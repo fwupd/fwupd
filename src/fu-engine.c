@@ -167,7 +167,7 @@ fu_engine_status_notify_cb (FuDevice *device, GParamSpec *pspec, FuEngine *self)
 static void
 fu_engine_watch_device (FuEngine *self, FuDevice *device)
 {
-	FuDevice *device_old = fu_device_list_get_old (self->device_list, device);
+	g_autoptr(FuDevice) device_old = fu_device_list_get_old (self->device_list, device);
 	if (device_old != NULL) {
 		g_signal_handlers_disconnect_by_func (device_old,
 						      fu_engine_progress_notify_cb,
@@ -320,8 +320,8 @@ fu_engine_get_remote_id_for_checksum (FuEngine *self, const gchar *csum)
 gboolean
 fu_engine_unlock (FuEngine *self, const gchar *device_id, GError **error)
 {
-	FuDevice *device;
 	FuPlugin *plugin;
+	g_autoptr(FuDevice) device = NULL;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
 	g_return_val_if_fail (device_id != NULL, FALSE);
@@ -534,12 +534,12 @@ fu_engine_modify_device (FuEngine *self,
 gboolean
 fu_engine_verify_update (FuEngine *self, const gchar *device_id, GError **error)
 {
-	FuDevice *device;
 	FuPlugin *plugin;
 	GPtrArray *checksums;
 	const gchar *fn = "/var/lib/fwupd/verify.xml";
 	g_autoptr(AsApp) app = NULL;
 	g_autoptr(AsStore) store = NULL;
+	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(GFile) file = NULL;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
@@ -628,12 +628,12 @@ fu_engine_verify (FuEngine *self, const gchar *device_id, GError **error)
 	AsApp *app;
 	AsChecksum *csum;
 	AsRelease *release;
-	FuDevice *device = NULL;
 	FuPlugin *plugin;
 	GPtrArray *checksums;
 	const gchar *hash = NULL;
 	const gchar *version = NULL;
 	g_autoptr(AsStore) store = NULL;
+	g_autoptr(FuDevice) device = NULL;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
 	g_return_val_if_fail (device_id != NULL, FALSE);
@@ -1226,7 +1226,7 @@ fu_engine_install_tasks (FuEngine *self,
 	devices_new = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device;
-		FuDevice *device_new;
+		g_autoptr(FuDevice) device_new = NULL;
 		g_autoptr(GError) error_local = NULL;
 		device = g_ptr_array_index (devices, i);
 		device_new = fu_device_list_get_by_id (self->device_list,
@@ -1237,7 +1237,7 @@ fu_engine_install_tasks (FuEngine *self,
 				   error_local->message);
 			continue;
 		}
-		g_ptr_array_add (devices_new, g_object_ref (device_new));
+		g_ptr_array_add (devices_new, g_steal_pointer (&device_new));
 	}
 
 	/* notify the plugins about the composite action */
@@ -1379,7 +1379,7 @@ fu_engine_get_plugins (FuEngine *self)
 
 gboolean
 fu_engine_install_blob (FuEngine *self,
-			FuDevice *device,
+			FuDevice *device_orig,
 			GBytes *blob_cab,
 			GBytes *blob_fw2,
 			const gchar *version,
@@ -1390,6 +1390,7 @@ fu_engine_install_blob (FuEngine *self,
 	GPtrArray *plugins;
 	g_autofree gchar *device_id_orig = NULL;
 	g_autofree gchar *version_orig = NULL;
+	g_autoptr(FuDevice) device = g_object_ref (device_orig);
 	g_autoptr(FwupdRelease) release_history = fwupd_release_new ();
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GHashTable) metadata_hash = NULL;
@@ -1475,6 +1476,7 @@ fu_engine_install_blob (FuEngine *self,
 		g_prefix_error (error, "failed to wait for detach replug: ");
 		return FALSE;
 	}
+	g_clear_object (&device);
 	device = fu_device_list_get_by_id (self->device_list, device_id_orig, error);
 	if (device == NULL) {
 		g_prefix_error (error, "failed to get device ID after detach replug: ");
@@ -1520,6 +1522,7 @@ fu_engine_install_blob (FuEngine *self,
 		fu_device_set_status (device, FWUPD_STATUS_IDLE);
 		return FALSE;
 	}
+	g_clear_object (&device);
 	device = fu_device_list_get_by_id (self->device_list, device_id_orig, error);
 	if (device == NULL) {
 		g_prefix_error (error, "failed to get device ID after update: ");
@@ -1529,6 +1532,7 @@ fu_engine_install_blob (FuEngine *self,
 		g_prefix_error (error, "failed to wait for replug after update: ");
 		return FALSE;
 	}
+	g_clear_object (&device);
 	device = fu_device_list_get_by_id (self->device_list, device_id_orig, error);
 	if (device == NULL) {
 		g_prefix_error (error, "failed to get device ID after post-update restart: ");
@@ -1546,6 +1550,7 @@ fu_engine_install_blob (FuEngine *self,
 		g_propagate_error (error, g_steal_pointer (&error_local));
 		return FALSE;
 	}
+	g_clear_object (&device);
 	device = fu_device_list_get_by_id (self->device_list, device_id_orig, error);
 	if (device == NULL) {
 		g_prefix_error (error, "failed to get device ID after attach: ");
@@ -1557,6 +1562,7 @@ fu_engine_install_blob (FuEngine *self,
 	}
 
 	/* get the new version number */
+	g_clear_object (&device);
 	device = fu_device_list_get_by_id (self->device_list, device_id_orig, error);
 	if (device == NULL) {
 		g_prefix_error (error, "failed to get device ID after attach replug: ");
@@ -2060,8 +2066,8 @@ fu_engine_get_result_from_app (FuEngine *self, AsApp *app, GError **error)
 	provides = as_app_get_provides (app);
 	for (guint i = 0; i < provides->len; i++) {
 		AsProvide *prov = AS_PROVIDE (g_ptr_array_index (provides, i));
-		FuDevice *device;
 		const gchar *guid;
+		g_autoptr(FuDevice) device = NULL;
 
 		/* not firmware */
 		if (as_provide_get_kind (prov) != AS_PROVIDE_KIND_FIRMWARE_FLASHED)
@@ -2234,7 +2240,7 @@ fu_engine_get_device (FuEngine *self, const gchar *device_id, GError **error)
 	device = fu_device_list_get_by_id (self->device_list, device_id, error);
 	if (device == NULL)
 		return NULL;
-	return g_object_ref (device);
+	return device;
 }
 
 /**
@@ -2445,7 +2451,7 @@ fu_engine_get_releases_for_device (FuEngine *self, FuDevice *device, GError **er
 GPtrArray *
 fu_engine_get_releases (FuEngine *self, const gchar *device_id, GError **error)
 {
-	FuDevice *device;
+	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(GPtrArray) releases = NULL;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), NULL);
@@ -2485,7 +2491,7 @@ fu_engine_get_releases (FuEngine *self, const gchar *device_id, GError **error)
 GPtrArray *
 fu_engine_get_downgrades (FuEngine *self, const gchar *device_id, GError **error)
 {
-	FuDevice *device;
+	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(GPtrArray) releases = NULL;
 	g_autoptr(GPtrArray) releases_tmp = NULL;
 	g_autoptr(GString) error_str = g_string_new (NULL);
@@ -2578,7 +2584,7 @@ fu_engine_get_downgrades (FuEngine *self, const gchar *device_id, GError **error
 GPtrArray *
 fu_engine_get_upgrades (FuEngine *self, const gchar *device_id, GError **error)
 {
-	FuDevice *device;
+	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(GPtrArray) releases = NULL;
 	g_autoptr(GPtrArray) releases_tmp = NULL;
 	g_autoptr(GString) error_str = g_string_new (NULL);
@@ -2965,7 +2971,7 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 
 	/* set any alternate objects on the device from the ID */
 	if (fu_device_get_alternate_id (device) != NULL) {
-		FuDevice *device_alt;
+		g_autoptr(FuDevice) device_alt = NULL;
 		device_alt = fu_device_list_get_by_id (self->device_list,
 						       fu_device_get_alternate_id (device),
 						       NULL);
@@ -2992,8 +2998,8 @@ fu_engine_plugin_device_removed_cb (FuPlugin *plugin,
 				    gpointer user_data)
 {
 	FuEngine *self = (FuEngine *) user_data;
-	FuDevice *device_tmp;
 	FuPlugin *plugin_old;
+	g_autoptr(FuDevice) device_tmp = NULL;
 	g_autoptr(GError) error = NULL;
 
 	device_tmp = fu_device_list_get_by_id (self->device_list,
@@ -3482,10 +3488,10 @@ fu_engine_load_hwids (FuEngine *self)
 static gboolean
 fu_engine_update_history_device (FuEngine *self, FuDevice *dev_history, GError **error)
 {
-	FuDevice *dev;
 	FuPlugin *plugin;
 	FwupdRelease *rel_history;
 	g_autofree gchar *btime = NULL;
+	g_autoptr(FuDevice) dev = NULL;
 
 	/* is in the device list */
 	dev = fu_device_list_get_by_id (self->device_list,

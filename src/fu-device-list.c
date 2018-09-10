@@ -248,7 +248,7 @@ fu_device_list_find_by_id (FuDeviceList *self,
  *
  * Returns the old device associated with the currently active device.
  *
- * Returns: (transfer none): the device, or %NULL if not found
+ * Returns: (transfer full): the device, or %NULL if not found
  *
  * Since: 1.0.3
  **/
@@ -258,7 +258,9 @@ fu_device_list_get_old (FuDeviceList *self, FuDevice *device)
 	FuDeviceItem *item = fu_device_list_find_by_device (self, device);
 	if (item == NULL)
 		return NULL;
-	return item->device_old;
+	if (item->device_old == NULL)
+		return NULL;
+	return g_object_ref (item->device_old);
 }
 
 static FuDeviceItem *
@@ -555,7 +557,7 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
  *
  * Finds a specific device that has the matching GUID.
  *
- * Returns: (transfer none): a device, or %NULL if not found
+ * Returns: (transfer full): a device, or %NULL if not found
  *
  * Since: 1.0.2
  **/
@@ -568,7 +570,7 @@ fu_device_list_get_by_guid (FuDeviceList *self, const gchar *guid, GError **erro
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 	item = fu_device_list_find_by_guid (self, guid);
 	if (item != NULL)
-		return item->device;
+		return g_object_ref (item->device);
 	g_set_error (error,
 		     FWUPD_ERROR,
 		     FWUPD_ERROR_NOT_FOUND,
@@ -670,7 +672,7 @@ fu_device_list_wait_for_replug (FuDeviceList *self, FuDevice *device, GError **e
  * Finds a specific device using the ID string. This function also supports
  * using abbreviated hashes.
  *
- * Returns: (transfer none): a device, or %NULL if not found
+ * Returns: (transfer full): a device, or %NULL if not found
  *
  * Since: 1.0.2
  **/
@@ -706,7 +708,7 @@ fu_device_list_get_by_id (FuDeviceList *self, const gchar *device_id, GError **e
 	}
 
 	/* something found */
-	return item->device;
+	return g_object_ref (item->device);
 }
 
 static void
