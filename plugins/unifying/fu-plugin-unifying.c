@@ -145,6 +145,7 @@ fu_plugin_usb_device_added (FuPlugin *plugin, FuUsbDevice *device, GError **erro
 	} else if (fu_device_has_custom_flag (FU_DEVICE (device), "is-texas")) {
 		dev = g_object_new (FU_TYPE_UNIFYING_BOOTLOADER_TEXAS, NULL);
 		fu_device_incorporate (dev, FU_DEVICE (device));
+		g_usleep (200*1000);
 	}
 
 	/* not supported */
