@@ -249,7 +249,6 @@ fu_quirks_add_quirks_from_filename (FuQuirks *self, const gchar *filename, GErro
 			fu_quirks_add_value (self, groups[i], keys[j], value);
 		}
 	}
-	g_debug ("now %u quirk entries", g_hash_table_size (self->hash));
 	return TRUE;
 }
 
@@ -306,6 +305,7 @@ fu_quirks_add_quirks_for_path (FuQuirks *self, const gchar *path, GError **error
 	}
 
 	/* success */
+	g_debug ("now %u quirk entries", g_hash_table_size (self->hash));
 	return TRUE;
 }
 
