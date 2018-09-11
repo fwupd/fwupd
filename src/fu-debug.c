@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
+#define G_LOG_DOMAIN				"FuDebug"
+
 #include <config.h>
 #include <glib/gi18n.h>
 #include <unistd.h>
@@ -61,13 +63,13 @@ fu_debug_handler_cb (const gchar *log_domain,
 			       g_date_time_get_second (dt),
 			       g_date_time_get_microsecond (dt) / 1000);
 
-	/* make these shorter */
-	if (g_str_has_prefix (log_domain, "FuPlugin"))
-		log_domain += 8;
+	/* each file should have set this */
+	if (log_domain == NULL)
+		log_domain = "FIXME";
 
 	/* pad out domain */
 	domain = g_string_new (log_domain);
-	for (gsize i = domain->len; i < 3; i++)
+	for (gsize i = domain->len; i < 15; i++)
 		g_string_append (domain, " ");
 
 	/* to file */

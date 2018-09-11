@@ -1,4 +1,4 @@
-cargs = ['-DG_LOG_DOMAIN="FuPluginThunderboltPower"']
+cargs = ['-DG_LOG_DOMAIN="FuPluginThunderbolt"']
 
 fu_plugin_thunderbolt_power = shared_module('fu_plugin_thunderbolt_power',
   sources : [

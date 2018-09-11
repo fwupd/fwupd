@@ -499,7 +499,7 @@ fu_engine_downgrade_func (void)
 	g_assert (ret);
 
 	/* expect just one broken remote to fail */
-	g_test_expect_message (G_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
+	g_test_expect_message ("FuEngine", G_LOG_LEVEL_WARNING,
 			       "failed to load remote broken: *");
 
 	testdatadir = fu_test_get_filename (TESTDATADIR, ".");
