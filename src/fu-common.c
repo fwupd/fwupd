@@ -986,7 +986,7 @@ fu_common_get_path (FuPathKind path_kind)
 		return g_build_filename (basedir, "cache", PACKAGE_NAME, NULL);
 	/* this shouldn't happen */
 	default:
-		g_assert_not_reached ();
+		g_warning ("cannot build path for unknown kind %u", path_kind);
 	}
 
 	return NULL;
