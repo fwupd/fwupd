@@ -1779,7 +1779,6 @@ fu_engine_is_device_supported (FuEngine *self, FuDevice *device)
 static gboolean
 fu_engine_load_metadata_store (FuEngine *self, GError **error)
 {
-	GPtrArray *apps;
 	GPtrArray *remotes;
 	g_autofree gchar *guids_str = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -1814,33 +1813,7 @@ fu_engine_load_metadata_store (FuEngine *self, GError **error)
 	}
 
 	/* print what we've got */
-	apps = as_store_get_apps (self->store);
-	if (apps->len == 0) {
-		g_debug ("no devices in store");
-	} else {
-		g_debug ("devices now in store:");
-		for (guint i = 0; i < apps->len; i++) {
-			AsApp *app = g_ptr_array_index (apps, i);
-			GPtrArray *releases = as_app_get_releases (app);
-			g_autoptr(GString) releases_str = g_string_new (NULL);
-
-			for (guint j = 0; j < releases->len; j++) {
-				AsRelease *release = g_ptr_array_index (releases, j);
-				g_string_append_printf (releases_str, "%s,",
-							as_release_get_version (release));
-				if (j >= 2) {
-					g_string_append (releases_str, "…,");
-					break;
-				}
-			}
-			if (releases_str->len > 1)
-				g_string_truncate (releases_str, releases_str->len - 1);
-			g_debug ("%u\t%s\t%s [%s]", i + 1,
-				 as_app_get_id (app),
-				 as_app_get_name (app, NULL),
-				 releases_str->str);
-		}
-	}
+	g_debug ("%u components now in store", as_store_get_size (self->store));
 
 	/* update the list of supported GUIDs */
 	g_ptr_array_set_size (self->supported_guids, 0);
