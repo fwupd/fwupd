@@ -1680,25 +1680,11 @@ fu_engine_get_item_by_id_fallback_history (FuEngine *self, const gchar *id, GErr
 	return NULL;
 }
 
+/* add releases that do not exist from a higher priority remote */
 static void
-fu_engine_add_component_to_store (FuEngine *self, AsApp *app)
+fu_engine_merge_component_releases (AsApp *app_old, AsApp *app)
 {
-	AsApp *app_old = as_store_get_app_by_id (self->store, as_app_get_id (app));
 	GPtrArray *releases = as_app_get_releases (app);
-
-	/* possibly convert the version from 0x to dotted */
-	fu_engine_vendor_quirk_release_version (self, app);
-
-	/* possibly convert the flashed provide to a GUID */
-	fu_engine_vendor_fixup_provide_value (app);
-
-	/* the app does not already exist */
-	if (app_old == NULL) {
-		as_store_add_app (self->store, app);
-		return;
-	}
-
-	/* add releases that do not exist from a higher priority remote */
 	for (guint j = 0; j < releases->len; j++) {
 		AsRelease *release = g_ptr_array_index (releases, j);
 		AsRelease *release_old;
@@ -1725,6 +1711,7 @@ fu_engine_load_metadata_from_file (FuEngine *self,
 	g_autoptr(AsStore) store = NULL;
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(GBytes) remote_blob = NULL;
+	g_autoptr(GPtrArray) apps_new = NULL;
 
 	/* load the store locally until we know it is valid */
 	store = as_store_new ();
@@ -1738,8 +1725,10 @@ fu_engine_load_metadata_from_file (FuEngine *self,
 
 	/* add the new application from the store */
 	apps = as_store_get_apps (store);
+	apps_new = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	for (guint i = 0; i < apps->len; i++) {
 		AsApp *app = g_ptr_array_index (apps, i);
+		AsApp *app_old = as_store_get_app_by_id (self->store, as_app_get_id (app));
 
 		/* save the remote-id to all the releases for this component */
 		if (remote_blob != NULL) {
@@ -1752,9 +1741,22 @@ fu_engine_load_metadata_from_file (FuEngine *self,
 			}
 		}
 
-		/* either add component, or merge in new releases */
-		fu_engine_add_component_to_store (self, app);
+		/* possibly convert the version from 0x to dotted */
+		fu_engine_vendor_quirk_release_version (self, app);
+
+		/* possibly convert the flashed provide to a GUID */
+		fu_engine_vendor_fixup_provide_value (app);
+
+		/* merge in new releases if already known */
+		if (app_old != NULL) {
+			fu_engine_merge_component_releases (app_old, app);
+			continue;
+		}
+		g_ptr_array_add (apps_new, g_object_ref (app));
 	}
+
+	/* add in one operation to avoid 'n' "Emitting ::changed()" events */
+	as_store_add_apps (self->store, apps_new);
 	return TRUE;
 }
 
