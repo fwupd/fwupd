@@ -1690,11 +1690,8 @@ fu_engine_merge_component_releases (AsApp *app_old, AsApp *app)
 		AsRelease *release_old;
 		const gchar *version = as_release_get_version (release);
 		release_old = as_app_get_release_by_version (app_old, version);
-		if (release_old != NULL) {
-			g_debug ("skipping release %s that already exists for %s",
-				 version, as_app_get_id (app_old));
+		if (release_old != NULL)
 			continue;
-		}
 		g_debug ("adding release %s to existing %s",
 			 version, as_app_get_id (app_old));
 		as_app_add_release (app_old, release);
