@@ -264,7 +264,8 @@ parts:
       - libgpgme11
       - libjson-glib-1.0-0
       - libpolkit-gobject-1-0
-      - gnupg
+      - glib-networking
+      - libglib2.0-bin
     prime:
       # we explicitly don't want /usr/bin/gpgconf
       # this will cause gpgme to error finding it
@@ -300,7 +301,6 @@ parts:
       - -usr/share/info
       - -usr/share/gir-1.0
       - -usr/share/upstart
-      - -usr/lib/*/glib-2.0
       - -usr/lib/*/pkgconfig
     after: [appstream-glib-dev, gudev, gusb, gnu-efi, libefivar-fixpkgconfig, libsmbios, build-introspection, gettext]
   fix-bash-completion:
