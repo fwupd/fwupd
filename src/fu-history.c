@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
+#define G_LOG_DOMAIN				"FuHistory"
+
 #include "config.h"
 
 #include <fwupd.h>
@@ -44,7 +46,7 @@ fu_history_device_from_stmt (sqlite3_stmt *stmt)
 
 	/* device_id */
 	tmp = (const gchar *) sqlite3_column_text (stmt, 0);
-	g_debug ("FuHistory: got sql result %s", tmp);
+	g_debug ("got sql result %s", tmp);
 	if (tmp != NULL)
 		fwupd_device_set_id (FWUPD_DEVICE (device), tmp);
 
@@ -180,7 +182,7 @@ fu_history_migrate_database_v1 (FuHistory *self, GError **error)
 			   "ALTER TABLE history RENAME TO history_old;",
 			   NULL, NULL, NULL);
 	if (rc != SQLITE_OK) {
-		g_debug ("FuHistory: cannot rename v0 table: %s", sqlite3_errmsg (self->db));
+		g_debug ("cannot rename v0 table: %s", sqlite3_errmsg (self->db));
 		return TRUE;
 	}
 
@@ -194,7 +196,7 @@ fu_history_migrate_database_v1 (FuHistory *self, GError **error)
 			   "DROP TABLE history_old;",
 			   NULL, NULL, NULL);
 	if (rc != SQLITE_OK) {
-		g_debug ("FuHistory: no history to migrate: %s", sqlite3_errmsg (self->db));
+		g_debug ("no history to migrate: %s", sqlite3_errmsg (self->db));
 		return TRUE;
 	}
 	return TRUE;
@@ -248,7 +250,7 @@ fu_history_load (FuHistory *self, GError **error)
 
 	/* open */
 	filename = g_build_filename (dirname, "pending.db", NULL);
-	g_debug ("FuHistory: trying to open database '%s'", filename);
+	g_debug ("trying to open database '%s'", filename);
 	rc = sqlite3_open (filename, &self->db);
 	if (rc != SQLITE_OK) {
 		g_set_error (error,
@@ -270,15 +272,15 @@ fu_history_load (FuHistory *self, GError **error)
 		if (rc == SQLITE_OK)
 			schema_ver = 1;
 	}
-	g_debug ("FuHistory: got schema version of %u", schema_ver);
+	g_debug ("got schema version of %u", schema_ver);
 
 	/* migrate schema */
 	if (schema_ver == 0) {
-		g_debug ("FuHistory: building initial database");
+		g_debug ("building initial database");
 		if (!fu_history_create_database (self, error))
 			return FALSE;
 	} else if (schema_ver == 1) {
-		g_debug ("FuHistory: migrating v%u database", schema_ver);
+		g_debug ("migrating v%u database", schema_ver);
 		if (!fu_history_migrate_database_v1 (self, error))
 			return FALSE;
 	}
@@ -329,7 +331,7 @@ fu_history_modify_device (FuHistory *self, FuDevice *device,
 	/* overwrite entry if it exists */
 	if ((flags & FU_HISTORY_FLAGS_MATCH_OLD_VERSION) &&
 	    (flags & FU_HISTORY_FLAGS_MATCH_NEW_VERSION)) {
-		g_debug ("FuHistory: modifying device %s [%s], version not important",
+		g_debug ("modifying device %s [%s], version not important",
 			 fu_device_get_name (device),
 			 fu_device_get_id (device));
 		rc = sqlite3_prepare_v2 (self->db,
@@ -340,7 +342,7 @@ fu_history_modify_device (FuHistory *self, FuDevice *device,
 					 "WHERE device_id = ?4;",
 					 -1, &stmt, NULL);
 	} else if (flags & FU_HISTORY_FLAGS_MATCH_OLD_VERSION) {
-		g_debug ("FuHistory: modifying device %s [%s], only version old %s",
+		g_debug ("modifying device %s [%s], only version old %s",
 			 fu_device_get_name (device),
 			 fu_device_get_id (device),
 			 fu_device_get_version (device));
@@ -352,7 +354,7 @@ fu_history_modify_device (FuHistory *self, FuDevice *device,
 					 "WHERE device_id = ?4 AND version_old = ?5;",
 					 -1, &stmt, NULL);
 	} else if (flags & FU_HISTORY_FLAGS_MATCH_NEW_VERSION) {
-		g_debug ("FuHistory: modifying device %s [%s], only version new %s",
+		g_debug ("modifying device %s [%s], only version new %s",
 			 fu_device_get_name (device),
 			 fu_device_get_id (device),
 			 fu_device_get_version (device));
@@ -400,7 +402,7 @@ fu_history_add_device (FuHistory *self, FuDevice *device, FwupdRelease *release,
 	if (!fu_history_remove_device (self, device, release, error))
 		return FALSE;
 
-	g_debug ("FuHistory: add device %s [%s]",
+	g_debug ("add device %s [%s]",
 		 fu_device_get_name (device),
 		 fu_device_get_id (device));
 	if (release != NULL) {
@@ -467,7 +469,7 @@ fu_history_remove_all_with_state (FuHistory *self,
 		return FALSE;
 
 	/* remove entries */
-	g_debug ("FuHistory: removing all devices with update_state %s",
+	g_debug ("removing all devices with update_state %s",
 		 fwupd_update_state_to_string (update_state));
 	rc = sqlite3_prepare_v2 (self->db,
 				 "DELETE FROM history WHERE update_state = ?1",
@@ -495,7 +497,7 @@ fu_history_remove_all (FuHistory *self, GError **error)
 		return FALSE;
 
 	/* remove entries */
-	g_debug ("FuHistory: removing all devices");
+	g_debug ("removing all devices");
 	rc = sqlite3_prepare_v2 (self->db, "DELETE FROM history;", -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
@@ -521,7 +523,7 @@ fu_history_remove_device (FuHistory *self,  FuDevice *device,
 	if (!fu_history_load (self, error))
 		return FALSE;
 
-	g_debug ("FuHistory: remove device %s [%s]",
+	g_debug ("remove device %s [%s]",
 		 fu_device_get_name (device),
 		 fu_device_get_id (device));
 	rc = sqlite3_prepare_v2 (self->db,
@@ -556,7 +558,7 @@ fu_history_get_device_by_id (FuHistory *self, const gchar *device_id, GError **e
 		return NULL;
 
 	/* get all the devices */
-	g_debug ("FuHistory: get device");
+	g_debug ("get device");
 	rc = sqlite3_prepare_v2 (self->db,
 				 "SELECT device_id, "
 					"checksum, "
@@ -610,7 +612,7 @@ fu_history_get_devices (FuHistory *self, GError **error)
 	}
 
 	/* get all the devices */
-	g_debug ("FuHistory: get devices");
+	g_debug ("get devices");
 	rc = sqlite3_prepare_v2 (self->db,
 				 "SELECT device_id, "
 					"checksum, "

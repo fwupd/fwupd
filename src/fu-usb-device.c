@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
+#define G_LOG_DOMAIN				"FuUsbDevice"
+
 #include "config.h"
 
 #include <appstream-glib.h>
