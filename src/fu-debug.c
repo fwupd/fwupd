@@ -17,12 +17,14 @@ typedef struct {
 	gboolean	 verbose;
 	gboolean	 console;
 	gchar		**plugin_verbose;
+	gchar		**daemon_verbose;
 } FuDebug;
 
 static void
 fu_debug_free (FuDebug *self)
 {
 	g_strfreev (self->plugin_verbose);
+	g_strfreev (self->daemon_verbose);
 	g_free (self);
 }
 
@@ -69,7 +71,7 @@ fu_debug_handler_cb (const gchar *log_domain,
 
 	/* pad out domain */
 	domain = g_string_new (log_domain);
-	for (gsize i = domain->len; i < 15; i++)
+	for (gsize i = domain->len; i < 20; i++)
 		g_string_append (domain, " ");
 
 	/* to file */
@@ -116,6 +118,9 @@ fu_debug_pre_parse_hook (GOptionContext *context,
 		{ "plugin-verbose", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &self->plugin_verbose,
 		  /* TRANSLATORS: this is for plugin development */
 		  N_("Show plugin verbose information"), "PLUGIN-NAME" },
+		{ "daemon-verbose", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &self->daemon_verbose,
+		  /* TRANSLATORS: this is for daemon development */
+		  N_("Show daemon verbose information"), "DOMAIN" },
 		{ NULL}
 	};
 
@@ -139,9 +144,15 @@ fu_debug_post_parse_hook (GOptionContext *context,
 					    G_LOG_LEVEL_CRITICAL);
 		g_log_set_default_handler (fu_debug_handler_cb, self);
 	} else {
-		/* hide all debugging */
-		g_log_set_handler (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-				   fu_debug_ignore_cb, self);
+		/* hide all debugging except whitelisted */
+		g_log_set_default_handler (fu_debug_ignore_cb, self);
+		if (self->daemon_verbose != NULL) {
+			for (guint i = 0; self->daemon_verbose[i] != NULL; i++) {
+				g_log_set_handler (self->daemon_verbose[i],
+						   G_LOG_LEVEL_MASK,
+						   fu_debug_handler_cb, self);
+			}
+		}
 	}
 
 	/* are we on an actual TTY? */
