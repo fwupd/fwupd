@@ -301,7 +301,7 @@ fu_plugin_dell_dock_func (void)
 					   DOCK_NIC_VID, DOCK_NIC_PID,
 					   NULL, FALSE);
 	ret = fu_plugin_usb_device_added (plugin_dell, NULL, &error);
-	g_assert_false (ret);
+	g_assert_true (ret);
 	g_clear_error (&error);
 	g_assert_cmpint (devices->len, ==, 0);
 

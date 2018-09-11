@@ -351,9 +351,8 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 
 	buf.buf = NULL;
 	if (!fu_dell_query_dock (data->smi_obj, &buf)) {
-		g_set_error_literal (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
-				     "no dock detected");
-		return FALSE;
+		g_debug ("no dock detected");
+		return TRUE;
 	}
 
 	if (buf.record->dock_info_header.dir_version != 1) {
