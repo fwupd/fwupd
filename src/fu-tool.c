@@ -21,6 +21,7 @@
 #include "fu-progressbar.h"
 #include "fu-smbios.h"
 #include "fu-util-common.h"
+#include "fu-debug.h"
 
 /* this is only valid in this file */
 #define FWUPD_ERROR_INVALID_ARGS	(FWUPD_ERROR_LAST+1)
@@ -195,12 +196,6 @@ fu_util_smbios_dump (FuUtilPrivate *priv, gchar **values, GError **error)
 	tmp = fu_smbios_to_string (smbios);
 	g_print ("%s\n", tmp);
 	return TRUE;
-}
-
-static void
-fu_util_ignore_cb (const gchar *log_domain, GLogLevelFlags log_level,
-		   const gchar *message, gpointer user_data)
-{
 }
 
 static gboolean
@@ -857,15 +852,11 @@ main (int argc, char *argv[])
 	gboolean allow_reinstall = FALSE;
 	gboolean force = FALSE;
 	gboolean ret;
-	gboolean verbose = FALSE;
 	g_auto(GStrv) plugin_glob = NULL;
 	g_autoptr(FuUtilPrivate) priv = g_new0 (FuUtilPrivate, 1);
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *cmd_descriptions = NULL;
 	const GOptionEntry options[] = {
-		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
-			/* TRANSLATORS: command line option */
-			_("Show extra debugging information"), NULL },
 		{ "allow-reinstall", '\0', 0, G_OPTION_ARG_NONE, &allow_reinstall,
 			/* TRANSLATORS: command line option */
 			_("Allow re-installing existing firmware versions"), NULL },
@@ -991,20 +982,13 @@ main (int argc, char *argv[])
 	/* TRANSLATORS: program name */
 	g_set_application_name (_("Firmware Utility"));
 	g_option_context_add_main_entries (priv->context, options, NULL);
+	g_option_context_add_group (priv->context, fu_debug_get_option_group ());
 	ret = g_option_context_parse (priv->context, &argc, &argv, &error);
 	if (!ret) {
 		/* TRANSLATORS: the user didn't read the man page */
 		g_print ("%s: %s\n", _("Failed to parse arguments"),
 			 error->message);
 		return EXIT_FAILURE;
-	}
-
-	/* set verbose? */
-	if (verbose) {
-		g_setenv ("G_MESSAGES_DEBUG", "all", FALSE);
-	} else {
-		g_log_set_handler (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-				   fu_util_ignore_cb, NULL);
 	}
 
 	/* set flags */
