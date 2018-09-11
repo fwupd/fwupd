@@ -1,3 +1,27 @@
+Version 1.0.9
+~~~~~~~~~~~~~
+Released: 2018-09-11
+
+New Features:
+ - Add support for more Wacom tablets (Richard Hughes)
+ - Add support for the Synaptics Panamera chip (Mario Limonciello)
+ - Add validation for Titan Ridge Thunderbolt devices (Andrei Emeltchenko)
+ - Use boltd force power API if available (Mario Limonciello)
+
+Bugfixes:
+ - Allow flashing Unifying devices in recovery mode (Richard Hughes)
+ - Allow updating just one specific device from the command line (Richard Hughes)
+ - Do not hold hidraw devices open forever (Richard Hughes)
+ - Do not use 8bitdo bootloader commands after a successful flash (Richard Hughes)
+ - Don't crash when the Dell alternate device has not been set (Richard Hughes)
+ - Don't potentially expose user passwords for remotes (Richard Hughes)
+ - Fix a potential buffer overflow when applying a DFU patch (Richard Hughes)
+ - Fix a potential segfault in smbios data processing (Mario Limonciello)
+ - Fix downgrading older releases to devices (Richard Hughes)
+ - Fix failure to detach Unifying devices when using a slow host controller (Richard Hughes)
+ - Fix flashing devices that require a manual replug (Richard Hughes)
+ - Handle -EAGAIN from the kernel better when reading NVM (Mario Limonciello)
+
 Version 1.0.8
 ~~~~~~~~~~~~~
 Released: 2018-06-07
