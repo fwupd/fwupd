@@ -565,22 +565,28 @@ static gboolean
 fu_plugin_uefi_ensure_esp_path (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	const gchar *key = "OverrideESPMountPoint";
+	guint64 sz_reqd = FU_UEFI_COMMON_REQUIRED_ESP_FREE_SPACE;
+	g_autofree gchar *require_esp_free_space = NULL;
 	g_autofree gchar *require_shim_for_sb = NULL;
 
+	/* parse free space */
+	require_esp_free_space = fu_plugin_get_config_value (plugin, "RequireESPFreeSpace");
+	if (require_esp_free_space != NULL)
+		sz_reqd = fu_common_strtoull (require_esp_free_space);
+
 	/* load from file */
-	data->esp_path = fu_plugin_get_config_value (plugin, key);
+	data->esp_path = fu_plugin_get_config_value (plugin, "OverrideESPMountPoint");
 	if (data->esp_path != NULL) {
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_uefi_check_esp_path (data->esp_path, &error_local)) {
 			g_set_error (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_FILENAME,
-				     "invalid %s=%s specified in config: %s",
-				     key, data->esp_path, error_local->message);
+				     "invalid OverrideESPMountPoint=%s specified in config: %s",
+				     data->esp_path, error_local->message);
 			return FALSE;
 		}
-		return TRUE;
+		return fu_uefi_check_esp_free_space (data->esp_path, sz_reqd, error);
 	}
 	require_shim_for_sb = fu_plugin_get_config_value (plugin, "RequireShimForSecureBoot");
 	if (require_shim_for_sb == NULL ||
@@ -594,10 +600,14 @@ fu_plugin_uefi_ensure_esp_path (FuPlugin *plugin, GError **error)
 			     G_IO_ERROR,
 			     G_IO_ERROR_INVALID_FILENAME,
 			     "Unable to determine EFI system partition location, "
-			     "override using %s in %s.conf",
-			     key, fu_plugin_get_name (plugin));
+			     "override using OverrideESPMountPoint in %s.conf",
+			     fu_plugin_get_name (plugin));
 		return FALSE;
 	}
+
+	/* check free space */
+	if (!fu_uefi_check_esp_free_space (data->esp_path, sz_reqd, error))
+		return FALSE;
 
 	/* success */
 	return TRUE;

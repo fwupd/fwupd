@@ -269,6 +269,33 @@ fu_uefi_read_file_as_uint64 (const gchar *path, const gchar *attr_name)
 }
 
 gboolean
+fu_uefi_check_esp_free_space (const gchar *path, guint64 required, GError **error)
+{
+	guint64 fs_free;
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(GFileInfo) info = NULL;
+
+	file = g_file_new_for_path (path);
+	info = g_file_query_filesystem_info (file,
+					     G_FILE_ATTRIBUTE_FILESYSTEM_FREE,
+					     NULL, error);
+	if (info == NULL)
+		return FALSE;
+	fs_free = g_file_info_get_attribute_uint64 (info, G_FILE_ATTRIBUTE_FILESYSTEM_FREE);
+	if (fs_free < required) {
+		g_autofree gchar *str_free = g_format_size (fs_free);
+		g_autofree gchar *str_reqd = g_format_size (required);
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "%s does not have sufficient space, required %s, got %s",
+			     path, str_reqd, str_free);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+gboolean
 fu_uefi_check_esp_path (const gchar *path, GError **error)
 {
 	const gchar *fs_types[] = { "vfat", "ntfs", "exfat", "autofs", NULL };
@@ -280,6 +307,7 @@ fu_uefi_check_esp_path (const gchar *path, GError **error)
 			     "%s was not mounted", path);
 		return FALSE;
 	}
+
 	/* /boot is a special case because systemd sandboxing marks
 	 * it read-only, but we need to write to /boot/EFI
 	 */
