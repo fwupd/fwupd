@@ -19,3 +19,4 @@
 /*.dsc
 /*.xz
 /*.gz
+__pycache__
