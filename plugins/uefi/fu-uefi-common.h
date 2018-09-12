@@ -57,6 +57,9 @@ typedef struct __attribute__((__packed__)) {
 	guint32		 status;
 } efi_update_info_t;
 
+/* the biggest size SPI part currently seen */
+#define FU_UEFI_COMMON_REQUIRED_ESP_FREE_SPACE		(32 * 1024 * 1024)
+
 gchar		*fu_uefi_get_esp_app_path	(const gchar	*esp_path,
 						 const gchar	*cmd,
 						 GError		**error);
@@ -72,6 +75,9 @@ gboolean	 fu_uefi_get_framebuffer_size	(guint32	*width,
 gboolean	 fu_uefi_secure_boot_enabled	(void);
 gchar		*fu_uefi_guess_esp_path		(void);
 gboolean	 fu_uefi_check_esp_path		(const gchar	*path,
+						 GError		**error);
+gboolean	 fu_uefi_check_esp_free_space	(const gchar	*path,
+						 guint64	 required,
 						 GError		**error);
 gchar		*fu_uefi_get_esp_path_for_os	(const gchar	*esp_path);
 GPtrArray	*fu_uefi_get_esrt_entry_paths	(const gchar	*esrt_path,
