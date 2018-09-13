@@ -2538,6 +2538,16 @@ fu_engine_get_upgrades (FuEngine *self, const gchar *device_id, GError **error)
 	if (device == NULL)
 		return NULL;
 
+	/* don't show upgrades again until we reboot */
+	if (fu_device_get_update_state (device) == FWUPD_UPDATE_STATE_NEEDS_REBOOT) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOTHING_TO_DO,
+			     "No upgrades for %s: A reboot is pending",
+			     fu_device_get_name (device));
+		return NULL;
+	}
+
 	/* get all the releases for the device */
 	releases_tmp = fu_engine_get_releases_for_device (self, device, error);
 	if (releases_tmp == NULL)
