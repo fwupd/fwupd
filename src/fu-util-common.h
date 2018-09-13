@@ -19,4 +19,6 @@ gboolean	 fu_util_print_device_tree	(GNode *n, gpointer data);
 gboolean	 fu_util_is_interesting_device	(FwupdDevice	*dev);
 gchar		*fu_util_get_user_cache_path	(const gchar	*fn);
 
+gchar		*fu_util_get_versions		(void);
+
 #endif /* __FU_UTIL_COMMON_H__ */

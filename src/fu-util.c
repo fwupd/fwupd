@@ -2550,10 +2550,8 @@ main (int argc, char *argv[])
 
 	/* just show versions and exit */
 	if (version) {
-		g_print ("client version:\t%i.%i.%i\n",
-			 FWUPD_MAJOR_VERSION,
-			 FWUPD_MINOR_VERSION,
-			 FWUPD_MICRO_VERSION);
+		g_autofree gchar *version_str = fu_util_get_versions();
+		g_print ("%s\n", version_str);
 		if (!fwupd_client_connect (priv->client, priv->cancellable, &error)) {
 			g_printerr ("Failed to connect to daemon: %s\n",
 				    error->message);
@@ -2561,22 +2559,6 @@ main (int argc, char *argv[])
 		}
 		g_print ("daemon version:\t%s\n",
 			 fwupd_client_get_daemon_version (priv->client));
-#ifdef FWUPD_GIT_DESCRIBE
-		g_print ("checkout info:\t%s\n", FWUPD_GIT_DESCRIBE);
-#endif
-		g_print ("compile-time dependency versions\n");
-		g_print ("\tappstream-glib:\t%d.%d.%d\n",
-			AS_MAJOR_VERSION,
-			AS_MINOR_VERSION,
-			AS_MICRO_VERSION);
-		g_print ("\tgusb:\t%d.%d.%d\n",
-			G_USB_MAJOR_VERSION,
-			G_USB_MINOR_VERSION,
-			G_USB_MICRO_VERSION);
-#ifdef EFIVAR_LIBRARY_VERSION
-		g_print ("\tefivar:\t%s\n",
-			EFIVAR_LIBRARY_VERSION);
-#endif
 		return EXIT_SUCCESS;
 	}
 

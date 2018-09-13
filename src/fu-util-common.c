@@ -5,8 +5,11 @@
  */
 
 #include <config.h>
+
+#include <appstream-glib.h>
 #include <stdio.h>
 #include <glib/gi18n.h>
+#include <gusb.h>
 
 #include "fu-util-common.h"
 #include "fu-device.h"
@@ -141,4 +144,38 @@ fu_util_get_user_cache_path (const gchar *fn)
 		return g_build_filename (cachedir_legacy, basename, NULL);
 
 	return g_build_filename (g_get_user_cache_dir (), "fwupd", basename, NULL);
+}
+
+gchar *
+fu_util_get_versions (void)
+{
+	GString *string = g_string_new ("");
+
+	g_string_append_printf (string,
+				"client version:\t%i.%i.%i\n",
+				FWUPD_MAJOR_VERSION,
+				FWUPD_MINOR_VERSION,
+				FWUPD_MICRO_VERSION);
+#ifdef FWUPD_GIT_DESCRIBE
+	g_string_append_printf (string,
+				"checkout info:\t%s\n", FWUPD_GIT_DESCRIBE);
+#endif
+	g_string_append_printf (string,
+				"compile-time dependency versions\n");
+	g_string_append_printf (string,
+				"\tappstream-glib:\t%d.%d.%d\n",
+				AS_MAJOR_VERSION,
+				AS_MINOR_VERSION,
+				AS_MICRO_VERSION);
+	g_string_append_printf (string,
+				"\tgusb:\t%d.%d.%d\n",
+				G_USB_MAJOR_VERSION,
+				G_USB_MINOR_VERSION,
+				G_USB_MICRO_VERSION);
+#ifdef EFIVAR_LIBRARY_VERSION
+	g_string_append_printf (string,
+				"\tefivar:\t%s",
+				EFIVAR_LIBRARY_VERSION);
+#endif
+	return g_string_free (string, FALSE);
 }

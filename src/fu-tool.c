@@ -852,11 +852,15 @@ main (int argc, char *argv[])
 	gboolean allow_reinstall = FALSE;
 	gboolean force = FALSE;
 	gboolean ret;
+	gboolean version = FALSE;
 	g_auto(GStrv) plugin_glob = NULL;
 	g_autoptr(FuUtilPrivate) priv = g_new0 (FuUtilPrivate, 1);
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *cmd_descriptions = NULL;
 	const GOptionEntry options[] = {
+		{ "version", '\0', 0, G_OPTION_ARG_NONE, &version,
+			/* TRANSLATORS: command line option */
+			_("Show client and daemon versions"), NULL },
 		{ "allow-reinstall", '\0', 0, G_OPTION_ARG_NONE, &allow_reinstall,
 			/* TRANSLATORS: command line option */
 			_("Allow re-installing existing firmware versions"), NULL },
@@ -1014,6 +1018,13 @@ main (int argc, char *argv[])
 	g_signal_connect (priv->engine, "percentage-changed",
 			  G_CALLBACK (fu_main_engine_percentage_changed_cb),
 			  priv);
+
+	/* just show versions and exit */
+	if (version) {
+		g_autofree gchar *version_str = fu_util_get_versions ();
+		g_print ("%s\n", version_str);
+		return EXIT_SUCCESS;
+	}
 
 	/* any plugin whitelist specified */
 	for (guint i = 0; plugin_glob != NULL && plugin_glob[i] != NULL; i++)
