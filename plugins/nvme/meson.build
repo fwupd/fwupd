@@ -1,11 +1,5 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginNvme"']
 
-install_data([
-  'nvme.quirk',
-  ],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
-
 shared_module('fu_plugin_nvme',
   sources : [
     'fu-plugin-nvme.c',
