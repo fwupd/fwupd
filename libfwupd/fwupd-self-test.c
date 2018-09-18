@@ -8,7 +8,6 @@
 
 #include <glib-object.h>
 #include <fnmatch.h>
-#include <appstream-glib.h>
 
 #include "fwupd-client.h"
 #include "fwupd-common.h"
@@ -287,7 +286,7 @@ fwupd_client_devices_func (void)
 		g_test_skip ("no enabled fwupd daemon");
 		return;
 	}
-	if (as_utils_vercmp (fwupd_client_get_daemon_version (client), "1.0.0") < 0) {
+	if (!g_str_has_prefix (fwupd_client_get_daemon_version (client), "1.")) {
 		g_test_skip ("running fwupd is too old");
 		return;
 	}
@@ -336,7 +335,7 @@ fwupd_client_remotes_func (void)
 		g_test_skip ("no enabled fwupd daemon");
 		return;
 	}
-	if (as_utils_vercmp (fwupd_client_get_daemon_version (client), "1.0.0") < 0) {
+	if (!g_str_has_prefix (fwupd_client_get_daemon_version (client), "1.")) {
 		g_test_skip ("running fwupd is too old");
 		return;
 	}
