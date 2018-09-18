@@ -71,8 +71,6 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 	GUdevDevice *udev_device = fu_udev_device_get_dev (FU_UDEV_DEVICE (device));
 	const gchar *guid = NULL;
 	g_autofree gchar *rom_fn = NULL;
-	g_autoptr(AsProfile) profile = as_profile_new ();
-	g_autoptr(AsProfileTask) ptask = NULL;
 
 	/* interesting device? */
 	if (g_strcmp0 (fu_udev_device_get_subsystem (device), "pci") != 0)
@@ -80,10 +78,6 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 	guid = g_udev_device_get_property (udev_device, "FWUPD_GUID");
 	if (guid == NULL)
 		return TRUE;
-
-	/* get data */
-	ptask = as_profile_start (profile, "FuPluginUdev:client-add{%s}", guid);
-	g_assert (ptask != NULL);
 
 	/* set the physical ID */
 	if (!fu_udev_device_set_physical_id (device, "pci", error))

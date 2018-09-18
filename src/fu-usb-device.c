@@ -111,8 +111,6 @@ fu_usb_device_open (FuDevice *device, GError **error)
 	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
 	FuUsbDeviceClass *klass = FU_USB_DEVICE_GET_CLASS (device);
 	guint idx;
-	g_autoptr(AsProfile) profile = as_profile_new ();
-	g_autoptr(AsProfileTask) ptask = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	g_return_val_if_fail (FU_IS_USB_DEVICE (self), FALSE);
@@ -121,12 +119,6 @@ fu_usb_device_open (FuDevice *device, GError **error)
 	/* already open */
 	if (priv->usb_device_locker != NULL)
 		return TRUE;
-
-	/* profile */
-	ptask = as_profile_start (profile, "added{%04x:%04x}",
-				  g_usb_device_get_vid (priv->usb_device),
-				  g_usb_device_get_pid (priv->usb_device));
-	g_assert (ptask != NULL);
 
 	/* open */
 	locker = fu_device_locker_new (priv->usb_device, error);

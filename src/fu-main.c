@@ -1093,10 +1093,6 @@ fu_main_on_bus_acquired_cb (GDBusConnection *connection,
 		g_warning ("cannot connect to DBus: %s", error->message);
 		return;
 	}
-
-	/* dump startup profile data */
-	if (g_getenv ("FWUPD_VERBOSE") != NULL)
-		fu_engine_profile_dump (priv->engine);
 }
 
 static void
