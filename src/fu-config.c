@@ -8,10 +8,12 @@
 
 #include "config.h"
 
-#include <appstream-glib.h>
 #include <glib-object.h>
 #include <gio/gio.h>
 #include <glib/gi18n.h>
+
+#include "xb-builder.h"
+#include "xb-silo-query.h"
 
 #include "fu-common.h"
 #include "fu-config.h"
@@ -31,7 +33,7 @@ struct _FuConfig
 	GPtrArray		*blacklist_devices;
 	GPtrArray		*blacklist_plugins;
 	guint64			 archive_size_max;
-	AsStore			*store_remotes;
+	XbSilo			*silo;
 	GHashTable		*os_release;
 };
 
@@ -132,70 +134,26 @@ fu_config_get_remote_agreement_default (FwupdRemote *self, GError **error)
 }
 
 static GString *
-fu_config_get_remote_agreement_for_app (FwupdRemote *self, AsApp *app, GError **error)
+fu_config_get_remote_agreement_for_app (FwupdRemote *self, XbNode *component, GError **error)
 {
-#if AS_CHECK_VERSION(0,7,8)
-	const gchar *tmp = NULL;
-	AsAgreement *agreement;
-	AsAgreementSection *section;
-
-	/* get the default agreement section */
-	agreement = as_app_get_agreement_default (app);
-	if (agreement == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_FOUND,
-				     "No agreement found");
-		return NULL;
-	}
-	section = as_agreement_get_section_default (agreement);
-	if (section == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_FOUND,
-				     "No default section for agreement found");
-		return NULL;
-	}
-	tmp = as_agreement_section_get_description (section, NULL);
-	if (tmp == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_FOUND,
-				     "No description found in agreement section");
-		return NULL;
-	}
-	return g_string_new (tmp);
-#else
-	AsFormat *format;
-	GNode *n;
-	g_autoptr(AsNode) root = NULL;
-	g_autoptr(GFile) file = NULL;
-
-	/* parse the XML file */
-	format = as_app_get_format_default (app);
-	if (format == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_FOUND,
-				     "No format for Metainfo file");
-		return NULL;
-	}
-	file = g_file_new_for_path (as_format_get_filename (format));
-	root = as_node_from_file (file, AS_NODE_FROM_XML_FLAG_NONE, NULL, error);
-	if (root == NULL)
-		return NULL;
+	XbNode *n;
+	g_autofree gchar *tmp = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* manually find the first agreement section */
-	n = as_node_find (root, "component/agreement/agreement_section/description");
+	n = xb_node_query_first (component, "agreement/agreement_section/description", &error_local);
 	if (n == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_FOUND,
-				     "No agreement description found");
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
+			     "No agreement description found: %s",
+			     error_local->message);
 		return NULL;
 	}
-	return as_node_to_xml (n->children, AS_NODE_TO_XML_FLAG_INCLUDE_SIBLINGS);
-#endif
+	tmp = xb_node_export (n, XB_NODE_EXPORT_FLAG_NONE, error);
+	if (tmp == NULL)
+		return NULL;
+	return g_string_new (tmp);
 }
 
 static gchar *
@@ -248,9 +206,13 @@ fu_config_add_remotes_for_path (FuConfig *self, const gchar *path, GError **erro
 		if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_DOWNLOAD) {
 			g_autoptr(GString) agreement_markup = NULL;
 			g_autofree gchar *component_id = fu_config_build_remote_component_id (remote);
-			AsApp *app = as_store_get_app_by_id (self->store_remotes, component_id);
-			if (app != NULL) {
-				agreement_markup = fu_config_get_remote_agreement_for_app (remote, app, error);
+			g_autoptr(XbNode) component = NULL;
+			g_autofree gchar *xpath = NULL;
+
+			xpath = g_strdup_printf ("components/component/id[text()='%s']/..", component_id);
+			component = xb_silo_query_first (self->silo, xpath, NULL);
+			if (component != NULL) {
+				agreement_markup = fu_config_get_remote_agreement_for_app (remote, component, error);
 			} else {
 				agreement_markup = fu_config_get_remote_agreement_default (remote, error);
 			}
@@ -453,13 +415,48 @@ fu_config_load_from_file (FuConfig *self, const gchar *config_file,
 	return TRUE;
 }
 
+static gboolean
+fu_config_load_metainfos (XbBuilder *builder, GError **error)
+{
+	const gchar *fn;
+	g_autofree gchar *datadir = NULL;
+	g_autofree gchar *metainfo_path = NULL;
+	g_autoptr(GDir) dir = NULL;
+
+	/* pkg metainfo dir */
+	datadir = fu_common_get_path (FU_PATH_KIND_DATADIR_PKG);
+	metainfo_path = g_build_filename (datadir, "metainfo", NULL);
+	if (!g_file_test (metainfo_path, G_FILE_TEST_EXISTS))
+		return TRUE;
+
+	g_debug ("loading %s", metainfo_path);
+	dir = g_dir_open (metainfo_path, 0, error);
+	if (dir == NULL)
+		return FALSE;
+	while ((fn = g_dir_read_name (dir)) != NULL) {
+		if (g_str_has_suffix (fn, ".metainfo.xml")) {
+			g_autofree gchar *filename = g_build_filename (metainfo_path, fn, NULL);
+			g_autoptr(GFile) file = g_file_new_for_path (filename);
+			g_autoptr(XbBuilderSource) source = xb_builder_source_new ();
+			if (!xb_builder_source_load_file (source, file,
+							  XB_BUILDER_SOURCE_FLAG_NONE,
+							  NULL, error))
+				return FALSE;
+			xb_builder_import_source (builder, source);
+		}
+	}
+	return TRUE;
+}
+
 gboolean
 fu_config_load (FuConfig *self, GError **error)
 {
-	g_autofree gchar *datadir = NULL;
 	g_autofree gchar *configdir = NULL;
-	g_autofree gchar *metainfo_path = NULL;
 	g_autofree gchar *config_file = NULL;
+	g_autofree gchar *cachedirpkg = NULL;
+	g_autofree gchar *xmlbfn = NULL;
+	g_autoptr(GFile) xmlb = NULL;
+	g_autoptr(XbBuilder) builder = xb_builder_new ();
 
 	g_return_val_if_fail (FU_IS_CONFIG (self), FALSE);
 
@@ -477,16 +474,18 @@ fu_config_load (FuConfig *self, GError **error)
 	self->os_release = fwupd_get_os_release (error);
 	if (self->os_release == NULL)
 		return FALSE;
-	as_store_add_filter (self->store_remotes, AS_APP_KIND_SOURCE);
-	datadir = fu_common_get_path (FU_PATH_KIND_DATADIR_PKG);
-	metainfo_path = g_build_filename (datadir, "metainfo", NULL);
-	if (g_file_test (metainfo_path, G_FILE_TEST_EXISTS)) {
-		if (!as_store_load_path (self->store_remotes,
-					 metainfo_path,
-					 NULL, /* cancellable */
-					 error))
-			return FALSE;
-	}
+	if (!fu_config_load_metainfos (builder, error))
+		return FALSE;
+
+	/* build the metainfo silo */
+	cachedirpkg = fu_common_get_path (FU_PATH_KIND_CACHEDIR_PKG);
+	xmlbfn = g_build_filename (cachedirpkg, "metainfo.xmlb", NULL);
+	xmlb = g_file_new_for_path (xmlbfn);
+	self->silo = xb_builder_ensure (builder, xmlb,
+					XB_BUILDER_COMPILE_FLAG_IGNORE_INVALID,
+					NULL, error);
+	if (self->silo == NULL)
+		return FALSE;
 
 	/* load remotes */
 	if (!fu_config_load_remotes (self, error))
@@ -547,7 +546,6 @@ fu_config_init (FuConfig *self)
 	self->blacklist_plugins = g_ptr_array_new_with_free_func (g_free);
 	self->remotes = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	self->monitors = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	self->store_remotes = as_store_new ();
 }
 
 static void
@@ -557,12 +555,13 @@ fu_config_finalize (GObject *obj)
 
 	if (self->os_release != NULL)
 		g_hash_table_unref (self->os_release);
+	if (self->silo != NULL)
+		g_object_unref (self->silo);
 	g_key_file_unref (self->keyfile);
 	g_ptr_array_unref (self->blacklist_devices);
 	g_ptr_array_unref (self->blacklist_plugins);
 	g_ptr_array_unref (self->remotes);
 	g_ptr_array_unref (self->monitors);
-	g_object_unref (self->store_remotes);
 
 	G_OBJECT_CLASS (fu_config_parent_class)->finalize (obj);
 }

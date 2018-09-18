@@ -1,5 +1,4 @@
 %global glib2_version 2.45.8
-%global libappstream_version 0.7.4
 %global libgusb_version 0.2.11
 %global libsoup_version 2.51.92
 %global systemd_version 231
@@ -36,7 +35,6 @@ Source0:   http://people.freedesktop.org/~hughsient/releases/%{name}-%{version}.
 
 BuildRequires: gettext
 BuildRequires: glib2-devel >= %{glib2_version}
-BuildRequires: libappstream-glib-devel >= %{libappstream_version}
 BuildRequires: libgcab1-devel
 BuildRequires: libgudev1-devel
 BuildRequires: libgusb-devel >= %{libgusb_version}
@@ -89,10 +87,10 @@ Requires(preun): systemd
 Requires(postun): systemd
 
 Requires: glib2%{?_isa} >= %{glib2_version}
-Requires: libappstream-glib%{?_isa} >= %{libappstream_version}
 Requires: libgusb%{?_isa} >= %{libgusb_version}
 Requires: libsoup%{?_isa} >= %{libsoup_version}
 Requires: bubblewrap
+Requires: shared-mime-info
 
 Recommends: python3
 

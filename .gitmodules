@@ -1,0 +1,3 @@
+[submodule "libxmlb"]
+	path = libxmlb
+	url = https://github.com/hughsie/libxmlb.git

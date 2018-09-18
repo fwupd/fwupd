@@ -48,6 +48,8 @@ lt_revision = '0'
 lt_age = '0'
 lt_version = '@0@.@1@.@2@'.format(lt_current, lt_age, lt_revision)
 
+configinc = include_directories('.')
+
 # get suported warning flags
 warning_flags = [
   '-fstack-protector-strong',
@@ -159,7 +161,6 @@ gudev = dependency('gudev-1.0')
 if gudev.version().version_compare('>= 232')
   conf.set('HAVE_GUDEV_232', '1')
 endif
-appstream_glib = dependency('appstream-glib', version : '>= 0.7.4')
 gusb = dependency('gusb', version : '>= 0.2.9')
 sqlite = dependency('sqlite3')
 libarchive = dependency('libarchive')
@@ -316,7 +317,6 @@ if default_sysconfdir == 'etc'
 endif
 
 plugin_deps = []
-plugin_deps += appstream_glib
 plugin_deps += gio
 plugin_deps += giounix
 plugin_deps += gmodule
@@ -331,6 +331,7 @@ if get_option('gtkdoc')
   subdir('docs')
 endif
 subdir('libfwupd')
+subdir('libxmlb/src')
 subdir('po')
 if get_option('daemon')
   subdir('policy')
