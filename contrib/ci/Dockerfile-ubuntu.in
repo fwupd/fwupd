@@ -7,4 +7,5 @@ RUN echo fubar > /etc/machine-id
 RUN mkdir /build
 WORKDIR /build
 COPY . .
+RUN ["./contrib/ci/libxmlb.sh"]
 CMD ["./contrib/ci/ubuntu.sh"]

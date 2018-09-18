@@ -8,7 +8,7 @@
 #define __FU_INSTALL_TASK_H
 
 #include <glib-object.h>
-#include <appstream-glib.h>
+#include <xmlb.h>
 
 #include "fu-device.h"
 
@@ -18,9 +18,9 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (FuInstallTask, fu_install_task, FU, INSTALL_TASK, GObject)
 
 FuInstallTask	*fu_install_task_new			(FuDevice	*device,
-							 AsApp		*app);
+							 XbNode		*component);
 FuDevice	*fu_install_task_get_device		(FuInstallTask	*self);
-AsApp		*fu_install_task_get_app		(FuInstallTask	*self);
+XbNode		*fu_install_task_get_component		(FuInstallTask	*self);
 FwupdTrustFlags	 fu_install_task_get_trust_flags	(FuInstallTask	*self);
 gboolean	 fu_install_task_get_is_downgrade	(FuInstallTask	*self);
 gboolean	 fu_install_task_check_requirements	(FuInstallTask	*self,

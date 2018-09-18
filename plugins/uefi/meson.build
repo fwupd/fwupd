@@ -48,7 +48,7 @@ executable(
     include_directories('../../libfwupd'),
   ],
   dependencies : [
-    appstream_glib,
+    libxmlb,
     giounix,
     gusb,
     gudev,

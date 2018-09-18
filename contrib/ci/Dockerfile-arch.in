@@ -10,4 +10,5 @@ RUN pacman -Syu --noconfirm archlinux-keyring
 RUN mkdir /build
 WORKDIR /build
 COPY . .
+RUN ["./contrib/ci/libxmlb.sh"]
 CMD ["./contrib/ci/arch.sh"]

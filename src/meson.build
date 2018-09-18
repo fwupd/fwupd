@@ -47,13 +47,13 @@ libfwupdprivate = static_library(
     include_directories('../libfwupd'),
   ],
   dependencies : [
-    appstream_glib,
     giounix,
     gudev,
     gusb,
     soup,
     sqlite,
     libarchive,
+    libxmlb,
     valgrind,
     uuid,
   ],
@@ -74,7 +74,7 @@ fwupdmgr = executable(
     include_directories('../libfwupd'),
   ],
   dependencies : [
-    appstream_glib,
+    libxmlb,
     giounix,
     gudev,
     gusb,
@@ -140,7 +140,7 @@ fwupdtool = executable(
   ],
   dependencies : [
     keyring_deps,
-    appstream_glib,
+    libxmlb,
     libgcab,
     giounix,
     gmodule,
@@ -220,7 +220,7 @@ executable(
   ],
   dependencies : [
     keyring_deps,
-    appstream_glib,
+    libxmlb,
     libgcab,
     giounix,
     gmodule,
@@ -290,7 +290,7 @@ if get_option('tests')
     ],
     dependencies : [
       keyring_deps,
-      appstream_glib,
+      libxmlb,
       libgcab,
       giounix,
       gmodule,
@@ -350,7 +350,7 @@ if get_option('introspection')
       include_directories('../libfwupd'),
     ],
     dependencies : [
-      appstream_glib,
+      libxmlb,
       gir_dep,
       giounix,
       gusb,

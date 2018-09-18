@@ -200,6 +200,27 @@
       ]
     },
     {
+      "name": "libxmlb",
+      "buildsystem": "meson",
+      "config-opts": [
+        "-Dintrospection=false",
+        "-Dgtkdoc=false",
+        "-Dtests=false",
+        "--sysconfdir=/app/etc",
+        "--localstatedir=/var/data"
+      ],
+      "cleanup": [
+        "/libexec/xb-tool"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://people.freedesktop.org/~hughsient/releases/libxmlb-0.1.2.tar.xz",
+          "sha256": "20a734895830ae2af82a270b61e4832c6012b1aaf2003e1300d743dbd6aa95cf"
+        }
+      ]
+    },
+    {
       "name": "fwupd",
       "buildsystem": "meson",
       "config-opts": [

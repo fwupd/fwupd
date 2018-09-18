@@ -26,7 +26,6 @@ dfu = static_library(
     'dfu-target-avr.c',
   ],
   dependencies : [
-    appstream_glib,
     giounix,
     libm,
     gusb,
@@ -72,7 +71,7 @@ dfu_tool = executable(
     include_directories('../../libfwupd'),
   ],
   dependencies : [
-    appstream_glib,
+    libxmlb,
     giounix,
     libm,
     gusb,
@@ -123,7 +122,7 @@ if get_option('tests')
       include_directories('../../src'),
     ],
     dependencies : [
-      appstream_glib,
+      libxmlb,
       gio,
       gusb,
       gudev,

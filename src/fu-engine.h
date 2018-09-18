@@ -9,7 +9,7 @@
 
 G_BEGIN_DECLS
 
-#include <appstream-glib.h>
+#include <xmlb.h>
 #include <glib-object.h>
 
 #include "fwupd-device.h"
@@ -30,7 +30,7 @@ gboolean	 fu_engine_load				(FuEngine	*self,
 gboolean	 fu_engine_load_plugins			(FuEngine	*self,
 							 GError		**error);
 FwupdStatus	 fu_engine_get_status			(FuEngine	*self);
-AsStore		*fu_engine_get_store_from_blob		(FuEngine	*self,
+XbSilo		*fu_engine_get_silo_from_blob		(FuEngine	*self,
 							 GBytes		*blob_cab,
 							 GError		**error);
 guint64		 fu_engine_get_archive_size_max		(FuEngine	*self);
@@ -122,10 +122,8 @@ gboolean	 fu_engine_check_requirements		(FuEngine	*self,
 							 FuInstallTask	*task,
 							 FwupdInstallFlags flags,
 							 GError		**error);
-gboolean	 fu_engine_load_metadata_from_file	(FuEngine	*self,
-							 const gchar	*path,
-							 const gchar	*remote_id,
-							 GError		**error);
+void		 fu_engine_set_silo			(FuEngine	*self,
+							 XbSilo		*silo);
 
 G_END_DECLS
 
