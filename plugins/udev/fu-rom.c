@@ -715,14 +715,10 @@ fu_rom_load_file (FuRom *self, GFile *file, FuRomLoadFlags flags,
 	g_autofree gchar *fn = NULL;
 	g_autofree guint8 *buffer = NULL;
 	g_autoptr(GFileOutputStream) output_stream = NULL;
-	g_autoptr(AsProfile) profile = as_profile_new ();
-	g_autoptr(AsProfileTask) ptask = NULL;
 
 	g_return_val_if_fail (FU_IS_ROM (self), FALSE);
 
 	/* open file */
-	ptask = as_profile_start_literal (profile, "FuRom:reading-data");
-	g_assert (ptask != NULL);
 	self->stream = G_INPUT_STREAM (g_file_read (file, cancellable, &error_local));
 	if (self->stream == NULL) {
 		g_set_error_literal (error,

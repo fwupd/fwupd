@@ -30,7 +30,6 @@ gboolean	 fu_engine_load				(FuEngine	*self,
 gboolean	 fu_engine_load_plugins			(FuEngine	*self,
 							 GError		**error);
 FwupdStatus	 fu_engine_get_status			(FuEngine	*self);
-void		 fu_engine_profile_dump			(FuEngine	*self);
 AsStore		*fu_engine_get_store_from_blob		(FuEngine	*self,
 							 GBytes		*blob_cab,
 							 GError		**error);

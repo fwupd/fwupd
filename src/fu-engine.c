@@ -56,7 +56,6 @@ struct _FuEngine
 	FwupdStatus		 status;
 	guint			 percentage;
 	FuHistory		*history;
-	AsProfile		*profile;
 	AsStore			*store;
 	gboolean		 coldplug_running;
 	guint			 coldplug_id;
@@ -111,20 +110,6 @@ fu_engine_get_status (FuEngine *self)
 {
 	g_return_val_if_fail (FU_IS_ENGINE (self), 0);
 	return self->status;
-}
-
-/**
- * fu_engine_profile_dump:
- * @self: A #FuEngine
- *
- * Dumps the engine profiling state to the console.
- **/
-void
-fu_engine_profile_dump (FuEngine *self)
-{
-	g_return_if_fail (FU_IS_ENGINE (self));
-	as_profile_set_duration_min (self->profile, 1);
-	as_profile_dump (self->profile);
 }
 
 static void
@@ -2758,20 +2743,10 @@ fu_engine_get_results (FuEngine *self, const gchar *device_id, GError **error)
 static void
 fu_engine_plugins_setup (FuEngine *self)
 {
-	GPtrArray *plugins;
-	g_autoptr(AsProfileTask) ptask = NULL;
-
-	ptask = as_profile_start_literal (self->profile, "FuEngine:setup");
-	g_assert (ptask != NULL);
-	plugins = fu_plugin_list_get_all (self->plugin_list);
+	GPtrArray *plugins = fu_plugin_list_get_all (self->plugin_list);
 	for (guint i = 0; i < plugins->len; i++) {
 		g_autoptr(GError) error = NULL;
-		g_autoptr(AsProfileTask) ptask2 = NULL;
 		FuPlugin *plugin = g_ptr_array_index (plugins, i);
-		ptask2 = as_profile_start (self->profile,
-					   "FuEngine:setup{%s}",
-					   fu_plugin_get_name (plugin));
-		g_assert (ptask2 != NULL);
 		if (!fu_plugin_runner_startup (plugin, &error)) {
 			fu_plugin_set_enabled (plugin, FALSE);
 			g_message ("disabling plugin because: %s", error->message);
@@ -2783,7 +2758,6 @@ static void
 fu_engine_plugins_coldplug (FuEngine *self, gboolean is_recoldplug)
 {
 	GPtrArray *plugins;
-	g_autoptr(AsProfileTask) ptask = NULL;
 	g_autoptr(GString) str = g_string_new (NULL);
 
 	/* don't allow coldplug to be scheduled when in coldplug */
@@ -2805,16 +2779,9 @@ fu_engine_plugins_coldplug (FuEngine *self, gboolean is_recoldplug)
 	}
 
 	/* exec */
-	ptask = as_profile_start_literal (self->profile, "FuEngine:coldplug");
-	g_assert (ptask != NULL);
 	for (guint i = 0; i < plugins->len; i++) {
 		g_autoptr(GError) error = NULL;
-		g_autoptr(AsProfileTask) ptask2 = NULL;
 		FuPlugin *plugin = g_ptr_array_index (plugins, i);
-		ptask2 = as_profile_start (self->profile,
-					   "FuEngine:coldplug{%s}",
-					   fu_plugin_get_name (plugin));
-		g_assert (ptask2 != NULL);
 		if (is_recoldplug) {
 			if (!fu_plugin_runner_recoldplug (plugin, &error))
 				g_message ("failed recoldplug: %s", error->message);
@@ -3248,12 +3215,7 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 {
 	const gchar *fn;
 	g_autoptr(GDir) dir = NULL;
-	g_autoptr(AsProfileTask) ptask = NULL;
 	g_autofree gchar *plugin_path = NULL;
-
-	/* profile */
-	ptask = as_profile_start_literal (self->profile, "FuEngine:load-plugins");
-	g_assert (ptask != NULL);
 
 	/* search */
 	plugin_path = fu_common_get_path (FU_PATH_KIND_PLUGINDIR_PKG);
@@ -3461,12 +3423,7 @@ fu_engine_usb_device_added_cb (GUsbContext *ctx,
 static void
 fu_engine_load_quirks (FuEngine *self)
 {
-	g_autoptr(AsProfileTask) ptask = NULL;
 	g_autoptr(GError) error = NULL;
-
-	/* profile */
-	ptask = as_profile_start_literal (self->profile, "FuEngine:load-quirks");
-	g_assert (ptask != NULL);
 	if (!fu_quirks_load (self->quirks, &error))
 		g_warning ("Failed to load quirks: %s", error->message);
 }
@@ -3474,12 +3431,7 @@ fu_engine_load_quirks (FuEngine *self)
 static void
 fu_engine_load_smbios (FuEngine *self)
 {
-	g_autoptr(AsProfileTask) ptask = NULL;
 	g_autoptr(GError) error = NULL;
-
-	/* profile */
-	ptask = as_profile_start_literal (self->profile, "FuEngine:load-smbios");
-	g_assert (ptask != NULL);
 	if (!fu_smbios_setup (self->smbios, &error))
 		g_warning ("Failed to load SMBIOS: %s", error->message);
 }
@@ -3487,12 +3439,7 @@ fu_engine_load_smbios (FuEngine *self)
 static void
 fu_engine_load_hwids (FuEngine *self)
 {
-	g_autoptr(AsProfileTask) ptask = NULL;
 	g_autoptr(GError) error = NULL;
-
-	/* profile */
-	ptask = as_profile_start_literal (self->profile, "FuEngine:load-hwids");
-	g_assert (ptask != NULL);
 	if (!fu_hwids_setup (self->hwids, self->smbios, &error))
 		g_warning ("Failed to load HWIDs: %s", error->message);
 }
@@ -3622,12 +3569,6 @@ fu_engine_udev_uevent_cb (GUdevClient *gudev_client,
 gboolean
 fu_engine_load (FuEngine *self, GError **error)
 {
-	g_autoptr(AsProfileTask) ptask = NULL;
-
-	/* profile */
-	ptask = as_profile_start_literal (self->profile, "FuEngine:load");
-	g_assert (ptask != NULL);
-
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
@@ -3779,7 +3720,6 @@ fu_engine_init (FuEngine *self)
 	self->quirks = fu_quirks_new ();
 	self->history = fu_history_new ();
 	self->plugin_list = fu_plugin_list_new ();
-	self->profile = as_profile_new ();
 	self->store = as_store_new ();
 	self->plugin_filter = g_ptr_array_new_with_free_func (g_free);
 	self->supported_guids = g_ptr_array_new_with_free_func (g_free);
@@ -3835,7 +3775,6 @@ fu_engine_finalize (GObject *obj)
 	g_object_unref (self->quirks);
 	g_object_unref (self->hwids);
 	g_object_unref (self->history);
-	g_object_unref (self->profile);
 	g_object_unref (self->store);
 	g_object_unref (self->device_list);
 	g_ptr_array_unref (self->supported_guids);
