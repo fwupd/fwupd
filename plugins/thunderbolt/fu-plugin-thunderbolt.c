@@ -732,7 +732,7 @@ fu_plugin_thunderbolt_wait_for_device (FuPlugin  *plugin,
 	if (!up_data.have_device) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     FWUPD_ERROR_NOT_FOUND,
 				     "timed out while waiting for device");
 		return FALSE;
 	}
@@ -861,21 +861,15 @@ fu_plugin_update (FuPlugin *plugin,
 	}
 
 	fu_device_set_status (dev, FWUPD_STATUS_DEVICE_WRITE);
-	if (!fu_plugin_thunderbolt_write_firmware (dev, udevice, blob_fw, &error_local)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_WRITE,
-			     "could not write firmware to thunderbolt device at %s: %s",
-			     devpath, error_local->message);
+	if (!fu_plugin_thunderbolt_write_firmware (dev, udevice, blob_fw, error)) {
+		g_prefix_error (error,
+				"could not write firmware to thunderbolt device at %s: ",
+				devpath);
 		return FALSE;
 	}
 
-	if (!fu_plugin_thunderbolt_trigger_update (udevice, &error_local)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Could not start thunderbolt device upgrade: %s",
-			     error_local->message);
+	if (!fu_plugin_thunderbolt_trigger_update (udevice, error)) {
+		g_prefix_error (error, "could not start thunderbolt device upgrade: ");
 		return FALSE;
 	}
 
@@ -883,19 +877,15 @@ fu_plugin_update (FuPlugin *plugin,
 
 	/* the device will disappear and we need to wait until it reappears,
 	 * and then check if we find an error */
-	if (!fu_plugin_thunderbolt_wait_for_device (plugin, dev, &error_local)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_FOUND,
-			     "could not detect device after update: %s",
-			     error_local->message);
+	if (!fu_plugin_thunderbolt_wait_for_device (plugin, dev, error)) {
+		g_prefix_error (error, "could not detect device after update: ");
 		return FALSE;
 	}
 
 	/* now check if the update actually worked */
 	status = udev_device_get_sysattr_guint64 (udevice,
 						  "nvm_authenticate",
-						  &error_local);
+						  error);
 
 	/* anything else then 0x0 means we got an error */
 	if (status != 0x0) {
