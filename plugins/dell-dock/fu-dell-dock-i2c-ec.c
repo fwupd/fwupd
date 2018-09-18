@@ -15,9 +15,9 @@
 
 #include "config.h"
 
-#include <appstream-glib.h>
 #include <string.h>
 
+#include "fu-common-version.h"
 #include "fu-usb-device.h"
 #include "fwupd-error.h"
 
@@ -369,7 +369,7 @@ fu_dell_dock_ec_get_dock_info (FuDevice *device,
 	}
 
 	/* minimum EC version this code will support */
-	if (as_utils_vercmp (self->ec_version, self->ec_minimum_version) < 0) {
+	if (fu_common_vercmp (self->ec_version, self->ec_minimum_version) < 0) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
 			     "dock containing EC version %s is not supported",
 			     self->ec_version);
@@ -533,7 +533,7 @@ fu_dell_dock_ec_reboot_dock (FuDevice *device, GError **error)
 	}
 
 	/* TODO: Drop when bumping minimum EC version to 13+ */
-	if (as_utils_vercmp (self->ec_version, "00.00.00.13") < 0)
+	if (fu_common_vercmp (self->ec_version, "00.00.00.13") < 0)
 		g_print ("\nEC Reboot API may fail on EC %s.  Please manually power cycle dock.\n",
 			   self->ec_version);
 	g_debug ("Rebooting %s", fu_device_get_name (device));
@@ -618,7 +618,7 @@ fu_dell_dock_ec_commit_package (FuDevice *device, GBytes *blob_fw,
 	g_debug ("\tpkg_version: %x", self->raw_versions->pkg_version);
 
 	/* TODO: Drop when updating minimum EC to 11+ */
-	if (as_utils_vercmp (self->ec_version, "00.00.00.11") < 0) {
+	if (fu_common_vercmp (self->ec_version, "00.00.00.11") < 0) {
 		g_debug ("EC %s doesn't support package version, ignoring",
 			 self->ec_version);
 		return TRUE;

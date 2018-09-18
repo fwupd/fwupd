@@ -16,6 +16,8 @@ meson .. \
 	-Dplugin_redfish=false \
 	-Dintrospection=false \
 	-Dgtkdoc=false \
+	-Dlibxmlb:introspection=false \
+	-Dlibxmlb:gtkdoc=false \
 	-Dman=false
 ninja -v
 ninja test -v

@@ -15,8 +15,6 @@
 
 #include "config.h"
 
-#include <appstream-glib.h>
-
 #include "fu-usb-device.h"
 #include "fwupd-error.h"
 

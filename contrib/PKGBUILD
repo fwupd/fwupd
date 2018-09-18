@@ -8,7 +8,7 @@ pkgdesc='A simple daemon to allow session software to update firmware'
 arch=('i686' 'x86_64')
 url='https://github.com/hughsie/fwupd'
 license=('GPL2')
-depends=('appstream-glib' 'libgusb')
+depends=('libgusb')
 makedepends=('meson' 'valgrind' 'gobject-introspection' 'gtk-doc' 'python-pillow' 'git'
              'python-cairo' 'noto-fonts' 'noto-fonts-cjk' 'python-gobject' 'vala'
              'libsoup' 'polkit' 'gcab')
@@ -16,7 +16,7 @@ makedepends=('meson' 'valgrind' 'gobject-introspection' 'gtk-doc' 'python-pillow
 build() {
     cd ${pkgname}
     if [ -n "$CI" ]; then
-        export CI="--werror"
+        export CI="--werror --wrap-mode=forcefallback"
     fi
     arch-meson -D b_lto=false $CI ../build
 

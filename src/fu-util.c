@@ -9,7 +9,7 @@
 #include "config.h"
 
 #include <fwupd.h>
-#include <appstream-glib.h>
+#include <xmlb.h>
 #include <fcntl.h>
 #include <glib/gstdio.h>
 #include <gio/gio.h>
@@ -435,6 +435,60 @@ fu_util_perhaps_show_unreported (FuUtilPrivate *priv, GError **error)
 	return fu_util_report_history (priv, NULL, error);
 }
 
+static gchar *
+fu_util_convert_appstream_description (const gchar *xml, GError **error)
+{
+	g_autoptr(GString) str = g_string_new (NULL);
+	g_autoptr(XbNode) n = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+
+	/* parse XML */
+	silo = xb_silo_new_from_xml (xml, error);
+	if (silo == NULL)
+		return NULL;
+
+	n = xb_silo_get_root (silo);
+	while (n != NULL) {
+		g_autoptr(XbNode) n2 = NULL;
+
+		/* support <p>, <ul>, <ol> and <li>, ignore all else */
+		if (g_strcmp0 (xb_node_get_element (n), "p") == 0) {
+			g_string_append_printf (str, "%s\n\n", xb_node_get_text (n));
+		} else if (g_strcmp0 (xb_node_get_element (n), "ul") == 0) {
+			g_autoptr(GPtrArray) children = xb_node_get_children (n);
+			for (guint i = 0; i < children->len; i++) {
+				XbNode *nc = g_ptr_array_index (children, i);
+				if (g_strcmp0 (xb_node_get_element (nc), "li") == 0) {
+					g_string_append_printf (str, " • %s\n",
+								xb_node_get_text (nc));
+				}
+			}
+			g_string_append (str, "\n");
+		} else if (g_strcmp0 (xb_node_get_element (n), "ol") == 0) {
+			g_autoptr(GPtrArray) children = xb_node_get_children (n);
+			for (guint i = 0; i < children->len; i++) {
+				XbNode *nc = g_ptr_array_index (children, i);
+				if (g_strcmp0 (xb_node_get_element (nc), "li") == 0) {
+					g_string_append_printf (str, " %u. %s\n",
+								i + 1,
+								xb_node_get_text (nc));
+				}
+			}
+			g_string_append (str, "\n");
+		}
+
+		n2 = xb_node_get_next (n);
+		g_set_object (&n, n2);
+	}
+
+	/* remove extra newline */
+	if (str->len > 0)
+		g_string_truncate (str, str->len - 1);
+
+	/* success */
+	return g_string_free (g_steal_pointer (&str), FALSE);
+}
+
 static gboolean
 fu_util_modify_remote_warning (FuUtilPrivate *priv, FwupdRemote *remote, GError **error)
 {
@@ -445,7 +499,7 @@ fu_util_modify_remote_warning (FuUtilPrivate *priv, FwupdRemote *remote, GError 
 	warning_markup = fwupd_remote_get_agreement (remote);
 	if (warning_markup == NULL)
 		return TRUE;
-	warning_plain = as_markup_convert_simple (warning_markup, error);
+	warning_plain = fu_util_convert_appstream_description (warning_markup, error);
 	if (warning_plain == NULL)
 		return FALSE;
 
@@ -1480,7 +1534,7 @@ fu_util_get_releases (FuUtilPrivate *priv, gchar **values, GError **error)
 		tmp = fwupd_release_get_description (rel);
 		if (tmp != NULL) {
 			g_autofree gchar *desc = NULL;
-			desc = as_markup_convert_simple (tmp, NULL);
+			desc = fu_util_convert_appstream_description (tmp, NULL);
 			/* TRANSLATORS: section header for firmware description */
 			fu_util_print_data (_("Description"), desc);
 		}
@@ -1727,9 +1781,7 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 			tmp = fwupd_release_get_description (rel);
 			if (tmp != NULL) {
 				g_autofree gchar *md = NULL;
-				md = as_markup_convert (tmp,
-							AS_MARKUP_CONVERT_FORMAT_SIMPLE,
-							NULL);
+				md = fu_util_convert_appstream_description (tmp, NULL);
 				if (md != NULL) {
 					/* TRANSLATORS: section header for long firmware desc */
 					fu_util_print_data (_("Update Description"), md);

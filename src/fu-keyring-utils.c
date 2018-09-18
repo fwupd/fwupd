@@ -67,7 +67,7 @@ fu_keyring_create_for_kind (FwupdKeyringKind kind, GError **error)
 
 /**
  * fu_keyring_get_release_trust_flags:
- * @release: A #AsRelease, e.g. %FWUPD_KEYRING_KIND_GPG
+ * @release: A #XbNode, e.g. %FWUPD_KEYRING_KIND_GPG
  * @trust_flags: A #FwupdTrustFlags, e.g. %FWUPD_TRUST_FLAG_PAYLOAD
  * @error: A #GError, or %NULL
  *
@@ -76,16 +76,16 @@ fu_keyring_create_for_kind (FwupdKeyringKind kind, GError **error)
  * Returns: %TRUE if @trust_flags has been set
  **/
 gboolean
-fu_keyring_get_release_trust_flags (AsRelease *release,
+fu_keyring_get_release_trust_flags (XbNode *release,
 				    FwupdTrustFlags *trust_flags,
 				    GError **error)
 {
-	AsChecksum *csum_tmp;
 	FwupdKeyringKind keyring_kind = FWUPD_KEYRING_KIND_UNKNOWN;
 	GBytes *blob_payload;
 	GBytes *blob_signature;
 	const gchar *fn;
 	g_autofree gchar *pki_dir = NULL;
+	g_autofree gchar *release_key = NULL;
 	g_autofree gchar *sysconfdir = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuKeyring) kr = NULL;
@@ -100,28 +100,17 @@ fu_keyring_get_release_trust_flags (AsRelease *release,
 		{ FWUPD_KEYRING_KIND_NONE,	NULL }
 	};
 
-	/* no filename? */
-	csum_tmp = as_release_get_checksum_by_target (release, AS_CHECKSUM_TARGET_CONTENT);
-	if (csum_tmp == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "no content checksum for release");
-		return FALSE;
-	}
-	fn = as_checksum_get_filename (csum_tmp);
-	if (fn == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "no filename");
-		return FALSE;
-	}
+	/* custom filename specified */
+	fn = xb_node_query_attr (release, "checksum[@target='content']", "filename", NULL);
+	if (fn == NULL)
+		fn = "filename.bin";
 
 	/* no signature == no trust */
 	for (guint i = 0; keyrings[i].ext != NULL; i++) {
-		g_autofree gchar *fn_tmp = g_strdup_printf ("%s.%s", fn, keyrings[i].ext);
-		blob_signature = as_release_get_blob (release, fn_tmp);
+		g_autofree gchar *fn_tmp = NULL;
+		fn_tmp = g_strdup_printf ("fwupd::ReleaseBlob(%s.%s)",
+					  fn, keyrings[i].ext);
+		blob_signature = g_object_get_data (G_OBJECT (release), fn_tmp);
 		if (blob_signature != NULL) {
 			keyring_kind = keyrings[i].kind;
 			break;
@@ -133,7 +122,8 @@ fu_keyring_get_release_trust_flags (AsRelease *release,
 	}
 
 	/* get payload */
-	blob_payload = as_release_get_blob (release, fn);
+	release_key = g_strdup_printf ("fwupd::ReleaseBlob(%s)", fn);
+	blob_payload = g_object_get_data (G_OBJECT (release), release_key);
 	if (blob_payload == NULL) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,

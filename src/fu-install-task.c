@@ -19,7 +19,7 @@ struct _FuInstallTask
 {
 	GObject			 parent_instance;
 	FuDevice		*device;
-	AsApp			*app;
+	XbNode			*component;
 	FwupdTrustFlags		 trust_flags;
 	gboolean		 is_downgrade;
 };
@@ -42,18 +42,18 @@ fu_install_task_get_device (FuInstallTask *self)
 }
 
 /**
- * fu_install_task_get_app:
+ * fu_install_task_get_component:
  * @self: A #FuInstallTask
  *
  * Gets the component for this task.
  *
  * Returns: (transfer none): the component
  **/
-AsApp *
-fu_install_task_get_app (FuInstallTask *self)
+XbNode *
+fu_install_task_get_component (FuInstallTask *self)
 {
 	g_return_val_if_fail (FU_IS_INSTALL_TASK (self), NULL);
-	return self->app;
+	return self->component;
 }
 
 /**
@@ -109,25 +109,33 @@ fu_install_task_check_requirements (FuInstallTask *self,
 				    FwupdInstallFlags flags,
 				    GError **error)
 {
-	AsRelease *release;
-	GPtrArray *provides;
 	const gchar *version;
 	const gchar *version_release;
 	const gchar *version_lowest;
 	gboolean matches_guid = FALSE;
 	gint vercmp;
 	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GPtrArray) provides = NULL;
+	g_autoptr(XbNode) release = NULL;
 
 	g_return_val_if_fail (FU_IS_INSTALL_TASK (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
-	/* does this app provide a GUID the device has */
-	provides = as_app_get_provides (self->app);
+	/* does this component provide a GUID the device has */
+	provides = xb_node_query (self->component,
+				  "provides/firmware[@type='flashed']",
+				  0, &error_local);
+	if (provides == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
+			     "No supported devices found: %s",
+			     error_local->message);
+		return FALSE;
+	}
 	for (guint i = 0; i < provides->len; i++) {
-		AsProvide *provide = g_ptr_array_index (provides, i);
-		if (as_provide_get_kind (provide) != AS_PROVIDE_KIND_FIRMWARE_FLASHED)
-			continue;
-		if (fu_device_has_guid (self->device, as_provide_get_value (provide))) {
+		XbNode *provide = g_ptr_array_index (provides, i);
+		if (fu_device_has_guid (self->device, xb_node_get_text (provide))) {
 			matches_guid = TRUE;
 			break;
 		}
@@ -187,7 +195,7 @@ fu_install_task_check_requirements (FuInstallTask *self,
 	}
 
 	/* get latest release */
-	release = as_app_get_release_default (self->app);
+	release = xb_node_query_first (self->component, "releases/release", NULL);
 	if (release == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -199,7 +207,7 @@ fu_install_task_check_requirements (FuInstallTask *self,
 	}
 
 	/* is this a downgrade or re-install */
-	version_release = as_release_get_version (release);
+	version_release = xb_node_get_attr (release, "version");
 	if (version_release == NULL) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -294,7 +302,7 @@ fu_install_task_finalize (GObject *object)
 {
 	FuInstallTask *self = FU_INSTALL_TASK (object);
 
-	g_object_unref (self->app);
+	g_object_unref (self->component);
 	if (self->device != NULL)
 		g_object_unref (self->device);
 
@@ -332,18 +340,18 @@ fu_install_task_compare (FuInstallTask *task1, FuInstallTask *task2)
 /**
  * fu_install_task_new:
  * @device: A #FuDevice
- * @app: a #AsApp
+ * @component: a #XbNode
  *
  * Creates a new install task that may or may not be valid.
  *
  * Returns: (transfer full): the #FuInstallTask
  **/
 FuInstallTask *
-fu_install_task_new (FuDevice *device, AsApp *app)
+fu_install_task_new (FuDevice *device, XbNode *component)
 {
 	FuInstallTask *self;
 	self = g_object_new (FU_TYPE_TASK, NULL);
-	self->app = g_object_ref (app);
+	self->component = g_object_ref (component);
 	if (device != NULL)
 		self->device = g_object_ref (device);
 	return FU_INSTALL_TASK (self);

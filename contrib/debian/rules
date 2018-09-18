@@ -10,7 +10,8 @@ ifeq "$(DEB_HOST_ARCH_BITS)" "32"
 endif
 
 ifneq ($(CI),)
-	export CI=--werror
+	export CI=--werror --wrap-mode=forcefallback
+	export DHSLIBS=-- --ignore-missing-info
 endif
 
 SB_STYLE := debian
@@ -53,6 +54,10 @@ override_dh_install:
 		dh_install -pfwupd usr/lib/fwupd/efi ;\
 		dh_install -pfwupd usr/lib/fwupd/fwupdate; \
 	fi
+	#if build with meson subproject in CI need to install this too
+	if [ -n "$CI" ] && [ -f debian/tmp/usr/lib/xb-tool ]; then \
+		dh_install -pfwupd usr/lib/xb-tool ;\
+	fi
 	dh_missing -a --fail-missing
 
 	#this is placed in fwupd-tests
@@ -91,3 +96,6 @@ ifeq (ubuntu,$(SB_STYLE))
 		dpkg-distaddfile $(tar_name) raw-uefi - ;\
 	fi
 endif
+
+override_dh_shlibdeps:
+	dh_shlibdeps $$DHSLIBS

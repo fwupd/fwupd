@@ -11,6 +11,7 @@
 /prime
 /stage
 /snap/.snapcraft
+/libxmlb
 /*.deb
 /*.ddeb
 /*.changes

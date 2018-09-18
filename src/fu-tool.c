@@ -649,13 +649,13 @@ fu_util_download_if_required (FuUtilPrivate *priv, const gchar *perhapsfn, GErro
 static gboolean
 fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	GPtrArray *apps;
 	g_autofree gchar *filename = NULL;
-	g_autoptr(AsStore) store = NULL;
 	g_autoptr(GBytes) blob_cab = NULL;
+	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(GPtrArray) devices_possible = NULL;
 	g_autoptr(GPtrArray) errors = NULL;
 	g_autoptr(GPtrArray) install_tasks = NULL;
+	g_autoptr(XbSilo) silo = NULL;
 
 	/* load engine */
 	if (!fu_util_start_engine (priv, error))
@@ -687,22 +687,24 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 	if (filename == NULL)
 		return FALSE;
 
-	/* parse store */
+	/* parse silo */
 	blob_cab = fu_common_get_contents_bytes (filename, error);
 	if (blob_cab == NULL) {
 		fu_util_maybe_prefix_sandbox_error (filename, error);
 		return FALSE;
 	}
-	store = fu_engine_get_store_from_blob (priv->engine, blob_cab, error);
-	if (store == NULL)
+	silo = fu_engine_get_silo_from_blob (priv->engine, blob_cab, error);
+	if (silo == NULL)
 		return FALSE;
-	apps = as_store_get_apps (store);
+	components = xb_silo_query (silo, "component", 0, error);
+	if (components == NULL)
+		return FALSE;
 
-	/* for each component in the store */
+	/* for each component in the silo */
 	errors = g_ptr_array_new_with_free_func ((GDestroyNotify) g_error_free);
 	install_tasks = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	for (guint i = 0; i < apps->len; i++) {
-		AsApp *app = g_ptr_array_index (apps, i);
+	for (guint i = 0; i < components->len; i++) {
+		XbNode *component = g_ptr_array_index (components, i);
 
 		/* do any devices pass the requirements */
 		for (guint j = 0; j < devices_possible->len; j++) {
@@ -711,13 +713,13 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 			g_autoptr(GError) error_local = NULL;
 
 			/* is this component valid for the device */
-			task = fu_install_task_new (device, app);
+			task = fu_install_task_new (device, component);
 			if (!fu_engine_check_requirements (priv->engine,
 							   task, priv->flags,
 							   &error_local)) {
 				g_debug ("requirement on %s:%s failed: %s",
 					 fu_device_get_id (device),
-					 as_app_get_id (app),
+					 xb_node_query_text (component, "id", NULL),
 					 error_local->message);
 				g_ptr_array_add (errors, g_steal_pointer (&error_local));
 				continue;
