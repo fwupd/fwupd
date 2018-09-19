@@ -344,7 +344,7 @@ static gboolean
 fu_nvme_device_setup (FuDevice *device, GError **error)
 {
 	FuNvmeDevice *self = FU_NVME_DEVICE (device);
-	guint8 buf[FU_NVME_ID_CTRL_SIZE];
+	guint8 buf[FU_NVME_ID_CTRL_SIZE] = { 0x0 };
 
 	/* get and parse CNS */
 	if (!fu_nvme_device_identify_ctrl (self, buf, error)) {
