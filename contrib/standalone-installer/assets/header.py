@@ -122,12 +122,43 @@ def install_flatpak (directory, verbose, uninstall):
     app = 'org.freedesktop.fwupd'
     common = '%s/.var/app/%s' % (os.getenv ('HOME'), app)
 
-    #check existing installed
-    cmd = ['flatpak', 'info', app]
     with open(os.devnull, 'w') as devnull:
+        if not verbose:
+            output = devnull
+        else:
+            output = None
+        #look for dependencies
+        dep = 'org.gnome.Platform/x86_64/3.28'
+        repo = 'flathub'
+        repo_url = 'https://flathub.org/repo/flathub.flatpakrepo'
+        cmd = ['flatpak', 'info', dep]
         if verbose:
             print(cmd)
-        ret = subprocess.run (cmd, stdout=devnull, stderr=devnull)
+        ret = subprocess.run (cmd, stdout=output, stderr=output)
+        #not installed
+        if ret.returncode != 0:
+            #look for remotes
+            cmd = ['flatpak', 'remote-info', repo, dep]
+            if verbose:
+                print(cmd)
+            ret = subprocess.run (cmd, stdout=output, stderr=output)
+            #not enabled, enable it
+            if ret.returncode != 0:
+                cmd = ['flatpak', 'remote-add', repo, repo_url]
+                if verbose:
+                    print(cmd)
+                ret = subprocess.run (cmd, stderr=output)
+            # install dep
+            cmd = ['flatpak', 'install', repo, dep]
+            if verbose:
+                print(cmd)
+            ret = subprocess.run (cmd)
+
+        #check existing installed
+        cmd = ['flatpak', 'info', app]
+        if verbose:
+            print(cmd)
+        ret = subprocess.run (cmd, stdout=output, stderr=output)
         if ret.returncode == 0:
             cmd = ['flatpak', 'remove', app]
             if verbose:
