@@ -220,13 +220,17 @@ def run_installation (directory, verbose, uninstall):
 if __name__ == '__main__':
     args = parse_args()
     if 'extract' in args.command:
+        if args.uninstall:
+            error ("Uninstall argument doesn't make sense with command %s" % args.command)
         if args.directory is None:
             error ("No directory specified")
         if not os.path.exists (args.directory):
             print ("Creating %s" % args.directory)
             os.makedirs (args.directory)
         unzip (args.directory)
-    elif 'install' in args.command:
+    else:
+        if args.directory:
+            error ("Directory argument %s doesn't make sense with command %s" % (args.directory, args.command))
         if os.getuid() != 0:
             error ("This tool must be run as root")
         with tempfile.TemporaryDirectory (prefix='fwupd') as target:
