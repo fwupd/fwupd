@@ -352,10 +352,7 @@ amt_get_provisioning_state (mei_context *mei_cl, guint8 *state, GError **error)
 				   AMT_HOST_IF_PROVISIONING_STATE_RESPONSE, 0,
 				   5000, error);
 	if (status != AMT_STATUS_SUCCESS) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Unable to get provisioning state");
+		g_prefix_error (error, "unable to get provisioning state: ");
 		return FALSE;
 	}
 
