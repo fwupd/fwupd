@@ -125,6 +125,7 @@ fu_plugin_dell_tpm_func (void)
 					 (guint32 *) &tpm_out, 0, 0,
 					 NULL, TRUE);
 	ret = fu_plugin_dell_detect_tpm (plugin_dell, &error);
+	g_assert_true (ret);
 	g_assert_cmpint (devices->len, ==, 2);
 
 	/* make sure 2.0 is locked */
