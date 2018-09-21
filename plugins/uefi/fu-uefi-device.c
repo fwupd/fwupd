@@ -339,16 +339,16 @@ fu_uefi_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 			fu_uefi_prefix_efi_errors (error);
 			return FALSE;
 		}
-	}
 
-	/* save this header and body to the hardware */
-	datasz = sizeof(info) + dp_bufsz;
-	data = g_malloc0 (datasz);
-	memcpy (data, &info, sizeof(info));
-	memcpy (data + sizeof(info), dp_buf, dp_bufsz);
-	if (!fu_uefi_device_set_efivar (self, data, datasz, error)) {
-		fu_uefi_prefix_efi_errors (error);
-		return FALSE;
+		/* save this header and body to the hardware */
+		datasz = sizeof(info) + dp_bufsz;
+		data = g_malloc0 (datasz);
+		memcpy (data, &info, sizeof(info));
+		memcpy (data + sizeof(info), dp_buf, dp_bufsz);
+		if (!fu_uefi_device_set_efivar (self, data, datasz, error)) {
+			fu_uefi_prefix_efi_errors (error);
+			return FALSE;
+		}
 	}
 
 	/* update the firmware before the bootloader runs */
