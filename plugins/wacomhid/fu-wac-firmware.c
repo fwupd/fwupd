@@ -181,6 +181,14 @@ fu_wac_firmware_parse_data (DfuFirmware *firmware,
 			}
 			hdr = g_ptr_array_index (header_infos, images_cnt);
 
+			if (image_buffer == NULL) {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "%s with missing image buffer", cmd);
+				return FALSE;
+			}
+
 			/* parse SREC file and add as image */
 			blob = g_bytes_new (image_buffer->str, image_buffer->len);
 			if (!dfu_image_from_srec (image, blob, hdr->addr, flags, error))

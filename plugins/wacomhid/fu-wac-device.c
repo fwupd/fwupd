@@ -235,13 +235,14 @@ static gboolean
 fu_wac_device_ensure_flash_descriptors (FuWacDevice *self, GError **error)
 {
 	gsize sz = (self->nr_flash_blocks * 10) + 1;
-	g_autofree guint8 *buf = g_malloc (sz);
+	g_autofree guint8 *buf = NULL;
 
 	/* already done */
 	if (self->flash_descriptors->len > 0)
 		return TRUE;
 
 	/* hit hardware */
+	buf = g_malloc (sz);
 	memset (buf, 0xff, sz);
 	buf[0] = FU_WAC_REPORT_ID_GET_FLASH_DESCRIPTOR;
 	if (!fu_wac_device_get_feature_report (self, buf, sz,
@@ -363,7 +364,7 @@ fu_wac_device_write_block (FuWacDevice *self,
 	const guint8 *tmp;
 	gsize bufsz = self->write_block_sz + 5;
 	gsize sz = 0;
-	g_autofree guint8 *buf = g_malloc (bufsz);
+	g_autofree guint8 *buf = NULL;
 
 	/* check size */
 	tmp = g_bytes_get_data (blob, &sz);
@@ -377,6 +378,7 @@ fu_wac_device_write_block (FuWacDevice *self,
 	}
 
 	/* build packet */
+	buf = g_malloc (bufsz);
 	memset (buf, 0xff, bufsz);
 	buf[0] = FU_WAC_REPORT_ID_WRITE_BLOCK;
 	fu_common_write_uint32 (buf + 1, addr, G_LITTLE_ENDIAN);
