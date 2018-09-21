@@ -395,8 +395,13 @@ fu_plugin_amt_create_device (GError **error)
 				   AMT_HOST_IF_CODE_VERSIONS_RESPONSE, 0,
 				   5000,
 				   error);
-	if (status != AMT_STATUS_SUCCESS)
+	if (status != AMT_STATUS_SUCCESS) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Failed to check version");
 		return NULL;
+	}
 	status = amt_verify_code_versions (response);
 	if (status == AMT_STATUS_HOST_IF_EMPTY_RESPONSE) {
 		g_set_error (error,
