@@ -325,6 +325,22 @@ fu_device_list_device_delayed_remove_cb (gpointer user_data)
 	return G_SOURCE_REMOVE;
 }
 
+static void
+fu_device_list_remove_with_delay (FuDeviceItem *item)
+{
+	/* we can't do anything with an unconnected device */
+	fu_device_remove_flag (item->device, FWUPD_DEVICE_FLAG_UPDATABLE);
+
+	/* give the hardware time to re-enumerate or the user time to
+	 * re-insert the device with a magic button pressed */
+	g_debug ("waiting %ums for %s device removal",
+		 fu_device_get_remove_delay (item->device),
+		 fu_device_get_name (item->device));
+	item->remove_id = g_timeout_add (fu_device_get_remove_delay (item->device),
+					 fu_device_list_device_delayed_remove_cb,
+					 item);
+}
+
 /**
  * fu_device_list_remove:
  * @self: A #FuDeviceList
@@ -363,22 +379,6 @@ fu_device_list_remove (FuDeviceList *self, FuDevice *device)
 		item->remove_id = 0;
 	}
 
-	/* delay the removal and check for replug */
-	if (fu_device_get_remove_delay (item->device) > 0) {
-
-		/* we can't do anything with an unconnected device */
-		fu_device_remove_flag (item->device, FWUPD_DEVICE_FLAG_UPDATABLE);
-
-		/* give the hardware time to re-enumerate or the user time to
-		 * re-insert the device with a magic button pressed */
-		g_debug ("waiting %ums for device removal",
-			 fu_device_get_remove_delay (item->device));
-		item->remove_id = g_timeout_add (fu_device_get_remove_delay (item->device),
-						 fu_device_list_device_delayed_remove_cb,
-						 item);
-		return;
-	}
-
 	/* remove any children associated with device */
 	children = fu_device_get_children (device);
 	for (guint j = 0; j < children->len; j++) {
@@ -390,10 +390,20 @@ fu_device_list_remove (FuDeviceList *self, FuDevice *device)
 			g_debug ("device %s not found", fu_device_get_id (child));
 			continue;
 		}
+		if (fu_device_get_remove_delay (child_item->device) > 0) {
+			fu_device_list_remove_with_delay (child_item);
+			continue;
+		}
 		fu_device_list_emit_device_removed (self, child);
 		fu_mutex_write_lock (self->devices_mutex);
 		g_ptr_array_remove (self->devices, child_item);
 		fu_mutex_write_unlock (self->devices_mutex);
+	}
+
+	/* delay the removal and check for replug */
+	if (fu_device_get_remove_delay (item->device) > 0) {
+		fu_device_list_remove_with_delay (item);
+		return;
 	}
 
 	/* remove right now */
