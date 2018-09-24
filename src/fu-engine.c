@@ -1421,6 +1421,22 @@ fu_engine_install_blob (FuEngine *self,
 	/* save the chosen device ID in case the device goes away */
 	device_id_orig = g_strdup (fu_device_get_id (device));
 
+	/* in case another device caused us to go into replug before starting */
+	device = fu_device_list_get_by_id (self->device_list, device_id_orig, error);
+	if (device == NULL) {
+		g_prefix_error (error, "failed to get device ID after detach: ");
+		return FALSE;
+	}
+	if (!fu_device_list_wait_for_replug (self->device_list, device, error)) {
+		g_prefix_error (error, "failed to wait for detach replug: ");
+		return FALSE;
+	}
+	device = fu_device_list_get_by_id (self->device_list, device_id_orig, error);
+	if (device == NULL) {
+		g_prefix_error (error, "failed to get device ID after detach replug: ");
+		return FALSE;
+	}
+
 	/* mark this as modified even if we actually fail to do the update */
 	fu_device_set_modified (device, (guint64) g_get_real_time () / G_USEC_PER_SEC);
 
