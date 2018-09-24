@@ -386,7 +386,7 @@ fu_device_list_remove (FuDeviceList *self, FuDevice *device)
 		FuDeviceItem *child_item = fu_device_list_find_by_id (self,
 								      fu_device_get_id (child),
 								      NULL);
-		if (item == NULL) {
+		if (child_item == NULL) {
 			g_debug ("device %s not found", fu_device_get_id (child));
 			continue;
 		}
