@@ -2186,15 +2186,15 @@ main (int argc, char *argv[])
 	g_autoptr(GOptionContext) context = NULL;
 	const GOptionEntry options[] = {
 		{ "version", '\0', 0, G_OPTION_ARG_NONE, &version,
-			"Print the version number", NULL },
+			_("Print the version number"), NULL },
 		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
-			"Print verbose debug statements", NULL },
+			_("Print verbose debug statements"), NULL },
 		{ "device", 'd', 0, G_OPTION_ARG_STRING, &priv->device_vid_pid,
-			"Specify Vendor/Product ID(s) of DFU device", "VID:PID" },
+			_("Specify Vendor/Product ID(s) of DFU device"), "VID:PID" },
 		{ "transfer-size", 't', 0, G_OPTION_ARG_STRING, &priv->transfer_size,
-			"Specify the number of bytes per USB transfer", "BYTES" },
+			_("Specify the number of bytes per USB transfer"), "BYTES" },
 		{ "force", '\0', 0, G_OPTION_ARG_NONE, &priv->force,
-			"Force the action ignoring all warnings", NULL },
+			_("Force the action ignoring all warnings"), NULL },
 		{ NULL}
 	};
 
