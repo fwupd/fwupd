@@ -670,6 +670,10 @@ fu_device_set_quirk_kv (FuDevice *self,
 		fu_device_set_firmware_size_max (self, fu_common_strtoull (value));
 		return TRUE;
 	}
+	if (g_strcmp0 (key, FU_QUIRKS_INSTALL_DURATION) == 0) {
+		fu_device_set_install_duration (self, fu_common_strtoull (value));
+		return TRUE;
+	}
 	if (g_strcmp0 (key, FU_QUIRKS_CHILDREN) == 0) {
 		g_auto(GStrv) sections = g_strsplit (value, ",", -1);
 		for (guint i = 0; sections[i] != NULL; i++) {

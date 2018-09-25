@@ -66,6 +66,9 @@ void		 fwupd_device_set_version_bootloader	(FwupdDevice	*device,
 guint32		 fwupd_device_get_flashes_left		(FwupdDevice	*device);
 void		 fwupd_device_set_flashes_left		(FwupdDevice	*device,
 							 guint32	flashes_left);
+guint32		 fwupd_device_get_install_duration	(FwupdDevice	*device);
+void		 fwupd_device_set_install_duration	(FwupdDevice	*device,
+							 guint32	 duration);
 guint64		 fwupd_device_get_flags			(FwupdDevice	*device);
 void		 fwupd_device_set_flags			(FwupdDevice	*device,
 							 guint64	 flags);
