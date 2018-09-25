@@ -48,6 +48,7 @@ typedef struct {
 	gchar				*version_bootloader;
 	GPtrArray			*checksums;
 	guint32				 flashes_left;
+	guint32				 install_duration;
 	FwupdUpdateState		 update_state;
 	gchar				*update_error;
 	GPtrArray			*releases;
@@ -700,6 +701,41 @@ fwupd_device_set_flashes_left (FwupdDevice *device, guint32 flashes_left)
 }
 
 /**
+ * fwupd_device_get_install_duration:
+ * @device: A #FwupdDevice
+ *
+ * Gets the time estimate for firmware installation (in seconds)
+ *
+ * Returns: the estimated time to flash this device (or 0 if unset)
+ *
+ * Since: 1.1.3
+ **/
+guint32
+fwupd_device_get_install_duration (FwupdDevice *device)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (device), 0);
+	return priv->install_duration;
+}
+
+/**
+ * fwupd_device_set_install_duration:
+ * @device: A #FwupdDevice
+ * @estimate: The amount of time
+ *
+ * Sets the time estimate for firmware installation (in seconds)
+ *
+ * Since: 1.1.3
+ **/
+void
+fwupd_device_set_install_duration (FwupdDevice *device, guint32 duration)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	priv->install_duration = duration;
+}
+
+/**
  * fwupd_device_get_plugin:
  * @device: A #FwupdDevice
  *
@@ -917,6 +953,8 @@ fwupd_device_incorporate (FwupdDevice *self, FwupdDevice *donor)
 		fwupd_device_set_modified (self, priv_donor->modified);
 	if (priv->flashes_left == 0)
 		fwupd_device_set_flashes_left (self, priv_donor->flashes_left);
+	if (priv->install_duration == 0)
+		fwupd_device_set_install_duration (self, priv_donor->install_duration);
 	if (priv->update_state == 0)
 		fwupd_device_set_update_state (self, priv_donor->update_state);
 	if (priv->description == NULL)
@@ -1085,6 +1123,11 @@ fwupd_device_to_variant_full (FwupdDevice *device, FwupdDeviceFlags flags)
 				       FWUPD_RESULT_KEY_FLASHES_LEFT,
 				       g_variant_new_uint32 (priv->flashes_left));
 	}
+	if (priv->install_duration > 0) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_INSTALL_DURATION,
+				       g_variant_new_uint32 (priv->install_duration));
+	}
 	if (priv->update_error != NULL) {
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_UPDATE_ERROR,
@@ -1234,6 +1277,10 @@ fwupd_device_from_key_value (FwupdDevice *device, const gchar *key, GVariant *va
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_FLASHES_LEFT) == 0) {
 		fwupd_device_set_flashes_left (device, g_variant_get_uint32 (value));
+		return;
+	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_INSTALL_DURATION) == 0) {
+		fwupd_device_set_install_duration (device, g_variant_get_uint32 (value));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_ERROR) == 0) {
@@ -1493,6 +1540,7 @@ fwupd_device_to_string (FwupdDevice *device)
 			g_string_truncate (tmp, tmp->len - 1);
 		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_ICON, tmp->str);
 	}
+	fwupd_pad_kv_int (str, FWUPD_RESULT_KEY_INSTALL_DURATION, priv->install_duration);
 	fwupd_pad_kv_unx (str, FWUPD_RESULT_KEY_CREATED, priv->created);
 	fwupd_pad_kv_unx (str, FWUPD_RESULT_KEY_MODIFIED, priv->modified);
 	fwupd_pad_kv_ups (str, FWUPD_RESULT_KEY_UPDATE_STATE, priv->update_state);
