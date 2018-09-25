@@ -24,7 +24,6 @@
 #include <locale.h>
 
 #include "fu-plugin-private.h"
-#include "fu-plugin-thunderbolt.h"
 #include "fu-thunderbolt-image.h"
 #include "fu-test.h"
 
@@ -1136,12 +1135,20 @@ test_update_working (ThunderboltTest *tt, gconstpointer user_data)
 	g_assert_no_error (error);
 	g_assert_true (ret);
 
+	/* we wait until the plugin has picked up  all the
+	 * subtree changes */
+	ret = mock_tree_settle (tree, plugin);
+	g_assert_true (ret);
+
+	ret = fu_plugin_runner_update_attach (plugin, tree->fu_device, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+
 	version_after = fu_device_get_version (tree->fu_device);
 	g_debug ("version after update: %s", version_after);
 	g_assert_cmpstr (version_after, ==, "42.23");
 
-	/* we wait until the plugin has picked up  all the
-	 * subtree changes */
+	/* make sure all pending events have happened */
 	ret = mock_tree_settle (tree, plugin);
 	g_assert_true (ret);
 
@@ -1174,19 +1181,27 @@ test_update_fail (ThunderboltTest *tt, gconstpointer user_data)
 	up_ctx->result = UPDATE_FAIL_DEVICE_INTERNAL;
 
 	ret = fu_plugin_runner_update (plugin, tree->fu_device, NULL, fw_data, 0, &error);
-	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
-	g_assert_false (ret);
-
-	/* version should *not* have changed (but we get parsed version) */
-	version_after = fu_device_get_version (tree->fu_device);
-	g_debug ("version after update: %s", version_after);
-	g_assert_cmpstr (version_after, ==, tree->device->nvm_parsed_version);
+	g_assert_no_error (error);
+	g_assert_true (ret);
 
 	/* we wait until the plugin has picked up all the
 	 * subtree changes, and make sure we still receive
 	 * udev updates correctly and are in sync */
 	ret = mock_tree_settle (tree, plugin);
 	g_assert_true (ret);
+
+	ret = fu_plugin_runner_update_attach (plugin, tree->fu_device, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
+	g_assert_false (ret);
+
+	/* make sure all pending events have happened */
+	ret = mock_tree_settle (tree, plugin);
+	g_assert_true (ret);
+
+	/* version should *not* have changed (but we get parsed version) */
+	version_after = fu_device_get_version (tree->fu_device);
+	g_debug ("version after update: %s", version_after);
+	g_assert_cmpstr (version_after, ==, tree->device->nvm_parsed_version);
 
 	ret = mock_tree_all (tree, mock_tree_node_have_fu_device, NULL);
 	g_assert_true (ret);
@@ -1213,51 +1228,15 @@ test_update_fail_nowshow (ThunderboltTest *tt, gconstpointer user_data)
 	up_ctx = mock_tree_prepare_for_update (tree, plugin, "42.23", fw_data, 1000);
 	up_ctx->result = UPDATE_FAIL_DEVICE_NOSHOW;
 
-	/* lets make the plugin only wait a second for the device */
-	fu_plugin_thunderbolt_set_timeout (plugin, 1000);
-
 	ret = fu_plugin_runner_update (plugin, tree->fu_device, NULL, fw_data, 0, &error);
-	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
-	g_assert_false (ret);
-}
-
-static void
-test_update_fail_tooslow (ThunderboltTest *tt, gconstpointer user_data)
-{
-	FuPlugin *plugin = tt->plugin;
-	MockTree *tree = tt->tree;
-	GBytes *fw_data = tt->fw_data;
-	gboolean ret;
-	g_autoptr(GError) error = NULL;
-	g_autoptr(UpdateContext) up_ctx = NULL;
-
-	/* test sanity check */
-	g_assert_nonnull (tree);
-	g_assert_nonnull (fw_data);
-
-	/* simulate an update, as in test_update_working, that is also working,
-	 * but that takes longer then our timeout, i.e. set_timeout < last
-	 * param in prepare_for_update. We will report an error, but we want
-	 * to make sure that the device tree afterwards is still correct
-	 */
-	up_ctx = mock_tree_prepare_for_update (tree, plugin, "42.23", fw_data, 2000);
-	up_ctx->result = UPDATE_SUCCESS;
-
-	/* lets make the plugin only wait half a second (1/4 of update time)  */
-	fu_plugin_thunderbolt_set_timeout (plugin, 500);
-
-	ret = fu_plugin_runner_update (plugin, tree->fu_device, NULL, fw_data, 0, &error);
-	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
-	g_assert_false (ret);
-
-	/* we wait until we see all devices again */
-	ret = mock_tree_settle (tree, plugin);
+	g_assert_no_error (error);
 	g_assert_true (ret);
+
+	mock_tree_sync (tree, plugin, 500);
 
 	ret = mock_tree_all (tree, mock_tree_node_have_fu_device, NULL);
-	g_assert_true (ret);
+	g_assert_false (ret);
 }
-
 
 int
 main (int argc, char **argv)
@@ -1307,13 +1286,6 @@ main (int argc, char **argv)
 		    TEST_INIT_FULL,
 		    test_set_up,
 		    test_update_fail_nowshow,
-		    test_tear_down);
-
-	g_test_add ("/thunderbolt/update{failing-tooslow}",
-		    ThunderboltTest,
-		    TEST_INIT_FULL,
-		    test_set_up,
-		    test_update_fail_tooslow,
 		    test_tear_down);
 
 	return g_test_run ();
