@@ -70,7 +70,7 @@ struct _FuDeviceClass
  * being slow and clumsy. This should be used when the user has to do something,
  * e.g. unplug, press a magic button and then replug.
  */
-#define FU_DEVICE_REMOVE_DELAY_USER_REPLUG		20000
+#define FU_DEVICE_REMOVE_DELAY_USER_REPLUG		40000
 
 FuDevice	*fu_device_new				(void);
 
