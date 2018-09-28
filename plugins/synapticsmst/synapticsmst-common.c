@@ -470,8 +470,8 @@ synapticsmst_common_enable_remote_control (SynapticsMSTConnection *connection,
 							 UPDC_ENABLE_RC,
 							 5, 0, (guint8*)sc,
 							 &error_local)) {
-			g_warning ("Failed to enable remote control in layer %d: %s, retrying",
-				   i, error_local->message);
+			g_debug ("Failed to enable remote control in layer %d: %s, retrying",
+				 i, error_local->message);
 
 			if (!synapticsmst_common_disable_remote_control (connection_tmp, error))
 				return FALSE;
