@@ -77,9 +77,9 @@ fu_debug_handler_cb (const gchar *log_domain,
 	/* to file */
 	if (!self->console) {
 		if (tmp != NULL)
-			g_print ("%s ", tmp);
-		g_print ("%s ", domain->str);
-		g_print ("%s\n", message);
+			g_printerr ("%s ", tmp);
+		g_printerr ("%s ", domain->str);
+		g_printerr ("%s\n", message);
 		return;
 	}
 
@@ -90,16 +90,16 @@ fu_debug_handler_cb (const gchar *log_domain,
 	case G_LOG_LEVEL_WARNING:
 		/* critical in red */
 		if (tmp != NULL)
-			g_print ("%c[%dm%s ", 0x1B, 32, tmp);
-		g_print ("%s ", domain->str);
-		g_print ("%c[%dm%s\n%c[%dm", 0x1B, 31, message, 0x1B, 0);
+			g_printerr ("%c[%dm%s ", 0x1B, 32, tmp);
+		g_printerr ("%s ", domain->str);
+		g_printerr ("%c[%dm%s\n%c[%dm", 0x1B, 31, message, 0x1B, 0);
 		break;
 	default:
 		/* debug in blue */
 		if (tmp != NULL)
-			g_print ("%c[%dm%s ", 0x1B, 32, tmp);
-		g_print ("%s ", domain->str);
-		g_print ("%c[%dm%s\n%c[%dm", 0x1B, 34, message, 0x1B, 0);
+			g_printerr ("%c[%dm%s ", 0x1B, 32, tmp);
+		g_printerr ("%s ", domain->str);
+		g_printerr ("%c[%dm%s\n%c[%dm", 0x1B, 34, message, 0x1B, 0);
 		break;
 	}
 }
@@ -156,7 +156,7 @@ fu_debug_post_parse_hook (GOptionContext *context,
 	}
 
 	/* are we on an actual TTY? */
-	self->console = (isatty (fileno (stdout)) == 1);
+	self->console = (isatty (fileno (stderr)) == 1);
 	g_debug ("Verbose debugging %s (on console %i)",
 		 self->verbose ? "enabled" : "disabled", self->console);
 
