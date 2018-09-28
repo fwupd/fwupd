@@ -651,7 +651,7 @@ synapticsmst_device_update_esm (SynapticsMSTDevice *device,
 			g_set_error (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
-				     "ESM update failed after %u tries", retries_cnt);
+				     "checksum did not match after %u tries", retries_cnt);
 			return FALSE;
 		}
 	}
