@@ -1219,8 +1219,8 @@ fu_engine_install_tasks (FuEngine *self,
 						       fu_device_get_id (device),
 						       &error_local);
 		if (device_new == NULL) {
-			g_warning ("failed to find new device: %s",
-				   error_local->message);
+			g_debug ("failed to find new device: %s",
+				 error_local->message);
 			continue;
 		}
 		g_ptr_array_add (devices_new, g_steal_pointer (&device_new));
