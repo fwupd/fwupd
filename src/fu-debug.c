@@ -34,13 +34,22 @@ fu_debug_ignore_cb (const gchar *log_domain,
 		    const gchar *message,
 		    gpointer user_data)
 {
-	/* syslog */
+	FuDebug *self = (FuDebug *) user_data;
+
 	switch (log_level) {
 	case G_LOG_LEVEL_INFO:
+		g_print ("%s\n", message);
+		break;
 	case G_LOG_LEVEL_CRITICAL:
 	case G_LOG_LEVEL_ERROR:
 	case G_LOG_LEVEL_WARNING:
-		g_print ("%s\n", message);
+		/* syslog */
+		if (!self->console) {
+			g_printerr ("%s\n", message);
+			break;
+		}
+		/* critical in red */
+		g_printerr ("%c[%dm%s\n%c[%dm", 0x1B, 31, message, 0x1B, 0);
 		break;
 	default:
 		break;
