@@ -823,6 +823,42 @@ fu_engine_check_requirement_firmware (FuEngine *self, AsRequire *req,
 		return TRUE;
 	}
 
+	/* another device */
+	if (as_utils_guid_is_valid (as_require_get_value (req))) {
+		const gchar *guid = as_require_get_value (req);
+		const gchar *version;
+		g_autoptr(FuDevice) device2 = NULL;
+
+		/* find if the other device exists */
+		device2 = fu_device_list_get_by_guid (self->device_list, guid, error);
+		if (device2 == NULL)
+			return FALSE;
+
+		/* get the version of the other device */
+		version = fu_device_get_version (device2);
+		if (!as_require_version_compare (req, version, &error_local)) {
+			if (as_require_get_compare (req) == AS_REQUIRE_COMPARE_GE) {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "Not compatible with %s version %s, requires >= %s",
+					     fu_device_get_name (device2),
+					     version,
+					     as_require_get_version (req));
+			} else {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "Not compatible with %s: %s",
+					     fu_device_get_name (device2),
+					     error_local->message);
+			}
+			return FALSE;
+		}
+		return TRUE;
+
+	}
+
 	/* not supported */
 	g_set_error (error,
 		     FWUPD_ERROR,
