@@ -28,6 +28,7 @@ struct _FuNvmeDevice {
 	gchar			*version_format;
 	guint			 pci_depth;
 	gint			 fd;
+	guint64			 write_block_size;
 };
 
 G_DEFINE_TYPE (FuNvmeDevice, fu_nvme_device, FU_TYPE_UDEV_DEVICE)
@@ -375,12 +376,14 @@ fu_nvme_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 {
 	FuNvmeDevice *self = FU_NVME_DEVICE (device);
 	g_autoptr(GPtrArray) chunks = NULL;
+	guint64 block_size = self->write_block_size > 0 ?
+			     self->write_block_size : 0x1000;
 
 	/* build packets */
 	chunks = fu_chunk_array_new_from_bytes (fw,
-						0x00,	/* start_addr */
-						0x00,	/* page_sz */
-						0x1000);/* block size */
+						0x00,		/* start_addr */
+						0x00,		/* page_sz */
+						block_size);	/* block size */
 
 	/* write each block */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
@@ -423,6 +426,11 @@ fu_nvme_device_set_quirk_kv (FuDevice *device,
 		self->version_format = g_strdup (value);
 		return TRUE;
 	}
+	if (g_strcmp0 (key, "NvmeBlockSize") == 0) {
+		self->write_block_size = fu_common_strtoull (value);
+		return TRUE;
+	}
+
 	g_set_error_literal (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_NOT_SUPPORTED,
