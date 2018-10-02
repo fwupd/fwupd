@@ -187,6 +187,62 @@ fu_engine_requirements_device_func (void)
 }
 
 static void
+fu_engine_requirements_other_device_func (void)
+{
+	gboolean ret;
+	g_autoptr(AsApp) app = as_app_new ();
+	g_autoptr(AsChecksum) csum = as_checksum_new ();
+	g_autoptr(AsProvide) prov = as_provide_new ();
+	g_autoptr(AsRelease) rel = as_release_new ();
+	g_autoptr(AsRequire) req1 = as_require_new ();
+	g_autoptr(FuDevice) device1 = fu_device_new ();
+	g_autoptr(FuDevice) device2 = fu_device_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuInstallTask) task = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* set up a dummy device */
+	fu_device_set_version (device1, "1.2.3");
+	fu_device_add_flag (device1, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_guid (device1, "12345678-1234-1234-1234-123456789012");
+
+	/* set up a different device */
+	fu_device_set_id (device2, "id2");
+	fu_device_set_name (device2, "Secondary firmware");
+	fu_device_set_version (device2, "4.5.6");
+	fu_device_set_vendor_id (device2, "FFFF");
+	fu_device_add_guid (device2, "00000000-0000-0000-0000-000000000000");
+	fu_engine_add_device (engine, device2);
+
+	/* make the component require another device version */
+	as_require_set_kind (req1, AS_REQUIRE_KIND_FIRMWARE);
+	as_require_set_compare (req1, AS_REQUIRE_COMPARE_GT);
+	as_require_set_version (req1, "4.0.0");
+	as_require_set_value (req1, "00000000-0000-0000-0000-000000000000");
+	as_app_add_require (app, req1);
+
+	/* add release */
+	as_checksum_set_target (csum, AS_CHECKSUM_TARGET_CONTENT);
+	as_checksum_set_filename (csum, "bios.bin");
+	as_release_set_version (rel, "1.2.4");
+	as_release_add_checksum (rel, csum);
+	as_app_add_release (app, rel);
+
+	/* add GUID to match */
+	as_provide_set_kind (prov, AS_PROVIDE_KIND_FIRMWARE_FLASHED);
+	as_provide_set_value (prov, "12345678-1234-1234-1234-123456789012");
+	as_app_add_provide (app, prov);
+
+	/* check this passes */
+	task = fu_install_task_new (device1, app);
+	ret = fu_engine_check_requirements (engine, task,
+					    FWUPD_INSTALL_FLAG_NONE,
+					    &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+}
+
+static void
 fu_engine_device_priority_func (void)
 {
 	g_autoptr(FuDevice) device1 = fu_device_new ();
@@ -2639,6 +2695,7 @@ main (int argc, char **argv)
 	/* tests go here */
 	if (g_test_slow ())
 		g_test_add_func ("/fwupd/progressbar", fu_progressbar_func);
+	g_test_add_func ("/fwupd/engine{requirements-other-device}", fu_engine_requirements_other_device_func);
 	g_test_add_func ("/fwupd/device{incorporate}", fu_device_incorporate_func);
 	g_test_add_func ("/fwupd/device{poll}", fu_device_poll_func);
 	g_test_add_func ("/fwupd/device-locker{success}", fu_device_locker_func);
