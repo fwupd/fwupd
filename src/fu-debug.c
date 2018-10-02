@@ -29,6 +29,14 @@ fu_debug_free (FuDebug *self)
 }
 
 static void
+fu_debug_silent_cb (const gchar *log_domain,
+		    GLogLevelFlags log_level,
+		    const gchar *message,
+		    gpointer user_data)
+{
+}
+
+static void
 fu_debug_ignore_cb (const gchar *log_domain,
 		    GLogLevelFlags log_level,
 		    const gchar *message,
@@ -153,8 +161,13 @@ fu_debug_post_parse_hook (GOptionContext *context,
 					    G_LOG_LEVEL_CRITICAL);
 		g_log_set_default_handler (fu_debug_handler_cb, self);
 	} else {
-		/* hide all debugging except whitelisted */
-		g_log_set_default_handler (fu_debug_ignore_cb, self);
+		/* fwupdtool: hide everything by default */
+		if (g_strcmp0 (g_get_prgname (), "fwupdtool") == 0)
+			g_log_set_default_handler (fu_debug_silent_cb, self);
+		/* fuwpd daemon: show messages, no debugging */
+		else
+			g_log_set_default_handler (fu_debug_ignore_cb, self);
+		/* show whitelisted debugging */
 		if (self->daemon_verbose != NULL) {
 			for (guint i = 0; self->daemon_verbose[i] != NULL; i++) {
 				g_log_set_handler (self->daemon_verbose[i],
