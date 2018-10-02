@@ -45,6 +45,8 @@ fu_uefi_device_kind_to_string (FuUefiDeviceKind kind)
 		return "uefi-driver";
 	if (kind == FU_UEFI_DEVICE_KIND_FMP)
 		return "fmp";
+	if (kind == FU_UEFI_DEVICE_KIND_DELL_TPM_FIRMWARE)
+		return "dell-tpm-firmware";
 	return NULL;
 }
 
@@ -59,6 +61,8 @@ fu_uefi_device_kind_from_string (const gchar *kind)
 		return FU_UEFI_DEVICE_KIND_UEFI_DRIVER;
 	if (g_strcmp0 (kind, "fmp") == 0)
 		return FU_UEFI_DEVICE_KIND_FMP;
+	if (g_strcmp0 (kind, "dell-tpm-firmware") == 0)
+		return FU_UEFI_DEVICE_KIND_DELL_TPM_FIRMWARE;
 	return FU_UEFI_DEVICE_KIND_UNKNOWN;
 }
 
