@@ -217,6 +217,12 @@ fu_device_list_find_by_id (FuDeviceList *self,
 	FuDeviceItem *item = NULL;
 	gsize device_id_len;
 
+	/* sanity check */
+	if (device_id == NULL) {
+		g_critical ("device ID was NULL");
+		return NULL;
+	}
+
 	/* support abbreviated hashes */
 	device_id_len = strlen (device_id);
 	fu_mutex_read_lock (self->devices_mutex);
