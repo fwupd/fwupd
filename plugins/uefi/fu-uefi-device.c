@@ -102,6 +102,8 @@ fu_uefi_device_to_string (FuDevice *device, GString *str)
 				fu_uefi_device_status_to_string (self->last_attempt_status));
 	g_string_append_printf (str, "    last_attempt_version:\t%" G_GUINT32_FORMAT "\n",
 				self->last_attempt_version);
+	g_string_append_printf (str, "    esp path:\t%s\n",
+				fu_device_get_metadata (device, "EspPath"));
 }
 
 FuUefiDeviceKind
