@@ -1093,6 +1093,11 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency type="build" id="uuid">
+    <distro id="centos">
+      <package>libuuid-devel</package>
+    </distro>
+  </dependency>
   <dependency type="build" id="valac">
     <distro id="arch">
       <package>vala</package>
