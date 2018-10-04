@@ -646,6 +646,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="libgcab-dev">
+    <distro id="arch">
+      <package>gcab</package>
+    </distro>
     <distro id="fedora">
       <package>libgcab1-devel</package>
     </distro>
@@ -691,6 +694,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="libgusb-dev">
+    <distro id="arch">
+      <package>libgusb</package>
+    </distro>
     <distro id="centos">
       <package>libgusb-devel</package>
     </distro>
@@ -748,6 +754,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="libsoup2.4-dev">
+    <distro id="arch">
+      <package>libsoup</package>
+    </distro>
     <distro id="centos">
       <package>libsoup-devel</package>
     </distro>
@@ -866,6 +875,9 @@
     </distro>
   </dependency>
   <dependency type="build" id="policykit-1">
+    <distro id="arch">
+      <package>polkit</package>
+    </distro>
     <distro id="centos">
       <package>polkit</package>
     </distro>
