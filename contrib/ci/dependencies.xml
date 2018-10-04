@@ -649,6 +649,9 @@
     <distro id="arch">
       <package>gcab</package>
     </distro>
+    <distro id="centos">
+      <package>libgcab1-devel</package>
+    </distro>
     <distro id="fedora">
       <package>libgcab1-devel</package>
     </distro>
