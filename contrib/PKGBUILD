@@ -8,9 +8,10 @@ pkgdesc='A simple daemon to allow session software to update firmware'
 arch=('i686' 'x86_64')
 url='https://github.com/hughsie/fwupd'
 license=('GPL2')
-depends=('appstream-glib')
+depends=('appstream-glib' 'libgusb')
 makedepends=('meson' 'valgrind' 'gobject-introspection' 'gtk-doc' 'python-pillow' 'git'
-             'python-cairo' 'noto-fonts' 'noto-fonts-cjk' 'python-gobject' 'vala')
+             'python-cairo' 'noto-fonts' 'noto-fonts-cjk' 'python-gobject' 'vala'
+             'libsoup' 'polkit' 'gcab')
 
 build() {
     cd ${pkgname}
