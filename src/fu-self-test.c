@@ -2267,6 +2267,168 @@ _build_cab (GCabCompression compression, ...)
 }
 
 static void
+_plugin_composite_device_added_cb (FuPlugin *plugin, FuDevice *device, gpointer user_data)
+{
+	GPtrArray *devices = (GPtrArray *) user_data;
+	g_ptr_array_add (devices, g_object_ref (device));
+}
+
+static void
+fu_plugin_composite_func (void)
+{
+	GError *error = NULL;
+	gboolean ret;
+	GPtrArray *apps;
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GPtrArray) install_tasks = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	g_autoptr(AsStore) store = NULL;
+
+	/* create CAB file */
+	blob = _build_cab (GCAB_COMPRESSION_NONE,
+			   "acme.metainfo.xml",
+	"<component type=\"firmware\">\n"
+	"  <id>com.acme.example.firmware</id>\n"
+	"  <provides>\n"
+	"    <firmware type=\"flashed\">b585990a-003e-5270-89d5-3705a17f9a43</firmware>\n"
+	"  </provides>\n"
+	"  <releases>\n"
+	"    <release version=\"1.2.3\"/>\n"
+	"  </releases>\n"
+	"</component>",
+	"acme.module1.metainfo.xml",
+	"<component type=\"firmware\">\n"
+	"  <id>com.acme.example.firmware.module1</id>\n"
+	"  <provides>\n"
+	"    <firmware type=\"flashed\">7fddead7-12b5-4fb9-9fa0-6d30305df755</firmware>\n"
+	"  </provides>\n"
+	"  <releases>\n"
+	"    <release version=\"2\"/>\n"
+	"  </releases>\n"
+	"</component>",
+	"acme.module2.metainfo.xml",
+	"<component type=\"firmware\">\n"
+	"  <id>com.acme.example.firmware.module2</id>\n"
+	"  <provides>\n"
+	"    <firmware type=\"flashed\">b8fe6b45-8702-4bcd-8120-ef236caac76f</firmware>\n"
+	"  </provides>\n"
+	"  <releases>\n"
+	"    <release version=\"11\"/>\n"
+	"  </releases>\n"
+	"</component>",
+			   "firmware.bin", "world",
+			   NULL);
+	if (blob == NULL) {
+		g_test_skip ("libgcab too old");
+		return;
+	}
+	store = fu_common_store_from_cab_bytes (blob, 10240, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (store);
+	apps = as_store_get_apps (store);
+	g_assert_cmpint (apps->len, ==, 3);
+
+	/* set up dummy plugin */
+	g_setenv ("FWUPD_PLUGIN_TEST", "composite", TRUE);
+	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_test.so", &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	fu_engine_add_plugin (engine, plugin);
+
+	ret = fu_plugin_runner_startup (plugin, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	g_signal_connect (plugin, "device-added",
+			  G_CALLBACK (_plugin_composite_device_added_cb),
+			  devices);
+
+	ret = fu_plugin_runner_coldplug (plugin, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+
+	/* check we found all composite devices  */
+	g_assert_cmpint (devices->len, ==, 3);
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device = g_ptr_array_index (devices, i);
+		fu_engine_add_device (engine, device);
+		if (g_strcmp0 (fu_device_get_id (device),
+				"08d460be0f1f9f128413f816022a6439e0078018") == 0) {
+			g_assert_cmpstr (fu_device_get_version (device), ==, "1.2.2");
+		} else if (g_strcmp0 (fu_device_get_id (device),
+					"c0a0a4aa6480ac28eea1ce164fbb466ca934e1ff") == 0) {
+			g_assert_cmpstr (fu_device_get_version (device), ==, "1");
+			g_assert_nonnull (fu_device_get_parent (device));
+		} else if (g_strcmp0 (fu_device_get_id (device),
+					"bf455e9f371d2608d1cb67660fd2b335d3f6ef73") == 0) {
+			g_assert_cmpstr (fu_device_get_version (device), ==, "10");
+			g_assert_nonnull (fu_device_get_parent (device));
+		}
+	}
+
+	/* produce install tasks */
+	for (guint i = 0; i < apps->len; i++) {
+		AsApp *app = g_ptr_array_index (apps, i);
+
+		/* do any devices pass the requirements */
+		for (guint j = 0; j < devices->len; j++) {
+			FuDevice *device = g_ptr_array_index (devices, j);
+			g_autoptr(FuInstallTask) task = NULL;
+			g_autoptr(GError) error_local = NULL;
+
+			/* is this component valid for the device */
+			task = fu_install_task_new (device, app);
+			if (!fu_engine_check_requirements (engine,
+							   task,
+							   0,
+							   &error_local)) {
+				g_debug ("requirement on %s:%s failed: %s",
+					 fu_device_get_id (device),
+					 as_app_get_id (app),
+					 error_local->message);
+				continue;
+			}
+
+			g_ptr_array_add (install_tasks, g_steal_pointer (&task));
+		}
+	}
+	g_assert_cmpint (install_tasks->len, ==, 3);
+
+	/* install the cab */
+	ret = fu_engine_install_tasks (engine,
+				       install_tasks,
+				       blob,
+				       FWUPD_DEVICE_FLAG_NONE,
+				       &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+
+	/* verify everything upgraded */
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device = g_ptr_array_index (devices, i);
+		const gchar *metadata;
+		if (g_strcmp0 (fu_device_get_id (device),
+				"08d460be0f1f9f128413f816022a6439e0078018") == 0) {
+			g_assert_cmpstr (fu_device_get_version (device), ==, "1.2.3");
+		} else if (g_strcmp0 (fu_device_get_id (device),
+					"c0a0a4aa6480ac28eea1ce164fbb466ca934e1ff") == 0) {
+			g_assert_cmpstr (fu_device_get_version (device), ==, "2");
+		} else if (g_strcmp0 (fu_device_get_id (device),
+					"bf455e9f371d2608d1cb67660fd2b335d3f6ef73") == 0) {
+			g_assert_cmpstr (fu_device_get_version (device), ==, "11");
+		}
+
+		/* verify prepare and cleanup ran on all devices */
+		metadata = fu_device_get_metadata (device, "frimbulator");
+		g_assert_cmpstr (metadata, ==, "1");
+		metadata = fu_device_get_metadata (device, "frombulator");
+		g_assert_cmpstr (metadata, ==, "1");
+	}
+}
+
+static void
 fu_common_store_cab_func (void)
 {
 	AsApp *app;
@@ -2732,6 +2894,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/plugin{quirks}", fu_plugin_quirks_func);
 	g_test_add_func ("/fwupd/plugin{quirks-performance}", fu_plugin_quirks_performance_func);
 	g_test_add_func ("/fwupd/plugin{quirks-device}", fu_plugin_quirks_device_func);
+	g_test_add_func ("/fwupd/plugin{composite}", fu_plugin_composite_func);
 	g_test_add_func ("/fwupd/keyring{gpg}", fu_keyring_gpg_func);
 	g_test_add_func ("/fwupd/keyring{pkcs7}", fu_keyring_pkcs7_func);
 	g_test_add_func ("/fwupd/chunk", fu_chunk_func);

@@ -501,6 +501,47 @@ fu_main_install_task_sort_cb (gconstpointer a, gconstpointer b)
 	return fu_install_task_compare (task_a, task_b);
 }
 
+static GPtrArray *
+fu_main_get_device_family (FuMainAuthHelper *helper, GError **error)
+{
+	FuDevice *parent;
+	GPtrArray *children;
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(GPtrArray) devices_possible = NULL;
+
+	/* get the device */
+	device = fu_engine_get_device (helper->priv->engine, helper->device_id, error);
+	if (device == NULL)
+		return NULL;
+
+	/* device itself */
+	devices_possible = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	g_ptr_array_add (devices_possible, g_object_ref (device));
+
+	/* add device children */
+	children = fu_device_get_children (device);
+	for (guint i = 0; i < children->len; i++) {
+		FuDevice *child = g_ptr_array_index (children, i);
+		g_ptr_array_add (devices_possible, g_object_ref (child));
+	}
+
+	/* add parent and siblings, not including the device itself */
+	parent = fu_device_get_parent (device);
+	if (parent != NULL) {
+		GPtrArray *siblings = fu_device_get_children (parent);
+		g_ptr_array_add (devices_possible, g_object_ref (parent));
+		for (guint i = 0; i < siblings->len; i++) {
+			FuDevice *sibling = g_ptr_array_index (siblings, i);
+			if (sibling == device)
+				continue;
+			g_ptr_array_add (devices_possible, g_object_ref (sibling));
+		}
+	}
+
+	/* success */
+	return g_steal_pointer (&devices_possible);
+}
+
 static gboolean
 fu_main_install_with_helper (FuMainAuthHelper *helper_ref, GError **error)
 {
@@ -511,21 +552,15 @@ fu_main_install_with_helper (FuMainAuthHelper *helper_ref, GError **error)
 	g_autoptr(GPtrArray) devices_possible = NULL;
 	g_autoptr(GPtrArray) errors = NULL;
 
-	/* get a list of devices that match the device_id */
+	/* get a list of devices that in some way match the device_id */
 	if (g_strcmp0 (helper->device_id, FWUPD_DEVICE_ID_ANY) == 0) {
 		devices_possible = fu_engine_get_devices (priv->engine, error);
-		if (devices_possible == NULL) {
-			g_prefix_error (error, "failed to get all devices: ");
+		if (devices_possible == NULL)
 			return FALSE;
-		}
 	} else {
-		FuDevice *device = fu_engine_get_device (priv->engine,
-							 helper->device_id,
-							 error);
-		if (device == NULL)
+		devices_possible = fu_main_get_device_family (helper, error);
+		if (devices_possible == NULL)
 			return FALSE;
-		devices_possible = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-		g_ptr_array_add (devices_possible, device);
 	}
 
 	/* parse store */

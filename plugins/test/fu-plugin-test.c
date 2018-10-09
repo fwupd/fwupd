@@ -53,6 +53,33 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		}
 	}
 	fu_plugin_device_add (plugin, device);
+
+	if (g_strcmp0 (g_getenv ("FWUPD_PLUGIN_TEST"), "composite") == 0) {
+		g_autoptr(FuDevice) child1 = NULL;
+		g_autoptr(FuDevice) child2 = NULL;
+
+		child1 = fu_device_new ();
+		fu_device_set_physical_id (child1, "fake");
+		fu_device_set_logical_id (child1, "child1");
+		fu_device_add_guid (child1, "7fddead7-12b5-4fb9-9fa0-6d30305df755");
+		fu_device_set_name (child1, "Module1");
+		fu_device_set_version (child1, "1");
+		fu_device_add_parent_guid (child1, "b585990a-003e-5270-89d5-3705a17f9a43");
+		fu_device_add_flag (child1, FWUPD_DEVICE_FLAG_UPDATABLE);
+		fu_plugin_device_add (plugin, child1);
+
+		child2 = fu_device_new ();
+		fu_device_set_physical_id (child2, "fake");
+		fu_device_set_logical_id (child2, "child2");
+		fu_device_add_guid (child2, "b8fe6b45-8702-4bcd-8120-ef236caac76f");
+		fu_device_set_name (child2, "Module2");
+		fu_device_set_version (child2, "10");
+		fu_device_add_parent_guid (child2, "b585990a-003e-5270-89d5-3705a17f9a43");
+		fu_device_add_flag (child2, FWUPD_DEVICE_FLAG_UPDATABLE);
+		fu_plugin_device_add (plugin, child2);
+
+	}
+
 	return TRUE;
 }
 
@@ -115,6 +142,17 @@ fu_plugin_update (FuPlugin *plugin,
 		fu_device_set_progress (device, i);
 	}
 
+	/* composite test, upgrade composite devices */
+	if (g_strcmp0 (g_getenv ("FWUPD_PLUGIN_TEST"), "composite") == 0) {
+		if (g_strcmp0 (fu_device_get_logical_id (device), "child1") == 0) {
+			fu_device_set_version (device, "2");
+			return TRUE;
+		} else if (g_strcmp0 (fu_device_get_logical_id (device), "child2") == 0) {
+			fu_device_set_version (device, "11");
+			return TRUE;
+		}
+	}
+
 	/* upgrade, or downgrade */
 	if (flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) {
 		fu_device_set_version (device, "1.2.2");
@@ -129,5 +167,33 @@ fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
 	fu_device_set_update_error (device, NULL);
+	return TRUE;
+}
+
+gboolean
+fu_plugin_composite_prepare (FuPlugin *plugin,
+			     GPtrArray *devices,
+			     GError **error)
+{
+	if (g_strcmp0 (g_getenv ("FWUPD_PLUGIN_TEST"), "composite") == 0) {
+		for (guint i = 0; i < devices->len; i++) {
+			FuDevice *device = g_ptr_array_index (devices, i);
+			fu_device_set_metadata (device, "frimbulator", "1");
+		}
+	}
+	return TRUE;
+}
+
+gboolean
+fu_plugin_composite_cleanup (FuPlugin *plugin,
+			     GPtrArray *devices,
+			     GError **error)
+{
+	if (g_strcmp0 (g_getenv ("FWUPD_PLUGIN_TEST"), "composite") == 0) {
+		for (guint i = 0; i < devices->len; i++) {
+			FuDevice *device = g_ptr_array_index (devices, i);
+			fu_device_set_metadata (device, "frombulator", "1");
+		}
+	}
 	return TRUE;
 }
