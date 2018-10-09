@@ -60,7 +60,6 @@ typedef struct {
 	/* only valid in update and downgrade */
 	FuUtilOperation		 current_operation;
 	FwupdDevice		*current_device;
-	FwupdRelease		*current_release;
 } FuUtilPrivate;
 
 typedef gboolean (*FuUtilPrivateCb)	(FuUtilPrivate	*util,
@@ -213,18 +212,14 @@ fu_util_update_device_changed_cb (FwupdClient *client,
 
 	/* show message in progressbar */
 	if (priv->current_operation == FU_UTIL_OPERATION_UPDATE) {
-		/* TRANSLATORS: %1 is a device name, and %2 and %3 are version numbers */
-		str = g_strdup_printf (_("Updating %s from %s to %s…"),
-				       fwupd_device_get_name (device),
-				       fwupd_device_get_version (device),
-				       fwupd_release_get_version (priv->current_release));
+		/* TRANSLATORS: %1 is a device name */
+		str = g_strdup_printf (_("Updating %s…"),
+				       fwupd_device_get_name (device));
 		fu_progressbar_set_title (priv->progressbar, str);
 	} else if (priv->current_operation == FU_UTIL_OPERATION_DOWNGRADE) {
-		/* TRANSLATORS: %1 is a device name, and %2 and %3 are version numbers */
-		str = g_strdup_printf (_("Downgrading %s from %s to %s…"),
-				       fwupd_device_get_name (device),
-				       fwupd_device_get_version (device),
-				       fwupd_release_get_version (priv->current_release));
+		/* TRANSLATORS: %1 is a device name */
+		str = g_strdup_printf (_("Downgrading %s…"),
+				       fwupd_device_get_name (device));
 		fu_progressbar_set_title (priv->progressbar, str);
 	} else if (priv->current_operation == FU_UTIL_OPERATION_INSTALL) {
 		/* TRANSLATORS: %1 is a device name  */
@@ -2029,7 +2024,6 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 				    fwupd_checksum_get_best (checksums),
 				    error))
 		return FALSE;
-	g_set_object (&priv->current_release, rel);
 	return fwupd_client_install (priv->client,
 				     fwupd_device_get_id (dev), fn,
 				     priv->flags, NULL, error);
@@ -2248,8 +2242,6 @@ fu_util_private_free (FuUtilPrivate *priv)
 		g_object_unref (priv->client);
 	if (priv->current_device != NULL)
 		g_object_unref (priv->current_device);
-	if (priv->current_release != NULL)
-		g_object_unref (priv->current_release);
 	if (priv->soup_session != NULL)
 		g_object_unref (priv->soup_session);
 	g_main_loop_unref (priv->loop);
