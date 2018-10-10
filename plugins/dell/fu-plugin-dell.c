@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#include "fu-common-guid.h"
 #include "fu-plugin-dell.h"
 #include "fu-plugin-vfuncs.h"
 #include "fu-device-metadata.h"
@@ -597,11 +598,11 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	}
 
 	tpm_guid_raw = g_strdup_printf ("%04x-%s", system_id, tpm_mode);
-	tpm_guid = as_utils_guid_from_string (tpm_guid_raw);
+	tpm_guid = fu_common_guid_from_string (tpm_guid_raw);
 	tpm_id = g_strdup_printf ("DELL-%s" G_GUINT64_FORMAT, tpm_guid);
 
 	tpm_guid_raw_alt = g_strdup_printf ("%04x-%s", system_id, tpm_mode_alt);
-	tpm_guid_alt = as_utils_guid_from_string (tpm_guid_raw_alt);
+	tpm_guid_alt = fu_common_guid_from_string (tpm_guid_raw_alt);
 	tpm_id_alt = g_strdup_printf ("DELL-%s" G_GUINT64_FORMAT, tpm_guid_alt);
 
 	g_debug ("Creating primary TPM GUID %s and secondary TPM GUID %s",

@@ -25,6 +25,7 @@
 #include "fwupd-resources.h"
 
 #include "fu-common-cab.h"
+#include "fu-common-guid.h"
 #include "fu-common.h"
 #include "fu-config.h"
 #include "fu-debug.h"
@@ -824,7 +825,7 @@ fu_engine_check_requirement_firmware (FuEngine *self, AsRequire *req,
 	}
 
 	/* another device */
-	if (as_utils_guid_is_valid (as_require_get_value (req))) {
+	if (fu_common_guid_is_valid (as_require_get_value (req))) {
 		const gchar *guid = as_require_get_value (req);
 		const gchar *version;
 		g_autoptr(FuDevice) device2 = NULL;
@@ -996,9 +997,9 @@ fu_engine_vendor_fixup_provide_value (AsApp *app)
 		g_autofree gchar *guid = NULL;
 		if (as_provide_get_kind (prov) != AS_PROVIDE_KIND_FIRMWARE_FLASHED)
 			continue;
-		if (as_utils_guid_is_valid (value))
+		if (fu_common_guid_is_valid (value))
 			continue;
-		guid = as_utils_guid_from_string (value);
+		guid = fu_common_guid_from_string (value);
 		as_provide_set_value (prov, guid);
 	}
 }
