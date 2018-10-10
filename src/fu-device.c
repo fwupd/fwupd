@@ -1009,7 +1009,7 @@ fu_device_set_name (FuDevice *self, const gchar *value)
 	}
 
 	g_strdelimit (new->str, "_", ' ');
-	as_utils_string_replace (new, "(TM)", "™");
+	fu_common_string_replace (new, "(TM)", "™");
 	fwupd_device_set_name (FWUPD_DEVICE (self), new->str);
 }
 

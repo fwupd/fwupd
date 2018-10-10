@@ -79,4 +79,8 @@ guint16		 fu_common_read_uint16		(const guint8	*buf,
 guint32		 fu_common_read_uint32		(const guint8	*buf,
 						 FuEndianType	 endian);
 
+guint		 fu_common_string_replace	(GString	*string,
+						 const gchar	*search,
+						 const gchar	*replace);
+
 #endif /* __FU_COMMON_H__ */
