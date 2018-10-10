@@ -567,6 +567,8 @@ fu_device_add_child_by_type_guid (FuDevice *self,
 	fu_device_add_guid (child, guid);
 	if (fu_device_get_physical_id (self) != NULL)
 		fu_device_set_physical_id (child, fu_device_get_physical_id (self));
+	if (!fu_device_ensure_id (self, error))
+		return FALSE;
 	if (!fu_device_probe (child, error))
 		return FALSE;
 	fu_device_add_child (self, child);

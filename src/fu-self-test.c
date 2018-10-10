@@ -1559,6 +1559,7 @@ fu_plugin_quirks_device_func (void)
 	g_assert (ret);
 
 	/* use quirk file to set device attributes */
+	fu_device_set_physical_id (device, "usb:00:05");
 	fu_device_set_quirks (device, quirks);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_guid (device, "USB\\VID_0BDA&PID_1100");
