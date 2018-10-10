@@ -242,6 +242,17 @@ gboolean	 fu_quirks_get_kvs_for_guid		(FuQuirks	*self,
  */
 #define	FU_QUIRKS_INSTALL_DURATION		"InstallDuration"
 
+/**
+ * FU_QUIRKS_VERSION_FORMAT:
+ * @key: the device ID, e.g. `HwId=USB\VID_0763&PID_2806`
+ * @value: the quirk format, e.g. `quad`
+ *
+ * Sets the version format the device should use for conversion.
+ *
+ * Since: 1.2.0
+ */
+#define	FU_QUIRKS_VERSION_FORMAT		"VersionFormat"
+
 G_END_DECLS
 
 #endif /* __FU_QUIRKS_H */

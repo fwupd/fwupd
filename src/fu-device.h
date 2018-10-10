@@ -11,6 +11,7 @@
 #include <fwupd.h>
 
 #include "fu-quirks.h"
+#include "fu-common-version.h"
 
 G_BEGIN_DECLS
 
@@ -176,6 +177,9 @@ void		 fu_device_set_remove_delay		(FuDevice	*self,
 FwupdStatus	 fu_device_get_status			(FuDevice	*self);
 void		 fu_device_set_status			(FuDevice	*self,
 							 FwupdStatus	 status);
+FuVersionFormat	 fu_device_get_version_format		(FuDevice	*self);
+void		 fu_device_set_version_format		(FuDevice	*self,
+							 FuVersionFormat version_format);
 void		 fu_device_set_firmware_size_min	(FuDevice	*self,
 							 guint64	 size_min);
 void		 fu_device_set_firmware_size_max	(FuDevice	*self,
