@@ -8,7 +8,6 @@
 
 #include "config.h"
 
-#include <appstream-glib.h>
 #include <gio/gio.h>
 #include <gio/gunixinputstream.h>
 #include <glib-object.h>
@@ -3786,9 +3785,7 @@ fu_engine_init (FuEngine *self)
 	/* add some runtime versions of things the daemon depends on */
 	fu_engine_add_runtime_version (self, "org.freedesktop.fwupd", VERSION);
 	fu_engine_add_runtime_version (self, "com.redhat.fwupdate", "12");
-#if AS_CHECK_VERSION(0,7,8)
-	fu_engine_add_runtime_version (self, "org.freedesktop.appstream-glib", as_version_string ());
-#endif
+	fu_engine_add_runtime_version (self, "org.freedesktop.appstream-glib", "0.7.14");
 #if G_USB_CHECK_VERSION(0,3,1)
 	fu_engine_add_runtime_version (self, "org.freedesktop.gusb", g_usb_version_string ());
 #endif
