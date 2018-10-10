@@ -1458,6 +1458,7 @@ fu_engine_install_blob (FuEngine *self,
 	device_id_orig = g_strdup (fu_device_get_id (device));
 
 	/* in case another device caused us to go into replug before starting */
+	g_clear_object (&device);
 	device = fu_device_list_get_by_id (self->device_list, device_id_orig, error);
 	if (device == NULL) {
 		g_prefix_error (error, "failed to get device ID after detach: ");
@@ -1467,6 +1468,7 @@ fu_engine_install_blob (FuEngine *self,
 		g_prefix_error (error, "failed to wait for detach replug: ");
 		return FALSE;
 	}
+	g_clear_object (&device);
 	device = fu_device_list_get_by_id (self->device_list, device_id_orig, error);
 	if (device == NULL) {
 		g_prefix_error (error, "failed to get device ID after detach replug: ");
@@ -1505,6 +1507,7 @@ fu_engine_install_blob (FuEngine *self,
 		g_propagate_error (error, g_steal_pointer (&error_local));
 		return FALSE;
 	}
+	g_clear_object (&device);
 	device = fu_device_list_get_by_id (self->device_list, device_id_orig, error);
 	if (device == NULL) {
 		g_prefix_error (error, "failed to get device ID after detach: ");
