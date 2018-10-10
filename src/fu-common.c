@@ -993,3 +993,68 @@ fu_common_get_path (FuPathKind path_kind)
 
 	return NULL;
 }
+
+/**
+ * fu_common_string_replace:
+ * @string: The #GString to operate on
+ * @search: The text to search for
+ * @replace: The text to use for substitutions
+ *
+ * Performs multiple search and replace operations on the given string.
+ *
+ * Returns: the number of replacements done, or 0 if @search is not found.
+ *
+ * Since: 1.2.0
+ **/
+guint
+fu_common_string_replace (GString *string, const gchar *search, const gchar *replace)
+{
+	gchar *tmp;
+	guint count = 0;
+	gsize search_idx = 0;
+	gsize replace_len;
+	gsize search_len;
+
+	g_return_val_if_fail (string != NULL, 0);
+	g_return_val_if_fail (search != NULL, 0);
+	g_return_val_if_fail (replace != NULL, 0);
+
+	/* nothing to do */
+	if (string->len == 0)
+		return 0;
+
+	search_len = strlen (search);
+	replace_len = strlen (replace);
+
+	do {
+		tmp = g_strstr_len (string->str + search_idx, -1, search);
+		if (tmp == NULL)
+			break;
+
+		/* advance the counter in case @replace contains @search */
+		search_idx = (gsize) (tmp - string->str);
+
+		/* reallocate the string if required */
+		if (search_len > replace_len) {
+			g_string_erase (string,
+					(gssize) search_idx,
+					(gssize) (search_len - replace_len));
+			memcpy (tmp, replace, replace_len);
+		} else if (search_len < replace_len) {
+			g_string_insert_len (string,
+					     (gssize) search_idx,
+					     replace,
+					     (gssize) (replace_len - search_len));
+			/* we have to treat this specially as it could have
+			 * been reallocated when the insertion happened */
+			memcpy (string->str + search_idx, replace, replace_len);
+		} else {
+			/* just memcmp in the new string */
+			memcpy (tmp, replace, replace_len);
+		}
+		search_idx += replace_len;
+		count++;
+	} while (TRUE);
+
+	return count;
+}

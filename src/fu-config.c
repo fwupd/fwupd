@@ -261,11 +261,11 @@ fu_config_add_remotes_for_path (FuConfig *self, const gchar *path, GError **erro
 			tmp = g_hash_table_lookup (self->os_release, "NAME");
 			if (tmp == NULL)
 				tmp = "this distribution";
-			as_utils_string_replace (agreement_markup, "$OS_RELEASE:NAME$", tmp);
+			fu_common_string_replace (agreement_markup, "$OS_RELEASE:NAME$", tmp);
 			tmp = g_hash_table_lookup (self->os_release, "BUG_REPORT_URL");
 			if (tmp == NULL)
 				tmp = "https://github.com/hughsie/fwupd/issues";
-			as_utils_string_replace (agreement_markup, "$OS_RELEASE:BUG_REPORT_URL$", tmp);
+			fu_common_string_replace (agreement_markup, "$OS_RELEASE:BUG_REPORT_URL$", tmp);
 			fwupd_remote_set_agreement (remote, agreement_markup->str);
 		}
 
