@@ -43,6 +43,7 @@ typedef struct {
 	GPtrArray			*children;
 	guint				 remove_delay;	/* ms */
 	FwupdStatus			 status;
+	FuVersionFormat			 version_format;
 	guint				 progress;
 	guint				 order;
 	guint				 priority;
@@ -672,6 +673,10 @@ fu_device_set_quirk_kv (FuDevice *self,
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_INSTALL_DURATION) == 0) {
 		fu_device_set_install_duration (self, fu_common_strtoull (value));
+		return TRUE;
+	}
+	if (g_strcmp0 (key, FU_QUIRKS_VERSION_FORMAT) == 0) {
+		fu_device_set_version_format (self, fu_common_version_format_from_string (value));
 		return TRUE;
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_CHILDREN) == 0) {
@@ -1347,6 +1352,43 @@ fu_device_set_status (FuDevice *self, FwupdStatus status)
 		return;
 	priv->status = status;
 	g_object_notify (G_OBJECT (self), "status");
+}
+
+/**
+ * fu_device_get_version_format:
+ * @self: A #FuDevice
+ *
+ * Returns how the device version should be formatted.
+ *
+ * Returns: the version format, e.g. %FU_VERSION_FORMAT_TRIPLET
+ *
+ * Since: 1.2.0
+ **/
+FuVersionFormat
+fu_device_get_version_format (FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_DEVICE (self), 0);
+	return priv->version_format;
+}
+
+/**
+ * fu_device_set_version_format:
+ * @self: A #FuDevice
+ * @version_format: the version_format value, e.g. %FU_VERSION_FORMAT_TRIPLET
+ *
+ * Sets how the version should be formatted.
+ *
+ * Since: 1.2.0
+ **/
+void
+fu_device_set_version_format (FuDevice *self, FuVersionFormat version_format)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_DEVICE (self));
+	if (priv->version_format == version_format)
+		return;
+	priv->version_format = version_format;
 }
 
 /**

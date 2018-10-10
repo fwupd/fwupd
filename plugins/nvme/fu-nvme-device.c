@@ -25,7 +25,6 @@
 
 struct _FuNvmeDevice {
 	FuUdevDevice		 parent_instance;
-	gchar			*version_format;
 	guint			 pci_depth;
 	gint			 fd;
 	guint64			 write_block_size;
@@ -186,13 +185,13 @@ static gboolean
 fu_nvme_device_set_version (FuNvmeDevice *self, const gchar *version, GError **error)
 {
 	/* unset */
-	if (self->version_format == NULL) {
+	if (fu_device_get_version_format (FU_DEVICE (self)) == FU_VERSION_FORMAT_UNKNOWN) {
 		fu_device_set_version (FU_DEVICE (self), version);
 		return TRUE;
 	}
 
 	/* AA.BB.CC.DD */
-	if (g_strcmp0 (self->version_format, "quad") == 0) {
+	if (fu_device_get_version_format (FU_DEVICE (self)) == FU_VERSION_FORMAT_QUAD) {
 		guint64 tmp = g_ascii_strtoull (version, NULL, 16);
 		g_autofree gchar *version_new = NULL;
 		if (tmp == 0 || tmp > G_MAXUINT32) {
@@ -203,17 +202,16 @@ fu_nvme_device_set_version (FuNvmeDevice *self, const gchar *version, GError **e
 				     version);
 			return FALSE;
 		}
-		version_new = as_utils_version_from_uint32 (tmp, FU_VERSION_FORMAT_QUAD);
+		version_new = fu_common_version_from_uint32 (tmp, FU_VERSION_FORMAT_QUAD);
 		fu_device_set_version (FU_DEVICE (self), version_new);
 		return TRUE;
 	}
 
 	/* invalid, or not supported */
-	g_set_error (error,
-		     G_IO_ERROR,
-		     G_IO_ERROR_INVALID_DATA,
-		     "version format %s not recognised",
-		     self->version_format);
+	g_set_error_literal (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "version format not recognised");
 	return FALSE;
 }
 
@@ -422,10 +420,6 @@ fu_nvme_device_set_quirk_kv (FuDevice *device,
 			     GError **error)
 {
 	FuNvmeDevice *self = FU_NVME_DEVICE (device);
-	if (g_strcmp0 (key, "NvmeVersionFormat") == 0) {
-		self->version_format = g_strdup (value);
-		return TRUE;
-	}
 	if (g_strcmp0 (key, "NvmeBlockSize") == 0) {
 		self->write_block_size = fu_common_strtoull (value);
 		return TRUE;
@@ -451,8 +445,6 @@ fu_nvme_device_init (FuNvmeDevice *self)
 static void
 fu_nvme_device_finalize (GObject *object)
 {
-	FuNvmeDevice *self = FU_NVME_DEVICE (object);
-	g_free (self->version_format);
 	G_OBJECT_CLASS (fu_nvme_device_parent_class)->finalize (object);
 }
 
