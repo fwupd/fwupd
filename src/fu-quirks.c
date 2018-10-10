@@ -11,9 +11,9 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 #include <string.h>
-#include <appstream-glib.h>
 
 #include "fu-common.h"
+#include "fu-common-guid.h"
 #include "fu-mutex.h"
 #include "fu-quirks.h"
 
@@ -97,9 +97,9 @@ fu_quirks_build_group_key (const gchar *group)
 	for (guint i = 0; guid_prefixes[i] != NULL; i++) {
 		if (g_str_has_prefix (group, guid_prefixes[i])) {
 			gsize len = strlen (guid_prefixes[i]);
-			if (as_utils_guid_is_valid (group + len))
+			if (fu_common_guid_is_valid (group + len))
 				return g_strdup (group + len);
-			return as_utils_guid_from_string (group + len);
+			return fu_common_guid_from_string (group + len);
 		}
 	}
 

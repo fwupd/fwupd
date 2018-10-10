@@ -13,6 +13,7 @@
 #include <gio/gio.h>
 
 #include "fu-common.h"
+#include "fu-common-guid.h"
 #include "fu-device-private.h"
 #include "fu-mutex.h"
 
@@ -534,8 +535,8 @@ fu_device_add_parent_guid (FuDevice *self, const gchar *guid)
 	g_return_if_fail (guid != NULL);
 
 	/* make valid */
-	if (!as_utils_guid_is_valid (guid)) {
-		g_autofree gchar *tmp = as_utils_guid_from_string (guid);
+	if (!fu_common_guid_is_valid (guid)) {
+		g_autofree gchar *tmp = fu_common_guid_from_string (guid);
 		if (fu_device_has_parent_guid (self, tmp))
 			return;
 		g_debug ("using %s for %s", tmp, guid);
@@ -769,7 +770,7 @@ fu_device_add_guid_safe (FuDevice *self, const gchar *guid)
  * @guid: A GUID, e.g. `2082b5e0-7a64-478a-b1b2-e3404fab6dad`
  *
  * Adds a GUID to the device. If the @guid argument is not a valid GUID then it
- * is converted to a GUID using as_utils_guid_from_string().
+ * is converted to a GUID using fu_common_guid_from_string().
  *
  * Since: 0.7.2
  **/
@@ -777,8 +778,8 @@ void
 fu_device_add_guid (FuDevice *self, const gchar *guid)
 {
 	/* make valid */
-	if (!as_utils_guid_is_valid (guid)) {
-		g_autofree gchar *tmp = as_utils_guid_from_string (guid);
+	if (!fu_common_guid_is_valid (guid)) {
+		g_autofree gchar *tmp = fu_common_guid_from_string (guid);
 		g_debug ("using %s for %s", tmp, guid);
 		fu_device_add_guid_safe (self, tmp);
 		return;
@@ -794,7 +795,7 @@ fu_device_add_guid (FuDevice *self, const gchar *guid)
  * @guid: A GUID, e.g. `2082b5e0-7a64-478a-b1b2-e3404fab6dad`
  *
  * Adds a GUID to the device. If the @guid argument is not a valid GUID then it
- * is converted to a GUID using as_utils_guid_from_string().
+ * is converted to a GUID using fu_common_guid_from_string().
  *
  * A counterpart GUID is typically the GUID of the same device in bootloader
  * or runtime mode, if they have a different device PCI or USB ID. Adding this
@@ -806,8 +807,8 @@ void
 fu_device_add_counterpart_guid (FuDevice *self, const gchar *guid)
 {
 	/* make valid */
-	if (!as_utils_guid_is_valid (guid)) {
-		g_autofree gchar *tmp = as_utils_guid_from_string (guid);
+	if (!fu_common_guid_is_valid (guid)) {
+		g_autofree gchar *tmp = fu_common_guid_from_string (guid);
 		g_debug ("using %s for counterpart %s", tmp, guid);
 		fwupd_device_add_guid (FWUPD_DEVICE (self), tmp);
 		return;

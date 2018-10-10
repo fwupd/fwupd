@@ -26,6 +26,7 @@ libfwupdprivate = static_library(
   'fwupdprivate',
   sources : [
     'fu-common.c',
+    'fu-common-guid.c',
     'fu-chunk.c',
     'fu-device.c',
     'fu-device-locker.c',
@@ -53,6 +54,7 @@ libfwupdprivate = static_library(
     sqlite,
     libarchive,
     valgrind,
+    uuid,
   ],
   c_args : [
     '-DFU_OFFLINE_DESTDIR=""',
@@ -108,6 +110,7 @@ fwupdtool = executable(
     'fu-chunk.c',
     'fu-common.c',
     'fu-common-cab.c',
+    'fu-common-guid.c',
     'fu-config.c',
     'fu-keyring.c',
     'fu-keyring-result.c',
@@ -145,6 +148,7 @@ fwupdtool = executable(
     sqlite,
     valgrind,
     libarchive,
+    uuid,
   ],
   link_with : [
     fwupd,
@@ -184,6 +188,7 @@ executable(
     'fu-chunk.c',
     'fu-common.c',
     'fu-common-cab.c',
+    'fu-common-guid.c',
     'fu-config.c',
     'fu-keyring.c',
     'fu-keyring-result.c',
@@ -223,6 +228,7 @@ executable(
     sqlite,
     valgrind,
     libarchive,
+    uuid,
   ],
   link_with : fwupd,
   c_args : [
@@ -251,6 +257,7 @@ if get_option('tests')
       'fu-chunk.c',
       'fu-common.c',
       'fu-common-cab.c',
+      'fu-common-guid.c',
       'fu-config.c',
       'fu-engine.c',
       'fu-keyring.c',
@@ -289,6 +296,7 @@ if get_option('tests')
       sqlite,
       valgrind,
       libarchive,
+      uuid,
     ],
     link_with : [
       fwupd,
@@ -312,6 +320,8 @@ if get_option('introspection')
       'fu-chunk.c',
       'fu-chunk.h',
       'fu-common.c',
+      'fu-common-guid.c',
+      'fu-common-guid.h',
       'fu-common.h',
       'fu-device.c',
       'fu-device.h',
