@@ -9,7 +9,6 @@
 #include "config.h"
 
 #include <string.h>
-#include <appstream-glib.h>
 #include <glib-object.h>
 #include <gio/gio.h>
 

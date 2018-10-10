@@ -8,7 +8,6 @@
 
 #include "config.h"
 
-#include <appstream-glib.h>
 #include <string.h>
 
 #include "fu-udev-device-private.h"
