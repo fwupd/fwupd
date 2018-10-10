@@ -6,7 +6,6 @@
 
 #include <config.h>
 
-#include <appstream-glib.h>
 #include <stdio.h>
 #include <glib/gi18n.h>
 #include <gusb.h>
@@ -162,11 +161,6 @@ fu_util_get_versions (void)
 #endif
 	g_string_append_printf (string,
 				"compile-time dependency versions\n");
-	g_string_append_printf (string,
-				"\tappstream-glib:\t%d.%d.%d\n",
-				AS_MAJOR_VERSION,
-				AS_MINOR_VERSION,
-				AS_MICRO_VERSION);
 	g_string_append_printf (string,
 				"\tgusb:\t%d.%d.%d\n",
 				G_USB_MAJOR_VERSION,
