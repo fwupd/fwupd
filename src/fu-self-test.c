@@ -17,6 +17,7 @@
 
 #include "fu-common-cab.h"
 #include "fu-common-guid.h"
+#include "fu-common-version.h"
 #include "fu-chunk.h"
 #include "fu-config.h"
 #include "fu-device-list.h"
@@ -2862,6 +2863,134 @@ fu_common_guid_func (void)
 	g_assert_cmpstr (guid2, ==, "1fbd1f2c-80f4-5d7c-a6ad-35c7b9bd5486");
 }
 
+static void
+fu_common_version_func (void)
+{
+	guint i;
+	struct {
+		guint32 val;
+		const gchar *ver;
+		FuVersionFormat flags;
+	} version_from_uint32[] = {
+		{ 0x0,		"0.0.0.0",		FU_VERSION_FORMAT_QUAD },
+		{ 0xff,		"0.0.0.255",		FU_VERSION_FORMAT_QUAD },
+		{ 0xff01,	"0.0.255.1",		FU_VERSION_FORMAT_QUAD },
+		{ 0xff0001,	"0.255.0.1",		FU_VERSION_FORMAT_QUAD },
+		{ 0xff000100,	"255.0.1.0",		FU_VERSION_FORMAT_QUAD },
+		{ 0x0,		"0.0.0",		FU_VERSION_FORMAT_TRIPLET },
+		{ 0xff,		"0.0.255",		FU_VERSION_FORMAT_TRIPLET },
+		{ 0xff01,	"0.0.65281",		FU_VERSION_FORMAT_TRIPLET },
+		{ 0xff0001,	"0.255.1",		FU_VERSION_FORMAT_TRIPLET },
+		{ 0xff000100,	"255.0.256",		FU_VERSION_FORMAT_TRIPLET },
+		{ 0x0,		"0",			FU_VERSION_FORMAT_PLAIN },
+		{ 0xff000100,	"4278190336",		FU_VERSION_FORMAT_PLAIN },
+		{ 0,		NULL }
+	};
+	struct {
+		guint16 val;
+		const gchar *ver;
+		FuVersionFormat flags;
+	} version_from_uint16[] = {
+		{ 0x0,		"0.0",			FU_VERSION_FORMAT_PAIR },
+		{ 0xff,		"0.255",		FU_VERSION_FORMAT_PAIR },
+		{ 0xff01,	"255.1",		FU_VERSION_FORMAT_PAIR },
+		{ 0x0,		"0.0",			FU_VERSION_FORMAT_BCD },
+		{ 0x0110,	"1.10",			FU_VERSION_FORMAT_BCD },
+		{ 0x9999,	"99.99",		FU_VERSION_FORMAT_BCD },
+		{ 0x0,		"0",			FU_VERSION_FORMAT_PLAIN },
+		{ 0x1234,	"4660",			FU_VERSION_FORMAT_PLAIN },
+		{ 0,		NULL }
+	};
+	struct {
+		const gchar *old;
+		const gchar *new;
+	} version_parse[] = {
+		{ "0",		"0" },
+		{ "0x1a",	"0.0.26" },
+		{ "257",	"0.0.257" },
+		{ "1.2.3",	"1.2.3" },
+		{ "0xff0001",	"0.255.1" },
+		{ "16711681",	"0.255.1" },
+		{ "20150915",	"20150915" },
+		{ "dave",	"dave" },
+		{ "0x1x",	"0x1x" },
+		{ NULL,		NULL }
+	};
+
+	/* check version conversion */
+	for (i = 0; version_from_uint32[i].ver != NULL; i++) {
+		g_autofree gchar *ver = NULL;
+		ver = fu_common_version_from_uint32 (version_from_uint32[i].val,
+						    version_from_uint32[i].flags);
+		g_assert_cmpstr (ver, ==, version_from_uint32[i].ver);
+	}
+	for (i = 0; version_from_uint16[i].ver != NULL; i++) {
+		g_autofree gchar *ver = NULL;
+		ver = fu_common_version_from_uint16 (version_from_uint16[i].val,
+						    version_from_uint16[i].flags);
+		g_assert_cmpstr (ver, ==, version_from_uint16[i].ver);
+	}
+
+	/* check version parsing */
+	for (i = 0; version_parse[i].old != NULL; i++) {
+		g_autofree gchar *ver = NULL;
+		ver = fu_common_version_parse (version_parse[i].old);
+		g_assert_cmpstr (ver, ==, version_parse[i].new);
+	}
+}
+
+static void
+fu_common_vercmp_func (void)
+{
+	/* same */
+	g_assert_cmpint (fu_common_vercmp ("1.2.3", "1.2.3"), ==, 0);
+	g_assert_cmpint (fu_common_vercmp ("001.002.003", "001.002.003"), ==, 0);
+
+	/* same, not dotted decimal */
+	g_assert_cmpint (fu_common_vercmp ("1.2.3", "0x1020003"), ==, 0);
+	g_assert_cmpint (fu_common_vercmp ("0x10203", "0x10203"), ==, 0);
+
+	/* upgrade and downgrade */
+	g_assert_cmpint (fu_common_vercmp ("1.2.3", "1.2.4"), <, 0);
+	g_assert_cmpint (fu_common_vercmp ("001.002.000", "001.002.009"), <, 0);
+	g_assert_cmpint (fu_common_vercmp ("1.2.3", "1.2.2"), >, 0);
+	g_assert_cmpint (fu_common_vercmp ("001.002.009", "001.002.000"), >, 0);
+
+	/* unequal depth */
+	g_assert_cmpint (fu_common_vercmp ("1.2.3", "1.2.3.1"), <, 0);
+	g_assert_cmpint (fu_common_vercmp ("1.2.3.1", "1.2.4"), <, 0);
+
+	/* mixed-alpha-numeric */
+	g_assert_cmpint (fu_common_vercmp ("1.2.3a", "1.2.3a"), ==, 0);
+	g_assert_cmpint (fu_common_vercmp ("1.2.3a", "1.2.3b"), <, 0);
+	g_assert_cmpint (fu_common_vercmp ("1.2.3b", "1.2.3a"), >, 0);
+
+	/* alpha version append */
+	g_assert_cmpint (fu_common_vercmp ("1.2.3", "1.2.3a"), <, 0);
+	g_assert_cmpint (fu_common_vercmp ("1.2.3a", "1.2.3"), >, 0);
+
+	/* alpha only */
+	g_assert_cmpint (fu_common_vercmp ("alpha", "alpha"), ==, 0);
+	g_assert_cmpint (fu_common_vercmp ("alpha", "beta"), <, 0);
+	g_assert_cmpint (fu_common_vercmp ("beta", "alpha"), >, 0);
+
+	/* alpha-compare */
+	g_assert_cmpint (fu_common_vercmp ("1.2a.3", "1.2a.3"), ==, 0);
+	g_assert_cmpint (fu_common_vercmp ("1.2a.3", "1.2b.3"), <, 0);
+	g_assert_cmpint (fu_common_vercmp ("1.2b.3", "1.2a.3"), >, 0);
+
+	/* tilde is all-powerful */
+	g_assert_cmpint (fu_common_vercmp ("1.2.3~rc1", "1.2.3~rc1"), ==, 0);
+	g_assert_cmpint (fu_common_vercmp ("1.2.3~rc1", "1.2.3"), <, 0);
+	g_assert_cmpint (fu_common_vercmp ("1.2.3", "1.2.3~rc1"), >, 0);
+	g_assert_cmpint (fu_common_vercmp ("1.2.3~rc2", "1.2.3~rc1"), >, 0);
+
+	/* invalid */
+	g_assert_cmpint (fu_common_vercmp ("1", NULL), ==, G_MAXINT);
+	g_assert_cmpint (fu_common_vercmp (NULL, "1"), ==, G_MAXINT);
+	g_assert_cmpint (fu_common_vercmp (NULL, NULL), ==, G_MAXINT);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -2924,6 +3053,8 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/keyring{pkcs7}", fu_keyring_pkcs7_func);
 	g_test_add_func ("/fwupd/chunk", fu_chunk_func);
 	g_test_add_func ("/fwupd/common{guid}", fu_common_guid_func);
+	g_test_add_func ("/fwupd/common{version}", fu_common_version_func);
+	g_test_add_func ("/fwupd/common{vercmp}", fu_common_vercmp_func);
 	g_test_add_func ("/fwupd/common{strstrip}", fu_common_strstrip_func);
 	g_test_add_func ("/fwupd/common{endian}", fu_common_endian_func);
 	g_test_add_func ("/fwupd/common{cab-success}", fu_common_store_cab_func);

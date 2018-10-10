@@ -21,7 +21,8 @@
 
 #include <string.h>
 #include <stdio.h>
-#include <appstream-glib.h>
+
+#include "fu-common-version.h"
 
 #include "dfu-common.h"
 #include "dfu-firmware.h"
@@ -642,8 +643,8 @@ dfu_firmware_to_string (DfuFirmware *firmware)
 
 	g_return_val_if_fail (DFU_IS_FIRMWARE (firmware), NULL);
 
-	release_str = as_utils_version_from_uint16 (priv->release,
-						    AS_VERSION_PARSE_FLAG_USE_BCD);
+	release_str = fu_common_version_from_uint16 (priv->release,
+						     FU_VERSION_FORMAT_BCD);
 	str = g_string_new ("");
 	g_string_append_printf (str, "vid:         0x%04x\n", priv->vid);
 	g_string_append_printf (str, "pid:         0x%04x\n", priv->pid);

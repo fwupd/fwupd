@@ -742,8 +742,8 @@ fu_util_install_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 			continue;
 
 		/* tell the user what's going to happen */
-		vercmp = as_utils_vercmp (fwupd_device_get_version (dev),
-					  fwupd_release_get_version (rel));
+		vercmp = fu_common_vercmp (fwupd_device_get_version (dev),
+					   fwupd_release_get_version (rel));
 		if (vercmp == 0) {
 			/* TRANSLATORS: the first replacement is a display name
 			 * e.g. "ColorHugALS" and the second is a version number

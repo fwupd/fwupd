@@ -13,6 +13,8 @@
 #include <gudev/gudev.h>
 
 #include "fu-common.h"
+#include "fu-common-guid.h"
+#include "fu-common-version.h"
 #include "fu-device.h"
 #include "fu-device-locker.h"
 #include "fu-quirks.h"

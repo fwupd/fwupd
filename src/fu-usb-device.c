@@ -8,8 +8,6 @@
 
 #include "config.h"
 
-#include <appstream-glib.h>
-
 #include "fu-usb-device-private.h"
 
 /**
@@ -238,8 +236,8 @@ fu_usb_device_probe (FuDevice *device, GError **error)
 	/* set the version if the release has been set */
 	release = g_usb_device_get_release (priv->usb_device);
 	if (release != 0x0) {
-		g_autofree gchar *version = as_utils_version_from_uint16 (release,
-									  AS_VERSION_PARSE_FLAG_USE_BCD);
+		g_autofree gchar *version = NULL;
+		version = fu_common_version_from_uint16 (release, FU_VERSION_FORMAT_BCD);
 		fu_device_set_version (device, version);
 	}
 
