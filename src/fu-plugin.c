@@ -10,7 +10,6 @@
 
 #include <fwupd.h>
 #include <gmodule.h>
-#include <appstream-glib.h>
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
