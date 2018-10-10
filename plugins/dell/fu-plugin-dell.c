@@ -232,7 +232,7 @@ fu_plugin_dell_inject_fake_data (FuPlugin *plugin,
 	data->can_switch_modes = TRUE;
 }
 
-static AsVersionParseFlag
+static FuVersionFormat
 fu_plugin_dell_get_version_format (FuPlugin *plugin)
 {
 	const gchar *content;
@@ -241,17 +241,15 @@ fu_plugin_dell_get_version_format (FuPlugin *plugin)
 
 	content = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER);
 	if (content == NULL)
-		return AS_VERSION_PARSE_FLAG_USE_TRIPLET;
+		return FU_VERSION_FORMAT_TRIPLET;
 
 	/* any quirks match */
 	group = g_strdup_printf ("SmbiosManufacturer=%s", content);
 	quirk = fu_plugin_lookup_quirk_by_id (plugin, group,
 					      FU_QUIRKS_UEFI_VERSION_FORMAT);
-	if (g_strcmp0 (quirk, "quad") == 0)
-		return AS_VERSION_PARSE_FLAG_NONE;
-
-	/* fall back */
-	return AS_VERSION_PARSE_FLAG_USE_TRIPLET;
+	if (quirk == NULL)
+		return FU_VERSION_FORMAT_TRIPLET;
+	return fu_common_version_format_from_string (quirk);
 }
 
 static gboolean
@@ -319,7 +317,7 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 			    GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	AsVersionParseFlag parse_flags;
+	FuVersionFormat version_format;
 	guint16 pid;
 	guint16 vid;
 	const gchar *query_str;
@@ -372,7 +370,7 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 	g_debug ("Dock cable type: %" G_GUINT32_FORMAT, dock_info->cable_type);
 	g_debug ("Dock location: %d", dock_info->location);
 	g_debug ("Dock component count: %d", dock_info->component_count);
-	parse_flags = fu_plugin_dell_get_version_format (plugin);
+	version_format = fu_plugin_dell_get_version_format (plugin);
 
 	for (guint i = 0; i < dock_info->component_count; i++) {
 		g_autofree gchar *fw_str = NULL;
@@ -411,8 +409,8 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 			continue;
 		}
 
-		fw_str = as_utils_version_from_uint32 (dock_info->components[i].fw_version,
-						       parse_flags);
+		fw_str = fu_common_version_from_uint32 (dock_info->components[i].fw_version,
+						       version_format);
 		if (!fu_plugin_dock_node (plugin,
 					  platform,
 					  buf.record->dock_info_header.dock_type,
@@ -427,8 +425,8 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 
 	/* if an old EC or invalid EC version found, create updatable parent */
 	if (old_ec)
-		flash_ver_str = as_utils_version_from_uint32 (dock_info->flash_pkg_version,
-							      parse_flags);
+		flash_ver_str = fu_common_version_from_uint32 (dock_info->flash_pkg_version,
+							       version_format);
 	if (!fu_plugin_dock_node (plugin,
 				  platform,
 				  buf.record->dock_info_header.dock_type,
@@ -607,8 +605,8 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 
 	g_debug ("Creating primary TPM GUID %s and secondary TPM GUID %s",
 		 tpm_guid_raw, tpm_guid_raw_alt);
-	version_str = as_utils_version_from_uint32 (out->fw_version,
-						    AS_VERSION_PARSE_FLAG_NONE);
+	version_str = fu_common_version_from_uint32 (out->fw_version,
+						     FU_VERSION_FORMAT_QUAD);
 
 	/* make it clear that the TPM is a discrete device of the product */
 	if (!data->smi_obj->fake_smbios) {

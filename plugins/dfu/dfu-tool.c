@@ -11,7 +11,6 @@
 #include <stdlib.h>
 #include <glib/gi18n.h>
 #include <glib-unix.h>
-#include <appstream-glib.h>
 
 #include "dfu-cipher-xtea.h"
 #include "dfu-device-private.h"
@@ -2036,8 +2035,8 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 		dfu_device_set_usb_context (device, usb_context);
 		if (!fu_device_probe (FU_DEVICE (device), NULL))
 			continue;
-		version = as_utils_version_from_uint16 (g_usb_device_get_release (usb_device),
-							AS_VERSION_PARSE_FLAG_USE_BCD);
+		version = fu_common_version_from_uint16 (g_usb_device_get_release (usb_device),
+							 FU_VERSION_FORMAT_BCD);
 		g_print ("%s %04x:%04x [v%s]:\n",
 			 /* TRANSLATORS: detected a DFU device */
 			 _("Found"),

@@ -10,6 +10,7 @@
 
 #include <fwupd.h>
 
+#include "fu-common-version.h"
 #include "fu-device-private.h"
 #include "fu-install-task.h"
 #include "fu-keyring-utils.h"
@@ -210,7 +211,7 @@ fu_install_task_check_requirements (FuInstallTask *self,
 	/* compare to the lowest supported version, if it exists */
 	version_lowest = fu_device_get_version_lowest (self->device);
 	if (version_lowest != NULL &&
-	    as_utils_vercmp (version_lowest, version) > 0 &&
+	    fu_common_vercmp (version_lowest, version) > 0 &&
 	    (flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -221,7 +222,7 @@ fu_install_task_check_requirements (FuInstallTask *self,
 	}
 
 	/* check semver */
-	vercmp = as_utils_vercmp (version, version_release);
+	vercmp = fu_common_vercmp (version, version_release);
 	if (vercmp == 0 && (flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) == 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,

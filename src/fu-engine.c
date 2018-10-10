@@ -1007,7 +1007,7 @@ fu_engine_vendor_fixup_provide_value (AsApp *app)
 static void
 fu_engine_vendor_quirk_release_version (FuEngine *self, AsApp *app)
 {
-	AsVersionParseFlag flags = AS_VERSION_PARSE_FLAG_USE_TRIPLET;
+	FuVersionFormat flags = FU_VERSION_FORMAT_TRIPLET;
 	GPtrArray *releases;
 	const gchar *quirk;
 	const gchar *version_format;
@@ -1024,7 +1024,7 @@ fu_engine_vendor_quirk_release_version (FuEngine *self, AsApp *app)
 		g_auto(GStrv) globs = g_strsplit (quirk, ",", -1);
 		for (guint i = 0; globs[i] != NULL; i++) {
 			if (fnmatch (globs[i], as_app_get_id (app), 0) == 0) {
-				flags = AS_VERSION_PARSE_FLAG_NONE;
+				flags = FU_VERSION_FORMAT_QUAD;
 				break;
 			}
 		}
@@ -1033,7 +1033,7 @@ fu_engine_vendor_quirk_release_version (FuEngine *self, AsApp *app)
 	/* specified in metadata */
 	version_format = as_app_get_metadata_item (app, "LVFS::VersionFormat");
 	if (g_strcmp0 (version_format, "quad") == 0)
-		flags = AS_VERSION_PARSE_FLAG_NONE;
+		flags = FU_VERSION_FORMAT_QUAD;
 
 	/* fix each release */
 	releases = as_app_get_releases (app);
@@ -1056,7 +1056,7 @@ fu_engine_vendor_quirk_release_version (FuEngine *self, AsApp *app)
 			continue;
 
 		/* convert to dotted decimal */
-		version_new = as_utils_version_from_uint32 ((guint32) ver_uint32, flags);
+		version_new = fu_common_version_from_uint32 ((guint32) ver_uint32, flags);
 		as_release_set_version (rel, version_new);
 	}
 }

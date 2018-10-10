@@ -412,7 +412,7 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 	}
 }
 
-static AsVersionParseFlag
+static FuVersionFormat
 fu_plugin_uefi_get_version_format_for_type (FuPlugin *plugin, FuUefiDeviceKind device_kind)
 {
 	const gchar *content;
@@ -421,21 +421,19 @@ fu_plugin_uefi_get_version_format_for_type (FuPlugin *plugin, FuUefiDeviceKind d
 
 	/* we have no information for devices */
 	if (device_kind == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE)
-		return AS_VERSION_PARSE_FLAG_USE_TRIPLET;
+		return FU_VERSION_FORMAT_TRIPLET;
 
 	content = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER);
 	if (content == NULL)
-		return AS_VERSION_PARSE_FLAG_USE_TRIPLET;
+		return FU_VERSION_FORMAT_TRIPLET;
 
 	/* any quirks match */
 	group = g_strdup_printf ("SmbiosManufacturer=%s", content);
 	quirk = fu_plugin_lookup_quirk_by_id (plugin, group,
 					      FU_QUIRKS_UEFI_VERSION_FORMAT);
-	if (g_strcmp0 (quirk, "quad") == 0)
-		return AS_VERSION_PARSE_FLAG_NONE;
-
-	/* fall back */
-	return AS_VERSION_PARSE_FLAG_USE_TRIPLET;
+	if (quirk == NULL)
+		return FU_VERSION_FORMAT_TRIPLET;
+	return fu_common_version_format_from_string (quirk);
 }
 
 static const gchar *
@@ -478,7 +476,7 @@ static gboolean
 fu_plugin_uefi_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GError **error)
 {
 	FuUefiDeviceKind device_kind;
-	AsVersionParseFlag parse_flags;
+	FuVersionFormat version_format;
 	guint32 version_raw;
 	g_autofree gchar *name = NULL;
 	g_autofree gchar *version_lowest = NULL;
@@ -486,17 +484,17 @@ fu_plugin_uefi_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GError **er
 
 	/* add details to the device */
 	device_kind = fu_uefi_device_get_kind (dev);
-	parse_flags = fu_plugin_uefi_get_version_format_for_type (plugin, device_kind);
+	version_format = fu_plugin_uefi_get_version_format_for_type (plugin, device_kind);
 	version_raw = fu_uefi_device_get_version (dev);
-	version = as_utils_version_from_uint32 (version_raw, parse_flags);
+	version = fu_common_version_from_uint32 (version_raw, version_format);
 	fu_device_set_version (dev, version);
 	name = fu_plugin_uefi_get_name_for_type (plugin, fu_uefi_device_get_kind (dev));
 	if (name != NULL)
 		fu_device_set_name (FU_DEVICE (dev), name);
 	version_raw = fu_uefi_device_get_version_lowest (dev);
 	if (version_raw != 0) {
-		version_lowest = as_utils_version_from_uint32 (version_raw,
-							       parse_flags);
+		version_lowest = fu_common_version_from_uint32 (version_raw,
+							        version_format);
 		fu_device_set_version_lowest (FU_DEVICE (dev), version_lowest);
 	}
 	fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_INTERNAL);

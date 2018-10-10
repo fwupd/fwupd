@@ -203,7 +203,7 @@ fu_nvme_device_set_version (FuNvmeDevice *self, const gchar *version, GError **e
 				     version);
 			return FALSE;
 		}
-		version_new = as_utils_version_from_uint32 (tmp, AS_VERSION_PARSE_FLAG_NONE);
+		version_new = as_utils_version_from_uint32 (tmp, FU_VERSION_FORMAT_QUAD);
 		fu_device_set_version (FU_DEVICE (self), version_new);
 		return TRUE;
 	}
