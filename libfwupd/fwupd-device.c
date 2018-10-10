@@ -721,7 +721,7 @@ fwupd_device_get_install_duration (FwupdDevice *device)
 /**
  * fwupd_device_set_install_duration:
  * @device: A #FwupdDevice
- * @estimate: The amount of time
+ * @duration: The amount of time
  *
  * Sets the time estimate for firmware installation (in seconds)
  *
