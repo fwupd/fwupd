@@ -45,9 +45,9 @@ libfwupdprivate = static_library(
   include_directories : [
     include_directories('..'),
     include_directories('../libfwupd'),
+    include_directories('../libxmlb/src'),
   ],
   dependencies : [
-    appstream_glib,
     giounix,
     gudev,
     gusb,
@@ -72,9 +72,9 @@ fwupdmgr = executable(
   include_directories : [
     include_directories('..'),
     include_directories('../libfwupd'),
+    include_directories('../libxmlb/src'),
   ],
   dependencies : [
-    appstream_glib,
     giounix,
     gudev,
     gusb,
@@ -86,6 +86,7 @@ fwupdmgr = executable(
   link_with : [
     fwupd,
     libfwupdprivate,
+    libxmlbstatic,
   ],
   c_args : [
     '-DFU_OFFLINE_DESTDIR=""',
@@ -137,10 +138,10 @@ fwupdtool = executable(
   include_directories : [
     include_directories('..'),
     include_directories('../libfwupd'),
+    include_directories('../libxmlb/src'),
   ],
   dependencies : [
     keyring_deps,
-    appstream_glib,
     libgcab,
     giounix,
     gmodule,
@@ -155,6 +156,7 @@ fwupdtool = executable(
   link_with : [
     fwupd,
     libfwupdprivate,
+    libxmlbstatic,
   ],
   c_args : [
     '-DFU_OFFLINE_DESTDIR=""',
@@ -217,10 +219,10 @@ executable(
   include_directories : [
     include_directories('..'),
     include_directories('../libfwupd'),
+    include_directories('../libxmlb/src'),
   ],
   dependencies : [
     keyring_deps,
-    appstream_glib,
     libgcab,
     giounix,
     gmodule,
@@ -233,7 +235,10 @@ executable(
     libarchive,
     uuid,
   ],
-  link_with : fwupd,
+  link_with : [
+    fwupd,
+    libxmlbstatic,
+  ],
   c_args : [
     '-DFU_OFFLINE_DESTDIR=""',
   ],
@@ -287,10 +292,10 @@ if get_option('tests')
     include_directories : [
       include_directories('..'),
       include_directories('../libfwupd'),
+      include_directories('../libxmlb/src'),
     ],
     dependencies : [
       keyring_deps,
-      appstream_glib,
       libgcab,
       giounix,
       gmodule,
@@ -304,6 +309,7 @@ if get_option('tests')
     ],
     link_with : [
       fwupd,
+      libxmlbstatic,
     ],
     c_args : [
       '-DTESTDATADIR_SRC="' + testdatadir_src + '"',
@@ -348,9 +354,9 @@ if get_option('introspection')
     include_directories : [
       include_directories('..'),
       include_directories('../libfwupd'),
+      include_directories('../libxmlb/src'),
     ],
     dependencies : [
-      appstream_glib,
       gir_dep,
       giounix,
       gusb,

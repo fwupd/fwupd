@@ -8,7 +8,6 @@
 
 #include "config.h"
 
-#include <appstream-glib.h>
 #include <fwupd.h>
 #include <gio/gunixfdlist.h>
 #include <glib/gi18n.h>
@@ -20,6 +19,8 @@
 #include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
 #include "fwupd-resources.h"
+
+#include "xb-silo-query.h"
 
 #include "fu-common.h"
 #include "fu-debug.h"
@@ -282,6 +283,7 @@ typedef struct {
 	gchar			*remote_id;
 	gchar			*key;
 	gchar			*value;
+	XbSilo			*silo;
 } FuMainAuthHelper;
 
 static void
@@ -291,6 +293,8 @@ fu_main_auth_helper_free (FuMainAuthHelper *helper)
 		g_bytes_unref (helper->blob_cab);
 	if (helper->subject != NULL)
 		g_object_unref (helper->subject);
+	if (helper->silo != NULL)
+		g_object_unref (helper->silo);
 	if (helper->install_tasks != NULL)
 		g_ptr_array_unref (helper->install_tasks);
 	if (helper->action_ids != NULL)
@@ -546,9 +550,8 @@ static gboolean
 fu_main_install_with_helper (FuMainAuthHelper *helper_ref, GError **error)
 {
 	FuMainPrivate *priv = helper_ref->priv;
-	GPtrArray *apps;
-	g_autoptr(AsStore) store = NULL;
 	g_autoptr(FuMainAuthHelper) helper = helper_ref;
+	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(GPtrArray) devices_possible = NULL;
 	g_autoptr(GPtrArray) errors = NULL;
 
@@ -563,20 +566,22 @@ fu_main_install_with_helper (FuMainAuthHelper *helper_ref, GError **error)
 			return FALSE;
 	}
 
-	/* parse store */
-	store = fu_engine_get_store_from_blob (priv->engine,
-					       helper->blob_cab,
-					       error);
-	if (store == NULL)
+	/* parse silo */
+	helper->silo = fu_engine_get_silo_from_blob (priv->engine,
+						     helper->blob_cab,
+						     error);
+	if (helper->silo == NULL)
 		return FALSE;
 
-	/* for each component in the store */
-	apps = as_store_get_apps (store);
+	/* for each component in the silo */
+	components = xb_silo_query (helper->silo, "component", 0, error);
+	if (components == NULL)
+		return FALSE;
 	helper->action_ids = g_ptr_array_new_with_free_func (g_free);
 	helper->install_tasks = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	errors = g_ptr_array_new_with_free_func ((GDestroyNotify) g_error_free);
-	for (guint i = 0; i < apps->len; i++) {
-		AsApp *app = g_ptr_array_index (apps, i);
+	for (guint i = 0; i < components->len; i++) {
+		XbNode *component = g_ptr_array_index (components, i);
 
 		/* do any devices pass the requirements */
 		for (guint j = 0; j < devices_possible->len; j++) {
@@ -586,14 +591,14 @@ fu_main_install_with_helper (FuMainAuthHelper *helper_ref, GError **error)
 			g_autoptr(GError) error_local = NULL;
 
 			/* is this component valid for the device */
-			task = fu_install_task_new (device, app);
+			task = fu_install_task_new (device, component);
 			if (!fu_engine_check_requirements (priv->engine,
 							   task,
 							   helper->flags,
 							   &error_local)) {
 				g_debug ("requirement on %s:%s failed: %s",
 					 fu_device_get_id (device),
-					 as_app_get_id (app),
+					 xb_node_query_text (component, "id", NULL),
 					 error_local->message);
 				g_ptr_array_add (errors, g_steal_pointer (&error_local));
 				continue;

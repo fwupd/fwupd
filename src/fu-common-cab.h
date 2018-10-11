@@ -7,9 +7,9 @@
 #ifndef __FU_COMMON_CAB_H
 #define __FU_COMMON_CAB_H
 
-#include <appstream-glib.h>
+#include "xb-silo.h"
 
-AsStore		*fu_common_store_from_cab_bytes		(GBytes		*blob,
+XbSilo		*fu_common_cab_build_silo		(GBytes		*blob,
 							 guint64	 size_max,
 							 GError		**error);
 
