@@ -12,6 +12,7 @@
 #include <fwupd.h>
 #include <gio/gunixfdlist.h>
 #include <glib/gi18n.h>
+#include <glib-unix.h>
 #include <locale.h>
 #include <polkit/polkit.h>
 #include <stdlib.h>
@@ -43,7 +44,22 @@ typedef struct {
 	PolkitAuthority		*authority;
 	guint			 owner_id;
 	FuEngine		*engine;
+	gboolean		 update_in_progress;
+	gboolean		 pending_sigterm;
 } FuMainPrivate;
+
+static gboolean
+fu_main_sigterm_cb (gpointer user_data)
+{
+	FuMainPrivate *priv = (FuMainPrivate *) user_data;
+	if (!priv->update_in_progress) {
+		g_main_loop_quit (priv->loop);
+		return G_SOURCE_REMOVE;
+	}
+	g_warning ("Received SIGTERM during a firmware update, ignoring");
+	priv->pending_sigterm = TRUE;
+	return G_SOURCE_CONTINUE;
+}
 
 static void
 fu_main_engine_changed_cb (FuEngine *engine, FuMainPrivate *priv)
@@ -447,6 +463,7 @@ fu_main_authorize_install_queue (FuMainAuthHelper *helper_ref)
 	FuMainPrivate *priv = helper_ref->priv;
 	g_autoptr(FuMainAuthHelper) helper = helper_ref;
 	g_autoptr(GError) error = NULL;
+	gboolean ret;
 
 	/* still more things to to authenticate */
 	if (helper->action_ids->len > 0) {
@@ -463,11 +480,16 @@ fu_main_authorize_install_queue (FuMainAuthHelper *helper_ref)
 	}
 
 	/* all authenticated, so install all the things */
-	if (!fu_engine_install_tasks (helper->priv->engine,
-				      helper->install_tasks,
-				      helper->blob_cab,
-				      helper->flags,
-				      &error)) {
+	priv->update_in_progress = TRUE;
+	ret = fu_engine_install_tasks (helper->priv->engine,
+				       helper->install_tasks,
+				       helper->blob_cab,
+				       helper->flags,
+				       &error);
+	priv->update_in_progress = FALSE;
+	if (priv->pending_sigterm)
+		g_main_loop_quit (priv->loop);
+	if (!ret) {
 		g_dbus_method_invocation_return_gerror (helper->invocation, error);
 		return;
 	}
@@ -1266,6 +1288,10 @@ main (int argc, char *argv[])
 		g_printerr ("Failed to load engine: %s\n", error->message);
 		return EXIT_FAILURE;
 	}
+
+	g_unix_signal_add_full (G_PRIORITY_DEFAULT,
+				SIGTERM, fu_main_sigterm_cb,
+				priv, NULL);
 
 	/* load introspection from file */
 	priv->introspection_daemon = fu_main_load_introspection (FWUPD_DBUS_INTERFACE ".xml",
