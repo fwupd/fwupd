@@ -23,6 +23,11 @@
 #include "fu-util-common.h"
 #include "fu-debug.h"
 
+#define SYSTEMD_SERVICE			"org.freedesktop.systemd1"
+#define SYSTEMD_OBJECT_PATH		"/org/freedesktop/systemd1"
+#define SYSTEMD_MANAGER_INTERFACE	"org.freedesktop.systemd1.Manager"
+#define SYSTEMD_FWUPD_UNIT		"fwupd.service"
+
 /* this is only valid in this file */
 #define FWUPD_ERROR_INVALID_ARGS	(FWUPD_ERROR_LAST+1)
 
@@ -60,6 +65,60 @@ fu_util_item_free (FuUtilItem *item)
 	g_free (item->arguments);
 	g_free (item->description);
 	g_free (item);
+}
+
+static gboolean
+fu_util_start_engine (FuUtilPrivate *priv, GError **error)
+{
+#ifdef HAVE_SYSTEMD
+	g_autoptr(GDBusConnection) connection = NULL;
+	g_autoptr(GDBusProxy) proxy = NULL;
+	g_autoptr(GVariant) val = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	/* try to stop any already running daemon */
+	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
+	if (connection == NULL)
+		return FALSE;
+	proxy = g_dbus_proxy_new_sync (connection,
+					G_DBUS_PROXY_FLAGS_NONE,
+					NULL,
+					SYSTEMD_SERVICE,
+					SYSTEMD_OBJECT_PATH,
+					SYSTEMD_MANAGER_INTERFACE,
+					NULL,
+					error);
+	if (proxy == NULL)
+		return FALSE;
+	val = g_dbus_proxy_call_sync (proxy,
+				      "GetUnit",
+				      g_variant_new ("(s)",
+						     SYSTEMD_FWUPD_UNIT),
+				      G_DBUS_CALL_FLAGS_NONE,
+				      -1,
+				      NULL,
+				      &error_local);
+	if (val == NULL) {
+		g_debug ("Unable to find %s: %s",
+			 SYSTEMD_FWUPD_UNIT,
+			 error_local->message);
+	} else {
+		g_clear_object (&val);
+		val = g_dbus_proxy_call_sync (proxy,
+					      "StopUnit",
+					      g_variant_new ("(ss)",
+							     SYSTEMD_FWUPD_UNIT,
+							     "replace"),
+					      G_DBUS_CALL_FLAGS_NONE,
+					      -1,
+					      NULL,
+					      error);
+		if (val == NULL)
+			return FALSE;
+	}
+
+#endif
+	return fu_engine_load (priv->engine, error);
 }
 
 static gint
@@ -270,7 +329,7 @@ fu_main_engine_percentage_changed_cb (FuEngine *engine,
 static gboolean
 fu_util_watch (FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	if (!fu_engine_load (priv->engine, error))
+	if (!fu_util_start_engine (priv, error))
 		return FALSE;
 	g_main_loop_run (priv->loop);
 	return TRUE;
@@ -318,7 +377,7 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 	gint fd;
 
 	/* load engine */
-	if (!fu_engine_load (priv->engine, error))
+	if (!fu_util_start_engine (priv, error))
 		return FALSE;
 
 	/* check args */
@@ -361,7 +420,7 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GPtrArray) devs = NULL;
 
 	/* load engine */
-	if (!fu_engine_load (priv->engine, error))
+	if (!fu_util_start_engine (priv, error))
 		return FALSE;
 
 	/* print */
@@ -406,7 +465,7 @@ fu_util_get_topology (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GPtrArray) devs = NULL;
 
 	/* load engine */
-	if (!fu_engine_load (priv->engine, error))
+	if (!fu_util_start_engine (priv, error))
 		return FALSE;
 
 	/* print */
@@ -512,7 +571,7 @@ fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* load engine */
-	if (!fu_engine_load (priv->engine, error))
+	if (!fu_util_start_engine (priv, error))
 		return FALSE;
 
 	/* get device */
@@ -599,7 +658,7 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GPtrArray) install_tasks = NULL;
 
 	/* load engine */
-	if (!fu_engine_load (priv->engine, error))
+	if (!fu_util_start_engine (priv, error))
 		return FALSE;
 
 	/* handle both forms */
@@ -697,7 +756,7 @@ fu_util_detach (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* load engine */
-	if (!fu_engine_load (priv->engine, error))
+	if (!fu_util_start_engine (priv, error))
 		return FALSE;
 
 	/* invalid args */
@@ -734,7 +793,7 @@ fu_util_attach (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* load engine */
-	if (!fu_engine_load (priv->engine, error))
+	if (!fu_util_start_engine (priv, error))
 		return FALSE;
 
 	/* invalid args */
