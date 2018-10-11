@@ -423,7 +423,7 @@ fu_dell_dock_ec_get_dock_data (FuDevice *device,
 
 	/* set serial number */
 	memcpy (service_tag, self->data->service_tag, 7);
-	bundled_serial = g_strdup_printf ("%s/%08lx",
+	bundled_serial = g_strdup_printf ("%s/%08" G_GUINT64_FORMAT,
 					  service_tag,
 					  self->data->module_serial);
 	fu_device_set_serial (device, bundled_serial);
@@ -466,9 +466,9 @@ fu_dell_dock_ec_to_string (FuDevice *device, GString *str)
 				self->data->dock_configuration);
 	g_string_append_printf (str, "\tpackage firmware version: %x\n",
 				self->data->dock_firmware_pkg_ver);
-	g_string_append_printf (str, "\tmodule serial #: %08lx\n",
+	g_string_append_printf (str, "\tmodule serial #: %08" G_GUINT64_FORMAT "\n",
 				self->data->module_serial);
-	g_string_append_printf (str, "\toriginal module serial #: %08lx\n",
+	g_string_append_printf (str, "\toriginal module serial #: %08" G_GUINT64_FORMAT "\n",
 				self->data->original_module_serial);
 	g_string_append_printf (str, "\ttype: %u\n",
 				self->data->dock_type);
@@ -607,7 +607,7 @@ fu_dell_dock_ec_commit_package (FuDevice *device, GBytes *blob_fw,
 	}
 	memcpy (self->raw_versions, data, length);
 
-	g_debug ("Committing (%lu) bytes ", sizeof(FuDellDockDockPackageFWVersion));
+	g_debug ("Committing (%zu) bytes ", sizeof(FuDellDockDockPackageFWVersion));
 	g_debug ("\tec_version: %x", self->raw_versions->ec_version);
 	g_debug ("\tmst_version: %x", self->raw_versions->mst_version);
 	g_debug ("\thub1_version: %x", self->raw_versions->hub1_version);
