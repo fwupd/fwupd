@@ -2959,6 +2959,8 @@ fu_common_version_func (void)
 		{ 0xff000100,	"255.0.256",		FU_VERSION_FORMAT_TRIPLET },
 		{ 0x0,		"0",			FU_VERSION_FORMAT_PLAIN },
 		{ 0xff000100,	"4278190336",		FU_VERSION_FORMAT_PLAIN },
+		{ 0x0,		"11.0.0.0",		FU_VERSION_FORMAT_INTEL_ME },
+		{ 0xffffffff,	"18.31.255.65535",	FU_VERSION_FORMAT_INTEL_ME },
 		{ 0,		NULL }
 	};
 	struct {
