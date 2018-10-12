@@ -162,20 +162,18 @@ fu_dell_dock_mst_read_register (FuDevice *symbiote,
 				GBytes **bytes,
 				GError **error)
 {
-	g_autoptr(GError) error_local = NULL;
-
 	g_return_val_if_fail (symbiote != NULL, FALSE);
 	g_return_val_if_fail (bytes != NULL, FALSE);
 	g_return_val_if_fail (length <= 32, FALSE);
 
 	/* write the offset we're querying */
 	if (!fu_dell_dock_hid_i2c_write (symbiote, (guint8 *) &address, 4,
-					 &mst_base_settings, &error_local))
+					 &mst_base_settings, error))
 		return FALSE;
 
 	/* read data for the result */
 	if (!fu_dell_dock_hid_i2c_read (symbiote, 0, length, bytes,
-					&mst_base_settings, &error_local))
+					&mst_base_settings, error))
 		return FALSE;
 
 	return TRUE;
@@ -188,7 +186,6 @@ fu_dell_dock_mst_write_register (FuDevice *symbiote,
 				 gsize length,
 				 GError **error)
 {
-	g_autoptr(GError) error_local = NULL;
 	g_autofree guint8 *buffer = g_malloc0 (length + 4);
 	memcpy (buffer, &address, 4);
 	memcpy (buffer + 4, data, length);
@@ -198,7 +195,7 @@ fu_dell_dock_mst_write_register (FuDevice *symbiote,
 
 	/* write the offset we're querying */
 	return fu_dell_dock_hid_i2c_write (symbiote, buffer, length + 4,
-					   &mst_base_settings, &error_local);
+					   &mst_base_settings, error);
 }
 
 static gboolean
