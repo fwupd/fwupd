@@ -4,6 +4,7 @@ Source: https://github.com/hughsie/fwupd
 
 Files: *
 Copyright: Christian J. Kellner <christian@kellner.me>
+	   Dell Inc.
 	   Dell, Inc.
 	   Google, Inc.
 	   Intel Corporation.
@@ -11,9 +12,11 @@ Copyright: Christian J. Kellner <christian@kellner.me>
 	   Max Ehrlich max.ehr@gmail.com
 	   Peichen Huang <peichenhuang@tw.synaptics.com>
 	   Peter Jones <pjones@redhat.com>
+	   Realtek Semiconductor Corporation
 	   Red Hat, Inc.
 	   Richard Hughes <richard@hughsie.com>
 	   Ryan Chang <ryan.chang@synaptics.com>
+	   Synaptics
 License: LGPL-2.1+
 
 Files:  *.metainfo.xml
