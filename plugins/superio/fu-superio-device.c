@@ -21,7 +21,6 @@
 
 struct _FuSuperioDevice {
 	FuDevice		 parent_instance;
-	gchar			*devport;
 	gint			 fd;
 	gchar			*chipset;
 	guint16			 data_port;
@@ -38,7 +37,6 @@ fu_superio_device_to_string (FuDevice *device, GString *str)
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
 	g_string_append (str, "  FuSuperioDevice:\n");
 	g_string_append_printf (str, "    fd:\t\t\t%i\n", self->fd);
-	g_string_append_printf (str, "    devport:\t\t%s\n", self->devport);
 	g_string_append_printf (str, "    chipset:\t\t%s\n", self->chipset);
 	g_string_append_printf (str, "    data-port:\t\t0x%04x\n", (guint) self->data_port);
 	g_string_append_printf (str, "    cmd-port:\t\t0x%04x\n", (guint) self->cmd_port);
@@ -221,13 +219,13 @@ fu_superio_device_open (FuDevice *device, GError **error)
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
 
 	/* open device */
-	self->fd = g_open (self->devport, O_RDWR);
+	self->fd = g_open (fu_device_get_physical_id (device), O_RDWR);
 	if (self->fd < 0) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
 			     "failed to open %s: %s",
-			     self->devport,
+			     fu_device_get_physical_id (device),
 			     strerror (errno));
 		return FALSE;
 	}
@@ -237,11 +235,23 @@ fu_superio_device_open (FuDevice *device, GError **error)
 }
 
 static gboolean
+fu_superio_device_probe (FuDevice *device, GError **error)
+{
+	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
+	g_autofree gchar *guid = NULL;
+
+	/* use the chipset name as the logical ID and for the GUID */
+	fu_device_set_logical_id (device, self->chipset);
+	guid = g_strdup_printf ("SuperIO-%s", self->chipset);
+	fu_device_add_guid (device, guid);
+	return TRUE;
+}
+
+static gboolean
 fu_superio_device_setup (FuDevice *device, GError **error)
 {
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
 	guint8 size_tmp = 0;
-	g_autofree gchar *guid = NULL;
 	g_autofree gchar *name = NULL;
 	g_autofree gchar *version = NULL;
 
@@ -250,11 +260,6 @@ fu_superio_device_setup (FuDevice *device, GError **error)
 		g_prefix_error (error, "failed to probe id: ");
 		return FALSE;
 	}
-
-	/* use the chipset name as the ID and for the GUID */
-	fu_device_set_id (device, self->chipset);
-	guid = g_strdup_printf ("SuperIO-%s", self->chipset);
-	fu_device_add_guid (device, guid);
 
 	/* get EC size */
 	if (!fu_superio_device_ec_flush (self, error))
@@ -290,7 +295,7 @@ fu_superio_device_close (FuDevice *device, GError **error)
 static void
 fu_superio_device_init (FuSuperioDevice *self)
 {
-	self->devport = g_strdup ("/dev/port");
+	fu_device_set_physical_id (FU_DEVICE (self), "/dev/port");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_set_summary (FU_DEVICE (self), "SuperIO device");
 	fu_device_add_icon (FU_DEVICE (self), "computer");
@@ -299,8 +304,6 @@ fu_superio_device_init (FuSuperioDevice *self)
 static void
 fu_superio_device_finalize (GObject *object)
 {
-	FuSuperioDevice *self = FU_SUPERIO_DEVICE (object);
-	g_free (self->devport);
 	G_OBJECT_CLASS (fu_superio_device_parent_class)->finalize (object);
 }
 
@@ -312,6 +315,7 @@ fu_superio_device_class_init (FuSuperioDeviceClass *klass)
 	object_class->finalize = fu_superio_device_finalize;
 	klass_device->to_string = fu_superio_device_to_string;
 	klass_device->open = fu_superio_device_open;
+	klass_device->probe = fu_superio_device_probe;
 	klass_device->setup = fu_superio_device_setup;
 	klass_device->close = fu_superio_device_close;
 }

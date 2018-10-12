@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
+#define G_LOG_DOMAIN				"FuDeviceLocker"
+
 #include "config.h"
 
 #include <gio/gio.h>

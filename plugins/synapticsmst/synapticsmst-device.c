@@ -37,6 +37,8 @@
 #define REG_QUAD_DISABLE		0x200fc0
 #define REG_HDCP22_DISABLE		0x200f90
 
+#define FLASH_SETTLE_TIME		5000000	/* us */
+
 typedef struct
 {
 	SynapticsMSTDeviceKind	 kind;
@@ -584,20 +586,28 @@ synapticsmst_device_update_esm (SynapticsMSTDevice *device,
 	}
 	g_debug ("ESM checksum %x doesn't match expected %x", flash_checksum, checksum);
 
-	/* erase ESM firmware */
-	for (guint32 i = 0; i < 4; i++)	{
-		if (!synapticsmst_device_set_flash_sector_erase (device, FLASH_SECTOR_ERASE_64K, i + 4, error)) {
-			g_prefix_error (error, "Failed to erase sector %u: ", i);
-			return FALSE;
-		}
-	}
-
 	/* update ESM firmware */
 	write_loops = esm_sz / unit_sz;
 	for (guint retries_cnt = 0; ; retries_cnt++) {
 		guint32 write_idx = 0;
 		guint32 write_offset = EEPROM_ESM_OFFSET;
 		const guint8 *esm_code_ptr = &payload_data[EEPROM_ESM_OFFSET];
+
+		/* erase ESM firmware; erase failure is fatal */
+		for (guint32 j = 0; j < 4; j++)	{
+			if (!synapticsmst_device_set_flash_sector_erase (device,
+									 FLASH_SECTOR_ERASE_64K,
+									 j + 4,
+									 error)) {
+				g_prefix_error (error, "failed to erase sector %u: ", j);
+				return FALSE;
+			}
+		}
+
+		g_debug ("Waiting for flash clear to settle");
+		g_usleep (FLASH_SETTLE_TIME);
+
+		/* write firmware */
 		for (guint32 i = 0; i < write_loops; i++) {
 			g_autoptr(GError) error_local = NULL;
 			if (!synapticsmst_common_rc_set_command (connection,
@@ -606,17 +616,8 @@ synapticsmst_device_update_esm (SynapticsMSTDevice *device,
 								 write_offset,
 								 esm_code_ptr + write_idx,
 								 &error_local)) {
-				g_warning ("failed to write ESM: %s, retrying", error_local->message);
-				/* repeat once */
-				if (!synapticsmst_common_rc_set_command (connection,
-									 UPDC_WRITE_TO_EEPROM,
-									 unit_sz,
-									 write_offset,
-									 esm_code_ptr + write_idx,
-									 error)) {
-					g_prefix_error (error, "ESM update failed: ");
-					return FALSE;
-				}
+				g_warning ("failed to write ESM: %s", error_local->message);
+				break;
 			}
 			write_offset += unit_sz;
 			write_idx += unit_sz;
@@ -650,7 +651,7 @@ synapticsmst_device_update_esm (SynapticsMSTDevice *device,
 			g_set_error (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
-				     "ESM update failed after %u tries", retries_cnt);
+				     "checksum did not match after %u tries", retries_cnt);
 			return FALSE;
 		}
 	}
@@ -687,7 +688,7 @@ synapticsmst_device_update_tesla_leaf_firmware (SynapticsMSTDevice *device,
 		if (!synapticsmst_device_set_flash_sector_erase (device, 0xffff, 0, error))
 			return FALSE;
 		g_debug ("Waiting for flash clear to settle");
-		g_usleep (5000000);
+		g_usleep (FLASH_SETTLE_TIME);
 
 		for (guint32 i = 0; i < write_loops; i++) {
 			g_autoptr(GError) error_local = NULL;
@@ -811,7 +812,7 @@ synapticsmst_device_update_panamera_firmware (SynapticsMSTDevice *device,
 								 FLASH_SECTOR_ERASE_64K, erase_offset, error))
 			return FALSE;
 		g_debug ("Waiting for flash clear to settle");
-		g_usleep (5000000);
+		g_usleep (FLASH_SETTLE_TIME);
 
 		/* write */
 		write_idx = 0;

@@ -125,6 +125,7 @@ fu_plugin_dell_tpm_func (void)
 					 (guint32 *) &tpm_out, 0, 0,
 					 NULL, TRUE);
 	ret = fu_plugin_dell_detect_tpm (plugin_dell, &error);
+	g_assert_true (ret);
 	g_assert_cmpint (devices->len, ==, 2);
 
 	/* make sure 2.0 is locked */
@@ -138,7 +139,7 @@ fu_plugin_dell_tpm_func (void)
 	g_assert_false (fu_device_has_flag (device_v12, FWUPD_DEVICE_FLAG_UPDATABLE));
 
 	/* try to unlock 2.0 */
-	ret = fu_plugin_runner_unlock (plugin_dell, device_v20, &error);
+	ret = fu_plugin_runner_unlock (plugin_uefi, device_v20, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_false (ret);
 	g_clear_error (&error);
@@ -169,7 +170,7 @@ fu_plugin_dell_tpm_func (void)
 	/* try to unlock 2.0 */
 	device_v20 = _find_device_by_name (devices, "Unknown TPM 2.0");
 	g_assert_nonnull (device_v20);
-	ret = fu_plugin_runner_unlock (plugin_dell, device_v20, &error);
+	ret = fu_plugin_runner_unlock (plugin_uefi, device_v20, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_false (ret);
 	g_clear_error (&error);
@@ -201,7 +202,7 @@ fu_plugin_dell_tpm_func (void)
 	g_assert_false (fu_device_has_flag (device_v20, FWUPD_DEVICE_FLAG_UPDATABLE));
 
 	/* try to unlock 2.0 */
-	ret = fu_plugin_runner_unlock (plugin_dell, device_v20, &error);
+	ret = fu_plugin_runner_unlock (plugin_uefi, device_v20, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -301,7 +302,7 @@ fu_plugin_dell_dock_func (void)
 					   DOCK_NIC_VID, DOCK_NIC_PID,
 					   NULL, FALSE);
 	ret = fu_plugin_usb_device_added (plugin_dell, NULL, &error);
-	g_assert_false (ret);
+	g_assert_true (ret);
 	g_clear_error (&error);
 	g_assert_cmpint (devices->len, ==, 0);
 

@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
+#define G_LOG_DOMAIN				"FuDevice"
+
 #include "config.h"
 
 #include <string.h>
@@ -13,6 +15,8 @@
 
 #include "fu-common.h"
 #include "fu-device-private.h"
+#include "fu-mutex.h"
+
 #include "fwupd-device-private.h"
 
 /**
@@ -33,7 +37,9 @@ typedef struct {
 	FuDevice			*parent;	/* noref */
 	FuQuirks			*quirks;
 	GHashTable			*metadata;
+	FuMutex				*metadata_mutex;
 	GPtrArray			*parent_guids;
+	FuMutex				*parent_guids_mutex;
 	GPtrArray			*children;
 	guint				 remove_delay;	/* ms */
 	FwupdStatus			 status;
@@ -472,7 +478,9 @@ GPtrArray *
 fu_device_get_parent_guids (FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_autoptr(FuMutexLocker) locker = fu_mutex_read_locker_new (priv->parent_guids_mutex);
 	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
+	g_return_val_if_fail (locker != NULL, NULL);
 	return priv->parent_guids;
 }
 
@@ -491,7 +499,9 @@ gboolean
 fu_device_has_parent_guid (FuDevice *self, const gchar *guid)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_autoptr(FuMutexLocker) locker = fu_mutex_read_locker_new (priv->parent_guids_mutex);
 	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
+	g_return_val_if_fail (locker != NULL, FALSE);
 	for (guint i = 0; i < priv->parent_guids->len; i++) {
 		const gchar *guid_tmp = g_ptr_array_index (priv->parent_guids, i);
 		if (g_strcmp0 (guid_tmp, guid) == 0)
@@ -520,6 +530,7 @@ void
 fu_device_add_parent_guid (FuDevice *self, const gchar *guid)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_autoptr(FuMutexLocker) locker = NULL;
 	g_return_if_fail (FU_IS_DEVICE (self));
 	g_return_if_fail (guid != NULL);
 
@@ -536,6 +547,8 @@ fu_device_add_parent_guid (FuDevice *self, const gchar *guid)
 	/* already valid */
 	if (fu_device_has_parent_guid (self, guid))
 		return;
+	locker = fu_mutex_write_locker_new (priv->parent_guids_mutex);
+	g_return_if_fail (locker != NULL);
 	g_ptr_array_add (priv->parent_guids, g_strdup (guid));
 }
 
@@ -554,6 +567,8 @@ fu_device_add_child_by_type_guid (FuDevice *self,
 	fu_device_add_guid (child, guid);
 	if (fu_device_get_physical_id (self) != NULL)
 		fu_device_set_physical_id (child, fu_device_get_physical_id (self));
+	if (!fu_device_ensure_id (self, error))
+		return FALSE;
 	if (!fu_device_probe (child, error))
 		return FALSE;
 	fu_device_add_child (self, child);
@@ -655,6 +670,10 @@ fu_device_set_quirk_kv (FuDevice *self,
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_FIRMWARE_SIZE_MAX) == 0) {
 		fu_device_set_firmware_size_max (self, fu_common_strtoull (value));
+		return TRUE;
+	}
+	if (g_strcmp0 (key, FU_QUIRKS_INSTALL_DURATION) == 0) {
+		fu_device_set_install_duration (self, fu_common_strtoull (value));
 		return TRUE;
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_CHILDREN) == 0) {
@@ -835,8 +854,10 @@ const gchar *
 fu_device_get_metadata (FuDevice *self, const gchar *key)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_autoptr(FuMutexLocker) locker = fu_mutex_read_locker_new (priv->metadata_mutex);
 	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
 	g_return_val_if_fail (key != NULL, NULL);
+	g_return_val_if_fail (locker != NULL, NULL);
 	return g_hash_table_lookup (priv->metadata, key);
 }
 
@@ -856,8 +877,10 @@ fu_device_get_metadata_boolean (FuDevice *self, const gchar *key)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	const gchar *tmp;
+	g_autoptr(FuMutexLocker) locker = fu_mutex_read_locker_new (priv->metadata_mutex);
 	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
 	g_return_val_if_fail (key != NULL, FALSE);
+	g_return_val_if_fail (locker != NULL, FALSE);
 	tmp = g_hash_table_lookup (priv->metadata, key);
 	if (tmp == NULL)
 		return FALSE;
@@ -882,9 +905,11 @@ fu_device_get_metadata_integer (FuDevice *self, const gchar *key)
 	const gchar *tmp;
 	gchar *endptr = NULL;
 	guint64 val;
+	g_autoptr(FuMutexLocker) locker = fu_mutex_read_locker_new (priv->metadata_mutex);
 
 	g_return_val_if_fail (FU_IS_DEVICE (self), G_MAXUINT);
 	g_return_val_if_fail (key != NULL, G_MAXUINT);
+	g_return_val_if_fail (locker != NULL, G_MAXUINT);
 
 	tmp = g_hash_table_lookup (priv->metadata, key);
 	if (tmp == NULL)
@@ -911,9 +936,11 @@ void
 fu_device_set_metadata (FuDevice *self, const gchar *key, const gchar *value)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_autoptr(FuMutexLocker) locker = fu_mutex_write_locker_new (priv->metadata_mutex);
 	g_return_if_fail (FU_IS_DEVICE (self));
 	g_return_if_fail (key != NULL);
 	g_return_if_fail (value != NULL);
+	g_return_if_fail (locker != NULL);
 	g_hash_table_insert (priv->metadata, g_strdup (key), g_strdup (value));
 }
 
@@ -1399,9 +1426,11 @@ fu_device_to_string (FuDevice *self)
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	GString *str = g_string_new ("");
 	g_autofree gchar *tmp = NULL;
+	g_autoptr(FuMutexLocker) locker = fu_mutex_read_locker_new (priv->metadata_mutex);
 	g_autoptr(GList) keys = NULL;
 
 	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
+	g_return_val_if_fail (locker != NULL, NULL);
 
 	tmp = fwupd_device_to_string (FWUPD_DEVICE (self));
 	if (tmp != NULL && tmp[0] != '\0')
@@ -1916,8 +1945,11 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 		fu_device_set_equivalent_id (self, fu_device_get_equivalent_id (donor));
 	if (priv->quirks == NULL)
 		fu_device_set_quirks (self, fu_device_get_quirks (donor));
+	fu_mutex_read_lock (priv_donor->parent_guids_mutex);
 	for (guint i = 0; i < parent_guids->len; i++)
 		fu_device_add_parent_guid (self, g_ptr_array_index (parent_guids, i));
+	fu_mutex_read_unlock (priv_donor->parent_guids_mutex);
+	fu_mutex_read_lock (priv_donor->metadata_mutex);
 	metadata_keys = g_hash_table_get_keys (priv_donor->metadata);
 	for (GList *l = metadata_keys; l != NULL; l = l->next) {
 		const gchar *key = l->data;
@@ -1926,6 +1958,7 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 			fu_device_set_metadata (self, key, value);
 		}
 	}
+	fu_mutex_read_unlock (priv_donor->metadata_mutex);
 
 	/* now the base class, where all the interesting bits are */
 	fwupd_device_incorporate (FWUPD_DEVICE (self), FWUPD_DEVICE (donor));
@@ -1982,8 +2015,10 @@ fu_device_init (FuDevice *self)
 	priv->status = FWUPD_STATUS_IDLE;
 	priv->children = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	priv->parent_guids = g_ptr_array_new_with_free_func (g_free);
+	priv->parent_guids_mutex = fu_mutex_new (G_OBJECT_TYPE_NAME(self), "parent_guids");
 	priv->metadata = g_hash_table_new_full (g_str_hash, g_str_equal,
 						g_free, g_free);
+	priv->metadata_mutex = fu_mutex_new (G_OBJECT_TYPE_NAME(self), "metadata");
 }
 
 static void
@@ -2000,6 +2035,8 @@ fu_device_finalize (GObject *object)
 		g_object_unref (priv->quirks);
 	if (priv->poll_id != 0)
 		g_source_remove (priv->poll_id);
+	g_object_unref (priv->metadata_mutex);
+	g_object_unref (priv->parent_guids_mutex);
 	g_hash_table_unref (priv->metadata);
 	g_ptr_array_unref (priv->children);
 	g_ptr_array_unref (priv->parent_guids);

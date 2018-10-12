@@ -351,9 +351,8 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 
 	buf.buf = NULL;
 	if (!fu_dell_query_dock (data->smi_obj, &buf)) {
-		g_set_error_literal (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
-				     "no dock detected");
-		return FALSE;
+		g_debug ("no dock detected");
+		return TRUE;
 	}
 
 	if (buf.record->dock_info_header.dir_version != 1) {
@@ -628,7 +627,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_icon (dev, "computer");
-	fu_device_set_metadata (dev, FU_DEVICE_METADATA_UEFI_DEVICE_KIND, "system-firmware");
+	fu_device_set_metadata (dev, FU_DEVICE_METADATA_UEFI_DEVICE_KIND, "dell-tpm-firmware");
 	if ((out->status & TPM_OWN_MASK) == 0 && out->flashes_left > 0) {
 		if (fu_plugin_dell_capsule_supported (plugin)) {
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
@@ -657,7 +656,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 		fu_device_add_flag (dev_alt, FWUPD_DEVICE_FLAG_LOCKED);
 		fu_device_add_icon (dev_alt, "computer");
 		fu_device_set_alternate_id (dev_alt, fu_device_get_id (dev));
-		fu_device_set_metadata (dev_alt, FU_DEVICE_METADATA_UEFI_DEVICE_KIND, "system-firmware");
+		fu_device_set_metadata (dev_alt, FU_DEVICE_METADATA_UEFI_DEVICE_KIND, "dell-tpm-firmware");
 		fu_device_add_parent_guid (dev_alt, tpm_guid);
 
 		/* If TPM is not owned and at least 1 flash left allow mode switching
@@ -676,63 +675,6 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	else
 		g_debug ("System %04x does not offer TPM modeswitching",
 			system_id);
-
-	return TRUE;
-}
-
-gboolean
-fu_plugin_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
-{
-	FuDevice *device_alt = NULL;
-	FwupdDeviceFlags device_flags_alt = 0;
-	guint flashes_left = 0;
-	guint flashes_left_alt = 0;
-
-	/* for unlocking TPM1.2 <-> TPM2.0 switching */
-	g_debug ("Unlocking upgrades for: %s (%s)", fu_device_get_name (device),
-		 fu_device_get_id (device));
-	device_alt = fu_device_get_alternate (device);
-	if (device_alt == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "No alternate device for %s",
-			     fu_device_get_name (device));
-		return FALSE;
-	}
-	g_debug ("Preventing upgrades for: %s (%s)", fu_device_get_name (device_alt),
-		 fu_device_get_id (device_alt));
-
-	flashes_left = fu_device_get_flashes_left (device);
-	flashes_left_alt = fu_device_get_flashes_left (device_alt);
-	if (flashes_left == 0) {
-		/* flashes left == 0 on both means no flashes left */
-		if (flashes_left_alt == 0) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "ERROR: %s has no flashes left.",
-				     fu_device_get_name (device));
-		/* flashes left == 0 on just unlocking device is ownership */
-		} else {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "ERROR: %s is currently OWNED. "
-				     "Ownership must be removed to switch modes.",
-				     fu_device_get_name (device_alt));
-		}
-		return FALSE;
-	}
-
-
-	/* clone the info from real device but prevent it from being flashed */
-	device_flags_alt = fu_device_get_flags (device_alt);
-	fu_device_set_flags (device, device_flags_alt);
-	fu_device_set_flags (device_alt, device_flags_alt & ~FWUPD_DEVICE_FLAG_UPDATABLE);
-
-	/* make sure that this unlocked device can be updated */
-	fu_device_set_version (device, "0.0.0.0");
 
 	return TRUE;
 }
@@ -860,6 +802,9 @@ fu_plugin_init (FuPlugin *plugin)
 	if (g_getenv ("FWUPD_DELL_FAKE_SMBIOS") != NULL)
 		data->smi_obj->fake_smbios = TRUE;
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_REQUIRES_QUIRK, FU_QUIRKS_PLUGIN);
+
+	/* make sure that UEFI plugin is ready to receive devices */
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "uefi");
 }
 
 void

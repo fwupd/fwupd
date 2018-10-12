@@ -425,8 +425,8 @@ fu_plugin_update_cleanup (FuPlugin *plugin,
 	return TRUE;
 }
 
-gboolean
-fu_plugin_coldplug (FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_thunderbolt_power_coldplug (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 
@@ -451,7 +451,13 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 }
 
 gboolean
+fu_plugin_coldplug (FuPlugin *plugin, GError **error)
+{
+	return fu_plugin_thunderbolt_power_coldplug (plugin, error);
+}
+
+gboolean
 fu_plugin_recoldplug (FuPlugin *plugin, GError **error)
 {
-	return fu_plugin_coldplug (plugin, error);
+	return fu_plugin_thunderbolt_power_coldplug (plugin, error);
 }

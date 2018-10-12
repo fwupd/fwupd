@@ -70,7 +70,7 @@ struct _FuDeviceClass
  * being slow and clumsy. This should be used when the user has to do something,
  * e.g. unplug, press a magic button and then replug.
  */
-#define FU_DEVICE_REMOVE_DELAY_USER_REPLUG		20000
+#define FU_DEVICE_REMOVE_DELAY_USER_REPLUG		40000
 
 FuDevice	*fu_device_new				(void);
 
@@ -97,6 +97,7 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_set_version_lowest(d,v)	fwupd_device_set_version_lowest(FWUPD_DEVICE(d),v)
 #define fu_device_set_version_bootloader(d,v)	fwupd_device_set_version_bootloader(FWUPD_DEVICE(d),v)
 #define fu_device_set_flashes_left(d,v)		fwupd_device_set_flashes_left(FWUPD_DEVICE(d),v)
+#define fu_device_set_install_duration(d,v)	fwupd_device_set_install_duration(FWUPD_DEVICE(d),v)
 #define fu_device_get_checksums(d)		fwupd_device_get_checksums(FWUPD_DEVICE(d))
 #define fu_device_get_flags(d)			fwupd_device_get_flags(FWUPD_DEVICE(d))
 #define fu_device_get_created(d)		fwupd_device_get_created(FWUPD_DEVICE(d))
@@ -117,6 +118,7 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_get_version_bootloader(d)	fwupd_device_get_version_bootloader(FWUPD_DEVICE(d))
 #define fu_device_get_vendor_id(d)		fwupd_device_get_vendor_id(FWUPD_DEVICE(d))
 #define fu_device_get_flashes_left(d)		fwupd_device_get_flashes_left(FWUPD_DEVICE(d))
+#define fu_device_get_install_duration(d)	fwupd_device_get_install_duration(FWUPD_DEVICE(d))
 
 /* accessors */
 gchar		*fu_device_to_string			(FuDevice	*self);

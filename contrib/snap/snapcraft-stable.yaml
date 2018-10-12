@@ -155,13 +155,15 @@ parts:
                        -Dtests=false,
                        -Dvapi=false,
                        -Ddocs=false]
+    build-packages:
+    - libgirepository1.0-dev
     prime:
     - -bin/
     - -include
     - -share
     - -lib/*/pkgconfig
     - -lib/*/girepository-1.0
-    after: [libusb]
+    after: [meson, libusb]
   gnu-efi:
     plugin: make
     source: http://superb-dca2.dl.sourceforge.net/project/gnu-efi/gnu-efi-3.0.5.tar.bz2
@@ -242,23 +244,31 @@ parts:
       - gcab
       - gnutls-dev
       - libarchive-dev
+      - libcairo-dev
       - libelf-dev
       - libgcab-dev
       - libglib2.0-dev
       - libgpgme11-dev
       - libjson-glib-dev
+      - libpango1.0-dev
       - libpolkit-gobject-1-dev
       - libsoup2.4-dev
       - libsqlite3-dev
       - locales
       - pkg-config
+      - uuid-dev
     stage-packages:
+      - libgcab-1.0-0
+      - libarchive13
       - libassuan0
       - liblcms2-2
       - libelf1
       - libgpgme11
       - libjson-glib-1.0-0
       - libpolkit-gobject-1-0
+      - libsoup2.4-1
+      - glib-networking
+      - libglib2.0-bin
     prime:
       # we explicitly don't want /usr/bin/gpgconf
       # this will cause gpgme to error finding it
@@ -294,7 +304,6 @@ parts:
       - -usr/share/info
       - -usr/share/gir-1.0
       - -usr/share/upstart
-      - -usr/lib/*/glib-2.0
       - -usr/lib/*/pkgconfig
     after: [appstream-glib-dev, gudev, gusb, gnu-efi, libefivar-fixpkgconfig, libsmbios, build-introspection, gettext]
   fix-bash-completion:

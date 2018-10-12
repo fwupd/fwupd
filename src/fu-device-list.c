@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
+#define G_LOG_DOMAIN				"FuDeviceList"
+
 #include "config.h"
 
 #include <glib-object.h>
@@ -11,6 +13,7 @@
 
 #include "fu-device-list.h"
 #include "fu-device-private.h"
+#include "fu-mutex.h"
 
 #include "fwupd-error.h"
 
@@ -34,6 +37,7 @@ struct _FuDeviceList
 {
 	GObject			 parent_instance;
 	GPtrArray		*devices;	/* of FuDeviceItem */
+	FuMutex			*devices_mutex;
 };
 
 enum {
@@ -95,6 +99,8 @@ fu_device_list_get_all (FuDeviceList *self)
 	GPtrArray *devices;
 	g_return_val_if_fail (FU_IS_DEVICE_LIST (self), NULL);
 	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+
+	fu_mutex_read_lock (self->devices_mutex);
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
 		g_ptr_array_add (devices, g_object_ref (item->device));
@@ -105,6 +111,7 @@ fu_device_list_get_all (FuDeviceList *self)
 			continue;
 		g_ptr_array_add (devices, g_object_ref (item->device_old));
 	}
+	fu_mutex_read_unlock (self->devices_mutex);
 	return devices;
 }
 
@@ -126,16 +133,20 @@ fu_device_list_get_active (FuDeviceList *self)
 	GPtrArray *devices;
 	g_return_val_if_fail (FU_IS_DEVICE_LIST (self), NULL);
 	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	fu_mutex_read_lock (self->devices_mutex);
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
 		g_ptr_array_add (devices, g_object_ref (item->device));
 	}
+	fu_mutex_read_unlock (self->devices_mutex);
 	return devices;
 }
 
 static FuDeviceItem *
 fu_device_list_find_by_device (FuDeviceList *self, FuDevice *device)
 {
+	g_autoptr(FuMutexLocker) locker = fu_mutex_read_locker_new (self->devices_mutex);
+	g_return_val_if_fail (locker != NULL, NULL);
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
 		if (item->device == device)
@@ -152,6 +163,8 @@ fu_device_list_find_by_device (FuDeviceList *self, FuDevice *device)
 static FuDeviceItem *
 fu_device_list_find_by_guid (FuDeviceList *self, const gchar *guid)
 {
+	g_autoptr(FuMutexLocker) locker = fu_mutex_read_locker_new (self->devices_mutex);
+	g_return_val_if_fail (locker != NULL, NULL);
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
 		if (fu_device_has_guid (item->device, guid))
@@ -172,8 +185,11 @@ fu_device_list_find_by_connection (FuDeviceList *self,
 				   const gchar *physical_id,
 				   const gchar *logical_id)
 {
+	g_autoptr(FuMutexLocker) locker = NULL;
 	if (physical_id == NULL)
 		return NULL;
+	locker = fu_mutex_read_locker_new (self->devices_mutex);
+	g_return_val_if_fail (locker != NULL, NULL);
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item_tmp = g_ptr_array_index (self->devices, i);
 		FuDevice *device = item_tmp->device;
@@ -201,8 +217,15 @@ fu_device_list_find_by_id (FuDeviceList *self,
 	FuDeviceItem *item = NULL;
 	gsize device_id_len;
 
+	/* sanity check */
+	if (device_id == NULL) {
+		g_critical ("device ID was NULL");
+		return NULL;
+	}
+
 	/* support abbreviated hashes */
 	device_id_len = strlen (device_id);
+	fu_mutex_read_lock (self->devices_mutex);
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item_tmp = g_ptr_array_index (self->devices, i);
 		const gchar *ids[] = {
@@ -217,10 +240,12 @@ fu_device_list_find_by_id (FuDeviceList *self,
 			}
 		}
 	}
+	fu_mutex_read_unlock (self->devices_mutex);
 	if (item != NULL)
 		return item;
 
 	/* only search old devices if we didn't find the active device */
+	fu_mutex_read_lock (self->devices_mutex);
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item_tmp = g_ptr_array_index (self->devices, i);
 		const gchar *ids[3] = { NULL };
@@ -236,6 +261,7 @@ fu_device_list_find_by_id (FuDeviceList *self,
 			}
 		}
 	}
+	fu_mutex_read_unlock (self->devices_mutex);
 	return item;
 }
 
@@ -246,7 +272,7 @@ fu_device_list_find_by_id (FuDeviceList *self,
  *
  * Returns the old device associated with the currently active device.
  *
- * Returns: (transfer none): the device, or %NULL if not found
+ * Returns: (transfer full): the device, or %NULL if not found
  *
  * Since: 1.0.3
  **/
@@ -256,12 +282,16 @@ fu_device_list_get_old (FuDeviceList *self, FuDevice *device)
 	FuDeviceItem *item = fu_device_list_find_by_device (self, device);
 	if (item == NULL)
 		return NULL;
-	return item->device_old;
+	if (item->device_old == NULL)
+		return NULL;
+	return g_object_ref (item->device_old);
 }
 
 static FuDeviceItem *
 fu_device_list_get_by_guids (FuDeviceList *self, GPtrArray *guids)
 {
+	g_autoptr(FuMutexLocker) locker = fu_mutex_read_locker_new (self->devices_mutex);
+	g_return_val_if_fail (locker != NULL, NULL);
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
 		for (guint j = 0; j < guids->len; j++) {
@@ -295,8 +325,26 @@ fu_device_list_device_delayed_remove_cb (gpointer user_data)
 	/* just remove now */
 	g_debug ("doing delayed removal");
 	fu_device_list_emit_device_removed (self, item->device);
+	fu_mutex_write_lock (self->devices_mutex);
 	g_ptr_array_remove (self->devices, item);
+	fu_mutex_write_unlock (self->devices_mutex);
 	return G_SOURCE_REMOVE;
+}
+
+static void
+fu_device_list_remove_with_delay (FuDeviceItem *item)
+{
+	/* we can't do anything with an unconnected device */
+	fu_device_remove_flag (item->device, FWUPD_DEVICE_FLAG_UPDATABLE);
+
+	/* give the hardware time to re-enumerate or the user time to
+	 * re-insert the device with a magic button pressed */
+	g_debug ("waiting %ums for %s device removal",
+		 fu_device_get_remove_delay (item->device),
+		 fu_device_get_name (item->device));
+	item->remove_id = g_timeout_add (fu_device_get_remove_delay (item->device),
+					 fu_device_list_device_delayed_remove_cb,
+					 item);
 }
 
 /**
@@ -337,22 +385,6 @@ fu_device_list_remove (FuDeviceList *self, FuDevice *device)
 		item->remove_id = 0;
 	}
 
-	/* delay the removal and check for replug */
-	if (fu_device_get_remove_delay (item->device) > 0) {
-
-		/* we can't do anything with an unconnected device */
-		fu_device_remove_flag (item->device, FWUPD_DEVICE_FLAG_UPDATABLE);
-
-		/* give the hardware time to re-enumerate or the user time to
-		 * re-insert the device with a magic button pressed */
-		g_debug ("waiting %ums for device removal",
-			 fu_device_get_remove_delay (item->device));
-		item->remove_id = g_timeout_add (fu_device_get_remove_delay (item->device),
-						 fu_device_list_device_delayed_remove_cb,
-						 item);
-		return;
-	}
-
 	/* remove any children associated with device */
 	children = fu_device_get_children (device);
 	for (guint j = 0; j < children->len; j++) {
@@ -360,17 +392,31 @@ fu_device_list_remove (FuDeviceList *self, FuDevice *device)
 		FuDeviceItem *child_item = fu_device_list_find_by_id (self,
 								      fu_device_get_id (child),
 								      NULL);
-		if (item == NULL) {
+		if (child_item == NULL) {
 			g_debug ("device %s not found", fu_device_get_id (child));
 			continue;
 		}
+		if (fu_device_get_remove_delay (child_item->device) > 0) {
+			fu_device_list_remove_with_delay (child_item);
+			continue;
+		}
 		fu_device_list_emit_device_removed (self, child);
+		fu_mutex_write_lock (self->devices_mutex);
 		g_ptr_array_remove (self->devices, child_item);
+		fu_mutex_write_unlock (self->devices_mutex);
+	}
+
+	/* delay the removal and check for replug */
+	if (fu_device_get_remove_delay (item->device) > 0) {
+		fu_device_list_remove_with_delay (item);
+		return;
 	}
 
 	/* remove right now */
 	fu_device_list_emit_device_removed (self, item->device);
+	fu_mutex_write_lock (self->devices_mutex);
 	g_ptr_array_remove (self->devices, item);
+	fu_mutex_write_unlock (self->devices_mutex);
 }
 
 static void
@@ -541,7 +587,9 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 	item->self = self; /* no ref */
 	item->device = g_object_ref (device);
 	item->replug_loop = g_main_loop_new (NULL, FALSE);
+	fu_mutex_write_lock (self->devices_mutex);
 	g_ptr_array_add (self->devices, item);
+	fu_mutex_write_unlock (self->devices_mutex);
 	fu_device_list_emit_device_added (self, device);
 }
 
@@ -553,7 +601,7 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
  *
  * Finds a specific device that has the matching GUID.
  *
- * Returns: (transfer none): a device, or %NULL if not found
+ * Returns: (transfer full): a device, or %NULL if not found
  *
  * Since: 1.0.2
  **/
@@ -566,7 +614,7 @@ fu_device_list_get_by_guid (FuDeviceList *self, const gchar *guid, GError **erro
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 	item = fu_device_list_find_by_guid (self, guid);
 	if (item != NULL)
-		return item->device;
+		return g_object_ref (item->device);
 	g_set_error (error,
 		     FWUPD_ERROR,
 		     FWUPD_ERROR_NOT_FOUND,
@@ -668,7 +716,7 @@ fu_device_list_wait_for_replug (FuDeviceList *self, FuDevice *device, GError **e
  * Finds a specific device using the ID string. This function also supports
  * using abbreviated hashes.
  *
- * Returns: (transfer none): a device, or %NULL if not found
+ * Returns: (transfer full): a device, or %NULL if not found
  *
  * Since: 1.0.2
  **/
@@ -704,7 +752,7 @@ fu_device_list_get_by_id (FuDeviceList *self, const gchar *device_id, GError **e
 	}
 
 	/* something found */
-	return item->device;
+	return g_object_ref (item->device);
 }
 
 static void
@@ -748,6 +796,7 @@ static void
 fu_device_list_init (FuDeviceList *self)
 {
 	self->devices = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_device_list_item_free);
+	self->devices_mutex = fu_mutex_new (G_OBJECT_TYPE_NAME(self), "devices");
 }
 
 static void
@@ -756,6 +805,7 @@ fu_device_list_finalize (GObject *obj)
 	FuDeviceList *self = FU_DEVICE_LIST (obj);
 
 	g_ptr_array_unref (self->devices);
+	g_object_unref (self->devices_mutex);
 
 	G_OBJECT_CLASS (fu_device_list_parent_class)->finalize (obj);
 }

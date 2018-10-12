@@ -1,5 +1,3 @@
-cargs = ['-DG_LOG_DOMAIN="Fu"']
-
 if get_option('daemon')
   install_data(['org.freedesktop.fwupd.xml'],
     install_dir : join_paths(datadir, 'dbus-1', 'interfaces')
@@ -33,6 +31,7 @@ libfwupdprivate = static_library(
     'fu-device-locker.c',
     'fu-hwids.c',
     'fu-history.c',
+    'fu-mutex.c',
     'fu-plugin.c',
     'fu-progressbar.c',
     'fu-quirks.c',
@@ -56,7 +55,6 @@ libfwupdprivate = static_library(
     valgrind,
   ],
   c_args : [
-    cargs,
     '-DFU_OFFLINE_DESTDIR=""',
   ],
 )
@@ -87,7 +85,6 @@ fwupdmgr = executable(
     libfwupdprivate,
   ],
   c_args : [
-    cargs,
     '-DFU_OFFLINE_DESTDIR=""',
   ],
   install : true,
@@ -154,7 +151,6 @@ fwupdtool = executable(
     libfwupdprivate,
   ],
   c_args : [
-    cargs,
     '-DFU_OFFLINE_DESTDIR=""',
   ],
   install : true,
@@ -202,6 +198,7 @@ executable(
     'fu-keyring.c',
     'fu-keyring-utils.c',
     'fu-history.c',
+    'fu-mutex.c',
     'fu-plugin.c',
     'fu-plugin-list.c',
     'fu-quirks.c',
@@ -229,7 +226,6 @@ executable(
   ],
   link_with : fwupd,
   c_args : [
-    cargs,
     '-DFU_OFFLINE_DESTDIR=""',
   ],
   install : true,
@@ -267,6 +263,7 @@ if get_option('tests')
       'fu-install-task.c',
       'fu-keyring.c',
       'fu-keyring-result.c',
+      'fu-mutex.c',
       'fu-plugin.c',
       'fu-plugin-list.c',
       'fu-progressbar.c',
@@ -297,12 +294,12 @@ if get_option('tests')
       fwupd,
     ],
     c_args : [
-      cargs,
       '-DTESTDATADIR_SRC="' + testdatadir_src + '"',
       '-DTESTDATADIR_DST="' + testdatadir_dst + '"',
       '-DTESTDATADIR="' + testdatadir_src + ':' + testdatadir_dst + '"',
       '-DPLUGINBUILDDIR="' + pluginbuilddir + '"',
       '-DFU_OFFLINE_DESTDIR="/tmp/fwupd-self-test"',
+      '-DFU_MUTEX_DEBUG',
     ],
   )
   test('fu-self-test', e, is_parallel:false)

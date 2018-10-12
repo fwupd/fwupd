@@ -4,9 +4,10 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
+#define G_LOG_DOMAIN				"FuUdevDevice"
+
 #include "config.h"
 
-#include <appstream-glib.h>
 #include <string.h>
 
 #include "fu-udev-device-private.h"

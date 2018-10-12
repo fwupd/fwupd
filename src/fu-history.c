@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
+#define G_LOG_DOMAIN				"FuHistory"
+
 #include "config.h"
 
 #include <fwupd.h>
@@ -15,6 +17,7 @@
 #include "fu-common.h"
 #include "fu-device-private.h"
 #include "fu-history.h"
+#include "fu-mutex.h"
 
 static void fu_history_finalize			 (GObject *object);
 
@@ -22,6 +25,7 @@ struct _FuHistory
 {
 	GObject			 parent_instance;
 	sqlite3			*db;
+	FuMutex			*db_mutex;
 };
 
 G_DEFINE_TYPE (FuHistory, fu_history, G_TYPE_OBJECT)
@@ -44,7 +48,6 @@ fu_history_device_from_stmt (sqlite3_stmt *stmt)
 
 	/* device_id */
 	tmp = (const gchar *) sqlite3_column_text (stmt, 0);
-	g_debug ("FuHistory: got sql result %s", tmp);
 	if (tmp != NULL)
 		fwupd_device_set_id (FWUPD_DEVICE (device), tmp);
 
@@ -180,7 +183,7 @@ fu_history_migrate_database_v1 (FuHistory *self, GError **error)
 			   "ALTER TABLE history RENAME TO history_old;",
 			   NULL, NULL, NULL);
 	if (rc != SQLITE_OK) {
-		g_debug ("FuHistory: cannot rename v0 table: %s", sqlite3_errmsg (self->db));
+		g_debug ("cannot rename v0 table: %s", sqlite3_errmsg (self->db));
 		return TRUE;
 	}
 
@@ -194,7 +197,7 @@ fu_history_migrate_database_v1 (FuHistory *self, GError **error)
 			   "DROP TABLE history_old;",
 			   NULL, NULL, NULL);
 	if (rc != SQLITE_OK) {
-		g_debug ("FuHistory: no history to migrate: %s", sqlite3_errmsg (self->db));
+		g_debug ("no history to migrate: %s", sqlite3_errmsg (self->db));
 		return TRUE;
 	}
 	return TRUE;
@@ -230,6 +233,7 @@ fu_history_load (FuHistory *self, GError **error)
 	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(GFile) file = NULL;
+	g_autoptr(FuMutexLocker) locker = fu_mutex_write_locker_new (self->db_mutex);
 
 	/* already done */
 	if (self->db != NULL)
@@ -237,6 +241,7 @@ fu_history_load (FuHistory *self, GError **error)
 
 	g_return_val_if_fail (FU_IS_HISTORY (self), FALSE);
 	g_return_val_if_fail (self->db == NULL, FALSE);
+	g_return_val_if_fail (locker != NULL, FALSE);
 
 	/* create directory */
 	dirname = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR_PKG);
@@ -248,7 +253,7 @@ fu_history_load (FuHistory *self, GError **error)
 
 	/* open */
 	filename = g_build_filename (dirname, "pending.db", NULL);
-	g_debug ("FuHistory: trying to open database '%s'", filename);
+	g_debug ("trying to open database '%s'", filename);
 	rc = sqlite3_open (filename, &self->db);
 	if (rc != SQLITE_OK) {
 		g_set_error (error,
@@ -270,15 +275,15 @@ fu_history_load (FuHistory *self, GError **error)
 		if (rc == SQLITE_OK)
 			schema_ver = 1;
 	}
-	g_debug ("FuHistory: got schema version of %u", schema_ver);
+	g_debug ("got schema version of %u", schema_ver);
 
 	/* migrate schema */
 	if (schema_ver == 0) {
-		g_debug ("FuHistory: building initial database");
+		g_debug ("building initial database");
 		if (!fu_history_create_database (self, error))
 			return FALSE;
 	} else if (schema_ver == 1) {
-		g_debug ("FuHistory: migrating v%u database", schema_ver);
+		g_debug ("migrating v%u database", schema_ver);
 		if (!fu_history_migrate_database_v1 (self, error))
 			return FALSE;
 	}
@@ -318,6 +323,7 @@ fu_history_modify_device (FuHistory *self, FuDevice *device,
 {
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
+	g_autoptr(FuMutexLocker) locker = NULL;
 
 	g_return_val_if_fail (FU_IS_HISTORY (self), FALSE);
 	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
@@ -327,9 +333,11 @@ fu_history_modify_device (FuHistory *self, FuDevice *device,
 		return FALSE;
 
 	/* overwrite entry if it exists */
+	locker = fu_mutex_write_locker_new (self->db_mutex);
+	g_return_val_if_fail (locker != NULL, FALSE);
 	if ((flags & FU_HISTORY_FLAGS_MATCH_OLD_VERSION) &&
 	    (flags & FU_HISTORY_FLAGS_MATCH_NEW_VERSION)) {
-		g_debug ("FuHistory: modifying device %s [%s], version not important",
+		g_debug ("modifying device %s [%s], version not important",
 			 fu_device_get_name (device),
 			 fu_device_get_id (device));
 		rc = sqlite3_prepare_v2 (self->db,
@@ -340,7 +348,7 @@ fu_history_modify_device (FuHistory *self, FuDevice *device,
 					 "WHERE device_id = ?4;",
 					 -1, &stmt, NULL);
 	} else if (flags & FU_HISTORY_FLAGS_MATCH_OLD_VERSION) {
-		g_debug ("FuHistory: modifying device %s [%s], only version old %s",
+		g_debug ("modifying device %s [%s], only version old %s",
 			 fu_device_get_name (device),
 			 fu_device_get_id (device),
 			 fu_device_get_version (device));
@@ -352,7 +360,7 @@ fu_history_modify_device (FuHistory *self, FuDevice *device,
 					 "WHERE device_id = ?4 AND version_old = ?5;",
 					 -1, &stmt, NULL);
 	} else if (flags & FU_HISTORY_FLAGS_MATCH_NEW_VERSION) {
-		g_debug ("FuHistory: modifying device %s [%s], only version new %s",
+		g_debug ("modifying device %s [%s], only version new %s",
 			 fu_device_get_name (device),
 			 fu_device_get_id (device),
 			 fu_device_get_version (device));
@@ -387,6 +395,7 @@ fu_history_add_device (FuHistory *self, FuDevice *device, FwupdRelease *release,
 	gint rc;
 	g_autofree gchar *metadata = NULL;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
+	g_autoptr(FuMutexLocker) locker = NULL;
 
 	g_return_val_if_fail (FU_IS_HISTORY (self), FALSE);
 	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
@@ -400,7 +409,7 @@ fu_history_add_device (FuHistory *self, FuDevice *device, FwupdRelease *release,
 	if (!fu_history_remove_device (self, device, release, error))
 		return FALSE;
 
-	g_debug ("FuHistory: add device %s [%s]",
+	g_debug ("add device %s [%s]",
 		 fu_device_get_name (device),
 		 fu_device_get_id (device));
 	if (release != NULL) {
@@ -412,6 +421,8 @@ fu_history_add_device (FuHistory *self, FuDevice *device, FwupdRelease *release,
 	metadata = _convert_hash_to_string (fwupd_release_get_metadata (release));
 
 	/* add */
+	locker = fu_mutex_write_locker_new (self->db_mutex);
+	g_return_val_if_fail (locker != NULL, FALSE);
 	rc = sqlite3_prepare_v2 (self->db,
 				 "INSERT INTO history (device_id,"
 						      "update_state,"
@@ -459,6 +470,7 @@ fu_history_remove_all_with_state (FuHistory *self,
 {
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
+	g_autoptr(FuMutexLocker) locker = NULL;
 
 	g_return_val_if_fail (FU_IS_HISTORY (self), FALSE);
 
@@ -467,7 +479,9 @@ fu_history_remove_all_with_state (FuHistory *self,
 		return FALSE;
 
 	/* remove entries */
-	g_debug ("FuHistory: removing all devices with update_state %s",
+	locker = fu_mutex_write_locker_new (self->db_mutex);
+	g_return_val_if_fail (locker != NULL, FALSE);
+	g_debug ("removing all devices with update_state %s",
 		 fwupd_update_state_to_string (update_state));
 	rc = sqlite3_prepare_v2 (self->db,
 				 "DELETE FROM history WHERE update_state = ?1",
@@ -487,6 +501,7 @@ fu_history_remove_all (FuHistory *self, GError **error)
 {
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
+	g_autoptr(FuMutexLocker) locker = NULL;
 
 	g_return_val_if_fail (FU_IS_HISTORY (self), FALSE);
 
@@ -495,7 +510,9 @@ fu_history_remove_all (FuHistory *self, GError **error)
 		return FALSE;
 
 	/* remove entries */
-	g_debug ("FuHistory: removing all devices");
+	locker = fu_mutex_write_locker_new (self->db_mutex);
+	g_return_val_if_fail (locker != NULL, FALSE);
+	g_debug ("removing all devices");
 	rc = sqlite3_prepare_v2 (self->db, "DELETE FROM history;", -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
@@ -512,6 +529,7 @@ fu_history_remove_device (FuHistory *self,  FuDevice *device,
 {
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
+	g_autoptr(FuMutexLocker) locker = NULL;
 
 	g_return_val_if_fail (FU_IS_HISTORY (self), FALSE);
 	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
@@ -521,7 +539,9 @@ fu_history_remove_device (FuHistory *self,  FuDevice *device,
 	if (!fu_history_load (self, error))
 		return FALSE;
 
-	g_debug ("FuHistory: remove device %s [%s]",
+	locker = fu_mutex_write_locker_new (self->db_mutex);
+	g_return_val_if_fail (locker != NULL, FALSE);
+	g_debug ("remove device %s [%s]",
 		 fu_device_get_name (device),
 		 fu_device_get_id (device));
 	rc = sqlite3_prepare_v2 (self->db,
@@ -547,6 +567,7 @@ fu_history_get_device_by_id (FuHistory *self, const gchar *device_id, GError **e
 	gint rc;
 	g_autoptr(GPtrArray) array_tmp = NULL;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
+	g_autoptr(FuMutexLocker) locker = NULL;
 
 	g_return_val_if_fail (FU_IS_HISTORY (self), NULL);
 	g_return_val_if_fail (device_id != NULL, NULL);
@@ -556,7 +577,9 @@ fu_history_get_device_by_id (FuHistory *self, const gchar *device_id, GError **e
 		return NULL;
 
 	/* get all the devices */
-	g_debug ("FuHistory: get device");
+	locker = fu_mutex_read_locker_new (self->db_mutex);
+	g_return_val_if_fail (locker != NULL, NULL);
+	g_debug ("get device");
 	rc = sqlite3_prepare_v2 (self->db,
 				 "SELECT device_id, "
 					"checksum, "
@@ -600,6 +623,7 @@ fu_history_get_devices (FuHistory *self, GError **error)
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 	gint rc;
 	g_autoptr(GPtrArray) array_tmp = NULL;
+	g_autoptr(FuMutexLocker) locker = NULL;
 
 	g_return_val_if_fail (FU_IS_HISTORY (self), NULL);
 
@@ -610,7 +634,8 @@ fu_history_get_devices (FuHistory *self, GError **error)
 	}
 
 	/* get all the devices */
-	g_debug ("FuHistory: get devices");
+	locker = fu_mutex_read_locker_new (self->db_mutex);
+	g_return_val_if_fail (locker != NULL, NULL);
 	rc = sqlite3_prepare_v2 (self->db,
 				 "SELECT device_id, "
 					"checksum, "
@@ -651,6 +676,7 @@ fu_history_class_init (FuHistoryClass *klass)
 static void
 fu_history_init (FuHistory *self)
 {
+	self->db_mutex = fu_mutex_new (G_OBJECT_TYPE_NAME(self), "db");
 }
 
 static void
@@ -660,6 +686,7 @@ fu_history_finalize (GObject *object)
 
 	if (self->db != NULL)
 		sqlite3_close (self->db);
+	g_object_unref (self->db_mutex);
 
 	G_OBJECT_CLASS (fu_history_parent_class)->finalize (object);
 }

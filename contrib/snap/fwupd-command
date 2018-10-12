@@ -5,6 +5,17 @@ mkdir -p $XDG_CACHE_HOME
 export GIO_MODULE_DIR=$XDG_CACHE_HOME/gio-modules
 export XDG_DATA_DIRS="$SNAP/usr/share"
 
+#determine architecture
+if [ "$SNAP_ARCH" = "amd64" ]; then
+  ARCH="x86_64-linux-gnu"
+elif [ "$SNAP_ARCH" = "armhf" ]; then
+  ARCH="arm-linux-gnueabihf"
+elif [ "$SNAP_ARCH" = "arm64" ]; then
+  ARCH="aarch64-linux-gnu"
+else
+  ARCH="$SNAP_ARCH-linux-gnu"
+fi
+
 # don't update between versions, we want to preserve previous data
 [ ! -d "$SNAP_USER_DATA/etc" ] && cp -R "$SNAP/etc" "$SNAP_USER_DATA"
 [ ! -d "$SNAP_USER_DATA/var" ] && cp -R "$SNAP/var" "$SNAP_USER_DATA"

@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
+#define G_LOG_DOMAIN				"FuDebug"
+
 #include <config.h>
 #include <glib/gi18n.h>
 #include <unistd.h>
@@ -15,12 +17,14 @@ typedef struct {
 	gboolean	 verbose;
 	gboolean	 console;
 	gchar		**plugin_verbose;
+	gchar		**daemon_verbose;
 } FuDebug;
 
 static void
 fu_debug_free (FuDebug *self)
 {
 	g_strfreev (self->plugin_verbose);
+	g_strfreev (self->daemon_verbose);
 	g_free (self);
 }
 
@@ -61,21 +65,21 @@ fu_debug_handler_cb (const gchar *log_domain,
 			       g_date_time_get_second (dt),
 			       g_date_time_get_microsecond (dt) / 1000);
 
-	/* make these shorter */
-	if (g_str_has_prefix (log_domain, "FuPlugin"))
-		log_domain += 8;
+	/* each file should have set this */
+	if (log_domain == NULL)
+		log_domain = "FIXME";
 
 	/* pad out domain */
 	domain = g_string_new (log_domain);
-	for (gsize i = domain->len; i < 3; i++)
+	for (gsize i = domain->len; i < 20; i++)
 		g_string_append (domain, " ");
 
 	/* to file */
 	if (!self->console) {
 		if (tmp != NULL)
-			g_print ("%s ", tmp);
-		g_print ("%s ", domain->str);
-		g_print ("%s\n", message);
+			g_printerr ("%s ", tmp);
+		g_printerr ("%s ", domain->str);
+		g_printerr ("%s\n", message);
 		return;
 	}
 
@@ -86,16 +90,16 @@ fu_debug_handler_cb (const gchar *log_domain,
 	case G_LOG_LEVEL_WARNING:
 		/* critical in red */
 		if (tmp != NULL)
-			g_print ("%c[%dm%s ", 0x1B, 32, tmp);
-		g_print ("%s ", domain->str);
-		g_print ("%c[%dm%s\n%c[%dm", 0x1B, 31, message, 0x1B, 0);
+			g_printerr ("%c[%dm%s ", 0x1B, 32, tmp);
+		g_printerr ("%s ", domain->str);
+		g_printerr ("%c[%dm%s\n%c[%dm", 0x1B, 31, message, 0x1B, 0);
 		break;
 	default:
 		/* debug in blue */
 		if (tmp != NULL)
-			g_print ("%c[%dm%s ", 0x1B, 32, tmp);
-		g_print ("%s ", domain->str);
-		g_print ("%c[%dm%s\n%c[%dm", 0x1B, 34, message, 0x1B, 0);
+			g_printerr ("%c[%dm%s ", 0x1B, 32, tmp);
+		g_printerr ("%s ", domain->str);
+		g_printerr ("%c[%dm%s\n%c[%dm", 0x1B, 34, message, 0x1B, 0);
 		break;
 	}
 }
@@ -114,6 +118,9 @@ fu_debug_pre_parse_hook (GOptionContext *context,
 		{ "plugin-verbose", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &self->plugin_verbose,
 		  /* TRANSLATORS: this is for plugin development */
 		  N_("Show plugin verbose information"), "PLUGIN-NAME" },
+		{ "daemon-verbose", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &self->daemon_verbose,
+		  /* TRANSLATORS: this is for daemon development */
+		  N_("Show daemon verbose information"), "DOMAIN" },
 		{ NULL}
 	};
 
@@ -137,13 +144,19 @@ fu_debug_post_parse_hook (GOptionContext *context,
 					    G_LOG_LEVEL_CRITICAL);
 		g_log_set_default_handler (fu_debug_handler_cb, self);
 	} else {
-		/* hide all debugging */
-		g_log_set_handler (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-				   fu_debug_ignore_cb, self);
+		/* hide all debugging except whitelisted */
+		g_log_set_default_handler (fu_debug_ignore_cb, self);
+		if (self->daemon_verbose != NULL) {
+			for (guint i = 0; self->daemon_verbose[i] != NULL; i++) {
+				g_log_set_handler (self->daemon_verbose[i],
+						   G_LOG_LEVEL_MASK,
+						   fu_debug_handler_cb, self);
+			}
+		}
 	}
 
 	/* are we on an actual TTY? */
-	self->console = (isatty (fileno (stdout)) == 1);
+	self->console = (isatty (fileno (stderr)) == 1);
 	g_debug ("Verbose debugging %s (on console %i)",
 		 self->verbose ? "enabled" : "disabled", self->console);
 

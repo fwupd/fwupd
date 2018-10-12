@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version : '1.1.2',
+  version : '1.1.3',
   license : 'LGPL-2.1+',
   meson_version : '>=0.43.0',
   default_options : ['warning_level=2', 'c_std=c99'],
@@ -100,6 +100,7 @@ warning_flags = [
   '-Wuninitialized',
   '-Wunused-but-set-variable',
   '-Wunused-variable',
+  '-Wvla',
   '-Wwrite-strings'
 ]
 cc = meson.get_compiler('c')

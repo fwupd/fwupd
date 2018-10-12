@@ -1,0 +1,72 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the fwupd package.
+#
+# Translators:
+# Ilyas Bakirov <i.bakirov@gmail.com>, 2018
+msgid ""
+msgstr ""
+"Project-Id-Version: fwupd\n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: 2018-10-12 11:10+0000\n"
+"Last-Translator: Richard Hughes <richard@hughsie.com>\n"
+"Language-Team: Kyrgyz (http://www.transifex.com/freedesktop/fwupd/language/ky/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ky\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Added"
+msgstr "Кошулду"
+
+#. TRANSLATORS: chip ID, e.g. "0x58200204"
+msgid "Chip ID"
+msgstr "Чиптин ID'си"
+
+#. TRANSLATORS: detected a DFU device
+msgid "Found"
+msgstr "Табылды"
+
+#. TRANSLATORS: Appstream ID for the hardware type
+msgid "ID"
+msgstr "ID"
+
+#. show message in progressbar
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Installing %s"
+msgstr "Орнотулууда: %s"
+
+msgid "Mode"
+msgstr "Режими"
+
+#. TRANSLATORS: DFU protocol version, e.g. 1.1
+msgid "Protocol"
+msgstr "Протокол"
+
+#. TRANSLATORS: reading from the flash chips
+msgid "Reading…"
+msgstr "Окуулууда..."
+
+#. TRANSLATORS: device state, i.e. appIDLE
+msgid "State"
+msgstr "Абалы"
+
+#. TRANSLATORS: probably not run as root...
+#. TRANSLATORS: device has failed to report status
+#. TRANSLATORS: device status, e.g. "OK"
+msgid "Status"
+msgstr "Статус"
+
+#. TRANSLATORS: currect daemon status is unknown
+msgid "Unknown"
+msgstr "Белгисиз"
+
+#. TRANSLATORS: writing to the flash chips
+msgid "Writing…"
+msgstr "Жазылууда..."
+
+msgid "fwupd"
+msgstr "fwupd"

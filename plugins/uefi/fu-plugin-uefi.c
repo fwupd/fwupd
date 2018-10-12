@@ -565,22 +565,28 @@ static gboolean
 fu_plugin_uefi_ensure_esp_path (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	const gchar *key = "OverrideESPMountPoint";
+	guint64 sz_reqd = FU_UEFI_COMMON_REQUIRED_ESP_FREE_SPACE;
+	g_autofree gchar *require_esp_free_space = NULL;
 	g_autofree gchar *require_shim_for_sb = NULL;
 
+	/* parse free space */
+	require_esp_free_space = fu_plugin_get_config_value (plugin, "RequireESPFreeSpace");
+	if (require_esp_free_space != NULL)
+		sz_reqd = fu_common_strtoull (require_esp_free_space);
+
 	/* load from file */
-	data->esp_path = fu_plugin_get_config_value (plugin, key);
+	data->esp_path = fu_plugin_get_config_value (plugin, "OverrideESPMountPoint");
 	if (data->esp_path != NULL) {
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_uefi_check_esp_path (data->esp_path, &error_local)) {
 			g_set_error (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_FILENAME,
-				     "invalid %s=%s specified in config: %s",
-				     key, data->esp_path, error_local->message);
+				     "invalid OverrideESPMountPoint=%s specified in config: %s",
+				     data->esp_path, error_local->message);
 			return FALSE;
 		}
-		return TRUE;
+		return fu_uefi_check_esp_free_space (data->esp_path, sz_reqd, error);
 	}
 	require_shim_for_sb = fu_plugin_get_config_value (plugin, "RequireShimForSecureBoot");
 	if (require_shim_for_sb == NULL ||
@@ -594,10 +600,14 @@ fu_plugin_uefi_ensure_esp_path (FuPlugin *plugin, GError **error)
 			     G_IO_ERROR,
 			     G_IO_ERROR_INVALID_FILENAME,
 			     "Unable to determine EFI system partition location, "
-			     "override using %s in %s.conf",
-			     key, fu_plugin_get_name (plugin));
+			     "override using OverrideESPMountPoint in %s.conf",
+			     fu_plugin_get_name (plugin));
 		return FALSE;
 	}
+
+	/* check free space */
+	if (!fu_uefi_check_esp_free_space (data->esp_path, sz_reqd, error))
+		return FALSE;
 
 	/* success */
 	return TRUE;
@@ -624,6 +634,73 @@ fu_plugin_uefi_ensure_efivarfs_rw (GError **error)
 			     "%s is read only", sysfsefivardir);
 		return FALSE;
 	}
+
+	return TRUE;
+}
+
+gboolean
+fu_plugin_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
+{
+	FuUefiDevice *device_uefi = FU_UEFI_DEVICE (device);
+	FuDevice *device_alt = NULL;
+	FwupdDeviceFlags device_flags_alt = 0;
+	guint flashes_left = 0;
+	guint flashes_left_alt = 0;
+
+	if (fu_uefi_device_get_kind (device_uefi) !=
+	    FU_UEFI_DEVICE_KIND_DELL_TPM_FIRMWARE) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "Unable to unlock %s",
+			     fu_device_get_name (device));
+		return FALSE;
+	}
+
+	/* for unlocking TPM1.2 <-> TPM2.0 switching */
+	g_debug ("Unlocking upgrades for: %s (%s)", fu_device_get_name (device),
+		 fu_device_get_id (device));
+	device_alt = fu_device_get_alternate (device);
+	if (device_alt == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "No alternate device for %s",
+			     fu_device_get_name (device));
+		return FALSE;
+	}
+	g_debug ("Preventing upgrades for: %s (%s)", fu_device_get_name (device_alt),
+		 fu_device_get_id (device_alt));
+
+	flashes_left = fu_device_get_flashes_left (device);
+	flashes_left_alt = fu_device_get_flashes_left (device_alt);
+	if (flashes_left == 0) {
+		/* flashes left == 0 on both means no flashes left */
+		if (flashes_left_alt == 0) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "ERROR: %s has no flashes left.",
+				     fu_device_get_name (device));
+		/* flashes left == 0 on just unlocking device is ownership */
+		} else {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "ERROR: %s is currently OWNED. "
+				     "Ownership must be removed to switch modes.",
+				     fu_device_get_name (device_alt));
+		}
+		return FALSE;
+	}
+
+	/* clone the info from real device but prevent it from being flashed */
+	device_flags_alt = fu_device_get_flags (device_alt);
+	fu_device_set_flags (device, device_flags_alt);
+	fu_device_set_flags (device_alt, device_flags_alt & ~FWUPD_DEVICE_FLAG_UPDATABLE);
+
+	/* make sure that this unlocked device can be updated */
+	fu_device_set_version (device, "0.0.0.0");
 
 	return TRUE;
 }

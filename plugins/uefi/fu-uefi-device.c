@@ -45,6 +45,8 @@ fu_uefi_device_kind_to_string (FuUefiDeviceKind kind)
 		return "uefi-driver";
 	if (kind == FU_UEFI_DEVICE_KIND_FMP)
 		return "fmp";
+	if (kind == FU_UEFI_DEVICE_KIND_DELL_TPM_FIRMWARE)
+		return "dell-tpm-firmware";
 	return NULL;
 }
 
@@ -59,6 +61,8 @@ fu_uefi_device_kind_from_string (const gchar *kind)
 		return FU_UEFI_DEVICE_KIND_UEFI_DRIVER;
 	if (g_strcmp0 (kind, "fmp") == 0)
 		return FU_UEFI_DEVICE_KIND_FMP;
+	if (g_strcmp0 (kind, "dell-tpm-firmware") == 0)
+		return FU_UEFI_DEVICE_KIND_DELL_TPM_FIRMWARE;
 	return FU_UEFI_DEVICE_KIND_UNKNOWN;
 }
 
@@ -102,6 +106,8 @@ fu_uefi_device_to_string (FuDevice *device, GString *str)
 				fu_uefi_device_status_to_string (self->last_attempt_status));
 	g_string_append_printf (str, "    last_attempt_version:\t%" G_GUINT32_FORMAT "\n",
 				self->last_attempt_version);
+	g_string_append_printf (str, "    esp path:\t%s\n",
+				fu_device_get_metadata (device, "EspPath"));
 }
 
 FuUefiDeviceKind
@@ -339,16 +345,16 @@ fu_uefi_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 			fu_uefi_prefix_efi_errors (error);
 			return FALSE;
 		}
-	}
 
-	/* save this header and body to the hardware */
-	datasz = sizeof(info) + dp_bufsz;
-	data = g_malloc0 (datasz);
-	memcpy (data, &info, sizeof(info));
-	memcpy (data + sizeof(info), dp_buf, dp_bufsz);
-	if (!fu_uefi_device_set_efivar (self, data, datasz, error)) {
-		fu_uefi_prefix_efi_errors (error);
-		return FALSE;
+		/* save this header and body to the hardware */
+		datasz = sizeof(info) + dp_bufsz;
+		data = g_malloc0 (datasz);
+		memcpy (data, &info, sizeof(info));
+		memcpy (data + sizeof(info), dp_buf, dp_bufsz);
+		if (!fu_uefi_device_set_efivar (self, data, datasz, error)) {
+			fu_uefi_prefix_efi_errors (error);
+			return FALSE;
+		}
 	}
 
 	/* update the firmware before the bootloader runs */

@@ -272,3 +272,10 @@ LIBFWUPD_1.1.2 {
     fwupd_device_to_variant_full;
   local: *;
 } LIBFWUPD_1.1.1;
+
+LIBFWUPD_1.1.3 {
+  global:
+    fwupd_device_get_install_duration;
+    fwupd_device_set_install_duration;
+  local: *;
+} LIBFWUPD_1.1.2;

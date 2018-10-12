@@ -167,6 +167,14 @@ main (int argc, char *argv[])
 			return EXIT_FAILURE;
 		}
 	}
+
+	/* check free space */
+	if (!fu_uefi_check_esp_free_space (esp_path,
+					   FU_UEFI_COMMON_REQUIRED_ESP_FREE_SPACE,
+					   &error)) {
+		g_printerr ("Unable to use EFI system partition: %s\n", error->message);
+		return EXIT_FAILURE;
+	}
 	g_debug ("ESP mountpoint set as %s", esp_path);
 
 	/* show the debug action_log from the last attempted update */

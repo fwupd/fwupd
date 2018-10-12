@@ -187,6 +187,62 @@ fu_engine_requirements_device_func (void)
 }
 
 static void
+fu_engine_requirements_other_device_func (void)
+{
+	gboolean ret;
+	g_autoptr(AsApp) app = as_app_new ();
+	g_autoptr(AsChecksum) csum = as_checksum_new ();
+	g_autoptr(AsProvide) prov = as_provide_new ();
+	g_autoptr(AsRelease) rel = as_release_new ();
+	g_autoptr(AsRequire) req1 = as_require_new ();
+	g_autoptr(FuDevice) device1 = fu_device_new ();
+	g_autoptr(FuDevice) device2 = fu_device_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuInstallTask) task = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* set up a dummy device */
+	fu_device_set_version (device1, "1.2.3");
+	fu_device_add_flag (device1, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_guid (device1, "12345678-1234-1234-1234-123456789012");
+
+	/* set up a different device */
+	fu_device_set_id (device2, "id2");
+	fu_device_set_name (device2, "Secondary firmware");
+	fu_device_set_version (device2, "4.5.6");
+	fu_device_set_vendor_id (device2, "FFFF");
+	fu_device_add_guid (device2, "00000000-0000-0000-0000-000000000000");
+	fu_engine_add_device (engine, device2);
+
+	/* make the component require another device version */
+	as_require_set_kind (req1, AS_REQUIRE_KIND_FIRMWARE);
+	as_require_set_compare (req1, AS_REQUIRE_COMPARE_GT);
+	as_require_set_version (req1, "4.0.0");
+	as_require_set_value (req1, "00000000-0000-0000-0000-000000000000");
+	as_app_add_require (app, req1);
+
+	/* add release */
+	as_checksum_set_target (csum, AS_CHECKSUM_TARGET_CONTENT);
+	as_checksum_set_filename (csum, "bios.bin");
+	as_release_set_version (rel, "1.2.4");
+	as_release_add_checksum (rel, csum);
+	as_app_add_release (app, rel);
+
+	/* add GUID to match */
+	as_provide_set_kind (prov, AS_PROVIDE_KIND_FIRMWARE_FLASHED);
+	as_provide_set_value (prov, "12345678-1234-1234-1234-123456789012");
+	as_app_add_provide (app, prov);
+
+	/* check this passes */
+	task = fu_install_task_new (device1, app);
+	ret = fu_engine_check_requirements (engine, task,
+					    FWUPD_INSTALL_FLAG_NONE,
+					    &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+}
+
+static void
 fu_engine_device_priority_func (void)
 {
 	g_autoptr(FuDevice) device1 = fu_device_new ();
@@ -222,11 +278,13 @@ fu_engine_device_priority_func (void)
 	/* the now-removed low-prio device */
 	device = fu_engine_get_device (engine, "4e89d81a2e6fb4be2578d245fd8511c1f4ad0b58", &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_null (device);
 	g_clear_error (&error);
 
 	/* the never-added 2nd low-prio device */
 	device = fu_engine_get_device (engine, "c48feddbbcfee514f530ce8f7f2dccd98b6cc150", &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_null (device);
 }
 
 static void
@@ -499,7 +557,7 @@ fu_engine_downgrade_func (void)
 	g_assert (ret);
 
 	/* expect just one broken remote to fail */
-	g_test_expect_message (G_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
+	g_test_expect_message ("FuEngine", G_LOG_LEVEL_WARNING,
 			       "failed to load remote broken: *");
 
 	testdatadir = fu_test_get_filename (TESTDATADIR, ".");
@@ -987,6 +1045,7 @@ fu_device_list_compatible_func (void)
 {
 	g_autoptr(FuDevice) device1 = fu_device_new ();
 	g_autoptr(FuDevice) device2 = fu_device_new ();
+	g_autoptr(FuDevice) device_old = NULL;
 	g_autoptr(FuDeviceList) device_list = fu_device_list_new ();
 	g_autoptr(GPtrArray) devices_all = NULL;
 	g_autoptr(GPtrArray) devices_active = NULL;
@@ -1053,8 +1112,8 @@ fu_device_list_compatible_func (void)
 			 "99249eb1bd9ef0b6e192b271a8cb6a3090cfec7a");
 
 	/* verify we can get the old device from the new device */
-	device = fu_device_list_get_old (device_list, device2);
-	g_assert (device == device1);
+	device_old = fu_device_list_get_old (device_list, device2);
+	g_assert (device_old == device1);
 }
 
 static void
@@ -1152,6 +1211,7 @@ fu_device_list_func (void)
 	g_assert (device != NULL);
 	g_assert_cmpstr (fu_device_get_id (device), ==,
 					   "99249eb1bd9ef0b6e192b271a8cb6a3090cfec7a");
+	g_clear_object (&device);
 
 	/* find by GUID */
 	device = fu_device_list_get_by_guid (device_list,
@@ -1161,6 +1221,7 @@ fu_device_list_func (void)
 	g_assert (device != NULL);
 	g_assert_cmpstr (fu_device_get_id (device), ==,
 			 "1a8d0d9a96ad3e67ba76cf3033623625dc6d6882");
+	g_clear_object (&device);
 
 	/* find by missing GUID */
 	device = fu_device_list_get_by_guid (device_list, "notfound", &error);
@@ -1498,6 +1559,7 @@ fu_plugin_quirks_device_func (void)
 	g_assert (ret);
 
 	/* use quirk file to set device attributes */
+	fu_device_set_physical_id (device, "usb:00:05");
 	fu_device_set_quirks (device, quirks);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_guid (device, "USB\\VID_0BDA&PID_1100");
@@ -2206,6 +2268,168 @@ _build_cab (GCabCompression compression, ...)
 }
 
 static void
+_plugin_composite_device_added_cb (FuPlugin *plugin, FuDevice *device, gpointer user_data)
+{
+	GPtrArray *devices = (GPtrArray *) user_data;
+	g_ptr_array_add (devices, g_object_ref (device));
+}
+
+static void
+fu_plugin_composite_func (void)
+{
+	GError *error = NULL;
+	gboolean ret;
+	GPtrArray *apps;
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GPtrArray) install_tasks = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	g_autoptr(AsStore) store = NULL;
+
+	/* create CAB file */
+	blob = _build_cab (GCAB_COMPRESSION_NONE,
+			   "acme.metainfo.xml",
+	"<component type=\"firmware\">\n"
+	"  <id>com.acme.example.firmware</id>\n"
+	"  <provides>\n"
+	"    <firmware type=\"flashed\">b585990a-003e-5270-89d5-3705a17f9a43</firmware>\n"
+	"  </provides>\n"
+	"  <releases>\n"
+	"    <release version=\"1.2.3\"/>\n"
+	"  </releases>\n"
+	"</component>",
+	"acme.module1.metainfo.xml",
+	"<component type=\"firmware\">\n"
+	"  <id>com.acme.example.firmware.module1</id>\n"
+	"  <provides>\n"
+	"    <firmware type=\"flashed\">7fddead7-12b5-4fb9-9fa0-6d30305df755</firmware>\n"
+	"  </provides>\n"
+	"  <releases>\n"
+	"    <release version=\"2\"/>\n"
+	"  </releases>\n"
+	"</component>",
+	"acme.module2.metainfo.xml",
+	"<component type=\"firmware\">\n"
+	"  <id>com.acme.example.firmware.module2</id>\n"
+	"  <provides>\n"
+	"    <firmware type=\"flashed\">b8fe6b45-8702-4bcd-8120-ef236caac76f</firmware>\n"
+	"  </provides>\n"
+	"  <releases>\n"
+	"    <release version=\"11\"/>\n"
+	"  </releases>\n"
+	"</component>",
+			   "firmware.bin", "world",
+			   NULL);
+	if (blob == NULL) {
+		g_test_skip ("libgcab too old");
+		return;
+	}
+	store = fu_common_store_from_cab_bytes (blob, 10240, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (store);
+	apps = as_store_get_apps (store);
+	g_assert_cmpint (apps->len, ==, 3);
+
+	/* set up dummy plugin */
+	g_setenv ("FWUPD_PLUGIN_TEST", "composite", TRUE);
+	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_test.so", &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	fu_engine_add_plugin (engine, plugin);
+
+	ret = fu_plugin_runner_startup (plugin, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	g_signal_connect (plugin, "device-added",
+			  G_CALLBACK (_plugin_composite_device_added_cb),
+			  devices);
+
+	ret = fu_plugin_runner_coldplug (plugin, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+
+	/* check we found all composite devices  */
+	g_assert_cmpint (devices->len, ==, 3);
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device = g_ptr_array_index (devices, i);
+		fu_engine_add_device (engine, device);
+		if (g_strcmp0 (fu_device_get_id (device),
+				"08d460be0f1f9f128413f816022a6439e0078018") == 0) {
+			g_assert_cmpstr (fu_device_get_version (device), ==, "1.2.2");
+		} else if (g_strcmp0 (fu_device_get_id (device),
+					"c0a0a4aa6480ac28eea1ce164fbb466ca934e1ff") == 0) {
+			g_assert_cmpstr (fu_device_get_version (device), ==, "1");
+			g_assert_nonnull (fu_device_get_parent (device));
+		} else if (g_strcmp0 (fu_device_get_id (device),
+					"bf455e9f371d2608d1cb67660fd2b335d3f6ef73") == 0) {
+			g_assert_cmpstr (fu_device_get_version (device), ==, "10");
+			g_assert_nonnull (fu_device_get_parent (device));
+		}
+	}
+
+	/* produce install tasks */
+	for (guint i = 0; i < apps->len; i++) {
+		AsApp *app = g_ptr_array_index (apps, i);
+
+		/* do any devices pass the requirements */
+		for (guint j = 0; j < devices->len; j++) {
+			FuDevice *device = g_ptr_array_index (devices, j);
+			g_autoptr(FuInstallTask) task = NULL;
+			g_autoptr(GError) error_local = NULL;
+
+			/* is this component valid for the device */
+			task = fu_install_task_new (device, app);
+			if (!fu_engine_check_requirements (engine,
+							   task,
+							   0,
+							   &error_local)) {
+				g_debug ("requirement on %s:%s failed: %s",
+					 fu_device_get_id (device),
+					 as_app_get_id (app),
+					 error_local->message);
+				continue;
+			}
+
+			g_ptr_array_add (install_tasks, g_steal_pointer (&task));
+		}
+	}
+	g_assert_cmpint (install_tasks->len, ==, 3);
+
+	/* install the cab */
+	ret = fu_engine_install_tasks (engine,
+				       install_tasks,
+				       blob,
+				       FWUPD_DEVICE_FLAG_NONE,
+				       &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+
+	/* verify everything upgraded */
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device = g_ptr_array_index (devices, i);
+		const gchar *metadata;
+		if (g_strcmp0 (fu_device_get_id (device),
+				"08d460be0f1f9f128413f816022a6439e0078018") == 0) {
+			g_assert_cmpstr (fu_device_get_version (device), ==, "1.2.3");
+		} else if (g_strcmp0 (fu_device_get_id (device),
+					"c0a0a4aa6480ac28eea1ce164fbb466ca934e1ff") == 0) {
+			g_assert_cmpstr (fu_device_get_version (device), ==, "2");
+		} else if (g_strcmp0 (fu_device_get_id (device),
+					"bf455e9f371d2608d1cb67660fd2b335d3f6ef73") == 0) {
+			g_assert_cmpstr (fu_device_get_version (device), ==, "11");
+		}
+
+		/* verify prepare and cleanup ran on all devices */
+		metadata = fu_device_get_metadata (device, "frimbulator");
+		g_assert_cmpstr (metadata, ==, "1");
+		metadata = fu_device_get_metadata (device, "frombulator");
+		g_assert_cmpstr (metadata, ==, "1");
+	}
+}
+
+static void
 fu_common_store_cab_func (void)
 {
 	AsApp *app;
@@ -2634,6 +2858,7 @@ main (int argc, char **argv)
 	/* tests go here */
 	if (g_test_slow ())
 		g_test_add_func ("/fwupd/progressbar", fu_progressbar_func);
+	g_test_add_func ("/fwupd/engine{requirements-other-device}", fu_engine_requirements_other_device_func);
 	g_test_add_func ("/fwupd/device{incorporate}", fu_device_incorporate_func);
 	g_test_add_func ("/fwupd/device{poll}", fu_device_poll_func);
 	g_test_add_func ("/fwupd/device-locker{success}", fu_device_locker_func);
@@ -2670,6 +2895,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/plugin{quirks}", fu_plugin_quirks_func);
 	g_test_add_func ("/fwupd/plugin{quirks-performance}", fu_plugin_quirks_performance_func);
 	g_test_add_func ("/fwupd/plugin{quirks-device}", fu_plugin_quirks_device_func);
+	g_test_add_func ("/fwupd/plugin{composite}", fu_plugin_composite_func);
 	g_test_add_func ("/fwupd/keyring{gpg}", fu_keyring_gpg_func);
 	g_test_add_func ("/fwupd/keyring{pkcs7}", fu_keyring_pkcs7_func);
 	g_test_add_func ("/fwupd/chunk", fu_chunk_func);

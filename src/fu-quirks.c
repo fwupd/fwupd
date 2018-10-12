@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
+#define G_LOG_DOMAIN				"FuQuirks"
+
 #include "config.h"
 
 #include <glib-object.h>
@@ -12,6 +14,7 @@
 #include <appstream-glib.h>
 
 #include "fu-common.h"
+#include "fu-mutex.h"
 #include "fu-quirks.h"
 
 #include "fwupd-error.h"
@@ -49,6 +52,7 @@ struct _FuQuirks
 	GObject			 parent_instance;
 	GPtrArray		*monitors;
 	GHashTable		*hash;	/* of group:{key:value} */
+	FuMutex			*hash_mutex;
 };
 
 G_DEFINE_TYPE (FuQuirks, fu_quirks, G_TYPE_OBJECT)
@@ -120,10 +124,12 @@ fu_quirks_lookup_by_id (FuQuirks *self, const gchar *group, const gchar *key)
 {
 	GHashTable *kvs;
 	g_autofree gchar *group_key = NULL;
+	g_autoptr(FuMutexLocker) locker = fu_mutex_read_locker_new (self->hash_mutex);
 
 	g_return_val_if_fail (FU_IS_QUIRKS (self), NULL);
 	g_return_val_if_fail (group != NULL, NULL);
 	g_return_val_if_fail (key != NULL, NULL);
+	g_return_val_if_fail (locker != NULL, NULL);
 
 	group_key = fu_quirks_build_group_key (group);
 	kvs = g_hash_table_lookup (self->hash, group_key);
@@ -148,6 +154,8 @@ gboolean
 fu_quirks_get_kvs_for_guid (FuQuirks *self, const gchar *guid, GHashTableIter *iter)
 {
 	GHashTable *kvs;
+	g_autoptr(FuMutexLocker) locker = fu_mutex_read_locker_new (self->hash_mutex);
+	g_return_val_if_fail (locker != NULL, FALSE);
 	kvs = g_hash_table_lookup (self->hash, guid);
 	if (kvs == NULL)
 		return FALSE;
@@ -195,6 +203,9 @@ fu_quirks_add_value (FuQuirks *self, const gchar *group, const gchar *key, const
 	const gchar *value_old;
 	g_autofree gchar *group_key = NULL;
 	g_autofree gchar *value_new = NULL;
+	g_autoptr(FuMutexLocker) locker = fu_mutex_write_locker_new (self->hash_mutex);
+
+	g_return_if_fail (locker != NULL);
 
 	/* does the key already exists in our hash */
 	group_key = fu_quirks_build_group_key (group);
@@ -247,7 +258,6 @@ fu_quirks_add_quirks_from_filename (FuQuirks *self, const gchar *filename, GErro
 			fu_quirks_add_value (self, groups[i], keys[j], value);
 		}
 	}
-	g_debug ("now %u quirk entries", g_hash_table_size (self->hash));
 	return TRUE;
 }
 
@@ -304,6 +314,7 @@ fu_quirks_add_quirks_for_path (FuQuirks *self, const gchar *path, GError **error
 	}
 
 	/* success */
+	g_debug ("now %u quirk entries", g_hash_table_size (self->hash));
 	return TRUE;
 }
 
@@ -323,11 +334,14 @@ fu_quirks_load (FuQuirks *self, GError **error)
 {
 	g_autofree gchar *datadir = NULL;
 	g_autofree gchar *localstatedir = NULL;
+
 	g_return_val_if_fail (FU_IS_QUIRKS (self), FALSE);
 
 	/* ensure empty in case we're called from a monitor change */
 	g_ptr_array_set_size (self->monitors, 0);
+	fu_mutex_write_lock (self->hash_mutex);
 	g_hash_table_remove_all (self->hash);
+	fu_mutex_write_unlock (self->hash_mutex);
 
 	/* system datadir */
 	datadir = fu_common_get_path (FU_PATH_KIND_DATADIR_PKG);
@@ -355,6 +369,7 @@ fu_quirks_init (FuQuirks *self)
 {
 	self->monitors = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	self->hash = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, (GDestroyNotify) g_hash_table_unref);
+	self->hash_mutex = fu_mutex_new (G_OBJECT_TYPE_NAME(self), "hash");
 }
 
 static void
@@ -362,6 +377,7 @@ fu_quirks_finalize (GObject *obj)
 {
 	FuQuirks *self = FU_QUIRKS (obj);
 	g_ptr_array_unref (self->monitors);
+	g_object_unref (self->hash_mutex);
 	g_hash_table_unref (self->hash);
 	G_OBJECT_CLASS (fu_quirks_parent_class)->finalize (obj);
 }

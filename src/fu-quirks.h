@@ -231,6 +231,17 @@ gboolean	 fu_quirks_get_kvs_for_guid		(FuQuirks	*self,
  */
 #define	FU_QUIRKS_FIRMWARE_SIZE_MAX		"FirmwareSizeMax"
 
+/**
+ * FU_QUIRKS_INSTALL_DURATION:
+ * @key: the USB device ID, e.g. `DeviceInstanceId=USB\VID_0763&PID_2806`
+ * @value: the estimated time for flashing the device in seconds
+ *
+ * Sets the estimated time to flash the device
+ *
+ * Since: 1.1.3
+ */
+#define	FU_QUIRKS_INSTALL_DURATION		"InstallDuration"
+
 G_END_DECLS
 
 #endif /* __FU_QUIRKS_H */

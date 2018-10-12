@@ -179,7 +179,7 @@ synapticsmst_common_rc_set_command (SynapticsMSTConnection *connection,
 							REG_RC_DATA,
 							buf, cur_length,
 							error)) {
-				g_prefix_error (error, "failed to write data: ");
+				g_prefix_error (error, "failure writing data register: ");
 				return FALSE;
 			}
 
@@ -188,7 +188,7 @@ synapticsmst_common_rc_set_command (SynapticsMSTConnection *connection,
 							REG_RC_OFFSET,
 							(guint8 *)&cur_offset, 4,
 							error)) {
-				g_prefix_error (error, "failed to write offset: ");
+				g_prefix_error (error, "failure writing offset register: ");
 				return FALSE;
 			}
 
@@ -197,7 +197,7 @@ synapticsmst_common_rc_set_command (SynapticsMSTConnection *connection,
 							REG_RC_LEN,
 							(guint8 *)&cur_length, 4,
 							error)) {
-				g_prefix_error (error, "failed to write length: ");
+				g_prefix_error (error, "failure writing length register: ");
 				return FALSE;
 			}
 		}
@@ -470,8 +470,8 @@ synapticsmst_common_enable_remote_control (SynapticsMSTConnection *connection,
 							 UPDC_ENABLE_RC,
 							 5, 0, (guint8*)sc,
 							 &error_local)) {
-			g_warning ("Failed to enable remote control in layer %d: %s, retrying",
-				   i, error_local->message);
+			g_debug ("Failed to enable remote control in layer %d: %s, retrying",
+				 i, error_local->message);
 
 			if (!synapticsmst_common_disable_remote_control (connection_tmp, error))
 				return FALSE;
