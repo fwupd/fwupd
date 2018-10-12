@@ -653,7 +653,7 @@ fu_dell_dock_ec_write_fw (FuDevice *device, GBytes *blob_fw,
 	g_return_val_if_fail (blob_fw != NULL, FALSE);
 
 	dynamic_version = g_strndup ((gchar *) data + self->blob_version_offset, 11);
-	g_debug ("Writing firmware version %s", dynamic_version);
+	g_debug ("writing EC firmware version %s", dynamic_version);
 
 	if (!fu_dell_dock_ec_modify_lock (device, self->unlock_target, TRUE, error))
 		return FALSE;
