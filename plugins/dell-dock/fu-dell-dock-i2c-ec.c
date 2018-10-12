@@ -594,7 +594,7 @@ fu_dell_dock_ec_commit_package (FuDevice *device, GBytes *blob_fw,
 	FuDellDockEc *self = FU_DELL_DOCK_EC (device);
 	gsize length = 0;
 	const guint8 *data = g_bytes_get_data (blob_fw, &length);
-	guint8 payload[length + 2];
+	g_autofree guint8 *payload = g_malloc0 (length + 2);
 
 	g_return_val_if_fail (device != NULL, FALSE);
 	g_return_val_if_fail (blob_fw != NULL, FALSE);

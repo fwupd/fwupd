@@ -189,7 +189,7 @@ fu_dell_dock_mst_write_register (FuDevice *symbiote,
 				 GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
-	guint8 buffer[length + 4];
+	g_autofree guint8 *buffer = g_malloc0 (length + 4);
 	memcpy (buffer, &address, 4);
 	memcpy (buffer + 4, data, length);
 
@@ -333,7 +333,7 @@ fu_dell_dock_mst_rc_command (FuDevice *symbiote,
 {
 	/* 4 for cmd, 4 for offset, 4 for length, 4 for garbage */
 	gint buffer_len = (data == NULL) ? 12 : length + 16;
-	guint8 buffer[buffer_len];
+	g_autofree guint8 *buffer = g_malloc0 (buffer_len);
 	guint32 tmp;
 
 	g_return_val_if_fail (symbiote != NULL, FALSE);
@@ -593,7 +593,7 @@ fu_dell_dock_mst_stop_esm (FuDevice *symbiote, GError **error)
 	guint32 payload = 0x21;
 	gsize length = sizeof(guint32);
 	const guint8 *data;
-	guint8 data_out[length];
+	guint8 data_out[sizeof(guint32)];
 
 	/* disable ESM first */
 	if (!fu_dell_dock_mst_rc_command (symbiote,
