@@ -8,8 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-06-06 14:54+0100\n"
-"PO-Revision-Date: 2018-06-06 14:00+0000\n"
+"PO-Revision-Date: 2018-10-12 11:10+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Chinese (Taiwan) (http://www.transifex.com/freedesktop/fwupd/language/zh_TW/)\n"
 "MIME-Version: 1.0\n"
@@ -17,6 +16,12 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: zh_TW\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+
+#. more than a minute
+#, c-format
+msgid "%.0f minute remaining"
+msgid_plural "%.0f minutes remaining"
+msgstr[0] "剩下 %.0f 分鐘"
 
 #. TRANSLATORS: first replacement is device name
 #, c-format
@@ -30,6 +35,10 @@ msgstr "已加入"
 #. TRANSLATORS: the age of the metadata
 msgid "Age"
 msgstr "年紀"
+
+#. TRANSLATORS: should the remote still be enabled
+msgid "Agree and enable the remote?"
+msgstr "同意並且啟用遠端站點？"
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
@@ -56,9 +65,17 @@ msgstr "全部的問題都回答是"
 msgid "Apply a binary patch"
 msgstr "套用二進位補丁"
 
+#. TRANSLATORS: command line option
+msgid "Apply firmware updates"
+msgstr "套用韌體更新"
+
 #. TRANSLATORS: command description
 msgid "Attach DFU capable device back to runtime"
 msgstr "將 DFU 能力裝置接回執行時期"
+
+#. TRANSLATORS: command description
+msgid "Attach to firmware mode"
+msgstr "連接至韌體模式"
 
 #. TRANSLATORS: device attributes, i.e. things that
 #. * the device can do
@@ -79,7 +96,7 @@ msgstr "必須先通過身份核對才能降級這臺機器上的韌體"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
-msgstr "必須通過身份核對才能修改設定作韌體更新的遠端"
+msgstr "必須通過身份核對才能修改設定作韌體更新的遠端站點"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to unlock a device"
@@ -182,6 +199,10 @@ msgstr "描述說明"
 msgid "Detach currently attached DFU capable device"
 msgstr "解開目前接上的 DFU 能力裝置"
 
+#. TRANSLATORS: command description
+msgid "Detach to bootloader mode"
+msgstr "斷開至開機載入器模式"
+
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device added:"
 msgstr "裝置已加入："
@@ -202,6 +223,17 @@ msgstr "成功更新的裝置："
 msgid "Devices that were not updated correctly:"
 msgstr "無法正確更新的裝置："
 
+msgid "Disabled fwupdate debugging"
+msgstr "已停用 fwupdate 除錯"
+
+#. TRANSLATORS: command description
+msgid "Disables a given remote"
+msgstr "停用指定的遠端站點"
+
+#. TRANSLATORS: command line option
+msgid "Display version"
+msgstr "顯示版本"
+
 #. TRANSLATORS: command line option
 msgid "Do not check for old metadata"
 msgstr "不要檢查中介資料是否老舊"
@@ -213,6 +245,10 @@ msgstr "不要檢查是否更新後要重新開機"
 #. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
 msgstr "不要檢查是否有尚未報告的歷史"
+
+#. TRANSLATORS: command line option
+msgid "Do not write to the history database"
+msgstr "不要寫入歷史資料庫中"
 
 msgid "Done!"
 msgstr "完成！"
@@ -226,7 +262,7 @@ msgstr "降級裝置的韌體"
 #. * version numbers e.g. "1.2.3"
 #, c-format
 msgid "Downgrading %s from %s to %s... "
-msgstr "正降級 %s 從 %s 版至 %s 版…"
+msgstr "正將 %s 從 %s 版降級至 %s 版... "
 
 #. TRANSLATORS: downloading from a remote server
 msgid "Downloading…"
@@ -244,9 +280,35 @@ msgstr "傾印韌體檔案的相關細節"
 msgid "Dump information about a binary patch to the screen"
 msgstr "傾印二進位補丁相關資訊至螢幕上"
 
+#. TRANSLATORS: ESP is EFI System Partition
+msgid "ESP specified was not valid"
+msgstr "指定的 ESP 無效"
+
+#. TRANSLATORS: command line option
+msgid "Enable firmware update support on supported systems"
+msgstr "對支援的系統啟用韌體更新支援"
+
+#. TRANSLATORS: Turn on the remote
+msgid "Enable this remote?"
+msgstr "啟用此遠端站點？"
+
 #. TRANSLATORS: if the remote is enabled
 msgid "Enabled"
 msgstr "啟用"
+
+msgid "Enabled fwupdate debugging"
+msgstr "已啟用 fwupdate 除錯"
+
+#. TRANSLATORS: command description
+msgid "Enables a given remote"
+msgstr "啟用指定的遠端站點"
+
+msgid "Enabling this functionality is done at your own risk, which means you have to contact your original equipment manufacturer regarding any problems caused by these updates. Only problems with the update process itself should be filed at $OS_RELEASE:BUG_REPORT_URL$."
+msgstr "啟用此功能必須自負風險。這代表若您遭遇到這些更新導致的任何問題，您必須向原始設備供應商聯絡並反應。只有在您遇到更新過程本身的問題時，才是向 $OS_RELEASE:BUG_REPORT_URL$ 回報。"
+
+#. TRANSLATORS: show the user a warning
+msgid "Enabling this remote is done at your own risk."
+msgstr "若要啟用此遠端站點，請自負風險。"
 
 #. TRANSLATORS: command description
 msgid "Encrypt firmware data"
@@ -267,6 +329,10 @@ msgstr "經過一段短暫延遲後便離開"
 #. TRANSLATORS: exit straight away, used for automatic profiling
 msgid "Exit after the engine has loaded"
 msgstr "引擎載入後離開"
+
+#. TRANSLATORS: the server is rate-limiting downloads
+msgid "Failed to download due to server limit"
+msgstr "因伺服器限制而下載失敗"
 
 #. TRANSLATORS: quirks are device-specific workarounds
 msgid "Failed to load quirks"
@@ -322,6 +388,12 @@ msgid "Firmware metadata has not been updated for %u day and may not be up to da
 msgid_plural "Firmware metadata has not been updated for %u days and may not be up to date."
 msgstr[0] "韌體中介資料已有 %u 天未更新，可能不是最新狀態。"
 
+msgid "Firmware updates are not supported on this machine."
+msgstr "此機器沒有韌體更新支援。"
+
+msgid "Firmware updates are supported on this machine."
+msgstr "此機器有韌體更新支援。"
+
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
 msgstr "找到"
@@ -330,8 +402,16 @@ msgid "GUID"
 msgstr "GUID"
 
 #. TRANSLATORS: command description
+msgid "Get all devices according to the system topology"
+msgstr "取得根據系統拓樸而得的所有裝置"
+
+#. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
 msgstr "取得所有支援韌體更新的裝置"
+
+#. TRANSLATORS: command description
+msgid "Get all enabled plugins registered with the system"
+msgstr "取得所有系統中註冊的啟用插件"
 
 #. TRANSLATORS: command description
 msgid "Gets details about a firmware file"
@@ -339,7 +419,7 @@ msgstr "取得韌體檔案的相關細節"
 
 #. TRANSLATORS: command description
 msgid "Gets the configured remotes"
-msgstr "取得設定的遠端"
+msgstr "取得設定的遠端站點"
 
 #. TRANSLATORS: command description
 msgid "Gets the cryptographic hash of the dumped firmware"
@@ -366,6 +446,10 @@ msgid "Idle…"
 msgstr "閒置…"
 
 #. TRANSLATORS: command description
+msgid "Install a firmware blob on a device"
+msgstr "在裝置上安裝韌體 blob"
+
+#. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "在此硬體安裝韌體檔案"
 
@@ -388,20 +472,49 @@ msgstr "安裝未簽署的裝置韌體"
 msgid "Install unsigned system firmware"
 msgstr "安裝未簽署的系統韌體"
 
+#. show message in progressbar
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Installing %s"
+msgstr "正安裝 %s"
+
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
 msgstr "安裝韌體更新中…"
 
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Installing on %s…"
+msgstr "正安裝到 %s…"
+
 msgid "Keyring"
 msgstr "鑰匙圈"
+
+#. TRANSLATORS: time remaining for completing firmware flash
+msgid "Less than one minute remaining"
+msgstr "剩不到一分鐘"
+
+msgid "Linux Vendor Firmware Service (stable firmware)"
+msgstr "Linux 廠商韌體服務（穩定版韌體）"
+
+msgid "Linux Vendor Firmware Service (testing firmware)"
+msgstr "Linux 廠商韌體服務（測試中韌體）"
 
 #. TRANSLATORS: command description
 msgid "List currently attached DFU capable devices"
 msgstr "列出目前接上的 DFU 能力裝置"
 
+#. TRANSLATORS: command line option
+msgid "List supported firmware updates"
+msgstr "列出支援的韌體更新"
+
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
 msgstr "載入中…"
+
+#. TRANSLATORS: command line option
+msgid "Manually whitelist specific plugins"
+msgstr "手動白名單指定插件"
 
 #. TRANSLATORS: command description
 msgid "Merge multiple firmware files into one"
@@ -415,15 +528,19 @@ msgstr "中介資料 URI"
 msgid "Metadata URI Signature"
 msgstr "中介資料 URI 簽章"
 
+#. TRANSLATORS: explain why no metadata available
+msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
+msgstr "中介資料可從 Linux 廠商韌體服務取得。"
+
 msgid "Mode"
 msgstr "模式"
 
 #. TRANSLATORS: command description
 msgid "Modifies a given remote"
-msgstr "修改指定的遠端"
+msgstr "修改指定的遠端站點"
 
 msgid "Modify a configured remote"
-msgstr "修改設定的遠端"
+msgstr "修改設定的遠端站點"
 
 #. TRANSLATORS: command description
 msgid "Monitor the daemon for events"
@@ -435,10 +552,21 @@ msgstr "監控幕後程式是否有活動"
 msgid "Name"
 msgstr "名稱"
 
+msgid "No action specified!"
+msgstr "未指定動作！"
+
 #. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "未偵測到具備韌體更新能力的硬體"
+
+#. TRANSLATORS: nothing found
+msgid "No plugins found"
+msgstr "找不到插件"
+
+#. TRANSLATORS: explain why no metadata available
+msgid "No remotes are currently enabled so no metadata is available."
+msgstr "目前沒有啟用的遠端站點，因而沒有中介資料可用。"
 
 msgid "OK"
 msgstr "確定"
@@ -446,6 +574,10 @@ msgstr "確定"
 #. TRANSLATORS: command line option
 msgid "Override plugin warning"
 msgstr "凌駕插件警告"
+
+#. TRANSLATORS: command line option
+msgid "Override the default ESP path"
+msgstr "凌駕預設 ESP 路徑"
 
 #. TRANSLATORS: remote filename base
 msgid "Password"
@@ -472,6 +604,10 @@ msgstr "繼續上傳？"
 #. TRANSLATORS: DFU protocol version, e.g. 1.1
 msgid "Protocol"
 msgstr "協定"
+
+#. TRANSLATORS: command line option
+msgid "Query for firmware update support"
+msgstr "查詢韌體更新支援"
 
 #. TRANSLATORS: device quirks, i.e. things that
 #. * it does that we have to work around
@@ -503,7 +639,7 @@ msgstr "地區"
 #. * e.g. "1.2.3"
 #, c-format
 msgid "Reinstalling %s with %s... "
-msgstr "正重新安裝 %s %s 版…"
+msgstr "正將 %s 重新安裝為 %s 版... "
 
 #. TRANSLATORS: section header for the remote the file is coming from
 msgid "Remote"
@@ -580,6 +716,10 @@ msgstr "設定韌體檔案產品 ID"
 msgid "Set release version on firmware file"
 msgstr "設定韌體檔案發行版本"
 
+#. TRANSLATORS: command line option
+msgid "Set the debugging flag during update"
+msgstr "在更新期間設定除錯旗標"
+
 #. TRANSLATORS: command description
 msgid "Set the firmware size for the target"
 msgstr "設定目標的韌體檔案大小"
@@ -609,6 +749,10 @@ msgid "Show debugging options"
 msgstr "顯示除錯選項"
 
 #. TRANSLATORS: command line option
+msgid "Show devices that are not updatable"
+msgstr "顯示不可更新的裝置"
+
+#. TRANSLATORS: command line option
 msgid "Show extra debugging information"
 msgstr "顯示額外除錯資訊"
 
@@ -619,6 +763,14 @@ msgstr "顯示韌體更新的歷史"
 #. TRANSLATORS: this is for plugin development
 msgid "Show plugin verbose information"
 msgstr "顯示插件詳盡資訊"
+
+#. TRANSLATORS: command line option
+msgid "Show the debug log from the last attempted update"
+msgstr "顯示從上次試圖更新起的除錯紀錄"
+
+#. TRANSLATORS: command line option
+msgid "Show the information of firmware update status"
+msgstr "顯示韌體更新狀態的資訊"
 
 #. TRANSLATORS: device state, i.e. appIDLE
 msgid "State"
@@ -637,11 +789,26 @@ msgstr "摘要"
 msgid "Target"
 msgstr "目標"
 
+#. TRANSLATORS: do not translate the variables marked using $
+msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
+msgstr "LVFS（Linux 廠商韌體服務，Linux Vendor Firmware Service）是由獨立法人運作的免費服務，而與 $OS_RELEASE:NAME$ 沒有關聯。您的系統散布商可能尚未驗證過任何韌體更新與您系統間或連接裝置上的相容性。所有本服務中的韌體僅由原始設備製造商提供。"
+
 msgid "The fwupd process is a simple daemon to allow session software to update device firmware on your local machine. It is designed for desktops, but this project is also usable on phones, tablets and on headless servers."
 msgstr "fwupd 程序是個簡易幕後程式，允許工作階段軟體更新您本地端機器上的裝置韌體。它主要設計給桌面電腦使用，但本專案也能用於手機、平板，或是指令列介面伺服器。"
 
+#. TRANSLATORS: exactly one update needs this
+msgid "The update requires a reboot to complete."
+msgstr "更新必須重新開機才能完成。"
+
+#. TRANSLATORS: we're poking around as a power user
+msgid "This program may only work correctly as root"
+msgstr "此程式僅有 root 身份才能正常運作"
+
 msgid "This project aims to make updating firmware on Linux automatic, safe and reliable. You can either use a GUI software manager like GNOME Software to view and apply updates, the command-line tool or the D-Bus interface directly."
 msgstr "本專案宗旨在於讓 Linux 上的韌體更新能自動、安全、可靠。您可以使用圖形介面的軟體管理員，如《GNOME 軟體》來檢視並套用更新，或用指令列工具，或甚至直接用 D-Bus 介面。"
+
+msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
+msgstr "這個遠端站點包含未列入禁運，但仍處於硬體廠商測試階段的韌體。您應該確保自己在韌體更新失敗時有方法能夠手動降級韌體。"
 
 #. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
 msgid "Title"
@@ -654,6 +821,10 @@ msgstr "傳輸大小"
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
 msgstr "類型"
+
+#. TRANSLATORS: program name
+msgid "UEFI Firmware Utility"
+msgstr "UEFI 韌體公用程式"
 
 #. TRANSLATORS: section header for firmware URI
 msgid "URI"
@@ -669,6 +840,10 @@ msgstr "解鎖裝置以允許存取"
 #. TRANSLATORS: command description
 msgid "Unlocks the device for firmware access"
 msgstr "解鎖裝置以供韌體存取"
+
+#. TRANSLATORS: command line option
+msgid "Unset the debugging flag during update"
+msgstr "取消更新期間的除錯旗標設定"
 
 #. TRANSLATORS: section header for firmware checksum
 msgid "Update Checksum"
@@ -725,7 +900,7 @@ msgstr "將所有韌體更新至可用的最新版本"
 #. * version numbers e.g. "1.2.3"
 #, c-format
 msgid "Updating %s from %s to %s... "
-msgstr "正更新 %s 從 %s 版至 %s 版…"
+msgstr "正將 %s 從 %s 版升級至 %s 版... "
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Upload message:"
@@ -734,6 +909,10 @@ msgstr "上傳訊息："
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "是否立刻上傳報告？"
+
+#. TRANSLATORS: explain why we want to upload
+msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
+msgstr "上傳韌體報告可以協助硬體廠商快速辨識出更新作業在真實裝置上是失敗還成功。"
 
 #. TRANSLATORS: remote filename base
 msgid "Username"
@@ -756,6 +935,10 @@ msgid "Watch DFU devices being hotplugged"
 msgstr "監看 DFU 裝置熱插拔的過程"
 
 #. TRANSLATORS: command description
+msgid "Watch for hardware changes"
+msgstr "監看硬體是否有變更"
+
+#. TRANSLATORS: command description
 msgid "Write firmware from file into device"
 msgstr "從檔案將韌體寫入裝置"
 
@@ -766,6 +949,10 @@ msgstr "從檔案將韌體寫入一分割區"
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing…"
 msgstr "寫入中…"
+
+#. TRANSLATORS: show the user a warning
+msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
+msgstr "您的系統散布商可能尚未驗證過任何韌體更新與您系統間或連接裝置上的相容性。"
 
 msgid "fwupd"
 msgstr "fwupd"

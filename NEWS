@@ -1,3 +1,24 @@
+Version 1.1.3
+~~~~~~~~~~~~~
+Released: 2018-10-12
+
+New Features:
+ - Add a plugin for an upcoming Dell USB-C dock (Mario Limonciello)
+ - Add support for devices to show an estimated flash time (Mario Limonciello)
+ - Add support for Realtek USB devices using vendor HID and HUB commands (Richard Hughes)
+ - Allow firmware files to depend on versions from other devices (Richard Hughes)
+
+Bugfixes:
+ - Adjust panamera ESM update routine for some reported issues (Mario Limonciello)
+ - Check the amount of free space on the ESP before upgrading (Richard Hughes)
+ - Don't show devices pending a reboot in GetUpgrades (Mario Limonciello)
+ - Fix possible crash in the thunderbolt-power plugin (Richard Hughes)
+ - Make various parts of the daemon thread-safe (Richard Hughes)
+ - Redirect all debugging output to stderr instead of stdout (Mario Limonciello)
+ - Run the Dell plugin initialization after the UEFI plugin (Mario Limonciello)
+ - Stop showing the current release during updates in fwupdmgr (Mario Limonciello)
+ - Update all sub-devices for a composite update (Mario Limonciello)
+
 Version 1.1.2
 ~~~~~~~~~~~~~
 Released: 2018-09-10

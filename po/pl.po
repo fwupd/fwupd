@@ -8,8 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-09-10 16:44+0100\n"
-"PO-Revision-Date: 2018-09-10 15:45+0000\n"
+"PO-Revision-Date: 2018-10-12 11:10+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Polish (http://www.transifex.com/freedesktop/fwupd/language/pl/)\n"
 "MIME-Version: 1.0\n"
@@ -17,6 +16,15 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: pl\n"
 "Plural-Forms: nplurals=4; plural=(n==1 ? 0 : (n%10>=2 && n%10<=4) && (n%100<12 || n%100>14) ? 1 : n!=1 && (n%10>=0 && n%10<=1) || (n%10>=5 && n%10<=9) || (n%100>=12 && n%100<=14) ? 2 : 3);\n"
+
+#. more than a minute
+#, c-format
+msgid "%.0f minute remaining"
+msgid_plural "%.0f minutes remaining"
+msgstr[0] "Pozostała %.0f minuta"
+msgstr[1] "Pozostały %.0f minuty"
+msgstr[2] "Pozostało %.0f minut"
+msgstr[3] "Pozostało %.0f minut"
 
 #. TRANSLATORS: first replacement is device name
 #, c-format
@@ -259,11 +267,6 @@ msgstr "Instaluje poprzednią wersję oprogramowania sprzętowego urządzenia"
 msgid "Downgrading %s from %s to %s... "
 msgstr "Instalowanie poprzedniej wersji %s z %s do %s… "
 
-#. TRANSLATORS: %1 is a device name, and %2 and %3 are version numbers
-#, c-format
-msgid "Downgrading %s from %s to %s…"
-msgstr "Instalowanie poprzedniej wersji urządzenia %s z %s na %s…"
-
 #. TRANSLATORS: downloading from a remote server
 msgid "Downloading…"
 msgstr "Pobieranie…"
@@ -485,8 +488,17 @@ msgstr "Instalowanie urządzenia %s"
 msgid "Installing firmware update…"
 msgstr "Instalowanie aktualizacji oprogramowania sprzętowego…"
 
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Installing on %s…"
+msgstr "Instalowanie na urządzeniu %s…"
+
 msgid "Keyring"
 msgstr "Baza kluczy"
+
+#. TRANSLATORS: time remaining for completing firmware flash
+msgid "Less than one minute remaining"
+msgstr "Pozostała mniej niż jedna minuta"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (stabilne oprogramowanie sprzętowe)"
@@ -790,6 +802,10 @@ msgstr "LVFS to wolny serwis działający jako niezależny podmiot prawny niemaj
 msgid "The fwupd process is a simple daemon to allow session software to update device firmware on your local machine. It is designed for desktops, but this project is also usable on phones, tablets and on headless servers."
 msgstr "Proces fwupd to prosta usługa umożliwiająca aktualizowanie oprogramowania sprzętowego komputera w sesji użytkownika. Jest zaprojektowana dla komputerów osobistych, ale można jej używać także na telefonach, tabletach i serwerach bez monitorów."
 
+#. TRANSLATORS: exactly one update needs this
+msgid "The update requires a reboot to complete."
+msgstr "Ukończenie aktualizacji wymaga ponownego uruchomienia."
+
 #. TRANSLATORS: we're poking around as a power user
 msgid "This program may only work correctly as root"
 msgstr "Ten program może działać poprawnie tylko jako root"
@@ -891,11 +907,6 @@ msgstr "Aktualizuje całe oprogramowanie sprzętowe do najnowszych dostępnych w
 #, c-format
 msgid "Updating %s from %s to %s... "
 msgstr "Aktualizowanie %s z wersji %s do %s… "
-
-#. TRANSLATORS: %1 is a device name, and %2 and %3 are version numbers
-#, c-format
-msgid "Updating %s from %s to %s…"
-msgstr "Aktualizowanie urządzenia %s z wersji %s do %s…"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Upload message:"
