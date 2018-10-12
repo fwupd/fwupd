@@ -200,7 +200,7 @@ fu_unifying_hidpp_transfer (gint fd, FuUnifyingHidppMsg *msg, GError **error)
 			return FALSE;
 		}
 
-		g_error ("ignoring message %u", ignore_cnt);
+		g_debug ("ignoring message %u", ignore_cnt);
 	};
 
 	/* copy over data */
