@@ -1409,6 +1409,15 @@ fu_plugin_runner_update (FuPlugin *self,
 	history = fu_history_new ();
 	device_pending = fu_history_get_device_by_id (history, fu_device_get_id (device), NULL);
 	if (!update_func (self, device, blob_fw, flags, &error_update)) {
+		if (error_update == NULL) {
+			g_critical ("plugin %s returned FALSE from UpdateFunc "
+				    "but did not set error!",
+				    fu_plugin_get_name (self));
+			g_set_error_literal (&error_update,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "unspecified error");
+		}
 		fu_device_set_update_error (device, error_update->message);
 		g_propagate_error (error, error_update);
 		return FALSE;
