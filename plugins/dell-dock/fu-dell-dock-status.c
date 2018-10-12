@@ -72,7 +72,7 @@ fu_dell_dock_status_write (FuDevice *device,
 
 	memcpy (&status_version, data + self->blob_version_offset, sizeof (guint32));
 	dynamic_version = fu_dell_dock_status_ver_string (status_version);
-	g_debug ("Writing firmware version %s", dynamic_version);
+	g_debug ("writing status firmware version %s", dynamic_version);
 
 	parent = fu_device_get_parent (device);
 	if (!fu_dell_dock_ec_commit_package (parent, blob_fw, error))

@@ -795,7 +795,7 @@ fu_dell_dock_mst_write_fw (FuDevice *device,
 					   data[self->blob_major_offset],
 					   data[self->blob_minor_offset],
 					   data[self->blob_build_offset]);
-	g_debug ("Writing firmware version %s", dynamic_version);
+	g_debug ("writing MST firmware version %s", dynamic_version);
 
 	/* determine the flash order */
 	if (!fu_dell_dock_mst_query_active_bank (self->symbiote, &bank_in_use, error))
