@@ -414,12 +414,14 @@ fu_dell_dock_ec_get_dock_data (FuDevice *device,
 
 	/* guard against EC not yet ready and fail init */
 	name = g_string_new (self->data->marketing_name);
-	if (name->len == 0) {
-		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_SIGNATURE_INVALID,
-			     "Invalid name detected, dock may be booting up");
-		return FALSE;
-	}
-	fu_device_set_name (device, name->str);
+	if (name->len > 0)
+		fu_device_set_name (device, name->str);
+	else
+		g_warning ("[EC bug] Invalid dock name detected");
+
+	if (self->data->module_type >= 0xfe)
+		g_warning ("[EC bug] Invalid module type 0x%02x",
+			   self->data->module_type);
 
 	/* set serial number */
 	memcpy (service_tag, self->data->service_tag, 7);
