@@ -148,8 +148,10 @@ Data files for installed tests.
 %endif
 %if 0%{?have_uefi}
     -Dplugin_uefi=true \
+    -Dplugin_nvme=true \
 %else
     -Dplugin_uefi=false \
+    -Dplugin_nvme=false \
 %endif
 %if 0%{?have_dell}
     -Dplugin_dell=true \
@@ -264,12 +266,14 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_libdir}/fwupd-plugins-3/libfu_plugin_ebitdo.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_flashrom.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_nitrokey.so
+%if 0%{?have_uefi}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_nvme.so
+%endif
 %if 0%{?have_redfish}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_redfish.so
+%endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_rts54hid.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_rts54hub.so
-%endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_steelseries.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_superio.so
 %if 0%{?have_dell}
