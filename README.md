@@ -73,14 +73,19 @@ To clear the local history of updates:
 Other frontends
 -------------------
 
-Currently [GNOME Software](https://wiki.gnome.org/Apps/Software) is the only graphical
-frontend available.  When compiled with firmware support, it will check for updates
-periodically and automatically download firmware in the background.
+ 1. [GNOME Software](https://wiki.gnome.org/Apps/Software) is the graphical
+ frontend available. When compiled with firmware support, it will check for
+ updates periodically and automatically download firmware in the background.
+ After the firmware has been downloaded a popup will be displayed in Gnome
+ Software to perform the update.
 
-After the firmware has been downloaded a popup will be displayed in Gnome Software
-to perform the update.
+2. [KDE Discover](https://userbase.kde.org/Discover) is the software centre,
+ generally bundled with KDE Plasma. With the release of
+ [KDE Plasma 5.14](https://www.kde.org/announcements/plasma-5.14.0.php),
+ a new fwupd backend has been implemented in KDE Discover for firmware updates.
+ These firmware updates are shown with other system updates.
 
-On Dell IoT gateways, [Wyse Cloud Client Manager (CCM)](http://www.dell.com/us/business/p/wyse-cloud-client-manager/pd)
-has been built with fwupd support.
-The remote administration interface can be used to download and deploy
-firmware updates.
+3. [Wyse Cloud Client Manager (CCM)](http://www.dell.com/us/business/p/wyse-cloud-client-manager/pd)
+ A software suite available on Dell IoT gateways with built-in fwupd support.
+ The remote administration interface can be used to download and deploy firmware
+ updates.
