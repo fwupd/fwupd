@@ -1,7 +1,7 @@
 project('fwupd', 'c',
   version : '1.2.0',
   license : 'LGPL-2.1+',
-  meson_version : '>=0.43.0',
+  meson_version : '>=0.44.0',
   default_options : ['warning_level=2', 'c_std=c99'],
 )
 
@@ -309,12 +309,6 @@ configure_file(
   output : 'config.h',
   configuration : conf
 )
-
-default_sysconfdir = get_option('sysconfdir')
-if default_sysconfdir == 'etc'
-  message('sysconfdir of etc makes no sense, using /etc')
-  default_sysconfdir = '/etc'
-endif
 
 plugin_deps = []
 plugin_deps += appstream_glib
