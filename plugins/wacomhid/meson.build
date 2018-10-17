@@ -49,7 +49,7 @@ if get_option('tests')
       include_directories('../../src'),
     ],
     dependencies : [
-      appstream_glib,
+      libxmlb,
       gio,
       gusb,
       gudev,

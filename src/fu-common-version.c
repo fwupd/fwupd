@@ -37,6 +37,8 @@ fu_common_version_format_from_string (const gchar *str)
 		return FU_VERSION_FORMAT_BCD;
 	if (g_strcmp0 (str, "plain") == 0)
 		return FU_VERSION_FORMAT_PLAIN;
+	if (g_strcmp0 (str, "intel-me") == 0)
+		return FU_VERSION_FORMAT_INTEL_ME;
 	return FU_VERSION_FORMAT_QUAD;
 }
 
@@ -61,6 +63,8 @@ fu_common_version_format_to_string (FuVersionFormat kind)
 		return "bcd";
 	if (kind == FU_VERSION_FORMAT_PLAIN)
 		return "plain";
+	if (kind == FU_VERSION_FORMAT_INTEL_ME)
+		return "intel-me";
 	return NULL;
 }
 
@@ -110,6 +114,14 @@ fu_common_version_from_uint32 (guint32 val, FuVersionFormat kind)
 					FU_COMMON_VERSION_DECODE_BCD(val >> 16),
 					FU_COMMON_VERSION_DECODE_BCD(val >> 8),
 					FU_COMMON_VERSION_DECODE_BCD(val));
+	}
+	if (kind == FU_VERSION_FORMAT_INTEL_ME) {
+		/* aaa+11.bbbbb.cccccccc.dddddddddddddddd */
+		return g_strdup_printf ("%u.%u.%u.%u",
+					((val >> 29) & 0x07) + 0x0b,
+					 (val >> 24) & 0x1f,
+					 (val >> 16) & 0xff,
+					  val & 0xffff);
 	}
 	return NULL;
 }

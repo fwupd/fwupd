@@ -6,7 +6,7 @@
 
 #include "config.h"
 
-#include <appstream-glib.h>
+#include <xmlb.h>
 #include <fwupd.h>
 #include <glib-object.h>
 #include <glib/gstdio.h>
@@ -45,24 +45,31 @@ static void
 fu_engine_requirements_missing_func (void)
 {
 	gboolean ret;
-	g_autoptr(AsApp) app = as_app_new ();
-	g_autoptr(AsRequire) req = as_require_new ();
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo = NULL;
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
+	const gchar *xml =
+		"<component>"
+		"  <requires>"
+		"    <id compare=\"ge\" version=\"1.2.3\">not.going.to.exist</id>"
+		"  </requires>"
+		"</component>";
 
 	/* set up a dummy version */
 	fu_engine_add_runtime_version (engine, "org.test.dummy", "1.2.3");
 
 	/* make the component require one thing */
-	as_require_set_kind (req, AS_REQUIRE_KIND_ID);
-	as_require_set_compare (req, AS_REQUIRE_COMPARE_GE);
-	as_require_set_version (req, "1.2.3");
-	as_require_set_value (req, "not.going.to.exist");
-	as_app_add_require (app, req);
+	silo = xb_silo_new_from_xml (xml, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (silo);
+	component = xb_silo_query_first (silo, "component", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (component);
 
 	/* check this fails */
-	task = fu_install_task_new (NULL, app);
+	task = fu_install_task_new (NULL, component);
 	ret = fu_engine_check_requirements (engine, task,
 					    FWUPD_INSTALL_FLAG_NONE,
 					    &error);
@@ -74,23 +81,31 @@ static void
 fu_engine_requirements_unsupported_func (void)
 {
 	gboolean ret;
-	g_autoptr(AsApp) app = as_app_new ();
-	g_autoptr(AsRequire) req = as_require_new ();
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo = NULL;
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
+	const gchar *xml =
+		"<component>"
+		"  <requires>"
+		"    <UNKNOWN compare=\"ge\" version=\"2.6.0\"/>"
+		"  </requires>"
+		"</component>";
 
 	/* set up a dummy version */
 	fu_engine_add_runtime_version (engine, "org.test.dummy", "1.2.3");
 
 	/* make the component require one thing that we don't support */
-	as_require_set_kind (req, AS_REQUIRE_KIND_LAST);
-	as_require_set_compare (req, AS_REQUIRE_COMPARE_GE);
-	as_require_set_version (req, "2.6.0");
-	as_app_add_require (app, req);
+	silo = xb_silo_new_from_xml (xml, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (silo);
+	component = xb_silo_query_first (silo, "component", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (component);
 
 	/* check this fails */
-	task = fu_install_task_new (NULL, app);
+	task = fu_install_task_new (NULL, component);
 	ret = fu_engine_check_requirements (engine, task,
 					    FWUPD_INSTALL_FLAG_NONE,
 					    &error);
@@ -102,25 +117,32 @@ static void
 fu_engine_requirements_func (void)
 {
 	gboolean ret;
-	g_autoptr(AsApp) app = as_app_new ();
-	g_autoptr(AsRequire) req = as_require_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+	const gchar *xml =
+		"<component>"
+		"  <requires>"
+		"    <id compare=\"ge\" version=\"1.2.3\">org.test.dummy</id>"
+		"  </requires>"
+		"</component>";
 
 	/* set up some dummy versions */
 	fu_engine_add_runtime_version (engine, "org.test.dummy", "1.2.3");
 	fu_engine_add_runtime_version (engine, "com.hughski.colorhug", "7.8.9");
 
 	/* make the component require one thing */
-	as_require_set_kind (req, AS_REQUIRE_KIND_ID);
-	as_require_set_compare (req, AS_REQUIRE_COMPARE_GE);
-	as_require_set_version (req, "1.2.3");
-	as_require_set_value (req, "org.test.dummy");
-	as_app_add_require (app, req);
+	silo = xb_silo_new_from_xml (xml, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (silo);
+	component = xb_silo_query_first (silo, "component", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (component);
 
 	/* check this passes */
-	task = fu_install_task_new (NULL, app);
+	task = fu_install_task_new (NULL, component);
 	ret = fu_engine_check_requirements (engine, task,
 					    FWUPD_INSTALL_FLAG_NONE,
 					    &error);
@@ -132,17 +154,28 @@ static void
 fu_engine_requirements_device_func (void)
 {
 	gboolean ret;
-	g_autoptr(AsApp) app = as_app_new ();
-	g_autoptr(AsChecksum) csum = as_checksum_new ();
-	g_autoptr(AsRequire) req1 = as_require_new ();
-	g_autoptr(AsRequire) req2 = as_require_new ();
-	g_autoptr(AsRequire) req3 = as_require_new ();
-	g_autoptr(AsProvide) prov = as_provide_new ();
-	g_autoptr(AsRelease) rel = as_release_new ();
 	g_autoptr(FuDevice) device = fu_device_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+	const gchar *xml =
+		"<component>"
+		"  <requires>"
+		"    <firmware compare=\"ge\" version=\"1.2.3\"/>"
+		"    <firmware compare=\"eq\" version=\"4.5.6\">bootloader</firmware>"
+		"    <firmware compare=\"eq\" version=\"FFFF\">vendor-id</firmware>"
+		"  </requires>"
+		"  <provides>"
+		"    <firmware type=\"flashed\">12345678-1234-1234-1234-123456789012</firmware>"
+		"  </provides>"
+		"  <releases>"
+		"    <release version=\"1.2.4\">"
+		"      <checksum type=\"sha1\" filename=\"bios.bin\" target=\"content\"/>"
+		"    </release>"
+		"  </releases>"
+		"</component>";
 
 	/* set up a dummy device */
 	fu_device_set_version (device, "1.2.3");
@@ -152,35 +185,15 @@ fu_engine_requirements_device_func (void)
 	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
 
 	/* make the component require three things */
-	as_require_set_kind (req1, AS_REQUIRE_KIND_FIRMWARE);
-	as_require_set_compare (req1, AS_REQUIRE_COMPARE_GE);
-	as_require_set_version (req1, "1.2.3");
-	as_app_add_require (app, req1);
-	as_require_set_kind (req2, AS_REQUIRE_KIND_FIRMWARE);
-	as_require_set_compare (req2, AS_REQUIRE_COMPARE_EQ);
-	as_require_set_version (req2, "4.5.6");
-	as_require_set_value (req2, "bootloader");
-	as_app_add_require (app, req3);
-	as_require_set_kind (req3, AS_REQUIRE_KIND_FIRMWARE);
-	as_require_set_compare (req3, AS_REQUIRE_COMPARE_EQ);
-	as_require_set_version (req3, "FFFF");
-	as_require_set_value (req3, "vendor-id");
-	as_app_add_require (app, req3);
-
-	/* add release */
-	as_checksum_set_target (csum, AS_CHECKSUM_TARGET_CONTENT);
-	as_checksum_set_filename (csum, "bios.bin");
-	as_release_set_version (rel, "1.2.4");
-	as_release_add_checksum (rel, csum);
-	as_app_add_release (app, rel);
-
-	/* add GUID to match */
-	as_provide_set_kind (prov, AS_PROVIDE_KIND_FIRMWARE_FLASHED);
-	as_provide_set_value (prov, "12345678-1234-1234-1234-123456789012");
-	as_app_add_provide (app, prov);
+	silo = xb_silo_new_from_xml (xml, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (silo);
+	component = xb_silo_query_first (silo, "component", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (component);
 
 	/* check this passes */
-	task = fu_install_task_new (device, app);
+	task = fu_install_task_new (device, component);
 	ret = fu_engine_check_requirements (engine, task,
 					    FWUPD_INSTALL_FLAG_NONE,
 					    &error);
@@ -192,16 +205,31 @@ static void
 fu_engine_requirements_other_device_func (void)
 {
 	gboolean ret;
-	g_autoptr(AsApp) app = as_app_new ();
-	g_autoptr(AsChecksum) csum = as_checksum_new ();
-	g_autoptr(AsProvide) prov = as_provide_new ();
-	g_autoptr(AsRelease) rel = as_release_new ();
-	g_autoptr(AsRequire) req1 = as_require_new ();
 	g_autoptr(FuDevice) device1 = fu_device_new ();
 	g_autoptr(FuDevice) device2 = fu_device_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new ();
+	const gchar *xml =
+		"<component>"
+		"  <requires>"
+		"    <firmware compare=\"gt\" version=\"4.0.0\">00000000-0000-0000-0000-000000000000</firmware>"
+		"  </requires>"
+		"  <provides>"
+		"    <firmware type=\"flashed\">12345678-1234-1234-1234-123456789012</firmware>"
+		"  </provides>"
+		"  <releases>"
+		"    <release version=\"1.2.4\">"
+		"      <checksum type=\"sha1\" filename=\"bios.bin\" target=\"content\"/>"
+		"    </release>"
+		"  </releases>"
+		"</component>";
+
+	/* no metadata in daemon */
+	fu_engine_set_silo (engine, silo_empty);
 
 	/* set up a dummy device */
 	fu_device_set_version (device1, "1.2.3");
@@ -216,27 +244,16 @@ fu_engine_requirements_other_device_func (void)
 	fu_device_add_guid (device2, "00000000-0000-0000-0000-000000000000");
 	fu_engine_add_device (engine, device2);
 
-	/* make the component require another device version */
-	as_require_set_kind (req1, AS_REQUIRE_KIND_FIRMWARE);
-	as_require_set_compare (req1, AS_REQUIRE_COMPARE_GT);
-	as_require_set_version (req1, "4.0.0");
-	as_require_set_value (req1, "00000000-0000-0000-0000-000000000000");
-	as_app_add_require (app, req1);
-
-	/* add release */
-	as_checksum_set_target (csum, AS_CHECKSUM_TARGET_CONTENT);
-	as_checksum_set_filename (csum, "bios.bin");
-	as_release_set_version (rel, "1.2.4");
-	as_release_add_checksum (rel, csum);
-	as_app_add_release (app, rel);
-
-	/* add GUID to match */
-	as_provide_set_kind (prov, AS_PROVIDE_KIND_FIRMWARE_FLASHED);
-	as_provide_set_value (prov, "12345678-1234-1234-1234-123456789012");
-	as_app_add_provide (app, prov);
+	/* import firmware metainfo */
+	silo = xb_silo_new_from_xml (xml, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (silo);
+	component = xb_silo_query_first (silo, "component", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (component);
 
 	/* check this passes */
-	task = fu_install_task_new (device1, app);
+	task = fu_install_task_new (device1, component);
 	ret = fu_engine_check_requirements (engine, task,
 					    FWUPD_INSTALL_FLAG_NONE,
 					    &error);
@@ -253,6 +270,10 @@ fu_engine_device_priority_func (void)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(GError) error = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new ();
+
+	/* no metadata in daemon */
+	fu_engine_set_silo (engine, silo_empty);
 
 	/* add low prio then high then low */
 	fu_device_set_id (device1, "id1");
@@ -296,6 +317,10 @@ fu_engine_device_parent_func (void)
 	g_autoptr(FuDevice) device2 = fu_device_new ();
 	g_autoptr(FuDevice) device3 = fu_device_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(XbSilo) silo_empty = xb_silo_new ();
+
+	/* no metadata in daemon */
+	fu_engine_set_silo (engine, silo_empty);
 
 	/* add child */
 	fu_device_set_id (device1, "child");
@@ -340,6 +365,10 @@ fu_engine_partial_hash_func (void)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GError) error_none = NULL;
 	g_autoptr(GError) error_both = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new ();
+
+	/* no metadata in daemon */
+	fu_engine_set_silo (engine, silo_empty);
 
 	/* set up dummy plugin */
 	fu_plugin_set_name (plugin, "test");
@@ -396,6 +425,10 @@ fu_engine_device_unlock_func (void)
 	g_autoptr(FuDevice) device = fu_device_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(XbBuilder) builder = xb_builder_new ();
+	g_autoptr(XbBuilderSource) source = xb_builder_source_new ();
+	g_autoptr(XbSilo) silo = NULL;
 
 	/* load engine to get FuConfig set up */
 	ret = fu_engine_load (engine, &error);
@@ -405,9 +438,17 @@ fu_engine_device_unlock_func (void)
 	/* add the hardcoded 'fwupd' metadata */
 	filename = fu_test_get_filename (TESTDATADIR, "metadata.xml");
 	g_assert (filename != NULL);
-	ret = fu_engine_load_metadata_from_file (engine, filename, NULL, &error);
+	file = g_file_new_for_path (filename);
+	ret = xb_builder_source_load_file (source, file,
+					   XB_BUILDER_SOURCE_FLAG_NONE,
+					   NULL, &error);
 	g_assert_no_error (error);
 	g_assert_true (ret);
+	xb_builder_import_source (builder, source);
+	silo = xb_builder_compile (builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (silo);
+	fu_engine_set_silo (engine, silo);
 
 	/* add a dummy device */
 	fu_device_set_id (device, "UEFI-dummy-dev0");
@@ -422,21 +463,25 @@ fu_engine_device_unlock_func (void)
 static void
 fu_engine_require_hwid_func (void)
 {
-	AsApp *app;
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
-	g_autoptr(AsStore) store = NULL;
 	g_autoptr(FuDevice) device = fu_device_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new ();
+	g_autoptr(XbSilo) silo = NULL;
 
 #if !defined(HAVE_GCAB_0_8) && defined(__s390x__)
 	/* See https://github.com/hughsie/fwupd/issues/318 for more information */
 	g_test_skip ("Skipping HWID test on s390x due to known problem with gcab");
 	return;
 #endif
+
+	/* no metadata in daemon */
+	fu_engine_set_silo (engine, silo_empty);
 
 	/* load engine to get FuConfig set up */
 	ret = fu_engine_load (engine, &error);
@@ -449,9 +494,9 @@ fu_engine_require_hwid_func (void)
 	blob_cab = fu_common_get_contents_bytes	(filename, &error);
 	g_assert_no_error (error);
 	g_assert (blob_cab != NULL);
-	store = fu_engine_get_store_from_blob (engine, blob_cab, &error);
+	silo = fu_engine_get_silo_from_blob (engine, blob_cab, &error);
 	g_assert_no_error (error);
-	g_assert (store != NULL);
+	g_assert_nonnull (silo);
 
 	/* add a dummy device */
 	fu_device_set_id (device, "test_device");
@@ -460,12 +505,13 @@ fu_engine_require_hwid_func (void)
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_engine_add_device (engine, device);
 
-	/* get app */
-	app = as_store_get_app_by_id (store, "com.hughski.test.firmware");
-	g_assert_nonnull (app);
+	/* get component */
+	component = xb_silo_query_first (silo, "component/id[text()='com.hughski.test.firmware']/..", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (component);
 
 	/* check requirements */
-	task = fu_install_task_new (device, app);
+	task = fu_install_task_new (device, component);
 	ret = fu_engine_check_requirements (engine, task,
 					    FWUPD_INSTALL_FLAG_NONE,
 					    &error);
@@ -491,6 +537,10 @@ fu_engine_downgrade_func (void)
 	g_autoptr(GPtrArray) releases = NULL;
 	g_autoptr(GPtrArray) releases_up = NULL;
 	g_autoptr(GPtrArray) remotes = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new ();
+
+	/* no metadata in daemon */
+	fu_engine_set_silo (engine, silo_empty);
 
 	/* write a broken file */
 	ret = g_file_set_contents ("/tmp/fwupd-self-test/broken.xml.gz",
@@ -558,10 +608,6 @@ fu_engine_downgrade_func (void)
 	g_assert_no_error (error);
 	g_assert (ret);
 
-	/* expect just one broken remote to fail */
-	g_test_expect_message ("FuEngine", G_LOG_LEVEL_WARNING,
-			       "failed to load remote broken: *");
-
 	testdatadir = fu_test_get_filename (TESTDATADIR, ".");
 	g_assert (testdatadir != NULL);
 	g_setenv ("FU_SELF_TEST_REMOTES_DIR", testdatadir, TRUE);
@@ -627,25 +673,32 @@ fu_engine_downgrade_func (void)
 static void
 fu_engine_history_func (void)
 {
-	AsApp *app;
 	gboolean ret;
+	g_autofree gchar *checksum = NULL;
 	g_autofree gchar *device_str_expected = NULL;
 	g_autofree gchar *device_str = NULL;
 	g_autofree gchar *filename = NULL;
-	g_autofree gchar *checksum = NULL;
 	g_autofree gchar *testdatadir = NULL;
-	g_autoptr(AsStore) store = NULL;
 	g_autoptr(FuDevice) device2 = NULL;
-	g_autoptr(FwupdDevice) device3 = NULL;
-	g_autoptr(FwupdDevice) device4 = NULL;
 	g_autoptr(FuDevice) device = fu_device_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
+	g_autoptr(FwupdDevice) device3 = NULL;
+	g_autoptr(FwupdDevice) device4 = NULL;
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new ();
+	g_autoptr(XbSilo) silo = NULL;
+
+	/* ensure the history database is fresh */
+	g_unlink ("/tmp/fwupd-self-test/var/lib/fwupd/pending.db");
+
+	/* no metadata in daemon */
+	fu_engine_set_silo (engine, silo_empty);
 
 	/* set up dummy plugin */
 	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_test.so", &error);
@@ -681,16 +734,17 @@ fu_engine_history_func (void)
 	blob_cab = fu_common_get_contents_bytes	(filename, &error);
 	g_assert_no_error (error);
 	g_assert (blob_cab != NULL);
-	store = fu_engine_get_store_from_blob (engine, blob_cab, &error);
+	silo = fu_engine_get_silo_from_blob (engine, blob_cab, &error);
 	g_assert_no_error (error);
-	g_assert (store != NULL);
+	g_assert_nonnull (silo);
 
-	/* get app */
-	app = as_store_get_app_by_id (store, "com.hughski.test.firmware");
-	g_assert_nonnull (app);
+	/* get component */
+	component = xb_silo_query_first (silo, "component/id[text()='com.hughski.test.firmware']/..", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (component);
 
 	/* install it */
-	task = fu_install_task_new (device, app);
+	task = fu_install_task_new (device, component);
 	ret = fu_engine_install (engine, task, blob_cab,
 				 FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error (error);
@@ -749,14 +803,12 @@ fu_engine_history_func (void)
 static void
 fu_engine_history_error_func (void)
 {
-	AsApp *app;
 	gboolean ret;
+	g_autofree gchar *checksum = NULL;
 	g_autofree gchar *device_str_expected = NULL;
 	g_autofree gchar *device_str = NULL;
 	g_autofree gchar *filename = NULL;
-	g_autofree gchar *checksum = NULL;
 	g_autofree gchar *testdatadir = NULL;
-	g_autoptr(AsStore) store = NULL;
 	g_autoptr(FuDevice) device2 = NULL;
 	g_autoptr(FuDevice) device = fu_device_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
@@ -767,6 +819,12 @@ fu_engine_history_error_func (void)
 	g_autoptr(GError) error2 = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new ();
+	g_autoptr(XbSilo) silo = NULL;
+
+	/* no metadata in daemon */
+	fu_engine_set_silo (engine, silo_empty);
 
 	/* set up dummy plugin */
 	g_setenv ("FWUPD_PLUGIN_TEST", "fail", TRUE);
@@ -804,12 +862,13 @@ fu_engine_history_error_func (void)
 	blob_cab = fu_common_get_contents_bytes	(filename, &error);
 	g_assert_no_error (error);
 	g_assert (blob_cab != NULL);
-	store = fu_engine_get_store_from_blob (engine, blob_cab, &error);
+	silo = fu_engine_get_silo_from_blob (engine, blob_cab, &error);
 	g_assert_no_error (error);
-	g_assert (store != NULL);
-	app = as_store_get_app_by_id (store, "com.hughski.test.firmware");
-	g_assert_nonnull (app);
-	task = fu_install_task_new (device, app);
+	g_assert_nonnull (silo);
+	component = xb_silo_query_first (silo, "component/id[text()='com.hughski.test.firmware']/..", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (component);
+	task = fu_install_task_new (device, component);
 	ret = fu_engine_install (engine, task, blob_cab,
 				 FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
@@ -2281,13 +2340,17 @@ fu_plugin_composite_func (void)
 {
 	GError *error = NULL;
 	gboolean ret;
-	GPtrArray *apps;
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
-	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GPtrArray) components = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) install_tasks = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	g_autoptr(AsStore) store = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new ();
+	g_autoptr(XbSilo) silo = NULL;
+
+	/* no metadata in daemon */
+	fu_engine_set_silo (engine, silo_empty);
 
 	/* create CAB file */
 	blob = _build_cab (GCAB_COMPRESSION_NONE,
@@ -2310,6 +2373,9 @@ fu_plugin_composite_func (void)
 	"  <releases>\n"
 	"    <release version=\"2\"/>\n"
 	"  </releases>\n"
+	"  <custom>\n"
+	"    <value key=\"LVFS::VersionFormat\">plain</value>\n"
+	"  </custom>\n"
 	"</component>",
 	"acme.module2.metainfo.xml",
 	"<component type=\"firmware\">\n"
@@ -2320,6 +2386,9 @@ fu_plugin_composite_func (void)
 	"  <releases>\n"
 	"    <release version=\"11\"/>\n"
 	"  </releases>\n"
+	"  <custom>\n"
+	"    <value key=\"LVFS::VersionFormat\">plain</value>\n"
+	"  </custom>\n"
 	"</component>",
 			   "firmware.bin", "world",
 			   NULL);
@@ -2327,11 +2396,13 @@ fu_plugin_composite_func (void)
 		g_test_skip ("libgcab too old");
 		return;
 	}
-	store = fu_common_store_from_cab_bytes (blob, 10240, &error);
+	silo = fu_common_cab_build_silo (blob, 10240, &error);
 	g_assert_no_error (error);
-	g_assert_nonnull (store);
-	apps = as_store_get_apps (store);
-	g_assert_cmpint (apps->len, ==, 3);
+	g_assert_nonnull (silo);
+	components = xb_silo_query (silo, "component", 0, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (components);
+	g_assert_cmpint (components->len, ==, 3);
 
 	/* set up dummy plugin */
 	g_setenv ("FWUPD_PLUGIN_TEST", "composite", TRUE);
@@ -2372,8 +2443,8 @@ fu_plugin_composite_func (void)
 	}
 
 	/* produce install tasks */
-	for (guint i = 0; i < apps->len; i++) {
-		AsApp *app = g_ptr_array_index (apps, i);
+	for (guint i = 0; i < components->len; i++) {
+		XbNode *component = g_ptr_array_index (components, i);
 
 		/* do any devices pass the requirements */
 		for (guint j = 0; j < devices->len; j++) {
@@ -2382,14 +2453,14 @@ fu_plugin_composite_func (void)
 			g_autoptr(GError) error_local = NULL;
 
 			/* is this component valid for the device */
-			task = fu_install_task_new (device, app);
+			task = fu_install_task_new (device, component);
 			if (!fu_engine_check_requirements (engine,
 							   task,
 							   0,
 							   &error_local)) {
 				g_debug ("requirement on %s:%s failed: %s",
 					 fu_device_get_id (device),
-					 as_app_get_id (app),
+					 xb_node_query_text (component, "id", NULL),
 					 error_local->message);
 				continue;
 			}
@@ -2434,16 +2505,16 @@ fu_plugin_composite_func (void)
 static void
 fu_common_store_cab_func (void)
 {
-	AsApp *app;
-	AsChecksum *csum;
-	AsRelease *rel;
-	AsRequire *req;
 	GBytes *blob_tmp;
-	g_autoptr(AsStore) store = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbNode) csum = NULL;
+	g_autoptr(XbNode) rel = NULL;
+	g_autoptr(XbNode) req = NULL;
+	g_autoptr(XbSilo) silo = NULL;
 
-	/* create store */
+	/* create silo */
 	blob = _build_cab (GCAB_COMPRESSION_NONE,
 			   "acme.metainfo.xml",
 	"<component type=\"firmware\">\n"
@@ -2454,9 +2525,8 @@ fu_common_store_cab_func (void)
 	"  </provides>\n"
 	"  <releases>\n"
 	"    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
-	"      <checksum filename=\"firmware.dfu\" target=\"content\"/>\n"
 	"      <size type=\"installed\">5</size>\n"
-	"      <checksum filename=\"firmware.bin\" target=\"content\" type=\"sha1\">7c211433f02071597741e6ff5a8ea34789abbf43</checksum>\n"
+	"      <checksum filename=\"firmware.dfu\" target=\"content\" type=\"sha1\">7c211433f02071597741e6ff5a8ea34789abbf43</checksum>\n"
 	"      <description><p>We fixed things</p></description>\n"
 	"    </release>\n"
 	"  </releases>\n"
@@ -2471,38 +2541,42 @@ fu_common_store_cab_func (void)
 		g_test_skip ("libgcab too old");
 		return;
 	}
-	store = fu_common_store_from_cab_bytes (blob, 10240, &error);
+	silo = fu_common_cab_build_silo (blob, 10240, &error);
 	g_assert_no_error (error);
-	g_assert (store != NULL);
+	g_assert_nonnull (silo);
 
 	/* verify */
-	app = as_store_get_app_by_id (store, "com.acme.example.firmware");
-	g_assert_nonnull (app);
-	rel = as_app_get_release_default (app);
+	component = xb_silo_query_first (silo, "component/id[text()='com.acme.example.firmware']/..", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (component);
+	rel = xb_node_query_first (component, "releases/release", &error);
+	g_assert_no_error (error);
 	g_assert_nonnull (rel);
-	g_assert_cmpstr (as_release_get_version (rel), ==, "1.2.3");
-	csum = as_release_get_checksum_by_target (rel, AS_CHECKSUM_TARGET_CONTENT);
-	g_assert_cmpstr (as_checksum_get_value (csum), ==, "7c211433f02071597741e6ff5a8ea34789abbf43");
-	blob_tmp = as_release_get_blob (rel, "firmware.dfu");
+	g_assert_cmpstr (xb_node_get_attr (rel, "version"), ==, "1.2.3");
+	csum = xb_node_query_first (rel, "checksum[@target='content']", &error);
+	g_assert_nonnull (csum);
+	g_assert_cmpstr (xb_node_get_text (csum), ==, "7c211433f02071597741e6ff5a8ea34789abbf43");
+	blob_tmp = xb_node_get_data (rel, "fwupd::ReleaseBlob(firmware.dfu)");
 	g_assert_nonnull (blob_tmp);
-	blob_tmp = as_release_get_blob (rel, "firmware.dfu.asc");
+	blob_tmp = xb_node_get_data (rel, "fwupd::ReleaseBlob(firmware.dfu.asc)");
 	g_assert_nonnull (blob_tmp);
-	req = as_app_get_require_by_value (app, AS_REQUIRE_KIND_ID, "org.freedesktop.fwupd");
+	req = xb_node_query_first (component, "requires/id", &error);
+	g_assert_no_error (error);
 	g_assert_nonnull (req);
 }
 
 static void
 fu_common_store_cab_unsigned_func (void)
 {
-	AsApp *app;
-	AsChecksum *csum;
-	AsRelease *rel;
 	GBytes *blob_tmp;
-	g_autoptr(AsStore) store = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbNode) csum = NULL;
+	g_autoptr(XbNode) rel = NULL;
+	g_autoptr(XbSilo) silo = NULL;
 
-	/* create store */
+	/* create silo */
 	blob = _build_cab (GCAB_COMPRESSION_NONE,
 			   "acme.metainfo.xml",
 	"<component type=\"firmware\">\n"
@@ -2517,36 +2591,37 @@ fu_common_store_cab_unsigned_func (void)
 		g_test_skip ("libgcab too old");
 		return;
 	}
-	store = fu_common_store_from_cab_bytes (blob, 10240, &error);
+	silo = fu_common_cab_build_silo (blob, 10240, &error);
 	g_assert_no_error (error);
-	g_assert (store != NULL);
+	g_assert_nonnull (silo);
 
 	/* verify */
-	app = as_store_get_app_by_id (store, "com.acme.example.firmware");
-	g_assert_nonnull (app);
-	rel = as_app_get_release_default (app);
+	component = xb_silo_query_first (silo, "component/id[text()='com.acme.example.firmware']/..", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (component);
+	rel = xb_node_query_first (component, "releases/release", &error);
+	g_assert_no_error (error);
 	g_assert_nonnull (rel);
-	g_assert_cmpstr (as_release_get_version (rel), ==, "1.2.3");
-	csum = as_release_get_checksum_by_target (rel, AS_CHECKSUM_TARGET_CONTENT);
-	g_assert_cmpstr (as_checksum_get_value (csum), ==, "7c211433f02071597741e6ff5a8ea34789abbf43");
-	blob_tmp = as_release_get_blob (rel, "firmware.bin");
+	g_assert_cmpstr (xb_node_get_attr (rel, "version"), ==, "1.2.3");
+	csum = xb_node_query_first (rel, "checksum[@target='content']", &error);
+	g_assert_null (csum);
+	blob_tmp = xb_node_get_data (rel, "fwupd::ReleaseBlob(firmware.bin)");
 	g_assert_nonnull (blob_tmp);
-	blob_tmp = as_release_get_blob (rel, "firmware.bin.asc");
+	blob_tmp = xb_node_get_data (rel, "fwupd::ReleaseBlob(firmware.bin.asc)");
 	g_assert_null (blob_tmp);
 }
 
 static void
 fu_common_store_cab_folder_func (void)
 {
-	AsApp *app;
-	AsChecksum *csum;
-	AsRelease *rel;
 	GBytes *blob_tmp;
-	g_autoptr(AsStore) store = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbNode) rel = NULL;
+	g_autoptr(XbSilo) silo = NULL;
 
-	/* create store */
+	/* create silo */
 	blob = _build_cab (GCAB_COMPRESSION_NONE,
 			   "lvfs\\acme.metainfo.xml",
 	"<component type=\"firmware\">\n"
@@ -2561,26 +2636,26 @@ fu_common_store_cab_folder_func (void)
 		g_test_skip ("libgcab too old");
 		return;
 	}
-	store = fu_common_store_from_cab_bytes (blob, 10240, &error);
+	silo = fu_common_cab_build_silo (blob, 10240, &error);
 	g_assert_no_error (error);
-	g_assert (store != NULL);
+	g_assert_nonnull (silo);
 
 	/* verify */
-	app = as_store_get_app_by_id (store, "com.acme.example.firmware");
-	g_assert_nonnull (app);
-	rel = as_app_get_release_default (app);
+	component = xb_silo_query_first (silo, "component/id[text()='com.acme.example.firmware']/..", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (component);
+	rel = xb_node_query_first (component, "releases/release", &error);
+	g_assert_no_error (error);
 	g_assert_nonnull (rel);
-	g_assert_cmpstr (as_release_get_version (rel), ==, "1.2.3");
-	csum = as_release_get_checksum_by_target (rel, AS_CHECKSUM_TARGET_CONTENT);
-	g_assert_cmpstr (as_checksum_get_value (csum), ==, "7c211433f02071597741e6ff5a8ea34789abbf43");
-	blob_tmp = as_release_get_blob (rel, "firmware.bin");
+	g_assert_cmpstr (xb_node_get_attr (rel, "version"), ==, "1.2.3");
+	blob_tmp = xb_node_get_data (rel, "fwupd::ReleaseBlob(firmware.bin)");
 	g_assert_nonnull (blob_tmp);
 }
 
 static void
 fu_common_store_cab_error_no_metadata_func (void)
 {
-	g_autoptr(AsStore) store = NULL;
+	g_autoptr(XbSilo) silo = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -2592,15 +2667,15 @@ fu_common_store_cab_error_no_metadata_func (void)
 		g_test_skip ("libgcab too old");
 		return;
 	}
-	store = fu_common_store_from_cab_bytes (blob, 10240, &error);
+	silo = fu_common_cab_build_silo (blob, 10240, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
-	g_assert (store == NULL);
+	g_assert_null (silo);
 }
 
 static void
 fu_common_store_cab_error_wrong_size_func (void)
 {
-	g_autoptr(AsStore) store = NULL;
+	g_autoptr(XbSilo) silo = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -2621,15 +2696,15 @@ fu_common_store_cab_error_wrong_size_func (void)
 		g_test_skip ("libgcab too old");
 		return;
 	}
-	store = fu_common_store_from_cab_bytes (blob, 10240, &error);
+	silo = fu_common_cab_build_silo (blob, 10240, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
-	g_assert (store == NULL);
+	g_assert_null (silo);
 }
 
 static void
 fu_common_store_cab_error_missing_file_func (void)
 {
-	g_autoptr(AsStore) store = NULL;
+	g_autoptr(XbSilo) silo = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -2649,15 +2724,15 @@ fu_common_store_cab_error_missing_file_func (void)
 		g_test_skip ("libgcab too old");
 		return;
 	}
-	store = fu_common_store_from_cab_bytes (blob, 10240, &error);
+	silo = fu_common_cab_build_silo (blob, 10240, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
-	g_assert (store == NULL);
+	g_assert_null (silo);
 }
 
 static void
 fu_common_store_cab_error_size_func (void)
 {
-	g_autoptr(AsStore) store = NULL;
+	g_autoptr(XbSilo) silo = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -2675,15 +2750,15 @@ fu_common_store_cab_error_size_func (void)
 		g_test_skip ("libgcab too old");
 		return;
 	}
-	store = fu_common_store_from_cab_bytes (blob, 123, &error);
+	silo = fu_common_cab_build_silo (blob, 123, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
-	g_assert (store == NULL);
+	g_assert_null (silo);
 }
 
 static void
 fu_common_store_cab_error_wrong_checksum_func (void)
 {
-	g_autoptr(AsStore) store = NULL;
+	g_autoptr(XbSilo) silo = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -2703,9 +2778,9 @@ fu_common_store_cab_error_wrong_checksum_func (void)
 		g_test_skip ("libgcab too old");
 		return;
 	}
-	store = fu_common_store_from_cab_bytes (blob, 10240, &error);
+	silo = fu_common_cab_build_silo (blob, 10240, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
-	g_assert (store == NULL);
+	g_assert_null (silo);
 }
 
 static gboolean
@@ -2884,6 +2959,8 @@ fu_common_version_func (void)
 		{ 0xff000100,	"255.0.256",		FU_VERSION_FORMAT_TRIPLET },
 		{ 0x0,		"0",			FU_VERSION_FORMAT_PLAIN },
 		{ 0xff000100,	"4278190336",		FU_VERSION_FORMAT_PLAIN },
+		{ 0x0,		"11.0.0.0",		FU_VERSION_FORMAT_INTEL_ME },
+		{ 0xffffffff,	"18.31.255.65535",	FU_VERSION_FORMAT_INTEL_ME },
 		{ 0,		NULL }
 	};
 	struct {

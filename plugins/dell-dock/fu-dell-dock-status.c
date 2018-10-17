@@ -16,7 +16,6 @@
 #include "config.h"
 
 #include <string.h>
-#include <appstream-glib.h>
 
 #include "fu-dell-dock-common.h"
 

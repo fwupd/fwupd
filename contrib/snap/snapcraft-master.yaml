@@ -80,38 +80,22 @@ parts:
       - -lib
       - -share
       - -usr
-  appstream-glib-dev:
+  libxmlb-dev:
     plugin: meson
-    meson-parameters: [--prefix=/usr, -Dgtk-doc=false, -Dintrospection=false, -Dman=false, -Drpm=false]
-    source: https://github.com/hughsie/appstream-glib
+    meson-parameters: [--prefix=/usr, -Dgtk-doc=false, -Dintrospection=false]
+    source: https://github.com/hughsie/libxmlb
     source-type: git
     build-packages:
       - python3-pip
-      - gperf
-      - intltool
-      - libarchive-dev
-      - libgcab-dev
-      - libgdk-pixbuf2.0-dev
       - libgirepository1.0-dev
       - libglib2.0-dev
       - libgtk-3-dev
       - libjson-glib-dev
-      - libsoup2.4-dev
-      - libsqlite3-dev
-      - libyaml-dev
-      - libstemmer-dev
       - uuid-dev
-    stage-packages:
-      - libarchive13
-      - libgcab-1.0-0
-      - libsoup2.4-1
-      - libstemmer0d
-      - libgdk-pixbuf2.0-0
     prime:
       - -usr/bin
       - -usr/include
       - -usr/share/doc
-      - -usr/lib/*/asb-plugins-5
       - -usr/share/bash-completion
       - -usr/share/aclocal
       - -usr/lib/*/pkgconfig
@@ -310,7 +294,7 @@ parts:
       - -usr/share/gir-1.0
       - -usr/share/upstart
       - -usr/lib/*/pkgconfig
-    after: [appstream-glib-dev, gudev, gusb, gnu-efi, libefivar-fixpkgconfig, libsmbios, build-introspection, gettext]
+    after: [libxmlb-dev, gudev, gusb, gnu-efi, libefivar-fixpkgconfig, libsmbios, build-introspection, gettext]
   fix-bash-completion:
     plugin: make
     source: contrib/snap/fix-bash-completion

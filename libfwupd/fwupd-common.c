@@ -45,7 +45,7 @@ fwupd_checksum_guess_kind (const gchar *checksum)
 }
 
 static const gchar *
-_g_checksum_type_to_string (GChecksumType checksum_type)
+fwupd_checksum_type_to_string_display (GChecksumType checksum_type)
 {
 	if (checksum_type == G_CHECKSUM_MD5)
 		return "MD5";
@@ -72,7 +72,9 @@ gchar *
 fwupd_checksum_format_for_display (const gchar *checksum)
 {
 	GChecksumType kind = fwupd_checksum_guess_kind (checksum);
-	return g_strdup_printf ("%s(%s)", _g_checksum_type_to_string (kind), checksum);
+	return g_strdup_printf ("%s(%s)",
+				fwupd_checksum_type_to_string_display (kind),
+				checksum);
 }
 
 /**
