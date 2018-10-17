@@ -66,8 +66,9 @@
 /* IDs used in DELL_DOCK */
 #define EXPECTED_CHIPID			0x5331
 
-/* firmware file offsets */
-#define MST_BLOB_VERSION_OFFSET		0x06F0
+/* indicates the version bytes are next */
+static const guint8 mst_version_anchor[] = {0x24, 0x53, 0x59, 0x4e,
+					    0x41, 0x53, 0x30, 0x10};
 
 typedef enum {
 	Bank0,
@@ -106,9 +107,6 @@ struct _FuDellDockMst {
 	FuDevice 			*symbiote;
 	guint8				 unlock_target;
 	guint			 	 relock_id;
-	guint64				 blob_major_offset;
-	guint64				 blob_minor_offset;
-	guint64				 blob_build_offset;
 };
 
 G_DEFINE_TYPE (FuDellDockMst, fu_dell_dock_mst, FU_TYPE_DEVICE)
@@ -763,6 +761,31 @@ fu_dell_dock_mst_invalidate_bank (FuDevice *symbiote, MSTBank bank_in_use,
 	return TRUE;
 }
 
+static gchar *
+fu_dell_dock_mst_find_blob_version (GBytes *blob_fw, GError **error)
+{
+	gsize length = 0;
+	gint matches = 0;
+	const guint8* data = g_bytes_get_data (blob_fw, &length);
+
+	for (guint i = 0; i < length; i++) {
+		if (mst_version_anchor[matches] == data[i])
+			matches++;
+		else
+			matches = 0;
+		if (matches == G_N_ELEMENTS (mst_version_anchor))
+			return g_strdup_printf ("%02x.%02x.%02x",
+					   data[i + 1],
+					   data[i + 2],
+					   data[i + 3]);
+	}
+	g_set_error_literal (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "unable to find version offset");
+	return NULL;
+}
+
 static gboolean
 fu_dell_dock_mst_write_fw (FuDevice *device,
 			   GBytes *blob_fw,
@@ -774,7 +797,6 @@ fu_dell_dock_mst_write_fw (FuDevice *device,
 	gboolean checksum = FALSE;
 	guint8 order[3] = {Bank0, ESM};
 	guint16 chip_id;
-	const guint8* data = g_bytes_get_data (blob_fw, NULL);
 	g_autofree gchar *dynamic_version = NULL;
 
 	g_return_val_if_fail (device != NULL, FALSE);
@@ -787,10 +809,9 @@ fu_dell_dock_mst_write_fw (FuDevice *device,
 		self->relock_id = 0;
 	}
 
-	dynamic_version = g_strdup_printf ("%02x.%02x.%02x",
-					   data[self->blob_major_offset],
-					   data[self->blob_minor_offset],
-					   data[self->blob_build_offset]);
+	dynamic_version = fu_dell_dock_mst_find_blob_version (blob_fw, error);
+	if (dynamic_version == NULL)
+		return FALSE;
 	g_debug ("writing MST firmware version %s", dynamic_version);
 
 	/* determine the flash order */
@@ -897,18 +918,6 @@ fu_dell_dock_mst_set_quirk_kv (FuDevice *device,
 				     G_IO_ERROR_INVALID_DATA,
 				     "invalid DellDockUnlockTarget");
 		return FALSE;
-	}
-	if (g_strcmp0 (key, "DellDockBlobMajorOffset") == 0) {
-		self->blob_major_offset = fu_common_strtoull (value);
-		return TRUE;
-	}
-	if (g_strcmp0 (key, "DellDockBlobMinorOffset") == 0) {
-		self->blob_minor_offset = fu_common_strtoull (value);
-		return TRUE;
-	}
-	if (g_strcmp0 (key, "DellDockBlobBuildOffset") == 0) {
-		self->blob_build_offset = fu_common_strtoull (value);
-		return TRUE;
 	}
 	else if (g_strcmp0 (key, "DellDockInstallDurationI2C") == 0) {
 		guint64 tmp = fu_common_strtoull (value);
