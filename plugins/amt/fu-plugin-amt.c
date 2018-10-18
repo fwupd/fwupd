@@ -375,6 +375,8 @@ fu_plugin_amt_create_device (GError **error)
 	uuid_t uu;
 	g_autofree struct amt_host_if_resp_header *response = NULL;
 	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(GString) version_bl = g_string_new (NULL);
+	g_autoptr(GString) version_fw = g_string_new (NULL);
 	g_autoptr(mei_context) ctx = g_new0 (mei_context, 1);
 
 	const uuid_le MEI_IAMTHIF = UUID_LE(0x12f80028, 0xb4b7, 0x4b2d,  \
@@ -449,15 +451,29 @@ fu_plugin_amt_create_device (GError **error)
 	/* get version numbers */
 	for (guint i = 0; i < ver.count; i++) {
 		if (g_strcmp0 (ver.versions[i].description.string, "AMT") == 0) {
-			fu_device_set_version (dev, ver.versions[i].version.string);
+			g_string_append (version_fw, ver.versions[i].version.string);
 			continue;
 		}
-		if (g_strcmp0 (ver.versions[i].description.string,
-			       "Recovery Version") == 0) {
-			fu_device_set_version_bootloader (dev, ver.versions[i].version.string);
+		if (g_strcmp0 (ver.versions[i].description.string, "Recovery Version") == 0) {
+			g_string_append (version_bl, ver.versions[i].version.string);
+			continue;
+		}
+		if (g_strcmp0 (ver.versions[i].description.string, "Build Number") == 0) {
+			g_string_append_printf (version_fw, ".%s",
+						ver.versions[i].version.string);
+			continue;
+		}
+		if (g_strcmp0 (ver.versions[i].description.string, "Recovery Build Num") == 0) {
+			g_string_append_printf (version_bl, ".%s",
+						ver.versions[i].version.string);
 			continue;
 		}
 	}
+	if (version_fw->len > 0)
+		fu_device_set_version (dev, version_fw->str);
+	if (version_bl->len > 0)
+		fu_device_set_version_bootloader (dev, version_bl->str);
+
 	return g_steal_pointer (&dev);
 }
 
