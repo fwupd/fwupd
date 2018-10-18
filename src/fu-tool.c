@@ -933,6 +933,67 @@ fu_util_firmware_builder (FuUtilPrivate *priv, gchar **values, GError **error)
 	return fu_common_set_contents_bytes (values[1], firmware_blob, error);
 }
 
+static void
+fu_util_device_added_cb (FwupdClient *client,
+			 FwupdDevice *device,
+			 gpointer user_data)
+{
+	g_autofree gchar *tmp = fwupd_device_to_string (device);
+	/* TRANSLATORS: this is when a device is hotplugged */
+	g_print ("%s\n%s", _("Device added:"), tmp);
+}
+
+static void
+fu_util_device_removed_cb (FwupdClient *client,
+			   FwupdDevice *device,
+			   gpointer user_data)
+{
+	g_autofree gchar *tmp = fwupd_device_to_string (device);
+	/* TRANSLATORS: this is when a device is hotplugged */
+	g_print ("%s\n%s", _("Device removed:"), tmp);
+}
+
+static void
+fu_util_device_changed_cb (FwupdClient *client,
+			   FwupdDevice *device,
+			   gpointer user_data)
+{
+	g_autofree gchar *tmp = fwupd_device_to_string (device);
+	/* TRANSLATORS: this is when a device has been updated */
+	g_print ("%s\n%s", _("Device changed:"), tmp);
+}
+
+static void
+fu_util_changed_cb (FwupdClient *client, gpointer user_data)
+{
+	/* TRANSLATORS: this is when the daemon state changes */
+	g_print ("%s\n", _("Changed"));
+}
+
+static gboolean
+fu_util_monitor (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(FwupdClient) client = fwupd_client_new ();
+
+	/* get all the devices */
+	if (!fwupd_client_connect (client, priv->cancellable, error))
+		return FALSE;
+
+	/* watch for any hotplugged device */
+	g_signal_connect (client, "changed",
+			  G_CALLBACK (fu_util_changed_cb), priv);
+	g_signal_connect (client, "device-added",
+			  G_CALLBACK (fu_util_device_added_cb), priv);
+	g_signal_connect (client, "device-removed",
+			  G_CALLBACK (fu_util_device_removed_cb), priv);
+	g_signal_connect (client, "device-changed",
+			  G_CALLBACK (fu_util_device_changed_cb), priv);
+	g_signal_connect (priv->cancellable, "cancelled",
+			  G_CALLBACK (fu_util_cancelled_cb), priv);
+	g_main_loop_run (priv->loop);
+	return TRUE;
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -1056,6 +1117,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Return all the hardware IDs for the machine"),
 		     fu_util_hwids);
+	fu_util_add (priv->cmd_array,
+		     "monitor",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Monitor the daemon for events"),
+		     fu_util_monitor);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();
