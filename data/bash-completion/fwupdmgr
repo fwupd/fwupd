@@ -16,7 +16,6 @@ _fwupdmgr_cmd_list=(
 	'install'
 	'install-prepared'
 	'modify-remote'
-	'monitor'
 	'refresh'
 	'report-history'
 	'unlock'

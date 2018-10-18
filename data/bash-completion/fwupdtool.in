@@ -7,6 +7,7 @@ _fwupdtool_cmd_list=(
 	'hwids'
 	'install'
 	'install-blob'
+	'monitor'
 	'smbios-dump'
 	'attach'
 	'detach'

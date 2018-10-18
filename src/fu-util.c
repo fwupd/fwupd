@@ -1924,74 +1924,6 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
-static void
-fu_util_cancelled_cb (GCancellable *cancellable, gpointer user_data)
-{
-	FuUtilPrivate *priv = (FuUtilPrivate *) user_data;
-	/* TRANSLATORS: this is when a device ctrl+c's a watch */
-	g_print ("%s\n", _("Cancelled"));
-	g_main_loop_quit (priv->loop);
-}
-
-static void
-fu_util_device_added_cb (FwupdClient *client,
-			 FwupdDevice *device,
-			 gpointer user_data)
-{
-	g_autofree gchar *tmp = fwupd_device_to_string (device);
-	/* TRANSLATORS: this is when a device is hotplugged */
-	g_print ("%s\n%s", _("Device added:"), tmp);
-}
-
-static void
-fu_util_device_removed_cb (FwupdClient *client,
-			   FwupdDevice *device,
-			   gpointer user_data)
-{
-	g_autofree gchar *tmp = fwupd_device_to_string (device);
-	/* TRANSLATORS: this is when a device is hotplugged */
-	g_print ("%s\n%s", _("Device removed:"), tmp);
-}
-
-static void
-fu_util_device_changed_cb (FwupdClient *client,
-			   FwupdDevice *device,
-			   gpointer user_data)
-{
-	g_autofree gchar *tmp = fwupd_device_to_string (device);
-	/* TRANSLATORS: this is when a device has been updated */
-	g_print ("%s\n%s", _("Device changed:"), tmp);
-}
-
-static void
-fu_util_changed_cb (FwupdClient *client, gpointer user_data)
-{
-	/* TRANSLATORS: this is when the daemon state changes */
-	g_print ("%s\n", _("Changed"));
-}
-
-static gboolean
-fu_util_monitor (FuUtilPrivate *priv, gchar **values, GError **error)
-{
-	/* get all the devices */
-	if (!fwupd_client_connect (priv->client, priv->cancellable, error))
-		return FALSE;
-
-	/* watch for any hotplugged device */
-	g_signal_connect (priv->client, "changed",
-			  G_CALLBACK (fu_util_changed_cb), priv);
-	g_signal_connect (priv->client, "device-added",
-			  G_CALLBACK (fu_util_device_added_cb), priv);
-	g_signal_connect (priv->client, "device-removed",
-			  G_CALLBACK (fu_util_device_removed_cb), priv);
-	g_signal_connect (priv->client, "device-changed",
-			  G_CALLBACK (fu_util_device_changed_cb), priv);
-	g_signal_connect (priv->cancellable, "cancelled",
-			  G_CALLBACK (fu_util_cancelled_cb), priv);
-	g_main_loop_run (priv->loop);
-	return TRUE;
-}
-
 static gboolean
 fu_util_update_device_with_release (FuUtilPrivate *priv,
 				    FwupdDevice *dev,
@@ -2470,12 +2402,6 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Update the stored metadata with current ROM contents"),
 		     fu_util_verify_update);
-	fu_util_add (priv->cmd_array,
-		     "monitor",
-		     NULL,
-		     /* TRANSLATORS: command description */
-		     _("Monitor the daemon for events"),
-		     fu_util_monitor);
 	fu_util_add (priv->cmd_array,
 		     "modify-remote",
 		     "REMOTE-ID KEY VALUE",
