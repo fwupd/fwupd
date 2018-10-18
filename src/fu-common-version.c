@@ -33,6 +33,8 @@ fu_common_version_format_from_string (const gchar *str)
 		return FU_VERSION_FORMAT_TRIPLET;
 	if (g_strcmp0 (str, "quad") == 0)
 		return FU_VERSION_FORMAT_QUAD;
+	if (g_strcmp0 (str, "intel-me2") == 0)
+		return FU_VERSION_FORMAT_INTEL_ME2;
 	if (g_strcmp0 (str, "bcd") == 0)
 		return FU_VERSION_FORMAT_BCD;
 	if (g_strcmp0 (str, "plain") == 0)
@@ -59,6 +61,8 @@ fu_common_version_format_to_string (FuVersionFormat kind)
 		return "triplet";
 	if (kind == FU_VERSION_FORMAT_QUAD)
 		return "quad";
+	if (kind == FU_VERSION_FORMAT_INTEL_ME2)
+		return "intel-me2";
 	if (kind == FU_VERSION_FORMAT_BCD)
 		return "bcd";
 	if (kind == FU_VERSION_FORMAT_PLAIN)
@@ -122,6 +126,14 @@ fu_common_version_from_uint32 (guint32 val, FuVersionFormat kind)
 					 (val >> 24) & 0x1f,
 					 (val >> 16) & 0xff,
 					  val & 0xffff);
+	}
+	if (kind == FU_VERSION_FORMAT_INTEL_ME2) {
+		/* A.B.CC.DDDD */
+		return g_strdup_printf ("%u.%u.%u.%u",
+					(val >> 28) & 0x0f,
+					(val >> 24) & 0x0f,
+					(val >> 16) & 0xff,
+					val & 0xffff);
 	}
 	return NULL;
 }
