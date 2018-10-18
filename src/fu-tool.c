@@ -906,6 +906,33 @@ fu_util_hwids (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_util_firmware_builder (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	const gchar *script_fn = "startup.sh";
+	const gchar *output_fn = "firmware.bin";
+	g_autoptr(GBytes) archive_blob = NULL;
+	g_autoptr(GBytes) firmware_blob = NULL;
+	if (g_strv_length (values) < 2) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments");
+		return FALSE;
+	}
+	archive_blob = fu_common_get_contents_bytes (values[0], error);
+	if (archive_blob == NULL)
+		return FALSE;
+	if (g_strv_length (values) > 2)
+		script_fn = values[2];
+	if (g_strv_length (values) > 3)
+		output_fn = values[3];
+	firmware_blob = fu_common_firmware_builder (archive_blob, script_fn, output_fn, error);
+	if (firmware_blob == NULL)
+		return FALSE;
+	return fu_common_set_contents_bytes (values[1], firmware_blob, error);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -957,6 +984,12 @@ main (int argc, char *argv[])
 
 	/* add commands */
 	priv->cmd_array = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_util_item_free);
+	fu_util_add (priv->cmd_array,
+		     "build-firmware",
+		     "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]",
+		     /* TRANSLATORS: command description */
+		     _("Build firmware using a sandbox"),
+		     fu_util_firmware_builder);
 	fu_util_add (priv->cmd_array,
 		     "smbios-dump",
 		     "FILE",
