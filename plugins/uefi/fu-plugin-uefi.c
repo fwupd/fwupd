@@ -477,36 +477,22 @@ fu_plugin_uefi_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GError **er
 {
 	FuUefiDeviceKind device_kind;
 	FuVersionFormat version_format;
-	guint32 version_raw;
-	g_autofree gchar *name = NULL;
-	g_autofree gchar *version_lowest = NULL;
-	g_autofree gchar *version = NULL;
 
-	/* add details to the device */
+	/* set default version format */
 	device_kind = fu_uefi_device_get_kind (dev);
 	version_format = fu_plugin_uefi_get_version_format_for_type (plugin, device_kind);
-	version_raw = fu_uefi_device_get_version (dev);
-	version = fu_common_version_from_uint32 (version_raw, version_format);
-	fu_device_set_version (dev, version);
-	name = fu_plugin_uefi_get_name_for_type (plugin, fu_uefi_device_get_kind (dev));
-	if (name != NULL)
-		fu_device_set_name (FU_DEVICE (dev), name);
-	version_raw = fu_uefi_device_get_version_lowest (dev);
-	if (version_raw != 0) {
-		version_lowest = fu_common_version_from_uint32 (version_raw,
-							        version_format);
-		fu_device_set_version_lowest (FU_DEVICE (dev), version_lowest);
-	}
-	fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_INTERNAL);
-	fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
-	fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_REQUIRE_AC);
-	if (device_kind == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE) {
-		/* nothing better in the icon naming spec */
-		fu_device_add_icon (FU_DEVICE (dev), "audio-card");
-	} else {
-		/* this is probably system firmware */
-		fu_device_add_icon (FU_DEVICE (dev), "computer");
-		fu_device_add_guid (FU_DEVICE (dev), "main-system-firmware");
+	fu_device_set_version_format (FU_DEVICE (dev), version_format);
+
+	/* probe to get add GUIDs (and hence any quirk fixups) */
+	if (!fu_device_probe (FU_DEVICE (dev), error))
+		return FALSE;
+
+	/* set fallback name if nothing else is set */
+	if (fu_device_get_name (FU_DEVICE (dev)) == 0) {
+		g_autofree gchar *name = NULL;
+		name = fu_plugin_uefi_get_name_for_type (plugin, fu_uefi_device_get_kind (dev));
+		if (name != NULL)
+			fu_device_set_name (FU_DEVICE (dev), name);
 	}
 
 	/* success */
@@ -741,6 +727,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	for (guint i = 0; i < entries->len; i++) {
 		const gchar *path = g_ptr_array_index (entries, i);
 		g_autoptr(FuUefiDevice) dev = fu_uefi_device_new_from_entry (path);
+		fu_device_set_quirks (FU_DEVICE (dev), fu_plugin_get_quirks (plugin));
 		if (!fu_plugin_uefi_coldplug_device (plugin, dev, error))
 			return FALSE;
 		if (error_esp != NULL) {

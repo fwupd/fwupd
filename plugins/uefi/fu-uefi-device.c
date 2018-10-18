@@ -367,6 +367,61 @@ fu_uefi_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_uefi_device_probe (FuDevice *device, GError **error)
+{
+	FuUefiDevice *self = FU_UEFI_DEVICE (device);
+	FuVersionFormat version_format;
+	g_autofree gchar *guid_devid = NULL;
+	g_autofree gchar *guid_strup = NULL;
+	g_autofree gchar *version_lowest = NULL;
+	g_autofree gchar *version = NULL;
+
+	/* broken sysfs? */
+	if (self->fw_class == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "failed to read fw_class");
+		return FALSE;
+	}
+
+	/* add GUID first, as quirks may set the version format */
+	fu_device_add_guid (device, self->fw_class);
+
+	/* set versions */
+	version_format = fu_device_get_version_format (device);
+	version = fu_common_version_from_uint32 (self->fw_version, version_format);
+	fu_device_set_version (device, version);
+	if (self->fw_version_lowest != 0) {
+		version_lowest = fu_common_version_from_uint32 (self->fw_version_lowest,
+							        version_format);
+		fu_device_set_version_lowest (device, version_lowest);
+	}
+
+	/* set flags */
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_REQUIRE_AC);
+
+	/* add icons */
+	if (self->kind == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE) {
+		/* nothing better in the icon naming spec */
+		fu_device_add_icon (device, "audio-card");
+	} else {
+		/* this is probably system firmware */
+		fu_device_add_icon (device, "computer");
+		fu_device_add_guid (device, "main-system-firmware");
+	}
+
+	/* Windows seems to be case insensitive, but for convenience we'll
+	 * match the upper case values typically specified in the .inf file */
+	guid_strup = g_ascii_strup (self->fw_class, -1);
+	guid_devid = g_strdup_printf ("UEFI\\RES_{%s}", guid_strup);
+	fu_device_add_guid (device, guid_devid);
+	return TRUE;
+}
+
 static void
 fu_uefi_device_init (FuUefiDevice *self)
 {
@@ -389,24 +444,8 @@ fu_uefi_device_class_init (FuUefiDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	object_class->finalize = fu_uefi_device_finalize;
 	klass_device->to_string = fu_uefi_device_to_string;
+	klass_device->probe = fu_uefi_device_probe;
 	klass_device->write_firmware = fu_uefi_device_write_firmware;
-}
-
-static void
-fu_uefi_device_add_win10_guid (FuUefiDevice *self)
-{
-	g_autofree gchar *guid_devid = NULL;
-	g_autofree gchar *guid_strup = NULL;
-
-	/* broken sysfs? */
-	if (self->fw_class == NULL)
-		return;
-
-	/* windows seems to be case insensitive, but for convenience we'll
-	 * match the upper case values typically specified in the .inf file */
-	guid_strup = g_ascii_strup (self->fw_class, -1);
-	guid_devid = g_strdup_printf ("UEFI\\RES_{%s}", guid_strup);
-	fu_device_add_guid (FU_DEVICE (self), guid_devid);
 }
 
 FuUefiDevice *
@@ -423,10 +462,8 @@ fu_uefi_device_new_from_entry (const gchar *entry_path)
 
 	/* read values from sysfs */
 	fw_class_fn = g_build_filename (entry_path, "fw_class", NULL);
-	if (g_file_get_contents (fw_class_fn, &self->fw_class, NULL, NULL)) {
+	if (g_file_get_contents (fw_class_fn, &self->fw_class, NULL, NULL))
 		g_strdelimit (self->fw_class, "\n", '\0');
-		fu_device_add_guid (FU_DEVICE (self), self->fw_class);
-	}
 	self->capsule_flags = fu_uefi_read_file_as_uint64 (entry_path, "capsule_flags");
 	self->kind = fu_uefi_read_file_as_uint64 (entry_path, "fw_type");
 	self->fw_version = fu_uefi_read_file_as_uint64 (entry_path, "fw_version");
@@ -443,9 +480,6 @@ fu_uefi_device_new_from_entry (const gchar *entry_path)
 	id = g_strdup_printf ("UEFI-%s-dev%" G_GUINT64_FORMAT,
 			      self->fw_class, self->fmp_hardware_instance);
 	fu_device_set_id (FU_DEVICE (self), id);
-
-	/* this is the DeviceID used in Windows 10 */
-	fu_uefi_device_add_win10_guid (self);
 
 	return self;
 }
@@ -467,9 +501,6 @@ fu_uefi_device_new_from_dev (FuDevice *dev)
 	self->capsule_flags = 0; /* FIXME? */
 	self->fw_version = 0; /* FIXME? */
 	g_assert (self->fw_class != NULL);
-
-	/* this is the DeviceID used in Windows 10 */
-	fu_uefi_device_add_win10_guid (self);
 	return self;
 }
 
