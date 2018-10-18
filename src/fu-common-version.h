@@ -17,7 +17,8 @@
  * @FU_VERSION_FORMAT_TRIPLET:		Use Microsoft-style AA.BB.CCDD version numbers
  * @FU_VERSION_FORMAT_PAIR:		Use two AABB.CCDD version numbers
  * @FU_VERSION_FORMAT_BCD:		Use binary coded decimal notation
- * @FU_VERSION_FORMAT_INTEL_ME:		Use Intel ME-style notation
+ * @FU_VERSION_FORMAT_INTEL_ME:		Use Intel ME-style bitshifted notation
+ * @FU_VERSION_FORMAT_INTEL_ME2:	Use Intel ME-style A.B.CC.DDDD notation notation
  *
  * The flags used when parsing version numbers.
  **/
@@ -29,6 +30,7 @@ typedef enum {
 	FU_VERSION_FORMAT_PAIR,		/* Since: 1.2.0 */
 	FU_VERSION_FORMAT_BCD,		/* Since: 1.2.0 */
 	FU_VERSION_FORMAT_INTEL_ME,	/* Since: 1.2.0 */
+	FU_VERSION_FORMAT_INTEL_ME2,	/* Since: 1.2.0 */
 	/*< private >*/
 	FU_VERSION_FORMAT_LAST
 } FuVersionFormat;
