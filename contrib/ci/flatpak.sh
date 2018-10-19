@@ -4,8 +4,8 @@ set -x
 
 # install the runtimes
 flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-flatpak install --assumeyes flathub runtime/org.gnome.Sdk/x86_64/3.28
-flatpak install --assumeyes flathub runtime/org.gnome.Platform/x86_64/3.28
+flatpak install --assumeyes flathub runtime/org.gnome.Sdk/x86_64/3.30
+flatpak install --assumeyes flathub runtime/org.gnome.Platform/x86_64/3.30
 
 # build the repo
 flatpak-builder --repo=repo --force-clean --disable-rofiles-fuse build-dir contrib/org.freedesktop.fwupd.json

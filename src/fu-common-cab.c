@@ -301,6 +301,28 @@ fu_common_store_file_cb (GCabFile *file, gpointer user_data)
 	return TRUE;
 }
 
+static gint
+fu_common_cab_sort_cb (XbBuilderNode *bn1, XbBuilderNode *bn2, gpointer user_data)
+{
+	guint64 prio1 = xb_builder_node_get_attr_as_uint (bn1, "priority");
+	guint64 prio2 = xb_builder_node_get_attr_as_uint (bn2, "priority");
+	if (prio1 > prio2)
+		return -1;
+	if (prio1 < prio2)
+		return 1;
+	return 0;
+}
+
+static gboolean
+fu_common_cab_sort_priority_cb (XbBuilderFixup *self,
+				XbBuilderNode *bn,
+				gpointer user_data,
+				GError **error)
+{
+	xb_builder_node_sort_children (bn, fu_common_cab_sort_cb, user_data);
+	return TRUE;
+}
+
 /**
  * fu_common_cab_build_silo:
  * @blob: A readable blob
@@ -326,10 +348,18 @@ fu_common_cab_build_silo (GBytes *blob, guint64 size_max, GError **error)
 #endif
 	g_autoptr(XbSilo) silo = NULL;
 	g_autoptr(XbBuilder) builder = xb_builder_new ();
+	g_autoptr(XbBuilderFixup) fixup = NULL;
 	g_autoptr(GCabCabinet) cabinet = gcab_cabinet_new ();
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GInputStream) ip = NULL;
 	g_autoptr(GPtrArray) components = NULL;
+
+	/* sort the components by priority */
+	fixup = xb_builder_fixup_new ("OrderByPriority",
+				      fu_common_cab_sort_priority_cb,
+				      NULL, NULL);
+	xb_builder_fixup_set_max_depth (fixup, 0);
+	xb_builder_add_fixup (builder, fixup);
 
 	/* load from a seekable stream */
 	ip = g_memory_input_stream_new_from_bytes (blob);
