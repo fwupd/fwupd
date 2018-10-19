@@ -1,7 +1,7 @@
 {
   "app-id": "org.freedesktop.fwupd",
   "runtime": "org.gnome.Platform",
-  "runtime-version": "3.28",
+  "runtime-version": "3.30",
   "branch": "master",
   "sdk": "org.gnome.Sdk",
   "command": "/app/libexec/fwupd/fwupdtool",
@@ -215,8 +215,8 @@
       "sources": [
         {
           "type": "archive",
-          "url": "https://people.freedesktop.org/~hughsient/releases/libxmlb-0.1.2.tar.xz",
-          "sha256": "20a734895830ae2af82a270b61e4832c6012b1aaf2003e1300d743dbd6aa95cf"
+          "url": "https://people.freedesktop.org/~hughsient/releases/libxmlb-0.1.3.tar.xz",
+          "sha256": "b609a95d078ab956231a43fd082382b386ed2f90e3fe5e8b785c4278a1b4787e"
         }
       ]
     },

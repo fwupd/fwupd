@@ -555,7 +555,7 @@
     </distro>
     <distro id="debian">
       <control>
-        <version>(>= 0.1.2)</version>
+        <version>(>= 0.1.3)</version>
       </control>
       <package variant="x86_64" />
       <package variant="s390x">libxmlb-dev:s390x</package>
@@ -563,7 +563,7 @@
     </distro>
     <distro id="ubuntu">
       <control>
-        <version>(>= 0.1.2)</version>
+        <version>(>= 0.1.3)</version>
       </control>
       <package variant="x86_64" />
     </distro>

@@ -5,6 +5,7 @@ ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 RUN echo fubar > /etc/machine-id
 %%%INSTALL_DEPENDENCIES_COMMAND%%%
+RUN dnf --enablerepo=updates-testing -y update
 RUN mkdir /build
 WORKDIR /build
 COPY . .
