@@ -26,21 +26,19 @@ bin file inside the archive, I would pass `--exe dell-thunderbolt-firmware.exe -
 
 ## Documentation
 
-`--firmware-id` ID for the firmware package, can be a customized [fwupd.org](http://fwupd.org/vendors.html) recommends using "a reverse-DNS prefix similar to java" and to "always use a .firmware suffix" (e.g. net.queuecumber.DellTBT.firmware) **REQUIRED**
-
 `--firmware-name` Short name of the firmware package can be customized (e.g. DellTBT) **REQUIRED**
 
 `--firmware-summary` One line description of the firmware package (e.g. Dell thunderbolt firmware)
 
 `--firmware-description` Longer description of the firmware package. Theoretically this can include HTML but I haven't tried it
 
-`--device-unique-id` Unique ID of the device this firmware will run on, this *must* match the output from `fwupdmgr get-devices` (e.g. 72533768-6a6c-5c06-994a-367374336810) **REQUIRED**
+`--device-guid` GUID ID of the device this firmware will run on, this *must* match the output from `fwupdmgr get-devices` (e.g. 72533768-6a6c-5c06-994a-367374336810) **REQUIRED**
 
 `--firmware-homepage` Website for the firmware provider (e.g. http://www.dell.com)
 
 `-contact-info` Email address of the firmware developer (e.g. someone@something.net)
 
-`--developer-name` Name of the firmware developer (e.g. John Smith)
+`--developer-name` Name of the firmware developer (e.g. Dell) **REQUIRED**
 
 `--release-version` Version number of the firmware package (e.g. 4.21.01.002) **REQUIRED**
 `--release-description` Description of the firmware release, again this can theoretically include HTML but I didnt try it.
