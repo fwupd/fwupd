@@ -2228,6 +2228,21 @@ fu_engine_get_details (FuEngine *self, gint fd, GError **error)
 	return g_steal_pointer (&details);
 }
 
+static gint
+fu_engine_sort_devices_by_priority (gconstpointer a, gconstpointer b)
+{
+	FuDevice *dev_a = *((FuDevice **) a);
+	FuDevice *dev_b = *((FuDevice **) b);
+	gint prio_a = fu_device_get_priority (dev_a);
+	gint prio_b = fu_device_get_priority (dev_b);
+
+	if (prio_a > prio_b)
+		return -1;
+	if (prio_a < prio_b)
+		return 1;
+	return 0;
+}
+
 /**
  * fu_engine_get_devices:
  * @self: A #FuEngine
@@ -2253,6 +2268,7 @@ fu_engine_get_devices (FuEngine *self, GError **error)
 				     "No detected devices");
 		return NULL;
 	}
+	g_ptr_array_sort (devices, fu_engine_sort_devices_by_priority);
 	return g_steal_pointer (&devices);
 }
 
