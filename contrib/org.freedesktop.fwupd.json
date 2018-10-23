@@ -155,8 +155,8 @@
       "sources": [
         {
           "type": "archive",
-          "url": "http://superb-dca2.dl.sourceforge.net/project/gnu-efi/gnu-efi-3.0.5.tar.bz2",
-          "sha256": "bd8fcd5914f18fc0e4ba948ab03b00013e528504f529c60739b748f6ef130b22"
+          "url": "http://superb-dca2.dl.sourceforge.net/project/gnu-efi/gnu-efi-3.0.9.tar.bz2",
+          "sha256": "6715ea7eae1c7e4fc5041034bd3f107ec2911962ed284a081e491646b12277f0"
         }
       ]
     },
