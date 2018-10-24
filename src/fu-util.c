@@ -268,7 +268,11 @@ fu_util_setup_networking (FuUtilPrivate *priv, GError **error)
 	/* set the proxy */
 	http_proxy = g_getenv ("https_proxy");
 	if (http_proxy == NULL)
+		http_proxy = g_getenv ("HTTPS_PROXY");
+	if (http_proxy == NULL)
 		http_proxy = g_getenv ("http_proxy");
+	if (http_proxy == NULL)
+		http_proxy = g_getenv ("HTTP_PROXY");
 	if (http_proxy != NULL) {
 		g_autoptr(SoupURI) proxy_uri = soup_uri_new (http_proxy);
 		if (proxy_uri == NULL) {
