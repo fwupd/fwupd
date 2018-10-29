@@ -264,6 +264,7 @@ synapticsmst_device_read_board_id (SynapticsMSTDevice *device,
 				   guint8 *byte,
 				   GError **error)
 {
+	guint32 dwData[4] = {0};
 	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 
 	if (priv->test_mode) {
@@ -300,13 +301,19 @@ synapticsmst_device_read_board_id (SynapticsMSTDevice *device,
 		}
 		close (fd);
 	} else {
+		/* get board ID via MCU address 0x170E instead of flash access due to HDCP2.2 running */
 		if (!synapticsmst_common_rc_get_command (connection,
-							 UPDC_READ_FROM_EEPROM,
-							 2, ADDR_CUSTOMER_ID, byte,
-							 error)) {
-			g_prefix_error (error, "failed ot read EEPROM: ");
+							UPDC_READ_FROM_MEMORY,
+							((sizeof(dwData)/sizeof(dwData[0]))*4),
+							(gint)ADDR_MEMORY_ID, (guint8*)dwData,
+							error)) {
+			g_prefix_error (error, "Memory query failed: ");
 			return FALSE;
 		}
+		byte[0] = (dwData[0]>>8)&0x000000ff;
+		byte[1] = dwData[0]&0x000000ff;		
+		g_debug ("0x170E: %lx bID %x cID %x", dwData[0], byte[0], byte[1]);
+
 	}
 
 	return TRUE;
@@ -377,7 +384,7 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device,
 	/* read board ID */
 	if (!synapticsmst_device_read_board_id (device, connection, byte, error))
 		return FALSE;
-	priv->board_id = (byte[0] << 8) | (byte[1]);
+	priv->board_id = (byte[1] << 8) | (byte[0]);
 	g_debug ("BoardID %x", priv->board_id);
 
 	/* read board chip_id */
