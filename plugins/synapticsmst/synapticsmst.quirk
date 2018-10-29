@@ -15,7 +15,7 @@
 # To override this behavior add the custom flag "skip-restart"
 #
 
-[SynapticsMSTBoardID=0]
+[SynapticsMSTBoardID=2]
 Name = Synaptics EVB development board
 DeviceKind = evb
 
