@@ -128,7 +128,7 @@ def install_flatpak (directory, verbose, uninstall):
         else:
             output = None
         #look for dependencies
-        dep = 'org.gnome.Platform/x86_64/3.28'
+        dep = 'org.gnome.Platform/x86_64/3.30'
         repo = 'flathub'
         repo_url = 'https://flathub.org/repo/flathub.flatpakrepo'
         cmd = ['flatpak', 'info', dep]

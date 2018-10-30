@@ -9,4 +9,4 @@ RUN dnf --enablerepo=updates-testing -y update
 RUN mkdir /build
 WORKDIR /build
 COPY . .
-CMD ["./contrib/ci/flatpak.sh"]
+CMD ["./contrib/ci/flatpak.py"]
