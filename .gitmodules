@@ -1,0 +1,3 @@
+[submodule "contrib/flatpak"]
+	path = contrib/flatpak
+	url = https://github.com/flathub/org.freedesktop.fwupd

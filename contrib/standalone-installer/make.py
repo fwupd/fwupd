@@ -85,8 +85,23 @@ def download_cab_file (directory, uri):
     subprocess.run (cmd, cwd=directory, check=True)
 
 def download_flatpak (directory):
-    cmd = ['wget', 'https://people.freedesktop.org/~hughsient/temp/fwupd.flatpak', '-O', 'fwupd.flatpak']
-    if 'DEBUG' in os.environ:
+    dep = 'org.freedesktop.fwupd'
+    flatpak_dir = os.path.join(os.getenv('HOME'),'.local', 'share', 'flatpak')
+    verbose = 'DEBUG' in os.environ
+
+    #check if we have installed locally already or not
+    if not os.path.exists (os.path.join (flatpak_dir, 'app', dep)):
+        # install into local user's repo
+        cmd = ['flatpak', 'install', '--user',
+            'https://www.flathub.org/repo/appstream/org.freedesktop.fwupd.flatpakref', '--no-deps', '-y']
+        if verbose:
+            print(cmd)
+        subprocess.run (cmd, cwd=directory, check=True)
+
+    # generate a bundle
+    repo = os.path.join(flatpak_dir, 'repo')
+    cmd = ['flatpak', 'build-bundle', repo, 'fwupd.flatpak', dep, 'stable']
+    if verbose:
         print(cmd)
     subprocess.run (cmd, cwd=directory, check=True)
 
