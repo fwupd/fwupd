@@ -69,7 +69,7 @@ executable(
 )
 
 install_data(['uefi.conf'],
-  install_dir:  join_paths(sysconfdir, 'fwupd')
+  install_dir:  join_paths(sysconfdir_install, 'fwupd')
 )
 
 if get_option('tests')

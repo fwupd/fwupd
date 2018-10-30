@@ -3,7 +3,7 @@ if get_option('daemon') and get_option('lvfs')
       'lvfs.conf',
       'lvfs-testing.conf',
     ],
-    install_dir : join_paths(sysconfdir, 'fwupd', 'remotes.d')
+    install_dir : join_paths(sysconfdir_install, 'fwupd', 'remotes.d')
   )
   i18n.merge_file(
     input: 'lvfs.metainfo.xml',
@@ -37,12 +37,12 @@ configure_file(
   output : 'fwupd.conf',
   configuration : con2,
   install: true,
-  install_dir: join_paths(sysconfdir, 'fwupd', 'remotes.d'),
+  install_dir: join_paths(sysconfdir_install, 'fwupd', 'remotes.d'),
 )
 configure_file(
   input : 'vendor.conf',
   output : 'vendor.conf',
   configuration : con2,
   install: true,
-  install_dir: join_paths(sysconfdir, 'fwupd', 'remotes.d'),
+  install_dir: join_paths(sysconfdir_install, 'fwupd', 'remotes.d'),
 )

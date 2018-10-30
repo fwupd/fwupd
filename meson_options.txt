@@ -17,6 +17,7 @@ option('plugin_uefi', type : 'boolean', value : true, description : 'enable UEFI
 option('plugin_nvme', type : 'boolean', value : true, description : 'enable NVMe support')
 option('systemd', type : 'boolean', value : true, description : 'enable systemd support')
 option('systemdunitdir', type: 'string', value: '', description: 'Directory for systemd units')
+option('sysconfdir_install', type: 'string', value: '', description: 'sysconfdir to use during installation')
 option('tests', type : 'boolean', value : true, description : 'enable tests')
 option('udevdir', type: 'string', value: '', description: 'Directory for udev rules')
 option('efi-cc', type : 'string', value : 'gcc', description : 'the compiler to use for EFI modules')

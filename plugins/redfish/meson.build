@@ -22,7 +22,7 @@ shared_module('fu_plugin_redfish',
 )
 
 install_data(['redfish.conf'],
-  install_dir:  join_paths(sysconfdir, 'fwupd')
+  install_dir:  join_paths(sysconfdir_install, 'fwupd')
 )
 
 if get_option('tests')

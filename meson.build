@@ -144,6 +144,12 @@ localstatedir = join_paths(prefix, get_option('localstatedir'))
 mandir = join_paths(prefix, get_option('mandir'))
 localedir = join_paths(prefix, get_option('localedir'))
 
+if get_option('sysconfdir_install') != ''
+  sysconfdir_install = join_paths(prefix, get_option('sysconfdir_install'))
+else
+  sysconfdir_install = sysconfdir
+endif
+
 gio = dependency('gio-2.0', version : '>= 2.45.8')
 if gio.version().version_compare ('>= 2.55.0')
   conf.set('HAVE_GIO_2_55_0', '1')
