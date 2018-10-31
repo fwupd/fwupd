@@ -21,55 +21,15 @@
 
 #include "fu-dell-dock-common.h"
 
-struct FuPluginData {
-	gboolean synaptics_functional;
-};
-
 void fu_plugin_init (FuPlugin *plugin)
 {
-	fu_plugin_alloc_data (plugin, sizeof(FuPluginData));
-
 	/* allow these to be built by quirks */
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_REQUIRES_QUIRK, FU_QUIRKS_PLUGIN);
 	g_type_ensure (FU_TYPE_DELL_DOCK_STATUS);
 	g_type_ensure (FU_TYPE_DELL_DOCK_MST);
-}
 
-static gboolean
-fu_plugin_dell_dock_get_synaptics_unlock (FuPlugin *plugin, guint8 *target,
-					  GError **error)
-{
-	const gchar *target_str = fu_plugin_lookup_quirk_by_id (plugin,
-								"DellDockUnlockTargets",
-								"synapticsmst");
-	guint64 tmp;
-
-	g_return_val_if_fail (target != NULL, FALSE);
-
-	tmp = fu_common_strtoull (target_str);
-	if (tmp < G_MAXUINT8) {
-		*target = tmp;
-		return TRUE;
-	}
-	g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
-		     "Unsupported unlock target %s",
-		     target_str);
-	return FALSE;
-}
-
-void
-fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
-{
-	if (g_strcmp0 (fu_device_get_plugin (device), "synapticsmst") != 0)
-		return;
-
-	/* not a perfect heuristic; but good enough - disable extra coldplug */
-	if (fu_device_has_custom_flag (device, "skip-restart")) {
-		FuPluginData *data = fu_plugin_get_data (plugin);
-		g_debug ("%s registered via Synaptics MST plugin, disabling extra coldplug",
-			 fu_device_get_name (device));
-		data->synaptics_functional = TRUE;
-	}
+	/* currently slower performance, but more reliable in corner cases */
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_BETTER_THAN, "synapticsmst");
 }
 
 static gboolean
@@ -111,7 +71,6 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 			    FuUsbDevice *device,
 			    GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data (plugin);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuDellDockHub) hub = fu_dell_dock_hub_new (device);
 	FuDevice *fu_device = FU_DEVICE (hub);
@@ -141,15 +100,6 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 				   key,
 				   error_local->message);
 		}
-
-		/* reprobe for synaptics when adding bridge */
-		g_debug ("Synaptics MST over DP aux functional: %d", data->synaptics_functional);
-#if defined(HAVE_SYNAPTICS)
-		if (!data->synaptics_functional) {
-			fu_plugin_set_coldplug_delay (plugin, 2000);
-			fu_plugin_request_recoldplug (plugin);
-		}
-#endif
 	}
 
 	return TRUE;
@@ -158,7 +108,6 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 gboolean
 fu_plugin_device_removed (FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data (plugin);
 	const gchar *device_key = fu_device_get_id (device);
 	FuDevice *dev;
 	FuDevice *parent;
@@ -176,8 +125,6 @@ fu_plugin_device_removed (FuPlugin *plugin, FuDevice *device, GError **error)
 			 fu_device_get_name (parent),
 			 fu_device_get_id (parent));
 		fu_plugin_device_remove (plugin, parent);
-		/* we don't know this anymore */
-		data->synaptics_functional = FALSE;
 	}
 
 	return TRUE;
@@ -239,17 +186,8 @@ fu_plugin_composite_prepare (FuPlugin *plugin,
 
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *dev = g_ptr_array_index (devices, i);
-		/* if synaptics is part of the transaction via DP aux turn it on */
-		if (g_strcmp0 (fu_device_get_plugin (dev), "synapticsmst") == 0) {
-			guint8 target;
-			if (fu_device_get_parent (dev) != parent)
-				continue;
-			if (!fu_plugin_dell_dock_get_synaptics_unlock (plugin, &target, error))
-				return FALSE;
-			if (!fu_dell_dock_set_power (parent, target, TRUE, error))
-				return FALSE;
 		/* if thunderbolt is part of transaction our family is leaving us */
-		} else if (g_strcmp0 (fu_device_get_plugin (dev), "thunderbolt") == 0) {
+		if (g_strcmp0 (fu_device_get_plugin (dev), "thunderbolt") == 0) {
 			if (fu_device_get_parent (dev) != parent)
 				continue;
 			fu_dell_dock_will_replug (parent);
