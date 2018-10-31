@@ -13,7 +13,8 @@
 
 #define ADDR_CUSTOMER_ID	0X10E
 #define ADDR_BOARD_ID		0x10F
-
+#define ADDR_MEMORY_CUSTOMER_ID 0x170E
+#define ADDR_MEMORY_BOARD_ID 0x170F
 #define REG_RC_CAP		0x4B0
 #define REG_RC_STATE		0X4B1
 #define REG_RC_CMD		0x4B2
@@ -25,8 +26,6 @@
 #define REG_VENDOR_ID		0x500
 #define REG_CHIP_ID		0x507
 #define REG_FIRMWARE_VERSION	0x50A
-
-#define ADDR_MEMORY_ID 0x170E
 
 typedef enum {
 	UPDC_COMMAND_SUCCESS		= 0,
