@@ -103,7 +103,7 @@ fu_util_start_engine (FuUtilPrivate *priv, GError **error)
 			 SYSTEMD_FWUPD_UNIT,
 			 error_local->message);
 	} else {
-		g_clear_object (&val);
+		g_variant_unref (val);
 		val = g_dbus_proxy_call_sync (proxy,
 					      "StopUnit",
 					      g_variant_new ("(ss)",
