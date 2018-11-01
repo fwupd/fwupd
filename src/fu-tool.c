@@ -70,7 +70,6 @@ fu_util_item_free (FuUtilItem *item)
 static gboolean
 fu_util_start_engine (FuUtilPrivate *priv, GError **error)
 {
-#ifdef HAVE_SYSTEMD
 	g_autoptr(GDBusConnection) connection = NULL;
 	g_autoptr(GDBusProxy) proxy = NULL;
 	g_autoptr(GVariant) val = NULL;
@@ -87,37 +86,40 @@ fu_util_start_engine (FuUtilPrivate *priv, GError **error)
 					SYSTEMD_OBJECT_PATH,
 					SYSTEMD_MANAGER_INTERFACE,
 					NULL,
-					error);
-	if (proxy == NULL)
-		return FALSE;
-	val = g_dbus_proxy_call_sync (proxy,
-				      "GetUnit",
-				      g_variant_new ("(s)",
-						     SYSTEMD_FWUPD_UNIT),
-				      G_DBUS_CALL_FLAGS_NONE,
-				      -1,
-				      NULL,
-				      &error_local);
-	if (val == NULL) {
-		g_debug ("Unable to find %s: %s",
-			 SYSTEMD_FWUPD_UNIT,
+					&error_local);
+	if (proxy == NULL) {
+		g_debug ("Failed to find %s: %s",
+			 SYSTEMD_SERVICE,
 			 error_local->message);
 	} else {
-		g_variant_unref (val);
 		val = g_dbus_proxy_call_sync (proxy,
-					      "StopUnit",
-					      g_variant_new ("(ss)",
-							     SYSTEMD_FWUPD_UNIT,
-							     "replace"),
+					      "GetUnit",
+					      g_variant_new ("(s)",
+							     SYSTEMD_FWUPD_UNIT),
 					      G_DBUS_CALL_FLAGS_NONE,
 					      -1,
 					      NULL,
-					      error);
-		if (val == NULL)
-			return FALSE;
+					      &error_local);
+		if (val == NULL) {
+			g_debug ("Unable to find %s: %s",
+				 SYSTEMD_FWUPD_UNIT,
+				 error_local->message);
+		} else {
+			g_variant_unref (val);
+			val = g_dbus_proxy_call_sync (proxy,
+						      "StopUnit",
+						      g_variant_new ("(ss)",
+								     SYSTEMD_FWUPD_UNIT,
+								     "replace"),
+						      G_DBUS_CALL_FLAGS_NONE,
+						      -1,
+						      NULL,
+						      error);
+			if (val == NULL)
+				return FALSE;
+		}
 	}
 
-#endif
 	return fu_engine_load (priv->engine, error);
 }
 
