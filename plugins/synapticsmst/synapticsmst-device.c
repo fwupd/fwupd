@@ -303,7 +303,7 @@ synapticsmst_device_read_board_id (SynapticsMSTDevice *device,
 		/* get board ID via MCU address 0x170E instead of flash access due to HDCP2.2 running */
 		if (!synapticsmst_common_rc_get_command (connection,
 							UPDC_READ_FROM_MEMORY,
-							4,
+							2,
 							(gint)ADDR_MEMORY_CUSTOMER_ID, byte,
 							error)) {
 			g_prefix_error (error, "Memory query failed: ");
