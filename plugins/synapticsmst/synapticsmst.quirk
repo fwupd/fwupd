@@ -15,10 +15,6 @@
 # To override this behavior add the custom flag "skip-restart"
 #
 
-[SynapticsMSTBoardID=2]
-Name = Synaptics EVB development board
-DeviceKind = evb
-
 [SynapticsMSTBoardID=272]
 Name = Dell X6 Platform
 DeviceKind = system

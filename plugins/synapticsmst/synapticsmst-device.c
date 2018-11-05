@@ -1117,6 +1117,7 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 				    GFileProgressCallback progress_cb,
 				    gpointer progress_data,
 				    gboolean reboot,
+				    gboolean install_force,
 				    GError **error)
 {
 	const guint8 *payload_data;
@@ -1137,21 +1138,16 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 		return FALSE;
 	}
 
-	/* TODO: May need a way to override this to cover field
-	 * issues of invalid firmware flashed*/
 	/* check firmware and board ID again */
 	tmp = (*(payload_data + ADDR_CUSTOMER_ID) << 8) + *(payload_data + ADDR_BOARD_ID);
-	if (synapticsmst_device_get_board_id (device) >> 8 == 0) {
-		g_warning ("EVB board detected, bypassing customer ID check");
-	} else {
-		if (tmp != synapticsmst_device_get_board_id (device)) {
-			g_set_error_literal (error,
-						G_IO_ERROR,
-						G_IO_ERROR_INVALID_DATA,
-						"board ID mismatch");
-			return FALSE;
-		}
+	if (tmp != synapticsmst_device_get_board_id (device) && !install_force) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "board ID mismatch");
+		return FALSE;
 	}
+
 	/* open device */
 	if (!synapticsmst_device_open (device, error)) {
 		g_prefix_error (error,
