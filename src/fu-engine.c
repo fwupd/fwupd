@@ -2483,10 +2483,10 @@ fu_engine_get_releases_for_device (FuEngine *self, FuDevice *device, GError **er
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOTHING_TO_DO,
 				     "No releases found for device");
-			return FALSE;
+			return NULL;
 		}
 		g_propagate_error (error, g_steal_pointer (&error_local));
-		return FALSE;
+		return NULL;
 	}
 
 	/* find all the releases that pass all the requirements */
