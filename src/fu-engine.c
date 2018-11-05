@@ -1860,6 +1860,16 @@ fu_engine_load_metadata_store (FuEngine *self, GError **error)
 	if (components != NULL)
 		g_debug ("%u components now in silo", components->len);
 
+	/* build the index */
+	if (!xb_silo_query_build_index (self->silo,
+					"components/component/provides/firmware",
+					"type", error))
+		return FALSE;
+	if (!xb_silo_query_build_index (self->silo,
+					"components/component/provides/firmware",
+					NULL, error))
+		return FALSE;
+
 	/* did any devices SUPPORTED state change? */
 	devices = fu_device_list_get_all (self->device_list);
 	for (guint i = 0; i < devices->len; i++) {
@@ -2076,7 +2086,7 @@ fu_engine_get_result_from_component (FuEngine *self, XbNode *component, GError *
 
 	dev = fwupd_device_new ();
 	provides = xb_node_query (component,
-				  "provides/firmware[@type='flashed']",
+				  "provides/firmware[@type=$'flashed']",
 				  0, &error_local);
 	if (provides == NULL) {
 		g_set_error (error,
@@ -2480,7 +2490,7 @@ fu_engine_get_releases_for_device (FuEngine *self, FuDevice *device, GError **er
 		const gchar *guid = g_ptr_array_index (device_guids, i);
 		xb_string_append_union (xpath,
 					"components/component/"
-					"provides/firmware[@type='flashed'][text()='%s']/"
+					"provides/firmware[@type=$'flashed'][text()=$'%s']/"
 					"../..", guid);
 	}
 	components = xb_silo_query (self->silo, xpath->str, 0, &error_local);
