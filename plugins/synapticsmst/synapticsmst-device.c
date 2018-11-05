@@ -994,9 +994,9 @@ synapticsmst_device_check_firmware_content (SynapticsMSTDevice *device,
 {
 	const guint8 *payload_data;
 	gsize payload_len, payload_len_max;
-	gint checksum = 0;
-	guint32 offset = 0;
-	guint32 code_size = 0;
+	//gint checksum = 0;
+	//guint32 offset = 0;
+	//guint32 code_size = 0;
 
 	switch (chip_type) {
 	case SYNAPTICSMST_CHIP_KIND_PANAMERA:
