@@ -340,6 +340,7 @@ fu_plugin_update (FuPlugin *plugin,
 	guint8 layer;
 	guint8 rad;
 	gboolean reboot;
+	gboolean install_force;
 
 	/* extract details to build a new device */
 	kind = synapticsmst_device_kind_from_string (fu_device_get_metadata (dev, "SynapticsMSTKind"));
@@ -359,11 +360,14 @@ fu_plugin_update (FuPlugin *plugin,
 	if (!synapticsmst_device_enumerate_device (device, error))
 		return FALSE;
 	reboot = !fu_device_has_custom_flag (dev, "skip-restart");
+	install_force = (flags & FWUPD_INSTALL_FLAG_FORCE) != 0 ||
+			fu_device_has_custom_flag (dev, "ignore-board-id");
 	fu_device_set_status (dev, FWUPD_STATUS_DEVICE_WRITE);
 	if (!synapticsmst_device_write_firmware (device, blob_fw,
 						 fu_synapticsmst_write_progress_cb,
 						 dev,
 						 reboot,
+						 install_force,
 						 error)) {
 		g_prefix_error (error, "failed to flash firmware: ");
 		return FALSE;
