@@ -105,7 +105,6 @@ struct _FuDellDockMst {
 	FuDevice			 parent_instance;
 	FuDevice 			*symbiote;
 	guint8				 unlock_target;
-	guint			 	 relock_id;
 	guint64				 blob_major_offset;
 	guint64				 blob_minor_offset;
 	guint64				 blob_build_offset;
@@ -781,16 +780,6 @@ fu_dell_dock_mst_write_fw (FuDevice *device,
 	g_return_val_if_fail (blob_fw != NULL, FALSE);
 	g_return_val_if_fail (self->symbiote != NULL, FALSE);
 
-	/* in case update was scheduled immediately after setup */
-	if (self->relock_id > 0) {
-		g_source_remove (self->relock_id);
-		self->relock_id = 0;
-	}
-
-	/* power up controller in case it's asleep */
-	if (!fu_dell_dock_set_power (device, self->unlock_target, TRUE, error))
-		return FALSE;
-
 	dynamic_version = g_strdup_printf ("%02x.%02x.%02x",
 					   data[self->blob_major_offset],
 					   data[self->blob_minor_offset],
@@ -929,41 +918,12 @@ fu_dell_dock_mst_set_quirk_kv (FuDevice *device,
 }
 
 static gboolean
-fu_dell_dock_mst_relock (gpointer user_data)
-{
-	FuDellDockMst *self = (FuDellDockMst *) user_data;
-	FuDevice *device = FU_DEVICE (self);
-	g_autoptr(GError) error_local = NULL;
-	gboolean ret;
-
-	self->relock_id = 0;
-	g_debug ("MST relock called");
-	/* only call if parent still around */
-	if (fu_device_get_parent (device) != NULL) {
-		ret = fu_dell_dock_set_power (device, self->unlock_target,
-					      FALSE, &error_local);
-		if (!ret)
-			g_warning ("%s", error_local->message);
-	}
-	return G_SOURCE_REMOVE;
-}
-
-static gboolean
 fu_dell_dock_mst_setup (FuDevice *device, GError **error)
 {
 	FuDellDockMst *self = FU_DELL_DOCK_MST (device);
 	FuDevice *parent;
 	const gchar *version;
 	g_autofree gchar *dynamic_version = NULL;
-
-	/* Open up access to the controller
-	 * - This is left open with a timeout to allow DP aux to initialize
-	 * - This intentionally isn't called in open, it should be called by
-	 *   plugin during update
-	 */
-	if (!fu_dell_dock_set_power (device, self->unlock_target, TRUE, error))
-		return FALSE;
-	self->relock_id = g_timeout_add (6000, fu_dell_dock_mst_relock, self);
 
 	/* sanity check that we can talk to MST */
 	if (!fu_d19_mst_check_fw (self->symbiote, error))
@@ -973,9 +933,7 @@ fu_dell_dock_mst_setup (FuDevice *device, GError **error)
 	parent = fu_device_get_parent (device);
 	version = fu_dell_dock_ec_get_mst_version (parent);
 
-	/* TODO: Potentially remove direct probe if we know EC return correct
-	 * value at all times
-	 */
+	/* TODO: Drop when we can guarantee EC 15+ */
 	if (version == NULL) {
 		if (!fu_dell_dock_mst_get_version_direct (self->symbiote,
 							  &dynamic_version,
@@ -1013,6 +971,10 @@ fu_dell_dock_mst_open (FuDevice *device, GError **error)
 	if (!fu_device_open (self->symbiote, error))
 		return FALSE;
 
+	/* open up access to controller bus */
+	if (!fu_dell_dock_set_power (device, self->unlock_target, TRUE, error))
+		return FALSE;
+
 	return TRUE;
 }
 
@@ -1021,6 +983,10 @@ fu_dell_dock_mst_close (FuDevice *device, GError **error)
 {
 	FuDellDockMst *self = FU_DELL_DOCK_MST (device);
 
+	/* close access to controller bus */
+	if (!fu_dell_dock_set_power (device, self->unlock_target, FALSE, error))
+		return FALSE;
+
 	return fu_device_close (self->symbiote, error);
 }
 
@@ -1028,11 +994,6 @@ static void
 fu_dell_dock_mst_finalize (GObject *object)
 {
 	FuDellDockMst *self = FU_DELL_DOCK_MST (object);
-	if (self->relock_id > 0) {
-		g_source_remove (self->relock_id);
-		self->relock_id = 0;
-		fu_dell_dock_mst_relock (self);
-	}
 	g_object_unref (self->symbiote);
 	G_OBJECT_CLASS (fu_dell_dock_mst_parent_class)->finalize (object);
 }
