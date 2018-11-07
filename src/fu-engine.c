@@ -604,7 +604,7 @@ fu_engine_verify_update (FuEngine *self, const gchar *device_id, GError **error)
 		const gchar *checksum = g_ptr_array_index (checksums, i);
 		GChecksumType kind = fwupd_checksum_guess_kind (checksum);
 		g_autoptr(XbBuilderNode) csum = NULL;
-		csum = xb_builder_node_insert (provides, "checksum",
+		csum = xb_builder_node_insert (release, "checksum",
 					       "type", fu_engine_checksum_type_to_string (kind),
 					       "target", "content",
 					       NULL);
