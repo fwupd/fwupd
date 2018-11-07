@@ -12,8 +12,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-09-10 16:44+0100\n"
-"PO-Revision-Date: 2018-09-10 15:45+0000\n"
+"POT-Creation-Date: 2018-11-07 11:16+0000\n"
+"PO-Revision-Date: 2018-10-12 11:10+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Portuguese (Brazil) (http://www.transifex.com/freedesktop/fwupd/language/pt_BR/)\n"
 "MIME-Version: 1.0\n"
@@ -262,11 +262,6 @@ msgstr "Retrocede a versão do firmware em um dispositivo"
 #, c-format
 msgid "Downgrading %s from %s to %s... "
 msgstr "Revertendo %s de %s para %s… "
-
-#. TRANSLATORS: %1 is a device name, and %2 and %3 are version numbers
-#, c-format
-msgid "Downgrading %s from %s to %s…"
-msgstr "Revertendo %s de %s para %s…"
 
 #. TRANSLATORS: downloading from a remote server
 msgid "Downloading…"
@@ -893,11 +888,6 @@ msgstr "Atualiza todos os firmwares para a última versão disponível"
 #, c-format
 msgid "Updating %s from %s to %s... "
 msgstr "Atualizando %s de %s para %s… "
-
-#. TRANSLATORS: %1 is a device name, and %2 and %3 are version numbers
-#, c-format
-msgid "Updating %s from %s to %s…"
-msgstr "Atualizando %s de %s para %s…"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Upload message:"

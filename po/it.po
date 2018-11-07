@@ -9,15 +9,22 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-09-10 16:44+0100\n"
-"PO-Revision-Date: 2018-09-10 15:45+0000\n"
-"Last-Translator: Richard Hughes <richard@hughsie.com>\n"
+"POT-Creation-Date: 2018-11-07 11:16+0000\n"
+"PO-Revision-Date: 2018-10-12 13:29+0000\n"
+"Last-Translator: Milo Casagrande <milo@ubuntu.com>\n"
 "Language-Team: Italian (http://www.transifex.com/freedesktop/fwupd/language/it/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: it\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. more than a minute
+#, c-format
+msgid "%.0f minute remaining"
+msgid_plural "%.0f minutes remaining"
+msgstr[0] "Manca %.0f minuto"
+msgstr[1] "Mancano %.0f minuti"
 
 #. TRANSLATORS: first replacement is device name
 #, c-format
@@ -260,10 +267,10 @@ msgstr "Ripristina una vecchia versione del firmare su un dispositivo"
 msgid "Downgrading %s from %s to %s... "
 msgstr "Arretramento di %s da %s a %s..."
 
-#. TRANSLATORS: %1 is a device name, and %2 and %3 are version numbers
+#. TRANSLATORS: %1 is a device name
 #, c-format
-msgid "Downgrading %s from %s to %s…"
-msgstr "Arretramento di %s da %s a %s…"
+msgid "Downgrading %s…"
+msgstr "Arretramento di %s…"
 
 #. TRANSLATORS: downloading from a remote server
 msgid "Downloading…"
@@ -396,6 +403,9 @@ msgstr "Gli aggiornamenti firmware non sono supportati su questo dispositivo."
 msgid "Firmware updates are supported on this machine."
 msgstr "Gli aggiornamenti firmware sono supportati su questo dispositivo."
 
+msgid "Force the action ignoring all warnings"
+msgstr "Forza l'azione ignorando gli avvisi"
+
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
 msgstr "Trovato"
@@ -484,8 +494,17 @@ msgstr "Installazione di %s"
 msgid "Installing firmware update…"
 msgstr "Installazione aggiornamento firmware…"
 
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Installing on %s…"
+msgstr "Installazione su %s…"
+
 msgid "Keyring"
 msgstr "Portachiavi"
+
+#. TRANSLATORS: time remaining for completing firmware flash
+msgid "Less than one minute remaining"
+msgstr "Manca meno di un minuto"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (firmware stabile)"
@@ -586,6 +605,12 @@ msgstr "Permesso negato"
 #, c-format
 msgid "Please enter a number from 0 to %u: "
 msgstr "Inserire un numero tra 0 e %u:"
+
+msgid "Print the version number"
+msgstr "Stampa il numero di versione"
+
+msgid "Print verbose debug statements"
+msgstr "Stampa messaggi di debug prolissi"
 
 #. TRANSLATORS: the numeric priority
 msgid "Priority"
@@ -733,6 +758,10 @@ msgstr "Condivide la cronologia del firmware con gli sviluppatori"
 msgid "Show client and daemon versions"
 msgstr "Mostra la versione del client e del demone"
 
+#. TRANSLATORS: this is for daemon development
+msgid "Show daemon verbose information"
+msgstr "Mostra informazioni prolisse del demone"
+
 #. TRANSLATORS: turn on all debugging
 msgid "Show debugging information for all files"
 msgstr "Mostra le informazioni di debug per tutti i file"
@@ -765,6 +794,12 @@ msgstr "Mostra debug dell'ultimo tentativo di aggiornamento"
 msgid "Show the information of firmware update status"
 msgstr "Mostra informazioni sullo stato degli aggiornamenti firmware"
 
+msgid "Specify Vendor/Product ID(s) of DFU device"
+msgstr "Specifica vendor/ID prodotto di un dispositivo DFU"
+
+msgid "Specify the number of bytes per USB transfer"
+msgstr "Specifica il numero di byte per trasferimento USB"
+
 #. TRANSLATORS: device state, i.e. appIDLE
 msgid "State"
 msgstr "Stato"
@@ -788,6 +823,10 @@ msgstr "LVFS è un servizio gratuito che opera come entità legale indipendente 
 
 msgid "The fwupd process is a simple daemon to allow session software to update device firmware on your local machine. It is designed for desktops, but this project is also usable on phones, tablets and on headless servers."
 msgstr "Il processo fwupd è un demone che consente di aggiornare il firmware di un dispositivo sul proprio computer. È progettato per un ambiente desktop, ma è possibile utilizzarlo anche su telefonini, tablet e server."
+
+#. TRANSLATORS: exactly one update needs this
+msgid "The update requires a reboot to complete."
+msgstr "Per essere completato, l'aggiornamento richiede un riavvio."
 
 #. TRANSLATORS: we're poking around as a power user
 msgid "This program may only work correctly as root"
@@ -891,10 +930,10 @@ msgstr "Aggiorna tutti i firmware all'ultima versione disponibile"
 msgid "Updating %s from %s to %s... "
 msgstr "Aggiornamento di %s da %s a %s..."
 
-#. TRANSLATORS: %1 is a device name, and %2 and %3 are version numbers
+#. TRANSLATORS: %1 is a device name
 #, c-format
-msgid "Updating %s from %s to %s…"
-msgstr "Aggiornamento di %s da %s a %s…"
+msgid "Updating %s…"
+msgstr "Aggiornamento di %s…"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Upload message:"

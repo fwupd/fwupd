@@ -1,3 +1,33 @@
+Version 1.2.0
+~~~~~~~~~~~~~
+Released: 2018-11-07
+
+New Features:
+ - Add a plugin for an upcoming Dell USB-C dock (Mario Limonciello)
+ - Add a standalone installer creation script (Mario Limonciello)
+ - Add support for devices to show an estimated flash time (Mario Limonciello)
+ - Add support for some new Realtek USB devices (Richard Hughes)
+ - Allow firmware files to depend on versions from other devices (Richard Hughes)
+ - Allow setting the version format from a quirk entry (Richard Hughes)
+ - Port from libappstream-glib to libxmlb for a large reduction in RSS (Richard Hughes)
+ - Stop any running daemon over dbus when using fu-tool (Mario Limonciello)
+ - Support the Intel ME version format (Richard Hughes)
+
+Bugfixes:
+ - Add version format quirks for several Lenovo machines (Richard Hughes)
+ - Adjust panamera ESM update routine for some reported issues (Mario Limonciello)
+ - Adjust synapticsmst EVB board handling (Mario Limonciello, RyanChang)
+ - Check the amount of free space on the ESP (Richard Hughes)
+ - Don't show devices pending a reboot in GetUpgrades (Mario Limonciello)
+ - Ensure that parent ID is created before creating quirked children (Mario Limonciello)
+ - Optionally wait for replug before updating a device (Mario Limonciello)
+ - Set the full AMT device version including the BuildNum (Richard Hughes)
+ - Sort the firmware sack by component priority (Richard Hughes)
+ - Stop showing errors when no Dell dock plugged in (Mario Limonciello)
+ - Stop showing the current release during updates in fwupdmgr (Mario Limonciello)
+ - Update all sub-devices for a composite update (Mario Limonciello)
+ - Use HTTPS_PROXY if set (Richard Hughes)
+
 Version 1.1.2
 ~~~~~~~~~~~~~
 Released: 2018-09-10

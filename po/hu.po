@@ -4,15 +4,15 @@
 #
 # Translators:
 # Balázs Meskó <meskobalazs@gmail.com>, 2017-2018
-# Balázs Úr <urbalazs@gmail.com>, 2015-2018
+# Balázs Úr <ur.balazs@fsf.hu>, 2015-2018
 # Gabor Kelemen <kelemeng at ubuntu dot com>, 2016
 # kelemeng <kelemeng@ubuntu.com>, 2016
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-06-06 14:54+0100\n"
-"PO-Revision-Date: 2018-06-06 14:00+0000\n"
+"POT-Creation-Date: 2018-11-07 11:16+0000\n"
+"PO-Revision-Date: 2018-10-12 11:10+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Hungarian (http://www.transifex.com/freedesktop/fwupd/language/hu/)\n"
 "MIME-Version: 1.0\n"
