@@ -71,7 +71,7 @@ parts:
   meson:
     plugin: python
     source: https://github.com/mesonbuild/meson.git
-    source-tag: 0.46.1
+    source-tag: 0.47.2
     build-packages:
       - ninja-build
     prime:

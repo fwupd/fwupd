@@ -68,7 +68,7 @@ parts:
       - -lib/*.a
   meson:
     plugin: python
-    source: https://github.com/mesonbuild/meson/releases/download/0.46.1/meson-0.46.1.tar.gz
+    source: https://github.com/mesonbuild/meson/releases/download/0.47.2/meson-0.47.2.tar.gz
     build-packages:
       - ninja-build
     prime:
