@@ -398,7 +398,7 @@ fu_common_cab_build_silo (GBytes *blob, guint64 size_max, GError **error)
 			     FWUPD_ERROR_INTERNAL,
 			     "failed to create temp dir: %s",
 			     error_local->message);
-		return FALSE;
+		return NULL;
 	}
 	helper.decompress_path = tmp_path;
 	tmp_file = g_file_new_for_path (tmp_path);

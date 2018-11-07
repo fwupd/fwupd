@@ -46,9 +46,9 @@ fu_common_guid_from_data (const gchar *namespace_id,
 	uuid_t uu_new;
 	g_autoptr(GChecksum) csum = NULL;
 
-	g_return_val_if_fail (namespace_id != NULL, FALSE);
-	g_return_val_if_fail (data != NULL, FALSE);
-	g_return_val_if_fail (data_len != 0, FALSE);
+	g_return_val_if_fail (namespace_id != NULL, NULL);
+	g_return_val_if_fail (data != NULL, NULL);
+	g_return_val_if_fail (data_len != 0, NULL);
 
 	/* convert the namespace to binary */
 	rc = uuid_parse (namespace_id, uu_namespace);
@@ -58,7 +58,7 @@ fu_common_guid_from_data (const gchar *namespace_id,
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "namespace '%s' is invalid",
 			     namespace_id);
-		return FALSE;
+		return NULL;
 	}
 
 	/* hash the namespace and then the string */
