@@ -100,9 +100,9 @@ FirmwareSizeMax=524288
 DellDockUnlockTarget = 9
 InstallDuration = 95
 DellDockInstallDurationI2C=360
-DellDockBlobMajorOffset = 0x06F0
-DellDockBlobMinorOffset = 0x06F1
-DellDockBlobBuildOffset = 0x06F2
+DellDockBlobMajorOffset = 0x18400
+DellDockBlobMinorOffset = 0x18401
+DellDockBlobBuildOffset = 0x18402
 
 # Thunderbolt controller
 [Guid=TBT-00d4b070]

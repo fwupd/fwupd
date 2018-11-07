@@ -300,11 +300,13 @@ synapticsmst_device_read_board_id (SynapticsMSTDevice *device,
 		}
 		close (fd);
 	} else {
+		/* get board ID via MCU address 0x170E instead of flash access due to HDCP2.2 running */
 		if (!synapticsmst_common_rc_get_command (connection,
-							 UPDC_READ_FROM_EEPROM,
-							 2, ADDR_CUSTOMER_ID, byte,
-							 error)) {
-			g_prefix_error (error, "failed ot read EEPROM: ");
+							UPDC_READ_FROM_MEMORY,
+							2,
+							(gint)ADDR_MEMORY_CUSTOMER_ID, byte,
+							error)) {
+			g_prefix_error (error, "Memory query failed: ");
 			return FALSE;
 		}
 	}
@@ -990,11 +992,7 @@ synapticsmst_device_check_firmware_content (SynapticsMSTDevice *device,
 					    SynapticsMSTChipKind chip_type,
 					    GError **error)
 {
-	const guint8 *payload_data;
 	gsize payload_len, payload_len_max;
-	gint checksum = 0;
-	guint32 offset = 0;
-	guint32 code_size = 0;
 
 	switch (chip_type) {
 	case SYNAPTICSMST_CHIP_KIND_PANAMERA:
@@ -1013,8 +1011,8 @@ synapticsmst_device_check_firmware_content (SynapticsMSTDevice *device,
 
 	}
 
-	/* get firmware data and check size */
-	payload_data = g_bytes_get_data (fw, &payload_len);
+	/* check size */
+	payload_len = g_bytes_get_size (fw);
 	if (payload_len > payload_len_max || payload_len == 0) {
 		g_set_error (error,
 			     G_IO_ERROR,
@@ -1025,117 +1023,6 @@ synapticsmst_device_check_firmware_content (SynapticsMSTDevice *device,
 		return FALSE;
 	}
 
-	/* check firmware content */
-	for (guint8 i = 0; i < 128; i++)
-		checksum += *(payload_data + i);
-	if (checksum & 0xff) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_INVALID_DATA,
-			     "EDID checksum error: %d",
-			     checksum);
-		return FALSE;
-	}
-	/* EDID */
-	checksum = 0;
-	offset = 128;
-	for (guint8 i = 0; i < 128; i++)
-		checksum += *(payload_data + offset + i);
-
-	if (checksum & 0xff) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "EDID checksum error");
-		return FALSE;
-	}
-	/* CFG 0 */
-	checksum = 0;
-	offset = 0x100;
-	for (guint16 i = 0; i < 256; i++)
-		checksum += *(payload_data + offset + i);
-
-	if (checksum & 0xff) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "configuration checksum error");
-		return FALSE;
-	}
-	/* CFG 1 */
-	checksum = 0;
-	offset = 0x200;
-	for (guint16 i = 0; i < 256; i++)
-		checksum += *(payload_data + offset + i);
-	if (checksum & 0xff) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "configuration checksum error");
-		return FALSE;
-	}
-	/* Firmware Size */
-	checksum = 0;
-	offset = 0x400;
-	if (chip_type == SYNAPTICSMST_CHIP_KIND_PANAMERA) {
-		code_size = (*(payload_data + offset) << 24);
-		code_size += (*(payload_data + offset + 1) << 16);
-		code_size += (*(payload_data + offset + 2) << 8);
-		code_size += (*(payload_data + offset + 3));
-		if (code_size >= 0x02ffff) {
-			g_set_error_literal (error,
-					     G_IO_ERROR,
-					     G_IO_ERROR_INVALID_DATA,
-					     "invalid firmware size");
-			return FALSE;
-		}
-	} else {
-		code_size = (*(payload_data + offset) << 8) + *(payload_data + offset + 1);
-		if (code_size >= 0xffff) {
-			g_set_error_literal (error,
-					     G_IO_ERROR,
-					     G_IO_ERROR_INVALID_DATA,
-					     "invalid firmware size");
-			return FALSE;
-		}
-	}
-	/* Firmware Checksum */
-	if (chip_type == SYNAPTICSMST_CHIP_KIND_PANAMERA) {
-		guint32 i = 0;
-		for ( i = 0; i < code_size + 1; i++ ) {
-			checksum += *(payload_data + offset + 0x10 + i);
-		}
-		if ((checksum & 0xffff)!=((*(payload_data + 0x408) << 8) | (*(payload_data + 0x409)))) {
-			g_set_error_literal (error,
-					     G_IO_ERROR,
-					     G_IO_ERROR_INVALID_DATA,
-					     "firmware checksum error");
-			return FALSE;
-		}
-		checksum = 0;
-		offset = EEPROM_ESM_OFFSET;
-		for (i = 0; i < (payload_len - EEPROM_ESM_OFFSET); i++) {
-			checksum += *(payload_data + offset + i);
-		}
-		if ((checksum & 0xffff)!=((*(payload_data + 0x40A) << 8) | (*(payload_data + 0x40B)))) {
-			g_set_error_literal (error,
-					     G_IO_ERROR,
-					     G_IO_ERROR_INVALID_DATA,
-					     "ESM firmware checksum error");
-			return FALSE;
-		}
-	} else {
-		for (guint32 i = 0; i < (code_size + 17); i++)
-			checksum += *(payload_data + offset + i);
-
-		if (checksum & 0xff) {
-			g_set_error_literal (error,
-					     G_IO_ERROR,
-					     G_IO_ERROR_INVALID_DATA,
-					     "firmware checksum error");
-			return FALSE;
-		}
-	}
 
 	return TRUE;
 }
@@ -1230,6 +1117,7 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 				    GFileProgressCallback progress_cb,
 				    gpointer progress_data,
 				    gboolean reboot,
+				    gboolean install_force,
 				    GError **error)
 {
 	const guint8 *payload_data;
@@ -1250,21 +1138,16 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 		return FALSE;
 	}
 
-	/* TODO: May need a way to override this to cover field
-	 * issues of invalid firmware flashed*/
 	/* check firmware and board ID again */
 	tmp = (*(payload_data + ADDR_CUSTOMER_ID) << 8) + *(payload_data + ADDR_BOARD_ID);
-	if (synapticsmst_device_get_board_id (device) >> 8 == 0) {
-		g_warning ("EVB board detected, bypassing customer ID check");
-	} else {
-		if (tmp != synapticsmst_device_get_board_id (device)) {
-			g_set_error_literal (error,
-						G_IO_ERROR,
-						G_IO_ERROR_INVALID_DATA,
-						"board ID mismatch");
-			return FALSE;
-		}
+	if (tmp != synapticsmst_device_get_board_id (device) && !install_force) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "board ID mismatch");
+		return FALSE;
 	}
+
 	/* open device */
 	if (!synapticsmst_device_open (device, error)) {
 		g_prefix_error (error,

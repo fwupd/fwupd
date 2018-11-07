@@ -2236,6 +2236,21 @@ fu_engine_get_details (FuEngine *self, gint fd, GError **error)
 	return g_steal_pointer (&details);
 }
 
+static gint
+fu_engine_sort_devices_by_priority (gconstpointer a, gconstpointer b)
+{
+	FuDevice *dev_a = *((FuDevice **) a);
+	FuDevice *dev_b = *((FuDevice **) b);
+	gint prio_a = fu_device_get_priority (dev_a);
+	gint prio_b = fu_device_get_priority (dev_b);
+
+	if (prio_a > prio_b)
+		return -1;
+	if (prio_a < prio_b)
+		return 1;
+	return 0;
+}
+
 /**
  * fu_engine_get_devices:
  * @self: A #FuEngine
@@ -2261,6 +2276,7 @@ fu_engine_get_devices (FuEngine *self, GError **error)
 				     "No detected devices");
 		return NULL;
 	}
+	g_ptr_array_sort (devices, fu_engine_sort_devices_by_priority);
 	return g_steal_pointer (&devices);
 }
 
@@ -2905,7 +2921,16 @@ fu_engine_plugin_device_added_cb (FuPlugin *plugin,
 				  gpointer user_data)
 {
 	FuEngine *self = (FuEngine *) user_data;
-	fu_device_set_priority (device, fu_plugin_get_priority (plugin));
+	gint priority = fu_plugin_get_priority (plugin);
+	GPtrArray *children = fu_device_get_children (device);
+	/* set the priority to 1 greater than biggest child */
+	for (guint i = 0; i < children->len; i++) {
+		FuDevice *child = g_ptr_array_index (children, i);
+		gint child_priority = fu_device_get_priority (child);
+		if (child_priority >= priority)
+			priority = child_priority + 1;
+	}
+	fu_device_set_priority (device, priority);
 	fu_engine_add_device (self, device);
 }
 
