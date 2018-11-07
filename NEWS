@@ -1,3 +1,15 @@
+Version 1.1.4
+~~~~~~~~~~~~~
+Released: 2018-11-07
+
+New Features:
+ - Stop any running daemon over dbus before loading engine (Mario Limonciello)
+
+Bugfixes:
+ - Use HTTPS_PROXY if set (Richard Hughes)
+ - Make the dell-dock plugin more robust in several ways (Mario Limonciello)
+ - Adjust EVB board handling (Mario Limonciello, RyanChang)
+
 Version 1.1.3
 ~~~~~~~~~~~~~
 Released: 2018-10-12

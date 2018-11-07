@@ -11,16 +11,6 @@ Released: 2018-xx-xx
 New Features:
 Bugfixes:
 
-Update translations:
-
-ninja-build fwupd-pot
-tx push --source
-tx pull --all --force --minimum-perc=5
-for f in ../po/*.po; do
-msgattrib --no-location --translated --no-wrap --sort-output $f --output-file=$f
-done
-git add ../po/*.po
-
 2. Commit changes to git:
 
 # MAKE SURE THESE ARE CORRECT
