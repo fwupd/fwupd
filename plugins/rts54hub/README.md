@@ -10,3 +10,11 @@ device using the HID update protocol.
 
 Other devices connected to the RTS54xx using I2C will be supported soon.
 
+GUID Generation
+---------------
+
+These devices use the standard USB DeviceInstanceId values, e.g.
+
+ * `USB\VID_0BDA&PID_5423&REV_0001`
+ * `USB\VID_0BDA&PID_5423`
+ * `USB\VID_0BDA`

@@ -15,3 +15,12 @@ Wacom devices are actually composite devices, with the main ARM CPU being
 programmed using a more complicated erase, write, verify algorithm based
 on a historical update protocol. The "sub-module" devices use a newer protocol,
 again based on HID, but are handled differently depending on thier type.
+
+GUID Generation
+---------------
+
+These devices use the standard USB DeviceInstanceId values, e.g.
+
+ * `USB\VID_056A&PID_0378&REV_0001`
+ * `USB\VID_056A&PID_0378`
+ * `USB\VID_056A`

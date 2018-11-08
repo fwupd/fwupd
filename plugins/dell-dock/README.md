@@ -4,6 +4,18 @@ Dell USB-C Dock
 ### Dell System
 Unlike previous Dell USB-C devices, a Dell system is not needed for updating.
 
+GUID Generation
+---------------
+
+These devices use several different generation schemes, e.g.
+
+ * USB Hub1: `USB\VID_413C&PID_B06F&hub`
+ * USB Hub2: `USB\VID_413C&PID_B06E&hub`
+ * Embedded Controller: `USB\VID_413C&PID_B06E&hub&embedded`
+ * Update Level: `USB\VID_413C&PID_B06E&hub&status`
+ * MST Hub: `MST-panamera-vmm5331-259`
+ * Thunderbolt Controller: `TBT-00d4b070`
+
 ### Components
 The device contains components the following directly updatable components:
 * USB hubs
