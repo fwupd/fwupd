@@ -3,6 +3,16 @@
 This plugin supports querying and flashing Synaptics MST hubs used in Dell systems
 and docks.
 
+GUID Generation
+---------------
+
+These devices use custom GUID values, e.g.
+
+ * `MST-$(device_kind)-$(chip-ID)-$(board-ID)`
+
+Please refer to the plugin source for more details about how the GUID is
+constructed for specific hardware.
+
 ## Requirements
 ### (Kernel) DP Aux Interface
 Kernel 4.6 introduced an DRM DP Aux interface for manipulation of the registers

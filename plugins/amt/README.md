@@ -15,3 +15,8 @@ which can be found here: https://github.com/mjg59/mei-amt-check
 
 That tool in turn is heavily based on mei-amt-version from samples/mei in the
 Linux source tree and copyright Intel Corporation.
+
+GUID Generation
+---------------
+
+These devices use the existing GUID provided by the AMT host interface.

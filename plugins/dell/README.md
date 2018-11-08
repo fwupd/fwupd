@@ -6,6 +6,16 @@ Introduction
 
 This allows installing Dell capsules that are not part of the ESRT table.
 
+GUID Generation
+---------------
+
+These devices uses custom GUIDs for Dell-specific hardware.
+
+ * Thunderbolt devices: `TBT-0x00d4u$(system-id)`
+ * TPM devices `$(system-id)-$(mode)`, where `mode` is either `2.0` or `1.2`
+
+In both cases the `system-id` is derived from the SMBIOS Product SKU property.
+
 Build Requirements
 ------------------
 

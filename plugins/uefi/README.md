@@ -11,6 +11,15 @@ With the UpdateCapsule boot service it can be used to update system firmware.
 If you don't want or need this functionality you can use the
 `-Dplugin_uefi=false` option.
 
+GUID Generation
+---------------
+
+These devices use the UEFI GUID as provided in the ESRT. Additionally, for the
+system device the `main-system-firmware` GUID is also added.
+
+For compatibility with Windows 10, the plugin also adds GUIDs of the form
+`UEFI\RES_{$(esrt)}`.
+
 UEFI Unlock Support
 -------------------
 

@@ -10,6 +10,12 @@ simple and secure management of modern scalable platform hardware.
 By specifying a RESTful interface and utilizing JSON and OData, Redfish helps
 customers integrate solutions within their existing tool chains.
 
+GUID Generation
+---------------
+
+These devices use the provided GUID provided in the `SoftwareId` parameter
+without modification. Devices without GUIDs are not supported.
+
 Setting Service IP Manually
 ---------------------------
 

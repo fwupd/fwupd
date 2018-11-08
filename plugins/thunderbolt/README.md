@@ -9,6 +9,18 @@ allows the connection of external peripherals to a computer.
 Versions 1 and 2 use the same connector as Mini DisplayPort (MDP), whereas
 version 3 uses USB Type-C.
 
+GUID Generation
+---------------
+
+These devices use a custom GUID generation scheme.
+When the device is in "safe mode" the GUID is hardcoded using:
+
+ * `TBT-safemode`
+
+... and when in runtime mode the GUID is:
+
+ * `TBT-$(vid)$(pid)-native` when native, and `TBT-$(vid)$(pid)` otherwise.
+
 Runtime Power Management
 ------------------------
 
