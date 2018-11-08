@@ -25,15 +25,11 @@ def prepare (target):
 
     #update to build from master
     data["branch"] = "master"
-    has_libxmlb = False
     for index in range(0, num_modules):
         module = data['modules'][index]
         if type (module) != dict or not 'name' in module:
             continue
         name = module['name']
-        if 'libxmlb' in name:
-            has_libxmlb = True
-            continue
         if not 'fwupd' in name:
             continue
         data['modules'][index]['sources'][0].pop ('url')
@@ -41,27 +37,6 @@ def prepare (target):
         data['modules'][index]['sources'][0]['type'] = 'dir'
         data['modules'][index]['sources'][0]['skip'] = [".git"]
         data['modules'][index]['sources'][0]['path'] = ".."
-
-    #add libxmlb (This should be dropped when new release to flathub)
-    if not has_libxmlb:
-        print ("Adding libxmlb into json")
-        libxmlb = {'name': 'libxmlb',
-                   'buildsystem': 'meson',
-                   'config-opts': [
-                                "-Dintrospection=false",
-                                "-Dgtkdoc=false",
-                                "-Dtests=false",
-                                "--sysconfdir=/app/etc",
-                                "--localstatedir=/var/data"
-                                ],
-                    'cleanup': ['/libexec/xb-tool'],
-                    'sources': [{
-                                "type": "archive",
-                                "url": "https://people.freedesktop.org/~hughsient/releases/libxmlb-0.1.3.tar.xz",
-                                "sha256": "b609a95d078ab956231a43fd082382b386ed2f90e3fe5e8b785c4278a1b4787e"
-                               }]
-                    }
-        data['modules'].insert(num_modules-1, libxmlb)
 
     #write json
     os.mkdir('build')
