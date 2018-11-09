@@ -1526,6 +1526,7 @@ fu_engine_install_blob (FuEngine *self,
 
 	/* do the update */
 	if (!fu_plugin_runner_update_detach (plugin, device, &error_local)) {
+		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
 		fu_device_set_update_error (device, error_local->message);
 		if ((flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0 &&
 		    !fu_history_modify_device (self->history, device,
@@ -1561,6 +1562,7 @@ fu_engine_install_blob (FuEngine *self,
 		g_autoptr(GError) error_attach = NULL;
 
 		/* save to database */
+		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
 		fu_device_set_update_error (device, error_local->message);
 		if ((flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0 &&
 		    !fu_history_modify_device (self->history, device,
@@ -1609,6 +1611,7 @@ fu_engine_install_blob (FuEngine *self,
 		return FALSE;
 	}
 	if (!fu_plugin_runner_update_attach (plugin, device, &error_local)) {
+		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
 		fu_device_set_update_error (device, error_local->message);
 		if ((flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0 &&
 		    !fu_history_modify_device (self->history, device,
@@ -1675,6 +1678,7 @@ fu_engine_install_blob (FuEngine *self,
 	if (version != NULL &&
 	    g_strcmp0 (version_orig, version) != 0 &&
 	    g_strcmp0 (version_orig, fu_device_get_version (device)) == 0) {
+		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
 		fu_device_set_update_error (device, "device version not updated on success");
 		if ((flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0 &&
 		    !fu_history_modify_device (self->history, device,
@@ -1694,12 +1698,12 @@ fu_engine_install_blob (FuEngine *self,
 	}
 
 	/* success */
+	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
 	if ((flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0 &&
 	    !fu_history_modify_device (self->history, device,
 				       FU_HISTORY_FLAGS_MATCH_NEW_VERSION,
 				       error))
 		return FALSE;
-	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
 	return TRUE;
 }
 
