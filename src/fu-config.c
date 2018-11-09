@@ -139,7 +139,7 @@ fu_config_get_remote_agreement_for_app (FwupdRemote *self, XbNode *component, GE
 	g_autoptr(GError) error_local = NULL;
 
 	/* manually find the first agreement section */
-	n = xb_node_query_first (component, "agreement/agreement_section/description", &error_local);
+	n = xb_node_query_first (component, "agreement/agreement_section/description/*", &error_local);
 	if (n == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -148,7 +148,7 @@ fu_config_get_remote_agreement_for_app (FwupdRemote *self, XbNode *component, GE
 			     error_local->message);
 		return NULL;
 	}
-	tmp = xb_node_export (n, XB_NODE_EXPORT_FLAG_NONE, error);
+	tmp = xb_node_export (n, XB_NODE_EXPORT_FLAG_INCLUDE_SIBLINGS, error);
 	if (tmp == NULL)
 		return NULL;
 	return g_string_new (tmp);
@@ -207,7 +207,7 @@ fu_config_add_remotes_for_path (FuConfig *self, const gchar *path, GError **erro
 			g_autoptr(XbNode) component = NULL;
 			g_autofree gchar *xpath = NULL;
 
-			xpath = g_strdup_printf ("components/component/id[text()='%s']/..", component_id);
+			xpath = g_strdup_printf ("component/id[text()='%s']/..", component_id);
 			component = xb_silo_query_first (self->silo, xpath, NULL);
 			if (component != NULL) {
 				agreement_markup = fu_config_get_remote_agreement_for_app (remote, component, error);
