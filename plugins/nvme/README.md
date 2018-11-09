@@ -26,3 +26,11 @@ added:
  * `STORAGE-DELL-${component-id}`
 
 and any optional GUID saved in the vendor extension block.
+
+Quirk use
+---------
+This plugin uses the following plugin-specific quirks:
+
+| Quirk                  | Description                                 | Minimum fwupd version |
+|------------------------|---------------------------------------------|-----------------------|
+| `NvmeBlockSize`        | The block size used for NVMe writes         | 1.1.3                 |
