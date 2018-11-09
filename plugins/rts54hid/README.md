@@ -23,3 +23,12 @@ Child I²C devices are created using the device number as a suffix, for instance
 
  * `USB\VID_0BDA&PID_1100&I2C_01`
 
+Quirk use
+---------
+This plugin uses the following plugin-specific quirks:
+
+| Quirk                  | Description                                 | Minimum fwupd version |
+|------------------------|---------------------------------------------|-----------------------|
+| `Rts54SlaveAddr`       | The slave address of a child module.        | 1.1.3                 |
+| `Rts54I2cSpeed`        | The I2C speed to operate at (0, 1, 2).      | 1.1.3                 |
+| `Rts54RegisterAddrLen` | The I2C register address length of commands | 1.1.3                 |
