@@ -293,7 +293,7 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 		fwupd_release_set_version (rel, version_rel);
 
 	/* find the remote */
-	remote_id = xb_node_query_text (component, "../custom/fwupd::RemoteId", NULL);
+	remote_id = xb_node_query_text (component, "../custom/value[@key='fwupd::RemoteId']", NULL);
 	if (remote_id != NULL) {
 		fwupd_release_set_remote_id (rel, remote_id);
 		remote = fu_config_get_remote_by_id (self->config, remote_id);
@@ -341,10 +341,9 @@ fu_engine_get_remote_id_for_checksum (FuEngine *self, const gchar *csum)
 {
 	g_autofree gchar *xpath = NULL;
 	g_autoptr(XbNode) key = NULL;
-	xpath = g_build_filename ("components", "component", "releases", "release",
-				  "checksum[@target='container']", "..", "..",
-				  "..", "..", "custom", "fwupd::RemoteId", NULL);
-
+	xpath = g_strdup_printf ("components/component/releases/release/"
+				 "checksum[@target='container'][text()='%s']/../../"
+				 "../../custom/value[@key='fwupd::RemoteId']", csum);
 	key = xb_silo_query_first (self->silo, xpath, NULL);
 	if (key == NULL)
 		return NULL;
@@ -1810,13 +1809,6 @@ fu_engine_load_metadata_store (FuEngine *self, GError **error)
 		}
 
 		/* save the remote-id in the custom metadata space */
-		custom = xb_builder_node_new ("custom");
-		xb_builder_node_insert_text (custom,
-					     "fwupd::FilenameCache", path,
-					     NULL);
-		xb_builder_node_insert_text (custom,
-					     "fwupd::RemoteId", fwupd_remote_get_id (remote),
-					     NULL);
 		file = g_file_new_for_path (path);
 		if (!xb_builder_source_load_file (source, file,
 						  XB_BUILDER_SOURCE_FLAG_NONE,
@@ -1826,6 +1818,18 @@ fu_engine_load_metadata_store (FuEngine *self, GError **error)
 				   error_local->message);
 			continue;
 		}
+
+		/* add metadata */
+		custom = xb_builder_node_new ("custom");
+		xb_builder_node_insert_text (custom,
+					     "value", path,
+					     "key", "fwupd::FilenameCache",
+					     NULL);
+		xb_builder_node_insert_text (custom,
+					     "value", fwupd_remote_get_id (remote),
+					     "key", "fwupd::RemoteId",
+					     NULL);
+		xb_builder_source_set_info (source, custom);
 
 		/* we need to watch for changes? */
 		xb_builder_import_source (builder, source);
