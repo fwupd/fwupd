@@ -449,6 +449,7 @@ fu_config_load_metainfos (XbBuilder *builder, GError **error)
 gboolean
 fu_config_load (FuConfig *self, GError **error)
 {
+	const gchar *const *locales = g_get_language_names ();
 	g_autofree gchar *configdir = NULL;
 	g_autofree gchar *config_file = NULL;
 	g_autofree gchar *cachedirpkg = NULL;
@@ -475,11 +476,16 @@ fu_config_load (FuConfig *self, GError **error)
 	if (!fu_config_load_metainfos (builder, error))
 		return FALSE;
 
+	/* add the locales, which is really only going to be 'C' or 'en' */
+	for (guint i = 0; locales[i] != NULL; i++)
+		xb_builder_add_locale (builder, locales[i]);
+
 	/* build the metainfo silo */
 	cachedirpkg = fu_common_get_path (FU_PATH_KIND_CACHEDIR_PKG);
 	xmlbfn = g_build_filename (cachedirpkg, "metainfo.xmlb", NULL);
 	xmlb = g_file_new_for_path (xmlbfn);
 	self->silo = xb_builder_ensure (builder, xmlb,
+					XB_BUILDER_COMPILE_FLAG_SINGLE_LANG |
 					XB_BUILDER_COMPILE_FLAG_IGNORE_INVALID,
 					NULL, error);
 	if (self->silo == NULL)
