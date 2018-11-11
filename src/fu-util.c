@@ -1703,6 +1703,45 @@ fu_util_perhaps_refresh_remotes (FuUtilPrivate *priv, GError **error)
 	return fu_util_download_metadata (priv, error);
 }
 
+static gchar *
+fu_util_time_to_str (guint64 tmp)
+{
+	g_return_val_if_fail (tmp != 0, FALSE);
+
+	/* seconds */
+	if (tmp < 60) {
+		/* TRANSLATORS: duration in seconds */
+		return g_strdup_printf (ngettext ("%u second", "%u seconds",
+						  (gint) tmp),
+					(guint) tmp);
+	}
+
+	/* minutes */
+	tmp /= 60;
+	if (tmp < 60) {
+		/* TRANSLATORS: duration in minutes */
+		return g_strdup_printf (ngettext ("%u minute", "%u minutes",
+						  (gint) tmp),
+					(guint) tmp);
+	}
+
+	/* hours */
+	tmp /= 60;
+	if (tmp < 60) {
+		/* TRANSLATORS: duration in minutes */
+		return g_strdup_printf (ngettext ("%u hour", "%u hours",
+						  (gint) tmp),
+					(guint) tmp);
+	}
+
+	/* days */
+	tmp /= 24;
+	/* TRANSLATORS: duration in days! */
+	return g_strdup_printf (ngettext ("%u day", "%u days",
+					  (gint) tmp),
+				(guint) tmp);
+}
+
 static gboolean
 fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 {
@@ -1750,6 +1789,7 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		/* print all releases */
 		for (guint j = 0; j < rels->len; j++) {
 			FwupdRelease *rel = g_ptr_array_index (rels, j);
+			guint64 duration;
 			GPtrArray *checksums;
 
 			/* TRANSLATORS: Appstream ID for the hardware type */
@@ -1768,6 +1808,15 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 			/* TRANSLATORS: section header for remote ID, e.g. lvfs-testing */
 			fu_util_print_data (_("Update Remote ID"),
 					    fwupd_release_get_remote_id (rel));
+
+			/* optional approximate duration */
+			duration = fwupd_release_get_install_duration (rel);
+			if (duration > 0) {
+				g_autofree gchar *str = fu_util_time_to_str (duration);
+				/* TRANSLATORS: section header for the amount
+				 * of time it takes to install the update */
+				fu_util_print_data (_("Update Duration"), str);
+			}
 
 			checksums = fwupd_release_get_checksums (rel);
 			for (guint k = 0; k < checksums->len; k++) {

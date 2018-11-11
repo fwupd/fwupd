@@ -279,3 +279,10 @@ LIBFWUPD_1.1.3 {
     fwupd_device_set_install_duration;
   local: *;
 } LIBFWUPD_1.1.2;
+
+LIBFWUPD_1.2.1 {
+  global:
+    fwupd_release_get_install_duration;
+    fwupd_release_set_install_duration;
+  local: *;
+} LIBFWUPD_1.1.3;

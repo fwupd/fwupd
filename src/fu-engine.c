@@ -332,6 +332,9 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 			fwupd_release_set_size (rel, *sizeptr);
 		}
 	}
+	tmp64 = xb_node_get_attr_as_uint (release, "install_duration");
+	if (tmp64 != 0)
+		fwupd_release_set_install_duration (rel, tmp64);
 }
 
 /* finds the remote-id for the first firmware in the silo that matches this
@@ -2092,7 +2095,7 @@ fu_engine_get_silo_from_blob (FuEngine *self, GBytes *blob_cab, GError **error)
 }
 
 static FwupdDevice *
-fu_engine_get_result_from_app (FuEngine *self, XbNode *component, GError **error)
+fu_engine_get_result_from_component (FuEngine *self, XbNode *component, GError **error)
 {
 	FwupdTrustFlags trust_flags = FWUPD_TRUST_FLAG_NONE;
 	g_autoptr(FuInstallTask) task = NULL;
@@ -2247,7 +2250,7 @@ fu_engine_get_details (FuEngine *self, gint fd, GError **error)
 	for (guint i = 0; i < components->len; i++) {
 		XbNode *component = g_ptr_array_index (components, i);
 		FwupdDevice *dev;
-		dev = fu_engine_get_result_from_app (self, component, error);
+		dev = fu_engine_get_result_from_component (self, component, error);
 		if (dev == NULL)
 			return NULL;
 		if (remote_id != NULL) {
@@ -2451,6 +2454,10 @@ fu_engine_add_releases_for_device_component (FuEngine *self,
 
 		/* create new FwupdRelease for the XbNode */
 		fu_engine_set_release_from_appstream (self, rel, component, release);
+
+		/* fall back to quirk-provided value */
+		if (fwupd_release_get_install_duration (rel) == 0)
+			fwupd_release_set_install_duration (rel, fu_device_get_install_duration (device));
 
 		/* invalid */
 		if (fwupd_release_get_uri (rel) == NULL)

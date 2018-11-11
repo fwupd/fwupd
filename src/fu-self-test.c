@@ -685,6 +685,74 @@ fu_engine_downgrade_func (void)
 }
 
 static void
+fu_engine_install_duration_func (void)
+{
+	FwupdRelease *rel;
+	gboolean ret;
+	g_autofree gchar *testdatadir = NULL;
+	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GPtrArray) releases = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new ();
+
+	/* ensure empty tree */
+	fu_self_test_mkroot ();
+
+	/* no metadata in daemon */
+	fu_engine_set_silo (engine, silo_empty);
+
+	/* write the main file */
+	ret = g_file_set_contents ("/tmp/fwupd-self-test/stable.xml",
+				   "<components>"
+				   "  <component type=\"firmware\">"
+				   "    <id>test</id>"
+				   "    <provides>"
+				   "      <firmware type=\"flashed\">aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee</firmware>"
+				   "    </provides>"
+				   "    <releases>"
+				   "      <release version=\"1.2.3\" date=\"2017-09-15\" install_duration=\"120\">"
+				   "        <location>https://test.org/foo.cab</location>"
+				   "        <checksum filename=\"foo.cab\" target=\"container\" type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
+				   "        <checksum filename=\"firmware.bin\" target=\"content\" type=\"md5\">deadbeefdeadbeefdeadbeefdeadbeef</checksum>"
+				   "      </release>"
+				   "    </releases>"
+				   "  </component>"
+				   "</components>", -1, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	testdatadir = fu_test_get_filename (TESTDATADIR, ".");
+	g_assert (testdatadir != NULL);
+	g_setenv ("FU_SELF_TEST_REMOTES_DIR", testdatadir, TRUE);
+	ret = fu_engine_load (engine, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* add a device so we can get the install duration */
+	fu_device_set_version (device, "1.2.3");
+	fu_device_set_id (device, "test_device");
+	fu_device_add_guid (device, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
+	fu_device_set_install_duration (device, 999);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_engine_add_device (engine, device);
+	devices = fu_engine_get_devices (engine, &error);
+	g_assert_no_error (error);
+	g_assert (devices != NULL);
+	g_assert_cmpint (devices->len, ==, 1);
+	g_assert (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_SUPPORTED));
+
+	/* check the release install duration */
+	releases = fu_engine_get_releases (engine, fu_device_get_id (device), &error);
+	g_assert_no_error (error);
+	g_assert (releases != NULL);
+	g_assert_cmpint (releases->len, ==, 1);
+	rel = FWUPD_RELEASE (g_ptr_array_index (releases, 0));
+	g_assert_cmpint (fwupd_release_get_install_duration (rel), ==, 120);
+}
+
+static void
 fu_engine_history_func (void)
 {
 	gboolean ret;
@@ -3129,6 +3197,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/engine{requirements-device}", fu_engine_requirements_device_func);
 	g_test_add_func ("/fwupd/engine{device-auto-parent}", fu_engine_device_parent_func);
 	g_test_add_func ("/fwupd/engine{device-priority}", fu_engine_device_priority_func);
+	g_test_add_func ("/fwupd/engine{install-duration}", fu_engine_install_duration_func);
 	g_test_add_func ("/fwupd/hwids", fu_hwids_func);
 	g_test_add_func ("/fwupd/smbios", fu_smbios_func);
 	g_test_add_func ("/fwupd/smbios3", fu_smbios3_func);
