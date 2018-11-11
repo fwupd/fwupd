@@ -43,6 +43,7 @@ typedef struct {
 	gchar				*version;
 	gchar				*remote_id;
 	guint64				 size;
+	guint32				 install_duration;
 	FwupdTrustFlags			 trust_flags;
 } FwupdReleasePrivate;
 
@@ -641,6 +642,41 @@ fwupd_release_set_trust_flags (FwupdRelease *release, FwupdTrustFlags trust_flag
 	priv->trust_flags = trust_flags;
 }
 
+/**
+ * fwupd_release_get_install_duration:
+ * @release: A #FwupdRelease
+ *
+ * Gets the time estimate for firmware installation (in seconds)
+ *
+ * Returns: the estimated time to flash this release (or 0 if unset)
+ *
+ * Since: 1.2.1
+ **/
+guint32
+fwupd_release_get_install_duration (FwupdRelease *release)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_val_if_fail (FWUPD_IS_RELEASE (release), 0);
+	return priv->install_duration;
+}
+
+/**
+ * fwupd_release_set_install_duration:
+ * @release: A #FwupdRelease
+ * @duration: The amount of time
+ *
+ * Sets the time estimate for firmware installation (in seconds)
+ *
+ * Since: 1.2.1
+ **/
+void
+fwupd_release_set_install_duration (FwupdRelease *release, guint32 duration)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_if_fail (FWUPD_IS_RELEASE (release));
+	priv->install_duration = duration;
+}
+
 static GVariant *
 _hash_kv_to_variant (GHashTable *hash)
 {
@@ -770,6 +806,11 @@ fwupd_release_to_variant (FwupdRelease *release)
 				       FWUPD_RESULT_KEY_METADATA,
 				       _hash_kv_to_variant (priv->metadata));
 	}
+	if (priv->install_duration > 0) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_INSTALL_DURATION,
+				       g_variant_new_uint32 (priv->install_duration));
+	}
 	return g_variant_new ("a{sv}", &builder);
 }
 
@@ -836,6 +877,10 @@ fwupd_release_from_key_value (FwupdRelease *release, const gchar *key, GVariant 
 		fwupd_release_set_trust_flags (release, g_variant_get_uint64 (value));
 		return;
 	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_INSTALL_DURATION) == 0) {
+		fwupd_release_set_install_duration (release, g_variant_get_uint32 (value));
+		return;
+	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_METADATA) == 0) {
 		g_hash_table_unref (priv->metadata);
 		priv->metadata = _variant_to_hash_kv (value);
@@ -885,6 +930,18 @@ fwupd_pad_kv_tfl (GString *str, const gchar *key, FwupdTrustFlags trust_flags)
 	fwupd_pad_kv_str (str, key, tmp->str);
 }
 
+static void
+fwupd_pad_kv_int (GString *str, const gchar *key, guint32 value)
+{
+	g_autofree gchar *tmp = NULL;
+
+	/* ignore */
+	if (value == 0)
+		return;
+	tmp = g_strdup_printf("%" G_GUINT32_FORMAT, value);
+	fwupd_pad_kv_str (str, key, tmp);
+}
+
 /**
  * fwupd_release_to_string:
  * @release: A #FwupdRelease
@@ -922,6 +979,7 @@ fwupd_release_to_string (FwupdRelease *release)
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_HOMEPAGE, priv->homepage);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
 	fwupd_pad_kv_tfl (str, FWUPD_RESULT_KEY_TRUST_FLAGS, priv->trust_flags);
+	fwupd_pad_kv_int (str, FWUPD_RESULT_KEY_INSTALL_DURATION, priv->install_duration);
 
 	/* metadata */
 	keys = g_hash_table_get_keys (priv->metadata);

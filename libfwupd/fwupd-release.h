@@ -84,6 +84,9 @@ void		 fwupd_release_set_license		(FwupdRelease	*release,
 FwupdTrustFlags	 fwupd_release_get_trust_flags		(FwupdRelease	*release);
 void		 fwupd_release_set_trust_flags		(FwupdRelease	*release,
 							 FwupdTrustFlags trust_flags);
+guint32		 fwupd_release_get_install_duration	(FwupdRelease	*release);
+void		 fwupd_release_set_install_duration	(FwupdRelease	*release,
+							 guint32	 duration);
 
 G_END_DECLS
 
