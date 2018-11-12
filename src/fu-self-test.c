@@ -42,6 +42,17 @@
 #endif
 
 static void
+fu_self_test_mkroot (void)
+{
+	if (g_file_test ("/tmp/fwupd-self-test", G_FILE_TEST_EXISTS)) {
+		g_autoptr(GError) error = NULL;
+		if (!fu_common_rmtree ("/tmp/fwupd-self-test", &error))
+			g_warning ("failed to mkroot: %s", error->message);
+	}
+	g_assert_cmpint (g_mkdir_with_parents ("/tmp/fwupd-self-test/var/lib/fwupd", 0755), ==, 0);
+}
+
+static void
 fu_engine_requirements_missing_func (void)
 {
 	gboolean ret;
@@ -539,6 +550,9 @@ fu_engine_downgrade_func (void)
 	g_autoptr(GPtrArray) remotes = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new ();
 
+	/* ensure empty tree */
+	fu_self_test_mkroot ();
+
 	/* no metadata in daemon */
 	fu_engine_set_silo (engine, silo_empty);
 
@@ -694,8 +708,8 @@ fu_engine_history_func (void)
 	g_autoptr(XbSilo) silo_empty = xb_silo_new ();
 	g_autoptr(XbSilo) silo = NULL;
 
-	/* ensure the history database is fresh */
-	g_unlink ("/tmp/fwupd-self-test/var/lib/fwupd/pending.db");
+	/* ensure empty tree */
+	fu_self_test_mkroot ();
 
 	/* no metadata in daemon */
 	fu_engine_set_silo (engine, silo_empty);
@@ -3084,8 +3098,8 @@ main (int argc, char **argv)
 	g_setenv ("FWUPD_SYSFSFWDIR", TESTDATADIR_SRC, TRUE);
 	g_setenv ("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 
-	fu_common_rmtree ("/tmp/fwupd-self-test", NULL);
-	g_assert_cmpint (g_mkdir_with_parents ("/tmp/fwupd-self-test/var/lib/fwupd", 0755), ==, 0);
+	/* ensure empty tree */
+	fu_self_test_mkroot ();
 
 	/* tests go here */
 	if (g_test_slow ())
