@@ -14,6 +14,7 @@
 #include <fu-debug.h>
 
 typedef struct {
+	GOptionGroup	*group;
 	gboolean	 verbose;
 	gboolean	 console;
 	gchar		**plugin_verbose;
@@ -23,6 +24,8 @@ typedef struct {
 static void
 fu_debug_free (FuDebug *self)
 {
+	g_option_group_set_parse_hooks (self->group, NULL, NULL);
+	g_option_group_unref (self->group);
 	g_strfreev (self->plugin_verbose);
 	g_strfreev (self->daemon_verbose);
 	g_free (self);
@@ -174,19 +177,19 @@ fu_debug_post_parse_hook (GOptionContext *context,
 	return TRUE;
 }
 
+/*(transfer): full */
 GOptionGroup *
 fu_debug_get_option_group (void)
 {
-	GOptionGroup *group;
 	FuDebug *self = g_new0 (FuDebug, 1);
-	group = g_option_group_new ("debug",
-				    /* TRANSLATORS: for the --verbose arg */
-				    _("Debugging Options"),
-				    /* TRANSLATORS: for the --verbose arg */
-				    _("Show debugging options"),
-				    self, (GDestroyNotify) fu_debug_free);
-	g_option_group_set_parse_hooks (group,
+	self->group = g_option_group_new ("debug",
+					  /* TRANSLATORS: for the --verbose arg */
+					  _("Debugging Options"),
+					  /* TRANSLATORS: for the --verbose arg */
+					  _("Show debugging options"),
+					  self, (GDestroyNotify) fu_debug_free);
+	g_option_group_set_parse_hooks (self->group,
 					fu_debug_pre_parse_hook,
 					fu_debug_post_parse_hook);
-	return group;
+	return g_option_group_ref (self->group);
 }
