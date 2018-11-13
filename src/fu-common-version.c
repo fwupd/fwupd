@@ -202,6 +202,17 @@ fu_common_vercmp_chunk (const gchar *str1, const gchar *str2)
 	return fu_common_vercmp_char (str1[i], str2[i]);
 }
 
+static gboolean
+_g_ascii_is_digits (const gchar *str)
+{
+	g_return_val_if_fail (str != NULL, FALSE);
+	for (gsize i = 0; str[i] != '\0'; i++) {
+		if (!g_ascii_isdigit (str[i]))
+			return FALSE;
+	}
+	return TRUE;
+}
+
 /**
  * fu_common_version_parse:
  * @version: A version number
@@ -228,7 +239,6 @@ fu_common_version_parse (const gchar *version)
 	gchar *endptr = NULL;
 	guint64 tmp;
 	guint base;
-	guint i;
 
 	/* already dotted decimal */
 	if (g_strstr_len (version, -1, ".") != NULL)
@@ -245,10 +255,8 @@ fu_common_version_parse (const gchar *version)
 		base = 16;
 	} else {
 		/* for non-numeric content, just return the string */
-		for (i = 0; version[i] != '\0'; i++) {
-			if (!g_ascii_isdigit (version[i]))
-				return g_strdup (version);
-		}
+		if (!_g_ascii_is_digits (version))
+			return g_strdup (version);
 		base = 10;
 	}
 
@@ -259,6 +267,56 @@ fu_common_version_parse (const gchar *version)
 	if (tmp == 0)
 		return g_strdup (version);
 	return fu_common_version_from_uint32 ((guint32) tmp, FU_VERSION_FORMAT_TRIPLET);
+}
+
+/**
+ * fu_common_version_guess_format:
+ * @version: A version number, e.g. "1.2.3"
+ *
+ * Guesses the version format from the version number. This is only a heuristic
+ * and plugins and components should explicitly set the version format whenever
+ * possible.
+ *
+ * If the version format cannot be guessed with any degree of accuracy, the
+ * %FU_VERSION_FORMAT_UNKNOWN constant is returned.
+ *
+ * Returns: A #FuVersionFormat, e.g. %FU_VERSION_FORMAT_QUAD
+ *
+ * Since: 1.2.0
+ */
+FuVersionFormat
+fu_common_version_guess_format (const gchar *version)
+{
+	guint sz;
+	g_auto(GStrv) split = NULL;
+
+	/* nothing to use */
+	if (version == NULL || version[0] == '\0')
+		return FU_VERSION_FORMAT_UNKNOWN;
+
+	/* no dots, assume just text */
+	split = g_strsplit (version, ".", -1);
+	sz = g_strv_length (split);
+	if (sz == 1)
+		return FU_VERSION_FORMAT_PLAIN;
+
+	/* check for only-digit semver version */
+	for (guint i = 0; split[i] != NULL; i++) {
+		/* check sections are plain numbers */
+		if (!_g_ascii_is_digits (split[i]))
+			return FU_VERSION_FORMAT_UNKNOWN;
+	}
+
+	/* the most common formats */
+	if (sz == 2)
+		return FU_VERSION_FORMAT_PAIR;
+	if (sz == 3)
+		return FU_VERSION_FORMAT_TRIPLET;
+	if (sz == 4)
+		return FU_VERSION_FORMAT_QUAD;
+
+	/* unknown! */
+	return FU_VERSION_FORMAT_UNKNOWN;
 }
 
 /**

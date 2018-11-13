@@ -53,6 +53,20 @@ fu_self_test_mkroot (void)
 }
 
 static void
+fu_common_version_guess_format_func (void)
+{
+	g_assert_cmpint (fu_common_version_guess_format (NULL), ==, FU_VERSION_FORMAT_UNKNOWN);
+	g_assert_cmpint (fu_common_version_guess_format (""), ==, FU_VERSION_FORMAT_UNKNOWN);
+	g_assert_cmpint (fu_common_version_guess_format ("1234ac"), ==, FU_VERSION_FORMAT_PLAIN);
+	g_assert_cmpint (fu_common_version_guess_format ("1.2"), ==, FU_VERSION_FORMAT_PAIR);
+	g_assert_cmpint (fu_common_version_guess_format ("1.2.3"), ==, FU_VERSION_FORMAT_TRIPLET);
+	g_assert_cmpint (fu_common_version_guess_format ("1.2.3.4"), ==, FU_VERSION_FORMAT_QUAD);
+	g_assert_cmpint (fu_common_version_guess_format ("1.2.3.4.5"), ==, FU_VERSION_FORMAT_UNKNOWN);
+	g_assert_cmpint (fu_common_version_guess_format ("1a.2b.3"), ==, FU_VERSION_FORMAT_UNKNOWN);
+	g_assert_cmpint (fu_common_version_guess_format ("1"), ==, FU_VERSION_FORMAT_PLAIN);
+}
+
+static void
 fu_engine_requirements_missing_func (void)
 {
 	gboolean ret;
@@ -857,7 +871,8 @@ fu_engine_history_func (void)
 		"  [Release]\n"
 		"  Version:              1.2.3\n"
 		"  Checksum:             SHA1(%s)\n"
-		"  TrustFlags:           none\n",
+		"  TrustFlags:           none\n"
+		"  VersionFormat:        triplet\n",
 		checksum);
 	ret = fu_test_compare_lines (device_str, device_str_expected, &error);
 	g_assert_no_error (error);
@@ -986,7 +1001,8 @@ fu_engine_history_error_func (void)
 		"  [Release]\n"
 		"  Version:              1.2.3\n"
 		"  Checksum:             SHA1(%s)\n"
-		"  TrustFlags:           none\n",
+		"  TrustFlags:           none\n"
+		"  VersionFormat:        triplet\n",
 		checksum);
 	ret = fu_test_compare_lines (device_str, device_str_expected, &error);
 	g_assert_no_error (error);
@@ -3214,6 +3230,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/keyring{gpg}", fu_keyring_gpg_func);
 	g_test_add_func ("/fwupd/keyring{pkcs7}", fu_keyring_pkcs7_func);
 	g_test_add_func ("/fwupd/chunk", fu_chunk_func);
+	g_test_add_func ("/fwupd/common{version-guess-format}", fu_common_version_guess_format_func);
 	g_test_add_func ("/fwupd/common{guid}", fu_common_guid_func);
 	g_test_add_func ("/fwupd/common{version}", fu_common_version_func);
 	g_test_add_func ("/fwupd/common{vercmp}", fu_common_vercmp_func);
