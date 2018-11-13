@@ -14,6 +14,7 @@
 
 #include "fu-common.h"
 #include "fu-common-guid.h"
+#include "fu-common-version.h"
 #include "fu-device-private.h"
 #include "fu-mutex.h"
 
@@ -1044,6 +1045,29 @@ fu_device_set_id (FuDevice *self, const gchar *id)
 	id_hash = g_compute_checksum_for_string (G_CHECKSUM_SHA1, id, -1);
 	g_debug ("using %s for %s", id_hash, id);
 	fwupd_device_set_id (FWUPD_DEVICE (self), id_hash);
+}
+
+/**
+ * fu_device_set_version:
+ * @self: A #FuDevice
+ * @version: a string, e.g. `1.2.3`
+ *
+ * Sets the device version, autodetecting the version format if required.
+ *
+ * Since: 1.2.1
+ **/
+void
+fu_device_set_version (FuDevice *self, const gchar *version)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_return_if_fail (version != NULL);
+
+	/* try to autodetect the version-format */
+	if (priv->version_format == FU_VERSION_FORMAT_UNKNOWN)
+		priv->version_format = fu_common_version_guess_format (version);
+	fwupd_device_set_version (FWUPD_DEVICE (self), version);
 }
 
 /**

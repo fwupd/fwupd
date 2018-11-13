@@ -45,5 +45,6 @@ gchar		*fu_common_version_from_uint32	(guint32	 val,
 gchar		*fu_common_version_from_uint16	(guint16	 val,
 						 FuVersionFormat flags);
 gchar		*fu_common_version_parse	(const gchar	*version);
+FuVersionFormat	 fu_common_version_guess_format	(const gchar	*version);
 
 #endif /* __FU_COMMON_VERSION_H__ */
