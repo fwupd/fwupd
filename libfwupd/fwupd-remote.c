@@ -1099,7 +1099,7 @@ fwupd_remote_class_init (FwupdRemoteClass *klass)
 	 * Since: 0.9.3
 	 */
 	pspec = g_param_spec_string ("id", NULL, NULL,
-				     NULL, G_PARAM_READWRITE);
+				     NULL, G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_ID, pspec);
 
 	/**
@@ -1110,7 +1110,7 @@ fwupd_remote_class_init (FwupdRemoteClass *klass)
 	 * Since: 0.9.3
 	 */
 	pspec = g_param_spec_boolean ("enabled", NULL, NULL,
-				      FALSE, G_PARAM_READWRITE);
+				      FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_ENABLED, pspec);
 }
 

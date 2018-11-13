@@ -1595,7 +1595,7 @@ fwupd_client_class_init (FwupdClientClass *klass)
 	 */
 	pspec = g_param_spec_uint ("status", NULL, NULL,
 				   0, FWUPD_STATUS_LAST, FWUPD_STATUS_UNKNOWN,
-				   G_PARAM_READWRITE);
+				   G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_STATUS, pspec);
 
 	/**
@@ -1607,7 +1607,7 @@ fwupd_client_class_init (FwupdClientClass *klass)
 	 */
 	pspec = g_param_spec_uint ("percentage", NULL, NULL,
 				   0, 100, 0,
-				   G_PARAM_READWRITE);
+				   G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_PERCENTAGE, pspec);
 
 	/**
@@ -1618,7 +1618,7 @@ fwupd_client_class_init (FwupdClientClass *klass)
 	 * Since: 0.9.6
 	 */
 	pspec = g_param_spec_string ("daemon-version", NULL, NULL,
-				     NULL, G_PARAM_READABLE);
+				     NULL, G_PARAM_READABLE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_DAEMON_VERSION, pspec);
 }
 
