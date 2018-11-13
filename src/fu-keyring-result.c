@@ -98,11 +98,15 @@ fu_keyring_result_class_init (FuKeyringResultClass *klass)
 
 	pspec = g_param_spec_int64 ("timestamp", NULL, NULL,
 				    0, G_MAXINT64, 0,
-				    G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
+				    G_PARAM_READWRITE |
+				    G_PARAM_CONSTRUCT_ONLY |
+				    G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_TIMESTAMP, pspec);
 
 	pspec = g_param_spec_string ("authority", NULL, NULL, NULL,
-				     G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
+				     G_PARAM_READWRITE |
+				     G_PARAM_CONSTRUCT_ONLY |
+				     G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_AUTHORITY, pspec);
 }
 
