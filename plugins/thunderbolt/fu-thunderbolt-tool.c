@@ -82,7 +82,7 @@ main (int argc, char **argv)
 		controller = g_bytes_new_take (controller_data, controller_len);
 	}
 
-	validation = fu_plugin_thunderbolt_validate_image (controller, image, &error);
+	validation = fu_thunderbolt_image_validate (controller, image, &error);
 	g_assert_no_error (error);
 	g_assert_cmpint (validation, ==, VALIDATION_PASSED);
 
