@@ -642,9 +642,9 @@ compare_pd_existence (guint16 id,
 }
 
 FuPluginValidation
-fu_plugin_thunderbolt_validate_image (GBytes  *controller_fw,
-				      GBytes  *blob_fw,
-				      GError **error)
+fu_thunderbolt_image_validate (GBytes  *controller_fw,
+			       GBytes  *blob_fw,
+			       GError **error)
 {
 	gboolean is_host;
 	guint16 device_id;
@@ -779,9 +779,9 @@ fu_plugin_thunderbolt_validate_image (GBytes  *controller_fw,
 }
 
 gboolean
-fu_plugin_thunderbolt_controller_is_native (GBytes    *controller_fw,
-					    gboolean  *is_native,
-					    GError   **error)
+fu_thunderbolt_image_controller_is_native (GBytes    *controller_fw,
+					   gboolean  *is_native,
+					   GError   **error)
 {
 	guint32 controller_sections[SECTION_COUNT] = { [DIGITAL_SECTION] = 0 };
 	gsize fw_size;

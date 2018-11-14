@@ -207,9 +207,9 @@ fu_plugin_thunderbolt_is_native (GUdevDevice *udevice, gboolean *is_native, GErr
 
 	controller_fw = g_bytes_new_take (content, length);
 
-	return fu_plugin_thunderbolt_controller_is_native (controller_fw,
-							   is_native,
-							   error);
+	return fu_thunderbolt_image_controller_is_native (controller_fw,
+							  is_native,
+							  error);
 }
 
 static void
@@ -436,10 +436,7 @@ fu_plugin_thunderbolt_validate_firmware (GUdevDevice  *udevice,
 		return VALIDATION_FAILED;
 
 	controller_fw = g_bytes_new_take (content, length);
-
-	return fu_plugin_thunderbolt_validate_image (controller_fw,
-						     blob_fw,
-						     error);
+	return fu_thunderbolt_image_validate (controller_fw, blob_fw, error);
 }
 
 static gboolean

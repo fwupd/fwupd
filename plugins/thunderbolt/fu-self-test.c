@@ -1045,40 +1045,40 @@ test_image_validation (ThunderboltTest *tt, gconstpointer user_data)
 	g_assert_nonnull (bad_data);
 
 	/* now for some testing ... this should work */
-	val = fu_plugin_thunderbolt_validate_image (ctl_data, fwi_data, &error);
+	val = fu_thunderbolt_image_validate (ctl_data, fwi_data, &error);
 	g_assert_no_error (error);
 	g_assert_cmpint (val, ==, VALIDATION_PASSED);
 
 
 	/* these all should fail */
 	/*  valid controller, bad update data */
-	val = fu_plugin_thunderbolt_validate_image (ctl_data, ctl_data, &error);
+	val = fu_thunderbolt_image_validate (ctl_data, ctl_data, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_READ);
 	g_assert_cmpint (val, ==, VALIDATION_FAILED);
 	g_debug ("expected image validation error [ctl, ctl]: %s", error->message);
 	g_clear_error (&error);
 
-	val = fu_plugin_thunderbolt_validate_image (ctl_data, bad_data, &error);
+	val = fu_thunderbolt_image_validate (ctl_data, bad_data, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_READ);
 	g_assert_cmpint (val, ==, VALIDATION_FAILED);
 	g_debug ("expected image validation error [ctl, bad]: %s", error->message);
 	g_clear_error (&error);
 
 	/* bad controller data, valid update data */
-	val = fu_plugin_thunderbolt_validate_image (fwi_data, fwi_data, &error);
+	val = fu_thunderbolt_image_validate (fwi_data, fwi_data, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_cmpint (val, ==, VALIDATION_FAILED);
 	g_debug ("expected image validation error [fwi, fwi]: %s", error->message);
 	g_clear_error (&error);
 
-	val = fu_plugin_thunderbolt_validate_image (bad_data, fwi_data, &error);
+	val = fu_thunderbolt_image_validate (bad_data, fwi_data, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_cmpint (val, ==, VALIDATION_FAILED);
 	g_debug ("expected image validation error [bad, fwi]: %s", error->message);
 	g_clear_error (&error);
 
 	/* both bad */
-	val = fu_plugin_thunderbolt_validate_image (bad_data, bad_data, &error);
+	val = fu_thunderbolt_image_validate (bad_data, bad_data, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_READ);
 	g_assert_cmpint (val, ==, VALIDATION_FAILED);
 	g_debug ("expected image validation error [bad, bad]: %s", error->message);
