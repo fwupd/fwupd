@@ -43,8 +43,10 @@ struct _FuPluginClass
 							 guint		 duration);
 	void		 (* device_register)		(FuPlugin	*self,
 							 FuDevice	*device);
+	gboolean	 (* check_supported)		(FuPlugin	*self,
+							 const gchar	*guid);
 	/*< private >*/
-	gpointer	padding[24];
+	gpointer	padding[23];
 };
 
 /**

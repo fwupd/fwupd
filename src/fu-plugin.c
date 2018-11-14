@@ -48,7 +48,6 @@ typedef struct {
 	FuQuirks		*quirks;
 	GHashTable		*runtime_versions;
 	GHashTable		*compile_versions;
-	GPtrArray		*supported_guids;
 	GPtrArray		*udev_subsystems;
 	FuSmbios		*smbios;
 	GHashTable		*devices;	/* platform_id:GObject */
@@ -63,6 +62,7 @@ enum {
 	SIGNAL_DEVICE_REGISTER,
 	SIGNAL_RECOLDPLUG,
 	SIGNAL_SET_COLDPLUG_DELAY,
+	SIGNAL_CHECK_SUPPORTED,
 	SIGNAL_LAST
 };
 
@@ -514,15 +514,9 @@ fu_plugin_get_hwids (FuPlugin *self)
 gboolean
 fu_plugin_check_supported (FuPlugin *self, const gchar *guid)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (self);
-	if (priv->supported_guids == NULL)
-		return FALSE;
-	for (guint i = 0; i < priv->supported_guids->len; i++) {
-		const gchar *guid_tmp = g_ptr_array_index (priv->supported_guids, i);
-		if (g_strcmp0 (guid, guid_tmp) == 0)
-			return TRUE;
-	}
-	return FALSE;
+	gboolean retval = FALSE;
+	g_signal_emit (self, signals[SIGNAL_CHECK_SUPPORTED], 0, guid, &retval);
+	return retval;
 }
 
 /**
@@ -594,15 +588,6 @@ fu_plugin_set_hwids (FuPlugin *self, FuHwids *hwids)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	g_set_object (&priv->hwids, hwids);
-}
-
-void
-fu_plugin_set_supported (FuPlugin *self, GPtrArray *supported_guids)
-{
-	FuPluginPrivate *priv = GET_PRIVATE (self);
-	if (priv->supported_guids != NULL)
-		g_ptr_array_unref (priv->supported_guids);
-	priv->supported_guids = g_ptr_array_ref (supported_guids);
 }
 
 void
@@ -1750,6 +1735,12 @@ fu_plugin_class_init (FuPluginClass *klass)
 			      G_STRUCT_OFFSET (FuPluginClass, set_coldplug_delay),
 			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
 			      G_TYPE_NONE, 1, G_TYPE_UINT);
+	signals[SIGNAL_CHECK_SUPPORTED] =
+		g_signal_new ("check-supported",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (FuPluginClass, check_supported),
+			      NULL, NULL, g_cclosure_marshal_generic,
+			      G_TYPE_BOOLEAN, 1, G_TYPE_STRING);
 }
 
 static void
@@ -1790,8 +1781,6 @@ fu_plugin_finalize (GObject *object)
 		g_object_unref (priv->hwids);
 	if (priv->quirks != NULL)
 		g_object_unref (priv->quirks);
-	if (priv->supported_guids != NULL)
-		g_ptr_array_unref (priv->supported_guids);
 	if (priv->udev_subsystems != NULL)
 		g_ptr_array_unref (priv->udev_subsystems);
 	if (priv->smbios != NULL)

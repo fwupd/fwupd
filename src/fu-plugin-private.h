@@ -20,8 +20,6 @@ void		 fu_plugin_set_usb_context		(FuPlugin	*self,
 							 GUsbContext	*usb_ctx);
 void		 fu_plugin_set_hwids			(FuPlugin	*self,
 							 FuHwids	*hwids);
-void		 fu_plugin_set_supported		(FuPlugin	*self,
-							 GPtrArray	*supported_guids);
 void		 fu_plugin_set_udev_subsystems		(FuPlugin	*self,
 							 GPtrArray	*udev_subsystems);
 void		 fu_plugin_set_quirks			(FuPlugin	*self,
