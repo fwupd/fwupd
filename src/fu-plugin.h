@@ -91,7 +91,6 @@ gboolean	 fu_plugin_get_enabled			(FuPlugin	*self);
 void		 fu_plugin_set_enabled			(FuPlugin	*self,
 							 gboolean	 enabled);
 GUsbContext	*fu_plugin_get_usb_context		(FuPlugin	*self);
-GPtrArray	*fu_plugin_get_supported		(FuPlugin	*self);
 void		 fu_plugin_device_add			(FuPlugin	*self,
 							 FuDevice	*device);
 void		 fu_plugin_device_remove		(FuPlugin	*self,
