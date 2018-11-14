@@ -741,23 +741,6 @@ fu_plugin_lookup_quirk_by_id_as_uint64 (FuPlugin *self, const gchar *group, cons
 	return fu_common_strtoull (fu_plugin_lookup_quirk_by_id (self, group, key));
 }
 
-/**
- * fu_plugin_get_supported:
- * @self: A #FuPlugin
- *
- * Gets all the device GUIDs supported by the daemon.
- *
- * Returns: (element-type utf8) (transfer none): GUIDs
- *
- * Since: 1.0.0
- **/
-GPtrArray *
-fu_plugin_get_supported (FuPlugin *self)
-{
-	FuPluginPrivate *priv = GET_PRIVATE (self);
-	return priv->supported_guids;
-}
-
 void
 fu_plugin_set_smbios (FuPlugin *self, FuSmbios *smbios)
 {
