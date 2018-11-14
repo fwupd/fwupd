@@ -62,7 +62,6 @@ struct _FuEngine
 	guint			 coldplug_delay;
 	FuPluginList		*plugin_list;
 	GPtrArray		*plugin_filter;
-	GPtrArray		*supported_guids;
 	GPtrArray		*udev_subsystems;
 	FuSmbios		*smbios;
 	FuHwids			*hwids;
@@ -1081,25 +1080,6 @@ fu_engine_check_requirements (FuEngine *self, FuInstallTask *task,
 }
 
 static gchar *
-fu_engine_get_guids_from_store (XbSilo *silo)
-{
-	GString *str;
-	g_autoptr(GPtrArray) provides = NULL;
-
-	/* return a string with all the firmware components in the silo */
-	provides = xb_silo_query (silo, "components/component/provides/firmware[@type='flashed']", 0, NULL);
-	if (provides == NULL)
-		return NULL;
-	str = g_string_new (NULL);
-	for (guint i = 0; i < provides->len; i++) {
-		XbNode *prov = XB_NODE (g_ptr_array_index (provides, i));
-		g_string_append_printf (str, "%s,", xb_node_get_text (prov));
-	}
-	g_string_truncate (str, str->len - 1);
-	return g_string_free (str, FALSE);
-}
-
-static gchar *
 fu_engine_get_boot_time (void)
 {
 	g_autofree gchar *buf = NULL;
@@ -1801,7 +1781,6 @@ fu_engine_load_metadata_store (FuEngine *self, GError **error)
 {
 	GPtrArray *remotes;
 	g_autofree gchar *cachedirpkg = NULL;
-	g_autofree gchar *guids_str = NULL;
 	g_autofree gchar *xmlbfn = NULL;
 	g_autoptr(GFile) xmlb = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -1880,17 +1859,6 @@ fu_engine_load_metadata_store (FuEngine *self, GError **error)
 	components = xb_silo_query (self->silo, "components/component", 0, NULL);
 	if (components != NULL)
 		g_debug ("%u components now in silo", components->len);
-
-	/* update the list of supported GUIDs */
-	g_ptr_array_set_size (self->supported_guids, 0);
-	guids_str = fu_engine_get_guids_from_store (self->silo);
-	if (guids_str != NULL) {
-		g_auto(GStrv) guids = g_strsplit (guids_str, ",", -1);
-		for (guint i = 0; guids[i] != NULL; i++) {
-			g_ptr_array_add (self->supported_guids,
-					 g_steal_pointer (&guids[i]));
-		}
-	}
 
 	/* did any devices SUPPORTED state change? */
 	devices = fu_device_list_get_all (self->device_list);
@@ -3360,6 +3328,18 @@ fu_engine_add_plugin_filter (FuEngine *self, const gchar *plugin_glob)
 	g_ptr_array_add (self->plugin_filter, g_strdup (plugin_glob));
 }
 
+static gboolean
+fu_engine_plugin_check_supported_cb (FuPlugin *plugin, const gchar *guid, FuEngine *self)
+{
+	g_autoptr(XbNode) n = NULL;
+	g_autofree gchar *xpath = NULL;
+	xpath = g_strdup_printf ("components/component/"
+				 "provides/firmware[@type='flashed'][text()='%s']",
+				 guid);
+	n = xb_silo_query_first (self->silo, xpath, NULL);
+	return n != NULL;
+}
+
 gboolean
 fu_engine_load_plugins (FuEngine *self, GError **error)
 {
@@ -3402,7 +3382,6 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 		fu_plugin_set_usb_context (plugin, self->usb_ctx);
 		fu_plugin_set_hwids (plugin, self->hwids);
 		fu_plugin_set_smbios (plugin, self->smbios);
-		fu_plugin_set_supported (plugin, self->supported_guids);
 		fu_plugin_set_udev_subsystems (plugin, self->udev_subsystems);
 		fu_plugin_set_quirks (plugin, self->quirks);
 		fu_plugin_set_runtime_versions (plugin, self->runtime_versions);
@@ -3440,6 +3419,9 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 				  self);
 		g_signal_connect (plugin, "set-coldplug-delay",
 				  G_CALLBACK (fu_engine_plugin_set_coldplug_delay_cb),
+				  self);
+		g_signal_connect (plugin, "check-supported",
+				  G_CALLBACK (fu_engine_plugin_check_supported_cb),
 				  self);
 
 		/* add */
@@ -3870,7 +3852,6 @@ fu_engine_init (FuEngine *self)
 	self->history = fu_history_new ();
 	self->plugin_list = fu_plugin_list_new ();
 	self->plugin_filter = g_ptr_array_new_with_free_func (g_free);
-	self->supported_guids = g_ptr_array_new_with_free_func (g_free);
 	self->udev_subsystems = g_ptr_array_new_with_free_func (g_free);
 	self->runtime_versions = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	self->compile_versions = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
@@ -3918,7 +3899,6 @@ fu_engine_finalize (GObject *obj)
 	g_object_unref (self->hwids);
 	g_object_unref (self->history);
 	g_object_unref (self->device_list);
-	g_ptr_array_unref (self->supported_guids);
 	g_ptr_array_unref (self->plugin_filter);
 	g_ptr_array_unref (self->udev_subsystems);
 	g_hash_table_unref (self->runtime_versions);
