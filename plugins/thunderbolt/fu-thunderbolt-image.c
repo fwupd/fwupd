@@ -787,8 +787,10 @@ fu_thunderbolt_image_controller_is_native (GBytes    *controller_fw,
 	gsize fw_size;
 	const guint8 *fw_data = g_bytes_get_data (controller_fw, &fw_size);
 	const FuThunderboltFwObject controller = { fw_data, fw_size, controller_sections };
-
-	const FuThunderboltFwLocation location = { .offset = 0x7B, .len = 1, .description = "Native", .mask = 0x20 };
-
+	const FuThunderboltFwLocation location = {
+		.offset = FU_TBT_OFFSET_NATIVE,
+		.len = 1,
+		.description = "Native",
+		.mask = 0x20 };
 	return read_bool (&location, &controller, is_native, error);
 }

@@ -193,19 +193,25 @@ fu_plugin_thunderbolt_udev_get_version (GUdevDevice *udevice)
 static gboolean
 fu_plugin_thunderbolt_is_native (GUdevDevice *udevice, gboolean *is_native, GError **error)
 {
+	gsize nr_chunks;
 	g_autoptr(GFile) nvmem = NULL;
 	g_autoptr(GBytes) controller_fw = NULL;
-	gchar *content;
-	gsize length;
+	g_autoptr(GInputStream) istr = NULL;
 
 	nvmem = fu_plugin_thunderbolt_find_nvmem (udevice, TRUE, error);
 	if (nvmem == NULL)
 		return FALSE;
 
-	if (!g_file_load_contents (nvmem, NULL, &content, &length, NULL, error))
+	/* read just enough bytes to read the status byte */
+	nr_chunks = (FU_TBT_OFFSET_NATIVE + FU_TBT_CHUNK_SZ - 1) / FU_TBT_CHUNK_SZ;
+	istr = G_INPUT_STREAM (g_file_read (nvmem, NULL, error));
+	if (istr == NULL)
 		return FALSE;
-
-	controller_fw = g_bytes_new_take (content, length);
+	controller_fw = g_input_stream_read_bytes (istr,
+						   nr_chunks * FU_TBT_CHUNK_SZ,
+						   NULL, error);
+	if (controller_fw == NULL)
+		return FALSE;
 
 	return fu_thunderbolt_image_controller_is_native (controller_fw,
 							  is_native,
