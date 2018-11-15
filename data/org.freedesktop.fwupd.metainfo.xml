@@ -30,4 +30,1030 @@
   <content_rating type="oars-1.0">
     <content_attribute id="social-info">moderate</content_attribute>
   </content_rating>
+  <releases>
+    <release version="1.2.0" date="2018-11-07">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add a plugin for an upcoming Dell USB-C dock</li>
+          <li>Add a standalone installer creation script</li>
+          <li>Add support for devices to show an estimated flash time</li>
+          <li>Add support for some new Realtek USB devices</li>
+          <li>Allow firmware files to depend on versions from other devices</li>
+          <li>Allow setting the version format from a quirk entry</li>
+          <li>Port from libappstream-glib to libxmlb for a large reduction in RSS</li>
+          <li>Stop any running daemon over dbus when using fu-tool</li>
+          <li>Support the Intel ME version format</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add version format quirks for several Lenovo machines</li>
+          <li>Adjust panamera ESM update routine for some reported issues</li>
+          <li>Adjust synapticsmst EVB board handling</li>
+          <li>Check the amount of free space on the ESP</li>
+          <li>Don't show devices pending a reboot in GetUpgrades</li>
+          <li>Ensure that parent ID is created before creating quirked children</li>
+          <li>Optionally wait for replug before updating a device</li>
+          <li>Set the full AMT device version including the BuildNum</li>
+          <li>Sort the firmware sack by component priority</li>
+          <li>Stop showing errors when no Dell dock plugged in</li>
+          <li>Stop showing the current release during updates in fwupdmgr</li>
+          <li>Update all sub-devices for a composite update</li>
+          <li>Use HTTPS_PROXY if set</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.1.2" date="2018-09-10">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>
+            Add a new device flag 'ignore-validation' that will
+            override checks
+          </li>
+          <li>Add a new plugin to enumerate EC firmware</li>
+          <li>Add a new plugin to update NVMe hardware</li>
+          <li>Add a plugin for updating using the flashrom command line tool</li>
+          <li>Allow the device list to take care of waiting for the device replug</li>
+          <li>Allow updating just one specific device from the command line</li>
+          <li>Allow upgrades using a self-signed fwupd.efi binary</li>
+          <li>Download firmware if the user specifies a URI</li>
+          <li>Include serial number in daemon device output when trusted</li>
+          <li>Notify all plugins of device removals through a new vfunc</li>
+          <li>Use boltd force power API if available</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add an install hook for classic snap</li>
+          <li>Allow forcing installation even if no AC power is applied</li>
+          <li>Allow using --force to ignore version_lowest</li>
+          <li>Always use the same HardwareIDs as Windows</li>
+          <li>Check the device state before assuming a fake DFU runtime</li>
+          <li>Copy over parent GUIDs from other plugin donors</li>
+          <li>Detect location of python3 interpreter</li>
+          <li>Do not add udev devices after a small delay</li>
+          <li>Don't fail to run if compiled without GPG/PKCS7</li>
+          <li>Fix a segfault in fwupdtool caused by cleanup of USB plugins</li>
+          <li>Implement the systemd recommendations for offline updates</li>
+          <li>Improve performance when reading keys from the quirk database</li>
+          <li>Remove children of devices when the parent is removed</li>
+          <li>Rewrite synapticsmst to use modern error handling</li>
+          <li>
+            Rewrite the unifying plugin to use the new daemon-provided
+            functionality
+          </li>
+          <li>Show a time estimate on the progressbar after an update has started</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.1.1" date="2018-08-13">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add support for the Synaptics Panamera hardware</li>
+          <li>Add validation for Alpine and Titan Ridge</li>
+          <li>Improve the Redfish plugin to actually work with real hardware</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Allow different plugins to add the same device</li>
+          <li>Allow flashing unifying devices in recovery mode</li>
+          <li>Allow running synapticsmst on non-Dell hardware</li>
+          <li>Check the ESP for sanity at at startup</li>
+          <li>Do not hold hidraw devices open forever</li>
+          <li>Don't override _FORTIFY_SOURCE when building the EFI binary</li>
+          <li>Don't show passwords in fwupdmgr</li>
+          <li>Fix a potential segfault in smbios data parsing</li>
+          <li>Fix encoding the GUID into the capsule EFI variable</li>
+          <li>Fix various bugs when reading the thunderbolt version number</li>
+          <li>Reboot synapticsmst devices at the end of flash cycle</li>
+          <li>Show status messages when the daemon is initializing</li>
+          <li>Show the correct title when updating devices</li>
+          <li>Show the reasons that plugins are not run on the CLI</li>
+          <li>Use localedir in po/make-images</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.1.0" date="2018-07-11">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add a initial Redfish support</li>
+          <li>Add a tool to mimic the original fwupdate CLI interface</li>
+          <li>Allow devices to assign a plugin from the quirk subsystem</li>
+          <li>Change the quirk file structure to be more efficient</li>
+          <li>Merge fwupdate functionality into fwupd</li>
+          <li>
+            Run a plugin vfunc before and after all the composite devices are
+            updated
+          </li>
+          <li>Support more Wacom tablets</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add release information for locked devices</li>
+          <li>Allow building with older meson</li>
+          <li>Detect the EFI system partition location at runtime</li>
+          <li>Do not use 8bitdo bootloader commands after a successful flash</li>
+          <li>Enable accesing downloaded files in flatpak and snap</li>
+          <li>Fix a potential buffer overflow when applying a DFU patch</li>
+          <li>Fix downgrading older releases to devices</li>
+          <li>Fix flashing devices that require a manual replug</li>
+          <li>Fix several small memory leaks in various places</li>
+          <li>Fix the retrieval of Redfish version</li>
+          <li>Fix unifying failure to detach when using a slow host controller</li>
+          <li>Set the Wacom device status when erasing and writing firmware</li>
+          <li>Show errors in the CLI if unable to access directory</li>
+          <li>Use the parent device name for Wacom sub-modules</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.8" date="2018-06-07">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add an plugin to update some future Wacom tablets</li>
+          <li>Add 'fwupdmgr get-topology' to show logical device tree</li>
+          <li>Add support for creating a flatpak</li>
+          <li>Add support for creating a snap</li>
+          <li>Add support for Motorola S-record files</li>
+          <li>Add the Linux Foundation public GPG keys for firmware and metadata</li>
+          <li>Show a translated warning when the server is limiting downloads</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add a firmware diagnostic tool called fwupdtool</li>
+          <li>Adjust all licensing to LGPL 2.1+</li>
+          <li>
+            Allow installing more than one firmware using 'fwupdmgr
+            install'
+          </li>
+          <li>Allow specifying hwids with OR relationships</li>
+          <li>Do not call fu_plugin_init() on blacklisted plugins</li>
+          <li>Do not require libcolorhug to build</li>
+          <li>Fix a crash in libfwupd where no device ID is set</li>
+          <li>Fix a potential DoS in libdfu by limiting holes to 1MiB</li>
+          <li>Fix a segfault that sometimes occurs during cleanup of USB plugins</li>
+          <li>Fix Hardware-ID{0,1,2,12} compatibility with Microsoft</li>
+          <li>Hide devices that aren't updatable by default in fwupdmgr</li>
+          <li>Search all UEFI GUIDs when matching hardware</li>
+          <li>Stop matching Nintendo Switch Pro in the 8bitdo plugin</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.7" date="2018-04-30">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add enable-remote and disable-remote commands to fwupdmgr</li>
+          <li>Add fu_plugin_add_compile_version() for libraries to use</li>
+          <li>Allow requiring specific versions of libraries for firmware updates</li>
+          <li>If no remotes are enabled try to enable the LVFS</li>
+          <li>Show a warning with interactive prompt when enabling a remote</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Check that EFI system partition is mounted before update</li>
+          <li>Disable synapticsmst remote control on failure</li>
+          <li>Don't recoldplug thunderbolt to fix a flashing failure</li>
+          <li>Fix SQL error when running 'fwupdmgr clear-offline'</li>
+          <li>Improve the update report message</li>
+          <li>Only enumerate Dell Docks if the type is known</li>
+          <li>Only run certtool if a new enough gnutls is present</li>
+          <li>Prevent a client crash if the daemon somehow sends invalid data</li>
+          <li>Reboot after scheduling using logind not systemd</li>
+          <li>Use the right encoding for the label in make-images</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.6" date="2018-03-12">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add bash completion for fwupdmgr</li>
+          <li>Add support for newest Thunderbolt chips</li>
+          <li>Allow all functions that take device arguments to be prompted</li>
+          <li>Allow devices to use the runtime version when in bootloader mode</li>
+          <li>Allow overriding ESP mount point via conf file</li>
+          <li>Delete any old fwupdate capsules and efivars when launching fwupd</li>
+          <li>Generate Vala bindings</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Allow ctrl-d out of the prompt for devices</li>
+          <li>Allow to create package out of provided binary</li>
+          <li>Correct handling of unknown Thunderbolt devices</li>
+          <li>Correctly detect new remotes that are manually copied</li>
+          <li>Fix a crash related to when passing device to downgrade in CLI</li>
+          <li>Fix running the self tests when no fwupd is installed</li>
+          <li>Fix Unifying signature writing and parsing for Texas bootloader</li>
+          <li>Only send success and failure reports to the server</li>
+          <li>Use a CNAME to redirect to the correct CDN for metadata</li>
+          <li>Use a longer timeout when powering back the Thunderbolt device</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.5" date="2018-02-14">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Offer to reboot when processing an offline update</li>
+          <li>Report the efivar, libsmbios and fwupdate library versions</li>
+          <li>Report Thunderbolt safe mode and SecureBoot status</li>
+          <li>Show the user a URL when they report a known problem</li>
+          <li>Support split cabinet archives as produced by Windows Update</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Be more careful deleting and modifying device history</li>
+          <li>Clarify which devices don't have upgrades</li>
+          <li>Ensure the Thunderbolt version is xx.yy</li>
+          <li>Fix a daemon warning when using fwupdmgr get-results</li>
+          <li>Fix crasher with MST flashing</li>
+          <li>Fix DFU detach with newer releases of libusb</li>
+          <li>Include the device VID and PID when generating the device-id</li>
+          <li>Set the RemoteId when using GetDetails</li>
+          <li>Stop matching 8bitdo DS4 controller VID/PID</li>
+          <li>Use help2man for dfu-tool and drop docbook dependencies</li>
+          <li>Use ngettext for any strings with plurals</li>
+          <li>Use the default value if ArchiveSizeMax is unspecified</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.4" date="2018-01-25">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add D-Bus methods to get and modify the history information</li>
+          <li>Allow the user to share firmware update success or failure</li>
+          <li>Ask the user to refresh metadata when it is very old</li>
+          <li>Store firmware update success and failure to a local database</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add a device name for locked UEFI devices</li>
+          <li>Allow each plugin to opt-in to the recoldplug action</li>
+          <li>Fix firmware downloading using gnome-software</li>
+          <li>Fix UX capsule reference to the one specified in efivar</li>
+          <li>Never add two devices to the daemon with the same ID</li>
+          <li>Rescan supported flags when refreshing metadata</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.3" date="2018-01-09">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add a new plugin to add support for CSR 'Driverless DFU'</li>
+          <li>Add initial SF30/SN30 Pro support</li>
+          <li>Support AppStream metadata with relative &lt;location&gt; URLs</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add more metadata to the user-agent string</li>
+          <li>Block owned Dell TPM updates</li>
+          <li>Choose the correct component from provides matches using requirements</li>
+          <li>Do not try to parse huge compressed archive files</li>
+          <li>Fix a double-free bug in the Udev code</li>
+          <li>Handle Thunderbolt 'native' mode</li>
+          <li>
+            Use the new functionality in libgcab &gt;= 1.0 to avoid writing temp
+            files
+          </li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.2" date="2017-11-28">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add a plugin for the Nitrokey Storage device</li>
+          <li>Add support for the original AVR DFU protocol</li>
+          <li>Allow different plugins to claim the same device</li>
+          <li>Allow quirks to set common USB properties</li>
+          <li>Move a common plugin functionality out to a new shared object</li>
+          <li>Optionally delay the device removal for better replugging</li>
+          <li>Set environment variables to allow easy per-plugin debugging</li>
+          <li>Use a SHA1 hash for the internal DeviceID</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add quirk for AT32UC3B1256 as used in the RubberDucky</li>
+          <li>Disable the dell plugin if libsmbios fails</li>
+          <li>Don't register for USB UDev events to later ignore them</li>
+          <li>Fix a possible buffer overflow when debugging ebitdo devices</li>
+          <li>Fix critical warning when more than one remote fails to load</li>
+          <li>Fix DFU attaching AVR32 devices like the XMEGA</li>
+          <li>Ignore useless Thunderbolt device types</li>
+          <li>Refactor ColorHug into a much more modern plugin</li>
+          <li>Release the Steelseries interface if getting the version failed</li>
+          <li>Remove autoconf-isms from the meson configure options</li>
+          <li>Show a nicer error message if the requirement fails</li>
+          <li>Sort the output of GetUpgrades correctly</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.1" date="2017-11-09">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add support for HWID requirements</li>
+          <li>Add support for programming various AVR32 and XMEGA parts using DFU</li>
+          <li>Add the various DFU quirks for the Jabra Speak devices</li>
+          <li>Allow specifying the output file type for 'dfu-tool read'</li>
+          <li>Move the database of supported devices out into runtime loaded files</li>
+          <li>Support the IHEX record type 0x05</li>
+          <li>Use help2man to generate the man page at build time</li>
+          <li>Use the new quirk infrastructure for version numbers</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Catch invalid Dell dock component requests</li>
+          <li>Correctly output Intel HEX files with &gt; 16bit offset addresses</li>
+          <li>Do not try to verify the element write if upload is unsupported</li>
+          <li>Fix a double-unref when updating any 8Bitdo device</li>
+          <li>Fix crash when enumerating with Dell dock connected but with no UEFI</li>
+          <li>Fix uploading large firmware files over DFU</li>
+          <li>Format the BCD USB revision numbers correctly</li>
+          <li>Guess the DFU transfer size if it is not specified</li>
+          <li>Include the reset timeout as wValue to fix some DFU bootloaders</li>
+          <li>Make the error message clearer when sans fonts are missing</li>
+          <li>Support devices with truncated DFU interface data</li>
+          <li>
+            Use the correct remote-specified username and passord when using
+            fwupdmgr
+          </li>
+          <li>Use the correct wDetachTimeOut when writing DFU firmware</li>
+          <li>Verify devices with legacy VIDs are actually 8Bitdo controllers</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.0" date="2017-10-09">
+      <description>
+        <p>This release breaks API and ABI to remove deprecated symbols!</p>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add a human-readable title for each remote</li>
+          <li>Add a method to return a list of upgrades for a specific device</li>
+          <li>
+            Add an 'Summary' and 'Icons' properties to each
+            device
+          </li>
+          <li>Add FuDeviceLocker to simplify device open/close lifecycles</li>
+          <li>Add functionality to blacklist Dell HW with problems</li>
+          <li>Add fu_plugin_check_supported()</li>
+          <li>Add fwupd_remote_get_checksum() to use in client programs</li>
+          <li>Add ModifyRemote as an easy way to enable and disable remotes</li>
+          <li>Add the plugin documentation to the main gtk-doc</li>
+          <li>Allow plugins to depend on each other</li>
+          <li>Disable the fallback USB plugin</li>
+          <li>Parse the SMBIOS v2 and v3 DMI tables directly</li>
+          <li>Support uploading the UEFI firmware splash image</li>
+          <li>Use the intel-wmi-thunderbolt kernel module to force power</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Only run SMI to toggle host MST GPIO on Dell systems with host MST</li>
+          <li>Disable unifying support if no CONFIG_HIDRAW support</li>
+          <li>Do not auto-open all USB devices at startup</li>
+          <li>Do not fail to load the daemon if cached metadata is invalid</li>
+          <li>Do not use system-specific infomation for UEFI PCI devices</li>
+          <li>Fix a crash when using fu_plugin_device_add_delay()</li>
+          <li>Fix the libdfu self test failure on s390 and ppc64</li>
+          <li>Fix various printing issues with the progressbar</li>
+          <li>Generate the LD script from the GObject introspection data</li>
+          <li>Never fallback to an offline update from client code</li>
+          <li>Only set the Dell coldplug delay when we know we need it</li>
+          <li>Prefer to use HWIDs to get DMI keys and DE table</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.9.7" date="2017-09-01">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add a configure switch for the LVFS remotes</li>
+          <li>Add a FirmwareBaseURI parameter to the remote config</li>
+          <li>Add a firmware builder that uses bubblewrap</li>
+          <li>
+            Add a python script to create fwupd compatible cab files from
+            Microsoft .exe files
+          </li>
+          <li>Add a thunderbolt plugin for new kernel interface</li>
+          <li>Allow plugins to get DMI data from the hardware in a safe way</li>
+          <li>Allow plugins to set metadata on devices created by other plugins</li>
+          <li>Optionally install the LVFS PKCS7 root certificate</li>
+          <li>Optionally use GnuTLS to verify PKCS7 certificates</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add back options for HAVE_SYNAPTICS and HAVE_THUNDERBOLT</li>
+          <li>Allow configuring systemd and udev directories</li>
+          <li>Enable C99 support in meson.build</li>
+          <li>Fix an incomplete cipher when using XTEA on data not in 4 byte chunks</li>
+          <li>Fix minor const-correctness issues</li>
+          <li>Implement thunderbolt image validation </li>
+          <li>Remove the confusing ALLOW_OFFLINE and ALLOW_ONLINE flags</li>
+          <li>Show a bouncing progress bar if the percentage remains at zero</li>
+          <li>Use a hwid to match supported systems for synapticsmst</li>
+          <li>Use the new bootloader PIDs for Unifying pico receivers</li>
+          <li>When thunderbolt is in safe mode on a Dell recover using SMBIOS</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.9.6" date="2017-08-03">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add DfuPatch to support forward-only firmware patching</li>
+          <li>Add --version option to fwupdmgr</li>
+          <li>Display all errors recorded by efi_error tracing</li>
+          <li>Make building introspection optional</li>
+          <li>Support embedded devices with local firmware metadata</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Check all the device GUIDs against the blacklist when added</li>
+          <li>Correct a memory leak in Dell plugin</li>
+          <li>Default to 'en' for UEFI capsule graphics</li>
+          <li>Don't log a warning when an unknown unifying report is parsed</li>
+          <li>Enable test suite via /etc/fwupd.conf</li>
+          <li>Fix a hang on 32 bit computers</li>
+          <li>Fix compilation of the policy on a variety of configurations</li>
+          <li>Fix UEFI crash when the product name is NULL</li>
+          <li>Make flashing ebitdo devices work with fu-ebitdo-tool</li>
+          <li>Make messages from installing capsules useful</li>
+          <li>Make sure the unifying percentage completion goes from 0% to 100%</li>
+          <li>Run the plugin coldplug methods in a predictable order</li>
+          <li>Test UEFI for kernel support during coldplug</li>
+          <li>Use new GUsb functionality to fix flashing Unifying devices</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.9.5" date="2017-07-04">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add a get-remotes command to fwupdmgr</li>
+          <li>Add a plugin to get the version of the AMT ME interface</li>
+          <li>Add Arch Linux to CI</li>
+          <li>Add some installed tests flashing actual hardware</li>
+          <li>Allow flashing Unifying devices in bootloader modes</li>
+          <li>Allow ordering the metadata remotes</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Do not check the runtime if the DFU device is in bootloader mode</li>
+          <li>Do not unlock devices when doing VerifyUpdate</li>
+          <li>Filter by Unifying SwId when making HID++2.0 requests</li>
+          <li>Fix downgrades when version_lowest is set</li>
+          <li>Fix the self tests when running on PPC64 big endian</li>
+          <li>Move the remotes parsing from the client to the server</li>
+          <li>Split up the Unifying HID++2.0 and HID++1.0 functionality</li>
+          <li>Store the metadata files rather than merging to one store</li>
+          <li>Use a longer timeout for some Unifying operations</li>
+          <li>Use the UFY DeviceID prefix for Unifying devides</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.9.4" date="2017-06-15">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add installed tests that use the daemon</li>
+          <li>Add the ability to restrict firmware to specific vendors</li>
+          <li>Enable Travis CI for Fedora and Debian</li>
+          <li>Export some more API for dealing with checksums</li>
+          <li>Generate a images for status messages during system firmware update</li>
+          <li>Show progress download when refreshing metadata</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Compile with newer versions of meson</li>
+          <li>Ensure that firmware provides are legal GUIDs</li>
+          <li>Fix a common crash when refreshing metadata</li>
+          <li>Use the correct type signature in the D-Bus introspection file</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.9.3" date="2017-06-07">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add a 'downgrade' command to fwupdmgr</li>
+          <li>Add a 'get-releases' command to fwupdmgr</li>
+          <li>Add support for ConsoleKit2</li>
+          <li>Add support for Microsoft HardwareIDs</li>
+          <li>Allow downloading metadata from more than just the LVFS</li>
+          <li>Allow multiple checksums on devices and releases</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Allow to specify bindir</li>
+          <li>Correctly open Unifying devices with original factory firmware</li>
+          <li>Deprecate some of the old FwupdResult API</li>
+          <li>Do not copy the origin from the new metadata file</li>
+          <li>Do not expect a Unifying reply when issuing a REBOOT command</li>
+          <li>Do not re-download firmware that exists in the cache</li>
+          <li>Fix a problem when testing for a Dell system</li>
+          <li>Fix flashing new firmware to 8bitdo controllers</li>
+          <li>Increase minimum required AppStream-Glib version to 0.6.13</li>
+          <li>Make documentation and man pages optional</li>
+          <li>Make systemd dependency at least version 231</li>
+          <li>Only decompress the firmware after the signature check</li>
+          <li>Remove 'lib' prefix when looking for libraries</li>
+          <li>Return the remote ID when getting updates about hardware</li>
+          <li>Send the daemon the remote ID when sending firmware metadata</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.9.2" date="2017-05-22">
+      <description>
+        <p>This release adds the following feature:</p>
+        <ul>
+          <li>Add support for Unifying DFU features</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Do not spew a critial warning when parsing an invalid URI</li>
+          <li>Ensure device is closed if did not complete setup</li>
+          <li>Ensure steelseries device is closed if it returns an invalid packet</li>
+          <li>Fix man page installation location</li>
+          <li>Ignore spaces in the Unifying version prefix</li>
+          <li>Set HAVE_POLKIT_0_114 when polkit is newer than 0.114</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.9.1" date="2017-04-28">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add a config option to allow runtime disabling plugins by name</li>
+          <li>Add the Meson build system and remove autotools</li>
+          <li>Support signed Intel HEX files</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add DFU quirk for OpenPICC and SIMtrace</li>
+          <li>Create directories in /var/cache as required</li>
+          <li>Refactor the unifying plugin now we know more about the hardware</li>
+          <li>Set the source origin when saving metadata</li>
+          <li>Support proxy servers in fwupdmgr</li>
+          <li>Use a 60 second timeout on all client downloads</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.8.1" date="2017-02-27">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Adjust systemd confinement restrictions</li>
+          <li>Do not hardcode docbook2man path</li>
+          <li>Don't initialize libsmbios on unsupported systems</li>
+          <li>Fix a crash when enumerating devices on a Dell WLD15</li>
+          <li>Fix compiler warnings</li>
+          <li>Fix fwupdmgr timeout with missing pending database</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.8.0" date="2017-02-08">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add a set of vfuncs that are run before and after a device update</li>
+          <li>
+            Add Dell-specific functionality to allow other plugins turn on
+            TBT/GPIO
+          </li>
+          <li>Add support for Intel Thunderbolt devices</li>
+          <li>Add support for Logitech Unifying devices</li>
+          <li>Add support for Synaptics MST cascades hubs</li>
+          <li>Add support for the Altus-Metrum ChaosKey device</li>
+          <li>Add VerifyUpdate to update the device checksums server-side</li>
+          <li>
+            Allow the metadata to match a version of fwupd and the existing fw
+            version
+          </li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add a new method for forcing a controller to flash mode</li>
+          <li>Always make sure we're getting a C99 compiler</li>
+          <li>Close USB devices before error returns</li>
+          <li>Don't read data from some DfuSe targets</li>
+          <li>Include all debug messages when run with --verbose</li>
+          <li>Return the pending UEFI update when not on AC power</li>
+          <li>
+            Use a heuristic for the start address if the firmware has no DfuSe
+            footer
+          </li>
+          <li>Use more restrictive settings when running under systemd</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.7.5" date="2016-10-19">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add a 'replace-data' command to dfu-tool</li>
+          <li>Use an animated progress bar when performing DFU operations</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add quirks for HydraBus as it does not have a DFU runtime</li>
+          <li>
+            Don't create the UEFI dummy device if the unlock will happen on
+            next boot
+          </li>
+          <li>Enable hardening flags on more binaries</li>
+          <li>Fix an assert when unlocking the dummy ESRT device</li>
+          <li>Fix writing firmware to devices using the ST reference bootloader</li>
+          <li>Match the Dell TB16 device</li>
+          <li>Re-get the quirks when the DfuDevice gets a new GUsbDevice</li>
+          <li>Show the nicely formatted target name for DfuSe devices</li>
+          <li>Verify devices support updating in mode they are called</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.7.4" date="2016-09-19">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add dfu_firmware_add_symbol()</li>
+          <li>Allow the argument to 'dfu-tool set-release' be major.minor</li>
+          <li>Load the Altos USB descriptor from ELF files</li>
+          <li>Support writing the IHEX symbol table</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add a fallback for older appstream-glib releases</li>
+          <li>Fix a possible crash when uploading firmware files using libdfu</li>
+          <li>Fix libfwupd self tests when a host-provided fwupd is not available</li>
+          <li>
+            Show the human-readable version in the 'dfu-tool dump'
+            output
+          </li>
+          <li>Write the ELF files with the correct section type</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.7.3" date="2016-08-29">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add a set-address and set-target-size commands to dfu-util</li>
+          <li>Add a small library for talking with 0bitdo hardware</li>
+          <li>Add Dell TPM and TB15/WD15 support via new Dell provider</li>
+          <li>Add FU_DEVICE_FLAG_NEEDS_BOOTLOADER</li>
+          <li>Add fwupd_client_get_status()</li>
+          <li>Add fwupd_result_get_unique_id()</li>
+          <li>Add initial ELF reading and writing support to libdfu</li>
+          <li>Add support for installing multiple devices from a CAB file</li>
+          <li>Allow providers to export percentage completion</li>
+          <li>Show a progress notification when installing firmware</li>
+          <li>Show the vendor flashing instructions when installing</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add XPS 9250 to Dell TPM modeswitch blacklist</li>
+          <li>Allow blacklisting devices by their GUID</li>
+          <li>Conditionally enable all providers based upon installed</li>
+          <li>Display flashes left in results output when it gets low</li>
+          <li>Do not attempt to add DFU devices not in runtime mode</li>
+          <li>Do not use the deprecated GNOME_COMPILE_WARNINGS</li>
+          <li>Don't fail while checking versions or locked state</li>
+          <li>Embed fwupd version in generated documentation</li>
+          <li>Ensure the ID is set when getting local firmware details</li>
+          <li>Fix gtk-doc build when srcdir != builddir</li>
+          <li>Fix libdfu hang when parsing corrupt IHEX files</li>
+          <li>Ignore devices that do not add at least one GUID</li>
+          <li>In get-details output, display the blob filename</li>
+          <li>Save the unique ID in the pending database</li>
+          <li>Support the 'DEVO' cipher kind in libdfu</li>
+          <li>Switch to the Amazon S3 CDN for firmware metadata</li>
+          <li>Update fwupdmgr manpage for new commands and arguments</li>
+          <li>Use a private gnupg key store</li>
+          <li>Use the correct firmware when installing a composite device</li>
+          <li>Use the SHA1 hash of the local file data as the origin</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.7.2" date="2016-06-13">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add a GetDetailsLocal() method to eventually replace GetDetails()</li>
+          <li>Add fu_device_get_alternate()</li>
+          <li>Allow devices to have multiple assigned GUIDs</li>
+          <li>Allow metainfo files to match only specific revisions of devices</li>
+          <li>Show the DFU protocol version in 'dfu-tool list'</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Enforce allowing providers to take away flash abilities</li>
+          <li>Only claim the DFU interface when required</li>
+          <li>Only return updatable devices from GetDevices()</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.7.1" date="2016-05-13">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add a --force flag to override provider warnings</li>
+          <li>Add device-added, device-removed and device-changed signals</li>
+          <li>Add dfu_image_get_element_default()</li>
+          <li>Add for a new device field 'Flashes Left'</li>
+          <li>Add fwupd_client_connect()</li>
+          <li>Add the 'monitor' debugging command for fwupdmgr</li>
+          <li>Add the 'supported' flag to the FuDevice</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add summary and name field for Rival SteelSeries</li>
+          <li>Fix a critical warning when restarting the daemon</li>
+          <li>Fix BE issues when reading and writing DFU files</li>
+          <li>Make the device display name nicer</li>
+          <li>Match the AppStream metadata after a device has been added</li>
+          <li>Remove non-interactive pinentry setting from fu-keyring</li>
+          <li>Return all update descriptions newer than the installed version</li>
+          <li>Set the device description when parsing local firmware files</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.7.0" date="2016-04-01">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add a version plugin for SteelSeries hardware</li>
+          <li>Add FwupdClient and FwupdResult to libfwupd</li>
+          <li>Generate gtk-doc documentation for libfwupd</li>
+          <li>Return the device flags when getting firmware details</li>
+          <li>Support other checksum kinds</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add Alienware to the version quirk table</li>
+          <li>Allow the test suite to run in %check</li>
+          <li>Do not return updates that require AC when on battery</li>
+          <li>Do not use /tmp for downloaded files</li>
+          <li>Test that GPG key import actually was successful</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.6.3" date="2016-03-14">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add an unlock method for devices</li>
+          <li>Add a simple plugin infrastructure</li>
+          <li>Add ESRT enable method into UEFI provider</li>
+          <li>Install the hardcoded firmware AppStream file</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Correct the BCD version number for DFU 1.1</li>
+          <li>Do not use deprecated API from libappstream-glib</li>
+          <li>Ignore the DFU runtime on the DW1820A</li>
+          <li>Only read PCI OptionROM firmware when devices are manually unlocked</li>
+          <li>Require AC power before scheduling some types of firmware update</li>
+          <li>Show ignored DFU devices in dfu-util, but not in fwupd</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.6.2" date="2016-02-12">
+      <description>
+        <p>This release adds the following feature:</p>
+        <ul>
+          <li>
+            Add 'Created' and 'Modified' properties on
+            managed devices
+          </li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Fix get-results for UEFI provider</li>
+          <li>Support vendor-specific UEFI version encodings</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.6.1" date="2016-01-19">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Always persist ColorHug devices after replug</li>
+          <li>Do not misdetect different ColorHug devices</li>
+          <li>Only dump the profiling data when run with --verbose</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.6.0" date="2015-12-07">
+      <description>
+        <p>
+          This release adds a new GObject library called libdfu and a command
+          line client called dfu-tool. This is a low-level tool used to upgrade
+          USB device firmware and can either be shipped in the same package as
+          fwupd or split off as separate subpackages.
+        </p>
+        <p>This release adds the following feature:</p>
+        <ul>
+          <li>Add support for automatically updating USB DFU-capable devices</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Emit the changed signal after doing an update</li>
+          <li>Export the AppStream ID when returning device results</li>
+          <li>Fix compile with --disable-shared</li>
+          <li>Use new API available in fwup 0.5</li>
+          <li>Use the same device identification string format as Microsoft</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.5.3" date="2015-11-05">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Avoid seeking when reading the file magic during refresh</li>
+          <li>Do not assume that the compressed XML data will be NUL terminated</li>
+          <li>Use the correct user agent string for fwupdmgr</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.5.2" date="2015-10-28">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add profiling data to debug slow startup times</li>
+          <li>Support cabinet archives files with more than one firmware</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add the update description to the GetDetails results</li>
+          <li>
+            Clear the in-memory firmware store only after parsing a valid XML
+            file
+          </li>
+          <li>Ensure D-Bus remote errors are registered at fwupdmgr startup</li>
+          <li>
+            Fix verify-update to produce components with the correct provide
+            values
+          </li>
+          <li>Require appstream-glib 0.5.1</li>
+          <li>Show the dotted-decimal representation of the UEFI version number</li>
+          <li>
+            When the version is from the 'FW' extension do not cache
+            the device
+          </li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.5.1" date="2015-09-21">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Fix the error message when no devices can be updated</li>
+          <li>Fix reading symlink to prevent crash with some compilers</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.5.0" date="2015-09-15">
+      <description>
+        <p>This release adds the following feature:</p>
+        <ul>
+          <li>Raise the dep on GLib to support and use g_autoptr()</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Do not merge existing firmware metadata</li>
+          <li>Do not reboot if racing with the PackageKit offline update mechanism</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.6" date="2015-09-10">
+      <description>
+        <p>This release adds the following feature:</p>
+        <ul>
+          <li>Remove fwsignd, we have the LVFS now</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add application metadata when getting the updates list</li>
+          <li>Depend on appstream-glib &gt;= 0.5.0</li>
+          <li>Don't apply firmware if something else is processing the update</li>
+          <li>Install fwupd into /usr/lib/$(triplet)/fwupd instead</li>
+          <li>Simplify the version properties on devices to avoid complexity</li>
+          <li>Update the offline update service to invoke right command</li>
+          <li>Use the new secure metadata URI</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.5" date="2015-08-12">
+      <description>
+        <p>
+          For the device verification code to work correctly you need at least
+          libappstream-glib 0.5.0 installed.
+        </p>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add a Raspberry Pi firmware provider</li>
+          <li>Add a simple config file to store the correct LVFS download URI</li>
+          <li>Make parsing the option ROM runtime optional</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Allow fwupd to be autostarted by systemd</li>
+          <li>
+            Allow no arguments to 'fwupdmgr verify-update' and use sane
+            defaults
+          </li>
+          <li>Devices with option ROM are always internal</li>
+          <li>Do not pre-convert the update description from AppStream XML</li>
+          <li>Fix validation of written firmware</li>
+          <li>Move the verification and metadata matching phase to the daemon</li>
+          <li>Sign the test binary with the correct key</li>
+          <li>Use the AppStream 0.9 firmware specification by default</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.4" date="2015-07-25">
+      <description>
+        <p>
+          In this release we've moved the LVFS website to the fwupd project
+          and made them work really well together. To update all the firmware on
+          your system is now just a case of 'fwupdmgr refresh &amp;&amp;
+          fwupdmgr update'.
+          We've also added verification of BIOS and PCI ROM firmware, which
+          may be useful for forensics or to verify that system updates have been
+          applied.
+        </p>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Actually parse the complete PCI option ROM</li>
+          <li>
+            Add a 'fwupdmgr update' command to update all devices to
+            latest versions
+          </li>
+          <li>Add a simple signing server that operates on .cab files</li>
+          <li>
+            Add a 'verify' command that verifies the cryptographic hash
+            of device firmware
+          </li>
+          <li>Allow clients to add new firmware metadata to the system cache</li>
+          <li>Move GetUpdates to the daemon</li>
+          <li>Move the LVFS website to the fwupd project</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Accept multiple files at one time when using fwupdmgr dump-rom</li>
+          <li>Automatically download metadata using fwupdmgr if required</li>
+          <li>Do not return NULL as a gboolean</li>
+          <li>Don't call efibootmgr after fwupdate</li>
+          <li>Fallback to offline install when calling the update argument</li>
+          <li>Fix Intel VBIOS detection on Dell hardware</li>
+          <li>Reload appstream data after refreshing</li>
+          <li>Use the new LVFS GPG key</li>
+          <li>Fix build: libgusb is required even without colorhug support</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.3" date="2015-05-28">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Get the firmware version from the device descriptors</li>
+          <li>Run the offline actions using systemd when required</li>
+          <li>Support OpenHardware devices using the fwupd vendor extensions</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add an UNKNOWN status so we can return meaningful enum values</li>
+          <li>Coldplug the devices before acquiring the well known name</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.2" date="2015-04-22">
+      <description>
+      </description>
+    </release>
+    <release version="0.1.1" date="2015-03-23">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add a 'get-updates' command to fwupdmgr</li>
+          <li>Add and document the offline-update lifecycle</li>
+          <li>Create a libfwupd shared library</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Create runtime directories if they do not exist</li>
+          <li>Do not crash when there are no devices to return</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.0" date="2015-03-16">
+      <description>
+        <p>fwupd is a simple daemon to allow session software to update firmware.</p>
+      </description>
+    </release>
+  </releases>
 </component>

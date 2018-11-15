@@ -202,7 +202,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %systemd_postun_with_restart pesign.service
 
 %files -f %{name}.lang
-%doc README.md AUTHORS NEWS
+%doc README.md AUTHORS
 %license COPYING
 %config(noreplace)%{_sysconfdir}/fwupd/daemon.conf
 %if 0%{?have_uefi}

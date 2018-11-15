@@ -1,8 +1,9 @@
 fwupd Release Notes
 
-1. Write NEWS entries for fwupd in the same format as usual.
+Write release entries:
 
-git shortlog 1.2.0.. | grep -i -v trivial | grep -v Merge > NEWS.new
+git log --format="%s" --cherry-pick --right-only 1.2.0... | grep -i -v trivial | grep -v Merge | sort | uniq
+Add any user visible changes into data/org.freedesktop.fwupd.metainfo.xml
 
 Version 1.2.1
 ~~~~~~~~~~~~~
@@ -13,6 +14,7 @@ Bugfixes:
 
 Update translations:
 
+appstream-util appdata-to-news data/org.freedesktop.fwupd.metainfo.xml > NEWS
 ninja-build fwupd-pot
 tx push --source
 tx pull --all --force --minimum-perc=5
