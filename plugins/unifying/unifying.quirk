@@ -3,6 +3,7 @@
 Plugin = unifying
 Flags = is-receiver
 VendorId=USB:0x046D
+InstallDuration = 7
 
 # Nordic
 [DeviceInstanceId=USB\VID_046D&PID_AAAA]
@@ -10,6 +11,7 @@ Plugin = unifying
 Flags = is-bootloader,is-nordic
 FirmwareSizeMin = 0x4000
 CounterpartGuid = HIDRAW\VEN_046D&DEV_C52B
+InstallDuration = 7
 
 # Nordic Pico
 [DeviceInstanceId=USB\VID_046D&PID_AAAE]
@@ -17,6 +19,7 @@ Plugin = unifying
 Flags = is-bootloader,is-nordic
 FirmwareSizeMin = 0x4000
 CounterpartGuid = HIDRAW\VEN_046D&DEV_C52B
+InstallDuration = 7
 
 # Texas
 [DeviceInstanceId=USB\VID_046D&PID_AAAC]
@@ -24,6 +27,7 @@ Plugin = unifying
 Flags = is-bootloader,is-texas
 FirmwareSizeMin = 0x4000
 CounterpartGuid = HIDRAW\VEN_046D&DEV_C52B
+InstallDuration = 7
 
 # Texas Pico
 [DeviceInstanceId=USB\VID_046D&PID_AAAD]
@@ -31,3 +35,4 @@ Plugin = unifying
 Flags = is-bootloader,is-texas
 FirmwareSizeMin = 0x4000
 CounterpartGuid = HIDRAW\VEN_046D&DEV_C52B
+InstallDuration = 7
