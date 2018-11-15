@@ -354,6 +354,10 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 
 	fu_plugin_cache_add (plugin, id, dev);
 	fu_plugin_device_add (plugin, dev);
+
+	/* inhibit the idle sleep of the daemon */
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_INHIBITS_IDLE,
+			    "thunderbolt requires device wakeup");
 }
 
 static void

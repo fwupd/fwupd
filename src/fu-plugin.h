@@ -45,8 +45,9 @@ struct _FuPluginClass
 							 FuDevice	*device);
 	gboolean	 (* check_supported)		(FuPlugin	*self,
 							 const gchar	*guid);
+	void		 (* rules_changed)		(FuPlugin	*self);
 	/*< private >*/
-	gpointer	padding[23];
+	gpointer	padding[22];
 };
 
 /**
@@ -68,6 +69,7 @@ typedef enum {
  * @FU_PLUGIN_RULE_RUN_BEFORE:		Order the plugin before another
  * @FU_PLUGIN_RULE_REQUIRES_QUIRK:	Requires a specific quirk
  * @FU_PLUGIN_RULE_BETTER_THAN:		Is better than another plugin
+ * @FU_PLUGIN_RULE_INHIBITS_IDLE:	The plugin inhibits the idle shutdown
  *
  * The rules used for ordering plugins.
  * Plugins are expected to add rules in fu_plugin_initialize().
@@ -78,6 +80,7 @@ typedef enum {
 	FU_PLUGIN_RULE_RUN_BEFORE,
 	FU_PLUGIN_RULE_REQUIRES_QUIRK,
 	FU_PLUGIN_RULE_BETTER_THAN,
+	FU_PLUGIN_RULE_INHIBITS_IDLE,
 	/*< private >*/
 	FU_PLUGIN_RULE_LAST
 } FuPluginRule;

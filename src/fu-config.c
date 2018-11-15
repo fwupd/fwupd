@@ -31,6 +31,7 @@ struct _FuConfig
 	GPtrArray		*blacklist_devices;
 	GPtrArray		*blacklist_plugins;
 	guint64			 archive_size_max;
+	guint			 idle_timeout;
 	XbSilo			*silo;
 	GHashTable		*os_release;
 };
@@ -353,6 +354,7 @@ fu_config_load_from_file (FuConfig *self, const gchar *config_file,
 {
 	GFileMonitor *monitor;
 	guint64 archive_size_max;
+	guint idle_timeout;
 	g_auto(GStrv) devices = NULL;
 	g_auto(GStrv) plugins = NULL;
 	g_autoptr(GFile) file = NULL;
@@ -410,6 +412,14 @@ fu_config_load_from_file (FuConfig *self, const gchar *config_file,
 						  NULL);
 	if (archive_size_max > 0)
 		self->archive_size_max = archive_size_max *= 0x100000;
+
+	/* get idle timeout */
+	idle_timeout = g_key_file_get_uint64 (self->keyfile,
+					      "fwupd",
+					      "IdleTimeout",
+					      NULL);
+	if (idle_timeout > 0)
+		self->idle_timeout = idle_timeout;
 	return TRUE;
 }
 
@@ -504,6 +514,13 @@ fu_config_get_remotes (FuConfig *self)
 {
 	g_return_val_if_fail (FU_IS_CONFIG (self), NULL);
 	return self->remotes;
+}
+
+guint
+fu_config_get_idle_timeout (FuConfig *self)
+{
+	g_return_val_if_fail (FU_IS_CONFIG (self), 0);
+	return self->idle_timeout;
 }
 
 FwupdRemote *

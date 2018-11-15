@@ -32,6 +32,7 @@
 #include "fu-device-private.h"
 #include "fu-engine.h"
 #include "fu-hwids.h"
+#include "fu-idle.h"
 #include "fu-keyring-utils.h"
 #include "fu-history.h"
 #include "fu-mutex.h"
@@ -56,6 +57,7 @@ struct _FuEngine
 	FwupdStatus		 status;
 	guint			 percentage;
 	FuHistory		*history;
+	FuIdle			*idle;
 	XbSilo			*silo;
 	gboolean		 coldplug_running;
 	guint			 coldplug_id;
@@ -88,6 +90,7 @@ static void
 fu_engine_emit_changed (FuEngine *self)
 {
 	g_signal_emit (self, signals[SIGNAL_CHANGED], 0);
+	fu_engine_idle_reset (self);
 }
 
 static void
@@ -1079,6 +1082,12 @@ fu_engine_check_requirements (FuEngine *self, FuInstallTask *task,
 	return TRUE;
 }
 
+void
+fu_engine_idle_reset (FuEngine *self)
+{
+	fu_idle_reset (self->idle);
+}
+
 static gchar *
 fu_engine_get_boot_time (void)
 {
@@ -1208,8 +1217,13 @@ fu_engine_install_tasks (FuEngine *self,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
+	g_autoptr(FuIdleLocker) locker = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) devices_new = NULL;
+
+	/* do not allow auto-shutdown during this time */
+	locker = fu_idle_locker_new (self->idle, "performing update");
+	g_assert (locker != NULL);
 
 	/* notify the plugins about the composite action */
 	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
@@ -3090,6 +3104,17 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 }
 
 static void
+fu_engine_plugin_rules_changed_cb (FuPlugin *plugin, gpointer user_data)
+{
+	FuEngine *self = FU_ENGINE (user_data);
+	GPtrArray *rules = fu_plugin_get_rules (plugin, FU_PLUGIN_RULE_INHIBITS_IDLE);
+	for (guint j = 0; j < rules->len; j++) {
+		const gchar *tmp = g_ptr_array_index (rules, j);
+		fu_idle_inhibit (self->idle, tmp);
+	}
+}
+
+static void
 fu_engine_plugin_device_removed_cb (FuPlugin *plugin,
 				    FuDevice *device,
 				    gpointer user_data)
@@ -3423,6 +3448,9 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 		g_signal_connect (plugin, "check-supported",
 				  G_CALLBACK (fu_engine_plugin_check_supported_cb),
 				  self);
+		g_signal_connect (plugin, "rules-changed",
+				  G_CALLBACK (fu_engine_plugin_rules_changed_cb),
+				  self);
 
 		/* add */
 		fu_plugin_list_add (self->plugin_list, plugin);
@@ -3710,6 +3738,10 @@ fu_engine_load (FuEngine *self, GError **error)
 		return FALSE;
 	}
 
+	/* set up idle exit */
+	if ((self->app_flags & FU_APP_FLAGS_NO_IDLE_SOURCES) == 0)
+		fu_idle_set_timeout (self->idle, fu_config_get_idle_timeout (self->config));
+
 	/* load quirks, SMBIOS and the hwids */
 	fu_engine_load_smbios (self);
 	fu_engine_load_hwids (self);
@@ -3840,6 +3872,14 @@ fu_engine_add_runtime_version (FuEngine *self,
 }
 
 static void
+fu_engine_idle_status_notify_cb (FuIdle *idle, GParamSpec *pspec, FuEngine *self)
+{
+	FwupdStatus status = fu_idle_get_status (idle);
+	if (status == FWUPD_STATUS_SHUTDOWN)
+		fu_engine_set_status (self, status);
+}
+
+static void
 fu_engine_init (FuEngine *self)
 {
 	self->percentage = 0;
@@ -3848,6 +3888,7 @@ fu_engine_init (FuEngine *self)
 	self->device_list = fu_device_list_new ();
 	self->smbios = fu_smbios_new ();
 	self->hwids = fu_hwids_new ();
+	self->idle = fu_idle_new ();
 	self->quirks = fu_quirks_new ();
 	self->history = fu_history_new ();
 	self->plugin_list = fu_plugin_list_new ();
@@ -3855,6 +3896,9 @@ fu_engine_init (FuEngine *self)
 	self->udev_subsystems = g_ptr_array_new_with_free_func (g_free);
 	self->runtime_versions = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	self->compile_versions = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+
+	g_signal_connect (self->idle, "notify::status",
+			  G_CALLBACK (fu_engine_idle_status_notify_cb), self);
 
 	/* add some runtime versions of things the daemon depends on */
 	fu_engine_add_runtime_version (self, "org.freedesktop.fwupd", VERSION);
@@ -3893,6 +3937,7 @@ fu_engine_finalize (GObject *obj)
 	if (self->coldplug_id != 0)
 		g_source_remove (self->coldplug_id);
 
+	g_object_unref (self->idle);
 	g_object_unref (self->config);
 	g_object_unref (self->smbios);
 	g_object_unref (self->quirks);

@@ -182,6 +182,10 @@ fu_main_engine_status_changed_cb (FuEngine *engine,
 				  FuMainPrivate *priv)
 {
 	fu_main_set_status (priv, status);
+
+	/* engine has gone idle */
+	if (status == FWUPD_STATUS_SHUTDOWN)
+		g_main_loop_quit (priv->loop);
 }
 
 static void
@@ -674,6 +678,9 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 	GVariant *val = NULL;
 	g_autoptr(GError) error = NULL;
 
+	/* activity */
+	fu_engine_idle_reset (priv->engine);
+
 	if (g_strcmp0 (method_name, "GetDevices") == 0) {
 		g_autoptr(GPtrArray) devices = NULL;
 		g_debug ("Called %s()", method_name);
@@ -1101,6 +1108,9 @@ fu_main_daemon_get_property (GDBusConnection *connection_, const gchar *sender,
 			     gpointer user_data)
 {
 	FuMainPrivate *priv = (FuMainPrivate *) user_data;
+
+	/* activity */
+	fu_engine_idle_reset (priv->engine);
 
 	if (g_strcmp0 (property_name, "DaemonVersion") == 0)
 		return g_variant_new_string (VERSION);
