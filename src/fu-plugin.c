@@ -60,6 +60,7 @@ enum {
 	SIGNAL_DEVICE_ADDED,
 	SIGNAL_DEVICE_REMOVED,
 	SIGNAL_DEVICE_REGISTER,
+	SIGNAL_RULES_CHANGED,
 	SIGNAL_RECOLDPLUG,
 	SIGNAL_SET_COLDPLUG_DELAY,
 	SIGNAL_CHECK_SUPPORTED,
@@ -1557,6 +1558,7 @@ fu_plugin_add_rule (FuPlugin *self, FuPluginRule rule, const gchar *name)
 {
 	FuPluginPrivate *priv = fu_plugin_get_instance_private (self);
 	g_ptr_array_add (priv->rules[rule], g_strdup (name));
+	g_signal_emit (self, signals[SIGNAL_RULES_CHANGED], 0);
 }
 
 /**
@@ -1741,6 +1743,12 @@ fu_plugin_class_init (FuPluginClass *klass)
 			      G_STRUCT_OFFSET (FuPluginClass, check_supported),
 			      NULL, NULL, g_cclosure_marshal_generic,
 			      G_TYPE_BOOLEAN, 1, G_TYPE_STRING);
+	signals[SIGNAL_RULES_CHANGED] =
+		g_signal_new ("rules-changed",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (FuPluginClass, rules_changed),
+			      NULL, NULL, g_cclosure_marshal_VOID__VOID,
+			      G_TYPE_NONE, 0);
 }
 
 static void

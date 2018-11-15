@@ -171,6 +171,10 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 
 	fu_plugin_device_add (plugin, dev);
 	fu_plugin_cache_add (plugin, dev_id_str, dev);
+
+	/* inhibit the idle sleep of the daemon */
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_INHIBITS_IDLE,
+			    "SynapticsMST can cause the screen to flash when probing");
 	return TRUE;
 }
 

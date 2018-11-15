@@ -57,6 +57,8 @@ fwupd_status_to_string (FwupdStatus status)
 		return "downloading";
 	if (status == FWUPD_STATUS_WAITING_FOR_AUTH)
 		return "waiting-for-auth";
+	if (status == FWUPD_STATUS_SHUTDOWN)
+		return "shutdown";
 	return NULL;
 }
 
@@ -99,6 +101,8 @@ fwupd_status_from_string (const gchar *status)
 		return FWUPD_STATUS_DEVICE_BUSY;
 	if (g_strcmp0 (status, "waiting-for-auth") == 0)
 		return FWUPD_STATUS_WAITING_FOR_AUTH;
+	if (g_strcmp0 (status, "shutdown") == 0)
+		return FWUPD_STATUS_SHUTDOWN;
 	return FWUPD_STATUS_LAST;
 }
 
