@@ -3080,13 +3080,13 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REGISTERED))
 		fu_engine_plugin_device_register (self, device);
 
+	/* create new device */
+	fu_device_list_add (self->device_list, device);
+
 	/* match the metadata at this point so clients can tell if the
 	 * device is worthy */
 	if (fu_engine_is_device_supported (self, device))
 		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_SUPPORTED);
-
-	/* create new device */
-	fu_device_list_add (self->device_list, device);
 }
 
 static void
