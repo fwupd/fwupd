@@ -633,18 +633,18 @@ static XbNode *
 fu_engine_store_get_app_by_guids (XbSilo *silo, FuDevice *device)
 {
 	GPtrArray *guids = fu_device_get_guids (device);
+	g_autoptr(GString) xpath = g_string_new (NULL);
+	g_autoptr(XbNode) component = NULL;
 	for (guint i = 0; i < guids->len; i++) {
-		g_autoptr(XbNode) component = NULL;
-		g_autofree gchar *xpath = NULL;
 		const gchar *guid = g_ptr_array_index (guids, i);
-		xpath = g_strdup_printf ("components/component/"
-					 "provides/firmware[@type='flashed'][text()='%s']/"
-					 "../..",
-					 guid);
-		component = xb_silo_query_first (silo, xpath, NULL);
-		if (component != NULL)
-			return g_steal_pointer (&component);
+		xb_string_append_union (xpath,
+					"components/component/"
+					"provides/firmware[@type='flashed'][text()='%s']/"
+					"../..", guid);
 	}
+	component = xb_silo_query_first (silo, xpath->str, NULL);
+	if (component != NULL)
+		return g_steal_pointer (&component);
 	return NULL;
 }
 
