@@ -207,7 +207,6 @@ static gchar *
 fu_engine_get_release_version (FuEngine *self, XbNode *component, XbNode *rel)
 {
 	FuVersionFormat fmt = FU_VERSION_FORMAT_TRIPLET;
-	const gchar *quirk;
 	const gchar *version;
 	const gchar *version_format;
 	guint64 ver_uint32;
@@ -220,21 +219,6 @@ fu_engine_get_release_version (FuEngine *self, XbNode *component, XbNode *rel)
 	/* already dotted notation */
 	if (g_strstr_len (version, -1, ".") != NULL)
 		return g_strdup (version);
-
-	/* fall back to the quirk database until all files have metadata */
-	quirk = fu_quirks_lookup_by_id (self->quirks,
-					"DaemonVersionFormat=quad",
-					FU_QUIRKS_DAEMON_VERSION_FORMAT);
-	if (quirk != NULL) {
-		const gchar *id = xb_node_query_text (component, "id", NULL);
-		g_auto(GStrv) globs = g_strsplit (quirk, ",", -1);
-		for (guint i = 0; globs[i] != NULL; i++) {
-			if (fnmatch (globs[i], id, 0) == 0) {
-				fmt = FU_VERSION_FORMAT_QUAD;
-				break;
-			}
-		}
-	}
 
 	/* specified in metadata */
 	version_format = xb_node_query_text (component,

@@ -38,10 +38,3 @@ UefiVersionFormat = quad
 
 [SmbiosManufacturer=Alienware]
 UefiVersionFormat = quad
-
-# DEPRECATED: put this in the AppStream metadata itself using
-# <custom>
-#   <value key="LVFS::VersionFormat">quad</value>
-# </custom>
-[DaemonVersionFormat=quad]
-ComponentIDs = com.dell.uefi*.firmware
