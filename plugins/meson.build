@@ -12,6 +12,7 @@ subdir('test')
 subdir('udev')
 subdir('unifying')
 subdir('upower')
+subdir('wacom-raw')
 subdir('wacom-usb')
 subdir('superio')
 
