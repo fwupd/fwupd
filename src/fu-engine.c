@@ -2217,6 +2217,14 @@ fu_engine_get_details (FuEngine *self, gint fd, GError **error)
 		return NULL;
 	}
 
+	/* build the index */
+	if (!xb_silo_query_build_index (silo, "component/provides/firmware",
+					"type", error))
+		return FALSE;
+	if (!xb_silo_query_build_index (silo, "component/provides/firmware",
+					NULL, error))
+		return FALSE;
+
 	/* does this exist in any enabled remote */
 	csum = g_compute_checksum_for_bytes (G_CHECKSUM_SHA1, blob);
 	remote_id = fu_engine_get_remote_id_for_checksum (self, csum);
