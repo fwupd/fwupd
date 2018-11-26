@@ -688,6 +688,9 @@ fu_dell_dock_ec_write_fw (FuDevice *device, GBytes *blob_fw,
 	if (!fu_dell_dock_hid_raise_mcu_clock (self->symbiote, FALSE, error))
 		return FALSE;
 
+	/* dock will reboot to re-read; this is to appease the daemon */
+	fu_device_set_version (device, dynamic_version);
+
 	if (fu_device_has_custom_flag (device, "skip-restart")) {
 		g_debug ("Skipping EC reset per quirk request");
 		return TRUE;
@@ -732,9 +735,6 @@ fu_dell_dock_ec_write_fw (FuDevice *device, GBytes *blob_fw,
 			return FALSE;
 		}
 	}
-
-	/* dock will reboot to re-read; this is to appease the daemon */
-	fu_device_set_version (device, dynamic_version);
 
 	return TRUE;
 }
