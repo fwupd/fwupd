@@ -40,6 +40,7 @@
 typedef enum {
 	FW_UPDATE_IN_PROGRESS,
 	FW_UPDATE_COMPLETE,
+	FW_UPDATE_AUTHENTICATION_FAILED,
 } FuDellDockECFWUpdateStatus;
 
 const FuHIDI2CParameters ec_base_settings = {
@@ -722,6 +723,13 @@ fu_dell_dock_ec_write_fw (FuDevice *device, GBytes *blob_fw,
 			g_debug ("Flash EC Received result: %s (status %u)",
 				 error_local->message, status);
 			return TRUE;
+		}
+		if (status == FW_UPDATE_AUTHENTICATION_FAILED) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
+					     "invalid EC firmware image");
+			return FALSE;
 		}
 	}
 
