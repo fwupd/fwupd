@@ -31,6 +31,25 @@
     <content_attribute id="social-info">moderate</content_attribute>
   </content_rating>
   <releases>
+    <release version="1.2.1" date="2018-11-27">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add per-release install duration values</li>
+          <li>Shut down the daemon after 2h of inactivity when possible</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Fix a use-after-free when using --immediate-exit</li>
+          <li>Fix flashing the 8bitdo SF30</li>
+          <li>Fix showing the custom remote agreements</li>
+          <li>Include the os-release information in the release metadata</li>
+          <li>Speed up startup by loading less thunderbolt firmware</li>
+          <li>Speed up startup by using a silo index for GUID queries</li>
+          <li>Use less memory and fragment the heap less when starting</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.2.0" date="2018-11-07">
       <description>
         <p>This release adds the following features:</p>
