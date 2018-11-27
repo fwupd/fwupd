@@ -1,6 +1,7 @@
 subdir('dfu')
 subdir('colorhug')
 subdir('ebitdo')
+subdir('fastboot')
 subdir('flashrom')
 subdir('steelseries')
 subdir('dell-dock')
