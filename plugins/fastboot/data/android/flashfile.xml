@@ -1,0 +1,6 @@
+<steps interface="AP">
+  <step operation="getvar" var="max-sparse-size"/>
+  <step operation="oem" var="fb_mode_set"/>
+  <step operation="flash" partition="logo" filename="logo.png" MD5="foo"/>
+  <step operation="erase" partition="cache"/>
+</steps>

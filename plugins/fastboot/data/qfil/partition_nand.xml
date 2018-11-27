@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nandboot>
+  <magic_numbers>
+    <usr_part_magic1>0xAA7D1B9A</usr_part_magic1>
+    <usr_part_magic2>0x1F7D48BC</usr_part_magic2>
+  </magic_numbers>
+  <partition_version length="4">0x4</partition_version>
+  <partitions>
+    <partition>
+      <name length="16" type="string">0:SBL</name>
+      <size_blks length="4">0x8</size_blks>
+      <pad_blks length="4">0x2</pad_blks>
+      <which_flash>0</which_flash>
+      <attr>0xFF</attr>
+      <attr>0x01</attr>
+      <attr>0x00</attr>
+      <attr>0xFE</attr>
+      <img_name type="string">sbl1.mbn</img_name>
+    </partition>
+  </partitions>
+</nandboot>
