@@ -138,7 +138,7 @@
           <li>Allow different plugins to add the same device</li>
           <li>Allow flashing unifying devices in recovery mode</li>
           <li>Allow running synapticsmst on non-Dell hardware</li>
-          <li>Check the ESP for sanity at at startup</li>
+          <li>Check the ESP for sanity at startup</li>
           <li>Do not hold hidraw devices open forever</li>
           <li>Don't override _FORTIFY_SOURCE when building the EFI binary</li>
           <li>Don't show passwords in fwupdmgr</li>
@@ -191,7 +191,7 @@
       <description>
         <p>This release adds the following features:</p>
         <ul>
-          <li>Add an plugin to update some future Wacom tablets</li>
+          <li>Add a plugin to update some future Wacom tablets</li>
           <li>Add 'fwupdmgr get-topology' to show logical device tree</li>
           <li>Add support for creating a flatpak</li>
           <li>Add support for creating a snap</li>
