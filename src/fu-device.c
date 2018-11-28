@@ -771,6 +771,30 @@ fu_device_add_guid_safe (FuDevice *self, const gchar *guid)
 }
 
 /**
+ * fu_device_has_guid:
+ * @self: A #FuDevice
+ * @guid: A GUID, e.g. `WacomAES`
+ *
+ * Finds out if the device has a specific GUID.
+ *
+ * Returns: %TRUE if the GUID is found
+ *
+ * Since: 1.2.2
+ **/
+gboolean
+fu_device_has_guid (FuDevice *self, const gchar *guid)
+{
+	/* make valid */
+	if (!fu_common_guid_is_valid (guid)) {
+		g_autofree gchar *tmp = fu_common_guid_from_string (guid);
+		return fwupd_device_has_guid (FWUPD_DEVICE (self), tmp);
+	}
+
+	/* already valid */
+	return fwupd_device_has_guid (FWUPD_DEVICE (self), guid);
+}
+
+/**
  * fu_device_add_guid:
  * @self: A #FuDevice
  * @guid: A GUID, e.g. `2082b5e0-7a64-478a-b1b2-e3404fab6dad`
