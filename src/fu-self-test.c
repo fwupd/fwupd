@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "fu-archive.h"
 #include "fu-common-cab.h"
 #include "fu-common-guid.h"
 #include "fu-common-version.h"
@@ -50,6 +51,63 @@ fu_self_test_mkroot (void)
 			g_warning ("failed to mkroot: %s", error->message);
 	}
 	g_assert_cmpint (g_mkdir_with_parents ("/tmp/fwupd-self-test/var/lib/fwupd", 0755), ==, 0);
+}
+
+static void
+fu_archive_invalid_func (void)
+{
+	g_autofree gchar *filename = NULL;
+	g_autoptr(FuArchive) archive = NULL;
+	g_autoptr(GBytes) data = NULL;
+	g_autoptr(GError) error = NULL;
+
+	filename = fu_test_get_filename (TESTDATADIR, "metadata.xml");
+	g_assert_nonnull (filename);
+	data = fu_common_get_contents_bytes (filename, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (data);
+
+	archive = fu_archive_new (data, FU_ARCHIVE_FLAG_NONE, &error);
+	g_assert_error (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED);
+	g_assert_null (archive);
+}
+
+static void
+fu_archive_cab_func (void)
+{
+	g_autofree gchar *checksum1 = NULL;
+	g_autofree gchar *checksum2 = NULL;
+	g_autofree gchar *filename = NULL;
+	g_autoptr(FuArchive) archive = NULL;
+	g_autoptr(GBytes) data = NULL;
+	g_autoptr(GError) error = NULL;
+	GBytes *data_tmp;
+
+	filename = fu_test_get_filename (TESTDATADIR, "colorhug/colorhug-als-3.0.2.cab");
+	g_assert_nonnull (filename);
+	data = fu_common_get_contents_bytes (filename, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (data);
+
+	archive = fu_archive_new (data, FU_ARCHIVE_FLAG_NONE, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (archive);
+
+	data_tmp = fu_archive_lookup_by_fn (archive, "firmware.metainfo.xml", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (data_tmp);
+	checksum1 = g_compute_checksum_for_bytes (G_CHECKSUM_SHA1, data_tmp);
+	g_assert_cmpstr (checksum1, ==, "8611114f51f7151f190de86a5c9259d79ff34216");
+
+	data_tmp = fu_archive_lookup_by_fn (archive, "firmware.bin", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (data_tmp);
+	checksum2 = g_compute_checksum_for_bytes (G_CHECKSUM_SHA1, data_tmp);
+	g_assert_cmpstr (checksum2, ==, "7c0ae84b191822bcadbdcbe2f74a011695d783c7");
+
+	data_tmp = fu_archive_lookup_by_fn (archive, "NOTGOINGTOEXIST.xml", &error);
+	g_assert_error (error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND);
+	g_assert_null (data_tmp);
 }
 
 static void
@@ -3188,6 +3246,8 @@ main (int argc, char **argv)
 	/* tests go here */
 	if (g_test_slow ())
 		g_test_add_func ("/fwupd/progressbar", fu_progressbar_func);
+	g_test_add_func ("/fwupd/archive{invalid}", fu_archive_invalid_func);
+	g_test_add_func ("/fwupd/archive{cab}", fu_archive_cab_func);
 	g_test_add_func ("/fwupd/engine{requirements-other-device}", fu_engine_requirements_other_device_func);
 	g_test_add_func ("/fwupd/device{incorporate}", fu_device_incorporate_func);
 	g_test_add_func ("/fwupd/device{poll}", fu_device_poll_func);

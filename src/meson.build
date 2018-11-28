@@ -25,6 +25,7 @@ endif
 libfwupdprivate = static_library(
   'fwupdprivate',
   sources : [
+    'fu-archive.c',
     'fu-common.c',
     'fu-common-guid.c',
     'fu-common-version.c',
@@ -108,6 +109,7 @@ fwupdtool = executable(
   sources : [
     'fu-tool.c',
     keyring_src,
+    'fu-archive.c',
     'fu-chunk.c',
     'fu-common.c',
     'fu-common-cab.c',
@@ -188,6 +190,7 @@ executable(
   resources_src,
   sources : [
     keyring_src,
+    'fu-archive.c',
     'fu-chunk.c',
     'fu-common.c',
     'fu-common-cab.c',
@@ -259,6 +262,7 @@ if get_option('tests')
     sources : [
       keyring_src,
       'fu-self-test.c',
+      'fu-archive.c',
       'fu-chunk.c',
       'fu-common.c',
       'fu-common-cab.c',
@@ -324,6 +328,8 @@ if get_option('introspection')
   gir_dep = declare_dependency(sources: gir)
   gnome.generate_gir(fwupd,
     sources : [
+      'fu-archive.c',
+      'fu-archive.h',
       'fu-chunk.c',
       'fu-chunk.h',
       'fu-common.c',
