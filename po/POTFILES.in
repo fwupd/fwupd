@@ -1,4 +1,3 @@
-data/org.freedesktop.fwupd.metainfo.xml
 data/remotes.d/lvfs.metainfo.xml
 data/remotes.d/lvfs-testing.metainfo.xml
 policy/org.freedesktop.fwupd.policy.in
