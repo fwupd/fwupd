@@ -9,8 +9,8 @@ fwupdmgr get-remotes
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
 # ---
-echo "Refreshing with dummy metadata..."
-fwupdmgr refresh ${dirname}/firmware-example.xml.gz ${dirname}/firmware-example.xml.gz.asc lvfs
+echo "Enabling fwupd-tests remote..."
+fwupdmgr enable-remote fwupd-tests
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
 # ---

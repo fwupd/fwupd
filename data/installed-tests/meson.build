@@ -13,8 +13,7 @@ configure_file(
 
 install_data([
     'fwupdmgr.sh',
-    'firmware-example.xml.gz',
-    'firmware-example.xml.gz.asc',
+    'fwupd-tests.xml',
     'hardware.py',
   ],
   install_dir : 'share/installed-tests/fwupd',
@@ -45,4 +44,13 @@ custom_target('installed-cab124',
   ],
   install: true,
   install_dir: join_paths('share', 'installed-tests', 'fwupd'),
+)
+
+# replace @installedtestsdir@
+configure_file(
+  input : 'remote.conf.in',
+  output : 'fwupd-tests.conf',
+  configuration : con2,
+  install: true,
+  install_dir: join_paths(sysconfdir, 'fwupd', 'remotes.d'),
 )
