@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<components version="0.9" origin="lvfs">
+  <component type="firmware">
+    <id>fakedevice.firmware</id>
+    <name>FakeDevice Firmware</name>
+    <summary>Firmware for the ACME Corp Integrated Webcam</summary>
+    <developer_name>ACME Corp</developer_name>
+    <project_license>GPL-2.0+</project_license>
+    <description><p>Updating the firmware on your webcam device improves performance and adds new features.</p></description>
+    <url type="homepage">http://www.acme.com/</url>
+    <releases>
+      <release version="1.2.4" timestamp="1497499200" urgency="medium">
+        <size type="installed">17</size>
+        <size type="download">1163</size>
+        <location>./fakedevice124.cab</location>
+        <checksum filename="fakedevice124.cab" target="container" type="sha1">fc0aabcf98bf3546c91270f2941f0acd0395dd79</checksum>
+        <checksum filename="fakedevice124.bin" target="content" type="sha1">2b8546ba805ad10bf8a2e5ad539d53f303812ba5</checksum>
+        <description><p>Fixes another bug with the flux capacitor to prevent time going backwards.</p></description>
+      </release>
+      <release version="1.2.3" timestamp="1497499200" urgency="medium">
+        <size type="installed">17</size>
+        <size type="download">1153</size>
+        <location>./fakedevice123.cab</location>
+        <checksum filename="fakedevice123.cab" target="container" type="sha1">bc3c32f42cf33fe5aade64f999417251fd8208d3</checksum>
+        <checksum filename="fakedevice123.bin" target="content" type="sha1">7998cd212721e068b2411135e1f90d0ad436d730</checksum>
+        <description><p>Fixes a bug with the flux capacitor to avoid year 2038 overflow.</p></description>
+      </release>
+    </releases>
+    <provides>
+      <firmware type="flashed">b585990a-003e-5270-89d5-3705a17f9a43</firmware>
+    </provides>
+  </component>
+  <component type="firmware">
+    <id>com.hughski.ColorHug2.firmware</id>
+    <name>ColorHug2</name>
+    <summary>Firmware for the Hughski ColorHug2 Colorimeter</summary>
+    <developer_name>Hughski Limited</developer_name>
+    <project_license>GPL-2.0+</project_license>
+    <description><p>Updating the firmware on your ColorHug2 device improves performance and adds new features.</p></description>
+    <url type="homepage">http://www.hughski.com/</url>
+    <releases>
+      <release version="2.0.7" timestamp="1482901200" urgency="medium">
+        <size type="installed">16384</size>
+        <size type="download">19592</size>
+        <location>hughski-colorhug2-2.0.7.cab</location>
+        <checksum filename="0a29848de74d26348bc5a6e24fc9f03778eddf0e-hughski-colorhug2-2.0.7.cab" target="container" type="sha1">490be5c0b13ca4a3f169bf8bc682ba127b8f7b96</checksum>
+        <checksum filename="firmware.bin" target="content" type="sha1">658851e6f27c4d87de19cd66b97b610d100efe09</checksum>
+        <description><p>This release fixes prevents the firmware returning an error when the remote SHA1 hash was never sent.</p></description>
+      </release>
+    </releases>
+    <provides>
+      <firmware type="flashed">2082b5e0-7a64-478a-b1b2-e3404fab6dad</firmware>
+    </provides>
+  </component>
+  <component type="firmware">
+    <id>com.hughski.ColorHug.firmware</id>
+    <name>ColorHug</name>
+    <summary>Firmware for the Hughski ColorHug Colorimeter</summary>
+    <developer_name>Hughski Limited</developer_name>
+    <project_license>GPL-2.0+</project_license>
+    <description><p>Updating the firmware on your ColorHug device improves performance and adds new features.</p></description>
+    <url type="homepage">http://www.hughski.com/</url>
+    <releases>
+      <release version="1.2.6" timestamp="1480683870" urgency="low">
+        <size type="installed">16384</size>
+        <size type="download">18054</size>
+        <location>hughski-colorhug-1.2.6.cab</location>
+        <checksum filename="aa1b94b36c91929fbf75551b8a376d7292f8c51c-hughski-colorhug-1.2.6.cab" target="container" type="sha1">570a4259af0c7670f3883e84d2f4e6ff7de572c2</checksum>
+        <checksum filename="firmware.bin" target="content" type="sha1">111784ffadfd5dd43f05655b266b5142230195b6</checksum>
+        <description><p>This release fixes prevents the firmware returning an error when the remote SHA1 hash was never sent.</p></description>
+      </release>
+    </releases>
+    <provides>
+      <firmware type="flashed">40338ceb-b966-4eae-adae-9c32edfcc484</firmware>
+    </provides>
+  </component>
+</components>
