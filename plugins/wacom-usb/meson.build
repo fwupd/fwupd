@@ -1,10 +1,10 @@
-cargs = ['-DG_LOG_DOMAIN="FuPluginWac"']
+cargs = ['-DG_LOG_DOMAIN="FuPluginWacomUsb"']
 
-install_data(['wacomhid.quirk'],
+install_data(['wacom-usb.quirk'],
   install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
 )
 
-shared_module('fu_plugin_wacomhid',
+shared_module('fu_plugin_wacom_usb',
   sources : [
     'fu-wac-common.c',
     'fu-wac-device.c',
@@ -12,7 +12,7 @@ shared_module('fu_plugin_wacomhid',
     'fu-wac-module.c',
     'fu-wac-module-bluetooth.c',
     'fu-wac-module-touch.c',
-    'fu-plugin-wacomhid.c',
+    'fu-plugin-wacom-usb.c',
   ],
   include_directories : [
     include_directories('../..'),
@@ -35,7 +35,7 @@ if get_option('tests')
   testdatadir = join_paths(meson.current_source_dir(), 'tests')
   cargs += '-DTESTDATADIR="' + testdatadir + '"'
   e = executable(
-    'wacomhid-self-test',
+    'wacom-usb-self-test',
     sources : [
       'fu-self-test.c',
       'fu-wac-common.c',
@@ -62,5 +62,5 @@ if get_option('tests')
     ],
     c_args : cargs
   )
-  test('wacomhid-self-test', e)
+  test('wacom-usb-self-test', e)
 endif

@@ -1,4 +1,4 @@
-Wacom HID Support
+Wacom USB Support
 =================
 
 Introduction
