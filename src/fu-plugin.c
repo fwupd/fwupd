@@ -807,6 +807,7 @@ fu_plugin_runner_startup (FuPlugin *self, GError **error)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginStartupFunc func = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* not enabled */
 	if (!priv->enabled)
@@ -821,8 +822,18 @@ fu_plugin_runner_startup (FuPlugin *self, GError **error)
 	if (func == NULL)
 		return TRUE;
 	g_debug ("performing startup() on %s", priv->name);
-	if (!func (self, error)) {
-		g_prefix_error (error, "failed to startup %s: ", priv->name);
+	if (!func (self, &error_local)) {
+		if (error_local == NULL) {
+			g_critical ("unset error in plugin %s for startup()",
+				    priv->name);
+			g_set_error_literal (&error_local,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "unspecified error");
+		}
+		g_propagate_prefixed_error (error, g_steal_pointer (&error_local),
+					    "failed to startup using %s: ",
+					    priv->name);
 		return FALSE;
 	}
 	return TRUE;
@@ -878,6 +889,7 @@ fu_plugin_runner_device_generic (FuPlugin *self, FuDevice *device,
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginDeviceFunc func = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* not enabled */
 	if (!priv->enabled)
@@ -892,10 +904,18 @@ fu_plugin_runner_device_generic (FuPlugin *self, FuDevice *device,
 	if (func == NULL)
 		return TRUE;
 	g_debug ("performing %s() on %s", symbol_name + 10, priv->name);
-	if (!func (self, device, error)) {
-		g_prefix_error (error, "failed to run %s() on %s: ",
-				symbol_name + 10,
-				priv->name);
+	if (!func (self, device, &error_local)) {
+		if (error_local == NULL) {
+			g_critical ("unset error in plugin %s for %s()",
+				    priv->name, symbol_name + 10);
+			g_set_error_literal (&error_local,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "unspecified error");
+		}
+		g_propagate_prefixed_error (error, g_steal_pointer (&error_local),
+					    "failed to %s using %s: ",
+					    symbol_name + 10, priv->name);
 		return FALSE;
 	}
 	return TRUE;
@@ -908,6 +928,7 @@ fu_plugin_runner_flagged_device_generic (FuPlugin *self, FwupdInstallFlags flags
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginFlaggedDeviceFunc func = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* not enabled */
 	if (!priv->enabled)
@@ -922,10 +943,18 @@ fu_plugin_runner_flagged_device_generic (FuPlugin *self, FwupdInstallFlags flags
 	if (func == NULL)
 		return TRUE;
 	g_debug ("performing %s() on %s", symbol_name + 10, priv->name);
-	if (!func (self, flags, device, error)) {
-		g_prefix_error (error, "failed to run %s() on %s: ",
-				symbol_name + 10,
-				priv->name);
+	if (!func (self, flags, device, &error_local)) {
+		if (error_local == NULL) {
+			g_critical ("unset error in plugin %s for %s()",
+				    priv->name, symbol_name + 10);
+			g_set_error_literal (&error_local,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "unspecified error");
+		}
+		g_propagate_prefixed_error (error, g_steal_pointer (&error_local),
+					    "failed to %s using %s: ",
+					    symbol_name + 10, priv->name);
 		return FALSE;
 	}
 	return TRUE;
@@ -938,6 +967,7 @@ fu_plugin_runner_device_array_generic (FuPlugin *self, GPtrArray *devices,
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginDeviceArrayFunc func = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* not enabled */
 	if (!priv->enabled)
@@ -952,10 +982,18 @@ fu_plugin_runner_device_array_generic (FuPlugin *self, GPtrArray *devices,
 	if (func == NULL)
 		return TRUE;
 	g_debug ("performing %s() on %s", symbol_name + 10, priv->name);
-	if (!func (self, devices, error)) {
-		g_prefix_error (error, "failed to run %s() on %s: ",
-				symbol_name + 10,
-				priv->name);
+	if (!func (self, devices, &error_local)) {
+		if (error_local == NULL) {
+			g_critical ("unset error in plugin %s for %s()",
+				    priv->name, symbol_name + 10);
+			g_set_error_literal (&error_local,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "unspecified error");
+		}
+		g_propagate_prefixed_error (error, g_steal_pointer (&error_local),
+					    "failed to %s using %s: ",
+					    symbol_name + 10, priv->name);
 		return FALSE;
 	}
 	return TRUE;
@@ -966,6 +1004,7 @@ fu_plugin_runner_coldplug (FuPlugin *self, GError **error)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginStartupFunc func = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* not enabled */
 	if (!priv->enabled)
@@ -980,8 +1019,17 @@ fu_plugin_runner_coldplug (FuPlugin *self, GError **error)
 	if (func == NULL)
 		return TRUE;
 	g_debug ("performing coldplug() on %s", priv->name);
-	if (!func (self, error)) {
-		g_prefix_error (error, "failed to coldplug %s: ", priv->name);
+	if (!func (self, &error_local)) {
+		if (error_local == NULL) {
+			g_critical ("unset error in plugin %s for coldplug()",
+				    priv->name);
+			g_set_error_literal (&error_local,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "unspecified error");
+		}
+		g_propagate_prefixed_error (error, g_steal_pointer (&error_local),
+					    "failed to coldplug using %s: ", priv->name);
 		return FALSE;
 	}
 	return TRUE;
@@ -992,6 +1040,7 @@ fu_plugin_runner_recoldplug (FuPlugin *self, GError **error)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginStartupFunc func = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* not enabled */
 	if (!priv->enabled)
@@ -1006,8 +1055,18 @@ fu_plugin_runner_recoldplug (FuPlugin *self, GError **error)
 	if (func == NULL)
 		return TRUE;
 	g_debug ("performing recoldplug() on %s", priv->name);
-	if (!func (self, error)) {
-		g_prefix_error (error, "failed to recoldplug %s: ", priv->name);
+	if (!func (self, &error_local)) {
+		if (error_local == NULL) {
+			g_critical ("unset error in plugin %s for recoldplug()",
+				    priv->name);
+			g_set_error_literal (&error_local,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "unspecified error");
+		}
+		g_propagate_prefixed_error (error, g_steal_pointer (&error_local),
+					    "failed to recoldplug using %s: ",
+					    priv->name);
 		return FALSE;
 	}
 	return TRUE;
@@ -1018,6 +1077,7 @@ fu_plugin_runner_coldplug_prepare (FuPlugin *self, GError **error)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginStartupFunc func = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* not enabled */
 	if (!priv->enabled)
@@ -1032,8 +1092,18 @@ fu_plugin_runner_coldplug_prepare (FuPlugin *self, GError **error)
 	if (func == NULL)
 		return TRUE;
 	g_debug ("performing coldplug_prepare() on %s", priv->name);
-	if (!func (self, error)) {
-		g_prefix_error (error, "failed to prepare for coldplug %s: ", priv->name);
+	if (!func (self, &error_local)) {
+		if (error_local == NULL) {
+			g_critical ("unset error in plugin %s for coldplug_prepare()",
+				    priv->name);
+			g_set_error_literal (&error_local,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "unspecified error");
+		}
+		g_propagate_prefixed_error (error, g_steal_pointer (&error_local),
+					    "failed to coldplug_prepare using %s: ",
+					    priv->name);
 		return FALSE;
 	}
 	return TRUE;
@@ -1044,6 +1114,7 @@ fu_plugin_runner_coldplug_cleanup (FuPlugin *self, GError **error)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginStartupFunc func = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* not enabled */
 	if (!priv->enabled)
@@ -1058,8 +1129,18 @@ fu_plugin_runner_coldplug_cleanup (FuPlugin *self, GError **error)
 	if (func == NULL)
 		return TRUE;
 	g_debug ("performing coldplug_cleanup() on %s", priv->name);
-	if (!func (self, error)) {
-		g_prefix_error (error, "failed to cleanup coldplug %s: ", priv->name);
+	if (!func (self, &error_local)) {
+		if (error_local == NULL) {
+			g_critical ("unset error in plugin %s for coldplug_cleanup()",
+				    priv->name);
+			g_set_error_literal (&error_local,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "unspecified error");
+		}
+		g_propagate_prefixed_error (error, g_steal_pointer (&error_local),
+					    "failed to coldplug_cleanup using %s: ",
+					    priv->name);
 		return FALSE;
 	}
 	return TRUE;
@@ -1147,6 +1228,7 @@ fu_plugin_runner_usb_device_added (FuPlugin *self, FuUsbDevice *device, GError *
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginUsbDeviceAddedFunc func = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* not enabled */
 	if (!priv->enabled)
@@ -1158,9 +1240,22 @@ fu_plugin_runner_usb_device_added (FuPlugin *self, FuUsbDevice *device, GError *
 
 	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_usb_device_added", (gpointer *) &func);
-	if (func != NULL) {
-		g_debug ("performing usb_device_added() on %s", priv->name);
-		return func (self, device, error);
+	if (func == NULL)
+		return TRUE;
+	g_debug ("performing usb_device_added() on %s", priv->name);
+	if (!func (self, device, &error_local)) {
+		if (error_local == NULL) {
+			g_critical ("unset error in plugin %s for usb_device_added()",
+				    priv->name);
+			g_set_error_literal (&error_local,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "unspecified error");
+		}
+		g_propagate_prefixed_error (error, g_steal_pointer (&error_local),
+					    "failed to add device using on %s: ",
+					    priv->name);
+		return FALSE;
 	}
 	return TRUE;
 }
@@ -1170,6 +1265,7 @@ fu_plugin_runner_udev_device_added (FuPlugin *self, FuUdevDevice *device, GError
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginUdevDeviceAddedFunc func = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* not enabled */
 	if (!priv->enabled)
@@ -1181,9 +1277,22 @@ fu_plugin_runner_udev_device_added (FuPlugin *self, FuUdevDevice *device, GError
 
 	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_udev_device_added", (gpointer *) &func);
-	if (func != NULL) {
-		g_debug ("performing udev_device_added() on %s", priv->name);
-		return func (self, device, error);
+	if (func == NULL)
+		return TRUE;
+	g_debug ("performing udev_device_added() on %s", priv->name);
+	if (!func (self, device, &error_local)) {
+		if (error_local == NULL) {
+			g_critical ("unset error in plugin %s for udev_device_added()",
+				    priv->name);
+			g_set_error_literal (&error_local,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "unspecified error");
+		}
+		g_propagate_prefixed_error (error, g_steal_pointer (&error_local),
+					    "failed to add device using on %s: ",
+					    priv->name);
+		return FALSE;
 	}
 	return TRUE;
 }
@@ -1296,6 +1405,7 @@ fu_plugin_runner_verify (FuPlugin *self,
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginVerifyFunc func = NULL;
 	GPtrArray *checksums;
+	g_autoptr(GError) error_local = NULL;
 
 	/* not enabled */
 	if (!priv->enabled)
@@ -1314,8 +1424,18 @@ fu_plugin_runner_verify (FuPlugin *self,
 	if (func == NULL)
 		return TRUE;
 	g_debug ("performing verify() on %s", priv->name);
-	if (!func (self, device, flags, error)) {
-		g_prefix_error (error, "failed to verify %s: ", priv->name);
+	if (!func (self, device, flags, &error_local)) {
+		if (error_local == NULL) {
+			g_critical ("unset error in plugin %s for verify()",
+				    priv->name);
+			g_set_error_literal (&error_local,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "unspecified error");
+		}
+		g_propagate_prefixed_error (error, g_steal_pointer (&error_local),
+					    "failed to verify using %s: ",
+					    priv->name);
 		return FALSE;
 	}
 	return TRUE;
@@ -1361,7 +1481,7 @@ fu_plugin_runner_update (FuPlugin *self,
 	FuPluginUpdateFunc update_func;
 	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(FuDevice) device_pending = NULL;
-	GError *error_update = NULL;
+	g_autoptr(GError) error_local = NULL;
 	GPtrArray *checksums;
 
 	/* not enabled */
@@ -1408,18 +1528,18 @@ fu_plugin_runner_update (FuPlugin *self,
 	/* online */
 	history = fu_history_new ();
 	device_pending = fu_history_get_device_by_id (history, fu_device_get_id (device), NULL);
-	if (!update_func (self, device, blob_fw, flags, &error_update)) {
-		if (error_update == NULL) {
-			g_critical ("plugin %s returned FALSE from UpdateFunc "
-				    "but did not set error!",
-				    fu_plugin_get_name (self));
-			g_set_error_literal (&error_update,
+	if (!update_func (self, device, blob_fw, flags, &error_local)) {
+		if (error_local == NULL) {
+			g_critical ("unset error in plugin %s for update()",
+				    priv->name);
+			g_set_error_literal (&error_local,
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_INTERNAL,
 					     "unspecified error");
+			return FALSE;
 		}
-		fu_device_set_update_error (device, error_update->message);
-		g_propagate_error (error, error_update);
+		fu_device_set_update_error (device, error_local->message);
+		g_propagate_error (error, g_steal_pointer (&error_local));
 		return FALSE;
 	}
 
@@ -1443,15 +1563,15 @@ fu_plugin_runner_update (FuPlugin *self,
 		release = fu_device_get_release_default (device_pending);
 		tmp = fwupd_release_get_filename (release);
 		if (tmp != NULL && g_str_has_prefix (tmp, LIBEXECDIR)) {
-			g_autoptr(GError) error_local = NULL;
+			g_autoptr(GError) error_delete = NULL;
 			g_autoptr(GFile) file = NULL;
 			file = g_file_new_for_path (tmp);
-			if (!g_file_delete (file, NULL, &error_local)) {
+			if (!g_file_delete (file, NULL, &error_delete)) {
 				g_set_error (error,
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_INVALID_FILE,
 					     "Failed to delete %s: %s",
-					     tmp, error_local->message);
+					     tmp, error_delete->message);
 				return FALSE;
 			}
 		}
@@ -1464,6 +1584,7 @@ fu_plugin_runner_clear_results (FuPlugin *self, FuDevice *device, GError **error
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginDeviceFunc func = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* not enabled */
 	if (!priv->enabled)
@@ -1478,8 +1599,18 @@ fu_plugin_runner_clear_results (FuPlugin *self, FuDevice *device, GError **error
 	if (func == NULL)
 		return TRUE;
 	g_debug ("performing clear_result() on %s", priv->name);
-	if (!func (self, device, error)) {
-		g_prefix_error (error, "failed to clear_result %s: ", priv->name);
+	if (!func (self, device, &error_local)) {
+		if (error_local == NULL) {
+			g_critical ("unset error in plugin %s for clear_result()",
+				    priv->name);
+			g_set_error_literal (&error_local,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "unspecified error");
+		}
+		g_propagate_prefixed_error (error, g_steal_pointer (&error_local),
+					    "failed to clear_result using %s: ",
+					    priv->name);
 		return FALSE;
 	}
 	return TRUE;
@@ -1490,6 +1621,7 @@ fu_plugin_runner_get_results (FuPlugin *self, FuDevice *device, GError **error)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginDeviceFunc func = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* not enabled */
 	if (!priv->enabled)
@@ -1504,8 +1636,18 @@ fu_plugin_runner_get_results (FuPlugin *self, FuDevice *device, GError **error)
 	if (func == NULL)
 		return TRUE;
 	g_debug ("performing get_results() on %s", priv->name);
-	if (!func (self, device, error)) {
-		g_prefix_error (error, "failed to get_results %s: ", priv->name);
+	if (!func (self, device, &error_local)) {
+		if (error_local == NULL) {
+			g_critical ("unset error in plugin %s for get_results()",
+				    priv->name);
+			g_set_error_literal (&error_local,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "unspecified error");
+		}
+		g_propagate_prefixed_error (error, g_steal_pointer (&error_local),
+					    "failed to get_results using %s: ",
+					    priv->name);
 		return FALSE;
 	}
 	return TRUE;
