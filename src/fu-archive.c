@@ -92,7 +92,7 @@ _archive_read_ctx_free (_archive_read_ctx *arch)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(_archive_read_ctx, _archive_read_ctx_free)
 
 static gboolean
-fu_archive_load (FuArchive *self, GBytes *blob, GError **error)
+fu_archive_load (FuArchive *self, GBytes *blob, FuArchiveFlags flags, GError **error)
 {
 	int r;
 	g_autoptr(_archive_read_ctx) arch = NULL;
@@ -124,6 +124,7 @@ fu_archive_load (FuArchive *self, GBytes *blob, GError **error)
 		gint64 bufsz;
 		gssize rc;
 		struct archive_entry *entry;
+		g_autofree gchar *fn_key = NULL;
 		g_autofree guint8 *buf = NULL;
 
 		r = archive_read_next_header (arch, &entry);
@@ -168,9 +169,14 @@ fu_archive_load (FuArchive *self, GBytes *blob, GError **error)
 				     rc, bufsz);
 			return FALSE;
 		}
-		g_debug ("adding %s [%" G_GINT64_FORMAT "]", fn, bufsz);
+		if (flags & FU_ARCHIVE_FLAG_IGNORE_PATH) {
+			fn_key = g_path_get_basename (fn);
+		} else {
+			fn_key = g_strdup (fn);
+		}
+		g_debug ("adding %s [%" G_GINT64_FORMAT "]", fn_key, bufsz);
 		g_hash_table_insert (self->entries,
-				     g_strdup (fn),
+				     g_steal_pointer (&fn_key),
 				     g_bytes_new_take (g_steal_pointer (&buf), bufsz));
 	}
 
@@ -194,7 +200,7 @@ fu_archive_new (GBytes *data, FuArchiveFlags flags, GError **error)
 	g_autoptr(FuArchive) self = g_object_new (FU_TYPE_ARCHIVE, NULL);
 	g_return_val_if_fail (data != NULL, NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
-	if (!fu_archive_load (self, data, error))
+	if (!fu_archive_load (self, data, flags, error))
 		return NULL;
 	return g_steal_pointer (&self);
 }
