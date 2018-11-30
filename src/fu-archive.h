@@ -15,9 +15,18 @@ G_BEGIN_DECLS
 
 G_DECLARE_FINAL_TYPE (FuArchive, fu_archive, FU, ARCHIVE, GObject)
 
+/**
+ * FwupdError:
+ * @FU_ARCHIVE_FLAG_NONE:		No flags set
+ * @FU_ARCHIVE_FLAG_IGNORE_PATH:	Ignore any path component
+ *
+ * The flags to use when loading the archive.
+ **/
 typedef enum {
 	FU_ARCHIVE_FLAG_NONE		= 0,
-	FU_ARCHIVE_FLAGS_LAST
+	FU_ARCHIVE_FLAG_IGNORE_PATH	= 1 << 0,
+	/*< private >*/
+	FU_ARCHIVE_FLAG_LAST
 } FuArchiveFlags;
 
 FuArchive	*fu_archive_new			(GBytes		*data,
