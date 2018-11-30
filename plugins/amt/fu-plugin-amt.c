@@ -86,27 +86,26 @@ mei_context_new (mei_context *ctx,
 	return TRUE;
 }
 
-static gssize
+static gboolean
 mei_recv_msg (mei_context *ctx, guchar *buffer,
-	      gssize len, unsigned long timeout, GError **error)
+	      gssize len, guint32 *readsz, unsigned long timeout, GError **error)
 {
 	gssize rc;
-
-	g_debug ("call read length = %zd", len);
 	rc = read (ctx->fd, buffer, len);
 	if (rc < 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_READ,
 			     "read failed with status %zd %s",
-				rc, strerror(errno));
-	} else {
-		g_debug ("read succeeded with result %zd", rc);
+			     rc, strerror(errno));
+		return FALSE;
 	}
-	return rc;
+	if (readsz != NULL)
+		*readsz = rc;
+	return TRUE;
 }
 
-static gssize
+static gboolean
 mei_send_msg (mei_context *ctx, const guchar *buffer,
 	      gssize len, unsigned long timeout, GError **error)
 {
@@ -118,7 +117,6 @@ mei_send_msg (mei_context *ctx, const guchar *buffer,
 	tv.tv_sec = timeout / 1000;
 	tv.tv_usec = (timeout % 1000) * 1000000;
 
-	g_debug ("call write length = %zd", len);
 	written = write (ctx->fd, buffer, len);
 	if (written < 0) {
 		g_set_error (error,
@@ -126,16 +124,22 @@ mei_send_msg (mei_context *ctx, const guchar *buffer,
 			     FWUPD_ERROR_WRITE,
 			     "write failed with status %zd %s",
 			     written, strerror(errno));
-		return -errno;
+		return FALSE;
+	}
+	if (written != len) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_WRITE,
+			     "only wrote %" G_GSSIZE_FORMAT " of %" G_GSSIZE_FORMAT,
+			     written, len);
+		return FALSE;
 	}
 
 	FD_ZERO(&set);
 	FD_SET(ctx->fd, &set);
 	rc = select (ctx->fd + 1 , &set, NULL, NULL, &tv);
-	if (rc > 0 && FD_ISSET(ctx->fd, &set)) {
-		g_debug ("write success");
-		return written;
-	}
+	if (rc > 0 && FD_ISSET(ctx->fd, &set))
+		return TRUE;
 
 	/* timed out */
 	if (rc == 0) {
@@ -143,7 +147,7 @@ mei_send_msg (mei_context *ctx, const guchar *buffer,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_WRITE,
 			     "write failed on timeout with status");
-		return 0;
+		return FALSE;
 	}
 
 	/* rc < 0 */
@@ -151,7 +155,7 @@ mei_send_msg (mei_context *ctx, const guchar *buffer,
 		     FWUPD_ERROR,
 		     FWUPD_ERROR_WRITE,
 		     "write failed on select with status %zd", rc);
-	return rc;
+	return FALSE;
 }
 
 /***************************************************************************
@@ -254,50 +258,91 @@ struct amt_host_if {
 	mei_context mei_cl;
 };
 
-static guint32
-amt_verify_code_versions (const struct amt_host_if_resp_header *resp)
+static gboolean
+amt_verify_code_versions (const struct amt_host_if_resp_header *resp, GError **error)
 {
 	struct amt_code_versions *code_ver = (struct amt_code_versions *)resp->data;
 	gsize code_ver_len = resp->header.length - sizeof(guint32);
 	guint32 ver_type_cnt = code_ver_len -
 					sizeof(code_ver->bios) -
 					sizeof(code_ver->count);
-	if (code_ver->count != ver_type_cnt / sizeof(struct amt_version_type))
-		return AMT_STATUS_INTERNAL_ERROR;
+	if (code_ver->count != ver_type_cnt / sizeof(struct amt_version_type)) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "invalid offset");
+		return FALSE;
+	}
 	for (guint32 i = 0; i < code_ver->count; i++) {
 		guint32 len = code_ver->versions[i].description.length;
-		if (len > AMT_UNICODE_STRING_LEN)
-			return AMT_STATUS_INTERNAL_ERROR;
+		if (len > AMT_UNICODE_STRING_LEN) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "string too large");
+			return FALSE;
+		}
 		len = code_ver->versions[i].version.length;
 		if (code_ver->versions[i].version.string[len] != '\0' ||
-		    len != strlen(code_ver->versions[i].version.string))
-			return AMT_STATUS_INTERNAL_ERROR;
+		    len != strlen(code_ver->versions[i].version.string)) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "string was invalid size");
+			return FALSE;
+		}
 	}
-	return AMT_STATUS_SUCCESS;
+	return TRUE;
 }
 
-static guint32
-amt_verify_response_header (guint32 command,
-			    const struct amt_host_if_msg_header *resp_hdr,
-			    guint32 response_size)
+static gboolean
+amt_status_set_error (guint32 status, GError **error)
 {
-	if (response_size < sizeof(struct amt_host_if_resp_header)) {
-		return AMT_STATUS_INTERNAL_ERROR;
-	} else if (response_size != (resp_hdr->length +
-				sizeof(struct amt_host_if_msg_header))) {
-		return AMT_STATUS_INTERNAL_ERROR;
-	} else if (resp_hdr->command != command) {
-		return AMT_STATUS_INTERNAL_ERROR;
-	} else if (resp_hdr->_reserved != 0) {
-		return AMT_STATUS_INTERNAL_ERROR;
-	} else if (resp_hdr->version.major != AMT_MAJOR_VERSION ||
-		  resp_hdr->version.minor < AMT_MINOR_VERSION) {
-		return AMT_STATUS_INTERNAL_ERROR;
+	if (status == AMT_STATUS_SUCCESS)
+		return TRUE;
+	if (status == AMT_STATUS_INTERNAL_ERROR) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "internal error");
+		return FALSE;
 	}
-	return AMT_STATUS_SUCCESS;
+	if (status == AMT_STATUS_NOT_READY) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "not ready");
+		return FALSE;
+	}
+	if (status == AMT_STATUS_INVALID_AMT_MODE) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "invalid AMT mode");
+		return FALSE;
+	}
+	if (status == AMT_STATUS_INVALID_MESSAGE_LENGTH) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "invalid message length");
+		return FALSE;
+	}
+	if (status == AMT_STATUS_HOST_IF_EMPTY_RESPONSE) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "Intel AMT is disabled");
+		return FALSE;
+	}
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "unknown error");
+	return FALSE;
 }
 
-static guint32
+static gboolean
 amt_host_if_call (mei_context *mei_cl,
 		  const guchar *command,
 		  gssize command_sz,
@@ -309,53 +354,86 @@ amt_host_if_call (mei_context *mei_cl,
 {
 	guint32 in_buf_sz;
 	guint32 out_buf_sz;
-	gssize written;
-	guint32 status;
 	struct amt_host_if_resp_header *msg_hdr;
 
 	in_buf_sz = mei_cl->buf_size;
 	*read_buf = (guint8 *) g_malloc0 (in_buf_sz);
 	msg_hdr = (struct amt_host_if_resp_header *) *read_buf;
 
-	written = mei_send_msg (mei_cl, command, command_sz, send_timeout, error);
-	if (written != command_sz)
-		return AMT_STATUS_INTERNAL_ERROR;
-
-	out_buf_sz = mei_recv_msg (mei_cl, *read_buf, in_buf_sz, 2000, error);
-	if (out_buf_sz <= 0)
-		return AMT_STATUS_HOST_IF_EMPTY_RESPONSE;
-
-	status = msg_hdr->status;
-	if (status != AMT_STATUS_SUCCESS)
-		return status;
-
-	status = amt_verify_response_header(rcmd, &msg_hdr->header, out_buf_sz);
-	if (status != AMT_STATUS_SUCCESS)
-		return status;
-
-	if (expected_sz && expected_sz != out_buf_sz)
-		return AMT_STATUS_INTERNAL_ERROR;
-
-	return AMT_STATUS_SUCCESS;
+	if (!mei_send_msg (mei_cl, command, command_sz, send_timeout, error))
+		return FALSE;
+	if (!mei_recv_msg (mei_cl, *read_buf, in_buf_sz, &out_buf_sz, 2000, error))
+		return FALSE;
+	if (out_buf_sz <= 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_READ,
+				     "empty response");
+		return FALSE;
+	}
+	if (expected_sz && expected_sz != out_buf_sz) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_WRITE,
+			     "expected %u but got %" G_GUINT32_FORMAT,
+			     expected_sz, out_buf_sz);
+		return FALSE;
+	}
+	if (!amt_status_set_error (msg_hdr->status, error))
+		return FALSE;
+	if (out_buf_sz < sizeof(struct amt_host_if_resp_header)) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_READ,
+				     "invalid response: too small");
+		return FALSE;
+	}
+	if (out_buf_sz != (msg_hdr->header.length +
+				sizeof(struct amt_host_if_msg_header))) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_READ,
+				     "invalid response: headerlen");
+		return FALSE;
+	}
+	if (msg_hdr->header.command != rcmd) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_READ,
+				     "invalid response: rcmd");
+		return FALSE;
+	}
+	if (msg_hdr->header._reserved != 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_READ,
+				     "invalid response: reserved");
+		return FALSE;
+	}
+	if (msg_hdr->header.version.major != AMT_MAJOR_VERSION ||
+	    msg_hdr->header.version.minor < AMT_MINOR_VERSION) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_READ,
+				     "invalid response: version");
+		return FALSE;
+	}
+	return TRUE;
 }
 
-static guint32
+static gboolean
 amt_get_provisioning_state (mei_context *mei_cl, guint8 *state, GError **error)
 {
 	g_autofree struct amt_host_if_resp_header *response = NULL;
-	guint32 status;
-
-	status = amt_host_if_call (mei_cl,
-				   (const guchar *)&PROVISIONING_STATE_REQUEST,
-				   sizeof(PROVISIONING_STATE_REQUEST),
-				   (guint8 **)&response,
-				   AMT_HOST_IF_PROVISIONING_STATE_RESPONSE, 0,
-				   5000, error);
-	if (status != AMT_STATUS_SUCCESS) {
+	if (!amt_host_if_call (mei_cl,
+			       (const guchar *)&PROVISIONING_STATE_REQUEST,
+			       sizeof(PROVISIONING_STATE_REQUEST),
+			       (guint8 **)&response,
+			       AMT_HOST_IF_PROVISIONING_STATE_RESPONSE, 0,
+			       5000, error)) {
 		g_prefix_error (error, "unable to get provisioning state: ");
 		return FALSE;
 	}
-
 	*state = response->data[0];
 	return TRUE;
 }
@@ -369,7 +447,6 @@ static FuDevice *
 fu_plugin_amt_create_device (GError **error)
 {
 	gchar guid_buf[37];
-	guint32 status;
 	guint8 state;
 	struct amt_code_versions ver;
 	uuid_t uu;
@@ -387,33 +464,18 @@ fu_plugin_amt_create_device (GError **error)
 		return NULL;
 
 	/* check version */
-	status = amt_host_if_call (ctx,
-				   (const guchar *) &CODE_VERSION_REQ,
-				   sizeof(CODE_VERSION_REQ),
-				   (guint8 **) &response,
-				   AMT_HOST_IF_CODE_VERSIONS_RESPONSE, 0,
-				   5000,
-				   error);
-	if (status != AMT_STATUS_SUCCESS) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "Failed to check version");
+	if (!amt_host_if_call (ctx,
+			       (const guchar *) &CODE_VERSION_REQ,
+			       sizeof(CODE_VERSION_REQ),
+			       (guint8 **) &response,
+			       AMT_HOST_IF_CODE_VERSIONS_RESPONSE, 0,
+			       5000,
+			       error)) {
+		g_prefix_error (error, "Failed to check version: ");
 		return NULL;
 	}
-	status = amt_verify_code_versions (response);
-	if (status == AMT_STATUS_HOST_IF_EMPTY_RESPONSE) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Intel AMT is disabled");
-		return NULL;
-	}
-	if (status != AMT_STATUS_SUCCESS) {
-		g_set_error_literal (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Failed to verify code versions");
+	if (!amt_verify_code_versions (response, error)) {
+		g_prefix_error (error, "failed to verify code versions: ");
 		return NULL;
 	}
 	memcpy (&ver, response->data, sizeof(struct amt_code_versions));
