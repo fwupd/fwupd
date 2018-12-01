@@ -897,6 +897,27 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency type="build" id="libmm-glib-dev">
+    <distro id="centos">
+      <package>ModemManager-glib-devel</package>
+    </distro>
+    <distro id="fedora">
+      <package>ModemManager-glib-devel</package>
+    </distro>
+    <distro id="arch">
+      <package>modemmanager</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x">libmm-glib-dev:s390x</package>
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
   <dependency type="build" id="libpolkit-gobject-1-dev">
     <distro id="centos">
       <package>polkit-devel</package>

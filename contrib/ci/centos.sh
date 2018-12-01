@@ -9,6 +9,7 @@ meson .. \
 	--werror \
 	-Dplugin_uefi=false \
 	-Dplugin_dell=false \
+	-Dplugin_modem_manager=false \
 	-Dplugin_synaptics=true \
 	-Dintrospection=true \
 	-Dgtkdoc=true \

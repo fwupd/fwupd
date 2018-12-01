@@ -93,6 +93,29 @@ parts:
       - -lib/girepository-1.0
       - -lib/pkgconfig
       - -share/
+  # this is for the library only, we don't care about the daemon "in-snap"
+  modemmanager:
+    plugin: autotools
+    source: https://gitlab.freedesktop.org/mobile-broadband/ModemManager.git
+    #not yet tagged
+    #source-tag: 1.10.0
+    after: [gudev, gettext]
+    # build without these; system daemon needs them
+    configflags:
+      - --without-mbim
+      - --without-qmi
+    prime:
+      - -include
+      - -etc
+      - -sbin
+      - -bin
+      - -share
+      - -lib/*.*a
+      - -lib/pkgconfig
+      - -lib/ModemManager
+      - -lib/systemd
+      - -lib/udev
+      - -lib/girepository-1.0
   libusb:
     plugin: autotools
     source: https://github.com/libusb/libusb/releases/download/v1.0.22/libusb-1.0.22.tar.bz2
@@ -260,7 +283,7 @@ parts:
       - -usr/share/gir-1.0
       - -usr/share/upstart
       - -usr/lib/*/pkgconfig
-    after: [gudev, gusb, gnu-efi, libefivar-fixpkgconfig, libsmbios, build-introspection, gettext]
+    after: [gudev, gusb, gnu-efi, libefivar-fixpkgconfig, libsmbios, build-introspection, gettext, modemmanager]
   fix-bash-completion:
     plugin: make
     source: contrib/snap/fix-bash-completion
