@@ -7,3 +7,4 @@ fwupd: library-not-linked-against-libc usr/lib/*/fwupd-plugins-3/libfu_plugin_up
 #EFI applications are PE executables
 fwupd: executable-not-elf-or-script usr/lib/fwupd/efi/*.efi
 fwupd: portable-executable-missing-security-features usr/lib/fwupd/efi/*.efi ASLR DEP/NX
+fwupd: library-not-linked-against-libc usr/lib/*/fwupd-plugins-3/libfu_plugin_modem_manager.so
