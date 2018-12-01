@@ -12,6 +12,7 @@ meson .. \
     -Dman=true \
     -Dtests=true \
     -Dplugin_dummy=true \
+    -Dplugin_modem_manager=true \
     -Dplugin_thunderbolt=true \
     -Dplugin_uefi=true \
     -Dplugin_dell=true \

@@ -15,6 +15,7 @@ option('plugin_thunderbolt', type : 'boolean', value : true, description : 'enab
 option('plugin_redfish', type : 'boolean', value : true, description : 'enable Redfish support')
 option('plugin_uefi', type : 'boolean', value : true, description : 'enable UEFI support')
 option('plugin_nvme', type : 'boolean', value : true, description : 'enable NVMe support')
+option('plugin_modem_manager', type : 'boolean', value : false, description : 'enable ModemManager support')
 option('systemd', type : 'boolean', value : true, description : 'enable systemd support')
 option('systemdunitdir', type: 'string', value: '', description: 'Directory for systemd units')
 option('tests', type : 'boolean', value : true, description : 'enable tests')
