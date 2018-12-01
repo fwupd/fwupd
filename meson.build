@@ -252,6 +252,11 @@ if get_option('plugin_dell')
   endif
 endif
 
+if get_option('plugin_modem_manager')
+  libmm_glib = dependency('mm-glib', version : '>= 1.9.1')
+  add_project_arguments('-DMM_REQUIRED_VERSION="1.9.1"', language : 'c')
+endif
+
 if get_option('plugin_nvme')
   if not cc.has_header('linux/nvme_ioctl.h')
     error('NVMe support requires kernel >= 4.4')
