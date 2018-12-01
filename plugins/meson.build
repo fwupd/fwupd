@@ -24,6 +24,10 @@ if get_option('plugin_nvme')
 subdir('nvme')
 endif
 
+if get_option('plugin_modem_manager')
+subdir('modem-manager')
+endif
+
 if get_option('plugin_altos')
 subdir('altos')
 endif
