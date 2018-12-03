@@ -1775,6 +1775,17 @@ fu_engine_is_device_supported (FuEngine *self, FuDevice *device)
 }
 
 static gboolean
+fu_engine_appstream_upgrade_cb (XbBuilderFixup *self,
+				XbBuilderNode *bn,
+				gpointer user_data,
+				GError **error)
+{
+	if (g_strcmp0 (xb_builder_node_get_element (bn), "metadata") == 0)
+		xb_builder_node_set_element (bn, "custom");
+	return TRUE;
+}
+
+static gboolean
 fu_engine_load_metadata_store (FuEngine *self, GError **error)
 {
 	GPtrArray *remotes;
@@ -1801,6 +1812,7 @@ fu_engine_load_metadata_store (FuEngine *self, GError **error)
 		const gchar *path = NULL;
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(GFile) file = NULL;
+		g_autoptr(XbBuilderFixup) fixup = NULL;
 		g_autoptr(XbBuilderNode) custom = NULL;
 		g_autoptr(XbBuilderSource) source = xb_builder_source_new ();
 
@@ -1826,6 +1838,13 @@ fu_engine_load_metadata_store (FuEngine *self, GError **error)
 				   error_local->message);
 			continue;
 		}
+
+		/* fix up any legacy installed files */
+		fixup = xb_builder_fixup_new ("AppStreamUpgrade",
+					      fu_engine_appstream_upgrade_cb,
+					      self, NULL);
+		xb_builder_fixup_set_max_depth (fixup, 3);
+		xb_builder_source_add_fixup (source, fixup);
 
 		/* add metadata */
 		custom = xb_builder_node_new ("custom");
