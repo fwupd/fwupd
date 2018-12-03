@@ -10,6 +10,12 @@
 
 #include "dfu-device.h"
 
+void
+fu_plugin_init (FuPlugin *plugin)
+{
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_REQUIRES_QUIRK, FU_QUIRKS_PLUGIN);
+}
+
 static void
 fu_plugin_dfu_state_changed_cb (DfuDevice *device,
 				DfuState state,
