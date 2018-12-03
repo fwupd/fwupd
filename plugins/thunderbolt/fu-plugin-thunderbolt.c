@@ -713,8 +713,7 @@ fu_plugin_update_attach (FuPlugin *plugin,
 		return FALSE;
 	}
 	status = g_ascii_strtoull (attribute, NULL, 16);
-	if ((status == 0x00 && errno == EINVAL) ||
-	    (status == G_MAXUINT64 && errno == ERANGE)) {
+	if (status == G_MAXUINT64 && errno == ERANGE) {
 		g_set_error (error, G_IO_ERROR,
 			     g_io_error_from_errno (errno),
 			     "failed to read 'nvm_authenticate: %s",
