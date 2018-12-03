@@ -15,6 +15,12 @@ The bootloader communication is not handled in the kernel, and a tty device is
 created so userspace can communicate with the hardware. Commands the bootloader
 accept are as follows:
 
+Firmware Format
+---------------
+
+The daemon will decompress the cabinet archive and extract a firmware blob in
+ELF file format. The firmware image is inserted into the `.text` section.
+
 GUID Generation
 ---------------
 

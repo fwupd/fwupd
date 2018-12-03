@@ -16,6 +16,12 @@ programmed using a more complicated erase, write, verify algorithm based
 on a historical update protocol. The "sub-module" devices use a newer protocol,
 again based on HID, but are handled differently depending on thier type.
 
+Firmware Format
+---------------
+
+The daemon will decompress the cabinet archive and extract a firmware blob in
+SREC file format, with a custom vendor header.
+
 GUID Generation
 ---------------
 

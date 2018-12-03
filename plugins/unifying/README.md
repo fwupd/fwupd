@@ -16,6 +16,12 @@ supplied by Logitech.
 
 Additional constants were taken from the Solaar[2] project.
 
+Firmware Format
+---------------
+
+The daemon will decompress the cabinet archive and extract a firmware blob in
+a vendor-specific format that appears to be a subset of the Intel HEX format.
+
 GUID Generation
 ---------------
 

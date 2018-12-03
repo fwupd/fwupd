@@ -10,6 +10,12 @@ device using the HUB update protocol.
 
 Other devices connected to the RTS54HIDxx using I2C will be supported soon.
 
+Firmware Format
+---------------
+
+The daemon will decompress the cabinet archive and extract a firmware blob in
+an unspecified binary file format.
+
 GUID Generation
 ---------------
 

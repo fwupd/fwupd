@@ -25,6 +25,12 @@ When this plugin is used, devices present in other plugins may be shown in
 the topology of this dock.  This is intentional as this plugin works together
 with those plugins to manage the flashing of all components.
 
+Firmware Format
+---------------
+
+The daemon will decompress the cabinet archive and extract several firmware
+blobs with an unspecified binary file format.
+
 GUID Generation
 ---------------
 

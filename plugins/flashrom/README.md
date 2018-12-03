@@ -6,6 +6,13 @@ Introduction
 
 This plugin uses `flashrom` to update the system firmware.
 
+Firmware Format
+---------------
+
+The daemon will decompress the cabinet archive and extract a firmware blob in
+an unspecified binary file format, which is typically the raw input for an
+EEPROM programmer.
+
 GUID Generation
 ---------------
 

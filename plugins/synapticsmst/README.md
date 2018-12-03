@@ -3,6 +3,12 @@
 This plugin supports querying and flashing Synaptics MST hubs used in Dell systems
 and docks.
 
+Firmware Format
+---------------
+
+The daemon will decompress the cabinet archive and extract a firmware blob in
+an unspecified binary file format.
+
 GUID Generation
 ---------------
 
