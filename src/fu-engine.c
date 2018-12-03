@@ -2520,7 +2520,8 @@ fu_engine_get_releases_for_device (FuEngine *self, FuDevice *device, GError **er
 	}
 	components = xb_silo_query (self->silo, xpath->str, 0, &error_local);
 	if (components == NULL) {
-		if (g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND)) {
+		if (g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) ||
+		    g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOTHING_TO_DO,
