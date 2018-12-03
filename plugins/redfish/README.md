@@ -10,6 +10,12 @@ simple and secure management of modern scalable platform hardware.
 By specifying a RESTful interface and utilizing JSON and OData, Redfish helps
 customers integrate solutions within their existing tool chains.
 
+Firmware Format
+---------------
+
+The daemon will decompress the cabinet archive and extract a firmware blob in
+an unspecified binary file format.
+
 GUID Generation
 ---------------
 

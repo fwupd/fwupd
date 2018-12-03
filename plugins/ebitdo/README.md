@@ -12,6 +12,13 @@ library and is possible thanks to the vendor open sourcing the flashing tool.
 The 8Bitdo devices share legacy USB VID/PIDs with other projects and so we have
 to be a bit careful to not claim other devices as our own.
 
+Firmware Format
+---------------
+
+The daemon will decompress the cabinet archive and extract a firmware blob in
+an unspecified binary file format. The binary file has a vendor-specific header
+that is used when flashing the image.
+
 GUID Generation
 ---------------
 

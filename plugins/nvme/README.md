@@ -11,6 +11,12 @@ firmware file. Firmware is sent in 4kB chunks and activated on next reboot.
 The device GUID is read from the vendor specific area and if not found then
 generated from the trimmed model string.
 
+Firmware Format
+---------------
+
+The daemon will decompress the cabinet archive and extract a firmware blob in
+an unspecified binary file format.
+
 GUID Generation
 ---------------
 

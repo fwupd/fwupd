@@ -11,6 +11,15 @@ With the UpdateCapsule boot service it can be used to update system firmware.
 If you don't want or need this functionality you can use the
 `-Dplugin_uefi=false` option.
 
+Firmware Format
+---------------
+
+The daemon will decompress the cabinet archive and extract a firmware blob in
+EFI capsule file format.
+
+See https://www.uefi.org/sites/default/files/resources/UEFI%20Spec%202_6.pdf
+for details.
+
 GUID Generation
 ---------------
 

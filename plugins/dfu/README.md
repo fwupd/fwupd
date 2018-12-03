@@ -7,6 +7,12 @@ Introduction
 Device Firmware Update is a standard that allows USB devices to be easily and
 safely updated by any operating system.
 
+Firmware Format
+---------------
+
+The daemon will decompress the cabinet archive and extract a firmware blob in
+DFU or DfuSe file format.
+
 GUID Generation
 ---------------
 
