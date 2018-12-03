@@ -771,7 +771,7 @@ fu_dell_dock_mst_write_fw (FuDevice *device,
 	MSTBank bank_in_use = 0;
 	guint retries = 2;
 	gboolean checksum = FALSE;
-	guint8 order[3] = {Bank0, ESM};
+	guint8 order[2] = {ESM, Bank0};
 	guint16 chip_id;
 	const guint8* data = g_bytes_get_data (blob_fw, NULL);
 	g_autofree gchar *dynamic_version = NULL;
@@ -791,7 +791,7 @@ fu_dell_dock_mst_write_fw (FuDevice *device,
 		return FALSE;
 
 	if (bank_in_use == Bank0)
-		order[0] = Bank1;
+		order[1] = Bank1;
 
 	/* enable remote control */
 	if (!fu_dell_dock_mst_enable_remote_control (self->symbiote, error))
