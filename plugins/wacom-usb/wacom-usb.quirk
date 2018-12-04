@@ -1,22 +1,3 @@
-# MobileStudio Pro 13 (touch) [DTH-W1320]
-[DeviceInstanceId=USB\VID_056A&PID_034A]
-Plugin = wacom-usb
-Flags = use-runtime-version
-
-# MobileStudio Pro 16 (touch) [DTH-W1620]
-[DeviceInstanceId=USB\VID_056A&PID_034B]
-Plugin = wacom-usb
-Flags = use-runtime-version
-
-# MobileStudio Pro 13 (pen/pad) [DTH-W1320]
-[DeviceInstanceId=USB\VID_056A&PID_034D]
-Plugin = wacom-usb
-Flags = use-runtime-version
-
-# MobileStudio Pro 16 (pen/pad) [DTH-W1620]
-[DeviceInstanceId=USB\VID_056A&PID_034E]
-Plugin = wacom-usb
-Flags = use-runtime-version
 
 # Intuos Pro medium (2nd-gen BT) [PTH-660]
 [DeviceInstanceId=USB\VID_056A&PID_0360]
@@ -38,26 +19,6 @@ Flags = use-runtime-version
 Plugin = wacom-usb
 Flags = use-runtime-version
 
-# Cintiq Pro 13 (pen/pad) [DTH-1320]
-[DeviceInstanceId=USB\VID_056A&PID_034F]
-Plugin = wacom-usb
-Flags = use-runtime-version
-
-# Cintiq Pro 16 (pen/pad) [DTH-1620]
-[DeviceInstanceId=USB\VID_056A&PID_0350]
-Plugin = wacom-usb
-Flags = use-runtime-version
-
-# Cintiq Pro 13 (touch) [DTH-1320]
-[DeviceInstanceId=USB\VID_056A&PID_0353]
-Plugin = wacom-usb
-Flags = use-runtime-version
-
-# Cintiq Pro 16 (touch) [DTH-1620]
-[DeviceInstanceId=USB\VID_056A&PID_0354]
-Plugin = wacom-usb
-Flags = use-runtime-version
-
 # Intuos Pro medium (2nd-gen USB) [PTH-660]
 [DeviceInstanceId=USB\VID_056A&PID_0357]
 Plugin = wacom-usb
@@ -65,16 +26,6 @@ Flags = use-runtime-version
 
 # Intuos Pro large (2nd-gen USB) [PTH-860]
 [DeviceInstanceId=USB\VID_056A&PID_0358]
-Plugin = wacom-usb
-Flags = use-runtime-version
-
-# Pen [DTH-1152]
-[DeviceInstanceId=USB\VID_056A&PID_035A]
-Plugin = wacom-usb
-Flags = use-runtime-version
-
-# Touch [DTH-1152]
-[DeviceInstanceId=USB\VID_056A&PID_0368]
 Plugin = wacom-usb
 Flags = use-runtime-version
 
