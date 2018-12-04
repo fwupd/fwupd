@@ -3,6 +3,8 @@ fwupd
 [![Build Status](https://travis-ci.org/hughsie/fwupd.png?branch=master)](https://travis-ci.org/hughsie/fwupd)
 [![Coverity Scan Build Status](https://scan.coverity.com/projects/10744/badge.svg)](https://scan.coverity.com/projects/10744)
 
+[![Get it from the Snap Store](https://snapcraft.io/static/images/badges/en/snap-store-white.svg)](https://snapcraft.io/fwupd)
+
 This project aims to make updating firmware on Linux automatic, safe and reliable.
 
 Additional information is available at the website: https://fwupd.org
