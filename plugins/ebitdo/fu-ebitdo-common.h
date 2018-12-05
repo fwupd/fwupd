@@ -70,8 +70,5 @@ const gchar	*fu_ebitdo_pkt_cmd_to_string	(FuEbitdoPktCmd		 cmd);
 const gchar	*fu_ebitdo_pkt_type_to_string	(FuEbitdoPktType	 type);
 void		 fu_ebitdo_dump_firmware_header	(FuEbitdoFirmwareHeader	*hdr);
 void		 fu_ebitdo_dump_pkt		(FuEbitdoPkt		*hdr);
-void		 fu_ebitdo_dump_raw		(const gchar		*title,
-						 const guint8		*data,
-						 gsize			 len);
 
 #endif /* __FU_EBITDO_COMMON_H */

@@ -67,17 +67,6 @@ fu_csr_device_to_string (FuDevice *device, GString *str)
 	g_string_append_printf (str, "    timeout:\t\t%" G_GUINT32_FORMAT "\n", self->dnload_timeout);
 }
 
-static void
-fu_csr_device_dump (const gchar *title, const guint8 *buf, gsize sz)
-{
-	if (g_getenv ("FWUPD_CSR_VERBOSE") == NULL)
-		return;
-	g_print ("%s (%" G_GSIZE_FORMAT "):\n", title, sz);
-	for (gsize i = 0; i < sz; i++)
-		g_print ("%02x ", buf[i]);
-	g_print ("\n");
-}
-
 static gboolean
 fu_csr_device_attach (FuDevice *device, GError **error)
 {
@@ -86,7 +75,8 @@ fu_csr_device_attach (FuDevice *device, GError **error)
 	gsize sz = 0;
 	guint8 buf[] = { FU_CSR_REPORT_ID_CONTROL, FU_CSR_CONTROL_RESET };
 
-	fu_csr_device_dump ("Reset", buf, sz);
+	if (g_getenv ("FWUPD_CSR_VERBOSE") != NULL)
+		fu_common_dump_raw (G_LOG_DOMAIN, "Reset", buf, sz);
 	if (!g_usb_device_control_transfer (usb_device,
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
@@ -135,7 +125,8 @@ fu_csr_device_get_status (FuCsrDevice *self, GError **error)
 		g_prefix_error (error, "Failed to GetStatus: ");
 		return FALSE;
 	}
-	fu_csr_device_dump ("GetStatus", buf, sz);
+	if (g_getenv ("FWUPD_CSR_VERBOSE") != NULL)
+		fu_common_dump_raw (G_LOG_DOMAIN, "GetStatus", buf, sz);
 
 	/* check packet */
 	if (sz != FU_CSR_STATUS_HEADER_SIZE) {
@@ -179,7 +170,8 @@ fu_csr_device_clear_status (FuCsrDevice *self, GError **error)
 		return TRUE;
 
 	/* hit hardware */
-	fu_csr_device_dump ("ClearStatus", buf, sz);
+	if (g_getenv ("FWUPD_CSR_VERBOSE") != NULL)
+		fu_common_dump_raw (G_LOG_DOMAIN, "ClearStatus", buf, sz);
 	if (!g_usb_device_control_transfer (usb_device,
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
@@ -230,7 +222,8 @@ fu_csr_device_upload_chunk (FuCsrDevice *self, GError **error)
 		g_prefix_error (error, "Failed to ReadFirmware: ");
 		return NULL;
 	}
-	fu_csr_device_dump ("ReadFirmware", buf, sz);
+	if (g_getenv ("FWUPD_CSR_VERBOSE") != NULL)
+		fu_common_dump_raw (G_LOG_DOMAIN, "ReadFirmware", buf, sz);
 
 	/* too small to parse */
 	if (sz < FU_CSR_COMMAND_HEADER_SIZE) {
@@ -362,7 +355,8 @@ fu_csr_device_download_chunk (FuCsrDevice *self, guint16 idx, GBytes *chunk, GEr
 	memcpy (buf + FU_CSR_COMMAND_HEADER_SIZE, chunk_data, chunk_sz);
 
 	/* hit hardware */
-	fu_csr_device_dump ("Upgrade", buf, sizeof(buf));
+	if (g_getenv ("FWUPD_CSR_VERBOSE") != NULL)
+		fu_common_dump_raw (G_LOG_DOMAIN, "Upgrade", buf, sizeof(buf));
 	if (!g_usb_device_control_transfer (usb_device,
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,

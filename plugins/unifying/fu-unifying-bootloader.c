@@ -299,7 +299,10 @@ fu_unifying_bootloader_request (FuUnifyingBootloader *self,
 	memcpy (buf_request + 0x04, req->data, 28);
 
 	/* send request */
-	fu_unifying_dump_raw ("host->device", buf_request, sizeof (buf_request));
+	if (g_getenv ("FWUPD_UNIFYING_VERBOSE") != NULL) {
+		fu_common_dump_raw (G_LOG_DOMAIN, "host->device",
+				    buf_request, sizeof (buf_request));
+	}
 	if (usb_device != NULL) {
 		if (!g_usb_device_control_transfer (usb_device,
 						    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
@@ -332,7 +335,10 @@ fu_unifying_bootloader_request (FuUnifyingBootloader *self,
 						      &error_ignore)) {
 			g_debug ("ignoring: %s", error_ignore->message);
 		} else {
-			fu_unifying_dump_raw ("device->host", buf_response, actual_length);
+			if (g_getenv ("FWUPD_UNIFYING_VERBOSE") != NULL) {
+				fu_common_dump_raw (G_LOG_DOMAIN, "device->host",
+						    buf_response, actual_length);
+			}
 		}
 		return TRUE;
 	}
@@ -365,7 +371,10 @@ fu_unifying_bootloader_request (FuUnifyingBootloader *self,
 		}
 		actual_length = sizeof (buf_response);
 	}
-	fu_unifying_dump_raw ("device->host", buf_response, actual_length);
+	if (g_getenv ("FWUPD_UNIFYING_VERBOSE") != NULL) {
+		fu_common_dump_raw (G_LOG_DOMAIN, "device->host",
+				    buf_response, actual_length);
+	}
 
 	/* parse response */
 	if ((buf_response[0x00] & 0xf0) != req->cmd) {

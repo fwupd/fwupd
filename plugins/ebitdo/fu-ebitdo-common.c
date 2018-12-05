@@ -65,20 +65,6 @@ fu_ebitdo_pkt_cmd_to_string (FuEbitdoPktCmd cmd)
 }
 
 void
-fu_ebitdo_dump_raw (const gchar *title, const guint8 *data, gsize len)
-{
-	g_print ("%s:", title);
-	for (gsize i = strlen (title); i < 16; i++)
-		g_print (" ");
-	for (gsize i = 0; i < len; i++) {
-		g_print ("%02x ", data[i]);
-		if (i > 0 && i % 32 == 0)
-			g_print ("\n");
-	}
-	g_print ("\n");
-}
-
-void
 fu_ebitdo_dump_pkt (FuEbitdoPkt *hdr)
 {
 	g_print ("PktLength:   0x%02x\n", hdr->pkt_len);

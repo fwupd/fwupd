@@ -66,7 +66,7 @@ fu_ebitdo_device_send (FuEbitdoDevice *self,
 
 	/* debug */
 	if (g_getenv ("FWUPD_EBITDO_VERBOSE") != NULL) {
-		fu_ebitdo_dump_raw ("->DEVICE", packet, (gsize) hdr->pkt_len + 1);
+		fu_common_dump_raw (G_LOG_DOMAIN, "->DEVICE", packet, (gsize) hdr->pkt_len + 1);
 		fu_ebitdo_dump_pkt (hdr);
 	}
 
@@ -127,7 +127,7 @@ fu_ebitdo_device_receive (FuEbitdoDevice *self,
 
 	/* debug */
 	if (g_getenv ("FWUPD_EBITDO_VERBOSE") != NULL) {
-		fu_ebitdo_dump_raw ("<-DEVICE", packet, actual_length);
+		fu_common_dump_raw (G_LOG_DOMAIN, "<-DEVICE", packet, actual_length);
 		fu_ebitdo_dump_pkt (hdr);
 	}
 
