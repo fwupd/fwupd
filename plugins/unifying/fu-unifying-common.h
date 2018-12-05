@@ -30,19 +30,6 @@ gchar		*fu_unifying_format_version	(const gchar	*name,
 						 guint8		 minor,
 						 guint16	 build);
 
-gint		 fu_unifying_nonblock_open	(const gchar	*filename,
-						 GError		**error);
-gboolean	 fu_unifying_nonblock_read	(gint		 fd,
-						 guint8		*data,
-						 gsize		 data_sz,
-						 gsize		*data_len,
-						 guint		 timeout,
-						 GError		**error);
-gboolean	 fu_unifying_nonblock_write	(gint		 fd,
-						 const guint8	*data,
-						 gsize		 data_sz,
-						 GError		**error);
-
 G_END_DECLS
 
 #endif /* __FU_UNIFYING_COMMON_H */

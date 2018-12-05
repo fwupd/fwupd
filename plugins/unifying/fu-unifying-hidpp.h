@@ -9,6 +9,8 @@
 
 #include <gio/gio.h>
 
+#include "fu-io-channel.h"
+
 G_BEGIN_DECLS
 
 /*
@@ -136,15 +138,15 @@ G_BEGIN_DECLS
 
 #include "fu-unifying-hidpp-msg.h"
 
-gboolean	 fu_unifying_hidpp_send		(gint			 fd,
+gboolean	 fu_unifying_hidpp_send		(FuIOChannel		*self,
 						 FuUnifyingHidppMsg	*msg,
 						 guint			 timeout,
 						 GError			**error);
-gboolean	 fu_unifying_hidpp_receive	(gint			 fd,
+gboolean	 fu_unifying_hidpp_receive	(FuIOChannel		*self,
 						 FuUnifyingHidppMsg	*msg,
 						 guint			 timeout,
 						 GError			**error);
-gboolean	 fu_unifying_hidpp_transfer	(gint			 fd,
+gboolean	 fu_unifying_hidpp_transfer	(FuIOChannel		*self,
 						 FuUnifyingHidppMsg	*msg,
 						 GError			**error);
 

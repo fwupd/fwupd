@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include <string.h>
-#include <glib/gstdio.h>
 
 #include "fu-unifying-common.h"
 #include "fu-unifying-peripheral.h"
@@ -22,7 +21,7 @@ struct _FuUnifyingPeripheral
 	guint8			 hidpp_version;
 	gboolean		 is_updatable;
 	gboolean		 is_active;
-	gint			 udev_fd;
+	FuIOChannel		*io_channel;
 	GPtrArray		*feature_index;	/* of FuUnifyingHidppMap */
 };
 
@@ -136,7 +135,7 @@ fu_unifying_peripheral_ping (FuUnifyingPeripheral *self, GError **error)
 	msg->data[1] = 0x00;
 	msg->data[2] = 0xaa; /* user-selected value */
 	msg->hidpp_version = self->hidpp_version;
-	if (!fu_unifying_hidpp_transfer (self->udev_fd, msg, &error_local)) {
+	if (!fu_unifying_hidpp_transfer (self->io_channel, msg, &error_local)) {
 		if (g_error_matches (error_local,
 				     G_IO_ERROR,
 				     G_IO_ERROR_NOT_SUPPORTED)) {
@@ -181,11 +180,9 @@ static gboolean
 fu_unifying_peripheral_close (FuDevice *device, GError **error)
 {
 	FuUnifyingPeripheral *self = FU_UNIFYING_PERIPHERAL (device);
-	if (self->udev_fd > 0) {
-		if (!g_close (self->udev_fd, error))
-			return FALSE;
-		self->udev_fd = 0;
-	}
+	if (!fu_io_channel_shutdown (self->io_channel, error))
+		return FALSE;
+	g_clear_object (&self->io_channel);
 	return TRUE;
 }
 
@@ -206,7 +203,7 @@ fu_unifying_peripheral_poll (FuDevice *device, GError **error)
 	/* flush pending data */
 	msg->device_id = self->hidpp_id;
 	msg->hidpp_version = self->hidpp_version;
-	if (!fu_unifying_hidpp_receive (self->udev_fd, msg, timeout, &error_local)) {
+	if (!fu_unifying_hidpp_receive (self->io_channel, msg, timeout, &error_local)) {
 		if (!g_error_matches (error_local,
 				      G_IO_ERROR,
 				      G_IO_ERROR_TIMED_OUT)) {
@@ -242,8 +239,8 @@ fu_unifying_peripheral_open (FuDevice *device, GError **error)
 	const gchar *devpath = g_udev_device_get_device_file (udev_device);
 
 	/* open */
-	self->udev_fd = fu_unifying_nonblock_open (devpath, error);
-	if (self->udev_fd < 0)
+	self->io_channel = fu_io_channel_new_file (devpath, error);
+	if (self->io_channel == NULL)
 		return FALSE;
 
 	return TRUE;
@@ -255,8 +252,6 @@ fu_unifying_peripheral_to_string (FuDevice *device, GString *str)
 	FuUnifyingPeripheral *self = FU_UNIFYING_PERIPHERAL (device);
 
 	g_string_append_printf (str, "  HidppVersion:\t\t%u\n", self->hidpp_version);
-	if (self->udev_fd > 0)
-		g_string_append_printf (str, "  UdevDevice:\t\t%i\n", self->udev_fd);
 	if (self->hidpp_id != HIDPP_DEVICE_ID_UNSET)
 		g_string_append_printf (str, "  HidppId:\t\t0x%02x\n", (guint) self->hidpp_id);
 	if (self->battery_level != 0)
@@ -301,7 +296,7 @@ fu_unifying_peripheral_fetch_firmware_info (FuUnifyingPeripheral *self, GError *
 	msg->sub_id = idx;
 	msg->function_id = 0x00 << 4; /* getCount */
 	msg->hidpp_version = self->hidpp_version;
-	if (!fu_unifying_hidpp_transfer (self->udev_fd, msg, error)) {
+	if (!fu_unifying_hidpp_transfer (self->io_channel, msg, error)) {
 		g_prefix_error (error, "failed to get firmware count: ");
 		return FALSE;
 	}
@@ -319,7 +314,7 @@ fu_unifying_peripheral_fetch_firmware_info (FuUnifyingPeripheral *self, GError *
 		msg->sub_id = idx;
 		msg->function_id = 0x01 << 4; /* getInfo */
 		msg->data[0] = i;
-		if (!fu_unifying_hidpp_transfer (self->udev_fd, msg, error)) {
+		if (!fu_unifying_hidpp_transfer (self->io_channel, msg, error)) {
 			g_prefix_error (error, "failed to get firmware info: ");
 			return FALSE;
 		}
@@ -371,7 +366,7 @@ fu_unifying_peripheral_fetch_battery_level (FuUnifyingPeripheral *self, GError *
 			msg->sub_id = idx;
 			msg->function_id = 0x00; /* GetBatteryLevelStatus */
 			msg->hidpp_version = self->hidpp_version;
-			if (!fu_unifying_hidpp_transfer (self->udev_fd, msg, error)) {
+			if (!fu_unifying_hidpp_transfer (self->io_channel, msg, error)) {
 				g_prefix_error (error, "failed to get battery info: ");
 				return FALSE;
 			}
@@ -389,7 +384,7 @@ fu_unifying_peripheral_fetch_battery_level (FuUnifyingPeripheral *self, GError *
 		msg->sub_id = HIDPP_SUBID_GET_REGISTER;
 		msg->function_id = HIDPP_REGISTER_BATTERY_MILEAGE;
 		msg->hidpp_version = self->hidpp_version;
-		if (fu_unifying_hidpp_transfer (self->udev_fd, msg, NULL)) {
+		if (fu_unifying_hidpp_transfer (self->io_channel, msg, NULL)) {
 			if (msg->data[0] != 0x00)
 				self->battery_level = msg->data[0];
 			return TRUE;
@@ -397,7 +392,7 @@ fu_unifying_peripheral_fetch_battery_level (FuUnifyingPeripheral *self, GError *
 
 		/* try HID++1.0 battery status instead */
 		msg->function_id = HIDPP_REGISTER_BATTERY_STATUS;
-		if (fu_unifying_hidpp_transfer (self->udev_fd, msg, NULL)) {
+		if (fu_unifying_hidpp_transfer (self->io_channel, msg, NULL)) {
 			switch (msg->data[0]) {
 			case 1: /* 0 - 10 */
 				self->battery_level = 5;
@@ -440,7 +435,7 @@ fu_unifying_hidpp_feature_search (FuDevice *device, guint16 feature, GError **er
 	msg->data[1] = feature;
 	msg->data[2] = 0x00;
 	msg->hidpp_version = self->hidpp_version;
-	if (!fu_unifying_hidpp_transfer (self->udev_fd, msg, error)) {
+	if (!fu_unifying_hidpp_transfer (self->io_channel, msg, error)) {
 		g_prefix_error (error,
 				"failed to get idx for feature %s [0x%04x]: ",
 				fu_unifying_hidpp_feature_to_string (feature), feature);
@@ -551,7 +546,7 @@ fu_unifying_peripheral_setup (FuDevice *device, GError **error)
 		msg->sub_id = idx;
 		msg->function_id = 0x02 << 4; /* getDeviceType */
 		msg->hidpp_version = self->hidpp_version;
-		if (!fu_unifying_hidpp_transfer (self->udev_fd, msg, error)) {
+		if (!fu_unifying_hidpp_transfer (self->io_channel, msg, error)) {
 			g_prefix_error (error, "failed to get device type: ");
 			return FALSE;
 		}
@@ -578,7 +573,7 @@ fu_unifying_peripheral_setup (FuDevice *device, GError **error)
 		msg->sub_id = idx;
 		msg->function_id = 0x00 << 4; /* getDfuStatus */
 		msg->hidpp_version = self->hidpp_version;
-		if (!fu_unifying_hidpp_transfer (self->udev_fd, msg, error)) {
+		if (!fu_unifying_hidpp_transfer (self->io_channel, msg, error)) {
 			g_prefix_error (error, "failed to get DFU status: ");
 			return FALSE;
 		}
@@ -631,7 +626,7 @@ fu_unifying_peripheral_detach (FuDevice *device, GError **error)
 		msg->hidpp_version = self->hidpp_version;
 		msg->flags = FU_UNIFYING_HIDPP_MSG_FLAG_IGNORE_SUB_ID |
 			     FU_UNIFYING_HIDPP_MSG_FLAG_LONGER_TIMEOUT;
-		if (!fu_unifying_hidpp_transfer (self->udev_fd, msg, error)) {
+		if (!fu_unifying_hidpp_transfer (self->io_channel, msg, error)) {
 			g_prefix_error (error, "failed to put device into DFU mode: ");
 			return FALSE;
 		}
@@ -654,7 +649,7 @@ fu_unifying_peripheral_detach (FuDevice *device, GError **error)
 		msg->data[5] = 'F';
 		msg->data[6] = 'U';
 		msg->flags = FU_UNIFYING_HIDPP_MSG_FLAG_IGNORE_SUB_ID;
-		if (!fu_unifying_hidpp_transfer (self->udev_fd, msg, error)) {
+		if (!fu_unifying_hidpp_transfer (self->io_channel, msg, error)) {
 			g_prefix_error (error, "failed to put device into DFU mode: ");
 			return FALSE;
 		}
@@ -833,7 +828,7 @@ fu_unifying_peripheral_write_firmware_pkt (FuUnifyingPeripheral *self,
 	msg->function_id = cmd << 4; /* dfuStart or dfuCmdDataX */
 	msg->hidpp_version = self->hidpp_version;
 	memcpy (msg->data, data, 16);
-	if (!fu_unifying_hidpp_transfer (self->udev_fd, msg, &error_local)) {
+	if (!fu_unifying_hidpp_transfer (self->io_channel, msg, &error_local)) {
 		g_prefix_error (error, "failed to supply program data: ");
 		return FALSE;
 	}
@@ -860,7 +855,7 @@ fu_unifying_peripheral_write_firmware_pkt (FuUnifyingPeripheral *self,
 	for (guint retry = 0; retry < 10; retry++) {
 		g_autoptr(FuUnifyingHidppMsg) msg2 = fu_unifying_hidpp_msg_new ();
 		msg2->flags = FU_UNIFYING_HIDPP_MSG_FLAG_IGNORE_FNCT_ID;
-		if (!fu_unifying_hidpp_receive (self->udev_fd, msg2, 15000, error))
+		if (!fu_unifying_hidpp_receive (self->io_channel, msg2, 15000, error))
 			return FALSE;
 		if (fu_unifying_hidpp_msg_is_reply (msg, msg2)) {
 			g_autoptr(GError) error2 = NULL;
@@ -956,7 +951,7 @@ fu_unifying_peripheral_attach (FuDevice *device, GError **error)
 	msg->flags = FU_UNIFYING_HIDPP_MSG_FLAG_IGNORE_SUB_ID |
 		     FU_UNIFYING_HIDPP_MSG_FLAG_IGNORE_SWID | // inferred?
 		     FU_UNIFYING_HIDPP_MSG_FLAG_LONGER_TIMEOUT;
-	if (!fu_unifying_hidpp_transfer (self->udev_fd, msg, error)) {
+	if (!fu_unifying_hidpp_transfer (self->io_channel, msg, error)) {
 		g_prefix_error (error, "failed to restart device: ");
 		return FALSE;
 	}
