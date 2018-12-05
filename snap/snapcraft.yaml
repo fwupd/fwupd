@@ -33,7 +33,7 @@ parts:
     make-parameters:
     - prefix=/
     - libdir=/lib
-    source: https://github.com/rhboot/efivar/releases/download/35/efivar-35.tar.bz2
+    source: https://github.com/rhboot/efivar/releases/download/37/efivar-37.tar.bz2
     build-packages:
       - libpopt-dev
     prime:
