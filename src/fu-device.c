@@ -1071,6 +1071,16 @@ fu_device_set_id (FuDevice *self, const gchar *id)
 	fwupd_device_set_id (FWUPD_DEVICE (self), id_hash);
 }
 
+static gboolean
+fu_device_is_valid_semver_char (gchar c)
+{
+	if (g_ascii_isdigit (c))
+		return TRUE;
+	if (c == '.')
+		return TRUE;
+	return FALSE;
+}
+
 /**
  * fu_device_set_version:
  * @self: A #FuDevice
@@ -1084,14 +1094,31 @@ void
 fu_device_set_version (FuDevice *self, const gchar *version)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GString) version_safe = NULL;
 
 	g_return_if_fail (FU_IS_DEVICE (self));
 	g_return_if_fail (version != NULL);
 
+	/* sanitize if required */
+	if (priv->version_format != FU_VERSION_FORMAT_UNKNOWN &&
+	    priv->version_format != FU_VERSION_FORMAT_PLAIN) {
+		version_safe = g_string_new (NULL);
+		for (guint i = 0; version[i] != '\0'; i++) {
+			if (fu_device_is_valid_semver_char (version[i]))
+				g_string_append_c (version_safe, version[i]);
+		}
+		if (g_strcmp0 (version, version_safe->str) != 0) {
+			g_debug ("converted '%s' to '%s'",
+				 version, version_safe->str);
+		}
+	} else {
+		version_safe = g_string_new (version);
+	}
+
 	/* try to autodetect the version-format */
 	if (priv->version_format == FU_VERSION_FORMAT_UNKNOWN)
-		priv->version_format = fu_common_version_guess_format (version);
-	fwupd_device_set_version (FWUPD_DEVICE (self), version);
+		priv->version_format = fu_common_version_guess_format (version_safe->str);
+	fwupd_device_set_version (FWUPD_DEVICE (self), version_safe->str);
 }
 
 /**

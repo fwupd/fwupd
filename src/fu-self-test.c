@@ -1459,6 +1459,15 @@ fu_device_list_func (void)
 }
 
 static void
+fu_device_version_format_func (void)
+{
+	g_autoptr(FuDevice) device = fu_device_new ();
+	fu_device_set_version_format (device, FU_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version (device, "Ver1.2.3 RELEASE");
+	g_assert_cmpstr (fu_device_get_version (device), ==, "1.2.3");
+}
+
+static void
 fu_device_open_refcount_func (void)
 {
 	gboolean ret;
@@ -3255,6 +3264,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/device-locker{fail}", fu_device_locker_fail_func);
 	g_test_add_func ("/fwupd/device{metadata}", fu_device_metadata_func);
 	g_test_add_func ("/fwupd/device{open-refcount}", fu_device_open_refcount_func);
+	g_test_add_func ("/fwupd/device{version-format}", fu_device_version_format_func);
 	g_test_add_func ("/fwupd/device-list", fu_device_list_func);
 	g_test_add_func ("/fwupd/device-list{delay}", fu_device_list_delay_func);
 	g_test_add_func ("/fwupd/device-list{compatible}", fu_device_list_compatible_func);
