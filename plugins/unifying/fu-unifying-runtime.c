@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include <string.h>
-#include <glib/gstdio.h>
 
 #include "fu-unifying-common.h"
 #include "fu-unifying-runtime.h"
@@ -18,7 +17,7 @@ struct _FuUnifyingRuntime
 	FuUdevDevice		 parent_instance;
 	guint8			 version_bl_major;
 	gboolean		 signed_firmware;
-	gint			 udev_fd;
+	FuIOChannel		*io_channel;
 };
 
 G_DEFINE_TYPE (FuUnifyingRuntime, fu_unifying_runtime, FU_TYPE_UDEV_DEVICE)
@@ -31,9 +30,6 @@ static void
 fu_unifying_runtime_to_string (FuDevice *device, GString *str)
 {
 	FuUnifyingRuntime *self = FU_UNIFYING_RUNTIME (device);
-
-	if (self->udev_fd > 0)
-		g_string_append_printf (str, "  UdevDevice:\t\t%i\n", self->udev_fd);
 	g_string_append_printf (str, "  SignedFirmware:\t%i\n", self->signed_firmware);
 }
 
@@ -49,18 +45,16 @@ fu_unifying_runtime_enable_notifications (FuUnifyingRuntime *self, GError **erro
 	msg->data[1] = 0x05; /* Wireless + SoftwarePresent */
 	msg->data[2] = 0x00;
 	msg->hidpp_version = 1;
-	return fu_unifying_hidpp_transfer (self->udev_fd, msg, error);
+	return fu_unifying_hidpp_transfer (self->io_channel, msg, error);
 }
 
 static gboolean
 fu_unifying_runtime_close (FuDevice *device, GError **error)
 {
 	FuUnifyingRuntime *self = FU_UNIFYING_RUNTIME (device);
-	if (self->udev_fd > 0) {
-		if (!g_close (self->udev_fd, error))
-			return FALSE;
-		self->udev_fd = 0;
-	}
+	if (!fu_io_channel_shutdown (self->io_channel, error))
+		return FALSE;
+	g_clear_object (&self->io_channel);
 	return TRUE;
 }
 
@@ -80,7 +74,7 @@ fu_unifying_runtime_poll (FuDevice *device, GError **error)
 
 	/* is there any pending data to read */
 	msg->hidpp_version = 1;
-	if (!fu_unifying_hidpp_receive (self->udev_fd, msg, timeout, &error_local)) {
+	if (!fu_unifying_hidpp_receive (self->io_channel, msg, timeout, &error_local)) {
 		if (g_error_matches (error_local,
 				     G_IO_ERROR,
 				     G_IO_ERROR_TIMED_OUT)) {
@@ -126,8 +120,8 @@ fu_unifying_runtime_open (FuDevice *device, GError **error)
 	const gchar *devpath = g_udev_device_get_device_file (udev_device);
 
 	/* open, but don't block */
-	self->udev_fd = fu_unifying_nonblock_open (devpath, error);
-	if (self->udev_fd < 0)
+	self->io_channel = fu_io_channel_new_file (devpath, error);
+	if (self->io_channel == NULL)
 		return FALSE;
 
 	/* poll for notifications */
@@ -208,7 +202,7 @@ fu_unifying_runtime_setup_internal (FuDevice *device, GError **error)
 		msg->function_id = HIDPP_REGISTER_DEVICE_FIRMWARE_INFORMATION;
 		msg->data[0] = i;
 		msg->hidpp_version = 1;
-		if (!fu_unifying_hidpp_transfer (self->udev_fd, msg, error)) {
+		if (!fu_unifying_hidpp_transfer (self->io_channel, msg, error)) {
 			g_prefix_error (error, "failed to read device config: ");
 			return FALSE;
 		}
@@ -286,7 +280,7 @@ fu_unifying_runtime_detach (FuDevice *device, GError **error)
 	msg->data[2] = 'P';
 	msg->hidpp_version = 1;
 	msg->flags = FU_UNIFYING_HIDPP_MSG_FLAG_LONGER_TIMEOUT;
-	if (!fu_unifying_hidpp_send (self->udev_fd, msg, FU_UNIFYING_DEVICE_TIMEOUT_MS, error)) {
+	if (!fu_unifying_hidpp_send (self->io_channel, msg, FU_UNIFYING_DEVICE_TIMEOUT_MS, error)) {
 		g_prefix_error (error, "failed to detach to bootloader: ");
 		return FALSE;
 	}

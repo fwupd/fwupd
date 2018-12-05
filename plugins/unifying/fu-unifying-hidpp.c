@@ -57,30 +57,28 @@ fu_unifying_hidpp_msg_to_string (FuUnifyingHidppMsg *msg)
 }
 
 gboolean
-fu_unifying_hidpp_send (gint fd,
+fu_unifying_hidpp_send (FuIOChannel *io_channel,
 			FuUnifyingHidppMsg *msg,
 			guint timeout,
 			GError **error)
 {
 	gsize len = fu_unifying_hidpp_msg_get_payload_length (msg);
 
-	g_return_val_if_fail (fd > 0, FALSE);
-
 	/* only for HID++2.0 */
 	if (msg->hidpp_version >= 2.f)
 		msg->function_id |= FU_UNIFYING_HIDPP_MSG_SW_ID;
 
-	if (g_getenv ("FWUPD_UNIFYING_VERBOSE") != NULL)
-		fu_common_dump_raw (G_LOG_DOMAIN, "host->device", (guint8 *) msg, len);
-
 	/* detailed debugging */
 	if (g_getenv ("FWUPD_UNIFYING_VERBOSE") != NULL) {
 		g_autofree gchar *str = fu_unifying_hidpp_msg_to_string (msg);
+		fu_common_dump_raw (G_LOG_DOMAIN, "host->device", (guint8 *) msg, len);
 		g_print ("%s", str);
 	}
 
 	/* HID */
-	if (!fu_unifying_nonblock_write (fd, (guint8 *) msg, len, error)) {
+	if (!fu_io_channel_write_raw (io_channel, (guint8 *) msg, len, 1500,
+				      FU_IO_CHANNEL_FLAG_FLUSH_INPUT |
+				      FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO, error)) {
 		g_prefix_error (error, "failed to send: ");
 		return FALSE;
 	}
@@ -90,21 +88,20 @@ fu_unifying_hidpp_send (gint fd,
 }
 
 gboolean
-fu_unifying_hidpp_receive (gint fd,
+fu_unifying_hidpp_receive (FuIOChannel *io_channel,
 			   FuUnifyingHidppMsg *msg,
 			   guint timeout,
 			   GError **error)
 {
 	gsize read_size = 0;
 
-	g_return_val_if_fail (fd > 0, FALSE);
-
-	if (!fu_unifying_nonblock_read (fd,
-					(guint8 *) msg,
-					sizeof(FuUnifyingHidppMsg),
-					&read_size,
-					timeout,
-					error)) {
+	if (!fu_io_channel_read_raw (io_channel,
+				     (guint8 *) msg,
+				     sizeof(FuUnifyingHidppMsg),
+				     &read_size,
+				     timeout,
+				     FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
+				     error)) {
 		g_prefix_error (error, "failed to receive: ");
 		return FALSE;
 	}
@@ -133,26 +130,24 @@ fu_unifying_hidpp_receive (gint fd,
 }
 
 gboolean
-fu_unifying_hidpp_transfer (gint fd, FuUnifyingHidppMsg *msg, GError **error)
+fu_unifying_hidpp_transfer (FuIOChannel *io_channel, FuUnifyingHidppMsg *msg, GError **error)
 {
 	guint timeout = FU_UNIFYING_DEVICE_TIMEOUT_MS;
 	guint ignore_cnt = 0;
 	g_autoptr(FuUnifyingHidppMsg) msg_tmp = fu_unifying_hidpp_msg_new ();
-
-	g_return_val_if_fail (fd > 0, FALSE);
 
 	/* increase timeout for some operations */
 	if (msg->flags & FU_UNIFYING_HIDPP_MSG_FLAG_LONGER_TIMEOUT)
 		timeout *= 10;
 
 	/* send request */
-	if (!fu_unifying_hidpp_send (fd, msg, timeout, error))
+	if (!fu_unifying_hidpp_send (io_channel, msg, timeout, error))
 		return FALSE;
 
 	/* keep trying to receive until we get a valid reply */
 	while (1) {
 		msg_tmp->hidpp_version = msg->hidpp_version;
-		if (!fu_unifying_hidpp_receive (fd, msg_tmp, timeout, error)) {
+		if (!fu_unifying_hidpp_receive (io_channel, msg_tmp, timeout, error)) {
 			g_prefix_error (error, "failed to receive: ");
 			return FALSE;
 		}
