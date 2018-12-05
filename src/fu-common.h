@@ -65,6 +65,13 @@ guint64		 fu_common_strtoull		(const gchar	*str);
 gchar		*fu_common_find_program_in_path	(const gchar	*basename,
 						 GError		**error);
 gchar		*fu_common_strstrip		(const gchar	*str);
+void		 fu_common_dump_raw		(const gchar	*log_domain,
+						 const gchar	*title,
+						 const guint8	*data,
+						 gsize		 len);
+void		 fu_common_dump_bytes		(const gchar	*log_domain,
+						 const gchar	*title,
+						 GBytes		*bytes);
 
 typedef guint FuEndianType;
 

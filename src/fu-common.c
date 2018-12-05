@@ -1058,3 +1058,53 @@ fu_common_string_replace (GString *string, const gchar *search, const gchar *rep
 
 	return count;
 }
+
+/**
+ * fu_common_dump_raw:
+ * @log_domain: log domain, typically %G_LOG_DOMAIN or %NULL
+ * @title: prefix title, or %NULL
+ * @data: buffer to print
+ * @len: the size of @data
+ *
+ * Dumps a raw buffer to the screen.
+ *
+ * Since: 1.2.2
+ **/
+void
+fu_common_dump_raw (const gchar *log_domain,
+		    const gchar *title,
+		    const guint8 *data,
+		    gsize len)
+{
+	g_autoptr(GString) str = g_string_new (NULL);
+	if (title != NULL)
+		g_string_append_printf (str, "%s:", title);
+	for (gsize i = str->len; i < 16; i++)
+		g_string_append (str, " ");
+	for (gsize i = 0; i < len; i++) {
+		g_string_append_printf (str, "%02x ", data[i]);
+		if (i > 0 && i % 32 == 0)
+			g_string_append (str, "\n");
+	}
+	g_log (log_domain, G_LOG_LEVEL_DEBUG, "%s", str->str);
+}
+
+/**
+ * fu_common_dump_raw:
+ * @log_domain: log domain, typically %G_LOG_DOMAIN or %NULL
+ * @title: prefix title, or %NULL
+ * @bytes: a #GBytes
+ *
+ * Dumps a byte buffer to the screen.
+ *
+ * Since: 1.2.2
+ **/
+void
+fu_common_dump_bytes (const gchar *log_domain,
+		      const gchar *title,
+		      GBytes *bytes)
+{
+	gsize len = 0;
+	const guint8 *data = g_bytes_get_data (bytes, &len);
+	fu_common_dump_raw (log_domain, title, data, len);
+}

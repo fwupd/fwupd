@@ -85,17 +85,3 @@ ch_strerror (ChError error_enum)
 		return "Self test failed: EEPROM";
 	return NULL;
 }
-
-void
-ch_buffer_dump (const gchar *title, const guint8 *buf, gsize sz)
-{
-	if (g_getenv ("FWUPD_COLORHUG_VERBOSE") == NULL)
-		return;
-	g_print ("%s (%" G_GSIZE_FORMAT "):\n", title, sz);
-	for (gsize i = 0; i < sz; i++) {
-		g_print ("%02x ", buf[i]);
-		if (i > 0 && (i + 1) % 256 == 0)
-			g_print ("\n");
-	}
-	g_print ("\n");
-}

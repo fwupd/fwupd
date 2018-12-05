@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include "fu-common.h"
 #include "fu-unifying-common.h"
 #include "fu-unifying-hidpp.h"
 
@@ -69,7 +70,8 @@ fu_unifying_hidpp_send (gint fd,
 	if (msg->hidpp_version >= 2.f)
 		msg->function_id |= FU_UNIFYING_HIDPP_MSG_SW_ID;
 
-	fu_unifying_dump_raw ("host->device", (guint8 *) msg, len);
+	if (g_getenv ("FWUPD_UNIFYING_VERBOSE") != NULL)
+		fu_common_dump_raw (G_LOG_DOMAIN, "host->device", (guint8 *) msg, len);
 
 	/* detailed debugging */
 	if (g_getenv ("FWUPD_UNIFYING_VERBOSE") != NULL) {
@@ -108,7 +110,8 @@ fu_unifying_hidpp_receive (gint fd,
 	}
 
 	/* check long enough, but allow returning oversize packets */
-	fu_unifying_dump_raw ("device->host", (guint8 *) msg, read_size);
+	if (g_getenv ("FWUPD_UNIFYING_VERBOSE") != NULL)
+		fu_common_dump_raw (G_LOG_DOMAIN, "device->host", (guint8 *) msg, read_size);
 	if (read_size < fu_unifying_hidpp_msg_get_payload_length (msg)) {
 		g_set_error (error,
 			     G_IO_ERROR,

@@ -22,10 +22,6 @@ G_BEGIN_DECLS
 /* Signed firmware are very long to verify on the device */
 #define FU_UNIFYING_DEVICE_TIMEOUT_MS			20000
 
-void		 fu_unifying_dump_raw		(const gchar	*title,
-						 const guint8	*data,
-						 gsize		 len);
-
 guint8		 fu_unifying_buffer_read_uint8	(const gchar	*str);
 guint16		 fu_unifying_buffer_read_uint16	(const gchar	*str);
 

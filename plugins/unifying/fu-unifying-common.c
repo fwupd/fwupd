@@ -33,26 +33,6 @@ fu_unifying_buffer_read_uint16 (const gchar *str)
 	return tmp;
 }
 
-void
-fu_unifying_dump_raw (const gchar *title, const guint8 *data, gsize len)
-{
-	g_autoptr(GString) str = g_string_new (NULL);
-	if (len == 0)
-		return;
-        if (g_getenv ("FWUPD_UNIFYING_VERBOSE") == NULL)
-		return;
-
-	g_string_append_printf (str, "%s:", title);
-	for (gsize i = strlen (title); i < 16; i++)
-		g_string_append (str, " ");
-	for (gsize i = 0; i < len; i++) {
-		g_string_append_printf (str, "%02x ", data[i]);
-		if (i > 0 && i % 32 == 0)
-			g_string_append (str, "\n");
-	}
-	g_debug ("%s", str->str);
-}
-
 gchar *
 fu_unifying_format_version (const gchar *name, guint8 major, guint8 minor, guint16 build)
 {

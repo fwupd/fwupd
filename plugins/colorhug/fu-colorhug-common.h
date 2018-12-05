@@ -52,9 +52,6 @@ typedef enum {
 } ChError;
 
 const gchar	*ch_strerror			(ChError	 error_enum);
-void		 ch_buffer_dump			(const gchar	*title,
-						 const guint8	*buf,
-						 gsize		 sz);
 
 G_END_DECLS
 
