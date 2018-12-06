@@ -1048,13 +1048,24 @@ add_capsule(update_table *update, EFI_CAPSULE_HEADER **capsule_out,
 	dprint(L"File guid: %g\n", fbuf);
 
 	/*
+	 * A file smaller than 28 bytes is unlikely to be a valid update.
+	 */
+	if (fsize < sizeof(EFI_CAPSULE_HEADER))
+		return EFI_INVALID_PARAMETER;
+
+	capsule = (EFI_CAPSULE_HEADER *)fbuf;
+
+	/*
 	 * See if it has the capsule header, and if not, add one.
 	 *
 	 * Unfortunately there's not a good way to do this, so we're just
 	 * checking if the capsule has the fw_class guid at the right place.
+	 * We also validate CapsuleImageSize in the capsule header in case
+	 * that the update file happens to start with the the fw_class guid.
 	 */
 	if ((guid_cmp(&update->info->guid, (efi_guid_t *)fbuf) == 0 ||
 	     is_fmp_capsule((efi_guid_t *)fbuf)) &&
+	    capsule->CapsuleImageSize == fsize &&
 	    /*
 	     * We're ignoring things that are 40 bytes here, because that's
 	     * the size of the variables used in the test code I wrote for
