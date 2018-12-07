@@ -449,9 +449,9 @@ fu_uefi_device_class_init (FuUefiDeviceClass *klass)
 }
 
 FuUefiDevice *
-fu_uefi_device_new_from_entry (const gchar *entry_path)
+fu_uefi_device_new_from_entry (const gchar *entry_path, GError **error)
 {
-	FuUefiDevice *self;
+	g_autoptr(FuUefiDevice) self = NULL;
 	g_autofree gchar *fw_class_fn = NULL;
 	g_autofree gchar *id = NULL;
 
@@ -481,7 +481,16 @@ fu_uefi_device_new_from_entry (const gchar *entry_path)
 			      self->fw_class, self->fmp_hardware_instance);
 	fu_device_set_id (FU_DEVICE (self), id);
 
-	return self;
+	/* this is invalid */
+	if (!fu_common_guid_is_valid (self->fw_class)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "ESRT GUID '%s' was not valid", self->fw_class);
+		return NULL;
+	}
+
+	return g_steal_pointer (&self);
 }
 
 FuUefiDevice *
