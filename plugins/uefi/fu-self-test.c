@@ -85,11 +85,13 @@ fu_uefi_device_func (void)
 {
 	g_autofree gchar *fn = NULL;
 	g_autoptr(FuUefiDevice) dev = NULL;
+	g_autoptr(GError) error = NULL;
 
 	fn = fu_test_get_filename (TESTDATADIR, "efi/esrt/entries/entry0");
 	g_assert (fn != NULL);
-	dev = fu_uefi_device_new_from_entry (fn);
+	dev = fu_uefi_device_new_from_entry (fn, &error);
 	g_assert_nonnull (dev);
+	g_assert_no_error (error);
 
 	g_assert_cmpint (fu_uefi_device_get_kind (dev), ==, FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE);
 	g_assert_cmpstr (fu_uefi_device_get_guid (dev), ==, "ddc0ee61-e7f0-4e7d-acc5-c070a398838e");
@@ -184,7 +186,12 @@ fu_uefi_plugin_func (void)
 	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	for (guint i = 0; i < entries->len; i++) {
 		const gchar *path = g_ptr_array_index (entries, i);
-		g_autoptr(FuUefiDevice) dev_tmp = fu_uefi_device_new_from_entry (path);
+		g_autoptr(GError) error_local = NULL;
+		g_autoptr(FuUefiDevice) dev_tmp = fu_uefi_device_new_from_entry (path, &error_local);
+		if (dev_tmp == NULL) {
+			g_debug ("failed to add %s: %s", path, error_local->message);
+			continue;
+		}
 		g_ptr_array_add (devices, g_object_ref (dev_tmp));
 	}
 	g_assert_cmpint (devices->len, ==, 2);
@@ -220,7 +227,8 @@ fu_uefi_update_info_func (void)
 
 	fn = fu_test_get_filename (TESTDATADIR, "efi/esrt/entries/entry0");
 	g_assert (fn != NULL);
-	dev = fu_uefi_device_new_from_entry (fn);
+	dev = fu_uefi_device_new_from_entry (fn, &error);
+	g_assert_no_error (error);
 	g_assert_nonnull (dev);
 	g_assert_cmpint (fu_uefi_device_get_kind (dev), ==, FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE);
 	g_assert_cmpstr (fu_uefi_device_get_guid (dev), ==, "ddc0ee61-e7f0-4e7d-acc5-c070a398838e");

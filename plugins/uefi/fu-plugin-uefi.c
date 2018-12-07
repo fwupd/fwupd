@@ -726,7 +726,12 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	/* add each device */
 	for (guint i = 0; i < entries->len; i++) {
 		const gchar *path = g_ptr_array_index (entries, i);
-		g_autoptr(FuUefiDevice) dev = fu_uefi_device_new_from_entry (path);
+		g_autoptr(GError) error_parse = NULL;
+		g_autoptr(FuUefiDevice) dev = fu_uefi_device_new_from_entry (path, &error_parse);
+		if (dev == NULL) {
+			g_warning ("failed to add %s: %s", path, error_parse->message);
+			continue;
+		}
 		fu_device_set_quirks (FU_DEVICE (dev), fu_plugin_get_quirks (plugin));
 		if (!fu_plugin_uefi_coldplug_device (plugin, dev, error))
 			return FALSE;

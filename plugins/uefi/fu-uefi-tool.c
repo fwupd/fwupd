@@ -216,7 +216,13 @@ main (int argc, char *argv[])
 		devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 		for (guint i = 0; i < entries->len; i++) {
 			const gchar *path = g_ptr_array_index (entries, i);
-			g_autoptr(FuUefiDevice) dev = fu_uefi_device_new_from_entry (path);
+			g_autoptr(GError) error_parse = NULL;
+			g_autoptr(FuUefiDevice) dev = fu_uefi_device_new_from_entry (path, &error_parse);
+			if (dev == NULL) {
+				g_warning ("failed to parse %s: %s",
+					   path, error_parse->message);
+				continue;
+			}
 			fu_device_set_metadata (FU_DEVICE (dev), "EspPath", esp_path);
 			g_ptr_array_add (devices, g_object_ref (dev));
 		}
