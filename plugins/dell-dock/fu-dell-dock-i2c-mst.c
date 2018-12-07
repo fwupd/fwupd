@@ -646,7 +646,7 @@ fu_dell_dock_mst_stop_esm (FuDevice *symbiote, GError **error)
 	if (!fu_dell_dock_mst_rc_command (symbiote,
 					  MST_CMD_WRITE_MEMORY,
 					  length, MST_REG_HDCP22_DISABLE,
-					  data,
+					  data_out,
 					  error))
 		return FALSE;
 
