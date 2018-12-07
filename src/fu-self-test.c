@@ -299,7 +299,7 @@ fu_engine_requirements_other_device_func (void)
 	const gchar *xml =
 		"<component>"
 		"  <requires>"
-		"    <firmware compare=\"gt\" version=\"4.0.0\">00000000-0000-0000-0000-000000000000</firmware>"
+		"    <firmware compare=\"gt\" version=\"4.0.0\">1ff60ab2-3905-06a1-b476-0371f00c9e9b</firmware>"
 		"  </requires>"
 		"  <provides>"
 		"    <firmware type=\"flashed\">12345678-1234-1234-1234-123456789012</firmware>"
@@ -324,7 +324,7 @@ fu_engine_requirements_other_device_func (void)
 	fu_device_set_name (device2, "Secondary firmware");
 	fu_device_set_version (device2, "4.5.6");
 	fu_device_set_vendor_id (device2, "FFFF");
-	fu_device_add_guid (device2, "00000000-0000-0000-0000-000000000000");
+	fu_device_add_guid (device2, "1ff60ab2-3905-06a1-b476-0371f00c9e9b");
 	fu_engine_add_device (engine, device2);
 
 	/* import firmware metainfo */
@@ -3092,6 +3092,7 @@ fu_common_guid_func (void)
 	g_assert (!fu_common_guid_is_valid ("1ff60ab2-3905-06a1-b476"));
 	g_assert (!fu_common_guid_is_valid ("1ff60ab2-XXXX-XXXX-XXXX-0371f00c9e9b"));
 	g_assert (!fu_common_guid_is_valid (" 1ff60ab2-3905-06a1-b476-0371f00c9e9b"));
+	g_assert (!fu_common_guid_is_valid ("00000000-0000-0000-0000-000000000000"));
 
 	/* valid */
 	g_assert (fu_common_guid_is_valid ("1ff60ab2-3905-06a1-b476-0371f00c9e9b"));

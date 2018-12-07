@@ -97,6 +97,8 @@ fu_common_guid_is_valid (const gchar *guid)
 	if (guid == NULL)
 		return FALSE;
 	rc = uuid_parse (guid, uu);
+	if (uuid_is_null (uu))
+		return FALSE;
 	return rc == 0;
 }
 
