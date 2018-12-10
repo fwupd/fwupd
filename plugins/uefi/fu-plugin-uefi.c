@@ -377,6 +377,10 @@ fu_plugin_update (FuPlugin *plugin,
 	if (!fu_device_write_firmware (device, blob_fw, error))
 		return FALSE;
 
+	/* record if we had an invalid header during update */
+	str = fu_uefi_missing_capsule_header (device) ? "True" : "False";
+	fu_plugin_add_report_metadata (plugin, "MissingCapsuleHeader", str);
+
 	/* record boot information to system log for future debugging */
 	efibootmgr_path = fu_common_find_program_in_path ("efibootmgr", NULL);
 	if (efibootmgr_path != NULL) {

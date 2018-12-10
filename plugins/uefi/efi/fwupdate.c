@@ -19,8 +19,6 @@ EFI_GUID fwupdate_guid =
 	{0x0abba7dc,0xe516,0x4167,{0xbb,0xf5,0x4d,0x9d,0x1c,0x73,0x94,0x16}};
 EFI_GUID ux_capsule_guid =
 	{0x3b8c8162,0x188c,0x46a4,{0xae,0xc9,0xbe,0x43,0xf1,0xd6,0x56,0x97}};
-EFI_GUID fmp_capsule_guid =
-	{0x6dcbd5ed,0xe82d,0x4c44,{0xbd,0xa1,0x71,0x94,0x19,0x9a,0xd9,0x2a}};
 EFI_GUID global_variable_guid = EFI_GLOBAL_VARIABLE;
 
 
@@ -1017,7 +1015,6 @@ do_ux_csum(EFI_HANDLE loaded_image, UINT8 *buf, UINTN size)
 }
 
 #define is_ux_capsule(guid) (guid_cmp(guid, &ux_capsule_guid) == 0)
-#define is_fmp_capsule(guid) (guid_cmp(guid, &fmp_capsule_guid) == 0)
 
 static EFI_STATUS
 add_capsule(update_table *update, EFI_CAPSULE_HEADER **capsule_out,
@@ -1047,68 +1044,17 @@ add_capsule(update_table *update, EFI_CAPSULE_HEADER **capsule_out,
 	dprint(L"updates guid: %g\n", &update->info->guid);
 	dprint(L"File guid: %g\n", fbuf);
 
-	/*
-	 * See if it has the capsule header, and if not, add one.
-	 *
-	 * Unfortunately there's not a good way to do this, so we're just
-	 * checking if the capsule has the fw_class guid at the right place.
-	 */
-	if ((guid_cmp(&update->info->guid, (efi_guid_t *)fbuf) == 0 ||
-	     is_fmp_capsule((efi_guid_t *)fbuf)) &&
-	    /*
-	     * We're ignoring things that are 40 bytes here, because that's
-	     * the size of the variables used in the test code I wrote for
-	     * edk2 - It's basically a capsule header with no payload, so
-	     * there's nothing real it can do anyway.
-	     *
-	     * At some point I'll update that to be slightly different and
-	     * take the exception out, but it's not pressing.
-	     */
-	    fsize != 40) {
-		dprint(L"Image has capsule image embedded\n");
-		cbd_len = fsize;
-		cbd_data = (EFI_PHYSICAL_ADDRESS)(UINTN)fbuf;
-		capsule = cap_out = (EFI_CAPSULE_HEADER *)fbuf;
-		if (!cap_out->Flags && !is_ux_capsule(&update->info->guid)) {
+	cbd_len = fsize;
+	cbd_data = (EFI_PHYSICAL_ADDRESS)(UINTN)fbuf;
+	capsule = cap_out = (EFI_CAPSULE_HEADER *)fbuf;
+	if (!cap_out->Flags && !is_ux_capsule(&update->info->guid)) {
 #if defined(__aarch64__)
-			cap_out->Flags |= update->info->capsule_flags;
+		cap_out->Flags |= update->info->capsule_flags;
 #else
-			cap_out->Flags |= update->info->capsule_flags |
-					  CAPSULE_FLAGS_PERSIST_ACROSS_RESET |
-					  CAPSULE_FLAGS_INITIATE_RESET;
+		cap_out->Flags |= update->info->capsule_flags |
+					CAPSULE_FLAGS_PERSIST_ACROSS_RESET |
+					CAPSULE_FLAGS_INITIATE_RESET;
 #endif
-		}
-	} else {
-		dprint(L"Image does not have embedded header\n");
-		dprint(L"Allocating %d for capsule header.\n",
-		       sizeof (*capsule)+fsize);
-		rc = allocate((void **)&capsule, sizeof (*capsule) + fsize);
-		if (EFI_ERROR(rc)) {
-			print(L"Tried to allocate %d\n",
-			      sizeof (*capsule) + fsize);
-			print(L"Could not allocate space for update: %r.\n",
-			      rc);
-			return EFI_OUT_OF_RESOURCES;
-		}
-		capsule->CapsuleGuid = update->info->guid;
-		capsule->HeaderSize = sizeof (*capsule);
-		if (!is_ux_capsule(&update->info->guid)) {
-#if defined(__aarch64__)
-			capsule->Flags |= update->info->capsule_flags;
-#else
-			capsule->Flags = update->info->capsule_flags |
-					 CAPSULE_FLAGS_PERSIST_ACROSS_RESET |
-					 CAPSULE_FLAGS_INITIATE_RESET;
-#endif
-		}
-		capsule->CapsuleImageSize = fsize + sizeof (*capsule);
-
-		UINT8 *buffer = (UINT8 *)capsule + capsule->HeaderSize;
-		CopyMem(buffer, fbuf, fsize);
-		cbd_len = capsule->CapsuleImageSize;
-		cbd_data = (EFI_PHYSICAL_ADDRESS)(UINTN)capsule;
-		cap_out = capsule;
-		free(fbuf, fsize);
 	}
 
 	if (is_ux_capsule(&update->info->guid)) {

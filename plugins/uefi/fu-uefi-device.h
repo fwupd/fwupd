@@ -57,6 +57,7 @@ const gchar	*fu_uefi_device_kind_to_string		(FuUefiDeviceKind kind);
 const gchar	*fu_uefi_device_status_to_string	(FuUefiDeviceStatus status);
 FuUefiUpdateInfo *fu_uefi_device_load_update_info	(FuUefiDevice	*self,
 							 GError		**error);
+gboolean	 fu_uefi_missing_capsule_header		(FuDevice *device);
 
 G_END_DECLS
 
