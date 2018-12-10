@@ -108,7 +108,7 @@ fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_si
 		efidp found_dp;
 		g_autofree guint8 *var_data_tmp = NULL;
 
-		if (efi_guid_cmp (guid, &efi_guid_global))
+		if (efi_guid_cmp (guid, &efi_guid_global) == 0)
 			continue;
 		rc = sscanf (name, "Boot%hX%n", &entry, &scanned);
 		if (rc < 0) {
