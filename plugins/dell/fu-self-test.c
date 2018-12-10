@@ -69,7 +69,7 @@ fu_plugin_dell_tpm_func (void)
 	struct tpm_status tpm_out;
 	g_autoptr(FuPlugin) plugin_dell = NULL;
 	g_autoptr(FuPlugin) plugin_uefi = NULL;
-	g_autoptr(GBytes) blob_fw = g_bytes_new_static ("fw", 2);
+	g_autoptr(GBytes) blob_fw = g_bytes_new_static ("fw", 30);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 
@@ -244,8 +244,11 @@ fu_plugin_dell_tpm_func (void)
 	g_clear_error (&error);
 
 	/* test override */
+	g_test_expect_message ("FuPluginUefi", G_LOG_LEVEL_WARNING,
+			       "missing or invalid embedded capsule header");
 	ret = fu_plugin_runner_update (plugin_uefi, device_v20, NULL, blob_fw,
 				       FWUPD_INSTALL_FLAG_FORCE, &error);
+	g_test_assert_expected_messages ();
 	g_assert_no_error (error);
 	g_assert (ret);
 }

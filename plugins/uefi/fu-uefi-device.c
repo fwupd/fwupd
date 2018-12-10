@@ -28,6 +28,7 @@ struct _FuUefiDevice {
 	FuUefiDeviceStatus	 last_attempt_status;
 	guint32			 last_attempt_version;
 	guint64			 fmp_hardware_instance;
+	gboolean		 missing_header;
 };
 
 G_DEFINE_TYPE (FuUefiDevice, fu_uefi_device, FU_TYPE_DEVICE)
@@ -289,6 +290,63 @@ fu_uefi_device_build_dp_buf (const gchar *path, gsize *bufsz, GError **error)
 	return g_steal_pointer (&dp_buf);
 }
 
+static GBytes *
+fu_uefi_device_fixup_firmware (FuDevice *device, GBytes *fw, GError **error)
+{
+	FuUefiDevice *self = FU_UEFI_DEVICE (device);
+	gsize fw_length;
+	efi_guid_t esrt_guid;
+	efi_guid_t payload_guid;
+	const gchar *data = g_bytes_get_data (fw, &fw_length);
+	self->missing_header = FALSE;
+
+	/* convert to EFI GUIDs */
+	if (efi_str_to_guid (fu_uefi_device_get_guid (self), &esrt_guid) < 0) {
+		g_set_error_literal (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
+				     "Invalid ESRT GUID");
+		return NULL;
+	}
+	if (fw_length < sizeof(efi_guid_t)) {
+		g_set_error_literal (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE,
+				     "Invalid payload");
+		return NULL;
+	}
+	memcpy (&payload_guid, data, sizeof(efi_guid_t));
+
+	/* ESRT header matches payload */
+	if (efi_guid_cmp (&esrt_guid, &payload_guid) == 0) {
+		g_debug ("ESRT matches payload GUID");
+		return g_bytes_new_from_bytes (fw, 0, fw_length);
+	/* FMP payload */
+	} else if (fu_uefi_device_get_kind (self) == FU_UEFI_DEVICE_KIND_FMP) {
+		g_debug ("performing FMP update");
+		return g_bytes_new_from_bytes (fw, 0, fw_length);
+	/* Missing, add a header */
+	} else {
+		guint header_size = sizeof(efi_capsule_header_t);
+		guint8 *new_data = g_malloc (fw_length + header_size);
+		guint8 *capsule = new_data + header_size;
+		efi_capsule_header_t *header = (efi_capsule_header_t *) new_data;
+
+		g_warning ("missing or invalid embedded capsule header");
+		self->missing_header = TRUE;
+		header->flags = self->capsule_flags;
+		header->header_size = header_size;
+		header->capsule_image_size = fw_length + header_size;
+		memcpy (&header->guid, &esrt_guid, sizeof (efi_guid_t));
+		memcpy (capsule, data, fw_length);
+
+		return g_bytes_new_take (new_data, fw_length + header_size);
+	}
+}
+
+gboolean
+fu_uefi_missing_capsule_header (FuDevice *device)
+{
+	FuUefiDevice *self = FU_UEFI_DEVICE (device);
+	return self->missing_header;
+}
+
 static gboolean
 fu_uefi_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 {
@@ -299,6 +357,7 @@ fu_uefi_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 	efi_update_info_t info;
 	gsize datasz = 0;
 	gsize dp_bufsz = 0;
+	g_autoptr(GBytes) fixed_fw = NULL;
 	g_autofree gchar *basename = NULL;
 	g_autofree gchar *directory = NULL;
 	g_autofree gchar *fn = NULL;
@@ -320,7 +379,10 @@ fu_uefi_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 	fn = g_build_filename (directory, "fw", basename, NULL);
 	if (!fu_common_mkdir_parent (fn, error))
 		return FALSE;
-	if (!fu_common_set_contents_bytes (fn, fw, error))
+	fixed_fw = fu_uefi_device_fixup_firmware (device, fw, error);
+	if (fixed_fw == NULL)
+		return FALSE;
+	if (!fu_common_set_contents_bytes (fn, fixed_fw, error))
 		return FALSE;
 
 	/* set the blob header shared with fwupd.efi */
