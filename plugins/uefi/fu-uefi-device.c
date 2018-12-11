@@ -323,7 +323,7 @@ fu_uefi_device_fixup_firmware (FuDevice *device, GBytes *fw, GError **error)
 		return g_bytes_new_from_bytes (fw, 0, fw_length);
 	/* Missing, add a header */
 	} else {
-		guint header_size = sizeof(efi_capsule_header_t);
+		guint header_size = getpagesize();
 		guint8 *new_data = g_malloc (fw_length + header_size);
 		guint8 *capsule = new_data + header_size;
 		efi_capsule_header_t *header = (efi_capsule_header_t *) new_data;
