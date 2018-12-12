@@ -352,11 +352,26 @@ fwupd_build_history_report_json_device (JsonBuilder *builder, FwupdDevice *dev)
 {
 	FwupdRelease *rel = fwupd_device_get_release_default (dev);
 	GPtrArray *checksums;
+	const gchar *tmp;
 
 	/* identify the firmware used */
 	json_builder_set_member_name (builder, "Checksum");
 	checksums = fwupd_release_get_checksums (rel);
 	json_builder_add_string_value (builder, fwupd_checksum_get_by_kind (checksums, G_CHECKSUM_SHA1));
+
+	/* identify the firmware written */
+	checksums = fwupd_device_get_checksums (dev);
+	tmp = fwupd_checksum_get_by_kind (checksums, G_CHECKSUM_SHA1);
+	if (tmp != NULL) {
+		json_builder_set_member_name (builder, "ChecksumDevice");
+		json_builder_add_string_value (builder, tmp);
+	}
+
+	/* include the protocol used */
+	if (fwupd_release_get_protocol (rel) != NULL) {
+		json_builder_set_member_name (builder, "Protocol");
+		json_builder_add_string_value (builder, fwupd_release_get_protocol (rel));
+	}
 
 	/* set the error state of the report */
 	json_builder_set_member_name (builder, "UpdateState");
