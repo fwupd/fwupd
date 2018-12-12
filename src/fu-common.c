@@ -928,6 +928,12 @@ fu_common_get_path (FuPathKind path_kind)
 		if (tmp != NULL)
 			return g_strdup (tmp);
 		return g_strdup ("/sys/firmware");
+	/* /sys/firmware */
+	case FU_PATH_KIND_SYSFSDIR_TPM:
+		tmp = g_getenv ("FWUPD_SYSFSTPMDIR");
+		if (tmp != NULL)
+			return g_strdup (tmp);
+		return g_strdup ("/sys/class/tpm");
 	/* /sys/bus/platform/drivers */
 	case FU_PATH_KIND_SYSFSDIR_DRIVERS:
 		tmp = g_getenv ("FWUPD_SYSFSDRIVERDIR");

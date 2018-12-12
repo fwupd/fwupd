@@ -16,6 +16,7 @@
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
 #include "fu-uefi-bootmgr.h"
+#include "fu-uefi-pcrs.h"
 #include "fu-uefi-vars.h"
 
 struct _FuUefiDevice {
@@ -430,6 +431,43 @@ fu_uefi_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 }
 
 static gboolean
+fu_uefi_device_add_system_checksum (FuDevice *device, GError **error)
+{
+	g_autoptr(FuUefiPcrs) pcrs = fu_uefi_pcrs_new ();
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GPtrArray) pcr0s = NULL;
+
+	/* get all the PCRs */
+	if (!fu_uefi_pcrs_setup (pcrs, &error_local)) {
+		if (g_error_matches (error_local,
+				     G_IO_ERROR,
+				     G_IO_ERROR_NOT_SUPPORTED)) {
+			g_debug ("%s", error_local->message);
+			return TRUE;
+		}
+		g_propagate_error (error, g_steal_pointer (&error_local));
+		return FALSE;
+	}
+
+	/* get all the PCR0s */
+	pcr0s = fu_uefi_pcrs_get_checksums (pcrs, 0);
+	if (pcr0s->len == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "no PCR0s detected");
+		return FALSE;
+	}
+	for (guint i = 0; i < pcr0s->len; i++) {
+		const gchar *checksum = g_ptr_array_index (pcr0s, i);
+		fu_device_add_checksum (device, checksum);
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_uefi_device_probe (FuDevice *device, GError **error)
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE (device);
@@ -474,6 +512,13 @@ fu_uefi_device_probe (FuDevice *device, GError **error)
 		/* this is probably system firmware */
 		fu_device_add_icon (device, "computer");
 		fu_device_add_guid (device, "main-system-firmware");
+	}
+
+	/* set the PCR0 as the device checksum */
+	if (self->kind == FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE) {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_uefi_device_add_system_checksum (device, &error_local))
+			g_warning ("Failed to get PCR0s: %s", error_local->message);
 	}
 
 	/* Windows seems to be case insensitive, but for convenience we'll
