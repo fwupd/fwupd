@@ -1482,7 +1482,6 @@ fu_plugin_runner_update (FuPlugin *self,
 	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(FuDevice) device_pending = NULL;
 	g_autoptr(GError) error_local = NULL;
-	GPtrArray *checksums;
 
 	/* not enabled */
 	if (!priv->enabled) {
@@ -1544,8 +1543,10 @@ fu_plugin_runner_update (FuPlugin *self,
 	}
 
 	/* no longer valid */
-	checksums = fu_device_get_checksums (device);
-	g_ptr_array_set_size (checksums, 0);
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT)) {
+		GPtrArray *checksums = fu_device_get_checksums (device);
+		g_ptr_array_set_size (checksums, 0);
+	}
 
 	/* cleanup */
 	if (device_pending != NULL) {
