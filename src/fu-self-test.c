@@ -874,6 +874,7 @@ fu_engine_history_func (void)
 	fu_device_set_name (device, "Test Device");
 	fu_device_set_plugin (device, "test");
 	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_checksum (device, "0123456789abcdef0123456789abcdef01234567");
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_created (device, 1515338000);
 	fu_engine_add_device (engine, device);

@@ -3657,9 +3657,17 @@ fu_engine_update_history_device (FuEngine *self, FuDevice *dev_history, GError *
 	/* the system is running with the new firmware version */
 	if (g_strcmp0 (fu_device_get_version (dev),
 		       fwupd_release_get_version (rel_history)) == 0) {
+		GPtrArray *checksums;
 		g_debug ("installed version %s matching history %s",
 			 fu_device_get_version (dev),
 			 fwupd_release_get_version (rel_history));
+
+		/* copy over runtime checksums if set from probe() */
+		checksums = fu_device_get_checksums (dev);
+		for (guint i = 0; i < checksums->len; i++) {
+			const gchar *csum = g_ptr_array_index (checksums, i);
+			fu_device_add_checksum (dev_history, csum);
+		}
 		fu_device_set_update_state (dev_history, FWUPD_UPDATE_STATE_SUCCESS);
 		return fu_history_modify_device (self->history, dev_history,
 						 FU_HISTORY_FLAGS_MATCH_NEW_VERSION,
