@@ -653,12 +653,12 @@ fu_engine_verify (FuEngine *self, const gchar *device_id, GError **error)
 {
 	FuPlugin *plugin;
 	GPtrArray *checksums;
-	const gchar *hash = NULL;
 	const gchar *version;
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *localstatedir = NULL;
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(GFile) file = NULL;
+	g_autoptr(GString) xpath_csum = g_string_new (NULL);
 	g_autoptr(XbNode) csum = NULL;
 	g_autoptr(XbNode) release = NULL;
 	g_autoptr(XbSilo) silo = xb_silo_new ();
@@ -730,16 +730,6 @@ fu_engine_verify (FuEngine *self, const gchar *device_id, GError **error)
 		return FALSE;
 	}
 
-	/* find checksum */
-	csum = xb_node_query_first (release, "checksum[@target='content']", NULL);
-	if (csum == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_FOUND,
-			     "No content checksum for %s", version);
-		return FALSE;
-	}
-
 	/* get the matching checksum */
 	checksums = fu_device_get_checksums (device);
 	if (checksums->len == 0) {
@@ -749,29 +739,52 @@ fu_engine_verify (FuEngine *self, const gchar *device_id, GError **error)
 			     "No device checksums for %s", version);
 		return FALSE;
 	}
+
+	/* do any of the checksums in the release match any in the device */
 	for (guint j = 0; j < checksums->len; j++) {
 		const gchar *hash_tmp = g_ptr_array_index (checksums, j);
-		GChecksumType hash_kind = fwupd_checksum_guess_kind (hash_tmp);
-		if (fwupd_checksum_guess_kind (xb_node_get_text (csum)) == hash_kind) {
-			hash = hash_tmp;
-			break;
+		xb_string_append_union (xpath_csum,
+					"checksum[@target='device'][text()='%s']",
+					hash_tmp);
+		xb_string_append_union (xpath_csum,
+					"checksum[@target='content'][text()='%s']",
+					hash_tmp);
+	}
+	csum = xb_node_query_first (release, xpath_csum->str, NULL);
+	if (csum == NULL) {
+		g_autoptr(GString) checksums_device = g_string_new (NULL);
+		g_autoptr(GString) checksums_metadata = g_string_new (NULL);
+		g_autoptr(GPtrArray) csums = NULL;
+		g_autoptr(GString) xpath = g_string_new (NULL);
+
+		/* get all checksums to display a useful error */
+		xb_string_append_union (xpath, "checksum[@target='device']");
+		xb_string_append_union (xpath, "checksum[@target='content']");
+		csums = xb_node_query (release, xpath->str, 0, NULL);
+		if (csums == NULL) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "No device or content checksum for %s",
+				     version);
+			return FALSE;
 		}
-	}
-	if (hash == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_FOUND,
-			     "No matching hash kind for %s", version);
-		return FALSE;
-	}
-	if (g_strcmp0 (xb_node_get_text (csum), hash) != 0) {
+		for (guint i = 0; i < csums->len; i++) {
+			XbNode *csum_tmp = g_ptr_array_index (csums, i);
+			xb_string_append_union (checksums_metadata,
+						"%s", xb_node_get_text (csum_tmp));
+		}
+		for (guint i = 0; i < checksums->len; i++) {
+			const gchar *hash_tmp = g_ptr_array_index (checksums, i);
+			xb_string_append_union (checksums_device, "%s", hash_tmp);
+		}
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_FOUND,
 			     "For v%s expected %s, got %s",
 			     version,
-			     xb_node_get_text (csum),
-			     hash);
+			     checksums_metadata->str,
+			     checksums_device->str);
 		return FALSE;
 	}
 
