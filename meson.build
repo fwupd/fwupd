@@ -278,6 +278,10 @@ if get_option('plugin_thunderbolt')
   conf.set('HAVE_THUNDERBOLT', '1')
 endif
 
+if get_option('plugin_flashrom')
+  libflashrom = dependency('flashrom', fallback : ['flashrom', 'flashrom_dep'])
+endif
+
 if get_option('systemd')
   systemd = dependency('systemd', version : '>= 211')
   conf.set('HAVE_SYSTEMD' , '1')
