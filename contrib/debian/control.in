@@ -33,6 +33,8 @@ Depends: ${misc:Depends},
          ${shlibs:Depends}
 Recommends: python3,
 	    bolt,
+	    tpm2-tools,
+	    tpm2-abrmd,
 	    fwupd-signed
 Breaks: gir1.2-dfu-1.0 (<< 0.9.7-1),
 	libdfu1 (<< 0.9.7-1),
