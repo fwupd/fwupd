@@ -32,6 +32,7 @@ void
 fu_plugin_init (FuPlugin *plugin)
 {
 	fu_plugin_add_udev_subsystem (plugin, "nvme");
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_SUPPORTS_PROTOCOL, "org.nvmexpress");
 }
 
 gboolean

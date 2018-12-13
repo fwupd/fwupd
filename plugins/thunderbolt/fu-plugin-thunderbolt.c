@@ -562,6 +562,7 @@ fu_plugin_init (FuPlugin *plugin)
 	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 	const gchar *subsystems[] = { "thunderbolt", NULL };
 
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_SUPPORTS_PROTOCOL, "com.intel.thunderbolt");
 	data->udev = g_udev_client_new (subsystems);
 	g_signal_connect (data->udev, "uevent",
 			  G_CALLBACK (udev_uevent_cb), plugin);
