@@ -15,6 +15,7 @@ struct FuPluginData {
 void
 fu_plugin_init (FuPlugin *plugin)
 {
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_SUPPORTS_PROTOCOL, "com.acme.test");
 	fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 	g_debug ("init");
 }

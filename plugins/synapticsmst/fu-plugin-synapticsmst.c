@@ -471,4 +471,5 @@ fu_plugin_init (FuPlugin *plugin)
 {
 	/* make sure dell is already coldplugged */
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "dell");
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_SUPPORTS_PROTOCOL, "com.synaptics.mst");
 }

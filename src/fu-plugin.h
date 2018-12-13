@@ -70,6 +70,7 @@ typedef enum {
  * @FU_PLUGIN_RULE_REQUIRES_QUIRK:	Requires a specific quirk
  * @FU_PLUGIN_RULE_BETTER_THAN:		Is better than another plugin
  * @FU_PLUGIN_RULE_INHIBITS_IDLE:	The plugin inhibits the idle shutdown
+ * @FU_PLUGIN_RULE_SUPPORTS_PROTOCOL:	The plugin supports a well known protocol
  *
  * The rules used for ordering plugins.
  * Plugins are expected to add rules in fu_plugin_initialize().
@@ -81,6 +82,7 @@ typedef enum {
 	FU_PLUGIN_RULE_REQUIRES_QUIRK,
 	FU_PLUGIN_RULE_BETTER_THAN,
 	FU_PLUGIN_RULE_INHIBITS_IDLE,
+	FU_PLUGIN_RULE_SUPPORTS_PROTOCOL,
 	/*< private >*/
 	FU_PLUGIN_RULE_LAST
 } FuPluginRule;
