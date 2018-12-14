@@ -1384,14 +1384,16 @@ fu_plugin_runner_verify (FuPlugin *self,
 	if (priv->module == NULL)
 		return TRUE;
 
-	/* clear any existing verification checksums */
-	checksums = fu_device_get_checksums (device);
-	g_ptr_array_set_size (checksums, 0);
-
 	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_verify", (gpointer *) &func);
 	if (func == NULL)
 		return TRUE;
+
+	/* clear any existing verification checksums */
+	checksums = fu_device_get_checksums (device);
+	g_ptr_array_set_size (checksums, 0);
+
+	/* run vfunc */
 	g_debug ("performing verify() on %s", priv->name);
 	if (!func (self, device, flags, &error_local)) {
 		if (error_local == NULL) {
