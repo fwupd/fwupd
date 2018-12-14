@@ -321,6 +321,9 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 	tmp64 = xb_node_get_attr_as_uint (release, "install_duration");
 	if (tmp64 != 0)
 		fwupd_release_set_install_duration (rel, tmp64);
+	tmp = xb_node_query_text (component, "custom/value[@key='LVFS::UpdateProtocol']", NULL);
+	if (tmp != NULL)
+		fwupd_release_set_protocol (rel, tmp);
 }
 
 /* finds the remote-id for the first firmware in the silo that matches this

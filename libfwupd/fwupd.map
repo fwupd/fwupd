@@ -286,3 +286,10 @@ LIBFWUPD_1.2.1 {
     fwupd_release_set_install_duration;
   local: *;
 } LIBFWUPD_1.1.3;
+
+LIBFWUPD_1.2.2 {
+  global:
+    fwupd_release_get_protocol;
+    fwupd_release_set_protocol;
+  local: *;
+} LIBFWUPD_1.2.1;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2018 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -54,6 +54,9 @@ const gchar	*fwupd_release_get_metadata_item	(FwupdRelease	*release,
 const gchar	*fwupd_release_get_filename		(FwupdRelease	*release);
 void		 fwupd_release_set_filename		(FwupdRelease	*release,
 							 const gchar	*filename);
+const gchar	*fwupd_release_get_protocol		(FwupdRelease	*release);
+void		 fwupd_release_set_protocol		(FwupdRelease	*release,
+							 const gchar	*protocol);
 const gchar	*fwupd_release_get_appstream_id		(FwupdRelease	*release);
 void		 fwupd_release_set_appstream_id		(FwupdRelease	*release,
 							 const gchar	*appstream_id);
