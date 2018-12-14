@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2018 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -33,6 +33,7 @@ typedef struct {
 	GHashTable			*metadata;
 	gchar				*description;
 	gchar				*filename;
+	gchar				*protocol;
 	gchar				*homepage;
 	gchar				*appstream_id;
 	gchar				*license;
@@ -156,6 +157,42 @@ fwupd_release_set_filename (FwupdRelease *release, const gchar *filename)
 	g_return_if_fail (FWUPD_IS_RELEASE (release));
 	g_free (priv->filename);
 	priv->filename = g_strdup (filename);
+}
+
+/**
+ * fwupd_release_get_protocol:
+ * @release: A #FwupdRelease
+ *
+ * Gets the update protocol.
+ *
+ * Returns: the update protocol, or %NULL if unset
+ *
+ * Since: 1.2.2
+ **/
+const gchar *
+fwupd_release_get_protocol (FwupdRelease *release)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_val_if_fail (FWUPD_IS_RELEASE (release), NULL);
+	return priv->protocol;
+}
+
+/**
+ * fwupd_release_set_protocol:
+ * @release: A #FwupdRelease
+ * @protocol: the update protocol, e.g. `org.usb.dfu`
+ *
+ * Sets the update protocol.
+ *
+ * Since: 1.2.2
+ **/
+void
+fwupd_release_set_protocol (FwupdRelease *release, const gchar *protocol)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_if_fail (FWUPD_IS_RELEASE (release));
+	g_free (priv->protocol);
+	priv->protocol = g_strdup (protocol);
 }
 
 /**
@@ -739,6 +776,11 @@ fwupd_release_to_variant (FwupdRelease *release)
 				       FWUPD_RESULT_KEY_FILENAME,
 				       g_variant_new_string (priv->filename));
 	}
+	if (priv->protocol != NULL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_PROTOCOL,
+				       g_variant_new_string (priv->protocol));
+	}
 	if (priv->license != NULL) {
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_LICENSE,
@@ -828,6 +870,10 @@ fwupd_release_from_key_value (FwupdRelease *release, const gchar *key, GVariant 
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_FILENAME) == 0) {
 		fwupd_release_set_filename (release, g_variant_get_string (value, NULL));
+		return;
+	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_PROTOCOL) == 0) {
+		fwupd_release_set_protocol (release, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_LICENSE) == 0) {
@@ -968,6 +1014,7 @@ fwupd_release_to_string (FwupdRelease *release)
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_VERSION, priv->version);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_FILENAME, priv->filename);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_PROTOCOL, priv->protocol);
 	for (guint i = 0; i < priv->checksums->len; i++) {
 		const gchar *checksum = g_ptr_array_index (priv->checksums, i);
 		g_autofree gchar *checksum_display = fwupd_checksum_format_for_display (checksum);
@@ -1015,6 +1062,7 @@ fwupd_release_finalize (GObject *object)
 
 	g_free (priv->description);
 	g_free (priv->filename);
+	g_free (priv->protocol);
 	g_free (priv->appstream_id);
 	g_free (priv->license);
 	g_free (priv->name);

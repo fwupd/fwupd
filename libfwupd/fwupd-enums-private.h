@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2016-2018 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -14,6 +14,7 @@
 #define FWUPD_RESULT_KEY_DEVICE_ID		"DeviceId"	/* s */
 #define FWUPD_RESULT_KEY_PARENT_DEVICE_ID	"ParentDeviceId"/* s */
 #define FWUPD_RESULT_KEY_FILENAME		"Filename"	/* s */
+#define FWUPD_RESULT_KEY_PROTOCOL		"Protocol"	/* s */
 #define FWUPD_RESULT_KEY_FLAGS			"Flags"		/* t */
 #define FWUPD_RESULT_KEY_FLASHES_LEFT		"FlashesLeft"	/* u */
 #define FWUPD_RESULT_KEY_INSTALL_DURATION	"InstallDuration"	/* u */
