@@ -50,6 +50,7 @@ dfu_tool_private_free (DfuToolPrivate *priv)
 	if (priv == NULL)
 		return;
 	g_free (priv->device_vid_pid);
+	g_object_unref (priv->progressbar);
 	g_object_unref (priv->cancellable);
 	g_object_unref (priv->quirks);
 	if (priv->cmd_array != NULL)
@@ -2427,6 +2428,5 @@ main (int argc, char *argv[])
 	}
 
 	/* success/ */
-	g_object_unref (priv->progressbar);
 	return EXIT_SUCCESS;
 }
