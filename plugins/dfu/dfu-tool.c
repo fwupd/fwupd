@@ -480,7 +480,7 @@ dfu_tool_bytes_replace (GBytes *data, GBytes *search, GBytes *replace)
 	g_return_val_if_fail (search_sz == replace_sz, FALSE);
 
 	/* find and replace each one */
-	for (gsize i = 0; i < data_sz - search_sz; i++) {
+	for (gsize i = 0; i < data_sz - search_sz + 1; i++) {
 		if (memcmp (data_buf + i, search_buf, search_sz) == 0) {
 			g_print ("Replacing %" G_GSIZE_FORMAT " bytes @0x%04x\n",
 				 replace_sz, (guint) i);
