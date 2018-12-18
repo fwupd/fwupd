@@ -319,7 +319,7 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 		}
 	}
 	tmp64 = xb_node_get_attr_as_uint (release, "install_duration");
-	if (tmp64 != 0)
+	if (tmp64 != G_MAXUINT64)
 		fwupd_release_set_install_duration (rel, tmp64);
 	tmp = xb_node_query_text (component, "custom/value[@key='LVFS::UpdateProtocol']", NULL);
 	if (tmp != NULL)
