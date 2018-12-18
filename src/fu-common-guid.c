@@ -96,6 +96,8 @@ fu_common_guid_is_valid (const gchar *guid)
 	uuid_t uu;
 	if (guid == NULL)
 		return FALSE;
+	if (strlen (guid) != 36)
+		return FALSE;
 	rc = uuid_parse (guid, uu);
 	if (uuid_is_null (uu))
 		return FALSE;
