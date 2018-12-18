@@ -675,7 +675,7 @@ dfu_tool_replace_data (DfuToolPrivate *priv, gchar **values, GError **error)
 	if (cnt == 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     FWUPD_ERROR_NOT_FOUND,
 				     "search string was not found");
 		return FALSE;
 	}
