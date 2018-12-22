@@ -12,8 +12,11 @@ shared_module('fu_plugin_dell_esrt',
   install : true,
   install_dir: plugin_dir,
   c_args : [
-      cargs,
-    ],
+    cargs,
+  ],
+  link_with : [
+    libfwupdprivate,
+  ],
   dependencies : [
     plugin_deps,
     libsmbios_c,

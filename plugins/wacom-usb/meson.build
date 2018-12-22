@@ -27,6 +27,7 @@ shared_module('fu_plugin_wacom_usb',
     plugin_deps,
   ],
   link_with : [
+    libfwupdprivate,
     dfu,
   ],
 )
@@ -57,7 +58,6 @@ if get_option('tests')
     ],
     link_with : [
       dfu,
-      fwupd,
       libfwupdprivate,
     ],
     c_args : cargs

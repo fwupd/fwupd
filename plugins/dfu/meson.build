@@ -31,6 +31,9 @@ dfu = static_library(
     gusb,
     gudev,
   ],
+  link_with : [
+    libfwupdprivate,
+  ],
   c_args : cargs,
   include_directories : [
     include_directories('../..'),
@@ -55,6 +58,7 @@ shared_module('fu_plugin_dfu',
     plugin_deps,
   ],
   link_with : [
+    libfwupdprivate,
     dfu,
   ],
 )
@@ -79,7 +83,6 @@ dfu_tool = executable(
   ],
   link_with : [
     dfu,
-    fwupd,
     libfwupdprivate,
   ],
   c_args : cargs,
@@ -130,7 +133,6 @@ if get_option('tests')
     ],
     link_with : [
       dfu,
-      fwupd,
       libfwupdprivate,
     ],
     c_args : cargs

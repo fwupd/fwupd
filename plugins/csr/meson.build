@@ -22,6 +22,7 @@ shared_module('fu_plugin_csr',
     plugin_deps,
   ],
   link_with : [
+    libfwupdprivate,
     dfu,
   ],
 )
