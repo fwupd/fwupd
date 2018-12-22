@@ -59,6 +59,9 @@ libfwupdprivate = static_library(
     valgrind,
     uuid,
   ],
+  link_with : [
+    fwupd,
+  ],
   c_args : [
     '-DFU_OFFLINE_DESTDIR=""',
   ],

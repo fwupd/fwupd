@@ -16,9 +16,12 @@ shared_module('fu_plugin_dell',
   ],
   install : true,
   install_dir: plugin_dir,
+  link_with : [
+    libfwupdprivate,
+  ],
   c_args : [
-      cargs,
-    ],
+    cargs,
+  ],
   dependencies : [
     plugin_deps,
     efivar,
@@ -51,7 +54,6 @@ if get_option('tests')
       valgrind,
     ],
     link_with : [
-      fwupd,
       libfwupdprivate,
     ],
     c_args : [

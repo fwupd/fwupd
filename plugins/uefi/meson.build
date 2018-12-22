@@ -26,6 +26,9 @@ shared_module('fu_plugin_uefi',
   ],
   install : true,
   install_dir: plugin_dir,
+  link_with : [
+    libfwupdprivate,
+  ],
   c_args : cargs,
   dependencies : [
     plugin_deps,
@@ -62,7 +65,6 @@ executable(
     efiboot,
   ],
   link_with : [
-    fwupd,
     libfwupdprivate,
   ],
   install : true,
@@ -101,7 +103,6 @@ if get_option('tests')
       efiboot,
     ],
     link_with : [
-      fwupd,
       libfwupdprivate,
     ],
     c_args : cargs

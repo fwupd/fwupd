@@ -16,6 +16,9 @@ shared_module('fu_plugin_nvme',
     cargs,
     '-DLOCALSTATEDIR="' + localstatedir + '"',
   ],
+  link_with : [
+    libfwupdprivate,
+  ],
   dependencies : [
     plugin_deps,
     efivar,
@@ -42,7 +45,6 @@ if get_option('tests')
       efivar,
     ],
     link_with : [
-      fwupd,
       libfwupdprivate,
     ],
     c_args : cargs

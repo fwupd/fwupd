@@ -15,6 +15,9 @@ shared_module('fu_plugin_flashrom',
   ],
   install : true,
   install_dir: plugin_dir,
+  link_with : [
+    libfwupdprivate,
+  ],
   c_args : [
     cargs,
     '-DLOCALSTATEDIR="' + localstatedir + '"',

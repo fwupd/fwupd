@@ -111,6 +111,7 @@ add_project_arguments(cc.get_supported_arguments(warning_flags), language : 'c')
 global_link_args = []
 test_link_args = [
   '-Wl,-z,relro',
+  '-Wl,-z,defs',
   '-Wl,-z,now',
 ]
 foreach arg: test_link_args

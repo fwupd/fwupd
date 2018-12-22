@@ -16,6 +16,9 @@ shared_module('fu_plugin_test',
   ],
   install : install_dummy,
   install_dir: plugin_dir,
+  link_with : [
+    libfwupdprivate,
+  ],
   c_args : cargs,
   dependencies : [
     plugin_deps,

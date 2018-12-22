@@ -26,6 +26,9 @@ shared_module('fu_plugin_unifying',
   ],
   install : true,
   install_dir: plugin_dir,
+  link_with : [
+    libfwupdprivate,
+  ],
   c_args : cargs,
   dependencies : [
     plugin_deps,
@@ -47,7 +50,7 @@ if get_option('tests')
       plugin_deps,
     ],
     link_with : [
-      fwupd,
+      libfwupdprivate,
     ],
     c_args : cargs,
   )

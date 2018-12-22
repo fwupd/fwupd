@@ -12,6 +12,9 @@ shared_module('fu_plugin_udev',
   ],
   install : true,
   install_dir: plugin_dir,
+  link_with : [
+    libfwupdprivate,
+  ],
   c_args : cargs,
   dependencies : [
     plugin_deps,
@@ -33,7 +36,6 @@ executable(
     plugin_deps,
   ],
   link_with : [
-    fwupd,
     libfwupdprivate,
   ],
   c_args : cargs,
@@ -59,7 +61,6 @@ if get_option('tests')
       plugin_deps,
     ],
     link_with : [
-      fwupd,
       libfwupdprivate,
     ],
     c_args : cargs
