@@ -1255,12 +1255,18 @@ main (int argc, char *argv[])
 	g_autoptr(FuMainPrivate) priv = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GOptionContext) context = NULL;
+	g_autofree gchar *version_tmp = NULL;
 
 	setlocale (LC_ALL, "");
 
 	bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
 	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 	textdomain (GETTEXT_PACKAGE);
+
+	/* test we're in a C-ish locale */
+	version_tmp = g_strdup_printf ("%.2f", 1.23f);
+	if (g_strcmp0 (version_tmp, "1.23") != 0)
+		g_printerr ("Started with an incompatible locale!\n");
 
 	/* TRANSLATORS: program name */
 	g_set_application_name (_("Firmware Update Daemon"));
