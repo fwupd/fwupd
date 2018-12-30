@@ -12,8 +12,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-11-07 11:16+0000\n"
-"PO-Revision-Date: 2018-10-12 11:10+0000\n"
+"POT-Creation-Date: 2018-12-30 15:16+0000\n"
+"PO-Revision-Date: 2018-11-28 13:44+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Chinese (China) (http://www.transifex.com/freedesktop/fwupd/language/zh_CN/)\n"
 "MIME-Version: 1.0\n"
@@ -683,12 +683,6 @@ msgstr "概览"
 msgid "Target"
 msgstr "目标"
 
-msgid "The fwupd process is a simple daemon to allow session software to update device firmware on your local machine. It is designed for desktops, but this project is also usable on phones, tablets and on headless servers."
-msgstr "fwupd 的进程作为一个简单的守护程序，可以让会话软件更新您本地机器的设备固件。它为桌面环境设计，但该项目可以应用在手机、平板电脑和服务器上。"
-
-msgid "This project aims to make updating firmware on Linux automatic, safe and reliable. You can either use a GUI software manager like GNOME Software to view and apply updates, the command-line tool or the D-Bus interface directly."
-msgstr "本项目的目标是让 Linux 上更新固件的流程变得自动化、安全又可靠。您既可以使用如 GNOME 软件这样的软件包管理器查看和应用更新，也可以直接使用命令行工具或者 D-Bus 接口。"
-
 #. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
 msgid "Title"
 msgstr "标题"
@@ -743,9 +737,6 @@ msgstr "更新概览"
 #. TRANSLATORS: section header for firmware version
 msgid "Update Version"
 msgstr "更新版本"
-
-msgid "Update device firmware on Linux"
-msgstr "更新 Linux 上的设备固件"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
@@ -820,6 +811,3 @@ msgstr "正在写入…"
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
 msgstr "您的发行商可能尚未认证任何固件的系统及设备兼容性。"
-
-msgid "fwupd"
-msgstr "fwupd"

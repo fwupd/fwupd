@@ -12,8 +12,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-11-07 11:16+0000\n"
-"PO-Revision-Date: 2018-10-12 11:10+0000\n"
+"POT-Creation-Date: 2018-12-30 15:16+0000\n"
+"PO-Revision-Date: 2018-11-28 13:44+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Swedish (http://www.transifex.com/freedesktop/fwupd/language/sv/)\n"
 "MIME-Version: 1.0\n"
@@ -676,12 +676,6 @@ msgstr "Sammanfattning"
 msgid "Target"
 msgstr "Mål"
 
-msgid "The fwupd process is a simple daemon to allow session software to update device firmware on your local machine. It is designed for desktops, but this project is also usable on phones, tablets and on headless servers."
-msgstr "Fwupd-processen är en enkel demon som tillåter sessions-programvara att uppdatera enheters fasta programvara på din lokala maskin. Det är utformat för skrivbordsmiljöer, men detta projekt är också användbart på telefoner, surfplattor och skärmlösa servrar."
-
-msgid "This project aims to make updating firmware on Linux automatic, safe and reliable. You can either use a GUI software manager like GNOME Software to view and apply updates, the command-line tool or the D-Bus interface directly."
-msgstr "Detta projekt strävar efter att göra uppdatering av fast programvara på Linux automatisk, säker och pålitlig. Du kan antingen använda ett grafiskt användargränssnitt som GNOME Programvara  för att granska och applicera uppdateringar, ett kommandoradsverktyg eller direkt mot D-Bus gränssnittet."
-
 #. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
 msgid "Title"
 msgstr "Titel"
@@ -736,9 +730,6 @@ msgstr "Uppdateringssammanfattning"
 #. TRANSLATORS: section header for firmware version
 msgid "Update Version"
 msgstr "Uppdateringsversion"
-
-msgid "Update device firmware on Linux"
-msgstr "Uppdatera enhetens fasta programvara på Linux"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
@@ -813,6 +804,3 @@ msgstr "Skriver…"
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
 msgstr "Din distributör kanske inte har verifierat någon av uppdateringarna av fastprogramvara för kompatibilitet med ditt system eller anslutna enheter."
-
-msgid "fwupd"
-msgstr "fwupd"

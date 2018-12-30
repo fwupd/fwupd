@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-11-07 11:16+0000\n"
-"PO-Revision-Date: 2018-10-12 11:10+0000\n"
+"POT-Creation-Date: 2018-12-30 15:16+0000\n"
+"PO-Revision-Date: 2018-11-28 13:44+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Friulian (http://www.transifex.com/freedesktop/fwupd/language/fur/)\n"
 "MIME-Version: 1.0\n"
@@ -562,9 +562,6 @@ msgstr "Stât"
 msgid "Summary"
 msgstr "Sintesi"
 
-msgid "The fwupd process is a simple daemon to allow session software to update device firmware on your local machine. It is designed for desktops, but this project is also usable on phones, tablets and on headless servers."
-msgstr "Il procès fwupd al è un sempliç demoni par permeti al software de session di inzornâ i firmware dai dispositîfs su la machine locâl. Al è progjetât pai scritoris, ma chest progjet si pues doprâ ancje sui telefonins, tablet e sui servidôrs cence visôr."
-
 #. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
 msgid "Title"
 msgstr "Titul"
@@ -615,9 +612,6 @@ msgstr "Inzorne sintesi"
 #. TRANSLATORS: section header for firmware version
 msgid "Update Version"
 msgstr "Inzorne version"
-
-msgid "Update device firmware on Linux"
-msgstr "Inzorne il firmware dal dispositîf su Linux"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
@@ -672,6 +666,3 @@ msgstr "Scrîf il firmware dal file intune partizion"
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing…"
 msgstr "Daûr a scrivi…"
-
-msgid "fwupd"
-msgstr "fwupd"

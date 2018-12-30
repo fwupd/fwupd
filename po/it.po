@@ -9,9 +9,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-11-07 11:16+0000\n"
-"PO-Revision-Date: 2018-10-12 13:29+0000\n"
-"Last-Translator: Milo Casagrande <milo@ubuntu.com>\n"
+"POT-Creation-Date: 2018-12-30 15:16+0000\n"
+"PO-Revision-Date: 2018-11-28 13:44+0000\n"
+"Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Italian (http://www.transifex.com/freedesktop/fwupd/language/it/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -30,6 +30,34 @@ msgstr[1] "Mancano %.0f minuti"
 #, c-format
 msgid "%s has firmware updates:"
 msgstr "%s ha degli aggiornamenti del firmware:"
+
+#. TRANSLATORS: duration in days!
+#, c-format
+msgid "%u day"
+msgid_plural "%u days"
+msgstr[0] "%u giorno"
+msgstr[1] "%u giorni"
+
+#. TRANSLATORS: duration in minutes
+#, c-format
+msgid "%u hour"
+msgid_plural "%u hours"
+msgstr[0] "%u ora"
+msgstr[1] "%u ore"
+
+#. TRANSLATORS: duration in minutes
+#, c-format
+msgid "%u minute"
+msgid_plural "%u minutes"
+msgstr[0] "%u minuto"
+msgstr[1] "%u minuti"
+
+#. TRANSLATORS: duration in seconds
+#, c-format
+msgid "%u second"
+msgid_plural "%u seconds"
+msgstr[0] "%u secondo"
+msgstr[1] "%u secondi"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Added"
@@ -821,9 +849,6 @@ msgstr "Obiettivo"
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
 msgstr "LVFS è un servizio gratuito che opera come entità legale indipendente e non ha alcun legame con $OS_RELEASE:NAME$. Il distributore potrebbe non aver verificato la compatibilità degli aggiornamenti firmware col proprio sistema o con i propri dispositivi collegati. Il firmware viene fornito solamente dall'OEM."
 
-msgid "The fwupd process is a simple daemon to allow session software to update device firmware on your local machine. It is designed for desktops, but this project is also usable on phones, tablets and on headless servers."
-msgstr "Il processo fwupd è un demone che consente di aggiornare il firmware di un dispositivo sul proprio computer. È progettato per un ambiente desktop, ma è possibile utilizzarlo anche su telefonini, tablet e server."
-
 #. TRANSLATORS: exactly one update needs this
 msgid "The update requires a reboot to complete."
 msgstr "Per essere completato, l'aggiornamento richiede un riavvio."
@@ -831,9 +856,6 @@ msgstr "Per essere completato, l'aggiornamento richiede un riavvio."
 #. TRANSLATORS: we're poking around as a power user
 msgid "This program may only work correctly as root"
 msgstr "Questo programma può funzionare correttamente solo come utente root"
-
-msgid "This project aims to make updating firmware on Linux automatic, safe and reliable. You can either use a GUI software manager like GNOME Software to view and apply updates, the command-line tool or the D-Bus interface directly."
-msgstr "Questo progetto vuole rendere l'aggiornamento di firmware su Linux un processo automatico, sicuro e affidabile. È possibile usare uno strumento grafico come GNOME Software per visualizzare e applicare gli aggiornamenti, oppure lo strumento a riga di comando o l'interfaccia D-Bus."
 
 msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
 msgstr "Questo remoto contiene firmware che non è bloccato, ma è ancora in fase di verifica dal produttore hardware. Assicurarsi di poter ripristinare, manualmente o con altre procedure, il vecchio firmware nel caso in cui l'aggiornamento non riuscisse."
@@ -881,6 +903,11 @@ msgstr "Codice di controllo aggiornamento"
 msgid "Update Description"
 msgstr "Descrizione aggiornamento"
 
+#. TRANSLATORS: section header for the amount
+#. * of time it takes to install the update
+msgid "Update Duration"
+msgstr "Durata aggiornamento"
+
 #. TRANSLATORS: section header for firmware remote http://
 msgid "Update Location"
 msgstr "Posizione aggiornamento"
@@ -900,9 +927,6 @@ msgstr "Riepilogo aggiornameto"
 #. TRANSLATORS: section header for firmware version
 msgid "Update Version"
 msgstr "Versione aggiornamento"
-
-msgid "Update device firmware on Linux"
-msgstr "Aggiorna firmware dispositivi su Linux"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
@@ -986,6 +1010,3 @@ msgstr "Scrittura…"
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
 msgstr "La propria distribuzione potrebbe non aver verificato la compatibilità degli aggiornamenti firmware col proprio sistema o col dispositivo collegato."
-
-msgid "fwupd"
-msgstr "fwupd"

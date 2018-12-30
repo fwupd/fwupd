@@ -31,6 +31,31 @@
     <content_attribute id="social-info">moderate</content_attribute>
   </content_rating>
   <releases>
+    <release version="1.2.2" date="2018-12-30">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add support for devices that support fastboot</li>
+          <li>Add more standard USB identifier GUIDs</li>
+          <li>Add new API to get the release protocol from the metadata</li>
+          <li>Add the PCR0 value as the device checksum for system firmware</li>
+          <li>Include the device firmware checksum and update protocol in the report</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add Dell TB18DC to the supported devices list</li>
+          <li>Allow replacing the last byte in the image when using 'dfu-tool replace-data'</li>
+          <li>Append the UEFI capsule header in userspace rather than in the loader</li>
+          <li>Check the device checksum as well as the content checksum during verify</li>
+          <li>Correctly parse format the version numbers correctly using old metadata</li>
+          <li>Fix a crash if AMT returns an empty response</li>
+          <li>Fix a regression when doing GetReleases on unsupported hardware</li>
+          <li>Fix the 8bitdo version number if the daemon locale is not C.UTF-8</li>
+          <li>Remove the Wacom DTH generation hardware from the whitelist</li>
+          <li>Sanitize the version if the version format has been specified</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.2.1" date="2018-11-27">
       <description>
         <p>This release adds the following features:</p>

@@ -8,9 +8,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-11-07 11:16+0000\n"
-"PO-Revision-Date: 2018-10-12 12:46+0000\n"
-"Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
+"POT-Creation-Date: 2018-12-30 15:16+0000\n"
+"PO-Revision-Date: 2018-11-28 13:44+0000\n"
+"Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Ukrainian (http://www.transifex.com/freedesktop/fwupd/language/uk/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -31,6 +31,42 @@ msgstr[3] "Лишилася %.0f хвилина"
 #, c-format
 msgid "%s has firmware updates:"
 msgstr "%s має такі оновлення мікропрограми:"
+
+#. TRANSLATORS: duration in days!
+#, c-format
+msgid "%u day"
+msgid_plural "%u days"
+msgstr[0] "%u день"
+msgstr[1] "%u дні"
+msgstr[2] "%u днів"
+msgstr[3] "%u день"
+
+#. TRANSLATORS: duration in minutes
+#, c-format
+msgid "%u hour"
+msgid_plural "%u hours"
+msgstr[0] "%u година"
+msgstr[1] "%u години"
+msgstr[2] "%u годин"
+msgstr[3] "%u година"
+
+#. TRANSLATORS: duration in minutes
+#, c-format
+msgid "%u minute"
+msgid_plural "%u minutes"
+msgstr[0] "%u хвилина"
+msgstr[1] "%u хвилини"
+msgstr[2] "%u хвилин"
+msgstr[3] "%u хвилина"
+
+#. TRANSLATORS: duration in seconds
+#, c-format
+msgid "%u second"
+msgid_plural "%u seconds"
+msgstr[0] "%u секунда"
+msgstr[1] "%u секунди"
+msgstr[2] "%u секунд"
+msgstr[3] "%u секунда"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Added"
@@ -824,9 +860,6 @@ msgstr "Ціль"
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
 msgstr "LVFS є безкоштовною службою, яка працює як незалежна юридична одиниця і не має зв'язку з $OS_RELEASE:NAME$. Розробники вашої операційної системи, можливо, не перевіряли жодні з цих оновлень на сумісність із системою або з'єднаними із комп'ютером пристроями. Усі мікропрограми надаються лише самими виробниками обладнання."
 
-msgid "The fwupd process is a simple daemon to allow session software to update device firmware on your local machine. It is designed for desktops, but this project is also usable on phones, tablets and on headless servers."
-msgstr "Процес fwupd є простою фоновою службою, яка надає змогу оновлювати мікропрограми пристроїв на вашому локальному комп’ютері у межах сеансу користування. Програму розроблено для робочих станцій, але нею можна скористатися на телефонах, планшетах та серверах без дисплеїв."
-
 #. TRANSLATORS: exactly one update needs this
 msgid "The update requires a reboot to complete."
 msgstr "Для завершення оновлення потрібне перезавантаження."
@@ -834,9 +867,6 @@ msgstr "Для завершення оновлення потрібне пере
 #. TRANSLATORS: we're poking around as a power user
 msgid "This program may only work correctly as root"
 msgstr "Програма зможе працювати належними чином лише від імені користувача root"
-
-msgid "This project aims to make updating firmware on Linux automatic, safe and reliable. You can either use a GUI software manager like GNOME Software to view and apply updates, the command-line tool or the D-Bus interface directly."
-msgstr "Метою цього проекту є автоматизація оновлення мікропрограм обладнання у Linux, безпечно і надійно. Для перегляду і застосування оновлень ви можете скористатися або програмою для керування програмним забезпеченням, зокрема Програмними засобами GNOME, або інструментом командного рядка, або безпосередньо інтерфейсом D-Bus."
 
 msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
 msgstr "У цьому сховищі міститься мікропрограма, встановлювати яку не заборонено, але яка усе ще перебуває у процесі тестування виробником обладнання. Вам слід переконатися, що ви зможете встановити стабільну версію мікропрограми, якщо процедура оновлення зазнає невдачі."
@@ -884,6 +914,11 @@ msgstr "Контрольна сума оновлення"
 msgid "Update Description"
 msgstr "Опис оновлення"
 
+#. TRANSLATORS: section header for the amount
+#. * of time it takes to install the update
+msgid "Update Duration"
+msgstr "Тривалість оновлення"
+
 #. TRANSLATORS: section header for firmware remote http://
 msgid "Update Location"
 msgstr "Місце оновлення"
@@ -903,9 +938,6 @@ msgstr "Резюме оновлення"
 #. TRANSLATORS: section header for firmware version
 msgid "Update Version"
 msgstr "Версія оновлення"
-
-msgid "Update device firmware on Linux"
-msgstr "Оновлення мікропрограм пристроїв у Linux"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
@@ -989,6 +1021,3 @@ msgstr "Записуємо…"
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
 msgstr "Виробник вашого дистрибутива може не перевіряти усі оновлення мікропрограми на сумісність із вашою системою або з’єднаними із нею пристроями."
-
-msgid "fwupd"
-msgstr "fwupd"

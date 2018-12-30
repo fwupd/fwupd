@@ -10,8 +10,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-11-07 11:16+0000\n"
-"PO-Revision-Date: 2018-10-12 11:10+0000\n"
+"POT-Creation-Date: 2018-12-30 15:16+0000\n"
+"PO-Revision-Date: 2018-11-28 13:44+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Czech (http://www.transifex.com/freedesktop/fwupd/language/cs/)\n"
 "MIME-Version: 1.0\n"
@@ -802,9 +802,6 @@ msgstr "Cíl"
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
 msgstr "LVFS je svobodná služba, které funguje jako nezávislý právní subjekt a nemá žádné vazby na systém $OS_RELEASE:NAME$. Váš distributor nemusí některé z aktualizací firmwaru schválit kvůli kompatibilitě s vaším systémem nebo připojenými zařízeními. Veškerý firmware je poskytován pouze přímo výrobci daných zařízení."
 
-msgid "The fwupd process is a simple daemon to allow session software to update device firmware on your local machine. It is designed for desktops, but this project is also usable on phones, tablets and on headless servers."
-msgstr "Proces fwupd je jednoduchý démon, který umožňuje softwaru sezení aktualizovat firmware zařízení na vašem počítači. Je navržen pro stolní počítače, ale je možné jej používat i na telefonech, tabletech a serverech bez monitoru."
-
 #. TRANSLATORS: exactly one update needs this
 msgid "The update requires a reboot to complete."
 msgstr "Pro dokončení aktualizace je potřeba provést restart."
@@ -812,9 +809,6 @@ msgstr "Pro dokončení aktualizace je potřeba provést restart."
 #. TRANSLATORS: we're poking around as a power user
 msgid "This program may only work correctly as root"
 msgstr "Tento program může správně fungovat jen pod uživatelem root"
-
-msgid "This project aims to make updating firmware on Linux automatic, safe and reliable. You can either use a GUI software manager like GNOME Software to view and apply updates, the command-line tool or the D-Bus interface directly."
-msgstr "Cílem tohoto projektu je, aby aktualizace firmwaru na Linuxu probíhala automaticky, bezpečně a spolehlivě. Pro zobrazení a nasazení aktualizací můžete použít správce softwaru s grafickým rozhraním, jako je třeba Software GNOME, nebo nástroj pro příkazovou řádku či přímo rozhraní D-Bus."
 
 msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
 msgstr "Tento zdroj obsahuje firmware, který není zakázaný, ale zatím je u výrobce stále ve stádiu testování. Měli byste se ujistit, že znáte způsob, jak se vrátit k předchozí verzi firmwaru, kdyby došlo k selhání."
@@ -881,9 +875,6 @@ msgstr "Souhrn aktualizace"
 #. TRANSLATORS: section header for firmware version
 msgid "Update Version"
 msgstr "Verze aktualizace"
-
-msgid "Update device firmware on Linux"
-msgstr "Aktualizace firmwaru zařízení na Linuxu"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
@@ -962,6 +953,3 @@ msgstr "Zapisuje se…"
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
 msgstr "Váš distributor nemusí schválit některé aktualizace firmwaru kvůli kompatibilitě s vaším systémem nebo připojenými zařízeními."
-
-msgid "fwupd"
-msgstr "fwupd"

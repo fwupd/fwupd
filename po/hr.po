@@ -10,8 +10,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-11-07 11:16+0000\n"
-"PO-Revision-Date: 2018-10-12 11:10+0000\n"
+"POT-Creation-Date: 2018-12-30 15:16+0000\n"
+"PO-Revision-Date: 2018-11-28 13:44+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Croatian (http://www.transifex.com/freedesktop/fwupd/language/hr/)\n"
 "MIME-Version: 1.0\n"
@@ -638,12 +638,6 @@ msgstr "Sažetak"
 msgid "Target"
 msgstr "Odredište"
 
-msgid "The fwupd process is a simple daemon to allow session software to update device firmware on your local machine. It is designed for desktops, but this project is also usable on phones, tablets and on headless servers."
-msgstr "fwupd je jednostavan pozadinski program koji omogućuje softveru sesije nadopunu frimvera uređaja na vašem lokalnom računalu. Dizajniran je za stolna računala, ali ovaj projekt se može koristiti i na mobilnim telefonima, tabletima i poslužiteljima."
-
-msgid "This project aims to make updating firmware on Linux automatic, safe and reliable. You can either use a GUI software manager like GNOME Software to view and apply updates, the command-line tool or the D-Bus interface directly."
-msgstr "Svrha ovog projekta je automatsko, sigurno i pouzdano nadopunjivanje frimvera na linuxu. Kako bi vidjeli i primijenili nadopune frimvera možete koristiti upravitelja softverom poput GNOME Softvera, alat naredbenog redka ili izravno D-Bus sučelje."
-
 #. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
 msgid "Title"
 msgstr "Naziv"
@@ -698,9 +692,6 @@ msgstr "Sažetak nadopune"
 #. TRANSLATORS: section header for firmware version
 msgid "Update Version"
 msgstr "Inačica nadopune"
-
-msgid "Update device firmware on Linux"
-msgstr "Nadopunite frimvere uređaja na Linuxu"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
@@ -767,6 +758,3 @@ msgstr "Zapiši frimver iz datoteke u jednu particiju uređaja"
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing…"
 msgstr "Zapisivanje..."
-
-msgid "fwupd"
-msgstr "fwupd"

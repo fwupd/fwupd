@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-11-07 11:16+0000\n"
-"PO-Revision-Date: 2018-10-12 11:10+0000\n"
+"POT-Creation-Date: 2018-12-30 15:16+0000\n"
+"PO-Revision-Date: 2018-11-28 13:44+0000\n"
 "Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: English (United Kingdom) (http://www.transifex.com/freedesktop/fwupd/language/en_GB/)\n"
 "MIME-Version: 1.0\n"
@@ -610,12 +610,6 @@ msgstr "Summary"
 msgid "Target"
 msgstr "Target"
 
-msgid "The fwupd process is a simple daemon to allow session software to update device firmware on your local machine. It is designed for desktops, but this project is also usable on phones, tablets and on headless servers."
-msgstr "The fwupd process is a simple daemon to allow session software to update device firmware on your local machine. It is designed for desktops, but this project is also usable on phones, tablets and on headless servers."
-
-msgid "This project aims to make updating firmware on Linux automatic, safe and reliable. You can either use a GUI software manager like GNOME Software to view and apply updates, the command-line tool or the D-Bus interface directly."
-msgstr "This project aims to make updating firmware on Linux automatic, safe and reliable. You can either use a GUI software manager like GNOME Software to view and apply updates, the command-line tool or the D-Bus interface directly."
-
 #. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
 msgid "Title"
 msgstr "Title"
@@ -670,9 +664,6 @@ msgstr "Update Summary"
 #. TRANSLATORS: section header for firmware version
 msgid "Update Version"
 msgstr "Update Version"
-
-msgid "Update device firmware on Linux"
-msgstr "Update device firmware on Linux"
 
 #. TRANSLATORS: ask the user if we can update the metadata
 msgid "Update now?"
@@ -731,6 +722,3 @@ msgstr "Write firmware from file into one partition"
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing…"
 msgstr "Writing…"
-
-msgid "fwupd"
-msgstr "fwupd"
