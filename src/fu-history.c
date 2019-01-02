@@ -157,7 +157,7 @@ fu_history_create_database (FuHistory *self, GError **error)
 			 "CREATE TABLE schema ("
 			 "created timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
 			 "version INTEGER DEFAULT 0);"
-			 "INSERT INTO schema (version) VALUES (3);"
+			 "INSERT INTO schema (version) VALUES (4);"
 			 "CREATE TABLE history ("
 			 "device_id TEXT,"
 			 "update_state INTEGER DEFAULT 0,"
@@ -226,7 +226,8 @@ fu_history_migrate_database_v2 (FuHistory *self, GError **error)
 
 	/* rename the table to something out the way */
 	rc = sqlite3_exec (self->db,
-			   "ALTER TABLE history ADD COLUMN checksum_device TEXT DEFAULT NULL;",
+			   "ALTER TABLE history ADD COLUMN checksum_device TEXT DEFAULT NULL;"
+			   "ALTER TABLE history ADD COLUMN protocol TEXT DEFAULT NULL;",
 			   NULL, NULL, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
@@ -236,10 +237,33 @@ fu_history_migrate_database_v2 (FuHistory *self, GError **error)
 	}
 
 	/* update version */
-	rc = sqlite3_exec (self->db, "UPDATE schema SET version=3;", NULL, NULL, NULL);
+	rc = sqlite3_exec (self->db, "UPDATE schema SET version=4;", NULL, NULL, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
 			     "Failed to migrate database: %s",
+			     sqlite3_errmsg (self->db));
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_history_migrate_database_v3 (FuHistory *self, GError **error)
+{
+	gint rc;
+
+	/* rename the table to something out the way */
+	rc = sqlite3_exec (self->db,
+			   "ALTER TABLE history ADD COLUMN protocol TEXT DEFAULT NULL;",
+			   NULL, NULL, NULL);
+	if (rc != SQLITE_OK)
+		g_debug ("ignoring database error: %s", sqlite3_errmsg (self->db));
+
+	/* update version */
+	rc = sqlite3_exec (self->db, "UPDATE schema SET version=4;", NULL, NULL, NULL);
+	if (rc != SQLITE_OK) {
+		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
+			     "Failed to update schema version: %s",
 			     sqlite3_errmsg (self->db));
 		return FALSE;
 	}
@@ -332,6 +356,10 @@ fu_history_load (FuHistory *self, GError **error)
 	} else if (schema_ver == 2) {
 		g_debug ("migrating v%u database", schema_ver);
 		if (!fu_history_migrate_database_v2 (self, error))
+			return FALSE;
+	} else if (schema_ver == 3) {
+		g_debug ("migrating v%u database", schema_ver);
+		if (!fu_history_migrate_database_v3 (self, error))
 			return FALSE;
 	}
 
