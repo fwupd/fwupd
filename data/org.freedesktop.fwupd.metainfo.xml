@@ -31,6 +31,14 @@
     <content_attribute id="social-info">moderate</content_attribute>
   </content_rating>
   <releases>
+    <release version="1.2.3" date="2019-01-04">
+      <description>
+        <p>This release fixes the following bug:</p>
+        <ul>
+          <li>Correctly migrate the history database</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.2.2" date="2018-12-30">
       <description>
         <p>This release adds the following features:</p>
