@@ -16,8 +16,7 @@ G_DECLARE_FINAL_TYPE (FuSuperioDevice, fu_superio_device, FU, SUPERIO_DEVICE, Fu
 
 FuSuperioDevice	*fu_superio_device_new		(const gchar		*chipset,
 						 guint16		 id,
-						 guint8			 data_port,
-						 guint8			 cmd_port);
+						 guint16		 port);
 
 G_END_DECLS
 
