@@ -8,6 +8,7 @@ shared_module('fu_plugin_superio',
   sources : [
     'fu-plugin-superio.c',
     'fu-superio-device.c',
+    'fu-superio-common.c',
   ],
   include_directories : [
     include_directories('../..'),

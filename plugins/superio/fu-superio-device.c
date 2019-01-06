@@ -12,19 +12,26 @@
 
 #include <glib/gstdio.h>
 
+#include "fu-superio-common.h"
 #include "fu-superio-device.h"
 
-#define FU_PLUGIN_SUPERIO_TIMEOUT	5 /* s */
+#define FU_PLUGIN_SUPERIO_TIMEOUT	0.25 /* s */
 
 #define KB_IBF			(1 << 1)  /* i/p buffer full */
 #define KB_OBF			(1 << 0)  /* o/p buffer full */
+
+#define SIO_CMD_GET_PARAM	0x80
+#define SIO_CMD_SET_PARAM	0x81
+#define SIO_CMD_GET_NAME_STR	0x92
+#define SIO_CMD_GET_VERSION_STR	0x93
 
 struct _FuSuperioDevice {
 	FuDevice		 parent_instance;
 	gint			 fd;
 	gchar			*chipset;
-	guint16			 data_port;
-	guint16			 cmd_port;
+	guint16			 port;
+	guint16			 pm1_iobad0;
+	guint16			 pm1_iobad1;
 	guint16			 id;
 	guint32			 size;
 };
@@ -38,60 +45,21 @@ fu_superio_device_to_string (FuDevice *device, GString *str)
 	g_string_append (str, "  FuSuperioDevice:\n");
 	g_string_append_printf (str, "    fd:\t\t\t%i\n", self->fd);
 	g_string_append_printf (str, "    chipset:\t\t%s\n", self->chipset);
-	g_string_append_printf (str, "    data-port:\t\t0x%04x\n", (guint) self->data_port);
-	g_string_append_printf (str, "    cmd-port:\t\t0x%04x\n", (guint) self->cmd_port);
 	g_string_append_printf (str, "    id:\t\t\t0x%04x\n", (guint) self->id);
+	g_string_append_printf (str, "    port:\t\t0x%04x\n", (guint) self->port);
+	g_string_append_printf (str, "    pm1-iobad0:\t\t0x%04x\n", (guint) self->pm1_iobad0);
+	g_string_append_printf (str, "    pm1-iobad1:\t\t0x%04x\n", (guint) self->pm1_iobad1);
 	g_string_append_printf (str, "    size:\t\t0x%04x\n", (guint) self->size);
-}
-
-static gboolean
-fu_superio_device_outb (FuSuperioDevice *self, guint16 port, guint8 data, GError **error)
-{
-	if (pwrite (self->fd, &data, 1, (goffset) port) != 1) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_FAILED,
-			     "failed to write to port %04x: %s",
-			     (guint) port,
-			     strerror (errno));
-		return FALSE;
-	}
-	return TRUE;
-}
-
-static gboolean
-fu_superio_device_inb (FuSuperioDevice *self, guint16 port, guint8 *data, GError **error)
-{
-	if (pread (self->fd, data, 1, (goffset) port) != 1) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_FAILED,
-			     "failed to read from port %04x: %s",
-			     (guint) port,
-			     strerror (errno));
-		return FALSE;
-	}
-	return TRUE;
 }
 
 static guint16
 fu_superio_device_check_id (FuSuperioDevice *self, GError **error)
 {
-	guint8 msb;
-	guint8 lsb;
 	guint16 id_tmp;
 
-	if (!fu_superio_device_outb (self, 0x2e, 0x20, error))
-		return FALSE;
-	if (!fu_superio_device_inb (self, 0x2f, &msb, error))
-		return FALSE;
-	if (!fu_superio_device_outb (self, 0x2e, 0x21, error))
-		return FALSE;
-	if (!fu_superio_device_inb (self, 0x2f, &lsb, error))
-		return FALSE;
-
 	/* check matches */
-	id_tmp = ((guint16) msb << 8) | (guint16) lsb;
+	if (!fu_superio_regval16 (self->fd, self->port, 0x20, &id_tmp, error))
+		return FALSE;
 	if (self->id != id_tmp) {
 		g_set_error (error,
 			     G_IO_ERROR,
@@ -110,7 +78,7 @@ fu_superio_device_wait_for (FuSuperioDevice *self, guint8 mask, gboolean set, GE
 	g_autoptr(GTimer) timer = g_timer_new ();
 	do {
 		guint8 status = 0x00;
-		if (!fu_superio_device_inb (self, self->cmd_port, &status, error))
+		if (!fu_superio_inb (self->fd, self->pm1_iobad1, &status, error))
 			return FALSE;
 		if (g_timer_elapsed (timer, NULL) > FU_PLUGIN_SUPERIO_TIMEOUT)
 			break;
@@ -127,27 +95,25 @@ fu_superio_device_wait_for (FuSuperioDevice *self, guint8 mask, gboolean set, GE
 }
 
 static gboolean
-fu_superio_device_ec_cmd (FuSuperioDevice *self, guint8 data, GError **error)
-{
-	if (!fu_superio_device_wait_for (self, KB_IBF, FALSE, error))
-		return FALSE;
-	return fu_superio_device_outb (self, self->cmd_port, data, error);
-}
-
-static gboolean
-fu_superio_device_ec_read (FuSuperioDevice *self, guint8 *data, GError **error)
+fu_superio_device_ec_read (FuSuperioDevice *self,
+			   guint16 port,
+			   guint8 *data,
+			   GError **error)
 {
 	if (!fu_superio_device_wait_for (self, KB_OBF, TRUE, error))
 		return FALSE;
-	return fu_superio_device_inb (self, self->data_port, data, error);
+	return fu_superio_inb (self->fd, port, data, error);
 }
 
 static gboolean
-fu_superio_device_ec_write (FuSuperioDevice *self, guint8 data, GError **error)
+fu_superio_device_ec_write (FuSuperioDevice *self,
+			    guint16 port,
+			    guint8 data,
+			    GError **error)
 {
 	if (!fu_superio_device_wait_for (self, KB_IBF, FALSE, error))
 		return FALSE;
-	return fu_superio_device_outb (self, self->data_port, data, error);
+	return fu_superio_outb (self->fd, port, data, error);
 }
 
 static gboolean
@@ -157,11 +123,11 @@ fu_superio_device_ec_flush (FuSuperioDevice *self, GError **error)
 	g_autoptr(GTimer) timer = g_timer_new ();
 	do {
 		guint8 unused = 0;
-		if (!fu_superio_device_inb (self, self->cmd_port, &status, error))
+		if (!fu_superio_inb (self->fd, self->pm1_iobad1, &status, error))
 			return FALSE;
 		if ((status & KB_OBF) == 0)
 			break;
-		if (!fu_superio_device_inb (self, self->data_port, &unused, error))
+		if (!fu_superio_inb (self->fd, self->pm1_iobad0, &unused, error))
 			return FALSE;
 		if (g_timer_elapsed (timer, NULL) > FU_PLUGIN_SUPERIO_TIMEOUT) {
 			g_set_error_literal (error,
@@ -177,22 +143,22 @@ fu_superio_device_ec_flush (FuSuperioDevice *self, GError **error)
 static gboolean
 fu_superio_device_ec_get_param (FuSuperioDevice *self, guint8 param, guint8 *data, GError **error)
 {
-	if (!fu_superio_device_ec_cmd (self, 0x80, error))
+	if (!fu_superio_device_ec_write (self, self->pm1_iobad1, SIO_CMD_GET_PARAM, error))
 		return FALSE;
-	if (!fu_superio_device_ec_write (self, param, error))
+	if (!fu_superio_device_ec_write (self, self->pm1_iobad0, param, error))
 		return FALSE;
-	return fu_superio_device_ec_read (self, data, error);
+	return fu_superio_device_ec_read (self, self->pm1_iobad0, data, error);
 }
 
 #if 0
 static gboolean
 fu_superio_device_ec_set_param (FuSuperioDevice *self, guint8 param, guint8 data, GError **error)
 {
-	if (!fu_superio_device_ec_cmd (self, 0x81, error))
+	if (!fu_superio_device_ec_write (self, self->pm1_iobad1, SIO_CMD_SET_PARAM, error))
 		return FALSE;
-	if (!fu_superio_device_ec_write (self, param, error))
+	if (!fu_superio_device_ec_write (self, self->pm1_iobad0, param, error))
 		return FALSE;
-	return fu_superio_device_ec_write (self, data, error);
+	return fu_superio_device_ec_write (self, self->pm1_iobad0, data, error);
 }
 #endif
 
@@ -200,11 +166,11 @@ static gchar *
 fu_superio_device_ec_get_str (FuSuperioDevice *self, guint8 idx, GError **error)
 {
 	GString *str = g_string_new (NULL);
-	if (!fu_superio_device_ec_cmd (self, idx, error))
+	if (!fu_superio_device_ec_write (self, self->pm1_iobad1, idx, error))
 		return NULL;
 	for (guint i = 0; i < 0xff; i++) {
 		guint8 c = 0;
-		if (!fu_superio_device_ec_read (self, &c, error))
+		if (!fu_superio_device_ec_read (self, self->pm1_iobad0, &c, error))
 			return NULL;
 		if (c == '$')
 			break;
@@ -248,12 +214,70 @@ fu_superio_device_probe (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_superio_device_setup (FuDevice *device, GError **error)
+fu_superio_device_setup_it85xx (FuSuperioDevice *self, GError **error)
 {
-	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
 	guint8 size_tmp = 0;
 	g_autofree gchar *name = NULL;
 	g_autofree gchar *version = NULL;
+
+	/* get EC size */
+	if (!fu_superio_device_ec_flush (self, error)) {
+		g_prefix_error (error, "failed to flush: ");
+		return FALSE;
+	}
+	if (!fu_superio_device_ec_get_param (self, 0xe5, &size_tmp, error)) {
+		g_prefix_error (error, "failed to get EC size: ");
+		return FALSE;
+	}
+	self->size = ((guint32) size_tmp) << 10;
+
+	/* get EC strings */
+	name = fu_superio_device_ec_get_str (self, SIO_CMD_GET_NAME_STR, error);
+	if (name == NULL) {
+		g_prefix_error (error, "failed to get EC name: ");
+		return FALSE;
+	}
+	fu_device_set_name (FU_DEVICE (self), name);
+	version = fu_superio_device_ec_get_str (self, SIO_CMD_GET_VERSION_STR, error);
+	if (version == NULL) {
+		g_prefix_error (error, "failed to get EC version: ");
+		return FALSE;
+	}
+	fu_device_set_version (FU_DEVICE (self), version);
+	return TRUE;
+}
+
+static gboolean
+fu_superio_device_setup_it89xx (FuSuperioDevice *self, GError **error)
+{
+	guint8 version_tmp[2] = { 0x00 };
+	g_autofree gchar *version = NULL;
+
+	/* get version */
+	if (!fu_superio_device_ec_flush (self, error)) {
+		g_prefix_error (error, "failed to flush: ");
+		return FALSE;
+	}
+	if (!fu_superio_device_ec_get_param (self, 0x00, &version_tmp[0], error)) {
+		g_prefix_error (error, "failed to get version major: ");
+		return FALSE;
+	}
+	if (!fu_superio_device_ec_get_param (self, 0x01, &version_tmp[1], error)) {
+		g_prefix_error (error, "failed to get version minor: ");
+		return FALSE;
+	}
+	version = g_strdup_printf ("%02u.%02u", version_tmp[0], version_tmp[1]);
+	fu_device_set_version (FU_DEVICE (self), version);
+
+	/* FIXME: hardcoded */
+	self->size = 0x20000;
+	return TRUE;
+}
+
+static gboolean
+fu_superio_device_setup (FuDevice *device, GError **error)
+{
+	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
 
 	/* check ID is correct */
 	if (!fu_superio_device_check_id (self, error)) {
@@ -261,22 +285,50 @@ fu_superio_device_setup (FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* get EC size */
-	if (!fu_superio_device_ec_flush (self, error))
-		return FALSE;
-	if (!fu_superio_device_ec_get_param (self, 0xe5, &size_tmp, error))
-		return FALSE;
-	self->size = ((guint32) size_tmp) << 10;
+	/* dump LDNs */
+	if (g_getenv ("FWUPD_SUPERIO_VERBOSE") != NULL) {
+		for (guint j = 0; j < MAXLDN; j++) {
+			if (!fu_superio_regdump (self->fd, self->port, j, error))
+				return FALSE;
+		}
+	}
 
-	/* get EC strings */
-	name = fu_superio_device_ec_get_str (self, 0x92, error);
-	if (name == NULL)
+	/* set Power Management I/F Channel 1 LDN */
+	if (!fu_superio_set_ldn (self->fd, self->port, 0x11, error))
 		return FALSE;
-	fu_device_set_name (device, name);
-	version = fu_superio_device_ec_get_str (self, 0x93, error);
-	if (version == NULL)
+
+	/* get the PM1 IOBAD0 address */
+	if (!fu_superio_regval16 (self->fd, self->port, 0x60, &self->pm1_iobad0, error))
 		return FALSE;
-	fu_device_set_version (device, version);
+
+	/* get the PM1 IOBAD1 address */
+	if (!fu_superio_regval16 (self->fd, self->port, 0x62, &self->pm1_iobad1, error))
+		return FALSE;
+
+	/* dump PMC register map */
+	if (g_getenv ("FWUPD_SUPERIO_VERBOSE") != NULL) {
+		guint8 buf[0xff] = { 0x00 };
+		for (guint i = 0x00; i < 0xff; i++) {
+			g_autoptr(GError) error_local = NULL;
+			if (!fu_superio_device_ec_get_param (self, i, &buf[i], &error_local)) {
+				g_debug ("param: 0x%02x = %s", i, error_local->message);
+				continue;
+			}
+		}
+		fu_common_dump_raw (G_LOG_DOMAIN, "EC PMC Registers", buf, 0x100);
+	}
+
+	/* IT85xx */
+	if (self->id >> 8 == 0x85) {
+		if (!fu_superio_device_setup_it85xx (self, error))
+			return FALSE;
+	}
+
+	/* IT89xx */
+	if (self->id >> 8 == 0x89) {
+		if (!fu_superio_device_setup_it89xx (self, error))
+			return FALSE;
+	}
 
 	/* success */
 	return TRUE;
@@ -321,13 +373,12 @@ fu_superio_device_class_init (FuSuperioDeviceClass *klass)
 }
 
 FuSuperioDevice *
-fu_superio_device_new (const gchar *chipset, guint16 id, guint8 data_port, guint8 cmd_port)
+fu_superio_device_new (const gchar *chipset, guint16 id, guint16 port)
 {
 	FuSuperioDevice *self;
 	self = g_object_new (FU_TYPE_SUPERIO_DEVICE, NULL);
 	self->chipset = g_strdup (chipset);
 	self->id = id;
-	self->data_port = data_port > 0 ? data_port : 0x62;
-	self->cmd_port = cmd_port > 0 ? cmd_port : 0x66;
+	self->port = port;
 	return self;
 }

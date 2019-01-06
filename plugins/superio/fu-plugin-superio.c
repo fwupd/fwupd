@@ -19,8 +19,7 @@ fu_plugin_superio_coldplug_chipset (FuPlugin *plugin, const gchar *chipset, GErr
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autofree gchar *key = g_strdup_printf ("SuperIO=%s", chipset);
 	guint64 id;
-	guint64 data_port;
-	guint64 cmd_port;
+	guint64 port;
 
 	/* get ID we need for the chipset */
 	id = fu_plugin_lookup_quirk_by_id_as_uint64 (plugin, key, "Id");
@@ -32,28 +31,18 @@ fu_plugin_superio_coldplug_chipset (FuPlugin *plugin, const gchar *chipset, GErr
 		return FALSE;
 	}
 
-	/* allow using a custom data port */
-	data_port = fu_plugin_lookup_quirk_by_id_as_uint64 (plugin, key, "DataPort");
-	if (data_port > 0xff) {
+	/* set address */
+	port = fu_plugin_lookup_quirk_by_id_as_uint64 (plugin, key, "Port");
+	if (port == 0x0 || port > 0xffff) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_NOT_SUPPORTED,
-			     "SuperIO chip %s has invalid DataPort", chipset);
-		return FALSE;
-	}
-
-	/* allow using a custom command port */
-	cmd_port = fu_plugin_lookup_quirk_by_id_as_uint64 (plugin, key, "CmdPort");
-	if (cmd_port > 0xff) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_NOT_SUPPORTED,
-			     "SuperIO chip %s has invalid CmdPort", chipset);
+			     "SuperIO chip %s has invalid Port", chipset);
 		return FALSE;
 	}
 
 	/* create device and unlock */
-	dev = fu_superio_device_new (chipset, id, data_port, cmd_port);
+	dev = fu_superio_device_new (chipset, id, port);
 	locker = fu_device_locker_new (dev, error);
 	if (locker == NULL)
 		return FALSE;
