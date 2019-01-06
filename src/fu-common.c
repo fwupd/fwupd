@@ -1066,6 +1066,74 @@ fu_common_string_replace (GString *string, const gchar *search, const gchar *rep
 }
 
 /**
+ * fu_common_dump_full:
+ * @log_domain: log domain, typically %G_LOG_DOMAIN or %NULL
+ * @title: prefix title, or %NULL
+ * @data: buffer to print
+ * @len: the size of @data
+ * @columns: break new lines after this many bytes
+ * @flags: some #FuDumpFlags, e.g. %FU_DUMP_FLAGS_SHOW_ASCII
+ *
+ * Dumps a raw buffer to the screen.
+ *
+ * Since: 1.2.4
+ **/
+void
+fu_common_dump_full (const gchar *log_domain,
+		     const gchar *title,
+		     const guint8 *data,
+		     gsize len,
+		     guint columns,
+		     FuDumpFlags flags)
+{
+	g_autoptr(GString) str = g_string_new (NULL);
+
+	/* optional */
+	if (title != NULL)
+		g_string_append_printf (str, "%s:", title);
+
+	/* if more than can fit on one line then start afresh */
+	if (len > columns || flags & FU_DUMP_FLAGS_SHOW_ADDRESSES) {
+		g_string_append (str, "\n");
+	} else {
+		for (gsize i = str->len; i < 16; i++)
+			g_string_append (str, " ");
+	}
+
+	/* offset line */
+	if (flags & FU_DUMP_FLAGS_SHOW_ADDRESSES) {
+		g_string_append (str, "       │ ");
+		for (gsize i = 0; i < columns; i++)
+			g_string_append_printf (str, "%02x ", (guint) i);
+		g_string_append (str, "\n───────┼");
+		for (gsize i = 0; i < columns; i++)
+			g_string_append (str, "───");
+		g_string_append_printf (str, "\n0x%04x │ ", (guint) 0);
+	}
+
+	/* print each row */
+	for (gsize i = 0; i < len; i++) {
+		g_string_append_printf (str, "%02x ", data[i]);
+
+		/* optionally print ASCII char */
+		if (flags & FU_DUMP_FLAGS_SHOW_ASCII) {
+			if (g_ascii_isprint (data[i]))
+				g_string_append_printf (str, "[%c] ", data[i]);
+			else
+				g_string_append (str, "[?] ");
+		}
+
+		/* new row required */
+		if (i > 0 && i != len - 1 && (i + 1) % columns == 0) {
+			g_string_append (str, "\n");
+			if (flags & FU_DUMP_FLAGS_SHOW_ADDRESSES)
+				g_string_append_printf (str, "0x%04x │ ", (guint) i + 1);
+		}
+	}
+	g_log (log_domain, G_LOG_LEVEL_DEBUG, "%s", str->str);
+}
+
+/**
  * fu_common_dump_raw:
  * @log_domain: log domain, typically %G_LOG_DOMAIN or %NULL
  * @title: prefix title, or %NULL
@@ -1082,17 +1150,10 @@ fu_common_dump_raw (const gchar *log_domain,
 		    const guint8 *data,
 		    gsize len)
 {
-	g_autoptr(GString) str = g_string_new (NULL);
-	if (title != NULL)
-		g_string_append_printf (str, "%s:", title);
-	for (gsize i = str->len; i < 16; i++)
-		g_string_append (str, " ");
-	for (gsize i = 0; i < len; i++) {
-		g_string_append_printf (str, "%02x ", data[i]);
-		if (i > 0 && i % 32 == 0)
-			g_string_append (str, "\n");
-	}
-	g_log (log_domain, G_LOG_LEVEL_DEBUG, "%s", str->str);
+	FuDumpFlags flags = FU_DUMP_FLAGS_NONE;
+	if (len > 64)
+		flags |= FU_DUMP_FLAGS_SHOW_ADDRESSES;
+	fu_common_dump_full (log_domain, title, data, len, 32, flags);
 }
 
 /**

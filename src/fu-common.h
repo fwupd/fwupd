@@ -16,6 +16,13 @@ typedef enum {
 } FuAppFlags;
 
 typedef enum {
+	FU_DUMP_FLAGS_NONE		= 0,
+	FU_DUMP_FLAGS_SHOW_ASCII	= 1 << 0,
+	FU_DUMP_FLAGS_SHOW_ADDRESSES	= 1 << 1,
+	FU_DUMP_FLAGS_LAST
+} FuDumpFlags;
+
+typedef enum {
 	FU_PATH_KIND_CACHEDIR_PKG,
 	FU_PATH_KIND_DATADIR_PKG,
 	FU_PATH_KIND_EFIAPPDIR,
@@ -70,6 +77,12 @@ void		 fu_common_dump_raw		(const gchar	*log_domain,
 						 const gchar	*title,
 						 const guint8	*data,
 						 gsize		 len);
+void		 fu_common_dump_full		(const gchar	*log_domain,
+						 const gchar	*title,
+						 const guint8	*data,
+						 gsize		 len,
+						 guint		 columns,
+						 FuDumpFlags	 flags);
 void		 fu_common_dump_bytes		(const gchar	*log_domain,
 						 const gchar	*title,
 						 GBytes		*bytes);
