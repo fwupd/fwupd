@@ -593,6 +593,16 @@ guint32
 fu_dell_dock_ec_get_status_version (FuDevice *device)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC (device);
+
+	/* TODO: drop if setting minimum board to 5+
+	 * this board was manufactured with 89.16.01.00 and won't upgrade
+	 */
+	if (self->data->board_id == 4 &&
+	    self->raw_versions->pkg_version == 71305) {
+		g_printerr ("Dock manufactured w/ invalid package %u\n",
+			    self->raw_versions->pkg_version);
+		self->raw_versions->pkg_version = 0;
+	}
 	return self->raw_versions->pkg_version;
 }
 
