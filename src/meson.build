@@ -7,6 +7,7 @@ endif
 keyring_deps = []
 keyring_src = []
 test_deps = []
+daemon_deps = []
 
 if get_option('gpg')
   keyring_src += 'fu-keyring-gpg.c'
@@ -68,6 +69,11 @@ libfwupdprivate = static_library(
 )
 
 if get_option('daemon')
+
+if get_option ('policykit')
+  daemon_deps += polkit
+endif
+
 fwupdmgr = executable(
   'fwupdmgr',
   sources : [
@@ -231,13 +237,13 @@ executable(
   ],
   dependencies : [
     keyring_deps,
+    daemon_deps,
     libxmlb,
     libgcab,
     giounix,
     gmodule,
     gudev,
     gusb,
-    polkit,
     soup,
     sqlite,
     valgrind,

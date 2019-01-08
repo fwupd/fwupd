@@ -163,9 +163,12 @@ libjsonglib = dependency('json-glib-1.0', version : '>= 1.1.1')
 valgrind = dependency('valgrind', required: false)
 soup = dependency('libsoup-2.4', version : '>= 2.51.92')
 if get_option('daemon')
-  polkit = dependency('polkit-gobject-1', version : '>= 0.103')
-  if polkit.version().version_compare('>= 0.114')
-    conf.set('HAVE_POLKIT_0_114', '1')
+  if get_option ('policykit')
+    polkit = dependency('polkit-gobject-1', version : '>= 0.103')
+    conf.set('HAVE_POLKIT', '1')
+    if polkit.version().version_compare('>= 0.114')
+      conf.set('HAVE_POLKIT_0_114', '1')
+    endif
   endif
   udevdir = get_option('udevdir')
   if udevdir == ''
@@ -322,7 +325,7 @@ if get_option('gtkdoc')
 endif
 subdir('libfwupd')
 subdir('po')
-if get_option('daemon')
+if get_option('daemon') and get_option ('policykit')
   subdir('policy')
 endif
 subdir('src')
