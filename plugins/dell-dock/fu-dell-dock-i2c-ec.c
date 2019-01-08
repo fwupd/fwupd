@@ -369,6 +369,12 @@ fu_dell_dock_ec_get_dock_info (FuDevice *device,
 		}
 	}
 
+	/* Thunderbolt SKU takes a little longer */
+	if (self->data->module_type == MODULE_TYPE_TBT) {
+		guint64 tmp = fu_device_get_install_duration (device);
+		fu_device_set_install_duration (device, tmp + 20);
+	}
+
 	/* minimum EC version this code will support */
 	if (as_utils_vercmp (self->ec_version, self->ec_minimum_version) < 0) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
