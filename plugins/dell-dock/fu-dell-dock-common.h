@@ -27,7 +27,6 @@
 
 #define 	DELL_DOCK_EC_GUID		"USB\\VID_413C&PID_B06E&hub&embedded"
 #define 	DELL_DOCK_TBT_GUID		"TBT-00d4b070"
-#define		REPLUG_TIMEOUT			60 /* s */
 
 gboolean	fu_dell_dock_set_power		(FuDevice *device,
 						 guint8 target,

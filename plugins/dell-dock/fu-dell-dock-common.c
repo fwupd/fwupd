@@ -47,10 +47,12 @@ fu_dell_dock_set_power (FuDevice *device, guint8 target,
 void
 fu_dell_dock_will_replug (FuDevice *device)
 {
+	guint64 timeout = fu_device_get_install_duration (device);
+
 	g_return_if_fail (FU_IS_DEVICE (device));
 
-	g_debug ("Activated %ds replug delay for %s",
-		 REPLUG_TIMEOUT, fu_device_get_name (device));
-	fu_device_set_remove_delay (device, REPLUG_TIMEOUT * 1000);
+	g_debug ("Activated %" G_GUINT64_FORMAT "s replug delay for %s",
+		 timeout, fu_device_get_name (device));
+	fu_device_set_remove_delay (device, timeout * 1000);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 }
