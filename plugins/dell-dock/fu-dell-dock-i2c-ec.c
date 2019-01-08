@@ -529,7 +529,6 @@ fu_dell_dock_ec_reset (FuDevice *device, GError **error)
 gboolean
 fu_dell_dock_ec_reboot_dock (FuDevice *device, GError **error)
 {
-	FuDellDockEc *self = FU_DELL_DOCK_EC (device);
 	guint16 cmd = EC_CMD_REBOOT;
 
 	g_return_val_if_fail (device != NULL, FALSE);
@@ -539,10 +538,6 @@ fu_dell_dock_ec_reboot_dock (FuDevice *device, GError **error)
 		return TRUE;
 	}
 
-	/* TODO: Drop when bumping minimum EC version to 13+ */
-	if (as_utils_vercmp (self->ec_version, "00.00.00.13") < 0)
-		g_print ("\nEC Reboot API may fail on EC %s.  Please manually power cycle dock.\n",
-			   self->ec_version);
 	g_debug ("Rebooting %s", fu_device_get_name (device));
 
 	return fu_dell_dock_ec_write (device, 2, (guint8 *) &cmd, error);
@@ -633,13 +628,6 @@ fu_dell_dock_ec_commit_package (FuDevice *device, GBytes *blob_fw,
 	g_debug ("\thub2_version: %x", self->raw_versions->hub2_version);
 	g_debug ("\ttbt_version: %x", self->raw_versions->tbt_version);
 	g_debug ("\tpkg_version: %x", self->raw_versions->pkg_version);
-
-	/* TODO: Drop when updating minimum EC to 11+ */
-	if (as_utils_vercmp (self->ec_version, "00.00.00.11") < 0) {
-		g_debug ("EC %s doesn't support package version, ignoring",
-			 self->ec_version);
-		return TRUE;
-	}
 
 	payload [0] = EC_CMD_SET_DOCK_PKG;
 	payload [1] = length;

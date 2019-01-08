@@ -70,8 +70,8 @@ FirmwareSizeMax = 0x20000
 Flags = require-ac
 Children = FuDellDockStatus|USB\VID_413C&PID_B06E&hub&status,FuDellDockMst|MST-panamera-vmm5331-259
 DellDockUnlockTarget = 1
-DellDockBoardMin = 2
-DellDockVersionLowest = 00.00.00.09
+DellDockBoardMin = 4
+DellDockVersionLowest = 00.00.00.17
 DellDockBlobVersionOffset = 0x1AFC0
 InstallDuration = 60
 
@@ -114,14 +114,3 @@ FirmwareSizeMin=0x40000
 FirmwareSizeMax=0x80000
 Flags = require-ac
 InstallDuration = 22
-
-# Thunderbolt controller (old ID)
-# TODO: This should be dropped when DellDockBoardMin is 3+
-[Guid=TBT-00d40012]
-Name = Thunderbolt controller in Dell dock
-Summary = Thunderbolt controller
-Vendor = Dell Inc
-ParentGuid = USB\VID_413C&PID_B06E&hub&embedded
-FirmwareSizeMin=0x40000
-FirmwareSizeMax=0x80000
-Flags = require-ac,ignore-validation
