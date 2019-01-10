@@ -2531,7 +2531,8 @@ fu_engine_get_releases_for_device (FuEngine *self, FuDevice *device, GError **er
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOTHING_TO_DO,
-				     "No releases found for device");
+				     "No releases for %s",
+				     fu_device_get_name (device));
 			return NULL;
 		}
 		g_propagate_error (error, g_steal_pointer (&error_local));
