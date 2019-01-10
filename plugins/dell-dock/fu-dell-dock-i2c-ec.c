@@ -443,7 +443,6 @@ fu_dell_dock_ec_get_dock_data (FuDevice *device,
 	/* make sure this hardware spin matches our expecations */
 	if (self->data->board_id >= self->board_min) {
 		fu_dell_dock_ec_set_board (device);
-		fu_device_set_version (device, self->ec_version);
 		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	} else {
 		g_warning ("This utility does not support this board, disabling updates for %s",
