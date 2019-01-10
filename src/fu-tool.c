@@ -754,6 +754,72 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GPtrArray) devices = NULL;
+
+	/* load engine */
+	if (!fu_util_start_engine (priv, error))
+		return FALSE;
+
+	devices = fu_engine_get_devices (priv->engine, error);
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index (devices, i);
+		FwupdRelease *rel;
+		const gchar *remote_id;
+		const gchar *device_id;
+		const gchar *uri_tmp;
+		g_autoptr(GPtrArray) rels = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		if (!fu_util_is_interesting_device (dev))
+			continue;
+		/* only show stuff that has metadata available */
+		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
+			continue;
+
+		device_id = fu_device_get_id (dev);
+		rels = fu_engine_get_upgrades (priv->engine, device_id, &error_local);
+		if (rels == NULL) {
+			g_printerr ("%s\n", error_local->message);
+			continue;
+		}
+
+		rel = g_ptr_array_index (rels, 0);
+		uri_tmp = fwupd_release_get_uri (rel);
+		remote_id = fwupd_release_get_remote_id (rel);
+		if (remote_id != NULL) {
+			FwupdRemote *remote;
+			g_auto(GStrv) argv = NULL;
+
+			remote = fu_engine_get_remote_by_id (priv->engine,
+							     remote_id,
+							     &error_local);
+			if (remote == NULL) {
+				g_printerr ("%s\n", error_local->message);
+				continue;
+			}
+
+			argv = g_new0 (gchar *, 2);
+			/* local remotes have the firmware already */
+			if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_LOCAL) {
+				const gchar *fn_cache = fwupd_remote_get_filename_cache (remote);
+				g_autofree gchar *path = g_path_get_dirname (fn_cache);
+				argv[0] = g_build_filename (path, uri_tmp, NULL);
+			/* web remote, fu_util_install will download file */
+			} else {
+				argv[0] = fwupd_remote_build_firmware_uri (remote, uri_tmp, error);
+			}
+			if (!fu_util_install (priv, argv, &error_local)) {
+				g_printerr ("%s\n", error_local->message);
+				continue;
+			}
+		}
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_util_detach (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FuDevice) device = NULL;
@@ -1125,6 +1191,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Monitor the daemon for events"),
 		     fu_util_monitor);
+	fu_util_add (priv->cmd_array,
+		     "update",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Update all devices that match local metadata"),
+		     fu_util_update);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();

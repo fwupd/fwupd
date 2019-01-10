@@ -5,6 +5,7 @@ _fwupdtool_cmd_list=(
 	'get-plugins'
 	'get-topology'
 	'hwids'
+	'update'
 	'install'
 	'install-blob'
 	'monitor'
