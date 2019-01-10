@@ -70,6 +70,7 @@ struct _FuEngine
 	FuQuirks		*quirks;
 	GHashTable		*runtime_versions;
 	GHashTable		*compile_versions;
+	gboolean		 loaded;
 };
 
 enum {
@@ -2420,6 +2421,38 @@ fu_engine_get_remotes (FuEngine *self, GError **error)
 	return g_ptr_array_ref (remotes);
 }
 
+/**
+ * fu_engine_get_remote_by_id:
+ * @self: A #FuEngine
+ * @remote_id: A string representation of a remote
+ * @error: A #GError, or %NULL
+ *
+ * Gets the FwupdRemote object.
+ *
+ * Returns: FwupdRemote
+ **/
+FwupdRemote *
+fu_engine_get_remote_by_id (FuEngine *self, const gchar *remote_id, GError **error)
+{
+	g_autoptr(GPtrArray) remotes = NULL;
+
+	remotes = fu_engine_get_remotes (self, error);
+	if (remotes == NULL)
+		return NULL;
+
+	for (guint i = 0; i < remotes->len; i++) {
+		FwupdRemote *remote = g_ptr_array_index (remotes, i);
+		if (g_strcmp0 (remote_id, fwupd_remote_get_id (remote)) == 0)
+			return remote;
+	}
+
+	g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
+		     "Couldn't find remote %s", remote_id);
+
+	return NULL;
+}
+
+
 static gint
 fu_engine_sort_releases_cb (gconstpointer a, gconstpointer b)
 {
@@ -3769,6 +3802,10 @@ fu_engine_load (FuEngine *self, GError **error)
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
+	/* avoid re-loading a second time if fu-tool or fu-util request to */
+	if (self->loaded)
+		return TRUE;
+
 	/* read config file */
 	if (!fu_config_load (self->config, error)) {
 		g_prefix_error (error, "Failed to load config: ");
@@ -3855,6 +3892,7 @@ fu_engine_load (FuEngine *self, GError **error)
 		return FALSE;
 
 	fu_engine_set_status (self, FWUPD_STATUS_IDLE);
+	self->loaded = TRUE;
 
 	/* success */
 	return TRUE;

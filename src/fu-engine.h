@@ -43,6 +43,9 @@ FuDevice	*fu_engine_get_device			(FuEngine	*self,
 							 GError		**error);
 GPtrArray	*fu_engine_get_history			(FuEngine	*self,
 							 GError		**error);
+FwupdRemote 	*fu_engine_get_remote_by_id		(FuEngine	*self,
+							 const gchar	*remote_id,
+							 GError		**error);
 GPtrArray	*fu_engine_get_remotes			(FuEngine	*self,
 							 GError		**error);
 GPtrArray	*fu_engine_get_releases			(FuEngine	*self,
