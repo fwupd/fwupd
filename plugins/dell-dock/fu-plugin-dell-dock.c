@@ -68,6 +68,16 @@ fu_plugin_dell_dock_probe (FuPlugin *plugin,
 					      error))
 		return FALSE;
 
+	/* create TBT endpoint if Thunderbolt SKU and Thunderbolt link inactive */
+	if (fu_dell_dock_ec_needs_tbt (FU_DEVICE (ec_device))) {
+		g_autoptr(FuDellDockTbt) tbt_device = fu_dell_dock_tbt_new ();
+		fu_device_add_child (FU_DEVICE (ec_device), FU_DEVICE (tbt_device));
+		if (!fu_plugin_dell_dock_create_node (plugin,
+						      FU_DEVICE (tbt_device),
+						      error))
+			return FALSE;
+	}
+
 	return TRUE;
 }
 
