@@ -590,6 +590,9 @@ fu_plugin_init (FuPlugin *plugin)
 	data->udev = g_udev_client_new (subsystems);
 	g_signal_connect (data->udev, "uevent",
 			  G_CALLBACK (udev_uevent_cb), plugin);
+
+	/* dell-dock plugin uses a slower bus for flashing */
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_BETTER_THAN, "dell_dock");
 }
 
 void

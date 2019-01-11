@@ -37,6 +37,11 @@
 #define EXPECTED_DOCK_INFO_SIZE		0xb7
 #define EXPECTED_DOCK_TYPE		0x04
 
+#define TBT_MODE_MASK			0x01
+
+#define BIT_SET(x,y)			(x |= (1<<y))
+#define BIT_CLEAR(x,y)			(x &= (~1<<(y)))
+
 typedef enum {
 	FW_UPDATE_IN_PROGRESS,
 	FW_UPDATE_COMPLETE,
@@ -130,6 +135,7 @@ struct _FuDellDockEc {
 	guint8				 board_min;
 	gchar				*ec_minimum_version;
 	guint64				 blob_version_offset;
+	guint32				 dock_unlock_status;
 };
 
 G_DEFINE_TYPE (FuDellDockEc, fu_dell_dock_ec, FU_TYPE_DEVICE)
@@ -165,11 +171,17 @@ fu_dell_dock_ec_get_symbiote (FuDevice *device)
 }
 
 gboolean
-fu_dell_dock_ec_has_tbt (FuDevice *device)
+fu_dell_dock_ec_needs_tbt (FuDevice *device)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC (device);
+	gboolean port0_tbt_mode = self->data->port0_dock_status & TBT_MODE_MASK;
 
-	return self->data->module_type == MODULE_TYPE_TBT;
+	/* check for TBT module type */
+	if (self->data->module_type != MODULE_TYPE_TBT)
+		return FALSE;
+	g_debug ("found thunderbolt dock, port mode: %d", port0_tbt_mode);
+
+	return !port0_tbt_mode;
 }
 
 static const gchar*
@@ -348,7 +360,8 @@ fu_dell_dock_ec_get_dock_info (FuDevice *device,
 			    device_entry[i].version.version_8[2],
 			    device_entry[i].version.version_8[3]);
 			g_debug ("\tParsed version %s", self->mst_version);
-		} else if (map->device_type == FU_DELL_DOCK_DEVICETYPE_TBT && fu_dell_dock_ec_has_tbt (device)) {
+		} else if (map->device_type == FU_DELL_DOCK_DEVICETYPE_TBT &&
+			   self->data->module_type == MODULE_TYPE_TBT) {
 			/* guard against invalid Thunderbolt version read from EC */
 			if (!fu_dell_dock_test_valid_byte (device_entry[i].version.version_8, 2)) {
 				g_warning ("[EC bug] EC read invalid Thunderbolt version %08x",
@@ -504,6 +517,7 @@ fu_dell_dock_ec_modify_lock (FuDevice *device,
 			     gboolean unlocked,
 			     GError **error)
 {
+	FuDellDockEc *self = FU_DELL_DOCK_EC (device);
 	guint32 cmd;
 
 	g_return_val_if_fail (device != NULL, FALSE);
@@ -523,6 +537,12 @@ fu_dell_dock_ec_modify_lock (FuDevice *device,
 		 target, unlocked,
 		 fu_device_get_name (device),
 		 fu_device_get_id (device));
+
+	if (unlocked)
+		BIT_SET (self->dock_unlock_status, target);
+	else
+		BIT_CLEAR (self->dock_unlock_status, target);
+	g_debug ("current overall unlock status: 0x%08x", self->dock_unlock_status);
 
 	return TRUE;
 }

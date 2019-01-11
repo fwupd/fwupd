@@ -21,6 +21,7 @@
 #include "fu-device.h"
 #include "fu-dell-dock-i2c-ec.h"
 #include "fu-dell-dock-i2c-mst.h"
+#include "fu-dell-dock-i2c-tbt.h"
 #include "fu-dell-dock-hub.h"
 #include "fu-dell-dock-hid.h"
 #include "fu-dell-dock-status.h"
