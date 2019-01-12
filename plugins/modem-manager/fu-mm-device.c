@@ -66,7 +66,7 @@ fu_mm_device_probe (FuDevice *device, GError **error)
 	}
 
 	/* various fastboot commands */
-	if (self->detach_method == MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT) {
+	if (self->detach_method & MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT) {
 		const gchar *tmp;
 		tmp = mm_firmware_update_settings_get_fastboot_at (update_settings);
 		if (tmp == NULL) {
@@ -285,7 +285,7 @@ fu_mm_device_detach (FuDevice *device, GError **error)
 		return FALSE;
 
 	/* fastboot */
-	if (self->detach_method == MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT)
+	if (self->detach_method & MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT)
 		return fu_mm_device_detach_qfastboot (device, error);
 
 	/* should not get here */
