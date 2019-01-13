@@ -15,6 +15,7 @@
 
 struct FuPluginData {
 	MMManager	*manager;
+	gboolean	manager_ready;
 };
 
 static void
@@ -55,11 +56,42 @@ fu_plugin_mm_device_removed_cb (MMManager *manager, MMObject *modem, FuPlugin *p
 	fu_plugin_device_remove (plugin, FU_DEVICE (dev));
 }
 
-gboolean
-fu_plugin_coldplug (FuPlugin *plugin, GError **error)
+static void
+fu_plugin_mm_teardown_manager (FuPlugin *plugin)
 {
 	FuPluginData *priv = fu_plugin_get_data (plugin);
+
+	if (priv->manager_ready) {
+		g_debug ("ModemManager no longer available");
+		g_signal_handlers_disconnect_by_func (priv->manager,
+						      G_CALLBACK (fu_plugin_mm_device_added_cb),
+						      plugin);
+		g_signal_handlers_disconnect_by_func (priv->manager,
+						      G_CALLBACK (fu_plugin_mm_device_removed_cb),
+						      plugin);
+		priv->manager_ready = FALSE;
+	}
+}
+
+static void
+fu_plugin_mm_setup_manager (FuPlugin *plugin)
+{
+	FuPluginData *priv = fu_plugin_get_data (plugin);
+	const gchar *version = mm_manager_get_version (priv->manager);
 	GList *list;
+
+	if (fu_common_vercmp (version, MM_REQUIRED_VERSION) < 0) {
+		g_warning ("ModemManager %s is available, but need at least %s",
+			   version, MM_REQUIRED_VERSION);
+		return;
+	}
+
+	g_debug ("ModemManager %s is available", version);
+
+	g_signal_connect (priv->manager, "object-added",
+			  G_CALLBACK (fu_plugin_mm_device_added_cb), plugin);
+	g_signal_connect (priv->manager, "object-removed",
+			  G_CALLBACK (fu_plugin_mm_device_removed_cb), plugin);
 
 	list = g_dbus_object_manager_get_objects (G_DBUS_OBJECT_MANAGER (priv->manager));
 	for (GList *l = list; l != NULL; l = g_list_next (l)) {
@@ -68,6 +100,30 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		g_object_unref (modem);
 	}
 	g_list_free (list);
+
+	priv->manager_ready = TRUE;
+}
+
+static void
+fu_plugin_mm_name_owner_updated (FuPlugin *plugin)
+{
+	FuPluginData *priv = fu_plugin_get_data (plugin);
+	const gchar *name_owner;
+	name_owner = g_dbus_object_manager_client_get_name_owner (G_DBUS_OBJECT_MANAGER_CLIENT (priv->manager));
+	if (name_owner != NULL)
+		fu_plugin_mm_setup_manager (plugin);
+	else
+		fu_plugin_mm_teardown_manager (plugin);
+}
+
+gboolean
+fu_plugin_coldplug (FuPlugin *plugin, GError **error)
+{
+	FuPluginData *priv = fu_plugin_get_data (plugin);
+	g_signal_connect_swapped (priv->manager, "notify::name-owner",
+				  G_CALLBACK (fu_plugin_mm_name_owner_updated),
+				  plugin);
+	fu_plugin_mm_name_owner_updated (plugin);
 	return TRUE;
 }
 
@@ -75,31 +131,17 @@ gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data (plugin);
-	const gchar *version;
 	g_autoptr(GDBusConnection) connection = NULL;
 
 	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
 	if (connection == NULL)
 		return FALSE;
 	priv->manager = mm_manager_new_sync (connection,
-					     G_DBUS_OBJECT_MANAGER_CLIENT_FLAGS_NONE,
+					     G_DBUS_OBJECT_MANAGER_CLIENT_FLAGS_DO_NOT_AUTO_START,
 					     NULL, error);
 	if (priv->manager == NULL)
 		return FALSE;
-	version = mm_manager_get_version (priv->manager);
-	if (fu_common_vercmp (version, MM_REQUIRED_VERSION) < 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "ModemManager too old, got %s, need %s",
-			     version, MM_REQUIRED_VERSION);
-		return FALSE;
-	}
 
-	g_signal_connect (priv->manager, "object-added",
-			  G_CALLBACK (fu_plugin_mm_device_added_cb), plugin);
-	g_signal_connect (priv->manager, "object-removed",
-			  G_CALLBACK (fu_plugin_mm_device_removed_cb), plugin);
 	return TRUE;
 }
 
