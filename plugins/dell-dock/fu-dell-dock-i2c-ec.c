@@ -383,6 +383,18 @@ fu_dell_dock_ec_get_dock_info (FuDevice *device,
 		return FALSE;
 	}
 
+	/* TODO: Drop if setting minimum board to 5+ and minimum EC to 19+
+	 * If running on board 4 or later, already EC19+, then
+	 * don't allow downgrades to anything < EC19
+	 */
+	if (self->data->board_id >= 4 &&
+	    as_utils_vercmp (self->ec_version, "00.00.00.19") >= 0) {
+		g_debug ("Prohibiting downgrades below EC 00.00.00.19");
+		g_free (self->ec_minimum_version);
+		self->ec_minimum_version = g_strdup ("00.00.00.19");
+	}
+	fu_device_set_version_lowest (device, self->ec_minimum_version);
+
 	return TRUE;
 }
 
