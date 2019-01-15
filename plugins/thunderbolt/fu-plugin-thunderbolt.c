@@ -218,6 +218,22 @@ fu_plugin_thunderbolt_is_native (GUdevDevice *udevice, gboolean *is_native, GErr
 							  error);
 }
 
+static gboolean
+fu_plugin_thunderbolt_can_update (GUdevDevice *udevice)
+{
+	g_autoptr(GError) nvmem_error = NULL;
+	g_autoptr(GFile) non_active_nvmem = NULL;
+
+	non_active_nvmem = fu_plugin_thunderbolt_find_nvmem (udevice, FALSE,
+							     &nvmem_error);
+	if (non_active_nvmem == NULL) {
+		g_debug ("%s", nvmem_error->message);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 static void
 fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 {
@@ -299,22 +315,29 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 					       is_safemode ? "True" : "False");
 	}
 	if (!is_safemode) {
-		if (is_host) {
-			g_autoptr(GError) error_local = NULL;
-			if (!fu_plugin_thunderbolt_is_native (device, &is_native, &error_local)) {
-				g_warning ("failed to get native mode status: %s", error_local->message);
-				return;
+		if (fu_plugin_thunderbolt_can_update (device)) {
+			if (is_host) {
+				g_autoptr(GError) native_error = NULL;
+				if (!fu_plugin_thunderbolt_is_native (device,
+								      &is_native,
+								      &native_error)) {
+					g_warning ("failed to get native mode status: %s",
+						   native_error->message);
+					return;
+				}
+				fu_plugin_add_report_metadata (plugin,
+							       "ThunderboltNative",
+							       is_native ? "True" : "False");
 			}
-			fu_plugin_add_report_metadata (plugin,
-						       "ThunderboltNative",
-						       is_native ? "True" : "False");
+			vendor_id = g_strdup_printf ("TBT:0x%04X", (guint) vid);
+			device_id = g_strdup_printf ("TBT-%04x%04x%s",
+						     (guint) vid,
+						     (guint) did,
+						     is_native ? "-native" : "");
+			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
+		} else {
+			fu_device_set_update_error (dev, "Missing non-active nvmem");
 		}
-		vendor_id = g_strdup_printf ("TBT:0x%04X", (guint) vid);
-		device_id = g_strdup_printf ("TBT-%04x%04x%s",
-					     (guint) vid,
-					     (guint) did,
-					     is_native ? "-native" : "");
-		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 	} else {
 		fu_device_set_update_error (dev, "Device is in safe mode");
 	}
