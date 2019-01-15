@@ -1175,3 +1175,41 @@ fu_common_dump_bytes (const gchar *log_domain,
 	const guint8 *data = g_bytes_get_data (bytes, &len);
 	fu_common_dump_raw (log_domain, title, data, len);
 }
+
+/**
+ * fu_common_bytes_align:
+ * @bytes: a #GBytes
+ * @blksz: block size in bytes
+ * @padval: the byte used to pad the byte buffer
+ *
+ * Aligns a block of memory to @blksize using the @padval value; if
+ * the block is already aligned then the original @bytes is returned.
+ *
+ * Returns: (transfer full): a #GBytes, possibly @bytes
+ *
+ * Since: 1.2.4
+ **/
+GBytes *
+fu_common_bytes_align (GBytes *bytes, gsize blksz, gchar padval)
+{
+	const guint8 *data;
+	gsize sz;
+
+	g_return_val_if_fail (bytes != NULL, NULL);
+	g_return_val_if_fail (blksz > 0, NULL);
+
+	/* pad */
+	data = g_bytes_get_data (bytes, &sz);
+	if (sz % blksz != 0) {
+		gsize sz_align = ((sz / blksz) + 1) * blksz;
+		guint8 *data_align = g_malloc (sz_align);
+		memcpy (data_align, data, sz);
+		memset (data_align + sz, padval, sz_align - sz);
+		g_debug ("aligning 0x%x bytes to 0x%x",
+			 (guint) sz, (guint) sz_align);
+		return g_bytes_new_take (data_align, sz_align);
+	}
+
+	/* perfectly aligned */
+	return g_bytes_ref (bytes);
+}

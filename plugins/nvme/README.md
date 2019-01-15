@@ -44,3 +44,4 @@ This plugin uses the following plugin-specific quirks:
 | Quirk                  | Description                                 | Minimum fwupd version |
 |------------------------|---------------------------------------------|-----------------------|
 | `NvmeBlockSize`        | The block size used for NVMe writes         | 1.1.3                 |
+| `Flags`                | `force-align` if image should be padded     | 1.2.4                 |
