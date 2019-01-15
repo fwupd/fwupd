@@ -244,6 +244,7 @@ static gboolean
 fu_nvme_device_parse_cns (FuNvmeDevice *self, const guint8 *buf, gsize sz, GError **error)
 {
 	guint8 fawr;
+	guint8 fwug;
 	guint8 nfws;
 	guint8 s1ro;
 	g_autofree gchar *mn = NULL;
@@ -273,6 +274,11 @@ fu_nvme_device_parse_cns (FuNvmeDevice *self, const guint8 *buf, gsize sz, GErro
 		if (!fu_nvme_device_set_version (self, sr, error))
 			return FALSE;
 	}
+
+	/* firmware update granularity (FWUG) */
+	fwug = buf[319];
+	if (fwug != 0x00 && fwug != 0xff)
+		self->write_block_size = ((guint64) fwug) * 0x1000;
 
 	/* firmware slot information */
 	fawr = (buf[260] & 0x10) >> 4;
