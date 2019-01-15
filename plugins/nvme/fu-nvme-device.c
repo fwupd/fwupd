@@ -410,12 +410,21 @@ static gboolean
 fu_nvme_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 {
 	FuNvmeDevice *self = FU_NVME_DEVICE (device);
+	g_autoptr(GBytes) fw2 = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 	guint64 block_size = self->write_block_size > 0 ?
 			     self->write_block_size : 0x1000;
 
+	/* some vendors provide firmware files whose sizes are not multiples
+	 * of blksz *and* the device won't accept blocks of different sizes */
+	if (fu_device_has_custom_flag (device, "force-align")) {
+		fw2 = fu_common_bytes_align (fw, block_size, 0xff);
+	} else {
+		fw2 = g_bytes_ref (fw);
+	}
+
 	/* build packets */
-	chunks = fu_chunk_array_new_from_bytes (fw,
+	chunks = fu_chunk_array_new_from_bytes (fw2,
 						0x00,		/* start_addr */
 						0x00,		/* page_sz */
 						block_size);	/* block size */
