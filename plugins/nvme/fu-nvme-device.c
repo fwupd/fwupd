@@ -247,6 +247,7 @@ fu_nvme_device_parse_cns (FuNvmeDevice *self, const guint8 *buf, gsize sz, GErro
 	guint8 fwug;
 	guint8 nfws;
 	guint8 s1ro;
+	g_autofree gchar *gu = NULL;
 	g_autofree gchar *mn = NULL;
 	g_autofree gchar *sn = NULL;
 	g_autofree gchar *sr = NULL;
@@ -285,6 +286,11 @@ fu_nvme_device_parse_cns (FuNvmeDevice *self, const guint8 *buf, gsize sz, GErro
 	nfws = (buf[260] & 0x0e) >> 1;
 	s1ro = buf[260] & 0x01;
 	g_debug ("fawr: %u, nr fw slots: %u, slot1 r/o: %u", fawr, nfws, s1ro);
+
+	/* FRU globally unique identifier (FGUID) */
+	gu = fu_nvme_device_get_guid_safe (buf, 127);
+	if (gu != NULL)
+		fu_device_add_guid (FU_DEVICE (self), gu);
 
 	/* Dell helpfully provide an EFI GUID we can use in the vendor offset,
 	 * but don't have a header or any magic we can use -- so check if the
