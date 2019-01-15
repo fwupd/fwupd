@@ -3,8 +3,10 @@ subdir('pki')
 subdir('remotes.d')
 subdir('bash-completion')
 
-if get_option('tests') and get_option('daemon')
+if get_option('tests')
   subdir('tests')
+endif
+if get_option('daemon')
   subdir('installed-tests')
 endif
 
