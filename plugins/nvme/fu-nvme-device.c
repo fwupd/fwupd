@@ -19,6 +19,7 @@
 #include <linux/nvme_ioctl.h>
 
 #include "fu-chunk.h"
+#include "fu-nvme-common.h"
 #include "fu-nvme-device.h"
 
 #define FU_NVME_ID_CTRL_SIZE	0x1000
@@ -100,7 +101,12 @@ fu_nvme_device_get_guid_safe (const guint8 *buf, guint16 addr_start)
 static gboolean
 fu_nvme_device_submit_admin_passthru (FuNvmeDevice *self, struct nvme_admin_cmd *cmd, GError **error)
 {
-	if (ioctl (self->fd, NVME_IOCTL_ADMIN_CMD, cmd) < 0) {
+	gint rc;
+	guint32 err;
+
+	/* submit admin command */
+	rc = ioctl (self->fd, NVME_IOCTL_ADMIN_CMD, cmd);
+	if (rc < 0) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
@@ -109,7 +115,26 @@ fu_nvme_device_submit_admin_passthru (FuNvmeDevice *self, struct nvme_admin_cmd 
 			     strerror (errno));
 		return FALSE;
 	}
-	return TRUE;
+
+	/* check the error code */
+	err = rc & 0x3ff;
+	switch (err) {
+	case NVME_SC_SUCCESS:
+	/* devices are always added with _NEEDS_REBOOT, so ignore */
+	case NVME_SC_FW_NEEDS_CONV_RESET:
+	case NVME_SC_FW_NEEDS_SUBSYS_RESET:
+	case NVME_SC_FW_NEEDS_RESET:
+		return TRUE;
+	default:
+		break;
+	}
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_SUPPORTED,
+		     "Not supported: %s",
+		     fu_nvme_status_to_string (err));
+	return FALSE;
+
 }
 
 static gboolean
