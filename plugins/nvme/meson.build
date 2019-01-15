@@ -3,6 +3,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginNvme"']
 shared_module('fu_plugin_nvme',
   sources : [
     'fu-plugin-nvme.c',
+    'fu-nvme-common.c',
     'fu-nvme-device.c',
   ],
   include_directories : [
@@ -32,6 +33,7 @@ if get_option('tests')
     'nvme-self-test',
     sources : [
       'fu-self-test.c',
+      'fu-nvme-common.c',
       'fu-nvme-device.c',
     ],
     include_directories : [
