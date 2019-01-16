@@ -84,8 +84,8 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 		return FALSE;
 
 	/* did we get enough data */
-	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_INTERNAL);
-	fu_device_add_icon (device, "audio-card");
+	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_add_icon (FU_DEVICE (device), "audio-card");
 
 	/* get the FW version from the rom when unlocked */
 	rom_fn = g_build_filename (fu_udev_device_get_sysfs_path (device), "rom", NULL);
