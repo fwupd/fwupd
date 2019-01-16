@@ -177,8 +177,8 @@ fu_nvme_device_fw_download (FuNvmeDevice *self,
 		.opcode		= 0x11,
 		.addr		= 0x0, /* memory address of data */
 		.data_len	= data_sz,
-		.cdw10		= (data_sz >> 2) - 1,
-		.cdw11		= addr >> 2,
+		.cdw10		= (data_sz >> 2) - 1,	/* convert to DWORDs */
+		.cdw11		= addr >> 2,		/* convert to DWORDs */
 	};
 	memcpy (&cmd.addr, &data, sizeof (gpointer));
 	return fu_nvme_device_submit_admin_passthru (self, &cmd, error);
