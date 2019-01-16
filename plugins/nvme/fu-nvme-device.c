@@ -373,6 +373,11 @@ fu_nvme_device_probe (FuUdevDevice *device, GError **error)
 	if (self->pci_depth <= 2)
 		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_INTERNAL);
 
+	/* all devices need at least a warm reset, but some quirked drives
+	 * need a full "cold" shutdown and startup */
+	if (!fu_device_has_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN))
+		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+
 	return TRUE;
 }
 
@@ -483,7 +488,6 @@ fu_nvme_device_init (FuNvmeDevice *self)
 {
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_set_summary (FU_DEVICE (self), "NVM Express Solid State Drive");
 	fu_device_add_icon (FU_DEVICE (self), "drive-harddisk");
 }
