@@ -1651,7 +1651,8 @@ fu_engine_install_blob (FuEngine *self,
 		 g_timer_elapsed (timer, NULL));
 
 	/* update database */
-	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT)) {
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT) ||
+	    fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN)) {
 		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_NEEDS_REBOOT);
 		if ((flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0 &&
 		    !fu_history_modify_device (self->history, device,

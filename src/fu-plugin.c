@@ -1514,7 +1514,8 @@ fu_plugin_runner_update (FuPlugin *self,
 	}
 
 	/* no longer valid */
-	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT)) {
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT) &&
+	    !fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN)) {
 		GPtrArray *checksums = fu_device_get_checksums (device);
 		g_ptr_array_set_size (checksums, 0);
 	}

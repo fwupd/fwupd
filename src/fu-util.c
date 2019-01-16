@@ -745,6 +745,51 @@ fu_util_update_reboot (GError **error)
 }
 
 static gboolean
+fu_util_update_shutdown (GError **error)
+{
+	g_autoptr(GDBusConnection) connection = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
+	if (connection == NULL)
+		return FALSE;
+
+#ifdef HAVE_SYSTEMD
+	/* shutdown using logind */
+	val = g_dbus_connection_call_sync (connection,
+					   "org.freedesktop.login1",
+					   "/org/freedesktop/login1",
+					   "org.freedesktop.login1.Manager",
+					   "PowerOff",
+					   g_variant_new ("(b)", TRUE),
+					   NULL,
+					   G_DBUS_CALL_FLAGS_NONE,
+					   -1,
+					   NULL,
+					   error);
+#elif defined(HAVE_CONSOLEKIT)
+	/* shutdown using ConsoleKit */
+	val = g_dbus_connection_call_sync (connection,
+					   "org.freedesktop.ConsoleKit",
+					   "/org/freedesktop/ConsoleKit/Manager",
+					   "org.freedesktop.ConsoleKit.Manager",
+					   "Stop",
+					   NULL,
+					   NULL,
+					   G_DBUS_CALL_FLAGS_NONE,
+					   -1,
+					   NULL,
+					   error);
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_ARGS,
+			     "No supported backend compiled in to perform the operation.");
+#endif
+	return val != NULL;
+}
+
+static gboolean
 fu_util_install_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	gint vercmp;
@@ -2043,6 +2088,7 @@ static gboolean
 fu_util_update_all (FuUtilPrivate *priv, GError **error)
 {
 	gboolean requires_reboot = FALSE;
+	gboolean requires_shutdown = FALSE;
 	g_autoptr(GPtrArray) devices = NULL;
 
 	/* get devices from daemon */
@@ -2073,7 +2119,9 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 		rel = g_ptr_array_index (rels, 0);
 		if (!fu_util_update_device_with_release (priv, dev, rel, error))
 			return FALSE;
-		if (fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
+		if (fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN))
+			requires_shutdown = TRUE;
+		else if (fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
 			requires_reboot = TRUE;
 	}
 
@@ -2084,7 +2132,16 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 	}
 
 	/* at least one of the updates needed a reboot */
-	if (requires_reboot) {
+	if (requires_shutdown) {
+		g_print ("\n%s %s [Y|n]: ",
+			 /* TRANSLATORS: explain why we want to upload */
+			 _("An update requires the system to shutdown to complete."),
+			 /* TRANSLATORS: reboot to apply the update */
+			 _("Shutdown now?"));
+		if (!fu_util_prompt_for_boolean (TRUE))
+			return TRUE;
+		return fu_util_update_shutdown (error);
+	} else if (requires_reboot) {
 		g_print ("\n%s %s [Y|n]: ",
 			 /* TRANSLATORS: explain why we want to upload */
 			 _("An update requires a reboot to complete."),
