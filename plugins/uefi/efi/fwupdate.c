@@ -68,12 +68,32 @@ msleep(unsigned long msecs)
 	})
 #endif
 
+/* use GCC __cleanup__ */
+#define _DEFINE_CLEANUP_FUNCTION0(Type, name, func) \
+  static inline void name(void *v) \
+  { \
+    if (*(Type*)v) \
+      func (*(Type*)v); \
+  }
+_DEFINE_CLEANUP_FUNCTION0(void *, _FreePool_p, FreePool)
+#define _cleanup_FreePool __attribute__ ((cleanup(_FreePool_p)))
+
+static inline void *
+_steal_pointer(void *pp)
+{
+	void **ptr = (void **) pp;
+	void *ref = *ptr;
+	*ptr = NULL;
+	return ref;
+}
+
 int
 debug_print(const char *func, const char *file, const int line,
 	    CHAR16 *fmt, ...)
 {
 	va_list args0, args1;
-	CHAR16 *out0, *out1;
+	_cleanup_FreePool CHAR16 *out0 = NULL;
+	_cleanup_FreePool CHAR16 *out1 = NULL;
 	UINT32 attrs = EFI_VARIABLE_NON_VOLATILE |
 		       EFI_VARIABLE_BOOTSERVICE_ACCESS |
 		       EFI_VARIABLE_RUNTIME_ACCESS;
@@ -96,7 +116,6 @@ debug_print(const char *func, const char *file, const int line,
 	if (debugging)
 		Print(L"%s", out0);
 	out1 = PoolPrint(L"%a:%d:%a(): %s", file, line, func, out0);
-	FreePool(out0);
 	if (!out1) {
 		Print(L"fwupdate: Allocation for debug log failed!\n");
 		return debugging;
@@ -109,8 +128,6 @@ debug_print(const char *func, const char *file, const int line,
 		attrs |= EFI_VARIABLE_APPEND_WRITE;
 	}
 	set_variable(name, fwupdate_guid, out1, StrSize(out1) - sizeof (CHAR16), attrs);
-
-	FreePool(out1);
 
 	return debugging;
 }
@@ -249,7 +266,7 @@ read_variable(CHAR16 *name, EFI_GUID guid, void **buf_out, UINTN *buf_size_out,
 	EFI_STATUS rc;
 	UINT32 attributes;
 	UINTN size = 0;
-	void *buf = NULL;
+	_cleanup_FreePool void *buf = NULL;
 
 	rc = uefi_call_wrapper(RT->GetVariable, 5, name,
 			       &guid, &attributes, &size, NULL);
@@ -273,10 +290,9 @@ read_variable(CHAR16 *name, EFI_GUID guid, void **buf_out, UINTN *buf_size_out,
 			       &size, buf);
 	if (EFI_ERROR(rc)) {
 		print(L"Could not get variable \"%s\": %r\n", name, rc);
-		FreePool(buf);
 		return rc;
 	}
-	*buf_out = buf;
+	*buf_out = _steal_pointer(&buf);
 	*buf_size_out = size;
 	*attributes_out = attributes;
 	return EFI_SUCCESS;
@@ -366,7 +382,7 @@ static EFI_STATUS
 find_updates(UINTN *n_updates_out, update_table ***updates_out)
 {
 	EFI_STATUS rc;
-	update_table **updates = NULL;
+	_cleanup_FreePool update_table **updates = NULL;
 	UINTN n_updates = 0;
 	UINTN n_updates_allocated = 128;
 	EFI_STATUS ret = EFI_OUT_OF_RESOURCES;
@@ -374,7 +390,7 @@ find_updates(UINTN *n_updates_out, update_table ***updates_out)
 #define GNVN_BUF_SIZE 1024
 	UINTN variable_name_allocation = GNVN_BUF_SIZE;
 	UINTN variable_name_size = 0;
-	CHAR16 *variable_name;
+	_cleanup_FreePool CHAR16 *variable_name = NULL;
 	EFI_GUID vendor_guid = empty_guid;
 	UINTN mult_res;
 
@@ -398,7 +414,6 @@ find_updates(UINTN *n_updates_out, update_table ***updates_out)
 	if (!variable_name) {
 		print(L"Tried to allocate %d\n", GNVN_BUF_SIZE * 2);
 		print(L"Could not allocate memory.\n");
-		FreePool(updates);
 		return EFI_OUT_OF_RESOURCES;
 	}
 
@@ -462,7 +477,7 @@ find_updates(UINTN *n_updates_out, update_table ***updates_out)
 		print(L"Found update %s\n", vn);
 
 		if (n_updates == n_updates_allocated) {
-			update_table **new_ups;
+			update_table **new_ups = NULL;
 			UINTN mul_a, mul_b;
 			if (uintn_mult(n_updates_allocated, 2, &mult_res)) {
 				mul_a = n_updates_allocated;
@@ -531,22 +546,16 @@ mult_err:
 		}
 	}
 
-	FreePool(variable_name);
-
 	*n_updates_out = n_updates;
-	*updates_out = updates;
+	*updates_out = _steal_pointer(&updates);
 
 	return EFI_SUCCESS;
 err:
-	FreePool(variable_name);
-
 	for (unsigned int i = 0; i < n_updates; i++) {
 		FreePool(updates[i]->name);
 		FreePool(updates[i]->info);
 		FreePool(updates[i]);
 	}
-
-	FreePool(updates);
 	return ret;
 }
 
@@ -728,8 +737,8 @@ delete_boot_order(CHAR16 *name, EFI_GUID guid)
 	EFI_STATUS rc;
 	UINTN info_size = 0;
 	UINT32 attributes = 0;
-	void *info_ptr = NULL;
-	UINT16 *new_info_ptr = NULL;
+	_cleanup_FreePool void *info_ptr = NULL;
+	_cleanup_FreePool UINT16 *new_info_ptr = NULL;
 	BOOLEAN num_found = FALSE;
 	UINTN new_list_num = 0;
 
@@ -745,7 +754,6 @@ delete_boot_order(CHAR16 *name, EFI_GUID guid)
 	if (!new_info_ptr) {
 		print(L"Tried to allocate %d\n", info_size);
 		print(L"Could not allocate memory.\n");
-		FreePool(info_ptr);
 		return EFI_OUT_OF_RESOURCES;
 	}
 
@@ -760,10 +768,8 @@ delete_boot_order(CHAR16 *name, EFI_GUID guid)
 	}
 
 	/* if not in the BootOrder list, do not update BootOrder */
-	if (!num_found) {
-		rc = EFI_SUCCESS;
-		goto out;
-	}
+	if (!num_found)
+		return EFI_SUCCESS;
 
 	rc = uefi_call_wrapper(RT->SetVariable, 5, L"BootOrder", &guid,
 				attributes, new_list_num * sizeof(UINT16),
@@ -771,14 +777,8 @@ delete_boot_order(CHAR16 *name, EFI_GUID guid)
 	if (EFI_ERROR(rc)) {
 		print(L"Could not update variable status for \"%s\": %r\n",
 		      name, rc);
-		goto out;
+		return rc;
 	}
-
-out:
-
-	FreePool(info_ptr);
-	FreePool(new_info_ptr);
-
 	return rc;
 }
 
@@ -789,10 +789,9 @@ delete_boot_entry(void)
 
 	UINTN variable_name_allocation = GNVN_BUF_SIZE;
 	UINTN variable_name_size = 0;
-	CHAR16 *variable_name;
+	_cleanup_FreePool CHAR16 *variable_name = NULL;
 	EFI_GUID vendor_guid = empty_guid;
 	UINTN mult_res;
-	EFI_STATUS ret = EFI_OUT_OF_RESOURCES;
 
 	variable_name = AllocateZeroPool(GNVN_BUF_SIZE * 2);
 	if (!variable_name) {
@@ -815,16 +814,14 @@ delete_boot_entry(void)
 			if (uintn_mult(new_allocation, 2, &mult_res)) {
 				print(L"%d * 2 would overflow size\n",
 				      new_allocation);
-				ret = EFI_OUT_OF_RESOURCES;
-				goto err;
+				return EFI_OUT_OF_RESOURCES;
 			}
 			new_name = AllocatePool(new_allocation * 2);
 			if (!new_name) {
 				print(L"Tried to allocate %d\n",
 				      new_allocation * 2);
 				print(L"Could not allocate memory.\n");
-				ret = EFI_OUT_OF_RESOURCES;
-				goto err;
+				return EFI_OUT_OF_RESOURCES;
 			}
 			CopyMem(new_name, variable_name,
 				variable_name_allocation);
@@ -836,8 +833,7 @@ delete_boot_entry(void)
 			break;
 		} else if (EFI_ERROR(rc)) {
 			print(L"Could not get variable name: %r\n", rc);
-			ret = rc;
-			goto err;
+			return rc;
 		}
 
 		/* check if the variable name is Boot#### */
@@ -846,16 +842,14 @@ delete_boot_entry(void)
 		    && vns == 8 && CompareMem(variable_name, L"Boot", 8) == 0) {
 			UINTN info_size = 0;
 			UINT32 attributes = 0;
-			void *info_ptr = NULL;
+			_cleanup_FreePool void *info_ptr = NULL;
 			CHAR16 *load_op_description = NULL;
 			CHAR16 target[] = L"Linux Firmware Updater";
 
 			rc = read_variable(variable_name, vendor_guid,
 					   &info_ptr, &info_size, &attributes);
-			if (EFI_ERROR(rc)) {
-				ret = rc;
-				goto err;
-			}
+			if (EFI_ERROR(rc))
+				return rc;
 
 			/*
 			 * check if the boot path created by fwupdate,
@@ -873,32 +867,21 @@ delete_boot_entry(void)
 						       vendor_guid);
 				if (EFI_ERROR(rc)) {
 					print(L"Failed to delete the Linux Firmware Updater boot entry from BootOrder.\n");
-					FreePool(info_ptr);
-					ret = rc;
-					goto err;
+					return rc;
 				}
 
 				rc = delete_variable(variable_name,
 						     vendor_guid, attributes);
 				if (EFI_ERROR(rc)) {
 					print(L"Failed to delete the Linux Firmware Updater boot entry.\n");
-					FreePool(info_ptr);
-					ret = rc;
-					goto err;
+					return rc;
 				}
-
-				FreePool(info_ptr);
 				break;
 			}
-
-			FreePool(info_ptr);
 		}
 	}
 
-	ret = EFI_SUCCESS;
-err:
-	FreePool(variable_name);
-	return ret;
+	return EFI_SUCCESS;
 }
 
 static EFI_STATUS
