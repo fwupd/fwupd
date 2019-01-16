@@ -2266,7 +2266,7 @@ fu_engine_get_details (FuEngine *self, gint fd, GError **error)
 		if (remote_id != NULL) {
 			FwupdRelease *rel = fwupd_device_get_release_default (dev);
 			fwupd_release_set_remote_id (rel, remote_id);
-			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED);
+			fwupd_device_add_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED);
 		}
 		g_ptr_array_add (details, dev);
 	}
