@@ -384,6 +384,19 @@ fwup_delete_boot_order(CHAR16 *name, EFI_GUID guid)
 	return rc;
 }
 
+/* TODO: move to gnu-efi: https://github.com/vathpela/gnu-efi/issues/7 */
+static BOOLEAN
+_StrHasPrefix(IN CONST CHAR16 *s1, IN CONST CHAR16 *s2)
+{
+	while (*s2) {
+		if (*s1 == L'\0' || *s1 != *s2)
+			return FALSE;
+		s1  += 1;
+		s2  += 1;
+	}
+	return TRUE;
+}
+
 static EFI_STATUS
 fwup_delete_boot_entry(VOID)
 {
@@ -429,14 +442,13 @@ fwup_delete_boot_entry(VOID)
 		if (info_size < sizeof(EFI_LOAD_OPTION))
 			continue;
 
-		CHAR16 target[] = L"Linux Firmware Updater";
 		/*
 		 * check if the boot path created by fwupdate,
 		 * check with EFI_LOAD_OPTION decription
 		 */
 		EFI_LOAD_OPTION *load_op = (EFI_LOAD_OPTION *) info_ptr;
-		if (CompareMem(load_op->description, target,
-			       sizeof(target) - 2) == 0) {
+		if (_StrHasPrefix(load_op->description, L"Linux Firmware Updater") ||
+		    _StrHasPrefix(load_op->description, L"Linux-Firmware-Updater")) {
 			/* delete the boot path from BootOrder list */
 			rc = fwup_delete_boot_order(variable_name, vendor_guid);
 			if (EFI_ERROR(rc)) {
