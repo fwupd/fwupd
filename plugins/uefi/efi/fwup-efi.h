@@ -12,40 +12,62 @@
 
 #define UPDATE_INFO_VERSION	7
 
-#ifdef _EFI_INCLUDE_
-#define efidp_header EFI_DEVICE_PATH
-#define efi_guid_t EFI_GUID
-#endif /* _EFI_INCLUDE_ */
+static __attribute__((__unused__)) EFI_GUID empty_guid =
+	{0x0,0x0,0x0,{0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0}};
+static __attribute__((__unused__))EFI_GUID fwupdate_guid =
+	{0x0abba7dc,0xe516,0x4167,{0xbb,0xf5,0x4d,0x9d,0x1c,0x73,0x94,0x16}};
+static __attribute__((__unused__))EFI_GUID ux_capsule_guid =
+	{0x3b8c8162,0x188c,0x46a4,{0xae,0xc9,0xbe,0x43,0xf1,0xd6,0x56,0x97}};
+static __attribute__((__unused__))EFI_GUID global_variable_guid = EFI_GLOBAL_VARIABLE;
 
 typedef struct {
-	uint8_t version;
-	uint8_t checksum;
-	uint8_t image_type;
-	uint8_t reserved;
-	uint32_t mode;
-	uint32_t x_offset;
-	uint32_t y_offset;
-} ux_capsule_header_t;
+	UINT8		 version;
+	UINT8		 checksum;
+	UINT8		 image_type;
+	UINT8		 reserved;
+	UINT32		 mode;
+	UINT32		 x_offset;
+	UINT32		 y_offset;
+} __attribute__((__packed__)) UX_CAPSULE_HEADER;
 
-typedef struct update_info_s {
-	uint32_t update_info_version;
+typedef struct {
+	UINT32		 update_info_version;
 
 	/* stuff we need to apply an update */
-	efi_guid_t guid;
-	uint32_t capsule_flags;
-	uint64_t hw_inst;
+	EFI_GUID	 guid;
+	UINT32		 capsule_flags;
+	UINT64		 hw_inst;
 
-	EFI_TIME time_attempted;
+	EFI_TIME	 time_attempted;
 
 	/* our metadata */
-	uint32_t status;
+	UINT32		 status;
 
 	/* variadic device path */
 	union {
-		efidp_header *dp_ptr;
-		efidp_header dp;
-		uint8_t dp_buf[0];
+		EFI_DEVICE_PATH	 dp;
+		UINT8		 dp_buf[0];
 	};
-} __attribute__((__packed__)) update_info;
+} __attribute__((__packed__)) FWUP_UPDATE_INFO;
+
+typedef struct {
+	UINT32		 attributes;
+	UINT16		 file_path_list_length;
+	CHAR16		*description;
+}  __attribute__((__packed__)) EFI_LOAD_OPTION;
+
+EFI_STATUS	 fwup_delete_variable	(CHAR16		*name,
+					 EFI_GUID	*guid,
+					 UINT32		 attrs);
+EFI_STATUS	 fwup_set_variable	(CHAR16		*name,
+					 EFI_GUID	*guid,
+					 VOID		*data,
+					 UINTN		 size,
+					 UINT32		 attrs);
+EFI_STATUS	 fwup_get_variable	(CHAR16		*name,
+					 EFI_GUID	*guid,
+					 VOID		**buf_out,
+					 UINTN		*buf_size_out,
+					 UINT32		*attrs_out);
 
 #endif /* _FWUP_EFI_H */

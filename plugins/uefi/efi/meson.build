@@ -103,14 +103,29 @@ endif
 libgcc_file_name = run_command(efi_cc, '-print-libgcc-file-name').stdout().strip()
 efi_name = 'fwupd@0@.efi'.format(EFI_MACHINE_TYPE_NAME)
 
-o_file = custom_target('fwupdate.o',
+o_file1 = custom_target('fwupdate.o',
                         input : 'fwupdate.c',
                         output : 'fwupdate.o',
                         command : [efi_cc, '-c', '@INPUT@', '-o', '@OUTPUT@']
                                   + compile_args)
+o_file2 = custom_target('fwup-debug.o',
+                        input : 'fwup-debug.c',
+                        output : 'fwup-debug.o',
+                        command : [efi_cc, '-c', '@INPUT@', '-o', '@OUTPUT@']
+                                  + compile_args)
+o_file3 = custom_target('fwup-efi.o',
+                        input : 'fwup-efi.c',
+                        output : 'fwup-efi.o',
+                        command : [efi_cc, '-c', '@INPUT@', '-o', '@OUTPUT@']
+                                  + compile_args)
+o_file4 = custom_target('fwup-common.o',
+                        input : 'fwup-common.c',
+                        output : 'fwup-common.o',
+                        command : [efi_cc, '-c', '@INPUT@', '-o', '@OUTPUT@']
+                                  + compile_args)
 
 so = custom_target('fwup.so',
-                   input : o_file,
+                   input : [o_file1, o_file2, o_file3, o_file4],
                    output : 'fwup.so',
                    command : [efi_ld, '-o', '@OUTPUT@'] +
                              efi_ldflags + ['@INPUT@'] +
