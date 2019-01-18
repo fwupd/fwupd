@@ -21,8 +21,11 @@
 
 #include "fu-dell-dock-common.h"
 
-void fu_plugin_init (FuPlugin *plugin)
+void
+fu_plugin_init (FuPlugin *plugin)
 {
+	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
+
 	/* allow these to be built by quirks */
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_REQUIRES_QUIRK, FU_QUIRKS_PLUGIN);
 	g_type_ensure (FU_TYPE_DELL_DOCK_STATUS);

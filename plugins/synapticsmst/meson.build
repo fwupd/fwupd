@@ -5,6 +5,7 @@ install_data(['synapticsmst.quirk'],
 )
 
 shared_module('fu_plugin_synapticsmst',
+  fu_hash,
   sources : [
     'fu-plugin-synapticsmst.c',
     'synapticsmst-common.c',

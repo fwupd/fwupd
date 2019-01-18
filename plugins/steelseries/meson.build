@@ -5,6 +5,7 @@ install_data(['steelseries.quirk'],
 )
 
 shared_module('fu_plugin_steelseries',
+  fu_hash,
   sources : [
     'fu-plugin-steelseries.c',
     'fu-steelseries-device.c',

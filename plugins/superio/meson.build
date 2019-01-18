@@ -5,6 +5,7 @@ install_data(['superio.quirk'],
 )
 
 shared_module('fu_plugin_superio',
+  fu_hash,
   sources : [
     'fu-plugin-superio.c',
     'fu-superio-device.c',

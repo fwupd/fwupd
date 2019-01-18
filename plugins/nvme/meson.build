@@ -7,6 +7,7 @@ install_data([
 )
 
 shared_module('fu_plugin_nvme',
+  fu_hash,
   sources : [
     'fu-plugin-nvme.c',
     'fu-nvme-common.c',

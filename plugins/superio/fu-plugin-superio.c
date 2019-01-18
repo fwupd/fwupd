@@ -62,6 +62,12 @@ fu_plugin_superio_coldplug_chipsets (FuPlugin *plugin, const gchar *str, GError 
 	return TRUE;
 }
 
+void
+fu_plugin_init (FuPlugin *plugin)
+{
+	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
+}
+
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {

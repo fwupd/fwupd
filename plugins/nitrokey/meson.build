@@ -5,6 +5,7 @@ install_data(['nitrokey.quirk'],
 )
 
 shared_module('fu_plugin_nitrokey',
+  fu_hash,
   sources : [
     'fu-nitrokey-device.c',
     'fu-nitrokey-common.c',

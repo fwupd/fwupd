@@ -5,6 +5,7 @@ install_data(['dell-dock.quirk'],
 )
 
 shared_module('fu_plugin_dell_dock',
+  fu_hash,
   sources : [
     'fu-plugin-dell-dock.c',
     'fu-dell-dock-common.c',

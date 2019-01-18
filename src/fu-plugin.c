@@ -44,6 +44,7 @@ typedef struct {
 	guint			 priority;
 	GPtrArray		*rules[FU_PLUGIN_RULE_LAST];
 	gchar			*name;
+	gchar			*build_hash;
 	FuHwids			*hwids;
 	FuQuirks		*quirks;
 	GHashTable		*runtime_versions;
@@ -130,6 +131,34 @@ fu_plugin_set_name (FuPlugin *self, const gchar *name)
 	g_return_if_fail (name != NULL);
 	g_free (priv->name);
 	priv->name = g_strdup (name);
+}
+
+/**
+ * fu_plugin_set_build_hash:
+ * @self: A #FuPlugin
+ * @build_hash: A checksum
+ *
+ * Sets the plugin build hash, typically a SHA256 checksum. All plugins must
+ * set the correct checksum to avoid the daemon being marked as tainted.
+ *
+ * Since: 1.2.4
+ **/
+void
+fu_plugin_set_build_hash (FuPlugin *self, const gchar *build_hash)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_PLUGIN (self));
+	g_return_if_fail (build_hash != NULL);
+	g_free (priv->build_hash);
+	priv->build_hash = g_strdup (build_hash);
+}
+
+const gchar *
+fu_plugin_get_build_hash (FuPlugin *self)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_PLUGIN (self), NULL);
+	return priv->build_hash;
 }
 
 /**

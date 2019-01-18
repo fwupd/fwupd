@@ -539,6 +539,12 @@ fu_plugin_amt_create_device (GError **error)
 	return g_steal_pointer (&dev);
 }
 
+void
+fu_plugin_init (FuPlugin *plugin)
+{
+	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
+}
+
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {

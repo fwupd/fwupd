@@ -23,6 +23,17 @@
     </property>
 
     <!--***********************************************************-->
+    <property name='Tainted' type='b' access='read'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            If the daemon has been tainted with a 3rd party plugin.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </property>
+
+    <!--***********************************************************-->
     <property name='Status' type='u' access='read'>
       <doc:doc>
         <doc:description>

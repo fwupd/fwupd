@@ -13,6 +13,7 @@
 void
 fu_plugin_init (FuPlugin *plugin)
 {
+	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 	fu_plugin_add_udev_subsystem (plugin, "pci");
 }
 

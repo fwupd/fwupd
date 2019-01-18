@@ -8,6 +8,7 @@ install_data([
 
 
 shared_module('fu_plugin_unifying',
+  fu_hash,
   sources : [
     'fu-plugin-unifying.c',
     'fu-unifying-bootloader.c',

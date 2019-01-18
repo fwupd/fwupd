@@ -7,6 +7,7 @@ install_data([
 )
 
 shared_module('fu_plugin_colorhug',
+  fu_hash,
   sources : [
     'fu-colorhug-common.c',
     'fu-colorhug-device.c',

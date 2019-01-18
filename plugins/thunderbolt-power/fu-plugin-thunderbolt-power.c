@@ -320,6 +320,7 @@ fu_plugin_init (FuPlugin *plugin)
 
 	/* make sure it's tried to coldplug */
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "thunderbolt");
+	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 }
 
 void

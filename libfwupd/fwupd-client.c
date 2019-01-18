@@ -37,6 +37,7 @@ static void fwupd_client_finalize	 (GObject *object);
 
 typedef struct {
 	FwupdStatus			 status;
+	gboolean			 tainted;
 	guint				 percentage;
 	gchar				*daemon_version;
 	GDBusConnection			*conn;
@@ -57,6 +58,7 @@ enum {
 	PROP_STATUS,
 	PROP_PERCENTAGE,
 	PROP_DAEMON_VERSION,
+	PROP_TAINTED,
 	PROP_LAST
 };
 
@@ -131,6 +133,14 @@ fwupd_client_properties_changed_cb (GDBusProxy *proxy,
 			g_object_notify (G_OBJECT (client), "status");
 		}
 	}
+	if (g_variant_dict_contains (dict, "Tainted")) {
+		g_autoptr(GVariant) val = NULL;
+		val = g_dbus_proxy_get_cached_property (proxy, "Tainted");
+		if (val != NULL) {
+			priv->tainted = g_variant_get_boolean (val);
+			g_object_notify (G_OBJECT (client), "tainted");
+		}
+	}
 	if (g_variant_dict_contains (dict, "Percentage")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property (proxy, "Percentage");
@@ -203,6 +213,7 @@ fwupd_client_connect (FwupdClient *client, GCancellable *cancellable, GError **e
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (client);
 	g_autoptr(GVariant) val = NULL;
+	g_autoptr(GVariant) val2 = NULL;
 
 	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
@@ -235,6 +246,9 @@ fwupd_client_connect (FwupdClient *client, GCancellable *cancellable, GError **e
 	val = g_dbus_proxy_get_cached_property (priv->proxy, "DaemonVersion");
 	if (val != NULL)
 		fwupd_client_set_daemon_version (client, g_variant_get_string (val, NULL));
+	val2 = g_dbus_proxy_get_cached_property (priv->proxy, "Tainted");
+	if (val2 != NULL)
+		priv->tainted = g_variant_get_boolean (val2);
 	return TRUE;
 }
 
@@ -1139,6 +1153,24 @@ fwupd_client_get_status (FwupdClient *client)
 }
 
 /**
+ * fwupd_client_get_tainted:
+ * @client: A #FwupdClient
+ *
+ * Gets if the daemon has been tainted by 3rd party code.
+ *
+ * Returns: %TRUE if the daemon is unsupported
+ *
+ * Since: 1.2.4
+ **/
+gboolean
+fwupd_client_get_tainted (FwupdClient *client)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	return priv->tainted;
+}
+
+/**
  * fwupd_client_update_metadata:
  * @client: A #FwupdClient
  * @remote_id: the remote ID, e.g. `lvfs-testing`
@@ -1461,6 +1493,9 @@ fwupd_client_get_property (GObject *object, guint prop_id,
 	case PROP_STATUS:
 		g_value_set_uint (value, priv->status);
 		break;
+	case PROP_TAINTED:
+		g_value_set_boolean (value, priv->tainted);
+		break;
 	case PROP_PERCENTAGE:
 		g_value_set_uint (value, priv->percentage);
 		break;
@@ -1597,6 +1632,17 @@ fwupd_client_class_init (FwupdClientClass *klass)
 				   0, FWUPD_STATUS_LAST, FWUPD_STATUS_UNKNOWN,
 				   G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_STATUS, pspec);
+
+	/**
+	 * FwupdClient:tainted:
+	 *
+	 * If the daemon is tainted by 3rd party code.
+	 *
+	 * Since: 1.2.4
+	 */
+	pspec = g_param_spec_boolean ("tainted", NULL, NULL, FALSE,
+				      G_PARAM_READABLE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_TAINTED, pspec);
 
 	/**
 	 * FwupdClient:percentage:

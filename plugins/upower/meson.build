@@ -1,6 +1,7 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginUpower"']
 
 shared_module('fu_plugin_upower',
+  fu_hash,
   sources : [
     'fu-plugin-upower.c',
   ],

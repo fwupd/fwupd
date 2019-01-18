@@ -18,6 +18,7 @@ struct FuPluginData {
 void
 fu_plugin_init (FuPlugin *plugin)
 {
+	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 	fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 }
 

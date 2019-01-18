@@ -1,6 +1,7 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginDellEsrt"']
 
 shared_module('fu_plugin_dell_esrt',
+  fu_hash,
   sources : [
     'fu-plugin-dell-esrt.c',
   ],

@@ -1,6 +1,7 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginThunderbolt"']
 
 fu_plugin_thunderbolt = shared_module('fu_plugin_thunderbolt',
+  fu_hash,
   sources : [
     'fu-plugin-thunderbolt.c',
     'fu-thunderbolt-image.c',
