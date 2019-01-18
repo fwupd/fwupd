@@ -10,7 +10,6 @@
 #include <stdbool.h>
 
 #include "fwup-efi.h"
-#include "hexdump.h"
 
 #define UNUSED __attribute__((__unused__))
 
@@ -921,34 +920,12 @@ get_gop_mode(UINT32 *mode, EFI_HANDLE loaded_image)
 	return EFI_UNSUPPORTED;
 }
 
-static UINT32 csum(UINT8 *buf, UINTN size)
-{
-	UINT32 sum = 0;
-	UINTN i;
-
-	dprint(L"checksumming %d bytes at 0x%08x\n", size, buf);
-
-	for (i = 0; i < size; i++) {
-		sum += buf[i];
-		if (debugging)
-			Print(L"\rpos:%08lx csum:%d", buf+i, sum);
-	}
-	if (debugging)
-		Print(L"\n");
-
-	return sum;
-}
-
 static EFI_STATUS
 do_ux_csum(EFI_HANDLE loaded_image, UINT8 *buf, UINTN size)
 {
 	ux_capsule_header_t *payload_hdr;
 	EFI_CAPSULE_HEADER *capsule;
 	EFI_STATUS rc;
-	UINTN sum = 0;
-
-	UINT8 *current = buf;
-	UINTN left = size;
 
 	if (size < sizeof(*capsule)) {
 		dprint(L"Invalid capsule size %d\n", size);
@@ -956,43 +933,10 @@ do_ux_csum(EFI_HANDLE loaded_image, UINT8 *buf, UINTN size)
 	}
 
 	capsule = (EFI_CAPSULE_HEADER *)buf;
-
-	if (debugging)
-		hexdump(buf, size <= 0x40 ? size : 0x40);
-
-	dprint(L"size: %d\n", size);
-	dprint(L"&HeaderSize: 0x%08lx\n", &capsule->HeaderSize);
-	dprint(L"HeaderSize: %d\n", capsule->HeaderSize);
-	dprint(L"&CapsuleImageSize: 0x%08lx\n", &capsule->CapsuleImageSize);
-	dprint(L"CapsuleImageSize: %d\n", capsule->CapsuleImageSize);
-
-	if (size < capsule->HeaderSize) {
-		dprint(L"Invalid capsule header size %d\n", size);
-		return EFI_INVALID_PARAMETER;
-	}
-
-	sum += csum(current, capsule->HeaderSize);
-	current += capsule->HeaderSize;
-	left -= capsule->HeaderSize;
-
 	payload_hdr = (ux_capsule_header_t *)(buf) + capsule->HeaderSize;
-	dprint(L"&PayloadHeader: 0x%08lx\n", payload_hdr);
-	dprint(L"PayloadHeader Size: %d\n", sizeof (*payload_hdr));
 	rc = get_gop_mode(&payload_hdr->mode, loaded_image);
 	if (EFI_ERROR(rc))
 		return EFI_UNSUPPORTED;
-
-	payload_hdr->checksum = 0;
-	sum += csum(current, sizeof(*payload_hdr));
-	current += sizeof(*payload_hdr);
-	left -= sizeof(*payload_hdr);
-
-	sum += csum(current, left);
-	dprint(L"sum is 0x%02hhx; setting ->checksum to 0x%02hhx\n",
-	       sum & 0xff, (uint8_t)((int8_t)(0 - (sum & 0xff))));
-
-	payload_hdr->checksum = (uint8_t)((int8_t)(0 - sum));
-	dprint(L"checksum is set...\n");
 
 	return EFI_SUCCESS;
 }

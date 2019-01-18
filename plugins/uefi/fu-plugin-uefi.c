@@ -158,6 +158,15 @@ fu_plugin_uefi_get_splash_data (guint width, guint height, GError **error)
 	return g_bytes_new_take (g_steal_pointer (&buf), buf_idx);
 }
 
+static guint8
+fu_plugin_uefi_calc_checksum (const guint8 *buf, gsize sz)
+{
+	guint8 csum = 0;
+	for (gsize i = 0; i < sz; i++)
+		csum += buf[i];
+	return csum;
+}
+
 static gboolean
 fu_plugin_uefi_write_splash_data (FuPlugin *plugin, GBytes *blob, GError **error)
 {
@@ -166,6 +175,7 @@ fu_plugin_uefi_write_splash_data (FuPlugin *plugin, GBytes *blob, GError **error
 	gsize buf_size = g_bytes_get_size (blob);
 	gssize size;
 	guint32 height, width;
+	guint8 csum = 0;
 	efi_ux_capsule_header_t header = { 0 };
 	efi_capsule_header_t capsule_header = {
 		.flags = EFI_CAPSULE_HEADER_FLAGS_PERSIST_ACROSS_RESET,
@@ -211,6 +221,15 @@ fu_plugin_uefi_write_splash_data (FuPlugin *plugin, GBytes *blob, GError **error
 	header.x_offset = (screen_x / 2) - (width / 2);
 	header.y_offset = fu_uefi_bgrt_get_yoffset (data->bgrt) +
 				fu_uefi_bgrt_get_height (data->bgrt);
+
+	/* header, payload and image has to add to zero */
+	csum += fu_plugin_uefi_calc_checksum ((guint8 *) &capsule_header,
+					      sizeof(capsule_header));
+	csum += fu_plugin_uefi_calc_checksum ((guint8 *) &header,
+					      sizeof(header));
+	csum += fu_plugin_uefi_calc_checksum (g_bytes_get_data (blob, NULL),
+					      g_bytes_get_size (blob));
+	header.checksum = 0x100 - csum;
 
 	/* write capsule file */
 	size = g_output_stream_write (ostream, &capsule_header,
