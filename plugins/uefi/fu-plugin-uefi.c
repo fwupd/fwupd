@@ -166,7 +166,7 @@ fu_plugin_uefi_write_splash_data (FuPlugin *plugin, GBytes *blob, GError **error
 	gsize buf_size = g_bytes_get_size (blob);
 	gssize size;
 	guint32 height, width;
-	efi_ux_capsule_header_t header;
+	efi_ux_capsule_header_t header = { 0 };
 	efi_capsule_header_t capsule_header = {
 		.flags = EFI_CAPSULE_HEADER_FLAGS_PERSIST_ACROSS_RESET,
 		.guid = efi_guid_ux_capsule,
@@ -205,7 +205,6 @@ fu_plugin_uefi_write_splash_data (FuPlugin *plugin, GBytes *blob, GError **error
 		sizeof(efi_capsule_header_t) +
 		sizeof(efi_ux_capsule_header_t);
 
-	memset (&header, '\0', sizeof(header));
 	header.version = 1;
 	header.image_type = 0;
 	header.reserved = 0;
