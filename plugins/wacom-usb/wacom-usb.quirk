@@ -48,3 +48,11 @@ Flags = use-runtime-version
 [DeviceInstanceId=USB\VID_056A&PID_0378]
 Plugin = wacom-usb
 Flags = use-runtime-version
+
+# Intuos Pro Small (2nd-gen USB) [PTH-460]
+[DeviceInstanceId=USB\VID_056A&PID_0392]
+Plugin = wacom-usb
+
+# Intuos Pro Small (2nd-gen Bluetooth) [PTH-460]
+[DeviceInstanceId=USB\VID_056A&PID_0393]
+Plugin = wacom-usb
