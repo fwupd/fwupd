@@ -353,6 +353,7 @@ fu_uefi_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE (device);
 	FuUefiBootmgrFlags flags = FU_UEFI_BOOTMGR_FLAG_NONE;
+	const gchar *bootmgr_desc = "Linux Firmware Updater";
 	const gchar *esp_path = fu_device_get_metadata (device, "EspPath");
 	efi_guid_t guid;
 	efi_update_info_t info;
@@ -423,7 +424,11 @@ fu_uefi_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 	/* update the firmware before the bootloader runs */
 	if (fu_device_get_metadata_boolean (device, "RequireShimForSecureBoot"))
 		flags |= FU_UEFI_BOOTMGR_FLAG_USE_SHIM_FOR_SB;
-	if (!fu_uefi_bootmgr_bootnext (esp_path, flags, error))
+
+	/* some legacy devices use the old name to deduplicate boot entries */
+	if (fu_device_has_custom_flag (device, "use-legacy-bootmgr-desc"))
+		bootmgr_desc = "Linux-Firmware-Updater";
+	if (!fu_uefi_bootmgr_bootnext (esp_path, bootmgr_desc, flags, error))
 		return FALSE;
 
 	/* success! */
