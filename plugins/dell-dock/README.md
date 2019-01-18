@@ -48,6 +48,7 @@ Custom flag use:
 This plugin uses the following plugin-specific custom flags:
 
 * `skip-restart`: Don't run the reset or reboot procedure of the component
+* `try-passive-flow`: Tries to use the "EC passive flow" delaying updates
 
 Quirk use
 ---------
