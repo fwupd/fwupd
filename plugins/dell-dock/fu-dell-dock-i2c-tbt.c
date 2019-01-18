@@ -118,8 +118,8 @@ fu_dell_dock_tbt_write_fw (FuDevice *device,
 
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_BUSY);
 
-	if (fu_device_has_custom_flag (device, "skip-restart")) {
-		g_debug ("skipping TBT reset per quirk request");
+	if (fu_dell_dock_ec_tbt_passive (fu_device_get_parent (device))) {
+		g_debug ("using passive flow for Thunderbolt");
 	} else if (!fu_dell_dock_hid_tbt_authenticate (self->symbiote,
 						       &tbt_base_settings,
 						       error)) {

@@ -32,6 +32,7 @@ FuDellDockEc 	*fu_dell_dock_ec_new			(FuDevice *symbiote);
 G_END_DECLS
 
 gboolean	 fu_dell_dock_ec_needs_tbt		(FuDevice *device);
+gboolean	 fu_dell_dock_ec_tbt_passive		(FuDevice *device);
 gboolean	 fu_dell_dock_ec_modify_lock		(FuDevice *self,
 							 guint8 target,
 							 gboolean unlocked,
