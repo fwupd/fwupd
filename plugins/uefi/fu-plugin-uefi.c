@@ -511,6 +511,12 @@ fu_plugin_uefi_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GError **er
 	if (!fu_device_probe (FU_DEVICE (dev), error))
 		return FALSE;
 
+	/* set this flag for all Lenovo hardware */
+	if (fu_plugin_check_hwid (plugin, "6de5d951-d755-576b-bd09-c5cf66b27234")) {
+		fu_device_set_custom_flags (FU_DEVICE (dev), "use-legacy-bootmgr-desc");
+		fu_plugin_add_report_metadata (plugin, "BootMgrDesc", "legacy");
+	}
+
 	/* set fallback name if nothing else is set */
 	if (fu_device_get_name (FU_DEVICE (dev)) == 0) {
 		g_autofree gchar *name = NULL;
