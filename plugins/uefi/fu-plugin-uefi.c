@@ -203,7 +203,7 @@ fu_plugin_uefi_write_splash_data (FuPlugin *plugin, GBytes *blob, GError **error
 	capsule_header.capsule_image_size =
 		g_bytes_get_size (blob) +
 		sizeof(efi_capsule_header_t) +
-		sizeof(header);
+		sizeof(efi_ux_capsule_header_t);
 
 	memset (&header, '\0', sizeof(header));
 	header.version = 1;
