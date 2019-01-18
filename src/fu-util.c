@@ -2609,6 +2609,17 @@ main (int argc, char *argv[])
 		return EXIT_SUCCESS;
 	}
 
+	/* show a warning if the daemon is tainted */
+	if (!fwupd_client_connect (priv->client, priv->cancellable, &error)) {
+		g_printerr ("Failed to connect to daemon: %s\n",
+			    error->message);
+		return EXIT_FAILURE;
+	}
+	if (fwupd_client_get_tainted (priv->client)) {
+		g_printerr ("WARNING: The daemon has loaded 3rd party code and "
+			    "is no longer supported by the upstream developers!\n");
+	}
+
 	/* run the specified command */
 	ret = fu_util_run (priv, argv[1], (gchar**) &argv[2], &error);
 	if (!ret) {

@@ -5,6 +5,7 @@ install_data(['altos.quirk'],
 )
 
 shared_module('fu_plugin_altos',
+  fu_hash,
   sources : [
     'fu-altos-device.c',
     'fu-altos-firmware.c',

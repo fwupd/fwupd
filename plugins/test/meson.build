@@ -6,6 +6,7 @@ if get_option('plugin_dummy')
 endif
 
 shared_module('fu_plugin_test',
+  fu_hash,
   sources : [
     'fu-plugin-test.c',
   ],

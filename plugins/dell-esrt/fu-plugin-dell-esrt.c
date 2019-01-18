@@ -83,6 +83,12 @@ fu_plugin_dell_esrt_admin_password_present (gboolean *password_present, GError *
 	return TRUE;
 }
 
+void
+fu_plugin_init (FuPlugin *plugin)
+{
+	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
+}
+
 gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {

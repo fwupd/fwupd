@@ -1,6 +1,7 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginUdev"']
 
 shared_module('fu_plugin_udev',
+  fu_hash,
   sources : [
     'fu-plugin-udev.c',
     'fu-rom.c',
@@ -23,6 +24,7 @@ shared_module('fu_plugin_udev',
 
 executable(
   'fu-rom-tool',
+  fu_hash,
   sources : [
     'fu-rom-tool.c',
     'fu-rom.c',

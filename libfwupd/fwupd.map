@@ -293,3 +293,9 @@ LIBFWUPD_1.2.2 {
     fwupd_release_set_protocol;
   local: *;
 } LIBFWUPD_1.2.1;
+
+LIBFWUPD_1.2.4 {
+  global:
+    fwupd_client_get_tainted;
+  local: *;
+} LIBFWUPD_1.2.2;

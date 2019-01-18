@@ -34,6 +34,7 @@
 #include "fu-hwids.h"
 #include "fu-idle.h"
 #include "fu-keyring-utils.h"
+#include "fu-hash.h"
 #include "fu-history.h"
 #include "fu-mutex.h"
 #include "fu-plugin.h"
@@ -55,6 +56,7 @@ struct _FuEngine
 	FuConfig		*config;
 	FuDeviceList		*device_list;
 	FwupdStatus		 status;
+	gboolean		 tainted;
 	guint			 percentage;
 	FuHistory		*history;
 	FuIdle			*idle;
@@ -3376,10 +3378,22 @@ fu_engine_plugin_set_coldplug_delay_cb (FuPlugin *plugin, guint duration, FuEngi
 		 duration, self->coldplug_delay);
 }
 
-/* for the self tests to use */
+/* this is called by the self tests as well */
 void
 fu_engine_add_plugin (FuEngine *self, FuPlugin *plugin)
 {
+	/* plugin does not match built version */
+	if (fu_plugin_get_build_hash (plugin) == NULL) {
+		const gchar *name = fu_plugin_get_name (plugin);
+		g_warning ("%s should call fu_plugin_set_build_hash()", name);
+		self->tainted = TRUE;
+	} else if (g_strcmp0 (fu_plugin_get_build_hash (plugin), FU_BUILD_HASH) != 0) {
+		const gchar *name = fu_plugin_get_name (plugin);
+		g_warning ("%s has incorrect built version %s",
+				name, fu_plugin_get_build_hash (plugin));
+		self->tainted = TRUE;
+	}
+
 	fu_plugin_list_add (self->plugin_list, plugin);
 }
 
@@ -3426,6 +3440,12 @@ fu_engine_plugin_check_supported_cb (FuPlugin *plugin, const gchar *guid, FuEngi
 				 guid);
 	n = xb_silo_query_first (self->silo, xpath, NULL);
 	return n != NULL;
+}
+
+gboolean
+fu_engine_get_tainted (FuEngine *self)
+{
+	return self->tainted;
 }
 
 gboolean
@@ -3516,7 +3536,7 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 				  self);
 
 		/* add */
-		fu_plugin_list_add (self->plugin_list, plugin);
+		fu_engine_add_plugin (self, plugin);
 	}
 
 	/* depsolve into the correct order */

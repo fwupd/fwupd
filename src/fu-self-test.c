@@ -31,6 +31,7 @@
 #include "fu-plugin-private.h"
 #include "fu-plugin-list.h"
 #include "fu-progressbar.h"
+#include "fu-hash.h"
 #include "fu-hwids.h"
 #include "fu-smbios.h"
 #include "fu-test.h"
@@ -455,6 +456,7 @@ fu_engine_partial_hash_func (void)
 
 	/* set up dummy plugin */
 	fu_plugin_set_name (plugin, "test");
+	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 	fu_engine_add_plugin (engine, plugin);
 
 	/* add two dummy devices */
@@ -1798,6 +1800,34 @@ fu_plugin_quirks_device_func (void)
 	device_tmp = g_ptr_array_index (children, 0);
 	g_assert_cmpstr (fu_device_get_name (device_tmp), ==, "HDMI");
 	g_assert (fu_device_has_flag (device_tmp, FWUPD_DEVICE_FLAG_UPDATABLE));
+}
+
+static void
+fu_plugin_hash_func (void)
+{
+	GError *error = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
+	gboolean ret = FALSE;
+
+	ret = fu_engine_load (engine, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* make sure not tainted */
+	ret = fu_engine_get_tainted (engine);
+	g_assert_false (ret);
+
+	/* create a tainted plugin */
+	g_setenv ("FWUPD_PLUGIN_TEST", "build-hash", TRUE);
+	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_test.so", &error);
+	g_assert_no_error (error);
+
+	/* make sure it tainted now */
+	g_test_expect_message ("FuEngine", G_LOG_LEVEL_WARNING, "* has incorrect built version*");
+	fu_engine_add_plugin (engine, plugin);
+	ret = fu_engine_get_tainted (engine);
+	g_assert_true (ret);
 }
 
 static void
@@ -3301,6 +3331,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/plugin{composite}", fu_plugin_composite_func);
 	g_test_add_func ("/fwupd/keyring{gpg}", fu_keyring_gpg_func);
 	g_test_add_func ("/fwupd/keyring{pkcs7}", fu_keyring_pkcs7_func);
+	g_test_add_func ("/fwupd/plugin{build-hash}", fu_plugin_hash_func);
 	g_test_add_func ("/fwupd/chunk", fu_chunk_func);
 	g_test_add_func ("/fwupd/common{version-guess-format}", fu_common_version_guess_format_func);
 	g_test_add_func ("/fwupd/common{guid}", fu_common_guid_func);

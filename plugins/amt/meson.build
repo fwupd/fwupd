@@ -1,6 +1,7 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginAmt"']
 
 shared_module('fu_plugin_amt',
+  fu_hash,
   sources : [
     'fu-plugin-amt.c',
   ],

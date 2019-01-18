@@ -107,9 +107,19 @@ resources_src = gnome.compile_resources(
   c_name : 'fu'
 )
 
+fu_hash = custom_target(
+  'fu-hash.h',
+  input : libfwupdprivate,
+  output : 'fu-hash.h',
+  command : [python3.path(),
+             join_paths(meson.current_source_dir(), 'fu-hash.py'),
+             '@INPUT@', '@OUTPUT@']
+)
+
 fwupdtool = executable(
   'fwupdtool',
   resources_src,
+  fu_hash,
   sources : [
     'fu-tool.c',
     keyring_src,
@@ -251,6 +261,7 @@ executable(
   install : true,
   install_dir : join_paths(libexecdir, 'fwupd')
 )
+
 endif
 
 if get_option('tests')
@@ -265,6 +276,7 @@ if get_option('tests')
     hwid_test_firmware,
     noreqs_test_firmware,
     test_deps,
+    fu_hash,
     sources : [
       keyring_src,
       'fu-self-test.c',

@@ -5,6 +5,7 @@ install_data(['dell.quirk'],
 )
 
 shared_module('fu_plugin_dell',
+  fu_hash,
   sources : [
     'fu-plugin-dell.c',
     'fu-dell-smi.c',

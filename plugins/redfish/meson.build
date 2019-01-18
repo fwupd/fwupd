@@ -1,6 +1,7 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginRedfish"']
 
 shared_module('fu_plugin_redfish',
+  fu_hash,
   sources : [
     'fu-plugin-redfish.c',
     'fu-redfish-client.c',

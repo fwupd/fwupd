@@ -1115,6 +1115,9 @@ fu_main_daemon_get_property (GDBusConnection *connection_, const gchar *sender,
 	if (g_strcmp0 (property_name, "DaemonVersion") == 0)
 		return g_variant_new_string (VERSION);
 
+	if (g_strcmp0 (property_name, "Tainted") == 0)
+		return g_variant_new_boolean (fu_engine_get_tainted (priv->engine));
+
 	if (g_strcmp0 (property_name, "Status") == 0)
 		return g_variant_new_uint32 (fu_engine_get_status (priv->engine));
 

@@ -5,6 +5,7 @@ install_data(['ebitdo.quirk'],
 )
 
 shared_module('fu_plugin_ebitdo',
+  fu_hash,
   sources : [
     'fu-plugin-ebitdo.c',
     'fu-ebitdo-common.c',

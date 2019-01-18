@@ -786,6 +786,7 @@ fu_plugin_init (FuPlugin *plugin)
 	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 	g_autofree gchar *tmp = NULL;
 
+	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 	tmp = g_strdup_printf ("%d.%d",
 			       smbios_get_library_version_major(),
 			       smbios_get_library_version_minor());

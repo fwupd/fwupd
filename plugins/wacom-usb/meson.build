@@ -5,6 +5,7 @@ install_data(['wacom-usb.quirk'],
 )
 
 shared_module('fu_plugin_wacom_usb',
+  fu_hash,
   sources : [
     'fu-wac-common.c',
     'fu-wac-device.c',

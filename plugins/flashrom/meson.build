@@ -5,6 +5,7 @@ install_data(['flashrom.quirk'],
 )
 
 shared_module('fu_plugin_flashrom',
+  fu_hash,
   sources : [
     'fu-plugin-flashrom.c',
   ],

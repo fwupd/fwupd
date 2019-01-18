@@ -8,6 +8,7 @@ install_data(['uefi.quirk'],
 )
 
 shared_module('fu_plugin_uefi',
+  fu_hash,
   sources : [
     'fu-plugin-uefi.c',
     'fu-uefi-bgrt.c',
@@ -40,6 +41,7 @@ shared_module('fu_plugin_uefi',
 executable(
   'fwupdate',
   resources_src,
+  fu_hash,
   sources : [
     'fu-uefi-tool.c',
     'fu-uefi-bgrt.c',

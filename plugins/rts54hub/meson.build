@@ -7,6 +7,7 @@ install_data([
 )
 
 shared_module('fu_plugin_rts54hub',
+  fu_hash,
   sources : [
     'fu-rts54hub-device.c',
     'fu-plugin-rts54hub.c',

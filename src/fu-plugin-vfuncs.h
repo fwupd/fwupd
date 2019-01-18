@@ -9,6 +9,7 @@
 
 #include "fu-plugin.h"
 #include "fu-device.h"
+#include "fu-hash.h"
 
 G_BEGIN_DECLS
 

@@ -38,6 +38,7 @@ void		 fu_plugin_set_priority			(FuPlugin	*self,
 							 guint		 priority);
 void		 fu_plugin_set_name			(FuPlugin	*self,
 							 const gchar 	*name);
+const gchar	*fu_plugin_get_build_hash		(FuPlugin	*self);
 GPtrArray	*fu_plugin_get_rules			(FuPlugin	*self,
 							 FuPluginRule	 rule);
 gboolean	 fu_plugin_has_rule			(FuPlugin	*self,

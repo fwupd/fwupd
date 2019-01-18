@@ -43,6 +43,7 @@ dfu = static_library(
 )
 
 shared_module('fu_plugin_dfu',
+  fu_hash,
   sources : [
     'fu-plugin-dfu.c',
   ],
@@ -65,6 +66,7 @@ shared_module('fu_plugin_dfu',
 
 dfu_tool = executable(
   'dfu-tool',
+  fu_hash,
   sources : [
     'dfu-tool.c',
   ],

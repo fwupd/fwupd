@@ -5,6 +5,7 @@ install_data(['fastboot.quirk'],
 )
 
 shared_module('fu_plugin_fastboot',
+  fu_hash,
   sources : [
     'fu-plugin-fastboot.c',
     'fu-fastboot-device.c',

@@ -120,7 +120,13 @@ fu_util_start_engine (FuUtilPrivate *priv, GError **error)
 		}
 	}
 
-	return fu_engine_load (priv->engine, error);
+	if (!fu_engine_load (priv->engine, error))
+		return FALSE;
+	if (fu_engine_get_tainted (priv->engine)) {
+		g_printerr ("WARNING: This tool has loaded 3rd party code and "
+			    "is no longer supported by the upstream developers!\n");
+	}
+	return TRUE;
 }
 
 static gint

@@ -7,6 +7,7 @@ install_data([
 )
 
 shared_module('fu_plugin_rts54hid',
+  fu_hash,
   sources : [
     'fu-rts54hid-device.c',
     'fu-rts54hid-module.c',
