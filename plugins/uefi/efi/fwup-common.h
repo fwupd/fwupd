@@ -20,4 +20,7 @@ VOID		*fwup_malloc_raw	(UINTN			 size);
 VOID		*fwup_malloc		(UINTN			 size);
 VOID		*fwup_malloc0		(UINTN			 size);
 
+#define fwup_new(struct_type, n)	((struct_type*)fwup_malloc((n)*sizeof(struct_type)))
+#define fwup_new0(struct_type, n)	((struct_type*)fwup_malloc0((n)*sizeof(struct_type)))
+
 #endif /* _FWUP_COMMON_H */
