@@ -182,9 +182,9 @@ fwup_search_file(EFI_DEVICE_PATH **file_dp, EFI_FILE_HANDLE *fh)
 	EFI_DEVICE_PATH *dp, *parent_dp;
 	EFI_GUID sfsp = SIMPLE_FILE_SYSTEM_PROTOCOL;
 	EFI_GUID dpp = DEVICE_PATH_PROTOCOL;
-	EFI_FILE_HANDLE *devices;
 	UINTN n_handles, count;
 	EFI_STATUS rc;
+	_cleanup_free EFI_FILE_HANDLE *devices = NULL;
 
 	rc = uefi_call_wrapper(BS->LocateHandleBuffer, 5, ByProtocol, &sfsp,
 			       NULL, &n_handles, (EFI_HANDLE **)&devices);
@@ -257,7 +257,6 @@ out:
 	if (!EFI_ERROR(rc))
 		fwup_info(L"File %s searched", DevicePathToStr(*file_dp));
 
-	uefi_call_wrapper(BS->FreePool, 1, devices);
 	return rc;
 }
 
