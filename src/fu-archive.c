@@ -79,6 +79,29 @@ fu_archive_lookup_by_fn (FuArchive *self, const gchar *fn, GError **error)
 	return fw;
 }
 
+/**
+ * fu_archive_iterate:
+ * @self: A #FuArchive
+ * @callback: A #FuArchiveIterateFunc.
+ * @user_data: User data.
+ *
+ * Iterates over the archive contents, calling the given function for each
+ * of the files found.
+ */
+void
+fu_archive_iterate (FuArchive *self, FuArchiveIterateFunc callback, gpointer user_data)
+{
+	GHashTableIter iter;
+	gpointer key, value;
+
+	g_return_if_fail (FU_IS_ARCHIVE (self));
+	g_return_if_fail (callback != NULL);
+
+	g_hash_table_iter_init (&iter, self->entries);
+	while (g_hash_table_iter_next (&iter, &key, &value))
+		callback (self, (const gchar *)key, (GBytes *)value, user_data);
+}
+
 /* workaround the struct types of libarchive */
 typedef struct archive _archive_read_ctx;
 
