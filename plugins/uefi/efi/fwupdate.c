@@ -23,7 +23,7 @@ typedef struct {
 	FWUP_UPDATE_INFO	*info;
 } FWUP_UPDATE_TABLE;
 
-VOID
+static VOID
 fwup_update_table_free(FWUP_UPDATE_TABLE *update)
 {
 	FreePool(update->info);
