@@ -22,8 +22,8 @@ VOID		 fwup_log		(FwupLogLevel	 level,
 					 CHAR16		*fmt,
 					 ...);
 
-UINT8		 fwup_debug_get_enabled	(VOID);
-VOID		 fwup_debug_set_enabled	(UINT8		 val);
+BOOLEAN		 fwup_debug_get_enabled	(VOID);
+VOID		 fwup_debug_set_enabled	(BOOLEAN	 val);
 
 #define fwup_debug(fmt, args...) fwup_log(FWUP_DEBUG_LEVEL_DEBUG, __func__, __FILE__, __LINE__, fmt, ## args )
 #define fwup_info(fmt, args...) fwup_log(FWUP_DEBUG_LEVEL_INFO, __func__, __FILE__, __LINE__, fmt, ## args )
