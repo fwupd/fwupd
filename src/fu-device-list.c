@@ -462,7 +462,8 @@ fu_device_list_replace (FuDeviceList *self, FuDeviceItem *item, FuDevice *device
 
 	/* always use the runtime version */
 	if (fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION) &&
-	    fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER)) {
+	    (fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER) ||
+	     fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))) {
 		const gchar *version = fu_device_get_version (item->device);
 		g_debug ("forcing runtime version %s to new device", version);
 		fu_device_set_version (device, version);
