@@ -1563,6 +1563,13 @@ fu_engine_install_blob (FuEngine *self,
 		g_prefix_error (error, "failed to get device after detach: ");
 		return FALSE;
 	}
+
+	/* get new plugin after detach */
+	plugin = fu_plugin_list_find_by_name (self->plugin_list,
+					      fu_device_get_plugin (device),
+					      error);
+	if (plugin == NULL)
+		return FALSE;
 	if (!fu_plugin_runner_update (plugin,
 				      device,
 				      blob_cab,
@@ -1629,6 +1636,13 @@ fu_engine_install_blob (FuEngine *self,
 		g_prefix_error (error, "failed to get device after attach: ");
 		return FALSE;
 	}
+
+	/* get new plugin after attach */
+	plugin = fu_plugin_list_find_by_name (self->plugin_list,
+					      fu_device_get_plugin (device),
+					      error);
+	if (plugin == NULL)
+		return FALSE;
 
 	/* get the new version number */
 	if (!fu_plugin_runner_update_reload (plugin, device, error)) {
