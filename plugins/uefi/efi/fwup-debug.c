@@ -11,16 +11,16 @@
 #include "fwup-debug.h"
 #include "fwup-efi.h"
 
-static UINT8 debugging = FALSE;
+static BOOLEAN debugging = FALSE;
 
-UINT8
+BOOLEAN
 fwup_debug_get_enabled(VOID)
 {
 	return debugging;
 }
 
 VOID
-fwup_debug_set_enabled(UINT8 val)
+fwup_debug_set_enabled(BOOLEAN val)
 {
 	debugging = val;
 }
@@ -32,7 +32,7 @@ fwupd_debug_efivar_append(CHAR16 *out1)
 	UINT32 attrs = EFI_VARIABLE_NON_VOLATILE |
 			 EFI_VARIABLE_BOOTSERVICE_ACCESS |
 			 EFI_VARIABLE_RUNTIME_ACCESS;
-	static UINT8 once = TRUE;
+	static BOOLEAN once = TRUE;
 	if (once) {
 		once = FALSE;
 		fwup_delete_variable(name, &fwupdate_guid, attrs);
