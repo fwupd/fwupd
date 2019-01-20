@@ -72,14 +72,12 @@ fwup_populate_update_info(CHAR16 *name, FWUP_UPDATE_TABLE *info_out)
 
 	if (info_size < sizeof(*info)) {
 		fwup_warning(L"Update '%s' is is too small", name);
-		fwup_delete_variable(name, &fwupdate_guid, attrs);
 		return EFI_INVALID_PARAMETER;
 	}
 
 	if (info_size - sizeof(EFI_DEVICE_PATH) <= sizeof(*info)) {
 		fwup_warning(L"Update '%s' is malformed, "
 			     L"and cannot hold a file path", name);
-		fwup_delete_variable(name, &fwupdate_guid, attrs);
 		return EFI_INVALID_PARAMETER;
 	}
 
@@ -89,7 +87,6 @@ fwup_populate_update_info(CHAR16 *name, FWUP_UPDATE_TABLE *info_out)
 		fwup_warning(L"Update '%s' has an invalid file path, "
 			     L"device path offset is %d, but total size is %d",
 			     name, is, info_size);
-		fwup_delete_variable(name, &fwupdate_guid, attrs);
 		return EFI_INVALID_PARAMETER;
 	}
 
@@ -99,7 +96,6 @@ fwup_populate_update_info(CHAR16 *name, FWUP_UPDATE_TABLE *info_out)
 		fwup_warning(L"Update '%s' has an invalid file path, "
 			     L"update info size: %d dp size: %d size for dp: %d",
 			     name, info_size, sz, is);
-		fwup_delete_variable(name, &fwupdate_guid, attrs);
 		return EFI_INVALID_PARAMETER;
 	}
 
@@ -165,6 +161,7 @@ fwup_populate_update_table(FWUP_UPDATE_TABLE **updates, UINTN *n_updates_out)
 			return EFI_OUT_OF_RESOURCES;
 		rc = fwup_populate_update_info(variable_name, update);
 		if (EFI_ERROR(rc)) {
+			fwup_delete_variable(variable_name, &fwupdate_guid);
 			fwup_warning(L"Could not populate update info for '%s'", variable_name);
 			return rc;
 		}
@@ -431,12 +428,11 @@ fwup_delete_boot_entry(VOID)
 			continue;
 
 		UINTN info_size = 0;
-		UINT32 attrs = 0;
 		_cleanup_free VOID *info_ptr = NULL;
 
 		/* get the data */
 		rc = fwup_get_variable(variable_name, &vendor_guid,
-				       &info_ptr, &info_size, &attrs);
+				       &info_ptr, &info_size, NULL);
 		if (EFI_ERROR(rc))
 			return rc;
 		if (info_size < sizeof(EFI_LOAD_OPTION))
@@ -455,8 +451,7 @@ fwup_delete_boot_entry(VOID)
 				fwup_warning(L"Failed to delete boot entry from BootOrder");
 				return rc;
 			}
-			rc = fwup_delete_variable(variable_name,
-						  &vendor_guid, attrs);
+			rc = fwup_delete_variable(variable_name, &vendor_guid);
 			if (EFI_ERROR(rc)) {
 				fwup_warning(L"Failed to delete boot entry");
 				return rc;

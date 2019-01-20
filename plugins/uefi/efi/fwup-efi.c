@@ -13,8 +13,21 @@
 #include "fwup-efi.h"
 
 EFI_STATUS
-fwup_delete_variable(CHAR16 *name, EFI_GUID *guid, UINT32 attrs)
+fwup_delete_variable(CHAR16 *name, EFI_GUID *guid)
 {
+	EFI_STATUS rc;
+	UINT32 attrs = 0;
+
+	/* get the attrs so we can delete it */
+	rc = uefi_call_wrapper(RT->GetVariable, 5, name, guid, &attrs, NULL, NULL);
+	if (EFI_ERROR(rc)) {
+		if (rc == EFI_NOT_FOUND) {
+			fwup_debug(L"Not deleting variable '%s' as not found", name);
+			return EFI_SUCCESS;
+		}
+		fwup_debug(L"Could not get variable '%s' for delete: %r", name, rc);
+		return rc;
+	}
 	return uefi_call_wrapper(RT->SetVariable, 5, name, guid, attrs, 0, NULL);
 }
 

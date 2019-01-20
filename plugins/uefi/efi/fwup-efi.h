@@ -57,8 +57,7 @@ typedef struct {
 }  __attribute__((__packed__)) EFI_LOAD_OPTION;
 
 EFI_STATUS	 fwup_delete_variable	(CHAR16		*name,
-					 EFI_GUID	*guid,
-					 UINT32		 attrs);
+					 EFI_GUID	*guid);
 EFI_STATUS	 fwup_set_variable	(CHAR16		*name,
 					 EFI_GUID	*guid,
 					 VOID		*data,
