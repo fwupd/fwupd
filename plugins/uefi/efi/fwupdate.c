@@ -197,18 +197,14 @@ fwup_search_file(EFI_DEVICE_PATH **file_dp, EFI_FILE_HANDLE *fh)
 
 	fwup_debug(L"Searching Device Path: %s...", DevicePathToStr(dp));
 	parent_dp = DuplicateDevicePath(dp);
-	if (parent_dp == NULL) {
-		rc = EFI_INVALID_PARAMETER;
-		goto out;
-	}
+	if (parent_dp == NULL)
+		return EFI_INVALID_PARAMETER;
 
 	dp = parent_dp;
 	count = 0;
 	while (1) {
-		if (IsDevicePathEnd(dp)) {
-			rc = EFI_INVALID_PARAMETER;
-			goto out;
-		}
+		if (IsDevicePathEnd(dp))
+			return EFI_INVALID_PARAMETER;
 
 		if (DevicePathType(dp) == MEDIA_DEVICE_PATH &&
 		    DevicePathSubType(dp) == MEDIA_FILEPATH_DP)
@@ -231,7 +227,6 @@ fwup_search_file(EFI_DEVICE_PATH **file_dp, EFI_FILE_HANDLE *fh)
 
 		fwup_debug(L"Device supporting SFSP: %s", DevicePathToStr(path));
 
-		rc = EFI_UNSUPPORTED;
 		while (!IsDevicePathEnd(path)) {
 			fwup_debug(L"Comparing: %s and %s",
 			           DevicePathToStr(parent_dp),
@@ -241,23 +236,18 @@ fwup_search_file(EFI_DEVICE_PATH **file_dp, EFI_FILE_HANDLE *fh)
 				*fh = devices[i];
 				for (UINTN j = 0; j < count; j++)
 					*file_dp = NextDevicePathNode(*file_dp);
-				rc = EFI_SUCCESS;
 
 				fwup_debug(L"Match up! Returning %s",
 					   DevicePathToStr(*file_dp));
-
-				goto out;
+				return EFI_SUCCESS;
 			}
 
 			path = NextDevicePathNode(path);
 		}
 	}
 
-out:
-	if (!EFI_ERROR(rc))
-		fwup_info(L"File %s searched", DevicePathToStr(*file_dp));
-
-	return rc;
+	fwup_warning(L"Failed to find '%s' DevicePath", DevicePathToStr(*file_dp));
+	return EFI_UNSUPPORTED;
 }
 
 static EFI_STATUS
