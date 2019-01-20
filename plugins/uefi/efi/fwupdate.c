@@ -253,6 +253,7 @@ fwup_search_file(EFI_DEVICE_PATH **file_dp, EFI_FILE_HANDLE *fh)
 static EFI_STATUS
 fwup_open_file(EFI_DEVICE_PATH *dp, EFI_FILE_HANDLE *fh)
 {
+	CONST UINTN devpath_max_size = 1024; /* arbitrary limit */
 	EFI_DEVICE_PATH *file_dp = dp;
 	EFI_GUID sfsp = SIMPLE_FILE_SYSTEM_PROTOCOL;
 	EFI_FILE_HANDLE device;
@@ -281,20 +282,14 @@ fwup_open_file(EFI_DEVICE_PATH *dp, EFI_FILE_HANDLE *fh)
 	CopyMem(&sz16, &file_dp->Length[0], sizeof(sz16));
 	sz = sz16;
 	sz -= 4;
-	if (sz <= 6 || sz % 2 != 0) {
-		fwup_warning(L"Invalid file device path");
+	if (sz <= 6 || sz % 2 != 0 ||
+	    sz > devpath_max_size * sizeof(CHAR16)) {
+		fwup_warning(L"Invalid file device path of size %d", sz);
 		return EFI_INVALID_PARAMETER;
 	}
 
-	/*check against some arbitrary limit to avoid stack overflow here */
-	sz /= sizeof(CHAR16);
-	if (sz > 1024) {
-		fwup_warning(L"Invalid file device path");
-		return EFI_INVALID_PARAMETER;
-	}
-	CHAR16 filename[sz+1];
-	CopyMem(filename, (UINT8 *)file_dp + 4, sz * sizeof(CHAR16));
-	filename[sz] = L'\0';
+	_cleanup_free CHAR16 *filename = fwup_malloc0(sz + sizeof(CHAR16));
+	CopyMem(filename, (UINT8 *)file_dp + 4, sz);
 
 	rc = uefi_call_wrapper(BS->HandleProtocol, 3, device, &sfsp,
 			       (VOID **)&drive);
@@ -688,7 +683,8 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *systab)
 	}
 
 	/* step 2: Build our data structure and add the capsules to it */
-	EFI_CAPSULE_HEADER *capsules[n_updates + 1];
+	_cleanup_free EFI_CAPSULE_HEADER **capsules = NULL;
+	capsules = fwup_new0(EFI_CAPSULE_HEADER *, n_updates + 1);
 	EFI_CAPSULE_BLOCK_DESCRIPTOR *cbd_data;
 	UINTN j = 0;
 	cbd_data = fwup_malloc_raw(sizeof(EFI_CAPSULE_BLOCK_DESCRIPTOR)*(n_updates+1));
