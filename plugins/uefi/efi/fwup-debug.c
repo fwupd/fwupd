@@ -35,7 +35,7 @@ fwupd_debug_efivar_append(CHAR16 *out1)
 	static BOOLEAN once = TRUE;
 	if (once) {
 		once = FALSE;
-		fwup_delete_variable(name, &fwupdate_guid, attrs);
+		fwup_delete_variable(name, &fwupdate_guid);
 	} else {
 		attrs |= EFI_VARIABLE_APPEND_WRITE;
 	}
