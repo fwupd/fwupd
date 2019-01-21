@@ -54,6 +54,7 @@ typedef struct _DOCK_DESCRIPTION
 #define LEGACY_CBL_STR		"2 2 2 1 0"
 #define UNIV_CBL_STR		"2 2 2 2 0"
 #define TBT_CBL_STR		"2 2 2 3 0"
+#define FUTURE_EC_STR		"3 0 2 4 0"
 
 /* supported dock related GUIDs */
 #define DOCK_FLASH_GUID		"e7ca1f36-bf73-4574-afe6-a4ccacabf479"
@@ -202,6 +203,7 @@ fu_plugin_dell_match_dock_component (const gchar *query_str,
 		{TBT_CBL_GUID, TBT_CBL_STR, TBT_CBL_DESC},
 		{UNIV_CBL_GUID, UNIV_CBL_STR, UNIV_CBL_DESC},
 		{LEGACY_CBL_GUID, LEGACY_CBL_STR, LEGACY_CBL_DESC},
+		{NULL, FUTURE_EC_STR, NULL},
 	};
 
 	for (guint i = 0; i < G_N_ELEMENTS (list); i++) {
@@ -394,6 +396,10 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 			g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
 				     "invalid dock component request %s", query_str);
 			return FALSE;
+		}
+		if (component_guid == NULL || component_name == NULL) {
+			g_debug ("%s is supported by another plugin", query_str);
+			return TRUE;
 		}
 
 		/* dock EC hasn't been updated for first time */
