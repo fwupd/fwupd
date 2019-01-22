@@ -139,7 +139,7 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 			continue;
 
 		/* ignore blank lines */
-		g_strdelimit (line, "\r", '\0');
+		g_strdelimit (lines[ln], "\r\x1a", '\0');
 		linesz = strlen (line);
 		if (linesz == 0)
 			continue;
