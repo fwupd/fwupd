@@ -203,6 +203,7 @@ if get_option('daemon')
 executable(
   'fwupd',
   resources_src,
+  fu_hash,
   sources : [
     keyring_src,
     'fu-archive.c',
