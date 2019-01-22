@@ -33,9 +33,17 @@ dfu_firmware_detect_ihex (GBytes *bytes)
 	data = (guint8 *) g_bytes_get_data (bytes, &len);
 	if (len < 12)
 		return DFU_FIRMWARE_FORMAT_UNKNOWN;
-	if (data[0] != ':')
-		return DFU_FIRMWARE_FORMAT_UNKNOWN;
-	return DFU_FIRMWARE_FORMAT_INTEL_HEX;
+
+	/* match the first char */
+	if (data[0] == ':')
+		return DFU_FIRMWARE_FORMAT_INTEL_HEX;
+
+	/* look for the EOF line */
+	if (g_strstr_len ((const gchar *) data, (gssize) len, ":000000") != NULL)
+		return DFU_FIRMWARE_FORMAT_INTEL_HEX;
+
+	/* failed */
+	return DFU_FIRMWARE_FORMAT_UNKNOWN;
 }
 
 #define	DFU_INHX32_RECORD_TYPE_DATA		0x00
