@@ -29,9 +29,6 @@
 #include "fu-util-common.h"
 #include "fwupd-common-private.h"
 
-/* this is only valid in this file */
-#define FWUPD_ERROR_INVALID_ARGS	(FWUPD_ERROR_LAST+1)
-
 /* custom return code */
 #define EXIT_NOTHING_TO_DO		2
 
@@ -60,6 +57,7 @@ typedef struct {
 	/* only valid in update and downgrade */
 	FuUtilOperation		 current_operation;
 	FwupdDevice		*current_device;
+	FwupdDeviceFlags	 completion_flags;
 } FuUtilPrivate;
 
 typedef gboolean (*FuUtilPrivateCb)	(FuUtilPrivate	*util,
@@ -230,6 +228,12 @@ fu_util_update_device_changed_cb (FwupdClient *client,
 		g_warning ("no FuUtilOperation set");
 	}
 	g_set_object (&priv->current_device, device);
+
+	if (fwupd_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN))
+		priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN;
+	else if (fwupd_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
+		priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
+
 }
 
 static FwupdDevice *
@@ -671,7 +675,18 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 	filename = fu_util_download_if_required (priv, values[0], error);
 	if (filename == NULL)
 		return FALSE;
-	return fwupd_client_install (priv->client, id, filename, priv->flags, NULL, error);
+
+	if (!fwupd_client_install (priv->client, id, filename, priv->flags, NULL, error))
+		return FALSE;
+
+	/* we don't want to ask anything */
+	if (priv->no_reboot_check) {
+		g_debug ("skipping reboot check");
+		return TRUE;
+	}
+
+	/* show reboot if needed */
+	return fu_util_prompt_complete (priv->completion_flags, TRUE, error);
 }
 
 static gboolean
@@ -697,96 +712,6 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_print ("%s\n", tmp);
 	}
 	return TRUE;
-}
-
-static gboolean
-fu_util_update_reboot (GError **error)
-{
-	g_autoptr(GDBusConnection) connection = NULL;
-	g_autoptr(GVariant) val = NULL;
-
-	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
-	if (connection == NULL)
-		return FALSE;
-
-#ifdef HAVE_SYSTEMD
-	/* reboot using logind */
-	val = g_dbus_connection_call_sync (connection,
-					   "org.freedesktop.login1",
-					   "/org/freedesktop/login1",
-					   "org.freedesktop.login1.Manager",
-					   "Reboot",
-					   g_variant_new ("(b)", TRUE),
-					   NULL,
-					   G_DBUS_CALL_FLAGS_NONE,
-					   -1,
-					   NULL,
-					   error);
-#elif defined(HAVE_CONSOLEKIT)
-	/* reboot using ConsoleKit */
-	val = g_dbus_connection_call_sync (connection,
-					   "org.freedesktop.ConsoleKit",
-					   "/org/freedesktop/ConsoleKit/Manager",
-					   "org.freedesktop.ConsoleKit.Manager",
-					   "Restart",
-					   NULL,
-					   NULL,
-					   G_DBUS_CALL_FLAGS_NONE,
-					   -1,
-					   NULL,
-					   error);
-#else
-	g_set_error_literal (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_ARGS,
-			     "No supported backend compiled in to perform the operation.");
-#endif
-	return val != NULL;
-}
-
-static gboolean
-fu_util_update_shutdown (GError **error)
-{
-	g_autoptr(GDBusConnection) connection = NULL;
-	g_autoptr(GVariant) val = NULL;
-
-	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
-	if (connection == NULL)
-		return FALSE;
-
-#ifdef HAVE_SYSTEMD
-	/* shutdown using logind */
-	val = g_dbus_connection_call_sync (connection,
-					   "org.freedesktop.login1",
-					   "/org/freedesktop/login1",
-					   "org.freedesktop.login1.Manager",
-					   "PowerOff",
-					   g_variant_new ("(b)", TRUE),
-					   NULL,
-					   G_DBUS_CALL_FLAGS_NONE,
-					   -1,
-					   NULL,
-					   error);
-#elif defined(HAVE_CONSOLEKIT)
-	/* shutdown using ConsoleKit */
-	val = g_dbus_connection_call_sync (connection,
-					   "org.freedesktop.ConsoleKit",
-					   "/org/freedesktop/ConsoleKit/Manager",
-					   "org.freedesktop.ConsoleKit.Manager",
-					   "Stop",
-					   NULL,
-					   NULL,
-					   G_DBUS_CALL_FLAGS_NONE,
-					   -1,
-					   NULL,
-					   error);
-#else
-	g_set_error_literal (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_ARGS,
-			     "No supported backend compiled in to perform the operation.");
-#endif
-	return val != NULL;
 }
 
 static gboolean
@@ -891,7 +816,7 @@ fu_util_install_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* reboot */
-	if (!fu_util_update_reboot (error))
+	if (!fu_util_prompt_complete (FWUPD_DEVICE_FLAG_NEEDS_REBOOT, FALSE, error))
 		return FALSE;
 
 	g_print ("%s\n", _("Done!"));
@@ -2087,8 +2012,6 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 static gboolean
 fu_util_update_all (FuUtilPrivate *priv, GError **error)
 {
-	gboolean requires_reboot = FALSE;
-	gboolean requires_shutdown = FALSE;
 	g_autoptr(GPtrArray) devices = NULL;
 
 	/* get devices from daemon */
@@ -2119,10 +2042,6 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 		rel = g_ptr_array_index (rels, 0);
 		if (!fu_util_update_device_with_release (priv, dev, rel, error))
 			return FALSE;
-		if (fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN))
-			requires_shutdown = TRUE;
-		else if (fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
-			requires_reboot = TRUE;
 	}
 
 	/* we don't want to ask anything */
@@ -2131,27 +2050,7 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 		return TRUE;
 	}
 
-	/* at least one of the updates needed a reboot */
-	if (requires_shutdown) {
-		g_print ("\n%s %s [Y|n]: ",
-			 /* TRANSLATORS: explain why we want to upload */
-			 _("An update requires the system to shutdown to complete."),
-			 /* TRANSLATORS: reboot to apply the update */
-			 _("Shutdown now?"));
-		if (!fu_util_prompt_for_boolean (TRUE))
-			return TRUE;
-		return fu_util_update_shutdown (error);
-	} else if (requires_reboot) {
-		g_print ("\n%s %s [Y|n]: ",
-			 /* TRANSLATORS: explain why we want to upload */
-			 _("An update requires a reboot to complete."),
-			 /* TRANSLATORS: reboot to apply the update */
-			 _("Restart now?"));
-		if (!fu_util_prompt_for_boolean (TRUE))
-			return TRUE;
-		return fu_util_update_reboot (error);
-	}
-	return TRUE;
+	return fu_util_prompt_complete (priv->completion_flags, TRUE, error);
 }
 
 static gboolean
@@ -2189,14 +2088,9 @@ fu_util_update_by_id (FuUtilPrivate *priv, const gchar *device_id, GError **erro
 
 	/* the update needs the user to restart the computer */
 	if (fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT)) {
-		g_print ("\n%s %s [Y|n]: ",
-			 /* TRANSLATORS: exactly one update needs this */
-			 _("The update requires a reboot to complete."),
-			 /* TRANSLATORS: reboot to apply the update */
-			 _("Restart now?"));
-		if (!fu_util_prompt_for_boolean (TRUE))
-			return TRUE;
-		return fu_util_update_reboot (error);
+		if (!fu_util_prompt_complete (FWUPD_DEVICE_FLAG_NEEDS_REBOOT, TRUE,
+					      error))
+			return FALSE;
 	}
 	return TRUE;
 }

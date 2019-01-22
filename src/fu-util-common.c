@@ -173,3 +173,124 @@ fu_util_get_versions (void)
 #endif
 	return g_string_free (string, FALSE);
 }
+
+static gboolean
+fu_util_update_shutdown (GError **error)
+{
+	g_autoptr(GDBusConnection) connection = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
+	if (connection == NULL)
+		return FALSE;
+
+#ifdef HAVE_SYSTEMD
+	/* shutdown using logind */
+	val = g_dbus_connection_call_sync (connection,
+					   "org.freedesktop.login1",
+					   "/org/freedesktop/login1",
+					   "org.freedesktop.login1.Manager",
+					   "PowerOff",
+					   g_variant_new ("(b)", TRUE),
+					   NULL,
+					   G_DBUS_CALL_FLAGS_NONE,
+					   -1,
+					   NULL,
+					   error);
+#elif defined(HAVE_CONSOLEKIT)
+	/* shutdown using ConsoleKit */
+	val = g_dbus_connection_call_sync (connection,
+					   "org.freedesktop.ConsoleKit",
+					   "/org/freedesktop/ConsoleKit/Manager",
+					   "org.freedesktop.ConsoleKit.Manager",
+					   "Stop",
+					   NULL,
+					   NULL,
+					   G_DBUS_CALL_FLAGS_NONE,
+					   -1,
+					   NULL,
+					   error);
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_ARGS,
+			     "No supported backend compiled in to perform the operation.");
+#endif
+	return val != NULL;
+}
+
+static gboolean
+fu_util_update_reboot (GError **error)
+{
+	g_autoptr(GDBusConnection) connection = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
+	if (connection == NULL)
+		return FALSE;
+
+#ifdef HAVE_SYSTEMD
+	/* reboot using logind */
+	val = g_dbus_connection_call_sync (connection,
+					   "org.freedesktop.login1",
+					   "/org/freedesktop/login1",
+					   "org.freedesktop.login1.Manager",
+					   "Reboot",
+					   g_variant_new ("(b)", TRUE),
+					   NULL,
+					   G_DBUS_CALL_FLAGS_NONE,
+					   -1,
+					   NULL,
+					   error);
+#elif defined(HAVE_CONSOLEKIT)
+	/* reboot using ConsoleKit */
+	val = g_dbus_connection_call_sync (connection,
+					   "org.freedesktop.ConsoleKit",
+					   "/org/freedesktop/ConsoleKit/Manager",
+					   "org.freedesktop.ConsoleKit.Manager",
+					   "Restart",
+					   NULL,
+					   NULL,
+					   G_DBUS_CALL_FLAGS_NONE,
+					   -1,
+					   NULL,
+					   error);
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_ARGS,
+			     "No supported backend compiled in to perform the operation.");
+#endif
+	return val != NULL;
+}
+
+gboolean
+fu_util_prompt_complete (FwupdDeviceFlags flags, gboolean prompt, GError **error)
+{
+	if (flags & FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN) {
+		if (prompt) {
+			g_print ("\n%s %s [Y|n]: ",
+				 /* TRANSLATORS: explain why we want to shutdown */
+				 _("An update requires the system to shutdown to complete."),
+				 /* TRANSLATORS: shutdown to apply the update */
+				 _("Shutdown now?"));
+			if (!fu_util_prompt_for_boolean (TRUE))
+				return TRUE;
+		}
+		return fu_util_update_shutdown (error);
+	}
+	if (flags & FWUPD_DEVICE_FLAG_NEEDS_REBOOT) {
+		if (prompt) {
+			g_print ("\n%s %s [Y|n]: ",
+				 /* TRANSLATORS: explain why we want to reboot */
+				 _("An update requires a reboot to complete."),
+				 /* TRANSLATORS: reboot to apply the update */
+				 _("Restart now?"));
+			if (!fu_util_prompt_for_boolean (TRUE))
+				return TRUE;
+		}
+		return fu_util_update_reboot (error);
+	}
+
+	return TRUE;
+}

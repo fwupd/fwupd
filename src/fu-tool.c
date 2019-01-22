@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include <fwupd.h>
+#include <glib/gstdio.h>
 #include <glib/gi18n.h>
 #include <glib-unix.h>
 #include <locale.h>
@@ -28,11 +29,15 @@
 #define SYSTEMD_MANAGER_INTERFACE	"org.freedesktop.systemd1.Manager"
 #define SYSTEMD_FWUPD_UNIT		"fwupd.service"
 
-/* this is only valid in this file */
-#define FWUPD_ERROR_INVALID_ARGS	(FWUPD_ERROR_LAST+1)
-
 /* custom return code */
 #define EXIT_NOTHING_TO_DO		2
+
+typedef enum {
+	FU_UTIL_OPERATION_UNKNOWN,
+	FU_UTIL_OPERATION_UPDATE,
+	FU_UTIL_OPERATION_INSTALL,
+	FU_UTIL_OPERATION_LAST
+} FuUtilOperation;
 
 typedef struct {
 	GCancellable		*cancellable;
@@ -41,10 +46,13 @@ typedef struct {
 	GPtrArray		*cmd_array;
 	FuEngine		*engine;
 	FuProgressbar		*progressbar;
+	gboolean		 no_reboot_check;
 	FwupdInstallFlags	 flags;
 	gboolean		 show_all_devices;
 	/* only valid in update and downgrade */
+	FuUtilOperation		 current_operation;
 	FwupdDevice		*current_device;
+	FwupdDeviceFlags	 completion_flags;
 } FuUtilPrivate;
 
 typedef gboolean (*FuUtilPrivateCb)	(FuUtilPrivate	*util,
@@ -531,7 +539,7 @@ fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
 }
 
 static void
-fu_util_install_device_changed_cb (FwupdClient *client,
+fu_util_update_device_changed_cb (FwupdClient *client,
 				  FwupdDevice *device,
 				  FuUtilPrivate *priv)
 {
@@ -543,11 +551,25 @@ fu_util_install_device_changed_cb (FwupdClient *client,
 		return;
 
 	/* show message in progressbar */
-	/* TRANSLATORS: %1 is a device name */
-	str = g_strdup_printf (_("Installing %s"),
-				fwupd_device_get_name (device));
-	fu_progressbar_set_title (priv->progressbar, str);
+	if (priv->current_operation == FU_UTIL_OPERATION_UPDATE) {
+		/* TRANSLATORS: %1 is a device name */
+		str = g_strdup_printf (_("Updating %s…"),
+				       fwupd_device_get_name (device));
+		fu_progressbar_set_title (priv->progressbar, str);
+	} else if (priv->current_operation == FU_UTIL_OPERATION_INSTALL) {
+		/* TRANSLATORS: %1 is a device name  */
+		str = g_strdup_printf (_("Installing on %s…"),
+				       fwupd_device_get_name (device));
+		fu_progressbar_set_title (priv->progressbar, str);
+	} else {
+		g_warning ("no FuUtilOperation set");
+	}
 	g_set_object (&priv->current_device, device);
+
+	if (fwupd_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN))
+		priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN;
+	else if (fwupd_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
+		priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
 }
 
 static gboolean
@@ -587,16 +609,21 @@ fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
 			return FALSE;
 	}
 
+	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
 	g_signal_connect (priv->engine, "device-changed",
-			  G_CALLBACK (fu_util_install_device_changed_cb), priv);
+			  G_CALLBACK (fu_util_update_device_changed_cb), priv);
 
 	/* write bare firmware */
-	return fu_engine_install_blob (priv->engine, device,
-				       NULL, /* blob_cab */
-				       blob_fw,
-				       NULL, /* version */
-				       priv->flags,
-				       error);
+	if (!fu_engine_install_blob (priv->engine, device,
+				     NULL, /* blob_cab */
+				     blob_fw,
+				     NULL, /* version */
+				     priv->flags,
+				     error))
+		return FALSE;
+
+	/* success */
+	return fu_util_prompt_complete (priv->completion_flags, TRUE, error);
 }
 
 static gint
@@ -742,15 +769,22 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 
+	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
 	g_signal_connect (priv->engine, "device-changed",
-			  G_CALLBACK (fu_util_install_device_changed_cb), priv);
+			  G_CALLBACK (fu_util_update_device_changed_cb), priv);
 
 	/* install all the tasks */
 	if (!fu_engine_install_tasks (priv->engine, install_tasks, blob_cab, priv->flags, error))
 		return FALSE;
 
+	/* we don't want to ask anything */
+	if (priv->no_reboot_check) {
+		g_debug ("skipping reboot check");
+		return TRUE;
+	}
+
 	/* success */
-	return TRUE;
+	return fu_util_prompt_complete (priv->completion_flags, TRUE, error);
 }
 
 static gboolean
@@ -761,6 +795,10 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 	/* load engine */
 	if (!fu_util_start_engine (priv, error))
 		return FALSE;
+
+	priv->current_operation = FU_UTIL_OPERATION_UPDATE;
+	g_signal_connect (priv->engine, "device-changed",
+			  G_CALLBACK (fu_util_update_device_changed_cb), priv);
 
 	devices = fu_engine_get_devices (priv->engine, error);
 	for (guint i = 0; i < devices->len; i++) {
@@ -816,7 +854,14 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 			}
 		}
 	}
-	return TRUE;
+
+	/* we don't want to ask anything */
+	if (priv->no_reboot_check) {
+		g_debug ("skipping reboot check");
+		return TRUE;
+	}
+
+	return fu_util_prompt_complete (priv->completion_flags, TRUE, error);
 }
 
 static gboolean
@@ -1087,6 +1132,9 @@ main (int argc, char *argv[])
 		{ "force", '\0', 0, G_OPTION_ARG_NONE, &force,
 			/* TRANSLATORS: command line option */
 			_("Override plugin warning"), NULL },
+		{ "no-reboot-check", '\0', 0, G_OPTION_ARG_NONE, &priv->no_reboot_check,
+			/* TRANSLATORS: command line option */
+			_("Do not check for reboot after update"), NULL },
 		{ "show-all-devices", '\0', 0, G_OPTION_ARG_NONE, &priv->show_all_devices,
 			/* TRANSLATORS: command line option */
 			_("Show devices that are not updatable"), NULL },
@@ -1209,6 +1257,10 @@ main (int argc, char *argv[])
 	/* sort by command name */
 	g_ptr_array_sort (priv->cmd_array,
 			  (GCompareFunc) fu_sort_command_name_cb);
+
+	/* non-TTY consoles cannot answer questions */
+	if (isatty (fileno (stdout)) == 0)
+		priv->no_reboot_check = TRUE;
 
 	/* get a list of the commands */
 	priv->context = g_option_context_new (NULL);

@@ -10,6 +10,9 @@
 #include <glib.h>
 #include <fwupd.h>
 
+/* this is only valid for tools */
+#define FWUPD_ERROR_INVALID_ARGS        (FWUPD_ERROR_LAST+1)
+
 void		 fu_util_print_data		(const gchar	*title,
 						 const gchar	*msg);
 guint		 fu_util_prompt_for_number	(guint		 maxnum);
@@ -20,5 +23,9 @@ gboolean	 fu_util_is_interesting_device	(FwupdDevice	*dev);
 gchar		*fu_util_get_user_cache_path	(const gchar	*fn);
 
 gchar		*fu_util_get_versions		(void);
+
+gboolean	fu_util_prompt_complete		(FwupdDeviceFlags flags,
+						 gboolean prompt,
+						 GError **error);
 
 #endif /* __FU_UTIL_COMMON_H__ */
