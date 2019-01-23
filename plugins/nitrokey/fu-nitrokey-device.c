@@ -13,55 +13,6 @@
 
 G_DEFINE_TYPE (FuNitrokeyDevice, fu_nitrokey_device, FU_TYPE_USB_DEVICE)
 
-#define NITROKEY_TRANSACTION_TIMEOUT		100 /* ms */
-#define NITROKEY_NR_RETRIES			5
-
-#define NITROKEY_REQUEST_DATA_LENGTH		59
-#define NITROKEY_REPLY_DATA_LENGTH		53
-
-#define NITROKEY_CMD_GET_DEVICE_STATUS		(0x20 + 14)
-
-typedef struct __attribute__((packed)) {
-	guint8		command;
-	guint8		payload[NITROKEY_REQUEST_DATA_LENGTH];
-	guint32		crc;
-} NitrokeyHidRequest;
-
-typedef struct __attribute__((packed)) {
-	guint8		_padding; /* always zero */
-	guint8		device_status;
-	guint32		last_command_crc;
-	guint8		last_command_status;
-	guint8		payload[NITROKEY_REPLY_DATA_LENGTH];
-	guint32		crc;
-} NitrokeyHidResponse;
-
-/* based from libnitrokey/stick20_commands.h */
-typedef struct __attribute__((packed)) {
-	guint8		_padding[24];
-	guint8		SendCounter;
-	guint8		SendDataType;
-	guint8		FollowBytesFlag;
-	guint8		SendSize;
-	guint16		MagicNumber_StickConfig;
-	guint8		ReadWriteFlagUncryptedVolume;
-	guint8		ReadWriteFlagCryptedVolume;
-	guint8		VersionReserved1;
-	guint8		VersionMinor;
-	guint8		VersionReserved2;
-	guint8		VersionMajor;
-	guint8		ReadWriteFlagHiddenVolume;
-	guint8		FirmwareLocked;
-	guint8		NewSDCardFound;
-	guint8		SDFillWithRandomChars;
-	guint32		ActiveSD_CardID;
-	guint8		VolumeActiceFlag;
-	guint8		NewSmartCardFound;
-	guint8		UserPwRetryCount;
-	guint8		AdminPwRetryCount;
-	guint32		ActiveSmartCardID;
-	guint8		StickKeysNotInitiated;
-} NitrokeyGetDeviceStatusPayload;
 
 static void
 _dump_to_console (const gchar *title, const guint8 *buf, gsize buf_sz)
@@ -240,8 +191,8 @@ fu_nitrokey_device_setup (FuDevice *device, GError **error)
 		return FALSE;
 	}
 	_dump_to_console ("payload", buf_reply, sizeof(buf_reply));
-	memcpy (&payload, buf_reply, sizeof(buf_reply));
-	version = g_strdup_printf ("%u.%u", payload.VersionMinor, payload.VersionMajor);
+	memcpy (&payload, buf_reply, sizeof(payload));
+	version = g_strdup_printf ("%u.%u", payload.VersionMajor, payload.VersionMinor);
 	fu_device_set_version (FU_DEVICE (device), version);
 
 	/* success */
