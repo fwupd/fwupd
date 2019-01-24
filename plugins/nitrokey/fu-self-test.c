@@ -16,8 +16,7 @@ fu_nitrokey_version_test (void)
         /* use the Nitrokey Storage v0.53 status response for test, CRC 0xa2762d14 */
         NitrokeyGetDeviceStatusPayload payload;
         NitrokeyHidResponse res;
-        guint32
-        crc_tmp;
+        guint32 crc_tmp;
         /* 65 bytes of response from HIDAPI; first byte is always 0*/
         const guint8 buf[] = {
                     /*0x00,*/
