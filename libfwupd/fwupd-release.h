@@ -96,6 +96,9 @@ void		 fwupd_release_set_trust_flags		(FwupdRelease	*release,
 guint32		 fwupd_release_get_install_duration	(FwupdRelease	*release);
 void		 fwupd_release_set_install_duration	(FwupdRelease	*release,
 							 guint32	 duration);
+const gchar	*fwupd_release_get_update_message	(FwupdRelease	*release);
+void		 fwupd_release_set_update_message	(FwupdRelease	*release,
+							 const gchar	*update_message);
 
 G_END_DECLS
 

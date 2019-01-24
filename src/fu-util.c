@@ -57,6 +57,7 @@ typedef struct {
 	/* only valid in update and downgrade */
 	FuUtilOperation		 current_operation;
 	FwupdDevice		*current_device;
+	gchar			*current_message;
 	FwupdDeviceFlags	 completion_flags;
 } FuUtilPrivate;
 
@@ -234,6 +235,11 @@ fu_util_update_device_changed_cb (FwupdClient *client,
 	else if (fwupd_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
 		priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
 
+	if (priv->current_message == NULL) {
+		const gchar *tmp = fwupd_device_get_update_message (priv->current_device);
+		if (tmp != NULL)
+			priv->current_message = g_strdup (tmp);
+	}
 }
 
 static FwupdDevice *
@@ -648,6 +654,15 @@ fu_util_download_if_required (FuUtilPrivate *priv, const gchar *perhapsfn, GErro
 	return g_steal_pointer (&filename);
 }
 
+static void
+fu_util_display_current_message (FuUtilPrivate *priv)
+{
+	if (priv->current_message == NULL)
+		return;
+	g_print ("%s\n", priv->current_message);
+	g_clear_pointer (&priv->current_message, g_free);
+}
+
 static gboolean
 fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 {
@@ -678,6 +693,8 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 
 	if (!fwupd_client_install (priv->client, id, filename, priv->flags, NULL, error))
 		return FALSE;
+
+	fu_util_display_current_message (priv);
 
 	/* we don't want to ask anything */
 	if (priv->no_reboot_check) {
@@ -2046,6 +2063,8 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 		rel = g_ptr_array_index (rels, 0);
 		if (!fu_util_update_device_with_release (priv, dev, rel, error))
 			return FALSE;
+
+		fu_util_display_current_message (priv);
 	}
 
 	/* we don't want to ask anything */
@@ -2083,6 +2102,8 @@ fu_util_update_by_id (FuUtilPrivate *priv, const gchar *device_id, GError **erro
 	rel = g_ptr_array_index (rels, 0);
 	if (!fu_util_update_device_with_release (priv, dev, rel, error))
 		return FALSE;
+
+	fu_util_display_current_message (priv);
 
 	/* we don't want to ask anything */
 	if (priv->no_reboot_check) {
@@ -2209,6 +2230,7 @@ fu_util_private_free (FuUtilPrivate *priv)
 		g_object_unref (priv->current_device);
 	if (priv->soup_session != NULL)
 		g_object_unref (priv->soup_session);
+	g_free (priv->current_message);
 	g_main_loop_unref (priv->loop);
 	g_object_unref (priv->cancellable);
 	g_object_unref (priv->progressbar);

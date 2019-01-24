@@ -341,6 +341,9 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 	tmp = xb_node_query_text (component, "custom/value[@key='LVFS::UpdateProtocol']", NULL);
 	if (tmp != NULL)
 		fwupd_release_set_protocol (rel, tmp);
+	tmp = xb_node_query_text (component, "custom/value[@key='LVFS::UpdateMessage']", NULL);
+	if (tmp != NULL)
+		fwupd_release_set_update_message (rel, tmp);
 }
 
 /* finds the remote-id for the first firmware in the silo that matches this
@@ -2612,6 +2615,7 @@ fu_engine_add_releases_for_device_component (FuEngine *self,
 	}
 	for (guint i = 0; i < releases_tmp->len; i++) {
 		XbNode *release = g_ptr_array_index (releases_tmp, i);
+		const gchar *update_message;
 		GPtrArray *checksums;
 		g_autoptr(FwupdRelease) rel = fwupd_release_new ();
 
@@ -2629,6 +2633,12 @@ fu_engine_add_releases_for_device_component (FuEngine *self,
 		if (checksums->len == 0)
 			continue;
 
+		/* add update message if exists but device doesn't already have one */
+		update_message = fwupd_release_get_update_message (rel);
+		if (fwupd_device_get_update_message (FWUPD_DEVICE (device)) == NULL &&
+		    update_message != NULL) {
+			    fwupd_device_set_update_message (FWUPD_DEVICE (device), update_message);
+		}
 		/* success */
 		g_ptr_array_add (releases, g_steal_pointer (&rel));
 	}

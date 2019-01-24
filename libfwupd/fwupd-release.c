@@ -48,6 +48,7 @@ typedef struct {
 	guint64				 size;
 	guint32				 install_duration;
 	FwupdTrustFlags			 trust_flags;
+	gchar				*update_message;
 } FwupdReleasePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FwupdRelease, fwupd_release, G_TYPE_OBJECT)
@@ -159,6 +160,42 @@ fwupd_release_set_filename (FwupdRelease *release, const gchar *filename)
 	g_return_if_fail (FWUPD_IS_RELEASE (release));
 	g_free (priv->filename);
 	priv->filename = g_strdup (filename);
+}
+
+/**
+ * fwupd_release_get_update_message:
+ * @release: A #FwupdRelease
+ *
+ * Gets the update message.
+ *
+ * Returns: the update message, or %NULL if unset
+ *
+ * Since: 1.2.4
+ **/
+const gchar *
+fwupd_release_get_update_message (FwupdRelease *release)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_val_if_fail (FWUPD_IS_RELEASE (release), NULL);
+	return priv->update_message;
+}
+
+/**
+ * fwupd_release_set_update_message:
+ * @release: A #FwupdRelease
+ * @update_message: the update message string
+ *
+ * Sets the update message.
+ *
+ * Since: 1.2.4
+ **/
+void
+fwupd_release_set_update_message (FwupdRelease *release, const gchar *update_message)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_if_fail (FWUPD_IS_RELEASE (release));
+	g_free (priv->update_message);
+	priv->update_message = g_strdup (update_message);
 }
 
 /**
@@ -1019,6 +1056,10 @@ fwupd_release_from_key_value (FwupdRelease *release, const gchar *key, GVariant 
 		fwupd_release_set_install_duration (release, g_variant_get_uint32 (value));
 		return;
 	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_MESSAGE) == 0) {
+		fwupd_release_set_update_message (release, g_variant_get_string (value, NULL));
+		return;
+	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_METADATA) == 0) {
 		g_hash_table_unref (priv->metadata);
 		priv->metadata = _variant_to_hash_kv (value);
@@ -1121,7 +1162,8 @@ fwupd_release_to_string (FwupdRelease *release)
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
 	fwupd_pad_kv_tfl (str, FWUPD_RESULT_KEY_TRUST_FLAGS, priv->trust_flags);
 	fwupd_pad_kv_int (str, FWUPD_RESULT_KEY_INSTALL_DURATION, priv->install_duration);
-
+	if (priv->update_message != NULL)
+		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->update_message);
 	/* metadata */
 	keys = g_hash_table_get_keys (priv->metadata);
 	for (GList *l = keys; l != NULL; l = l->next) {
@@ -1168,6 +1210,7 @@ fwupd_release_finalize (GObject *object)
 	g_free (priv->vendor);
 	g_free (priv->version);
 	g_free (priv->remote_id);
+	g_free (priv->update_message);
 	g_ptr_array_unref (priv->checksums);
 	g_hash_table_unref (priv->metadata);
 
