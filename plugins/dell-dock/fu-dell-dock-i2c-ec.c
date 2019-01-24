@@ -40,7 +40,7 @@
 #define TBT_MODE_MASK			0x01
 
 #define BIT_SET(x,y)			(x |= (1<<y))
-#define BIT_CLEAR(x,y)			(x &= (~1<<(y)))
+#define BIT_CLEAR(x,y)			(x &= (~(1<<y)))
 
 typedef enum {
 	FW_UPDATE_IN_PROGRESS,
