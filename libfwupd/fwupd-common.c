@@ -380,6 +380,10 @@ fwupd_build_history_report_json_device (JsonBuilder *builder, FwupdDevice *dev)
 		json_builder_set_member_name (builder, "UpdateError");
 		json_builder_add_string_value (builder, fwupd_device_get_update_error (dev));
 	}
+	if (fwupd_release_get_update_message (rel) != NULL) {
+		json_builder_set_member_name (builder, "UpdateMessage");
+		json_builder_add_string_value (builder, fwupd_release_get_update_message (rel));
+	}
 
 	/* map back to the dev type on the LVFS */
 	json_builder_set_member_name (builder, "Guid");

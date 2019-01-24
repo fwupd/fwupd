@@ -53,6 +53,7 @@ typedef struct {
 	/* only valid in update and downgrade */
 	FuUtilOperation		 current_operation;
 	FwupdDevice		*current_device;
+	gchar			*current_message;
 	FwupdDeviceFlags	 completion_flags;
 } FuUtilPrivate;
 
@@ -300,6 +301,7 @@ fu_util_private_free (FuUtilPrivate *priv)
 		g_object_unref (priv->progressbar);
 	if (priv->context != NULL)
 		g_option_context_free (priv->context);
+	g_free (priv->current_message);
 	g_free (priv);
 }
 
@@ -620,6 +622,21 @@ fu_util_update_device_changed_cb (FwupdClient *client,
 		priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN;
 	else if (fwupd_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
 		priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
+
+	if (priv->current_message == NULL) {
+		const gchar *tmp = fwupd_device_get_update_message (priv->current_device);
+		if (tmp != NULL)
+			priv->current_message = g_strdup (tmp);
+	}
+}
+
+static void
+fu_util_display_current_message (FuUtilPrivate *priv)
+{
+	if (priv->current_message == NULL)
+		return;
+	g_print ("%s\n", priv->current_message);
+	g_clear_pointer (&priv->current_message, g_free);
 }
 
 static gboolean
@@ -671,6 +688,8 @@ fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
 				     priv->flags,
 				     error))
 		return FALSE;
+
+	fu_util_display_current_message (priv);
 
 	/* success */
 	return fu_util_prompt_complete (priv->completion_flags, TRUE, error);
@@ -827,6 +846,8 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_engine_install_tasks (priv->engine, install_tasks, blob_cab, priv->flags, error))
 		return FALSE;
 
+	fu_util_display_current_message (priv);
+
 	/* we don't want to ask anything */
 	if (priv->no_reboot_check) {
 		g_debug ("skipping reboot check");
@@ -904,6 +925,7 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 				g_printerr ("%s\n", error_local->message);
 				continue;
 			}
+			fu_util_display_current_message (priv);
 		}
 	}
 

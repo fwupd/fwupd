@@ -51,6 +51,7 @@ typedef struct {
 	guint32				 install_duration;
 	FwupdUpdateState		 update_state;
 	gchar				*update_error;
+	gchar				*update_message;
 	GPtrArray			*releases;
 	FwupdDevice			*parent;
 } FwupdDevicePrivate;
@@ -977,6 +978,8 @@ fwupd_device_incorporate (FwupdDevice *self, FwupdDevice *donor)
 		fwupd_device_set_plugin (self, priv_donor->plugin);
 	if (priv->update_error == NULL)
 		fwupd_device_set_update_error (self, priv_donor->update_error);
+	if (priv->update_message == NULL)
+		fwupd_device_set_update_message (self, priv_donor->update_message);
 	if (priv->version == NULL)
 		fwupd_device_set_version (self, priv_donor->version);
 	if (priv->version_lowest == NULL)
@@ -1133,6 +1136,11 @@ fwupd_device_to_variant_full (FwupdDevice *device, FwupdDeviceFlags flags)
 				       FWUPD_RESULT_KEY_UPDATE_ERROR,
 				       g_variant_new_string (priv->update_error));
 	}
+	if (priv->update_message != NULL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_UPDATE_MESSAGE,
+				       g_variant_new_string (priv->update_message));
+	}
 	if (priv->update_state != FWUPD_UPDATE_STATE_UNKNOWN) {
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_UPDATE_STATE,
@@ -1287,6 +1295,10 @@ fwupd_device_from_key_value (FwupdDevice *device, const gchar *key, GVariant *va
 		fwupd_device_set_update_error (device, g_variant_get_string (value, NULL));
 		return;
 	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_MESSAGE) == 0) {
+		fwupd_device_set_update_message (device, g_variant_get_string (value, NULL));
+		return;
+	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_STATE) == 0) {
 		fwupd_device_set_update_state (device, g_variant_get_uint32 (value));
 		return;
@@ -1383,6 +1395,42 @@ fwupd_device_set_update_state (FwupdDevice *device, FwupdUpdateState update_stat
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
 	priv->update_state = update_state;
+}
+
+/**
+ * fwupd_device_get_update_message:
+ * @device: A #FwupdDevice
+ *
+ * Gets the update message.
+ *
+ * Returns: the update message, or %NULL if unset
+ *
+ * Since: 1.2.4
+ **/
+const gchar *
+fwupd_device_get_update_message (FwupdDevice *device)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	return priv->update_message;
+}
+
+/**
+ * fwupd_device_set_update_message:
+ * @device: A #FwupdDevice
+ * @update_message: the update message string
+ *
+ * Sets the update message.
+ *
+ * Since: 1.2.4
+ **/
+void
+fwupd_device_set_update_message (FwupdDevice *device, const gchar *update_message)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	g_free (priv->update_message);
+	priv->update_message = g_strdup (update_message);
 }
 
 /**
@@ -1545,6 +1593,7 @@ fwupd_device_to_string (FwupdDevice *device)
 	fwupd_pad_kv_unx (str, FWUPD_RESULT_KEY_MODIFIED, priv->modified);
 	fwupd_pad_kv_ups (str, FWUPD_RESULT_KEY_UPDATE_STATE, priv->update_state);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_ERROR, priv->update_error);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->update_message);
 	for (guint i = 0; i < priv->releases->len; i++) {
 		FwupdRelease *release = g_ptr_array_index (priv->releases, i);
 		g_autofree gchar *tmp = fwupd_release_to_string (release);
@@ -1590,6 +1639,7 @@ fwupd_device_finalize (GObject *object)
 	g_free (priv->vendor_id);
 	g_free (priv->plugin);
 	g_free (priv->update_error);
+	g_free (priv->update_message);
 	g_free (priv->version);
 	g_free (priv->version_lowest);
 	g_free (priv->version_bootloader);
