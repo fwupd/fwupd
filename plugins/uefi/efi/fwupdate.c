@@ -669,7 +669,7 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *systab)
 	 *    so we can do multiple runs
 	 * 3) only select the ones from one type for the first go
 	 */
-	updates = fwup_malloc0(FWUP_NUM_CAPSULE_UPDATES_MAX);
+	updates = fwup_new0(FWUP_UPDATE_TABLE *, FWUP_NUM_CAPSULE_UPDATES_MAX);
 	if (updates == NULL)
 		return EFI_OUT_OF_RESOURCES;
 	rc = fwup_populate_update_table(updates, &n_updates);
