@@ -228,6 +228,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %config(noreplace)%{_sysconfdir}/fwupd/remotes.d/lvfs.conf
 %config(noreplace)%{_sysconfdir}/fwupd/remotes.d/lvfs-testing.conf
 %config(noreplace)%{_sysconfdir}/fwupd/remotes.d/vendor.conf
+%config(noreplace)%{_sysconfdir}/fwupd/remotes.d/vendor-directory.conf
 %config(noreplace)%{_sysconfdir}/pki/fwupd
 %{_sysconfdir}/pki/fwupd-metadata
 %{_sysconfdir}/dbus-1/system.d/org.freedesktop.fwupd.conf

@@ -846,11 +846,12 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 
 			argv = g_new0 (gchar *, 2);
 			/* local remotes have the firmware already */
-			if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_LOCAL ||
-			    fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_DIRECTORY) {
+			if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_LOCAL) {
 				const gchar *fn_cache = fwupd_remote_get_filename_cache (remote);
 				g_autofree gchar *path = g_path_get_dirname (fn_cache);
 				argv[0] = g_build_filename (path, uri_tmp, NULL);
+			} else if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_DIRECTORY) {
+				argv[0] = g_strdup (uri_tmp + 7);
 			/* web remote, fu_util_install will download file */
 			} else {
 				argv[0] = fwupd_remote_build_firmware_uri (remote, uri_tmp, error);
