@@ -1973,13 +1973,16 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 			return FALSE;
 
 		/* local and directory remotes have the firmware already */
-		if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_LOCAL ||
-		    fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_DIRECTORY) {
+		if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_LOCAL) {
 			const gchar *fn_cache = fwupd_remote_get_filename_cache (remote);
 			g_autofree gchar *path = g_path_get_dirname (fn_cache);
 
-			/* install with flags chosen by the user */
 			fn = g_build_filename (path, uri_tmp, NULL);
+		} else if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_DIRECTORY) {
+			fn = g_strdup (uri_tmp + 7);
+		}
+		/* install with flags chosen by the user */
+		if (fn != NULL) {
 			return fwupd_client_install (priv->client,
 						     fwupd_device_get_id (dev),
 						     fn, priv->flags, NULL, error);

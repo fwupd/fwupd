@@ -74,6 +74,49 @@ fu_archive_invalid_func (void)
 }
 
 static void
+fu_engine_generate_md_func (void)
+{
+	const gchar *tmp;
+	gboolean ret;
+	g_autofree gchar *filename = NULL;
+	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(GBytes) data = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(XbNode) component = NULL;
+
+	/* put cab file somewhere we can parse it */
+	filename = fu_test_get_filename (TESTDATADIR, "colorhug/colorhug-als-3.0.2.cab");
+	g_assert_nonnull (filename);
+	data = fu_common_get_contents_bytes (filename, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (data);
+	ret = fu_common_set_contents_bytes ("/tmp/fwupd-self-test/var/cache/fwupd/foo.cab",
+					    data, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* load engine and check the device was found */
+	ret = fu_engine_load (engine, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
+	fu_device_set_version (device, "1.2.3");
+	component = fu_engine_get_component_by_guids (engine, device);
+	g_assert_nonnull (component);
+
+	/* check remote ID set */
+	tmp = xb_node_query_text (component, "../custom/value[@key='fwupd::RemoteId']", NULL);
+	g_assert_cmpstr (tmp, ==, "directory");
+
+	/* verify checksums */
+	tmp = xb_node_query_text (component, "releases/release/checksum[@target='container']", NULL);
+	g_assert_cmpstr (tmp, !=, NULL);
+	tmp = xb_node_query_text (component, "releases/release/checksum[@target='content']", NULL);
+	g_assert_cmpstr (tmp, ==, NULL);
+}
+
+static void
 fu_archive_cab_func (void)
 {
 	g_autofree gchar *checksum1 = NULL;
@@ -709,7 +752,7 @@ fu_engine_downgrade_func (void)
 	remotes = fu_engine_get_remotes (engine, &error);
 	g_assert_no_error (error);
 	g_assert (remotes != NULL);
-	g_assert_cmpint (remotes->len, ==, 3);
+	g_assert_cmpint (remotes->len, ==, 4);
 
 	/* ensure there are no devices already */
 	devices_pre = fu_engine_get_devices (engine, &error);
@@ -3316,6 +3359,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/engine{device-auto-parent}", fu_engine_device_parent_func);
 	g_test_add_func ("/fwupd/engine{device-priority}", fu_engine_device_priority_func);
 	g_test_add_func ("/fwupd/engine{install-duration}", fu_engine_install_duration_func);
+	g_test_add_func ("/fwupd/engine{generate-md}", fu_engine_generate_md_func);
 	g_test_add_func ("/fwupd/hwids", fu_hwids_func);
 	g_test_add_func ("/fwupd/smbios", fu_smbios_func);
 	g_test_add_func ("/fwupd/smbios3", fu_smbios3_func);

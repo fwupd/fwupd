@@ -129,6 +129,8 @@ gboolean	 fu_engine_check_requirements		(FuEngine	*self,
 							 GError		**error);
 void		 fu_engine_set_silo			(FuEngine	*self,
 							 XbSilo		*silo);
+XbNode		*fu_engine_get_component_by_guids	(FuEngine	*self,
+							 FuDevice	*device);
 
 G_END_DECLS
 

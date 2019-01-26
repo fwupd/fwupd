@@ -304,6 +304,14 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 		if (uri == NULL)
 			uri = g_strdup (tmp);
 		fwupd_release_set_uri (rel, uri);
+	} else if (remote != NULL &&
+		   fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_DIRECTORY) {
+		g_autofree gchar *uri = NULL;
+		tmp = xb_node_query_text (component, "../custom/value[@key='fwupd::FilenameCache']", NULL);
+		if (tmp != NULL)  {
+			uri = g_strdup_printf ("file://%s", tmp);
+			fwupd_release_set_uri (rel, uri);
+		}
 	}
 	tmp = xb_node_query_text (release, "checksum[@target='content']", NULL);
 	if (tmp != NULL)
@@ -628,8 +636,8 @@ fu_engine_verify_update (FuEngine *self, const gchar *device_id, GError **error)
 	return TRUE;
 }
 
-static XbNode *
-fu_engine_store_get_app_by_guids (XbSilo *silo, FuDevice *device)
+XbNode *
+fu_engine_get_component_by_guids (FuEngine *self, FuDevice *device)
 {
 	GPtrArray *guids = fu_device_get_guids (device);
 	g_autoptr(GString) xpath = g_string_new (NULL);
@@ -641,7 +649,7 @@ fu_engine_store_get_app_by_guids (XbSilo *silo, FuDevice *device)
 					"provides/firmware[@type='flashed'][text()='%s']/"
 					"../..", guid);
 	}
-	component = xb_silo_query_first (silo, xpath->str, NULL);
+	component = xb_silo_query_first (self->silo, xpath->str, NULL);
 	if (component != NULL)
 		return g_steal_pointer (&component);
 	return NULL;
@@ -1796,7 +1804,7 @@ fu_engine_is_device_supported (FuEngine *self, FuDevice *device)
 		return FALSE;
 
 	/* match the GUIDs in the XML */
-	component = fu_engine_store_get_app_by_guids (self->silo, device);
+	component = fu_engine_get_component_by_guids (self, device);
 	if (component == NULL)
 		return FALSE;
 
@@ -1812,6 +1820,84 @@ fu_engine_appstream_upgrade_cb (XbBuilderFixup *self,
 {
 	if (g_strcmp0 (xb_builder_node_get_element (bn), "metadata") == 0)
 		xb_builder_node_set_element (bn, "custom");
+	return TRUE;
+}
+
+static XbBuilderSource *
+fu_engine_create_metadata_builder_source (FuEngine *self,
+					  const gchar *fn,
+					  GError **error)
+{
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+	g_autoptr(XbBuilderSource) source = xb_builder_source_new ();
+	g_autofree gchar *xml = NULL;
+
+	g_debug ("building metadata for %s", fn);
+	blob = fu_common_get_contents_bytes (fn, error);
+	if (blob == NULL)
+		return NULL;
+
+	/* convert the silo for the CAB into a XbBuilderSource */
+	silo = fu_engine_get_silo_from_blob (self, blob, error);
+	if (silo == NULL)
+		return NULL;
+	xml = xb_silo_export (silo, XB_NODE_EXPORT_FLAG_NONE, error);
+	if (xml == NULL)
+		return NULL;
+	if (!xb_builder_source_load_xml (source, xml,
+					 XB_BUILDER_SOURCE_FLAG_NONE,
+					 error))
+		return NULL;
+	return g_steal_pointer (&source);
+}
+
+static gboolean
+fu_engine_create_metadata (FuEngine *self, XbBuilder *builder,
+			   FwupdRemote *remote, GError **error)
+{
+	g_autoptr(GPtrArray) files = NULL;
+	const gchar *path;
+
+	/* find all files in directory */
+	path = fwupd_remote_get_filename_cache (remote);
+	files = fu_common_get_files_recursive (path, error);
+	if (files == NULL)
+		return FALSE;
+
+	/* add each source */
+	for (guint i = 0; i < files->len; i++) {
+		g_autoptr(XbBuilderNode) custom = NULL;
+		g_autoptr(XbBuilderSource) source = NULL;
+		g_autoptr(GError) error_local = NULL;
+		const gchar *fn = g_ptr_array_index (files, i);
+
+		/* check is cab file */
+		if (!g_str_has_suffix (fn, ".cab")) {
+			g_debug ("ignoring: %s", fn);
+			continue;
+		}
+
+		/* build source for file */
+		source = fu_engine_create_metadata_builder_source (self, fn, &error_local);
+		if (source == NULL) {
+			g_warning ("%s", error_local->message);
+			continue;
+		}
+
+		/* add metadata */
+		custom = xb_builder_node_new ("custom");
+		xb_builder_node_insert_text (custom,
+					     "value", fn,
+					     "key", "fwupd::FilenameCache",
+					     NULL);
+		xb_builder_node_insert_text (custom,
+					     "value", fwupd_remote_get_id (remote),
+					     "key", "fwupd::RemoteId",
+					     NULL);
+		xb_builder_source_set_info (source, custom);
+		xb_builder_import_source (builder, source);
+	}
 	return TRUE;
 }
 
@@ -1855,6 +1941,18 @@ fu_engine_load_metadata_store (FuEngine *self, GError **error)
 		path = fwupd_remote_get_filename_cache (remote);
 		if (!g_file_test (path, G_FILE_TEST_EXISTS)) {
 			g_debug ("no %s, so skipping", path);
+			continue;
+		}
+
+		/* generate all metadata on demand */
+		if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_DIRECTORY) {
+			g_debug ("building metadata for remote '%s'",
+				 fwupd_remote_get_id (remote));
+			if (!fu_engine_create_metadata (self, builder, remote, &error_local)) {
+				g_warning ("failed to generate remote %s: %s",
+					   fwupd_remote_get_id (remote),
+					   error_local->message);
+			}
 			continue;
 		}
 
@@ -3148,7 +3246,7 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 
 	/* if this device is locked get some metadata from AppStream */
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_LOCKED)) {
-		g_autoptr(XbNode) component = fu_engine_store_get_app_by_guids (self->silo, device);
+		g_autoptr(XbNode) component = fu_engine_get_component_by_guids (self, device);
 		if (component != NULL) {
 			g_autoptr(XbNode) release = NULL;
 			release = xb_node_query_first (component,
