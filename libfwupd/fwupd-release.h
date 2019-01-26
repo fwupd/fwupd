@@ -78,6 +78,12 @@ void		 fwupd_release_set_description		(FwupdRelease	*release,
 const gchar	*fwupd_release_get_homepage		(FwupdRelease	*release);
 void		 fwupd_release_set_homepage		(FwupdRelease	*release,
 							 const gchar	*homepage);
+const gchar	*fwupd_release_get_details_url		(FwupdRelease	*release);
+void		 fwupd_release_set_details_url		(FwupdRelease	*release,
+							 const gchar	*details_url);
+const gchar	*fwupd_release_get_source_url		(FwupdRelease	*release);
+void		 fwupd_release_set_source_url		(FwupdRelease	*release,
+							 const gchar	*source_url);
 guint64		 fwupd_release_get_size			(FwupdRelease	*release);
 void		 fwupd_release_set_size			(FwupdRelease	*release,
 							 guint64	 size);
