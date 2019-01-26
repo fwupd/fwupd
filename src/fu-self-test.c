@@ -591,7 +591,7 @@ fu_engine_require_hwid_func (void)
 	fu_engine_add_device (engine, device);
 
 	/* get component */
-	component = xb_silo_query_first (silo, "component/id[text()='com.hughski.test.firmware']/..", &error);
+	component = xb_silo_query_first (silo, "components/component/id[text()='com.hughski.test.firmware']/..", &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (component);
 
@@ -896,7 +896,7 @@ fu_engine_history_func (void)
 	g_assert_nonnull (silo);
 
 	/* get component */
-	component = xb_silo_query_first (silo, "component/id[text()='com.hughski.test.firmware']/..", &error);
+	component = xb_silo_query_first (silo, "components/component/id[text()='com.hughski.test.firmware']/..", &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (component);
 
@@ -1023,7 +1023,7 @@ fu_engine_history_error_func (void)
 	silo = fu_engine_get_silo_from_blob (engine, blob_cab, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (silo);
-	component = xb_silo_query_first (silo, "component/id[text()='com.hughski.test.firmware']/..", &error);
+	component = xb_silo_query_first (silo, "components/component/id[text()='com.hughski.test.firmware']/..", &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (component);
 	task = fu_install_task_new (device, component);
@@ -2595,7 +2595,7 @@ fu_plugin_composite_func (void)
 	silo = fu_common_cab_build_silo (blob, 10240, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (silo);
-	components = xb_silo_query (silo, "component", 0, &error);
+	components = xb_silo_query (silo, "components/component", 0, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (components);
 	g_assert_cmpint (components->len, ==, 3);
@@ -2742,7 +2742,7 @@ fu_common_store_cab_func (void)
 	g_assert_nonnull (silo);
 
 	/* verify */
-	component = xb_silo_query_first (silo, "component/id[text()='com.acme.example.firmware']/..", &error);
+	component = xb_silo_query_first (silo, "components/component/id[text()='com.acme.example.firmware']/..", &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (component);
 	rel = xb_node_query_first (component, "releases/release", &error);
@@ -2792,7 +2792,7 @@ fu_common_store_cab_unsigned_func (void)
 	g_assert_nonnull (silo);
 
 	/* verify */
-	component = xb_silo_query_first (silo, "component/id[text()='com.acme.example.firmware']/..", &error);
+	component = xb_silo_query_first (silo, "components/component/id[text()='com.acme.example.firmware']/..", &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (component);
 	rel = xb_node_query_first (component, "releases/release", &error);
@@ -2837,7 +2837,7 @@ fu_common_store_cab_folder_func (void)
 	g_assert_nonnull (silo);
 
 	/* verify */
-	component = xb_silo_query_first (silo, "component/id[text()='com.acme.example.firmware']/..", &error);
+	component = xb_silo_query_first (silo, "components/component/id[text()='com.acme.example.firmware']/..", &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (component);
 	rel = xb_node_query_first (component, "releases/release", &error);

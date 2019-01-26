@@ -731,7 +731,7 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 	silo = fu_engine_get_silo_from_blob (priv->engine, blob_cab, error);
 	if (silo == NULL)
 		return FALSE;
-	components = xb_silo_query (silo, "component", 0, error);
+	components = xb_silo_query (silo, "components/component", 0, error);
 	if (components == NULL)
 		return FALSE;
 

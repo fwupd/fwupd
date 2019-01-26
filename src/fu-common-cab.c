@@ -187,6 +187,9 @@ fu_common_store_from_cab_file (XbBuilder *builder, GCabCabinet *cabinet,
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(XbBuilderSource) source = xb_builder_source_new ();
 
+	/* rewrite to be under a components root */
+	xb_builder_source_set_prefix (source, "components");
+
 	/* parse file */
 #ifdef HAVE_GCAB_1_0
 	blob = gcab_file_get_bytes (cabfile);
@@ -440,8 +443,7 @@ fu_common_cab_build_silo (GBytes *blob, guint64 size_max, GError **error)
 	if (silo == NULL)
 		return NULL;
 
-	/* this looks weird, but metainfo files have no <components> node */
-	components = xb_silo_query (silo, "component", 0, &error_local);
+	components = xb_silo_query (silo, "components/component", 0, &error_local);
 	if (components == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,

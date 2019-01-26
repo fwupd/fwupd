@@ -2250,7 +2250,7 @@ fu_engine_get_details (FuEngine *self, gint fd, GError **error)
 	silo = fu_engine_get_silo_from_blob (self, blob, error);
 	if (silo == NULL)
 		return NULL;
-	components = xb_silo_query (silo, "component", 0, &error_local);
+	components = xb_silo_query (silo, "components/component", 0, &error_local);
 	if (components == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -2261,10 +2261,10 @@ fu_engine_get_details (FuEngine *self, gint fd, GError **error)
 	}
 
 	/* build the index */
-	if (!xb_silo_query_build_index (silo, "component/provides/firmware",
+	if (!xb_silo_query_build_index (silo, "components/component/provides/firmware",
 					"type", error))
 		return FALSE;
-	if (!xb_silo_query_build_index (silo, "component/provides/firmware",
+	if (!xb_silo_query_build_index (silo, "components/component/provides/firmware",
 					NULL, error))
 		return FALSE;
 
