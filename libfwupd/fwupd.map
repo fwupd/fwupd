@@ -297,5 +297,9 @@ LIBFWUPD_1.2.2 {
 LIBFWUPD_1.2.4 {
   global:
     fwupd_client_get_tainted;
+    fwupd_release_get_details_url;
+    fwupd_release_get_source_url;
+    fwupd_release_set_details_url;
+    fwupd_release_set_source_url;
   local: *;
 } LIBFWUPD_1.2.2;

@@ -308,6 +308,12 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 	tmp = xb_node_query_text (release, "checksum[@target='content']", NULL);
 	if (tmp != NULL)
 		fwupd_release_set_filename (rel, tmp);
+	tmp = xb_node_query_text (release, "url[@type='details']", NULL);
+	if (tmp != NULL)
+		fwupd_release_set_details_url (rel, tmp);
+	tmp = xb_node_query_text (release, "url[@type='source']", NULL);
+	if (tmp != NULL)
+		fwupd_release_set_source_url (rel, tmp);
 	tmp = xb_node_query_text (release, "checksum[@target='container']", NULL);
 	if (tmp != NULL)
 		fwupd_release_add_checksum (rel, tmp);

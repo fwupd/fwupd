@@ -35,6 +35,8 @@ typedef struct {
 	gchar				*filename;
 	gchar				*protocol;
 	gchar				*homepage;
+	gchar				*details_url;
+	gchar				*source_url;
 	gchar				*appstream_id;
 	gchar				*license;
 	gchar				*name;
@@ -391,6 +393,78 @@ fwupd_release_set_homepage (FwupdRelease *release, const gchar *homepage)
 	g_return_if_fail (FWUPD_IS_RELEASE (release));
 	g_free (priv->homepage);
 	priv->homepage = g_strdup (homepage);
+}
+
+/**
+ * fwupd_release_get_details_url:
+ * @release: A #FwupdRelease
+ *
+ * Gets the URL for the online update notes.
+ *
+ * Returns: the update URL, or %NULL if unset
+ *
+ * Since: 1.2.4
+ **/
+const gchar *
+fwupd_release_get_details_url (FwupdRelease *release)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_val_if_fail (FWUPD_IS_RELEASE (release), NULL);
+	return priv->details_url;
+}
+
+/**
+ * fwupd_release_set_details_url:
+ * @release: A #FwupdRelease
+ * @details_url: the URL
+ *
+ * Sets the URL for the online update notes.
+ *
+ * Since: 1.2.4
+ **/
+void
+fwupd_release_set_details_url (FwupdRelease *release, const gchar *details_url)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_if_fail (FWUPD_IS_RELEASE (release));
+	g_free (priv->details_url);
+	priv->details_url = g_strdup (details_url);
+}
+
+/**
+ * fwupd_release_get_source_url:
+ * @release: A #FwupdRelease
+ *
+ * Gets the URL of the source code used to build this release.
+ *
+ * Returns: the update source_url, or %NULL if unset
+ *
+ * Since: 1.2.4
+ **/
+const gchar *
+fwupd_release_get_source_url (FwupdRelease *release)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_val_if_fail (FWUPD_IS_RELEASE (release), NULL);
+	return priv->source_url;
+}
+
+/**
+ * fwupd_release_set_source_url:
+ * @release: A #FwupdRelease
+ * @source_url: the URL
+ *
+ * Sets the URL of the source code used to build this release.
+ *
+ * Since: 1.2.4
+ **/
+void
+fwupd_release_set_source_url (FwupdRelease *release, const gchar *source_url)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_if_fail (FWUPD_IS_RELEASE (release));
+	g_free (priv->source_url);
+	priv->source_url = g_strdup (source_url);
 }
 
 /**
@@ -828,6 +902,16 @@ fwupd_release_to_variant (FwupdRelease *release)
 				       FWUPD_RESULT_KEY_HOMEPAGE,
 				       g_variant_new_string (priv->homepage));
 	}
+	if (priv->details_url != NULL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_DETAILS_URL,
+				       g_variant_new_string (priv->details_url));
+	}
+	if (priv->source_url != NULL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_SOURCE_URL,
+				       g_variant_new_string (priv->source_url));
+	}
 	if (priv->version != NULL) {
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_VERSION,
@@ -909,6 +993,14 @@ fwupd_release_from_key_value (FwupdRelease *release, const gchar *key, GVariant 
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_HOMEPAGE) == 0) {
 		fwupd_release_set_homepage (release, g_variant_get_string (value, NULL));
+		return;
+	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DETAILS_URL) == 0) {
+		fwupd_release_set_details_url (release, g_variant_get_string (value, NULL));
+		return;
+	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_SOURCE_URL) == 0) {
+		fwupd_release_set_source_url (release, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_VERSION) == 0) {
@@ -1024,6 +1116,8 @@ fwupd_release_to_string (FwupdRelease *release)
 	fwupd_pad_kv_siz (str, FWUPD_RESULT_KEY_SIZE, priv->size);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_URI, priv->uri);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_HOMEPAGE, priv->homepage);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DETAILS_URL, priv->details_url);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_SOURCE_URL, priv->source_url);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
 	fwupd_pad_kv_tfl (str, FWUPD_RESULT_KEY_TRUST_FLAGS, priv->trust_flags);
 	fwupd_pad_kv_int (str, FWUPD_RESULT_KEY_INSTALL_DURATION, priv->install_duration);
@@ -1069,6 +1163,8 @@ fwupd_release_finalize (GObject *object)
 	g_free (priv->summary);
 	g_free (priv->uri);
 	g_free (priv->homepage);
+	g_free (priv->details_url);
+	g_free (priv->source_url);
 	g_free (priv->vendor);
 	g_free (priv->version);
 	g_free (priv->remote_id);

@@ -20,6 +20,8 @@
 #define FWUPD_RESULT_KEY_INSTALL_DURATION	"InstallDuration"	/* u */
 #define FWUPD_RESULT_KEY_GUID			"Guid"		/* as */
 #define FWUPD_RESULT_KEY_HOMEPAGE		"Homepage"	/* s */
+#define FWUPD_RESULT_KEY_DETAILS_URL		"DetailsUrl"	/* s */
+#define FWUPD_RESULT_KEY_SOURCE_URL		"SourceUrl"	/* s */
 #define FWUPD_RESULT_KEY_ICON			"Icon"		/* as */
 #define FWUPD_RESULT_KEY_LICENSE		"License"	/* s */
 #define FWUPD_RESULT_KEY_MODIFIED		"Modified"	/* t */
