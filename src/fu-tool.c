@@ -846,7 +846,8 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 
 			argv = g_new0 (gchar *, 2);
 			/* local remotes have the firmware already */
-			if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_LOCAL) {
+			if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_LOCAL ||
+			    fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_DIRECTORY) {
 				const gchar *fn_cache = fwupd_remote_get_filename_cache (remote);
 				g_autofree gchar *path = g_path_get_dirname (fn_cache);
 				argv[0] = g_build_filename (path, uri_tmp, NULL);

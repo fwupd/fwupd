@@ -1972,8 +1972,9 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 		if (remote == NULL)
 			return FALSE;
 
-		/* local remotes have the firmware already */
-		if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_LOCAL) {
+		/* local and directory remotes have the firmware already */
+		if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_LOCAL ||
+		    fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_DIRECTORY) {
 			const gchar *fn_cache = fwupd_remote_get_filename_cache (remote);
 			g_autofree gchar *path = g_path_get_dirname (fn_cache);
 
