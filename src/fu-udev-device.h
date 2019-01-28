@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2018 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2017-2019 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -35,6 +35,7 @@ guint8		 fu_udev_device_get_revision		(FuUdevDevice	*self);
 gboolean	 fu_udev_device_set_physical_id		(FuUdevDevice	*self,
 							 const gchar	*subsystem,
 							 GError		**error);
+void		 fu_udev_device_dump			(FuUdevDevice	*self);
 
 G_END_DECLS
 
