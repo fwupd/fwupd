@@ -326,6 +326,55 @@ fu_common_cab_sort_priority_cb (XbBuilderFixup *self,
 	return TRUE;
 }
 
+static XbBuilderNode *
+_xb_builder_node_get_child_by_element_attr (XbBuilderNode *bn,
+					    const gchar *element,
+					    const gchar *attr_name,
+					    const gchar *attr_value)
+{
+	GPtrArray *bcs = xb_builder_node_get_children (bn);
+	for (guint i = 0; i < bcs->len; i++) {
+		XbBuilderNode *bc = g_ptr_array_index (bcs, i);
+		if (g_strcmp0 (xb_builder_node_get_element (bc), element) != 0)
+			continue;
+		if (g_strcmp0 (xb_builder_node_get_attr (bc, "type"), "container") == 0)
+			return g_object_ref (bc);
+	}
+	return NULL;
+}
+
+static gboolean
+fu_common_cab_set_container_checksum_cb (XbBuilderFixup *self,
+					 XbBuilderNode *bn,
+					 gpointer user_data,
+					 GError **error)
+{
+
+	const gchar *container_checksum = (const gchar *) user_data;
+	g_autoptr(XbBuilderNode) csum = NULL;
+
+	/* not us */
+	if (g_strcmp0 (xb_builder_node_get_element (bn), "release") != 0)
+		return TRUE;
+
+	/* verify it exists */
+	csum = _xb_builder_node_get_child_by_element_attr (bn, "checksum",
+							   "target", "container");
+	if (csum == NULL) {
+		csum = xb_builder_node_insert (bn, "checksum",
+					       "target", "container",
+					       NULL);
+	}
+
+	/* verify it is correct */
+	if (g_strcmp0 (xb_builder_node_get_text (csum), container_checksum) != 0) {
+		g_debug ("invalid container checksum %s, fixing up to %s",
+			 xb_builder_node_get_text (csum), container_checksum);
+		xb_builder_node_set_text (csum, container_checksum, -1);
+	}
+	return TRUE;
+}
+
 /**
  * fu_common_cab_build_silo:
  * @blob: A readable blob
@@ -345,6 +394,7 @@ fu_common_cab_build_silo (GBytes *blob, guint64 size_max, GError **error)
 		.error		= NULL,
 	};
 	GPtrArray *folders;
+	g_autofree gchar *container_checksum = NULL;
 #ifndef HAVE_GCAB_1_0
 	g_autofree gchar *tmp_path = NULL;
 	g_autoptr(GFile) tmp_file = NULL;
@@ -352,6 +402,7 @@ fu_common_cab_build_silo (GBytes *blob, guint64 size_max, GError **error)
 	g_autoptr(XbSilo) silo = NULL;
 	g_autoptr(XbBuilder) builder = xb_builder_new ();
 	g_autoptr(XbBuilderFixup) fixup = NULL;
+	g_autoptr(XbBuilderFixup) fixup2 = NULL;
 	g_autoptr(GCabCabinet) cabinet = gcab_cabinet_new ();
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GInputStream) ip = NULL;
@@ -437,6 +488,13 @@ fu_common_cab_build_silo (GBytes *blob, guint64 size_max, GError **error)
 		if (!fu_common_store_from_cab_folder (builder, cabinet, cabfolder, error))
 			return NULL;
 	}
+
+	/* ensure the container checksum is always set */
+	container_checksum = g_compute_checksum_for_bytes (G_CHECKSUM_SHA1, blob);
+	fixup2 = xb_builder_fixup_new ("SetContainerChecksum",
+				      fu_common_cab_set_container_checksum_cb,
+				      container_checksum, NULL);
+	xb_builder_add_fixup (builder, fixup2);
 
 	/* did we get any valid files */
 	silo = xb_builder_compile (builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, error);
