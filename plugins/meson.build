@@ -1,3 +1,4 @@
+subdir('ata')
 subdir('dfu')
 subdir('colorhug')
 subdir('ebitdo')
