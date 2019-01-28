@@ -1,5 +1,6 @@
 _fwupdtool_cmd_list=(
 	'build-firmware'
+	'get-updates'
 	'get-details'
 	'get-devices'
 	'get-plugins'
