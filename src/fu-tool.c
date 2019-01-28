@@ -23,6 +23,7 @@
 #include "fu-smbios.h"
 #include "fu-util-common.h"
 #include "fu-debug.h"
+#include "fwupd-common-private.h"
 
 #define SYSTEMD_SERVICE			"org.freedesktop.systemd1"
 #define SYSTEMD_OBJECT_PATH		"/org/freedesktop/systemd1"
@@ -383,6 +384,49 @@ fu_util_get_plugins (FuUtilPrivate *priv, gchar **values, GError **error)
 		return TRUE;
 	}
 
+	return TRUE;
+}
+
+static gboolean
+fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GPtrArray) devices = NULL;
+
+	/* load engine */
+	if (!fu_util_start_engine (priv, error))
+		return FALSE;
+
+	/* get devices from daemon */
+	devices = fu_engine_get_devices (priv->engine, error);
+	if (devices == NULL)
+		return FALSE;
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index (devices, i);
+		g_autoptr(GPtrArray) rels = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		/* not going to have results, so save a D-Bus round-trip */
+		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
+			continue;
+
+		/* get the releases for this device and filter for validity */
+		rels = fu_engine_get_upgrades (priv->engine,
+					       fwupd_device_get_id (dev),
+					       &error_local);
+		if (rels == NULL) {
+			g_printerr ("%s\n", error_local->message);
+			continue;
+		}
+		g_print ("%s", fwupd_device_to_string (dev));
+		g_print (" Release information:\n");
+		/* print all releases */
+		for (guint j = 0; j < rels->len; j++) {
+			FwupdRelease *rel = g_ptr_array_index (rels, j);
+			g_print ("%s\n", fwupd_release_to_string (rel));
+		}
+	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -1193,6 +1237,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Gets details about a firmware file"),
 		     fu_util_get_details);
+	fu_util_add (priv->cmd_array,
+		     "get-updates",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Gets the list of updates for connected hardware"),
+		     fu_util_get_updates);
 	fu_util_add (priv->cmd_array,
 		     "get-devices",
 		     NULL,
