@@ -68,7 +68,7 @@ fu_common_store_from_cab_release (XbNode *release, GCabCabinet *cabinet, GError 
 {
 	GCabFile *cabfile;
 	GBytes *blob;
-	const gchar *csum_filename;
+	const gchar *csum_filename = NULL;
 	const gchar *suffixes[] = { "asc", "p7b", "p7c", NULL };
 	g_autofree gchar *basename = NULL;
 	g_autofree gchar *release_key = NULL;
@@ -77,14 +77,13 @@ fu_common_store_from_cab_release (XbNode *release, GCabCabinet *cabinet, GError 
 
 	/* ensure we always have a content checksum */
 	csum_tmp = xb_node_query_first (release, "checksum[@target='content']", NULL);
-	if (csum_tmp != NULL) {
+	if (csum_tmp != NULL)
 		csum_filename = xb_node_get_attr (csum_tmp, "filename");
-	} else {
-		/* if this isn't true, a firmware needs to set in
-		 * the metainfo.xml file something like:
-		 * <checksum target="content" filename="FLASH.ROM"/> */
+
+	/* if this isn't true, a firmware needs to set in the metainfo.xml file
+	 * something like: <checksum target="content" filename="FLASH.ROM"/> */
+	if (csum_filename == NULL)
 		csum_filename = "firmware.bin";
-	}
 
 	/* get the main firmware file */
 	basename = g_path_get_basename (csum_filename);
