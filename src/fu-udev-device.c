@@ -91,6 +91,7 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 	const gchar *tmp;
 	g_autofree gchar *subsystem = NULL;
+	g_autoptr(GUdevDevice) udev_parent = NULL;
 
 	/* set ven:dev:rev */
 	priv->vendor = fu_udev_device_get_sysfs_attr_as_uint64 (priv->udev_device, "vendor");
@@ -98,17 +99,18 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	priv->revision = fu_udev_device_get_sysfs_attr_as_uint64 (priv->udev_device, "revision");
 
 	/* fallback to the parent */
-	if (priv->vendor == 0x0 && priv->model == 0x0 && priv->revision == 0x0) {
-		g_autoptr(GUdevDevice) parent = g_udev_device_get_parent (priv->udev_device);
-		priv->vendor = fu_udev_device_get_sysfs_attr_as_uint64 (parent, "vendor");
-		priv->model = fu_udev_device_get_sysfs_attr_as_uint64 (parent, "device");
-		priv->revision = fu_udev_device_get_sysfs_attr_as_uint64 (parent, "revision");
+	udev_parent = g_udev_device_get_parent (priv->udev_device);
+	if (udev_parent != NULL &&
+	    priv->vendor == 0x0 && priv->model == 0x0 && priv->revision == 0x0) {
+		priv->vendor = fu_udev_device_get_sysfs_attr_as_uint64 (udev_parent, "vendor");
+		priv->model = fu_udev_device_get_sysfs_attr_as_uint64 (udev_parent, "device");
+		priv->revision = fu_udev_device_get_sysfs_attr_as_uint64 (udev_parent, "revision");
 	}
 
 	/* hidraw helpfully encodes the information in a different place */
-	if (priv->vendor == 0x0 && priv->model == 0x0 && priv->revision == 0x0 &&
+	if (udev_parent != NULL &&
+	    priv->vendor == 0x0 && priv->model == 0x0 && priv->revision == 0x0 &&
 	    g_strcmp0 (g_udev_device_get_subsystem (priv->udev_device), "hidraw") == 0) {
-		g_autoptr(GUdevDevice) udev_parent = g_udev_device_get_parent (priv->udev_device);
 		tmp = g_udev_device_get_property (udev_parent, "HID_ID");
 		if (tmp != NULL && strlen (tmp) == 22) {
 			priv->vendor = fu_udev_device_read_uint16 (tmp + 10);
