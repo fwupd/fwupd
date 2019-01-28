@@ -251,10 +251,19 @@ fu_fastboot_device_cmd (FuDevice *device, const gchar *cmd, GError **error)
 }
 
 static gboolean
-fu_fastboot_device_flash (FuDevice *device,
-			  const gchar *partition,
-			  GBytes *fw,
-			  GError **error)
+fu_fastboot_device_flash (FuDevice *device, const gchar *partition, GError **error)
+{
+	g_autofree gchar *tmp = g_strdup_printf ("flash:%s", partition);
+	if (!fu_fastboot_device_writestr (device, tmp, error))
+		return FALSE;
+	if (!fu_fastboot_device_read (device, NULL,
+				      FU_FASTBOOT_DEVICE_READ_FLAG_STATUS_POLL, error))
+		return FALSE;
+	return TRUE;
+}
+
+static gboolean
+fu_fastboot_device_download (FuDevice *device, GBytes *fw, GError **error)
 {
 	FuFastbootDevice *self = FU_FASTBOOT_DEVICE (device);
 	gsize sz = g_bytes_get_size (fw);
@@ -360,7 +369,9 @@ fu_fastboot_device_write_qfil_part (FuDevice *device,
 		partition += 2;
 
 	/* flash the partition */
-	return fu_fastboot_device_flash (device, partition, data, error);
+	if (!fu_fastboot_device_download (device, data, error))
+		return FALSE;
+	return fu_fastboot_device_flash (device, partition, error);
 }
 
 static gboolean
@@ -481,7 +492,9 @@ fu_fastboot_device_write_motorola_part (FuDevice *device,
 		}
 
 		/* flash the partition */
-		return fu_fastboot_device_flash (device, partition, data, error);
+		if (!fu_fastboot_device_download (device, data, error))
+			return FALSE;
+		return fu_fastboot_device_flash (device, partition, error);
 	}
 
 	/* dumb operation that doesn't expect a response */
