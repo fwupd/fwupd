@@ -141,6 +141,8 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 		tmp = g_udev_device_get_property (priv->udev_device, "FWUPD_MODEL");
 		if (tmp == NULL)
 			tmp = g_udev_device_get_property (priv->udev_device, "ID_MODEL_FROM_DATABASE");
+		if (tmp == NULL)
+			tmp = g_udev_device_get_property (priv->udev_device, "ID_MODEL");
 		if (tmp != NULL)
 			fu_device_set_name (device, tmp);
 	}
@@ -150,6 +152,8 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 		tmp = g_udev_device_get_property (priv->udev_device, "FWUPD_VENDOR");
 		if (tmp == NULL)
 			tmp = g_udev_device_get_property (priv->udev_device, "ID_VENDOR_FROM_DATABASE");
+		if (tmp == NULL)
+			tmp = g_udev_device_get_property (priv->udev_device, "ID_VENDOR");
 		if (tmp != NULL)
 			fu_device_set_vendor (device, tmp);
 	}
