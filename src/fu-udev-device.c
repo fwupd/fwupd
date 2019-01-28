@@ -158,6 +158,15 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 			fu_device_set_vendor (device, tmp);
 	}
 
+	/* set serial */
+	if (fu_device_get_serial (device) == NULL) {
+		tmp = g_udev_device_get_property (priv->udev_device, "ID_SERIAL_SHORT");
+		if (tmp == NULL)
+			tmp = g_udev_device_get_property (priv->udev_device, "ID_SERIAL");
+		if (tmp != NULL)
+			fu_device_set_serial (device, tmp);
+	}
+
 	/* set vendor ID */
 	subsystem = g_ascii_strup (fu_udev_device_get_subsystem (self), -1);
 	if (subsystem != NULL && priv->vendor != 0x0000) {
