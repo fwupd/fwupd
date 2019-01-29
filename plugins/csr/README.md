@@ -22,6 +22,10 @@ Firmware Format
 The daemon will decompress the cabinet archive and extract a firmware blob in
 DFU file format.
 
+This plugin supports the following protocol ID:
+
+ * com.qualcomm.dfu
+
 GUID Generation
 ---------------
 

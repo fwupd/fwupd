@@ -15,6 +15,10 @@ Firmware Format
 The daemon will decompress the cabinet archive and extract a firmware blob in
 an unspecified binary file format, with vendor specific header.
 
+This plugin supports the following protocol ID:
+
+ * com.intel.thunderbolt
+
 GUID Generation
 ---------------
 

@@ -31,6 +31,11 @@ Firmware Format
 The daemon will decompress the cabinet archive and extract several firmware
 blobs with an unspecified binary file format.
 
+This plugin supports the following protocol ID:
+
+ * com.dell.dock
+ * com.synaptics.mst
+
 GUID Generation
 ---------------
 

@@ -22,6 +22,11 @@ Firmware Format
 The daemon will decompress the cabinet archive and extract a firmware blob in
 a vendor-specific format that appears to be a subset of the Intel HEX format.
 
+This plugin supports the following protocol IDs:
+
+ * com.logitech.unifying
+ * com.logitech.unifyingsigned
+
 GUID Generation
 ---------------
 

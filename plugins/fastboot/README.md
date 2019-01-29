@@ -18,6 +18,10 @@ the manifest must be either an Android `flashfile.xml` format file, or a QFIL
 For both types, all partitions with a defined image found in the zip file will
 be updated.
 
+This plugin supports the following protocol ID:
+
+ * com.google.fastboot
+
 GUID Generation
 ---------------
 

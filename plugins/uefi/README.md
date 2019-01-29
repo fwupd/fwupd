@@ -20,6 +20,10 @@ EFI capsule file format.
 See https://www.uefi.org/sites/default/files/resources/UEFI%20Spec%202_6.pdf
 for details.
 
+This plugin supports the following protocol ID:
+
+ * org.uefi.capsule
+
 GUID Generation
 ---------------
 

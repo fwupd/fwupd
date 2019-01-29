@@ -22,6 +22,10 @@ Firmware Format
 The daemon will decompress the cabinet archive and extract a firmware blob in
 SREC file format, with a custom vendor header.
 
+This plugin supports the following protocol ID:
+
+ * com.wacom.usb
+
 GUID Generation
 ---------------
 

@@ -21,6 +21,10 @@ Firmware Format
 The daemon will decompress the cabinet archive and extract a firmware blob in
 ELF file format. The firmware image is inserted into the `.text` section.
 
+This plugin supports the following protocol ID:
+
+ * org.altusmetrum.altos
+
 GUID Generation
 ---------------
 
