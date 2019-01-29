@@ -251,6 +251,24 @@ fu_udev_device_set_dev (FuUdevDevice *self, GUdevDevice *udev_device)
 		return;
 }
 
+guint
+fu_udev_device_get_slot_depth (FuUdevDevice *self, const gchar *subsystem)
+{
+	GUdevDevice *udev_device = fu_udev_device_get_dev (FU_UDEV_DEVICE (self));
+	g_autoptr(GUdevDevice) device_tmp = NULL;
+
+	device_tmp = g_udev_device_get_parent_with_subsystem (udev_device, subsystem, NULL);
+	if (device_tmp == NULL)
+		return 0;
+	for (guint i = 0; i < 0xff; i++) {
+		g_autoptr(GUdevDevice) parent = g_udev_device_get_parent (device_tmp);
+		if (parent == NULL)
+			return i;
+		g_set_object (&device_tmp, parent);
+	}
+	return 0;
+}
+
 static void
 fu_udev_device_incorporate (FuDevice *self, FuDevice *donor)
 {
