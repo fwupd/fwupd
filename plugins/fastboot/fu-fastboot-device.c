@@ -240,12 +240,12 @@ fu_fastboot_device_getvar (FuDevice *device, const gchar *key, gchar **str, GErr
 }
 
 static gboolean
-fu_fastboot_device_cmd (FuDevice *device, const gchar *cmd, GError **error)
+fu_fastboot_device_cmd (FuDevice *device, const gchar *cmd,
+			FuFastbootDeviceReadFlags flags, GError **error)
 {
 	if (!fu_fastboot_device_writestr (device, cmd, error))
 		return FALSE;
-	if (!fu_fastboot_device_read (device, NULL,
-				      FU_FASTBOOT_DEVICE_READ_FLAG_NONE, error))
+	if (!fu_fastboot_device_read (device, NULL, flags, error))
 		return FALSE;
 	return TRUE;
 }
@@ -254,12 +254,9 @@ static gboolean
 fu_fastboot_device_flash (FuDevice *device, const gchar *partition, GError **error)
 {
 	g_autofree gchar *tmp = g_strdup_printf ("flash:%s", partition);
-	if (!fu_fastboot_device_writestr (device, tmp, error))
-		return FALSE;
-	if (!fu_fastboot_device_read (device, NULL,
-				      FU_FASTBOOT_DEVICE_READ_FLAG_STATUS_POLL, error))
-		return FALSE;
-	return TRUE;
+	return fu_fastboot_device_cmd (device, tmp,
+				       FU_FASTBOOT_DEVICE_READ_FLAG_STATUS_POLL,
+				       error);
 }
 
 static gboolean
@@ -271,10 +268,9 @@ fu_fastboot_device_download (FuDevice *device, GBytes *fw, GError **error)
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	/* tell the client the size of data to expect */
-	if (!fu_fastboot_device_writestr (device, tmp, error))
-		return FALSE;
-	if (!fu_fastboot_device_read (device, NULL,
-				      FU_FASTBOOT_DEVICE_READ_FLAG_STATUS_POLL, error))
+	if (!fu_fastboot_device_cmd (device, tmp,
+				     FU_FASTBOOT_DEVICE_READ_FLAG_STATUS_POLL,
+				     error))
 		return FALSE;
 
 	/* send the data in chunks */
@@ -436,7 +432,9 @@ fu_fastboot_device_write_motorola_part (FuDevice *device,
 		}
 
 		/* erase the partition */
-		return fu_fastboot_device_cmd (device, cmd, error);
+		return fu_fastboot_device_cmd (device, cmd,
+					       FU_FASTBOOT_DEVICE_READ_FLAG_NONE,
+					       error);
 	}
 
 	/* flash */
@@ -503,7 +501,9 @@ fu_fastboot_device_write_motorola_part (FuDevice *device,
 	    g_strcmp0 (op, "reboot") == 0 ||
 	    g_strcmp0 (op, "reboot-bootloader") == 0 ||
 	    g_strcmp0 (op, "powerdown") == 0) {
-		return fu_fastboot_device_cmd (device, op, error);
+		return fu_fastboot_device_cmd (device, op,
+					       FU_FASTBOOT_DEVICE_READ_FLAG_NONE,
+					       error);
 	}
 
 	/* unknown */
@@ -672,7 +672,9 @@ static gboolean
 fu_fastboot_device_attach (FuDevice *device, GError **error)
 {
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	return fu_fastboot_device_cmd (device, "reboot", error);
+	return fu_fastboot_device_cmd (device, "reboot",
+				       FU_FASTBOOT_DEVICE_READ_FLAG_NONE,
+				       error);
 }
 
 static void
