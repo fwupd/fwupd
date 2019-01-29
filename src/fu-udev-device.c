@@ -386,6 +386,29 @@ fu_udev_device_get_revision (FuUdevDevice *self)
 	return priv->revision;
 }
 
+static GString *
+fu_udev_device_get_parent_subsystems (FuUdevDevice *self)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	GString *str = g_string_new (NULL);
+	g_autoptr(GUdevDevice) udev_device = g_object_ref (priv->udev_device);
+
+	/* find subsystems of all parent devices */
+	while (TRUE) {
+		g_autoptr(GUdevDevice) parent = g_udev_device_get_parent (udev_device);
+		if (parent == NULL)
+			break;
+		if (g_udev_device_get_subsystem (parent) != NULL) {
+			g_string_append_printf (str, "%s,",
+						g_udev_device_get_subsystem (parent));
+		}
+		g_set_object (&udev_device, g_steal_pointer (&parent));
+	}
+	if (str->len > 0)
+		g_string_truncate (str, str->len - 1);
+	return str;
+}
+
 /**
  * fu_udev_device_set_physical_id:
  * @self: A #GUdevDevice
@@ -418,11 +441,13 @@ fu_udev_device_set_physical_id (FuUdevDevice *self, const gchar *subsystem, GErr
 		udev_device = g_udev_device_get_parent_with_subsystem (priv->udev_device,
 								       subsystem, NULL);
 		if (udev_device == NULL) {
+			g_autoptr(GString) str = NULL;
+			str = fu_udev_device_get_parent_subsystems (self);
 			g_set_error (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_NOT_FOUND,
-				     "failed to find device with subsystem %s",
-				     subsystem);
+				     "failed to find device with subsystem %s, only got %s",
+				     subsystem, str->str);
 			return FALSE;
 		}
 	}
