@@ -19,6 +19,10 @@ The daemon will decompress the cabinet archive and extract a firmware blob in
 an unspecified binary file format. The binary file has a vendor-specific header
 that is used when flashing the image.
 
+This plugin supports the following protocol ID:
+
+ * com.8bitdo
+
 GUID Generation
 ---------------
 

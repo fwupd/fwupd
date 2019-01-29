@@ -13,6 +13,10 @@ The daemon will decompress the cabinet archive and extract a firmware blob in
 an unspecified binary file format, which is typically the raw input for an
 EEPROM programmer.
 
+This plugin supports the following protocol ID:
+
+ * org.flashrom
+
 GUID Generation
 ---------------
 

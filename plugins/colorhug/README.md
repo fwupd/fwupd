@@ -17,6 +17,10 @@ Firmware Format
 The daemon will decompress the cabinet archive and extract a firmware blob in
 a packed binary file format.
 
+This plugin supports the following protocol ID:
+
+ * com.hughski.colorhug
+
 GUID Generation
 ---------------
 

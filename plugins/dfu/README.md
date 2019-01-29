@@ -13,6 +13,11 @@ Firmware Format
 The daemon will decompress the cabinet archive and extract a firmware blob in
 DFU or DfuSe file format.
 
+This plugin supports the following protocol IDs:
+
+ * org.usb.dfu
+ * com.st.dfuse
+
 GUID Generation
 ---------------
 
