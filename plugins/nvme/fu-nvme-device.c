@@ -305,24 +305,6 @@ fu_nvme_device_parse_cns (FuNvmeDevice *self, const guint8 *buf, gsize sz, GErro
 	return TRUE;
 }
 
-static guint
-fu_nvme_device_pci_slot_depth (FuNvmeDevice *self)
-{
-	GUdevDevice *udev_device = fu_udev_device_get_dev (FU_UDEV_DEVICE (self));
-	g_autoptr(GUdevDevice) device_tmp = NULL;
-
-	device_tmp = g_udev_device_get_parent_with_subsystem (udev_device, "pci", NULL);
-	if (device_tmp == NULL)
-		return 0;
-	for (guint i = 0; i < 0xff; i++) {
-		g_autoptr(GUdevDevice) parent = g_udev_device_get_parent (device_tmp);
-		if (parent == NULL)
-			return i;
-		g_set_object (&device_tmp, parent);
-	}
-	return 0;
-}
-
 static void
 fu_nvme_device_dump (const gchar *title, const guint8 *buf, gsize sz)
 {
@@ -369,7 +351,7 @@ fu_nvme_device_probe (FuUdevDevice *device, GError **error)
 		return FALSE;
 
 	/* look at the PCI depth to work out if in an external enclosure */
-	self->pci_depth = fu_nvme_device_pci_slot_depth (self);
+	self->pci_depth = fu_udev_device_get_slot_depth (device, "pci");
 	if (self->pci_depth <= 2)
 		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_INTERNAL);
 
