@@ -214,7 +214,7 @@ fu_mm_device_io_close (FuMmDevice *self, GError **error)
 }
 
 static gboolean
-fu_mm_device_detach_qfastboot (FuDevice *device, GError **error)
+fu_mm_device_detach_fastboot (FuDevice *device, GError **error)
 {
 	FuMmDevice *self = FU_MM_DEVICE (device);
 	g_autoptr(FuDeviceLocker) locker  = NULL;
@@ -286,7 +286,7 @@ fu_mm_device_detach (FuDevice *device, GError **error)
 
 	/* fastboot */
 	if (self->detach_method & MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT)
-		return fu_mm_device_detach_qfastboot (device, error);
+		return fu_mm_device_detach_fastboot (device, error);
 
 	/* should not get here */
 	g_set_error_literal (error,
