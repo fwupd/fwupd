@@ -301,6 +301,7 @@ fu_mm_device_init (FuMmDevice *self)
 {
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION);
 	fu_device_set_summary (FU_DEVICE (self), "Mobile broadband device");
 	fu_device_add_icon (FU_DEVICE (self), "network-modem");
 }
