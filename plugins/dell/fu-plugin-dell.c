@@ -65,6 +65,7 @@ struct da_structure {
 #define UNIV_CBL_STR		"2 2 2 2 0"
 #define TBT_CBL_STR		"2 2 2 3 0"
 #define FUTURE_EC_STR		"3 0 2 4 0"
+#define FUTURE_EC_STR2		"4 0 2 4 0"
 
 /* supported dock related GUIDs */
 #define DOCK_FLASH_GUID		"e7ca1f36-bf73-4574-afe6-a4ccacabf479"
@@ -227,6 +228,7 @@ fu_plugin_dell_match_dock_component (const gchar *query_str,
 		{UNIV_CBL_GUID, UNIV_CBL_STR, UNIV_CBL_DESC},
 		{LEGACY_CBL_GUID, LEGACY_CBL_STR, LEGACY_CBL_DESC},
 		{NULL, FUTURE_EC_STR, NULL},
+		{NULL, FUTURE_EC_STR2, NULL},
 	};
 
 	for (guint i = 0; i < G_N_ELEMENTS (list); i++) {
