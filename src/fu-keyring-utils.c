@@ -135,6 +135,7 @@ fu_keyring_get_release_trust_flags (XbNode *release,
 	/* check we were installed correctly */
 	sysconfdir = fu_common_get_path (FU_PATH_KIND_SYSCONFDIR);
 	pki_dir = g_build_filename (sysconfdir, "pki", PACKAGE_NAME, NULL);
+#if defined(ENABLE_PKCS7) || defined(ENABLE_PKCS7)
 	if (!g_file_test (pki_dir, G_FILE_TEST_EXISTS)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -142,6 +143,7 @@ fu_keyring_get_release_trust_flags (XbNode *release,
 			     "PKI directory %s not found", pki_dir);
 		return FALSE;
 	}
+#endif
 
 	/* verify against the system trusted keys */
 	kr = fu_keyring_create_for_kind (keyring_kind, error);
