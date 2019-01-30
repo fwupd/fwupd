@@ -112,7 +112,6 @@ fu_mm_device_probe (FuDevice *device, GError **error)
 	fu_device_set_vendor (device, mm_modem_get_manufacturer (modem));
 	fu_device_set_name (device, mm_modem_get_model (modem));
 	fu_device_set_version (device, version);
-	fu_device_set_physical_id (device, mm_modem_get_device (modem));
 	for (guint i = 0; device_ids[i] != NULL; i++)
 		fu_device_add_guid (device, device_ids[i]);
 
