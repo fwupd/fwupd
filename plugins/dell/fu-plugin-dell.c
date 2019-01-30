@@ -45,6 +45,16 @@ typedef struct _DOCK_DESCRIPTION
 	const gchar *		desc;
 } DOCK_DESCRIPTION;
 
+struct da_structure {
+	guint8			 type;
+	guint8			 length;
+	guint16			 handle;
+	guint16			 cmd_address;
+	guint8			 cmd_code;
+	guint32			 supported_cmds;
+	guint8			*tokens;
+} __attribute__((packed));
+
 /* These are for matching the components */
 #define WD15_EC_STR		"2 0 2 2 0"
 #define TB16_EC_STR		"2 0 2 1 0"
@@ -159,8 +169,10 @@ static gboolean
 fu_dell_supported (FuPlugin *plugin)
 {
 	GBytes *de_table = NULL;
+	GBytes *da_table = NULL;
 	GBytes *enclosure = NULL;
 	const guint8 *value;
+	const struct da_structure *da_values;
 	gsize len;
 
 	/* make sure that Dell SMBIOS methods are available */
@@ -172,6 +184,17 @@ fu_dell_supported (FuPlugin *plugin)
 		return FALSE;
 	if (*value != 0xDE)
 		return FALSE;
+	da_table = fu_plugin_get_smbios_data (plugin, 0xDA);
+	if (da_table == NULL)
+		return FALSE;
+	da_values = (struct da_structure *) g_bytes_get_data (da_table, &len);
+	if (len == 0)
+		return FALSE;
+	if (!(da_values->supported_cmds & (1 << DACI_FLASH_INTERFACE_CLASS))) {
+		g_debug ("unable to access flash interface. supported commands: 0x%x",
+			 da_values->supported_cmds);
+		return FALSE;
+	}
 
 	/* only run on intended Dell hw types */
 	enclosure = fu_plugin_get_smbios_data (plugin,
