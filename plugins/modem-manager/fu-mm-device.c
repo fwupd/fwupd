@@ -16,7 +16,7 @@ struct _FuMmDevice {
 	FuIOChannel			*io_channel;
 	MMManager			*manager;
 	MMObject			*omodem;
-	MMModemFirmwareUpdateMethod	 detach_method;
+	MMModemFirmwareUpdateMethod	 update_method;
 	gchar				*detach_fastboot_at;
 	gchar				*detach_port_at;
 };
@@ -30,9 +30,9 @@ fu_mm_device_to_string (FuDevice *device, GString *str)
 	g_string_append (str, "  FuMmDevice:\n");
 	g_string_append_printf (str, "    path:\t\t\t%s\n",
 				mm_object_get_path (self->omodem));
-	if (self->detach_method != MM_MODEM_FIRMWARE_UPDATE_METHOD_NONE) {
+	if (self->update_method != MM_MODEM_FIRMWARE_UPDATE_METHOD_NONE) {
 		g_autofree gchar *tmp = NULL;
-		tmp = mm_modem_firmware_update_method_build_string_from_mask (self->detach_method);
+		tmp = mm_modem_firmware_update_method_build_string_from_mask (self->update_method);
 		g_string_append_printf (str, "    detach-kind:\t\t%s\n", tmp);
 	}
 	if (self->detach_port_at != NULL) {
@@ -56,8 +56,8 @@ fu_mm_device_probe (FuDevice *device, GError **error)
 	/* find out what detach method we should use */
 	modem_fw = mm_object_peek_modem_firmware (self->omodem);
 	update_settings = mm_modem_firmware_get_update_settings (modem_fw);
-	self->detach_method = mm_firmware_update_settings_get_method (update_settings);
-	if (self->detach_method == MM_MODEM_FIRMWARE_UPDATE_METHOD_NONE) {
+	self->update_method = mm_firmware_update_settings_get_method (update_settings);
+	if (self->update_method == MM_MODEM_FIRMWARE_UPDATE_METHOD_NONE) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -66,7 +66,7 @@ fu_mm_device_probe (FuDevice *device, GError **error)
 	}
 
 	/* various fastboot commands */
-	if (self->detach_method & MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT) {
+	if (self->update_method & MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT) {
 		const gchar *tmp;
 		tmp = mm_firmware_update_settings_get_fastboot_at (update_settings);
 		if (tmp == NULL) {
@@ -79,7 +79,7 @@ fu_mm_device_probe (FuDevice *device, GError **error)
 		self->detach_fastboot_at = g_strdup (tmp);
 	} else {
 		g_autofree gchar *str = NULL;
-		str = mm_modem_firmware_update_method_build_string_from_mask (self->detach_method);
+		str = mm_modem_firmware_update_method_build_string_from_mask (self->update_method);
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
@@ -285,7 +285,7 @@ fu_mm_device_detach (FuDevice *device, GError **error)
 		return FALSE;
 
 	/* fastboot */
-	if (self->detach_method & MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT)
+	if (self->update_method & MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT)
 		return fu_mm_device_detach_fastboot (device, error);
 
 	/* should not get here */
