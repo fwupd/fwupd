@@ -1269,6 +1269,13 @@ fu_engine_install_tasks (FuEngine *self,
 		}
 	}
 
+	/* set all the device statuses back to unknown */
+	for (guint i = 0; i < install_tasks->len; i++) {
+		FuInstallTask *task = g_ptr_array_index (install_tasks, i);
+		FuDevice *device = fu_install_task_get_device (task);
+		fu_device_set_status (device, FWUPD_STATUS_UNKNOWN);
+	}
+
 	/* get a new list of devices in case they replugged */
 	devices_new = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	for (guint i = 0; i < devices->len; i++) {
