@@ -81,7 +81,6 @@ Name = Package level of Dell dock
 Summary = A representation of dock update status
 Plugin = dell_dock
 Vendor = Dell Inc
-Flags = updatable
 FirmwareSizeMin = 24
 FirmwareSizeMax = 24
 InstallDuration = 5

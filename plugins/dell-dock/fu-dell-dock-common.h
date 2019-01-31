@@ -35,4 +35,6 @@ gboolean	fu_dell_dock_set_power		(FuDevice *device,
 						 GError **error);
 void		 fu_dell_dock_will_replug	(FuDevice *device);
 
+void		 fu_dell_dock_clone_updatable	(FuDevice *device);
+
 #endif /* __FU_DELL_DOCK_COMMON_H */

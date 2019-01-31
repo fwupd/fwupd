@@ -51,6 +51,8 @@ fu_dell_dock_status_setup (FuDevice *device, GError **error)
 	fu_device_set_version (device, dynamic_version);
 	fu_device_set_logical_id (FU_DEVICE (device), "status");
 
+	fu_dell_dock_clone_updatable (device);
+
 	return TRUE;
 }
 
