@@ -117,6 +117,9 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 		}
 	}
 
+	/* clear updatable flag if parent doesn't have it */
+	fu_dell_dock_clone_updatable (fu_device);
+
 	return TRUE;
 }
 

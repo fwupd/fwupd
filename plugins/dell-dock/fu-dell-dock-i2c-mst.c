@@ -906,13 +906,14 @@ fu_dell_dock_mst_setup (FuDevice *device, GError **error)
 	if (version != NULL)
 		fu_device_set_version (device, version);
 
+	fu_dell_dock_clone_updatable (device);
+
 	return TRUE;
 }
 
 static gboolean
 fu_dell_dock_mst_probe (FuDevice *device, GError **error)
 {
-	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_logical_id (FU_DEVICE (device), "mst");
 
 	return TRUE;

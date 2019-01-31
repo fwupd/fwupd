@@ -203,7 +203,8 @@ fu_dell_dock_tbt_setup (FuDevice *device, GError **error)
 					   "Updates over I2C are disabled due to insufficient USB 3.1 G2 hub version");
 		return TRUE;
 	}
-	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+
+	fu_dell_dock_clone_updatable (device);
 
 	return TRUE;
 }
