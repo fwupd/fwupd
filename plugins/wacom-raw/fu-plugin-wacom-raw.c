@@ -75,8 +75,8 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 
 	/* not supported */
 	g_set_error_literal (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_FAILED,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "Only EMR or AES devices are supported");
 	return FALSE;
 }
