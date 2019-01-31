@@ -108,7 +108,7 @@ fu_plugin_upower_check_on_battery (FuPlugin *plugin)
 	value = g_dbus_proxy_get_cached_property (data->upower_proxy, "OnBattery");
 	if (value == NULL) {
 		g_warning ("failed to get OnBattery value, assume on AC power");
-		return TRUE;
+		return FALSE;
 	}
 	return g_variant_get_boolean (value);
 }
