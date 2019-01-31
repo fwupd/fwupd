@@ -20,7 +20,12 @@ Firmware Format
 ---------------
 
 The daemon will decompress the cabinet archive and extract a firmware blob in
-SREC file format, with a custom vendor header.
+the following formats:
+
+ * Touch module: Intel HEX file format
+ * Bluetooth module: Unknown airoflash file format
+ * EMR module: Plain SREC file format
+ * Main module: SREC file format, with a custom `WACOM` vendor header
 
 This plugin supports the following protocol ID:
 
