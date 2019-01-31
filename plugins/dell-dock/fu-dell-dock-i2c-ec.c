@@ -434,8 +434,7 @@ fu_dell_dock_ec_get_dock_info (FuDevice *device,
 	/* TODO: Drop if minimum EC is set to 23+
 	 * Determine if the passive flow should be used when flashing
 	 */
-	if (fu_device_has_custom_flag (device, "try-passive-flow") &&
-	    fu_common_vercmp (self->ec_version, "00.00.00.23") >= 0) {
+	if (fu_common_vercmp (self->ec_version, "00.00.00.23") >= 0) {
 		g_debug ("using passive flow");
 		self->passive_flow = PASSIVE_REBOOT_MASK;
 		fu_device_set_custom_flags (device, "skip-restart");
