@@ -13,6 +13,7 @@
 #include "fu-chunk.h"
 #include "fu-fastboot-device.h"
 
+#define FASTBOOT_REMOVE_DELAY_RE_ENUMERATE	60000 /* ms */
 #define FASTBOOT_TRANSACTION_TIMEOUT		1000 /* ms */
 #define FASTBOOT_TRANSACTION_RETRY_MAX		600
 #define FASTBOOT_EP_IN				0x81
@@ -683,8 +684,7 @@ fu_fastboot_device_init (FuFastbootDevice *self)
 	/* this is a safe default, even using USBv1 */
 	self->blocksz = 512;
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_set_remove_delay (FU_DEVICE (self),
-				    FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_set_remove_delay (FU_DEVICE (self), FASTBOOT_REMOVE_DELAY_RE_ENUMERATE);
 }
 
 static void
