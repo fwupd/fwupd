@@ -38,15 +38,6 @@ dfu_firmware_detect_srec (GBytes *bytes)
 	return DFU_FIRMWARE_FORMAT_SREC;
 }
 
-typedef enum {
-	DFU_SREC_RECORD_CLASS_UNKNOWN,
-	DFU_SREC_RECORD_CLASS_HEADER,
-	DFU_SREC_RECORD_CLASS_DATA,
-	DFU_SREC_RECORD_CLASS_TERMINATION,
-	DFU_SREC_RECORD_CLASS_COUNT,
-	DFU_SREC_RECORD_CLASS_LAST
-} DfuSrecClassType;
-
 /**
  * dfu_firmware_from_srec: (skip)
  * @firmware: a #DfuFirmware
@@ -65,65 +56,67 @@ dfu_image_from_srec (DfuImage *image,
 		     DfuFirmwareParseFlags flags,
 		     GError **error)
 {
-	const gchar *in_buffer;
+	const gchar *data;
 	gboolean got_eof = FALSE;
 	gboolean got_hdr = FALSE;
-	gsize len_in;
-	guint16 class_data_cnt = 0;
+	gsize sz = 0;
+	guint16 data_cnt = 0;
 	guint32 addr32_last = 0;
 	guint32 element_address = 0;
-	guint offset = 0;
-	g_autoptr(DfuElement) element = NULL;
+	g_auto(GStrv) lines = NULL;
+	g_autoptr(DfuElement) element = dfu_element_new ();
 	g_autoptr(GBytes) contents = NULL;
-	g_autoptr(GString) modname = g_string_new (NULL);
-	g_autoptr(GString) outbuf = NULL;
+	g_autoptr(GString) outbuf = g_string_new (NULL);
 
 	g_return_val_if_fail (bytes != NULL, FALSE);
 
-	/* create element */
-	element = dfu_element_new ();
-
 	/* parse records */
-	in_buffer = g_bytes_get_data (bytes, &len_in);
-	outbuf = g_string_new ("");
-	while (offset < len_in) {
-		DfuSrecClassType rec_class = DFU_SREC_RECORD_CLASS_UNKNOWN;
+	data = g_bytes_get_data (bytes, &sz);
+	lines = dfu_utils_strnsplit (data, sz, "\n", -1);
+	for (guint ln = 0; lines[ln] != NULL; ln++) {
+		const gchar *line = lines[ln];
+		gsize linesz;
 		guint32 rec_addr32;
-		guint8 rec_count;		/* bytes */
-		guint8 rec_dataoffset;		/* bytes */
+		guint8 addrsz = 0;		/* bytes */
+		guint8 rec_count;		/* words */
 		guint8 rec_kind;
 
+		/* ignore blank lines */
+		g_strdelimit (lines[ln], "\r", '\0');
+		linesz = strlen (line);
+		if (linesz == 0)
+			continue;
+
 		/* check starting token */
-		if (in_buffer[offset] != 'S') {
+		if (line[0] != 'S') {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
-				     "invalid starting token, got 0x%02x at 0x%x",
-				     (guint) in_buffer[offset], offset);
+				     "invalid starting token, got '%c' at line %u",
+				     line[0], ln);
 			return FALSE;
 		}
 
 		/* check there's enough data for the smallest possible record */
-		if (offset + 10 > (guint) len_in) {
+		if (linesz < 10) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
-				     "record incomplete at %u, length %u",
-				     offset, (guint) len_in);
+				     "record incomplete at line %u, length %u",
+				     ln, (guint) linesz);
 			return FALSE;
 		}
 
 		/* kind, count, address, (data), checksum, linefeed */
-		rec_kind = in_buffer[offset + 1];
-		rec_count = dfu_utils_buffer_parse_uint8 (in_buffer + offset + 2);
-
-		/* check we can read out this much data */
-		if (len_in < offset + (rec_count * 2) + 4) {
+		rec_kind = line[1] - '0';
+		rec_count = dfu_utils_buffer_parse_uint8 (line + 2);
+		if (rec_count * 2 != linesz - 4) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
-				     "file incomplete at %u, length %u",
-				     offset, (guint) len_in);
+				     "count incomplete at line %u, "
+				     "length %u, expected %u",
+				     ln, (guint) linesz - 4, (guint) rec_count * 2);
 			return FALSE;
 		}
 
@@ -132,28 +125,24 @@ dfu_image_from_srec (DfuImage *image,
 			guint8 rec_csum = 0;
 			guint8 rec_csum_expected;
 			for (guint8 i = 0; i < rec_count; i++)
-				rec_csum += dfu_utils_buffer_parse_uint8 (in_buffer + offset + (i * 2) + 2);
+				rec_csum += dfu_utils_buffer_parse_uint8 (line + (i * 2) + 2);
 			rec_csum ^= 0xff;
-			rec_csum_expected = dfu_utils_buffer_parse_uint8 (in_buffer + offset + (rec_count * 2) + 2);
+			rec_csum_expected = dfu_utils_buffer_parse_uint8 (line + (rec_count * 2) + 2);
 			if (rec_csum != rec_csum_expected) {
 				g_set_error (error,
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_INVALID_FILE,
-					     "checksum incorrect @ 0x%04x, expected %02x, got %02x",
-					     offset, rec_csum_expected, rec_csum);
+					     "checksum incorrect line %u, "
+					     "expected %02x, got %02x",
+					     ln, rec_csum_expected, rec_csum);
 				return FALSE;
 			}
 		}
 
-		/* record kind + record count (in bytes, not chars) */
-		rec_dataoffset = 2;
-
-		/* parse record */
+		/* set each command settings */
 		switch (rec_kind) {
-		case '0':
-			rec_class = DFU_SREC_RECORD_CLASS_HEADER;
-			rec_dataoffset += 2;
-			rec_addr32 = dfu_utils_buffer_parse_uint16 (in_buffer + offset + 4);
+		case 0:
+			addrsz = 2;
 			if (got_hdr) {
 				g_set_error_literal (error,
 						     FWUPD_ERROR,
@@ -161,6 +150,63 @@ dfu_image_from_srec (DfuImage *image,
 						     "duplicate header record");
 				return FALSE;
 			}
+			got_hdr = TRUE;
+			break;
+		case 1:
+			addrsz = 2;
+			break;
+		case 2:
+			addrsz = 3;
+			break;
+		case 3:
+			addrsz = 4;
+			break;
+		case 5:
+			addrsz = 2;
+			got_eof = TRUE;
+			break;
+		case 6:
+			addrsz = 3;
+			break;
+		case 7:
+			addrsz = 4;
+			got_eof = TRUE;
+			break;
+		case 8:
+			addrsz = 3;
+			got_eof = TRUE;
+			break;
+		case 9:
+			addrsz = 2;
+			got_eof = TRUE;
+			break;
+		default:
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "invalid srec record type S%c",
+				     line[1]);
+			return FALSE;
+		}
+
+		/* parse address */
+		switch (addrsz) {
+		case 2:
+			rec_addr32 = dfu_utils_buffer_parse_uint16 (line + 4);
+			break;
+		case 3:
+			rec_addr32 = dfu_utils_buffer_parse_uint24 (line + 4);
+			break;
+		case 4:
+			rec_addr32 = dfu_utils_buffer_parse_uint32 (line + 4);
+			break;
+		default:
+			g_assert_not_reached ();
+		}
+
+		/* header */
+		if (rec_kind == 0) {
+			g_autoptr(GString) modname = g_string_new (NULL);
 			if (rec_addr32 != 0x0) {
 				g_set_error (error,
 					     FWUPD_ERROR,
@@ -169,76 +215,34 @@ dfu_image_from_srec (DfuImage *image,
 					     rec_addr32);
 				return FALSE;
 			}
+
 			/* could be anything, lets assume text */
-			for (guint8 i = rec_dataoffset; i <= rec_count; i++) {
-				guint8 tmp = dfu_utils_buffer_parse_uint8 (in_buffer + offset + (i * 2));
+			for (guint8 i = 4 + (addrsz * 2); i <= rec_count * 2; i += 2) {
+				guint8 tmp = dfu_utils_buffer_parse_uint8 (line + i);
 				if (!g_ascii_isgraph (tmp))
 					break;
 				g_string_append_c (modname, tmp);
 			}
 			if (modname->len != 0)
 				dfu_image_set_name (image, modname->str);
-			got_hdr = TRUE;
-			break;
-		case '1':
-			rec_class = DFU_SREC_RECORD_CLASS_DATA;
-			rec_dataoffset += 2;
-			rec_addr32 = dfu_utils_buffer_parse_uint16 (in_buffer + offset + 4);
-			break;
-		case '2':
-			rec_class = DFU_SREC_RECORD_CLASS_DATA;
-			rec_dataoffset += 3;
-			rec_addr32 = dfu_utils_buffer_parse_uint24 (in_buffer + offset + 4);
-			break;
-		case '3':
-			rec_class = DFU_SREC_RECORD_CLASS_DATA;
-			rec_dataoffset += 4;
-			rec_addr32 = dfu_utils_buffer_parse_uint32 (in_buffer + offset + 4);
-			break;
-		case '9':
-			rec_class = DFU_SREC_RECORD_CLASS_TERMINATION;
-			rec_addr32 = dfu_utils_buffer_parse_uint16 (in_buffer + offset + 4);
-			got_eof = TRUE;
-			break;
-		case '8':
-			rec_class = DFU_SREC_RECORD_CLASS_TERMINATION;
-			rec_addr32 = dfu_utils_buffer_parse_uint24 (in_buffer + offset + 4);
-			got_eof = TRUE;
-			break;
-		case '7':
-			rec_class = DFU_SREC_RECORD_CLASS_TERMINATION;
-			rec_addr32 = dfu_utils_buffer_parse_uint32 (in_buffer + offset + 4);
-			got_eof = TRUE;
-			break;
-		case '5':
-			rec_class = DFU_SREC_RECORD_CLASS_COUNT;
-			rec_addr32 = dfu_utils_buffer_parse_uint16 (in_buffer + offset + 4);
-			if (rec_addr32 != class_data_cnt) {
+			continue;
+		}
+
+		/* verify we got all records */
+		if (rec_kind == 5) {
+			if (rec_addr32 != data_cnt) {
 				g_set_error (error,
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_INVALID_FILE,
 					     "count record was not valid, got 0x%02x expected 0x%02x",
-					     (guint) rec_addr32, (guint) class_data_cnt);
+					     (guint) rec_addr32, (guint) data_cnt);
 				return FALSE;
 			}
-			got_eof = TRUE;
-			break;
-		default:
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "invalid srec record type S%c",
-				     rec_kind);
-			return FALSE;
 		}
 
-		/* record EOF */
-		if (rec_class == DFU_SREC_RECORD_CLASS_TERMINATION)
-			g_debug ("start execution location: 0x%04x", (guint) rec_addr32);
-
-		/* read data */
-		if (rec_class == DFU_SREC_RECORD_CLASS_DATA) {
-			/* probably invalid data */
+		/* data */
+		if (rec_kind == 1 || rec_kind == 2 || rec_kind == 3) {
+			/* invalid */
 			if (!got_hdr) {
 				g_set_error_literal (error,
 						     FWUPD_ERROR,
@@ -260,23 +264,15 @@ dfu_image_from_srec (DfuImage *image,
 				g_debug ("ignoring data at 0x%x as before start address 0x%x",
 					 (guint) rec_addr32, (guint) start_addr);
 			} else {
-				for (guint8 i = rec_dataoffset; i <= rec_count; i++) {
-					guint8 tmp = dfu_utils_buffer_parse_uint8 (in_buffer + offset + (i * 2));
+				for (guint8 i = 4 + (addrsz * 2); i <= rec_count * 2; i += 2) {
+					guint8 tmp = dfu_utils_buffer_parse_uint8 (line + i);
 					g_string_append_c (outbuf, tmp);
 				}
 				if (element_address == 0x0)
 					element_address = rec_addr32;
 			}
 			addr32_last = rec_addr32++;
-			class_data_cnt++;
-		}
-
-		/* ignore any line return */
-		offset += (rec_count * 2) + 4;
-		for (; offset < len_in; offset++) {
-			if (in_buffer[offset] != '\n' &&
-			    in_buffer[offset] != '\r')
-				break;
+			data_cnt++;
 		}
 	}
 
