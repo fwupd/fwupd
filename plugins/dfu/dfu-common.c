@@ -326,3 +326,27 @@ dfu_utils_buffer_parse_uint32 (const gchar *data)
 	buffer[8] = '\0';
 	return (guint32) g_ascii_strtoull (buffer, NULL, 16);
 }
+
+/**
+ * dfu_utils_strnsplit:
+ * @str: a string to split
+ * @sz: size of @str
+ * @delimiter: a string which specifies the places at which to split the string
+ * @max_tokens: the maximum number of pieces to split @str into
+ *
+ * Splits a string into a maximum of @max_tokens pieces, using the given
+ * delimiter. If @max_tokens is reached, the remainder of string is appended
+ * to the last token.
+ *
+ * Return value: a newly-allocated NULL-terminated array of strings
+ **/
+gchar **
+dfu_utils_strnsplit (const gchar *str, gsize sz,
+		     const gchar *delimiter, gint max_tokens)
+{
+	if (str[sz - 1] != '\0') {
+		g_autofree gchar *str2 = g_strndup (str, sz);
+		return g_strsplit (str2, delimiter, max_tokens);
+	}
+	return g_strsplit (str, delimiter, max_tokens);
+}

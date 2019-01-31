@@ -74,17 +74,6 @@ dfu_firmware_ihex_record_type_to_string (guint8 record_type)
 	return NULL;
 }
 
-static gchar **
-_g_strnsplit (const gchar *str, gsize sz,
-	      const gchar *delimiter, gint max_tokens)
-{
-	if (str[sz - 1] != '\0') {
-		g_autofree gchar *str2 = g_strndup (str, sz);
-		return g_strsplit (str2, delimiter, max_tokens);
-	}
-	return g_strsplit (str, delimiter, max_tokens);
-}
-
 /**
  * dfu_firmware_from_ihex: (skip)
  * @firmware: a #DfuFirmware
@@ -125,7 +114,7 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 
 	/* parse records */
 	data = g_bytes_get_data (bytes, &sz);
-	lines = _g_strnsplit ((const gchar *) data, sz, "\n", -1);
+	lines = dfu_utils_strnsplit (data, sz, "\n", -1);
 	for (guint ln = 0; lines[ln] != NULL; ln++) {
 		const gchar *line = lines[ln];
 		gsize linesz;

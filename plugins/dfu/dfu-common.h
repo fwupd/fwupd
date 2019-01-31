@@ -165,6 +165,10 @@ guint8		 dfu_utils_buffer_parse_uint8		(const gchar	*data);
 guint16		 dfu_utils_buffer_parse_uint16		(const gchar	*data);
 guint32		 dfu_utils_buffer_parse_uint24		(const gchar	*data);
 guint32		 dfu_utils_buffer_parse_uint32		(const gchar	*data);
+gchar		**dfu_utils_strnsplit			(const gchar	*str,
+							 gsize		 sz,
+							 const gchar	*delimiter,
+							 gint		 max_tokens);
 
 G_END_DECLS
 
