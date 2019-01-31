@@ -1343,8 +1343,10 @@ main (int argc, char *argv[])
 			  (GCompareFunc) fu_sort_command_name_cb);
 
 	/* non-TTY consoles cannot answer questions */
-	if (isatty (fileno (stdout)) == 0)
+	if (isatty (fileno (stdout)) == 0) {
 		priv->no_reboot_check = TRUE;
+		fu_progressbar_set_interactive (priv->progressbar, FALSE);
+	}
 
 	/* get a list of the commands */
 	priv->context = g_option_context_new (NULL);

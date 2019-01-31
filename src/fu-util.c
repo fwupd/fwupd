@@ -2466,6 +2466,7 @@ main (int argc, char *argv[])
 		priv->no_unreported_check = TRUE;
 		priv->no_metadata_check = TRUE;
 		priv->no_reboot_check = TRUE;
+		fu_progressbar_set_interactive (priv->progressbar, FALSE);
 	}
 
 	/* get a list of the commands */
