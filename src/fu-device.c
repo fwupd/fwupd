@@ -2089,6 +2089,24 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 		klass->incorporate (self, donor);
 }
 
+/**
+ * fu_device_incorporate_from_component:
+ * @self: A #FuDevice
+ * @component: A #XbNode
+ *
+ * Copy all properties from the donor AppStream component.
+ *
+ * Since: 1.2.4
+ **/
+void
+fu_device_incorporate_from_component (FuDevice *device, XbNode *component)
+{
+	const gchar *tmp;
+	tmp = xb_node_query_text (component, "custom/value[@key='LVFS::UpdateMessage']", NULL);
+	if (tmp != NULL)
+		fwupd_device_set_update_message (FWUPD_DEVICE (device), tmp);
+}
+
 static void
 fu_device_class_init (FuDeviceClass *klass)
 {

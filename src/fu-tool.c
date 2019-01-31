@@ -17,6 +17,7 @@
 #include <unistd.h>
 #include <libsoup/soup.h>
 
+#include "fu-device-private.h"
 #include "fu-engine.h"
 #include "fu-plugin-private.h"
 #include "fu-progressbar.h"
@@ -822,6 +823,9 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 				g_ptr_array_add (errors, g_steal_pointer (&error_local));
 				continue;
 			}
+
+			/* if component should have an update message from CAB */
+			fu_device_incorporate_from_component (device, component);
 
 			/* success */
 			g_ptr_array_add (install_tasks, g_steal_pointer (&task));
