@@ -56,6 +56,8 @@ typedef struct {
 	FwupdDevice		*current_device;
 	gchar			*current_message;
 	FwupdDeviceFlags	 completion_flags;
+	gboolean		 prepare_blob;
+	gboolean		 cleanup_blob;
 } FuUtilPrivate;
 
 typedef gboolean (*FuUtilPrivateCb)	(FuUtilPrivate	*util,
@@ -645,6 +647,7 @@ fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(GBytes) blob_fw = NULL;
+	FuInstallBlobFlags blob_flags = FU_INSTALL_BLOB_FLAGS_NONE;
 
 	/* invalid args */
 	if (g_strv_length (values) == 0) {
@@ -681,13 +684,18 @@ fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_signal_connect (priv->engine, "device-changed",
 			  G_CALLBACK (fu_util_update_device_changed_cb), priv);
 
+	if (priv->prepare_blob)
+		blob_flags |= FU_INSTALL_BLOB_FLAG_PREPARE;
+	if (priv->cleanup_blob)
+		blob_flags |= FU_INSTALL_BLOB_FLAG_CLEANUP;
+
 	/* write bare firmware */
-	if (!fu_engine_install_blob (priv->engine, device,
-				     NULL, /* blob_cab */
-				     blob_fw,
-				     NULL, /* version */
-				     priv->flags,
-				     error))
+	if (!fu_engine_install_blob_with_composite (priv->engine,
+						    device,
+						    blob_fw,
+						    priv->flags,
+						    blob_flags,
+						    error))
 		return FALSE;
 
 	fu_util_display_current_message (priv);
@@ -1219,6 +1227,13 @@ main (int argc, char *argv[])
 		{ "plugin-whitelist", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &plugin_glob,
 			/* TRANSLATORS: command line option */
 			_("Manually whitelist specific plugins"), NULL },
+		{ "prepare", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &priv->prepare_blob,
+			/* TRANSLATORS: command line option */
+			_("Run the plugin composite prepare routine when using install-blob"), NULL },
+		{ "cleanup", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &priv->cleanup_blob,
+			/* TRANSLATORS: command line option */
+			_("Run the plugin composite cleanup routine when using install-blob"), NULL },
+
 		{ NULL}
 	};
 

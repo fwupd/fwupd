@@ -89,6 +89,14 @@ static guint signals[SIGNAL_LAST] = { 0 };
 
 G_DEFINE_TYPE (FuEngine, fu_engine, G_TYPE_OBJECT)
 
+static gboolean	fu_engine_install_blob		(FuEngine *self,
+						 FuDevice *device_orig,
+						 GBytes *blob_cab,
+						 GBytes *blob_fw2,
+						 const gchar *version,
+						 FwupdInstallFlags flags,
+						 GError **error);
+
 static void
 fu_engine_emit_changed (FuEngine *self)
 {
@@ -1216,6 +1224,79 @@ fu_engine_composite_cleanup (FuEngine *self, GPtrArray *devices, GError **error)
 	return TRUE;
 }
 
+static GPtrArray *
+fu_engine_get_replugged_devices (FuEngine *self, GPtrArray *devices_old)
+{
+	GPtrArray *devices_new;
+
+	devices_new = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	for (guint i = 0; i < devices_old->len; i++) {
+		FuDevice *device;
+		g_autoptr(FuDevice) device_new = NULL;
+		g_autoptr(GError) error_local = NULL;
+		device = g_ptr_array_index (devices_old, i);
+		device_new = fu_device_list_get_by_id (self->device_list,
+						       fu_device_get_id (device),
+						       &error_local);
+		if (device_new == NULL) {
+			g_debug ("failed to find new device: %s",
+				 error_local->message);
+			continue;
+		}
+		g_ptr_array_add (devices_new, g_steal_pointer (&device_new));
+	}
+
+	return devices_new;
+}
+
+gboolean
+fu_engine_install_blob_with_composite (FuEngine *self,
+				       FuDevice *device_orig,
+				       GBytes *blob_fw2,
+				       FwupdInstallFlags install_flags,
+				       FuInstallBlobFlags blob_flags,
+				       GError **error)
+{
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GPtrArray) devices_new = NULL;
+
+	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	g_ptr_array_add (devices, g_object_ref (device_orig));
+
+	if (blob_flags & FU_INSTALL_BLOB_FLAG_PREPARE) {
+		if (!fu_engine_composite_prepare (self, devices, error)) {
+			g_prefix_error (error, "failed to prepare composite action: ");
+			return FALSE;
+		}
+	}
+
+	if (!fu_engine_install_blob (self, device_orig,
+				     NULL, /* blob_cab */
+				     blob_fw2,
+				     NULL, /* version */
+				     install_flags,
+				     error)) {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_engine_composite_cleanup (self, devices, &error_local)) {
+			g_warning ("failed to cleanup failed composite action: %s",
+					error_local->message);
+		}
+		return FALSE;
+	}
+
+	/* get a new list of devices in case they replugged */
+	devices_new = fu_engine_get_replugged_devices (self, devices);
+
+	if (blob_flags & FU_INSTALL_BLOB_FLAG_CLEANUP) {
+		if (!fu_engine_composite_cleanup (self, devices_new, error)) {
+			g_prefix_error (error, "failed to cleanup composite action: ");
+			return FALSE;
+		}
+	}
+
+	return TRUE;
+}
+
 /**
  * fu_engine_install_tasks:
  * @self: A #FuEngine
@@ -1279,22 +1360,7 @@ fu_engine_install_tasks (FuEngine *self,
 	}
 
 	/* get a new list of devices in case they replugged */
-	devices_new = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	for (guint i = 0; i < devices->len; i++) {
-		FuDevice *device;
-		g_autoptr(FuDevice) device_new = NULL;
-		g_autoptr(GError) error_local = NULL;
-		device = g_ptr_array_index (devices, i);
-		device_new = fu_device_list_get_by_id (self->device_list,
-						       fu_device_get_id (device),
-						       &error_local);
-		if (device_new == NULL) {
-			g_debug ("failed to find new device: %s",
-				 error_local->message);
-			continue;
-		}
-		g_ptr_array_add (devices_new, g_steal_pointer (&device_new));
-	}
+	devices_new = fu_engine_get_replugged_devices (self, devices);
 
 	/* notify the plugins about the composite action */
 	if (!fu_engine_composite_cleanup (self, devices_new, error)) {
@@ -1462,7 +1528,7 @@ fu_engine_get_device_by_id (FuEngine *self, const gchar *device_id, GError **err
 	return g_steal_pointer (&device2);
 }
 
-gboolean
+static gboolean
 fu_engine_install_blob (FuEngine *self,
 			FuDevice *device_orig,
 			GBytes *blob_cab,
