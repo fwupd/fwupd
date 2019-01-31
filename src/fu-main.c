@@ -629,6 +629,9 @@ fu_main_install_with_helper (FuMainAuthHelper *helper_ref, GError **error)
 				continue;
 			}
 
+			/* if component should have an update message from CAB */
+			fu_device_incorporate_from_component (device, component);
+
 			/* get the action IDs for the valid device */
 			action_id = fu_install_task_get_action_id (task);
 			if (!g_ptr_array_find (helper->action_ids, action_id, NULL))
