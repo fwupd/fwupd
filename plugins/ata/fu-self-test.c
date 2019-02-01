@@ -29,7 +29,7 @@ fu_ata_id_func (void)
 	dev = fu_ata_device_new_from_blob ((guint8 *)data, sz, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (dev);
-	g_assert_cmpint (fu_ata_device_get_transfer_mode (dev), ==, 0x3);
+	g_assert_cmpint (fu_ata_device_get_transfer_mode (dev), ==, 0xe);
 	g_assert_cmpint (fu_ata_device_get_transfer_blocks (dev), ==, 0x1);
 	g_assert_cmpstr (fu_device_get_serial (FU_DEVICE (dev)), ==, "A45A078A198600476509");
 	g_assert_cmpstr (fu_device_get_name (FU_DEVICE (dev)), ==, "SATA SSD");
