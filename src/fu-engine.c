@@ -1473,16 +1473,25 @@ fu_engine_install (FuEngine *self,
 					     "No cabinet archive to schedule");
 			return FALSE;
 		}
-		return fu_plugin_runner_schedule_update (plugin,
-							 device,
-							 blob_cab,
-							 error);
+		return fu_plugin_runner_schedule_update (plugin, device, blob_cab, error);
 	}
 
 	/* install firmware blob */
 	version_orig = g_strdup (fu_device_get_version (device));
-	if (!fu_engine_install_blob (self, device, blob_fw2, flags, error))
+	if (!fu_engine_install_blob (self, device, blob_fw2, flags, &error_local)) {
+		fu_device_set_status (device, FWUPD_STATUS_IDLE);
+		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
+		fu_device_set_update_error (device, error_local->message);
+		if ((flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0 &&
+		    !fu_history_modify_device (self->history, device,
+					       FU_HISTORY_FLAGS_MATCH_OLD_VERSION |
+					       FU_HISTORY_FLAGS_MATCH_NEW_VERSION,
+					       error)) {
+			return FALSE;
+		}
+		g_propagate_error (error, g_steal_pointer (&error_local));
 		return FALSE;
+	}
 
 	/* update database */
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT) ||
@@ -1579,22 +1588,167 @@ fu_engine_get_device_by_id (FuEngine *self, const gchar *device_id, GError **err
 	return g_steal_pointer (&device2);
 }
 
+static gboolean
+fu_engine_update_prepare (FuEngine *self,
+			  FwupdInstallFlags flags,
+			  const gchar *device_id,
+			  GError **error)
+{
+	GPtrArray *plugins = fu_plugin_list_get_all (self->plugin_list);
+	g_autoptr(FuDevice) device = NULL;
+
+	/* the device and plugin both may have changed */
+	device = fu_engine_get_device_by_id (self, device_id, error);
+	if (device == NULL)
+		return FALSE;
+	for (guint j = 0; j < plugins->len; j++) {
+		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
+		if (!fu_plugin_runner_update_prepare (plugin_tmp, flags, device, error))
+			return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_engine_update_cleanup (FuEngine *self,
+			  FwupdInstallFlags flags,
+			  const gchar *device_id,
+			  GError **error)
+{
+	GPtrArray *plugins = fu_plugin_list_get_all (self->plugin_list);
+	g_autoptr(FuDevice) device = NULL;
+
+	/* the device and plugin both may have changed */
+	device = fu_engine_get_device_by_id (self, device_id, error);
+	if (device == NULL)
+		return FALSE;
+	for (guint j = 0; j < plugins->len; j++) {
+		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
+		if (!fu_plugin_runner_update_cleanup (plugin_tmp, flags, device, error))
+			return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_engine_update_detach (FuEngine *self, const gchar *device_id, GError **error)
+{
+	FuPlugin *plugin;
+	g_autoptr(FuDevice) device = NULL;
+
+	/* the device and plugin both may have changed */
+	device = fu_engine_get_device_by_id (self, device_id, error);
+	if (device == NULL)
+		return FALSE;
+	plugin = fu_plugin_list_find_by_name (self->plugin_list,
+					      fu_device_get_plugin (device),
+					      error);
+	if (plugin == NULL)
+		return FALSE;
+	if (!fu_plugin_runner_update_detach (plugin, device, error))
+		return FALSE;
+	return TRUE;
+}
+
+static gboolean
+fu_engine_update_attach (FuEngine *self, const gchar *device_id, GError **error)
+{
+	FuPlugin *plugin;
+	g_autoptr(FuDevice) device = NULL;
+
+	/* the device and plugin both may have changed */
+	device = fu_engine_get_device_by_id (self, device_id, error);
+	if (device == NULL) {
+		g_prefix_error (error, "failed to get device after update: ");
+		return FALSE;
+	}
+	plugin = fu_plugin_list_find_by_name (self->plugin_list,
+					      fu_device_get_plugin (device),
+					      error);
+	if (plugin == NULL)
+		return FALSE;
+	if (!fu_plugin_runner_update_attach (plugin, device, error))
+		return FALSE;
+	return TRUE;
+}
+
+static gboolean
+fu_engine_update_reload (FuEngine *self, const gchar *device_id, GError **error)
+{
+	FuPlugin *plugin;
+	g_autoptr(FuDevice) device = NULL;
+
+	/* the device and plugin both may have changed */
+	device = fu_engine_get_device_by_id (self, device_id, error);
+	if (device == NULL) {
+		g_prefix_error (error, "failed to get device after update: ");
+		return FALSE;
+	}
+	plugin = fu_plugin_list_find_by_name (self->plugin_list,
+					      fu_device_get_plugin (device),
+					      error);
+	if (plugin == NULL)
+		return FALSE;
+	if (!fu_plugin_runner_update_reload (plugin, device, error)) {
+		g_prefix_error (error, "failed to reload device: ");
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_engine_update (FuEngine *self,
+		  const gchar *device_id,
+		  GBytes *blob_fw2,
+		  FwupdInstallFlags flags,
+		  GError **error)
+{
+	FuPlugin *plugin;
+	g_autoptr(FuDevice) device = NULL;
+
+	/* the device and plugin both may have changed */
+	device = fu_engine_get_device_by_id (self, device_id, error);
+	if (device == NULL) {
+		g_prefix_error (error, "failed to get device after detach: ");
+		return FALSE;
+	}
+	plugin = fu_plugin_list_find_by_name (self->plugin_list,
+					      fu_device_get_plugin (device),
+					      error);
+	if (plugin == NULL)
+		return FALSE;
+	if (!fu_plugin_runner_update (plugin, device, blob_fw2, flags, error)) {
+		g_autoptr(GError) error_attach = NULL;
+		g_autoptr(GError) error_cleanup = NULL;
+
+		/* attack back into runtime then cleanup */
+		if (!fu_plugin_runner_update_attach (plugin,
+						     device,
+						     &error_attach)) {
+			g_warning ("failed to attach device after failed update: %s",
+				   error_attach->message);
+		}
+		if (!fu_engine_update_cleanup (self, flags, device_id, &error_cleanup)) {
+			g_warning ("failed to update-cleanup after failed update: %s",
+				   error_cleanup->message);
+		}
+		return FALSE;
+	}
+	return TRUE;
+}
+
 gboolean
 fu_engine_install_blob (FuEngine *self,
-			FuDevice *device_orig,
-			GBytes *blob_fw2,
+			FuDevice *device,
+			GBytes *blob_fw,
 			FwupdInstallFlags flags,
 			GError **error)
 {
-	FuPlugin *plugin;
-	GPtrArray *plugins;
-	g_autofree gchar *device_id_orig = NULL;
-	g_autoptr(FuDevice) device = g_object_ref (device_orig);
-	g_autoptr(GError) error_local = NULL;
+	g_autofree gchar *device_id = NULL;
 	g_autoptr(GTimer) timer = g_timer_new ();
 
 	/* test the firmware is not an empty blob */
-	if (g_bytes_get_size (blob_fw2) == 0) {
+	if (g_bytes_get_size (blob_fw) == 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
@@ -1602,147 +1756,33 @@ fu_engine_install_blob (FuEngine *self,
 		return FALSE;
 	}
 
-	/* get the plugin */
-	plugin = fu_plugin_list_find_by_name (self->plugin_list,
-					      fu_device_get_plugin (device),
-					      error);
-	if (plugin == NULL)
-		return FALSE;
-
-	/* signal to all the plugins the update is about to happen */
-	plugins = fu_plugin_list_get_all (self->plugin_list);
-	for (guint j = 0; j < plugins->len; j++) {
-		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
-		if (!fu_plugin_runner_update_prepare (plugin_tmp, flags, device, error))
-			return FALSE;
-	}
-
-	/* save the chosen device ID in case the device goes away */
-	device_id_orig = g_strdup (fu_device_get_id (device));
-
-	/* in case another device caused us to go into replug before starting */
-	g_clear_object (&device);
-	device = fu_engine_get_device_by_id (self, device_id_orig, error);
-	if (device == NULL)
-		return FALSE;
-
 	/* mark this as modified even if we actually fail to do the update */
 	fu_device_set_modified (device, (guint64) g_get_real_time () / G_USEC_PER_SEC);
 
-	/* do the update */
-	if (!fu_plugin_runner_update_detach (plugin, device, &error_local)) {
-		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
-		fu_device_set_update_error (device, error_local->message);
-		if ((flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0 &&
-		    !fu_history_modify_device (self->history, device,
-					       FU_HISTORY_FLAGS_MATCH_OLD_VERSION,
-					       error)) {
-			return FALSE;
-		}
-		g_propagate_error (error, g_steal_pointer (&error_local));
+	/* signal to all the plugins the update is about to happen */
+	device_id = g_strdup (fu_device_get_id (device));
+	if (!fu_engine_update_prepare (self, flags, device_id, error))
 		return FALSE;
-	}
-	g_clear_object (&device);
-	device = fu_engine_get_device_by_id (self, device_id_orig, error);
-	if (device == NULL) {
-		g_prefix_error (error, "failed to get device after detach: ");
-		return FALSE;
-	}
 
-	/* get new plugin after detach */
-	plugin = fu_plugin_list_find_by_name (self->plugin_list,
-					      fu_device_get_plugin (device),
-					      error);
-	if (plugin == NULL)
+	/* detach to bootloader mode */
+	if (!fu_engine_update_detach (self, device_id, error))
 		return FALSE;
-	if (!fu_plugin_runner_update (plugin,
-				      device,
-				      blob_fw2,
-				      flags,
-				      &error_local)) {
-		g_autoptr(GError) error_attach = NULL;
 
-		/* save to database */
-		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
-		fu_device_set_update_error (device, error_local->message);
-		if ((flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0 &&
-		    !fu_history_modify_device (self->history, device,
-					       FU_HISTORY_FLAGS_MATCH_OLD_VERSION,
-					       error)) {
-			return FALSE;
-		}
-		g_propagate_error (error, g_steal_pointer (&error_local));
+	/* install */
+	if (!fu_engine_update (self, device_id, blob_fw, flags, error))
+		return FALSE;
 
-		/* attack back into runtime */
-		if (!fu_plugin_runner_update_attach (plugin,
-						     device,
-						     &error_attach)) {
-			g_warning ("failed to attach device after failed update: %s",
-				   error_attach->message);
-		}
-		for (guint j = 0; j < plugins->len; j++) {
-			FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
-			g_autoptr(GError) error_cleanup = NULL;
-			if (!fu_plugin_runner_update_cleanup (plugin_tmp,
-							      flags,
-							      device,
-							      &error_cleanup)) {
-				g_warning ("failed to update-cleanup "
-					   "after failed update: %s",
-					   error_cleanup->message);
-			}
-		}
-		fu_device_set_status (device, FWUPD_STATUS_IDLE);
-		return FALSE;
-	}
-	g_clear_object (&device);
-	device = fu_engine_get_device_by_id (self, device_id_orig, error);
-	if (device == NULL) {
-		g_prefix_error (error, "failed to get device after update: ");
-		return FALSE;
-	}
-	if (!fu_plugin_runner_update_attach (plugin, device, &error_local)) {
-		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
-		fu_device_set_update_error (device, error_local->message);
-		if ((flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0 &&
-		    !fu_history_modify_device (self->history, device,
-					       FU_HISTORY_FLAGS_MATCH_OLD_VERSION |
-					       FU_HISTORY_FLAGS_MATCH_NEW_VERSION,
-					       error)) {
-			return FALSE;
-		}
-		g_propagate_error (error, g_steal_pointer (&error_local));
-		return FALSE;
-	}
-	g_clear_object (&device);
-	device = fu_engine_get_device_by_id (self, device_id_orig, error);
-	if (device == NULL) {
-		g_prefix_error (error, "failed to get device after attach: ");
-		return FALSE;
-	}
-
-	/* get new plugin after attach */
-	plugin = fu_plugin_list_find_by_name (self->plugin_list,
-					      fu_device_get_plugin (device),
-					      error);
-	if (plugin == NULL)
+	/* attach into runtime mode */
+	if (!fu_engine_update_attach (self, device_id, error))
 		return FALSE;
 
 	/* get the new version number */
-	if (!fu_plugin_runner_update_reload (plugin, device, error)) {
-		g_prefix_error (error, "failed to reload device: ");
+	if (!fu_engine_update_reload (self, device_id, error))
 		return FALSE;
-	}
 
 	/* signal to all the plugins the update has happened */
-	for (guint j = 0; j < plugins->len; j++) {
-		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
-		g_autoptr(GError) error_cleanup = NULL;
-		if (!fu_plugin_runner_update_cleanup (plugin_tmp, flags, device, &error_cleanup)) {
-			g_warning ("failed to update-cleanup: %s",
-				   error_cleanup->message);
-		}
-	}
+	if (!fu_engine_update_cleanup (self, flags, device_id, error))
+		return FALSE;
 
 	/* make the UI update */
 	fu_engine_set_status (self, FWUPD_STATUS_IDLE);
