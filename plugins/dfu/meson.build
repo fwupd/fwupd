@@ -6,6 +6,7 @@ install_data(['dfu.quirk'],
 
 dfu = static_library(
   'dfu',
+  fu_hash,
   sources : [
     'dfu-cipher-xtea.c',
     'dfu-common.c',
@@ -117,6 +118,7 @@ if get_option('tests')
   cargs += '-DTESTDATADIR="' + testdatadir + '"'
   e = executable(
     'dfu-self-test',
+    fu_hash,
     sources : [
       'dfu-self-test.c'
     ],

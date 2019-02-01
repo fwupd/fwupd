@@ -50,6 +50,7 @@ if get_option('tests')
   cargs += '-DTESTDATADIR="' + testdatadir + '"'
   e = executable(
     'udev-self-test',
+    fu_hash,
     sources : [
       'fu-self-test.c',
       'fu-rom.c',

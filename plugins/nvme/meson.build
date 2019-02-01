@@ -38,6 +38,7 @@ if get_option('tests')
   cargs += '-DTESTDATADIR="' + testdatadir + '"'
   e = executable(
     'nvme-self-test',
+    fu_hash,
     sources : [
       'fu-self-test.c',
       'fu-nvme-common.c',

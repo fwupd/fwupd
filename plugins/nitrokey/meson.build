@@ -30,6 +30,7 @@ shared_module('fu_plugin_nitrokey',
 if get_option('tests')
   e = executable(
     'nitrokey-self-test',
+    fu_hash,
     sources : [
       'fu-nitrokey-common.c',
       'fu-self-test.c',

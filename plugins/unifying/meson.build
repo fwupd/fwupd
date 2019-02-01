@@ -39,6 +39,7 @@ shared_module('fu_plugin_unifying',
 if get_option('tests')
   e = executable(
     'unifying-self-test',
+    fu_hash,
     sources : [
       'fu-unifying-self-test.c',
       'fu-unifying-common.c',

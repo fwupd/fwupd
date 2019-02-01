@@ -38,6 +38,7 @@ if get_option('tests')
   cargs += '-DTESTDATADIR="' + testdatadir + '"'
   e = executable(
     'wacom-usb-self-test',
+    fu_hash,
     sources : [
       'fu-self-test.c',
       'fu-wac-common.c',

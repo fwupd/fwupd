@@ -32,6 +32,7 @@ install_data(['redfish.conf'],
 if get_option('tests')
   e = executable(
     'redfish-self-test',
+    fu_hash,
     sources : [
       'fu-self-test.c',
       'fu-redfish-client.c',
