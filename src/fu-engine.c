@@ -1463,8 +1463,23 @@ fu_engine_install (FuEngine *self,
 			return FALSE;
 	}
 
+	/* just schedule this for the next reboot  */
+	if (flags & FWUPD_INSTALL_FLAG_OFFLINE) {
+		if (blob_cab == NULL) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
+					     "No cabinet archive to schedule");
+			return FALSE;
+		}
+		return fu_plugin_runner_schedule_update (plugin,
+							 device,
+							 blob_cab,
+							 error);
+	}
+
 	/* install firmware blob */
-	return fu_engine_install_blob (self, device, blob_cab, blob_fw2,
+	return fu_engine_install_blob (self, device, blob_fw2,
 				       version_rel, flags, error);
 }
 
@@ -1520,7 +1535,6 @@ fu_engine_get_device_by_id (FuEngine *self, const gchar *device_id, GError **err
 gboolean
 fu_engine_install_blob (FuEngine *self,
 			FuDevice *device_orig,
-			GBytes *blob_cab,
 			GBytes *blob_fw2,
 			const gchar *version,
 			FwupdInstallFlags flags,
@@ -1608,22 +1622,6 @@ fu_engine_install_blob (FuEngine *self,
 					      error);
 	if (plugin == NULL)
 		return FALSE;
-
-	/* just schedule this for the next reboot  */
-	if (flags & FWUPD_INSTALL_FLAG_OFFLINE) {
-		if (blob_cab == NULL) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_NOT_SUPPORTED,
-					     "No cabinet archive to schedule");
-			return FALSE;
-		}
-		return fu_plugin_runner_schedule_update (plugin,
-							 device,
-							 blob_cab,
-							 error);
-	}
-
 	if (!fu_plugin_runner_update (plugin,
 				      device,
 				      blob_fw2,
