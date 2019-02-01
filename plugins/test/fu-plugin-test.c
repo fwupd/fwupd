@@ -164,6 +164,17 @@ fu_plugin_update (FuPlugin *plugin,
 	} else {
 		fu_device_set_version (device, "1.2.3");
 	}
+
+	/* do this all over again */
+	if (g_strcmp0 (g_getenv ("FWUPD_PLUGIN_TEST"), "another-write-required") == 0) {
+		g_unsetenv ("FWUPD_PLUGIN_TEST");
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED);
+	}
+
+	/* for the self tests only */
+	fu_device_set_metadata_integer (device, "nr-update",
+					fu_device_get_metadata_integer (device, "nr-update") + 1);
+
 	return TRUE;
 }
 
