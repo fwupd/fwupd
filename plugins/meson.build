@@ -1,4 +1,3 @@
-subdir('ata')
 subdir('dfu')
 subdir('colorhug')
 subdir('ebitdo')
@@ -19,6 +18,10 @@ subdir('superio')
 
 # depends on dfu
 subdir('csr')
+
+if get_option('plugin_ata')
+subdir('ata')
+endif
 
 if get_option('plugin_nvme')
 subdir('nvme')
