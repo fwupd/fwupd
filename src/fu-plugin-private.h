@@ -93,7 +93,6 @@ void		 fu_plugin_runner_device_register	(FuPlugin	*self,
 							 FuDevice	*device);
 gboolean	 fu_plugin_runner_update		(FuPlugin	*self,
 							 FuDevice	*device,
-							 GBytes		*blob_cab,
 							 GBytes		*blob_fw,
 							 FwupdInstallFlags flags,
 							 GError		**error);
@@ -109,6 +108,10 @@ gboolean	 fu_plugin_runner_clear_results		(FuPlugin	*self,
 							 GError		**error);
 gboolean	 fu_plugin_runner_get_results		(FuPlugin	*self,
 							 FuDevice	*device,
+							 GError		**error);
+gboolean	 fu_plugin_runner_schedule_update	(FuPlugin	*self,
+							 FuDevice	*device,
+							 GBytes		*blob_cab,
 							 GError		**error);
 gint		 fu_plugin_name_compare			(FuPlugin	*plugin1,
 							 FuPlugin	*plugin2);

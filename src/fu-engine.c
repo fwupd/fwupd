@@ -1596,9 +1596,24 @@ fu_engine_install_blob (FuEngine *self,
 					      error);
 	if (plugin == NULL)
 		return FALSE;
+
+	/* just schedule this for the next reboot  */
+	if (flags & FWUPD_INSTALL_FLAG_OFFLINE) {
+		if (blob_cab == NULL) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
+					     "No cabinet archive to schedule");
+			return FALSE;
+		}
+		return fu_plugin_runner_schedule_update (plugin,
+							 device,
+							 blob_cab,
+							 error);
+	}
+
 	if (!fu_plugin_runner_update (plugin,
 				      device,
-				      blob_cab,
 				      blob_fw2,
 				      flags,
 				      &error_local)) {

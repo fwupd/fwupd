@@ -1933,8 +1933,7 @@ fu_plugin_module_func (void)
 	g_assert (mapped_file != NULL);
 	blob_cab = g_mapped_file_get_bytes (mapped_file);
 	fwupd_release_set_version (fu_device_get_release_default (device), "1.2.3");
-	ret = fu_plugin_runner_update (plugin, device, blob_cab, NULL,
-				       FWUPD_INSTALL_FLAG_OFFLINE, &error);
+	ret = fu_plugin_runner_schedule_update (plugin, device, blob_cab, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (cnt, ==, 1);
@@ -1955,7 +1954,7 @@ fu_plugin_module_func (void)
 	pending_cap = g_strdup (fwupd_release_get_filename (release));
 
 	/* lets do this online */
-	ret = fu_plugin_runner_update (plugin, device, blob_cab, NULL,
+	ret = fu_plugin_runner_update (plugin, device, blob_cab,
 				       FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
