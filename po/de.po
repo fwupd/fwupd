@@ -50,7 +50,7 @@ msgstr "Herabstufung von Firmware-Versionen zulassen"
 msgid "Allow re-installing existing firmware versions"
 msgstr "Erneute Installation vorhandener Firmware-Versionen erlauben"
 
-#. TRANSLATORS: explain why we want to upload
+#. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "Ein Neustart ist erforderlich, um eine Aktualisierung abzuschließen."
 
@@ -434,12 +434,6 @@ msgstr "Nicht-signierte Geräte-Firmware installieren"
 msgid "Install unsigned system firmware"
 msgstr "Nicht-signierte System-Firmware installieren"
 
-#. show message in progressbar
-#. TRANSLATORS: %1 is a device name
-#, c-format
-msgid "Installing %s"
-msgstr "%s wird installiert"
-
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
 msgstr "Firmware-Aktualisierung wird installiert …"
@@ -740,10 +734,6 @@ msgstr "Ziel"
 #. TRANSLATORS: do not translate the variables marked using $
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
 msgstr "Der LVFS ist ein kostenloser Dienst, der als unabhängige juristische Person arbeitet und keine Verbindung zu $OS_RELEASE:NAME$ hat. Möglicherweise hat Ihr Lieferant eine der Firmware-Aktualisierungen nicht auf Kompatibilität mit Ihrem System oder angeschlossenen Geräten überprüft. Die gesamte Firmware wird nur vom Originalhersteller zur Verfügung gestellt."
-
-#. TRANSLATORS: exactly one update needs this
-msgid "The update requires a reboot to complete."
-msgstr "Ein Neustart ist erforderlich, um die Aktualisierung abzuschließen."
 
 #. TRANSLATORS: we're poking around as a power user
 msgid "This program may only work correctly as root"

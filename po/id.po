@@ -41,7 +41,7 @@ msgstr "Izinkan penuruntingkatan versi firmware"
 msgid "Allow re-installing existing firmware versions"
 msgstr "Izinkan pemasangan ulang versi firmware yang telah ada"
 
-#. TRANSLATORS: explain why we want to upload
+#. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "Suatu pembaruan memerlukan boot ulang agar lengkap."
 

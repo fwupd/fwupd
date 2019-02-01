@@ -43,7 +43,7 @@ msgstr "Dopusti vraćanje starije inačice frimvera"
 msgid "Allow re-installing existing firmware versions"
 msgstr "Dopusti ponovnu instalaciju frimvera postojeće inačice"
 
-#. TRANSLATORS: explain why we want to upload
+#. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "Nadopuna zahtijeva ponovno pokretanje za završetak."
 

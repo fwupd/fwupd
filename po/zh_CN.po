@@ -49,7 +49,7 @@ msgstr "允许降级固件版本"
 msgid "Allow re-installing existing firmware versions"
 msgstr "允许重新安装现有的固件版本"
 
-#. TRANSLATORS: explain why we want to upload
+#. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "更新需要重启设备才能完成。"
 

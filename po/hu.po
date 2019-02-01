@@ -83,7 +83,7 @@ msgstr "Firmware verziók visszafejlesztésének engedélyezése"
 msgid "Allow re-installing existing firmware versions"
 msgstr "Meglévő firmware verziók újratelepítésének engedélyezése"
 
-#. TRANSLATORS: explain why we want to upload
+#. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "Egy frissítés újraindítást igényel a befejezéshez."
 
@@ -511,12 +511,6 @@ msgstr "Nem aláírt eszköz firmware telepítése"
 msgid "Install unsigned system firmware"
 msgstr "Nem aláírt rendszer firmware telepítése"
 
-#. show message in progressbar
-#. TRANSLATORS: %1 is a device name
-#, c-format
-msgid "Installing %s"
-msgstr "%s telepítése"
-
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
 msgstr "Firmware frissítés telepítése…"
@@ -847,10 +841,6 @@ msgstr "Cél"
 #. TRANSLATORS: do not translate the variables marked using $
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
 msgstr "Az LVFS egy ingyenes szolgáltatás, amely független jogi entitásként működik, és nincs kapcsolata a $OS_RELEASE:NAME$ operációs rendszerrel. A disztribúció szállítója nem biztos, hogy ellenőrízte kompatibilitási szempontból a firmware frissítést. Mindent firmware-t csak az eredeti termék gyártója biztosít."
-
-#. TRANSLATORS: exactly one update needs this
-msgid "The update requires a reboot to complete."
-msgstr "A frissítés befejezéséhez újraindítás szükséges."
 
 #. TRANSLATORS: we're poking around as a power user
 msgid "This program may only work correctly as root"

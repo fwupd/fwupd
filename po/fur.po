@@ -41,7 +41,7 @@ msgstr "Permet di tornâ indaûr aes versions di firmware precedentis"
 msgid "Allow re-installing existing firmware versions"
 msgstr "Permet di tornâ a instalâ lis versions dai firmware esistentis"
 
-#. TRANSLATORS: explain why we want to upload
+#. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "Un inzornament al à bisugne che si torni a inviâ il computer par finî."
 

@@ -31,6 +31,38 @@
     <content_attribute id="social-info">moderate</content_attribute>
   </content_rating>
   <releases>
+    <release version="1.2.4" date="2019-02-01">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add a directory remote that generates metadata</li>
+          <li>Add a new remote type "directory"</li>
+          <li>Add a plugin to update Wacom embedded EMR and AES panels</li>
+          <li>Add a plugin to upgrade firmware on ATA-ATAPI hardware</li>
+          <li>Add a quirk to use the legacy bootmgr description</li>
+          <li>Add flag to support manually aligning the NVMe firmware to the FWUG value</li>
+          <li>Add SuperIO IT89xx device support</li>
+          <li>Add support for Dell dock passive flow</li>
+          <li>Add 'update' and 'get-updates' commands to fwupdtool</li>
+          <li>Allow Dell dock flashing Thunderbolt over I2C</li>
+          <li>Check the battery percentage before flashing</li>
+          <li>Show a per-release source and details URL</li>
+          <li>Show a `UpdateMessage` and display it in tools</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add the needs-shutdown quirk to Phison NVMe drives</li>
+          <li>Correct Nitrokey Storage invalid firmware version read</li>
+          <li>Do not check the BGRT status before uploading a UX capsule</li>
+          <li>Do the UEFI UX checksum calculation in fwupd</li>
+          <li>Fix flashing various Jabra devices</li>
+          <li>Fix the parser to support extended segment addresses</li>
+          <li>Flash the fastboot partition after downloading the file</li>
+          <li>Show a console warning if loading an out-of-tree plugin</li>
+          <li>Support FGUID to get the SKU GUID for NVMe hardware</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.2.3" date="2019-01-04">
       <description>
         <p>This release fixes the following bug:</p>

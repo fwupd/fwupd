@@ -1,0 +1,417 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the fwupd package.
+#
+# Translators:
+# F Wolff <friedel@translate.org.za>, 2019
+msgid ""
+msgstr ""
+"Project-Id-Version: fwupd\n"
+"Report-Msgid-Bugs-To: \n"
+"Language-Team: Afrikaans (http://www.transifex.com/freedesktop/fwupd/language/af/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: af\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. more than a minute
+#, c-format
+msgid "%.0f minute remaining"
+msgid_plural "%.0f minutes remaining"
+msgstr[0] "%.0f minuut oor"
+msgstr[1] "%.0f minute oor"
+
+#. TRANSLATORS: duration in days!
+#, c-format
+msgid "%u day"
+msgid_plural "%u days"
+msgstr[0] "%u dag"
+msgstr[1] "%u dae"
+
+#. TRANSLATORS: duration in minutes
+#, c-format
+msgid "%u hour"
+msgid_plural "%u hours"
+msgstr[0] "%u uur"
+msgstr[1] "%u ure"
+
+#. TRANSLATORS: duration in minutes
+#, c-format
+msgid "%u minute"
+msgid_plural "%u minutes"
+msgstr[0] "%u minuut"
+msgstr[1] "%u minute"
+
+#. TRANSLATORS: duration in seconds
+#, c-format
+msgid "%u second"
+msgid_plural "%u seconds"
+msgstr[0] "%u sekonde"
+msgstr[1] "%u sekondes"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Added"
+msgstr "Bygevoeg"
+
+#. TRANSLATORS: the age of the metadata
+msgid "Age"
+msgstr "Ouderdom"
+
+#. TRANSLATORS: explain why we want to reboot
+msgid "An update requires a reboot to complete."
+msgstr "’n Bywerking vereis dat die stelsel herbegin om te voltooi."
+
+#. TRANSLATORS: command line option
+msgid "Answer yes to all questions"
+msgstr "Antwoord ja op alle vrae"
+
+#. TRANSLATORS: device attributes, i.e. things that
+#. * the device can do
+msgid "Attributes"
+msgstr "Attribute"
+
+#. TRANSLATORS: this is to abort the interactive prompt
+msgid "Cancel"
+msgstr "Kanselleer"
+
+#. TRANSLATORS: this is when a device ctrl+c's a watch
+msgid "Cancelled"
+msgstr "Gekanselleer"
+
+#. TRANSLATORS: this is when a device is hotplugged
+#. TRANSLATORS: this is when the daemon state changes
+msgid "Changed"
+msgstr "Verander"
+
+#. TRANSLATORS: section header for firmware checksum
+#. TRANSLATORS: remote checksum
+msgid "Checksum"
+msgstr "Kontrolesom"
+
+#. TRANSLATORS: chip ID, e.g. "0x58200204"
+msgid "Chip ID"
+msgstr "Vlokkie-ID"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose a device:"
+msgstr "Kies 'n toestel:"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose a release:"
+msgstr "Kies 'n vrystelling:"
+
+#. TRANSLATORS: error message
+msgid "Command not found"
+msgstr "Opdrag nie gevind nie"
+
+msgid "DFU"
+msgstr "DFU"
+
+#. TRANSLATORS: decompressing the firmware file
+msgid "Decompressing…"
+msgstr "Pak tans uit…"
+
+#. TRANSLATORS: section header for firmware description
+msgid "Description"
+msgstr "Beskrywing"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device added:"
+msgstr "Toestel bygevoeg:"
+
+#. TRANSLATORS: this is when a device has been updated
+msgid "Device changed:"
+msgstr "Toestel verander:"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device removed:"
+msgstr "Toestel verwyder:"
+
+#. TRANSLATORS: a list of successful updates
+msgid "Devices that have been updated successfully:"
+msgstr "Toestelle wat suksesvol bygewerk is:"
+
+#. TRANSLATORS: a list of failed updates
+msgid "Devices that were not updated correctly:"
+msgstr "Toestelle wat nie korrek bygewerk is nie:"
+
+msgid "Done!"
+msgstr "Klaar!"
+
+#. TRANSLATORS: the first replacement is a display name
+#. * e.g. "ColorHugALS" and the second and third are
+#. * version numbers e.g. "1.2.3"
+#, c-format
+msgid "Downgrading %s from %s to %s... "
+msgstr "Gradeer tans %s af vanaf %s na %s… "
+
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Downgrading %s…"
+msgstr "Gradeer tans %s af…"
+
+#. TRANSLATORS: downloading from a remote server
+msgid "Downloading…"
+msgstr "Laai tans af…"
+
+#. TRANSLATORS: if the remote is enabled
+msgid "Enabled"
+msgstr "Geaktiveer"
+
+#. TRANSLATORS: erasing contents of the flash chips
+msgid "Erasing…"
+msgstr "Vee tans uit…"
+
+#. TRANSLATORS: the server is rate-limiting downloads
+msgid "Failed to download due to server limit"
+msgstr "Kon nie aflaai nie a.g.v. bedienerlimiet"
+
+#. TRANSLATORS: downloading unknown file
+msgid "Fetching file"
+msgstr "Kry tans lêer"
+
+#. TRANSLATORS: downloading new metadata file
+msgid "Fetching metadata"
+msgstr "Kry tans metadata"
+
+#. TRANSLATORS: downloading new signing file
+msgid "Fetching signature"
+msgstr "Kry tans handtekening"
+
+#. TRANSLATORS: filename of the local file
+msgid "Filename"
+msgstr "Lêernaam"
+
+#. TRANSLATORS: filename of the local file
+msgid "Filename Signature"
+msgstr "Lêernaamhandtekening"
+
+#. TRANSLATORS: detected a DFU device
+msgid "Found"
+msgstr "Gevind"
+
+msgid "GUID"
+msgstr "GUID"
+
+#. TRANSLATORS: Appstream ID for the hardware type
+msgid "ID"
+msgstr "ID"
+
+#. TRANSLATORS: daemon is inactive
+msgid "Idle…"
+msgstr "Ledig…"
+
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Installing on %s…"
+msgstr "Installeer tans op %s…"
+
+msgid "Keyring"
+msgstr "Sleutelring"
+
+#. TRANSLATORS: time remaining for completing firmware flash
+msgid "Less than one minute remaining"
+msgstr "Minder as een minuut oor"
+
+#. TRANSLATORS: parsing the firmware information
+msgid "Loading…"
+msgstr "Laai tans…"
+
+#. TRANSLATORS: remote URI
+msgid "Metadata URI"
+msgstr "Metadata-URI"
+
+#. TRANSLATORS: remote URI
+msgid "Metadata URI Signature"
+msgstr "Metadata-URI-handtekening"
+
+msgid "Mode"
+msgstr "Modus"
+
+#. TRANSLATORS: interface name, e.g. "Flash"
+#. TRANSLATORS: device name, e.g. 'ColorHug2'
+#. TRANSLATORS: section header for the release name
+msgid "Name"
+msgstr "Naam"
+
+msgid "OK"
+msgstr "Goed"
+
+#. TRANSLATORS: remote filename base
+msgid "Password"
+msgstr "Wagwoord"
+
+msgid "Permission denied"
+msgstr "Toestemming gewyer"
+
+msgid "Print the version number"
+msgstr "Druk die weergawenommer"
+
+#. TRANSLATORS: the numeric priority
+msgid "Priority"
+msgstr "Prioriteit"
+
+msgid "Proceed with upload?"
+msgstr "Gaan voort met oplaai?"
+
+#. TRANSLATORS: DFU protocol version, e.g. 1.1
+msgid "Protocol"
+msgstr "Protokol"
+
+#. TRANSLATORS: reading from the flash chips
+msgid "Reading…"
+msgstr "Lees tans…"
+
+#. TRANSLATORS: these are areas of memory on the chip
+msgid "Region"
+msgstr "Streek"
+
+#. TRANSLATORS: the first replacement is a display name
+#. * e.g. "ColorHugALS" and the second is a version number
+#. * e.g. "1.2.3"
+#, c-format
+msgid "Reinstalling %s with %s... "
+msgstr "Herinstalleer tans %s met %s… "
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Removed"
+msgstr "Verwyder"
+
+#. TRANSLATORS: metadata is downloaded from the Internet
+msgid "Requires internet connection"
+msgstr "Internetverbinding is nodig"
+
+#. TRANSLATORS: reboot to apply the update
+msgid "Restart now?"
+msgstr "Herbegin nou?"
+
+#. TRANSLATORS: restarting the device to pick up new F/W
+msgid "Restarting device…"
+msgstr "Herbegin tans toestel…"
+
+#. TRANSLATORS: command line option
+msgid "Schedule installation for next reboot when possible"
+msgstr "Skeduleer die installasie vir die volgende herbegin indien moontlik"
+
+#. TRANSLATORS: scheduing an update to be done on the next boot
+msgid "Scheduling…"
+msgstr "Skeduleer tans…"
+
+#. TRANSLATORS: serial number, e.g. '00012345'
+msgid "Serial"
+msgstr "Reeksnommer"
+
+#. TRANSLATORS: command line option
+msgid "Show devices that are not updatable"
+msgstr "Wys toestelle wat nie bygewerk kan word nie"
+
+#. TRANSLATORS: device state, i.e. appIDLE
+msgid "State"
+msgstr "Toestand"
+
+#. TRANSLATORS: probably not run as root...
+#. TRANSLATORS: device has failed to report status
+#. TRANSLATORS: device status, e.g. "OK"
+msgid "Status"
+msgstr "Status"
+
+#. TRANSLATORS: section header for the release one line summary
+msgid "Summary"
+msgstr "Opsomming"
+
+msgid "Target"
+msgstr "Teiken"
+
+#. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
+msgid "Title"
+msgstr "Titel"
+
+#. TRANSLATORS: transfer size in bytes
+msgid "Transfer Size"
+msgstr "Oordraggrootte"
+
+#. TRANSLATORS: remote type, e.g. remote or local
+msgid "Type"
+msgstr "Tipe"
+
+#. TRANSLATORS: section header for firmware URI
+msgid "URI"
+msgstr "URI"
+
+#. TRANSLATORS: currect daemon status is unknown
+msgid "Unknown"
+msgstr "Onbekend"
+
+#. TRANSLATORS: section header for firmware checksum
+msgid "Update Checksum"
+msgstr "Bywerking se kontrolesom"
+
+#. TRANSLATORS: section header for long firmware desc
+msgid "Update Description"
+msgstr "Bywerking se beskrywing"
+
+#. TRANSLATORS: section header for the amount
+#. * of time it takes to install the update
+msgid "Update Duration"
+msgstr "Bywerking se duur"
+
+#. TRANSLATORS: section header for firmware remote http://
+msgid "Update Location"
+msgstr "Bywerking se ligging"
+
+#. TRANSLATORS: section header for the release name
+msgid "Update Name"
+msgstr "Bywerking se naam"
+
+#. TRANSLATORS: section header for the release one line summary
+msgid "Update Summary"
+msgstr "Bywerking se opsomming"
+
+#. TRANSLATORS: section header for firmware version
+msgid "Update Version"
+msgstr "Bywerking se weergawe"
+
+#. TRANSLATORS: ask the user if we can update the metadata
+msgid "Update now?"
+msgstr "Werk nou by?"
+
+#. TRANSLATORS: the first replacement is a display name
+#. * e.g. "ColorHugALS" and the second and third are
+#. * version numbers e.g. "1.2.3"
+#, c-format
+msgid "Updating %s from %s to %s... "
+msgstr "Werk tans %s by vanaf %s na %s… "
+
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Updating %s…"
+msgstr "Werk tans %s by…"
+
+#. TRANSLATORS: the server sent the user a small message
+msgid "Upload message:"
+msgstr "Oplaaiboodskap:"
+
+#. TRANSLATORS: ask the user to upload
+msgid "Upload report now?"
+msgstr "Laai verslag nou op?"
+
+#. TRANSLATORS: remote filename base
+msgid "Username"
+msgstr "Gebruikernaam"
+
+#. TRANSLATORS: verifying we wrote the firmware correctly
+msgid "Verifying…"
+msgstr "Verifieer tans…"
+
+#. TRANSLATORS: section header for release version number
+msgid "Version"
+msgstr "Weergawe"
+
+#. TRANSLATORS: waiting for device to do something
+msgid "Waiting…"
+msgstr "Wag tans…"
+
+#. TRANSLATORS: writing to the flash chips
+msgid "Writing…"
+msgstr "Skryf tans…"

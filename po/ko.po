@@ -46,7 +46,7 @@ msgstr "펌웨어 다운그레이드를 허용합니다"
 msgid "Allow re-installing existing firmware versions"
 msgstr "기존 펌웨어 버전 재설치를 허용합니다"
 
-#. TRANSLATORS: explain why we want to upload
+#. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "업데이트를 완료하려면 다시 시작해야 합니다."
 

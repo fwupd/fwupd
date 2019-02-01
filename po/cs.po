@@ -56,7 +56,7 @@ msgstr "Povolit přechod na nižší verze firmwaru"
 msgid "Allow re-installing existing firmware versions"
 msgstr "Povolit reinstalaci stávající verze firmwaru"
 
-#. TRANSLATORS: explain why we want to upload
+#. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "Některá z aktualizací vyžaduje pro dokončení restart."
 
@@ -478,12 +478,6 @@ msgstr "Instalace nepodepsaného firmwaru zařízení"
 msgid "Install unsigned system firmware"
 msgstr "Instalace nepodepsaného systémového firmwaru"
 
-#. show message in progressbar
-#. TRANSLATORS: %1 is a device name
-#, c-format
-msgid "Installing %s"
-msgstr "Instaluje se zařízení %s"
-
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
 msgstr "Instaluje se aktualizace firmwaru…"
@@ -798,10 +792,6 @@ msgstr "Cíl"
 #. TRANSLATORS: do not translate the variables marked using $
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
 msgstr "LVFS je svobodná služba, které funguje jako nezávislý právní subjekt a nemá žádné vazby na systém $OS_RELEASE:NAME$. Váš distributor nemusí některé z aktualizací firmwaru schválit kvůli kompatibilitě s vaším systémem nebo připojenými zařízeními. Veškerý firmware je poskytován pouze přímo výrobci daných zařízení."
-
-#. TRANSLATORS: exactly one update needs this
-msgid "The update requires a reboot to complete."
-msgstr "Pro dokončení aktualizace je potřeba provést restart."
 
 #. TRANSLATORS: we're poking around as a power user
 msgid "This program may only work correctly as root"

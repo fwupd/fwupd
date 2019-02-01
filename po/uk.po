@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Yuri Chornoivan <yurchor@ukr.net>, 2015-2018
+# Yuri Chornoivan <yurchor@ukr.net>, 2015-2019
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -90,9 +90,13 @@ msgstr "Дозволити зниження версій мікропрогра�
 msgid "Allow re-installing existing firmware versions"
 msgstr "Дозволити повторне встановлення наявних версій мікропрограми"
 
-#. TRANSLATORS: explain why we want to upload
+#. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "Для завершення оновлення слід перезавантажити систему."
+
+#. TRANSLATORS: explain why we want to shutdown
+msgid "An update requires the system to shutdown to complete."
+msgstr "Для завершення оновлення систему слід вимкнути."
 
 #. TRANSLATORS: command line option
 msgid "Answer yes to all questions"
@@ -520,12 +524,6 @@ msgstr "Встановити непідписану мікропрограму �
 msgid "Install unsigned system firmware"
 msgstr "Встановити непідписану мікропрограму системи"
 
-#. show message in progressbar
-#. TRANSLATORS: %1 is a device name
-#, c-format
-msgid "Installing %s"
-msgstr "Встановлюємо %s"
-
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
 msgstr "Встановлюємо оновлення мікропрограми…"
@@ -830,6 +828,10 @@ msgstr "Показати діагностичний журнал щодо ост
 msgid "Show the information of firmware update status"
 msgstr "Показати дані щодо стану оновлення мікропрограми"
 
+#. TRANSLATORS: shutdown to apply the update
+msgid "Shutdown now?"
+msgstr "Вимкнути зараз?"
+
 msgid "Specify Vendor/Product ID(s) of DFU device"
 msgstr "Вказати ідентифікатори виробника/продукту пристрою DFU"
 
@@ -856,10 +858,6 @@ msgstr "Ціль"
 #. TRANSLATORS: do not translate the variables marked using $
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
 msgstr "LVFS є безкоштовною службою, яка працює як незалежна юридична одиниця і не має зв'язку з $OS_RELEASE:NAME$. Розробники вашої операційної системи, можливо, не перевіряли жодні з цих оновлень на сумісність із системою або з'єднаними із комп'ютером пристроями. Усі мікропрограми надаються лише самими виробниками обладнання."
-
-#. TRANSLATORS: exactly one update needs this
-msgid "The update requires a reboot to complete."
-msgstr "Для завершення оновлення потрібне перезавантаження."
 
 #. TRANSLATORS: we're poking around as a power user
 msgid "This program may only work correctly as root"
@@ -935,6 +933,10 @@ msgstr "Резюме оновлення"
 #. TRANSLATORS: section header for firmware version
 msgid "Update Version"
 msgstr "Версія оновлення"
+
+#. TRANSLATORS: command description
+msgid "Update all devices that match local metadata"
+msgstr "Оновити усі пристрої, які відповідають локальним метаданим"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
