@@ -468,6 +468,12 @@ fu_device_list_replace (FuDeviceList *self, FuDeviceItem *item, FuDevice *device
 		fu_device_set_version (device, version);
 	}
 
+	/* allow another plugin to handle the write too */
+	if (fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED)) {
+		g_debug ("copying another-write-required to new device");
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED);
+	}
+
 	/* copy the parent if not already set */
 	if (fu_device_get_parent (item->device) != NULL &&
 	    fu_device_get_parent (device) == NULL) {

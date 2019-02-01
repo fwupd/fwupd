@@ -1744,6 +1744,7 @@ fu_engine_install_blob (FuEngine *self,
 			FwupdInstallFlags flags,
 			GError **error)
 {
+	guint retries = 0;
 	g_autofree gchar *device_id = NULL;
 	g_autoptr(GTimer) timer = g_timer_new ();
 
@@ -1759,22 +1760,39 @@ fu_engine_install_blob (FuEngine *self,
 	/* mark this as modified even if we actually fail to do the update */
 	fu_device_set_modified (device, (guint64) g_get_real_time () / G_USEC_PER_SEC);
 
-	/* signal to all the plugins the update is about to happen */
+	/* plugins can set FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED to run again, but they
+	 * must return TRUE rather than an error */
 	device_id = g_strdup (fu_device_get_id (device));
-	if (!fu_engine_update_prepare (self, flags, device_id, error))
-		return FALSE;
+	do {
+		/* check for a loop */
+		if (++retries > 5) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "aborting device write loop, limit 5");
+			return FALSE;
+		}
 
-	/* detach to bootloader mode */
-	if (!fu_engine_update_detach (self, device_id, error))
-		return FALSE;
+		/* don't rely on a plugin clearing this */
+		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED);
 
-	/* install */
-	if (!fu_engine_update (self, device_id, blob_fw, flags, error))
-		return FALSE;
+		/* signal to all the plugins the update is about to happen */
+		if (!fu_engine_update_prepare (self, flags, device_id, error))
+			return FALSE;
 
-	/* attach into runtime mode */
-	if (!fu_engine_update_attach (self, device_id, error))
-		return FALSE;
+		/* detach to bootloader mode */
+		if (!fu_engine_update_detach (self, device_id, error))
+			return FALSE;
+
+		/* install */
+		if (!fu_engine_update (self, device_id, blob_fw, flags, error))
+			return FALSE;
+
+		/* attach into runtime mode */
+		if (!fu_engine_update_attach (self, device_id, error))
+			return FALSE;
+
+	} while (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED));
 
 	/* get the new version number */
 	if (!fu_engine_update_reload (self, device_id, error))

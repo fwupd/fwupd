@@ -943,12 +943,19 @@ fu_engine_history_func (void)
 	g_assert_no_error (error);
 	g_assert_nonnull (component);
 
+	/* set the counter */
+	g_setenv ("FWUPD_PLUGIN_TEST", "another-write-required", TRUE);
+	fu_device_set_metadata_integer (device, "nr-update", 0);
+
 	/* install it */
 	task = fu_install_task_new (device, component);
 	ret = fu_engine_install (engine, task, blob_cab,
 				 FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
+
+	/* check the write was done more than once */
+	g_assert_cmpint (fu_device_get_metadata_integer (device, "nr-update"), ==, 2);
 
 	/* check the history database */
 	history = fu_history_new ();
