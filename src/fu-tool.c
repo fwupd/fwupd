@@ -49,6 +49,8 @@ typedef struct {
 	FuEngine		*engine;
 	FuProgressbar		*progressbar;
 	gboolean		 no_reboot_check;
+	gboolean		 prepare_blob;
+	gboolean		 cleanup_blob;
 	FwupdInstallFlags	 flags;
 	gboolean		 show_all_devices;
 	/* only valid in update and downgrade */
@@ -682,6 +684,15 @@ fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
 			  G_CALLBACK (fu_util_update_device_changed_cb), priv);
 
 	/* write bare firmware */
+	if (priv->prepare_blob) {
+		g_autoptr(GPtrArray) devices = NULL;
+		devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+		g_ptr_array_add (devices, g_object_ref (device));
+		if (!fu_engine_composite_prepare (priv->engine, devices, error)) {
+			g_prefix_error (error, "failed to prepare composite action: ");
+			return FALSE;
+		}
+	}
 	if (!fu_engine_install_blob (priv->engine, device,
 				     NULL, /* blob_cab */
 				     blob_fw,
@@ -689,6 +700,26 @@ fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
 				     priv->flags,
 				     error))
 		return FALSE;
+	if (priv->cleanup_blob) {
+		g_autoptr(FuDevice) device_new = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		/* get the possibly new device from the old ID */
+		device_new = fu_engine_get_device (priv->engine,
+						   fu_device_get_id (device),
+						   &error_local);
+		if (device_new == NULL) {
+			g_debug ("failed to find new device: %s",
+				 error_local->message);
+		} else {
+			g_autoptr(GPtrArray) devices_new = NULL;
+			g_ptr_array_add (devices_new, g_steal_pointer (&device_new));
+			if (!fu_engine_composite_cleanup (priv->engine, devices_new, error)) {
+				g_prefix_error (error, "failed to cleanup composite action: ");
+				return FALSE;
+			}
+		}
+	}
 
 	fu_util_display_current_message (priv);
 
@@ -1219,6 +1250,13 @@ main (int argc, char *argv[])
 		{ "plugin-whitelist", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &plugin_glob,
 			/* TRANSLATORS: command line option */
 			_("Manually whitelist specific plugins"), NULL },
+		{ "prepare", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &priv->prepare_blob,
+			/* TRANSLATORS: command line option */
+			_("Run the plugin composite prepare routine when using install-blob"), NULL },
+		{ "cleanup", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &priv->cleanup_blob,
+			/* TRANSLATORS: command line option */
+			_("Run the plugin composite cleanup routine when using install-blob"), NULL },
+
 		{ NULL}
 	};
 
