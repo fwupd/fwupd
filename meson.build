@@ -77,7 +77,7 @@ warning_flags = [
   '-Wmissing-prototypes',
   '-Wnested-externs',
   '-Wno-cast-function-type',
-  '-Wno-error=cpp',
+  '-Wno-address-of-packed-member',  # incompatable with g_autoptr()
   '-Wno-unknown-pragmas',
   '-Wno-discarded-qualifiers',
   '-Wno-missing-field-initializers',
