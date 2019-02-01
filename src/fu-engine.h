@@ -102,7 +102,6 @@ gboolean	 fu_engine_install			(FuEngine	*self,
 gboolean	 fu_engine_install_blob			(FuEngine	*self,
 							 FuDevice	*device,
 							 GBytes		*blob_fw,
-							 const gchar	*version,
 							 FwupdInstallFlags flags,
 							 GError		**error);
 gboolean	 fu_engine_install_tasks		(FuEngine	*self,
