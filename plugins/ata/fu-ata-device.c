@@ -38,6 +38,12 @@ struct ata_tf {
 #define ATA_OP_IDENTIFY			0xec
 #define ATA_OP_DOWNLOAD_MICROCODE	0x92
 
+#define ATA_SUBCMD_MICROCODE_OBSOLETE			0x01
+#define ATA_SUBCMD_MICROCODE_DOWNLOAD_CHUNKS_ACTIVATE	0x03
+#define ATA_SUBCMD_MICROCODE_DOWNLOAD_CHUNK		0x07
+#define ATA_SUBCMD_MICROCODE_DOWNLOAD_CHUNKS		0x0e
+#define ATA_SUBCMD_MICROCODE_ACTIVATE			0x0f
+
 #define SG_CHECK_CONDITION		0x02
 #define SG_DRIVER_SENSE			0x08
 
@@ -164,16 +170,13 @@ fu_ata_device_parse_id (FuAtaDevice *self, const guint8 *buf, gsize sz, GError *
 		return FALSE;
 	}
 
-	/* fallback to a sane default */
-	if (self->transfer_mode == 0x0) {
-		if ((id[119] & 0x10) && (id[120] & 0x10))
-			self->transfer_mode = 0x3;
-		else
-			self->transfer_mode = 0x7;
-	}
+	/* firmware will be applied when the device restarts */
+	if (self->transfer_mode == ATA_SUBCMD_MICROCODE_DOWNLOAD_CHUNKS)
+		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 
 	/* the newer, segmented transfer mode */
-	if (self->transfer_mode == 0x3 || self->transfer_mode == 0xe) {
+	if (self->transfer_mode == ATA_SUBCMD_MICROCODE_DOWNLOAD_CHUNKS_ACTIVATE ||
+	    self->transfer_mode == ATA_SUBCMD_MICROCODE_DOWNLOAD_CHUNKS) {
 		xfer_min = id[234];
 		if (xfer_min == 0x0 || xfer_min == 0xffff)
 			xfer_min = 1;
@@ -485,7 +488,7 @@ fu_ata_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	/* only one block allowed */
-	if (self->transfer_mode == 0x7)
+	if (self->transfer_mode == ATA_SUBCMD_MICROCODE_DOWNLOAD_CHUNK)
 		max_size = 0xffff;
 
 	/* check is valid */
@@ -537,7 +540,9 @@ fu_ata_device_set_quirk_kv (FuDevice *device,
 	FuAtaDevice *self = FU_ATA_DEVICE (device);
 	if (g_strcmp0 (key, "AtaTransferMode") == 0) {
 		guint64 tmp = fu_common_strtoull (value);
-		if (tmp != 0x3 && tmp != 0x7 && tmp != 0xe) {
+		if (tmp != ATA_SUBCMD_MICROCODE_DOWNLOAD_CHUNKS_ACTIVATE &&
+		    tmp != ATA_SUBCMD_MICROCODE_DOWNLOAD_CHUNKS &&
+		    tmp != ATA_SUBCMD_MICROCODE_DOWNLOAD_CHUNK) {
 			g_set_error_literal (error,
 					     G_IO_ERROR,
 					     G_IO_ERROR_NOT_SUPPORTED,
@@ -571,9 +576,12 @@ fu_ata_device_set_quirk_kv (FuDevice *device,
 static void
 fu_ata_device_init (FuAtaDevice *self)
 {
+	/* we chose this default as _DOWNLOAD_CHUNKS_ACTIVATE applies the
+	 * firmware straight away and the kernel might not like the unexpected
+	 * ATA restart and panic */
+	self->transfer_mode = ATA_SUBCMD_MICROCODE_DOWNLOAD_CHUNKS;
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_set_summary (FU_DEVICE (self), "ATA Drive");
 	fu_device_add_icon (FU_DEVICE (self), "drive-harddisk");
 }
