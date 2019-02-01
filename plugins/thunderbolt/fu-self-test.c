@@ -1131,7 +1131,7 @@ test_update_working (ThunderboltTest *tt, gconstpointer user_data)
 	/* simulate an update, where the device goes away and comes back
 	 * after the time in the last parameter (given in ms) */
 	up_ctx = mock_tree_prepare_for_update (tree, plugin, "42.23", fw_data, 1000);
-	ret = fu_plugin_runner_update (plugin, tree->fu_device, NULL, fw_data, 0, &error);
+	ret = fu_plugin_runner_update (plugin, tree->fu_device, fw_data, 0, &error);
 	g_assert_no_error (error);
 	g_assert_true (ret);
 
@@ -1180,7 +1180,7 @@ test_update_fail (ThunderboltTest *tt, gconstpointer user_data)
 	up_ctx = mock_tree_prepare_for_update (tree, plugin, "42.23", fw_data, 1000);
 	up_ctx->result = UPDATE_FAIL_DEVICE_INTERNAL;
 
-	ret = fu_plugin_runner_update (plugin, tree->fu_device, NULL, fw_data, 0, &error);
+	ret = fu_plugin_runner_update (plugin, tree->fu_device, fw_data, 0, &error);
 	g_assert_no_error (error);
 	g_assert_true (ret);
 
@@ -1228,7 +1228,7 @@ test_update_fail_nowshow (ThunderboltTest *tt, gconstpointer user_data)
 	up_ctx = mock_tree_prepare_for_update (tree, plugin, "42.23", fw_data, 1000);
 	up_ctx->result = UPDATE_FAIL_DEVICE_NOSHOW;
 
-	ret = fu_plugin_runner_update (plugin, tree->fu_device, NULL, fw_data, 0, &error);
+	ret = fu_plugin_runner_update (plugin, tree->fu_device, fw_data, 0, &error);
 	g_assert_no_error (error);
 	g_assert_true (ret);
 
