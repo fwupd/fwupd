@@ -1331,6 +1331,7 @@ fu_engine_install (FuEngine *self,
 {
 	XbNode *component = fu_install_task_get_component (task);
 	FuDevice *device = fu_install_task_get_device (task);
+	FuPlugin *plugin;
 	GBytes *blob_fw;
 	const gchar *tmp = NULL;
 	g_autofree gchar *release_key = NULL;
@@ -1407,8 +1408,62 @@ fu_engine_install (FuEngine *self,
 		blob_fw2 = g_bytes_ref (blob_fw);
 	}
 
-	/* install firmware blob */
+	/* get the plugin */
+	plugin = fu_plugin_list_find_by_name (self->plugin_list,
+					      fu_device_get_plugin (device),
+					      error);
+	if (plugin == NULL)
+		return FALSE;
+
+	/* add device to database */
 	version_rel = fu_engine_get_release_version (self, component, rel);
+	if ((flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0) {
+		g_autoptr(FwupdRelease) release_history = fwupd_release_new ();
+		g_autoptr(GHashTable) metadata_hash = NULL;
+		g_autoptr(GHashTable) os_release = NULL;
+
+		/* add release data from os-release */
+		os_release = fwupd_get_os_release (error);
+		if (os_release == NULL)
+			return FALSE;
+
+		/* build the version metadata */
+		metadata_hash = fu_engine_get_report_metadata (self);
+		fwupd_release_add_metadata (release_history, metadata_hash);
+		fwupd_release_add_metadata (release_history,
+					    fu_plugin_get_report_metadata (plugin));
+		tmp = xb_node_query_text (component,
+					  "releases/release/checksum[@target='container']",
+					  NULL);
+		if (tmp != NULL) {
+			fwupd_release_add_metadata_item (release_history,
+							 "DistroId", tmp);
+		}
+		fwupd_release_add_checksum (release_history, tmp);
+		fwupd_release_set_version (release_history, version_rel);
+		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
+
+		/* add details from os-release as metadata */
+		tmp = g_hash_table_lookup (os_release, "ID");
+		if (tmp != NULL) {
+			fwupd_release_add_metadata_item (release_history,
+							 "DistroId", tmp);
+		}
+		tmp = g_hash_table_lookup (os_release, "VERSION_ID");
+		if (tmp != NULL) {
+			fwupd_release_add_metadata_item (release_history,
+							 "DistroVersion", tmp);
+		}
+		tmp = g_hash_table_lookup (os_release, "VARIANT_ID");
+		if (tmp != NULL) {
+			fwupd_release_add_metadata_item (release_history,
+							 "DistroVariant", tmp);
+		}
+		if (!fu_history_add_device (self->history, device, release_history, error))
+			return FALSE;
+	}
+
+	/* install firmware blob */
 	return fu_engine_install_blob (self, device, blob_cab, blob_fw2,
 				       version_rel, flags, error);
 }
@@ -1476,16 +1531,8 @@ fu_engine_install_blob (FuEngine *self,
 	g_autofree gchar *device_id_orig = NULL;
 	g_autofree gchar *version_orig = NULL;
 	g_autoptr(FuDevice) device = g_object_ref (device_orig);
-	g_autoptr(FwupdRelease) release_history = fwupd_release_new ();
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GHashTable) metadata_hash = NULL;
-	g_autoptr(GHashTable) os_release = NULL;
 	g_autoptr(GTimer) timer = g_timer_new ();
-
-	/* add release data from os-release */
-	os_release = fwupd_get_os_release (error);
-	if (os_release == NULL)
-		return FALSE;
 
 	/* test the firmware is not an empty blob */
 	if (g_bytes_get_size (blob_fw2) == 0) {
@@ -1534,41 +1581,6 @@ fu_engine_install_blob (FuEngine *self,
 
 	/* mark this as modified even if we actually fail to do the update */
 	fu_device_set_modified (device, (guint64) g_get_real_time () / G_USEC_PER_SEC);
-
-	/* build the version metadata */
-	metadata_hash = fu_engine_get_report_metadata (self);
-	fwupd_release_add_metadata (release_history, metadata_hash);
-	fwupd_release_add_metadata (release_history,
-				    fu_plugin_get_report_metadata (plugin));
-
-	/* add device to database */
-	if ((flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0) {
-		const gchar *tmp;
-		g_autofree gchar *checksum = NULL;
-		checksum = g_compute_checksum_for_bytes (G_CHECKSUM_SHA1, blob_cab);
-		fwupd_release_set_version (release_history, version);
-		fwupd_release_add_checksum (release_history, checksum);
-		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
-
-		/* add details from os-release as metadata */
-		tmp = g_hash_table_lookup (os_release, "ID");
-		if (tmp != NULL) {
-			fwupd_release_add_metadata_item (release_history,
-							 "DistroId", tmp);
-		}
-		tmp = g_hash_table_lookup (os_release, "VERSION_ID");
-		if (tmp != NULL) {
-			fwupd_release_add_metadata_item (release_history,
-							 "DistroVersion", tmp);
-		}
-		tmp = g_hash_table_lookup (os_release, "VARIANT_ID");
-		if (tmp != NULL) {
-			fwupd_release_add_metadata_item (release_history,
-							 "DistroVariant", tmp);
-		}
-		if (!fu_history_add_device (self->history, device, release_history, error))
-			return FALSE;
-	}
 
 	/* do the update */
 	if (!fu_plugin_runner_update_detach (plugin, device, &error_local)) {
