@@ -694,7 +694,6 @@ fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
 		}
 	}
 	if (!fu_engine_install_blob (priv->engine, device,
-				     NULL, /* blob_cab */
 				     blob_fw,
 				     NULL, /* version */
 				     priv->flags,
