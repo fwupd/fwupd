@@ -15,5 +15,6 @@ gchar		*fu_common_guid_from_data	(const gchar	*namespace_id,
 						 const guint8	*data,
 						 gsize		 data_len,
 						 GError		**error);
+gboolean	 fu_common_guid_is_plausible	(const guint8	*buf);
 
 #endif /* __FU_COMMON_GUID_H__ */

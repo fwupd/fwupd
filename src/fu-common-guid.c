@@ -131,3 +131,27 @@ fu_common_guid_from_string (const gchar *str)
 	return fu_common_guid_from_data ("6ba7b810-9dad-11d1-80b4-00c04fd430c8",
 					(const guint8 *) str, strlen (str), NULL);
 }
+
+/**
+ * fu_common_guid_is_plausible:
+ * @buf: a buffer of data
+ *
+ * Checks whether a chunk of memory looks like it could be a GUID.
+ *
+ * Returns: TRUE if it looks like a GUID, FALSE if not
+ *
+ * Since: 1.2.5
+ **/
+gboolean
+fu_common_guid_is_plausible (const guint8 *buf)
+{
+	guint guint_sum = 0;
+
+	for (guint i = 0; i < 16; i++)
+		guint_sum += buf[i];
+	if (guint_sum == 0x00)
+		return FALSE;
+	if (guint_sum < 0xff)
+		return FALSE;
+	return TRUE;
+}
