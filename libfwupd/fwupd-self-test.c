@@ -460,6 +460,30 @@ fwupd_common_machine_hash_func (void)
 	g_assert_cmpstr (mhash2, !=, mhash1);
 }
 
+static void
+fwupd_common_guid_func (void)
+{
+	g_autofree gchar *guid1 = NULL;
+	g_autofree gchar *guid2 = NULL;
+
+	/* invalid */
+	g_assert (!fwupd_guid_is_valid (NULL));
+	g_assert (!fwupd_guid_is_valid (""));
+	g_assert (!fwupd_guid_is_valid ("1ff60ab2-3905-06a1-b476"));
+	g_assert (!fwupd_guid_is_valid ("1ff60ab2-XXXX-XXXX-XXXX-0371f00c9e9b"));
+	g_assert (!fwupd_guid_is_valid (" 1ff60ab2-3905-06a1-b476-0371f00c9e9b"));
+	g_assert (!fwupd_guid_is_valid ("00000000-0000-0000-0000-000000000000"));
+
+	/* valid */
+	g_assert (fwupd_guid_is_valid ("1ff60ab2-3905-06a1-b476-0371f00c9e9b"));
+
+	/* make valid */
+	guid1 = fwupd_guid_from_string ("python.org");
+	g_assert_cmpstr (guid1, ==, "886313e1-3b8a-5372-9b90-0c9aee199e5d");
+	guid2 = fwupd_guid_from_string ("8086:0406");
+	g_assert_cmpstr (guid2, ==, "1fbd1f2c-80f4-5d7c-a6ad-35c7b9bd5486");
+}
+
 int
 main (int argc, char **argv)
 {
@@ -472,6 +496,7 @@ main (int argc, char **argv)
 	/* tests go here */
 	g_test_add_func ("/fwupd/enums", fwupd_enums_func);
 	g_test_add_func ("/fwupd/common{machine-hash}", fwupd_common_machine_hash_func);
+	g_test_add_func ("/fwupd/common{guid}", fwupd_common_guid_func);
 	g_test_add_func ("/fwupd/release", fwupd_release_func);
 	g_test_add_func ("/fwupd/device", fwupd_device_func);
 	g_test_add_func ("/fwupd/remote{download}", fwupd_remote_download_func);

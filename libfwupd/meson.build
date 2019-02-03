@@ -46,6 +46,7 @@ fwupd = shared_library(
     giounix,
     soup,
     libjsonglib,
+    uuid,
   ],
   c_args : [
       cargs,
@@ -100,6 +101,7 @@ if get_option('introspection')
     dependencies : [
       giounix,
       soup,
+      uuid,
     ],
     includes : [
       'Gio-2.0',

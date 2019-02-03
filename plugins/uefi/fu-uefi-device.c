@@ -594,7 +594,7 @@ fu_uefi_device_new_from_entry (const gchar *entry_path, GError **error)
 	fu_device_set_id (FU_DEVICE (self), id);
 
 	/* this is invalid */
-	if (!fu_common_guid_is_valid (self->fw_class)) {
+	if (!fwupd_guid_is_valid (self->fw_class)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
