@@ -4,6 +4,11 @@
 export LC_ALL := C.UTF-8
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
+# Link without -Bsymbolic-functions
+ifneq (,$(LDFLAGS))
+  LDFLAGS := $(filter-out %-Bsymbolic-functions,$(LDFLAGS))
+endif
+
 #GPGME needs this for proper building on 32 bit archs
 ifeq "$(DEB_HOST_ARCH_BITS)" "32"
 	export DEB_CFLAGS_MAINT_APPEND = -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
