@@ -102,6 +102,11 @@ gboolean	 fwupd_device_has_guid			(FwupdDevice	*device,
 							 const gchar	*guid);
 GPtrArray	*fwupd_device_get_guids			(FwupdDevice	*device);
 const gchar	*fwupd_device_get_guid_default		(FwupdDevice	*device);
+void		 fwupd_device_add_instance_id		(FwupdDevice	*device,
+							 const gchar	*instance_id);
+gboolean	 fwupd_device_has_instance_id		(FwupdDevice	*device,
+							 const gchar	*instance_id);
+GPtrArray	*fwupd_device_get_instance_ids		(FwupdDevice	*device);
 void		 fwupd_device_add_icon			(FwupdDevice	*device,
 							 const gchar	*icon);
 GPtrArray	*fwupd_device_get_icons			(FwupdDevice	*device);
