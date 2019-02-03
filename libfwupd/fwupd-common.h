@@ -15,6 +15,20 @@
 
 #define FWUPD_DEVICE_ID_ANY		"*"
 
+/**
+ * FwupdGuidFlags:
+ * @FWUPD_GUID_FLAG_NONE:			No trust
+ * @FWUPD_GUID_FLAG_NAMESPACE_MICROSOFT:	Use the Microsoft-compatible namespace
+ *
+ * The flags to show how the data should be converted.
+ **/
+typedef enum {
+	FWUPD_GUID_FLAG_NONE			= 0,		/* Since: 1.2.5 */
+	FWUPD_GUID_FLAG_NAMESPACE_MICROSOFT	= 1 << 0,	/* Since: 1.2.5 */
+	/*< private >*/
+	FWUPD_GUID_FLAG_LAST
+} FwupdGuidFlags;
+
 const gchar	*fwupd_checksum_get_best		(GPtrArray	*checksums);
 const gchar	*fwupd_checksum_get_by_kind		(GPtrArray	*checksums,
 							 GChecksumType	 kind);
@@ -26,5 +40,10 @@ gchar		*fwupd_build_machine_id			(const gchar 	*salt,
 GHashTable	*fwupd_get_os_release			(GError		**error);
 gchar		*fwupd_build_history_report_json	(GPtrArray	*devices,
 							 GError		**error);
+gboolean	 fwupd_guid_is_valid			(const gchar	*guid);
+gchar		*fwupd_guid_from_string			(const gchar	*str);
+gchar		*fwupd_guid_from_data			(const guint8	*data,
+							 gsize		 datasz,
+							 FwupdGuidFlags	 flags);
 
 #endif /* __FWUPD_COMMON_H */

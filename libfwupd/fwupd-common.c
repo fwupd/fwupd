@@ -15,6 +15,7 @@
 #include <string.h>
 #include <sys/utsname.h>
 #include <json-glib/json-glib.h>
+#include <uuid.h>
 
 /**
  * fwupd_checksum_guess_kind:
@@ -511,4 +512,119 @@ fwupd_build_history_report_json (GPtrArray *devices, GError **error)
 		return NULL;
 	}
 	return data;
+}
+
+#define FWUPD_GUID_NAMESPACE_DEFAULT	"6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+#define FWUPD_GUID_NAMESPACE_MICROSOFT	"70ffd812-4c7f-4c7d-0000-000000000000"
+
+/**
+ * fwupd_guid_from_data:
+ * @flags: some %FwupdGuidFlags, e.g. %FWUPD_GUID_FLAG_NAMESPACE_MICROSOFT
+ * @data: data to hash
+ * @datasz: length of @data
+ *
+ * Returns a GUID for some data. This uses a hash and so even small
+ * differences in the @data will produce radically different return values.
+ *
+ * The implementation is taken from RFC4122, Section 4.1.3; specifically
+ * using a type-5 SHA-1 hash.
+ *
+ * Returns: A new GUID, or %NULL for internal error
+ *
+ * Since: 1.2.5
+ **/
+gchar *
+fwupd_guid_from_data (const guint8 *data, gsize datasz, FwupdGuidFlags flags)
+{
+	const gchar *namespace_id = FWUPD_GUID_NAMESPACE_DEFAULT;
+	gchar guid_new[37]; /* 36 plus NUL */
+	gsize digestlen = 20;
+	guint8 hash[20];
+	gint rc;
+	uuid_t uu_namespace;
+	uuid_t uu_new;
+	g_autoptr(GChecksum) csum = NULL;
+
+	g_return_val_if_fail (namespace_id != NULL, NULL);
+	g_return_val_if_fail (data != NULL, NULL);
+	g_return_val_if_fail (datasz != 0, NULL);
+
+	/* old MS GUID */
+	if (flags & FWUPD_GUID_FLAG_NAMESPACE_MICROSOFT)
+		namespace_id = FWUPD_GUID_NAMESPACE_MICROSOFT;
+
+	/* convert the namespace to binary */
+	rc = uuid_parse (namespace_id, uu_namespace);
+	if (rc != 0)
+		return NULL;
+
+	/* hash the namespace and then the string */
+	csum = g_checksum_new (G_CHECKSUM_SHA1);
+	g_checksum_update (csum, (guchar *) uu_namespace, 16);
+	g_checksum_update (csum, (guchar *) data, (gssize) datasz);
+	g_checksum_get_digest (csum, hash, &digestlen);
+
+	/* copy most parts of the hash 1:1 */
+	memcpy (uu_new, hash, 16);
+
+	/* set specific bits according to Section 4.1.3 */
+	uu_new[6] = (guint8) ((uu_new[6] & 0x0f) | (5 << 4));
+	uu_new[8] = (guint8) ((uu_new[8] & 0x3f) | 0x80);
+
+	/* return as a string */
+	uuid_unparse (uu_new, guid_new);
+	return g_strdup (guid_new);
+}
+
+/**
+ * fwupd_guid_is_valid:
+ * @guid: string to check
+ *
+ * Checks the source string is a valid string GUID descriptor.
+ *
+ * Returns: %TRUE if @guid was a valid GUID, %FALSE otherwise
+ *
+ * Since: 1.2.5
+ **/
+gboolean
+fwupd_guid_is_valid (const gchar *guid)
+{
+	gint rc;
+	uuid_t uu;
+	if (guid == NULL)
+		return FALSE;
+	if (strlen (guid) != 36)
+		return FALSE;
+	rc = uuid_parse (guid, uu);
+	if (uuid_is_null (uu))
+		return FALSE;
+	return rc == 0;
+}
+
+/**
+ * fwupd_guid_from_string:
+ * @str: A source string to use as a key
+ *
+ * Returns a GUID for a given string. This uses a hash and so even small
+ * differences in the @str will produce radically different return values.
+ *
+ * The default implementation is taken from RFC4122, Section 4.1.3; specifically
+ * using a type-5 SHA-1 hash with a DNS namespace.
+ * The same result can be obtained with this simple python program:
+ *
+ *    #!/usr/bin/python
+ *    import uuid
+ *    print uuid.uuid5(uuid.NAMESPACE_DNS, 'python.org')
+ *
+ * Returns: A new GUID, or %NULL if the string was invalid
+ *
+ * Since: 1.2.5
+ **/
+gchar *
+fwupd_guid_from_string (const gchar *str)
+{
+	if (str == NULL)
+		return NULL;
+	return fwupd_guid_from_data ((const guint8 *) str, strlen (str),
+				     FWUPD_GUID_FLAG_NONE);
 }

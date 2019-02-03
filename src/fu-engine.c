@@ -24,7 +24,6 @@
 #include "fwupd-resources.h"
 
 #include "fu-common-cab.h"
-#include "fu-common-guid.h"
 #include "fu-common.h"
 #include "fu-config.h"
 #include "fu-debug.h"
@@ -938,7 +937,7 @@ fu_engine_check_requirement_firmware (FuEngine *self, XbNode *req,
 	}
 
 	/* another device */
-	if (fu_common_guid_is_valid (xb_node_get_text (req))) {
+	if (fwupd_guid_is_valid (xb_node_get_text (req))) {
 		const gchar *guid = xb_node_get_text (req);
 		const gchar *version;
 		g_autoptr(FuDevice) device2 = NULL;

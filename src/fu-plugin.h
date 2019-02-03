@@ -20,6 +20,7 @@
 #include "fu-hwids.h"
 #include "fu-usb-device.h"
 #include "fu-udev-device.h"
+#include "fwupd-common.h"
 
 G_BEGIN_DECLS
 

@@ -307,3 +307,11 @@ LIBFWUPD_1.2.4 {
     fwupd_release_set_update_message;
   local: *;
 } LIBFWUPD_1.2.2;
+
+LIBFWUPD_1.2.5 {
+  global:
+    fwupd_guid_from_data;
+    fwupd_guid_from_string;
+    fwupd_guid_is_valid;
+  local: *;
+} LIBFWUPD_1.2.4;
