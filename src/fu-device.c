@@ -807,15 +807,12 @@ fu_device_has_guid (FuDevice *self, const gchar *guid)
 void
 fu_device_add_guid (FuDevice *self, const gchar *guid)
 {
-	/* make valid */
-	if (!fu_common_guid_is_valid (guid)) {
-		g_autofree gchar *tmp = fu_common_guid_from_string (guid);
-
 	/* turn instance ID into a GUID */
 	if (!fwupd_guid_is_valid (guid)) {
 		g_autofree gchar *tmp = fwupd_guid_from_string (guid);
 		g_debug ("using %s for %s", tmp, guid);
 		fu_device_add_guid_safe (self, tmp);
+		fwupd_device_add_instance_id (FWUPD_DEVICE (self), guid);
 		return;
 	}
 
