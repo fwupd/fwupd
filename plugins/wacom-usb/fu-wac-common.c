@@ -8,6 +8,7 @@
 
 #include <string.h>
 
+#include "fu-common.h"
 #include "fu-wac-common.h"
 
 guint32
@@ -76,14 +77,9 @@ fu_wac_report_id_to_string (guint8 report_id)
 void
 fu_wac_buffer_dump (const gchar *title, guint8 cmd, const guint8 *buf, gsize sz)
 {
-	if (g_getenv ("FWUPD_WAC_VERBOSE") == NULL)
+	if (g_getenv ("FWUPD_WACOM_USB_VERBOSE") == NULL)
 		return;
-	g_print ("%s %s (%" G_GSIZE_FORMAT "):\n",
+	g_debug ("%s %s (%" G_GSIZE_FORMAT "):\n",
 		 title, fu_wac_report_id_to_string (cmd), sz);
-	for (gsize i = 0; i < sz; i++) {
-		g_print ("%02x ", buf[i]);
-		if (i > 0 && (i + 1) % 256 == 0)
-			g_print ("\n");
-	}
-	g_print ("\n");
+	fu_common_dump_raw (G_LOG_DOMAIN, NULL, buf, sz);
 }
