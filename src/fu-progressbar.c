@@ -274,7 +274,7 @@ fu_progressbar_update (FuProgressbar *self, FwupdStatus status, guint percentage
 
 	if (!self->interactive) {
 		if (self->status != status) {
-			g_print ("%s\n", fu_progressbar_status_to_string (status));
+			g_debug ("%s\n", fu_progressbar_status_to_string (status));
 			self->status = status;
 		}
 		return;
