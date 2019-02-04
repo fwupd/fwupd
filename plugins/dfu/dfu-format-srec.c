@@ -264,14 +264,35 @@ dfu_image_from_srec (DfuImage *image,
 				g_debug ("ignoring data at 0x%x as before start address 0x%x",
 					 (guint) rec_addr32, (guint) start_addr);
 			} else {
+				guint bytecnt = 0;
+				guint32 len_hole = rec_addr32 - addr32_last;
+
+				/* fill any holes, but only up to 1Mb to avoid a DoS */
+				if (addr32_last > 0 && len_hole > 0x100000) {
+					g_set_error (error,
+						     FWUPD_ERROR,
+						     FWUPD_ERROR_INVALID_FILE,
+						     "hole of 0x%x bytes too large to fill",
+						     (guint) len_hole);
+					return FALSE;
+				}
+				if (addr32_last > 0x0 && len_hole > 1) {
+					g_debug ("filling address 0x%08x to 0x%08x",
+						 addr32_last + 1, addr32_last + len_hole - 1);
+					for (guint j = 0; j < len_hole; j++)
+						g_string_append_c (outbuf, 0xff);
+				}
+
+				/* add data */
 				for (guint8 i = 4 + (addrsz * 2); i <= rec_count * 2; i += 2) {
 					guint8 tmp = dfu_utils_buffer_parse_uint8 (line + i);
 					g_string_append_c (outbuf, tmp);
+					bytecnt++;
 				}
 				if (element_address == 0x0)
 					element_address = rec_addr32;
+				addr32_last = rec_addr32 + bytecnt;
 			}
-			addr32_last = rec_addr32++;
 			data_cnt++;
 		}
 	}
