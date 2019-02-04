@@ -15,21 +15,21 @@
 #include "dfu-common.h"
 #include "dfu-firmware.h"
 
-#define FU_WAC_MODLE_STATUS_OK				0
-#define FU_WAC_MODLE_STATUS_BUSY			1
-#define FU_WAC_MODLE_STATUS_ERR_CRC			2
-#define FU_WAC_MODLE_STATUS_ERR_CMD			3
-#define FU_WAC_MODLE_STATUS_ERR_HW_ACCESS_FAIL		4
-#define FU_WAC_MODLE_STATUS_ERR_FLASH_NO_SUPPORT	5
-#define FU_WAC_MODLE_STATUS_ERR_MODE_WRONG		6
-#define FU_WAC_MODLE_STATUS_ERR_MPU_NO_SUPPORT		7
-#define FU_WAC_MODLE_STATUS_ERR_VERSION_NO_SUPPORT	8
-#define FU_WAC_MODLE_STATUS_ERR_ERASE			9
-#define FU_WAC_MODLE_STATUS_ERR_WRITE			10
-#define FU_WAC_MODLE_STATUS_ERR_EXIT			11
-#define FU_WAC_MODLE_STATUS_ERR				12
-#define FU_WAC_MODLE_STATUS_ERR_INVALID_OP		13
-#define FU_WAC_MODLE_STATUS_ERR_WRONG_IMAGE		14
+#define FU_WAC_MODULE_STATUS_OK				0
+#define FU_WAC_MODULE_STATUS_BUSY			1
+#define FU_WAC_MODULE_STATUS_ERR_CRC			2
+#define FU_WAC_MODULE_STATUS_ERR_CMD			3
+#define FU_WAC_MODULE_STATUS_ERR_HW_ACCESS_FAIL		4
+#define FU_WAC_MODULE_STATUS_ERR_FLASH_NO_SUPPORT	5
+#define FU_WAC_MODULE_STATUS_ERR_MODE_WRONG		6
+#define FU_WAC_MODULE_STATUS_ERR_MPU_NO_SUPPORT		7
+#define FU_WAC_MODULE_STATUS_ERR_VERSION_NO_SUPPORT	8
+#define FU_WAC_MODULE_STATUS_ERR_ERASE			9
+#define FU_WAC_MODULE_STATUS_ERR_WRITE			10
+#define FU_WAC_MODULE_STATUS_ERR_EXIT			11
+#define FU_WAC_MODULE_STATUS_ERR			12
+#define FU_WAC_MODULE_STATUS_ERR_INVALID_OP		13
+#define FU_WAC_MODULE_STATUS_ERR_WRONG_IMAGE		14
 
 typedef struct {
 	GUsbDevice		*usb_device;
@@ -77,35 +77,35 @@ fu_wac_module_command_to_string (guint8 command)
 static const gchar *
 fu_wac_module_status_to_string (guint8 status)
 {
-	if (status == FU_WAC_MODLE_STATUS_OK)
+	if (status == FU_WAC_MODULE_STATUS_OK)
 		return "ok";
-	if (status == FU_WAC_MODLE_STATUS_BUSY)
+	if (status == FU_WAC_MODULE_STATUS_BUSY)
 		return "busy";
-	if (status == FU_WAC_MODLE_STATUS_ERR_CRC)
+	if (status == FU_WAC_MODULE_STATUS_ERR_CRC)
 		return "err-crc";
-	if (status == FU_WAC_MODLE_STATUS_ERR_CMD)
+	if (status == FU_WAC_MODULE_STATUS_ERR_CMD)
 		return "err-cmd";
-	if (status == FU_WAC_MODLE_STATUS_ERR_HW_ACCESS_FAIL)
+	if (status == FU_WAC_MODULE_STATUS_ERR_HW_ACCESS_FAIL)
 		return "err-hw-access-fail";
-	if (status == FU_WAC_MODLE_STATUS_ERR_FLASH_NO_SUPPORT)
+	if (status == FU_WAC_MODULE_STATUS_ERR_FLASH_NO_SUPPORT)
 		return "err-flash-no-support";
-	if (status == FU_WAC_MODLE_STATUS_ERR_MODE_WRONG)
+	if (status == FU_WAC_MODULE_STATUS_ERR_MODE_WRONG)
 		return "err-mode-wrong";
-	if (status == FU_WAC_MODLE_STATUS_ERR_MPU_NO_SUPPORT)
+	if (status == FU_WAC_MODULE_STATUS_ERR_MPU_NO_SUPPORT)
 		return "err-mpu-no-support";
-	if (status == FU_WAC_MODLE_STATUS_ERR_VERSION_NO_SUPPORT)
+	if (status == FU_WAC_MODULE_STATUS_ERR_VERSION_NO_SUPPORT)
 		return "erro-version-no-support";
-	if (status == FU_WAC_MODLE_STATUS_ERR_ERASE)
+	if (status == FU_WAC_MODULE_STATUS_ERR_ERASE)
 		return "err-erase";
-	if (status == FU_WAC_MODLE_STATUS_ERR_WRITE)
+	if (status == FU_WAC_MODULE_STATUS_ERR_WRITE)
 		return "err-write";
-	if (status == FU_WAC_MODLE_STATUS_ERR_EXIT)
+	if (status == FU_WAC_MODULE_STATUS_ERR_EXIT)
 		return "err-exit";
-	if (status == FU_WAC_MODLE_STATUS_ERR)
+	if (status == FU_WAC_MODULE_STATUS_ERR)
 		return "err-err";
-	if (status == FU_WAC_MODLE_STATUS_ERR_INVALID_OP)
+	if (status == FU_WAC_MODULE_STATUS_ERR_INVALID_OP)
 		return "err-invalid-op";
-	if (status == FU_WAC_MODLE_STATUS_ERR_WRONG_IMAGE)
+	if (status == FU_WAC_MODULE_STATUS_ERR_WRONG_IMAGE)
 		return "err-wrong-image";
 	return NULL;
 }
@@ -228,11 +228,11 @@ fu_wac_module_set_feature (FuWacModule *self,
 	for (guint i = 0; i < busy_poll_loops; i++) {
 		if (!fu_wac_module_refresh (self, error))
 			return FALSE;
-		if (priv->status == FU_WAC_MODLE_STATUS_BUSY) {
+		if (priv->status == FU_WAC_MODULE_STATUS_BUSY) {
 			g_usleep (10000); /* 10ms */
 			continue;
 		}
-		if (priv->status == FU_WAC_MODLE_STATUS_OK)
+		if (priv->status == FU_WAC_MODULE_STATUS_OK)
 			break;
 		g_set_error (error,
 			     FWUPD_ERROR,
