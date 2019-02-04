@@ -465,7 +465,7 @@ fu_unifying_hidpp_feature_search (FuDevice *device, guint16 feature, GError **er
 static gboolean
 fu_unifying_peripheral_probe (FuUdevDevice *device, GError **error)
 {
-	g_autofree gchar *guid = NULL;
+	g_autofree gchar *devid = NULL;
 
 	/* set the physical ID */
 	if (!fu_udev_device_set_physical_id (device, "hid", error))
@@ -475,10 +475,10 @@ fu_unifying_peripheral_probe (FuUdevDevice *device, GError **error)
 	fu_device_set_vendor_id (FU_DEVICE (device), "USB:0x046D");
 
 	/* this is a non-standard extension */
-	guid = g_strdup_printf ("UFY\\VID_%04X&PID_%04X",
-				fu_udev_device_get_vendor (device),
-				fu_udev_device_get_model (device));
-	fu_device_add_guid (FU_DEVICE (device), guid);
+	devid = g_strdup_printf ("UFY\\VID_%04X&PID_%04X",
+				 fu_udev_device_get_vendor (device),
+				 fu_udev_device_get_model (device));
+	fu_device_add_instance_id (FU_DEVICE (device), devid);
 	return TRUE;
 }
 

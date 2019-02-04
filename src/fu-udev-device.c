@@ -214,18 +214,18 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 		devid = g_strdup_printf ("%s\\VEN_%04X&DEV_%04X&REV_%02X",
 					 subsystem, priv->vendor,
 					 priv->model, priv->revision);
-		fu_device_add_guid (device, devid);
+		fu_device_add_instance_id (device, devid);
 	}
 	if (priv->vendor != 0x0000 && priv->model != 0x0000) {
 		g_autofree gchar *devid = NULL;
 		devid = g_strdup_printf ("%s\\VEN_%04X&DEV_%04X",
 					 subsystem, priv->vendor, priv->model);
-		fu_device_add_guid (device, devid);
+		fu_device_add_instance_id (device, devid);
 	}
 	if (priv->vendor != 0x0000) {
 		g_autofree gchar *devid = NULL;
 		devid = g_strdup_printf ("%s\\VEN_%04X", subsystem, priv->vendor);
-		fu_device_add_guid (device, devid);
+		fu_device_add_instance_id (device, devid);
 	}
 
 	/* subclassed */

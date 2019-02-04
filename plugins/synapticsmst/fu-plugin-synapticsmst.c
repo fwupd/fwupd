@@ -41,9 +41,8 @@ fu_plugin_synapticsmst_create_simple_guid (FuDevice *fu_device,
 					   const gchar *str)
 {
 	guint16 board_id = synapticsmst_device_get_board_id (device);
-	g_autofree gchar *guid = g_strdup_printf ("MST-%s-%u", str, board_id);
-
-	fu_device_add_guid (fu_device, guid);
+	g_autofree gchar *devid = g_strdup_printf ("MST-%s-%u", str, board_id);
+	fu_device_add_instance_id (fu_device, devid);
 }
 
 /* creates MST-$str-$chipid-$BOARDID */

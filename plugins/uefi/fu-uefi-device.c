@@ -477,7 +477,7 @@ fu_uefi_device_probe (FuDevice *device, GError **error)
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE (device);
 	FuVersionFormat version_format;
-	g_autofree gchar *guid_devid = NULL;
+	g_autofree gchar *devid = NULL;
 	g_autofree gchar *guid_strup = NULL;
 	g_autofree gchar *version_lowest = NULL;
 	g_autofree gchar *version = NULL;
@@ -516,7 +516,7 @@ fu_uefi_device_probe (FuDevice *device, GError **error)
 	} else {
 		/* this is probably system firmware */
 		fu_device_add_icon (device, "computer");
-		fu_device_add_guid (device, "main-system-firmware");
+		fu_device_add_instance_id (device, "main-system-firmware");
 	}
 
 	/* set the PCR0 as the device checksum */
@@ -529,8 +529,8 @@ fu_uefi_device_probe (FuDevice *device, GError **error)
 	/* Windows seems to be case insensitive, but for convenience we'll
 	 * match the upper case values typically specified in the .inf file */
 	guid_strup = g_ascii_strup (self->fw_class, -1);
-	guid_devid = g_strdup_printf ("UEFI\\RES_{%s}", guid_strup);
-	fu_device_add_guid (device, guid_devid);
+	devid = g_strdup_printf ("UEFI\\RES_{%s}", guid_strup);
+	fu_device_add_instance_id (device, devid);
 	return TRUE;
 }
 

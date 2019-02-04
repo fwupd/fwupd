@@ -795,6 +795,29 @@ fu_device_has_guid (FuDevice *self, const gchar *guid)
 }
 
 /**
+ * fu_device_add_instance_id:
+ * @self: A #FuDevice
+ * @instance_id: the InstanceID, e.g. `PCI\VEN_10EC&DEV_525A`
+ *
+ * Adds an instance ID to the device. If the @instance_id argument is already a
+ * valid GUID then fu_device_add_guid() should be used instead.
+ *
+ * Since: 1.2.5
+ **/
+void
+fu_device_add_instance_id (FuDevice *self, const gchar *instance_id)
+{
+	g_autofree gchar *guid = fwupd_guid_from_string (instance_id);
+	if (fwupd_guid_is_valid (instance_id)) {
+		g_warning ("use fu_device_add_guid(\"%s\") instead!", instance_id);
+		fu_device_add_guid_safe (self, instance_id);
+		return;
+	}
+	fu_device_add_guid_safe (self, guid);
+	fwupd_device_add_instance_id (FWUPD_DEVICE (self), instance_id);
+}
+
+/**
  * fu_device_add_guid:
  * @self: A #FuDevice
  * @guid: A GUID, e.g. `2082b5e0-7a64-478a-b1b2-e3404fab6dad`
@@ -807,15 +830,10 @@ fu_device_has_guid (FuDevice *self, const gchar *guid)
 void
 fu_device_add_guid (FuDevice *self, const gchar *guid)
 {
-	/* turn instance ID into a GUID */
 	if (!fwupd_guid_is_valid (guid)) {
-		g_autofree gchar *tmp = fwupd_guid_from_string (guid);
-		fu_device_add_guid_safe (self, tmp);
-		fwupd_device_add_instance_id (FWUPD_DEVICE (self), guid);
+		fu_device_add_instance_id (self, guid);
 		return;
 	}
-
-	/* already valid */
 	fu_device_add_guid_safe (self, guid);
 }
 

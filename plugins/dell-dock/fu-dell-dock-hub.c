@@ -32,14 +32,14 @@ G_DEFINE_TYPE (FuDellDockHub, fu_dell_dock_hub, FU_TYPE_USB_DEVICE)
 static gboolean
 fu_dell_dock_hub_probe (FuDevice *device, GError **error)
 {
-	g_autofree gchar *guid = NULL;
+	g_autofree gchar *devid = NULL;
 
-	guid = g_strdup_printf ("USB\\VID_%04X&PID_%04X&hub",
+	devid = g_strdup_printf ("USB\\VID_%04X&PID_%04X&hub",
 			     (guint) fu_usb_device_get_vid (FU_USB_DEVICE (device)),
 			     (guint) fu_usb_device_get_pid (FU_USB_DEVICE (device)));
 
 	fu_device_set_logical_id (device, "hub");
-	fu_device_add_guid (device, guid);
+	fu_device_add_instance_id (device, devid);
 
 	return TRUE;
 }

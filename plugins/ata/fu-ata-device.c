@@ -168,7 +168,7 @@ fu_ata_device_parse_id_maybe_dell (FuAtaDevice *self, const guint16 *buf)
 		return;
 	}
 	guid_id = g_strdup_printf ("STORAGE-DELL-%s", component_id);
-	fu_device_add_guid (FU_DEVICE (self), guid_id);
+	fu_device_add_instance_id (FU_DEVICE (self), guid_id);
 
 	/* also add the EFI GUID */
 	guid_efi = fu_ata_device_get_guid_safe (buf, 129);
@@ -265,16 +265,16 @@ fu_ata_device_parse_id (FuAtaDevice *self, const guint8 *buf, gsize sz, GError *
 		g_autofree gchar *tmp = NULL;
 		tmp = g_strdup_printf ("IDE\\%s%s", name_pad,
 				       fu_device_get_version (device));
-		fu_device_add_guid (device, tmp);
+		fu_device_add_instance_id (device, tmp);
 	}
 	if (name_pad != NULL) {
 		g_autofree gchar *tmp = NULL;
 		tmp = g_strdup_printf ("IDE\\0%s", name_pad);
-		fu_device_add_guid (device, tmp);
+		fu_device_add_instance_id (device, tmp);
 	}
 
 	/* add the name fallback */
-	fu_device_add_guid (device, fu_device_get_name (device));
+	fu_device_add_instance_id (device, fu_device_get_name (device));
 
 	return TRUE;
 }
