@@ -91,7 +91,7 @@ fu_wac_module_touch_write_firmware (FuDevice *device, GBytes *blob, GError **err
 		/* build G11T data packet */
 		memset (buf, 0xff, sizeof(buf));
 		buf[0] = 0x01; /* writing */
-		fu_common_write_uint32 (&buf[1], chk->address, G_LITTLE_ENDIAN);
+		fu_common_write_uint32 (&buf[1], chk->address, G_BIG_ENDIAN);
 		buf[5] = chk->idx;
 		memcpy (&buf[6], chk->data, chk->data_sz);
 		blob_chunk = g_bytes_new (buf, sizeof(buf));
