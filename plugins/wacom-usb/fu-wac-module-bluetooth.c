@@ -107,7 +107,6 @@ fu_wac_module_bluetooth_parse_blocks (const guint8 *data, gsize sz, gboolean ski
 static gboolean
 fu_wac_module_bluetooth_write_firmware (FuDevice *device, GBytes *blob, GError **error)
 {
-	FuWacDevice *parent = FU_WAC_DEVICE (fu_device_get_parent (device));
 	FuWacModule *self = FU_WAC_MODULE (device);
 	const guint8 *data;
 	gsize len = 0;
@@ -157,10 +156,7 @@ fu_wac_module_bluetooth_write_firmware (FuDevice *device, GBytes *blob, GError *
 
 	/* update progress */
 	fu_device_set_progress_full (device, blocks_total, blocks_total);
-
-	/* reboot */
-	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	return fu_wac_device_update_reset (parent, error);
+	return TRUE;
 }
 
 static void

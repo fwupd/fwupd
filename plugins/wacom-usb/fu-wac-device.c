@@ -681,10 +681,7 @@ fu_wac_device_write_firmware (FuDevice *device, GBytes *blob, GError **error)
 
 	/* update progress */
 	fu_device_set_progress_full (device, blocks_total, blocks_total);
-
-	/* reboot, which switches the boot index of the firmware */
-	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	return fu_wac_device_update_reset (self, error);
+	return TRUE;
 }
 
 static gboolean

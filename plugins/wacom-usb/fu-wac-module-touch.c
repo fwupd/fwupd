@@ -81,10 +81,7 @@ fu_wac_module_touch_write_firmware (FuDevice *device, GBytes *blob, GError **err
 
 	/* update progress */
 	fu_device_set_progress_full (device, blocks_total, blocks_total);
-
-	/* reboot */
-	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	return fu_wac_device_update_reset (parent, error);
+	return TRUE;
 }
 
 static void
