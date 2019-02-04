@@ -19,12 +19,14 @@
  * FwupdGuidFlags:
  * @FWUPD_GUID_FLAG_NONE:			No trust
  * @FWUPD_GUID_FLAG_NAMESPACE_MICROSOFT:	Use the Microsoft-compatible namespace
+ * @FWUPD_GUID_FLAG_MIXED_ENDIAN:		Use EFI mixed endian representation
  *
  * The flags to show how the data should be converted.
  **/
 typedef enum {
 	FWUPD_GUID_FLAG_NONE			= 0,		/* Since: 1.2.5 */
 	FWUPD_GUID_FLAG_NAMESPACE_MICROSOFT	= 1 << 0,	/* Since: 1.2.5 */
+	FWUPD_GUID_FLAG_MIXED_ENDIAN		= 1 << 1,	/* Since: 1.2.5 */
 	/*< private >*/
 	FWUPD_GUID_FLAG_LAST
 } FwupdGuidFlags;
@@ -41,6 +43,8 @@ GHashTable	*fwupd_get_os_release			(GError		**error);
 gchar		*fwupd_build_history_report_json	(GPtrArray	*devices,
 							 GError		**error);
 gboolean	 fwupd_guid_is_valid			(const gchar	*guid);
+gchar		*fwupd_guid_from_buf			(const guint8	*buf,
+							 FwupdGuidFlags	 flags);
 gchar		*fwupd_guid_from_string			(const gchar	*str);
 gchar		*fwupd_guid_from_data			(const guint8	*data,
 							 gsize		 datasz,

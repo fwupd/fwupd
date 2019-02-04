@@ -253,12 +253,7 @@ if get_option('plugin_dell')
   endif
 endif
 
-if get_option('plugin_ata')
-  efivar = dependency('efivar')
-endif
-
 if get_option('plugin_nvme')
-  efivar = dependency('efivar')
   if not cc.has_header('linux/nvme_ioctl.h')
     error('NVMe support requires kernel >= 4.4')
   endif

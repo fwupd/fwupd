@@ -517,6 +517,54 @@ fwupd_build_history_report_json (GPtrArray *devices, GError **error)
 #define FWUPD_GUID_NAMESPACE_DEFAULT	"6ba7b810-9dad-11d1-80b4-00c04fd430c8"
 #define FWUPD_GUID_NAMESPACE_MICROSOFT	"70ffd812-4c7f-4c7d-0000-000000000000"
 
+typedef struct __attribute__((packed)) {
+	guint32		a;
+	guint16		b;
+	guint16		c;
+	guint16		d;
+	guint8		e[6];
+} FwupdGuid;
+
+/**
+ * fwupd_guid_from_buf:
+ * @flags: some %FwupdGuidFlags, e.g. %FWUPD_GUID_FLAG_MIXED_ENDIAN
+ * @buf: data to read, at least 16 bytes in length
+ *
+ * Returns a text GUID of mixed or BE endian for a packed buffer.
+ *
+ * Returns: A new GUID
+ *
+ * Since: 1.2.5
+ **/
+gchar *
+fwupd_guid_from_buf (const guint8 *buf, FwupdGuidFlags flags)
+{
+	FwupdGuid guid;
+
+	/* copy to avoid issues with aligning */
+	memcpy (&guid, buf, sizeof(FwupdGuid));
+
+	/* mixed is bizaar, but specified as the DCE encoding */
+	if (flags & FWUPD_GUID_FLAG_MIXED_ENDIAN) {
+		return g_strdup_printf ("%08x-%04x-%04x-%04x-%02x%02x%02x%02x%02x%02x",
+					GUINT32_FROM_LE(guid.a),
+					GUINT16_FROM_LE(guid.b),
+					GUINT16_FROM_LE(guid.c),
+					GUINT16_FROM_BE(guid.d),
+					guid.e[0], guid.e[1],
+					guid.e[2], guid.e[3],
+					guid.e[4], guid.e[5]);
+	}
+	return g_strdup_printf ("%08x-%04x-%04x-%04x-%02x%02x%02x%02x%02x%02x",
+				GUINT32_FROM_BE(guid.a),
+				GUINT16_FROM_BE(guid.b),
+				GUINT16_FROM_BE(guid.c),
+				GUINT16_FROM_BE(guid.d),
+				guid.e[0], guid.e[1],
+				guid.e[2], guid.e[3],
+				guid.e[4], guid.e[5]);
+}
+
 /**
  * fwupd_guid_from_data:
  * @flags: some %FwupdGuidFlags, e.g. %FWUPD_GUID_FLAG_NAMESPACE_MICROSOFT
@@ -537,7 +585,6 @@ gchar *
 fwupd_guid_from_data (const guint8 *data, gsize datasz, FwupdGuidFlags flags)
 {
 	const gchar *namespace_id = FWUPD_GUID_NAMESPACE_DEFAULT;
-	gchar guid_new[37]; /* 36 plus NUL */
 	gsize digestlen = 20;
 	guint8 hash[20];
 	gint rc;
@@ -570,10 +617,7 @@ fwupd_guid_from_data (const guint8 *data, gsize datasz, FwupdGuidFlags flags)
 	/* set specific bits according to Section 4.1.3 */
 	uu_new[6] = (guint8) ((uu_new[6] & 0x0f) | (5 << 4));
 	uu_new[8] = (guint8) ((uu_new[8] & 0x3f) | 0x80);
-
-	/* return as a string */
-	uuid_unparse (uu_new, guid_new);
-	return g_strdup (guid_new);
+	return fwupd_guid_from_buf (uu_new, flags);
 }
 
 /**

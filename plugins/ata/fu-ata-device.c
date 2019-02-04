@@ -6,7 +6,6 @@
 
 #include "config.h"
 
-#include <efivar.h>
 #include <fcntl.h>
 #include <string.h>
 #include <sys/errno.h>
@@ -141,15 +140,9 @@ fu_ata_device_pad_string_for_id (const gchar *name)
 static gchar *
 fu_ata_device_get_guid_safe (const guint16 *buf, guint16 addr_start)
 {
-	efi_guid_t guid_tmp;
-	g_autofree char *guid = NULL;
-
 	if (!fu_common_guid_is_plausible ((guint8 *) (buf + addr_start)))
 		return NULL;
-	memcpy (&guid_tmp, buf + addr_start, 16);
-	if (efi_guid_to_str (&guid_tmp, &guid) < 0)
-		return NULL;
-	return g_strdup (guid);
+	return fwupd_guid_from_buf ((const guint8 *) (buf + addr_start), FWUPD_GUID_FLAG_MIXED_ENDIAN);
 }
 
 static void
