@@ -884,7 +884,7 @@ static gboolean
 fu_dell_dock_ec_probe (FuDevice *device, GError **error)
 {
 	/* this will trigger setting up all the quirks */
-	fu_device_add_guid (device, DELL_DOCK_EC_GUID);
+	fu_device_add_instance_id (device, DELL_DOCK_EC_INSTANCE_ID);
 
 	return TRUE;
 }

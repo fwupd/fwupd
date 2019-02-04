@@ -729,7 +729,7 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 			device_id = g_strdup_printf ("TBT-%04x%04x", 0x00d4u,
 						     (unsigned) system_id);
 			fu_device_set_vendor_id (device, vendor_id);
-			fu_device_add_guid (device, device_id);
+			fu_device_add_instance_id (device, device_id);
 			fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 		}
 	}

@@ -247,14 +247,14 @@ fu_usb_device_probe (FuDevice *device, GError **error)
 				  g_usb_device_get_vid (priv->usb_device),
 				  g_usb_device_get_pid (priv->usb_device),
 				  release);
-	fu_device_add_guid (device, devid2);
+	fu_device_add_instance_id (device, devid2);
 	devid1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
 				  g_usb_device_get_vid (priv->usb_device),
 				  g_usb_device_get_pid (priv->usb_device));
-	fu_device_add_guid (device, devid1);
+	fu_device_add_instance_id (device, devid1);
 	devid0 = g_strdup_printf ("USB\\VID_%04X",
 				  g_usb_device_get_vid (priv->usb_device));
-	fu_device_add_guid (device, devid0);
+	fu_device_add_instance_id (device, devid0);
 
 	/* add the interface GUIDs */
 	intfs = g_usb_device_get_interfaces (priv->usb_device, error);
@@ -269,14 +269,14 @@ fu_usb_device_probe (FuDevice *device, GError **error)
 					  g_usb_interface_get_class (intf),
 					  g_usb_interface_get_subclass (intf),
 					  g_usb_interface_get_protocol (intf));
-		fu_device_add_guid (device, intid1);
+		fu_device_add_instance_id (device, intid1);
 		intid2 = g_strdup_printf ("USB\\CLASS_%02X&SUBCLASS_%02X",
 					  g_usb_interface_get_class (intf),
 					  g_usb_interface_get_subclass (intf));
-		fu_device_add_guid (device, intid2);
+		fu_device_add_instance_id (device, intid2);
 		intid3 = g_strdup_printf ("USB\\CLASS_%02X",
 					  g_usb_interface_get_class (intf));
-		fu_device_add_guid (device, intid3);
+		fu_device_add_instance_id (device, intid3);
 	}
 
 	/* subclassed */

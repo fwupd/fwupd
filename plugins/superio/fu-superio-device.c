@@ -204,12 +204,12 @@ static gboolean
 fu_superio_device_probe (FuDevice *device, GError **error)
 {
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
-	g_autofree gchar *guid = NULL;
+	g_autofree gchar *devid = NULL;
 
 	/* use the chipset name as the logical ID and for the GUID */
 	fu_device_set_logical_id (device, self->chipset);
-	guid = g_strdup_printf ("SuperIO-%s", self->chipset);
-	fu_device_add_guid (device, guid);
+	devid = g_strdup_printf ("SuperIO-%s", self->chipset);
+	fu_device_add_instance_id (device, devid);
 	return TRUE;
 }
 

@@ -180,8 +180,8 @@ static void
 fu_nvme_device_parse_cns_maybe_dell (FuNvmeDevice *self, const guint8 *buf)
 {
 	g_autofree gchar *component_id = NULL;
+	g_autofree gchar *devid = NULL;
 	g_autofree gchar *guid_efi = NULL;
-	g_autofree gchar *guid_id = NULL;
 
 	/* add extra component ID if set */
 	component_id = fu_nvme_device_get_string_safe (buf, 0xc36, 0xc3d);
@@ -191,8 +191,8 @@ fu_nvme_device_parse_cns_maybe_dell (FuNvmeDevice *self, const guint8 *buf)
 		g_debug ("invalid component ID, skipping");
 		return;
 	}
-	guid_id = g_strdup_printf ("STORAGE-DELL-%s", component_id);
-	fu_device_add_guid (FU_DEVICE (self), guid_id);
+	devid = g_strdup_printf ("STORAGE-DELL-%s", component_id);
+	fu_device_add_instance_id (FU_DEVICE (self), devid);
 
 	/* also add the EFI GUID */
 	guid_efi = fu_nvme_device_get_guid_safe (buf, 0x0c26);
@@ -294,7 +294,7 @@ fu_nvme_device_parse_cns (FuNvmeDevice *self, const guint8 *buf, gsize sz, GErro
 	/* fall back to the device description */
 	if (fu_device_get_guids (FU_DEVICE (self))->len == 0) {
 		g_debug ("no vendor GUID, falling back to mn");
-		fu_device_add_guid (FU_DEVICE (self), mn);
+		fu_device_add_instance_id (FU_DEVICE (self), mn);
 	}
 	return TRUE;
 }

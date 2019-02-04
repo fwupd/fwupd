@@ -311,7 +311,7 @@ fu_wac_module_constructed (GObject *object)
 				 g_usb_device_get_vid (priv->usb_device),
 				 g_usb_device_get_pid (priv->usb_device),
 				 fu_wac_module_fw_type_to_string (priv->fw_type));
-	fu_device_add_guid (FU_DEVICE (self), devid);
+	fu_device_add_instance_id (FU_DEVICE (self), devid);
 
 	G_OBJECT_CLASS (fu_wac_module_parent_class)->constructed (object);
 }

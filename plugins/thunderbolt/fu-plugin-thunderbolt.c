@@ -369,7 +369,7 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	if (vendor_id != NULL)
 		fu_device_set_vendor_id (dev, vendor_id);
 	if (device_id != NULL)
-		fu_device_add_guid (dev, device_id);
+		fu_device_add_instance_id (dev, device_id);
 	if (version != NULL)
 		fu_device_set_version (dev, version);
 	if (is_host)
