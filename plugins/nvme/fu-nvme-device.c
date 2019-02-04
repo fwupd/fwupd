@@ -15,7 +15,6 @@
 
 #include <glib/gstdio.h>
 
-#include <efivar.h>
 #include <linux/nvme_ioctl.h>
 
 #include "fu-chunk.h"
@@ -79,15 +78,9 @@ fu_nvme_device_get_string_safe (const guint8 *buf, guint16 addr_start, guint16 a
 static gchar *
 fu_nvme_device_get_guid_safe (const guint8 *buf, guint16 addr_start)
 {
-	efi_guid_t guid_tmp;
-	g_autofree char *guid = NULL;
-
 	if (!fu_common_guid_is_plausible (buf + addr_start))
 		return NULL;
-	memcpy (&guid_tmp, buf + addr_start, 16);
-	if (efi_guid_to_str (&guid_tmp, &guid) < 0)
-		return NULL;
-	return g_strdup (guid);
+	return fwupd_guid_from_buf (buf + addr_start, FWUPD_GUID_FLAG_MIXED_ENDIAN);
 }
 
 static gboolean

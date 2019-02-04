@@ -28,7 +28,6 @@ shared_module('fu_plugin_ata',
   ],
   dependencies : [
     plugin_deps,
-    efivar,
   ],
 )
 
@@ -50,7 +49,6 @@ if get_option('tests')
     ],
     dependencies : [
       plugin_deps,
-      efivar,
     ],
     link_with : [
       libfwupdprivate,
