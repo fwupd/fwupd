@@ -42,3 +42,34 @@ fu_plugin_update (FuPlugin *plugin, FuDevice *device, GBytes *blob_fw,
 		return FALSE;
 	return fu_device_write_firmware (device, blob_fw, error);
 }
+
+static FuDevice *
+fu_plugin_wacom_usb_get_device (GPtrArray *devices)
+{
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *dev = g_ptr_array_index (devices, i);
+		if (FU_IS_WAC_DEVICE (dev))
+			return dev;
+	}
+	return NULL;
+}
+
+gboolean
+fu_plugin_composite_cleanup (FuPlugin *plugin,
+			     GPtrArray *devices,
+			     GError **error)
+{
+	FuDevice *device = fu_plugin_wacom_usb_get_device (devices);
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	/* not us */
+	if (device == NULL)
+		return TRUE;
+
+	/* reboot, which switches the boot index of the firmware */
+	locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
+		return FALSE;
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+	return fu_wac_device_update_reset (FU_WAC_DEVICE (device), error);
+}
