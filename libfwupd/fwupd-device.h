@@ -100,6 +100,7 @@ void		 fwupd_device_add_guid			(FwupdDevice	*device,
 							 const gchar	*guid);
 gboolean	 fwupd_device_has_guid			(FwupdDevice	*device,
 							 const gchar	*guid);
+void		 fwupd_device_reset_guids		(FwupdDevice	*device);
 GPtrArray	*fwupd_device_get_guids			(FwupdDevice	*device);
 const gchar	*fwupd_device_get_guid_default		(FwupdDevice	*device);
 void		 fwupd_device_add_instance_id		(FwupdDevice	*device,

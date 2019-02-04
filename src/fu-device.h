@@ -118,6 +118,7 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_get_vendor_id(d)		fwupd_device_get_vendor_id(FWUPD_DEVICE(d))
 #define fu_device_get_flashes_left(d)		fwupd_device_get_flashes_left(FWUPD_DEVICE(d))
 #define fu_device_get_install_duration(d)	fwupd_device_get_install_duration(FWUPD_DEVICE(d))
+#define fu_device_reset_guids(d)		fwupd_device_reset_guids(FWUPD_DEVICE(d))
 
 /* accessors */
 gchar		*fu_device_to_string			(FuDevice	*self);

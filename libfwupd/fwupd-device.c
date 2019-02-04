@@ -364,6 +364,24 @@ fwupd_device_get_guid_default (FwupdDevice *device)
 }
 
 /**
+ * fwupd_device_reset_guids:
+ * @device: A #FwupdDevice
+ *
+ * Removes all GUIDs from the device
+ *
+ * Since: 1.2.5
+ **/
+void
+fwupd_device_reset_guids (FwupdDevice *device)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	if (priv->guids->len == 0)
+		return;
+	g_ptr_array_set_size (priv->guids, 0);
+}
+
+/**
  * fwupd_device_get_instance_ids:
  * @device: A #FwupdDevice
  *

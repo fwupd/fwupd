@@ -184,6 +184,7 @@ fu_nvme_device_parse_cns_maybe_dell (FuNvmeDevice *self, const guint8 *buf)
 		g_debug ("invalid component ID, skipping");
 		return;
 	}
+	fu_device_reset_guids (FU_DEVICE (self));
 	devid = g_strdup_printf ("STORAGE-DELL-%s", component_id);
 	fu_device_add_instance_id (FU_DEVICE (self), devid);
 
