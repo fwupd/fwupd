@@ -96,8 +96,10 @@ fu_wac_module_touch_write_firmware (FuDevice *device, GBytes *blob, GError **err
 		memcpy (&buf[6], chk->data, chk->data_sz);
 		blob_chunk = g_bytes_new (buf, sizeof(buf));
 		if (!fu_wac_module_set_feature (self, FU_WAC_MODULE_COMMAND_DATA,
-						blob_chunk, error))
+						blob_chunk, error)) {
+			g_prefix_error (error, "failed to write block %u: ", chk->idx);
 			return FALSE;
+		}
 
 		/* update progress */
 		fu_device_set_progress_full (device, i + 1, blocks_total);
