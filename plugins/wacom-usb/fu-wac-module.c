@@ -233,16 +233,17 @@ fu_wac_module_set_feature (FuWacModule *self,
 			continue;
 		}
 		if (priv->status == FU_WAC_MODLE_STATUS_OK)
-			return TRUE;
+			break;
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Failed to SetFeature: %s",
+			     fu_wac_module_status_to_string (priv->status));
+		return FALSE;
 	}
 
-	/* the hardware never responded */
-	g_set_error (error,
-		     FWUPD_ERROR,
-		     FWUPD_ERROR_INTERNAL,
-		     "Failed to SetFeature: %s",
-		     fu_wac_module_status_to_string (priv->status));
-	return FALSE;
+	/* success */
+	return TRUE;
 }
 
 static void
