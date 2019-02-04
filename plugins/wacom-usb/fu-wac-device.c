@@ -597,6 +597,13 @@ fu_wac_device_write_firmware (FuDevice *device, GBytes *blob, GError **error)
 		if (blob_block == NULL)
 			break;
 
+		/* ignore empty blocks */
+		if (dfu_utils_bytes_is_empty (blob_block)) {
+			g_debug ("empty block, ignoring");
+			fu_device_set_progress_full (device, blocks_done++, blocks_total);
+			continue;
+		}
+
 		/* erase entire block */
 		if (!fu_wac_device_erase_block (self, i, error))
 			return FALSE;
@@ -637,6 +644,7 @@ fu_wac_device_write_firmware (FuDevice *device, GBytes *blob, GError **error)
 		return FALSE;
 	for (guint16 i = 0; i < self->flash_descriptors->len; i++) {
 		FuWacFlashDescriptor *fd = g_ptr_array_index (self->flash_descriptors, i);
+		GBytes *blob_block;
 		guint32 csum_rom;
 
 		/* if page is protected */
@@ -644,8 +652,11 @@ fu_wac_device_write_firmware (FuDevice *device, GBytes *blob, GError **error)
 			continue;
 
 		/* no more written pages */
-		if (g_hash_table_lookup (fd_blobs, fd) == NULL)
-			break;
+		blob_block = g_hash_table_lookup (fd_blobs, fd);
+		if (blob_block == NULL)
+			continue;
+		if (dfu_utils_bytes_is_empty (blob_block))
+			continue;
 
 		/* check checksum matches */
 		csum_rom = g_array_index (self->checksums, guint32, i);
