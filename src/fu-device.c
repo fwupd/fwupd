@@ -573,6 +573,7 @@ fu_device_add_child_by_type_guid (FuDevice *self,
 		return FALSE;
 	if (!fu_device_probe (child, error))
 		return FALSE;
+	fu_device_convert_instance_ids (child);
 	fu_device_add_child (self, child);
 	return TRUE;
 }
@@ -807,13 +808,11 @@ fu_device_has_guid (FuDevice *self, const gchar *guid)
 void
 fu_device_add_instance_id (FuDevice *self, const gchar *instance_id)
 {
-	g_autofree gchar *guid = fwupd_guid_from_string (instance_id);
 	if (fwupd_guid_is_valid (instance_id)) {
 		g_warning ("use fu_device_add_guid(\"%s\") instead!", instance_id);
 		fu_device_add_guid_safe (self, instance_id);
 		return;
 	}
-	fu_device_add_guid_safe (self, guid);
 	fwupd_device_add_instance_id (FWUPD_DEVICE (self), instance_id);
 }
 
@@ -1997,6 +1996,35 @@ fu_device_probe (FuDevice *self, GError **error)
 }
 
 /**
+ * fu_device_convert_instance_ids:
+ * @self: A #FuDevice
+ *
+ * Converts all the Device Instance IDs added using fu_device_add_instance_id()
+ * into actual GUIDs, **unless** %FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS has
+ * been set.
+ *
+ * Plugins will only need to need to call this manually when adding child
+ * devices, as fu_device_setup() automatically calls this after the
+ * fu_device_probe() and fu_device_setup() virtual functions have been run.
+ *
+ * Since: 1.2.5
+ **/
+void
+fu_device_convert_instance_ids (FuDevice *self)
+{
+	GPtrArray *instance_ids = fwupd_device_get_instance_ids (FWUPD_DEVICE (self));
+
+	/* OEM specific hardware */
+	if (fu_device_has_flag (self, FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS))
+		return;
+	for (guint i = 0; i < instance_ids->len; i++) {
+		const gchar *instance_id = g_ptr_array_index (instance_ids, i);
+		g_autofree gchar *guid = fwupd_guid_from_string (instance_id);
+		fu_device_add_guid_safe (self, guid);
+	}
+}
+
+/**
  * fu_device_setup:
  * @self: A #FuDevice
  * @error: A #GError, or %NULL
@@ -2027,6 +2055,10 @@ fu_device_setup (FuDevice *self, GError **error)
 		if (!klass->setup (self, error))
 			return FALSE;
 	}
+
+	/* convert the instance IDs to GUIDs */
+	fu_device_convert_instance_ids (self);
+
 	priv->done_setup = TRUE;
 	return TRUE;
 }

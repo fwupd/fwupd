@@ -29,6 +29,7 @@ gboolean	 fu_device_ensure_id			(FuDevice	*self,
 							 GError		**error);
 void		 fu_device_incorporate_from_component	(FuDevice	*device,
 							 XbNode		*component);
+void		 fu_device_convert_instance_ids		(FuDevice	*self);
 
 G_END_DECLS
 
