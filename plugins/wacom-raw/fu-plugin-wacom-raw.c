@@ -56,7 +56,7 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 		return TRUE;
 
 	/* EMR */
-	if (fu_device_has_guid (FU_DEVICE (device), "WacomEMR")) {
+	if (fu_device_has_instance_id (FU_DEVICE (device), "WacomEMR")) {
 		g_autoptr(FuWacomEmrDevice) dev = fu_wacom_emr_device_new (device);
 		g_autoptr(FuDeviceLocker) locker = fu_device_locker_new (dev, error);
 		if (locker == NULL)
@@ -65,7 +65,7 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 	}
 
 	/* AES */
-	if (fu_device_has_guid (FU_DEVICE (device), "WacomAES")) {
+	if (fu_device_has_instance_id (FU_DEVICE (device), "WacomAES")) {
 		g_autoptr(FuWacomAesDevice) dev = fu_wacom_aes_device_new (device);
 		g_autoptr(FuDeviceLocker) locker = fu_device_locker_new (dev, error);
 		if (locker == NULL)
