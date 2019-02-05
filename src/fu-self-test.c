@@ -406,16 +406,19 @@ fu_engine_device_priority_func (void)
 	fu_device_set_priority (device1, 0);
 	fu_device_set_plugin (device1, "udev");
 	fu_device_add_instance_id (device1, "GUID1");
+	fu_device_convert_instance_ids (device1);
 	fu_engine_add_device (engine, device1);
 	fu_device_set_id (device2, "id2");
 	fu_device_set_priority (device2, 1);
 	fu_device_set_plugin (device2, "redfish");
 	fu_device_add_instance_id (device2, "GUID1");
+	fu_device_convert_instance_ids (device2);
 	fu_engine_add_device (engine, device2);
 	fu_device_set_id (device3, "id3");
 	fu_device_set_priority (device3, 0);
 	fu_device_set_plugin (device3, "uefi");
 	fu_device_add_instance_id (device3, "GUID1");
+	fu_device_convert_instance_ids (device3);
 	fu_engine_add_device (engine, device3);
 
 	/* get the high prio device */
@@ -452,17 +455,20 @@ fu_engine_device_parent_func (void)
 	fu_device_set_id (device1, "child");
 	fu_device_add_instance_id (device1, "child-GUID-1");
 	fu_device_add_parent_guid (device1, "parent-GUID");
+	fu_device_convert_instance_ids (device1);
 	fu_engine_add_device (engine, device1);
 
 	/* parent */
 	fu_device_set_id (device2, "parent");
 	fu_device_add_instance_id (device2, "parent-GUID");
 	fu_device_set_vendor (device2, "oem");
+	fu_device_convert_instance_ids (device2);
 
 	/* add another child */
 	fu_device_set_id (device3, "child2");
 	fu_device_add_instance_id (device3, "child-GUID-2");
 	fu_device_add_parent_guid (device3, "parent-GUID");
+	fu_device_convert_instance_ids (device3);
 	fu_device_add_child (device2, device3);
 
 	/* add two together */
@@ -1150,6 +1156,7 @@ fu_device_list_delay_func (void)
 	fu_device_set_id (device1, "device1");
 	fu_device_add_instance_id (device1, "foobar");
 	fu_device_set_remove_delay (device1, 100);
+	fu_device_convert_instance_ids (device1);
 	fu_device_list_add (device_list, device1);
 	g_assert_cmpint (added_cnt, ==, 1);
 	g_assert_cmpint (removed_cnt, ==, 0);
@@ -1278,11 +1285,13 @@ fu_device_list_replug_user_func (void)
 	fu_device_add_instance_id (device1, "bar");
 	fu_device_set_plugin (device1, "self-test");
 	fu_device_set_remove_delay (device1, FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
+	fu_device_convert_instance_ids (device1);
 	fu_device_set_id (device2, "device2");
 	fu_device_add_instance_id (device2, "baz");
 	fu_device_add_instance_id (device2, "bar"); /* matches */
 	fu_device_set_plugin (device2, "self-test");
 	fu_device_set_remove_delay (device2, FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
+	fu_device_convert_instance_ids (device2);
 
 	/* not yet added */
 	ret = fu_device_list_wait_for_replug (device_list, device1, &error);
@@ -1341,6 +1350,7 @@ fu_device_list_compatible_func (void)
 	fu_device_add_instance_id (device1, "foobar");
 	fu_device_add_instance_id (device1, "bootloader");
 	fu_device_set_remove_delay (device1, 100);
+	fu_device_convert_instance_ids (device1);
 	fu_device_list_add (device_list, device1);
 	g_assert_cmpint (added_cnt, ==, 1);
 	g_assert_cmpint (removed_cnt, ==, 0);
@@ -1350,6 +1360,7 @@ fu_device_list_compatible_func (void)
 	fu_device_set_id (device2, "device2");
 	fu_device_set_plugin (device2, "plugin-for-bootloader");
 	fu_device_add_instance_id (device2, "bootloader");
+	fu_device_convert_instance_ids (device2);
 
 	/* verify only a changed event was generated */
 	added_cnt = removed_cnt = changed_cnt = 0;
@@ -1409,6 +1420,7 @@ fu_device_list_remove_chain_func (void)
 	/* add child */
 	fu_device_set_id (device_child, "child");
 	fu_device_add_instance_id (device_child, "child-GUID-1");
+	fu_device_convert_instance_ids (device_child);
 	fu_device_list_add (device_list, device_child);
 	g_assert_cmpint (added_cnt, ==, 1);
 	g_assert_cmpint (removed_cnt, ==, 0);
@@ -1417,6 +1429,7 @@ fu_device_list_remove_chain_func (void)
 	/* add parent */
 	fu_device_set_id (device_parent, "parent");
 	fu_device_add_instance_id (device_parent, "parent-GUID-1");
+	fu_device_convert_instance_ids (device_parent);
 	fu_device_add_child (device_parent, device_child);
 	fu_device_list_add (device_list, device_parent);
 	g_assert_cmpint (added_cnt, ==, 2);
@@ -1457,9 +1470,11 @@ fu_device_list_func (void)
 	/* add both */
 	fu_device_set_id (device1, "device1");
 	fu_device_add_instance_id (device1, "foobar");
+	fu_device_convert_instance_ids (device1);
 	fu_device_list_add (device_list, device1);
 	fu_device_set_id (device2, "device2");
 	fu_device_add_instance_id (device2, "baz");
+	fu_device_convert_instance_ids (device2);
 	fu_device_list_add (device_list, device2);
 	g_assert_cmpint (added_cnt, ==, 2);
 	g_assert_cmpint (removed_cnt, ==, 0);
@@ -1841,6 +1856,7 @@ fu_plugin_quirks_device_func (void)
 	fu_device_set_quirks (device, quirks);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_instance_id (device, "USB\\VID_0BDA&PID_1100");
+	fu_device_convert_instance_ids (device);
 	g_assert_cmpstr (fu_device_get_name (device), ==, "Hub");
 
 	/* ensure children are created */

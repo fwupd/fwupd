@@ -151,6 +151,7 @@ fu_ata_device_parse_id_maybe_dell (FuAtaDevice *self, const guint16 *buf)
 	g_autofree gchar *component_id = NULL;
 	g_autofree gchar *guid_efi = NULL;
 	g_autofree gchar *guid_id = NULL;
+	g_autofree gchar *guid = NULL;
 
 	/* add extra component ID if set */
 	component_id = fu_ata_device_get_string (buf, 137, 140);
@@ -160,8 +161,16 @@ fu_ata_device_parse_id_maybe_dell (FuAtaDevice *self, const guint16 *buf)
 		g_debug ("invalid component ID, skipping");
 		return;
 	}
+
+	/* do not add the FuUdevDevice instance IDs as generic firmware
+	 * should not be used on these OEM-specific devices */
+	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS);
+
+	/* add instance ID *and* GUID as using no-auto-instance-ids */
 	guid_id = g_strdup_printf ("STORAGE-DELL-%s", component_id);
 	fu_device_add_instance_id (FU_DEVICE (self), guid_id);
+	guid = fwupd_guid_from_string (guid_id);
+	fu_device_add_guid (FU_DEVICE (self), guid);
 
 	/* also add the EFI GUID */
 	guid_efi = fu_ata_device_get_guid_safe (buf, 129);
