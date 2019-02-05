@@ -96,7 +96,7 @@ fu_hwids_get_guid_for_str (const gchar *str, GError **error)
 		data[i] = GUINT16_TO_LE(data[i]);
 
 	/* convert to a GUID */
-	return fwupd_guid_from_data ((guint8*) data, items_written * 2,
+	return fwupd_guid_hash_data ((guint8*) data, items_written * 2,
 				     FWUPD_GUID_FLAG_NAMESPACE_MICROSOFT);
 }
 

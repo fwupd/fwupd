@@ -538,7 +538,7 @@ fu_device_add_parent_guid (FuDevice *self, const gchar *guid)
 
 	/* make valid */
 	if (!fwupd_guid_is_valid (guid)) {
-		g_autofree gchar *tmp = fwupd_guid_from_string (guid);
+		g_autofree gchar *tmp = fwupd_guid_hash_string (guid);
 		if (fu_device_has_parent_guid (self, tmp))
 			return;
 		g_debug ("using %s for %s", tmp, guid);
@@ -787,7 +787,7 @@ fu_device_has_guid (FuDevice *self, const gchar *guid)
 {
 	/* make valid */
 	if (!fwupd_guid_is_valid (guid)) {
-		g_autofree gchar *tmp = fwupd_guid_from_string (guid);
+		g_autofree gchar *tmp = fwupd_guid_hash_string (guid);
 		return fwupd_device_has_guid (FWUPD_DEVICE (self), tmp);
 	}
 
@@ -822,7 +822,7 @@ fu_device_add_instance_id (FuDevice *self, const gchar *instance_id)
  * @guid: A GUID, e.g. `2082b5e0-7a64-478a-b1b2-e3404fab6dad`
  *
  * Adds a GUID to the device. If the @guid argument is not a valid GUID then it
- * is converted to a GUID using fwupd_guid_from_string().
+ * is converted to a GUID using fwupd_guid_hash_string().
  *
  * Since: 0.7.2
  **/
@@ -842,7 +842,7 @@ fu_device_add_guid (FuDevice *self, const gchar *guid)
  * @guid: A GUID, e.g. `2082b5e0-7a64-478a-b1b2-e3404fab6dad`
  *
  * Adds a GUID to the device. If the @guid argument is not a valid GUID then it
- * is converted to a GUID using fwupd_guid_from_string().
+ * is converted to a GUID using fwupd_guid_hash_string().
  *
  * A counterpart GUID is typically the GUID of the same device in bootloader
  * or runtime mode, if they have a different device PCI or USB ID. Adding this
@@ -855,7 +855,7 @@ fu_device_add_counterpart_guid (FuDevice *self, const gchar *guid)
 {
 	/* make valid */
 	if (!fwupd_guid_is_valid (guid)) {
-		g_autofree gchar *tmp = fwupd_guid_from_string (guid);
+		g_autofree gchar *tmp = fwupd_guid_hash_string (guid);
 		fwupd_device_add_guid (FWUPD_DEVICE (self), tmp);
 		return;
 	}
@@ -2019,7 +2019,7 @@ fu_device_convert_instance_ids (FuDevice *self)
 		return;
 	for (guint i = 0; i < instance_ids->len; i++) {
 		const gchar *instance_id = g_ptr_array_index (instance_ids, i);
-		g_autofree gchar *guid = fwupd_guid_from_string (instance_id);
+		g_autofree gchar *guid = fwupd_guid_hash_string (instance_id);
 		fu_device_add_guid_safe (self, guid);
 	}
 }

@@ -144,7 +144,8 @@ fu_ata_device_get_guid_safe (const guint16 *buf, guint16 addr_start)
 {
 	if (!fu_common_guid_is_plausible ((guint8 *) (buf + addr_start)))
 		return NULL;
-	return fwupd_guid_from_buf ((const guint8 *) (buf + addr_start), FWUPD_GUID_FLAG_MIXED_ENDIAN);
+	return fwupd_guid_to_string ((const fwupd_guid_t *) (buf + addr_start),
+				     FWUPD_GUID_FLAG_MIXED_ENDIAN);
 }
 
 static void
@@ -171,7 +172,7 @@ fu_ata_device_parse_id_maybe_dell (FuAtaDevice *self, const guint16 *buf)
 	/* add instance ID *and* GUID as using no-auto-instance-ids */
 	guid_id = g_strdup_printf ("STORAGE-DELL-%s", component_id);
 	fu_device_add_instance_id (FU_DEVICE (self), guid_id);
-	guid = fwupd_guid_from_string (guid_id);
+	guid = fwupd_guid_hash_string (guid_id);
 	fu_device_add_guid (FU_DEVICE (self), guid);
 
 	/* also add the EFI GUID */

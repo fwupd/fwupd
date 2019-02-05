@@ -99,7 +99,7 @@ fu_quirks_build_group_key (const gchar *group)
 			gsize len = strlen (guid_prefixes[i]);
 			if (fwupd_guid_is_valid (group + len))
 				return g_strdup (group + len);
-			return fwupd_guid_from_string (group + len);
+			return fwupd_guid_hash_string (group + len);
 		}
 	}
 

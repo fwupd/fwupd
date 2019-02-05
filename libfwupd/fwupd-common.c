@@ -15,7 +15,6 @@
 #include <string.h>
 #include <sys/utsname.h>
 #include <json-glib/json-glib.h>
-#include <uuid.h>
 
 /**
  * fwupd_checksum_guess_kind:
@@ -523,12 +522,12 @@ typedef struct __attribute__((packed)) {
 	guint16		c;
 	guint16		d;
 	guint8		e[6];
-} FwupdGuid;
+} fwupd_guid_native_t;
 
 /**
- * fwupd_guid_from_buf:
+ * fwupd_guid_to_string:
+ * @guid: a #fwupd_guid_t to read
  * @flags: some %FwupdGuidFlags, e.g. %FWUPD_GUID_FLAG_MIXED_ENDIAN
- * @buf: data to read, at least 16 bytes in length
  *
  * Returns a text GUID of mixed or BE endian for a packed buffer.
  *
@@ -537,39 +536,187 @@ typedef struct __attribute__((packed)) {
  * Since: 1.2.5
  **/
 gchar *
-fwupd_guid_from_buf (const guint8 *buf, FwupdGuidFlags flags)
+fwupd_guid_to_string (const fwupd_guid_t *guid, FwupdGuidFlags flags)
 {
-	FwupdGuid guid;
+	fwupd_guid_native_t gnat;
+
+	g_return_val_if_fail (guid != NULL, NULL);
 
 	/* copy to avoid issues with aligning */
-	memcpy (&guid, buf, sizeof(FwupdGuid));
+	memcpy (&gnat, guid, sizeof(gnat));
 
 	/* mixed is bizaar, but specified as the DCE encoding */
 	if (flags & FWUPD_GUID_FLAG_MIXED_ENDIAN) {
 		return g_strdup_printf ("%08x-%04x-%04x-%04x-%02x%02x%02x%02x%02x%02x",
-					GUINT32_FROM_LE(guid.a),
-					GUINT16_FROM_LE(guid.b),
-					GUINT16_FROM_LE(guid.c),
-					GUINT16_FROM_BE(guid.d),
-					guid.e[0], guid.e[1],
-					guid.e[2], guid.e[3],
-					guid.e[4], guid.e[5]);
+					GUINT32_FROM_LE(gnat.a),
+					GUINT16_FROM_LE(gnat.b),
+					GUINT16_FROM_LE(gnat.c),
+					GUINT16_FROM_BE(gnat.d),
+					gnat.e[0], gnat.e[1],
+					gnat.e[2], gnat.e[3],
+					gnat.e[4], gnat.e[5]);
 	}
 	return g_strdup_printf ("%08x-%04x-%04x-%04x-%02x%02x%02x%02x%02x%02x",
-				GUINT32_FROM_BE(guid.a),
-				GUINT16_FROM_BE(guid.b),
-				GUINT16_FROM_BE(guid.c),
-				GUINT16_FROM_BE(guid.d),
-				guid.e[0], guid.e[1],
-				guid.e[2], guid.e[3],
-				guid.e[4], guid.e[5]);
+				GUINT32_FROM_BE(gnat.a),
+				GUINT16_FROM_BE(gnat.b),
+				GUINT16_FROM_BE(gnat.c),
+				GUINT16_FROM_BE(gnat.d),
+				gnat.e[0], gnat.e[1],
+				gnat.e[2], gnat.e[3],
+				gnat.e[4], gnat.e[5]);
+}
+
+#if !GLIB_CHECK_VERSION(2,54,0)
+static gboolean
+str_has_sign (const gchar *str)
+{
+	return str[0] == '-' || str[0] == '+';
+}
+
+static gboolean
+str_has_hex_prefix (const gchar *str)
+{
+	return str[0] == '0' && g_ascii_tolower (str[1]) == 'x';
+}
+
+static gboolean
+g_ascii_string_to_unsigned (const gchar *str,
+			    guint base,
+			    guint64 min,
+			    guint64 max,
+			    guint64 *out_num,
+			    GError **error)
+{
+	const gchar *end_ptr = NULL;
+	gint saved_errno = 0;
+	guint64 number;
+
+	g_return_val_if_fail (str != NULL, FALSE);
+	g_return_val_if_fail (base >= 2 && base <= 36, FALSE);
+	g_return_val_if_fail (min <= max, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	if (str[0] == '\0') {
+		g_set_error_literal (error,
+				     G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
+				     "Empty string is not a number");
+		return FALSE;
+	}
+
+	errno = 0;
+	number = g_ascii_strtoull (str, (gchar **)&end_ptr, base);
+	saved_errno = errno;
+
+	if (g_ascii_isspace (str[0]) || str_has_sign (str) ||
+	    (base == 16 && str_has_hex_prefix (str)) ||
+	    (saved_errno != 0 && saved_errno != ERANGE) ||
+	    end_ptr == NULL ||
+	    *end_ptr != '\0') {
+		g_set_error (error,
+			     G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
+			     "“%s” is not an unsigned number", str);
+		return FALSE;
+	}
+	if (saved_errno == ERANGE || number < min || number > max) {
+		g_autofree gchar *min_str = g_strdup_printf ("%" G_GUINT64_FORMAT, min);
+		g_autofree gchar *max_str = g_strdup_printf ("%" G_GUINT64_FORMAT, max);
+		g_set_error (error,
+			     G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
+			     "Number “%s” is out of bounds [%s, %s]",
+			     str, min_str, max_str);
+		return FALSE;
+	}
+	if (out_num != NULL)
+		*out_num = number;
+	return TRUE;
+}
+#endif /* GLIB_CHECK_VERSION(2,54,0) */
+
+/**
+ * fwupd_guid_from_string:
+ * @guidstr: (nullable): a GUID, e.g. `00112233-4455-6677-8899-aabbccddeeff`
+ * @guid: a #fwupd_guid_t, or NULL to just check the GUID
+ * @flags: some %FwupdGuidFlags, e.g. %FWUPD_GUID_FLAG_MIXED_ENDIAN
+ * @error: A #GError or %NULL
+ *
+ * Converts a string GUID into its binary encoding. All string GUIDs are
+ * formatted as big endian but on-disk can be encoded in different ways.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.2.5
+ **/
+gboolean
+fwupd_guid_from_string (const gchar *guidstr,
+			fwupd_guid_t *guid,
+			FwupdGuidFlags flags,
+			GError **error)
+{
+	fwupd_guid_native_t gu = { 0x0 };
+	gboolean mixed_endian = flags & FWUPD_GUID_FLAG_MIXED_ENDIAN;
+	guint64 tmp;
+	g_auto(GStrv) split = NULL;
+
+	g_return_val_if_fail (guidstr != NULL, FALSE);
+
+	/* split into sections */
+	if (strlen (guidstr) != 36) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "is not valid format");
+		return FALSE;
+	}
+	split = g_strsplit (guidstr, "-", 5);
+	if (g_strv_length (split) != 5) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "is not valid format, no dashes");
+		return FALSE;
+	}
+	if (strlen (split[0]) != 8 && strlen (split[1]) != 4 &&
+	    strlen (split[2]) != 4 && strlen (split[3]) != 4 &&
+	    strlen (split[4]) != 12) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "is not valid format, not GUID");
+		return FALSE;
+	}
+
+	/* parse */
+	if (!g_ascii_string_to_unsigned (split[0], 16, 0, 0xffffffff, &tmp, error))
+		return FALSE;
+	gu.a = mixed_endian ? GUINT32_TO_LE(tmp) : GUINT32_TO_BE(tmp);
+	if (!g_ascii_string_to_unsigned (split[1], 16, 0, 0xffff, &tmp, error))
+		return FALSE;
+	gu.b = mixed_endian ? GUINT16_TO_LE(tmp) : GUINT16_TO_BE(tmp);
+	if (!g_ascii_string_to_unsigned (split[2], 16, 0, 0xffff, &tmp, error))
+		return FALSE;
+	gu.c = mixed_endian ? GUINT16_TO_LE(tmp) : GUINT16_TO_BE(tmp);
+	if (!g_ascii_string_to_unsigned (split[3], 16, 0, 0xffff, &tmp, error))
+		return FALSE;
+	gu.d = GUINT16_TO_BE(tmp);
+	for (guint i = 0; i < 6; i++) {
+		gchar buffer[3] = { 0x0 };
+		memcpy (buffer, split[4] + (i * 2), 2);
+		if (!g_ascii_string_to_unsigned (buffer, 16, 0, 0xff, &tmp, error))
+			return FALSE;
+		gu.e[i] = tmp;
+	}
+	if (guid != NULL)
+		memcpy (guid, &gu, sizeof(gu));
+
+	/* success */
+	return TRUE;
 }
 
 /**
- * fwupd_guid_from_data:
- * @flags: some %FwupdGuidFlags, e.g. %FWUPD_GUID_FLAG_NAMESPACE_MICROSOFT
+ * fwupd_guid_hash_data:
  * @data: data to hash
  * @datasz: length of @data
+ * @flags: some %FwupdGuidFlags, e.g. %FWUPD_GUID_FLAG_NAMESPACE_MICROSOFT
  *
  * Returns a GUID for some data. This uses a hash and so even small
  * differences in the @data will produce radically different return values.
@@ -582,14 +729,13 @@ fwupd_guid_from_buf (const guint8 *buf, FwupdGuidFlags flags)
  * Since: 1.2.5
  **/
 gchar *
-fwupd_guid_from_data (const guint8 *data, gsize datasz, FwupdGuidFlags flags)
+fwupd_guid_hash_data (const guint8 *data, gsize datasz, FwupdGuidFlags flags)
 {
 	const gchar *namespace_id = FWUPD_GUID_NAMESPACE_DEFAULT;
 	gsize digestlen = 20;
 	guint8 hash[20];
-	gint rc;
-	uuid_t uu_namespace;
-	uuid_t uu_new;
+	fwupd_guid_t uu_namespace;
+	fwupd_guid_t uu_new;
 	g_autoptr(GChecksum) csum = NULL;
 
 	g_return_val_if_fail (namespace_id != NULL, NULL);
@@ -600,31 +746,30 @@ fwupd_guid_from_data (const guint8 *data, gsize datasz, FwupdGuidFlags flags)
 	if (flags & FWUPD_GUID_FLAG_NAMESPACE_MICROSOFT)
 		namespace_id = FWUPD_GUID_NAMESPACE_MICROSOFT;
 
-	/* convert the namespace to binary */
-	rc = uuid_parse (namespace_id, uu_namespace);
-	if (rc != 0)
+	/* convert the namespace to binary: hardcoded BE, not @flags */
+	if (!fwupd_guid_from_string (namespace_id, &uu_namespace, FWUPD_GUID_FLAG_NONE, NULL))
 		return NULL;
 
 	/* hash the namespace and then the string */
 	csum = g_checksum_new (G_CHECKSUM_SHA1);
-	g_checksum_update (csum, (guchar *) uu_namespace, 16);
+	g_checksum_update (csum, (guchar *) &uu_namespace, sizeof(uu_namespace));
 	g_checksum_update (csum, (guchar *) data, (gssize) datasz);
 	g_checksum_get_digest (csum, hash, &digestlen);
 
 	/* copy most parts of the hash 1:1 */
-	memcpy (uu_new, hash, 16);
+	memcpy (uu_new, hash, sizeof(uu_new));
 
 	/* set specific bits according to Section 4.1.3 */
 	uu_new[6] = (guint8) ((uu_new[6] & 0x0f) | (5 << 4));
 	uu_new[8] = (guint8) ((uu_new[8] & 0x3f) | 0x80);
-	return fwupd_guid_from_buf (uu_new, flags);
+	return fwupd_guid_to_string ((const fwupd_guid_t *) &uu_new, flags);
 }
 
 /**
  * fwupd_guid_is_valid:
- * @guid: string to check
+ * @guid: string to check, e.g. `00112233-4455-6677-8899-aabbccddeeff`
  *
- * Checks the source string is a valid string GUID descriptor.
+ * Checks the string is a valid GUID.
  *
  * Returns: %TRUE if @guid was a valid GUID, %FALSE otherwise
  *
@@ -633,20 +778,17 @@ fwupd_guid_from_data (const guint8 *data, gsize datasz, FwupdGuidFlags flags)
 gboolean
 fwupd_guid_is_valid (const gchar *guid)
 {
-	gint rc;
-	uuid_t uu;
 	if (guid == NULL)
 		return FALSE;
-	if (strlen (guid) != 36)
+	if (!fwupd_guid_from_string (guid, NULL, FWUPD_GUID_FLAG_NONE, NULL))
 		return FALSE;
-	rc = uuid_parse (guid, uu);
-	if (uuid_is_null (uu))
+	if (g_strcmp0 (guid, "00000000-0000-0000-0000-000000000000") == 0)
 		return FALSE;
-	return rc == 0;
+	return TRUE;
 }
 
 /**
- * fwupd_guid_from_string:
+ * fwupd_guid_hash_string:
  * @str: A source string to use as a key
  *
  * Returns a GUID for a given string. This uses a hash and so even small
@@ -665,10 +807,10 @@ fwupd_guid_is_valid (const gchar *guid)
  * Since: 1.2.5
  **/
 gchar *
-fwupd_guid_from_string (const gchar *str)
+fwupd_guid_hash_string (const gchar *str)
 {
 	if (str == NULL)
 		return NULL;
-	return fwupd_guid_from_data ((const guint8 *) str, strlen (str),
+	return fwupd_guid_hash_data ((const guint8 *) str, strlen (str),
 				     FWUPD_GUID_FLAG_NONE);
 }

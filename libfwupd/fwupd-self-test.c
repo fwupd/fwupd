@@ -465,6 +465,11 @@ fwupd_common_guid_func (void)
 {
 	g_autofree gchar *guid1 = NULL;
 	g_autofree gchar *guid2 = NULL;
+	g_autofree gchar *guid_be = NULL;
+	g_autofree gchar *guid_me = NULL;
+	fwupd_guid_t buf = { 0x0 };
+	gboolean ret;
+	g_autoptr(GError) error = NULL;
 
 	/* invalid */
 	g_assert (!fwupd_guid_is_valid (NULL));
@@ -478,10 +483,33 @@ fwupd_common_guid_func (void)
 	g_assert (fwupd_guid_is_valid ("1ff60ab2-3905-06a1-b476-0371f00c9e9b"));
 
 	/* make valid */
-	guid1 = fwupd_guid_from_string ("python.org");
+	guid1 = fwupd_guid_hash_string ("python.org");
 	g_assert_cmpstr (guid1, ==, "886313e1-3b8a-5372-9b90-0c9aee199e5d");
-	guid2 = fwupd_guid_from_string ("8086:0406");
+
+	guid2 = fwupd_guid_hash_string ("8086:0406");
 	g_assert_cmpstr (guid2, ==, "1fbd1f2c-80f4-5d7c-a6ad-35c7b9bd5486");
+
+	/* round-trip BE */
+	ret = fwupd_guid_from_string ("00112233-4455-6677-8899-aabbccddeeff", &buf,
+				      FWUPD_GUID_FLAG_NONE, &error);
+	g_assert_true (ret);
+	g_assert_no_error (error);
+	g_assert (memcmp (buf, "\x00\x11\x22\x33\x44\x55\x66\x77\x88\x99\xaa\xbb\xcc\xdd\xee\xff", sizeof(buf)) == 0);
+	guid_be = fwupd_guid_to_string ((const fwupd_guid_t *) &buf, FWUPD_GUID_FLAG_NONE);
+	g_assert_cmpstr (guid_be, ==, "00112233-4455-6677-8899-aabbccddeeff");
+
+	/* round-trip mixed encoding */
+	ret = fwupd_guid_from_string ("00112233-4455-6677-8899-aabbccddeeff", &buf,
+				      FWUPD_GUID_FLAG_MIXED_ENDIAN, &error);
+	g_assert_true (ret);
+	g_assert_no_error (error);
+	g_assert (memcmp (buf, "\x33\x22\x11\x00\x55\x44\x77\x66\x88\x99\xaa\xbb\xcc\xdd\xee\xff", sizeof(buf)) == 0);
+	guid_me = fwupd_guid_to_string ((const fwupd_guid_t *) &buf, FWUPD_GUID_FLAG_MIXED_ENDIAN);
+	g_assert_cmpstr (guid_me, ==, "00112233-4455-6677-8899-aabbccddeeff");
+
+	/* check failure */
+	g_assert_false (fwupd_guid_from_string ("001122334455-6677-8899-aabbccddeeff", NULL, 0, NULL));
+	g_assert_false (fwupd_guid_from_string ("0112233-4455-6677-8899-aabbccddeeff", NULL, 0, NULL));
 }
 
 int
