@@ -31,6 +31,11 @@ typedef enum {
 	FWUPD_GUID_FLAG_LAST
 } FwupdGuidFlags;
 
+/* GObject Introspection does not understand typedefs with sizes */
+#ifndef __GI_SCANNER__
+typedef guint8 fwupd_guid_t[16];
+#endif
+
 const gchar	*fwupd_checksum_get_best		(GPtrArray	*checksums);
 const gchar	*fwupd_checksum_get_by_kind		(GPtrArray	*checksums,
 							 GChecksumType	 kind);
@@ -42,11 +47,25 @@ gchar		*fwupd_build_machine_id			(const gchar 	*salt,
 GHashTable	*fwupd_get_os_release			(GError		**error);
 gchar		*fwupd_build_history_report_json	(GPtrArray	*devices,
 							 GError		**error);
-gboolean	 fwupd_guid_is_valid			(const gchar	*guid);
-gchar		*fwupd_guid_from_buf			(const guint8	*buf,
+
+#ifndef __GI_SCANNER__
+gchar		*fwupd_guid_to_string			(const fwupd_guid_t *guid,
 							 FwupdGuidFlags	 flags);
-gchar		*fwupd_guid_from_string			(const gchar	*str);
-gchar		*fwupd_guid_from_data			(const guint8	*data,
+gboolean	 fwupd_guid_from_string			(const gchar	*guidstr,
+							 fwupd_guid_t	*guid,
+							 FwupdGuidFlags	 flags,
+							 GError		**error);
+#else
+gchar		*fwupd_guid_to_string			(const guint8	 guid[16],
+							 FwupdGuidFlags	 flags);
+gboolean	 fwupd_guid_from_string			(const gchar	*guidstr,
+							 guint8		 guid[16],
+							 FwupdGuidFlags	 flags,
+							 GError		**error);
+#endif
+gboolean	 fwupd_guid_is_valid			(const gchar	*guid);
+gchar		*fwupd_guid_hash_string			(const gchar	*str);
+gchar		*fwupd_guid_hash_data			(const guint8	*data,
 							 gsize		 datasz,
 							 FwupdGuidFlags	 flags);
 

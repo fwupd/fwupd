@@ -54,7 +54,6 @@ BuildRequires: valgrind-devel
 %endif
 BuildRequires: elfutils-libelf-devel
 BuildRequires: gtk-doc
-BuildRequires: libuuid-devel
 BuildRequires: gnutls-devel
 BuildRequires: gnutls-utils
 BuildRequires: meson

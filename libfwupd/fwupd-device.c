@@ -1642,7 +1642,7 @@ fwupd_device_to_string (FwupdDevice *device)
 	for (guint i = 0; i < priv->instance_ids->len; i++) {
 		const gchar *instance_id = g_ptr_array_index (priv->instance_ids, i);
 		g_hash_table_insert (ids,
-				     fwupd_guid_from_string (instance_id),
+				     fwupd_guid_hash_string (instance_id),
 				     g_strdup (instance_id));
 	}
 	for (guint i = 0; i < priv->guids->len; i++) {

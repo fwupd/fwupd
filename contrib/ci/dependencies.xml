@@ -1109,21 +1109,6 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
-  <dependency type="build" id="uuid-dev">
-    <distro id="centos">
-      <package>libuuid-devel</package>
-    </distro>
-    <distro id="debian">
-      <control />
-      <package variant="x86_64" />
-      <package variant="s390x">uuid-dev:s390x</package>
-      <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <control />
-      <package variant="x86_64" />
-    </distro>
-  </dependency>
   <dependency type="build" id="valac">
     <distro id="arch">
       <package>vala</package>
