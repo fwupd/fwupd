@@ -71,6 +71,7 @@ enum {
 struct _FuAtaDevice {
 	FuUdevDevice		 parent_instance;
 	guint			 pci_depth;
+	guint			 usb_depth;
 	gint			 fd;
 	guint16			 transfer_blocks;
 	guint8			 transfer_mode;
@@ -124,6 +125,7 @@ fu_ata_device_to_string (FuDevice *device, GString *str)
 	g_string_append_printf (str, "    transfer-mode:\t0x%x\n", (guint) self->transfer_mode);
 	g_string_append_printf (str, "    transfer-size:\t0x%x\n", (guint) self->transfer_blocks);
 	g_string_append_printf (str, "    pci-depth:\t\t%u\n", self->pci_depth);
+	g_string_append_printf (str, "    usb-depth:\t\t%u\n", self->usb_depth);
 }
 
 /* https://docs.microsoft.com/en-us/windows-hardware/drivers/install/identifiers-for-ide-devices */
@@ -303,9 +305,10 @@ fu_ata_device_probe (FuUdevDevice *device, GError **error)
 	if (!fu_udev_device_set_physical_id (device, "scsi", error))
 		return FALSE;
 
-	/* look at the PCI depth to work out if in an external enclosure */
+	/* look at the PCI and USB depth to work out if in an external enclosure */
 	self->pci_depth = fu_udev_device_get_slot_depth (device, "pci");
-	if (self->pci_depth <= 2)
+	self->usb_depth = fu_udev_device_get_slot_depth (device, "usb");
+	if (self->pci_depth <= 2 && self->usb_depth <= 2)
 		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_INTERNAL);
 
 	return TRUE;
