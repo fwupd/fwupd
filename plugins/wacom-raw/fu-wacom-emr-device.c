@@ -186,7 +186,7 @@ fu_wacom_emr_device_write_firmware (FuDevice *device, GPtrArray *chunks, GError 
 	guint8 idx = 0;
 
 	/* erase W9013 */
-	if (fu_device_has_guid (device, "WacomEMR_W9013")) {
+	if (fu_device_has_instance_id (device, "WacomEMR_W9013")) {
 		fu_device_set_status (device, FWUPD_STATUS_DEVICE_ERASE);
 		if (!fu_wacom_emr_device_w9013_erase_data (self, error))
 			return FALSE;
@@ -197,7 +197,7 @@ fu_wacom_emr_device_write_firmware (FuDevice *device, GPtrArray *chunks, GError 
 	}
 
 	/* erase W9021 */
-	if (fu_device_has_guid (device, "WacomEMR_W9021")) {
+	if (fu_device_has_instance_id (device, "WacomEMR_W9021")) {
 		if (!fu_wacom_device_w9021_erase_all (self, error))
 			return FALSE;
 	}
