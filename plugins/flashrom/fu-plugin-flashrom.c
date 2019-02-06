@@ -55,7 +55,10 @@ fu_plugin_destroy (FuPlugin *plugin)
 static int
 fu_plugin_flashrom_debug_cb (enum flashrom_log_level lvl, const char *fmt, va_list args)
 {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wformat-nonliteral"
 	g_autofree gchar *tmp = g_strdup_vprintf (fmt, args);
+#pragma clang diagnostic pop
 	switch (lvl) {
 	case FLASHROM_MSG_ERROR:
 	case FLASHROM_MSG_WARN:
@@ -186,6 +189,7 @@ fu_plugin_update (FuPlugin *plugin,
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	gsize sz = 0;
+	gint rc;
 	const guint8 *buf = g_bytes_get_data (blob_fw, &sz);
 
 	if (flashrom_layout_read_from_ifd (&data->layout, data->flashctx, NULL, 0)) {
@@ -216,11 +220,12 @@ fu_plugin_update (FuPlugin *plugin,
 		return FALSE;
 	}
 	flashrom_flag_set (data->flashctx, FLASHROM_FLAG_VERIFY_AFTER_WRITE, TRUE);
-	if (flashrom_image_write (data->flashctx, buf, sz, NULL /* refbuffer */)) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_WRITE,
-				     "image write failed");
+	rc = flashrom_image_write (data->flashctx, (void *) buf, sz, NULL /* refbuffer */);
+	if (rc != 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_WRITE,
+			     "image write failed, err=%u", rc);
 		return FALSE;
 	}
 

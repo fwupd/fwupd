@@ -190,6 +190,12 @@ Data files for installed tests.
 
 mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 
+# delete most files from the subproject
+rm ${RPM_BUILD_ROOT}%{_includedir}/libflashrom.h
+rm ${RPM_BUILD_ROOT}%{_libdir}/libflashrom.so
+rm ${RPM_BUILD_ROOT}%{_libdir}/pkgconfig/libflashrom.pc
+rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
+
 %find_lang %{name}
 
 %post
@@ -303,6 +309,9 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %if 0%{?have_uefi}
 %{_datadir}/locale/*/LC_IMAGES/fwupd*
 %endif
+
+# eww, but just until the Fedora package ships these...
+%{_libdir}/libflashrom.so.1*
 
 %files devel
 %{_datadir}/gir-1.0/Fwupd-2.0.gir
