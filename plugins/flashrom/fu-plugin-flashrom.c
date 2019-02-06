@@ -225,7 +225,7 @@ fu_plugin_update (FuPlugin *plugin,
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_WRITE,
-			     "image write failed, err=%u", rc);
+			     "image write failed, err=%i", rc);
 		return FALSE;
 	}
 
