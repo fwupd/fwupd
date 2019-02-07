@@ -809,7 +809,7 @@ fwupd_guid_is_valid (const gchar *guid)
 gchar *
 fwupd_guid_hash_string (const gchar *str)
 {
-	if (str == NULL)
+	if (str == NULL || str[0] == '\0')
 		return NULL;
 	return fwupd_guid_hash_data ((const guint8 *) str, strlen (str),
 				     FWUPD_GUID_FLAG_NONE);
