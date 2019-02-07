@@ -747,7 +747,10 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
-      <control />
+      <control>
+        <inclusive>i386</inclusive>
+        <inclusive>amd64</inclusive>
+      </control>
       <package variant="x86_64" />
     </distro>
   </dependency>
