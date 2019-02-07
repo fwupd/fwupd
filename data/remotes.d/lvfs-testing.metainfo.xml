@@ -4,7 +4,7 @@
 <component type="source">
   <id>org.freedesktop.fwupd.remotes.lvfs-testing</id>
   <name>Linux Vendor Firmware Service (testing firmware)</name>
-  <metadata_license>CC0</metadata_license>
+  <metadata_license>CC0-1.0</metadata_license>
   <agreement version_id="1.0">
     <agreement_section>
       <description>
