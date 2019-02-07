@@ -33,7 +33,7 @@ _gcab_cabinet_get_file_by_name (GCabCabinet *cabinet, const gchar *basename)
 		g_autoptr(GSList) files = gcab_folder_get_files (cabfolder);
 		for (GSList *l = files; l != NULL; l = l->next) {
 			GCabFile *cabfile = GCAB_FILE (l->data);
-			if (g_strcmp0 (gcab_file_get_name (cabfile), basename) == 0)
+			if (g_strcmp0 (gcab_file_get_extract_name (cabfile), basename) == 0)
 				return cabfile;
 		}
 #endif
