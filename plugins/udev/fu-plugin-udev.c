@@ -93,6 +93,10 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 	if (g_file_test (rom_fn, G_FILE_TEST_EXISTS))
 		fu_device_set_metadata (FU_DEVICE (device), "RomFilename", rom_fn);
 
+	/* we never open the device, so convert the instance IDs */
+	if (!fu_device_setup (FU_DEVICE (device), error))
+		return FALSE;
+
 	/* insert to hash */
 	fu_plugin_device_add (plugin, FU_DEVICE (device));
 	return TRUE;
