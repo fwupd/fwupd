@@ -904,6 +904,8 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 			  G_CALLBACK (fu_util_update_device_changed_cb), priv);
 
 	devices = fu_engine_get_devices (priv->engine, error);
+	if (devices == NULL)
+		return FALSE;
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
 		FwupdRelease *rel;
