@@ -11,8 +11,7 @@ ifeq "$(DEB_HOST_ARCH_BITS)" "32"
 endif
 
 ifneq ($(CI),)
-	export CI=--werror --wrap-mode=forcefallback
-	export DHSLIBS=-- --ignore-missing-info
+	export CI=--werror
 endif
 
 SB_STYLE := debian
