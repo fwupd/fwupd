@@ -21,7 +21,6 @@ Build-Depends:
 	gobject-introspection,
 	gtk-doc-tools,
 	help2man,
-	libappstream-glib-dev (>= 0.7.4),
 	libarchive-dev,
 	libcairo-dev,
 	libcairo-gobject2,
@@ -41,6 +40,7 @@ Build-Depends:
 	libsoup2.4-dev,
 	libsqlite3-dev,
 	libtool-bin,
+	libxmlb-dev (>= 0.1.5),
 	locales,
 	meson,
 	pkg-config,
@@ -48,9 +48,11 @@ Build-Depends:
 	python3-gi-cairo,
 	python3-pil,
 	python3-requests,
+	shared-mime-info,
 	systemd (>= 231),
 	udev,
 	umockdev,
+	uuid-dev,
 	valac,
 	valgrind [!ia64 !riscv64 !x32 !mips !sparc64 !sh4 !ppc64 !powerpcspe !hppa !alpha !mips64el !armhf !armel !mipsel !m68k],
 Standards-Version: 4.1.4
@@ -69,8 +71,7 @@ Description: Firmware update daemon library
  fwupd is a daemon to allow session software to update device firmware.
  You can either use a GUI software manager like GNOME Software to view and
  apply updates, the command-line tool or the system D-Bus interface directly.
- Currently, firmware updates using the UEFI capsule format and for the
- ColorHug are supported. More formats may be supported in the future.
+ Firmware updates are supported for a variety of technologies.
  See <https://github.com/hughsie/fwupd> for details
  .
  This package provides the library used by the daemon.
@@ -81,6 +82,8 @@ Depends: ${misc:Depends},
          ${shlibs:Depends}
 Recommends: python3,
 	    bolt,
+	    tpm2-tools,
+	    tpm2-abrmd,
 	    fwupd-signed
 Breaks: gir1.2-dfu-1.0 (<< 0.9.7-1),
 	libdfu1 (<< 0.9.7-1),
@@ -93,8 +96,7 @@ Description: Firmware update daemon
  fwupd is a daemon to allow session software to update device firmware.
  You can either use a GUI software manager like GNOME Software to view and
  apply updates, the command-line tool or the system D-Bus interface directly.
- Currently, firmware updates using the UEFI capsule format and for the
- ColorHug are supported. More formats may be supported in the future.
+ Firmware updates are supported for a variety of technologies.
  See <https://github.com/hughsie/fwupd> for details
 
 Package: fwupd-tests
@@ -116,8 +118,7 @@ Description: Test suite for firmware update daemon
  fwupd is a daemon to allow session software to update device firmware.
  You can either use a GUI software manager like GNOME Software to view and
  apply updates, the command-line tool or the system D-Bus interface directly.
- Currently, firmware updates using the UEFI capsule format and for the
- ColorHug are supported. More formats may be supported in the future.
+ Firmware updates are supported for a variety of technologies.
  See <https://github.com/hughsie/fwupd> for details
  .
  This package provides a set of installed tests that can be run to validate
@@ -132,8 +133,7 @@ Description: Firmware update daemon documentation (HTML format)
  fwupd is a daemon to allow session software to update device firmware.
  You can either use a GUI software manager like GNOME Software to view and
  apply updates, the command-line tool or the system D-Bus interface directly.
- Currently, firmware updates using the UEFI capsule format and for the
- ColorHug are supported. More formats may be supported in the future.
+ Firmware updates are supported for a variety of technologies.
  See <https://github.com/hughsie/fwupd> for details
  .
  This package provides development documentation for creating a package that
@@ -152,8 +152,7 @@ Description: development files for libfwupd
  fwupd is a daemon to allow session software to update device firmware.
  You can either use a GUI software manager like GNOME Software to view and
  apply updates, the command-line tool or the system D-Bus interface directly.
- Currently, firmware updates using the UEFI capsule format and for the
- ColorHug are supported. More formats may be supported in the future.
+ Firmware updates are supported for a variety of technologies.
  See <https://github.com/hughsie/fwupd> for details
  .
  This package provides the development files for libfwupd

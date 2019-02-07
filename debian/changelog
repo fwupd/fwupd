@@ -1,3 +1,11 @@
+fwupd (1.2.4-1) unstable; urgency=medium
+
+  * New upstream version
+  * refresh build dependencies
+  * Recommends on tpm2 stack to read PCR values
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Wed, 06 Feb 2019 20:31:24 -0600
+
 fwupd (1.1.4-1) unstable; urgency=medium
 
   * New upstream version
