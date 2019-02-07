@@ -97,6 +97,8 @@ fu_progressbar_status_to_string (FwupdStatus status)
 static void
 fu_progressbar_erase_line (FuProgressbar *self)
 {
+	if (!self->interactive)
+		return;
 	for (guint i = 0; i < self->to_erase; i++)
 		g_print ("\b");
 	self->to_erase = 0;
