@@ -1,0 +1,68 @@
+{
+        // Use IntelliSense to learn about possible attributes.
+        // Hover to view descriptions of existing attributes.
+        // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+        "version": "0.2.0",
+        "configurations": [
+                {
+                        "name": "gdbserver (fwupdtool)",
+                        "type": "cppdbg",
+                        "request": "launch",
+                        "program": "${workspaceFolder}/dist/libexec/fwupd/fwupdtool",
+                        "args": [],
+                        "stopAtEntry": false,
+                        "cwd": "${workspaceFolder}",
+                        "environment": [],
+                        "miDebuggerServerAddress": "localhost:9091",
+                        "externalConsole": false,
+                        "MIMode": "gdb",
+                        "setupCommands": [
+                            {
+                                "description": "Enable pretty-printing for gdb",
+                                "text": "-enable-pretty-printing",
+                                "ignoreFailures": true
+                            }
+                        ]
+                },
+                {
+                        "name": "gdbserver (fwupd)",
+                        "type": "cppdbg",
+                        "request": "launch",
+                        "program": "${workspaceFolder}/dist/libexec/fwupd/fwupd",
+                        "args": [],
+                        "stopAtEntry": false,
+                        "cwd": "${workspaceFolder}",
+                        "environment": [],
+                        "miDebuggerServerAddress": "localhost:9091",
+                        "externalConsole": false,
+                        "MIMode": "gdb",
+                        "setupCommands": [
+                            {
+                                "description": "Enable pretty-printing for gdb",
+                                "text": "-enable-pretty-printing",
+                                "ignoreFailures": true
+                            }
+                        ]
+                },
+                {
+                        "name": "gdbserver (fwupdmgr)",
+                        "type": "cppdbg",
+                        "request": "launch",
+                        "program": "${workspaceFolder}/dist/bin/fwupdmgr",
+                        "args": [],
+                        "stopAtEntry": false,
+                        "cwd": "${workspaceFolder}",
+                        "environment": [],
+                        "miDebuggerServerAddress": "localhost:9091",
+                        "externalConsole": false,
+                        "MIMode": "gdb",
+                        "setupCommands": [
+                            {
+                                "description": "Enable pretty-printing for gdb",
+                                "text": "-enable-pretty-printing",
+                                "ignoreFailures": true
+                            }
+                        ]
+                },
+        ]
+}

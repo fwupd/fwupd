@@ -578,6 +578,7 @@ dfu_device_set_quirks_from_string (DfuDevice *device, const gchar *str)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	g_auto(GStrv) split = g_strsplit (str, ",", -1);
+	priv->quirks = DFU_DEVICE_QUIRK_NONE;
 	for (guint i = 0; split[i] != NULL; i++) {
 		if (g_strcmp0 (split[i], "ignore-polltimeout") == 0) {
 			priv->quirks |= DFU_DEVICE_QUIRK_IGNORE_POLLTIMEOUT;
@@ -1441,9 +1442,6 @@ dfu_device_close (FuUsbDevice *device, GError **error)
 	DfuDevice *self = DFU_DEVICE (device);
 	DfuDevicePrivate *priv = GET_PRIVATE (self);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
-
-	/* unset the quirks */
-	priv->quirks = DFU_DEVICE_QUIRK_NONE;
 
 	/* release interface */
 	if (priv->claimed_interface) {

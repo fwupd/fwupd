@@ -1,0 +1,35 @@
+# Devices that do "replug" and thus don't change VID:PID to the bootloader
+# need to have an extra GUID of WacomAES or WacomEMR added so that the flash
+# constants are set correctly.
+
+# Dell XPS-15 9575
+[DeviceInstanceId=HIDRAW\VEN_056A&DEV_4875]
+Plugin = wacom_raw
+Guid = WacomAES
+
+# AES bootloader mode
+[DeviceInstanceId=HIDRAW\VEN_056A&DEV_0094]
+Plugin = wacom_raw
+Guid = WacomAES
+Flags = is-bootloader
+
+# EMR bootloader mode
+[DeviceInstanceId=HIDRAW\VEN_056A&DEV_012B]
+Plugin = wacom_raw
+Guid = WacomEMR
+Flags = is-bootloader
+
+[Guid=WacomEMR_W9013]
+WacomI2cFlashBlockSize=64
+WacomI2cFlashBaseAddr=0x2000
+WacomI2cFlashSize=0x1e000
+
+[Guid=WacomEMR_W9021]
+WacomI2cFlashBlockSize=256
+WacomI2cFlashBaseAddr=0x3000
+WacomI2cFlashSize=0x3c000
+
+[Guid=WacomAES]
+WacomI2cFlashBlockSize=128
+WacomI2cFlashBaseAddr=0x8000
+WacomI2cFlashSize=0x24000

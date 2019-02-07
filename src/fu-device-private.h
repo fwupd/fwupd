@@ -8,6 +8,7 @@
 #define __FU_DEVICE_PRIVATE_H
 
 #include <fu-device.h>
+#include <xmlb.h>
 
 G_BEGIN_DECLS
 
@@ -26,6 +27,8 @@ void		 fu_device_set_alternate		(FuDevice	*self,
 							 FuDevice	*alternate);
 gboolean	 fu_device_ensure_id			(FuDevice	*self,
 							 GError		**error);
+void		 fu_device_incorporate_from_component	(FuDevice	*device,
+							 XbNode		*component);
 
 G_END_DECLS
 

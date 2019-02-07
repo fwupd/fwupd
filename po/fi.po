@@ -8,8 +8,6 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2018-10-12 11:10+0000\n"
-"Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Finnish (http://www.transifex.com/freedesktop/fwupd/language/fi/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -179,9 +177,6 @@ msgstr "Tyyppi"
 msgid "Unknown"
 msgstr "Tuntematon"
 
-msgid "Update device firmware on Linux"
-msgstr "Päivitä laitteiden firmware-laiteohjelmistoja Linuxilla"
-
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "Käyttäjätunnus"
@@ -201,6 +196,3 @@ msgstr "Odotetaan…"
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing…"
 msgstr "Kirjoitetaan…"
-
-msgid "fwupd"
-msgstr "fwupd"

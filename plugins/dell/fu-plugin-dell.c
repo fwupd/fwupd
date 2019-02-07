@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#include "fu-common-guid.h"
 #include "fu-plugin-dell.h"
 #include "fu-plugin-vfuncs.h"
 #include "fu-device-metadata.h"
@@ -44,6 +45,16 @@ typedef struct _DOCK_DESCRIPTION
 	const gchar *		desc;
 } DOCK_DESCRIPTION;
 
+struct da_structure {
+	guint8			 type;
+	guint8			 length;
+	guint16			 handle;
+	guint16			 cmd_address;
+	guint8			 cmd_code;
+	guint32			 supported_cmds;
+	guint8			*tokens;
+} __attribute__((packed));
+
 /* These are for matching the components */
 #define WD15_EC_STR		"2 0 2 2 0"
 #define TB16_EC_STR		"2 0 2 1 0"
@@ -53,6 +64,8 @@ typedef struct _DOCK_DESCRIPTION
 #define LEGACY_CBL_STR		"2 2 2 1 0"
 #define UNIV_CBL_STR		"2 2 2 2 0"
 #define TBT_CBL_STR		"2 2 2 3 0"
+#define FUTURE_EC_STR		"3 0 2 4 0"
+#define FUTURE_EC_STR2		"4 0 2 4 0"
 
 /* supported dock related GUIDs */
 #define DOCK_FLASH_GUID		"e7ca1f36-bf73-4574-afe6-a4ccacabf479"
@@ -157,8 +170,10 @@ static gboolean
 fu_dell_supported (FuPlugin *plugin)
 {
 	GBytes *de_table = NULL;
+	GBytes *da_table = NULL;
 	GBytes *enclosure = NULL;
 	const guint8 *value;
+	const struct da_structure *da_values;
 	gsize len;
 
 	/* make sure that Dell SMBIOS methods are available */
@@ -170,6 +185,17 @@ fu_dell_supported (FuPlugin *plugin)
 		return FALSE;
 	if (*value != 0xDE)
 		return FALSE;
+	da_table = fu_plugin_get_smbios_data (plugin, 0xDA);
+	if (da_table == NULL)
+		return FALSE;
+	da_values = (struct da_structure *) g_bytes_get_data (da_table, &len);
+	if (len == 0)
+		return FALSE;
+	if (!(da_values->supported_cmds & (1 << DACI_FLASH_INTERFACE_CLASS))) {
+		g_debug ("unable to access flash interface. supported commands: 0x%x",
+			 da_values->supported_cmds);
+		return FALSE;
+	}
 
 	/* only run on intended Dell hw types */
 	enclosure = fu_plugin_get_smbios_data (plugin,
@@ -201,6 +227,8 @@ fu_plugin_dell_match_dock_component (const gchar *query_str,
 		{TBT_CBL_GUID, TBT_CBL_STR, TBT_CBL_DESC},
 		{UNIV_CBL_GUID, UNIV_CBL_STR, UNIV_CBL_DESC},
 		{LEGACY_CBL_GUID, LEGACY_CBL_STR, LEGACY_CBL_DESC},
+		{NULL, FUTURE_EC_STR, NULL},
+		{NULL, FUTURE_EC_STR2, NULL},
 	};
 
 	for (guint i = 0; i < G_N_ELEMENTS (list); i++) {
@@ -231,7 +259,7 @@ fu_plugin_dell_inject_fake_data (FuPlugin *plugin,
 	data->can_switch_modes = TRUE;
 }
 
-static AsVersionParseFlag
+static FuVersionFormat
 fu_plugin_dell_get_version_format (FuPlugin *plugin)
 {
 	const gchar *content;
@@ -240,17 +268,15 @@ fu_plugin_dell_get_version_format (FuPlugin *plugin)
 
 	content = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER);
 	if (content == NULL)
-		return AS_VERSION_PARSE_FLAG_USE_TRIPLET;
+		return FU_VERSION_FORMAT_TRIPLET;
 
 	/* any quirks match */
 	group = g_strdup_printf ("SmbiosManufacturer=%s", content);
 	quirk = fu_plugin_lookup_quirk_by_id (plugin, group,
 					      FU_QUIRKS_UEFI_VERSION_FORMAT);
-	if (g_strcmp0 (quirk, "quad") == 0)
-		return AS_VERSION_PARSE_FLAG_NONE;
-
-	/* fall back */
-	return AS_VERSION_PARSE_FLAG_USE_TRIPLET;
+	if (quirk == NULL)
+		return FU_VERSION_FORMAT_TRIPLET;
+	return fu_common_version_format_from_string (quirk);
 }
 
 static gboolean
@@ -318,7 +344,7 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 			    GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	AsVersionParseFlag parse_flags;
+	FuVersionFormat version_format;
 	guint16 pid;
 	guint16 vid;
 	const gchar *query_str;
@@ -371,7 +397,7 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 	g_debug ("Dock cable type: %" G_GUINT32_FORMAT, dock_info->cable_type);
 	g_debug ("Dock location: %d", dock_info->location);
 	g_debug ("Dock component count: %d", dock_info->component_count);
-	parse_flags = fu_plugin_dell_get_version_format (plugin);
+	version_format = fu_plugin_dell_get_version_format (plugin);
 
 	for (guint i = 0; i < dock_info->component_count; i++) {
 		g_autofree gchar *fw_str = NULL;
@@ -396,6 +422,10 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 				     "invalid dock component request %s", query_str);
 			return FALSE;
 		}
+		if (component_guid == NULL || component_name == NULL) {
+			g_debug ("%s is supported by another plugin", query_str);
+			return TRUE;
+		}
 
 		/* dock EC hasn't been updated for first time */
 		if (dock_info->flash_pkg_version == 0x00ffffff) {
@@ -410,8 +440,8 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 			continue;
 		}
 
-		fw_str = as_utils_version_from_uint32 (dock_info->components[i].fw_version,
-						       parse_flags);
+		fw_str = fu_common_version_from_uint32 (dock_info->components[i].fw_version,
+						       version_format);
 		if (!fu_plugin_dock_node (plugin,
 					  platform,
 					  buf.record->dock_info_header.dock_type,
@@ -426,8 +456,8 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 
 	/* if an old EC or invalid EC version found, create updatable parent */
 	if (old_ec)
-		flash_ver_str = as_utils_version_from_uint32 (dock_info->flash_pkg_version,
-							      parse_flags);
+		flash_ver_str = fu_common_version_from_uint32 (dock_info->flash_pkg_version,
+							       version_format);
 	if (!fu_plugin_dock_node (plugin,
 				  platform,
 				  buf.record->dock_info_header.dock_type,
@@ -597,17 +627,17 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	}
 
 	tpm_guid_raw = g_strdup_printf ("%04x-%s", system_id, tpm_mode);
-	tpm_guid = as_utils_guid_from_string (tpm_guid_raw);
+	tpm_guid = fu_common_guid_from_string (tpm_guid_raw);
 	tpm_id = g_strdup_printf ("DELL-%s" G_GUINT64_FORMAT, tpm_guid);
 
 	tpm_guid_raw_alt = g_strdup_printf ("%04x-%s", system_id, tpm_mode_alt);
-	tpm_guid_alt = as_utils_guid_from_string (tpm_guid_raw_alt);
+	tpm_guid_alt = fu_common_guid_from_string (tpm_guid_raw_alt);
 	tpm_id_alt = g_strdup_printf ("DELL-%s" G_GUINT64_FORMAT, tpm_guid_alt);
 
 	g_debug ("Creating primary TPM GUID %s and secondary TPM GUID %s",
 		 tpm_guid_raw, tpm_guid_raw_alt);
-	version_str = as_utils_version_from_uint32 (out->fw_version,
-						    AS_VERSION_PARSE_FLAG_NONE);
+	version_str = fu_common_version_from_uint32 (out->fw_version,
+						     FU_VERSION_FORMAT_QUAD);
 
 	/* make it clear that the TPM is a discrete device of the product */
 	if (!data->smi_obj->fake_smbios) {
@@ -787,6 +817,7 @@ fu_plugin_init (FuPlugin *plugin)
 	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 	g_autofree gchar *tmp = NULL;
 
+	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 	tmp = g_strdup_printf ("%d.%d",
 			       smbios_get_library_version_major(),
 			       smbios_get_library_version_minor());

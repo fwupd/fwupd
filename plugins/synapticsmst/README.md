@@ -3,6 +3,26 @@
 This plugin supports querying and flashing Synaptics MST hubs used in Dell systems
 and docks.
 
+Firmware Format
+---------------
+
+The daemon will decompress the cabinet archive and extract a firmware blob in
+an unspecified binary file format.
+
+This plugin supports the following protocol ID:
+
+ * com.synaptics.mst
+
+GUID Generation
+---------------
+
+These devices use custom GUID values, e.g.
+
+ * `MST-$(device_kind)-$(chip-ID)-$(board-ID)`
+
+Please refer to the plugin source for more details about how the GUID is
+constructed for specific hardware.
+
 ## Requirements
 ### (Kernel) DP Aux Interface
 Kernel 4.6 introduced an DRM DP Aux interface for manipulation of the registers
@@ -41,18 +61,19 @@ Payloads can be flashed just like any other plugin from LVFS.
 ## Supported devices
 Not all Dell systems or accessories contain MST hubs.
 Here is a sample list of systems known to support them however:
-1. Dell WD15 dock
-2. Dell TB16 dock
-3. Latitude E5570
-4. Latitude E5470
-5. Latitude E5270
-6. Latitude E7470
-7. Latitude E7270
-8. Latitude E7450
-9. Latitude E7250
-10. Latitude E5550
-11. Latitude E5450
-12. Latitude E5250
-13. Latitude Rugged 5414
-14. Latitude Rugged 7214
-15. Latitude Rugged 7414
+ *  Dell WD15 dock
+ *  Dell TB16 dock
+ *  Dell TB18DC
+ *  Latitude E5570
+ *  Latitude E5470
+ *  Latitude E5270
+ *  Latitude E7470
+ *  Latitude E7270
+ *  Latitude E7450
+ *  Latitude E7250
+ *  Latitude E5550
+ *  Latitude E5450
+ *  Latitude E5250
+ *  Latitude Rugged 5414
+ *  Latitude Rugged 7214
+ *  Latitude Rugged 7414

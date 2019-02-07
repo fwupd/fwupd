@@ -108,7 +108,7 @@ fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_si
 		efidp found_dp;
 		g_autofree guint8 *var_data_tmp = NULL;
 
-		if (efi_guid_cmp (guid, &efi_guid_global))
+		if (efi_guid_cmp (guid, &efi_guid_global) != 0)
 			continue;
 		rc = sscanf (name, "Boot%hX%n", &entry, &scanned);
 		if (rc < 0) {
@@ -292,7 +292,10 @@ fu_uefi_copy_asset (const gchar *source, const gchar *target, GError **error)
 }
 
 gboolean
-fu_uefi_bootmgr_bootnext (const gchar *esp_path, FuUefiBootmgrFlags flags, GError **error)
+fu_uefi_bootmgr_bootnext (const gchar *esp_path,
+			  const gchar *description,
+			  FuUefiBootmgrFlags flags,
+			  GError **error)
 {
 	gboolean use_fwup_path = FALSE;
 	gsize loader_sz = 0;
@@ -382,7 +385,7 @@ fu_uefi_bootmgr_bootnext (const gchar *esp_path, FuUefiBootmgrFlags flags, GErro
 		return FALSE;
 	}
 
-	label = g_strdup ("Linux Firmware Updater");
+	label = g_strdup (description);
 	sz = efi_loadopt_create (opt, opt_size, attributes,
 				 (efidp)dp_buf, dp_size,
 				 (guint8 *)label,

@@ -7,6 +7,11 @@ Introduction
 This allows enabling the BIOS setup option for UEFI capsule updates without
 manually going into BIOS setup.
 
+GUID Generation
+---------------
+
+These device uses a hardcoded GUID of `2d47f29b-83a2-4f31-a2e8-63474f4d4c2e`.
+
 Build Requirements
 ------------------
 

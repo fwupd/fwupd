@@ -1,6 +1,7 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginThunderbolt"']
 
 fu_plugin_thunderbolt = shared_module('fu_plugin_thunderbolt',
+  fu_hash,
   sources : [
     'fu-plugin-thunderbolt.c',
     'fu-thunderbolt-image.c',
@@ -12,6 +13,9 @@ fu_plugin_thunderbolt = shared_module('fu_plugin_thunderbolt',
   ],
   install : true,
   install_dir: plugin_dir,
+  link_with : [
+    libfwupdprivate,
+  ],
   c_args : cargs,
   dependencies : [
     plugin_deps,
@@ -33,7 +37,6 @@ executable('tbtfwucli',
   c_args : cargs,
   link_with : [
     fu_plugin_thunderbolt,
-    fwupd,
     libfwupdprivate,
   ],
   dependencies : [
@@ -62,7 +65,6 @@ if get_option('tests') and umockdev.found() and gio.version().version_compare('>
       umockdev,
     ],
     link_with : [
-      fwupd,
       libfwupdprivate,
     ],
     c_args : cargs

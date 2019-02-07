@@ -7,6 +7,7 @@ install_data([
 )
 
 shared_module('fu_plugin_rts54hub',
+  fu_hash,
   sources : [
     'fu-rts54hub-device.c',
     'fu-plugin-rts54hub.c',
@@ -18,6 +19,9 @@ shared_module('fu_plugin_rts54hub',
   ],
   install : true,
   install_dir: plugin_dir,
+  link_with : [
+    libfwupdprivate,
+  ],
   c_args : cargs,
   dependencies : [
     plugin_deps,

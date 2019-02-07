@@ -25,12 +25,16 @@ endif
 libfwupdprivate = static_library(
   'fwupdprivate',
   sources : [
+    'fu-archive.c',
     'fu-common.c',
+    'fu-common-guid.c',
+    'fu-common-version.c',
     'fu-chunk.c',
     'fu-device.c',
     'fu-device-locker.c',
     'fu-hwids.c',
     'fu-history.c',
+    'fu-io-channel.c',
     'fu-mutex.c',
     'fu-plugin.c',
     'fu-progressbar.c',
@@ -45,14 +49,18 @@ libfwupdprivate = static_library(
     include_directories('../libfwupd'),
   ],
   dependencies : [
-    appstream_glib,
     giounix,
     gudev,
     gusb,
     soup,
     sqlite,
     libarchive,
+    libxmlb,
     valgrind,
+    uuid,
+  ],
+  link_with : [
+    fwupd,
   ],
   c_args : [
     '-DFU_OFFLINE_DESTDIR=""',
@@ -71,7 +79,7 @@ fwupdmgr = executable(
     include_directories('../libfwupd'),
   ],
   dependencies : [
-    appstream_glib,
+    libxmlb,
     giounix,
     gudev,
     gusb,
@@ -99,15 +107,28 @@ resources_src = gnome.compile_resources(
   c_name : 'fu'
 )
 
+fu_hash = custom_target(
+  'fu-hash.h',
+  input : libfwupdprivate,
+  output : 'fu-hash.h',
+  command : [python3.path(),
+             join_paths(meson.current_source_dir(), 'fu-hash.py'),
+             '@INPUT@', '@OUTPUT@']
+)
+
 fwupdtool = executable(
   'fwupdtool',
   resources_src,
+  fu_hash,
   sources : [
     'fu-tool.c',
     keyring_src,
+    'fu-archive.c',
     'fu-chunk.c',
     'fu-common.c',
     'fu-common-cab.c',
+    'fu-common-guid.c',
+    'fu-common-version.c',
     'fu-config.c',
     'fu-keyring.c',
     'fu-keyring-result.c',
@@ -117,7 +138,9 @@ fwupdtool = executable(
     'fu-device.c',
     'fu-device-list.c',
     'fu-device-locker.c',
+    'fu-idle.c',
     'fu-install-task.c',
+    'fu-io-channel.c',
     'fu-keyring.c',
     'fu-keyring-utils.c',
     'fu-history.c',
@@ -135,7 +158,7 @@ fwupdtool = executable(
   ],
   dependencies : [
     keyring_deps,
-    appstream_glib,
+    libxmlb,
     libgcab,
     giounix,
     gmodule,
@@ -145,6 +168,7 @@ fwupdtool = executable(
     sqlite,
     valgrind,
     libarchive,
+    uuid,
   ],
   link_with : [
     fwupd,
@@ -179,11 +203,15 @@ if get_option('daemon')
 executable(
   'fwupd',
   resources_src,
+  fu_hash,
   sources : [
     keyring_src,
+    'fu-archive.c',
     'fu-chunk.c',
     'fu-common.c',
     'fu-common-cab.c',
+    'fu-common-guid.c',
+    'fu-common-version.c',
     'fu-config.c',
     'fu-keyring.c',
     'fu-keyring-result.c',
@@ -194,6 +222,8 @@ executable(
     'fu-device.c',
     'fu-device-list.c',
     'fu-device-locker.c',
+    'fu-idle.c',
+    'fu-io-channel.c',
     'fu-install-task.c',
     'fu-keyring.c',
     'fu-keyring-utils.c',
@@ -212,7 +242,7 @@ executable(
   ],
   dependencies : [
     keyring_deps,
-    appstream_glib,
+    libxmlb,
     libgcab,
     giounix,
     gmodule,
@@ -223,6 +253,7 @@ executable(
     sqlite,
     valgrind,
     libarchive,
+    uuid,
   ],
   link_with : fwupd,
   c_args : [
@@ -231,6 +262,7 @@ executable(
   install : true,
   install_dir : join_paths(libexecdir, 'fwupd')
 )
+
 endif
 
 if get_option('tests')
@@ -245,12 +277,16 @@ if get_option('tests')
     hwid_test_firmware,
     noreqs_test_firmware,
     test_deps,
+    fu_hash,
     sources : [
       keyring_src,
       'fu-self-test.c',
+      'fu-archive.c',
       'fu-chunk.c',
       'fu-common.c',
       'fu-common-cab.c',
+      'fu-common-guid.c',
+      'fu-common-version.c',
       'fu-config.c',
       'fu-engine.c',
       'fu-keyring.c',
@@ -260,7 +296,9 @@ if get_option('tests')
       'fu-device-list.c',
       'fu-device-locker.c',
       'fu-history.c',
+      'fu-idle.c',
       'fu-install-task.c',
+      'fu-io-channel.c',
       'fu-keyring.c',
       'fu-keyring-result.c',
       'fu-mutex.c',
@@ -279,7 +317,7 @@ if get_option('tests')
     ],
     dependencies : [
       keyring_deps,
-      appstream_glib,
+      libxmlb,
       libgcab,
       giounix,
       gmodule,
@@ -289,6 +327,7 @@ if get_option('tests')
       sqlite,
       valgrind,
       libarchive,
+      uuid,
     ],
     link_with : [
       fwupd,
@@ -309,14 +348,21 @@ if get_option('introspection')
   gir_dep = declare_dependency(sources: gir)
   gnome.generate_gir(fwupd,
     sources : [
+      'fu-archive.c',
+      'fu-archive.h',
       'fu-chunk.c',
       'fu-chunk.h',
       'fu-common.c',
+      'fu-common-guid.c',
+      'fu-common-guid.h',
+      'fu-common-version.c',
+      'fu-common-version.h',
       'fu-common.h',
       'fu-device.c',
       'fu-device.h',
       'fu-device-locker.c',
       'fu-device-locker.h',
+      'fu-io-channel.c',
       'fu-plugin.c',
       'fu-plugin.h',
       'fu-quirks.c',
@@ -334,7 +380,7 @@ if get_option('introspection')
       include_directories('../libfwupd'),
     ],
     dependencies : [
-      appstream_glib,
+      libxmlb,
       gir_dep,
       giounix,
       gusb,

@@ -26,11 +26,13 @@ dfu = static_library(
     'dfu-target-avr.c',
   ],
   dependencies : [
-    appstream_glib,
     giounix,
     libm,
     gusb,
     gudev,
+  ],
+  link_with : [
+    libfwupdprivate,
   ],
   c_args : cargs,
   include_directories : [
@@ -41,6 +43,7 @@ dfu = static_library(
 )
 
 shared_module('fu_plugin_dfu',
+  fu_hash,
   sources : [
     'fu-plugin-dfu.c',
   ],
@@ -56,12 +59,14 @@ shared_module('fu_plugin_dfu',
     plugin_deps,
   ],
   link_with : [
+    libfwupdprivate,
     dfu,
   ],
 )
 
 dfu_tool = executable(
   'dfu-tool',
+  fu_hash,
   sources : [
     'dfu-tool.c',
   ],
@@ -72,7 +77,7 @@ dfu_tool = executable(
     include_directories('../../libfwupd'),
   ],
   dependencies : [
-    appstream_glib,
+    libxmlb,
     giounix,
     libm,
     gusb,
@@ -80,7 +85,6 @@ dfu_tool = executable(
   ],
   link_with : [
     dfu,
-    fwupd,
     libfwupdprivate,
   ],
   c_args : cargs,
@@ -123,7 +127,7 @@ if get_option('tests')
       include_directories('../../src'),
     ],
     dependencies : [
-      appstream_glib,
+      libxmlb,
       gio,
       gusb,
       gudev,
@@ -131,7 +135,6 @@ if get_option('tests')
     ],
     link_with : [
       dfu,
-      fwupd,
       libfwupdprivate,
     ],
     c_args : cargs

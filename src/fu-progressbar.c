@@ -29,6 +29,7 @@ struct _FuProgressbar
 	gint64			 last_animated;		/* monotonic */
 	GTimer			*time_elapsed;
 	gdouble			 last_estimate;
+	gboolean		 interactive;
 };
 
 G_DEFINE_TYPE (FuProgressbar, fu_progressbar, G_TYPE_OBJECT)
@@ -157,7 +158,7 @@ fu_progressbar_refresh (FuProgressbar *self, FwupdStatus status, guint percentag
 	}
 	title = fu_progressbar_status_to_string (status);
 	g_string_append (str, title);
-	for (i = str->len; i < self->length_status; i++)
+	for (i = g_utf8_strlen (str->str, -1); i < self->length_status; i++)
 		g_string_append_c (str, ' ');
 
 	/* add progressbar */
@@ -186,7 +187,7 @@ fu_progressbar_refresh (FuProgressbar *self, FwupdStatus status, guint percentag
 
 	/* dump to screen */
 	g_print ("%s", str->str);
-	self->to_erase = str->len - 2;
+	self->to_erase = str->len;
 
 	/* done */
 	if (is_idle_newline) {
@@ -271,6 +272,14 @@ fu_progressbar_update (FuProgressbar *self, FwupdStatus status, guint percentage
 	if (status == FWUPD_STATUS_UNKNOWN)
 		status = self->status;
 
+	if (!self->interactive) {
+		if (self->status != status) {
+			g_print ("%s\n", fu_progressbar_status_to_string (status));
+			self->status = status;
+		}
+		return;
+	}
+
 	/* if the main loop isn't spinning and we've not had a chance to
 	 * execute the callback just do the refresh now manually */
 	if (percentage == 0 &&
@@ -303,6 +312,13 @@ fu_progressbar_update (FuProgressbar *self, FwupdStatus status, guint percentage
 }
 
 void
+fu_progressbar_set_interactive (FuProgressbar *self, gboolean interactive)
+{
+	g_return_if_fail (FU_IS_PROGRESSBAR (self));
+	self->interactive = interactive;
+}
+
+void
 fu_progressbar_set_length_status (FuProgressbar *self, guint len)
 {
 	g_return_if_fail (FU_IS_PROGRESSBAR (self));
@@ -332,6 +348,7 @@ fu_progressbar_init (FuProgressbar *self)
 	self->length_status = 25;
 	self->spinner_count_up = TRUE;
 	self->time_elapsed = g_timer_new ();
+	self->interactive = TRUE;
 }
 
 static void

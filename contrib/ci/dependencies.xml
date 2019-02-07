@@ -366,15 +366,6 @@
       <package variant="i386">gnu-efi</package>
     </distro>
   </dependency>
-  <dependency type="build" id="gir1.2-appstreamglib-1.0">
-    <distro id="debian">
-      <package variant="x86_64" />
-      <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <package variant="x86_64" />
-    </distro>
-  </dependency>
   <dependency type="build" id="git">
     <distro id="arch">
       <package />
@@ -551,30 +542,34 @@
       <package />
     </distro>
   </dependency>
-  <dependency type="build" id="libappstream-glib-dev">
+  <dependency type="build" id="libxmlb-dev">
     <distro id="arch">
-      <package>appstream-glib</package>
+      <package>libxmlb</package>
     </distro>
+<!--
     <distro id="centos">
-      <package>libappstream-glib-devel</package>
+      <package>libxmlb-devel</package>
     </distro>
+-->
     <distro id="fedora">
-      <package>libappstream-glib-devel</package>
+      <package>libxmlb-devel</package>
     </distro>
+<!--
     <distro id="debian">
       <control>
-        <version>(>= 0.7.4)</version>
+        <version>(>= 0.1.3)</version>
       </control>
       <package variant="x86_64" />
-      <package variant="s390x">libappstream-glib-dev:s390x</package>
+      <package variant="s390x">libxmlb-dev:s390x</package>
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
       <control>
-        <version>(>= 0.6.9)</version>
+        <version>(>= 0.1.3)</version>
       </control>
       <package variant="x86_64" />
     </distro>
+-->
   </dependency>
   <dependency type="build" id="libarchive-dev">
     <distro id="centos">
@@ -1052,6 +1047,27 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency type="build" id="shared-mime-info">
+    <distro id="arch">
+      <package />
+    </distro>
+    <distro id="centos">
+      <package />
+    </distro>
+    <distro id="fedora">
+      <package />
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
   <dependency type="build" id="texlive-fonts-recommended">
     <distro id="debian">
       <package variant="x86_64" />
@@ -1093,9 +1109,19 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
-  <dependency type="build" id="uuid">
+  <dependency type="build" id="uuid-dev">
     <distro id="centos">
       <package>libuuid-devel</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x">uuid-dev:s390x</package>
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="valac">

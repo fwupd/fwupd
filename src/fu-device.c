@@ -9,11 +9,12 @@
 #include "config.h"
 
 #include <string.h>
-#include <appstream-glib.h>
 #include <glib-object.h>
 #include <gio/gio.h>
 
 #include "fu-common.h"
+#include "fu-common-guid.h"
+#include "fu-common-version.h"
 #include "fu-device-private.h"
 #include "fu-mutex.h"
 
@@ -43,6 +44,7 @@ typedef struct {
 	GPtrArray			*children;
 	guint				 remove_delay;	/* ms */
 	FwupdStatus			 status;
+	FuVersionFormat			 version_format;
 	guint				 progress;
 	guint				 order;
 	guint				 priority;
@@ -535,8 +537,8 @@ fu_device_add_parent_guid (FuDevice *self, const gchar *guid)
 	g_return_if_fail (guid != NULL);
 
 	/* make valid */
-	if (!as_utils_guid_is_valid (guid)) {
-		g_autofree gchar *tmp = as_utils_guid_from_string (guid);
+	if (!fu_common_guid_is_valid (guid)) {
+		g_autofree gchar *tmp = fu_common_guid_from_string (guid);
 		if (fu_device_has_parent_guid (self, tmp))
 			return;
 		g_debug ("using %s for %s", tmp, guid);
@@ -676,6 +678,10 @@ fu_device_set_quirk_kv (FuDevice *self,
 		fu_device_set_install_duration (self, fu_common_strtoull (value));
 		return TRUE;
 	}
+	if (g_strcmp0 (key, FU_QUIRKS_VERSION_FORMAT) == 0) {
+		fu_device_set_version_format (self, fu_common_version_format_from_string (value));
+		return TRUE;
+	}
 	if (g_strcmp0 (key, FU_QUIRKS_CHILDREN) == 0) {
 		g_auto(GStrv) sections = g_strsplit (value, ",", -1);
 		for (guint i = 0; sections[i] != NULL; i++) {
@@ -765,12 +771,36 @@ fu_device_add_guid_safe (FuDevice *self, const gchar *guid)
 }
 
 /**
+ * fu_device_has_guid:
+ * @self: A #FuDevice
+ * @guid: A GUID, e.g. `WacomAES`
+ *
+ * Finds out if the device has a specific GUID.
+ *
+ * Returns: %TRUE if the GUID is found
+ *
+ * Since: 1.2.2
+ **/
+gboolean
+fu_device_has_guid (FuDevice *self, const gchar *guid)
+{
+	/* make valid */
+	if (!fu_common_guid_is_valid (guid)) {
+		g_autofree gchar *tmp = fu_common_guid_from_string (guid);
+		return fwupd_device_has_guid (FWUPD_DEVICE (self), tmp);
+	}
+
+	/* already valid */
+	return fwupd_device_has_guid (FWUPD_DEVICE (self), guid);
+}
+
+/**
  * fu_device_add_guid:
  * @self: A #FuDevice
  * @guid: A GUID, e.g. `2082b5e0-7a64-478a-b1b2-e3404fab6dad`
  *
  * Adds a GUID to the device. If the @guid argument is not a valid GUID then it
- * is converted to a GUID using as_utils_guid_from_string().
+ * is converted to a GUID using fu_common_guid_from_string().
  *
  * Since: 0.7.2
  **/
@@ -778,8 +808,8 @@ void
 fu_device_add_guid (FuDevice *self, const gchar *guid)
 {
 	/* make valid */
-	if (!as_utils_guid_is_valid (guid)) {
-		g_autofree gchar *tmp = as_utils_guid_from_string (guid);
+	if (!fu_common_guid_is_valid (guid)) {
+		g_autofree gchar *tmp = fu_common_guid_from_string (guid);
 		g_debug ("using %s for %s", tmp, guid);
 		fu_device_add_guid_safe (self, tmp);
 		return;
@@ -795,7 +825,7 @@ fu_device_add_guid (FuDevice *self, const gchar *guid)
  * @guid: A GUID, e.g. `2082b5e0-7a64-478a-b1b2-e3404fab6dad`
  *
  * Adds a GUID to the device. If the @guid argument is not a valid GUID then it
- * is converted to a GUID using as_utils_guid_from_string().
+ * is converted to a GUID using fu_common_guid_from_string().
  *
  * A counterpart GUID is typically the GUID of the same device in bootloader
  * or runtime mode, if they have a different device PCI or USB ID. Adding this
@@ -807,8 +837,8 @@ void
 fu_device_add_counterpart_guid (FuDevice *self, const gchar *guid)
 {
 	/* make valid */
-	if (!as_utils_guid_is_valid (guid)) {
-		g_autofree gchar *tmp = as_utils_guid_from_string (guid);
+	if (!fu_common_guid_is_valid (guid)) {
+		g_autofree gchar *tmp = fu_common_guid_from_string (guid);
 		g_debug ("using %s for counterpart %s", tmp, guid);
 		fwupd_device_add_guid (FWUPD_DEVICE (self), tmp);
 		return;
@@ -1011,7 +1041,7 @@ fu_device_set_name (FuDevice *self, const gchar *value)
 	}
 
 	g_strdelimit (new->str, "_", ' ');
-	as_utils_string_replace (new, "(TM)", "™");
+	fu_common_string_replace (new, "(TM)", "™");
 	fwupd_device_set_name (FWUPD_DEVICE (self), new->str);
 }
 
@@ -1039,6 +1069,56 @@ fu_device_set_id (FuDevice *self, const gchar *id)
 	id_hash = g_compute_checksum_for_string (G_CHECKSUM_SHA1, id, -1);
 	g_debug ("using %s for %s", id_hash, id);
 	fwupd_device_set_id (FWUPD_DEVICE (self), id_hash);
+}
+
+static gboolean
+fu_device_is_valid_semver_char (gchar c)
+{
+	if (g_ascii_isdigit (c))
+		return TRUE;
+	if (c == '.')
+		return TRUE;
+	return FALSE;
+}
+
+/**
+ * fu_device_set_version:
+ * @self: A #FuDevice
+ * @version: a string, e.g. `1.2.3`
+ *
+ * Sets the device version, autodetecting the version format if required.
+ *
+ * Since: 1.2.1
+ **/
+void
+fu_device_set_version (FuDevice *self, const gchar *version)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GString) version_safe = NULL;
+
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_return_if_fail (version != NULL);
+
+	/* sanitize if required */
+	if (priv->version_format != FU_VERSION_FORMAT_UNKNOWN &&
+	    priv->version_format != FU_VERSION_FORMAT_PLAIN) {
+		version_safe = g_string_new (NULL);
+		for (guint i = 0; version[i] != '\0'; i++) {
+			if (fu_device_is_valid_semver_char (version[i]))
+				g_string_append_c (version_safe, version[i]);
+		}
+		if (g_strcmp0 (version, version_safe->str) != 0) {
+			g_debug ("converted '%s' to '%s'",
+				 version, version_safe->str);
+		}
+	} else {
+		version_safe = g_string_new (version);
+	}
+
+	/* try to autodetect the version-format */
+	if (priv->version_format == FU_VERSION_FORMAT_UNKNOWN)
+		priv->version_format = fu_common_version_guess_format (version_safe->str);
+	fwupd_device_set_version (FWUPD_DEVICE (self), version_safe->str);
 }
 
 /**
@@ -1352,6 +1432,43 @@ fu_device_set_status (FuDevice *self, FwupdStatus status)
 }
 
 /**
+ * fu_device_get_version_format:
+ * @self: A #FuDevice
+ *
+ * Returns how the device version should be formatted.
+ *
+ * Returns: the version format, e.g. %FU_VERSION_FORMAT_TRIPLET
+ *
+ * Since: 1.2.0
+ **/
+FuVersionFormat
+fu_device_get_version_format (FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_DEVICE (self), 0);
+	return priv->version_format;
+}
+
+/**
+ * fu_device_set_version_format:
+ * @self: A #FuDevice
+ * @version_format: the version_format value, e.g. %FU_VERSION_FORMAT_TRIPLET
+ *
+ * Sets how the version should be formatted.
+ *
+ * Since: 1.2.0
+ **/
+void
+fu_device_set_version_format (FuDevice *self, FuVersionFormat version_format)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_DEVICE (self));
+	if (priv->version_format == version_format)
+		return;
+	priv->version_format = version_format;
+}
+
+/**
  * fu_device_get_progress:
  * @self: A #FuDevice
  *
@@ -1435,6 +1552,10 @@ fu_device_to_string (FuDevice *self)
 	tmp = fwupd_device_to_string (FWUPD_DEVICE (self));
 	if (tmp != NULL && tmp[0] != '\0')
 		g_string_append (str, tmp);
+        if (priv->version_format != FU_VERSION_FORMAT_UNKNOWN) {
+		fwupd_pad_kv_str (str, "VersionFormat",
+                                  fu_common_version_format_to_string (priv->version_format));
+        }
 	if (priv->alternate_id != NULL)
 		fwupd_pad_kv_str (str, "AlternateId", priv->alternate_id);
 	if (priv->equivalent_id != NULL)
@@ -1966,6 +2087,24 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 	/* optional subclass */
 	if (klass->incorporate != NULL)
 		klass->incorporate (self, donor);
+}
+
+/**
+ * fu_device_incorporate_from_component:
+ * @self: A #FuDevice
+ * @component: A #XbNode
+ *
+ * Copy all properties from the donor AppStream component.
+ *
+ * Since: 1.2.4
+ **/
+void
+fu_device_incorporate_from_component (FuDevice *device, XbNode *component)
+{
+	const gchar *tmp;
+	tmp = xb_node_query_text (component, "custom/value[@key='LVFS::UpdateMessage']", NULL);
+	if (tmp != NULL)
+		fwupd_device_set_update_message (FWUPD_DEVICE (device), tmp);
 }
 
 static void

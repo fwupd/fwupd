@@ -9,7 +9,7 @@
 
 G_BEGIN_DECLS
 
-#include <appstream-glib.h>
+#include <xmlb.h>
 #include <glib-object.h>
 
 #include "fwupd-device.h"
@@ -25,12 +25,14 @@ G_DECLARE_FINAL_TYPE (FuEngine, fu_engine, FU, ENGINE, GObject)
 FuEngine	*fu_engine_new				(FuAppFlags	 app_flags);
 void		 fu_engine_add_plugin_filter		(FuEngine	*self,
 							 const gchar	*plugin_glob);
+void		 fu_engine_idle_reset			(FuEngine	*self);
 gboolean	 fu_engine_load				(FuEngine	*self,
 							 GError		**error);
 gboolean	 fu_engine_load_plugins			(FuEngine	*self,
 							 GError		**error);
+gboolean	 fu_engine_get_tainted			(FuEngine	*self);
 FwupdStatus	 fu_engine_get_status			(FuEngine	*self);
-AsStore		*fu_engine_get_store_from_blob		(FuEngine	*self,
+XbSilo		*fu_engine_get_silo_from_blob		(FuEngine	*self,
 							 GBytes		*blob_cab,
 							 GError		**error);
 guint64		 fu_engine_get_archive_size_max		(FuEngine	*self);
@@ -41,6 +43,9 @@ FuDevice	*fu_engine_get_device			(FuEngine	*self,
 							 const gchar	*device_id,
 							 GError		**error);
 GPtrArray	*fu_engine_get_history			(FuEngine	*self,
+							 GError		**error);
+FwupdRemote 	*fu_engine_get_remote_by_id		(FuEngine	*self,
+							 const gchar	*remote_id,
 							 GError		**error);
 GPtrArray	*fu_engine_get_remotes			(FuEngine	*self,
 							 GError		**error);
@@ -122,10 +127,10 @@ gboolean	 fu_engine_check_requirements		(FuEngine	*self,
 							 FuInstallTask	*task,
 							 FwupdInstallFlags flags,
 							 GError		**error);
-gboolean	 fu_engine_load_metadata_from_file	(FuEngine	*self,
-							 const gchar	*path,
-							 const gchar	*remote_id,
-							 GError		**error);
+void		 fu_engine_set_silo			(FuEngine	*self,
+							 XbSilo		*silo);
+XbNode		*fu_engine_get_component_by_guids	(FuEngine	*self,
+							 FuDevice	*device);
 
 G_END_DECLS
 

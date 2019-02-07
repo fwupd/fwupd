@@ -16,7 +16,6 @@
 
 #include "config.h"
 
-#include <appstream-glib.h>
 #include <string.h>
 
 #include "fu-common.h"
@@ -426,35 +425,6 @@ fu_d19_mst_check_fw (FuDevice *symbiote, GError **error)
 }
 
 static gboolean
-fu_dell_dock_mst_get_version_direct (FuDevice *symbiote, gchar **version_out,
-				     GError **error)
-{
-	g_autoptr(GBytes) bytes = NULL;
-	const guint8 *data;
-	gsize length = 4;
-
-	g_return_val_if_fail (version_out != NULL, FALSE);
-
-	/* Try to read core MCU FW version */
-	if (!fu_dell_dock_mst_read_register (symbiote,
-					     MST_CORE_MCU_FW_VERSION,
-					     length, &bytes,
-					     error))
-		return FALSE;
-	data = g_bytes_get_data (bytes, &length);
-	if (length < 4) {
-		g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
-			     "Invalid MST result %" G_GSIZE_FORMAT, length);
-		return FALSE;
-	}
-	*version_out = g_strdup_printf ("%02x.%02x.%02x",
-					data[1],    /* major */
-					data[0],    /* minor */
-					data[2]);   /* build */
-	return TRUE;
-}
-
-static gboolean
 fu_dell_dock_mst_checksum_bank (FuDevice *symbiote,
 				GBytes *blob_fw,
 				MSTBank bank,
@@ -646,7 +616,7 @@ fu_dell_dock_mst_stop_esm (FuDevice *symbiote, GError **error)
 	if (!fu_dell_dock_mst_rc_command (symbiote,
 					  MST_CMD_WRITE_MEMORY,
 					  length, MST_REG_HDCP22_DISABLE,
-					  data,
+					  data_out,
 					  error))
 		return FALSE;
 
@@ -772,7 +742,7 @@ fu_dell_dock_mst_write_fw (FuDevice *device,
 	MSTBank bank_in_use = 0;
 	guint retries = 2;
 	gboolean checksum = FALSE;
-	guint8 order[3] = {Bank0, ESM};
+	guint8 order[2] = {ESM, Bank0};
 	guint16 chip_id;
 	const guint8* data = g_bytes_get_data (blob_fw, NULL);
 	g_autofree gchar *dynamic_version = NULL;
@@ -792,7 +762,7 @@ fu_dell_dock_mst_write_fw (FuDevice *device,
 		return FALSE;
 
 	if (bank_in_use == Bank0)
-		order[0] = Bank1;
+		order[1] = Bank1;
 
 	/* enable remote control */
 	if (!fu_dell_dock_mst_enable_remote_control (self->symbiote, error))
@@ -924,7 +894,6 @@ fu_dell_dock_mst_setup (FuDevice *device, GError **error)
 	FuDellDockMst *self = FU_DELL_DOCK_MST (device);
 	FuDevice *parent;
 	const gchar *version;
-	g_autofree gchar *dynamic_version = NULL;
 
 	/* sanity check that we can talk to MST */
 	if (!fu_d19_mst_check_fw (self->symbiote, error))
@@ -934,16 +903,10 @@ fu_dell_dock_mst_setup (FuDevice *device, GError **error)
 	parent = fu_device_get_parent (device);
 	version = fu_dell_dock_ec_get_mst_version (parent);
 
-	/* TODO: Drop when we can guarantee EC 15+ */
-	if (version == NULL) {
-		if (!fu_dell_dock_mst_get_version_direct (self->symbiote,
-							  &dynamic_version,
-							  error))
-			return FALSE;
-		version = dynamic_version;
-	}
 	if (version != NULL)
 		fu_device_set_version (device, version);
+
+	fu_dell_dock_clone_updatable (device);
 
 	return TRUE;
 }
@@ -951,7 +914,6 @@ fu_dell_dock_mst_setup (FuDevice *device, GError **error)
 static gboolean
 fu_dell_dock_mst_probe (FuDevice *device, GError **error)
 {
-	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_logical_id (FU_DEVICE (device), "mst");
 
 	return TRUE;

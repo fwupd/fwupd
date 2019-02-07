@@ -9,8 +9,6 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2018-10-12 11:10+0000\n"
-"Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Catalan (http://www.transifex.com/freedesktop/fwupd/language/ca/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -29,6 +27,34 @@ msgstr[1] "Manquen %.0f minuts"
 #, c-format
 msgid "%s has firmware updates:"
 msgstr "%s té actualitzacions de microprogramari:"
+
+#. TRANSLATORS: duration in days!
+#, c-format
+msgid "%u day"
+msgid_plural "%u days"
+msgstr[0] "%u dia"
+msgstr[1] "%u dies"
+
+#. TRANSLATORS: duration in minutes
+#, c-format
+msgid "%u hour"
+msgid_plural "%u hours"
+msgstr[0] "%u hora"
+msgstr[1] "%u hores"
+
+#. TRANSLATORS: duration in minutes
+#, c-format
+msgid "%u minute"
+msgid_plural "%u minutes"
+msgstr[0] "%u minut"
+msgstr[1] "%u minuts"
+
+#. TRANSLATORS: duration in seconds
+#, c-format
+msgid "%u second"
+msgid_plural "%u seconds"
+msgstr[0] "%u segon"
+msgstr[1] "%u segons"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Added"
@@ -55,7 +81,7 @@ msgstr "Permet tornar a la versió anterior del microprogramari"
 msgid "Allow re-installing existing firmware versions"
 msgstr "Permet tornar a instal·lar les versions de microprogramari existents"
 
-#. TRANSLATORS: explain why we want to upload
+#. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "Una actualització requereix un reinici per a completar-se."
 
@@ -266,6 +292,11 @@ msgstr "Desactualitza el microprogramari en un dispositiu"
 msgid "Downgrading %s from %s to %s... "
 msgstr "S'està desactualitzant %s des de %s a %s... "
 
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Downgrading %s…"
+msgstr "S'està desactualitzant %s…"
+
 #. TRANSLATORS: downloading from a remote server
 msgid "Downloading…"
 msgstr "S'està descarregant..."
@@ -397,6 +428,9 @@ msgstr "Les actualitzacions de microprogramari no estan admeses en aquesta màqu
 msgid "Firmware updates are supported on this machine."
 msgstr "Les actualitzacions de microprogramari estan admeses en aquesta màquina."
 
+msgid "Force the action ignoring all warnings"
+msgstr "Força l'acció ignorant tots els avisos"
+
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
 msgstr "S'ha trobat"
@@ -474,12 +508,6 @@ msgstr "Instal·la microprogramari sense signar per al dispositiu"
 
 msgid "Install unsigned system firmware"
 msgstr "Instal·la microprogramari sense signar per al sistema"
-
-#. show message in progressbar
-#. TRANSLATORS: %1 is a device name
-#, c-format
-msgid "Installing %s"
-msgstr "S'està instal·lant %s"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
@@ -596,6 +624,12 @@ msgstr "Permís denegat"
 #, c-format
 msgid "Please enter a number from 0 to %u: "
 msgstr "Introduïu un número del 0 al %u: "
+
+msgid "Print the version number"
+msgstr "Imprimeix el número de versió"
+
+msgid "Print verbose debug statements"
+msgstr "Imprimeix les sentències detallades de la depuració"
 
 #. TRANSLATORS: the numeric priority
 msgid "Priority"
@@ -743,6 +777,10 @@ msgstr "Comparteix l'historial de microprogramari amb els desenvolupadors"
 msgid "Show client and daemon versions"
 msgstr "Mostra les versions del client i el dimoni"
 
+#. TRANSLATORS: this is for daemon development
+msgid "Show daemon verbose information"
+msgstr "Mostra la informació detallada del dimoni"
+
 #. TRANSLATORS: turn on all debugging
 msgid "Show debugging information for all files"
 msgstr "Mostra la informació de depuració per a tots els fitxers"
@@ -775,6 +813,12 @@ msgstr "Mostra el registre de depuració del darrer intent d'actualització"
 msgid "Show the information of firmware update status"
 msgstr "Mostra la informació sobre l'estat de l'actualització del microprogramari"
 
+msgid "Specify Vendor/Product ID(s) of DFU device"
+msgstr "Especifiqueu el proveïdor/ID del producte del dispositiu DFU"
+
+msgid "Specify the number of bytes per USB transfer"
+msgstr "Especifiqueu el nombre de bytes per a la transferència USB"
+
 #. TRANSLATORS: device state, i.e. appIDLE
 msgid "State"
 msgstr "Estat"
@@ -796,19 +840,9 @@ msgstr "Objectiu"
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
 msgstr "El LVFS és un servei gratuït que funciona com una entitat legal independent i no té cap vincle amb la $OS_RELEASE:NAME$. És possible que el vostre distribuïdor no hagi verificat cap de les actualitzacions del microprogramari per a la compatibilitat amb el vostre sistema o els dispositius connectats. Tot el microprogramari només és proporcionat pel fabricant original dels equips."
 
-msgid "The fwupd process is a simple daemon to allow session software to update device firmware on your local machine. It is designed for desktops, but this project is also usable on phones, tablets and on headless servers."
-msgstr "El procés del «fwupd» és un dimoni senzill, el qual permet que una sessió de programari actualitzi el microprogramari del dispositiu a la màquina local. Està dissenyat per a equips d'escriptori, però aquest projecte també és usable a telèfons, tauletes i servidors sense perifèrics."
-
-#. TRANSLATORS: exactly one update needs this
-msgid "The update requires a reboot to complete."
-msgstr "L'actualització requereix un reinici per a completar-se."
-
 #. TRANSLATORS: we're poking around as a power user
 msgid "This program may only work correctly as root"
 msgstr "Aquest programa només pot funcionar correctament com a «root»"
-
-msgid "This project aims to make updating firmware on Linux automatic, safe and reliable. You can either use a GUI software manager like GNOME Software to view and apply updates, the command-line tool or the D-Bus interface directly."
-msgstr "Aquest projecte pretén fer que actualitzar automàticament el microprogramari a Linux, sigui segur i fiable. Com a IGU, podeu usar un gestor de programari com el Programari GNOME per a veure i aplicar les actualitzacions, directament l'eina de la línia d'ordres o la interfície de D-Bus."
 
 msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
 msgstr "Aquest remot conté el microprogramari que no està embargat, però encara l'ha provat el proveïdor del maquinari. Haureu d'assegurar-vos que teniu una manera de baixar manualment el microprogramari si l'actualització del microprogramari no funciona."
@@ -856,6 +890,11 @@ msgstr "Suma de verificació de l'actualització"
 msgid "Update Description"
 msgstr "Descripció de l'actualització"
 
+#. TRANSLATORS: section header for the amount
+#. * of time it takes to install the update
+msgid "Update Duration"
+msgstr "Durada de l'actualització"
+
 #. TRANSLATORS: section header for firmware remote http://
 msgid "Update Location"
 msgstr "Ubicació de l'actualització"
@@ -875,9 +914,6 @@ msgstr "Actualitza el resum"
 #. TRANSLATORS: section header for firmware version
 msgid "Update Version"
 msgstr "Versió de l'actualització"
-
-msgid "Update device firmware on Linux"
-msgstr "Actualitza el microprogramari del dispositiu a Linux"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
@@ -904,6 +940,11 @@ msgstr "Actualitza tot el microprogramari a les versions més recents"
 #, c-format
 msgid "Updating %s from %s to %s... "
 msgstr "S'està actualitzant %s des de %s a %s... "
+
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Updating %s…"
+msgstr "S'està actualitzant %s…"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Upload message:"
@@ -956,6 +997,3 @@ msgstr "S'està escrivint..."
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
 msgstr "És possible que el vostre distribuïdor no hagi verificat cap de les actualitzacions del microprogramari per a la compatibilitat amb el vostre sistema o els dispositius connectats."
-
-msgid "fwupd"
-msgstr "fwupd"

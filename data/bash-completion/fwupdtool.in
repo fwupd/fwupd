@@ -1,11 +1,15 @@
 _fwupdtool_cmd_list=(
+	'build-firmware'
+	'get-updates'
 	'get-details'
 	'get-devices'
 	'get-plugins'
 	'get-topology'
 	'hwids'
+	'update'
 	'install'
 	'install-blob'
+	'monitor'
 	'smbios-dump'
 	'attach'
 	'detach'
@@ -62,6 +66,23 @@ _fwupdtool()
 		if [[ "$prev" = "$command" ]]; then
 			_show_device_ids
 		#modifiers
+		else
+			_show_modifiers
+		fi
+		;;
+	build-firmware)
+		#file in
+		if [[ "$prev" = "$command" ]]; then
+			_filedir
+		#file out
+		elif [[ "$prev" = "${COMP_WORDS[2]}" ]]; then
+			_filedir
+		#script
+		elif [[ "$prev" = "${COMP_WORDS[3]}" ]]; then
+			_filedir
+		#output
+		elif [[ "$prev" = "${COMP_WORDS[4]}" ]]; then
+			_filedir
 		else
 			_show_modifiers
 		fi

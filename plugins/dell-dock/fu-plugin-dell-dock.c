@@ -21,8 +21,11 @@
 
 #include "fu-dell-dock-common.h"
 
-void fu_plugin_init (FuPlugin *plugin)
+void
+fu_plugin_init (FuPlugin *plugin)
 {
+	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
+
 	/* allow these to be built by quirks */
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_REQUIRES_QUIRK, FU_QUIRKS_PLUGIN);
 	g_type_ensure (FU_TYPE_DELL_DOCK_STATUS);
@@ -30,6 +33,8 @@ void fu_plugin_init (FuPlugin *plugin)
 
 	/* currently slower performance, but more reliable in corner cases */
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_BETTER_THAN, "synapticsmst");
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_SUPPORTS_PROTOCOL, "com.dell.dock");
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_SUPPORTS_PROTOCOL, "com.synaptics.mst");
 }
 
 static gboolean
@@ -62,6 +67,16 @@ fu_plugin_dell_dock_probe (FuPlugin *plugin,
 					      FU_DEVICE (ec_device),
 					      error))
 		return FALSE;
+
+	/* create TBT endpoint if Thunderbolt SKU and Thunderbolt link inactive */
+	if (fu_dell_dock_ec_needs_tbt (FU_DEVICE (ec_device))) {
+		g_autoptr(FuDellDockTbt) tbt_device = fu_dell_dock_tbt_new ();
+		fu_device_add_child (FU_DEVICE (ec_device), FU_DEVICE (tbt_device));
+		if (!fu_plugin_dell_dock_create_node (plugin,
+						      FU_DEVICE (tbt_device),
+						      error))
+			return FALSE;
+	}
 
 	return TRUE;
 }
@@ -101,6 +116,9 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 				   error_local->message);
 		}
 	}
+
+	/* clear updatable flag if parent doesn't have it */
+	fu_dell_dock_clone_updatable (fu_device);
 
 	return TRUE;
 }

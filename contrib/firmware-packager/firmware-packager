@@ -24,14 +24,14 @@ def cd(path):
 firmware_metainfo_template = """
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="firmware">
-  <id>{firmware_id}</id>
+  <id>org.{developer_name}.guid{firmware_id}</id>
   <name>{firmware_name}</name>
   <summary>{firmware_summary}</summary>
   <description>
     {firmware_description}
   </description>
   <provides>
-    <firmware type="flashed">{device_unique_id}</firmware>
+    <firmware type="flashed">{device_guid}</firmware>
   </provides>
   <url type="homepage">{firmware_homepage}</url>
   <metadata_license>CC0-1.0</metadata_license>
@@ -50,7 +50,9 @@ firmware_metainfo_template = """
 
 
 def make_firmware_metainfo(firmware_info, dst):
-    firmware_metainfo = firmware_metainfo_template.format(**vars(firmware_info), timestamp=time.time())
+    local_info = vars(firmware_info)
+    local_info["firmware_id"] = local_info["device_guid"][0:8]
+    firmware_metainfo = firmware_metainfo_template.format(**local_info, timestamp=time.time())
 
     with open(os.path.join(dst, 'firmware.metainfo.xml'), 'w') as f:
         f.write(firmware_metainfo)
@@ -68,7 +70,15 @@ def get_firmware_bin(root, bin_path, dst):
 
 def create_firmware_cab(exe, folder):
     with cd(folder):
-        command = ['gcab', '--create', 'firmware.cab', 'firmware.bin', 'firmware.metainfo.xml']
+        if os.name is "nt":
+          directive = os.path.join (folder, "directive")
+          with open (directive, 'w') as wfd:
+            wfd.write('"firmware.cab"\r\n')
+            wfd.write('"firmware.bin"\r\n')
+            wfd.write('"firmware.metainfo.xml"\r\n')
+          command = ['makecab.exe', '/f', directive]
+        else:
+          command = ['gcab', '--create', 'firmware.cab', 'firmware.bin', 'firmware.metainfo.xml']
         subprocess.check_call(command)
 
 
@@ -93,18 +103,17 @@ def main(args):
         shutil.copy(os.path.join(dir, 'firmware.cab'), args.out)
 
 parser = argparse.ArgumentParser(description='Create fwupd packaged from windows executables')
-parser.add_argument('--firmware-id', help='ID for the firmware package, can be a customized (e.g. net.queuecumber.DellTBT.firmware)', required=True)
 parser.add_argument('--firmware-name', help='Name of the firmware package can be customized (e.g. DellTBT)', required=True)
 parser.add_argument('--firmware-summary', help='One line description of the firmware package')
 parser.add_argument('--firmware-description', help='Longer description of the firmware package')
-parser.add_argument('--device-unique-id', help='Unique ID of the device this firmware will run on, this *must* match the output from `fwupdmgr get-devices`', required=True)
+parser.add_argument('--device-guid', help='GUID of the device this firmware will run on, this *must* match the output of one of the GUIDs in `fwupdmgr get-devices`', required=True)
 parser.add_argument('--firmware-homepage', help='Website for the firmware provider')
 parser.add_argument('--contact-info', help='Email address of the firmware developer')
-parser.add_argument('--developer-name', help='Name of the firmware developer')
+parser.add_argument('--developer-name', help='Name of the firmware developer', required=True)
 parser.add_argument('--release-version', help='Version number of the firmware package', required=True)
 parser.add_argument('--release-description', help='Description of the firmware release')
-parser.add_argument('--exe', help='Executable file to extract firmware from')
-parser.add_argument('--bin', help='Path to the .bin file inside the executable to use as the firmware image', required=True)
+parser.add_argument('--exe', help='(optional) Executable file to extract firmware from')
+parser.add_argument('--bin', help='Path to the .bin file (Relative if inside the executable; Absolute if outside) to use as the firmware image', required=True)
 parser.add_argument('--out', help='Output cab file path', required=True)
 args = parser.parse_args()
 

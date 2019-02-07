@@ -78,4 +78,19 @@ gboolean	fu_dell_dock_hid_verify_update		(FuDevice *self,
 							 gboolean *result,
 							 GError **error);
 
+gboolean	fu_dell_dock_hid_tbt_wake		(FuDevice *self,
+							 const FuHIDI2CParameters *parameters,
+							 GError **error);
+
+gboolean	fu_dell_dock_hid_tbt_write		(FuDevice *self,
+							 guint32 start_addr,
+							 const guint8 *input,
+							 gsize write_size,
+							 const FuHIDI2CParameters *parameters,
+							 GError **error);
+
+gboolean	fu_dell_dock_hid_tbt_authenticate	(FuDevice *self,
+							 const FuHIDI2CParameters *parameters,
+							 GError **error);
+
 #endif /* __FU_DELL_DOCK_HID_H */

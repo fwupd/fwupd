@@ -20,6 +20,7 @@ typedef enum {
 } FuUefiBootmgrFlags;
 
 gboolean	 fu_uefi_bootmgr_bootnext	(const gchar		*esp_path,
+						 const gchar		*description,
 						 FuUefiBootmgrFlags	 flags,
 						 GError			**error);
 

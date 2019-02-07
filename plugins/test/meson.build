@@ -6,6 +6,7 @@ if get_option('plugin_dummy')
 endif
 
 shared_module('fu_plugin_test',
+  fu_hash,
   sources : [
     'fu-plugin-test.c',
   ],
@@ -16,6 +17,9 @@ shared_module('fu_plugin_test',
   ],
   install : install_dummy,
   install_dir: plugin_dir,
+  link_with : [
+    libfwupdprivate,
+  ],
   c_args : cargs,
   dependencies : [
     plugin_deps,

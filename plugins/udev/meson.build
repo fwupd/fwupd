@@ -1,6 +1,7 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginUdev"']
 
 shared_module('fu_plugin_udev',
+  fu_hash,
   sources : [
     'fu-plugin-udev.c',
     'fu-rom.c',
@@ -12,6 +13,9 @@ shared_module('fu_plugin_udev',
   ],
   install : true,
   install_dir: plugin_dir,
+  link_with : [
+    libfwupdprivate,
+  ],
   c_args : cargs,
   dependencies : [
     plugin_deps,
@@ -20,6 +24,7 @@ shared_module('fu_plugin_udev',
 
 executable(
   'fu-rom-tool',
+  fu_hash,
   sources : [
     'fu-rom-tool.c',
     'fu-rom.c',
@@ -33,7 +38,6 @@ executable(
     plugin_deps,
   ],
   link_with : [
-    fwupd,
     libfwupdprivate,
   ],
   c_args : cargs,
@@ -59,7 +63,6 @@ if get_option('tests')
       plugin_deps,
     ],
     link_with : [
-      fwupd,
       libfwupdprivate,
     ],
     c_args : cargs

@@ -12,6 +12,7 @@
 #include <termios.h>
 #include <errno.h>
 
+#include "fu-io-channel.h"
 #include "fu-altos-device.h"
 #include "fu-altos-firmware.h"
 
@@ -25,7 +26,7 @@ struct _FuAltosDevice {
 	guint64			 addr_base;
 	guint64			 addr_bound;
 	struct termios		 tty_termios;
-	gint			 tty_fd;
+	FuIOChannel		*io_channel;
 };
 
 G_DEFINE_TYPE (FuAltosDevice, fu_altos_device, FU_TYPE_USB_DEVICE)
@@ -149,60 +150,15 @@ fu_altos_device_tty_write (FuAltosDevice *self,
 			   gssize data_len,
 			   GError **error)
 {
-	gint rc;
-	gssize idx = 0;
-	guint timeout_ms = 500;
-	struct pollfd fds;
-
 	/* lets assume this is text */
 	if (data_len < 0)
 		data_len = strlen (data);
-
-	fds.fd = self->tty_fd;
-	fds.events = POLLOUT;
-
-	g_debug ("write, with timeout %ums", timeout_ms);
-	while (idx < data_len) {
-
-		/* wait for data to be allowed to write without blocking */
-		rc = poll (&fds, 1, (gint) timeout_ms);
-		if (rc == 0)
-			break;
-		if (rc < 0) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_READ,
-				     "failed to poll %i",
-				     self->tty_fd);
-			return FALSE;
-		}
-
-		/* we can write data */
-		if (fds.revents & POLLOUT) {
-			gssize len;
-			g_debug ("writing %" G_GSSIZE_FORMAT " bytes: %s", data_len, data);
-			len = write (self->tty_fd, data + idx, data_len - idx);
-			if (len < 0) {
-				if (errno == EAGAIN) {
-					g_debug ("got EAGAIN, trying harder");
-					continue;
-				}
-				g_set_error (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_WRITE,
-					     "failed to write %" G_GSSIZE_FORMAT
-					     " bytes to %i: %s" ,
-					     data_len,
-					     self->tty_fd,
-					     strerror (errno));
-				return FALSE;
-			}
-			g_debug ("wrote %" G_GSSIZE_FORMAT " bytes", len);
-			idx += len;
-		}
-	}
-
-	return TRUE;
+	return fu_io_channel_write_raw (self->io_channel,
+					(const guint8 *) data,
+					(gsize) data_len,
+					500, /* ms */
+					FU_IO_CHANNEL_FLAG_NONE,
+					error);
 }
 
 static GString *
@@ -211,90 +167,12 @@ fu_altos_device_tty_read (FuAltosDevice *self,
 			  gssize max_size,
 			  GError **error)
 {
-	gint rc;
-	struct pollfd fds;
-	g_autoptr(GString) str = g_string_new (NULL);
-
-	fds.fd = self->tty_fd;
-	fds.events = POLLIN;
-
-	g_debug ("read, with timeout %ums", timeout_ms);
-	for (;;) {
-		/* wait for data to appear */
-		rc = poll (&fds, 1, (gint) timeout_ms);
-		if (rc == 0)
-			break;
-		if (rc < 0) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_READ,
-				     "failed to poll %i",
-				     self->tty_fd);
-			return NULL;
-		}
-
-		/* we have data to read */
-		if (fds.revents & POLLIN) {
-			guint8 buf[1024];
-			gssize len = read (self->tty_fd, buf, sizeof (buf));
-			if (len < 0) {
-				if (errno == EAGAIN) {
-					g_debug ("got EAGAIN, trying harder");
-					continue;
-				}
-				g_set_error (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_READ,
-					     "failed to read %i: %s",
-					     self->tty_fd,
-					     strerror (errno));
-				return NULL;
-			}
-			if (len > 0) {
-				g_debug ("read %" G_GSSIZE_FORMAT " bytes from device", len);
-				g_string_append_len (str, (gchar *) buf, len);
-			}
-
-			/* check maximum size */
-			if (max_size > 0 && str->len >= (guint) max_size)
-				break;
-			continue;
-		}
-		if (fds.revents & POLLERR) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_READ,
-					     "error condition");
-			return NULL;
-		}
-		if (fds.revents & POLLHUP) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_READ,
-					     "connection hung up");
-			return NULL;
-		}
-		if (fds.revents & POLLNVAL) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_READ,
-					     "invalid request");
-			return NULL;
-		}
-	}
-
-	/* no data */
-	if (str->len == 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_READ,
-			     "no data received from device in %ums",
-			     timeout_ms);
+	g_autoptr(GBytes) buf = NULL;
+	buf = fu_io_channel_read_bytes (self->io_channel, max_size,
+					timeout_ms, FU_IO_CHANNEL_FLAG_NONE, error);
+	if (buf == NULL)
 		return NULL;
-	}
-
-	/* return blob */
-	return g_steal_pointer (&str);
+	return g_string_new_len (g_bytes_get_data (buf, NULL), g_bytes_get_size (buf));
 }
 
 static gboolean
@@ -304,18 +182,12 @@ fu_altos_device_tty_open (FuAltosDevice *self, GError **error)
 	g_autoptr(GString) str = NULL;
 
 	/* open device */
-	self->tty_fd = open (self->tty, O_RDWR | O_NONBLOCK);
-	if (self->tty_fd < 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "failed to open %s",
-			     self->tty);
+	self->io_channel = fu_io_channel_new_file (self->tty, error);
+	if (self->io_channel == NULL)
 		return FALSE;
-	}
 
 	/* get the old termios settings so we can restore later */
-	if (tcgetattr (self->tty_fd, &termios) < 0) {
+	if (tcgetattr (fu_io_channel_unix_get_fd (self->io_channel), &termios) < 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
@@ -340,7 +212,8 @@ fu_altos_device_tty_open (FuAltosDevice *self, GError **error)
 	termios.c_cc[VTIME] = 0;
 
 	/* set all new data */
-	if (tcsetattr (self->tty_fd, TCSAFLUSH, &termios) < 0) {
+	if (tcsetattr (fu_io_channel_unix_get_fd (self->io_channel),
+		       TCSAFLUSH, &termios) < 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
@@ -359,10 +232,11 @@ fu_altos_device_tty_open (FuAltosDevice *self, GError **error)
 static gboolean
 fu_altos_device_tty_close (FuAltosDevice *self, GError **error)
 {
-
-	tcsetattr (self->tty_fd, TCSAFLUSH, &self->tty_termios);
-	close (self->tty_fd);
-
+	tcsetattr (fu_io_channel_unix_get_fd (self->io_channel),
+		   TCSAFLUSH, &self->tty_termios);
+	if (!fu_io_channel_shutdown (self->io_channel, error))
+		return FALSE;
+	g_clear_object (&self->io_channel);
 	return TRUE;
 }
 

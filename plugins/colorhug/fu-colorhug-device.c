@@ -82,7 +82,8 @@ fu_colorhug_device_msg (FuColorhugDevice *self, guint8 cmd,
 		memcpy (buf + 1, ibuf, ibufsz);
 
 	/* request */
-	ch_buffer_dump ("REQ", buf, ibufsz + 1);
+	if (g_getenv ("FWUPD_COLORHUG_VERBOSE") != NULL)
+		fu_common_dump_raw (G_LOG_DOMAIN, "REQ", buf, ibufsz + 1);
 	if (!g_usb_device_interrupt_transfer (usb_device,
 					      CH_USB_HID_EP_OUT,
 					      buf,
@@ -115,7 +116,8 @@ fu_colorhug_device_msg (FuColorhugDevice *self, guint8 cmd,
 		g_prefix_error (error, "failed to get reply: ");
 		return FALSE;
 	}
-	ch_buffer_dump ("RES", buf, actual_length);
+	if (g_getenv ("FWUPD_COLORHUG_VERBOSE") != NULL)
+		fu_common_dump_raw (G_LOG_DOMAIN, "RES", buf, actual_length);
 
 	/* old bootloaders do not return the full block */
 	if (actual_length != CH_USB_HID_EP_SIZE &&

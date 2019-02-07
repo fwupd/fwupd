@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2016-2018 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -14,11 +14,14 @@
 #define FWUPD_RESULT_KEY_DEVICE_ID		"DeviceId"	/* s */
 #define FWUPD_RESULT_KEY_PARENT_DEVICE_ID	"ParentDeviceId"/* s */
 #define FWUPD_RESULT_KEY_FILENAME		"Filename"	/* s */
+#define FWUPD_RESULT_KEY_PROTOCOL		"Protocol"	/* s */
 #define FWUPD_RESULT_KEY_FLAGS			"Flags"		/* t */
 #define FWUPD_RESULT_KEY_FLASHES_LEFT		"FlashesLeft"	/* u */
 #define FWUPD_RESULT_KEY_INSTALL_DURATION	"InstallDuration"	/* u */
 #define FWUPD_RESULT_KEY_GUID			"Guid"		/* as */
 #define FWUPD_RESULT_KEY_HOMEPAGE		"Homepage"	/* s */
+#define FWUPD_RESULT_KEY_DETAILS_URL		"DetailsUrl"	/* s */
+#define FWUPD_RESULT_KEY_SOURCE_URL		"SourceUrl"	/* s */
 #define FWUPD_RESULT_KEY_ICON			"Icon"		/* as */
 #define FWUPD_RESULT_KEY_LICENSE		"License"	/* s */
 #define FWUPD_RESULT_KEY_MODIFIED		"Modified"	/* t */
@@ -31,6 +34,7 @@
 #define FWUPD_RESULT_KEY_SIZE			"Size"		/* t */
 #define FWUPD_RESULT_KEY_SUMMARY		"Summary"	/* s */
 #define FWUPD_RESULT_KEY_TRUST_FLAGS		"TrustFlags"	/* t */
+#define FWUPD_RESULT_KEY_UPDATE_MESSAGE		"UpdateMessage"	/* s */
 #define FWUPD_RESULT_KEY_UPDATE_ERROR		"UpdateError"	/* s */
 #define FWUPD_RESULT_KEY_UPDATE_STATE		"UpdateState"	/* u */
 #define FWUPD_RESULT_KEY_URI			"Uri"		/* s */

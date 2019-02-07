@@ -15,11 +15,15 @@ typedef enum {
 	UNKNOWN_DEVICE,
 } FuPluginValidation;
 
-FuPluginValidation	fu_plugin_thunderbolt_validate_image	(GBytes  *controller_fw,
+/* byte offsets in firmware image */
+#define FU_TBT_OFFSET_NATIVE		0x7B
+#define FU_TBT_CHUNK_SZ			0x40
+
+FuPluginValidation	fu_thunderbolt_image_validate		(GBytes  *controller_fw,
 								 GBytes  *blob_fw,
 								 GError **error);
 
-gboolean	fu_plugin_thunderbolt_controller_is_native	(GBytes    *controller_fw,
+gboolean	fu_thunderbolt_image_controller_is_native	(GBytes    *controller_fw,
 								 gboolean  *is_native,
 								 GError   **error);
 

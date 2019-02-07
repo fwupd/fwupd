@@ -8,8 +8,6 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2018-10-12 11:10+0000\n"
-"Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Indonesian (http://www.transifex.com/freedesktop/fwupd/language/id/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -43,7 +41,7 @@ msgstr "Izinkan penuruntingkatan versi firmware"
 msgid "Allow re-installing existing firmware versions"
 msgstr "Izinkan pemasangan ulang versi firmware yang telah ada"
 
-#. TRANSLATORS: explain why we want to upload
+#. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "Suatu pembaruan memerlukan boot ulang agar lengkap."
 
@@ -627,12 +625,6 @@ msgstr "Ringkasan"
 msgid "Target"
 msgstr "Target"
 
-msgid "The fwupd process is a simple daemon to allow session software to update device firmware on your local machine. It is designed for desktops, but this project is also usable on phones, tablets and on headless servers."
-msgstr "Proses fwupd adalah sebuah daemon sederhana yang memungkinkan perangkat lunak sesi memperbarui firmware peranti pada mesin lokal Anda. Ini dirancang untuk desktop, tapi proyek ini juga dapat dipakai pada telepon, tablet, dan server headless."
-
-msgid "This project aims to make updating firmware on Linux automatic, safe and reliable. You can either use a GUI software manager like GNOME Software to view and apply updates, the command-line tool or the D-Bus interface directly."
-msgstr "Proyek ini bertujuan membuat pemutakhiran firmware pada Linux otomatis, aman, dan handal. Anda dapat memakai manajer perangkat lunak GUI seperti GNOME Perangkat Lunak untuk melihat dan menerapkan pembaruan, perkakas perintah baris, atau antar muka D-Bus secara langsung."
-
 #. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
 msgid "Title"
 msgstr "Judul"
@@ -687,9 +679,6 @@ msgstr "Ringkasan Pembaruan"
 #. TRANSLATORS: section header for firmware version
 msgid "Update Version"
 msgstr "Mutakhirkan Versi"
-
-msgid "Update device firmware on Linux"
-msgstr "Perbarui firmware peranti pada Linux"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
@@ -756,6 +745,3 @@ msgstr "Tulis firmware dari berkas ke dalam suatu partisi"
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing…"
 msgstr "Menulis..."
-
-msgid "fwupd"
-msgstr "fwupd"

@@ -5,6 +5,7 @@ install_data(['nitrokey.quirk'],
 )
 
 shared_module('fu_plugin_nitrokey',
+  fu_hash,
   sources : [
     'fu-nitrokey-device.c',
     'fu-nitrokey-common.c',
@@ -17,6 +18,9 @@ shared_module('fu_plugin_nitrokey',
   ],
   install : true,
   install_dir: plugin_dir,
+  link_with : [
+    libfwupdprivate,
+  ],
   c_args : cargs,
   dependencies : [
     plugin_deps,

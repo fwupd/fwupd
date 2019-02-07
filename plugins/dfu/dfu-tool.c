@@ -11,7 +11,6 @@
 #include <stdlib.h>
 #include <glib/gi18n.h>
 #include <glib-unix.h>
-#include <appstream-glib.h>
 
 #include "dfu-cipher-xtea.h"
 #include "dfu-device-private.h"
@@ -50,6 +49,7 @@ dfu_tool_private_free (DfuToolPrivate *priv)
 	if (priv == NULL)
 		return;
 	g_free (priv->device_vid_pid);
+	g_object_unref (priv->progressbar);
 	g_object_unref (priv->cancellable);
 	g_object_unref (priv->quirks);
 	if (priv->cmd_array != NULL)
@@ -480,7 +480,7 @@ dfu_tool_bytes_replace (GBytes *data, GBytes *search, GBytes *replace)
 	g_return_val_if_fail (search_sz == replace_sz, FALSE);
 
 	/* find and replace each one */
-	for (gsize i = 0; i < data_sz - search_sz; i++) {
+	for (gsize i = 0; i < data_sz - search_sz + 1; i++) {
 		if (memcmp (data_buf + i, search_buf, search_sz) == 0) {
 			g_print ("Replacing %" G_GSIZE_FORMAT " bytes @0x%04x\n",
 				 replace_sz, (guint) i);
@@ -675,7 +675,7 @@ dfu_tool_replace_data (DfuToolPrivate *priv, gchar **values, GError **error)
 	if (cnt == 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     FWUPD_ERROR_NOT_FOUND,
 				     "search string was not found");
 		return FALSE;
 	}
@@ -2036,8 +2036,8 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 		dfu_device_set_usb_context (device, usb_context);
 		if (!fu_device_probe (FU_DEVICE (device), NULL))
 			continue;
-		version = as_utils_version_from_uint16 (g_usb_device_get_release (usb_device),
-							AS_VERSION_PARSE_FLAG_USE_BCD);
+		version = fu_common_version_from_uint16 (g_usb_device_get_release (usb_device),
+							 FU_VERSION_FORMAT_BCD);
 		g_print ("%s %04x:%04x [v%s]:\n",
 			 /* TRANSLATORS: detected a DFU device */
 			 _("Found"),
@@ -2427,6 +2427,5 @@ main (int argc, char *argv[])
 	}
 
 	/* success/ */
-	g_object_unref (priv->progressbar);
 	return EXIT_SUCCESS;
 }

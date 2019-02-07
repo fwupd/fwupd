@@ -16,6 +16,13 @@ typedef enum {
 } FuAppFlags;
 
 typedef enum {
+	FU_DUMP_FLAGS_NONE		= 0,
+	FU_DUMP_FLAGS_SHOW_ASCII	= 1 << 0,
+	FU_DUMP_FLAGS_SHOW_ADDRESSES	= 1 << 1,
+	FU_DUMP_FLAGS_LAST
+} FuDumpFlags;
+
+typedef enum {
 	FU_PATH_KIND_CACHEDIR_PKG,
 	FU_PATH_KIND_DATADIR_PKG,
 	FU_PATH_KIND_EFIAPPDIR,
@@ -26,6 +33,7 @@ typedef enum {
 	FU_PATH_KIND_SYSCONFDIR_PKG,
 	FU_PATH_KIND_SYSFSDIR_FW,
 	FU_PATH_KIND_SYSFSDIR_DRIVERS,
+	FU_PATH_KIND_SYSFSDIR_TPM,
 	FU_PATH_KIND_LAST
 } FuPathKind;
 
@@ -65,6 +73,22 @@ guint64		 fu_common_strtoull		(const gchar	*str);
 gchar		*fu_common_find_program_in_path	(const gchar	*basename,
 						 GError		**error);
 gchar		*fu_common_strstrip		(const gchar	*str);
+void		 fu_common_dump_raw		(const gchar	*log_domain,
+						 const gchar	*title,
+						 const guint8	*data,
+						 gsize		 len);
+void		 fu_common_dump_full		(const gchar	*log_domain,
+						 const gchar	*title,
+						 const guint8	*data,
+						 gsize		 len,
+						 guint		 columns,
+						 FuDumpFlags	 flags);
+void		 fu_common_dump_bytes		(const gchar	*log_domain,
+						 const gchar	*title,
+						 GBytes		*bytes);
+GBytes		*fu_common_bytes_align		(GBytes		*bytes,
+						 gsize		 blksz,
+						 gchar		 padval);
 
 typedef guint FuEndianType;
 
@@ -78,5 +102,9 @@ guint16		 fu_common_read_uint16		(const guint8	*buf,
 						 FuEndianType	 endian);
 guint32		 fu_common_read_uint32		(const guint8	*buf,
 						 FuEndianType	 endian);
+
+guint		 fu_common_string_replace	(GString	*string,
+						 const gchar	*search,
+						 const gchar	*replace);
 
 #endif /* __FU_COMMON_H__ */

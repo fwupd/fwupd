@@ -275,6 +275,8 @@ fwupd_remote_kind_from_string (const gchar *kind)
 		return FWUPD_REMOTE_KIND_DOWNLOAD;
 	if (g_strcmp0 (kind, "local") == 0)
 		return FWUPD_REMOTE_KIND_LOCAL;
+	if (g_strcmp0 (kind, "directory") == 0)
+		return FWUPD_REMOTE_KIND_DIRECTORY;
 	return FWUPD_REMOTE_KIND_UNKNOWN;
 }
 
@@ -295,6 +297,8 @@ fwupd_remote_kind_to_string (FwupdRemoteKind kind)
 		return "download";
 	if (kind == FWUPD_REMOTE_KIND_LOCAL)
 		return "local";
+	if (kind == FWUPD_REMOTE_KIND_DIRECTORY)
+		return "directory";
 	return NULL;
 }
 
@@ -384,7 +388,14 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 	if (metadata_uri == NULL)
 		return FALSE;
 	if (g_str_has_prefix (metadata_uri, "file://")) {
-		priv->kind = FWUPD_REMOTE_KIND_LOCAL;
+		const gchar *filename_cache = metadata_uri;
+		if (g_str_has_prefix (filename_cache, "file://"))
+			filename_cache += 7;
+		fwupd_remote_set_filename_cache (self, filename_cache);
+		if (g_file_test (filename_cache, G_FILE_TEST_IS_DIR))
+			priv->kind = FWUPD_REMOTE_KIND_DIRECTORY;
+		else
+			priv->kind = FWUPD_REMOTE_KIND_LOCAL;
 	} else if (g_str_has_prefix (metadata_uri, "http://") ||
 		   g_str_has_prefix (metadata_uri, "https://")) {
 		priv->kind = FWUPD_REMOTE_KIND_DOWNLOAD;
@@ -444,14 +455,6 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 		fwupd_remote_set_filename_cache (self, filename_cache);
 	}
 
-	/* all LOCAL remotes have to include a valid MetadataURI */
-	if (priv->kind == FWUPD_REMOTE_KIND_LOCAL) {
-		const gchar *filename_cache = metadata_uri;
-		if (g_str_has_prefix (filename_cache, "file://"))
-			filename_cache += 7;
-		fwupd_remote_set_filename_cache (self, filename_cache);
-	}
-
 	/* load the checksum */
 	if (priv->filename_cache_sig != NULL &&
 	    g_file_test (priv->filename_cache_sig, G_FILE_TEST_EXISTS)) {
@@ -472,6 +475,25 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 	firmware_base_uri = g_key_file_get_string (kf, group, "FirmwareBaseURI", NULL);
 	if (firmware_base_uri != NULL)
 		fwupd_remote_set_firmware_base_uri (self, firmware_base_uri);
+
+	/* some validation around DIRECTORY types */
+	if (priv->kind == FWUPD_REMOTE_KIND_DIRECTORY) {
+		if (priv->keyring_kind != FWUPD_KEYRING_KIND_NONE) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "Keyring kind %s is not supported with directory remote",
+				     fwupd_keyring_kind_to_string (priv->keyring_kind));
+			return FALSE;
+		}
+		if (firmware_base_uri != NULL) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "Directory remotes don't support firmware base URI");
+			return FALSE;
+		}
+	}
 
 	/* dep logic */
 	order_before = g_key_file_get_string (kf, group, "OrderBefore", NULL);
@@ -1099,7 +1121,7 @@ fwupd_remote_class_init (FwupdRemoteClass *klass)
 	 * Since: 0.9.3
 	 */
 	pspec = g_param_spec_string ("id", NULL, NULL,
-				     NULL, G_PARAM_READWRITE);
+				     NULL, G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_ID, pspec);
 
 	/**
@@ -1110,7 +1132,7 @@ fwupd_remote_class_init (FwupdRemoteClass *klass)
 	 * Since: 0.9.3
 	 */
 	pspec = g_param_spec_boolean ("enabled", NULL, NULL,
-				      FALSE, G_PARAM_READWRITE);
+				      FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_ENABLED, pspec);
 }
 

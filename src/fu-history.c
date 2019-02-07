@@ -113,6 +113,16 @@ fu_history_device_from_stmt (sqlite3_stmt *stmt)
 	tmp = (const gchar *) sqlite3_column_text (stmt, 13);
 	if (tmp != NULL)
 		fu_device_set_version (device, tmp);
+
+	/* checksum_device */
+	tmp = (const gchar *) sqlite3_column_text (stmt, 14);
+	if (tmp != NULL)
+		fu_device_add_checksum (device, tmp);
+
+	/* protocol */
+	tmp = (const gchar *) sqlite3_column_text (stmt, 15);
+	if (tmp != NULL)
+		fwupd_release_set_protocol (release, tmp);
 	return device;
 }
 
@@ -147,7 +157,7 @@ fu_history_create_database (FuHistory *self, GError **error)
 			 "CREATE TABLE schema ("
 			 "created timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
 			 "version INTEGER DEFAULT 0);"
-			 "INSERT INTO schema (version) VALUES (2);"
+			 "INSERT INTO schema (version) VALUES (4);"
 			 "CREATE TABLE history ("
 			 "device_id TEXT,"
 			 "update_state INTEGER DEFAULT 0,"
@@ -162,7 +172,9 @@ fu_history_create_database (FuHistory *self, GError **error)
 			 "metadata TEXT DEFAULT NULL,"
 			 "guid_default TEXT DEFAULT NULL,"
 			 "version_old TEXT,"
-			 "version_new TEXT);"
+			 "version_new TEXT,"
+			 "checksum_device TEXT DEFAULT NULL,"
+			 "protocol TEXT DEFAULT NULL);"
 			 "COMMIT;", NULL, NULL, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
@@ -193,12 +205,67 @@ fu_history_migrate_database_v1 (FuHistory *self, GError **error)
 
 	/* migrate the old entries to the new table */
 	rc = sqlite3_exec (self->db,
-			   "INSERT INTO history SELECT * FROM history_old;"
+			   "INSERT INTO history SELECT "
+			   "device_id, update_state, update_error, filename, "
+			   "display_name, plugin, device_created, device_modified, "
+			   "checksum, flags, metadata, guid_default, version_old, "
+			   "version_new, NULL, NULL FROM history_old;"
 			   "DROP TABLE history_old;",
 			   NULL, NULL, NULL);
 	if (rc != SQLITE_OK) {
 		g_debug ("no history to migrate: %s", sqlite3_errmsg (self->db));
 		return TRUE;
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_history_migrate_database_v2 (FuHistory *self, GError **error)
+{
+	gint rc;
+
+	/* rename the table to something out the way */
+	rc = sqlite3_exec (self->db,
+			   "ALTER TABLE history ADD COLUMN checksum_device TEXT DEFAULT NULL;"
+			   "ALTER TABLE history ADD COLUMN protocol TEXT DEFAULT NULL;",
+			   NULL, NULL, NULL);
+	if (rc != SQLITE_OK) {
+		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
+			     "Failed to alter database: %s",
+			     sqlite3_errmsg (self->db));
+		return FALSE;
+	}
+
+	/* update version */
+	rc = sqlite3_exec (self->db, "UPDATE schema SET version=4;", NULL, NULL, NULL);
+	if (rc != SQLITE_OK) {
+		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
+			     "Failed to migrate database: %s",
+			     sqlite3_errmsg (self->db));
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_history_migrate_database_v3 (FuHistory *self, GError **error)
+{
+	gint rc;
+
+	/* rename the table to something out the way */
+	rc = sqlite3_exec (self->db,
+			   "ALTER TABLE history ADD COLUMN protocol TEXT DEFAULT NULL;",
+			   NULL, NULL, NULL);
+	if (rc != SQLITE_OK)
+		g_debug ("ignoring database error: %s", sqlite3_errmsg (self->db));
+
+	/* update version */
+	rc = sqlite3_exec (self->db, "UPDATE schema SET version=4;", NULL, NULL, NULL);
+	if (rc != SQLITE_OK) {
+		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
+			     "Failed to update schema version: %s",
+			     sqlite3_errmsg (self->db));
+		return FALSE;
 	}
 	return TRUE;
 }
@@ -286,6 +353,14 @@ fu_history_load (FuHistory *self, GError **error)
 		g_debug ("migrating v%u database", schema_ver);
 		if (!fu_history_migrate_database_v1 (self, error))
 			return FALSE;
+	} else if (schema_ver == 2) {
+		g_debug ("migrating v%u database", schema_ver);
+		if (!fu_history_migrate_database_v2 (self, error))
+			return FALSE;
+	} else if (schema_ver == 3) {
+		g_debug ("migrating v%u database", schema_ver);
+		if (!fu_history_migrate_database_v3 (self, error))
+			return FALSE;
 	}
 
 	return TRUE;
@@ -344,6 +419,7 @@ fu_history_modify_device (FuHistory *self, FuDevice *device,
 					 "UPDATE history SET "
 					 "update_state = ?1, "
 					 "update_error = ?2, "
+					 "checksum_device = ?6, "
 					 "flags = ?3 "
 					 "WHERE device_id = ?4;",
 					 -1, &stmt, NULL);
@@ -356,6 +432,7 @@ fu_history_modify_device (FuHistory *self, FuDevice *device,
 					 "UPDATE history SET "
 					 "update_state = ?1, "
 					 "update_error = ?2, "
+					 "checksum_device = ?6, "
 					 "flags = ?3 "
 					 "WHERE device_id = ?4 AND version_old = ?5;",
 					 -1, &stmt, NULL);
@@ -368,6 +445,7 @@ fu_history_modify_device (FuHistory *self, FuDevice *device,
 					 "UPDATE history SET "
 					 "update_state = ?1, "
 					 "update_error = ?2, "
+					 "checksum_device = ?6, "
 					 "flags = ?3 "
 					 "WHERE device_id = ?4 AND version_new = ?5;",
 					 -1, &stmt, NULL);
@@ -380,17 +458,21 @@ fu_history_modify_device (FuHistory *self, FuDevice *device,
 			     sqlite3_errmsg (self->db));
 		return FALSE;
 	}
+
 	sqlite3_bind_int (stmt, 1, fu_device_get_update_state (device));
 	sqlite3_bind_text (stmt, 2, fu_device_get_update_error (device), -1, SQLITE_STATIC);
 	sqlite3_bind_int64 (stmt, 3, fu_history_get_device_flags_filtered (device));
 	sqlite3_bind_text (stmt, 4, fu_device_get_id (device), -1, SQLITE_STATIC);
 	sqlite3_bind_text (stmt, 5, fu_device_get_version (device), -1, SQLITE_STATIC);
+	sqlite3_bind_text (stmt, 6, fwupd_checksum_get_by_kind (fu_device_get_checksums (device),
+								G_CHECKSUM_SHA1), -1, SQLITE_STATIC);
 	return fu_history_stmt_exec (self, stmt, NULL, error);
 }
 
 gboolean
 fu_history_add_device (FuHistory *self, FuDevice *device, FwupdRelease *release, GError **error)
 {
+	const gchar *checksum_device;
 	const gchar *checksum = NULL;
 	gint rc;
 	g_autofree gchar *metadata = NULL;
@@ -416,6 +498,8 @@ fu_history_add_device (FuHistory *self, FuDevice *device, FwupdRelease *release,
 		GPtrArray *checksums = fwupd_release_get_checksums (release);
 		checksum = fwupd_checksum_get_by_kind (checksums, G_CHECKSUM_SHA1);
 	}
+	checksum_device = fwupd_checksum_get_by_kind (fu_device_get_checksums (device),
+						      G_CHECKSUM_SHA1);
 
 	/* metadata is stored as a simple string */
 	metadata = _convert_hash_to_string (fwupd_release_get_metadata (release));
@@ -437,9 +521,11 @@ fu_history_add_device (FuHistory *self, FuDevice *device, FwupdRelease *release,
 						      "device_created,"
 						      "device_modified,"
 						      "version_old,"
-						      "version_new) "
+						      "version_new,"
+						      "checksum_device,"
+						      "protocol) "
 				 "VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,"
-					 "?11,?12,?13,?14)", -1, &stmt, NULL);
+					 "?11,?12,?13,?14,?15,?16)", -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
 			     "Failed to prepare SQL: %s",
@@ -460,6 +546,8 @@ fu_history_add_device (FuHistory *self, FuDevice *device, FwupdRelease *release,
 	sqlite3_bind_int64 (stmt, 12, fu_device_get_modified (device));
 	sqlite3_bind_text (stmt, 13, fu_device_get_version (device), -1, SQLITE_STATIC);
 	sqlite3_bind_text (stmt, 14, fwupd_release_get_version (release), -1, SQLITE_STATIC);
+	sqlite3_bind_text (stmt, 15, checksum_device, -1, SQLITE_STATIC);
+	sqlite3_bind_text (stmt, 16, fwupd_release_get_protocol (release), -1, SQLITE_STATIC);
 	return fu_history_stmt_exec (self, stmt, NULL, error);
 }
 
@@ -594,7 +682,9 @@ fu_history_get_device_by_id (FuHistory *self, const gchar *device_id, GError **e
 					"update_state, "
 					"update_error, "
 					"version_new, "
-					"version_old FROM history WHERE "
+					"version_old, "
+					"checksum_device, "
+					"protocol FROM history WHERE "
 				 "device_id = ?1 LIMIT 1", -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
@@ -650,7 +740,9 @@ fu_history_get_devices (FuHistory *self, GError **error)
 					"update_state, "
 					"update_error, "
 					"version_new, "
-					"version_old FROM history "
+					"version_old, "
+					"checksum_device, "
+					"protocol FROM history "
 					"ORDER BY device_modified ASC;",
 					-1, &stmt, NULL);
 	if (rc != SQLITE_OK) {

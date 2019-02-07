@@ -6,14 +6,12 @@
 # Derek W. Stavis <dekestavis@gmail.com>, 2015
 # Derek W. Stavis <dekestavis@gmail.com>, 2016
 # Derek W. Stavis <dekestavis@gmail.com>, 2015-2016
-# Rafael Fontenelle <rafaelff@gnome.org>, 2017
+# Rafael Fontenelle <rafaelff@gnome.org>, 2017-2018
 # Rafael Fontenelle <rffontenelle@gmail.com>, 2015-2018
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2018-10-12 11:10+0000\n"
-"Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Portuguese (Brazil) (http://www.transifex.com/freedesktop/fwupd/language/pt_BR/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -21,10 +19,45 @@ msgstr ""
 "Language: pt_BR\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
+#. more than a minute
+#, c-format
+msgid "%.0f minute remaining"
+msgid_plural "%.0f minutes remaining"
+msgstr[0] "%.0f minuto restante"
+msgstr[1] "%.0f minutos restantes"
+
 #. TRANSLATORS: first replacement is device name
 #, c-format
 msgid "%s has firmware updates:"
 msgstr "%s tem atualizações de firmware:"
+
+#. TRANSLATORS: duration in days!
+#, c-format
+msgid "%u day"
+msgid_plural "%u days"
+msgstr[0] "%u dia"
+msgstr[1] "%u dias"
+
+#. TRANSLATORS: duration in minutes
+#, c-format
+msgid "%u hour"
+msgid_plural "%u hours"
+msgstr[0] "%u hora"
+msgstr[1] "%u horas"
+
+#. TRANSLATORS: duration in minutes
+#, c-format
+msgid "%u minute"
+msgid_plural "%u minutes"
+msgstr[0] "%u minuto"
+msgstr[1] "%u minutos"
+
+#. TRANSLATORS: duration in seconds
+#, c-format
+msgid "%u second"
+msgid_plural "%u seconds"
+msgstr[0] "%u segundo"
+msgstr[1] "%u segundos"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Added"
@@ -45,13 +78,13 @@ msgstr "Atalho para %s"
 
 #. TRANSLATORS: command line option
 msgid "Allow downgrading firmware versions"
-msgstr "Permite reverter versões de firmware"
+msgstr "Permite fazer downgrade de versões de firmware"
 
 #. TRANSLATORS: command line option
 msgid "Allow re-installing existing firmware versions"
 msgstr "Permite reinstalar versões existentes de firmware"
 
-#. TRANSLATORS: explain why we want to upload
+#. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "Uma atualização requer uma reinicialização para completar."
 
@@ -86,11 +119,11 @@ msgstr "Autenticando…"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on a removable device"
-msgstr "É requerida autenticação para voltar a versão do firmware em um dispositivo removível"
+msgstr "É requerida autenticação para fazer downgrade da versão do firmware em um dispositivo removível"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on this machine"
-msgstr "É requerida autenticação para voltar a versão do firmware nesta máquina"
+msgstr "É requerida autenticação para fazer downgrade da versão do firmware nesta máquina"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
@@ -253,14 +286,19 @@ msgstr "Feito!"
 
 #. TRANSLATORS: command description
 msgid "Downgrades the firmware on a device"
-msgstr "Retrocede a versão do firmware em um dispositivo"
+msgstr "Faz downgrade da versão do firmware em um dispositivo"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
 #. * version numbers e.g. "1.2.3"
 #, c-format
 msgid "Downgrading %s from %s to %s... "
-msgstr "Revertendo %s de %s para %s… "
+msgstr "Fazendo downgrade de %s de %s para %s… "
+
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Downgrading %s…"
+msgstr "Fazendo downgrade %s…"
 
 #. TRANSLATORS: downloading from a remote server
 msgid "Downloading…"
@@ -393,6 +431,9 @@ msgstr "Não há suporte a atualizações de firmware nessa máquina."
 msgid "Firmware updates are supported on this machine."
 msgstr "Há suporte a atualizações de firmware nesta máquina."
 
+msgid "Force the action ignoring all warnings"
+msgstr "Força a ação ignorando todos avisos"
+
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
 msgstr "Encontrado"
@@ -471,18 +512,21 @@ msgstr "Instalar firmware não assinado no dispositivo"
 msgid "Install unsigned system firmware"
 msgstr "Instalar firmware não assinado no sistema"
 
-#. show message in progressbar
-#. TRANSLATORS: %1 is a device name
-#, c-format
-msgid "Installing %s"
-msgstr "Instalando %s"
-
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
 msgstr "Instalando atualização de firmware…"
 
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Installing on %s…"
+msgstr "Instalando em %s…"
+
 msgid "Keyring"
 msgstr "Chaveiro"
+
+#. TRANSLATORS: time remaining for completing firmware flash
+msgid "Less than one minute remaining"
+msgstr "Menos que um minuto restante"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux Vendor Firmware Service (firmware estável)"
@@ -583,6 +627,12 @@ msgstr "Permissão negada"
 #, c-format
 msgid "Please enter a number from 0 to %u: "
 msgstr "Por favor, insira um número de 0 a %u: "
+
+msgid "Print the version number"
+msgstr "Imprime o número de versão"
+
+msgid "Print verbose debug statements"
+msgstr "Imprime instruções de depuração verbosas"
 
 #. TRANSLATORS: the numeric priority
 msgid "Priority"
@@ -730,6 +780,10 @@ msgstr "Compartilha histórico de firmware com os desenvolvedores"
 msgid "Show client and daemon versions"
 msgstr "Mostra as versões do cliente e do daemon"
 
+#. TRANSLATORS: this is for daemon development
+msgid "Show daemon verbose information"
+msgstr "Mostra informações verbosas de daemon"
+
 #. TRANSLATORS: turn on all debugging
 msgid "Show debugging information for all files"
 msgstr "Mostrar informações de depuração para todos os arquivos"
@@ -762,6 +816,12 @@ msgstr "Mostra o registro log de depuração da tentativa mais recente de atuali
 msgid "Show the information of firmware update status"
 msgstr "Mostra as informações do status de atualização de firmware"
 
+msgid "Specify Vendor/Product ID(s) of DFU device"
+msgstr "Especifica ID(s) de Fornecedor/Produto de dispositivo DFU"
+
+msgid "Specify the number of bytes per USB transfer"
+msgstr "Especifica o número de bytes por transferência USB"
+
 #. TRANSLATORS: device state, i.e. appIDLE
 msgid "State"
 msgstr "Estado"
@@ -783,15 +843,9 @@ msgstr "Alvo"
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
 msgstr "O LVFS é um serviço livre que opera como uma entidade legal independente e tem nenhuma conexão com $OS_RELEASE:NAME$. Seu distribuidor pode não ter verificado alguma das atualizações de firmware por compatibilidade com seu sistema ou dispositivos conectados. Todos os firmwares são fornecidos apenas pelo fabricante do equipamento original."
 
-msgid "The fwupd process is a simple daemon to allow session software to update device firmware on your local machine. It is designed for desktops, but this project is also usable on phones, tablets and on headless servers."
-msgstr "O fwupd processa é um daemon simples para permitir que software sessão atualizem firmware de dispositivo em seu computador local. É projetado para computadores de mesa, mas esse projeto também é usável em telefones, tablets e em servidores “headless” (sem monitor, teclado e mouse)."
-
 #. TRANSLATORS: we're poking around as a power user
 msgid "This program may only work correctly as root"
 msgstr "Esse programa só pode funcionar corretamente como root"
-
-msgid "This project aims to make updating firmware on Linux automatic, safe and reliable. You can either use a GUI software manager like GNOME Software to view and apply updates, the command-line tool or the D-Bus interface directly."
-msgstr "Esse projeto visa tornar a atualização de firmware no Linux automática, segura e confiável. você pode usar um gerenciador de software GUI, como o GNOME Software, para ver e aplicar atualizações, a ferramenta de linha de comando ou a interface D-Bus diretamente."
 
 msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
 msgstr "Este remoto contém firmware que não está embargado, mas ainda está sendo testado pelo fornecedor do hardware. Você deve garantir que você tenha uma maneira de fazer downgrade manual do firmware se a atualização do firmware falhar."
@@ -839,6 +893,11 @@ msgstr "Soma de verificação da atualização"
 msgid "Update Description"
 msgstr "Descrição da atualização"
 
+#. TRANSLATORS: section header for the amount
+#. * of time it takes to install the update
+msgid "Update Duration"
+msgstr "Duração da atualização"
+
 #. TRANSLATORS: section header for firmware remote http://
 msgid "Update Location"
 msgstr "Local da atualização"
@@ -858,9 +917,6 @@ msgstr "Resumo da atualização"
 #. TRANSLATORS: section header for firmware version
 msgid "Update Version"
 msgstr "Versão da atualização"
-
-msgid "Update device firmware on Linux"
-msgstr "Atualize firmware de dispositivos no Linux"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
@@ -887,6 +943,11 @@ msgstr "Atualiza todos os firmwares para a última versão disponível"
 #, c-format
 msgid "Updating %s from %s to %s... "
 msgstr "Atualizando %s de %s para %s… "
+
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Updating %s…"
+msgstr "Atualizando %s…"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Upload message:"
@@ -939,6 +1000,3 @@ msgstr "Escrevendo…"
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
 msgstr "Seu distribuidor pode não ter verificado qualquer das atualizações de firmware para compatibilidade com seu sistema ou dispositivos conectados."
-
-msgid "fwupd"
-msgstr "fwupd"

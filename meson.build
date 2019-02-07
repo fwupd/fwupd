@@ -1,7 +1,7 @@
 project('fwupd', 'c',
-  version : '1.1.4',
+  version : '1.2.4',
   license : 'LGPL-2.1+',
-  meson_version : '>=0.43.0',
+  meson_version : '>=0.47.0',
   default_options : ['warning_level=2', 'c_std=c99'],
 )
 
@@ -111,17 +111,12 @@ add_project_arguments(cc.get_supported_arguments(warning_flags), language : 'c')
 global_link_args = []
 test_link_args = [
   '-Wl,-z,relro',
+  '-Wl,-z,defs',
   '-Wl,-z,now',
 ]
 foreach arg: test_link_args
-  if meson.version().version_compare('>=0.46.0')
-    if cc.has_link_argument(arg)
-      global_link_args += arg
-    endif
-  else
-    if cc.has_argument(arg)
-      global_link_args += arg
-    endif
+  if cc.has_link_argument(arg)
+    global_link_args += arg
   endif
 endforeach
 add_global_link_arguments(
@@ -160,7 +155,7 @@ gudev = dependency('gudev-1.0')
 if gudev.version().version_compare('>= 232')
   conf.set('HAVE_GUDEV_232', '1')
 endif
-appstream_glib = dependency('appstream-glib', version : '>= 0.7.4')
+libxmlb = dependency('xmlb', version : '>= 0.1.5', fallback : ['libxmlb', 'libxmlb_dep'])
 gusb = dependency('gusb', version : '>= 0.2.9')
 sqlite = dependency('sqlite3')
 libarchive = dependency('libarchive')
@@ -198,6 +193,7 @@ if libgcab.version().version_compare('>= 1.0')
 endif
 gcab = find_program('gcab', required : true)
 bashcomp = dependency('bash-completion', required: false)
+python3 = find_program('python3')
 
 if valgrind.found()
   conf.set('HAVE_VALGRIND', '1')
@@ -242,8 +238,6 @@ if get_option('plugin_uefi')
           gnu_efi_arch = ''
   endif
   conf.set_quoted('EFI_MACHINE_TYPE_NAME', EFI_MACHINE_TYPE_NAME)
-
-  python3 = find_program('python3')
   r = run_command([python3, 'po/test-deps'])
   if r.returncode() != 0
     error(r.stdout())
@@ -310,14 +304,8 @@ configure_file(
   configuration : conf
 )
 
-default_sysconfdir = get_option('sysconfdir')
-if default_sysconfdir == 'etc'
-  message('sysconfdir of etc makes no sense, using /etc')
-  default_sysconfdir = '/etc'
-endif
-
 plugin_deps = []
-plugin_deps += appstream_glib
+plugin_deps += libxmlb
 plugin_deps += gio
 plugin_deps += giounix
 plugin_deps += gmodule

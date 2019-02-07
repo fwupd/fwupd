@@ -9,8 +9,6 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2018-10-12 11:10+0000\n"
-"Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Korean (http://www.transifex.com/freedesktop/fwupd/language/ko/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -48,7 +46,7 @@ msgstr "펌웨어 다운그레이드를 허용합니다"
 msgid "Allow re-installing existing firmware versions"
 msgstr "기존 펌웨어 버전 재설치를 허용합니다"
 
-#. TRANSLATORS: explain why we want to upload
+#. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "업데이트를 완료하려면 다시 시작해야 합니다."
 
@@ -769,15 +767,9 @@ msgstr "대상"
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
 msgstr "LVFS는 $OS_RELEASE:NAME$와(과) 별개로 운영되는 독립된 법적 단체에서 운영하는 무료 서비스입니다. 배포판 개발사에서 펌웨어 업데이트와 시스템 및 연결된 장치간의 호환성을 검증한다는 보장이 없습니다. 모든 펌웨어는 원 장치 제조사(OEM)에서 직접 제공합니다."
 
-msgid "The fwupd process is a simple daemon to allow session software to update device firmware on your local machine. It is designed for desktops, but this project is also usable on phones, tablets and on headless servers."
-msgstr "fwupd 프로세스는 로컬 머신의 장치 펌웨어를 세션 프로그램에서 업데이트할 수 있게 하는 간단한 데몬입니다. 데스크톱용으로 설계했지만, 전화기, 태블릿, 헤드리스 서버에서도 사용할 수 있습니다."
-
 #. TRANSLATORS: we're poking around as a power user
 msgid "This program may only work correctly as root"
 msgstr "이 프로그램은 루트 권한으로만 올바르게 작동할 수도 있습니다"
-
-msgid "This project aims to make updating firmware on Linux automatic, safe and reliable. You can either use a GUI software manager like GNOME Software to view and apply updates, the command-line tool or the D-Bus interface directly."
-msgstr "이 프로젝트에서는 리눅스에서 자동으로 안전하고 믿을 수 있게 펌웨어를 업데이트할 수 있게 하려고 합니다. 그놈 소프트웨어와 같은 GUI 도구로 업데이트를 보고 적용하거나, 명령행 도구 및 D-Bus 인터페이스를 직접 사용할 수 있습니다."
 
 msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
 msgstr "이 원격 저장소에서는 하드웨어 제조사에서 검증 단계를 진행 중인 펌웨어를 배포합니다. 펌웨어 업데이트 도중 및 이후 문제가 발생했을 때 수동으로 펌웨어를 다운그레이드할 방법을 찾아 두는 것을 추천합니다."
@@ -844,9 +836,6 @@ msgstr "업데이트 요약"
 #. TRANSLATORS: section header for firmware version
 msgid "Update Version"
 msgstr "업데이트 버전"
-
-msgid "Update device firmware on Linux"
-msgstr "리눅스에서 장치 펌웨어를 업데이트합니다"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
@@ -925,6 +914,3 @@ msgstr "쓰는 중…"
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
 msgstr "배포판 개발사에서 펌웨어 업데이트와 시스템 및 연결된 장치간의 호환성을 검증한다는 보장이 없습니다."
-
-msgid "fwupd"
-msgstr "fwupd"

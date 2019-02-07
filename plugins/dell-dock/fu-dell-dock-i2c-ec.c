@@ -15,9 +15,9 @@
 
 #include "config.h"
 
-#include <appstream-glib.h>
 #include <string.h>
 
+#include "fu-common-version.h"
 #include "fu-usb-device.h"
 #include "fwupd-error.h"
 
@@ -32,14 +32,25 @@
 #define EC_CMD_MODIFY_LOCK		0x0a
 #define EC_CMD_RESET			0x0b
 #define EC_CMD_REBOOT			0x0c
+#define EC_CMD_PASSIVE			0x0d
 #define EC_GET_FW_UPDATE_STATUS		0x0f
 
 #define EXPECTED_DOCK_INFO_SIZE		0xb7
 #define EXPECTED_DOCK_TYPE		0x04
 
+#define TBT_MODE_MASK			0x01
+
+#define BIT_SET(x,y)			(x |= (1<<y))
+#define BIT_CLEAR(x,y)			(x &= (~(1<<y)))
+
+#define PASSIVE_RESET_MASK		0x01
+#define PASSIVE_REBOOT_MASK		0x02
+#define PASSIVE_TBT_MASK		0x04
+
 typedef enum {
 	FW_UPDATE_IN_PROGRESS,
 	FW_UPDATE_COMPLETE,
+	FW_UPDATE_AUTHENTICATION_FAILED,
 } FuDellDockECFWUpdateStatus;
 
 const FuHIDI2CParameters ec_base_settings = {
@@ -129,7 +140,13 @@ struct _FuDellDockEc {
 	guint8				 board_min;
 	gchar				*ec_minimum_version;
 	guint64				 blob_version_offset;
+	guint8				 passive_flow;
+	guint32				 dock_unlock_status;
 };
+
+static gboolean	fu_dell_dock_get_ec_status	(FuDevice *device,
+						 FuDellDockECFWUpdateStatus *status_out,
+						 GError **error);
 
 G_DEFINE_TYPE (FuDellDockEc, fu_dell_dock_ec, FU_TYPE_DEVICE)
 
@@ -164,11 +181,29 @@ fu_dell_dock_ec_get_symbiote (FuDevice *device)
 }
 
 gboolean
-fu_dell_dock_ec_has_tbt (FuDevice *device)
+fu_dell_dock_ec_needs_tbt (FuDevice *device)
+{
+	FuDellDockEc *self = FU_DELL_DOCK_EC (device);
+	gboolean port0_tbt_mode = self->data->port0_dock_status & TBT_MODE_MASK;
+
+	/* check for TBT module type */
+	if (self->data->module_type != MODULE_TYPE_TBT)
+		return FALSE;
+	g_debug ("found thunderbolt dock, port mode: %d", port0_tbt_mode);
+
+	return !port0_tbt_mode;
+}
+
+gboolean
+fu_dell_dock_ec_tbt_passive (FuDevice *device)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC (device);
 
-	return self->data->module_type == MODULE_TYPE_TBT;
+	if (self->passive_flow > 0) {
+		self->passive_flow |= PASSIVE_TBT_MASK;
+		return TRUE;
+	}
+	return FALSE;
 }
 
 static const gchar*
@@ -332,7 +367,7 @@ fu_dell_dock_ec_get_dock_info (FuDevice *device,
 			    device_entry[i].version.version_8[2],
 			    device_entry[i].version.version_8[3]);
 			g_debug ("\tParsed version %s", self->ec_version);
-			fu_device_set_version (self, self->ec_version);
+			fu_device_set_version (FU_DEVICE (self), self->ec_version);
 
 		} else if (map->device_type == FU_DELL_DOCK_DEVICETYPE_MST) {
 			self->raw_versions->mst_version = device_entry[i].version.version_32;
@@ -347,7 +382,8 @@ fu_dell_dock_ec_get_dock_info (FuDevice *device,
 			    device_entry[i].version.version_8[2],
 			    device_entry[i].version.version_8[3]);
 			g_debug ("\tParsed version %s", self->mst_version);
-		} else if (map->device_type == FU_DELL_DOCK_DEVICETYPE_TBT && fu_dell_dock_ec_has_tbt (device)) {
+		} else if (map->device_type == FU_DELL_DOCK_DEVICETYPE_TBT &&
+			   self->data->module_type == MODULE_TYPE_TBT) {
 			/* guard against invalid Thunderbolt version read from EC */
 			if (!fu_dell_dock_test_valid_byte (device_entry[i].version.version_8, 2)) {
 				g_warning ("[EC bug] EC read invalid Thunderbolt version %08x",
@@ -368,14 +404,41 @@ fu_dell_dock_ec_get_dock_info (FuDevice *device,
 		}
 	}
 
+	/* Thunderbolt SKU takes a little longer */
+	if (self->data->module_type == MODULE_TYPE_TBT) {
+		guint64 tmp = fu_device_get_install_duration (device);
+		fu_device_set_install_duration (device, tmp + 20);
+	}
+
 	/* minimum EC version this code will support */
-	if (as_utils_vercmp (self->ec_version, self->ec_minimum_version) < 0) {
+	if (fu_common_vercmp (self->ec_version, self->ec_minimum_version) < 0) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
 			     "dock containing EC version %s is not supported",
 			     self->ec_version);
 		return FALSE;
 	}
 
+	/* TODO: Drop if setting minimum board to 5+ and minimum EC to 19+
+	 * If running on board 4 or later, already EC19+, then
+	 * don't allow downgrades to anything < EC19
+	 */
+	if (self->data->board_id >= 4 &&
+	    fu_common_vercmp (self->ec_version, "00.00.00.19") >= 0) {
+		g_debug ("Prohibiting downgrades below EC 00.00.00.19");
+		g_free (self->ec_minimum_version);
+		self->ec_minimum_version = g_strdup ("00.00.00.19");
+	}
+	fu_device_set_version_lowest (device, self->ec_minimum_version);
+
+
+	/* TODO: Drop if minimum EC is set to 23+
+	 * Determine if the passive flow should be used when flashing
+	 */
+	if (fu_common_vercmp (self->ec_version, "00.00.00.23") >= 0) {
+		g_debug ("using passive flow");
+		self->passive_flow = PASSIVE_REBOOT_MASK;
+		fu_device_set_custom_flags (device, "skip-restart");
+	}
 	return TRUE;
 }
 
@@ -390,6 +453,7 @@ fu_dell_dock_ec_get_dock_data (FuDevice *device,
 	const guint8 *result;
 	gsize length = sizeof(FuDellDockDockDataStructure);
 	g_autofree gchar *bundled_serial = NULL;
+	FuDellDockECFWUpdateStatus status;
 
 	g_return_val_if_fail (device != NULL, FALSE);
 
@@ -433,11 +497,20 @@ fu_dell_dock_ec_get_dock_data (FuDevice *device,
 	/* copy this for being able to send in next commit transaction */
 	self->raw_versions->pkg_version = self->data->dock_firmware_pkg_ver;
 
+	/* read if passive update pending */
+	if (!fu_dell_dock_get_ec_status (device, &status, error))
+		return FALSE;
+
 	/* make sure this hardware spin matches our expecations */
 	if (self->data->board_id >= self->board_min) {
-		fu_dell_dock_ec_set_board (device);
-		fu_device_set_version (device, self->ec_version);
-		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+		if (status != FW_UPDATE_IN_PROGRESS) {
+			fu_dell_dock_ec_set_board (device);
+			fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+		} else {
+			fu_device_set_update_error (device, "An update is pending "
+							    "next time the dock is "
+							    "unplugged");
+		}
 	} else {
 		g_warning ("This utility does not support this board, disabling updates for %s",
 			   fu_device_get_name (device));
@@ -486,6 +559,7 @@ fu_dell_dock_ec_modify_lock (FuDevice *device,
 			     gboolean unlocked,
 			     GError **error)
 {
+	FuDellDockEc *self = FU_DELL_DOCK_EC (device);
 	guint32 cmd;
 
 	g_return_val_if_fail (device != NULL, FALSE);
@@ -506,6 +580,12 @@ fu_dell_dock_ec_modify_lock (FuDevice *device,
 		 fu_device_get_name (device),
 		 fu_device_get_id (device));
 
+	if (unlocked)
+		BIT_SET (self->dock_unlock_status, target);
+	else
+		BIT_CLEAR (self->dock_unlock_status, target);
+	g_debug ("current overall unlock status: 0x%08x", self->dock_unlock_status);
+
 	return TRUE;
 }
 
@@ -523,22 +603,24 @@ gboolean
 fu_dell_dock_ec_reboot_dock (FuDevice *device, GError **error)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC (device);
-	guint16 cmd = EC_CMD_REBOOT;
 
 	g_return_val_if_fail (device != NULL, FALSE);
 
-	if (fu_device_has_custom_flag (device, "skip-restart")) {
-		g_debug ("Skipping reboot per quirk request");
-		return TRUE;
+	if (self->passive_flow > 0) {
+		guint32 cmd = EC_CMD_PASSIVE |  /* cmd */
+			      1 << 8 |          /* length of data arguments */
+			      self->passive_flow << 16;
+		g_debug ("activating passive flow (%x) for %s",
+			 self->passive_flow,
+			 fu_device_get_name (device));
+		return fu_dell_dock_ec_write (device, 3, (guint8 *) &cmd, error);
+	} else {
+		guint16 cmd = EC_CMD_REBOOT;
+		g_debug ("rebooting %s", fu_device_get_name (device));
+		return fu_dell_dock_ec_write (device, 2, (guint8 *) &cmd, error);
 	}
 
-	/* TODO: Drop when bumping minimum EC version to 13+ */
-	if (as_utils_vercmp (self->ec_version, "00.00.00.13") < 0)
-		g_print ("\nEC Reboot API may fail on EC %s.  Please manually power cycle dock.\n",
-			   self->ec_version);
-	g_debug ("Rebooting %s", fu_device_get_name (device));
-
-	return fu_dell_dock_ec_write (device, 2, (guint8 *) &cmd, error);
+	return TRUE;
 }
 
 static gboolean
@@ -586,6 +668,16 @@ guint32
 fu_dell_dock_ec_get_status_version (FuDevice *device)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC (device);
+
+	/* TODO: drop if setting minimum board to 5+
+	 * this board was manufactured with 89.16.01.00 and won't upgrade
+	 */
+	if (self->data->board_id == 4 &&
+	    self->raw_versions->pkg_version == 71305) {
+		g_printerr ("Dock manufactured w/ invalid package %u\n",
+			    self->raw_versions->pkg_version);
+		self->raw_versions->pkg_version = 0;
+	}
 	return self->raw_versions->pkg_version;
 }
 
@@ -616,13 +708,6 @@ fu_dell_dock_ec_commit_package (FuDevice *device, GBytes *blob_fw,
 	g_debug ("\thub2_version: %x", self->raw_versions->hub2_version);
 	g_debug ("\ttbt_version: %x", self->raw_versions->tbt_version);
 	g_debug ("\tpkg_version: %x", self->raw_versions->pkg_version);
-
-	/* TODO: Drop when updating minimum EC to 11+ */
-	if (as_utils_vercmp (self->ec_version, "00.00.00.11") < 0) {
-		g_debug ("EC %s doesn't support package version, ignoring",
-			 self->ec_version);
-		return TRUE;
-	}
 
 	payload [0] = EC_CMD_SET_DOCK_PKG;
 	payload [1] = length;
@@ -687,6 +772,13 @@ fu_dell_dock_ec_write_fw (FuDevice *device, GBytes *blob_fw,
 	if (!fu_dell_dock_hid_raise_mcu_clock (self->symbiote, FALSE, error))
 		return FALSE;
 
+	/* dock will reboot to re-read; this is to appease the daemon */
+	fu_device_set_version (device, dynamic_version);
+
+	/* activate passive behavior */
+	if (self->passive_flow)
+		self->passive_flow |= PASSIVE_RESET_MASK;
+
 	if (fu_device_has_custom_flag (device, "skip-restart")) {
 		g_debug ("Skipping EC reset per quirk request");
 		return TRUE;
@@ -723,10 +815,14 @@ fu_dell_dock_ec_write_fw (FuDevice *device, GBytes *blob_fw,
 				 error_local->message, status);
 			return TRUE;
 		}
+		if (status == FW_UPDATE_AUTHENTICATION_FAILED) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
+					     "invalid EC firmware image");
+			return FALSE;
+		}
 	}
-
-	/* dock will reboot to re-read; this is to appease the daemon */
-	fu_device_set_version (device, dynamic_version);
 
 	return TRUE;
 }

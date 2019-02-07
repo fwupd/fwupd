@@ -32,7 +32,9 @@ struct FuPluginData {
 void
 fu_plugin_init (FuPlugin *plugin)
 {
+	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 	fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_SUPPORTS_PROTOCOL, "org.flashrom");
 }
 
 void
@@ -66,6 +68,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 			g_autofree gchar *device_id = g_strdup_printf ("flashrom-%s", quirk_str);
 			g_autoptr(FuDevice) dev = fu_device_new ();
 			fu_device_set_id (dev, device_id);
+			fu_device_set_quirks (dev, fu_plugin_get_quirks (plugin));
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
 			if (data->flashrom_fn != NULL) {
 				fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);

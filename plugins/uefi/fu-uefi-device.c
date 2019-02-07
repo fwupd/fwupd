@@ -16,6 +16,7 @@
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
 #include "fu-uefi-bootmgr.h"
+#include "fu-uefi-pcrs.h"
 #include "fu-uefi-vars.h"
 
 struct _FuUefiDevice {
@@ -28,6 +29,7 @@ struct _FuUefiDevice {
 	FuUefiDeviceStatus	 last_attempt_status;
 	guint32			 last_attempt_version;
 	guint64			 fmp_hardware_instance;
+	gboolean		 missing_header;
 };
 
 G_DEFINE_TYPE (FuUefiDevice, fu_uefi_device, FU_TYPE_DEVICE)
@@ -289,16 +291,75 @@ fu_uefi_device_build_dp_buf (const gchar *path, gsize *bufsz, GError **error)
 	return g_steal_pointer (&dp_buf);
 }
 
+static GBytes *
+fu_uefi_device_fixup_firmware (FuDevice *device, GBytes *fw, GError **error)
+{
+	FuUefiDevice *self = FU_UEFI_DEVICE (device);
+	gsize fw_length;
+	efi_guid_t esrt_guid;
+	efi_guid_t payload_guid;
+	const gchar *data = g_bytes_get_data (fw, &fw_length);
+	self->missing_header = FALSE;
+
+	/* convert to EFI GUIDs */
+	if (efi_str_to_guid (fu_uefi_device_get_guid (self), &esrt_guid) < 0) {
+		g_set_error_literal (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
+				     "Invalid ESRT GUID");
+		return NULL;
+	}
+	if (fw_length < sizeof(efi_guid_t)) {
+		g_set_error_literal (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE,
+				     "Invalid payload");
+		return NULL;
+	}
+	memcpy (&payload_guid, data, sizeof(efi_guid_t));
+
+	/* ESRT header matches payload */
+	if (efi_guid_cmp (&esrt_guid, &payload_guid) == 0) {
+		g_debug ("ESRT matches payload GUID");
+		return g_bytes_new_from_bytes (fw, 0, fw_length);
+	/* FMP payload */
+	} else if (fu_uefi_device_get_kind (self) == FU_UEFI_DEVICE_KIND_FMP) {
+		g_debug ("performing FMP update");
+		return g_bytes_new_from_bytes (fw, 0, fw_length);
+	/* Missing, add a header */
+	} else {
+		guint header_size = getpagesize();
+		guint8 *new_data = g_malloc (fw_length + header_size);
+		guint8 *capsule = new_data + header_size;
+		efi_capsule_header_t *header = (efi_capsule_header_t *) new_data;
+
+		g_warning ("missing or invalid embedded capsule header");
+		self->missing_header = TRUE;
+		header->flags = self->capsule_flags;
+		header->header_size = header_size;
+		header->capsule_image_size = fw_length + header_size;
+		memcpy (&header->guid, &esrt_guid, sizeof (efi_guid_t));
+		memcpy (capsule, data, fw_length);
+
+		return g_bytes_new_take (new_data, fw_length + header_size);
+	}
+}
+
+gboolean
+fu_uefi_missing_capsule_header (FuDevice *device)
+{
+	FuUefiDevice *self = FU_UEFI_DEVICE (device);
+	return self->missing_header;
+}
+
 static gboolean
 fu_uefi_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE (device);
 	FuUefiBootmgrFlags flags = FU_UEFI_BOOTMGR_FLAG_NONE;
+	const gchar *bootmgr_desc = "Linux Firmware Updater";
 	const gchar *esp_path = fu_device_get_metadata (device, "EspPath");
 	efi_guid_t guid;
 	efi_update_info_t info;
 	gsize datasz = 0;
 	gsize dp_bufsz = 0;
+	g_autoptr(GBytes) fixed_fw = NULL;
 	g_autofree gchar *basename = NULL;
 	g_autofree gchar *directory = NULL;
 	g_autofree gchar *fn = NULL;
@@ -320,7 +381,10 @@ fu_uefi_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 	fn = g_build_filename (directory, "fw", basename, NULL);
 	if (!fu_common_mkdir_parent (fn, error))
 		return FALSE;
-	if (!fu_common_set_contents_bytes (fn, fw, error))
+	fixed_fw = fu_uefi_device_fixup_firmware (device, fw, error);
+	if (fixed_fw == NULL)
+		return FALSE;
+	if (!fu_common_set_contents_bytes (fn, fixed_fw, error))
 		return FALSE;
 
 	/* set the blob header shared with fwupd.efi */
@@ -360,10 +424,113 @@ fu_uefi_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 	/* update the firmware before the bootloader runs */
 	if (fu_device_get_metadata_boolean (device, "RequireShimForSecureBoot"))
 		flags |= FU_UEFI_BOOTMGR_FLAG_USE_SHIM_FOR_SB;
-	if (!fu_uefi_bootmgr_bootnext (esp_path, flags, error))
+
+	/* some legacy devices use the old name to deduplicate boot entries */
+	if (fu_device_has_custom_flag (device, "use-legacy-bootmgr-desc"))
+		bootmgr_desc = "Linux-Firmware-Updater";
+	if (!fu_uefi_bootmgr_bootnext (esp_path, bootmgr_desc, flags, error))
 		return FALSE;
 
 	/* success! */
+	return TRUE;
+}
+
+static gboolean
+fu_uefi_device_add_system_checksum (FuDevice *device, GError **error)
+{
+	g_autoptr(FuUefiPcrs) pcrs = fu_uefi_pcrs_new ();
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GPtrArray) pcr0s = NULL;
+
+	/* get all the PCRs */
+	if (!fu_uefi_pcrs_setup (pcrs, &error_local)) {
+		if (g_error_matches (error_local,
+				     G_IO_ERROR,
+				     G_IO_ERROR_NOT_SUPPORTED)) {
+			g_debug ("%s", error_local->message);
+			return TRUE;
+		}
+		g_propagate_error (error, g_steal_pointer (&error_local));
+		return FALSE;
+	}
+
+	/* get all the PCR0s */
+	pcr0s = fu_uefi_pcrs_get_checksums (pcrs, 0);
+	if (pcr0s->len == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "no PCR0s detected");
+		return FALSE;
+	}
+	for (guint i = 0; i < pcr0s->len; i++) {
+		const gchar *checksum = g_ptr_array_index (pcr0s, i);
+		fu_device_add_checksum (device, checksum);
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_uefi_device_probe (FuDevice *device, GError **error)
+{
+	FuUefiDevice *self = FU_UEFI_DEVICE (device);
+	FuVersionFormat version_format;
+	g_autofree gchar *guid_devid = NULL;
+	g_autofree gchar *guid_strup = NULL;
+	g_autofree gchar *version_lowest = NULL;
+	g_autofree gchar *version = NULL;
+
+	/* broken sysfs? */
+	if (self->fw_class == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "failed to read fw_class");
+		return FALSE;
+	}
+
+	/* add GUID first, as quirks may set the version format */
+	fu_device_add_guid (device, self->fw_class);
+
+	/* set versions */
+	version_format = fu_device_get_version_format (device);
+	version = fu_common_version_from_uint32 (self->fw_version, version_format);
+	fu_device_set_version (device, version);
+	if (self->fw_version_lowest != 0) {
+		version_lowest = fu_common_version_from_uint32 (self->fw_version_lowest,
+							        version_format);
+		fu_device_set_version_lowest (device, version_lowest);
+	}
+
+	/* set flags */
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_REQUIRE_AC);
+
+	/* add icons */
+	if (self->kind == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE) {
+		/* nothing better in the icon naming spec */
+		fu_device_add_icon (device, "audio-card");
+	} else {
+		/* this is probably system firmware */
+		fu_device_add_icon (device, "computer");
+		fu_device_add_guid (device, "main-system-firmware");
+	}
+
+	/* set the PCR0 as the device checksum */
+	if (self->kind == FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE) {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_uefi_device_add_system_checksum (device, &error_local))
+			g_warning ("Failed to get PCR0s: %s", error_local->message);
+	}
+
+	/* Windows seems to be case insensitive, but for convenience we'll
+	 * match the upper case values typically specified in the .inf file */
+	guid_strup = g_ascii_strup (self->fw_class, -1);
+	guid_devid = g_strdup_printf ("UEFI\\RES_{%s}", guid_strup);
+	fu_device_add_guid (device, guid_devid);
 	return TRUE;
 }
 
@@ -389,30 +556,14 @@ fu_uefi_device_class_init (FuUefiDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	object_class->finalize = fu_uefi_device_finalize;
 	klass_device->to_string = fu_uefi_device_to_string;
+	klass_device->probe = fu_uefi_device_probe;
 	klass_device->write_firmware = fu_uefi_device_write_firmware;
 }
 
-static void
-fu_uefi_device_add_win10_guid (FuUefiDevice *self)
-{
-	g_autofree gchar *guid_devid = NULL;
-	g_autofree gchar *guid_strup = NULL;
-
-	/* broken sysfs? */
-	if (self->fw_class == NULL)
-		return;
-
-	/* windows seems to be case insensitive, but for convenience we'll
-	 * match the upper case values typically specified in the .inf file */
-	guid_strup = g_ascii_strup (self->fw_class, -1);
-	guid_devid = g_strdup_printf ("UEFI\\RES_{%s}", guid_strup);
-	fu_device_add_guid (FU_DEVICE (self), guid_devid);
-}
-
 FuUefiDevice *
-fu_uefi_device_new_from_entry (const gchar *entry_path)
+fu_uefi_device_new_from_entry (const gchar *entry_path, GError **error)
 {
-	FuUefiDevice *self;
+	g_autoptr(FuUefiDevice) self = NULL;
 	g_autofree gchar *fw_class_fn = NULL;
 	g_autofree gchar *id = NULL;
 
@@ -423,10 +574,8 @@ fu_uefi_device_new_from_entry (const gchar *entry_path)
 
 	/* read values from sysfs */
 	fw_class_fn = g_build_filename (entry_path, "fw_class", NULL);
-	if (g_file_get_contents (fw_class_fn, &self->fw_class, NULL, NULL)) {
+	if (g_file_get_contents (fw_class_fn, &self->fw_class, NULL, NULL))
 		g_strdelimit (self->fw_class, "\n", '\0');
-		fu_device_add_guid (FU_DEVICE (self), self->fw_class);
-	}
 	self->capsule_flags = fu_uefi_read_file_as_uint64 (entry_path, "capsule_flags");
 	self->kind = fu_uefi_read_file_as_uint64 (entry_path, "fw_type");
 	self->fw_version = fu_uefi_read_file_as_uint64 (entry_path, "fw_version");
@@ -444,10 +593,16 @@ fu_uefi_device_new_from_entry (const gchar *entry_path)
 			      self->fw_class, self->fmp_hardware_instance);
 	fu_device_set_id (FU_DEVICE (self), id);
 
-	/* this is the DeviceID used in Windows 10 */
-	fu_uefi_device_add_win10_guid (self);
+	/* this is invalid */
+	if (!fu_common_guid_is_valid (self->fw_class)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "ESRT GUID '%s' was not valid", self->fw_class);
+		return NULL;
+	}
 
-	return self;
+	return g_steal_pointer (&self);
 }
 
 FuUefiDevice *
@@ -467,9 +622,6 @@ fu_uefi_device_new_from_dev (FuDevice *dev)
 	self->capsule_flags = 0; /* FIXME? */
 	self->fw_version = 0; /* FIXME? */
 	g_assert (self->fw_class != NULL);
-
-	/* this is the DeviceID used in Windows 10 */
-	fu_uefi_device_add_win10_guid (self);
 	return self;
 }
 

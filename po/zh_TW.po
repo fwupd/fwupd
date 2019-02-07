@@ -8,8 +8,6 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2018-10-12 11:10+0000\n"
-"Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Chinese (Taiwan) (http://www.transifex.com/freedesktop/fwupd/language/zh_TW/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -53,7 +51,7 @@ msgstr "允許降級韌體版本"
 msgid "Allow re-installing existing firmware versions"
 msgstr "允許重新安裝既有的韌體版本"
 
-#. TRANSLATORS: explain why we want to upload
+#. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "有更新必須重新開機才能完成。"
 
@@ -472,12 +470,6 @@ msgstr "安裝未簽署的裝置韌體"
 msgid "Install unsigned system firmware"
 msgstr "安裝未簽署的系統韌體"
 
-#. show message in progressbar
-#. TRANSLATORS: %1 is a device name
-#, c-format
-msgid "Installing %s"
-msgstr "正安裝 %s"
-
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
 msgstr "安裝韌體更新中…"
@@ -793,19 +785,9 @@ msgstr "目標"
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
 msgstr "LVFS（Linux 廠商韌體服務，Linux Vendor Firmware Service）是由獨立法人運作的免費服務，而與 $OS_RELEASE:NAME$ 沒有關聯。您的系統散布商可能尚未驗證過任何韌體更新與您系統間或連接裝置上的相容性。所有本服務中的韌體僅由原始設備製造商提供。"
 
-msgid "The fwupd process is a simple daemon to allow session software to update device firmware on your local machine. It is designed for desktops, but this project is also usable on phones, tablets and on headless servers."
-msgstr "fwupd 程序是個簡易幕後程式，允許工作階段軟體更新您本地端機器上的裝置韌體。它主要設計給桌面電腦使用，但本專案也能用於手機、平板，或是指令列介面伺服器。"
-
-#. TRANSLATORS: exactly one update needs this
-msgid "The update requires a reboot to complete."
-msgstr "更新必須重新開機才能完成。"
-
 #. TRANSLATORS: we're poking around as a power user
 msgid "This program may only work correctly as root"
 msgstr "此程式僅有 root 身份才能正常運作"
-
-msgid "This project aims to make updating firmware on Linux automatic, safe and reliable. You can either use a GUI software manager like GNOME Software to view and apply updates, the command-line tool or the D-Bus interface directly."
-msgstr "本專案宗旨在於讓 Linux 上的韌體更新能自動、安全、可靠。您可以使用圖形介面的軟體管理員，如《GNOME 軟體》來檢視並套用更新，或用指令列工具，或甚至直接用 D-Bus 介面。"
 
 msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
 msgstr "這個遠端站點包含未列入禁運，但仍處於硬體廠商測試階段的韌體。您應該確保自己在韌體更新失敗時有方法能夠手動降級韌體。"
@@ -872,9 +854,6 @@ msgstr "更新摘要"
 #. TRANSLATORS: section header for firmware version
 msgid "Update Version"
 msgstr "更新版本"
-
-msgid "Update device firmware on Linux"
-msgstr "在 Linux 上更新裝置韌體"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
@@ -953,6 +932,3 @@ msgstr "寫入中…"
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
 msgstr "您的系統散布商可能尚未驗證過任何韌體更新與您系統間或連接裝置上的相容性。"
-
-msgid "fwupd"
-msgstr "fwupd"

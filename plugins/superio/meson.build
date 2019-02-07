@@ -5,9 +5,11 @@ install_data(['superio.quirk'],
 )
 
 shared_module('fu_plugin_superio',
+  fu_hash,
   sources : [
     'fu-plugin-superio.c',
     'fu-superio-device.c',
+    'fu-superio-common.c',
   ],
   include_directories : [
     include_directories('../..'),
@@ -16,6 +18,9 @@ shared_module('fu_plugin_superio',
   ],
   install : true,
   install_dir: plugin_dir,
+  link_with : [
+    libfwupdprivate,
+  ],
   c_args : cargs,
   dependencies : [
     plugin_deps,

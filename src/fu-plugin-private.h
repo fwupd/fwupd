@@ -20,8 +20,6 @@ void		 fu_plugin_set_usb_context		(FuPlugin	*self,
 							 GUsbContext	*usb_ctx);
 void		 fu_plugin_set_hwids			(FuPlugin	*self,
 							 FuHwids	*hwids);
-void		 fu_plugin_set_supported		(FuPlugin	*self,
-							 GPtrArray	*supported_guids);
 void		 fu_plugin_set_udev_subsystems		(FuPlugin	*self,
 							 GPtrArray	*udev_subsystems);
 void		 fu_plugin_set_quirks			(FuPlugin	*self,
@@ -40,6 +38,7 @@ void		 fu_plugin_set_priority			(FuPlugin	*self,
 							 guint		 priority);
 void		 fu_plugin_set_name			(FuPlugin	*self,
 							 const gchar 	*name);
+const gchar	*fu_plugin_get_build_hash		(FuPlugin	*self);
 GPtrArray	*fu_plugin_get_rules			(FuPlugin	*self,
 							 FuPluginRule	 rule);
 gboolean	 fu_plugin_has_rule			(FuPlugin	*self,

@@ -8,10 +8,11 @@
 
 #include "config.h"
 
-#include <appstream-glib.h>
+#include <xmlb.h>
 #include <fwupd.h>
 #include <gio/gunixfdlist.h>
 #include <glib/gi18n.h>
+#include <glib-unix.h>
 #include <locale.h>
 #include <polkit/polkit.h>
 #include <stdlib.h>
@@ -43,7 +44,22 @@ typedef struct {
 	PolkitAuthority		*authority;
 	guint			 owner_id;
 	FuEngine		*engine;
+	gboolean		 update_in_progress;
+	gboolean		 pending_sigterm;
 } FuMainPrivate;
+
+static gboolean
+fu_main_sigterm_cb (gpointer user_data)
+{
+	FuMainPrivate *priv = (FuMainPrivate *) user_data;
+	if (!priv->update_in_progress) {
+		g_main_loop_quit (priv->loop);
+		return G_SOURCE_REMOVE;
+	}
+	g_warning ("Received SIGTERM during a firmware update, ignoring");
+	priv->pending_sigterm = TRUE;
+	return G_SOURCE_CONTINUE;
+}
 
 static void
 fu_main_engine_changed_cb (FuEngine *engine, FuMainPrivate *priv)
@@ -166,6 +182,10 @@ fu_main_engine_status_changed_cb (FuEngine *engine,
 				  FuMainPrivate *priv)
 {
 	fu_main_set_status (priv, status);
+
+	/* engine has gone idle */
+	if (status == FWUPD_STATUS_SHUTDOWN)
+		g_main_loop_quit (priv->loop);
 }
 
 static void
@@ -282,6 +302,7 @@ typedef struct {
 	gchar			*remote_id;
 	gchar			*key;
 	gchar			*value;
+	XbSilo			*silo;
 } FuMainAuthHelper;
 
 static void
@@ -291,6 +312,8 @@ fu_main_auth_helper_free (FuMainAuthHelper *helper)
 		g_bytes_unref (helper->blob_cab);
 	if (helper->subject != NULL)
 		g_object_unref (helper->subject);
+	if (helper->silo != NULL)
+		g_object_unref (helper->silo);
 	if (helper->install_tasks != NULL)
 		g_ptr_array_unref (helper->install_tasks);
 	if (helper->action_ids != NULL)
@@ -447,6 +470,7 @@ fu_main_authorize_install_queue (FuMainAuthHelper *helper_ref)
 	FuMainPrivate *priv = helper_ref->priv;
 	g_autoptr(FuMainAuthHelper) helper = helper_ref;
 	g_autoptr(GError) error = NULL;
+	gboolean ret;
 
 	/* still more things to to authenticate */
 	if (helper->action_ids->len > 0) {
@@ -463,11 +487,16 @@ fu_main_authorize_install_queue (FuMainAuthHelper *helper_ref)
 	}
 
 	/* all authenticated, so install all the things */
-	if (!fu_engine_install_tasks (helper->priv->engine,
-				      helper->install_tasks,
-				      helper->blob_cab,
-				      helper->flags,
-				      &error)) {
+	priv->update_in_progress = TRUE;
+	ret = fu_engine_install_tasks (helper->priv->engine,
+				       helper->install_tasks,
+				       helper->blob_cab,
+				       helper->flags,
+				       &error);
+	priv->update_in_progress = FALSE;
+	if (priv->pending_sigterm)
+		g_main_loop_quit (priv->loop);
+	if (!ret) {
 		g_dbus_method_invocation_return_gerror (helper->invocation, error);
 		return;
 	}
@@ -546,9 +575,8 @@ static gboolean
 fu_main_install_with_helper (FuMainAuthHelper *helper_ref, GError **error)
 {
 	FuMainPrivate *priv = helper_ref->priv;
-	GPtrArray *apps;
-	g_autoptr(AsStore) store = NULL;
 	g_autoptr(FuMainAuthHelper) helper = helper_ref;
+	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(GPtrArray) devices_possible = NULL;
 	g_autoptr(GPtrArray) errors = NULL;
 
@@ -563,20 +591,22 @@ fu_main_install_with_helper (FuMainAuthHelper *helper_ref, GError **error)
 			return FALSE;
 	}
 
-	/* parse store */
-	store = fu_engine_get_store_from_blob (priv->engine,
-					       helper->blob_cab,
-					       error);
-	if (store == NULL)
+	/* parse silo */
+	helper->silo = fu_engine_get_silo_from_blob (priv->engine,
+						     helper->blob_cab,
+						     error);
+	if (helper->silo == NULL)
 		return FALSE;
 
-	/* for each component in the store */
-	apps = as_store_get_apps (store);
+	/* for each component in the silo */
+	components = xb_silo_query (helper->silo, "components/component", 0, error);
+	if (components == NULL)
+		return FALSE;
 	helper->action_ids = g_ptr_array_new_with_free_func (g_free);
 	helper->install_tasks = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	errors = g_ptr_array_new_with_free_func ((GDestroyNotify) g_error_free);
-	for (guint i = 0; i < apps->len; i++) {
-		AsApp *app = g_ptr_array_index (apps, i);
+	for (guint i = 0; i < components->len; i++) {
+		XbNode *component = g_ptr_array_index (components, i);
 
 		/* do any devices pass the requirements */
 		for (guint j = 0; j < devices_possible->len; j++) {
@@ -586,18 +616,21 @@ fu_main_install_with_helper (FuMainAuthHelper *helper_ref, GError **error)
 			g_autoptr(GError) error_local = NULL;
 
 			/* is this component valid for the device */
-			task = fu_install_task_new (device, app);
+			task = fu_install_task_new (device, component);
 			if (!fu_engine_check_requirements (priv->engine,
 							   task,
 							   helper->flags,
 							   &error_local)) {
 				g_debug ("requirement on %s:%s failed: %s",
 					 fu_device_get_id (device),
-					 as_app_get_id (app),
+					 xb_node_query_text (component, "id", NULL),
 					 error_local->message);
 				g_ptr_array_add (errors, g_steal_pointer (&error_local));
 				continue;
 			}
+
+			/* if component should have an update message from CAB */
+			fu_device_incorporate_from_component (device, component);
 
 			/* get the action IDs for the valid device */
 			action_id = fu_install_task_get_action_id (task);
@@ -647,6 +680,9 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 	FuMainPrivate *priv = (FuMainPrivate *) user_data;
 	GVariant *val = NULL;
 	g_autoptr(GError) error = NULL;
+
+	/* activity */
+	fu_engine_idle_reset (priv->engine);
 
 	if (g_strcmp0 (method_name, "GetDevices") == 0) {
 		g_autoptr(GPtrArray) devices = NULL;
@@ -1076,8 +1112,14 @@ fu_main_daemon_get_property (GDBusConnection *connection_, const gchar *sender,
 {
 	FuMainPrivate *priv = (FuMainPrivate *) user_data;
 
+	/* activity */
+	fu_engine_idle_reset (priv->engine);
+
 	if (g_strcmp0 (property_name, "DaemonVersion") == 0)
 		return g_variant_new_string (VERSION);
+
+	if (g_strcmp0 (property_name, "Tainted") == 0)
+		return g_variant_new_boolean (fu_engine_get_tainted (priv->engine));
 
 	if (g_strcmp0 (property_name, "Status") == 0)
 		return g_variant_new_uint32 (fu_engine_get_status (priv->engine));
@@ -1267,6 +1309,10 @@ main (int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
+	g_unix_signal_add_full (G_PRIORITY_DEFAULT,
+				SIGTERM, fu_main_sigterm_cb,
+				priv, NULL);
+
 	/* load introspection from file */
 	priv->introspection_daemon = fu_main_load_introspection (FWUPD_DBUS_INTERFACE ".xml",
 								 &error);
@@ -1298,6 +1344,8 @@ main (int argc, char *argv[])
 		g_idle_add (fu_main_timed_exit_cb, priv->loop);
 	else if (timed_exit)
 		g_timeout_add_seconds (5, fu_main_timed_exit_cb, priv->loop);
+
+	g_debug ("Started with locale %s", g_getenv ("LANG"));
 
 	/* wait */
 	g_message ("Daemon ready for requests");

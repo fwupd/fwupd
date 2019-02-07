@@ -1,6 +1,7 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginAmt"']
 
 shared_module('fu_plugin_amt',
+  fu_hash,
   sources : [
     'fu-plugin-amt.c',
   ],
@@ -11,6 +12,9 @@ shared_module('fu_plugin_amt',
   ],
   install : true,
   install_dir: plugin_dir,
+  link_with : [
+    libfwupdprivate,
+  ],
   c_args : cargs,
   dependencies : [
     plugin_deps,

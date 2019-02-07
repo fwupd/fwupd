@@ -171,6 +171,10 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 
 	fu_plugin_device_add (plugin, dev);
 	fu_plugin_cache_add (plugin, dev_id_str, dev);
+
+	/* inhibit the idle sleep of the daemon */
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_INHIBITS_IDLE,
+			    "SynapticsMST can cause the screen to flash when probing");
 	return TRUE;
 }
 
@@ -467,4 +471,6 @@ fu_plugin_init (FuPlugin *plugin)
 {
 	/* make sure dell is already coldplugged */
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "dell");
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_SUPPORTS_PROTOCOL, "com.synaptics.mst");
+	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 }

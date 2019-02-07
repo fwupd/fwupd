@@ -1,6 +1,7 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginRedfish"']
 
 shared_module('fu_plugin_redfish',
+  fu_hash,
   sources : [
     'fu-plugin-redfish.c',
     'fu-redfish-client.c',
@@ -13,6 +14,9 @@ shared_module('fu_plugin_redfish',
   ],
   install : true,
   install_dir: plugin_dir,
+  link_with : [
+    libfwupdprivate,
+  ],
   c_args : cargs,
   dependencies : [
     plugin_deps,
@@ -44,7 +48,6 @@ if get_option('tests')
       libjsonglib,
     ],
     link_with : [
-      fwupd,
       libfwupdprivate,
     ],
     c_args : cargs

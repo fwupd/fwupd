@@ -116,6 +116,7 @@ gboolean	 fwupd_client_modify_device		(FwupdClient	*client,
 							 GCancellable	*cancellable,
 							 GError		**error);
 FwupdStatus	 fwupd_client_get_status		(FwupdClient	*client);
+gboolean	 fwupd_client_get_tainted		(FwupdClient	*client);
 guint		 fwupd_client_get_percentage		(FwupdClient	*client);
 const gchar	*fwupd_client_get_daemon_version	(FwupdClient	*client);
 

@@ -46,3 +46,10 @@ configure_file(
   install: true,
   install_dir: join_paths(sysconfdir, 'fwupd', 'remotes.d'),
 )
+configure_file(
+  input : 'vendor-directory.conf',
+  output : 'vendor-directory.conf',
+  configuration : con2,
+  install: true,
+  install_dir: join_paths(sysconfdir, 'fwupd', 'remotes.d'),
+)

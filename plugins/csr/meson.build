@@ -5,6 +5,7 @@ install_data(['csr-aiaiai.quirk'],
 )
 
 shared_module('fu_plugin_csr',
+  fu_hash,
   sources : [
     'fu-csr-device.c',
     'fu-plugin-csr.c',
@@ -22,6 +23,7 @@ shared_module('fu_plugin_csr',
     plugin_deps,
   ],
   link_with : [
+    libfwupdprivate,
     dfu,
   ],
 )

@@ -8,8 +8,6 @@
 
 #include "config.h"
 
-#include <appstream-glib.h>
-
 #include "fu-usb-device-private.h"
 
 /**
@@ -230,6 +228,7 @@ fu_usb_device_probe (FuDevice *device, GError **error)
 	g_autofree gchar *devid1 = NULL;
 	g_autofree gchar *devid2 = NULL;
 	g_autofree gchar *vendor_id = NULL;
+	g_autoptr(GPtrArray) intfs = NULL;
 
 	/* set vendor ID */
 	vendor_id = g_strdup_printf ("USB:0x%04X", g_usb_device_get_vid (priv->usb_device));
@@ -238,8 +237,8 @@ fu_usb_device_probe (FuDevice *device, GError **error)
 	/* set the version if the release has been set */
 	release = g_usb_device_get_release (priv->usb_device);
 	if (release != 0x0) {
-		g_autofree gchar *version = as_utils_version_from_uint16 (release,
-									  AS_VERSION_PARSE_FLAG_USE_BCD);
+		g_autofree gchar *version = NULL;
+		version = fu_common_version_from_uint16 (release, FU_VERSION_FORMAT_BCD);
 		fu_device_set_version (device, version);
 	}
 
@@ -256,6 +255,29 @@ fu_usb_device_probe (FuDevice *device, GError **error)
 	devid0 = g_strdup_printf ("USB\\VID_%04X",
 				  g_usb_device_get_vid (priv->usb_device));
 	fu_device_add_guid (device, devid0);
+
+	/* add the interface GUIDs */
+	intfs = g_usb_device_get_interfaces (priv->usb_device, error);
+	if (intfs == NULL)
+		return FALSE;
+	for (guint i = 0; i < intfs->len; i++) {
+		GUsbInterface *intf = g_ptr_array_index (intfs, i);
+		g_autofree gchar *intid1 = NULL;
+		g_autofree gchar *intid2 = NULL;
+		g_autofree gchar *intid3 = NULL;
+		intid1 = g_strdup_printf ("USB\\CLASS_%02X&SUBCLASS_%02X&PROT_%02X",
+					  g_usb_interface_get_class (intf),
+					  g_usb_interface_get_subclass (intf),
+					  g_usb_interface_get_protocol (intf));
+		fu_device_add_guid (device, intid1);
+		intid2 = g_strdup_printf ("USB\\CLASS_%02X&SUBCLASS_%02X",
+					  g_usb_interface_get_class (intf),
+					  g_usb_interface_get_subclass (intf));
+		fu_device_add_guid (device, intid2);
+		intid3 = g_strdup_printf ("USB\\CLASS_%02X",
+					  g_usb_interface_get_class (intf));
+		fu_device_add_guid (device, intid3);
+	}
 
 	/* subclassed */
 	if (klass->probe != NULL) {

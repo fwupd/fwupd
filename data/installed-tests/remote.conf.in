@@ -1,0 +1,9 @@
+[fwupd Remote]
+# This is a local fwupd remote that is used only for installed tests
+# either from continuous integration or for fake devices from fwupd
+# frontends
+
+Enabled=false
+Title=fwupd test suite
+Keyring=none
+MetadataURI=file://@installedtestsdir@/fwupd-tests.xml

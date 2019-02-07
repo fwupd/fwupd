@@ -45,7 +45,7 @@ fwupd_checksum_guess_kind (const gchar *checksum)
 }
 
 static const gchar *
-_g_checksum_type_to_string (GChecksumType checksum_type)
+fwupd_checksum_type_to_string_display (GChecksumType checksum_type)
 {
 	if (checksum_type == G_CHECKSUM_MD5)
 		return "MD5";
@@ -72,7 +72,9 @@ gchar *
 fwupd_checksum_format_for_display (const gchar *checksum)
 {
 	GChecksumType kind = fwupd_checksum_guess_kind (checksum);
-	return g_strdup_printf ("%s(%s)", _g_checksum_type_to_string (kind), checksum);
+	return g_strdup_printf ("%s(%s)",
+				fwupd_checksum_type_to_string_display (kind),
+				checksum);
 }
 
 /**
@@ -350,11 +352,26 @@ fwupd_build_history_report_json_device (JsonBuilder *builder, FwupdDevice *dev)
 {
 	FwupdRelease *rel = fwupd_device_get_release_default (dev);
 	GPtrArray *checksums;
+	const gchar *tmp;
 
 	/* identify the firmware used */
 	json_builder_set_member_name (builder, "Checksum");
 	checksums = fwupd_release_get_checksums (rel);
 	json_builder_add_string_value (builder, fwupd_checksum_get_by_kind (checksums, G_CHECKSUM_SHA1));
+
+	/* identify the firmware written */
+	checksums = fwupd_device_get_checksums (dev);
+	tmp = fwupd_checksum_get_by_kind (checksums, G_CHECKSUM_SHA1);
+	if (tmp != NULL) {
+		json_builder_set_member_name (builder, "ChecksumDevice");
+		json_builder_add_string_value (builder, tmp);
+	}
+
+	/* include the protocol used */
+	if (fwupd_release_get_protocol (rel) != NULL) {
+		json_builder_set_member_name (builder, "Protocol");
+		json_builder_add_string_value (builder, fwupd_release_get_protocol (rel));
+	}
 
 	/* set the error state of the report */
 	json_builder_set_member_name (builder, "UpdateState");
@@ -362,6 +379,10 @@ fwupd_build_history_report_json_device (JsonBuilder *builder, FwupdDevice *dev)
 	if (fwupd_device_get_update_error (dev) != NULL) {
 		json_builder_set_member_name (builder, "UpdateError");
 		json_builder_add_string_value (builder, fwupd_device_get_update_error (dev));
+	}
+	if (fwupd_release_get_update_message (rel) != NULL) {
+		json_builder_set_member_name (builder, "UpdateMessage");
+		json_builder_add_string_value (builder, fwupd_release_get_update_message (rel));
 	}
 
 	/* map back to the dev type on the LVFS */

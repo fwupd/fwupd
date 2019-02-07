@@ -193,23 +193,45 @@ fu_plugin_thunderbolt_udev_get_version (GUdevDevice *udevice)
 static gboolean
 fu_plugin_thunderbolt_is_native (GUdevDevice *udevice, gboolean *is_native, GError **error)
 {
+	gsize nr_chunks;
 	g_autoptr(GFile) nvmem = NULL;
 	g_autoptr(GBytes) controller_fw = NULL;
-	gchar *content;
-	gsize length;
+	g_autoptr(GInputStream) istr = NULL;
 
 	nvmem = fu_plugin_thunderbolt_find_nvmem (udevice, TRUE, error);
 	if (nvmem == NULL)
 		return FALSE;
 
-	if (!g_file_load_contents (nvmem, NULL, &content, &length, NULL, error))
+	/* read just enough bytes to read the status byte */
+	nr_chunks = (FU_TBT_OFFSET_NATIVE + FU_TBT_CHUNK_SZ - 1) / FU_TBT_CHUNK_SZ;
+	istr = G_INPUT_STREAM (g_file_read (nvmem, NULL, error));
+	if (istr == NULL)
+		return FALSE;
+	controller_fw = g_input_stream_read_bytes (istr,
+						   nr_chunks * FU_TBT_CHUNK_SZ,
+						   NULL, error);
+	if (controller_fw == NULL)
 		return FALSE;
 
-	controller_fw = g_bytes_new_take (content, length);
+	return fu_thunderbolt_image_controller_is_native (controller_fw,
+							  is_native,
+							  error);
+}
 
-	return fu_plugin_thunderbolt_controller_is_native (controller_fw,
-							   is_native,
-							   error);
+static gboolean
+fu_plugin_thunderbolt_can_update (GUdevDevice *udevice)
+{
+	g_autoptr(GError) nvmem_error = NULL;
+	g_autoptr(GFile) non_active_nvmem = NULL;
+
+	non_active_nvmem = fu_plugin_thunderbolt_find_nvmem (udevice, FALSE,
+							     &nvmem_error);
+	if (non_active_nvmem == NULL) {
+		g_debug ("%s", nvmem_error->message);
+		return FALSE;
+	}
+
+	return TRUE;
 }
 
 static void
@@ -293,22 +315,29 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 					       is_safemode ? "True" : "False");
 	}
 	if (!is_safemode) {
-		if (is_host) {
-			g_autoptr(GError) error_local = NULL;
-			if (!fu_plugin_thunderbolt_is_native (device, &is_native, &error_local)) {
-				g_warning ("failed to get native mode status: %s", error_local->message);
-				return;
+		if (fu_plugin_thunderbolt_can_update (device)) {
+			if (is_host) {
+				g_autoptr(GError) native_error = NULL;
+				if (!fu_plugin_thunderbolt_is_native (device,
+								      &is_native,
+								      &native_error)) {
+					g_warning ("failed to get native mode status: %s",
+						   native_error->message);
+					return;
+				}
+				fu_plugin_add_report_metadata (plugin,
+							       "ThunderboltNative",
+							       is_native ? "True" : "False");
 			}
-			fu_plugin_add_report_metadata (plugin,
-						       "ThunderboltNative",
-						       is_native ? "True" : "False");
+			vendor_id = g_strdup_printf ("TBT:0x%04X", (guint) vid);
+			device_id = g_strdup_printf ("TBT-%04x%04x%s",
+						     (guint) vid,
+						     (guint) did,
+						     is_native ? "-native" : "");
+			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
+		} else {
+			fu_device_set_update_error (dev, "Missing non-active nvmem");
 		}
-		vendor_id = g_strdup_printf ("TBT:0x%04X", (guint) vid);
-		device_id = g_strdup_printf ("TBT-%04x%04x%s",
-					     (guint) vid,
-					     (guint) did,
-					     is_native ? "-native" : "");
-		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 	} else {
 		fu_device_set_update_error (dev, "Device is in safe mode");
 	}
@@ -348,6 +377,10 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 
 	fu_plugin_cache_add (plugin, id, dev);
 	fu_plugin_device_add (plugin, dev);
+
+	/* inhibit the idle sleep of the daemon */
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_INHIBITS_IDLE,
+			    "thunderbolt requires device wakeup");
 }
 
 static void
@@ -436,10 +469,7 @@ fu_plugin_thunderbolt_validate_firmware (GUdevDevice  *udevice,
 		return VALIDATION_FAILED;
 
 	controller_fw = g_bytes_new_take (content, length);
-
-	return fu_plugin_thunderbolt_validate_image (controller_fw,
-						     blob_fw,
-						     error);
+	return fu_thunderbolt_image_validate (controller_fw, blob_fw, error);
 }
 
 static gboolean
@@ -555,9 +585,14 @@ fu_plugin_init (FuPlugin *plugin)
 	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 	const gchar *subsystems[] = { "thunderbolt", NULL };
 
+	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_SUPPORTS_PROTOCOL, "com.intel.thunderbolt");
 	data->udev = g_udev_client_new (subsystems);
 	g_signal_connect (data->udev, "uevent",
 			  G_CALLBACK (udev_uevent_cb), plugin);
+
+	/* dell-dock plugin uses a slower bus for flashing */
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_BETTER_THAN, "dell_dock");
 }
 
 void
@@ -706,8 +741,7 @@ fu_plugin_update_attach (FuPlugin *plugin,
 		return FALSE;
 	}
 	status = g_ascii_strtoull (attribute, NULL, 16);
-	if ((status == 0x00 && errno == EINVAL) ||
-	    (status == G_MAXUINT64 && errno == ERANGE)) {
+	if (status == G_MAXUINT64 && errno == ERANGE) {
 		g_set_error (error, G_IO_ERROR,
 			     g_io_error_from_errno (errno),
 			     "failed to read 'nvm_authenticate: %s",

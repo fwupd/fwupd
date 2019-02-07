@@ -38,7 +38,9 @@ fu_plugin_init (FuPlugin *plugin)
 	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 	data->bgrt = fu_uefi_bgrt_new ();
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "upower");
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_SUPPORTS_PROTOCOL, "org.uefi.capsule");
 	fu_plugin_add_compile_version (plugin, "com.redhat.efivar", EFIVAR_LIBRARY_VERSION);
+	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 }
 
 void
@@ -157,6 +159,15 @@ fu_plugin_uefi_get_splash_data (guint width, guint height, GError **error)
 	return g_bytes_new_take (g_steal_pointer (&buf), buf_idx);
 }
 
+static guint8
+fu_plugin_uefi_calc_checksum (const guint8 *buf, gsize sz)
+{
+	guint8 csum = 0;
+	for (gsize i = 0; i < sz; i++)
+		csum += buf[i];
+	return csum;
+}
+
 static gboolean
 fu_plugin_uefi_write_splash_data (FuPlugin *plugin, GBytes *blob, GError **error)
 {
@@ -165,7 +176,8 @@ fu_plugin_uefi_write_splash_data (FuPlugin *plugin, GBytes *blob, GError **error
 	gsize buf_size = g_bytes_get_size (blob);
 	gssize size;
 	guint32 height, width;
-	efi_ux_capsule_header_t header;
+	guint8 csum = 0;
+	efi_ux_capsule_header_t header = { 0 };
 	efi_capsule_header_t capsule_header = {
 		.flags = EFI_CAPSULE_HEADER_FLAGS_PERSIST_ACROSS_RESET,
 		.guid = efi_guid_ux_capsule,
@@ -202,15 +214,23 @@ fu_plugin_uefi_write_splash_data (FuPlugin *plugin, GBytes *blob, GError **error
 	capsule_header.capsule_image_size =
 		g_bytes_get_size (blob) +
 		sizeof(efi_capsule_header_t) +
-		sizeof(header);
+		sizeof(efi_ux_capsule_header_t);
 
-	memset (&header, '\0', sizeof(header));
 	header.version = 1;
 	header.image_type = 0;
 	header.reserved = 0;
 	header.x_offset = (screen_x / 2) - (width / 2);
 	header.y_offset = fu_uefi_bgrt_get_yoffset (data->bgrt) +
 				fu_uefi_bgrt_get_height (data->bgrt);
+
+	/* header, payload and image has to add to zero */
+	csum += fu_plugin_uefi_calc_checksum ((guint8 *) &capsule_header,
+					      sizeof(capsule_header));
+	csum += fu_plugin_uefi_calc_checksum ((guint8 *) &header,
+					      sizeof(header));
+	csum += fu_plugin_uefi_calc_checksum (g_bytes_get_data (blob, NULL),
+					      g_bytes_get_size (blob));
+	header.checksum = 0x100 - csum;
 
 	/* write capsule file */
 	size = g_output_stream_write (ostream, &capsule_header,
@@ -377,6 +397,10 @@ fu_plugin_update (FuPlugin *plugin,
 	if (!fu_device_write_firmware (device, blob_fw, error))
 		return FALSE;
 
+	/* record if we had an invalid header during update */
+	str = fu_uefi_missing_capsule_header (device) ? "True" : "False";
+	fu_plugin_add_report_metadata (plugin, "MissingCapsuleHeader", str);
+
 	/* record boot information to system log for future debugging */
 	efibootmgr_path = fu_common_find_program_in_path ("efibootmgr", NULL);
 	if (efibootmgr_path != NULL) {
@@ -412,7 +436,7 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 	}
 }
 
-static AsVersionParseFlag
+static FuVersionFormat
 fu_plugin_uefi_get_version_format_for_type (FuPlugin *plugin, FuUefiDeviceKind device_kind)
 {
 	const gchar *content;
@@ -421,21 +445,19 @@ fu_plugin_uefi_get_version_format_for_type (FuPlugin *plugin, FuUefiDeviceKind d
 
 	/* we have no information for devices */
 	if (device_kind == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE)
-		return AS_VERSION_PARSE_FLAG_USE_TRIPLET;
+		return FU_VERSION_FORMAT_TRIPLET;
 
 	content = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER);
 	if (content == NULL)
-		return AS_VERSION_PARSE_FLAG_USE_TRIPLET;
+		return FU_VERSION_FORMAT_TRIPLET;
 
 	/* any quirks match */
 	group = g_strdup_printf ("SmbiosManufacturer=%s", content);
 	quirk = fu_plugin_lookup_quirk_by_id (plugin, group,
 					      FU_QUIRKS_UEFI_VERSION_FORMAT);
-	if (g_strcmp0 (quirk, "quad") == 0)
-		return AS_VERSION_PARSE_FLAG_NONE;
-
-	/* fall back */
-	return AS_VERSION_PARSE_FLAG_USE_TRIPLET;
+	if (quirk == NULL)
+		return FU_VERSION_FORMAT_TRIPLET;
+	return fu_common_version_format_from_string (quirk);
 }
 
 static const gchar *
@@ -478,37 +500,29 @@ static gboolean
 fu_plugin_uefi_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GError **error)
 {
 	FuUefiDeviceKind device_kind;
-	AsVersionParseFlag parse_flags;
-	guint32 version_raw;
-	g_autofree gchar *name = NULL;
-	g_autofree gchar *version_lowest = NULL;
-	g_autofree gchar *version = NULL;
+	FuVersionFormat version_format;
 
-	/* add details to the device */
+	/* set default version format */
 	device_kind = fu_uefi_device_get_kind (dev);
-	parse_flags = fu_plugin_uefi_get_version_format_for_type (plugin, device_kind);
-	version_raw = fu_uefi_device_get_version (dev);
-	version = as_utils_version_from_uint32 (version_raw, parse_flags);
-	fu_device_set_version (dev, version);
-	name = fu_plugin_uefi_get_name_for_type (plugin, fu_uefi_device_get_kind (dev));
-	if (name != NULL)
-		fu_device_set_name (FU_DEVICE (dev), name);
-	version_raw = fu_uefi_device_get_version_lowest (dev);
-	if (version_raw != 0) {
-		version_lowest = as_utils_version_from_uint32 (version_raw,
-							       parse_flags);
-		fu_device_set_version_lowest (FU_DEVICE (dev), version_lowest);
+	version_format = fu_plugin_uefi_get_version_format_for_type (plugin, device_kind);
+	fu_device_set_version_format (FU_DEVICE (dev), version_format);
+
+	/* probe to get add GUIDs (and hence any quirk fixups) */
+	if (!fu_device_probe (FU_DEVICE (dev), error))
+		return FALSE;
+
+	/* set this flag for all Lenovo hardware */
+	if (fu_plugin_check_hwid (plugin, "6de5d951-d755-576b-bd09-c5cf66b27234")) {
+		fu_device_set_custom_flags (FU_DEVICE (dev), "use-legacy-bootmgr-desc");
+		fu_plugin_add_report_metadata (plugin, "BootMgrDesc", "legacy");
 	}
-	fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_INTERNAL);
-	fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
-	fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_REQUIRE_AC);
-	if (device_kind == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE) {
-		/* nothing better in the icon naming spec */
-		fu_device_add_icon (FU_DEVICE (dev), "audio-card");
-	} else {
-		/* this is probably system firmware */
-		fu_device_add_icon (FU_DEVICE (dev), "computer");
-		fu_device_add_guid (FU_DEVICE (dev), "main-system-firmware");
+
+	/* set fallback name if nothing else is set */
+	if (fu_device_get_name (FU_DEVICE (dev)) == 0) {
+		g_autofree gchar *name = NULL;
+		name = fu_plugin_uefi_get_name_for_type (plugin, fu_uefi_device_get_kind (dev));
+		if (name != NULL)
+			fu_device_set_name (FU_DEVICE (dev), name);
 	}
 
 	/* success */
@@ -742,7 +756,13 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	/* add each device */
 	for (guint i = 0; i < entries->len; i++) {
 		const gchar *path = g_ptr_array_index (entries, i);
-		g_autoptr(FuUefiDevice) dev = fu_uefi_device_new_from_entry (path);
+		g_autoptr(GError) error_parse = NULL;
+		g_autoptr(FuUefiDevice) dev = fu_uefi_device_new_from_entry (path, &error_parse);
+		if (dev == NULL) {
+			g_warning ("failed to add %s: %s", path, error_parse->message);
+			continue;
+		}
+		fu_device_set_quirks (FU_DEVICE (dev), fu_plugin_get_quirks (plugin));
 		if (!fu_plugin_uefi_coldplug_device (plugin, dev, error))
 			return FALSE;
 		if (error_esp != NULL) {

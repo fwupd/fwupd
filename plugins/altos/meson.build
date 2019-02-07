@@ -5,6 +5,7 @@ install_data(['altos.quirk'],
 )
 
 shared_module('fu_plugin_altos',
+  fu_hash,
   sources : [
     'fu-altos-device.c',
     'fu-altos-firmware.c',
@@ -17,6 +18,9 @@ shared_module('fu_plugin_altos',
   ],
   install : true,
   install_dir: plugin_dir,
+  link_with : [
+    libfwupdprivate,
+  ],
   c_args : cargs,
   dependencies : [
     libelf,

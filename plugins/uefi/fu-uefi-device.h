@@ -40,7 +40,8 @@ typedef enum {
 } FuUefiDeviceStatus;
 
 FuUefiDevice	*fu_uefi_device_new_from_guid		(const gchar	*guid);
-FuUefiDevice	*fu_uefi_device_new_from_entry		(const gchar	*entry_path);
+FuUefiDevice	*fu_uefi_device_new_from_entry		(const gchar	*entry_path,
+							 GError		**error);
 FuUefiDevice	*fu_uefi_device_new_from_dev		(FuDevice	*dev);
 gboolean	 fu_uefi_device_clear_status		(FuUefiDevice	*self,
 							 GError		**error);
@@ -56,6 +57,7 @@ const gchar	*fu_uefi_device_kind_to_string		(FuUefiDeviceKind kind);
 const gchar	*fu_uefi_device_status_to_string	(FuUefiDeviceStatus status);
 FuUefiUpdateInfo *fu_uefi_device_load_update_info	(FuUefiDevice	*self,
 							 GError		**error);
+gboolean	 fu_uefi_missing_capsule_header		(FuDevice *device);
 
 G_END_DECLS
 

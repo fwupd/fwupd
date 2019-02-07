@@ -16,7 +16,6 @@
 #include "config.h"
 
 #include <string.h>
-#include <appstream-glib.h>
 
 #include "fu-dell-dock-common.h"
 
@@ -51,6 +50,8 @@ fu_dell_dock_status_setup (FuDevice *device, GError **error)
 	dynamic_version = fu_dell_dock_status_ver_string (status_version);
 	fu_device_set_version (device, dynamic_version);
 	fu_device_set_logical_id (FU_DEVICE (device), "status");
+
+	fu_dell_dock_clone_updatable (device);
 
 	return TRUE;
 }

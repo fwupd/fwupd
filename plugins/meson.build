@@ -1,6 +1,8 @@
+subdir('ata')
 subdir('dfu')
 subdir('colorhug')
 subdir('ebitdo')
+subdir('fastboot')
 subdir('flashrom')
 subdir('steelseries')
 subdir('dell-dock')
@@ -11,7 +13,8 @@ subdir('test')
 subdir('udev')
 subdir('unifying')
 subdir('upower')
-subdir('wacomhid')
+subdir('wacom-raw')
+subdir('wacom-usb')
 subdir('superio')
 
 # depends on dfu

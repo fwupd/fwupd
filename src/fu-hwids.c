@@ -11,9 +11,9 @@
 #include <glib.h>
 #include <gio/gio.h>
 #include <string.h>
-#include <appstream-glib.h>
 
 #include "fu-common.h"
+#include "fu-common-guid.h"
 #include "fu-hwids.h"
 #include "fwupd-error.h"
 
@@ -97,10 +97,10 @@ fu_hwids_get_guid_for_str (const gchar *str, GError **error)
 		data[i] = GUINT16_TO_LE(data[i]);
 
 	/* convert to a GUID */
-	return as_utils_guid_from_data (namespace_id,
-					(guint8*) data,
-					items_written * 2,
-					error);
+	return fu_common_guid_from_data (namespace_id,
+					 (guint8*) data,
+					 items_written * 2,
+					 error);
 }
 
 /**
@@ -394,7 +394,6 @@ fu_hwids_setup (FuHwids *self, FuSmbios *smbios, GError **error)
 	for (guint i = 0; i < 15; i++) {
 		g_autofree gchar *guid = NULL;
 		g_autofree gchar *key = NULL;
-		g_autofree gchar *values = NULL;
 		g_autoptr(GError) error_local = NULL;
 
 		/* get the GUID and add to hash */
@@ -407,11 +406,7 @@ fu_hwids_setup (FuHwids *self, FuSmbios *smbios, GError **error)
 		g_hash_table_insert (self->hash_guid,
 				     g_strdup (guid),
 				     GUINT_TO_POINTER (1));
-		g_ptr_array_add (self->array_guids, g_strdup (guid));
-
-		/* show what makes up the GUID */
-		values = fu_hwids_get_replace_values (self, key, NULL);
-		g_debug ("{%s}   <- %s", guid, values);
+		g_ptr_array_add (self->array_guids, g_steal_pointer (&guid));
 	}
 
 	return TRUE;

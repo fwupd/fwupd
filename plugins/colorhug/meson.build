@@ -7,6 +7,7 @@ install_data([
 )
 
 shared_module('fu_plugin_colorhug',
+  fu_hash,
   sources : [
     'fu-colorhug-common.c',
     'fu-colorhug-device.c',
@@ -19,6 +20,9 @@ shared_module('fu_plugin_colorhug',
   ],
   install : true,
   install_dir: plugin_dir,
+  link_with : [
+    libfwupdprivate,
+  ],
   c_args : cargs,
   dependencies : [
     plugin_deps,

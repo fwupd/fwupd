@@ -1,5 +1,4 @@
 _fwupdmgr_cmd_list=(
-	'build-firmware'
 	'clear-history'
 	'clear-offline'
 	'clear-results'
@@ -17,7 +16,6 @@ _fwupdmgr_cmd_list=(
 	'install'
 	'install-prepared'
 	'modify-remote'
-	'monitor'
 	'refresh'
 	'report-history'
 	'unlock'
@@ -143,23 +141,6 @@ _fwupdmgr()
 		#find remote ID
 		elif [[ "$prev" = "${COMP_WORDS[3]}" ]]; then
 			_show_remotes
-		else
-			_show_modifiers
-		fi
-		;;
-	build-firmware)
-		#file in
-		if [[ "$prev" = "$command" ]]; then
-			_filedir
-		#file out
-		elif [[ "$prev" = "${COMP_WORDS[2]}" ]]; then
-			_filedir
-		#script
-		elif [[ "$prev" = "${COMP_WORDS[3]}" ]]; then
-			_filedir
-		#output
-		elif [[ "$prev" = "${COMP_WORDS[4]}" ]]; then
-			_filedir
 		else
 			_show_modifiers
 		fi

@@ -3,14 +3,13 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
+# Ettore Atalan <atalanttore@googlemail.com>, 2018
 # Marco Tedaldi <tedaldi@hifo.uzh.ch>, 2015
 # Wolfgang Stöggl <c72578@yahoo.de>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2018-10-12 11:10+0000\n"
-"Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: German (http://www.transifex.com/freedesktop/fwupd/language/de/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -18,14 +17,25 @@ msgstr ""
 "Language: de\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
+#. more than a minute
+#, c-format
+msgid "%.0f minute remaining"
+msgid_plural "%.0f minutes remaining"
+msgstr[0] "%.0f Minute verbleibt"
+msgstr[1] "%.0f Minuten verbleiben"
+
 #. TRANSLATORS: first replacement is device name
 #, c-format
 msgid "%s has firmware updates:"
-msgstr "Firmwareaktualisierungen für %s verfügbar:"
+msgstr "Firmware-Aktualisierungen für %s verfügbar:"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Added"
 msgstr "Hinzugefügt"
+
+#. TRANSLATORS: the age of the metadata
+msgid "Age"
+msgstr "Alter"
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
@@ -34,23 +44,48 @@ msgstr "Verweis auf %s"
 
 #. TRANSLATORS: command line option
 msgid "Allow downgrading firmware versions"
-msgstr "Einspielen niedrigerer Firmwareversionen zulassen (Downgrade)"
+msgstr "Herabstufung von Firmware-Versionen zulassen"
 
 #. TRANSLATORS: command line option
 msgid "Allow re-installing existing firmware versions"
 msgstr "Erneute Installation vorhandener Firmware-Versionen erlauben"
 
+#. TRANSLATORS: explain why we want to reboot
+msgid "An update requires a reboot to complete."
+msgstr "Ein Neustart ist erforderlich, um eine Aktualisierung abzuschließen."
+
+#. TRANSLATORS: command line option
+msgid "Answer yes to all questions"
+msgstr "Alle Fragen mit Ja beantworten"
+
+#. TRANSLATORS: command description
+msgid "Apply a binary patch"
+msgstr "Binären Patch anwenden"
+
+#. TRANSLATORS: command line option
+msgid "Apply firmware updates"
+msgstr "Firmware-Aktualisierungen anwenden"
+
 #. TRANSLATORS: command description
 msgid "Attach DFU capable device back to runtime"
 msgstr "DFU-fähiges Gerät wieder zurück in Laufzeit einhängen"
 
+#. TRANSLATORS: device attributes, i.e. things that
+#. * the device can do
+msgid "Attributes"
+msgstr "Attribute"
+
+#. TRANSLATORS: waiting for user to authenticate
+msgid "Authenticating…"
+msgstr "Authentifizierung …"
+
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on a removable device"
-msgstr "Legitimierung ist erforderlich, um das Firmware-Downgrade auf einem entfernbaren Gerät durchzuführen"
+msgstr "Für eine Herabstufung der Firmware auf einem entfernbaren Gerät ist eine Authentifizierung erforderlich"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on this machine"
-msgstr "Auf diesem System ist eine Legitimierung erforderlich, um das Firmware-Downgrade durchzuführen"
+msgstr "Für eine Herabstufung der Firmware auf diesem System ist eine Authentifizierung erforderlich"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to unlock a device"
@@ -58,11 +93,23 @@ msgstr "Legitimation ist zum Entsperren eines Geräts erforderlich"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on a removable device"
-msgstr "Legitimierung ist notwendig, um die Firmware auf einem entfernbaren Gerät zu aktualisieren"
+msgstr "Für die Aktualisierung der Firmware auf einem entfernbaren Gerät ist eine Authentifizierung erforderlich"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on this machine"
-msgstr "Auf diesem System ist eine Authentifizierung notwendig, um das Firmware Update durch zu führen"
+msgstr "Für die Aktualisierung der Firmware auf diesem System ist eine Authentifizierung erforderlich"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the stored checksums for the device"
+msgstr "Eine Authentifizierung ist erforderlich, um die gespeicherten Prüfsummen für das Gerät zu aktualisieren"
+
+#. TRANSLATORS: command description
+msgid "Build firmware using a sandbox"
+msgstr "Firmware mit Hilfe einer Sandbox erstellen"
+
+#. TRANSLATORS: this is to abort the interactive prompt
+msgid "Cancel"
+msgstr "Abbrechen"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
 msgid "Cancelled"
@@ -77,6 +124,18 @@ msgstr "Geändert"
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Prüfsumme"
+
+#. TRANSLATORS: chip ID, e.g. "0x58200204"
+msgid "Chip ID"
+msgstr "Chip-Kennung"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose a device:"
+msgstr "Wählen Sie ein Gerät aus:"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose a release:"
+msgstr "Wählen Sie eine Version aus:"
 
 #. TRANSLATORS: this is the encryption method used when writing
 msgid "Cipher"
@@ -94,9 +153,16 @@ msgstr "Befehl nicht gefunden"
 msgid "Convert firmware to DFU format"
 msgstr "Firmware in das DFU-Format konvertieren"
 
+#. TRANSLATORS: command description
+msgid "Create a binary patch using two files"
+msgstr "Binären Patch aus zwei Dateien erstellen"
+
+msgid "DFU"
+msgstr "DFU"
+
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
-msgstr "DFU-Werkzeug"
+msgstr "DFU-Dienstprogramm"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Debugging Options"
@@ -108,7 +174,7 @@ msgstr "Entpacken …"
 
 #. TRANSLATORS: command description
 msgid "Decrypt firmware data"
-msgstr "Firmwaredaten entschlüsseln"
+msgstr "Firmware-Daten entschlüsseln"
 
 #. TRANSLATORS: section header for firmware description
 msgid "Description"
@@ -130,23 +196,101 @@ msgstr "Gerät geändert:"
 msgid "Device removed:"
 msgstr "Gerät entfernt:"
 
+#. TRANSLATORS: a list of successful updates
+msgid "Devices that have been updated successfully:"
+msgstr "Erfolgreich aktualisierte Geräte:"
+
+#. TRANSLATORS: a list of failed updates
+msgid "Devices that were not updated correctly:"
+msgstr "Nicht korrekt aktualisierte Geräte:"
+
+msgid "Disabled fwupdate debugging"
+msgstr "fwupdate-Defektlokalisierung deaktivieren"
+
+#. TRANSLATORS: command line option
+msgid "Display version"
+msgstr "Version anzeigen"
+
+#. TRANSLATORS: command line option
+msgid "Do not check for old metadata"
+msgstr "Nicht auf alte Metadaten prüfen"
+
+#. TRANSLATORS: command line option
+msgid "Do not check for reboot after update"
+msgstr "Nach der Aktualisierung nicht auf einen Neustart prüfen"
+
+#. TRANSLATORS: command line option
+msgid "Do not check for unreported history"
+msgstr "Nicht auf nicht erfassten Verlauf prüfen"
+
+#. TRANSLATORS: command line option
+msgid "Do not write to the history database"
+msgstr "Nicht in die Verlaufsdatenbank schreiben"
+
 msgid "Done!"
 msgstr "Fertig."
+
+#. TRANSLATORS: command description
+msgid "Downgrades the firmware on a device"
+msgstr "Stuft die Firmware auf einem Gerät herab"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
 #. * version numbers e.g. "1.2.3"
 #, c-format
 msgid "Downgrading %s from %s to %s... "
-msgstr "Downgrade für %s von %s auf %s wird eingespielt …"
+msgstr "Herabstufung für %s von %s auf %s wird eingespielt…"
+
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Downgrading %s…"
+msgstr "%s wird herabgestuft …"
+
+#. TRANSLATORS: downloading from a remote server
+msgid "Downloading…"
+msgstr "Herunterladen …"
+
+#. TRANSLATORS: command description
+msgid "Dump SMBIOS data from a file"
+msgstr "SMBIOS-Daten aus einer Datei ausgeben"
 
 #. TRANSLATORS: command description
 msgid "Dump details about a firmware file"
 msgstr "Details zu einer Firmware-Datei ausgeben"
 
 #. TRANSLATORS: command description
+msgid "Dump information about a binary patch to the screen"
+msgstr "Informationen über einen binären Patch auf dem Bildschirm ausgeben"
+
+#. TRANSLATORS: ESP is EFI System Partition
+msgid "ESP specified was not valid"
+msgstr "Das angegebene ESP war nicht gültig"
+
+#. TRANSLATORS: command line option
+msgid "Enable firmware update support on supported systems"
+msgstr "Firmware-Aktualisierungsunterstützung auf unterstützten Systemen aktivieren"
+
+#. TRANSLATORS: if the remote is enabled
+msgid "Enabled"
+msgstr "Aktiviert"
+
+msgid "Enabled fwupdate debugging"
+msgstr "fwupdate-Defektlokalisierung aktivieren"
+
+msgid "Enabling this functionality is done at your own risk, which means you have to contact your original equipment manufacturer regarding any problems caused by these updates. Only problems with the update process itself should be filed at $OS_RELEASE:BUG_REPORT_URL$."
+msgstr "Die Aktivierung dieser Funktionalität erfolgt auf eigene Gefahr, d.h. Sie müssen sich bei Problemen, die durch diese Aktualisierungen verursacht werden, an Ihren Erstausrüster wenden. Nur Probleme mit dem Aktualisierungsprozess selbst sollten unter $OS_RELEASE:BUG_REPORT_URL$ eingereicht werden."
+
+#. TRANSLATORS: command description
 msgid "Encrypt firmware data"
-msgstr "Firmwaredaten verschlüsseln"
+msgstr "Firmware-Daten verschlüsseln"
+
+#. TRANSLATORS: command description
+msgid "Erase all firmware update history"
+msgstr "Gesamten Firmware-Aktualisierungsverlauf löschen"
+
+#. TRANSLATORS: erasing contents of the flash chips
+msgid "Erasing…"
+msgstr "Löschen …"
 
 #. TRANSLATORS: exit after we've started up, used for user profiling
 msgid "Exit after a small delay"
@@ -160,17 +304,61 @@ msgstr "Nach dem Laden der Engine beenden"
 msgid "Failed to parse arguments"
 msgstr "Verarbeitung der Argumente schlug fehl"
 
+#. TRANSLATORS: downloading unknown file
+msgid "Fetching file"
+msgstr "Datei wird abgerufen"
+
+#. TRANSLATORS: downloading new firmware file
+msgid "Fetching firmware"
+msgstr "Firmware wird abgerufen"
+
+#. TRANSLATORS: downloading new metadata file
+msgid "Fetching metadata"
+msgstr "Metadaten werden abgerufen"
+
+#. TRANSLATORS: downloading new signing file
+msgid "Fetching signature"
+msgstr "Signatur wird abgerufen"
+
+#. TRANSLATORS: filename of the local file
+msgid "Filename"
+msgstr "Dateiname"
+
+#. TRANSLATORS: filename of the local file
+msgid "Filename Signature"
+msgstr "Signatur des Dateinamens"
+
+#. TRANSLATORS: remote URI
+msgid "Firmware Base URI"
+msgstr "Firmware Basis-URI"
+
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
 msgstr "D-Bus-Dienst für Firmware-Aktualisierung"
 
 #. TRANSLATORS: program name
 msgid "Firmware Update Daemon"
-msgstr "Dienst für Firmware-Aktualisierung"
+msgstr "Hintergrundprogramm für Firmware-Aktualisierung"
 
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
-msgstr "Firmware-Werkzeug"
+msgstr "Firmware-Dienstprogramm"
+
+#. TRANSLATORS: the metadata is very out of date; %u is a number > 1
+#, c-format
+msgid "Firmware metadata has not been updated for %u day and may not be up to date."
+msgid_plural "Firmware metadata has not been updated for %u days and may not be up to date."
+msgstr[0] "Firmware-Metadaten wurden seit %u Tag nicht aktualisiert und sind möglicherweise nicht auf dem neuesten Stand."
+msgstr[1] "Firmware-Metadaten wurden seit %u Tagen nicht aktualisiert und sind möglicherweise nicht auf dem neuesten Stand."
+
+msgid "Firmware updates are not supported on this machine."
+msgstr "Firmware-Aktualisierungen werden auf diesem System nicht unterstützt."
+
+msgid "Firmware updates are supported on this machine."
+msgstr "Firmware-Aktualisierungen werden auf diesem System unterstützt."
+
+msgid "Force the action ignoring all warnings"
+msgstr "Aktion erzwingen, bei der alle Warnungen ignoriert werden"
 
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
@@ -180,8 +368,16 @@ msgid "GUID"
 msgstr "GUID"
 
 #. TRANSLATORS: command description
+msgid "Get all devices according to the system topology"
+msgstr "Ermittelt alle Geräte gemäß der Systemtopologie"
+
+#. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
 msgstr "Alle Geräte ermitteln, die Firmware-Aktualisierungen unterstützen"
+
+#. TRANSLATORS: command description
+msgid "Get all enabled plugins registered with the system"
+msgstr "Alle aktivierten und im System registrierten Plugins ermitteln"
 
 #. TRANSLATORS: command description
 msgid "Gets details about a firmware file"
@@ -196,6 +392,10 @@ msgid "Gets the list of updates for connected hardware"
 msgstr "Ermittelt die Liste der Aktualisierungen für angeschlossene Hardware"
 
 #. TRANSLATORS: command description
+msgid "Gets the releases for a device"
+msgstr "Ermittelt die Versionen für ein Gerät"
+
+#. TRANSLATORS: command description
 msgid "Gets the results from the last update"
 msgstr "Ermittelt die Ergebnisse der letzten Aktualisierung"
 
@@ -206,6 +406,10 @@ msgstr "Kennung"
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
 msgstr "Bereit …"
+
+#. TRANSLATORS: command description
+msgid "Install a firmware blob on a device"
+msgstr "Firmware-Blob auf einem Gerät installieren"
 
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
@@ -230,9 +434,35 @@ msgstr "Nicht-signierte Geräte-Firmware installieren"
 msgid "Install unsigned system firmware"
 msgstr "Nicht-signierte System-Firmware installieren"
 
+#. TRANSLATORS: this is shown when updating the firmware after the reboot
+msgid "Installing firmware update…"
+msgstr "Firmware-Aktualisierung wird installiert …"
+
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Installing on %s…"
+msgstr "Wird auf %s installiert …"
+
+msgid "Keyring"
+msgstr "Schlüsselbund"
+
+#. TRANSLATORS: time remaining for completing firmware flash
+msgid "Less than one minute remaining"
+msgstr "Weniger als eine Minute verbleiben"
+
+msgid "Linux Vendor Firmware Service (stable firmware)"
+msgstr "Linux Vendor Firmware Service (stabile Firmware)"
+
+msgid "Linux Vendor Firmware Service (testing firmware)"
+msgstr "Linux Vendor Firmware Service (Test-Firmware)"
+
 #. TRANSLATORS: command description
 msgid "List currently attached DFU capable devices"
 msgstr "Derzeit angeschlossene DFU-fähige Geräte auflisten"
+
+#. TRANSLATORS: command line option
+msgid "List supported firmware updates"
+msgstr "Unterstützte Firmware-Aktualisierungen auflisten"
 
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
@@ -242,12 +472,24 @@ msgstr "Laden …"
 msgid "Merge multiple firmware files into one"
 msgstr "Mehrere Firmware-Dateien in eine zusammenführen"
 
+#. TRANSLATORS: remote URI
+msgid "Metadata URI"
+msgstr "Metadaten-URI"
+
+#. TRANSLATORS: remote URI
+msgid "Metadata URI Signature"
+msgstr "Metadaten URI-Signatur"
+
+#. TRANSLATORS: explain why no metadata available
+msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
+msgstr "Metadaten können über den Linux Vendor Firmware Service bezogen werden."
+
 msgid "Mode"
 msgstr "Modus"
 
 #. TRANSLATORS: command description
 msgid "Monitor the daemon for events"
-msgstr "Den Daemon auf Ereignisse überwachen"
+msgstr "Hintergrundprogramm auf Ereignisse überwachen"
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 #. TRANSLATORS: device name, e.g. 'ColorHug2'
@@ -255,17 +497,64 @@ msgstr "Den Daemon auf Ereignisse überwachen"
 msgid "Name"
 msgstr "Name"
 
+msgid "No action specified!"
+msgstr "Keine Aktion angegeben!"
+
 #. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Es wurde keine Hardware erkannt, deren Firmware aktualisiert werden kann"
 
+#. TRANSLATORS: nothing found
+msgid "No plugins found"
+msgstr "Keine Plugins gefunden"
+
 msgid "OK"
 msgstr "Ok"
+
+#. TRANSLATORS: command line option
+msgid "Override plugin warning"
+msgstr "Plugin-Warnung überschreiben"
+
+#. TRANSLATORS: command line option
+msgid "Override the default ESP path"
+msgstr "Standard-ESP-Pfad überschreiben"
+
+#. TRANSLATORS: remote filename base
+msgid "Password"
+msgstr "Passwort"
+
+msgid "Payload"
+msgstr "Nutzdaten"
+
+msgid "Permission denied"
+msgstr "Berechtigung verweigert"
+
+#. TRANSLATORS: the user isn't reading the question
+#, c-format
+msgid "Please enter a number from 0 to %u: "
+msgstr "Bitte geben Sie eine Zahl von 0 bis %u ein: "
+
+msgid "Print the version number"
+msgstr "Versionsnummer ausgeben"
+
+msgid "Print verbose debug statements"
+msgstr "Ausführliche Debug-Anweisungen ausgeben"
+
+#. TRANSLATORS: the numeric priority
+msgid "Priority"
+msgstr "Priorität"
+
+msgid "Proceed with upload?"
+msgstr "Mit dem Hochladen fortfahren?"
 
 #. TRANSLATORS: DFU protocol version, e.g. 1.1
 msgid "Protocol"
 msgstr "Protokoll"
+
+#. TRANSLATORS: command line option
+msgid "Query for firmware update support"
+msgstr "Abfrage der Unterstützung für Firmware-Aktualisierungen"
 
 #. TRANSLATORS: device quirks, i.e. things that
 #. * it does that we have to work around
@@ -279,6 +568,10 @@ msgstr "Firmware von Gerät in Datei schreiben"
 #. TRANSLATORS: command description
 msgid "Read firmware from one partition into a file"
 msgstr "Firmware von einzelner Partition in Datei lesen"
+
+#. TRANSLATORS: reading from the flash chips
+msgid "Reading…"
+msgstr "Lesen …"
 
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
@@ -299,9 +592,40 @@ msgstr "Erneute Installation von %s mit %s …"
 msgid "Removed"
 msgstr "Entfernt"
 
+#. TRANSLATORS: command description
+msgid "Replace data in an existing firmware file"
+msgstr "Daten in einer bestehenden Firmware-Datei ersetzen"
+
+#. TRANSLATORS: URI to send success/failure reports
+msgid "Report URI"
+msgstr "Bericht-URI"
+
+#. TRANSLATORS: metadata is downloaded from the Internet
+msgid "Requires internet connection"
+msgstr "Erfordert Internetverbindung"
+
+#. TRANSLATORS: command description
+msgid "Reset a DFU device"
+msgstr "DFU-Gerät zurücksetzen"
+
+#. TRANSLATORS: reboot to apply the update
+msgid "Restart now?"
+msgstr "Jetzt neu starten?"
+
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
 msgstr "Gerät wird neu gestartet …"
+
+#. TRANSLATORS: command description
+msgid "Return all the hardware IDs for the machine"
+msgstr "Alle Hardware-Kennungen für das System zurückgeben"
+
+msgid "Runtime"
+msgstr "Laufzeit"
+
+#. TRANSLATORS: command line option
+msgid "Schedule installation for next reboot when possible"
+msgstr "Installation für den nächsten Neustart planen, falls möglich"
 
 #. TRANSLATORS: scheduing an update to be done on the next boot
 msgid "Scheduling…"
@@ -333,7 +657,7 @@ msgstr "Veröffentlichungsversion einer Firmware-Datei festlegen"
 
 #. TRANSLATORS: command description
 msgid "Set the firmware size for the target"
-msgstr "Die Firmware-Größe für das Ziel festlegen"
+msgstr "Firmware-Größe für das Ziel festlegen"
 
 #. TRANSLATORS: command description
 msgid "Set vendor ID on firmware file"
@@ -342,6 +666,18 @@ msgstr "Hersteller-Kennung einer Firmware-Datei festlegen"
 #. TRANSLATORS: command description
 msgid "Sets metadata on a firmware file"
 msgstr "Metadaten einer Firmware-Datei festlegen"
+
+#. TRANSLATORS: command description
+msgid "Share firmware history with the developers"
+msgstr "Firmware-Verlauf mit den Entwicklern teilen"
+
+#. TRANSLATORS: command line option
+msgid "Show client and daemon versions"
+msgstr "Client- und Hintergrundprogramm-Versionen anzeigen"
+
+#. TRANSLATORS: this is for daemon development
+msgid "Show daemon verbose information"
+msgstr "Ausführliche Informationen zum Dienstprogramm anzeigen"
 
 #. TRANSLATORS: turn on all debugging
 msgid "Show debugging information for all files"
@@ -352,8 +688,31 @@ msgid "Show debugging options"
 msgstr "Debug Optionen anzeigen"
 
 #. TRANSLATORS: command line option
+msgid "Show devices that are not updatable"
+msgstr "Nicht aktualisierbare Geräte anzeigen"
+
+#. TRANSLATORS: command line option
 msgid "Show extra debugging information"
 msgstr "Zusätzliche Informationen zur Fehlerdiagnose anzeigen"
+
+#. TRANSLATORS: command description
+msgid "Show history of firmware updates"
+msgstr "Verlauf von Firmware-Aktualisierungen anzeigen"
+
+#. TRANSLATORS: this is for plugin development
+msgid "Show plugin verbose information"
+msgstr "Ausführliche Informationen zum Plugin anzeigen"
+
+#. TRANSLATORS: command line option
+msgid "Show the debug log from the last attempted update"
+msgstr "Fehlerprotokoll der letzten versuchten Aktualisierung anzeigen"
+
+#. TRANSLATORS: command line option
+msgid "Show the information of firmware update status"
+msgstr "Informationen über den Firmware-Aktualisierungsstatus anzeigen"
+
+msgid "Specify the number of bytes per USB transfer"
+msgstr "Geben Sie die Anzahl der Bytes pro USB-Übertragung an"
 
 #. TRANSLATORS: device state, i.e. appIDLE
 msgid "State"
@@ -364,6 +723,41 @@ msgstr "Zustand"
 #. TRANSLATORS: device status, e.g. "OK"
 msgid "Status"
 msgstr "Status"
+
+#. TRANSLATORS: section header for the release one line summary
+msgid "Summary"
+msgstr "Zusammenfassung"
+
+msgid "Target"
+msgstr "Ziel"
+
+#. TRANSLATORS: do not translate the variables marked using $
+msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
+msgstr "Der LVFS ist ein kostenloser Dienst, der als unabhängige juristische Person arbeitet und keine Verbindung zu $OS_RELEASE:NAME$ hat. Möglicherweise hat Ihr Lieferant eine der Firmware-Aktualisierungen nicht auf Kompatibilität mit Ihrem System oder angeschlossenen Geräten überprüft. Die gesamte Firmware wird nur vom Originalhersteller zur Verfügung gestellt."
+
+#. TRANSLATORS: we're poking around as a power user
+msgid "This program may only work correctly as root"
+msgstr "Dieses Programm funktioniert möglicherweise nur als root korrekt"
+
+#. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
+msgid "Title"
+msgstr "Titel"
+
+#. TRANSLATORS: transfer size in bytes
+msgid "Transfer Size"
+msgstr "Übertragungsgröße"
+
+#. TRANSLATORS: remote type, e.g. remote or local
+msgid "Type"
+msgstr "Typ"
+
+#. TRANSLATORS: program name
+msgid "UEFI Firmware Utility"
+msgstr "UEFI-Firmware-Dienstprogramm"
+
+#. TRANSLATORS: section header for firmware URI
+msgid "URI"
+msgstr "URI"
 
 #. TRANSLATORS: currect daemon status is unknown
 msgid "Unknown"
@@ -388,9 +782,28 @@ msgstr "Beschreibung aktualisieren"
 msgid "Update Location"
 msgstr "Ort aktualisieren"
 
+#. TRANSLATORS: section header for the release name
+msgid "Update Name"
+msgstr "Aktualisierungsname"
+
+#. TRANSLATORS: section header for the release one line summary
+msgid "Update Summary"
+msgstr "Aktualisierungszusammenfassung"
+
 #. TRANSLATORS: section header for firmware version
 msgid "Update Version"
 msgstr "Version aktualisieren"
+
+#. TRANSLATORS: the server sent the user a small message
+msgid "Update failure is a known issue, visit this URL for more information:"
+msgstr "Der Aktualisierungsfehler ist ein bekanntes Problem, besuchen Sie diese URL für weitere Informationen:"
+
+#. TRANSLATORS: ask the user if we can update the metadata
+msgid "Update now?"
+msgstr "Jetzt aktualisieren?"
+
+msgid "Update the stored device verification information"
+msgstr "Gespeicherte Geräteverifizierungsinformationen aktualisieren"
 
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current ROM contents"
@@ -407,17 +820,46 @@ msgstr "Alle Firmware auf die neueste verfügbare Version aktualisieren"
 msgid "Updating %s from %s to %s... "
 msgstr "Aktualisieren von %s von %s nach %s …"
 
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Updating %s…"
+msgstr "%s wird aktualisiert …"
+
+#. TRANSLATORS: the server sent the user a small message
+msgid "Upload message:"
+msgstr "Nachricht beim Hochladen:"
+
+#. TRANSLATORS: ask the user to upload
+msgid "Upload report now?"
+msgstr "Bericht jetzt hochladen?"
+
+#. TRANSLATORS: explain why we want to upload
+msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
+msgstr "Das Hochladen von Firmware-Berichten hilft Hardwareherstellern, fehlerhafte und erfolgreiche Aktualisierungen auf realen Geräten schnell zu erkennen."
+
+#. TRANSLATORS: remote filename base
+msgid "Username"
+msgstr "Benutzername"
+
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
-msgstr "Überprüfung läuft …"
+msgstr "Überprüfung …"
 
 #. TRANSLATORS: section header for release version number
 msgid "Version"
 msgstr "Version"
 
+#. TRANSLATORS: waiting for device to do something
+msgid "Waiting…"
+msgstr "Warten …"
+
 #. TRANSLATORS: command description
 msgid "Watch DFU devices being hotplugged"
 msgstr "Geräteanschluss von DFU-Geräten überwachen"
+
+#. TRANSLATORS: command description
+msgid "Watch for hardware changes"
+msgstr "Auf Hardware-Änderungen achten"
 
 #. TRANSLATORS: command description
 msgid "Write firmware from file into device"
@@ -430,3 +872,7 @@ msgstr "Firmware aus Datei in einzelne Partition schreiben"
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing…"
 msgstr "Schreiben …"
+
+#. TRANSLATORS: show the user a warning
+msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
+msgstr "Möglicherweise hat Ihr Lieferant eine der Firmware-Aktualisierungen nicht auf Kompatibilität mit Ihrem System oder angeschlossenen Geräten überprüft."

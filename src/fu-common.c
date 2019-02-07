@@ -928,6 +928,12 @@ fu_common_get_path (FuPathKind path_kind)
 		if (tmp != NULL)
 			return g_strdup (tmp);
 		return g_strdup ("/sys/firmware");
+	/* /sys/firmware */
+	case FU_PATH_KIND_SYSFSDIR_TPM:
+		tmp = g_getenv ("FWUPD_SYSFSTPMDIR");
+		if (tmp != NULL)
+			return g_strdup (tmp);
+		return g_strdup ("/sys/class/tpm");
 	/* /sys/bus/platform/drivers */
 	case FU_PATH_KIND_SYSFSDIR_DRIVERS:
 		tmp = g_getenv ("FWUPD_SYSFSDRIVERDIR");
@@ -992,4 +998,218 @@ fu_common_get_path (FuPathKind path_kind)
 	}
 
 	return NULL;
+}
+
+/**
+ * fu_common_string_replace:
+ * @string: The #GString to operate on
+ * @search: The text to search for
+ * @replace: The text to use for substitutions
+ *
+ * Performs multiple search and replace operations on the given string.
+ *
+ * Returns: the number of replacements done, or 0 if @search is not found.
+ *
+ * Since: 1.2.0
+ **/
+guint
+fu_common_string_replace (GString *string, const gchar *search, const gchar *replace)
+{
+	gchar *tmp;
+	guint count = 0;
+	gsize search_idx = 0;
+	gsize replace_len;
+	gsize search_len;
+
+	g_return_val_if_fail (string != NULL, 0);
+	g_return_val_if_fail (search != NULL, 0);
+	g_return_val_if_fail (replace != NULL, 0);
+
+	/* nothing to do */
+	if (string->len == 0)
+		return 0;
+
+	search_len = strlen (search);
+	replace_len = strlen (replace);
+
+	do {
+		tmp = g_strstr_len (string->str + search_idx, -1, search);
+		if (tmp == NULL)
+			break;
+
+		/* advance the counter in case @replace contains @search */
+		search_idx = (gsize) (tmp - string->str);
+
+		/* reallocate the string if required */
+		if (search_len > replace_len) {
+			g_string_erase (string,
+					(gssize) search_idx,
+					(gssize) (search_len - replace_len));
+			memcpy (tmp, replace, replace_len);
+		} else if (search_len < replace_len) {
+			g_string_insert_len (string,
+					     (gssize) search_idx,
+					     replace,
+					     (gssize) (replace_len - search_len));
+			/* we have to treat this specially as it could have
+			 * been reallocated when the insertion happened */
+			memcpy (string->str + search_idx, replace, replace_len);
+		} else {
+			/* just memcmp in the new string */
+			memcpy (tmp, replace, replace_len);
+		}
+		search_idx += replace_len;
+		count++;
+	} while (TRUE);
+
+	return count;
+}
+
+/**
+ * fu_common_dump_full:
+ * @log_domain: log domain, typically %G_LOG_DOMAIN or %NULL
+ * @title: prefix title, or %NULL
+ * @data: buffer to print
+ * @len: the size of @data
+ * @columns: break new lines after this many bytes
+ * @flags: some #FuDumpFlags, e.g. %FU_DUMP_FLAGS_SHOW_ASCII
+ *
+ * Dumps a raw buffer to the screen.
+ *
+ * Since: 1.2.4
+ **/
+void
+fu_common_dump_full (const gchar *log_domain,
+		     const gchar *title,
+		     const guint8 *data,
+		     gsize len,
+		     guint columns,
+		     FuDumpFlags flags)
+{
+	g_autoptr(GString) str = g_string_new (NULL);
+
+	/* optional */
+	if (title != NULL)
+		g_string_append_printf (str, "%s:", title);
+
+	/* if more than can fit on one line then start afresh */
+	if (len > columns || flags & FU_DUMP_FLAGS_SHOW_ADDRESSES) {
+		g_string_append (str, "\n");
+	} else {
+		for (gsize i = str->len; i < 16; i++)
+			g_string_append (str, " ");
+	}
+
+	/* offset line */
+	if (flags & FU_DUMP_FLAGS_SHOW_ADDRESSES) {
+		g_string_append (str, "       │ ");
+		for (gsize i = 0; i < columns; i++)
+			g_string_append_printf (str, "%02x ", (guint) i);
+		g_string_append (str, "\n───────┼");
+		for (gsize i = 0; i < columns; i++)
+			g_string_append (str, "───");
+		g_string_append_printf (str, "\n0x%04x │ ", (guint) 0);
+	}
+
+	/* print each row */
+	for (gsize i = 0; i < len; i++) {
+		g_string_append_printf (str, "%02x ", data[i]);
+
+		/* optionally print ASCII char */
+		if (flags & FU_DUMP_FLAGS_SHOW_ASCII) {
+			if (g_ascii_isprint (data[i]))
+				g_string_append_printf (str, "[%c] ", data[i]);
+			else
+				g_string_append (str, "[?] ");
+		}
+
+		/* new row required */
+		if (i > 0 && i != len - 1 && (i + 1) % columns == 0) {
+			g_string_append (str, "\n");
+			if (flags & FU_DUMP_FLAGS_SHOW_ADDRESSES)
+				g_string_append_printf (str, "0x%04x │ ", (guint) i + 1);
+		}
+	}
+	g_log (log_domain, G_LOG_LEVEL_DEBUG, "%s", str->str);
+}
+
+/**
+ * fu_common_dump_raw:
+ * @log_domain: log domain, typically %G_LOG_DOMAIN or %NULL
+ * @title: prefix title, or %NULL
+ * @data: buffer to print
+ * @len: the size of @data
+ *
+ * Dumps a raw buffer to the screen.
+ *
+ * Since: 1.2.2
+ **/
+void
+fu_common_dump_raw (const gchar *log_domain,
+		    const gchar *title,
+		    const guint8 *data,
+		    gsize len)
+{
+	FuDumpFlags flags = FU_DUMP_FLAGS_NONE;
+	if (len > 64)
+		flags |= FU_DUMP_FLAGS_SHOW_ADDRESSES;
+	fu_common_dump_full (log_domain, title, data, len, 32, flags);
+}
+
+/**
+ * fu_common_dump_raw:
+ * @log_domain: log domain, typically %G_LOG_DOMAIN or %NULL
+ * @title: prefix title, or %NULL
+ * @bytes: a #GBytes
+ *
+ * Dumps a byte buffer to the screen.
+ *
+ * Since: 1.2.2
+ **/
+void
+fu_common_dump_bytes (const gchar *log_domain,
+		      const gchar *title,
+		      GBytes *bytes)
+{
+	gsize len = 0;
+	const guint8 *data = g_bytes_get_data (bytes, &len);
+	fu_common_dump_raw (log_domain, title, data, len);
+}
+
+/**
+ * fu_common_bytes_align:
+ * @bytes: a #GBytes
+ * @blksz: block size in bytes
+ * @padval: the byte used to pad the byte buffer
+ *
+ * Aligns a block of memory to @blksize using the @padval value; if
+ * the block is already aligned then the original @bytes is returned.
+ *
+ * Returns: (transfer full): a #GBytes, possibly @bytes
+ *
+ * Since: 1.2.4
+ **/
+GBytes *
+fu_common_bytes_align (GBytes *bytes, gsize blksz, gchar padval)
+{
+	const guint8 *data;
+	gsize sz;
+
+	g_return_val_if_fail (bytes != NULL, NULL);
+	g_return_val_if_fail (blksz > 0, NULL);
+
+	/* pad */
+	data = g_bytes_get_data (bytes, &sz);
+	if (sz % blksz != 0) {
+		gsize sz_align = ((sz / blksz) + 1) * blksz;
+		guint8 *data_align = g_malloc (sz_align);
+		memcpy (data_align, data, sz);
+		memset (data_align + sz, padval, sz_align - sz);
+		g_debug ("aligning 0x%x bytes to 0x%x",
+			 (guint) sz, (guint) sz_align);
+		return g_bytes_new_take (data_align, sz_align);
+	}
+
+	/* perfectly aligned */
+	return g_bytes_ref (bytes);
 }

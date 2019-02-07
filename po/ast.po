@@ -8,8 +8,6 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2018-10-12 11:10+0000\n"
-"Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Asturian (http://www.transifex.com/freedesktop/fwupd/language/ast/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -77,15 +75,6 @@ msgstr "Estáu"
 msgid "Status"
 msgstr "Estáu"
 
-msgid "This project aims to make updating firmware on Linux automatic, safe and reliable. You can either use a GUI software manager like GNOME Software to view and apply updates, the command-line tool or the D-Bus interface directly."
-msgstr "Esti proyeutu tien l'oxetivu d'anovar automáticamente'l firmware en Linux d'un mou seguru y fiable. Pues usar un xestor de software GUI como Gnome Software pa ver y aplicar los anovamientos, la ferramienta en llinia de comandos o la interfaz D-Bus direutamente."
-
 #. TRANSLATORS: transfer size in bytes
 msgid "Transfer Size"
 msgstr "Tamañu de tresferencia"
-
-msgid "Update device firmware on Linux"
-msgstr "Anueva'l firmware de preseos en Linux"
-
-msgid "fwupd"
-msgstr "fwupd"

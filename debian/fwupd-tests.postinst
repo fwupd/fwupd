@@ -12,4 +12,12 @@ if [ "$1" = configure ] && [ -z "$2" ]; then
 			echo "To enable test suite, modify /etc/fwupd/daemon.conf"
 		fi
 	fi
+	if [ -f /etc/fwupd/remotes.d/fwupd-tests.conf ]; then
+		if [ "$CI" = "true" ]; then
+			sed "s,^Enabled=false,Enabled=true," -i /etc/fwupd/remotes.d/fwupd-tests.conf
+		else
+			echo "To enable test suite, enable fwupd-tests remote"
+		fi
+
+	fi
 fi

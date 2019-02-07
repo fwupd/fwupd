@@ -7,12 +7,13 @@
 #ifndef __FU_PLUGIN_H
 #define __FU_PLUGIN_H
 
-#include <appstream-glib.h>
 #include <gio/gio.h>
 #include <gusb.h>
 #include <gudev/gudev.h>
 
 #include "fu-common.h"
+#include "fu-common-guid.h"
+#include "fu-common-version.h"
 #include "fu-device.h"
 #include "fu-device-locker.h"
 #include "fu-quirks.h"
@@ -42,8 +43,11 @@ struct _FuPluginClass
 							 guint		 duration);
 	void		 (* device_register)		(FuPlugin	*self,
 							 FuDevice	*device);
+	gboolean	 (* check_supported)		(FuPlugin	*self,
+							 const gchar	*guid);
+	void		 (* rules_changed)		(FuPlugin	*self);
 	/*< private >*/
-	gpointer	padding[24];
+	gpointer	padding[22];
 };
 
 /**
@@ -65,6 +69,8 @@ typedef enum {
  * @FU_PLUGIN_RULE_RUN_BEFORE:		Order the plugin before another
  * @FU_PLUGIN_RULE_REQUIRES_QUIRK:	Requires a specific quirk
  * @FU_PLUGIN_RULE_BETTER_THAN:		Is better than another plugin
+ * @FU_PLUGIN_RULE_INHIBITS_IDLE:	The plugin inhibits the idle shutdown
+ * @FU_PLUGIN_RULE_SUPPORTS_PROTOCOL:	The plugin supports a well known protocol
  *
  * The rules used for ordering plugins.
  * Plugins are expected to add rules in fu_plugin_initialize().
@@ -75,6 +81,8 @@ typedef enum {
 	FU_PLUGIN_RULE_RUN_BEFORE,
 	FU_PLUGIN_RULE_REQUIRES_QUIRK,
 	FU_PLUGIN_RULE_BETTER_THAN,
+	FU_PLUGIN_RULE_INHIBITS_IDLE,
+	FU_PLUGIN_RULE_SUPPORTS_PROTOCOL,
 	/*< private >*/
 	FU_PLUGIN_RULE_LAST
 } FuPluginRule;
@@ -89,8 +97,9 @@ FuPluginData	*fu_plugin_alloc_data			(FuPlugin	*self,
 gboolean	 fu_plugin_get_enabled			(FuPlugin	*self);
 void		 fu_plugin_set_enabled			(FuPlugin	*self,
 							 gboolean	 enabled);
+void		 fu_plugin_set_build_hash		(FuPlugin	*self,
+							 const gchar	*build_hash);
 GUsbContext	*fu_plugin_get_usb_context		(FuPlugin	*self);
-GPtrArray	*fu_plugin_get_supported		(FuPlugin	*self);
 void		 fu_plugin_device_add			(FuPlugin	*self,
 							 FuDevice	*device);
 void		 fu_plugin_device_remove		(FuPlugin	*self,

@@ -14,7 +14,9 @@
 void
 fu_plugin_init (FuPlugin *plugin)
 {
+	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_REQUIRES_QUIRK, FU_QUIRKS_PLUGIN);
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_SUPPORTS_PROTOCOL, "com.realtek.rts54");
 
 	/* register the custom types */
 	g_type_ensure (FU_TYPE_RTS54HID_MODULE);

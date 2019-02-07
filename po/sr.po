@@ -10,8 +10,6 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2018-10-12 11:10+0000\n"
-"Last-Translator: Richard Hughes <richard@hughsie.com>\n"
 "Language-Team: Serbian (http://www.transifex.com/freedesktop/fwupd/language/sr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -45,7 +43,7 @@ msgstr "Дозволи уназађивање издања фирмвера"
 msgid "Allow re-installing existing firmware versions"
 msgstr "Дозволи поновно инсталирање већ постојећих издања фирмвера"
 
-#. TRANSLATORS: explain why we want to upload
+#. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "Потребно је поново покретање да би се исправка применила."
 
@@ -631,12 +629,6 @@ msgstr "Сажетак"
 msgid "Target"
 msgstr "Мета"
 
-msgid "The fwupd process is a simple daemon to allow session software to update device firmware on your local machine. It is designed for desktops, but this project is also usable on phones, tablets and on headless servers."
-msgstr "Fwupd процес је једноставан демно који омогућава програмиму у сесији да ажурира фирмвер уређаја на вашој локалној машини. Намењен је за стоне рачунаре али је овај пројекат могуће користити на телефонима, таблетима и безглавим серверима."
-
-msgid "This project aims to make updating firmware on Linux automatic, safe and reliable. You can either use a GUI software manager like GNOME Software to view and apply updates, the command-line tool or the D-Bus interface directly."
-msgstr "Сврха овог пројекта је да учини ажурирање фирмвера на Линуксу лаким, безбедним и поузданим. Можете користити графичког управника програма као што су то Гномови Програми да бисте гледали и примењивали исправке, командну алатку или D-Bus интерфејс директно."
-
 #. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
 msgid "Title"
 msgstr "Наслов"
@@ -691,9 +683,6 @@ msgstr "Сажетак ажурирања"
 #. TRANSLATORS: section header for firmware version
 msgid "Update Version"
 msgstr "Верзија ажурирања"
-
-msgid "Update device firmware on Linux"
-msgstr "Ажурирајте фирмвер уређаја на Линуксу"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
@@ -760,6 +749,3 @@ msgstr "Упиши фирмвер из датотеке у једну парти
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing…"
 msgstr "Пишем…"
-
-msgid "fwupd"
-msgstr "fwupd"

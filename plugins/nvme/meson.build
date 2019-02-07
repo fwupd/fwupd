@@ -1,8 +1,16 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginNvme"']
 
+install_data([
+  'nvme.quirk',
+  ],
+  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
+)
+
 shared_module('fu_plugin_nvme',
+  fu_hash,
   sources : [
     'fu-plugin-nvme.c',
+    'fu-nvme-common.c',
     'fu-nvme-device.c',
   ],
   include_directories : [
@@ -15,6 +23,9 @@ shared_module('fu_plugin_nvme',
   c_args : [
     cargs,
     '-DLOCALSTATEDIR="' + localstatedir + '"',
+  ],
+  link_with : [
+    libfwupdprivate,
   ],
   dependencies : [
     plugin_deps,
@@ -29,6 +40,7 @@ if get_option('tests')
     'nvme-self-test',
     sources : [
       'fu-self-test.c',
+      'fu-nvme-common.c',
       'fu-nvme-device.c',
     ],
     include_directories : [
@@ -42,7 +54,6 @@ if get_option('tests')
       efivar,
     ],
     link_with : [
-      fwupd,
       libfwupdprivate,
     ],
     c_args : cargs

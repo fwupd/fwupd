@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2018 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -54,6 +54,9 @@ const gchar	*fwupd_release_get_metadata_item	(FwupdRelease	*release,
 const gchar	*fwupd_release_get_filename		(FwupdRelease	*release);
 void		 fwupd_release_set_filename		(FwupdRelease	*release,
 							 const gchar	*filename);
+const gchar	*fwupd_release_get_protocol		(FwupdRelease	*release);
+void		 fwupd_release_set_protocol		(FwupdRelease	*release,
+							 const gchar	*protocol);
 const gchar	*fwupd_release_get_appstream_id		(FwupdRelease	*release);
 void		 fwupd_release_set_appstream_id		(FwupdRelease	*release,
 							 const gchar	*appstream_id);
@@ -75,6 +78,12 @@ void		 fwupd_release_set_description		(FwupdRelease	*release,
 const gchar	*fwupd_release_get_homepage		(FwupdRelease	*release);
 void		 fwupd_release_set_homepage		(FwupdRelease	*release,
 							 const gchar	*homepage);
+const gchar	*fwupd_release_get_details_url		(FwupdRelease	*release);
+void		 fwupd_release_set_details_url		(FwupdRelease	*release,
+							 const gchar	*details_url);
+const gchar	*fwupd_release_get_source_url		(FwupdRelease	*release);
+void		 fwupd_release_set_source_url		(FwupdRelease	*release,
+							 const gchar	*source_url);
 guint64		 fwupd_release_get_size			(FwupdRelease	*release);
 void		 fwupd_release_set_size			(FwupdRelease	*release,
 							 guint64	 size);
@@ -84,6 +93,12 @@ void		 fwupd_release_set_license		(FwupdRelease	*release,
 FwupdTrustFlags	 fwupd_release_get_trust_flags		(FwupdRelease	*release);
 void		 fwupd_release_set_trust_flags		(FwupdRelease	*release,
 							 FwupdTrustFlags trust_flags);
+guint32		 fwupd_release_get_install_duration	(FwupdRelease	*release);
+void		 fwupd_release_set_install_duration	(FwupdRelease	*release,
+							 guint32	 duration);
+const gchar	*fwupd_release_get_update_message	(FwupdRelease	*release);
+void		 fwupd_release_set_update_message	(FwupdRelease	*release,
+							 const gchar	*update_message);
 
 G_END_DECLS
 

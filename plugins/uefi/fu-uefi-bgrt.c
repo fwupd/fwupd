@@ -24,7 +24,6 @@ gboolean
 fu_uefi_bgrt_setup (FuUefiBgrt *self, GError **error)
 {
 	gsize sz = 0;
-	guint64 status;
 	guint64 type;
 	guint64 version;
 	g_autofree gchar *bgrtdir = NULL;
@@ -41,14 +40,6 @@ fu_uefi_bgrt_setup (FuUefiBgrt *self, GError **error)
 				     G_IO_ERROR,
 				     G_IO_ERROR_NOT_SUPPORTED,
 				     "BGRT is not supported");
-		return FALSE;
-	}
-	status = fu_uefi_read_file_as_uint64 (bgrtdir, "status");
-	if (status != 1) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_NOT_SUPPORTED,
-			     "BGRT status was %" G_GUINT64_FORMAT, status);
 		return FALSE;
 	}
 	type = fu_uefi_read_file_as_uint64 (bgrtdir, "type");

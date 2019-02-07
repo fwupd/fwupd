@@ -5,6 +5,7 @@ install_data(['synapticsmst.quirk'],
 )
 
 shared_module('fu_plugin_synapticsmst',
+  fu_hash,
   sources : [
     'fu-plugin-synapticsmst.c',
     'synapticsmst-common.c',
@@ -18,8 +19,11 @@ shared_module('fu_plugin_synapticsmst',
   install : true,
   install_dir: plugin_dir,
   c_args : [
-      cargs,
-    ],
+    cargs,
+  ],
+  link_with : [
+    libfwupdprivate,
+  ],
   dependencies : [
     plugin_deps,
   ],
@@ -47,7 +51,6 @@ if get_option('tests')
       valgrind,
     ],
     link_with : [
-      fwupd,
       libfwupdprivate,
     ],
     c_args : [

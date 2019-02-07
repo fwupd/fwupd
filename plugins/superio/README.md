@@ -20,3 +20,10 @@ Other useful links:
 * https://github.com/coreboot/coreboot/blob/master/util/superiotool/superiotool.h
 * https://github.com/flashrom/flashrom/blob/master/it85spi.c
 * http://wiki.laptop.org/go/Ec_specification
+
+GUID Generation
+---------------
+
+These devices use a custom GUID generated using the SuperIO chipset name:
+
+ * `SuperIO-$(chipset)`, for example `SuperIO-IT8512`

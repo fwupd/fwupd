@@ -7,10 +7,10 @@
 #include "config.h"
 
 #include <fwupd.h>
-#include <appstream-glib.h>
 #include <glib/gstdio.h>
 #include <string.h>
 
+#include "fu-common-guid.h"
 #include "fu-rom.h"
 
 static void fu_rom_finalize			 (GObject *object);
@@ -689,7 +689,7 @@ fu_rom_load_data (FuRom *self,
 	/* update guid */
 	id = g_strdup_printf ("PCI\\VEN_%04X&DEV_%04X",
 			      self->vendor_id, self->device_id);
-	self->guid = as_utils_guid_from_string (id);
+	self->guid = fu_common_guid_from_string (id);
 	g_debug ("using %s for %s", self->guid, id);
 
 	/* not known */

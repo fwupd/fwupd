@@ -112,6 +112,9 @@ void		 fwupd_device_set_update_state		(FwupdDevice	*device,
 const gchar	*fwupd_device_get_update_error		(FwupdDevice	*device);
 void		 fwupd_device_set_update_error		(FwupdDevice	*device,
 							 const gchar	*update_error);
+const gchar	*fwupd_device_get_update_message	(FwupdDevice	*device);
+void		 fwupd_device_set_update_message	(FwupdDevice	*device,
+							 const gchar	*update_message);
 void		 fwupd_device_add_release		(FwupdDevice	*device,
 							 FwupdRelease	*release);
 GPtrArray	*fwupd_device_get_releases		(FwupdDevice	*device);

@@ -3,7 +3,12 @@ subdir('efi')
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefi"']
 cargs += '-DEFI_APP_LOCATION_BUILD="' + app.full_path() + '"'
 
+install_data(['uefi.quirk'],
+  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
+)
+
 shared_module('fu_plugin_uefi',
+  fu_hash,
   sources : [
     'fu-plugin-uefi.c',
     'fu-uefi-bgrt.c',
@@ -11,6 +16,7 @@ shared_module('fu_plugin_uefi',
     'fu-uefi-bootmgr.c',
     'fu-uefi-common.c',
     'fu-uefi-device.c',
+    'fu-uefi-pcrs.c',
     'fu-uefi-update-info.c',
     'fu-uefi-vars.c',
   ],
@@ -21,6 +27,9 @@ shared_module('fu_plugin_uefi',
   ],
   install : true,
   install_dir: plugin_dir,
+  link_with : [
+    libfwupdprivate,
+  ],
   c_args : cargs,
   dependencies : [
     plugin_deps,
@@ -32,6 +41,7 @@ shared_module('fu_plugin_uefi',
 executable(
   'fwupdate',
   resources_src,
+  fu_hash,
   sources : [
     'fu-uefi-tool.c',
     'fu-uefi-bgrt.c',
@@ -39,6 +49,7 @@ executable(
     'fu-uefi-bootmgr.c',
     'fu-uefi-common.c',
     'fu-uefi-device.c',
+    'fu-uefi-pcrs.c',
     'fu-uefi-update-info.c',
     'fu-uefi-vars.c',
   ],
@@ -48,7 +59,7 @@ executable(
     include_directories('../../libfwupd'),
   ],
   dependencies : [
-    appstream_glib,
+    libxmlb,
     giounix,
     gusb,
     gudev,
@@ -56,7 +67,6 @@ executable(
     efiboot,
   ],
   link_with : [
-    fwupd,
     libfwupdprivate,
   ],
   install : true,
@@ -79,6 +89,7 @@ if get_option('tests')
       'fu-uefi-bootmgr.c',
       'fu-uefi-common.c',
       'fu-uefi-device.c',
+      'fu-uefi-pcrs.c',
       'fu-uefi-update-info.c',
       'fu-uefi-vars.c',
       'fu-ucs2.c',
@@ -94,7 +105,6 @@ if get_option('tests')
       efiboot,
     ],
     link_with : [
-      fwupd,
       libfwupdprivate,
     ],
     c_args : cargs

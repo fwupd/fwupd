@@ -279,3 +279,31 @@ LIBFWUPD_1.1.3 {
     fwupd_device_set_install_duration;
   local: *;
 } LIBFWUPD_1.1.2;
+
+LIBFWUPD_1.2.1 {
+  global:
+    fwupd_release_get_install_duration;
+    fwupd_release_set_install_duration;
+  local: *;
+} LIBFWUPD_1.1.3;
+
+LIBFWUPD_1.2.2 {
+  global:
+    fwupd_release_get_protocol;
+    fwupd_release_set_protocol;
+  local: *;
+} LIBFWUPD_1.2.1;
+
+LIBFWUPD_1.2.4 {
+  global:
+    fwupd_client_get_tainted;
+    fwupd_device_get_update_message;
+    fwupd_device_set_update_message;
+    fwupd_release_get_details_url;
+    fwupd_release_get_source_url;
+    fwupd_release_get_update_message;
+    fwupd_release_set_details_url;
+    fwupd_release_set_source_url;
+    fwupd_release_set_update_message;
+  local: *;
+} LIBFWUPD_1.2.2;

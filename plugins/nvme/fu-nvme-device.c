@@ -19,13 +19,13 @@
 #include <linux/nvme_ioctl.h>
 
 #include "fu-chunk.h"
+#include "fu-nvme-common.h"
 #include "fu-nvme-device.h"
 
 #define FU_NVME_ID_CTRL_SIZE	0x1000
 
 struct _FuNvmeDevice {
 	FuUdevDevice		 parent_instance;
-	gchar			*version_format;
 	guint			 pci_depth;
 	gint			 fd;
 	guint64			 write_block_size;
@@ -101,7 +101,12 @@ fu_nvme_device_get_guid_safe (const guint8 *buf, guint16 addr_start)
 static gboolean
 fu_nvme_device_submit_admin_passthru (FuNvmeDevice *self, struct nvme_admin_cmd *cmd, GError **error)
 {
-	if (ioctl (self->fd, NVME_IOCTL_ADMIN_CMD, cmd) < 0) {
+	gint rc;
+	guint32 err;
+
+	/* submit admin command */
+	rc = ioctl (self->fd, NVME_IOCTL_ADMIN_CMD, cmd);
+	if (rc < 0) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
@@ -110,7 +115,26 @@ fu_nvme_device_submit_admin_passthru (FuNvmeDevice *self, struct nvme_admin_cmd 
 			     strerror (errno));
 		return FALSE;
 	}
-	return TRUE;
+
+	/* check the error code */
+	err = rc & 0x3ff;
+	switch (err) {
+	case NVME_SC_SUCCESS:
+	/* devices are always added with _NEEDS_REBOOT, so ignore */
+	case NVME_SC_FW_NEEDS_CONV_RESET:
+	case NVME_SC_FW_NEEDS_SUBSYS_RESET:
+	case NVME_SC_FW_NEEDS_RESET:
+		return TRUE;
+	default:
+		break;
+	}
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_SUPPORTED,
+		     "Not supported: %s",
+		     fu_nvme_status_to_string (err));
+	return FALSE;
+
 }
 
 static gboolean
@@ -153,8 +177,8 @@ fu_nvme_device_fw_download (FuNvmeDevice *self,
 		.opcode		= 0x11,
 		.addr		= 0x0, /* memory address of data */
 		.data_len	= data_sz,
-		.cdw10		= (data_sz >> 2) - 1,
-		.cdw11		= addr >> 2,
+		.cdw10		= (data_sz >> 2) - 1,	/* convert to DWORDs */
+		.cdw11		= addr >> 2,		/* convert to DWORDs */
 	};
 	memcpy (&cmd.addr, &data, sizeof (gpointer));
 	return fu_nvme_device_submit_admin_passthru (self, &cmd, error);
@@ -186,13 +210,13 @@ static gboolean
 fu_nvme_device_set_version (FuNvmeDevice *self, const gchar *version, GError **error)
 {
 	/* unset */
-	if (self->version_format == NULL) {
+	if (fu_device_get_version_format (FU_DEVICE (self)) == FU_VERSION_FORMAT_UNKNOWN) {
 		fu_device_set_version (FU_DEVICE (self), version);
 		return TRUE;
 	}
 
 	/* AA.BB.CC.DD */
-	if (g_strcmp0 (self->version_format, "quad") == 0) {
+	if (fu_device_get_version_format (FU_DEVICE (self)) == FU_VERSION_FORMAT_QUAD) {
 		guint64 tmp = g_ascii_strtoull (version, NULL, 16);
 		g_autofree gchar *version_new = NULL;
 		if (tmp == 0 || tmp > G_MAXUINT32) {
@@ -203,17 +227,16 @@ fu_nvme_device_set_version (FuNvmeDevice *self, const gchar *version, GError **e
 				     version);
 			return FALSE;
 		}
-		version_new = as_utils_version_from_uint32 (tmp, AS_VERSION_PARSE_FLAG_NONE);
+		version_new = fu_common_version_from_uint32 (tmp, FU_VERSION_FORMAT_QUAD);
 		fu_device_set_version (FU_DEVICE (self), version_new);
 		return TRUE;
 	}
 
 	/* invalid, or not supported */
-	g_set_error (error,
-		     G_IO_ERROR,
-		     G_IO_ERROR_INVALID_DATA,
-		     "version format %s not recognised",
-		     self->version_format);
+	g_set_error_literal (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "version format not recognised");
 	return FALSE;
 }
 
@@ -221,8 +244,10 @@ static gboolean
 fu_nvme_device_parse_cns (FuNvmeDevice *self, const guint8 *buf, gsize sz, GError **error)
 {
 	guint8 fawr;
+	guint8 fwug;
 	guint8 nfws;
 	guint8 s1ro;
+	g_autofree gchar *gu = NULL;
 	g_autofree gchar *mn = NULL;
 	g_autofree gchar *sn = NULL;
 	g_autofree gchar *sr = NULL;
@@ -251,11 +276,21 @@ fu_nvme_device_parse_cns (FuNvmeDevice *self, const guint8 *buf, gsize sz, GErro
 			return FALSE;
 	}
 
+	/* firmware update granularity (FWUG) */
+	fwug = buf[319];
+	if (fwug != 0x00 && fwug != 0xff)
+		self->write_block_size = ((guint64) fwug) * 0x1000;
+
 	/* firmware slot information */
 	fawr = (buf[260] & 0x10) >> 4;
 	nfws = (buf[260] & 0x0e) >> 1;
 	s1ro = buf[260] & 0x01;
 	g_debug ("fawr: %u, nr fw slots: %u, slot1 r/o: %u", fawr, nfws, s1ro);
+
+	/* FRU globally unique identifier (FGUID) */
+	gu = fu_nvme_device_get_guid_safe (buf, 127);
+	if (gu != NULL)
+		fu_device_add_guid (FU_DEVICE (self), gu);
 
 	/* Dell helpfully provide an EFI GUID we can use in the vendor offset,
 	 * but don't have a header or any magic we can use -- so check if the
@@ -268,24 +303,6 @@ fu_nvme_device_parse_cns (FuNvmeDevice *self, const guint8 *buf, gsize sz, GErro
 		fu_device_add_guid (FU_DEVICE (self), mn);
 	}
 	return TRUE;
-}
-
-static guint
-fu_nvme_device_pci_slot_depth (FuNvmeDevice *self)
-{
-	GUdevDevice *udev_device = fu_udev_device_get_dev (FU_UDEV_DEVICE (self));
-	g_autoptr(GUdevDevice) device_tmp = NULL;
-
-	device_tmp = g_udev_device_get_parent_with_subsystem (udev_device, "pci", NULL);
-	if (device_tmp == NULL)
-		return 0;
-	for (guint i = 0; i < 0xff; i++) {
-		g_autoptr(GUdevDevice) parent = g_udev_device_get_parent (device_tmp);
-		if (parent == NULL)
-			return i;
-		g_set_object (&device_tmp, parent);
-	}
-	return 0;
 }
 
 static void
@@ -334,9 +351,14 @@ fu_nvme_device_probe (FuUdevDevice *device, GError **error)
 		return FALSE;
 
 	/* look at the PCI depth to work out if in an external enclosure */
-	self->pci_depth = fu_nvme_device_pci_slot_depth (self);
+	self->pci_depth = fu_udev_device_get_slot_depth (device, "pci");
 	if (self->pci_depth <= 2)
 		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_INTERNAL);
+
+	/* all devices need at least a warm reset, but some quirked drives
+	 * need a full "cold" shutdown and startup */
+	if (!fu_device_has_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN))
+		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 
 	return TRUE;
 }
@@ -375,12 +397,21 @@ static gboolean
 fu_nvme_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 {
 	FuNvmeDevice *self = FU_NVME_DEVICE (device);
+	g_autoptr(GBytes) fw2 = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 	guint64 block_size = self->write_block_size > 0 ?
 			     self->write_block_size : 0x1000;
 
+	/* some vendors provide firmware files whose sizes are not multiples
+	 * of blksz *and* the device won't accept blocks of different sizes */
+	if (fu_device_has_custom_flag (device, "force-align")) {
+		fw2 = fu_common_bytes_align (fw, block_size, 0xff);
+	} else {
+		fw2 = g_bytes_ref (fw);
+	}
+
 	/* build packets */
-	chunks = fu_chunk_array_new_from_bytes (fw,
+	chunks = fu_chunk_array_new_from_bytes (fw2,
 						0x00,		/* start_addr */
 						0x00,		/* page_sz */
 						block_size);	/* block size */
@@ -422,10 +453,6 @@ fu_nvme_device_set_quirk_kv (FuDevice *device,
 			     GError **error)
 {
 	FuNvmeDevice *self = FU_NVME_DEVICE (device);
-	if (g_strcmp0 (key, "NvmeVersionFormat") == 0) {
-		self->version_format = g_strdup (value);
-		return TRUE;
-	}
 	if (g_strcmp0 (key, "NvmeBlockSize") == 0) {
 		self->write_block_size = fu_common_strtoull (value);
 		return TRUE;
@@ -443,7 +470,6 @@ fu_nvme_device_init (FuNvmeDevice *self)
 {
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_set_summary (FU_DEVICE (self), "NVM Express Solid State Drive");
 	fu_device_add_icon (FU_DEVICE (self), "drive-harddisk");
 }
@@ -451,8 +477,6 @@ fu_nvme_device_init (FuNvmeDevice *self)
 static void
 fu_nvme_device_finalize (GObject *object)
 {
-	FuNvmeDevice *self = FU_NVME_DEVICE (object);
-	g_free (self->version_format);
 	G_OBJECT_CLASS (fu_nvme_device_parent_class)->finalize (object);
 }
 
