@@ -24,7 +24,7 @@ else
 endif
 
 %:
-	dh $@ --with gir,systemd
+	dh $@ --with gir
 
 override_dh_auto_clean:
 	rm -fr debian/build

@@ -174,14 +174,14 @@
   <dependency type="build" id="debhelper">
     <distro id="debian">
       <control>
-        <version>(>= 10.3)</version>
+        <version>(>= 11)</version>
       </control>
       <package variant="x86_64" />
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
       <control>
-        <version>(>= 10.3)</version>
+        <version>(>= 11)</version>
       </control>
       <package variant="x86_64" />
     </distro>
