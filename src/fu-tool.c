@@ -89,9 +89,11 @@ fu_util_start_engine (FuUtilPrivate *priv, GError **error)
 	g_autoptr(GError) error_local = NULL;
 
 	/* try to stop any already running daemon */
-	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
-	if (connection == NULL)
-		return FALSE;
+	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, &error_local);
+	if (connection == NULL) {
+		g_debug ("Failed to get bus: %s", error_local->message);
+		return TRUE;
+	}
 	proxy = g_dbus_proxy_new_sync (connection,
 					G_DBUS_PROXY_FLAGS_NONE,
 					NULL,
