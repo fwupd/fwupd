@@ -1998,6 +1998,10 @@ fu_device_probe (FuDevice *self, GError **error)
 		if (!klass->probe (self, error))
 			return FALSE;
 	}
+
+	/* convert the instance IDs to GUIDs */
+	fu_device_convert_instance_ids (self);
+
 	priv->done_probe = TRUE;
 	return TRUE;
 }
