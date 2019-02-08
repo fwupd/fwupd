@@ -70,7 +70,7 @@ def get_firmware_bin(root, bin_path, dst):
 
 def create_firmware_cab(exe, folder):
     with cd(folder):
-        if os.name is "nt":
+        if os.name == "nt":
           directive = os.path.join (folder, "directive")
           with open (directive, 'w') as wfd:
             wfd.write('"firmware.cab"\r\n')
