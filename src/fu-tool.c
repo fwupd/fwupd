@@ -1250,10 +1250,10 @@ main (int argc, char *argv[])
 		{ "plugin-whitelist", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &plugin_glob,
 			/* TRANSLATORS: command line option */
 			_("Manually whitelist specific plugins"), NULL },
-		{ "prepare", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &priv->prepare_blob,
+		{ "prepare", '\0', 0, G_OPTION_ARG_NONE, &priv->prepare_blob,
 			/* TRANSLATORS: command line option */
 			_("Run the plugin composite prepare routine when using install-blob"), NULL },
-		{ "cleanup", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &priv->cleanup_blob,
+		{ "cleanup", '\0', 0, G_OPTION_ARG_NONE, &priv->cleanup_blob,
 			/* TRANSLATORS: command line option */
 			_("Run the plugin composite cleanup routine when using install-blob"), NULL },
 
