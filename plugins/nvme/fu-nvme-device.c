@@ -182,7 +182,7 @@ fu_nvme_device_parse_cns_maybe_dell (FuNvmeDevice *self, const guint8 *buf)
 	component_id = fu_nvme_device_get_string_safe (buf, 0xc36, 0xc3d);
 	if (component_id == NULL ||
 	   !g_str_is_ascii (component_id) ||
-	    strlen (component_id) < 4) {
+	    strlen (component_id) < 6) {
 		g_debug ("invalid component ID, skipping");
 		return;
 	}

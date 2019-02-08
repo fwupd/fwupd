@@ -160,7 +160,7 @@ fu_ata_device_parse_id_maybe_dell (FuAtaDevice *self, const guint16 *buf)
 	component_id = fu_ata_device_get_string (buf, 137, 140);
 	if (component_id == NULL ||
 	   !g_str_is_ascii (component_id) ||
-	    strlen (component_id) < 4) {
+	    strlen (component_id) < 6) {
 		g_debug ("invalid component ID, skipping");
 		return;
 	}
