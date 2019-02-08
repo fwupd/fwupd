@@ -709,7 +709,7 @@ fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
 			g_debug ("failed to find new device: %s",
 				 error_local->message);
 		} else {
-			g_autoptr(GPtrArray) devices_new = NULL;
+			g_autoptr(GPtrArray) devices_new = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 			g_ptr_array_add (devices_new, g_steal_pointer (&device_new));
 			if (!fu_engine_composite_cleanup (priv->engine, devices_new, error)) {
 				g_prefix_error (error, "failed to cleanup composite action: ");
