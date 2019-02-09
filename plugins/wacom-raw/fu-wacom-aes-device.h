@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_WACOM_AES_DEVICE_H
-#define __FU_WACOM_AES_DEVICE_H
+#pragma once
 
 #include "fu-wacom-device.h"
 
@@ -17,5 +16,3 @@ G_DECLARE_FINAL_TYPE (FuWacomAesDevice, fu_wacom_aes_device, FU, WACOM_AES_DEVIC
 FuWacomAesDevice	*fu_wacom_aes_device_new	(FuUdevDevice	*device);
 
 G_END_DECLS
-
-#endif /* __FU_WACOM_AES_DEVICE_H */

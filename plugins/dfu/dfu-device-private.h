@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __DFU_DEVICE_PRIVATE_H
-#define __DFU_DEVICE_PRIVATE_H
+#pragma once
 
 #include <glib-object.h>
 #include <gio/gio.h>
@@ -26,5 +25,3 @@ gboolean	 dfu_device_ensure_interface		(DfuDevice	*device,
 							 GError		**error);
 
 G_END_DECLS
-
-#endif /* __DFU_DEVICE_PRIVATE_H */

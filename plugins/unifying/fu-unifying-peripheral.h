@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_UNIFYING_PERIPHERAL_H
-#define __FU_UNIFYING_PERIPHERAL_H
+#pragma once
 
 #include "fu-udev-device.h"
 
@@ -15,5 +14,3 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (FuUnifyingPeripheral, fu_unifying_peripheral, FU, UNIFYING_PERIPHERAL, FuUdevDevice)
 
 G_END_DECLS
-
-#endif /* __FU_UNIFYING_PERIPHERAL_H */

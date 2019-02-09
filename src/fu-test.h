@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_TEST_H__
-#define __FU_TEST_H__
+#pragma once
 
 #include <glib.h>
 
@@ -16,5 +15,3 @@ void		 fu_test_loop_quit		(void);
 gboolean	 fu_test_compare_lines		(const gchar	*txt1,
 						 const gchar	*txt2,
 						 GError		**error);
-
-#endif /* __FU_TEST_H__ */

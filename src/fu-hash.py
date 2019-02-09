@@ -28,6 +28,5 @@ if __name__ == '__main__':
         buf = f.read()
         csum = hashlib.sha256(buf).hexdigest()
         with open(sys.argv[2], 'w') as f2:
-            f2.write('#ifndef FU_BUILD_HASH\n')
+            f2.write('#pragma once\n')
             f2.write('#define FU_BUILD_HASH "%s"\n' % csum)
-            f2.write('#endif /* FU_BUILD_HASH */\n')

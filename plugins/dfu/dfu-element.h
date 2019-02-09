@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __DFU_ELEMENT_H
-#define __DFU_ELEMENT_H
+#pragma once
 
 #include <glib-object.h>
 #include <gio/gio.h>
@@ -41,5 +40,3 @@ void		 dfu_element_set_padding_value	(DfuElement	*element,
 gchar		*dfu_element_to_string		(DfuElement	*element);
 
 G_END_DECLS
-
-#endif /* __DFU_ELEMENT_H */

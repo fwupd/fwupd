@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_PLUGIN_DELL_H
-#define __FU_PLUGIN_DELL_H
+#pragma once
 
 #include "fu-plugin.h"
 #include "fu-dell-smi.h"
@@ -40,5 +39,3 @@ struct tpm_status {
 #define TPM_TYPE_MASK	0x0F00
 #define TPM_1_2_MODE	0x0001
 #define TPM_2_0_MODE	0x0002
-
-#endif /* __FU_PLUGIN_DELL_H */

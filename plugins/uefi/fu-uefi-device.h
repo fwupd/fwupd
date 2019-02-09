@@ -5,8 +5,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_UEFI_DEVICE_H
-#define __FU_UEFI_DEVICE_H
+#pragma once
 
 #include "fu-plugin.h"
 #include "fu-uefi-device.h"
@@ -60,5 +59,3 @@ FuUefiUpdateInfo *fu_uefi_device_load_update_info	(FuUefiDevice	*self,
 gboolean	 fu_uefi_missing_capsule_header		(FuDevice *device);
 
 G_END_DECLS
-
-#endif /* __FU_UEFI_DEVICE_H */

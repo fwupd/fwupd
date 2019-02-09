@@ -14,8 +14,7 @@
  * SPDX-License-Identifier: LGPL-2.1+ OR MIT
  */
 
-#ifndef __FU_DELLDOCK_I2C_TBT_H
-#define __FU_DELLDOCK_I2C_TBT_H
+#pragma once
 
 #include "config.h"
 
@@ -29,6 +28,3 @@ G_DECLARE_FINAL_TYPE (FuDellDockTbt, fu_dell_dock_tbt, FU, DELL_DOCK_TBT, FuDevi
 FuDellDockTbt 	*fu_dell_dock_tbt_new	(void);
 
 G_END_DECLS
-
-
-#endif /* __FU_DELLDOCK_I2C_TBT_H */

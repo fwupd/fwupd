@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_SUPERIO_COMMON_H
-#define __FU_SUPERIO_COMMON_H
+#pragma once
 
 #include "fu-plugin.h"
 
@@ -47,5 +46,3 @@ gboolean	 fu_superio_set_ldn	(gint		 fd,
 					 GError		**error);
 
 G_END_DECLS
-
-#endif /* __FU_SUPERIO_COMMON_H */

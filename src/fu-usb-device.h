@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_USB_DEVICE_H
-#define __FU_USB_DEVICE_H
+#pragma once
 
 #include <glib-object.h>
 #include <gusb.h>
@@ -48,5 +47,3 @@ void		 fu_usb_device_set_dev			(FuUsbDevice	*device,
 gboolean	 fu_usb_device_is_open			(FuUsbDevice	*device);
 
 G_END_DECLS
-
-#endif /* __FU_USB_DEVICE_H */

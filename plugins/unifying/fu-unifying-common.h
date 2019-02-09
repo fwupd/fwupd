@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_UNIFYING_COMMON_H
-#define __FU_UNIFYING_COMMON_H
+#pragma once
 
 #include <glib.h>
 
@@ -31,5 +30,3 @@ gchar		*fu_unifying_format_version	(const gchar	*name,
 						 guint16	 build);
 
 G_END_DECLS
-
-#endif /* __FU_UNIFYING_COMMON_H */

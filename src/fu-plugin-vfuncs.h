@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_PLUGIN_VFUNCS_H
-#define __FU_PLUGIN_VFUNCS_H
+#pragma once
 
 #include "fu-plugin.h"
 #include "fu-device.h"
@@ -79,5 +78,3 @@ void		 fu_plugin_device_registered		(FuPlugin	*plugin,
 							 FuDevice	*dev);
 
 G_END_DECLS
-
-#endif /* __FU_PLUGIN_VFUNCS_H */

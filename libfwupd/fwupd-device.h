@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FWUPD_DEVICE_H
-#define __FWUPD_DEVICE_H
+#pragma once
 
 #include <glib-object.h>
 
@@ -128,6 +127,3 @@ gint		 fwupd_device_compare			(FwupdDevice	*device1,
 							 FwupdDevice	*device2);
 
 G_END_DECLS
-
-#endif /* __FWUPD_DEVICE_H */
-

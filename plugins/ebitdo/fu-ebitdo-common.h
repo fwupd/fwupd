@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_EBITDO_COMMON_H
-#define __FU_EBITDO_COMMON_H
+#pragma once
 
 #include <glib.h>
 
@@ -70,5 +69,3 @@ const gchar	*fu_ebitdo_pkt_cmd_to_string	(FuEbitdoPktCmd		 cmd);
 const gchar	*fu_ebitdo_pkt_type_to_string	(FuEbitdoPktType	 type);
 void		 fu_ebitdo_dump_firmware_header	(FuEbitdoFirmwareHeader	*hdr);
 void		 fu_ebitdo_dump_pkt		(FuEbitdoPkt		*hdr);
-
-#endif /* __FU_EBITDO_COMMON_H */

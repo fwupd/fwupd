@@ -13,8 +13,7 @@
  * SPDX-License-Identifier: LGPL-2.1+ OR MIT
  */
 
-#ifndef __FU_DELL_DOCK_COMMON_H
-#define __FU_DELL_DOCK_COMMON_H
+#pragma once
 
 #include "config.h"
 
@@ -36,5 +35,3 @@ gboolean	fu_dell_dock_set_power		(FuDevice *device,
 void		 fu_dell_dock_will_replug	(FuDevice *device);
 
 void		 fu_dell_dock_clone_updatable	(FuDevice *device);
-
-#endif /* __FU_DELL_DOCK_COMMON_H */

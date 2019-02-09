@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FWUPD_REMOTE_PRIVATE_H
-#define __FWUPD_REMOTE_PRIVATE_H
+#pragma once
 
 #include "fwupd-remote.h"
 
@@ -27,6 +26,3 @@ gchar		**fwupd_remote_get_order_after		(FwupdRemote	*self);
 gchar		**fwupd_remote_get_order_before		(FwupdRemote	*self);
 
 G_END_DECLS
-
-#endif /* __FWUPD_REMOTE_PRIVATE_H */
-

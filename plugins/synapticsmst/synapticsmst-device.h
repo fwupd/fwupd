@@ -6,8 +6,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __SYNAPTICSMST_DEVICE_H
-#define __SYNAPTICSMST_DEVICE_H
+#pragma once
 
 #include <gio/gio.h>
 
@@ -86,5 +85,3 @@ gboolean	 synapticsmst_device_write_firmware		(SynapticsMSTDevice *device,
 								 GError	**error);
 
 G_END_DECLS
-
-#endif /* __SYNAPTICSMST_DEVICE_H */

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FWUPD_ENUMS_PRIVATE_H
-#define __FWUPD_ENUMS_PRIVATE_H
+#pragma once
 
 #define FWUPD_RESULT_KEY_APPSTREAM_ID		"AppstreamId"	/* s */
 #define FWUPD_RESULT_KEY_CHECKSUM		"Checksum"	/* as */
@@ -45,5 +44,3 @@
 #define FWUPD_RESULT_KEY_VERSION_BOOTLOADER	"VersionBootloader"	/* s */
 #define FWUPD_RESULT_KEY_VERSION_LOWEST		"VersionLowest"	/* s */
 #define FWUPD_RESULT_KEY_VERSION		"Version"	/* s */
-
-#endif /* __FWUPD_ENUMS_PRIVATE_H */

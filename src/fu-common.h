@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_COMMON_H__
-#define __FU_COMMON_H__
+#pragma once
 
 #include <gio/gio.h>
 
@@ -106,5 +105,3 @@ guint32		 fu_common_read_uint32		(const guint8	*buf,
 guint		 fu_common_string_replace	(GString	*string,
 						 const gchar	*search,
 						 const gchar	*replace);
-
-#endif /* __FU_COMMON_H__ */

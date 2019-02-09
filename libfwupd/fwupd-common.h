@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FWUPD_COMMON_H
-#define __FWUPD_COMMON_H
+#pragma once
 
 #include <glib.h>
 
@@ -68,5 +67,3 @@ gchar		*fwupd_guid_hash_string			(const gchar	*str);
 gchar		*fwupd_guid_hash_data			(const guint8	*data,
 							 gsize		 datasz,
 							 FwupdGuidFlags	 flags);
-
-#endif /* __FWUPD_COMMON_H */

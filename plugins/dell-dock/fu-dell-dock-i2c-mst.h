@@ -13,8 +13,7 @@
  * SPDX-License-Identifier: LGPL-2.1+ OR MIT
  */
 
-#ifndef __FU_DELL_DOCK_I2C_MST_H
-#define __FU_DELL_DOCK_I2C_MST_H
+#pragma once
 
 #include "config.h"
 
@@ -28,5 +27,3 @@ G_DECLARE_FINAL_TYPE (FuDellDockMst, fu_dell_dock_mst, FU, DELL_DOCK_MST, FuDevi
 FuDellDockMst 	*fu_dell_dock_mst_new	(void);
 
 G_END_DECLS
-
-#endif /* __FU_DELL_DOCK_I2C_MST_H */

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_UNIFYING_BOOTLOADER_TEXAS_H
-#define __FU_UNIFYING_BOOTLOADER_TEXAS_H
+#pragma once
 
 #include "fu-unifying-bootloader.h"
 
@@ -15,5 +14,3 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (FuUnifyingBootloaderTexas, fu_unifying_bootloader_texas, FU, UNIFYING_BOOTLOADER_TEXAS, FuUnifyingBootloader)
 
 G_END_DECLS
-
-#endif /* __FU_UNIFYING_BOOTLOADER_TEXAS_H */

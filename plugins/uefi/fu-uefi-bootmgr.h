@@ -5,8 +5,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_UEFI_BOOTMGR_H
-#define __FU_UEFI_BOOTMGR_H
+#pragma once
 
 #include <glib.h>
 #include <efivar.h>
@@ -25,5 +24,3 @@ gboolean	 fu_uefi_bootmgr_bootnext	(const gchar		*esp_path,
 						 GError			**error);
 
 G_END_DECLS
-
-#endif /* __FU_UEFI_BOOTMGR_H */

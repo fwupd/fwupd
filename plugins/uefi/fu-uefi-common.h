@@ -5,8 +5,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_UEFI_COMMON_H
-#define __FU_UEFI_COMMON_H
+#pragma once
 
 #include <glib.h>
 #include <efivar.h>
@@ -87,5 +86,3 @@ guint64		 fu_uefi_read_file_as_uint64	(const gchar	*path,
 gboolean	 fu_uefi_prefix_efi_errors	(GError		**error);
 
 G_END_DECLS
-
-#endif /* __FU_UEFI_COMMON_H */

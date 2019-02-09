@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_ENGINE_H
-#define __FU_ENGINE_H
+#pragma once
 
 G_BEGIN_DECLS
 
@@ -131,6 +130,3 @@ XbNode		*fu_engine_get_component_by_guids	(FuEngine	*self,
 							 FuDevice	*device);
 
 G_END_DECLS
-
-#endif /* __FU_ENGINE_H */
-

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __DFU_TARGET_H
-#define __DFU_TARGET_H
+#pragma once
 
 #include <glib-object.h>
 #include <gio/gio.h>
@@ -91,5 +90,3 @@ gboolean	 dfu_target_mass_erase			(DfuTarget	*target,
 DfuCipherKind	 dfu_target_get_cipher_kind		(DfuTarget	*target);
 
 G_END_DECLS
-
-#endif /* __DFU_TARGET_H */

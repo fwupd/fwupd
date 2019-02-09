@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_COLORHUG_DEVICE_H
-#define __FU_COLORHUG_DEVICE_H
+#pragma once
 
 #include "fu-plugin.h"
 
@@ -22,5 +21,3 @@ gboolean	 fu_colorhug_device_set_flash_success	(FuColorhugDevice	*device,
 							 GError			**error);
 
 G_END_DECLS
-
-#endif /* __FU_COLORHUG_DEVICE_H */

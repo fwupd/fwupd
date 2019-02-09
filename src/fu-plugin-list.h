@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_PLUGIN_LIST_H
-#define __FU_PLUGIN_LIST_H
+#pragma once
 
 G_BEGIN_DECLS
 
@@ -27,6 +26,3 @@ gboolean	 fu_plugin_list_depsolve		(FuPluginList	*self,
 							 GError		**error);
 
 G_END_DECLS
-
-#endif /* __FU_PLUGIN_LIST_H */
-

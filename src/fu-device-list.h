@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_DEVICE_LIST_H
-#define __FU_DEVICE_LIST_H
+#pragma once
 
 G_BEGIN_DECLS
 
@@ -36,6 +35,3 @@ gboolean	 fu_device_list_wait_for_replug		(FuDeviceList	*self,
 							 GError		**error);
 
 G_END_DECLS
-
-#endif /* __FU_DEVICE_LIST_H */
-

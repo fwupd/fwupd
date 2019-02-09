@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_CHUNK_H
-#define __FU_CHUNK_H
+#pragma once
 
 #include <glib.h>
 #include <gusb.h>
@@ -39,5 +38,3 @@ GPtrArray	*fu_chunk_array_new_from_bytes		(GBytes		*blob,
 							 guint32	 packet_sz);
 
 G_END_DECLS
-
-#endif /* __FU_CHUNK_H */

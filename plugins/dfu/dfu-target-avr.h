@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __DFU_TARGET_AVR_H
-#define __DFU_TARGET_AVR_H
+#pragma once
 
 #include <glib-object.h>
 #include <gio/gio.h>
@@ -25,5 +24,3 @@ struct _DfuTargetAvrClass
 DfuTarget	*dfu_target_avr_new		(void);
 
 G_END_DECLS
-
-#endif /* __DFU_TARGET_AVR_H */

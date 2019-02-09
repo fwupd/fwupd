@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __DFU_FORMAT_DFU_H
-#define __DFU_FORMAT_DFU_H
+#pragma once
 
 #include <glib-object.h>
 #include <gio/gio.h>
@@ -23,5 +22,3 @@ gboolean		 dfu_firmware_from_dfu		(DfuFirmware	*firmware,
 							GError		**error);
 
 G_END_DECLS
-
-#endif /* __DFU_FORMAT_DFU_H */

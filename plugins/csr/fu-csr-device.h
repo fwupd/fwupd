@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_CSR_DEVICE_H
-#define __FU_CSR_DEVICE_H
+#pragma once
 
 #include "fu-plugin.h"
 
@@ -17,5 +16,3 @@ G_DECLARE_FINAL_TYPE (FuCsrDevice, fu_csr_device, FU, CSR_DEVICE, FuUsbDevice)
 FuCsrDevice	*fu_csr_device_new		(FuUsbDevice		*device);
 
 G_END_DECLS
-
-#endif /* __FU_CSR_DEVICE_H */

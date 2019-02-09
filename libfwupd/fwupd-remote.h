@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FWUPD_REMOTE_H
-#define __FWUPD_REMOTE_H
+#pragma once
 
 #include "fwupd-enums.h"
 
@@ -71,6 +70,3 @@ gchar		*fwupd_remote_build_firmware_uri	(FwupdRemote	*self,
 							 GError		**error);
 
 G_END_DECLS
-
-#endif /* __FWUPD_REMOTE_H */
-

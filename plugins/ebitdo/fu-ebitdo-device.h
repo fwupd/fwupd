@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_EBITDO_DEVICE_H
-#define __FU_EBITDO_DEVICE_H
+#pragma once
 
 #include "fu-plugin.h"
 
@@ -20,5 +19,3 @@ FuEbitdoDevice	*fu_ebitdo_device_new			(FuUsbDevice	*device);
 const guint32	*fu_ebitdo_device_get_serial		(FuEbitdoDevice	*device);
 
 G_END_DECLS
-
-#endif /* __FU_EBITDO_DEVICE_H */

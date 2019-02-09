@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_NITROKEY_DEVICE_H
-#define __FU_NITROKEY_DEVICE_H
+#pragma once
 
 #include "fu-plugin.h"
 
@@ -22,5 +21,3 @@ struct _FuNitrokeyDeviceClass
 FuNitrokeyDevice *fu_nitrokey_device_new	(FuUsbDevice		*device);
 
 G_END_DECLS
-
-#endif /* __FU_NITROKEY_DEVICE_H */

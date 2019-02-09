@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __DFU_PATCH_H
-#define __DFU_PATCH_H
+#pragma once
 
 #include <glib-object.h>
 #include <gio/gio.h>
@@ -54,5 +53,3 @@ GBytes		*dfu_patch_get_checksum_old	(DfuPatch	*self);
 GBytes		*dfu_patch_get_checksum_new	(DfuPatch	*self);
 
 G_END_DECLS
-
-#endif /* __DFU_PATCH_H */

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_IO_CHANNEL_H
-#define __FU_IO_CHANNEL_H
+#pragma once
 
 #include <glib-object.h>
 
@@ -65,5 +64,3 @@ GBytes		*fu_io_channel_read_bytes	(FuIOChannel	*self,
 						 GError		**error);
 
 G_END_DECLS
-
-#endif /* __FU_IO_CHANNEL_H */
