@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_DEVICE_H
-#define __FU_DEVICE_H
+#pragma once
 
 #include <glib-object.h>
 #include <fwupd.h>
@@ -228,6 +227,3 @@ void		 fu_device_set_poll_interval		(FuDevice	*self,
 							 guint		 interval);
 
 G_END_DECLS
-
-#endif /* __FU_DEVICE_H */
-

@@ -5,8 +5,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef _FWUP_DEBUG_H
-#define _FWUP_DEBUG_H
+#pragma once
 
 typedef enum {
 	FWUP_DEBUG_LEVEL_DEBUG,
@@ -28,5 +27,3 @@ VOID		 fwup_debug_set_enabled	(BOOLEAN	 val);
 #define fwup_debug(fmt, args...) fwup_log(FWUP_DEBUG_LEVEL_DEBUG, __func__, __FILE__, __LINE__, fmt, ## args )
 #define fwup_info(fmt, args...) fwup_log(FWUP_DEBUG_LEVEL_INFO, __func__, __FILE__, __LINE__, fmt, ## args )
 #define fwup_warning(fmt, args...) fwup_log(FWUP_DEBUG_LEVEL_WARNING, __func__, __FILE__, __LINE__, fmt, ## args )
-
-#endif /* _FWUP_DEBUG_H */

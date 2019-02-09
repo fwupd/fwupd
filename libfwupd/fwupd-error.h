@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FWUPD_ERROR_H
-#define __FWUPD_ERROR_H
+#pragma once
 
 #include <glib.h>
 
@@ -52,5 +51,3 @@ typedef enum {
 GQuark		 fwupd_error_quark			(void);
 const gchar	*fwupd_error_to_string			(FwupdError	 error);
 FwupdError	 fwupd_error_from_string		(const gchar	*error);
-
-#endif /* __FWUPD_ERROR_H */

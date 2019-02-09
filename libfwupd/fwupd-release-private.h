@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FWUPD_RELEASE_PRIVATE_H
-#define __FWUPD_RELEASE_PRIVATE_H
+#pragma once
 
 #include <glib-object.h>
 
@@ -17,6 +16,4 @@ FwupdRelease	*fwupd_release_from_variant		(GVariant	*data);
 GVariant	*fwupd_release_to_variant		(FwupdRelease	*release);
 
 G_END_DECLS
-
-#endif /* __FWUPD_RELEASE_PRIVATE_H */
 

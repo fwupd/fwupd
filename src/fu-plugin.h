@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_PLUGIN_H
-#define __FU_PLUGIN_H
+#pragma once
 
 #include <gio/gio.h>
 #include <gusb.h>
@@ -154,6 +153,3 @@ void		 fu_plugin_add_compile_version		(FuPlugin	*self,
 							 const gchar	*version);
 
 G_END_DECLS
-
-#endif /* __FU_PLUGIN_H */
-

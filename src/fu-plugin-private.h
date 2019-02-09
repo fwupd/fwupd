@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_PLUGIN_PRIVATE_H
-#define __FU_PLUGIN_PRIVATE_H
+#pragma once
 
 #include "fu-quirks.h"
 #include "fu-plugin.h"
@@ -122,5 +121,3 @@ gint		 fu_plugin_order_compare		(FuPlugin	*plugin1,
 gchar		*fu_plugin_guess_name_from_fn           (const gchar	*filename);
 
 G_END_DECLS
-
-#endif /* __FU_PLUGIN_PRIVATE_H */

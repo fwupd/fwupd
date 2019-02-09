@@ -5,8 +5,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_QUIRKS_H
-#define __FU_QUIRKS_H
+#pragma once
 
 G_BEGIN_DECLS
 
@@ -49,5 +48,3 @@ gboolean	 fu_quirks_get_kvs_for_guid		(FuQuirks	*self,
 #define	FU_QUIRKS_VERSION_FORMAT		"VersionFormat"
 
 G_END_DECLS
-
-#endif /* __FU_QUIRKS_H */

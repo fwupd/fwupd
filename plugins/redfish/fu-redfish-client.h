@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_REDFISH_CLIENT_H
-#define __FU_REDFISH_CLIENT_H
+#pragma once
 
 #include <gio/gio.h>
 
@@ -40,7 +39,3 @@ gboolean	 fu_redfish_client_coldplug	(FuRedfishClient	*self,
 GPtrArray	*fu_redfish_client_get_devices	(FuRedfishClient	*self);
 
 G_END_DECLS
-
-#endif /* __FU_REDFISH_CLIENT_H */
-
-/* vim: set noexpandtab: */

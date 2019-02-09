@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_UNIFYING_HIDPP_H
-#define __FU_UNIFYING_HIDPP_H
+#pragma once
 
 #include <gio/gio.h>
 
@@ -151,5 +150,3 @@ gboolean	 fu_unifying_hidpp_transfer	(FuIOChannel		*self,
 						 GError			**error);
 
 G_END_DECLS
-
-#endif /* __FU_UNIFYING_HIDPP_H */

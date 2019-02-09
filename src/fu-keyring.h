@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_KEYRING_H
-#define __FU_KEYRING_H
+#pragma once
 
 #include <glib-object.h>
 #include <gio/gio.h>
@@ -45,5 +44,3 @@ void		 fu_keyring_set_name			(FuKeyring	*self,
 							 const gchar	*name);
 
 G_END_DECLS
-
-#endif /* __FU_KEYRING_H */

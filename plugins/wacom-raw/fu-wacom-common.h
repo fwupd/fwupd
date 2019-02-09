@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_WACOM_COMMON_H
-#define __FU_WACOM_COMMON_H
+#pragma once
 
 #include <glib-object.h>
 
@@ -76,5 +75,3 @@ gboolean	 fu_wacom_common_block_is_empty	(const guint8	*data,
 						 guint16	 datasz);
 
 G_END_DECLS
-
-#endif /* __FU_WACOM_COMMON_H */

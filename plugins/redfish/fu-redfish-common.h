@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_REDFISH_COMMON_H
-#define __FU_REDFISH_COMMON_H
+#pragma once
 
 #include <gio/gio.h>
 #include <efivar.h>
@@ -49,7 +48,3 @@ gchar		*fu_redfish_common_buffer_to_ipv4	(const guint8	*buffer);
 gchar		*fu_redfish_common_buffer_to_ipv6	(const guint8	*buffer);
 
 G_END_DECLS
-
-#endif /* __FU_REDFISH_COMMON_H */
-
-/* vim: set noexpandtab: */

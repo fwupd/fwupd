@@ -6,8 +6,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_RTS54HID_COMMON_H
-#define __FU_RTS54HID_COMMON_H
+#pragma once
 
 #define FU_RTS54HID_TRANSFER_BLOCK_SIZE			0x80
 #define FU_RTS54HID_REPORT_LENGTH			0xc0
@@ -68,5 +67,3 @@ typedef enum {
 	/* <private >*/
 	FU_RTS54HID_EXT_LAST,
 } FuRts54HidExt;
-
-#endif /* __FU_RTS54HID_COMMON_H */

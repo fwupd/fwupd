@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_UTIL_COMMON_H__
-#define __FU_UTIL_COMMON_H__
+#pragma once
 
 #include <glib.h>
 #include <fwupd.h>
@@ -27,5 +26,3 @@ gchar		*fu_util_get_versions		(void);
 gboolean	fu_util_prompt_complete		(FwupdDeviceFlags flags,
 						 gboolean prompt,
 						 GError **error);
-
-#endif /* __FU_UTIL_COMMON_H__ */

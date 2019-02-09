@@ -4,13 +4,10 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FWUPD_COMMON_PRIVATE_H
-#define __FWUPD_COMMON_PRIVATE_H
+#pragma once
 
 #include <glib.h>
 
 #include "fwupd-common.h"
 
 gchar		*fwupd_checksum_format_for_display	(const gchar	*checksum);
-
-#endif /* __FWUPD_COMMON_PRIVATE_H */

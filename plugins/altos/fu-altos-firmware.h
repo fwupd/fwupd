@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_ALTOS_FIRMWARE_H
-#define __FU_ALTOS_FIRMWARE_H
+#pragma once
 
 G_BEGIN_DECLS
 
@@ -21,5 +20,3 @@ gboolean	 fu_altos_firmware_parse	(FuAltosFirmware	*self,
 						 GError			**error);
 
 G_END_DECLS
-
-#endif /* __FU_ALTOS_FIRMWARE_H */

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __DFU_SECTOR_PRIVATE_H
-#define __DFU_SECTOR_PRIVATE_H
+#pragma once
 
 #include "dfu-sector.h"
 
@@ -19,5 +18,3 @@ DfuSector	*dfu_sector_new		(guint32	 address,
 					 DfuSectorCap	 cap);
 
 G_END_DECLS
-
-#endif /* __DFU_SECTOR_PRIVATE_H */

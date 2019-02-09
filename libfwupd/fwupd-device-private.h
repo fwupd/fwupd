@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FWUPD_DEVICE_PRIVATE_H
-#define __FWUPD_DEVICE_PRIVATE_H
+#pragma once
 
 #include <glib-object.h>
 
@@ -21,6 +20,4 @@ void		 fwupd_device_incorporate		(FwupdDevice	*self,
 							 FwupdDevice	*donor);
 
 G_END_DECLS
-
-#endif /* __FWUPD_DEVICE_PRIVATE_H */
 

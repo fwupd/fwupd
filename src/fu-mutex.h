@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_MUTEX_H
-#define __FU_MUTEX_H
+#pragma once
 
 #include <glib-object.h>
 
@@ -64,5 +63,3 @@ void		 fu_mutex_locker_free		(FuMutexLocker	*locker);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuMutexLocker, fu_mutex_locker_free)
 
 G_END_DECLS
-
-#endif /* __FU_MUTEX_H */

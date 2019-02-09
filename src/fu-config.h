@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_CONFIG_H
-#define __FU_CONFIG_H
+#pragma once
 
 G_BEGIN_DECLS
 
@@ -29,6 +28,3 @@ FwupdRemote	*fu_config_get_remote_by_id		(FuConfig	*self,
 							 const gchar	*remote_id);
 
 G_END_DECLS
-
-#endif /* __FU_CONFIG_H */
-

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_UEFI_BGRT_H
-#define __FU_UEFI_BGRT_H
+#pragma once
 
 G_BEGIN_DECLS
 
@@ -22,5 +21,3 @@ guint32		 fu_uefi_bgrt_get_width		(FuUefiBgrt	*self);
 guint32		 fu_uefi_bgrt_get_height	(FuUefiBgrt	*self);
 
 G_END_DECLS
-
-#endif /* __FU_UEFI_BGRT_H */

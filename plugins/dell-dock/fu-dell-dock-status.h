@@ -13,8 +13,7 @@
  * SPDX-License-Identifier: LGPL-2.1+ OR MIT
  */
 
-#ifndef __FU_DELL_DOCK_STATUS_H
-#define __FU_DELL_DOCK_STATUS_H
+#pragma once
 
 #include "config.h"
 
@@ -28,5 +27,3 @@ G_DECLARE_FINAL_TYPE (FuDellDockStatus, fu_dell_dock_status, FU, DELL_DOCK_STATU
 FuDellDockStatus	*fu_dell_dock_status_new	(void);
 
 G_END_DECLS
-
-#endif /* __FU_DELL_DOCK_STATUS_H */

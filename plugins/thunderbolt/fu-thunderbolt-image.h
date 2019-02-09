@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_THUNDERBOLT_IMAGE_H__
-#define __FU_THUNDERBOLT_IMAGE_H__
+#pragma once
 
 #include <glib.h>
 
@@ -26,5 +25,3 @@ FuPluginValidation	fu_thunderbolt_image_validate		(GBytes  *controller_fw,
 gboolean	fu_thunderbolt_image_controller_is_native	(GBytes    *controller_fw,
 								 gboolean  *is_native,
 								 GError   **error);
-
-#endif /* __FU_THUNDERBOLT_IMAGE_H__ */

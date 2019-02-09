@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FWUPD_ENUMS_H
-#define __FWUPD_ENUMS_H
+#pragma once
 
 #include <glib.h>
 
@@ -183,5 +182,3 @@ const gchar	*fwupd_trust_flag_to_string		(FwupdTrustFlags trust_flag);
 FwupdTrustFlags	 fwupd_trust_flag_from_string		(const gchar	*trust_flag);
 FwupdKeyringKind fwupd_keyring_kind_from_string		(const gchar	*keyring_kind);
 const gchar	*fwupd_keyring_kind_to_string		(FwupdKeyringKind keyring_kind);
-
-#endif /* __FWUPD_ENUMS_H */

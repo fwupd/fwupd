@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_DEVICE_METADATA_H__
-#define __FU_DEVICE_METADATA_H__
+#pragma once
 
 /**
  * SECTION:fu-device-metadata
@@ -41,5 +40,3 @@
  * need to be handled as a capsule update.
  */
 #define FU_DEVICE_METADATA_UEFI_DEVICE_KIND	"UefiDeviceKind"
-
-#endif /* __FU_DEVICE_METADATA_H__ */
