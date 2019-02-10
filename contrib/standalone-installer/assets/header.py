@@ -209,7 +209,7 @@ def run_installation (directory, verbose, uninstall):
         try:
             install_snap (directory, verbose, uninstall)
             return True
-        except:
+        except Exception as _:
             if verbose:
                 print ("Snap installation failed")
             if not try_flatpak:
