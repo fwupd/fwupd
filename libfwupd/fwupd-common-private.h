@@ -10,4 +10,8 @@
 
 #include "fwupd-common.h"
 
+G_BEGIN_DECLS
+
 gchar		*fwupd_checksum_format_for_display	(const gchar	*checksum);
+
+G_END_DECLS

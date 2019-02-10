@@ -8,6 +8,8 @@
 
 #include <glib.h>
 
+G_BEGIN_DECLS
+
 #define FWUPD_DBUS_PATH			"/"
 #define FWUPD_DBUS_SERVICE		"org.freedesktop.fwupd"
 #define FWUPD_DBUS_INTERFACE		"org.freedesktop.fwupd"
@@ -67,3 +69,5 @@ gchar		*fwupd_guid_hash_string			(const gchar	*str);
 gchar		*fwupd_guid_hash_data			(const guint8	*data,
 							 gsize		 datasz,
 							 FwupdGuidFlags	 flags);
+
+G_END_DECLS

@@ -8,6 +8,8 @@
 
 #include <glib.h>
 
+G_BEGIN_DECLS
+
 #define FWUPD_ERROR			fwupd_error_quark()
 
 /**
@@ -51,3 +53,5 @@ typedef enum {
 GQuark		 fwupd_error_quark			(void);
 const gchar	*fwupd_error_to_string			(FwupdError	 error);
 FwupdError	 fwupd_error_from_string		(const gchar	*error);
+
+G_END_DECLS

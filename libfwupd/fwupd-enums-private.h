@@ -6,6 +6,8 @@
 
 #pragma once
 
+G_BEGIN_DECLS
+
 #define FWUPD_RESULT_KEY_APPSTREAM_ID		"AppstreamId"	/* s */
 #define FWUPD_RESULT_KEY_CHECKSUM		"Checksum"	/* as */
 #define FWUPD_RESULT_KEY_CREATED		"Created"	/* t */
@@ -44,3 +46,5 @@
 #define FWUPD_RESULT_KEY_VERSION_BOOTLOADER	"VersionBootloader"	/* s */
 #define FWUPD_RESULT_KEY_VERSION_LOWEST		"VersionLowest"	/* s */
 #define FWUPD_RESULT_KEY_VERSION		"Version"	/* s */
+
+G_END_DECLS
