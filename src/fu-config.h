@@ -6,11 +6,11 @@
 
 #pragma once
 
-G_BEGIN_DECLS
-
 #include <glib-object.h>
 
 #include "fwupd-remote.h"
+
+G_BEGIN_DECLS
 
 #define FU_TYPE_CONFIG (fu_config_get_type ())
 G_DECLARE_FINAL_TYPE (FuConfig, fu_config, FU, CONFIG, GObject)

@@ -6,8 +6,6 @@
 
 #pragma once
 
-G_BEGIN_DECLS
-
 #include <xmlb.h>
 #include <glib-object.h>
 
@@ -17,6 +15,8 @@ G_BEGIN_DECLS
 #include "fu-common.h"
 #include "fu-install-task.h"
 #include "fu-plugin.h"
+
+G_BEGIN_DECLS
 
 #define FU_TYPE_ENGINE (fu_engine_get_type ())
 G_DECLARE_FINAL_TYPE (FuEngine, fu_engine, FU, ENGINE, GObject)

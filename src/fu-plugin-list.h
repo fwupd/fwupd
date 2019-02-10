@@ -6,11 +6,11 @@
 
 #pragma once
 
-G_BEGIN_DECLS
-
 #include <glib-object.h>
 
 #include "fu-plugin.h"
+
+G_BEGIN_DECLS
 
 #define FU_TYPE_PLUGIN_LIST (fu_plugin_list_get_type ())
 G_DECLARE_FINAL_TYPE (FuPluginList, fu_plugin_list, FU, PLUGIN_LIST, GObject)

@@ -7,9 +7,9 @@
 
 #pragma once
 
-G_BEGIN_DECLS
-
 #include <glib-object.h>
+
+G_BEGIN_DECLS
 
 #define FU_TYPE_QUIRKS (fu_quirks_get_type ())
 G_DECLARE_FINAL_TYPE (FuQuirks, fu_quirks, FU, QUIRKS, GObject)

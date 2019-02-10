@@ -8,6 +8,8 @@
 
 #include <gio/gio.h>
 
+G_BEGIN_DECLS
+
 /**
  * FuVersionFormat:
  * @FU_VERSION_FORMAT_UNKNOWN:		Unknown version format
@@ -45,3 +47,5 @@ gchar		*fu_common_version_from_uint16	(guint16	 val,
 						 FuVersionFormat flags);
 gchar		*fu_common_version_parse	(const gchar	*version);
 FuVersionFormat	 fu_common_version_guess_format	(const gchar	*version);
+
+G_END_DECLS

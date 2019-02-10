@@ -8,6 +8,8 @@
 
 #include <gio/gio.h>
 
+G_BEGIN_DECLS
+
 typedef enum {
 	FU_APP_FLAGS_NONE		= 0,
 	FU_APP_FLAGS_NO_IDLE_SOURCES	= 1 << 0,
@@ -105,3 +107,5 @@ guint32		 fu_common_read_uint32		(const guint8	*buf,
 guint		 fu_common_string_replace	(GString	*string,
 						 const gchar	*search,
 						 const gchar	*replace);
+
+G_END_DECLS

@@ -9,6 +9,8 @@
 #include <glib.h>
 #include <fwupd.h>
 
+G_BEGIN_DECLS
+
 /* this is only valid for tools */
 #define FWUPD_ERROR_INVALID_ARGS        (FWUPD_ERROR_LAST+1)
 
@@ -26,3 +28,5 @@ gchar		*fu_util_get_versions		(void);
 gboolean	fu_util_prompt_complete		(FwupdDeviceFlags flags,
 						 gboolean prompt,
 						 GError **error);
+
+G_END_DECLS
