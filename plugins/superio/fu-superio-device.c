@@ -82,7 +82,7 @@ fu_superio_device_wait_for (FuSuperioDevice *self, guint8 mask, gboolean set, GE
 			return FALSE;
 		if (g_timer_elapsed (timer, NULL) > FU_PLUGIN_SUPERIO_TIMEOUT)
 			break;
-		if (set && (status & mask) > 0)
+		if (set && (status & mask) != 0)
 			return TRUE;
 		if (!set && (status & mask) == 0)
 			return TRUE;
