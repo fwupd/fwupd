@@ -318,7 +318,9 @@ if get_option('gtkdoc')
   subdir('docs')
 endif
 subdir('libfwupd')
-subdir('po')
+if get_option('nls')
+  subdir('po')
+endif
 if get_option('daemon')
   subdir('policy')
 endif

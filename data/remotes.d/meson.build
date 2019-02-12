@@ -5,24 +5,39 @@ if get_option('daemon') and get_option('lvfs')
     ],
     install_dir : join_paths(sysconfdir, 'fwupd', 'remotes.d')
   )
-  i18n.merge_file(
-    input: 'lvfs.metainfo.xml',
-    output: 'org.freedesktop.fwupd.remotes.lvfs.metainfo.xml',
-    type: 'xml',
-    po_dir: join_paths(meson.source_root(), 'po'),
-    data_dirs: join_paths(meson.source_root(), 'po'),
-    install: true,
-    install_dir: join_paths(get_option('datadir'), 'fwupd', 'metainfo')
-  )
-  i18n.merge_file(
-    input: 'lvfs-testing.metainfo.xml',
-    output: 'org.freedesktop.fwupd.remotes.lvfs-testing.metainfo.xml',
-    type: 'xml',
-    po_dir: join_paths(meson.source_root(), 'po'),
-    data_dirs: join_paths(meson.source_root(), 'po'),
-    install: true,
-    install_dir: join_paths(get_option('datadir'), 'fwupd', 'metainfo')
-  )
+  if get_option('nls')
+    i18n.merge_file(
+      input: 'lvfs.metainfo.xml',
+      output: 'org.freedesktop.fwupd.remotes.lvfs.metainfo.xml',
+      type: 'xml',
+      po_dir: join_paths(meson.source_root(), 'po'),
+      data_dirs: join_paths(meson.source_root(), 'po'),
+      install: true,
+      install_dir: join_paths(get_option('datadir'), 'fwupd', 'metainfo')
+    )
+    i18n.merge_file(
+      input: 'lvfs-testing.metainfo.xml',
+      output: 'org.freedesktop.fwupd.remotes.lvfs-testing.metainfo.xml',
+      type: 'xml',
+      po_dir: join_paths(meson.source_root(), 'po'),
+      data_dirs: join_paths(meson.source_root(), 'po'),
+      install: true,
+      install_dir: join_paths(get_option('datadir'), 'fwupd', 'metainfo')
+    )
+  else
+    configure_file(
+      input: 'lvfs.metainfo.xml',
+      output: 'org.freedesktop.fwupd.remotes.lvfs.metainfo.xml',
+      install: true,
+      install_dir: join_paths(get_option('datadir'), 'fwupd', 'metainfo')
+    )
+    configure_file(
+      input: 'lvfs-testing.metainfo.xml',
+      output: 'org.freedesktop.fwupd.remotes.lvfs-testing.metainfo.xml',
+      install: true,
+      install_dir: join_paths(get_option('datadir'), 'fwupd', 'metainfo')
+    )
+  endif
 endif
 
 install_data('README.md',
