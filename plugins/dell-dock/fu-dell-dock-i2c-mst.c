@@ -385,7 +385,7 @@ fu_dell_dock_mst_read_chipid (FuDevice *symbiote,
 static gboolean
 fu_dell_dock_mst_check_offset (guint8 byte, guint8 offset)
 {
-	if ((byte & offset) > 0)
+	if ((byte & offset) != 0)
 		return TRUE;
 	return FALSE;
 }

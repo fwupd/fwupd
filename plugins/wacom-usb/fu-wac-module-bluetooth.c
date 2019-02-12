@@ -39,8 +39,8 @@ fu_wac_module_bluetooth_calculate_crc_byte (guint8 *crc, guint8 data)
 
 	/* find out what bits are set */
 	for (guint i = 0; i < 8; i++) {
-		c[i] = (*crc & 1 << i) > 0;
-		m[i] = (data & 1 << i) > 0;
+		c[i] = (*crc & (1 << i)) != 0;
+		m[i] = (data & (1 << i)) != 0;
 	}
 
 	/* do CRC on byte */
