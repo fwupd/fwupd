@@ -619,8 +619,8 @@ fu_uefi_device_new_from_dev (FuDevice *dev)
 	self->fw_class = g_strdup (fu_device_get_guid_default (dev));
 	tmp = fu_device_get_metadata (dev, FU_DEVICE_METADATA_UEFI_DEVICE_KIND);
 	self->kind = fu_uefi_device_kind_from_string (tmp);
-	self->capsule_flags = 0; /* FIXME? */
-	self->fw_version = 0; /* FIXME? */
+	self->capsule_flags = fu_device_get_metadata_integer (dev, FU_DEVICE_METADATA_UEFI_CAPSULE_FLAGS);
+	self->fw_version = fu_device_get_metadata_integer (dev, FU_DEVICE_METADATA_UEFI_FW_VERSION);
 	g_assert (self->fw_class != NULL);
 	return self;
 }
