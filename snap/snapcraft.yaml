@@ -211,6 +211,7 @@ parts:
       - libsqlite3-dev
       - locales
       - pkg-config
+      - uuid-dev
     stage-packages:
       - libgcab-1.0-0
       - libarchive13
