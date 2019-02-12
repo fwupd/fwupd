@@ -2026,6 +2026,7 @@ fu_device_probe (FuDevice *self, GError **error)
 void
 fu_device_convert_instance_ids (FuDevice *self)
 {
+	FuDevicePrivate *priv = GET_PRIVATE (self);
 	GPtrArray *instance_ids = fwupd_device_get_instance_ids (FWUPD_DEVICE (self));
 
 	/* OEM specific hardware */
@@ -2035,6 +2036,12 @@ fu_device_convert_instance_ids (FuDevice *self)
 		const gchar *instance_id = g_ptr_array_index (instance_ids, i);
 		g_autofree gchar *guid = fwupd_guid_hash_string (instance_id);
 		fwupd_device_add_guid (FWUPD_DEVICE (self), guid);
+	}
+
+	/* convert all children too */
+	for (guint i = 0; i < priv->children->len; i++) {
+		FuDevice *devtmp = g_ptr_array_index (priv->children, i);
+		fu_device_convert_instance_ids (devtmp);
 	}
 }
 
