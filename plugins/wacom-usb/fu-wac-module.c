@@ -244,6 +244,17 @@ fu_wac_module_set_feature (FuWacModule *self,
 		return FALSE;
 	}
 
+	/* too many retries */
+	if (priv->status != FU_WAC_MODULE_STATUS_OK) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Timed out after %u loops with status %s",
+			     busy_poll_loops,
+			     fu_wac_module_status_to_string (priv->status));
+		return FALSE;
+	}
+
 	/* success */
 	return TRUE;
 }
