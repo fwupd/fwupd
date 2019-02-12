@@ -1,0 +1,16 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: cibuilds/snapcraft:stable
+    steps:
+      - checkout
+      - run:
+          name: "Build Snap"
+          command: snapcraft
+
+workflows:
+  version: 2
+  main:
+    jobs:
+      - build
