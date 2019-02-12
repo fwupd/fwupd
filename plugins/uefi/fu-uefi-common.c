@@ -376,17 +376,14 @@ gboolean
 fu_uefi_prefix_efi_errors (GError **error)
 {
 	g_autoptr(GString) str = g_string_new (NULL);
-	gint rc = 1;
-	for (gint i = 0; rc > 0; i++) {
+	for (gint i = 0; ; i++) {
 		gchar *filename = NULL;
 		gchar *function = NULL;
 		gchar *message = NULL;
 		gint line = 0;
 		gint err = 0;
-
-		rc = efi_error_get (i, &filename, &function, &line,
-				    &message, &err);
-		if (rc <= 0)
+		if (efi_error_get (i, &filename, &function, &line,
+				   &message, &err) <= 0)
 			break;
 		g_string_append_printf (str, "{error #%d} %s:%d %s(): %s: %s\t",
 					i, filename, line, function,
