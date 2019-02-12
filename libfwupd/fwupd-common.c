@@ -16,6 +16,10 @@
 #include <sys/utsname.h>
 #include <json-glib/json-glib.h>
 
+#if !GLIB_CHECK_VERSION(2,54,0)
+#include <errno.h>
+#endif
+
 /**
  * fwupd_checksum_guess_kind:
  * @checksum: A checksum
