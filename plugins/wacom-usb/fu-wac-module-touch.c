@@ -68,7 +68,7 @@ fu_wac_module_touch_write_firmware (FuDevice *device, GBytes *blob, GError **err
 
 	/* build each data packet */
 	chunks = fu_chunk_array_new_from_bytes (blob,
-						0x0, /* addr_start */
+						dfu_element_get_address (element),
 						0x0, /* page_sz */
 						128); /* packet_sz */
 	blocks_total = chunks->len + 2;
@@ -91,9 +91,10 @@ fu_wac_module_touch_write_firmware (FuDevice *device, GBytes *blob, GError **err
 		/* build G11T data packet */
 		memset (buf, 0xff, sizeof(buf));
 		buf[0] = 0x01; /* writing */
-		fu_common_write_uint32 (&buf[1], chk->address, G_BIG_ENDIAN);
-		buf[5] = chk->idx;
-		memcpy (&buf[6], chk->data, chk->data_sz);
+		buf[1] = chk->idx + 1;
+		fu_common_write_uint32 (&buf[2], chk->address, G_LITTLE_ENDIAN);
+		buf[6] = 0x10; /* no idea! */
+		memcpy (&buf[7], chk->data, chk->data_sz);
 		blob_chunk = g_bytes_new (buf, sizeof(buf));
 		if (!fu_wac_module_set_feature (self, FU_WAC_MODULE_COMMAND_DATA,
 						blob_chunk, error)) {
