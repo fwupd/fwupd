@@ -874,6 +874,7 @@ fu_wac_device_init (FuWacDevice *self)
 	self->firmware_index = 0xffff;
 	fu_device_add_icon (FU_DEVICE (self), "input-tablet");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_set_install_duration (FU_DEVICE (self), 10);
 }
 
 static void
