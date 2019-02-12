@@ -134,7 +134,8 @@ fu_wac_module_refresh (FuWacModule *self, GError **error)
 
 	/* get from hardware */
 	if (!fu_wac_device_get_feature_report (parent_device, buf, sizeof(buf),
-					       FU_WAC_DEVICE_FEATURE_FLAG_ALLOW_TRUNC,
+					       FU_WAC_DEVICE_FEATURE_FLAG_ALLOW_TRUNC |
+					       FU_WAC_DEVICE_FEATURE_FLAG_NO_DEBUG,
 					       error)) {
 		g_prefix_error (error, "failed to refresh status: ");
 		return FALSE;
@@ -151,13 +152,14 @@ fu_wac_module_refresh (FuWacModule *self, GError **error)
 		return FALSE;
 	}
 
-	/* current phase */
-	priv->command = buf[2];
-	g_debug ("command: %s", fu_wac_module_command_to_string (priv->command));
-
-	/* current status */
-	priv->status = buf[3];
-	g_debug ("status: %s", fu_wac_module_status_to_string (priv->status));
+	/* current phase and status */
+	if (priv->command != buf[2] || priv->status != buf[3]) {
+		priv->command = buf[2];
+		priv->status = buf[3];
+		g_debug ("command: %s, status: %s",
+			 fu_wac_module_command_to_string (priv->command),
+			 fu_wac_module_status_to_string (priv->status));
+	}
 
 	/* success */
 	return TRUE;
@@ -212,7 +214,7 @@ fu_wac_module_set_feature (FuWacModule *self,
 	}
 
 	/* send to hardware */
-	if (!fu_wac_device_set_feature_report (parent_device, buf, sizeof(buf),
+	if (!fu_wac_device_set_feature_report (parent_device, buf, len + 3,
 					       FU_WAC_DEVICE_FEATURE_FLAG_ALLOW_TRUNC,
 					       error)) {
 		g_prefix_error (error, "failed to set module feature: ");

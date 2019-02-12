@@ -153,7 +153,8 @@ fu_wac_device_get_feature_report (FuWacDevice *self,
 	guint8 cmd = buf[0];
 
 	/* hit hardware */
-	fu_wac_buffer_dump ("GET", cmd, buf, bufsz);
+	if ((flags & FU_WAC_DEVICE_FEATURE_FLAG_NO_DEBUG) == 0)
+		fu_wac_buffer_dump ("GET", cmd, buf, bufsz);
 	if (!g_usb_device_control_transfer (usb_device,
 					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
@@ -167,7 +168,8 @@ fu_wac_device_get_feature_report (FuWacDevice *self,
 		g_prefix_error (error, "Failed to get feature report: ");
 		return FALSE;
 	}
-	fu_wac_buffer_dump ("GE2", cmd, buf, sz);
+	if ((flags & FU_WAC_DEVICE_FEATURE_FLAG_NO_DEBUG) == 0)
+		fu_wac_buffer_dump ("GE2", cmd, buf, sz);
 
 	/* check packet */
 	if ((flags & FU_WAC_DEVICE_FEATURE_FLAG_ALLOW_TRUNC) == 0 && sz != bufsz) {
