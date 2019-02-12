@@ -63,6 +63,7 @@ enum {
 	PROP_PHYSICAL_ID,
 	PROP_LOGICAL_ID,
 	PROP_QUIRKS,
+	PROP_VERSION_FORMAT,
 	PROP_LAST
 };
 
@@ -81,6 +82,9 @@ fu_device_get_property (GObject *object, guint prop_id,
 		break;
 	case PROP_PROGRESS:
 		g_value_set_uint (value, priv->progress);
+		break;
+	case PROP_VERSION_FORMAT:
+		g_value_set_uint (value, priv->version_format);
 		break;
 	case PROP_PHYSICAL_ID:
 		g_value_set_string (value, fu_device_get_physical_id (self));
@@ -108,6 +112,9 @@ fu_device_set_property (GObject *object, guint prop_id,
 		break;
 	case PROP_PROGRESS:
 		fu_device_set_progress (self, g_value_get_uint (value));
+		break;
+	case PROP_VERSION_FORMAT:
+		fu_device_set_version_format (self, g_value_get_uint (value));
 		break;
 	case PROP_PHYSICAL_ID:
 		fu_device_set_physical_id (self, g_value_get_string (value));
@@ -2195,6 +2202,14 @@ fu_device_class_init (FuDeviceClass *klass)
 				   G_PARAM_READWRITE |
 				   G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_PROGRESS, pspec);
+
+	pspec = g_param_spec_uint ("version-format", NULL, NULL,
+				   FU_VERSION_FORMAT_UNKNOWN,
+				   FU_VERSION_FORMAT_LAST,
+				   FU_VERSION_FORMAT_UNKNOWN,
+				   G_PARAM_READWRITE |
+				   G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_VERSION_FORMAT, pspec);
 
 	pspec = g_param_spec_object ("quirks", NULL, NULL,
 				     FU_TYPE_QUIRKS,

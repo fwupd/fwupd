@@ -88,12 +88,16 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 
 	/* runtime */
 	if (fu_device_has_custom_flag (FU_DEVICE (device), "is-receiver")) {
-		dev = g_object_new (FU_TYPE_UNIFYING_RUNTIME, NULL);
+		dev = g_object_new (FU_TYPE_UNIFYING_RUNTIME,
+				    "version-format", FU_VERSION_FORMAT_PLAIN,
+				    NULL);
 		fu_device_incorporate (dev, FU_DEVICE (device));
 	} else {
 
 		/* create device so we can run ->probe() and add UFY GUIDs */
-		dev = g_object_new (FU_TYPE_UNIFYING_PERIPHERAL, NULL);
+		dev = g_object_new (FU_TYPE_UNIFYING_PERIPHERAL,
+				    "version-format", FU_VERSION_FORMAT_PLAIN,
+				    NULL);
 		fu_device_incorporate (dev, FU_DEVICE (device));
 		if (!fu_device_probe (dev, error))
 			return FALSE;
@@ -131,10 +135,14 @@ fu_plugin_usb_device_added (FuPlugin *plugin, FuUsbDevice *device, GError **erro
 		return TRUE;
 	}
 	if (fu_device_has_custom_flag (FU_DEVICE (device), "is-nordic")) {
-		dev = g_object_new (FU_TYPE_UNIFYING_BOOTLOADER_NORDIC, NULL);
+		dev = g_object_new (FU_TYPE_UNIFYING_BOOTLOADER_NORDIC,
+				    "version-format", FU_VERSION_FORMAT_PLAIN,
+				    NULL);
 		fu_device_incorporate (dev, FU_DEVICE (device));
 	} else if (fu_device_has_custom_flag (FU_DEVICE (device), "is-texas")) {
-		dev = g_object_new (FU_TYPE_UNIFYING_BOOTLOADER_TEXAS, NULL);
+		dev = g_object_new (FU_TYPE_UNIFYING_BOOTLOADER_TEXAS,
+				    "version-format", FU_VERSION_FORMAT_PLAIN,
+				    NULL);
 		fu_device_incorporate (dev, FU_DEVICE (device));
 		g_usleep (200*1000);
 	}
