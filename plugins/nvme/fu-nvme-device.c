@@ -80,7 +80,7 @@ fu_nvme_device_get_guid_safe (const guint8 *buf, guint16 addr_start)
 {
 	if (!fu_common_guid_is_plausible (buf + addr_start))
 		return NULL;
-	return fwupd_guid_to_string ((const fwupd_guid_t *) buf + addr_start,
+	return fwupd_guid_to_string ((const fwupd_guid_t *) (buf + addr_start),
 				     FWUPD_GUID_FLAG_MIXED_ENDIAN);
 }
 
