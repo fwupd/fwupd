@@ -80,14 +80,63 @@ fu_superio_regwrite (gint fd, guint16 port, guint8 addr,
 gboolean
 fu_superio_set_ldn (gint fd, guint16 port, guint8 ldn, GError **error)
 {
-	return fu_superio_regwrite (fd, port, LDN_SEL, ldn, error);
+	return fu_superio_regwrite (fd, port, SIO_LDNxx_IDX_LDNSEL, ldn, error);
+}
+
+const gchar *
+fu_superio_ldn_to_text (guint8 ldn)
+{
+	if (ldn == SIO_LDN_FDC)
+		return "Floppy Disk Controller";
+	if (ldn == SIO_LDN_GPIO)
+		return "General Purpose IO";
+	if (ldn == SIO_LDN_PARALLEL_PORT)
+		return "Parallel Port";
+	if (ldn == SIO_LDN_UART1)
+		return "Serial Port 1";
+	if (ldn == SIO_LDN_UART2)
+		return "Serial Port 2";
+	if (ldn == SIO_LDN_UART3)
+		return "Serial Port 3";
+	if (ldn == SIO_LDN_UART4)
+		return "Serial Port 4";
+	if (ldn == SIO_LDN_SWUC)
+		return "System Wake-Up Control";
+	if (ldn == SIO_LDN_KBC_MOUSE)
+		return "KBC/Mouse";
+	if (ldn == SIO_LDN_KBC_KEYBOARD)
+		return "KBC/Keyboard";
+	if (ldn == SIO_LDN_CIR)
+		return "Consumer IR";
+	if (ldn == SIO_LDN_SMFI)
+		return "Shared Memory/Flash";
+	if (ldn == SIO_LDN_RTCT)
+		return "RTC-like Timer";
+	if (ldn == SIO_LDN_SSSP1)
+		return "Serial Peripheral";
+	if (ldn == SIO_LDN_PECI)
+		return "Platform Environmental Control";
+	if (ldn == SIO_LDN_PM1)
+		return "Power Management 1";
+	if (ldn == SIO_LDN_PM2)
+		return "Power Management 2";
+	if (ldn == SIO_LDN_PM3)
+		return "Power Management 3";
+	if (ldn == SIO_LDN_PM4)
+		return "Power Management 4";
+	if (ldn == SIO_LDN_PM5)
+		return "Power Management 5";
+	return NULL;
 }
 
 gboolean
 fu_superio_regdump (gint fd, guint16 port, guint8 ldn, GError **error)
 {
-	g_autofree gchar *title = NULL;
+	const gchar *ldnstr = fu_superio_ldn_to_text (ldn);
 	guint8 buf[0xff] = { 0x00 };
+	guint16 iobad0 = 0x0;
+	guint16 iobad1 = 0x0;
+	g_autoptr(GString) str = g_string_new (NULL);
 
 	/* set LDN */
 	if (!fu_superio_set_ldn (fd, port, ldn, error))
@@ -96,7 +145,21 @@ fu_superio_regdump (gint fd, guint16 port, guint8 ldn, GError **error)
 		if (!fu_superio_regval (fd, port, i, &buf[i], error))
 			return FALSE;
 	}
-	title = g_strdup_printf ("PORT:0x%04x LDN:0x%02x", port, ldn);
-	fu_common_dump_raw (G_LOG_DOMAIN, title, buf, 0x100);
+
+	/* get the i/o base addresses */
+	if (!fu_superio_regval16 (fd, port, SIO_LDNxx_IDX_IOBAD0, &iobad0, error))
+		return FALSE;
+	if (!fu_superio_regval16 (fd, port, SIO_LDNxx_IDX_IOBAD1, &iobad1, error))
+		return FALSE;
+
+	g_string_append_printf (str, "PORT:0x%04x ", port);
+	g_string_append_printf (str, "LDN:0x%02x ", ldn);
+	if (iobad0 != 0x0)
+		g_string_append_printf (str, "IOBAD0:0x%04x ", iobad0);
+	if (iobad1 != 0x0)
+		g_string_append_printf (str, "IOBAD1:0x%04x ", iobad1);
+	if (ldnstr != NULL)
+		g_string_append_printf (str, "(%s)", ldnstr);
+	fu_common_dump_raw (G_LOG_DOMAIN, str->str, buf, 0x100);
 	return TRUE;
 }
