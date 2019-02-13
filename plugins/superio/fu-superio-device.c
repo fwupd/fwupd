@@ -353,6 +353,43 @@ fu_superio_device_setup (FuDevice *device, GError **error)
 }
 
 static gboolean
+fu_superio_device_attach (FuDevice *device, GError **error)
+{
+	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
+
+	/* re-enable HOSTWA -- use 0xfd for LCFC */
+	if (!fu_superio_device_ec_write (self, self->pm1_iobad1, 0xfc, error))
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_superio_device_detach (FuDevice *device, GError **error)
+{
+	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
+	guint8 tmp = 0x00;
+
+	/* turn off HOSTWA bit, keeping HSEMIE and HSEMW high */
+	if (!fu_superio_device_ec_write (self, self->pm1_iobad1, 0xdc, error))
+		return FALSE;
+	if (!fu_superio_device_ec_read (self, self->pm1_iobad0, &tmp, error))
+		return FALSE;
+	if (tmp != 0x33) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_SUPPORTED,
+			     "failed to clear HOSTWA, got 0x%02x, expected 0x33",
+			     tmp);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_superio_device_close (FuDevice *device, GError **error)
 {
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
@@ -385,6 +422,8 @@ fu_superio_device_class_init (FuSuperioDeviceClass *klass)
 	object_class->finalize = fu_superio_device_finalize;
 	klass_device->to_string = fu_superio_device_to_string;
 	klass_device->open = fu_superio_device_open;
+	klass_device->attach = fu_superio_device_attach;
+	klass_device->detach = fu_superio_device_detach;
 	klass_device->probe = fu_superio_device_probe;
 	klass_device->setup = fu_superio_device_setup;
 	klass_device->close = fu_superio_device_close;
