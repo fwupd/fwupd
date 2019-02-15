@@ -243,6 +243,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_datadir}/man/man1/dfu-tool.1.gz
 %{_datadir}/man/man1/fwupdmgr.1.gz
 %{_datadir}/metainfo/org.freedesktop.fwupd.metainfo.xml
+%{_datadir}/icons/hicolor/scalable/apps/org.freedesktop.fwupd.svg
 %{_datadir}/fwupd/firmware-packager
 %{_unitdir}/fwupd-offline-update.service
 %{_unitdir}/fwupd.service

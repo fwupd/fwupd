@@ -18,6 +18,10 @@ install_data(['org.freedesktop.fwupd.metainfo.xml'],
   install_dir: join_paths(datadir, 'metainfo')
 )
 
+install_data(['org.freedesktop.fwupd.svg'],
+  install_dir : join_paths(datadir, 'icons', 'hicolor', 'scalable', 'apps')
+)
+
 install_data(['org.freedesktop.fwupd.conf'],
   install_dir : join_paths(sysconfdir, 'dbus-1', 'system.d')
 )
