@@ -1,3 +1,9 @@
+fwupd (1.2.4-3) unstable; urgency=medium
+
+  * Backport a patch from master that fixes FTBFS with newer glib
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Fri, 15 Feb 2019 08:06:55 -0600
+
 fwupd (1.2.4-2) unstable; urgency=medium
 
   * debian: explicitly depend on shared-mime-info
