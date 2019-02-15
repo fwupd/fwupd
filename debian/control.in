@@ -30,7 +30,8 @@ Description: Firmware update daemon library
 Package: fwupd
 Architecture: linux-any
 Depends: ${misc:Depends},
-         ${shlibs:Depends}
+         ${shlibs:Depends},
+         shared-mime-info
 Recommends: python3,
 	    bolt,
 	    tpm2-tools,
