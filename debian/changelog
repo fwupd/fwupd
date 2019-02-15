@@ -1,3 +1,9 @@
+fwupd (1.2.4-2) unstable; urgency=medium
+
+  * debian: explicitly depend on shared-mime-info
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Thu, 14 Feb 2019 21:21:46 -0600
+
 fwupd (1.2.4-1) unstable; urgency=medium
 
   * New upstream version
