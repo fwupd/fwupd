@@ -595,7 +595,7 @@ fwup_set_update_statuses(FWUP_UPDATE_TABLE **updates)
 {
 	EFI_STATUS rc;
 	for (UINTN i = 0; i < FWUP_NUM_CAPSULE_UPDATES_MAX; i++) {
-		if (updates[i]->name == NULL)
+		if (updates[i] == NULL || updates[i]->name == NULL)
 			break;
 		rc = fwup_set_variable(updates[i]->name, &fwupdate_guid,
 				       updates[i]->info, updates[i]->size,
