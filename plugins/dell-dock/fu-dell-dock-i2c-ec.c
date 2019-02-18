@@ -312,6 +312,7 @@ fu_dell_dock_ec_get_dock_info (FuDevice *device,
 	const FuDellDockDockInfoHeader *header = NULL;
 	const FuDellDockEcQueryEntry *device_entry = NULL;
 	const FuDellDockEcAddrMap *map = NULL;
+	const gchar *hub_version;
 	guint32 oldest_base_pd = 0;
 	g_autoptr(GBytes) data = NULL;
 
@@ -447,13 +448,18 @@ fu_dell_dock_ec_get_dock_info (FuDevice *device,
 	fu_device_set_version_lowest (device, self->ec_minimum_version);
 
 
-	/* TODO: Drop if minimum EC is set to 25+
+	/* TODO: Drop part of clause if minimum EC is set to 26+
 	 * Determine if the passive flow should be used when flashing
 	 */
-	if (fu_common_vercmp (self->ec_version, "00.00.00.25") >= 0) {
+	hub_version = fu_device_get_version (self->symbiote);
+	if (fu_common_vercmp (self->ec_version, "00.00.00.26") >= 0 &&
+	    fu_common_vercmp (hub_version, "1.42") >= 0) {
 		g_debug ("using passive flow");
 		self->passive_flow = PASSIVE_REBOOT_MASK;
 		fu_device_set_custom_flags (device, "skip-restart");
+	} else {
+		g_debug ("not using passive flow (EC: %s Hub2: %s)",
+			 self->ec_version, hub_version);
 	}
 	/* TODO: drop if minimum board is to 5+ and minimum EC to 24+ */
 	if (self->data->board_id == 4 && oldest_base_pd >= 0x18) {
@@ -580,6 +586,8 @@ fu_dell_dock_ec_to_string (FuDevice *device, GString *str)
 				self->ec_minimum_version);
 	g_string_append_printf (str, "\tblacklist pd: %d\n",
 				self->pd_blacklist);
+	g_string_append_printf (str, "\tpassive flow: %d\n",
+				self->passive_flow);
 }
 
 gboolean
