@@ -87,7 +87,7 @@ Other frontends
  a new fwupd backend has been implemented in KDE Discover for firmware updates.
  These firmware updates are shown with other system updates.
 
-3. [Wyse Cloud Client Manager (CCM)](http://www.dell.com/us/business/p/wyse-cloud-client-manager/pd)
- A software suite available on Dell IoT gateways with built-in fwupd support.
+3. [Wyse Management Suite](https://www.dell.com/en-us/work/shop/wyse-endpoints-and-software/wyse-management-suite/spd/wyse-wms)
+ A software suite available on Dell IoT gateways and Wyse thin clients with built-in fwupd support.
  The remote administration interface can be used to download and deploy firmware
  updates.
