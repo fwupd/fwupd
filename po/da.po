@@ -1,0 +1,1285 @@
+# Danish translation for fwupd.
+# Copyright (C) 2019 fwupd's COPYRIGHT HOLDER
+# This file is distributed under the same license as the fwupd package.
+# scootergrisen, 2019.
+msgid ""
+msgstr ""
+"Project-Id-Version: fwupd master\n"
+"Report-Msgid-Bugs-To: https://github.com/hughsie/fwupd/issues\n"
+"POT-Creation-Date: 2019-02-22 03:24+0000\n"
+"PO-Revision-Date: 2019-02-22 18:11+0200\n"
+"Last-Translator: scootergrisen\n"
+"Language-Team: Danish\n"
+"Language: da\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: data/remotes.d/lvfs.metainfo.xml:6
+msgid "Linux Vendor Firmware Service (stable firmware)"
+msgstr "Linux Vendor Firmware Service (stabilt firmware)"
+
+#: data/remotes.d/lvfs-testing.metainfo.xml:6
+msgid "Linux Vendor Firmware Service (testing firmware)"
+msgstr "Linux Vendor Firmware Service (testning firmware)"
+
+#: policy/org.freedesktop.fwupd.policy.in:17
+msgid "Install signed system firmware"
+msgstr "Installer systemfirmware der er underskrevet"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:19
+#: policy/org.freedesktop.fwupd.policy.in:30
+msgid "Authentication is required to update the firmware on this machine"
+msgstr "Der kræves autentifikation for at opdatere firmwaren på maskinen"
+
+#: policy/org.freedesktop.fwupd.policy.in:28
+msgid "Install unsigned system firmware"
+msgstr "Installer systemfirmware der ikke er underskrevet"
+
+#: policy/org.freedesktop.fwupd.policy.in:39
+msgid "Install old version of system firmware"
+msgstr "Installer gammel version af systemfirmware"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:41
+msgid "Authentication is required to downgrade the firmware on this machine"
+msgstr "Der kræves autentifikation for at nedgradere firmwaren på maskinen"
+
+#: policy/org.freedesktop.fwupd.policy.in:50
+msgid "Install signed device firmware"
+msgstr "Installer enhedsfirmware der er underskrevet"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:52
+#: policy/org.freedesktop.fwupd.policy.in:63
+msgid "Authentication is required to update the firmware on a removable device"
+msgstr ""
+"Der kræves autentifikation for at opdatere firmwaren på en flytbar enhed"
+
+#: policy/org.freedesktop.fwupd.policy.in:61
+#: policy/org.freedesktop.fwupd.policy.in:72
+msgid "Install unsigned device firmware"
+msgstr "Installer enhedsfirmware der ikke er underskrevet"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:74
+msgid ""
+"Authentication is required to downgrade the firmware on a removable device"
+msgstr ""
+"Der kræves autentifikation for at nedgradere firmwaren på en flytbar enhed"
+
+#: policy/org.freedesktop.fwupd.policy.in:83
+msgid "Unlock the device to allow access"
+msgstr "Lås enheden op for at tillade adgang"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:85
+msgid "Authentication is required to unlock a device"
+msgstr "Der kræves autentifikation for at låse enhed op"
+
+#: policy/org.freedesktop.fwupd.policy.in:94
+msgid "Update the stored device verification information"
+msgstr "Opdaterer de gemte informationer om enhedsverifikation"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:96
+msgid ""
+"Authentication is required to update the stored checksums for the device"
+msgstr ""
+"Der kræves autentifikation for at opdatere de gemte checksumme for enheden"
+
+#: policy/org.freedesktop.fwupd.policy.in:105
+msgid "Modify a configured remote"
+msgstr "Rediger en konfigureret fjern"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:107
+msgid ""
+"Authentication is required to modify a configured remote used for firmware "
+"updates"
+msgstr ""
+"Der kræves autentifikation for at redigere en konfigureret fjern som bruges "
+"til firmwareopdateringer"
+
+#. TRANSLATORS: this is a command alias, e.g. 'get-devices'
+#: plugins/dfu/dfu-tool.c:112 src/fu-tool.c:186 src/fu-util.c:122
+#, c-format
+msgid "Alias to %s"
+msgstr "Alias til %s"
+
+#. TRANSLATORS: error message
+#: plugins/dfu/dfu-tool.c:180 src/fu-tool.c:250 src/fu-util.c:186
+msgid "Command not found"
+msgstr "Kommandoen blev ikke fundet"
+
+#. TRANSLATORS: this is when a device is hotplugged
+#: plugins/dfu/dfu-tool.c:1446
+msgid "Added"
+msgstr "Tilføjet"
+
+#. TRANSLATORS: this is when a device is hotplugged
+#: plugins/dfu/dfu-tool.c:1457
+msgid "Removed"
+msgstr "Fjernet"
+
+#. TRANSLATORS: this is when a device is hotplugged
+#. TRANSLATORS: this is when the daemon state changes
+#: plugins/dfu/dfu-tool.c:1466 src/fu-tool.c:1191
+msgid "Changed"
+msgstr "Ændret"
+
+#. TRANSLATORS: this is when a device ctrl+c's a watch
+#: plugins/dfu/dfu-tool.c:1474 src/fu-tool.c:259
+msgid "Cancelled"
+msgstr "Annulleret"
+
+#. TRANSLATORS: Appstream ID for the hardware type
+#: plugins/dfu/dfu-tool.c:1968 src/fu-util.c:1783
+msgid "ID"
+msgstr "Id"
+
+#. TRANSLATORS: interface name, e.g. "Flash"
+#. TRANSLATORS: device name, e.g. 'ColorHug2'
+#. TRANSLATORS: section header for the release name
+#: plugins/dfu/dfu-tool.c:1974 plugins/dfu/dfu-tool.c:1980
+#: plugins/dfu/dfu-tool.c:2083 src/fu-util.c:1515
+msgid "Name"
+msgstr "Navn"
+
+#. TRANSLATORS: this is the encryption method used when writing
+#: plugins/dfu/dfu-tool.c:1987
+msgid "Cipher"
+msgstr "Krypteringsalgoritme"
+
+#. TRANSLATORS: these are areas of memory on the chip
+#: plugins/dfu/dfu-tool.c:2001
+msgid "Region"
+msgstr "Område"
+
+#. TRANSLATORS: detected a DFU device
+#: plugins/dfu/dfu-tool.c:2043
+msgid "Found"
+msgstr "Fundet"
+
+#. TRANSLATORS: DFU protocol version, e.g. 1.1
+#: plugins/dfu/dfu-tool.c:2051
+msgid "Protocol"
+msgstr "Protokol"
+
+#. TRANSLATORS: probably not run as root...
+#. TRANSLATORS: device has failed to report status
+#. TRANSLATORS: device status, e.g. "OK"
+#: plugins/dfu/dfu-tool.c:2061 plugins/dfu/dfu-tool.c:2070
+#: plugins/dfu/dfu-tool.c:2076 plugins/dfu/dfu-tool.c:2098
+msgid "Status"
+msgstr "Status"
+
+#: plugins/dfu/dfu-tool.c:2061
+msgid "Permission denied"
+msgstr "Tilladelse nægtet"
+
+#. TRANSLATORS: serial number, e.g. '00012345'
+#: plugins/dfu/dfu-tool.c:2089
+msgid "Serial"
+msgstr "Serienummer"
+
+#: plugins/dfu/dfu-tool.c:2094
+msgid "Mode"
+msgstr "Tilstand"
+
+#: plugins/dfu/dfu-tool.c:2094
+msgid "Runtime"
+msgstr "Runtime"
+
+#: plugins/dfu/dfu-tool.c:2094
+msgid "DFU"
+msgstr "DFU"
+
+#. TRANSLATORS: device state, i.e. appIDLE
+#: plugins/dfu/dfu-tool.c:2102
+msgid "State"
+msgstr "Tilstand"
+
+#. TRANSLATORS: transfer size in bytes
+#: plugins/dfu/dfu-tool.c:2110
+msgid "Transfer Size"
+msgstr "Overførselsstørrelse"
+
+#. TRANSLATORS: device attributes, i.e. things that
+#. * the device can do
+#: plugins/dfu/dfu-tool.c:2118
+msgid "Attributes"
+msgstr "Attributter"
+
+#. TRANSLATORS: device quirks, i.e. things that
+#. * it does that we have to work around
+#: plugins/dfu/dfu-tool.c:2126
+msgid "Quirks"
+msgstr "Quirks"
+
+#. TRANSLATORS: chip ID, e.g. "0x58200204"
+#: plugins/dfu/dfu-tool.c:2133
+msgid "Chip ID"
+msgstr "Chip-id"
+
+#: plugins/dfu/dfu-tool.c:2189
+msgid "Print the version number"
+msgstr "Udskriv versionsnummer"
+
+#: plugins/dfu/dfu-tool.c:2191
+msgid "Print verbose debug statements"
+msgstr "Udskriv uddybende fejlretningsudsagn"
+
+#: plugins/dfu/dfu-tool.c:2193
+msgid "Specify Vendor/Product ID(s) of DFU device"
+msgstr "Angiv producent-/produkt-id('er) for DFU-enhed"
+
+#: plugins/dfu/dfu-tool.c:2195
+msgid "Specify the number of bytes per USB transfer"
+msgstr "Angiv antal bytes pr. USB-overførsel"
+
+#: plugins/dfu/dfu-tool.c:2197
+msgid "Force the action ignoring all warnings"
+msgstr "Tving handlingen og ignorer alle advarsler"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2213
+msgid "Convert firmware to DFU format"
+msgstr "Konverter firmware til DFU-format"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2219
+msgid "Merge multiple firmware files into one"
+msgstr "Sammenlæg flere firmwarefiler i én"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2225
+msgid "Set vendor ID on firmware file"
+msgstr "Indstil producent-id på firmwarefil"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2231
+msgid "Set product ID on firmware file"
+msgstr "Indstil producent-id på firmwarefil"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2237
+msgid "Set element address on firmware file"
+msgstr "Indstil elementadresse på firmwarefil"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2243
+msgid "Set the firmware size for the target"
+msgstr "Indstil firmwarestørrelse på målet"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2249
+msgid "Set release version on firmware file"
+msgstr "Indstil udgivelsesversion på firmwarefil"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2255
+msgid "Set alternative number on firmware file"
+msgstr "Indstil alternativt tal på firmwarefil"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2261
+msgid "Set alternative name on firmware file"
+msgstr "Indstil alternativt navn på firmwarefil"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2267
+msgid "Attach DFU capable device back to runtime"
+msgstr "Tilkobl enheder som formår DFU tilbage til runtime"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2273
+msgid "Reset a DFU device"
+msgstr "Nulstil en DFU-enhed"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2279
+msgid "Read firmware from device into a file"
+msgstr "Læs firmware fra enhed ind i en fil"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2285
+msgid "Read firmware from one partition into a file"
+msgstr "Læs firmware fra en partition ind i en fil"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2291
+msgid "Write firmware from file into device"
+msgstr "Skriv firmware fra fil ind i enhed"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2297
+msgid "Write firmware from file into one partition"
+msgstr "Skriv firmware fra fil ind i en partition"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2303
+msgid "List currently attached DFU capable devices"
+msgstr "Vis tilkoblede enheder som formår DFU"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2309
+msgid "Detach currently attached DFU capable device"
+msgstr "Frakobl tilkoblede enheder som formår DFU"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2315
+msgid "Dump details about a firmware file"
+msgstr "Dump detaljer om en firmwarefil"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2321
+msgid "Watch DFU devices being hotplugged"
+msgstr "Hold øje med DFU-enheder som hotplugges"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2327
+msgid "Encrypt firmware data"
+msgstr "Kryptér firmwaredata"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2333
+msgid "Decrypt firmware data"
+msgstr "Afkryptér firmwaredata"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2339
+msgid "Sets metadata on a firmware file"
+msgstr "Indstiller metadata på en firmwarefil"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2345
+msgid "Replace data in an existing firmware file"
+msgstr "Erstat data i en eksisterende firmwarefil"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2351
+msgid "Create a binary patch using two files"
+msgstr "Opret en binær patch ved brug af to filer"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2357
+msgid "Apply a binary patch"
+msgstr "Anvend en binær patch"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2363
+msgid "Dump information about a binary patch to the screen"
+msgstr "Dump information om en binær patch på skærmen"
+
+#. TRANSLATORS: quirks are device-specific workarounds
+#: plugins/dfu/dfu-tool.c:2375
+msgid "Failed to load quirks"
+msgstr "Kunne ikke indlæse quirks"
+
+#. TRANSLATORS: DFU stands for device firmware update
+#: plugins/dfu/dfu-tool.c:2397
+msgid "DFU Utility"
+msgstr "DFU-redskab"
+
+#. TRANSLATORS: the user didn't read the man page
+#: plugins/dfu/dfu-tool.c:2402 plugins/uefi/fu-uefi-tool.c:127
+#: src/fu-tool.c:1404 src/fu-util.c:2487
+msgid "Failed to parse arguments"
+msgstr "Kunne ikke fortolke argumenter"
+
+#. TRANSLATORS: this is shown when updating the firmware after the reboot
+#: plugins/uefi/fu-plugin-uefi.c:381
+msgid "Installing firmware update…"
+msgstr "Installerer firmwareopdateringer …"
+
+#. TRANSLATORS: command line option
+#: plugins/uefi/fu-uefi-tool.c:71 src/fu-util.c:2263
+msgid "Show extra debugging information"
+msgstr "Vis ekstra fejlretningsinformation"
+
+#. TRANSLATORS: command line option
+#: plugins/uefi/fu-uefi-tool.c:74
+msgid "Display version"
+msgstr "Vis version"
+
+#. TRANSLATORS: command line option
+#: plugins/uefi/fu-uefi-tool.c:77
+msgid "Show the debug log from the last attempted update"
+msgstr "Vis fejlretningsloggen fra den opdatering der blev forsøgt sidst"
+
+#. TRANSLATORS: command line option
+#: plugins/uefi/fu-uefi-tool.c:80
+msgid "List supported firmware updates"
+msgstr "Vis understøttede firmwareopdateringer"
+
+#. TRANSLATORS: command line option
+#: plugins/uefi/fu-uefi-tool.c:83
+msgid "Query for firmware update support"
+msgstr "Forespørg om understøttelse af firmwareopdatering"
+
+#. TRANSLATORS: command line option
+#: plugins/uefi/fu-uefi-tool.c:86
+msgid "Show the information of firmware update status"
+msgstr "Vis informationen om firmwareopdateringsstatus"
+
+#. TRANSLATORS: command line option
+#: plugins/uefi/fu-uefi-tool.c:89
+msgid "Enable firmware update support on supported systems"
+msgstr ""
+"Aktivér understøttelse af firmwareopdateringer på systemer som understøtter "
+"det"
+
+#. TRANSLATORS: command line option
+#: plugins/uefi/fu-uefi-tool.c:92
+msgid "Override the default ESP path"
+msgstr "Tilsidesæt standard-ESP-stien"
+
+#. TRANSLATORS: command line option
+#: plugins/uefi/fu-uefi-tool.c:95
+msgid "Set the debugging flag during update"
+msgstr "Indstil fejlretningsflaget under opdatering"
+
+#. TRANSLATORS: command line option
+#: plugins/uefi/fu-uefi-tool.c:98
+msgid "Unset the debugging flag during update"
+msgstr "Fjern fejlretningsflaget under opdatering"
+
+#. TRANSLATORS: command line option
+#: plugins/uefi/fu-uefi-tool.c:101
+msgid "Apply firmware updates"
+msgstr "Anvend firmwareopdateringer"
+
+#. TRANSLATORS: we're poking around as a power user
+#: plugins/uefi/fu-uefi-tool.c:114 src/fu-tool.c:1272
+msgid "This program may only work correctly as root"
+msgstr "Programmet virker måske kun korrekt som root"
+
+#. TRANSLATORS: program name
+#: plugins/uefi/fu-uefi-tool.c:122
+msgid "UEFI Firmware Utility"
+msgstr "UEFI-firmwareredskab"
+
+#: plugins/uefi/fu-uefi-tool.c:146
+msgid "No action specified!"
+msgstr "Der er ikke angivet nogen handling!"
+
+#. TRANSLATORS: ESP is EFI System Partition
+#: plugins/uefi/fu-uefi-tool.c:158
+msgid "ESP specified was not valid"
+msgstr "Angivet ESP var ikke gyldig"
+
+#: plugins/uefi/fu-uefi-tool.c:247
+msgid "Firmware updates are supported on this machine."
+msgstr "Maskinen understøtter firmwareopdateringer."
+
+#: plugins/uefi/fu-uefi-tool.c:249
+msgid "Firmware updates are not supported on this machine."
+msgstr "Maskinen understøtter ikke firmwareopdateringer."
+
+#: plugins/uefi/fu-uefi-tool.c:302
+msgid "Enabled fwupdate debugging"
+msgstr "Aktivér fwupdate-fejlretning"
+
+#: plugins/uefi/fu-uefi-tool.c:314
+msgid "Disabled fwupdate debugging"
+msgstr "Deaktivér fwupdate-fejlretning"
+
+#. TRANSLATORS: show the user a warning
+#: src/fu-config.c:126
+msgid ""
+"Your distributor may not have verified any of the firmware updates for "
+"compatibility with your system or connected devices."
+msgstr ""
+"Din distributør har måske ikke verificeret kompatibiliteten af "
+"firmwareopdateringerne med dit system eller tilsluttede enheder."
+
+#. TRANSLATORS: show the user a warning
+#: src/fu-config.c:131
+msgid "Enabling this remote is done at your own risk."
+msgstr "Aktivering af fjernen sker på egen risiko."
+
+#. TRANSLATORS: turn on all debugging
+#: src/fu-debug.c:120
+msgid "Show debugging information for all files"
+msgstr "Vis fejlretningsinformation for alle filer"
+
+#. TRANSLATORS: this is for plugin development
+#: src/fu-debug.c:123
+msgid "Show plugin verbose information"
+msgstr "Vis uddybende information om plugin"
+
+#. TRANSLATORS: this is for daemon development
+#: src/fu-debug.c:126
+msgid "Show daemon verbose information"
+msgstr "Vis uddybende information om dæmon"
+
+#. TRANSLATORS: for the --verbose arg
+#: src/fu-debug.c:187
+msgid "Debugging Options"
+msgstr "Fejlretningsindstillinger"
+
+#. TRANSLATORS: for the --verbose arg
+#: src/fu-debug.c:189
+msgid "Show debugging options"
+msgstr "Vis fejlretningsindstillinger"
+
+#. TRANSLATORS: exit after we've started up, used for user profiling
+#: src/fu-main.c:1255
+msgid "Exit after a small delay"
+msgstr "Afslut efter en lille forsinkelse"
+
+#. TRANSLATORS: exit straight away, used for automatic profiling
+#: src/fu-main.c:1258
+msgid "Exit after the engine has loaded"
+msgstr "Afslut efter motoren er indlæst"
+
+#. TRANSLATORS: program name
+#: src/fu-main.c:1272
+msgid "Firmware Update Daemon"
+msgstr "Firmwareopdateringsdæmon"
+
+#. TRANSLATORS: program summary
+#: src/fu-main.c:1277
+msgid "Firmware Update D-Bus Service"
+msgstr "D-Bus-tjeneste for firmwareopdatering"
+
+#. TRANSLATORS: nothing found
+#: src/fu-tool.c:390
+msgid "No plugins found"
+msgstr "Der blev ikke fundet nogen plugins"
+
+#. TRANSLATORS: nothing attached
+#. TRANSLATORS: nothing attached that can be upgraded
+#: src/fu-tool.c:499 src/fu-tool.c:546 src/fu-util.c:591 src/fu-util.c:614
+msgid "No hardware detected with firmware update capability"
+msgstr "Der blev ikke fundet nogen hardware med firmware som kan opdateres"
+
+#. TRANSLATORS: get interactive prompt
+#: src/fu-tool.c:576 src/fu-util.c:283
+msgid "Choose a device:"
+msgstr "Vælg en enhed:"
+
+#. TRANSLATORS: this is to abort the interactive prompt
+#: src/fu-tool.c:578 src/fu-util.c:285
+msgid "Cancel"
+msgstr "Annuller"
+
+#. TRANSLATORS: %1 is a device name
+#: src/fu-tool.c:613 src/fu-util.c:215
+#, c-format
+msgid "Updating %s…"
+msgstr "Opdaterer %s …"
+
+#. TRANSLATORS: %1 is a device name
+#: src/fu-tool.c:618 src/fu-util.c:225
+#, c-format
+msgid "Installing on %s…"
+msgstr "Installerer på %s …"
+
+#. TRANSLATORS: this is when a device is hotplugged
+#: src/fu-tool.c:1164
+msgid "Device added:"
+msgstr "Enhed tilføjet:"
+
+#. TRANSLATORS: this is when a device is hotplugged
+#: src/fu-tool.c:1174
+msgid "Device removed:"
+msgstr "Enhed fjernet:"
+
+#. TRANSLATORS: this is when a device has been updated
+#: src/fu-tool.c:1184
+msgid "Device changed:"
+msgstr "Enhed ændret:"
+
+#. TRANSLATORS: command line option
+#: src/fu-tool.c:1234 src/fu-util.c:2266
+msgid "Show client and daemon versions"
+msgstr "Vis klient- og dæmonversioner"
+
+#. TRANSLATORS: command line option
+#: src/fu-tool.c:1237 src/fu-util.c:2272
+msgid "Allow re-installing existing firmware versions"
+msgstr "Tillad geninstallering af eksisterende firmwareversioner"
+
+#. TRANSLATORS: command line option
+#: src/fu-tool.c:1240 src/fu-util.c:2275
+msgid "Allow downgrading firmware versions"
+msgstr "Tillad nedgradering af firmwareversioner"
+
+#. TRANSLATORS: command line option
+#: src/fu-tool.c:1243 src/fu-util.c:2278
+msgid "Override plugin warning"
+msgstr "Tilsidesæt advarsel for plugin"
+
+#. TRANSLATORS: command line option
+#: src/fu-tool.c:1246 src/fu-util.c:2290
+msgid "Do not check for reboot after update"
+msgstr "Tjek ikke om der er genstartet, efter opdatering"
+
+#. TRANSLATORS: command line option
+#: src/fu-tool.c:1249 src/fu-util.c:2296
+msgid "Show devices that are not updatable"
+msgstr "Vis enheder som ikke kan opdateres"
+
+#. TRANSLATORS: command line option
+#: src/fu-tool.c:1252
+msgid "Manually whitelist specific plugins"
+msgstr "Manuel hvidlistning af bestemte plugins"
+
+#. TRANSLATORS: command line option
+#: src/fu-tool.c:1255
+msgid "Run the plugin composite prepare routine when using install-blob"
+msgstr "Kør forberedelsesrutinen for pluginkomposition når install-blob bruges"
+
+#. TRANSLATORS: command line option
+#: src/fu-tool.c:1258
+msgid "Run the plugin composite cleanup routine when using install-blob"
+msgstr "Kør oprydningsrutinen for pluginkomposition når install-blob bruges"
+
+#. TRANSLATORS: command description
+#: src/fu-tool.c:1284
+msgid "Build firmware using a sandbox"
+msgstr "Byg firmware med en sandkasse"
+
+#. TRANSLATORS: command description
+#: src/fu-tool.c:1290
+msgid "Dump SMBIOS data from a file"
+msgstr "Dump SMBIOS-data fra en fil"
+
+#. TRANSLATORS: command description
+#: src/fu-tool.c:1296
+msgid "Get all enabled plugins registered with the system"
+msgstr "Hent alle aktiverede plugins som er registreret med systemet"
+
+#. TRANSLATORS: command description
+#: src/fu-tool.c:1302 src/fu-util.c:2361
+msgid "Gets details about a firmware file"
+msgstr "Hent detaljer om en firmwarefil"
+
+#. TRANSLATORS: command description
+#: src/fu-tool.c:1308 src/fu-util.c:2367
+msgid "Gets the list of updates for connected hardware"
+msgstr "Henter listen over opdateringer for tilsluttet hardware"
+
+#. TRANSLATORS: command description
+#: src/fu-tool.c:1314 src/fu-util.c:2319
+msgid "Get all devices that support firmware updates"
+msgstr "Hent alle enheder som understøtter firmwareopdateringer"
+
+#. TRANSLATORS: command description
+#: src/fu-tool.c:1320 src/fu-util.c:2325
+msgid "Get all devices according to the system topology"
+msgstr "Hent alle enheder i henhold til systemets topologi"
+
+#. TRANSLATORS: command description
+#: src/fu-tool.c:1326
+msgid "Watch for hardware changes"
+msgstr "Hold øje med hardwareændringer"
+
+#. TRANSLATORS: command description
+#: src/fu-tool.c:1332
+msgid "Install a firmware blob on a device"
+msgstr "Installer en firmwareblob på en enhed"
+
+#. TRANSLATORS: command description
+#: src/fu-tool.c:1338 src/fu-util.c:2355
+msgid "Install a firmware file on this hardware"
+msgstr "Installer en firmwarefil på hardwaren"
+
+#. TRANSLATORS: command description
+#: src/fu-tool.c:1344
+msgid "Attach to firmware mode"
+msgstr "Tilkobl til firmwaretilstand"
+
+#. TRANSLATORS: command description
+#: src/fu-tool.c:1350
+msgid "Detach to bootloader mode"
+msgstr "Frakobl til opstartsindlæsertilstand"
+
+#. TRANSLATORS: command description
+#: src/fu-tool.c:1356
+msgid "Return all the hardware IDs for the machine"
+msgstr "Returner alle maskinens hardware-id'er"
+
+#. TRANSLATORS: command description
+#: src/fu-tool.c:1362
+msgid "Monitor the daemon for events"
+msgstr "Overvåg dæmonen for hændelser"
+
+#. TRANSLATORS: command description
+#: src/fu-tool.c:1368
+msgid "Update all devices that match local metadata"
+msgstr "Opdater alle enheder som matcher lokale metadata"
+
+#. TRANSLATORS: program name
+#: src/fu-tool.c:1398 src/fu-util.c:2482
+msgid "Firmware Utility"
+msgstr "Firmwareredskab"
+
+#. TRANSLATORS: daemon is inactive
+#: src/fu-progressbar.c:43
+msgid "Idle…"
+msgstr "Inaktiv …"
+
+#. TRANSLATORS: decompressing the firmware file
+#: src/fu-progressbar.c:47
+msgid "Decompressing…"
+msgstr "Udpakker …"
+
+#. TRANSLATORS: parsing the firmware information
+#: src/fu-progressbar.c:51
+msgid "Loading…"
+msgstr "Indlæser …"
+
+#. TRANSLATORS: restarting the device to pick up new F/W
+#: src/fu-progressbar.c:55
+msgid "Restarting device…"
+msgstr "Genstarter enhed …"
+
+#. TRANSLATORS: reading from the flash chips
+#: src/fu-progressbar.c:59
+msgid "Reading…"
+msgstr "Læser …"
+
+#. TRANSLATORS: writing to the flash chips
+#: src/fu-progressbar.c:63
+msgid "Writing…"
+msgstr "Skriver …"
+
+#. TRANSLATORS: erasing contents of the flash chips
+#: src/fu-progressbar.c:67
+msgid "Erasing…"
+msgstr "Sletter …"
+
+#. TRANSLATORS: verifying we wrote the firmware correctly
+#: src/fu-progressbar.c:71
+msgid "Verifying…"
+msgstr "Verficerer …"
+
+#. TRANSLATORS: scheduing an update to be done on the next boot
+#: src/fu-progressbar.c:75
+msgid "Scheduling…"
+msgstr "Planlægger …"
+
+#. TRANSLATORS: downloading from a remote server
+#: src/fu-progressbar.c:79
+msgid "Downloading…"
+msgstr "Downloader …"
+
+#. TRANSLATORS: waiting for user to authenticate
+#: src/fu-progressbar.c:83
+msgid "Authenticating…"
+msgstr "Autentificerer …"
+
+#. TRANSLATORS: waiting for device to do something
+#: src/fu-progressbar.c:87
+msgid "Waiting…"
+msgstr "Venter …"
+
+#. TRANSLATORS: currect daemon status is unknown
+#: src/fu-progressbar.c:94
+msgid "Unknown"
+msgstr "Ukendt"
+
+#. TRANSLATORS: time remaining for completing firmware flash
+#: src/fu-progressbar.c:134
+msgid "Less than one minute remaining"
+msgstr "Mindre end et minut tilbage"
+
+#. more than a minute
+#: src/fu-progressbar.c:138
+#, c-format
+msgid "%.0f minute remaining"
+msgid_plural "%.0f minutes remaining"
+msgstr[0] "%.0f minut tilbage"
+msgstr[1] "%.0f minutter tilbage"
+
+#. TRANSLATORS: %1 is a device name
+#: src/fu-util.c:220
+#, c-format
+msgid "Downgrading %s…"
+msgstr "Nedgraderer %s …"
+
+#. TRANSLATORS: a list of failed updates
+#: src/fu-util.c:409
+msgid "Devices that were not updated correctly:"
+msgstr "Enheder som ikke blev opdateret korrekt:"
+
+#. TRANSLATORS: a list of successful updates
+#: src/fu-util.c:423
+msgid "Devices that have been updated successfully:"
+msgstr "Enheder som det lykkedes at opdatere:"
+
+#. TRANSLATORS: explain why we want to upload
+#: src/fu-util.c:437
+msgid ""
+"Uploading firmware reports helps hardware vendors to quickly identify "
+"failing and successful updates on real devices."
+msgstr ""
+"Upload af firmwarerapporter hjælper hardwareproducenter til hurtigt at "
+"identificere opdateringer som fejlede og lykkedes på rigtigt hardware."
+
+#. TRANSLATORS: ask the user to upload
+#: src/fu-util.c:441
+msgid "Upload report now?"
+msgstr "Upload rapport nu?"
+
+#. TRANSLATORS: metadata is downloaded from the Internet
+#: src/fu-util.c:443 src/fu-util.c:1684
+msgid "Requires internet connection"
+msgstr "Kræver internetforbindelse"
+
+#. TRANSLATORS: should the remote still be enabled
+#: src/fu-util.c:526
+msgid "Agree and enable the remote?"
+msgstr "Accepter og aktivér fjernen?"
+
+#. TRANSLATORS: the first replacement is a display name
+#. * e.g. "ColorHugALS" and the second is a version number
+#. * e.g. "1.2.3"
+#: src/fu-util.c:796
+#, c-format
+msgid "Reinstalling %s with %s... "
+msgstr "Geninstallerer %s med %s... "
+
+#. TRANSLATORS: the first replacement is a display name
+#. * e.g. "ColorHugALS" and the second and third are
+#. * version numbers e.g. "1.2.3"
+#: src/fu-util.c:803
+#, c-format
+msgid "Downgrading %s from %s to %s... "
+msgstr "Nedgraderer %s fra %s til %s... "
+
+#. TRANSLATORS: the first replacement is a display name
+#. * e.g. "ColorHugALS" and the second and third are
+#. * version numbers e.g. "1.2.3"
+#: src/fu-util.c:811
+#, c-format
+msgid "Updating %s from %s to %s... "
+msgstr "Opdaterer %s fra %s til %s... "
+
+#: src/fu-util.c:839
+msgid "Done!"
+msgstr "Færdig!"
+
+#: src/fu-util.c:871
+msgid "Target"
+msgstr "Mål"
+
+#: src/fu-util.c:872
+msgid "Payload"
+msgstr "Nyttelast"
+
+#: src/fu-util.c:873
+msgid "Proceed with upload?"
+msgstr "Fortsæt med upload?"
+
+#. TRANSLATORS: the server sent the user a small message
+#: src/fu-util.c:952
+msgid "Update failure is a known issue, visit this URL for more information:"
+msgstr ""
+"Opdateringer som mislykkes er et velkendt problem. Besøg URL'en for mere "
+"information:"
+
+#. TRANSLATORS: the server sent the user a small message
+#: src/fu-util.c:956
+msgid "Upload message:"
+msgstr "Uploadmeddelelse:"
+
+#: src/fu-util.c:1179 src/fu-util.c:1608
+msgid "OK"
+msgstr "OK"
+
+#. TRANSLATORS: downloading new signing file
+#: src/fu-util.c:1284
+msgid "Fetching signature"
+msgstr "Henter underskrift"
+
+#. TRANSLATORS: downloading new metadata file
+#: src/fu-util.c:1287
+msgid "Fetching metadata"
+msgstr "Henter metadata"
+
+#. TRANSLATORS: downloading new firmware file
+#: src/fu-util.c:1290
+msgid "Fetching firmware"
+msgstr "Henter firmware"
+
+#. TRANSLATORS: downloading unknown file
+#: src/fu-util.c:1293
+msgid "Fetching file"
+msgstr "Henter fil"
+
+#. TRANSLATORS: the server is rate-limiting downloads
+#: src/fu-util.c:1307
+msgid "Failed to download due to server limit"
+msgstr "Kunne ikke downloade pga. begrænsning på server"
+
+#. TRANSLATORS: explain why no metadata available
+#: src/fu-util.c:1408
+msgid "No remotes are currently enabled so no metadata is available."
+msgstr "Der er ikke nogen metadata da der ikke er aktiveret nogen fjerne."
+
+#. TRANSLATORS: explain why no metadata available
+#: src/fu-util.c:1410
+msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
+msgstr "Metadata kan hentes fra Linux Vendor Firmware Service."
+
+#. TRANSLATORS: Turn on the remote
+#: src/fu-util.c:1412
+msgid "Enable this remote?"
+msgstr "Aktivér fjernen?"
+
+#. TRANSLATORS: section header for release version number
+#: src/fu-util.c:1512
+msgid "Version"
+msgstr "Version"
+
+#. TRANSLATORS: section header for the release one line summary
+#: src/fu-util.c:1518
+msgid "Summary"
+msgstr "Opsummering"
+
+#. TRANSLATORS: section header for the remote the file is coming from
+#: src/fu-util.c:1521
+msgid "Remote"
+msgstr "Fjern"
+
+#. TRANSLATORS: section header for firmware URI
+#: src/fu-util.c:1524
+msgid "URI"
+msgstr "URI"
+
+#. TRANSLATORS: section header for firmware description
+#: src/fu-util.c:1530
+msgid "Description"
+msgstr "Beskrivelse"
+
+#. TRANSLATORS: section header for firmware checksum
+#. TRANSLATORS: remote checksum
+#: src/fu-util.c:1538 src/fu-util.c:1881
+msgid "Checksum"
+msgstr "Checksum"
+
+#. TRANSLATORS: get interactive prompt
+#: src/fu-util.c:1570
+msgid "Choose a release:"
+msgstr "Vælg en udgivelse:"
+
+#. TRANSLATORS: the metadata is very out of date; %u is a number > 1
+#: src/fu-util.c:1674
+#, c-format
+msgid ""
+"Firmware metadata has not been updated for %u day and may not be up to date."
+msgid_plural ""
+"Firmware metadata has not been updated for %u days and may not be up to date."
+msgstr[0] ""
+"Firmwaremetadata er ikke blevet opdateret i %u dag og kan være forældet."
+msgstr[1] ""
+"Firmwaremetadata er ikke blevet opdateret i %u dage og kan være forældet."
+
+#. TRANSLATORS: ask the user if we can update the metadata
+#: src/fu-util.c:1682
+msgid "Update now?"
+msgstr "Opdater nu?"
+
+#. TRANSLATORS: duration in seconds
+#: src/fu-util.c:1701
+#, c-format
+msgid "%u second"
+msgid_plural "%u seconds"
+msgstr[0] "%u sekund"
+msgstr[1] "%u sekunder"
+
+#. TRANSLATORS: duration in minutes
+#: src/fu-util.c:1710
+#, c-format
+msgid "%u minute"
+msgid_plural "%u minutes"
+msgstr[0] "%u minut"
+msgstr[1] "%u minutter"
+
+#. TRANSLATORS: duration in minutes
+#: src/fu-util.c:1719
+#, c-format
+msgid "%u hour"
+msgid_plural "%u hours"
+msgstr[0] "%u time"
+msgstr[1] "%u timer"
+
+#. TRANSLATORS: duration in days!
+#: src/fu-util.c:1727
+#, c-format
+msgid "%u day"
+msgid_plural "%u days"
+msgstr[0] "%u dag"
+msgstr[1] "%u dage"
+
+#. TRANSLATORS: first replacement is device name
+#: src/fu-util.c:1766
+#, c-format
+msgid "%s has firmware updates:"
+msgstr "%s har firmwareopdateringer:"
+
+#: src/fu-util.c:1773
+msgid "GUID"
+msgstr "GUID"
+
+#. TRANSLATORS: section header for firmware version
+#: src/fu-util.c:1786
+msgid "Update Version"
+msgstr "Opdateringens version"
+
+#. TRANSLATORS: section header for the release name
+#: src/fu-util.c:1790
+msgid "Update Name"
+msgstr "Opdateringens navn"
+
+#. TRANSLATORS: section header for the release one line summary
+#: src/fu-util.c:1793
+msgid "Update Summary"
+msgstr "Opdateringens opsummering"
+
+#. TRANSLATORS: section header for remote ID, e.g. lvfs-testing
+#: src/fu-util.c:1796
+msgid "Update Remote ID"
+msgstr "Opdateringens fjern-id"
+
+#. TRANSLATORS: section header for the amount
+#. * of time it takes to install the update
+#: src/fu-util.c:1805
+msgid "Update Duration"
+msgstr "Opdateringens varighed"
+
+#. TRANSLATORS: section header for firmware checksum
+#: src/fu-util.c:1814
+msgid "Update Checksum"
+msgstr "Opdateringens checksum"
+
+#. TRANSLATORS: section header for firmware remote http://
+#: src/fu-util.c:1818
+msgid "Update Location"
+msgstr "Opdateringens placering"
+
+#. TRANSLATORS: section header for long firmware desc
+#: src/fu-util.c:1827
+msgid "Update Description"
+msgstr "Opdateringens beskrivelse"
+
+#. TRANSLATORS: remote identifier, e.g. lvfs-testing
+#: src/fu-util.c:1859
+msgid "Remote ID"
+msgstr "Fjern-id"
+
+#. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
+#: src/fu-util.c:1863
+msgid "Title"
+msgstr "Titel"
+
+#. TRANSLATORS: remote type, e.g. remote or local
+#: src/fu-util.c:1867
+msgid "Type"
+msgstr "Type"
+
+#: src/fu-util.c:1872
+msgid "Keyring"
+msgstr "Nøglering"
+
+#. TRANSLATORS: if the remote is enabled
+#: src/fu-util.c:1877
+msgid "Enabled"
+msgstr "Aktiveret"
+
+#. TRANSLATORS: the age of the metadata
+#: src/fu-util.c:1908
+msgid "Age"
+msgstr "Alder"
+
+#. TRANSLATORS: the numeric priority
+#: src/fu-util.c:1915
+msgid "Priority"
+msgstr "Prioritet"
+
+#. TRANSLATORS: remote filename base
+#: src/fu-util.c:1920
+msgid "Username"
+msgstr "Brugernavn"
+
+#. TRANSLATORS: remote filename base
+#: src/fu-util.c:1926
+msgid "Password"
+msgstr "Adgangskode"
+
+#. TRANSLATORS: filename of the local file
+#: src/fu-util.c:1931
+msgid "Filename"
+msgstr "Filnavn"
+
+#. TRANSLATORS: filename of the local file
+#: src/fu-util.c:1936
+msgid "Filename Signature"
+msgstr "Filnavnets underskrift"
+
+#. TRANSLATORS: remote URI
+#: src/fu-util.c:1941
+msgid "Metadata URI"
+msgstr "Metadata-URI"
+
+#. TRANSLATORS: remote URI
+#: src/fu-util.c:1946
+msgid "Metadata URI Signature"
+msgstr "Underskrift for metadata-URI"
+
+#. TRANSLATORS: remote URI
+#: src/fu-util.c:1951
+msgid "Firmware Base URI"
+msgstr "Grund-URI for firmware"
+
+#. TRANSLATORS: URI to send success/failure reports
+#: src/fu-util.c:1956
+msgid "Report URI"
+msgstr "Rapport-URI"
+
+#. TRANSLATORS: command line option
+#: src/fu-util.c:2269
+msgid "Schedule installation for next reboot when possible"
+msgstr "Planlægning af installation ved næste genstart, når det er muligt"
+
+#. TRANSLATORS: command line option
+#: src/fu-util.c:2281
+msgid "Answer yes to all questions"
+msgstr "Svar ja til alle spørgsmål"
+
+#. TRANSLATORS: command line option
+#: src/fu-util.c:2284
+msgid "Do not check for unreported history"
+msgstr "Tjek ikke efter historik som ikke er blevet rapporteret"
+
+#. TRANSLATORS: command line option
+#: src/fu-util.c:2287
+msgid "Do not check for old metadata"
+msgstr "Tjek ikke efter gammel metadata"
+
+#. TRANSLATORS: command line option
+#: src/fu-util.c:2293
+msgid "Do not write to the history database"
+msgstr "Skriv ikke til historikdatabasen"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2331
+msgid "Install prepared updates now"
+msgstr "Installer forberedte opdateringer nu"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2337
+msgid "Show history of firmware updates"
+msgstr "Vis historik over firmwareopdateringer"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2343
+msgid "Erase all firmware update history"
+msgstr "Slet al historik over firmwareopdateringer"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2349
+msgid "Share firmware history with the developers"
+msgstr "Del historik over firmware med udviklerne"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2373
+msgid "Updates all firmware to latest versions available"
+msgstr "Opdaterer alle firmware til de seneste versioner"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2379
+msgid "Gets the cryptographic hash of the dumped firmware"
+msgstr "Henter den kryptografiske hash fra den dumpede firmware"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2385
+msgid "Unlocks the device for firmware access"
+msgstr "Låser op for enheden for at få adgang til firmwaren"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2391
+msgid "Clears the results from the last update"
+msgstr "Rydder resultaterne fra den sidste opdatering"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2397
+msgid "Clears any updates scheduled to be updated offline"
+msgstr "Rydder opdateringer som er planlagt til at blive opdateret offline"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2403
+msgid "Gets the results from the last update"
+msgstr "Henter resultaterne fra den sidste opdatering"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2409
+msgid "Gets the releases for a device"
+msgstr "Henter resultaterne fra en enhed"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2415
+msgid "Gets the configured remotes"
+msgstr "Henter de konfigurerede fjerne"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2421
+msgid "Downgrades the firmware on a device"
+msgstr "Nedgraderer firmwaren på en enhed"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2427
+msgid "Refresh metadata from remote server"
+msgstr "Genopfrisk metadata fra fjernserver"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2433
+msgid "Update the stored metadata with current ROM contents"
+msgstr "Opdater de gemte metadata med indholdet fra den nuværende ROM"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2439
+msgid "Modifies a given remote"
+msgstr "Redigerer en angivet fjern"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2445
+msgid "Enables a given remote"
+msgstr "Aktiverer en angivet fjern"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2451
+msgid "Disables a given remote"
+msgstr "Deaktiverer en angivet fjern"
+
+#. TRANSLATORS: the user isn't reading the question
+#: src/fu-util-common.c:60
+#, c-format
+msgid "Please enter a number from 0 to %u: "
+msgstr "Indtast venligst et tal nummer 0 og %u: "
+
+#. TRANSLATORS: explain why we want to shutdown
+#: src/fu-util-common.c:274
+msgid "An update requires the system to shutdown to complete."
+msgstr "For at gennemføre en opdatering skal systemet lukkes ned."
+
+#. TRANSLATORS: shutdown to apply the update
+#: src/fu-util-common.c:276
+msgid "Shutdown now?"
+msgstr "Luk ned nu?"
+
+#. TRANSLATORS: explain why we want to reboot
+#: src/fu-util-common.c:286
+msgid "An update requires a reboot to complete."
+msgstr "For at gennemføre en opdatering skal systemet genstartes."
+
+#. TRANSLATORS: reboot to apply the update
+#: src/fu-util-common.c:288
+msgid "Restart now?"
+msgstr "Genstart nu?"
