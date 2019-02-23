@@ -184,7 +184,7 @@ fu_util_update_shutdown (GError **error)
 	if (connection == NULL)
 		return FALSE;
 
-#ifdef HAVE_SYSTEMD
+#ifdef HAVE_LOGIND
 	/* shutdown using logind */
 	val = g_dbus_connection_call_sync (connection,
 					   "org.freedesktop.login1",
@@ -229,7 +229,7 @@ fu_util_update_reboot (GError **error)
 	if (connection == NULL)
 		return FALSE;
 
-#ifdef HAVE_SYSTEMD
+#ifdef HAVE_LOGIND
 	/* reboot using logind */
 	val = g_dbus_connection_call_sync (connection,
 					   "org.freedesktop.login1",

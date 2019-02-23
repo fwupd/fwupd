@@ -63,17 +63,6 @@ if get_option('systemd')
   endif
   con2.set('dynamic_options', '\n'.join(dynamic_options))
 
-  # replace @libexecdir@
-  configure_file(
-    input : 'org.freedesktop.fwupd.service.in',
-    output : 'org.freedesktop.fwupd.service',
-    configuration : con2,
-    install: true,
-    install_dir: join_paths(datadir,
-                            'dbus-1',
-                            'system-services'),
-  )
-
   # replace @bindir@
   configure_file(
     input : 'fwupd-offline-update.service.in',
@@ -90,5 +79,21 @@ if get_option('systemd')
     configuration : con2,
     install: true,
     install_dir: systemdunitdir,
+  )
+endif
+
+if get_option('systemd') or get_option('elogind')
+  con2 = configuration_data()
+  con2.set('libexecdir', libexecdir)
+
+  # replace @libexecdir@
+  configure_file(
+    input : 'org.freedesktop.fwupd.service.in',
+    output : 'org.freedesktop.fwupd.service',
+    configuration : con2,
+    install: true,
+    install_dir: join_paths(datadir,
+                            'dbus-1',
+                            'system-services'),
   )
 endif

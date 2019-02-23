@@ -270,6 +270,12 @@ endif
 if get_option('systemd')
   systemd = dependency('systemd', version : '>= 211')
   conf.set('HAVE_SYSTEMD' , '1')
+  conf.set('HAVE_LOGIND' , '1')
+endif
+
+if get_option('elogind')
+  elogind = dependency('libelogind', version : '>= 211')
+  conf.set('HAVE_LOGIND' , '1')
 endif
 
 if get_option('consolekit')
