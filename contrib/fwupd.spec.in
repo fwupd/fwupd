@@ -190,14 +190,12 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %find_lang %{name}
 
 %post
-/sbin/ldconfig
 %systemd_post fwupd.service
 
 %preun
 %systemd_preun fwupd.service
 
 %postun
-/sbin/ldconfig
 %systemd_postun_with_restart fwupd.service
 %systemd_postun_with_restart pesign.service
 
