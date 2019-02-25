@@ -2204,6 +2204,69 @@ fu_util_downgrade (FuUtilPrivate *priv, gchar **values, GError **error)
 	return fu_util_update_device_with_release (priv, dev, rel, error);
 }
 
+static gboolean
+fu_util_activate (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GPtrArray) devices = NULL;
+	gboolean has_pending = FALSE;
+
+	/* handle both forms */
+	if (g_strv_length (values) == 0) {
+		/* activate anything with _NEEDS_ACTIVATION */
+		devices = fwupd_client_get_devices (priv->client, NULL, error);
+		if (devices == NULL)
+			return FALSE;
+		for (guint i = 0; i < devices->len; i++) {
+			FuDevice *device = g_ptr_array_index (devices, i);
+			if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
+				has_pending = TRUE;
+				break;
+			}
+		}
+	} else if (g_strv_length (values) == 1) {
+		FwupdDevice *device = fwupd_client_get_device_by_id (priv->client,
+								     values[0],
+								     NULL,
+								     error);
+		if (device == NULL)
+			return FALSE;
+		devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+		g_ptr_array_add (devices, device);
+		if (fwupd_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION))
+			has_pending = TRUE;
+	} else {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments");
+		return FALSE;
+	}
+
+	/* nothing to do */
+	if (!has_pending) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "No firmware to activate");
+		return FALSE;
+	}
+
+	/* activate anything with _NEEDS_ACTIVATION */
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *device = g_ptr_array_index (devices, i);
+		if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION))
+			continue;
+		/* TRANSLATORS: shown when shutting down to switch to the new version */
+		g_print ("%s %s…\n", _("Activating firmware update for"),
+			 fwupd_device_get_name (device));
+		if (!fwupd_client_activate (priv->client, NULL,
+					    fwupd_device_get_id (device), error))
+			return FALSE;
+	}
+
+	return TRUE;
+}
+
 static void
 fu_util_ignore_cb (const gchar *log_domain, GLogLevelFlags log_level,
 		   const gchar *message, gpointer user_data)
@@ -2450,6 +2513,13 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Disables a given remote"),
 		     fu_util_remote_disable);
+	fu_util_add (priv->cmd_array,
+		     "activate",
+		     "[DEVICE-ID]",
+		     /* TRANSLATORS: command description */
+		     _("Activate devices"),
+		     fu_util_activate);
+
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();

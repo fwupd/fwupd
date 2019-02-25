@@ -1014,6 +1014,110 @@ fu_engine_history_func (void)
 }
 
 static void
+fu_engine_history_inherit (void)
+{
+	gboolean ret;
+	g_autofree gchar *filename = NULL;
+	g_autofree gchar *testdatadir = NULL;
+	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuInstallTask) task = NULL;
+	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
+	g_autoptr(GBytes) blob_cab = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new ();
+	g_autoptr(XbSilo) silo = NULL;
+
+	/* no metadata in daemon */
+	fu_engine_set_silo (engine, silo_empty);
+
+	/* set up dummy plugin */
+	g_setenv ("FWUPD_PLUGIN_TEST", "fail", TRUE);
+	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_test.so", &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	fu_engine_add_plugin (engine, plugin);
+	testdatadir = fu_test_get_filename (TESTDATADIR, ".");
+	g_assert (testdatadir != NULL);
+	g_setenv ("FU_SELF_TEST_REMOTES_DIR", testdatadir, TRUE);
+	ret = fu_engine_load (engine, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	g_assert_cmpint (fu_engine_get_status (engine), ==, FWUPD_STATUS_IDLE);
+
+	/* add a device so we can get upgrade it */
+	fu_device_set_version (device, "1.2.2");
+	fu_device_set_id (device, "test_device");
+	fu_device_set_name (device, "Test Device");
+	fu_device_set_plugin (device, "test");
+	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_set_created (device, 1515338000);
+	fu_engine_add_device (engine, device);
+	devices = fu_engine_get_devices (engine, &error);
+	g_assert_no_error (error);
+	g_assert (devices != NULL);
+	g_assert_cmpint (devices->len, ==, 1);
+	g_assert (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REGISTERED));
+
+	filename = fu_test_get_filename (TESTDATADIR, "missing-hwid/noreqs-1.2.3.cab");
+	g_assert (filename != NULL);
+	blob_cab = fu_common_get_contents_bytes	(filename, &error);
+	g_assert_no_error (error);
+	g_assert (blob_cab != NULL);
+	silo = fu_engine_get_silo_from_blob (engine, blob_cab, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (silo);
+
+	/* get component */
+	component = xb_silo_query_first (silo, "components/component/id[text()='com.hughski.test.firmware']/..", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (component);
+
+	/* install it */
+	g_setenv ("FWUPD_PLUGIN_TEST", "requires-activation", TRUE);
+	task = fu_install_task_new (device, component);
+	ret = fu_engine_install (engine, task, blob_cab,
+				 FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* check the device requires an activation */
+	g_assert_true (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION));
+	g_assert_cmpstr (fu_device_get_version (device), ==, "1.2.2");
+
+	/* activate the device */
+	ret = fu_engine_activate (engine, fu_device_get_id (device), &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* check the device no longer requires an activation */
+	g_assert_false (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION));
+	g_assert_cmpstr (fu_device_get_version (device), ==, "1.2.3");
+
+	/* emulate getting the flag for a fresh boot on old firmware */
+	fu_device_set_version (device, "1.2.2");
+	ret = fu_engine_install (engine, task, blob_cab,
+				 FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	g_object_unref (engine);
+	g_object_unref (device);
+	engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	fu_engine_set_silo (engine, silo_empty);
+	fu_engine_add_plugin (engine, plugin);
+	device = fu_device_new ();
+	fu_device_set_id (device, "test_device");
+	fu_device_set_name (device, "Test Device");
+	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
+	fu_device_set_version (device, "1.2.2");
+	fu_engine_add_device (engine, device);
+	g_assert_true (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION));
+}
+
+static void
 fu_engine_history_error_func (void)
 {
 	gboolean ret;
@@ -3365,6 +3469,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/device-list{replug-auto}", fu_device_list_replug_auto_func);
 	g_test_add_func ("/fwupd/device-list{replug-user}", fu_device_list_replug_user_func);
 	g_test_add_func ("/fwupd/engine{require-hwid}", fu_engine_require_hwid_func);
+	g_test_add_func ("/fwupd/engine{history-inherit}", fu_engine_history_inherit);
 	g_test_add_func ("/fwupd/engine{partial-hash}", fu_engine_partial_hash_func);
 	g_test_add_func ("/fwupd/engine{downgrade}", fu_engine_downgrade_func);
 	g_test_add_func ("/fwupd/engine{requirements-success}", fu_engine_requirements_func);

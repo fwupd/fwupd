@@ -90,6 +90,17 @@
     </defaults>
   </action>
 
+  <action id="org.freedesktop.fwupd.device-activate">
+    <description>Activate the new firmware on the device</description>
+    <!-- TRANSLATORS: this is the PolicyKit modal dialog -->
+    <message>Authentication is required to switch to the new firmware version</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
   <action id="org.freedesktop.fwupd.verify-update">
     <description>Update the stored device verification information</description>
     <!-- TRANSLATORS: this is the PolicyKit modal dialog -->

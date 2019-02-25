@@ -36,6 +36,9 @@ gboolean	 fu_plugin_verify			(FuPlugin	*plugin,
 gboolean	 fu_plugin_unlock			(FuPlugin	*plugin,
 							 FuDevice	*dev,
 							 GError		**error);
+gboolean	 fu_plugin_activate			(FuPlugin	*plugin,
+							 FuDevice	*dev,
+							 GError		**error);
 gboolean	 fu_plugin_clear_results		(FuPlugin	*plugin,
 							 FuDevice	*dev,
 							 GError		**error);

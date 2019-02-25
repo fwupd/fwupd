@@ -1,4 +1,5 @@
 _fwupdtool_cmd_list=(
+	'activate'
 	'build-firmware'
 	'get-updates'
 	'get-details'
@@ -64,7 +65,7 @@ _fwupdtool()
 			_show_modifiers
 		fi
 		;;
-	attach|detach)
+	attach|detach|activate)
 		if [[ "$prev" = "$command" ]]; then
 			_show_device_ids
 		#modifiers

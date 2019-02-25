@@ -1671,6 +1671,37 @@ fu_engine_update_attach (FuEngine *self, const gchar *device_id, GError **error)
 	return TRUE;
 }
 
+gboolean
+fu_engine_activate (FuEngine *self, const gchar *device_id, GError **error)
+{
+	FuPlugin *plugin;
+	g_autoptr(FuDevice) device = NULL;
+
+	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
+	g_return_val_if_fail (device_id != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* check the device exists */
+	device = fu_device_list_get_by_id (self->device_list, device_id, error);
+	if (device == NULL)
+		return FALSE;
+
+	plugin = fu_plugin_list_find_by_name (self->plugin_list,
+					      fu_device_get_plugin (device),
+					      error);
+	if (plugin == NULL)
+		return FALSE;
+	g_debug ("Activating %s", fu_device_get_name (device));
+
+	if (!fu_plugin_runner_activate (plugin, device, error))
+		return FALSE;
+
+	fu_engine_emit_device_changed (self, device);
+	fu_engine_emit_changed (self);
+
+	return TRUE;
+}
+
 static gboolean
 fu_engine_update_reload (FuEngine *self, const gchar *device_id, GError **error)
 {
@@ -3302,6 +3333,34 @@ fu_engine_adopt_children (FuEngine *self, FuDevice *device)
 	}
 }
 
+static void
+fu_engine_device_inherit_history (FuEngine *self, FuDevice *device)
+{
+	g_autoptr(FuDevice) device_history = NULL;
+
+	/* any success or failed update? */
+	device_history = fu_history_get_device_by_id (self->history,
+						      fu_device_get_id (device),
+						      NULL);
+	if (device_history == NULL)
+		return;
+
+	/* the device is still running the old firmware version and so if it
+	 * required activation before, it still requires it now -- note:
+	 * we can't just check for version_new=version to allow for re-installs */
+	if (fu_device_has_flag (device_history, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
+		FwupdRelease *release = fu_device_get_release_default (device_history);
+		if (g_strcmp0 (fu_device_get_version (device),
+			       fwupd_release_get_version (release)) != 0) {
+			g_debug ("inheriting needs-activation for %s as version %s != %s",
+				 fu_device_get_name (device),
+				 fu_device_get_version (device),
+				 fwupd_release_get_version (release));
+			fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+		}
+	}
+}
+
 void
 fu_engine_add_device (FuEngine *self, FuDevice *device)
 {
@@ -3374,6 +3433,9 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 	 * device is worthy */
 	if (fu_engine_is_device_supported (self, device))
 		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_SUPPORTED);
+
+	/* sometimes inherit flags from recent history */
+	fu_engine_device_inherit_history (self, device);
 }
 
 static void
@@ -3944,6 +4006,7 @@ fu_engine_update_history_device (FuEngine *self, FuDevice *dev_history, GError *
 			const gchar *csum = g_ptr_array_index (checksums, i);
 			fu_device_add_checksum (dev_history, csum);
 		}
+		fu_device_remove_flag (dev_history, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 		fu_device_set_update_state (dev_history, FWUPD_UPDATE_STATE_SUCCESS);
 		return fu_history_modify_device (self->history, dev_history,
 						 FU_HISTORY_FLAGS_MATCH_NEW_VERSION,

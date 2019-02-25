@@ -1442,6 +1442,33 @@ fu_plugin_runner_verify (FuPlugin *self,
 }
 
 gboolean
+fu_plugin_runner_activate (FuPlugin *self, FuDevice *device, GError **error)
+{
+	guint64 flags;
+
+	/* final check */
+	flags = fu_device_get_flags (device);
+	if ((flags & FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION) == 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "Device %s does not need activation",
+			     fu_device_get_id (device));
+		return FALSE;
+	}
+
+	/* run vfunc */
+	if (!fu_plugin_runner_device_generic (self, device,
+					      "fu_plugin_activate", error))
+		return FALSE;
+
+	/* update with correct flags */
+	fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+	fu_device_set_modified (device, (guint64) g_get_real_time () / G_USEC_PER_SEC);
+	return TRUE;
+}
+
+gboolean
 fu_plugin_runner_unlock (FuPlugin *self, FuDevice *device, GError **error)
 {
 	guint64 flags;

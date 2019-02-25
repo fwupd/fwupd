@@ -1,4 +1,5 @@
 _fwupdmgr_cmd_list=(
+	'activate'
 	'clear-history'
 	'clear-offline'
 	'clear-results'
@@ -70,7 +71,7 @@ _fwupdmgr()
 	command=${COMP_WORDS[1]}
 
 	case $command in
-	clear-results|downgrade|get-releases|get-results|unlock|verify|verify-update)
+	activate|clear-results|downgrade|get-releases|get-results|unlock|verify|verify-update)
 		if [[ "$prev" = "$command" ]]; then
 			_show_device_ids
 		else

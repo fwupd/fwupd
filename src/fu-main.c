@@ -387,6 +387,32 @@ fu_main_authorize_unlock_cb (GObject *source, GAsyncResult *res, gpointer user_d
 }
 
 static void
+fu_main_authorize_activate_cb (GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *) user_data;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(PolkitAuthorizationResult) auth = NULL;
+
+	/* get result */
+	fu_main_set_status (helper->priv, FWUPD_STATUS_IDLE);
+	auth = polkit_authority_check_authorization_finish (POLKIT_AUTHORITY (source),
+							    res, &error);
+	if (!fu_main_authorization_is_valid (auth, &error)) {
+		g_dbus_method_invocation_return_gerror (helper->invocation, error);
+		return;
+	}
+
+	/* authenticated */
+	if (!fu_engine_activate (helper->priv->engine, helper->device_id, &error)) {
+		g_dbus_method_invocation_return_gerror (helper->invocation, error);
+		return;
+	}
+
+	/* success */
+	g_dbus_method_invocation_return_value (helper->invocation, NULL);
+}
+
+static void
 fu_main_authorize_verify_update_cb (GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *) user_data;
@@ -894,6 +920,34 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
 						      NULL,
 						      fu_main_authorize_unlock_cb,
+						      g_steal_pointer (&helper));
+		return;
+	}
+	if (g_strcmp0 (method_name, "Activate") == 0) {
+		const gchar *device_id = NULL;
+		g_autoptr(FuMainAuthHelper) helper = NULL;
+		g_autoptr(PolkitSubject) subject = NULL;
+
+		g_variant_get (parameters, "(&s)", &device_id);
+		g_debug ("Called %s(%s)", method_name, device_id);
+		if (!fu_main_device_id_valid (device_id, &error)) {
+			g_dbus_method_invocation_return_gerror (invocation, error);
+			return;
+		}
+
+		/* authenticate */
+		fu_main_set_status (priv, FWUPD_STATUS_WAITING_FOR_AUTH);
+		helper = g_new0 (FuMainAuthHelper, 1);
+		helper->priv = priv;
+		helper->invocation = g_object_ref (invocation);
+		helper->device_id = g_strdup (device_id);
+		subject = polkit_system_bus_name_new (sender);
+		polkit_authority_check_authorization (priv->authority, subject,
+						      "org.freedesktop.fwupd.device-activate",
+						      NULL,
+						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
+						      NULL,
+						      fu_main_authorize_activate_cb,
 						      g_steal_pointer (&helper));
 		return;
 	}

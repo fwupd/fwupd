@@ -2085,6 +2085,35 @@ fu_device_setup (FuDevice *self, GError **error)
 }
 
 /**
+ * fu_device_activate:
+ * @self: A #FuDevice
+ * @error: A #GError, or %NULL
+ *
+ * Activates up a device, which normally means the device switches to a new
+ * firmware verson. This should only be called when data loss cannot occur.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.2.6
+ **/
+gboolean
+fu_device_activate (FuDevice *self, GError **error)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+
+	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* subclassed */
+	if (klass->activate != NULL) {
+		if (!klass->activate (self, error))
+			return FALSE;
+	}
+
+	return TRUE;
+}
+
+/**
  * fu_device_probe_invalidate:
  * @self: A #FuDevice
  *

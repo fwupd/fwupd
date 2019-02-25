@@ -320,3 +320,9 @@ LIBFWUPD_1.2.5 {
     fwupd_guid_to_string;
   local: *;
 } LIBFWUPD_1.2.4;
+
+LIBFWUPD_1.2.6 {
+  global:
+    fwupd_client_activate;
+  local: *;
+} LIBFWUPD_1.2.5;

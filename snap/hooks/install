@@ -11,3 +11,5 @@ install_if_missing share/polkit-1/rules.d/org.freedesktop.fwupd.rules /usr
 install_if_missing share/dbus-1/system-services/org.freedesktop.fwupd.service /usr
 install_if_missing share/dbus-1/interfaces/org.freedesktop.fwupd.xml /usr
 install_if_missing etc/dbus-1/system.d/org.freedesktop.fwupd.conf /
+#activation via systemd
+install_if_missing /lib/systemd/system-shutdown/fwupd.shutdown /
