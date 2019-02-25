@@ -31,6 +31,29 @@
     <content_attribute id="social-info">moderate</content_attribute>
   </content_rating>
   <releases>
+    <release version="1.2.5" date="2019-02-25">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Allow a device to be updated using more than one plugin</li>
+          <li>Report the DeviceInstanceIDs from fwupdmgr when run as root</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add an extra check for Dell NVMe drives to avoid false positives</li>
+          <li>Call composite prepare and cleanup using fwupdtool</li>
+          <li>Correct handling of CAB files with nested directories</li>
+          <li>Detect and special case Dell ATA hardware</li>
+          <li>Do not fail fwupdtool if dbus is unavailable</li>
+          <li>Do not unconditionally enable Werror for the EFI binary</li>
+          <li>Fill holes when reading SREC files</li>
+          <li>Filter the last supported payloads of certain Dell docks</li>
+          <li>Fix flashing failure with latest Intuos Pro tablet</li>
+          <li>Fix potential segfault when applying UEFI updates</li>
+          <li>Fix unifying regression when recovering from failed flash</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.2.4" date="2019-02-01">
       <description>
         <p>This release adds the following features:</p>
