@@ -239,7 +239,7 @@ if get_option('plugin_uefi')
   conf.set_quoted('EFI_MACHINE_TYPE_NAME', EFI_MACHINE_TYPE_NAME)
   r = run_command([python3, 'po/test-deps'])
   if r.returncode() != 0
-    error(r.stdout())
+    error(r.stderr())
   endif
 endif
 
