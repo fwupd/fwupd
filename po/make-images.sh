@@ -6,8 +6,8 @@
 # Distributed under terms of the GPLv2 license.
 #
 
-LOCALEDIR=${DESTDIR}$1
-PYTHON3=$2
+LOCALEDIR="${DESTDIR}$1"
+PYTHON3="$2"
 
 install -m 0755 -d $LOCALEDIR
 ${PYTHON3} ${MESON_SOURCE_ROOT}/po/make-images "Installing firmware update…" $LOCALEDIR ${MESON_SOURCE_ROOT}/po/LINGUAS
