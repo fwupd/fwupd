@@ -50,8 +50,10 @@ struct _FuDeviceClass
 							 FuDevice	*donor);
 	gboolean		 (*poll)		(FuDevice	*self,
 							 GError		**error);
+	gboolean		 (*activate)		(FuDevice	*self,
+							 GError		**error);
 	/*< private >*/
-	gpointer	padding[20];
+	gpointer	padding[19];
 };
 
 /**
@@ -219,6 +221,8 @@ gboolean	 fu_device_close			(FuDevice	*self,
 gboolean	 fu_device_probe			(FuDevice	*self,
 							 GError		**error);
 gboolean	 fu_device_setup			(FuDevice	*self,
+							 GError		**error);
+gboolean	 fu_device_activate			(FuDevice	*self,
 							 GError		**error);
 void		 fu_device_probe_invalidate		(FuDevice	*self);
 gboolean	 fu_device_poll				(FuDevice	*self,

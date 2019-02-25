@@ -111,6 +111,9 @@ gboolean	 fu_engine_install_tasks		(FuEngine	*self,
 GPtrArray	*fu_engine_get_details			(FuEngine	*self,
 							 gint		 fd,
 							 GError		**error);
+gboolean	 fu_engine_activate			(FuEngine	*self,
+							 const gchar	*device_id,
+							 GError		**error);
 
 /* for the self tests */
 void		 fu_engine_add_device			(FuEngine	*self,

@@ -159,6 +159,8 @@ fwupd_device_flag_to_string (FwupdDeviceFlags device_flag)
 		return "another-write-required";
 	if (device_flag == FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS)
 		return "no-auto-instance-ids";
+	if (device_flag == FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)
+		return "needs-activation";
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -219,6 +221,8 @@ fwupd_device_flag_from_string (const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED;
 	if (g_strcmp0 (device_flag, "no-auto-instance-ids") == 0)
 		return FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS;
+	if (g_strcmp0 (device_flag, "needs-activation") == 0)
+		return FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION;
 	return FWUPD_DEVICE_FLAG_UNKNOWN;
 }
 

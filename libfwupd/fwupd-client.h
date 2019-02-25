@@ -78,6 +78,10 @@ gboolean	 fwupd_client_unlock			(FwupdClient	*client,
 							 const gchar	*device_id,
 							 GCancellable	*cancellable,
 							 GError		**error);
+gboolean	 fwupd_client_activate			(FwupdClient	*client,
+							 GCancellable	*cancellable,
+							 const gchar	*device_id,
+							 GError		**error);
 gboolean	 fwupd_client_clear_results		(FwupdClient	*client,
 							 const gchar	*device_id,
 							 GCancellable	*cancellable,

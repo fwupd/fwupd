@@ -41,6 +41,7 @@ if get_option('systemd')
   con2.set('libexecdir', libexecdir)
   con2.set('bindir', bindir)
   con2.set('datadir', datadir)
+  con2.set('localstatedir', localstatedir)
 
   rw_directories = []
   rw_directories += join_paths (localstatedir, 'lib', 'fwupd')
@@ -79,6 +80,15 @@ if get_option('systemd')
     configuration : con2,
     install: true,
     install_dir: systemdunitdir,
+  )
+
+  # for activation
+  configure_file(
+    input : 'fwupd.shutdown.in',
+    output : 'fwupd.shutdown',
+    configuration : con2,
+    install: true,
+    install_dir: systemd.get_pkgconfig_variable('systemdshutdowndir'),
   )
 endif
 

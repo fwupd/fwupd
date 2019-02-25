@@ -644,6 +644,55 @@ fwupd_client_proxy_call_cb (GObject *source, GAsyncResult *res, gpointer user_da
 }
 
 /**
+ * fwupd_client_activate:
+ * @client: A #FwupdClient
+ * @cancellable: the #GCancellable, or %NULL
+ * @device_id: a device
+ * @error: the #GError, or %NULL
+ *
+ * Activates up a device, which normally means the device switches to a new
+ * firmware verson. This should only be called when data loss cannot occur.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.2.6
+ **/
+gboolean
+fwupd_client_activate (FwupdClient *client, GCancellable *cancellable,
+		       const gchar *device_id, GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_autoptr(FwupdClientHelper) helper = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (device_id != NULL, FALSE);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* connect */
+	if (!fwupd_client_connect (client, cancellable, error))
+		return FALSE;
+
+	/* call into daemon */
+	helper = fwupd_client_helper_new ();
+	g_dbus_proxy_call (priv->proxy,
+			   "Activate",
+			   g_variant_new ("(s)", device_id),
+			   G_DBUS_CALL_FLAGS_NONE,
+			   -1,
+			   cancellable,
+			   fwupd_client_proxy_call_cb,
+			   helper);
+	g_main_loop_run (helper->loop);
+	if (!helper->ret) {
+		g_propagate_error (error, helper->error);
+		helper->error = NULL;
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/**
  * fwupd_client_verify:
  * @client: A #FwupdClient
  * @device_id: the device ID

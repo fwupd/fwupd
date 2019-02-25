@@ -99,6 +99,9 @@ gboolean	 fu_plugin_runner_verify		(FuPlugin	*self,
 							 FuDevice	*device,
 							 FuPluginVerifyFlags flags,
 							 GError		**error);
+gboolean	 fu_plugin_runner_activate 		(FuPlugin *self,
+							 FuDevice *device,
+							 GError **error);
 gboolean	 fu_plugin_runner_unlock		(FuPlugin	*self,
 							 FuDevice	*device,
 							 GError		**error);
