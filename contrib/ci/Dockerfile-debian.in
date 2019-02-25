@@ -1,4 +1,4 @@
-FROM %%%ARCH_PREFIX%%%debian:unstable
+FROM %%%ARCH_PREFIX%%%debian:testing
 %%%OS%%%
 RUN echo fubar > /etc/machine-id
 %%%ARCH_SPECIFIC_COMMAND%%%
