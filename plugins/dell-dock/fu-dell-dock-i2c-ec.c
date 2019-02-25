@@ -540,6 +540,7 @@ fu_dell_dock_ec_get_dock_data (FuDevice *device,
 			fu_dell_dock_ec_set_board (device);
 			fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 		} else {
+			fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 			fu_device_set_update_error (device, "An update is pending "
 							    "next time the dock is "
 							    "unplugged");
@@ -634,6 +635,38 @@ fu_dell_dock_ec_reset (FuDevice *device, GError **error)
 	g_return_val_if_fail (device != NULL, FALSE);
 
 	return fu_dell_dock_ec_write (device, 2, (guint8 *) &cmd, error);
+}
+
+static gboolean
+fu_dell_dock_ec_activate (FuDevice *device, GError **error)
+{
+	FuDellDockEc *self = FU_DELL_DOCK_EC (device);
+	FuDellDockECFWUpdateStatus status;
+
+	/* TODO: drop if minimum EC set to 27+ */
+	if (fu_common_vercmp (self->ec_version, "00.00.00.27") < 0) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_SUPPORTED,
+			     "Activation is not supported on EC %s",
+			     self->ec_version);
+		return FALSE;
+	}
+
+	/* read if passive update pending */
+	if (!fu_dell_dock_get_ec_status (device, &status, error))
+		return FALSE;
+
+	if (status != FW_UPDATE_IN_PROGRESS) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_SUPPORTED,
+			     "No firmware update pending for %s",
+			     fu_device_get_name (device));
+		return FALSE;
+	}
+
+	return fu_dell_dock_ec_reset (device, error);
 }
 
 gboolean
@@ -830,6 +863,7 @@ fu_dell_dock_ec_write_fw (FuDevice *device, GBytes *blob_fw,
 
 	if (fu_device_has_custom_flag (device, "skip-restart")) {
 		g_debug ("Skipping EC reset per quirk request");
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 		return TRUE;
 	}
 
@@ -1029,6 +1063,7 @@ fu_dell_dock_ec_class_init (FuDellDockEcClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	object_class->finalize = fu_dell_dock_ec_finalize;
+	klass_device->activate = fu_dell_dock_ec_activate;
 	klass_device->to_string = fu_dell_dock_ec_to_string;
 	klass_device->probe = fu_dell_dock_ec_probe;
 	klass_device->setup = fu_dell_dock_ec_setup;
