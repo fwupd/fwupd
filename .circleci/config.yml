@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: cibuilds/snapcraft:stable
+      - image: superm1/snapcraft-edge:latest
     steps:
       - checkout
       - run:
