@@ -15,7 +15,6 @@
 
 #include <glib/gstdio.h>
 
-#include <efivar.h>
 #include <linux/nvme_ioctl.h>
 
 #include "fu-chunk.h"
@@ -79,23 +78,10 @@ fu_nvme_device_get_string_safe (const guint8 *buf, guint16 addr_start, guint16 a
 static gchar *
 fu_nvme_device_get_guid_safe (const guint8 *buf, guint16 addr_start)
 {
-	efi_guid_t guid_tmp;
-	guint guint_sum = 0;
-	g_autofree char *guid = NULL;
-
-	/* check the GUID is plausible */
-	for (guint i = 0; i < 16; i++)
-		guint_sum += buf[addr_start + i];
-	if (guint_sum == 0x00)
+	if (!fu_common_guid_is_plausible (buf + addr_start))
 		return NULL;
-	if (guint_sum < 0xff) {
-		g_warning ("implausible GUID with sum %02x", guint_sum);
-		return NULL;
-	}
-	memcpy (&guid_tmp, buf + addr_start, 16);
-	if (efi_guid_to_str (&guid_tmp, &guid) < 0)
-		return NULL;
-	return g_strdup (guid);
+	return fwupd_guid_to_string ((const fwupd_guid_t *) (buf + addr_start),
+				     FWUPD_GUID_FLAG_MIXED_ENDIAN);
 }
 
 static gboolean
@@ -188,17 +174,28 @@ static void
 fu_nvme_device_parse_cns_maybe_dell (FuNvmeDevice *self, const guint8 *buf)
 {
 	g_autofree gchar *component_id = NULL;
+	g_autofree gchar *devid = NULL;
 	g_autofree gchar *guid_efi = NULL;
-	g_autofree gchar *guid_id = NULL;
+	g_autofree gchar *guid = NULL;
 
 	/* add extra component ID if set */
 	component_id = fu_nvme_device_get_string_safe (buf, 0xc36, 0xc3d);
-	if (component_id == NULL || strlen (component_id) < 4) {
+	if (component_id == NULL ||
+	   !g_str_is_ascii (component_id) ||
+	    strlen (component_id) < 6) {
 		g_debug ("invalid component ID, skipping");
 		return;
 	}
-	guid_id = g_strdup_printf ("STORAGE-DELL-%s", component_id);
-	fu_device_add_guid (FU_DEVICE (self), guid_id);
+
+	/* do not add the FuUdevDevice instance IDs as generic firmware
+	 * should not be used on these OEM-specific devices */
+	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS);
+
+	/* add instance ID *and* GUID as using no-auto-instance-ids */
+	devid = g_strdup_printf ("STORAGE-DELL-%s", component_id);
+	fu_device_add_instance_id (FU_DEVICE (self), devid);
+	guid = fwupd_guid_hash_string (devid);
+	fu_device_add_guid (FU_DEVICE (self), guid);
 
 	/* also add the EFI GUID */
 	guid_efi = fu_nvme_device_get_guid_safe (buf, 0x0c26);
@@ -300,7 +297,7 @@ fu_nvme_device_parse_cns (FuNvmeDevice *self, const guint8 *buf, gsize sz, GErro
 	/* fall back to the device description */
 	if (fu_device_get_guids (FU_DEVICE (self))->len == 0) {
 		g_debug ("no vendor GUID, falling back to mn");
-		fu_device_add_guid (FU_DEVICE (self), mn);
+		fu_device_add_instance_id (FU_DEVICE (self), mn);
 	}
 	return TRUE;
 }

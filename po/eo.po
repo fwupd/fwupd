@@ -1,0 +1,94 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the fwupd package.
+#
+# Translators:
+# kristjan <kristjan.schmidt@googlemail.com>, 2019
+msgid ""
+msgstr ""
+"Project-Id-Version: fwupd\n"
+"Report-Msgid-Bugs-To: \n"
+"Language-Team: Esperanto (http://www.transifex.com/freedesktop/fwupd/language/eo/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: eo\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. TRANSLATORS: duration in seconds
+#, c-format
+msgid "%u second"
+msgid_plural "%u seconds"
+msgstr[0] "%u sekundo"
+msgstr[1] "%u sekundoj"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Added"
+msgstr "Aldonita"
+
+#. TRANSLATORS: this is to abort the interactive prompt
+msgid "Cancel"
+msgstr "Nuligi"
+
+#. TRANSLATORS: this is when a device ctrl+c's a watch
+msgid "Cancelled"
+msgstr "Nuligita"
+
+#. TRANSLATORS: this is when a device is hotplugged
+#. TRANSLATORS: this is when the daemon state changes
+msgid "Changed"
+msgstr "Ŝanĝita"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose a device:"
+msgstr "Elektu aparaton:"
+
+#. TRANSLATORS: section header for firmware description
+msgid "Description"
+msgstr "Priskribo"
+
+msgid "Done!"
+msgstr "Farita!"
+
+#. TRANSLATORS: detected a DFU device
+msgid "Found"
+msgstr "Trovita"
+
+#. TRANSLATORS: Appstream ID for the hardware type
+msgid "ID"
+msgstr "ID"
+
+msgid "Mode"
+msgstr "Reĝimo"
+
+#. TRANSLATORS: interface name, e.g. "Flash"
+#. TRANSLATORS: device name, e.g. 'ColorHug2'
+#. TRANSLATORS: section header for the release name
+msgid "Name"
+msgstr "Nomo"
+
+msgid "OK"
+msgstr "Bone"
+
+#. TRANSLATORS: DFU protocol version, e.g. 1.1
+msgid "Protocol"
+msgstr "Protokolo"
+
+#. TRANSLATORS: these are areas of memory on the chip
+msgid "Region"
+msgstr "Regiono"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Removed"
+msgstr "Forigita"
+
+msgid "Target"
+msgstr "Celo"
+
+#. TRANSLATORS: currect daemon status is unknown
+msgid "Unknown"
+msgstr "Nekonata"
+
+#. TRANSLATORS: section header for release version number
+msgid "Version"
+msgstr "Versio"

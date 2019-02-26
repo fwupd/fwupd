@@ -4,6 +4,7 @@ etc/*
 usr/share/bash-completion
 usr/share/fwupd/*
 usr/share/dbus-1/*
+usr/share/icons/*
 usr/share/polkit-1/*
 usr/share/locale
 usr/share/metainfo/*

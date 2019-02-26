@@ -129,9 +129,9 @@ fu_wacom_aes_device_setup (FuDevice *device, GError **error)
 		if (!fu_wacom_aes_device_obtain_hwid (self, &error_local)) {
 			g_debug ("failed to get HwID: %s", error_local->message);
 		} else {
-			g_autofree gchar *guid = NULL;
-			guid = g_strdup_printf ("WACOM\\HWID_%04X", self->hwid);
-			fu_device_add_guid (device, guid);
+			g_autofree gchar *devid = NULL;
+			devid = g_strdup_printf ("WACOM\\HWID_%04X", self->hwid);
+			fu_device_add_instance_id (device, devid);
 		}
 	}
 

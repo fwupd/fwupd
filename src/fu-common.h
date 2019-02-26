@@ -4,10 +4,11 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_COMMON_H__
-#define __FU_COMMON_H__
+#pragma once
 
 #include <gio/gio.h>
+
+G_BEGIN_DECLS
 
 typedef enum {
 	FU_APP_FLAGS_NONE		= 0,
@@ -107,4 +108,4 @@ guint		 fu_common_string_replace	(GString	*string,
 						 const gchar	*search,
 						 const gchar	*replace);
 
-#endif /* __FU_COMMON_H__ */
+G_END_DECLS

@@ -34,6 +34,7 @@ typedef struct {
 	guint64				 modified;
 	guint64				 flags;
 	GPtrArray			*guids;
+	GPtrArray			*instance_ids;
 	GPtrArray			*icons;
 	gchar				*name;
 	gchar				*serial;
@@ -360,6 +361,69 @@ fwupd_device_get_guid_default (FwupdDevice *device)
 	if (priv->guids->len == 0)
 		return NULL;
 	return g_ptr_array_index (priv->guids, 0);
+}
+
+/**
+ * fwupd_device_get_instance_ids:
+ * @device: A #FwupdDevice
+ *
+ * Gets the InstanceIDs.
+ *
+ * Returns: (element-type utf8) (transfer none): the InstanceID
+ *
+ * Since: 1.2.5
+ **/
+GPtrArray *
+fwupd_device_get_instance_ids (FwupdDevice *device)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	return priv->instance_ids;
+}
+
+/**
+ * fwupd_device_has_instance_id:
+ * @device: A #FwupdDevice
+ * @instance_id: the InstanceID, e.g. `PCI\VEN_10EC&DEV_525A`
+ *
+ * Finds out if the device has this specific InstanceID.
+ *
+ * Returns: %TRUE if the InstanceID is found
+ *
+ * Since: 1.2.5
+ **/
+gboolean
+fwupd_device_has_instance_id (FwupdDevice *device, const gchar *instance_id)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+
+	g_return_val_if_fail (FWUPD_IS_DEVICE (device), FALSE);
+
+	for (guint i = 0; i < priv->instance_ids->len; i++) {
+		const gchar *instance_id_tmp = g_ptr_array_index (priv->instance_ids, i);
+		if (g_strcmp0 (instance_id, instance_id_tmp) == 0)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+/**
+ * fwupd_device_add_instance_id:
+ * @device: A #FwupdDevice
+ * @instance_id: the GUID, e.g. `PCI\VEN_10EC&DEV_525A`
+ *
+ * Adds the InstanceID if it does not already exist.
+ *
+ * Since: 1.2.5
+ **/
+void
+fwupd_device_add_instance_id (FwupdDevice *device, const gchar *instance_id)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	if (fwupd_device_has_instance_id (device, instance_id))
+		return;
+	g_ptr_array_add (priv->instance_ids, g_strdup (instance_id));
 }
 
 /**
@@ -990,6 +1054,10 @@ fwupd_device_incorporate (FwupdDevice *self, FwupdDevice *donor)
 		const gchar *tmp = g_ptr_array_index (priv_donor->guids, i);
 		fwupd_device_add_guid (self, tmp);
 	}
+	for (guint i = 0; i < priv_donor->instance_ids->len; i++) {
+		const gchar *tmp = g_ptr_array_index (priv_donor->instance_ids, i);
+		fwupd_device_add_instance_id (self, tmp);
+	}
 	for (guint i = 0; i < priv_donor->icons->len; i++) {
 		const gchar *tmp = g_ptr_array_index (priv_donor->icons, i);
 		fwupd_device_add_icon (self, tmp);
@@ -1152,6 +1220,12 @@ fwupd_device_to_variant_full (FwupdDevice *device, FwupdDeviceFlags flags)
 					       FWUPD_RESULT_KEY_SERIAL,
 					       g_variant_new_string (priv->serial));
 		}
+		if (priv->instance_ids->len > 0) {
+			const gchar * const *tmp = (const gchar * const *) priv->instance_ids->pdata;
+			g_variant_builder_add (&builder, "{sv}",
+					       FWUPD_RESULT_KEY_INSTANCE_IDS,
+					       g_variant_new_strv (tmp, priv->instance_ids->len));
+		}
 	}
 
 	/* create an array with all the metadata in */
@@ -1226,6 +1300,12 @@ fwupd_device_from_key_value (FwupdDevice *device, const gchar *key, GVariant *va
 		g_autofree const gchar **guids = g_variant_get_strv (value, NULL);
 		for (guint i = 0; guids != NULL && guids[i] != NULL; i++)
 			fwupd_device_add_guid (device, guids[i]);
+		return;
+	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_INSTANCE_IDS) == 0) {
+		g_autofree const gchar **instance_ids = g_variant_get_strv (value, NULL);
+		for (guint i = 0; instance_ids != NULL && instance_ids[i] != NULL; i++)
+			fwupd_device_add_instance_id (device, instance_ids[i]);
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_ICON) == 0) {
@@ -1547,6 +1627,7 @@ fwupd_device_to_string (FwupdDevice *device)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	GString *str;
+	g_autoptr(GHashTable) ids = NULL;
 
 	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
 
@@ -1557,9 +1638,23 @@ fwupd_device_to_string (FwupdDevice *device)
 		str = g_string_append (str, "Unknown Device\n");
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_ID, priv->id);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_PARENT_DEVICE_ID, priv->parent_id);
+	ids = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+	for (guint i = 0; i < priv->instance_ids->len; i++) {
+		const gchar *instance_id = g_ptr_array_index (priv->instance_ids, i);
+		g_hash_table_insert (ids,
+				     fwupd_guid_hash_string (instance_id),
+				     g_strdup (instance_id));
+	}
 	for (guint i = 0; i < priv->guids->len; i++) {
 		const gchar *guid = g_ptr_array_index (priv->guids, i);
-		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_GUID, guid);
+		const gchar *instance_id = g_hash_table_lookup (ids, guid);
+		if (instance_id == NULL) {
+			fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_GUID, guid);
+		} else {
+			g_autofree gchar *tmp = NULL;
+			tmp = g_strdup_printf ("%s <- %s", guid, instance_id);
+			fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_GUID, tmp);
+		}
 	}
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_SERIAL, priv->serial);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
@@ -1616,6 +1711,7 @@ fwupd_device_init (FwupdDevice *device)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	priv->guids = g_ptr_array_new_with_free_func (g_free);
+	priv->instance_ids = g_ptr_array_new_with_free_func (g_free);
 	priv->icons = g_ptr_array_new_with_free_func (g_free);
 	priv->checksums = g_ptr_array_new_with_free_func (g_free);
 	priv->releases = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
@@ -1644,6 +1740,7 @@ fwupd_device_finalize (GObject *object)
 	g_free (priv->version_lowest);
 	g_free (priv->version_bootloader);
 	g_ptr_array_unref (priv->guids);
+	g_ptr_array_unref (priv->instance_ids);
 	g_ptr_array_unref (priv->icons);
 	g_ptr_array_unref (priv->checksums);
 	g_ptr_array_unref (priv->releases);

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_DEVICE_PRIVATE_H
-#define __FU_DEVICE_PRIVATE_H
+#pragma once
 
 #include <fu-device.h>
 #include <xmlb.h>
@@ -29,8 +28,6 @@ gboolean	 fu_device_ensure_id			(FuDevice	*self,
 							 GError		**error);
 void		 fu_device_incorporate_from_component	(FuDevice	*device,
 							 XbNode		*component);
+void		 fu_device_convert_instance_ids		(FuDevice	*self);
 
 G_END_DECLS
-
-#endif /* __FU_DEVICE_PRIVATE_H */
-

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_ARCHIVE_H
-#define __FU_ARCHIVE_H
+#pragma once
 
 #include <glib-object.h>
 
@@ -54,5 +53,3 @@ void		 fu_archive_iterate		(FuArchive		*self,
 						 gpointer		user_data);
 
 G_END_DECLS
-
-#endif /* __FU_ARCHIVE_H */

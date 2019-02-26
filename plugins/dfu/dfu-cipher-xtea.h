@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __DFU_FORMAT_XTEA_H
-#define __DFU_FORMAT_XTEA_H
+#pragma once
 
 #include <glib-object.h>
 #include <gio/gio.h>
@@ -22,5 +21,3 @@ gboolean		 dfu_cipher_decrypt_xtea	(const gchar	*key,
 							 GError		**error);
 
 G_END_DECLS
-
-#endif /* __DFU_FORMAT_XTEA_H */

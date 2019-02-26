@@ -37,6 +37,7 @@ if get_option('tests')
   cargs += '-DPLUGINBUILDDIR="' + meson.current_build_dir() + '"'
   e = executable(
     'dell-self-test',
+    fu_hash,
     sources : [
       'fu-self-test.c',
       'fu-dell-smi.c',

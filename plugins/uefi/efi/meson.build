@@ -53,7 +53,6 @@ compile_args = ['-Og',
                 '--param=ssp-buffer-size=4',
                 '-fexceptions',
                 '-Wall',
-                '-Werror',
                 '-Wextra',
                 '-Wvla',
                 '-std=gnu11',
@@ -66,10 +65,14 @@ compile_args = ['-Og',
                 '-fno-merge-constants',
                 '-Wsign-compare',
                 '-Wno-missing-field-initializers',
+                '-Wno-address-of-packed-member',
                 '-grecord-gcc-switches',
                 '-DDEBUGDIR="@0@"'.format(debugdir),
                 '-isystem', efi_incdir,
                 '-isystem', join_paths(efi_incdir, gnu_efi_path_arch)]
+if get_option('werror')
+    compile_args += '-Werror'
+endif
 if efi_arch == 'x86_64'
   compile_args += ['-mno-red-zone',
                    '-mno-sse',

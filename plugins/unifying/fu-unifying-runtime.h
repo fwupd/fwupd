@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_UNIFYING_DEVICE_RUNTIME_H
-#define __FU_UNIFYING_DEVICE_RUNTIME_H
+#pragma once
 
 #include "fu-udev-device.h"
 
@@ -15,5 +14,3 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (FuUnifyingRuntime, fu_unifying_runtime, FU, UNIFYING_RUNTIME, FuUdevDevice)
 
 G_END_DECLS
-
-#endif /* __FU_UNIFYING_DEVICE_RUNTIME_H */

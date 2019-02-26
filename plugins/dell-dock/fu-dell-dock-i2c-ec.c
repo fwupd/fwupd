@@ -66,6 +66,7 @@ typedef enum {
 
 typedef enum {
 	FU_DELL_DOCK_DEVICETYPE_MAIN_EC = 0,
+	FU_DELL_DOCK_DEVICETYPE_PD  = 1,
 	FU_DELL_DOCK_DEVICETYPE_HUB = 3,
 	FU_DELL_DOCK_DEVICETYPE_MST = 4,
 	FU_DELL_DOCK_DEVICETYPE_TBT = 5,
@@ -142,6 +143,7 @@ struct _FuDellDockEc {
 	guint64				 blob_version_offset;
 	guint8				 passive_flow;
 	guint32				 dock_unlock_status;
+	gboolean		 	 pd_blacklist;
 };
 
 static gboolean	fu_dell_dock_get_ec_status	(FuDevice *device,
@@ -222,6 +224,8 @@ fu_dell_dock_devicetype_to_str (guint device_type, guint sub_type)
 		else if (sub_type == SUBTYPE_GEN1)
 			return "USB 3.1 Gen1";
 		return NULL;
+	case FU_DELL_DOCK_DEVICETYPE_PD:
+		return "PD";
 	default:
 		return NULL;
 	}
@@ -308,6 +312,8 @@ fu_dell_dock_ec_get_dock_info (FuDevice *device,
 	const FuDellDockDockInfoHeader *header = NULL;
 	const FuDellDockEcQueryEntry *device_entry = NULL;
 	const FuDellDockEcAddrMap *map = NULL;
+	const gchar *hub_version;
+	guint32 oldest_base_pd = 0;
 	g_autoptr(GBytes) data = NULL;
 
 	g_return_val_if_fail (device != NULL, FALSE);
@@ -401,6 +407,17 @@ fu_dell_dock_ec_get_dock_info (FuDevice *device,
 				self->raw_versions->hub2_version = device_entry[i].version.version_32;
 			else if (map->sub_type == SUBTYPE_GEN1)
 				self->raw_versions->hub1_version = device_entry[i].version.version_32;
+		} else if (map->device_type == FU_DELL_DOCK_DEVICETYPE_PD &&
+			   map->location == LOCATION_BASE &&
+			   map->sub_type == 0) {
+			if (oldest_base_pd == 0 ||
+			    device_entry[i].version.version_32 < oldest_base_pd)
+				oldest_base_pd = GUINT32_TO_BE (device_entry[i].version.version_32);
+			g_debug ("\tParsed version: %02x.%02x.%02x.%02x",
+				 device_entry[i].version.version_8[0],
+				 device_entry[i].version.version_8[1],
+				 device_entry[i].version.version_8[2],
+				 device_entry[i].version.version_8[3]);
 		}
 	}
 
@@ -431,13 +448,29 @@ fu_dell_dock_ec_get_dock_info (FuDevice *device,
 	fu_device_set_version_lowest (device, self->ec_minimum_version);
 
 
-	/* TODO: Drop if minimum EC is set to 23+
+	/* TODO: Drop part of clause if minimum EC is set to 26+
 	 * Determine if the passive flow should be used when flashing
 	 */
-	if (fu_common_vercmp (self->ec_version, "00.00.00.23") >= 0) {
+	hub_version = fu_device_get_version (self->symbiote);
+	if (fu_common_vercmp (self->ec_version, "00.00.00.26") >= 0 &&
+	    fu_common_vercmp (hub_version, "1.42") >= 0) {
 		g_debug ("using passive flow");
 		self->passive_flow = PASSIVE_REBOOT_MASK;
 		fu_device_set_custom_flags (device, "skip-restart");
+	} else {
+		g_debug ("not using passive flow (EC: %s Hub2: %s)",
+			 self->ec_version, hub_version);
+	}
+	/* TODO: drop if minimum board is to 5+ and minimum EC to 24+ */
+	if (self->data->board_id == 4 && oldest_base_pd >= 0x18) {
+		if (fu_common_vercmp (self->ec_version, "00.00.00.24") < 0)
+			self->pd_blacklist = TRUE;
+		if (fu_common_vercmp (self->ec_version, "00.00.00.23") == 0) {
+			fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+			fu_device_set_update_error (device, "No more updates will "
+							    "be released for this "
+							    "dock SKU");
+		}
 	}
 	return TRUE;
 }
@@ -551,6 +584,10 @@ fu_dell_dock_ec_to_string (FuDevice *device, GString *str)
 				self->data->module_type);
 	g_string_append_printf (str, "\tminimum ec: %s\n",
 				self->ec_minimum_version);
+	g_string_append_printf (str, "\tblacklist pd: %d\n",
+				self->pd_blacklist);
+	g_string_append_printf (str, "\tpassive flow: %d\n",
+				self->passive_flow);
 }
 
 gboolean
@@ -742,6 +779,18 @@ fu_dell_dock_ec_write_fw (FuDevice *device, GBytes *blob_fw,
 	dynamic_version = g_strndup ((gchar *) data + self->blob_version_offset, 11);
 	g_debug ("writing EC firmware version %s", dynamic_version);
 
+	/* TODO: drop if minimum board set to 5+ and minimum EC to 24+ */
+	if (self->pd_blacklist &&
+	    fu_common_vercmp (dynamic_version, "00.00.00.24") >= 0) {
+		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE,
+			     "%s can not flash firmware %s. "
+			     "only firmware %s -> 00.00.00.23 can be flashed.",
+			     fu_device_get_name (device),
+			     dynamic_version,
+			     self->ec_minimum_version);
+		return FALSE;
+	}
+
 	if (!fu_dell_dock_ec_modify_lock (device, self->unlock_target, TRUE, error))
 		return FALSE;
 
@@ -884,7 +933,7 @@ static gboolean
 fu_dell_dock_ec_probe (FuDevice *device, GError **error)
 {
 	/* this will trigger setting up all the quirks */
-	fu_device_add_guid (device, DELL_DOCK_EC_GUID);
+	fu_device_add_instance_id (device, DELL_DOCK_EC_INSTANCE_ID);
 
 	return TRUE;
 }

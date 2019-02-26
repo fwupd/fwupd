@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_RTS54HID_DEVICE_H
-#define __FU_RTS54HID_DEVICE_H
+#pragma once
 
 #include "fu-plugin.h"
 
@@ -25,5 +24,3 @@ gboolean		 fu_rts54hid_device_get_report	(FuRts54HidDevice		*self,
 							 GError			**error);
 
 G_END_DECLS
-
-#endif /* __FU_RTS54HID_DEVICE_H */

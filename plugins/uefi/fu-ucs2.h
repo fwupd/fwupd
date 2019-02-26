@@ -5,8 +5,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_UCS2_H
-#define __FU_UCS2_H
+#pragma once
 
 #include <glib.h>
 
@@ -16,5 +15,3 @@ guint16		*fu_uft8_to_ucs2		(const gchar	*str,
 						 gssize		 max);
 gchar		*fu_ucs2_to_uft8		(const guint16	*str,
 						 gssize		 max);
-
-#endif /* __FU_UCS2_H */

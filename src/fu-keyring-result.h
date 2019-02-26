@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_KEYRING_RESULT_H
-#define __FU_KEYRING_RESULT_H
+#pragma once
 
 #include <glib-object.h>
 
@@ -19,5 +18,3 @@ gint64		 fu_keyring_result_get_timestamp	(FuKeyringResult	*self);
 const gchar	*fu_keyring_result_get_authority	(FuKeyringResult	*self);
 
 G_END_DECLS
-
-#endif /* __FU_KEYRING_RESULT_H */

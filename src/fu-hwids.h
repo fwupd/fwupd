@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_HWIDS_H
-#define __FU_HWIDS_H
+#pragma once
 
 #include <glib-object.h>
 
@@ -49,5 +48,3 @@ gboolean	 fu_hwids_setup			(FuHwids	*self,
 						 GError		**error);
 
 G_END_DECLS
-
-#endif /* __FU_HWIDS_H */

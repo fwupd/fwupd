@@ -14,8 +14,7 @@
  * SPDX-License-Identifier: LGPL-2.1+ OR MIT
  */
 
-#ifndef __FU_DELL_DOCK_HID_H
-#define __FU_DELL_DOCK_HID_H
+#pragma once
 
 #include "config.h"
 
@@ -92,5 +91,3 @@ gboolean	fu_dell_dock_hid_tbt_write		(FuDevice *self,
 gboolean	fu_dell_dock_hid_tbt_authenticate	(FuDevice *self,
 							 const FuHIDI2CParameters *parameters,
 							 GError **error);
-
-#endif /* __FU_DELL_DOCK_HID_H */

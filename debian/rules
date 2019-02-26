@@ -11,8 +11,7 @@ ifeq "$(DEB_HOST_ARCH_BITS)" "32"
 endif
 
 ifneq ($(CI),)
-	export CI=--werror --wrap-mode=forcefallback
-	export DHSLIBS=-- --ignore-missing-info
+	export CI=--werror
 endif
 
 regenerate_control:
@@ -28,8 +27,9 @@ else
 endif
 
 %:
-	[ -f debian/control ] || debian/rules regenerate_control
 	dh $@ --with gir,systemd
+	[ -f debian/control ] || debian/rules regenerate_control
+	dh $@ --with gir
 
 override_dh_auto_clean: regenerate_control
 	rm -fr debian/build
@@ -92,7 +92,7 @@ override_dh_auto_test:
 	fi
 
 override_dh_builddeb:
-	dh_builddeb -- -Zxz
+	dh_builddeb
 ifeq (ubuntu,$(SB_STYLE))
 	if [ -d debian/tmp/usr/lib/fwupd/efi/ ]; then \
 		mkdir -p debian/fwupd-images/$(deb_version) ;\

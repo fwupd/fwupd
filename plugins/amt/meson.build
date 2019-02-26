@@ -18,6 +18,5 @@ shared_module('fu_plugin_amt',
   c_args : cargs,
   dependencies : [
     plugin_deps,
-    uuid,
   ],
 )

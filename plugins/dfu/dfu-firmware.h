@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __DFU_FIRMWARE_H
-#define __DFU_FIRMWARE_H
+#pragma once
 
 #include <glib-object.h>
 #include <gio/gio.h>
@@ -120,5 +119,3 @@ void		 dfu_firmware_remove_metadata	(DfuFirmware	*firmware,
 						 const gchar	*key);
 
 G_END_DECLS
-
-#endif /* __DFU_FIRMWARE_H */

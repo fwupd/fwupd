@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_STEELSERIES_DEVICE_H
-#define __FU_STEELSERIES_DEVICE_H
+#pragma once
 
 #include "fu-plugin.h"
 
@@ -22,5 +21,3 @@ struct _FuSteelseriesDeviceClass
 FuSteelseriesDevice	*fu_steelseries_device_new	(FuUsbDevice	*device);
 
 G_END_DECLS
-
-#endif /* __FU_STEELSERIES_DEVICE_H */

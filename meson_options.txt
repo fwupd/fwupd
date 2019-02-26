@@ -1,5 +1,6 @@
 option('daemon', type : 'boolean', value : true, description : 'enable the fwupd daemon')
 option('consolekit', type : 'boolean', value : true, description : 'enable ConsoleKit support')
+option('firmware-packager', type : 'boolean', value : true, description : 'enable firmware-packager installation')
 option('gpg', type : 'boolean', value : true, description : 'enable the GPG verification support')
 option('gtkdoc', type : 'boolean', value : true, description : 'enable developer documentation')
 option('introspection', type : 'boolean', value : true, description : 'generate GObject Introspection data')

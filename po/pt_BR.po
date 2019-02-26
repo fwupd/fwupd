@@ -7,7 +7,7 @@
 # Derek W. Stavis <dekestavis@gmail.com>, 2016
 # Derek W. Stavis <dekestavis@gmail.com>, 2015-2016
 # Rafael Fontenelle <rafaelff@gnome.org>, 2017-2018
-# Rafael Fontenelle <rffontenelle@gmail.com>, 2015-2018
+# Rafael Fontenelle <rffontenelle@gmail.com>, 2015-2019
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -87,6 +87,10 @@ msgstr "Permite reinstalar versões existentes de firmware"
 #. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "Uma atualização requer uma reinicialização para completar."
+
+#. TRANSLATORS: explain why we want to shutdown
+msgid "An update requires the system to shutdown to complete."
+msgstr "Uma atualização requer que o sistema seja desligado por completo."
 
 #. TRANSLATORS: command line option
 msgid "Answer yes to all questions"
@@ -816,6 +820,10 @@ msgstr "Mostra o registro log de depuração da tentativa mais recente de atuali
 msgid "Show the information of firmware update status"
 msgstr "Mostra as informações do status de atualização de firmware"
 
+#. TRANSLATORS: shutdown to apply the update
+msgid "Shutdown now?"
+msgstr "Desligar agora?"
+
 msgid "Specify Vendor/Product ID(s) of DFU device"
 msgstr "Especifica ID(s) de Fornecedor/Produto de dispositivo DFU"
 
@@ -917,6 +925,10 @@ msgstr "Resumo da atualização"
 #. TRANSLATORS: section header for firmware version
 msgid "Update Version"
 msgstr "Versão da atualização"
+
+#. TRANSLATORS: command description
+msgid "Update all devices that match local metadata"
+msgstr "Atualiza todos os dispositivos que correspondem aos metadados locais"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"

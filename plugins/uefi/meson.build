@@ -83,6 +83,7 @@ if get_option('tests')
   cargs += '-DTESTDATADIR="' + testdatadir + '"'
   e = executable(
     'uefi-self-test',
+    fu_hash,
     sources : [
       'fu-self-test.c',
       'fu-uefi-bgrt.c',

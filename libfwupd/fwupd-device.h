@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FWUPD_DEVICE_H
-#define __FWUPD_DEVICE_H
+#pragma once
 
 #include <glib-object.h>
 
@@ -102,6 +101,11 @@ gboolean	 fwupd_device_has_guid			(FwupdDevice	*device,
 							 const gchar	*guid);
 GPtrArray	*fwupd_device_get_guids			(FwupdDevice	*device);
 const gchar	*fwupd_device_get_guid_default		(FwupdDevice	*device);
+void		 fwupd_device_add_instance_id		(FwupdDevice	*device,
+							 const gchar	*instance_id);
+gboolean	 fwupd_device_has_instance_id		(FwupdDevice	*device,
+							 const gchar	*instance_id);
+GPtrArray	*fwupd_device_get_instance_ids		(FwupdDevice	*device);
 void		 fwupd_device_add_icon			(FwupdDevice	*device,
 							 const gchar	*icon);
 GPtrArray	*fwupd_device_get_icons			(FwupdDevice	*device);
@@ -123,6 +127,3 @@ gint		 fwupd_device_compare			(FwupdDevice	*device1,
 							 FwupdDevice	*device2);
 
 G_END_DECLS
-
-#endif /* __FWUPD_DEVICE_H */
-

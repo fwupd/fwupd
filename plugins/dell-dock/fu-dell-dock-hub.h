@@ -13,8 +13,7 @@
  * SPDX-License-Identifier: LGPL-2.1+ OR MIT
  */
 
-#ifndef __FU_DELL_DOCK_HUB_H
-#define __FU_DELL_DOCK_HUB_H
+#pragma once
 
 #include "config.h"
 
@@ -28,5 +27,3 @@ G_DECLARE_FINAL_TYPE (FuDellDockHub, fu_dell_dock_hub, FU, DELL_DOCK_HUB, FuUsbD
 FuDellDockHub 	*fu_dell_dock_hub_new		(FuUsbDevice *device);
 
 G_END_DECLS
-
-#endif /* __FU_DELL_DOCK_HUB_H */

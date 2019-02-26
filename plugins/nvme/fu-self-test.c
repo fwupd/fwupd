@@ -8,6 +8,7 @@
 
 #include <fwupd.h>
 
+#include "fu-device-private.h"
 #include "fu-nvme-device.h"
 #include "fu-test.h"
 
@@ -29,6 +30,7 @@ fu_nvme_cns_func (void)
 	dev = fu_nvme_device_new_from_blob ((guint8 *)data, sz, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (dev);
+	fu_device_convert_instance_ids (FU_DEVICE (dev));
 	g_assert_cmpstr (fu_device_get_name (FU_DEVICE (dev)), ==, "THNSN5512GPU7 TOSHIBA");
 	g_assert_cmpstr (fu_device_get_version (FU_DEVICE (dev)), ==, "410557LA");
 	g_assert_cmpstr (fu_device_get_serial (FU_DEVICE (dev)), ==, "37RSDEADBEEF");

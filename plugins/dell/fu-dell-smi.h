@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_DELL_COMMON_H
-#define __FU_DELL_COMMON_H
+#pragma once
 
 #include "fu-device.h"
 #include <smbios_c/smi.h>
@@ -126,5 +125,3 @@ fu_dell_toggle_host_mode (FuDellSmiObj *smi_obj, const efi_guid_t guid, int mode
 /* VID/PID of ethernet controller on dock */
 #define DOCK_NIC_VID		0x0bda
 #define DOCK_NIC_PID		0x8153
-
-#endif /* __FU_DELL_COMMON_H */

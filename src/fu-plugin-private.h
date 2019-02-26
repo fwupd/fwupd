@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_PLUGIN_PRIVATE_H
-#define __FU_PLUGIN_PRIVATE_H
+#pragma once
 
 #include "fu-quirks.h"
 #include "fu-plugin.h"
@@ -93,7 +92,6 @@ void		 fu_plugin_runner_device_register	(FuPlugin	*self,
 							 FuDevice	*device);
 gboolean	 fu_plugin_runner_update		(FuPlugin	*self,
 							 FuDevice	*device,
-							 GBytes		*blob_cab,
 							 GBytes		*blob_fw,
 							 FwupdInstallFlags flags,
 							 GError		**error);
@@ -110,6 +108,10 @@ gboolean	 fu_plugin_runner_clear_results		(FuPlugin	*self,
 gboolean	 fu_plugin_runner_get_results		(FuPlugin	*self,
 							 FuDevice	*device,
 							 GError		**error);
+gboolean	 fu_plugin_runner_schedule_update	(FuPlugin	*self,
+							 FuDevice	*device,
+							 GBytes		*blob_cab,
+							 GError		**error);
 gint		 fu_plugin_name_compare			(FuPlugin	*plugin1,
 							 FuPlugin	*plugin2);
 gint		 fu_plugin_order_compare		(FuPlugin	*plugin1,
@@ -119,5 +121,3 @@ gint		 fu_plugin_order_compare		(FuPlugin	*plugin1,
 gchar		*fu_plugin_guess_name_from_fn           (const gchar	*filename);
 
 G_END_DECLS
-
-#endif /* __FU_PLUGIN_PRIVATE_H */

@@ -17,7 +17,6 @@
 
 #include "fu-archive.h"
 #include "fu-common-cab.h"
-#include "fu-common-guid.h"
 #include "fu-common-version.h"
 #include "fu-chunk.h"
 #include "fu-config.h"
@@ -406,17 +405,20 @@ fu_engine_device_priority_func (void)
 	fu_device_set_id (device1, "id1");
 	fu_device_set_priority (device1, 0);
 	fu_device_set_plugin (device1, "udev");
-	fu_device_add_guid (device1, "GUID1");
+	fu_device_add_instance_id (device1, "GUID1");
+	fu_device_convert_instance_ids (device1);
 	fu_engine_add_device (engine, device1);
 	fu_device_set_id (device2, "id2");
 	fu_device_set_priority (device2, 1);
 	fu_device_set_plugin (device2, "redfish");
-	fu_device_add_guid (device2, "GUID1");
+	fu_device_add_instance_id (device2, "GUID1");
+	fu_device_convert_instance_ids (device2);
 	fu_engine_add_device (engine, device2);
 	fu_device_set_id (device3, "id3");
 	fu_device_set_priority (device3, 0);
 	fu_device_set_plugin (device3, "uefi");
-	fu_device_add_guid (device3, "GUID1");
+	fu_device_add_instance_id (device3, "GUID1");
+	fu_device_convert_instance_ids (device3);
 	fu_engine_add_device (engine, device3);
 
 	/* get the high prio device */
@@ -451,19 +453,22 @@ fu_engine_device_parent_func (void)
 
 	/* add child */
 	fu_device_set_id (device1, "child");
-	fu_device_add_guid (device1, "child-GUID-1");
+	fu_device_add_instance_id (device1, "child-GUID-1");
 	fu_device_add_parent_guid (device1, "parent-GUID");
+	fu_device_convert_instance_ids (device1);
 	fu_engine_add_device (engine, device1);
 
 	/* parent */
 	fu_device_set_id (device2, "parent");
-	fu_device_add_guid (device2, "parent-GUID");
+	fu_device_add_instance_id (device2, "parent-GUID");
 	fu_device_set_vendor (device2, "oem");
+	fu_device_convert_instance_ids (device2);
 
 	/* add another child */
 	fu_device_set_id (device3, "child2");
-	fu_device_add_guid (device3, "child-GUID-2");
+	fu_device_add_instance_id (device3, "child-GUID-2");
 	fu_device_add_parent_guid (device3, "parent-GUID");
+	fu_device_convert_instance_ids (device3);
 	fu_device_add_child (device2, device3);
 
 	/* add two together */
@@ -943,12 +948,19 @@ fu_engine_history_func (void)
 	g_assert_no_error (error);
 	g_assert_nonnull (component);
 
+	/* set the counter */
+	g_setenv ("FWUPD_PLUGIN_TEST", "another-write-required", TRUE);
+	fu_device_set_metadata_integer (device, "nr-update", 0);
+
 	/* install it */
 	task = fu_install_task_new (device, component);
 	ret = fu_engine_install (engine, task, blob_cab,
 				 FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
+
+	/* check the write was done more than once */
+	g_assert_cmpint (fu_device_get_metadata_integer (device, "nr-update"), ==, 2);
 
 	/* check the history database */
 	history = fu_history_new ();
@@ -1142,8 +1154,9 @@ fu_device_list_delay_func (void)
 
 	/* add one device */
 	fu_device_set_id (device1, "device1");
-	fu_device_add_guid (device1, "foobar");
+	fu_device_add_instance_id (device1, "foobar");
 	fu_device_set_remove_delay (device1, 100);
+	fu_device_convert_instance_ids (device1);
 	fu_device_list_add (device_list, device1);
 	g_assert_cmpint (added_cnt, ==, 1);
 	g_assert_cmpint (removed_cnt, ==, 0);
@@ -1268,15 +1281,17 @@ fu_device_list_replug_user_func (void)
 
 	/* fake devices */
 	fu_device_set_id (device1, "device1");
-	fu_device_add_guid (device1, "foo");
-	fu_device_add_guid (device1, "bar");
+	fu_device_add_instance_id (device1, "foo");
+	fu_device_add_instance_id (device1, "bar");
 	fu_device_set_plugin (device1, "self-test");
 	fu_device_set_remove_delay (device1, FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
+	fu_device_convert_instance_ids (device1);
 	fu_device_set_id (device2, "device2");
-	fu_device_add_guid (device2, "baz");
-	fu_device_add_guid (device2, "bar"); /* matches */
+	fu_device_add_instance_id (device2, "baz");
+	fu_device_add_instance_id (device2, "bar"); /* matches */
 	fu_device_set_plugin (device2, "self-test");
 	fu_device_set_remove_delay (device2, FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
+	fu_device_convert_instance_ids (device2);
 
 	/* not yet added */
 	ret = fu_device_list_wait_for_replug (device_list, device1, &error);
@@ -1332,9 +1347,10 @@ fu_device_list_compatible_func (void)
 	fu_device_set_plugin (device1, "plugin-for-runtime");
 	fu_device_set_vendor_id (device1, "USB:0x20A0");
 	fu_device_set_version (device1, "1.2.3");
-	fu_device_add_guid (device1, "foobar");
-	fu_device_add_guid (device1, "bootloader");
+	fu_device_add_instance_id (device1, "foobar");
+	fu_device_add_instance_id (device1, "bootloader");
 	fu_device_set_remove_delay (device1, 100);
+	fu_device_convert_instance_ids (device1);
 	fu_device_list_add (device_list, device1);
 	g_assert_cmpint (added_cnt, ==, 1);
 	g_assert_cmpint (removed_cnt, ==, 0);
@@ -1343,7 +1359,8 @@ fu_device_list_compatible_func (void)
 	/* add another device in bootloader mode */
 	fu_device_set_id (device2, "device2");
 	fu_device_set_plugin (device2, "plugin-for-bootloader");
-	fu_device_add_guid (device2, "bootloader");
+	fu_device_add_instance_id (device2, "bootloader");
+	fu_device_convert_instance_ids (device2);
 
 	/* verify only a changed event was generated */
 	added_cnt = removed_cnt = changed_cnt = 0;
@@ -1402,7 +1419,8 @@ fu_device_list_remove_chain_func (void)
 
 	/* add child */
 	fu_device_set_id (device_child, "child");
-	fu_device_add_guid (device_child, "child-GUID-1");
+	fu_device_add_instance_id (device_child, "child-GUID-1");
+	fu_device_convert_instance_ids (device_child);
 	fu_device_list_add (device_list, device_child);
 	g_assert_cmpint (added_cnt, ==, 1);
 	g_assert_cmpint (removed_cnt, ==, 0);
@@ -1410,7 +1428,8 @@ fu_device_list_remove_chain_func (void)
 
 	/* add parent */
 	fu_device_set_id (device_parent, "parent");
-	fu_device_add_guid (device_parent, "parent-GUID-1");
+	fu_device_add_instance_id (device_parent, "parent-GUID-1");
+	fu_device_convert_instance_ids (device_parent);
 	fu_device_add_child (device_parent, device_child);
 	fu_device_list_add (device_list, device_parent);
 	g_assert_cmpint (added_cnt, ==, 2);
@@ -1450,10 +1469,12 @@ fu_device_list_func (void)
 
 	/* add both */
 	fu_device_set_id (device1, "device1");
-	fu_device_add_guid (device1, "foobar");
+	fu_device_add_instance_id (device1, "foobar");
+	fu_device_convert_instance_ids (device1);
 	fu_device_list_add (device_list, device1);
 	fu_device_set_id (device2, "device2");
-	fu_device_add_guid (device2, "baz");
+	fu_device_add_instance_id (device2, "baz");
+	fu_device_convert_instance_ids (device2);
 	fu_device_list_add (device_list, device2);
 	g_assert_cmpint (added_cnt, ==, 2);
 	g_assert_cmpint (removed_cnt, ==, 0);
@@ -1834,7 +1855,8 @@ fu_plugin_quirks_device_func (void)
 	fu_device_set_physical_id (device, "usb:00:05");
 	fu_device_set_quirks (device, quirks);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_guid (device, "USB\\VID_0BDA&PID_1100");
+	fu_device_add_instance_id (device, "USB\\VID_0BDA&PID_1100");
+	fu_device_convert_instance_ids (device);
 	g_assert_cmpstr (fu_device_get_name (device), ==, "Hub");
 
 	/* ensure children are created */
@@ -1933,8 +1955,7 @@ fu_plugin_module_func (void)
 	g_assert (mapped_file != NULL);
 	blob_cab = g_mapped_file_get_bytes (mapped_file);
 	fwupd_release_set_version (fu_device_get_release_default (device), "1.2.3");
-	ret = fu_plugin_runner_update (plugin, device, blob_cab, NULL,
-				       FWUPD_INSTALL_FLAG_OFFLINE, &error);
+	ret = fu_plugin_runner_schedule_update (plugin, device, blob_cab, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (cnt, ==, 1);
@@ -1955,7 +1976,7 @@ fu_plugin_module_func (void)
 	pending_cap = g_strdup (fwupd_release_get_filename (release));
 
 	/* lets do this online */
-	ret = fu_plugin_runner_update (plugin, device, blob_cab, NULL,
+	ret = fu_plugin_runner_update (plugin, device, blob_cab,
 				       FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -3155,30 +3176,6 @@ fu_common_strstrip_func (void)
 }
 
 static void
-fu_common_guid_func (void)
-{
-	g_autofree gchar *guid1 = NULL;
-	g_autofree gchar *guid2 = NULL;
-
-	/* invalid */
-	g_assert (!fu_common_guid_is_valid (NULL));
-	g_assert (!fu_common_guid_is_valid (""));
-	g_assert (!fu_common_guid_is_valid ("1ff60ab2-3905-06a1-b476"));
-	g_assert (!fu_common_guid_is_valid ("1ff60ab2-XXXX-XXXX-XXXX-0371f00c9e9b"));
-	g_assert (!fu_common_guid_is_valid (" 1ff60ab2-3905-06a1-b476-0371f00c9e9b"));
-	g_assert (!fu_common_guid_is_valid ("00000000-0000-0000-0000-000000000000"));
-
-	/* valid */
-	g_assert (fu_common_guid_is_valid ("1ff60ab2-3905-06a1-b476-0371f00c9e9b"));
-
-	/* make valid */
-	guid1 = fu_common_guid_from_string ("python.org");
-	g_assert_cmpstr (guid1, ==, "886313e1-3b8a-5372-9b90-0c9aee199e5d");
-	guid2 = fu_common_guid_from_string ("8086:0406");
-	g_assert_cmpstr (guid2, ==, "1fbd1f2c-80f4-5d7c-a6ad-35c7b9bd5486");
-}
-
-static void
 fu_common_version_func (void)
 {
 	guint i;
@@ -3378,7 +3375,6 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/plugin{build-hash}", fu_plugin_hash_func);
 	g_test_add_func ("/fwupd/chunk", fu_chunk_func);
 	g_test_add_func ("/fwupd/common{version-guess-format}", fu_common_version_guess_format_func);
-	g_test_add_func ("/fwupd/common{guid}", fu_common_guid_func);
 	g_test_add_func ("/fwupd/common{version}", fu_common_version_func);
 	g_test_add_func ("/fwupd/common{vercmp}", fu_common_vercmp_func);
 	g_test_add_func ("/fwupd/common{strstrip}", fu_common_strstrip_func);

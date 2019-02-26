@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __DFU_TARGET_STM_H
-#define __DFU_TARGET_STM_H
+#pragma once
 
 #include <glib-object.h>
 #include <gio/gio.h>
@@ -25,5 +24,3 @@ struct _DfuTargetStmClass
 DfuTarget	*dfu_target_stm_new		(void);
 
 G_END_DECLS
-
-#endif /* __DFU_TARGET_STM_H */

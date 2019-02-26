@@ -1,0 +1,21 @@
+extraction:
+  python:
+    python_setup:
+      version: "3"
+  cpp:
+    prepare:
+      packages:
+      - bsdtar
+      - python3-gi
+      - libcogl-pango-dev
+      - python3-pil
+      - python3-cairo
+    after_prepare:
+    - "wget -O libxmlb.zip https://github.com/hughsie/libxmlb/archive/0.1.5.zip"
+    - "mkdir -p subprojects/libxmlb"
+    - "bsdtar --strip-components=1 -xvf libxmlb.zip -C subprojects/libxmlb"
+    index:
+      build_command:
+      - "meson setup build"
+      - "ninja -C build"
+ 

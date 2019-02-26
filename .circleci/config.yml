@@ -1,0 +1,64 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: cibuilds/snapcraft:stable
+    steps:
+      - checkout
+      - run:
+          name: "Update apt"
+          command: apt update
+      - run:
+          name: "Build Snap"
+          command: snapcraft
+      - persist_to_workspace:
+          root: .
+          paths:
+            - "*.snap"
+
+  publish-edge:
+    docker:
+      - image: cibuilds/snapcraft:stable
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: "Publish to Store"
+          command: |
+            mkdir .snapcraft
+            echo $SNAPCRAFT_LOGIN_FILE | base64 --decode --ignore-garbage > .snapcraft/snapcraft.cfg
+            snapcraft push *.snap --release edge
+
+  publish-stable:
+    docker:
+      - image: cibuilds/snapcraft:stable
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: "Publish to Store"
+          command: |
+            mkdir .snapcraft
+            echo $SNAPCRAFT_LOGIN_FILE | base64 --decode --ignore-garbage > .snapcraft/snapcraft.cfg
+            snapcraft push *.snap --release stable
+
+workflows:
+  version: 2
+  main:
+    jobs:
+      - build
+      - publish-edge:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
+      - publish-stable:
+          requires:
+            - build
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^\d+\.\d+\.\d+$/
+

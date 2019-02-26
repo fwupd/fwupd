@@ -35,6 +35,7 @@ if get_option('tests')
   cargs += '-DSOURCEDIR="' + meson.current_source_dir() + '"'
   e = executable(
     'synapticsmst-self-test',
+    fu_hash,
     sources : [
       'fu-self-test.c',
       'synapticsmst-common.c',

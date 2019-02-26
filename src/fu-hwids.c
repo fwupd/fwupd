@@ -13,8 +13,8 @@
 #include <string.h>
 
 #include "fu-common.h"
-#include "fu-common-guid.h"
 #include "fu-hwids.h"
+#include "fwupd-common.h"
 #include "fwupd-error.h"
 
 struct _FuHwids {
@@ -75,7 +75,6 @@ fu_hwids_get_guids (FuHwids *self)
 static gchar *
 fu_hwids_get_guid_for_str (const gchar *str, GError **error)
 {
-	const gchar *namespace_id = "70ffd812-4c7f-4c7d-0000-000000000000";
 	glong items_written = 0;
 	g_autofree gunichar2 *data = NULL;
 
@@ -97,10 +96,8 @@ fu_hwids_get_guid_for_str (const gchar *str, GError **error)
 		data[i] = GUINT16_TO_LE(data[i]);
 
 	/* convert to a GUID */
-	return fu_common_guid_from_data (namespace_id,
-					 (guint8*) data,
-					 items_written * 2,
-					 error);
+	return fwupd_guid_hash_data ((guint8*) data, items_written * 2,
+				     FWUPD_GUID_FLAG_NAMESPACE_MICROSOFT);
 }
 
 /**

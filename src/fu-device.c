@@ -13,11 +13,11 @@
 #include <gio/gio.h>
 
 #include "fu-common.h"
-#include "fu-common-guid.h"
 #include "fu-common-version.h"
 #include "fu-device-private.h"
 #include "fu-mutex.h"
 
+#include "fwupd-common.h"
 #include "fwupd-device-private.h"
 
 /**
@@ -63,6 +63,7 @@ enum {
 	PROP_PHYSICAL_ID,
 	PROP_LOGICAL_ID,
 	PROP_QUIRKS,
+	PROP_VERSION_FORMAT,
 	PROP_LAST
 };
 
@@ -81,6 +82,9 @@ fu_device_get_property (GObject *object, guint prop_id,
 		break;
 	case PROP_PROGRESS:
 		g_value_set_uint (value, priv->progress);
+		break;
+	case PROP_VERSION_FORMAT:
+		g_value_set_uint (value, priv->version_format);
 		break;
 	case PROP_PHYSICAL_ID:
 		g_value_set_string (value, fu_device_get_physical_id (self));
@@ -108,6 +112,9 @@ fu_device_set_property (GObject *object, guint prop_id,
 		break;
 	case PROP_PROGRESS:
 		fu_device_set_progress (self, g_value_get_uint (value));
+		break;
+	case PROP_VERSION_FORMAT:
+		fu_device_set_version_format (self, g_value_get_uint (value));
 		break;
 	case PROP_PHYSICAL_ID:
 		fu_device_set_physical_id (self, g_value_get_string (value));
@@ -537,8 +544,8 @@ fu_device_add_parent_guid (FuDevice *self, const gchar *guid)
 	g_return_if_fail (guid != NULL);
 
 	/* make valid */
-	if (!fu_common_guid_is_valid (guid)) {
-		g_autofree gchar *tmp = fu_common_guid_from_string (guid);
+	if (!fwupd_guid_is_valid (guid)) {
+		g_autofree gchar *tmp = fwupd_guid_hash_string (guid);
 		if (fu_device_has_parent_guid (self, tmp))
 			return;
 		g_debug ("using %s for %s", tmp, guid);
@@ -573,6 +580,7 @@ fu_device_add_child_by_type_guid (FuDevice *self,
 		return FALSE;
 	if (!fu_device_probe (child, error))
 		return FALSE;
+	fu_device_convert_instance_ids (child);
 	fu_device_add_child (self, child);
 	return TRUE;
 }
@@ -785,8 +793,8 @@ gboolean
 fu_device_has_guid (FuDevice *self, const gchar *guid)
 {
 	/* make valid */
-	if (!fu_common_guid_is_valid (guid)) {
-		g_autofree gchar *tmp = fu_common_guid_from_string (guid);
+	if (!fwupd_guid_is_valid (guid)) {
+		g_autofree gchar *tmp = fwupd_guid_hash_string (guid);
 		return fwupd_device_has_guid (FWUPD_DEVICE (self), tmp);
 	}
 
@@ -795,27 +803,50 @@ fu_device_has_guid (FuDevice *self, const gchar *guid)
 }
 
 /**
+ * fu_device_add_instance_id:
+ * @self: A #FuDevice
+ * @instance_id: the InstanceID, e.g. `PCI\VEN_10EC&DEV_525A`
+ *
+ * Adds an instance ID to the device. If the @instance_id argument is already a
+ * valid GUID then fu_device_add_guid() should be used instead.
+ *
+ * Since: 1.2.5
+ **/
+void
+fu_device_add_instance_id (FuDevice *self, const gchar *instance_id)
+{
+	g_autofree gchar *guid = NULL;
+	if (fwupd_guid_is_valid (instance_id)) {
+		g_warning ("use fu_device_add_guid(\"%s\") instead!", instance_id);
+		fu_device_add_guid_safe (self, instance_id);
+		return;
+	}
+	/* it seems odd adding the instance ID and the GUID quirks and not just
+	 * calling fu_device_add_guid_safe() -- but we want the quirks to match
+	 * so the plugin is set, but not the LVFS metadata to match firmware
+	 * until we're sure the device isn't using _NO_AUTO_INSTANCE_IDS */
+	guid = fwupd_guid_hash_string (instance_id);
+	fu_device_add_guid_quirks (self, guid);
+	fwupd_device_add_instance_id (FWUPD_DEVICE (self), instance_id);
+}
+
+/**
  * fu_device_add_guid:
  * @self: A #FuDevice
  * @guid: A GUID, e.g. `2082b5e0-7a64-478a-b1b2-e3404fab6dad`
  *
  * Adds a GUID to the device. If the @guid argument is not a valid GUID then it
- * is converted to a GUID using fu_common_guid_from_string().
+ * is converted to a GUID using fwupd_guid_hash_string().
  *
  * Since: 0.7.2
  **/
 void
 fu_device_add_guid (FuDevice *self, const gchar *guid)
 {
-	/* make valid */
-	if (!fu_common_guid_is_valid (guid)) {
-		g_autofree gchar *tmp = fu_common_guid_from_string (guid);
-		g_debug ("using %s for %s", tmp, guid);
-		fu_device_add_guid_safe (self, tmp);
+	if (!fwupd_guid_is_valid (guid)) {
+		fu_device_add_instance_id (self, guid);
 		return;
 	}
-
-	/* already valid */
 	fu_device_add_guid_safe (self, guid);
 }
 
@@ -825,7 +856,7 @@ fu_device_add_guid (FuDevice *self, const gchar *guid)
  * @guid: A GUID, e.g. `2082b5e0-7a64-478a-b1b2-e3404fab6dad`
  *
  * Adds a GUID to the device. If the @guid argument is not a valid GUID then it
- * is converted to a GUID using fu_common_guid_from_string().
+ * is converted to a GUID using fwupd_guid_hash_string().
  *
  * A counterpart GUID is typically the GUID of the same device in bootloader
  * or runtime mode, if they have a different device PCI or USB ID. Adding this
@@ -837,9 +868,8 @@ void
 fu_device_add_counterpart_guid (FuDevice *self, const gchar *guid)
 {
 	/* make valid */
-	if (!fu_common_guid_is_valid (guid)) {
-		g_autofree gchar *tmp = fu_common_guid_from_string (guid);
-		g_debug ("using %s for counterpart %s", tmp, guid);
+	if (!fwupd_guid_is_valid (guid)) {
+		g_autofree gchar *tmp = fwupd_guid_hash_string (guid);
 		fwupd_device_add_guid (FWUPD_DEVICE (self), tmp);
 		return;
 	}
@@ -1980,6 +2010,42 @@ fu_device_probe (FuDevice *self, GError **error)
 }
 
 /**
+ * fu_device_convert_instance_ids:
+ * @self: A #FuDevice
+ *
+ * Converts all the Device Instance IDs added using fu_device_add_instance_id()
+ * into actual GUIDs, **unless** %FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS has
+ * been set.
+ *
+ * Plugins will only need to need to call this manually when adding child
+ * devices, as fu_device_setup() automatically calls this after the
+ * fu_device_probe() and fu_device_setup() virtual functions have been run.
+ *
+ * Since: 1.2.5
+ **/
+void
+fu_device_convert_instance_ids (FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	GPtrArray *instance_ids = fwupd_device_get_instance_ids (FWUPD_DEVICE (self));
+
+	/* OEM specific hardware */
+	if (fu_device_has_flag (self, FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS))
+		return;
+	for (guint i = 0; i < instance_ids->len; i++) {
+		const gchar *instance_id = g_ptr_array_index (instance_ids, i);
+		g_autofree gchar *guid = fwupd_guid_hash_string (instance_id);
+		fwupd_device_add_guid (FWUPD_DEVICE (self), guid);
+	}
+
+	/* convert all children too */
+	for (guint i = 0; i < priv->children->len; i++) {
+		FuDevice *devtmp = g_ptr_array_index (priv->children, i);
+		fu_device_convert_instance_ids (devtmp);
+	}
+}
+
+/**
  * fu_device_setup:
  * @self: A #FuDevice
  * @error: A #GError, or %NULL
@@ -2010,6 +2076,10 @@ fu_device_setup (FuDevice *self, GError **error)
 		if (!klass->setup (self, error))
 			return FALSE;
 	}
+
+	/* convert the instance IDs to GUIDs */
+	fu_device_convert_instance_ids (self);
+
 	priv->done_setup = TRUE;
 	return TRUE;
 }
@@ -2139,6 +2209,14 @@ fu_device_class_init (FuDeviceClass *klass)
 				   G_PARAM_READWRITE |
 				   G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_PROGRESS, pspec);
+
+	pspec = g_param_spec_uint ("version-format", NULL, NULL,
+				   FU_VERSION_FORMAT_UNKNOWN,
+				   FU_VERSION_FORMAT_LAST,
+				   FU_VERSION_FORMAT_UNKNOWN,
+				   G_PARAM_READWRITE |
+				   G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_VERSION_FORMAT, pspec);
 
 	pspec = g_param_spec_object ("quirks", NULL, NULL,
 				     FU_TYPE_QUIRKS,

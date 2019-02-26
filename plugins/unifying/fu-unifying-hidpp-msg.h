@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_UNIFYING_HIDPP_MSG_H
-#define __FU_UNIFYING_HIDPP_MSG_H
+#pragma once
 
 #include <glib.h>
 
@@ -57,5 +56,3 @@ const gchar	*fu_unifying_hidpp_msg_sub_id_to_string		(FuUnifyingHidppMsg	*msg);
 const gchar	*fu_unifying_hidpp_msg_fcn_id_to_string		(FuUnifyingHidppMsg	*msg);
 
 G_END_DECLS
-
-#endif /* __FU_UNIFYING_HIDPP_MSG_H */

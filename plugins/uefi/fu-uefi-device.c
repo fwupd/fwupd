@@ -477,7 +477,7 @@ fu_uefi_device_probe (FuDevice *device, GError **error)
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE (device);
 	FuVersionFormat version_format;
-	g_autofree gchar *guid_devid = NULL;
+	g_autofree gchar *devid = NULL;
 	g_autofree gchar *guid_strup = NULL;
 	g_autofree gchar *version_lowest = NULL;
 	g_autofree gchar *version = NULL;
@@ -516,7 +516,7 @@ fu_uefi_device_probe (FuDevice *device, GError **error)
 	} else {
 		/* this is probably system firmware */
 		fu_device_add_icon (device, "computer");
-		fu_device_add_guid (device, "main-system-firmware");
+		fu_device_add_instance_id (device, "main-system-firmware");
 	}
 
 	/* set the PCR0 as the device checksum */
@@ -529,8 +529,8 @@ fu_uefi_device_probe (FuDevice *device, GError **error)
 	/* Windows seems to be case insensitive, but for convenience we'll
 	 * match the upper case values typically specified in the .inf file */
 	guid_strup = g_ascii_strup (self->fw_class, -1);
-	guid_devid = g_strdup_printf ("UEFI\\RES_{%s}", guid_strup);
-	fu_device_add_guid (device, guid_devid);
+	devid = g_strdup_printf ("UEFI\\RES_{%s}", guid_strup);
+	fu_device_add_instance_id (device, devid);
 	return TRUE;
 }
 
@@ -594,7 +594,7 @@ fu_uefi_device_new_from_entry (const gchar *entry_path, GError **error)
 	fu_device_set_id (FU_DEVICE (self), id);
 
 	/* this is invalid */
-	if (!fu_common_guid_is_valid (self->fw_class)) {
+	if (!fwupd_guid_is_valid (self->fw_class)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
@@ -619,8 +619,8 @@ fu_uefi_device_new_from_dev (FuDevice *dev)
 	self->fw_class = g_strdup (fu_device_get_guid_default (dev));
 	tmp = fu_device_get_metadata (dev, FU_DEVICE_METADATA_UEFI_DEVICE_KIND);
 	self->kind = fu_uefi_device_kind_from_string (tmp);
-	self->capsule_flags = 0; /* FIXME? */
-	self->fw_version = 0; /* FIXME? */
+	self->capsule_flags = fu_device_get_metadata_integer (dev, FU_DEVICE_METADATA_UEFI_CAPSULE_FLAGS);
+	self->fw_version = fu_device_get_metadata_integer (dev, FU_DEVICE_METADATA_UEFI_FW_VERSION);
 	g_assert (self->fw_class != NULL);
 	return self;
 }

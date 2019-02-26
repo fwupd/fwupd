@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_UEFI_UPDATE_INFO_H
-#define __FU_UEFI_UPDATE_INFO_H
+#pragma once
 
 G_BEGIN_DECLS
 
@@ -32,5 +31,3 @@ guint64		 fu_uefi_update_info_get_hw_inst	(FuUefiUpdateInfo	*self);
 FuUefiUpdateInfoStatus fu_uefi_update_info_get_status	(FuUefiUpdateInfo	*self);
 
 G_END_DECLS
-
-#endif /* __FU_UEFI_UPDATE_INFO_H */

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_SUPERIO_DEVICE_H
-#define __FU_SUPERIO_DEVICE_H
+#pragma once
 
 #include "fu-plugin.h"
 
@@ -19,5 +18,3 @@ FuSuperioDevice	*fu_superio_device_new		(const gchar		*chipset,
 						 guint16		 port);
 
 G_END_DECLS
-
-#endif /* __FU_SUPERIO_DEVICE_H */

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FWUPD_CLIENT_H
-#define __FWUPD_CLIENT_H
+#pragma once
 
 #include <glib-object.h>
 #include <gio/gio.h>
@@ -129,6 +128,3 @@ FwupdRemote	*fwupd_client_get_remote_by_id		(FwupdClient	*client,
 							 GError		**error);
 
 G_END_DECLS
-
-#endif /* __FWUPD_CLIENT_H */
-

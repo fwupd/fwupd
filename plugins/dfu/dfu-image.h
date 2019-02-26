@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __DFU_IMAGE_H
-#define __DFU_IMAGE_H
+#pragma once
 
 #include <glib-object.h>
 #include <gio/gio.h>
@@ -43,5 +42,3 @@ void		 dfu_image_set_name		(DfuImage	*image,
 gchar		*dfu_image_to_string		(DfuImage	*image);
 
 G_END_DECLS
-
-#endif /* __DFU_IMAGE_H */

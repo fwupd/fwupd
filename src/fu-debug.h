@@ -4,11 +4,12 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_DEBUG_H__
-#define __FU_DEBUG_H__
+#pragma once
 
 #include <glib.h>
 
+G_BEGIN_DECLS
+
 GOptionGroup	*fu_debug_get_option_group	(void);
 
-#endif /* __FU_DEBUG_H__ */
+G_END_DECLS

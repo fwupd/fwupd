@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_WAC_MODULE_BLUETOOTH_H
-#define __FU_WAC_MODULE_BLUETOOTH_H
+#pragma once
 
 #include "fu-wac-module.h"
 
@@ -17,5 +16,3 @@ G_DECLARE_FINAL_TYPE (FuWacModuleBluetooth, fu_wac_module_bluetooth, FU, WAC_MOD
 FuWacModule	*fu_wac_module_bluetooth_new	(GUsbDevice	*usb_device);
 
 G_END_DECLS
-
-#endif /* __FU_WAC_MODULE_BLUETOOTH_H */

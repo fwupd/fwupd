@@ -4,8 +4,9 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FWUPD_ENUMS_PRIVATE_H
-#define __FWUPD_ENUMS_PRIVATE_H
+#pragma once
+
+G_BEGIN_DECLS
 
 #define FWUPD_RESULT_KEY_APPSTREAM_ID		"AppstreamId"	/* s */
 #define FWUPD_RESULT_KEY_CHECKSUM		"Checksum"	/* as */
@@ -19,6 +20,7 @@
 #define FWUPD_RESULT_KEY_FLASHES_LEFT		"FlashesLeft"	/* u */
 #define FWUPD_RESULT_KEY_INSTALL_DURATION	"InstallDuration"	/* u */
 #define FWUPD_RESULT_KEY_GUID			"Guid"		/* as */
+#define FWUPD_RESULT_KEY_INSTANCE_IDS		"InstanceIds"	/* as */
 #define FWUPD_RESULT_KEY_HOMEPAGE		"Homepage"	/* s */
 #define FWUPD_RESULT_KEY_DETAILS_URL		"DetailsUrl"	/* s */
 #define FWUPD_RESULT_KEY_SOURCE_URL		"SourceUrl"	/* s */
@@ -45,4 +47,4 @@
 #define FWUPD_RESULT_KEY_VERSION_LOWEST		"VersionLowest"	/* s */
 #define FWUPD_RESULT_KEY_VERSION		"Version"	/* s */
 
-#endif /* __FWUPD_ENUMS_PRIVATE_H */
+G_END_DECLS

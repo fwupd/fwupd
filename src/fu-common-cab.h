@@ -4,13 +4,14 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_COMMON_CAB_H
-#define __FU_COMMON_CAB_H
+#pragma once
 
 #include <xmlb.h>
+
+G_BEGIN_DECLS
 
 XbSilo		*fu_common_cab_build_silo		(GBytes		*blob,
 							 guint64	 size_max,
 							 GError		**error);
 
-#endif /* __FU_COMMON_CAB_H */
+G_END_DECLS

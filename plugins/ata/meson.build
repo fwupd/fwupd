@@ -36,6 +36,7 @@ if get_option('tests')
   cargs += '-DTESTDATADIR="' + testdatadir + '"'
   e = executable(
     'ata-self-test',
+    fu_hash,
     sources : [
       'fu-self-test.c',
       'fu-ata-device.c',

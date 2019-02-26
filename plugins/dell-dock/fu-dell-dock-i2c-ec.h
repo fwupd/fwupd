@@ -13,8 +13,7 @@
  * SPDX-License-Identifier: LGPL-2.1+ OR MIT
  */
 
-#ifndef __FU_DELL_DOCK_EC_H
-#define __FU_DELL_DOCK_EC_H
+#pragma once
 
 #include "config.h"
 
@@ -48,5 +47,3 @@ gboolean	 fu_dell_dock_ec_commit_package 	(FuDevice *device,
 							 GBytes *blob_fw,
 							 GError **error);
 FuDevice 	*fu_dell_dock_ec_get_symbiote		(FuDevice *device);
-
-#endif /* __FU_DELL_DOCK_EC_H */

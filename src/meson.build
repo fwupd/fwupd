@@ -57,7 +57,6 @@ libfwupdprivate = static_library(
     libarchive,
     libxmlb,
     valgrind,
-    uuid,
   ],
   link_with : [
     fwupd,
@@ -168,7 +167,6 @@ fwupdtool = executable(
     sqlite,
     valgrind,
     libarchive,
-    uuid,
   ],
   link_with : [
     fwupd,
@@ -253,7 +251,6 @@ executable(
     sqlite,
     valgrind,
     libarchive,
-    uuid,
   ],
   link_with : fwupd,
   c_args : [
@@ -327,7 +324,6 @@ if get_option('tests')
       sqlite,
       valgrind,
       libarchive,
-      uuid,
     ],
     link_with : [
       fwupd,

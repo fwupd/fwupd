@@ -4,13 +4,12 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
+#pragma once
+
 /**
  * SECTION:fwupd
  * @short_description: Helper objects for accessing fwupd
  */
-
-#ifndef __FWUPD_H__
-#define __FWUPD_H__
 
 #define __FWUPD_H_INSIDE__
 
@@ -28,6 +27,3 @@
 #endif
 
 #undef __FWUPD_H_INSIDE__
-
-#endif /* __FWUPD_H__ */
-

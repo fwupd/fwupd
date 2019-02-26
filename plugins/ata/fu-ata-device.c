@@ -71,6 +71,7 @@ enum {
 struct _FuAtaDevice {
 	FuUdevDevice		 parent_instance;
 	guint			 pci_depth;
+	guint			 usb_depth;
 	gint			 fd;
 	guint16			 transfer_blocks;
 	guint8			 transfer_mode;
@@ -108,7 +109,7 @@ fu_ata_device_get_string (const guint16 *buf, guint start, guint end)
 
 	/* remove whitespace before returning */
 	if (str->len > 0) {
-		g_strchomp (str->str);
+		g_strstrip (str->str);
 		if (str->str[0] == '\0')
 			return NULL;
 	}
@@ -124,6 +125,7 @@ fu_ata_device_to_string (FuDevice *device, GString *str)
 	g_string_append_printf (str, "    transfer-mode:\t0x%x\n", (guint) self->transfer_mode);
 	g_string_append_printf (str, "    transfer-size:\t0x%x\n", (guint) self->transfer_blocks);
 	g_string_append_printf (str, "    pci-depth:\t\t%u\n", self->pci_depth);
+	g_string_append_printf (str, "    usb-depth:\t\t%u\n", self->usb_depth);
 }
 
 /* https://docs.microsoft.com/en-us/windows-hardware/drivers/install/identifiers-for-ide-devices */
@@ -135,6 +137,48 @@ fu_ata_device_pad_string_for_id (const gchar *name)
 	for (guint i = str->len; i < 40; i++)
 		g_string_append_c (str, '_');
 	return g_string_free (str, FALSE);
+}
+
+static gchar *
+fu_ata_device_get_guid_safe (const guint16 *buf, guint16 addr_start)
+{
+	if (!fu_common_guid_is_plausible ((guint8 *) (buf + addr_start)))
+		return NULL;
+	return fwupd_guid_to_string ((const fwupd_guid_t *) (buf + addr_start),
+				     FWUPD_GUID_FLAG_MIXED_ENDIAN);
+}
+
+static void
+fu_ata_device_parse_id_maybe_dell (FuAtaDevice *self, const guint16 *buf)
+{
+	g_autofree gchar *component_id = NULL;
+	g_autofree gchar *guid_efi = NULL;
+	g_autofree gchar *guid_id = NULL;
+	g_autofree gchar *guid = NULL;
+
+	/* add extra component ID if set */
+	component_id = fu_ata_device_get_string (buf, 137, 140);
+	if (component_id == NULL ||
+	   !g_str_is_ascii (component_id) ||
+	    strlen (component_id) < 6) {
+		g_debug ("invalid component ID, skipping");
+		return;
+	}
+
+	/* do not add the FuUdevDevice instance IDs as generic firmware
+	 * should not be used on these OEM-specific devices */
+	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS);
+
+	/* add instance ID *and* GUID as using no-auto-instance-ids */
+	guid_id = g_strdup_printf ("STORAGE-DELL-%s", component_id);
+	fu_device_add_instance_id (FU_DEVICE (self), guid_id);
+	guid = fwupd_guid_hash_string (guid_id);
+	fu_device_add_guid (FU_DEVICE (self), guid);
+
+	/* also add the EFI GUID */
+	guid_efi = fu_ata_device_get_guid_safe (buf, 129);
+	if (guid_efi != NULL)
+		fu_device_add_guid (FU_DEVICE (self), guid_efi);
 }
 
 static gboolean
@@ -169,6 +213,8 @@ fu_ata_device_parse_id (FuAtaDevice *self, const guint8 *buf, gsize sz, GError *
 				     "DOWNLOAD_MICROCODE not supported by device");
 		return FALSE;
 	}
+
+	fu_ata_device_parse_id_maybe_dell (self, id);
 
 	/* firmware will be applied when the device restarts */
 	if (self->transfer_mode == ATA_SUBCMD_MICROCODE_DOWNLOAD_CHUNKS)
@@ -213,20 +259,27 @@ fu_ata_device_parse_id (FuAtaDevice *self, const guint8 *buf, gsize sz, GError *
 	if (sku != NULL)
 		g_debug ("SKU=%s", sku);
 
-	/* add extra GUIDs */
+	/* if we have vendor defined identify blocks don't add generic GUID */
+	if (fu_device_get_guids (device)->len != 0)
+		return TRUE;
+
+	/* add extra GUIDs if none detected from identify block */
 	name_pad = fu_ata_device_pad_string_for_id (fu_device_get_name (device));
 	if (name_pad != NULL &&
 	    fu_device_get_version (device) != NULL) {
 		g_autofree gchar *tmp = NULL;
 		tmp = g_strdup_printf ("IDE\\%s%s", name_pad,
 				       fu_device_get_version (device));
-		fu_device_add_guid (device, tmp);
+		fu_device_add_instance_id (device, tmp);
 	}
 	if (name_pad != NULL) {
 		g_autofree gchar *tmp = NULL;
 		tmp = g_strdup_printf ("IDE\\0%s", name_pad);
-		fu_device_add_guid (device, tmp);
+		fu_device_add_instance_id (device, tmp);
 	}
+
+	/* add the name fallback */
+	fu_device_add_instance_id (device, fu_device_get_name (device));
 
 	return TRUE;
 }
@@ -262,9 +315,10 @@ fu_ata_device_probe (FuUdevDevice *device, GError **error)
 	if (!fu_udev_device_set_physical_id (device, "scsi", error))
 		return FALSE;
 
-	/* look at the PCI depth to work out if in an external enclosure */
+	/* look at the PCI and USB depth to work out if in an external enclosure */
 	self->pci_depth = fu_udev_device_get_slot_depth (device, "pci");
-	if (self->pci_depth <= 2)
+	self->usb_depth = fu_udev_device_get_slot_depth (device, "usb");
+	if (self->pci_depth <= 2 && self->usb_depth <= 2)
 		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_INTERNAL);
 
 	return TRUE;
@@ -407,9 +461,6 @@ fu_ata_device_setup (FuDevice *device, GError **error)
 	}
 	if (!fu_ata_device_parse_id (self, id, sizeof(id), error))
 		return FALSE;
-
-	/* add the name fallback */
-	fu_device_add_guid (device, fu_device_get_name (device));
 
 	/* success */
 	return TRUE;

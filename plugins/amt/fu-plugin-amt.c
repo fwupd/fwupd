@@ -13,7 +13,6 @@
 #include <linux/mei.h>
 #include <string.h>
 #include <sys/ioctl.h>
-#include <uuid.h>
 
 #include "fu-plugin-vfuncs.h"
 
@@ -446,10 +445,10 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(mei_context, mei_context_free)
 static FuDevice *
 fu_plugin_amt_create_device (GError **error)
 {
-	gchar guid_buf[37];
 	guint8 state;
 	struct amt_code_versions ver;
-	uuid_t uu;
+	fwupd_guid_t uu;
+	g_autofree gchar *guid_buf = NULL;
 	g_autofree struct amt_host_if_resp_header *response = NULL;
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(GString) version_bl = g_string_new (NULL);
@@ -507,7 +506,7 @@ fu_plugin_amt_create_device (GError **error)
 
 	/* add guid */
 	memcpy (&uu, &ctx->guid, 16);
-	uuid_unparse (uu, guid_buf);
+	guid_buf = fwupd_guid_to_string ((const fwupd_guid_t *) &uu, FWUPD_GUID_FLAG_NONE);
 	fu_device_add_guid (dev, guid_buf);
 
 	/* get version numbers */

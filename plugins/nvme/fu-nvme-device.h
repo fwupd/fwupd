@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_NVME_DEVICE_H
-#define __FU_NVME_DEVICE_H
+#pragma once
 
 #include "fu-plugin.h"
 
@@ -20,5 +19,3 @@ FuNvmeDevice	*fu_nvme_device_new_from_blob		(const guint8	*buf,
 							 GError		**error);
 
 G_END_DECLS
-
-#endif /* __FU_NVME_DEVICE_H */

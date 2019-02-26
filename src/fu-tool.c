@@ -49,6 +49,8 @@ typedef struct {
 	FuEngine		*engine;
 	FuProgressbar		*progressbar;
 	gboolean		 no_reboot_check;
+	gboolean		 prepare_blob;
+	gboolean		 cleanup_blob;
 	FwupdInstallFlags	 flags;
 	gboolean		 show_all_devices;
 	/* only valid in update and downgrade */
@@ -87,9 +89,11 @@ fu_util_start_engine (FuUtilPrivate *priv, GError **error)
 	g_autoptr(GError) error_local = NULL;
 
 	/* try to stop any already running daemon */
-	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
-	if (connection == NULL)
-		return FALSE;
+	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, &error_local);
+	if (connection == NULL) {
+		g_debug ("Failed to get bus: %s", error_local->message);
+		return TRUE;
+	}
 	proxy = g_dbus_proxy_new_sync (connection,
 					G_DBUS_PROXY_FLAGS_NONE,
 					NULL,
@@ -682,13 +686,37 @@ fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
 			  G_CALLBACK (fu_util_update_device_changed_cb), priv);
 
 	/* write bare firmware */
-	if (!fu_engine_install_blob (priv->engine, device,
-				     NULL, /* blob_cab */
-				     blob_fw,
-				     NULL, /* version */
-				     priv->flags,
-				     error))
+	if (priv->prepare_blob) {
+		g_autoptr(GPtrArray) devices = NULL;
+		devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+		g_ptr_array_add (devices, g_object_ref (device));
+		if (!fu_engine_composite_prepare (priv->engine, devices, error)) {
+			g_prefix_error (error, "failed to prepare composite action: ");
+			return FALSE;
+		}
+	}
+	if (!fu_engine_install_blob (priv->engine, device, blob_fw, priv->flags, error))
 		return FALSE;
+	if (priv->cleanup_blob) {
+		g_autoptr(FuDevice) device_new = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		/* get the possibly new device from the old ID */
+		device_new = fu_engine_get_device (priv->engine,
+						   fu_device_get_id (device),
+						   &error_local);
+		if (device_new == NULL) {
+			g_debug ("failed to find new device: %s",
+				 error_local->message);
+		} else {
+			g_autoptr(GPtrArray) devices_new = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+			g_ptr_array_add (devices_new, g_steal_pointer (&device_new));
+			if (!fu_engine_composite_cleanup (priv->engine, devices_new, error)) {
+				g_prefix_error (error, "failed to cleanup composite action: ");
+				return FALSE;
+			}
+		}
+	}
 
 	fu_util_display_current_message (priv);
 
@@ -876,6 +904,8 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 			  G_CALLBACK (fu_util_update_device_changed_cb), priv);
 
 	devices = fu_engine_get_devices (priv->engine, error);
+	if (devices == NULL)
+		return FALSE;
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
 		FwupdRelease *rel;
@@ -1193,6 +1223,7 @@ main (int argc, char *argv[])
 	gboolean force = FALSE;
 	gboolean ret;
 	gboolean version = FALSE;
+	gboolean interactive = isatty (fileno (stdout)) != 0;
 	g_auto(GStrv) plugin_glob = NULL;
 	g_autoptr(FuUtilPrivate) priv = g_new0 (FuUtilPrivate, 1);
 	g_autoptr(GError) error = NULL;
@@ -1219,6 +1250,13 @@ main (int argc, char *argv[])
 		{ "plugin-whitelist", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &plugin_glob,
 			/* TRANSLATORS: command line option */
 			_("Manually whitelist specific plugins"), NULL },
+		{ "prepare", '\0', 0, G_OPTION_ARG_NONE, &priv->prepare_blob,
+			/* TRANSLATORS: command line option */
+			_("Run the plugin composite prepare routine when using install-blob"), NULL },
+		{ "cleanup", '\0', 0, G_OPTION_ARG_NONE, &priv->cleanup_blob,
+			/* TRANSLATORS: command line option */
+			_("Run the plugin composite cleanup routine when using install-blob"), NULL },
+
 		{ NULL}
 	};
 
@@ -1229,7 +1267,7 @@ main (int argc, char *argv[])
 	textdomain (GETTEXT_PACKAGE);
 
 	/* ensure root user */
-	if (getuid () != 0 || geteuid () != 0)
+	if (interactive && (getuid () != 0 || geteuid () != 0))
 		/* TRANSLATORS: we're poking around as a power user */
 		g_printerr ("%s\n", _("This program may only work correctly as root"));
 
@@ -1343,7 +1381,7 @@ main (int argc, char *argv[])
 			  (GCompareFunc) fu_sort_command_name_cb);
 
 	/* non-TTY consoles cannot answer questions */
-	if (isatty (fileno (stdout)) == 0) {
+	if (!interactive) {
 		priv->no_reboot_check = TRUE;
 		fu_progressbar_set_interactive (priv->progressbar, FALSE);
 	}

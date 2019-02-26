@@ -4,8 +4,11 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_DEVICE_METADATA_H__
-#define __FU_DEVICE_METADATA_H__
+#pragma once
+
+#include <glib.h>
+
+G_BEGIN_DECLS
 
 /**
  * SECTION:fu-device-metadata
@@ -42,4 +45,23 @@
  */
 #define FU_DEVICE_METADATA_UEFI_DEVICE_KIND	"UefiDeviceKind"
 
-#endif /* __FU_DEVICE_METADATA_H__ */
+/**
+ * FU_DEVICE_METADATA_UEFI_FW_VERSION:
+ *
+ * The firmware version of the UEFI device specified as a 32 bit unsigned
+ * integer.
+ * Consumed by the uefi plugin when other devices register fake devices that
+ * need to be handled as a capsule update.
+ */
+#define FU_DEVICE_METADATA_UEFI_FW_VERSION	"UefiFwVersion"
+
+/**
+ * FU_DEVICE_METADATA_UEFI_CAPSULE_FLAGS:
+ *
+ * The capsule flags for the UEFI device, e.g. %EFI_CAPSULE_HEADER_FLAGS_PERSIST_ACROSS_RESET
+ * Consumed by the uefi plugin when other devices register fake devices that
+ * need to be handled as a capsule update.
+ */
+#define FU_DEVICE_METADATA_UEFI_CAPSULE_FLAGS	"UefiCapsuleFlags"
+
+G_END_DECLS

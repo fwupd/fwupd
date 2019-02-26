@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FWUPD_RELEASE_H
-#define __FWUPD_RELEASE_H
+#pragma once
 
 #include <glib-object.h>
 
@@ -101,6 +100,3 @@ void		 fwupd_release_set_update_message	(FwupdRelease	*release,
 							 const gchar	*update_message);
 
 G_END_DECLS
-
-#endif /* __FWUPD_RELEASE_H */
-

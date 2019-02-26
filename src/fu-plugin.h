@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_PLUGIN_H
-#define __FU_PLUGIN_H
+#pragma once
 
 #include <gio/gio.h>
 #include <gusb.h>
@@ -20,6 +19,7 @@
 #include "fu-hwids.h"
 #include "fu-usb-device.h"
 #include "fu-udev-device.h"
+#include "fwupd-common.h"
 
 G_BEGIN_DECLS
 
@@ -153,6 +153,3 @@ void		 fu_plugin_add_compile_version		(FuPlugin	*self,
 							 const gchar	*version);
 
 G_END_DECLS
-
-#endif /* __FU_PLUGIN_H */
-

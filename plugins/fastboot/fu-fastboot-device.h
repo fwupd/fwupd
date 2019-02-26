@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_FASTBOOT_DEVICE_H
-#define __FU_FASTBOOT_DEVICE_H
+#pragma once
 
 #include "fu-plugin.h"
 
@@ -17,5 +16,3 @@ G_DECLARE_FINAL_TYPE (FuFastbootDevice, fu_fastboot_device, FU, FASTBOOT_DEVICE,
 FuFastbootDevice	*fu_fastboot_device_new	(FuUsbDevice	*device);
 
 G_END_DECLS
-
-#endif /* __FU_FASTBOOT_DEVICE_H */

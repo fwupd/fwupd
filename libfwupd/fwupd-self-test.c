@@ -43,6 +43,60 @@ fu_test_compare_lines (const gchar *txt1, const gchar *txt2, GError **error)
 	return FALSE;
 }
 
+/* https://gitlab.gnome.org/GNOME/glib/issues/225 */
+static guint
+_g_string_replace (GString *string, const gchar *search, const gchar *replace)
+{
+	gchar *tmp;
+	guint count = 0;
+	gsize search_idx = 0;
+	gsize replace_len;
+	gsize search_len;
+
+	g_return_val_if_fail (string != NULL, 0);
+	g_return_val_if_fail (search != NULL, 0);
+	g_return_val_if_fail (replace != NULL, 0);
+
+	/* nothing to do */
+	if (string->len == 0)
+		return 0;
+
+	search_len = strlen (search);
+	replace_len = strlen (replace);
+
+	do {
+		tmp = g_strstr_len (string->str + search_idx, -1, search);
+		if (tmp == NULL)
+			break;
+
+		/* advance the counter in case @replace contains @search */
+		search_idx = (gsize) (tmp - string->str);
+
+		/* reallocate the string if required */
+		if (search_len > replace_len) {
+			g_string_erase (string,
+					(gssize) search_idx,
+					(gssize) (search_len - replace_len));
+			memcpy (tmp, replace, replace_len);
+		} else if (search_len < replace_len) {
+			g_string_insert_len (string,
+					     (gssize) search_idx,
+					     replace,
+					     (gssize) (replace_len - search_len));
+			/* we have to treat this specially as it could have
+			 * been reallocated when the insertion happened */
+			memcpy (string->str + search_idx, replace, replace_len);
+		} else {
+			/* just memcmp in the new string */
+			memcpy (tmp, replace, replace_len);
+		}
+		search_idx += replace_len;
+		count++;
+	} while (TRUE);
+
+	return count;
+}
+
 static void
 fwupd_enums_func (void)
 {
@@ -211,6 +265,7 @@ fwupd_device_func (void)
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(FwupdRelease) rel = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GString) str_ascii = NULL;
 
 	/* create dummy object */
 	dev = fwupd_device_new ();
@@ -243,7 +298,11 @@ fwupd_device_func (void)
 	g_assert (fwupd_device_has_guid (dev, "00000000-0000-0000-0000-000000000000"));
 	g_assert (!fwupd_device_has_guid (dev, "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"));
 
-	ret = fu_test_compare_lines (str,
+	/* convert the new non-breaking space back into a normal space:
+	 * https://gitlab.gnome.org/GNOME/glib/commit/76af5dabb4a25956a6c41a75c0c7feeee74496da */
+	str_ascii = g_string_new (str);
+	_g_string_replace (str_ascii, " ", " ");
+	ret = fu_test_compare_lines (str_ascii->str,
 		"ColorHug2\n"
 		"  DeviceId:             USB:foo\n"
 		"  Guid:                 2082b5e0-7a64-478a-b1b2-e3404fab6dad\n"
@@ -401,6 +460,58 @@ fwupd_common_machine_hash_func (void)
 	g_assert_cmpstr (mhash2, !=, mhash1);
 }
 
+static void
+fwupd_common_guid_func (void)
+{
+	g_autofree gchar *guid1 = NULL;
+	g_autofree gchar *guid2 = NULL;
+	g_autofree gchar *guid_be = NULL;
+	g_autofree gchar *guid_me = NULL;
+	fwupd_guid_t buf = { 0x0 };
+	gboolean ret;
+	g_autoptr(GError) error = NULL;
+
+	/* invalid */
+	g_assert (!fwupd_guid_is_valid (NULL));
+	g_assert (!fwupd_guid_is_valid (""));
+	g_assert (!fwupd_guid_is_valid ("1ff60ab2-3905-06a1-b476"));
+	g_assert (!fwupd_guid_is_valid ("1ff60ab2-XXXX-XXXX-XXXX-0371f00c9e9b"));
+	g_assert (!fwupd_guid_is_valid (" 1ff60ab2-3905-06a1-b476-0371f00c9e9b"));
+	g_assert (!fwupd_guid_is_valid ("00000000-0000-0000-0000-000000000000"));
+
+	/* valid */
+	g_assert (fwupd_guid_is_valid ("1ff60ab2-3905-06a1-b476-0371f00c9e9b"));
+
+	/* make valid */
+	guid1 = fwupd_guid_hash_string ("python.org");
+	g_assert_cmpstr (guid1, ==, "886313e1-3b8a-5372-9b90-0c9aee199e5d");
+
+	guid2 = fwupd_guid_hash_string ("8086:0406");
+	g_assert_cmpstr (guid2, ==, "1fbd1f2c-80f4-5d7c-a6ad-35c7b9bd5486");
+
+	/* round-trip BE */
+	ret = fwupd_guid_from_string ("00112233-4455-6677-8899-aabbccddeeff", &buf,
+				      FWUPD_GUID_FLAG_NONE, &error);
+	g_assert_true (ret);
+	g_assert_no_error (error);
+	g_assert (memcmp (buf, "\x00\x11\x22\x33\x44\x55\x66\x77\x88\x99\xaa\xbb\xcc\xdd\xee\xff", sizeof(buf)) == 0);
+	guid_be = fwupd_guid_to_string ((const fwupd_guid_t *) &buf, FWUPD_GUID_FLAG_NONE);
+	g_assert_cmpstr (guid_be, ==, "00112233-4455-6677-8899-aabbccddeeff");
+
+	/* round-trip mixed encoding */
+	ret = fwupd_guid_from_string ("00112233-4455-6677-8899-aabbccddeeff", &buf,
+				      FWUPD_GUID_FLAG_MIXED_ENDIAN, &error);
+	g_assert_true (ret);
+	g_assert_no_error (error);
+	g_assert (memcmp (buf, "\x33\x22\x11\x00\x55\x44\x77\x66\x88\x99\xaa\xbb\xcc\xdd\xee\xff", sizeof(buf)) == 0);
+	guid_me = fwupd_guid_to_string ((const fwupd_guid_t *) &buf, FWUPD_GUID_FLAG_MIXED_ENDIAN);
+	g_assert_cmpstr (guid_me, ==, "00112233-4455-6677-8899-aabbccddeeff");
+
+	/* check failure */
+	g_assert_false (fwupd_guid_from_string ("001122334455-6677-8899-aabbccddeeff", NULL, 0, NULL));
+	g_assert_false (fwupd_guid_from_string ("0112233-4455-6677-8899-aabbccddeeff", NULL, 0, NULL));
+}
+
 int
 main (int argc, char **argv)
 {
@@ -413,6 +524,7 @@ main (int argc, char **argv)
 	/* tests go here */
 	g_test_add_func ("/fwupd/enums", fwupd_enums_func);
 	g_test_add_func ("/fwupd/common{machine-hash}", fwupd_common_machine_hash_func);
+	g_test_add_func ("/fwupd/common{guid}", fwupd_common_guid_func);
 	g_test_add_func ("/fwupd/release", fwupd_release_func);
 	g_test_add_func ("/fwupd/device", fwupd_device_func);
 	g_test_add_func ("/fwupd/remote{download}", fwupd_remote_download_func);

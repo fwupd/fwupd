@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_UEFI_PCRS_H
-#define __FU_UEFI_PCRS_H
+#pragma once
 
 G_BEGIN_DECLS
 
@@ -19,5 +18,3 @@ GPtrArray	*fu_uefi_pcrs_get_checksums	(FuUefiPcrs	*self,
 						 guint		 idx);
 
 G_END_DECLS
-
-#endif /* __FU_UEFI_PCRS_H */

@@ -4,10 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_ENGINE_H
-#define __FU_ENGINE_H
-
-G_BEGIN_DECLS
+#pragma once
 
 #include <xmlb.h>
 #include <glib-object.h>
@@ -18,6 +15,8 @@ G_BEGIN_DECLS
 #include "fu-common.h"
 #include "fu-install-task.h"
 #include "fu-plugin.h"
+
+G_BEGIN_DECLS
 
 #define FU_TYPE_ENGINE (fu_engine_get_type ())
 G_DECLARE_FINAL_TYPE (FuEngine, fu_engine, FU, ENGINE, GObject)
@@ -101,9 +100,7 @@ gboolean	 fu_engine_install			(FuEngine	*self,
 							 GError		**error);
 gboolean	 fu_engine_install_blob			(FuEngine	*self,
 							 FuDevice	*device,
-							 GBytes		*blob_cab,
 							 GBytes		*blob_fw,
-							 const gchar	*version,
 							 FwupdInstallFlags flags,
 							 GError		**error);
 gboolean	 fu_engine_install_tasks		(FuEngine	*self,
@@ -133,6 +130,3 @@ XbNode		*fu_engine_get_component_by_guids	(FuEngine	*self,
 							 FuDevice	*device);
 
 G_END_DECLS
-
-#endif /* __FU_ENGINE_H */
-

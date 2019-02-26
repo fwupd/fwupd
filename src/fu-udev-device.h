@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_UDEV_DEVICE_H
-#define __FU_UDEV_DEVICE_H
+#pragma once
 
 #include <glib-object.h>
 #include <gudev/gudev.h>
@@ -40,5 +39,3 @@ gboolean	 fu_udev_device_set_physical_id		(FuUdevDevice	*self,
 void		 fu_udev_device_dump			(FuUdevDevice	*self);
 
 G_END_DECLS
-
-#endif /* __FU_UDEV_DEVICE_H */

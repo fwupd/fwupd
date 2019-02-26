@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_WAC_HID_H
-#define __FU_WAC_HID_H
+#pragma once
 
 #include <glib-object.h>
 
@@ -50,5 +49,3 @@ void		 fu_wac_buffer_dump			(const gchar	*title,
 							 gsize		 sz);
 
 G_END_DECLS
-
-#endif /* __FU_WAC_HID_H */

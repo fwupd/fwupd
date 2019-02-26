@@ -4,10 +4,11 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_COMMON_VERSION_H__
-#define __FU_COMMON_VERSION_H__
+#pragma once
 
 #include <gio/gio.h>
+
+G_BEGIN_DECLS
 
 /**
  * FuVersionFormat:
@@ -47,4 +48,4 @@ gchar		*fu_common_version_from_uint16	(guint16	 val,
 gchar		*fu_common_version_parse	(const gchar	*version);
 FuVersionFormat	 fu_common_version_guess_format	(const gchar	*version);
 
-#endif /* __FU_COMMON_VERSION_H__ */
+G_END_DECLS

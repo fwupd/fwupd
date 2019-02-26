@@ -4,9 +4,10 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FWUPD_DEPRECATED_H
-#define __FWUPD_DEPRECATED_H
+#pragma once
+
+G_BEGIN_DECLS
 
 /* indeed, nothing */
 
-#endif /* __FWUPD_DEPRECATED_H */
+G_END_DECLS

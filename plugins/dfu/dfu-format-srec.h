@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __DFU_FORMAT_SREC_H
-#define __DFU_FORMAT_SREC_H
+#pragma once
 
 #include <glib-object.h>
 #include <gio/gio.h>
@@ -28,5 +27,3 @@ gboolean		 dfu_image_from_srec		(DfuImage	*image,
 							 GError		**error);
 
 G_END_DECLS
-
-#endif /* __DFU_FORMAT_SREC_H */

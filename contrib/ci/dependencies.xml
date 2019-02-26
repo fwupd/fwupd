@@ -174,14 +174,14 @@
   <dependency type="build" id="debhelper">
     <distro id="debian">
       <control>
-        <version>(>= 10.3)</version>
+        <version>(>= 11)</version>
       </control>
       <package variant="x86_64" />
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
       <control>
-        <version>(>= 10.3)</version>
+        <version>(>= 11)</version>
       </control>
       <package variant="x86_64" />
     </distro>
@@ -554,18 +554,18 @@
     <distro id="fedora">
       <package>libxmlb-devel</package>
     </distro>
-<!--
     <distro id="debian">
       <control>
-        <version>(>= 0.1.3)</version>
+        <version>(>= 0.1.5)</version>
       </control>
       <package variant="x86_64" />
       <package variant="s390x">libxmlb-dev:s390x</package>
       <package variant="i386" />
     </distro>
+<!--
     <distro id="ubuntu">
       <control>
-        <version>(>= 0.1.3)</version>
+        <version>(>= 0.1.5)</version>
       </control>
       <package variant="x86_64" />
     </distro>
@@ -747,7 +747,10 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
-      <control />
+      <control>
+        <inclusive>i386</inclusive>
+        <inclusive>amd64</inclusive>
+      </control>
       <package variant="x86_64" />
     </distro>
   </dependency>
@@ -1102,21 +1105,6 @@
     <distro id="debian">
       <control />
       <package variant="x86_64" />
-      <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <control />
-      <package variant="x86_64" />
-    </distro>
-  </dependency>
-  <dependency type="build" id="uuid-dev">
-    <distro id="centos">
-      <package>libuuid-devel</package>
-    </distro>
-    <distro id="debian">
-      <control />
-      <package variant="x86_64" />
-      <package variant="s390x">uuid-dev:s390x</package>
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">

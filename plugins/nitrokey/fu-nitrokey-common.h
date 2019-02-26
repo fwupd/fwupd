@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_NITROKEY_COMMON_H
-#define __FU_NITROKEY_COMMON_H
+#pragma once
 
 #include <glib.h>
 
@@ -65,5 +64,3 @@ typedef struct __attribute__((packed)) {
 } NitrokeyGetDeviceStatusPayload;
 
 G_END_DECLS
-
-#endif /* __FU_NITROKEY_COMMON_H */

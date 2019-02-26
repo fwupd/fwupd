@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
+#pragma once
+
 #define _DEFINE_CLEANUP_FUNCTION0(Type, name, func) \
   static inline VOID name(VOID *v) \
   { \

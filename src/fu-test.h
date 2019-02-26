@@ -4,10 +4,11 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_TEST_H__
-#define __FU_TEST_H__
+#pragma once
 
 #include <glib.h>
+
+G_BEGIN_DECLS
 
 gchar		*fu_test_get_filename		(const gchar	*testdatadirs,
 						 const gchar	*filename);
@@ -17,4 +18,4 @@ gboolean	 fu_test_compare_lines		(const gchar	*txt1,
 						 const gchar	*txt2,
 						 GError		**error);
 
-#endif /* __FU_TEST_H__ */
+G_END_DECLS

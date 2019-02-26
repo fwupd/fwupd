@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_WAC_DEVICE_H
-#define __FU_WAC_DEVICE_H
+#pragma once
 
 #include "fu-plugin.h"
 
@@ -17,6 +16,7 @@ G_DECLARE_FINAL_TYPE (FuWacDevice, fu_wac_device, FU, WAC_DEVICE, FuUsbDevice)
 typedef enum {
 	FU_WAC_DEVICE_FEATURE_FLAG_NONE			= 0,
 	FU_WAC_DEVICE_FEATURE_FLAG_ALLOW_TRUNC		= 1 << 0,
+	FU_WAC_DEVICE_FEATURE_FLAG_NO_DEBUG		= 1 << 1,
 	FU_WAC_DEVICE_FEATURE_FLAG_LAST
 } FuWacDeviceFeatureFlags;
 
@@ -35,5 +35,3 @@ gboolean	 fu_wac_device_set_feature_report	(FuWacDevice	*self,
 							 GError		**error);
 
 G_END_DECLS
-
-#endif /* __FU_WAC_DEVICE_H */

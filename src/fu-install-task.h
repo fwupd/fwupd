@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_INSTALL_TASK_H
-#define __FU_INSTALL_TASK_H
+#pragma once
 
 #include <glib-object.h>
 #include <xmlb.h>
@@ -31,6 +30,3 @@ gint		 fu_install_task_compare		(FuInstallTask	*task1,
 							 FuInstallTask	*task2);
 
 G_END_DECLS
-
-#endif /* __FU_INSTALL_TASK_H */
-

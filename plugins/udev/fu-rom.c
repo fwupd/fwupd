@@ -10,7 +10,6 @@
 #include <glib/gstdio.h>
 #include <string.h>
 
-#include "fu-common-guid.h"
 #include "fu-rom.h"
 
 static void fu_rom_finalize			 (GObject *object);
@@ -549,7 +548,6 @@ fu_rom_load_data (FuRom *self,
 	guint32 sz = buffer_sz;
 	guint32 jump = 0;
 	guint32 hdr_sz = 0;
-	g_autofree gchar *id = NULL;
 	g_autoptr(GChecksum) checksum_sha1 = g_checksum_new (G_CHECKSUM_SHA1);
 	g_autoptr(GChecksum) checksum_sha256 = g_checksum_new (G_CHECKSUM_SHA256);
 
@@ -687,10 +685,8 @@ fu_rom_load_data (FuRom *self,
 	g_ptr_array_add (self->checksums, g_strdup (g_checksum_get_string (checksum_sha256)));
 
 	/* update guid */
-	id = g_strdup_printf ("PCI\\VEN_%04X&DEV_%04X",
-			      self->vendor_id, self->device_id);
-	self->guid = fu_common_guid_from_string (id);
-	g_debug ("using %s for %s", self->guid, id);
+	self->guid = g_strdup_printf ("PCI\\VEN_%04X&DEV_%04X",
+				      self->vendor_id, self->device_id);
 
 	/* not known */
 	if (self->version == NULL) {

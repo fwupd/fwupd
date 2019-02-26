@@ -153,7 +153,8 @@ fu_wac_device_get_feature_report (FuWacDevice *self,
 	guint8 cmd = buf[0];
 
 	/* hit hardware */
-	fu_wac_buffer_dump ("GET", cmd, buf, bufsz);
+	if ((flags & FU_WAC_DEVICE_FEATURE_FLAG_NO_DEBUG) == 0)
+		fu_wac_buffer_dump ("GET", cmd, buf, bufsz);
 	if (!g_usb_device_control_transfer (usb_device,
 					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
@@ -167,7 +168,8 @@ fu_wac_device_get_feature_report (FuWacDevice *self,
 		g_prefix_error (error, "Failed to get feature report: ");
 		return FALSE;
 	}
-	fu_wac_buffer_dump ("GE2", cmd, buf, sz);
+	if ((flags & FU_WAC_DEVICE_FEATURE_FLAG_NO_DEBUG) == 0)
+		fu_wac_buffer_dump ("GE2", cmd, buf, sz);
 
 	/* check packet */
 	if ((flags & FU_WAC_DEVICE_FEATURE_FLAG_ALLOW_TRUNC) == 0 && sz != bufsz) {
@@ -597,6 +599,13 @@ fu_wac_device_write_firmware (FuDevice *device, GBytes *blob, GError **error)
 		if (blob_block == NULL)
 			break;
 
+		/* ignore empty blocks */
+		if (dfu_utils_bytes_is_empty (blob_block)) {
+			g_debug ("empty block, ignoring");
+			fu_device_set_progress_full (device, blocks_done++, blocks_total);
+			continue;
+		}
+
 		/* erase entire block */
 		if (!fu_wac_device_erase_block (self, i, error))
 			return FALSE;
@@ -637,6 +646,7 @@ fu_wac_device_write_firmware (FuDevice *device, GBytes *blob, GError **error)
 		return FALSE;
 	for (guint16 i = 0; i < self->flash_descriptors->len; i++) {
 		FuWacFlashDescriptor *fd = g_ptr_array_index (self->flash_descriptors, i);
+		GBytes *blob_block;
 		guint32 csum_rom;
 
 		/* if page is protected */
@@ -644,8 +654,11 @@ fu_wac_device_write_firmware (FuDevice *device, GBytes *blob, GError **error)
 			continue;
 
 		/* no more written pages */
-		if (g_hash_table_lookup (fd_blobs, fd) == NULL)
-			break;
+		blob_block = g_hash_table_lookup (fd_blobs, fd);
+		if (blob_block == NULL)
+			continue;
+		if (dfu_utils_bytes_is_empty (blob_block))
+			continue;
 
 		/* check checksum matches */
 		csum_rom = g_array_index (self->checksums, guint32, i);
@@ -670,10 +683,7 @@ fu_wac_device_write_firmware (FuDevice *device, GBytes *blob, GError **error)
 
 	/* update progress */
 	fu_device_set_progress_full (device, blocks_total, blocks_total);
-
-	/* reboot, which switches the boot index of the firmware */
-	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	return fu_wac_device_update_reset (self, error);
+	return TRUE;
 }
 
 static gboolean
@@ -864,6 +874,7 @@ fu_wac_device_init (FuWacDevice *self)
 	self->firmware_index = 0xffff;
 	fu_device_add_icon (FU_DEVICE (self), "input-tablet");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_set_install_duration (FU_DEVICE (self), 10);
 }
 
 static void

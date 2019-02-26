@@ -4,14 +4,13 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_CONFIG_H
-#define __FU_CONFIG_H
-
-G_BEGIN_DECLS
+#pragma once
 
 #include <glib-object.h>
 
 #include "fwupd-remote.h"
+
+G_BEGIN_DECLS
 
 #define FU_TYPE_CONFIG (fu_config_get_type ())
 G_DECLARE_FINAL_TYPE (FuConfig, fu_config, FU, CONFIG, GObject)
@@ -29,6 +28,3 @@ FwupdRemote	*fu_config_get_remote_by_id		(FuConfig	*self,
 							 const gchar	*remote_id);
 
 G_END_DECLS
-
-#endif /* __FU_CONFIG_H */
-

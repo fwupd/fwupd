@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_UNIFYING_BOOTLOADER_H
-#define __FU_UNIFYING_BOOTLOADER_H
+#pragma once
 
 #include "fu-usb-device.h"
 
@@ -79,5 +78,3 @@ guint16		 fu_unifying_bootloader_get_addr_hi	(FuUnifyingBootloader	*self);
 guint16		 fu_unifying_bootloader_get_blocksize	(FuUnifyingBootloader	*self);
 
 G_END_DECLS
-
-#endif /* __FU_UNIFYING_BOOTLOADER_H */

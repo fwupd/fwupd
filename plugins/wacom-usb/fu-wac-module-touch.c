@@ -12,6 +12,7 @@
 #include "fu-wac-module-touch.h"
 
 #include "fu-chunk.h"
+#include "dfu-firmware.h"
 
 struct _FuWacModuleTouch
 {
@@ -23,26 +24,53 @@ G_DEFINE_TYPE (FuWacModuleTouch, fu_wac_module_touch, FU_TYPE_WAC_MODULE)
 static gboolean
 fu_wac_module_touch_write_firmware (FuDevice *device, GBytes *blob, GError **error)
 {
-	FuWacDevice *parent = FU_WAC_DEVICE (fu_device_get_parent (device));
+	DfuElement *element;
+	DfuImage *image;
 	FuWacModule *self = FU_WAC_MODULE (device);
-	const guint8 *data;
 	gsize blocks_total = 0;
-	gsize len = 0;
 	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(DfuFirmware) firmware = dfu_firmware_new ();
 
-	/* build each data packet */
-	data = g_bytes_get_data (blob, &len);
-	if (len % 128 != 0) {
+	/* load .hex file */
+	if (!dfu_firmware_parse_data (firmware, blob, DFU_FIRMWARE_PARSE_FLAG_NONE, error))
+		return FALSE;
+
+	/* check type */
+	if (dfu_firmware_get_format (firmware) != DFU_FIRMWARE_FORMAT_INTEL_HEX) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "expected firmware format is 'ihex', got '%s'",
+			     dfu_firmware_format_to_string (dfu_firmware_get_format (firmware)));
+		return FALSE;
+	}
+
+	/* use the correct image from the firmware */
+	image = dfu_firmware_get_image (firmware, 0);
+	if (image == NULL) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
-				     "firmware has to be padded to 128b");
+				     "no firmware image");
 		return FALSE;
 	}
-	chunks = fu_chunk_array_new (data, (guint32) len,
-				     0x0, /* addr_start */
-				     0x0, /* page_sz */
-				     128); /* packet_sz */
+	element = dfu_image_get_element_default (image);
+	if (element == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "no firmware element");
+		return FALSE;
+	}
+	g_debug ("using element at addr 0x%0x",
+		 (guint) dfu_element_get_address (element));
+	blob = dfu_element_get_contents (element);
+
+	/* build each data packet */
+	chunks = fu_chunk_array_new_from_bytes (blob,
+						dfu_element_get_address (element),
+						0x0, /* page_sz */
+						128); /* packet_sz */
 	blocks_total = chunks->len + 2;
 
 	/* start, which will erase the module */
@@ -57,19 +85,22 @@ fu_wac_module_touch_write_firmware (FuDevice *device, GBytes *blob, GError **err
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
-		guint8 buf[128+7];
+		guint8 buf[128+7] = { 0xff };
 		g_autoptr(GBytes) blob_chunk = NULL;
 
 		/* build G11T data packet */
 		memset (buf, 0xff, sizeof(buf));
 		buf[0] = 0x01; /* writing */
-		fu_common_write_uint32 (&buf[1], chk->address, G_LITTLE_ENDIAN);
-		buf[5] = chk->idx;
-		memcpy (&buf[6], chk->data, chk->data_sz);
+		buf[1] = chk->idx + 1;
+		fu_common_write_uint32 (&buf[2], chk->address, G_LITTLE_ENDIAN);
+		buf[6] = 0x10; /* no idea! */
+		memcpy (&buf[7], chk->data, chk->data_sz);
 		blob_chunk = g_bytes_new (buf, sizeof(buf));
 		if (!fu_wac_module_set_feature (self, FU_WAC_MODULE_COMMAND_DATA,
-						blob_chunk, error))
+						blob_chunk, error)) {
+			g_prefix_error (error, "failed to write block %u: ", chk->idx);
 			return FALSE;
+		}
 
 		/* update progress */
 		fu_device_set_progress_full (device, i + 1, blocks_total);
@@ -81,16 +112,14 @@ fu_wac_module_touch_write_firmware (FuDevice *device, GBytes *blob, GError **err
 
 	/* update progress */
 	fu_device_set_progress_full (device, blocks_total, blocks_total);
-
-	/* reboot */
-	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	return fu_wac_device_update_reset (parent, error);
+	return TRUE;
 }
 
 static void
 fu_wac_module_touch_init (FuWacModuleTouch *self)
 {
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_set_install_duration (FU_DEVICE (self), 30);
 }
 
 static void

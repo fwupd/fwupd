@@ -4,14 +4,13 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_DEVICE_LIST_H
-#define __FU_DEVICE_LIST_H
-
-G_BEGIN_DECLS
+#pragma once
 
 #include <glib-object.h>
 
 #include "fu-device.h"
+
+G_BEGIN_DECLS
 
 #define FU_TYPE_DEVICE_LIST (fu_device_list_get_type ())
 G_DECLARE_FINAL_TYPE (FuDeviceList, fu_device_list, FU, DEVICE_LIST, GObject)
@@ -36,6 +35,3 @@ gboolean	 fu_device_list_wait_for_replug		(FuDeviceList	*self,
 							 GError		**error);
 
 G_END_DECLS
-
-#endif /* __FU_DEVICE_LIST_H */
-

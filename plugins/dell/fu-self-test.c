@@ -237,7 +237,7 @@ fu_plugin_dell_tpm_func (void)
 	g_assert_false (fu_device_has_flag (device_v12, FWUPD_DEVICE_FLAG_UPDATABLE));
 
 	/* With one flash left we need an override */
-	ret = fu_plugin_runner_update (plugin_uefi, device_v20, NULL, blob_fw,
+	ret = fu_plugin_runner_update (plugin_uefi, device_v20, blob_fw,
 				       FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_false (ret);
@@ -246,7 +246,7 @@ fu_plugin_dell_tpm_func (void)
 	/* test override */
 	g_test_expect_message ("FuPluginUefi", G_LOG_LEVEL_WARNING,
 			       "missing or invalid embedded capsule header");
-	ret = fu_plugin_runner_update (plugin_uefi, device_v20, NULL, blob_fw,
+	ret = fu_plugin_runner_update (plugin_uefi, device_v20, blob_fw,
 				       FWUPD_INSTALL_FLAG_FORCE, &error);
 	g_test_assert_expected_messages ();
 	g_assert_no_error (error);

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __DFU_SECTOR_H
-#define __DFU_SECTOR_H
+#pragma once
 
 #include <glib-object.h>
 #include <gio/gio.h>
@@ -49,5 +48,3 @@ gboolean	 dfu_sector_has_cap		(DfuSector	*sector,
 gchar		*dfu_sector_to_string		(DfuSector	*sector);
 
 G_END_DECLS
-
-#endif /* __DFU_SECTOR_H */

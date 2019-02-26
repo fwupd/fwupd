@@ -1330,7 +1330,7 @@ fu_plugin_runner_device_register (FuPlugin *self, FuDevice *device)
 	}
 }
 
-static gboolean
+gboolean
 fu_plugin_runner_schedule_update (FuPlugin *self,
 			     FuDevice *device,
 			     GBytes *blob_cab,
@@ -1472,7 +1472,6 @@ fu_plugin_runner_unlock (FuPlugin *self, FuDevice *device, GError **error)
 gboolean
 fu_plugin_runner_update (FuPlugin *self,
 			 FuDevice *device,
-			 GBytes *blob_cab,
 			 GBytes *blob_fw,
 			 FwupdInstallFlags flags,
 			 GError **error)
@@ -1503,21 +1502,6 @@ fu_plugin_runner_update (FuPlugin *self,
 				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "No update possible");
 		return FALSE;
-	}
-
-	/* just schedule this for the next reboot  */
-	if (flags & FWUPD_INSTALL_FLAG_OFFLINE) {
-		if (blob_cab == NULL) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_NOT_SUPPORTED,
-					     "No cabinet archive to schedule");
-			return FALSE;
-		}
-		return fu_plugin_runner_schedule_update (self,
-							 device,
-							 blob_cab,
-							 error);
 	}
 
 	/* cancel the pending action */

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_DEVICE_LOCKER_H
-#define __FU_DEVICE_LOCKER_H
+#pragma once
 
 #include <glib-object.h>
 
@@ -26,5 +25,3 @@ FuDeviceLocker	*fu_device_locker_new_full	(gpointer		 device,
 						 GError			**error);
 
 G_END_DECLS
-
-#endif /* __FU_DEVICE_LOCKER_H */

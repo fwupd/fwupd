@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_HISTORY_H
-#define __FU_HISTORY_H
+#pragma once
 
 #include <glib-object.h>
 
@@ -58,6 +57,3 @@ GPtrArray	*fu_history_get_devices			(FuHistory	*self,
 							 GError		**error);
 
 G_END_DECLS
-
-#endif /* __FU_HISTORY_H */
-

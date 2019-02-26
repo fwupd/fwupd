@@ -39,8 +39,8 @@ fu_wac_module_bluetooth_calculate_crc_byte (guint8 *crc, guint8 data)
 
 	/* find out what bits are set */
 	for (guint i = 0; i < 8; i++) {
-		c[i] = (*crc & 1 << i) > 0;
-		m[i] = (data & 1 << i) > 0;
+		c[i] = (*crc & (1 << i)) != 0;
+		m[i] = (data & (1 << i)) != 0;
 	}
 
 	/* do CRC on byte */
@@ -107,7 +107,6 @@ fu_wac_module_bluetooth_parse_blocks (const guint8 *data, gsize sz, gboolean ski
 static gboolean
 fu_wac_module_bluetooth_write_firmware (FuDevice *device, GBytes *blob, GError **error)
 {
-	FuWacDevice *parent = FU_WAC_DEVICE (fu_device_get_parent (device));
 	FuWacModule *self = FU_WAC_MODULE (device);
 	const guint8 *data;
 	gsize len = 0;
@@ -157,16 +156,14 @@ fu_wac_module_bluetooth_write_firmware (FuDevice *device, GBytes *blob, GError *
 
 	/* update progress */
 	fu_device_set_progress_full (device, blocks_total, blocks_total);
-
-	/* reboot */
-	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	return fu_wac_device_update_reset (parent, error);
+	return TRUE;
 }
 
 static void
 fu_wac_module_bluetooth_init (FuWacModuleBluetooth *self)
 {
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_set_install_duration (FU_DEVICE (self), 30);
 }
 
 static void

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __DFU_TARGET_PRIVATE_H
-#define __DFU_TARGET_PRIVATE_H
+#pragma once
 
 #include <gusb.h>
 
@@ -56,5 +55,3 @@ gboolean	 dfu_target_parse_sectors		(DfuTarget	*target,
 							 GError		**error);
 
 G_END_DECLS
-
-#endif /* __DFU_TARGET_PRIVATE_H */

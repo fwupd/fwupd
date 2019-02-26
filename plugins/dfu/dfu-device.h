@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __DFU_DEVICE_H
-#define __DFU_DEVICE_H
+#pragma once
 
 #include <glib-object.h>
 #include <gio/gio.h>
@@ -162,5 +161,3 @@ void		 dfu_device_set_usb_context		(DfuDevice	*device,
 GUsbContext	*dfu_device_get_usb_context		(DfuDevice	*device);
 
 G_END_DECLS
-
-#endif /* __DFU_DEVICE_H */

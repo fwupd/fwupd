@@ -29,7 +29,6 @@ shared_module('fu_plugin_nvme',
   ],
   dependencies : [
     plugin_deps,
-    efivar,
   ],
 )
 
@@ -38,6 +37,7 @@ if get_option('tests')
   cargs += '-DTESTDATADIR="' + testdatadir + '"'
   e = executable(
     'nvme-self-test',
+    fu_hash,
     sources : [
       'fu-self-test.c',
       'fu-nvme-common.c',
@@ -51,7 +51,6 @@ if get_option('tests')
     ],
     dependencies : [
       plugin_deps,
-      efivar,
     ],
     link_with : [
       libfwupdprivate,

@@ -5,8 +5,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_UEFI_VARS_H
-#define __FU_UEFI_VARS_H
+#pragma once
 
 #include <glib.h>
 
@@ -47,5 +46,3 @@ gboolean	 fu_uefi_vars_delete_with_glob	(const gchar	*guid,
 						 GError		**error);
 
 G_END_DECLS
-
-#endif /* __FU_UEFI_VARS_H */

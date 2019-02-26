@@ -5,8 +5,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __SYNAPTICSMST_COMMON_H
-#define __SYNAPTICSMST_COMMON_H
+#pragma once
 
 #include <glib.h>
 #include <gio/gio.h>
@@ -108,5 +107,3 @@ gboolean	 synapticsmst_common_disable_remote_control	(SynapticsMSTConnection *co
 #pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(SynapticsMSTConnection, synapticsmst_common_free)
 #pragma clang diagnostic pop
-
-#endif /* __SYNAPTICSMST_COMMON_H */

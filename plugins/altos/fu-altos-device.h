@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_ALTOS_DEVICE_H
-#define __FU_ALTOS_DEVICE_H
+#pragma once
 
 #include "fu-plugin.h"
 
@@ -35,5 +34,3 @@ const gchar	*fu_altos_device_kind_to_string		(FuAltosDeviceKind kind);
 FuAltosDeviceKind fu_altos_device_get_kind		(FuAltosDevice	*device);
 
 G_END_DECLS
-
-#endif /* __FU_ALTOS_DEVICE_H */

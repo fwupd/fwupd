@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_NVME_COMMON_H
-#define __FU_NVME_COMMON_H
+#pragma once
 
 #include <glib.h>
 
@@ -125,5 +124,3 @@ enum {
 const gchar	*fu_nvme_status_to_string	(guint32	 status);
 
 G_END_DECLS
-
-#endif /* __FU_NVME_COMMON_H */

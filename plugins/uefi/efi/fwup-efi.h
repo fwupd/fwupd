@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef _FWUP_EFI_H
-#define _FWUP_EFI_H
+#pragma once
 
 #define FWUPDATE_ATTEMPT_UPDATE		0x00000001
 #define FWUPDATE_ATTEMPTED		0x00000002
@@ -68,5 +67,3 @@ EFI_STATUS	 fwup_get_variable	(CHAR16		*name,
 					 VOID		**buf_out,
 					 UINTN		*buf_size_out,
 					 UINT32		*attrs_out);
-
-#endif /* _FWUP_EFI_H */

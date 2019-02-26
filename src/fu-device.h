@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_DEVICE_H
-#define __FU_DEVICE_H
+#pragma once
 
 #include <glib-object.h>
 #include <fwupd.h>
@@ -79,6 +78,7 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_add_flag(d,v)			fwupd_device_add_flag(FWUPD_DEVICE(d),v)
 #define fu_device_remove_flag(d,v)		fwupd_device_remove_flag(FWUPD_DEVICE(d),v)
 #define fu_device_has_flag(d,v)			fwupd_device_has_flag(FWUPD_DEVICE(d),v)
+#define fu_device_has_instance_id(d,v)		fwupd_device_has_instance_id(FWUPD_DEVICE(d),v)
 #define fu_device_add_checksum(d,v)		fwupd_device_add_checksum(FWUPD_DEVICE(d),v)
 #define fu_device_add_release(d,v)		fwupd_device_add_release(FWUPD_DEVICE(d),v)
 #define fu_device_add_icon(d,v)			fwupd_device_add_icon(FWUPD_DEVICE(d),v)
@@ -131,6 +131,8 @@ void		 fu_device_add_guid			(FuDevice	*self,
 							 const gchar	*guid);
 gboolean	 fu_device_has_guid			(FuDevice	*self,
 							 const gchar	*guid);
+void		 fu_device_add_instance_id		(FuDevice	*self,
+							 const gchar	*instance_id);
 gchar		*fu_device_get_guids_as_str		(FuDevice	*self);
 FuDevice	*fu_device_get_alternate		(FuDevice	*self);
 FuDevice	*fu_device_get_parent			(FuDevice	*self);
@@ -225,6 +227,3 @@ void		 fu_device_set_poll_interval		(FuDevice	*self,
 							 guint		 interval);
 
 G_END_DECLS
-
-#endif /* __FU_DEVICE_H */
-

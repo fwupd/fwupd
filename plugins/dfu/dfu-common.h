@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __DFU_COMMON_H
-#define __DFU_COMMON_H
+#pragma once
 
 #include <glib.h>
 #include <gusb.h>
@@ -171,5 +170,3 @@ gchar		**dfu_utils_strnsplit			(const gchar	*str,
 							 gint		 max_tokens);
 
 G_END_DECLS
-
-#endif /* __DFU_COMMON_H */

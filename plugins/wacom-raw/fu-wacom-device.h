@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_WACOM_DEVICE_H
-#define __FU_WACOM_DEVICE_H
+#pragma once
 
 #include "fu-wacom-common.h"
 #include "fu-udev-device.h"
@@ -52,5 +51,3 @@ guint		 fu_wacom_device_get_block_sz	(FuWacomDevice	*self);
 guint		 fu_wacom_device_get_base_addr	(FuWacomDevice	*self);
 
 G_END_DECLS
-
-#endif /* __FU_WACOM_DEVICE_H */

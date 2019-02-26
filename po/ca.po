@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Antoni Bella Pérez <antonibella5@yahoo.com>, 2017-2018
+# Antoni Bella Pérez <antonibella5@yahoo.com>, 2017-2019
 # Robert Antoni Buj Gelonch <rbuj@fedoraproject.org>, 2017
 msgid ""
 msgstr ""
@@ -84,6 +84,10 @@ msgstr "Permet tornar a instal·lar les versions de microprogramari existents"
 #. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "Una actualització requereix un reinici per a completar-se."
+
+#. TRANSLATORS: explain why we want to shutdown
+msgid "An update requires the system to shutdown to complete."
+msgstr "Una actualització requereix que s'aturi el sistema per a finalitzar."
 
 #. TRANSLATORS: command line option
 msgid "Answer yes to all questions"
@@ -813,6 +817,10 @@ msgstr "Mostra el registre de depuració del darrer intent d'actualització"
 msgid "Show the information of firmware update status"
 msgstr "Mostra la informació sobre l'estat de l'actualització del microprogramari"
 
+#. TRANSLATORS: shutdown to apply the update
+msgid "Shutdown now?"
+msgstr "Aturar-lo ara?"
+
 msgid "Specify Vendor/Product ID(s) of DFU device"
 msgstr "Especifiqueu el proveïdor/ID del producte del dispositiu DFU"
 
@@ -914,6 +922,10 @@ msgstr "Actualitza el resum"
 #. TRANSLATORS: section header for firmware version
 msgid "Update Version"
 msgstr "Versió de l'actualització"
+
+#. TRANSLATORS: command description
+msgid "Update all devices that match local metadata"
+msgstr "Actualitza tots els dispositius que coincideixin amb les metadades locals"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"

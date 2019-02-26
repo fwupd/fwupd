@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_ATA_DEVICE_H
-#define __FU_ATA_DEVICE_H
+#pragma once
 
 #include "fu-plugin.h"
 
@@ -24,5 +23,3 @@ guint8		 fu_ata_device_get_transfer_mode	(FuAtaDevice	*self);
 guint16		 fu_ata_device_get_transfer_blocks	(FuAtaDevice	*self);
 
 G_END_DECLS
-
-#endif /* __FU_ATA_DEVICE_H */

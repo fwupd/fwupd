@@ -4,11 +4,12 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_UTIL_COMMON_H__
-#define __FU_UTIL_COMMON_H__
+#pragma once
 
 #include <glib.h>
 #include <fwupd.h>
+
+G_BEGIN_DECLS
 
 /* this is only valid for tools */
 #define FWUPD_ERROR_INVALID_ARGS        (FWUPD_ERROR_LAST+1)
@@ -28,4 +29,4 @@ gboolean	fu_util_prompt_complete		(FwupdDeviceFlags flags,
 						 gboolean prompt,
 						 GError **error);
 
-#endif /* __FU_UTIL_COMMON_H__ */
+G_END_DECLS

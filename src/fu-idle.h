@@ -4,15 +4,14 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_IDLE_H
-#define __FU_IDLE_H
-
-G_BEGIN_DECLS
+#pragma once
 
 #include <glib-object.h>
 #include <fwupd.h>
 
 #include "fu-device.h"
+
+G_BEGIN_DECLS
 
 #define FU_TYPE_IDLE (fu_idle_get_type ())
 G_DECLARE_FINAL_TYPE (FuIdle, fu_idle, FU, IDLE, GObject)
@@ -39,6 +38,3 @@ void		 fu_idle_locker_free		(FuIdleLocker	*locker);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuIdleLocker, fu_idle_locker_free)
 
 G_END_DECLS
-
-#endif /* __FU_IDLE_H */
-

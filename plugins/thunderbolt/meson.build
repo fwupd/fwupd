@@ -26,6 +26,7 @@ testdatadir_src = join_paths(meson.source_root(), 'data', 'tests')
 testdatadir_dst = join_paths(meson.build_root(), 'data', 'tests')
 cargs += '-DTESTDATADIR="' + testdatadir_src + ':' + testdatadir_dst + '"'
 executable('tbtfwucli',
+  fu_hash,
   sources : [
     'fu-thunderbolt-tool.c',
   ],
@@ -50,6 +51,7 @@ if get_option('tests') and umockdev.found() and gio.version().version_compare('>
   cargs += '-DPLUGINBUILDDIR="' + meson.current_build_dir() + '"'
   e = executable(
     'thunderbolt-self-test',
+    fu_hash,
     sources : [
       'fu-self-test.c',
       'fu-plugin-thunderbolt.c',

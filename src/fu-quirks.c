@@ -13,10 +13,10 @@
 #include <string.h>
 
 #include "fu-common.h"
-#include "fu-common-guid.h"
 #include "fu-mutex.h"
 #include "fu-quirks.h"
 
+#include "fwupd-common.h"
 #include "fwupd-error.h"
 #include "fwupd-remote-private.h"
 
@@ -97,9 +97,9 @@ fu_quirks_build_group_key (const gchar *group)
 	for (guint i = 0; guid_prefixes[i] != NULL; i++) {
 		if (g_str_has_prefix (group, guid_prefixes[i])) {
 			gsize len = strlen (guid_prefixes[i]);
-			if (fu_common_guid_is_valid (group + len))
+			if (fwupd_guid_is_valid (group + len))
 				return g_strdup (group + len);
-			return fu_common_guid_from_string (group + len);
+			return fwupd_guid_hash_string (group + len);
 		}
 	}
 

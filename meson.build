@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version : '1.2.4',
+  version : '1.2.5',
   license : 'LGPL-2.1+',
   meson_version : '>=0.47.0',
   default_options : ['warning_level=2', 'c_std=c99'],
@@ -77,7 +77,7 @@ warning_flags = [
   '-Wmissing-prototypes',
   '-Wnested-externs',
   '-Wno-cast-function-type',
-  '-Wno-error=cpp',
+  '-Wno-address-of-packed-member',  # incompatable with g_autoptr()
   '-Wno-unknown-pragmas',
   '-Wno-discarded-qualifiers',
   '-Wno-missing-field-initializers',
@@ -183,7 +183,6 @@ if get_option('gpg')
   conf.set('ENABLE_GPG', '1')
 endif
 libm = cc.find_library('m', required: false)
-uuid = dependency('uuid')
 libgcab = dependency('libgcab-1.0')
 if libgcab.version().version_compare('>= 0.8')
   conf.set('HAVE_GCAB_0_8', '1')
@@ -254,7 +253,6 @@ if get_option('plugin_dell')
 endif
 
 if get_option('plugin_nvme')
-  efivar = dependency('efivar')
   if not cc.has_header('linux/nvme_ioctl.h')
     error('NVMe support requires kernel >= 4.4')
   endif

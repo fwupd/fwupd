@@ -23,6 +23,8 @@ _fwupdtool_opts=(
 	'--force'
 	'--show-all-devices'
 	'--plugin-whitelist'
+	'--prepare'
+	'--cleanup'
 )
 
 _show_plugins()

@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_PROGRESSBAR_H
-#define __FU_PROGRESSBAR_H
+#pragma once
 
 #include <gio/gio.h>
 
@@ -30,6 +29,3 @@ void		 fu_progressbar_set_interactive		(FuProgressbar *self,
 							 gboolean interactive);
 
 G_END_DECLS
-
-#endif /* __FU_PROGRESSBAR_H */
-

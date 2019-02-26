@@ -307,3 +307,16 @@ LIBFWUPD_1.2.4 {
     fwupd_release_set_update_message;
   local: *;
 } LIBFWUPD_1.2.2;
+
+LIBFWUPD_1.2.5 {
+  global:
+    fwupd_device_add_instance_id;
+    fwupd_device_get_instance_ids;
+    fwupd_device_has_instance_id;
+    fwupd_guid_from_string;
+    fwupd_guid_hash_data;
+    fwupd_guid_hash_string;
+    fwupd_guid_is_valid;
+    fwupd_guid_to_string;
+  local: *;
+} LIBFWUPD_1.2.4;

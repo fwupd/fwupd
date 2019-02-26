@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#ifndef __FU_ROM_H
-#define __FU_ROM_H
+#pragma once
 
 #include <gio/gio.h>
 
@@ -54,6 +53,3 @@ guint16		 fu_rom_get_model			(FuRom		*self);
 const gchar	*fu_rom_kind_to_string			(FuRomKind	 kind);
 
 G_END_DECLS
-
-#endif /* __FU_ROM_H */
-
