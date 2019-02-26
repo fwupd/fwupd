@@ -64,7 +64,7 @@ fu_uefi_vars_set_immutable_fd (int fd,
 	rc = ioctl (fd, FS_IOC_GETFLAGS, &flags);
 	if (rc < 0) {
 		/* check for tmpfs */
-		if (errno == ENOTTY) {
+		if (errno == ENOTTY || errno == ENOSYS) {
 			is_immutable = FALSE;
 		} else {
 			g_set_error (error,
