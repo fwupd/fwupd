@@ -44,6 +44,7 @@ typedef void	(*FuOutputHandler)		(const gchar	*line,
 gboolean	 fu_common_spawn_sync		(const gchar * const *argv,
 						 FuOutputHandler handler_cb,
 						 gpointer	 handler_user_data,
+						 guint		 timeout_ms,
 						 GCancellable	*cancellable,
 						 GError		**error);
 

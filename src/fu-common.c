@@ -520,6 +520,7 @@ typedef struct {
 	GSource			*source;
 	GInputStream		*stream;
 	GCancellable		*cancellable;
+	guint			 timeout_id;
 } FuCommonSpawnHelper;
 
 static void fu_common_spawn_create_pollable_source (FuCommonSpawnHelper *helper);
@@ -581,12 +582,15 @@ fu_common_spawn_create_pollable_source (FuCommonSpawnHelper *helper)
 static void
 fu_common_spawn_helper_free (FuCommonSpawnHelper *helper)
 {
+	g_object_unref (helper->cancellable);
 	if (helper->stream != NULL)
 		g_object_unref (helper->stream);
 	if (helper->source != NULL)
 		g_source_destroy (helper->source);
 	if (helper->loop != NULL)
 		g_main_loop_unref (helper->loop);
+	if (helper->timeout_id != 0)
+		g_source_remove (helper->timeout_id);
 	g_free (helper);
 }
 
@@ -595,11 +599,29 @@ fu_common_spawn_helper_free (FuCommonSpawnHelper *helper)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuCommonSpawnHelper, fu_common_spawn_helper_free)
 #pragma clang diagnostic pop
 
+static gboolean
+fu_common_spawn_timeout_cb (gpointer user_data)
+{
+	FuCommonSpawnHelper *helper = (FuCommonSpawnHelper *) user_data;
+	g_cancellable_cancel (helper->cancellable);
+	g_main_loop_quit (helper->loop);
+	helper->timeout_id = 0;
+	return G_SOURCE_REMOVE;
+}
+
+static void
+fu_common_spawn_cancelled_cb (GCancellable *cancellable, FuCommonSpawnHelper *helper)
+{
+	/* just propagate */
+	g_cancellable_cancel (helper->cancellable);
+}
+
 /**
  * fu_common_spawn_sync:
  * @argv: The argument list to run
  * @handler_cb: (scope call): A #FuOutputHandler or %NULL
  * @handler_user_data: the user data to pass to @handler_cb
+ * @timeout_ms: a timeout in ms, or 0 for no limit
  * @cancellable: a #GCancellable, or %NULL
  * @error: A #GError or %NULL
  *
@@ -612,11 +634,13 @@ gboolean
 fu_common_spawn_sync (const gchar * const * argv,
 		      FuOutputHandler handler_cb,
 		      gpointer handler_user_data,
+		      guint timeout_ms,
 		      GCancellable *cancellable, GError **error)
 {
 	g_autoptr(FuCommonSpawnHelper) helper = NULL;
 	g_autoptr(GSubprocess) subprocess = NULL;
 	g_autofree gchar *argv_str = NULL;
+	gulong cancellable_id = 0;
 
 	/* create subprocess */
 	argv_str = g_strjoinv (" ", (gchar **) argv);
@@ -632,9 +656,26 @@ fu_common_spawn_sync (const gchar * const * argv,
 	helper->handler_user_data = handler_user_data;
 	helper->loop = g_main_loop_new (NULL, FALSE);
 	helper->stream = g_subprocess_get_stdout_pipe (subprocess);
-	helper->cancellable = cancellable;
+
+	/* always create a cancellable, and connect up the parent */
+	helper->cancellable = g_cancellable_new ();
+	if (cancellable != NULL) {
+		cancellable_id = g_cancellable_connect (cancellable,
+							G_CALLBACK (fu_common_spawn_cancelled_cb),
+							helper, NULL);
+	}
+
+	/* allow timeout */
+	if (timeout_ms > 0) {
+		helper->timeout_id = g_timeout_add (timeout_ms,
+						    fu_common_spawn_timeout_cb,
+						    helper);
+	}
 	fu_common_spawn_create_pollable_source (helper);
 	g_main_loop_run (helper->loop);
+	g_cancellable_disconnect (cancellable, cancellable_id);
+	if (g_cancellable_set_error_if_cancelled (helper->cancellable, error))
+		return FALSE;
 	return g_subprocess_wait_check (subprocess, cancellable, error);
 }
 
