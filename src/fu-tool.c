@@ -82,18 +82,17 @@ fu_util_item_free (FuUtilItem *item)
 }
 
 static gboolean
-fu_util_start_engine (FuUtilPrivate *priv, GError **error)
+fu_util_stop_daemon (GError **error)
 {
 	g_autoptr(GDBusConnection) connection = NULL;
 	g_autoptr(GDBusProxy) proxy = NULL;
 	g_autoptr(GVariant) val = NULL;
-	g_autoptr(GError) error_local = NULL;
 
 	/* try to stop any already running daemon */
-	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, &error_local);
+	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
 	if (connection == NULL) {
-		g_debug ("Failed to get bus: %s", error_local->message);
-		return TRUE;
+		g_prefix_error (error, "failed to get bus: ");
+		return FALSE;
 	}
 	proxy = g_dbus_proxy_new_sync (connection,
 					G_DBUS_PROXY_FLAGS_NONE,
@@ -102,40 +101,43 @@ fu_util_start_engine (FuUtilPrivate *priv, GError **error)
 					SYSTEMD_OBJECT_PATH,
 					SYSTEMD_MANAGER_INTERFACE,
 					NULL,
-					&error_local);
+					error);
 	if (proxy == NULL) {
-		g_debug ("Failed to find %s: %s",
-			 SYSTEMD_SERVICE,
-			 error_local->message);
-	} else {
-		val = g_dbus_proxy_call_sync (proxy,
-					      "GetUnit",
-					      g_variant_new ("(s)",
-							     SYSTEMD_FWUPD_UNIT),
-					      G_DBUS_CALL_FLAGS_NONE,
-					      -1,
-					      NULL,
-					      &error_local);
-		if (val == NULL) {
-			g_debug ("Unable to find %s: %s",
-				 SYSTEMD_FWUPD_UNIT,
-				 error_local->message);
-		} else {
-			g_variant_unref (val);
-			val = g_dbus_proxy_call_sync (proxy,
-						      "StopUnit",
-						      g_variant_new ("(ss)",
-								     SYSTEMD_FWUPD_UNIT,
-								     "replace"),
-						      G_DBUS_CALL_FLAGS_NONE,
-						      -1,
-						      NULL,
-						      error);
-			if (val == NULL)
-				return FALSE;
-		}
+		g_prefix_error (error, "failed to find %s: ", SYSTEMD_SERVICE);
+		return FALSE;
 	}
+	val = g_dbus_proxy_call_sync (proxy,
+				      "GetUnit",
+				      g_variant_new ("(s)",
+						     SYSTEMD_FWUPD_UNIT),
+				      G_DBUS_CALL_FLAGS_NONE,
+				      -1,
+				      NULL,
+				      error);
+	if (val == NULL) {
+		g_prefix_error (error, "failed to find %s: ", SYSTEMD_FWUPD_UNIT);
+		return FALSE;
+	}
+	g_variant_unref (val);
+	val = g_dbus_proxy_call_sync (proxy,
+				      "StopUnit",
+				      g_variant_new ("(ss)",
+				     SYSTEMD_FWUPD_UNIT,
+				     "replace"),
+				      G_DBUS_CALL_FLAGS_NONE,
+				      -1,
+				      NULL,
+				      error);
+	return val != NULL;
+}
 
+static gboolean
+fu_util_start_engine (FuUtilPrivate *priv, GError **error)
+{
+	g_autoptr(GError) error_local = NULL;
+
+	if (!fu_util_stop_daemon (&error_local))
+		g_debug ("Failed top stop daemon: %s", error_local->message);
 	if (!fu_engine_load (priv->engine, error))
 		return FALSE;
 	if (fu_engine_get_tainted (priv->engine)) {
