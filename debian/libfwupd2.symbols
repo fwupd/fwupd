@@ -23,6 +23,7 @@ libfwupd.so.2 libfwupd2 #MINVER#
  LIBFWUPD_1.2.1@LIBFWUPD_1.2.1 1.2.1
  LIBFWUPD_1.2.2@LIBFWUPD_1.2.2 1.2.2
  LIBFWUPD_1.2.4@LIBFWUPD_1.2.4 1.2.4
+ LIBFWUPD_1.2.5@LIBFWUPD_1.2.5 1.2.5
  fwupd_build_history_report_json@LIBFWUPD_1.0.4 1.0.4
  fwupd_build_machine_id@LIBFWUPD_1.0.4 1.0.4
  fwupd_build_user_agent@LIBFWUPD_1.0.3 1.0.3
@@ -59,6 +60,7 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_device_add_flag@LIBFWUPD_0.9.3 1.0.0
  fwupd_device_add_guid@LIBFWUPD_0.9.3 1.0.0
  fwupd_device_add_icon@LIBFWUPD_0.9.8 1.0.0
+ fwupd_device_add_instance_id@LIBFWUPD_1.2.5 1.2.5
  fwupd_device_add_release@LIBFWUPD_0.9.8 1.0.0
  fwupd_device_compare@LIBFWUPD_1.1.1 1.1.1
  fwupd_device_flag_from_string@LIBFWUPD_0.7.0 1.0.0
@@ -74,6 +76,7 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_device_get_icons@LIBFWUPD_0.9.8 1.0.0
  fwupd_device_get_id@LIBFWUPD_0.9.3 1.0.0
  fwupd_device_get_install_duration@LIBFWUPD_1.1.3 1.1.3
+ fwupd_device_get_instance_ids@LIBFWUPD_1.2.5 1.2.5
  fwupd_device_get_modified@LIBFWUPD_0.9.3 1.0.0
  fwupd_device_get_name@LIBFWUPD_0.9.3 1.0.0
  fwupd_device_get_parent@LIBFWUPD_1.0.8 1.0.8
@@ -94,6 +97,7 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_device_get_version_lowest@LIBFWUPD_0.9.3 1.0.0
  fwupd_device_has_flag@LIBFWUPD_0.9.3 1.0.0
  fwupd_device_has_guid@LIBFWUPD_0.9.3 1.0.0
+ fwupd_device_has_instance_id@LIBFWUPD_1.2.5 1.2.5
  fwupd_device_incorporate@LIBFWUPD_1.1.0 1.1.0
  fwupd_device_new@LIBFWUPD_0.9.3 1.0.0
  fwupd_device_remove_flag@LIBFWUPD_0.9.3 1.0.0
@@ -125,6 +129,11 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_error_quark@LIBFWUPD_0.1.1 1.0.0
  fwupd_error_to_string@LIBFWUPD_0.7.0 1.0.0
  fwupd_get_os_release@LIBFWUPD_1.0.7 1.0.7
+ fwupd_guid_from_string@LIBFWUPD_1.2.5 1.2.5
+ fwupd_guid_hash_data@LIBFWUPD_1.2.5 1.2.5
+ fwupd_guid_hash_string@LIBFWUPD_1.2.5 1.2.5
+ fwupd_guid_is_valid@LIBFWUPD_1.2.5 1.2.5
+ fwupd_guid_to_string@LIBFWUPD_1.2.5 1.2.5
  fwupd_keyring_kind_from_string@LIBFWUPD_0.9.7 1.0.0
  fwupd_keyring_kind_to_string@LIBFWUPD_0.9.7 1.0.0
  fwupd_release_add_checksum@LIBFWUPD_0.9.3 1.0.0
