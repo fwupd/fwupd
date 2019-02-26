@@ -58,3 +58,13 @@ fu_plugin_update (FuPlugin *plugin,
 		return FALSE;
 	return fu_device_write_firmware (device, blob_fw, error);
 }
+
+gboolean
+fu_plugin_activate (FuPlugin *plugin, FuDevice *device, GError **error)
+{
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
+		return FALSE;
+	return fu_device_activate (device, error);
+}
