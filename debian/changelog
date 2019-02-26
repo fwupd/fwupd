@@ -1,3 +1,10 @@
+fwupd (1.2.5-1) unstable; urgency=medium
+
+  * New upstream version (1.2.5)
+  * Drop all patches, upstream
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Tue, 26 Feb 2019 16:30:52 -0600
+
 fwupd (1.2.4-3) unstable; urgency=medium
 
   * Backport a patch from master that fixes FTBFS with newer glib

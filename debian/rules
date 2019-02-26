@@ -27,7 +27,6 @@ else
 endif
 
 %:
-	dh $@ --with gir,systemd
 	[ -f debian/control ] || debian/rules regenerate_control
 	dh $@ --with gir
 

@@ -3,8 +3,7 @@ Upstream-Name: fwupd
 Source: https://github.com/hughsie/fwupd
 
 Files: *
-Copyright: 1999 Free Software Foundation, Inc.
-	   Christian J. Kellner <christian@kellner.me>
+Copyright: Christian J. Kellner <christian@kellner.me>
 	   Dell Inc.
 	   Dell, Inc.
 	   Google, Inc.
