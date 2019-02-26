@@ -18,7 +18,7 @@ def prepare (target):
         shutil.rmtree ('build')
     data = {}
     with open ('contrib/flatpak/org.freedesktop.fwupd.json', 'r') as rfd:
-        data = json.load (rfd)
+        data = json.load (rfd, strict=False)
     platform = 'runtime/%s/x86_64/%s' % (data['runtime'], data['runtime-version'])
     sdk = 'runtime/%s/x86_64/%s' % (data['sdk'], data['runtime-version'])
     num_modules = len (data['modules'])
