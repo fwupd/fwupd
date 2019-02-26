@@ -744,7 +744,7 @@ fu_util_download_out_of_process (const gchar *uri, const gchar *fn, GError **err
 			g_debug ("%s", error_local->message);
 			continue;
 		}
-		return fu_common_spawn_sync (argv[i], NULL, NULL, NULL, error);
+		return fu_common_spawn_sync (argv[i], NULL, NULL, 0, NULL, error);
 	}
 	g_set_error_literal (error,
 			     FWUPD_ERROR,

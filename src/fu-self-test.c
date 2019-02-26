@@ -2478,10 +2478,28 @@ fu_common_spawn_func (void)
 	g_assert (fn != NULL);
 	argv[0] = fn;
 	ret = fu_common_spawn_sync (argv,
-				    fu_test_stdout_cb, &lines, NULL, &error);
+				    fu_test_stdout_cb, &lines, 0, NULL, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (lines, ==, 6);
+}
+
+static void
+fu_common_spawn_timeout_func (void)
+{
+	gboolean ret;
+	guint lines = 0;
+	g_autoptr(GError) error = NULL;
+	g_autofree gchar *fn = NULL;
+	const gchar *argv[3] = { "replace", "test", NULL };
+
+	fn = fu_test_get_filename (TESTDATADIR, "spawn.sh");
+	g_assert (fn != NULL);
+	argv[0] = fn;
+	ret = fu_common_spawn_sync (argv, fu_test_stdout_cb, &lines, 50, NULL, &error);
+	g_assert_error (error, G_IO_ERROR, G_IO_ERROR_CANCELLED);
+	g_assert (!ret);
+	g_assert_cmpint (lines, ==, 1);
 }
 
 static void
@@ -3388,6 +3406,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/common{cab-error-missing-file}", fu_common_store_cab_error_missing_file_func);
 	g_test_add_func ("/fwupd/common{cab-error-size}", fu_common_store_cab_error_size_func);
 	g_test_add_func ("/fwupd/common{spawn)", fu_common_spawn_func);
+	g_test_add_func ("/fwupd/common{spawn-timeout)", fu_common_spawn_timeout_func);
 	g_test_add_func ("/fwupd/common{firmware-builder}", fu_common_firmware_builder_func);
 	return g_test_run ();
 }

@@ -153,7 +153,7 @@ fu_plugin_update_prepare (FuPlugin *plugin,
 			"--verbose", NULL };
 		if (!fu_common_spawn_sync ((const gchar * const *) argv,
 					   fu_plugin_flashrom_read_cb, device,
-					   NULL, error)) {
+					   0, NULL, error)) {
 			g_prefix_error (error, "failed to get original firmware: ");
 			return FALSE;
 		}
@@ -190,7 +190,7 @@ fu_plugin_update (FuPlugin *plugin,
 	argv[4] = firmware_fn;
 	if (!fu_common_spawn_sync ((const gchar * const *) argv,
 				   fu_plugin_flashrom_write_cb, device,
-				   NULL, error)) {
+				   0, NULL, error)) {
 		g_prefix_error (error, "failed to write firmware: ");
 		return FALSE;
 	}
