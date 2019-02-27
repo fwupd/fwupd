@@ -19,6 +19,7 @@ _fwupdtool_cmd_list=(
 
 _fwupdtool_opts=(
 	'--verbose'
+	'--enable-json-state'
 	'--allow-reinstall'
 	'--allow-older'
 	'--force'

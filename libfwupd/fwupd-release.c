@@ -1121,6 +1121,82 @@ fwupd_pad_kv_int (GString *str, const gchar *key, guint32 value)
 	fwupd_pad_kv_str (str, key, tmp);
 }
 
+static void
+fwupd_release_json_add_string (JsonBuilder *builder, const gchar *key, const gchar *str)
+{
+	if (str == NULL)
+		return;
+	json_builder_set_member_name (builder, key);
+	json_builder_add_string_value (builder, str);
+}
+
+static void
+fwupd_release_json_add_int (JsonBuilder *builder, const gchar *key, guint64 num)
+{
+	if (num == 0)
+		return;
+	json_builder_set_member_name (builder, key);
+	json_builder_add_int_value (builder, num);
+}
+
+/**
+ * fwupd_release_to_json:
+ * @release: A #FwupdRelease
+ * @builder: A #JsonBuilder
+ *
+ * Adds a fwupd release to a JSON builder
+ *
+ * Since: 1.2.6
+ **/
+void
+fwupd_release_to_json (FwupdRelease *release, JsonBuilder *builder)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_autoptr(GList) keys = NULL;
+
+	g_return_if_fail (FWUPD_IS_RELEASE (release));
+	g_return_if_fail (builder != NULL);
+
+	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
+	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_REMOTE_ID, priv->remote_id);
+	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
+	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
+	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_VERSION, priv->version);
+	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_FILENAME, priv->filename);
+	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_PROTOCOL, priv->protocol);
+	if (priv->checksums->len > 0) {
+		json_builder_set_member_name (builder, FWUPD_RESULT_KEY_CHECKSUM);
+		json_builder_begin_array (builder);
+		json_builder_begin_object (builder);
+		for (guint i = 0; i < priv->checksums->len; i++) {
+			const gchar *checksum = g_ptr_array_index (priv->checksums, i);
+			g_autofree gchar *checksum_display = fwupd_checksum_format_for_display (checksum);
+			g_autofree gchar *title = g_strdup_printf ("%s%u", FWUPD_RESULT_KEY_CHECKSUM, i);
+			fwupd_release_json_add_string (builder, title, checksum_display);
+		}
+		json_builder_end_object (builder);
+		json_builder_end_array (builder);
+	}
+	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_LICENSE, priv->license);
+	fwupd_release_json_add_int (builder, FWUPD_RESULT_KEY_SIZE, priv->size);
+	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_URI, priv->uri);
+	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_HOMEPAGE, priv->homepage);
+	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_DETAILS_URL, priv->details_url);
+	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_SOURCE_URL, priv->source_url);
+	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
+	fwupd_release_json_add_int (builder, FWUPD_RESULT_KEY_TRUST_FLAGS, priv->trust_flags);
+	fwupd_release_json_add_int (builder, FWUPD_RESULT_KEY_INSTALL_DURATION, priv->install_duration);
+	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->update_message);
+
+	/* metadata */
+	keys = g_hash_table_get_keys (priv->metadata);
+	for (GList *l = keys; l != NULL; l = l->next) {
+		const gchar *key = l->data;
+		const gchar *value = g_hash_table_lookup (priv->metadata, key);
+		fwupd_release_json_add_string (builder, key, value);
+	}
+}
+
 /**
  * fwupd_release_to_string:
  * @release: A #FwupdRelease
