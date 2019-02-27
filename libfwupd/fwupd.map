@@ -324,5 +324,7 @@ LIBFWUPD_1.2.5 {
 LIBFWUPD_1.2.6 {
   global:
     fwupd_client_activate;
+    fwupd_device_to_json;
+    fwupd_release_to_json;
   local: *;
 } LIBFWUPD_1.2.5;

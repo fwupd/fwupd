@@ -26,6 +26,7 @@
 #include "fu-util-common.h"
 #include "fu-debug.h"
 #include "fwupd-common-private.h"
+#include "fwupd-device-private.h"
 
 #define SYSTEMD_SERVICE			"org.freedesktop.systemd1"
 #define SYSTEMD_OBJECT_PATH		"/org/freedesktop/systemd1"
@@ -52,6 +53,7 @@ typedef struct {
 	gboolean		 no_reboot_check;
 	gboolean		 prepare_blob;
 	gboolean		 cleanup_blob;
+	gboolean		 enable_json_state;
 	FwupdInstallFlags	 flags;
 	gboolean		 show_all_devices;
 	/* only valid in update and downgrade */
@@ -129,6 +131,53 @@ fu_util_stop_daemon (GError **error)
 				      NULL,
 				      error);
 	return val != NULL;
+}
+
+static gboolean
+fu_util_save_current_state (FuUtilPrivate *priv, GError **error)
+{
+	g_autoptr(JsonBuilder) builder = NULL;
+	g_autoptr(JsonGenerator) json_generator = NULL;
+	g_autoptr(JsonNode) json_root = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autofree gchar *state = NULL;
+	g_autofree gchar *dirname = NULL;
+	g_autofree gchar *filename = NULL;
+
+	if (!priv->enable_json_state)
+		return TRUE;
+
+	devices = fu_engine_get_devices (priv->engine, error);
+	if (devices == NULL)
+		return FALSE;
+
+	/* create header */
+	builder = json_builder_new ();
+	json_builder_begin_object (builder);
+
+	/* add each device */
+	json_builder_set_member_name (builder, "Devices");
+	json_builder_begin_array (builder);
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index (devices, i);
+		json_builder_begin_object (builder);
+		fwupd_device_to_json (dev, builder);
+		json_builder_end_object (builder);
+	}
+	json_builder_end_array (builder);
+	json_builder_end_object (builder);
+
+	/* export as a string */
+	json_root = json_builder_get_root (builder);
+	json_generator = json_generator_new ();
+	json_generator_set_pretty (json_generator, TRUE);
+	json_generator_set_root (json_generator, json_root);
+	state = json_generator_to_data (json_generator, NULL);
+	if (state == NULL)
+		return FALSE;
+	dirname = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	filename = g_build_filename (dirname, "state.json", NULL);
+	return g_file_set_contents (filename, state, -1, error);
 }
 
 static gboolean
@@ -436,6 +485,10 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		}
 	}
 
+	/* save the device state for other applications to see */
+	if (!fu_util_save_current_state (priv, error))
+		return FALSE;
+
 	/* success */
 	return TRUE;
 }
@@ -509,6 +562,10 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 			g_print ("%s\n", tmp);
 		}
 	}
+
+	/* save the device state for other applications to see */
+	if (!fu_util_save_current_state (priv, error))
+		return FALSE;
 
 	return TRUE;
 }
@@ -889,6 +946,10 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 		return TRUE;
 	}
 
+	/* save the device state for other applications to see */
+	if (!fu_util_save_current_state (priv, error))
+		return FALSE;
+
 	/* success */
 	return fu_util_prompt_complete (priv->completion_flags, TRUE, error);
 }
@@ -971,6 +1032,10 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_debug ("skipping reboot check");
 		return TRUE;
 	}
+
+	/* save the device state for other applications to see */
+	if (!fu_util_save_current_state (priv, error))
+		return FALSE;
 
 	return fu_util_prompt_complete (priv->completion_flags, TRUE, error);
 }
@@ -1322,7 +1387,9 @@ main (int argc, char *argv[])
 		{ "cleanup", '\0', 0, G_OPTION_ARG_NONE, &priv->cleanup_blob,
 			/* TRANSLATORS: command line option */
 			_("Run the plugin composite cleanup routine when using install-blob"), NULL },
-
+		{ "enable-json-state", '\0', 0, G_OPTION_ARG_NONE, &priv->enable_json_state,
+			/* TRANSLATORS: command line option */
+			_("Save device state into a JSON file between executions"), NULL },
 		{ NULL}
 	};
 

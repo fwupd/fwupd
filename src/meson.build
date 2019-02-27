@@ -55,6 +55,7 @@ libfwupdprivate = static_library(
     soup,
     sqlite,
     libarchive,
+    libjsonglib,
     libxmlb,
     valgrind,
   ],
@@ -167,6 +168,7 @@ fwupdtool = executable(
     sqlite,
     valgrind,
     libarchive,
+    libjsonglib,
   ],
   link_with : [
     fwupd,
@@ -251,6 +253,7 @@ executable(
     sqlite,
     valgrind,
     libarchive,
+    libjsonglib,
   ],
   link_with : fwupd,
   c_args : [
@@ -324,6 +327,7 @@ if get_option('tests')
       sqlite,
       valgrind,
       libarchive,
+      libjsonglib,
     ],
     link_with : [
       fwupd,

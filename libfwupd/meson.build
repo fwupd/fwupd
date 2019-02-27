@@ -156,6 +156,7 @@ if get_option('tests')
     dependencies : [
       gio,
       soup,
+      libjsonglib,
     ],
     link_with : fwupd,
     c_args : [

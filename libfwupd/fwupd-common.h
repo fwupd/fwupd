@@ -48,7 +48,6 @@ gchar		*fwupd_build_machine_id			(const gchar 	*salt,
 GHashTable	*fwupd_get_os_release			(GError		**error);
 gchar		*fwupd_build_history_report_json	(GPtrArray	*devices,
 							 GError		**error);
-
 #ifndef __GI_SCANNER__
 gchar		*fwupd_guid_to_string			(const fwupd_guid_t *guid,
 							 FwupdGuidFlags	 flags);
