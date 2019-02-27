@@ -49,6 +49,7 @@ typedef struct {
 	GPtrArray		*cmd_array;
 	FuEngine		*engine;
 	FuProgressbar		*progressbar;
+	gchar			*log_current_devices;
 	gboolean		 no_reboot_check;
 	gboolean		 prepare_blob;
 	gboolean		 cleanup_blob;
@@ -132,6 +133,24 @@ fu_util_stop_daemon (GError **error)
 }
 
 static gboolean
+fu_util_log_current_devices (FuUtilPrivate *priv, GError **error)
+{
+	g_autoptr(GPtrArray) devs = NULL;
+	g_autoptr(GString) string = NULL;
+
+	devs = fu_engine_get_devices (priv->engine, error);
+	if (devs == NULL)
+		return FALSE;
+	string = g_string_new ("");
+	for (guint i = 0; i < devs->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index (devs, i);
+		g_autofree gchar *tmp = fwupd_device_to_string (dev);
+		g_string_append_printf (string, "%s\n", tmp);
+	}
+	return g_file_set_contents (priv->log_current_devices, string->str, -1, error);
+}
+
+static gboolean
 fu_util_start_engine (FuUtilPrivate *priv, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
@@ -143,6 +162,10 @@ fu_util_start_engine (FuUtilPrivate *priv, GError **error)
 	if (fu_engine_get_tainted (priv->engine)) {
 		g_printerr ("WARNING: This tool has loaded 3rd party code and "
 			    "is no longer supported by the upstream developers!\n");
+	}
+	if (priv->log_current_devices != NULL) {
+		if (!fu_util_log_current_devices (priv, error))
+			return FALSE;
 	}
 	return TRUE;
 }
@@ -1307,6 +1330,9 @@ main (int argc, char *argv[])
 		{ "force", '\0', 0, G_OPTION_ARG_NONE, &force,
 			/* TRANSLATORS: command line option */
 			_("Override plugin warning"), NULL },
+		{ "log-current-devices", '\0', 0, G_OPTION_ARG_FILENAME, &priv->log_current_devices,
+			/* TRANSLATORS: command line option */
+			_("File to log the current devices before performing an action"), NULL },
 		{ "no-reboot-check", '\0', 0, G_OPTION_ARG_NONE, &priv->no_reboot_check,
 			/* TRANSLATORS: command line option */
 			_("Do not check for reboot after update"), NULL },
