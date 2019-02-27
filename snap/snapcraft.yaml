@@ -97,8 +97,7 @@ parts:
   modemmanager:
     plugin: autotools
     source: https://gitlab.freedesktop.org/mobile-broadband/ModemManager.git
-    #not yet tagged
-    #source-tag: 1.10.0
+    source-tag: 1.10.0
     after: [gudev, gettext]
     # build without these; system daemon needs them
     configflags:
@@ -116,12 +115,31 @@ parts:
       - -lib/systemd
       - -lib/udev
       - -lib/girepository-1.0
+  libmbim:
+    plugin: autotools
+    source: https://gitlab.freedesktop.org/mobile-broadband/libmbim.git
+    source-tag: 1.18.0
+    after: [gudev, gettext, modemmanager]
+    # build without these; system daemon needs them
+    configflags:
+      - --without-udev
+    prime:
+      - -include
+      - -etc
+      - -sbin
+      - -bin
+      - -share
+      - -lib/*.*a
+      - -lib/pkgconfig
+      - -lib/ModemManager
+      - -lib/systemd
+      - -lib/udev
+      - -lib/girepository-1.0
   libqmi:
     plugin: autotools
     source: https://gitlab.freedesktop.org/mobile-broadband/libqmi.git
-    #not yet tagged
-    #source-tag: 1.10.0
-    after: [gudev, gettext, modemmanager]
+    source-tag: 1.23.1
+    after: [gudev, gettext, modemmanager, libmbim]
     # build without these; system daemon needs them
     configflags:
       - --without-udev
@@ -305,7 +323,7 @@ parts:
       - -usr/share/gir-1.0
       - -usr/share/upstart
       - -usr/lib/*/pkgconfig
-    after: [gudev, gusb, gnu-efi, libefivar-fixpkgconfig, libsmbios, build-introspection, gettext, modemmanager, libqmi]
+    after: [gudev, gusb, gnu-efi, libefivar-fixpkgconfig, libsmbios, build-introspection, gettext, modemmanager, libmbim, libqmi]
   fix-bash-completion:
     plugin: make
     source: contrib/snap/fix-bash-completion
