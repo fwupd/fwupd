@@ -21,8 +21,6 @@
     </p>
   </description>
   <url type="bugtracker">https://github.com/hughsie/fwupd/issues</url>
-  <url type="donation"/>
-  <url type="help"/>
   <url type="homepage">https://fwupd.org/</url>
   <url type="translate">https://www.transifex.com/freedesktop/fwupd/</url>
   <update_contact>richard_at_hughsie.com</update_contact>
@@ -30,6 +28,9 @@
   <content_rating type="oars-1.0">
     <content_attribute id="social-info">moderate</content_attribute>
   </content_rating>
+  <provides>
+    <binary>fwupdmgr</binary>
+  </provides>
   <releases>
     <release version="1.2.5" date="2019-02-25">
       <description>
