@@ -96,7 +96,7 @@ if get_option('introspection')
     symbol_prefix : 'fwupd',
     identifier_prefix : 'Fwupd',
     export_packages : 'fwupd',
-    extra_args : '--c-include=fwupd.h', # This can be replaced with header : 'fwupd.h' once can depend on Meson 0.43.0
+    header : 'fwupd.h',
     dependencies : [
       giounix,
       soup,
