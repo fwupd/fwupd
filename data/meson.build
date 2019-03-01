@@ -10,6 +10,12 @@ if get_option('daemon')
   subdir('installed-tests')
 endif
 
+if get_option('agent')
+  install_data(['agent.conf'],
+    install_dir : join_paths(sysconfdir, 'fwupd')
+  )
+endif
+
 install_data(['daemon.conf'],
   install_dir : join_paths(sysconfdir, 'fwupd')
 )
@@ -88,6 +94,20 @@ if get_option('systemd')
     install: true,
     install_dir: systemd.get_pkgconfig_variable('systemdshutdowndir'),
   )
+
+  if get_option('agent')
+    install_data(['fwupdagent.timer'],
+      install_dir : systemdunitdir
+    )
+    configure_file(
+      input : 'fwupdagent.service',
+      output : 'fwupdagent.service',
+      configuration : con2,
+      install: true,
+      install_dir : systemdunitdir,
+    )
+  endif
+
 endif
 
 if get_option('systemd') or get_option('elogind')

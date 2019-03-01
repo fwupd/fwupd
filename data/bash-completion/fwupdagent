@@ -1,5 +1,10 @@
 _fwupdagent_cmd_list=(
 	'get-devices'
+	'enable'
+	'disable'
+	'register'
+	'unregister'
+	'sync'
 )
 
 _fwupdagent_opts=(

@@ -274,8 +274,11 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %{_datadir}/icons/hicolor/scalable/apps/org.freedesktop.fwupd.svg
 %{_datadir}/fwupd/firmware-packager
 %{_unitdir}/fwupd-offline-update.service
+%{_unitdir}/fwupdagent.service
+%{_unitdir}/fwupdagent.timer
 %{_unitdir}/fwupd.service
 %{_unitdir}/system-update.target.wants/
+%config(noreplace)%{_sysconfdir}/fwupd/agent.conf
 %dir %{_localstatedir}/lib/fwupd
 %dir %{_datadir}/fwupd/quirks.d
 %{_datadir}/fwupd/quirks.d/*.quirk

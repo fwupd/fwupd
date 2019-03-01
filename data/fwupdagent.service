@@ -1,0 +1,15 @@
+[Unit]
+Description=Firmware update daemon agent
+Documentation=https://fwupd.org/
+Requires=fwupd.service
+After=fwupd.service
+
+[Service]
+Type=oneshot
+User=nobody
+ExecStart=@libexecdir@/fwupd/fwupdagent
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=full
+SystemCallFilter=~@mount
+@dynamic_options@
