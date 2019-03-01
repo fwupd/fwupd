@@ -294,3 +294,124 @@ fu_util_prompt_complete (FwupdDeviceFlags flags, gboolean prompt, GError **error
 
 	return TRUE;
 }
+
+static void
+fu_util_cmd_free (FuUtilCmd *item)
+{
+	g_free (item->name);
+	g_free (item->arguments);
+	g_free (item->description);
+	g_free (item);
+}
+
+GPtrArray *
+fu_util_cmd_array_new (void)
+{
+	return g_ptr_array_new_with_free_func ((GDestroyNotify) fu_util_cmd_free);
+}
+
+static gint
+fu_util_cmd_sort_cb (FuUtilCmd **item1, FuUtilCmd **item2)
+{
+	return g_strcmp0 ((*item1)->name, (*item2)->name);
+}
+
+void
+fu_util_cmd_array_sort (GPtrArray *array)
+{
+	g_ptr_array_sort (array, (GCompareFunc) fu_util_cmd_sort_cb);
+}
+
+void
+fu_util_cmd_array_add (GPtrArray *array,
+		       const gchar *name,
+		       const gchar *arguments,
+		       const gchar *description,
+		       FuUtilCmdFunc callback)
+{
+	g_auto(GStrv) names = NULL;
+
+	g_return_if_fail (name != NULL);
+	g_return_if_fail (description != NULL);
+	g_return_if_fail (callback != NULL);
+
+	/* add each one */
+	names = g_strsplit (name, ",", -1);
+	for (guint i = 0; names[i] != NULL; i++) {
+		FuUtilCmd *item = g_new0 (FuUtilCmd, 1);
+		item->name = g_strdup (names[i]);
+		if (i == 0) {
+			item->description = g_strdup (description);
+		} else {
+			/* TRANSLATORS: this is a command alias, e.g. 'get-devices' */
+			item->description = g_strdup_printf (_("Alias to %s"),
+							     names[0]);
+		}
+		item->arguments = g_strdup (arguments);
+		item->callback = callback;
+		g_ptr_array_add (array, item);
+	}
+}
+
+gboolean
+fu_util_cmd_array_run (GPtrArray *array,
+		       FuUtilPrivate *priv,
+		       const gchar *command,
+		       gchar **values,
+		       GError **error)
+{
+	/* find command */
+	for (guint i = 0; i < array->len; i++) {
+		FuUtilCmd *item = g_ptr_array_index (array, i);
+		if (g_strcmp0 (item->name, command) == 0)
+			return item->callback (priv, values, error);
+	}
+
+	/* not found */
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_ARGS,
+			     /* TRANSLATORS: error message */
+			     _("Command not found"));
+	return FALSE;
+}
+
+gchar *
+fu_util_cmd_array_to_string (GPtrArray *array)
+{
+	gsize len;
+	const gsize max_len = 35;
+	GString *string;
+
+	/* print each command */
+	string = g_string_new ("");
+	for (guint i = 0; i < array->len; i++) {
+		FuUtilCmd *item = g_ptr_array_index (array, i);
+		g_string_append (string, "  ");
+		g_string_append (string, item->name);
+		len = strlen (item->name) + 2;
+		if (item->arguments != NULL) {
+			g_string_append (string, " ");
+			g_string_append (string, item->arguments);
+			len += strlen (item->arguments) + 1;
+		}
+		if (len < max_len) {
+			for (gsize j = len; j < max_len + 1; j++)
+				g_string_append_c (string, ' ');
+			g_string_append (string, item->description);
+			g_string_append_c (string, '\n');
+		} else {
+			g_string_append_c (string, '\n');
+			for (gsize j = 0; j < max_len + 1; j++)
+				g_string_append_c (string, ' ');
+			g_string_append (string, item->description);
+			g_string_append_c (string, '\n');
+		}
+	}
+
+	/* remove trailing newline */
+	if (string->len > 0)
+		g_string_set_size (string, string->len - 1);
+
+	return g_string_free (string, FALSE);
+}
