@@ -1654,13 +1654,10 @@ fwupd_device_to_json (FwupdDevice *device, JsonBuilder *builder)
 	if (priv->guids->len > 0) {
 		json_builder_set_member_name (builder, FWUPD_RESULT_KEY_GUID);
 		json_builder_begin_array (builder);
-		json_builder_begin_object (builder);
 		for (guint i = 0; i < priv->guids->len; i++) {
 			const gchar *guid = g_ptr_array_index (priv->guids, i);
-			g_autofree gchar *title = g_strdup_printf ("%s%u", FWUPD_RESULT_KEY_GUID, i);
-			fwupd_device_json_add_string (builder, title, guid);
+			json_builder_add_string_value (builder, guid);
 		}
-		json_builder_end_object (builder);
 		json_builder_end_array (builder);
 	}
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_SERIAL, priv->serial);
@@ -1671,14 +1668,11 @@ fwupd_device_to_json (FwupdDevice *device, JsonBuilder *builder)
 	if (priv->checksums->len > 0) {
 		json_builder_set_member_name (builder, "Checksums");
 		json_builder_begin_array (builder);
-		json_builder_begin_object (builder);
 		for (guint i = 0; i < priv->checksums->len; i++) {
 			const gchar *checksum = g_ptr_array_index (priv->checksums, i);
 			g_autofree gchar *checksum_display = fwupd_checksum_format_for_display (checksum);
-			g_autofree gchar *title = g_strdup_printf ("%s%u", FWUPD_RESULT_KEY_CHECKSUM, i);
-			fwupd_device_json_add_string (builder, title, checksum_display);
+			json_builder_add_string_value (builder, checksum_display);
 		}
-		json_builder_end_object (builder);
 		json_builder_end_array (builder);
 	}
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
@@ -1690,13 +1684,10 @@ fwupd_device_to_json (FwupdDevice *device, JsonBuilder *builder)
 	if (priv->icons->len > 0) {
 		json_builder_set_member_name (builder, "Icons");
 		json_builder_begin_array (builder);
-		json_builder_begin_object (builder);
 		for (guint i = 0; i < priv->icons->len; i++) {
 			const gchar *icon = g_ptr_array_index (priv->icons, i);
-			g_autofree gchar *title = g_strdup_printf ("%s%u", FWUPD_RESULT_KEY_ICON, i);
-			fwupd_device_json_add_string (builder, title, icon);
+			json_builder_add_string_value (builder, icon);
 		}
-		json_builder_end_object (builder);
 		json_builder_end_array (builder);
 	}
 	fwupd_device_json_add_int (builder, FWUPD_RESULT_KEY_INSTALL_DURATION, priv->install_duration);

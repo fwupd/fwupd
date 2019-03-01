@@ -1167,14 +1167,11 @@ fwupd_release_to_json (FwupdRelease *release, JsonBuilder *builder)
 	if (priv->checksums->len > 0) {
 		json_builder_set_member_name (builder, FWUPD_RESULT_KEY_CHECKSUM);
 		json_builder_begin_array (builder);
-		json_builder_begin_object (builder);
 		for (guint i = 0; i < priv->checksums->len; i++) {
 			const gchar *checksum = g_ptr_array_index (priv->checksums, i);
 			g_autofree gchar *checksum_display = fwupd_checksum_format_for_display (checksum);
-			g_autofree gchar *title = g_strdup_printf ("%s%u", FWUPD_RESULT_KEY_CHECKSUM, i);
-			fwupd_release_json_add_string (builder, title, checksum_display);
+			json_builder_add_string_value (builder, checksum_display);
 		}
-		json_builder_end_object (builder);
 		json_builder_end_array (builder);
 	}
 	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_LICENSE, priv->license);
