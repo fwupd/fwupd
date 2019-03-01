@@ -415,3 +415,48 @@ fu_util_cmd_array_to_string (GPtrArray *array)
 
 	return g_string_free (string, FALSE);
 }
+
+SoupSession *
+fu_util_setup_networking (GError **error)
+{
+	const gchar *http_proxy;
+	g_autofree gchar *user_agent = NULL;
+	g_autoptr(SoupSession) session = NULL;
+
+	/* create the soup session */
+	user_agent = fwupd_build_user_agent (PACKAGE_NAME, PACKAGE_VERSION);
+	session = soup_session_new_with_options (SOUP_SESSION_USER_AGENT, user_agent,
+						 SOUP_SESSION_TIMEOUT, 60,
+						 NULL);
+	if (session == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "failed to setup networking");
+		return NULL;
+	}
+
+	/* set the proxy */
+	http_proxy = g_getenv ("https_proxy");
+	if (http_proxy == NULL)
+		http_proxy = g_getenv ("HTTPS_PROXY");
+	if (http_proxy == NULL)
+		http_proxy = g_getenv ("http_proxy");
+	if (http_proxy == NULL)
+		http_proxy = g_getenv ("HTTP_PROXY");
+	if (http_proxy != NULL) {
+		g_autoptr(SoupURI) proxy_uri = soup_uri_new (http_proxy);
+		if (proxy_uri == NULL) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "invalid proxy URI: %s", http_proxy);
+			return FALSE;
+		}
+		g_object_set (session, SOUP_SESSION_PROXY_URI, proxy_uri, NULL);
+	}
+
+	/* this disables the double-compression of the firmware.xml.gz file */
+	soup_session_remove_feature_by_type (session, SOUP_TYPE_CONTENT_DECODER);
+	return g_steal_pointer (&session);
+}
