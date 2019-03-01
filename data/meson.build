@@ -23,6 +23,12 @@ if build_standalone
     install_dir: join_paths(datadir, 'fwupd', 'quirks.d'))
 endif
 
+if get_option('agent')
+  install_data(['agent.conf'],
+    install_dir : join_paths(sysconfdir, 'fwupd')
+  )
+endif
+
 install_data(['org.freedesktop.fwupd.metainfo.xml'],
   install_dir: join_paths(datadir, 'metainfo')
 )
@@ -96,6 +102,20 @@ if get_option('systemd') and build_daemon
     install: true,
     install_dir: systemd_shutdown_dir,
   )
+
+  if get_option('agent')
+    install_data(['fwupdagent.timer'],
+      install_dir : systemdunitdir
+    )
+    configure_file(
+      input : 'fwupdagent.service',
+      output : 'fwupdagent.service',
+      configuration : con2,
+      install: true,
+      install_dir : systemdunitdir,
+    )
+  endif
+
 endif
 
 if (get_option('systemd') or get_option('elogind')) and build_daemon

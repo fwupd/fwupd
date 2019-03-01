@@ -3,6 +3,9 @@ _fwupdagent_cmd_list=(
 	'get-updates'
 	'get-upgrades'
 	'security'
+	'register'
+	'unregister'
+	'sync'
 )
 
 _fwupdagent_opts=(

@@ -383,11 +383,14 @@ done
 %{_datadir}/fwupd/add_capsule_header.py
 %{_datadir}/fwupd/install_dell_bios_exe.py
 %{_unitdir}/fwupd-offline-update.service
+%{_unitdir}/fwupdagent.service
+%{_unitdir}/fwupdagent.timer
 %{_unitdir}/fwupd.service
 %{_unitdir}/fwupd-refresh.service
 %{_unitdir}/fwupd-refresh.timer
 %{_presetdir}/fwupd-refresh.preset
 %{_unitdir}/system-update.target.wants/
+%config(noreplace)%{_sysconfdir}/fwupd/agent.conf
 %dir %{_localstatedir}/lib/fwupd
 %dir %{_localstatedir}/cache/fwupd
 %dir %{_datadir}/fwupd/quirks.d
