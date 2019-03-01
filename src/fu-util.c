@@ -20,7 +20,6 @@
 #include <json-glib/json-glib.h>
 #include <locale.h>
 #include <stdlib.h>
-#include <libsoup/soup.h>
 #include <unistd.h>
 
 #include "fu-history.h"
@@ -180,54 +179,6 @@ fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
 	}
 	dev = g_ptr_array_index (devices_filtered, idx - 1);
 	return g_object_ref (dev);
-}
-
-static gboolean
-fu_util_setup_networking (FuUtilPrivate *priv, GError **error)
-{
-	const gchar *http_proxy;
-	g_autofree gchar *user_agent = NULL;
-
-	/* already done */
-	if (priv->soup_session != NULL)
-		return TRUE;
-
-	/* create the soup session */
-	user_agent = fwupd_build_user_agent (PACKAGE_NAME, PACKAGE_VERSION);
-	priv->soup_session = soup_session_new_with_options (SOUP_SESSION_USER_AGENT, user_agent,
-							    SOUP_SESSION_TIMEOUT, 60,
-							    NULL);
-	if (priv->soup_session == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "failed to setup networking");
-		return FALSE;
-	}
-
-	/* set the proxy */
-	http_proxy = g_getenv ("https_proxy");
-	if (http_proxy == NULL)
-		http_proxy = g_getenv ("HTTPS_PROXY");
-	if (http_proxy == NULL)
-		http_proxy = g_getenv ("http_proxy");
-	if (http_proxy == NULL)
-		http_proxy = g_getenv ("HTTP_PROXY");
-	if (http_proxy != NULL) {
-		g_autoptr(SoupURI) proxy_uri = soup_uri_new (http_proxy);
-		if (proxy_uri == NULL) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "invalid proxy URI: %s", http_proxy);
-			return FALSE;
-		}
-		g_object_set (priv->soup_session, SOUP_SESSION_PROXY_URI, proxy_uri, NULL);
-	}
-
-	/* this disables the double-compression of the firmware.xml.gz file */
-	soup_session_remove_feature_by_type (priv->soup_session, SOUP_TYPE_CONTENT_DECODER);
-	return TRUE;
 }
 
 static gboolean
@@ -860,8 +811,11 @@ fu_util_report_history (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GPtrArray) remotes = NULL;
 
 	/* set up networking */
-	if (!fu_util_setup_networking (priv, error))
-		return FALSE;
+	if (priv->soup_session == NULL) {
+		priv->soup_session = fu_util_setup_networking (error);
+		if (priv->soup_session == NULL)
+			return FALSE;
+	}
 
 	/* create a map of RemoteID to RemoteURI */
 	remotes = fwupd_client_get_remotes (priv->client, NULL, error);
@@ -1143,8 +1097,11 @@ fu_util_download_file (FuUtilPrivate *priv,
 	}
 
 	/* set up networking */
-	if (!fu_util_setup_networking (priv, error))
-		return FALSE;
+	if (priv->soup_session == NULL) {
+		priv->soup_session = fu_util_setup_networking (error);
+		if (priv->soup_session == NULL)
+			return FALSE;
+	}
 
 	/* download data */
 	uri_str = soup_uri_to_string (uri, FALSE);
