@@ -43,11 +43,10 @@ typedef enum {
 	FU_UTIL_OPERATION_LAST
 } FuUtilOperation;
 
-typedef struct {
+struct FuUtilPrivate {
 	GCancellable		*cancellable;
 	GMainLoop		*loop;
 	GOptionContext		*context;
-	GPtrArray		*cmd_array;
 	FuEngine		*engine;
 	FuProgressbar		*progressbar;
 	gboolean		 no_reboot_check;
@@ -61,27 +60,7 @@ typedef struct {
 	FwupdDevice		*current_device;
 	gchar			*current_message;
 	FwupdDeviceFlags	 completion_flags;
-} FuUtilPrivate;
-
-typedef gboolean (*FuUtilPrivateCb)	(FuUtilPrivate	*util,
-					 gchar		**values,
-					 GError		**error);
-
-typedef struct {
-	gchar		*name;
-	gchar		*arguments;
-	gchar		*description;
-	FuUtilPrivateCb	 callback;
-} FuUtilItem;
-
-static void
-fu_util_item_free (FuUtilItem *item)
-{
-	g_free (item->name);
-	g_free (item->arguments);
-	g_free (item->description);
-	g_free (item);
-}
+};
 
 static gboolean
 fu_util_stop_daemon (GError **error)
@@ -196,12 +175,6 @@ fu_util_start_engine (FuUtilPrivate *priv, GError **error)
 	return TRUE;
 }
 
-static gint
-fu_sort_command_name_cb (FuUtilItem **item1, FuUtilItem **item2)
-{
-	return g_strcmp0 ((*item1)->name, (*item2)->name);
-}
-
 static void
 fu_util_maybe_prefix_sandbox_error (const gchar *value, GError **error)
 {
@@ -211,96 +184,6 @@ fu_util_maybe_prefix_sandbox_error (const gchar *value, GError **error)
 				"Unable to access %s. You may need to copy %s to %s: ",
 				path, value, g_getenv ("HOME"));
 	}
-}
-
-static void
-fu_util_add (GPtrArray *array,
-	     const gchar *name,
-	     const gchar *arguments,
-	     const gchar *description,
-	     FuUtilPrivateCb callback)
-{
-	g_auto(GStrv) names = NULL;
-
-	g_return_if_fail (name != NULL);
-	g_return_if_fail (description != NULL);
-	g_return_if_fail (callback != NULL);
-
-	/* add each one */
-	names = g_strsplit (name, ",", -1);
-	for (guint i = 0; names[i] != NULL; i++) {
-		FuUtilItem *item = g_new0 (FuUtilItem, 1);
-		item->name = g_strdup (names[i]);
-		if (i == 0) {
-			item->description = g_strdup (description);
-		} else {
-			/* TRANSLATORS: this is a command alias, e.g. 'get-devices' */
-			item->description = g_strdup_printf (_("Alias to %s"),
-							     names[0]);
-		}
-		item->arguments = g_strdup (arguments);
-		item->callback = callback;
-		g_ptr_array_add (array, item);
-	}
-}
-
-static gchar *
-fu_util_get_descriptions (GPtrArray *array)
-{
-	gsize len;
-	const gsize max_len = 35;
-	GString *string;
-
-	/* print each command */
-	string = g_string_new ("");
-	for (guint i = 0; i < array->len; i++) {
-		FuUtilItem *item = g_ptr_array_index (array, i);
-		g_string_append (string, "  ");
-		g_string_append (string, item->name);
-		len = strlen (item->name) + 2;
-		if (item->arguments != NULL) {
-			g_string_append (string, " ");
-			g_string_append (string, item->arguments);
-			len += strlen (item->arguments) + 1;
-		}
-		if (len < max_len) {
-			for (gsize j = len; j < max_len + 1; j++)
-				g_string_append_c (string, ' ');
-			g_string_append (string, item->description);
-			g_string_append_c (string, '\n');
-		} else {
-			g_string_append_c (string, '\n');
-			for (gsize j = 0; j < max_len + 1; j++)
-				g_string_append_c (string, ' ');
-			g_string_append (string, item->description);
-			g_string_append_c (string, '\n');
-		}
-	}
-
-	/* remove trailing newline */
-	if (string->len > 0)
-		g_string_set_size (string, string->len - 1);
-
-	return g_string_free (string, FALSE);
-}
-
-static gboolean
-fu_util_run (FuUtilPrivate *priv, const gchar *command, gchar **values, GError **error)
-{
-	/* find command */
-	for (guint i = 0; i < priv->cmd_array->len; i++) {
-		FuUtilItem *item = g_ptr_array_index (priv->cmd_array, i);
-		if (g_strcmp0 (item->name, command) == 0)
-			return item->callback (priv, values, error);
-	}
-
-	/* not found */
-	g_set_error_literal (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_ARGS,
-			     /* TRANSLATORS: error message */
-			     _("Command not found"));
-	return FALSE;
 }
 
 static void
@@ -344,8 +227,6 @@ fu_util_sigint_cb (gpointer user_data)
 static void
 fu_util_private_free (FuUtilPrivate *priv)
 {
-	if (priv->cmd_array != NULL)
-		g_ptr_array_unref (priv->cmd_array);
 	if (priv->current_device != NULL)
 		g_object_unref (priv->current_device);
 	if (priv->engine != NULL)
@@ -1358,6 +1239,7 @@ main (int argc, char *argv[])
 	g_auto(GStrv) plugin_glob = NULL;
 	g_autoptr(FuUtilPrivate) priv = g_new0 (FuUtilPrivate, 1);
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) cmd_array = fu_util_cmd_array_new ();
 	g_autofree gchar *cmd_descriptions = NULL;
 	const GOptionEntry options[] = {
 		{ "version", '\0', 0, G_OPTION_ARG_NONE, &version,
@@ -1409,98 +1291,97 @@ main (int argc, char *argv[])
 	priv->progressbar = fu_progressbar_new ();
 
 	/* add commands */
-	priv->cmd_array = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_util_item_free);
-	fu_util_add (priv->cmd_array,
+	fu_util_cmd_array_add (cmd_array,
 		     "build-firmware",
 		     "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]",
 		     /* TRANSLATORS: command description */
 		     _("Build firmware using a sandbox"),
 		     fu_util_firmware_builder);
-	fu_util_add (priv->cmd_array,
+	fu_util_cmd_array_add (cmd_array,
 		     "smbios-dump",
 		     "FILE",
 		     /* TRANSLATORS: command description */
 		     _("Dump SMBIOS data from a file"),
 		     fu_util_smbios_dump);
-	fu_util_add (priv->cmd_array,
+	fu_util_cmd_array_add (cmd_array,
 		     "get-plugins",
 		     NULL,
 		     /* TRANSLATORS: command description */
 		     _("Get all enabled plugins registered with the system"),
 		     fu_util_get_plugins);
-	fu_util_add (priv->cmd_array,
+	fu_util_cmd_array_add (cmd_array,
 		     "get-details",
 		     NULL,
 		     /* TRANSLATORS: command description */
 		     _("Gets details about a firmware file"),
 		     fu_util_get_details);
-	fu_util_add (priv->cmd_array,
+	fu_util_cmd_array_add (cmd_array,
 		     "get-updates",
 		     NULL,
 		     /* TRANSLATORS: command description */
 		     _("Gets the list of updates for connected hardware"),
 		     fu_util_get_updates);
-	fu_util_add (priv->cmd_array,
+	fu_util_cmd_array_add (cmd_array,
 		     "get-devices",
 		     NULL,
 		     /* TRANSLATORS: command description */
 		     _("Get all devices that support firmware updates"),
 		     fu_util_get_devices);
-	fu_util_add (priv->cmd_array,
+	fu_util_cmd_array_add (cmd_array,
 		     "get-topology",
 		     NULL,
 		     /* TRANSLATORS: command description */
 		     _("Get all devices according to the system topology"),
 		     fu_util_get_topology);
-	fu_util_add (priv->cmd_array,
+	fu_util_cmd_array_add (cmd_array,
 		     "watch",
 		     NULL,
 		     /* TRANSLATORS: command description */
 		     _("Watch for hardware changes"),
 		     fu_util_watch);
-	fu_util_add (priv->cmd_array,
+	fu_util_cmd_array_add (cmd_array,
 		     "install-blob",
 		     "FILENAME DEVICE-ID",
 		     /* TRANSLATORS: command description */
 		     _("Install a firmware blob on a device"),
 		     fu_util_install_blob);
-	fu_util_add (priv->cmd_array,
+	fu_util_cmd_array_add (cmd_array,
 		     "install",
 		     "FILE [ID]",
 		     /* TRANSLATORS: command description */
 		     _("Install a firmware file on this hardware"),
 		     fu_util_install);
-	fu_util_add (priv->cmd_array,
+	fu_util_cmd_array_add (cmd_array,
 		     "attach",
 		     "DEVICE-ID",
 		     /* TRANSLATORS: command description */
 		     _("Attach to firmware mode"),
 		     fu_util_attach);
-	fu_util_add (priv->cmd_array,
+	fu_util_cmd_array_add (cmd_array,
 		     "detach",
 		     "DEVICE-ID",
 		     /* TRANSLATORS: command description */
 		     _("Detach to bootloader mode"),
 		     fu_util_detach);
-	fu_util_add (priv->cmd_array,
+	fu_util_cmd_array_add (cmd_array,
 		     "activate",
 		     "[DEVICE-ID]",
 		     /* TRANSLATORS: command description */
 		     _("Activate pending devices"),
 		     fu_util_activate);
-	fu_util_add (priv->cmd_array,
+	fu_util_cmd_array_add (cmd_array,
 		     "hwids",
 		     "[FILE]",
 		     /* TRANSLATORS: command description */
 		     _("Return all the hardware IDs for the machine"),
 		     fu_util_hwids);
-	fu_util_add (priv->cmd_array,
+	fu_util_cmd_array_add (cmd_array,
 		     "monitor",
 		     NULL,
 		     /* TRANSLATORS: command description */
 		     _("Monitor the daemon for events"),
 		     fu_util_monitor);
-	fu_util_add (priv->cmd_array,
+	fu_util_cmd_array_add (cmd_array,
 		     "update",
 		     NULL,
 		     /* TRANSLATORS: command description */
@@ -1516,8 +1397,7 @@ main (int argc, char *argv[])
 			  G_CALLBACK (fu_util_cancelled_cb), priv);
 
 	/* sort by command name */
-	g_ptr_array_sort (priv->cmd_array,
-			  (GCompareFunc) fu_sort_command_name_cb);
+	fu_util_cmd_array_sort (cmd_array);
 
 	/* non-TTY consoles cannot answer questions */
 	if (!interactive) {
@@ -1527,7 +1407,7 @@ main (int argc, char *argv[])
 
 	/* get a list of the commands */
 	priv->context = g_option_context_new (NULL);
-	cmd_descriptions = fu_util_get_descriptions (priv->cmd_array);
+	cmd_descriptions = fu_util_cmd_array_to_string (cmd_array);
 	g_option_context_set_summary (priv->context, cmd_descriptions);
 	g_option_context_set_description (priv->context,
 		"This tool allows an administrator to use the fwupd plugins "
@@ -1581,7 +1461,7 @@ main (int argc, char *argv[])
 		fu_engine_add_plugin_filter (priv->engine, plugin_glob[i]);
 
 	/* run the specified command */
-	ret = fu_util_run (priv, argv[1], (gchar**) &argv[2], &error);
+	ret = fu_util_cmd_array_run (cmd_array, priv, argv[1], (gchar**) &argv[2], &error);
 	if (!ret) {
 		if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_ARGS)) {
 			g_autofree gchar *tmp = NULL;
