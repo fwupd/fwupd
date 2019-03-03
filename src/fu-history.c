@@ -180,7 +180,7 @@ fu_history_create_database (FuHistory *self, GError **error)
 			 "COMMIT;", NULL, NULL, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
-			     "Failed to create database: %s",
+			     "Failed to prepare SQL for creating tables: %s",
 			     sqlite3_errmsg (self->db));
 		return FALSE;
 	}
@@ -257,14 +257,15 @@ fu_history_get_schema_version (FuHistory *self)
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 
 	rc = sqlite3_prepare_v2 (self->db,
-				 "SELECT version FROM schema LIMIT 1;", -1, &stmt, NULL);
+				 "SELECT version FROM schema LIMIT 1;",
+				 -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		g_debug ("no schema version: %s", sqlite3_errmsg (self->db));
 		return 0;
 	}
 	rc = sqlite3_step (stmt);
 	if (rc != SQLITE_ROW) {
-		g_warning ("failed to execute prepared statement: %s",
+		g_warning ("failed prepare to get schema version: %s",
 			   sqlite3_errmsg (self->db));
 		return 0;
 	}
@@ -447,7 +448,7 @@ fu_history_modify_device (FuHistory *self, FuDevice *device,
 	}
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
-			     "Failed to prepare SQL: %s",
+			     "Failed to prepare SQL to update history: %s",
 			     sqlite3_errmsg (self->db));
 		return FALSE;
 	}
@@ -521,7 +522,7 @@ fu_history_add_device (FuHistory *self, FuDevice *device, FwupdRelease *release,
 					 "?11,?12,?13,?14,?15,?16)", -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
-			     "Failed to prepare SQL: %s",
+			     "Failed to prepare SQL to insert history: %s",
 			     sqlite3_errmsg (self->db));
 		return FALSE;
 	}
@@ -569,7 +570,7 @@ fu_history_remove_all_with_state (FuHistory *self,
 				 -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
-			     "Failed to prepare SQL: %s",
+			     "Failed to prepare SQL to delete history: %s",
 			     sqlite3_errmsg (self->db));
 		return FALSE;
 	}
@@ -597,7 +598,7 @@ fu_history_remove_all (FuHistory *self, GError **error)
 	rc = sqlite3_prepare_v2 (self->db, "DELETE FROM history;", -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
-			     "Failed to prepare SQL: %s",
+			     "Failed to prepare SQL to delete history: %s",
 			     sqlite3_errmsg (self->db));
 		return FALSE;
 	}
@@ -632,7 +633,7 @@ fu_history_remove_device (FuHistory *self,  FuDevice *device,
 				 -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
-			     "Failed to prepare SQL: %s",
+			     "Failed to prepare SQL to delete history: %s",
 			     sqlite3_errmsg (self->db));
 		return FALSE;
 	}
@@ -681,7 +682,7 @@ fu_history_get_device_by_id (FuHistory *self, const gchar *device_id, GError **e
 				 "device_id = ?1 LIMIT 1", -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
-			     "Failed to prepare SQL: %s",
+			     "Failed to prepare SQL to get history: %s",
 			     sqlite3_errmsg (self->db));
 		return NULL;
 	}
@@ -740,7 +741,7 @@ fu_history_get_devices (FuHistory *self, GError **error)
 					-1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
-			     "Failed to prepare SQL: %s",
+			     "Failed to prepare SQL to get history: %s",
 			     sqlite3_errmsg (self->db));
 		return NULL;
 	}
