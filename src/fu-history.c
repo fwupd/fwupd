@@ -223,8 +223,6 @@ static gboolean
 fu_history_migrate_database_v2 (FuHistory *self, GError **error)
 {
 	gint rc;
-
-	/* rename the table to something out the way */
 	rc = sqlite3_exec (self->db,
 			   "ALTER TABLE history ADD COLUMN checksum_device TEXT DEFAULT NULL;"
 			   "ALTER TABLE history ADD COLUMN protocol TEXT DEFAULT NULL;",
@@ -251,8 +249,6 @@ static gboolean
 fu_history_migrate_database_v3 (FuHistory *self, GError **error)
 {
 	gint rc;
-
-	/* rename the table to something out the way */
 	rc = sqlite3_exec (self->db,
 			   "ALTER TABLE history ADD COLUMN protocol TEXT DEFAULT NULL;",
 			   NULL, NULL, NULL);
