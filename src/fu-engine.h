@@ -114,6 +114,9 @@ GPtrArray	*fu_engine_get_details			(FuEngine	*self,
 gboolean	 fu_engine_activate			(FuEngine	*self,
 							 const gchar	*device_id,
 							 GError		**error);
+GPtrArray	*fu_engine_get_approved_firmware	(FuEngine	*self);
+void		 fu_engine_add_approved_firmware	(FuEngine	*self,
+							 const gchar	*checksum);
 
 /* for the self tests */
 void		 fu_engine_add_device			(FuEngine	*self,

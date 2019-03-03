@@ -2123,6 +2123,62 @@ fu_util_activate (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_util_set_approved_firmware (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_auto(GStrv) checksums = NULL;
+
+	/* check args */
+	if (g_strv_length (values) != 1) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments: list of checksums expected");
+		return FALSE;
+	}
+
+	/* call into daemon */
+	checksums = g_strsplit (values[0], ",", -1);
+	return fwupd_client_set_approved_firmware (priv->client,
+						   checksums,
+						   priv->cancellable,
+						   error);
+}
+
+static gboolean
+fu_util_get_approved_firmware (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_auto(GStrv) checksums = NULL;
+
+	/* check args */
+	if (g_strv_length (values) != 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments: none expected");
+		return FALSE;
+	}
+
+	/* call into daemon */
+	checksums = fwupd_client_get_approved_firmware (priv->client,
+							priv->cancellable,
+							error);
+	if (checksums == NULL)
+		return FALSE;
+	if (g_strv_length (checksums) == 0) {
+		/* TRANSLATORS: approved firmware has been checked by
+		 * the domain administrator */
+		g_print ("%s\n", _("There is no approved firmware."));
+	} else {
+		/* TRANSLATORS: approved firmware has been checked by
+		 * the domain administrator */
+		g_print ("%s\n", _("Approved firmware:"));
+		for (guint i = 0; checksums[i] != NULL; i++)
+			g_print (" * %s\n", checksums[i]);
+	}
+	return TRUE;
+}
+
 static void
 fu_util_ignore_cb (const gchar *log_domain, GLogLevelFlags log_level,
 		   const gchar *message, gpointer user_data)
@@ -2373,6 +2429,18 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Activate devices"),
 		     fu_util_activate);
+	fu_util_cmd_array_add (cmd_array,
+		     "get-approved-firmware",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Gets the list of approved firmware."),
+		     fu_util_get_approved_firmware);
+	fu_util_cmd_array_add (cmd_array,
+		     "set-approved-firmware",
+		     "CHECKSUM1[,CHECKSUM2][,CHECKSUM3]",
+		     /* TRANSLATORS: command description */
+		     _("Sets the list of approved firmware."),
+		     fu_util_set_approved_firmware);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();

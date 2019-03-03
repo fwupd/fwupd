@@ -30,6 +30,7 @@ struct _FuConfig
 	GPtrArray		*monitors;
 	GPtrArray		*blacklist_devices;
 	GPtrArray		*blacklist_plugins;
+	GPtrArray		*approved_firmware;
 	guint64			 archive_size_max;
 	guint			 idle_timeout;
 	XbSilo			*silo;
@@ -357,6 +358,7 @@ fu_config_load_from_file (FuConfig *self, const gchar *config_file,
 	GFileMonitor *monitor;
 	guint64 archive_size_max;
 	guint idle_timeout;
+	g_auto(GStrv) approved_firmware = NULL;
 	g_auto(GStrv) devices = NULL;
 	g_auto(GStrv) plugins = NULL;
 	g_autoptr(GFile) file = NULL;
@@ -364,6 +366,7 @@ fu_config_load_from_file (FuConfig *self, const gchar *config_file,
 	/* ensure empty in case we're called from a monitor change */
 	g_ptr_array_set_size (self->blacklist_devices, 0);
 	g_ptr_array_set_size (self->blacklist_plugins, 0);
+	g_ptr_array_set_size (self->approved_firmware, 0);
 	g_ptr_array_set_size (self->monitors, 0);
 	g_ptr_array_set_size (self->remotes, 0);
 
@@ -404,6 +407,19 @@ fu_config_load_from_file (FuConfig *self, const gchar *config_file,
 		for (guint i = 0; plugins[i] != NULL; i++) {
 			g_ptr_array_add (self->blacklist_plugins,
 					 g_strdup (plugins[i]));
+		}
+	}
+
+	/* get approved firmware */
+	approved_firmware = g_key_file_get_string_list (self->keyfile,
+							"fwupd",
+							"ApprovedFirmware",
+							NULL, /* length */
+							NULL);
+	if (approved_firmware != NULL) {
+		for (guint i = 0; approved_firmware[i] != NULL; i++) {
+			g_ptr_array_add (self->approved_firmware,
+					 g_strdup (approved_firmware[i]));
 		}
 	}
 
@@ -553,6 +569,13 @@ fu_config_get_blacklist_plugins (FuConfig *self)
 	return self->blacklist_plugins;
 }
 
+GPtrArray *
+fu_config_get_approved_firmware (FuConfig *self)
+{
+	g_return_val_if_fail (FU_IS_CONFIG (self), NULL);
+	return self->approved_firmware;
+}
+
 static void
 fu_config_class_init (FuConfigClass *klass)
 {
@@ -567,6 +590,7 @@ fu_config_init (FuConfig *self)
 	self->keyfile = g_key_file_new ();
 	self->blacklist_devices = g_ptr_array_new_with_free_func (g_free);
 	self->blacklist_plugins = g_ptr_array_new_with_free_func (g_free);
+	self->approved_firmware = g_ptr_array_new_with_free_func (g_free);
 	self->remotes = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	self->monitors = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 }
@@ -583,6 +607,7 @@ fu_config_finalize (GObject *obj)
 	g_key_file_unref (self->keyfile);
 	g_ptr_array_unref (self->blacklist_devices);
 	g_ptr_array_unref (self->blacklist_plugins);
+	g_ptr_array_unref (self->approved_firmware);
 	g_ptr_array_unref (self->remotes);
 	g_ptr_array_unref (self->monitors);
 

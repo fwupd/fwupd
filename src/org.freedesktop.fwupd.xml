@@ -372,6 +372,42 @@
     </method>
 
     <!--***********************************************************-->
+    <method name='GetApprovedFirmware'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Gets the list of approved firmware.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='as' name='checksums' direction='out'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>The checksums of the archives</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
+    <method name='SetApprovedFirmware'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Sets the list of approved firmware.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='as' name='checksums' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>The checksums of the archives</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
     <method name='ClearResults'>
       <doc:doc>
         <doc:description>

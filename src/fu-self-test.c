@@ -785,6 +785,16 @@ fu_engine_downgrade_func (void)
 	g_assert (releases != NULL);
 	g_assert_cmpint (releases->len, ==, 4);
 
+	/* no upgrades, as no firmware is approved */
+	releases_up = fu_engine_get_upgrades (engine, fu_device_get_id (device), &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO);
+	g_assert_null (releases_up);
+	g_clear_error (&error);
+
+	/* retry with approved firmware set */
+	fu_engine_add_approved_firmware (engine, "deadbeefdeadbeefdeadbeefdeadbeef");
+	fu_engine_add_approved_firmware (engine, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+
 	/* upgrades */
 	releases_up = fu_engine_get_upgrades (engine, fu_device_get_id (device), &error);
 	g_assert_no_error (error);
@@ -2236,6 +2246,7 @@ fu_history_func (void)
 	FwupdRelease *release;
 	g_autoptr(FuDevice) device_found = NULL;
 	g_autoptr(FuHistory) history = NULL;
+	g_autoptr(GPtrArray) approved_firmware = NULL;
 	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
 
@@ -2325,6 +2336,23 @@ fu_history_func (void)
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert (device_found == NULL);
 	g_clear_error (&error);
+
+	/* approved firmware */
+	ret = fu_history_clear_approved_firmware (history, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	ret = fu_history_add_approved_firmware (history, "foo", &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	ret = fu_history_add_approved_firmware (history, "bar", &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	approved_firmware = fu_history_get_approved_firmware (history, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (approved_firmware);
+	g_assert_cmpint (approved_firmware->len, ==, 2);
+	g_assert_cmpstr (g_ptr_array_index (approved_firmware, 0), ==, "foo");
+	g_assert_cmpstr (g_ptr_array_index (approved_firmware, 1), ==, "bar");
 }
 
 static void

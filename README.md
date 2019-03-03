@@ -72,6 +72,26 @@ To clear the local history of updates:
 
  Only updates that were distributed from the LVFS will be reported to the LVFS.
 
+Enterprise Use
+--------------
+
+The flow of updates can be controlled in the enterprise using the
+"approved updates" feature. This allows the domain administrator to filter
+the possible updates from a central server (e.g. the LVFS) to only firmware
+that have been tested specifically in your organisation.
+
+The list of approved updates can be enabled by adding `ApprovalRequired=true`
+to the remote configuration file, e.g. `lvfs.conf`. Once enabled, the list
+of approved updates can be set in `daemon.conf`, for instance:
+
+    ApprovedFirmware=foo,bar
+
+The `foo,bar` refers to the container checksum as specified in the metadata
+file.
+
+Additionally, the list of approved firmware can be supplemented using
+`fwupdmgr set-approved-firmware baz` or using the D-Bus interface.
+
 Other frontends
 -------------------
 
