@@ -71,6 +71,7 @@ struct _FuEngine
 	FuQuirks		*quirks;
 	GHashTable		*runtime_versions;
 	GHashTable		*compile_versions;
+	GHashTable		*approved_firmware;
 	gboolean		 loaded;
 };
 
@@ -2698,6 +2699,19 @@ fu_engine_sort_releases_cb (gconstpointer a, gconstpointer b)
 }
 
 static gboolean
+fu_engine_check_release_is_approved (FuEngine *self, FwupdRelease *rel)
+{
+	GPtrArray *csums = fwupd_release_get_checksums (rel);
+	for (guint i = 0; i < csums->len; i++) {
+		const gchar *csum = g_ptr_array_index (csums, i);
+		g_debug ("checking %s against approved list", csum);
+		if (g_hash_table_lookup (self->approved_firmware, csum) != NULL)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+static gboolean
 fu_engine_add_releases_for_device_component (FuEngine *self,
 					     FuDevice *device,
 					     XbNode *component,
@@ -2726,6 +2740,7 @@ fu_engine_add_releases_for_device_component (FuEngine *self,
 	}
 	for (guint i = 0; i < releases_tmp->len; i++) {
 		XbNode *release = g_ptr_array_index (releases_tmp, i);
+		const gchar *remote_id;
 		const gchar *update_message;
 		gint vercmp;
 		GPtrArray *checksums;
@@ -2758,6 +2773,17 @@ fu_engine_add_releases_for_device_component (FuEngine *self,
 		    fu_common_vercmp (fwupd_release_get_version (rel),
 				      fu_device_get_version_lowest (device)) < 0) {
 			fwupd_release_add_flag (rel, FWUPD_RELEASE_FLAG_BLOCKED_VERSION);
+		}
+
+		/* check if remote is whitelisting firmware */
+		remote_id = fwupd_release_get_remote_id (rel);
+		if (remote_id != NULL) {
+			FwupdRemote *remote = fu_engine_get_remote_by_id (self, remote_id, NULL);
+			if (remote != NULL &&
+			    fwupd_remote_get_approval_required (remote) &&
+			    !fu_engine_check_release_is_approved (self, rel)) {
+				fwupd_release_add_flag (rel, FWUPD_RELEASE_FLAG_BLOCKED_APPROVAL);
+			}
 		}
 
 		/* add update message if exists but device doesn't already have one */
@@ -2995,6 +3021,24 @@ fu_engine_get_downgrades (FuEngine *self, const gchar *device_id, GError **error
 	return g_steal_pointer (&releases);
 }
 
+GPtrArray *
+fu_engine_get_approved_firmware (FuEngine *self)
+{
+	GPtrArray *checksums = g_ptr_array_new_with_free_func (g_free);
+	g_autoptr(GList) keys = g_hash_table_get_keys (self->approved_firmware);
+	for (GList *l = keys; l != NULL; l = l->next) {
+		const gchar *csum = l->data;
+		g_ptr_array_add (checksums, g_strdup (csum));
+	}
+	return checksums;
+}
+
+void
+fu_engine_add_approved_firmware (FuEngine *self, const gchar *checksum)
+{
+	g_hash_table_add (self->approved_firmware, g_strdup (checksum));
+}
+
 /**
  * fu_engine_get_upgrades:
  * @self: A #FuEngine
@@ -3060,6 +3104,17 @@ fu_engine_get_upgrades (FuEngine *self, const gchar *device_id, GError **error)
 				 fu_device_get_version (device));
 			continue;
 		}
+
+		/* not approved */
+		if (fwupd_release_has_flag (rel_tmp, FWUPD_RELEASE_FLAG_BLOCKED_APPROVAL)) {
+			g_string_append_printf (error_str, "%s=not-approved, ",
+						fwupd_release_get_version (rel_tmp));
+			g_debug ("ignoring %s as not approved as required by %s",
+				 fwupd_release_get_version (rel_tmp),
+				 fwupd_release_get_remote_id (rel_tmp));
+			continue;
+		}
+
 		g_ptr_array_add (releases, g_object_ref (rel_tmp));
 	}
 	if (error_str->len > 2)
@@ -4104,6 +4159,8 @@ fu_engine_udev_uevent_cb (GUdevClient *gudev_client,
 gboolean
 fu_engine_load (FuEngine *self, GError **error)
 {
+	g_autoptr(GPtrArray) checksums = NULL;
+
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
@@ -4115,6 +4172,22 @@ fu_engine_load (FuEngine *self, GError **error)
 	if (!fu_config_load (self->config, error)) {
 		g_prefix_error (error, "Failed to load config: ");
 		return FALSE;
+	}
+
+	/* get hardcoded approved firmware */
+	checksums = fu_config_get_approved_firmware (self->config);
+	for (guint i = 0; i < checksums->len; i++) {
+		const gchar *csum = g_ptr_array_index (checksums, i);
+		fu_engine_add_approved_firmware (self, csum);
+	}
+
+	/* get extra firmware saved to the database */
+	checksums = fu_history_get_approved_firmware (self->history, error);
+	if (checksums == NULL)
+		return FALSE;
+	for (guint i = 0; i < checksums->len; i++) {
+		const gchar *csum = g_ptr_array_index (checksums, i);
+		fu_engine_add_approved_firmware (self, csum);
 	}
 
 	/* set up idle exit */
@@ -4276,6 +4349,7 @@ fu_engine_init (FuEngine *self)
 	self->udev_subsystems = g_ptr_array_new_with_free_func (g_free);
 	self->runtime_versions = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	self->compile_versions = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+	self->approved_firmware = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
 
 	g_signal_connect (self->idle, "notify::status",
 			  G_CALLBACK (fu_engine_idle_status_notify_cb), self);
@@ -4328,6 +4402,7 @@ fu_engine_finalize (GObject *obj)
 	g_ptr_array_unref (self->udev_subsystems);
 	g_hash_table_unref (self->runtime_versions);
 	g_hash_table_unref (self->compile_versions);
+	g_hash_table_unref (self->approved_firmware);
 	g_object_unref (self->plugin_list);
 
 	G_OBJECT_CLASS (fu_engine_parent_class)->finalize (obj);

@@ -123,4 +123,15 @@
     </defaults>
   </action>
 
+  <action id="org.freedesktop.fwupd.set-approved-firmware">
+    <description>Sets the list of approved firmware</description>
+    <!-- TRANSLATORS: this is the PolicyKit modal dialog -->
+    <message>Authentication is required to set the list of approved firmware</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
 </policyconfig>

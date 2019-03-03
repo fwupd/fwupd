@@ -131,4 +131,12 @@ FwupdRemote	*fwupd_client_get_remote_by_id		(FwupdClient	*client,
 							 GCancellable	*cancellable,
 							 GError		**error);
 
+gchar		**fwupd_client_get_approved_firmware	(FwupdClient	*client,
+							 GCancellable	*cancellable,
+							 GError		**error);
+gboolean	 fwupd_client_set_approved_firmware	(FwupdClient	*client,
+							 gchar		**checksums,
+							 GCancellable	*cancellable,
+							 GError		**error);
+
 G_END_DECLS

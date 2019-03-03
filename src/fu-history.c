@@ -19,7 +19,7 @@
 #include "fu-history.h"
 #include "fu-mutex.h"
 
-#define FU_HISTORY_CURRENT_SCHEMA_VERSION	4
+#define FU_HISTORY_CURRENT_SCHEMA_VERSION	5
 
 static void fu_history_finalize			 (GObject *object);
 
@@ -177,6 +177,8 @@ fu_history_create_database (FuHistory *self, GError **error)
 			 "version_new TEXT,"
 			 "checksum_device TEXT DEFAULT NULL,"
 			 "protocol TEXT DEFAULT NULL);"
+			 "CREATE TABLE approved_firmware ("
+			 "checksum TEXT);"
 			 "COMMIT;", NULL, NULL, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
@@ -246,6 +248,22 @@ fu_history_migrate_database_v3 (FuHistory *self, GError **error)
 			   NULL, NULL, NULL);
 	if (rc != SQLITE_OK)
 		g_debug ("ignoring database error: %s", sqlite3_errmsg (self->db));
+	return TRUE;
+}
+
+static gboolean
+fu_history_migrate_database_v4 (FuHistory *self, GError **error)
+{
+	gint rc;
+	rc = sqlite3_exec (self->db,
+			   "CREATE TABLE approved_firmware (checksum TEXT);",
+			   NULL, NULL, NULL);
+	if (rc != SQLITE_OK) {
+		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
+			     "Failed to create table: %s",
+			     sqlite3_errmsg (self->db));
+		return FALSE;
+	}
 	return TRUE;
 }
 
@@ -340,9 +358,17 @@ fu_history_load (FuHistory *self, GError **error)
 			return FALSE;
 		if (!fu_history_migrate_database_v3 (self, error))
 			return FALSE;
+		if (!fu_history_migrate_database_v4 (self, error))
+			return FALSE;
 	} else if (schema_ver == 3) {
 		g_debug ("migrating v%u database by altering", schema_ver);
 		if (!fu_history_migrate_database_v3 (self, error))
+			return FALSE;
+		if (!fu_history_migrate_database_v4 (self, error))
+			return FALSE;
+	} else if (schema_ver == 4) {
+		g_debug ("migrating v%u database by altering", schema_ver);
+		if (!fu_history_migrate_database_v4 (self, error))
 			return FALSE;
 	}
 
@@ -750,6 +776,108 @@ fu_history_get_devices (FuHistory *self, GError **error)
 		return NULL;
 	array = g_ptr_array_ref (array_tmp);
 	return array;
+}
+
+GPtrArray *
+fu_history_get_approved_firmware (FuHistory *self, GError **error)
+{
+	gint rc;
+	g_autoptr(FuMutexLocker) locker = NULL;
+	g_autoptr(GPtrArray) array = NULL;
+	g_autoptr(sqlite3_stmt) stmt = NULL;
+
+	g_return_val_if_fail (FU_IS_HISTORY (self), NULL);
+
+	/* lazy load */
+	if (self->db == NULL) {
+		if (!fu_history_load (self, error))
+			return NULL;
+	}
+
+	/* get all the approved firmware */
+	locker = fu_mutex_read_locker_new (self->db_mutex);
+	g_return_val_if_fail (locker != NULL, NULL);
+	rc = sqlite3_prepare_v2 (self->db,
+				 "SELECT checksum FROM approved_firmware;",
+				 -1, &stmt, NULL);
+	if (rc != SQLITE_OK) {
+		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
+			     "Failed to prepare SQL to get checksum: %s",
+			     sqlite3_errmsg (self->db));
+		return NULL;
+	}
+	array = g_ptr_array_new_with_free_func (g_free);
+	while ((rc = sqlite3_step (stmt)) == SQLITE_ROW) {
+		const gchar *tmp = (const gchar *) sqlite3_column_text (stmt, 0);
+		g_ptr_array_add (array, g_strdup (tmp));
+	}
+	if (rc != SQLITE_DONE) {
+		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_WRITE,
+			     "failed to execute prepared statement: %s",
+			     sqlite3_errmsg (self->db));
+		return NULL;
+	}
+	return g_steal_pointer (&array);
+}
+
+gboolean
+fu_history_clear_approved_firmware (FuHistory *self, GError **error)
+{
+	gint rc;
+	g_autoptr(sqlite3_stmt) stmt = NULL;
+	g_autoptr(FuMutexLocker) locker = NULL;
+
+	g_return_val_if_fail (FU_IS_HISTORY (self), FALSE);
+
+	/* lazy load */
+	if (!fu_history_load (self, error))
+		return FALSE;
+
+	/* remove entries */
+	locker = fu_mutex_write_locker_new (self->db_mutex);
+	g_return_val_if_fail (locker != NULL, FALSE);
+	rc = sqlite3_prepare_v2 (self->db,
+				 "DELETE FROM approved_firmware;",
+				 -1, &stmt, NULL);
+	if (rc != SQLITE_OK) {
+		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
+			     "Failed to prepare SQL to delete approved firmware: %s",
+			     sqlite3_errmsg (self->db));
+		return FALSE;
+	}
+	return fu_history_stmt_exec (self, stmt, NULL, error);
+}
+
+gboolean
+fu_history_add_approved_firmware (FuHistory *self,
+				  const gchar *checksum,
+				  GError **error)
+{
+	gint rc;
+	g_autoptr(sqlite3_stmt) stmt = NULL;
+	g_autoptr(FuMutexLocker) locker = NULL;
+
+	g_return_val_if_fail (FU_IS_HISTORY (self), FALSE);
+	g_return_val_if_fail (checksum != NULL, FALSE);
+
+	/* lazy load */
+	if (!fu_history_load (self, error))
+		return FALSE;
+
+	/* add */
+	locker = fu_mutex_write_locker_new (self->db_mutex);
+	g_return_val_if_fail (locker != NULL, FALSE);
+	rc = sqlite3_prepare_v2 (self->db,
+				 "INSERT INTO approved_firmware (checksum) "
+				 "VALUES (?1)", -1, &stmt, NULL);
+	if (rc != SQLITE_OK) {
+		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
+			     "Failed to prepare SQL to insert checksum: %s",
+			     sqlite3_errmsg (self->db));
+		return FALSE;
+	}
+	sqlite3_bind_text (stmt, 1, checksum, -1, SQLITE_STATIC);
+	return fu_history_stmt_exec (self, stmt, NULL, error);
 }
 
 static void

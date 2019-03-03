@@ -124,6 +124,7 @@ typedef guint64 FwupdDeviceFlags;
  * @FWUPD_RELEASE_FLAG_IS_UPGRADE:		Is newer than the device version
  * @FWUPD_RELEASE_FLAG_IS_DOWNGRADE:		Is older than the device version
  * @FWUPD_RELEASE_FLAG_BLOCKED_VERSION:		Blocked as below device version-lowest
+ * @FWUPD_RELEASE_FLAG_BLOCKED_APPROVAL:	Blocked as release not approved
  *
  * The release flags.
  **/
@@ -133,6 +134,7 @@ typedef guint64 FwupdDeviceFlags;
 #define FWUPD_RELEASE_FLAG_IS_UPGRADE		(1u << 2)	/* Since: 1.2.6 */
 #define FWUPD_RELEASE_FLAG_IS_DOWNGRADE		(1u << 3)	/* Since: 1.2.6 */
 #define FWUPD_RELEASE_FLAG_BLOCKED_VERSION	(1u << 4)	/* Since: 1.2.6 */
+#define FWUPD_RELEASE_FLAG_BLOCKED_APPROVAL	(1u << 5)	/* Since: 1.2.6 */
 #define FWUPD_RELEASE_FLAG_UNKNOWN		G_MAXUINT64	/* Since: 1.2.6 */
 typedef guint64 FwupdReleaseFlags;
 

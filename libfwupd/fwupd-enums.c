@@ -391,6 +391,8 @@ fwupd_release_flag_to_string (FwupdReleaseFlags release_flag)
 		return "is-downgrade";
 	if (release_flag == FWUPD_RELEASE_FLAG_BLOCKED_VERSION)
 		return "blocked-version";
+	if (release_flag == FWUPD_RELEASE_FLAG_BLOCKED_APPROVAL)
+		return "blocked-approval";
 	return NULL;
 }
 
@@ -417,5 +419,7 @@ fwupd_release_flag_from_string (const gchar *release_flag)
 		return FWUPD_RELEASE_FLAG_IS_DOWNGRADE;
 	if (g_strcmp0 (release_flag, "blocked-version") == 0)
 		return FWUPD_RELEASE_FLAG_BLOCKED_VERSION;
+	if (g_strcmp0 (release_flag, "blocked-approval") == 0)
+		return FWUPD_RELEASE_FLAG_BLOCKED_APPROVAL;
 	return FWUPD_RELEASE_FLAG_NONE;
 }
