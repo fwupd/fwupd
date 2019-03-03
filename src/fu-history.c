@@ -19,6 +19,8 @@
 #include "fu-history.h"
 #include "fu-mutex.h"
 
+#define FU_HISTORY_CURRENT_SCHEMA_VERSION	4
+
 static void fu_history_finalize			 (GObject *object);
 
 struct _FuHistory
@@ -157,7 +159,7 @@ fu_history_create_database (FuHistory *self, GError **error)
 			 "CREATE TABLE schema ("
 			 "created timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
 			 "version INTEGER DEFAULT 0);"
-			 "INSERT INTO schema (version) VALUES (4);"
+			 "INSERT INTO schema (version) VALUES (0);"
 			 "CREATE TABLE history ("
 			 "device_id TEXT,"
 			 "update_state INTEGER DEFAULT 0,"
@@ -224,21 +226,11 @@ fu_history_migrate_database_v2 (FuHistory *self, GError **error)
 {
 	gint rc;
 	rc = sqlite3_exec (self->db,
-			   "ALTER TABLE history ADD COLUMN checksum_device TEXT DEFAULT NULL;"
-			   "ALTER TABLE history ADD COLUMN protocol TEXT DEFAULT NULL;",
+			   "ALTER TABLE history ADD COLUMN checksum_device TEXT DEFAULT NULL;",
 			   NULL, NULL, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
 			     "Failed to alter database: %s",
-			     sqlite3_errmsg (self->db));
-		return FALSE;
-	}
-
-	/* update version */
-	rc = sqlite3_exec (self->db, "UPDATE schema SET version=4;", NULL, NULL, NULL);
-	if (rc != SQLITE_OK) {
-		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
-			     "Failed to migrate database: %s",
 			     sqlite3_errmsg (self->db));
 		return FALSE;
 	}
@@ -254,15 +246,6 @@ fu_history_migrate_database_v3 (FuHistory *self, GError **error)
 			   NULL, NULL, NULL);
 	if (rc != SQLITE_OK)
 		g_debug ("ignoring database error: %s", sqlite3_errmsg (self->db));
-
-	/* update version */
-	rc = sqlite3_exec (self->db, "UPDATE schema SET version=4;", NULL, NULL, NULL);
-	if (rc != SQLITE_OK) {
-		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
-			     "Failed to update schema version: %s",
-			     sqlite3_errmsg (self->db));
-		return FALSE;
-	}
 	return TRUE;
 }
 
@@ -297,6 +280,7 @@ fu_history_load (FuHistory *self, GError **error)
 	g_autofree gchar *filename = NULL;
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(FuMutexLocker) locker = fu_mutex_write_locker_new (self->db_mutex);
+	g_autoptr(sqlite3_stmt) stmt = NULL;
 
 	/* already done */
 	if (self->db != NULL)
@@ -331,35 +315,48 @@ fu_history_load (FuHistory *self, GError **error)
 	/* check database */
 	schema_ver = fu_history_get_schema_version (self);
 	if (schema_ver == 0) {
-		g_autoptr(sqlite3_stmt) stmt = NULL;
+		g_autoptr(sqlite3_stmt) stmt_tmp = NULL;
 		rc = sqlite3_prepare_v2 (self->db,
 					 "SELECT * FROM history LIMIT 0;",
-					 -1, &stmt, NULL);
+					 -1, &stmt_tmp, NULL);
 		if (rc == SQLITE_OK)
 			schema_ver = 1;
 	}
 	g_debug ("got schema version of %u", schema_ver);
 
-	/* migrate schema */
+	/* create initial up-to-date database, or migrate */
 	if (schema_ver == 0) {
 		g_debug ("building initial database");
 		if (!fu_history_create_database (self, error))
 			return FALSE;
 	} else if (schema_ver == 1) {
-		g_debug ("migrating v%u database", schema_ver);
+		g_debug ("migrating v%u database by recreating table", schema_ver);
 		if (!fu_history_migrate_database_v1 (self, error))
 			return FALSE;
 	} else if (schema_ver == 2) {
-		g_debug ("migrating v%u database", schema_ver);
+		g_debug ("migrating v%u database by altering", schema_ver);
 		if (!fu_history_migrate_database_v2 (self, error))
 			return FALSE;
+		if (!fu_history_migrate_database_v3 (self, error))
+			return FALSE;
 	} else if (schema_ver == 3) {
-		g_debug ("migrating v%u database", schema_ver);
+		g_debug ("migrating v%u database by altering", schema_ver);
 		if (!fu_history_migrate_database_v3 (self, error))
 			return FALSE;
 	}
 
-	return TRUE;
+	/* update version */
+	rc = sqlite3_prepare_v2 (self->db,
+				 "UPDATE schema SET version=?1;",
+				 -1, &stmt, NULL);
+	if (rc != SQLITE_OK) {
+		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
+			     "Failed to prepare SQL for updating schema: %s",
+			     sqlite3_errmsg (self->db));
+		return FALSE;
+	}
+	sqlite3_bind_int (stmt, 1, FU_HISTORY_CURRENT_SCHEMA_VERSION);
+	return fu_history_stmt_exec (self, stmt, NULL, error);
 }
 
 static gchar *
