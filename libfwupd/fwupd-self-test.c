@@ -13,6 +13,7 @@
 #include "fwupd-common.h"
 #include "fwupd-enums.h"
 #include "fwupd-error.h"
+#include "fwupd-device-private.h"
 #include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
 
@@ -261,11 +262,15 @@ static void
 fwupd_device_func (void)
 {
 	gboolean ret;
+	g_autofree gchar *data = NULL;
 	g_autofree gchar *str = NULL;
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(FwupdRelease) rel = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GString) str_ascii = NULL;
+	g_autoptr(JsonBuilder) builder = NULL;
+	g_autoptr(JsonGenerator) json_generator = NULL;
+	g_autoptr(JsonNode) json_root = NULL;
 
 	/* create dummy object */
 	dev = fwupd_device_new ();
@@ -322,6 +327,56 @@ fwupd_device_func (void)
 		"  Size:                 1.0 kB\n"
 		"  Uri:                  http://foo.com\n"
 		"  TrustFlags:           payload\n", &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* export to json */
+	builder = json_builder_new ();
+	json_builder_begin_object (builder);
+	fwupd_device_to_json (dev, builder);
+	json_builder_end_object (builder);
+	json_root = json_builder_get_root (builder);
+	json_generator = json_generator_new ();
+	json_generator_set_pretty (json_generator, TRUE);
+	json_generator_set_root (json_generator, json_root);
+	data = json_generator_to_data (json_generator, NULL);
+	g_assert_nonnull (data);
+	ret = fu_test_compare_lines (data,
+		"{\n"
+		"  \"Name\" : \"ColorHug2\",\n"
+		"  \"DeviceId\" : \"USB:foo\",\n"
+		"  \"Guid\" : [\n"
+		"    \"2082b5e0-7a64-478a-b1b2-e3404fab6dad\",\n"
+		"    \"00000000-0000-0000-0000-000000000000\"\n"
+		"  ],\n"
+		"  \"Flags\" : [\n"
+		"    \"updatable\",\n"
+		"    \"require-ac\"\n"
+		"  ],\n"
+		"  \"Checksums\" : [\n"
+		"    \"SHA1(beefdead)\"\n"
+		"  ],\n"
+		"  \"Icons\" : [\n"
+		"    \"input-gaming\",\n"
+		"    \"input-mouse\"\n"
+		"  ],\n"
+		"  \"Created\" : 1,\n"
+		"  \"Modified\" : 86400,\n"
+		"  \"Releases\" : [\n"
+		"    {\n"
+		"      \"AppstreamId\" : \"org.dave.ColorHug.firmware\",\n"
+		"      \"Description\" : \"<p>Hi there!</p>\",\n"
+		"      \"Version\" : \"1.2.3\",\n"
+		"      \"Filename\" : \"firmware.bin\",\n"
+		"      \"Checksum\" : [\n"
+		"        \"SHA1(deadbeef)\"\n"
+		"      ],\n"
+		"      \"Size\" : 1024,\n"
+		"      \"Uri\" : \"http://foo.com\",\n"
+		"      \"TrustFlags\" : 1\n"
+		"    }\n"
+		"  ]\n"
+		"}", &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 }

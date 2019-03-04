@@ -1664,7 +1664,18 @@ fwupd_device_to_json (FwupdDevice *device, JsonBuilder *builder)
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
-	fwupd_device_json_add_int (builder, FWUPD_RESULT_KEY_FLAGS, priv->flags);
+	if (priv->flags != FWUPD_DEVICE_FLAG_NONE) {
+		json_builder_set_member_name (builder, FWUPD_RESULT_KEY_FLAGS);
+		json_builder_begin_array (builder);
+		for (guint i = 0; i < 64; i++) {
+			const gchar *tmp;
+			if ((priv->flags & ((guint64) 1 << i)) == 0)
+				continue;
+			tmp = fwupd_device_flag_to_string ((guint64) 1 << i);
+			json_builder_add_string_value (builder, tmp);
+		}
+		json_builder_end_array (builder);
+	}
 	if (priv->checksums->len > 0) {
 		json_builder_set_member_name (builder, "Checksums");
 		json_builder_begin_array (builder);
