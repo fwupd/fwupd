@@ -365,3 +365,45 @@ fwupd_keyring_kind_to_string (FwupdKeyringKind keyring_kind)
 		return "pkcs7";
 	return NULL;
 }
+
+/**
+ * fwupd_release_flag_to_string:
+ * @release_flag: A #FwupdReleaseFlags, e.g. %FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD
+ *
+ * Converts a #FwupdReleaseFlags to a string.
+ *
+ * Return value: identifier string
+ *
+ * Since: 1.2.6
+ **/
+const gchar *
+fwupd_release_flag_to_string (FwupdReleaseFlags release_flag)
+{
+	if (release_flag == FWUPD_RELEASE_FLAG_NONE)
+		return "none";
+	if (release_flag == FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD)
+		return "trusted-payload";
+	if (release_flag == FWUPD_RELEASE_FLAG_TRUSTED_METADATA)
+		return "trusted-metadata";
+	return NULL;
+}
+
+/**
+ * fwupd_release_flag_from_string:
+ * @release_flag: A string, e.g. `trusted-payload`
+ *
+ * Converts a string to a #FwupdReleaseFlags.
+ *
+ * Return value: enumerated value
+ *
+ * Since: 1.2.6
+ **/
+FwupdReleaseFlags
+fwupd_release_flag_from_string (const gchar *release_flag)
+{
+	if (g_strcmp0 (release_flag, "trusted-payload") == 0)
+		return FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD;
+	if (g_strcmp0 (release_flag, "trusted-metadata") == 0)
+		return FWUPD_RELEASE_FLAG_TRUSTED_METADATA;
+	return FWUPD_RELEASE_FLAG_NONE;
+}

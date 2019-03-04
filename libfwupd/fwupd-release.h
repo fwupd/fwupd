@@ -89,9 +89,20 @@ void		 fwupd_release_set_size			(FwupdRelease	*release,
 const gchar	*fwupd_release_get_license		(FwupdRelease	*release);
 void		 fwupd_release_set_license		(FwupdRelease	*release,
 							 const gchar	*license);
-FwupdTrustFlags	 fwupd_release_get_trust_flags		(FwupdRelease	*release);
+FwupdTrustFlags	 fwupd_release_get_trust_flags		(FwupdRelease	*release)
+G_DEPRECATED_FOR(fwupd_release_get_flags);
 void		 fwupd_release_set_trust_flags		(FwupdRelease	*release,
-							 FwupdTrustFlags trust_flags);
+							 FwupdTrustFlags trust_flags)
+G_DEPRECATED_FOR(fwupd_release_set_flags);
+FwupdReleaseFlags fwupd_release_get_flags		(FwupdRelease	*release);
+void		 fwupd_release_set_flags		(FwupdRelease	*release,
+							 FwupdReleaseFlags flags);
+void		 fwupd_release_add_flag			(FwupdRelease	*release,
+							 FwupdReleaseFlags flag);
+void		 fwupd_release_remove_flag		(FwupdRelease	*release,
+							 FwupdReleaseFlags flag);
+gboolean	 fwupd_release_has_flag			(FwupdRelease	*release,
+							 FwupdReleaseFlags flag);
 guint32		 fwupd_release_get_install_duration	(FwupdRelease	*release);
 void		 fwupd_release_set_install_duration	(FwupdRelease	*release,
 							 guint32	 duration);

@@ -2334,7 +2334,7 @@ fu_engine_get_silo_from_blob (FuEngine *self, GBytes *blob_cab, GError **error)
 static FwupdDevice *
 fu_engine_get_result_from_component (FuEngine *self, XbNode *component, GError **error)
 {
-	FwupdTrustFlags trust_flags = FWUPD_TRUST_FLAG_NONE;
+	FwupdReleaseFlags release_flags = FWUPD_RELEASE_FLAG_NONE;
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(FwupdRelease) rel = NULL;
@@ -2401,9 +2401,9 @@ fu_engine_get_result_from_component (FuEngine *self, XbNode *component, GError *
 			     error_local->message);
 		return NULL;
 	}
-	if (!fu_keyring_get_release_trust_flags (release,
-						 &trust_flags,
-						 &error_local)) {
+	if (!fu_keyring_get_release_flags (release,
+					   &release_flags,
+					   &error_local)) {
 		if (g_error_matches (error_local,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED)) {
@@ -2426,7 +2426,7 @@ fu_engine_get_result_from_component (FuEngine *self, XbNode *component, GError *
 			fwupd_device_set_description (dev, xml);
 	}
 	rel = fwupd_release_new ();
-	fwupd_release_set_trust_flags (rel, trust_flags);
+	fwupd_release_set_flags (rel, release_flags);
 	fu_engine_set_release_from_appstream (self, rel, component, release);
 	fwupd_device_add_release (dev, rel);
 	return g_steal_pointer (&dev);

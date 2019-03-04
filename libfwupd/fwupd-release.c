@@ -47,12 +47,16 @@ typedef struct {
 	gchar				*remote_id;
 	guint64				 size;
 	guint32				 install_duration;
-	FwupdTrustFlags			 trust_flags;
+	FwupdReleaseFlags		 flags;
 	gchar				*update_message;
 } FwupdReleasePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FwupdRelease, fwupd_release, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fwupd_release_get_instance_private (o))
+
+/* the deprecated fwupd_release_get_trust_flags() function should only
+ * return the last two bits of the #FwupdReleaseFlags */
+#define FWUPD_RELEASE_TRUST_FLAGS_MASK		0x3
 
 /**
  * fwupd_release_get_remote_id:
@@ -770,7 +774,7 @@ fwupd_release_get_trust_flags (FwupdRelease *release)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE (release);
 	g_return_val_if_fail (FWUPD_IS_RELEASE (release), 0);
-	return priv->trust_flags;
+	return priv->flags & FWUPD_RELEASE_TRUST_FLAGS_MASK;
 }
 
 /**
@@ -787,7 +791,98 @@ fwupd_release_set_trust_flags (FwupdRelease *release, FwupdTrustFlags trust_flag
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE (release);
 	g_return_if_fail (FWUPD_IS_RELEASE (release));
-	priv->trust_flags = trust_flags;
+
+	/* only overwrite the last two bits of the flags */
+	priv->flags &= ~FWUPD_RELEASE_TRUST_FLAGS_MASK;
+	priv->flags |= trust_flags;
+}
+
+/**
+ * fwupd_release_get_flags:
+ * @release: A #FwupdRelease
+ *
+ * Gets the release flags.
+ *
+ * Returns: the release flags, or 0 if unset
+ *
+ * Since: 1.2.6
+ **/
+FwupdReleaseFlags
+fwupd_release_get_flags (FwupdRelease *release)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_val_if_fail (FWUPD_IS_RELEASE (release), 0);
+	return priv->flags;
+}
+
+/**
+ * fwupd_release_set_flags:
+ * @release: A #FwupdRelease
+ * @flags: the release flags, e.g. %FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD
+ *
+ * Sets the release flags.
+ *
+ * Since: 1.2.6
+ **/
+void
+fwupd_release_set_flags (FwupdRelease *release, FwupdReleaseFlags flags)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_if_fail (FWUPD_IS_RELEASE (release));
+	priv->flags = flags;
+}
+
+/**
+ * fwupd_release_add_flag:
+ * @release: A #FwupdRelease
+ * @flag: the #FwupdReleaseFlags
+ *
+ * Adds a specific release flag to the release.
+ *
+ * Since: 1.2.6
+ **/
+void
+fwupd_release_add_flag (FwupdRelease *release, FwupdReleaseFlags flag)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_if_fail (FWUPD_IS_RELEASE (release));
+	priv->flags |= flag;
+}
+
+/**
+ * fwupd_release_remove_flag:
+ * @release: A #FwupdRelease
+ * @flag: the #FwupdReleaseFlags
+ *
+ * Removes a specific release flag from the release.
+ *
+ * Since: 1.2.6
+ **/
+void
+fwupd_release_remove_flag (FwupdRelease *release, FwupdReleaseFlags flag)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_if_fail (FWUPD_IS_RELEASE (release));
+	priv->flags &= ~flag;
+}
+
+/**
+ * fwupd_release_has_flag:
+ * @release: A #FwupdRelease
+ * @flag: the #FwupdReleaseFlags
+ *
+ * Finds if the release has a specific release flag.
+ *
+ * Returns: %TRUE if the flag is set
+ *
+ * Since: 1.2.6
+ **/
+gboolean
+fwupd_release_has_flag (FwupdRelease *release, FwupdReleaseFlags flag)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_val_if_fail (FWUPD_IS_RELEASE (release), FALSE);
+	return (priv->flags & flag) > 0;
 }
 
 /**
@@ -959,10 +1054,10 @@ fwupd_release_to_variant (FwupdRelease *release)
 				       FWUPD_RESULT_KEY_VENDOR,
 				       g_variant_new_string (priv->vendor));
 	}
-	if (priv->trust_flags != 0) {
+	if (priv->flags != 0) {
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_TRUST_FLAGS,
-				       g_variant_new_uint64 (priv->trust_flags));
+				       g_variant_new_uint64 (priv->flags));
 	}
 	if (g_hash_table_size (priv->metadata) > 0) {
 		g_variant_builder_add (&builder, "{sv}",
@@ -1049,7 +1144,7 @@ fwupd_release_from_key_value (FwupdRelease *release, const gchar *key, GVariant 
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_TRUST_FLAGS) == 0) {
-		fwupd_release_set_trust_flags (release, g_variant_get_uint64 (value));
+		fwupd_release_set_flags (release, g_variant_get_uint64 (value));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_INSTALL_DURATION) == 0) {
@@ -1092,17 +1187,17 @@ fwupd_pad_kv_siz (GString *str, const gchar *key, guint64 value)
 }
 
 static void
-fwupd_pad_kv_tfl (GString *str, const gchar *key, FwupdTrustFlags trust_flags)
+fwupd_pad_kv_tfl (GString *str, const gchar *key, FwupdReleaseFlags release_flags)
 {
 	g_autoptr(GString) tmp = g_string_new ("");
-	for (guint i = 1; i < FWUPD_TRUST_FLAG_LAST; i *= 2) {
-		if ((trust_flags & i) == 0)
+	for (guint i = 0; i < 64; i++) {
+		if ((release_flags & ((guint64) 1 << i)) == 0)
 			continue;
 		g_string_append_printf (tmp, "%s|",
-					fwupd_trust_flag_to_string (i));
+					fwupd_release_flag_to_string ((guint64) 1 << i));
 	}
 	if (tmp->len == 0) {
-		g_string_append (tmp, fwupd_trust_flag_to_string (0));
+		g_string_append (tmp, fwupd_release_flag_to_string (0));
 	} else {
 		g_string_truncate (tmp, tmp->len - 1);
 	}
@@ -1181,7 +1276,18 @@ fwupd_release_to_json (FwupdRelease *release, JsonBuilder *builder)
 	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_DETAILS_URL, priv->details_url);
 	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_SOURCE_URL, priv->source_url);
 	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
-	fwupd_release_json_add_int (builder, FWUPD_RESULT_KEY_TRUST_FLAGS, priv->trust_flags);
+	if (priv->flags != FWUPD_RELEASE_FLAG_NONE) {
+		json_builder_set_member_name (builder, FWUPD_RESULT_KEY_FLAGS);
+		json_builder_begin_array (builder);
+		for (guint i = 0; i < 64; i++) {
+			const gchar *tmp;
+			if ((priv->flags & ((guint64) 1 << i)) == 0)
+				continue;
+			tmp = fwupd_release_flag_to_string ((guint64) 1 << i);
+			json_builder_add_string_value (builder, tmp);
+		}
+		json_builder_end_array (builder);
+	}
 	fwupd_release_json_add_int (builder, FWUPD_RESULT_KEY_INSTALL_DURATION, priv->install_duration);
 	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->update_message);
 
@@ -1233,7 +1339,7 @@ fwupd_release_to_string (FwupdRelease *release)
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DETAILS_URL, priv->details_url);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_SOURCE_URL, priv->source_url);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
-	fwupd_pad_kv_tfl (str, FWUPD_RESULT_KEY_TRUST_FLAGS, priv->trust_flags);
+	fwupd_pad_kv_tfl (str, FWUPD_RESULT_KEY_FLAGS, priv->flags);
 	fwupd_pad_kv_int (str, FWUPD_RESULT_KEY_INSTALL_DURATION, priv->install_duration);
 	if (priv->update_message != NULL)
 		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->update_message);

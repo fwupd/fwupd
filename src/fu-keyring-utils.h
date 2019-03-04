@@ -15,8 +15,8 @@ G_BEGIN_DECLS
 
 FuKeyring	*fu_keyring_create_for_kind		(FwupdKeyringKind kind,
 							 GError		**error);
-gboolean	 fu_keyring_get_release_trust_flags	(XbNode		*release,
-							 FwupdTrustFlags *trust_flags,
+gboolean	 fu_keyring_get_release_flags		(XbNode		*release,
+							 FwupdReleaseFlags *flags,
 							 GError		**error);
 
 G_END_DECLS

@@ -117,6 +117,20 @@ typedef enum {
 typedef guint64 FwupdDeviceFlags;
 
 /**
+ * FwupdReleaseFlags:
+ * @FWUPD_RELEASE_FLAG_NONE:			No flags set
+ * @FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD:		The payload binary is trusted
+ * @FWUPD_RELEASE_FLAG_TRUSTED_METADATA:	The payload metadata is trusted
+ *
+ * The release flags.
+ **/
+#define FWUPD_RELEASE_FLAG_NONE			(0u)		/* Since: 1.2.6 */
+#define FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD	(1u << 0)	/* Since: 1.2.6 */
+#define FWUPD_RELEASE_FLAG_TRUSTED_METADATA	(1u << 1)	/* Since: 1.2.6 */
+#define FWUPD_RELEASE_FLAG_UNKNOWN		G_MAXUINT64	/* Since: 1.2.6 */
+typedef guint64 FwupdReleaseFlags;
+
+/**
  * FwupdInstallFlags:
  * @FWUPD_INSTALL_FLAG_NONE:			No flags set
  * @FWUPD_INSTALL_FLAG_OFFLINE:			Schedule this for next boot
@@ -180,6 +194,8 @@ const gchar	*fwupd_status_to_string			(FwupdStatus	 status);
 FwupdStatus	 fwupd_status_from_string		(const gchar	*status);
 const gchar	*fwupd_device_flag_to_string		(FwupdDeviceFlags device_flag);
 FwupdDeviceFlags fwupd_device_flag_from_string		(const gchar	*device_flag);
+const gchar	*fwupd_release_flag_to_string		(FwupdReleaseFlags release_flag);
+FwupdReleaseFlags fwupd_release_flag_from_string	(const gchar	*release_flag);
 const gchar	*fwupd_update_state_to_string		(FwupdUpdateState update_state);
 FwupdUpdateState fwupd_update_state_from_string		(const gchar	*update_state);
 const gchar	*fwupd_trust_flag_to_string		(FwupdTrustFlags trust_flag);
