@@ -20,6 +20,8 @@ def parse_args():
     parser.add_argument("--directory", help="Directory to extract to")
     parser.add_argument("--uninstall", action='store_true', help="Uninstall tools when done with installation")
     parser.add_argument("--verbose", action='store_true', help="Run the tool in verbose mode")
+    parser.add_argument("--allow-reinstall", action='store_true', help="Allow re-installing existing firmware versions")
+    parser.add_argument("--allow-older", action='store_true', help="Allow downgrading firmware versions")
     parser.add_argument("command", choices=["install", "extract"], help="Command to run")
     args = parser.parse_args()
     return args
@@ -66,7 +68,7 @@ def copy_cabs (source, target):
     return cabs
 
 
-def install_snap (directory, verbose, uninstall):
+def install_snap (directory, verbose, allow_reinstall, allow_older, uninstall):
     app = 'fwupd'
     common = '/root/snap/%s/common' % app
 
@@ -102,6 +104,10 @@ def install_snap (directory, verbose, uninstall):
     # run the snap
     for cab in cabs:
         cmd = ["%s.fwupdmgr" % app, 'install', cab]
+        if allow_reinstall:
+            cmd += ["--allow-reinstall"]
+        if allow_older:
+            cmd += ["--allow-older"]
         if verbose:
             cmd += ["--verbose"]
             print(cmd)
@@ -118,7 +124,7 @@ def install_snap (directory, verbose, uninstall):
             print(cmd)
         subprocess.run (cmd)
 
-def install_flatpak (directory, verbose, uninstall):
+def install_flatpak (directory, verbose, allow_reinstall, allow_older, uninstall):
     app = 'org.freedesktop.fwupd'
     common = '%s/.var/app/%s' % (os.getenv ('HOME'), app)
 
@@ -177,6 +183,10 @@ def install_flatpak (directory, verbose, uninstall):
     #run command
     for cab in cabs:
         cmd = ['flatpak', 'run', app, 'install', cab]
+        if allow_reinstall:
+            cmd += ["--allow-reinstall"]
+        if allow_older:
+            cmd += ["--allow-older"]
         if verbose:
             cmd += ["--verbose"]
             print(cmd)
@@ -194,7 +204,7 @@ def install_flatpak (directory, verbose, uninstall):
         subprocess.run (cmd)
 
 
-def run_installation (directory, verbose, uninstall):
+def run_installation (directory, verbose, allow_reinstall, allow_older, uninstall):
     try_snap = False
     try_flatpak = False
 
@@ -207,7 +217,7 @@ def run_installation (directory, verbose, uninstall):
 
     if try_snap:
         try:
-            install_snap (directory, verbose, uninstall)
+            install_snap (directory, verbose, allow_reinstall, allow_older, uninstall)
             return True
         except Exception as _:
             if verbose:
@@ -215,11 +225,15 @@ def run_installation (directory, verbose, uninstall):
             if not try_flatpak:
                 error ("Snap installation failed")
     if try_flatpak:
-        install_flatpak (directory, verbose, uninstall)
+        install_flatpak (directory, verbose, allow_reinstall, allow_older, uninstall)
 
 if __name__ == '__main__':
     args = parse_args()
     if 'extract' in args.command:
+        if args.allow_reinstall:
+            error ("allow-reinstall argument doesn't make sense with command %s" % args.command)
+        if args.allow_older:
+            error ("allow-older argument doesn't make sense with command %s" % args.command)
         if args.uninstall:
             error ("Uninstall argument doesn't make sense with command %s" % args.command)
         if args.directory is None:
@@ -235,4 +249,4 @@ if __name__ == '__main__':
             error ("This tool must be run as root")
         with tempfile.TemporaryDirectory (prefix='fwupd') as target:
             unzip (target)
-            run_installation (target, args.verbose, args.uninstall)
+            run_installation (target, args.verbose, args.allow_reinstall, args.allow_older, args.uninstall)
