@@ -1342,6 +1342,7 @@ fu_util_get_releases (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_print ("%s:\n", fwupd_device_get_name (dev));
 	for (guint i = 0; i < rels->len; i++) {
 		FwupdRelease *rel = g_ptr_array_index (rels, i);
+		FwupdReleaseFlags flags = fwupd_release_get_flags (rel);
 		GPtrArray *checksums;
 		const gchar *tmp;
 
@@ -1373,6 +1374,24 @@ fu_util_get_releases (FuUtilPrivate *priv, gchar **values, GError **error)
 			checksum_display = fwupd_checksum_format_for_display (checksum);
 			/* TRANSLATORS: section header for firmware checksum */
 			fu_util_print_data (_("Checksum"), checksum_display);
+		}
+
+		/* show flags if set */
+		if (flags != FWUPD_RELEASE_FLAG_NONE) {
+			g_autoptr(GString) str = g_string_new ("");
+			for (guint j = 0; j < 64; j++) {
+				if ((flags & ((guint64) 1 << j)) == 0)
+					continue;
+				g_string_append_printf (str, "%s,",
+							fwupd_release_flag_to_string ((guint64) 1 << j));
+			}
+			if (str->len == 0) {
+				g_string_append (str, fwupd_release_flag_to_string (0));
+			} else {
+				g_string_truncate (str, str->len - 1);
+			}
+			/* TRANSLATORS: section header for firmware flags */
+			fu_util_print_data (_("Flags"), str->str);
 		}
 
 		/* new line between all but last entries */
