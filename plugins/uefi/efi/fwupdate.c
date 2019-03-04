@@ -92,7 +92,7 @@ fwup_populate_update_info(CHAR16 *name, FWUP_UPDATE_TABLE *info_out)
 
 	is = info_size - is;
 	INTN sz = fwup_dp_size(hdr, info_size);
-	if (sz < 0 || is < 0 || is > (INTN)info_size || is != sz) {
+	if (sz < 0 || is > (INTN)info_size || is != sz) {
 		fwup_warning(L"Update '%s' has an invalid file path, "
 			     L"update info size: %d dp size: %d size for dp: %d",
 			     name, info_size, sz, is);
