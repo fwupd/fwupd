@@ -491,7 +491,7 @@ fwup_check_gop_for_ux_capsule(EFI_HANDLE loaded_image,
 	UX_CAPSULE_HEADER *payload_hdr;
 	EFI_STATUS rc;
 
-	payload_hdr = (UX_CAPSULE_HEADER *)((UINT8*) capsule) + capsule->HeaderSize;
+	payload_hdr = (UX_CAPSULE_HEADER *) (((UINT8 *) capsule) + capsule->HeaderSize);
 	rc = fwup_get_gop_mode(&payload_hdr->mode, loaded_image);
 	if (EFI_ERROR(rc))
 		return EFI_UNSUPPORTED;
