@@ -121,12 +121,18 @@ typedef guint64 FwupdDeviceFlags;
  * @FWUPD_RELEASE_FLAG_NONE:			No flags set
  * @FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD:		The payload binary is trusted
  * @FWUPD_RELEASE_FLAG_TRUSTED_METADATA:	The payload metadata is trusted
+ * @FWUPD_RELEASE_FLAG_IS_UPGRADE:		Is newer than the device version
+ * @FWUPD_RELEASE_FLAG_IS_DOWNGRADE:		Is older than the device version
+ * @FWUPD_RELEASE_FLAG_BLOCKED_VERSION:		Blocked as below device version-lowest
  *
  * The release flags.
  **/
 #define FWUPD_RELEASE_FLAG_NONE			(0u)		/* Since: 1.2.6 */
 #define FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD	(1u << 0)	/* Since: 1.2.6 */
 #define FWUPD_RELEASE_FLAG_TRUSTED_METADATA	(1u << 1)	/* Since: 1.2.6 */
+#define FWUPD_RELEASE_FLAG_IS_UPGRADE		(1u << 2)	/* Since: 1.2.6 */
+#define FWUPD_RELEASE_FLAG_IS_DOWNGRADE		(1u << 3)	/* Since: 1.2.6 */
+#define FWUPD_RELEASE_FLAG_BLOCKED_VERSION	(1u << 4)	/* Since: 1.2.6 */
 #define FWUPD_RELEASE_FLAG_UNKNOWN		G_MAXUINT64	/* Since: 1.2.6 */
 typedef guint64 FwupdReleaseFlags;
 

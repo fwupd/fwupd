@@ -2727,6 +2727,7 @@ fu_engine_add_releases_for_device_component (FuEngine *self,
 	for (guint i = 0; i < releases_tmp->len; i++) {
 		XbNode *release = g_ptr_array_index (releases_tmp, i);
 		const gchar *update_message;
+		gint vercmp;
 		GPtrArray *checksums;
 		g_autoptr(FwupdRelease) rel = fwupd_release_new ();
 
@@ -2743,6 +2744,21 @@ fu_engine_add_releases_for_device_component (FuEngine *self,
 		checksums = fwupd_release_get_checksums (rel);
 		if (checksums->len == 0)
 			continue;
+
+		/* test for upgrade or downgrade */
+		vercmp = fu_common_vercmp (fwupd_release_get_version (rel),
+					  fu_device_get_version (device));
+		if (vercmp > 0)
+			fwupd_release_add_flag (rel, FWUPD_RELEASE_FLAG_IS_UPGRADE);
+		else if (vercmp < 0)
+			fwupd_release_add_flag (rel, FWUPD_RELEASE_FLAG_IS_DOWNGRADE);
+
+		/* lower than allowed to downgrade to */
+		if (fu_device_get_version_lowest (device) != NULL &&
+		    fu_common_vercmp (fwupd_release_get_version (rel),
+				      fu_device_get_version_lowest (device)) < 0) {
+			fwupd_release_add_flag (rel, FWUPD_RELEASE_FLAG_BLOCKED_VERSION);
+		}
 
 		/* add update message if exists but device doesn't already have one */
 		update_message = fwupd_release_get_update_message (rel);
@@ -2923,12 +2939,10 @@ fu_engine_get_downgrades (FuEngine *self, const gchar *device_id, GError **error
 	releases = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	for (guint i = 0; i < releases_tmp->len; i++) {
 		FwupdRelease *rel_tmp = g_ptr_array_index (releases_tmp, i);
-		gint vercmp;
 
-		/* only include older firmware */
-		vercmp = fu_common_vercmp (fwupd_release_get_version (rel_tmp),
-					  fu_device_get_version (device));
-		if (vercmp == 0) {
+		/* same as installed */
+		if (!fwupd_release_has_flag (rel_tmp, FWUPD_RELEASE_FLAG_IS_UPGRADE) &&
+		    !fwupd_release_has_flag (rel_tmp, FWUPD_RELEASE_FLAG_IS_DOWNGRADE)) {
 			g_string_append_printf (error_str, "%s=same, ",
 						fwupd_release_get_version (rel_tmp));
 			g_debug ("ignoring %s as the same as %s",
@@ -2936,7 +2950,9 @@ fu_engine_get_downgrades (FuEngine *self, const gchar *device_id, GError **error
 				 fu_device_get_version (device));
 			continue;
 		}
-		if (vercmp > 0) {
+
+		/* newer than current */
+		if (fwupd_release_has_flag (rel_tmp, FWUPD_RELEASE_FLAG_IS_UPGRADE)) {
 			g_string_append_printf (error_str, "%s=newer, ",
 						fwupd_release_get_version (rel_tmp));
 			g_debug ("ignoring %s as newer than %s",
@@ -2946,16 +2962,13 @@ fu_engine_get_downgrades (FuEngine *self, const gchar *device_id, GError **error
 		}
 
 		/* don't show releases we are not allowed to dowgrade to */
-		if (fu_device_get_version_lowest (device) != NULL) {
-			if (fu_common_vercmp (fwupd_release_get_version (rel_tmp),
-					     fu_device_get_version_lowest (device)) <= 0) {
-				g_string_append_printf (error_str, "%s=lowest, ",
-							fwupd_release_get_version (rel_tmp));
-				g_debug ("ignoring %s as older than lowest %s",
-					 fwupd_release_get_version (rel_tmp),
-					 fu_device_get_version_lowest (device));
-				continue;
-			}
+		if (fwupd_release_has_flag (rel_tmp, FWUPD_RELEASE_FLAG_BLOCKED_VERSION)) {
+			g_string_append_printf (error_str, "%s=lowest, ",
+						fwupd_release_get_version (rel_tmp));
+			g_debug ("ignoring %s as older than lowest %s",
+				 fwupd_release_get_version (rel_tmp),
+				 fu_device_get_version_lowest (device));
+			continue;
 		}
 		g_ptr_array_add (releases, g_object_ref (rel_tmp));
 	}
@@ -3026,12 +3039,10 @@ fu_engine_get_upgrades (FuEngine *self, const gchar *device_id, GError **error)
 	releases = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	for (guint i = 0; i < releases_tmp->len; i++) {
 		FwupdRelease *rel_tmp = g_ptr_array_index (releases_tmp, i);
-		gint vercmp;
 
-		/* only include older firmware */
-		vercmp = fu_common_vercmp (fwupd_release_get_version (rel_tmp),
-					  fu_device_get_version (device));
-		if (vercmp == 0) {
+		/* same as installed */
+		if (!fwupd_release_has_flag (rel_tmp, FWUPD_RELEASE_FLAG_IS_UPGRADE) &&
+		    !fwupd_release_has_flag (rel_tmp, FWUPD_RELEASE_FLAG_IS_DOWNGRADE)) {
 			g_string_append_printf (error_str, "%s=same, ",
 						fwupd_release_get_version (rel_tmp));
 			g_debug ("ignoring %s as the same as %s",
@@ -3039,7 +3050,9 @@ fu_engine_get_upgrades (FuEngine *self, const gchar *device_id, GError **error)
 				 fu_device_get_version (device));
 			continue;
 		}
-		if (vercmp < 0) {
+
+		/* older than current */
+		if (fwupd_release_has_flag (rel_tmp, FWUPD_RELEASE_FLAG_IS_DOWNGRADE)) {
 			g_string_append_printf (error_str, "%s=older, ",
 						fwupd_release_get_version (rel_tmp));
 			g_debug ("ignoring %s as older than %s",
