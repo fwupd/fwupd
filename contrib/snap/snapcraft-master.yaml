@@ -295,7 +295,6 @@ parts:
       - -usr/share/glib-2.0/schemas
       - -usr/share/X11
       - -include
-      - -lib/systemd
       - -lib/udev
       - -lib/*/pkgconfig
       - -usr/share/lintian
