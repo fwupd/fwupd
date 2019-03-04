@@ -385,6 +385,12 @@ fwupd_release_flag_to_string (FwupdReleaseFlags release_flag)
 		return "trusted-payload";
 	if (release_flag == FWUPD_RELEASE_FLAG_TRUSTED_METADATA)
 		return "trusted-metadata";
+	if (release_flag == FWUPD_RELEASE_FLAG_IS_UPGRADE)
+		return "is-upgrade";
+	if (release_flag == FWUPD_RELEASE_FLAG_IS_DOWNGRADE)
+		return "is-downgrade";
+	if (release_flag == FWUPD_RELEASE_FLAG_BLOCKED_VERSION)
+		return "blocked-version";
 	return NULL;
 }
 
@@ -405,5 +411,11 @@ fwupd_release_flag_from_string (const gchar *release_flag)
 		return FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD;
 	if (g_strcmp0 (release_flag, "trusted-metadata") == 0)
 		return FWUPD_RELEASE_FLAG_TRUSTED_METADATA;
+	if (g_strcmp0 (release_flag, "is-upgrade") == 0)
+		return FWUPD_RELEASE_FLAG_IS_UPGRADE;
+	if (g_strcmp0 (release_flag, "is-downgrade") == 0)
+		return FWUPD_RELEASE_FLAG_IS_DOWNGRADE;
+	if (g_strcmp0 (release_flag, "blocked-version") == 0)
+		return FWUPD_RELEASE_FLAG_BLOCKED_VERSION;
 	return FWUPD_RELEASE_FLAG_NONE;
 }
