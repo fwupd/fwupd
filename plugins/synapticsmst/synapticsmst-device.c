@@ -353,7 +353,6 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device,
 	g_autoptr(SynapticsMSTConnection) connection = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
-	//FIXME?
 	if (!synapticsmst_device_open (device, error)) {
 		g_prefix_error (error, "Failed to open device in DP Aux Node %s: ",
 				synapticsmst_device_get_aux_node (device));
