@@ -325,6 +325,13 @@ LIBFWUPD_1.2.6 {
   global:
     fwupd_client_activate;
     fwupd_device_to_json;
+    fwupd_release_add_flag;
+    fwupd_release_flag_from_string;
+    fwupd_release_flag_to_string;
+    fwupd_release_get_flags;
+    fwupd_release_has_flag;
+    fwupd_release_remove_flag;
+    fwupd_release_set_flags;
     fwupd_release_to_json;
   local: *;
 } LIBFWUPD_1.2.5;

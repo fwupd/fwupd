@@ -20,7 +20,7 @@ FuInstallTask	*fu_install_task_new			(FuDevice	*device,
 							 XbNode		*component);
 FuDevice	*fu_install_task_get_device		(FuInstallTask	*self);
 XbNode		*fu_install_task_get_component		(FuInstallTask	*self);
-FwupdTrustFlags	 fu_install_task_get_trust_flags	(FuInstallTask	*self);
+FwupdReleaseFlags fu_install_task_get_trust_flags	(FuInstallTask	*self);
 gboolean	 fu_install_task_get_is_downgrade	(FuInstallTask	*self);
 gboolean	 fu_install_task_check_requirements	(FuInstallTask	*self,
 							 FwupdInstallFlags flags,

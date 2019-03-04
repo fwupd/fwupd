@@ -987,7 +987,7 @@ fu_engine_history_func (void)
 		"  [Release]\n"
 		"  Version:              1.2.3\n"
 		"  Checksum:             SHA1(%s)\n"
-		"  TrustFlags:           none\n"
+		"  Flags:                none\n"
 		"  VersionFormat:        triplet\n",
 		checksum);
 	ret = fu_test_compare_lines (device_str, device_str_expected, &error);
@@ -1221,7 +1221,7 @@ fu_engine_history_error_func (void)
 		"  [Release]\n"
 		"  Version:              1.2.3\n"
 		"  Checksum:             SHA1(%s)\n"
-		"  TrustFlags:           none\n"
+		"  Flags:                none\n"
 		"  VersionFormat:        triplet\n",
 		checksum);
 	ret = fu_test_compare_lines (device_str, device_str_expected, &error);

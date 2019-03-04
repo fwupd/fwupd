@@ -286,7 +286,7 @@ fwupd_device_func (void)
 	fwupd_device_add_icon (dev, "input-mouse");
 	fwupd_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	rel = fwupd_release_new ();
-	fwupd_release_set_trust_flags (rel, FWUPD_TRUST_FLAG_PAYLOAD);
+	fwupd_release_add_flag (rel, FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD);
 	fwupd_release_add_checksum (rel, "deadbeef");
 	fwupd_release_set_description (rel, "<p>Hi there!</p>");
 	fwupd_release_set_filename (rel, "firmware.bin");
@@ -326,7 +326,7 @@ fwupd_device_func (void)
 		"  Checksum:             SHA1(deadbeef)\n"
 		"  Size:                 1.0 kB\n"
 		"  Uri:                  http://foo.com\n"
-		"  TrustFlags:           payload\n", &error);
+		"  Flags:                trusted-payload\n", &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -373,7 +373,9 @@ fwupd_device_func (void)
 		"      ],\n"
 		"      \"Size\" : 1024,\n"
 		"      \"Uri\" : \"http://foo.com\",\n"
-		"      \"TrustFlags\" : 1\n"
+		"      \"Flags\" : [\n"
+		"        \"trusted-payload\"\n"
+		"      ]\n"
 		"    }\n"
 		"  ]\n"
 		"}", &error);
