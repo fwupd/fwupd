@@ -1264,8 +1264,7 @@ fwupd_release_to_json (FwupdRelease *release, JsonBuilder *builder)
 		json_builder_begin_array (builder);
 		for (guint i = 0; i < priv->checksums->len; i++) {
 			const gchar *checksum = g_ptr_array_index (priv->checksums, i);
-			g_autofree gchar *checksum_display = fwupd_checksum_format_for_display (checksum);
-			json_builder_add_string_value (builder, checksum_display);
+			json_builder_add_string_value (builder, checksum);
 		}
 		json_builder_end_array (builder);
 	}
