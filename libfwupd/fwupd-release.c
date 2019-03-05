@@ -280,6 +280,31 @@ fwupd_release_add_checksum (FwupdRelease *release, const gchar *checksum)
 }
 
 /**
+ * fwupd_release_has_checksum:
+ * @release: A #FwupdRelease
+ * @checksum: the update checksum
+ *
+ * Finds out if the release has the update checksum.
+ *
+ * Returns: %TRUE if the release matches
+ *
+ * Since: 1.2.6
+ **/
+gboolean
+fwupd_release_has_checksum (FwupdRelease *release, const gchar *checksum)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_val_if_fail (FWUPD_IS_RELEASE (release), FALSE);
+	g_return_val_if_fail (checksum != NULL, FALSE);
+	for (guint i = 0; i < priv->checksums->len; i++) {
+		const gchar *checksum_tmp = g_ptr_array_index (priv->checksums, i);
+		if (g_strcmp0 (checksum_tmp, checksum) == 0)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+/**
  * fwupd_release_get_metadata:
  * @release: A #FwupdRelease
  *

@@ -40,6 +40,8 @@ void		 fwupd_release_set_uri			(FwupdRelease	*release,
 GPtrArray	*fwupd_release_get_checksums		(FwupdRelease	*release);
 void		 fwupd_release_add_checksum		(FwupdRelease	*release,
 							 const gchar	*checksum);
+gboolean	 fwupd_release_has_checksum		(FwupdRelease	*release,
+							 const gchar	*checksum);
 
 GHashTable	*fwupd_release_get_metadata		(FwupdRelease	*release);
 void		 fwupd_release_add_metadata		(FwupdRelease	*release,
