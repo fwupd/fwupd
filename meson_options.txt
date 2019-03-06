@@ -1,4 +1,5 @@
 option('daemon', type : 'boolean', value : true, description : 'enable the fwupd daemon')
+option('agent', type : 'boolean', value : true, description : 'enable the fwupd agent')
 option('consolekit', type : 'boolean', value : true, description : 'enable ConsoleKit support')
 option('firmware-packager', type : 'boolean', value : true, description : 'enable firmware-packager installation')
 option('gpg', type : 'boolean', value : true, description : 'enable the GPG verification support')

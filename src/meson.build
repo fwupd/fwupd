@@ -100,6 +100,34 @@ fwupdmgr = executable(
 )
 endif
 
+if get_option('agent')
+fwupdagent = executable(
+  'fwupdagent',
+  sources : [
+    'fu-agent.c',
+    'fu-util-common.c',
+  ],
+  include_directories : [
+    include_directories('..'),
+    include_directories('../libfwupd'),
+  ],
+  dependencies : [
+    libxmlb,
+    giounix,
+    gudev,
+    gusb,
+    soup,
+    libjsonglib,
+  ],
+  link_with : [
+    fwupd,
+    libfwupdprivate,
+  ],
+  install : true,
+  install_dir : join_paths(libexecdir, 'fwupd')
+)
+endif
+
 resources_src = gnome.compile_resources(
   'fwupd-resources',
   'fwupd.gresource.xml',
