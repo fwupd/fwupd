@@ -1,0 +1,37 @@
+_fwupdagent_cmd_list=(
+	'get-devices'
+)
+
+_fwupdagent_opts=(
+	'--verbose'
+)
+
+_show_modifiers()
+{
+	COMPREPLY+=( $(compgen -W '${_fwupdagent_opts[@]}' -- "$cur") )
+}
+
+_fwupdagent()
+{
+	local cur prev command
+	COMPREPLY=()
+	cur=`_get_cword`
+	prev=${COMP_WORDS[COMP_CWORD-1]}
+	command=${COMP_WORDS[1]}
+
+	case $command in
+	*)
+		#find first command
+		if [[ ${COMP_CWORD} = 1 ]]; then
+			COMPREPLY=( $(compgen -W '${_fwupdagent_cmd_list[@]}' -- "$cur") )
+		#modifiers for all commands
+		else
+			_show_modifiers
+		fi
+		;;
+	esac
+
+	return 0
+}
+
+complete -F _fwupdagent fwupdagent

@@ -10,6 +10,12 @@ if get_option('daemon')
     )
 endif
 
+if get_option('agent')
+    install_data(['fwupdagent'],
+      install_dir : tgt,
+    )
+endif
+
 # replace @libexecdir@
 fwupdtool_path = join_paths(libexecdir, 'fwupd')
 con2 = configuration_data()
