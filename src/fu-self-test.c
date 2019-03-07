@@ -2400,7 +2400,9 @@ fu_keyring_gpg_func (void)
 	g_assert_no_error (error);
 	g_assert_nonnull (blob_pass);
 	blob_sig = g_bytes_new_static (sig_gpgme, strlen (sig_gpgme));
-	result_pass = fu_keyring_verify_data (keyring, blob_pass, blob_sig, &error);
+	result_pass = fu_keyring_verify_data (keyring, blob_pass, blob_sig,
+					      FU_KEYRING_VERIFY_FLAG_NONE,
+					      &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (result_pass);
 	g_assert_cmpint (fu_keyring_result_get_timestamp (result_pass), == , 1438072952);
@@ -2413,7 +2415,8 @@ fu_keyring_gpg_func (void)
 	blob_fail = fu_common_get_contents_bytes (fw_fail, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (blob_fail);
-	result_fail = fu_keyring_verify_data (keyring, blob_fail, blob_sig, &error);
+	result_fail = fu_keyring_verify_data (keyring, blob_fail, blob_sig,
+					      FU_KEYRING_VERIFY_FLAG_NONE, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_SIGNATURE_INVALID);
 	g_assert_null (result_fail);
 	g_clear_error (&error);
@@ -2463,7 +2466,8 @@ fu_keyring_pkcs7_func (void)
 	blob_sig = fu_common_get_contents_bytes (sig_fn, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (blob_sig);
-	result_pass = fu_keyring_verify_data (keyring, blob_pass, blob_sig, &error);
+	result_pass = fu_keyring_verify_data (keyring, blob_pass, blob_sig,
+					      FU_KEYRING_VERIFY_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (result_pass);
 	g_assert_cmpint (fu_keyring_result_get_timestamp (result_pass), >= , 1502871248);
@@ -2475,7 +2479,8 @@ fu_keyring_pkcs7_func (void)
 	blob_sig2 = fu_common_get_contents_bytes (sig_fn2, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (blob_sig2);
-	result_fail = fu_keyring_verify_data (keyring, blob_pass, blob_sig2, &error);
+	result_fail = fu_keyring_verify_data (keyring, blob_pass, blob_sig2,
+					      FU_KEYRING_VERIFY_FLAG_NONE, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_SIGNATURE_INVALID);
 	g_assert_null (result_fail);
 	g_clear_error (&error);
@@ -2486,10 +2491,50 @@ fu_keyring_pkcs7_func (void)
 	blob_fail = fu_common_get_contents_bytes (fw_fail, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (blob_fail);
-	result_fail = fu_keyring_verify_data (keyring, blob_fail, blob_sig, &error);
+	result_fail = fu_keyring_verify_data (keyring, blob_fail, blob_sig,
+					      FU_KEYRING_VERIFY_FLAG_NONE, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_SIGNATURE_INVALID);
 	g_assert_null (result_fail);
 	g_clear_error (&error);
+#else
+	g_test_skip ("no GnuTLS support enabled");
+#endif
+}
+
+static void
+fu_keyring_pkcs7_self_signed_func (void)
+{
+#ifdef ENABLE_PKCS7
+	gboolean ret;
+	g_autoptr(FuKeyring) kr = NULL;
+	g_autoptr(FuKeyringResult) kr_result = NULL;
+	g_autoptr(GBytes) payload = NULL;
+	g_autoptr(GBytes) signature = NULL;
+	g_autoptr(GError) error = NULL;
+
+#ifndef HAVE_GNUTLS_3_6_0
+	/* required to create the private key correctly */
+	g_test_skip ("GnuTLS version too old");
+#endif
+
+	/* create detached signature and verify */
+	kr = fu_keyring_pkcs7_new ();
+	ret = fu_keyring_setup (kr, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	payload = fu_common_get_contents_bytes ("/etc/machine-id", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (payload);
+	signature = fu_keyring_sign_data (kr, payload, FU_KEYRING_SIGN_FLAG_ADD_TIMESTAMP, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (signature);
+	ret = fu_common_set_contents_bytes ("/tmp/test.p7b", signature, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	kr_result = fu_keyring_verify_data (kr, payload, signature,
+					    FU_KEYRING_VERIFY_FLAG_USE_CLIENT_CERT, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (kr_result);
 #else
 	g_test_skip ("no GnuTLS support enabled");
 #endif
@@ -3523,6 +3568,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/plugin{composite}", fu_plugin_composite_func);
 	g_test_add_func ("/fwupd/keyring{gpg}", fu_keyring_gpg_func);
 	g_test_add_func ("/fwupd/keyring{pkcs7}", fu_keyring_pkcs7_func);
+	g_test_add_func ("/fwupd/keyring{pkcs7-self-signed}", fu_keyring_pkcs7_self_signed_func);
 	g_test_add_func ("/fwupd/plugin{build-hash}", fu_plugin_hash_func);
 	g_test_add_func ("/fwupd/chunk", fu_chunk_func);
 	g_test_add_func ("/fwupd/common{version-guess-format}", fu_common_version_guess_format_func);

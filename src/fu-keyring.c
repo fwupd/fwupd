@@ -40,13 +40,33 @@ FuKeyringResult *
 fu_keyring_verify_data (FuKeyring *keyring,
 		       GBytes *blob,
 		       GBytes *blob_signature,
+		       FuKeyringVerifyFlags flags,
 		       GError **error)
 {
 	FuKeyringClass *klass = FU_KEYRING_GET_CLASS (keyring);
 	g_return_val_if_fail (FU_IS_KEYRING (keyring), NULL);
 	g_return_val_if_fail (blob != NULL, NULL);
 	g_return_val_if_fail (blob_signature != NULL, NULL);
-	return klass->verify_data (keyring, blob, blob_signature, error);
+	return klass->verify_data (keyring, blob, blob_signature, flags, error);
+}
+
+GBytes *
+fu_keyring_sign_data (FuKeyring *keyring,
+		      GBytes *blob,
+		      FuKeyringSignFlags flags,
+		      GError **error)
+{
+	FuKeyringClass *klass = FU_KEYRING_GET_CLASS (keyring);
+	g_return_val_if_fail (FU_IS_KEYRING (keyring), NULL);
+	g_return_val_if_fail (blob != NULL, NULL);
+	if (klass->sign_data == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "signing data is not supported");
+		return NULL;
+	}
+	return klass->sign_data (keyring, blob, flags, error);
 }
 
 const gchar *

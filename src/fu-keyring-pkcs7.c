@@ -8,8 +8,11 @@
 
 #include "config.h"
 
+#include <gnutls/abstract.h>
+#include <gnutls/crypto.h>
 #include <gnutls/pkcs7.h>
 
+#include "fu-common.h"
 #include "fu-keyring-pkcs7.h"
 
 #include "fwupd-error.h"
@@ -22,11 +25,20 @@ struct _FuKeyringPkcs7
 
 G_DEFINE_TYPE (FuKeyringPkcs7, fu_keyring_pkcs7, FU_TYPE_KEYRING)
 
+typedef guchar gnutls_data_t;
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTO_CLEANUP_FREE_FUNC(gnutls_pkcs7_t, gnutls_pkcs7_deinit, NULL)
+G_DEFINE_AUTO_CLEANUP_FREE_FUNC(gnutls_privkey_t, gnutls_privkey_deinit, NULL)
+G_DEFINE_AUTO_CLEANUP_FREE_FUNC(gnutls_pubkey_t, gnutls_pubkey_deinit, NULL)
 G_DEFINE_AUTO_CLEANUP_FREE_FUNC(gnutls_x509_crt_t, gnutls_x509_crt_deinit, NULL)
 G_DEFINE_AUTO_CLEANUP_FREE_FUNC(gnutls_x509_dn_t, gnutls_x509_dn_deinit, NULL)
+G_DEFINE_AUTO_CLEANUP_FREE_FUNC(gnutls_x509_privkey_t, gnutls_x509_privkey_deinit, NULL)
+#ifdef HAVE_GNUTLS_3_6_0
+G_DEFINE_AUTO_CLEANUP_FREE_FUNC(gnutls_x509_spki_t, gnutls_x509_spki_deinit, NULL)
+#endif
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(gnutls_data_t, gnutls_free)
 #pragma clang diagnostic pop
 
 static gnutls_x509_crt_t
@@ -151,6 +163,362 @@ fu_keyring_pkcs7_add_public_keys (FuKeyring *keyring,
 	return TRUE;
 }
 
+static gnutls_privkey_t
+fu_keyring_pkcs7_load_privkey (FuKeyringPkcs7 *self, GError **error)
+{
+	int rc;
+	gnutls_datum_t d = { 0 };
+	gsize bufsz = 0;
+	g_autofree gchar *buf = NULL;
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *localstatedir = NULL;
+	g_auto(gnutls_privkey_t) key = NULL;
+
+	/* load the private key */
+	rc = gnutls_privkey_init (&key);
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_SIGNATURE_INVALID,
+			     "privkey_init: %s [%i]",
+			     gnutls_strerror (rc), rc);
+		return NULL;
+	}
+	localstatedir = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	fn = g_build_filename (localstatedir, "pki", "secret.key", NULL);
+	if (!g_file_get_contents (fn, &buf, &bufsz, error))
+		return NULL;
+	d.size = bufsz;
+	d.data = (unsigned char *) buf;
+	rc = gnutls_privkey_import_x509_raw (key, &d, GNUTLS_X509_FMT_PEM, NULL, 0);
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_SIGNATURE_INVALID,
+			     "privkey_import_x509_raw: %s [%i]",
+			     gnutls_strerror (rc), rc);
+		return NULL;
+	}
+	return g_steal_pointer (&key);
+}
+
+static gnutls_x509_crt_t
+fu_keyring_pkcs7_load_client_certificate (FuKeyringPkcs7 *self, GError **error)
+{
+	g_autofree gchar *filename = NULL;
+	g_autofree gchar *localstatedir = NULL;
+	localstatedir = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	filename = g_build_filename (localstatedir, "pki", "client.pem", NULL);
+	return fu_keyring_pkcs7_load_crt_from_filename (filename,
+							GNUTLS_X509_FMT_PEM,
+							error);
+}
+
+static gnutls_pubkey_t
+fu_keyring_pkcs7_load_pubkey_from_privkey (gnutls_privkey_t privkey, GError **error)
+{
+	g_auto(gnutls_pubkey_t) pubkey = NULL;
+	int rc;
+
+	/* get the public key part of the private key */
+	rc = gnutls_pubkey_init (&pubkey);
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_SIGNATURE_INVALID,
+			     "pubkey_init: %s [%i]",
+			     gnutls_strerror (rc), rc);
+		return NULL;
+	}
+	rc = gnutls_pubkey_import_privkey (pubkey, privkey, 0, 0);
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_SIGNATURE_INVALID,
+			     "pubkey_import_privkey: %s [%i]",
+			     gnutls_strerror (rc), rc);
+		return NULL;
+	}
+
+	/* success */
+	return g_steal_pointer (&pubkey);
+}
+
+/* generates a private key just like:
+ *  `certtool --generate-privkey` */
+static gboolean
+fu_keyring_pkcs7_ensure_private_key (FuKeyringPkcs7 *self, GError **error)
+{
+#ifdef HAVE_GNUTLS_3_6_0
+	gnutls_datum_t d = { 0 };
+	int bits;
+	int key_type = GNUTLS_PK_RSA;
+	int rc;
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *localstatedir = NULL;
+	g_auto(gnutls_x509_privkey_t) key = NULL;
+	g_auto(gnutls_x509_spki_t) spki = NULL;
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(gnutls_data_t) d_payload = NULL;
+
+	/* check exists */
+	localstatedir = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	fn = g_build_filename (localstatedir, "pki", "secret.key", NULL);
+	if (g_file_test (fn, G_FILE_TEST_EXISTS))
+		return TRUE;
+
+	/* initialize key and SPKI */
+	rc = gnutls_x509_privkey_init (&key);
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_SIGNATURE_INVALID,
+			     "privkey_init: %s [%i]",
+			     gnutls_strerror (rc), rc);
+		return FALSE;
+	}
+	rc = gnutls_x509_spki_init (&spki);
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_SIGNATURE_INVALID,
+			     "spki_init: %s [%i]",
+			     gnutls_strerror (rc), rc);
+		return FALSE;
+	}
+
+	/* generate key */
+	bits = gnutls_sec_param_to_pk_bits (key_type, GNUTLS_SEC_PARAM_HIGH);
+	g_debug ("generating a %d bit %s private key...",
+		 bits, gnutls_pk_algorithm_get_name (key_type));
+	rc = gnutls_x509_privkey_generate2(key, key_type, bits, 0, NULL, 0);
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_SIGNATURE_INVALID,
+			     "privkey_generate2: %s [%i]",
+			     gnutls_strerror (rc), rc);
+		return FALSE;
+	}
+	rc = gnutls_x509_privkey_verify_params (key);
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_SIGNATURE_INVALID,
+			     "privkey_verify_params: %s [%i]",
+			     gnutls_strerror (rc), rc);
+		return FALSE;
+	}
+
+	/* create parents if required */
+	if (!fu_common_mkdir_parent (fn, error))
+		return FALSE;
+
+	/* save to file */
+	rc = gnutls_x509_privkey_export2 (key, GNUTLS_X509_FMT_PEM, &d);
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_SIGNATURE_INVALID,
+			     "privkey_export2: %s [%i]",
+			     gnutls_strerror (rc), rc);
+		return FALSE;
+	}
+	d_payload = d.data;
+	file = g_file_new_for_path (fn);
+	return g_file_replace_contents (file, (const char *) d_payload, d.size,
+					NULL, FALSE, G_FILE_CREATE_PRIVATE, NULL,
+					NULL, error);
+#else
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_SUPPORTED,
+		     "cannot build private key as GnuTLS version is too old");
+	return FALSE;
+#endif
+}
+
+/* generates a self signed certificate just like:
+ *  `certtool --generate-self-signed --load-privkey priv.pem` */
+static gboolean
+fu_keyring_pkcs7_ensure_client_certificate (FuKeyringPkcs7 *self, GError **error)
+{
+	int rc;
+	gnutls_datum_t d = { 0 };
+	guchar sha1buf[20];
+	gsize sha1bufsz = sizeof(sha1buf);
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *localstatedir = NULL;
+	g_auto(gnutls_privkey_t) key = NULL;
+	g_auto(gnutls_pubkey_t) pubkey = NULL;
+	g_auto(gnutls_x509_crt_t) crt = NULL;
+	g_autoptr(gnutls_data_t) d_payload = NULL;
+
+	/* check exists */
+	localstatedir = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	fn = g_build_filename (localstatedir, "pki", "client.pem", NULL);
+	if (g_file_test (fn, G_FILE_TEST_EXISTS))
+		return TRUE;
+
+	/* ensure the private key exists */
+	if (!fu_keyring_pkcs7_ensure_private_key (self, error)) {
+		g_prefix_error (error, "failed to generate private key: ");
+		return FALSE;
+	}
+
+	/* load private key */
+	key = fu_keyring_pkcs7_load_privkey (self, error);
+	if (key == NULL)
+		return FALSE;
+
+	/* load the public key from the private key */
+	pubkey = fu_keyring_pkcs7_load_pubkey_from_privkey (key, error);
+	if (pubkey == NULL)
+		return FALSE;
+
+	/* create certificate */
+	rc = gnutls_x509_crt_init (&crt);
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_SIGNATURE_INVALID,
+			     "crt_init: %s [%i]",
+			     gnutls_strerror (rc), rc);
+		return FALSE;
+	}
+
+	/* set public key */
+	rc = gnutls_x509_crt_set_pubkey (crt, pubkey);
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_SIGNATURE_INVALID,
+			     "crt_set_pubkey: %s [%i]",
+			     gnutls_strerror (rc), rc);
+		return FALSE;
+	}
+
+	/* set positive random serial number */
+	rc = gnutls_rnd (GNUTLS_RND_NONCE, sha1buf, sizeof(sha1buf));
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_SIGNATURE_INVALID,
+			     "gnutls_rnd: %s [%i]",
+			     gnutls_strerror (rc), rc);
+		return FALSE;
+	}
+	sha1buf[0] &= 0x7f;
+	rc = gnutls_x509_crt_set_serial(crt, sha1buf, sizeof(sha1buf));
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_SIGNATURE_INVALID,
+			     "crt_set_serial: %s [%i]",
+			     gnutls_strerror (rc), rc);
+		return FALSE;
+	}
+
+	/* set activation */
+	rc = gnutls_x509_crt_set_activation_time (crt, time (NULL));
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_SIGNATURE_INVALID,
+			     "set_activation_time: %s [%i]",
+			     gnutls_strerror (rc), rc);
+		return FALSE;
+	}
+
+	/* set expiration */
+	rc = gnutls_x509_crt_set_expiration_time (crt, (time_t) -1);
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_SIGNATURE_INVALID,
+			     "set_expiration_time: %s [%i]",
+			     gnutls_strerror (rc), rc);
+		return FALSE;
+	}
+
+	/* set basic constraints */
+	rc = gnutls_x509_crt_set_basic_constraints (crt, 0, -1);
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_SIGNATURE_INVALID,
+			     "set_basic_constraints: %s [%i]",
+			     gnutls_strerror (rc), rc);
+		return FALSE;
+	}
+
+	/* set usage */
+	rc = gnutls_x509_crt_set_key_usage (crt, GNUTLS_KEY_DIGITAL_SIGNATURE);
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_SIGNATURE_INVALID,
+			     "set_key_usage: %s [%i]",
+			     gnutls_strerror (rc), rc);
+		return FALSE;
+	}
+
+	/* set subject key ID */
+	rc = gnutls_x509_crt_get_key_id (crt, GNUTLS_KEYID_USE_SHA1, sha1buf, &sha1bufsz);
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_SIGNATURE_INVALID,
+			     "get_key_id: %s [%i]",
+			     gnutls_strerror (rc), rc);
+		return FALSE;
+	}
+	rc = gnutls_x509_crt_set_subject_key_id (crt, sha1buf, sha1bufsz);
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_SIGNATURE_INVALID,
+			     "set_subject_key_id: %s [%i]",
+			     gnutls_strerror (rc), rc);
+		return FALSE;
+	}
+
+	/* set version */
+	rc = gnutls_x509_crt_set_version (crt, 3);
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_SIGNATURE_INVALID,
+			     "error setting certificate version: %s [%i]",
+			     gnutls_strerror (rc), rc);
+		return FALSE;
+	}
+
+	/* self-sign certificate */
+	rc = gnutls_x509_crt_privkey_sign (crt, crt, key, GNUTLS_DIG_SHA256, 0);
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_SIGNATURE_INVALID,
+			     "crt_privkey_sign: %s [%i]",
+			     gnutls_strerror (rc), rc);
+		return FALSE;
+	}
+
+	/* export to file */
+	rc = gnutls_x509_crt_export2 (crt, GNUTLS_X509_FMT_PEM, &d);
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_SIGNATURE_INVALID,
+			     "crt_export2: %s [%i]",
+			     gnutls_strerror (rc), rc);
+		return FALSE;
+	}
+	d_payload = d.data;
+	return g_file_set_contents (fn, (const gchar *) d_payload, d.size, error);
+}
+
 static gboolean
 fu_keyring_pkcs7_setup (FuKeyring *keyring, GError **error)
 {
@@ -205,10 +573,13 @@ fu_keyring_pkcs7_datum_to_dn_str (const gnutls_datum_t *raw)
 	return g_strndup ((const gchar *) str->data, str->size);
 }
 
+/* verifies a detached signature just like:
+ *  `certtool --p7-verify --load-certificate client.pem --infile=test.p7b` */
 static FuKeyringResult *
 fu_keyring_pkcs7_verify_data (FuKeyring *keyring,
 			     GBytes *blob,
 			     GBytes *blob_signature,
+			     FuKeyringVerifyFlags flags,
 			     GError **error)
 {
 	FuKeyringPkcs7 *self = FU_KEYRING_PKCS7 (keyring);
@@ -217,7 +588,14 @@ fu_keyring_pkcs7_verify_data (FuKeyring *keyring,
 	int count;
 	int rc;
 	g_auto(gnutls_pkcs7_t) pkcs7 = NULL;
+	g_auto(gnutls_x509_crt_t) crt = NULL;
 	g_autoptr(GString) authority_newest = g_string_new (NULL);
+
+	/* ensure the client certificate exists */
+	if (!fu_keyring_pkcs7_ensure_client_certificate (self, error)) {
+		g_prefix_error (error, "failed to generate client certificate: ");
+		return NULL;
+	}
 
 	/* startup */
 	rc = gnutls_pkcs7_init (&pkcs7);
@@ -255,17 +633,33 @@ fu_keyring_pkcs7_verify_data (FuKeyring *keyring,
 				     "no PKCS7 signatures found");
 		return NULL;
 	}
+
+	/* use client certificate */
+	if (flags & FU_KEYRING_VERIFY_FLAG_USE_CLIENT_CERT) {
+		if (!fu_keyring_pkcs7_ensure_client_certificate (self, error)) {
+			g_prefix_error (error, "failed to generate client certificate: ");
+			return NULL;
+		}
+		crt = fu_keyring_pkcs7_load_client_certificate (self, error);
+		if (crt == NULL)
+			return NULL;
+	}
+
 	for (gint i = 0; i < count; i++) {
 		gnutls_pkcs7_signature_info_st info;
 		gint64 signing_time = 0;
 
 		/* verify the data against the detached signature */
-		rc = gnutls_pkcs7_verify (pkcs7, self->tl,
-					  NULL, /* vdata */
-					  0,    /* vdata_size */
-					  i,    /* index */
-					  &datum, /* data */
-					  0);   /* flags */
+		if (flags & FU_KEYRING_VERIFY_FLAG_USE_CLIENT_CERT) {
+			rc = gnutls_pkcs7_verify_direct (pkcs7, crt, i, &datum, 0);
+		} else {
+			rc = gnutls_pkcs7_verify (pkcs7, self->tl,
+						  NULL, /* vdata */
+						  0,    /* vdata_size */
+						  i,    /* index */
+						  &datum, /* data */
+						  0);   /* flags */
+		}
 		if (rc < 0) {
 			g_set_error (error,
 				     FWUPD_ERROR,
@@ -303,6 +697,107 @@ fu_keyring_pkcs7_verify_data (FuKeyring *keyring,
 						NULL));
 }
 
+/* creates a detached signature just like:
+ *  `certtool --p7-detached-sign --load-certificate client.pem \
+ *    --load-privkey secret.pem --outfile=test.p7b` */
+static GBytes *
+fu_keyring_pkcs7_sign_data (FuKeyring *keyring,
+			    GBytes *blob,
+			    FuKeyringSignFlags flags,
+			    GError **error)
+{
+	FuKeyringPkcs7 *self = FU_KEYRING_PKCS7 (keyring);
+	gnutls_datum_t d = { 0 };
+	gnutls_digest_algorithm_t dig = GNUTLS_DIG_NULL;
+	guint gnutls_flags = 0;
+	int rc;
+	g_auto(gnutls_pkcs7_t) pkcs7 = NULL;
+	g_auto(gnutls_privkey_t) key = NULL;
+	g_auto(gnutls_pubkey_t) pubkey = NULL;
+	g_auto(gnutls_x509_crt_t) crt = NULL;
+	g_autoptr(gnutls_data_t) d_payload = NULL;
+
+	/* ensure the client certificate exists */
+	if (!fu_keyring_pkcs7_ensure_client_certificate (self, error)) {
+		g_prefix_error (error, "failed to generate client certificate: ");
+		return NULL;
+	}
+
+	/* import the keys */
+	crt = fu_keyring_pkcs7_load_client_certificate (self, error);
+	if (crt == NULL)
+		return NULL;
+	key = fu_keyring_pkcs7_load_privkey (self, error);
+	if (key == NULL)
+		return NULL;
+
+	/* get the digest algorithm from the publix key */
+	pubkey = fu_keyring_pkcs7_load_pubkey_from_privkey (key, error);
+	if (pubkey == NULL)
+		return NULL;
+	rc = gnutls_pubkey_get_preferred_hash_algorithm (pubkey, &dig, NULL);
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_SIGNATURE_INVALID,
+			     "preferred_hash_algorithm: %s [%i]",
+			     gnutls_strerror (rc), rc);
+		return NULL;
+	}
+
+	/* create container */
+	rc = gnutls_pkcs7_init (&pkcs7);
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_SIGNATURE_INVALID,
+			     "pkcs7_init: %s [%i]",
+			     gnutls_strerror (rc), rc);
+		return NULL;
+	}
+
+	/* sign data */
+	d.data = (unsigned char *) g_bytes_get_data (blob, NULL);
+	d.size = g_bytes_get_size (blob);
+	if (flags & FU_KEYRING_SIGN_FLAG_ADD_TIMESTAMP)
+		gnutls_flags |= GNUTLS_PKCS7_INCLUDE_TIME;
+	if (flags & FU_KEYRING_SIGN_FLAG_ADD_CERT)
+		gnutls_flags |= GNUTLS_PKCS7_INCLUDE_CERT;
+	rc = gnutls_pkcs7_sign (pkcs7, crt, key, &d, NULL, NULL, dig, gnutls_flags);
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_SIGNATURE_INVALID,
+			     "pkcs7_sign: %s [%i]",
+			     gnutls_strerror (rc), rc);
+		return NULL;
+	}
+
+	/* set certificate */
+	if (flags & FU_KEYRING_SIGN_FLAG_ADD_CERT) {
+		rc = gnutls_pkcs7_set_crt (pkcs7, crt);
+		if (rc < 0) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_SIGNATURE_INVALID,
+				     "pkcs7_set_cr: %s", gnutls_strerror (rc));
+			return NULL;
+		}
+	}
+
+	/* export */
+	rc = gnutls_pkcs7_export2 (pkcs7, GNUTLS_X509_FMT_PEM, &d);
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_SIGNATURE_INVALID,
+			     "pkcs7_export: %s", gnutls_strerror (rc));
+		return NULL;
+	}
+	d_payload = d.data;
+	return g_bytes_new (d_payload, d.size);
+}
+
 static void
 fu_keyring_pkcs7_finalize (GObject *object)
 {
@@ -318,6 +813,7 @@ fu_keyring_pkcs7_class_init (FuKeyringPkcs7Class *klass)
 	FuKeyringClass *klass_app = FU_KEYRING_CLASS (klass);
 	klass_app->setup = fu_keyring_pkcs7_setup;
 	klass_app->add_public_keys = fu_keyring_pkcs7_add_public_keys;
+	klass_app->sign_data = fu_keyring_pkcs7_sign_data;
 	klass_app->verify_data = fu_keyring_pkcs7_verify_data;
 	object_class->finalize = fu_keyring_pkcs7_finalize;
 }
