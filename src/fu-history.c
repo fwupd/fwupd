@@ -291,6 +291,60 @@ fu_history_get_schema_version (FuHistory *self)
 }
 
 static gboolean
+fu_history_create_or_migrate (FuHistory *self, guint schema_ver, GError **error)
+{
+	gint rc;
+	g_autoptr(sqlite3_stmt) stmt = NULL;
+
+	/* create initial up-to-date database or migrate */
+	if (schema_ver == 0) {
+		g_debug ("building initial database");
+		if (!fu_history_create_database (self, error))
+			return FALSE;
+	} else if (schema_ver == 1) {
+		g_debug ("migrating v%u database by recreating table", schema_ver);
+		if (!fu_history_migrate_database_v1 (self, error))
+			return FALSE;
+	} else if (schema_ver == 2) {
+		g_debug ("migrating v%u database by altering", schema_ver);
+		if (!fu_history_migrate_database_v2 (self, error))
+			return FALSE;
+		if (!fu_history_migrate_database_v3 (self, error))
+			return FALSE;
+		if (!fu_history_migrate_database_v4 (self, error))
+			return FALSE;
+	} else if (schema_ver == 3) {
+		g_debug ("migrating v%u database by altering", schema_ver);
+		if (!fu_history_migrate_database_v3 (self, error))
+			return FALSE;
+		if (!fu_history_migrate_database_v4 (self, error))
+			return FALSE;
+	} else if (schema_ver == 4) {
+		g_debug ("migrating v%u database by altering", schema_ver);
+		if (!fu_history_migrate_database_v4 (self, error))
+			return FALSE;
+	} else {
+		/* this is probably okay, but return an error if we ever delete
+		 * or rename columns */
+		g_warning ("schema version %u is unknown", schema_ver);
+		return TRUE;
+	}
+
+	/* set new schema version */
+	rc = sqlite3_prepare_v2 (self->db,
+				 "UPDATE schema SET version=?1;",
+				 -1, &stmt, NULL);
+	if (rc != SQLITE_OK) {
+		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
+			     "Failed to prepare SQL for updating schema: %s",
+			     sqlite3_errmsg (self->db));
+		return FALSE;
+	}
+	sqlite3_bind_int (stmt, 1, FU_HISTORY_CURRENT_SCHEMA_VERSION);
+	return fu_history_stmt_exec (self, stmt, NULL, error);
+}
+
+static gboolean
 fu_history_load (FuHistory *self, GError **error)
 {
 	gint rc;
@@ -299,7 +353,6 @@ fu_history_load (FuHistory *self, GError **error)
 	g_autofree gchar *filename = NULL;
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(FuMutexLocker) locker = fu_mutex_write_locker_new (self->db_mutex);
-	g_autoptr(sqlite3_stmt) stmt = NULL;
 
 	/* already done */
 	if (self->db != NULL)
@@ -341,49 +394,16 @@ fu_history_load (FuHistory *self, GError **error)
 		if (rc == SQLITE_OK)
 			schema_ver = 1;
 	}
-	g_debug ("got schema version of %u", schema_ver);
 
 	/* create initial up-to-date database, or migrate */
-	if (schema_ver == 0) {
-		g_debug ("building initial database");
-		if (!fu_history_create_database (self, error))
-			return FALSE;
-	} else if (schema_ver == 1) {
-		g_debug ("migrating v%u database by recreating table", schema_ver);
-		if (!fu_history_migrate_database_v1 (self, error))
-			return FALSE;
-	} else if (schema_ver == 2) {
-		g_debug ("migrating v%u database by altering", schema_ver);
-		if (!fu_history_migrate_database_v2 (self, error))
-			return FALSE;
-		if (!fu_history_migrate_database_v3 (self, error))
-			return FALSE;
-		if (!fu_history_migrate_database_v4 (self, error))
-			return FALSE;
-	} else if (schema_ver == 3) {
-		g_debug ("migrating v%u database by altering", schema_ver);
-		if (!fu_history_migrate_database_v3 (self, error))
-			return FALSE;
-		if (!fu_history_migrate_database_v4 (self, error))
-			return FALSE;
-	} else if (schema_ver == 4) {
-		g_debug ("migrating v%u database by altering", schema_ver);
-		if (!fu_history_migrate_database_v4 (self, error))
+	g_debug ("got schema version of %u", schema_ver);
+	if (schema_ver != FU_HISTORY_CURRENT_SCHEMA_VERSION) {
+		if (!fu_history_create_or_migrate (self, schema_ver, error))
 			return FALSE;
 	}
 
-	/* update version */
-	rc = sqlite3_prepare_v2 (self->db,
-				 "UPDATE schema SET version=?1;",
-				 -1, &stmt, NULL);
-	if (rc != SQLITE_OK) {
-		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
-			     "Failed to prepare SQL for updating schema: %s",
-			     sqlite3_errmsg (self->db));
-		return FALSE;
-	}
-	sqlite3_bind_int (stmt, 1, FU_HISTORY_CURRENT_SCHEMA_VERSION);
-	return fu_history_stmt_exec (self, stmt, NULL, error);
+	/* success */
+	return TRUE;
 }
 
 static gchar *
