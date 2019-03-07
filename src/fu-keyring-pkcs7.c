@@ -35,6 +35,7 @@ fu_keyring_pkcs7_add_public_key (FuKeyringPkcs7 *self,
 				 gnutls_x509_crt_fmt_t format,
 				 GError **error)
 {
+	guint key_usage = 0;
 	gnutls_datum_t datum;
 	gsize sz;
 	int rc;
@@ -67,12 +68,22 @@ fu_keyring_pkcs7_add_public_key (FuKeyringPkcs7 *self,
 			     gnutls_strerror (rc), rc);
 		return FALSE;
 	}
-	if (gnutls_x509_crt_check_key_purpose (cert, GNUTLS_KP_ANY, 0) != 0) {
+	rc = gnutls_x509_crt_get_key_usage (cert, &key_usage, NULL);
+	if (rc < 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_SIGNATURE_INVALID,
-			     "certificate %s not suitable for use",
-			     filename);
+			     "failed to get key usage: %s [%i]",
+			     gnutls_strerror (rc), rc);
+		return FALSE;
+	}
+	if ((key_usage & GNUTLS_KEY_DIGITAL_SIGNATURE) == 0 &&
+	    (key_usage & GNUTLS_KEY_KEY_CERT_SIGN) == 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_SIGNATURE_INVALID,
+			     "certificate %s not suitable for use [0x%x]",
+			     filename, key_usage);
 		return FALSE;
 	}
 	rc = gnutls_x509_trust_list_add_cas (self->tl, &cert, 1, 0);
