@@ -1041,7 +1041,7 @@ fu_util_activate (FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* load engine */
-	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_READONLY_FS, error))
 		return FALSE;
 
 	/* activate anything with _NEEDS_ACTIVATION */
