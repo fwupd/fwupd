@@ -15,8 +15,14 @@ G_BEGIN_DECLS
 #define FU_TYPE_CONFIG (fu_config_get_type ())
 G_DECLARE_FINAL_TYPE (FuConfig, fu_config, FU, CONFIG, GObject)
 
+typedef enum {
+	FU_CONFIG_LOAD_FLAG_NONE		= 0,
+	FU_CONFIG_LOAD_FLAG_LAST
+} FuConfigLoadFlags;
+
 FuConfig	*fu_config_new				(void);
 gboolean	 fu_config_load				(FuConfig	*self,
+							 FuConfigLoadFlags flags,
 							 GError		**error);
 
 guint64		 fu_config_get_archive_size_max		(FuConfig	*self);

@@ -4169,7 +4169,7 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 		return TRUE;
 
 	/* read config file */
-	if (!fu_config_load (self->config, error)) {
+	if (!fu_config_load (self->config, FU_CONFIG_LOAD_FLAG_NONE, error)) {
 		g_prefix_error (error, "Failed to load config: ");
 		return FALSE;
 	}
