@@ -484,6 +484,8 @@ fu_config_load (FuConfig *self, FuConfigLoadFlags flags, GError **error)
 	g_autofree gchar *xmlbfn = NULL;
 	g_autoptr(GFile) xmlb = NULL;
 	g_autoptr(XbBuilder) builder = xb_builder_new ();
+	XbBuilderCompileFlags compile_flags = XB_BUILDER_COMPILE_FLAG_SINGLE_LANG |
+					      XB_BUILDER_COMPILE_FLAG_IGNORE_INVALID;
 
 	g_return_val_if_fail (FU_IS_CONFIG (self), FALSE);
 
@@ -508,14 +510,17 @@ fu_config_load (FuConfig *self, FuConfigLoadFlags flags, GError **error)
 	for (guint i = 0; locales[i] != NULL; i++)
 		xb_builder_add_locale (builder, locales[i]);
 
+#if LIBXMLB_CHECK_VERSION(0,1,7)
+	/* on a read-only filesystem don't care about the cache GUID */
+	if (flags & FU_CONFIG_LOAD_FLAG_READONLY_FS)
+		compile_flags |= XB_BUILDER_COMPILE_FLAG_IGNORE_GUID;
+#endif
+
 	/* build the metainfo silo */
 	cachedirpkg = fu_common_get_path (FU_PATH_KIND_CACHEDIR_PKG);
 	xmlbfn = g_build_filename (cachedirpkg, "metainfo.xmlb", NULL);
 	xmlb = g_file_new_for_path (xmlbfn);
-	self->silo = xb_builder_ensure (builder, xmlb,
-					XB_BUILDER_COMPILE_FLAG_SINGLE_LANG |
-					XB_BUILDER_COMPILE_FLAG_IGNORE_INVALID,
-					NULL, error);
+	self->silo = xb_builder_ensure (builder, xmlb, compile_flags, NULL, error);
 	if (self->silo == NULL)
 		return FALSE;
 

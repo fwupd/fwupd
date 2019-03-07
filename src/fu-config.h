@@ -17,6 +17,7 @@ G_DECLARE_FINAL_TYPE (FuConfig, fu_config, FU, CONFIG, GObject)
 
 typedef enum {
 	FU_CONFIG_LOAD_FLAG_NONE		= 0,
+	FU_CONFIG_LOAD_FLAG_READONLY_FS		= 1 << 0,
 	FU_CONFIG_LOAD_FLAG_LAST
 } FuConfigLoadFlags;
 
