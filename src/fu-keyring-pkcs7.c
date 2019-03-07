@@ -172,6 +172,7 @@ fu_keyring_pkcs7_datum_to_dn_str (const gnutls_datum_t *raw)
 	if (rc < 0)
 		return NULL;
 	str = (gnutls_datum_t *) gnutls_malloc (sizeof (gnutls_datum_t));
+	str->data = NULL;
 	rc = gnutls_x509_dn_get_str2 (dn, str, 0);
 	if (rc < 0)
 		return NULL;
@@ -185,7 +186,7 @@ fu_keyring_pkcs7_verify_data (FuKeyring *keyring,
 			     GError **error)
 {
 	FuKeyringPkcs7 *self = FU_KEYRING_PKCS7 (keyring);
-	gnutls_datum_t datum;
+	gnutls_datum_t datum = { 0 };
 	gint64 timestamp_newest = 0;
 	int count;
 	int rc;
@@ -263,7 +264,8 @@ fu_keyring_pkcs7_verify_data (FuKeyring *keyring,
 			g_autofree gchar *dn = NULL;
 			timestamp_newest = signing_time;
 			dn = fu_keyring_pkcs7_datum_to_dn_str (&info.issuer_dn);
-			g_string_assign (authority_newest, dn);
+			if (dn != NULL)
+				g_string_assign (authority_newest, dn);
 		}
 		gnutls_pkcs7_signature_info_deinit (&info);
 	}
