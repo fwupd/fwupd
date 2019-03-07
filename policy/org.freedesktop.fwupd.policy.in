@@ -134,4 +134,15 @@
     </defaults>
   </action>
 
+  <action id="org.freedesktop.fwupd.self-sign">
+    <description>Sign data using the client certificate</description>
+    <!-- TRANSLATORS: this is the PolicyKit modal dialog -->
+    <message>Authentication is required to sign data using the client certificate</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
 </policyconfig>

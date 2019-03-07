@@ -13,6 +13,7 @@
 #include "fwupd-enums.h"
 
 #include "fu-common.h"
+#include "fu-keyring.h"
 #include "fu-install-task.h"
 #include "fu-plugin.h"
 
@@ -124,6 +125,10 @@ gboolean	 fu_engine_activate			(FuEngine	*self,
 GPtrArray	*fu_engine_get_approved_firmware	(FuEngine	*self);
 void		 fu_engine_add_approved_firmware	(FuEngine	*self,
 							 const gchar	*checksum);
+gchar		*fu_engine_self_sign			(FuEngine	*self,
+							 const gchar	*value,
+							 FuKeyringSignFlags flags,
+							 GError		**error);
 
 /* for the self tests */
 void		 fu_engine_add_device			(FuEngine	*self,

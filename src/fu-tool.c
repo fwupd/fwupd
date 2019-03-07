@@ -1166,6 +1166,32 @@ fu_util_firmware_builder (FuUtilPrivate *priv, gchar **values, GError **error)
 	return fu_common_set_contents_bytes (values[1], firmware_blob, error);
 }
 
+static gboolean
+fu_util_self_sign (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autofree gchar *sig = NULL;
+
+	/* check args */
+	if (g_strv_length (values) != 1) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments: value expected");
+		return FALSE;
+	}
+
+	/* start engine */
+	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+		return FALSE;
+	sig = fu_engine_self_sign (priv->engine, values[0],
+				   FU_KEYRING_SIGN_FLAG_ADD_TIMESTAMP |
+				   FU_KEYRING_SIGN_FLAG_ADD_CERT, error);
+	if (sig == NULL)
+		return FALSE;
+	g_print ("%s\n", sig);
+	return TRUE;
+}
+
 static void
 fu_util_device_added_cb (FwupdClient *client,
 			 FwupdDevice *device,
@@ -1387,6 +1413,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Update all devices that match local metadata"),
 		     fu_util_update);
+	fu_util_cmd_array_add (cmd_array,
+		     "self-sign",
+		     "TEXT",
+		     /* TRANSLATORS: command description */
+		     _("Sign data using the client certificate"),
+		     fu_util_self_sign);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();

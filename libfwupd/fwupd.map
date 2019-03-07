@@ -325,6 +325,7 @@ LIBFWUPD_1.2.6 {
   global:
     fwupd_client_activate;
     fwupd_client_get_approved_firmware;
+    fwupd_client_self_sign;
     fwupd_client_set_approved_firmware;
     fwupd_device_to_json;
     fwupd_release_add_flag;

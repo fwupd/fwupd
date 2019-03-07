@@ -1457,6 +1457,68 @@ fwupd_client_set_approved_firmware (FwupdClient *client,
 }
 
 /**
+ * fwupd_client_self_sign:
+ * @client: A #FwupdClient
+ * @value: A string to sign, typically a JSON blob
+ * @flags: #FwupdSelfSignFlags, e.g. %FWUPD_SELF_SIGN_FLAG_ADD_TIMESTAMP
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Signs the data using the client self-signed certificate.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.2.6
+ **/
+gchar *
+fwupd_client_self_sign (FwupdClient *client,
+			const gchar *value,
+			FwupdSelfSignFlags flags,
+			GCancellable *cancellable,
+			GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	GVariantBuilder builder;
+	g_autoptr(GVariant) val = NULL;
+	gchar *retval = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* connect */
+	if (!fwupd_client_connect (client, cancellable, error))
+		return NULL;
+
+	/* set options */
+	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
+	if (flags & FWUPD_SELF_SIGN_FLAG_ADD_TIMESTAMP) {
+		g_variant_builder_add (&builder, "{sv}",
+				       "add-timestamp", g_variant_new_boolean (TRUE));
+	}
+	if (flags & FWUPD_SELF_SIGN_FLAG_ADD_CERT) {
+		g_variant_builder_add (&builder, "{sv}",
+				       "add-cert", g_variant_new_boolean (TRUE));
+	}
+
+	/* call into daemon */
+	val = g_dbus_proxy_call_sync (priv->proxy,
+				      "SelfSign",
+				      g_variant_new ("(sa{sv})", value, &builder),
+				      G_DBUS_CALL_FLAGS_NONE,
+				      -1,
+				      cancellable,
+				      error);
+	if (val == NULL) {
+		if (error != NULL)
+			fwupd_client_fixup_dbus_error (*error);
+		return NULL;
+	}
+	g_variant_get (val, "(s)", &retval);
+	return retval;
+}
+
+/**
  * fwupd_client_modify_remote:
  * @client: A #FwupdClient
  * @remote_id: the remote ID, e.g. `lvfs-testing`

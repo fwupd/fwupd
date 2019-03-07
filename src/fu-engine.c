@@ -3047,6 +3047,36 @@ fu_engine_add_approved_firmware (FuEngine *self, const gchar *checksum)
 	g_hash_table_add (self->approved_firmware, g_strdup (checksum));
 }
 
+gchar *
+fu_engine_self_sign (FuEngine *self,
+		     const gchar *value,
+		     FuKeyringSignFlags flags,
+		     GError **error)
+{
+	g_autoptr(FuKeyring) kr = NULL;
+	g_autoptr(FuKeyringResult) kr_result = NULL;
+	g_autoptr(GBytes) payload = NULL;
+	g_autoptr(GBytes) signature = NULL;
+
+	/* create detached signature and verify */
+	kr = fu_keyring_create_for_kind (FWUPD_KEYRING_KIND_PKCS7, error);
+	if (kr == NULL)
+		return NULL;
+	if (!fu_keyring_setup (kr, error))
+		return NULL;
+	payload = g_bytes_new (value, strlen (value));
+	signature = fu_keyring_sign_data (kr, payload, flags, error);
+	if (signature == NULL)
+		return NULL;
+	kr_result = fu_keyring_verify_data (kr, payload, signature,
+					    FU_KEYRING_VERIFY_FLAG_USE_CLIENT_CERT,
+					    error);
+	if (kr_result == NULL)
+		return NULL;
+	return g_strndup (g_bytes_get_data (signature, NULL),
+			  g_bytes_get_size (signature));
+}
+
 /**
  * fu_engine_get_upgrades:
  * @self: A #FuEngine

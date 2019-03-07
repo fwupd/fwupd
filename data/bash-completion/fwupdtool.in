@@ -11,6 +11,7 @@ _fwupdtool_cmd_list=(
 	'install'
 	'install-blob'
 	'monitor'
+	'self-sign'
 	'smbios-dump'
 	'attach'
 	'detach'
