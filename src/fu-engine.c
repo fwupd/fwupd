@@ -2017,9 +2017,10 @@ fu_engine_create_metadata (FuEngine *self, XbBuilder *builder,
 }
 
 static gboolean
-fu_engine_load_metadata_store (FuEngine *self, GError **error)
+fu_engine_load_metadata_store (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 {
 	GPtrArray *remotes;
+	XbBuilderCompileFlags compile_flags = XB_BUILDER_COMPILE_FLAG_IGNORE_INVALID;
 	g_autofree gchar *cachedirpkg = NULL;
 	g_autofree gchar *xmlbfn = NULL;
 	g_autoptr(GFile) xmlb = NULL;
@@ -2109,9 +2110,7 @@ fu_engine_load_metadata_store (FuEngine *self, GError **error)
 	cachedirpkg = fu_common_get_path (FU_PATH_KIND_CACHEDIR_PKG);
 	xmlbfn = g_build_filename (cachedirpkg, "metadata.xmlb", NULL);
 	xmlb = g_file_new_for_path (xmlbfn);
-	self->silo = xb_builder_ensure (builder, xmlb,
-					XB_BUILDER_COMPILE_FLAG_IGNORE_INVALID,
-					NULL, error);
+	self->silo = xb_builder_ensure (builder, xmlb, compile_flags, NULL, error);
 	if (self->silo == NULL)
 		return FALSE;
 
@@ -2298,7 +2297,7 @@ fu_engine_update_metadata (FuEngine *self, const gchar *remote_id,
 						   bytes_sig, error))
 			return FALSE;
 	}
-	return fu_engine_load_metadata_store (self, error);
+	return fu_engine_load_metadata_store (self, FU_ENGINE_LOAD_FLAG_NONE, error);
 }
 
 /**
@@ -4150,6 +4149,7 @@ fu_engine_udev_uevent_cb (GUdevClient *gudev_client,
 /**
  * fu_engine_load:
  * @self: A #FuEngine
+ * @flags: #FuEngineLoadFlags, e.g. %FU_ENGINE_LOAD_FLAG_READONLY_FS
  * @error: A #GError, or %NULL
  *
  * Load the firmware update engine so it is ready for use.
@@ -4157,7 +4157,7 @@ fu_engine_udev_uevent_cb (GUdevClient *gudev_client,
  * Returns: %TRUE for success
  **/
 gboolean
-fu_engine_load (FuEngine *self, GError **error)
+fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 {
 	g_autoptr(GPtrArray) checksums = NULL;
 
@@ -4200,7 +4200,7 @@ fu_engine_load (FuEngine *self, GError **error)
 	fu_engine_load_quirks (self);
 
 	/* load AppStream metadata */
-	if (!fu_engine_load_metadata_store (self, error)) {
+	if (!fu_engine_load_metadata_store (self, flags, error)) {
 		g_prefix_error (error, "Failed to load AppStream data: ");
 		return FALSE;
 	}

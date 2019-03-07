@@ -1426,7 +1426,7 @@ main (int argc, char *argv[])
 	g_signal_connect (priv->engine, "percentage-changed",
 			  G_CALLBACK (fu_main_engine_percentage_changed_cb),
 			  priv);
-	if (!fu_engine_load (priv->engine, &error)) {
+	if (!fu_engine_load (priv->engine, FU_ENGINE_LOAD_FLAG_NONE, &error)) {
 		g_printerr ("Failed to load engine: %s\n", error->message);
 		return EXIT_FAILURE;
 	}

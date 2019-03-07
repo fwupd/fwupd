@@ -160,13 +160,13 @@ fu_util_save_current_state (FuUtilPrivate *priv, GError **error)
 }
 
 static gboolean
-fu_util_start_engine (FuUtilPrivate *priv, GError **error)
+fu_util_start_engine (FuUtilPrivate *priv, FuEngineLoadFlags flags, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
 
 	if (!fu_util_stop_daemon (&error_local))
 		g_debug ("Failed top stop daemon: %s", error_local->message);
-	if (!fu_engine_load (priv->engine, error))
+	if (!fu_engine_load (priv->engine, flags, error))
 		return FALSE;
 	if (fu_engine_get_tainted (priv->engine)) {
 		g_printerr ("WARNING: This tool has loaded 3rd party code and "
@@ -286,7 +286,7 @@ fu_main_engine_percentage_changed_cb (FuEngine *engine,
 static gboolean
 fu_util_watch (FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	if (!fu_util_start_engine (priv, error))
+	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
 		return FALSE;
 	g_main_loop_run (priv->loop);
 	return TRUE;
@@ -333,7 +333,7 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GPtrArray) devices = NULL;
 
 	/* load engine */
-	if (!fu_util_start_engine (priv, error))
+	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
 		return FALSE;
 
 	/* get devices from daemon */
@@ -381,7 +381,7 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 	gint fd;
 
 	/* load engine */
-	if (!fu_util_start_engine (priv, error))
+	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
 		return FALSE;
 
 	/* check args */
@@ -424,7 +424,7 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GPtrArray) devs = NULL;
 
 	/* load engine */
-	if (!fu_util_start_engine (priv, error))
+	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
 		return FALSE;
 
 	/* print */
@@ -473,7 +473,7 @@ fu_util_get_topology (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GPtrArray) devs = NULL;
 
 	/* load engine */
-	if (!fu_util_start_engine (priv, error))
+	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
 		return FALSE;
 
 	/* print */
@@ -608,7 +608,7 @@ fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* load engine */
-	if (!fu_util_start_engine (priv, error))
+	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
 		return FALSE;
 
 	/* get device */
@@ -726,7 +726,7 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(XbSilo) silo = NULL;
 
 	/* load engine */
-	if (!fu_util_start_engine (priv, error))
+	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
 		return FALSE;
 
 	/* handle both forms */
@@ -841,7 +841,7 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GPtrArray) devices = NULL;
 
 	/* load engine */
-	if (!fu_util_start_engine (priv, error))
+	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
 		return FALSE;
 
 	priv->current_operation = FU_UTIL_OPERATION_UPDATE;
@@ -928,7 +928,7 @@ fu_util_detach (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* load engine */
-	if (!fu_util_start_engine (priv, error))
+	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
 		return FALSE;
 
 	/* invalid args */
@@ -965,7 +965,7 @@ fu_util_attach (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* load engine */
-	if (!fu_util_start_engine (priv, error))
+	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
 		return FALSE;
 
 	/* invalid args */
@@ -1041,7 +1041,7 @@ fu_util_activate (FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* load engine */
-	if (!fu_util_start_engine (priv, error))
+	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
 		return FALSE;
 
 	/* activate anything with _NEEDS_ACTIVATION */

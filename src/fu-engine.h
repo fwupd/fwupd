@@ -21,11 +21,17 @@ G_BEGIN_DECLS
 #define FU_TYPE_ENGINE (fu_engine_get_type ())
 G_DECLARE_FINAL_TYPE (FuEngine, fu_engine, FU, ENGINE, GObject)
 
+typedef enum {
+	FU_ENGINE_LOAD_FLAG_NONE		= 0,
+	FU_ENGINE_LOAD_FLAG_LAST
+} FuEngineLoadFlags;
+
 FuEngine	*fu_engine_new				(FuAppFlags	 app_flags);
 void		 fu_engine_add_plugin_filter		(FuEngine	*self,
 							 const gchar	*plugin_glob);
 void		 fu_engine_idle_reset			(FuEngine	*self);
 gboolean	 fu_engine_load				(FuEngine	*self,
+							 FuEngineLoadFlags flags,
 							 GError		**error);
 gboolean	 fu_engine_load_plugins			(FuEngine	*self,
 							 GError		**error);
