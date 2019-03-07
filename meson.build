@@ -175,6 +175,9 @@ if get_option('daemon')
 endif
 if get_option('pkcs7')
   gnutls = dependency('gnutls', version : '>= 3.4.4.1')
+  if gnutls.version().version_compare('>= 3.6.0')
+    conf.set('HAVE_GNUTLS_3_6_0', '1')
+  endif
   conf.set('ENABLE_PKCS7', '1')
 endif
 if get_option('gpg')

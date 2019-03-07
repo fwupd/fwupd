@@ -398,7 +398,7 @@ if get_option('tests')
       '-DFU_MUTEX_DEBUG',
     ],
   )
-  test('fu-self-test', e, is_parallel:false)
+  test('fu-self-test', e, is_parallel:false, timeout:180)
 endif
 
 if get_option('introspection')
