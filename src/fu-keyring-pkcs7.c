@@ -29,6 +29,45 @@ G_DEFINE_AUTO_CLEANUP_FREE_FUNC(gnutls_x509_crt_t, gnutls_x509_crt_deinit, NULL)
 G_DEFINE_AUTO_CLEANUP_FREE_FUNC(gnutls_x509_dn_t, gnutls_x509_dn_deinit, NULL)
 #pragma clang diagnostic pop
 
+static gnutls_x509_crt_t
+fu_keyring_pkcs7_load_crt_from_filename (const gchar *filename,
+					 gnutls_x509_crt_fmt_t format,
+					 GError **error)
+{
+	gnutls_datum_t d = { 0 };
+	gsize bufsz = 0;
+	int rc;
+	g_autofree gchar *buf = NULL;
+	g_auto(gnutls_x509_crt_t) crt = NULL;
+
+	/* create certificate */
+	rc = gnutls_x509_crt_init (&crt);
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_SIGNATURE_INVALID,
+			     "crt_init: %s [%i]",
+			     gnutls_strerror (rc), rc);
+		return NULL;
+	}
+
+	/* import the certificate */
+	if (!g_file_get_contents (filename, &buf, &bufsz, error))
+		return NULL;
+	d.size = bufsz;
+	d.data = (unsigned char *) buf;
+	rc = gnutls_x509_crt_import (crt, &d, GNUTLS_X509_FMT_PEM);
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_SIGNATURE_INVALID,
+			     "crt_import: %s [%i]",
+			     gnutls_strerror (rc), rc);
+		return NULL;
+	}
+	return g_steal_pointer (&crt);
+}
+
 static gboolean
 fu_keyring_pkcs7_add_public_key (FuKeyringPkcs7 *self,
 				 const gchar *filename,
@@ -36,39 +75,15 @@ fu_keyring_pkcs7_add_public_key (FuKeyringPkcs7 *self,
 				 GError **error)
 {
 	guint key_usage = 0;
-	gnutls_datum_t datum;
-	gsize sz;
 	int rc;
-	g_autofree gchar *pem_data = NULL;
-	g_auto(gnutls_x509_crt_t) cert = NULL;
+	g_auto(gnutls_x509_crt_t) crt = NULL;
 
 	/* load file and add to the trust list */
-	if (!g_file_get_contents (filename, &pem_data, &sz, error)) {
-		g_prefix_error (error, "failed to load %s: ", filename);
+	g_debug ("trying to load certificate from %s", filename);
+	crt = fu_keyring_pkcs7_load_crt_from_filename (filename, format, error);
+	if (crt == NULL)
 		return FALSE;
-	}
-	datum.data = (guint8 *) pem_data;
-	datum.size = sz;
-	g_debug ("trying to load CA from %s", filename);
-	rc = gnutls_x509_crt_init (&cert);
-	if (rc < 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_SIGNATURE_INVALID,
-			     "failed to initialize certificate: %s [%i]",
-			     gnutls_strerror (rc), rc);
-		return FALSE;
-	}
-	rc = gnutls_x509_crt_import (cert, &datum, format);
-	if (rc < 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_SIGNATURE_INVALID,
-			     "failed to import certificate: %s [%i]",
-			     gnutls_strerror (rc), rc);
-		return FALSE;
-	}
-	rc = gnutls_x509_crt_get_key_usage (cert, &key_usage, NULL);
+	rc = gnutls_x509_crt_get_key_usage (crt, &key_usage, NULL);
 	if (rc < 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -86,7 +101,7 @@ fu_keyring_pkcs7_add_public_key (FuKeyringPkcs7 *self,
 			     filename, key_usage);
 		return FALSE;
 	}
-	rc = gnutls_x509_trust_list_add_cas (self->tl, &cert, 1, 0);
+	rc = gnutls_x509_trust_list_add_cas (self->tl, &crt, 1, 0);
 	if (rc < 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -95,10 +110,10 @@ fu_keyring_pkcs7_add_public_key (FuKeyringPkcs7 *self,
 			     gnutls_strerror (rc), rc);
 		return FALSE;
 	}
-	g_debug ("loaded %i CAs", rc);
+	g_debug ("loaded %i certificates", rc);
 
 	/* confusingly the trust list does not copy the certificate */
-	cert = NULL;
+	crt = NULL;
 	return TRUE;
 }
 
