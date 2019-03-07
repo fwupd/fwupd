@@ -296,7 +296,7 @@ typedef struct {
 	GPtrArray		*install_tasks;
 	GPtrArray		*action_ids;
 	GPtrArray		*checksums;
-	FwupdInstallFlags	 flags;
+	guint64			 flags;
 	GBytes			*blob_cab;
 	FuMainPrivate		*priv;
 	gchar			*device_id;
@@ -411,6 +411,34 @@ fu_main_authorize_set_approved_firmware_cb (GObject *source, GAsyncResult *res, 
 		fu_engine_add_approved_firmware (helper->priv->engine, csum);
 	}
 	g_dbus_method_invocation_return_value (helper->invocation, NULL);
+}
+
+static void
+fu_main_authorize_self_sign_cb (GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *) user_data;
+	g_autofree gchar *sig = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(PolkitAuthorizationResult) auth = NULL;
+
+	/* get result */
+	fu_main_set_status (helper->priv, FWUPD_STATUS_IDLE);
+	auth = polkit_authority_check_authorization_finish (POLKIT_AUTHORITY (source),
+							    res, &error);
+	if (!fu_main_authorization_is_valid (auth, &error)) {
+		g_dbus_method_invocation_return_gerror (helper->invocation, error);
+		return;
+	}
+
+	/* authenticated */
+	sig = fu_engine_self_sign (helper->priv->engine, helper->value, helper->flags, &error);
+	if (sig == NULL) {
+		g_dbus_method_invocation_return_gerror (helper->invocation, error);
+		return;
+	}
+
+	/* success */
+	g_dbus_method_invocation_return_value (helper->invocation, g_variant_new ("(s)", sig));
 }
 
 static void
@@ -809,6 +837,45 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
 						      NULL,
 						      fu_main_authorize_set_approved_firmware_cb,
+						      g_steal_pointer (&helper));
+		return;
+	}
+	if (g_strcmp0 (method_name, "SelfSign") == 0) {
+		GVariant *prop_value;
+		gchar *prop_key;
+		g_autofree gchar *value = NULL;
+		g_autoptr(FuMainAuthHelper) helper = NULL;
+		g_autoptr(PolkitSubject) subject = NULL;
+		g_autoptr(GVariantIter) iter = NULL;
+
+		g_variant_get (parameters, "(sa{sv})", &value, &iter);
+		g_debug ("Called %s(%s)", method_name, value);
+
+		/* get flags */
+		helper = g_new0 (FuMainAuthHelper, 1);
+		while (g_variant_iter_next (iter, "{&sv}", &prop_key, &prop_value)) {
+			g_debug ("got option %s", prop_key);
+			if (g_strcmp0 (prop_key, "add-timestamp") == 0 &&
+			    g_variant_get_boolean (prop_value) == TRUE)
+				helper->flags |= FU_KEYRING_SIGN_FLAG_ADD_TIMESTAMP;
+			if (g_strcmp0 (prop_key, "add-cert") == 0 &&
+			    g_variant_get_boolean (prop_value) == TRUE)
+				helper->flags |= FU_KEYRING_SIGN_FLAG_ADD_CERT;
+			g_variant_unref (prop_value);
+		}
+
+		/* authenticate */
+		fu_main_set_status (priv, FWUPD_STATUS_WAITING_FOR_AUTH);
+		helper->priv = priv;
+		helper->value = g_steal_pointer (&value);
+		helper->invocation = g_object_ref (invocation);
+		subject = polkit_system_bus_name_new (sender);
+		polkit_authority_check_authorization (priv->authority, subject,
+						      "org.freedesktop.fwupd.self-sign",
+						      NULL,
+						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
+						      NULL,
+						      fu_main_authorize_self_sign_cb,
 						      g_steal_pointer (&helper));
 		return;
 	}

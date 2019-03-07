@@ -138,5 +138,10 @@ gboolean	 fwupd_client_set_approved_firmware	(FwupdClient	*client,
 							 gchar		**checksums,
 							 GCancellable	*cancellable,
 							 GError		**error);
+gchar		*fwupd_client_self_sign			(FwupdClient	*client,
+							 const gchar	*value,
+							 FwupdSelfSignFlags flags,
+							 GCancellable	*cancellable,
+							 GError		**error);
 
 G_END_DECLS

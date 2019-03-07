@@ -161,6 +161,22 @@ typedef enum {
 } FwupdInstallFlags;
 
 /**
+ * FwupdSelfSignFlags:
+ * @FWUPD_SELF_SIGN_FLAG_NONE:			No flags set
+ * @FWUPD_SELF_SIGN_FLAG_ADD_TIMESTAMP:		Add the timestamp to the detached signature
+ * @FWUPD_SELF_SIGN_FLAG_ADD_CERT:		Add the certificate to the detached signature
+ *
+ * Flags to set when performing the firwmare update or install.
+ **/
+typedef enum {
+	FWUPD_SELF_SIGN_FLAG_NONE		= 0,		/* Since: 1.2.6 */
+	FWUPD_SELF_SIGN_FLAG_ADD_TIMESTAMP	= 1 << 0,	/* Since: 1.2.6 */
+	FWUPD_SELF_SIGN_FLAG_ADD_CERT		= 1 << 1,	/* Since: 1.2.6 */
+	/*< private >*/
+	FWUPD_SELF_SIGN_FLAG_LAST
+} FwupdSelfSignFlags;
+
+/**
  * FwupdUpdateState:
  * @FWUPD_UPDATE_STATE_UNKNOWN:			Unknown
  * @FWUPD_UPDATE_STATE_PENDING:			Update is pending
