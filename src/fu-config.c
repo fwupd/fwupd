@@ -77,7 +77,7 @@ fu_config_monitor_changed_cb (GFileMonitor *monitor,
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *filename = g_file_get_path (file);
 	g_debug ("%s changed, reloading all configs", filename);
-	if (!fu_config_load (self, &error))
+	if (!fu_config_load (self, FU_CONFIG_LOAD_FLAG_NONE, &error))
 		g_warning ("failed to rescan config: %s", error->message);
 }
 
@@ -475,7 +475,7 @@ fu_config_load_metainfos (XbBuilder *builder, GError **error)
 }
 
 gboolean
-fu_config_load (FuConfig *self, GError **error)
+fu_config_load (FuConfig *self, FuConfigLoadFlags flags, GError **error)
 {
 	const gchar *const *locales = g_get_language_names ();
 	g_autofree gchar *configdir = NULL;
