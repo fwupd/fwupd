@@ -51,6 +51,7 @@ struct FuUtilPrivate {
 	gboolean		 no_reboot_check;
 	gboolean		 no_unreported_check;
 	gboolean		 assume_yes;
+	gboolean		 sign;
 	gboolean		 show_all_devices;
 	/* only valid in update and downgrade */
 	FuUtilOperation		 current_operation;
@@ -580,6 +581,7 @@ fu_util_report_history_for_uri (FuUtilPrivate *priv,
 	const gchar *server_msg = NULL;
 	guint status_code;
 	g_autofree gchar *data = NULL;
+	g_autofree gchar *sig = NULL;
 	g_autoptr(JsonParser) json_parser = NULL;
 	g_autoptr(SoupMessage) msg = NULL;
 
@@ -588,10 +590,21 @@ fu_util_report_history_for_uri (FuUtilPrivate *priv,
 	if (data == NULL)
 		return FALSE;
 
+	/* self sign data */
+	if (priv->sign) {
+		sig = fwupd_client_self_sign (priv->client, data,
+					      FWUPD_SELF_SIGN_FLAG_ADD_TIMESTAMP,
+					      priv->cancellable, error);
+		if (sig == NULL)
+			return FALSE;
+	}
+
 	/* ask for permission */
 	if (!priv->assume_yes) {
 		fu_util_print_data (_("Target"), report_uri);
 		fu_util_print_data (_("Payload"), data);
+		if (sig != NULL)
+			fu_util_print_data (_("Signature"), sig);
 		g_print ("%s [Y|n]: ", _("Proceed with upload?"));
 		if (!fu_util_prompt_for_boolean (TRUE)) {
 			g_set_error_literal (error,
@@ -603,9 +616,17 @@ fu_util_report_history_for_uri (FuUtilPrivate *priv,
 	}
 
 	/* POST request */
-	msg = soup_message_new (SOUP_METHOD_POST, report_uri);
-	soup_message_set_request (msg, "application/json; charset=utf-8",
-				  SOUP_MEMORY_COPY, data, strlen (data));
+	if (sig != NULL) {
+		g_autoptr(SoupMultipart) mp = NULL;
+		mp = soup_multipart_new (SOUP_FORM_MIME_TYPE_MULTIPART);
+		soup_multipart_append_form_string (mp, "payload", data);
+		soup_multipart_append_form_string (mp, "signature", sig);
+		msg = soup_form_request_new_from_multipart (report_uri, mp);
+	} else {
+		msg = soup_message_new (SOUP_METHOD_POST, report_uri);
+		soup_message_set_request (msg, "application/json; charset=utf-8",
+					  SOUP_MEMORY_COPY, data, strlen (data));
+	}
 	status_code = soup_session_send_message (priv->soup_session, msg);
 	g_debug ("server returned: %s", msg->response_body->data);
 
@@ -2144,6 +2165,9 @@ main (int argc, char *argv[])
 		{ "assume-yes", 'y', 0, G_OPTION_ARG_NONE, &priv->assume_yes,
 			/* TRANSLATORS: command line option */
 			_("Answer yes to all questions"), NULL },
+		{ "sign", '\0', 0, G_OPTION_ARG_NONE, &priv->sign,
+			/* TRANSLATORS: command line option */
+			_("Sign the uploaded data with the client certificate"), NULL },
 		{ "no-unreported-check", '\0', 0, G_OPTION_ARG_NONE, &priv->no_unreported_check,
 			/* TRANSLATORS: command line option */
 			_("Do not check for unreported history"), NULL },
