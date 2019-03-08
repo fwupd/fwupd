@@ -1,6 +1,18 @@
 version: 2
 jobs:
-  build:
+  build-s390x:
+    machine:
+      image: circleci/classic:latest
+    steps:
+      - checkout
+      - run:
+          name: "Build container"
+          command: OS=debian-s390x ./contrib/ci/generate_docker.py
+      - run:
+          name: "Run build script"
+          command: docker run --privileged -e CI=true -t -v `pwd`/dist:/build/dist fwupd-debian-s390x
+
+  build-snap:
     docker:
       - image: superm1/snapcraft-edge:latest
     steps:
@@ -46,16 +58,17 @@ workflows:
   version: 2
   main:
     jobs:
-      - build
+      - build-s390x
+      - build-snap
       - publish-edge:
           requires:
-            - build
+            - build-snap
           filters:
             branches:
               only: master
       - publish-stable:
           requires:
-            - build
+            - build-snap
           filters:
             branches:
               ignore: /.*/

@@ -6,7 +6,6 @@ services:
   - docker
 
 env:
-  - OS=debian-s390x
   - OS=fedora
   - OS=debian-x86_64
   - OS=arch
