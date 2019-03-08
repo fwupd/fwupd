@@ -39,6 +39,7 @@ _fwupdmgr_opts=(
 	'--no-metadata-check'
 	'--no-reboot-check'
 	'--show-all-devices'
+	'--sign'
 )
 
 _show_modifiers()
