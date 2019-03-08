@@ -10,6 +10,7 @@ usr/share/locale
 usr/share/metainfo/*
 usr/lib/*/fwupd
 usr/lib/*/fwupdagent
+usr/lib/*/fwupdoffline
 usr/lib/*/fwupdtool
 usr/share/man/man1/*
 lib/systemd/system/*

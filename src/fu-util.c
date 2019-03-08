@@ -563,115 +563,6 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_install_prepared (FuUtilPrivate *priv, gchar **values, GError **error)
-{
-	gint vercmp;
-	guint cnt = 0;
-	g_autofree gchar *link = NULL;
-	g_autoptr(GPtrArray) results = NULL;
-	g_autoptr(FuHistory) history = NULL;
-
-	/* verify this is pointing to our cache */
-	link = g_file_read_link (FU_OFFLINE_TRIGGER_FILENAME, NULL);
-	if (link == NULL) {
-		g_debug ("No %s, exiting", FU_OFFLINE_TRIGGER_FILENAME);
-		return TRUE;
-	}
-	if (g_strcmp0 (link, "/var/lib/fwupd") != 0) {
-		g_debug ("Another framework set up the trigger, exiting");
-		return TRUE;
-	}
-
-	/* do this first to avoid a loop if this tool segfaults */
-	g_unlink (FU_OFFLINE_TRIGGER_FILENAME);
-
-	if (g_strv_length (values) != 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_ARGS,
-				     "Invalid arguments: none expected");
-		return FALSE;
-	}
-
-	/* ensure root user */
-	if (getuid () != 0 || geteuid () != 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_ARGS,
-				     "This function can only be used as root");
-		return FALSE;
-	}
-
-	/* get prepared updates */
-	history = fu_history_new ();
-	results = fu_history_get_devices (history, error);
-	if (results == NULL)
-		return FALSE;
-
-	/* apply each update */
-	for (guint i = 0; i < results->len; i++) {
-		FwupdDevice *dev = g_ptr_array_index (results, i);
-		FwupdRelease *rel = fwupd_device_get_release_default (dev);
-
-		/* check not already done */
-		if (fwupd_device_get_update_state (dev) != FWUPD_UPDATE_STATE_PENDING)
-			continue;
-
-		/* tell the user what's going to happen */
-		vercmp = fu_common_vercmp (fwupd_device_get_version (dev),
-					   fwupd_release_get_version (rel));
-		if (vercmp == 0) {
-			/* TRANSLATORS: the first replacement is a display name
-			 * e.g. "ColorHugALS" and the second is a version number
-			 * e.g. "1.2.3" */
-			g_print (_("Reinstalling %s with %s... "),
-				 fwupd_device_get_name (dev),
-				 fwupd_release_get_version (rel));
-		} else if (vercmp > 0) {
-			/* TRANSLATORS: the first replacement is a display name
-			 * e.g. "ColorHugALS" and the second and third are
-			 * version numbers e.g. "1.2.3" */
-			g_print (_("Downgrading %s from %s to %s... "),
-				 fwupd_device_get_name (dev),
-				 fwupd_device_get_version (dev),
-				 fwupd_release_get_version (rel));
-		} else if (vercmp < 0) {
-			/* TRANSLATORS: the first replacement is a display name
-			 * e.g. "ColorHugALS" and the second and third are
-			 * version numbers e.g. "1.2.3" */
-			g_print (_("Updating %s from %s to %s... "),
-				 fwupd_device_get_name (dev),
-				 fwupd_device_get_version (dev),
-				 fwupd_release_get_version (rel));
-		}
-		if (!fwupd_client_install (priv->client,
-					   fwupd_device_get_id (dev),
-					   fwupd_release_get_filename (rel),
-					   priv->flags,
-					   NULL,
-					   error))
-			return FALSE;
-		cnt++;
-	}
-
-	/* nothing to do */
-	if (cnt == 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOTHING_TO_DO,
-				     "No updates prepared");
-		return FALSE;
-	}
-
-	/* reboot */
-	if (!fu_util_prompt_complete (FWUPD_DEVICE_FLAG_NEEDS_REBOOT, FALSE, error))
-		return FALSE;
-
-	g_print ("%s\n", _("Done!"));
-	return TRUE;
-}
-
-static gboolean
 fu_util_clear_history (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FuHistory) history = fu_history_new ();
@@ -2297,12 +2188,6 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Get all devices according to the system topology"),
 		     fu_util_get_topology);
-	fu_util_cmd_array_add (cmd_array,
-		     "install-prepared",
-		     NULL,
-		     /* TRANSLATORS: command description */
-		     _("Install prepared updates now"),
-		     fu_util_install_prepared);
 	fu_util_cmd_array_add (cmd_array,
 		     "get-history",
 		     NULL,
