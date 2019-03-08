@@ -8,6 +8,7 @@ src/fu-agent.c
 src/fu-config.c
 src/fu-debug.c
 src/fu-main.c
+src/fu-offline.c
 src/fu-tool.c
 src/fu-progressbar.c
 src/fu-util.c

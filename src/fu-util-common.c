@@ -219,7 +219,7 @@ fu_util_update_shutdown (GError **error)
 	return val != NULL;
 }
 
-static gboolean
+gboolean
 fu_util_update_reboot (GError **error)
 {
 	g_autoptr(GDBusConnection) connection = NULL;

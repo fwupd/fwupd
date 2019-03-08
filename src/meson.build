@@ -128,6 +128,35 @@ fwupdagent = executable(
 )
 endif
 
+if get_option('systemd')
+fwupdagent = executable(
+  'fwupdoffline',
+  sources : [
+    'fu-offline.c',
+    'fu-util-common.c',
+  ],
+  include_directories : [
+    include_directories('..'),
+    include_directories('../libfwupd'),
+  ],
+  dependencies : [
+    giounix,
+    gudev,
+    gusb,
+    soup,
+  ],
+  link_with : [
+    fwupd,
+    libfwupdprivate,
+  ],
+  c_args : [
+    '-DFU_OFFLINE_DESTDIR=""',
+  ],
+  install : true,
+  install_dir : join_paths(libexecdir, 'fwupd')
+)
+endif
+
 resources_src = gnome.compile_resources(
   'fwupd-resources',
   'fwupd.gresource.xml',

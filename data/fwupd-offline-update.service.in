@@ -9,5 +9,5 @@ Before=shutdown.target system-update.target
 
 [Service]
 Type=oneshot
-ExecStart=@bindir@/fwupdmgr install-prepared
+ExecStart=@bindir@/fwupdoffline
 FailureAction=reboot

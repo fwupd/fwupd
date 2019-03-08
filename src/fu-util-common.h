@@ -41,6 +41,7 @@ gchar		*fu_util_get_versions		(void);
 gboolean	fu_util_prompt_complete		(FwupdDeviceFlags flags,
 						 gboolean prompt,
 						 GError **error);
+gboolean	fu_util_update_reboot		(GError **error);
 
 GPtrArray	*fu_util_cmd_array_new		(void);
 void		 fu_util_cmd_array_add		(GPtrArray	*array,
