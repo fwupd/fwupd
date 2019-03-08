@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include <sys/errno.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "fu-superio-common.h"
