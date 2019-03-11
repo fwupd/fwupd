@@ -1440,7 +1440,7 @@ fu_util_perhaps_refresh_remotes (FuUtilPrivate *priv, GError **error)
 static gchar *
 fu_util_time_to_str (guint64 tmp)
 {
-	g_return_val_if_fail (tmp != 0, FALSE);
+	g_return_val_if_fail (tmp != 0, NULL);
 
 	/* seconds */
 	if (tmp < 60) {

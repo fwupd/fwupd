@@ -257,7 +257,7 @@ fu_io_channel_read_bytes (FuIOChannel *self,
 				     G_IO_ERROR,
 				     G_IO_ERROR_TIMED_OUT,
 				     "timeout");
-			return FALSE;
+			return NULL;
 		}
 		if (rc < 0) {
 			if (errno == EINTR)

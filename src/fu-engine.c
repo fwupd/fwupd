@@ -2487,10 +2487,10 @@ fu_engine_get_details (FuEngine *self, gint fd, GError **error)
 	/* build the index */
 	if (!xb_silo_query_build_index (silo, "components/component/provides/firmware",
 					"type", error))
-		return FALSE;
+		return NULL;
 	if (!xb_silo_query_build_index (silo, "components/component/provides/firmware",
 					NULL, error))
-		return FALSE;
+		return NULL;
 
 	/* does this exist in any enabled remote */
 	csum = g_compute_checksum_for_bytes (G_CHECKSUM_SHA1, blob);

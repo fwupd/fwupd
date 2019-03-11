@@ -451,7 +451,7 @@ fu_util_setup_networking (GError **error)
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
 				     "invalid proxy URI: %s", http_proxy);
-			return FALSE;
+			return NULL;
 		}
 		g_object_set (session, SOUP_SESSION_PROXY_URI, proxy_uri, NULL);
 	}
