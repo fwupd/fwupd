@@ -2,7 +2,7 @@
 Description=Firmware update daemon
 Documentation=https://fwupd.org/
 After=dbus.service
-Before=gdm.service
+Before=display-manager.service
 
 [Service]
 Type=dbus
