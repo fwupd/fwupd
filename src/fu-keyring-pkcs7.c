@@ -591,12 +591,6 @@ fu_keyring_pkcs7_verify_data (FuKeyring *keyring,
 	g_auto(gnutls_x509_crt_t) crt = NULL;
 	g_autoptr(GString) authority_newest = g_string_new (NULL);
 
-	/* ensure the client certificate exists */
-	if (!fu_keyring_pkcs7_ensure_client_certificate (self, error)) {
-		g_prefix_error (error, "failed to generate client certificate: ");
-		return NULL;
-	}
-
 	/* startup */
 	rc = gnutls_pkcs7_init (&pkcs7);
 	if (rc != GNUTLS_E_SUCCESS) {
