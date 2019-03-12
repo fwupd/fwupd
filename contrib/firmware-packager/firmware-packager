@@ -73,9 +73,11 @@ def create_firmware_cab(exe, folder):
         if os.name == "nt":
           directive = os.path.join (folder, "directive")
           with open (directive, 'w') as wfd:
-            wfd.write('"firmware.cab"\r\n')
-            wfd.write('"firmware.bin"\r\n')
-            wfd.write('"firmware.metainfo.xml"\r\n')
+            wfd.write('.OPTION EXPLICIT\r\n')
+            wfd.write('.Set CabinetNameTemplate=firmware.cab\r\n')
+            wfd.write('.Set DiskDirectory1=.\r\n')
+            wfd.write('firmware.bin\r\n')
+            wfd.write('firmware.metainfo.xml\r\n')
           command = ['makecab.exe', '/f', directive]
         else:
           command = ['gcab', '--create', 'firmware.cab', 'firmware.bin', 'firmware.metainfo.xml']
