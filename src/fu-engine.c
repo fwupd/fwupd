@@ -4185,6 +4185,32 @@ fu_engine_udev_uevent_cb (GUdevClient *gudev_client,
 	}
 }
 
+static void
+fu_engine_ensure_client_certificate (FuEngine *self)
+{
+	g_autoptr(FuKeyring) kr = NULL;
+	g_autoptr(GBytes) blob = g_bytes_new_static ("test\0", 5);
+	g_autoptr(GBytes) sig = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* create keyring and sign dummy data to ensure certificate exists */
+	kr = fu_keyring_create_for_kind (FWUPD_KEYRING_KIND_PKCS7, &error);
+	if (kr == NULL) {
+		g_message ("failed to create keyring: %s", error->message);
+		return;
+	}
+	if (!fu_keyring_setup (kr, &error)) {
+		g_message ("failed to setup keyring: %s", error->message);
+		return;
+	}
+	sig = fu_keyring_sign_data (kr, blob, FU_KEYRING_SIGN_FLAG_NONE, &error);
+	if (sig == NULL) {
+		g_message ("failed to sign using keyring: %s", error->message);
+		return;
+	}
+	g_debug ("client certificate exists and working");
+}
+
 /**
  * fu_engine_load:
  * @self: A #FuEngine
@@ -4215,6 +4241,9 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 		g_prefix_error (error, "Failed to load config: ");
 		return FALSE;
 	}
+
+	/* create client certificate */
+	fu_engine_ensure_client_certificate (self);
 
 	/* get hardcoded approved firmware */
 	checksums = fu_config_get_approved_firmware (self->config);
