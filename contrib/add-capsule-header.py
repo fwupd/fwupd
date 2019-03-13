@@ -46,7 +46,7 @@ def main(args):
 
     # set header flags
     flags = CAPSULE_FLAGS_PERSIST_ACROSS_RESET | CAPSULE_FLAGS_INITIATE_RESET
-    if hasattr(args, 'flags'):
+    if args.flags:
         flags = int(args.flags, 16)
 
     # build update capsule header
@@ -65,7 +65,7 @@ parser = argparse.ArgumentParser(description='Add capsule header on firmware')
 parser.add_argument('--guid', help='GUID of the device', required=True)
 parser.add_argument('--bin', help='Path to the .bin file', required=True)
 parser.add_argument('--cap', help='Output capsule file path', required=True)
-parser.add_argument('--flags', help='Flags, e.g. 0x40000')
+parser.add_argument('--flags', help='Flags, e.g. 0x40000', default=None)
 args = parser.parse_args()
 
 sys.exit(main(args))
