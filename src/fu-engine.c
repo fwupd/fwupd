@@ -1330,24 +1330,25 @@ fu_engine_install (FuEngine *self,
 		   GError **error)
 {
 	XbNode *component = fu_install_task_get_component (task);
-	FuDevice *device = fu_install_task_get_device (task);
 	FuPlugin *plugin;
 	GBytes *blob_fw;
 	const gchar *tmp = NULL;
 	g_autofree gchar *release_key = NULL;
 	g_autofree gchar *version_orig = NULL;
 	g_autofree gchar *version_rel = NULL;
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuDevice) device_tmp = NULL;
 	g_autoptr(GBytes) blob_fw2 = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(XbNode) rel = NULL;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
-	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (XB_IS_NODE (component), FALSE);
 	g_return_val_if_fail (blob_cab != NULL, FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* not in bootloader mode */
+	device = g_object_ref (fu_install_task_get_device (task));
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER)) {
 		const gchar *caption = NULL;
 		caption = xb_node_query_text (component,
@@ -1493,6 +1494,16 @@ fu_engine_install (FuEngine *self,
 		return FALSE;
 	}
 
+	/* the device may have changed */
+	device_tmp = fu_device_list_get_by_id (self->device_list,
+					       fu_device_get_id (device),
+					       error);
+	if (device_tmp == NULL) {
+		g_prefix_error (error, "failed to get device after install: ");
+		return FALSE;
+	}
+	g_set_object (&device, device_tmp);
+
 	/* update database */
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT) ||
 	    fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN)) {
@@ -1510,8 +1521,11 @@ fu_engine_install (FuEngine *self,
 	if (version_rel != NULL &&
 	    g_strcmp0 (version_orig, version_rel) != 0 &&
 	    g_strcmp0 (version_orig, fu_device_get_version (device)) == 0) {
+		g_autofree gchar *str = NULL;
 		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
-		fu_device_set_update_error (device, "device version not updated on success");
+		str = g_strdup_printf ("device version not updated on success, %s != %s",
+				       version_rel, fu_device_get_version (device));
+		fu_device_set_update_error (device, str);
 		if ((flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0 &&
 		    !fu_history_modify_device (self->history, device,
 					       FU_HISTORY_FLAGS_MATCH_OLD_VERSION,
