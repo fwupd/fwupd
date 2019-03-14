@@ -484,6 +484,18 @@ fwup_get_gop_mode(UINT32 *mode, EFI_HANDLE loaded_image)
 	return EFI_UNSUPPORTED;
 }
 
+static inline void
+fwup_update_ux_capsule_checksum(UX_CAPSULE_HEADER *payload_hdr)
+{
+	UINT8 *buf = (UINT8 *)payload_hdr;
+	UINT8 sum = 0;
+
+	payload_hdr->checksum = 0;
+	for (UINTN i = 0; i < sizeof(*payload_hdr); i++)
+		sum = (UINT8) (sum + buf[i]);
+	payload_hdr->checksum = sum;
+}
+
 static EFI_STATUS
 fwup_check_gop_for_ux_capsule(EFI_HANDLE loaded_image,
 			      EFI_CAPSULE_HEADER *capsule)
@@ -495,6 +507,8 @@ fwup_check_gop_for_ux_capsule(EFI_HANDLE loaded_image,
 	rc = fwup_get_gop_mode(&payload_hdr->mode, loaded_image);
 	if (EFI_ERROR(rc))
 		return EFI_UNSUPPORTED;
+
+	fwup_update_ux_capsule_checksum(payload_hdr);
 
 	return EFI_SUCCESS;
 }
