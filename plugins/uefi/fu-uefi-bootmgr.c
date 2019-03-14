@@ -297,16 +297,16 @@ fu_uefi_bootmgr_bootnext (const gchar *esp_path,
 			  FuUefiBootmgrFlags flags,
 			  GError **error)
 {
+	const gchar *filepath;
 	gboolean use_fwup_path = FALSE;
 	gsize loader_sz = 0;
 	gssize opt_size = 0;
 	gssize sz, dp_size = 0;
 	guint32 attributes = LOAD_OPTION_ACTIVE;
 	g_autofree guint16 *loader_str = NULL;
-	g_autofree gchar *fwup_esp_path = NULL;
-	g_autofree gchar *fwup_fs_basename = NULL;
 	g_autofree gchar *label = NULL;
 	g_autofree gchar *shim_app = NULL;
+	g_autofree gchar *shim_cpy = NULL;
 	g_autofree guint8 *dp_buf = NULL;
 	g_autofree guint8 *opt = NULL;
 	g_autofree gchar *source_app = NULL;
@@ -325,7 +325,21 @@ fu_uefi_bootmgr_bootnext (const gchar *esp_path,
 	shim_app = fu_uefi_get_esp_app_path (esp_path, "shim", error);
 	if (shim_app == NULL)
 		return FALSE;
-	if (!g_file_test (shim_app, G_FILE_TEST_EXISTS)) {
+	if (g_file_test (shim_app, G_FILE_TEST_EXISTS)) {
+		/* use a custom copy of shim for firmware updates */
+		if (flags & FU_UEFI_BOOTMGR_FLAG_USE_SHIM_UNIQUE) {
+			shim_cpy = fu_uefi_get_esp_app_path (esp_path, "shimfwupd", error);
+			if (shim_cpy == NULL)
+				return FALSE;
+			if (!fu_uefi_cmp_asset (shim_app, shim_cpy)) {
+				if (!fu_uefi_copy_asset (shim_app, shim_cpy, error))
+					return FALSE;
+			}
+			filepath = shim_cpy;
+		} else {
+			filepath = shim_app;
+		}
+	} else {
 		if (fu_uefi_secure_boot_enabled () &&
 		    (flags & FU_UEFI_BOOTMGR_FLAG_USE_SHIM_FOR_SB) > 0) {
 			g_set_error_literal (error,
@@ -346,9 +360,12 @@ fu_uefi_bootmgr_bootnext (const gchar *esp_path,
 			return FALSE;
 	}
 
-	sz = efi_generate_file_device_path (dp_buf, dp_size, use_fwup_path
-							    ? target_app
-							    : shim_app,
+	/* no shim, so use this directly */
+	if (use_fwup_path)
+		filepath = target_app;
+
+	/* generate device path for target */
+	sz = efi_generate_file_device_path (dp_buf, dp_size, filepath,
 					    EFIBOOT_OPTIONS_IGNORE_FS_ERROR|
 					    EFIBOOT_ABBREV_HD);
 	if (sz < 0) {
@@ -356,24 +373,23 @@ fu_uefi_bootmgr_bootnext (const gchar *esp_path,
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
 			     "efi_generate_file_device_path(%s) failed",
-			     use_fwup_path ? target_app : shim_app);
+			     filepath);
 		return FALSE;
 	}
 
+	/* add the fwupdx64.efi ESP path as the shim loadopt data */
 	dp_size = sz;
 	dp_buf = g_malloc0 (dp_size);
-	fwup_fs_basename = g_path_get_basename (target_app);
-	fwup_esp_path = g_strdup_printf ("\\%s", fwup_fs_basename);
 	if (!use_fwup_path) {
+		g_autofree gchar *fwup_fs_basename = g_path_get_basename (target_app);
+		g_autofree gchar *fwup_esp_path = g_strdup_printf ("\\%s", fwup_fs_basename);
 		loader_str = fu_uft8_to_ucs2 (fwup_esp_path, -1);
 		loader_sz = fu_ucs2_strlen (loader_str, -1) * 2;
 		if (loader_sz)
 			loader_sz += 2;
 	}
 
-	sz = efi_generate_file_device_path (dp_buf, dp_size, use_fwup_path
-							    ? target_app
-							    : shim_app,
+	sz = efi_generate_file_device_path (dp_buf, dp_size, filepath,
 					    EFIBOOT_OPTIONS_IGNORE_FS_ERROR|
 					    EFIBOOT_ABBREV_HD);
 	if (sz != dp_size) {
@@ -381,7 +397,7 @@ fu_uefi_bootmgr_bootnext (const gchar *esp_path,
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
 			     "efi_generate_file_device_path(%s) failed",
-			     use_fwup_path ? target_app : shim_app);
+			     filepath);
 		return FALSE;
 	}
 

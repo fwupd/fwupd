@@ -424,6 +424,8 @@ fu_uefi_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 	/* update the firmware before the bootloader runs */
 	if (fu_device_get_metadata_boolean (device, "RequireShimForSecureBoot"))
 		flags |= FU_UEFI_BOOTMGR_FLAG_USE_SHIM_FOR_SB;
+	if (fu_device_has_custom_flag (device, "use-shim-unique"))
+		flags |= FU_UEFI_BOOTMGR_FLAG_USE_SHIM_UNIQUE;
 
 	/* some legacy devices use the old name to deduplicate boot entries */
 	if (fu_device_has_custom_flag (device, "use-legacy-bootmgr-desc"))
