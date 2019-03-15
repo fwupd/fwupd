@@ -1253,6 +1253,37 @@ fu_util_monitor (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_util_verify_update (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autofree gchar *str = NULL;
+	g_autoptr(FuDevice) dev = NULL;
+
+	/* load engine */
+	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+		return FALSE;
+
+	/* get device */
+	if (g_strv_length (values) == 1) {
+		dev = fu_engine_get_device (priv->engine, values[1], error);
+		if (dev == NULL)
+			return FALSE;
+	} else {
+		dev = fu_util_prompt_for_device (priv, error);
+		if (dev == NULL)
+			return FALSE;
+	}
+
+	/* add checksums */
+	if (!fu_engine_verify_update (priv->engine, fu_device_get_id (dev), error))
+		return FALSE;
+
+	/* show checksums */
+	str = fu_device_to_string (dev);
+	g_print ("%s\n", str);
+	return TRUE;
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -1419,6 +1450,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Sign data using the client certificate"),
 		     fu_util_self_sign);
+	fu_util_cmd_array_add (cmd_array,
+		     "verify-update",
+		     "[DEVICE_ID]",
+		     /* TRANSLATORS: command description */
+		     _("Update the stored metadata with current contents"),
+		     fu_util_verify_update);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();
