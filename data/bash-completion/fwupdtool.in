@@ -15,6 +15,7 @@ _fwupdtool_cmd_list=(
 	'smbios-dump'
 	'attach'
 	'detach'
+	'verify-update'
 	'watch'
 )
 
@@ -67,7 +68,7 @@ _fwupdtool()
 			_show_modifiers
 		fi
 		;;
-	attach|detach|activate)
+	attach|detach|activate|verify-update)
 		if [[ "$prev" = "$command" ]]; then
 			_show_device_ids
 		#modifiers
