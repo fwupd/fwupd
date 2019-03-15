@@ -25,6 +25,16 @@ G_BEGIN_DECLS
 #define SIO_LDNxx_IDX_IOBAD0		0x60 /* 16 bit */
 #define SIO_LDNxx_IDX_IOBAD1		0x62 /* 16 bit */
 
+/* these registers are only accessable by EC */
+#define GCTRL_ECHIPID1			0x2000
+#define GCTRL_ECHIPID2			0x2001
+#define GCTRL_ECHIPVER			0x2002
+
+/* to create sub-addresses */
+#define SIO_DEPTH2_I2EC_ADDRL		0x10
+#define SIO_DEPTH2_I2EC_ADDRH		0x11
+#define SIO_DEPTH2_I2EC_DATA		0x12
+
 typedef enum {
 	SIO_LDN_FDC			= 0x00,	/* IT87 */
 	SIO_LDN_UART1			= 0x01,	/* IT87+IT89 */

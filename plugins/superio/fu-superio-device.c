@@ -262,6 +262,83 @@ fu_superio_device_setup_it85xx (FuSuperioDevice *self, GError **error)
 }
 
 static gboolean
+fu_superio_device_it89xx_read_ec_register (FuSuperioDevice *self,
+					   guint16 addr,
+					   guint8 *outval,
+					   GError **error)
+{
+	if (!fu_superio_regwrite (self->fd, self->port,
+				  SIO_LDNxx_IDX_D2ADR,
+				  SIO_DEPTH2_I2EC_ADDRH,
+				  error))
+		return FALSE;
+	if (!fu_superio_regwrite (self->fd, self->port,
+				  SIO_LDNxx_IDX_D2DAT,
+				  addr >> 8,
+				  error))
+		return FALSE;
+	if (!fu_superio_regwrite (self->fd, self->port,
+				  SIO_LDNxx_IDX_D2ADR,
+				  SIO_DEPTH2_I2EC_ADDRL,
+				  error))
+		return FALSE;
+	if (!fu_superio_regwrite (self->fd, self->port,
+				  SIO_LDNxx_IDX_D2DAT,
+				  addr & 0xff, error))
+		return FALSE;
+	if (!fu_superio_regwrite (self->fd, self->port,
+				  SIO_LDNxx_IDX_D2ADR,
+				  SIO_DEPTH2_I2EC_DATA,
+				  error))
+		return FALSE;
+	return fu_superio_regval (self->fd, self->port,
+				  SIO_LDNxx_IDX_D2DAT,
+				  outval,
+				  error);
+}
+
+static gboolean
+fu_superio_device_it89xx_ec_size (FuSuperioDevice *self, GError **error)
+{
+	guint8 tmp = 0;
+
+	/* not sure why we can't just use SIO_LDNxx_IDX_CHIPID1,
+	 * but lets do the same as the vendor flash tool... */
+	if (!fu_superio_device_it89xx_read_ec_register (self,
+							GCTRL_ECHIPID1,
+							&tmp,
+							error))
+		return FALSE;
+	if (tmp == 0x85) {
+		g_warning ("possibly IT85xx class device");
+		self->size = 0x20000;
+		return TRUE;
+	}
+
+	/* can't we just use SIO_LDNxx_IDX_CHIPVER... */
+	if (!fu_superio_device_it89xx_read_ec_register (self,
+							GCTRL_ECHIPVER,
+							&tmp,
+							error))
+		return FALSE;
+	if (tmp >> 4 == 0x00) {
+		self->size = 0x20000;
+		return TRUE;
+	}
+	if (tmp >> 4 == 0x04) {
+		self->size = 0x30000;
+		return TRUE;
+	}
+	if (tmp >> 4 == 0x08) {
+		self->size = 0x40000;
+		return TRUE;
+	}
+	g_warning ("falling back to default size");
+	self->size = 0x20000;
+	return TRUE;
+}
+
+static gboolean
 fu_superio_device_setup_it89xx (FuSuperioDevice *self, GError **error)
 {
 	guint8 version_tmp[2] = { 0x00 };
@@ -283,8 +360,11 @@ fu_superio_device_setup_it89xx (FuSuperioDevice *self, GError **error)
 	version = g_strdup_printf ("%02u.%02u", version_tmp[0], version_tmp[1]);
 	fu_device_set_version (FU_DEVICE (self), version);
 
-	/* FIXME: hardcoded */
-	self->size = 0x20000;
+	/* get size from the EC */
+	if (!fu_superio_device_it89xx_ec_size (self, error))
+		return FALSE;
+
+	/* success */
 	return TRUE;
 }
 
