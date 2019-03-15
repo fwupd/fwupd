@@ -628,6 +628,8 @@ fu_engine_verify_update (FuEngine *self, const gchar *device_id, GError **error)
 	/* save silo */
 	localstatedir = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR_PKG);
 	fn = g_strdup_printf ("%s/verify/%s.xml", localstatedir, device_id);
+	if (!fu_common_mkdir_parent (fn, error))
+		return FALSE;
 	file = g_file_new_for_path (fn);
 	silo = xb_builder_compile (builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, error);
 	if (silo == NULL)
