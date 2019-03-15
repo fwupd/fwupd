@@ -589,6 +589,10 @@ fwup_apply_capsules(EFI_CAPSULE_HEADER **capsules,
 
 	rc = uefi_call_wrapper(RT->QueryCapsuleCapabilities, 4, capsules,
 				num_updates, &max_capsule_size, reset);
+	if (EFI_ERROR(rc)) {
+		fwup_warning(L"Could not query capsule capabilities: %r", rc);
+		return rc;
+	}
 	fwup_debug(L"QueryCapsuleCapabilities: %r max: %ld reset:%d",
 	           rc, max_capsule_size, *reset);
 	fwup_debug(L"Capsules: %d", num_updates);
