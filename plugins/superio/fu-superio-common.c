@@ -161,6 +161,6 @@ fu_superio_regdump (gint fd, guint16 port, guint8 ldn, GError **error)
 		g_string_append_printf (str, "IOBAD1:0x%04x ", iobad1);
 	if (ldnstr != NULL)
 		g_string_append_printf (str, "(%s)", ldnstr);
-	fu_common_dump_raw (G_LOG_DOMAIN, str->str, buf, 0x100);
+	fu_common_dump_raw (G_LOG_DOMAIN, str->str, buf, sizeof(buf));
 	return TRUE;
 }
