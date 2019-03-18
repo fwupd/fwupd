@@ -35,6 +35,24 @@ G_BEGIN_DECLS
 #define SIO_DEPTH2_I2EC_ADDRH		0x11
 #define SIO_DEPTH2_I2EC_DATA		0x12
 
+/* SPI commands */
+#define SIO_SPI_CMD_READ		0x03
+#define SIO_SPI_CMD_HS_READ		0x0b
+#define SIO_SPI_CMD_FAST_READ_DUAL_OP	0x3b
+#define SIO_SPI_CMD_FAST_READ_DUAL_IO	0xbb
+#define SIO_SPI_CMD_4K_SECTOR_ERASE	0xd7 /* or 0x20 or 0x52 */
+#define SIO_SPI_CMD_64K_BLOCK_ERASE	0xd8
+#define SIO_SPI_CMD_CHIP_ERASE		0xc7 /* or 0x60 */
+#define SIO_SPI_CMD_PAGE_PROGRAM	0x02
+#define SIO_SPI_CMD_RDSR		0x05 /* read status register */
+#define SIO_SPI_CMD_WRSR		0x01 /* write status register */
+#define SIO_SPI_CMD_WREN		0x06 /* write enable */
+#define SIO_SPI_CMD_WRDI		0x04 /* write disable */
+#define SIO_SPI_CMD_RDID		0xab
+#define SIO_SPI_CMD_JEDEC_ID		0x9f
+#define SIO_SPI_CMD_DPD			0xb9 /* deep sleep */
+#define SIO_SPI_CMD_RDPD		0xab /* wake from deep sleep */
+
 typedef enum {
 	SIO_LDN_FDC			= 0x00,	/* IT87 */
 	SIO_LDN_UART1			= 0x01,	/* IT87+IT89 */
