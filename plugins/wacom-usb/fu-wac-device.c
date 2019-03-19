@@ -600,7 +600,7 @@ fu_wac_device_write_firmware (FuDevice *device, GBytes *blob, GError **error)
 			break;
 
 		/* ignore empty blocks */
-		if (dfu_utils_bytes_is_empty (blob_block)) {
+		if (fu_common_bytes_is_empty (blob_block)) {
 			g_debug ("empty block, ignoring");
 			fu_device_set_progress_full (device, blocks_done++, blocks_total);
 			continue;
@@ -657,7 +657,7 @@ fu_wac_device_write_firmware (FuDevice *device, GBytes *blob, GError **error)
 		blob_block = g_hash_table_lookup (fd_blobs, fd);
 		if (blob_block == NULL)
 			continue;
-		if (dfu_utils_bytes_is_empty (blob_block))
+		if (fu_common_bytes_is_empty (blob_block))
 			continue;
 
 		/* check checksum matches */

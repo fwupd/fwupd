@@ -91,6 +91,7 @@ void		 fu_common_dump_bytes		(const gchar	*log_domain,
 GBytes		*fu_common_bytes_align		(GBytes		*bytes,
 						 gsize		 blksz,
 						 gchar		 padval);
+gboolean	 fu_common_bytes_is_empty	(GBytes		*bytes);
 
 typedef guint FuEndianType;
 

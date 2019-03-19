@@ -178,26 +178,6 @@ dfu_utils_bytes_join_array (GPtrArray *chunks)
 }
 
 /**
- * dfu_utils_bytes_is_empty:
- * @bytes: a #GBytes
- *
- * Checks if a byte array are just empty (0xff) bytes.
- *
- * Return value: %TRUE if @bytes is empty
- **/
-gboolean
-dfu_utils_bytes_is_empty (GBytes *bytes)
-{
-	gsize sz = 0;
-	const guint8 *buf = g_bytes_get_data (bytes, &sz);
-	for (gsize i = 0; i < sz; i++) {
-		if (buf[i] != 0xff)
-			return FALSE;
-	}
-	return TRUE;
-}
-
-/**
  * dfu_utils_bytes_pad:
  * @bytes: a #GBytes
  * @sz: the desired size in bytes
