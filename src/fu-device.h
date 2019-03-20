@@ -190,6 +190,8 @@ void		 fu_device_set_firmware_size_min	(FuDevice	*self,
 							 guint64	 size_min);
 void		 fu_device_set_firmware_size_max	(FuDevice	*self,
 							 guint64	 size_max);
+guint64		 fu_device_get_firmware_size_min	(FuDevice	*self);
+guint64		 fu_device_get_firmware_size_max	(FuDevice	*self);
 guint		 fu_device_get_progress			(FuDevice	*self);
 void		 fu_device_set_progress			(FuDevice	*self,
 							 guint		 progress);

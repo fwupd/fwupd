@@ -769,6 +769,42 @@ fu_device_set_firmware_size_max (FuDevice *self, guint64 size_max)
 	priv->size_max = size_max;
 }
 
+/**
+ * fu_device_get_firmware_size_min:
+ * @self: A #FuDevice
+ *
+ * Gets the minimum size of the firmware blob.
+ *
+ * Returns: Size in bytes, or 0 if unset
+ *
+ * Since: 1.2.6
+ **/
+guint64
+fu_device_get_firmware_size_min (FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_DEVICE (self), 0);
+	return priv->size_min;
+}
+
+/**
+ * fu_device_get_firmware_size_max:
+ * @self: A #FuDevice
+ *
+ * Gets the maximum size of the firmware blob.
+ *
+ * Returns: Size in bytes, or 0 if unset
+ *
+ * Since: 1.2.6
+ **/
+guint64
+fu_device_get_firmware_size_max (FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_DEVICE (self), 0);
+	return priv->size_max;
+}
+
 static void
 fu_device_add_guid_safe (FuDevice *self, const gchar *guid)
 {
