@@ -186,6 +186,8 @@ void		 fu_device_set_status			(FuDevice	*self,
 FuVersionFormat	 fu_device_get_version_format		(FuDevice	*self);
 void		 fu_device_set_version_format		(FuDevice	*self,
 							 FuVersionFormat version_format);
+void		 fu_device_set_firmware_size		(FuDevice	*self,
+							 guint64	 size);
 void		 fu_device_set_firmware_size_min	(FuDevice	*self,
 							 guint64	 size_min);
 void		 fu_device_set_firmware_size_max	(FuDevice	*self,

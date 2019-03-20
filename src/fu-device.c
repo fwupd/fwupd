@@ -682,6 +682,10 @@ fu_device_set_quirk_kv (FuDevice *self,
 		fu_device_set_firmware_size_max (self, fu_common_strtoull (value));
 		return TRUE;
 	}
+	if (g_strcmp0 (key, FU_QUIRKS_FIRMWARE_SIZE) == 0) {
+		fu_device_set_firmware_size (self, fu_common_strtoull (value));
+		return TRUE;
+	}
 	if (g_strcmp0 (key, FU_QUIRKS_INSTALL_DURATION) == 0) {
 		fu_device_set_install_duration (self, fu_common_strtoull (value));
 		return TRUE;
@@ -733,6 +737,24 @@ fu_device_add_guid_quirks (FuDevice *self, const gchar *guid)
 			}
 		}
 	}
+}
+
+/**
+ * fu_device_set_firmware_size:
+ * @self: A #FuDevice
+ * @size: Size in bytes
+ *
+ * Sets the exact allowed size of the firmware blob.
+ *
+ * Since: 1.2.6
+ **/
+void
+fu_device_set_firmware_size (FuDevice *self, guint64 size)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_DEVICE (self));
+	priv->size_min = size;
+	priv->size_max = size;
 }
 
 /**
