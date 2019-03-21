@@ -1274,3 +1274,53 @@ fu_common_bytes_is_empty (GBytes *bytes)
 	}
 	return TRUE;
 }
+
+/**
+ * fu_common_bytes_compare:
+ * @bytes1: a #GBytes
+ * @bytes2: another #GBytes
+ * @error: A #GError or %NULL
+ *
+ * Checks if a byte array are just empty (0xff) bytes.
+ *
+ * Return value: %TRUE if @bytes1 and @bytes2 are identical
+ **/
+gboolean
+fu_common_bytes_compare (GBytes *bytes1, GBytes *bytes2, GError **error)
+{
+	const guint8 *buf1;
+	const guint8 *buf2;
+	gsize bufsz1;
+	gsize bufsz2;
+
+	g_return_val_if_fail (bytes1 != NULL, FALSE);
+	g_return_val_if_fail (bytes2 != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* not the same length */
+	buf1 = g_bytes_get_data (bytes1, &bufsz1);
+	buf2 = g_bytes_get_data (bytes2, &bufsz2);
+	if (bufsz1 != bufsz2) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "got %" G_GSIZE_FORMAT " bytes, expected "
+			     "%" G_GSIZE_FORMAT, bufsz1, bufsz2);
+		return FALSE;
+	}
+
+	/* check matches */
+	for (guint i = 0x0; i < bufsz1; i++) {
+		if (buf1[i] != buf2[i]) {
+			g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "got 0x%02x, expected 0x%02x @ 0x%04x",
+			     buf1[i], buf2[i], i);
+			return FALSE;
+		}
+	}
+
+	/* success */
+	return TRUE;
+}

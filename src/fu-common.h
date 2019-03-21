@@ -92,6 +92,9 @@ GBytes		*fu_common_bytes_align		(GBytes		*bytes,
 						 gsize		 blksz,
 						 gchar		 padval);
 gboolean	 fu_common_bytes_is_empty	(GBytes		*bytes);
+gboolean	 fu_common_bytes_compare	(GBytes		*bytes1,
+						 GBytes		*bytes2,
+						 GError		**error);
 
 typedef guint FuEndianType;
 
