@@ -57,7 +57,7 @@ if get_option('systemd')
   endif
   if systemd.version().version_compare('>= 231')
     dynamic_options += 'RestrictRealtime=yes'
-    dynamic_options += 'MemoryDenyWriteExecute=yes'
+#    dynamic_options += 'MemoryDenyWriteExecute=yes'
     dynamic_options += ['ReadWritePaths=' + ' '.join(rw_directories)]
   else
     dynamic_options += ['ReadWriteDirectories=' + ' '.join(rw_directories)]
