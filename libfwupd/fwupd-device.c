@@ -1093,7 +1093,7 @@ fwupd_device_to_variant_full (FwupdDevice *device, FwupdDeviceFlags flags)
 	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
 
 	/* create an array with all the metadata in */
-	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
+	g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
 	if (priv->id != NULL) {
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_DEVICE_ID,

@@ -1022,7 +1022,7 @@ fwupd_remote_to_variant (FwupdRemote *self)
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
 
 	/* create an array with all the metadata in */
-	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
+	g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
 	if (priv->id != NULL) {
 		g_variant_builder_add (&builder, "{sv}", FWUPD_RESULT_KEY_REMOTE_ID,
 				       g_variant_new_string (priv->id));

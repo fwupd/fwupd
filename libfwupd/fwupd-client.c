@@ -994,7 +994,7 @@ fwupd_client_install (FwupdClient *client,
 		return FALSE;
 
 	/* set options */
-	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
+	g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
 	g_variant_builder_add (&builder, "{sv}",
 			       "reason", g_variant_new_string ("user-action"));
 	g_variant_builder_add (&builder, "{sv}",
@@ -1491,7 +1491,7 @@ fwupd_client_self_sign (FwupdClient *client,
 		return NULL;
 
 	/* set options */
-	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
+	g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
 	if (flags & FWUPD_SELF_SIGN_FLAG_ADD_TIMESTAMP) {
 		g_variant_builder_add (&builder, "{sv}",
 				       "add-timestamp", g_variant_new_boolean (TRUE));

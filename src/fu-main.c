@@ -148,7 +148,7 @@ fu_main_emit_property_changed (FuMainPrivate *priv,
 
 	/* build the dict */
 	g_variant_builder_init (&invalidated_builder, G_VARIANT_TYPE ("as"));
-	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
+	g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
 	g_variant_builder_add (&builder,
 			       "{sv}",
 			       property_name,

@@ -991,7 +991,7 @@ fwupd_release_to_variant (FwupdRelease *release)
 	g_return_val_if_fail (FWUPD_IS_RELEASE (release), NULL);
 
 	/* create an array with all the metadata in */
-	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
+	g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
 	if (priv->remote_id != NULL) {
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_REMOTE_ID,
