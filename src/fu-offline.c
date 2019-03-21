@@ -16,6 +16,79 @@
 #include "fu-plugin-private.h"
 #include "fu-util-common.h"
 
+struct FuUtilPrivate {
+	gchar		*splash_cmd;
+	GTimer		*splash_timer;
+};
+
+static gboolean
+fu_offline_set_splash_msg (FuUtilPrivate *priv, const gchar *msg, GError **error)
+{
+	g_autoptr(GSubprocess) subprocess = NULL;
+
+	/* call into plymouth if installed */
+	if (priv->splash_cmd == NULL)
+		return TRUE;
+	subprocess = g_subprocess_new (G_SUBPROCESS_FLAGS_NONE, error,
+				       priv->splash_cmd,
+				       "display-message", "--text", msg, NULL);
+	if (subprocess == NULL)
+		return FALSE;
+	return g_subprocess_wait (subprocess, NULL, error);
+}
+
+static gboolean
+fu_offline_set_splash_mode (FuUtilPrivate *priv, const gchar *mode, GError **error)
+{
+	g_autofree gchar *mode_arg = NULL;
+	g_autoptr(GSubprocess) subprocess = NULL;
+
+	/* call into plymouth if installed */
+	if (priv->splash_cmd == NULL)
+		return TRUE;
+	mode_arg = g_strdup_printf ("--%s", mode);
+	subprocess = g_subprocess_new (G_SUBPROCESS_FLAGS_NONE, error,
+				       priv->splash_cmd,
+				       "change-mode", mode_arg, NULL);
+	if (subprocess == NULL)
+		return FALSE;
+	return g_subprocess_wait (subprocess, NULL, error);
+}
+
+static void
+fu_offline_client_notify_cb (GObject *object, GParamSpec *pspec, gpointer user_data)
+{
+	FuUtilPrivate *priv = (FuUtilPrivate *) user_data;
+	FwupdClient *client = FWUPD_CLIENT (object);
+	g_autofree gchar *msg = NULL;
+
+	/* rate limit to 1 second */
+	if (g_timer_elapsed (priv->splash_timer, NULL) < 1.f)
+		return;
+
+	/* TRANSLATORS: this is the message we send plymouth to advise
+	 * of the new percentage completion when installing firmware */
+	msg = g_strdup_printf ("%s - %u%%", _("Installing Firmware"),
+			       fwupd_client_get_percentage (client));
+	if (fwupd_client_get_percentage (client) > 5)
+		fu_offline_set_splash_msg (priv, msg, NULL);
+	g_timer_reset (priv->splash_timer);
+}
+
+static void
+fu_util_private_free (FuUtilPrivate *priv)
+{
+	if (priv->splash_timer != NULL)
+		g_timer_destroy (priv->splash_timer);
+	g_free (priv->splash_cmd);
+	g_free (priv);
+}
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtilPrivate, fu_util_private_free)
+#pragma clang diagnostic pop
+
 int
 main (int argc, char *argv[])
 {
@@ -26,6 +99,7 @@ main (int argc, char *argv[])
 	g_autoptr(FwupdClient) client = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) results = NULL;
+	g_autoptr(FuUtilPrivate) priv = g_new0 (FuUtilPrivate, 1);
 
 	setlocale (LC_ALL, "");
 
@@ -50,6 +124,10 @@ main (int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
+	/* find plymouth, but not an error if not found */
+	priv->splash_cmd = g_find_program_in_path ("plymouth");
+	priv->splash_timer = g_timer_new ();
+
 	/* ensure D-Bus errors are registered */
 	fwupd_error_quark ();
 
@@ -65,9 +143,25 @@ main (int argc, char *argv[])
 
 	/* connect to the daemon */
 	client = fwupd_client_new ();
+	g_signal_connect (client, "notify::percentage",
+			  G_CALLBACK (fu_offline_client_notify_cb), priv);
 	if (!fwupd_client_connect (client, NULL, &error)) {
 		/* TRANSLATORS: we could not talk to the fwupd daemon */
 		g_printerr ("%s: %s\n", _("Failed to connect to daemon"),
+			    error->message);
+		return EXIT_FAILURE;
+	}
+
+	/* set up splash */
+	if (!fu_offline_set_splash_mode (priv, "updates", &error)) {
+		/* TRANSLATORS: we could not talk to plymouth */
+		g_printerr ("%s: %s\n", _("Failed to set splash mode"),
+			    error->message);
+		return EXIT_FAILURE;
+	}
+	if (!fu_offline_set_splash_msg (priv, _("Installing Firmware…"), &error)) {
+		/* TRANSLATORS: we could not talk to plymouth */
+		g_printerr ("%s: %s\n", _("Failed to set splash message"),
 			    error->message);
 		return EXIT_FAILURE;
 	}
@@ -128,6 +222,10 @@ main (int argc, char *argv[])
 		g_printerr ("%s\n", _("No updates were applied"));
 		return EXIT_FAILURE;
 	}
+
+	/* TRANSLATORS: we've finished doing offline updates */
+	fu_offline_set_splash_msg (priv, _("Rebooting…"), NULL);
+	fu_offline_set_splash_mode (priv, "reboot", NULL);
 
 	/* reboot */
 	if (!fu_util_update_reboot (&error)) {
