@@ -1348,7 +1348,8 @@ fu_plugin_runner_schedule_update (FuPlugin *self,
 	/* id already exists */
 	history = fu_history_new ();
 	res_tmp = fu_history_get_device_by_id (history, fu_device_get_id (device), NULL);
-	if (res_tmp != NULL) {
+	if (res_tmp != NULL &&
+	    fu_device_get_update_state (res_tmp) == FWUPD_UPDATE_STATE_PENDING) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_ALREADY_PENDING,

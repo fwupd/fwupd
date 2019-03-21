@@ -111,7 +111,7 @@ main (int argc, char *argv[])
 		if (!fwupd_client_install (client,
 					   fwupd_device_get_id (dev),
 					   fwupd_release_get_filename (rel),
-					   FWUPD_INSTALL_FLAG_NONE,
+					   FWUPD_INSTALL_FLAG_ALLOW_REINSTALL,
 					   NULL,
 					   &error)) {
 			/* TRANSLATORS: we could not install for some reason */
