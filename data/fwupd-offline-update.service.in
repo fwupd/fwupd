@@ -9,5 +9,5 @@ Before=shutdown.target system-update.target
 
 [Service]
 Type=oneshot
-ExecStart=@bindir@/fwupdoffline
+ExecStart=@libexecdir@/fwupd/fwupdoffline
 FailureAction=reboot
