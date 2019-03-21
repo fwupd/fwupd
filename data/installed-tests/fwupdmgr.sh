@@ -20,7 +20,7 @@ rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
 # ---
 echo "Getting devices (should be one)..."
-fwupdmgr get-devices
+fwupdmgr get-devices --no-unreported-check
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
 # ---
