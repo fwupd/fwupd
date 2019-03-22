@@ -1467,8 +1467,9 @@ fu_engine_install (FuEngine *self,
 			return FALSE;
 	}
 
-	/* just schedule this for the next reboot  */
-	if (flags & FWUPD_INSTALL_FLAG_OFFLINE)
+	/* schedule this for the next reboot if not in system-update.target */
+	if ((self->app_flags & FU_ENGINE_LOAD_FLAG_IS_OFFLINE) == 0 &&
+	    (flags & FWUPD_INSTALL_FLAG_OFFLINE) > 0)
 		return fu_plugin_runner_schedule_update (plugin, device, blob_cab, error);
 
 	/* install firmware blob */
@@ -4401,6 +4402,13 @@ fu_engine_add_runtime_version (FuEngine *self,
 	g_hash_table_insert (self->runtime_versions,
 			     g_strdup (component_id),
 			     g_strdup (version));
+}
+
+void
+fu_engine_add_app_flag (FuEngine *self, FuAppFlags app_flags)
+{
+	g_return_if_fail (FU_IS_ENGINE (self));
+	self->app_flags |= app_flags;
 }
 
 static void
