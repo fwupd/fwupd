@@ -16,8 +16,12 @@ G_DECLARE_DERIVABLE_TYPE (FuSuperioDevice, fu_superio_device, FU, SUPERIO_DEVICE
 struct _FuSuperioDeviceClass
 {
 	FuDeviceClass		parent_class;
+	gboolean		 (*setup)	(FuSuperioDevice	*self,
+						 GError		**error);
 };
 
+gboolean	 fu_superio_device_ec_flush	(FuSuperioDevice	*self,
+						 GError			**error);
 gboolean	 fu_superio_device_ec_read	(FuSuperioDevice	*self,
 						 guint8			*data,
 						 GError			**error);
@@ -26,6 +30,10 @@ gboolean	 fu_superio_device_ec_write0	(FuSuperioDevice	*self,
 						 GError			**error);
 gboolean	 fu_superio_device_ec_write1	(FuSuperioDevice	*self,
 						 guint8			 data,
+						 GError			**error);
+gboolean	 fu_superio_device_ec_get_param	(FuSuperioDevice	*self,
+						 guint8			 param,
+						 guint8			*data,
 						 GError			**error);
 gboolean	 fu_superio_device_regval	(FuSuperioDevice	*self,
 						 guint8			 addr,

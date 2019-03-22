@@ -17,10 +17,6 @@
 
 #define FU_PLUGIN_SUPERIO_TIMEOUT	0.25 /* s */
 
-/* unknown source, IT87 only */
-#define SIO_CMD_EC_GET_NAME_STR		0x92
-#define SIO_CMD_EC_GET_VERSION_STR	0x93
-
 typedef struct
 {
 	gint			 fd;
@@ -206,7 +202,7 @@ fu_superio_device_ec_write1 (FuSuperioDevice *self, guint8 data, GError **error)
 	return fu_superio_outb (priv->fd, priv->pm1_iobad1, data, error);
 }
 
-static gboolean
+gboolean
 fu_superio_device_ec_flush (FuSuperioDevice *self, GError **error)
 {
 	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
@@ -231,7 +227,7 @@ fu_superio_device_ec_flush (FuSuperioDevice *self, GError **error)
 	return TRUE;
 }
 
-static gboolean
+gboolean
 fu_superio_device_ec_get_param (FuSuperioDevice *self, guint8 param, guint8 *data, GError **error)
 {
 	if (!fu_superio_device_ec_write1 (self, SIO_CMD_EC_READ, error))
@@ -252,23 +248,6 @@ fu_superio_device_ec_set_param (FuSuperioDevice *self, guint8 param, guint8 data
 	return fu_superio_device_ec_write0 (self, data, error);
 }
 #endif
-
-static gchar *
-fu_superio_device_ec_get_str (FuSuperioDevice *self, guint8 idx, GError **error)
-{
-	GString *str = g_string_new (NULL);
-	if (!fu_superio_device_ec_write1 (self, idx, error))
-		return NULL;
-	for (guint i = 0; i < 0xff; i++) {
-		guint8 c = 0;
-		if (!fu_superio_device_ec_read (self, &c, error))
-			return NULL;
-		if (c == '$')
-			break;
-		g_string_append_c (str, c);
-	}
-	return g_string_free (str, FALSE);
-}
 
 static gboolean
 fu_superio_device_open (FuDevice *device, GError **error)
@@ -303,40 +282,6 @@ fu_superio_device_probe (FuDevice *device, GError **error)
 	fu_device_set_logical_id (device, priv->chipset);
 	devid = g_strdup_printf ("SuperIO-%s", priv->chipset);
 	fu_device_add_instance_id (device, devid);
-	return TRUE;
-}
-
-static gboolean
-fu_superio_device_setup_it85xx (FuSuperioDevice *self, GError **error)
-{
-	guint8 size_tmp = 0;
-	g_autofree gchar *name = NULL;
-	g_autofree gchar *version = NULL;
-
-	/* get EC size */
-	if (!fu_superio_device_ec_flush (self, error)) {
-		g_prefix_error (error, "failed to flush: ");
-		return FALSE;
-	}
-	if (!fu_superio_device_ec_get_param (self, 0xe5, &size_tmp, error)) {
-		g_prefix_error (error, "failed to get EC size: ");
-		return FALSE;
-	}
-	fu_device_set_firmware_size (FU_DEVICE (self), ((guint32) size_tmp) << 10);
-
-	/* get EC strings */
-	name = fu_superio_device_ec_get_str (self, SIO_CMD_EC_GET_NAME_STR, error);
-	if (name == NULL) {
-		g_prefix_error (error, "failed to get EC name: ");
-		return FALSE;
-	}
-	fu_device_set_name (FU_DEVICE (self), name);
-	version = fu_superio_device_ec_get_str (self, SIO_CMD_EC_GET_VERSION_STR, error);
-	if (version == NULL) {
-		g_prefix_error (error, "failed to get EC version: ");
-		return FALSE;
-	}
-	fu_device_set_version (FU_DEVICE (self), version);
 	return TRUE;
 }
 
@@ -450,6 +395,7 @@ fu_superio_device_setup_it89xx (FuSuperioDevice *self, GError **error)
 static gboolean
 fu_superio_device_setup (FuDevice *device, GError **error)
 {
+	FuSuperioDeviceClass *klass = FU_SUPERIO_DEVICE_GET_CLASS (device);
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
 	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
 	guint8 tmp = 0x0;
@@ -506,11 +452,9 @@ fu_superio_device_setup (FuDevice *device, GError **error)
 		fu_common_dump_raw (G_LOG_DOMAIN, "EC Registers", buf, 0x100);
 	}
 
-	/* IT85xx */
-	if (priv->id >> 8 == 0x85) {
-		if (!fu_superio_device_setup_it85xx (self, error))
-			return FALSE;
-	}
+	/* subclassed setup */
+	if (klass->setup != NULL)
+		return klass->setup (self, error);
 
 	/* IT89xx */
 	if (priv->id >> 8 == 0x89) {

@@ -8,7 +8,7 @@
 
 #include "fu-plugin-vfuncs.h"
 
-#include "fu-superio-device.h"
+#include "fu-superio-it85-device.h"
 
 #define		FU_QUIRKS_SUPERIO_CHIPSETS		"SuperioChipsets"
 
@@ -41,12 +41,26 @@ fu_plugin_superio_coldplug_chipset (FuPlugin *plugin, const gchar *chipset, GErr
 		return FALSE;
 	}
 
-	/* create IT8xxx */
-	dev = g_object_new (FU_TYPE_SUPERIO_DEVICE,
-			    "chipset", chipset,
-			    "id", id,
-			    "port", port,
-			    NULL);
+	/* create IT89xx or IT89xx */
+	if (id >> 8 == 0x85) {
+		dev = g_object_new (FU_TYPE_SUPERIO_IT85_DEVICE,
+				    "chipset", chipset,
+				    "id", id,
+				    "port", port,
+				    NULL);
+	} else if (id >> 8 == 0x89) {
+		dev = g_object_new (FU_TYPE_SUPERIO_DEVICE,
+				    "chipset", chipset,
+				    "id", id,
+				    "port", port,
+				    NULL);
+	} else {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_SUPPORTED,
+			     "SuperIO chip %s has unsupported Id", chipset);
+		return FALSE;
+	}
 
 	/* unlock */
 	locker = fu_device_locker_new (dev, error);
