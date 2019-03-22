@@ -51,6 +51,14 @@ G_DEFINE_TYPE_WITH_PRIVATE (FuSuperioDevice, fu_superio_device, FU_TYPE_DEVICE)
 
 #define GET_PRIVATE(o) (fu_superio_device_get_instance_private (o))
 
+enum {
+	PROP_0,
+	PROP_CHIPSET,
+	PROP_PORT,
+	PROP_ID,
+	PROP_LAST
+};
+
 static void
 fu_superio_device_to_string (FuDevice *device, GString *str)
 {
@@ -499,6 +507,51 @@ fu_superio_device_close (FuDevice *device, GError **error)
 }
 
 static void
+fu_superio_device_get_property (GObject *object, guint prop_id,
+				GValue *value, GParamSpec *pspec)
+{
+	FuSuperioDevice *self = FU_SUPERIO_DEVICE (object);
+	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
+	switch (prop_id) {
+	case PROP_CHIPSET:
+		g_value_set_string (value, priv->chipset);
+		break;
+	case PROP_PORT:
+		g_value_set_uint (value, priv->port);
+		break;
+	case PROP_ID:
+		g_value_set_uint (value, priv->id);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+		break;
+	}
+}
+
+static void
+fu_superio_device_set_property (GObject *object, guint prop_id,
+				const GValue *value, GParamSpec *pspec)
+{
+	FuSuperioDevice *self = FU_SUPERIO_DEVICE (object);
+	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
+	switch (prop_id) {
+	case PROP_CHIPSET:
+		g_free (priv->chipset);
+		priv->chipset = g_value_dup_string (value);
+		break;
+	case PROP_PORT:
+		priv->port = g_value_get_uint (value);
+		break;
+	case PROP_ID:
+		priv->id = g_value_get_uint (value);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+		break;
+	}
+}
+
+static void
 fu_superio_device_init (FuSuperioDevice *self)
 {
 	fu_device_set_physical_id (FU_DEVICE (self), "/dev/port");
@@ -517,7 +570,30 @@ static void
 fu_superio_device_class_init (FuSuperioDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+	GParamSpec *pspec;
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
+
+	/* properties */
+	object_class->get_property = fu_superio_device_get_property;
+	object_class->set_property = fu_superio_device_set_property;
+	pspec = g_param_spec_string ("chipset", NULL, NULL, NULL,
+				     G_PARAM_READWRITE |
+				     G_PARAM_CONSTRUCT_ONLY |
+				     G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_CHIPSET, pspec);
+	pspec = g_param_spec_uint ("port", NULL, NULL,
+				   0, G_MAXUINT, 0,
+				   G_PARAM_READWRITE |
+				   G_PARAM_CONSTRUCT_ONLY |
+				   G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_PORT, pspec);
+	pspec = g_param_spec_uint ("id", NULL, NULL,
+				   0, G_MAXUINT, 0,
+				   G_PARAM_READWRITE |
+				   G_PARAM_CONSTRUCT_ONLY |
+				   G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_ID, pspec);
+
 	object_class->finalize = fu_superio_device_finalize;
 	klass_device->to_string = fu_superio_device_to_string;
 	klass_device->open = fu_superio_device_open;
@@ -526,17 +602,4 @@ fu_superio_device_class_init (FuSuperioDeviceClass *klass)
 	klass_device->probe = fu_superio_device_probe;
 	klass_device->setup = fu_superio_device_setup;
 	klass_device->close = fu_superio_device_close;
-}
-
-FuSuperioDevice *
-fu_superio_device_new (const gchar *chipset, guint16 id, guint16 port)
-{
-	FuSuperioDevice *self;
-	FuSuperioDevicePrivate *priv;
-	self = g_object_new (FU_TYPE_SUPERIO_DEVICE, NULL);
-	priv = GET_PRIVATE (self);
-	priv->chipset = g_strdup (chipset);
-	priv->id = id;
-	priv->port = port;
-	return self;
 }
