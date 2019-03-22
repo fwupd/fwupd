@@ -18,4 +18,17 @@ struct _FuSuperioDeviceClass
 	FuDeviceClass		parent_class;
 };
 
+gboolean	 fu_superio_device_regval	(FuSuperioDevice	*self,
+						 guint8			 addr,
+						 guint8			*data,
+						 GError			**error);
+gboolean	 fu_superio_device_regval16	(FuSuperioDevice	*self,
+						 guint8			 addr,
+						 guint16		*data,
+						 GError			**error);
+gboolean	 fu_superio_device_regwrite	(FuSuperioDevice	*self,
+						 guint8			 addr,
+						 guint8			 data,
+						 GError			**error);
+
 G_END_DECLS

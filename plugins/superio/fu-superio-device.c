@@ -43,6 +43,84 @@ enum {
 	PROP_LAST
 };
 
+gboolean
+fu_superio_device_regval (FuSuperioDevice *self, guint8 addr,
+			  guint8 *data, GError **error)
+{
+	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
+	if (!fu_superio_outb (priv->fd, priv->port, addr, error))
+		return FALSE;
+	if (!fu_superio_inb (priv->fd, priv->port + 1, data, error))
+		return FALSE;
+	return TRUE;
+}
+
+gboolean
+fu_superio_device_regval16 (FuSuperioDevice *self, guint8 addr,
+			    guint16 *data, GError **error)
+{
+	guint8 msb;
+	guint8 lsb;
+	if (!fu_superio_device_regval (self, addr, &msb, error))
+		return FALSE;
+	if (!fu_superio_device_regval (self, addr + 1, &lsb, error))
+		return FALSE;
+	*data = ((guint16) msb << 8) | (guint16) lsb;
+	return TRUE;
+}
+
+gboolean
+fu_superio_device_regwrite (FuSuperioDevice *self, guint8 addr,
+			    guint8 data, GError **error)
+{
+	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
+	if (!fu_superio_outb (priv->fd, priv->port, addr, error))
+		return FALSE;
+	if (!fu_superio_outb (priv->fd, priv->port + 1, data, error))
+		return FALSE;
+	return TRUE;
+}
+
+static gboolean
+fu_superio_device_set_ldn (FuSuperioDevice *self, guint8 ldn, GError **error)
+{
+	return fu_superio_device_regwrite (self, SIO_LDNxx_IDX_LDNSEL, ldn, error);
+}
+
+static gboolean
+fu_superio_device_regdump (FuSuperioDevice *self, guint8 ldn, GError **error)
+{
+	const gchar *ldnstr = fu_superio_ldn_to_text (ldn);
+	guint8 buf[0xff] = { 0x00 };
+	guint16 iobad0 = 0x0;
+	guint16 iobad1 = 0x0;
+	g_autoptr(GString) str = g_string_new (NULL);
+
+	/* set LDN */
+	if (!fu_superio_device_set_ldn (self, ldn, error))
+		return FALSE;
+	for (guint i = 0x00; i < 0xff; i++) {
+		if (!fu_superio_device_regval (self, i, &buf[i], error))
+			return FALSE;
+	}
+
+	/* get the i/o base addresses */
+	if (!fu_superio_device_regval16 (self, SIO_LDNxx_IDX_IOBAD0, &iobad0, error))
+		return FALSE;
+	if (!fu_superio_device_regval16 (self, SIO_LDNxx_IDX_IOBAD1, &iobad1, error))
+		return FALSE;
+
+	g_string_append_printf (str, "LDN:0x%02x ", ldn);
+	if (iobad0 != 0x0)
+		g_string_append_printf (str, "IOBAD0:0x%04x ", iobad0);
+	if (iobad1 != 0x0)
+		g_string_append_printf (str, "IOBAD1:0x%04x ", iobad1);
+	if (ldnstr != NULL)
+		g_string_append_printf (str, "(%s)", ldnstr);
+	fu_common_dump_raw (G_LOG_DOMAIN, str->str, buf, sizeof(buf));
+	return TRUE;
+}
+
 static void
 fu_superio_device_to_string (FuDevice *device, GString *str)
 {
@@ -64,8 +142,7 @@ fu_superio_device_check_id (FuSuperioDevice *self, GError **error)
 	guint16 id_tmp;
 
 	/* check ID, which can be done from any LDN */
-	if (!fu_superio_regval16 (priv->fd, priv->port,
-				  SIO_LDNxx_IDX_CHIPID1, &id_tmp, error))
+	if (!fu_superio_device_regval16 (self, SIO_LDNxx_IDX_CHIPID1, &id_tmp, error))
 		return FALSE;
 	if (priv->id != id_tmp) {
 		g_set_error (error,
@@ -270,35 +347,34 @@ fu_superio_device_it89xx_read_ec_register (FuSuperioDevice *self,
 					   guint8 *outval,
 					   GError **error)
 {
-	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
-	if (!fu_superio_regwrite (priv->fd, priv->port,
-				  SIO_LDNxx_IDX_D2ADR,
-				  SIO_DEPTH2_I2EC_ADDRH,
-				  error))
+	if (!fu_superio_device_regwrite (self,
+					 SIO_LDNxx_IDX_D2ADR,
+					 SIO_DEPTH2_I2EC_ADDRH,
+					 error))
 		return FALSE;
-	if (!fu_superio_regwrite (priv->fd, priv->port,
-				  SIO_LDNxx_IDX_D2DAT,
-				  addr >> 8,
-				  error))
+	if (!fu_superio_device_regwrite (self,
+					 SIO_LDNxx_IDX_D2DAT,
+					 addr >> 8,
+					 error))
 		return FALSE;
-	if (!fu_superio_regwrite (priv->fd, priv->port,
-				  SIO_LDNxx_IDX_D2ADR,
-				  SIO_DEPTH2_I2EC_ADDRL,
-				  error))
+	if (!fu_superio_device_regwrite (self,
+					 SIO_LDNxx_IDX_D2ADR,
+					 SIO_DEPTH2_I2EC_ADDRL,
+					 error))
 		return FALSE;
-	if (!fu_superio_regwrite (priv->fd, priv->port,
-				  SIO_LDNxx_IDX_D2DAT,
-				  addr & 0xff, error))
+	if (!fu_superio_device_regwrite (self,
+					 SIO_LDNxx_IDX_D2DAT,
+					 addr & 0xff, error))
 		return FALSE;
-	if (!fu_superio_regwrite (priv->fd, priv->port,
-				  SIO_LDNxx_IDX_D2ADR,
-				  SIO_DEPTH2_I2EC_DATA,
-				  error))
+	if (!fu_superio_device_regwrite (self,
+					 SIO_LDNxx_IDX_D2ADR,
+					 SIO_DEPTH2_I2EC_DATA,
+					 error))
 		return FALSE;
-	return fu_superio_regval (priv->fd, priv->port,
-				  SIO_LDNxx_IDX_D2DAT,
-				  outval,
-				  error);
+	return fu_superio_device_regval (self,
+					 SIO_LDNxx_IDX_D2DAT,
+					 outval,
+					 error);
 }
 
 static gboolean
@@ -399,25 +475,23 @@ fu_superio_device_setup (FuDevice *device, GError **error)
 	/* dump LDNs */
 	if (g_getenv ("FWUPD_SUPERIO_VERBOSE") != NULL) {
 		for (guint j = 0; j < SIO_LDN_LAST; j++) {
-			if (!fu_superio_regdump (priv->fd, priv->port, j, error))
+			if (!fu_superio_device_regdump (self, j, error))
 				return FALSE;
 		}
 	}
 
 	/* set Power Management I/F Channel 1 LDN */
-	if (!fu_superio_set_ldn (priv->fd, priv->port, SIO_LDN_PM1, error))
+	if (!fu_superio_device_set_ldn (self, SIO_LDN_PM1, error))
 		return FALSE;
 
 	/* get the PM1 IOBAD0 address */
-	if (!fu_superio_regval16 (priv->fd, priv->port,
-				  SIO_LDNxx_IDX_IOBAD0,
-				  &priv->pm1_iobad0, error))
+	if (!fu_superio_device_regval16 (self, SIO_LDNxx_IDX_IOBAD0,
+					 &priv->pm1_iobad0, error))
 		return FALSE;
 
 	/* get the PM1 IOBAD1 address */
-	if (!fu_superio_regval16 (priv->fd, priv->port,
-				  SIO_LDNxx_IDX_IOBAD1,
-				  &priv->pm1_iobad1, error))
+	if (!fu_superio_device_regval16 (self, SIO_LDNxx_IDX_IOBAD1,
+					 &priv->pm1_iobad1, error))
 		return FALSE;
 
 	/* dump PMC register map */

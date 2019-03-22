@@ -106,28 +106,5 @@ gboolean	 fu_superio_inb		(gint		 fd,
 					 guint16	 port,
 					 guint8		*data,
 					 GError		**error);
-gboolean	 fu_superio_regval	(gint		 fd,
-					 guint16	 port,
-					 guint8		 addr,
-					 guint8		*data,
-					 GError		**error);
-gboolean	 fu_superio_regval16	(gint		 fd,
-					 guint16	 port,
-					 guint8		 addr,
-					 guint16	*data,
-					 GError		**error);
-gboolean	 fu_superio_regwrite	(gint		 fd,
-					 guint16	 port,
-					 guint8		 addr,
-					 guint8		 data,
-					 GError		**error);
-gboolean	 fu_superio_regdump	(gint		 fd,
-					 guint16	 port,
-					 guint8		 ldn,
-					 GError		**error);
-gboolean	 fu_superio_set_ldn	(gint		 fd,
-					 guint16	 port,
-					 guint8		 ldn,
-					 GError		**error);
 
 G_END_DECLS
