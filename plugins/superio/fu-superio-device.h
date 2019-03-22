@@ -18,8 +18,4 @@ struct _FuSuperioDeviceClass
 	FuDeviceClass		parent_class;
 };
 
-FuSuperioDevice	*fu_superio_device_new		(const gchar		*chipset,
-						 guint16		 id,
-						 guint16		 port);
-
 G_END_DECLS

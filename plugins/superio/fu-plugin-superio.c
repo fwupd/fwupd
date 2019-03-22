@@ -41,8 +41,14 @@ fu_plugin_superio_coldplug_chipset (FuPlugin *plugin, const gchar *chipset, GErr
 		return FALSE;
 	}
 
-	/* create device and unlock */
-	dev = fu_superio_device_new (chipset, id, port);
+	/* create IT8xxx */
+	dev = g_object_new (FU_TYPE_SUPERIO_DEVICE,
+			    "chipset", chipset,
+			    "id", id,
+			    "port", port,
+			    NULL);
+
+	/* unlock */
 	locker = fu_device_locker_new (dev, error);
 	if (locker == NULL)
 		return FALSE;
