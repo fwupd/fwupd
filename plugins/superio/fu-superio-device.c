@@ -19,7 +19,6 @@
 
 typedef struct
 {
-	FuDevice		 parent_instance;
 	gint			 fd;
 	gchar			*chipset;
 	guint16			 port;
@@ -428,6 +427,8 @@ fu_superio_device_class_init (FuSuperioDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 
 	/* properties */
+	object_class->get_property = fu_superio_device_get_property;
+	object_class->set_property = fu_superio_device_set_property;
 	pspec = g_param_spec_string ("chipset", NULL, NULL, NULL,
 				     G_PARAM_READWRITE |
 				     G_PARAM_CONSTRUCT_ONLY |
@@ -446,8 +447,6 @@ fu_superio_device_class_init (FuSuperioDeviceClass *klass)
 				   G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_ID, pspec);
 
-	object_class->get_property = fu_superio_device_get_property;
-	object_class->set_property = fu_superio_device_set_property;
 	object_class->finalize = fu_superio_device_finalize;
 	klass_device->to_string = fu_superio_device_to_string;
 	klass_device->open = fu_superio_device_open;
