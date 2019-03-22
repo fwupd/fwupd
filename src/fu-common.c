@@ -14,7 +14,9 @@
 #include <archive_entry.h>
 #include <archive.h>
 #include <errno.h>
+#include <limits.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "fwupd-error.h"
 
@@ -1323,4 +1325,31 @@ fu_common_bytes_compare (GBytes *bytes1, GBytes *bytes2, GError **error)
 
 	/* success */
 	return TRUE;
+}
+
+/**
+ * fu_common_realpath:
+ * @filename: a filename
+ * @error: A #GError or %NULL
+ *
+ * Finds the canonicalized absolute filename for a path.
+ *
+ * Return value: A filename, or %NULL if invalid or not found
+ **/
+gchar *
+fu_common_realpath (const gchar *filename, GError **error)
+{
+	char full_tmp[PATH_MAX];
+
+	g_return_val_if_fail (filename != NULL, NULL);
+
+	if (realpath (filename, full_tmp) == NULL) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "cannot resolve path: %s",
+			     strerror (errno));
+		return NULL;
+	}
+	return g_strdup (full_tmp);
 }

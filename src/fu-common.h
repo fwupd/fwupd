@@ -49,6 +49,8 @@ gboolean	 fu_common_spawn_sync		(const gchar * const *argv,
 						 GError		**error);
 
 gchar		*fu_common_get_path		(FuPathKind	 path_kind);
+gchar		*fu_common_realpath		(const gchar	*filename,
+						 GError		**error);
 gboolean	 fu_common_rmtree		(const gchar	*directory,
 						 GError		**error);
 GPtrArray	*fu_common_get_files_recursive	(const gchar	*path,
