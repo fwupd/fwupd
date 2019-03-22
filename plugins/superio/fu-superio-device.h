@@ -20,8 +20,6 @@ struct _FuSuperioDeviceClass
 						 GError		**error);
 };
 
-gboolean	 fu_superio_device_ec_flush	(FuSuperioDevice	*self,
-						 GError			**error);
 gboolean	 fu_superio_device_ec_read	(FuSuperioDevice	*self,
 						 guint8			*data,
 						 GError			**error);

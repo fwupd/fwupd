@@ -202,7 +202,7 @@ fu_superio_device_ec_write1 (FuSuperioDevice *self, guint8 data, GError **error)
 	return fu_superio_outb (priv->fd, priv->pm1_iobad1, data, error);
 }
 
-gboolean
+static gboolean
 fu_superio_device_ec_flush (FuSuperioDevice *self, GError **error)
 {
 	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
@@ -331,6 +331,12 @@ fu_superio_device_setup (FuDevice *device, GError **error)
 	if (!fu_superio_device_regval16 (self, SIO_LDNxx_IDX_IOBAD1,
 					 &priv->pm1_iobad1, error))
 		return FALSE;
+
+	/* drain */
+	if (!fu_superio_device_ec_flush (self, error)) {
+		g_prefix_error (error, "failed to flush: ");
+		return FALSE;
+	}
 
 	/* dump PMC register map */
 	if (g_getenv ("FWUPD_SUPERIO_VERBOSE") != NULL) {

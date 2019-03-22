@@ -102,10 +102,6 @@ fu_superio_it89_device_setup (FuSuperioDevice *self, GError **error)
 	}
 
 	/* get version */
-	if (!fu_superio_device_ec_flush (self, error)) {
-		g_prefix_error (error, "failed to flush: ");
-		return FALSE;
-	}
 	if (!fu_superio_device_ec_get_param (self, 0x00, &version_tmp[0], error)) {
 		g_prefix_error (error, "failed to get version major: ");
 		return FALSE;
