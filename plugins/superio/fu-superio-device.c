@@ -36,8 +36,8 @@
 #define SIO_CMD_EC_GET_NAME_STR		0x92
 #define SIO_CMD_EC_GET_VERSION_STR	0x93
 
-struct _FuSuperioDevice {
-	FuDevice		 parent_instance;
+typedef struct
+{
 	gint			 fd;
 	gchar			*chipset;
 	guint16			 port;
@@ -45,39 +45,43 @@ struct _FuSuperioDevice {
 	guint16			 pm1_iobad1;
 	guint16			 id;
 	guint32			 size;
-};
+} FuSuperioDevicePrivate;
 
-G_DEFINE_TYPE (FuSuperioDevice, fu_superio_device, FU_TYPE_DEVICE)
+G_DEFINE_TYPE_WITH_PRIVATE (FuSuperioDevice, fu_superio_device, FU_TYPE_DEVICE)
+
+#define GET_PRIVATE(o) (fu_superio_device_get_instance_private (o))
 
 static void
 fu_superio_device_to_string (FuDevice *device, GString *str)
 {
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
+	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
 	g_string_append (str, "  FuSuperioDevice:\n");
-	g_string_append_printf (str, "    fd:\t\t\t%i\n", self->fd);
-	g_string_append_printf (str, "    chipset:\t\t%s\n", self->chipset);
-	g_string_append_printf (str, "    id:\t\t\t0x%04x\n", (guint) self->id);
-	g_string_append_printf (str, "    port:\t\t0x%04x\n", (guint) self->port);
-	g_string_append_printf (str, "    pm1-iobad0:\t\t0x%04x\n", (guint) self->pm1_iobad0);
-	g_string_append_printf (str, "    pm1-iobad1:\t\t0x%04x\n", (guint) self->pm1_iobad1);
-	g_string_append_printf (str, "    size:\t\t0x%04x\n", (guint) self->size);
+	g_string_append_printf (str, "    fd:\t\t\t%i\n", priv->fd);
+	g_string_append_printf (str, "    chipset:\t\t%s\n", priv->chipset);
+	g_string_append_printf (str, "    id:\t\t\t0x%04x\n", (guint) priv->id);
+	g_string_append_printf (str, "    port:\t\t0x%04x\n", (guint) priv->port);
+	g_string_append_printf (str, "    pm1-iobad0:\t\t0x%04x\n", (guint) priv->pm1_iobad0);
+	g_string_append_printf (str, "    pm1-iobad1:\t\t0x%04x\n", (guint) priv->pm1_iobad1);
+	g_string_append_printf (str, "    size:\t\t0x%04x\n", (guint) priv->size);
 }
 
 static guint16
 fu_superio_device_check_id (FuSuperioDevice *self, GError **error)
 {
+	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
 	guint16 id_tmp;
 
 	/* check ID, which can be done from any LDN */
-	if (!fu_superio_regval16 (self->fd, self->port,
+	if (!fu_superio_regval16 (priv->fd, priv->port,
 				  SIO_LDNxx_IDX_CHIPID1, &id_tmp, error))
 		return FALSE;
-	if (self->id != id_tmp) {
+	if (priv->id != id_tmp) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_NOT_SUPPORTED,
 			     "SuperIO chip not supported, got %04x, expected %04x",
-			     (guint) id_tmp, (guint) self->id);
+			     (guint) id_tmp, (guint) priv->id);
 		return FALSE;
 	}
 
@@ -87,10 +91,11 @@ fu_superio_device_check_id (FuSuperioDevice *self, GError **error)
 static gboolean
 fu_superio_device_wait_for (FuSuperioDevice *self, guint8 mask, gboolean set, GError **error)
 {
+	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
 	g_autoptr(GTimer) timer = g_timer_new ();
 	do {
 		guint8 status = 0x00;
-		if (!fu_superio_inb (self->fd, self->pm1_iobad1, &status, error))
+		if (!fu_superio_inb (priv->fd, priv->pm1_iobad1, &status, error))
 			return FALSE;
 		if (g_timer_elapsed (timer, NULL) > FU_PLUGIN_SUPERIO_TIMEOUT)
 			break;
@@ -112,9 +117,10 @@ fu_superio_device_ec_read (FuSuperioDevice *self,
 			   guint8 *data,
 			   GError **error)
 {
+	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
 	if (!fu_superio_device_wait_for (self, SIO_STATUS_EC_OBF, TRUE, error))
 		return FALSE;
-	return fu_superio_inb (self->fd, port, data, error);
+	return fu_superio_inb (priv->fd, port, data, error);
 }
 
 static gboolean
@@ -123,23 +129,25 @@ fu_superio_device_ec_write (FuSuperioDevice *self,
 			    guint8 data,
 			    GError **error)
 {
+	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
 	if (!fu_superio_device_wait_for (self, SIO_STATUS_EC_IBF, FALSE, error))
 		return FALSE;
-	return fu_superio_outb (self->fd, port, data, error);
+	return fu_superio_outb (priv->fd, port, data, error);
 }
 
 static gboolean
 fu_superio_device_ec_flush (FuSuperioDevice *self, GError **error)
 {
+	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
 	guint8 status = 0x00;
 	g_autoptr(GTimer) timer = g_timer_new ();
 	do {
 		guint8 unused = 0;
-		if (!fu_superio_inb (self->fd, self->pm1_iobad1, &status, error))
+		if (!fu_superio_inb (priv->fd, priv->pm1_iobad1, &status, error))
 			return FALSE;
 		if ((status & SIO_STATUS_EC_OBF) == 0)
 			break;
-		if (!fu_superio_inb (self->fd, self->pm1_iobad0, &unused, error))
+		if (!fu_superio_inb (priv->fd, priv->pm1_iobad0, &unused, error))
 			return FALSE;
 		if (g_timer_elapsed (timer, NULL) > FU_PLUGIN_SUPERIO_TIMEOUT) {
 			g_set_error_literal (error,
@@ -155,36 +163,38 @@ fu_superio_device_ec_flush (FuSuperioDevice *self, GError **error)
 static gboolean
 fu_superio_device_ec_get_param (FuSuperioDevice *self, guint8 param, guint8 *data, GError **error)
 {
-	if (!fu_superio_device_ec_write (self, self->pm1_iobad1,
+	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
+	if (!fu_superio_device_ec_write (self, priv->pm1_iobad1,
 					 SIO_CMD_EC_READ, error))
 		return FALSE;
-	if (!fu_superio_device_ec_write (self, self->pm1_iobad0, param, error))
+	if (!fu_superio_device_ec_write (self, priv->pm1_iobad0, param, error))
 		return FALSE;
-	return fu_superio_device_ec_read (self, self->pm1_iobad0, data, error);
+	return fu_superio_device_ec_read (self, priv->pm1_iobad0, data, error);
 }
 
 #if 0
 static gboolean
 fu_superio_device_ec_set_param (FuSuperioDevice *self, guint8 param, guint8 data, GError **error)
 {
-	if (!fu_superio_device_ec_write (self, self->pm1_iobad1,
+	if (!fu_superio_device_ec_write (self, priv->pm1_iobad1,
 					 SIO_CMD_EC_WRITE, error))
 		return FALSE;
-	if (!fu_superio_device_ec_write (self, self->pm1_iobad0, param, error))
+	if (!fu_superio_device_ec_write (self, priv->pm1_iobad0, param, error))
 		return FALSE;
-	return fu_superio_device_ec_write (self, self->pm1_iobad0, data, error);
+	return fu_superio_device_ec_write (self, priv->pm1_iobad0, data, error);
 }
 #endif
 
 static gchar *
 fu_superio_device_ec_get_str (FuSuperioDevice *self, guint8 idx, GError **error)
 {
+	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
 	GString *str = g_string_new (NULL);
-	if (!fu_superio_device_ec_write (self, self->pm1_iobad1, idx, error))
+	if (!fu_superio_device_ec_write (self, priv->pm1_iobad1, idx, error))
 		return NULL;
 	for (guint i = 0; i < 0xff; i++) {
 		guint8 c = 0;
-		if (!fu_superio_device_ec_read (self, self->pm1_iobad0, &c, error))
+		if (!fu_superio_device_ec_read (self, priv->pm1_iobad0, &c, error))
 			return NULL;
 		if (c == '$')
 			break;
@@ -197,10 +207,11 @@ static gboolean
 fu_superio_device_open (FuDevice *device, GError **error)
 {
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
+	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
 
 	/* open device */
-	self->fd = g_open (fu_device_get_physical_id (device), O_RDWR);
-	if (self->fd < 0) {
+	priv->fd = g_open (fu_device_get_physical_id (device), O_RDWR);
+	if (priv->fd < 0) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
@@ -218,11 +229,12 @@ static gboolean
 fu_superio_device_probe (FuDevice *device, GError **error)
 {
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
+	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
 	g_autofree gchar *devid = NULL;
 
 	/* use the chipset name as the logical ID and for the GUID */
-	fu_device_set_logical_id (device, self->chipset);
-	devid = g_strdup_printf ("SuperIO-%s", self->chipset);
+	fu_device_set_logical_id (device, priv->chipset);
+	devid = g_strdup_printf ("SuperIO-%s", priv->chipset);
 	fu_device_add_instance_id (device, devid);
 	return TRUE;
 }
@@ -230,6 +242,7 @@ fu_superio_device_probe (FuDevice *device, GError **error)
 static gboolean
 fu_superio_device_setup_it85xx (FuSuperioDevice *self, GError **error)
 {
+	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
 	guint8 size_tmp = 0;
 	g_autofree gchar *name = NULL;
 	g_autofree gchar *version = NULL;
@@ -243,7 +256,7 @@ fu_superio_device_setup_it85xx (FuSuperioDevice *self, GError **error)
 		g_prefix_error (error, "failed to get EC size: ");
 		return FALSE;
 	}
-	self->size = ((guint32) size_tmp) << 10;
+	priv->size = ((guint32) size_tmp) << 10;
 
 	/* get EC strings */
 	name = fu_superio_device_ec_get_str (self, SIO_CMD_EC_GET_NAME_STR, error);
@@ -267,31 +280,32 @@ fu_superio_device_it89xx_read_ec_register (FuSuperioDevice *self,
 					   guint8 *outval,
 					   GError **error)
 {
-	if (!fu_superio_regwrite (self->fd, self->port,
+	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
+	if (!fu_superio_regwrite (priv->fd, priv->port,
 				  SIO_LDNxx_IDX_D2ADR,
 				  SIO_DEPTH2_I2EC_ADDRH,
 				  error))
 		return FALSE;
-	if (!fu_superio_regwrite (self->fd, self->port,
+	if (!fu_superio_regwrite (priv->fd, priv->port,
 				  SIO_LDNxx_IDX_D2DAT,
 				  addr >> 8,
 				  error))
 		return FALSE;
-	if (!fu_superio_regwrite (self->fd, self->port,
+	if (!fu_superio_regwrite (priv->fd, priv->port,
 				  SIO_LDNxx_IDX_D2ADR,
 				  SIO_DEPTH2_I2EC_ADDRL,
 				  error))
 		return FALSE;
-	if (!fu_superio_regwrite (self->fd, self->port,
+	if (!fu_superio_regwrite (priv->fd, priv->port,
 				  SIO_LDNxx_IDX_D2DAT,
 				  addr & 0xff, error))
 		return FALSE;
-	if (!fu_superio_regwrite (self->fd, self->port,
+	if (!fu_superio_regwrite (priv->fd, priv->port,
 				  SIO_LDNxx_IDX_D2ADR,
 				  SIO_DEPTH2_I2EC_DATA,
 				  error))
 		return FALSE;
-	return fu_superio_regval (self->fd, self->port,
+	return fu_superio_regval (priv->fd, priv->port,
 				  SIO_LDNxx_IDX_D2DAT,
 				  outval,
 				  error);
@@ -300,6 +314,7 @@ fu_superio_device_it89xx_read_ec_register (FuSuperioDevice *self,
 static gboolean
 fu_superio_device_it89xx_ec_size (FuSuperioDevice *self, GError **error)
 {
+	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
 	guint8 tmp = 0;
 
 	/* not sure why we can't just use SIO_LDNxx_IDX_CHIPID1,
@@ -311,7 +326,7 @@ fu_superio_device_it89xx_ec_size (FuSuperioDevice *self, GError **error)
 		return FALSE;
 	if (tmp == 0x85) {
 		g_warning ("possibly IT85xx class device");
-		self->size = 0x20000;
+		priv->size = 0x20000;
 		return TRUE;
 	}
 
@@ -322,19 +337,19 @@ fu_superio_device_it89xx_ec_size (FuSuperioDevice *self, GError **error)
 							error))
 		return FALSE;
 	if (tmp >> 4 == 0x00) {
-		self->size = 0x20000;
+		priv->size = 0x20000;
 		return TRUE;
 	}
 	if (tmp >> 4 == 0x04) {
-		self->size = 0x30000;
+		priv->size = 0x30000;
 		return TRUE;
 	}
 	if (tmp >> 4 == 0x08) {
-		self->size = 0x40000;
+		priv->size = 0x40000;
 		return TRUE;
 	}
 	g_warning ("falling back to default size");
-	self->size = 0x20000;
+	priv->size = 0x20000;
 	return TRUE;
 }
 
@@ -372,6 +387,7 @@ static gboolean
 fu_superio_device_setup (FuDevice *device, GError **error)
 {
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
+	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
 
 	/* check ID is correct */
 	if (!fu_superio_device_check_id (self, error)) {
@@ -382,25 +398,25 @@ fu_superio_device_setup (FuDevice *device, GError **error)
 	/* dump LDNs */
 	if (g_getenv ("FWUPD_SUPERIO_VERBOSE") != NULL) {
 		for (guint j = 0; j < SIO_LDN_LAST; j++) {
-			if (!fu_superio_regdump (self->fd, self->port, j, error))
+			if (!fu_superio_regdump (priv->fd, priv->port, j, error))
 				return FALSE;
 		}
 	}
 
 	/* set Power Management I/F Channel 1 LDN */
-	if (!fu_superio_set_ldn (self->fd, self->port, SIO_LDN_PM1, error))
+	if (!fu_superio_set_ldn (priv->fd, priv->port, SIO_LDN_PM1, error))
 		return FALSE;
 
 	/* get the PM1 IOBAD0 address */
-	if (!fu_superio_regval16 (self->fd, self->port,
+	if (!fu_superio_regval16 (priv->fd, priv->port,
 				  SIO_LDNxx_IDX_IOBAD0,
-				  &self->pm1_iobad0, error))
+				  &priv->pm1_iobad0, error))
 		return FALSE;
 
 	/* get the PM1 IOBAD1 address */
-	if (!fu_superio_regval16 (self->fd, self->port,
+	if (!fu_superio_regval16 (priv->fd, priv->port,
 				  SIO_LDNxx_IDX_IOBAD1,
-				  &self->pm1_iobad1, error))
+				  &priv->pm1_iobad1, error))
 		return FALSE;
 
 	/* dump PMC register map */
@@ -417,13 +433,13 @@ fu_superio_device_setup (FuDevice *device, GError **error)
 	}
 
 	/* IT85xx */
-	if (self->id >> 8 == 0x85) {
+	if (priv->id >> 8 == 0x85) {
 		if (!fu_superio_device_setup_it85xx (self, error))
 			return FALSE;
 	}
 
 	/* IT89xx */
-	if (self->id >> 8 == 0x89) {
+	if (priv->id >> 8 == 0x89) {
 		if (!fu_superio_device_setup_it89xx (self, error))
 			return FALSE;
 	}
@@ -436,9 +452,10 @@ static gboolean
 fu_superio_device_attach (FuDevice *device, GError **error)
 {
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
+	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
 
 	/* re-enable HOSTWA -- use 0xfd for LCFC */
-	if (!fu_superio_device_ec_write (self, self->pm1_iobad1, 0xfc, error))
+	if (!fu_superio_device_ec_write (self, priv->pm1_iobad1, 0xfc, error))
 		return FALSE;
 
 	/* success */
@@ -449,12 +466,13 @@ static gboolean
 fu_superio_device_detach (FuDevice *device, GError **error)
 {
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
+	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
 	guint8 tmp = 0x00;
 
 	/* turn off HOSTWA bit, keeping HSEMIE and HSEMW high */
-	if (!fu_superio_device_ec_write (self, self->pm1_iobad1, 0xdc, error))
+	if (!fu_superio_device_ec_write (self, priv->pm1_iobad1, 0xdc, error))
 		return FALSE;
-	if (!fu_superio_device_ec_read (self, self->pm1_iobad0, &tmp, error))
+	if (!fu_superio_device_ec_read (self, priv->pm1_iobad0, &tmp, error))
 		return FALSE;
 	if (tmp != 0x33) {
 		g_set_error (error,
@@ -473,9 +491,10 @@ static gboolean
 fu_superio_device_close (FuDevice *device, GError **error)
 {
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
-	if (!g_close (self->fd, error))
+	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
+	if (!g_close (priv->fd, error))
 		return FALSE;
-	self->fd = 0;
+	priv->fd = 0;
 	return TRUE;
 }
 
@@ -513,9 +532,11 @@ FuSuperioDevice *
 fu_superio_device_new (const gchar *chipset, guint16 id, guint16 port)
 {
 	FuSuperioDevice *self;
+	FuSuperioDevicePrivate *priv;
 	self = g_object_new (FU_TYPE_SUPERIO_DEVICE, NULL);
-	self->chipset = g_strdup (chipset);
-	self->id = id;
-	self->port = port;
+	priv = GET_PRIVATE (self);
+	priv->chipset = g_strdup (chipset);
+	priv->id = id;
+	priv->port = port;
 	return self;
 }
