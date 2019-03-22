@@ -35,6 +35,27 @@ G_BEGIN_DECLS
 #define SIO_DEPTH2_I2EC_ADDRH		0x11
 #define SIO_DEPTH2_I2EC_DATA		0x12
 
+/*
+ * The PMC is a communication channel used between the host and the EC.
+ * Compatible mode uses four registers:
+ *
+ * Name			| EC		| HOST		| ADDR
+ * _____________________|_______________|_______________|______
+ * PMDIR		| RO		| WO		| 0x62
+ * PMDOR		| WO		| RO		| 0x62
+ * PMCMDR		| RO		| RO		| 0x66
+ * PMSTR		| RO		| RO		| 0x66
+ */
+#define SIO_EC_PMC_PM1STS		0x00
+#define SIO_EC_PMC_PM1DO		0x01
+#define SIO_EC_PMC_PM1DOSCI		0x02
+#define SIO_EC_PMC_PM1DOCMI		0x03
+#define SIO_EC_PMC_PM1DI		0x04
+#define SIO_EC_PMC_PM1DISCI		0x05
+#define SIO_EC_PMC_PM1CTL		0x06
+#define SIO_EC_PMC_PM1IC		0x07
+#define SIO_EC_PMC_PM1IE		0x08
+
 /* SPI commands */
 #define SIO_SPI_CMD_READ		0x03
 #define SIO_SPI_CMD_HS_READ		0x0b

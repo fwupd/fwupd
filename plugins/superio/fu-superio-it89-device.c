@@ -122,6 +122,122 @@ fu_superio_it89_device_setup (FuSuperioDevice *self, GError **error)
 }
 
 static gboolean
+fu_superio_it89_device_ec_pm1do_sci (FuSuperioDevice *self, guint8 val, GError **error)
+{
+	if (!fu_superio_device_ec_write1 (self, SIO_EC_PMC_PM1DOSCI, error))
+		return FALSE;
+	if (!fu_superio_device_ec_write1 (self, val, error))
+		return FALSE;
+	return TRUE;
+}
+
+static gboolean
+fu_superio_it89_device_ec_pm1do_smi (FuSuperioDevice *self, guint8 val, GError **error)
+{
+	if (!fu_superio_device_ec_write1 (self, SIO_EC_PMC_PM1DOCMI, error))
+		return FALSE;
+	if (!fu_superio_device_ec_write1 (self, val, error))
+		return FALSE;
+	return TRUE;
+}
+
+static gboolean
+fu_superio_device_ec_read_status (FuSuperioDevice *self, GError **error)
+{
+	guint8 tmp = 0x00;
+
+	/* read status register */
+	if (!fu_superio_device_ec_write1 (self, SIO_EC_PMC_PM1DO, error))
+		return FALSE;
+	if (!fu_superio_it89_device_ec_pm1do_sci (self, SIO_SPI_CMD_RDSR, error))
+		return FALSE;
+
+	/* wait for write */
+	do {
+		if (!fu_superio_device_ec_write1 (self, SIO_EC_PMC_PM1DI, error))
+			return FALSE;
+		if (!fu_superio_device_ec_read (self, &tmp, error))
+			return FALSE;
+	} while ((tmp & SIO_STATUS_EC_OBF) != 0);
+
+	/* watch SCI events */
+	return fu_superio_device_ec_write1 (self,   SIO_EC_PMC_PM1DISCI, error);
+}
+
+static GBytes *
+fu_superio_it89_device_read_addr (FuSuperioDevice *self,
+				  guint32 addr,
+				  guint size,
+				  GFileProgressCallback progress_cb,
+				  GError **error)
+{
+	g_autofree guint8 *buf = NULL;
+
+	/* check... */
+	if (!fu_superio_device_ec_read_status (self, error))
+		return NULL;
+
+	/* high speed read */
+	if (!fu_superio_device_ec_write1 (self, SIO_EC_PMC_PM1DO, error))
+		return NULL;
+	if (!fu_superio_it89_device_ec_pm1do_sci (self, SIO_SPI_CMD_HS_READ, error))
+		return NULL;
+
+	/* set address, MSB, MID, LSB */
+	if (!fu_superio_it89_device_ec_pm1do_smi (self, addr >> 16, error))
+		return NULL;
+	if (!fu_superio_it89_device_ec_pm1do_smi (self, addr >> 8, error))
+		return NULL;
+	if (!fu_superio_it89_device_ec_pm1do_smi (self, addr & 0xff, error))
+		return NULL;
+
+	/* padding for HS? */
+	if (!fu_superio_it89_device_ec_pm1do_smi (self, 0x0, error))
+		return NULL;
+
+	/* read out data */
+	buf = g_malloc0 (size);
+	for (guint i = 0; i < size; i++) {
+		if (!fu_superio_device_ec_write1 (self, SIO_EC_PMC_PM1DI, error))
+			return NULL;
+		if (!fu_superio_device_ec_read (self, &buf[i], error))
+			return NULL;
+
+		/* update progress */
+		if (progress_cb != NULL)
+			progress_cb ((goffset) i, (goffset) size, self);
+	}
+
+	/* check again... */
+	if (!fu_superio_device_ec_read_status (self, error))
+		return NULL;
+
+	/* success */
+	return g_bytes_new_take (g_steal_pointer (&buf), size);
+}
+
+static void
+fu_superio_it89_device_progress_cb (goffset current, goffset total, gpointer user_data)
+{
+	FuDevice *device = FU_DEVICE (user_data);
+	fu_device_set_progress_full (device, (gsize) current, (gsize) total);
+}
+
+static GBytes *
+fu_superio_it89_device_read_firmware (FuDevice *device, GError **error)
+{
+	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
+	guint64 fwsize = fu_device_get_firmware_size_min (device);
+	g_autoptr(GBytes) blob = NULL;
+
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_READ);
+	blob = fu_superio_it89_device_read_addr (self, 0x0, fwsize,
+						 fu_superio_it89_device_progress_cb,
+						 error);
+	return g_steal_pointer (&blob);
+}
+
+static gboolean
 fu_superio_it89_device_attach (FuDevice *device, GError **error)
 {
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
@@ -172,5 +288,6 @@ fu_superio_it89_device_class_init (FuSuperioIt89DeviceClass *klass)
 	FuSuperioDeviceClass *klass_superio_device = FU_SUPERIO_DEVICE_CLASS (klass);
 	klass_device->attach = fu_superio_it89_device_attach;
 	klass_device->detach = fu_superio_it89_device_detach;
+	klass_device->read_firmware = fu_superio_it89_device_read_firmware;
 	klass_superio_device->setup = fu_superio_it89_device_setup;
 }
