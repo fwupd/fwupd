@@ -87,6 +87,7 @@ void
 fu_plugin_init (FuPlugin *plugin)
 {
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_SUPPORTS_PROTOCOL, "tw.com.ite.superio");
 }
 
 gboolean
@@ -152,4 +153,39 @@ fu_plugin_verify (FuPlugin *plugin, FuDevice *device,
 		fu_device_add_checksum (device, hash);
 	}
 	return TRUE;
+}
+
+gboolean
+fu_plugin_update_detach (FuPlugin *plugin, FuDevice *device, GError **error)
+{
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
+		return TRUE;
+	locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
+		return FALSE;
+	return fu_device_detach (device, error);
+}
+
+gboolean
+fu_plugin_update_attach (FuPlugin *plugin, FuDevice *device, GError **error)
+{
+	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
+		return FALSE;
+	return fu_device_attach (device, error);
+}
+
+gboolean
+fu_plugin_update (FuPlugin *plugin,
+		  FuDevice *device,
+		  GBytes *blob_fw,
+		  FwupdInstallFlags flags,
+		  GError **error)
+{
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
+		return FALSE;
+	return fu_device_write_firmware (device, blob_fw, error);
 }
