@@ -18,6 +18,9 @@ struct _FuSuperioDeviceClass
 	FuDeviceClass		parent_class;
 };
 
+gboolean	 fu_superio_device_ec_read	(FuSuperioDevice	*self,
+						 guint8			*data,
+						 GError			**error);
 gboolean	 fu_superio_device_regval	(FuSuperioDevice	*self,
 						 guint8			 addr,
 						 guint8			*data,

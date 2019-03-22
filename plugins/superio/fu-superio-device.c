@@ -179,16 +179,13 @@ fu_superio_device_wait_for (FuSuperioDevice *self, guint8 mask, gboolean set, GE
 	return FALSE;
 }
 
-static gboolean
-fu_superio_device_ec_read (FuSuperioDevice *self,
-			   guint16 port,
-			   guint8 *data,
-			   GError **error)
+gboolean
+fu_superio_device_ec_read (FuSuperioDevice *self, guint8 *data, GError **error)
 {
 	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
 	if (!fu_superio_device_wait_for (self, SIO_STATUS_EC_OBF, TRUE, error))
 		return FALSE;
-	return fu_superio_inb (priv->fd, port, data, error);
+	return fu_superio_inb (priv->fd, priv->pm1_iobad0, data, error);
 }
 
 static gboolean
@@ -237,7 +234,7 @@ fu_superio_device_ec_get_param (FuSuperioDevice *self, guint8 param, guint8 *dat
 		return FALSE;
 	if (!fu_superio_device_ec_write (self, priv->pm1_iobad0, param, error))
 		return FALSE;
-	return fu_superio_device_ec_read (self, priv->pm1_iobad0, data, error);
+	return fu_superio_device_ec_read (self, data, error);
 }
 
 #if 0
@@ -262,7 +259,7 @@ fu_superio_device_ec_get_str (FuSuperioDevice *self, guint8 idx, GError **error)
 		return NULL;
 	for (guint i = 0; i < 0xff; i++) {
 		guint8 c = 0;
-		if (!fu_superio_device_ec_read (self, priv->pm1_iobad0, &c, error))
+		if (!fu_superio_device_ec_read (self, &c, error))
 			return NULL;
 		if (c == '$')
 			break;
@@ -547,7 +544,7 @@ fu_superio_device_detach (FuDevice *device, GError **error)
 	/* turn off HOSTWA bit, keeping HSEMIE and HSEMW high */
 	if (!fu_superio_device_ec_write (self, priv->pm1_iobad1, 0xdc, error))
 		return FALSE;
-	if (!fu_superio_device_ec_read (self, priv->pm1_iobad0, &tmp, error))
+	if (!fu_superio_device_ec_read (self, &tmp, error))
 		return FALSE;
 	if (tmp != 0x33) {
 		g_set_error (error,
