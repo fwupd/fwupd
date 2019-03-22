@@ -1308,6 +1308,33 @@ fu_engine_install_tasks (FuEngine *self,
 	return TRUE;
 }
 
+static gboolean
+fu_engine_is_running_offline_update (void)
+{
+	const gchar *default_target = NULL;
+	g_autoptr(GDBusConnection) connection = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, NULL);
+	if (connection == NULL)
+		return FALSE;
+	val = g_dbus_connection_call_sync (connection,
+					   "org.freedesktop.systemd1",
+					   "/org/freedesktop/systemd1",
+					   "org.freedesktop.systemd1.Manager",
+					   "GetDefaultTarget",
+					   NULL, NULL,
+					   G_DBUS_CALL_FLAGS_NONE,
+					   1500, NULL, &error);
+	if (val == NULL) {
+		g_warning ("failed to get default.target: %s", error->message);
+		return FALSE;
+	}
+	g_variant_get (val, "(&s)", &default_target);
+	return g_strcmp0 (default_target, "system-update.target") == 0;
+}
+
 /**
  * fu_engine_install:
  * @self: A #FuEngine
@@ -1467,8 +1494,9 @@ fu_engine_install (FuEngine *self,
 			return FALSE;
 	}
 
-	/* just schedule this for the next reboot  */
-	if (flags & FWUPD_INSTALL_FLAG_OFFLINE)
+	/* schedule this for the next reboot if not in system-update.target */
+	if (!fu_engine_is_running_offline_update () &&
+	    (flags & FWUPD_INSTALL_FLAG_OFFLINE) > 0)
 		return fu_plugin_runner_schedule_update (plugin, device, blob_cab, error);
 
 	/* install firmware blob */
