@@ -41,10 +41,6 @@ fu_superio_it85_device_setup (FuSuperioDevice *self, GError **error)
 	g_autofree gchar *version = NULL;
 
 	/* get EC size */
-	if (!fu_superio_device_ec_flush (self, error)) {
-		g_prefix_error (error, "failed to flush: ");
-		return FALSE;
-	}
 	if (!fu_superio_device_ec_get_param (self, 0xe5, &size_tmp, error)) {
 		g_prefix_error (error, "failed to get EC size: ");
 		return FALSE;
