@@ -223,6 +223,41 @@ fu_superio_it89_device_progress_cb (goffset current, goffset total, gpointer use
 	fu_device_set_progress_full (device, (gsize) current, (gsize) total);
 }
 
+/* The 14th byte of the 16 byte signature is always read from the hardware as
+ * 0x00 rather than the specified 0xAA. Fix up the firmware to match the
+ * .ROM file which uses 0x7F as the number of bytes to mirror to e-flash... */
+static GBytes *
+fu_plugin_superio_fix_signature (FuSuperioDevice *self, GBytes *fw, GError **error)
+{
+	gsize sz = 0;
+	const guint8 *buf = g_bytes_get_data (fw, &sz);
+	g_autofree guint8 *buf2 = NULL;
+	const guint signature_offset = 0x4d; /* IT85, IT89 is 0x8d */
+
+	/* not big enough */
+	if (sz < signature_offset + 1) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "image too small to fix");
+		return NULL;
+	}
+
+	/* not zero */
+	if (buf[signature_offset] != 0x0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "nonzero signature byte");
+		return NULL;
+	}
+
+	/* fix signature to match SMT version */
+	buf2 = g_memdup (buf, sz);
+	buf2[signature_offset] = 0x7f;
+	return g_bytes_new_take (g_steal_pointer (&buf2), sz);
+}
+
 static GBytes *
 fu_superio_it89_device_read_firmware (FuDevice *device, GError **error)
 {
@@ -234,7 +269,7 @@ fu_superio_it89_device_read_firmware (FuDevice *device, GError **error)
 	blob = fu_superio_it89_device_read_addr (self, 0x0, fwsize,
 						 fu_superio_it89_device_progress_cb,
 						 error);
-	return g_steal_pointer (&blob);
+	return fu_plugin_superio_fix_signature (self, blob, error);
 }
 
 static gboolean
