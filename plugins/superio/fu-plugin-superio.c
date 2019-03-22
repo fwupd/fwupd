@@ -9,6 +9,7 @@
 #include "fu-plugin-vfuncs.h"
 
 #include "fu-superio-it85-device.h"
+#include "fu-superio-it89-device.h"
 
 #define		FU_QUIRKS_SUPERIO_CHIPSETS		"SuperioChipsets"
 
@@ -49,7 +50,7 @@ fu_plugin_superio_coldplug_chipset (FuPlugin *plugin, const gchar *chipset, GErr
 				    "port", port,
 				    NULL);
 	} else if (id >> 8 == 0x89) {
-		dev = g_object_new (FU_TYPE_SUPERIO_DEVICE,
+		dev = g_object_new (FU_TYPE_SUPERIO_IT89_DEVICE,
 				    "chipset", chipset,
 				    "id", id,
 				    "port", port,
