@@ -21,6 +21,12 @@ struct _FuSuperioDeviceClass
 gboolean	 fu_superio_device_ec_read	(FuSuperioDevice	*self,
 						 guint8			*data,
 						 GError			**error);
+gboolean	 fu_superio_device_ec_write0	(FuSuperioDevice	*self,
+						 guint8			 data,
+						 GError			**error);
+gboolean	 fu_superio_device_ec_write1	(FuSuperioDevice	*self,
+						 guint8			 data,
+						 GError			**error);
 gboolean	 fu_superio_device_regval	(FuSuperioDevice	*self,
 						 guint8			 addr,
 						 guint8			*data,
