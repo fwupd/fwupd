@@ -863,12 +863,22 @@ fu_plugin_runner_offline_invalidate (GError **error)
 static gboolean
 fu_plugin_runner_offline_setup (GError **error)
 {
+	const gchar *symlink_target = "/var/lib/fwupd";
 	gint rc;
+	g_autofree gchar *filename = NULL;
 
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
+	/* does already exist */
+	filename = fu_common_realpath (FU_OFFLINE_TRIGGER_FILENAME, NULL);
+	if (g_strcmp0 (filename, symlink_target) == 0) {
+		g_debug ("%s already points to %s, skipping creation",
+			 FU_OFFLINE_TRIGGER_FILENAME, symlink_target);
+		return TRUE;
+	}
+
 	/* create symlink for the systemd-system-update-generator */
-	rc = symlink ("/var/lib/fwupd", FU_OFFLINE_TRIGGER_FILENAME);
+	rc = symlink (symlink_target, FU_OFFLINE_TRIGGER_FILENAME);
 	if (rc < 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
