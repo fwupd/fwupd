@@ -1402,6 +1402,7 @@ fu_plugin_runner_schedule_update (FuPlugin *self,
 		return FALSE;
 
 	/* next boot we run offline */
+	fu_device_set_progress (device, 100);
 	return fu_plugin_runner_offline_setup (error);
 }
 
