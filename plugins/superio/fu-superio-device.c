@@ -29,7 +29,6 @@ typedef struct
 	guint16			 pm1_iobad0;
 	guint16			 pm1_iobad1;
 	guint16			 id;
-	guint32			 size;
 } FuSuperioDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuSuperioDevice, fu_superio_device, FU_TYPE_DEVICE)
@@ -56,7 +55,6 @@ fu_superio_device_to_string (FuDevice *device, GString *str)
 	g_string_append_printf (str, "    port:\t\t0x%04x\n", (guint) priv->port);
 	g_string_append_printf (str, "    pm1-iobad0:\t\t0x%04x\n", (guint) priv->pm1_iobad0);
 	g_string_append_printf (str, "    pm1-iobad1:\t\t0x%04x\n", (guint) priv->pm1_iobad1);
-	g_string_append_printf (str, "    size:\t\t0x%04x\n", (guint) priv->size);
 }
 
 static guint16
@@ -235,7 +233,6 @@ fu_superio_device_probe (FuDevice *device, GError **error)
 static gboolean
 fu_superio_device_setup_it85xx (FuSuperioDevice *self, GError **error)
 {
-	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
 	guint8 size_tmp = 0;
 	g_autofree gchar *name = NULL;
 	g_autofree gchar *version = NULL;
@@ -249,7 +246,7 @@ fu_superio_device_setup_it85xx (FuSuperioDevice *self, GError **error)
 		g_prefix_error (error, "failed to get EC size: ");
 		return FALSE;
 	}
-	priv->size = ((guint32) size_tmp) << 10;
+	fu_device_set_firmware_size (FU_DEVICE (self), ((guint32) size_tmp) << 10);
 
 	/* get EC strings */
 	name = fu_superio_device_ec_get_str (self, SIO_CMD_EC_GET_NAME_STR, error);
@@ -307,7 +304,6 @@ fu_superio_device_it89xx_read_ec_register (FuSuperioDevice *self,
 static gboolean
 fu_superio_device_it89xx_ec_size (FuSuperioDevice *self, GError **error)
 {
-	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
 	guint8 tmp = 0;
 
 	/* not sure why we can't just use SIO_LDNxx_IDX_CHIPID1,
@@ -319,7 +315,7 @@ fu_superio_device_it89xx_ec_size (FuSuperioDevice *self, GError **error)
 		return FALSE;
 	if (tmp == 0x85) {
 		g_warning ("possibly IT85xx class device");
-		priv->size = 0x20000;
+		fu_device_set_firmware_size (FU_DEVICE (self), 0x20000);
 		return TRUE;
 	}
 
@@ -330,19 +326,19 @@ fu_superio_device_it89xx_ec_size (FuSuperioDevice *self, GError **error)
 							error))
 		return FALSE;
 	if (tmp >> 4 == 0x00) {
-		priv->size = 0x20000;
+		fu_device_set_firmware_size (FU_DEVICE (self), 0x20000);
 		return TRUE;
 	}
 	if (tmp >> 4 == 0x04) {
-		priv->size = 0x30000;
+		fu_device_set_firmware_size (FU_DEVICE (self), 0x30000);
 		return TRUE;
 	}
 	if (tmp >> 4 == 0x08) {
-		priv->size = 0x40000;
+		fu_device_set_firmware_size (FU_DEVICE (self), 0x40000);
 		return TRUE;
 	}
 	g_warning ("falling back to default size");
-	priv->size = 0x20000;
+	fu_device_set_firmware_size (FU_DEVICE (self), 0x20000);
 	return TRUE;
 }
 
