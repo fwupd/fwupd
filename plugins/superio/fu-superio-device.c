@@ -17,21 +17,6 @@
 
 #define FU_PLUGIN_SUPERIO_TIMEOUT	0.25 /* s */
 
-/* EC Status Register (see ec/google/chromeec/ec_commands.h) */
-#define SIO_STATUS_EC_OBF		(1 << 0)	/* o/p buffer full */
-#define SIO_STATUS_EC_IBF		(1 << 1)	/* i/p buffer full */
-#define SIO_STATUS_EC_IS_BUSY		(1 << 2)
-#define SIO_STATUS_EC_IS_CMD		(1 << 3)
-#define SIO_STATUS_EC_BURST_ENABLE	(1 << 4)
-#define SIO_STATUS_EC_SCI		(1 << 5)	/* 1 if more events in queue */
-
-/* EC Command Register (see KB3700-ds-01.pdf) */
-#define SIO_CMD_EC_READ			0x80
-#define SIO_CMD_EC_WRITE		0x81
-#define SIO_CMD_EC_BURST_ENABLE		0x82
-#define SIO_CMD_EC_BURST_DISABLE	0x83
-#define SIO_CMD_EC_QUERY_EVENT		0x84
-
 /* unknown source, IT87 only */
 #define SIO_CMD_EC_GET_NAME_STR		0x92
 #define SIO_CMD_EC_GET_VERSION_STR	0x93

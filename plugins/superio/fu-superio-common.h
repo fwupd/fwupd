@@ -44,6 +44,7 @@ G_BEGIN_DECLS
 #define SIO_SPI_CMD_64K_BLOCK_ERASE	0xd8
 #define SIO_SPI_CMD_CHIP_ERASE		0xc7 /* or 0x60 */
 #define SIO_SPI_CMD_PAGE_PROGRAM	0x02
+#define SIO_SPI_CMD_WRITE_WORD		0xad
 #define SIO_SPI_CMD_RDSR		0x05 /* read status register */
 #define SIO_SPI_CMD_WRSR		0x01 /* write status register */
 #define SIO_SPI_CMD_WREN		0x06 /* write enable */
@@ -52,6 +53,25 @@ G_BEGIN_DECLS
 #define SIO_SPI_CMD_JEDEC_ID		0x9f
 #define SIO_SPI_CMD_DPD			0xb9 /* deep sleep */
 #define SIO_SPI_CMD_RDPD		0xab /* wake from deep sleep */
+
+/* EC Status Register (see ec/google/chromeec/ec_commands.h) */
+#define SIO_STATUS_EC_OBF		(1 << 0)	/* o/p buffer full */
+#define SIO_STATUS_EC_IBF		(1 << 1)	/* i/p buffer full */
+#define SIO_STATUS_EC_IS_BUSY		(1 << 2)
+#define SIO_STATUS_EC_IS_CMD		(1 << 3)
+#define SIO_STATUS_EC_BURST_ENABLE	(1 << 4)
+#define SIO_STATUS_EC_SCI		(1 << 5)	/* 1 if more events in queue */
+
+/* EC Command Register (see KB3700-ds-01.pdf) */
+#define SIO_CMD_EC_READ			0x80
+#define SIO_CMD_EC_WRITE		0x81
+#define SIO_CMD_EC_BURST_ENABLE		0x82
+#define SIO_CMD_EC_BURST_DISABLE	0x83
+#define SIO_CMD_EC_QUERY_EVENT		0x84
+#define SIO_CMD_EC_GET_NAME_STR		0x92
+#define SIO_CMD_EC_GET_VERSION_STR	0x93
+#define SIO_CMD_EC_DISABLE_HOST_WA	0xdc
+#define SIO_CMD_EC_ENABLE_HOST_WA	0xfc
 
 typedef enum {
 	SIO_LDN_FDC			= 0x00,	/* IT87 */
