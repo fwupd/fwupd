@@ -362,6 +362,29 @@ fu_superio_device_setup (FuDevice *device, GError **error)
 	return TRUE;
 }
 
+static GBytes *
+fu_superio_device_prepare_firmware (FuDevice *device, GBytes *fw, GError **error)
+{
+	gsize sz = 0;
+	const guint8 *buf = g_bytes_get_data (fw, &sz);
+	const guint8 sig1[] = { 0xa5, 0xa5, 0xa5, 0xa5, 0xa5, 0xa5, 0xa5 };
+	const guint8 sig2[] = { 0x85, 0x12, 0x5a, 0x5a, 0xaa };
+
+	/* find signature -- maybe ignore byte 0x14 too? */
+	for (gsize off = 0; off < sz; off += 16) {
+		if (memcmp (&buf[off], sig1, sizeof(sig1)) == 0 &&
+		    memcmp (&buf[off + 8], sig2, sizeof(sig2)) == 0) {
+			g_debug ("found signature at 0x%04x", (guint) off);
+			return g_bytes_ref (fw);
+		}
+	}
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "did not detect signature in firmware image");
+	return NULL;
+}
+
 static gboolean
 fu_superio_device_close (FuDevice *device, GError **error)
 {
@@ -467,4 +490,5 @@ fu_superio_device_class_init (FuSuperioDeviceClass *klass)
 	klass_device->probe = fu_superio_device_probe;
 	klass_device->setup = fu_superio_device_setup;
 	klass_device->close = fu_superio_device_close;
+	klass_device->prepare_firmware = fu_superio_device_prepare_firmware;
 }
