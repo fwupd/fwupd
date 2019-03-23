@@ -9,10 +9,12 @@ SuperioChipsets=IT8587
 # Star LabTop Mk3
 [HwId=3dc52d2c-9e9b-5ba5-b10d-9ba1eb11dacc]
 SuperioChipsets=IT8987
+InstallDuration=20
 
 # Star Lite Mk2
 [HwId=d1a64840-4307-58fb-a62c-de28a07c0151]
 SuperioChipsets=IT8987
+InstallDuration=20
 
 [SuperIO=IT8510]
 Id=0x8510
