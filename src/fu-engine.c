@@ -1467,10 +1467,17 @@ fu_engine_install (FuEngine *self,
 			return FALSE;
 	}
 
-	/* schedule this for the next reboot if not in system-update.target */
+	/* schedule this for the next reboot if not in system-update.target,
+	 * but first check if allowed on battery power */
 	if ((self->app_flags & FU_APP_FLAGS_IS_OFFLINE) == 0 &&
-	    (flags & FWUPD_INSTALL_FLAG_OFFLINE) > 0)
+	    (flags & FWUPD_INSTALL_FLAG_OFFLINE) > 0) {
+		plugin = fu_plugin_list_find_by_name (self->plugin_list, "upower", NULL);
+		if (plugin != NULL) {
+			if (!fu_plugin_runner_update_prepare (plugin, flags, device, error))
+				return FALSE;
+		}
 		return fu_plugin_runner_schedule_update (plugin, device, blob_cab, error);
+	}
 
 	/* install firmware blob */
 	version_orig = g_strdup (fu_device_get_version (device));
