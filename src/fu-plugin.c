@@ -1397,6 +1397,7 @@ fu_plugin_runner_schedule_update (FuPlugin *self,
 	fwupd_release_set_filename (release_tmp, filename);
 
 	/* add to database */
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_PENDING);
 	if (!fu_history_add_device (history, device, release_tmp, error))
 		return FALSE;

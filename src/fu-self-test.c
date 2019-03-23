@@ -2074,6 +2074,9 @@ fu_plugin_module_func (void)
 	g_assert (ret);
 	g_assert_cmpint (cnt, ==, 1);
 
+	/* set on the current device */
+	g_assert_true (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT));
+
 	/* lets check the history */
 	history = fu_history_new ();
 	device2 = fu_history_get_device_by_id (history, fu_device_get_id (device), &error);
@@ -2081,6 +2084,7 @@ fu_plugin_module_func (void)
 	g_assert (device2 != NULL);
 	g_assert_cmpint (fu_device_get_update_state (device2), ==, FWUPD_UPDATE_STATE_PENDING);
 	g_assert_cmpstr (fu_device_get_update_error (device2), ==, NULL);
+	g_assert_true (fu_device_has_flag (device2, FWUPD_DEVICE_FLAG_NEEDS_REBOOT));
 	release = fu_device_get_release_default (device2);
 	g_assert (release != NULL);
 	g_assert_cmpstr (fwupd_release_get_filename (release), !=, NULL);

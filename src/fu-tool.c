@@ -543,6 +543,12 @@ fu_util_update_device_changed_cb (FwupdClient *client,
 {
 	g_autofree gchar *str = NULL;
 
+	/* allowed to set whenever the device has changed */
+	if (fwupd_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN))
+		priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN;
+	if (fwupd_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
+		priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
+
 	/* same as last time, so ignore */
 	if (priv->current_device != NULL &&
 	    fwupd_device_compare (priv->current_device, device) == 0)
@@ -563,11 +569,6 @@ fu_util_update_device_changed_cb (FwupdClient *client,
 		g_warning ("no FuUtilOperation set");
 	}
 	g_set_object (&priv->current_device, device);
-
-	if (fwupd_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN))
-		priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN;
-	else if (fwupd_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
-		priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
 
 	if (priv->current_message == NULL) {
 		const gchar *tmp = fwupd_device_get_update_message (priv->current_device);
