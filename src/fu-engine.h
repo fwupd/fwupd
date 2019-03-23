@@ -25,7 +25,6 @@ G_DECLARE_FINAL_TYPE (FuEngine, fu_engine, FU, ENGINE, GObject)
 typedef enum {
 	FU_ENGINE_LOAD_FLAG_NONE		= 0,
 	FU_ENGINE_LOAD_FLAG_READONLY_FS		= 1 << 0,
-	FU_ENGINE_LOAD_FLAG_IS_OFFLINE		= 1 << 1,
 	FU_ENGINE_LOAD_FLAG_LAST
 } FuEngineLoadFlags;
 

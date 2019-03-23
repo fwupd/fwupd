@@ -1371,7 +1371,7 @@ fu_main_on_bus_acquired_cb (GDBusConnection *connection,
 
 	/* are we running in the offline target */
 	if (fu_main_is_running_offline_update (priv))
-		fu_engine_add_app_flag (priv->engine, FU_ENGINE_LOAD_FLAG_IS_OFFLINE);
+		fu_engine_add_app_flag (priv->engine, FU_APP_FLAGS_IS_OFFLINE);
 
 	/* connect to D-Bus directly */
 	priv->proxy_uid =

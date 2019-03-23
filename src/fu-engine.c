@@ -1468,7 +1468,7 @@ fu_engine_install (FuEngine *self,
 	}
 
 	/* schedule this for the next reboot if not in system-update.target */
-	if ((self->app_flags & FU_ENGINE_LOAD_FLAG_IS_OFFLINE) == 0 &&
+	if ((self->app_flags & FU_APP_FLAGS_IS_OFFLINE) == 0 &&
 	    (flags & FWUPD_INSTALL_FLAG_OFFLINE) > 0)
 		return fu_plugin_runner_schedule_update (plugin, device, blob_cab, error);
 
