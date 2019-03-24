@@ -1535,6 +1535,9 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_print (_("%s has firmware updates:"), fwupd_device_get_name (dev));
 		g_print ("\n");
 
+		/* TRANSLATORS: ID for hardware, typically a SHA1 sum */
+		fu_util_print_data (_("Device ID"), fwupd_device_get_id (dev));
+
 		/* TRANSLATORS: a GUID for the hardware */
 		guids = fwupd_device_get_guids (dev);
 		for (guint j = 0; j < guids->len; j++) {
