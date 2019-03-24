@@ -202,6 +202,7 @@ main (int argc, char *argv[])
 					   fwupd_device_get_id (dev),
 					   fwupd_release_get_filename (rel),
 					   FWUPD_INSTALL_FLAG_ALLOW_REINSTALL |
+					   FWUPD_INSTALL_FLAG_ALLOW_OLDER |
 					   FWUPD_INSTALL_FLAG_OFFLINE,
 					   NULL,
 					   &error)) {
