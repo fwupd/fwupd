@@ -1794,6 +1794,9 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 				    fwupd_checksum_get_best (checksums),
 				    error))
 		return FALSE;
+	/* if the device specifies ONLY_OFFLINE automatically set this flag */
+	if (fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_ONLY_OFFLINE))
+		priv->flags |= FWUPD_INSTALL_FLAG_OFFLINE;
 	return fwupd_client_install (priv->client,
 				     fwupd_device_get_id (dev), fn,
 				     priv->flags, NULL, error);
