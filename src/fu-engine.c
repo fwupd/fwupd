@@ -2747,6 +2747,7 @@ fu_engine_add_releases_for_device_component (FuEngine *self,
 	g_autoptr(GPtrArray) releases_tmp = NULL;
 
 	if (!fu_engine_check_requirements (self, task,
+					   FWUPD_INSTALL_FLAG_OFFLINE |
 					   FWUPD_INSTALL_FLAG_ALLOW_REINSTALL |
 					   FWUPD_INSTALL_FLAG_ALLOW_OLDER,
 					   error))
