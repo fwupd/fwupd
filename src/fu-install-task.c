@@ -172,6 +172,7 @@ fu_install_task_check_requirements (FuInstallTask *self,
 
 	/* called with online update, test if device is supposed to allow this */
 	if ((flags & FWUPD_INSTALL_FLAG_OFFLINE) == 0 &&
+	    (flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
 	    fu_device_has_flag (self->device, FWUPD_DEVICE_FLAG_ONLY_OFFLINE)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
