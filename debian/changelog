@@ -1,4 +1,4 @@
-fwupd (1.2.5-2) UNRELEASED; urgency=medium
+fwupd (1.2.5-2) unstable; urgency=medium
 
   * debian/gen_signing_json: Update the format of the json metadata to
     match new requirements:
@@ -6,7 +6,7 @@ fwupd (1.2.5-2) UNRELEASED; urgency=medium
     + Add an empty "trusted_certs" key - our binaries do not do any
       further verification with an embedded key.
 
- -- Steve McIntyre <93sam@debian.org>  Fri, 08 Mar 2019 23:36:13 +0000
+ -- Steve McIntyre <93sam@debian.org>  Mon, 25 Mar 2019 00:32:07 +0000
 
 fwupd (1.2.5-1) unstable; urgency=medium
 
