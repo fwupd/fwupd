@@ -395,7 +395,6 @@ if get_option('tests')
       '-DTESTDATADIR="' + testdatadir_src + ':' + testdatadir_dst + '"',
       '-DPLUGINBUILDDIR="' + pluginbuilddir + '"',
       '-DFU_OFFLINE_DESTDIR="/tmp/fwupd-self-test"',
-      '-DFU_MUTEX_DEBUG',
     ],
   )
   test('fu-self-test', e, is_parallel:false, timeout:180)
