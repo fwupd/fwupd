@@ -3544,7 +3544,8 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/engine{device-unlock}", fu_engine_device_unlock_func);
 	g_test_add_func ("/fwupd/engine{history-success}", fu_engine_history_func);
 	g_test_add_func ("/fwupd/engine{history-error}", fu_engine_history_error_func);
-	g_test_add_func ("/fwupd/device-list{replug-auto}", fu_device_list_replug_auto_func);
+	if (g_test_slow ())
+		g_test_add_func ("/fwupd/device-list{replug-auto}", fu_device_list_replug_auto_func);
 	g_test_add_func ("/fwupd/device-list{replug-user}", fu_device_list_replug_user_func);
 	g_test_add_func ("/fwupd/engine{require-hwid}", fu_engine_require_hwid_func);
 	g_test_add_func ("/fwupd/engine{history-inherit}", fu_engine_history_inherit);
