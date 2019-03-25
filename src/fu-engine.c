@@ -1450,6 +1450,18 @@ fu_engine_install (FuEngine *self,
 	if (plugin == NULL)
 		return FALSE;
 
+	/* schedule this for the next reboot if not in system-update.target,
+	 * but first check if allowed on battery power */
+	if ((self->app_flags & FU_APP_FLAGS_IS_OFFLINE) == 0 &&
+	    (flags & FWUPD_INSTALL_FLAG_OFFLINE) > 0) {
+		plugin = fu_plugin_list_find_by_name (self->plugin_list, "upower", NULL);
+		if (plugin != NULL) {
+			if (!fu_plugin_runner_update_prepare (plugin, flags, device, error))
+				return FALSE;
+		}
+		return fu_plugin_runner_schedule_update (plugin, device, blob_cab, error);
+	}
+
 	/* add device to database */
 	version_rel = fu_engine_get_release_version (self, component, rel);
 	if ((flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0) {
@@ -1466,18 +1478,6 @@ fu_engine_install (FuEngine *self,
 		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
 		if (!fu_history_add_device (self->history, device, release_tmp, error))
 			return FALSE;
-	}
-
-	/* schedule this for the next reboot if not in system-update.target,
-	 * but first check if allowed on battery power */
-	if ((self->app_flags & FU_APP_FLAGS_IS_OFFLINE) == 0 &&
-	    (flags & FWUPD_INSTALL_FLAG_OFFLINE) > 0) {
-		plugin = fu_plugin_list_find_by_name (self->plugin_list, "upower", NULL);
-		if (plugin != NULL) {
-			if (!fu_plugin_runner_update_prepare (plugin, flags, device, error))
-				return FALSE;
-		}
-		return fu_plugin_runner_schedule_update (plugin, device, blob_cab, error);
 	}
 
 	/* install firmware blob */
