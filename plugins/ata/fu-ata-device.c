@@ -37,6 +37,7 @@ struct ata_tf {
 
 #define ATA_OP_IDENTIFY			0xec
 #define ATA_OP_DOWNLOAD_MICROCODE	0x92
+#define ATA_OP_STANDBY_IMMEDIATE	0xe0
 
 #define ATA_SUBCMD_MICROCODE_OBSOLETE			0x01
 #define ATA_SUBCMD_MICROCODE_DOWNLOAD_CHUNKS_ACTIVATE	0x03
@@ -472,7 +473,17 @@ fu_ata_device_activate (FuDevice *device, GError **error)
 	FuAtaDevice *self = FU_ATA_DEVICE (device);
 	struct ata_tf tf = { 0x0 };
 
+	/* flush caches and make sure drive is ready to activate */
 	tf.dev = 0xa0 | ATA_USING_LBA;
+	tf.command = ATA_OP_STANDBY_IMMEDIATE;
+	if (!fu_ata_device_command (self, &tf, SG_DXFER_TO_DEV,
+				    120 * 1000, /* a long time! */
+				    NULL, 0, error)) {
+		g_prefix_error (error, "failed to standby immediate: ");
+		return FALSE;
+	}
+
+	/* load the new firmware */
 	tf.command = ATA_OP_DOWNLOAD_MICROCODE;
 	tf.feat = ATA_SUBCMD_MICROCODE_ACTIVATE;
 	if (!fu_ata_device_command (self, &tf, SG_DXFER_TO_DEV,
