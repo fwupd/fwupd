@@ -1439,11 +1439,8 @@ fu_engine_install (FuEngine *self,
 		tmp = xb_node_query_text (component,
 					  "releases/release/checksum[@target='container']",
 					  NULL);
-		if (tmp != NULL) {
-			fwupd_release_add_metadata_item (release_history,
-							 "DistroId", tmp);
-		}
-		fwupd_release_add_checksum (release_history, tmp);
+		if (tmp != NULL)
+			fwupd_release_add_checksum (release_history, tmp);
 		fwupd_release_set_version (release_history, version_rel);
 		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
 
