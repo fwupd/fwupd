@@ -1343,16 +1343,15 @@ fu_plugin_runner_device_register (FuPlugin *self, FuDevice *device)
 gboolean
 fu_plugin_runner_schedule_update (FuPlugin *self,
 			     FuDevice *device,
+			     FwupdRelease *release,
 			     GBytes *blob_cab,
 			     GError **error)
 {
-	FwupdRelease *release;
 	gchar tmpname[] = {"XXXXXX.cap"};
 	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuDevice) res_tmp = NULL;
 	g_autoptr(FuHistory) history = NULL;
-	g_autoptr(FwupdRelease) release_tmp = fwupd_release_new ();
 	g_autoptr(GFile) file = NULL;
 
 	/* id already exists */
@@ -1392,14 +1391,12 @@ fu_plugin_runner_schedule_update (FuPlugin *self,
 	/* schedule for next boot */
 	g_debug ("schedule %s to be installed to %s on next boot",
 		 filename, fu_device_get_id (device));
-	release = fu_device_get_release_default (device);
-	fwupd_release_set_version (release_tmp, fwupd_release_get_version (release));
-	fwupd_release_set_filename (release_tmp, filename);
+	fwupd_release_set_filename (release, filename);
 
 	/* add to database */
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_PENDING);
-	if (!fu_history_add_device (history, device, release_tmp, error))
+	if (!fu_history_add_device (history, device, release, error))
 		return FALSE;
 
 	/* next boot we run offline */

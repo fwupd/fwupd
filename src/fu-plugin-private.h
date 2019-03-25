@@ -113,6 +113,7 @@ gboolean	 fu_plugin_runner_get_results		(FuPlugin	*self,
 							 GError		**error);
 gboolean	 fu_plugin_runner_schedule_update	(FuPlugin	*self,
 							 FuDevice	*device,
+							 FwupdRelease	*release,
 							 GBytes		*blob_cab,
 							 GError		**error);
 gint		 fu_plugin_name_compare			(FuPlugin	*plugin1,
