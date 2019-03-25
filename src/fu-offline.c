@@ -16,51 +16,95 @@
 #include "fu-plugin-private.h"
 #include "fu-util-common.h"
 
+typedef enum {
+	FU_OFFLINE_FLAG_NONE		= 0,
+	FU_OFFLINE_FLAG_ENABLE		= 1 << 0,
+	FU_OFFLINE_FLAG_USE_PROGRESS	= 1 << 1,
+} FuOfflineFlag;
+
 struct FuUtilPrivate {
 	gchar		*splash_cmd;
 	GTimer		*splash_timer;
+	FuOfflineFlag	 splash_flags;
 };
 
 static gboolean
 fu_offline_set_splash_progress (FuUtilPrivate *priv, guint percentage, GError **error)
 {
-	g_autofree gchar *msg = NULL;
-	g_autofree gchar *str = NULL;
-	g_autoptr(GSubprocess) subprocess = NULL;
+	g_autofree gchar *str = g_strdup_printf ("%u", percentage);
+	const gchar *argv[] = { priv->splash_cmd, "system-update", "--progress", str, NULL };
 
 	/* call into plymouth if installed */
-	if (priv->splash_cmd == NULL)
+	if (priv->splash_flags == FU_OFFLINE_FLAG_NONE) {
+		/* TRANSLATORS: console message when not using plymouth */
+		g_printerr ("%s: %u%%\n", _("Percentage complete"), percentage);
 		return TRUE;
+	}
 
-	/* TRANSLATORS: this is the message we send plymouth to advise
-	 * of the new percentage completion when installing firmware */
-	msg = g_strdup_printf ("%s - %u%%", _("Installing Firmware"), percentage);
-	str = g_strdup_printf ("%u", percentage);
-	subprocess = g_subprocess_new (G_SUBPROCESS_FLAGS_NONE, error,
-				       priv->splash_cmd, "update",
-				       "--status", msg,
-				       "--progress", str, NULL);
-	if (subprocess == NULL)
-		return FALSE;
-	return g_subprocess_wait (subprocess, NULL, error);
+	/* fall back to really old mode that should be supported by anything */
+	if ((priv->splash_flags & FU_OFFLINE_FLAG_USE_PROGRESS) == 0) {
+		argv[1] = "display-message";
+		argv[2] = "--text";
+	}
+	return fu_common_spawn_sync (argv, NULL, NULL, 200, NULL, error);
 }
 
 static gboolean
-fu_offline_set_splash_mode (FuUtilPrivate *priv, const gchar *mode, GError **error)
+fu_offline_set_splash_mode (FuUtilPrivate *priv, GError **error)
 {
-	g_autofree gchar *mode_str = NULL;
-	g_autoptr(GSubprocess) subprocess = NULL;
+	g_autoptr(GError) error_local = NULL;
+	const gchar *argv[] = { priv->splash_cmd, "change-mode", "--system-upgrade", NULL };
 
 	/* call into plymouth if installed */
-	if (priv->splash_cmd == NULL)
+	if (priv->splash_cmd == NULL) {
+		/* TRANSLATORS: console message when no Plymouth is installed */
+		g_printerr ("%s\n", _("Installing Firmware…"));
 		return TRUE;
-	mode_str = g_strdup_printf ("--%s", mode);
-	subprocess = g_subprocess_new (G_SUBPROCESS_FLAGS_NONE, error,
-				       priv->splash_cmd,
-				       "change-mode", mode_str, NULL);
-	if (subprocess == NULL)
-		return FALSE;
-	return g_subprocess_wait (subprocess, NULL, error);
+	}
+
+	/* try the new fancy mode, then fall back to really old mode */
+	if (!fu_common_spawn_sync (argv, NULL, NULL, 1500, NULL, &error_local)) {
+		argv[2] = "--updates";
+		if (!fu_common_spawn_sync (argv, NULL, NULL, 1500, NULL, error)) {
+			g_prefix_error (error, "%s: ", error_local->message);
+			return FALSE;
+		}
+		priv->splash_flags = FU_OFFLINE_FLAG_ENABLE;
+		return TRUE;
+	}
+
+	/* success */
+	priv->splash_flags = FU_OFFLINE_FLAG_USE_PROGRESS;
+	priv->splash_flags = FU_OFFLINE_FLAG_ENABLE;
+	return TRUE;
+}
+
+static gboolean
+fu_offline_set_splash_reboot (FuUtilPrivate *priv, GError **error)
+{
+	g_autoptr(GError) error_local = NULL;
+	const gchar *argv[] = { priv->splash_cmd, "change-mode", "--reboot", NULL };
+
+	/* call into plymouth if installed */
+	if (priv->splash_flags == FU_OFFLINE_FLAG_NONE) {
+		/* TRANSLATORS: console message when not using plymouth */
+		g_printerr ("%s\n", _("Rebooting…"));
+		return TRUE;
+	}
+
+	/* try the new fancy mode, then fall back to really old mode */
+	if (!fu_common_spawn_sync (argv, NULL, NULL, 200, NULL, &error_local)) {
+		/* fall back to really old mode that should be supported */
+		argv[2] = "--shutdown";
+		if (!fu_common_spawn_sync (argv, NULL, NULL, 200, NULL, error)) {
+			g_prefix_error (error, "%s: ", error_local->message);
+			return FALSE;
+		}
+		return TRUE;
+	}
+
+	/* success */
+	return TRUE;
 }
 
 static void
@@ -155,7 +199,7 @@ main (int argc, char *argv[])
 	}
 
 	/* set up splash */
-	if (!fu_offline_set_splash_mode (priv, "updates", &error)) {
+	if (!fu_offline_set_splash_mode (priv, &error)) {
 		/* TRANSLATORS: we could not talk to plymouth */
 		g_printerr ("%s: %s\n", _("Failed to set splash mode"),
 			    error->message);
@@ -222,7 +266,7 @@ main (int argc, char *argv[])
 	}
 
 	/* reboot */
-	fu_offline_set_splash_mode (priv, "reboot", NULL);
+	fu_offline_set_splash_reboot (priv, NULL);
 	if (!fu_util_update_reboot (&error)) {
 		/* TRANSLATORS: we could not reboot for some reason */
 		g_printerr ("%s: %s\n", _("Failed to reboot"), error->message);
