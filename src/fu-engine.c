@@ -1452,18 +1452,24 @@ fu_engine_install (FuEngine *self,
 
 	/* schedule this for the next reboot if not in system-update.target,
 	 * but first check if allowed on battery power */
+	version_rel = fu_engine_get_release_version (self, component, rel);
 	if ((self->app_flags & FU_APP_FLAGS_IS_OFFLINE) == 0 &&
 	    (flags & FWUPD_INSTALL_FLAG_OFFLINE) > 0) {
+		g_autoptr(FwupdRelease) release_tmp = NULL;
 		plugin = fu_plugin_list_find_by_name (self->plugin_list, "upower", NULL);
 		if (plugin != NULL) {
 			if (!fu_plugin_runner_update_prepare (plugin, flags, device, error))
 				return FALSE;
 		}
-		return fu_plugin_runner_schedule_update (plugin, device, blob_cab, error);
+		release_tmp = fu_engine_create_release_metadata (self, plugin, error);
+		if (release_tmp == NULL)
+			return FALSE;
+		fwupd_release_set_version (release_tmp, version_rel);
+		return fu_plugin_runner_schedule_update (plugin, device, release_tmp,
+							 blob_cab, error);
 	}
 
 	/* add device to database */
-	version_rel = fu_engine_get_release_version (self, component, rel);
 	if ((flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0) {
 		g_autoptr(FwupdRelease) release_tmp = NULL;
 		release_tmp = fu_engine_create_release_metadata (self, plugin, error);
