@@ -281,6 +281,7 @@ msgstr "Kontrollera inte ej rapporterad historik"
 msgid "Do not write to the history database"
 msgstr "Skriv inte till historikdatabasen"
 
+#. success
 msgid "Done!"
 msgstr "Klar!"
 
@@ -495,10 +496,6 @@ msgstr "Installera en fast programvarufil på denna hårdvara"
 
 msgid "Install old version of system firmware"
 msgstr "Installera en gammal version av fast programvara för systemet"
-
-#. TRANSLATORS: command description
-msgid "Install prepared updates now"
-msgstr "Installera förberedda uppdateringar nu"
 
 msgid "Install signed device firmware"
 msgstr "Installera signerad fast programvara för enhet"

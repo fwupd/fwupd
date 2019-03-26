@@ -28,6 +28,7 @@ msgstr "फर्मवेयर अपडेट के लिए प्रम�
 msgid "Debugging Options"
 msgstr "डिबगिंग के विकल्प "
 
+#. success
 msgid "Done!"
 msgstr "हो गया !"
 
@@ -65,10 +66,6 @@ msgstr "फर्मवेयर फाइल की अधिक जानक�
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "फर्मवेयर फाइल को इस हार्डवेयर पर स्थापित करें "
-
-#. TRANSLATORS: command description
-msgid "Install prepared updates now"
-msgstr "तैयार अपडेट अभी स्थापित करें "
 
 #. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded

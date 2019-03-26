@@ -248,6 +248,7 @@ msgstr "不要檢查是否有尚未報告的歷史"
 msgid "Do not write to the history database"
 msgstr "不要寫入歷史資料庫中"
 
+#. success
 msgid "Done!"
 msgstr "完成！"
 
@@ -453,10 +454,6 @@ msgstr "在此硬體安裝韌體檔案"
 
 msgid "Install old version of system firmware"
 msgstr "安裝舊版本的系統韌體"
-
-#. TRANSLATORS: command description
-msgid "Install prepared updates now"
-msgstr "立刻安裝準備的更新"
 
 msgid "Install signed device firmware"
 msgstr "安裝已簽署的裝置韌體"

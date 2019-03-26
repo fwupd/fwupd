@@ -227,6 +227,7 @@ msgstr "Nicht auf nicht erfassten Verlauf prüfen"
 msgid "Do not write to the history database"
 msgstr "Nicht in die Verlaufsdatenbank schreiben"
 
+#. success
 msgid "Done!"
 msgstr "Fertig."
 
@@ -417,10 +418,6 @@ msgstr "Eine Firmware-Datei auf dieser Hardware installieren"
 
 msgid "Install old version of system firmware"
 msgstr "Alte Version der System-Firmware installieren"
-
-#. TRANSLATORS: command description
-msgid "Install prepared updates now"
-msgstr "Vorbereitete Aktualisierungen jetzt installieren"
 
 msgid "Install signed device firmware"
 msgstr "Signierte Geräte-Firmware installieren"

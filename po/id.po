@@ -207,6 +207,7 @@ msgstr "Jangan periksa untuk boot ulang setelah pembaruan"
 msgid "Do not check for unreported history"
 msgstr "Jangan periksa untuk riwayat yang tak dilaporkan"
 
+#. success
 msgid "Done!"
 msgstr "Selesai!"
 
@@ -364,10 +365,6 @@ msgstr "Pasang suatu berkas firmware pada perangkat keras ini"
 
 msgid "Install old version of system firmware"
 msgstr "Pasang versi lama dari firmware sistem"
-
-#. TRANSLATORS: command description
-msgid "Install prepared updates now"
-msgstr "Pasang pemutakhiran yang disiapkan sekarang"
 
 msgid "Install signed device firmware"
 msgstr "Pasang firmware perangkat yang ditandatangani"

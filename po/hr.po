@@ -213,6 +213,7 @@ msgstr "Ne provjeravaj za ponovno pokretanje nakon nadopune"
 msgid "Do not check for unreported history"
 msgstr "Ne provjeravaj neprijavljenu povijest"
 
+#. success
 msgid "Done!"
 msgstr "Završeno!"
 
@@ -372,10 +373,6 @@ msgstr "Instaliraj datoteku frimvera na ovaj uređaj"
 
 msgid "Install old version of system firmware"
 msgstr "Instaliraj stariju inačicu frimvera sustava"
-
-#. TRANSLATORS: command description
-msgid "Install prepared updates now"
-msgstr "Instaliraj pripremljene uređaje odmah"
 
 msgid "Install signed device firmware"
 msgstr "Instaliraj frimver potpisan uređajem"

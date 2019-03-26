@@ -32,6 +32,34 @@
     <binary>fwupdmgr</binary>
   </provides>
   <releases>
+    <release version="1.2.6" date="2019-03-26">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add a plugin to support modem hardware</li>
+          <li>Add support for delayed activation of docks and ATA devices</li>
+          <li>Add support for reading the SuperIO device checksum and writing to e-flash</li>
+          <li>Add the fwupdagent binary for use in shell scripts</li>
+          <li>Allow restricting firmware updates for enterprise use</li>
+          <li>Allow signing the fwupd report with a client certificate</li>
+          <li>Use Plymouth when updating offline firmware</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Allow forcing an offline-only update on a live system using --force</li>
+          <li>Allow running offline updates when in system-update.target</li>
+          <li>Ask to reboot after scheduling an offline firmware update</li>
+          <li>Correctly check the new version for devices that replug</li>
+          <li>Do not fail to start the daemon if tpm2_pcrlist hangs</li>
+          <li>Do not fail when scheduling more than one update to be run offline</li>
+          <li>Do not let failing to find DBus prevent fwuptool from starting</li>
+          <li>Do not schedule an update on battery power if it requires AC power</li>
+          <li>Include all device checksums in the LVFS report</li>
+          <li>Rename the shimx64.efi binary for known broken firmware</li>
+          <li>Upload the UPDATE_INFO entry for the UEFI UX capsule</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.2.5" date="2019-02-25">
       <description>
         <p>This release adds the following features:</p>

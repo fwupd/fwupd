@@ -28,6 +28,7 @@ msgstr "Une authentification est nécessaire pour mettre à jour le micrologicie
 msgid "Debugging Options"
 msgstr "Options de débogage"
 
+#. success
 msgid "Done!"
 msgstr "Terminé !"
 
@@ -65,10 +66,6 @@ msgstr "Obtenir les détails d'un fichier de micrologiciel"
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Installer un fichier de micrologiciel sur ce matériel"
-
-#. TRANSLATORS: command description
-msgid "Install prepared updates now"
-msgstr "Installer immédiatement les mises à jour préparées"
 
 #. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded

@@ -282,6 +282,7 @@ msgstr "No comprovar si hi ha un historial sense informar"
 msgid "Do not write to the history database"
 msgstr "No escriure a la base de dades de l'historial"
 
+#. success
 msgid "Done!"
 msgstr "Fet!"
 
@@ -496,10 +497,6 @@ msgstr "Instal·la un fitxer de microprogramari en aquest maquinari"
 
 msgid "Install old version of system firmware"
 msgstr "Instal·la la versió antiga del microprogramari per al sistema"
-
-#. TRANSLATORS: command description
-msgid "Install prepared updates now"
-msgstr "Instal·la ara les actualitzacions preparades"
 
 msgid "Install signed device firmware"
 msgstr "Instal·la microprogramari signat per al dispositiu"
@@ -721,6 +718,14 @@ msgstr "S'està reiniciant el dispositiu..."
 #. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
 msgstr "Retorna tots els ID del maquinari de la màquina"
+
+#. TRANSLATORS: command line option
+msgid "Run the plugin composite cleanup routine when using install-blob"
+msgstr "Executa la rutina de neteja de la composició del connector en usar install-blob"
+
+#. TRANSLATORS: command line option
+msgid "Run the plugin composite prepare routine when using install-blob"
+msgstr "Executa la rutina de preparació de la composició del connector en usar install-blob"
 
 msgid "Runtime"
 msgstr "Temps d'execució"

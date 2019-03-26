@@ -155,6 +155,7 @@ msgstr "Laite poistettu:"
 msgid "Display version"
 msgstr "Näytä versio"
 
+#. success
 msgid "Done!"
 msgstr "Valmis!"
 

@@ -180,6 +180,7 @@ msgstr "Dispositîfs che a son stâts inzornâts cun sucès:"
 msgid "Devices that were not updated correctly:"
 msgstr "Dispositîfs che no son stâts inzornâts ben:"
 
+#. success
 msgid "Done!"
 msgstr "Fat!"
 
@@ -318,10 +319,6 @@ msgstr "Instale un file firmware su chest hardware"
 
 msgid "Install old version of system firmware"
 msgstr "Instale une version vecje dal firmware di sisteme"
-
-#. TRANSLATORS: command description
-msgid "Install prepared updates now"
-msgstr "Instale inzornaments preparâts cumò"
 
 msgid "Install signed device firmware"
 msgstr "Instasle firmware di dispositîf firmât"

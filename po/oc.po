@@ -55,6 +55,7 @@ msgstr "Opcions de desbugatge"
 msgid "Description"
 msgstr "Descripcion"
 
+#. success
 msgid "Done!"
 msgstr "Acabat !"
 
@@ -103,10 +104,6 @@ msgstr "ID"
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Installar un fichièr de micrologicial sus aqueste material"
-
-#. TRANSLATORS: command description
-msgid "Install prepared updates now"
-msgstr "Installar immediatament las mesas a jorn preparadas"
 
 msgid "Mode"
 msgstr "Mòde"
