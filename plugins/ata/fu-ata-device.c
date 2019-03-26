@@ -474,9 +474,9 @@ fu_ata_device_activate (FuDevice *device, GError **error)
 	struct ata_tf tf = { 0x0 };
 
 	/* flush caches and make sure drive is ready to activate */
-	tf.dev = 0xa0 | ATA_USING_LBA;
+	tf.dev = ATA_USING_LBA;
 	tf.command = ATA_OP_STANDBY_IMMEDIATE;
-	if (!fu_ata_device_command (self, &tf, SG_DXFER_TO_DEV,
+	if (!fu_ata_device_command (self, &tf, SG_DXFER_NONE,
 				    120 * 1000, /* a long time! */
 				    NULL, 0, error)) {
 		g_prefix_error (error, "failed to standby immediate: ");
@@ -484,9 +484,10 @@ fu_ata_device_activate (FuDevice *device, GError **error)
 	}
 
 	/* load the new firmware */
+	tf.dev = 0x0a | ATA_USING_LBA;
 	tf.command = ATA_OP_DOWNLOAD_MICROCODE;
 	tf.feat = ATA_SUBCMD_MICROCODE_ACTIVATE;
-	if (!fu_ata_device_command (self, &tf, SG_DXFER_TO_DEV,
+	if (!fu_ata_device_command (self, &tf, SG_DXFER_NONE,
 				    120 * 1000, /* a long time! */
 				    NULL, 0, error)) {
 		g_prefix_error (error, "failed to activate firmware: ");
