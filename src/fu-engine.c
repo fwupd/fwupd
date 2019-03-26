@@ -3480,8 +3480,8 @@ fu_engine_device_inherit_history (FuEngine *self, FuDevice *device)
 	 * we can't just check for version_new=version to allow for re-installs */
 	if (fu_device_has_flag (device_history, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
 		FwupdRelease *release = fu_device_get_release_default (device_history);
-		if (g_strcmp0 (fu_device_get_version (device),
-			       fwupd_release_get_version (release)) != 0) {
+		if (fu_common_vercmp (fu_device_get_version (device),
+				      fwupd_release_get_version (release)) != 0) {
 			g_debug ("inheriting needs-activation for %s as version %s != %s",
 				 fu_device_get_name (device),
 				 fu_device_get_version (device),
@@ -4123,8 +4123,8 @@ fu_engine_update_history_device (FuEngine *self, FuDevice *dev_history, GError *
 	}
 
 	/* the system is running with the new firmware version */
-	if (g_strcmp0 (fu_device_get_version (dev),
-		       fwupd_release_get_version (rel_history)) == 0) {
+	if (fu_common_vercmp (fu_device_get_version (dev),
+			      fwupd_release_get_version (rel_history)) == 0) {
 		GPtrArray *checksums;
 		g_debug ("installed version %s matching history %s",
 			 fu_device_get_version (dev),
