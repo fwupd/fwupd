@@ -3,7 +3,8 @@ Upstream-Name: fwupd
 Source: https://github.com/hughsie/fwupd
 
 Files: *
-Copyright: Christian J. Kellner <christian@kellner.me>
+Copyright: Aleksander Morgado <aleksander@aleksander.es>
+	   Christian J. Kellner <christian@kellner.me>
 	   Dell Inc.
 	   Dell, Inc.
 	   Google, Inc.
