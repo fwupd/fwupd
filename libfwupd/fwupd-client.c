@@ -644,6 +644,55 @@ fwupd_client_proxy_call_cb (GObject *source, GAsyncResult *res, gpointer user_da
 }
 
 /**
+ * fwupd_client_activate:
+ * @client: A #FwupdClient
+ * @cancellable: the #GCancellable, or %NULL
+ * @device_id: a device
+ * @error: the #GError, or %NULL
+ *
+ * Activates up a device, which normally means the device switches to a new
+ * firmware verson. This should only be called when data loss cannot occur.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.2.6
+ **/
+gboolean
+fwupd_client_activate (FwupdClient *client, GCancellable *cancellable,
+		       const gchar *device_id, GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_autoptr(FwupdClientHelper) helper = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (device_id != NULL, FALSE);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* connect */
+	if (!fwupd_client_connect (client, cancellable, error))
+		return FALSE;
+
+	/* call into daemon */
+	helper = fwupd_client_helper_new ();
+	g_dbus_proxy_call (priv->proxy,
+			   "Activate",
+			   g_variant_new ("(s)", device_id),
+			   G_DBUS_CALL_FLAGS_NONE,
+			   -1,
+			   cancellable,
+			   fwupd_client_proxy_call_cb,
+			   helper);
+	g_main_loop_run (helper->loop);
+	if (!helper->ret) {
+		g_propagate_error (error, helper->error);
+		helper->error = NULL;
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/**
  * fwupd_client_verify:
  * @client: A #FwupdClient
  * @device_id: the device ID
@@ -945,7 +994,7 @@ fwupd_client_install (FwupdClient *client,
 		return FALSE;
 
 	/* set options */
-	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
+	g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
 	g_variant_builder_add (&builder, "{sv}",
 			       "reason", g_variant_new_string ("user-action"));
 	g_variant_builder_add (&builder, "{sv}",
@@ -1313,6 +1362,160 @@ fwupd_client_get_remotes (FwupdClient *client, GCancellable *cancellable, GError
 		return NULL;
 	}
 	return fwupd_client_parse_remotes_from_data (val);
+}
+
+/**
+ * fwupd_client_get_approved_firmware:
+ * @client: A #FwupdClient
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Gets the list of approved firmware.
+ *
+ * Returns: (transfer full): list of remotes, or %NULL
+ *
+ * Since: 1.2.6
+ **/
+gchar **
+fwupd_client_get_approved_firmware (FwupdClient *client,
+				    GCancellable *cancellable,
+				    GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_autoptr(GVariant) val = NULL;
+	gchar **retval = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* connect */
+	if (!fwupd_client_connect (client, cancellable, error))
+		return NULL;
+
+	/* call into daemon */
+	val = g_dbus_proxy_call_sync (priv->proxy,
+				      "GetApprovedFirmware",
+				      NULL,
+				      G_DBUS_CALL_FLAGS_NONE,
+				      -1,
+				      cancellable,
+				      error);
+	if (val == NULL) {
+		if (error != NULL)
+			fwupd_client_fixup_dbus_error (*error);
+		return NULL;
+	}
+	g_variant_get (val, "(^as)", &retval);
+	return retval;
+}
+
+/**
+ * fwupd_client_set_approved_firmware:
+ * @client: A #FwupdClient
+ * @checksums: Array of checksums
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Sets the list of approved firmware.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.2.6
+ **/
+gboolean
+fwupd_client_set_approved_firmware (FwupdClient *client,
+				    gchar **checksums,
+				    GCancellable *cancellable,
+				    GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_autoptr(GVariant) val = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* connect */
+	if (!fwupd_client_connect (client, cancellable, error))
+		return FALSE;
+
+	/* call into daemon */
+	val = g_dbus_proxy_call_sync (priv->proxy,
+				      "SetApprovedFirmware",
+				      g_variant_new ("(^as)", checksums),
+				      G_DBUS_CALL_FLAGS_NONE,
+				      -1,
+				      cancellable,
+				      error);
+	if (val == NULL) {
+		if (error != NULL)
+			fwupd_client_fixup_dbus_error (*error);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/**
+ * fwupd_client_self_sign:
+ * @client: A #FwupdClient
+ * @value: A string to sign, typically a JSON blob
+ * @flags: #FwupdSelfSignFlags, e.g. %FWUPD_SELF_SIGN_FLAG_ADD_TIMESTAMP
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Signs the data using the client self-signed certificate.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.2.6
+ **/
+gchar *
+fwupd_client_self_sign (FwupdClient *client,
+			const gchar *value,
+			FwupdSelfSignFlags flags,
+			GCancellable *cancellable,
+			GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	GVariantBuilder builder;
+	g_autoptr(GVariant) val = NULL;
+	gchar *retval = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* connect */
+	if (!fwupd_client_connect (client, cancellable, error))
+		return NULL;
+
+	/* set options */
+	g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
+	if (flags & FWUPD_SELF_SIGN_FLAG_ADD_TIMESTAMP) {
+		g_variant_builder_add (&builder, "{sv}",
+				       "add-timestamp", g_variant_new_boolean (TRUE));
+	}
+	if (flags & FWUPD_SELF_SIGN_FLAG_ADD_CERT) {
+		g_variant_builder_add (&builder, "{sv}",
+				       "add-cert", g_variant_new_boolean (TRUE));
+	}
+
+	/* call into daemon */
+	val = g_dbus_proxy_call_sync (priv->proxy,
+				      "SelfSign",
+				      g_variant_new ("(sa{sv})", value, &builder),
+				      G_DBUS_CALL_FLAGS_NONE,
+				      -1,
+				      cancellable,
+				      error);
+	if (val == NULL) {
+		if (error != NULL)
+			fwupd_client_fixup_dbus_error (*error);
+		return NULL;
+	}
+	g_variant_get (val, "(s)", &retval);
+	return retval;
 }
 
 /**

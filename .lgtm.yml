@@ -11,7 +11,7 @@ extraction:
       - python3-pil
       - python3-cairo
     after_prepare:
-    - "wget -O libxmlb.zip https://github.com/hughsie/libxmlb/archive/0.1.5.zip"
+    - "wget -O libxmlb.zip https://github.com/hughsie/libxmlb/archive/0.1.7.zip"
     - "mkdir -p subprojects/libxmlb"
     - "bsdtar --strip-components=1 -xvf libxmlb.zip -C subprojects/libxmlb"
     index:

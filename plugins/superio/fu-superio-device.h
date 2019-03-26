@@ -11,10 +11,39 @@
 G_BEGIN_DECLS
 
 #define FU_TYPE_SUPERIO_DEVICE (fu_superio_device_get_type ())
-G_DECLARE_FINAL_TYPE (FuSuperioDevice, fu_superio_device, FU, SUPERIO_DEVICE, FuDevice)
+G_DECLARE_DERIVABLE_TYPE (FuSuperioDevice, fu_superio_device, FU, SUPERIO_DEVICE, FuDevice)
 
-FuSuperioDevice	*fu_superio_device_new		(const gchar		*chipset,
-						 guint16		 id,
-						 guint16		 port);
+struct _FuSuperioDeviceClass
+{
+	FuDeviceClass		parent_class;
+	gboolean		 (*setup)	(FuSuperioDevice	*self,
+						 GError		**error);
+};
+
+gboolean	 fu_superio_device_ec_read	(FuSuperioDevice	*self,
+						 guint8			*data,
+						 GError			**error);
+gboolean	 fu_superio_device_ec_write0	(FuSuperioDevice	*self,
+						 guint8			 data,
+						 GError			**error);
+gboolean	 fu_superio_device_ec_write1	(FuSuperioDevice	*self,
+						 guint8			 data,
+						 GError			**error);
+gboolean	 fu_superio_device_ec_get_param	(FuSuperioDevice	*self,
+						 guint8			 param,
+						 guint8			*data,
+						 GError			**error);
+gboolean	 fu_superio_device_regval	(FuSuperioDevice	*self,
+						 guint8			 addr,
+						 guint8			*data,
+						 GError			**error);
+gboolean	 fu_superio_device_regval16	(FuSuperioDevice	*self,
+						 guint8			 addr,
+						 guint16		*data,
+						 GError			**error);
+gboolean	 fu_superio_device_regwrite	(FuSuperioDevice	*self,
+						 guint8			 addr,
+						 guint8			 data,
+						 GError			**error);
 
 G_END_DECLS

@@ -123,6 +123,7 @@ msgstr "Zmenené zariadenie:"
 msgid "Device removed:"
 msgstr "Odstránené zariadenie:"
 
+#. success
 msgid "Done!"
 msgstr "Hotovo!"
 
@@ -202,10 +203,6 @@ msgstr "Nainštaluje súbor firmvéru do tohoto hardvéru"
 
 msgid "Install old version of system firmware"
 msgstr "Nainštaluje staršiu verziu firmvéru systému"
-
-#. TRANSLATORS: command description
-msgid "Install prepared updates now"
-msgstr "Nainštaluje pripravené aktualizácie ihneď"
 
 msgid "Install signed device firmware"
 msgstr "Nainštaluje podpísaný firmvér zariadenia"

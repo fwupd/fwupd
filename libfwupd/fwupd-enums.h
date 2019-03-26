@@ -87,6 +87,7 @@ typedef enum {
  * @FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN:		Requires system shutdown to apply firmware
  * @FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED:	Requires the update to be retried with a new plugin
  * @FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS:	Do not add instance IDs from the device baseclass
+ * @FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION:		Device update needs to be separately activated
  *
  * The device flags.
  **/
@@ -111,8 +112,31 @@ typedef enum {
 #define FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN	(1u << 17)	/* Since: 1.2.4 */
 #define FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED (1u << 18)	/* Since: 1.2.5 */
 #define FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS	(1u << 19)	/* Since: 1.2.5 */
+#define FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION	(1u << 20)	/* Since: 1.2.6 */
 #define FWUPD_DEVICE_FLAG_UNKNOWN		G_MAXUINT64	/* Since: 0.7.3 */
 typedef guint64 FwupdDeviceFlags;
+
+/**
+ * FwupdReleaseFlags:
+ * @FWUPD_RELEASE_FLAG_NONE:			No flags set
+ * @FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD:		The payload binary is trusted
+ * @FWUPD_RELEASE_FLAG_TRUSTED_METADATA:	The payload metadata is trusted
+ * @FWUPD_RELEASE_FLAG_IS_UPGRADE:		Is newer than the device version
+ * @FWUPD_RELEASE_FLAG_IS_DOWNGRADE:		Is older than the device version
+ * @FWUPD_RELEASE_FLAG_BLOCKED_VERSION:		Blocked as below device version-lowest
+ * @FWUPD_RELEASE_FLAG_BLOCKED_APPROVAL:	Blocked as release not approved
+ *
+ * The release flags.
+ **/
+#define FWUPD_RELEASE_FLAG_NONE			(0u)		/* Since: 1.2.6 */
+#define FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD	(1u << 0)	/* Since: 1.2.6 */
+#define FWUPD_RELEASE_FLAG_TRUSTED_METADATA	(1u << 1)	/* Since: 1.2.6 */
+#define FWUPD_RELEASE_FLAG_IS_UPGRADE		(1u << 2)	/* Since: 1.2.6 */
+#define FWUPD_RELEASE_FLAG_IS_DOWNGRADE		(1u << 3)	/* Since: 1.2.6 */
+#define FWUPD_RELEASE_FLAG_BLOCKED_VERSION	(1u << 4)	/* Since: 1.2.6 */
+#define FWUPD_RELEASE_FLAG_BLOCKED_APPROVAL	(1u << 5)	/* Since: 1.2.6 */
+#define FWUPD_RELEASE_FLAG_UNKNOWN		G_MAXUINT64	/* Since: 1.2.6 */
+typedef guint64 FwupdReleaseFlags;
 
 /**
  * FwupdInstallFlags:
@@ -135,6 +159,22 @@ typedef enum {
 	/*< private >*/
 	FWUPD_INSTALL_FLAG_LAST
 } FwupdInstallFlags;
+
+/**
+ * FwupdSelfSignFlags:
+ * @FWUPD_SELF_SIGN_FLAG_NONE:			No flags set
+ * @FWUPD_SELF_SIGN_FLAG_ADD_TIMESTAMP:		Add the timestamp to the detached signature
+ * @FWUPD_SELF_SIGN_FLAG_ADD_CERT:		Add the certificate to the detached signature
+ *
+ * Flags to set when performing the firwmare update or install.
+ **/
+typedef enum {
+	FWUPD_SELF_SIGN_FLAG_NONE		= 0,		/* Since: 1.2.6 */
+	FWUPD_SELF_SIGN_FLAG_ADD_TIMESTAMP	= 1 << 0,	/* Since: 1.2.6 */
+	FWUPD_SELF_SIGN_FLAG_ADD_CERT		= 1 << 1,	/* Since: 1.2.6 */
+	/*< private >*/
+	FWUPD_SELF_SIGN_FLAG_LAST
+} FwupdSelfSignFlags;
 
 /**
  * FwupdUpdateState:
@@ -178,6 +218,8 @@ const gchar	*fwupd_status_to_string			(FwupdStatus	 status);
 FwupdStatus	 fwupd_status_from_string		(const gchar	*status);
 const gchar	*fwupd_device_flag_to_string		(FwupdDeviceFlags device_flag);
 FwupdDeviceFlags fwupd_device_flag_from_string		(const gchar	*device_flag);
+const gchar	*fwupd_release_flag_to_string		(FwupdReleaseFlags release_flag);
+FwupdReleaseFlags fwupd_release_flag_from_string	(const gchar	*release_flag);
 const gchar	*fwupd_update_state_to_string		(FwupdUpdateState update_state);
 FwupdUpdateState fwupd_update_state_from_string		(const gchar	*update_state);
 const gchar	*fwupd_trust_flag_to_string		(FwupdTrustFlags trust_flag);

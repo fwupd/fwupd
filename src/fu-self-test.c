@@ -96,7 +96,7 @@ fu_engine_generate_md_func (void)
 	g_assert (ret);
 
 	/* load engine and check the device was found */
-	ret = fu_engine_load (engine, &error);
+	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
@@ -564,7 +564,7 @@ fu_engine_device_unlock_func (void)
 	g_autoptr(XbSilo) silo = NULL;
 
 	/* load engine to get FuConfig set up */
-	ret = fu_engine_load (engine, &error);
+	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -617,7 +617,7 @@ fu_engine_require_hwid_func (void)
 	fu_engine_set_silo (engine, silo_empty);
 
 	/* load engine to get FuConfig set up */
-	ret = fu_engine_load (engine, &error);
+	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -747,7 +747,7 @@ fu_engine_downgrade_func (void)
 	testdatadir = fu_test_get_filename (TESTDATADIR, ".");
 	g_assert (testdatadir != NULL);
 	g_setenv ("FU_SELF_TEST_REMOTES_DIR", testdatadir, TRUE);
-	ret = fu_engine_load (engine, &error);
+	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (fu_engine_get_status (engine), ==, FWUPD_STATUS_IDLE);
@@ -784,6 +784,16 @@ fu_engine_downgrade_func (void)
 	g_assert_no_error (error);
 	g_assert (releases != NULL);
 	g_assert_cmpint (releases->len, ==, 4);
+
+	/* no upgrades, as no firmware is approved */
+	releases_up = fu_engine_get_upgrades (engine, fu_device_get_id (device), &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO);
+	g_assert_null (releases_up);
+	g_clear_error (&error);
+
+	/* retry with approved firmware set */
+	fu_engine_add_approved_firmware (engine, "deadbeefdeadbeefdeadbeefdeadbeef");
+	fu_engine_add_approved_firmware (engine, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
 
 	/* upgrades */
 	releases_up = fu_engine_get_upgrades (engine, fu_device_get_id (device), &error);
@@ -848,7 +858,7 @@ fu_engine_install_duration_func (void)
 	testdatadir = fu_test_get_filename (TESTDATADIR, ".");
 	g_assert (testdatadir != NULL);
 	g_setenv ("FU_SELF_TEST_REMOTES_DIR", testdatadir, TRUE);
-	ret = fu_engine_load (engine, &error);
+	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -913,7 +923,7 @@ fu_engine_history_func (void)
 	testdatadir = fu_test_get_filename (TESTDATADIR, ".");
 	g_assert (testdatadir != NULL);
 	g_setenv ("FU_SELF_TEST_REMOTES_DIR", testdatadir, TRUE);
-	ret = fu_engine_load (engine, &error);
+	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (fu_engine_get_status (engine), ==, FWUPD_STATUS_IDLE);
@@ -987,7 +997,7 @@ fu_engine_history_func (void)
 		"  [Release]\n"
 		"  Version:              1.2.3\n"
 		"  Checksum:             SHA1(%s)\n"
-		"  TrustFlags:           none\n"
+		"  Flags:                none\n"
 		"  VersionFormat:        triplet\n",
 		checksum);
 	ret = fu_test_compare_lines (device_str, device_str_expected, &error);
@@ -1011,6 +1021,110 @@ fu_engine_history_func (void)
 	device4 = fu_engine_get_results (engine, FWUPD_DEVICE_ID_ANY, &error);
 	g_assert (device4 == NULL);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO);
+}
+
+static void
+fu_engine_history_inherit (void)
+{
+	gboolean ret;
+	g_autofree gchar *filename = NULL;
+	g_autofree gchar *testdatadir = NULL;
+	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuInstallTask) task = NULL;
+	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
+	g_autoptr(GBytes) blob_cab = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new ();
+	g_autoptr(XbSilo) silo = NULL;
+
+	/* no metadata in daemon */
+	fu_engine_set_silo (engine, silo_empty);
+
+	/* set up dummy plugin */
+	g_setenv ("FWUPD_PLUGIN_TEST", "fail", TRUE);
+	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_test.so", &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	fu_engine_add_plugin (engine, plugin);
+	testdatadir = fu_test_get_filename (TESTDATADIR, ".");
+	g_assert (testdatadir != NULL);
+	g_setenv ("FU_SELF_TEST_REMOTES_DIR", testdatadir, TRUE);
+	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	g_assert_cmpint (fu_engine_get_status (engine), ==, FWUPD_STATUS_IDLE);
+
+	/* add a device so we can get upgrade it */
+	fu_device_set_version (device, "1.2.2");
+	fu_device_set_id (device, "test_device");
+	fu_device_set_name (device, "Test Device");
+	fu_device_set_plugin (device, "test");
+	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_set_created (device, 1515338000);
+	fu_engine_add_device (engine, device);
+	devices = fu_engine_get_devices (engine, &error);
+	g_assert_no_error (error);
+	g_assert (devices != NULL);
+	g_assert_cmpint (devices->len, ==, 1);
+	g_assert (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REGISTERED));
+
+	filename = fu_test_get_filename (TESTDATADIR, "missing-hwid/noreqs-1.2.3.cab");
+	g_assert (filename != NULL);
+	blob_cab = fu_common_get_contents_bytes	(filename, &error);
+	g_assert_no_error (error);
+	g_assert (blob_cab != NULL);
+	silo = fu_engine_get_silo_from_blob (engine, blob_cab, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (silo);
+
+	/* get component */
+	component = xb_silo_query_first (silo, "components/component/id[text()='com.hughski.test.firmware']/..", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (component);
+
+	/* install it */
+	g_setenv ("FWUPD_PLUGIN_TEST", "requires-activation", TRUE);
+	task = fu_install_task_new (device, component);
+	ret = fu_engine_install (engine, task, blob_cab,
+				 FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* check the device requires an activation */
+	g_assert_true (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION));
+	g_assert_cmpstr (fu_device_get_version (device), ==, "1.2.2");
+
+	/* activate the device */
+	ret = fu_engine_activate (engine, fu_device_get_id (device), &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* check the device no longer requires an activation */
+	g_assert_false (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION));
+	g_assert_cmpstr (fu_device_get_version (device), ==, "1.2.3");
+
+	/* emulate getting the flag for a fresh boot on old firmware */
+	fu_device_set_version (device, "1.2.2");
+	ret = fu_engine_install (engine, task, blob_cab,
+				 FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	g_object_unref (engine);
+	g_object_unref (device);
+	engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	fu_engine_set_silo (engine, silo_empty);
+	fu_engine_add_plugin (engine, plugin);
+	device = fu_device_new ();
+	fu_device_set_id (device, "test_device");
+	fu_device_set_name (device, "Test Device");
+	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
+	fu_device_set_version (device, "1.2.2");
+	fu_engine_add_device (engine, device);
+	g_assert_true (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION));
 }
 
 static void
@@ -1049,7 +1163,7 @@ fu_engine_history_error_func (void)
 	testdatadir = fu_test_get_filename (TESTDATADIR, ".");
 	g_assert (testdatadir != NULL);
 	g_setenv ("FU_SELF_TEST_REMOTES_DIR", testdatadir, TRUE);
-	ret = fu_engine_load (engine, &error);
+	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (fu_engine_get_status (engine), ==, FWUPD_STATUS_IDLE);
@@ -1117,7 +1231,7 @@ fu_engine_history_error_func (void)
 		"  [Release]\n"
 		"  Version:              1.2.3\n"
 		"  Checksum:             SHA1(%s)\n"
-		"  TrustFlags:           none\n"
+		"  Flags:                none\n"
 		"  VersionFormat:        triplet\n",
 		checksum);
 	ret = fu_test_compare_lines (device_str, device_str_expected, &error);
@@ -1875,7 +1989,7 @@ fu_plugin_hash_func (void)
 	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
 	gboolean ret = FALSE;
 
-	ret = fu_engine_load (engine, &error);
+	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -1954,11 +2068,15 @@ fu_plugin_module_func (void)
 	g_assert_no_error (error);
 	g_assert (mapped_file != NULL);
 	blob_cab = g_mapped_file_get_bytes (mapped_file);
-	fwupd_release_set_version (fu_device_get_release_default (device), "1.2.3");
-	ret = fu_plugin_runner_schedule_update (plugin, device, blob_cab, &error);
+	release = fu_device_get_release_default (device);
+	fwupd_release_set_version (release, "1.2.3");
+	ret = fu_plugin_runner_schedule_update (plugin, device, release, blob_cab, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (cnt, ==, 1);
+
+	/* set on the current device */
+	g_assert_true (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT));
 
 	/* lets check the history */
 	history = fu_history_new ();
@@ -1967,6 +2085,7 @@ fu_plugin_module_func (void)
 	g_assert (device2 != NULL);
 	g_assert_cmpint (fu_device_get_update_state (device2), ==, FWUPD_UPDATE_STATE_PENDING);
 	g_assert_cmpstr (fu_device_get_update_error (device2), ==, NULL);
+	g_assert_true (fu_device_has_flag (device2, FWUPD_DEVICE_FLAG_NEEDS_REBOOT));
 	release = fu_device_get_release_default (device2);
 	g_assert (release != NULL);
 	g_assert_cmpstr (fwupd_release_get_filename (release), !=, NULL);
@@ -2132,6 +2251,7 @@ fu_history_func (void)
 	FwupdRelease *release;
 	g_autoptr(FuDevice) device_found = NULL;
 	g_autoptr(FuHistory) history = NULL;
+	g_autoptr(GPtrArray) approved_firmware = NULL;
 	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
 
@@ -2221,6 +2341,23 @@ fu_history_func (void)
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert (device_found == NULL);
 	g_clear_error (&error);
+
+	/* approved firmware */
+	ret = fu_history_clear_approved_firmware (history, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	ret = fu_history_add_approved_firmware (history, "foo", &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	ret = fu_history_add_approved_firmware (history, "bar", &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	approved_firmware = fu_history_get_approved_firmware (history, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (approved_firmware);
+	g_assert_cmpint (approved_firmware->len, ==, 2);
+	g_assert_cmpstr (g_ptr_array_index (approved_firmware, 0), ==, "foo");
+	g_assert_cmpstr (g_ptr_array_index (approved_firmware, 1), ==, "bar");
 }
 
 static void
@@ -2268,7 +2405,9 @@ fu_keyring_gpg_func (void)
 	g_assert_no_error (error);
 	g_assert_nonnull (blob_pass);
 	blob_sig = g_bytes_new_static (sig_gpgme, strlen (sig_gpgme));
-	result_pass = fu_keyring_verify_data (keyring, blob_pass, blob_sig, &error);
+	result_pass = fu_keyring_verify_data (keyring, blob_pass, blob_sig,
+					      FU_KEYRING_VERIFY_FLAG_NONE,
+					      &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (result_pass);
 	g_assert_cmpint (fu_keyring_result_get_timestamp (result_pass), == , 1438072952);
@@ -2281,7 +2420,8 @@ fu_keyring_gpg_func (void)
 	blob_fail = fu_common_get_contents_bytes (fw_fail, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (blob_fail);
-	result_fail = fu_keyring_verify_data (keyring, blob_fail, blob_sig, &error);
+	result_fail = fu_keyring_verify_data (keyring, blob_fail, blob_sig,
+					      FU_KEYRING_VERIFY_FLAG_NONE, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_SIGNATURE_INVALID);
 	g_assert_null (result_fail);
 	g_clear_error (&error);
@@ -2331,7 +2471,8 @@ fu_keyring_pkcs7_func (void)
 	blob_sig = fu_common_get_contents_bytes (sig_fn, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (blob_sig);
-	result_pass = fu_keyring_verify_data (keyring, blob_pass, blob_sig, &error);
+	result_pass = fu_keyring_verify_data (keyring, blob_pass, blob_sig,
+					      FU_KEYRING_VERIFY_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (result_pass);
 	g_assert_cmpint (fu_keyring_result_get_timestamp (result_pass), >= , 1502871248);
@@ -2343,7 +2484,8 @@ fu_keyring_pkcs7_func (void)
 	blob_sig2 = fu_common_get_contents_bytes (sig_fn2, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (blob_sig2);
-	result_fail = fu_keyring_verify_data (keyring, blob_pass, blob_sig2, &error);
+	result_fail = fu_keyring_verify_data (keyring, blob_pass, blob_sig2,
+					      FU_KEYRING_VERIFY_FLAG_NONE, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_SIGNATURE_INVALID);
 	g_assert_null (result_fail);
 	g_clear_error (&error);
@@ -2354,10 +2496,50 @@ fu_keyring_pkcs7_func (void)
 	blob_fail = fu_common_get_contents_bytes (fw_fail, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (blob_fail);
-	result_fail = fu_keyring_verify_data (keyring, blob_fail, blob_sig, &error);
+	result_fail = fu_keyring_verify_data (keyring, blob_fail, blob_sig,
+					      FU_KEYRING_VERIFY_FLAG_NONE, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_SIGNATURE_INVALID);
 	g_assert_null (result_fail);
 	g_clear_error (&error);
+#else
+	g_test_skip ("no GnuTLS support enabled");
+#endif
+}
+
+static void
+fu_keyring_pkcs7_self_signed_func (void)
+{
+#ifdef ENABLE_PKCS7
+	gboolean ret;
+	g_autoptr(FuKeyring) kr = NULL;
+	g_autoptr(FuKeyringResult) kr_result = NULL;
+	g_autoptr(GBytes) payload = NULL;
+	g_autoptr(GBytes) signature = NULL;
+	g_autoptr(GError) error = NULL;
+
+#ifndef HAVE_GNUTLS_3_6_0
+	/* required to create the private key correctly */
+	g_test_skip ("GnuTLS version too old");
+#endif
+
+	/* create detached signature and verify */
+	kr = fu_keyring_pkcs7_new ();
+	ret = fu_keyring_setup (kr, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	payload = fu_common_get_contents_bytes ("/etc/machine-id", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (payload);
+	signature = fu_keyring_sign_data (kr, payload, FU_KEYRING_SIGN_FLAG_ADD_TIMESTAMP, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (signature);
+	ret = fu_common_set_contents_bytes ("/tmp/test.p7b", signature, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	kr_result = fu_keyring_verify_data (kr, payload, signature,
+					    FU_KEYRING_VERIFY_FLAG_USE_CLIENT_CERT, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (kr_result);
 #else
 	g_test_skip ("no GnuTLS support enabled");
 #endif
@@ -2478,10 +2660,28 @@ fu_common_spawn_func (void)
 	g_assert (fn != NULL);
 	argv[0] = fn;
 	ret = fu_common_spawn_sync (argv,
-				    fu_test_stdout_cb, &lines, NULL, &error);
+				    fu_test_stdout_cb, &lines, 0, NULL, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (lines, ==, 6);
+}
+
+static void
+fu_common_spawn_timeout_func (void)
+{
+	gboolean ret;
+	guint lines = 0;
+	g_autoptr(GError) error = NULL;
+	g_autofree gchar *fn = NULL;
+	const gchar *argv[3] = { "replace", "test", NULL };
+
+	fn = fu_test_get_filename (TESTDATADIR, "spawn.sh");
+	g_assert (fn != NULL);
+	argv[0] = fn;
+	ret = fu_common_spawn_sync (argv, fu_test_stdout_cb, &lines, 50, NULL, &error);
+	g_assert_error (error, G_IO_ERROR, G_IO_ERROR_CANCELLED);
+	g_assert (!ret);
+	g_assert_cmpint (lines, ==, 1);
 }
 
 static void
@@ -3344,9 +3544,11 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/engine{device-unlock}", fu_engine_device_unlock_func);
 	g_test_add_func ("/fwupd/engine{history-success}", fu_engine_history_func);
 	g_test_add_func ("/fwupd/engine{history-error}", fu_engine_history_error_func);
-	g_test_add_func ("/fwupd/device-list{replug-auto}", fu_device_list_replug_auto_func);
+	if (g_test_slow ())
+		g_test_add_func ("/fwupd/device-list{replug-auto}", fu_device_list_replug_auto_func);
 	g_test_add_func ("/fwupd/device-list{replug-user}", fu_device_list_replug_user_func);
 	g_test_add_func ("/fwupd/engine{require-hwid}", fu_engine_require_hwid_func);
+	g_test_add_func ("/fwupd/engine{history-inherit}", fu_engine_history_inherit);
 	g_test_add_func ("/fwupd/engine{partial-hash}", fu_engine_partial_hash_func);
 	g_test_add_func ("/fwupd/engine{downgrade}", fu_engine_downgrade_func);
 	g_test_add_func ("/fwupd/engine{requirements-success}", fu_engine_requirements_func);
@@ -3372,6 +3574,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/plugin{composite}", fu_plugin_composite_func);
 	g_test_add_func ("/fwupd/keyring{gpg}", fu_keyring_gpg_func);
 	g_test_add_func ("/fwupd/keyring{pkcs7}", fu_keyring_pkcs7_func);
+	g_test_add_func ("/fwupd/keyring{pkcs7-self-signed}", fu_keyring_pkcs7_self_signed_func);
 	g_test_add_func ("/fwupd/plugin{build-hash}", fu_plugin_hash_func);
 	g_test_add_func ("/fwupd/chunk", fu_chunk_func);
 	g_test_add_func ("/fwupd/common{version-guess-format}", fu_common_version_guess_format_func);
@@ -3388,6 +3591,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/common{cab-error-missing-file}", fu_common_store_cab_error_missing_file_func);
 	g_test_add_func ("/fwupd/common{cab-error-size}", fu_common_store_cab_error_size_func);
 	g_test_add_func ("/fwupd/common{spawn)", fu_common_spawn_func);
+	g_test_add_func ("/fwupd/common{spawn-timeout)", fu_common_spawn_timeout_func);
 	g_test_add_func ("/fwupd/common{firmware-builder}", fu_common_firmware_builder_func);
 	return g_test_run ();
 }

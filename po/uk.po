@@ -291,6 +291,7 @@ msgstr "Не перевіряти, чи є ненадіслані звіти у 
 msgid "Do not write to the history database"
 msgstr "Не записувати дані до бази даних журналу"
 
+#. success
 msgid "Done!"
 msgstr "Виконано!"
 
@@ -507,10 +508,6 @@ msgstr "Встановити файл мікропрограми на це об�
 
 msgid "Install old version of system firmware"
 msgstr "Встановити стару версію мікропрограми системи"
-
-#. TRANSLATORS: command description
-msgid "Install prepared updates now"
-msgstr "Встановити приготовані оновлення зараз"
 
 msgid "Install signed device firmware"
 msgstr "Встановити підписану мікропрограму пристрою"
@@ -732,6 +729,14 @@ msgstr "Перезапускаємо пристрій…"
 #. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
 msgstr "Повернути усі ідентифікатори апаратного забезпечення комп’ютера"
+
+#. TRANSLATORS: command line option
+msgid "Run the plugin composite cleanup routine when using install-blob"
+msgstr "Запустити процедуру чищення композиції додатків при використанні install-blob"
+
+#. TRANSLATORS: command line option
+msgid "Run the plugin composite prepare routine when using install-blob"
+msgstr "Запустити процедуру приготування композиції додатків при використанні install-blob"
 
 msgid "Runtime"
 msgstr "Час обробляння"

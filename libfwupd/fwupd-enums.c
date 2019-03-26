@@ -159,6 +159,8 @@ fwupd_device_flag_to_string (FwupdDeviceFlags device_flag)
 		return "another-write-required";
 	if (device_flag == FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS)
 		return "no-auto-instance-ids";
+	if (device_flag == FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)
+		return "needs-activation";
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -219,6 +221,8 @@ fwupd_device_flag_from_string (const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED;
 	if (g_strcmp0 (device_flag, "no-auto-instance-ids") == 0)
 		return FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS;
+	if (g_strcmp0 (device_flag, "needs-activation") == 0)
+		return FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION;
 	return FWUPD_DEVICE_FLAG_UNKNOWN;
 }
 
@@ -360,4 +364,62 @@ fwupd_keyring_kind_to_string (FwupdKeyringKind keyring_kind)
 	if (keyring_kind == FWUPD_KEYRING_KIND_PKCS7)
 		return "pkcs7";
 	return NULL;
+}
+
+/**
+ * fwupd_release_flag_to_string:
+ * @release_flag: A #FwupdReleaseFlags, e.g. %FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD
+ *
+ * Converts a #FwupdReleaseFlags to a string.
+ *
+ * Return value: identifier string
+ *
+ * Since: 1.2.6
+ **/
+const gchar *
+fwupd_release_flag_to_string (FwupdReleaseFlags release_flag)
+{
+	if (release_flag == FWUPD_RELEASE_FLAG_NONE)
+		return "none";
+	if (release_flag == FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD)
+		return "trusted-payload";
+	if (release_flag == FWUPD_RELEASE_FLAG_TRUSTED_METADATA)
+		return "trusted-metadata";
+	if (release_flag == FWUPD_RELEASE_FLAG_IS_UPGRADE)
+		return "is-upgrade";
+	if (release_flag == FWUPD_RELEASE_FLAG_IS_DOWNGRADE)
+		return "is-downgrade";
+	if (release_flag == FWUPD_RELEASE_FLAG_BLOCKED_VERSION)
+		return "blocked-version";
+	if (release_flag == FWUPD_RELEASE_FLAG_BLOCKED_APPROVAL)
+		return "blocked-approval";
+	return NULL;
+}
+
+/**
+ * fwupd_release_flag_from_string:
+ * @release_flag: A string, e.g. `trusted-payload`
+ *
+ * Converts a string to a #FwupdReleaseFlags.
+ *
+ * Return value: enumerated value
+ *
+ * Since: 1.2.6
+ **/
+FwupdReleaseFlags
+fwupd_release_flag_from_string (const gchar *release_flag)
+{
+	if (g_strcmp0 (release_flag, "trusted-payload") == 0)
+		return FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD;
+	if (g_strcmp0 (release_flag, "trusted-metadata") == 0)
+		return FWUPD_RELEASE_FLAG_TRUSTED_METADATA;
+	if (g_strcmp0 (release_flag, "is-upgrade") == 0)
+		return FWUPD_RELEASE_FLAG_IS_UPGRADE;
+	if (g_strcmp0 (release_flag, "is-downgrade") == 0)
+		return FWUPD_RELEASE_FLAG_IS_DOWNGRADE;
+	if (g_strcmp0 (release_flag, "blocked-version") == 0)
+		return FWUPD_RELEASE_FLAG_BLOCKED_VERSION;
+	if (g_strcmp0 (release_flag, "blocked-approval") == 0)
+		return FWUPD_RELEASE_FLAG_BLOCKED_APPROVAL;
+	return FWUPD_RELEASE_FLAG_NONE;
 }

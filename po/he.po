@@ -47,6 +47,7 @@ msgstr "אפשרויות ניפוי שגיאות"
 msgid "Description"
 msgstr "תיאור"
 
+#. success
 msgid "Done!"
 msgstr "הסתיים!"
 
@@ -88,10 +89,6 @@ msgstr "מציג פרטים אודות קובץ קושחה"
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "מתקין קובץ קושחה בחומרה זו"
-
-#. TRANSLATORS: command description
-msgid "Install prepared updates now"
-msgstr "מתקין כעת עדכונים מוכנים"
 
 #. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded

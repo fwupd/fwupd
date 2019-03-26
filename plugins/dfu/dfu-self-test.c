@@ -35,34 +35,6 @@ dfu_test_get_filename (const gchar *filename)
 	return g_strdup (full_tmp);
 }
 
-static gchar *
-_g_bytes_compare_verbose (GBytes *bytes1, GBytes *bytes2)
-{
-	const guint8 *data1;
-	const guint8 *data2;
-	gsize length1;
-	gsize length2;
-
-	data1 = g_bytes_get_data (bytes1, &length1);
-	data2 = g_bytes_get_data (bytes2, &length2);
-
-	/* not the same length */
-	if (length1 != length2) {
-		return g_strdup_printf ("got %" G_GSIZE_FORMAT " bytes, "
-					"expected %" G_GSIZE_FORMAT,
-					length1, length2);
-	}
-
-	/* return 00 01 02 03 */
-	for (guint i = 0; i < length1; i++) {
-		if (data1[i] != data2[i]) {
-			return g_strdup_printf ("got 0x%02x, expected 0x%02x @ 0x%04x",
-						data1[i], data2[i], i);
-		}
-	}
-	return NULL;
-}
-
 static void
 dfu_cipher_xtea_func (void)
 {
@@ -180,7 +152,9 @@ dfu_firmware_raw_func (void)
 	roundtrip = dfu_firmware_write_data (firmware, &error);
 	g_assert_no_error (error);
 	g_assert (roundtrip != NULL);
-	g_assert_cmpstr (_g_bytes_compare_verbose (roundtrip, fw), ==, NULL);
+	ret = fu_common_bytes_compare (roundtrip, fw, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
 }
 
 static void
@@ -255,7 +229,9 @@ dfu_firmware_dfu_func (void)
 	roundtrip = dfu_firmware_write_data (firmware, &error);
 	g_assert_no_error (error);
 	g_assert (roundtrip != NULL);
-	g_assert_cmpstr (_g_bytes_compare_verbose (roundtrip, roundtrip_orig), ==, NULL);
+	ret = fu_common_bytes_compare (roundtrip, roundtrip_orig, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
 }
 
 static void
@@ -299,7 +275,9 @@ dfu_firmware_dfuse_func (void)
 //			     g_bytes_get_data (roundtrip, NULL),
 //			     g_bytes_get_size (roundtrip), NULL);
 
-	g_assert_cmpstr (_g_bytes_compare_verbose (roundtrip, roundtrip_orig), ==, NULL);
+	ret = fu_common_bytes_compare (roundtrip, roundtrip_orig, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
 
 	/* use usual image name copying */
 	g_unsetenv ("DFU_SELF_TEST_IMAGE_MEMCPY_NAME");
@@ -337,8 +315,9 @@ dfu_firmware_metadata_func (void)
 	roundtrip = dfu_firmware_write_data (firmware, &error);
 	g_assert_no_error (error);
 	g_assert (roundtrip != NULL);
-
-	g_assert_cmpstr (_g_bytes_compare_verbose (roundtrip, roundtrip_orig), ==, NULL);
+	ret = fu_common_bytes_compare (roundtrip, roundtrip_orig, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
 }
 
 static void
@@ -427,7 +406,9 @@ dfu_firmware_srec_func (void)
 	data_ref = dfu_self_test_get_bytes_for_file (file_bin, &error);
 	g_assert_no_error (error);
 	g_assert (data_ref != NULL);
-	g_assert_cmpstr (_g_bytes_compare_verbose (data_bin, data_ref), ==, NULL);
+	ret = fu_common_bytes_compare (data_bin, data_ref, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
 }
 
 static void
@@ -471,7 +452,9 @@ dfu_firmware_intel_hex_func (void)
 	data_ref = dfu_self_test_get_bytes_for_file (file_bin, &error);
 	g_assert_no_error (error);
 	g_assert (data_ref != NULL);
-	g_assert_cmpstr (_g_bytes_compare_verbose (data_bin, data_ref), ==, NULL);
+	ret = fu_common_bytes_compare (data_bin, data_ref, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
 
 	/* export a ihex file (which will be slightly different due to
 	 * non-continous regions being expanded */
@@ -498,7 +481,9 @@ dfu_firmware_intel_hex_func (void)
 	data_bin2 = dfu_firmware_write_data (firmware, &error);
 	g_assert_no_error (error);
 	g_assert (data_bin2 != NULL);
-	g_assert_cmpstr (_g_bytes_compare_verbose (data_bin, data_bin2), ==, NULL);
+	ret = fu_common_bytes_compare (data_bin, data_bin2, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
 }
 
 static void

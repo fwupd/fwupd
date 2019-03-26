@@ -243,6 +243,7 @@ msgstr "보고되지 않은 과거 기록 검사하지 않기"
 msgid "Do not write to the history database"
 msgstr "과거 기록 데이터베이스에 기록하지 않기"
 
+#. success
 msgid "Done!"
 msgstr "완료!"
 
@@ -444,10 +445,6 @@ msgstr "이 하드웨어에 펌웨어 파일을 설치합니다"
 
 msgid "Install old version of system firmware"
 msgstr "이전 버전 시스템 펌웨어 설치"
-
-#. TRANSLATORS: command description
-msgid "Install prepared updates now"
-msgstr "현재 준비한 업데이트를 설치합니다"
 
 msgid "Install signed device firmware"
 msgstr "서명된 장치 펌웨어 설치"

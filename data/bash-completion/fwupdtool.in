@@ -1,4 +1,5 @@
 _fwupdtool_cmd_list=(
+	'activate'
 	'build-firmware'
 	'get-updates'
 	'get-details'
@@ -10,14 +11,17 @@ _fwupdtool_cmd_list=(
 	'install'
 	'install-blob'
 	'monitor'
+	'self-sign'
 	'smbios-dump'
 	'attach'
 	'detach'
+	'verify-update'
 	'watch'
 )
 
 _fwupdtool_opts=(
 	'--verbose'
+	'--enable-json-state'
 	'--allow-reinstall'
 	'--allow-older'
 	'--force'
@@ -64,7 +68,7 @@ _fwupdtool()
 			_show_modifiers
 		fi
 		;;
-	attach|detach)
+	attach|detach|activate|verify-update)
 		if [[ "$prev" = "$command" ]]; then
 			_show_device_ids
 		#modifiers

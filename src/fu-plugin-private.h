@@ -99,6 +99,9 @@ gboolean	 fu_plugin_runner_verify		(FuPlugin	*self,
 							 FuDevice	*device,
 							 FuPluginVerifyFlags flags,
 							 GError		**error);
+gboolean	 fu_plugin_runner_activate 		(FuPlugin *self,
+							 FuDevice *device,
+							 GError **error);
 gboolean	 fu_plugin_runner_unlock		(FuPlugin	*self,
 							 FuDevice	*device,
 							 GError		**error);
@@ -110,6 +113,7 @@ gboolean	 fu_plugin_runner_get_results		(FuPlugin	*self,
 							 GError		**error);
 gboolean	 fu_plugin_runner_schedule_update	(FuPlugin	*self,
 							 FuDevice	*device,
+							 FwupdRelease	*release,
 							 GBytes		*blob_cab,
 							 GError		**error);
 gint		 fu_plugin_name_compare			(FuPlugin	*plugin1,

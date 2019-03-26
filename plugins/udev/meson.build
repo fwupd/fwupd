@@ -36,6 +36,7 @@ executable(
   ],
   dependencies : [
     plugin_deps,
+    libjsonglib,
   ],
   link_with : [
     libfwupdprivate,

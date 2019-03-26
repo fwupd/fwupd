@@ -80,6 +80,7 @@ msgstr "Aygıt değişti:"
 msgid "Device removed:"
 msgstr "Aygıt çıkarıldı:"
 
+#. success
 msgid "Done!"
 msgstr "Bitti!"
 

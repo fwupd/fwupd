@@ -66,19 +66,19 @@ fu_keyring_create_for_kind (FwupdKeyringKind kind, GError **error)
 }
 
 /**
- * fu_keyring_get_release_trust_flags:
+ * fu_keyring_get_release_flags:
  * @release: A #XbNode, e.g. %FWUPD_KEYRING_KIND_GPG
- * @trust_flags: A #FwupdTrustFlags, e.g. %FWUPD_TRUST_FLAG_PAYLOAD
+ * @flags: A #FwupdReleaseFlags, e.g. %FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD
  * @error: A #GError, or %NULL
  *
  * Uses the correct keyring to get the trust flags for a given release.
  *
- * Returns: %TRUE if @trust_flags has been set
+ * Returns: %TRUE if @flags has been set
  **/
 gboolean
-fu_keyring_get_release_trust_flags (XbNode *release,
-				    FwupdTrustFlags *trust_flags,
-				    GError **error)
+fu_keyring_get_release_flags (XbNode *release,
+			      FwupdReleaseFlags *flags,
+			      GError **error)
 {
 	FwupdKeyringKind keyring_kind = FWUPD_KEYRING_KIND_UNKNOWN;
 	GBytes *blob_payload;
@@ -159,7 +159,9 @@ fu_keyring_get_release_trust_flags (XbNode *release,
 				fu_keyring_get_name (kr));
 		return FALSE;
 	}
-	kr_result = fu_keyring_verify_data (kr, blob_payload, blob_signature, &error_local);
+	kr_result = fu_keyring_verify_data (kr, blob_payload, blob_signature,
+					    FU_KEYRING_VERIFY_FLAG_NONE,
+					    &error_local);
 	if (kr_result == NULL) {
 		g_warning ("untrusted as failed to verify from %s keyring: %s",
 			   fu_keyring_get_name (kr),
@@ -169,6 +171,6 @@ fu_keyring_get_release_trust_flags (XbNode *release,
 
 	/* awesome! */
 	g_debug ("marking payload as trusted");
-	*trust_flags |= FWUPD_TRUST_FLAG_PAYLOAD;
+	*flags |= FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD;
 	return TRUE;
 }

@@ -19,6 +19,8 @@
 #include "fu-history.h"
 #include "fu-mutex.h"
 
+#define FU_HISTORY_CURRENT_SCHEMA_VERSION	5
+
 static void fu_history_finalize			 (GObject *object);
 
 struct _FuHistory
@@ -157,7 +159,7 @@ fu_history_create_database (FuHistory *self, GError **error)
 			 "CREATE TABLE schema ("
 			 "created timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
 			 "version INTEGER DEFAULT 0);"
-			 "INSERT INTO schema (version) VALUES (4);"
+			 "INSERT INTO schema (version) VALUES (0);"
 			 "CREATE TABLE history ("
 			 "device_id TEXT,"
 			 "update_state INTEGER DEFAULT 0,"
@@ -175,10 +177,12 @@ fu_history_create_database (FuHistory *self, GError **error)
 			 "version_new TEXT,"
 			 "checksum_device TEXT DEFAULT NULL,"
 			 "protocol TEXT DEFAULT NULL);"
+			 "CREATE TABLE approved_firmware ("
+			 "checksum TEXT);"
 			 "COMMIT;", NULL, NULL, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
-			     "Failed to create database: %s",
+			     "Failed to prepare SQL for creating tables: %s",
 			     sqlite3_errmsg (self->db));
 		return FALSE;
 	}
@@ -223,24 +227,12 @@ static gboolean
 fu_history_migrate_database_v2 (FuHistory *self, GError **error)
 {
 	gint rc;
-
-	/* rename the table to something out the way */
 	rc = sqlite3_exec (self->db,
-			   "ALTER TABLE history ADD COLUMN checksum_device TEXT DEFAULT NULL;"
-			   "ALTER TABLE history ADD COLUMN protocol TEXT DEFAULT NULL;",
+			   "ALTER TABLE history ADD COLUMN checksum_device TEXT DEFAULT NULL;",
 			   NULL, NULL, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
 			     "Failed to alter database: %s",
-			     sqlite3_errmsg (self->db));
-		return FALSE;
-	}
-
-	/* update version */
-	rc = sqlite3_exec (self->db, "UPDATE schema SET version=4;", NULL, NULL, NULL);
-	if (rc != SQLITE_OK) {
-		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
-			     "Failed to migrate database: %s",
 			     sqlite3_errmsg (self->db));
 		return FALSE;
 	}
@@ -251,19 +243,24 @@ static gboolean
 fu_history_migrate_database_v3 (FuHistory *self, GError **error)
 {
 	gint rc;
-
-	/* rename the table to something out the way */
 	rc = sqlite3_exec (self->db,
 			   "ALTER TABLE history ADD COLUMN protocol TEXT DEFAULT NULL;",
 			   NULL, NULL, NULL);
 	if (rc != SQLITE_OK)
 		g_debug ("ignoring database error: %s", sqlite3_errmsg (self->db));
+	return TRUE;
+}
 
-	/* update version */
-	rc = sqlite3_exec (self->db, "UPDATE schema SET version=4;", NULL, NULL, NULL);
+static gboolean
+fu_history_migrate_database_v4 (FuHistory *self, GError **error)
+{
+	gint rc;
+	rc = sqlite3_exec (self->db,
+			   "CREATE TABLE approved_firmware (checksum TEXT);",
+			   NULL, NULL, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
-			     "Failed to update schema version: %s",
+			     "Failed to create table: %s",
 			     sqlite3_errmsg (self->db));
 		return FALSE;
 	}
@@ -278,18 +275,73 @@ fu_history_get_schema_version (FuHistory *self)
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 
 	rc = sqlite3_prepare_v2 (self->db,
-				 "SELECT version FROM schema LIMIT 1;", -1, &stmt, NULL);
+				 "SELECT version FROM schema LIMIT 1;",
+				 -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		g_debug ("no schema version: %s", sqlite3_errmsg (self->db));
 		return 0;
 	}
 	rc = sqlite3_step (stmt);
 	if (rc != SQLITE_ROW) {
-		g_warning ("failed to execute prepared statement: %s",
+		g_warning ("failed prepare to get schema version: %s",
 			   sqlite3_errmsg (self->db));
 		return 0;
 	}
 	return sqlite3_column_int (stmt, 0);
+}
+
+static gboolean
+fu_history_create_or_migrate (FuHistory *self, guint schema_ver, GError **error)
+{
+	gint rc;
+	g_autoptr(sqlite3_stmt) stmt = NULL;
+
+	/* create initial up-to-date database or migrate */
+	if (schema_ver == 0) {
+		g_debug ("building initial database");
+		if (!fu_history_create_database (self, error))
+			return FALSE;
+	} else if (schema_ver == 1) {
+		g_debug ("migrating v%u database by recreating table", schema_ver);
+		if (!fu_history_migrate_database_v1 (self, error))
+			return FALSE;
+	} else if (schema_ver == 2) {
+		g_debug ("migrating v%u database by altering", schema_ver);
+		if (!fu_history_migrate_database_v2 (self, error))
+			return FALSE;
+		if (!fu_history_migrate_database_v3 (self, error))
+			return FALSE;
+		if (!fu_history_migrate_database_v4 (self, error))
+			return FALSE;
+	} else if (schema_ver == 3) {
+		g_debug ("migrating v%u database by altering", schema_ver);
+		if (!fu_history_migrate_database_v3 (self, error))
+			return FALSE;
+		if (!fu_history_migrate_database_v4 (self, error))
+			return FALSE;
+	} else if (schema_ver == 4) {
+		g_debug ("migrating v%u database by altering", schema_ver);
+		if (!fu_history_migrate_database_v4 (self, error))
+			return FALSE;
+	} else {
+		/* this is probably okay, but return an error if we ever delete
+		 * or rename columns */
+		g_warning ("schema version %u is unknown", schema_ver);
+		return TRUE;
+	}
+
+	/* set new schema version */
+	rc = sqlite3_prepare_v2 (self->db,
+				 "UPDATE schema SET version=?1;",
+				 -1, &stmt, NULL);
+	if (rc != SQLITE_OK) {
+		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
+			     "Failed to prepare SQL for updating schema: %s",
+			     sqlite3_errmsg (self->db));
+		return FALSE;
+	}
+	sqlite3_bind_int (stmt, 1, FU_HISTORY_CURRENT_SCHEMA_VERSION);
+	return fu_history_stmt_exec (self, stmt, NULL, error);
 }
 
 static gboolean
@@ -335,34 +387,22 @@ fu_history_load (FuHistory *self, GError **error)
 	/* check database */
 	schema_ver = fu_history_get_schema_version (self);
 	if (schema_ver == 0) {
-		g_autoptr(sqlite3_stmt) stmt = NULL;
+		g_autoptr(sqlite3_stmt) stmt_tmp = NULL;
 		rc = sqlite3_prepare_v2 (self->db,
 					 "SELECT * FROM history LIMIT 0;",
-					 -1, &stmt, NULL);
+					 -1, &stmt_tmp, NULL);
 		if (rc == SQLITE_OK)
 			schema_ver = 1;
 	}
-	g_debug ("got schema version of %u", schema_ver);
 
-	/* migrate schema */
-	if (schema_ver == 0) {
-		g_debug ("building initial database");
-		if (!fu_history_create_database (self, error))
-			return FALSE;
-	} else if (schema_ver == 1) {
-		g_debug ("migrating v%u database", schema_ver);
-		if (!fu_history_migrate_database_v1 (self, error))
-			return FALSE;
-	} else if (schema_ver == 2) {
-		g_debug ("migrating v%u database", schema_ver);
-		if (!fu_history_migrate_database_v2 (self, error))
-			return FALSE;
-	} else if (schema_ver == 3) {
-		g_debug ("migrating v%u database", schema_ver);
-		if (!fu_history_migrate_database_v3 (self, error))
+	/* create initial up-to-date database, or migrate */
+	g_debug ("got schema version of %u", schema_ver);
+	if (schema_ver != FU_HISTORY_CURRENT_SCHEMA_VERSION) {
+		if (!fu_history_create_or_migrate (self, schema_ver, error))
 			return FALSE;
 	}
 
+	/* success */
 	return TRUE;
 }
 
@@ -454,7 +494,7 @@ fu_history_modify_device (FuHistory *self, FuDevice *device,
 	}
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
-			     "Failed to prepare SQL: %s",
+			     "Failed to prepare SQL to update history: %s",
 			     sqlite3_errmsg (self->db));
 		return FALSE;
 	}
@@ -528,7 +568,7 @@ fu_history_add_device (FuHistory *self, FuDevice *device, FwupdRelease *release,
 					 "?11,?12,?13,?14,?15,?16)", -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
-			     "Failed to prepare SQL: %s",
+			     "Failed to prepare SQL to insert history: %s",
 			     sqlite3_errmsg (self->db));
 		return FALSE;
 	}
@@ -576,7 +616,7 @@ fu_history_remove_all_with_state (FuHistory *self,
 				 -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
-			     "Failed to prepare SQL: %s",
+			     "Failed to prepare SQL to delete history: %s",
 			     sqlite3_errmsg (self->db));
 		return FALSE;
 	}
@@ -604,7 +644,7 @@ fu_history_remove_all (FuHistory *self, GError **error)
 	rc = sqlite3_prepare_v2 (self->db, "DELETE FROM history;", -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
-			     "Failed to prepare SQL: %s",
+			     "Failed to prepare SQL to delete history: %s",
 			     sqlite3_errmsg (self->db));
 		return FALSE;
 	}
@@ -639,7 +679,7 @@ fu_history_remove_device (FuHistory *self,  FuDevice *device,
 				 -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
-			     "Failed to prepare SQL: %s",
+			     "Failed to prepare SQL to delete history: %s",
 			     sqlite3_errmsg (self->db));
 		return FALSE;
 	}
@@ -688,7 +728,7 @@ fu_history_get_device_by_id (FuHistory *self, const gchar *device_id, GError **e
 				 "device_id = ?1 LIMIT 1", -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
-			     "Failed to prepare SQL: %s",
+			     "Failed to prepare SQL to get history: %s",
 			     sqlite3_errmsg (self->db));
 		return NULL;
 	}
@@ -747,7 +787,7 @@ fu_history_get_devices (FuHistory *self, GError **error)
 					-1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
-			     "Failed to prepare SQL: %s",
+			     "Failed to prepare SQL to get history: %s",
 			     sqlite3_errmsg (self->db));
 		return NULL;
 	}
@@ -756,6 +796,108 @@ fu_history_get_devices (FuHistory *self, GError **error)
 		return NULL;
 	array = g_ptr_array_ref (array_tmp);
 	return array;
+}
+
+GPtrArray *
+fu_history_get_approved_firmware (FuHistory *self, GError **error)
+{
+	gint rc;
+	g_autoptr(FuMutexLocker) locker = NULL;
+	g_autoptr(GPtrArray) array = NULL;
+	g_autoptr(sqlite3_stmt) stmt = NULL;
+
+	g_return_val_if_fail (FU_IS_HISTORY (self), NULL);
+
+	/* lazy load */
+	if (self->db == NULL) {
+		if (!fu_history_load (self, error))
+			return NULL;
+	}
+
+	/* get all the approved firmware */
+	locker = fu_mutex_read_locker_new (self->db_mutex);
+	g_return_val_if_fail (locker != NULL, NULL);
+	rc = sqlite3_prepare_v2 (self->db,
+				 "SELECT checksum FROM approved_firmware;",
+				 -1, &stmt, NULL);
+	if (rc != SQLITE_OK) {
+		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
+			     "Failed to prepare SQL to get checksum: %s",
+			     sqlite3_errmsg (self->db));
+		return NULL;
+	}
+	array = g_ptr_array_new_with_free_func (g_free);
+	while ((rc = sqlite3_step (stmt)) == SQLITE_ROW) {
+		const gchar *tmp = (const gchar *) sqlite3_column_text (stmt, 0);
+		g_ptr_array_add (array, g_strdup (tmp));
+	}
+	if (rc != SQLITE_DONE) {
+		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_WRITE,
+			     "failed to execute prepared statement: %s",
+			     sqlite3_errmsg (self->db));
+		return NULL;
+	}
+	return g_steal_pointer (&array);
+}
+
+gboolean
+fu_history_clear_approved_firmware (FuHistory *self, GError **error)
+{
+	gint rc;
+	g_autoptr(sqlite3_stmt) stmt = NULL;
+	g_autoptr(FuMutexLocker) locker = NULL;
+
+	g_return_val_if_fail (FU_IS_HISTORY (self), FALSE);
+
+	/* lazy load */
+	if (!fu_history_load (self, error))
+		return FALSE;
+
+	/* remove entries */
+	locker = fu_mutex_write_locker_new (self->db_mutex);
+	g_return_val_if_fail (locker != NULL, FALSE);
+	rc = sqlite3_prepare_v2 (self->db,
+				 "DELETE FROM approved_firmware;",
+				 -1, &stmt, NULL);
+	if (rc != SQLITE_OK) {
+		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
+			     "Failed to prepare SQL to delete approved firmware: %s",
+			     sqlite3_errmsg (self->db));
+		return FALSE;
+	}
+	return fu_history_stmt_exec (self, stmt, NULL, error);
+}
+
+gboolean
+fu_history_add_approved_firmware (FuHistory *self,
+				  const gchar *checksum,
+				  GError **error)
+{
+	gint rc;
+	g_autoptr(sqlite3_stmt) stmt = NULL;
+	g_autoptr(FuMutexLocker) locker = NULL;
+
+	g_return_val_if_fail (FU_IS_HISTORY (self), FALSE);
+	g_return_val_if_fail (checksum != NULL, FALSE);
+
+	/* lazy load */
+	if (!fu_history_load (self, error))
+		return FALSE;
+
+	/* add */
+	locker = fu_mutex_write_locker_new (self->db_mutex);
+	g_return_val_if_fail (locker != NULL, FALSE);
+	rc = sqlite3_prepare_v2 (self->db,
+				 "INSERT INTO approved_firmware (checksum) "
+				 "VALUES (?1)", -1, &stmt, NULL);
+	if (rc != SQLITE_OK) {
+		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
+			     "Failed to prepare SQL to insert checksum: %s",
+			     sqlite3_errmsg (self->db));
+		return FALSE;
+	}
+	sqlite3_bind_text (stmt, 1, checksum, -1, SQLITE_STATIC);
+	return fu_history_stmt_exec (self, stmt, NULL, error);
 }
 
 static void

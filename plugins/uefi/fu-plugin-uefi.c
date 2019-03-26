@@ -169,7 +169,10 @@ fu_plugin_uefi_calc_checksum (const guint8 *buf, gsize sz)
 }
 
 static gboolean
-fu_plugin_uefi_write_splash_data (FuPlugin *plugin, GBytes *blob, GError **error)
+fu_plugin_uefi_write_splash_data (FuPlugin *plugin,
+				  FuDevice *device,
+				  GBytes *blob,
+				  GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	guint32 screen_x, screen_y;
@@ -244,12 +247,18 @@ fu_plugin_uefi_write_splash_data (FuPlugin *plugin, GBytes *blob, GError **error
 	if (size < 0)
 		return FALSE;
 
+	/* write display capsule location as UPDATE_INFO */
+	if (!fu_uefi_device_write_update_info (FU_UEFI_DEVICE (device), fn,
+					       "fwupd-ux-capsule",
+					       &efi_guid_ux_capsule, error))
+		return FALSE;
+
 	/* success */
 	return TRUE;
 }
 
 static gboolean
-fu_plugin_uefi_update_splash (FuPlugin *plugin, GError **error)
+fu_plugin_uefi_update_splash (FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	guint best_idx = G_MAXUINT;
@@ -320,7 +329,7 @@ fu_plugin_uefi_update_splash (FuPlugin *plugin, GError **error)
 		return FALSE;
 
 	/* perform the upload */
-	return fu_plugin_uefi_write_splash_data (plugin, image_bmp, error);
+	return fu_plugin_uefi_write_splash_data (plugin, device, image_bmp, error);
 }
 
 static gboolean
@@ -390,7 +399,7 @@ fu_plugin_update (FuPlugin *plugin,
 	/* perform the update */
 	g_debug ("Performing UEFI capsule update");
 	fu_device_set_status (device, FWUPD_STATUS_SCHEDULING);
-	if (!fu_plugin_uefi_update_splash (plugin, &error_splash)) {
+	if (!fu_plugin_uefi_update_splash (plugin, device, &error_splash)) {
 		g_debug ("failed to upload UEFI UX capsule text: %s",
 			 error_splash->message);
 	}

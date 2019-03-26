@@ -176,21 +176,6 @@ fu_uefi_device_build_varname (FuUefiDevice *self)
 				self->fmp_hardware_instance);
 }
 
-static gboolean
-fu_uefi_device_set_efivar (FuUefiDevice *self,
-			   const guint8 *data,
-			   gsize datasz,
-			   GError **error)
-{
-	g_autofree gchar *varname = fu_uefi_device_build_varname (self);
-	return fu_uefi_vars_set_data (FU_UEFI_VARS_GUID_FWUPDATE, varname,
-				      data, datasz,
-				      FU_UEFI_VARS_ATTR_NON_VOLATILE |
-				      FU_UEFI_VARS_ATTR_BOOTSERVICE_ACCESS |
-				      FU_UEFI_VARS_ATTR_RUNTIME_ACCESS,
-				      error);
-}
-
 FuUefiUpdateInfo *
 fu_uefi_device_load_update_info (FuUefiDevice *self, GError **error)
 {
@@ -238,7 +223,12 @@ fu_uefi_device_clear_status (FuUefiDevice *self, GError **error)
 	memcpy (&info, data, sizeof(info));
 	info.status = FU_UEFI_DEVICE_STATUS_SUCCESS;
 	memcpy (data, &info, sizeof(info));
-	return fu_uefi_device_set_efivar (self, data, datasz, error);
+	return fu_uefi_vars_set_data (FU_UEFI_VARS_GUID_FWUPDATE, varname,
+				      data, datasz,
+				      FU_UEFI_VARS_ATTR_NON_VOLATILE |
+				      FU_UEFI_VARS_ATTR_BOOTSERVICE_ACCESS |
+				      FU_UEFI_VARS_ATTR_RUNTIME_ACCESS,
+				      error);
 }
 
 static guint8 *
@@ -348,6 +338,57 @@ fu_uefi_missing_capsule_header (FuDevice *device)
 	return self->missing_header;
 }
 
+gboolean
+fu_uefi_device_write_update_info (FuUefiDevice *self,
+				  const gchar *filename,
+				  const gchar *varname,
+				  const efi_guid_t *guid,
+				  GError **error)
+{
+	gsize datasz = 0;
+	gsize dp_bufsz = 0;
+	g_autofree guint8 *data = NULL;
+	g_autofree guint8 *dp_buf = NULL;
+	efi_update_info_t info = {
+		.update_info_version	= 0x7,
+		.guid			= { 0x0 },
+		.capsule_flags		= self->capsule_flags,
+		.hw_inst		= self->fmp_hardware_instance,
+		.time_attempted		= { 0x0 },
+		.status			= FU_UEFI_UPDATE_INFO_STATUS_ATTEMPT_UPDATE,
+	};
+
+	/* set the body as the device path */
+	if (g_getenv ("FWUPD_UEFI_ESP_PATH") != NULL) {
+		g_debug ("not building device path, in tests....");
+		return TRUE;
+	}
+
+	/* convert to EFI device path */
+	dp_buf = fu_uefi_device_build_dp_buf (filename, &dp_bufsz, error);
+	if (dp_buf == NULL) {
+		fu_uefi_prefix_efi_errors (error);
+		return FALSE;
+	}
+
+	/* save this header and body to the hardware */
+	memcpy (&info.guid, guid, sizeof(efi_guid_t));
+	datasz = sizeof(info) + dp_bufsz;
+	data = g_malloc0 (datasz);
+	memcpy (data, &info, sizeof(info));
+	memcpy (data + sizeof(info), dp_buf, dp_bufsz);
+	if (!fu_uefi_vars_set_data (FU_UEFI_VARS_GUID_FWUPDATE, varname,
+				    data, datasz,
+				    FU_UEFI_VARS_ATTR_NON_VOLATILE |
+				    FU_UEFI_VARS_ATTR_BOOTSERVICE_ACCESS |
+				    FU_UEFI_VARS_ATTR_RUNTIME_ACCESS,
+				    error)) {
+		fu_uefi_prefix_efi_errors (error);
+		return FALSE;
+	}
+	return TRUE;
+}
+
 static gboolean
 fu_uefi_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 {
@@ -356,15 +397,11 @@ fu_uefi_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 	const gchar *bootmgr_desc = "Linux Firmware Updater";
 	const gchar *esp_path = fu_device_get_metadata (device, "EspPath");
 	efi_guid_t guid;
-	efi_update_info_t info;
-	gsize datasz = 0;
-	gsize dp_bufsz = 0;
 	g_autoptr(GBytes) fixed_fw = NULL;
 	g_autofree gchar *basename = NULL;
 	g_autofree gchar *directory = NULL;
 	g_autofree gchar *fn = NULL;
-	g_autofree guint8 *data = NULL;
-	g_autofree guint8 *dp_buf = NULL;
+	g_autofree gchar *varname = fu_uefi_device_build_varname (self);
 
 	/* ensure we have the existing state */
 	if (self->fw_class == NULL) {
@@ -388,11 +425,6 @@ fu_uefi_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 		return FALSE;
 
 	/* set the blob header shared with fwupd.efi */
-	memset (&info, 0x0, sizeof(info));
-	info.status = FU_UEFI_UPDATE_INFO_STATUS_ATTEMPT_UPDATE;
-	info.capsule_flags = self->capsule_flags;
-	info.update_info_version = 0x7;
-	info.hw_inst = self->fmp_hardware_instance;
 	if (efi_str_to_guid (self->fw_class, &guid) < 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -400,30 +432,14 @@ fu_uefi_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 				     "failed to get convert GUID");
 		return FALSE;
 	}
-	memcpy (&info.guid, &guid, sizeof(efi_guid_t));
-
-	/* set the body as the device path */
-	if (g_getenv ("FWUPD_UEFI_ESP_PATH") == NULL) {
-		dp_buf = fu_uefi_device_build_dp_buf (fn, &dp_bufsz, error);
-		if (dp_buf == NULL) {
-			fu_uefi_prefix_efi_errors (error);
-			return FALSE;
-		}
-
-		/* save this header and body to the hardware */
-		datasz = sizeof(info) + dp_bufsz;
-		data = g_malloc0 (datasz);
-		memcpy (data, &info, sizeof(info));
-		memcpy (data + sizeof(info), dp_buf, dp_bufsz);
-		if (!fu_uefi_device_set_efivar (self, data, datasz, error)) {
-			fu_uefi_prefix_efi_errors (error);
-			return FALSE;
-		}
-	}
+	if (!fu_uefi_device_write_update_info (self, fn, varname, &guid, error))
+		return FALSE;
 
 	/* update the firmware before the bootloader runs */
 	if (fu_device_get_metadata_boolean (device, "RequireShimForSecureBoot"))
 		flags |= FU_UEFI_BOOTMGR_FLAG_USE_SHIM_FOR_SB;
+	if (fu_device_has_custom_flag (device, "use-shim-unique"))
+		flags |= FU_UEFI_BOOTMGR_FLAG_USE_SHIM_UNIQUE;
 
 	/* some legacy devices use the old name to deduplicate boot entries */
 	if (fu_device_has_custom_flag (device, "use-legacy-bootmgr-desc"))

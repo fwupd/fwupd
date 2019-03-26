@@ -93,7 +93,7 @@ static gboolean
 fu_uefi_pcrs_setup_tpm20 (FuUefiPcrs *self, const gchar *argv0, GError **error)
 {
 	const gchar *argv[] = { argv0, NULL };
-	return fu_common_spawn_sync (argv, fu_uefi_pcrs_parse_line, self, NULL, error);
+	return fu_common_spawn_sync (argv, fu_uefi_pcrs_parse_line, self, 1500, NULL, error);
 }
 
 gboolean

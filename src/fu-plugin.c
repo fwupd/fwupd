@@ -863,12 +863,22 @@ fu_plugin_runner_offline_invalidate (GError **error)
 static gboolean
 fu_plugin_runner_offline_setup (GError **error)
 {
+	const gchar *symlink_target = "/var/lib/fwupd";
 	gint rc;
+	g_autofree gchar *filename = NULL;
 
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
+	/* does already exist */
+	filename = fu_common_realpath (FU_OFFLINE_TRIGGER_FILENAME, NULL);
+	if (g_strcmp0 (filename, symlink_target) == 0) {
+		g_debug ("%s already points to %s, skipping creation",
+			 FU_OFFLINE_TRIGGER_FILENAME, symlink_target);
+		return TRUE;
+	}
+
 	/* create symlink for the systemd-system-update-generator */
-	rc = symlink ("/var/lib/fwupd", FU_OFFLINE_TRIGGER_FILENAME);
+	rc = symlink (symlink_target, FU_OFFLINE_TRIGGER_FILENAME);
 	if (rc < 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -1333,22 +1343,22 @@ fu_plugin_runner_device_register (FuPlugin *self, FuDevice *device)
 gboolean
 fu_plugin_runner_schedule_update (FuPlugin *self,
 			     FuDevice *device,
+			     FwupdRelease *release,
 			     GBytes *blob_cab,
 			     GError **error)
 {
-	FwupdRelease *release;
 	gchar tmpname[] = {"XXXXXX.cap"};
 	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuDevice) res_tmp = NULL;
 	g_autoptr(FuHistory) history = NULL;
-	g_autoptr(FwupdRelease) release_tmp = fwupd_release_new ();
 	g_autoptr(GFile) file = NULL;
 
 	/* id already exists */
 	history = fu_history_new ();
 	res_tmp = fu_history_get_device_by_id (history, fu_device_get_id (device), NULL);
-	if (res_tmp != NULL) {
+	if (res_tmp != NULL &&
+	    fu_device_get_update_state (res_tmp) == FWUPD_UPDATE_STATE_PENDING) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_ALREADY_PENDING,
@@ -1381,16 +1391,16 @@ fu_plugin_runner_schedule_update (FuPlugin *self,
 	/* schedule for next boot */
 	g_debug ("schedule %s to be installed to %s on next boot",
 		 filename, fu_device_get_id (device));
-	release = fu_device_get_release_default (device);
-	fwupd_release_set_version (release_tmp, fwupd_release_get_version (release));
-	fwupd_release_set_filename (release_tmp, filename);
+	fwupd_release_set_filename (release, filename);
 
 	/* add to database */
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_PENDING);
-	if (!fu_history_add_device (history, device, release_tmp, error))
+	if (!fu_history_add_device (history, device, release, error))
 		return FALSE;
 
 	/* next boot we run offline */
+	fu_device_set_progress (device, 100);
 	return fu_plugin_runner_offline_setup (error);
 }
 
@@ -1422,9 +1432,16 @@ fu_plugin_runner_verify (FuPlugin *self,
 	checksums = fu_device_get_checksums (device);
 	g_ptr_array_set_size (checksums, 0);
 
+	/* run additional detach */
+	if (!fu_plugin_runner_device_generic (self, device,
+					      "fu_plugin_verify_detach",
+					      error))
+		return FALSE;
+
 	/* run vfunc */
 	g_debug ("performing verify() on %s", priv->name);
 	if (!func (self, device, flags, &error_local)) {
+		g_autoptr(GError) error_attach = NULL;
 		if (error_local == NULL) {
 			g_critical ("unset error in plugin %s for verify()",
 				    priv->name);
@@ -1436,8 +1453,50 @@ fu_plugin_runner_verify (FuPlugin *self,
 		g_propagate_prefixed_error (error, g_steal_pointer (&error_local),
 					    "failed to verify using %s: ",
 					    priv->name);
+		/* make the device "work" again, but don't prefix the error */
+		if (!fu_plugin_runner_device_generic (self, device,
+						      "fu_plugin_verify_attach",
+						      &error_attach)) {
+			g_warning ("failed to attach whilst aborting verify(): %s",
+				   error_attach->message);
+		}
 		return FALSE;
 	}
+
+	/* run optional attach */
+	if (!fu_plugin_runner_device_generic (self, device,
+					      "fu_plugin_verify_attach",
+					      error))
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+gboolean
+fu_plugin_runner_activate (FuPlugin *self, FuDevice *device, GError **error)
+{
+	guint64 flags;
+
+	/* final check */
+	flags = fu_device_get_flags (device);
+	if ((flags & FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION) == 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "Device %s does not need activation",
+			     fu_device_get_id (device));
+		return FALSE;
+	}
+
+	/* run vfunc */
+	if (!fu_plugin_runner_device_generic (self, device,
+					      "fu_plugin_activate", error))
+		return FALSE;
+
+	/* update with correct flags */
+	fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+	fu_device_set_modified (device, (guint64) g_get_real_time () / G_USEC_PER_SEC);
 	return TRUE;
 }
 

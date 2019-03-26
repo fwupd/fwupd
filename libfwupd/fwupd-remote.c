@@ -42,6 +42,7 @@ typedef struct {
 	gchar			*filename_cache_sig;
 	gchar			*filename_source;
 	gboolean		 enabled;
+	gboolean		 approval_required;
 	gint			 priority;
 	guint64			 mtime;
 	gchar			**order_after;
@@ -52,6 +53,7 @@ enum {
 	PROP_0,
 	PROP_ID,
 	PROP_ENABLED,
+	PROP_APPROVAL_REQUIRED,
 	PROP_LAST
 };
 
@@ -410,6 +412,7 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 
 	/* extract data */
 	priv->enabled = g_key_file_get_boolean (kf, group, "Enabled", NULL);
+	priv->approval_required = g_key_file_get_boolean (kf, group, "ApprovalRequired", NULL);
 	priv->title = g_key_file_get_string (kf, group, "Title", NULL);
 
 	/* reporting is optional */
@@ -911,6 +914,25 @@ fwupd_remote_get_enabled (FwupdRemote *self)
 }
 
 /**
+ * fwupd_remote_get_approval_required:
+ * @self: A #FwupdRemote
+ *
+ * Gets if firmware from the remote should be checked against the list
+ * of a approved checksums.
+ *
+ * Returns: a #TRUE if the remote is restricted
+ *
+ * Since: 1.2.6
+ **/
+gboolean
+fwupd_remote_get_approval_required (FwupdRemote *self)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), FALSE);
+	return priv->approval_required;
+}
+
+/**
  * fwupd_remote_get_id:
  * @self: A #FwupdRemote
  *
@@ -969,6 +991,8 @@ fwupd_remote_set_from_variant_iter (FwupdRemote *self, GVariantIter *iter)
 			fwupd_remote_set_checksum (self, g_variant_get_string (value, NULL));
 		} else if (g_strcmp0 (key, "Enabled") == 0) {
 			priv->enabled = g_variant_get_boolean (value);
+		} else if (g_strcmp0 (key, "ApprovalRequired") == 0) {
+			priv->approval_required = g_variant_get_boolean (value);
 		} else if (g_strcmp0 (key, "Priority") == 0) {
 			priv->priority = g_variant_get_int32 (value);
 		} else if (g_strcmp0 (key, "ModificationTime") == 0) {
@@ -998,7 +1022,7 @@ fwupd_remote_to_variant (FwupdRemote *self)
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
 
 	/* create an array with all the metadata in */
-	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
+	g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
 	if (priv->id != NULL) {
 		g_variant_builder_add (&builder, "{sv}", FWUPD_RESULT_KEY_REMOTE_ID,
 				       g_variant_new_string (priv->id));
@@ -1061,6 +1085,8 @@ fwupd_remote_to_variant (FwupdRemote *self)
 	}
 	g_variant_builder_add (&builder, "{sv}", "Enabled",
 			       g_variant_new_boolean (priv->enabled));
+	g_variant_builder_add (&builder, "{sv}", "ApprovalRequired",
+			       g_variant_new_boolean (priv->approval_required));
 	return g_variant_new ("a{sv}", &builder);
 }
 
@@ -1074,6 +1100,9 @@ fwupd_remote_get_property (GObject *obj, guint prop_id,
 	switch (prop_id) {
 	case PROP_ENABLED:
 		g_value_set_boolean (value, priv->enabled);
+		break;
+	case PROP_APPROVAL_REQUIRED:
+		g_value_set_boolean (value, priv->approval_required);
 		break;
 	case PROP_ID:
 		g_value_set_string (value, priv->id);
@@ -1094,6 +1123,9 @@ fwupd_remote_set_property (GObject *obj, guint prop_id,
 	switch (prop_id) {
 	case PROP_ENABLED:
 		priv->enabled = g_value_get_boolean (value);
+		break;
+	case PROP_APPROVAL_REQUIRED:
+		priv->approval_required = g_value_get_boolean (value);
 		break;
 	case PROP_ID:
 		fwupd_remote_set_id (self, g_value_get_string (value));
@@ -1134,6 +1166,18 @@ fwupd_remote_class_init (FwupdRemoteClass *klass)
 	pspec = g_param_spec_boolean ("enabled", NULL, NULL,
 				      FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_ENABLED, pspec);
+
+	/**
+	 * FwupdRemote:approval-required:
+	 *
+	 * If firmware from the remote should be checked against the system
+	 * list of approved firmware.
+	 *
+	 * Since: 1.2.6
+	 */
+	pspec = g_param_spec_boolean ("approval-required", NULL, NULL,
+				      FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_APPROVAL_REQUIRED, pspec);
 }
 
 static void

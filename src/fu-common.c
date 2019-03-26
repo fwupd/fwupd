@@ -14,7 +14,9 @@
 #include <archive_entry.h>
 #include <archive.h>
 #include <errno.h>
+#include <limits.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "fwupd-error.h"
 
@@ -520,6 +522,7 @@ typedef struct {
 	GSource			*source;
 	GInputStream		*stream;
 	GCancellable		*cancellable;
+	guint			 timeout_id;
 } FuCommonSpawnHelper;
 
 static void fu_common_spawn_create_pollable_source (FuCommonSpawnHelper *helper);
@@ -581,12 +584,15 @@ fu_common_spawn_create_pollable_source (FuCommonSpawnHelper *helper)
 static void
 fu_common_spawn_helper_free (FuCommonSpawnHelper *helper)
 {
+	g_object_unref (helper->cancellable);
 	if (helper->stream != NULL)
 		g_object_unref (helper->stream);
 	if (helper->source != NULL)
 		g_source_destroy (helper->source);
 	if (helper->loop != NULL)
 		g_main_loop_unref (helper->loop);
+	if (helper->timeout_id != 0)
+		g_source_remove (helper->timeout_id);
 	g_free (helper);
 }
 
@@ -595,11 +601,29 @@ fu_common_spawn_helper_free (FuCommonSpawnHelper *helper)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuCommonSpawnHelper, fu_common_spawn_helper_free)
 #pragma clang diagnostic pop
 
+static gboolean
+fu_common_spawn_timeout_cb (gpointer user_data)
+{
+	FuCommonSpawnHelper *helper = (FuCommonSpawnHelper *) user_data;
+	g_cancellable_cancel (helper->cancellable);
+	g_main_loop_quit (helper->loop);
+	helper->timeout_id = 0;
+	return G_SOURCE_REMOVE;
+}
+
+static void
+fu_common_spawn_cancelled_cb (GCancellable *cancellable, FuCommonSpawnHelper *helper)
+{
+	/* just propagate */
+	g_cancellable_cancel (helper->cancellable);
+}
+
 /**
  * fu_common_spawn_sync:
  * @argv: The argument list to run
  * @handler_cb: (scope call): A #FuOutputHandler or %NULL
  * @handler_user_data: the user data to pass to @handler_cb
+ * @timeout_ms: a timeout in ms, or 0 for no limit
  * @cancellable: a #GCancellable, or %NULL
  * @error: A #GError or %NULL
  *
@@ -612,11 +636,13 @@ gboolean
 fu_common_spawn_sync (const gchar * const * argv,
 		      FuOutputHandler handler_cb,
 		      gpointer handler_user_data,
+		      guint timeout_ms,
 		      GCancellable *cancellable, GError **error)
 {
 	g_autoptr(FuCommonSpawnHelper) helper = NULL;
 	g_autoptr(GSubprocess) subprocess = NULL;
 	g_autofree gchar *argv_str = NULL;
+	gulong cancellable_id = 0;
 
 	/* create subprocess */
 	argv_str = g_strjoinv (" ", (gchar **) argv);
@@ -632,9 +658,26 @@ fu_common_spawn_sync (const gchar * const * argv,
 	helper->handler_user_data = handler_user_data;
 	helper->loop = g_main_loop_new (NULL, FALSE);
 	helper->stream = g_subprocess_get_stdout_pipe (subprocess);
-	helper->cancellable = cancellable;
+
+	/* always create a cancellable, and connect up the parent */
+	helper->cancellable = g_cancellable_new ();
+	if (cancellable != NULL) {
+		cancellable_id = g_cancellable_connect (cancellable,
+							G_CALLBACK (fu_common_spawn_cancelled_cb),
+							helper, NULL);
+	}
+
+	/* allow timeout */
+	if (timeout_ms > 0) {
+		helper->timeout_id = g_timeout_add (timeout_ms,
+						    fu_common_spawn_timeout_cb,
+						    helper);
+	}
 	fu_common_spawn_create_pollable_source (helper);
 	g_main_loop_run (helper->loop);
+	g_cancellable_disconnect (cancellable, cancellable_id);
+	if (g_cancellable_set_error_if_cancelled (helper->cancellable, error))
+		return FALSE;
 	return g_subprocess_wait_check (subprocess, cancellable, error);
 }
 
@@ -1212,4 +1255,101 @@ fu_common_bytes_align (GBytes *bytes, gsize blksz, gchar padval)
 
 	/* perfectly aligned */
 	return g_bytes_ref (bytes);
+}
+
+/**
+ * fu_common_bytes_is_empty:
+ * @bytes: a #GBytes
+ *
+ * Checks if a byte array are just empty (0xff) bytes.
+ *
+ * Return value: %TRUE if @bytes is empty
+ **/
+gboolean
+fu_common_bytes_is_empty (GBytes *bytes)
+{
+	gsize sz = 0;
+	const guint8 *buf = g_bytes_get_data (bytes, &sz);
+	for (gsize i = 0; i < sz; i++) {
+		if (buf[i] != 0xff)
+			return FALSE;
+	}
+	return TRUE;
+}
+
+/**
+ * fu_common_bytes_compare:
+ * @bytes1: a #GBytes
+ * @bytes2: another #GBytes
+ * @error: A #GError or %NULL
+ *
+ * Checks if a byte array are just empty (0xff) bytes.
+ *
+ * Return value: %TRUE if @bytes1 and @bytes2 are identical
+ **/
+gboolean
+fu_common_bytes_compare (GBytes *bytes1, GBytes *bytes2, GError **error)
+{
+	const guint8 *buf1;
+	const guint8 *buf2;
+	gsize bufsz1;
+	gsize bufsz2;
+
+	g_return_val_if_fail (bytes1 != NULL, FALSE);
+	g_return_val_if_fail (bytes2 != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* not the same length */
+	buf1 = g_bytes_get_data (bytes1, &bufsz1);
+	buf2 = g_bytes_get_data (bytes2, &bufsz2);
+	if (bufsz1 != bufsz2) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "got %" G_GSIZE_FORMAT " bytes, expected "
+			     "%" G_GSIZE_FORMAT, bufsz1, bufsz2);
+		return FALSE;
+	}
+
+	/* check matches */
+	for (guint i = 0x0; i < bufsz1; i++) {
+		if (buf1[i] != buf2[i]) {
+			g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "got 0x%02x, expected 0x%02x @ 0x%04x",
+			     buf1[i], buf2[i], i);
+			return FALSE;
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
+/**
+ * fu_common_realpath:
+ * @filename: a filename
+ * @error: A #GError or %NULL
+ *
+ * Finds the canonicalized absolute filename for a path.
+ *
+ * Return value: A filename, or %NULL if invalid or not found
+ **/
+gchar *
+fu_common_realpath (const gchar *filename, GError **error)
+{
+	char full_tmp[PATH_MAX];
+
+	g_return_val_if_fail (filename != NULL, NULL);
+
+	if (realpath (filename, full_tmp) == NULL) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "cannot resolve path: %s",
+			     strerror (errno));
+		return NULL;
+	}
+	return g_strdup (full_tmp);
 }

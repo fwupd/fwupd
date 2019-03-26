@@ -13,6 +13,7 @@
 #include "fwupd-enums.h"
 
 #include "fu-common.h"
+#include "fu-keyring.h"
 #include "fu-install-task.h"
 #include "fu-plugin.h"
 
@@ -21,11 +22,20 @@ G_BEGIN_DECLS
 #define FU_TYPE_ENGINE (fu_engine_get_type ())
 G_DECLARE_FINAL_TYPE (FuEngine, fu_engine, FU, ENGINE, GObject)
 
+typedef enum {
+	FU_ENGINE_LOAD_FLAG_NONE		= 0,
+	FU_ENGINE_LOAD_FLAG_READONLY_FS		= 1 << 0,
+	FU_ENGINE_LOAD_FLAG_LAST
+} FuEngineLoadFlags;
+
 FuEngine	*fu_engine_new				(FuAppFlags	 app_flags);
+void		 fu_engine_add_app_flag			(FuEngine	*self,
+							 FuAppFlags	 app_flags);
 void		 fu_engine_add_plugin_filter		(FuEngine	*self,
 							 const gchar	*plugin_glob);
 void		 fu_engine_idle_reset			(FuEngine	*self);
 gboolean	 fu_engine_load				(FuEngine	*self,
+							 FuEngineLoadFlags flags,
 							 GError		**error);
 gboolean	 fu_engine_load_plugins			(FuEngine	*self,
 							 GError		**error);
@@ -110,6 +120,16 @@ gboolean	 fu_engine_install_tasks		(FuEngine	*self,
 							 GError		**error);
 GPtrArray	*fu_engine_get_details			(FuEngine	*self,
 							 gint		 fd,
+							 GError		**error);
+gboolean	 fu_engine_activate			(FuEngine	*self,
+							 const gchar	*device_id,
+							 GError		**error);
+GPtrArray	*fu_engine_get_approved_firmware	(FuEngine	*self);
+void		 fu_engine_add_approved_firmware	(FuEngine	*self,
+							 const gchar	*checksum);
+gchar		*fu_engine_self_sign			(FuEngine	*self,
+							 const gchar	*value,
+							 FuKeyringSignFlags flags,
 							 GError		**error);
 
 /* for the self tests */

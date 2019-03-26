@@ -55,6 +55,7 @@ libfwupdprivate = static_library(
     soup,
     sqlite,
     libarchive,
+    libjsonglib,
     libxmlb,
     valgrind,
   ],
@@ -96,6 +97,63 @@ fwupdmgr = executable(
   ],
   install : true,
   install_dir : bindir
+)
+endif
+
+if get_option('agent')
+fwupdagent = executable(
+  'fwupdagent',
+  sources : [
+    'fu-agent.c',
+    'fu-util-common.c',
+  ],
+  include_directories : [
+    include_directories('..'),
+    include_directories('../libfwupd'),
+  ],
+  dependencies : [
+    libxmlb,
+    giounix,
+    gudev,
+    gusb,
+    soup,
+    libjsonglib,
+  ],
+  link_with : [
+    fwupd,
+    libfwupdprivate,
+  ],
+  install : true,
+  install_dir : join_paths(libexecdir, 'fwupd')
+)
+endif
+
+if get_option('systemd')
+fwupdagent = executable(
+  'fwupdoffline',
+  sources : [
+    'fu-offline.c',
+    'fu-util-common.c',
+  ],
+  include_directories : [
+    include_directories('..'),
+    include_directories('../libfwupd'),
+  ],
+  dependencies : [
+    giounix,
+    gudev,
+    gusb,
+    soup,
+  ],
+  link_with : [
+    fwupd,
+    libfwupdprivate,
+  ],
+  c_args : [
+    '-DFU_OFFLINE_DESTDIR=""',
+  ],
+  install : true,
+  install_dir : join_paths(libexecdir, 'fwupd')
 )
 endif
 
@@ -167,6 +225,7 @@ fwupdtool = executable(
     sqlite,
     valgrind,
     libarchive,
+    libjsonglib,
   ],
   link_with : [
     fwupd,
@@ -251,6 +310,7 @@ executable(
     sqlite,
     valgrind,
     libarchive,
+    libjsonglib,
   ],
   link_with : fwupd,
   c_args : [
@@ -324,6 +384,7 @@ if get_option('tests')
       sqlite,
       valgrind,
       libarchive,
+      libjsonglib,
     ],
     link_with : [
       fwupd,
@@ -334,10 +395,9 @@ if get_option('tests')
       '-DTESTDATADIR="' + testdatadir_src + ':' + testdatadir_dst + '"',
       '-DPLUGINBUILDDIR="' + pluginbuilddir + '"',
       '-DFU_OFFLINE_DESTDIR="/tmp/fwupd-self-test"',
-      '-DFU_MUTEX_DEBUG',
     ],
   )
-  test('fu-self-test', e, is_parallel:false)
+  test('fu-self-test', e, is_parallel:false, timeout:180)
 endif
 
 if get_option('introspection')

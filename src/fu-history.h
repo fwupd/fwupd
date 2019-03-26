@@ -56,4 +56,12 @@ FuDevice	*fu_history_get_device_by_id		(FuHistory	*self,
 GPtrArray	*fu_history_get_devices			(FuHistory	*self,
 							 GError		**error);
 
+gboolean	 fu_history_clear_approved_firmware	(FuHistory	*self,
+							 GError		**error);
+gboolean	 fu_history_add_approved_firmware	(FuHistory	*self,
+							 const gchar	*checksum,
+							 GError		**error);
+GPtrArray	*fu_history_get_approved_firmware	(FuHistory	*self,
+							 GError		**error);
+
 G_END_DECLS

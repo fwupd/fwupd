@@ -14,6 +14,7 @@ Fedora (x86_64)
 * Tests with the built in local test suite for all plugins.
 * All packages are installed
 * An installed testing run with the "test" plugin and pulling from LVFS.
+* With modem manager disabled
 
 Debian testing (x86_64)
 ------
@@ -57,6 +58,7 @@ Debian testing (cross compile s390x)
 * Compiled under gcc
 * Tests with -Werror enabled
 * Runs local test suite using qemu-user
+* Modem manager disabled
 
 Arch Linux (x86_64)
 ----------

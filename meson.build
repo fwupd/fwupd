@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version : '1.2.5',
+  version : '1.2.6',
   license : 'LGPL-2.1+',
   meson_version : '>=0.47.0',
   default_options : ['warning_level=2', 'c_std=c99'],
@@ -175,6 +175,9 @@ if get_option('daemon')
 endif
 if get_option('pkcs7')
   gnutls = dependency('gnutls', version : '>= 3.4.4.1')
+  if gnutls.version().version_compare('>= 3.6.0')
+    conf.set('HAVE_GNUTLS_3_6_0', '1')
+  endif
   conf.set('ENABLE_PKCS7', '1')
 endif
 if get_option('gpg')
@@ -239,7 +242,7 @@ if get_option('plugin_uefi')
   conf.set_quoted('EFI_MACHINE_TYPE_NAME', EFI_MACHINE_TYPE_NAME)
   r = run_command([python3, 'po/test-deps'])
   if r.returncode() != 0
-    error(r.stdout())
+    error(r.stderr())
   endif
 endif
 
@@ -250,6 +253,13 @@ if get_option('plugin_dell')
   if not get_option('plugin_uefi')
     error('plugin_dell also needs plugin_uefi to work')
   endif
+endif
+
+if get_option('plugin_modem_manager')
+  libmm_glib = dependency('mm-glib', version : '>= 1.10.0')
+  add_project_arguments('-DMM_REQUIRED_VERSION="1.10.0"', language : 'c')
+  libqmi_glib = dependency('qmi-glib', version : '>= 1.22.0')
+  add_project_arguments('-DQMI_REQUIRED_VERSION="1.23.1"', language : 'c')
 endif
 
 if get_option('plugin_nvme')
@@ -270,6 +280,12 @@ endif
 if get_option('systemd')
   systemd = dependency('systemd', version : '>= 211')
   conf.set('HAVE_SYSTEMD' , '1')
+  conf.set('HAVE_LOGIND' , '1')
+endif
+
+if get_option('elogind')
+  elogind = dependency('libelogind', version : '>= 211')
+  conf.set('HAVE_LOGIND' , '1')
 endif
 
 if get_option('consolekit')

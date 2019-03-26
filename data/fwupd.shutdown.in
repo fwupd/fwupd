@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# no history database exists
+[ -f @localstatedir@/lib/fwupd/pending.db ] || exit 0
+
+# activate firmware when we have a read-only filesysten
+@libexecdir@/fwupd/fwupdtool activate

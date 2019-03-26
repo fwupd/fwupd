@@ -209,6 +209,7 @@ msgstr "Не проверавај да ли је потребно поновно
 msgid "Do not check for unreported history"
 msgstr "Не проверавај непослати историјат"
 
+#. success
 msgid "Done!"
 msgstr "Урађено!"
 
@@ -368,10 +369,6 @@ msgstr "Инсталирај датотеку са фирмвером на ов�
 
 msgid "Install old version of system firmware"
 msgstr "Инсталирајте старо издање системског фирмвера"
-
-#. TRANSLATORS: command description
-msgid "Install prepared updates now"
-msgstr "Инсталирај припремљена ажурирања сад"
 
 msgid "Install signed device firmware"
 msgstr "Инсталирајте потписани фирмвер за уређаје"

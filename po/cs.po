@@ -253,6 +253,7 @@ msgstr "Nekontrolovat nenahlášení historie"
 msgid "Do not write to the history database"
 msgstr "Nezapisovat do databáze historie"
 
+#. success
 msgid "Done!"
 msgstr "Hotovo!"
 
@@ -461,10 +462,6 @@ msgstr "Nainstalovat soubor s firmwarem na tento hardware"
 
 msgid "Install old version of system firmware"
 msgstr "Instalace starší verze systémového firmwaru"
-
-#. TRANSLATORS: command description
-msgid "Install prepared updates now"
-msgstr "Nainstalovat připravené aktualizace nyní"
 
 msgid "Install signed device firmware"
 msgstr "Instalace podepsaného firmwaru zařízení"

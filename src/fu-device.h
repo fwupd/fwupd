@@ -50,8 +50,10 @@ struct _FuDeviceClass
 							 FuDevice	*donor);
 	gboolean		 (*poll)		(FuDevice	*self,
 							 GError		**error);
+	gboolean		 (*activate)		(FuDevice	*self,
+							 GError		**error);
 	/*< private >*/
-	gpointer	padding[20];
+	gpointer	padding[19];
 };
 
 /**
@@ -184,10 +186,14 @@ void		 fu_device_set_status			(FuDevice	*self,
 FuVersionFormat	 fu_device_get_version_format		(FuDevice	*self);
 void		 fu_device_set_version_format		(FuDevice	*self,
 							 FuVersionFormat version_format);
+void		 fu_device_set_firmware_size		(FuDevice	*self,
+							 guint64	 size);
 void		 fu_device_set_firmware_size_min	(FuDevice	*self,
 							 guint64	 size_min);
 void		 fu_device_set_firmware_size_max	(FuDevice	*self,
 							 guint64	 size_max);
+guint64		 fu_device_get_firmware_size_min	(FuDevice	*self);
+guint64		 fu_device_get_firmware_size_max	(FuDevice	*self);
 guint		 fu_device_get_progress			(FuDevice	*self);
 void		 fu_device_set_progress			(FuDevice	*self,
 							 guint		 progress);
@@ -219,6 +225,8 @@ gboolean	 fu_device_close			(FuDevice	*self,
 gboolean	 fu_device_probe			(FuDevice	*self,
 							 GError		**error);
 gboolean	 fu_device_setup			(FuDevice	*self,
+							 GError		**error);
+gboolean	 fu_device_activate			(FuDevice	*self,
 							 GError		**error);
 void		 fu_device_probe_invalidate		(FuDevice	*self);
 gboolean	 fu_device_poll				(FuDevice	*self,

@@ -92,7 +92,7 @@ fwup_populate_update_info(CHAR16 *name, FWUP_UPDATE_TABLE *info_out)
 
 	is = info_size - is;
 	INTN sz = fwup_dp_size(hdr, info_size);
-	if (sz < 0 || is < 0 || is > (INTN)info_size || is != sz) {
+	if (sz < 0 || is > (INTN)info_size || is != sz) {
 		fwup_warning(L"Update '%s' has an invalid file path, "
 			     L"update info size: %d dp size: %d size for dp: %d",
 			     name, info_size, sz, is);
@@ -484,6 +484,18 @@ fwup_get_gop_mode(UINT32 *mode, EFI_HANDLE loaded_image)
 	return EFI_UNSUPPORTED;
 }
 
+static inline void
+fwup_update_ux_capsule_checksum(UX_CAPSULE_HEADER *payload_hdr)
+{
+	UINT8 *buf = (UINT8 *)payload_hdr;
+	UINT8 sum = 0;
+
+	payload_hdr->checksum = 0;
+	for (UINTN i = 0; i < sizeof(*payload_hdr); i++)
+		sum = (UINT8) (sum + buf[i]);
+	payload_hdr->checksum = sum;
+}
+
 static EFI_STATUS
 fwup_check_gop_for_ux_capsule(EFI_HANDLE loaded_image,
 			      EFI_CAPSULE_HEADER *capsule)
@@ -491,10 +503,12 @@ fwup_check_gop_for_ux_capsule(EFI_HANDLE loaded_image,
 	UX_CAPSULE_HEADER *payload_hdr;
 	EFI_STATUS rc;
 
-	payload_hdr = (UX_CAPSULE_HEADER *)((UINT8*) capsule) + capsule->HeaderSize;
+	payload_hdr = (UX_CAPSULE_HEADER *) (((UINT8 *) capsule) + capsule->HeaderSize);
 	rc = fwup_get_gop_mode(&payload_hdr->mode, loaded_image);
 	if (EFI_ERROR(rc))
 		return EFI_UNSUPPORTED;
+
+	fwup_update_ux_capsule_checksum(payload_hdr);
 
 	return EFI_SUCCESS;
 }
@@ -575,6 +589,10 @@ fwup_apply_capsules(EFI_CAPSULE_HEADER **capsules,
 
 	rc = uefi_call_wrapper(RT->QueryCapsuleCapabilities, 4, capsules,
 				num_updates, &max_capsule_size, reset);
+	if (EFI_ERROR(rc)) {
+		fwup_warning(L"Could not query capsule capabilities: %r", rc);
+		return rc;
+	}
 	fwup_debug(L"QueryCapsuleCapabilities: %r max: %ld reset:%d",
 	           rc, max_capsule_size, *reset);
 	fwup_debug(L"Capsules: %d", num_updates);

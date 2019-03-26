@@ -285,6 +285,7 @@ msgstr "Não verifica por histórico não relatado"
 msgid "Do not write to the history database"
 msgstr "Não escreve no banco de dados de histórico"
 
+#. success
 msgid "Done!"
 msgstr "Feito!"
 
@@ -499,10 +500,6 @@ msgstr "Instala um arquivo de firmware neste periférico"
 
 msgid "Install old version of system firmware"
 msgstr "Instalar versão antiga do firmware no sistema"
-
-#. TRANSLATORS: command description
-msgid "Install prepared updates now"
-msgstr "Instala as atualizações preparadas agora"
 
 msgid "Install signed device firmware"
 msgstr "Instalar firmware assinado no dispositivo"
@@ -724,6 +721,14 @@ msgstr "Reiniciando dispositivo…"
 #. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
 msgstr "Retorna todos os IDs de hardware para a máquina"
+
+#. TRANSLATORS: command line option
+msgid "Run the plugin composite cleanup routine when using install-blob"
+msgstr "Executa a rotina de limpeza da composição de plugin ao usar install-blob"
+
+#. TRANSLATORS: command line option
+msgid "Run the plugin composite prepare routine when using install-blob"
+msgstr "Executa a rotina de preparação da composição de plugin ao usar install-blob"
 
 msgid "Runtime"
 msgstr "Runtime"

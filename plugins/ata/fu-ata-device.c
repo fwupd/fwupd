@@ -37,6 +37,7 @@ struct ata_tf {
 
 #define ATA_OP_IDENTIFY			0xec
 #define ATA_OP_DOWNLOAD_MICROCODE	0x92
+#define ATA_OP_STANDBY_IMMEDIATE	0xe0
 
 #define ATA_SUBCMD_MICROCODE_OBSOLETE			0x01
 #define ATA_SUBCMD_MICROCODE_DOWNLOAD_CHUNKS_ACTIVATE	0x03
@@ -467,6 +468,36 @@ fu_ata_device_setup (FuDevice *device, GError **error)
 }
 
 static gboolean
+fu_ata_device_activate (FuDevice *device, GError **error)
+{
+	FuAtaDevice *self = FU_ATA_DEVICE (device);
+	struct ata_tf tf = { 0x0 };
+
+	/* flush caches and make sure drive is ready to activate */
+	tf.dev = 0xa0 | ATA_USING_LBA;
+	tf.command = ATA_OP_STANDBY_IMMEDIATE;
+	if (!fu_ata_device_command (self, &tf, SG_DXFER_TO_DEV,
+				    120 * 1000, /* a long time! */
+				    NULL, 0, error)) {
+		g_prefix_error (error, "failed to standby immediate: ");
+		return FALSE;
+	}
+
+	/* load the new firmware */
+	tf.command = ATA_OP_DOWNLOAD_MICROCODE;
+	tf.feat = ATA_SUBCMD_MICROCODE_ACTIVATE;
+	if (!fu_ata_device_command (self, &tf, SG_DXFER_TO_DEV,
+				    120 * 1000, /* a long time! */
+				    NULL, 0, error)) {
+		g_prefix_error (error, "failed to activate firmware: ");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_ata_device_close (FuDevice *device, GError **error)
 {
 	FuAtaDevice *self = FU_ATA_DEVICE (device);
@@ -578,6 +609,7 @@ fu_ata_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 	}
 
 	/* success! */
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 	fu_device_set_progress (device, 100);
 	return TRUE;
 }
@@ -654,6 +686,7 @@ fu_ata_device_class_init (FuAtaDeviceClass *klass)
 	klass_device->set_quirk_kv = fu_ata_device_set_quirk_kv;
 	klass_device->open = fu_ata_device_open;
 	klass_device->setup = fu_ata_device_setup;
+	klass_device->activate = fu_ata_device_activate;
 	klass_device->close = fu_ata_device_close;
 	klass_device->write_firmware = fu_ata_device_write_firmware;
 	klass_udev_device->probe = fu_ata_device_probe;

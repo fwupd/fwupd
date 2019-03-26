@@ -13,6 +13,7 @@ G_BEGIN_DECLS
 typedef enum {
 	FU_APP_FLAGS_NONE		= 0,
 	FU_APP_FLAGS_NO_IDLE_SOURCES	= 1 << 0,
+	FU_APP_FLAGS_IS_OFFLINE		= 1 << 1,
 	FU_APP_FLAGS_LAST
 } FuAppFlags;
 
@@ -44,10 +45,13 @@ typedef void	(*FuOutputHandler)		(const gchar	*line,
 gboolean	 fu_common_spawn_sync		(const gchar * const *argv,
 						 FuOutputHandler handler_cb,
 						 gpointer	 handler_user_data,
+						 guint		 timeout_ms,
 						 GCancellable	*cancellable,
 						 GError		**error);
 
 gchar		*fu_common_get_path		(FuPathKind	 path_kind);
+gchar		*fu_common_realpath		(const gchar	*filename,
+						 GError		**error);
 gboolean	 fu_common_rmtree		(const gchar	*directory,
 						 GError		**error);
 GPtrArray	*fu_common_get_files_recursive	(const gchar	*path,
@@ -90,6 +94,10 @@ void		 fu_common_dump_bytes		(const gchar	*log_domain,
 GBytes		*fu_common_bytes_align		(GBytes		*bytes,
 						 gsize		 blksz,
 						 gchar		 padval);
+gboolean	 fu_common_bytes_is_empty	(GBytes		*bytes);
+gboolean	 fu_common_bytes_compare	(GBytes		*bytes1,
+						 GBytes		*bytes2,
+						 GError		**error);
 
 typedef guint FuEndianType;
 

@@ -308,6 +308,25 @@
     </method>
 
     <!--***********************************************************-->
+    <method name='Activate'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Activate a firmware update on the device.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='s' name='id' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              An ID, typically the sha hash of the device string.</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
     <method name='GetResults'>
       <doc:doc>
         <doc:description>
@@ -347,6 +366,44 @@
         <doc:doc>
           <doc:summary>
             <doc:para>The array remotes, with properties</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
+    <method name='GetApprovedFirmware'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Gets the list of approved firmware that can be applied to devices.
+            In an enterprise this will be configured by a domain administrator.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='as' name='checksums' direction='out'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>The checksums of the archives</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
+    <method name='SetApprovedFirmware'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Sets the list of approved firmware that can be applied to devices.
+            In an enterprise this will be configured by a domain administrator.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='as' name='checksums' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>The checksums of the archives</doc:para>
           </doc:summary>
         </doc:doc>
       </arg>
@@ -480,6 +537,45 @@
           <doc:summary>
             <doc:para>
               The value of the correct type, e.g. a URL.
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
+    <method name='SelfSign'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Signs some text, typically using a self-signed PKCS-7 certificate.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='s' name='data' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              String input data, certainly *NOT* binary data.
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+      <arg type='a{sv}' name='options' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              Options to be used when signing, e.g.
+              <doc:tt>add-cert=True</doc:tt> or <doc:tt>add-timestamp=True</doc:tt>.
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+      <arg type='s' name='sig' direction='out'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              The detached signature string.
             </doc:para>
           </doc:summary>
         </doc:doc>

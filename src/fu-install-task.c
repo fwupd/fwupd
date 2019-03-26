@@ -20,7 +20,7 @@ struct _FuInstallTask
 	GObject			 parent_instance;
 	FuDevice		*device;
 	XbNode			*component;
-	FwupdTrustFlags		 trust_flags;
+	FwupdReleaseFlags		 trust_flags;
 	gboolean		 is_downgrade;
 };
 
@@ -65,9 +65,9 @@ fu_install_task_get_component (FuInstallTask *self)
  * NOTE: This is only set after fu_install_task_check_requirements() has been
  * called successfully.
  *
- * Returns: the #FwupdTrustFlags, e.g. #FWUPD_TRUST_FLAG_PAYLOAD
+ * Returns: the #FwupdReleaseFlags, e.g. #FWUPD_TRUST_FLAG_PAYLOAD
  **/
-FwupdTrustFlags
+FwupdReleaseFlags
 fu_install_task_get_trust_flags (FuInstallTask *self)
 {
 	g_return_val_if_fail (FU_IS_INSTALL_TASK (self), FALSE);
@@ -172,6 +172,7 @@ fu_install_task_check_requirements (FuInstallTask *self,
 
 	/* called with online update, test if device is supposed to allow this */
 	if ((flags & FWUPD_INSTALL_FLAG_OFFLINE) == 0 &&
+	    (flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
 	    fu_device_has_flag (self->device, FWUPD_DEVICE_FLAG_ONLY_OFFLINE)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -250,7 +251,7 @@ fu_install_task_check_requirements (FuInstallTask *self,
 	}
 
 	/* verify */
-	if (!fu_keyring_get_release_trust_flags (release, &self->trust_flags, &error_local)) {
+	if (!fu_keyring_get_release_flags (release, &self->trust_flags, &error_local)) {
 		if (g_error_matches (error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 			g_warning ("Ignoring verification for %s: %s",
 				   fu_device_get_name (self->device),

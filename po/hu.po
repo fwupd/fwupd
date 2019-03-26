@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Balázs Meskó <meskobalazs@gmail.com>, 2017-2018
+# Balázs Meskó <meskobalazs@gmail.com>, 2017-2019
 # Balázs Úr <ur.balazs@fsf.hu>, 2015-2018
 # Gabor Kelemen <kelemeng at ubuntu dot com>, 2016
 # kelemeng <kelemeng@ubuntu.com>, 2016
@@ -86,6 +86,10 @@ msgstr "Meglévő firmware verziók újratelepítésének engedélyezése"
 #. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "Egy frissítés újraindítást igényel a befejezéshez."
+
+#. TRANSLATORS: explain why we want to shutdown
+msgid "An update requires the system to shutdown to complete."
+msgstr "Egy frissítés a rendszer újraindítását igényel a befejezéshez."
 
 #. TRANSLATORS: command line option
 msgid "Answer yes to all questions"
@@ -280,6 +284,7 @@ msgstr "Ne ellenőrizze a nem jelentett előzményeket"
 msgid "Do not write to the history database"
 msgstr "Ne írjon az előzmények adatbázisába"
 
+#. success
 msgid "Done!"
 msgstr "Kész!"
 
@@ -494,10 +499,6 @@ msgstr "Egy firmware fájl telepítése ezen a hardveren"
 
 msgid "Install old version of system firmware"
 msgstr "A rendszer firmware régi verziójának telepítése"
-
-#. TRANSLATORS: command description
-msgid "Install prepared updates now"
-msgstr "Az előkészített frissítések telepítés most"
 
 msgid "Install signed device firmware"
 msgstr "Aláírt eszköz firmware telepítése"
@@ -815,6 +816,10 @@ msgstr "A legutóbb megpróbált frissítés hibakeresési naplójának megjelen
 msgid "Show the information of firmware update status"
 msgstr "A firmware frissítési állapot információinak megjelenítése"
 
+#. TRANSLATORS: shutdown to apply the update
+msgid "Shutdown now?"
+msgstr "Leállítja most?"
+
 msgid "Specify Vendor/Product ID(s) of DFU device"
 msgstr "Adja meg a DFU eszköz gyártó-/termékazonosítóját"
 
@@ -916,6 +921,10 @@ msgstr "Frissítés összegzése"
 #. TRANSLATORS: section header for firmware version
 msgid "Update Version"
 msgstr "Frissítés verziója"
+
+#. TRANSLATORS: command description
+msgid "Update all devices that match local metadata"
+msgstr "Az összes olyan eszköz frissítése, amely illeszkedik a helyi metaadatokra"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"

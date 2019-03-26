@@ -682,6 +682,10 @@ fu_device_set_quirk_kv (FuDevice *self,
 		fu_device_set_firmware_size_max (self, fu_common_strtoull (value));
 		return TRUE;
 	}
+	if (g_strcmp0 (key, FU_QUIRKS_FIRMWARE_SIZE) == 0) {
+		fu_device_set_firmware_size (self, fu_common_strtoull (value));
+		return TRUE;
+	}
 	if (g_strcmp0 (key, FU_QUIRKS_INSTALL_DURATION) == 0) {
 		fu_device_set_install_duration (self, fu_common_strtoull (value));
 		return TRUE;
@@ -736,6 +740,24 @@ fu_device_add_guid_quirks (FuDevice *self, const gchar *guid)
 }
 
 /**
+ * fu_device_set_firmware_size:
+ * @self: A #FuDevice
+ * @size: Size in bytes
+ *
+ * Sets the exact allowed size of the firmware blob.
+ *
+ * Since: 1.2.6
+ **/
+void
+fu_device_set_firmware_size (FuDevice *self, guint64 size)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_DEVICE (self));
+	priv->size_min = size;
+	priv->size_max = size;
+}
+
+/**
  * fu_device_set_firmware_size_min:
  * @self: A #FuDevice
  * @size_min: Size in bytes
@@ -767,6 +789,42 @@ fu_device_set_firmware_size_max (FuDevice *self, guint64 size_max)
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_DEVICE (self));
 	priv->size_max = size_max;
+}
+
+/**
+ * fu_device_get_firmware_size_min:
+ * @self: A #FuDevice
+ *
+ * Gets the minimum size of the firmware blob.
+ *
+ * Returns: Size in bytes, or 0 if unset
+ *
+ * Since: 1.2.6
+ **/
+guint64
+fu_device_get_firmware_size_min (FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_DEVICE (self), 0);
+	return priv->size_min;
+}
+
+/**
+ * fu_device_get_firmware_size_max:
+ * @self: A #FuDevice
+ *
+ * Gets the maximum size of the firmware blob.
+ *
+ * Returns: Size in bytes, or 0 if unset
+ *
+ * Since: 1.2.6
+ **/
+guint64
+fu_device_get_firmware_size_max (FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_DEVICE (self), 0);
+	return priv->size_max;
 }
 
 static void
@@ -2081,6 +2139,35 @@ fu_device_setup (FuDevice *self, GError **error)
 	fu_device_convert_instance_ids (self);
 
 	priv->done_setup = TRUE;
+	return TRUE;
+}
+
+/**
+ * fu_device_activate:
+ * @self: A #FuDevice
+ * @error: A #GError, or %NULL
+ *
+ * Activates up a device, which normally means the device switches to a new
+ * firmware verson. This should only be called when data loss cannot occur.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.2.6
+ **/
+gboolean
+fu_device_activate (FuDevice *self, GError **error)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+
+	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* subclassed */
+	if (klass->activate != NULL) {
+		if (!klass->activate (self, error))
+			return FALSE;
+	}
+
 	return TRUE;
 }
 

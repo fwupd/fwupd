@@ -701,7 +701,7 @@ dfu_target_avr_upload_element (DfuTarget *target,
 		g_ptr_array_add (blobs, blob_tmp);
 
 		/* this page has valid data */
-		if (!dfu_utils_bytes_is_empty (blob_tmp)) {
+		if (!fu_common_bytes_is_empty (blob_tmp)) {
 			g_debug ("chunk %u has data (page %" G_GUINT32_FORMAT ")",
 				 i, chk->page);
 			chunk_valid = i;

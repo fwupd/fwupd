@@ -148,7 +148,7 @@ fu_main_emit_property_changed (FuMainPrivate *priv,
 
 	/* build the dict */
 	g_variant_builder_init (&invalidated_builder, G_VARIANT_TYPE ("as"));
-	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
+	g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
 	g_variant_builder_add (&builder,
 			       "{sv}",
 			       property_name,
@@ -295,7 +295,8 @@ typedef struct {
 	PolkitSubject		*subject;
 	GPtrArray		*install_tasks;
 	GPtrArray		*action_ids;
-	FwupdInstallFlags	 flags;
+	GPtrArray		*checksums;
+	guint64			 flags;
 	GBytes			*blob_cab;
 	FuMainPrivate		*priv;
 	gchar			*device_id;
@@ -318,6 +319,8 @@ fu_main_auth_helper_free (FuMainAuthHelper *helper)
 		g_ptr_array_unref (helper->install_tasks);
 	if (helper->action_ids != NULL)
 		g_ptr_array_unref (helper->action_ids);
+	if (helper->checksums != NULL)
+		g_ptr_array_unref (helper->checksums);
 	g_free (helper->device_id);
 	g_free (helper->remote_id);
 	g_free (helper->key);
@@ -378,6 +381,84 @@ fu_main_authorize_unlock_cb (GObject *source, GAsyncResult *res, gpointer user_d
 
 	/* authenticated */
 	if (!fu_engine_unlock (helper->priv->engine, helper->device_id, &error)) {
+		g_dbus_method_invocation_return_gerror (helper->invocation, error);
+		return;
+	}
+
+	/* success */
+	g_dbus_method_invocation_return_value (helper->invocation, NULL);
+}
+
+static void
+fu_main_authorize_set_approved_firmware_cb (GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *) user_data;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(PolkitAuthorizationResult) auth = NULL;
+
+	/* get result */
+	fu_main_set_status (helper->priv, FWUPD_STATUS_IDLE);
+	auth = polkit_authority_check_authorization_finish (POLKIT_AUTHORITY (source),
+							    res, &error);
+	if (!fu_main_authorization_is_valid (auth, &error)) {
+		g_dbus_method_invocation_return_gerror (helper->invocation, error);
+		return;
+	}
+
+	/* success */
+	for (guint i = 0; i < helper->checksums->len; i++) {
+		const gchar *csum = g_ptr_array_index (helper->checksums, i);
+		fu_engine_add_approved_firmware (helper->priv->engine, csum);
+	}
+	g_dbus_method_invocation_return_value (helper->invocation, NULL);
+}
+
+static void
+fu_main_authorize_self_sign_cb (GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *) user_data;
+	g_autofree gchar *sig = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(PolkitAuthorizationResult) auth = NULL;
+
+	/* get result */
+	fu_main_set_status (helper->priv, FWUPD_STATUS_IDLE);
+	auth = polkit_authority_check_authorization_finish (POLKIT_AUTHORITY (source),
+							    res, &error);
+	if (!fu_main_authorization_is_valid (auth, &error)) {
+		g_dbus_method_invocation_return_gerror (helper->invocation, error);
+		return;
+	}
+
+	/* authenticated */
+	sig = fu_engine_self_sign (helper->priv->engine, helper->value, helper->flags, &error);
+	if (sig == NULL) {
+		g_dbus_method_invocation_return_gerror (helper->invocation, error);
+		return;
+	}
+
+	/* success */
+	g_dbus_method_invocation_return_value (helper->invocation, g_variant_new ("(s)", sig));
+}
+
+static void
+fu_main_authorize_activate_cb (GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *) user_data;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(PolkitAuthorizationResult) auth = NULL;
+
+	/* get result */
+	fu_main_set_status (helper->priv, FWUPD_STATUS_IDLE);
+	auth = polkit_authority_check_authorization_finish (POLKIT_AUTHORITY (source),
+							    res, &error);
+	if (!fu_main_authorization_is_valid (auth, &error)) {
+		g_dbus_method_invocation_return_gerror (helper->invocation, error);
+		return;
+	}
+
+	/* authenticated */
+	if (!fu_engine_activate (helper->priv->engine, helper->device_id, &error)) {
 		g_dbus_method_invocation_return_gerror (helper->invocation, error);
 		return;
 	}
@@ -718,6 +799,86 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		g_dbus_method_invocation_return_value (invocation, val);
 		return;
 	}
+	if (g_strcmp0 (method_name, "GetApprovedFirmware") == 0) {
+		GVariantBuilder builder;
+		GPtrArray *checksums = fu_engine_get_approved_firmware (priv->engine);
+		g_variant_builder_init (&builder, G_VARIANT_TYPE ("as"));
+		for (guint i = 0; i < checksums->len; i++) {
+			const gchar *checksum = g_ptr_array_index (checksums, i);
+			g_variant_builder_add_value (&builder, g_variant_new_string (checksum));
+		}
+		val = g_variant_builder_end (&builder);
+		g_dbus_method_invocation_return_value (invocation,
+						       g_variant_new_tuple (&val, 1));
+		return;
+	}
+	if (g_strcmp0 (method_name, "SetApprovedFirmware") == 0) {
+		g_autofree gchar *checksums_str = NULL;
+		g_auto(GStrv) checksums = NULL;
+		g_autoptr(FuMainAuthHelper) helper = NULL;
+		g_autoptr(PolkitSubject) subject = NULL;
+
+		g_variant_get (parameters, "(^as)", &checksums);
+		checksums_str = g_strjoinv (",", checksums);
+		g_debug ("Called %s(%s)", method_name, checksums_str);
+
+		/* authenticate */
+		fu_main_set_status (priv, FWUPD_STATUS_WAITING_FOR_AUTH);
+		helper = g_new0 (FuMainAuthHelper, 1);
+		helper->priv = priv;
+		helper->invocation = g_object_ref (invocation);
+		helper->checksums = g_ptr_array_new_with_free_func (g_free);
+		for (guint i = 0; checksums[i] != NULL; i++)
+			g_ptr_array_add (helper->checksums, g_strdup (checksums[i]));
+		subject = polkit_system_bus_name_new (sender);
+		polkit_authority_check_authorization (priv->authority, subject,
+						      "org.freedesktop.fwupd.set-approved-firmware",
+						      NULL,
+						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
+						      NULL,
+						      fu_main_authorize_set_approved_firmware_cb,
+						      g_steal_pointer (&helper));
+		return;
+	}
+	if (g_strcmp0 (method_name, "SelfSign") == 0) {
+		GVariant *prop_value;
+		gchar *prop_key;
+		g_autofree gchar *value = NULL;
+		g_autoptr(FuMainAuthHelper) helper = NULL;
+		g_autoptr(PolkitSubject) subject = NULL;
+		g_autoptr(GVariantIter) iter = NULL;
+
+		g_variant_get (parameters, "(sa{sv})", &value, &iter);
+		g_debug ("Called %s(%s)", method_name, value);
+
+		/* get flags */
+		helper = g_new0 (FuMainAuthHelper, 1);
+		while (g_variant_iter_next (iter, "{&sv}", &prop_key, &prop_value)) {
+			g_debug ("got option %s", prop_key);
+			if (g_strcmp0 (prop_key, "add-timestamp") == 0 &&
+			    g_variant_get_boolean (prop_value) == TRUE)
+				helper->flags |= FU_KEYRING_SIGN_FLAG_ADD_TIMESTAMP;
+			if (g_strcmp0 (prop_key, "add-cert") == 0 &&
+			    g_variant_get_boolean (prop_value) == TRUE)
+				helper->flags |= FU_KEYRING_SIGN_FLAG_ADD_CERT;
+			g_variant_unref (prop_value);
+		}
+
+		/* authenticate */
+		fu_main_set_status (priv, FWUPD_STATUS_WAITING_FOR_AUTH);
+		helper->priv = priv;
+		helper->value = g_steal_pointer (&value);
+		helper->invocation = g_object_ref (invocation);
+		subject = polkit_system_bus_name_new (sender);
+		polkit_authority_check_authorization (priv->authority, subject,
+						      "org.freedesktop.fwupd.self-sign",
+						      NULL,
+						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
+						      NULL,
+						      fu_main_authorize_self_sign_cb,
+						      g_steal_pointer (&helper));
+		return;
+	}
 	if (g_strcmp0 (method_name, "GetDowngrades") == 0) {
 		const gchar *device_id;
 		g_autoptr(GPtrArray) releases = NULL;
@@ -894,6 +1055,34 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
 						      NULL,
 						      fu_main_authorize_unlock_cb,
+						      g_steal_pointer (&helper));
+		return;
+	}
+	if (g_strcmp0 (method_name, "Activate") == 0) {
+		const gchar *device_id = NULL;
+		g_autoptr(FuMainAuthHelper) helper = NULL;
+		g_autoptr(PolkitSubject) subject = NULL;
+
+		g_variant_get (parameters, "(&s)", &device_id);
+		g_debug ("Called %s(%s)", method_name, device_id);
+		if (!fu_main_device_id_valid (device_id, &error)) {
+			g_dbus_method_invocation_return_gerror (invocation, error);
+			return;
+		}
+
+		/* authenticate */
+		fu_main_set_status (priv, FWUPD_STATUS_WAITING_FOR_AUTH);
+		helper = g_new0 (FuMainAuthHelper, 1);
+		helper->priv = priv;
+		helper->invocation = g_object_ref (invocation);
+		helper->device_id = g_strdup (device_id);
+		subject = polkit_system_bus_name_new (sender);
+		polkit_authority_check_authorization (priv->authority, subject,
+						      "org.freedesktop.fwupd.device-activate",
+						      NULL,
+						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
+						      NULL,
+						      fu_main_authorize_activate_cb,
 						      g_steal_pointer (&helper));
 		return;
 	}
@@ -1133,6 +1322,29 @@ fu_main_daemon_get_property (GDBusConnection *connection_, const gchar *sender,
 	return NULL;
 }
 
+static gboolean
+fu_main_is_running_offline_update (FuMainPrivate *priv)
+{
+	const gchar *default_target = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	val = g_dbus_connection_call_sync (priv->connection,
+					   "org.freedesktop.systemd1",
+					   "/org/freedesktop/systemd1",
+					   "org.freedesktop.systemd1.Manager",
+					   "GetDefaultTarget",
+					   NULL, NULL,
+					   G_DBUS_CALL_FLAGS_NONE,
+					   1500, NULL, &error);
+	if (val == NULL) {
+		g_warning ("failed to get default.target: %s", error->message);
+		return FALSE;
+	}
+	g_variant_get (val, "(&s)", &default_target);
+	return g_strcmp0 (default_target, "system-update.target") == 0;
+}
+
 static void
 fu_main_on_bus_acquired_cb (GDBusConnection *connection,
 			    const gchar *name,
@@ -1156,6 +1368,10 @@ fu_main_on_bus_acquired_cb (GDBusConnection *connection,
 							     NULL,  /* user_data_free_func */
 							     NULL); /* GError** */
 	g_assert (registration_id > 0);
+
+	/* are we running in the offline target */
+	if (fu_main_is_running_offline_update (priv))
+		fu_engine_add_app_flag (priv->engine, FU_APP_FLAGS_IS_OFFLINE);
 
 	/* connect to D-Bus directly */
 	priv->proxy_uid =
@@ -1304,7 +1520,7 @@ main (int argc, char *argv[])
 	g_signal_connect (priv->engine, "percentage-changed",
 			  G_CALLBACK (fu_main_engine_percentage_changed_cb),
 			  priv);
-	if (!fu_engine_load (priv->engine, &error)) {
+	if (!fu_engine_load (priv->engine, FU_ENGINE_LOAD_FLAG_NONE, &error)) {
 		g_printerr ("Failed to load engine: %s\n", error->message);
 		return EXIT_FAILURE;
 	}

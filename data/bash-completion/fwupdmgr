@@ -1,10 +1,12 @@
 _fwupdmgr_cmd_list=(
+	'activate'
 	'clear-history'
 	'clear-offline'
 	'clear-results'
 	'disable-remote'
 	'downgrade'
 	'enable-remote'
+	'get-approved-firmware'
 	'get-details'
 	'get-devices'
 	'get-history'
@@ -14,10 +16,10 @@ _fwupdmgr_cmd_list=(
 	'get-topology'
 	'get-updates'
 	'install'
-	'install-prepared'
 	'modify-remote'
 	'refresh'
 	'report-history'
+	'set-approved-firmware'
 	'unlock'
 	'update'
 	'verify'
@@ -37,6 +39,7 @@ _fwupdmgr_opts=(
 	'--no-metadata-check'
 	'--no-reboot-check'
 	'--show-all-devices'
+	'--sign'
 )
 
 _show_modifiers()
@@ -70,7 +73,7 @@ _fwupdmgr()
 	command=${COMP_WORDS[1]}
 
 	case $command in
-	clear-results|downgrade|get-releases|get-results|unlock|verify|verify-update)
+	activate|clear-results|downgrade|get-releases|get-results|unlock|verify|verify-update)
 		if [[ "$prev" = "$command" ]]; then
 			_show_device_ids
 		else

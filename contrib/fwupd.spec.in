@@ -61,6 +61,7 @@ BuildRequires: help2man
 BuildRequires: json-glib-devel >= %{json_glib_version}
 BuildRequires: vala
 BuildRequires: bash-completion
+#BuildRequires: ModemManager-glib-devel >= 1.9.1
 
 %if 0%{?have_redfish}
 BuildRequires: efivar-devel >= 33
@@ -190,14 +191,12 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %find_lang %{name}
 
 %post
-/sbin/ldconfig
 %systemd_post fwupd.service
 
 %preun
 %systemd_preun fwupd.service
 
 %postun
-/sbin/ldconfig
 %systemd_postun_with_restart fwupd.service
 %systemd_postun_with_restart pesign.service
 
@@ -214,6 +213,8 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %dir %{_libexecdir}/fwupd
 %{_libexecdir}/fwupd/fwupd
 %{_libexecdir}/fwupd/fwupdtool
+%{_libexecdir}/fwupd/fwupdagent
+%{_libexecdir}/fwupd/fwupdoffline
 %if 0%{?have_uefi}
 %{_libexecdir}/fwupd/efi/*.efi
 %{_libexecdir}/fwupd/efi/*.efi.signed
@@ -233,6 +234,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_sysconfdir}/dbus-1/system.d/org.freedesktop.fwupd.conf
 %{_datadir}/bash-completion/completions/fwupdmgr
 %{_datadir}/bash-completion/completions/fwupdtool
+%{_datadir}/bash-completion/completions/fwupdagent
 %{_datadir}/fwupd/metainfo/org.freedesktop.fwupd*.metainfo.xml
 %{_datadir}/fwupd/remotes.d/fwupd/metadata.xml
 %{_datadir}/fwupd/remotes.d/vendor/firmware/README.md
@@ -255,6 +257,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_libdir}/libfwupd*.so.*
 %{_libdir}/girepository-1.0/Fwupd-2.0.typelib
 /usr/lib/udev/rules.d/*.rules
+/usr/lib/systemd/system-shutdown/fwupd.shutdown
 %dir %{_libdir}/fwupd-plugins-3
 %{_libdir}/fwupd-plugins-3/libfu_plugin_altos.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_amt.so
@@ -270,6 +273,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_libdir}/fwupd-plugins-3/libfu_plugin_ebitdo.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_fastboot.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_flashrom.so
+#%{_libdir}/fwupd-plugins-3/libfu_plugin_modem_manager.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_nitrokey.so
 %if 0%{?have_uefi}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_nvme.so

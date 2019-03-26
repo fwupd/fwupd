@@ -291,6 +291,7 @@ msgstr "Bez sprawdzania niezgłoszonej historii"
 msgid "Do not write to the history database"
 msgstr "Bez zapisywania do bazy danych historii"
 
+#. success
 msgid "Done!"
 msgstr "Gotowe."
 
@@ -507,10 +508,6 @@ msgstr "Instaluje plik oprogramowania sprzętowego na tym sprzęcie"
 
 msgid "Install old version of system firmware"
 msgstr "Instalacja poprzedniej wersji oprogramowania sprzętowego komputera"
-
-#. TRANSLATORS: command description
-msgid "Install prepared updates now"
-msgstr "Instaluje przygotowaną aktualizację teraz"
 
 msgid "Install signed device firmware"
 msgstr "Instalacja podpisanego oprogramowania sprzętowego urządzenia"
@@ -732,6 +729,14 @@ msgstr "Ponowne uruchamianie urządzenia…"
 #. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
 msgstr "Zwraca wszystkie identyfikatory sprzętu dla komputera"
+
+#. TRANSLATORS: command line option
+msgid "Run the plugin composite cleanup routine when using install-blob"
+msgstr "Wykonuje procedurę czyszczenia składania wtyczki podczas używania „install-blob”"
+
+#. TRANSLATORS: command line option
+msgid "Run the plugin composite prepare routine when using install-blob"
+msgstr "Wykonuje procedurę przygotowania składania wtyczki podczas używania „install-blob”"
 
 msgid "Runtime"
 msgstr "Uruchamianie systemu"

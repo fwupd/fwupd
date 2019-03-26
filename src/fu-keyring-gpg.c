@@ -231,6 +231,7 @@ static FuKeyringResult *
 fu_keyring_gpg_verify_data (FuKeyring *keyring,
 			    GBytes *blob,
 			    GBytes *blob_signature,
+			    FuKeyringVerifyFlags flags,
 			    GError **error)
 {
 	FuKeyringGpg *self = FU_KEYRING_GPG (keyring);
@@ -241,6 +242,15 @@ fu_keyring_gpg_verify_data (FuKeyring *keyring,
 	g_auto(gpgme_data_t) data = NULL;
 	g_auto(gpgme_data_t) sig = NULL;
 	g_autoptr(GString) authority_newest = g_string_new (NULL);
+
+	/* not supported */
+	if (flags & FU_KEYRING_VERIFY_FLAG_USE_CLIENT_CERT) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "no GPG client certificate support");
+		return NULL;
+	}
 
 	/* load file data */
 	rc = gpgme_data_new_from_mem (&data,

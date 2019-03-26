@@ -122,6 +122,7 @@ msgstr "Apparaat gewijzigd:"
 msgid "Device removed:"
 msgstr "Apparaat verwijderd:"
 
+#. success
 msgid "Done!"
 msgstr "Afgerond!"
 
@@ -205,10 +206,6 @@ msgstr "Een firmware-bestand op deze hardware installeren"
 
 msgid "Install old version of system firmware"
 msgstr "Oude versie van systeemfirmware installeren"
-
-#. TRANSLATORS: command description
-msgid "Install prepared updates now"
-msgstr "Voorbereide updates nu installeren"
 
 msgid "Install signed device firmware"
 msgstr "Ondertekende apparaatfirmware installeren"

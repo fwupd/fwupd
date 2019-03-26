@@ -78,6 +78,10 @@ gboolean	 fwupd_client_unlock			(FwupdClient	*client,
 							 const gchar	*device_id,
 							 GCancellable	*cancellable,
 							 GError		**error);
+gboolean	 fwupd_client_activate			(FwupdClient	*client,
+							 GCancellable	*cancellable,
+							 const gchar	*device_id,
+							 GError		**error);
 gboolean	 fwupd_client_clear_results		(FwupdClient	*client,
 							 const gchar	*device_id,
 							 GCancellable	*cancellable,
@@ -124,6 +128,19 @@ GPtrArray	*fwupd_client_get_remotes		(FwupdClient	*client,
 							 GError		**error);
 FwupdRemote	*fwupd_client_get_remote_by_id		(FwupdClient	*client,
 							 const gchar	*remote_id,
+							 GCancellable	*cancellable,
+							 GError		**error);
+
+gchar		**fwupd_client_get_approved_firmware	(FwupdClient	*client,
+							 GCancellable	*cancellable,
+							 GError		**error);
+gboolean	 fwupd_client_set_approved_firmware	(FwupdClient	*client,
+							 gchar		**checksums,
+							 GCancellable	*cancellable,
+							 GError		**error);
+gchar		*fwupd_client_self_sign			(FwupdClient	*client,
+							 const gchar	*value,
+							 FwupdSelfSignFlags flags,
 							 GCancellable	*cancellable,
 							 GError		**error);
 

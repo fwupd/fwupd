@@ -227,6 +227,7 @@ msgstr "不要在更新后检查是否需要重启"
 msgid "Do not check for unreported history"
 msgstr "不要查找未报告历史"
 
+#. success
 msgid "Done!"
 msgstr "完成！"
 
@@ -396,10 +397,6 @@ msgstr "安装此硬件上的固件文件"
 
 msgid "Install old version of system firmware"
 msgstr "安装旧版本的系统固件"
-
-#. TRANSLATORS: command description
-msgid "Install prepared updates now"
-msgstr "现在安装准备好的更新"
 
 msgid "Install signed device firmware"
 msgstr "安装已签名的设备固件"

@@ -41,6 +41,7 @@ if get_option('systemd')
   con2.set('libexecdir', libexecdir)
   con2.set('bindir', bindir)
   con2.set('datadir', datadir)
+  con2.set('localstatedir', localstatedir)
 
   rw_directories = []
   rw_directories += join_paths (localstatedir, 'lib', 'fwupd')
@@ -56,23 +57,12 @@ if get_option('systemd')
   endif
   if systemd.version().version_compare('>= 231')
     dynamic_options += 'RestrictRealtime=yes'
-    dynamic_options += 'MemoryDenyWriteExecute=yes'
+#    dynamic_options += 'MemoryDenyWriteExecute=yes'
     dynamic_options += ['ReadWritePaths=' + ' '.join(rw_directories)]
   else
     dynamic_options += ['ReadWriteDirectories=' + ' '.join(rw_directories)]
   endif
   con2.set('dynamic_options', '\n'.join(dynamic_options))
-
-  # replace @libexecdir@
-  configure_file(
-    input : 'org.freedesktop.fwupd.service.in',
-    output : 'org.freedesktop.fwupd.service',
-    configuration : con2,
-    install: true,
-    install_dir: join_paths(datadir,
-                            'dbus-1',
-                            'system-services'),
-  )
 
   # replace @bindir@
   configure_file(
@@ -90,5 +80,30 @@ if get_option('systemd')
     configuration : con2,
     install: true,
     install_dir: systemdunitdir,
+  )
+
+  # for activation
+  configure_file(
+    input : 'fwupd.shutdown.in',
+    output : 'fwupd.shutdown',
+    configuration : con2,
+    install: true,
+    install_dir: systemd.get_pkgconfig_variable('systemdshutdowndir'),
+  )
+endif
+
+if get_option('systemd') or get_option('elogind')
+  con2 = configuration_data()
+  con2.set('libexecdir', libexecdir)
+
+  # replace @libexecdir@
+  configure_file(
+    input : 'org.freedesktop.fwupd.service.in',
+    output : 'org.freedesktop.fwupd.service',
+    configuration : con2,
+    install: true,
+    install_dir: join_paths(datadir,
+                            'dbus-1',
+                            'system-services'),
   )
 endif

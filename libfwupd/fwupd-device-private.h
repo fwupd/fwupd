@@ -7,6 +7,7 @@
 #pragma once
 
 #include <glib-object.h>
+#include <json-glib/json-glib.h>
 
 #include "fwupd-device.h"
 
@@ -18,6 +19,8 @@ GVariant	*fwupd_device_to_variant_full		(FwupdDevice	*device,
 							 FwupdDeviceFlags flags);
 void		 fwupd_device_incorporate		(FwupdDevice	*self,
 							 FwupdDevice	*donor);
+void		 fwupd_device_to_json			(FwupdDevice *device,
+							 JsonBuilder *builder);
 
 G_END_DECLS
 

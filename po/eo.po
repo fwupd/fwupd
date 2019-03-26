@@ -47,6 +47,7 @@ msgstr "Elektu aparaton:"
 msgid "Description"
 msgstr "Priskribo"
 
+#. success
 msgid "Done!"
 msgstr "Farita!"
 
