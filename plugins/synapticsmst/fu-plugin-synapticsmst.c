@@ -16,6 +16,30 @@
 #define SYNAPTICS_UPDATE_ENUMERATE_TRIES 3
 
 static gboolean
+syanpticsmst_check_amdgpu_safe (GError **error)
+{
+	gsize bufsz = 0;
+	g_autofree gchar *buf = NULL;
+	g_auto(GStrv) lines = NULL;
+
+	if (!g_file_get_contents ("/proc/modules", &buf, &bufsz, error))
+		return FALSE;
+
+	lines = g_strsplit (buf, "\n", -1);
+	for (guint i = 0; lines[i] != NULL; i++) {
+		if (g_str_has_prefix (lines[i], "amdgpu ")) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "amdgpu has known issues with synapticsmst");
+			return FALSE;
+		}
+	}
+
+	return TRUE;
+}
+
+static gboolean
 synapticsmst_common_check_supported_system (FuPlugin *plugin, GError **error)
 {
 
@@ -23,6 +47,10 @@ synapticsmst_common_check_supported_system (FuPlugin *plugin, GError **error)
 		g_debug ("Running Synaptics plugin in test mode");
 		return TRUE;
 	}
+
+	/* See https://github.com/hughsie/fwupd/issues/1121 for more details */
+	if (!syanpticsmst_check_amdgpu_safe (error))
+		return FALSE;
 
 	if (!g_file_test (SYSFS_DRM_DP_AUX, G_FILE_TEST_IS_DIR)) {
 		g_set_error (error,
