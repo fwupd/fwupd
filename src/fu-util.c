@@ -2091,7 +2091,9 @@ fu_util_get_approved_firmware (FuUtilPrivate *priv, gchar **values, GError **err
 	} else {
 		/* TRANSLATORS: approved firmware has been checked by
 		 * the domain administrator */
-		g_print ("%s\n", _("Approved firmware:"));
+		g_print ("%s\n", ngettext ("Approved firmware:",
+					   "Approved firmware:",
+					   g_strv_length (checksums)));
 		for (guint i = 0; checksums[i] != NULL; i++)
 			g_print (" * %s\n", checksums[i]);
 	}
