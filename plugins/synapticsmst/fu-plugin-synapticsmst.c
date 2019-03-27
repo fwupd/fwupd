@@ -12,8 +12,56 @@
 #include "fu-plugin-vfuncs.h"
 #include "fu-device-metadata.h"
 
+#include <errno.h>
+#include <sys/utsname.h>
+
 #define SYNAPTICS_FLASH_MODE_DELAY 3
 #define SYNAPTICS_UPDATE_ENUMERATE_TRIES 3
+
+static gboolean
+syanpticsmst_check_amdgpu_safe (GError **error)
+{
+	gsize bufsz = 0;
+	g_autofree gchar *buf = NULL;
+	g_auto(GStrv) lines = NULL;
+	gboolean has_amdgpu = FALSE;
+
+	if (!g_file_get_contents ("/proc/modules", &buf, &bufsz, error))
+		return FALSE;
+
+	lines = g_strsplit (buf, "\n", -1);
+	for (guint i = 0; lines[i] != NULL; i++) {
+		if (g_str_has_prefix (lines[i], "amdgpu ")) {
+			has_amdgpu = TRUE;
+			break;
+		}
+	}
+
+	if (has_amdgpu) {
+		struct utsname name_tmp;
+		g_auto(GStrv) components = NULL;
+		memset (&name_tmp, 0, sizeof(struct utsname));
+		if (uname (&name_tmp) != 0) {
+			g_set_error (error, 
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "failed to check kernel: %s",
+				     g_strerror (errno));
+			return FALSE;
+		}
+		components = g_strsplit (name_tmp.release, "-", -1);
+		if (fu_common_vercmp (components[0], "4.18.0") < 0) {
+			g_set_error (error, 
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "kernel %s is not safe with amdgpu",
+				     name_tmp.release);
+			return FALSE;
+		}
+	}
+
+	return TRUE;
+}
 
 static gboolean
 synapticsmst_common_check_supported_system (FuPlugin *plugin, GError **error)
@@ -23,6 +71,9 @@ synapticsmst_common_check_supported_system (FuPlugin *plugin, GError **error)
 		g_debug ("Running Synaptics plugin in test mode");
 		return TRUE;
 	}
+
+	if (!syanpticsmst_check_amdgpu_safe (error))
+		return FALSE;
 
 	if (!g_file_test (SYSFS_DRM_DP_AUX, G_FILE_TEST_IS_DIR)) {
 		g_set_error (error,
