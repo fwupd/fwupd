@@ -21,6 +21,16 @@ struct _FuUefiPcrs {
 
 G_DEFINE_TYPE (FuUefiPcrs, fu_uefi_pcrs, G_TYPE_OBJECT)
 
+static gboolean
+_g_string_isxdigit (GString *str)
+{
+	for (gsize i = 0; i < str->len; i++) {
+		if (!g_ascii_isxdigit (str->str[i]))
+			return FALSE;
+	}
+	return TRUE;
+}
+
 static void
 fu_uefi_pcrs_parse_line (const gchar *line, gpointer user_data)
 {
@@ -34,7 +44,7 @@ fu_uefi_pcrs_parse_line (const gchar *line, gpointer user_data)
 	/* split into index:hash */
 	if (line == NULL || line[0] == '\0')
 		return;
-	split = g_strsplit (line, ":", 2);
+	split = g_strsplit (line, ":", -1);
 	if (g_strv_length (split) != 2) {
 		g_debug ("unexpected format, skipping: %s", line);
 		return;
@@ -50,9 +60,11 @@ fu_uefi_pcrs_parse_line (const gchar *line, gpointer user_data)
 
 	/* parse hash */
 	str = g_string_new (split[1]);
-	if (str->len < 16)
-		return;
 	fu_common_string_replace (str, " ", "");
+	if ((str->len != 40 && str->len != 64) || !_g_string_isxdigit (str)) {
+		g_debug ("not SHA-1 or SHA-256, skipping: %s", split[1]);
+		return;
+	}
 	g_string_ascii_down (str);
 	item = g_new0 (FuUefiPcrItem, 1);
 	item->idx = idx;
