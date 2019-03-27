@@ -1450,7 +1450,8 @@ main (int argc, char *argv[])
 		     "self-sign",
 		     "TEXT",
 		     /* TRANSLATORS: command description */
-		     _("Sign data using the client certificate"),
+		     C_("command-description",
+			"Sign data using the client certificate"),
 		     fu_util_self_sign);
 	fu_util_cmd_array_add (cmd_array,
 		     "verify-update",
