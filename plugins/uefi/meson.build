@@ -3,6 +3,11 @@ subdir('efi')
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefi"']
 cargs += '-DEFI_APP_LOCATION_BUILD="' + app.full_path() + '"'
 
+efi_os_dir = get_option('efi_os_dir')
+if efi_os_dir != ''
+  cargs += '-DEFI_OS_DIR="' + efi_os_dir + '"'
+endif
+
 install_data(['uefi.quirk'],
   install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
 )

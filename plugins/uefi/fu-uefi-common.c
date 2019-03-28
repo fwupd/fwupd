@@ -246,6 +246,7 @@ gchar *
 fu_uefi_get_esp_path_for_os (const gchar *esp_path)
 {
 	const gchar *os_release_id = NULL;
+#ifndef EFI_OS_DIR
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GHashTable) os_release = fwupd_get_os_release (&error_local);
 	if (os_release != NULL) {
@@ -255,6 +256,9 @@ fu_uefi_get_esp_path_for_os (const gchar *esp_path)
 	}
 	if (os_release_id == NULL)
 		os_release_id = "unknown";
+#else
+	os_release_id = EFI_OS_DIR;
+#endif
 	return g_build_filename (esp_path, "EFI", os_release_id, NULL);
 }
 
