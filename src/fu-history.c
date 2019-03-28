@@ -725,7 +725,8 @@ fu_history_get_device_by_id (FuHistory *self, const gchar *device_id, GError **e
 					"version_old, "
 					"checksum_device, "
 					"protocol FROM history WHERE "
-				 "device_id = ?1 LIMIT 1", -1, &stmt, NULL);
+				 "device_id = ?1 ORDER BY device_created DESC "
+				 "LIMIT 1", -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
 			     "Failed to prepare SQL to get history: %s",
