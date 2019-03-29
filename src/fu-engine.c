@@ -256,6 +256,7 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 	const gchar *remote_id;
 	guint64 tmp64;
 	g_autofree gchar *version_rel = NULL;
+	g_autoptr(GPtrArray) cats = NULL;
 	g_autoptr(XbNode) description = NULL;
 
 	/* set from the component */
@@ -340,6 +341,13 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 	tmp64 = xb_node_get_attr_as_uint (release, "install_duration");
 	if (tmp64 != G_MAXUINT64)
 		fwupd_release_set_install_duration (rel, tmp64);
+	cats = xb_node_query (component, "categories/category", 0, NULL);
+	if (cats != NULL) {
+		for (guint i = 0; i < cats->len; i++) {
+			XbNode *n = g_ptr_array_index (cats, i);
+			fwupd_release_add_category (rel, xb_node_get_text (n));
+		}
+	}
 	tmp = xb_node_query_text (component, "custom/value[@key='LVFS::UpdateProtocol']", NULL);
 	if (tmp != NULL)
 		fwupd_release_set_protocol (rel, tmp);

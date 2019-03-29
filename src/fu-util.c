@@ -1263,7 +1263,7 @@ fu_util_get_releases (FuUtilPrivate *priv, gchar **values, GError **error)
 		fu_util_print_data (_("Version"), fwupd_release_get_version (rel));
 
 		/* TRANSLATORS: section header for the release name */
-		fu_util_print_data (_("Name"), fwupd_release_get_name (rel));
+		fu_util_print_data (_("Name"), fu_util_release_get_name (rel));
 
 		/* TRANSLATORS: section header for the release one line summary */
 		fu_util_print_data (_("Summary"), fwupd_release_get_summary (rel));
@@ -1559,7 +1559,7 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 					    fwupd_release_get_version (rel));
 
 			/* TRANSLATORS: section header for the release name */
-			fu_util_print_data (_("Update Name"), fwupd_release_get_name (rel));
+			fu_util_print_data (_("Update Name"), fu_util_release_get_name (rel));
 
 			/* TRANSLATORS: section header for the release one line summary */
 			fu_util_print_data (_("Update Summary"), fwupd_release_get_summary (rel));

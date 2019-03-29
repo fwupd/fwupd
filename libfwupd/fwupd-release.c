@@ -30,6 +30,7 @@ static void fwupd_release_finalize	 (GObject *object);
 
 typedef struct {
 	GPtrArray			*checksums;
+	GPtrArray			*categories;
 	GHashTable			*metadata;
 	gchar				*description;
 	gchar				*filename;
@@ -236,6 +237,72 @@ fwupd_release_set_protocol (FwupdRelease *release, const gchar *protocol)
 	g_return_if_fail (FWUPD_IS_RELEASE (release));
 	g_free (priv->protocol);
 	priv->protocol = g_strdup (protocol);
+}
+
+/**
+ * fwupd_release_get_categories:
+ * @release: A #FwupdRelease
+ *
+ * Gets the release categories.
+ *
+ * Returns: (element-type utf8) (transfer none): the categories, which may be empty
+ *
+ * Since: 1.2.7
+ **/
+GPtrArray *
+fwupd_release_get_categories (FwupdRelease *release)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_val_if_fail (FWUPD_IS_RELEASE (release), NULL);
+	return priv->categories;
+}
+
+/**
+ * fwupd_release_add_category:
+ * @release: A #FwupdRelease
+ * @category: the update category, e.g. `X-EmbeddedController`
+ *
+ * Adds the update category.
+ *
+ * Since: 1.2.7
+ **/
+void
+fwupd_release_add_category (FwupdRelease *release, const gchar *category)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_if_fail (FWUPD_IS_RELEASE (release));
+	g_return_if_fail (category != NULL);
+	for (guint i = 0; i < priv->categories->len; i++) {
+		const gchar *category_tmp = g_ptr_array_index (priv->categories, i);
+		if (g_strcmp0 (category_tmp, category) == 0)
+			return;
+	}
+	g_ptr_array_add (priv->categories, g_strdup (category));
+}
+
+/**
+ * fwupd_release_has_category:
+ * @release: A #FwupdRelease
+ * @category: the update category, e.g. `X-EmbeddedController`
+ *
+ * Finds out if the release has the update category.
+ *
+ * Returns: %TRUE if the release matches
+ *
+ * Since: 1.2.7
+ **/
+gboolean
+fwupd_release_has_category (FwupdRelease *release, const gchar *category)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_val_if_fail (FWUPD_IS_RELEASE (release), FALSE);
+	g_return_val_if_fail (category != NULL, FALSE);
+	for (guint i = 0; i < priv->categories->len; i++) {
+		const gchar *category_tmp = g_ptr_array_index (priv->categories, i);
+		if (g_strcmp0 (category_tmp, category) == 0)
+			return TRUE;
+	}
+	return FALSE;
 }
 
 /**
@@ -1037,6 +1104,14 @@ fwupd_release_to_variant (FwupdRelease *release)
 				       FWUPD_RESULT_KEY_DESCRIPTION,
 				       g_variant_new_string (priv->description));
 	}
+	if (priv->categories->len > 0) {
+		g_autofree const gchar **strv = g_new0 (const gchar *, priv->categories->len + 1);
+		for (guint i = 0; i < priv->categories->len; i++)
+			strv[i] = (const gchar *) g_ptr_array_index (priv->categories, i);
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_CATEGORIES,
+				       g_variant_new_strv (strv, -1));
+	}
 	if (priv->checksums->len > 0) {
 		g_autoptr(GString) str = g_string_new ("");
 		for (guint i = 0; i < priv->checksums->len; i++) {
@@ -1135,6 +1210,12 @@ fwupd_release_from_key_value (FwupdRelease *release, const gchar *key, GVariant 
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DESCRIPTION) == 0) {
 		fwupd_release_set_description (release, g_variant_get_string (value, NULL));
+		return;
+	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_CATEGORIES) == 0) {
+		g_autofree const gchar **strv = g_variant_get_strv (value, NULL);
+		for (guint i = 0; strv[i] != NULL; i++)
+			fwupd_release_add_category (release, strv[i]);
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_CHECKSUM) == 0) {
@@ -1284,6 +1365,15 @@ fwupd_release_to_json (FwupdRelease *release, JsonBuilder *builder)
 	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_VERSION, priv->version);
 	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_FILENAME, priv->filename);
 	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_PROTOCOL, priv->protocol);
+	if (priv->categories->len > 0) {
+		json_builder_set_member_name (builder, FWUPD_RESULT_KEY_CATEGORIES);
+		json_builder_begin_array (builder);
+		for (guint i = 0; i < priv->categories->len; i++) {
+			const gchar *tmp = g_ptr_array_index (priv->categories, i);
+			json_builder_add_string_value (builder, tmp);
+		}
+		json_builder_end_array (builder);
+	}
 	if (priv->checksums->len > 0) {
 		json_builder_set_member_name (builder, FWUPD_RESULT_KEY_CHECKSUM);
 		json_builder_begin_array (builder);
@@ -1351,6 +1441,10 @@ fwupd_release_to_string (FwupdRelease *release)
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_VERSION, priv->version);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_FILENAME, priv->filename);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_PROTOCOL, priv->protocol);
+	for (guint i = 0; i < priv->categories->len; i++) {
+		const gchar *tmp = g_ptr_array_index (priv->categories, i);
+		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_CATEGORIES, tmp);
+	}
 	for (guint i = 0; i < priv->checksums->len; i++) {
 		const gchar *checksum = g_ptr_array_index (priv->checksums, i);
 		g_autofree gchar *checksum_display = fwupd_checksum_format_for_display (checksum);
@@ -1389,6 +1483,7 @@ static void
 fwupd_release_init (FwupdRelease *release)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	priv->categories = g_ptr_array_new_with_free_func (g_free);
 	priv->checksums = g_ptr_array_new_with_free_func (g_free);
 	priv->metadata = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 }
@@ -1414,6 +1509,7 @@ fwupd_release_finalize (GObject *object)
 	g_free (priv->version);
 	g_free (priv->remote_id);
 	g_free (priv->update_message);
+	g_ptr_array_unref (priv->categories);
 	g_ptr_array_unref (priv->checksums);
 	g_hash_table_unref (priv->metadata);
 
