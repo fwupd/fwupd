@@ -37,6 +37,11 @@ void		 fwupd_release_set_version		(FwupdRelease	*release,
 const gchar	*fwupd_release_get_uri			(FwupdRelease	*release);
 void		 fwupd_release_set_uri			(FwupdRelease	*release,
 							 const gchar	*uri);
+GPtrArray	*fwupd_release_get_categories		(FwupdRelease	*release);
+void		 fwupd_release_add_category		(FwupdRelease	*release,
+							 const gchar	*category);
+gboolean	 fwupd_release_has_category		(FwupdRelease	*release,
+							 const gchar	*category);
 GPtrArray	*fwupd_release_get_checksums		(FwupdRelease	*release);
 void		 fwupd_release_add_checksum		(FwupdRelease	*release,
 							 const gchar	*checksum);
