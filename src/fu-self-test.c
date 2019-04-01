@@ -2520,6 +2520,7 @@ fu_keyring_pkcs7_self_signed_func (void)
 #ifndef HAVE_GNUTLS_3_6_0
 	/* required to create the private key correctly */
 	g_test_skip ("GnuTLS version too old");
+	return;
 #endif
 
 	/* create detached signature and verify */
