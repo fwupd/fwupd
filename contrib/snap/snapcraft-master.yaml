@@ -313,6 +313,10 @@ parts:
     plugin: make
     source: contrib/snap/fix-bash-completion
     after: [fwupd]
+  activate-shutdown:
+    plugin: make
+    source: contrib/snap/activate-shutdown
+    after: [fwupd]
   update-mime:
     plugin: make
     source: contrib/snap/update-mime

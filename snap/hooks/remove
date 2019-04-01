@@ -1,0 +1,6 @@
+#!/bin/sh -e
+
+#activation via systemd
+systemctl disable fwupd-activate
+rm /etc/systemd/system/fwupd-activate.service -f
+systemctl daemon-reload
