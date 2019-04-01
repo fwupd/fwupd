@@ -145,6 +145,7 @@ endif
 
 if get_option('tests')
   testdatadir = join_paths(meson.source_root(), 'data')
+  localremotetestdir = join_paths(meson.source_root(), 'plugins', 'dell-esrt')
   e = executable(
     'fwupd-self-test',
     sources : [
@@ -164,6 +165,7 @@ if get_option('tests')
       '-DLOCALSTATEDIR="' + localstatedir + '"',
       '-DTESTDATADIR="' + testdatadir + '"',
       '-DFU_SELF_TEST_REMOTES_DIR="' + testdatadir + '"',
+      '-DFU_LOCAL_REMOTE_DIR="' + localremotetestdir + '"',
     ],
   )
   test('fwupd-self-test', e)
