@@ -238,7 +238,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_bindir}/fwupdmgr
 %dir %{_sysconfdir}/fwupd
 %dir %{_sysconfdir}/fwupd/remotes.d
-%config(noreplace)%{_sysconfdir}/fwupd/remotes.d/fwupd.conf
+%config(noreplace)%{_sysconfdir}/fwupd/remotes.d/dell-esrt.conf
 %config(noreplace)%{_sysconfdir}/fwupd/remotes.d/lvfs.conf
 %config(noreplace)%{_sysconfdir}/fwupd/remotes.d/lvfs-testing.conf
 %config(noreplace)%{_sysconfdir}/fwupd/remotes.d/vendor.conf
@@ -250,7 +250,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_datadir}/bash-completion/completions/fwupdtool
 %{_datadir}/bash-completion/completions/fwupdagent
 %{_datadir}/fwupd/metainfo/org.freedesktop.fwupd*.metainfo.xml
-%{_datadir}/fwupd/remotes.d/fwupd/metadata.xml
+%{_datadir}/fwupd/remotes.d/dell-esrt/metadata.xml
 %{_datadir}/fwupd/remotes.d/vendor/firmware/README.md
 %{_datadir}/dbus-1/interfaces/org.freedesktop.fwupd.xml
 %{_datadir}/polkit-1/actions/org.freedesktop.fwupd.policy
