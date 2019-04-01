@@ -1,0 +1,11 @@
+[Unit]
+Description=Activate fwupd updates
+RequiresMountsFor=/snap/fwupd/current
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+ExecStop=/snap/bin/fwupd.fwupdtool activate
+
+[Install]
+WantedBy=multi-user.target
