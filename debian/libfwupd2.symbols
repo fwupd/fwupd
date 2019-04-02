@@ -143,14 +143,18 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_keyring_kind_from_string@LIBFWUPD_0.9.7 1.0.0
  fwupd_keyring_kind_to_string@LIBFWUPD_0.9.7 1.0.0
  fwupd_release_add_checksum@LIBFWUPD_0.9.3 1.0.0
+ fwupd_release_add_flag@LIBFWUPD_1.2.6 1.2.6
  fwupd_release_add_metadata@LIBFWUPD_1.0.4 1.0.4
  fwupd_release_add_metadata_item@LIBFWUPD_1.0.4 1.0.4
+ fwupd_release_flag_from_string@LIBFWUPD_1.2.6 1.2.6
+ fwupd_release_flag_to_string@LIBFWUPD_1.2.6 1.2.6
  fwupd_release_from_variant@LIBFWUPD_1.0.0 1.0.0
  fwupd_release_get_appstream_id@LIBFWUPD_0.9.3 1.0.0
  fwupd_release_get_checksums@LIBFWUPD_0.9.3 1.0.0
  fwupd_release_get_description@LIBFWUPD_0.9.3 1.0.0
  fwupd_release_get_details_url@LIBFWUPD_1.2.4 1.2.4
  fwupd_release_get_filename@LIBFWUPD_0.9.3 1.0.0
+ fwupd_release_get_flags@LIBFWUPD_1.2.6 1.2.6
  fwupd_release_get_homepage@LIBFWUPD_0.9.3 1.0.0
  fwupd_release_get_install_duration@LIBFWUPD_1.2.1 1.2.4
  fwupd_release_get_license@LIBFWUPD_0.9.3 1.0.0
@@ -168,11 +172,15 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_release_get_uri@LIBFWUPD_0.9.3 1.0.0
  fwupd_release_get_vendor@LIBFWUPD_0.9.3 1.0.0
  fwupd_release_get_version@LIBFWUPD_0.9.3 1.0.0
+ fwupd_release_has_checksum@LIBFWUPD_1.2.6 1.2.6
+ fwupd_release_has_flag@LIBFWUPD_1.2.6 1.2.6
  fwupd_release_new@LIBFWUPD_0.9.3 1.0.0
+ fwupd_release_remove_flag@LIBFWUPD_1.2.6 1.2.6
  fwupd_release_set_appstream_id@LIBFWUPD_0.9.3 1.0.0
  fwupd_release_set_description@LIBFWUPD_0.9.3 1.0.0
  fwupd_release_set_details_url@LIBFWUPD_1.2.4 1.2.4
  fwupd_release_set_filename@LIBFWUPD_0.9.3 1.0.0
+ fwupd_release_set_flags@LIBFWUPD_1.2.6 1.2.6
  fwupd_release_set_homepage@LIBFWUPD_0.9.3 1.0.0
  fwupd_release_set_install_duration@LIBFWUPD_1.2.1 1.2.4
  fwupd_release_set_license@LIBFWUPD_0.9.3 1.0.0
@@ -187,12 +195,14 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_release_set_uri@LIBFWUPD_0.9.3 1.0.0
  fwupd_release_set_vendor@LIBFWUPD_0.9.3 1.0.0
  fwupd_release_set_version@LIBFWUPD_0.9.3 1.0.0
+ fwupd_release_to_json@LIBFWUPD_1.2.6 1.2.6
  fwupd_release_to_string@LIBFWUPD_0.9.3 1.0.0
  fwupd_release_to_variant@LIBFWUPD_1.0.0 1.0.0
  fwupd_remote_build_firmware_uri@LIBFWUPD_0.9.7 1.0.0
  fwupd_remote_from_variant@LIBFWUPD_1.0.0 1.0.0
  fwupd_remote_get_age@LIBFWUPD_0.9.5 1.0.0
  fwupd_remote_get_agreement@LIBFWUPD_1.0.7 1.0.7
+ fwupd_remote_get_approval_required@LIBFWUPD_1.2.6 1.2.6
  fwupd_remote_get_checksum@LIBFWUPD_1.0.0 1.0.0
  fwupd_remote_get_enabled@LIBFWUPD_0.9.3 1.0.0
  fwupd_remote_get_filename_cache@LIBFWUPD_0.9.6 1.0.0
