@@ -6,6 +6,7 @@ RequiresMountsFor=/snap/fwupd/current
 Type=oneshot
 RemainAfterExit=true
 ExecStop=/snap/bin/fwupd.fwupdtool activate
+SuccessExitStatus=0 2
 
 [Install]
 WantedBy=multi-user.target
