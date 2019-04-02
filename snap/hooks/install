@@ -15,3 +15,4 @@ install_if_missing etc/dbus-1/system.d/org.freedesktop.fwupd.conf /
 install_if_missing etc/systemd/system/fwupd-activate.service /
 systemctl daemon-reload
 systemctl enable fwupd-activate
+systemctl start fwupd-activate
