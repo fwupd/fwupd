@@ -1,10 +1,10 @@
-fwupd (1.2.6-1) UNRELEASED; urgency=medium
+fwupd (1.2.6-1) unstable; urgency=medium
 
   * New upstream version (1.2.6)
   * debian/control:
     - Add new build depends related to Modem Manager
 
- -- Mario Limonciello <mario.limonciello@dell.com>  Tue, 26 Mar 2019 09:07:30 -0500
+ -- Mario Limonciello <mario.limonciello@dell.com>  Mon, 01 Apr 2019 21:18:14 -0500
 
 fwupd (1.2.5-2) unstable; urgency=medium
 
