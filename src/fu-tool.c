@@ -1286,6 +1286,30 @@ fu_util_verify_update (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_util_get_history (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GPtrArray) devices = NULL;
+
+	/* load engine */
+	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+		return FALSE;
+
+	/* get all devices from the history database */
+	devices = fu_engine_get_history (priv->engine, error);
+	if (devices == NULL)
+		return FALSE;
+
+	/* show each device */
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index (devices, i);
+		g_autofree gchar *str = fwupd_device_to_string (dev);
+		g_print ("%s\n", str);
+	}
+
+	return TRUE;
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -1374,6 +1398,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Gets details about a firmware file"),
 		     fu_util_get_details);
+	fu_util_cmd_array_add (cmd_array,
+		     "get-history",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Show history of firmware updates"),
+		     fu_util_get_history);
 	fu_util_cmd_array_add (cmd_array,
 		     "get-updates",
 		     NULL,
