@@ -11,7 +11,6 @@ env:
   - OS=arch
   - OS=debian-i386
   - OS=ubuntu-x86_64
-  - OS=centos
   - OS=flatpak
 
 install:
