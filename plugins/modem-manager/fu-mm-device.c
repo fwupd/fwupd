@@ -15,8 +15,12 @@
 #include "fu-mm-utils.h"
 #include "fu-qmi-pdc-updater.h"
 
-/* amount of time for the modem to be re-probed and exposed in MM after being uninhibited */
-#define FU_MM_DEVICE_REMOVE_DELAY_REPROBE	45000	/* ms */
+/* Amount of time for the modem to be re-probed and exposed in MM after being
+ * uninhibited. The timeout is long enough to cover the worst case, where the
+ * modem boots without SIM card inserted (and therefore the initialization
+ * may be very slow) and also where carrier config switching is explicitly
+ * required (e.g. if switching from the default (DF) to generic (GC).*/
+#define FU_MM_DEVICE_REMOVE_DELAY_REPROBE	120000	/* ms */
 
 struct _FuMmDevice {
 	FuDevice			 parent_instance;
