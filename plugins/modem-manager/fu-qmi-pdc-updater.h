@@ -15,13 +15,16 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (FuQmiPdcUpdater, fu_qmi_pdc_updater, FU, QMI_PDC_UPDATER, GObject)
 
 FuQmiPdcUpdater	*fu_qmi_pdc_updater_new		(const gchar		*qmi_port);
-gboolean	fu_qmi_pdc_updater_open		(FuQmiPdcUpdater	*self,
+gboolean	 fu_qmi_pdc_updater_open	(FuQmiPdcUpdater	*self,
 						 GError			**error);
-gboolean	fu_qmi_pdc_updater_write	(FuQmiPdcUpdater	*self,
+GArray		*fu_qmi_pdc_updater_write	(FuQmiPdcUpdater	*self,
 						 const gchar		*filename,
 						 GBytes			*blob,
 						 GError			**error);
-gboolean	fu_qmi_pdc_updater_close	(FuQmiPdcUpdater	*self,
+gboolean	 fu_qmi_pdc_updater_activate	(FuQmiPdcUpdater	*self,
+						 GArray			*digest,
+						 GError			**error);
+gboolean	 fu_qmi_pdc_updater_close	(FuQmiPdcUpdater	*self,
 						 GError			**error);
 
 G_END_DECLS
