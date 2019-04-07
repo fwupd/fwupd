@@ -96,6 +96,9 @@ fu_engine_generate_md_func (void)
 	g_assert (ret);
 
 	/* load engine and check the device was found */
+	ret = fu_engine_load_config (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
 	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -716,6 +719,9 @@ fu_engine_device_unlock_func (void)
 	g_autoptr(XbSilo) silo = NULL;
 
 	/* load engine to get FuConfig set up */
+	ret = fu_engine_load_config (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
 	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -769,6 +775,9 @@ fu_engine_require_hwid_func (void)
 	fu_engine_set_silo (engine, silo_empty);
 
 	/* load engine to get FuConfig set up */
+	ret = fu_engine_load_config (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
 	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -899,6 +908,9 @@ fu_engine_downgrade_func (void)
 	testdatadir = fu_test_get_filename (TESTDATADIR, ".");
 	g_assert (testdatadir != NULL);
 	g_setenv ("FU_SELF_TEST_REMOTES_DIR", testdatadir, TRUE);
+	ret = fu_engine_load_config (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
 	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -1010,6 +1022,9 @@ fu_engine_install_duration_func (void)
 	testdatadir = fu_test_get_filename (TESTDATADIR, ".");
 	g_assert (testdatadir != NULL);
 	g_setenv ("FU_SELF_TEST_REMOTES_DIR", testdatadir, TRUE);
+	ret = fu_engine_load_config (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
 	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -1075,6 +1090,9 @@ fu_engine_history_func (void)
 	testdatadir = fu_test_get_filename (TESTDATADIR, ".");
 	g_assert (testdatadir != NULL);
 	g_setenv ("FU_SELF_TEST_REMOTES_DIR", testdatadir, TRUE);
+	ret = fu_engine_load_config (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
 	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -1204,6 +1222,9 @@ fu_engine_history_inherit (void)
 	testdatadir = fu_test_get_filename (TESTDATADIR, ".");
 	g_assert (testdatadir != NULL);
 	g_setenv ("FU_SELF_TEST_REMOTES_DIR", testdatadir, TRUE);
+	ret = fu_engine_load_config (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
 	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -1315,6 +1336,9 @@ fu_engine_history_error_func (void)
 	testdatadir = fu_test_get_filename (TESTDATADIR, ".");
 	g_assert (testdatadir != NULL);
 	g_setenv ("FU_SELF_TEST_REMOTES_DIR", testdatadir, TRUE);
+	ret = fu_engine_load_config (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
 	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -2141,6 +2165,9 @@ fu_plugin_hash_func (void)
 	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
 	gboolean ret = FALSE;
 
+	ret = fu_engine_load_config (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
 	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);

@@ -431,6 +431,16 @@ fu_engine_unlock (FuEngine *self, const gchar *device_id, GError **error)
 	return TRUE;
 }
 
+gboolean
+fu_engine_set_verbose_domains (FuEngine *self, const gchar *value, GError **error)
+{
+	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
+	g_return_val_if_fail (value != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	return fu_config_set_verbose_domains (self->config, value, error);
+}
+
 /**
  * fu_engine_modify_remote:
  * @self: A #FuEngine
@@ -4332,6 +4342,41 @@ fu_engine_ensure_client_certificate (FuEngine *self)
 }
 
 /**
+ * fu_engine_load_config
+ * @self: A #FuEngine
+ * @flags: #FuEngineLoadFlags, e.g. %FU_ENGINE_LOAD_FLAG_READONLY_FS
+ * @error: A #GError, or %NULL
+ *
+ * Parses the engine configuration file
+ *
+ * Returns: %TRUE for success
+ **/
+gboolean
+fu_engine_load_config (FuEngine *self, FuEngineLoadFlags flags, GError **error)
+{
+	FuConfigLoadFlags config_flags = FU_CONFIG_LOAD_FLAG_NONE;
+	const gchar *verbose_domains;
+
+	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* read config file */
+	if (flags & FU_ENGINE_LOAD_FLAG_READONLY_FS)
+		config_flags |= FU_CONFIG_LOAD_FLAG_READONLY_FS;
+	if (!fu_config_load (self->config, config_flags, error)) {
+		g_prefix_error (error, "Failed to load config: ");
+		return FALSE;
+	}
+
+	/* set up verbose domains */
+	verbose_domains = fu_config_get_verbose_domains (self->config);
+	if (verbose_domains != NULL)
+		g_setenv ("FWUPD_VERBOSE", verbose_domains, TRUE);
+
+	return TRUE;
+}
+
+/**
  * fu_engine_load:
  * @self: A #FuEngine
  * @flags: #FuEngineLoadFlags, e.g. %FU_ENGINE_LOAD_FLAG_READONLY_FS
@@ -4344,7 +4389,6 @@ fu_engine_ensure_client_certificate (FuEngine *self)
 gboolean
 fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 {
-	FuConfigLoadFlags config_flags = FU_CONFIG_LOAD_FLAG_NONE;
 	g_autoptr(GPtrArray) checksums = NULL;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
@@ -4353,14 +4397,6 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	/* avoid re-loading a second time if fu-tool or fu-util request to */
 	if (self->loaded)
 		return TRUE;
-
-	/* read config file */
-	if (flags & FU_ENGINE_LOAD_FLAG_READONLY_FS)
-		config_flags |= FU_CONFIG_LOAD_FLAG_READONLY_FS;
-	if (!fu_config_load (self->config, config_flags, error)) {
-		g_prefix_error (error, "Failed to load config: ");
-		return FALSE;
-	}
 
 	/* create client certificate */
 	fu_engine_ensure_client_certificate (self);

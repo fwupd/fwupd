@@ -443,6 +443,30 @@ fu_main_authorize_self_sign_cb (GObject *source, GAsyncResult *res, gpointer use
 }
 
 static void
+fu_main_set_verbose_domains_cb (GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *) user_data;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(PolkitAuthorizationResult) auth = NULL;
+
+	/* get result */
+	auth = polkit_authority_check_authorization_finish (POLKIT_AUTHORITY (source),
+							    res, &error);
+	if (!fu_main_authorization_is_valid (auth, &error)) {
+		g_dbus_method_invocation_return_gerror (helper->invocation, error);
+		return;
+	}
+
+	if (!fu_engine_set_verbose_domains (helper->priv->engine, helper->key, &error)) {
+		g_dbus_method_invocation_return_gerror (helper->invocation, error);
+		return;
+	}
+
+	/* success */
+	g_dbus_method_invocation_return_value (helper->invocation, NULL);
+}
+
+static void
 fu_main_authorize_activate_cb (GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *) user_data;
@@ -1087,6 +1111,31 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 						      g_steal_pointer (&helper));
 		return;
 	}
+	if (g_strcmp0 (method_name, "ModifyVerbose") == 0) {
+		g_auto(GStrv) domains = NULL;
+		g_autofree gchar *domains_str = NULL;
+		g_autoptr(FuMainAuthHelper) helper = NULL;
+		g_autoptr(PolkitSubject) subject = NULL;
+
+		g_variant_get (parameters, "(^as)", &domains);
+		domains_str = g_strjoinv (",", domains);
+		g_debug ("Called %s(%s)", method_name, domains_str);
+
+		/* authenticate */
+		helper = g_new0 (FuMainAuthHelper, 1);
+		helper->priv = priv;
+		helper->key = g_steal_pointer (&domains_str);
+		helper->invocation = g_object_ref (invocation);
+		subject = polkit_system_bus_name_new (sender);
+		polkit_authority_check_authorization (priv->authority, subject,
+						      "org.freedesktop.fwupd.modify-verbose",
+						      NULL,
+						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
+						      NULL,
+						      fu_main_set_verbose_domains_cb,
+						      g_steal_pointer (&helper));
+		return;
+	}
 	if (g_strcmp0 (method_name, "ModifyRemote") == 0) {
 		const gchar *remote_id = NULL;
 		const gchar *key = NULL;
@@ -1510,10 +1559,6 @@ main (int argc, char *argv[])
 	g_option_context_add_group (context, fu_debug_get_option_group ());
 	/* TRANSLATORS: program summary */
 	g_option_context_set_summary (context, _("Firmware Update D-Bus Service"));
-	if (!g_option_context_parse (context, &argc, &argv, &error)) {
-		g_printerr ("Failed to parse command line: %s\n", error->message);
-		return EXIT_FAILURE;
-	}
 
 	/* create new objects */
 	priv = g_new0 (FuMainPrivate, 1);
@@ -1539,6 +1584,15 @@ main (int argc, char *argv[])
 	g_signal_connect (priv->engine, "percentage-changed",
 			  G_CALLBACK (fu_main_engine_percentage_changed_cb),
 			  priv);
+
+	if (!fu_engine_load_config (priv->engine, FU_ENGINE_LOAD_FLAG_NONE, &error))
+		return EXIT_FAILURE;
+
+	if (!g_option_context_parse (context, &argc, &argv, &error)) {
+		g_printerr ("Failed to parse command line: %s\n", error->message);
+		return EXIT_FAILURE;
+	}
+
 	if (!fu_engine_load (priv->engine, FU_ENGINE_LOAD_FLAG_NONE, &error)) {
 		g_printerr ("Failed to load engine: %s\n", error->message);
 		return EXIT_FAILURE;

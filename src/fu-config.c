@@ -31,10 +31,12 @@ struct _FuConfig
 	GPtrArray		*blacklist_devices;
 	GPtrArray		*blacklist_plugins;
 	GPtrArray		*approved_firmware;
+	gchar			*verbose_domains;
 	guint64			 archive_size_max;
 	guint			 idle_timeout;
 	XbSilo			*silo;
 	GHashTable		*os_release;
+	gchar			*config_file;
 };
 
 G_DEFINE_TYPE (FuConfig, fu_config, G_TYPE_OBJECT)
@@ -351,6 +353,17 @@ fu_config_load_remotes (FuConfig *self, GError **error)
 	return TRUE;
 }
 
+gboolean
+fu_config_set_verbose_domains (FuConfig *self, const gchar *value, GError **error)
+{
+	self->verbose_domains = value;
+	g_key_file_set_string (self->keyfile,
+			       "fwupd",
+			       "VerboseDomains",
+			       self->verbose_domains);
+	return g_key_file_save_to_file (self->keyfile, self->config_file, error);
+}
+
 static gboolean
 fu_config_load_from_file (FuConfig *self, const gchar *config_file,
 			  GError **error)
@@ -362,6 +375,7 @@ fu_config_load_from_file (FuConfig *self, const gchar *config_file,
 	g_auto(GStrv) devices = NULL;
 	g_auto(GStrv) plugins = NULL;
 	g_autoptr(GFile) file = NULL;
+	g_autofree gchar *domains = NULL;
 
 	/* ensure empty in case we're called from a monitor change */
 	g_ptr_array_set_size (self->blacklist_devices, 0);
@@ -438,6 +452,15 @@ fu_config_load_from_file (FuConfig *self, const gchar *config_file,
 					      NULL);
 	if (idle_timeout > 0)
 		self->idle_timeout = idle_timeout;
+
+	/* get the domains to run in verbose */
+	domains = g_key_file_get_string (self->keyfile,
+					"fwupd",
+					"VerboseDomains",
+					NULL);
+	if (domains != NULL && strlen (domains) > 0)
+		self->verbose_domains = g_steal_pointer (&domains);
+
 	return TRUE;
 }
 
@@ -479,7 +502,6 @@ fu_config_load (FuConfig *self, FuConfigLoadFlags flags, GError **error)
 {
 	const gchar *const *locales = g_get_language_names ();
 	g_autofree gchar *configdir = NULL;
-	g_autofree gchar *config_file = NULL;
 	g_autofree gchar *cachedirpkg = NULL;
 	g_autofree gchar *xmlbfn = NULL;
 	g_autoptr(GFile) xmlb = NULL;
@@ -491,12 +513,12 @@ fu_config_load (FuConfig *self, FuConfigLoadFlags flags, GError **error)
 
 	/* load the main daemon config file */
 	configdir = fu_common_get_path (FU_PATH_KIND_SYSCONFDIR_PKG);
-	config_file = g_build_filename (configdir, "daemon.conf", NULL);
-	if (g_file_test (config_file, G_FILE_TEST_EXISTS)) {
-		if (!fu_config_load_from_file (self, config_file, error))
+	self->config_file = g_build_filename (configdir, "daemon.conf", NULL);
+	if (g_file_test (self->config_file, G_FILE_TEST_EXISTS)) {
+		if (!fu_config_load_from_file (self, self->config_file, error))
 			return FALSE;
 	} else {
-		g_warning ("Daemon configuration %s not found", config_file);
+		g_warning ("Daemon configuration %s not found", self->config_file);
 	}
 
 	/* load AppStream about the remotes */
@@ -581,6 +603,13 @@ fu_config_get_approved_firmware (FuConfig *self)
 	return self->approved_firmware;
 }
 
+gchar *
+fu_config_get_verbose_domains (FuConfig *self)
+{
+	g_return_val_if_fail (FU_IS_CONFIG (self), NULL);
+	return self->verbose_domains;
+}
+
 static void
 fu_config_class_init (FuConfigClass *klass)
 {
@@ -615,6 +644,8 @@ fu_config_finalize (GObject *obj)
 	g_ptr_array_unref (self->approved_firmware);
 	g_ptr_array_unref (self->remotes);
 	g_ptr_array_unref (self->monitors);
+	g_free (self->verbose_domains);
+	g_free (self->config_file);
 
 	G_OBJECT_CLASS (fu_config_parent_class)->finalize (obj);
 }

@@ -37,6 +37,9 @@ void		 fu_engine_idle_reset			(FuEngine	*self);
 gboolean	 fu_engine_load				(FuEngine	*self,
 							 FuEngineLoadFlags flags,
 							 GError		**error);
+gboolean	 fu_engine_load_config			(FuEngine *self,
+							 FuEngineLoadFlags flags,
+							 GError **error);
 gboolean	 fu_engine_load_plugins			(FuEngine	*self,
 							 GError		**error);
 gboolean	 fu_engine_get_tainted			(FuEngine	*self);
@@ -131,6 +134,9 @@ gchar		*fu_engine_self_sign			(FuEngine	*self,
 							 const gchar	*value,
 							 FuKeyringSignFlags flags,
 							 GError		**error);
+gboolean	 fu_engine_set_verbose_domains		(FuEngine *self,
+							 const gchar *value,
+							 GError **error);
 
 /* for the self tests */
 void		 fu_engine_add_device			(FuEngine	*self,

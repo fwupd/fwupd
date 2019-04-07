@@ -3,6 +3,7 @@ _fwupdmgr_cmd_list=(
 	'clear-history'
 	'clear-offline'
 	'clear-results'
+	'daemon-verbose'
 	'disable-remote'
 	'downgrade'
 	'enable-remote'

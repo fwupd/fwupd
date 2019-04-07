@@ -2100,6 +2100,26 @@ fu_util_get_approved_firmware (FuUtilPrivate *priv, gchar **values, GError **err
 	return TRUE;
 }
 
+static gboolean
+fu_util_set_daemon_verbose (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	if (g_strv_length (values) == 0)
+		g_print ("%s\n", _("Turning off daemon debugging"));
+	else
+		g_print ("%s\n", _("Turning on daemon verbose debugging"));
+	if (!fwupd_client_modify_verbose (priv->client,
+					  values,
+					  priv->cancellable,
+					  error))
+		return FALSE;
+	g_print ("%s\n [Y|n]: ",
+		 _("Would you like to stop the daemon to make the change effective?"));
+
+	if (!fu_util_prompt_for_boolean (FALSE))
+		return TRUE;
+	return fu_util_stop_daemon (error);
+}
+
 static void
 fu_util_ignore_cb (const gchar *log_domain, GLogLevelFlags log_level,
 		   const gchar *message, gpointer user_data)
@@ -2359,6 +2379,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: firmware approved by the admin */
 		     _("Sets the list of approved firmware."),
 		     fu_util_set_approved_firmware);
+	fu_util_cmd_array_add (cmd_array,
+		     "daemon-verbose",
+		     "FuDomain1[,FuDomain2,FuDomain3]",
+		     /* TRANSLATORS: Groups of debugging strings */
+		     _("Sets the daemon verbose logging domains."),
+		     fu_util_set_daemon_verbose);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();

@@ -31,6 +31,10 @@ guint		 fu_config_get_idle_timeout		(FuConfig	*self);
 GPtrArray	*fu_config_get_blacklist_devices	(FuConfig	*self);
 GPtrArray	*fu_config_get_blacklist_plugins	(FuConfig	*self);
 GPtrArray	*fu_config_get_approved_firmware	(FuConfig	*self);
+gboolean	 fu_config_set_verbose_domains		(FuConfig	*self,
+							 const gchar	*value,
+							 GError		**error);
+gchar		*fu_config_get_verbose_domains		(FuConfig	*self);
 GPtrArray	*fu_config_get_remotes			(FuConfig	*self);
 FwupdRemote	*fu_config_get_remote_by_id		(FuConfig	*self,
 							 const gchar	*remote_id);

@@ -28,11 +28,6 @@
 #include "fwupd-common-private.h"
 #include "fwupd-device-private.h"
 
-#define SYSTEMD_SERVICE			"org.freedesktop.systemd1"
-#define SYSTEMD_OBJECT_PATH		"/org/freedesktop/systemd1"
-#define SYSTEMD_MANAGER_INTERFACE	"org.freedesktop.systemd1.Manager"
-#define SYSTEMD_FWUPD_UNIT		"fwupd.service"
-
 /* custom return code */
 #define EXIT_NOTHING_TO_DO		2
 
@@ -61,56 +56,6 @@ struct FuUtilPrivate {
 	gchar			*current_message;
 	FwupdDeviceFlags	 completion_flags;
 };
-
-static gboolean
-fu_util_stop_daemon (GError **error)
-{
-	g_autoptr(GDBusConnection) connection = NULL;
-	g_autoptr(GDBusProxy) proxy = NULL;
-	g_autoptr(GVariant) val = NULL;
-
-	/* try to stop any already running daemon */
-	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
-	if (connection == NULL) {
-		g_prefix_error (error, "failed to get bus: ");
-		return FALSE;
-	}
-	proxy = g_dbus_proxy_new_sync (connection,
-					G_DBUS_PROXY_FLAGS_NONE,
-					NULL,
-					SYSTEMD_SERVICE,
-					SYSTEMD_OBJECT_PATH,
-					SYSTEMD_MANAGER_INTERFACE,
-					NULL,
-					error);
-	if (proxy == NULL) {
-		g_prefix_error (error, "failed to find %s: ", SYSTEMD_SERVICE);
-		return FALSE;
-	}
-	val = g_dbus_proxy_call_sync (proxy,
-				      "GetUnit",
-				      g_variant_new ("(s)",
-						     SYSTEMD_FWUPD_UNIT),
-				      G_DBUS_CALL_FLAGS_NONE,
-				      -1,
-				      NULL,
-				      error);
-	if (val == NULL) {
-		g_prefix_error (error, "failed to find %s: ", SYSTEMD_FWUPD_UNIT);
-		return FALSE;
-	}
-	g_variant_unref (val);
-	val = g_dbus_proxy_call_sync (proxy,
-				      "StopUnit",
-				      g_variant_new ("(ss)",
-				     SYSTEMD_FWUPD_UNIT,
-				     "replace"),
-				      G_DBUS_CALL_FLAGS_NONE,
-				      -1,
-				      NULL,
-				      error);
-	return val != NULL;
-}
 
 static gboolean
 fu_util_save_current_state (FuUtilPrivate *priv, GError **error)
@@ -166,6 +111,8 @@ fu_util_start_engine (FuUtilPrivate *priv, FuEngineLoadFlags flags, GError **err
 
 	if (!fu_util_stop_daemon (&error_local))
 		g_debug ("Failed top stop daemon: %s", error_local->message);
+	if (!fu_engine_load_config (priv->engine, flags, error))
+		return FALSE;
 	if (!fu_engine_load (priv->engine, flags, error))
 		return FALSE;
 	if (fu_engine_get_tainted (priv->engine)) {

@@ -13,6 +13,61 @@
 #include "fu-util-common.h"
 #include "fu-device.h"
 
+#define SYSTEMD_SERVICE			"org.freedesktop.systemd1"
+#define SYSTEMD_OBJECT_PATH		"/org/freedesktop/systemd1"
+#define SYSTEMD_MANAGER_INTERFACE	"org.freedesktop.systemd1.Manager"
+#define SYSTEMD_FWUPD_UNIT		"fwupd.service"
+
+gboolean
+fu_util_stop_daemon (GError **error)
+{
+	g_autoptr(GDBusConnection) connection = NULL;
+	g_autoptr(GDBusProxy) proxy = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	/* try to stop any already running daemon */
+	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
+	if (connection == NULL) {
+		g_prefix_error (error, "failed to get bus: ");
+		return FALSE;
+	}
+	proxy = g_dbus_proxy_new_sync (connection,
+					G_DBUS_PROXY_FLAGS_NONE,
+					NULL,
+					SYSTEMD_SERVICE,
+					SYSTEMD_OBJECT_PATH,
+					SYSTEMD_MANAGER_INTERFACE,
+					NULL,
+					error);
+	if (proxy == NULL) {
+		g_prefix_error (error, "failed to find %s: ", SYSTEMD_SERVICE);
+		return FALSE;
+	}
+	val = g_dbus_proxy_call_sync (proxy,
+				      "GetUnit",
+				      g_variant_new ("(s)",
+						     SYSTEMD_FWUPD_UNIT),
+				      G_DBUS_CALL_FLAGS_NONE,
+				      -1,
+				      NULL,
+				      error);
+	if (val == NULL) {
+		g_prefix_error (error, "failed to find %s: ", SYSTEMD_FWUPD_UNIT);
+		return FALSE;
+	}
+	g_variant_unref (val);
+	val = g_dbus_proxy_call_sync (proxy,
+				      "StopUnit",
+				      g_variant_new ("(ss)",
+				     SYSTEMD_FWUPD_UNIT,
+				     "replace"),
+				      G_DBUS_CALL_FLAGS_NONE,
+				      -1,
+				      NULL,
+				      error);
+	return val != NULL;
+}
+
 void
 fu_util_print_data (const gchar *title, const gchar *msg)
 {

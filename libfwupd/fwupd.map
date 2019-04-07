@@ -343,6 +343,7 @@ LIBFWUPD_1.2.6 {
 
 LIBFWUPD_1.2.7 {
   global:
+    fwupd_client_modify_verbose;
     fwupd_release_add_category;
     fwupd_release_get_categories;
     fwupd_release_has_category;

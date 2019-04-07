@@ -139,6 +139,16 @@ fu_debug_post_parse_hook (GOptionContext *context,
 			  GError **error)
 {
 	FuDebug *self = (FuDebug *) data;
+	const gchar *env = g_getenv ("FWUPD_VERBOSE");
+
+	if (env != NULL) {
+		/* conf file requested to turn on all verbosity */
+		if (g_strcmp0 (env, "*") == 0)
+			self->verbose = TRUE;
+		/* enable certain domains only if not set on command line */
+		else if (self->verbose_domain == NULL)
+			self->verbose_domain = g_strsplit (env, ",", -1);
+	}
 
 	/* verbose? */
 	if (self->verbose) {

@@ -308,6 +308,25 @@
     </method>
 
     <!--***********************************************************-->
+    <method name='ModifyVerbose'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Modify verbose logging configuration for daemon
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='as' name='domains' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              Which domains to log.</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
     <method name='Activate'>
       <doc:doc>
         <doc:description>
