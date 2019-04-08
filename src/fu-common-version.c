@@ -41,6 +41,8 @@ fu_common_version_format_from_string (const gchar *str)
 		return FU_VERSION_FORMAT_PLAIN;
 	if (g_strcmp0 (str, "intel-me") == 0)
 		return FU_VERSION_FORMAT_INTEL_ME;
+	if (g_strcmp0 (str, "pair") == 0)
+		return FU_VERSION_FORMAT_PAIR;
 	return FU_VERSION_FORMAT_QUAD;
 }
 
@@ -69,6 +71,8 @@ fu_common_version_format_to_string (FuVersionFormat kind)
 		return "plain";
 	if (kind == FU_VERSION_FORMAT_INTEL_ME)
 		return "intel-me";
+	if (kind == FU_VERSION_FORMAT_PAIR)
+		return "pair";
 	return NULL;
 }
 
