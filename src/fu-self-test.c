@@ -434,6 +434,52 @@ fu_engine_requirements_device_func (void)
 }
 
 static void
+fu_engine_requirements_version_format_func (void)
+{
+	gboolean ret;
+	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuInstallTask) task = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+	const gchar *xml =
+		"<component>"
+		"  <provides>"
+		"    <firmware type=\"flashed\">12345678-1234-1234-1234-123456789012</firmware>"
+		"  </provides>"
+		"  <releases>"
+		"    <release version=\"1.2.4\">"
+		"      <checksum type=\"sha1\" filename=\"bios.bin\" target=\"content\"/>"
+		"    </release>"
+		"  </releases>"
+		"</component>";
+
+	/* set up a dummy device */
+	fu_device_set_version (device, "1.2.3.4");
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
+
+	/* make the component require three things */
+	silo = xb_silo_new_from_xml (xml, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (silo);
+	component = xb_silo_query_first (silo, "component", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (component);
+
+	/* check this fails */
+	task = fu_install_task_new (device, component);
+	ret = fu_engine_check_requirements (engine, task,
+					    FWUPD_INSTALL_FLAG_NONE,
+					    &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_nonnull (g_strstr_len (error->message, -1,
+					"Firmware version formats were different"));
+	g_assert (!ret);
+}
+
+static void
 fu_engine_requirements_other_device_func (void)
 {
 	gboolean ret;
@@ -3664,6 +3710,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/engine{requirements-not-child-fail}", fu_engine_requirements_child_fail_func);
 	g_test_add_func ("/fwupd/engine{requirements-unsupported}", fu_engine_requirements_unsupported_func);
 	g_test_add_func ("/fwupd/engine{requirements-device}", fu_engine_requirements_device_func);
+	g_test_add_func ("/fwupd/engine{requirements-version-format}", fu_engine_requirements_version_format_func);
 	g_test_add_func ("/fwupd/engine{device-auto-parent}", fu_engine_device_parent_func);
 	g_test_add_func ("/fwupd/engine{device-priority}", fu_engine_device_priority_func);
 	g_test_add_func ("/fwupd/engine{install-duration}", fu_engine_install_duration_func);
