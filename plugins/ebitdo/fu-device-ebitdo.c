@@ -66,6 +66,8 @@ fu_device_ebitdo_kind_from_string (const gchar *kind)
 		return FU_DEVICE_EBITDO_KIND_FC30PRO;
 	if (g_strcmp0 (kind, "NES30PRO") == 0)
 		return FU_DEVICE_EBITDO_KIND_NES30PRO;
+	if (g_strcmp0 (kind, "M30") == 0)
+		return FU_DEVICE_EBITDO_KIND_M30;
 	if (g_strcmp0 (kind, "FC30_ARCADE") == 0)
 		return FU_DEVICE_EBITDO_KIND_FC30_ARCADE;
 	return FU_DEVICE_EBITDO_KIND_UNKNOWN;
@@ -98,6 +100,8 @@ fu_device_ebitdo_kind_to_string (FuDeviceEbitdoKind kind)
 		return "FC30PRO";
 	if (kind == FU_DEVICE_EBITDO_KIND_NES30PRO)
 		return "NES30PRO";
+	if (kind == FU_DEVICE_EBITDO_KIND_M30)
+		return "M30";
 	if (kind == FU_DEVICE_EBITDO_KIND_FC30_ARCADE)
 		return "FC30_ARCADE";
 	return NULL;
@@ -718,6 +722,7 @@ fu_device_ebitdo_new (GUsbDevice *usb_device)
 		{ 0x2dc8, 0xab20, FU_DEVICE_EBITDO_KIND_SNES30 },
 		{ 0x2dc8, 0x9000, FU_DEVICE_EBITDO_KIND_FC30PRO },
 		{ 0x2dc8, 0x9001, FU_DEVICE_EBITDO_KIND_NES30PRO },
+		{ 0x2dc8, 0x5006, FU_DEVICE_EBITDO_KIND_M30 },
 		{ 0x2dc8, 0x1002, FU_DEVICE_EBITDO_KIND_FC30_ARCADE },
 		{ 0x0000, 0x0000, FU_DEVICE_EBITDO_KIND_UNKNOWN }
 	};

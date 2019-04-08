@@ -102,6 +102,7 @@ main (int argc, char **argv)
 		case FU_DEVICE_EBITDO_KIND_NES30:
 		case FU_DEVICE_EBITDO_KIND_SFC30:
 		case FU_DEVICE_EBITDO_KIND_SNES30:
+		case FU_DEVICE_EBITDO_KIND_M30:
 			g_print ("2. Hold down L+R+START for 3 seconds until "
 				 "both LED lights flashing.\n");
 			break;
