@@ -209,7 +209,7 @@ fu_engine_device_changed_cb (FuDeviceList *device_list, FuDevice *device, FuEngi
 
 /* convert hex and decimal versions to dotted style */
 static gchar *
-fu_engine_get_release_version (FuEngine *self, XbNode *component, XbNode *rel)
+fu_engine_get_release_version (FuEngine *self, XbNode *component, XbNode *rel, GError **error)
 {
 	FuVersionFormat fmt = FU_VERSION_FORMAT_TRIPLET;
 	const gchar *version;
@@ -218,8 +218,13 @@ fu_engine_get_release_version (FuEngine *self, XbNode *component, XbNode *rel)
 
 	/* get version */
 	version = xb_node_get_attr (rel, "version");
-	if (version == NULL)
+	if (version == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "version unset");
 		return NULL;
+	}
 
 	/* already dotted notation */
 	if (g_strstr_len (version, -1, ".") != NULL)
@@ -229,8 +234,17 @@ fu_engine_get_release_version (FuEngine *self, XbNode *component, XbNode *rel)
 	version_format = xb_node_query_text (component,
 					     "custom/value[@key='LVFS::VersionFormat']",
 					     NULL);
-	if (version_format != NULL)
+	if (version_format != NULL) {
 		fmt = fu_common_version_format_from_string (version_format);
+		if (fmt == FU_VERSION_FORMAT_UNKNOWN) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "version format %s unsupported",
+				     version_format);
+			return NULL;
+		}
+	}
 
 	/* don't touch my version! */
 	if (fmt == FU_VERSION_FORMAT_PLAIN)
@@ -245,11 +259,12 @@ fu_engine_get_release_version (FuEngine *self, XbNode *component, XbNode *rel)
 	return fu_common_version_from_uint32 ((guint32) ver_uint32, fmt);
 }
 
-static void
+static gboolean
 fu_engine_set_release_from_appstream (FuEngine *self,
 				      FwupdRelease *rel,
 				      XbNode *component,
-				      XbNode *release)
+				      XbNode *release,
+				      GError **error)
 {
 	FwupdRemote *remote = NULL;
 	const gchar *tmp;
@@ -280,9 +295,10 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 		fwupd_release_set_vendor (rel, tmp);
 
 	/* the version is fixed up at runtime */
-	version_rel = fu_engine_get_release_version (self, component, release);
-	if (version_rel != NULL)
-		fwupd_release_set_version (rel, version_rel);
+	version_rel = fu_engine_get_release_version (self, component, release, error);
+	if (version_rel == NULL)
+		return FALSE;
+	fwupd_release_set_version (rel, version_rel);
 
 	/* find the remote */
 	remote_id = xb_node_query_text (component, "../custom/value[@key='fwupd::RemoteId']", NULL);
@@ -354,6 +370,7 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 	tmp = xb_node_query_text (component, "custom/value[@key='LVFS::UpdateMessage']", NULL);
 	if (tmp != NULL)
 		fwupd_release_set_update_message (rel, tmp);
+	return TRUE;
 }
 
 /* finds the remote-id for the first firmware in the silo that matches this
@@ -1496,7 +1513,11 @@ fu_engine_install (FuEngine *self,
 
 	/* schedule this for the next reboot if not in system-update.target,
 	 * but first check if allowed on battery power */
-	version_rel = fu_engine_get_release_version (self, component, rel);
+	version_rel = fu_engine_get_release_version (self, component, rel, error);
+	if (version_rel == NULL) {
+		g_prefix_error (error, "failed to get release version: ");
+		return FALSE;
+	}
 	if ((self->app_flags & FU_APP_FLAGS_IS_OFFLINE) == 0 &&
 	    (flags & FWUPD_INSTALL_FLAG_OFFLINE) > 0) {
 		g_autoptr(FwupdRelease) release_tmp = NULL;
@@ -2504,7 +2525,8 @@ fu_engine_get_result_from_component (FuEngine *self, XbNode *component, GError *
 	}
 	rel = fwupd_release_new ();
 	fwupd_release_set_flags (rel, release_flags);
-	fu_engine_set_release_from_appstream (self, rel, component, release);
+	if (!fu_engine_set_release_from_appstream (self, rel, component, release, error))
+		return NULL;
 	fwupd_device_add_release (dev, rel);
 	return g_steal_pointer (&dev);
 }
@@ -2822,9 +2844,18 @@ fu_engine_add_releases_for_device_component (FuEngine *self,
 		gint vercmp;
 		GPtrArray *checksums;
 		g_autoptr(FwupdRelease) rel = fwupd_release_new ();
+		g_autoptr(GError) error_loop = NULL;
 
 		/* create new FwupdRelease for the XbNode */
-		fu_engine_set_release_from_appstream (self, rel, component, release);
+		if (!fu_engine_set_release_from_appstream (self,
+							   rel,
+							   component,
+							   release,
+							   &error_loop)) {
+			g_warning ("failed to set release for component: %s",
+				   error_loop->message);
+			continue;
+		}
 
 		/* fall back to quirk-provided value */
 		if (fwupd_release_get_install_duration (rel) == 0)
@@ -3579,8 +3610,17 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 						       NULL);
 			if (release != NULL) {
 				g_autoptr(FwupdRelease) rel = fwupd_release_new ();
-				fu_engine_set_release_from_appstream (self, rel, component, release);
-				fu_device_add_release (device, rel);
+				g_autoptr(GError) error_local = NULL;
+				if (!fu_engine_set_release_from_appstream (self,
+									   rel,
+									   component,
+									   release,
+									   &error_local)) {
+					g_warning ("failed to set AppStream release: %s",
+						   error_local->message);
+				} else {
+					fu_device_add_release (device, rel);
+				}
 			}
 		}
 	}
