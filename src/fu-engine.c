@@ -1563,7 +1563,8 @@ fu_engine_install (FuEngine *self,
 		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_NEEDS_REBOOT);
 		if ((flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0 &&
 		    !fu_history_modify_device (self->history, device,
-					       FU_HISTORY_FLAGS_MATCH_OLD_VERSION,
+					       FU_HISTORY_FLAGS_MATCH_OLD_VERSION |
+					       FU_HISTORY_FLAGS_MATCH_NEW_VERSION,
 					       error))
 			return FALSE;
 		/* success */
