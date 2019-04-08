@@ -876,6 +876,38 @@ fu_engine_require_vercmp (XbNode *req, const gchar *version, GError **error)
 }
 
 static gboolean
+fu_engine_check_requirement_not_child (FuEngine *self, XbNode *req,
+				       FuDevice *device, GError **error)
+{
+	GPtrArray *children = fu_device_get_children (device);
+
+	/* only <firmware> supported */
+	if (g_strcmp0 (xb_node_get_element (req), "firmware") != 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "cannot handle not-child %s requirement",
+			     xb_node_get_element (req));
+		return FALSE;
+	}
+
+	/* check each child */
+	for (guint i = 0; i < children->len; i++) {
+		FuDevice *child = g_ptr_array_index (children, i);
+		const gchar *version = fu_device_get_version (child);
+		if (fu_engine_require_vercmp (req, version, NULL)) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "Not compatible with child device version %s",
+				     version);
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_engine_check_requirement_firmware (FuEngine *self, XbNode *req,
 				      FuDevice *device, GError **error)
 {
@@ -946,6 +978,10 @@ fu_engine_check_requirement_firmware (FuEngine *self, XbNode *req,
 		}
 		return TRUE;
 	}
+
+	/* child version */
+	if (g_strcmp0 (xb_node_get_text (req), "not-child") == 0)
+		return fu_engine_check_requirement_not_child (self, req, device, error);
 
 	/* another device */
 	if (fwupd_guid_is_valid (xb_node_get_text (req))) {
