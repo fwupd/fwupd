@@ -18,7 +18,7 @@ typedef struct {
 	gboolean	 verbose;
 	gboolean	 console;
 	gchar		**plugin_verbose;
-	gchar		**daemon_verbose;
+	gchar		**verbose_domain;
 } FuDebug;
 
 static void
@@ -27,7 +27,7 @@ fu_debug_free (FuDebug *self)
 	g_option_group_set_parse_hooks (self->group, NULL, NULL);
 	g_option_group_unref (self->group);
 	g_strfreev (self->plugin_verbose);
-	g_strfreev (self->daemon_verbose);
+	g_strfreev (self->verbose_domain);
 	g_free (self);
 }
 
@@ -121,9 +121,9 @@ fu_debug_pre_parse_hook (GOptionContext *context,
 		{ "plugin-verbose", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &self->plugin_verbose,
 		  /* TRANSLATORS: this is for plugin development */
 		  N_("Show plugin verbose information"), "PLUGIN-NAME" },
-		{ "daemon-verbose", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &self->daemon_verbose,
+		{ "domain-verbose", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &self->verbose_domain,
 		  /* TRANSLATORS: this is for daemon development */
-		  N_("Show daemon verbose information"), "DOMAIN" },
+		  N_("Show daemon verbose information for a particular domain"), "DOMAIN" },
 		{ NULL}
 	};
 
@@ -149,9 +149,9 @@ fu_debug_post_parse_hook (GOptionContext *context,
 	} else {
 		/* hide all debugging except whitelisted */
 		g_log_set_default_handler (fu_debug_ignore_cb, self);
-		if (self->daemon_verbose != NULL) {
-			for (guint i = 0; self->daemon_verbose[i] != NULL; i++) {
-				g_log_set_handler (self->daemon_verbose[i],
+		if (self->verbose_domain != NULL) {
+			for (guint i = 0; self->verbose_domain[i] != NULL; i++) {
+				g_log_set_handler (self->verbose_domain[i],
 						   G_LOG_LEVEL_MASK,
 						   fu_debug_handler_cb, self);
 			}
