@@ -1042,7 +1042,7 @@ dfu_target_upload (DfuTarget *target,
 		if (zone_cur == zone_last)
 			continue;
 
-		/* get the size of the entire continous zone */
+		/* get the size of the entire continuous zone */
 		zone_size = dfu_target_get_size_of_zone (target, zone_cur);
 		zone_last = zone_cur;
 

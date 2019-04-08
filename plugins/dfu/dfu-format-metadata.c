@@ -161,7 +161,7 @@ dfu_firmware_to_metadata (DfuFirmware *firmware, GError **error)
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "metdata key too long: %s",
+				     "metadata key too long: %s",
 				     key);
 			return NULL;
 		}

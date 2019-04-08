@@ -651,7 +651,7 @@ fwupd_client_proxy_call_cb (GObject *source, GAsyncResult *res, gpointer user_da
  * @error: the #GError, or %NULL
  *
  * Activates up a device, which normally means the device switches to a new
- * firmware verson. This should only be called when data loss cannot occur.
+ * firmware version. This should only be called when data loss cannot occur.
  *
  * Returns: %TRUE for success
  *

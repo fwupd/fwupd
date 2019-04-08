@@ -228,7 +228,7 @@ dfu_element_set_target_size (DfuElement *element, guint32 target_size)
 	g_assert (buf != NULL);
 	memcpy (buf, data, length);
 
-	/* set the pading value */
+	/* set the padding value */
 	if (priv->padding_value != 0x00) {
 		memset (buf + length,
 			priv->padding_value,

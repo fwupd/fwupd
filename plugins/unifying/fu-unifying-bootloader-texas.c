@@ -157,7 +157,7 @@ fu_unifying_bootloader_texas_write_firmware (FuDevice *device, GBytes *fw, GErro
 		memcpy (req->data, payload->data, payload->len);
 		if (!fu_unifying_bootloader_request (self, req, error)) {
 			g_prefix_error (error,
-					"failed to write ram bufer @0x%02x: ",
+					"failed to write ram buffer @0x%02x: ",
 					req->addr);
 			return FALSE;
 		}

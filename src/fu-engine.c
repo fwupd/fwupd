@@ -1355,7 +1355,7 @@ fu_engine_create_release_metadata (FuEngine *self, FuPlugin *plugin, GError **er
  * @flags: The #FwupdInstallFlags, e.g. %FWUPD_DEVICE_FLAG_UPDATABLE
  * @error: A #GError, or %NULL
  *
- * Installs a specfic firmware file on a device.
+ * Installs a specific firmware file on a device.
  *
  * By this point all the requirements and tests should have been done in
  * fu_engine_check_requirements() so this should not fail before running
@@ -3027,7 +3027,7 @@ fu_engine_get_downgrades (FuEngine *self, const gchar *device_id, GError **error
 			continue;
 		}
 
-		/* don't show releases we are not allowed to dowgrade to */
+		/* don't show releases we are not allowed to downgrade to */
 		if (fwupd_release_has_flag (rel_tmp, FWUPD_RELEASE_FLAG_BLOCKED_VERSION)) {
 			g_string_append_printf (error_str, "%s=lowest, ",
 						fwupd_release_get_version (rel_tmp));

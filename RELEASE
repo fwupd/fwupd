@@ -29,7 +29,7 @@ git push
 
 ninja dist
 
-3a. Generate the additon verification metadata
+3a. Generate the additional verification metadata
 
 gpg -b -a meson-dist/fwupd-${release_ver}.tar.xz
 

@@ -115,7 +115,7 @@ typedef enum {
  * @DFU_CIPHER_KIND_XTEA:			XTEA cipher detected
  * @DFU_CIPHER_KIND_RSA:			RSA cipher detected
  *
- * The type of cipher used for transfering the firmware.
+ * The type of cipher used for transferring the firmware.
  **/
 typedef enum {
 	DFU_CIPHER_KIND_NONE,

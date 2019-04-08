@@ -155,7 +155,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
       </section>
 
       <section>
-        <title>Creating an abstact device</title>
+        <title>Creating an abstract device</title>
         <para>
           This section shows how you would create a device which is exported
           to the daemon and thus can be queried and updated by the client software.
@@ -294,7 +294,7 @@ fu_plugin_update (FuPlugin *plugin,
           For some hardware, we might want to do an action before or after
           the actual firmware is squirted into the device.
           This could be something as simple as checking the system battery
-          level is over a certain theshold, or it could be as complicated as
+          level is over a certain threshold, or it could be as complicated as
           ensuring a vendor-specific GPIO is asserted when specific types
           of hardware are updated.
         </para>
@@ -334,7 +334,7 @@ fu_plugin_update_cleanup (FuPlugin *plugin, FuDevice *device, GError **error)
         <title>Detaching to bootloader mode</title>
         <para>
           Some hardware can only be updated in a special bootloader mode, which
-          for most devices can be switched to automaticaly.
+          for most devices can be switched to automatically.
           In some cases the user to do something manually, for instance
           re-inserting the hardware with a secret button pressed.
         </para>

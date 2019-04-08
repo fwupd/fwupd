@@ -317,7 +317,7 @@ fu_plugin_synapticsmst_enumerate (FuPlugin *plugin,
 		dev_id_str = g_strdup_printf ("MST-DIRECT-%s-0-0", aux_node);
 		fu_dev = fu_plugin_cache_lookup (plugin, dev_id_str);
 
-		/* If we open succesfully a device exists here */
+		/* If we open successfully a device exists here */
 		device = synapticsmst_device_new (SYNAPTICSMST_DEVICE_KIND_DIRECT, aux_node, 0, 0);
 		if (!synapticsmst_device_open (device, &error_local)) {
 			/* No device exists here, but was there - remove from DB */

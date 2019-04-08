@@ -10,7 +10,7 @@ Nordic (U0007) device and the Texas Instruments (U0008) version.
 This plugin will not work with the different "Nano" dongle (U0010) as it does
 not use the Unifying protocol.
 
-Some bootloader protocol infomation was taken from the Mousejack[1] project,
+Some bootloader protocol information was taken from the Mousejack[1] project,
 specifically logitech-usb-restore.py and unifying.py. Other documentation was
 supplied by Logitech.
 

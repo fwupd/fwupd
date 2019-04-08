@@ -117,7 +117,7 @@ dfu_target_stm_upload_element (DfuTarget *target,
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "memory sector at 0x%04x is not readble",
+			     "memory sector at 0x%04x is not readable",
 			     (guint) offset);
 		return NULL;
 	}

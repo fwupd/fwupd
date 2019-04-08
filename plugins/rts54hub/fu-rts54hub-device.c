@@ -272,7 +272,7 @@ fu_rts54hub_device_setup (FuDevice *device, GError **error)
 	if (!fu_rts54hub_device_ensure_status (self, error))
 		return FALSE;
 
-	/* all three conditons must be set */
+	/* all three conditions must be set */
 	if (!self->running_on_flash) {
 		fu_device_set_update_error (device,
 					    "device is abnormally running from ROM");

@@ -120,7 +120,7 @@ fu_device_list_get_all (FuDeviceList *self)
  * @self: A #FuDeviceList
  *
  * Returns all the active devices that have been added to the device list.
- * An active device is defined as a device that is currently conected and has
+ * An active device is defined as a device that is currently connected and has
  * is owned by a plugin.
  *
  * Returns: (transfer container) (element-type FuDevice): the devices
@@ -649,7 +649,7 @@ fu_device_list_replug_cb (gpointer user_data)
  * @device: A #FuDevice
  * @error: A #GError, or %NULL
  *
- * Waits for a specific devic to replug if %FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG
+ * Waits for a specific device to replug if %FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG
  * is set.
  *
  * If the device does not exist this function returns without an error.

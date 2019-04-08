@@ -25,7 +25,7 @@ G_BEGIN_DECLS
 #define SIO_LDNxx_IDX_IOBAD0		0x60 /* 16 bit */
 #define SIO_LDNxx_IDX_IOBAD1		0x62 /* 16 bit */
 
-/* these registers are only accessable by EC */
+/* these registers are only accessible by EC */
 #define GCTRL_ECHIPID1			0x2000
 #define GCTRL_ECHIPID2			0x2001
 #define GCTRL_ECHIPVER			0x2002

@@ -982,7 +982,7 @@ fu_util_download_chunk_cb (SoupMessage *msg, SoupBuffer *chunk, gpointer user_da
 	if (header_size < body_length)
 		return;
 
-	/* calulate percentage */
+	/* calculate percentage */
 	percentage = (guint) ((100 * body_length) / header_size);
 	g_debug ("progress: %u%%", percentage);
 	fu_progressbar_update (priv->progressbar, FWUPD_STATUS_DOWNLOADING, percentage);

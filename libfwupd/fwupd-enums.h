@@ -180,7 +180,7 @@ typedef enum {
  * FwupdUpdateState:
  * @FWUPD_UPDATE_STATE_UNKNOWN:			Unknown
  * @FWUPD_UPDATE_STATE_PENDING:			Update is pending
- * @FWUPD_UPDATE_STATE_SUCCESS:			Update was successfull
+ * @FWUPD_UPDATE_STATE_SUCCESS:			Update was successful
  * @FWUPD_UPDATE_STATE_FAILED:			Update failed
  * @FWUPD_UPDATE_STATE_NEEDS_REBOOT:		Waiting for a reboot to apply
  *
