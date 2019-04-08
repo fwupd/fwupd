@@ -2955,13 +2955,14 @@ fu_engine_get_releases_for_device (FuEngine *self, FuDevice *device, GError **er
 	/* return the compound error */
 	if (releases->len == 0) {
 		if (error_all != NULL) {
-			g_propagate_error (error, g_steal_pointer (&error_all));
+			g_propagate_prefixed_error (error, g_steal_pointer (&error_all),
+						    "No releases found for device: ");
 			return NULL;
 		}
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOTHING_TO_DO,
-			     "No valid releases found for device");
+			     "No releases found for device");
 		return NULL;
 	}
 	return releases;
