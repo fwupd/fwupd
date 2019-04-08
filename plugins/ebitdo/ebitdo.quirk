@@ -79,3 +79,10 @@ Flags = none
 Plugin = ebitdo
 Flags = none
 InstallDuration = 120
+
+# M30
+[DeviceInstanceId=USB\VID_2DC8&PID_5006]
+Plugin = ebitdo
+Flags = none
+InstallDuration = 120
+
