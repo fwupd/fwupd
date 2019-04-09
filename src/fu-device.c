@@ -2223,6 +2223,8 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 		fu_device_set_equivalent_id (self, fu_device_get_equivalent_id (donor));
 	if (priv->quirks == NULL)
 		fu_device_set_quirks (self, fu_device_get_quirks (donor));
+	if (priv->version_format == FU_VERSION_FORMAT_UNKNOWN)
+		fu_device_set_version_format (self, fu_device_get_version_format (donor));
 	fu_mutex_read_lock (priv_donor->parent_guids_mutex);
 	for (guint i = 0; i < parent_guids->len; i++)
 		fu_device_add_parent_guid (self, g_ptr_array_index (parent_guids, i));
