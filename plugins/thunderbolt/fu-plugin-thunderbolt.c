@@ -374,6 +374,7 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 		fu_device_set_version (dev, version);
 	if (is_host)
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 
 	/* we never open the device, so convert the instance IDs */
 	fu_device_setup (dev, NULL);
