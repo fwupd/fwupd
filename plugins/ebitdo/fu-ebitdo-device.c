@@ -389,6 +389,7 @@ fu_ebitdo_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 		case 0x6000: /* SF30 pro: Dinput mode */
 		case 0x6001: /* SN30 pro: Dinput mode */
 		case 0x028e: /* SF30/SN30 pro: Xinput mode */
+		case 0x5006: /* M30 */
 			g_string_append (msg, "press and hold L1+R1+START for 3 seconds "
 					      "until the LED on top blinks red, ");
 			break;
