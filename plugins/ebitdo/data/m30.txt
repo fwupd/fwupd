@@ -1,0 +1,22 @@
+M30 shows up as in firmware Update Mode:
+Bus 002 Device 009: ID 2dc8:5750 8BitDo
+
+8Bitdo  
+  DeviceId:             73ef80b60058b4f18549921520bfd94eaf18710a
+  Guid:                 78acf201-a624-5c0b-a521-e204be14e3d5 <- USB\VID_2DC8&PID_5750&REV_0200
+  Guid:                 b02f1319-c1c4-54f4-b7f2-5bb3552f6a9e <- USB\VID_2DC8&PID_5750
+  Guid:                 5bc60e62-f461-58bd-91b6-7de3392f8bd6 <- USB\VID_2DC8
+  Guid:                 afa5518d-7c55-51cb-8e1c-bf3b11b67dfa <- USB\CLASS_03&SUBCLASS_00&PROT_00
+  Guid:                 cee9c5bc-aa12-51eb-a220-d0ef588d7cb2 <- USB\CLASS_03&SUBCLASS_00
+  Guid:                 571229d5-caed-5cbc-91c1-5c216601a194 <- USB\CLASS_03
+  Serial:               BootMod
+  Summary:              A redesigned classic game controller
+  Plugin:               ebitdo
+  Flags:                updatable|supported|registered|is-bootloader
+  Vendor:               8Bitdo
+  VendorId:             USB:0x2DC8
+  Version:              1.00
+  Icon:                 input-gaming
+  InstallDuration:      120
+  Created:              2019-04-08
+
