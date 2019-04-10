@@ -1,0 +1,1573 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the fwupd package.
+#
+# Translators:
+# Moo, 2019
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: fwupd\n"
+"Report-Msgid-Bugs-To: https://github.com/hughsie/fwupd/issues\n"
+"POT-Creation-Date: 2019-04-09 15:24+0000\n"
+"PO-Revision-Date: 2019-04-10 13:38+0300\n"
+"Last-Translator: Moo\n"
+"Language-Team: Lithuanian\n"
+"Language: lt\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Launchpad-Export-Date: 2019-04-09 19:36+0000\n"
+"X-Generator: Poedit 2.2.1\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && (n%100<11 || n%100>19) ? 0 : n"
+"%10>=2 && n%10<=9 && (n%100<11 || n%100>19) ? 1 : 2);\n"
+
+#: data/remotes.d/lvfs.metainfo.xml:6
+msgid "Linux Vendor Firmware Service (stable firmware)"
+msgstr ""
+"Linux tiekėjų programinės aparatinės įrangos paslauga (stabili programinė "
+"aparatinė įranga)"
+
+#: data/remotes.d/lvfs-testing.metainfo.xml:6
+msgid "Linux Vendor Firmware Service (testing firmware)"
+msgstr ""
+"Linux tiekėjų programinės aparatinės įrangos paslauga (testuojama programinė "
+"aparatinė įranga)"
+
+#: policy/org.freedesktop.fwupd.policy.in:17
+msgid "Install signed system firmware"
+msgstr "Įdiegti pasirašytą sistemos programinę aparatinę įrangą"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:19
+#: policy/org.freedesktop.fwupd.policy.in:30
+msgid "Authentication is required to update the firmware on this machine"
+msgstr ""
+"Norint šiame kompiuteryje atnaujinti programinę aparatinę įrangą, "
+"reikalingas tapatybės nustatymas"
+
+#: policy/org.freedesktop.fwupd.policy.in:28
+msgid "Install unsigned system firmware"
+msgstr "Įdiegti nepasirašytą sistemos programinę aparatinę įrangą"
+
+#: policy/org.freedesktop.fwupd.policy.in:39
+msgid "Install old version of system firmware"
+msgstr "Įdiegti senąją sistemos programinės aparatinės įrangos versiją"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:41
+msgid "Authentication is required to downgrade the firmware on this machine"
+msgstr ""
+"Norint šiame kompiuteryje sendinti programinę aparatinę įrangą, reikalingas "
+"tapatybės nustatymas"
+
+#: policy/org.freedesktop.fwupd.policy.in:50
+msgid "Install signed device firmware"
+msgstr "Įdiegti pasirašytą įrenginio programinę aparatinę įrangą"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:52
+#: policy/org.freedesktop.fwupd.policy.in:63
+msgid "Authentication is required to update the firmware on a removable device"
+msgstr ""
+"Norint keičiamajame įrenginyje atnaujinti programinę aparatinę įrangą, "
+"reikalingas tapatybės nustatymas"
+
+#: policy/org.freedesktop.fwupd.policy.in:61
+#: policy/org.freedesktop.fwupd.policy.in:72
+msgid "Install unsigned device firmware"
+msgstr "Įdiegti nepasirašytą įrenginio programinę aparatinę įrangą"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:74
+msgid ""
+"Authentication is required to downgrade the firmware on a removable device"
+msgstr ""
+"Norint keičiamajame įrenginyje sendinti programinę aparatinę įrangą, "
+"reikalingas tapatybės nustatymas"
+
+#: policy/org.freedesktop.fwupd.policy.in:83
+msgid "Unlock the device to allow access"
+msgstr "Atrakinti įrenginį, kad būtų leista prieiga"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:85
+msgid "Authentication is required to unlock a device"
+msgstr "Norint atrakinti įrenginį, reikalingas tapatybės nustatymas"
+
+#: policy/org.freedesktop.fwupd.policy.in:94
+msgid "Activate the new firmware on the device"
+msgstr "Aktyvuoti naują programinę aparatinę įrangą įrenginyje"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:96
+msgid "Authentication is required to switch to the new firmware version"
+msgstr ""
+"Norint perjungti į naują programinės aparatinės įrangos versiją, reikalingas "
+"tapatybės nustatymas"
+
+#: policy/org.freedesktop.fwupd.policy.in:105
+msgid "Update the stored device verification information"
+msgstr "Atnaujinti saugomo įrenginio patikrinimo informaciją"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:107
+msgid ""
+"Authentication is required to update the stored checksums for the device"
+msgstr ""
+"Norint atnaujinti įrenginiui saugomas kontrolines sumas, reikalingas "
+"tapatybės nustatymas"
+
+#: policy/org.freedesktop.fwupd.policy.in:116
+msgid "Modify a configured remote"
+msgstr "Modifikuoti sukonfigūruotą nuotolinę saugyklą"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:118
+msgid ""
+"Authentication is required to modify a configured remote used for firmware "
+"updates"
+msgstr ""
+"Norint modifikuoti programinės aparatinės įrangos atnaujinimams naudojamą "
+"sukonfigūruotą saugyklą, reikalingas tapatybės nustatymas"
+
+#: policy/org.freedesktop.fwupd.policy.in:127
+msgid "Sets the list of approved firmware"
+msgstr "Nustato patvirtintą programinės aparatinės įrangos sąrašą"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:129
+msgid "Authentication is required to set the list of approved firmware"
+msgstr ""
+"Norint nustatyti patvirtintos programinės aparatinės įrangos sąrašą, "
+"reikalingas tapatybės nustatymas"
+
+#: policy/org.freedesktop.fwupd.policy.in:138
+msgid "Sign data using the client certificate"
+msgstr "Pasirašyti duomenis, naudojant kliento liudijimą"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+#: policy/org.freedesktop.fwupd.policy.in:140
+msgid "Authentication is required to sign data using the client certificate"
+msgstr ""
+"Norint pasirašyti duomenis naudojant kliento liudijimą, reikalingas "
+"tapatybės nustatymas"
+
+#. TRANSLATORS: this is a command alias, e.g. 'get-devices'
+#: plugins/dfu/dfu-tool.c:112 src/fu-util-common.c:347
+#, c-format
+msgid "Alias to %s"
+msgstr "Alternatyvusis %s pavadinimas"
+
+#. TRANSLATORS: error message
+#: plugins/dfu/dfu-tool.c:180 src/fu-util-common.c:375
+msgid "Command not found"
+msgstr "Komanda nerasta"
+
+#. TRANSLATORS: this is when a device is hotplugged
+#: plugins/dfu/dfu-tool.c:1446
+msgid "Added"
+msgstr "Pridėtas"
+
+#. TRANSLATORS: this is when a device is hotplugged
+#: plugins/dfu/dfu-tool.c:1457
+msgid "Removed"
+msgstr "Pašalintas"
+
+#. TRANSLATORS: this is when a device is hotplugged
+#. TRANSLATORS: this is when the daemon state changes
+#: plugins/dfu/dfu-tool.c:1466 src/fu-tool.c:1231
+msgid "Changed"
+msgstr "Pakeistas"
+
+#. TRANSLATORS: this is when a device ctrl+c's a watch
+#: plugins/dfu/dfu-tool.c:1474 src/fu-tool.c:194
+msgid "Cancelled"
+msgstr "Atsisakyta"
+
+#. TRANSLATORS: Appstream ID for the hardware type
+#: plugins/dfu/dfu-tool.c:1968 src/fu-util.c:1555
+msgid "ID"
+msgstr "ID"
+
+#. TRANSLATORS: interface name, e.g. "Flash"
+#. TRANSLATORS: device name, e.g. 'ColorHug2'
+#. TRANSLATORS: section header for the release name
+#: plugins/dfu/dfu-tool.c:1974 plugins/dfu/dfu-tool.c:1980
+#: plugins/dfu/dfu-tool.c:2083 src/fu-util.c:1266
+msgid "Name"
+msgstr "Pavadinimas"
+
+#. TRANSLATORS: this is the encryption method used when writing
+#: plugins/dfu/dfu-tool.c:1987
+msgid "Cipher"
+msgstr "Šifras"
+
+#. TRANSLATORS: these are areas of memory on the chip
+#: plugins/dfu/dfu-tool.c:2001
+msgid "Region"
+msgstr "Sritis"
+
+#. TRANSLATORS: detected a DFU device
+#: plugins/dfu/dfu-tool.c:2043
+msgid "Found"
+msgstr "Rastas"
+
+#. TRANSLATORS: DFU protocol version, e.g. 1.1
+#: plugins/dfu/dfu-tool.c:2051
+msgid "Protocol"
+msgstr "Protokolas"
+
+#. TRANSLATORS: probably not run as root...
+#. TRANSLATORS: device has failed to report status
+#. TRANSLATORS: device status, e.g. "OK"
+#: plugins/dfu/dfu-tool.c:2061 plugins/dfu/dfu-tool.c:2070
+#: plugins/dfu/dfu-tool.c:2076 plugins/dfu/dfu-tool.c:2098
+msgid "Status"
+msgstr "Būsena"
+
+#: plugins/dfu/dfu-tool.c:2061
+msgid "Permission denied"
+msgstr "Leidimas atmestas"
+
+#. TRANSLATORS: serial number, e.g. '00012345'
+#: plugins/dfu/dfu-tool.c:2089
+msgid "Serial"
+msgstr "Serijos numeris"
+
+#: plugins/dfu/dfu-tool.c:2094
+msgid "Mode"
+msgstr "Veiksena"
+
+#: plugins/dfu/dfu-tool.c:2094
+msgid "Runtime"
+msgstr "Vykdymo aplinka"
+
+#: plugins/dfu/dfu-tool.c:2094
+msgid "DFU"
+msgstr "ĮPAĮA"
+
+#. TRANSLATORS: device state, i.e. appIDLE
+#: plugins/dfu/dfu-tool.c:2102
+msgid "State"
+msgstr "Būsena"
+
+#. TRANSLATORS: transfer size in bytes
+#: plugins/dfu/dfu-tool.c:2110
+msgid "Transfer Size"
+msgstr "Persiuntimo dydis"
+
+#. TRANSLATORS: device attributes, i.e. things that
+#. * the device can do
+#: plugins/dfu/dfu-tool.c:2118
+msgid "Attributes"
+msgstr "Požymiai"
+
+#. TRANSLATORS: device quirks, i.e. things that
+#. * it does that we have to work around
+#: plugins/dfu/dfu-tool.c:2126
+msgid "Quirks"
+msgstr "Gudrybės"
+
+#. TRANSLATORS: chip ID, e.g. "0x58200204"
+#: plugins/dfu/dfu-tool.c:2133
+msgid "Chip ID"
+msgstr "Lusto ID"
+
+#: plugins/dfu/dfu-tool.c:2189
+msgid "Print the version number"
+msgstr "Parodyti versijos numerį"
+
+#: plugins/dfu/dfu-tool.c:2191
+msgid "Print verbose debug statements"
+msgstr "Parodyti išsamius derinimo teiginius"
+
+#: plugins/dfu/dfu-tool.c:2193
+msgid "Specify Vendor/Product ID(s) of DFU device"
+msgstr "Nurodyti ĮPAĮA įrenginio tiekėją/produkto ID"
+
+#: plugins/dfu/dfu-tool.c:2195
+msgid "Specify the number of bytes per USB transfer"
+msgstr "Nurodyti baitų skaičių tenkantį vienam USB persiuntimui"
+
+#: plugins/dfu/dfu-tool.c:2197
+msgid "Force the action ignoring all warnings"
+msgstr "Priverstinai atlikti veiksmą nepaisant visų įspėjimų"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2213
+msgid "Convert firmware to DFU format"
+msgstr "Konvertuoti programinę aparatinė įrangą į ĮPAĮA formatą"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2219
+msgid "Merge multiple firmware files into one"
+msgstr "Sujungti kelis programinės aparatinės įrangos failus į vieną"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2225
+msgid "Set vendor ID on firmware file"
+msgstr "Nustatyti programinės aparatinės įrangos faile tiekėjo ID"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2231
+msgid "Set product ID on firmware file"
+msgstr "Nustatyti programinės aparatinės įrangos faile produkto ID"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2237
+msgid "Set element address on firmware file"
+msgstr "Nustatyti elemento adresą programinės aparatinės įrangos faile"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2243
+msgid "Set the firmware size for the target"
+msgstr ""
+"Nustatyti programinės aparatinės įrangos dydį, skirtą paskirties objektui"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2249
+msgid "Set release version on firmware file"
+msgstr "Nustatyti programinės aparatinės įrangos faile laidos versiją"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2255
+msgid "Set alternative number on firmware file"
+msgstr "Nustatyti programinės aparatinės įrangos faile alternatyvų skaičių"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2261
+msgid "Set alternative name on firmware file"
+msgstr "Nustatyti programinės aparatinės įrangos faile alternatyvų pavadinimą"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2267
+msgid "Attach DFU capable device back to runtime"
+msgstr "Prijungti ĮPAĮA įgalintą įrenginį atgal prie vykdymo aplinkos"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2273
+msgid "Reset a DFU device"
+msgstr "Atstatyti ĮPAĮA įrenginį"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2279
+msgid "Read firmware from device into a file"
+msgstr "Skaityti programinę aparatinę įrangą iš įrenginio į failą"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2285
+msgid "Read firmware from one partition into a file"
+msgstr "Skaityti programinę aparatinę įrangą iš vieno skaidinio į failą"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2291
+msgid "Write firmware from file into device"
+msgstr "Rašyti programinę aparatinę įrangą iš failo į įrenginį"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2297
+msgid "Write firmware from file into one partition"
+msgstr "Rašyti programinę aparatinę įrangą iš failo į vieną skaidinį"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2303
+msgid "List currently attached DFU capable devices"
+msgstr "Išvardyti šiuo metu prijungtus ĮPAĮA įgalintus įrenginius"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2309
+msgid "Detach currently attached DFU capable device"
+msgstr "Atjungti šiuo metu prijungtą ĮPAĮA įgalintą įrenginį"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2315
+msgid "Dump details about a firmware file"
+msgstr ""
+"Iškloti išsamesnę informaciją apie programinės aparatinės įrangos failą"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2321
+msgid "Watch DFU devices being hotplugged"
+msgstr "Stebėti ĮPAĮA įrenginius, kurie atnaujinami nepaleidžiant iš naujo"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2327
+msgid "Encrypt firmware data"
+msgstr "Šifruoti programinės aparatinės įrangos duomenis"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2333
+msgid "Decrypt firmware data"
+msgstr "Iššifruoti programinės aparatinės įrangos duomenis"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2339
+msgid "Sets metadata on a firmware file"
+msgstr "Nustato metaduomenis programinės aparatinės įrangos faile"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2345
+msgid "Replace data in an existing firmware file"
+msgstr "Pakeisti duomenis esamame programinės aparatinės įrangos faile"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2351
+msgid "Create a binary patch using two files"
+msgstr "Sukurti dvejetainę pataisą, naudojant du failus"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2357
+msgid "Apply a binary patch"
+msgstr "Taikyti dvejetainę pataisą"
+
+#. TRANSLATORS: command description
+#: plugins/dfu/dfu-tool.c:2363
+msgid "Dump information about a binary patch to the screen"
+msgstr "Iškloti į ekraną informaciją apie dvejetainę pataisą"
+
+#. TRANSLATORS: quirks are device-specific workarounds
+#: plugins/dfu/dfu-tool.c:2375
+msgid "Failed to load quirks"
+msgstr "Nepavyko įkelti gudrybių"
+
+#. TRANSLATORS: DFU stands for device firmware update
+#: plugins/dfu/dfu-tool.c:2397
+msgid "DFU Utility"
+msgstr "ĮPAĮA paslaugų programa"
+
+#. TRANSLATORS: the user didn't read the man page
+#: plugins/dfu/dfu-tool.c:2402 plugins/uefi/fu-uefi-tool.c:127
+#: src/fu-agent.c:203 src/fu-tool.c:1525 src/fu-util.c:2395
+msgid "Failed to parse arguments"
+msgstr "Nepavyko išanalizuoti argumentų"
+
+#. TRANSLATORS: this is shown when updating the firmware after the reboot
+#: plugins/uefi/fu-plugin-uefi.c:390
+#| msgid "%s has firmware updates:"
+msgid "Installing firmware update…"
+msgstr "Įdiegiamas programinės aparatinės įrangos atnaujinimas…"
+
+#. TRANSLATORS: command line option
+#: plugins/uefi/fu-uefi-tool.c:71 src/fu-agent.c:157 src/fu-util.c:2158
+msgid "Show extra debugging information"
+msgstr "Rodyti papildomą derinimo informaciją"
+
+#. TRANSLATORS: command line option
+#: plugins/uefi/fu-uefi-tool.c:74
+msgid "Display version"
+msgstr "Rodyti versiją"
+
+#. TRANSLATORS: command line option
+#: plugins/uefi/fu-uefi-tool.c:77
+msgid "Show the debug log from the last attempted update"
+msgstr "Rodyti derinimo žurnalą iš paskutinio bandyto atnaujinimo"
+
+#. TRANSLATORS: command line option
+#: plugins/uefi/fu-uefi-tool.c:80
+msgid "List supported firmware updates"
+msgstr "Išvardyti prieinamus programinės aparatinės įrangos atnaujinimus"
+
+#. TRANSLATORS: command line option
+#: plugins/uefi/fu-uefi-tool.c:83
+msgid "Query for firmware update support"
+msgstr "Užklausti programinės aparatinės įrangos atnaujinimų palaikymo"
+
+#. TRANSLATORS: command line option
+#: plugins/uefi/fu-uefi-tool.c:86
+msgid "Show the information of firmware update status"
+msgstr "Rodyti programinės aparatinės įrangos atnaujinimo būseną"
+
+#. TRANSLATORS: command line option
+#: plugins/uefi/fu-uefi-tool.c:89
+msgid "Enable firmware update support on supported systems"
+msgstr ""
+"Įjungti programinės aparatinės įrangos atnaujinimo palaikymą palaikomose "
+"sistemose"
+
+#. TRANSLATORS: command line option
+#: plugins/uefi/fu-uefi-tool.c:92
+msgid "Override the default ESP path"
+msgstr "Nustelbti numatytąjį ESS (angl. ESP) kelią"
+
+#. TRANSLATORS: command line option
+#: plugins/uefi/fu-uefi-tool.c:95
+msgid "Set the debugging flag during update"
+msgstr "Atnaujinimo metu nustatyti derinimo vėliavėlę"
+
+#. TRANSLATORS: command line option
+#: plugins/uefi/fu-uefi-tool.c:98
+msgid "Unset the debugging flag during update"
+msgstr "Atnaujinimo metu panaikinti derinimo vėliavėlės nustatymą"
+
+#. TRANSLATORS: command line option
+#: plugins/uefi/fu-uefi-tool.c:101
+msgid "Apply firmware updates"
+msgstr "Taikyti programinės aparatinės įrangos atnaujinimus"
+
+#. TRANSLATORS: we're poking around as a power user
+#: plugins/uefi/fu-uefi-tool.c:114 src/fu-tool.c:1370
+msgid "This program may only work correctly as root"
+msgstr "Ši programa gali tinkamai veikti tik pagrindinio naudotojo teisėmis"
+
+#. TRANSLATORS: program name
+#: plugins/uefi/fu-uefi-tool.c:122
+msgid "UEFI Firmware Utility"
+msgstr "UEFI programinės aparatinės įrangos paslaugų programa"
+
+#: plugins/uefi/fu-uefi-tool.c:146
+msgid "No action specified!"
+msgstr "Nenurodytas joks veiksmas!"
+
+#. TRANSLATORS: ESP is EFI System Partition
+#: plugins/uefi/fu-uefi-tool.c:158
+msgid "ESP specified was not valid"
+msgstr "Nurodytas ESS (angl. ESP) nebuvo teisingas"
+
+#: plugins/uefi/fu-uefi-tool.c:247
+msgid "Firmware updates are supported on this machine."
+msgstr ""
+"Šiame kompiuteryje yra prieinami programinės aparatinės įrangos atnaujinimai."
+
+#: plugins/uefi/fu-uefi-tool.c:249
+msgid "Firmware updates are not supported on this machine."
+msgstr ""
+"Šiame kompiuteryje programinės aparatinės įrangos atnaujinimai yra "
+"neprieinami."
+
+#: plugins/uefi/fu-uefi-tool.c:302
+msgid "Enabled fwupdate debugging"
+msgstr "Įjungtas fwupdate derinimas"
+
+#: plugins/uefi/fu-uefi-tool.c:314
+msgid "Disabled fwupdate debugging"
+msgstr "Išjungtas fwupdate derinimas"
+
+#. TRANSLATORS: command description
+#: src/fu-agent.c:178
+msgid "Get all devices and possible releases"
+msgstr "Gauti visus įrenginius ir galimas laidas"
+
+#. TRANSLATORS: program name
+#: src/fu-agent.c:198
+msgid "Firmware Agent"
+msgstr "Programinės aparatinės įrangos agentas"
+
+#. TRANSLATORS: show the user a warning
+#: src/fu-config.c:127
+msgid ""
+"Your distributor may not have verified any of the firmware updates for "
+"compatibility with your system or connected devices."
+msgstr ""
+"Gali būti, kad jūsų platintojas, suderinamumui su jūsų sistema ar "
+"prijungtais įrenginiais, nėra patvirtinęs jokių programinės aparatinės "
+"įrangos atnaujinimų."
+
+#. TRANSLATORS: show the user a warning
+#: src/fu-config.c:132
+msgid "Enabling this remote is done at your own risk."
+msgstr "Šios nuotolinės saugyklos įjungimas yra jūsų pačių rizika."
+
+#. TRANSLATORS: turn on all debugging
+#: src/fu-debug.c:120
+msgid "Show debugging information for all files"
+msgstr "Rodyti visų failų derinimo informaciją"
+
+#. TRANSLATORS: this is for plugin development
+#: src/fu-debug.c:123
+msgid "Show plugin verbose information"
+msgstr "Rodyti išsamią įskiepio informaciją"
+
+#. TRANSLATORS: this is for daemon development
+#: src/fu-debug.c:126
+msgid "Show daemon verbose information"
+msgstr "Rodyti išsamią tarnybos informaciją"
+
+#. TRANSLATORS: for the --verbose arg
+#: src/fu-debug.c:187
+msgid "Debugging Options"
+msgstr "Derinimo parametrai"
+
+#. TRANSLATORS: for the --verbose arg
+#: src/fu-debug.c:189
+msgid "Show debugging options"
+msgstr "Rodyti derinimo parametrus"
+
+#. TRANSLATORS: exit after we've started up, used for user profiling
+#: src/fu-main.c:1489
+msgid "Exit after a small delay"
+msgstr "Išeiti po nedidelės delsos"
+
+#. TRANSLATORS: exit straight away, used for automatic profiling
+#: src/fu-main.c:1492
+msgid "Exit after the engine has loaded"
+msgstr "Išeiti, įkėlus modulį"
+
+#. TRANSLATORS: program name
+#: src/fu-main.c:1507
+msgid "Firmware Update Daemon"
+msgstr "Programinės aparatinės įrangos atnaujinimo tarnyba"
+
+#. TRANSLATORS: program summary
+#: src/fu-main.c:1512
+msgid "Firmware Update D-Bus Service"
+msgstr "Programinės aparatinės įrangos atnaujinimo D-Bus tarnyba"
+
+#. TRANSLATORS: console message when not using plymouth
+#: src/fu-offline.c:40
+msgid "Percentage complete"
+msgstr "Užbaigta procentinė dalis"
+
+#. TRANSLATORS: console message when no Plymouth is installed
+#: src/fu-offline.c:61
+msgid "Installing Firmware…"
+msgstr "Įdiegiama programinė aparatinė įranga…"
+
+#. TRANSLATORS: console message when not using plymouth
+#: src/fu-offline.c:91
+#| msgid "Writing…"
+msgid "Rebooting…"
+msgstr "Paleidžiama iš naujo…"
+
+#. TRANSLATORS: the user needs to stop playing with stuff
+#: src/fu-offline.c:169
+msgid "This tool can only be used by the root user"
+msgstr "Šį įrankį gali naudoti tik pagrindinis naudotojas"
+
+#. TRANSLATORS: we could not get the devices to update offline
+#: src/fu-offline.c:185
+msgid "Failed to get pending devices"
+msgstr "Nepavyko gauti laukiančių įrenginių"
+
+#. TRANSLATORS: we could not talk to the fwupd daemon
+#: src/fu-offline.c:196
+msgid "Failed to connect to daemon"
+msgstr "Nepavyko prisijungti prie tarnybos"
+
+#. TRANSLATORS: we could not talk to plymouth
+#: src/fu-offline.c:204
+msgid "Failed to set splash mode"
+msgstr "Nepavyko nustatyti prisistatymo lango veikseną"
+
+#. TRANSLATORS: the first replacement is a display name
+#. * e.g. "ColorHugALS" and the second is a version number
+#. * e.g. "1.2.3"
+#: src/fu-offline.c:225
+#, c-format
+msgid "Reinstalling %s with %s... "
+msgstr "Iš naujo įdiegiama %s su %s... "
+
+#. TRANSLATORS: the first replacement is a display name
+#. * e.g. "ColorHugALS" and the second and third are
+#. * version numbers e.g. "1.2.3"
+#: src/fu-offline.c:232
+#, c-format
+msgid "Downgrading %s from %s to %s... "
+msgstr "Sendinama %s iš %s į %s... "
+
+#. TRANSLATORS: the first replacement is a display name
+#. * e.g. "ColorHugALS" and the second and third are
+#. * version numbers e.g. "1.2.3"
+#: src/fu-offline.c:240
+#, c-format
+msgid "Updating %s from %s to %s... "
+msgstr "Atnaujinama %s iš %s į %s... "
+
+#. TRANSLATORS: we could not install for some reason
+#: src/fu-offline.c:254
+msgid "Failed to install firmware update"
+msgstr "Nepavyko įdiegti programinės aparatinės įrangos atnaujinimo"
+
+#. TRANSLATORS: nothing was updated offline
+#: src/fu-offline.c:264
+msgid "No updates were applied"
+msgstr "Nebuvo pritaikyti jokie atnaujinimai"
+
+#. TRANSLATORS: we could not reboot for some reason
+#: src/fu-offline.c:272
+msgid "Failed to reboot"
+msgstr "Nepavyko paleisti iš naujo"
+
+#. success
+#: src/fu-offline.c:277
+msgid "Done!"
+msgstr "Atlikta!"
+
+#. TRANSLATORS: nothing found
+#: src/fu-tool.c:323
+msgid "No plugins found"
+msgstr "Nerasta jokių įskiepių"
+
+#. TRANSLATORS: nothing attached
+#. TRANSLATORS: nothing attached that can be upgraded
+#: src/fu-tool.c:436 src/fu-tool.c:487 src/fu-util.c:424 src/fu-util.c:447
+msgid "No hardware detected with firmware update capability"
+msgstr ""
+"Neaptikta jokios aparatinės įrangos su programinės aparatinės įrangos "
+"atnaujinimo galimybėmis"
+
+#. TRANSLATORS: get interactive prompt
+#: src/fu-tool.c:517 src/fu-util.c:164
+msgid "Choose a device:"
+msgstr "Pasirinkite įrenginį:"
+
+#. TRANSLATORS: this is to abort the interactive prompt
+#: src/fu-tool.c:519 src/fu-util.c:166
+msgid "Cancel"
+msgstr "Atsisakyti"
+
+#. TRANSLATORS: %1 is a device name
+#: src/fu-tool.c:560 src/fu-util.c:101
+#, c-format
+msgid "Updating %s…"
+msgstr "Atnaujinama %s…"
+
+#. TRANSLATORS: %1 is a device name
+#: src/fu-tool.c:565 src/fu-util.c:111
+#, c-format
+msgid "Installing on %s…"
+msgstr "Įdiegiama ties %s…"
+
+#. TRANSLATORS: shown when shutting down to switch to the new version
+#: src/fu-tool.c:1055
+msgid "Activating firmware update"
+msgstr "Aktyvuojamas programinės aparatinės įrangos atnaujinimas"
+
+#. TRANSLATORS: this is when a device is hotplugged
+#: src/fu-tool.c:1204
+msgid "Device added:"
+msgstr "Pridėtas įrenginys:"
+
+#. TRANSLATORS: this is when a device is hotplugged
+#: src/fu-tool.c:1214
+msgid "Device removed:"
+msgstr "Pašalintas įrenginys:"
+
+#. TRANSLATORS: this is when a device has been updated
+#: src/fu-tool.c:1224
+msgid "Device changed:"
+msgstr "Pakeistas įrenginys:"
+
+#. TRANSLATORS: command line option
+#: src/fu-tool.c:1330 src/fu-util.c:2161
+msgid "Show client and daemon versions"
+msgstr "Rodyti kliento ir tarnybos versijas"
+
+#. TRANSLATORS: command line option
+#: src/fu-tool.c:1333 src/fu-util.c:2167
+msgid "Allow re-installing existing firmware versions"
+msgstr "Leisti iš naujo įdiegti esamas programinės aparatinės įrangos versijas"
+
+#. TRANSLATORS: command line option
+#: src/fu-tool.c:1336 src/fu-util.c:2170
+msgid "Allow downgrading firmware versions"
+msgstr "Leisti sendinti programinės aparatinės įrangos versijas"
+
+#. TRANSLATORS: command line option
+#: src/fu-tool.c:1339 src/fu-util.c:2173
+msgid "Override plugin warning"
+msgstr "Nustelbti įskiepio įspėjimą"
+
+#. TRANSLATORS: command line option
+#: src/fu-tool.c:1342 src/fu-util.c:2188
+msgid "Do not check for reboot after update"
+msgstr "Po atnaujinimo netikrinti ar buvo paleidimas iš naujo"
+
+#. TRANSLATORS: command line option
+#: src/fu-tool.c:1345 src/fu-util.c:2194
+msgid "Show devices that are not updatable"
+msgstr "Rodyti negalimus atnaujinti įrenginius"
+
+#. TRANSLATORS: command line option
+#: src/fu-tool.c:1348
+msgid "Manually whitelist specific plugins"
+msgstr "Rankiniu būdu įtraukti tam tikrus įskiepius į baltąjį sąrašą"
+
+#. TRANSLATORS: command line option
+#: src/fu-tool.c:1351
+msgid "Run the plugin composite prepare routine when using install-blob"
+msgstr "Paleisti sudėtinę įskiepio paruošimo programą, naudojant install-blob"
+
+#. TRANSLATORS: command line option
+#: src/fu-tool.c:1354
+msgid "Run the plugin composite cleanup routine when using install-blob"
+msgstr "Paleisti sudėtinę įskiepio išvalymo programą, naudojant install-blob"
+
+#. TRANSLATORS: command line option
+#: src/fu-tool.c:1357
+msgid "Save device state into a JSON file between executions"
+msgstr "Įrašyti įrenginio būseną tarp paleidimų į JSON failą"
+
+#. TRANSLATORS: command description
+#: src/fu-tool.c:1381
+msgid "Build firmware using a sandbox"
+msgstr "Sukurti programinę aparatinę įrangą, naudojant smėliadėžę"
+
+#. TRANSLATORS: command description
+#: src/fu-tool.c:1387
+msgid "Dump SMBIOS data from a file"
+msgstr "Iškloti SMBIOS duomenis iš failo"
+
+#. TRANSLATORS: command description
+#: src/fu-tool.c:1393
+msgid "Get all enabled plugins registered with the system"
+msgstr "Gauti visus įjungtus sistemoje registruotus įskiepius"
+
+#. TRANSLATORS: command description
+#: src/fu-tool.c:1399 src/fu-util.c:2252
+msgid "Gets details about a firmware file"
+msgstr "Gauna išsamesnę informaciją apie programinės aparatinės įrangos failą"
+
+#. TRANSLATORS: command description
+#: src/fu-tool.c:1405 src/fu-util.c:2228
+msgid "Show history of firmware updates"
+msgstr "Rodyti programinės aparatinės įrangos atnaujinimų istoriją"
+
+#. TRANSLATORS: command description
+#: src/fu-tool.c:1411 src/fu-util.c:2258
+msgid "Gets the list of updates for connected hardware"
+msgstr "Gauna atnaujinimų sąrašą prijungtai aparatinei įrangai"
+
+#. TRANSLATORS: command description
+#: src/fu-tool.c:1417 src/fu-util.c:2216
+msgid "Get all devices that support firmware updates"
+msgstr ""
+"Gauti visus įrenginius, kurie palaiko programinės aparatinės įrangos "
+"atnaujinimus"
+
+#. TRANSLATORS: command description
+#: src/fu-tool.c:1423 src/fu-util.c:2222
+msgid "Get all devices according to the system topology"
+msgstr "Gauti visus įrenginius pagal sistemos topologiją"
+
+#. TRANSLATORS: command description
+#: src/fu-tool.c:1429
+msgid "Watch for hardware changes"
+msgstr "Stebėti aparatinės įrangos pakeitimus"
+
+#. TRANSLATORS: command description
+#: src/fu-tool.c:1435
+msgid "Install a firmware blob on a device"
+msgstr ""
+"Įdiegti įrenginyje programinės aparatinės įrangos dvejetainį išplėstinį "
+"objektą"
+
+#. TRANSLATORS: command description
+#: src/fu-tool.c:1441 src/fu-util.c:2246
+msgid "Install a firmware file on this hardware"
+msgstr ""
+"Įdiegti šioje aparatinėje įrangoje programinės aparatinės įrangos failą"
+
+#. TRANSLATORS: command description
+#: src/fu-tool.c:1447
+msgid "Attach to firmware mode"
+msgstr "Pridėti į programinės aparatinės įrangos veikseną"
+
+#. TRANSLATORS: command description
+#: src/fu-tool.c:1453
+msgid "Detach to bootloader mode"
+msgstr "Atskirti į pradinio įkėliklio veikseną"
+
+#. TRANSLATORS: command description
+#: src/fu-tool.c:1459
+msgid "Activate pending devices"
+msgstr "Aktyvuoti laukiančius įrenginius"
+
+#. TRANSLATORS: command description
+#: src/fu-tool.c:1465
+msgid "Return all the hardware IDs for the machine"
+msgstr "Grąžinti visus kompiuterio aparatinės įrangos ID"
+
+#. TRANSLATORS: command description
+#: src/fu-tool.c:1471
+msgid "Monitor the daemon for events"
+msgstr "Stebėti tarnybą, ar yra įvykių"
+
+#. TRANSLATORS: command description
+#: src/fu-tool.c:1477
+msgid "Update all devices that match local metadata"
+msgstr "Atnaujinti visus įrenginius, kurie atitinka vietinius metaduomenis"
+
+#: src/fu-tool.c:1484
+msgctxt "command-description"
+msgid "Sign data using the client certificate"
+msgstr "Pasirašyti duomenis, naudojant kliento liudijimą"
+
+#. TRANSLATORS: command description
+#: src/fu-tool.c:1490
+msgid "Update the stored metadata with current contents"
+msgstr "Atnaujinti saugomus metaduomenis esamu turiniu"
+
+#. TRANSLATORS: program name
+#: src/fu-tool.c:1519 src/fu-util.c:2390
+msgid "Firmware Utility"
+msgstr "Programinės aparatinės įrangos paslaugų programa"
+
+#. TRANSLATORS: daemon is inactive
+#: src/fu-progressbar.c:43
+msgid "Idle…"
+msgstr "Neveiklus…"
+
+#. TRANSLATORS: decompressing the firmware file
+#: src/fu-progressbar.c:47
+msgid "Decompressing…"
+msgstr "Išskleidžiama…"
+
+#. TRANSLATORS: parsing the firmware information
+#: src/fu-progressbar.c:51
+msgid "Loading…"
+msgstr "Įkeliama…"
+
+#. TRANSLATORS: restarting the device to pick up new F/W
+#: src/fu-progressbar.c:55
+msgid "Restarting device…"
+msgstr "Įrenginys paleidžiamas iš naujo…"
+
+#. TRANSLATORS: reading from the flash chips
+#: src/fu-progressbar.c:59
+#| msgid "Reading"
+msgid "Reading…"
+msgstr "Skaitoma…"
+
+#. TRANSLATORS: writing to the flash chips
+#: src/fu-progressbar.c:63
+msgid "Writing…"
+msgstr "Rašoma…"
+
+#. TRANSLATORS: erasing contents of the flash chips
+#: src/fu-progressbar.c:67
+#| msgid "Erasing"
+msgid "Erasing…"
+msgstr "Ištrinama…"
+
+#. TRANSLATORS: verifying we wrote the firmware correctly
+#: src/fu-progressbar.c:71
+msgid "Verifying…"
+msgstr "Patikrinama…"
+
+#. TRANSLATORS: scheduing an update to be done on the next boot
+#: src/fu-progressbar.c:75
+msgid "Scheduling…"
+msgstr "Suplanuojama…"
+
+#. TRANSLATORS: downloading from a remote server
+#: src/fu-progressbar.c:79
+#| msgid "Loading…"
+msgid "Downloading…"
+msgstr "Atsisiunčiama…"
+
+#. TRANSLATORS: waiting for user to authenticate
+#: src/fu-progressbar.c:83
+msgid "Authenticating…"
+msgstr "Nustatoma tapatybė…"
+
+#. TRANSLATORS: waiting for device to do something
+#: src/fu-progressbar.c:87
+msgid "Waiting…"
+msgstr "Laukiama…"
+
+#. TRANSLATORS: currect daemon status is unknown
+#: src/fu-progressbar.c:94
+msgid "Unknown"
+msgstr "Nežinoma"
+
+#. TRANSLATORS: time remaining for completing firmware flash
+#: src/fu-progressbar.c:134
+msgid "Less than one minute remaining"
+msgstr "Liko mažiau kaip viena minutė"
+
+#. more than a minute
+#: src/fu-progressbar.c:138
+#, c-format
+msgid "%.0f minute remaining"
+msgid_plural "%.0f minutes remaining"
+msgstr[0] "Liko %.0f minutė"
+msgstr[1] "Liko %.0f minutės"
+msgstr[2] "Liko %.0f minučių"
+
+#. TRANSLATORS: %1 is a device name
+#: src/fu-util.c:106
+#, c-format
+#| msgid "Loading…"
+msgid "Downgrading %s…"
+msgstr "Sendinamas %s…"
+
+#. TRANSLATORS: a list of failed updates
+#: src/fu-util.c:242
+msgid "Devices that were not updated correctly:"
+msgstr "Įrenginiai, kurie nebuvo teisingai atnaujinti:"
+
+#. TRANSLATORS: a list of successful updates
+#: src/fu-util.c:256
+msgid "Devices that have been updated successfully:"
+msgstr "Įrenginiai, kurie buvo sėkmingai atnaujinti:"
+
+#. TRANSLATORS: explain why we want to upload
+#: src/fu-util.c:270
+msgid ""
+"Uploading firmware reports helps hardware vendors to quickly identify "
+"failing and successful updates on real devices."
+msgstr ""
+"Programinės aparatinės įrangos ataskaitų išsiuntimas padeda aparatinės "
+"įrangos tiekėjams greitai atpažinti nesėkmingus bei sėkmingus atnaujinimus "
+"tikruose įrenginiuose."
+
+#. TRANSLATORS: ask the user to upload
+#: src/fu-util.c:274
+msgid "Upload report now?"
+msgstr "Išsiųsti ataskaitą dabar?"
+
+#. TRANSLATORS: metadata is downloaded from the Internet
+#: src/fu-util.c:276 src/fu-util.c:1453
+msgid "Requires internet connection"
+msgstr "Reikalauja interneto ryšio"
+
+#. TRANSLATORS: should the remote still be enabled
+#: src/fu-util.c:359
+msgid "Agree and enable the remote?"
+msgstr "Sutikti ir įjungti šią nuotolinę saugyklą?"
+
+#: src/fu-util.c:605
+msgid "Target"
+msgstr "Paskirtis"
+
+#: src/fu-util.c:606
+msgid "Payload"
+msgstr "Naudingoji apkrova"
+
+#: src/fu-util.c:608
+msgid "Signature"
+msgstr "Parašas"
+
+#: src/fu-util.c:609
+msgid "Proceed with upload?"
+msgstr "Tęsti išsiuntimą?"
+
+#. TRANSLATORS: the server sent the user a small message
+#: src/fu-util.c:696
+msgid "Update failure is a known issue, visit this URL for more information:"
+msgstr ""
+"Atnaujinimo nesėkmė yra žinoma problema, išsamesnei informacijai "
+"apsilankykite šiame URL:"
+
+#. TRANSLATORS: the server sent the user a small message
+#: src/fu-util.c:700
+msgid "Upload message:"
+msgstr "Išsiuntimo žinutė:"
+
+#: src/fu-util.c:926 src/fu-util.c:1377
+msgid "OK"
+msgstr "Gerai"
+
+#. TRANSLATORS: downloading new signing file
+#: src/fu-util.c:1034
+msgid "Fetching signature"
+msgstr "Gaunamas parašas"
+
+#. TRANSLATORS: downloading new metadata file
+#: src/fu-util.c:1037
+msgid "Fetching metadata"
+msgstr "Gaunami metaduomenys"
+
+#. TRANSLATORS: downloading new firmware file
+#: src/fu-util.c:1040
+msgid "Fetching firmware"
+msgstr "Gaunama programinė aparatinė įranga"
+
+#. TRANSLATORS: downloading unknown file
+#: src/fu-util.c:1043
+msgid "Fetching file"
+msgstr "Gaunamas failas"
+
+#. TRANSLATORS: the server is rate-limiting downloads
+#: src/fu-util.c:1057
+msgid "Failed to download due to server limit"
+msgstr "Nepavyko atsisiųsti dėl serverio apribojimo"
+
+#. TRANSLATORS: explain why no metadata available
+#: src/fu-util.c:1158
+msgid "No remotes are currently enabled so no metadata is available."
+msgstr ""
+"Šiuo metu nėra įjungtos jokios nuotolinės saugyklos, taigi, nėra prieinami "
+"jokie metaduomenys."
+
+#. TRANSLATORS: explain why no metadata available
+#: src/fu-util.c:1160
+msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
+msgstr ""
+"Metaduomenys gali būti gauti iš Linux tiekėjų programinės aparatinės įrangos "
+"paslaugos."
+
+#. TRANSLATORS: Turn on the remote
+#: src/fu-util.c:1162
+msgid "Enable this remote?"
+msgstr "Įjungti šią nuotolinę saugyklą?"
+
+#. TRANSLATORS: section header for release version number
+#: src/fu-util.c:1263
+msgid "Version"
+msgstr "Versija"
+
+#. TRANSLATORS: section header for the release one line summary
+#: src/fu-util.c:1269
+msgid "Summary"
+msgstr "Santrauka"
+
+#. TRANSLATORS: section header for the remote the file is coming from
+#: src/fu-util.c:1272
+msgid "Remote"
+msgstr "Nuotolinė saugykla"
+
+#. TRANSLATORS: section header for firmware URI
+#: src/fu-util.c:1275
+msgid "URI"
+msgstr "URI"
+
+#. TRANSLATORS: section header for firmware description
+#: src/fu-util.c:1281
+msgid "Description"
+msgstr "Aprašas"
+
+#. TRANSLATORS: section header for firmware checksum
+#. TRANSLATORS: remote checksum
+#: src/fu-util.c:1289 src/fu-util.c:1653
+msgid "Checksum"
+msgstr "Kontrolinė suma"
+
+#. TRANSLATORS: section header for firmware flags
+#: src/fu-util.c:1307
+msgid "Flags"
+msgstr "Vėliavėlės"
+
+#. TRANSLATORS: get interactive prompt
+#: src/fu-util.c:1339
+msgid "Choose a release:"
+msgstr "Pasirinkite laidą:"
+
+#. TRANSLATORS: the metadata is very out of date; %u is a number > 1
+#: src/fu-util.c:1443
+#, c-format
+msgid ""
+"Firmware metadata has not been updated for %u day and may not be up to date."
+msgid_plural ""
+"Firmware metadata has not been updated for %u days and may not be up to date."
+msgstr[0] ""
+"Programinės aparatinės įrangos metaduomenys nebuvo atnaujinti %u dieną ir "
+"gali būti neaktualūs."
+msgstr[1] ""
+"Programinės aparatinės įrangos metaduomenys nebuvo atnaujinti %u dienas ir "
+"gali būti neaktualūs."
+msgstr[2] ""
+"Programinės aparatinės įrangos metaduomenys nebuvo atnaujinti %u dienų ir "
+"gali būti neaktualūs."
+
+#. TRANSLATORS: ask the user if we can update the metadata
+#: src/fu-util.c:1451
+msgid "Update now?"
+msgstr "Atnaujinti dabar?"
+
+#. TRANSLATORS: duration in seconds
+#: src/fu-util.c:1470
+#, c-format
+msgid "%u second"
+msgid_plural "%u seconds"
+msgstr[0] "%u sekundė"
+msgstr[1] "%u sekundės"
+msgstr[2] "%u sekundžių"
+
+#. TRANSLATORS: duration in minutes
+#: src/fu-util.c:1479
+#, c-format
+msgid "%u minute"
+msgid_plural "%u minutes"
+msgstr[0] "%u minutė"
+msgstr[1] "%u minutės"
+msgstr[2] "%u minučių"
+
+#. TRANSLATORS: duration in minutes
+#: src/fu-util.c:1488
+#, c-format
+msgid "%u hour"
+msgid_plural "%u hours"
+msgstr[0] "%u valanda"
+msgstr[1] "%u valandos"
+msgstr[2] "%u valandų"
+
+#. TRANSLATORS: duration in days!
+#: src/fu-util.c:1496
+#, c-format
+msgid "%u day"
+msgid_plural "%u days"
+msgstr[0] "%u diena"
+msgstr[1] "%u dienos"
+msgstr[2] "%u dienų"
+
+#. TRANSLATORS: first replacement is device name
+#: src/fu-util.c:1535
+#, c-format
+msgid "%s has firmware updates:"
+msgstr "%s turi programinės aparatinės įrangos atnaujinimų:"
+
+#. TRANSLATORS: ID for hardware, typically a SHA1 sum
+#: src/fu-util.c:1539
+msgid "Device ID"
+msgstr "Įrenginio ID"
+
+#: src/fu-util.c:1545
+msgid "GUID"
+msgstr "GUID"
+
+#. TRANSLATORS: section header for firmware version
+#: src/fu-util.c:1558
+msgid "Update Version"
+msgstr "Atnaujinimo versija"
+
+#. TRANSLATORS: section header for the release name
+#: src/fu-util.c:1562
+msgid "Update Name"
+msgstr "Atnaujinimo pavadinimas"
+
+#. TRANSLATORS: section header for the release one line summary
+#: src/fu-util.c:1565
+msgid "Update Summary"
+msgstr "Atnaujinimo santrauka"
+
+#. TRANSLATORS: section header for remote ID, e.g. lvfs-testing
+#: src/fu-util.c:1568
+msgid "Update Remote ID"
+msgstr "Atnaujinimų nuotolinės saugyklos ID"
+
+#. TRANSLATORS: section header for the amount
+#. * of time it takes to install the update
+#: src/fu-util.c:1577
+msgid "Update Duration"
+msgstr "Atnaujinimo trukmė"
+
+#. TRANSLATORS: section header for firmware checksum
+#: src/fu-util.c:1586
+msgid "Update Checksum"
+msgstr "Atnaujinimo kontrolinė suma"
+
+#. TRANSLATORS: section header for firmware remote http://
+#: src/fu-util.c:1590
+msgid "Update Location"
+msgstr "Atnaujinimo vieta"
+
+#. TRANSLATORS: section header for long firmware desc
+#: src/fu-util.c:1599
+msgid "Update Description"
+msgstr "Atnaujinimo aprašas"
+
+#. TRANSLATORS: remote identifier, e.g. lvfs-testing
+#: src/fu-util.c:1631
+msgid "Remote ID"
+msgstr "Nuotolinės saugyklos ID"
+
+#. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
+#: src/fu-util.c:1635
+msgid "Title"
+msgstr "Pavadinimas"
+
+#. TRANSLATORS: remote type, e.g. remote or local
+#: src/fu-util.c:1639
+msgid "Type"
+msgstr "Tipas"
+
+#: src/fu-util.c:1644
+msgid "Keyring"
+msgstr "Raktinė"
+
+#. TRANSLATORS: if the remote is enabled
+#: src/fu-util.c:1649
+msgid "Enabled"
+msgstr "Įjungta"
+
+#. TRANSLATORS: the age of the metadata
+#: src/fu-util.c:1680
+msgid "Age"
+msgstr "Amžius"
+
+#. TRANSLATORS: the numeric priority
+#: src/fu-util.c:1687
+msgid "Priority"
+msgstr "Pirmenybė"
+
+#. TRANSLATORS: remote filename base
+#: src/fu-util.c:1692
+msgid "Username"
+msgstr "Naudotojo vardas"
+
+#. TRANSLATORS: remote filename base
+#: src/fu-util.c:1698
+msgid "Password"
+msgstr "Slaptažodis"
+
+#. TRANSLATORS: filename of the local file
+#: src/fu-util.c:1703
+msgid "Filename"
+msgstr "Failo pavadinimas"
+
+#. TRANSLATORS: filename of the local file
+#: src/fu-util.c:1708
+msgid "Filename Signature"
+msgstr "Failo pavadinimo parašas"
+
+#. TRANSLATORS: remote URI
+#: src/fu-util.c:1713
+msgid "Metadata URI"
+msgstr "Metaduomenų URI"
+
+#. TRANSLATORS: remote URI
+#: src/fu-util.c:1718
+msgid "Metadata URI Signature"
+msgstr "Metaduomenų URI parašas"
+
+#. TRANSLATORS: remote URI
+#: src/fu-util.c:1723
+msgid "Firmware Base URI"
+msgstr "Pagrindinis programinės aparatinės įrangos URI"
+
+#. TRANSLATORS: URI to send success/failure reports
+#: src/fu-util.c:1728
+msgid "Report URI"
+msgstr "Ataskaitų URI"
+
+#. TRANSLATORS: shown when shutting down to switch to the new version
+#: src/fu-util.c:2035
+msgid "Activating firmware update for"
+msgstr "Aktyvuojama programinė aparatinė įranga, skirta"
+
+#. TRANSLATORS: approved firmware has been checked by
+#. * the domain administrator
+#: src/fu-util.c:2090
+msgid "There is no approved firmware."
+msgstr "Nėra jokios patvirtintos programinės aparatinės įrangos."
+
+#. TRANSLATORS: approved firmware has been checked by
+#. * the domain administrator
+#: src/fu-util.c:2094
+msgid "Approved firmware:"
+msgid_plural "Approved firmware:"
+msgstr[0] "Patvirtinta programinė aparatinė įranga:"
+msgstr[1] "Patvirtintos programinės aparatinės įrangos:"
+msgstr[2] "Patvirtintos programinės aparatinės įrangos:"
+
+#. TRANSLATORS: command line option
+#: src/fu-util.c:2164
+msgid "Schedule installation for next reboot when possible"
+msgstr "Kai įmanoma, suplanuoti įdiegimą kitam paleidimui iš naujo"
+
+#. TRANSLATORS: command line option
+#: src/fu-util.c:2176
+msgid "Answer yes to all questions"
+msgstr "Atsakyti taip į visus klausimus"
+
+#. TRANSLATORS: command line option
+#: src/fu-util.c:2179
+msgid "Sign the uploaded data with the client certificate"
+msgstr "Pasirašyti išsiunčiamus duomenis naudojant kliento liudijimą"
+
+#. TRANSLATORS: command line option
+#: src/fu-util.c:2182
+msgid "Do not check for unreported history"
+msgstr "Netikrinti ar yra istorijos apie kurią nepranešta"
+
+#. TRANSLATORS: command line option
+#: src/fu-util.c:2185
+msgid "Do not check for old metadata"
+msgstr "Netikrinti ar yra senų metaduomenų"
+
+#. TRANSLATORS: command line option
+#: src/fu-util.c:2191
+msgid "Do not write to the history database"
+msgstr "Nerašyti į istorijos duomenų bazę"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2234
+msgid "Erase all firmware update history"
+msgstr "Ištrinti visą programinės aparatinės įrangos atnaujinimų istoriją"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2240
+msgid "Share firmware history with the developers"
+msgstr "Bendrinti programinės aparatinės įrangos istoriją su plėtotojais"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2264
+msgid "Updates all firmware to latest versions available"
+msgstr ""
+"Atnaujina visą programinę aparatinę įrangą iki naujausios prieinamos versijos"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2270
+msgid "Gets the cryptographic hash of the dumped firmware"
+msgstr "Gauna išklotos programinės aparatinės įrangos šifravimo maišą"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2276
+msgid "Unlocks the device for firmware access"
+msgstr "Atrakina įrenginį programinės aparatinės įrangos prieigai"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2282
+msgid "Clears the results from the last update"
+msgstr "Išvalo rezultatus iš paskutinio atnaujinimo"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2288
+msgid "Clears any updates scheduled to be updated offline"
+msgstr "Išvalo visus autonominiam atnaujinimui suplanuotus atnaujinimus"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2294
+msgid "Gets the results from the last update"
+msgstr "Gauna rezultatus iš paskutinio atnaujinimo"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2300
+msgid "Gets the releases for a device"
+msgstr "Gauna laidas įrenginiui"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2306
+msgid "Gets the configured remotes"
+msgstr "Gauna sukonfigūruotas nuotolines saugyklas"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2312
+msgid "Downgrades the firmware on a device"
+msgstr "Sendina programinę aparatinę įrangą įrenginyje"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2318
+msgid "Refresh metadata from remote server"
+msgstr "Iš naujo įkelti metaduomenis iš nuotolinio serverio"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2324
+msgid "Update the stored metadata with current ROM contents"
+msgstr "Atnaujinti saugomus metaduomenis esamu ROM turiniu"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2330
+msgid "Modifies a given remote"
+msgstr "Modifikuoja nurodytą nuotolinę saugyklą"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2336
+msgid "Enables a given remote"
+msgstr "Įjungia nurodytą nuotolinę saugyklą"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2342
+msgid "Disables a given remote"
+msgstr "Išjungia nurodytą nuotolinę saugyklą"
+
+#. TRANSLATORS: command description
+#: src/fu-util.c:2348
+msgid "Activate devices"
+msgstr "Aktyvuoti įrenginius"
+
+#. TRANSLATORS: firmware approved by the admin
+#: src/fu-util.c:2354
+msgid "Gets the list of approved firmware."
+msgstr "Gauna patvirtintos programinės aparatinės įrangos sąrašą."
+
+#. TRANSLATORS: firmware approved by the admin
+#: src/fu-util.c:2360
+msgid "Sets the list of approved firmware."
+msgstr "Nustato patvirtintos programinės aparatinės įrangos sąrašą."
+
+#. TRANSLATORS: the user isn't reading the question
+#: src/fu-util-common.c:60
+#, c-format
+msgid "Please enter a number from 0 to %u: "
+msgstr "Įveskite skaičių nuo 0 iki %u: "
+
+#. TRANSLATORS: explain why we want to shutdown
+#: src/fu-util-common.c:274
+msgid "An update requires the system to shutdown to complete."
+msgstr "Atnaujinimo užbaigimui, reikia išjungti sistemą."
+
+#. TRANSLATORS: shutdown to apply the update
+#: src/fu-util-common.c:276
+msgid "Shutdown now?"
+msgstr "Išjungti dabar?"
+
+#. TRANSLATORS: explain why we want to reboot
+#: src/fu-util-common.c:286
+msgid "An update requires a reboot to complete."
+msgstr "Atnaujinimo užbaigimui, reikia paleisti sistemą iš naujo."
+
+#. TRANSLATORS: reboot to apply the update
+#: src/fu-util-common.c:288
+msgid "Restart now?"
+msgstr "Paleisti iš naujo dabar?"
+
+#. TRANSLATORS: a specific part of hardware,
+#. * the first %s is the device name, e.g. 'Unifying Receiver`
+#: src/fu-util-common.c:475
+#, c-format
+msgid "%s Device Update"
+msgstr "%s įrenginio atnaujinimas"
+
+#. TRANSLATORS: the entire system, e.g. all internal devices,
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#: src/fu-util-common.c:480
+#, c-format
+msgid "%s System Update"
+msgstr "%s sisteminis atnaujinimas"
+
+#. TRANSLATORS: the EC is typically the keyboard controller chip,
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#: src/fu-util-common.c:485
+#, c-format
+msgid "%s Embedded Controller Update"
+msgstr "%s įtaisytojo valdiklio atnaujinimas"
+
+#. TRANSLATORS: ME stands for Management Engine, the Intel AMT thing,
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#: src/fu-util-common.c:490
+#, c-format
+msgid "%s ME Update"
+msgstr "%s ME atnaujinimas"
+
+#. TRANSLATORS: the controller is a device that has other devices
+#. * plugged into it, for example ThunderBolt, FireWire or USB,
+#. * the first %s is the device name, e.g. 'Intel ThunderBolt`
+#: src/fu-util-common.c:496
+#, c-format
+msgid "%s Controller Update"
+msgstr "%s valdiklio atnaujinimas"
+
+#. TRANSLATORS: this is the fallback where we don't know if the release
+#. * is updating the system, the device, or a device class, or something else --
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#: src/fu-util-common.c:503
+#, c-format
+msgid "%s Update"
+msgstr "%s atnaujinimas"
+
+#~ msgid "Writing"
+#~ msgstr "Rašoma"
+
+#~ msgid "Verifying"
+#~ msgstr "Patikrinima"
+
+#~ msgid "Attaching"
+#~ msgstr "Prijungiama"
+
+#~ msgid "Enumerate all Synaptics MST devices"
+#~ msgstr "Išskaičiuoti visus Synaptics MST įrenginius"
+
+#~ msgid "Synaptics Multistream Transport Utility"
+#~ msgstr "Synaptics Multistream Transport paslaugų programa"
+
+#~ msgid "Retrying as an offline update"
+#~ msgstr "Bandoma iš naujo kaip atnaujinimas atsijungus"
+
+#~ msgid "Update Checksum Type"
+#~ msgstr "Atnaujinimo kontrolinės sumos tipas"
+
+#~ msgid "Install prepared updates now"
+#~ msgstr "Įdiegti paruoštus atnaujinimus dabar"
