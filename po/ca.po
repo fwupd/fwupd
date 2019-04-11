@@ -56,6 +56,25 @@ msgid_plural "%u seconds"
 msgstr[0] "%u segon"
 msgstr[1] "%u segons"
 
+#. TRANSLATORS: command description
+msgid "Activate devices"
+msgstr "Activa els dispositius"
+
+#. TRANSLATORS: command description
+msgid "Activate pending devices"
+msgstr "Activa els dispositius pendents"
+
+msgid "Activate the new firmware on the device"
+msgstr "Activa el microprogramari nou al dispositiu"
+
+#. TRANSLATORS: shown when shutting down to switch to the new version
+msgid "Activating firmware update"
+msgstr "Activació de l'actualització del microprogramari"
+
+#. TRANSLATORS: shown when shutting down to switch to the new version
+msgid "Activating firmware update for"
+msgstr "Activa l’actualització del microprogramari per a"
+
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Added"
 msgstr "S'ha afegit"
@@ -101,6 +120,13 @@ msgstr "Aplica un pedaç binari"
 msgid "Apply firmware updates"
 msgstr "Aplica les actualizacions de microprogramari"
 
+#. TRANSLATORS: approved firmware has been checked by
+#. * the domain administrator
+msgid "Approved firmware:"
+msgid_plural "Approved firmware:"
+msgstr[0] "Microprogramari aprovat:"
+msgstr[1] "Microprogramari aprovat:"
+
 #. TRANSLATORS: command description
 msgid "Attach DFU capable device back to runtime"
 msgstr "Connecta un dispositiu amb capacitat DFU en temps real"
@@ -129,6 +155,18 @@ msgstr "Es requereix autenticació per a desactualitzar el microprogramari en aq
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
 msgstr "Es necessita l'autenticació per a modificar un remot configurat emprat per a les actualitzacions del microprogramari"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to set the list of approved firmware"
+msgstr "Es requereix autenticació per a establir la llista de microprogramari aprovat"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to sign data using the client certificate"
+msgstr "Es requereix autenticació per a signar les dades emprant el certificat del client"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to switch to the new firmware version"
+msgstr "Es requereix autenticació per a canviar a la nova versió del micropogramari"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to unlock a device"
@@ -234,6 +272,10 @@ msgstr "Desconecta el dispositiu amb capacitat DFU actualment connectat"
 #. TRANSLATORS: command description
 msgid "Detach to bootloader mode"
 msgstr "Separa del mode carregador d'arrencada"
+
+#. TRANSLATORS: ID for hardware, typically a SHA1 sum
+msgid "Device ID"
+msgstr "ID del dispositiu"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device added:"
@@ -368,9 +410,21 @@ msgstr "Surt després d'un petit retard"
 msgid "Exit after the engine has loaded"
 msgstr "Sur una vegada s'hagi carregat el motor"
 
+#. TRANSLATORS: we could not talk to the fwupd daemon
+msgid "Failed to connect to daemon"
+msgstr "Ha fallat en connectar amb el dimoni"
+
 #. TRANSLATORS: the server is rate-limiting downloads
 msgid "Failed to download due to server limit"
 msgstr "La baixada ha fallat a causa del límit del servidor"
+
+#. TRANSLATORS: we could not get the devices to update offline
+msgid "Failed to get pending devices"
+msgstr "Ha fallat en obtenir els dispositius pendents"
+
+#. TRANSLATORS: we could not install for some reason
+msgid "Failed to install firmware update"
+msgstr "Ha fallat en instal·lar l’actualització del microprogramari"
 
 #. TRANSLATORS: quirks are device-specific workarounds
 msgid "Failed to load quirks"
@@ -379,6 +433,14 @@ msgstr "No s'han pogut carregar les peculiaritats"
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
 msgstr "Ha fallat en analitzar els arguments"
+
+#. TRANSLATORS: we could not reboot for some reason
+msgid "Failed to reboot"
+msgstr "Ha fallat en tornar a arrencar"
+
+#. TRANSLATORS: we could not talk to plymouth
+msgid "Failed to set splash mode"
+msgstr "Ha fallat en establir el mode de presentació"
 
 #. TRANSLATORS: downloading unknown file
 msgid "Fetching file"
@@ -403,6 +465,10 @@ msgstr "Nom del fitxer"
 #. TRANSLATORS: filename of the local file
 msgid "Filename Signature"
 msgstr "Signatura del nom del fitxer"
+
+#. TRANSLATORS: program name
+msgid "Firmware Agent"
+msgstr "Agent de microprogramari"
 
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
@@ -433,6 +499,10 @@ msgstr "Les actualitzacions de microprogramari no estan admeses en aquesta màqu
 msgid "Firmware updates are supported on this machine."
 msgstr "Les actualitzacions de microprogramari estan admeses en aquesta màquina."
 
+#. TRANSLATORS: section header for firmware flags
+msgid "Flags"
+msgstr "Etiquetes"
+
 msgid "Force the action ignoring all warnings"
 msgstr "Força l'acció ignorant tots els avisos"
 
@@ -446,6 +516,10 @@ msgstr "GUID"
 #. TRANSLATORS: command description
 msgid "Get all devices according to the system topology"
 msgstr "Obtén tots els dispositius segons la topologia del sistema"
+
+#. TRANSLATORS: command description
+msgid "Get all devices and possible releases"
+msgstr "Obtén tots els dispositius i possibles llançaments"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -466,6 +540,10 @@ msgstr "Obtén els remots configurats"
 #. TRANSLATORS: command description
 msgid "Gets the cryptographic hash of the dumped firmware"
 msgstr "Obté el resultat d'aplicar la funció criptogràfica de resum sobre el microprogramari bolcat"
+
+#. TRANSLATORS: firmware approved by the admin
+msgid "Gets the list of approved firmware."
+msgstr "Obtén la llista del microprogramari aprovat."
 
 #. TRANSLATORS: command description
 msgid "Gets the list of updates for connected hardware"
@@ -509,6 +587,10 @@ msgstr "Instal·la microprogramari sense signar per al dispositiu"
 
 msgid "Install unsigned system firmware"
 msgstr "Instal·la microprogramari sense signar per al sistema"
+
+#. TRANSLATORS: console message when no Plymouth is installed
+msgid "Installing Firmware…"
+msgstr "Instal·lació del microprogramari..."
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
@@ -600,6 +682,10 @@ msgstr "No s'ha trobat cap connector"
 msgid "No remotes are currently enabled so no metadata is available."
 msgstr "Actualment, no hi ha cap remot habilitat, de manera que no hi ha metadades disponibles."
 
+#. TRANSLATORS: nothing was updated offline
+msgid "No updates were applied"
+msgstr "No s’han aplicat les actualitzacions"
+
 msgid "OK"
 msgstr "D'acord"
 
@@ -617,6 +703,10 @@ msgstr "Contrasenya"
 
 msgid "Payload"
 msgstr "Carrega útil"
+
+#. TRANSLATORS: console message when not using plymouth
+msgid "Percentage complete"
+msgstr "Percentatge completat"
 
 msgid "Permission denied"
 msgstr "Permís denegat"
@@ -663,6 +753,10 @@ msgstr "Llegeix el microprogramari des d'una partició a un fitxer"
 #. TRANSLATORS: reading from the flash chips
 msgid "Reading…"
 msgstr "S'està llegint..."
+
+#. TRANSLATORS: console message when not using plymouth
+msgid "Rebooting…"
+msgstr "S'està tornant a arencar..."
 
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
@@ -731,6 +825,10 @@ msgid "Runtime"
 msgstr "Temps d'execució"
 
 #. TRANSLATORS: command line option
+msgid "Save device state into a JSON file between executions"
+msgstr "Desa l'estat del dispositiu en un fitxer JSON entre les execucions"
+
+#. TRANSLATORS: command line option
 msgid "Schedule installation for next reboot when possible"
 msgstr "Planifica la instal·lació per al següent reinici quan sigui posible"
 
@@ -777,6 +875,13 @@ msgstr "Estableix l'ID del proveïdor al fitxer del microprogramari"
 #. TRANSLATORS: command description
 msgid "Sets metadata on a firmware file"
 msgstr "Estableix les metadades en un fitxer de microprogramari"
+
+msgid "Sets the list of approved firmware"
+msgstr "Estableix la llista de microprogramari aprovat"
+
+#. TRANSLATORS: firmware approved by the admin
+msgid "Sets the list of approved firmware."
+msgstr "Estableix la llista del microprogramari aprovat."
 
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
@@ -826,6 +931,20 @@ msgstr "Mostra la informació sobre l'estat de l'actualització del microprogram
 msgid "Shutdown now?"
 msgstr "Aturar-lo ara?"
 
+msgid "Sign data using the client certificate"
+msgstr "Signa les dades emprant el certificat del client"
+
+msgctxt "command-description"
+msgid "Sign data using the client certificate"
+msgstr "Signa les dades emprant el certificat del client"
+
+#. TRANSLATORS: command line option
+msgid "Sign the uploaded data with the client certificate"
+msgstr "Signa les dades pujades amb el certificat del client"
+
+msgid "Signature"
+msgstr "Signatura"
+
 msgid "Specify Vendor/Product ID(s) of DFU device"
 msgstr "Especifiqueu el proveïdor/ID del producte del dispositiu DFU"
 
@@ -853,12 +972,21 @@ msgstr "Objectiu"
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
 msgstr "El LVFS és un servei gratuït que funciona com una entitat legal independent i no té cap vincle amb la $OS_RELEASE:NAME$. És possible que el vostre distribuïdor no hagi verificat cap de les actualitzacions del microprogramari per a la compatibilitat amb el vostre sistema o els dispositius connectats. Tot el microprogramari només és proporcionat pel fabricant original dels equips."
 
+#. TRANSLATORS: approved firmware has been checked by
+#. * the domain administrator
+msgid "There is no approved firmware."
+msgstr "No hi ha cap microprogramari aprovat."
+
 #. TRANSLATORS: we're poking around as a power user
 msgid "This program may only work correctly as root"
 msgstr "Aquest programa només pot funcionar correctament com a «root»"
 
 msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
 msgstr "Aquest remot conté el microprogramari que no està embargat, però encara l'ha provat el proveïdor del maquinari. Haureu d'assegurar-vos que teniu una manera de baixar manualment el microprogramari si l'actualització del microprogramari no funciona."
+
+#. TRANSLATORS: the user needs to stop playing with stuff
+msgid "This tool can only be used by the root user"
+msgstr "Aquesta eina només pot ser usada per l'usuari «root»."
 
 #. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
 msgid "Title"
@@ -946,6 +1074,10 @@ msgstr "Actualitza la informació de verificació dels dispositius emmagatzemats
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current ROM contents"
 msgstr "Actualitza les metadades emmagatzemades amb el contingut de la ROM actual"
+
+#. TRANSLATORS: command description
+msgid "Update the stored metadata with current contents"
+msgstr "Actualitza les metadades emmagatzemades amb el contingut actual"
 
 #. TRANSLATORS: command description
 msgid "Updates all firmware to latest versions available"

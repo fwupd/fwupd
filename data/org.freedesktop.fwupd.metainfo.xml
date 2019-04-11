@@ -32,6 +32,30 @@
     <binary>fwupdmgr</binary>
   </provides>
   <releases>
+    <release version="1.2.7" date="2019-04-11">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add a component categories to express the firmware type</li>
+          <li>Add support for 8BitDo M30</li>
+          <li>Add support for the not-child extension from Logitech</li>
+          <li>Shut down the daemon if the on-disk binary is replaced</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Blacklist the synapticsmst plugin when using amdgpu</li>
+          <li>Correct ATA activation functionality to work for all vendors</li>
+          <li>Implement QMI PDC active config selection for modems</li>
+          <li>Make an error message clearer when there are no updates available</li>
+          <li>Match the old or new version number when setting NEEDS_REBOOT</li>
+          <li>More carefully check the output from tpm2_pcrlist</li>
+          <li>Recreate the history database if migration failed</li>
+          <li>Require AC power when updating Thunderbolt devices</li>
+          <li>Require --force to install a release with a different version format</li>
+          <li>Save history from firmware installed with fwupdtool</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.2.6" date="2019-03-26">
       <description>
         <p>This release adds the following features:</p>

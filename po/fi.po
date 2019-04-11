@@ -16,6 +16,9 @@ msgstr ""
 "Language: fi\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
+msgid "Activate the new firmware on the device"
+msgstr "Aktivoi laitteessa oleva uusi laiteohjelmisto 'firmware'"
+
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Added"
 msgstr "Lisätty"
@@ -28,6 +31,10 @@ msgstr "Peitenimi %s"
 #. TRANSLATORS: command description
 msgid "Apply a binary patch"
 msgstr "Käytä binääristä korjaustiedostoa"
+
+#. TRANSLATORS: command line option
+msgid "Apply firmware updates"
+msgstr "Käytä firmware-päivityksiä"
 
 #. TRANSLATORS: command description
 msgid "Attach DFU capable device back to runtime"
@@ -53,6 +60,18 @@ msgstr "Todennus on tarpeen tämän laitteen firmwaren alentamiseksi"
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
 msgstr "Todennusta tarvitaan firmware-päivityksiin käytettävän konfiguroidun etä-ohjaimen muokkaamisessa"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to set the list of approved firmware"
+msgstr "Vahvistus on tarpeen hyväksyttyjen laiteohjelmien listan määrittämiseksi"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to sign data using the client certificate"
+msgstr "Autentikointi edellyttää tietojen allekirjoittamista asiakaan sertifikaatin avulla"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to switch to the new firmware version"
+msgstr "Uuden firmware-version käyttöönottoon tarvitaan todennus"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to unlock a device"
@@ -151,6 +170,9 @@ msgstr "Laite muutettu:"
 msgid "Device removed:"
 msgstr "Laite poistettu:"
 
+msgid "Disabled fwupdate debugging"
+msgstr "fw-päivityksen virheenkorjaus poistettu"
+
 #. TRANSLATORS: command line option
 msgid "Display version"
 msgstr "Näytä versio"
@@ -171,8 +193,23 @@ msgstr "Tyhjennä laiteohjelmiston tiedot"
 msgid "Dump information about a binary patch to the screen"
 msgstr "Tulosta tiedot binäärisestä korjaustiedostosta näytölle"
 
+#. TRANSLATORS: ESP is EFI System Partition
+msgid "ESP specified was not valid"
+msgstr "Määritetty ESP ei ollut voimassa"
+
+#. TRANSLATORS: command line option
+msgid "Enable firmware update support on supported systems"
+msgstr "Ota firmware-päivitystuki käyttöön tuetuissa järjestelmissä"
+
+msgid "Enabled fwupdate debugging"
+msgstr "fw-päivityksen virheenkorjaus käytössä"
+
 msgid "Enabling this functionality is done at your own risk, which means you have to contact your original equipment manufacturer regarding any problems caused by these updates. Only problems with the update process itself should be filed at $OS_RELEASE:BUG_REPORT_URL$."
 msgstr "Tämän toiminnon käyttöönotto tapahtuu omalla vastuullasi, joten sinun on otettava yhteyttä alkuperäiseen laitevalmistajaan näiden päivitysten aiheuttamista ongelmista. Vain päivitysprosessiin liittyvät ongelmat pitäisi jättää osoitteeseen $OS_RELEASE:BUG_REPORT_URL$."
+
+#. TRANSLATORS: show the user a warning
+msgid "Enabling this remote is done at your own risk."
+msgstr "Tämän etä-ohjaimen käyttöönotto tapahtuu omalla vastuullasi."
 
 #. TRANSLATORS: command description
 msgid "Encrypt firmware data"
@@ -215,8 +252,18 @@ msgid "Filename"
 msgstr "Tiedostonimi"
 
 #. TRANSLATORS: program name
+msgid "Firmware Agent"
+msgstr "Firmware-agentti"
+
+#. TRANSLATORS: program name
 msgid "Firmware Utility"
 msgstr "Firmware-työkalu"
+
+msgid "Firmware updates are not supported on this machine."
+msgstr "Ohjelmistopäivitys 'firmware' ei tue tätä laitetta"
+
+msgid "Firmware updates are supported on this machine."
+msgstr "Ohjelmistopäivitys 'firmware' tukee tätä laitetta"
 
 msgid "Force the action ignoring all warnings"
 msgstr "Pakota toimenpide huomioimatta kaikki varoitukset"
@@ -224,6 +271,10 @@ msgstr "Pakota toimenpide huomioimatta kaikki varoitukset"
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
 msgstr "Löydetty"
+
+#. TRANSLATORS: command description
+msgid "Get all devices and possible releases"
+msgstr "Hanki kaikki laitteet ja mahdolliset julkaisut"
 
 #. TRANSLATORS: Appstream ID for the hardware type
 msgid "ID"
@@ -262,6 +313,10 @@ msgstr "Linux-toimittajan laiteohjelmisto (firmware testaus)"
 msgid "List currently attached DFU capable devices"
 msgstr "Luettelo tällä hetkellä liitetyistä DFU-laitteista"
 
+#. TRANSLATORS: command line option
+msgid "List supported firmware updates"
+msgstr "Lista tuetuista firmware-päivityksistä"
+
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
 msgstr "Ladataan…"
@@ -282,8 +337,15 @@ msgstr "Muokkaa määritettyä etänä"
 msgid "Name"
 msgstr "Nimi"
 
+msgid "No action specified!"
+msgstr "Toimintoa ei ole määritetty!"
+
 msgid "OK"
 msgstr "OK"
+
+#. TRANSLATORS: command line option
+msgid "Override the default ESP path"
+msgstr "Ohita oletusarvoinen ESP-polku"
 
 #. TRANSLATORS: remote filename base
 msgid "Password"
@@ -301,6 +363,10 @@ msgstr "Tulosta virheelliset virheilmoitukset"
 #. TRANSLATORS: DFU protocol version, e.g. 1.1
 msgid "Protocol"
 msgstr "Protokolla"
+
+#. TRANSLATORS: command line option
+msgid "Query for firmware update support"
+msgstr "Kysely firmware-päivityksen tuesta"
 
 #. TRANSLATORS: device quirks, i.e. things that
 #. * it does that we have to work around
@@ -370,6 +436,10 @@ msgstr "Aseta tuotetunnus firmware tiedostoon"
 msgid "Set release version on firmware file"
 msgstr "Aseta julkaisuversio firmware-tiedostosta"
 
+#. TRANSLATORS: command line option
+msgid "Set the debugging flag during update"
+msgstr "Aseta virheenkorjauksen lippu päivityksen aikana"
+
 #. TRANSLATORS: command description
 msgid "Set the firmware size for the target"
 msgstr "Määritä firmwaren kohteen koko"
@@ -382,6 +452,13 @@ msgstr "Aseta toimittajan tunnus firmware tiedostoon"
 msgid "Sets metadata on a firmware file"
 msgstr "Asetta metatiedot firmware -tiedostoon"
 
+msgid "Sets the list of approved firmware"
+msgstr "Asettaa listan hyväksytyjä 'firmware' laiteohjelmistoja "
+
+#. TRANSLATORS: turn on all debugging
+msgid "Show debugging information for all files"
+msgstr "Näytä kaikkien tiedostojen virheenkorjaustiedot"
+
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
 msgstr "Näytä vianjäljitysvalinnat"
@@ -390,9 +467,24 @@ msgstr "Näytä vianjäljitysvalinnat"
 msgid "Show extra debugging information"
 msgstr "Näytä ylimääräiset virheenkorjaustiedot"
 
+#. TRANSLATORS: this is for plugin development
+msgid "Show plugin verbose information"
+msgstr "Näytä plugin tiedot"
+
 #. TRANSLATORS: command line option
 msgid "Show the debug log from the last attempted update"
 msgstr "Näytä virheenkorjausloki viimeisestä päivitysyrityksestä"
+
+#. TRANSLATORS: command line option
+msgid "Show the information of firmware update status"
+msgstr "Näytä tiedot laiteohjelmiston 'firmware' päivitystilasta"
+
+msgid "Sign data using the client certificate"
+msgstr "Allekirjoita tietoja käyttämällä asiakkaan sertifikaattia"
+
+msgctxt "command-description"
+msgid "Sign data using the client certificate"
+msgstr "Allekirjoita tietoja käyttämällä asiakkaan sertifikaattia"
 
 msgid "Specify Vendor/Product ID(s) of DFU device"
 msgstr "Määritä DFU laitteen toimittaja/tuotetunnus(s)"
@@ -414,6 +506,10 @@ msgstr "Tila"
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
 msgstr "LVFS on ilmainen palvelu, joka toimii itsenäisenä oikeushenkilönä eikä sillä ole yhteyttä $OS_RELEASE:NAME$. Jakelijasi ei ehkä ole tarkistanut mitään laiteohjelmistopäivityksiä, jotka ovat yhteensopivia järjestelmän tai liitettyjen laitteiden kanssa. Kaikki laiteohjelmistot on tarkoitettu vain alkuperäisen laitteen valmistajalle."
 
+#. TRANSLATORS: we're poking around as a power user
+msgid "This program may only work correctly as root"
+msgstr "Tämä ohjelma voi toimia vain juuressa 'root'"
+
 msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
 msgstr "Tämä sisältää firmwaren, jota ei ole vientikiellossa, mutta jota laitteistotoimittaja testaa edelleen. Varmista, että voit päivittää firmwaren manuaalisesti, jos päivitys epäonnistuu."
 
@@ -425,12 +521,20 @@ msgstr "Siirron koko"
 msgid "Type"
 msgstr "Tyyppi"
 
+#. TRANSLATORS: program name
+msgid "UEFI Firmware Utility"
+msgstr "UEFI firmware -apuohjelma"
+
 #. TRANSLATORS: currect daemon status is unknown
 msgid "Unknown"
 msgstr "Tuntematon"
 
 msgid "Unlock the device to allow access"
 msgstr "Sallia pääsy laitteeseen"
+
+#. TRANSLATORS: command line option
+msgid "Unset the debugging flag during update"
+msgstr "Poista virheenkorjauksen lippu päivityksen aikana"
 
 msgid "Update the stored device verification information"
 msgstr "Päivitä laitteen tallennetut vahvistustiedot"
@@ -466,3 +570,7 @@ msgstr "Kirjoita firmware tiedostosta osioon"
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing…"
 msgstr "Kirjoitetaan…"
+
+#. TRANSLATORS: show the user a warning
+msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
+msgstr "Jakelijasi ei ehkä ole tarkistanut mitään laiteohjelmistopäivityksiä, jotka ovat yhteensopivia järjestelmän tai liitettyjen laitteiden kanssa."
