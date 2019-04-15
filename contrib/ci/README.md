@@ -90,7 +90,7 @@ The XML is organized by a top level element representing the dependencies needed
 
 The child elements represent individual dependencies for all distributions.
 * This element has an attribute ***id*** that represents the most common package name used by distributions
-* This element has an attribute ***type*** that reprsents if the package is needed at build time or runtime.  
+* This element has an attribute ***type*** that represents if the package is needed at build time or runtime.
 
 Each dependency then has a mapping to individual distributions (___distro___).
 * This element has an attribute ***id*** that represents the distribution.

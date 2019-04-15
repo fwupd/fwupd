@@ -14,7 +14,7 @@ understanding it would be used to build a plugin under a LGPLv2+ licence.
 Wacom devices are actually composite devices, with the main ARM CPU being
 programmed using a more complicated erase, write, verify algorithm based
 on a historical update protocol. The "sub-module" devices use a newer protocol,
-again based on HID, but are handled differently depending on thier type.
+again based on HID, but are handled differently depending on their type.
 
 Firmware Format
 ---------------

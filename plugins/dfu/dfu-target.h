@@ -30,7 +30,7 @@ G_DECLARE_DERIVABLE_TYPE (DfuTarget, dfu_target, DFU, TARGET, GUsbDevice)
  * @DFU_TARGET_TRANSFER_FLAG_ANY_CIPHER:	Allow any cipher kinds to be downloaded
  * @DFU_TARGET_TRANSFER_FLAG_ADDR_HEURISTIC:	Automatically detect the address to use
  *
- * The optional flags used for transfering firmware.
+ * The optional flags used for transferring firmware.
  **/
 typedef enum {
 	DFU_TARGET_TRANSFER_FLAG_NONE		= 0,

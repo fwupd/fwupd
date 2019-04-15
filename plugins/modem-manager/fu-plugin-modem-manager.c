@@ -396,12 +396,11 @@ fu_plugin_update (FuPlugin *plugin,
 	return fu_device_write_firmware (device, blob_fw, error);
 }
 
-static gboolean
-fu_plugin_mm_uninhibit_device_idle (gpointer user_data)
+static void
+fu_plugin_mm_device_attach_finished (gpointer user_data)
 {
 	FuPlugin *plugin = FU_PLUGIN (user_data);
 	fu_plugin_mm_uninhibit_device (plugin);
-	return G_SOURCE_REMOVE;
 }
 
 gboolean
@@ -414,10 +413,16 @@ fu_plugin_update_attach (FuPlugin *plugin, FuDevice *device, GError **error)
 	if (locker == NULL)
 		return FALSE;
 
-	/* must be done in idle so that the engine explicitly
-	 * waits for the device to be redetected */
-	g_idle_add (fu_plugin_mm_uninhibit_device_idle, plugin);
+	/* schedule device attach asynchronously, which is extremely important
+         * so that engine can setup the device "waiting" logic before the actual
+         * attach procedure happens (which will reset the module if it worked
+         * properly) */
+	if (!fu_device_attach (device, error))
+		return FALSE;
 
-	/* reset */
-	return fu_device_attach (FU_DEVICE (device), error);
+	/* this signal will always be emitted asynchronously */
+	g_signal_connect_swapped (device, "attach-finished",
+				  G_CALLBACK (fu_plugin_mm_device_attach_finished), plugin);
+
+	return TRUE;
 }

@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version : '1.2.6',
+  version : '1.2.7',
   license : 'LGPL-2.1+',
   meson_version : '>=0.47.0',
   default_options : ['warning_level=2', 'c_std=c99'],
@@ -48,7 +48,7 @@ lt_revision = '0'
 lt_age = '0'
 lt_version = '@0@.@1@.@2@'.format(lt_current, lt_age, lt_revision)
 
-# get suported warning flags
+# get supported warning flags
 warning_flags = [
   '-fstack-protector-strong',
   '-Waggregate-return',
@@ -77,7 +77,7 @@ warning_flags = [
   '-Wmissing-prototypes',
   '-Wnested-externs',
   '-Wno-cast-function-type',
-  '-Wno-address-of-packed-member',  # incompatable with g_autoptr()
+  '-Wno-address-of-packed-member',  # incompatible with g_autoptr()
   '-Wno-unknown-pragmas',
   '-Wno-discarded-qualifiers',
   '-Wno-missing-field-initializers',
@@ -155,7 +155,7 @@ gudev = dependency('gudev-1.0')
 if gudev.version().version_compare('>= 232')
   conf.set('HAVE_GUDEV_232', '1')
 endif
-libxmlb = dependency('xmlb', version : '>= 0.1.5', fallback : ['libxmlb', 'libxmlb_dep'])
+libxmlb = dependency('xmlb', version : '>= 0.1.7', fallback : ['libxmlb', 'libxmlb_dep'])
 gusb = dependency('gusb', version : '>= 0.2.9')
 sqlite = dependency('sqlite3')
 libarchive = dependency('libarchive')

@@ -390,19 +390,262 @@ fu_qmi_pdc_updater_get_checksum (GBytes *blob)
 	return digest;
 }
 
-gboolean
+GArray *
 fu_qmi_pdc_updater_write (FuQmiPdcUpdater *self, const gchar *filename, GBytes *blob, GError **error)
 {
 	g_autoptr(GMainLoop) mainloop = g_main_loop_new (NULL, FALSE);
+	g_autoptr(GArray) digest = fu_qmi_pdc_updater_get_checksum (blob);
 	WriteContext ctx = {
 		.mainloop = mainloop,
 		.qmi_client = self->qmi_client,
-		.blob = blob,
-		.digest = fu_qmi_pdc_updater_get_checksum (blob),
 		.error = NULL,
+		.indication_id = 0,
+		.timeout_id = 0,
+		.blob = blob,
+		.digest = digest,
+		.offset = 0,
+		.token = 0,
 	};
 
 	fu_qmi_pdc_updater_load_config (&ctx);
+	g_main_loop_run (mainloop);
+
+	if (ctx.error != NULL) {
+		g_propagate_error (error, ctx.error);
+		return NULL;
+	}
+
+	return g_steal_pointer (&digest);
+}
+
+typedef struct {
+	GMainLoop	*mainloop;
+	QmiClientPdc	*qmi_client;
+	GError		*error;
+	gulong		 indication_id;
+	guint		 timeout_id;
+	GArray		*digest;
+	guint		 token;
+} ActivateContext;
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(QmiMessagePdcActivateConfigInput, qmi_message_pdc_activate_config_input_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(QmiMessagePdcActivateConfigOutput, qmi_message_pdc_activate_config_output_unref)
+#pragma clang diagnostic pop
+
+static gboolean
+fu_qmi_pdc_updater_activate_config_timeout (gpointer user_data)
+{
+	ActivateContext *ctx = user_data;
+
+	ctx->timeout_id = 0;
+	g_signal_handler_disconnect (ctx->qmi_client, ctx->indication_id);
+	ctx->indication_id = 0;
+
+	/* not an error, the device may go away without sending the indication */
+	g_main_loop_quit (ctx->mainloop);
+
+	return G_SOURCE_REMOVE;
+}
+
+static void
+fu_qmi_pdc_updater_activate_config_indication (QmiClientPdc *client,
+					       QmiIndicationPdcActivateConfigOutput *output,
+					       ActivateContext *ctx)
+{
+	guint16 error_code = 0;
+
+	g_source_remove (ctx->timeout_id);
+	ctx->timeout_id = 0;
+	g_signal_handler_disconnect (ctx->qmi_client, ctx->indication_id);
+	ctx->indication_id = 0;
+
+	if (!qmi_indication_pdc_activate_config_output_get_indication_result (output, &error_code, &ctx->error)) {
+		g_main_loop_quit (ctx->mainloop);
+		return;
+	}
+
+	if (error_code != 0) {
+		g_set_error (&ctx->error, G_IO_ERROR, G_IO_ERROR_FAILED,
+			     "couldn't activate config: %s", qmi_protocol_error_get_string ((QmiProtocolError) error_code));
+		g_main_loop_quit (ctx->mainloop);
+		return;
+	}
+
+	/* assume ok */
+	g_debug ("successful activate configuration indication: assuming device reset is ongoing");
+	g_main_loop_quit (ctx->mainloop);
+}
+
+static void
+fu_qmi_pdc_updater_activate_config_ready (GObject *qmi_client, GAsyncResult *res, gpointer user_data)
+{
+	ActivateContext *ctx = (ActivateContext *) user_data;
+	g_autoptr(QmiMessagePdcActivateConfigOutput) output = NULL;
+
+	output = qmi_client_pdc_activate_config_finish (QMI_CLIENT_PDC (qmi_client), res, &ctx->error);
+	if (output == NULL) {
+		/* If we didn't receive a response, this is a good indication that the device
+		 * reseted itself, we can consider this a successful operation.
+		 * Note: not using g_error_matches() to avoid matching the domain, because the
+		 * error may be either QMI_CORE_ERROR_TIMEOUT or MBIM_CORE_ERROR_TIMEOUT (same
+		 * numeric value), and we don't want to build-depend on libmbim just for this.
+		 */
+		if (ctx->error->code == QMI_CORE_ERROR_TIMEOUT) {
+			g_debug ("request to activate configuration timed out: assuming device reset is ongoing");
+			g_clear_error (&ctx->error);
+		}
+		g_main_loop_quit (ctx->mainloop);
+		return;
+	}
+
+	if (!qmi_message_pdc_activate_config_output_get_result (output, &ctx->error)) {
+		g_main_loop_quit (ctx->mainloop);
+		return;
+	}
+
+	/* When we activate the config, if the operation is successful, we'll just
+	 * see the modem going away completely. So, do not consider an error the timeout
+	 * waiting for the Activate Config indication, as that is actually a good
+	 * thing.
+	 */
+	g_warn_if_fail (ctx->indication_id == 0);
+	ctx->indication_id = g_signal_connect (ctx->qmi_client, "activate-config",
+					       G_CALLBACK (fu_qmi_pdc_updater_activate_config_indication), ctx);
+
+	/* don't wait forever */
+	g_warn_if_fail (ctx->timeout_id == 0);
+	ctx->timeout_id = g_timeout_add_seconds (5, fu_qmi_pdc_updater_activate_config_timeout, ctx);
+}
+
+static void
+fu_qmi_pdc_updater_activate_config (ActivateContext *ctx)
+{
+	g_autoptr(QmiMessagePdcActivateConfigInput) input = NULL;
+
+	input = qmi_message_pdc_activate_config_input_new ();
+	qmi_message_pdc_activate_config_input_set_config_type (input, QMI_PDC_CONFIGURATION_TYPE_SOFTWARE, NULL);
+	qmi_message_pdc_activate_config_input_set_token (input, ctx->token++, NULL);
+
+	g_debug ("activating selected configuration...");
+	qmi_client_pdc_activate_config (ctx->qmi_client, input, 5, NULL,
+					fu_qmi_pdc_updater_activate_config_ready, ctx);
+}
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(QmiMessagePdcSetSelectedConfigInput, qmi_message_pdc_set_selected_config_input_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(QmiMessagePdcSetSelectedConfigOutput, qmi_message_pdc_set_selected_config_output_unref)
+#pragma clang diagnostic pop
+
+static gboolean
+fu_qmi_pdc_updater_set_selected_config_timeout (gpointer user_data)
+{
+	ActivateContext *ctx = user_data;
+
+	ctx->timeout_id = 0;
+	g_signal_handler_disconnect (ctx->qmi_client, ctx->indication_id);
+	ctx->indication_id = 0;
+
+	g_set_error_literal (&ctx->error, G_IO_ERROR, G_IO_ERROR_FAILED,
+			     "couldn't set selected config: timed out");
+	g_main_loop_quit (ctx->mainloop);
+
+	return G_SOURCE_REMOVE;
+}
+
+static void
+fu_qmi_pdc_updater_set_selected_config_indication (QmiClientPdc *client,
+						   QmiIndicationPdcSetSelectedConfigOutput *output,
+						   ActivateContext *ctx)
+{
+	guint16 error_code = 0;
+
+	g_source_remove (ctx->timeout_id);
+	ctx->timeout_id = 0;
+	g_signal_handler_disconnect (ctx->qmi_client, ctx->indication_id);
+	ctx->indication_id = 0;
+
+	if (!qmi_indication_pdc_set_selected_config_output_get_indication_result (output, &error_code, &ctx->error)) {
+		g_main_loop_quit (ctx->mainloop);
+		return;
+	}
+
+	if (error_code != 0) {
+		g_set_error (&ctx->error, G_IO_ERROR, G_IO_ERROR_FAILED,
+			     "couldn't set selected config: %s", qmi_protocol_error_get_string ((QmiProtocolError) error_code));
+		g_main_loop_quit (ctx->mainloop);
+		return;
+	}
+
+	g_debug ("current configuration successfully selected...");
+
+	/* now activate config */
+	fu_qmi_pdc_updater_activate_config (ctx);
+}
+
+static void
+fu_qmi_pdc_updater_set_selected_config_ready (GObject *qmi_client, GAsyncResult *res, gpointer user_data)
+{
+	ActivateContext *ctx = (ActivateContext *) user_data;
+	g_autoptr(QmiMessagePdcSetSelectedConfigOutput) output = NULL;
+
+	output = qmi_client_pdc_set_selected_config_finish (QMI_CLIENT_PDC (qmi_client), res, &ctx->error);
+	if (output == NULL) {
+		g_main_loop_quit (ctx->mainloop);
+		return;
+	}
+
+	if (!qmi_message_pdc_set_selected_config_output_get_result (output, &ctx->error)) {
+		g_main_loop_quit (ctx->mainloop);
+		return;
+	}
+
+	/* after receiving the response to our request, we now expect an indication
+	 * with the actual result of the operation */
+	g_warn_if_fail (ctx->indication_id == 0);
+	ctx->indication_id = g_signal_connect (ctx->qmi_client, "set-selected-config",
+					       G_CALLBACK (fu_qmi_pdc_updater_set_selected_config_indication), ctx);
+
+	/* don't wait forever */
+	g_warn_if_fail (ctx->timeout_id == 0);
+	ctx->timeout_id = g_timeout_add_seconds (5, fu_qmi_pdc_updater_set_selected_config_timeout, ctx);
+}
+
+static void
+fu_qmi_pdc_updater_set_selected_config (ActivateContext *ctx)
+{
+	g_autoptr(QmiMessagePdcSetSelectedConfigInput) input = NULL;
+	QmiConfigTypeAndId type_and_id;
+
+	type_and_id.config_type = QMI_PDC_CONFIGURATION_TYPE_SOFTWARE;
+	type_and_id.id = ctx->digest;
+
+	input = qmi_message_pdc_set_selected_config_input_new ();
+	qmi_message_pdc_set_selected_config_input_set_type_with_id (input, &type_and_id, NULL);
+	qmi_message_pdc_set_selected_config_input_set_token (input, ctx->token++, NULL);
+
+	g_debug ("selecting current configuration...");
+	qmi_client_pdc_set_selected_config (ctx->qmi_client, input, 10, NULL,
+					    fu_qmi_pdc_updater_set_selected_config_ready, ctx);
+}
+
+gboolean
+fu_qmi_pdc_updater_activate (FuQmiPdcUpdater *self, GArray *digest, GError **error)
+{
+	g_autoptr(GMainLoop) mainloop = g_main_loop_new (NULL, FALSE);
+	ActivateContext ctx = {
+		.mainloop = mainloop,
+		.qmi_client = self->qmi_client,
+		.error = NULL,
+		.indication_id = 0,
+		.timeout_id = 0,
+		.digest = digest,
+		.token = 0,
+	};
+
+	fu_qmi_pdc_updater_set_selected_config (&ctx);
 	g_main_loop_run (mainloop);
 
 	if (ctx.error != NULL) {

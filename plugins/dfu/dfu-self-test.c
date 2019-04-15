@@ -222,7 +222,7 @@ dfu_firmware_dfu_func (void)
 	g_assert_cmpint (dfu_firmware_get_size (firmware), ==, 0x8eB4);
 	g_assert_cmpint (dfu_firmware_get_cipher_kind (firmware), ==, DFU_CIPHER_KIND_NONE);
 
-	/* can we roundtrip without loosing data */
+	/* can we roundtrip without losing data */
 	roundtrip_orig = dfu_self_test_get_bytes_for_file (file, &error);
 	g_assert_no_error (error);
 	g_assert (roundtrip_orig != NULL);
@@ -263,7 +263,7 @@ dfu_firmware_dfuse_func (void)
 	g_assert_cmpint (dfu_firmware_get_size (firmware), ==, 0x168d5);
 	g_assert_cmpint (dfu_firmware_get_cipher_kind (firmware), ==, DFU_CIPHER_KIND_NONE);
 
-	/* can we roundtrip without loosing data */
+	/* can we roundtrip without losing data */
 	roundtrip_orig = dfu_self_test_get_bytes_for_file (file, &error);
 	g_assert_no_error (error);
 	g_assert (roundtrip_orig != NULL);
@@ -308,7 +308,7 @@ dfu_firmware_metadata_func (void)
 	g_assert_cmpstr (dfu_firmware_get_metadata (firmware, "key"), ==, "value");
 	g_assert_cmpstr (dfu_firmware_get_metadata (firmware, "???"), ==, NULL);
 
-	/* can we roundtrip without loosing data */
+	/* can we roundtrip without losing data */
 	roundtrip_orig = dfu_self_test_get_bytes_for_file (file, &error);
 	g_assert_no_error (error);
 	g_assert (roundtrip_orig != NULL);

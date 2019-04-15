@@ -460,3 +460,45 @@ fu_util_setup_networking (GError **error)
 	soup_session_remove_feature_by_type (session, SOUP_TYPE_CONTENT_DECODER);
 	return g_steal_pointer (&session);
 }
+
+gchar *
+fu_util_release_get_name (FwupdRelease *release)
+{
+	const gchar *name = fwupd_release_get_name (release);
+	GPtrArray *cats = fwupd_release_get_categories (release);
+
+	for (guint i = 0; i < cats->len; i++) {
+		const gchar *cat = g_ptr_array_index (cats, i);
+		if (g_strcmp0 (cat, "X-Device") == 0) {
+			/* TRANSLATORS: a specific part of hardware,
+			 * the first %s is the device name, e.g. 'Unifying Receiver` */
+			return g_strdup_printf (_("%s Device Update"), name);
+		}
+		if (g_strcmp0 (cat, "X-System") == 0) {
+			/* TRANSLATORS: the entire system, e.g. all internal devices,
+			 * the first %s is the device name, e.g. 'ThinkPad P50` */
+			return g_strdup_printf (_("%s System Update"), name);
+		}
+		if (g_strcmp0 (cat, "X-EmbeddedController") == 0) {
+			/* TRANSLATORS: the EC is typically the keyboard controller chip,
+			 * the first %s is the device name, e.g. 'ThinkPad P50` */
+			return g_strdup_printf (_("%s Embedded Controller Update"), name);
+		}
+		if (g_strcmp0 (cat, "X-ManagementEngine") == 0) {
+			/* TRANSLATORS: ME stands for Management Engine, the Intel AMT thing,
+			 * the first %s is the device name, e.g. 'ThinkPad P50` */
+			return g_strdup_printf (_("%s ME Update"), name);
+		}
+		if (g_strcmp0 (cat, "X-Controller") == 0) {
+			/* TRANSLATORS: the controller is a device that has other devices
+			 * plugged into it, for example ThunderBolt, FireWire or USB,
+			 * the first %s is the device name, e.g. 'Intel ThunderBolt` */
+			return g_strdup_printf (_("%s Controller Update"), name);
+		}
+	}
+
+	/* TRANSLATORS: this is the fallback where we don't know if the release
+	 * is updating the system, the device, or a device class, or something else --
+	 * the first %s is the device name, e.g. 'ThinkPad P50` */
+	return g_strdup_printf (_("%s Update"), name);
+}

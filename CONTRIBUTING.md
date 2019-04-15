@@ -18,7 +18,7 @@ from the PackageKit Coding Style.
  * Prefer descriptive names over abbreviations (unless well-known)
    and shortening of names. e.g `device` not `dev`
 
- * Single statments inside if/else should not be enclosed by '{}'
+ * Single statements inside if/else should not be enclosed by '{}'
 
  * Use comments to explain why something is being done, but also avoid
    over-documenting the obvious. Here is an example of useless comment:

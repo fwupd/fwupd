@@ -36,6 +36,7 @@ struct ata_tf {
 #define ATA_STAT_ERR			(1 << 0)
 
 #define ATA_OP_IDENTIFY			0xec
+#define ATA_OP_FLUSH_CACHE		0xe7
 #define ATA_OP_DOWNLOAD_MICROCODE	0x92
 #define ATA_OP_STANDBY_IMMEDIATE	0xe0
 
@@ -473,10 +474,18 @@ fu_ata_device_activate (FuDevice *device, GError **error)
 	FuAtaDevice *self = FU_ATA_DEVICE (device);
 	struct ata_tf tf = { 0x0 };
 
-	/* flush caches and make sure drive is ready to activate */
-	tf.dev = 0xa0 | ATA_USING_LBA;
+
+	/* flush cache and put drive in standby to prepare to activate */
+	tf.dev = ATA_USING_LBA;
+	tf.command = ATA_OP_FLUSH_CACHE;
+	if (!fu_ata_device_command (self, &tf, SG_DXFER_NONE,
+				    120 * 1000, /* a long time! */
+				    NULL, 0, error)) {
+		g_prefix_error (error, "failed to flush cache immediate: ");
+		return FALSE;
+	}
 	tf.command = ATA_OP_STANDBY_IMMEDIATE;
-	if (!fu_ata_device_command (self, &tf, SG_DXFER_TO_DEV,
+	if (!fu_ata_device_command (self, &tf, SG_DXFER_NONE,
 				    120 * 1000, /* a long time! */
 				    NULL, 0, error)) {
 		g_prefix_error (error, "failed to standby immediate: ");
@@ -484,9 +493,10 @@ fu_ata_device_activate (FuDevice *device, GError **error)
 	}
 
 	/* load the new firmware */
+	tf.dev = 0xa0 | ATA_USING_LBA;
 	tf.command = ATA_OP_DOWNLOAD_MICROCODE;
 	tf.feat = ATA_SUBCMD_MICROCODE_ACTIVATE;
-	if (!fu_ata_device_command (self, &tf, SG_DXFER_TO_DEV,
+	if (!fu_ata_device_command (self, &tf, SG_DXFER_NONE,
 				    120 * 1000, /* a long time! */
 				    NULL, 0, error)) {
 		g_prefix_error (error, "failed to activate firmware: ");

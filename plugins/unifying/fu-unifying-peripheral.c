@@ -210,7 +210,7 @@ fu_unifying_peripheral_poll (FuDevice *device, GError **error)
 			g_warning ("failed to get pending read: %s", error_local->message);
 			return TRUE;
 		}
-		/* no data to recieve */
+		/* no data to receive */
 		g_clear_error (&error_local);
 	}
 

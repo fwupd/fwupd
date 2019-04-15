@@ -26,6 +26,11 @@
 %global have_dell 1
 %endif
 
+# only available recently
+%if 0%{?fedora} >= 30
+%global have_modem_manager 1
+%endif
+
 Summary:   Firmware update daemon
 Name:      fwupd
 Version:   #VERSION#
@@ -61,7 +66,11 @@ BuildRequires: help2man
 BuildRequires: json-glib-devel >= %{json_glib_version}
 BuildRequires: vala
 BuildRequires: bash-completion
-#BuildRequires: ModemManager-glib-devel >= 1.9.1
+
+%if 0%{?have_modem_manager}
+BuildRequires: ModemManager-glib-devel >= 1.10.0
+BuildRequires: libqmi-devel >= 1.22.0
+%endif
 
 %if 0%{?have_redfish}
 BuildRequires: efivar-devel >= 33
@@ -162,6 +171,11 @@ Data files for installed tests.
     -Dplugin_dell=false \
     -Dplugin_synaptics=false \
 %endif
+%if 0%{?have_modem_manager}
+    -Dplugin_modem_manager=true \
+%else
+    -Dplugin_modem_manager=false \
+%endif
     -Dman=true
 
 %meson_build
@@ -224,7 +238,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_bindir}/fwupdmgr
 %dir %{_sysconfdir}/fwupd
 %dir %{_sysconfdir}/fwupd/remotes.d
-%config(noreplace)%{_sysconfdir}/fwupd/remotes.d/fwupd.conf
+%config(noreplace)%{_sysconfdir}/fwupd/remotes.d/dell-esrt.conf
 %config(noreplace)%{_sysconfdir}/fwupd/remotes.d/lvfs.conf
 %config(noreplace)%{_sysconfdir}/fwupd/remotes.d/lvfs-testing.conf
 %config(noreplace)%{_sysconfdir}/fwupd/remotes.d/vendor.conf
@@ -236,7 +250,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_datadir}/bash-completion/completions/fwupdtool
 %{_datadir}/bash-completion/completions/fwupdagent
 %{_datadir}/fwupd/metainfo/org.freedesktop.fwupd*.metainfo.xml
-%{_datadir}/fwupd/remotes.d/fwupd/metadata.xml
+%{_datadir}/fwupd/remotes.d/dell-esrt/metadata.xml
 %{_datadir}/fwupd/remotes.d/vendor/firmware/README.md
 %{_datadir}/dbus-1/interfaces/org.freedesktop.fwupd.xml
 %{_datadir}/polkit-1/actions/org.freedesktop.fwupd.policy
@@ -273,7 +287,9 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_libdir}/fwupd-plugins-3/libfu_plugin_ebitdo.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_fastboot.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_flashrom.so
-#%{_libdir}/fwupd-plugins-3/libfu_plugin_modem_manager.so
+%if 0%{?have_modem_manager}
+%{_libdir}/fwupd-plugins-3/libfu_plugin_modem_manager.so
+%endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_nitrokey.so
 %if 0%{?have_uefi}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_nvme.so

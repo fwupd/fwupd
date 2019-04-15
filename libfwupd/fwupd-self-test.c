@@ -226,7 +226,7 @@ fwupd_remote_local_func (void)
 	g_autoptr(GError) error = NULL;
 
 	remote = fwupd_remote_new ();
-	fn = g_build_filename (FU_SELF_TEST_REMOTES_DIR, "remotes.d", "fwupd.conf", NULL);
+	fn = g_build_filename (FU_LOCAL_REMOTE_DIR, "dell-esrt.conf", NULL);
 	ret = fwupd_remote_load_from_filename (remote, fn, NULL, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -236,8 +236,8 @@ fwupd_remote_local_func (void)
 	g_assert (fwupd_remote_get_metadata_uri (remote) == NULL);
 	g_assert (fwupd_remote_get_metadata_uri_sig (remote) == NULL);
 	g_assert (fwupd_remote_get_report_uri (remote) == NULL);
-	g_assert_cmpstr (fwupd_remote_get_title (remote), ==, "Core");
-	g_assert_cmpstr (fwupd_remote_get_filename_cache (remote), ==, "@datadir@/fwupd/remotes.d/fwupd/metadata.xml");
+	g_assert_cmpstr (fwupd_remote_get_title (remote), ==, "Enable UEFI capsule updates on Dell systems");
+	g_assert_cmpstr (fwupd_remote_get_filename_cache (remote), ==, "@datadir@/fwupd/remotes.d/dell-esrt/metadata.xml");
 	g_assert_cmpstr (fwupd_remote_get_filename_cache_sig (remote), ==, NULL);
 	g_assert_cmpstr (fwupd_remote_get_checksum (remote), ==, NULL);
 }

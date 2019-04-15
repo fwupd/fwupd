@@ -3,56 +3,48 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# scootergrisen, 2019
-# scootergrisen, 2019
+# Moo, 2019
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
-"Language-Team: Danish (http://www.transifex.com/freedesktop/fwupd/language/da/)\n"
+"Language-Team: Lithuanian (http://www.transifex.com/freedesktop/fwupd/language/lt/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: da\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
-
-#. more than a minute
-#, c-format
-msgid "%.0f minute remaining"
-msgid_plural "%.0f minutes remaining"
-msgstr[0] "%.0f minut tilbage"
-msgstr[1] "%.0f minutter tilbage"
+"Language: lt\n"
+"Plural-Forms: nplurals=4; plural=(n % 10 == 1 && (n % 100 > 19 || n % 100 < 11) ? 0 : (n % 10 >= 2 && n % 10 <=9) && (n % 100 > 19 || n % 100 < 11) ? 1 : n % 1 != 0 ? 2: 3);\n"
 
 #. TRANSLATORS: the controller is a device that has other devices
 #. * plugged into it, for example ThunderBolt, FireWire or USB,
 #. * the first %s is the device name, e.g. 'Intel ThunderBolt`
 #, c-format
 msgid "%s Controller Update"
-msgstr "Kontrolleropdatering for %s"
+msgstr "%s valdiklio atnaujinimas"
 
 #. TRANSLATORS: a specific part of hardware,
 #. * the first %s is the device name, e.g. 'Unifying Receiver`
 #, c-format
 msgid "%s Device Update"
-msgstr "Enhedsopdatering for %s"
+msgstr "%s įrenginio atnaujinimas"
 
 #. TRANSLATORS: the EC is typically the keyboard controller chip,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s Embedded Controller Update"
-msgstr "Controlleropdatering for indlejret %s"
+msgstr "%s įtaisytojo valdiklio atnaujinimas"
 
 #. TRANSLATORS: ME stands for Management Engine, the Intel AMT thing,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s ME Update"
-msgstr "ME-opdatering for %s"
+msgstr "%s ME atnaujinimas"
 
 #. TRANSLATORS: the entire system, e.g. all internal devices,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s System Update"
-msgstr "Systemopdatering for %s"
+msgstr "%s sisteminis atnaujinimas"
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else
@@ -60,988 +52,936 @@ msgstr "Systemopdatering for %s"
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s Update"
-msgstr "Opdatering for %s"
+msgstr "%s atnaujinimas"
 
 #. TRANSLATORS: first replacement is device name
 #, c-format
 msgid "%s has firmware updates:"
-msgstr "%s har firmwareopdateringer:"
-
-#. TRANSLATORS: duration in days!
-#, c-format
-msgid "%u day"
-msgid_plural "%u days"
-msgstr[0] "%u dag"
-msgstr[1] "%u dage"
-
-#. TRANSLATORS: duration in minutes
-#, c-format
-msgid "%u hour"
-msgid_plural "%u hours"
-msgstr[0] "%u time"
-msgstr[1] "%u timer"
-
-#. TRANSLATORS: duration in minutes
-#, c-format
-msgid "%u minute"
-msgid_plural "%u minutes"
-msgstr[0] "%u minut"
-msgstr[1] "%u minutter"
-
-#. TRANSLATORS: duration in seconds
-#, c-format
-msgid "%u second"
-msgid_plural "%u seconds"
-msgstr[0] "%u sekund"
-msgstr[1] "%u sekunder"
+msgstr "%s turi programinės aparatinės įrangos atnaujinimų:"
 
 #. TRANSLATORS: command description
 msgid "Activate devices"
-msgstr "Aktivér enheder"
+msgstr "Aktyvuoti įrenginius"
 
 #. TRANSLATORS: command description
 msgid "Activate pending devices"
-msgstr "Aktiverer afventende enheder"
+msgstr "Aktyvuoti laukiančius įrenginius"
 
 msgid "Activate the new firmware on the device"
-msgstr "Aktivér den nye firmware på enheden"
+msgstr "Aktyvuoti naują programinę aparatinę įrangą įrenginyje"
 
 #. TRANSLATORS: shown when shutting down to switch to the new version
 msgid "Activating firmware update"
-msgstr "Aktiverer firmwareopdatering"
+msgstr "Aktyvuojamas programinės aparatinės įrangos atnaujinimas"
 
 #. TRANSLATORS: shown when shutting down to switch to the new version
 msgid "Activating firmware update for"
-msgstr "Aktiverer firmwareopdatering for"
+msgstr "Aktyvuojama programinė aparatinė įranga, skirta"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Added"
-msgstr "Tilføjet"
+msgstr "Pridėtas"
 
 #. TRANSLATORS: the age of the metadata
 msgid "Age"
-msgstr "Alder"
+msgstr "Amžius"
 
 #. TRANSLATORS: should the remote still be enabled
 msgid "Agree and enable the remote?"
-msgstr "Accepter og aktivér fjernen?"
+msgstr "Sutikti ir įjungti šią nuotolinę saugyklą?"
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
 msgid "Alias to %s"
-msgstr "Alias til %s"
+msgstr "Alternatyvusis %s pavadinimas"
 
 #. TRANSLATORS: command line option
 msgid "Allow downgrading firmware versions"
-msgstr "Tillad nedgradering af firmwareversioner"
+msgstr "Leisti sendinti programinės aparatinės įrangos versijas"
 
 #. TRANSLATORS: command line option
 msgid "Allow re-installing existing firmware versions"
-msgstr "Tillad geninstallering af eksisterende firmwareversioner"
+msgstr "Leisti iš naujo įdiegti esamas programinės aparatinės įrangos versijas"
 
 #. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
-msgstr "For at fuldføre en opdatering skal systemet genstartes."
+msgstr "Atnaujinimo užbaigimui, reikia paleisti sistemą iš naujo."
 
 #. TRANSLATORS: explain why we want to shutdown
 msgid "An update requires the system to shutdown to complete."
-msgstr "For at fuldføre en opdatering skal systemet lukkes ned."
+msgstr "Atnaujinimo užbaigimui, reikia išjungti sistemą."
 
 #. TRANSLATORS: command line option
 msgid "Answer yes to all questions"
-msgstr "Svar ja til alle spørgsmål"
+msgstr "Atsakyti taip į visus klausimus"
 
 #. TRANSLATORS: command description
 msgid "Apply a binary patch"
-msgstr "Anvend en binær patch"
+msgstr "Taikyti dvejetainę pataisą"
 
 #. TRANSLATORS: command line option
 msgid "Apply firmware updates"
-msgstr "Anvend firmwareopdateringer"
-
-#. TRANSLATORS: approved firmware has been checked by
-#. * the domain administrator
-msgid "Approved firmware:"
-msgid_plural "Approved firmware:"
-msgstr[0] "Godkendt firmware:"
-msgstr[1] "Godkendt firmware:"
+msgstr "Taikyti programinės aparatinės įrangos atnaujinimus"
 
 #. TRANSLATORS: command description
 msgid "Attach DFU capable device back to runtime"
-msgstr "Tilkobl enheder som formår DFU tilbage til runtime"
+msgstr "Prijungti ĮPAĮA įgalintą įrenginį atgal prie vykdymo aplinkos"
 
 #. TRANSLATORS: command description
 msgid "Attach to firmware mode"
-msgstr "Tilkobl til firmwaretilstand"
+msgstr "Pridėti į programinės aparatinės įrangos veikseną"
 
 #. TRANSLATORS: device attributes, i.e. things that
 #. * the device can do
 msgid "Attributes"
-msgstr "Attributter"
+msgstr "Požymiai"
 
 #. TRANSLATORS: waiting for user to authenticate
 msgid "Authenticating…"
-msgstr "Autentificerer …"
+msgstr "Nustatoma tapatybė…"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on a removable device"
-msgstr "Der kræves autentifikation for at nedgradere firmwaren på en flytbar enhed"
+msgstr "Norint keičiamajame įrenginyje sendinti programinę aparatinę įrangą, reikalingas tapatybės nustatymas"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on this machine"
-msgstr "Der kræves autentifikation for at nedgradere firmwaren på maskinen"
+msgstr "Norint šiame kompiuteryje sendinti programinę aparatinę įrangą, reikalingas tapatybės nustatymas"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
-msgstr "Der kræves autentifikation for at redigere en konfigureret fjern som bruges til firmwareopdateringer"
+msgstr "Norint modifikuoti programinės aparatinės įrangos atnaujinimams naudojamą sukonfigūruotą saugyklą, reikalingas tapatybės nustatymas"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
-msgstr "Der kræves autentifikation for at indstille listen over godkendt firmware"
+msgstr "Norint nustatyti patvirtintos programinės aparatinės įrangos sąrašą, reikalingas tapatybės nustatymas"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to sign data using the client certificate"
-msgstr "Der kræves autentifikation for at underskrive data med klientcertifikatet"
+msgstr "Norint pasirašyti duomenis naudojant kliento liudijimą, reikalingas tapatybės nustatymas"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
-msgstr "Der kræves autentifikation for at skifte til den nye firmwareversion"
+msgstr "Norint perjungti į naują programinės aparatinės įrangos versiją, reikalingas tapatybės nustatymas"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to unlock a device"
-msgstr "Der kræves autentifikation for at låse enhed op"
+msgstr "Norint atrakinti įrenginį, reikalingas tapatybės nustatymas"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on a removable device"
-msgstr "Der kræves autentifikation for at opdatere firmwaren på en flytbar enhed"
+msgstr "Norint keičiamajame įrenginyje atnaujinti programinę aparatinę įrangą, reikalingas tapatybės nustatymas"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on this machine"
-msgstr "Der kræves autentifikation for at opdatere firmwaren på maskinen"
+msgstr "Norint šiame kompiuteryje atnaujinti programinę aparatinę įrangą, reikalingas tapatybės nustatymas"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the stored checksums for the device"
-msgstr "Der kræves autentifikation for at opdatere de gemte checksumme for enheden"
+msgstr "Norint atnaujinti įrenginiui saugomas kontrolines sumas, reikalingas tapatybės nustatymas"
 
 #. TRANSLATORS: command description
 msgid "Build firmware using a sandbox"
-msgstr "Byg firmware med en sandkasse"
+msgstr "Sukurti programinę aparatinę įrangą, naudojant smėliadėžę"
 
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
-msgstr "Annuller"
+msgstr "Atsisakyti"
 
 #. TRANSLATORS: this is when a device ctrl+c's a watch
 msgid "Cancelled"
-msgstr "Annulleret"
+msgstr "Atsisakyta"
 
 #. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
-msgstr "Ændret"
+msgstr "Pakeistas"
 
 #. TRANSLATORS: section header for firmware checksum
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
-msgstr "Checksum"
+msgstr "Kontrolinė suma"
 
 #. TRANSLATORS: chip ID, e.g. "0x58200204"
 msgid "Chip ID"
-msgstr "Chip-id"
+msgstr "Lusto ID"
 
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a device:"
-msgstr "Vælg en enhed:"
+msgstr "Pasirinkite įrenginį:"
 
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a release:"
-msgstr "Vælg en udgivelse:"
+msgstr "Pasirinkite laidą:"
 
 #. TRANSLATORS: this is the encryption method used when writing
 msgid "Cipher"
-msgstr "Krypteringsalgoritme"
+msgstr "Šifras"
 
 #. TRANSLATORS: command description
 msgid "Clears any updates scheduled to be updated offline"
-msgstr "Rydder opdateringer som er planlagt til at blive opdateret offline"
+msgstr "Išvalo visus autonominiam atnaujinimui suplanuotus atnaujinimus"
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
-msgstr "Rydder resultaterne fra den sidste opdatering"
+msgstr "Išvalo rezultatus iš paskutinio atnaujinimo"
 
 #. TRANSLATORS: error message
 msgid "Command not found"
-msgstr "Kommandoen blev ikke fundet"
+msgstr "Komanda nerasta"
 
 #. TRANSLATORS: command description
 msgid "Convert firmware to DFU format"
-msgstr "Konverter firmware til DFU-format"
+msgstr "Konvertuoti programinę aparatinė įrangą į ĮPAĮA formatą"
 
 #. TRANSLATORS: command description
 msgid "Create a binary patch using two files"
-msgstr "Opret en binær patch ved brug af to filer"
+msgstr "Sukurti dvejetainę pataisą, naudojant du failus"
 
 msgid "DFU"
-msgstr "DFU"
+msgstr "ĮPAĮA"
 
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
-msgstr "DFU-redskab"
+msgstr "ĮPAĮA paslaugų programa"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Debugging Options"
-msgstr "Fejlsøgningsindstillinger"
+msgstr "Derinimo parametrai"
 
 #. TRANSLATORS: decompressing the firmware file
 msgid "Decompressing…"
-msgstr "Udpakker …"
+msgstr "Išskleidžiama…"
 
 #. TRANSLATORS: command description
 msgid "Decrypt firmware data"
-msgstr "Afkryptér firmwaredata"
+msgstr "Iššifruoti programinės aparatinės įrangos duomenis"
 
 #. TRANSLATORS: section header for firmware description
 msgid "Description"
-msgstr "Beskrivelse"
+msgstr "Aprašas"
 
 #. TRANSLATORS: command description
 msgid "Detach currently attached DFU capable device"
-msgstr "Frakobl tilkoblede enheder som formår DFU"
+msgstr "Atjungti šiuo metu prijungtą ĮPAĮA įgalintą įrenginį"
 
 #. TRANSLATORS: command description
 msgid "Detach to bootloader mode"
-msgstr "Frakobl til opstartsindlæsertilstand"
+msgstr "Atskirti į pradinio įkėliklio veikseną"
 
 #. TRANSLATORS: ID for hardware, typically a SHA1 sum
 msgid "Device ID"
-msgstr "Enheds-id"
+msgstr "Įrenginio ID"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device added:"
-msgstr "Enhed tilføjet:"
+msgstr "Pridėtas įrenginys:"
 
 #. TRANSLATORS: this is when a device has been updated
 msgid "Device changed:"
-msgstr "Enhed ændret:"
+msgstr "Pakeistas įrenginys:"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device removed:"
-msgstr "Enhed fjernet:"
+msgstr "Pašalintas įrenginys:"
 
 #. TRANSLATORS: a list of successful updates
 msgid "Devices that have been updated successfully:"
-msgstr "Enheder som det lykkedes at opdatere:"
+msgstr "Įrenginiai, kurie buvo sėkmingai atnaujinti:"
 
 #. TRANSLATORS: a list of failed updates
 msgid "Devices that were not updated correctly:"
-msgstr "Enheder som ikke blev opdateret korrekt:"
+msgstr "Įrenginiai, kurie nebuvo teisingai atnaujinti:"
 
 msgid "Disabled fwupdate debugging"
-msgstr "Deaktivér fejlsøgning af fwupdate"
+msgstr "Išjungtas fwupdate derinimas"
 
 #. TRANSLATORS: command description
 msgid "Disables a given remote"
-msgstr "Deaktiverer en angivet fjern"
+msgstr "Išjungia nurodytą nuotolinę saugyklą"
 
 #. TRANSLATORS: command line option
 msgid "Display version"
-msgstr "Vis version"
+msgstr "Rodyti versiją"
 
 #. TRANSLATORS: command line option
 msgid "Do not check for old metadata"
-msgstr "Tjek ikke efter gammel metadata"
+msgstr "Netikrinti ar yra senų metaduomenų"
 
 #. TRANSLATORS: command line option
 msgid "Do not check for reboot after update"
-msgstr "Tjek ikke om der er genstartet, efter opdatering"
+msgstr "Po atnaujinimo netikrinti ar buvo paleidimas iš naujo"
 
 #. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
-msgstr "Tjek ikke efter historik som ikke er blevet rapporteret"
+msgstr "Netikrinti ar yra istorijos apie kurią nepranešta"
 
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
-msgstr "Skriv ikke til historikdatabasen"
+msgstr "Nerašyti į istorijos duomenų bazę"
 
 #. success
 msgid "Done!"
-msgstr "Færdig!"
+msgstr "Atlikta!"
 
 #. TRANSLATORS: command description
 msgid "Downgrades the firmware on a device"
-msgstr "Nedgraderer firmwaren på en enhed"
+msgstr "Sendina programinę aparatinę įrangą įrenginyje"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
 #. * version numbers e.g. "1.2.3"
 #, c-format
 msgid "Downgrading %s from %s to %s... "
-msgstr "Nedgraderer %s fra %s til %s... "
+msgstr "Sendinama %s iš %s į %s... "
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
 msgid "Downgrading %s…"
-msgstr "Nedgraderer %s …"
+msgstr "Sendinamas %s…"
 
 #. TRANSLATORS: downloading from a remote server
 msgid "Downloading…"
-msgstr "Downloader …"
+msgstr "Atsisiunčiama…"
 
 #. TRANSLATORS: command description
 msgid "Dump SMBIOS data from a file"
-msgstr "Dump SMBIOS-data fra en fil"
+msgstr "Iškloti SMBIOS duomenis iš failo"
 
 #. TRANSLATORS: command description
 msgid "Dump details about a firmware file"
-msgstr "Dump detaljer om en firmwarefil"
+msgstr "Iškloti išsamesnę informaciją apie programinės aparatinės įrangos failą"
 
 #. TRANSLATORS: command description
 msgid "Dump information about a binary patch to the screen"
-msgstr "Dump information om en binær patch på skærmen"
+msgstr "Iškloti į ekraną informaciją apie dvejetainę pataisą"
 
 #. TRANSLATORS: ESP is EFI System Partition
 msgid "ESP specified was not valid"
-msgstr "Angivet ESP var ikke gyldig"
+msgstr "Nurodytas ESS (angl. ESP) nebuvo teisingas"
 
 #. TRANSLATORS: command line option
 msgid "Enable firmware update support on supported systems"
-msgstr "Aktivér understøttelse af firmwareopdateringer på systemer som understøtter det"
+msgstr "Įjungti programinės aparatinės įrangos atnaujinimo palaikymą palaikomose sistemose"
 
 #. TRANSLATORS: Turn on the remote
 msgid "Enable this remote?"
-msgstr "Aktivér fjernen?"
+msgstr "Įjungti šią nuotolinę saugyklą?"
 
 #. TRANSLATORS: if the remote is enabled
 msgid "Enabled"
-msgstr "Aktiveret"
+msgstr "Įjungta"
 
 msgid "Enabled fwupdate debugging"
-msgstr "Aktivér fejlsøgning af fwupdate"
+msgstr "Įjungtas fwupdate derinimas"
 
 #. TRANSLATORS: command description
 msgid "Enables a given remote"
-msgstr "Aktiverer en angivet fjern"
-
-msgid "Enabling this functionality is done at your own risk, which means you have to contact your original equipment manufacturer regarding any problems caused by these updates. Only problems with the update process itself should be filed at $OS_RELEASE:BUG_REPORT_URL$."
-msgstr "Aktivering af funktionen sker på egen risiko. Det betydet at du skal kontakte din oprindelige udstyrsproducent vedrørende eventuelle problemer forårsaget af opdateringerne. Det er kun problemer med selv opdateringsprocessen som skal indsende på $OS_RELEASE:BUG_REPORT_URL$."
+msgstr "Įjungia nurodytą nuotolinę saugyklą"
 
 #. TRANSLATORS: show the user a warning
 msgid "Enabling this remote is done at your own risk."
-msgstr "Aktivering af fjernen sker på egen risiko."
+msgstr "Šios nuotolinės saugyklos įjungimas yra jūsų pačių rizika."
 
 #. TRANSLATORS: command description
 msgid "Encrypt firmware data"
-msgstr "Kryptér firmwaredata"
+msgstr "Šifruoti programinės aparatinės įrangos duomenis"
 
 #. TRANSLATORS: command description
 msgid "Erase all firmware update history"
-msgstr "Slet al historik over firmwareopdateringer"
+msgstr "Ištrinti visą programinės aparatinės įrangos atnaujinimų istoriją"
 
 #. TRANSLATORS: erasing contents of the flash chips
 msgid "Erasing…"
-msgstr "Sletter …"
+msgstr "Ištrinama…"
 
 #. TRANSLATORS: exit after we've started up, used for user profiling
 msgid "Exit after a small delay"
-msgstr "Afslut efter en lille forsinkelse"
+msgstr "Išeiti po nedidelės delsos"
 
 #. TRANSLATORS: exit straight away, used for automatic profiling
 msgid "Exit after the engine has loaded"
-msgstr "Afslut efter motoren er indlæst"
+msgstr "Išeiti, įkėlus modulį"
 
 #. TRANSLATORS: we could not talk to the fwupd daemon
 msgid "Failed to connect to daemon"
-msgstr "Kunne ikke oprette forbindelse til dæmonen"
+msgstr "Nepavyko prisijungti prie tarnybos"
 
 #. TRANSLATORS: the server is rate-limiting downloads
 msgid "Failed to download due to server limit"
-msgstr "Kunne ikke downloade pga. begrænsning på server"
+msgstr "Nepavyko atsisiųsti dėl serverio apribojimo"
 
 #. TRANSLATORS: we could not get the devices to update offline
 msgid "Failed to get pending devices"
-msgstr "Kunne ikke hente afventende enheder"
+msgstr "Nepavyko gauti laukiančių įrenginių"
 
 #. TRANSLATORS: we could not install for some reason
 msgid "Failed to install firmware update"
-msgstr "Kunne ikke installere firmwareopdateringen"
+msgstr "Nepavyko įdiegti programinės aparatinės įrangos atnaujinimo"
 
 #. TRANSLATORS: quirks are device-specific workarounds
 msgid "Failed to load quirks"
-msgstr "Kunne ikke indlæse quirks"
+msgstr "Nepavyko įkelti gudrybių"
 
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
-msgstr "Kunne ikke fortolke argumenter"
+msgstr "Nepavyko išanalizuoti argumentų"
 
 #. TRANSLATORS: we could not reboot for some reason
 msgid "Failed to reboot"
-msgstr "Kunne ikke genstarte"
+msgstr "Nepavyko paleisti iš naujo"
 
 #. TRANSLATORS: we could not talk to plymouth
 msgid "Failed to set splash mode"
-msgstr "Kunne ikke indstille splash-tilstand"
+msgstr "Nepavyko nustatyti prisistatymo lango veikseną"
 
 #. TRANSLATORS: downloading unknown file
 msgid "Fetching file"
-msgstr "Henter fil"
+msgstr "Gaunamas failas"
 
 #. TRANSLATORS: downloading new firmware file
 msgid "Fetching firmware"
-msgstr "Henter firmware"
+msgstr "Gaunama programinė aparatinė įranga"
 
 #. TRANSLATORS: downloading new metadata file
 msgid "Fetching metadata"
-msgstr "Henter metadata"
+msgstr "Gaunami metaduomenys"
 
 #. TRANSLATORS: downloading new signing file
 msgid "Fetching signature"
-msgstr "Henter underskrift"
+msgstr "Gaunamas parašas"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
-msgstr "Filnavn"
+msgstr "Failo pavadinimas"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename Signature"
-msgstr "Filnavnets underskrift"
+msgstr "Failo pavadinimo parašas"
 
 #. TRANSLATORS: program name
 msgid "Firmware Agent"
-msgstr "Firmwareagent"
+msgstr "Programinės aparatinės įrangos agentas"
 
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
-msgstr "Grund-URI for firmware"
+msgstr "Pagrindinis programinės aparatinės įrangos URI"
 
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
-msgstr "D-Bus-tjeneste for firmwareopdatering"
+msgstr "Programinės aparatinės įrangos atnaujinimo D-Bus tarnyba"
 
 #. TRANSLATORS: program name
 msgid "Firmware Update Daemon"
-msgstr "Firmwareopdateringsdæmon"
+msgstr "Programinės aparatinės įrangos atnaujinimo tarnyba"
 
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
-msgstr "Firmwareredskab"
-
-#. TRANSLATORS: the metadata is very out of date; %u is a number > 1
-#, c-format
-msgid "Firmware metadata has not been updated for %u day and may not be up to date."
-msgid_plural "Firmware metadata has not been updated for %u days and may not be up to date."
-msgstr[0] "Firmwaremetadata er ikke blevet opdateret i %u dag og kan være forældet."
-msgstr[1] "Firmwaremetadata er ikke blevet opdateret i %u dage og kan være forældet."
+msgstr "Programinės aparatinės įrangos paslaugų programa"
 
 msgid "Firmware updates are not supported on this machine."
-msgstr "Maskinen understøtter ikke firmwareopdateringer."
+msgstr "Šiame kompiuteryje programinės aparatinės įrangos atnaujinimai yra neprieinami."
 
 msgid "Firmware updates are supported on this machine."
-msgstr "Maskinen understøtter firmwareopdateringer."
+msgstr "Šiame kompiuteryje yra prieinami programinės aparatinės įrangos atnaujinimai."
 
 #. TRANSLATORS: section header for firmware flags
 msgid "Flags"
-msgstr "Flag"
+msgstr "Vėliavėlės"
 
 msgid "Force the action ignoring all warnings"
-msgstr "Tving handlingen og ignorer alle advarsler"
+msgstr "Priverstinai atlikti veiksmą nepaisant visų įspėjimų"
 
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
-msgstr "Fundet"
+msgstr "Rastas"
 
 msgid "GUID"
 msgstr "GUID"
 
 #. TRANSLATORS: command description
 msgid "Get all devices according to the system topology"
-msgstr "Hent alle enheder i henhold til systemets topologi"
+msgstr "Gauti visus įrenginius pagal sistemos topologiją"
 
 #. TRANSLATORS: command description
 msgid "Get all devices and possible releases"
-msgstr "Hent alle enheder og mulige udgivelser"
+msgstr "Gauti visus įrenginius ir galimas laidas"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
-msgstr "Hent alle enheder som understøtter firmwareopdateringer"
+msgstr "Gauti visus įrenginius, kurie palaiko programinės aparatinės įrangos atnaujinimus"
 
 #. TRANSLATORS: command description
 msgid "Get all enabled plugins registered with the system"
-msgstr "Hent alle aktiverede plugins som er registreret med systemet"
+msgstr "Gauti visus įjungtus sistemoje registruotus įskiepius"
 
 #. TRANSLATORS: command description
 msgid "Gets details about a firmware file"
-msgstr "Hent detaljer om en firmwarefil"
+msgstr "Gauna išsamesnę informaciją apie programinės aparatinės įrangos failą"
 
 #. TRANSLATORS: command description
 msgid "Gets the configured remotes"
-msgstr "Henter de konfigurerede fjerne"
+msgstr "Gauna sukonfigūruotas nuotolines saugyklas"
 
 #. TRANSLATORS: command description
 msgid "Gets the cryptographic hash of the dumped firmware"
-msgstr "Henter den kryptografiske hash fra den dumpede firmware"
+msgstr "Gauna išklotos programinės aparatinės įrangos šifravimo maišą"
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Gets the list of approved firmware."
-msgstr "Henter listen over godkendt firmware."
+msgstr "Gauna patvirtintos programinės aparatinės įrangos sąrašą."
 
 #. TRANSLATORS: command description
 msgid "Gets the list of updates for connected hardware"
-msgstr "Henter listen over opdateringer for tilsluttet hardware"
+msgstr "Gauna atnaujinimų sąrašą prijungtai aparatinei įrangai"
 
 #. TRANSLATORS: command description
 msgid "Gets the releases for a device"
-msgstr "Henter resultaterne fra en enhed"
+msgstr "Gauna laidas įrenginiui"
 
 #. TRANSLATORS: command description
 msgid "Gets the results from the last update"
-msgstr "Henter resultaterne fra den sidste opdatering"
+msgstr "Gauna rezultatus iš paskutinio atnaujinimo"
 
 #. TRANSLATORS: Appstream ID for the hardware type
 msgid "ID"
-msgstr "Id"
+msgstr "ID"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
-msgstr "Inaktiv …"
+msgstr "Neveiklus…"
 
 #. TRANSLATORS: command description
 msgid "Install a firmware blob on a device"
-msgstr "Installer en firmwareblob på en enhed"
+msgstr "Įdiegti įrenginyje programinės aparatinės įrangos dvejetainį išplėstinį objektą"
 
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
-msgstr "Installer en firmwarefil på hardwaren"
+msgstr "Įdiegti šioje aparatinėje įrangoje programinės aparatinės įrangos failą"
 
 msgid "Install old version of system firmware"
-msgstr "Installer gammel version af systemfirmware"
+msgstr "Įdiegti senąją sistemos programinės aparatinės įrangos versiją"
 
 msgid "Install signed device firmware"
-msgstr "Installer enhedsfirmware der er underskrevet"
+msgstr "Įdiegti pasirašytą įrenginio programinę aparatinę įrangą"
 
 msgid "Install signed system firmware"
-msgstr "Installer systemfirmware der er underskrevet"
+msgstr "Įdiegti pasirašytą sistemos programinę aparatinę įrangą"
 
 msgid "Install unsigned device firmware"
-msgstr "Installer enhedsfirmware der ikke er underskrevet"
+msgstr "Įdiegti nepasirašytą įrenginio programinę aparatinę įrangą"
 
 msgid "Install unsigned system firmware"
-msgstr "Installer systemfirmware der ikke er underskrevet"
+msgstr "Įdiegti nepasirašytą sistemos programinę aparatinę įrangą"
 
 #. TRANSLATORS: console message when no Plymouth is installed
 msgid "Installing Firmware…"
-msgstr "Installerer firmware …"
+msgstr "Įdiegiama programinė aparatinė įranga…"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
-msgstr "Installerer firmwareopdateringer …"
+msgstr "Įdiegiamas programinės aparatinės įrangos atnaujinimas…"
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
 msgid "Installing on %s…"
-msgstr "Installerer på %s …"
+msgstr "Įdiegiama ties %s…"
 
 msgid "Keyring"
-msgstr "Nøglering"
+msgstr "Raktinė"
 
 #. TRANSLATORS: time remaining for completing firmware flash
 msgid "Less than one minute remaining"
-msgstr "Mindre end et minut tilbage"
+msgstr "Liko mažiau kaip viena minutė"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
-msgstr "Linux Vendor Firmware Service (stabilt firmware)"
+msgstr "Linux tiekėjų programinės aparatinės įrangos paslauga (stabili programinė aparatinė įranga)"
 
 msgid "Linux Vendor Firmware Service (testing firmware)"
-msgstr "Linux Vendor Firmware Service (testning firmware)"
+msgstr "Linux tiekėjų programinės aparatinės įrangos paslauga (testuojama programinė aparatinė įranga)"
 
 #. TRANSLATORS: command description
 msgid "List currently attached DFU capable devices"
-msgstr "Vis tilkoblede enheder som formår DFU"
+msgstr "Išvardyti šiuo metu prijungtus ĮPAĮA įgalintus įrenginius"
 
 #. TRANSLATORS: command line option
 msgid "List supported firmware updates"
-msgstr "Vis understøttede firmwareopdateringer"
+msgstr "Išvardyti prieinamus programinės aparatinės įrangos atnaujinimus"
 
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
-msgstr "Indlæser …"
+msgstr "Įkeliama…"
 
 #. TRANSLATORS: command line option
 msgid "Manually whitelist specific plugins"
-msgstr "Manuel hvidlistning af bestemte plugins"
+msgstr "Rankiniu būdu įtraukti tam tikrus įskiepius į baltąjį sąrašą"
 
 #. TRANSLATORS: command description
 msgid "Merge multiple firmware files into one"
-msgstr "Sammenlæg flere firmwarefiler i én"
+msgstr "Sujungti kelis programinės aparatinės įrangos failus į vieną"
 
 #. TRANSLATORS: remote URI
 msgid "Metadata URI"
-msgstr "Metadata-URI"
+msgstr "Metaduomenų URI"
 
 #. TRANSLATORS: remote URI
 msgid "Metadata URI Signature"
-msgstr "Underskrift for metadata-URI"
+msgstr "Metaduomenų URI parašas"
 
 #. TRANSLATORS: explain why no metadata available
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
-msgstr "Metadata kan hentes fra Linux Vendor Firmware Service."
+msgstr "Metaduomenys gali būti gauti iš Linux tiekėjų programinės aparatinės įrangos paslaugos."
 
 msgid "Mode"
-msgstr "Tilstand"
+msgstr "Veiksena"
 
 #. TRANSLATORS: command description
 msgid "Modifies a given remote"
-msgstr "Redigerer en angivet fjern"
+msgstr "Modifikuoja nurodytą nuotolinę saugyklą"
 
 msgid "Modify a configured remote"
-msgstr "Rediger en konfigureret fjern"
+msgstr "Modifikuoti sukonfigūruotą nuotolinę saugyklą"
 
 #. TRANSLATORS: command description
 msgid "Monitor the daemon for events"
-msgstr "Overvåg dæmonen for hændelser"
+msgstr "Stebėti tarnybą, ar yra įvykių"
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 #. TRANSLATORS: device name, e.g. 'ColorHug2'
 #. TRANSLATORS: section header for the release name
 msgid "Name"
-msgstr "Navn"
+msgstr "Pavadinimas"
 
 msgid "No action specified!"
-msgstr "Der er ikke angivet nogen handling!"
+msgstr "Nenurodytas joks veiksmas!"
 
 #. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
-msgstr "Der blev ikke fundet nogen hardware med firmware som kan opdateres"
+msgstr "Neaptikta jokios aparatinės įrangos su programinės aparatinės įrangos atnaujinimo galimybėmis"
 
 #. TRANSLATORS: nothing found
 msgid "No plugins found"
-msgstr "Der blev ikke fundet nogen plugins"
+msgstr "Nerasta jokių įskiepių"
 
 #. TRANSLATORS: explain why no metadata available
 msgid "No remotes are currently enabled so no metadata is available."
-msgstr "Der er ikke nogen metadata da der ikke er aktiveret nogen fjerne."
+msgstr "Šiuo metu nėra įjungtos jokios nuotolinės saugyklos, taigi, nėra prieinami jokie metaduomenys."
 
 #. TRANSLATORS: nothing was updated offline
 msgid "No updates were applied"
-msgstr "Der blev ikke anvendt nogen opdateringer"
+msgstr "Nebuvo pritaikyti jokie atnaujinimai"
 
 msgid "OK"
-msgstr "OK"
+msgstr "Gerai"
 
 #. TRANSLATORS: command line option
 msgid "Override plugin warning"
-msgstr "Tilsidesæt advarsel for plugin"
+msgstr "Nustelbti įskiepio įspėjimą"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
-msgstr "Tilsidesæt standard-ESP-stien"
+msgstr "Nustelbti numatytąjį ESS (angl. ESP) kelią"
 
 #. TRANSLATORS: remote filename base
 msgid "Password"
-msgstr "Adgangskode"
+msgstr "Slaptažodis"
 
 msgid "Payload"
-msgstr "Nyttelast"
+msgstr "Naudingoji apkrova"
 
 #. TRANSLATORS: console message when not using plymouth
 msgid "Percentage complete"
-msgstr "Procent fuldført"
+msgstr "Užbaigta procentinė dalis"
 
 msgid "Permission denied"
-msgstr "Tilladelse nægtet"
+msgstr "Leidimas atmestas"
 
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u: "
-msgstr "Indtast venligst et tal nummer 0 og %u: "
+msgstr "Įveskite skaičių nuo 0 iki %u: "
 
 msgid "Print the version number"
-msgstr "Udskriv versionsnummer"
+msgstr "Parodyti versijos numerį"
 
 msgid "Print verbose debug statements"
-msgstr "Udskriv uddybende fejlsøgningsudsagn"
+msgstr "Parodyti išsamius derinimo teiginius"
 
 #. TRANSLATORS: the numeric priority
 msgid "Priority"
-msgstr "Prioritet"
+msgstr "Pirmenybė"
 
 msgid "Proceed with upload?"
-msgstr "Fortsæt med upload?"
+msgstr "Tęsti išsiuntimą?"
 
 #. TRANSLATORS: DFU protocol version, e.g. 1.1
 msgid "Protocol"
-msgstr "Protokol"
+msgstr "Protokolas"
 
 #. TRANSLATORS: command line option
 msgid "Query for firmware update support"
-msgstr "Forespørg om understøttelse af firmwareopdatering"
+msgstr "Užklausti programinės aparatinės įrangos atnaujinimų palaikymo"
 
 #. TRANSLATORS: device quirks, i.e. things that
 #. * it does that we have to work around
 msgid "Quirks"
-msgstr "Quirks"
+msgstr "Gudrybės"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from device into a file"
-msgstr "Læs firmware fra enhed ind i en fil"
+msgstr "Skaityti programinę aparatinę įrangą iš įrenginio į failą"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from one partition into a file"
-msgstr "Læs firmware fra en partition ind i en fil"
+msgstr "Skaityti programinę aparatinę įrangą iš vieno skaidinio į failą"
 
 #. TRANSLATORS: reading from the flash chips
 msgid "Reading…"
-msgstr "Læser …"
+msgstr "Skaitoma…"
 
 #. TRANSLATORS: console message when not using plymouth
 msgid "Rebooting…"
-msgstr "Genstarter …"
+msgstr "Paleidžiama iš naujo…"
 
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
-msgstr "Genopfrisk metadata fra fjernserver"
+msgstr "Iš naujo įkelti metaduomenis iš nuotolinio serverio"
 
 #. TRANSLATORS: these are areas of memory on the chip
 msgid "Region"
-msgstr "Område"
+msgstr "Sritis"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
 #. * e.g. "1.2.3"
 #, c-format
 msgid "Reinstalling %s with %s... "
-msgstr "Geninstallerer %s med %s... "
+msgstr "Iš naujo įdiegiama %s su %s... "
 
 #. TRANSLATORS: section header for the remote the file is coming from
 msgid "Remote"
-msgstr "Fjern"
+msgstr "Nuotolinė saugykla"
 
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 msgid "Remote ID"
-msgstr "Fjern-id"
+msgstr "Nuotolinės saugyklos ID"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Removed"
-msgstr "Fjernet"
+msgstr "Pašalintas"
 
 #. TRANSLATORS: command description
 msgid "Replace data in an existing firmware file"
-msgstr "Erstat data i en eksisterende firmwarefil"
+msgstr "Pakeisti duomenis esamame programinės aparatinės įrangos faile"
 
 #. TRANSLATORS: URI to send success/failure reports
 msgid "Report URI"
-msgstr "Rapport-URI"
+msgstr "Ataskaitų URI"
 
 #. TRANSLATORS: metadata is downloaded from the Internet
 msgid "Requires internet connection"
-msgstr "Kræver internetforbindelse"
+msgstr "Reikalauja interneto ryšio"
 
 #. TRANSLATORS: command description
 msgid "Reset a DFU device"
-msgstr "Nulstil en DFU-enhed"
+msgstr "Atstatyti ĮPAĮA įrenginį"
 
 #. TRANSLATORS: reboot to apply the update
 msgid "Restart now?"
-msgstr "Genstart nu?"
+msgstr "Paleisti iš naujo dabar?"
 
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
-msgstr "Genstarter enhed …"
+msgstr "Įrenginys paleidžiamas iš naujo…"
 
 #. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
-msgstr "Returner alle maskinens hardware-id'er"
+msgstr "Grąžinti visus kompiuterio aparatinės įrangos ID"
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
-msgstr "Kør oprydningsrutinen for pluginkomposition når install-blob bruges"
+msgstr "Paleisti sudėtinę įskiepio išvalymo programą, naudojant install-blob"
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite prepare routine when using install-blob"
-msgstr "Kør forberedelsesrutinen for pluginkomposition når install-blob bruges"
+msgstr "Paleisti sudėtinę įskiepio paruošimo programą, naudojant install-blob"
 
 msgid "Runtime"
-msgstr "Runtime"
+msgstr "Vykdymo aplinka"
 
 #. TRANSLATORS: command line option
 msgid "Save device state into a JSON file between executions"
-msgstr "Gem enhedens tilstand i en JSON-fil mellem udførsler"
+msgstr "Įrašyti įrenginio būseną tarp paleidimų į JSON failą"
 
 #. TRANSLATORS: command line option
 msgid "Schedule installation for next reboot when possible"
-msgstr "Planlægning af installation ved næste genstart, når det er muligt"
+msgstr "Kai įmanoma, suplanuoti įdiegimą kitam paleidimui iš naujo"
 
 #. TRANSLATORS: scheduing an update to be done on the next boot
 msgid "Scheduling…"
-msgstr "Planlægger …"
+msgstr "Suplanuojama…"
 
 #. TRANSLATORS: serial number, e.g. '00012345'
 msgid "Serial"
-msgstr "Serienummer"
+msgstr "Serijos numeris"
 
 #. TRANSLATORS: command description
 msgid "Set alternative name on firmware file"
-msgstr "Indstil alternativt navn på firmwarefil"
+msgstr "Nustatyti programinės aparatinės įrangos faile alternatyvų pavadinimą"
 
 #. TRANSLATORS: command description
 msgid "Set alternative number on firmware file"
-msgstr "Indstil alternativt tal på firmwarefil"
+msgstr "Nustatyti programinės aparatinės įrangos faile alternatyvų skaičių"
 
 #. TRANSLATORS: command description
 msgid "Set element address on firmware file"
-msgstr "Indstil elementadresse på firmwarefil"
+msgstr "Nustatyti elemento adresą programinės aparatinės įrangos faile"
 
 #. TRANSLATORS: command description
 msgid "Set product ID on firmware file"
-msgstr "Indstil producent-id på firmwarefil"
+msgstr "Nustatyti programinės aparatinės įrangos faile produkto ID"
 
 #. TRANSLATORS: command description
 msgid "Set release version on firmware file"
-msgstr "Indstil udgivelsesversion på firmwarefil"
+msgstr "Nustatyti programinės aparatinės įrangos faile laidos versiją"
 
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
-msgstr "Indstil fejlsøgningsflaget under opdatering"
+msgstr "Atnaujinimo metu nustatyti derinimo vėliavėlę"
 
 #. TRANSLATORS: command description
 msgid "Set the firmware size for the target"
-msgstr "Indstil firmwarestørrelse på målet"
+msgstr "Nustatyti programinės aparatinės įrangos dydį, skirtą paskirties objektui"
 
 #. TRANSLATORS: command description
 msgid "Set vendor ID on firmware file"
-msgstr "Indstil producent-id på firmwarefil"
+msgstr "Nustatyti programinės aparatinės įrangos faile tiekėjo ID"
 
 #. TRANSLATORS: command description
 msgid "Sets metadata on a firmware file"
-msgstr "Indstiller metadata på en firmwarefil"
+msgstr "Nustato metaduomenis programinės aparatinės įrangos faile"
 
 msgid "Sets the list of approved firmware"
-msgstr "Indstiller listen over godkendt firmware"
+msgstr "Nustato patvirtintą programinės aparatinės įrangos sąrašą"
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware."
-msgstr "Indstiller listen over godkendt firmware."
+msgstr "Nustato patvirtintos programinės aparatinės įrangos sąrašą."
 
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
-msgstr "Del historik over firmware med udviklerne"
+msgstr "Bendrinti programinės aparatinės įrangos istoriją su plėtotojais"
 
 #. TRANSLATORS: command line option
 msgid "Show client and daemon versions"
-msgstr "Vis klient- og dæmonversioner"
+msgstr "Rodyti kliento ir tarnybos versijas"
 
 #. TRANSLATORS: this is for daemon development
 msgid "Show daemon verbose information"
-msgstr "Vis uddybende information om dæmon"
+msgstr "Rodyti išsamią tarnybos informaciją"
 
 #. TRANSLATORS: turn on all debugging
 msgid "Show debugging information for all files"
-msgstr "Vis fejlsøgningsinformation for alle filer"
+msgstr "Rodyti visų failų derinimo informaciją"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
-msgstr "Vis fejlsøgningsindstillinger"
+msgstr "Rodyti derinimo parametrus"
 
 #. TRANSLATORS: command line option
 msgid "Show devices that are not updatable"
-msgstr "Vis enheder som ikke kan opdateres"
+msgstr "Rodyti negalimus atnaujinti įrenginius"
 
 #. TRANSLATORS: command line option
 msgid "Show extra debugging information"
-msgstr "Vis ekstra fejlsøgningsinformation"
+msgstr "Rodyti papildomą derinimo informaciją"
 
 #. TRANSLATORS: command description
 msgid "Show history of firmware updates"
-msgstr "Vis historik over firmwareopdateringer"
+msgstr "Rodyti programinės aparatinės įrangos atnaujinimų istoriją"
 
 #. TRANSLATORS: this is for plugin development
 msgid "Show plugin verbose information"
-msgstr "Vis uddybende information om plugin"
+msgstr "Rodyti išsamią įskiepio informaciją"
 
 #. TRANSLATORS: command line option
 msgid "Show the debug log from the last attempted update"
-msgstr "Vis fejlsøgningsloggen fra den opdatering der blev forsøgt sidst"
+msgstr "Rodyti derinimo žurnalą iš paskutinio bandyto atnaujinimo"
 
 #. TRANSLATORS: command line option
 msgid "Show the information of firmware update status"
-msgstr "Vis informationen om firmwareopdateringsstatus"
+msgstr "Rodyti programinės aparatinės įrangos atnaujinimo būseną"
 
 #. TRANSLATORS: shutdown to apply the update
 msgid "Shutdown now?"
-msgstr "Luk ned nu?"
+msgstr "Išjungti dabar?"
 
 msgid "Sign data using the client certificate"
-msgstr "Underskriv data med klientcertifikat"
+msgstr "Pasirašyti duomenis, naudojant kliento liudijimą"
 
 msgctxt "command-description"
 msgid "Sign data using the client certificate"
-msgstr "Underskriv data med klientcertifikat"
+msgstr "Pasirašyti duomenis, naudojant kliento liudijimą"
 
 #. TRANSLATORS: command line option
 msgid "Sign the uploaded data with the client certificate"
-msgstr "Underskriv den uploadede data med klientcertifikatet"
+msgstr "Pasirašyti išsiunčiamus duomenis naudojant kliento liudijimą"
 
 msgid "Signature"
-msgstr "Underskrift"
+msgstr "Parašas"
 
 msgid "Specify Vendor/Product ID(s) of DFU device"
-msgstr "Angiv producent-/produkt-id('er) for DFU-enhed"
+msgstr "Nurodyti ĮPAĮA įrenginio tiekėją/produkto ID"
 
 msgid "Specify the number of bytes per USB transfer"
-msgstr "Angiv antal bytes pr. USB-overførsel"
+msgstr "Nurodyti baitų skaičių tenkantį vienam USB persiuntimui"
 
 #. TRANSLATORS: device state, i.e. appIDLE
 msgid "State"
-msgstr "Tilstand"
+msgstr "Būsena"
 
 #. TRANSLATORS: probably not run as root...
 #. TRANSLATORS: device has failed to report status
 #. TRANSLATORS: device status, e.g. "OK"
 msgid "Status"
-msgstr "Status"
+msgstr "Būsena"
 
 #. TRANSLATORS: section header for the release one line summary
 msgid "Summary"
-msgstr "Opsummering"
+msgstr "Santrauka"
 
 msgid "Target"
-msgstr "Mål"
-
-#. TRANSLATORS: do not translate the variables marked using $
-msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
-msgstr "LVFS'en er en gratis tjeneste der opererer som en selvstændig juridisk enhed og har ingen forbindelse med $OS_RELEASE:NAME$. Din distributør har måske ikke bekræftet nogen af firmwareopdateringerne for kompatibilitet med dit system eller tilsluttede enheder. Al firmware leveres kun af den oprindelige udstyrsproducent."
+msgstr "Paskirtis"
 
 #. TRANSLATORS: approved firmware has been checked by
 #. * the domain administrator
 msgid "There is no approved firmware."
-msgstr "Der er ikke nogen godkendt firmware."
+msgstr "Nėra jokios patvirtintos programinės aparatinės įrangos."
 
 #. TRANSLATORS: we're poking around as a power user
 msgid "This program may only work correctly as root"
-msgstr "Programmet virker måske kun korrekt som root"
-
-msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
-msgstr "Fjernen indeholder firmware som der ikke er embargo på, men som stadigvæk testes af hardwareproducenten. Du skal sikre dig at du har en manuel måde til at nedgradere firmwaren på hvis firmwareopdateringen mislykkedes."
+msgstr "Ši programa gali tinkamai veikti tik pagrindinio naudotojo teisėmis"
 
 #. TRANSLATORS: the user needs to stop playing with stuff
 msgid "This tool can only be used by the root user"
-msgstr "Værktøjet kan kun bruges af root-brugeren"
+msgstr "Šį įrankį gali naudoti tik pagrindinis naudotojas"
 
 #. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
 msgid "Title"
-msgstr "Titel"
+msgstr "Pavadinimas"
 
 #. TRANSLATORS: transfer size in bytes
 msgid "Transfer Size"
-msgstr "Overførselsstørrelse"
+msgstr "Persiuntimo dydis"
 
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
-msgstr "Type"
+msgstr "Tipas"
 
 #. TRANSLATORS: program name
 msgid "UEFI Firmware Utility"
-msgstr "UEFI-firmwareredskab"
+msgstr "UEFI programinės aparatinės įrangos paslaugų programa"
 
 #. TRANSLATORS: section header for firmware URI
 msgid "URI"
@@ -1049,139 +989,139 @@ msgstr "URI"
 
 #. TRANSLATORS: currect daemon status is unknown
 msgid "Unknown"
-msgstr "Ukendt"
+msgstr "Nežinoma"
 
 msgid "Unlock the device to allow access"
-msgstr "Lås enheden op for at tillade adgang"
+msgstr "Atrakinti įrenginį, kad būtų leista prieiga"
 
 #. TRANSLATORS: command description
 msgid "Unlocks the device for firmware access"
-msgstr "Låser op for enheden for at få adgang til firmwaren"
+msgstr "Atrakina įrenginį programinės aparatinės įrangos prieigai"
 
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"
-msgstr "Fjern fejlsøgningsflaget under opdatering"
+msgstr "Atnaujinimo metu panaikinti derinimo vėliavėlės nustatymą"
 
 #. TRANSLATORS: section header for firmware checksum
 msgid "Update Checksum"
-msgstr "Opdateringens checksum"
+msgstr "Atnaujinimo kontrolinė suma"
 
 #. TRANSLATORS: section header for long firmware desc
 msgid "Update Description"
-msgstr "Opdateringens beskrivelse"
+msgstr "Atnaujinimo aprašas"
 
 #. TRANSLATORS: section header for the amount
 #. * of time it takes to install the update
 msgid "Update Duration"
-msgstr "Opdateringens varighed"
+msgstr "Atnaujinimo trukmė"
 
 #. TRANSLATORS: section header for firmware remote http://
 msgid "Update Location"
-msgstr "Opdateringens placering"
+msgstr "Atnaujinimo vieta"
 
 #. TRANSLATORS: section header for the release name
 msgid "Update Name"
-msgstr "Opdateringens navn"
+msgstr "Atnaujinimo pavadinimas"
 
 #. TRANSLATORS: section header for remote ID, e.g. lvfs-testing
 msgid "Update Remote ID"
-msgstr "Opdateringens fjern-id"
+msgstr "Atnaujinimų nuotolinės saugyklos ID"
 
 #. TRANSLATORS: section header for the release one line summary
 msgid "Update Summary"
-msgstr "Opdateringens opsummering"
+msgstr "Atnaujinimo santrauka"
 
 #. TRANSLATORS: section header for firmware version
 msgid "Update Version"
-msgstr "Opdateringens version"
+msgstr "Atnaujinimo versija"
 
 #. TRANSLATORS: command description
 msgid "Update all devices that match local metadata"
-msgstr "Opdater alle enheder som matcher lokale metadata"
+msgstr "Atnaujinti visus įrenginius, kurie atitinka vietinius metaduomenis"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
-msgstr "Opdateringer som mislykkes er et velkendt problem. Besøg URL'en for mere information:"
+msgstr "Atnaujinimo nesėkmė yra žinoma problema, išsamesnei informacijai apsilankykite šiame URL:"
 
 #. TRANSLATORS: ask the user if we can update the metadata
 msgid "Update now?"
-msgstr "Opdater nu?"
+msgstr "Atnaujinti dabar?"
 
 msgid "Update the stored device verification information"
-msgstr "Opdaterer de gemte informationer om enhedsverifikation"
+msgstr "Atnaujinti saugomo įrenginio patikrinimo informaciją"
 
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current ROM contents"
-msgstr "Opdater de gemte metadata med indholdet fra den nuværende ROM"
+msgstr "Atnaujinti saugomus metaduomenis esamu ROM turiniu"
 
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current contents"
-msgstr "Opdater det gemte metadata med det nuværende indhold"
+msgstr "Atnaujinti saugomus metaduomenis esamu turiniu"
 
 #. TRANSLATORS: command description
 msgid "Updates all firmware to latest versions available"
-msgstr "Opdaterer alle firmware til de seneste versioner"
+msgstr "Atnaujina visą programinę aparatinę įrangą iki naujausios prieinamos versijos"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
 #. * version numbers e.g. "1.2.3"
 #, c-format
 msgid "Updating %s from %s to %s... "
-msgstr "Opdaterer %s fra %s til %s... "
+msgstr "Atnaujinama %s iš %s į %s... "
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
 msgid "Updating %s…"
-msgstr "Opdaterer %s …"
+msgstr "Atnaujinama %s…"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Upload message:"
-msgstr "Uploadmeddelelse:"
+msgstr "Išsiuntimo žinutė:"
 
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
-msgstr "Upload rapport nu?"
+msgstr "Išsiųsti ataskaitą dabar?"
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
-msgstr "Upload af firmwarerapporter hjælper hardwareproducenter til hurtigt at identificere opdateringer som fejlede og lykkedes på rigtigt hardware."
+msgstr "Programinės aparatinės įrangos ataskaitų išsiuntimas padeda aparatinės įrangos tiekėjams greitai atpažinti nesėkmingus bei sėkmingus atnaujinimus tikruose įrenginiuose."
 
 #. TRANSLATORS: remote filename base
 msgid "Username"
-msgstr "Brugernavn"
+msgstr "Naudotojo vardas"
 
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
-msgstr "Verificerer …"
+msgstr "Patikrinama…"
 
 #. TRANSLATORS: section header for release version number
 msgid "Version"
-msgstr "Version"
+msgstr "Versija"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
-msgstr "Venter …"
+msgstr "Laukiama…"
 
 #. TRANSLATORS: command description
 msgid "Watch DFU devices being hotplugged"
-msgstr "Hold øje med DFU-enheder som hotplugges"
+msgstr "Stebėti ĮPAĮA įrenginius, kurie atnaujinami nepaleidžiant iš naujo"
 
 #. TRANSLATORS: command description
 msgid "Watch for hardware changes"
-msgstr "Hold øje med hardwareændringer"
+msgstr "Stebėti aparatinės įrangos pakeitimus"
 
 #. TRANSLATORS: command description
 msgid "Write firmware from file into device"
-msgstr "Skriv firmware fra fil ind i enhed"
+msgstr "Rašyti programinę aparatinę įrangą iš failo į įrenginį"
 
 #. TRANSLATORS: command description
 msgid "Write firmware from file into one partition"
-msgstr "Skriv firmware fra fil ind i en partition"
+msgstr "Rašyti programinę aparatinę įrangą iš failo į vieną skaidinį"
 
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing…"
-msgstr "Skriver …"
+msgstr "Rašoma…"
 
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
-msgstr "Din distributør har måske ikke verificeret kompatibiliteten af firmwareopdateringerne med dit system eller tilsluttede enheder."
+msgstr "Gali būti, kad jūsų platintojas, suderinamumui su jūsų sistema ar prijungtais įrenginiais, nėra patvirtinęs jokių programinės aparatinės įrangos atnaujinimų."

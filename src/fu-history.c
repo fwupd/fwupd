@@ -10,6 +10,7 @@
 
 #include <fwupd.h>
 #include <glib-object.h>
+#include <glib/gstdio.h>
 #include <gio/gio.h>
 #include <sqlite3.h>
 #include <stdlib.h>
@@ -345,6 +346,23 @@ fu_history_create_or_migrate (FuHistory *self, guint schema_ver, GError **error)
 }
 
 static gboolean
+fu_history_open (FuHistory *self, const gchar *filename, GError **error)
+{
+	gint rc;
+	g_debug ("trying to open database '%s'", filename);
+	rc = sqlite3_open (filename, &self->db);
+	if (rc != SQLITE_OK) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_READ,
+			     "Can't open %s: %s",
+			     filename, sqlite3_errmsg (self->db));
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_history_load (FuHistory *self, GError **error)
 {
 	gint rc;
@@ -372,17 +390,8 @@ fu_history_load (FuHistory *self, GError **error)
 
 	/* open */
 	filename = g_build_filename (dirname, "pending.db", NULL);
-	g_debug ("trying to open database '%s'", filename);
-	rc = sqlite3_open (filename, &self->db);
-	if (rc != SQLITE_OK) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_READ,
-			     "Can't open %s: %s",
-			     filename, sqlite3_errmsg (self->db));
-		sqlite3_close (self->db);
+	if (!fu_history_open (self, filename, error))
 		return FALSE;
-	}
 
 	/* check database */
 	schema_ver = fu_history_get_schema_version (self);
@@ -398,8 +407,24 @@ fu_history_load (FuHistory *self, GError **error)
 	/* create initial up-to-date database, or migrate */
 	g_debug ("got schema version of %u", schema_ver);
 	if (schema_ver != FU_HISTORY_CURRENT_SCHEMA_VERSION) {
-		if (!fu_history_create_or_migrate (self, schema_ver, error))
-			return FALSE;
+		g_autoptr(GError) error_migrate = NULL;
+		if (!fu_history_create_or_migrate (self, schema_ver, &error_migrate)) {
+			/* this is fatal to the daemon, so delete the database
+			 * and try again with something empty */
+			g_warning ("failed to migrate %s database: %s",
+				   filename, error_migrate->message);
+			sqlite3_close (self->db);
+			if (g_unlink (filename) != 0) {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "Can't delete %s", filename);
+				return FALSE;
+			}
+			if (!fu_history_open (self, filename, error))
+				return FALSE;
+			return fu_history_create_database (self, error);
+		}
 	}
 
 	/* success */
@@ -725,7 +750,8 @@ fu_history_get_device_by_id (FuHistory *self, const gchar *device_id, GError **e
 					"version_old, "
 					"checksum_device, "
 					"protocol FROM history WHERE "
-				 "device_id = ?1 LIMIT 1", -1, &stmt, NULL);
+				 "device_id = ?1 ORDER BY device_created DESC "
+				 "LIMIT 1", -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
 			     "Failed to prepare SQL to get history: %s",

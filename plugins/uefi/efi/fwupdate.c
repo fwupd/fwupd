@@ -424,7 +424,7 @@ fwup_delete_boot_entry(VOID)
 
 		/*
 		 * check if the boot path created by fwupdate,
-		 * check with EFI_LOAD_OPTION decription
+		 * check with EFI_LOAD_OPTION description
 		 */
 		EFI_LOAD_OPTION *load_op = (EFI_LOAD_OPTION *) info_ptr;
 		if (_StrHasPrefix(load_op->description, L"Linux Firmware Updater") ||

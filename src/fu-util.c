@@ -982,7 +982,7 @@ fu_util_download_chunk_cb (SoupMessage *msg, SoupBuffer *chunk, gpointer user_da
 	if (header_size < body_length)
 		return;
 
-	/* calulate percentage */
+	/* calculate percentage */
 	percentage = (guint) ((100 * body_length) / header_size);
 	g_debug ("progress: %u%%", percentage);
 	fu_progressbar_update (priv->progressbar, FWUPD_STATUS_DOWNLOADING, percentage);
@@ -1263,7 +1263,7 @@ fu_util_get_releases (FuUtilPrivate *priv, gchar **values, GError **error)
 		fu_util_print_data (_("Version"), fwupd_release_get_version (rel));
 
 		/* TRANSLATORS: section header for the release name */
-		fu_util_print_data (_("Name"), fwupd_release_get_name (rel));
+		fu_util_print_data (_("Name"), fu_util_release_get_name (rel));
 
 		/* TRANSLATORS: section header for the release one line summary */
 		fu_util_print_data (_("Summary"), fwupd_release_get_summary (rel));
@@ -1559,7 +1559,7 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 					    fwupd_release_get_version (rel));
 
 			/* TRANSLATORS: section header for the release name */
-			fu_util_print_data (_("Update Name"), fwupd_release_get_name (rel));
+			fu_util_print_data (_("Update Name"), fu_util_release_get_name (rel));
 
 			/* TRANSLATORS: section header for the release one line summary */
 			fu_util_print_data (_("Update Summary"), fwupd_release_get_summary (rel));
@@ -2091,7 +2091,9 @@ fu_util_get_approved_firmware (FuUtilPrivate *priv, gchar **values, GError **err
 	} else {
 		/* TRANSLATORS: approved firmware has been checked by
 		 * the domain administrator */
-		g_print ("%s\n", _("Approved firmware:"));
+		g_print ("%s\n", ngettext ("Approved firmware:",
+					   "Approved firmware:",
+					   g_strv_length (checksums)));
 		for (guint i = 0; checksums[i] != NULL; i++)
 			g_print (" * %s\n", checksums[i]);
 	}

@@ -9,7 +9,7 @@ This plugin is used to update hardware that uses the fastboot protocol.
 Firmware Format
 ---------------
 
-The daemon will decompress the cabinet archive and extract a firmare blob in
+The daemon will decompress the cabinet archive and extract a firmware blob in
 ZIP file format. Inside the zip file must be all the firmware images for each
 partition and a manifest file. The partition images can be in any format, but
 the manifest must be either an Android `flashfile.xml` format file, or a QFIL

@@ -41,6 +41,7 @@ typedef struct {
 	GDBusNodeInfo		*introspection_daemon;
 	GDBusProxy		*proxy_uid;
 	GMainLoop		*loop;
+	GFileMonitor		*argv0_monitor;
 	PolkitAuthority		*authority;
 	guint			 owner_id;
 	FuEngine		*engine;
@@ -1416,6 +1417,21 @@ fu_main_timed_exit_cb (gpointer user_data)
 	return G_SOURCE_REMOVE;
 }
 
+static void
+fu_main_argv_changed_cb (GFileMonitor *monitor, GFile *file, GFile *other_file,
+			 GFileMonitorEvent event_type, gpointer user_data)
+{
+	FuMainPrivate *priv = (FuMainPrivate *) user_data;
+
+	/* can do straight away? */
+	if (priv->update_in_progress) {
+		g_warning ("binary changed during a firmware update, ignoring");
+		return;
+	}
+	g_debug ("binary changed, shutting down");
+	g_main_loop_quit (priv->loop);
+}
+
 static GDBusNodeInfo *
 fu_main_load_introspection (const gchar *filename, GError **error)
 {
@@ -1450,6 +1466,8 @@ fu_main_private_free (FuMainPrivate *priv)
 		g_object_unref (priv->connection);
 	if (priv->authority != NULL)
 		g_object_unref (priv->authority);
+	if (priv->argv0_monitor != NULL)
+		g_object_unref (priv->argv0_monitor);
 	if (priv->introspection_daemon != NULL)
 		g_dbus_node_info_unref (priv->introspection_daemon);
 	g_free (priv);
@@ -1476,6 +1494,7 @@ main (int argc, char *argv[])
 	};
 	g_autoptr(FuMainPrivate) priv = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GFile) argv0_file = g_file_new_for_path (argv[0]);
 	g_autoptr(GOptionContext) context = NULL;
 
 	setlocale (LC_ALL, "");
@@ -1528,6 +1547,12 @@ main (int argc, char *argv[])
 	g_unix_signal_add_full (G_PRIORITY_DEFAULT,
 				SIGTERM, fu_main_sigterm_cb,
 				priv, NULL);
+
+	/* restart the daemon if the binary gets replaced */
+	priv->argv0_monitor = g_file_monitor_file (argv0_file, G_FILE_MONITOR_NONE,
+						   NULL, &error);
+	g_signal_connect (priv->argv0_monitor, "changed",
+			  G_CALLBACK (fu_main_argv_changed_cb), priv);
 
 	/* load introspection from file */
 	priv->introspection_daemon = fu_main_load_introspection (FWUPD_DBUS_INTERFACE ".xml",

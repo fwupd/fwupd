@@ -12,4 +12,7 @@ install_if_missing share/dbus-1/system-services/org.freedesktop.fwupd.service /u
 install_if_missing share/dbus-1/interfaces/org.freedesktop.fwupd.xml /usr
 install_if_missing etc/dbus-1/system.d/org.freedesktop.fwupd.conf /
 #activation via systemd
-install_if_missing lib/systemd/system-shutdown/fwupd.shutdown /
+install_if_missing etc/systemd/system/fwupd-activate.service /
+systemctl daemon-reload
+systemctl enable fwupd-activate
+systemctl start fwupd-activate

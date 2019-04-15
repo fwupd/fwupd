@@ -37,7 +37,7 @@ If, for instance, a plugin needs the old system firmware blob (for a bsdiff)
 then the plugin can write to this directory and the startup.sh script will be
 able to access it as the chroot-ed `/boot`.
 
-Firmware `.cab` files using this funtionality should list the `.tar` file:
+Firmware `.cab` files using this functionality should list the `.tar` file:
 
     <release>
       <checksum filename="firmware.tar" target="content"/>

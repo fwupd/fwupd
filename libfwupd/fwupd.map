@@ -340,3 +340,11 @@ LIBFWUPD_1.2.6 {
     fwupd_remote_get_approval_required;
   local: *;
 } LIBFWUPD_1.2.5;
+
+LIBFWUPD_1.2.7 {
+  global:
+    fwupd_release_add_category;
+    fwupd_release_get_categories;
+    fwupd_release_has_category;
+  local: *;
+} LIBFWUPD_1.2.6;

@@ -2156,7 +2156,7 @@ dfu_tool_detach (DfuToolPrivate *priv, gchar **values, GError **error)
 	if (priv->transfer_size > 0)
 		dfu_device_set_transfer_size (device, priv->transfer_size);
 
-	/* detatch */
+	/* detach */
 	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;

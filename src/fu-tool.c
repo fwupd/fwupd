@@ -637,6 +637,7 @@ fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
 			return FALSE;
 		}
 	}
+	priv->flags = FWUPD_INSTALL_FLAG_NO_HISTORY;
 	if (!fu_engine_install_blob (priv->engine, device, blob_fw, priv->flags, error))
 		return FALSE;
 	if (priv->cleanup_blob) {
@@ -1285,6 +1286,30 @@ fu_util_verify_update (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_util_get_history (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GPtrArray) devices = NULL;
+
+	/* load engine */
+	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+		return FALSE;
+
+	/* get all devices from the history database */
+	devices = fu_engine_get_history (priv->engine, error);
+	if (devices == NULL)
+		return FALSE;
+
+	/* show each device */
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index (devices, i);
+		g_autofree gchar *str = fwupd_device_to_string (dev);
+		g_print ("%s\n", str);
+	}
+
+	return TRUE;
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -1374,6 +1399,12 @@ main (int argc, char *argv[])
 		     _("Gets details about a firmware file"),
 		     fu_util_get_details);
 	fu_util_cmd_array_add (cmd_array,
+		     "get-history",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Show history of firmware updates"),
+		     fu_util_get_history);
+	fu_util_cmd_array_add (cmd_array,
 		     "get-updates",
 		     NULL,
 		     /* TRANSLATORS: command description */
@@ -1449,7 +1480,8 @@ main (int argc, char *argv[])
 		     "self-sign",
 		     "TEXT",
 		     /* TRANSLATORS: command description */
-		     _("Sign data using the client certificate"),
+		     C_("command-description",
+			"Sign data using the client certificate"),
 		     fu_util_self_sign);
 	fu_util_cmd_array_add (cmd_array,
 		     "verify-update",
@@ -1496,7 +1528,6 @@ main (int argc, char *argv[])
 	}
 
 	/* set flags */
-	priv->flags |= FWUPD_INSTALL_FLAG_NO_HISTORY;
 	if (allow_reinstall)
 		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
 	if (allow_older)

@@ -667,7 +667,7 @@ fu_plugin_set_runtime_versions (FuPlugin *self, GHashTable *runtime_versions)
  * @component_id: An AppStream component id, e.g. "org.gnome.Software"
  * @version: A version string, e.g. "1.2.3"
  *
- * Sets a runtime version of a specific dependancy.
+ * Sets a runtime version of a specific dependency.
  *
  * Since: 1.0.7
  **/
@@ -697,7 +697,7 @@ fu_plugin_set_compile_versions (FuPlugin *self, GHashTable *compile_versions)
  * @component_id: An AppStream component id, e.g. "org.gnome.Software"
  * @version: A version string, e.g. "1.2.3"
  *
- * Sets a compile-time version of a specific dependancy.
+ * Sets a compile-time version of a specific dependency.
  *
  * Since: 1.0.7
  **/

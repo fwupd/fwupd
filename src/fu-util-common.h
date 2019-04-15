@@ -56,5 +56,6 @@ gboolean	 fu_util_cmd_array_run		(GPtrArray	*array,
 						 const gchar	*command,
 						 gchar		**values,
 						 GError		**error);
+gchar		*fu_util_release_get_name	(FwupdRelease	*release);
 
 G_END_DECLS

@@ -6,4 +6,6 @@ set -e
 if dpkg-maintscript-helper supports rm_conffile 2>/dev/null; then
 	dpkg-maintscript-helper rm_conffile \
 		/etc/fwupd.conf 1.0.0~ -- "$@"
+	dpkg-maintscript-helper rm_conffile \
+		/etc/fwupd/remotes.d/fwupd.conf 1.2.7~ -- "$@"
 fi

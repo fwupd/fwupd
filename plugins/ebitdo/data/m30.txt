@@ -1,0 +1,168 @@
+Bus 002 Device 008: ID 2dc8:5006 8BitDo M30 gamepad
+Device Descriptor:
+  bLength                18
+  bDescriptorType         1
+  bcdUSB               2.00
+  bDeviceClass            0 
+  bDeviceSubClass         0 
+  bDeviceProtocol         0 
+  bMaxPacketSize0        64
+  idVendor           0x2dc8 8BitDo
+  idProduct          0x5006 M30 gamepad
+  bcdDevice            0.01
+  iManufacturer           1 8Bitdo 
+  iProduct                2 8BitDo M30 gamepad
+  iSerial                 0 
+  bNumConfigurations      1
+  Configuration Descriptor:
+    bLength                 9
+    bDescriptorType         2
+    wTotalLength       0x0029
+    bNumInterfaces          1
+    bConfigurationValue     1
+    iConfiguration          0 
+    bmAttributes         0xc0
+      Self Powered
+    MaxPower              480mA
+    Interface Descriptor:
+      bLength                 9
+      bDescriptorType         4
+      bInterfaceNumber        0
+      bAlternateSetting       0
+      bNumEndpoints           2
+      bInterfaceClass         3 Human Interface Device
+      bInterfaceSubClass      0 
+      bInterfaceProtocol      0 
+      iInterface              0 
+        HID Device Descriptor:
+          bLength                 9
+          bDescriptorType        33
+          bcdHID               1.11
+          bCountryCode            0 Not supported
+          bNumDescriptors         1
+          bDescriptorType        34 Report
+          wDescriptorLength     123
+          Report Descriptor: (length is 123)
+            Item(Global): Usage Page, data= [ 0x01 ] 1
+                            Generic Desktop Controls
+            Item(Local ): Usage, data= [ 0x05 ] 5
+                            Gamepad
+            Item(Main  ): Collection, data= [ 0x01 ] 1
+                            Application
+            Item(Global): Logical Minimum, data= [ 0x00 ] 0
+            Item(Global): Logical Maximum, data= [ 0x01 ] 1
+            Item(Global): Physical Minimum, data= [ 0x00 ] 0
+            Item(Global): Physical Maximum, data= [ 0x01 ] 1
+            Item(Global): Report Size, data= [ 0x01 ] 1
+            Item(Global): Report Count, data= [ 0x0f ] 15
+            Item(Global): Usage Page, data= [ 0x09 ] 9
+                            Buttons
+            Item(Local ): Usage Minimum, data= [ 0x01 ] 1
+                            Button 1 (Primary)
+            Item(Local ): Usage Maximum, data= [ 0x0f ] 15
+                            (null)
+            Item(Main  ): Input, data= [ 0x02 ] 2
+                            Data Variable Absolute No_Wrap Linear
+                            Preferred_State No_Null_Position Non_Volatile Bitfield
+            Item(Global): Report Count, data= [ 0x01 ] 1
+            Item(Main  ): Input, data= [ 0x01 ] 1
+                            Constant Array Absolute No_Wrap Linear
+                            Preferred_State No_Null_Position Non_Volatile Bitfield
+            Item(Global): Usage Page, data= [ 0x01 ] 1
+                            Generic Desktop Controls
+            Item(Global): Logical Maximum, data= [ 0x07 ] 7
+            Item(Global): Physical Maximum, data= [ 0x3b 0x01 ] 315
+            Item(Global): Report Size, data= [ 0x04 ] 4
+            Item(Global): Report Count, data= [ 0x01 ] 1
+            Item(Global): Unit, data= [ 0x14 ] 20
+                            System: English Rotation, Unit: Degrees
+            Item(Local ): Usage, data= [ 0x39 ] 57
+                            Hat Switch
+            Item(Main  ): Input, data= [ 0x42 ] 66
+                            Data Variable Absolute No_Wrap Linear
+                            Preferred_State Null_State Non_Volatile Bitfield
+            Item(Global): Unit, data= [ 0x00 ] 0
+                            System: None, Unit: (None)
+            Item(Global): Report Count, data= [ 0x01 ] 1
+            Item(Main  ): Input, data= [ 0x01 ] 1
+                            Constant Array Absolute No_Wrap Linear
+                            Preferred_State No_Null_Position Non_Volatile Bitfield
+            Item(Global): Logical Maximum, data= [ 0xff 0x00 ] 255
+            Item(Global): Physical Maximum, data= [ 0xff 0x00 ] 255
+            Item(Local ): Usage, data= [ 0x30 ] 48
+                            Direction-X
+            Item(Local ): Usage, data= [ 0x31 ] 49
+                            Direction-Y
+            Item(Local ): Usage, data= [ 0x32 ] 50
+                            Direction-Z
+            Item(Local ): Usage, data= [ 0x35 ] 53
+                            Rotate-Z
+            Item(Global): Report Size, data= [ 0x08 ] 8
+            Item(Global): Report Count, data= [ 0x04 ] 4
+            Item(Main  ): Input, data= [ 0x02 ] 2
+                            Data Variable Absolute No_Wrap Linear
+                            Preferred_State No_Null_Position Non_Volatile Bitfield
+            Item(Global): Usage Page, data= [ 0x02 ] 2
+                            Simulation Controls
+            Item(Global): Logical Minimum, data= [ 0x00 ] 0
+            Item(Global): Logical Maximum, data= [ 0xff 0x00 ] 255
+            Item(Local ): Usage, data= [ 0xc4 ] 196
+                            Accelerator
+            Item(Local ): Usage, data= [ 0xc5 ] 197
+                            Brake
+            Item(Global): Report Count, data= [ 0x02 ] 2
+            Item(Global): Report Size, data= [ 0x08 ] 8
+            Item(Main  ): Input, data= [ 0x02 ] 2
+                            Data Variable Absolute No_Wrap Linear
+                            Preferred_State No_Null_Position Non_Volatile Bitfield
+            Item(Global): Usage Page, data= [ 0x08 ] 8
+                            LEDs
+            Item(Local ): Usage, data= [ 0x43 ] 67
+                            Slow Blink On Time
+            Item(Global): Logical Minimum, data= [ 0x00 ] 0
+            Item(Global): Logical Maximum, data= [ 0xff 0x00 ] 255
+            Item(Global): Physical Minimum, data= [ 0x00 ] 0
+            Item(Global): Physical Maximum, data= [ 0xff 0x00 ] 255
+            Item(Global): Report Size, data= [ 0x08 ] 8
+            Item(Global): Report Count, data= [ 0x02 ] 2
+            Item(Main  ): Output, data= [ 0x82 ] 130
+                            Data Variable Absolute No_Wrap Linear
+                            Preferred_State No_Null_Position Volatile Bitfield
+            Item(Local ): Usage, data= [ 0x44 ] 68
+                            Slow Blink Off Time
+            Item(Main  ): Output, data= [ 0x82 ] 130
+                            Data Variable Absolute No_Wrap Linear
+                            Preferred_State No_Null_Position Volatile Bitfield
+            Item(Local ): Usage, data= [ 0x45 ] 69
+                            Fast Blink On Time
+            Item(Main  ): Output, data= [ 0x82 ] 130
+                            Data Variable Absolute No_Wrap Linear
+                            Preferred_State No_Null_Position Volatile Bitfield
+            Item(Local ): Usage, data= [ 0x46 ] 70
+                            Fast Blink Off Time
+            Item(Main  ): Output, data= [ 0x82 ] 130
+                            Data Variable Absolute No_Wrap Linear
+                            Preferred_State No_Null_Position Volatile Bitfield
+            Item(Main  ): End Collection, data=none
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x81  EP 1 IN
+        bmAttributes            3
+          Transfer Type            Interrupt
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0040  1x 64 bytes
+        bInterval               5
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x02  EP 2 OUT
+        bmAttributes            3
+          Transfer Type            Interrupt
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0040  1x 64 bytes
+        bInterval              16
+Device Status:     0x0000
+  (Bus Powered)

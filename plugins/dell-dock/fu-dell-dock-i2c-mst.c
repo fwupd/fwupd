@@ -715,7 +715,7 @@ fu_dell_dock_mst_invalidate_bank (FuDevice *symbiote, MSTBank bank_in_use,
 		new_tag = g_bytes_get_data (bytes_new, NULL);
 		g_debug ("CRC byte is currently 0x%x", new_tag[3]);
 
-		/* tag succesfully cleared */
+		/* tag successfully cleared */
 		if ((new_tag[3] == 0xff && crc_tag[3] != 0xff) ||
 		    (new_tag[3] == 0x00 && crc_tag[3] == 0xff)) {
 			break;

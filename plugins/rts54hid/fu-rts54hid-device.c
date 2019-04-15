@@ -277,7 +277,7 @@ fu_rts54hid_device_setup (FuDevice *device, GError **error)
 	if (!fu_rts54hid_device_ensure_status (self, error))
 		return FALSE;
 
-	/* both conditons must be set */
+	/* both conditions must be set */
 	if (!self->fw_auth) {
 		fu_device_set_update_error (device,
 					    "device does not support authentication");

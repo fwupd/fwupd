@@ -21,7 +21,7 @@
  *
  * This list of plugins provides a way to get the specific plugin quickly using
  * a hash table and also any plugin-list specific functionality such as
- * sorting by dependancy order.
+ * sorting by dependency order.
  *
  * See also: #FuPlugin
  */

@@ -32,6 +32,30 @@
     <binary>fwupdmgr</binary>
   </provides>
   <releases>
+    <release version="1.2.7" date="2019-04-11">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add a component categories to express the firmware type</li>
+          <li>Add support for 8BitDo M30</li>
+          <li>Add support for the not-child extension from Logitech</li>
+          <li>Shut down the daemon if the on-disk binary is replaced</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Blacklist the synapticsmst plugin when using amdgpu</li>
+          <li>Correct ATA activation functionality to work for all vendors</li>
+          <li>Implement QMI PDC active config selection for modems</li>
+          <li>Make an error message clearer when there are no updates available</li>
+          <li>Match the old or new version number when setting NEEDS_REBOOT</li>
+          <li>More carefully check the output from tpm2_pcrlist</li>
+          <li>Recreate the history database if migration failed</li>
+          <li>Require AC power when updating Thunderbolt devices</li>
+          <li>Require --force to install a release with a different version format</li>
+          <li>Save history from firmware installed with fwupdtool</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.2.6" date="2019-03-26">
       <description>
         <p>This release adds the following features:</p>
@@ -291,7 +315,7 @@
           <li>Allow building with older meson</li>
           <li>Detect the EFI system partition location at runtime</li>
           <li>Do not use 8bitdo bootloader commands after a successful flash</li>
-          <li>Enable accesing downloaded files in flatpak and snap</li>
+          <li>Enable accessing downloaded files in flatpak and snap</li>
           <li>Fix a potential buffer overflow when applying a DFU patch</li>
           <li>Fix downgrading older releases to devices</li>
           <li>Fix flashing devices that require a manual replug</li>
@@ -405,7 +429,7 @@
           <li>Clarify which devices don't have upgrades</li>
           <li>Ensure the Thunderbolt version is xx.yy</li>
           <li>Fix a daemon warning when using fwupdmgr get-results</li>
-          <li>Fix crasher with MST flashing</li>
+          <li>Fix crash with MST flashing</li>
           <li>Fix DFU detach with newer releases of libusb</li>
           <li>Include the device VID and PID when generating the device-id</li>
           <li>Set the RemoteId when using GetDetails</li>
@@ -553,7 +577,7 @@
           <li>Disable unifying support if no CONFIG_HIDRAW support</li>
           <li>Do not auto-open all USB devices at startup</li>
           <li>Do not fail to load the daemon if cached metadata is invalid</li>
-          <li>Do not use system-specific infomation for UEFI PCI devices</li>
+          <li>Do not use system-specific information for UEFI PCI devices</li>
           <li>Fix a crash when using fu_plugin_device_add_delay()</li>
           <li>Fix the libdfu self test failure on s390 and ppc64</li>
           <li>Fix various printing issues with the progressbar</li>
@@ -648,7 +672,7 @@
           <li>Split up the Unifying HID++2.0 and HID++1.0 functionality</li>
           <li>Store the metadata files rather than merging to one store</li>
           <li>Use a longer timeout for some Unifying operations</li>
-          <li>Use the UFY DeviceID prefix for Unifying devides</li>
+          <li>Use the UFY DeviceID prefix for Unifying devices</li>
         </ul>
       </description>
     </release>
