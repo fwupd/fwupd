@@ -308,7 +308,7 @@ fu_common_version_guess_format (const gchar *version)
 	for (guint i = 0; split[i] != NULL; i++) {
 		/* check sections are plain numbers */
 		if (!_g_ascii_is_digits (split[i]))
-			return FU_VERSION_FORMAT_UNKNOWN;
+			return FU_VERSION_FORMAT_PLAIN;
 	}
 
 	/* the most common formats */
