@@ -499,7 +499,7 @@ fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 	if (completion_code[3] == DELL_SUCCESS) {
 		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
 	} else {
-		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
+		FwupdUpdateState update_state = FWUPD_UPDATE_STATE_FAILED;
 		switch (completion_code[3]) {
 		case DELL_CONSISTENCY_FAIL:
 			tmp = "The image failed one or more consistency checks.";
@@ -515,12 +515,15 @@ fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 			break;
 		case DELL_BATTERY_MISSING:
 			tmp = "A battery must be installed for the operation to complete.";
+			update_state = FWUPD_UPDATE_STATE_FAILED_TRANSIENT;
 			break;
 		case DELL_BATTERY_DEAD:
 			tmp = "A fully-charged battery must be present for the operation to complete.";
+			update_state = FWUPD_UPDATE_STATE_FAILED_TRANSIENT;
 			break;
 		case DELL_AC_MISSING:
 			tmp = "An external power adapter must be connected for the operation to complete.";
+			update_state = FWUPD_UPDATE_STATE_FAILED_TRANSIENT;
 			break;
 		case DELL_CANT_SET_12V:
 			tmp = "The 12V required to program the flash-memory could not be set.";
@@ -546,6 +549,7 @@ fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 		default:
 			break;
 		}
+		fu_device_set_update_state (device, update_state);
 		if (tmp != NULL)
 			fu_device_set_update_error (device, tmp);
 	}

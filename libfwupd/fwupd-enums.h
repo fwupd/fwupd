@@ -183,6 +183,7 @@ typedef enum {
  * @FWUPD_UPDATE_STATE_SUCCESS:			Update was successful
  * @FWUPD_UPDATE_STATE_FAILED:			Update failed
  * @FWUPD_UPDATE_STATE_NEEDS_REBOOT:		Waiting for a reboot to apply
+ * @FWUPD_UPDATE_STATE_FAILED_TRANSIENT:	Update failed due to transient issue, e.g. AC power required
  *
  * The update state.
  **/
@@ -192,6 +193,7 @@ typedef enum {
 	FWUPD_UPDATE_STATE_SUCCESS,			/* Since: 0.7.0 */
 	FWUPD_UPDATE_STATE_FAILED,			/* Since: 0.7.0 */
 	FWUPD_UPDATE_STATE_NEEDS_REBOOT,		/* Since: 1.0.4 */
+	FWUPD_UPDATE_STATE_FAILED_TRANSIENT,		/* Since: 1.2.7 */
 	/*< private >*/
 	FWUPD_UPDATE_STATE_LAST
 } FwupdUpdateState;
