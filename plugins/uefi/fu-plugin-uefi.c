@@ -74,7 +74,12 @@ fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 	}
 
 	/* something went wrong */
-	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
+	if (status == FU_UEFI_DEVICE_STATUS_ERROR_PWR_EVT_AC ||
+	    status == FU_UEFI_DEVICE_STATUS_ERROR_PWR_EVT_BATT) {
+		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED_TRANSIENT);
+	} else {
+		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
+	}
 	version_str = g_strdup_printf ("%u", fu_uefi_device_get_version_error (device_uefi));
 	tmp = fu_uefi_device_status_to_string (status);
 	if (tmp == NULL) {

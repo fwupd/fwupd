@@ -1555,7 +1555,13 @@ fu_engine_install (FuEngine *self,
 	version_orig = g_strdup (fu_device_get_version (device));
 	if (!fu_engine_install_blob (self, device, blob_fw2, flags, &error_local)) {
 		fu_device_set_status (device, FWUPD_STATUS_IDLE);
-		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
+		if (g_error_matches (error_local,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_AC_POWER_REQUIRED)) {
+			fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED_TRANSIENT);
+		} else {
+			fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
+		}
 		fu_device_set_update_error (device, error_local->message);
 		if ((flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0 &&
 		    !fu_history_modify_device (self->history, device,
@@ -1953,6 +1959,7 @@ fu_engine_get_item_by_id_fallback_history (FuEngine *self, const gchar *id, GErr
 
 		/* only useful */
 		if (fu_device_get_update_state (dev) == FWUPD_UPDATE_STATE_SUCCESS ||
+		    fu_device_get_update_state (dev) == FWUPD_UPDATE_STATE_FAILED_TRANSIENT ||
 		    fu_device_get_update_state (dev) == FWUPD_UPDATE_STATE_FAILED) {
 			return g_steal_pointer (&dev);
 		}
@@ -1973,6 +1980,7 @@ fu_engine_get_item_by_id_fallback_history (FuEngine *self, const gchar *id, GErr
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *dev = g_ptr_array_index (devices, i);
 		if (fu_device_get_update_state (dev) == FWUPD_UPDATE_STATE_SUCCESS ||
+		    fu_device_get_update_state (dev) == FWUPD_UPDATE_STATE_FAILED_TRANSIENT ||
 		    fu_device_get_update_state (dev) == FWUPD_UPDATE_STATE_FAILED)
 			return g_object_ref (dev);
 	}
@@ -4240,7 +4248,8 @@ fu_engine_update_history_device (FuEngine *self, FuDevice *dev_history, GError *
 		return FALSE;
 
 	/* the plugin either can't tell us the error, or doesn't know itself */
-	if (fu_device_get_update_state (dev) != FWUPD_UPDATE_STATE_FAILED) {
+	if (fu_device_get_update_state (dev) != FWUPD_UPDATE_STATE_FAILED &&
+	    fu_device_get_update_state (dev) != FWUPD_UPDATE_STATE_FAILED_TRANSIENT) {
 		g_debug ("falling back to generic failure");
 		fu_device_set_update_error (dev_history, "failed to run update on reboot");
 	}
