@@ -200,7 +200,7 @@ static gboolean
 dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
-	DfuFuncDescriptor desc;
+	DfuFuncDescriptor desc = { 0x0 };
 	const guint8 *buf;
 	gsize sz;
 
@@ -208,6 +208,10 @@ dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data, GError **err
 	buf = g_bytes_get_data (iface_data, &sz);
 	if (sz == sizeof(DfuFuncDescriptor)) {
 		memcpy (&desc, buf, sz);
+	} else if (sz > sizeof(DfuFuncDescriptor)) {
+		g_debug ("DFU interface with %" G_GSIZE_FORMAT " bytes vendor data",
+			 sz - sizeof(DfuFuncDescriptor));
+		memcpy (&desc, buf, sizeof(DfuFuncDescriptor));
 	} else if (sz == sizeof(DfuFuncDescriptor) - 2) {
 		g_warning ("truncated DFU interface data, no bcdDFUVersion");
 		memcpy (&desc, buf, sz);
@@ -224,16 +228,6 @@ dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data, GError **err
 			     "interface found, but not the correct length for "
 			     "functional data: %" G_GSIZE_FORMAT " bytes: %s",
 			     sz, bufstr->str);
-		return FALSE;
-	}
-
-	/* check sanity */
-	if (desc.bLength != sz) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_INVALID_DATA,
-			     "DFU interface data has incorrect length: 0x%02x",
-			     desc.bLength);
 		return FALSE;
 	}
 
