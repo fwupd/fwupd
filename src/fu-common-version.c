@@ -301,8 +301,13 @@ fu_common_version_guess_format (const gchar *version)
 	/* no dots, assume just text */
 	split = g_strsplit (version, ".", -1);
 	sz = g_strv_length (split);
-	if (sz == 1)
+	if (sz == 1) {
+		if (g_str_has_prefix (version, "0x"))
+			version += 2;
+		if (_g_ascii_is_digits (version))
+			return FU_VERSION_FORMAT_UNKNOWN;
 		return FU_VERSION_FORMAT_PLAIN;
+	}
 
 	/* check for only-digit semver version */
 	for (guint i = 0; split[i] != NULL; i++) {
