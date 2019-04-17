@@ -1640,10 +1640,10 @@ fu_device_to_string (FuDevice *self)
 	tmp = fwupd_device_to_string (FWUPD_DEVICE (self));
 	if (tmp != NULL && tmp[0] != '\0')
 		g_string_append (str, tmp);
-        if (priv->version_format != FU_VERSION_FORMAT_UNKNOWN) {
+	if (priv->version_format != FU_VERSION_FORMAT_UNKNOWN) {
 		fwupd_pad_kv_str (str, "VersionFormat",
-                                  fu_common_version_format_to_string (priv->version_format));
-        }
+				  fu_common_version_format_to_string (priv->version_format));
+	}
 	if (priv->alternate_id != NULL)
 		fwupd_pad_kv_str (str, "AlternateId", priv->alternate_id);
 	if (priv->equivalent_id != NULL)
