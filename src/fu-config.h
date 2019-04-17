@@ -25,6 +25,10 @@ FuConfig	*fu_config_new				(void);
 gboolean	 fu_config_load				(FuConfig	*self,
 							 FuConfigLoadFlags flags,
 							 GError		**error);
+gboolean	 fu_config_modify_and_save		(FuConfig	*self,
+							 const gchar	*key,
+							 const gchar	*value,
+							 GError		**error);
 
 guint64		 fu_config_get_archive_size_max		(FuConfig	*self);
 guint		 fu_config_get_idle_timeout		(FuConfig	*self);

@@ -480,6 +480,34 @@ fu_engine_unlock (FuEngine *self, const gchar *device_id, GError **error)
 	return TRUE;
 }
 
+gboolean
+fu_engine_modify_config (FuEngine *self, const gchar *key, const gchar *value, GError **error)
+{
+	const gchar *keys[] = {
+		"ArchiveSizeMax",
+		"BlacklistDevices",
+		"BlacklistPlugins",
+		"IdleTimeout",
+		NULL };
+
+	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
+	g_return_val_if_fail (key != NULL, FALSE);
+	g_return_val_if_fail (value != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* check keys are valid */
+	if (!g_strv_contains (keys, key)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
+			     "key %s not supported", key);
+		return FALSE;
+	}
+
+	/* modify, effective next reboot */
+	return fu_config_modify_and_save (self->config, key, value, error);
+}
+
 /**
  * fu_engine_modify_remote:
  * @self: A #FuEngine

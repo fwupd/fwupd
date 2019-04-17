@@ -2100,6 +2100,32 @@ fu_util_get_approved_firmware (FuUtilPrivate *priv, gchar **values, GError **err
 	return TRUE;
 }
 
+static gboolean
+fu_util_modify_config (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	/* check args */
+	if (g_strv_length (values) != 2) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments: KEY VALUE expected");
+		return FALSE;
+	}
+	if (!fwupd_client_modify_config (priv->client,
+					 values[0], values[1],
+					 priv->cancellable,
+					 error))
+		return FALSE;
+	if (!priv->assume_yes) {
+		g_print ("%s\n [Y|n]: ",
+			/* TRANSLATORS: configuration changes only take effect on restart */
+			 _("Restart the daemon to make the change effective?"));
+		if (!fu_util_prompt_for_boolean (FALSE))
+			return TRUE;
+	}
+	return fu_util_stop_daemon (error);
+}
+
 static void
 fu_util_ignore_cb (const gchar *log_domain, GLogLevelFlags log_level,
 		   const gchar *message, gpointer user_data)
@@ -2359,6 +2385,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: firmware approved by the admin */
 		     _("Sets the list of approved firmware."),
 		     fu_util_set_approved_firmware);
+	fu_util_cmd_array_add (cmd_array,
+		     "modify-config",
+		     "KEY,VALUE",
+		     /* TRANSLATORS: sets something in daemon.conf */
+		     _("Modifies a daemon configuration value."),
+		     fu_util_modify_config);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();

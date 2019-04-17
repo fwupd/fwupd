@@ -644,6 +644,55 @@ fwupd_client_proxy_call_cb (GObject *source, GAsyncResult *res, gpointer user_da
 }
 
 /**
+ * fwupd_client_modify_config
+ * @client: A #FwupdClient
+ * @key: key, e.g. `BlacklistPlugins`
+ * @value: value, e.g. `*`
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Modifies a daemon config option.
+ * The daemon will only respond to this request with proper permissions
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.2.8
+ **/
+gboolean
+fwupd_client_modify_config (FwupdClient *client, const gchar *key, const gchar *value,
+			    GCancellable *cancellable, GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_autoptr(FwupdClientHelper) helper = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* connect */
+	if (!fwupd_client_connect (client, cancellable, error))
+		return FALSE;
+
+	/* call into daemon */
+	helper = fwupd_client_helper_new ();
+	g_dbus_proxy_call (priv->proxy,
+			   "ModifyConfig",
+			   g_variant_new ("(ss)", key, value),
+			   G_DBUS_CALL_FLAGS_NONE,
+			   -1,
+			   cancellable,
+			   fwupd_client_proxy_call_cb,
+			   helper);
+	g_main_loop_run (helper->loop);
+	if (!helper->ret) {
+		g_propagate_error (error, helper->error);
+		helper->error = NULL;
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/**
  * fwupd_client_activate:
  * @client: A #FwupdClient
  * @cancellable: the #GCancellable, or %NULL
