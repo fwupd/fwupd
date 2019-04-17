@@ -31,23 +31,32 @@ fu_debug_free (FuDebug *self)
 	g_free (self);
 }
 
-static void
-fu_debug_ignore_cb (const gchar *log_domain,
-		    GLogLevelFlags log_level,
-		    const gchar *message,
-		    gpointer user_data)
+static gboolean
+fu_debug_filter_cb (FuDebug *self, const gchar *log_domain, GLogLevelFlags log_level)
 {
-	/* syslog */
-	switch (log_level) {
-	case G_LOG_LEVEL_INFO:
-	case G_LOG_LEVEL_CRITICAL:
-	case G_LOG_LEVEL_ERROR:
-	case G_LOG_LEVEL_WARNING:
-		g_print ("%s\n", message);
-		break;
-	default:
-		break;
+	const gchar *domains = g_getenv ("FWUPD_VERBOSE");
+
+	/* include important things by default only */
+	if (domains == NULL) {
+		if (log_level == G_LOG_LEVEL_INFO ||
+		    log_level == G_LOG_LEVEL_CRITICAL ||
+		    log_level == G_LOG_LEVEL_WARNING ||
+		    log_level == G_LOG_LEVEL_ERROR) {
+			return TRUE;
+		}
+		return FALSE;
 	}
+
+	/* everything */
+	if (g_strcmp0 (domains, "*") == 0)
+		return TRUE;
+
+	/* filter on domain */
+	if (domains != NULL) {
+		g_auto(GStrv) domains_str = g_strsplit (domains, ",", -1);
+		return g_strv_contains ((const gchar * const *) domains_str, log_domain);
+	}
+	return FALSE;
 }
 
 static void
@@ -60,6 +69,10 @@ fu_debug_handler_cb (const gchar *log_domain,
 	g_autofree gchar *tmp = NULL;
 	g_autoptr(GDateTime) dt = g_date_time_new_now_utc ();
 	g_autoptr(GString) domain = NULL;
+
+	/* should ignore */
+	if (!fu_debug_filter_cb (self, log_domain, log_level))
+		return;
 
 	/* time header */
 	tmp = g_strdup_printf ("%02i:%02i:%02i:%04i",
@@ -117,13 +130,13 @@ fu_debug_pre_parse_hook (GOptionContext *context,
 	const GOptionEntry main_entries[] = {
 		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &self->verbose,
 		  /* TRANSLATORS: turn on all debugging */
-		  N_("Show debugging information for all files"), NULL },
+		  N_("Show debugging information for all domains"), NULL },
 		{ "plugin-verbose", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &self->plugin_verbose,
 		  /* TRANSLATORS: this is for plugin development */
 		  N_("Show plugin verbose information"), "PLUGIN-NAME" },
 		{ "daemon-verbose", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &self->daemon_verbose,
 		  /* TRANSLATORS: this is for daemon development */
-		  N_("Show daemon verbose information"), "DOMAIN" },
+		  N_("Show daemon verbose information for a particular domain"), "DOMAIN" },
 		{ NULL}
 	};
 
@@ -142,21 +155,15 @@ fu_debug_post_parse_hook (GOptionContext *context,
 
 	/* verbose? */
 	if (self->verbose) {
-		g_setenv ("FWUPD_VERBOSE", "1", TRUE);
-		g_log_set_fatal_mask (NULL, G_LOG_LEVEL_ERROR |
-					    G_LOG_LEVEL_CRITICAL);
-		g_log_set_default_handler (fu_debug_handler_cb, self);
-	} else {
-		/* hide all debugging except whitelisted */
-		g_log_set_default_handler (fu_debug_ignore_cb, self);
-		if (self->daemon_verbose != NULL) {
-			for (guint i = 0; self->daemon_verbose[i] != NULL; i++) {
-				g_log_set_handler (self->daemon_verbose[i],
-						   G_LOG_LEVEL_MASK,
-						   fu_debug_handler_cb, self);
-			}
-		}
+		g_setenv ("FWUPD_VERBOSE", "*", TRUE);
+	} else if (self->daemon_verbose != NULL) {
+		g_autofree gchar *str = g_strjoinv (",", self->daemon_verbose);
+		g_setenv ("FWUPD_VERBOSE", str, TRUE);
 	}
+
+	/* redirect all domains to be able to change FWUPD_VERBOSE at runtime */
+	g_log_set_fatal_mask (NULL, G_LOG_LEVEL_MASK);
+	g_log_set_default_handler (fu_debug_handler_cb, self);
 
 	/* are we on an actual TTY? */
 	self->console = (isatty (fileno (stderr)) == 1);

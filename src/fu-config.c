@@ -370,6 +370,7 @@ fu_config_load_from_file (FuConfig *self, const gchar *config_file,
 	g_auto(GStrv) devices = NULL;
 	g_auto(GStrv) plugins = NULL;
 	g_autoptr(GFile) file = NULL;
+	g_autofree gchar *domains = NULL;
 
 	/* ensure empty in case we're called from a monitor change */
 	g_ptr_array_set_size (self->blacklist_devices, 0);
@@ -446,6 +447,15 @@ fu_config_load_from_file (FuConfig *self, const gchar *config_file,
 					      NULL);
 	if (idle_timeout > 0)
 		self->idle_timeout = idle_timeout;
+
+	/* get the domains to run in verbose */
+	domains = g_key_file_get_string (self->keyfile,
+					 "fwupd",
+					 "VerboseDomains",
+					 NULL);
+	if (domains != NULL && domains[0] != '\0')
+		g_setenv ("FWUPD_VERBOSE", domains, TRUE);
+
 	return TRUE;
 }
 
