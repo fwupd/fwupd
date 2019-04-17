@@ -488,6 +488,7 @@ fu_engine_modify_config (FuEngine *self, const gchar *key, const gchar *value, G
 		"BlacklistDevices",
 		"BlacklistPlugins",
 		"IdleTimeout",
+		"VerboseDomains",
 		NULL };
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
