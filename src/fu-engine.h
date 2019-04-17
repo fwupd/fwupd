@@ -131,6 +131,10 @@ gchar		*fu_engine_self_sign			(FuEngine	*self,
 							 const gchar	*value,
 							 FuKeyringSignFlags flags,
 							 GError		**error);
+gboolean	 fu_engine_modify_config		(FuEngine	*self,
+							 const gchar	*key,
+							 const gchar	*value,
+							 GError		**error);
 
 /* for the self tests */
 void		 fu_engine_add_device			(FuEngine	*self,

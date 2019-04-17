@@ -348,3 +348,9 @@ LIBFWUPD_1.2.7 {
     fwupd_release_has_category;
   local: *;
 } LIBFWUPD_1.2.6;
+
+LIBFWUPD_1.2.8 {
+  global:
+    fwupd_client_modify_config;
+  local: *;
+} LIBFWUPD_1.2.7;

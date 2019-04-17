@@ -16,6 +16,7 @@ _fwupdmgr_cmd_list=(
 	'get-topology'
 	'get-updates'
 	'install'
+	'modify-config'
 	'modify-remote'
 	'refresh'
 	'report-history'

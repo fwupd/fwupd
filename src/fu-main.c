@@ -443,6 +443,30 @@ fu_main_authorize_self_sign_cb (GObject *source, GAsyncResult *res, gpointer use
 }
 
 static void
+fu_main_modify_config_cb (GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *) user_data;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(PolkitAuthorizationResult) auth = NULL;
+
+	/* get result */
+	auth = polkit_authority_check_authorization_finish (POLKIT_AUTHORITY (source),
+							    res, &error);
+	if (!fu_main_authorization_is_valid (auth, &error)) {
+		g_dbus_method_invocation_return_gerror (helper->invocation, error);
+		return;
+	}
+
+	if (!fu_engine_modify_config (helper->priv->engine, helper->key, helper->value, &error)) {
+		g_dbus_method_invocation_return_gerror (helper->invocation, error);
+		return;
+	}
+
+	/* success */
+	g_dbus_method_invocation_return_value (helper->invocation, NULL);
+}
+
+static void
 fu_main_authorize_activate_cb (GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *) user_data;
@@ -1084,6 +1108,31 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
 						      NULL,
 						      fu_main_authorize_activate_cb,
+						      g_steal_pointer (&helper));
+		return;
+	}
+	if (g_strcmp0 (method_name, "ModifyConfig") == 0) {
+		g_autofree gchar *key = NULL;
+		g_autofree gchar *value = NULL;
+		g_autoptr(FuMainAuthHelper) helper = NULL;
+		g_autoptr(PolkitSubject) subject = NULL;
+
+		g_variant_get (parameters, "(ss)", &key, &value);
+		g_debug ("Called %s(%s=%s)", method_name, key, value);
+
+		/* authenticate */
+		helper = g_new0 (FuMainAuthHelper, 1);
+		helper->priv = priv;
+		helper->key = g_steal_pointer (&key);
+		helper->value = g_steal_pointer (&value);
+		helper->invocation = g_object_ref (invocation);
+		subject = polkit_system_bus_name_new (sender);
+		polkit_authority_check_authorization (priv->authority, subject,
+						      "org.freedesktop.fwupd.modify-config",
+						      NULL,
+						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
+						      NULL,
+						      fu_main_modify_config_cb,
 						      g_steal_pointer (&helper));
 		return;
 	}
