@@ -207,6 +207,60 @@ fu_engine_device_changed_cb (FuDeviceList *device_list, FuDevice *device, FuEngi
 	fu_engine_emit_device_changed (self, device);
 }
 
+static gboolean
+fu_engine_set_device_version_format (FuEngine *self, FuDevice *device, XbNode *component, GError **error)
+{
+	FuVersionFormat fmt;
+	const gchar *developer_name;
+	const gchar *version_format;
+
+	/* specified in metadata */
+	version_format = xb_node_query_text (component,
+					     "custom/value[@key='LVFS::VersionFormat']",
+					     NULL);
+	if (version_format != NULL) {
+		fmt = fu_common_version_format_from_string (version_format);
+		if (fmt == FU_VERSION_FORMAT_UNKNOWN) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "version format from metadata %s unsupported",
+				     version_format);
+			return FALSE;
+		}
+		g_debug ("using VersionFormat %s from metadata", version_format);
+		fu_device_set_version_format (device, fmt);
+		return TRUE;
+	}
+
+	/* fall back to the SmbiosManufacturer quirk */
+	developer_name = xb_node_query_text (component, "developer_name", NULL);
+	if (developer_name != NULL) {
+		g_autofree gchar *group = NULL;
+		group = g_strdup_printf ("SmbiosManufacturer=%s", developer_name);
+		version_format = fu_quirks_lookup_by_id (self->quirks, group,
+							 FU_QUIRKS_UEFI_VERSION_FORMAT);
+		if (version_format != NULL) {
+			fmt = fu_common_version_format_from_string (version_format);
+			if (fmt == FU_VERSION_FORMAT_UNKNOWN) {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
+					     "version format %s from quirk %s unsupported",
+					     version_format, developer_name);
+				return FALSE;
+			}
+			g_debug ("using VersionFormat %s from SmbiosManufacturer %s",
+				  version_format, developer_name);
+			fu_device_set_version_format (device, fmt);
+			return TRUE;
+		}
+	}
+
+	/* nothing found, which is probably fine */
+	return TRUE;
+}
+
 /* convert hex and decimal versions to dotted style */
 static gchar *
 fu_engine_get_release_version (FuEngine *self, XbNode *component, XbNode *rel, GError **error)
@@ -2487,6 +2541,10 @@ fu_engine_get_result_from_component (FuEngine *self, XbNode *component, GError *
 				     "component has no GUIDs");
 		return NULL;
 	}
+
+	/* get (or guess) the component version format */
+	if (!fu_engine_set_device_version_format (self, dev, component, error))
+		return NULL;
 
 	/* check we can install it */
 	task = fu_install_task_new (NULL, component);
