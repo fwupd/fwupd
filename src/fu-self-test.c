@@ -739,6 +739,7 @@ fu_engine_device_unlock_func (void)
 	fu_device_set_id (device, "UEFI-dummy-dev0");
 	fu_device_add_guid (device, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_LOCKED);
+	fu_device_set_version_format (device, FU_VERSION_FORMAT_PLAIN);
 	fu_engine_add_device (engine, device);
 
 	/* ensure the metainfo was matched */

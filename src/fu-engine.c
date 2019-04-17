@@ -263,11 +263,10 @@ fu_engine_set_device_version_format (FuEngine *self, FuDevice *device, XbNode *c
 
 /* convert hex and decimal versions to dotted style */
 static gchar *
-fu_engine_get_release_version (FuEngine *self, XbNode *component, XbNode *rel, GError **error)
+fu_engine_get_release_version (FuEngine *self, FuDevice *dev, XbNode *rel, GError **error)
 {
 	FuVersionFormat fmt = FU_VERSION_FORMAT_TRIPLET;
 	const gchar *version;
-	const gchar *version_format;
 	guint64 ver_uint32;
 
 	/* get version */
@@ -284,20 +283,15 @@ fu_engine_get_release_version (FuEngine *self, XbNode *component, XbNode *rel, G
 	if (g_strstr_len (version, -1, ".") != NULL)
 		return g_strdup (version);
 
-	/* specified in metadata */
-	version_format = xb_node_query_text (component,
-					     "custom/value[@key='LVFS::VersionFormat']",
-					     NULL);
-	if (version_format != NULL) {
-		fmt = fu_common_version_format_from_string (version_format);
-		if (fmt == FU_VERSION_FORMAT_UNKNOWN) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "version format %s unsupported",
-				     version_format);
-			return NULL;
-		}
+	/* specified in metadata or from a quirk */
+	fmt = fu_device_get_version_format (dev);
+	if (fmt == FU_VERSION_FORMAT_UNKNOWN) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "version format unset and version %s ambiguous",
+			     version);
+		return NULL;
 	}
 
 	/* don't touch my version! */
@@ -315,6 +309,7 @@ fu_engine_get_release_version (FuEngine *self, XbNode *component, XbNode *rel, G
 
 static gboolean
 fu_engine_set_release_from_appstream (FuEngine *self,
+				      FuDevice *dev,
 				      FwupdRelease *rel,
 				      XbNode *component,
 				      XbNode *release,
@@ -349,7 +344,7 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 		fwupd_release_set_vendor (rel, tmp);
 
 	/* the version is fixed up at runtime */
-	version_rel = fu_engine_get_release_version (self, component, release, error);
+	version_rel = fu_engine_get_release_version (self, dev, release, error);
 	if (version_rel == NULL)
 		return FALSE;
 	fwupd_release_set_version (rel, version_rel);
@@ -1567,7 +1562,7 @@ fu_engine_install (FuEngine *self,
 
 	/* schedule this for the next reboot if not in system-update.target,
 	 * but first check if allowed on battery power */
-	version_rel = fu_engine_get_release_version (self, component, rel, error);
+	version_rel = fu_engine_get_release_version (self, device, rel, error);
 	if (version_rel == NULL) {
 		g_prefix_error (error, "failed to get release version: ");
 		return FALSE;
@@ -2914,6 +2909,7 @@ fu_engine_add_releases_for_device_component (FuEngine *self,
 
 		/* create new FwupdRelease for the XbNode */
 		if (!fu_engine_set_release_from_appstream (self,
+							   device,
 							   rel,
 							   component,
 							   release,
@@ -3678,6 +3674,7 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 				g_autoptr(FwupdRelease) rel = fwupd_release_new ();
 				g_autoptr(GError) error_local = NULL;
 				if (!fu_engine_set_release_from_appstream (self,
+									   device,
 									   rel,
 									   component,
 									   release,
