@@ -763,8 +763,11 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 
 	/* if secure boot is enabled ensure we have a signed fwupd.efi */
 	bootloader = fu_uefi_get_built_app_path (&error_bootloader);
-	if (bootloader == NULL)
+	if (bootloader == NULL) {
+		if (fu_uefi_secure_boot_enabled ())
+			g_prefix_error (&error_bootloader, "missing signed bootloader for secure boot: ");
 		g_warning ("%s", error_bootloader->message);
+	}
 
 	/* ensure the ESP is detected */
 	if (!fu_plugin_uefi_ensure_esp_path (plugin, &error_esp))
