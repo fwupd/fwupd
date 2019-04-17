@@ -2437,19 +2437,19 @@ fu_engine_get_silo_from_blob (FuEngine *self, GBytes *blob_cab, GError **error)
 	return g_steal_pointer (&silo);
 }
 
-static FwupdDevice *
+static FuDevice *
 fu_engine_get_result_from_component (FuEngine *self, XbNode *component, GError **error)
 {
 	FwupdReleaseFlags release_flags = FWUPD_RELEASE_FLAG_NONE;
 	g_autoptr(FuInstallTask) task = NULL;
-	g_autoptr(FwupdDevice) dev = NULL;
+	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(FwupdRelease) rel = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) provides = NULL;
 	g_autoptr(XbNode) description = NULL;
 	g_autoptr(XbNode) release = NULL;
 
-	dev = fwupd_device_new ();
+	dev = fu_device_new ();
 	provides = xb_node_query (component,
 				  "provides/firmware[@type=$'flashed']",
 				  0, &error_local);
@@ -2472,15 +2472,15 @@ fu_engine_get_result_from_component (FuEngine *self, XbNode *component, GError *
 			continue;
 		device = fu_device_list_get_by_guid (self->device_list, guid, NULL);
 		if (device != NULL) {
-			fwupd_device_set_name (dev, fu_device_get_name (device));
-			fwupd_device_set_flags (dev, fu_device_get_flags (device));
-			fwupd_device_set_id (dev, fu_device_get_id (device));
+			fu_device_set_name (dev, fu_device_get_name (device));
+			fu_device_set_flags (dev, fu_device_get_flags (device));
+			fu_device_set_id (dev, fu_device_get_id (device));
 		}
 
 		/* add GUID */
-		fwupd_device_add_guid (dev, guid);
+		fu_device_add_guid (dev, guid);
 	}
-	if (fwupd_device_get_guids(dev)->len == 0) {
+	if (fu_device_get_guids(dev)->len == 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
@@ -2529,13 +2529,13 @@ fu_engine_get_result_from_component (FuEngine *self, XbNode *component, GError *
 				      XB_NODE_EXPORT_FLAG_ONLY_CHILDREN,
 				      NULL);
 		if (xml != NULL)
-			fwupd_device_set_description (dev, xml);
+			fu_device_set_description (dev, xml);
 	}
 	rel = fwupd_release_new ();
 	fwupd_release_set_flags (rel, release_flags);
-	if (!fu_engine_set_release_from_appstream (self, rel, component, release, error))
+	if (!fu_engine_set_release_from_appstream (self, dev, rel, component, release, error))
 		return NULL;
-	fwupd_device_add_release (dev, rel);
+	fu_device_add_release (dev, rel);
 	return g_steal_pointer (&dev);
 }
 
@@ -2549,7 +2549,7 @@ fu_engine_get_result_from_component (FuEngine *self, XbNode *component, GError *
  *
  * Note: this will close the fd when done
  *
- * Returns: (transfer container) (element-type FwupdDevice): results
+ * Returns: (transfer container) (element-type FuDevice): results
  **/
 GPtrArray *
 fu_engine_get_details (FuEngine *self, gint fd, GError **error)
@@ -2601,14 +2601,14 @@ fu_engine_get_details (FuEngine *self, gint fd, GError **error)
 	details = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	for (guint i = 0; i < components->len; i++) {
 		XbNode *component = g_ptr_array_index (components, i);
-		FwupdDevice *dev;
+		FuDevice *dev;
 		dev = fu_engine_get_result_from_component (self, component, error);
 		if (dev == NULL)
 			return NULL;
 		if (remote_id != NULL) {
-			FwupdRelease *rel = fwupd_device_get_release_default (dev);
+			FwupdRelease *rel = fu_device_get_release_default (dev);
 			fwupd_release_set_remote_id (rel, remote_id);
-			fwupd_device_add_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED);
+			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED);
 		}
 		g_ptr_array_add (details, dev);
 	}
