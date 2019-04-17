@@ -234,7 +234,8 @@ fu_install_task_check_requirements (FuInstallTask *self,
 
 	/* check the version formats match */
 	fmt = fu_install_task_guess_version_format (self, version_release);
-	if (fmt != fu_device_get_version_format (self->device)) {
+	if (fmt != FU_VERSION_FORMAT_UNKNOWN &&
+	    fmt != fu_device_get_version_format (self->device)) {
 		FuVersionFormat fmt_dev = fu_device_get_version_format (self->device);
 		if (flags & FWUPD_INSTALL_FLAG_FORCE) {
 			g_warning ("ignoring version format difference %s:%s",
