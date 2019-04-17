@@ -206,14 +206,16 @@ fu_nvme_device_parse_cns_maybe_dell (FuNvmeDevice *self, const guint8 *buf)
 static gboolean
 fu_nvme_device_set_version (FuNvmeDevice *self, const gchar *version, GError **error)
 {
+	FuVersionFormat fmt = fu_device_get_version_format (FU_DEVICE (self));
+
 	/* unset */
-	if (fu_device_get_version_format (FU_DEVICE (self)) == FU_VERSION_FORMAT_UNKNOWN) {
+	if (fmt == FU_VERSION_FORMAT_UNKNOWN || fmt == FU_VERSION_FORMAT_PLAIN) {
 		fu_device_set_version (FU_DEVICE (self), version);
 		return TRUE;
 	}
 
 	/* AA.BB.CC.DD */
-	if (fu_device_get_version_format (FU_DEVICE (self)) == FU_VERSION_FORMAT_QUAD) {
+	if (fmt == FU_VERSION_FORMAT_QUAD) {
 		guint64 tmp = g_ascii_strtoull (version, NULL, 16);
 		g_autofree gchar *version_new = NULL;
 		if (tmp == 0 || tmp > G_MAXUINT32) {
@@ -230,10 +232,11 @@ fu_nvme_device_set_version (FuNvmeDevice *self, const gchar *version, GError **e
 	}
 
 	/* invalid, or not supported */
-	g_set_error_literal (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_INVALID_DATA,
-			     "version format not recognised");
+	g_set_error (error,
+		     G_IO_ERROR,
+		     G_IO_ERROR_INVALID_DATA,
+		     "version format %s not handled",
+		     fu_common_version_format_to_string (fmt));
 	return FALSE;
 }
 
