@@ -164,7 +164,8 @@ fu_common_version_guess_format_func (void)
 	g_assert_cmpint (fu_common_version_guess_format ("1.2.3.4"), ==, FU_VERSION_FORMAT_QUAD);
 	g_assert_cmpint (fu_common_version_guess_format ("1.2.3.4.5"), ==, FU_VERSION_FORMAT_UNKNOWN);
 	g_assert_cmpint (fu_common_version_guess_format ("1a.2b.3"), ==, FU_VERSION_FORMAT_PLAIN);
-	g_assert_cmpint (fu_common_version_guess_format ("1"), ==, FU_VERSION_FORMAT_PLAIN);
+	g_assert_cmpint (fu_common_version_guess_format ("1"), ==, FU_VERSION_FORMAT_UNKNOWN);
+	g_assert_cmpint (fu_common_version_guess_format ("0x10201"), ==, FU_VERSION_FORMAT_UNKNOWN);
 }
 
 static void
