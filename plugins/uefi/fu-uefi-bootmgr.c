@@ -11,6 +11,8 @@
 #include <gio/gio.h>
 #include <stdio.h>
 
+#include "fwupd-error.h"
+
 #include "fu-ucs2.h"
 #include "fu-uefi-bootmgr.h"
 #include "fu-uefi-common.h"
@@ -343,8 +345,8 @@ fu_uefi_bootmgr_bootnext (const gchar *esp_path,
 		if (fu_uefi_secure_boot_enabled () &&
 		    (flags & FU_UEFI_BOOTMGR_FLAG_USE_SHIM_FOR_SB) > 0) {
 			g_set_error_literal (error,
-					     G_IO_ERROR,
-					     G_IO_ERROR_FAILED,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_BROKEN_SYSTEM,
 					     "Secure boot is enabled, but shim isn't installed to the EFI system partition");
 			return FALSE;
 		}
