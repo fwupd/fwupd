@@ -265,17 +265,22 @@ fu_usb_device_probe (FuDevice *device, GError **error)
 		g_autofree gchar *intid1 = NULL;
 		g_autofree gchar *intid2 = NULL;
 		g_autofree gchar *intid3 = NULL;
+		guint8 class = g_usb_interface_get_class (intf);
+		if (class != 0xFE && class != 0xFF) {
+			g_debug ("Skipping USB interface class %02X", class);
+			continue;
+		}
 		intid1 = g_strdup_printf ("USB\\CLASS_%02X&SUBCLASS_%02X&PROT_%02X",
-					  g_usb_interface_get_class (intf),
+					  class,
 					  g_usb_interface_get_subclass (intf),
 					  g_usb_interface_get_protocol (intf));
 		fu_device_add_instance_id (device, intid1);
 		intid2 = g_strdup_printf ("USB\\CLASS_%02X&SUBCLASS_%02X",
-					  g_usb_interface_get_class (intf),
+					  class,
 					  g_usb_interface_get_subclass (intf));
 		fu_device_add_instance_id (device, intid2);
 		intid3 = g_strdup_printf ("USB\\CLASS_%02X",
-					  g_usb_interface_get_class (intf));
+					  class);
 		fu_device_add_instance_id (device, intid3);
 	}
 
