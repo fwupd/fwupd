@@ -10,6 +10,7 @@
 
 #include <string.h>
 
+#include "fu-device-private.h"
 #include "fu-udev-device-private.h"
 
 /**
@@ -225,7 +226,8 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	if (priv->vendor != 0x0000) {
 		g_autofree gchar *devid = NULL;
 		devid = g_strdup_printf ("%s\\VEN_%04X", subsystem, priv->vendor);
-		fu_device_add_instance_id (device, devid);
+		fu_device_add_instance_id_full (device, devid,
+						FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
 	}
 
 	/* subclassed */
