@@ -860,6 +860,29 @@ fu_device_has_guid (FuDevice *self, const gchar *guid)
 	return fwupd_device_has_guid (FWUPD_DEVICE (self), guid);
 }
 
+/* private */
+void
+fu_device_add_instance_id_full (FuDevice *self,
+				const gchar *instance_id,
+				FuDeviceInstanceFlags flags)
+{
+	g_autofree gchar *guid = NULL;
+	if (fwupd_guid_is_valid (instance_id)) {
+		g_warning ("use fu_device_add_guid(\"%s\") instead!", instance_id);
+		fu_device_add_guid_safe (self, instance_id);
+		return;
+	}
+
+	/* it seems odd adding the instance ID and the GUID quirks and not just
+	 * calling fu_device_add_guid_safe() -- but we want the quirks to match
+	 * so the plugin is set, but not the LVFS metadata to match firmware
+	 * until we're sure the device isn't using _NO_AUTO_INSTANCE_IDS */
+	guid = fwupd_guid_hash_string (instance_id);
+	fu_device_add_guid_quirks (self, guid);
+	if ((flags & FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS) == 0)
+		fwupd_device_add_instance_id (FWUPD_DEVICE (self), instance_id);
+}
+
 /**
  * fu_device_add_instance_id:
  * @self: A #FuDevice
@@ -873,19 +896,9 @@ fu_device_has_guid (FuDevice *self, const gchar *guid)
 void
 fu_device_add_instance_id (FuDevice *self, const gchar *instance_id)
 {
-	g_autofree gchar *guid = NULL;
-	if (fwupd_guid_is_valid (instance_id)) {
-		g_warning ("use fu_device_add_guid(\"%s\") instead!", instance_id);
-		fu_device_add_guid_safe (self, instance_id);
-		return;
-	}
-	/* it seems odd adding the instance ID and the GUID quirks and not just
-	 * calling fu_device_add_guid_safe() -- but we want the quirks to match
-	 * so the plugin is set, but not the LVFS metadata to match firmware
-	 * until we're sure the device isn't using _NO_AUTO_INSTANCE_IDS */
-	guid = fwupd_guid_hash_string (instance_id);
-	fu_device_add_guid_quirks (self, guid);
-	fwupd_device_add_instance_id (FWUPD_DEVICE (self), instance_id);
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_return_if_fail (instance_id != NULL);
+	fu_device_add_instance_id_full (self, instance_id, FU_DEVICE_INSTANCE_FLAG_NONE);
 }
 
 /**
