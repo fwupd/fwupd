@@ -729,10 +729,6 @@ msgstr "和開發者分享韌體歷史"
 msgid "Show client and daemon versions"
 msgstr "顯示客戶端與幕後程式版本"
 
-#. TRANSLATORS: turn on all debugging
-msgid "Show debugging information for all files"
-msgstr "顯示所有檔案的除錯資訊"
-
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
 msgstr "顯示除錯選項"

@@ -589,10 +589,6 @@ msgstr "Подели историјат фирмвера са програмер
 msgid "Show client and daemon versions"
 msgstr "Прикажи издања клијента и демона"
 
-#. TRANSLATORS: turn on all debugging
-msgid "Show debugging information for all files"
-msgstr "Прикажи податке о отклањању проблема за све датотеке"
-
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
 msgstr "Прикажи опције за отклањање проблема"

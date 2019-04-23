@@ -79,10 +79,6 @@ msgstr "Aucun matériel ayant des capacités de mise à jour du micrologiciel n'
 msgid "Reinstalling %s with %s... "
 msgstr "Réinstallation de %s en %s"
 
-#. TRANSLATORS: turn on all debugging
-msgid "Show debugging information for all files"
-msgstr "Montrer les informations de débogage pour tous les fichiers"
-
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
 msgstr "Montrer les options de débogage"

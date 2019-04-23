@@ -943,14 +943,6 @@ msgstr "Поділитися журналом оновлень із розроб
 msgid "Show client and daemon versions"
 msgstr "Вивести дані щодо версій клієнат і фонової служби"
 
-#. TRANSLATORS: this is for daemon development
-msgid "Show daemon verbose information"
-msgstr "Показати докладні відомості щодо фонової служби"
-
-#. TRANSLATORS: turn on all debugging
-msgid "Show debugging information for all files"
-msgstr "Показувати діагностичні дані для всіх файлів"
-
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
 msgstr "Показувати параметри діагностики"

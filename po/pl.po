@@ -943,14 +943,6 @@ msgstr "Udostępnia historię oprogramowania sprzętowego programistom"
 msgid "Show client and daemon versions"
 msgstr "Wyświetla wersje klienta i usługi"
 
-#. TRANSLATORS: this is for daemon development
-msgid "Show daemon verbose information"
-msgstr "Wyświetla więcej informacji o usłudze"
-
-#. TRANSLATORS: turn on all debugging
-msgid "Show debugging information for all files"
-msgstr "Wyświetla informacje o debugowaniu dla wszystkich plików"
-
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
 msgstr "Wyświetla opcje debugowania"

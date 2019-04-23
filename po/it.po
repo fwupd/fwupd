@@ -930,14 +930,6 @@ msgstr "Condivide la cronologia del firmware con gli sviluppatori"
 msgid "Show client and daemon versions"
 msgstr "Mostra la versione del client e del demone"
 
-#. TRANSLATORS: this is for daemon development
-msgid "Show daemon verbose information"
-msgstr "Mostra informazioni prolisse del demone"
-
-#. TRANSLATORS: turn on all debugging
-msgid "Show debugging information for all files"
-msgstr "Mostra le informazioni di debug per tutti i file"
-
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
 msgstr "Mostra le opzioni di debug"

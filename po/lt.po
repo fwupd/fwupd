@@ -877,14 +877,6 @@ msgstr "Bendrinti programinės aparatinės įrangos istoriją su plėtotojais"
 msgid "Show client and daemon versions"
 msgstr "Rodyti kliento ir tarnybos versijas"
 
-#. TRANSLATORS: this is for daemon development
-msgid "Show daemon verbose information"
-msgstr "Rodyti išsamią tarnybos informaciją"
-
-#. TRANSLATORS: turn on all debugging
-msgid "Show debugging information for all files"
-msgstr "Rodyti visų failų derinimo informaciją"
-
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
 msgstr "Rodyti derinimo parametrus"

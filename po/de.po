@@ -672,14 +672,6 @@ msgstr "Firmware-Verlauf mit den Entwicklern teilen"
 msgid "Show client and daemon versions"
 msgstr "Client- und Hintergrundprogramm-Versionen anzeigen"
 
-#. TRANSLATORS: this is for daemon development
-msgid "Show daemon verbose information"
-msgstr "Ausführliche Informationen zum Dienstprogramm anzeigen"
-
-#. TRANSLATORS: turn on all debugging
-msgid "Show debugging information for all files"
-msgstr "Debuginformationen für alle Dateien anzeigen"
-
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
 msgstr "Debug Optionen anzeigen"

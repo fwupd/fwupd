@@ -105,10 +105,6 @@ msgstr "אישור"
 msgid "Reinstalling %s with %s... "
 msgstr "מתקין מחדש %s עם %s..."
 
-#. TRANSLATORS: turn on all debugging
-msgid "Show debugging information for all files"
-msgstr "הצג מידע ניפוי שגיאות לכל הקבצים"
-
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
 msgstr "הצג אפשרויות ניפוי שגיאות"

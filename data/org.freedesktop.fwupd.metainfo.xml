@@ -32,6 +32,20 @@
     <binary>fwupdmgr</binary>
   </provides>
   <releases>
+    <release version="1.2.8" date="2019-04-23">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Allow the fwupdmgr tool to modify the daemon config</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Correctly parse DFU interfaces with extra vendor-specific data</li>
+          <li>Do not report transient or invalid system failures</li>
+          <li>Fix problems with the version format checking for some updates</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.2.7" date="2019-04-11">
       <description>
         <p>This release adds the following features:</p>

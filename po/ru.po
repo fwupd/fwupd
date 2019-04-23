@@ -516,10 +516,6 @@ msgstr "Устанавливает метаданные файла микроп�
 msgid "Show client and daemon versions"
 msgstr "Показать версии клиента и фоновой службы"
 
-#. TRANSLATORS: turn on all debugging
-msgid "Show debugging information for all files"
-msgstr "Показать отладочную информацию для всех файлов"
-
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
 msgstr "Показать параметры отладки"

@@ -777,14 +777,6 @@ msgstr "Dela fast programvaruhistorik med utvecklarna"
 msgid "Show client and daemon versions"
 msgstr "Visa klient- och demon-version"
 
-#. TRANSLATORS: this is for daemon development
-msgid "Show daemon verbose information"
-msgstr "Visa utförlig information om demon"
-
-#. TRANSLATORS: turn on all debugging
-msgid "Show debugging information for all files"
-msgstr "Visa felsökningsinformation för alla filer"
-
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
 msgstr "Visa felsökningsalternativ"

@@ -142,10 +142,6 @@ msgstr "Reïnstallacion de %s en %s "
 msgid "Removed"
 msgstr "Suprimit"
 
-#. TRANSLATORS: turn on all debugging
-msgid "Show debugging information for all files"
-msgstr "Mostrar las informacions de desbugatge per totes los fichièrs"
-
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
 msgstr "Mostrar las opcions de desbugatge"

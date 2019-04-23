@@ -930,14 +930,6 @@ msgstr "Del historik over firmware med udviklerne"
 msgid "Show client and daemon versions"
 msgstr "Vis klient- og dæmonversioner"
 
-#. TRANSLATORS: this is for daemon development
-msgid "Show daemon verbose information"
-msgstr "Vis uddybende information om dæmon"
-
-#. TRANSLATORS: turn on all debugging
-msgid "Show debugging information for all files"
-msgstr "Vis fejlsøgningsinformation for alle filer"
-
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
 msgstr "Vis fejlsøgningsindstillinger"
