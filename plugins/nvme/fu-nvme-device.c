@@ -201,6 +201,7 @@ fu_nvme_device_parse_cns_maybe_dell (FuNvmeDevice *self, const guint8 *buf)
 	guid_efi = fu_nvme_device_get_guid_safe (buf, 0x0c26);
 	if (guid_efi != NULL)
 		fu_device_add_guid (FU_DEVICE (self), guid_efi);
+	fu_device_set_version_format (FU_DEVICE (self), FU_VERSION_FORMAT_PLAIN);
 }
 
 static gboolean
