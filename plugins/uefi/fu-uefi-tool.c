@@ -140,7 +140,7 @@ main (int argc, char *argv[])
 	/* nothing specified */
 	if (!action_enable && !action_info && !action_list && !action_log &&
 	    !action_set_debug && !action_supported && !action_unset_debug &&
-	    !action_version) {
+	    !action_version && apply == NULL) {
 		g_autofree gchar *tmp = NULL;
 		tmp = g_option_context_get_help (priv->context, TRUE, NULL);
 		g_printerr ("%s\n\n%s", _("No action specified!"), tmp);
@@ -323,6 +323,7 @@ main (int argc, char *argv[])
 			g_printerr ("failed: %s\n", error_local->message);
 			return EXIT_FAILURE;
 		}
+		fu_device_set_metadata (FU_DEVICE (dev), "EspPath", esp_path);
 		if (!fu_device_write_firmware (FU_DEVICE (dev), fw, &error_local)) {
 			g_printerr ("failed: %s\n", error_local->message);
 			return EXIT_FAILURE;
