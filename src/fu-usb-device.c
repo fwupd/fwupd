@@ -170,6 +170,7 @@ fu_usb_device_open (FuDevice *device, GError **error)
 	if (idx != 0x00) {
 		g_autofree gchar *tmp = NULL;
 		tmp = g_usb_device_get_string_descriptor (priv->usb_device, idx, NULL);
+		fu_device_set_version_format (device, fu_common_version_guess_format (tmp));
 		fu_device_set_version (device, tmp);
 	}
 
