@@ -1,5 +1,8 @@
 #!/bin/sh -e
 
+#offline updates
+rm /etc/systemd/system/fwupd-offline-update.service -f
+rm /etc/systemd/system/system-update.target.wants/fwupd-offline-update.service -f
 #activation via systemd
 systemctl stop fwupd-activate
 systemctl disable fwupd-activate
