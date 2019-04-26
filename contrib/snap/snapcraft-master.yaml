@@ -19,6 +19,8 @@ apps:
     command: fwupdtool.wrapper
     completer:
       share/bash-completion/completions/fwupdtool
+  fwupdoffline:
+    command: fwupdoffline.wrapper
   fwupd:
     command: fwupd.wrapper
     daemon: simple
@@ -317,6 +319,10 @@ parts:
     plugin: make
     source: contrib/snap/activate-shutdown
     after: [fwupd]
+  offline-update:
+    plugin: make
+    source: contrib/snap/fwupd-offline-update
+    after: [fwupd]
   update-mime:
     plugin: make
     source: contrib/snap/update-mime
@@ -339,6 +345,7 @@ parts:
     stage:
     - dfu-tool.wrapper
     - fwupd-command
+    - fwupdoffline.wrapper
     - fwupdtool.wrapper
     - fwupd.wrapper
     - fwupdmgr.wrapper

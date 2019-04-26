@@ -11,6 +11,13 @@ install_if_missing share/polkit-1/rules.d/org.freedesktop.fwupd.rules /usr
 install_if_missing share/dbus-1/system-services/org.freedesktop.fwupd.service /usr
 install_if_missing share/dbus-1/interfaces/org.freedesktop.fwupd.xml /usr
 install_if_missing etc/dbus-1/system.d/org.freedesktop.fwupd.conf /
+#offline updates
+mkdir -p /etc/systemd/system/system-update.target.wants
+rm -f /etc/systemd/system/system-update.target.wants/fwupd-offline-update.service
+ln -s ../fwupd-offline-update.service /etc/systemd/system/system-update.target.wants/fwupd-offline-update.service
+rm -f /etc/systemd/system/system-update.target.wants/snap.fwupd.fwupd.service
+ln -s ../snap.fwupd.fwupd.service /etc/systemd/system/system-update.target.wants/snap.fwupd.fwupd.service
+install_if_missing etc/systemd/system/fwupd-offline-update.service /
 #activation via systemd
 install_if_missing etc/systemd/system/fwupd-activate.service /
 systemctl daemon-reload
