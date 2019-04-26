@@ -1610,7 +1610,7 @@ fu_engine_install (FuEngine *self,
 			return FALSE;
 		fwupd_release_set_version (release_tmp, version_rel);
 		return fu_plugin_runner_schedule_update (plugin, device, release_tmp,
-							 blob_cab, error);
+							 blob_cab, flags, error);
 	}
 
 	/* add device to database */
