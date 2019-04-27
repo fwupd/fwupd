@@ -161,6 +161,8 @@ fwupd_device_flag_to_string (FwupdDeviceFlags device_flag)
 		return "no-auto-instance-ids";
 	if (device_flag == FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)
 		return "needs-activation";
+	if (device_flag == FWUPD_DEVICE_FLAG_ENSURE_SEMVER)
+		return "ensure-semver";
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -223,6 +225,8 @@ fwupd_device_flag_from_string (const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS;
 	if (g_strcmp0 (device_flag, "needs-activation") == 0)
 		return FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION;
+	if (g_strcmp0 (device_flag, "ensure-semver") == 0)
+		return FWUPD_DEVICE_FLAG_ENSURE_SEMVER;
 	return FWUPD_DEVICE_FLAG_UNKNOWN;
 }
 

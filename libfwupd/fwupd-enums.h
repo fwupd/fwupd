@@ -88,6 +88,7 @@ typedef enum {
  * @FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED:	Requires the update to be retried with a new plugin
  * @FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS:	Do not add instance IDs from the device baseclass
  * @FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION:		Device update needs to be separately activated
+ * @FWUPD_DEVICE_FLAG_ENSURE_SEMVER:		Ensure the version is a valid semantic version, e.g. numbers separated with dots
  *
  * The device flags.
  **/
@@ -113,6 +114,7 @@ typedef enum {
 #define FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED (1u << 18)	/* Since: 1.2.5 */
 #define FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS	(1u << 19)	/* Since: 1.2.5 */
 #define FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION	(1u << 20)	/* Since: 1.2.6 */
+#define FWUPD_DEVICE_FLAG_ENSURE_SEMVER		(1u << 21)	/* Since: 1.2.9 */
 #define FWUPD_DEVICE_FLAG_UNKNOWN		G_MAXUINT64	/* Since: 0.7.3 */
 typedef guint64 FwupdDeviceFlags;
 

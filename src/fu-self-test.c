@@ -1797,7 +1797,7 @@ static void
 fu_device_version_format_func (void)
 {
 	g_autoptr(FuDevice) device = fu_device_new ();
-	fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_ENSURE_SEMVER);
 	fu_device_set_version (device, "Ver1.2.3 RELEASE");
 	g_assert_cmpstr (fu_device_get_version (device), ==, "1.2.3");
 }
