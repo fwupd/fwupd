@@ -216,6 +216,37 @@ typedef enum {
 	FWUPD_KEYRING_KIND_LAST
 } FwupdKeyringKind;
 
+/**
+ * FwupdVersionFormat:
+ * @FWUPD_VERSION_FORMAT_UNKNOWN:		Unknown version format
+ * @FWUPD_VERSION_FORMAT_PLAIN:			An unidentified format text string
+ * @FWUPD_VERSION_FORMAT_NUMBER:		A single integer version number
+ * @FWUPD_VERSION_FORMAT_PAIR:			Two AABB.CCDD version numbers
+ * @FWUPD_VERSION_FORMAT_TRIPLET:		Microsoft-style AA.BB.CCDD version numbers
+ * @FWUPD_VERSION_FORMAT_QUAD:			Dell-style AA.BB.CC.DD version numbers
+ * @FWUPD_VERSION_FORMAT_BCD:			Binary coded decimal notation
+ * @FWUPD_VERSION_FORMAT_INTEL_ME:		Intel ME-style bitshifted notation
+ * @FWUPD_VERSION_FORMAT_INTEL_ME2:		Intel ME-style A.B.CC.DDDD notation notation
+ *
+ * The flags used when parsing version numbers.
+ *
+ * If no verification is required then %FWUPD_VERSION_FORMAT_PLAIN should
+ * be used to signify an unparsable text string.
+ **/
+typedef enum {
+	FWUPD_VERSION_FORMAT_UNKNOWN,			/* Since: 1.2.9 */
+	FWUPD_VERSION_FORMAT_PLAIN,			/* Since: 1.2.9 */
+	FWUPD_VERSION_FORMAT_NUMBER,			/* Since: 1.2.9 */
+	FWUPD_VERSION_FORMAT_PAIR,			/* Since: 1.2.9 */
+	FWUPD_VERSION_FORMAT_TRIPLET,			/* Since: 1.2.9 */
+	FWUPD_VERSION_FORMAT_QUAD,			/* Since: 1.2.9 */
+	FWUPD_VERSION_FORMAT_BCD,			/* Since: 1.2.9 */
+	FWUPD_VERSION_FORMAT_INTEL_ME,			/* Since: 1.2.9 */
+	FWUPD_VERSION_FORMAT_INTEL_ME2,			/* Since: 1.2.9 */
+	/*< private >*/
+	FWUPD_VERSION_FORMAT_LAST
+} FwupdVersionFormat;
+
 const gchar	*fwupd_status_to_string			(FwupdStatus	 status);
 FwupdStatus	 fwupd_status_from_string		(const gchar	*status);
 const gchar	*fwupd_device_flag_to_string		(FwupdDeviceFlags device_flag);
@@ -228,5 +259,7 @@ const gchar	*fwupd_trust_flag_to_string		(FwupdTrustFlags trust_flag);
 FwupdTrustFlags	 fwupd_trust_flag_from_string		(const gchar	*trust_flag);
 FwupdKeyringKind fwupd_keyring_kind_from_string		(const gchar	*keyring_kind);
 const gchar	*fwupd_keyring_kind_to_string		(FwupdKeyringKind keyring_kind);
+FwupdVersionFormat fwupd_version_format_from_string	(const gchar	*str);
+const gchar	*fwupd_version_format_to_string		(FwupdVersionFormat kind);
 
 G_END_DECLS

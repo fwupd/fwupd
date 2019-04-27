@@ -156,16 +156,16 @@ fu_archive_cab_func (void)
 static void
 fu_common_version_guess_format_func (void)
 {
-	g_assert_cmpint (fu_common_version_guess_format (NULL), ==, FU_VERSION_FORMAT_UNKNOWN);
-	g_assert_cmpint (fu_common_version_guess_format (""), ==, FU_VERSION_FORMAT_UNKNOWN);
-	g_assert_cmpint (fu_common_version_guess_format ("1234ac"), ==, FU_VERSION_FORMAT_PLAIN);
-	g_assert_cmpint (fu_common_version_guess_format ("1.2"), ==, FU_VERSION_FORMAT_PAIR);
-	g_assert_cmpint (fu_common_version_guess_format ("1.2.3"), ==, FU_VERSION_FORMAT_TRIPLET);
-	g_assert_cmpint (fu_common_version_guess_format ("1.2.3.4"), ==, FU_VERSION_FORMAT_QUAD);
-	g_assert_cmpint (fu_common_version_guess_format ("1.2.3.4.5"), ==, FU_VERSION_FORMAT_UNKNOWN);
-	g_assert_cmpint (fu_common_version_guess_format ("1a.2b.3"), ==, FU_VERSION_FORMAT_PLAIN);
-	g_assert_cmpint (fu_common_version_guess_format ("1"), ==, FU_VERSION_FORMAT_UNKNOWN);
-	g_assert_cmpint (fu_common_version_guess_format ("0x10201"), ==, FU_VERSION_FORMAT_UNKNOWN);
+	g_assert_cmpint (fu_common_version_guess_format (NULL), ==, FWUPD_VERSION_FORMAT_UNKNOWN);
+	g_assert_cmpint (fu_common_version_guess_format (""), ==, FWUPD_VERSION_FORMAT_UNKNOWN);
+	g_assert_cmpint (fu_common_version_guess_format ("1234ac"), ==, FWUPD_VERSION_FORMAT_PLAIN);
+	g_assert_cmpint (fu_common_version_guess_format ("1.2"), ==, FWUPD_VERSION_FORMAT_PAIR);
+	g_assert_cmpint (fu_common_version_guess_format ("1.2.3"), ==, FWUPD_VERSION_FORMAT_TRIPLET);
+	g_assert_cmpint (fu_common_version_guess_format ("1.2.3.4"), ==, FWUPD_VERSION_FORMAT_QUAD);
+	g_assert_cmpint (fu_common_version_guess_format ("1.2.3.4.5"), ==, FWUPD_VERSION_FORMAT_UNKNOWN);
+	g_assert_cmpint (fu_common_version_guess_format ("1a.2b.3"), ==, FWUPD_VERSION_FORMAT_PLAIN);
+	g_assert_cmpint (fu_common_version_guess_format ("1"), ==, FWUPD_VERSION_FORMAT_NUMBER);
+	g_assert_cmpint (fu_common_version_guess_format ("0x10201"), ==, FWUPD_VERSION_FORMAT_NUMBER);
 }
 
 static void
@@ -740,7 +740,7 @@ fu_engine_device_unlock_func (void)
 	fu_device_set_id (device, "UEFI-dummy-dev0");
 	fu_device_add_guid (device, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_LOCKED);
-	fu_device_set_version_format (device, FU_VERSION_FORMAT_PLAIN);
+	fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_PLAIN);
 	fu_engine_add_device (engine, device);
 
 	/* ensure the metainfo was matched */
@@ -1144,6 +1144,7 @@ fu_engine_history_func (void)
 		"  Plugin:               test\n"
 		"  Flags:                updatable\n"
 		"  Version:              1.2.2\n"
+		"  VersionFormat:        triplet\n"
 		"  Created:              2018-01-07\n"
 		"  Modified:             2017-12-27\n"
 		"  UpdateState:          success\n"
@@ -1151,8 +1152,7 @@ fu_engine_history_func (void)
 		"  [Release]\n"
 		"  Version:              1.2.3\n"
 		"  Checksum:             SHA1(%s)\n"
-		"  Flags:                none\n"
-		"  VersionFormat:        triplet\n",
+		"  Flags:                none\n",
 		checksum);
 	ret = fu_test_compare_lines (device_str, device_str_expected, &error);
 	g_assert_no_error (error);
@@ -1377,6 +1377,7 @@ fu_engine_history_error_func (void)
 		"  Plugin:               test\n"
 		"  Flags:                updatable\n"
 		"  Version:              1.2.2\n"
+		"  VersionFormat:        triplet\n"
 		"  Created:              2018-01-07\n"
 		"  Modified:             2017-12-27\n"
 		"  UpdateState:          failed\n"
@@ -1385,8 +1386,7 @@ fu_engine_history_error_func (void)
 		"  [Release]\n"
 		"  Version:              1.2.3\n"
 		"  Checksum:             SHA1(%s)\n"
-		"  Flags:                none\n"
-		"  VersionFormat:        triplet\n",
+		"  Flags:                none\n",
 		checksum);
 	ret = fu_test_compare_lines (device_str, device_str_expected, &error);
 	g_assert_no_error (error);
@@ -1797,7 +1797,7 @@ static void
 fu_device_version_format_func (void)
 {
 	g_autoptr(FuDevice) device = fu_device_new ();
-	fu_device_set_version_format (device, FU_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version (device, "Ver1.2.3 RELEASE");
 	g_assert_cmpstr (fu_device_get_version (device), ==, "1.2.3");
 }
@@ -3537,39 +3537,39 @@ fu_common_version_func (void)
 	struct {
 		guint32 val;
 		const gchar *ver;
-		FuVersionFormat flags;
+		FwupdVersionFormat flags;
 	} version_from_uint32[] = {
-		{ 0x0,		"0.0.0.0",		FU_VERSION_FORMAT_QUAD },
-		{ 0xff,		"0.0.0.255",		FU_VERSION_FORMAT_QUAD },
-		{ 0xff01,	"0.0.255.1",		FU_VERSION_FORMAT_QUAD },
-		{ 0xff0001,	"0.255.0.1",		FU_VERSION_FORMAT_QUAD },
-		{ 0xff000100,	"255.0.1.0",		FU_VERSION_FORMAT_QUAD },
-		{ 0x0,		"0.0.0",		FU_VERSION_FORMAT_TRIPLET },
-		{ 0xff,		"0.0.255",		FU_VERSION_FORMAT_TRIPLET },
-		{ 0xff01,	"0.0.65281",		FU_VERSION_FORMAT_TRIPLET },
-		{ 0xff0001,	"0.255.1",		FU_VERSION_FORMAT_TRIPLET },
-		{ 0xff000100,	"255.0.256",		FU_VERSION_FORMAT_TRIPLET },
-		{ 0x0,		"0",			FU_VERSION_FORMAT_PLAIN },
-		{ 0xff000100,	"4278190336",		FU_VERSION_FORMAT_PLAIN },
-		{ 0x0,		"11.0.0.0",		FU_VERSION_FORMAT_INTEL_ME },
-		{ 0xffffffff,	"18.31.255.65535",	FU_VERSION_FORMAT_INTEL_ME },
-		{ 0x0b32057a,	"11.11.50.1402",	FU_VERSION_FORMAT_INTEL_ME },
-		{ 0xb8320d84,	"11.8.50.3460",		FU_VERSION_FORMAT_INTEL_ME2 },
+		{ 0x0,		"0.0.0.0",		FWUPD_VERSION_FORMAT_QUAD },
+		{ 0xff,		"0.0.0.255",		FWUPD_VERSION_FORMAT_QUAD },
+		{ 0xff01,	"0.0.255.1",		FWUPD_VERSION_FORMAT_QUAD },
+		{ 0xff0001,	"0.255.0.1",		FWUPD_VERSION_FORMAT_QUAD },
+		{ 0xff000100,	"255.0.1.0",		FWUPD_VERSION_FORMAT_QUAD },
+		{ 0x0,		"0.0.0",		FWUPD_VERSION_FORMAT_TRIPLET },
+		{ 0xff,		"0.0.255",		FWUPD_VERSION_FORMAT_TRIPLET },
+		{ 0xff01,	"0.0.65281",		FWUPD_VERSION_FORMAT_TRIPLET },
+		{ 0xff0001,	"0.255.1",		FWUPD_VERSION_FORMAT_TRIPLET },
+		{ 0xff000100,	"255.0.256",		FWUPD_VERSION_FORMAT_TRIPLET },
+		{ 0x0,		"0",			FWUPD_VERSION_FORMAT_NUMBER },
+		{ 0xff000100,	"4278190336",		FWUPD_VERSION_FORMAT_NUMBER },
+		{ 0x0,		"11.0.0.0",		FWUPD_VERSION_FORMAT_INTEL_ME },
+		{ 0xffffffff,	"18.31.255.65535",	FWUPD_VERSION_FORMAT_INTEL_ME },
+		{ 0x0b32057a,	"11.11.50.1402",	FWUPD_VERSION_FORMAT_INTEL_ME },
+		{ 0xb8320d84,	"11.8.50.3460",		FWUPD_VERSION_FORMAT_INTEL_ME2 },
 		{ 0,		NULL }
 	};
 	struct {
 		guint16 val;
 		const gchar *ver;
-		FuVersionFormat flags;
+		FwupdVersionFormat flags;
 	} version_from_uint16[] = {
-		{ 0x0,		"0.0",			FU_VERSION_FORMAT_PAIR },
-		{ 0xff,		"0.255",		FU_VERSION_FORMAT_PAIR },
-		{ 0xff01,	"255.1",		FU_VERSION_FORMAT_PAIR },
-		{ 0x0,		"0.0",			FU_VERSION_FORMAT_BCD },
-		{ 0x0110,	"1.10",			FU_VERSION_FORMAT_BCD },
-		{ 0x9999,	"99.99",		FU_VERSION_FORMAT_BCD },
-		{ 0x0,		"0",			FU_VERSION_FORMAT_PLAIN },
-		{ 0x1234,	"4660",			FU_VERSION_FORMAT_PLAIN },
+		{ 0x0,		"0.0",			FWUPD_VERSION_FORMAT_PAIR },
+		{ 0xff,		"0.255",		FWUPD_VERSION_FORMAT_PAIR },
+		{ 0xff01,	"255.1",		FWUPD_VERSION_FORMAT_PAIR },
+		{ 0x0,		"0.0",			FWUPD_VERSION_FORMAT_BCD },
+		{ 0x0110,	"1.10",			FWUPD_VERSION_FORMAT_BCD },
+		{ 0x9999,	"99.99",		FWUPD_VERSION_FORMAT_BCD },
+		{ 0x0,		"0",			FWUPD_VERSION_FORMAT_NUMBER },
+		{ 0x1234,	"4660",			FWUPD_VERSION_FORMAT_NUMBER },
 		{ 0,		NULL }
 	};
 	struct {

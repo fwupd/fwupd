@@ -201,22 +201,22 @@ fu_nvme_device_parse_cns_maybe_dell (FuNvmeDevice *self, const guint8 *buf)
 	guid_efi = fu_nvme_device_get_guid_safe (buf, 0x0c26);
 	if (guid_efi != NULL)
 		fu_device_add_guid (FU_DEVICE (self), guid_efi);
-	fu_device_set_version_format (FU_DEVICE (self), FU_VERSION_FORMAT_PLAIN);
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PLAIN);
 }
 
 static gboolean
 fu_nvme_device_set_version (FuNvmeDevice *self, const gchar *version, GError **error)
 {
-	FuVersionFormat fmt = fu_device_get_version_format (FU_DEVICE (self));
+	FwupdVersionFormat fmt = fu_device_get_version_format (FU_DEVICE (self));
 
 	/* unset */
-	if (fmt == FU_VERSION_FORMAT_UNKNOWN || fmt == FU_VERSION_FORMAT_PLAIN) {
+	if (fmt == FWUPD_VERSION_FORMAT_UNKNOWN || fmt == FWUPD_VERSION_FORMAT_PLAIN) {
 		fu_device_set_version (FU_DEVICE (self), version);
 		return TRUE;
 	}
 
 	/* AA.BB.CC.DD */
-	if (fmt == FU_VERSION_FORMAT_QUAD) {
+	if (fmt == FWUPD_VERSION_FORMAT_QUAD) {
 		guint64 tmp = g_ascii_strtoull (version, NULL, 16);
 		g_autofree gchar *version_new = NULL;
 		if (tmp == 0 || tmp > G_MAXUINT32) {
@@ -227,7 +227,7 @@ fu_nvme_device_set_version (FuNvmeDevice *self, const gchar *version, GError **e
 				     version);
 			return FALSE;
 		}
-		version_new = fu_common_version_from_uint32 (tmp, FU_VERSION_FORMAT_QUAD);
+		version_new = fu_common_version_from_uint32 (tmp, FWUPD_VERSION_FORMAT_QUAD);
 		fu_device_set_version (FU_DEVICE (self), version_new);
 		return TRUE;
 	}
@@ -237,7 +237,7 @@ fu_nvme_device_set_version (FuNvmeDevice *self, const gchar *version, GError **e
 		     G_IO_ERROR,
 		     G_IO_ERROR_INVALID_DATA,
 		     "version format %s not handled",
-		     fu_common_version_format_to_string (fmt));
+		     fwupd_version_format_to_string (fmt));
 	return FALSE;
 }
 

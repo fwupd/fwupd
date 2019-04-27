@@ -239,7 +239,7 @@ fu_usb_device_probe (FuDevice *device, GError **error)
 	release = g_usb_device_get_release (priv->usb_device);
 	if (release != 0x0) {
 		g_autofree gchar *version = NULL;
-		version = fu_common_version_from_uint16 (release, FU_VERSION_FORMAT_BCD);
+		version = fu_common_version_from_uint16 (release, FWUPD_VERSION_FORMAT_BCD);
 		fu_device_set_version (device, version);
 	}
 

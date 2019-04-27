@@ -47,6 +47,7 @@ typedef struct {
 	gchar				*version;
 	gchar				*version_lowest;
 	gchar				*version_bootloader;
+	FwupdVersionFormat		 version_format;
 	GPtrArray			*checksums;
 	guint32				 flashes_left;
 	guint32				 install_duration;
@@ -56,6 +57,12 @@ typedef struct {
 	GPtrArray			*releases;
 	FwupdDevice			*parent;
 } FwupdDevicePrivate;
+
+enum {
+	PROP_0,
+	PROP_VERSION_FORMAT,
+	PROP_LAST
+};
 
 G_DEFINE_TYPE_WITH_PRIVATE (FwupdDevice, fwupd_device, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fwupd_device_get_instance_private (o))
@@ -1050,6 +1057,8 @@ fwupd_device_incorporate (FwupdDevice *self, FwupdDevice *donor)
 		fwupd_device_set_version_lowest (self, priv_donor->version_lowest);
 	if (priv->version_bootloader == NULL)
 		fwupd_device_set_version_bootloader (self, priv_donor->version_bootloader);
+	if (priv->version_format == FWUPD_VERSION_FORMAT_UNKNOWN)
+		fwupd_device_set_version_format (self, priv_donor->version_format);
 	for (guint i = 0; i < priv_donor->guids->len; i++) {
 		const gchar *tmp = g_ptr_array_index (priv_donor->guids, i);
 		fwupd_device_add_guid (self, tmp);
@@ -1213,6 +1222,11 @@ fwupd_device_to_variant_full (FwupdDevice *device, FwupdDeviceFlags flags)
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_UPDATE_STATE,
 				       g_variant_new_uint32 (priv->update_state));
+	}
+	if (priv->version_format != FWUPD_VERSION_FORMAT_UNKNOWN) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_VERSION_FORMAT,
+				       g_variant_new_uint32 (priv->version_format));
 	}
 	if (flags & FWUPD_DEVICE_FLAG_TRUSTED) {
 		if (priv->serial != NULL) {
@@ -1383,6 +1397,10 @@ fwupd_device_from_key_value (FwupdDevice *device, const gchar *key, GVariant *va
 		fwupd_device_set_update_state (device, g_variant_get_uint32 (value));
 		return;
 	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_VERSION_FORMAT) == 0) {
+		fwupd_device_set_version_format (device, g_variant_get_uint32 (value));
+		return;
+	}
 }
 
 static void
@@ -1475,6 +1493,41 @@ fwupd_device_set_update_state (FwupdDevice *device, FwupdUpdateState update_stat
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
 	priv->update_state = update_state;
+}
+
+/**
+ * fwupd_device_get_version_format:
+ * @device: A #FwupdDevice
+ *
+ * Gets the update state.
+ *
+ * Returns: the update state, or %FWUPD_VERSION_FORMAT_UNKNOWN if unset
+ *
+ * Since: 1.2.9
+ **/
+FwupdVersionFormat
+fwupd_device_get_version_format (FwupdDevice *device)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (device), FWUPD_VERSION_FORMAT_UNKNOWN);
+	return priv->version_format;
+}
+
+/**
+ * fwupd_device_set_version_format:
+ * @device: A #FwupdDevice
+ * @version_format: the state, e.g. %FWUPD_VERSION_FORMAT_PENDING
+ *
+ * Sets the update state.
+ *
+ * Since: 1.2.9
+ **/
+void
+fwupd_device_set_version_format (FwupdDevice *device, FwupdVersionFormat version_format)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	priv->version_format = version_format;
 }
 
 /**
@@ -1690,6 +1743,8 @@ fwupd_device_to_json (FwupdDevice *device, JsonBuilder *builder)
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_VERSION, priv->version);
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_VERSION_LOWEST, priv->version_lowest);
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_VERSION_BOOTLOADER, priv->version_bootloader);
+	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_VERSION_FORMAT,
+				      fwupd_version_format_to_string (priv->version_format));
 	fwupd_device_json_add_int (builder, FWUPD_RESULT_KEY_FLASHES_LEFT, priv->flashes_left);
 	if (priv->icons->len > 0) {
 		json_builder_set_member_name (builder, "Icons");
@@ -1778,6 +1833,8 @@ fwupd_device_to_string (FwupdDevice *device)
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_VERSION, priv->version);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_VERSION_LOWEST, priv->version_lowest);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_VERSION_BOOTLOADER, priv->version_bootloader);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_VERSION_FORMAT,
+			  fwupd_version_format_to_string (priv->version_format));
 	if (priv->flashes_left < 2)
 		fwupd_pad_kv_int (str, FWUPD_RESULT_KEY_FLASHES_LEFT, priv->flashes_left);
 	if (priv->icons->len > 0) {
@@ -1807,10 +1864,53 @@ fwupd_device_to_string (FwupdDevice *device)
 }
 
 static void
+fwupd_device_get_property (GObject *object, guint prop_id,
+			   GValue *value, GParamSpec *pspec)
+{
+	FwupdDevice *self = FWUPD_DEVICE (object);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	switch (prop_id) {
+	case PROP_VERSION_FORMAT:
+		g_value_set_uint (value, priv->version_format);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+		break;
+	}
+}
+
+static void
+fwupd_device_set_property (GObject *object, guint prop_id,
+			   const GValue *value, GParamSpec *pspec)
+{
+	FwupdDevice *self = FWUPD_DEVICE (object);
+	switch (prop_id) {
+	case PROP_VERSION_FORMAT:
+		fwupd_device_set_version_format (self, g_value_get_uint (value));
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+		break;
+	}
+}
+
+static void
 fwupd_device_class_init (FwupdDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+	GParamSpec *pspec;
+
 	object_class->finalize = fwupd_device_finalize;
+	object_class->get_property = fwupd_device_get_property;
+	object_class->set_property = fwupd_device_set_property;
+
+	pspec = g_param_spec_uint ("version-format", NULL, NULL,
+				   FWUPD_VERSION_FORMAT_UNKNOWN,
+				   FWUPD_VERSION_FORMAT_LAST,
+				   FWUPD_VERSION_FORMAT_UNKNOWN,
+				   G_PARAM_READWRITE |
+				   G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_VERSION_FORMAT, pspec);
 }
 
 static void

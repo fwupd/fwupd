@@ -492,7 +492,7 @@ static gboolean
 fu_uefi_device_probe (FuDevice *device, GError **error)
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE (device);
-	FuVersionFormat version_format;
+	FwupdVersionFormat version_format;
 	g_autofree gchar *devid = NULL;
 	g_autofree gchar *guid_strup = NULL;
 	g_autofree gchar *version_lowest = NULL;

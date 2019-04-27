@@ -259,7 +259,7 @@ fu_plugin_dell_inject_fake_data (FuPlugin *plugin,
 	data->can_switch_modes = TRUE;
 }
 
-static FuVersionFormat
+static FwupdVersionFormat
 fu_plugin_dell_get_version_format (FuPlugin *plugin)
 {
 	const gchar *content;
@@ -268,15 +268,15 @@ fu_plugin_dell_get_version_format (FuPlugin *plugin)
 
 	content = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER);
 	if (content == NULL)
-		return FU_VERSION_FORMAT_TRIPLET;
+		return FWUPD_VERSION_FORMAT_TRIPLET;
 
 	/* any quirks match */
 	group = g_strdup_printf ("SmbiosManufacturer=%s", content);
 	quirk = fu_plugin_lookup_quirk_by_id (plugin, group,
 					      FU_QUIRKS_UEFI_VERSION_FORMAT);
 	if (quirk == NULL)
-		return FU_VERSION_FORMAT_TRIPLET;
-	return fu_common_version_format_from_string (quirk);
+		return FWUPD_VERSION_FORMAT_TRIPLET;
+	return fwupd_version_format_from_string (quirk);
 }
 
 static gboolean
@@ -344,7 +344,7 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 			    GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	FuVersionFormat version_format;
+	FwupdVersionFormat version_format;
 	guint16 pid;
 	guint16 vid;
 	const gchar *query_str;
@@ -641,7 +641,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	g_debug ("Creating primary TPM GUID %s and secondary TPM GUID %s",
 		 tpm_guid_raw, tpm_guid_raw_alt);
 	version_str = fu_common_version_from_uint32 (out->fw_version,
-						     FU_VERSION_FORMAT_QUAD);
+						     FWUPD_VERSION_FORMAT_QUAD);
 
 	/* make it clear that the TPM is a discrete device of the product */
 	if (!data->smi_obj->fake_smbios) {

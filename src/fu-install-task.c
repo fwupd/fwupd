@@ -92,7 +92,7 @@ fu_install_task_get_is_downgrade (FuInstallTask *self)
 	return self->is_downgrade;
 }
 
-static FuVersionFormat
+static FwupdVersionFormat
 fu_install_task_guess_version_format (FuInstallTask *self, const gchar *version)
 {
 	const gchar *tmp;
@@ -100,7 +100,7 @@ fu_install_task_guess_version_format (FuInstallTask *self, const gchar *version)
 	/* explicit set */
 	tmp = xb_node_query_text (self->component, "custom/value[@key='LVFS::VersionFormat']", NULL);
 	if (tmp != NULL)
-		return fu_common_version_format_from_string (tmp);
+		return fwupd_version_format_from_string (tmp);
 
 	/* count section from dotted notation */
 	return fu_common_version_guess_format (version);
@@ -123,7 +123,7 @@ fu_install_task_check_requirements (FuInstallTask *self,
 				    FwupdInstallFlags flags,
 				    GError **error)
 {
-	FuVersionFormat fmt;
+	FwupdVersionFormat fmt;
 	const gchar *version;
 	const gchar *version_release;
 	const gchar *version_lowest;
@@ -234,21 +234,21 @@ fu_install_task_check_requirements (FuInstallTask *self,
 
 	/* check the version formats match */
 	fmt = fu_install_task_guess_version_format (self, version_release);
-	if (fmt != FU_VERSION_FORMAT_UNKNOWN &&
+	if (fmt != FWUPD_VERSION_FORMAT_UNKNOWN &&
 	    fmt != fu_device_get_version_format (self->device)) {
-		FuVersionFormat fmt_dev = fu_device_get_version_format (self->device);
+		FwupdVersionFormat fmt_dev = fu_device_get_version_format (self->device);
 		if (flags & FWUPD_INSTALL_FLAG_FORCE) {
 			g_warning ("ignoring version format difference %s:%s",
-				   fu_common_version_format_to_string (fmt_dev),
-				   fu_common_version_format_to_string (fmt));
+				   fwupd_version_format_to_string (fmt_dev),
+				   fwupd_version_format_to_string (fmt));
 		} else {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "Firmware version formats were different, "
 				     "device was '%s' and release is '%s'",
-				     fu_common_version_format_to_string (fmt_dev),
-				     fu_common_version_format_to_string (fmt));
+				     fwupd_version_format_to_string (fmt_dev),
+				     fwupd_version_format_to_string (fmt));
 			return FALSE;
 		}
 	}

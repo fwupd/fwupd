@@ -69,7 +69,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		fu_device_add_guid (child1, "7fddead7-12b5-4fb9-9fa0-6d30305df755");
 		fu_device_set_name (child1, "Module1");
 		fu_device_set_version (child1, "1");
-		fu_device_set_version_format (child1, FU_VERSION_FORMAT_PLAIN);
+		fu_device_set_version_format (child1, FWUPD_VERSION_FORMAT_PLAIN);
 		fu_device_add_parent_guid (child1, "b585990a-003e-5270-89d5-3705a17f9a43");
 		fu_device_add_flag (child1, FWUPD_DEVICE_FLAG_UPDATABLE);
 		fu_plugin_device_add (plugin, child1);
@@ -80,7 +80,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		fu_device_add_guid (child2, "b8fe6b45-8702-4bcd-8120-ef236caac76f");
 		fu_device_set_name (child2, "Module2");
 		fu_device_set_version (child2, "10");
-		fu_device_set_version_format (child2, FU_VERSION_FORMAT_PLAIN);
+		fu_device_set_version_format (child2, FWUPD_VERSION_FORMAT_PLAIN);
 		fu_device_add_parent_guid (child2, "b585990a-003e-5270-89d5-3705a17f9a43");
 		fu_device_add_flag (child2, FWUPD_DEVICE_FLAG_UPDATABLE);
 		fu_plugin_device_add (plugin, child2);

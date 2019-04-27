@@ -354,3 +354,12 @@ LIBFWUPD_1.2.8 {
     fwupd_client_modify_config;
   local: *;
 } LIBFWUPD_1.2.7;
+
+LIBFWUPD_1.2.9 {
+  global:
+    fwupd_device_get_version_format;
+    fwupd_device_set_version_format;
+    fwupd_version_format_from_string;
+    fwupd_version_format_to_string;
+  local: *;
+} LIBFWUPD_1.2.8;

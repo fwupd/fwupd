@@ -210,7 +210,7 @@ fu_engine_device_changed_cb (FuDeviceList *device_list, FuDevice *device, FuEngi
 static gboolean
 fu_engine_set_device_version_format (FuEngine *self, FuDevice *device, XbNode *component, GError **error)
 {
-	FuVersionFormat fmt;
+	FwupdVersionFormat fmt;
 	const gchar *developer_name;
 	const gchar *version_format;
 
@@ -219,8 +219,8 @@ fu_engine_set_device_version_format (FuEngine *self, FuDevice *device, XbNode *c
 					     "custom/value[@key='LVFS::VersionFormat']",
 					     NULL);
 	if (version_format != NULL) {
-		fmt = fu_common_version_format_from_string (version_format);
-		if (fmt == FU_VERSION_FORMAT_UNKNOWN) {
+		fmt = fwupd_version_format_from_string (version_format);
+		if (fmt == FWUPD_VERSION_FORMAT_UNKNOWN) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -241,8 +241,8 @@ fu_engine_set_device_version_format (FuEngine *self, FuDevice *device, XbNode *c
 		version_format = fu_quirks_lookup_by_id (self->quirks, group,
 							 FU_QUIRKS_UEFI_VERSION_FORMAT);
 		if (version_format != NULL) {
-			fmt = fu_common_version_format_from_string (version_format);
-			if (fmt == FU_VERSION_FORMAT_UNKNOWN) {
+			fmt = fwupd_version_format_from_string (version_format);
+			if (fmt == FWUPD_VERSION_FORMAT_UNKNOWN) {
 				g_set_error (error,
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_NOT_SUPPORTED,
@@ -265,7 +265,7 @@ fu_engine_set_device_version_format (FuEngine *self, FuDevice *device, XbNode *c
 static gchar *
 fu_engine_get_release_version (FuEngine *self, FuDevice *dev, XbNode *rel, GError **error)
 {
-	FuVersionFormat fmt = FU_VERSION_FORMAT_TRIPLET;
+	FwupdVersionFormat fmt = FWUPD_VERSION_FORMAT_TRIPLET;
 	const gchar *version;
 	guint64 ver_uint32;
 
@@ -285,7 +285,7 @@ fu_engine_get_release_version (FuEngine *self, FuDevice *dev, XbNode *rel, GErro
 
 	/* specified in metadata or from a quirk */
 	fmt = fu_device_get_version_format (dev);
-	if (fmt == FU_VERSION_FORMAT_UNKNOWN) {
+	if (fmt == FWUPD_VERSION_FORMAT_UNKNOWN) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
@@ -295,7 +295,7 @@ fu_engine_get_release_version (FuEngine *self, FuDevice *dev, XbNode *rel, GErro
 	}
 
 	/* don't touch my version! */
-	if (fmt == FU_VERSION_FORMAT_PLAIN)
+	if (fmt == FWUPD_VERSION_FORMAT_PLAIN)
 		return g_strdup (version);
 
 	/* parse as integer */
@@ -3734,7 +3734,7 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 	}
 
 	if (fu_device_get_version (device) != NULL &&
-	    fu_device_get_version_format (device) == FU_VERSION_FORMAT_UNKNOWN) {
+	    fu_device_get_version_format (device) == FWUPD_VERSION_FORMAT_UNKNOWN) {
 		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 		fu_device_set_update_error (device, "VersionFormat is ambiguous for this device");
 	}

@@ -2037,7 +2037,7 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 		if (!fu_device_probe (FU_DEVICE (device), NULL))
 			continue;
 		version = fu_common_version_from_uint16 (g_usb_device_get_release (usb_device),
-							 FU_VERSION_FORMAT_BCD);
+							 FWUPD_VERSION_FORMAT_BCD);
 		g_print ("%s %04x:%04x [v%s]:\n",
 			 /* TRANSLATORS: detected a DFU device */
 			 _("Found"),

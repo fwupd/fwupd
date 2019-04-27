@@ -44,7 +44,6 @@ typedef struct {
 	GPtrArray			*children;
 	guint				 remove_delay;	/* ms */
 	FwupdStatus			 status;
-	FuVersionFormat			 version_format;
 	guint				 progress;
 	guint				 order;
 	guint				 priority;
@@ -63,7 +62,6 @@ enum {
 	PROP_PHYSICAL_ID,
 	PROP_LOGICAL_ID,
 	PROP_QUIRKS,
-	PROP_VERSION_FORMAT,
 	PROP_LAST
 };
 
@@ -82,9 +80,6 @@ fu_device_get_property (GObject *object, guint prop_id,
 		break;
 	case PROP_PROGRESS:
 		g_value_set_uint (value, priv->progress);
-		break;
-	case PROP_VERSION_FORMAT:
-		g_value_set_uint (value, priv->version_format);
 		break;
 	case PROP_PHYSICAL_ID:
 		g_value_set_string (value, fu_device_get_physical_id (self));
@@ -112,9 +107,6 @@ fu_device_set_property (GObject *object, guint prop_id,
 		break;
 	case PROP_PROGRESS:
 		fu_device_set_progress (self, g_value_get_uint (value));
-		break;
-	case PROP_VERSION_FORMAT:
-		fu_device_set_version_format (self, g_value_get_uint (value));
 		break;
 	case PROP_PHYSICAL_ID:
 		fu_device_set_physical_id (self, g_value_get_string (value));
@@ -691,7 +683,7 @@ fu_device_set_quirk_kv (FuDevice *self,
 		return TRUE;
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_VERSION_FORMAT) == 0) {
-		fu_device_set_version_format (self, fu_common_version_format_from_string (value));
+		fu_device_set_version_format (self, fwupd_version_format_from_string (value));
 		return TRUE;
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_CHILDREN) == 0) {
@@ -1194,15 +1186,15 @@ fu_device_is_valid_semver_char (gchar c)
 void
 fu_device_set_version (FuDevice *self, const gchar *version)
 {
-	FuDevicePrivate *priv = GET_PRIVATE (self);
+	FwupdVersionFormat version_format = fu_device_get_version_format (self);
 	g_autoptr(GString) version_safe = NULL;
 
 	g_return_if_fail (FU_IS_DEVICE (self));
 	g_return_if_fail (version != NULL);
 
 	/* sanitize if required */
-	if (priv->version_format != FU_VERSION_FORMAT_UNKNOWN &&
-	    priv->version_format != FU_VERSION_FORMAT_PLAIN) {
+	if (version_format != FWUPD_VERSION_FORMAT_UNKNOWN &&
+	    version_format != FWUPD_VERSION_FORMAT_PLAIN) {
 		version_safe = g_string_new (NULL);
 		for (guint i = 0; version[i] != '\0'; i++) {
 			if (fu_device_is_valid_semver_char (version[i]))
@@ -1217,8 +1209,10 @@ fu_device_set_version (FuDevice *self, const gchar *version)
 	}
 
 	/* try to autodetect the version-format */
-	if (priv->version_format == FU_VERSION_FORMAT_UNKNOWN)
-		priv->version_format = fu_common_version_guess_format (version_safe->str);
+	if (version_format == FWUPD_VERSION_FORMAT_UNKNOWN) {
+		version_format = fu_common_version_guess_format (version_safe->str);
+		fu_device_set_version_format (self, version_format);
+	}
 	fwupd_device_set_version (FWUPD_DEVICE (self), version_safe->str);
 }
 
@@ -1533,43 +1527,6 @@ fu_device_set_status (FuDevice *self, FwupdStatus status)
 }
 
 /**
- * fu_device_get_version_format:
- * @self: A #FuDevice
- *
- * Returns how the device version should be formatted.
- *
- * Returns: the version format, e.g. %FU_VERSION_FORMAT_TRIPLET
- *
- * Since: 1.2.0
- **/
-FuVersionFormat
-fu_device_get_version_format (FuDevice *self)
-{
-	FuDevicePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FU_IS_DEVICE (self), 0);
-	return priv->version_format;
-}
-
-/**
- * fu_device_set_version_format:
- * @self: A #FuDevice
- * @version_format: the version_format value, e.g. %FU_VERSION_FORMAT_TRIPLET
- *
- * Sets how the version should be formatted.
- *
- * Since: 1.2.0
- **/
-void
-fu_device_set_version_format (FuDevice *self, FuVersionFormat version_format)
-{
-	FuDevicePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FU_IS_DEVICE (self));
-	if (priv->version_format == version_format)
-		return;
-	priv->version_format = version_format;
-}
-
-/**
  * fu_device_get_progress:
  * @self: A #FuDevice
  *
@@ -1653,10 +1610,6 @@ fu_device_to_string (FuDevice *self)
 	tmp = fwupd_device_to_string (FWUPD_DEVICE (self));
 	if (tmp != NULL && tmp[0] != '\0')
 		g_string_append (str, tmp);
-	if (priv->version_format != FU_VERSION_FORMAT_UNKNOWN) {
-		fwupd_pad_kv_str (str, "VersionFormat",
-				  fu_common_version_format_to_string (priv->version_format));
-	}
 	if (priv->alternate_id != NULL)
 		fwupd_pad_kv_str (str, "AlternateId", priv->alternate_id);
 	if (priv->equivalent_id != NULL)
@@ -2236,8 +2189,6 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 		fu_device_set_equivalent_id (self, fu_device_get_equivalent_id (donor));
 	if (priv->quirks == NULL)
 		fu_device_set_quirks (self, fu_device_get_quirks (donor));
-	if (priv->version_format == FU_VERSION_FORMAT_UNKNOWN)
-		fu_device_set_version_format (self, fu_device_get_version_format (donor));
 	fu_mutex_read_lock (priv_donor->parent_guids_mutex);
 	for (guint i = 0; i < parent_guids->len; i++)
 		fu_device_add_parent_guid (self, g_ptr_array_index (parent_guids, i));
@@ -2311,14 +2262,6 @@ fu_device_class_init (FuDeviceClass *klass)
 				   G_PARAM_READWRITE |
 				   G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_PROGRESS, pspec);
-
-	pspec = g_param_spec_uint ("version-format", NULL, NULL,
-				   FU_VERSION_FORMAT_UNKNOWN,
-				   FU_VERSION_FORMAT_LAST,
-				   FU_VERSION_FORMAT_UNKNOWN,
-				   G_PARAM_READWRITE |
-				   G_PARAM_STATIC_NAME);
-	g_object_class_install_property (object_class, PROP_VERSION_FORMAT, pspec);
 
 	pspec = g_param_spec_object ("quirks", NULL, NULL,
 				     FU_TYPE_QUIRKS,

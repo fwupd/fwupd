@@ -181,7 +181,7 @@ fu_ata_device_parse_id_maybe_dell (FuAtaDevice *self, const guint16 *buf)
 	guid_efi = fu_ata_device_get_guid_safe (buf, 129);
 	if (guid_efi != NULL)
 		fu_device_add_guid (FU_DEVICE (self), guid_efi);
-	fu_device_set_version_format (FU_DEVICE (self), FU_VERSION_FORMAT_PLAIN);
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PLAIN);
 }
 
 static gboolean

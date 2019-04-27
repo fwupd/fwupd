@@ -97,6 +97,7 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_set_vendor_id(d,v)		fwupd_device_set_vendor_id(FWUPD_DEVICE(d),v)
 #define fu_device_set_version_lowest(d,v)	fwupd_device_set_version_lowest(FWUPD_DEVICE(d),v)
 #define fu_device_set_version_bootloader(d,v)	fwupd_device_set_version_bootloader(FWUPD_DEVICE(d),v)
+#define fu_device_set_version_format(d,v)	fwupd_device_set_version_format(FWUPD_DEVICE(d),v)
 #define fu_device_set_flashes_left(d,v)		fwupd_device_set_flashes_left(FWUPD_DEVICE(d),v)
 #define fu_device_set_install_duration(d,v)	fwupd_device_set_install_duration(FWUPD_DEVICE(d),v)
 #define fu_device_get_checksums(d)		fwupd_device_get_checksums(FWUPD_DEVICE(d))
@@ -117,6 +118,7 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_get_version(d)		fwupd_device_get_version(FWUPD_DEVICE(d))
 #define fu_device_get_version_lowest(d)		fwupd_device_get_version_lowest(FWUPD_DEVICE(d))
 #define fu_device_get_version_bootloader(d)	fwupd_device_get_version_bootloader(FWUPD_DEVICE(d))
+#define fu_device_get_version_format(d)		fwupd_device_get_version_format(FWUPD_DEVICE(d))
 #define fu_device_get_vendor_id(d)		fwupd_device_get_vendor_id(FWUPD_DEVICE(d))
 #define fu_device_get_flashes_left(d)		fwupd_device_get_flashes_left(FWUPD_DEVICE(d))
 #define fu_device_get_install_duration(d)	fwupd_device_get_install_duration(FWUPD_DEVICE(d))
@@ -183,9 +185,6 @@ void		 fu_device_set_remove_delay		(FuDevice	*self,
 FwupdStatus	 fu_device_get_status			(FuDevice	*self);
 void		 fu_device_set_status			(FuDevice	*self,
 							 FwupdStatus	 status);
-FuVersionFormat	 fu_device_get_version_format		(FuDevice	*self);
-void		 fu_device_set_version_format		(FuDevice	*self,
-							 FuVersionFormat version_format);
 void		 fu_device_set_firmware_size		(FuDevice	*self,
 							 guint64	 size);
 void		 fu_device_set_firmware_size_min	(FuDevice	*self,

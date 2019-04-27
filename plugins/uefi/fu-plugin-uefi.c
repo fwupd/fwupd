@@ -450,7 +450,7 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 	}
 }
 
-static FuVersionFormat
+static FwupdVersionFormat
 fu_plugin_uefi_get_version_format_for_type (FuPlugin *plugin, FuUefiDeviceKind device_kind)
 {
 	const gchar *content;
@@ -459,19 +459,19 @@ fu_plugin_uefi_get_version_format_for_type (FuPlugin *plugin, FuUefiDeviceKind d
 
 	/* we have no information for devices */
 	if (device_kind == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE)
-		return FU_VERSION_FORMAT_TRIPLET;
+		return FWUPD_VERSION_FORMAT_TRIPLET;
 
 	content = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER);
 	if (content == NULL)
-		return FU_VERSION_FORMAT_TRIPLET;
+		return FWUPD_VERSION_FORMAT_TRIPLET;
 
 	/* any quirks match */
 	group = g_strdup_printf ("SmbiosManufacturer=%s", content);
 	quirk = fu_plugin_lookup_quirk_by_id (plugin, group,
 					      FU_QUIRKS_UEFI_VERSION_FORMAT);
 	if (quirk == NULL)
-		return FU_VERSION_FORMAT_TRIPLET;
-	return fu_common_version_format_from_string (quirk);
+		return FWUPD_VERSION_FORMAT_TRIPLET;
+	return fwupd_version_format_from_string (quirk);
 }
 
 static const gchar *
@@ -514,7 +514,7 @@ static gboolean
 fu_plugin_uefi_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GError **error)
 {
 	FuUefiDeviceKind device_kind;
-	FuVersionFormat version_format;
+	FwupdVersionFormat version_format;
 
 	/* set default version format */
 	device_kind = fu_uefi_device_get_kind (dev);
