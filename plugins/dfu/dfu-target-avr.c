@@ -431,8 +431,10 @@ dfu_target_avr_setup (DfuTarget *target, GError **error)
 			return FALSE;
 	} else {
 		chunk_sig = dfu_target_avr32_get_chip_signature (target, error);
-		if (chunk_sig == NULL)
+		if (chunk_sig == NULL) {
+			g_prefix_error (error, "failed to get chip signature: ");
 			return FALSE;
+		}
 	}
 
 	/* get data back */
@@ -691,8 +693,8 @@ dfu_target_avr_upload_element (DfuTarget *target,
 			return NULL;
 
 		/* upload data */
-		g_debug ("requesting %i bytes from the hardware",
-			 ATMEL_MAX_TRANSFER_SIZE);
+		g_debug ("requesting %i bytes from the hardware for chunk 0x%x",
+			 ATMEL_MAX_TRANSFER_SIZE, i);
 		blob_tmp = dfu_target_upload_chunk (target, i,
 						    ATMEL_MAX_TRANSFER_SIZE,
 						    error);
