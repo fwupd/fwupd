@@ -1030,7 +1030,8 @@ dfu_device_refresh (DfuDevice *device, GError **error)
 	}
 
 	/* some devices use the wrong state value */
-	if (dfu_device_has_quirk (device, DFU_DEVICE_QUIRK_FORCE_DFU_MODE)) {
+	if (dfu_device_has_quirk (device, DFU_DEVICE_QUIRK_FORCE_DFU_MODE) &&
+	    dfu_device_get_state (device) != DFU_STATE_DFU_IDLE) {
 		g_debug ("quirking device into DFU mode");
 		dfu_device_set_state (device, DFU_STATE_DFU_IDLE);
 	} else {
