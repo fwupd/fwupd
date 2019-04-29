@@ -254,6 +254,8 @@ fu_ata_device_parse_id (FuAtaDevice *self, const guint8 *buf, gsize sz, GError *
 		g_autofree gchar *tmp = NULL;
 		tmp = fu_ata_device_get_string (id, 23, 26);
 		fu_device_set_version (device, tmp, FWUPD_VERSION_FORMAT_PLAIN);
+	} else {
+		fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_PLAIN);
 	}
 
 	/* 8 byte additional product identifier == SKU? */
