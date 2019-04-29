@@ -1233,6 +1233,7 @@ dfu_device_detach (DfuDevice *device, GError **error)
 	}
 
 	/* success */
+	priv->force_version = 0x0;
 	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_IDLE);
 	return TRUE;
 }
@@ -1626,6 +1627,7 @@ dfu_device_attach (DfuDevice *device, GError **error)
 	}
 
 	/* success */
+	priv->force_version = 0x0;
 	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_IDLE);
 	return TRUE;
 }
