@@ -40,10 +40,11 @@ def _get_cache_file(fn):
     return cachefn
 
 class Test:
-    def __init__(self, name, guid):
+    def __init__(self, name, guid, has_runtime=True):
         self.files = []
         self.name = name
         self.guid = guid
+        self.has_runtime = has_runtime
 
     def run(self):
 
@@ -68,13 +69,14 @@ class Test:
             client.install(dev.get_id(), fn_cache, flags, cancellable)
 
             # verify version
-            dev = _get_by_device_guid(client, self.guid)
-            if not dev:
-                raise GLib.Error('Device did not come back: ' + name)
-            if not dev.get_version():
-                raise GLib.Error('No version set after flash for: ' + name)
-            if dev.get_version() != ver:
-                raise GLib.Error('Got: ' + dev.get_version() + ', expected: ' + ver)
+            if self.has_runtime:
+                dev = _get_by_device_guid(client, self.guid)
+                if not dev:
+                    raise GLib.Error('Device did not come back: ' + self.name)
+                if not dev.get_version():
+                    raise GLib.Error('No version set after flash for: ' + self.name)
+                if dev.get_version() != ver:
+                    raise GLib.Error('Got: ' + dev.get_version() + ', expected: ' + ver)
 
             # FIXME: wait for device to settle?
             time.sleep(2)
@@ -162,7 +164,7 @@ if __name__ == '__main__':
     tests.append(test)
 
     # AIAIAI H05
-    test = Test('AIAIAI-H05', '7e8318e1-27ae-55e4-a7a7-a35eff60e9bf')
+    test = Test('AIAIAI-H05', '7e8318e1-27ae-55e4-a7a7-a35eff60e9bf', has_runtime=False)
     test.add_file('84279d6bab52262080531acac701523604f3e649-AIAIAI-H05-1.6.cab', '1.6')
     tests.append(test)
 
