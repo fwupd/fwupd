@@ -731,8 +731,7 @@ fu_plugin_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
 	fu_device_set_flags (device_alt, device_flags_alt & ~FWUPD_DEVICE_FLAG_UPDATABLE);
 
 	/* make sure that this unlocked device can be updated */
-	fu_device_set_version (device, "0.0.0.0");
-
+	fu_device_set_version (device, "0.0.0.0", FWUPD_VERSION_FORMAT_QUAD);
 	return TRUE;
 }
 

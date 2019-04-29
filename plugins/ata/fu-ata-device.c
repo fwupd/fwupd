@@ -181,7 +181,6 @@ fu_ata_device_parse_id_maybe_dell (FuAtaDevice *self, const guint16 *buf)
 	guid_efi = fu_ata_device_get_guid_safe (buf, 129);
 	if (guid_efi != NULL)
 		fu_device_add_guid (FU_DEVICE (self), guid_efi);
-	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PLAIN);
 }
 
 static gboolean
@@ -254,7 +253,7 @@ fu_ata_device_parse_id (FuAtaDevice *self, const guint8 *buf, gsize sz, GError *
 	if (fu_device_get_version (device) == NULL) {
 		g_autofree gchar *tmp = NULL;
 		tmp = fu_ata_device_get_string (id, 23, 26);
-		fu_device_set_version (device, tmp);
+		fu_device_set_version (device, tmp, FWUPD_VERSION_FORMAT_PLAIN);
 	}
 
 	/* 8 byte additional product identifier == SKU? */

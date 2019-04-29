@@ -339,7 +339,8 @@ fu_unifying_peripheral_fetch_firmware_info (FuUnifyingPeripheral *self, GError *
 					     build);
 		g_debug ("firmware entity 0x%02x version is %s", i, version);
 		if (msg->data[0] == 0) {
-			fu_device_set_version (FU_DEVICE (self), version);
+			fu_device_set_version (FU_DEVICE (self), version,
+					       FWUPD_VERSION_FORMAT_PLAIN);
 			self->cached_fw_entity = i;
 		} else if (msg->data[0] == 1) {
 			fu_device_set_version_bootloader (FU_DEVICE (self), version);
@@ -590,7 +591,9 @@ fu_unifying_peripheral_setup (FuDevice *device, GError **error)
 		fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 		if (fu_device_get_version (device) == NULL) {
 			g_debug ("repairing device in bootloader mode");
-			fu_device_set_version (FU_DEVICE (device), "MPK00.00_B0000");
+			fu_device_set_version (FU_DEVICE (device),
+					       "MPK00.00_B0000",
+					       FWUPD_VERSION_FORMAT_PLAIN);
 		}
 	}
 

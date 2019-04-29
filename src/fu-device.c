@@ -647,7 +647,7 @@ fu_device_set_quirk_kv (FuDevice *self,
 		return TRUE;
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_VERSION) == 0) {
-		fu_device_set_version (self, value);
+		fu_device_set_version (self, value, fu_device_get_version_format (self));
 		return TRUE;
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_ICON) == 0) {
@@ -1168,16 +1168,17 @@ fu_device_set_id (FuDevice *self, const gchar *id)
  * fu_device_set_version:
  * @self: A #FuDevice
  * @version: a string, e.g. `1.2.3`
+ * @fmt: a #FwupdVersionFormat, e.g. %FWUPD_VERSION_FORMAT_TRIPLET
  *
- * Sets the device version, autodetecting the version format if required.
+ * Sets the device version, sanitizing the string if required.
  *
- * Since: 1.2.1
+ * Since: 1.2.9
  **/
 void
-fu_device_set_version (FuDevice *self, const gchar *version)
+fu_device_set_version (FuDevice *self, const gchar *version, FwupdVersionFormat fmt)
 {
-	FwupdVersionFormat version_format = fu_device_get_version_format (self);
 	g_autofree gchar *version_safe = NULL;
+	g_autoptr(GError) error = NULL;
 
 	g_return_if_fail (FU_IS_DEVICE (self));
 	g_return_if_fail (version != NULL);
@@ -1191,11 +1192,11 @@ fu_device_set_version (FuDevice *self, const gchar *version)
 		version_safe = g_strdup (version);
 	}
 
-	/* try to autodetect the version-format */
-	if (version_format == FWUPD_VERSION_FORMAT_UNKNOWN) {
-		version_format = fu_common_version_guess_format (version_safe);
-		fu_device_set_version_format (self, version_format);
-	}
+	/* print a console warning for an invalid version, if semver */
+	if (!fu_common_version_verify_format (version_safe, fmt, &error))
+		g_warning ("%s", error->message);
+
+	fu_device_set_version_format (self, fmt);
 	fwupd_device_set_version (FWUPD_DEVICE (self), version_safe);
 }
 

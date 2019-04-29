@@ -371,7 +371,7 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	if (device_id != NULL)
 		fu_device_add_instance_id (dev, device_id);
 	if (version != NULL)
-		fu_device_set_version (dev, version);
+		fu_device_set_version (dev, version, FWUPD_VERSION_FORMAT_PAIR);
 	if (is_host)
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
@@ -427,7 +427,7 @@ fu_plugin_thunderbolt_change (FuPlugin *plugin, GUdevDevice *device)
 	}
 
 	version = fu_plugin_thunderbolt_udev_get_version (device);
-	fu_device_set_version (dev, version);
+	fu_device_set_version (dev, version, FWUPD_VERSION_FORMAT_PAIR);
 }
 
 static gboolean

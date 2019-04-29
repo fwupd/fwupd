@@ -1702,7 +1702,8 @@ fu_engine_install (FuEngine *self,
 	    g_strcmp0 (fu_device_get_version (device), version_rel) != 0) {
 		g_warning ("new device version '%s' was is not '%s', fixing up",
 			   fu_device_get_version (device), version_rel);
-		fu_device_set_version (device, version_rel);
+		fu_device_set_version (device, version_rel,
+				       fu_device_get_version_format (device));
 	}
 
 	/* success */
@@ -3733,8 +3734,8 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 			fu_device_set_alternate (device, device_alt);
 	}
 
-	if (fu_device_get_version (device) != NULL &&
-	    fu_device_get_version_format (device) == FWUPD_VERSION_FORMAT_UNKNOWN) {
+	if (fu_device_get_version_format (device) == FWUPD_VERSION_FORMAT_UNKNOWN &&
+	    fu_common_version_guess_format (fu_device_get_version (device)) == FWUPD_VERSION_FORMAT_NUMBER) {
 		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 		fu_device_set_update_error (device, "VersionFormat is ambiguous for this device");
 	}
@@ -4323,7 +4324,8 @@ fu_engine_update_history_device (FuEngine *self, FuDevice *dev_history, GError *
 			const gchar *csum = g_ptr_array_index (checksums, i);
 			fu_device_add_checksum (dev_history, csum);
 		}
-		fu_device_set_version (dev_history, fu_device_get_version (dev));
+		fu_device_set_version (dev_history, fu_device_get_version (dev),
+				       fu_device_get_version_format (dev));
 		fu_device_remove_flag (dev_history, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 		fu_device_set_update_state (dev_history, FWUPD_UPDATE_STATE_SUCCESS);
 		return fu_history_modify_device (self->history, dev_history,

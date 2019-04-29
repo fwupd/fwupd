@@ -157,7 +157,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	fu_device_set_name (dev, "Dell UEFI updates");
 	fu_device_set_summary (dev, "Enable UEFI Update Functionality");
 	fu_device_add_guid (dev, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
-	fu_device_set_version (dev, "0");
+	fu_device_set_version (dev, "0", FWUPD_VERSION_FORMAT_NUMBER);
 	fu_device_add_icon (dev, "computer");
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_LOCKED);
 	fu_plugin_device_add (plugin, dev);

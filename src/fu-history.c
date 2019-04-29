@@ -115,7 +115,7 @@ fu_history_device_from_stmt (sqlite3_stmt *stmt)
 	/* version_old */
 	tmp = (const gchar *) sqlite3_column_text (stmt, 13);
 	if (tmp != NULL)
-		fu_device_set_version (device, tmp);
+		fu_device_set_version (device, tmp, FWUPD_VERSION_FORMAT_UNKNOWN);
 
 	/* checksum_device */
 	tmp = (const gchar *) sqlite3_column_text (stmt, 14);

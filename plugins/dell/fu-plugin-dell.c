@@ -290,7 +290,8 @@ fu_plugin_dell_capsule_supported (FuPlugin *plugin)
 static gboolean
 fu_plugin_dock_node (FuPlugin *plugin, const gchar *platform,
 		     guint8 type, const gchar *component_guid,
-		     const gchar *component_desc, const gchar *version)
+		     const gchar *component_desc, const gchar *version,
+		     FwupdVersionFormat version_format)
 {
 	const gchar *dock_type;
 	g_autofree gchar *dock_name = NULL;
@@ -324,7 +325,7 @@ fu_plugin_dock_node (FuPlugin *plugin, const gchar *platform,
 	fu_device_add_guid (dev, component_guid);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	if (version != NULL) {
-		fu_device_set_version (dev, version);
+		fu_device_set_version (dev, version, version_format);
 		if (fu_plugin_dell_capsule_supported (plugin)) {
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
@@ -447,7 +448,8 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 					  buf.record->dock_info_header.dock_type,
 					  component_guid,
 					  component_name,
-					  fw_str)) {
+					  fw_str,
+					  version_format)) {
 			g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
 				     "failed to create %s", component_name);
 			return FALSE;
@@ -463,7 +465,8 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 				  buf.record->dock_info_header.dock_type,
 				  DOCK_FLASH_GUID,
 				  NULL,
-				  flash_ver_str)) {
+				  flash_ver_str,
+				  version_format)) {
 		g_set_error_literal (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
 				    "failed to create top dock node");
 
@@ -657,7 +660,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	fu_device_set_vendor (dev, "Dell Inc.");
 	fu_device_set_name (dev, pretty_tpm_name);
 	fu_device_set_summary (dev, "Platform TPM device");
-	fu_device_set_version (dev, version_str);
+	fu_device_set_version (dev, version_str, FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_icon (dev, "computer");

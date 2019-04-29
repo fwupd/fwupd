@@ -711,7 +711,7 @@ fu_wac_device_add_modules_bluetooth (FuWacDevice *self, GError **error)
 	module = fu_wac_module_bluetooth_new (usb_device);
 	fu_device_add_child (FU_DEVICE (self), FU_DEVICE (module));
 	fu_device_set_name (FU_DEVICE (module), name);
-	fu_device_set_version (FU_DEVICE (module), version);
+	fu_device_set_version (FU_DEVICE (module), version, FWUPD_VERSION_FORMAT_PAIR);
 	return TRUE;
 }
 
@@ -781,7 +781,7 @@ fu_wac_device_add_modules (FuWacDevice *self, GError **error)
 						fu_device_get_name (FU_DEVICE (self)));
 			fu_device_add_child (FU_DEVICE (self), FU_DEVICE (module));
 			fu_device_set_name (FU_DEVICE (module), name);
-			fu_device_set_version (FU_DEVICE (module), version);
+			fu_device_set_version (FU_DEVICE (module), version, FWUPD_VERSION_FORMAT_PAIR);
 			break;
 		case FU_WAC_MODULE_FW_TYPE_BLUETOOTH:
 			module = fu_wac_module_bluetooth_new (usb_device);
@@ -789,10 +789,10 @@ fu_wac_device_add_modules (FuWacDevice *self, GError **error)
 						fu_device_get_name (FU_DEVICE (self)));
 			fu_device_add_child (FU_DEVICE (self), FU_DEVICE (module));
 			fu_device_set_name (FU_DEVICE (module), name);
-			fu_device_set_version (FU_DEVICE (module), version);
+			fu_device_set_version (FU_DEVICE (module), version, FWUPD_VERSION_FORMAT_PAIR);
 			break;
 		case FU_WAC_MODULE_FW_TYPE_MAIN:
-			fu_device_set_version (FU_DEVICE (self), version);
+			fu_device_set_version (FU_DEVICE (self), version, FWUPD_VERSION_FORMAT_PAIR);
 			break;
 		default:
 			g_warning ("unknown submodule type 0x%0x", fw_type);

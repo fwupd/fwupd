@@ -92,20 +92,6 @@ fu_install_task_get_is_downgrade (FuInstallTask *self)
 	return self->is_downgrade;
 }
 
-static FwupdVersionFormat
-fu_install_task_guess_version_format (FuInstallTask *self, const gchar *version)
-{
-	const gchar *tmp;
-
-	/* explicit set */
-	tmp = xb_node_query_text (self->component, "custom/value[@key='LVFS::VersionFormat']", NULL);
-	if (tmp != NULL)
-		return fwupd_version_format_from_string (tmp);
-
-	/* count section from dotted notation */
-	return fu_common_version_guess_format (version);
-}
-
 /**
  * fu_install_task_check_requirements:
  * @self: A #FuInstallTask
@@ -123,7 +109,7 @@ fu_install_task_check_requirements (FuInstallTask *self,
 				    FwupdInstallFlags flags,
 				    GError **error)
 {
-	FwupdVersionFormat fmt;
+	const gchar *tmp;
 	const gchar *version;
 	const gchar *version_release;
 	const gchar *version_lowest;
@@ -232,26 +218,46 @@ fu_install_task_check_requirements (FuInstallTask *self,
 		return FALSE;
 	}
 
-	/* check the version formats match */
-	fmt = fu_install_task_guess_version_format (self, version_release);
-	if (fmt != FWUPD_VERSION_FORMAT_UNKNOWN &&
-	    fmt != fu_device_get_version_format (self->device)) {
+	/* check the version formats match if set in the release */
+	tmp = xb_node_query_text (self->component, "custom/value[@key='LVFS::VersionFormat']", NULL);
+	if (tmp != NULL) {
 		FwupdVersionFormat fmt_dev = fu_device_get_version_format (self->device);
-		if (flags & FWUPD_INSTALL_FLAG_FORCE) {
-			g_warning ("ignoring version format difference %s:%s",
-				   fwupd_version_format_to_string (fmt_dev),
-				   fwupd_version_format_to_string (fmt));
-		} else {
+		FwupdVersionFormat fmt_rel = fwupd_version_format_from_string (tmp);
+		if (fmt_rel == FWUPD_VERSION_FORMAT_UNKNOWN &&
+		    (flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "Firmware version formats were different, "
-				     "device was '%s' and release is '%s'",
-				     fwupd_version_format_to_string (fmt_dev),
-				     fwupd_version_format_to_string (fmt));
+				     "release version format '%s' unsupported",
+				     tmp);
 			return FALSE;
 		}
+		if (fmt_dev == FWUPD_VERSION_FORMAT_UNKNOWN &&
+		    (flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "release version format '%s' but no device version format",
+				     tmp);
+			return FALSE;
+		}
+		if (fmt_dev != fmt_rel) {
+			if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
+					     "Firmware version formats were different, "
+					     "device was '%s' and release is '%s'",
+					     fwupd_version_format_to_string (fmt_dev),
+					     fwupd_version_format_to_string (fmt_rel));
+				return FALSE;
+			}
+			g_warning ("ignoring version format difference %s:%s",
+				   fwupd_version_format_to_string (fmt_dev),
+				   fwupd_version_format_to_string (fmt_rel));
+		}
 	}
+
 
 	/* compare to the lowest supported version, if it exists */
 	version_lowest = fu_device_get_version_lowest (self->device);

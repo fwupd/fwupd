@@ -45,7 +45,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	fu_device_set_vendor (device, "ACME Corp.");
 	fu_device_set_vendor_id (device, "USB:0x046D");
 	fu_device_set_version_bootloader (device, "0.1.2");
-	fu_device_set_version (device, "1.2.2");
+	fu_device_set_version (device, "1.2.2", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version_lowest (device, "1.2.0");
 	if (g_strcmp0 (g_getenv ("FWUPD_PLUGIN_TEST"), "registration") == 0) {
 		fu_plugin_device_register (plugin, device);
@@ -68,8 +68,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		fu_device_set_logical_id (child1, "child1");
 		fu_device_add_guid (child1, "7fddead7-12b5-4fb9-9fa0-6d30305df755");
 		fu_device_set_name (child1, "Module1");
-		fu_device_set_version (child1, "1");
-		fu_device_set_version_format (child1, FWUPD_VERSION_FORMAT_PLAIN);
+		fu_device_set_version (child1, "1", FWUPD_VERSION_FORMAT_PLAIN);
 		fu_device_add_parent_guid (child1, "b585990a-003e-5270-89d5-3705a17f9a43");
 		fu_device_add_flag (child1, FWUPD_DEVICE_FLAG_UPDATABLE);
 		fu_plugin_device_add (plugin, child1);
@@ -79,8 +78,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		fu_device_set_logical_id (child2, "child2");
 		fu_device_add_guid (child2, "b8fe6b45-8702-4bcd-8120-ef236caac76f");
 		fu_device_set_name (child2, "Module2");
-		fu_device_set_version (child2, "10");
-		fu_device_set_version_format (child2, FWUPD_VERSION_FORMAT_PLAIN);
+		fu_device_set_version (child2, "10", FWUPD_VERSION_FORMAT_PLAIN);
 		fu_device_add_parent_guid (child2, "b585990a-003e-5270-89d5-3705a17f9a43");
 		fu_device_add_flag (child2, FWUPD_DEVICE_FLAG_UPDATABLE);
 		fu_plugin_device_add (plugin, child2);
@@ -154,10 +152,10 @@ fu_plugin_update (FuPlugin *plugin,
 	/* composite test, upgrade composite devices */
 	if (g_strcmp0 (test, "composite") == 0) {
 		if (g_strcmp0 (fu_device_get_logical_id (device), "child1") == 0) {
-			fu_device_set_version (device, "2");
+			fu_device_set_version (device, "2", FWUPD_VERSION_FORMAT_PLAIN);
 			return TRUE;
 		} else if (g_strcmp0 (fu_device_get_logical_id (device), "child2") == 0) {
-			fu_device_set_version (device, "11");
+			fu_device_set_version (device, "11", FWUPD_VERSION_FORMAT_PLAIN);
 			return TRUE;
 		}
 	}
@@ -167,9 +165,9 @@ fu_plugin_update (FuPlugin *plugin,
 		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 	} else {
 		if (flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) {
-			fu_device_set_version (device, "1.2.2");
+			fu_device_set_version (device, "1.2.2", FWUPD_VERSION_FORMAT_TRIPLET);
 		} else {
-			fu_device_set_version (device, "1.2.3");
+			fu_device_set_version (device, "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET);
 		}
 	}
 
@@ -189,7 +187,7 @@ fu_plugin_update (FuPlugin *plugin,
 gboolean
 fu_plugin_activate (FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	fu_device_set_version (device, "1.2.3");
+	fu_device_set_version (device, "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET);
 	return TRUE;
 }
 

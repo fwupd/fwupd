@@ -304,6 +304,47 @@ fu_common_version_guess_format (const gchar *version)
 	return FWUPD_VERSION_FORMAT_UNKNOWN;
 }
 
+static FwupdVersionFormat
+fu_common_version_convert_base (FwupdVersionFormat fmt)
+{
+	if (fmt == FWUPD_VERSION_FORMAT_INTEL_ME ||
+	    fmt == FWUPD_VERSION_FORMAT_INTEL_ME2)
+		return FWUPD_VERSION_FORMAT_QUAD;
+	if (fmt == FWUPD_VERSION_FORMAT_BCD)
+		return FWUPD_VERSION_FORMAT_PAIR;
+	return fmt;
+}
+
+gboolean
+fu_common_version_verify_format (const gchar *version,
+				 FwupdVersionFormat fmt,
+				 GError **error)
+{
+	FwupdVersionFormat fmt_base = fu_common_version_convert_base (fmt);
+
+	/* don't touch */
+	if (fmt == FWUPD_VERSION_FORMAT_PLAIN)
+		return TRUE;
+
+	/* nothing we can check for */
+	if (fmt == FWUPD_VERSION_FORMAT_UNKNOWN) {
+		g_debug ("not checking %s as no version format set", version);
+		return TRUE;
+	}
+
+	/* check the base format */
+	if (fu_common_version_guess_format (version) != fmt_base) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "%s is not a valid %s",
+			     version,
+			     fwupd_version_format_to_string (fmt));
+		return FALSE;
+	}
+	return TRUE;
+}
+
 /**
  * fu_common_vercmp:
  * @version_a: the release version, e.g. 1.2.3

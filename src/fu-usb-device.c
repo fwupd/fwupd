@@ -170,7 +170,10 @@ fu_usb_device_open (FuDevice *device, GError **error)
 	if (idx != 0x00) {
 		g_autofree gchar *tmp = NULL;
 		tmp = g_usb_device_get_string_descriptor (priv->usb_device, idx, NULL);
-		fu_device_set_version (device, tmp);
+		/* although guessing is a route to insanity, if the device has
+		 * provided the extra data it's because the BCD type was not
+		 * suitable -- and INTEL_ME is not relevant here */
+		fu_device_set_version (device, tmp, fu_common_version_guess_format (tmp));
 	}
 
 	/* get GUID from the descriptor if set */
@@ -240,7 +243,7 @@ fu_usb_device_probe (FuDevice *device, GError **error)
 	if (release != 0x0) {
 		g_autofree gchar *version = NULL;
 		version = fu_common_version_from_uint16 (release, FWUPD_VERSION_FORMAT_BCD);
-		fu_device_set_version (device, version);
+		fu_device_set_version (device, version, FWUPD_VERSION_FORMAT_BCD);
 	}
 
 	/* add GUIDs in order of priority */

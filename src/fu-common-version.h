@@ -20,5 +20,7 @@ gchar		*fu_common_version_from_uint16	(guint16	 val,
 gchar		*fu_common_version_parse	(const gchar	*version);
 gchar		*fu_common_version_ensure_semver (const gchar	*version);
 FwupdVersionFormat	 fu_common_version_guess_format	(const gchar	*version);
-
+gboolean	 fu_common_version_verify_format	(const gchar	*version,
+							 FwupdVersionFormat fmt,
+							 GError		**error);
 G_END_DECLS

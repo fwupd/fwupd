@@ -513,7 +513,7 @@ fu_uefi_device_probe (FuDevice *device, GError **error)
 	/* set versions */
 	version_format = fu_device_get_version_format (device);
 	version = fu_common_version_from_uint32 (self->fw_version, version_format);
-	fu_device_set_version (device, version);
+	fu_device_set_version (device, version, version_format);
 	if (self->fw_version_lowest != 0) {
 		version_lowest = fu_common_version_from_uint32 (self->fw_version_lowest,
 							        version_format);

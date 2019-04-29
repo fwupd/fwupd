@@ -201,7 +201,6 @@ fu_nvme_device_parse_cns_maybe_dell (FuNvmeDevice *self, const guint8 *buf)
 	guid_efi = fu_nvme_device_get_guid_safe (buf, 0x0c26);
 	if (guid_efi != NULL)
 		fu_device_add_guid (FU_DEVICE (self), guid_efi);
-	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PLAIN);
 }
 
 static gboolean
@@ -211,7 +210,7 @@ fu_nvme_device_set_version (FuNvmeDevice *self, const gchar *version, GError **e
 
 	/* unset */
 	if (fmt == FWUPD_VERSION_FORMAT_UNKNOWN || fmt == FWUPD_VERSION_FORMAT_PLAIN) {
-		fu_device_set_version (FU_DEVICE (self), version);
+		fu_device_set_version (FU_DEVICE (self), version, FWUPD_VERSION_FORMAT_PLAIN);
 		return TRUE;
 	}
 
@@ -228,7 +227,7 @@ fu_nvme_device_set_version (FuNvmeDevice *self, const gchar *version, GError **e
 			return FALSE;
 		}
 		version_new = fu_common_version_from_uint32 (tmp, FWUPD_VERSION_FORMAT_QUAD);
-		fu_device_set_version (FU_DEVICE (self), version_new);
+		fu_device_set_version (FU_DEVICE (self), version_new, fmt);
 		return TRUE;
 	}
 

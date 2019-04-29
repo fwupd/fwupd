@@ -100,7 +100,7 @@ fu_engine_generate_md_func (void)
 	g_assert_no_error (error);
 	g_assert (ret);
 	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
-	fu_device_set_version (device, "1.2.3");
+	fu_device_set_version (device, "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET);
 	component = fu_engine_get_component_by_guids (engine, device);
 	g_assert_nonnull (component);
 
@@ -267,12 +267,12 @@ fu_engine_requirements_child_func (void)
 		"</component>";
 
 	/* set up a dummy device */
-	fu_device_set_version (device, "1.2.3");
+	fu_device_set_version (device, "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version_bootloader (device, "4.5.6");
 	fu_device_set_vendor_id (device, "FFFF");
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
-	fu_device_set_version (child, "0.0.999");
+	fu_device_set_version (child, "0.0.999", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_child (device, child);
 
 	/* make the component require three things */
@@ -319,12 +319,12 @@ fu_engine_requirements_child_fail_func (void)
 		"</component>";
 
 	/* set up a dummy device */
-	fu_device_set_version (device, "1.2.3");
+	fu_device_set_version (device, "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version_bootloader (device, "4.5.6");
 	fu_device_set_vendor_id (device, "FFFF");
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
-	fu_device_set_version (child, "0.0.1");
+	fu_device_set_version (child, "0.0.1", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_child (device, child);
 
 	/* make the component require three things */
@@ -411,7 +411,7 @@ fu_engine_requirements_device_func (void)
 		"</component>";
 
 	/* set up a dummy device */
-	fu_device_set_version (device, "1.2.3");
+	fu_device_set_version (device, "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version_bootloader (device, "4.5.6");
 	fu_device_set_vendor_id (device, "FFFF");
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
@@ -454,10 +454,13 @@ fu_engine_requirements_version_format_func (void)
 		"      <checksum type=\"sha1\" filename=\"bios.bin\" target=\"content\"/>"
 		"    </release>"
 		"  </releases>"
+		"  <custom>"
+		"    <value key=\"LVFS::VersionFormat\">triplet</value>"
+		"  </custom>"
 		"</component>";
 
 	/* set up a dummy device */
-	fu_device_set_version (device, "1.2.3.4");
+	fu_device_set_version (device, "1.2.3.4", FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
 
@@ -511,14 +514,14 @@ fu_engine_requirements_other_device_func (void)
 	fu_engine_set_silo (engine, silo_empty);
 
 	/* set up a dummy device */
-	fu_device_set_version (device1, "1.2.3");
+	fu_device_set_version (device1, "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_flag (device1, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_guid (device1, "12345678-1234-1234-1234-123456789012");
 
 	/* set up a different device */
 	fu_device_set_id (device2, "id2");
 	fu_device_set_name (device2, "Secondary firmware");
-	fu_device_set_version (device2, "4.5.6");
+	fu_device_set_version (device2, "4.5.6", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_vendor_id (device2, "FFFF");
 	fu_device_add_guid (device2, "1ff60ab2-3905-06a1-b476-0371f00c9e9b");
 	fu_engine_add_device (engine, device2);
@@ -787,7 +790,7 @@ fu_engine_require_hwid_func (void)
 
 	/* add a dummy device */
 	fu_device_set_id (device, "test_device");
-	fu_device_set_version (device, "1.2.2");
+	fu_device_set_version (device, "1.2.2", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_engine_add_device (engine, device);
@@ -920,7 +923,7 @@ fu_engine_downgrade_func (void)
 	g_clear_error (&error);
 
 	/* add a device so we can get upgrades and downgrades */
-	fu_device_set_version (device, "1.2.3");
+	fu_device_set_version (device, "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_id (device, "test_device");
 	fu_device_set_name (device, "Test Device");
 	fu_device_add_guid (device, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
@@ -1017,7 +1020,7 @@ fu_engine_install_duration_func (void)
 	g_assert (ret);
 
 	/* add a device so we can get the install duration */
-	fu_device_set_version (device, "1.2.3");
+	fu_device_set_version (device, "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_id (device, "test_device");
 	fu_device_add_guid (device, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
 	fu_device_set_install_duration (device, 999);
@@ -1083,7 +1086,7 @@ fu_engine_history_func (void)
 	g_assert_cmpint (fu_engine_get_status (engine), ==, FWUPD_STATUS_IDLE);
 
 	/* add a device so we can get upgrade it */
-	fu_device_set_version (device, "1.2.2");
+	fu_device_set_version (device, "1.2.2", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_id (device, "test_device");
 	fu_device_set_name (device, "Test Device");
 	fu_device_set_plugin (device, "test");
@@ -1144,7 +1147,6 @@ fu_engine_history_func (void)
 		"  Plugin:               test\n"
 		"  Flags:                updatable\n"
 		"  Version:              1.2.2\n"
-		"  VersionFormat:        triplet\n"
 		"  Created:              2018-01-07\n"
 		"  Modified:             2017-12-27\n"
 		"  UpdateState:          success\n"
@@ -1212,7 +1214,7 @@ fu_engine_history_inherit (void)
 	g_assert_cmpint (fu_engine_get_status (engine), ==, FWUPD_STATUS_IDLE);
 
 	/* add a device so we can get upgrade it */
-	fu_device_set_version (device, "1.2.2");
+	fu_device_set_version (device, "1.2.2", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_id (device, "test_device");
 	fu_device_set_name (device, "Test Device");
 	fu_device_set_plugin (device, "test");
@@ -1262,7 +1264,7 @@ fu_engine_history_inherit (void)
 	g_assert_cmpstr (fu_device_get_version (device), ==, "1.2.3");
 
 	/* emulate getting the flag for a fresh boot on old firmware */
-	fu_device_set_version (device, "1.2.2");
+	fu_device_set_version (device, "1.2.2", FWUPD_VERSION_FORMAT_TRIPLET);
 	ret = fu_engine_install (engine, task, blob_cab,
 				 FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error (error);
@@ -1276,7 +1278,7 @@ fu_engine_history_inherit (void)
 	fu_device_set_id (device, "test_device");
 	fu_device_set_name (device, "Test Device");
 	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
-	fu_device_set_version (device, "1.2.2");
+	fu_device_set_version (device, "1.2.2", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_engine_add_device (engine, device);
 	g_assert_true (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION));
 }
@@ -1323,7 +1325,7 @@ fu_engine_history_error_func (void)
 	g_assert_cmpint (fu_engine_get_status (engine), ==, FWUPD_STATUS_IDLE);
 
 	/* add a device so we can get upgrade it */
-	fu_device_set_version (device, "1.2.2");
+	fu_device_set_version (device, "1.2.2", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_id (device, "test_device");
 	fu_device_set_name (device, "Test Device");
 	fu_device_set_plugin (device, "test");
@@ -1377,7 +1379,6 @@ fu_engine_history_error_func (void)
 		"  Plugin:               test\n"
 		"  Flags:                updatable\n"
 		"  Version:              1.2.2\n"
-		"  VersionFormat:        triplet\n"
 		"  Created:              2018-01-07\n"
 		"  Modified:             2017-12-27\n"
 		"  UpdateState:          failed\n"
@@ -1614,7 +1615,7 @@ fu_device_list_compatible_func (void)
 	fu_device_set_id (device1, "device1");
 	fu_device_set_plugin (device1, "plugin-for-runtime");
 	fu_device_set_vendor_id (device1, "USB:0x20A0");
-	fu_device_set_version (device1, "1.2.3");
+	fu_device_set_version (device1, "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_instance_id (device1, "foobar");
 	fu_device_add_instance_id (device1, "bootloader");
 	fu_device_set_remove_delay (device1, 100);
@@ -1798,7 +1799,7 @@ fu_device_version_format_func (void)
 {
 	g_autoptr(FuDevice) device = fu_device_new ();
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_ENSURE_SEMVER);
-	fu_device_set_version (device, "Ver1.2.3 RELEASE");
+	fu_device_set_version (device, "Ver1.2.3 RELEASE", FWUPD_VERSION_FORMAT_TRIPLET);
 	g_assert_cmpstr (fu_device_get_version (device), ==, "1.2.3");
 }
 
@@ -2424,7 +2425,7 @@ fu_history_func (void)
 	device = fu_device_new ();
 	fu_device_set_id (device, "self-test");
 	fu_device_set_name (device, "ColorHug"),
-	fu_device_set_version (device, "3.0.1"),
+	fu_device_set_version (device, "3.0.1", FWUPD_VERSION_FORMAT_TRIPLET),
 	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
 	fu_device_set_update_error (device, "word");
 	fu_device_add_guid (device, "827edddd-9bb6-5632-889f-2c01255503da");

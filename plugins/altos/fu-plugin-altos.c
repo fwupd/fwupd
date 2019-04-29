@@ -46,7 +46,8 @@ fu_plugin_usb_device_added (FuPlugin *plugin, FuUsbDevice *device, GError **erro
 			g_debug ("adding runtime GUID of %s", guid);
 			fu_device_add_counterpart_guid (FU_DEVICE (dev), guid);
 			fu_device_set_version (FU_DEVICE (dev),
-					       fu_device_get_version (dev_runtime));
+					       fu_device_get_version (dev_runtime),
+					       fu_device_get_version_format (dev_runtime));
 		}
 	} else {
 		fu_plugin_cache_add (plugin, runtime_id, dev);

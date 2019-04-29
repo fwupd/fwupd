@@ -165,7 +165,8 @@ void		 fu_device_set_metadata_integer		(FuDevice	*self,
 void		 fu_device_set_id			(FuDevice	*self,
 							 const gchar	*id);
 void		 fu_device_set_version			(FuDevice	*self,
-							 const gchar	*version);
+							 const gchar	*version,
+							 FwupdVersionFormat fmt);
 const gchar	*fu_device_get_physical_id		(FuDevice	*self);
 void		 fu_device_set_physical_id		(FuDevice	*self,
 							 const gchar	*physical_id);

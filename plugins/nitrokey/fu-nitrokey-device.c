@@ -192,7 +192,7 @@ fu_nitrokey_device_setup (FuDevice *device, GError **error)
 	_dump_to_console ("payload", buf_reply, sizeof(buf_reply));
 	memcpy (&payload, buf_reply, sizeof(payload));
 	version = g_strdup_printf ("%u.%u", payload.VersionMajor, payload.VersionMinor);
-	fu_device_set_version (FU_DEVICE (device), version);
+	fu_device_set_version (FU_DEVICE (device), version, FWUPD_VERSION_FORMAT_PAIR);
 
 	/* success */
 	return TRUE;

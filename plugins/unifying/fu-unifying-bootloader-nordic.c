@@ -70,9 +70,11 @@ fu_unifying_bootloader_nordic_setup (FuUnifyingBootloader *self, GError **error)
 	if (version_fw == NULL) {
 		g_warning ("failed to get firmware version: %s",
 			   error_local->message);
-		fu_device_set_version (FU_DEVICE (self), "RQR12.00_B0000");
+		fu_device_set_version (FU_DEVICE (self), "RQR12.00_B0000",
+				       FWUPD_VERSION_FORMAT_PLAIN);
 	} else {
-		fu_device_set_version (FU_DEVICE (self), version_fw);
+		fu_device_set_version (FU_DEVICE (self), version_fw,
+				       FWUPD_VERSION_FORMAT_PLAIN);
 	}
 
 	return TRUE;
