@@ -235,7 +235,8 @@ fu_engine_set_device_version_format (FuEngine *self, FuDevice *device, XbNode *c
 
 	/* fall back to the SmbiosManufacturer quirk */
 	developer_name = xb_node_query_text (component, "developer_name", NULL);
-	if (developer_name != NULL) {
+	if (developer_name != NULL &&
+	    fu_device_has_flag (device, FWUPD_DEVICE_FLAG_INTERNAL)) {
 		g_autofree gchar *group = NULL;
 		group = g_strdup_printf ("SmbiosManufacturer=%s", developer_name);
 		version_format = fu_quirks_lookup_by_id (self->quirks, group,
