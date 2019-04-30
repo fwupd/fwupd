@@ -863,9 +863,9 @@ fu_plugin_runner_offline_invalidate (GError **error)
 static gboolean
 fu_plugin_runner_offline_setup (GError **error)
 {
-	const gchar *symlink_target = "/var/lib/fwupd";
 	gint rc;
 	g_autofree gchar *filename = NULL;
+	g_autofree gchar *symlink_target = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR_PKG);
 
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
