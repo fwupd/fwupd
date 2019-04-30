@@ -15,7 +15,7 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (FuArchive, fu_archive, FU, ARCHIVE, GObject)
 
 /**
- * FwupdError:
+ * FuArchiveFlags:
  * @FU_ARCHIVE_FLAG_NONE:		No flags set
  * @FU_ARCHIVE_FLAG_IGNORE_PATH:	Ignore any path component
  *
@@ -32,7 +32,7 @@ typedef enum {
  * FuArchiveIterateFunc:
  * @self: A #FuArchive.
  * @filename: A filename.
- * @blob: The blob referenced by @filename.
+ * @bytes: The blob referenced by @filename.
  * @user_data: User data.
  *
  * Specifies the type of archive iteration function.

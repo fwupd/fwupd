@@ -971,7 +971,7 @@ fu_common_get_path (FuPathKind path_kind)
 		if (tmp != NULL)
 			return g_strdup (tmp);
 		return g_strdup ("/sys/firmware");
-	/* /sys/firmware */
+	/* /sys/class/tpm */
 	case FU_PATH_KIND_SYSFSDIR_TPM:
 		tmp = g_getenv ("FWUPD_SYSFSTPMDIR");
 		if (tmp != NULL)
@@ -1200,7 +1200,7 @@ fu_common_dump_raw (const gchar *log_domain,
 }
 
 /**
- * fu_common_dump_raw:
+ * fu_common_dump_bytes:
  * @log_domain: log domain, typically %G_LOG_DOMAIN or %NULL
  * @title: prefix title, or %NULL
  * @bytes: a #GBytes
