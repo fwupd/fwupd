@@ -97,16 +97,9 @@ fu_mutex_locker_new (FuMutex *mutex, FuMutexAccess kind)
 /**
  * fu_mutex_lock:
  * @self: a #FuMutex
+ * @kind: a #FuMutexAccess type
  *
  * Obtain a read or write lock.
- *
- * If @kind is FU_MUTEX_ACCESS_READ and another thread currently holds the
- * write lock or blocks waiting for it, the current thread will block.
- * Read locks can be taken recursively.
-
- * If @kind is FU_MUTEX_ACCESS_WRITE and any thread already holds a read or
- * write lock, the current thread will block until all other threads have
- * dropped their locks.
  *
  * Since: 1.1.2
  **/
@@ -122,6 +115,7 @@ fu_mutex_lock (FuMutex *self, FuMutexAccess kind)
 /**
  * fu_mutex_unlock:
  * @self: a #FuMutex
+ * @kind: a #FuMutexAccess type
  *
  * Release a read or write lock.
  *
@@ -170,6 +164,8 @@ fu_mutex_init (FuMutex *self)
 
 /**
  * fu_mutex_new:
+ * @module: (debugging only) A module to debug; ie G_STRLOC
+ * @func: (debugging only) A function debug; ie G_STRFUNC
  *
  * Creates a new RW lock.
  *

@@ -42,9 +42,9 @@ const gchar	*fu_common_version_format_to_string	(FuVersionFormat kind);
 gint		 fu_common_vercmp		(const gchar	*version_a,
 						 const gchar	*version_b);
 gchar		*fu_common_version_from_uint32	(guint32	 val,
-						 FuVersionFormat flags);
+						 FuVersionFormat kind);
 gchar		*fu_common_version_from_uint16	(guint16	 val,
-						 FuVersionFormat flags);
+						 FuVersionFormat kind);
 gchar		*fu_common_version_parse	(const gchar	*version);
 FuVersionFormat	 fu_common_version_guess_format	(const gchar	*version);
 

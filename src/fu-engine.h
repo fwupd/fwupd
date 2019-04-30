@@ -22,9 +22,17 @@ G_BEGIN_DECLS
 #define FU_TYPE_ENGINE (fu_engine_get_type ())
 G_DECLARE_FINAL_TYPE (FuEngine, fu_engine, FU, ENGINE, GObject)
 
+/**
+ * FuEngineLoadFlags:
+ * @FU_ENGINE_LOAD_FLAG_NONE:		No flags set
+ * @FU_ENGINE_LOAD_FLAG_READONLY_FS:	Ignore readonly filesystem errors
+ *
+ * The flags to use when loading the engine.
+ **/
 typedef enum {
 	FU_ENGINE_LOAD_FLAG_NONE		= 0,
 	FU_ENGINE_LOAD_FLAG_READONLY_FS		= 1 << 0,
+	/*< private >*/
 	FU_ENGINE_LOAD_FLAG_LAST
 } FuEngineLoadFlags;
 

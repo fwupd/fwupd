@@ -11,9 +11,17 @@
 
 G_BEGIN_DECLS
 
+/**
+ * FuDeviceInstanceFlags:
+ * @FU_DEVICE_INSTANCE_FLAG_NONE:		No flags set
+ * @FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS:	Only use instance ID for quirk matching
+ *
+ * The flags to use when interacting with a device instance
+ **/
 typedef enum {
 	FU_DEVICE_INSTANCE_FLAG_NONE		= 0,
 	FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS	= 1 << 0,
+	/*< private >*/
 	FU_DEVICE_INSTANCE_FLAG_LAST
 } FuDeviceInstanceFlags;
 

@@ -13,19 +13,33 @@ G_BEGIN_DECLS
 #define FU_TYPE_MUTEX (fu_mutex_get_type ())
 G_DECLARE_FINAL_TYPE (FuMutex, fu_mutex, FU, MUTEX, GObject)
 
+/**
+ * FuMutexAccess:
+ * @FU_MUTEX_ACCESS_READ:	If another thread currently holds the write lock or blocks waiting for it, the current thread will block.  Read locks can be taken recursively.
+ * @FU_MUTEX_ACCESS_WRITE:	If any thread already holds a read or  write lock, the current thread will block until all other threads have dropped their locks.
+ *
+ * Type of mutex access to take
+ **/
 typedef enum {
 	FU_MUTEX_ACCESS_READ,
 	FU_MUTEX_ACCESS_WRITE
 } FuMutexAccess;
 
+/**
+ * FuMutexLocker:
+ * @mutex:	A #FuMutex
+ * @kind:	A #FuMutexAccess
+ *
+ * A locker for storing a mutex
+ **/
 typedef struct {
 	FuMutex		*mutex;
 	FuMutexAccess	 kind;
 } FuMutexLocker;
 
 #ifdef FU_MUTEX_DEBUG
-#define		 fu_mutex_lock(o,k)		 fu_mutex_lock_dbg(o,k,G_STRLOC,G_STRFUNC)
-#define		 fu_mutex_unlock(o,k)		 fu_mutex_unlock_dbg(o,k,G_STRLOC,G_STRFUNC)
+#define		 fu_mutex_lock(self,kind)	 fu_mutex_lock_dbg(self,kind,G_STRLOC,G_STRFUNC)
+#define		 fu_mutex_unlock(self,kind)	 fu_mutex_unlock_dbg(self,kind,G_STRLOC,G_STRFUNC)
 #define		 fu_mutex_locker_new(o,k)	 fu_mutex_locker_new_dbg(o,k,G_STRLOC,G_STRFUNC)
 void		 fu_mutex_lock_dbg		(FuMutex	*self,
 						 FuMutexAccess	 kind,

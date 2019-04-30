@@ -2263,7 +2263,7 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 
 /**
  * fu_device_incorporate_from_component:
- * @self: A #FuDevice
+ * @device: A #FuDevice
  * @component: A #XbNode
  *
  * Copy all properties from the donor AppStream component.

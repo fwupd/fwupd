@@ -48,7 +48,7 @@ fu_common_version_format_from_string (const gchar *str)
 
 /**
  * fu_common_version_format_to_string:
- * @str: A #FuVersionFormat, e.g. %FU_VERSION_FORMAT_TRIPLET
+ * @kind: A #FuVersionFormat, e.g. %FU_VERSION_FORMAT_TRIPLET
  *
  * Converts a display version type to text.
  *
