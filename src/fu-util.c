@@ -351,7 +351,7 @@ fu_util_modify_remote_warning (FuUtilPrivate *priv, FwupdRemote *remote, GError 
 		return FALSE;
 
 	/* show and ask user to confirm */
-	g_print ("%s", warning_plain);
+	fu_util_warning_box (warning_plain, 80);
 	if (!priv->assume_yes) {
 		/* ask for permission */
 		g_print ("\n%s [Y|n]: ",

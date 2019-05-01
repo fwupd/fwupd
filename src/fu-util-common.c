@@ -557,3 +557,90 @@ fu_util_release_get_name (FwupdRelease *release)
 	 * the first %s is the device name, e.g. 'ThinkPad P50` */
 	return g_strdup_printf (_("%s Update"), name);
 }
+
+static GPtrArray *
+fu_util_strsplit_words (const gchar *text, guint line_len)
+{
+	g_auto(GStrv) tokens = NULL;
+	g_autoptr(GPtrArray) lines = g_ptr_array_new ();
+	g_autoptr(GString) curline = g_string_new (NULL);
+
+	/* sanity check */
+	if (text == NULL || text[0] == '\0')
+		return NULL;
+	if (line_len == 0)
+		return NULL;
+
+	/* tokenize the string */
+	tokens = g_strsplit (text, " ", -1);
+	for (guint i = 0; tokens[i] != NULL; i++) {
+
+		/* current line plus new token is okay */
+		if (curline->len + strlen (tokens[i]) < line_len) {
+			g_string_append_printf (curline, "%s ", tokens[i]);
+			continue;
+		}
+
+		/* too long, so remove space, add newline and dump */
+		if (curline->len > 0)
+			g_string_truncate (curline, curline->len - 1);
+		g_ptr_array_add (lines, g_strdup (curline->str));
+		g_string_truncate (curline, 0);
+		g_string_append_printf (curline, "%s ", tokens[i]);
+	}
+
+	/* any incomplete line? */
+	if (curline->len > 0) {
+		g_string_truncate (curline, curline->len - 1);
+		g_ptr_array_add (lines, g_strdup (curline->str));
+	}
+	return g_steal_pointer (&lines);
+}
+
+static void
+fu_util_warning_box_line (const gchar *start,
+			  const gchar *text,
+			  const gchar *end,
+			  const gchar *padding,
+			  guint width)
+{
+	guint offset = 0;
+	if (start != NULL) {
+		offset += g_utf8_strlen (start, -1);
+		g_print ("%s", start);
+	}
+	if (text != NULL) {
+		offset += g_utf8_strlen (text, -1);
+		g_print ("%s", text);
+	}
+	if (end != NULL)
+		offset += g_utf8_strlen (end, -1);
+	for (guint i = offset; i < width; i++)
+		g_print ("%s", padding);
+	if (end != NULL)
+		g_print ("%s\n", end);
+}
+
+void
+fu_util_warning_box (const gchar *str, guint width)
+{
+	g_auto(GStrv) split = g_strsplit (str, "\n", -1);
+
+	/* header */
+	fu_util_warning_box_line ("╔", NULL, "╗", "═", width);
+
+	/* body */
+	for (guint i = 0; split[i] != NULL; i++) {
+		g_autoptr(GPtrArray) lines = fu_util_strsplit_words (split[i], width - 4);
+		if (lines == NULL)
+			continue;
+		for (guint j = 0; j < lines->len; j++) {
+			const gchar *line = g_ptr_array_index (lines, j);
+			fu_util_warning_box_line ("║ ", line, " ║", " ", width);
+		}
+		fu_util_warning_box_line ("║", NULL, "║", " ", width);
+	}
+
+	/* footer */
+	fu_util_warning_box_line ("╚", NULL, "╝", "═", width);
+}
