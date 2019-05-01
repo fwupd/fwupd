@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
+#include "config.h"
+
 #include <gio/gio.h>
 #include "fu-mm-utils.h"
 
