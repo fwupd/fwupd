@@ -23,6 +23,8 @@
 #include "fu-history.h"
 #include "fu-mutex.h"
 
+#define SYSTEM_UPDATE_TARGET_WANTS_DIR "/etc/systemd/system/system-update.target.wants"
+
 /**
  * SECTION:fu-plugin
  * @short_description: a daemon plugin
@@ -886,6 +888,45 @@ fu_plugin_runner_offline_setup (gchar *system_update, GError **error)
 			     "/var/lib", strerror (errno));
 		return FALSE;
 	}
+
+	/* if running on snap, make sure core will mount too */
+	if (g_getenv ("SNAP") != NULL) {
+		g_autofree gchar *core_version = NULL;
+		g_autofree gchar *core_mount = NULL;
+		g_autofree gchar *source_file = NULL;
+		g_autofree gchar *target_file = NULL;
+		g_autoptr(GFile) file = NULL;
+		core_version = g_file_read_link ("/snap/core/current", error);
+		if (core_version == NULL)
+			return FALSE;
+		core_mount = g_strdup_printf ("snap-core-%s.mount", core_version);
+		/* intentioanlly hardcoded to /etc - %SNAP_USER_DATA% / %FWUPD_SYSCONFDIR% will be wrong */
+		if (!g_file_test (SYSTEM_UPDATE_TARGET_WANTS_DIR, G_FILE_TEST_IS_DIR)) {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "%s doesn't exist",
+					     SYSTEM_UPDATE_TARGET_WANTS_DIR);
+				return FALSE;
+		}
+		target_file = g_build_filename (SYSTEM_UPDATE_TARGET_WANTS_DIR, core_mount, NULL);
+		source_file = g_build_filename ("/etc/systemd/system", core_mount, NULL);
+		file = g_file_new_for_path (target_file);
+		if (!g_file_query_exists (file, NULL)) {
+			g_debug ("Creating core symlink for %s", core_mount);
+			rc = symlink (source_file, target_file);
+			if (rc < 0) {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "Failed to create symlink %s to %s: %s",
+					     source_file, target_file,
+					     strerror (errno));
+				return FALSE;
+			}
+		}
+	}
+
 	return TRUE;
 }
 
