@@ -2438,8 +2438,15 @@ main (int argc, char *argv[])
 	}
 
 	/* set flags */
-	if (offline)
+	if (offline) {
+		const gchar *tmp = g_getenv ("SNAP");
+		if (tmp != NULL) {
+			/* TRANSLATORS: Type of package distibuted */
+			g_print ("%s\n", _("Offline unsupported with snap package"));
+			return EXIT_FAILURE;
+		}
 		priv->flags |= FWUPD_INSTALL_FLAG_OFFLINE;
+	}
 	if (allow_reinstall)
 		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
 	if (allow_older)
