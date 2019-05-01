@@ -861,17 +861,15 @@ fu_plugin_runner_offline_invalidate (GError **error)
 }
 
 static gboolean
-fu_plugin_runner_offline_setup (GError **error)
+fu_plugin_runner_offline_setup (gchar *system_update, GError **error)
 {
 	gint rc;
-	g_autofree gchar *filename = NULL;
 	g_autofree gchar *symlink_target = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR_PKG);
 
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* does already exist */
-	filename = fu_common_realpath (FU_OFFLINE_TRIGGER_FILENAME, NULL);
-	if (g_strcmp0 (filename, symlink_target) == 0) {
+	if (g_strcmp0 (system_update, symlink_target) == 0) {
 		g_debug ("%s already points to %s, skipping creation",
 			 FU_OFFLINE_TRIGGER_FILENAME, symlink_target);
 		return TRUE;
@@ -1350,6 +1348,7 @@ fu_plugin_runner_schedule_update (FuPlugin *self,
 	gchar tmpname[] = {"XXXXXX.cap"};
 	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
+	g_autofree gchar *system_update = fu_common_realpath (FU_OFFLINE_TRIGGER_FILENAME, NULL);
 	g_autoptr(FuDevice) res_tmp = NULL;
 	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(GFile) file = NULL;
@@ -1359,6 +1358,17 @@ fu_plugin_runner_schedule_update (FuPlugin *self,
 	res_tmp = fu_history_get_device_by_id (history, fu_device_get_id (device), NULL);
 	if (res_tmp != NULL &&
 	    fu_device_get_update_state (res_tmp) == FWUPD_UPDATE_STATE_PENDING) {
+		/* still pending but system-update was destroyed
+		 * (device unplugged at bootup?)
+		 **/
+		if (system_update == NULL) {
+			g_debug ("%s (%s) is scheduled to update, but system-update missing",
+				 fu_device_get_name (device), fu_device_get_id (device));
+			fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+			fu_device_set_update_state (device, FWUPD_UPDATE_STATE_PENDING);
+			fu_device_set_progress (device, 100);
+			return fu_plugin_runner_offline_setup (system_update, error);
+		}
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_ALREADY_PENDING,
@@ -1401,7 +1411,7 @@ fu_plugin_runner_schedule_update (FuPlugin *self,
 
 	/* next boot we run offline */
 	fu_device_set_progress (device, 100);
-	return fu_plugin_runner_offline_setup (error);
+	return fu_plugin_runner_offline_setup (system_update, error);
 }
 
 gboolean
