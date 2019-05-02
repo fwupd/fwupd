@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-common.h"
+#include "fu-uefi-devpath.h"
 #include "fu-uefi-update-info.h"
 #include "fu-uefi-common.h"
 #include "fu-ucs2.h"
@@ -36,42 +37,41 @@ fu_uefi_update_info_status_to_string (FuUefiUpdateInfoStatus status)
 }
 
 static gchar *
-fu_uefi_update_info_parse_dp (const guint8 *buf, gsize sz)
+fu_uefi_update_info_parse_dp (const guint8 *buf, gsize sz, GError **error)
 {
-	const_efidp idp;
-	guint16 ucs2sz = 0;
+	GBytes *dp_data;
+	const gchar *data;
+	gsize ucs2sz = 0;
 	g_autofree gchar *relpath = NULL;
 	g_autofree guint16 *ucs2file = NULL;
+	g_autoptr(GPtrArray) dps = NULL;
 
 	g_return_val_if_fail (buf != NULL, NULL);
 	g_return_val_if_fail (sz != 0, NULL);
 
-	/* find UCS2 string */
-	idp = (const_efidp) buf;
-	while (1) {
-		if (efidp_type (idp) == EFIDP_END_TYPE &&
-		    efidp_subtype (idp) == EFIDP_END_ENTIRE)
-			break;
-		if (efidp_type(idp) != EFIDP_MEDIA_TYPE ||
-		    efidp_subtype (idp) != EFIDP_MEDIA_FILE) {
-			if (efidp_next_node (idp, &idp) < 0)
-				break;
-			continue;
-		}
-		ucs2sz = efidp_node_size (idp) - 4;
-		ucs2file = g_new0 (guint16, (ucs2sz / 2) + 1);
-		memcpy (ucs2file, (guint8 *)idp + 4, ucs2sz);
-		break;
-	}
-
-	/* nothing found */
-	if (ucs2file == NULL || ucs2sz == 0)
+	/* get all headers */
+	dps = fu_uefi_devpath_parse (buf, sz, FU_UEFI_DEVPATH_PARSE_FLAG_REPAIR, error);
+	if (dps == NULL)
+		return NULL;
+	dp_data = fu_uefi_devpath_find_data (dps,
+					     EFIDP_MEDIA_TYPE,
+					     EFIDP_MEDIA_FILE,
+					     error);
+	if (dp_data == NULL)
 		return NULL;
 
-	/* convert to something sane */
+	/* convert to UTF-8 */
+	data = g_bytes_get_data (dp_data, &ucs2sz);
+	ucs2file = g_new0 (guint16, (ucs2sz / 2) + 1);
+	memcpy (ucs2file, data, ucs2sz);
 	relpath = fu_ucs2_to_uft8 (ucs2file, ucs2sz / sizeof (guint16));
-	if (relpath == NULL)
+	if (relpath == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "cannot convert to UTF-8");
 		return NULL;
+	}
 	g_strdelimit (relpath, "\\", '/');
 	return g_steal_pointer (&relpath);
 }
@@ -106,7 +106,10 @@ fu_uefi_update_info_parse (FuUefiUpdateInfo *self, const guint8 *buf, gsize sz, 
 	}
 	if (sz > sizeof(efi_update_info_t)) {
 		self->capsule_fn = fu_uefi_update_info_parse_dp (buf + sizeof(efi_update_info_t),
-								 sz - sizeof(efi_update_info_t));
+								 sz - sizeof(efi_update_info_t),
+								 error);
+		if (self->capsule_fn == NULL)
+			return FALSE;
 	}
 	return TRUE;
 }
