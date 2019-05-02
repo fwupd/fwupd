@@ -2018,6 +2018,7 @@ fu_plugin_finalize (GObject *object)
 	g_hash_table_unref (priv->devices);
 	g_hash_table_unref (priv->report_metadata);
 	g_object_unref (priv->devices_mutex);
+	g_free (priv->build_hash);
 	g_free (priv->name);
 	g_free (priv->data);
 	/* Must happen as the last step to avoid prematurely
