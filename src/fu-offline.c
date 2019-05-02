@@ -267,13 +267,7 @@ main (int argc, char *argv[])
 
 	/* reboot */
 	fu_offline_set_splash_reboot (priv, NULL);
-	if (!fu_util_update_reboot (&error)) {
-		/* TRANSLATORS: we could not reboot for some reason */
-		g_printerr ("%s: %s\n", _("Failed to reboot"), error->message);
-		return EXIT_FAILURE;
-	}
-
-	/* success */
 	g_print ("%s\n", _("Done!"));
-	return EXIT_SUCCESS;
+
+	return EXIT_FAILURE;
 }

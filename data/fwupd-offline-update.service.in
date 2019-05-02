@@ -11,3 +11,4 @@ Before=shutdown.target system-update.target
 Type=oneshot
 ExecStart=@libexecdir@/fwupd/fwupdoffline
 FailureAction=reboot
+FailureActionExitStatus=0
