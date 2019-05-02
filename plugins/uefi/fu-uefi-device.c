@@ -15,6 +15,7 @@
 
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
+#include "fu-uefi-devpath.h"
 #include "fu-uefi-bootmgr.h"
 #include "fu-uefi-pcrs.h"
 #include "fu-uefi-vars.h"
@@ -237,6 +238,7 @@ fu_uefi_device_build_dp_buf (const gchar *path, gsize *bufsz, GError **error)
 	gssize req;
 	gssize sz;
 	g_autofree guint8 *dp_buf = NULL;
+	g_autoptr(GPtrArray) dps = NULL;
 
 	/* get the size of the path first */
 	req = efi_generate_file_device_path (NULL, 0, path,
@@ -272,6 +274,14 @@ fu_uefi_device_build_dp_buf (const gchar *path, gsize *bufsz, GError **error)
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "failed to efi_generate_file_device_path(%s)",
 			     path);
+		return NULL;
+	}
+
+	/* parse what we got back from efivar */
+	dps = fu_uefi_devpath_parse (dp_buf, (gsize) sz,
+				     FU_UEFI_DEVPATH_PARSE_FLAG_NONE, error);
+	if (dps == NULL) {
+		fu_common_dump_raw (G_LOG_DOMAIN, "dp_buf", dp_buf, (gsize) sz);
 		return NULL;
 	}
 
