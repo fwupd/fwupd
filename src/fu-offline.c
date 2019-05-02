@@ -74,8 +74,7 @@ fu_offline_set_splash_mode (FuUtilPrivate *priv, GError **error)
 	}
 
 	/* success */
-	priv->splash_flags = FU_OFFLINE_FLAG_USE_PROGRESS;
-	priv->splash_flags = FU_OFFLINE_FLAG_ENABLE;
+	priv->splash_flags = FU_OFFLINE_FLAG_ENABLE | FU_OFFLINE_FLAG_USE_PROGRESS;
 	return TRUE;
 }
 
