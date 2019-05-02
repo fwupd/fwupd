@@ -35,6 +35,7 @@ static gboolean
 fu_debug_filter_cb (FuDebug *self, const gchar *log_domain, GLogLevelFlags log_level)
 {
 	const gchar *domains = g_getenv ("FWUPD_VERBOSE");
+	g_auto(GStrv) domains_str = NULL;
 
 	/* include important things by default only */
 	if (domains == NULL) {
@@ -52,11 +53,8 @@ fu_debug_filter_cb (FuDebug *self, const gchar *log_domain, GLogLevelFlags log_l
 		return TRUE;
 
 	/* filter on domain */
-	if (domains != NULL) {
-		g_auto(GStrv) domains_str = g_strsplit (domains, ",", -1);
-		return g_strv_contains ((const gchar * const *) domains_str, log_domain);
-	}
-	return FALSE;
+	domains_str = g_strsplit (domains, ",", -1);
+	return g_strv_contains ((const gchar * const *) domains_str, log_domain);
 }
 
 static void
