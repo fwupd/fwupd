@@ -1,0 +1,4 @@
+[DeviceInstanceId=USB\VID_06CB&PID_00A9]
+Plugin = synaptics_prometheus
+[DeviceInstanceId=USB\VID_06CB&PID_00BD]
+Plugin = synaptics_prometheus
