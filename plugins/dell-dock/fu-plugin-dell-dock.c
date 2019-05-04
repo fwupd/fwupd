@@ -162,7 +162,7 @@ fu_plugin_update (FuPlugin *plugin,
 		return FALSE;
 
 	fu_device_set_status (dev, FWUPD_STATUS_DEVICE_WRITE);
-	if (!fu_device_write_firmware (dev, blob_fw, error)) {
+	if (!fu_device_write_firmware (dev, blob_fw, flags, error)) {
 		g_prefix_error (error,
 				"failed to update %s: ",
 				fu_device_get_name (dev));

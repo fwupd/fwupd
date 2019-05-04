@@ -217,7 +217,10 @@ fu_wacom_device_set_version_bootloader (FuWacomDevice *self, GError **error)
 }
 
 static gboolean
-fu_wacom_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
+fu_wacom_device_write_firmware (FuDevice *device,
+				GBytes *fw,
+				FwupdInstallFlags flags,
+				GError **error)
 {
 	FuWacomDevice *self = FU_WACOM_DEVICE (device);
 	FuWacomDevicePrivate *priv = GET_PRIVATE (self);

@@ -347,7 +347,10 @@ fu_ebitdo_device_get_serial (FuEbitdoDevice *self)
 }
 
 static gboolean
-fu_ebitdo_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
+fu_ebitdo_device_write_firmware (FuDevice *device,
+				 GBytes *fw,
+				 FwupdInstallFlags flags,
+				 GError **error)
 {
 	FuEbitdoDevice *self = FU_EBITDO_DEVICE (device);
 	FuEbitdoFirmwareHeader *hdr;

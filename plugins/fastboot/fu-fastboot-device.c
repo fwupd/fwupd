@@ -594,7 +594,10 @@ fu_fastboot_device_write_qfil (FuDevice *device, FuArchive* archive, GError **er
 }
 
 static gboolean
-fu_fastboot_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
+fu_fastboot_device_write_firmware (FuDevice *device,
+				   GBytes *fw,
+				   FwupdInstallFlags flags,
+				   GError **error)
 {
 	g_autoptr(FuArchive) archive = NULL;
 

@@ -590,7 +590,10 @@ fu_superio_it89_device_get_jedec_id (FuSuperioDevice *self, guint8 *id, GError *
 }
 
 static gboolean
-fu_superio_it89_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
+fu_superio_it89_device_write_firmware (FuDevice *device,
+				       GBytes *fw,
+				       FwupdInstallFlags flags,
+				       GError **error)
 {
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
 	guint8 id[4] = { 0x0 };

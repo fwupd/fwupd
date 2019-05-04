@@ -400,7 +400,10 @@ fu_uefi_device_write_update_info (FuUefiDevice *self,
 }
 
 static gboolean
-fu_uefi_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
+fu_uefi_device_write_firmware (FuDevice *device,
+			       GBytes *fw,
+			       FwupdInstallFlags install_flags,
+			       GError **error)
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE (device);
 	FuUefiBootmgrFlags flags = FU_UEFI_BOOTMGR_FLAG_NONE;

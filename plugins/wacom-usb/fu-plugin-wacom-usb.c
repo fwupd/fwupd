@@ -40,7 +40,7 @@ fu_plugin_update (FuPlugin *plugin, FuDevice *device, GBytes *blob_fw,
 	locker = fu_device_locker_new (parent != NULL ? parent : device, error);
 	if (locker == NULL)
 		return FALSE;
-	return fu_device_write_firmware (device, blob_fw, error);
+	return fu_device_write_firmware (device, blob_fw, flags, error);
 }
 
 static FuDevice *

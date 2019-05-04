@@ -363,7 +363,10 @@ fu_superio_device_setup (FuDevice *device, GError **error)
 }
 
 static GBytes *
-fu_superio_device_prepare_firmware (FuDevice *device, GBytes *fw, GError **error)
+fu_superio_device_prepare_firmware (FuDevice *device,
+				    GBytes *fw,
+				    FwupdInstallFlags flags,
+				    GError **error)
 {
 	gsize sz = 0;
 	const guint8 *buf = g_bytes_get_data (fw, &sz);

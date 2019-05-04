@@ -597,7 +597,10 @@ fu_mm_device_write_firmware_qmi_pdc (FuDevice *device, GBytes *fw, GArray **acti
 }
 
 static gboolean
-fu_mm_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
+fu_mm_device_write_firmware (FuDevice *device,
+			     GBytes *fw,
+			     FwupdInstallFlags flags,
+			     GError **error)
 {
 	FuMmDevice *self = FU_MM_DEVICE (device);
 	g_autoptr(FuDeviceLocker) locker = NULL;

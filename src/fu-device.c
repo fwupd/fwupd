@@ -1683,6 +1683,7 @@ fu_device_get_release_default (FuDevice *self)
  * fu_device_write_firmware:
  * @self: A #FuDevice
  * @fw: A #GBytes
+ * @flags: #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_FORCE
  * @error: A #GError
  *
  * Writes firmware to the device by calling a plugin-specific vfunc.
@@ -1692,7 +1693,10 @@ fu_device_get_release_default (FuDevice *self)
  * Since: 1.0.8
  **/
 gboolean
-fu_device_write_firmware (FuDevice *self, GBytes *fw, GError **error)
+fu_device_write_firmware (FuDevice *self,
+			  GBytes *fw,
+			  FwupdInstallFlags flags,
+			  GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
 	g_autoptr(GBytes) fw_new = NULL;
@@ -1710,18 +1714,19 @@ fu_device_write_firmware (FuDevice *self, GBytes *fw, GError **error)
 	}
 
 	/* prepare (e.g. decompress) firmware */
-	fw_new = fu_device_prepare_firmware (self, fw, error);
+	fw_new = fu_device_prepare_firmware (self, fw, flags, error);
 	if (fw_new == NULL)
 		return FALSE;
 
 	/* call vfunc */
-	return klass->write_firmware (self, fw_new, error);
+	return klass->write_firmware (self, fw_new, flags, error);
 }
 
 /**
  * fu_device_prepare_firmware:
  * @self: A #FuDevice
  * @fw: A #GBytes
+ * @flags: #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_FORCE
  * @error: A #GError
  *
  * Prepares the firmware by calling an optional device-specific vfunc for the
@@ -1737,7 +1742,10 @@ fu_device_write_firmware (FuDevice *self, GBytes *fw, GError **error)
  * Since: 1.1.2
  **/
 GBytes *
-fu_device_prepare_firmware (FuDevice *self, GBytes *fw, GError **error)
+fu_device_prepare_firmware (FuDevice *self,
+			    GBytes *fw,
+			    FwupdInstallFlags flags,
+			    GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
 	FuDevicePrivate *priv = GET_PRIVATE (self);
@@ -1750,7 +1758,7 @@ fu_device_prepare_firmware (FuDevice *self, GBytes *fw, GError **error)
 
 	/* optionally subclassed */
 	if (klass->prepare_firmware != NULL) {
-		fw_new = klass->prepare_firmware (self, fw, error);
+		fw_new = klass->prepare_firmware (self, fw, flags, error);
 		if (fw_new == NULL)
 			return NULL;
 	} else {

@@ -394,7 +394,10 @@ fu_nvme_device_close (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_nvme_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
+fu_nvme_device_write_firmware (FuDevice *device,
+			       GBytes *fw,
+			       FwupdInstallFlags flags,
+			       GError **error)
 {
 	FuNvmeDevice *self = FU_NVME_DEVICE (device);
 	g_autoptr(GBytes) fw2 = NULL;

@@ -65,7 +65,7 @@ fu_plugin_update (FuPlugin *plugin, FuDevice *device, GBytes *blob_fw,
 	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;
-	if (!fu_device_write_firmware (device, blob_fw, error))
+	if (!fu_device_write_firmware (device, blob_fw, flags, error))
 		return FALSE;
 	return fu_device_attach (device, error);
 }

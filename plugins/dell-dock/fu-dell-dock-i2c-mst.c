@@ -736,6 +736,7 @@ fu_dell_dock_mst_invalidate_bank (FuDevice *symbiote, MSTBank bank_in_use,
 static gboolean
 fu_dell_dock_mst_write_fw (FuDevice *device,
 			   GBytes *blob_fw,
+			   FwupdInstallFlags flags,
 			   GError **error)
 {
 	FuDellDockMst *self = FU_DELL_DOCK_MST (device);

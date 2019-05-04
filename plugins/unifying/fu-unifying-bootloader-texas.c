@@ -108,7 +108,10 @@ fu_unifying_bootloader_texas_clear_ram_buffer (FuUnifyingBootloader *self, GErro
 }
 
 static gboolean
-fu_unifying_bootloader_texas_write_firmware (FuDevice *device, GBytes *fw, GError **error)
+fu_unifying_bootloader_texas_write_firmware (FuDevice *device,
+					     GBytes *fw,
+					     FwupdInstallFlags flags,
+					     GError **error)
 {
 	FuUnifyingBootloader *self = FU_UNIFYING_BOOTLOADER (device);
 	const FuUnifyingBootloaderRequest *payload;

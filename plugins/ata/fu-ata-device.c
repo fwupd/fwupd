@@ -574,7 +574,10 @@ fu_ata_device_fw_download (FuAtaDevice *self,
 }
 
 static gboolean
-fu_ata_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
+fu_ata_device_write_firmware (FuDevice *device,
+			      GBytes *fw,
+			      FwupdInstallFlags flags,
+			      GError **error)
 {
 	FuAtaDevice *self = FU_ATA_DEVICE (device);
 	guint32 chunksz = (guint32) self->transfer_blocks * FU_ATA_BLOCK_SIZE;
