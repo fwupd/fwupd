@@ -91,5 +91,5 @@ fu_plugin_update (FuPlugin *plugin,
 		  GError **error)
 {
 	fu_device_set_status (dev, FWUPD_STATUS_DEVICE_WRITE);
-	return fu_device_write_firmware (dev, blob_fw, error);
+	return fu_device_write_firmware (dev, blob_fw, flags, error);
 }

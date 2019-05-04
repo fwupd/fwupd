@@ -431,7 +431,10 @@ _dfu_firmware_get_default_element_data (DfuFirmware *firmware)
 }
 
 static GBytes *
-fu_csr_device_prepare_firmware (FuDevice *device, GBytes *fw, GError **error)
+fu_csr_device_prepare_firmware (FuDevice *device,
+				GBytes *fw,
+				FwupdInstallFlags flags,
+				GError **error)
 {
 	GBytes *blob_noftr;
 	g_autoptr(DfuFirmware) dfu_firmware = dfu_firmware_new ();
@@ -468,7 +471,10 @@ fu_csr_device_prepare_firmware (FuDevice *device, GBytes *fw, GError **error)
 }
 
 static gboolean
-fu_csr_device_download (FuDevice *device, GBytes *blob, GError **error)
+fu_csr_device_download (FuDevice *device,
+			GBytes *blob,
+			FwupdInstallFlags flags,
+			GError **error)
 {
 	FuCsrDevice *self = FU_CSR_DEVICE (device);
 	guint16 idx;

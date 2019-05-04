@@ -408,7 +408,7 @@ fu_plugin_update (FuPlugin *plugin,
 		g_debug ("failed to upload UEFI UX capsule text: %s",
 			 error_splash->message);
 	}
-	if (!fu_device_write_firmware (device, blob_fw, error))
+	if (!fu_device_write_firmware (device, blob_fw, flags, error))
 		return FALSE;
 
 	/* record if we had an invalid header during update */

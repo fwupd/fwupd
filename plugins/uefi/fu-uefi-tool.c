@@ -324,7 +324,9 @@ main (int argc, char *argv[])
 			return EXIT_FAILURE;
 		}
 		fu_device_set_metadata (FU_DEVICE (dev), "EspPath", esp_path);
-		if (!fu_device_write_firmware (FU_DEVICE (dev), fw, &error_local)) {
+		if (!fu_device_write_firmware (FU_DEVICE (dev), fw,
+					       FWUPD_INSTALL_FLAG_NONE,
+					       &error_local)) {
 			g_printerr ("failed: %s\n", error_local->message);
 			return EXIT_FAILURE;
 		}

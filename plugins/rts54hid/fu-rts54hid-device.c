@@ -314,7 +314,10 @@ fu_rts54hid_device_close (FuUsbDevice *device, GError **error)
 }
 
 static gboolean
-fu_rts54hid_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
+fu_rts54hid_device_write_firmware (FuDevice *device,
+				   GBytes *fw,
+				   FwupdInstallFlags flags,
+				   GError **error)
 {
 	FuRts54HidDevice *self = FU_RTS54HID_DEVICE (device);
 	g_autoptr(GPtrArray) chunks = NULL;

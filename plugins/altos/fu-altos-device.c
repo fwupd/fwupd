@@ -269,7 +269,10 @@ fu_altos_device_write_page (FuAltosDevice *self,
 }
 
 static gboolean
-fu_altos_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
+fu_altos_device_write_firmware (FuDevice *device,
+				GBytes *fw,
+				FwupdInstallFlags flags,
+				GError **error)
 {
 	FuAltosDevice *self = FU_ALTOS_DEVICE (device);
 	GBytes *fw_blob;

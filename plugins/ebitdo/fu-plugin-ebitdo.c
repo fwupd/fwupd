@@ -59,7 +59,7 @@ fu_plugin_update (FuPlugin *plugin,
 	locker = fu_device_locker_new (ebitdo_dev, error);
 	if (locker == NULL)
 		return FALSE;
-	if (!fu_device_write_firmware (FU_DEVICE (ebitdo_dev), blob_fw, error))
+	if (!fu_device_write_firmware (FU_DEVICE (ebitdo_dev), blob_fw, flags, error))
 		return FALSE;
 
 	/* when doing a soft-reboot the device does not re-enumerate properly

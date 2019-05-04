@@ -22,7 +22,10 @@ struct _FuWacModuleTouch
 G_DEFINE_TYPE (FuWacModuleTouch, fu_wac_module_touch, FU_TYPE_WAC_MODULE)
 
 static gboolean
-fu_wac_module_touch_write_firmware (FuDevice *device, GBytes *blob, GError **error)
+fu_wac_module_touch_write_firmware (FuDevice *device,
+				    GBytes *blob,
+				    FwupdInstallFlags flags,
+				    GError **error)
 {
 	DfuElement *element;
 	DfuImage *image;

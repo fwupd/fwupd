@@ -881,7 +881,10 @@ fu_unifying_peripheral_write_firmware_pkt (FuUnifyingPeripheral *self,
 }
 
 static gboolean
-fu_unifying_peripheral_write_firmware (FuDevice *device, GBytes *fw, GError **error)
+fu_unifying_peripheral_write_firmware (FuDevice *device,
+				       GBytes *fw,
+				       FwupdInstallFlags flags,
+				       GError **error)
 {
 	FuUnifyingPeripheral *self = FU_UNIFYING_PERIPHERAL (device);
 	gsize sz = 0;

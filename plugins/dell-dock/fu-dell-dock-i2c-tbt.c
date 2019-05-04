@@ -54,6 +54,7 @@ G_DEFINE_TYPE (FuDellDockTbt, fu_dell_dock_tbt, FU_TYPE_DEVICE)
 static gboolean
 fu_dell_dock_tbt_write_fw (FuDevice *device,
 			   GBytes *blob_fw,
+			   FwupdInstallFlags flags,
 			   GError **error)
 {
 	FuDellDockTbt *self = FU_DELL_DOCK_TBT (device);

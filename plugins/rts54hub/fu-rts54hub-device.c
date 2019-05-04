@@ -308,7 +308,10 @@ fu_rts54hub_device_close (FuUsbDevice *device, GError **error)
 }
 
 static gboolean
-fu_rts54hub_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
+fu_rts54hub_device_write_firmware (FuDevice *device,
+				   GBytes *fw,
+				   FwupdInstallFlags flags,
+				   GError **error)
 {
 	FuRts54HubDevice *self = FU_RTS54HUB_DEVICE (device);
 	g_autoptr(GPtrArray) chunks = NULL;
@@ -381,7 +384,10 @@ fu_rts54hub_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
 }
 
 static GBytes *
-fu_rts54hub_device_prepare_firmware (FuDevice *device, GBytes *fw, GError **error)
+fu_rts54hub_device_prepare_firmware (FuDevice *device,
+				     GBytes *fw,
+				     FwupdInstallFlags flags,
+				     GError **error)
 {
 	gsize sz = 0;
 	const guint8 *data = g_bytes_get_data (fw, &sz);

@@ -24,6 +24,7 @@ struct _FuDeviceClass
 							 GString	*str);
 	gboolean		 (*write_firmware)	(FuDevice	*self,
 							 GBytes		*fw,
+							 FwupdInstallFlags flags,
 							 GError		**error);
 	GBytes			*(*read_firmware)	(FuDevice	*self,
 							 GError		**error);
@@ -39,6 +40,7 @@ struct _FuDeviceClass
 							 GError		**error);
 	GBytes			*(*prepare_firmware)	(FuDevice	*self,
 							 GBytes		*fw,
+							 FwupdInstallFlags flags,
 							 GError		**error);
 	gboolean		 (*set_quirk_kv)	(FuDevice	*self,
 							 const gchar	*key,
@@ -206,9 +208,11 @@ FuQuirks	*fu_device_get_quirks			(FuDevice	*self);
 FwupdRelease	*fu_device_get_release_default		(FuDevice	*self);
 gboolean	 fu_device_write_firmware		(FuDevice	*self,
 							 GBytes		*fw,
+							 FwupdInstallFlags flags,
 							 GError		**error);
 GBytes		*fu_device_prepare_firmware		(FuDevice	*self,
 							 GBytes		*fw,
+							 FwupdInstallFlags flags,
 							 GError		**error);
 GBytes		*fu_device_read_firmware		(FuDevice	*self,
 							 GError		**error);

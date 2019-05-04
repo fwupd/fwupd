@@ -744,7 +744,9 @@ fu_dell_dock_ec_commit_package (FuDevice *device, GBytes *blob_fw,
 }
 
 static gboolean
-fu_dell_dock_ec_write_fw (FuDevice *device, GBytes *blob_fw,
+fu_dell_dock_ec_write_fw (FuDevice *device,
+			  GBytes *blob_fw,
+			  FwupdInstallFlags flags,
 			  GError **error)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC (device);

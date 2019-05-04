@@ -195,7 +195,10 @@ fu_unifying_bootloader_nordic_erase (FuUnifyingBootloader *self, guint16 addr, G
 }
 
 static gboolean
-fu_unifying_bootloader_nordic_write_firmware (FuDevice *device, GBytes *fw, GError **error)
+fu_unifying_bootloader_nordic_write_firmware (FuDevice *device,
+					      GBytes *fw,
+					      FwupdInstallFlags flags,
+					      GError **error)
 {
 	FuUnifyingBootloader *self = FU_UNIFYING_BOOTLOADER (device);
 	const FuUnifyingBootloaderRequest *payload;

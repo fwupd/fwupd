@@ -211,7 +211,10 @@ fu_rts54hid_module_close (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_rts54hid_module_write_firmware (FuDevice *module, GBytes *fw, GError **error)
+fu_rts54hid_module_write_firmware (FuDevice *module,
+				   GBytes *fw,
+				   FwupdInstallFlags flags,
+				   GError **error)
 {
 	FuRts54HidModule *self = FU_RTS54HID_MODULE (module);
 	g_autoptr(GPtrArray) chunks = NULL;

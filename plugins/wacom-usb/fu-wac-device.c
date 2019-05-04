@@ -482,7 +482,10 @@ fu_wac_device_switch_to_flash_loader (FuWacDevice *self, GError **error)
 }
 
 static gboolean
-fu_wac_device_write_firmware (FuDevice *device, GBytes *blob, GError **error)
+fu_wac_device_write_firmware (FuDevice *device,
+			      GBytes *blob,
+			      FwupdInstallFlags flags,
+			      GError **error)
 {
 	DfuElement *element;
 	DfuImage *image;

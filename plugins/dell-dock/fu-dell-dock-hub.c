@@ -47,6 +47,7 @@ fu_dell_dock_hub_probe (FuDevice *device, GError **error)
 static gboolean
 fu_dell_dock_hub_write_fw (FuDevice *device,
 			   GBytes *blob_fw,
+			   FwupdInstallFlags flags,
 			   GError **error)
 {
 	FuDellDockHub *self = FU_DELL_DOCK_HUB (device);
