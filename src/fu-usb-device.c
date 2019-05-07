@@ -312,6 +312,8 @@ fu_usb_device_get_vid (FuUsbDevice *self)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_USB_DEVICE (self), 0x0000);
+	if (priv->usb_device == NULL)
+		return 0x0;
 	return g_usb_device_get_vid (priv->usb_device);
 }
 
@@ -330,6 +332,8 @@ fu_usb_device_get_pid (FuUsbDevice *self)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_USB_DEVICE (self), 0x0000);
+	if (priv->usb_device == NULL)
+		return 0x0;
 	return g_usb_device_get_pid (priv->usb_device);
 }
 
@@ -348,6 +352,8 @@ fu_usb_device_get_platform_id (FuUsbDevice *self)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_USB_DEVICE (self), NULL);
+	if (priv->usb_device == NULL)
+		return NULL;
 	return g_usb_device_get_platform_id (priv->usb_device);
 }
 
