@@ -17,6 +17,15 @@
 #define SYSTEMD_OBJECT_PATH		"/org/freedesktop/systemd1"
 #define SYSTEMD_MANAGER_INTERFACE	"org.freedesktop.systemd1.Manager"
 #define SYSTEMD_FWUPD_UNIT		"fwupd.service"
+#define SYSTEMD_SNAP_FWUPD_UNIT		"snap.fwupd.fwupd.service"
+
+static const gchar *
+fu_util_get_systemd_unit (void)
+{
+	if (g_getenv ("SNAP") != NULL)
+		return SYSTEMD_SNAP_FWUPD_UNIT;
+	return SYSTEMD_FWUPD_UNIT;
+}
 
 gboolean
 fu_util_stop_daemon (GError **error)
@@ -24,8 +33,8 @@ fu_util_stop_daemon (GError **error)
 	g_autoptr(GDBusConnection) connection = NULL;
 	g_autoptr(GDBusProxy) proxy = NULL;
 	g_autoptr(GVariant) val = NULL;
+	const gchar *target = fu_util_get_systemd_unit ();
 
-	/* try to stop any already running daemon */
 	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
 	if (connection == NULL) {
 		g_prefix_error (error, "failed to get bus: ");
@@ -46,20 +55,20 @@ fu_util_stop_daemon (GError **error)
 	val = g_dbus_proxy_call_sync (proxy,
 				      "GetUnit",
 				      g_variant_new ("(s)",
-						     SYSTEMD_FWUPD_UNIT),
+						     target),
 				      G_DBUS_CALL_FLAGS_NONE,
 				      -1,
 				      NULL,
 				      error);
 	if (val == NULL) {
-		g_prefix_error (error, "failed to find %s: ", SYSTEMD_FWUPD_UNIT);
+		g_prefix_error (error, "failed to find %s: ", target);
 		return FALSE;
 	}
 	g_variant_unref (val);
 	val = g_dbus_proxy_call_sync (proxy,
 				      "StopUnit",
 				      g_variant_new ("(ss)",
-						     SYSTEMD_FWUPD_UNIT,
+						     target,
 						     "replace"),
 				      G_DBUS_CALL_FLAGS_NONE,
 				      -1,
