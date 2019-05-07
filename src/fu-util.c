@@ -2158,6 +2158,28 @@ fu_util_private_free (FuUtilPrivate *priv)
 	g_free (priv);
 }
 
+static gboolean
+fu_util_check_daemon_version (FuUtilPrivate *priv, GError **error)
+{
+	g_autofree gchar *client = g_strdup_printf ("%i.%i.%i",
+						    FWUPD_MAJOR_VERSION,
+						    FWUPD_MINOR_VERSION,
+						    FWUPD_MICRO_VERSION);
+	const gchar *daemon = fwupd_client_get_daemon_version (priv->client);
+
+	if (g_strcmp0 (daemon, client) != 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     /* TRANSLATORS: error message */
+			     _("Unsupported daemon version %s, client version is %s"),
+			     daemon, client);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtilPrivate, fu_util_private_free)
@@ -2479,6 +2501,12 @@ main (int argc, char *argv[])
 	if (fwupd_client_get_tainted (priv->client)) {
 		g_printerr ("WARNING: The daemon has loaded 3rd party code and "
 			    "is no longer supported by the upstream developers!\n");
+	}
+
+	/* check that we have at least this version daemon running */
+	if (!fu_util_check_daemon_version (priv, &error)) {
+		g_printerr ("%s\n", error->message);
+		return EXIT_FAILURE;
 	}
 
 #ifdef HAVE_SYSTEMD
