@@ -1156,12 +1156,21 @@ fu_device_set_name (FuDevice *self, const gchar *value)
 void
 fu_device_set_id (FuDevice *self, const gchar *id)
 {
+	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_autofree gchar *id_hash = NULL;
+
 	g_return_if_fail (FU_IS_DEVICE (self));
 	g_return_if_fail (id != NULL);
+
 	id_hash = g_compute_checksum_for_string (G_CHECKSUM_SHA1, id, -1);
 	g_debug ("using %s for %s", id_hash, id);
 	fwupd_device_set_id (FWUPD_DEVICE (self), id_hash);
+
+	/* ensure the parent ID is set */
+	for (guint i = 0; i < priv->children->len; i++) {
+		FuDevice *devtmp = g_ptr_array_index (priv->children, i);
+		fwupd_device_set_parent_id (FWUPD_DEVICE (devtmp), id_hash);
+	}
 }
 
 /**
