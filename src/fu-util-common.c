@@ -27,6 +27,68 @@ fu_util_get_systemd_unit (void)
 	return SYSTEMD_FWUPD_UNIT;
 }
 
+static const gchar *
+fu_util_get_expected_command (const gchar *target)
+{
+	if (g_strcmp0 (target, SYSTEMD_SNAP_FWUPD_UNIT))
+		return "fwupd.fwupdmgr";
+	return "fwupdmgr";
+}
+
+gboolean
+fu_util_using_correct_daemon (GError **error)
+{
+	g_autoptr(GDBusConnection) connection = NULL;
+	g_autoptr(GVariant) default_target = NULL;
+	g_autoptr(GVariant) val_path = NULL;
+	g_autoptr(GError) error_local = NULL;
+	const gchar *target = fu_util_get_systemd_unit ();
+
+	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
+	if (connection == NULL)
+		return FALSE;
+
+	default_target = g_dbus_connection_call_sync (connection,
+						      SYSTEMD_SERVICE,
+						      SYSTEMD_OBJECT_PATH,
+						      SYSTEMD_MANAGER_INTERFACE,
+						      "GetDefaultTarget",
+						      NULL,
+						      NULL,
+						      G_DBUS_CALL_FLAGS_NONE,
+						      -1,
+						      NULL,
+						      &error_local);
+	if (default_target == NULL) {
+		g_debug ("Systemd isn't accessible: %s\n", error_local->message);
+		return TRUE;
+	}
+
+	val_path = g_dbus_connection_call_sync (connection,
+						SYSTEMD_SERVICE,
+						SYSTEMD_OBJECT_PATH,
+						SYSTEMD_MANAGER_INTERFACE,
+						"GetUnit",
+						g_variant_new ("(s)",
+								target),
+						NULL,
+						G_DBUS_CALL_FLAGS_NONE,
+						-1,
+						NULL,
+						NULL);
+	if (val_path == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_ARGS,
+			     /* TRANSLATORS: error message */
+			     _("Mismatched daemon and client, use %s instead"),
+			     fu_util_get_expected_command (target));
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 gboolean
 fu_util_stop_daemon (GError **error)
 {

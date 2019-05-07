@@ -2481,6 +2481,14 @@ main (int argc, char *argv[])
 			    "is no longer supported by the upstream developers!\n");
 	}
 
+#ifdef HAVE_SYSTEMD
+	/* make sure the correct daemon is in use */
+	if (!fu_util_using_correct_daemon (&error)) {
+		g_printerr ("%s\n", error->message);
+		return EXIT_FAILURE;
+	}
+#endif
+
 	/* run the specified command */
 	ret = fu_util_cmd_array_run (cmd_array, priv, argv[1], (gchar**) &argv[2], &error);
 	if (!ret) {
