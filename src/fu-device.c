@@ -398,7 +398,7 @@ fu_device_set_parent (FuDevice *self, FuDevice *parent)
 
 	/* this is what goes over D-Bus */
 	fwupd_device_set_parent_id (FWUPD_DEVICE (self),
-				    self != NULL ? fu_device_get_id (parent) : NULL);
+				    parent != NULL ? fu_device_get_id (parent) : NULL);
 }
 
 /**
