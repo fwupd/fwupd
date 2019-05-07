@@ -453,6 +453,13 @@ fu_device_add_child (FuDevice *self, FuDevice *child)
 		fu_device_set_vendor (child, fu_device_get_vendor (self));
 	if (fu_device_get_vendor_id (child) == NULL)
 		fu_device_set_vendor_id (child, fu_device_get_vendor_id (self));
+	if (fu_device_get_icons(child)->len == 0) {
+		GPtrArray *icons = fu_device_get_icons (self);
+		for (guint i = 0; i < icons->len; i++) {
+			const gchar *icon_name = g_ptr_array_index (icons, i);
+			fu_device_add_icon (child, icon_name);
+		}
+	}
 
 	/* ensure the parent is also set on the child */
 	fu_device_set_parent (child, self);
