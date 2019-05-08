@@ -18,7 +18,7 @@ def parse_args():
     import argparse
     parser = argparse.ArgumentParser(description="Self extracting firmware updater")
     parser.add_argument("--directory", help="Directory to extract to")
-    parser.add_argument("--uninstall", action='store_true', help="Uninstall tools when done with installation")
+    parser.add_argument("--cleanup", action='store_true', help="Remove tools when done with installation")
     parser.add_argument("--verbose", action='store_true', help="Run the tool in verbose mode")
     parser.add_argument("--allow-reinstall", action='store_true', help="Allow re-installing existing firmware versions")
     parser.add_argument("--allow-older", action='store_true', help="Allow downgrading firmware versions")
@@ -234,8 +234,8 @@ if __name__ == '__main__':
             error ("allow-reinstall argument doesn't make sense with command %s" % args.command)
         if args.allow_older:
             error ("allow-older argument doesn't make sense with command %s" % args.command)
-        if args.uninstall:
-            error ("Uninstall argument doesn't make sense with command %s" % args.command)
+        if args.cleanup:
+            error ("Cleanup argument doesn't make sense with command %s" % args.command)
         if args.directory is None:
             error ("No directory specified")
         if not os.path.exists (args.directory):
@@ -249,4 +249,4 @@ if __name__ == '__main__':
             error ("This tool must be run as root")
         with tempfile.TemporaryDirectory (prefix='fwupd') as target:
             unzip (target)
-            run_installation (target, args.verbose, args.allow_reinstall, args.allow_older, args.uninstall)
+            run_installation (target, args.verbose, args.allow_reinstall, args.allow_older, args.cleanup)
