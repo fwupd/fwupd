@@ -24,6 +24,7 @@ def parse_args():
     parser.add_argument("--disable-snap-download", action='store_true', help="Don't download support for snap")
     parser.add_argument("--disable-flatpak-download", action='store_true', help="Don't download support for flatpak")
     parser.add_argument("--snap-channel", help="Channel to download snap from (optional)")
+    parser.add_argument("--minimum", help="Use already installed fwupd version if at least this version")
     parser.add_argument("cab", help="CAB file or directory containing CAB files to automatically install")
     parser.add_argument('target', help='target file to create')
     args = parser.parse_args()
@@ -129,5 +130,9 @@ if __name__ == '__main__':
 
         if not args.disable_flatpak_download:
             download_flatpak (directory)
+
+        if args.minimum:
+            with open(os.path.join(directory, "minimum"), "w") as wfd:
+                wfd.write(args.minimum)
 
         generate_installer (directory, args.target)
