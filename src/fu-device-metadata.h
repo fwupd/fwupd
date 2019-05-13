@@ -64,4 +64,23 @@ G_BEGIN_DECLS
  */
 #define FU_DEVICE_METADATA_UEFI_CAPSULE_FLAGS	"UefiCapsuleFlags"
 
+/**
+ * FU_DEVICE_METADATA_FLASHROM_DEVICE_KIND:
+ *
+ * The type of flashrom device, e.g. "system-firmware" or "device-firmware"
+ * Consumed by the flashrom plugin when other devices register fake devices that
+ * need to be handled by flashrom.
+ */
+#define FU_DEVICE_METADATA_FLASHROM_DEVICE_KIND     "FlashromDeviceKind"
+
+/**
+ * FU_DEVICE_METADATA_FLASHROM_FMAP_NAME:
+ *
+ * The name of the FMAP region to operate on. The FMAP descriptor must be part
+ * of the update firmware image.
+ * Consumed by the flashrom plugin when other devices register fake devices that
+ * need to be handled by flashrom's fmap module.
+ */
+#define FU_DEVICE_METADATA_FLASHROM_FMAP_NAME "FlashromFMAPName"
+
 G_END_DECLS

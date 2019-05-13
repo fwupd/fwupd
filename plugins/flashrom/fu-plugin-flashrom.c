@@ -24,6 +24,8 @@
 #include <string.h>
 
 #include "fu-plugin-vfuncs.h"
+#include "fu-flashrom-device.h"
+#include "fu-device-metadata.h"
 #include "libflashrom.h"
 
 #define SELFCHECK_TRUE 1
@@ -34,6 +36,34 @@ struct FuPluginData {
 	struct flashrom_layout		*layout;
 	struct flashrom_programmer	*flashprog;
 };
+
+static const gchar *
+fu_plugin_flashrom_flashrom_type_to_string (FuFlashromDeviceKind device_kind)
+{
+        if (device_kind == FU_FLASHROM_DEVICE_KIND_UNKNOWN)
+                return "Unknown Firmware";
+        if (device_kind == FU_FLASHROM_DEVICE_KIND_SYSTEM_FIRMWARE)
+                return "System Firmware";
+        return NULL;
+}
+
+const gchar *
+fu_flashrom_device_kind_to_string (FuFlashromDeviceKind kind)
+{
+        if (kind == FU_FLASHROM_DEVICE_KIND_UNKNOWN)
+                return "unknown";
+        if (kind == FU_FLASHROM_DEVICE_KIND_SYSTEM_FIRMWARE)
+                return "system-firmware";
+        return NULL;
+}
+
+static FuFlashromDeviceKind
+fu_flashrom_device_kind_from_string (const gchar *kind)
+{
+        if (g_strcmp0 (kind, "system-firmware") == 0)
+                return FU_FLASHROM_DEVICE_KIND_SYSTEM_FIRMWARE;
+        return FU_FLASHROM_DEVICE_KIND_UNKNOWN;
+}
 
 void
 fu_plugin_init (FuPlugin *plugin)
@@ -261,3 +291,24 @@ fu_plugin_update (FuPlugin *plugin,
 	/* success */
 	return TRUE;
 }
+
+static void
+fu_plugin_flashrom_register_proxy_device (FuPlugin *plugin, FuDevice *device)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	fu_plugin_device_add (plugin, device);
+}
+
+void
+fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
+{
+	if (fu_device_get_metadata (device, FU_DEVICE_METADATA_FLASHROM_DEVICE_KIND) != NULL) {
+		if (fu_device_get_guid_default (device) == NULL) {
+			gchar *dbg = fu_device_to_string (device);
+			g_warning ("cannot create proxy device as no GUID: %s", dbg);
+			return;
+		}
+		fu_plugin_flashrom_register_proxy_device (plugin, device);
+	}
+}
+

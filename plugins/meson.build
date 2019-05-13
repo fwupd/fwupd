@@ -16,6 +16,7 @@ subdir('upower')
 subdir('wacom-raw')
 subdir('wacom-usb')
 subdir('superio')
+subdir('coreboot')
 
 # depends on dfu
 subdir('csr')

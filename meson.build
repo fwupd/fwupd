@@ -282,6 +282,12 @@ if get_option('plugin_flashrom')
   libflashrom = dependency('flashrom', fallback : ['flashrom', 'flashrom_dep'])
 endif
 
+if get_option('plugin_coreboot')
+  if not get_option('plugin_flashrom')
+    error('plugin_coreboot also needs plugin_flashrom to work')
+  endif
+endif
+
 if get_option('systemd')
   systemd = dependency('systemd', version : '>= 211')
   conf.set('HAVE_SYSTEMD' , '1')
