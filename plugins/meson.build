@@ -1,6 +1,7 @@
 subdir('ata')
 subdir('dfu')
 subdir('colorhug')
+subdir('coreboot')
 subdir('ebitdo')
 subdir('fastboot')
 subdir('steelseries')
