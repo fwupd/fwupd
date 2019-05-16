@@ -30,7 +30,7 @@ fu_util_get_systemd_unit (void)
 static const gchar *
 fu_util_get_expected_command (const gchar *target)
 {
-	if (g_strcmp0 (target, SYSTEMD_SNAP_FWUPD_UNIT))
+	if (g_strcmp0 (target, SYSTEMD_SNAP_FWUPD_UNIT) == 0)
 		return "fwupd.fwupdmgr";
 	return "fwupdmgr";
 }
