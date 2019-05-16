@@ -2218,7 +2218,7 @@ main (int argc, char *argv[])
 			_("Allow downgrading firmware versions"), NULL },
 		{ "force", '\0', 0, G_OPTION_ARG_NONE, &force,
 			/* TRANSLATORS: command line option */
-			_("Override plugin warning"), NULL },
+			_("Override warnings and force the action"), NULL },
 		{ "assume-yes", 'y', 0, G_OPTION_ARG_NONE, &priv->assume_yes,
 			/* TRANSLATORS: command line option */
 			_("Answer yes to all questions"), NULL },
@@ -2511,7 +2511,8 @@ main (int argc, char *argv[])
 
 #ifdef HAVE_SYSTEMD
 	/* make sure the correct daemon is in use */
-	if (!fu_util_using_correct_daemon (&error)) {
+	if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
+	    !fu_util_using_correct_daemon (&error)) {
 		g_printerr ("%s\n", error->message);
 		return EXIT_FAILURE;
 	}
