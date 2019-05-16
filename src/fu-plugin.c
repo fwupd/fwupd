@@ -1348,7 +1348,7 @@ fu_plugin_runner_schedule_update (FuPlugin *self,
 			     FwupdInstallFlags flags,
 			     GError **error)
 {
-	gchar tmpname[] = {"XXXXXX.cap"};
+	gchar tmpname[] = {"XXXXXX.cab"};
 	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuHistory) history = NULL;
