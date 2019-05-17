@@ -1372,29 +1372,6 @@ fu_main_daemon_get_property (GDBusConnection *connection_, const gchar *sender,
 	return NULL;
 }
 
-static gboolean
-fu_main_is_running_offline_update (FuMainPrivate *priv)
-{
-	const gchar *default_target = NULL;
-	g_autoptr(GError) error = NULL;
-	g_autoptr(GVariant) val = NULL;
-
-	val = g_dbus_connection_call_sync (priv->connection,
-					   "org.freedesktop.systemd1",
-					   "/org/freedesktop/systemd1",
-					   "org.freedesktop.systemd1.Manager",
-					   "GetDefaultTarget",
-					   NULL, NULL,
-					   G_DBUS_CALL_FLAGS_NONE,
-					   1500, NULL, &error);
-	if (val == NULL) {
-		g_warning ("failed to get default.target: %s", error->message);
-		return FALSE;
-	}
-	g_variant_get (val, "(&s)", &default_target);
-	return g_strcmp0 (default_target, "system-update.target") == 0;
-}
-
 static void
 fu_main_on_bus_acquired_cb (GDBusConnection *connection,
 			    const gchar *name,
@@ -1418,10 +1395,6 @@ fu_main_on_bus_acquired_cb (GDBusConnection *connection,
 							     NULL,  /* user_data_free_func */
 							     NULL); /* GError** */
 	g_assert (registration_id > 0);
-
-	/* are we running in the offline target */
-	if (fu_main_is_running_offline_update (priv))
-		fu_engine_add_app_flag (priv->engine, FU_APP_FLAGS_IS_OFFLINE);
 
 	/* connect to D-Bus directly */
 	priv->proxy_uid =

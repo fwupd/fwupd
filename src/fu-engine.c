@@ -44,6 +44,10 @@
 #include "fu-udev-device-private.h"
 #include "fu-usb-device-private.h"
 
+#ifdef HAVE_SYSTEMD
+#include "fu-systemd.h"
+#endif
+
 static void fu_engine_finalize	 (GObject *obj);
 
 struct _FuEngine
@@ -1479,6 +1483,23 @@ fu_engine_create_release_metadata (FuEngine *self, FuPlugin *plugin, GError **er
 	return g_steal_pointer (&release);
 }
 
+static gboolean
+fu_engine_is_running_offline (FuEngine *self)
+{
+#ifdef HAVE_SYSTEMD
+	g_autofree gchar *default_target = NULL;
+	g_autoptr(GError) error = NULL;
+	default_target = fu_systemd_get_default_target (&error);
+	if (default_target == NULL) {
+		g_warning ("failed to get default.target: %s", error->message);
+		return FALSE;
+	}
+	return g_strcmp0 (default_target, "system-update.target") == 0;
+#else
+	return FALSE;
+#endif
+}
+
 /**
  * fu_engine_install:
  * @self: A #FuEngine
@@ -1597,8 +1618,8 @@ fu_engine_install (FuEngine *self,
 		g_prefix_error (error, "failed to get release version: ");
 		return FALSE;
 	}
-	if ((self->app_flags & FU_APP_FLAGS_IS_OFFLINE) == 0 &&
-	    (flags & FWUPD_INSTALL_FLAG_OFFLINE) > 0) {
+	if ((flags & FWUPD_INSTALL_FLAG_OFFLINE) > 0 &&
+	    !fu_engine_is_running_offline (self)) {
 		g_autoptr(FwupdRelease) release_tmp = NULL;
 		plugin = fu_plugin_list_find_by_name (self->plugin_list, "upower", NULL);
 		if (plugin != NULL) {

@@ -28,6 +28,10 @@
 #include "fu-util-common.h"
 #include "fwupd-common-private.h"
 
+#ifdef HAVE_SYSTEMD
+#include "fu-systemd.h"
+#endif
+
 /* custom return code */
 #define EXIT_NOTHING_TO_DO		2
 
@@ -2118,7 +2122,7 @@ fu_util_modify_config (FuUtilPrivate *priv, gchar **values, GError **error)
 		if (!fu_util_prompt_for_boolean (FALSE))
 			return TRUE;
 	}
-	return fu_util_stop_daemon (error);
+	return fu_systemd_unit_stop (fu_util_get_systemd_unit (), error);
 }
 
 static void
