@@ -1887,12 +1887,7 @@ fu_util_update_by_id (FuUtilPrivate *priv, const gchar *device_id, GError **erro
 	}
 
 	/* the update needs the user to restart the computer */
-	if (fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT)) {
-		if (!fu_util_prompt_complete (FWUPD_DEVICE_FLAG_NEEDS_REBOOT, TRUE,
-					      error))
-			return FALSE;
-	}
-	return TRUE;
+	return fu_util_prompt_complete (priv->completion_flags, TRUE, error);
 }
 
 static gboolean
