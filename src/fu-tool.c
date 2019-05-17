@@ -28,6 +28,10 @@
 #include "fwupd-common-private.h"
 #include "fwupd-device-private.h"
 
+#ifdef HAVE_SYSTEMD
+#include "fu-systemd.h"
+#endif
+
 /* custom return code */
 #define EXIT_NOTHING_TO_DO		2
 
@@ -109,7 +113,7 @@ fu_util_start_engine (FuUtilPrivate *priv, FuEngineLoadFlags flags, GError **err
 {
 	g_autoptr(GError) error_local = NULL;
 
-	if (!fu_util_stop_daemon (&error_local))
+	if (!fu_systemd_unit_stop (fu_util_get_systemd_unit (), &error_local))
 		g_debug ("Failed top stop daemon: %s", error_local->message);
 	if (!fu_engine_load (priv->engine, flags, error))
 		return FALSE;

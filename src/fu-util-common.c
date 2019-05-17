@@ -13,13 +13,14 @@
 #include "fu-util-common.h"
 #include "fu-device.h"
 
-#define SYSTEMD_SERVICE			"org.freedesktop.systemd1"
-#define SYSTEMD_OBJECT_PATH		"/org/freedesktop/systemd1"
-#define SYSTEMD_MANAGER_INTERFACE	"org.freedesktop.systemd1.Manager"
+#ifdef HAVE_SYSTEMD
+#include "fu-systemd.h"
+#endif
+
 #define SYSTEMD_FWUPD_UNIT		"fwupd.service"
 #define SYSTEMD_SNAP_FWUPD_UNIT		"snap.fwupd.fwupd.service"
 
-static const gchar *
+const gchar *
 fu_util_get_systemd_unit (void)
 {
 	if (g_getenv ("SNAP") != NULL)
@@ -38,45 +39,17 @@ fu_util_get_expected_command (const gchar *target)
 gboolean
 fu_util_using_correct_daemon (GError **error)
 {
-	g_autoptr(GDBusConnection) connection = NULL;
-	g_autoptr(GVariant) default_target = NULL;
-	g_autoptr(GVariant) val_path = NULL;
+	g_autofree gchar *default_target = NULL;
 	g_autoptr(GError) error_local = NULL;
 	const gchar *target = fu_util_get_systemd_unit ();
 
-	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
-	if (connection == NULL)
-		return FALSE;
-
-	default_target = g_dbus_connection_call_sync (connection,
-						      SYSTEMD_SERVICE,
-						      SYSTEMD_OBJECT_PATH,
-						      SYSTEMD_MANAGER_INTERFACE,
-						      "GetDefaultTarget",
-						      NULL,
-						      NULL,
-						      G_DBUS_CALL_FLAGS_NONE,
-						      -1,
-						      NULL,
-						      &error_local);
+	default_target = fu_systemd_get_default_target (&error_local);
 	if (default_target == NULL) {
 		g_debug ("Systemd isn't accessible: %s\n", error_local->message);
 		return TRUE;
 	}
-
-	val_path = g_dbus_connection_call_sync (connection,
-						SYSTEMD_SERVICE,
-						SYSTEMD_OBJECT_PATH,
-						SYSTEMD_MANAGER_INTERFACE,
-						"GetUnit",
-						g_variant_new ("(s)",
-								target),
-						NULL,
-						G_DBUS_CALL_FLAGS_NONE,
-						-1,
-						NULL,
-						NULL);
-	if (val_path == NULL) {
+	if (!fu_systemd_unit_check_exists (target, &error_local)) {
+		g_debug ("wrong target: %s\n", error_local->message);
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_ARGS,
@@ -87,56 +60,6 @@ fu_util_using_correct_daemon (GError **error)
 	}
 
 	return TRUE;
-}
-
-gboolean
-fu_util_stop_daemon (GError **error)
-{
-	g_autoptr(GDBusConnection) connection = NULL;
-	g_autoptr(GDBusProxy) proxy = NULL;
-	g_autoptr(GVariant) val = NULL;
-	const gchar *target = fu_util_get_systemd_unit ();
-
-	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
-	if (connection == NULL) {
-		g_prefix_error (error, "failed to get bus: ");
-		return FALSE;
-	}
-	proxy = g_dbus_proxy_new_sync (connection,
-					G_DBUS_PROXY_FLAGS_NONE,
-					NULL,
-					SYSTEMD_SERVICE,
-					SYSTEMD_OBJECT_PATH,
-					SYSTEMD_MANAGER_INTERFACE,
-					NULL,
-					error);
-	if (proxy == NULL) {
-		g_prefix_error (error, "failed to find %s: ", SYSTEMD_SERVICE);
-		return FALSE;
-	}
-	val = g_dbus_proxy_call_sync (proxy,
-				      "GetUnit",
-				      g_variant_new ("(s)",
-						     target),
-				      G_DBUS_CALL_FLAGS_NONE,
-				      -1,
-				      NULL,
-				      error);
-	if (val == NULL) {
-		g_prefix_error (error, "failed to find %s: ", target);
-		return FALSE;
-	}
-	g_variant_unref (val);
-	val = g_dbus_proxy_call_sync (proxy,
-				      "StopUnit",
-				      g_variant_new ("(ss)",
-						     target,
-						     "replace"),
-				      G_DBUS_CALL_FLAGS_NONE,
-				      -1,
-				      NULL,
-				      error);
-	return val != NULL;
 }
 
 void

@@ -14,14 +14,12 @@ G_BEGIN_DECLS
  * FuAppFlags:
  * @FU_APP_FLAGS_NONE:			No flags set
  * @FU_APP_FLAGS_NO_IDLE_SOURCES:	Disallow idle sources
- * @FU_APP_FLAGS_IS_OFFLINE:		Offline is set
  *
  * The flags to use when loading an application.
  **/
 typedef enum {
 	FU_APP_FLAGS_NONE		= 0,
 	FU_APP_FLAGS_NO_IDLE_SOURCES	= 1 << 0,
-	FU_APP_FLAGS_IS_OFFLINE		= 1 << 1,
 	/*< private >*/
 	FU_APP_FLAGS_LAST
 } FuAppFlags;

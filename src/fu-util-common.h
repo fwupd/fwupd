@@ -60,7 +60,7 @@ gboolean	 fu_util_cmd_array_run		(GPtrArray	*array,
 						 GError		**error);
 gchar		*fu_util_release_get_name	(FwupdRelease	*release);
 
+const gchar	*fu_util_get_systemd_unit	(void);
 gboolean	 fu_util_using_correct_daemon	(GError		**error);
-gboolean	 fu_util_stop_daemon		(GError		**error);
 
 G_END_DECLS
