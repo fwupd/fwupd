@@ -538,6 +538,16 @@ fu_util_release_get_name (FwupdRelease *release)
 			 * the first %s is the device name, e.g. 'ThinkPad P50` */
 			return g_strdup_printf (_("%s ME Update"), name);
 		}
+		if (g_strcmp0 (cat, "X-CorporateManagementEngine") == 0) {
+			/* TRANSLATORS: ME stands for Management Engine (with Intel AMT),
+			 * where the first %s is the device name, e.g. 'ThinkPad P50` */
+			return g_strdup_printf (_("%s Corporate ME Update"), name);
+		}
+		if (g_strcmp0 (cat, "X-ConsumerManagementEngine") == 0) {
+			/* TRANSLATORS: ME stands for Management Engine, where
+			 * the first %s is the device name, e.g. 'ThinkPad P50` */
+			return g_strdup_printf (_("%s Consumer ME Update"), name);
+		}
 		if (g_strcmp0 (cat, "X-Controller") == 0) {
 			/* TRANSLATORS: the controller is a device that has other devices
 			 * plugged into it, for example ThunderBolt, FireWire or USB,
