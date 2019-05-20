@@ -627,12 +627,11 @@ fu_plugin_uefi_ensure_esp_path (FuPlugin *plugin, GError **error)
 	/* try to guess from heuristics */
 	data->esp_path = fu_uefi_guess_esp_path ();
 	if (data->esp_path == NULL) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_INVALID_FILENAME,
-			     "Unable to determine EFI system partition location, "
-			     "override using OverrideESPMountPoint in %s.conf",
-			     fu_plugin_get_name (plugin));
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_FILENAME,
+				     "Unable to determine EFI system partition location, "
+				     "See https://github.com/hughsie/fwupd/wiki/Determining-EFI-system-partition-location");
 		return FALSE;
 	}
 
