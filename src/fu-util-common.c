@@ -28,6 +28,7 @@ fu_util_get_systemd_unit (void)
 	return SYSTEMD_FWUPD_UNIT;
 }
 
+#ifdef HAVE_SYSTEMD
 static const gchar *
 fu_util_get_expected_command (const gchar *target)
 {
@@ -35,10 +36,12 @@ fu_util_get_expected_command (const gchar *target)
 		return "fwupd.fwupdmgr";
 	return "fwupdmgr";
 }
+#endif
 
 gboolean
 fu_util_using_correct_daemon (GError **error)
 {
+#ifdef HAVE_SYSTEMD
 	g_autofree gchar *default_target = NULL;
 	g_autoptr(GError) error_local = NULL;
 	const gchar *target = fu_util_get_systemd_unit ();
@@ -58,7 +61,7 @@ fu_util_using_correct_daemon (GError **error)
 			     fu_util_get_expected_command (target));
 		return FALSE;
 	}
-
+#endif
 	return TRUE;
 }
 

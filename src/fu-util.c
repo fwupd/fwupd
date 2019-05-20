@@ -2122,7 +2122,11 @@ fu_util_modify_config (FuUtilPrivate *priv, gchar **values, GError **error)
 		if (!fu_util_prompt_for_boolean (FALSE))
 			return TRUE;
 	}
-	return fu_systemd_unit_stop (fu_util_get_systemd_unit (), error);
+#ifdef HAVE_SYSTEMD
+	if (!fu_systemd_unit_stop (fu_util_get_systemd_unit (), error))
+		return FALSE;
+#endif
+	return TRUE;
 }
 
 static void
