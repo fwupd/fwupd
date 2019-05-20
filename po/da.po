@@ -196,6 +196,10 @@ msgid "Authentication is required to modify a configured remote used for firmwar
 msgstr "Der kræves autentifikation for at redigere en konfigureret fjern som bruges til firmwareopdateringer"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify daemon configuration"
+msgstr "Der kræves autentifikation for at redigere dæmonkonfiguration"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
 msgstr "Der kræves autentifikation for at indstille listen over godkendt firmware"
 
@@ -688,12 +692,19 @@ msgstr "Metadata kan hentes fra Linux Vendor Firmware Service."
 msgid "Mode"
 msgstr "Tilstand"
 
+#. TRANSLATORS: sets something in daemon.conf
+msgid "Modifies a daemon configuration value."
+msgstr "Rediger en værdi i dæmonkonfiguration."
+
 #. TRANSLATORS: command description
 msgid "Modifies a given remote"
 msgstr "Redigerer en angivet fjern"
 
 msgid "Modify a configured remote"
 msgstr "Rediger en konfigureret fjern"
+
+msgid "Modify daemon configuration"
+msgstr "Rediger dæmonkonfiguration"
 
 #. TRANSLATORS: command description
 msgid "Monitor the daemon for events"
@@ -844,6 +855,10 @@ msgstr "Nulstil en DFU-enhed"
 msgid "Restart now?"
 msgstr "Genstart nu?"
 
+#. TRANSLATORS: configuration changes only take effect on restart
+msgid "Restart the daemon to make the change effective?"
+msgstr "Genstart dæmonen så ændringerne kan træde i kraft?"
+
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
 msgstr "Genstarter enhed …"
@@ -929,6 +944,14 @@ msgstr "Del historik over firmware med udviklerne"
 #. TRANSLATORS: command line option
 msgid "Show client and daemon versions"
 msgstr "Vis klient- og dæmonversioner"
+
+#. TRANSLATORS: this is for daemon development
+msgid "Show daemon verbose information for a particular domain"
+msgstr "Vis uddybende information for dæmon for et bestemt domæne"
+
+#. TRANSLATORS: turn on all debugging
+msgid "Show debugging information for all domains"
+msgstr "Vis fejlsøgningsinformation for alle domæner"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"

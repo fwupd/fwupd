@@ -196,6 +196,10 @@ msgid "Authentication is required to modify a configured remote used for firmwar
 msgstr "Todennusta tarvitaan firmware-päivityksiin käytettävän konfiguroidun etä-ohjaimen muokkaamisessa"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify daemon configuration"
+msgstr "Todennusta tarvitaan taustaprosessin asetusten muokkaamiseen"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
 msgstr "Vahvistus on tarpeen hyväksyttyjen laiteohjelmien listan määrittämiseksi"
 
@@ -688,12 +692,19 @@ msgstr "Metatiedot voidaan hankkia Linux Vendor Firmware -palvelusta."
 msgid "Mode"
 msgstr "Malli"
 
+#. TRANSLATORS: sets something in daemon.conf
+msgid "Modifies a daemon configuration value."
+msgstr "Muuta taustaprosessin määritysarvoja."
+
 #. TRANSLATORS: command description
 msgid "Modifies a given remote"
 msgstr "Muuta  annettua etäyhteyttä"
 
 msgid "Modify a configured remote"
 msgstr "Muokkaa määritettyä etänä"
+
+msgid "Modify daemon configuration"
+msgstr "Muokkaa taustaprosessin kokoonpanoa"
 
 #. TRANSLATORS: command description
 msgid "Monitor the daemon for events"
@@ -844,6 +855,10 @@ msgstr "Nollaa DFU-laite"
 msgid "Restart now?"
 msgstr "Käynnistä nyt?"
 
+#. TRANSLATORS: configuration changes only take effect on restart
+msgid "Restart the daemon to make the change effective?"
+msgstr "Käynnistä taustaprosessi uudelleen, jotta muutos tulee voimaan"
+
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
 msgstr "Käynnistetään laite uudelleen…"
@@ -929,6 +944,14 @@ msgstr "Jaa laiteohjelmiston historia kehittäjien kanssa"
 #. TRANSLATORS: command line option
 msgid "Show client and daemon versions"
 msgstr "Näytä asiakas- ja taustaprosessin versiot"
+
+#. TRANSLATORS: this is for daemon development
+msgid "Show daemon verbose information for a particular domain"
+msgstr "Näytä taustaprosessin täydelliset tiedot tietylle verkkotunnukselle"
+
+#. TRANSLATORS: turn on all debugging
+msgid "Show debugging information for all domains"
+msgstr "Näytä kaikkien verkkotunnusten virheenkorjaustiedot"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"

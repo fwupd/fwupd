@@ -199,6 +199,10 @@ msgid "Authentication is required to modify a configured remote used for firmwar
 msgstr "É requerida autenticação para modificar um remoto configurado usado para atualizações de firmware"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify daemon configuration"
+msgstr "É requerida autenticação para modificar uma configuração de daemon"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
 msgstr "É requirida autenticação para definir a lista de firmwares aprovados"
 
@@ -691,12 +695,19 @@ msgstr "Metadados podem ser obtidos do Linux Vendor Firmware Service."
 msgid "Mode"
 msgstr "Modo"
 
+#. TRANSLATORS: sets something in daemon.conf
+msgid "Modifies a daemon configuration value."
+msgstr "Modifica o valor de uma configuração do daemon."
+
 #. TRANSLATORS: command description
 msgid "Modifies a given remote"
 msgstr "Modifica um remoto dado"
 
 msgid "Modify a configured remote"
 msgstr "Modificar um remoto configurado"
+
+msgid "Modify daemon configuration"
+msgstr "Modificar a configuração do daemon"
 
 #. TRANSLATORS: command description
 msgid "Monitor the daemon for events"
@@ -847,6 +858,10 @@ msgstr "Redefine um dispositivo DFU"
 msgid "Restart now?"
 msgstr "Reiniciar agora?"
 
+#. TRANSLATORS: configuration changes only take effect on restart
+msgid "Restart the daemon to make the change effective?"
+msgstr "Reiniciar o daemon para tornar a mudança efetiva?"
+
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
 msgstr "Reiniciando dispositivo…"
@@ -932,6 +947,14 @@ msgstr "Compartilha histórico de firmware com os desenvolvedores"
 #. TRANSLATORS: command line option
 msgid "Show client and daemon versions"
 msgstr "Mostra as versões do cliente e do daemon"
+
+#. TRANSLATORS: this is for daemon development
+msgid "Show daemon verbose information for a particular domain"
+msgstr "Mostrar informações detalhadas do daemon para um domínio em particular"
+
+#. TRANSLATORS: turn on all debugging
+msgid "Show debugging information for all domains"
+msgstr "Mostrar informações de depuração para todos domínios"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"

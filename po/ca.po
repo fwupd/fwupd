@@ -196,6 +196,10 @@ msgid "Authentication is required to modify a configured remote used for firmwar
 msgstr "Es necessita l'autenticació per a modificar un remot configurat emprat per a les actualitzacions del microprogramari"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify daemon configuration"
+msgstr "Es requereix autenticació per a modificar la configuració del dimoni"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
 msgstr "Es requereix autenticació per a establir la llista de microprogramari aprovat"
 
@@ -688,12 +692,19 @@ msgstr "Les metadades es poden obtenir des del servei de microprogramari del pro
 msgid "Mode"
 msgstr "Mode"
 
+#. TRANSLATORS: sets something in daemon.conf
+msgid "Modifies a daemon configuration value."
+msgstr "Modifica un valor de la configuració del dimoni."
+
 #. TRANSLATORS: command description
 msgid "Modifies a given remote"
 msgstr "Modifica un remot indicat"
 
 msgid "Modify a configured remote"
 msgstr "Modifica un remot configurat"
+
+msgid "Modify daemon configuration"
+msgstr "Modifica la configuració del dimoni"
 
 #. TRANSLATORS: command description
 msgid "Monitor the daemon for events"
@@ -844,6 +855,10 @@ msgstr "Restableix un dispositiu DFU"
 msgid "Restart now?"
 msgstr "Reinicio ara?"
 
+#. TRANSLATORS: configuration changes only take effect on restart
+msgid "Restart the daemon to make the change effective?"
+msgstr "Reinicio el dimoni per a fer efectiu el canvi?"
+
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
 msgstr "S'està reiniciant el dispositiu..."
@@ -929,6 +944,14 @@ msgstr "Comparteix l'historial de microprogramari amb els desenvolupadors"
 #. TRANSLATORS: command line option
 msgid "Show client and daemon versions"
 msgstr "Mostra les versions del client i el dimoni"
+
+#. TRANSLATORS: this is for daemon development
+msgid "Show daemon verbose information for a particular domain"
+msgstr "Mostra informació detallada del dimoni per a un domini concret"
+
+#. TRANSLATORS: turn on all debugging
+msgid "Show debugging information for all domains"
+msgstr "Mostra la informació de depuració per a tots els dominis"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"

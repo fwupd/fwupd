@@ -203,6 +203,10 @@ msgid "Authentication is required to modify a configured remote used for firmwar
 msgstr "Potrebna je ovjera za promjenu udaljene lokacije koja se koristi za nadopunu frimvera"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify daemon configuration"
+msgstr "Potrebna je ovjera za promjenu podešavanja pozadinskog programa"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
 msgstr "Potrebna je ovjera za postavljanje popisa odobrenih frimvera"
 
@@ -652,10 +656,10 @@ msgid "Less than one minute remaining"
 msgstr "Preostalo je manje od minute"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
-msgstr "Frimvera Usluga Linux Proizvođača (LVFS) (stabilni frimver)."
+msgstr "Frimver Usluga Linux Proizvođača (LVFS) (stabilni frimver)."
 
 msgid "Linux Vendor Firmware Service (testing firmware)"
-msgstr "Frimvera Usluga Linux Proizvođača (LVFS) (testni frimver)."
+msgstr "Frimver Usluga Linux Proizvođača (LVFS) (testni frimver)."
 
 #. TRANSLATORS: command description
 msgid "List currently attached DFU capable devices"
@@ -692,12 +696,19 @@ msgstr "Metapodaci se mogu dobiti od Frimver Usluge Linux Proizvođača (LVFS)."
 msgid "Mode"
 msgstr "Način"
 
+#. TRANSLATORS: sets something in daemon.conf
+msgid "Modifies a daemon configuration value."
+msgstr "Prilagođava vrijednost podešavanja pozadinskog programa."
+
 #. TRANSLATORS: command description
 msgid "Modifies a given remote"
 msgstr "Promjena zadane udaljene lokacije"
 
 msgid "Modify a configured remote"
 msgstr "Promijeni zadanu udaljenu lokaciju"
+
+msgid "Modify daemon configuration"
+msgstr "Prilagodi podešavanje pozadinskog programa"
 
 #. TRANSLATORS: command description
 msgid "Monitor the daemon for events"
@@ -845,6 +856,10 @@ msgstr "Vrati na izvorno DFU uređaj"
 msgid "Restart now?"
 msgstr "Ponovno pokreni odmah?"
 
+#. TRANSLATORS: configuration changes only take effect on restart
+msgid "Restart the daemon to make the change effective?"
+msgstr "Ponovno pokreni pozadinski program kako bi se promjene primijenile?"
+
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
 msgstr "Ponovno pokretanje uređaja..."
@@ -931,6 +946,14 @@ msgstr "Podijeli povijest frimvera sa razvijateljima"
 msgid "Show client and daemon versions"
 msgstr "Prikaži inačicu klijenta i pozadinskog programa"
 
+#. TRANSLATORS: this is for daemon development
+msgid "Show daemon verbose information for a particular domain"
+msgstr "Prikaži dodatne informacije pozadinskog programa za određenu domenu"
+
+#. TRANSLATORS: turn on all debugging
+msgid "Show debugging information for all domains"
+msgstr "Prikaži informacije otklanjanja greške za sve domene"
+
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
 msgstr "Prikaži mogućnosti otklanjanja greške"
@@ -1002,7 +1025,7 @@ msgstr "Odredište"
 
 #. TRANSLATORS: do not translate the variables marked using $
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
-msgstr "LVFS (Frimvera Usluga Linux Proizvođača) je besplatna usluga koja djeluje kao neovisna pravna osoba i nema veze sa $OS_RELEASE:NAME$. Vaš distributer možda nije provjerio nadopune frimvera za kompatibilnost s vašim sustavom ili priključenim uređajima. Svi frimveri su pružani od strane izvornih proizvođača opreme."
+msgstr "LVFS (Frimver Usluga Linux Proizvođača) je besplatna usluga koja djeluje kao neovisna pravna osoba i nema veze sa $OS_RELEASE:NAME$. Vaš distributer možda nije provjerio nadopune frimvera za kompatibilnost s vašim sustavom ili priključenim uređajima. Svi frimveri su pružani od strane izvornih proizvođača opreme."
 
 #. TRANSLATORS: approved firmware has been checked by
 #. * the domain administrator
