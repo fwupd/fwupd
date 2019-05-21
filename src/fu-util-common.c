@@ -496,7 +496,7 @@ fu_util_setup_networking (GError **error)
 		http_proxy = g_getenv ("http_proxy");
 	if (http_proxy == NULL)
 		http_proxy = g_getenv ("HTTP_PROXY");
-	if (http_proxy != NULL) {
+	if (http_proxy != NULL && strlen (http_proxy) > 0) {
 		g_autoptr(SoupURI) proxy_uri = soup_uri_new (http_proxy);
 		if (proxy_uri == NULL) {
 			g_set_error (error,
