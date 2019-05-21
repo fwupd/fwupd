@@ -1274,7 +1274,7 @@ fu_main_daemon_update_metadata (FuMainPrivate *priv, gint fd, gint fd_sig, GErro
 
 	/* read the entire file into memory */
 	stream_fd = g_unix_input_stream_new (fd, TRUE);
-	bytes_raw = g_input_stream_read_bytes (stream_fd, 0x100000, NULL, error);
+	bytes_raw = g_input_stream_read_bytes (stream_fd, 0x1000000, NULL, error);
 	if (bytes_raw == NULL)
 		return FALSE;
 	stream_buf = g_memory_input_stream_new ();
@@ -1293,7 +1293,7 @@ fu_main_daemon_update_metadata (FuMainPrivate *priv, gint fd, gint fd_sig, GErro
 		g_debug ("using GZip decompressor for data");
 		converter = G_CONVERTER (g_zlib_decompressor_new (G_ZLIB_COMPRESSOR_FORMAT_GZIP));
 		stream = g_converter_input_stream_new (stream_buf, converter);
-		bytes = g_input_stream_read_bytes (stream, 0x100000, NULL, error);
+		bytes = g_input_stream_read_bytes (stream, 0x1000000, NULL, error);
 		if (bytes == NULL)
 			return FALSE;
 	} else if (data[0] == '<' && data[1] == '?') {
