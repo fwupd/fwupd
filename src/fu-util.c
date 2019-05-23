@@ -2183,6 +2183,24 @@ fu_util_check_daemon_version (FuUtilPrivate *priv, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_util_check_polkit_actions (GError **error)
+{
+	g_autofree gchar *directory = fu_common_get_path (FU_PATH_KIND_POLKIT_ACTIONS);
+	g_autofree gchar *filename = g_build_filename (directory,
+						       "org.freedesktop.fwupd.policy",
+						       NULL);
+	if (!g_file_test (filename, G_FILE_TEST_IS_REGULAR)) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_AUTH_FAILED,
+				     "PolicyKit files are missing, see https://github.com/hughsie/fwupd/wiki/PolicyKit-files-are-missing");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtilPrivate, fu_util_private_free)
@@ -2520,6 +2538,12 @@ main (int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 #endif
+
+	/* make sure polkit actions were installed */
+	if (!fu_util_check_polkit_actions (&error)) {
+		g_printerr ("%s\n", error->message);
+		return EXIT_FAILURE;
+	}
 
 	/* run the specified command */
 	ret = fu_util_cmd_array_run (cmd_array, priv, argv[1], (gchar**) &argv[2], &error);

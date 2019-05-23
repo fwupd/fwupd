@@ -167,6 +167,7 @@ if get_option('daemon')
   if polkit.version().version_compare('>= 0.114')
     conf.set('HAVE_POLKIT_0_114', '1')
   endif
+  conf.set_quoted ('POLKIT_ACTIONDIR', polkit.get_pkgconfig_variable('actiondir'))
   udevdir = get_option('udevdir')
   if udevdir == ''
     udev = dependency('udev')
