@@ -1,6 +1,9 @@
 #!/bin/sh -e
 
 install_if_missing() {
+	if [ "$2" != "/" ]; then
+		mkdir -p $(dirname ${2}/${1})
+	fi
 	install -m 644 -C ${SNAP}/${1} ${2}/${1}
 }
 
