@@ -234,8 +234,10 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 
 	/* add properties to fwupd device */
 	fu_device_set_physical_id (device, device_sysfs_path);
-	fu_device_set_vendor (device, mm_modem_get_manufacturer (modem));
-	fu_device_set_name (device, mm_modem_get_model (modem));
+	if (mm_modem_get_manufacturer (modem) != NULL)
+		fu_device_set_vendor (device, mm_modem_get_manufacturer (modem));
+	if (mm_modem_get_model (modem) != NULL)
+		fu_device_set_name (device, mm_modem_get_model (modem));
 	fu_device_set_version (device, version, FWUPD_VERSION_FORMAT_UNKNOWN);
 	for (guint i = 0; device_ids[i] != NULL; i++)
 		fu_device_add_instance_id (device, device_ids[i]);
