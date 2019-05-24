@@ -125,10 +125,13 @@ fu_redfish_client_coldplug_member (FuRedfishClient *self,
 	fu_device_set_id (dev, id);
 
 	fu_device_add_guid (dev, guid);
-	fu_device_set_name (dev, json_object_get_string_member (member, "Name"));
+	if (json_object_has_member (member, "Name"))
+		fu_device_set_name (dev, json_object_get_string_member (member, "Name"));
 	fu_device_set_summary (dev, "Redfish device");
-	fu_device_set_version (dev, json_object_get_string_member (member, "Version"),
-			       FWUPD_VERSION_FORMAT_UNKNOWN);
+	if (json_object_has_member (member, "Version")) {
+		fu_device_set_version (dev, json_object_get_string_member (member, "Version"),
+				       FWUPD_VERSION_FORMAT_UNKNOWN);
+	}
 	if (json_object_has_member (member, "LowestSupportedVersion"))
 		fu_device_set_version_lowest (dev, json_object_get_string_member (member, "LowestSupportedVersion"));
 	if (json_object_has_member (member, "Description"))
