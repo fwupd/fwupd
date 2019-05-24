@@ -243,17 +243,20 @@ fu_ata_device_parse_id (FuAtaDevice *self, const guint8 *buf, gsize sz, GError *
 	if (fu_device_get_serial (device) == NULL) {
 		g_autofree gchar *tmp = NULL;
 		tmp = fu_ata_device_get_string (id, 10, 19);
-		fu_device_set_serial (device, tmp);
+		if (tmp != NULL)
+			fu_device_set_serial (device, tmp);
 	}
 	if (fu_device_get_name (device) == NULL) {
 		g_autofree gchar *tmp = NULL;
 		tmp = fu_ata_device_get_string (id, 27, 46);
-		fu_device_set_name (device, tmp);
+		if (tmp != NULL)
+			fu_device_set_name (device, tmp);
 	}
 	if (fu_device_get_version (device) == NULL) {
 		g_autofree gchar *tmp = NULL;
 		tmp = fu_ata_device_get_string (id, 23, 26);
-		fu_device_set_version (device, tmp, FWUPD_VERSION_FORMAT_PLAIN);
+		if (tmp != NULL)
+			fu_device_set_version (device, tmp, FWUPD_VERSION_FORMAT_PLAIN);
 	} else {
 		fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_PLAIN);
 	}
