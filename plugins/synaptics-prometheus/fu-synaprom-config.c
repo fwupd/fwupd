@@ -36,6 +36,7 @@ typedef struct __attribute__((packed)) {
 /* this is followed by a chain of iotas, as follows */
 typedef struct __attribute__((packed)) {
 	guint16		 status;
+	guint32		 fullsize;
 	guint16		 nbytes;
 	guint16		 itype;
 } FuSynapromReplyIotaFindHdr;
