@@ -255,6 +255,34 @@ fu_synaprom_config_set_property (GObject *obj, guint prop_id,
 	}
 }
 
+static gboolean
+fu_synaprom_config_open (FuDevice *device, GError **error)
+{
+	FuSynapromConfig *self = FU_SYNAPROM_CONFIG (device);
+	return fu_device_open (FU_DEVICE (self->device), error);
+}
+
+static gboolean
+fu_synaprom_config_close (FuDevice *device, GError **error)
+{
+	FuSynapromConfig *self = FU_SYNAPROM_CONFIG (device);
+	return fu_device_close (FU_DEVICE (self->device), error);
+}
+
+static gboolean
+fu_synaprom_config_attach (FuDevice *device, GError **error)
+{
+	FuSynapromConfig *self = FU_SYNAPROM_CONFIG (device);
+	return fu_device_attach (FU_DEVICE (self->device), error);
+}
+
+static gboolean
+fu_synaprom_config_detach (FuDevice *device, GError **error)
+{
+	FuSynapromConfig *self = FU_SYNAPROM_CONFIG (device);
+	return fu_device_detach (FU_DEVICE (self->device), error);
+}
+
 static void
 fu_synaprom_config_class_init (FuSynapromConfigClass *klass)
 {
@@ -268,7 +296,11 @@ fu_synaprom_config_class_init (FuSynapromConfigClass *klass)
 	object_class->set_property = fu_synaprom_config_set_property;
 	klass_device->write_firmware = fu_synaprom_config_write_firmware;
 	klass_device->prepare_firmware = fu_synaprom_config_prepare_firmware;
+	klass_device->open = fu_synaprom_config_open;
+	klass_device->close = fu_synaprom_config_close;
 	klass_device->setup = fu_synaprom_config_setup;
+	klass_device->attach = fu_synaprom_config_attach;
+	klass_device->detach = fu_synaprom_config_detach;
 
 	pspec = g_param_spec_object ("device", NULL, NULL,
 				     FU_TYPE_SYNAPROM_DEVICE,
