@@ -63,11 +63,10 @@ fu_plugin_update (FuPlugin *plugin,
 		  FwupdInstallFlags flags,
 		  GError **error)
 {
-	FuSynapromDevice *synaprom_dev = FU_SYNAPROM_DEVICE (dev);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* write the firmware */
-	locker = fu_device_locker_new (synaprom_dev, error);
+	locker = fu_device_locker_new (dev, error);
 	if (locker == NULL)
 		return FALSE;
 	if (!fu_device_write_firmware (dev, blob_fw, flags, error))
@@ -80,11 +79,10 @@ fu_plugin_update (FuPlugin *plugin,
 gboolean
 fu_plugin_update_reload (FuPlugin *plugin, FuDevice *dev, GError **error)
 {
-	FuSynapromDevice *synaprom_dev = FU_SYNAPROM_DEVICE (dev);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* get the new version number */
-	locker = fu_device_locker_new (synaprom_dev, error);
+	locker = fu_device_locker_new (dev, error);
 	if (locker == NULL) {
 		g_prefix_error (error, "failed to re-open device: ");
 		return FALSE;
