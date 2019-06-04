@@ -287,6 +287,13 @@ fu_plugin_uefi_update_splash (FuPlugin *plugin, FuDevice *device, GError **error
 		{ 0, 0 }
 	};
 
+	/* no UX capsule support, so deleting var if it exists */
+	if (fu_device_has_custom_flag (device, "no-ux-capsule")) {
+		g_debug ("not providing UX capsule");
+		return fu_uefi_vars_delete (FU_UEFI_VARS_GUID_FWUPDATE,
+					    "fwupd-ux-capsule", error);
+	}
+
 	/* get the boot graphics resource table data */
 	if (!fu_uefi_bgrt_get_supported (data->bgrt)) {
 		g_set_error_literal (error,
