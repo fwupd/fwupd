@@ -164,7 +164,7 @@ fu_plugin_update_prepare (FuPlugin *plugin,
 		g_autofree guint8 *newcontents = g_malloc (data->flash_size);
 		g_autoptr(GBytes) buf = NULL;
 
-		// TODO: callback implementation
+		fu_device_set_status (device, FWUPD_STATUS_DEVICE_READ);
 		if (flashrom_image_read (data->flashctx, newcontents, data->flash_size)) {
 			g_set_error_literal (error,
 					     FWUPD_ERROR,
@@ -219,13 +219,23 @@ fu_plugin_update (FuPlugin *plugin,
 			     (guint) sz, (guint) data->flash_size);
 		return FALSE;
 	}
-	flashrom_flag_set (data->flashctx, FLASHROM_FLAG_VERIFY_AFTER_WRITE, TRUE);
+
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 	rc = flashrom_image_write (data->flashctx, (void *) buf, sz, NULL /* refbuffer */);
 	if (rc != 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_WRITE,
 			     "image write failed, err=%i", rc);
+		return FALSE;
+	}
+
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_VERIFY);
+	if (flashrom_image_verify (data->flashctx, (void *) buf, sz)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_WRITE,
+			     "image verify failed");
 		return FALSE;
 	}
 
