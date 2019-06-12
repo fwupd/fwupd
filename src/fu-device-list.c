@@ -37,7 +37,7 @@ struct _FuDeviceList
 {
 	GObject			 parent_instance;
 	GPtrArray		*devices;	/* of FuDeviceItem */
-	FuMutex			*devices_mutex;
+	GRWLock			 devices_mutex;
 };
 
 enum {
@@ -100,7 +100,7 @@ fu_device_list_get_all (FuDeviceList *self)
 	g_return_val_if_fail (FU_IS_DEVICE_LIST (self), NULL);
 	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 
-	fu_mutex_read_lock (self->devices_mutex);
+	g_rw_lock_reader_lock (&self->devices_mutex);
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
 		g_ptr_array_add (devices, g_object_ref (item->device));
@@ -111,7 +111,7 @@ fu_device_list_get_all (FuDeviceList *self)
 			continue;
 		g_ptr_array_add (devices, g_object_ref (item->device_old));
 	}
-	fu_mutex_read_unlock (self->devices_mutex);
+	g_rw_lock_reader_unlock (&self->devices_mutex);
 	return devices;
 }
 
@@ -133,19 +133,19 @@ fu_device_list_get_active (FuDeviceList *self)
 	GPtrArray *devices;
 	g_return_val_if_fail (FU_IS_DEVICE_LIST (self), NULL);
 	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	fu_mutex_read_lock (self->devices_mutex);
+	g_rw_lock_reader_lock (&self->devices_mutex);
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
 		g_ptr_array_add (devices, g_object_ref (item->device));
 	}
-	fu_mutex_read_unlock (self->devices_mutex);
+	g_rw_lock_reader_unlock (&self->devices_mutex);
 	return devices;
 }
 
 static FuDeviceItem *
 fu_device_list_find_by_device (FuDeviceList *self, FuDevice *device)
 {
-	g_autoptr(FuMutexLocker) locker = fu_mutex_read_locker_new (self->devices_mutex);
+	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_reader_locker_new (&self->devices_mutex);
 	g_return_val_if_fail (locker != NULL, NULL);
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
@@ -163,7 +163,7 @@ fu_device_list_find_by_device (FuDeviceList *self, FuDevice *device)
 static FuDeviceItem *
 fu_device_list_find_by_guid (FuDeviceList *self, const gchar *guid)
 {
-	g_autoptr(FuMutexLocker) locker = fu_mutex_read_locker_new (self->devices_mutex);
+	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_reader_locker_new (&self->devices_mutex);
 	g_return_val_if_fail (locker != NULL, NULL);
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
@@ -185,10 +185,10 @@ fu_device_list_find_by_connection (FuDeviceList *self,
 				   const gchar *physical_id,
 				   const gchar *logical_id)
 {
-	g_autoptr(FuMutexLocker) locker = NULL;
+	g_autoptr(GRWLockReaderLocker) locker = NULL;
 	if (physical_id == NULL)
 		return NULL;
-	locker = fu_mutex_read_locker_new (self->devices_mutex);
+	locker = g_rw_lock_reader_locker_new (&self->devices_mutex);
 	g_return_val_if_fail (locker != NULL, NULL);
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item_tmp = g_ptr_array_index (self->devices, i);
@@ -225,7 +225,7 @@ fu_device_list_find_by_id (FuDeviceList *self,
 
 	/* support abbreviated hashes */
 	device_id_len = strlen (device_id);
-	fu_mutex_read_lock (self->devices_mutex);
+	g_rw_lock_reader_lock (&self->devices_mutex);
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item_tmp = g_ptr_array_index (self->devices, i);
 		const gchar *ids[] = {
@@ -240,12 +240,12 @@ fu_device_list_find_by_id (FuDeviceList *self,
 			}
 		}
 	}
-	fu_mutex_read_unlock (self->devices_mutex);
+	g_rw_lock_reader_unlock (&self->devices_mutex);
 	if (item != NULL)
 		return item;
 
 	/* only search old devices if we didn't find the active device */
-	fu_mutex_read_lock (self->devices_mutex);
+	g_rw_lock_reader_lock (&self->devices_mutex);
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item_tmp = g_ptr_array_index (self->devices, i);
 		const gchar *ids[3] = { NULL };
@@ -261,7 +261,7 @@ fu_device_list_find_by_id (FuDeviceList *self,
 			}
 		}
 	}
-	fu_mutex_read_unlock (self->devices_mutex);
+	g_rw_lock_reader_unlock (&self->devices_mutex);
 	return item;
 }
 
@@ -290,7 +290,7 @@ fu_device_list_get_old (FuDeviceList *self, FuDevice *device)
 static FuDeviceItem *
 fu_device_list_get_by_guids (FuDeviceList *self, GPtrArray *guids)
 {
-	g_autoptr(FuMutexLocker) locker = fu_mutex_read_locker_new (self->devices_mutex);
+	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_reader_locker_new (&self->devices_mutex);
 	g_return_val_if_fail (locker != NULL, NULL);
 	for (guint i = 0; i < self->devices->len; i++) {
 		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
@@ -325,9 +325,9 @@ fu_device_list_device_delayed_remove_cb (gpointer user_data)
 	/* just remove now */
 	g_debug ("doing delayed removal");
 	fu_device_list_emit_device_removed (self, item->device);
-	fu_mutex_write_lock (self->devices_mutex);
+	g_rw_lock_writer_lock (&self->devices_mutex);
 	g_ptr_array_remove (self->devices, item);
-	fu_mutex_write_unlock (self->devices_mutex);
+	g_rw_lock_writer_unlock (&self->devices_mutex);
 	return G_SOURCE_REMOVE;
 }
 
@@ -401,9 +401,9 @@ fu_device_list_remove (FuDeviceList *self, FuDevice *device)
 			continue;
 		}
 		fu_device_list_emit_device_removed (self, child);
-		fu_mutex_write_lock (self->devices_mutex);
+		g_rw_lock_writer_lock (&self->devices_mutex);
 		g_ptr_array_remove (self->devices, child_item);
-		fu_mutex_write_unlock (self->devices_mutex);
+		g_rw_lock_writer_unlock (&self->devices_mutex);
 	}
 
 	/* delay the removal and check for replug */
@@ -414,9 +414,9 @@ fu_device_list_remove (FuDeviceList *self, FuDevice *device)
 
 	/* remove right now */
 	fu_device_list_emit_device_removed (self, item->device);
-	fu_mutex_write_lock (self->devices_mutex);
+	g_rw_lock_writer_lock (&self->devices_mutex);
 	g_ptr_array_remove (self->devices, item);
-	fu_mutex_write_unlock (self->devices_mutex);
+	g_rw_lock_writer_unlock (&self->devices_mutex);
 }
 
 static void
@@ -595,9 +595,9 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 	item->self = self; /* no ref */
 	item->device = g_object_ref (device);
 	item->replug_loop = g_main_loop_new (NULL, FALSE);
-	fu_mutex_write_lock (self->devices_mutex);
+	g_rw_lock_writer_lock (&self->devices_mutex);
 	g_ptr_array_add (self->devices, item);
-	fu_mutex_write_unlock (self->devices_mutex);
+	g_rw_lock_writer_unlock (&self->devices_mutex);
 	fu_device_list_emit_device_added (self, device);
 }
 
@@ -804,7 +804,7 @@ static void
 fu_device_list_init (FuDeviceList *self)
 {
 	self->devices = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_device_list_item_free);
-	self->devices_mutex = fu_mutex_new (G_OBJECT_TYPE_NAME(self), "devices");
+	g_rw_lock_init (&self->devices_mutex);
 }
 
 static void
@@ -813,7 +813,7 @@ fu_device_list_finalize (GObject *obj)
 	FuDeviceList *self = FU_DEVICE_LIST (obj);
 
 	g_ptr_array_unref (self->devices);
-	g_object_unref (self->devices_mutex);
+	g_rw_lock_clear (&self->devices_mutex);
 
 	G_OBJECT_CLASS (fu_device_list_parent_class)->finalize (obj);
 }
