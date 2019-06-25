@@ -25,5 +25,6 @@ shared_module('fu_plugin_flashrom',
   ],
   dependencies : [
     plugin_deps,
+    libflashrom,
   ],
 )

@@ -142,6 +142,42 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency type="build" id="libftdi1-dev">
+    <distro id="arch">
+      <package>libftdi</package>
+    </distro>
+    <distro id="centos">
+      <package>libftdi-devel</package>
+    </distro>
+    <distro id="fedora">
+      <package>libftdi-devel</package>
+    </distro>
+    <distro id="debian">
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="libpci-dev">
+    <distro id="arch">
+      <package>pciutils</package>
+    </distro>
+    <distro id="centos">
+      <package>pciutils-devel</package>
+    </distro>
+    <distro id="fedora">
+      <package>pciutils-devel</package>
+    </distro>
+    <distro id="debian">
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
   <dependency type="build" id="fonts-noto">
     <distro id="arch">
       <package>noto-fonts</package>

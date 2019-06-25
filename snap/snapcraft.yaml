@@ -264,11 +264,13 @@ parts:
       - libarchive-dev
       - libcairo-dev
       - libelf-dev
+      - libftdi1-dev
       - libgcab-dev
       - libglib2.0-dev
       - libgpgme11-dev
       - libjson-glib-dev
       - libpango1.0-dev
+      - libpci-dev
       - libpolkit-gobject-1-dev
       - libsoup2.4-dev
       - libsqlite3-dev
