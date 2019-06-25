@@ -11,7 +11,7 @@ ifeq "$(DEB_HOST_ARCH_BITS)" "32"
 endif
 
 ifneq ($(CI),)
-	export CI=--werror
+	export CI=--werror --wrap-mode=default
 endif
 
 SB_STYLE := debian
@@ -57,6 +57,9 @@ override_dh_install:
 	#if build with meson subproject in CI need to install this too
 	if [ -n "$CI" ] && [ -f debian/tmp/usr/lib/xb-tool ]; then \
 		dh_install -pfwupd usr/lib/xb-tool ;\
+	fi
+	if [ -n "$CI" ] && [ -f debian/tmp/usr/sbin/flashrom ]; then \
+		dh_install -pfwupd usr/sbin/flashrom ;\
 	fi
 	dh_missing -a --fail-missing
 

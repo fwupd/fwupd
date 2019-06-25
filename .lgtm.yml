@@ -14,8 +14,10 @@ extraction:
     - "wget -O libxmlb.zip https://github.com/hughsie/libxmlb/archive/0.1.7.zip"
     - "mkdir -p subprojects/libxmlb"
     - "bsdtar --strip-components=1 -xvf libxmlb.zip -C subprojects/libxmlb"
+    - "wget -O flashrom.zip https://github.com/hughsie/flashrom/archive/wip/hughsie/fwupd.zip"
+    - "mkdir -p subprojects/flashrom"
+    - "bsdtar --strip-components=1 -xvf flashrom.zip -C subprojects/flashrom"
     index:
       build_command:
       - "meson setup build"
       - "ninja -C build"
- 
