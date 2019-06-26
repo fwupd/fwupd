@@ -41,36 +41,43 @@ class LdVersionScript:
         release.append(identifier)
         return version
 
+    def _add_cls(self, cls):
+
+        # add all class functions
+        for node in cls.findall(XMLNS + 'function'):
+            self._add_node(node)
+
+        # add the constructor
+        for node in cls.findall(XMLNS + 'constructor'):
+            self._add_node(node)
+
+        # choose the lowest version method for the _get_type symbol
+        version_lowest = None
+        if '{http://www.gtk.org/introspection/glib/1.0}get-type' not in cls.attrib:
+            return
+        type_name = cls.attrib['{http://www.gtk.org/introspection/glib/1.0}get-type']
+
+        # add all class methods
+        for node in cls.findall(XMLNS + 'method'):
+            version_tmp = self._add_node(node)
+            if version_tmp:
+                if not version_lowest or version_tmp < version_lowest:
+                    version_lowest = version_tmp
+
+        # finally add the get_type symbol
+        if version_lowest:
+            self.releases[version_lowest].append(type_name)
+
     def import_gir(self, filename):
         tree = ET.parse(filename)
         root = tree.getroot()
         for ns in root.findall(XMLNS + 'namespace'):
             for node in ns.findall(XMLNS + 'function'):
                 self._add_node(node)
+            for cls in ns.findall(XMLNS + 'record'):
+                self._add_cls(cls)
             for cls in ns.findall(XMLNS + 'class'):
-
-                # add all class functions
-                for node in cls.findall(XMLNS + 'function'):
-                    self._add_node(node)
-
-                # add the constructor
-                for node in cls.findall(XMLNS + 'constructor'):
-                    self._add_node(node)
-
-                # choose the lowest version method for the _get_type symbol
-                version_lowest = None
-                type_name = cls.attrib['{http://www.gtk.org/introspection/glib/1.0}get-type']
-
-                # add all class methods
-                for node in cls.findall(XMLNS + 'method'):
-                    version_tmp = self._add_node(node)
-                    if version_tmp:
-                        if not version_lowest or version_tmp < version_lowest:
-                            version_lowest = version_tmp
-
-                # finally add the get_type symbol
-                if version_lowest:
-                    self.releases[version_lowest].append(type_name)
+                self._add_cls(cls)
 
     def render(self):
 
