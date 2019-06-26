@@ -8,6 +8,8 @@
 import sys
 import xml.etree.ElementTree as ET
 
+from pkg_resources import parse_version
+
 XMLNS = '{http://www.gtk.org/introspection/core/1.0}'
 XMLNS_C = '{http://www.gtk.org/introspection/c/1.0}'
 
@@ -80,7 +82,7 @@ class LdVersionScript:
         # output the version data to a file
         verout = '# generated automatically, do not edit!\n'
         oldversion = None
-        for version in sorted(versions):
+        for version in sorted(versions, key=parse_version):
             symbols = sorted(self.releases[version])
             verout += '\n%s_%s {\n' % (self.library_name, version)
             verout += '  global:\n'
