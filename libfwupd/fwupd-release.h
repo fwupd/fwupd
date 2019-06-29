@@ -117,4 +117,7 @@ const gchar	*fwupd_release_get_update_message	(FwupdRelease	*release);
 void		 fwupd_release_set_update_message	(FwupdRelease	*release,
 							 const gchar	*update_message);
 
+FwupdRelease	*fwupd_release_from_variant		(GVariant	*value);
+GPtrArray	*fwupd_release_array_from_variant	(GVariant	*value);
+
 G_END_DECLS
