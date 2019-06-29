@@ -13,7 +13,8 @@
 
 G_BEGIN_DECLS
 
-FwupdRelease	*fwupd_release_from_variant		(GVariant	*data);
+FwupdRelease	*fwupd_release_from_variant		(GVariant	*value);
+GPtrArray	*fwupd_release_array_from_variant	(GVariant	*value);
 GVariant	*fwupd_release_to_variant		(FwupdRelease	*release);
 void		 fwupd_release_to_json			(FwupdRelease *release,
 							 JsonBuilder *builder);

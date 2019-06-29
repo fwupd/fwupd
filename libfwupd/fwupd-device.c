@@ -1968,35 +1968,86 @@ fwupd_device_set_from_variant_iter (FwupdDevice *device, GVariantIter *iter)
 
 /**
  * fwupd_device_from_variant:
- * @data: a #GVariant
+ * @value: a #GVariant
  *
  * Creates a new device using packed data.
  *
- * Returns: (transfer full): a new #FwupdDevice, or %NULL if @data was invalid
+ * Returns: (transfer full): a new #FwupdDevice, or %NULL if @value was invalid
  *
  * Since: 1.0.0
  **/
 FwupdDevice *
-fwupd_device_from_variant (GVariant *data)
+fwupd_device_from_variant (GVariant *value)
 {
 	FwupdDevice *dev = NULL;
 	const gchar *type_string;
 	g_autoptr(GVariantIter) iter = NULL;
 
 	/* format from GetDetails */
-	type_string = g_variant_get_type_string (data);
+	type_string = g_variant_get_type_string (value);
 	if (g_strcmp0 (type_string, "(a{sv})") == 0) {
 		dev = fwupd_device_new ();
-		g_variant_get (data, "(a{sv})", &iter);
+		g_variant_get (value, "(a{sv})", &iter);
 		fwupd_device_set_from_variant_iter (dev, iter);
 	} else if (g_strcmp0 (type_string, "a{sv}") == 0) {
 		dev = fwupd_device_new ();
-		g_variant_get (data, "a{sv}", &iter);
+		g_variant_get (value, "a{sv}", &iter);
 		fwupd_device_set_from_variant_iter (dev, iter);
 	} else {
 		g_warning ("type %s not known", type_string);
 	}
 	return dev;
+}
+
+/**
+ * fwupd_device_array_from_variant:
+ * @value: a #GVariant
+ *
+ * Creates an array of new devices using packed data.
+ *
+ * Returns: (transfer container) (element-type FwupdDevice): devices, or %NULL if @value was invalid
+ *
+ * Since: 1.2.10
+ **/
+GPtrArray *
+fwupd_device_array_from_variant (GVariant *value)
+{
+	GPtrArray *array = NULL;
+	gsize sz;
+	g_autoptr(GVariant) untuple = NULL;
+	g_autoptr(GHashTable) devices_by_id = NULL;
+
+	array = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	devices_by_id = g_hash_table_new (g_str_hash, g_str_equal);
+	untuple = g_variant_get_child_value (value, 0);
+	sz = g_variant_n_children (untuple);
+	for (guint i = 0; i < sz; i++) {
+		FwupdDevice *dev;
+		g_autoptr(GVariant) data = NULL;
+		data = g_variant_get_child_value (untuple, i);
+		dev = fwupd_device_from_variant (data);
+		if (dev == NULL)
+			continue;
+		g_ptr_array_add (array, dev);
+		if (fwupd_device_get_id (dev) != NULL) {
+			g_hash_table_insert (devices_by_id,
+					     (gpointer) fwupd_device_get_id (dev),
+					     (gpointer) dev);
+		}
+	}
+
+	/* set the parent on each child */
+	for (guint i = 0; i < array->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index (array, i);
+		const gchar *parent_id = fwupd_device_get_parent_id (dev);
+		if (parent_id != NULL) {
+			FwupdDevice *dev_tmp;
+			dev_tmp = g_hash_table_lookup (devices_by_id, parent_id);
+			fwupd_device_set_parent (dev, dev_tmp);
+		}
+	}
+
+	return array;
 }
 
 /**

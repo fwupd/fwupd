@@ -363,3 +363,11 @@ LIBFWUPD_1.2.9 {
     fwupd_version_format_to_string;
   local: *;
 } LIBFWUPD_1.2.8;
+
+LIBFWUPD_1.2.10 {
+  global:
+    fwupd_device_array_from_variant;
+    fwupd_release_array_from_variant;
+    fwupd_remote_array_from_variant;
+  local: *;
+} LIBFWUPD_1.2.9;
