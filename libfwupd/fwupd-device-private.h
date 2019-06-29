@@ -13,8 +13,6 @@
 
 G_BEGIN_DECLS
 
-FwupdDevice	*fwupd_device_from_variant		(GVariant	*value);
-GPtrArray	*fwupd_device_array_from_variant	(GVariant	*value);
 GVariant	*fwupd_device_to_variant		(FwupdDevice	*device);
 GVariant	*fwupd_device_to_variant_full		(FwupdDevice	*device,
 							 FwupdDeviceFlags flags);

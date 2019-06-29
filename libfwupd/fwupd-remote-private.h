@@ -10,8 +10,6 @@
 
 G_BEGIN_DECLS
 
-FwupdRemote	*fwupd_remote_from_variant		(GVariant	*value);
-GPtrArray	*fwupd_remote_array_from_variant	(GVariant	*value);
 GVariant	*fwupd_remote_to_variant		(FwupdRemote	*self);
 gboolean	 fwupd_remote_load_from_filename	(FwupdRemote	*self,
 							 const gchar	*filename,

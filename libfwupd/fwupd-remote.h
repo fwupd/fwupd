@@ -71,4 +71,7 @@ gchar		*fwupd_remote_build_firmware_uri	(FwupdRemote	*self,
 							 const gchar	*url,
 							 GError		**error);
 
+FwupdRemote	*fwupd_remote_from_variant		(GVariant	*value);
+GPtrArray	*fwupd_remote_array_from_variant	(GVariant	*value);
+
 G_END_DECLS
