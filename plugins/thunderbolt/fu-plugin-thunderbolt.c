@@ -503,7 +503,7 @@ fu_plugin_thunderbolt_trigger_update (GUdevDevice  *udevice,
 		if (n < 1 && errno != EINTR) {
 			g_set_error (error, G_IO_ERROR,
 				     g_io_error_from_errno (errno),
-				     "could write to 'nvm_authenticate': %s",
+				     "could not write to 'nvm_authenticate': %s",
 				     g_strerror (errno));
 			(void) close (fd);
 			return FALSE;
@@ -514,7 +514,7 @@ fu_plugin_thunderbolt_trigger_update (GUdevDevice  *udevice,
 	if (r < 0 && errno != EINTR) {
 		g_set_error (error, G_IO_ERROR,
 			     g_io_error_from_errno (errno),
-			     "could close 'nvm_authenticate': %s",
+			     "could not close 'nvm_authenticate': %s",
 			     g_strerror (errno));
 		return FALSE;
 	}
