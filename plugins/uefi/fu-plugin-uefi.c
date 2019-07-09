@@ -591,10 +591,41 @@ fu_plugin_uefi_delete_old_capsules (FuPlugin *plugin, GError **error)
 gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
-	/* are the EFI dirs set up so we can update each device */
-	if (!fu_uefi_vars_supported (error))
+	const guint8 *data;
+	gsize sz;
+	g_autoptr(GBytes) bios_information = fu_plugin_get_smbios_data (plugin, 0);
+	if (bios_information == NULL) {
+		const gchar *tmp = g_getenv ("FWUPD_DELL_FAKE_SMBIOS");
+		if (tmp != NULL)
+			return TRUE;
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "SMBIOS not supported");
 		return FALSE;
-
+	}
+	data = g_bytes_get_data (bios_information, &sz);
+	if (sz < 0x13) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "offset bigger than size %" G_GSIZE_FORMAT, sz);
+		return FALSE;
+	}
+	if (data[1] < 0x13) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "SMBIOS 2.3 not supported");
+		return FALSE;
+	}
+	if (!(data[0x13] & (1 << 3))) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "System does not support UEFI mode");
+		return FALSE;
+	}
 	/* test for invalid ESP in coldplug, and set the update-error rather
 	 * than showing no output if the plugin had self-disabled here */
 	return TRUE;
@@ -742,6 +773,38 @@ fu_plugin_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_plugin_uefi_create_dummy (FuPlugin *plugin, GError **error)
+{
+	const gchar *key;
+	g_autoptr(FuDevice) dev = fu_device_new ();
+
+	key = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER);
+	if (key != NULL)
+		fu_device_set_vendor (dev, key);
+	key = fu_plugin_uefi_get_name_for_type (plugin, FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE);
+	fu_device_set_name (dev, key);
+	key = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VERSION);
+	if (key != NULL)
+		fu_device_set_version (dev, key, FWUPD_VERSION_FORMAT_PLAIN);
+	key = "Firmware can not be updated in legacy mode, switch to UEFI mode.";
+	fu_device_set_update_error (dev, key);
+
+	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
+
+	fu_device_add_icon (dev, "computer");
+	fu_device_set_plugin (dev, fu_plugin_get_name (plugin));
+	fu_device_set_physical_id (dev, "UEFI");
+	fu_device_add_instance_id (dev, "main-system-firmware");
+	if (!fu_device_setup (dev, error))
+		return FALSE;
+	fu_plugin_device_add (plugin, dev);
+
+	return TRUE;
+}
+
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
@@ -755,6 +818,10 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	g_autoptr(GError) error_esp = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) entries = NULL;
+
+	/* are the EFI dirs set up so we can update each device */
+	if (!fu_uefi_vars_supported (error))
+		return fu_plugin_uefi_create_dummy (plugin, error);
 
 	/* get the directory of ESRT entries */
 	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
