@@ -820,8 +820,10 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	g_autoptr(GPtrArray) entries = NULL;
 
 	/* are the EFI dirs set up so we can update each device */
-	if (!fu_uefi_vars_supported (error))
+	if (!fu_uefi_vars_supported (&error_local)) {
+		g_warning ("%s", error_local->message);
 		return fu_plugin_uefi_create_dummy (plugin, error);
+	}
 
 	/* get the directory of ESRT entries */
 	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
