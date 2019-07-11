@@ -48,6 +48,7 @@ fi
 #install RPM packages
 dnf install -y $HOME/rpmbuild/RPMS/*/*.rpm
 
+mkdir -p dist
 cp $HOME/rpmbuild/RPMS/*/*.rpm dist
 
 if [ "$CI" = "true" ]; then
