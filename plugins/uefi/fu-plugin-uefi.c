@@ -796,7 +796,7 @@ fu_plugin_uefi_create_dummy (FuPlugin *plugin, GError **error)
 
 	fu_device_add_icon (dev, "computer");
 	fu_device_set_plugin (dev, fu_plugin_get_name (plugin));
-	fu_device_set_physical_id (dev, "UEFI");
+	fu_device_set_id (dev, "UEFI-dummy");
 	fu_device_add_instance_id (dev, "main-system-firmware");
 	if (!fu_device_setup (dev, error))
 		return FALSE;
