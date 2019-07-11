@@ -456,8 +456,7 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_autofree gchar *tmp = NULL;
 		FwupdDevice *dev = g_ptr_array_index (devs, i);
 		if (!priv->show_all_devices) {
-			if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE) &&
-			    !fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
+			if (!fu_util_is_interesting_device (dev))
 				continue;
 		}
 		tmp = fwupd_device_to_string (dev);
