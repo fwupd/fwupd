@@ -23,6 +23,45 @@ msgid_plural "%.0f minutes remaining"
 msgstr[0] "Manca %.0f minut"
 msgstr[1] "Manquen %.0f minuts"
 
+#. TRANSLATORS: the controller is a device that has other devices
+#. * plugged into it, for example ThunderBolt, FireWire or USB,
+#. * the first %s is the device name, e.g. 'Intel ThunderBolt`
+#, c-format
+msgid "%s Controller Update"
+msgstr "Actualització del controlador %s"
+
+#. TRANSLATORS: a specific part of hardware,
+#. * the first %s is the device name, e.g. 'Unifying Receiver`
+#, c-format
+msgid "%s Device Update"
+msgstr "Actualizació del dispositiu %s"
+
+#. TRANSLATORS: the EC is typically the keyboard controller chip,
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Embedded Controller Update"
+msgstr "Actualització del controlador incorporat %s"
+
+#. TRANSLATORS: ME stands for Management Engine, the Intel AMT thing,
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s ME Update"
+msgstr "Actualització ME de %s"
+
+#. TRANSLATORS: the entire system, e.g. all internal devices,
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s System Update"
+msgstr "Actualizació del sistema %s"
+
+#. TRANSLATORS: this is the fallback where we don't know if the release
+#. * is updating the system, the device, or a device class, or something else
+#. --
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Update"
+msgstr "Actualització de %s"
+
 #. TRANSLATORS: first replacement is device name
 #, c-format
 msgid "%s has firmware updates:"
@@ -155,6 +194,10 @@ msgstr "Es requereix autenticació per a desactualitzar el microprogramari en aq
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
 msgstr "Es necessita l'autenticació per a modificar un remot configurat emprat per a les actualitzacions del microprogramari"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify daemon configuration"
+msgstr "Es requereix autenticació per a modificar la configuració del dimoni"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
@@ -649,12 +692,19 @@ msgstr "Les metadades es poden obtenir des del servei de microprogramari del pro
 msgid "Mode"
 msgstr "Mode"
 
+#. TRANSLATORS: sets something in daemon.conf
+msgid "Modifies a daemon configuration value."
+msgstr "Modifica un valor de la configuració del dimoni."
+
 #. TRANSLATORS: command description
 msgid "Modifies a given remote"
 msgstr "Modifica un remot indicat"
 
 msgid "Modify a configured remote"
 msgstr "Modifica un remot configurat"
+
+msgid "Modify daemon configuration"
+msgstr "Modifica la configuració del dimoni"
 
 #. TRANSLATORS: command description
 msgid "Monitor the daemon for events"
@@ -805,6 +855,10 @@ msgstr "Restableix un dispositiu DFU"
 msgid "Restart now?"
 msgstr "Reinicio ara?"
 
+#. TRANSLATORS: configuration changes only take effect on restart
+msgid "Restart the daemon to make the change effective?"
+msgstr "Reinicio el dimoni per a fer efectiu el canvi?"
+
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
 msgstr "S'està reiniciant el dispositiu..."
@@ -892,12 +946,12 @@ msgid "Show client and daemon versions"
 msgstr "Mostra les versions del client i el dimoni"
 
 #. TRANSLATORS: this is for daemon development
-msgid "Show daemon verbose information"
-msgstr "Mostra la informació detallada del dimoni"
+msgid "Show daemon verbose information for a particular domain"
+msgstr "Mostra informació detallada del dimoni per a un domini concret"
 
 #. TRANSLATORS: turn on all debugging
-msgid "Show debugging information for all files"
-msgstr "Mostra la informació de depuració per a tots els fitxers"
+msgid "Show debugging information for all domains"
+msgstr "Mostra la informació de depuració per a tots els dominis"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"

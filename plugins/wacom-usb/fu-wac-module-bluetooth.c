@@ -105,7 +105,10 @@ fu_wac_module_bluetooth_parse_blocks (const guint8 *data, gsize sz, gboolean ski
 }
 
 static gboolean
-fu_wac_module_bluetooth_write_firmware (FuDevice *device, GBytes *blob, GError **error)
+fu_wac_module_bluetooth_write_firmware (FuDevice *device,
+					GBytes *blob,
+					FwupdInstallFlags flags,
+					GError **error)
 {
 	FuWacModule *self = FU_WAC_MODULE (device);
 	const guint8 *data;

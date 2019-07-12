@@ -44,7 +44,6 @@ typedef struct {
 	GPtrArray			*children;
 	guint				 remove_delay;	/* ms */
 	FwupdStatus			 status;
-	FuVersionFormat			 version_format;
 	guint				 progress;
 	guint				 order;
 	guint				 priority;
@@ -63,7 +62,6 @@ enum {
 	PROP_PHYSICAL_ID,
 	PROP_LOGICAL_ID,
 	PROP_QUIRKS,
-	PROP_VERSION_FORMAT,
 	PROP_LAST
 };
 
@@ -82,9 +80,6 @@ fu_device_get_property (GObject *object, guint prop_id,
 		break;
 	case PROP_PROGRESS:
 		g_value_set_uint (value, priv->progress);
-		break;
-	case PROP_VERSION_FORMAT:
-		g_value_set_uint (value, priv->version_format);
 		break;
 	case PROP_PHYSICAL_ID:
 		g_value_set_string (value, fu_device_get_physical_id (self));
@@ -112,9 +107,6 @@ fu_device_set_property (GObject *object, guint prop_id,
 		break;
 	case PROP_PROGRESS:
 		fu_device_set_progress (self, g_value_get_uint (value));
-		break;
-	case PROP_VERSION_FORMAT:
-		fu_device_set_version_format (self, g_value_get_uint (value));
 		break;
 	case PROP_PHYSICAL_ID:
 		fu_device_set_physical_id (self, g_value_get_string (value));
@@ -406,7 +398,7 @@ fu_device_set_parent (FuDevice *self, FuDevice *parent)
 
 	/* this is what goes over D-Bus */
 	fwupd_device_set_parent_id (FWUPD_DEVICE (self),
-				    self != NULL ? fu_device_get_id (parent) : NULL);
+				    parent != NULL ? fu_device_get_id (parent) : NULL);
 }
 
 /**
@@ -454,10 +446,20 @@ fu_device_add_child (FuDevice *self, FuDevice *child)
 	g_ptr_array_add (priv->children, g_object_ref (child));
 
 	/* copy from main device if unset */
+	if (fu_device_get_physical_id (child) == NULL &&
+	    fu_device_get_physical_id (self) != NULL)
+		fu_device_set_physical_id (child, fu_device_get_physical_id (self));
 	if (fu_device_get_vendor (child) == NULL)
 		fu_device_set_vendor (child, fu_device_get_vendor (self));
 	if (fu_device_get_vendor_id (child) == NULL)
 		fu_device_set_vendor_id (child, fu_device_get_vendor_id (self));
+	if (fu_device_get_icons(child)->len == 0) {
+		GPtrArray *icons = fu_device_get_icons (self);
+		for (guint i = 0; i < icons->len; i++) {
+			const gchar *icon_name = g_ptr_array_index (icons, i);
+			fu_device_add_icon (child, icon_name);
+		}
+	}
 
 	/* ensure the parent is also set on the child */
 	fu_device_set_parent (child, self);
@@ -655,7 +657,7 @@ fu_device_set_quirk_kv (FuDevice *self,
 		return TRUE;
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_VERSION) == 0) {
-		fu_device_set_version (self, value);
+		fu_device_set_version (self, value, fu_device_get_version_format (self));
 		return TRUE;
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_ICON) == 0) {
@@ -691,7 +693,7 @@ fu_device_set_quirk_kv (FuDevice *self,
 		return TRUE;
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_VERSION_FORMAT) == 0) {
-		fu_device_set_version_format (self, fu_common_version_format_from_string (value));
+		fu_device_set_version_format (self, fwupd_version_format_from_string (value));
 		return TRUE;
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_CHILDREN) == 0) {
@@ -860,6 +862,29 @@ fu_device_has_guid (FuDevice *self, const gchar *guid)
 	return fwupd_device_has_guid (FWUPD_DEVICE (self), guid);
 }
 
+/* private */
+void
+fu_device_add_instance_id_full (FuDevice *self,
+				const gchar *instance_id,
+				FuDeviceInstanceFlags flags)
+{
+	g_autofree gchar *guid = NULL;
+	if (fwupd_guid_is_valid (instance_id)) {
+		g_warning ("use fu_device_add_guid(\"%s\") instead!", instance_id);
+		fu_device_add_guid_safe (self, instance_id);
+		return;
+	}
+
+	/* it seems odd adding the instance ID and the GUID quirks and not just
+	 * calling fu_device_add_guid_safe() -- but we want the quirks to match
+	 * so the plugin is set, but not the LVFS metadata to match firmware
+	 * until we're sure the device isn't using _NO_AUTO_INSTANCE_IDS */
+	guid = fwupd_guid_hash_string (instance_id);
+	fu_device_add_guid_quirks (self, guid);
+	if ((flags & FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS) == 0)
+		fwupd_device_add_instance_id (FWUPD_DEVICE (self), instance_id);
+}
+
 /**
  * fu_device_add_instance_id:
  * @self: A #FuDevice
@@ -873,19 +898,9 @@ fu_device_has_guid (FuDevice *self, const gchar *guid)
 void
 fu_device_add_instance_id (FuDevice *self, const gchar *instance_id)
 {
-	g_autofree gchar *guid = NULL;
-	if (fwupd_guid_is_valid (instance_id)) {
-		g_warning ("use fu_device_add_guid(\"%s\") instead!", instance_id);
-		fu_device_add_guid_safe (self, instance_id);
-		return;
-	}
-	/* it seems odd adding the instance ID and the GUID quirks and not just
-	 * calling fu_device_add_guid_safe() -- but we want the quirks to match
-	 * so the plugin is set, but not the LVFS metadata to match firmware
-	 * until we're sure the device isn't using _NO_AUTO_INSTANCE_IDS */
-	guid = fwupd_guid_hash_string (instance_id);
-	fu_device_add_guid_quirks (self, guid);
-	fwupd_device_add_instance_id (FWUPD_DEVICE (self), instance_id);
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_return_if_fail (instance_id != NULL);
+	fu_device_add_instance_id_full (self, instance_id, FU_DEVICE_INSTANCE_FLAG_NONE);
 }
 
 /**
@@ -1151,62 +1166,57 @@ fu_device_set_name (FuDevice *self, const gchar *value)
 void
 fu_device_set_id (FuDevice *self, const gchar *id)
 {
+	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_autofree gchar *id_hash = NULL;
+
 	g_return_if_fail (FU_IS_DEVICE (self));
 	g_return_if_fail (id != NULL);
+
 	id_hash = g_compute_checksum_for_string (G_CHECKSUM_SHA1, id, -1);
 	g_debug ("using %s for %s", id_hash, id);
 	fwupd_device_set_id (FWUPD_DEVICE (self), id_hash);
-}
 
-static gboolean
-fu_device_is_valid_semver_char (gchar c)
-{
-	if (g_ascii_isdigit (c))
-		return TRUE;
-	if (c == '.')
-		return TRUE;
-	return FALSE;
+	/* ensure the parent ID is set */
+	for (guint i = 0; i < priv->children->len; i++) {
+		FuDevice *devtmp = g_ptr_array_index (priv->children, i);
+		fwupd_device_set_parent_id (FWUPD_DEVICE (devtmp), id_hash);
+	}
 }
 
 /**
  * fu_device_set_version:
  * @self: A #FuDevice
  * @version: a string, e.g. `1.2.3`
+ * @fmt: a #FwupdVersionFormat, e.g. %FWUPD_VERSION_FORMAT_TRIPLET
  *
- * Sets the device version, autodetecting the version format if required.
+ * Sets the device version, sanitizing the string if required.
  *
- * Since: 1.2.1
+ * Since: 1.2.9
  **/
 void
-fu_device_set_version (FuDevice *self, const gchar *version)
+fu_device_set_version (FuDevice *self, const gchar *version, FwupdVersionFormat fmt)
 {
-	FuDevicePrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GString) version_safe = NULL;
+	g_autofree gchar *version_safe = NULL;
+	g_autoptr(GError) error = NULL;
 
 	g_return_if_fail (FU_IS_DEVICE (self));
 	g_return_if_fail (version != NULL);
 
 	/* sanitize if required */
-	if (priv->version_format != FU_VERSION_FORMAT_UNKNOWN &&
-	    priv->version_format != FU_VERSION_FORMAT_PLAIN) {
-		version_safe = g_string_new (NULL);
-		for (guint i = 0; version[i] != '\0'; i++) {
-			if (fu_device_is_valid_semver_char (version[i]))
-				g_string_append_c (version_safe, version[i]);
-		}
-		if (g_strcmp0 (version, version_safe->str) != 0) {
-			g_debug ("converted '%s' to '%s'",
-				 version, version_safe->str);
-		}
+	if (fu_device_has_flag (self, FWUPD_DEVICE_FLAG_ENSURE_SEMVER)) {
+		version_safe = fu_common_version_ensure_semver (version);
+		if (g_strcmp0 (version, version_safe) != 0)
+			g_debug ("converted '%s' to '%s'", version, version_safe);
 	} else {
-		version_safe = g_string_new (version);
+		version_safe = g_strdup (version);
 	}
 
-	/* try to autodetect the version-format */
-	if (priv->version_format == FU_VERSION_FORMAT_UNKNOWN)
-		priv->version_format = fu_common_version_guess_format (version_safe->str);
-	fwupd_device_set_version (FWUPD_DEVICE (self), version_safe->str);
+	/* print a console warning for an invalid version, if semver */
+	if (!fu_common_version_verify_format (version_safe, fmt, &error))
+		g_warning ("%s", error->message);
+
+	fu_device_set_version_format (self, fmt);
+	fwupd_device_set_version (FWUPD_DEVICE (self), version_safe);
 }
 
 /**
@@ -1520,43 +1530,6 @@ fu_device_set_status (FuDevice *self, FwupdStatus status)
 }
 
 /**
- * fu_device_get_version_format:
- * @self: A #FuDevice
- *
- * Returns how the device version should be formatted.
- *
- * Returns: the version format, e.g. %FU_VERSION_FORMAT_TRIPLET
- *
- * Since: 1.2.0
- **/
-FuVersionFormat
-fu_device_get_version_format (FuDevice *self)
-{
-	FuDevicePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FU_IS_DEVICE (self), 0);
-	return priv->version_format;
-}
-
-/**
- * fu_device_set_version_format:
- * @self: A #FuDevice
- * @version_format: the version_format value, e.g. %FU_VERSION_FORMAT_TRIPLET
- *
- * Sets how the version should be formatted.
- *
- * Since: 1.2.0
- **/
-void
-fu_device_set_version_format (FuDevice *self, FuVersionFormat version_format)
-{
-	FuDevicePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FU_IS_DEVICE (self));
-	if (priv->version_format == version_format)
-		return;
-	priv->version_format = version_format;
-}
-
-/**
  * fu_device_get_progress:
  * @self: A #FuDevice
  *
@@ -1640,10 +1613,6 @@ fu_device_to_string (FuDevice *self)
 	tmp = fwupd_device_to_string (FWUPD_DEVICE (self));
 	if (tmp != NULL && tmp[0] != '\0')
 		g_string_append (str, tmp);
-        if (priv->version_format != FU_VERSION_FORMAT_UNKNOWN) {
-		fwupd_pad_kv_str (str, "VersionFormat",
-                                  fu_common_version_format_to_string (priv->version_format));
-        }
 	if (priv->alternate_id != NULL)
 		fwupd_pad_kv_str (str, "AlternateId", priv->alternate_id);
 	if (priv->equivalent_id != NULL)
@@ -1733,6 +1702,7 @@ fu_device_get_release_default (FuDevice *self)
  * fu_device_write_firmware:
  * @self: A #FuDevice
  * @fw: A #GBytes
+ * @flags: #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_FORCE
  * @error: A #GError
  *
  * Writes firmware to the device by calling a plugin-specific vfunc.
@@ -1742,7 +1712,10 @@ fu_device_get_release_default (FuDevice *self)
  * Since: 1.0.8
  **/
 gboolean
-fu_device_write_firmware (FuDevice *self, GBytes *fw, GError **error)
+fu_device_write_firmware (FuDevice *self,
+			  GBytes *fw,
+			  FwupdInstallFlags flags,
+			  GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
 	g_autoptr(GBytes) fw_new = NULL;
@@ -1760,18 +1733,19 @@ fu_device_write_firmware (FuDevice *self, GBytes *fw, GError **error)
 	}
 
 	/* prepare (e.g. decompress) firmware */
-	fw_new = fu_device_prepare_firmware (self, fw, error);
+	fw_new = fu_device_prepare_firmware (self, fw, flags, error);
 	if (fw_new == NULL)
 		return FALSE;
 
 	/* call vfunc */
-	return klass->write_firmware (self, fw_new, error);
+	return klass->write_firmware (self, fw_new, flags, error);
 }
 
 /**
  * fu_device_prepare_firmware:
  * @self: A #FuDevice
  * @fw: A #GBytes
+ * @flags: #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_FORCE
  * @error: A #GError
  *
  * Prepares the firmware by calling an optional device-specific vfunc for the
@@ -1787,7 +1761,10 @@ fu_device_write_firmware (FuDevice *self, GBytes *fw, GError **error)
  * Since: 1.1.2
  **/
 GBytes *
-fu_device_prepare_firmware (FuDevice *self, GBytes *fw, GError **error)
+fu_device_prepare_firmware (FuDevice *self,
+			    GBytes *fw,
+			    FwupdInstallFlags flags,
+			    GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
 	FuDevicePrivate *priv = GET_PRIVATE (self);
@@ -1800,7 +1777,7 @@ fu_device_prepare_firmware (FuDevice *self, GBytes *fw, GError **error)
 
 	/* optionally subclassed */
 	if (klass->prepare_firmware != NULL) {
-		fw_new = klass->prepare_firmware (self, fw, error);
+		fw_new = klass->prepare_firmware (self, fw, flags, error);
 		if (fw_new == NULL)
 			return NULL;
 	} else {
@@ -2223,8 +2200,6 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 		fu_device_set_equivalent_id (self, fu_device_get_equivalent_id (donor));
 	if (priv->quirks == NULL)
 		fu_device_set_quirks (self, fu_device_get_quirks (donor));
-	if (priv->version_format == FU_VERSION_FORMAT_UNKNOWN)
-		fu_device_set_version_format (self, fu_device_get_version_format (donor));
 	fu_mutex_read_lock (priv_donor->parent_guids_mutex);
 	for (guint i = 0; i < parent_guids->len; i++)
 		fu_device_add_parent_guid (self, g_ptr_array_index (parent_guids, i));
@@ -2250,7 +2225,7 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 
 /**
  * fu_device_incorporate_from_component:
- * @self: A #FuDevice
+ * @device: A #FuDevice
  * @component: A #XbNode
  *
  * Copy all properties from the donor AppStream component.
@@ -2298,14 +2273,6 @@ fu_device_class_init (FuDeviceClass *klass)
 				   G_PARAM_READWRITE |
 				   G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_PROGRESS, pspec);
-
-	pspec = g_param_spec_uint ("version-format", NULL, NULL,
-				   FU_VERSION_FORMAT_UNKNOWN,
-				   FU_VERSION_FORMAT_LAST,
-				   FU_VERSION_FORMAT_UNKNOWN,
-				   G_PARAM_READWRITE |
-				   G_PARAM_STATIC_NAME);
-	g_object_class_install_property (object_class, PROP_VERSION_FORMAT, pspec);
 
 	pspec = g_param_spec_object ("quirks", NULL, NULL,
 				     FU_TYPE_QUIRKS,

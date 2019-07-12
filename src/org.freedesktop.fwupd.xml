@@ -468,6 +468,35 @@
     </method>
 
     <!--***********************************************************-->
+    <method name='ModifyConfig'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Modify persistent configuration for daemon
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='s' name='key' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              The key, e.g. 'BlacklistPlugins'.
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+      <arg type='s' name='value' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>
+              The value of the correct type, e.g. a URL.
+            </doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
     <method name='UpdateMetadata'>
       <doc:doc>
         <doc:description>

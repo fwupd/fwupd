@@ -143,7 +143,6 @@ struct _FuDellDockEc {
 	guint64				 blob_version_offset;
 	guint8				 passive_flow;
 	guint32				 dock_unlock_status;
-	gboolean		 	 pd_blacklist;
 };
 
 static gboolean	fu_dell_dock_get_ec_status	(FuDevice *device,
@@ -373,7 +372,7 @@ fu_dell_dock_ec_get_dock_info (FuDevice *device,
 			    device_entry[i].version.version_8[2],
 			    device_entry[i].version.version_8[3]);
 			g_debug ("\tParsed version %s", self->ec_version);
-			fu_device_set_version (FU_DEVICE (self), self->ec_version);
+			fu_device_set_version (FU_DEVICE (self), self->ec_version, FWUPD_VERSION_FORMAT_QUAD);
 
 		} else if (map->device_type == FU_DELL_DOCK_DEVICETYPE_MST) {
 			self->raw_versions->mst_version = device_entry[i].version.version_32;
@@ -435,42 +434,18 @@ fu_dell_dock_ec_get_dock_info (FuDevice *device,
 		return FALSE;
 	}
 
-	/* TODO: Drop if setting minimum board to 5+ and minimum EC to 19+
-	 * If running on board 4 or later, already EC19+, then
-	 * don't allow downgrades to anything < EC19
-	 */
-	if (self->data->board_id >= 4 &&
-	    fu_common_vercmp (self->ec_version, "00.00.00.19") >= 0) {
-		g_debug ("Prohibiting downgrades below EC 00.00.00.19");
-		g_free (self->ec_minimum_version);
-		self->ec_minimum_version = g_strdup ("00.00.00.19");
-	}
 	fu_device_set_version_lowest (device, self->ec_minimum_version);
 
 
-	/* TODO: Drop part of clause if minimum EC is set to 26+
-	 * Determine if the passive flow should be used when flashing
-	 */
+	/* Determine if the passive flow should be used when flashing */
 	hub_version = fu_device_get_version (self->symbiote);
-	if (fu_common_vercmp (self->ec_version, "00.00.00.26") >= 0 &&
-	    fu_common_vercmp (hub_version, "1.42") >= 0) {
+	if (fu_common_vercmp (hub_version, "1.42") >= 0) {
 		g_debug ("using passive flow");
 		self->passive_flow = PASSIVE_REBOOT_MASK;
 		fu_device_set_custom_flags (device, "skip-restart");
 	} else {
 		g_debug ("not using passive flow (EC: %s Hub2: %s)",
 			 self->ec_version, hub_version);
-	}
-	/* TODO: drop if minimum board is to 5+ and minimum EC to 24+ */
-	if (self->data->board_id == 4 && oldest_base_pd >= 0x18) {
-		if (fu_common_vercmp (self->ec_version, "00.00.00.24") < 0)
-			self->pd_blacklist = TRUE;
-		if (fu_common_vercmp (self->ec_version, "00.00.00.23") == 0) {
-			fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
-			fu_device_set_update_error (device, "No more updates will "
-							    "be released for this "
-							    "dock SKU");
-		}
 	}
 	return TRUE;
 }
@@ -585,8 +560,6 @@ fu_dell_dock_ec_to_string (FuDevice *device, GString *str)
 				self->data->module_type);
 	g_string_append_printf (str, "\tminimum ec: %s\n",
 				self->ec_minimum_version);
-	g_string_append_printf (str, "\tblacklist pd: %d\n",
-				self->pd_blacklist);
 	g_string_append_printf (str, "\tpassive flow: %d\n",
 				self->passive_flow);
 }
@@ -640,18 +613,7 @@ fu_dell_dock_ec_reset (FuDevice *device, GError **error)
 static gboolean
 fu_dell_dock_ec_activate (FuDevice *device, GError **error)
 {
-	FuDellDockEc *self = FU_DELL_DOCK_EC (device);
 	FuDellDockECFWUpdateStatus status;
-
-	/* TODO: drop if minimum EC set to 27+ */
-	if (fu_common_vercmp (self->ec_version, "00.00.00.27") < 0) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_NOT_SUPPORTED,
-			     "Activation is not supported on EC %s",
-			     self->ec_version);
-		return FALSE;
-	}
 
 	/* read if passive update pending */
 	if (!fu_dell_dock_get_ec_status (device, &status, error))
@@ -738,16 +700,6 @@ guint32
 fu_dell_dock_ec_get_status_version (FuDevice *device)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC (device);
-
-	/* TODO: drop if setting minimum board to 5+
-	 * this board was manufactured with 89.16.01.00 and won't upgrade
-	 */
-	if (self->data->board_id == 4 &&
-	    self->raw_versions->pkg_version == 71305) {
-		g_printerr ("Dock manufactured w/ invalid package %u\n",
-			    self->raw_versions->pkg_version);
-		self->raw_versions->pkg_version = 0;
-	}
 	return self->raw_versions->pkg_version;
 }
 
@@ -792,7 +744,9 @@ fu_dell_dock_ec_commit_package (FuDevice *device, GBytes *blob_fw,
 }
 
 static gboolean
-fu_dell_dock_ec_write_fw (FuDevice *device, GBytes *blob_fw,
+fu_dell_dock_ec_write_fw (FuDevice *device,
+			  GBytes *blob_fw,
+			  FwupdInstallFlags flags,
 			  GError **error)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC (device);
@@ -811,18 +765,6 @@ fu_dell_dock_ec_write_fw (FuDevice *device, GBytes *blob_fw,
 
 	dynamic_version = g_strndup ((gchar *) data + self->blob_version_offset, 11);
 	g_debug ("writing EC firmware version %s", dynamic_version);
-
-	/* TODO: drop if minimum board set to 5+ and minimum EC to 24+ */
-	if (self->pd_blacklist &&
-	    fu_common_vercmp (dynamic_version, "00.00.00.24") >= 0) {
-		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE,
-			     "%s can not flash firmware %s. "
-			     "only firmware %s -> 00.00.00.23 can be flashed.",
-			     fu_device_get_name (device),
-			     dynamic_version,
-			     self->ec_minimum_version);
-		return FALSE;
-	}
 
 	if (!fu_dell_dock_ec_modify_lock (device, self->unlock_target, TRUE, error))
 		return FALSE;
@@ -855,7 +797,7 @@ fu_dell_dock_ec_write_fw (FuDevice *device, GBytes *blob_fw,
 		return FALSE;
 
 	/* dock will reboot to re-read; this is to appease the daemon */
-	fu_device_set_version (device, dynamic_version);
+	fu_device_set_version (device, dynamic_version, FWUPD_VERSION_FORMAT_QUAD);
 
 	/* activate passive behavior */
 	if (self->passive_flow)
@@ -888,10 +830,7 @@ fu_dell_dock_ec_write_fw (FuDevice *device, GBytes *blob_fw,
 			progress0 = 100;
 		fu_device_set_progress_full (device, progress0, 100);
 
-		/* This is expected to fail until update is done
-		 * TODO: After can guarantee EC version that reports status byte
-		 *       don't call this until progress0 is 100
-		 */
+		/* This is expected to fail until update is done */
 		if (!fu_dell_dock_get_ec_status (device, &status,
 						 &error_local)) {
 			g_debug ("Flash EC Received result: %s (status %u)",

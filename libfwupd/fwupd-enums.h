@@ -88,6 +88,7 @@ typedef enum {
  * @FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED:	Requires the update to be retried with a new plugin
  * @FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS:	Do not add instance IDs from the device baseclass
  * @FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION:		Device update needs to be separately activated
+ * @FWUPD_DEVICE_FLAG_ENSURE_SEMVER:		Ensure the version is a valid semantic version, e.g. numbers separated with dots
  *
  * The device flags.
  **/
@@ -113,6 +114,7 @@ typedef enum {
 #define FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED (1u << 18)	/* Since: 1.2.5 */
 #define FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS	(1u << 19)	/* Since: 1.2.5 */
 #define FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION	(1u << 20)	/* Since: 1.2.6 */
+#define FWUPD_DEVICE_FLAG_ENSURE_SEMVER		(1u << 21)	/* Since: 1.2.9 */
 #define FWUPD_DEVICE_FLAG_UNKNOWN		G_MAXUINT64	/* Since: 0.7.3 */
 typedef guint64 FwupdDeviceFlags;
 
@@ -183,6 +185,7 @@ typedef enum {
  * @FWUPD_UPDATE_STATE_SUCCESS:			Update was successful
  * @FWUPD_UPDATE_STATE_FAILED:			Update failed
  * @FWUPD_UPDATE_STATE_NEEDS_REBOOT:		Waiting for a reboot to apply
+ * @FWUPD_UPDATE_STATE_FAILED_TRANSIENT:	Update failed due to transient issue, e.g. AC power required
  *
  * The update state.
  **/
@@ -192,6 +195,7 @@ typedef enum {
 	FWUPD_UPDATE_STATE_SUCCESS,			/* Since: 0.7.0 */
 	FWUPD_UPDATE_STATE_FAILED,			/* Since: 0.7.0 */
 	FWUPD_UPDATE_STATE_NEEDS_REBOOT,		/* Since: 1.0.4 */
+	FWUPD_UPDATE_STATE_FAILED_TRANSIENT,		/* Since: 1.2.7 */
 	/*< private >*/
 	FWUPD_UPDATE_STATE_LAST
 } FwupdUpdateState;
@@ -214,6 +218,37 @@ typedef enum {
 	FWUPD_KEYRING_KIND_LAST
 } FwupdKeyringKind;
 
+/**
+ * FwupdVersionFormat:
+ * @FWUPD_VERSION_FORMAT_UNKNOWN:		Unknown version format
+ * @FWUPD_VERSION_FORMAT_PLAIN:			An unidentified format text string
+ * @FWUPD_VERSION_FORMAT_NUMBER:		A single integer version number
+ * @FWUPD_VERSION_FORMAT_PAIR:			Two AABB.CCDD version numbers
+ * @FWUPD_VERSION_FORMAT_TRIPLET:		Microsoft-style AA.BB.CCDD version numbers
+ * @FWUPD_VERSION_FORMAT_QUAD:			Dell-style AA.BB.CC.DD version numbers
+ * @FWUPD_VERSION_FORMAT_BCD:			Binary coded decimal notation
+ * @FWUPD_VERSION_FORMAT_INTEL_ME:		Intel ME-style bitshifted notation
+ * @FWUPD_VERSION_FORMAT_INTEL_ME2:		Intel ME-style A.B.CC.DDDD notation notation
+ *
+ * The flags used when parsing version numbers.
+ *
+ * If no verification is required then %FWUPD_VERSION_FORMAT_PLAIN should
+ * be used to signify an unparsable text string.
+ **/
+typedef enum {
+	FWUPD_VERSION_FORMAT_UNKNOWN,			/* Since: 1.2.9 */
+	FWUPD_VERSION_FORMAT_PLAIN,			/* Since: 1.2.9 */
+	FWUPD_VERSION_FORMAT_NUMBER,			/* Since: 1.2.9 */
+	FWUPD_VERSION_FORMAT_PAIR,			/* Since: 1.2.9 */
+	FWUPD_VERSION_FORMAT_TRIPLET,			/* Since: 1.2.9 */
+	FWUPD_VERSION_FORMAT_QUAD,			/* Since: 1.2.9 */
+	FWUPD_VERSION_FORMAT_BCD,			/* Since: 1.2.9 */
+	FWUPD_VERSION_FORMAT_INTEL_ME,			/* Since: 1.2.9 */
+	FWUPD_VERSION_FORMAT_INTEL_ME2,			/* Since: 1.2.9 */
+	/*< private >*/
+	FWUPD_VERSION_FORMAT_LAST
+} FwupdVersionFormat;
+
 const gchar	*fwupd_status_to_string			(FwupdStatus	 status);
 FwupdStatus	 fwupd_status_from_string		(const gchar	*status);
 const gchar	*fwupd_device_flag_to_string		(FwupdDeviceFlags device_flag);
@@ -226,5 +261,7 @@ const gchar	*fwupd_trust_flag_to_string		(FwupdTrustFlags trust_flag);
 FwupdTrustFlags	 fwupd_trust_flag_from_string		(const gchar	*trust_flag);
 FwupdKeyringKind fwupd_keyring_kind_from_string		(const gchar	*keyring_kind);
 const gchar	*fwupd_keyring_kind_to_string		(FwupdKeyringKind keyring_kind);
+FwupdVersionFormat fwupd_version_format_from_string	(const gchar	*str);
+const gchar	*fwupd_version_format_to_string		(FwupdVersionFormat kind);
 
 G_END_DECLS

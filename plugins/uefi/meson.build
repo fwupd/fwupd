@@ -1,7 +1,6 @@
 subdir('efi')
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefi"']
-cargs += '-DEFI_APP_LOCATION_BUILD="' + app.full_path() + '"'
 
 efi_os_dir = get_option('efi_os_dir')
 if efi_os_dir != ''
@@ -21,6 +20,7 @@ shared_module('fu_plugin_uefi',
     'fu-uefi-bootmgr.c',
     'fu-uefi-common.c',
     'fu-uefi-device.c',
+    'fu-uefi-devpath.c',
     'fu-uefi-pcrs.c',
     'fu-uefi-update-info.c',
     'fu-uefi-vars.c',
@@ -54,6 +54,7 @@ executable(
     'fu-uefi-bootmgr.c',
     'fu-uefi-common.c',
     'fu-uefi-device.c',
+    'fu-uefi-devpath.c',
     'fu-uefi-pcrs.c',
     'fu-uefi-update-info.c',
     'fu-uefi-vars.c',
@@ -95,6 +96,7 @@ if get_option('tests')
       'fu-uefi-bootmgr.c',
       'fu-uefi-common.c',
       'fu-uefi-device.c',
+      'fu-uefi-devpath.c',
       'fu-uefi-pcrs.c',
       'fu-uefi-update-info.c',
       'fu-uefi-vars.c',

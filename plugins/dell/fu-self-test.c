@@ -65,11 +65,12 @@ fu_plugin_dell_tpm_func (void)
 {
 	FuDevice *device_v12;
 	FuDevice *device_v20;
+	const guint8 fw[30] = { 'F', 'W', 0x00 };
 	gboolean ret;
 	struct tpm_status tpm_out;
 	g_autoptr(FuPlugin) plugin_dell = NULL;
 	g_autoptr(FuPlugin) plugin_uefi = NULL;
-	g_autoptr(GBytes) blob_fw = g_bytes_new_static ("fw", 30);
+	g_autoptr(GBytes) blob_fw = g_bytes_new_static (fw, sizeof(fw));
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 

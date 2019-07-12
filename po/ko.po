@@ -884,14 +884,6 @@ msgstr "개발사와 펌웨어 업데이트 기록 공유하기"
 msgid "Show client and daemon versions"
 msgstr "클라이언트와 데몬 버전 표시"
 
-#. TRANSLATORS: this is for daemon development
-msgid "Show daemon verbose information"
-msgstr "자세한 데몬 정보 표시"
-
-#. TRANSLATORS: turn on all debugging
-msgid "Show debugging information for all files"
-msgstr "모든 파일의 디버깅 정보 표시"
-
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
 msgstr "디버깅 옵션을 표시합니다"

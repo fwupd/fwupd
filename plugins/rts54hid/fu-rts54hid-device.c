@@ -244,8 +244,7 @@ fu_rts54hid_device_ensure_status (FuRts54HidDevice *self, GError **error)
 
 	/* hub version is more accurate than bcdVersion */
 	version = g_strdup_printf ("%x.%x", buf[0x40 + 10], buf[0x40 + 11]);
-	fu_device_set_version (FU_DEVICE (self), version);
-
+	fu_device_set_version (FU_DEVICE (self), version, FWUPD_VERSION_FORMAT_PAIR);
 	return TRUE;
 }
 
@@ -315,7 +314,10 @@ fu_rts54hid_device_close (FuUsbDevice *device, GError **error)
 }
 
 static gboolean
-fu_rts54hid_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
+fu_rts54hid_device_write_firmware (FuDevice *device,
+				   GBytes *fw,
+				   FwupdInstallFlags flags,
+				   GError **error)
 {
 	FuRts54HidDevice *self = FU_RTS54HID_DEVICE (device);
 	g_autoptr(GPtrArray) chunks = NULL;

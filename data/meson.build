@@ -41,6 +41,7 @@ if get_option('systemd')
 
   rw_directories = []
   rw_directories += join_paths (localstatedir, 'lib', 'fwupd')
+  rw_directories += join_paths (sysconfdir, 'fwupd')
   rw_directories += join_paths (sysconfdir, 'fwupd', 'remotes.d')
   if get_option('plugin_uefi')
     rw_directories += ['-/boot/efi', '-/efi/EFI', '-/boot/EFI']

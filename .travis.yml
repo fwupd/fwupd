@@ -11,7 +11,6 @@ env:
   - OS=arch
   - OS=debian-i386
   - OS=ubuntu-x86_64
-  - OS=flatpak
 
 install:
   - ./contrib/ci/generate_docker.py

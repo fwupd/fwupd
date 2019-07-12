@@ -7,6 +7,7 @@ endif
 keyring_deps = []
 keyring_src = []
 test_deps = []
+init_src = []
 
 if get_option('gpg')
   keyring_src += 'fu-keyring-gpg.c'
@@ -22,9 +23,14 @@ if get_option('pkcs7')
   endif
 endif
 
+if get_option('systemd')
+  init_src += 'fu-systemd.c'
+endif
+
 libfwupdprivate = static_library(
   'fwupdprivate',
   sources : [
+    init_src,
     'fu-archive.c',
     'fu-common.c',
     'fu-common-guid.c',
@@ -180,6 +186,7 @@ fwupdtool = executable(
   sources : [
     'fu-tool.c',
     keyring_src,
+    init_src,
     'fu-archive.c',
     'fu-chunk.c',
     'fu-common.c',
@@ -263,6 +270,7 @@ executable(
   fu_hash,
   sources : [
     keyring_src,
+    init_src,
     'fu-archive.c',
     'fu-chunk.c',
     'fu-common.c',
@@ -337,6 +345,7 @@ if get_option('tests')
     fu_hash,
     sources : [
       keyring_src,
+      init_src,
       'fu-self-test.c',
       'fu-archive.c',
       'fu-chunk.c',

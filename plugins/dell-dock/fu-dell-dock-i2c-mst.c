@@ -736,6 +736,7 @@ fu_dell_dock_mst_invalidate_bank (FuDevice *symbiote, MSTBank bank_in_use,
 static gboolean
 fu_dell_dock_mst_write_fw (FuDevice *device,
 			   GBytes *blob_fw,
+			   FwupdInstallFlags flags,
 			   GError **error)
 {
 	FuDellDockMst *self = FU_DELL_DOCK_MST (device);
@@ -836,7 +837,7 @@ fu_dell_dock_mst_write_fw (FuDevice *device,
 	}
 
 	/* dock will reboot to re-read; this is to appease the daemon */
-	fu_device_set_version (device, dynamic_version);
+	fu_device_set_version (device, dynamic_version, FWUPD_VERSION_FORMAT_TRIPLET);
 
 	/* disable remote control now */
 	return fu_dell_dock_mst_disable_remote_control (self->symbiote, error);
@@ -902,9 +903,8 @@ fu_dell_dock_mst_setup (FuDevice *device, GError **error)
 	/* set version from EC if we know it */
 	parent = fu_device_get_parent (device);
 	version = fu_dell_dock_ec_get_mst_version (parent);
-
 	if (version != NULL)
-		fu_device_set_version (device, version);
+		fu_device_set_version (device, version, FWUPD_VERSION_FORMAT_TRIPLET);
 
 	fu_dell_dock_clone_updatable (device);
 

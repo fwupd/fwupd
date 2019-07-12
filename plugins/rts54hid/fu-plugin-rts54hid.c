@@ -32,7 +32,7 @@ fu_plugin_update (FuPlugin *plugin,
 	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;
-	return fu_device_write_firmware (device, blob_fw, error);
+	return fu_device_write_firmware (device, blob_fw, flags, error);
 }
 
 gboolean

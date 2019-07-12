@@ -522,10 +522,6 @@ msgstr "Condivît la conologjie dai firmware cui svilupadôrs"
 msgid "Show client and daemon versions"
 msgstr "Mostre versions di client e demoni"
 
-#. TRANSLATORS: turn on all debugging
-msgid "Show debugging information for all files"
-msgstr "Mostre lis informazions di debug par ducj i file"
-
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
 msgstr "Mostre opzions di debug"

@@ -443,6 +443,30 @@ fu_main_authorize_self_sign_cb (GObject *source, GAsyncResult *res, gpointer use
 }
 
 static void
+fu_main_modify_config_cb (GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *) user_data;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(PolkitAuthorizationResult) auth = NULL;
+
+	/* get result */
+	auth = polkit_authority_check_authorization_finish (POLKIT_AUTHORITY (source),
+							    res, &error);
+	if (!fu_main_authorization_is_valid (auth, &error)) {
+		g_dbus_method_invocation_return_gerror (helper->invocation, error);
+		return;
+	}
+
+	if (!fu_engine_modify_config (helper->priv->engine, helper->key, helper->value, &error)) {
+		g_dbus_method_invocation_return_gerror (helper->invocation, error);
+		return;
+	}
+
+	/* success */
+	g_dbus_method_invocation_return_value (helper->invocation, NULL);
+}
+
+static void
 fu_main_authorize_activate_cb (GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *) user_data;
@@ -1087,6 +1111,31 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 						      g_steal_pointer (&helper));
 		return;
 	}
+	if (g_strcmp0 (method_name, "ModifyConfig") == 0) {
+		g_autofree gchar *key = NULL;
+		g_autofree gchar *value = NULL;
+		g_autoptr(FuMainAuthHelper) helper = NULL;
+		g_autoptr(PolkitSubject) subject = NULL;
+
+		g_variant_get (parameters, "(ss)", &key, &value);
+		g_debug ("Called %s(%s=%s)", method_name, key, value);
+
+		/* authenticate */
+		helper = g_new0 (FuMainAuthHelper, 1);
+		helper->priv = priv;
+		helper->key = g_steal_pointer (&key);
+		helper->value = g_steal_pointer (&value);
+		helper->invocation = g_object_ref (invocation);
+		subject = polkit_system_bus_name_new (sender);
+		polkit_authority_check_authorization (priv->authority, subject,
+						      "org.freedesktop.fwupd.modify-config",
+						      NULL,
+						      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
+						      NULL,
+						      fu_main_modify_config_cb,
+						      g_steal_pointer (&helper));
+		return;
+	}
 	if (g_strcmp0 (method_name, "ModifyRemote") == 0) {
 		const gchar *remote_id = NULL;
 		const gchar *key = NULL;
@@ -1323,29 +1372,6 @@ fu_main_daemon_get_property (GDBusConnection *connection_, const gchar *sender,
 	return NULL;
 }
 
-static gboolean
-fu_main_is_running_offline_update (FuMainPrivate *priv)
-{
-	const gchar *default_target = NULL;
-	g_autoptr(GError) error = NULL;
-	g_autoptr(GVariant) val = NULL;
-
-	val = g_dbus_connection_call_sync (priv->connection,
-					   "org.freedesktop.systemd1",
-					   "/org/freedesktop/systemd1",
-					   "org.freedesktop.systemd1.Manager",
-					   "GetDefaultTarget",
-					   NULL, NULL,
-					   G_DBUS_CALL_FLAGS_NONE,
-					   1500, NULL, &error);
-	if (val == NULL) {
-		g_warning ("failed to get default.target: %s", error->message);
-		return FALSE;
-	}
-	g_variant_get (val, "(&s)", &default_target);
-	return g_strcmp0 (default_target, "system-update.target") == 0;
-}
-
 static void
 fu_main_on_bus_acquired_cb (GDBusConnection *connection,
 			    const gchar *name,
@@ -1369,10 +1395,6 @@ fu_main_on_bus_acquired_cb (GDBusConnection *connection,
 							     NULL,  /* user_data_free_func */
 							     NULL); /* GError** */
 	g_assert (registration_id > 0);
-
-	/* are we running in the offline target */
-	if (fu_main_is_running_offline_update (priv))
-		fu_engine_add_app_flag (priv->engine, FU_APP_FLAGS_IS_OFFLINE);
 
 	/* connect to D-Bus directly */
 	priv->proxy_uid =

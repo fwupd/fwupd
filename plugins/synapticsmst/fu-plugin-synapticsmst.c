@@ -189,7 +189,8 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 	fu_device_set_vendor (dev, "Synaptics");
 	fu_device_set_summary (dev, "Multi-Stream Transport Device");
 	fu_device_add_icon (dev, "computer");
-	fu_device_set_version (dev, synapticsmst_device_get_version (device));
+	fu_device_set_version (dev, synapticsmst_device_get_version (device),
+			       FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_quirks (dev, fu_plugin_get_quirks (plugin));
 
 	/* create GUIDs and name */
@@ -429,7 +430,8 @@ fu_plugin_update (FuPlugin *plugin,
 			}
 		}
 	}
-	fu_device_set_version (dev, synapticsmst_device_get_version (device));
+	fu_device_set_version (dev, synapticsmst_device_get_version (device),
+			       FWUPD_VERSION_FORMAT_TRIPLET);
 
 	return TRUE;
 }

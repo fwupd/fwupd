@@ -13,6 +13,55 @@
 #include "fu-util-common.h"
 #include "fu-device.h"
 
+#ifdef HAVE_SYSTEMD
+#include "fu-systemd.h"
+#endif
+
+#define SYSTEMD_FWUPD_UNIT		"fwupd.service"
+#define SYSTEMD_SNAP_FWUPD_UNIT		"snap.fwupd.fwupd.service"
+
+const gchar *
+fu_util_get_systemd_unit (void)
+{
+	if (g_getenv ("SNAP") != NULL)
+		return SYSTEMD_SNAP_FWUPD_UNIT;
+	return SYSTEMD_FWUPD_UNIT;
+}
+
+static const gchar *
+fu_util_get_expected_command (const gchar *target)
+{
+	if (g_strcmp0 (target, SYSTEMD_SNAP_FWUPD_UNIT) == 0)
+		return "fwupd.fwupdmgr";
+	return "fwupdmgr";
+}
+
+gboolean
+fu_util_using_correct_daemon (GError **error)
+{
+	g_autofree gchar *default_target = NULL;
+	g_autoptr(GError) error_local = NULL;
+	const gchar *target = fu_util_get_systemd_unit ();
+
+	default_target = fu_systemd_get_default_target (&error_local);
+	if (default_target == NULL) {
+		g_debug ("Systemd isn't accessible: %s\n", error_local->message);
+		return TRUE;
+	}
+	if (!fu_systemd_unit_check_exists (target, &error_local)) {
+		g_debug ("wrong target: %s\n", error_local->message);
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_ARGS,
+			     /* TRANSLATORS: error message */
+			     _("Mismatched daemon and client, use %s instead"),
+			     fu_util_get_expected_command (target));
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 void
 fu_util_print_data (const gchar *title, const gchar *msg)
 {
@@ -489,6 +538,16 @@ fu_util_release_get_name (FwupdRelease *release)
 			 * the first %s is the device name, e.g. 'ThinkPad P50` */
 			return g_strdup_printf (_("%s ME Update"), name);
 		}
+		if (g_strcmp0 (cat, "X-CorporateManagementEngine") == 0) {
+			/* TRANSLATORS: ME stands for Management Engine (with Intel AMT),
+			 * where the first %s is the device name, e.g. 'ThinkPad P50` */
+			return g_strdup_printf (_("%s Corporate ME Update"), name);
+		}
+		if (g_strcmp0 (cat, "X-ConsumerManagementEngine") == 0) {
+			/* TRANSLATORS: ME stands for Management Engine, where
+			 * the first %s is the device name, e.g. 'ThinkPad P50` */
+			return g_strdup_printf (_("%s Consumer ME Update"), name);
+		}
 		if (g_strcmp0 (cat, "X-Controller") == 0) {
 			/* TRANSLATORS: the controller is a device that has other devices
 			 * plugged into it, for example ThunderBolt, FireWire or USB,
@@ -501,4 +560,91 @@ fu_util_release_get_name (FwupdRelease *release)
 	 * is updating the system, the device, or a device class, or something else --
 	 * the first %s is the device name, e.g. 'ThinkPad P50` */
 	return g_strdup_printf (_("%s Update"), name);
+}
+
+static GPtrArray *
+fu_util_strsplit_words (const gchar *text, guint line_len)
+{
+	g_auto(GStrv) tokens = NULL;
+	g_autoptr(GPtrArray) lines = g_ptr_array_new ();
+	g_autoptr(GString) curline = g_string_new (NULL);
+
+	/* sanity check */
+	if (text == NULL || text[0] == '\0')
+		return NULL;
+	if (line_len == 0)
+		return NULL;
+
+	/* tokenize the string */
+	tokens = g_strsplit (text, " ", -1);
+	for (guint i = 0; tokens[i] != NULL; i++) {
+
+		/* current line plus new token is okay */
+		if (curline->len + strlen (tokens[i]) < line_len) {
+			g_string_append_printf (curline, "%s ", tokens[i]);
+			continue;
+		}
+
+		/* too long, so remove space, add newline and dump */
+		if (curline->len > 0)
+			g_string_truncate (curline, curline->len - 1);
+		g_ptr_array_add (lines, g_strdup (curline->str));
+		g_string_truncate (curline, 0);
+		g_string_append_printf (curline, "%s ", tokens[i]);
+	}
+
+	/* any incomplete line? */
+	if (curline->len > 0) {
+		g_string_truncate (curline, curline->len - 1);
+		g_ptr_array_add (lines, g_strdup (curline->str));
+	}
+	return g_steal_pointer (&lines);
+}
+
+static void
+fu_util_warning_box_line (const gchar *start,
+			  const gchar *text,
+			  const gchar *end,
+			  const gchar *padding,
+			  guint width)
+{
+	guint offset = 0;
+	if (start != NULL) {
+		offset += g_utf8_strlen (start, -1);
+		g_print ("%s", start);
+	}
+	if (text != NULL) {
+		offset += g_utf8_strlen (text, -1);
+		g_print ("%s", text);
+	}
+	if (end != NULL)
+		offset += g_utf8_strlen (end, -1);
+	for (guint i = offset; i < width; i++)
+		g_print ("%s", padding);
+	if (end != NULL)
+		g_print ("%s\n", end);
+}
+
+void
+fu_util_warning_box (const gchar *str, guint width)
+{
+	g_auto(GStrv) split = g_strsplit (str, "\n", -1);
+
+	/* header */
+	fu_util_warning_box_line ("╔", NULL, "╗", "═", width);
+
+	/* body */
+	for (guint i = 0; split[i] != NULL; i++) {
+		g_autoptr(GPtrArray) lines = fu_util_strsplit_words (split[i], width - 4);
+		if (lines == NULL)
+			continue;
+		for (guint j = 0; j < lines->len; j++) {
+			const gchar *line = g_ptr_array_index (lines, j);
+			fu_util_warning_box_line ("║ ", line, " ║", " ", width);
+		}
+		fu_util_warning_box_line ("║", NULL, "║", " ", width);
+	}
+
+	/* footer */
+	fu_util_warning_box_line ("╚", NULL, "╝", "═", width);
 }

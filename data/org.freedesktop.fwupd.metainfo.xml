@@ -32,6 +32,44 @@
     <binary>fwupdmgr</binary>
   </provides>
   <releases>
+    <release version="1.2.9" date="2019-05-20">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add support for Synaptics Prometheus fingerprint readers</li>
+          <li>Check if VersionFormat is ambiguous when adding devices</li>
+          <li>Check the daemon version is at least the client version</li>
+          <li>Export the version-format used by devices to clients</li>
+          <li>Set the version format for more device types</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Allow using --force to trigger a duplicate offline update</li>
+          <li>Be smarter about existing installed fwupd when using standalone-installer</li>
+          <li>Correctly identify DFU firmware that starts at offset zero</li>
+          <li>Display the remote warning on the console in an easy-to-read way</li>
+          <li>Fix a libasan failure when reading a UEFI variable</li>
+          <li>Never guess the version format from the version string</li>
+          <li>Only use class-based instance IDs for quirk matching</li>
+          <li>Prompt the user to shutdown if requried when installing by ID</li>
+          <li>Reset the forced version during DFU attach and detach</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.2.8" date="2019-04-23">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Allow the fwupdmgr tool to modify the daemon config</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Correctly parse DFU interfaces with extra vendor-specific data</li>
+          <li>Do not report transient or invalid system failures</li>
+          <li>Fix problems with the version format checking for some updates</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.2.7" date="2019-04-11">
       <description>
         <p>This release adds the following features:</p>

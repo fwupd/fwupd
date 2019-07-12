@@ -74,8 +74,7 @@ fu_offline_set_splash_mode (FuUtilPrivate *priv, GError **error)
 	}
 
 	/* success */
-	priv->splash_flags = FU_OFFLINE_FLAG_USE_PROGRESS;
-	priv->splash_flags = FU_OFFLINE_FLAG_ENABLE;
+	priv->splash_flags = FU_OFFLINE_FLAG_ENABLE | FU_OFFLINE_FLAG_USE_PROGRESS;
 	return TRUE;
 }
 
@@ -141,6 +140,7 @@ main (int argc, char *argv[])
 	gint vercmp;
 	guint cnt = 0;
 	g_autofree gchar *link = NULL;
+	g_autofree gchar *target = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR_PKG);
 	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(FwupdClient) client = NULL;
 	g_autoptr(GError) error = NULL;
@@ -157,7 +157,7 @@ main (int argc, char *argv[])
 	link = g_file_read_link (FU_OFFLINE_TRIGGER_FILENAME, NULL);
 	if (link == NULL)
 		return EXIT_SUCCESS;
-	if (g_strcmp0 (link, "/var/lib/fwupd") != 0)
+	if (g_strcmp0 (link, target) != 0)
 		return EXIT_SUCCESS;
 
 	/* do this first to avoid a loop if this tool segfaults */

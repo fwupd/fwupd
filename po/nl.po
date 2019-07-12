@@ -344,10 +344,6 @@ msgstr "Leveranciers-ID instellen op het firmware-bestand"
 msgid "Sets metadata on a firmware file"
 msgstr "Stelt metadata in op een firmware-bestand"
 
-#. TRANSLATORS: turn on all debugging
-msgid "Show debugging information for all files"
-msgstr "Foutopsporingsinformatie weergeven voor alle bestanden"
-
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
 msgstr "Foutopsporingsopties weergeven"

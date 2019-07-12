@@ -863,9 +863,9 @@ fu_plugin_runner_offline_invalidate (GError **error)
 static gboolean
 fu_plugin_runner_offline_setup (GError **error)
 {
-	const gchar *symlink_target = "/var/lib/fwupd";
 	gint rc;
 	g_autofree gchar *filename = NULL;
+	g_autofree gchar *symlink_target = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR_PKG);
 
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
@@ -1345,26 +1345,29 @@ fu_plugin_runner_schedule_update (FuPlugin *self,
 			     FuDevice *device,
 			     FwupdRelease *release,
 			     GBytes *blob_cab,
+			     FwupdInstallFlags flags,
 			     GError **error)
 {
-	gchar tmpname[] = {"XXXXXX.cap"};
+	gchar tmpname[] = {"XXXXXX.cab"};
 	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
-	g_autoptr(FuDevice) res_tmp = NULL;
 	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(GFile) file = NULL;
 
 	/* id already exists */
 	history = fu_history_new ();
-	res_tmp = fu_history_get_device_by_id (history, fu_device_get_id (device), NULL);
-	if (res_tmp != NULL &&
-	    fu_device_get_update_state (res_tmp) == FWUPD_UPDATE_STATE_PENDING) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_ALREADY_PENDING,
-			     "%s is already scheduled to be updated",
-			     fu_device_get_id (device));
-		return FALSE;
+	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+		g_autoptr(FuDevice) res_tmp = NULL;
+		res_tmp = fu_history_get_device_by_id (history, fu_device_get_id (device), NULL);
+		if (res_tmp != NULL &&
+		    fu_device_get_update_state (res_tmp) == FWUPD_UPDATE_STATE_PENDING) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_ALREADY_PENDING,
+				     "%s is already scheduled to be updated",
+				     fu_device_get_id (device));
+			return FALSE;
+		}
 	}
 
 	/* create directory */
@@ -2018,6 +2021,7 @@ fu_plugin_finalize (GObject *object)
 	g_hash_table_unref (priv->devices);
 	g_hash_table_unref (priv->report_metadata);
 	g_object_unref (priv->devices_mutex);
+	g_free (priv->build_hash);
 	g_free (priv->name);
 	g_free (priv->data);
 	/* Must happen as the last step to avoid prematurely

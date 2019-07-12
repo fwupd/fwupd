@@ -44,6 +44,10 @@
 #include "fu-udev-device-private.h"
 #include "fu-usb-device-private.h"
 
+#ifdef HAVE_SYSTEMD
+#include "fu-systemd.h"
+#endif
+
 static void fu_engine_finalize	 (GObject *obj);
 
 struct _FuEngine
@@ -207,13 +211,67 @@ fu_engine_device_changed_cb (FuDeviceList *device_list, FuDevice *device, FuEngi
 	fu_engine_emit_device_changed (self, device);
 }
 
+static gboolean
+fu_engine_set_device_version_format (FuEngine *self, FuDevice *device, XbNode *component, GError **error)
+{
+	FwupdVersionFormat fmt;
+	const gchar *developer_name;
+	const gchar *version_format;
+
+	/* specified in metadata */
+	version_format = xb_node_query_text (component,
+					     "custom/value[@key='LVFS::VersionFormat']",
+					     NULL);
+	if (version_format != NULL) {
+		fmt = fwupd_version_format_from_string (version_format);
+		if (fmt == FWUPD_VERSION_FORMAT_UNKNOWN) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "version format from metadata %s unsupported",
+				     version_format);
+			return FALSE;
+		}
+		g_debug ("using VersionFormat %s from metadata", version_format);
+		fu_device_set_version_format (device, fmt);
+		return TRUE;
+	}
+
+	/* fall back to the SmbiosManufacturer quirk */
+	developer_name = xb_node_query_text (component, "developer_name", NULL);
+	if (developer_name != NULL &&
+	    fu_device_has_flag (device, FWUPD_DEVICE_FLAG_INTERNAL)) {
+		g_autofree gchar *group = NULL;
+		group = g_strdup_printf ("SmbiosManufacturer=%s", developer_name);
+		version_format = fu_quirks_lookup_by_id (self->quirks, group,
+							 FU_QUIRKS_UEFI_VERSION_FORMAT);
+		if (version_format != NULL) {
+			fmt = fwupd_version_format_from_string (version_format);
+			if (fmt == FWUPD_VERSION_FORMAT_UNKNOWN) {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
+					     "version format %s from quirk %s unsupported",
+					     version_format, developer_name);
+				return FALSE;
+			}
+			g_debug ("using VersionFormat %s from SmbiosManufacturer %s",
+				  version_format, developer_name);
+			fu_device_set_version_format (device, fmt);
+			return TRUE;
+		}
+	}
+
+	/* nothing found, which is probably fine */
+	return TRUE;
+}
+
 /* convert hex and decimal versions to dotted style */
 static gchar *
-fu_engine_get_release_version (FuEngine *self, XbNode *component, XbNode *rel, GError **error)
+fu_engine_get_release_version (FuEngine *self, FuDevice *dev, XbNode *rel, GError **error)
 {
-	FuVersionFormat fmt = FU_VERSION_FORMAT_TRIPLET;
+	FwupdVersionFormat fmt = FWUPD_VERSION_FORMAT_TRIPLET;
 	const gchar *version;
-	const gchar *version_format;
 	guint64 ver_uint32;
 
 	/* get version */
@@ -230,24 +288,19 @@ fu_engine_get_release_version (FuEngine *self, XbNode *component, XbNode *rel, G
 	if (g_strstr_len (version, -1, ".") != NULL)
 		return g_strdup (version);
 
-	/* specified in metadata */
-	version_format = xb_node_query_text (component,
-					     "custom/value[@key='LVFS::VersionFormat']",
-					     NULL);
-	if (version_format != NULL) {
-		fmt = fu_common_version_format_from_string (version_format);
-		if (fmt == FU_VERSION_FORMAT_UNKNOWN) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "version format %s unsupported",
-				     version_format);
-			return NULL;
-		}
+	/* specified in metadata or from a quirk */
+	fmt = fu_device_get_version_format (dev);
+	if (fmt == FWUPD_VERSION_FORMAT_UNKNOWN) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "version format unset and version %s ambiguous",
+			     version);
+		return NULL;
 	}
 
 	/* don't touch my version! */
-	if (fmt == FU_VERSION_FORMAT_PLAIN)
+	if (fmt == FWUPD_VERSION_FORMAT_PLAIN)
 		return g_strdup (version);
 
 	/* parse as integer */
@@ -261,6 +314,7 @@ fu_engine_get_release_version (FuEngine *self, XbNode *component, XbNode *rel, G
 
 static gboolean
 fu_engine_set_release_from_appstream (FuEngine *self,
+				      FuDevice *dev,
 				      FwupdRelease *rel,
 				      XbNode *component,
 				      XbNode *release,
@@ -295,7 +349,7 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 		fwupd_release_set_vendor (rel, tmp);
 
 	/* the version is fixed up at runtime */
-	version_rel = fu_engine_get_release_version (self, component, release, error);
+	version_rel = fu_engine_get_release_version (self, dev, release, error);
 	if (version_rel == NULL)
 		return FALSE;
 	fwupd_release_set_version (rel, version_rel);
@@ -429,6 +483,35 @@ fu_engine_unlock (FuEngine *self, const gchar *device_id, GError **error)
 	fu_engine_emit_device_changed (self, device);
 	fu_engine_emit_changed (self);
 	return TRUE;
+}
+
+gboolean
+fu_engine_modify_config (FuEngine *self, const gchar *key, const gchar *value, GError **error)
+{
+	const gchar *keys[] = {
+		"ArchiveSizeMax",
+		"BlacklistDevices",
+		"BlacklistPlugins",
+		"IdleTimeout",
+		"VerboseDomains",
+		NULL };
+
+	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
+	g_return_val_if_fail (key != NULL, FALSE);
+	g_return_val_if_fail (value != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* check keys are valid */
+	if (!g_strv_contains (keys, key)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
+			     "key %s not supported", key);
+		return FALSE;
+	}
+
+	/* modify, effective next reboot */
+	return fu_config_modify_and_save (self->config, key, value, error);
 }
 
 /**
@@ -1400,6 +1483,23 @@ fu_engine_create_release_metadata (FuEngine *self, FuPlugin *plugin, GError **er
 	return g_steal_pointer (&release);
 }
 
+static gboolean
+fu_engine_is_running_offline (FuEngine *self)
+{
+#ifdef HAVE_SYSTEMD
+	g_autofree gchar *default_target = NULL;
+	g_autoptr(GError) error = NULL;
+	default_target = fu_systemd_get_default_target (&error);
+	if (default_target == NULL) {
+		g_warning ("failed to get default.target: %s", error->message);
+		return FALSE;
+	}
+	return g_strcmp0 (default_target, "system-update.target") == 0;
+#else
+	return FALSE;
+#endif
+}
+
 /**
  * fu_engine_install:
  * @self: A #FuEngine
@@ -1513,13 +1613,13 @@ fu_engine_install (FuEngine *self,
 
 	/* schedule this for the next reboot if not in system-update.target,
 	 * but first check if allowed on battery power */
-	version_rel = fu_engine_get_release_version (self, component, rel, error);
+	version_rel = fu_engine_get_release_version (self, device, rel, error);
 	if (version_rel == NULL) {
 		g_prefix_error (error, "failed to get release version: ");
 		return FALSE;
 	}
-	if ((self->app_flags & FU_APP_FLAGS_IS_OFFLINE) == 0 &&
-	    (flags & FWUPD_INSTALL_FLAG_OFFLINE) > 0) {
+	if ((flags & FWUPD_INSTALL_FLAG_OFFLINE) > 0 &&
+	    !fu_engine_is_running_offline (self)) {
 		g_autoptr(FwupdRelease) release_tmp = NULL;
 		plugin = fu_plugin_list_find_by_name (self->plugin_list, "upower", NULL);
 		if (plugin != NULL) {
@@ -1531,7 +1631,7 @@ fu_engine_install (FuEngine *self,
 			return FALSE;
 		fwupd_release_set_version (release_tmp, version_rel);
 		return fu_plugin_runner_schedule_update (plugin, device, release_tmp,
-							 blob_cab, error);
+							 blob_cab, flags, error);
 	}
 
 	/* add device to database */
@@ -1555,7 +1655,16 @@ fu_engine_install (FuEngine *self,
 	version_orig = g_strdup (fu_device_get_version (device));
 	if (!fu_engine_install_blob (self, device, blob_fw2, flags, &error_local)) {
 		fu_device_set_status (device, FWUPD_STATUS_IDLE);
-		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
+		if (g_error_matches (error_local,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_AC_POWER_REQUIRED) ||
+		    g_error_matches (error_local,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_BROKEN_SYSTEM)) {
+			fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED_TRANSIENT);
+		} else {
+			fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
+		}
 		fu_device_set_update_error (device, error_local->message);
 		if ((flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0 &&
 		    !fu_history_modify_device (self->history, device,
@@ -1615,7 +1724,8 @@ fu_engine_install (FuEngine *self,
 	    g_strcmp0 (fu_device_get_version (device), version_rel) != 0) {
 		g_warning ("new device version '%s' was is not '%s', fixing up",
 			   fu_device_get_version (device), version_rel);
-		fu_device_set_version (device, version_rel);
+		fu_device_set_version (device, version_rel,
+				       fu_device_get_version_format (device));
 	}
 
 	/* success */
@@ -1953,6 +2063,7 @@ fu_engine_get_item_by_id_fallback_history (FuEngine *self, const gchar *id, GErr
 
 		/* only useful */
 		if (fu_device_get_update_state (dev) == FWUPD_UPDATE_STATE_SUCCESS ||
+		    fu_device_get_update_state (dev) == FWUPD_UPDATE_STATE_FAILED_TRANSIENT ||
 		    fu_device_get_update_state (dev) == FWUPD_UPDATE_STATE_FAILED) {
 			return g_steal_pointer (&dev);
 		}
@@ -1973,6 +2084,7 @@ fu_engine_get_item_by_id_fallback_history (FuEngine *self, const gchar *id, GErr
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *dev = g_ptr_array_index (devices, i);
 		if (fu_device_get_update_state (dev) == FWUPD_UPDATE_STATE_SUCCESS ||
+		    fu_device_get_update_state (dev) == FWUPD_UPDATE_STATE_FAILED_TRANSIENT ||
 		    fu_device_get_update_state (dev) == FWUPD_UPDATE_STATE_FAILED)
 			return g_object_ref (dev);
 	}
@@ -2429,19 +2541,19 @@ fu_engine_get_silo_from_blob (FuEngine *self, GBytes *blob_cab, GError **error)
 	return g_steal_pointer (&silo);
 }
 
-static FwupdDevice *
+static FuDevice *
 fu_engine_get_result_from_component (FuEngine *self, XbNode *component, GError **error)
 {
 	FwupdReleaseFlags release_flags = FWUPD_RELEASE_FLAG_NONE;
 	g_autoptr(FuInstallTask) task = NULL;
-	g_autoptr(FwupdDevice) dev = NULL;
+	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(FwupdRelease) rel = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) provides = NULL;
 	g_autoptr(XbNode) description = NULL;
 	g_autoptr(XbNode) release = NULL;
 
-	dev = fwupd_device_new ();
+	dev = fu_device_new ();
 	provides = xb_node_query (component,
 				  "provides/firmware[@type=$'flashed']",
 				  0, &error_local);
@@ -2464,21 +2576,25 @@ fu_engine_get_result_from_component (FuEngine *self, XbNode *component, GError *
 			continue;
 		device = fu_device_list_get_by_guid (self->device_list, guid, NULL);
 		if (device != NULL) {
-			fwupd_device_set_name (dev, fu_device_get_name (device));
-			fwupd_device_set_flags (dev, fu_device_get_flags (device));
-			fwupd_device_set_id (dev, fu_device_get_id (device));
+			fu_device_set_name (dev, fu_device_get_name (device));
+			fu_device_set_flags (dev, fu_device_get_flags (device));
+			fu_device_set_id (dev, fu_device_get_id (device));
 		}
 
 		/* add GUID */
-		fwupd_device_add_guid (dev, guid);
+		fu_device_add_guid (dev, guid);
 	}
-	if (fwupd_device_get_guids(dev)->len == 0) {
+	if (fu_device_get_guids(dev)->len == 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
 				     "component has no GUIDs");
 		return NULL;
 	}
+
+	/* get (or guess) the component version format */
+	if (!fu_engine_set_device_version_format (self, dev, component, error))
+		return NULL;
 
 	/* check we can install it */
 	task = fu_install_task_new (NULL, component);
@@ -2521,13 +2637,13 @@ fu_engine_get_result_from_component (FuEngine *self, XbNode *component, GError *
 				      XB_NODE_EXPORT_FLAG_ONLY_CHILDREN,
 				      NULL);
 		if (xml != NULL)
-			fwupd_device_set_description (dev, xml);
+			fu_device_set_description (dev, xml);
 	}
 	rel = fwupd_release_new ();
 	fwupd_release_set_flags (rel, release_flags);
-	if (!fu_engine_set_release_from_appstream (self, rel, component, release, error))
+	if (!fu_engine_set_release_from_appstream (self, dev, rel, component, release, error))
 		return NULL;
-	fwupd_device_add_release (dev, rel);
+	fu_device_add_release (dev, rel);
 	return g_steal_pointer (&dev);
 }
 
@@ -2541,7 +2657,7 @@ fu_engine_get_result_from_component (FuEngine *self, XbNode *component, GError *
  *
  * Note: this will close the fd when done
  *
- * Returns: (transfer container) (element-type FwupdDevice): results
+ * Returns: (transfer container) (element-type FuDevice): results
  **/
 GPtrArray *
 fu_engine_get_details (FuEngine *self, gint fd, GError **error)
@@ -2593,14 +2709,14 @@ fu_engine_get_details (FuEngine *self, gint fd, GError **error)
 	details = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	for (guint i = 0; i < components->len; i++) {
 		XbNode *component = g_ptr_array_index (components, i);
-		FwupdDevice *dev;
+		FuDevice *dev;
 		dev = fu_engine_get_result_from_component (self, component, error);
 		if (dev == NULL)
 			return NULL;
 		if (remote_id != NULL) {
-			FwupdRelease *rel = fwupd_device_get_release_default (dev);
+			FwupdRelease *rel = fu_device_get_release_default (dev);
 			fwupd_release_set_remote_id (rel, remote_id);
-			fwupd_device_add_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED);
+			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED);
 		}
 		g_ptr_array_add (details, dev);
 	}
@@ -2848,6 +2964,7 @@ fu_engine_add_releases_for_device_component (FuEngine *self,
 
 		/* create new FwupdRelease for the XbNode */
 		if (!fu_engine_set_release_from_appstream (self,
+							   device,
 							   rel,
 							   component,
 							   release,
@@ -3612,6 +3729,7 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 				g_autoptr(FwupdRelease) rel = fwupd_release_new ();
 				g_autoptr(GError) error_local = NULL;
 				if (!fu_engine_set_release_from_appstream (self,
+									   device,
 									   rel,
 									   component,
 									   release,
@@ -3636,6 +3754,12 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 						       NULL);
 		if (device_alt != NULL)
 			fu_device_set_alternate (device, device_alt);
+	}
+
+	if (fu_device_get_version_format (device) == FWUPD_VERSION_FORMAT_UNKNOWN &&
+	    fu_common_version_guess_format (fu_device_get_version (device)) == FWUPD_VERSION_FORMAT_NUMBER) {
+		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+		fu_device_set_update_error (device, "VersionFormat is ambiguous for this device");
 	}
 
 	/* notify all plugins about this new device */
@@ -4222,7 +4346,8 @@ fu_engine_update_history_device (FuEngine *self, FuDevice *dev_history, GError *
 			const gchar *csum = g_ptr_array_index (checksums, i);
 			fu_device_add_checksum (dev_history, csum);
 		}
-		fu_device_set_version (dev_history, fu_device_get_version (dev));
+		fu_device_set_version (dev_history, fu_device_get_version (dev),
+				       fu_device_get_version_format (dev));
 		fu_device_remove_flag (dev_history, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 		fu_device_set_update_state (dev_history, FWUPD_UPDATE_STATE_SUCCESS);
 		return fu_history_modify_device (self->history, dev_history,
@@ -4240,7 +4365,8 @@ fu_engine_update_history_device (FuEngine *self, FuDevice *dev_history, GError *
 		return FALSE;
 
 	/* the plugin either can't tell us the error, or doesn't know itself */
-	if (fu_device_get_update_state (dev) != FWUPD_UPDATE_STATE_FAILED) {
+	if (fu_device_get_update_state (dev) != FWUPD_UPDATE_STATE_FAILED &&
+	    fu_device_get_update_state (dev) != FWUPD_UPDATE_STATE_FAILED_TRANSIENT) {
 		g_debug ("falling back to generic failure");
 		fu_device_set_update_error (dev_history, "failed to run update on reboot");
 	}

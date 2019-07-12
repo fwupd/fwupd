@@ -96,7 +96,7 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 	gsize sz = 0;
 	guint32 abs_addr = 0x0;
 	guint32 addr_last = 0x0;
-	guint32 base_addr = 0x0;
+	guint32 base_addr = G_MAXUINT32;
 	guint32 seg_addr = 0x0;
 	g_auto(GStrv) lines = NULL;
 	g_autoptr(DfuElement) element = NULL;
@@ -196,7 +196,7 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 		switch (record_type) {
 		case DFU_INHX32_RECORD_TYPE_DATA:
 			/* base address for element */
-			if (base_addr == 0x0)
+			if (base_addr == G_MAXUINT32)
 				base_addr = addr;
 
 			/* does not make sense */
@@ -299,7 +299,8 @@ dfu_firmware_from_ihex (DfuFirmware *firmware,
 	/* add single image */
 	contents = g_bytes_new (buf->str, buf->len);
 	dfu_element_set_contents (element, contents);
-	dfu_element_set_address (element, base_addr);
+	if (base_addr != G_MAXUINT32)
+		dfu_element_set_address (element, base_addr);
 	dfu_image_add_element (image, element);
 	dfu_firmware_add_image (firmware, image);
 	dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_INTEL_HEX);

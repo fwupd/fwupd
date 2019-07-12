@@ -269,7 +269,10 @@ fu_altos_device_write_page (FuAltosDevice *self,
 }
 
 static gboolean
-fu_altos_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
+fu_altos_device_write_firmware (FuDevice *device,
+				GBytes *fw,
+				FwupdInstallFlags flags,
+				GError **error)
 {
 	FuAltosDevice *self = FU_ALTOS_DEVICE (device);
 	GBytes *fw_blob;
@@ -512,7 +515,8 @@ fu_altos_device_probe_bootloader (FuAltosDevice *self, GError **error)
 
 		/* version number */
 		if (g_str_has_prefix (lines[i], "software-version ")) {
-			fu_device_set_version (FU_DEVICE (self), lines[i] + 17);
+			fu_device_set_version (FU_DEVICE (self), lines[i] + 17,
+					       FWUPD_VERSION_FORMAT_TRIPLET);
 			continue;
 		}
 
@@ -571,7 +575,8 @@ fu_altos_device_probe (FuDevice *device, GError **error)
 				     version);
 			return FALSE;
 		}
-		fu_device_set_version (FU_DEVICE (self), version + 19);
+		fu_device_set_version (FU_DEVICE (self), version + 19,
+				       FWUPD_VERSION_FORMAT_TRIPLET);
 	}
 
 	/* success */

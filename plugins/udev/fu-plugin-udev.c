@@ -49,7 +49,8 @@ fu_plugin_verify (FuPlugin *plugin,
 			 fu_device_get_id (device),
 			 fu_device_get_version (device),
 			 fu_rom_get_version (rom));
-		fu_device_set_version (device, fu_rom_get_version (rom));
+		fu_device_set_version (device, fu_rom_get_version (rom),
+				       FWUPD_VERSION_FORMAT_UNKNOWN);
 	}
 
 	/* Also add the GUID from the firmware as the firmware may be more

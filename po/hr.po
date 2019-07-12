@@ -5,7 +5,7 @@
 # Translators:
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2016
 # gogo <trebelnik2@gmail.com>, 2016
-# gogo <trebelnik2@gmail.com>, 2016-2018
+# gogo <trebelnik2@gmail.com>, 2016-2019
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -17,10 +17,108 @@ msgstr ""
 "Language: hr\n"
 "Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
 
+#. more than a minute
+#, c-format
+msgid "%.0f minute remaining"
+msgid_plural "%.0f minutes remaining"
+msgstr[0] "%.0f minuta preostala"
+msgstr[1] "%.0f minute preostale"
+msgstr[2] "%.0f minuta preostalo"
+
+#. TRANSLATORS: the controller is a device that has other devices
+#. * plugged into it, for example ThunderBolt, FireWire or USB,
+#. * the first %s is the device name, e.g. 'Intel ThunderBolt`
+#, c-format
+msgid "%s Controller Update"
+msgstr "%s nadopuna upravljača"
+
+#. TRANSLATORS: a specific part of hardware,
+#. * the first %s is the device name, e.g. 'Unifying Receiver`
+#, c-format
+msgid "%s Device Update"
+msgstr "%s uređaj nadopunjen"
+
+#. TRANSLATORS: the EC is typically the keyboard controller chip,
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Embedded Controller Update"
+msgstr "%s ugrađeni upravljač nadopunjen"
+
+#. TRANSLATORS: ME stands for Management Engine, the Intel AMT thing,
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s ME Update"
+msgstr "%s ME nadopunjen"
+
+#. TRANSLATORS: the entire system, e.g. all internal devices,
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s System Update"
+msgstr "%s sustav nadopunjen"
+
+#. TRANSLATORS: this is the fallback where we don't know if the release
+#. * is updating the system, the device, or a device class, or something else
+#. --
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Update"
+msgstr "%s nadopuna"
+
 #. TRANSLATORS: first replacement is device name
 #, c-format
 msgid "%s has firmware updates:"
 msgstr "%s ima nadopune frimvera:"
+
+#. TRANSLATORS: duration in days!
+#, c-format
+msgid "%u day"
+msgid_plural "%u days"
+msgstr[0] "%u dan"
+msgstr[1] "%u dana"
+msgstr[2] "%u dana"
+
+#. TRANSLATORS: duration in minutes
+#, c-format
+msgid "%u hour"
+msgid_plural "%u hours"
+msgstr[0] "%u sat"
+msgstr[1] "%u sata"
+msgstr[2] "%u sati"
+
+#. TRANSLATORS: duration in minutes
+#, c-format
+msgid "%u minute"
+msgid_plural "%u minutes"
+msgstr[0] "%u minuta"
+msgstr[1] "%u minute"
+msgstr[2] "%u minuta"
+
+#. TRANSLATORS: duration in seconds
+#, c-format
+msgid "%u second"
+msgid_plural "%u seconds"
+msgstr[0] "%u sekunda"
+msgstr[1] "%u sekunde"
+msgstr[2] "%u sekundi"
+
+#. TRANSLATORS: command description
+msgid "Activate devices"
+msgstr "Aktiviraj uređaj"
+
+#. TRANSLATORS: command description
+msgid "Activate pending devices"
+msgstr "Aktiviraj uređaje na čekanju"
+
+msgid "Activate the new firmware on the device"
+msgstr "Aktiviraj novi frimver na uređaju"
+
+#. TRANSLATORS: shown when shutting down to switch to the new version
+msgid "Activating firmware update"
+msgstr "Aktivacija nadopune frimvera"
+
+#. TRANSLATORS: shown when shutting down to switch to the new version
+msgid "Activating firmware update for"
+msgstr "Aktivacija nadopune frimvera za"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Added"
@@ -29,6 +127,10 @@ msgstr "Dodano"
 #. TRANSLATORS: the age of the metadata
 msgid "Age"
 msgstr "Dob"
+
+#. TRANSLATORS: should the remote still be enabled
+msgid "Agree and enable the remote?"
+msgstr "Slažete se s omogućavanjem udaljene lokacije?"
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
@@ -47,6 +149,10 @@ msgstr "Dopusti ponovnu instalaciju frimvera postojeće inačice"
 msgid "An update requires a reboot to complete."
 msgstr "Nadopuna zahtijeva ponovno pokretanje za završetak."
 
+#. TRANSLATORS: explain why we want to shutdown
+msgid "An update requires the system to shutdown to complete."
+msgstr "Nadopuna zahtijeva potpuno isključivanje sustava."
+
 #. TRANSLATORS: command line option
 msgid "Answer yes to all questions"
 msgstr "Odgovori 'da' na sva pitanja"
@@ -55,9 +161,25 @@ msgstr "Odgovori 'da' na sva pitanja"
 msgid "Apply a binary patch"
 msgstr "Primijeni binarnu zakrpu"
 
+#. TRANSLATORS: command line option
+msgid "Apply firmware updates"
+msgstr "Primijeni nadopune frimvera"
+
+#. TRANSLATORS: approved firmware has been checked by
+#. * the domain administrator
+msgid "Approved firmware:"
+msgid_plural "Approved firmware:"
+msgstr[0] "Odobreni frimver:"
+msgstr[1] "Odobreni frimveri:"
+msgstr[2] "Odobreni frimveri:"
+
 #. TRANSLATORS: command description
 msgid "Attach DFU capable device back to runtime"
 msgstr "Poveži DFU sposoban uređaj natrag u vremenu izvršavanja"
+
+#. TRANSLATORS: command description
+msgid "Attach to firmware mode"
+msgstr "Prebaci u način frimvera"
 
 #. TRANSLATORS: device attributes, i.e. things that
 #. * the device can do
@@ -79,6 +201,22 @@ msgstr "Potrebna je ovjera za vraćanje starije inačicu frimvera na ovom račun
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
 msgstr "Potrebna je ovjera za promjenu udaljene lokacije koja se koristi za nadopunu frimvera"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify daemon configuration"
+msgstr "Potrebna je ovjera za promjenu podešavanja pozadinskog programa"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to set the list of approved firmware"
+msgstr "Potrebna je ovjera za postavljanje popisa odobrenih frimvera"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to sign data using the client certificate"
+msgstr "Potrebna je ovjera za potpisivanje podataka vjerodajnicom klijenta"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to switch to the new firmware version"
+msgstr "Potrebna je ovjera za prebacivanje na novu inačicu frimvera"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to unlock a device"
@@ -181,6 +319,14 @@ msgstr "Opis"
 msgid "Detach currently attached DFU capable device"
 msgstr "Odspoji trenutno povezane DFU sposobne uređaje"
 
+#. TRANSLATORS: command description
+msgid "Detach to bootloader mode"
+msgstr "Prebaci u način učitača pokretanja"
+
+#. TRANSLATORS: ID for hardware, typically a SHA1 sum
+msgid "Device ID"
+msgstr "ID uređaja"
+
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device added:"
 msgstr "Uređaj dodan:"
@@ -201,6 +347,17 @@ msgstr "Uređaji koji su ispravno nadopunjeni:"
 msgid "Devices that were not updated correctly:"
 msgstr "Uređaji koji nisu ispravno nadopunjeni:"
 
+msgid "Disabled fwupdate debugging"
+msgstr "Onemogući fwupdate otklanjanje grešaka"
+
+#. TRANSLATORS: command description
+msgid "Disables a given remote"
+msgstr "Onemogućuje zadane udaljene lokacije"
+
+#. TRANSLATORS: command line option
+msgid "Display version"
+msgstr "Prikaži inačicu"
+
 #. TRANSLATORS: command line option
 msgid "Do not check for old metadata"
 msgstr "Ne provjeravaj stare metapodatke"
@@ -212,6 +369,10 @@ msgstr "Ne provjeravaj za ponovno pokretanje nakon nadopune"
 #. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
 msgstr "Ne provjeravaj neprijavljenu povijest"
+
+#. TRANSLATORS: command line option
+msgid "Do not write to the history database"
+msgstr "Ne zapisuj bazu podataka povijesti"
 
 #. success
 msgid "Done!"
@@ -227,6 +388,11 @@ msgstr "Vraća stariju inačicu frimvera na uređaju"
 #, c-format
 msgid "Downgrading %s from %s to %s... "
 msgstr "Vraćanje  %s s inačice %s na inačicu %s... "
+
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Downgrading %s…"
+msgstr "Vraćanje %s na stariju inačicu…"
 
 #. TRANSLATORS: downloading from a remote server
 msgid "Downloading…"
@@ -244,9 +410,35 @@ msgstr "Ispiši opširnije pojedinosti o frimveru u datoteku"
 msgid "Dump information about a binary patch to the screen"
 msgstr "Ispiši informacije o binarnoj zakrpi na zaslonu"
 
+#. TRANSLATORS: ESP is EFI System Partition
+msgid "ESP specified was not valid"
+msgstr "Određeni ESP nije ispravan"
+
+#. TRANSLATORS: command line option
+msgid "Enable firmware update support on supported systems"
+msgstr "Omogući podršku nadopune frimvera na podržanim sustavima"
+
+#. TRANSLATORS: Turn on the remote
+msgid "Enable this remote?"
+msgstr "Omogući ovu udaljenu lokaciju?"
+
 #. TRANSLATORS: if the remote is enabled
 msgid "Enabled"
 msgstr "Omogućeno"
+
+msgid "Enabled fwupdate debugging"
+msgstr "Omogući fwupdate otklanjanje grešaka"
+
+#. TRANSLATORS: command description
+msgid "Enables a given remote"
+msgstr "Omogućuje zadane udaljene lokacije"
+
+msgid "Enabling this functionality is done at your own risk, which means you have to contact your original equipment manufacturer regarding any problems caused by these updates. Only problems with the update process itself should be filed at $OS_RELEASE:BUG_REPORT_URL$."
+msgstr "Omogućujete ovu funkcionalnost na vlastiti rizik, što znači da morate kontaktirati svog izvornog proizvođača opreme u vezi problema uzrokovanih tim nadopunama. Samo probleme sa samim postupkom nadopune treba prijaviti na $OS_RELEASE:BUG_REPORT_URL$."
+
+#. TRANSLATORS: show the user a warning
+msgid "Enabling this remote is done at your own risk."
+msgstr "Ovu udaljenu lokaciju omogućavate na vlastiti rizik."
 
 #. TRANSLATORS: command description
 msgid "Encrypt firmware data"
@@ -268,6 +460,22 @@ msgstr "Izađi nakon kratke odgode"
 msgid "Exit after the engine has loaded"
 msgstr "Izađi nakon učitavanja pogona"
 
+#. TRANSLATORS: we could not talk to the fwupd daemon
+msgid "Failed to connect to daemon"
+msgstr "Neuspjelo povezivanje s pozadinskim programom"
+
+#. TRANSLATORS: the server is rate-limiting downloads
+msgid "Failed to download due to server limit"
+msgstr "Neuspjelo preuzimanje zbog ograničenja poslužitelja"
+
+#. TRANSLATORS: we could not get the devices to update offline
+msgid "Failed to get pending devices"
+msgstr "Neuspjeli prikaz uređaja na čekanju"
+
+#. TRANSLATORS: we could not install for some reason
+msgid "Failed to install firmware update"
+msgstr "Neuspjela instalacija nadopune frimvera"
+
 #. TRANSLATORS: quirks are device-specific workarounds
 msgid "Failed to load quirks"
 msgstr "Neuspjelo učitavanje okolnosti uređaja"
@@ -275,6 +483,10 @@ msgstr "Neuspjelo učitavanje okolnosti uređaja"
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
 msgstr "Neuspjela obrada argumenata"
+
+#. TRANSLATORS: we could not reboot for some reason
+msgid "Failed to reboot"
+msgstr "Neuspjelo ponovno pokretanje"
 
 #. TRANSLATORS: downloading unknown file
 msgid "Fetching file"
@@ -300,6 +512,10 @@ msgstr "Naziv datoteke"
 msgid "Filename Signature"
 msgstr "Potpis naziva datoteke"
 
+#. TRANSLATORS: program name
+msgid "Firmware Agent"
+msgstr "Firmver agent"
+
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
 msgstr "Osnovni URI frimvera"
@@ -324,6 +540,19 @@ msgstr[0] "Metapodaci firmvera nisu nadopunjeni %u dan i možda nisu najnoviji."
 msgstr[1] "Metapodaci firmvera nisu nadopunjeni %u dana i možda nisu najnoviji."
 msgstr[2] "Metapodaci firmvera nisu nadopunjeni %u dana i možda nisu najnoviji."
 
+msgid "Firmware updates are not supported on this machine."
+msgstr "Nadopuna frimvera nije podržana na ovom računalu."
+
+msgid "Firmware updates are supported on this machine."
+msgstr "Nadopuna frimvera je podržana na ovom računalu."
+
+#. TRANSLATORS: section header for firmware flags
+msgid "Flags"
+msgstr "Oznake"
+
+msgid "Force the action ignoring all warnings"
+msgstr "Prisili radnju zanemarivanja svih upozorenja"
+
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
 msgstr "Pronađen"
@@ -332,8 +561,20 @@ msgid "GUID"
 msgstr "GUID"
 
 #. TRANSLATORS: command description
+msgid "Get all devices according to the system topology"
+msgstr "Prikaži sve uređaje prema topologiji sustava"
+
+#. TRANSLATORS: command description
+msgid "Get all devices and possible releases"
+msgstr "Prikaži sve uređaje i moguća izdanja"
+
+#. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
 msgstr "Prikaži sve uređaje koji podržavaju nadopunu frimvera"
+
+#. TRANSLATORS: command description
+msgid "Get all enabled plugins registered with the system"
+msgstr "Prikaži sve omogućene priključke registrirane sa sustavom"
 
 #. TRANSLATORS: command description
 msgid "Gets details about a firmware file"
@@ -346,6 +587,10 @@ msgstr "Prikazuje udaljena podešavanja"
 #. TRANSLATORS: command description
 msgid "Gets the cryptographic hash of the dumped firmware"
 msgstr "Prikaži kriptografsku jedinstvenu vrijednost opširnijih informacija frimvera"
+
+#. TRANSLATORS: firmware approved by the admin
+msgid "Gets the list of approved firmware."
+msgstr "Prikazuje popis odobrenih frimvera."
 
 #. TRANSLATORS: command description
 msgid "Gets the list of updates for connected hardware"
@@ -368,6 +613,10 @@ msgid "Idle…"
 msgstr "Mirovanje..."
 
 #. TRANSLATORS: command description
+msgid "Install a firmware blob on a device"
+msgstr "Instaliraj blob frimvera na uređaj"
+
+#. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Instaliraj datoteku frimvera na ovaj uređaj"
 
@@ -386,20 +635,47 @@ msgstr "Instaliraj frimver nepotpisan uređajem"
 msgid "Install unsigned system firmware"
 msgstr "Instaliraj frimver nepotpisan sustavom"
 
+#. TRANSLATORS: console message when no Plymouth is installed
+msgid "Installing Firmware…"
+msgstr "Instalacija frimvera…"
+
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
 msgstr "Instalacija nadopune frimvera..."
 
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Installing on %s…"
+msgstr "Instaliram na %s…"
+
 msgid "Keyring"
 msgstr "Skup ključeva"
+
+#. TRANSLATORS: time remaining for completing firmware flash
+msgid "Less than one minute remaining"
+msgstr "Preostalo je manje od minute"
+
+msgid "Linux Vendor Firmware Service (stable firmware)"
+msgstr "Frimver Usluga Linux Proizvođača (LVFS) (stabilni frimver)."
+
+msgid "Linux Vendor Firmware Service (testing firmware)"
+msgstr "Frimver Usluga Linux Proizvođača (LVFS) (testni frimver)."
 
 #. TRANSLATORS: command description
 msgid "List currently attached DFU capable devices"
 msgstr "Prikaži trenutno povezane DFU sposobne uređaje"
 
+#. TRANSLATORS: command line option
+msgid "List supported firmware updates"
+msgstr "Prikaži nadopune podržanih frimvera"
+
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
 msgstr "Učitavanje..."
+
+#. TRANSLATORS: command line option
+msgid "Manually whitelist specific plugins"
+msgstr "Ručno dopusti određene priključke"
 
 #. TRANSLATORS: command description
 msgid "Merge multiple firmware files into one"
@@ -413,8 +689,16 @@ msgstr "URI metapodataka"
 msgid "Metadata URI Signature"
 msgstr "Potpis URI metapodataka"
 
+#. TRANSLATORS: explain why no metadata available
+msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
+msgstr "Metapodaci se mogu dobiti od Frimver Usluge Linux Proizvođača (LVFS)."
+
 msgid "Mode"
 msgstr "Način"
+
+#. TRANSLATORS: sets something in daemon.conf
+msgid "Modifies a daemon configuration value."
+msgstr "Prilagođava vrijednost podešavanja pozadinskog programa."
 
 #. TRANSLATORS: command description
 msgid "Modifies a given remote"
@@ -422,6 +706,9 @@ msgstr "Promjena zadane udaljene lokacije"
 
 msgid "Modify a configured remote"
 msgstr "Promijeni zadanu udaljenu lokaciju"
+
+msgid "Modify daemon configuration"
+msgstr "Prilagodi podešavanje pozadinskog programa"
 
 #. TRANSLATORS: command description
 msgid "Monitor the daemon for events"
@@ -433,10 +720,25 @@ msgstr "Nadgledaj događaje pozadinskim programom"
 msgid "Name"
 msgstr "Naziv"
 
+msgid "No action specified!"
+msgstr "Nema zadane radnje!"
+
 #. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Nema otkrivenog hardvera s mogućnosti nadopune frimvera"
+
+#. TRANSLATORS: nothing found
+msgid "No plugins found"
+msgstr "Nema pronađenih priključaka"
+
+#. TRANSLATORS: explain why no metadata available
+msgid "No remotes are currently enabled so no metadata is available."
+msgstr "Trenutno nema omogućenih udaljenih lokacija stoga nema dostupnih metapodataka."
+
+#. TRANSLATORS: nothing was updated offline
+msgid "No updates were applied"
+msgstr "Nema primijenjenih nadopuna"
 
 msgid "OK"
 msgstr "U redu"
@@ -445,9 +747,17 @@ msgstr "U redu"
 msgid "Override plugin warning"
 msgstr "Zaobiđi upozorenja priključka"
 
+#. TRANSLATORS: command line option
+msgid "Override the default ESP path"
+msgstr "Zaobiđi zadanu ESP putanju"
+
 #. TRANSLATORS: remote filename base
 msgid "Password"
 msgstr "Lozinka"
+
+#. TRANSLATORS: console message when not using plymouth
+msgid "Percentage complete"
+msgstr "Postotak završetka"
 
 msgid "Permission denied"
 msgstr "Dozvola odbijena"
@@ -456,6 +766,12 @@ msgstr "Dozvola odbijena"
 #, c-format
 msgid "Please enter a number from 0 to %u: "
 msgstr "Odaberite broj od 0 do %u: "
+
+msgid "Print the version number"
+msgstr "Prikaži broj inačice"
+
+msgid "Print verbose debug statements"
+msgstr "Zapisuj opširniji izvještaj otklanjanja grešaka"
 
 #. TRANSLATORS: the numeric priority
 msgid "Priority"
@@ -467,6 +783,10 @@ msgstr "Nastavi sa slanjem?"
 #. TRANSLATORS: DFU protocol version, e.g. 1.1
 msgid "Protocol"
 msgstr "Protokol"
+
+#. TRANSLATORS: command line option
+msgid "Query for firmware update support"
+msgstr "Zatraži podršku nadopune frimvera"
 
 #. TRANSLATORS: device quirks, i.e. things that
 #. * it does that we have to work around
@@ -484,6 +804,10 @@ msgstr "Očitaj frimver iz jedne particije u datoteku"
 #. TRANSLATORS: reading from the flash chips
 msgid "Reading…"
 msgstr "Čitanje..."
+
+#. TRANSLATORS: console message when not using plymouth
+msgid "Rebooting…"
+msgstr "Ponovno pokretanje…"
 
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
@@ -532,6 +856,10 @@ msgstr "Vrati na izvorno DFU uređaj"
 msgid "Restart now?"
 msgstr "Ponovno pokreni odmah?"
 
+#. TRANSLATORS: configuration changes only take effect on restart
+msgid "Restart the daemon to make the change effective?"
+msgstr "Ponovno pokreni pozadinski program kako bi se promjene primijenile?"
+
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
 msgstr "Ponovno pokretanje uređaja..."
@@ -540,8 +868,20 @@ msgstr "Ponovno pokretanje uređaja..."
 msgid "Return all the hardware IDs for the machine"
 msgstr "Vrati sve ID-ove hardvera za uređaj"
 
+#. TRANSLATORS: command line option
+msgid "Run the plugin composite cleanup routine when using install-blob"
+msgstr "Pokreni rutinu čišćenja sastavljanja priključka kada se koristi install-blob"
+
+#. TRANSLATORS: command line option
+msgid "Run the plugin composite prepare routine when using install-blob"
+msgstr "Pokreni rutinu pripreme sastavljanja priključka kada se koristi install-blob"
+
 msgid "Runtime"
 msgstr "Vrijeme trajanja"
+
+#. TRANSLATORS: command line option
+msgid "Save device state into a JSON file between executions"
+msgstr "Spremi stanje uređaja u JSON datoteku između izvršavanja"
 
 #. TRANSLATORS: command line option
 msgid "Schedule installation for next reboot when possible"
@@ -575,6 +915,10 @@ msgstr "Postavi ID proizvoda u datoteku firmvera"
 msgid "Set release version on firmware file"
 msgstr "Postavi inačicu izdanja u datoteku firmvera"
 
+#. TRANSLATORS: command line option
+msgid "Set the debugging flag during update"
+msgstr "Postavi oznaku otklanjanja grešaka tijekom nadopune"
+
 #. TRANSLATORS: command description
 msgid "Set the firmware size for the target"
 msgstr "Postavi veličinu frimvera za metu"
@@ -587,6 +931,13 @@ msgstr "Postavi ID proizvođača u datoteku firmvera"
 msgid "Sets metadata on a firmware file"
 msgstr "Postavlja metapodatke u datoteku frimvera"
 
+msgid "Sets the list of approved firmware"
+msgstr "Postavlja popis odobrenih frimvera"
+
+#. TRANSLATORS: firmware approved by the admin
+msgid "Sets the list of approved firmware."
+msgstr "Postavlja popis odobrenih frimvera"
+
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
 msgstr "Podijeli povijest frimvera sa razvijateljima"
@@ -595,13 +946,21 @@ msgstr "Podijeli povijest frimvera sa razvijateljima"
 msgid "Show client and daemon versions"
 msgstr "Prikaži inačicu klijenta i pozadinskog programa"
 
+#. TRANSLATORS: this is for daemon development
+msgid "Show daemon verbose information for a particular domain"
+msgstr "Prikaži dodatne informacije pozadinskog programa za određenu domenu"
+
 #. TRANSLATORS: turn on all debugging
-msgid "Show debugging information for all files"
-msgstr "Prikaži informacije otklanjanja greške za sve datoteke"
+msgid "Show debugging information for all domains"
+msgstr "Prikaži informacije otklanjanja greške za sve domene"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
 msgstr "Prikaži mogućnosti otklanjanja greške"
+
+#. TRANSLATORS: command line option
+msgid "Show devices that are not updatable"
+msgstr "Prikaži uređaje koji se ne mogu nadopuniti"
 
 #. TRANSLATORS: command line option
 msgid "Show extra debugging information"
@@ -614,6 +973,38 @@ msgstr "Prikaži povijest nadopune metapodataka"
 #. TRANSLATORS: this is for plugin development
 msgid "Show plugin verbose information"
 msgstr "Prikaži dodatne informacije priključka"
+
+#. TRANSLATORS: command line option
+msgid "Show the debug log from the last attempted update"
+msgstr "Prikaži zapis otklanjanja grešaka posljednjeg pokušaja nadopune"
+
+#. TRANSLATORS: command line option
+msgid "Show the information of firmware update status"
+msgstr "Prikaži informacije stanja nadopune frimvera"
+
+#. TRANSLATORS: shutdown to apply the update
+msgid "Shutdown now?"
+msgstr "Odmah isključi?"
+
+msgid "Sign data using the client certificate"
+msgstr "Potpiši podatke koristeći vjerodajnicu klijenta"
+
+msgctxt "command-description"
+msgid "Sign data using the client certificate"
+msgstr "Potpiši podatke koristeći vjerodajnicu klijenta"
+
+#. TRANSLATORS: command line option
+msgid "Sign the uploaded data with the client certificate"
+msgstr "Potpiši poslane podatke s vjerodajnicom klijenta"
+
+msgid "Signature"
+msgstr "Potpis"
+
+msgid "Specify Vendor/Product ID(s) of DFU device"
+msgstr "Odredi ID-ove Proizvođača/Proizvoda DFU uređaja"
+
+msgid "Specify the number of bytes per USB transfer"
+msgstr "Odredi broj bajtova po USB prijenosu"
 
 #. TRANSLATORS: device state, i.e. appIDLE
 msgid "State"
@@ -632,6 +1023,26 @@ msgstr "Sažetak"
 msgid "Target"
 msgstr "Odredište"
 
+#. TRANSLATORS: do not translate the variables marked using $
+msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
+msgstr "LVFS (Frimver Usluga Linux Proizvođača) je besplatna usluga koja djeluje kao neovisna pravna osoba i nema veze sa $OS_RELEASE:NAME$. Vaš distributer možda nije provjerio nadopune frimvera za kompatibilnost s vašim sustavom ili priključenim uređajima. Svi frimveri su pružani od strane izvornih proizvođača opreme."
+
+#. TRANSLATORS: approved firmware has been checked by
+#. * the domain administrator
+msgid "There is no approved firmware."
+msgstr "Ne postoji odobreni frimver."
+
+#. TRANSLATORS: we're poking around as a power user
+msgid "This program may only work correctly as root"
+msgstr "Ovaj program možda radi ispravno samo ako je pokrenut kao korijenski korisnik"
+
+msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
+msgstr "Ova udaljena lokacija sadrži frimver koji nije zabranjen, ali se još uvijek testira od strane proizvođača hardvera. Provjerite da imate način na ručno vraćanje starije inačice frimvera ako nadopuna frimvera ne uspije."
+
+#. TRANSLATORS: the user needs to stop playing with stuff
+msgid "This tool can only be used by the root user"
+msgstr "Ovaj alat može koristiti samo korijenski korisnik"
+
 #. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
 msgid "Title"
 msgstr "Naziv"
@@ -643,6 +1054,10 @@ msgstr "Veličina prijenosa"
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
 msgstr "Vrsta"
+
+#. TRANSLATORS: program name
+msgid "UEFI Firmware Utility"
+msgstr "UEFI firmver pomagalo"
 
 #. TRANSLATORS: section header for firmware URI
 msgid "URI"
@@ -659,6 +1074,10 @@ msgstr "Otključaj uređaj za dopuštenje pristupa"
 msgid "Unlocks the device for firmware access"
 msgstr "Otključava uređaj za pristup frimvera"
 
+#. TRANSLATORS: command line option
+msgid "Unset the debugging flag during update"
+msgstr "Ukloni oznaku otklanjanja grešaka tijekom nadopune"
+
 #. TRANSLATORS: section header for firmware checksum
 msgid "Update Checksum"
 msgstr "Kontrolni zbroj nadopune"
@@ -666,6 +1085,11 @@ msgstr "Kontrolni zbroj nadopune"
 #. TRANSLATORS: section header for long firmware desc
 msgid "Update Description"
 msgstr "Opis nadopune"
+
+#. TRANSLATORS: section header for the amount
+#. * of time it takes to install the update
+msgid "Update Duration"
+msgstr "Trajanje nadopune"
 
 #. TRANSLATORS: section header for firmware remote http://
 msgid "Update Location"
@@ -687,6 +1111,10 @@ msgstr "Sažetak nadopune"
 msgid "Update Version"
 msgstr "Inačica nadopune"
 
+#. TRANSLATORS: command description
+msgid "Update all devices that match local metadata"
+msgstr "Nadopuni sve uređaje koji se podudaraju s lokalnim metapodacima"
+
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
 msgstr "Neuspješna nadopuna je poznat problem, posjetite ovaj URL za više informacija:"
@@ -703,6 +1131,10 @@ msgid "Update the stored metadata with current ROM contents"
 msgstr "Nadopuni pohranjene metapodatke s trenutnim sadržajem ROM-a"
 
 #. TRANSLATORS: command description
+msgid "Update the stored metadata with current contents"
+msgstr "Nadopuni pohranjene metapodatke s trenutnim sadržajem"
+
+#. TRANSLATORS: command description
 msgid "Updates all firmware to latest versions available"
 msgstr "Nadopuni sav frimver na najnovije dostupne inačice"
 
@@ -713,6 +1145,11 @@ msgstr "Nadopuni sav frimver na najnovije dostupne inačice"
 msgid "Updating %s from %s to %s... "
 msgstr "Nadopuna %s s inačice %s na inačicu %s... "
 
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Updating %s…"
+msgstr "Nadopunjujem %s…"
+
 #. TRANSLATORS: the server sent the user a small message
 msgid "Upload message:"
 msgstr "Pošalji poruku:"
@@ -720,6 +1157,10 @@ msgstr "Pošalji poruku:"
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "Pošalji izvještaj odmah?"
+
+#. TRANSLATORS: explain why we want to upload
+msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
+msgstr "Slanje izvještaja frimvera pomaže proizvođačima hardvera brzo otkrivanje nedostatka i brzu nadopunu na stvarnim uređajima."
 
 #. TRANSLATORS: remote filename base
 msgid "Username"
@@ -742,6 +1183,10 @@ msgid "Watch DFU devices being hotplugged"
 msgstr "Nadgledaj odspajanje DFU uređaja"
 
 #. TRANSLATORS: command description
+msgid "Watch for hardware changes"
+msgstr "Nadgledaj promjene hardvera"
+
+#. TRANSLATORS: command description
 msgid "Write firmware from file into device"
 msgstr "Zapiši frimver iz datoteke u uređaj"
 
@@ -752,3 +1197,7 @@ msgstr "Zapiši frimver iz datoteke u jednu particiju uređaja"
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing…"
 msgstr "Zapisivanje..."
+
+#. TRANSLATORS: show the user a warning
+msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
+msgstr "Vaš distributer možda nije provjerio nadopune frimvera za kompatibilnost s vašim sustavom ili priključenim uređajima."

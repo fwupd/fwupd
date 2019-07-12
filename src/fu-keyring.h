@@ -16,16 +16,33 @@ G_BEGIN_DECLS
 #define FU_TYPE_KEYRING (fu_keyring_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuKeyring, fu_keyring, FU, KEYRING, GObject)
 
+/**
+ * FuKeyringVerifyFlags:
+ * @FU_KEYRING_VERIFY_FLAG_NONE:		No flags set
+ * @FU_KEYRING_VERIFY_FLAG_USE_CLIENT_CERT:	Use client certificate to verify
+ *
+ * The flags to use when interacting with a keyring
+ **/
 typedef enum {
 	FU_KEYRING_VERIFY_FLAG_NONE		= 0,
 	FU_KEYRING_VERIFY_FLAG_USE_CLIENT_CERT	= 1 << 1,
+	/*< private >*/
 	FU_KEYRING_VERIFY_FLAG_LAST
 } FuKeyringVerifyFlags;
 
+/**
+ * FuKeyringSignFlags:
+ * @FU_KEYRING_SIGN_FLAG_NONE:		No flags set
+ * @FU_KEYRING_SIGN_FLAG_ADD_TIMESTAMP:	Add a timestamp
+ * @FU_KEYRING_SIGN_FLAG_ADD_CERT: 	Add a certificate
+ *
+ * The flags to when signing a binary
+ **/
 typedef enum {
 	FU_KEYRING_SIGN_FLAG_NONE		= 0,
 	FU_KEYRING_SIGN_FLAG_ADD_TIMESTAMP	= 1 << 0,
 	FU_KEYRING_SIGN_FLAG_ADD_CERT		= 1 << 1,
+	/*< private >*/
 	FU_KEYRING_SIGN_FLAG_LAST
 } FuKeyringSignFlags;
 

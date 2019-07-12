@@ -15,6 +15,7 @@
 
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
+#include "fu-uefi-devpath.h"
 #include "fu-uefi-bootmgr.h"
 #include "fu-uefi-pcrs.h"
 #include "fu-uefi-vars.h"
@@ -237,6 +238,7 @@ fu_uefi_device_build_dp_buf (const gchar *path, gsize *bufsz, GError **error)
 	gssize req;
 	gssize sz;
 	g_autofree guint8 *dp_buf = NULL;
+	g_autoptr(GPtrArray) dps = NULL;
 
 	/* get the size of the path first */
 	req = efi_generate_file_device_path (NULL, 0, path,
@@ -272,6 +274,14 @@ fu_uefi_device_build_dp_buf (const gchar *path, gsize *bufsz, GError **error)
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "failed to efi_generate_file_device_path(%s)",
 			     path);
+		return NULL;
+	}
+
+	/* parse what we got back from efivar */
+	dps = fu_uefi_devpath_parse (dp_buf, (gsize) sz,
+				     FU_UEFI_DEVPATH_PARSE_FLAG_NONE, error);
+	if (dps == NULL) {
+		fu_common_dump_raw (G_LOG_DOMAIN, "dp_buf", dp_buf, (gsize) sz);
 		return NULL;
 	}
 
@@ -390,7 +400,10 @@ fu_uefi_device_write_update_info (FuUefiDevice *self,
 }
 
 static gboolean
-fu_uefi_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
+fu_uefi_device_write_firmware (FuDevice *device,
+			       GBytes *fw,
+			       FwupdInstallFlags install_flags,
+			       GError **error)
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE (device);
 	FuUefiBootmgrFlags flags = FU_UEFI_BOOTMGR_FLAG_NONE;
@@ -492,7 +505,7 @@ static gboolean
 fu_uefi_device_probe (FuDevice *device, GError **error)
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE (device);
-	FuVersionFormat version_format;
+	FwupdVersionFormat version_format;
 	g_autofree gchar *devid = NULL;
 	g_autofree gchar *guid_strup = NULL;
 	g_autofree gchar *version_lowest = NULL;
@@ -513,7 +526,7 @@ fu_uefi_device_probe (FuDevice *device, GError **error)
 	/* set versions */
 	version_format = fu_device_get_version_format (device);
 	version = fu_common_version_from_uint32 (self->fw_version, version_format);
-	fu_device_set_version (device, version);
+	fu_device_set_version (device, version, version_format);
 	if (self->fw_version_lowest != 0) {
 		version_lowest = fu_common_version_from_uint32 (self->fw_version_lowest,
 							        version_format);

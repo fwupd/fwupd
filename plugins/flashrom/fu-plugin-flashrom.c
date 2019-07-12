@@ -78,7 +78,9 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 			fu_device_add_guid (dev, guid);
 			fu_device_set_name (dev, fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_PRODUCT_NAME));
 			fu_device_set_vendor (dev, fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER));
-			fu_device_set_version (dev, fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VERSION));
+			fu_device_set_version (dev,
+					       fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VERSION),
+					       FWUPD_VERSION_FORMAT_UNKNOWN);
 			fu_plugin_device_add (plugin, dev);
 			fu_plugin_cache_add (plugin, device_id, dev);
 			break;

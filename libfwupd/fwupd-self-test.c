@@ -122,6 +122,11 @@ fwupd_enums_func (void)
 		g_assert_cmpstr (tmp, !=, NULL);
 		g_assert_cmpint (fwupd_trust_flag_from_string (tmp), ==, i);
 	}
+	for (guint i = 1; i < FWUPD_VERSION_FORMAT_LAST; i++) {
+		const gchar *tmp = fwupd_version_format_to_string (i);
+		g_assert_cmpstr (tmp, !=, NULL);
+		g_assert_cmpint (fwupd_version_format_from_string (tmp), ==, i);
+	}
 
 	/* bitfield */
 	for (guint64 i = 1; i < FWUPD_DEVICE_FLAG_UNKNOWN; i *= 2) {

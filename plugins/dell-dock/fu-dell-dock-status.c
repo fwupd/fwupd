@@ -48,7 +48,7 @@ fu_dell_dock_status_setup (FuDevice *device, GError **error)
 	status_version = fu_dell_dock_ec_get_status_version (parent);
 
 	dynamic_version = fu_dell_dock_status_ver_string (status_version);
-	fu_device_set_version (device, dynamic_version);
+	fu_device_set_version (device, dynamic_version, FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_logical_id (FU_DEVICE (device), "status");
 
 	fu_dell_dock_clone_updatable (device);
@@ -59,6 +59,7 @@ fu_dell_dock_status_setup (FuDevice *device, GError **error)
 static gboolean
 fu_dell_dock_status_write (FuDevice *device,
 			   GBytes *blob_fw,
+			   FwupdInstallFlags flags,
 			   GError **error)
 {
 	FuDellDockStatus *self = FU_DELL_DOCK_STATUS (device);
@@ -80,8 +81,7 @@ fu_dell_dock_status_write (FuDevice *device,
 		return FALSE;
 
 	/* dock will reboot to re-read; this is to appease the daemon */
-	fu_device_set_version (device, dynamic_version);
-
+	fu_device_set_version (device, dynamic_version, FWUPD_VERSION_FORMAT_QUAD);
 	return TRUE;
 }
 

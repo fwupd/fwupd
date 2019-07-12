@@ -10,6 +10,7 @@
 
 #include <string.h>
 
+#include "fu-device-private.h"
 #include "fu-udev-device-private.h"
 
 /**
@@ -158,7 +159,7 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	if (fu_device_get_version (device) == NULL) {
 		if (priv->revision != 0x00) {
 			g_autofree gchar *version = g_strdup_printf ("%02x", priv->revision);
-			fu_device_set_version (device, version);
+			fu_device_set_version (device, version, FWUPD_VERSION_FORMAT_PLAIN);
 		}
 	}
 
@@ -197,7 +198,7 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	if (fu_device_get_version (device) == NULL) {
 		tmp = g_udev_device_get_property (priv->udev_device, "ID_REVISION");
 		if (tmp != NULL)
-			fu_device_set_version (device, tmp);
+			fu_device_set_version (device, tmp, FWUPD_VERSION_FORMAT_UNKNOWN);
 	}
 
 	/* set vendor ID */
@@ -225,7 +226,8 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	if (priv->vendor != 0x0000) {
 		g_autofree gchar *devid = NULL;
 		devid = g_strdup_printf ("%s\\VEN_%04X", subsystem, priv->vendor);
-		fu_device_add_instance_id (device, devid);
+		fu_device_add_instance_id_full (device, devid,
+						FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
 	}
 
 	/* subclassed */

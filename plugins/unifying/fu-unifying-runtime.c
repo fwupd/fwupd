@@ -215,7 +215,7 @@ fu_unifying_runtime_setup_internal (FuDevice *device, GError **error)
 						 config[3],
 						 (guint16) config[4] << 8 |
 						 config[5]);
-	fu_device_set_version (device, version_fw);
+	fu_device_set_version (device, version_fw, FWUPD_VERSION_FORMAT_PLAIN);
 
 	/* get bootloader version */
 	if (self->version_bl_major > 0) {

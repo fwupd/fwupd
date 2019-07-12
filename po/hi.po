@@ -79,10 +79,6 @@ msgstr "अपडेट की क्षमता वाला हार्ड�
 msgid "Reinstalling %s with %s... "
 msgstr "%s को %s से दोबारा स्थापित करा जा रहा है "
 
-#. TRANSLATORS: turn on all debugging
-msgid "Show debugging information for all files"
-msgstr "फाइल्स की डिबगिंग की जानकारी दिखाए "
-
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
 msgstr "डिबगिंग के विकल्प दिखाए "

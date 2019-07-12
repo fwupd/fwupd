@@ -161,6 +161,8 @@ fwupd_device_flag_to_string (FwupdDeviceFlags device_flag)
 		return "no-auto-instance-ids";
 	if (device_flag == FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)
 		return "needs-activation";
+	if (device_flag == FWUPD_DEVICE_FLAG_ENSURE_SEMVER)
+		return "ensure-semver";
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -223,6 +225,8 @@ fwupd_device_flag_from_string (const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS;
 	if (g_strcmp0 (device_flag, "needs-activation") == 0)
 		return FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION;
+	if (g_strcmp0 (device_flag, "ensure-semver") == 0)
+		return FWUPD_DEVICE_FLAG_ENSURE_SEMVER;
 	return FWUPD_DEVICE_FLAG_UNKNOWN;
 }
 
@@ -247,6 +251,8 @@ fwupd_update_state_to_string (FwupdUpdateState update_state)
 		return "success";
 	if (update_state == FWUPD_UPDATE_STATE_FAILED)
 		return "failed";
+	if (update_state == FWUPD_UPDATE_STATE_FAILED_TRANSIENT)
+		return "failed-transient";
 	if (update_state == FWUPD_UPDATE_STATE_NEEDS_REBOOT)
 		return "needs-reboot";
 	return NULL;
@@ -273,6 +279,8 @@ fwupd_update_state_from_string (const gchar *update_state)
 		return FWUPD_UPDATE_STATE_SUCCESS;
 	if (g_strcmp0 (update_state, "failed") == 0)
 		return FWUPD_UPDATE_STATE_FAILED;
+	if (g_strcmp0 (update_state, "failed-transient") == 0)
+		return FWUPD_UPDATE_STATE_FAILED_TRANSIENT;
 	if (g_strcmp0 (update_state, "needs-reboot") == 0)
 		return FWUPD_UPDATE_STATE_NEEDS_REBOOT;
 	return FWUPD_UPDATE_STATE_UNKNOWN;
@@ -422,4 +430,68 @@ fwupd_release_flag_from_string (const gchar *release_flag)
 	if (g_strcmp0 (release_flag, "blocked-approval") == 0)
 		return FWUPD_RELEASE_FLAG_BLOCKED_APPROVAL;
 	return FWUPD_RELEASE_FLAG_NONE;
+}
+
+/**
+ * fwupd_version_format_from_string:
+ * @str: A string, e.g. `quad`
+ *
+ * Converts text to a display version type.
+ *
+ * Returns: A #FwupdVersionFormat, e.g. %FWUPD_VERSION_FORMAT_TRIPLET
+ *
+ * Since: 1.2.9
+ **/
+FwupdVersionFormat
+fwupd_version_format_from_string (const gchar *str)
+{
+	if (g_strcmp0 (str, "plain") == 0)
+		return FWUPD_VERSION_FORMAT_PLAIN;
+	if (g_strcmp0 (str, "pair") == 0)
+		return FWUPD_VERSION_FORMAT_PAIR;
+	if (g_strcmp0 (str, "number") == 0)
+		return FWUPD_VERSION_FORMAT_NUMBER;
+	if (g_strcmp0 (str, "triplet") == 0)
+		return FWUPD_VERSION_FORMAT_TRIPLET;
+	if (g_strcmp0 (str, "quad") == 0)
+		return FWUPD_VERSION_FORMAT_QUAD;
+	if (g_strcmp0 (str, "bcd") == 0)
+		return FWUPD_VERSION_FORMAT_BCD;
+	if (g_strcmp0 (str, "intel-me") == 0)
+		return FWUPD_VERSION_FORMAT_INTEL_ME;
+	if (g_strcmp0 (str, "intel-me2") == 0)
+		return FWUPD_VERSION_FORMAT_INTEL_ME2;
+	return FWUPD_VERSION_FORMAT_UNKNOWN;
+}
+
+/**
+ * fwupd_version_format_to_string:
+ * @kind: A #FwupdVersionFormat, e.g. %FWUPD_VERSION_FORMAT_TRIPLET
+ *
+ * Converts a display version type to text.
+ *
+ * Returns: A string, e.g. `quad`, or %NULL if not known
+ *
+ * Since: 1.2.9
+ **/
+const gchar *
+fwupd_version_format_to_string (FwupdVersionFormat kind)
+{
+	if (kind == FWUPD_VERSION_FORMAT_PLAIN)
+		return "plain";
+	if (kind == FWUPD_VERSION_FORMAT_NUMBER)
+		return "number";
+	if (kind == FWUPD_VERSION_FORMAT_PAIR)
+		return "pair";
+	if (kind == FWUPD_VERSION_FORMAT_TRIPLET)
+		return "triplet";
+	if (kind == FWUPD_VERSION_FORMAT_QUAD)
+		return "quad";
+	if (kind == FWUPD_VERSION_FORMAT_BCD)
+		return "bcd";
+	if (kind == FWUPD_VERSION_FORMAT_INTEL_ME)
+		return "intel-me";
+	if (kind == FWUPD_VERSION_FORMAT_INTEL_ME2)
+		return "intel-me2";
+	return NULL;
 }

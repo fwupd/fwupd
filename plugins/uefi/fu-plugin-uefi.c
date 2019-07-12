@@ -74,7 +74,12 @@ fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 	}
 
 	/* something went wrong */
-	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
+	if (status == FU_UEFI_DEVICE_STATUS_ERROR_PWR_EVT_AC ||
+	    status == FU_UEFI_DEVICE_STATUS_ERROR_PWR_EVT_BATT) {
+		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED_TRANSIENT);
+	} else {
+		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
+	}
 	version_str = g_strdup_printf ("%u", fu_uefi_device_get_version_error (device_uefi));
 	tmp = fu_uefi_device_status_to_string (status);
 	if (tmp == NULL) {
@@ -403,7 +408,7 @@ fu_plugin_update (FuPlugin *plugin,
 		g_debug ("failed to upload UEFI UX capsule text: %s",
 			 error_splash->message);
 	}
-	if (!fu_device_write_firmware (device, blob_fw, error))
+	if (!fu_device_write_firmware (device, blob_fw, flags, error))
 		return FALSE;
 
 	/* record if we had an invalid header during update */
@@ -445,7 +450,7 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 	}
 }
 
-static FuVersionFormat
+static FwupdVersionFormat
 fu_plugin_uefi_get_version_format_for_type (FuPlugin *plugin, FuUefiDeviceKind device_kind)
 {
 	const gchar *content;
@@ -454,19 +459,19 @@ fu_plugin_uefi_get_version_format_for_type (FuPlugin *plugin, FuUefiDeviceKind d
 
 	/* we have no information for devices */
 	if (device_kind == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE)
-		return FU_VERSION_FORMAT_TRIPLET;
+		return FWUPD_VERSION_FORMAT_TRIPLET;
 
 	content = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER);
 	if (content == NULL)
-		return FU_VERSION_FORMAT_TRIPLET;
+		return FWUPD_VERSION_FORMAT_TRIPLET;
 
 	/* any quirks match */
 	group = g_strdup_printf ("SmbiosManufacturer=%s", content);
 	quirk = fu_plugin_lookup_quirk_by_id (plugin, group,
 					      FU_QUIRKS_UEFI_VERSION_FORMAT);
 	if (quirk == NULL)
-		return FU_VERSION_FORMAT_TRIPLET;
-	return fu_common_version_format_from_string (quirk);
+		return FWUPD_VERSION_FORMAT_TRIPLET;
+	return fwupd_version_format_from_string (quirk);
 }
 
 static const gchar *
@@ -509,7 +514,7 @@ static gboolean
 fu_plugin_uefi_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GError **error)
 {
 	FuUefiDeviceKind device_kind;
-	FuVersionFormat version_format;
+	FwupdVersionFormat version_format;
 
 	/* set default version format */
 	device_kind = fu_uefi_device_get_kind (dev);
@@ -726,8 +731,7 @@ fu_plugin_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
 	fu_device_set_flags (device_alt, device_flags_alt & ~FWUPD_DEVICE_FLAG_UPDATABLE);
 
 	/* make sure that this unlocked device can be updated */
-	fu_device_set_version (device, "0.0.0.0");
-
+	fu_device_set_version (device, "0.0.0.0", FWUPD_VERSION_FORMAT_QUAD);
 	return TRUE;
 }
 
@@ -758,8 +762,11 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 
 	/* if secure boot is enabled ensure we have a signed fwupd.efi */
 	bootloader = fu_uefi_get_built_app_path (&error_bootloader);
-	if (bootloader == NULL)
+	if (bootloader == NULL) {
+		if (fu_uefi_secure_boot_enabled ())
+			g_prefix_error (&error_bootloader, "missing signed bootloader for secure boot: ");
 		g_warning ("%s", error_bootloader->message);
+	}
 
 	/* ensure the ESP is detected */
 	if (!fu_plugin_uefi_ensure_esp_path (plugin, &error_esp))

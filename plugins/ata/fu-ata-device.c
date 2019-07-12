@@ -253,7 +253,9 @@ fu_ata_device_parse_id (FuAtaDevice *self, const guint8 *buf, gsize sz, GError *
 	if (fu_device_get_version (device) == NULL) {
 		g_autofree gchar *tmp = NULL;
 		tmp = fu_ata_device_get_string (id, 23, 26);
-		fu_device_set_version (device, tmp);
+		fu_device_set_version (device, tmp, FWUPD_VERSION_FORMAT_PLAIN);
+	} else {
+		fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_PLAIN);
 	}
 
 	/* 8 byte additional product identifier == SKU? */
@@ -572,7 +574,10 @@ fu_ata_device_fw_download (FuAtaDevice *self,
 }
 
 static gboolean
-fu_ata_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
+fu_ata_device_write_firmware (FuDevice *device,
+			      GBytes *fw,
+			      FwupdInstallFlags flags,
+			      GError **error)
 {
 	FuAtaDevice *self = FU_ATA_DEVICE (device);
 	guint32 chunksz = (guint32) self->transfer_blocks * FU_ATA_BLOCK_SIZE;

@@ -38,6 +38,8 @@ SoupSession	*fu_util_setup_networking	(GError		**error);
 
 gchar		*fu_util_get_versions		(void);
 
+void		 fu_util_warning_box		(const gchar	*str,
+						 guint		 width);
 gboolean	fu_util_prompt_complete		(FwupdDeviceFlags flags,
 						 gboolean prompt,
 						 GError **error);
@@ -57,5 +59,8 @@ gboolean	 fu_util_cmd_array_run		(GPtrArray	*array,
 						 gchar		**values,
 						 GError		**error);
 gchar		*fu_util_release_get_name	(FwupdRelease	*release);
+
+const gchar	*fu_util_get_systemd_unit	(void);
+gboolean	 fu_util_using_correct_daemon	(GError		**error);
 
 G_END_DECLS

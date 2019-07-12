@@ -108,7 +108,7 @@ fu_wacom_aes_device_setup (FuDevice *device, GError **error)
 
 	/* get firmware version */
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		fu_device_set_version (device, "0.0");
+		fu_device_set_version (device, "0.0", FWUPD_VERSION_FORMAT_PAIR);
 	} else {
 		guint32 fw_ver;
 		guint8 data[FU_WACOM_RAW_STATUS_REPORT_SZ] = {
@@ -123,7 +123,7 @@ fu_wacom_aes_device_setup (FuDevice *device, GError **error)
 			return FALSE;
 		fw_ver = fu_common_read_uint16 (data + 11, G_LITTLE_ENDIAN);
 		version = g_strdup_printf ("%04x.%02x", fw_ver, data[13]);
-		fu_device_set_version (device, version);
+		fu_device_set_version (device, version, FWUPD_VERSION_FORMAT_PAIR);
 
 		/* get the optional 32 byte HWID and add it as a GUID */
 		if (!fu_wacom_aes_device_obtain_hwid (self, &error_local)) {

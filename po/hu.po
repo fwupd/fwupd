@@ -4,7 +4,7 @@
 #
 # Translators:
 # Balázs Meskó <meskobalazs@gmail.com>, 2017-2019
-# Balázs Úr <ur.balazs@fsf.hu>, 2015-2018
+# Balázs Úr, 2015-2018
 # Gabor Kelemen <kelemeng at ubuntu dot com>, 2016
 # kelemeng <kelemeng@ubuntu.com>, 2016
 msgid ""
@@ -923,14 +923,6 @@ msgstr "Firmware frissítése előzmények megosztása a fejlesztőkkel"
 #. TRANSLATORS: command line option
 msgid "Show client and daemon versions"
 msgstr "Ügyfél és démon verziók megjelenítése"
-
-#. TRANSLATORS: this is for daemon development
-msgid "Show daemon verbose information"
-msgstr "A démon részletes információinak megjelenítése"
-
-#. TRANSLATORS: turn on all debugging
-msgid "Show debugging information for all files"
-msgstr "Hibakeresési információk megjelenítése minden fájlnál"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"

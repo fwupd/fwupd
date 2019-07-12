@@ -18,7 +18,7 @@ def parse_args():
     import argparse
     parser = argparse.ArgumentParser(description="Self extracting firmware updater")
     parser.add_argument("--directory", help="Directory to extract to")
-    parser.add_argument("--uninstall", action='store_true', help="Uninstall tools when done with installation")
+    parser.add_argument("--cleanup", action='store_true', help="Remove tools when done with installation")
     parser.add_argument("--verbose", action='store_true', help="Run the tool in verbose mode")
     parser.add_argument("--allow-reinstall", action='store_true', help="Allow re-installing existing firmware versions")
     parser.add_argument("--allow-older", action='store_true', help="Allow downgrading firmware versions")
@@ -203,10 +203,77 @@ def install_flatpak (directory, verbose, allow_reinstall, allow_older, uninstall
             print(cmd)
         subprocess.run (cmd)
 
+# Check which package to use
+# - return False to use packaged version
+# - return True for snap/flatpak
+def use_included_version(minimum_version):
+    try:
+        import apt
+    except ModuleNotFoundError:
+        return True
+    cache = apt.Cache()
+    pkg = cache.get("fwupd")
+    version = pkg.installed
+    if not version:
+        return True
+    if minimum_version:
+        if minimum_version > version:
+            print("fwupd %s is already installed but this package requires %s" %
+                  (version.version, minimum_version))
+        else:
+            print("New enough fwupd already installed")
+            return False
+    else:
+        print("fwupd %s is installed and must be removed" % version.version)
+    return remove_packaged_version(pkg, cache)
+
+def remove_packaged_version(pkg, cache):
+    res = False
+    while not res:
+        res = input("Remove now (Y/N)? ")
+        if res.lower() == 'n':
+            return False
+        if res.lower() == 'y':
+            break
+        res = False
+    pkg.mark_delete()
+    res = cache.commit()
+    if not res:
+        raise Exception("Need to remove packaged version")
+    return res
+
+def install_builtin(directory, verbose, allow_reinstall, allow_older):
+    cabs = []
+    for root, dirs, files in os.walk (directory):
+        for f in files:
+            if f.endswith('.cab'):
+                cabs.append(os.path.join(root, f))
+    #run command
+    for cab in cabs:
+        cmd = ['fwupdmgr', 'install', cab]
+        if allow_reinstall:
+            cmd += ["--allow-reinstall"]
+        if allow_older:
+            cmd += ["--allow-older"]
+        if verbose:
+            cmd += ["--verbose"]
+            print(cmd)
+        subprocess.run(cmd)
 
 def run_installation (directory, verbose, allow_reinstall, allow_older, uninstall):
     try_snap = False
     try_flatpak = False
+
+    #determine if a minimum version was specified
+    minimum_path = os.path.join(directory, "minimum")
+    minimum = None
+    if os.path.exists(minimum_path):
+        with open(minimum_path, "r") as rfd:
+            minimum = rfd.read()
+
+    if use_included_version(minimum):
+        install_builtin(directory, verbose, allow_reinstall, allow_older)
+        return
 
     # determine what self extracting binary has
     if os.path.exists (os.path.join (directory, 'fwupd.snap')) and \
@@ -234,8 +301,8 @@ if __name__ == '__main__':
             error ("allow-reinstall argument doesn't make sense with command %s" % args.command)
         if args.allow_older:
             error ("allow-older argument doesn't make sense with command %s" % args.command)
-        if args.uninstall:
-            error ("Uninstall argument doesn't make sense with command %s" % args.command)
+        if args.cleanup:
+            error ("Cleanup argument doesn't make sense with command %s" % args.command)
         if args.directory is None:
             error ("No directory specified")
         if not os.path.exists (args.directory):
@@ -249,4 +316,4 @@ if __name__ == '__main__':
             error ("This tool must be run as root")
         with tempfile.TemporaryDirectory (prefix='fwupd') as target:
             unzip (target)
-            run_installation (target, args.verbose, args.allow_reinstall, args.allow_older, args.uninstall)
+            run_installation (target, args.verbose, args.allow_reinstall, args.allow_older, args.cleanup)

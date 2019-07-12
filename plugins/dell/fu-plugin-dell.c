@@ -259,7 +259,7 @@ fu_plugin_dell_inject_fake_data (FuPlugin *plugin,
 	data->can_switch_modes = TRUE;
 }
 
-static FuVersionFormat
+static FwupdVersionFormat
 fu_plugin_dell_get_version_format (FuPlugin *plugin)
 {
 	const gchar *content;
@@ -268,15 +268,15 @@ fu_plugin_dell_get_version_format (FuPlugin *plugin)
 
 	content = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER);
 	if (content == NULL)
-		return FU_VERSION_FORMAT_TRIPLET;
+		return FWUPD_VERSION_FORMAT_TRIPLET;
 
 	/* any quirks match */
 	group = g_strdup_printf ("SmbiosManufacturer=%s", content);
 	quirk = fu_plugin_lookup_quirk_by_id (plugin, group,
 					      FU_QUIRKS_UEFI_VERSION_FORMAT);
 	if (quirk == NULL)
-		return FU_VERSION_FORMAT_TRIPLET;
-	return fu_common_version_format_from_string (quirk);
+		return FWUPD_VERSION_FORMAT_TRIPLET;
+	return fwupd_version_format_from_string (quirk);
 }
 
 static gboolean
@@ -290,7 +290,8 @@ fu_plugin_dell_capsule_supported (FuPlugin *plugin)
 static gboolean
 fu_plugin_dock_node (FuPlugin *plugin, const gchar *platform,
 		     guint8 type, const gchar *component_guid,
-		     const gchar *component_desc, const gchar *version)
+		     const gchar *component_desc, const gchar *version,
+		     FwupdVersionFormat version_format)
 {
 	const gchar *dock_type;
 	g_autofree gchar *dock_name = NULL;
@@ -324,7 +325,7 @@ fu_plugin_dock_node (FuPlugin *plugin, const gchar *platform,
 	fu_device_add_guid (dev, component_guid);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	if (version != NULL) {
-		fu_device_set_version (dev, version);
+		fu_device_set_version (dev, version, version_format);
 		if (fu_plugin_dell_capsule_supported (plugin)) {
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
@@ -344,7 +345,7 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 			    GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	FuVersionFormat version_format;
+	FwupdVersionFormat version_format;
 	guint16 pid;
 	guint16 vid;
 	const gchar *query_str;
@@ -447,7 +448,8 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 					  buf.record->dock_info_header.dock_type,
 					  component_guid,
 					  component_name,
-					  fw_str)) {
+					  fw_str,
+					  version_format)) {
 			g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
 				     "failed to create %s", component_name);
 			return FALSE;
@@ -463,7 +465,8 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 				  buf.record->dock_info_header.dock_type,
 				  DOCK_FLASH_GUID,
 				  NULL,
-				  flash_ver_str)) {
+				  flash_ver_str,
+				  version_format)) {
 		g_set_error_literal (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
 				    "failed to create top dock node");
 
@@ -499,7 +502,7 @@ fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 	if (completion_code[3] == DELL_SUCCESS) {
 		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
 	} else {
-		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
+		FwupdUpdateState update_state = FWUPD_UPDATE_STATE_FAILED;
 		switch (completion_code[3]) {
 		case DELL_CONSISTENCY_FAIL:
 			tmp = "The image failed one or more consistency checks.";
@@ -515,12 +518,15 @@ fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 			break;
 		case DELL_BATTERY_MISSING:
 			tmp = "A battery must be installed for the operation to complete.";
+			update_state = FWUPD_UPDATE_STATE_FAILED_TRANSIENT;
 			break;
 		case DELL_BATTERY_DEAD:
 			tmp = "A fully-charged battery must be present for the operation to complete.";
+			update_state = FWUPD_UPDATE_STATE_FAILED_TRANSIENT;
 			break;
 		case DELL_AC_MISSING:
 			tmp = "An external power adapter must be connected for the operation to complete.";
+			update_state = FWUPD_UPDATE_STATE_FAILED_TRANSIENT;
 			break;
 		case DELL_CANT_SET_12V:
 			tmp = "The 12V required to program the flash-memory could not be set.";
@@ -546,6 +552,7 @@ fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 		default:
 			break;
 		}
+		fu_device_set_update_state (device, update_state);
 		if (tmp != NULL)
 			fu_device_set_update_error (device, tmp);
 	}
@@ -637,7 +644,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	g_debug ("Creating primary TPM GUID %s and secondary TPM GUID %s",
 		 tpm_guid_raw, tpm_guid_raw_alt);
 	version_str = fu_common_version_from_uint32 (out->fw_version,
-						     FU_VERSION_FORMAT_QUAD);
+						     FWUPD_VERSION_FORMAT_QUAD);
 
 	/* make it clear that the TPM is a discrete device of the product */
 	if (!data->smi_obj->fake_smbios) {
@@ -653,7 +660,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	fu_device_set_vendor (dev, "Dell Inc.");
 	fu_device_set_name (dev, pretty_tpm_name);
 	fu_device_set_summary (dev, "Platform TPM device");
-	fu_device_set_version (dev, version_str);
+	fu_device_set_version (dev, version_str, FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_icon (dev, "computer");

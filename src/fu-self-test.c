@@ -100,7 +100,7 @@ fu_engine_generate_md_func (void)
 	g_assert_no_error (error);
 	g_assert (ret);
 	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
-	fu_device_set_version (device, "1.2.3");
+	fu_device_set_version (device, "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET);
 	component = fu_engine_get_component_by_guids (engine, device);
 	g_assert_nonnull (component);
 
@@ -156,15 +156,16 @@ fu_archive_cab_func (void)
 static void
 fu_common_version_guess_format_func (void)
 {
-	g_assert_cmpint (fu_common_version_guess_format (NULL), ==, FU_VERSION_FORMAT_UNKNOWN);
-	g_assert_cmpint (fu_common_version_guess_format (""), ==, FU_VERSION_FORMAT_UNKNOWN);
-	g_assert_cmpint (fu_common_version_guess_format ("1234ac"), ==, FU_VERSION_FORMAT_PLAIN);
-	g_assert_cmpint (fu_common_version_guess_format ("1.2"), ==, FU_VERSION_FORMAT_PAIR);
-	g_assert_cmpint (fu_common_version_guess_format ("1.2.3"), ==, FU_VERSION_FORMAT_TRIPLET);
-	g_assert_cmpint (fu_common_version_guess_format ("1.2.3.4"), ==, FU_VERSION_FORMAT_QUAD);
-	g_assert_cmpint (fu_common_version_guess_format ("1.2.3.4.5"), ==, FU_VERSION_FORMAT_UNKNOWN);
-	g_assert_cmpint (fu_common_version_guess_format ("1a.2b.3"), ==, FU_VERSION_FORMAT_UNKNOWN);
-	g_assert_cmpint (fu_common_version_guess_format ("1"), ==, FU_VERSION_FORMAT_PLAIN);
+	g_assert_cmpint (fu_common_version_guess_format (NULL), ==, FWUPD_VERSION_FORMAT_UNKNOWN);
+	g_assert_cmpint (fu_common_version_guess_format (""), ==, FWUPD_VERSION_FORMAT_UNKNOWN);
+	g_assert_cmpint (fu_common_version_guess_format ("1234ac"), ==, FWUPD_VERSION_FORMAT_PLAIN);
+	g_assert_cmpint (fu_common_version_guess_format ("1.2"), ==, FWUPD_VERSION_FORMAT_PAIR);
+	g_assert_cmpint (fu_common_version_guess_format ("1.2.3"), ==, FWUPD_VERSION_FORMAT_TRIPLET);
+	g_assert_cmpint (fu_common_version_guess_format ("1.2.3.4"), ==, FWUPD_VERSION_FORMAT_QUAD);
+	g_assert_cmpint (fu_common_version_guess_format ("1.2.3.4.5"), ==, FWUPD_VERSION_FORMAT_UNKNOWN);
+	g_assert_cmpint (fu_common_version_guess_format ("1a.2b.3"), ==, FWUPD_VERSION_FORMAT_PLAIN);
+	g_assert_cmpint (fu_common_version_guess_format ("1"), ==, FWUPD_VERSION_FORMAT_NUMBER);
+	g_assert_cmpint (fu_common_version_guess_format ("0x10201"), ==, FWUPD_VERSION_FORMAT_NUMBER);
 }
 
 static void
@@ -266,12 +267,12 @@ fu_engine_requirements_child_func (void)
 		"</component>";
 
 	/* set up a dummy device */
-	fu_device_set_version (device, "1.2.3");
+	fu_device_set_version (device, "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version_bootloader (device, "4.5.6");
 	fu_device_set_vendor_id (device, "FFFF");
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
-	fu_device_set_version (child, "0.0.999");
+	fu_device_set_version (child, "0.0.999", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_child (device, child);
 
 	/* make the component require three things */
@@ -318,12 +319,12 @@ fu_engine_requirements_child_fail_func (void)
 		"</component>";
 
 	/* set up a dummy device */
-	fu_device_set_version (device, "1.2.3");
+	fu_device_set_version (device, "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version_bootloader (device, "4.5.6");
 	fu_device_set_vendor_id (device, "FFFF");
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
-	fu_device_set_version (child, "0.0.1");
+	fu_device_set_version (child, "0.0.1", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_child (device, child);
 
 	/* make the component require three things */
@@ -410,7 +411,7 @@ fu_engine_requirements_device_func (void)
 		"</component>";
 
 	/* set up a dummy device */
-	fu_device_set_version (device, "1.2.3");
+	fu_device_set_version (device, "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version_bootloader (device, "4.5.6");
 	fu_device_set_vendor_id (device, "FFFF");
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
@@ -453,10 +454,13 @@ fu_engine_requirements_version_format_func (void)
 		"      <checksum type=\"sha1\" filename=\"bios.bin\" target=\"content\"/>"
 		"    </release>"
 		"  </releases>"
+		"  <custom>"
+		"    <value key=\"LVFS::VersionFormat\">triplet</value>"
+		"  </custom>"
 		"</component>";
 
 	/* set up a dummy device */
-	fu_device_set_version (device, "1.2.3.4");
+	fu_device_set_version (device, "1.2.3.4", FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
 
@@ -510,14 +514,14 @@ fu_engine_requirements_other_device_func (void)
 	fu_engine_set_silo (engine, silo_empty);
 
 	/* set up a dummy device */
-	fu_device_set_version (device1, "1.2.3");
+	fu_device_set_version (device1, "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_flag (device1, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_guid (device1, "12345678-1234-1234-1234-123456789012");
 
 	/* set up a different device */
 	fu_device_set_id (device2, "id2");
 	fu_device_set_name (device2, "Secondary firmware");
-	fu_device_set_version (device2, "4.5.6");
+	fu_device_set_version (device2, "4.5.6", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_vendor_id (device2, "FFFF");
 	fu_device_add_guid (device2, "1ff60ab2-3905-06a1-b476-0371f00c9e9b");
 	fu_engine_add_device (engine, device2);
@@ -739,6 +743,7 @@ fu_engine_device_unlock_func (void)
 	fu_device_set_id (device, "UEFI-dummy-dev0");
 	fu_device_add_guid (device, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_LOCKED);
+	fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_PLAIN);
 	fu_engine_add_device (engine, device);
 
 	/* ensure the metainfo was matched */
@@ -785,7 +790,7 @@ fu_engine_require_hwid_func (void)
 
 	/* add a dummy device */
 	fu_device_set_id (device, "test_device");
-	fu_device_set_version (device, "1.2.2");
+	fu_device_set_version (device, "1.2.2", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_engine_add_device (engine, device);
@@ -918,7 +923,7 @@ fu_engine_downgrade_func (void)
 	g_clear_error (&error);
 
 	/* add a device so we can get upgrades and downgrades */
-	fu_device_set_version (device, "1.2.3");
+	fu_device_set_version (device, "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_id (device, "test_device");
 	fu_device_set_name (device, "Test Device");
 	fu_device_add_guid (device, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
@@ -1015,7 +1020,7 @@ fu_engine_install_duration_func (void)
 	g_assert (ret);
 
 	/* add a device so we can get the install duration */
-	fu_device_set_version (device, "1.2.3");
+	fu_device_set_version (device, "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_id (device, "test_device");
 	fu_device_add_guid (device, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
 	fu_device_set_install_duration (device, 999);
@@ -1081,7 +1086,7 @@ fu_engine_history_func (void)
 	g_assert_cmpint (fu_engine_get_status (engine), ==, FWUPD_STATUS_IDLE);
 
 	/* add a device so we can get upgrade it */
-	fu_device_set_version (device, "1.2.2");
+	fu_device_set_version (device, "1.2.2", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_id (device, "test_device");
 	fu_device_set_name (device, "Test Device");
 	fu_device_set_plugin (device, "test");
@@ -1149,8 +1154,7 @@ fu_engine_history_func (void)
 		"  [Release]\n"
 		"  Version:              1.2.3\n"
 		"  Checksum:             SHA1(%s)\n"
-		"  Flags:                none\n"
-		"  VersionFormat:        triplet\n",
+		"  Flags:                none\n",
 		checksum);
 	ret = fu_test_compare_lines (device_str, device_str_expected, &error);
 	g_assert_no_error (error);
@@ -1210,7 +1214,7 @@ fu_engine_history_inherit (void)
 	g_assert_cmpint (fu_engine_get_status (engine), ==, FWUPD_STATUS_IDLE);
 
 	/* add a device so we can get upgrade it */
-	fu_device_set_version (device, "1.2.2");
+	fu_device_set_version (device, "1.2.2", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_id (device, "test_device");
 	fu_device_set_name (device, "Test Device");
 	fu_device_set_plugin (device, "test");
@@ -1260,7 +1264,7 @@ fu_engine_history_inherit (void)
 	g_assert_cmpstr (fu_device_get_version (device), ==, "1.2.3");
 
 	/* emulate getting the flag for a fresh boot on old firmware */
-	fu_device_set_version (device, "1.2.2");
+	fu_device_set_version (device, "1.2.2", FWUPD_VERSION_FORMAT_TRIPLET);
 	ret = fu_engine_install (engine, task, blob_cab,
 				 FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error (error);
@@ -1274,7 +1278,7 @@ fu_engine_history_inherit (void)
 	fu_device_set_id (device, "test_device");
 	fu_device_set_name (device, "Test Device");
 	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
-	fu_device_set_version (device, "1.2.2");
+	fu_device_set_version (device, "1.2.2", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_engine_add_device (engine, device);
 	g_assert_true (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION));
 }
@@ -1321,7 +1325,7 @@ fu_engine_history_error_func (void)
 	g_assert_cmpint (fu_engine_get_status (engine), ==, FWUPD_STATUS_IDLE);
 
 	/* add a device so we can get upgrade it */
-	fu_device_set_version (device, "1.2.2");
+	fu_device_set_version (device, "1.2.2", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_id (device, "test_device");
 	fu_device_set_name (device, "Test Device");
 	fu_device_set_plugin (device, "test");
@@ -1383,8 +1387,7 @@ fu_engine_history_error_func (void)
 		"  [Release]\n"
 		"  Version:              1.2.3\n"
 		"  Checksum:             SHA1(%s)\n"
-		"  Flags:                none\n"
-		"  VersionFormat:        triplet\n",
+		"  Flags:                none\n",
 		checksum);
 	ret = fu_test_compare_lines (device_str, device_str_expected, &error);
 	g_assert_no_error (error);
@@ -1612,7 +1615,7 @@ fu_device_list_compatible_func (void)
 	fu_device_set_id (device1, "device1");
 	fu_device_set_plugin (device1, "plugin-for-runtime");
 	fu_device_set_vendor_id (device1, "USB:0x20A0");
-	fu_device_set_version (device1, "1.2.3");
+	fu_device_set_version (device1, "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_instance_id (device1, "foobar");
 	fu_device_add_instance_id (device1, "bootloader");
 	fu_device_set_remove_delay (device1, 100);
@@ -1795,8 +1798,8 @@ static void
 fu_device_version_format_func (void)
 {
 	g_autoptr(FuDevice) device = fu_device_new ();
-	fu_device_set_version_format (device, FU_VERSION_FORMAT_TRIPLET);
-	fu_device_set_version (device, "Ver1.2.3 RELEASE");
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_ENSURE_SEMVER);
+	fu_device_set_version (device, "Ver1.2.3 RELEASE", FWUPD_VERSION_FORMAT_TRIPLET);
 	g_assert_cmpstr (fu_device_get_version (device), ==, "1.2.3");
 }
 
@@ -2222,7 +2225,8 @@ fu_plugin_module_func (void)
 	blob_cab = g_mapped_file_get_bytes (mapped_file);
 	release = fu_device_get_release_default (device);
 	fwupd_release_set_version (release, "1.2.3");
-	ret = fu_plugin_runner_schedule_update (plugin, device, release, blob_cab, &error);
+	ret = fu_plugin_runner_schedule_update (plugin, device, release, blob_cab,
+						FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (cnt, ==, 1);
@@ -2422,7 +2426,7 @@ fu_history_func (void)
 	device = fu_device_new ();
 	fu_device_set_id (device, "self-test");
 	fu_device_set_name (device, "ColorHug"),
-	fu_device_set_version (device, "3.0.1"),
+	fu_device_set_version (device, "3.0.1", FWUPD_VERSION_FORMAT_TRIPLET),
 	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
 	fu_device_set_update_error (device, "word");
 	fu_device_add_guid (device, "827edddd-9bb6-5632-889f-2c01255503da");
@@ -3535,39 +3539,39 @@ fu_common_version_func (void)
 	struct {
 		guint32 val;
 		const gchar *ver;
-		FuVersionFormat flags;
+		FwupdVersionFormat flags;
 	} version_from_uint32[] = {
-		{ 0x0,		"0.0.0.0",		FU_VERSION_FORMAT_QUAD },
-		{ 0xff,		"0.0.0.255",		FU_VERSION_FORMAT_QUAD },
-		{ 0xff01,	"0.0.255.1",		FU_VERSION_FORMAT_QUAD },
-		{ 0xff0001,	"0.255.0.1",		FU_VERSION_FORMAT_QUAD },
-		{ 0xff000100,	"255.0.1.0",		FU_VERSION_FORMAT_QUAD },
-		{ 0x0,		"0.0.0",		FU_VERSION_FORMAT_TRIPLET },
-		{ 0xff,		"0.0.255",		FU_VERSION_FORMAT_TRIPLET },
-		{ 0xff01,	"0.0.65281",		FU_VERSION_FORMAT_TRIPLET },
-		{ 0xff0001,	"0.255.1",		FU_VERSION_FORMAT_TRIPLET },
-		{ 0xff000100,	"255.0.256",		FU_VERSION_FORMAT_TRIPLET },
-		{ 0x0,		"0",			FU_VERSION_FORMAT_PLAIN },
-		{ 0xff000100,	"4278190336",		FU_VERSION_FORMAT_PLAIN },
-		{ 0x0,		"11.0.0.0",		FU_VERSION_FORMAT_INTEL_ME },
-		{ 0xffffffff,	"18.31.255.65535",	FU_VERSION_FORMAT_INTEL_ME },
-		{ 0x0b32057a,	"11.11.50.1402",	FU_VERSION_FORMAT_INTEL_ME },
-		{ 0xb8320d84,	"11.8.50.3460",		FU_VERSION_FORMAT_INTEL_ME2 },
+		{ 0x0,		"0.0.0.0",		FWUPD_VERSION_FORMAT_QUAD },
+		{ 0xff,		"0.0.0.255",		FWUPD_VERSION_FORMAT_QUAD },
+		{ 0xff01,	"0.0.255.1",		FWUPD_VERSION_FORMAT_QUAD },
+		{ 0xff0001,	"0.255.0.1",		FWUPD_VERSION_FORMAT_QUAD },
+		{ 0xff000100,	"255.0.1.0",		FWUPD_VERSION_FORMAT_QUAD },
+		{ 0x0,		"0.0.0",		FWUPD_VERSION_FORMAT_TRIPLET },
+		{ 0xff,		"0.0.255",		FWUPD_VERSION_FORMAT_TRIPLET },
+		{ 0xff01,	"0.0.65281",		FWUPD_VERSION_FORMAT_TRIPLET },
+		{ 0xff0001,	"0.255.1",		FWUPD_VERSION_FORMAT_TRIPLET },
+		{ 0xff000100,	"255.0.256",		FWUPD_VERSION_FORMAT_TRIPLET },
+		{ 0x0,		"0",			FWUPD_VERSION_FORMAT_NUMBER },
+		{ 0xff000100,	"4278190336",		FWUPD_VERSION_FORMAT_NUMBER },
+		{ 0x0,		"11.0.0.0",		FWUPD_VERSION_FORMAT_INTEL_ME },
+		{ 0xffffffff,	"18.31.255.65535",	FWUPD_VERSION_FORMAT_INTEL_ME },
+		{ 0x0b32057a,	"11.11.50.1402",	FWUPD_VERSION_FORMAT_INTEL_ME },
+		{ 0xb8320d84,	"11.8.50.3460",		FWUPD_VERSION_FORMAT_INTEL_ME2 },
 		{ 0,		NULL }
 	};
 	struct {
 		guint16 val;
 		const gchar *ver;
-		FuVersionFormat flags;
+		FwupdVersionFormat flags;
 	} version_from_uint16[] = {
-		{ 0x0,		"0.0",			FU_VERSION_FORMAT_PAIR },
-		{ 0xff,		"0.255",		FU_VERSION_FORMAT_PAIR },
-		{ 0xff01,	"255.1",		FU_VERSION_FORMAT_PAIR },
-		{ 0x0,		"0.0",			FU_VERSION_FORMAT_BCD },
-		{ 0x0110,	"1.10",			FU_VERSION_FORMAT_BCD },
-		{ 0x9999,	"99.99",		FU_VERSION_FORMAT_BCD },
-		{ 0x0,		"0",			FU_VERSION_FORMAT_PLAIN },
-		{ 0x1234,	"4660",			FU_VERSION_FORMAT_PLAIN },
+		{ 0x0,		"0.0",			FWUPD_VERSION_FORMAT_PAIR },
+		{ 0xff,		"0.255",		FWUPD_VERSION_FORMAT_PAIR },
+		{ 0xff01,	"255.1",		FWUPD_VERSION_FORMAT_PAIR },
+		{ 0x0,		"0.0",			FWUPD_VERSION_FORMAT_BCD },
+		{ 0x0110,	"1.10",			FWUPD_VERSION_FORMAT_BCD },
+		{ 0x9999,	"99.99",		FWUPD_VERSION_FORMAT_BCD },
+		{ 0x0,		"0",			FWUPD_VERSION_FORMAT_NUMBER },
+		{ 0x1234,	"4660",			FWUPD_VERSION_FORMAT_NUMBER },
 		{ 0,		NULL }
 	};
 	struct {

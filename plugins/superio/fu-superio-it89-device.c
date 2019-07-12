@@ -111,7 +111,7 @@ fu_superio_it89_device_setup (FuSuperioDevice *self, GError **error)
 		return FALSE;
 	}
 	version = g_strdup_printf ("%02u.%02u", version_tmp[0], version_tmp[1]);
-	fu_device_set_version (FU_DEVICE (self), version);
+	fu_device_set_version (FU_DEVICE (self), version, FWUPD_VERSION_FORMAT_PAIR);
 
 	/* get size from the EC */
 	if (!fu_superio_it89_device_ec_size (self, error))
@@ -590,7 +590,10 @@ fu_superio_it89_device_get_jedec_id (FuSuperioDevice *self, guint8 *id, GError *
 }
 
 static gboolean
-fu_superio_it89_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
+fu_superio_it89_device_write_firmware (FuDevice *device,
+				       GBytes *fw,
+				       FwupdInstallFlags flags,
+				       GError **error)
 {
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
 	guint8 id[4] = { 0x0 };

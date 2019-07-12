@@ -15,15 +15,27 @@ G_BEGIN_DECLS
 #define FU_TYPE_CONFIG (fu_config_get_type ())
 G_DECLARE_FINAL_TYPE (FuConfig, fu_config, FU, CONFIG, GObject)
 
+/**
+ * FuConfigLoadFlags:
+ * @FU_CONFIG_LOAD_FLAG_NONE:		No flags set
+ * @FU_CONFIG_LOAD_FLAG_READONLY_FS:	Ignore readonly filesystem errors
+ *
+ * The flags to use when loading a configuration file.
+ **/
 typedef enum {
 	FU_CONFIG_LOAD_FLAG_NONE		= 0,
 	FU_CONFIG_LOAD_FLAG_READONLY_FS		= 1 << 0,
+	/*< private >*/
 	FU_CONFIG_LOAD_FLAG_LAST
 } FuConfigLoadFlags;
 
 FuConfig	*fu_config_new				(void);
 gboolean	 fu_config_load				(FuConfig	*self,
 							 FuConfigLoadFlags flags,
+							 GError		**error);
+gboolean	 fu_config_modify_and_save		(FuConfig	*self,
+							 const gchar	*key,
+							 const gchar	*value,
 							 GError		**error);
 
 guint64		 fu_config_get_archive_size_max		(FuConfig	*self);

@@ -216,7 +216,7 @@ fu_ebitdo_device_set_version (FuEbitdoDevice *self, guint32 version)
 {
 	g_autofree gchar *tmp = NULL;
 	tmp = g_strdup_printf ("%u.%02u", version / 100, version % 100);
-	fu_device_set_version (FU_DEVICE (self), tmp);
+	fu_device_set_version (FU_DEVICE (self), tmp, FWUPD_VERSION_FORMAT_PAIR);
 }
 
 static gboolean
@@ -347,7 +347,10 @@ fu_ebitdo_device_get_serial (FuEbitdoDevice *self)
 }
 
 static gboolean
-fu_ebitdo_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
+fu_ebitdo_device_write_firmware (FuDevice *device,
+				 GBytes *fw,
+				 FwupdInstallFlags flags,
+				 GError **error)
 {
 	FuEbitdoDevice *self = FU_EBITDO_DEVICE (device);
 	FuEbitdoFirmwareHeader *hdr;

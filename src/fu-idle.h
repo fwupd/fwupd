@@ -26,6 +26,13 @@ void		 fu_idle_set_timeout		(FuIdle		*self,
 void		 fu_idle_reset			(FuIdle		*self);
 FwupdStatus	 fu_idle_get_status		(FuIdle		*self);
 
+/**
+ * FuIdleLocker:
+ * @idle:	A #FuIdle
+ * @token:	A #guint32 number
+ *
+ * A locker to prevent daemon from shutting down on its own
+ **/
 typedef struct {
 	FuIdle		*idle;
 	guint32		 token;

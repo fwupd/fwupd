@@ -309,10 +309,6 @@ msgstr "Nastaví ID výrobcu pre súbor s firmvérom"
 msgid "Sets metadata on a firmware file"
 msgstr "Nastaví metaúdaje pre súbor s firmvérom"
 
-#. TRANSLATORS: turn on all debugging
-msgid "Show debugging information for all files"
-msgstr "Zobrazí ladiace informácie pre všetky súbory"
-
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
 msgstr "Zobrazí voľby ladenia"

@@ -10,20 +10,52 @@
 
 G_BEGIN_DECLS
 
+/**
+ * FuAppFlags:
+ * @FU_APP_FLAGS_NONE:			No flags set
+ * @FU_APP_FLAGS_NO_IDLE_SOURCES:	Disallow idle sources
+ *
+ * The flags to use when loading an application.
+ **/
 typedef enum {
 	FU_APP_FLAGS_NONE		= 0,
 	FU_APP_FLAGS_NO_IDLE_SOURCES	= 1 << 0,
-	FU_APP_FLAGS_IS_OFFLINE		= 1 << 1,
+	/*< private >*/
 	FU_APP_FLAGS_LAST
 } FuAppFlags;
 
+/**
+ * FuDumpFlags:
+ * @FU_DUMP_FLAGS_NONE:			No flags set
+ * @FU_DUMP_FLAGS_SHOW_ASCII:		Show ASCII in debugging dumps
+ * @FU_DUMP_FLAGS_SHOW_ADDRESSES:	Show addresses in debugging dumps
+ *
+ * The flags to use when configuring debugging
+ **/
 typedef enum {
 	FU_DUMP_FLAGS_NONE		= 0,
 	FU_DUMP_FLAGS_SHOW_ASCII	= 1 << 0,
 	FU_DUMP_FLAGS_SHOW_ADDRESSES	= 1 << 1,
+	/*< private >*/
 	FU_DUMP_FLAGS_LAST
 } FuDumpFlags;
 
+/**
+ * FuPathKind:
+ * @FU_PATH_KIND_CACHEDIR_PKG:		The cache directory (IE /var/cache/fwupd)
+ * @FU_PATH_KIND_DATADIR_PKG:		The non-volatile data store (IE /usr/share/fwupd)
+ * @FU_PATH_KIND_EFIAPPDIR:		The location to store EFI apps before install (IE /usr/libexec/fwupd/efi)
+ * @FU_PATH_KIND_LOCALSTATEDIR:		The local state directory (IE /var)
+ * @FU_PATH_KIND_LOCALSTATEDIR_PKG:	The local state directory for the package (IE /var/lib/fwupd)
+ * @FU_PATH_KIND_PLUGINDIR_PKG:		The location to look for plugins for package (IE /usr/lib/[triplet]/fwupd-plugins-3)
+ * @FU_PATH_KIND_SYSCONFDIR:		The configuration location (IE /etc)
+ * @FU_PATH_KIND_SYSCONFDIR_PKG:	The package configuration location (IE /etc/fwupd)
+ * @FU_PATH_KIND_SYSFSDIR_FW:		The sysfs firmware location (IE /sys/firmware)
+ * @FU_PATH_KIND_SYSFSDIR_DRIVERS:	The platform sysfs directory (IE /sys/bus/platform/drivers)
+ * @FU_PATH_KIND_SYSFSDIR_TPM:		The TPM sysfs directory (IE /sys/class/tpm)
+ *
+ * Path types to use when dynamically determining a path at runtime
+ **/
 typedef enum {
 	FU_PATH_KIND_CACHEDIR_PKG,
 	FU_PATH_KIND_DATADIR_PKG,
@@ -36,6 +68,7 @@ typedef enum {
 	FU_PATH_KIND_SYSFSDIR_FW,
 	FU_PATH_KIND_SYSFSDIR_DRIVERS,
 	FU_PATH_KIND_SYSFSDIR_TPM,
+	/*< private >*/
 	FU_PATH_KIND_LAST
 } FuPathKind;
 

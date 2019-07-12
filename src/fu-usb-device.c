@@ -8,6 +8,7 @@
 
 #include "config.h"
 
+#include "fu-device-private.h"
 #include "fu-usb-device-private.h"
 
 /**
@@ -169,7 +170,10 @@ fu_usb_device_open (FuDevice *device, GError **error)
 	if (idx != 0x00) {
 		g_autofree gchar *tmp = NULL;
 		tmp = g_usb_device_get_string_descriptor (priv->usb_device, idx, NULL);
-		fu_device_set_version (device, tmp);
+		/* although guessing is a route to insanity, if the device has
+		 * provided the extra data it's because the BCD type was not
+		 * suitable -- and INTEL_ME is not relevant here */
+		fu_device_set_version (device, tmp, fu_common_version_guess_format (tmp));
 	}
 
 	/* get GUID from the descriptor if set */
@@ -238,8 +242,8 @@ fu_usb_device_probe (FuDevice *device, GError **error)
 	release = g_usb_device_get_release (priv->usb_device);
 	if (release != 0x0) {
 		g_autofree gchar *version = NULL;
-		version = fu_common_version_from_uint16 (release, FU_VERSION_FORMAT_BCD);
-		fu_device_set_version (device, version);
+		version = fu_common_version_from_uint16 (release, FWUPD_VERSION_FORMAT_BCD);
+		fu_device_set_version (device, version, FWUPD_VERSION_FORMAT_BCD);
 	}
 
 	/* add GUIDs in order of priority */
@@ -254,7 +258,8 @@ fu_usb_device_probe (FuDevice *device, GError **error)
 	fu_device_add_instance_id (device, devid1);
 	devid0 = g_strdup_printf ("USB\\VID_%04X",
 				  g_usb_device_get_vid (priv->usb_device));
-	fu_device_add_instance_id (device, devid0);
+	fu_device_add_instance_id_full (device, devid0,
+					FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
 
 	/* add the interface GUIDs */
 	intfs = g_usb_device_get_interfaces (priv->usb_device, error);
@@ -269,14 +274,17 @@ fu_usb_device_probe (FuDevice *device, GError **error)
 					  g_usb_interface_get_class (intf),
 					  g_usb_interface_get_subclass (intf),
 					  g_usb_interface_get_protocol (intf));
-		fu_device_add_instance_id (device, intid1);
+		fu_device_add_instance_id_full (device, intid1,
+						FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
 		intid2 = g_strdup_printf ("USB\\CLASS_%02X&SUBCLASS_%02X",
 					  g_usb_interface_get_class (intf),
 					  g_usb_interface_get_subclass (intf));
-		fu_device_add_instance_id (device, intid2);
+		fu_device_add_instance_id_full (device, intid2,
+						FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
 		intid3 = g_strdup_printf ("USB\\CLASS_%02X",
 					  g_usb_interface_get_class (intf));
-		fu_device_add_instance_id (device, intid3);
+		fu_device_add_instance_id_full (device, intid3,
+						FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
 	}
 
 	/* subclassed */
@@ -304,6 +312,8 @@ fu_usb_device_get_vid (FuUsbDevice *self)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_USB_DEVICE (self), 0x0000);
+	if (priv->usb_device == NULL)
+		return 0x0;
 	return g_usb_device_get_vid (priv->usb_device);
 }
 
@@ -322,6 +332,8 @@ fu_usb_device_get_pid (FuUsbDevice *self)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_USB_DEVICE (self), 0x0000);
+	if (priv->usb_device == NULL)
+		return 0x0;
 	return g_usb_device_get_pid (priv->usb_device);
 }
 
@@ -340,6 +352,8 @@ fu_usb_device_get_platform_id (FuUsbDevice *self)
 {
 	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_USB_DEVICE (self), NULL);
+	if (priv->usb_device == NULL)
+		return NULL;
 	return g_usb_device_get_platform_id (priv->usb_device);
 }
 

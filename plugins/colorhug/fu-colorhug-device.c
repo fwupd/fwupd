@@ -306,7 +306,7 @@ fu_colorhug_device_setup (FuDevice *device, GError **error)
 		version = fu_colorhug_device_get_version (self, &error_local);
 		if (version != NULL) {
 			g_debug ("obtained fwver using API '%s'", version);
-			fu_device_set_version (FU_DEVICE (device), version);
+			fu_device_set_version (device, version, FWUPD_VERSION_FORMAT_TRIPLET);
 		} else {
 			g_warning ("failed to get firmware version: %s",
 				   error_local->message);
@@ -327,7 +327,10 @@ ch_colorhug_device_calculate_checksum (const guint8 *data, guint32 len)
 }
 
 static gboolean
-fu_colorhug_device_write_firmware (FuDevice *device, GBytes *fw, GError **error)
+fu_colorhug_device_write_firmware (FuDevice *device,
+				   GBytes *fw,
+				   FwupdInstallFlags flags,
+				   GError **error)
 {
 	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
 	g_autoptr(GPtrArray) chunks = NULL;

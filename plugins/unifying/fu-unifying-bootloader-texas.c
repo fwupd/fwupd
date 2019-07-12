@@ -108,7 +108,10 @@ fu_unifying_bootloader_texas_clear_ram_buffer (FuUnifyingBootloader *self, GErro
 }
 
 static gboolean
-fu_unifying_bootloader_texas_write_firmware (FuDevice *device, GBytes *fw, GError **error)
+fu_unifying_bootloader_texas_write_firmware (FuDevice *device,
+					     GBytes *fw,
+					     FwupdInstallFlags flags,
+					     GError **error)
 {
 	FuUnifyingBootloader *self = FU_UNIFYING_BOOTLOADER (device);
 	const FuUnifyingBootloaderRequest *payload;
@@ -212,7 +215,8 @@ fu_unifying_bootloader_texas_write_firmware (FuDevice *device, GBytes *fw, GErro
 static gboolean
 fu_unifying_bootloader_texas_setup (FuUnifyingBootloader *self, GError **error)
 {
-	fu_device_set_version (FU_DEVICE (self), "RQR24.00_B0000");
+	fu_device_set_version (FU_DEVICE (self), "RQR24.00_B0000",
+			       FWUPD_VERSION_FORMAT_PLAIN);
 	return TRUE;
 }
 

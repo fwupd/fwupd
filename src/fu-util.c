@@ -28,6 +28,10 @@
 #include "fu-util-common.h"
 #include "fwupd-common-private.h"
 
+#ifdef HAVE_SYSTEMD
+#include "fu-systemd.h"
+#endif
+
 /* custom return code */
 #define EXIT_NOTHING_TO_DO		2
 
@@ -351,7 +355,7 @@ fu_util_modify_remote_warning (FuUtilPrivate *priv, FwupdRemote *remote, GError 
 		return FALSE;
 
 	/* show and ask user to confirm */
-	g_print ("%s", warning_plain);
+	fu_util_warning_box (warning_plain, 80);
 	if (!priv->assume_yes) {
 		/* ask for permission */
 		g_print ("\n%s [Y|n]: ",
@@ -1887,12 +1891,7 @@ fu_util_update_by_id (FuUtilPrivate *priv, const gchar *device_id, GError **erro
 	}
 
 	/* the update needs the user to restart the computer */
-	if (fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT)) {
-		if (!fu_util_prompt_complete (FWUPD_DEVICE_FLAG_NEEDS_REBOOT, TRUE,
-					      error))
-			return FALSE;
-	}
-	return TRUE;
+	return fu_util_prompt_complete (priv->completion_flags, TRUE, error);
 }
 
 static gboolean
@@ -2100,6 +2099,32 @@ fu_util_get_approved_firmware (FuUtilPrivate *priv, gchar **values, GError **err
 	return TRUE;
 }
 
+static gboolean
+fu_util_modify_config (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	/* check args */
+	if (g_strv_length (values) != 2) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments: KEY VALUE expected");
+		return FALSE;
+	}
+	if (!fwupd_client_modify_config (priv->client,
+					 values[0], values[1],
+					 priv->cancellable,
+					 error))
+		return FALSE;
+	if (!priv->assume_yes) {
+		g_print ("%s\n [Y|n]: ",
+			/* TRANSLATORS: configuration changes only take effect on restart */
+			 _("Restart the daemon to make the change effective?"));
+		if (!fu_util_prompt_for_boolean (FALSE))
+			return TRUE;
+	}
+	return fu_systemd_unit_stop (fu_util_get_systemd_unit (), error);
+}
+
 static void
 fu_util_ignore_cb (const gchar *log_domain, GLogLevelFlags log_level,
 		   const gchar *message, gpointer user_data)
@@ -2130,6 +2155,28 @@ fu_util_private_free (FuUtilPrivate *priv)
 	g_object_unref (priv->progressbar);
 	g_option_context_free (priv->context);
 	g_free (priv);
+}
+
+static gboolean
+fu_util_check_daemon_version (FuUtilPrivate *priv, GError **error)
+{
+	g_autofree gchar *client = g_strdup_printf ("%i.%i.%i",
+						    FWUPD_MAJOR_VERSION,
+						    FWUPD_MINOR_VERSION,
+						    FWUPD_MICRO_VERSION);
+	const gchar *daemon = fwupd_client_get_daemon_version (priv->client);
+
+	if (g_strcmp0 (daemon, client) != 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     /* TRANSLATORS: error message */
+			     _("Unsupported daemon version %s, client version is %s"),
+			     daemon, client);
+		return FALSE;
+	}
+
+	return TRUE;
 }
 
 #pragma clang diagnostic push
@@ -2170,7 +2217,7 @@ main (int argc, char *argv[])
 			_("Allow downgrading firmware versions"), NULL },
 		{ "force", '\0', 0, G_OPTION_ARG_NONE, &force,
 			/* TRANSLATORS: command line option */
-			_("Override plugin warning"), NULL },
+			_("Override warnings and force the action"), NULL },
 		{ "assume-yes", 'y', 0, G_OPTION_ARG_NONE, &priv->assume_yes,
 			/* TRANSLATORS: command line option */
 			_("Answer yes to all questions"), NULL },
@@ -2359,6 +2406,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: firmware approved by the admin */
 		     _("Sets the list of approved firmware."),
 		     fu_util_set_approved_firmware);
+	fu_util_cmd_array_add (cmd_array,
+		     "modify-config",
+		     "KEY,VALUE",
+		     /* TRANSLATORS: sets something in daemon.conf */
+		     _("Modifies a daemon configuration value."),
+		     fu_util_modify_config);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();
@@ -2448,6 +2501,21 @@ main (int argc, char *argv[])
 		g_printerr ("WARNING: The daemon has loaded 3rd party code and "
 			    "is no longer supported by the upstream developers!\n");
 	}
+
+	/* check that we have at least this version daemon running */
+	if (!fu_util_check_daemon_version (priv, &error)) {
+		g_printerr ("%s\n", error->message);
+		return EXIT_FAILURE;
+	}
+
+#ifdef HAVE_SYSTEMD
+	/* make sure the correct daemon is in use */
+	if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
+	    !fu_util_using_correct_daemon (&error)) {
+		g_printerr ("%s\n", error->message);
+		return EXIT_FAILURE;
+	}
+#endif
 
 	/* run the specified command */
 	ret = fu_util_cmd_array_run (cmd_array, priv, argv[1], (gchar**) &argv[2], &error);

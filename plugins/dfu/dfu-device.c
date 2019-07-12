@@ -200,7 +200,7 @@ static gboolean
 dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data, GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
-	DfuFuncDescriptor desc;
+	DfuFuncDescriptor desc = { 0x0 };
 	const guint8 *buf;
 	gsize sz;
 
@@ -208,6 +208,10 @@ dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data, GError **err
 	buf = g_bytes_get_data (iface_data, &sz);
 	if (sz == sizeof(DfuFuncDescriptor)) {
 		memcpy (&desc, buf, sz);
+	} else if (sz > sizeof(DfuFuncDescriptor)) {
+		g_debug ("DFU interface with %" G_GSIZE_FORMAT " bytes vendor data",
+			 sz - sizeof(DfuFuncDescriptor));
+		memcpy (&desc, buf, sizeof(DfuFuncDescriptor));
 	} else if (sz == sizeof(DfuFuncDescriptor) - 2) {
 		g_warning ("truncated DFU interface data, no bcdDFUVersion");
 		memcpy (&desc, buf, sz);
@@ -224,16 +228,6 @@ dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data, GError **err
 			     "interface found, but not the correct length for "
 			     "functional data: %" G_GSIZE_FORMAT " bytes: %s",
 			     sz, bufstr->str);
-		return FALSE;
-	}
-
-	/* check sanity */
-	if (desc.bLength != sz) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_INVALID_DATA,
-			     "DFU interface data has incorrect length: 0x%02x",
-			     desc.bLength);
 		return FALSE;
 	}
 
@@ -1036,7 +1030,8 @@ dfu_device_refresh (DfuDevice *device, GError **error)
 	}
 
 	/* some devices use the wrong state value */
-	if (dfu_device_has_quirk (device, DFU_DEVICE_QUIRK_FORCE_DFU_MODE)) {
+	if (dfu_device_has_quirk (device, DFU_DEVICE_QUIRK_FORCE_DFU_MODE) &&
+	    dfu_device_get_state (device) != DFU_STATE_DFU_IDLE) {
 		g_debug ("quirking device into DFU mode");
 		dfu_device_set_state (device, DFU_STATE_DFU_IDLE);
 	} else {
@@ -1239,6 +1234,7 @@ dfu_device_detach (DfuDevice *device, GError **error)
 	}
 
 	/* success */
+	priv->force_version = 0x0;
 	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_IDLE);
 	return TRUE;
 }
@@ -1632,6 +1628,7 @@ dfu_device_attach (DfuDevice *device, GError **error)
 	}
 
 	/* success */
+	priv->force_version = 0x0;
 	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_IDLE);
 	return TRUE;
 }
