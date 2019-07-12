@@ -65,9 +65,12 @@ fu_plugin_flashrom_debug_cb (enum flashrom_log_level lvl, const char *fmt, va_li
 		g_warning ("%s", tmp);
 		break;
 	case FLASHROM_MSG_INFO:
+		g_debug ("%s", tmp);
+		break;
 	case FLASHROM_MSG_DEBUG:
 	case FLASHROM_MSG_DEBUG2:
-		g_debug ("%s", tmp);
+		if (g_getenv ("FWUPD_FLASHROM_VERBOSE") != NULL)
+			g_debug ("%s", tmp);
 		break;
 	case FLASHROM_MSG_SPEW:
 		break;
