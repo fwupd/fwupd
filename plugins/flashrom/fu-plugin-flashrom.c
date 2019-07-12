@@ -78,11 +78,44 @@ fu_plugin_flashrom_debug_cb (enum flashrom_log_level lvl, const char *fmt, va_li
 }
 
 gboolean
-fu_plugin_startup (FuPlugin *plugin, GError **error)
+fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
+	GPtrArray *hwids = fu_plugin_get_hwids (plugin);
+	g_autoptr(GPtrArray) devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 
-	/* probe hardware */
+	for (guint i = 0; i < hwids->len; i++) {
+		const gchar *guid = g_ptr_array_index (hwids, i);
+		const gchar *quirk_str;
+		g_autofree gchar *quirk_key_prefixed = NULL;
+		quirk_key_prefixed = g_strdup_printf ("HwId=%s", guid);
+		quirk_str = fu_plugin_lookup_quirk_by_id (plugin,
+							  quirk_key_prefixed,
+							  "DeviceId");
+		if (quirk_str != NULL) {
+			g_autofree gchar *device_id = g_strdup_printf ("flashrom-%s", quirk_str);
+			g_autoptr(FuDevice) dev = fu_device_new ();
+			fu_device_set_id (dev, device_id);
+			fu_device_set_quirks (dev, fu_plugin_get_quirks (plugin));
+			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
+			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
+			fu_device_set_name (dev, fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_PRODUCT_NAME));
+			fu_device_set_vendor (dev, fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER));
+			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ENSURE_SEMVER);
+			fu_device_set_version (dev,
+					       fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VERSION),
+					       FWUPD_VERSION_FORMAT_UNKNOWN);
+			fu_device_add_guid (dev, guid);
+			g_ptr_array_add (devices, g_steal_pointer (&dev));
+			break;
+		}
+	}
+
+	/* nothing to do, so don't bother initializing flashrom */
+	if (devices->len == 0)
+		return TRUE;
+
+	/* actually probe hardware to check for support */
 	if (flashrom_init (SELFCHECK_TRUE)) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -106,39 +139,19 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 		return FALSE;
 	}
 	data->flash_size = flashrom_flash_getsize (data->flashctx);
-	return TRUE;
-}
+	if (data->flash_size == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "flash size zero");
+		return FALSE;
+	}
 
-gboolean
-fu_plugin_coldplug (FuPlugin *plugin, GError **error)
-{
-	GPtrArray *hwids = fu_plugin_get_hwids (plugin);
-	for (guint i = 0; i < hwids->len; i++) {
-		const gchar *guid = g_ptr_array_index (hwids, i);
-		const gchar *quirk_str;
-		g_autofree gchar *quirk_key_prefixed = NULL;
-		quirk_key_prefixed = g_strdup_printf ("HwId=%s", guid);
-		quirk_str = fu_plugin_lookup_quirk_by_id (plugin,
-							  quirk_key_prefixed,
-							  "DeviceId");
-		if (quirk_str != NULL) {
-			g_autofree gchar *device_id = g_strdup_printf ("flashrom-%s", quirk_str);
-			g_autoptr(FuDevice) dev = fu_device_new ();
-			fu_device_set_id (dev, device_id);
-			fu_device_set_quirks (dev, fu_plugin_get_quirks (plugin));
-			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
-			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
-			fu_device_set_name (dev, fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_PRODUCT_NAME));
-			fu_device_set_vendor (dev, fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER));
-			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ENSURE_SEMVER);
-			fu_device_set_version (dev,
-					       fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VERSION),
-					       FWUPD_VERSION_FORMAT_UNKNOWN);
-			fu_device_add_guid (dev, guid);
-			fu_plugin_device_add (plugin, dev);
-			fu_plugin_cache_add (plugin, device_id, dev);
-			break;
-		}
+	/* add devices */
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *dev = g_ptr_array_index (devices, i);
+		fu_plugin_device_add (plugin, dev);
+		fu_plugin_cache_add (plugin, fu_device_get_id (dev), dev);
 	}
 	return TRUE;
 }
