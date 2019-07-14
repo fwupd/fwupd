@@ -93,7 +93,6 @@ gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	gboolean capsule_disable = FALSE;
-	gboolean password_present = FALSE;
 	g_autofree gchar *sysfsfwdir = NULL;
 	g_autofree gchar *esrtdir = NULL;
 
@@ -119,20 +118,9 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 			g_set_error_literal (error,
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_NOT_SUPPORTED,
-					     "UEFI firmware can be unlocked on next boot");
+					     "UEFI firmware will be unlocked on next boot");
 			return FALSE;
 		}
-	}
-
-	/* check the admin password isn't set */
-	if (!fu_plugin_dell_esrt_admin_password_present (&password_present, error))
-		return FALSE;
-	if (password_present) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "cannot be enabled as admin password set");
-		return FALSE;
 	}
 
 	return TRUE;
@@ -141,10 +129,28 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 gboolean
 fu_plugin_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
 {
+	gboolean password_present = FALSE;
+	/* check the admin password isn't set */
+	if (!fu_plugin_dell_esrt_admin_password_present (&password_present, error))
+		return FALSE;
+	if (password_present) {
+		const gchar *err_string = "Cannot be unlocked automatically as admin password set";
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     err_string);
+		fu_device_set_update_error (device, err_string);
+		return FALSE;
+	}
+
 	/* disabled in BIOS, but supported to be enabled via tool */
 	if (!fu_plugin_dell_esrt_query_token (CAPSULE_EN_TOKEN, NULL, error))
 		return FALSE;
-	return fu_plugin_dell_esrt_activate_token (CAPSULE_EN_TOKEN, error);
+	if (!fu_plugin_dell_esrt_activate_token (CAPSULE_EN_TOKEN, error))
+		return FALSE;
+	fu_device_set_update_error (device, NULL);
+
+	return TRUE;
 }
 
 gboolean
@@ -160,6 +166,8 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	fu_device_set_version (dev, "0", FWUPD_VERSION_FORMAT_NUMBER);
 	fu_device_add_icon (dev, "computer");
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_LOCKED);
+	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+	fu_device_set_update_error (dev, "Firmware updates disabled; run 'fwupdmgr unlock' to enable");
 	fu_plugin_device_add (plugin, dev);
 	return TRUE;
 }
