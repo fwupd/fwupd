@@ -1,0 +1,3 @@
+[suppress_type]
+  type_kind = enum
+  changed_enumerators = FWUPD_STATUS_LAST

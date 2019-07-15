@@ -1,5 +1,17 @@
 version: 2
 jobs:
+  check-abi:
+    machine:
+      image: circleci/classic:latest
+    steps:
+      - checkout
+      - run:
+          name: "Build container"
+          command: OS=debian-x86_64 ./contrib/ci/generate_docker.py
+      - run:
+          name: "Run build script"
+          command: docker run -t -v `pwd`:/build fwupd-debian-x86_64 ./contrib/ci/check-abi $(git describe --abbrev=0 --tags) $(git rev-parse HEAD)
+
   build-s390x:
     machine:
       image: circleci/classic:latest
@@ -60,6 +72,7 @@ workflows:
     jobs:
       - build-s390x
       - build-snap
+      - check-abi
       - publish-edge:
           requires:
             - build-snap
