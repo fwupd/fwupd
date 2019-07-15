@@ -11,6 +11,7 @@ meson .. \
 	-Dplugin_dell=false \
 	-Dplugin_modem_manager=false \
 	-Dplugin_synaptics=true \
+	-Dplugin_flashrom=true \
 	-Dintrospection=true \
 	-Dgtkdoc=true \
 	-Dpkcs7=false \
