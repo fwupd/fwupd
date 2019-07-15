@@ -1,3 +1,9 @@
+fwupd (1.2.10-1) unstable; urgency=medium
+
+  * New upstream version (1.2.10)
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Mon, 15 Jul 2019 13:58:47 -0500
+
 fwupd (1.2.9-1) unstable; urgency=medium
 
   * New upstream version (1.2.9)
