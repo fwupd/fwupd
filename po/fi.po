@@ -23,12 +23,24 @@ msgid_plural "%.0f minutes remaining"
 msgstr[0] "%.0f minuuttia jäljellä"
 msgstr[1] "%.0f minuuttia jäljellä"
 
+#. TRANSLATORS: ME stands for Management Engine, where
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Consumer ME Update"
+msgstr "%sKuluttajan ME-päivitys"
+
 #. TRANSLATORS: the controller is a device that has other devices
 #. * plugged into it, for example ThunderBolt, FireWire or USB,
 #. * the first %s is the device name, e.g. 'Intel ThunderBolt`
 #, c-format
 msgid "%s Controller Update"
 msgstr "%sOhjaimen päivitys"
+
+#. TRANSLATORS: ME stands for Management Engine (with Intel AMT),
+#. * where the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Corporate ME Update"
+msgstr "%sYrityksen ME-päivitys"
 
 #. TRANSLATORS: a specific part of hardware,
 #. * the first %s is the device name, e.g. 'Unifying Receiver`
@@ -689,6 +701,11 @@ msgstr "Metatietojen URI-allekirjoitus"
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "Metatiedot voidaan hankkia Linux Vendor Firmware -palvelusta."
 
+#. TRANSLATORS: error message
+#, c-format
+msgid "Mismatched daemon and client, use %s instead"
+msgstr "Virheellinen taustaprosessi ja asiakas, käytä sen sijaan %s"
+
 msgid "Mode"
 msgstr "Malli"
 
@@ -746,6 +763,10 @@ msgstr "Ohita plugin-varoitus"
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Ohita oletusarvoinen ESP-polku"
+
+#. TRANSLATORS: command line option
+msgid "Override warnings and force the action"
+msgstr "Ohita varoitukset ja pakota toiminto"
 
 #. TRANSLATORS: remote filename base
 msgid "Password"
@@ -1076,6 +1097,11 @@ msgstr "Avaa pääsy laitteen laiteohjelmistoon"
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"
 msgstr "Poista virheenkorjauksen lippu päivityksen aikana"
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "Unsupported daemon version %s, client version is %s"
+msgstr "Ei tuettu taustaprosessin versio %s, asiakasversio on %s"
 
 #. TRANSLATORS: section header for firmware checksum
 msgid "Update Checksum"

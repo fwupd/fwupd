@@ -2,7 +2,7 @@ fwupd Release Notes
 
 Write release entries:
 
-git log --format="%s" --cherry-pick --right-only 1.2.8... | grep -i -v trivial | grep -v Merge | sort | uniq
+git log --format="%s" --cherry-pick --right-only 1.2.9... | grep -i -v trivial | grep -v Merge | sort | uniq
 Add any user visible changes into ../data/org.freedesktop.fwupd.metainfo.xml
 appstream-util appdata-to-news ../data/org.freedesktop.fwupd.metainfo.xml > NEWS
 
@@ -11,13 +11,13 @@ Update translations:
 ninja-build fwupd-pot
 tx push --source
 tx pull --all --force --minimum-perc=5
-../contrib/fix_translations.py ../po
+ninja-build fix-translations
 git add ../po/*.po
 
 2. Commit changes to git:
 
 # MAKE SURE THIS IS CORRECT
-export release_ver="1.2.9"
+export release_ver="1.2.10"
 
 git commit -a -m "Release fwupd ${release_ver}"
 git tag -s -f -m "Release fwupd ${release_ver}" "${release_ver}"

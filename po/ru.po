@@ -25,12 +25,24 @@ msgstr[1] "Осталось %.0f минуты"
 msgstr[2] "Осталось %.0f минут"
 msgstr[3] "Осталось %.0f минут"
 
+#. TRANSLATORS: ME stands for Management Engine, where
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Consumer ME Update"
+msgstr "Обновление подсистемы Consumer МЕ устройства %s"
+
 #. TRANSLATORS: the controller is a device that has other devices
 #. * plugged into it, for example ThunderBolt, FireWire or USB,
 #. * the first %s is the device name, e.g. 'Intel ThunderBolt`
 #, c-format
 msgid "%s Controller Update"
 msgstr "Обновление контроллера %s"
+
+#. TRANSLATORS: ME stands for Management Engine (with Intel AMT),
+#. * where the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Corporate ME Update"
+msgstr "Обновление подсистемы Corporate МЕ устройства %s"
 
 #. TRANSLATORS: a specific part of hardware,
 #. * the first %s is the device name, e.g. 'Unifying Receiver`
@@ -48,7 +60,7 @@ msgstr "Обновление встроенного контроллера %s"
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s ME Update"
-msgstr "Обновление подсистемы ME устройства %s"
+msgstr "Обновление подсистемы МЕ устройства %s"
 
 #. TRANSLATORS: the entire system, e.g. all internal devices,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
@@ -703,6 +715,11 @@ msgstr "Подпись URI метаданных"
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "Метаданные можно получить в Linux Vendor Firmware Service."
 
+#. TRANSLATORS: error message
+#, c-format
+msgid "Mismatched daemon and client, use %s instead"
+msgstr "Несовместимые фоновая служба и клиент, используйте %s"
+
 msgid "Mode"
 msgstr "Режим"
 
@@ -760,6 +777,10 @@ msgstr "Переопределить предупреждение плагина
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Переопределить путь ESP по умолчанию"
+
+#. TRANSLATORS: command line option
+msgid "Override warnings and force the action"
+msgstr "Отменить предупреждения и выполнить действие"
 
 #. TRANSLATORS: remote filename base
 msgid "Password"
@@ -1090,6 +1111,11 @@ msgstr "Разблокировать устройство для доступа 
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"
 msgstr "Снять флаг отладки во время обновления"
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "Unsupported daemon version %s, client version is %s"
+msgstr "Неподдерживаемая фоновая служба версии %s, клиент версии %s"
 
 #. TRANSLATORS: section header for firmware checksum
 msgid "Update Checksum"

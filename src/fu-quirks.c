@@ -52,7 +52,7 @@ struct _FuQuirks
 	GObject			 parent_instance;
 	GPtrArray		*monitors;
 	GHashTable		*hash;	/* of group:{key:value} */
-	FuMutex			*hash_mutex;
+	GRWLock			 hash_mutex;
 };
 
 G_DEFINE_TYPE (FuQuirks, fu_quirks, G_TYPE_OBJECT)
@@ -124,7 +124,7 @@ fu_quirks_lookup_by_id (FuQuirks *self, const gchar *group, const gchar *key)
 {
 	GHashTable *kvs;
 	g_autofree gchar *group_key = NULL;
-	g_autoptr(FuMutexLocker) locker = fu_mutex_read_locker_new (self->hash_mutex);
+	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_reader_locker_new (&self->hash_mutex);
 
 	g_return_val_if_fail (FU_IS_QUIRKS (self), NULL);
 	g_return_val_if_fail (group != NULL, NULL);
@@ -154,7 +154,7 @@ gboolean
 fu_quirks_get_kvs_for_guid (FuQuirks *self, const gchar *guid, GHashTableIter *iter)
 {
 	GHashTable *kvs;
-	g_autoptr(FuMutexLocker) locker = fu_mutex_read_locker_new (self->hash_mutex);
+	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_reader_locker_new (&self->hash_mutex);
 	g_return_val_if_fail (locker != NULL, FALSE);
 	kvs = g_hash_table_lookup (self->hash, guid);
 	if (kvs == NULL)
@@ -203,7 +203,7 @@ fu_quirks_add_value (FuQuirks *self, const gchar *group, const gchar *key, const
 	const gchar *value_old;
 	g_autofree gchar *group_key = NULL;
 	g_autofree gchar *value_new = NULL;
-	g_autoptr(FuMutexLocker) locker = fu_mutex_write_locker_new (self->hash_mutex);
+	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_writer_locker_new (&self->hash_mutex);
 
 	g_return_if_fail (locker != NULL);
 
@@ -339,9 +339,9 @@ fu_quirks_load (FuQuirks *self, GError **error)
 
 	/* ensure empty in case we're called from a monitor change */
 	g_ptr_array_set_size (self->monitors, 0);
-	fu_mutex_write_lock (self->hash_mutex);
+	g_rw_lock_writer_lock (&self->hash_mutex);
 	g_hash_table_remove_all (self->hash);
-	fu_mutex_write_unlock (self->hash_mutex);
+	g_rw_lock_writer_unlock (&self->hash_mutex);
 
 	/* system datadir */
 	datadir = fu_common_get_path (FU_PATH_KIND_DATADIR_PKG);
@@ -369,7 +369,7 @@ fu_quirks_init (FuQuirks *self)
 {
 	self->monitors = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	self->hash = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, (GDestroyNotify) g_hash_table_unref);
-	self->hash_mutex = fu_mutex_new (G_OBJECT_TYPE_NAME(self), "hash");
+	g_rw_lock_init (&self->hash_mutex);
 }
 
 static void
@@ -377,7 +377,7 @@ fu_quirks_finalize (GObject *obj)
 {
 	FuQuirks *self = FU_QUIRKS (obj);
 	g_ptr_array_unref (self->monitors);
-	g_object_unref (self->hash_mutex);
+	g_rw_lock_clear (&self->hash_mutex);
 	g_hash_table_unref (self->hash);
 	G_OBJECT_CLASS (fu_quirks_parent_class)->finalize (obj);
 }

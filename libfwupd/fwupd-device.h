@@ -129,4 +129,7 @@ FwupdRelease	*fwupd_device_get_release_default	(FwupdDevice	*device);
 gint		 fwupd_device_compare			(FwupdDevice	*device1,
 							 FwupdDevice	*device2);
 
+FwupdDevice	*fwupd_device_from_variant		(GVariant	*value);
+GPtrArray	*fwupd_device_array_from_variant	(GVariant	*value);
+
 G_END_DECLS

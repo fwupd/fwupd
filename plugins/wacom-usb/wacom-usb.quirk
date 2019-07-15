@@ -1,24 +1,4 @@
 
-# Intuos Pro medium (2nd-gen BT) [PTH-660]
-[DeviceInstanceId=USB\VID_056A&PID_0360]
-Plugin = wacom_usb
-Flags = use-runtime-version
-
-# Intuos Pro large (2nd-gen BT) [PTH-860]
-[DeviceInstanceId=USB\VID_056A&PID_0361]
-Plugin = wacom_usb
-Flags = use-runtime-version
-
-# Intuos BT S (3rd-gen BT) [CTL-4100WL]
-[DeviceInstanceId=USB\VID_056A&PID_0377]
-Plugin = wacom_usb
-Flags = use-runtime-version
-
-# Intuos BT M (3rd-gen BT) [CTL-6100WL]
-[DeviceInstanceId=USB\VID_056A&PID_0379]
-Plugin = wacom_usb
-Flags = use-runtime-version
-
 # Intuos Pro medium (2nd-gen USB) [PTH-660]
 [DeviceInstanceId=USB\VID_056A&PID_0357]
 Plugin = wacom_usb
@@ -51,8 +31,4 @@ Flags = use-runtime-version
 
 # Intuos Pro Small (2nd-gen USB) [PTH-460]
 [DeviceInstanceId=USB\VID_056A&PID_0392]
-Plugin = wacom_usb
-
-# Intuos Pro Small (2nd-gen Bluetooth) [PTH-460]
-[DeviceInstanceId=USB\VID_056A&PID_0393]
 Plugin = wacom_usb

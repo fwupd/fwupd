@@ -19,7 +19,7 @@ struct _FuIdle
 {
 	GObject			 parent_instance;
 	GPtrArray		*items;	/* of FuIdleItem */
-	FuMutex			*items_mutex;
+	GRWLock			 items_mutex;
 	guint			 idle_id;
 	guint			 timeout;
 	FwupdStatus		 status;
@@ -118,7 +118,7 @@ fu_idle_reset (FuIdle *self)
 void
 fu_idle_uninhibit (FuIdle *self, guint32 token)
 {
-	g_autoptr(FuMutexLocker) locker = fu_mutex_write_locker_new (self->items_mutex);
+	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_writer_locker_new (&self->items_mutex);
 
 	g_return_if_fail (FU_IS_IDLE (self));
 	g_return_if_fail (token != 0);
@@ -139,7 +139,7 @@ guint32
 fu_idle_inhibit (FuIdle *self, const gchar *reason)
 {
 	FuIdleItem *item;
-	g_autoptr(FuMutexLocker) locker = fu_mutex_write_locker_new (self->items_mutex);
+	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_writer_locker_new (&self->items_mutex);
 
 	g_return_val_if_fail (FU_IS_IDLE (self), 0);
 	g_return_val_if_fail (reason != NULL, 0);
@@ -213,7 +213,7 @@ fu_idle_init (FuIdle *self)
 {
 	self->status = FWUPD_STATUS_IDLE;
 	self->items = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_idle_item_free);
-	self->items_mutex = fu_mutex_new (G_OBJECT_TYPE_NAME(self), "items");
+	g_rw_lock_init (&self->items_mutex);
 }
 
 static void
@@ -223,7 +223,7 @@ fu_idle_finalize (GObject *obj)
 
 	fu_idle_stop (self);
 	g_ptr_array_unref (self->items);
-	g_object_unref (self->items_mutex);
+	g_rw_lock_clear (&self->items_mutex);
 
 	G_OBJECT_CLASS (fu_idle_parent_class)->finalize (obj);
 }

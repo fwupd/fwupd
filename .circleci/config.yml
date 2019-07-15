@@ -66,6 +66,14 @@ workflows:
           filters:
             branches:
               only: master
+  deploy:
+    jobs:
+      - build-snap:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^\d+\.\d+\.\d+$/
       - publish-stable:
           requires:
             - build-snap
@@ -74,4 +82,3 @@ workflows:
               ignore: /.*/
             tags:
               only: /^\d+\.\d+\.\d+$/
-

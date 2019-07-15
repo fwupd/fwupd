@@ -456,8 +456,7 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_autofree gchar *tmp = NULL;
 		FwupdDevice *dev = g_ptr_array_index (devs, i);
 		if (!priv->show_all_devices) {
-			if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE) &&
-			    !fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
+			if (!fu_util_is_interesting_device (dev))
 				continue;
 		}
 		tmp = fwupd_device_to_string (dev);
@@ -1407,7 +1406,15 @@ fu_util_unlock (FuUtilPrivate *priv, gchar **values, GError **error)
 	if (dev == NULL)
 		return FALSE;
 
-	return fwupd_client_unlock (priv->client, fwupd_device_get_id (dev), NULL, error);
+	if (fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN))
+		priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN;
+	if (fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
+		priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
+
+	if (!fwupd_client_unlock (priv->client, fwupd_device_get_id (dev), NULL, error))
+		return FALSE;
+
+	return fu_util_prompt_complete (priv->completion_flags, TRUE, error);
 }
 
 static gboolean
@@ -2122,7 +2129,11 @@ fu_util_modify_config (FuUtilPrivate *priv, gchar **values, GError **error)
 		if (!fu_util_prompt_for_boolean (FALSE))
 			return TRUE;
 	}
-	return fu_systemd_unit_stop (fu_util_get_systemd_unit (), error);
+#ifdef HAVE_SYSTEMD
+	if (!fu_systemd_unit_stop (fu_util_get_systemd_unit (), error))
+		return FALSE;
+#endif
+	return TRUE;
 }
 
 static void
@@ -2173,6 +2184,24 @@ fu_util_check_daemon_version (FuUtilPrivate *priv, GError **error)
 			     /* TRANSLATORS: error message */
 			     _("Unsupported daemon version %s, client version is %s"),
 			     daemon, client);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
+fu_util_check_polkit_actions (GError **error)
+{
+	g_autofree gchar *directory = fu_common_get_path (FU_PATH_KIND_POLKIT_ACTIONS);
+	g_autofree gchar *filename = g_build_filename (directory,
+						       "org.freedesktop.fwupd.policy",
+						       NULL);
+	if (!g_file_test (filename, G_FILE_TEST_IS_REGULAR)) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_AUTH_FAILED,
+				     "PolicyKit files are missing, see https://github.com/hughsie/fwupd/wiki/PolicyKit-files-are-missing");
 		return FALSE;
 	}
 
@@ -2516,6 +2545,12 @@ main (int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 #endif
+
+	/* make sure polkit actions were installed */
+	if (!fu_util_check_polkit_actions (&error)) {
+		g_printerr ("%s\n", error->message);
+		return EXIT_FAILURE;
+	}
 
 	/* run the specified command */
 	ret = fu_util_cmd_array_run (cmd_array, priv, argv[1], (gchar**) &argv[2], &error);

@@ -11,7 +11,7 @@ ifeq "$(DEB_HOST_ARCH_BITS)" "32"
 endif
 
 ifneq ($(CI),)
-	export CI=--werror
+	export CI=--werror --wrap-mode=default
 endif
 
 regenerate_control:
@@ -47,7 +47,12 @@ override_dh_auto_configure:
 	else \
 		export UEFI="-Dplugin_uefi=false -Dplugin_redfish=false -Dplugin_nvme=false"; \
 	fi; \
-	dh_auto_configure -- $$UEFI $$DELL $$CI -Dplugin_dummy=true --libexecdir=/usr/lib
+	if [ ! -z "$$CI" ]; then \
+		export FLASHROM="-Dplugin_flashrom=true"; \
+	else \
+		export FLASHROM="-Dplugin_flashrom=false"; \
+	fi; \
+	dh_auto_configure -- $$UEFI $$DELL $$FLASHROM $$CI -Dplugin_dummy=true --libexecdir=/usr/lib
 
 override_dh_install:
 	find debian/tmp/usr -type f -name "*a" -print | xargs rm -f
@@ -59,8 +64,11 @@ override_dh_install:
 		dh_install -pfwupd usr/lib/fwupd/fwupdate; \
 	fi
 	#if build with meson subproject in CI need to install this too
-	if [ -n "$CI" ] && [ -f debian/tmp/usr/lib/xb-tool ]; then \
+	if [ ! -z "$$CI" ] && [ -f debian/tmp/usr/lib/xb-tool ]; then \
 		dh_install -pfwupd usr/lib/xb-tool ;\
+	fi
+	if [ ! -z "$$CI" ] && [ -f debian/tmp/usr/sbin/flashrom ]; then \
+		dh_install -pfwupd usr/sbin/flashrom ;\
 	fi
 	dh_missing -a --fail-missing
 

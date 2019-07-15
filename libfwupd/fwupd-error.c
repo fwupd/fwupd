@@ -65,6 +65,8 @@ fwupd_error_to_string (FwupdError error)
 		return FWUPD_DBUS_INTERFACE ".PermissionDenied";
 	if (error == FWUPD_ERROR_BROKEN_SYSTEM)
 		return FWUPD_DBUS_INTERFACE ".BrokenSystem";
+	if (error == FWUPD_ERROR_BATTERY_LEVEL_TOO_LOW)
+		return FWUPD_DBUS_INTERFACE ".BatteryLevelTooLow";
 	return NULL;
 }
 
@@ -111,6 +113,8 @@ fwupd_error_from_string (const gchar *error)
 		return FWUPD_ERROR_PERMISSION_DENIED;
 	if (g_strcmp0 (error, FWUPD_DBUS_INTERFACE ".BrokenSystem") == 0)
 		return FWUPD_ERROR_BROKEN_SYSTEM;
+	if (g_strcmp0 (error, FWUPD_DBUS_INTERFACE ".BatteryLevelTooLow") == 0)
+		return FWUPD_ERROR_BATTERY_LEVEL_TOO_LOW;
 	return FWUPD_ERROR_LAST;
 }
 

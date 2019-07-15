@@ -103,11 +103,10 @@ fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_si
 	g_autofree guint8 *var_data = NULL;
 
 	while ((rc = efi_get_next_variable_name (&guid, &name)) > 0) {
+		const gchar *desc;
 		gint div, mod;
 		gint scanned = 0;
-		gssize sz;
 		guint16 entry = 0;
-		efidp found_dp;
 		g_autofree guint8 *var_data_tmp = NULL;
 
 		if (efi_guid_cmp (guid, &efi_guid_global) != 0)
@@ -142,24 +141,10 @@ fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_si
 			continue;
 		}
 
-		sz = efi_loadopt_pathlen(loadopt, var_data_size);
-		if (sz != efidp_size((efidp)dp_buf)) {
-			g_debug ("pathlen device path doesn't match");
-			continue;
-		}
-
-		found_dp = efi_loadopt_path (loadopt, var_data_size);
-		if (memcmp (found_dp, dp_buf, sz)) {
-			g_debug ("found_dp/dp_buf device path doesn't match");
-		}
-
-		if ((gssize)var_data_size != opt_size) {
-			g_debug ("variable data doesn't match");
-			continue;
-		}
-
-		if (memcmp (loadopt, opt, opt_size)) {
-			g_debug ("load option doesn't match");
+		desc = (const gchar *) efi_loadopt_desc (loadopt, var_data_size);
+		if (g_strcmp0 (desc, "Linux Firmware Updater") != 0 &&
+		    g_strcmp0 (desc, "Linux-Firmware-Updater") != 0) {
+			g_debug ("description does not match");
 			continue;
 		}
 

@@ -252,88 +252,6 @@ fwupd_client_connect (FwupdClient *client, GCancellable *cancellable, GError **e
 	return TRUE;
 }
 
-static GPtrArray *
-fwupd_client_parse_releases_from_variant (GVariant *val)
-{
-	GPtrArray *array = NULL;
-	gsize sz;
-	g_autoptr(GVariant) untuple = NULL;
-
-	array = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	untuple = g_variant_get_child_value (val, 0);
-	sz = g_variant_n_children (untuple);
-	for (guint i = 0; i < sz; i++) {
-		FwupdRelease *rel;
-		g_autoptr(GVariant) data = NULL;
-		data = g_variant_get_child_value (untuple, i);
-		rel = fwupd_release_from_variant (data);
-		if (rel == NULL)
-			continue;
-		g_ptr_array_add (array, rel);
-	}
-	return array;
-}
-
-static GPtrArray *
-fwupd_client_parse_devices_from_variant (GVariant *val)
-{
-	GPtrArray *array = NULL;
-	gsize sz;
-	g_autoptr(GVariant) untuple = NULL;
-	g_autoptr(GHashTable) devices_by_id = NULL;
-
-	array = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	devices_by_id = g_hash_table_new (g_str_hash, g_str_equal);
-	untuple = g_variant_get_child_value (val, 0);
-	sz = g_variant_n_children (untuple);
-	for (guint i = 0; i < sz; i++) {
-		FwupdDevice *dev;
-		g_autoptr(GVariant) data = NULL;
-		data = g_variant_get_child_value (untuple, i);
-		dev = fwupd_device_from_variant (data);
-		if (dev == NULL)
-			continue;
-		g_ptr_array_add (array, dev);
-		if (fwupd_device_get_id (dev) != NULL) {
-			g_hash_table_insert (devices_by_id,
-					     (gpointer) fwupd_device_get_id (dev),
-					     (gpointer) dev);
-		}
-	}
-
-	/* set the parent on each child */
-	for (guint i = 0; i < array->len; i++) {
-		FwupdDevice *dev = g_ptr_array_index (array, i);
-		const gchar *parent_id = fwupd_device_get_parent_id (dev);
-		if (parent_id != NULL) {
-			FwupdDevice *dev_tmp;
-			dev_tmp = g_hash_table_lookup (devices_by_id, parent_id);
-			fwupd_device_set_parent (dev, dev_tmp);
-		}
-	}
-
-	return array;
-}
-
-static GPtrArray *
-fwupd_client_parse_remotes_from_data (GVariant *devices)
-{
-	GPtrArray *remotes = NULL;
-	gsize sz;
-	g_autoptr(GVariant) untuple = NULL;
-
-	remotes = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	untuple = g_variant_get_child_value (devices, 0);
-	sz = g_variant_n_children (untuple);
-	for (guint i = 0; i < sz; i++) {
-		g_autoptr(GVariant) data = g_variant_get_child_value (untuple, i);
-		FwupdRemote *remote = fwupd_remote_from_variant (data);
-		g_ptr_array_add (remotes, remote);
-	}
-
-	return remotes;
-}
-
 static void
 fwupd_client_fixup_dbus_error (GError *error)
 {
@@ -406,7 +324,7 @@ fwupd_client_get_devices (FwupdClient *client, GCancellable *cancellable, GError
 			fwupd_client_fixup_dbus_error (*error);
 		return NULL;
 	}
-	return fwupd_client_parse_devices_from_variant (val);
+	return fwupd_device_array_from_variant (val);
 }
 
 /**
@@ -448,7 +366,7 @@ fwupd_client_get_history (FwupdClient *client, GCancellable *cancellable, GError
 			fwupd_client_fixup_dbus_error (*error);
 		return NULL;
 	}
-	return fwupd_client_parse_devices_from_variant (val);
+	return fwupd_device_array_from_variant (val);
 }
 
 /**
@@ -537,7 +455,7 @@ fwupd_client_get_releases (FwupdClient *client, const gchar *device_id,
 			fwupd_client_fixup_dbus_error (*error);
 		return NULL;
 	}
-	return fwupd_client_parse_releases_from_variant (val);
+	return fwupd_release_array_from_variant (val);
 }
 
 /**
@@ -582,7 +500,7 @@ fwupd_client_get_downgrades (FwupdClient *client, const gchar *device_id,
 			fwupd_client_fixup_dbus_error (*error);
 		return NULL;
 	}
-	return fwupd_client_parse_releases_from_variant (val);
+	return fwupd_release_array_from_variant (val);
 }
 
 /**
@@ -627,7 +545,7 @@ fwupd_client_get_upgrades (FwupdClient *client, const gchar *device_id,
 			fwupd_client_fixup_dbus_error (*error);
 		return NULL;
 	}
-	return fwupd_client_parse_releases_from_variant (val);
+	return fwupd_release_array_from_variant (val);
 }
 
 static void
@@ -1193,7 +1111,7 @@ fwupd_client_get_details (FwupdClient *client, const gchar *filename,
 	}
 
 	/* return results */
-	return fwupd_client_parse_devices_from_variant (helper->val);
+	return fwupd_device_array_from_variant (helper->val);
 }
 
 /**
@@ -1410,7 +1328,7 @@ fwupd_client_get_remotes (FwupdClient *client, GCancellable *cancellable, GError
 			fwupd_client_fixup_dbus_error (*error);
 		return NULL;
 	}
-	return fwupd_client_parse_remotes_from_data (val);
+	return fwupd_remote_array_from_variant (val);
 }
 
 /**

@@ -255,6 +255,7 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(GError) error_vid = NULL;
 	g_autoptr(GError) error_did = NULL;
+	g_autoptr(GError) error_setup = NULL;
 
 	uuid = g_udev_device_get_sysfs_attr (device, "unique_id");
 	if (uuid == NULL) {
@@ -377,7 +378,10 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 
 	/* we never open the device, so convert the instance IDs */
-	fu_device_setup (dev, NULL);
+	if (!fu_device_setup (dev, &error_setup)) {
+		g_warning ("failed to setup: %s", error_setup->message);
+		return;
+	}
 	fu_plugin_cache_add (plugin, id, dev);
 	fu_plugin_device_add (plugin, dev);
 
@@ -503,7 +507,7 @@ fu_plugin_thunderbolt_trigger_update (GUdevDevice  *udevice,
 		if (n < 1 && errno != EINTR) {
 			g_set_error (error, G_IO_ERROR,
 				     g_io_error_from_errno (errno),
-				     "could write to 'nvm_authenticate': %s",
+				     "could not write to 'nvm_authenticate': %s",
 				     g_strerror (errno));
 			(void) close (fd);
 			return FALSE;
@@ -514,7 +518,7 @@ fu_plugin_thunderbolt_trigger_update (GUdevDevice  *udevice,
 	if (r < 0 && errno != EINTR) {
 		g_set_error (error, G_IO_ERROR,
 			     g_io_error_from_errno (errno),
-			     "could close 'nvm_authenticate': %s",
+			     "could not close 'nvm_authenticate': %s",
 			     g_strerror (errno));
 		return FALSE;
 	}

@@ -1660,6 +1660,9 @@ fu_engine_install (FuEngine *self,
 				     FWUPD_ERROR_AC_POWER_REQUIRED) ||
 		    g_error_matches (error_local,
 				     FWUPD_ERROR,
+				     FWUPD_ERROR_BATTERY_LEVEL_TOO_LOW) ||
+		    g_error_matches (error_local,
+				     FWUPD_ERROR,
 				     FWUPD_ERROR_BROKEN_SYSTEM)) {
 			fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED_TRANSIENT);
 		} else {

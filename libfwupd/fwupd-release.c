@@ -1529,35 +1529,67 @@ fwupd_release_set_from_variant_iter (FwupdRelease *release, GVariantIter *iter)
 
 /**
  * fwupd_release_from_variant:
- * @data: a #GVariant
+ * @value: a #GVariant
  *
  * Creates a new release using packed data.
  *
- * Returns: (transfer full): a new #FwupdRelease, or %NULL if @data was invalid
+ * Returns: (transfer full): a new #FwupdRelease, or %NULL if @value was invalid
  *
  * Since: 1.0.0
  **/
 FwupdRelease *
-fwupd_release_from_variant (GVariant *data)
+fwupd_release_from_variant (GVariant *value)
 {
 	FwupdRelease *rel = NULL;
 	const gchar *type_string;
 	g_autoptr(GVariantIter) iter = NULL;
 
 	/* format from GetDetails */
-	type_string = g_variant_get_type_string (data);
+	type_string = g_variant_get_type_string (value);
 	if (g_strcmp0 (type_string, "(a{sv})") == 0) {
 		rel = fwupd_release_new ();
-		g_variant_get (data, "(a{sv})", &iter);
+		g_variant_get (value, "(a{sv})", &iter);
 		fwupd_release_set_from_variant_iter (rel, iter);
 	} else if (g_strcmp0 (type_string, "a{sv}") == 0) {
 		rel = fwupd_release_new ();
-		g_variant_get (data, "a{sv}", &iter);
+		g_variant_get (value, "a{sv}", &iter);
 		fwupd_release_set_from_variant_iter (rel, iter);
 	} else {
 		g_warning ("type %s not known", type_string);
 	}
 	return rel;
+}
+
+/**
+ * fwupd_release_array_from_variant:
+ * @value: a #GVariant
+ *
+ * Creates an array of new releases using packed data.
+ *
+ * Returns: (transfer container) (element-type FwupdRelease): releases, or %NULL if @value was invalid
+ *
+ * Since: 1.2.10
+ **/
+GPtrArray *
+fwupd_release_array_from_variant (GVariant *value)
+{
+	GPtrArray *array = NULL;
+	gsize sz;
+	g_autoptr(GVariant) untuple = NULL;
+
+	array = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	untuple = g_variant_get_child_value (value, 0);
+	sz = g_variant_n_children (untuple);
+	for (guint i = 0; i < sz; i++) {
+		FwupdRelease *rel;
+		g_autoptr(GVariant) data = NULL;
+		data = g_variant_get_child_value (untuple, i);
+		rel = fwupd_release_from_variant (data);
+		if (rel == NULL)
+			continue;
+		g_ptr_array_add (array, rel);
+	}
+	return array;
 }
 
 /**

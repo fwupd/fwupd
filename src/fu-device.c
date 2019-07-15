@@ -38,9 +38,9 @@ typedef struct {
 	FuDevice			*parent;	/* noref */
 	FuQuirks			*quirks;
 	GHashTable			*metadata;
-	FuMutex				*metadata_mutex;
+	GRWLock				 metadata_mutex;
 	GPtrArray			*parent_guids;
-	FuMutex				*parent_guids_mutex;
+	GRWLock				 parent_guids_mutex;
 	GPtrArray			*children;
 	guint				 remove_delay;	/* ms */
 	FwupdStatus			 status;
@@ -212,6 +212,7 @@ guint
 fu_device_get_order (FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_DEVICE (self), 0);
 	return priv->order;
 }
 
@@ -229,6 +230,7 @@ void
 fu_device_set_order (FuDevice *self, guint order)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_DEVICE (self));
 	priv->order = order;
 }
 
@@ -246,6 +248,7 @@ guint
 fu_device_get_priority (FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_DEVICE (self), 0);
 	return priv->priority;
 }
 
@@ -262,6 +265,7 @@ void
 fu_device_set_priority (FuDevice *self, guint priority)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_DEVICE (self));
 	priv->priority = priority;
 }
 
@@ -393,6 +397,8 @@ fu_device_set_parent (FuDevice *self, FuDevice *parent)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 
+	g_return_if_fail (FU_IS_DEVICE (self));
+
 	g_object_add_weak_pointer (G_OBJECT (parent), (gpointer *) &priv->parent);
 	priv->parent = parent;
 
@@ -489,7 +495,7 @@ GPtrArray *
 fu_device_get_parent_guids (FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
-	g_autoptr(FuMutexLocker) locker = fu_mutex_read_locker_new (priv->parent_guids_mutex);
+	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_reader_locker_new (&priv->parent_guids_mutex);
 	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
 	g_return_val_if_fail (locker != NULL, NULL);
 	return priv->parent_guids;
@@ -510,7 +516,7 @@ gboolean
 fu_device_has_parent_guid (FuDevice *self, const gchar *guid)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
-	g_autoptr(FuMutexLocker) locker = fu_mutex_read_locker_new (priv->parent_guids_mutex);
+	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_reader_locker_new (&priv->parent_guids_mutex);
 	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
 	g_return_val_if_fail (locker != NULL, FALSE);
 	for (guint i = 0; i < priv->parent_guids->len; i++) {
@@ -541,7 +547,8 @@ void
 fu_device_add_parent_guid (FuDevice *self, const gchar *guid)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
-	g_autoptr(FuMutexLocker) locker = NULL;
+	g_autoptr(GRWLockReaderLocker) locker = NULL;
+
 	g_return_if_fail (FU_IS_DEVICE (self));
 	g_return_if_fail (guid != NULL);
 
@@ -558,7 +565,7 @@ fu_device_add_parent_guid (FuDevice *self, const gchar *guid)
 	/* already valid */
 	if (fu_device_has_parent_guid (self, guid))
 		return;
-	locker = fu_mutex_write_locker_new (priv->parent_guids_mutex);
+	locker = g_rw_lock_writer_locker_new (&priv->parent_guids_mutex);
 	g_return_if_fail (locker != NULL);
 	g_ptr_array_add (priv->parent_guids, g_strdup (guid));
 }
@@ -852,6 +859,9 @@ fu_device_add_guid_safe (FuDevice *self, const gchar *guid)
 gboolean
 fu_device_has_guid (FuDevice *self, const gchar *guid)
 {
+	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
+	g_return_val_if_fail (guid != NULL, FALSE);
+
 	/* make valid */
 	if (!fwupd_guid_is_valid (guid)) {
 		g_autofree gchar *tmp = fwupd_guid_hash_string (guid);
@@ -916,6 +926,8 @@ fu_device_add_instance_id (FuDevice *self, const gchar *instance_id)
 void
 fu_device_add_guid (FuDevice *self, const gchar *guid)
 {
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_return_if_fail (guid != NULL);
 	if (!fwupd_guid_is_valid (guid)) {
 		fu_device_add_instance_id (self, guid);
 		return;
@@ -940,6 +952,9 @@ fu_device_add_guid (FuDevice *self, const gchar *guid)
 void
 fu_device_add_counterpart_guid (FuDevice *self, const gchar *guid)
 {
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_return_if_fail (guid != NULL);
+
 	/* make valid */
 	if (!fwupd_guid_is_valid (guid)) {
 		g_autofree gchar *tmp = fwupd_guid_hash_string (guid);
@@ -965,8 +980,13 @@ fu_device_add_counterpart_guid (FuDevice *self, const gchar *guid)
 gchar *
 fu_device_get_guids_as_str (FuDevice *self)
 {
-	GPtrArray *guids = fu_device_get_guids (self);
-	g_autofree gchar **tmp = g_new0 (gchar *, guids->len + 1);
+	GPtrArray *guids;
+	g_autofree gchar **tmp = NULL;
+
+	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
+
+	guids = fu_device_get_guids (self);
+	tmp = g_new0 (gchar *, guids->len + 1);
 	for (guint i = 0; i < guids->len; i++)
 		tmp[i] = g_ptr_array_index (guids, i);
 	return g_strjoinv (",", tmp);
@@ -987,7 +1007,7 @@ const gchar *
 fu_device_get_metadata (FuDevice *self, const gchar *key)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
-	g_autoptr(FuMutexLocker) locker = fu_mutex_read_locker_new (priv->metadata_mutex);
+	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_reader_locker_new (&priv->metadata_mutex);
 	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
 	g_return_val_if_fail (key != NULL, NULL);
 	g_return_val_if_fail (locker != NULL, NULL);
@@ -1010,10 +1030,12 @@ fu_device_get_metadata_boolean (FuDevice *self, const gchar *key)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	const gchar *tmp;
-	g_autoptr(FuMutexLocker) locker = fu_mutex_read_locker_new (priv->metadata_mutex);
+	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_reader_locker_new (&priv->metadata_mutex);
+
 	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
 	g_return_val_if_fail (key != NULL, FALSE);
 	g_return_val_if_fail (locker != NULL, FALSE);
+
 	tmp = g_hash_table_lookup (priv->metadata, key);
 	if (tmp == NULL)
 		return FALSE;
@@ -1038,7 +1060,7 @@ fu_device_get_metadata_integer (FuDevice *self, const gchar *key)
 	const gchar *tmp;
 	gchar *endptr = NULL;
 	guint64 val;
-	g_autoptr(FuMutexLocker) locker = fu_mutex_read_locker_new (priv->metadata_mutex);
+	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_reader_locker_new (&priv->metadata_mutex);
 
 	g_return_val_if_fail (FU_IS_DEVICE (self), G_MAXUINT);
 	g_return_val_if_fail (key != NULL, G_MAXUINT);
@@ -1069,7 +1091,7 @@ void
 fu_device_set_metadata (FuDevice *self, const gchar *key, const gchar *value)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
-	g_autoptr(FuMutexLocker) locker = fu_mutex_write_locker_new (priv->metadata_mutex);
+	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_writer_locker_new (&priv->metadata_mutex);
 	g_return_if_fail (FU_IS_DEVICE (self));
 	g_return_if_fail (key != NULL);
 	g_return_if_fail (value != NULL);
@@ -1091,6 +1113,9 @@ fu_device_set_metadata (FuDevice *self, const gchar *key, const gchar *value)
 void
 fu_device_set_metadata_boolean (FuDevice *self, const gchar *key, gboolean value)
 {
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_return_if_fail (key != NULL);
+
 	fu_device_set_metadata (self, key, value ? "true" : "false");
 }
 
@@ -1109,6 +1134,10 @@ void
 fu_device_set_metadata_integer (FuDevice *self, const gchar *key, guint value)
 {
 	g_autofree gchar *tmp = g_strdup_printf ("%u", value);
+
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_return_if_fail (key != NULL);
+
 	fu_device_set_metadata (self, key, tmp);
 }
 
@@ -1125,6 +1154,9 @@ void
 fu_device_set_name (FuDevice *self, const gchar *value)
 {
 	g_autoptr(GString) new = g_string_new (value);
+
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_return_if_fail (value != NULL);
 
 	/* overwriting? */
 	if (g_strcmp0 (value, fu_device_get_name (self)) == 0) {
@@ -1235,6 +1267,9 @@ gboolean
 fu_device_ensure_id (FuDevice *self, GError **error)
 {
 	g_autofree gchar *device_id = NULL;
+
+	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* already set */
 	if (fu_device_get_id (self) != NULL)
@@ -1581,6 +1616,7 @@ void
 fu_device_set_progress_full (FuDevice *self, gsize progress_done, gsize progress_total)
 {
 	gdouble percentage = 0.f;
+	g_return_if_fail (FU_IS_DEVICE (self));
 	if (progress_total > 0)
 		percentage = (100.f * (gdouble) progress_done) / (gdouble) progress_total;
 	fu_device_set_progress (self, (guint) percentage);
@@ -1604,7 +1640,7 @@ fu_device_to_string (FuDevice *self)
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	GString *str = g_string_new ("");
 	g_autofree gchar *tmp = NULL;
-	g_autoptr(FuMutexLocker) locker = fu_mutex_read_locker_new (priv->metadata_mutex);
+	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_reader_locker_new (&priv->metadata_mutex);
 	g_autoptr(GList) keys = NULL;
 
 	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
@@ -1691,6 +1727,7 @@ FwupdRelease *
 fu_device_get_release_default (FuDevice *self)
 {
 	g_autoptr(FwupdRelease) rel = NULL;
+	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
 	if (fwupd_device_get_release_default (FWUPD_DEVICE (self)) != NULL)
 		return fwupd_device_get_release_default (FWUPD_DEVICE (self));
 	rel = fwupd_release_new ();
@@ -2200,11 +2237,11 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 		fu_device_set_equivalent_id (self, fu_device_get_equivalent_id (donor));
 	if (priv->quirks == NULL)
 		fu_device_set_quirks (self, fu_device_get_quirks (donor));
-	fu_mutex_read_lock (priv_donor->parent_guids_mutex);
+	g_rw_lock_reader_lock (&priv_donor->parent_guids_mutex);
 	for (guint i = 0; i < parent_guids->len; i++)
 		fu_device_add_parent_guid (self, g_ptr_array_index (parent_guids, i));
-	fu_mutex_read_unlock (priv_donor->parent_guids_mutex);
-	fu_mutex_read_lock (priv_donor->metadata_mutex);
+	g_rw_lock_reader_unlock (&priv_donor->parent_guids_mutex);
+	g_rw_lock_reader_lock (&priv_donor->metadata_mutex);
 	metadata_keys = g_hash_table_get_keys (priv_donor->metadata);
 	for (GList *l = metadata_keys; l != NULL; l = l->next) {
 		const gchar *key = l->data;
@@ -2213,7 +2250,7 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 			fu_device_set_metadata (self, key, value);
 		}
 	}
-	fu_mutex_read_unlock (priv_donor->metadata_mutex);
+	g_rw_lock_reader_unlock (&priv_donor->metadata_mutex);
 
 	/* now the base class, where all the interesting bits are */
 	fwupd_device_incorporate (FWUPD_DEVICE (self), FWUPD_DEVICE (donor));
@@ -2233,12 +2270,14 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
  * Since: 1.2.4
  **/
 void
-fu_device_incorporate_from_component (FuDevice *device, XbNode *component)
+fu_device_incorporate_from_component (FuDevice *self, XbNode *component)
 {
 	const gchar *tmp;
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_return_if_fail (XB_IS_NODE (component));
 	tmp = xb_node_query_text (component, "custom/value[@key='LVFS::UpdateMessage']", NULL);
 	if (tmp != NULL)
-		fwupd_device_set_update_message (FWUPD_DEVICE (device), tmp);
+		fwupd_device_set_update_message (FWUPD_DEVICE (self), tmp);
 }
 
 static void
@@ -2288,10 +2327,10 @@ fu_device_init (FuDevice *self)
 	priv->status = FWUPD_STATUS_IDLE;
 	priv->children = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	priv->parent_guids = g_ptr_array_new_with_free_func (g_free);
-	priv->parent_guids_mutex = fu_mutex_new (G_OBJECT_TYPE_NAME(self), "parent_guids");
+	g_rw_lock_init (&priv->parent_guids_mutex);
 	priv->metadata = g_hash_table_new_full (g_str_hash, g_str_equal,
 						g_free, g_free);
-	priv->metadata_mutex = fu_mutex_new (G_OBJECT_TYPE_NAME(self), "metadata");
+	g_rw_lock_init (&priv->metadata_mutex);
 }
 
 static void
@@ -2308,8 +2347,8 @@ fu_device_finalize (GObject *object)
 		g_object_unref (priv->quirks);
 	if (priv->poll_id != 0)
 		g_source_remove (priv->poll_id);
-	g_object_unref (priv->metadata_mutex);
-	g_object_unref (priv->parent_guids_mutex);
+	g_rw_lock_clear (&priv->metadata_mutex);
+	g_rw_lock_clear (&priv->parent_guids_mutex);
 	g_hash_table_unref (priv->metadata);
 	g_ptr_array_unref (priv->children);
 	g_ptr_array_unref (priv->parent_guids);

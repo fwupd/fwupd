@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version : '1.2.9',
+  version : '1.2.10',
   license : 'LGPL-2.1+',
   meson_version : '>=0.47.0',
   default_options : ['warning_level=2', 'c_std=c99'],
@@ -167,6 +167,7 @@ if get_option('daemon')
   if polkit.version().version_compare('>= 0.114')
     conf.set('HAVE_POLKIT_0_114', '1')
   endif
+  conf.set_quoted ('POLKIT_ACTIONDIR', polkit.get_pkgconfig_variable('actiondir'))
   udevdir = get_option('udevdir')
   if udevdir == ''
     udev = dependency('udev')
@@ -275,6 +276,10 @@ endif
 if get_option('plugin_thunderbolt')
   umockdev = dependency('umockdev-1.0', required: false)
   conf.set('HAVE_THUNDERBOLT', '1')
+endif
+
+if get_option('plugin_flashrom')
+  libflashrom = dependency('flashrom', fallback : ['flashrom', 'flashrom_dep'])
 endif
 
 if get_option('systemd')

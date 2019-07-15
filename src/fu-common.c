@@ -1035,6 +1035,12 @@ fu_common_get_path (FuPathKind path_kind)
 	case FU_PATH_KIND_CACHEDIR_PKG:
 		basedir = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR);
 		return g_build_filename (basedir, "cache", PACKAGE_NAME, NULL);
+	case FU_PATH_KIND_POLKIT_ACTIONS:
+#ifdef POLKIT_ACTIONDIR
+		return g_strdup (POLKIT_ACTIONDIR);
+#else
+	return NULL;
+#endif
 	/* this shouldn't happen */
 	default:
 		g_warning ("cannot build path for unknown kind %u", path_kind);

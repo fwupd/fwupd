@@ -4,7 +4,7 @@
 #
 # Translators:
 # Boyuan Yang <073plan@gmail.com>, 2017
-# Dz Chen <wsxy162@gmail.com>, 2016-2019
+# Dingzhong Chen <wsxy162@gmail.com>, 2016-2019
 # Mingcong Bai <jeffbai@aosc.xyz>, 2017-2018
 # Mingye Wang <arthur200126@gmail.com>, 2016
 # Mingye Wang <arthur2e5@aosc.xyz>, 2015
@@ -25,12 +25,24 @@ msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"
 msgstr[0] "还剩 %.0f 分钟"
 
+#. TRANSLATORS: ME stands for Management Engine, where
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Consumer ME Update"
+msgstr "%s 消费者 ME 更新"
+
 #. TRANSLATORS: the controller is a device that has other devices
 #. * plugged into it, for example ThunderBolt, FireWire or USB,
 #. * the first %s is the device name, e.g. 'Intel ThunderBolt`
 #, c-format
 msgid "%s Controller Update"
 msgstr "%s 控制器更新"
+
+#. TRANSLATORS: ME stands for Management Engine (with Intel AMT),
+#. * where the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Corporate ME Update"
+msgstr "%s 企业 ME 更新"
 
 #. TRANSLATORS: a specific part of hardware,
 #. * the first %s is the device name, e.g. 'Unifying Receiver`
@@ -191,6 +203,10 @@ msgstr "需要认证：在此机器上降级固件"
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
 msgstr "需要认证：修改用于固件更新的已配置远程位置"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify daemon configuration"
+msgstr "需要认证：修改守护进程配置"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
@@ -681,8 +697,17 @@ msgstr "元数据 URI 签名"
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "可从 Linux 供应商固件服务获取元数据。"
 
+#. TRANSLATORS: error message
+#, c-format
+msgid "Mismatched daemon and client, use %s instead"
+msgstr "守护进程与客户端不匹配，使用 %s 来代替"
+
 msgid "Mode"
 msgstr "模式"
+
+#. TRANSLATORS: sets something in daemon.conf
+msgid "Modifies a daemon configuration value."
+msgstr "修改守护进程配置值。"
 
 #. TRANSLATORS: command description
 msgid "Modifies a given remote"
@@ -690,6 +715,9 @@ msgstr "修改给定的远程位置"
 
 msgid "Modify a configured remote"
 msgstr "修改已配置的远程位置"
+
+msgid "Modify daemon configuration"
+msgstr "修改守护进程配置"
 
 #. TRANSLATORS: command description
 msgid "Monitor the daemon for events"
@@ -731,6 +759,10 @@ msgstr "忽略插件警告"
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "覆盖默认的 ESP 路径"
+
+#. TRANSLATORS: command line option
+msgid "Override warnings and force the action"
+msgstr "覆盖警告并强制执行操作"
 
 #. TRANSLATORS: remote filename base
 msgid "Password"
@@ -840,6 +872,10 @@ msgstr "重置一个 DFU 设备"
 msgid "Restart now?"
 msgstr "要现在重启设备吗？"
 
+#. TRANSLATORS: configuration changes only take effect on restart
+msgid "Restart the daemon to make the change effective?"
+msgstr "重启守护进程以让更改生效？"
+
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
 msgstr "正在重启设备…"
@@ -925,6 +961,14 @@ msgstr "与开发者分享固件历史"
 #. TRANSLATORS: command line option
 msgid "Show client and daemon versions"
 msgstr "显示客户端及守护程序版本"
+
+#. TRANSLATORS: this is for daemon development
+msgid "Show daemon verbose information for a particular domain"
+msgstr "显示特定域的守护进程详细信息"
+
+#. TRANSLATORS: turn on all debugging
+msgid "Show debugging information for all domains"
+msgstr "显示所有域的调试信息"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
@@ -1049,6 +1093,11 @@ msgstr "为固件访问解锁设备"
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"
 msgstr "更新期间取消设定调试标志"
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "Unsupported daemon version %s, client version is %s"
+msgstr "未受支持的守护进程版本 %s，客户端版本为 %s"
 
 #. TRANSLATORS: section header for firmware checksum
 msgid "Update Checksum"

@@ -24,12 +24,24 @@ msgstr[1] "Pozostały %.0f minuty"
 msgstr[2] "Pozostało %.0f minut"
 msgstr[3] "Pozostało %.0f minut"
 
+#. TRANSLATORS: ME stands for Management Engine, where
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Consumer ME Update"
+msgstr "Aktualizacja podsystemu ME użytkownika końcowego urządzenia %s"
+
 #. TRANSLATORS: the controller is a device that has other devices
 #. * plugged into it, for example ThunderBolt, FireWire or USB,
 #. * the first %s is the device name, e.g. 'Intel ThunderBolt`
 #, c-format
 msgid "%s Controller Update"
 msgstr "Aktualizacja kontrolera %s"
+
+#. TRANSLATORS: ME stands for Management Engine (with Intel AMT),
+#. * where the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Corporate ME Update"
+msgstr "Aktualizacja firmowego podsystemu ME urządzenia %s"
 
 #. TRANSLATORS: a specific part of hardware,
 #. * the first %s is the device name, e.g. 'Unifying Receiver`
@@ -702,6 +714,11 @@ msgstr "Podpis adresu URI metadanych"
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "Metadane można uzyskać z serwisu Linux Vendor Firmware Service."
 
+#. TRANSLATORS: error message
+#, c-format
+msgid "Mismatched daemon and client, use %s instead"
+msgstr "Niezgodna usługa i klient, proszę użyć %s zamiast tego"
+
 msgid "Mode"
 msgstr "Tryb"
 
@@ -759,6 +776,10 @@ msgstr "Zastępuje ostrzeżenie wtyczki"
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Zastępuje domyślną ścieżkę ESP"
+
+#. TRANSLATORS: command line option
+msgid "Override warnings and force the action"
+msgstr "Zastępuje ostrzeżenia i wymusza działanie"
 
 #. TRANSLATORS: remote filename base
 msgid "Password"
@@ -1089,6 +1110,11 @@ msgstr "Odblokowuje urządzenie"
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"
 msgstr "Usuwa flagę debugowania podczas aktualizacji"
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "Unsupported daemon version %s, client version is %s"
+msgstr "Nieobsługiwana wersja usługi %s, wersja klienta to %s"
 
 #. TRANSLATORS: section header for firmware checksum
 msgid "Update Checksum"

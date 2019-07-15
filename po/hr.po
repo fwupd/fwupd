@@ -25,12 +25,24 @@ msgstr[0] "%.0f minuta preostala"
 msgstr[1] "%.0f minute preostale"
 msgstr[2] "%.0f minuta preostalo"
 
+#. TRANSLATORS: ME stands for Management Engine, where
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Consumer ME Update"
+msgstr "%s Potrošački pogon upravljanja (ME) nadopunjen"
+
 #. TRANSLATORS: the controller is a device that has other devices
 #. * plugged into it, for example ThunderBolt, FireWire or USB,
 #. * the first %s is the device name, e.g. 'Intel ThunderBolt`
 #, c-format
 msgid "%s Controller Update"
 msgstr "%s nadopuna upravljača"
+
+#. TRANSLATORS: ME stands for Management Engine (with Intel AMT),
+#. * where the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Corporate ME Update"
+msgstr "%s Korporativni pogon upravljanja (ME) nadopunjen"
 
 #. TRANSLATORS: a specific part of hardware,
 #. * the first %s is the device name, e.g. 'Unifying Receiver`
@@ -48,7 +60,7 @@ msgstr "%s ugrađeni upravljač nadopunjen"
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s ME Update"
-msgstr "%s ME nadopunjen"
+msgstr "%s Pogon upravljanja (ME) nadopunjen"
 
 #. TRANSLATORS: the entire system, e.g. all internal devices,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
@@ -693,6 +705,11 @@ msgstr "Potpis URI metapodataka"
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "Metapodaci se mogu dobiti od Frimver Usluge Linux Proizvođača (LVFS)."
 
+#. TRANSLATORS: error message
+#, c-format
+msgid "Mismatched daemon and client, use %s instead"
+msgstr "Pozadinski program i klijent se ne podudaraju, umjesto koristite %s"
+
 msgid "Mode"
 msgstr "Način"
 
@@ -750,6 +767,10 @@ msgstr "Zaobiđi upozorenja priključka"
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Zaobiđi zadanu ESP putanju"
+
+#. TRANSLATORS: command line option
+msgid "Override warnings and force the action"
+msgstr "Zaobiđi upozorenja i prisili radnju"
 
 #. TRANSLATORS: remote filename base
 msgid "Password"
@@ -1077,6 +1098,11 @@ msgstr "Otključava uređaj za pristup frimvera"
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"
 msgstr "Ukloni oznaku otklanjanja grešaka tijekom nadopune"
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "Unsupported daemon version %s, client version is %s"
+msgstr "Nepodržana inačica pozadinskog programa %s, inačica klijenta je %s"
 
 #. TRANSLATORS: section header for firmware checksum
 msgid "Update Checksum"

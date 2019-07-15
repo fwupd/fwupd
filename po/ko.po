@@ -22,6 +22,57 @@ msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"
 msgstr[0] "%.0f분 남음"
 
+#. TRANSLATORS: ME stands for Management Engine, where
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Consumer ME Update"
+msgstr "%s 소비자용 ME 업데이트"
+
+#. TRANSLATORS: the controller is a device that has other devices
+#. * plugged into it, for example ThunderBolt, FireWire or USB,
+#. * the first %s is the device name, e.g. 'Intel ThunderBolt`
+#, c-format
+msgid "%s Controller Update"
+msgstr "%s 컨트롤러 업데이트"
+
+#. TRANSLATORS: ME stands for Management Engine (with Intel AMT),
+#. * where the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Corporate ME Update"
+msgstr "%s 기업용 ME 업데이트"
+
+#. TRANSLATORS: a specific part of hardware,
+#. * the first %s is the device name, e.g. 'Unifying Receiver`
+#, c-format
+msgid "%s Device Update"
+msgstr "%s 장치 업데이트"
+
+#. TRANSLATORS: the EC is typically the keyboard controller chip,
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Embedded Controller Update"
+msgstr "%s 임베디드 컨트롤러 업데이트"
+
+#. TRANSLATORS: ME stands for Management Engine, the Intel AMT thing,
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s ME Update"
+msgstr "%s ME 업데이트"
+
+#. TRANSLATORS: the entire system, e.g. all internal devices,
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s System Update"
+msgstr "%s 시스템 업데이트"
+
+#. TRANSLATORS: this is the fallback where we don't know if the release
+#. * is updating the system, the device, or a device class, or something else
+#. --
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Update"
+msgstr "%s 업데이트"
+
 #. TRANSLATORS: first replacement is device name
 #, c-format
 msgid "%s has firmware updates:"
@@ -149,6 +200,10 @@ msgstr "이 머신에 이전 버전의 펌웨어를 설치하려면 인증해야
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
 msgstr "펌웨어 업데이트에 사용할 원격 설정을 수정하려면 인증해야 합니다"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify daemon configuration"
+msgstr "데몬 설정을 수정하려면 인증해야 합니다"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
@@ -639,8 +694,17 @@ msgstr "메타데이터 URI  서명"
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "리눅스 제조사 펌웨어 서비스에서 메타데이터를 가져올 수 있습니다."
 
+#. TRANSLATORS: error message
+#, c-format
+msgid "Mismatched daemon and client, use %s instead"
+msgstr "데몬과 클라이언트가 일치하지 않음, %s을(를) 대신 사용함"
+
 msgid "Mode"
 msgstr "모드"
+
+#. TRANSLATORS: sets something in daemon.conf
+msgid "Modifies a daemon configuration value."
+msgstr "데몬 설정값을 변경합니다."
 
 #. TRANSLATORS: command description
 msgid "Modifies a given remote"
@@ -648,6 +712,9 @@ msgstr "지정한 원격 정보를 수정합니다"
 
 msgid "Modify a configured remote"
 msgstr "원격 설정 수정"
+
+msgid "Modify daemon configuration"
+msgstr "데몬 설정 수정"
 
 #. TRANSLATORS: command description
 msgid "Monitor the daemon for events"
@@ -689,6 +756,10 @@ msgstr "플러그인 경고 무시"
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "기본 ESP 경로 재정의"
+
+#. TRANSLATORS: command line option
+msgid "Override warnings and force the action"
+msgstr "경고를 무시하고 강제로 작업 진행"
 
 #. TRANSLATORS: remote filename base
 msgid "Password"
@@ -798,6 +869,10 @@ msgstr "DFU 장치 초기화"
 msgid "Restart now?"
 msgstr "지금 다시 시작하시겠습니까?"
 
+#. TRANSLATORS: configuration changes only take effect on restart
+msgid "Restart the daemon to make the change effective?"
+msgstr "데몬을 다시 시작하여 변경 사항을 적용하시겠습니까?"
+
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
 msgstr "장치 다시 시작하는 중…"
@@ -883,6 +958,14 @@ msgstr "개발사와 펌웨어 업데이트 기록 공유하기"
 #. TRANSLATORS: command line option
 msgid "Show client and daemon versions"
 msgstr "클라이언트와 데몬 버전 표시"
+
+#. TRANSLATORS: this is for daemon development
+msgid "Show daemon verbose information for a particular domain"
+msgstr "지정한 도메인의 자세한 데몬 정보 표시"
+
+#. TRANSLATORS: turn on all debugging
+msgid "Show debugging information for all domains"
+msgstr "모든 도메인의 디버깅 정보 표시"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
@@ -1007,6 +1090,11 @@ msgstr "펌웨어에 접근할 수 있도록 장치 잠금을 해제합니다"
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"
 msgstr "업데이트 중 디버깅 플래그 설정 해제"
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "Unsupported daemon version %s, client version is %s"
+msgstr "지원하지 않는 데몬 버전 %s, 클라이언트 버전 %s"
 
 #. TRANSLATORS: section header for firmware checksum
 msgid "Update Checksum"

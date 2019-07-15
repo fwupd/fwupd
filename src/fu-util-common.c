@@ -28,6 +28,7 @@ fu_util_get_systemd_unit (void)
 	return SYSTEMD_FWUPD_UNIT;
 }
 
+#ifdef HAVE_SYSTEMD
 static const gchar *
 fu_util_get_expected_command (const gchar *target)
 {
@@ -35,10 +36,12 @@ fu_util_get_expected_command (const gchar *target)
 		return "fwupd.fwupdmgr";
 	return "fwupdmgr";
 }
+#endif
 
 gboolean
 fu_util_using_correct_daemon (GError **error)
 {
+#ifdef HAVE_SYSTEMD
 	g_autofree gchar *default_target = NULL;
 	g_autoptr(GError) error_local = NULL;
 	const gchar *target = fu_util_get_systemd_unit ();
@@ -58,7 +61,7 @@ fu_util_using_correct_daemon (GError **error)
 			     fu_util_get_expected_command (target));
 		return FALSE;
 	}
-
+#endif
 	return TRUE;
 }
 
@@ -493,7 +496,7 @@ fu_util_setup_networking (GError **error)
 		http_proxy = g_getenv ("http_proxy");
 	if (http_proxy == NULL)
 		http_proxy = g_getenv ("HTTP_PROXY");
-	if (http_proxy != NULL) {
+	if (http_proxy != NULL && strlen (http_proxy) > 0) {
 		g_autoptr(SoupURI) proxy_uri = soup_uri_new (http_proxy);
 		if (proxy_uri == NULL) {
 			g_set_error (error,

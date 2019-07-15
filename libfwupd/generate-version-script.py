@@ -8,6 +8,8 @@
 import sys
 import xml.etree.ElementTree as ET
 
+from pkg_resources import parse_version
+
 XMLNS = '{http://www.gtk.org/introspection/core/1.0}'
 XMLNS_C = '{http://www.gtk.org/introspection/c/1.0}'
 
@@ -32,7 +34,6 @@ class LdVersionScript:
         if 'version' not in node.attrib:
             print('No version for', identifier)
             sys.exit(1)
-            return
         version = node.attrib['version']
         if version not in self.releases:
             self.releases[version] = []
@@ -40,36 +41,43 @@ class LdVersionScript:
         release.append(identifier)
         return version
 
+    def _add_cls(self, cls):
+
+        # add all class functions
+        for node in cls.findall(XMLNS + 'function'):
+            self._add_node(node)
+
+        # add the constructor
+        for node in cls.findall(XMLNS + 'constructor'):
+            self._add_node(node)
+
+        # choose the lowest version method for the _get_type symbol
+        version_lowest = None
+        if '{http://www.gtk.org/introspection/glib/1.0}get-type' not in cls.attrib:
+            return
+        type_name = cls.attrib['{http://www.gtk.org/introspection/glib/1.0}get-type']
+
+        # add all class methods
+        for node in cls.findall(XMLNS + 'method'):
+            version_tmp = self._add_node(node)
+            if version_tmp:
+                if not version_lowest or version_tmp < version_lowest:
+                    version_lowest = version_tmp
+
+        # finally add the get_type symbol
+        if version_lowest:
+            self.releases[version_lowest].append(type_name)
+
     def import_gir(self, filename):
         tree = ET.parse(filename)
         root = tree.getroot()
         for ns in root.findall(XMLNS + 'namespace'):
             for node in ns.findall(XMLNS + 'function'):
                 self._add_node(node)
+            for cls in ns.findall(XMLNS + 'record'):
+                self._add_cls(cls)
             for cls in ns.findall(XMLNS + 'class'):
-
-                # add all class functions
-                for node in cls.findall(XMLNS + 'function'):
-                    self._add_node(node)
-
-                # add the constructor
-                for node in cls.findall(XMLNS + 'constructor'):
-                    self._add_node(node)
-
-                # choose the lowest version method for the _get_type symbol
-                version_lowest = None
-                type_name = cls.attrib['{http://www.gtk.org/introspection/glib/1.0}get-type']
-
-                # add all class methods
-                for node in cls.findall(XMLNS + 'method'):
-                    version_tmp = self._add_node(node)
-                    if version_tmp:
-                        if not version_lowest or version_tmp < version_lowest:
-                            version_lowest = version_tmp
-
-                # finally add the get_type symbol
-                if version_lowest:
-                    self.releases[version_lowest].append(type_name)
+                self._add_cls(cls)
 
     def render(self):
 
@@ -81,7 +89,7 @@ class LdVersionScript:
         # output the version data to a file
         verout = '# generated automatically, do not edit!\n'
         oldversion = None
-        for version in sorted(versions):
+        for version in sorted(versions, key=parse_version):
             symbols = sorted(self.releases[version])
             verout += '\n%s_%s {\n' % (self.library_name, version)
             verout += '  global:\n'

@@ -12,6 +12,7 @@ meson .. \
     -Dman=true \
     -Dtests=true \
     -Dplugin_dummy=true \
+    -Dplugin_flashrom=true \
     -Dplugin_modem_manager=false \
     -Dplugin_thunderbolt=true \
     -Dplugin_uefi=true \
@@ -48,6 +49,7 @@ fi
 #install RPM packages
 dnf install -y $HOME/rpmbuild/RPMS/*/*.rpm
 
+mkdir -p dist
 cp $HOME/rpmbuild/RPMS/*/*.rpm dist
 
 if [ "$CI" = "true" ]; then

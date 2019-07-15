@@ -196,7 +196,8 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 	/* create GUIDs and name */
 	if (!fu_plugin_synapticsmst_lookup_device (plugin, dev, device, error))
 		return FALSE;
-
+	if (!fu_device_setup (dev, error))
+		return FALSE;
 	fu_plugin_device_add (plugin, dev);
 	fu_plugin_cache_add (plugin, dev_id_str, dev);
 

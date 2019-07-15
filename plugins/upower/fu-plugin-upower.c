@@ -139,7 +139,7 @@ fu_plugin_update_prepare (FuPlugin *plugin,
 	   (flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
-			     FWUPD_ERROR_AC_POWER_REQUIRED,
+			     FWUPD_ERROR_BATTERY_LEVEL_TOO_LOW,
 			     "Cannot install update when battery "
 			     "is not at least %d%% unless forced",
 			      MINIMUM_BATTERY_PERCENTAGE);
