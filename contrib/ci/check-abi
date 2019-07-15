@@ -1,0 +1,114 @@
+#!/usr/bin/python3
+
+
+import argparse
+import contextlib
+import os
+import shutil
+import subprocess
+import sys
+
+
+def format_title(title):
+    box = {
+        'tl': '╔', 'tr': '╗', 'bl': '╚', 'br': '╝', 'h': '═', 'v': '║',
+    }
+    hline = box['h'] * (len(title) + 2)
+
+    return '\n'.join([
+        f"{box['tl']}{hline}{box['tr']}",
+        f"{box['v']} {title} {box['v']}",
+        f"{box['bl']}{hline}{box['br']}",
+    ])
+
+
+def rm_rf(path):
+    try:
+        shutil.rmtree(path)
+    except FileNotFoundError:
+        pass
+
+
+def sanitize_path(name):
+    return name.replace('/', '-')
+
+
+def get_current_revision():
+    revision = subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
+                                       encoding='utf-8').strip()
+
+    if revision == 'HEAD':
+        # This is a detached HEAD, get the commit hash
+        revision = subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip().decode('utf-8')
+
+    return revision
+
+
+@contextlib.contextmanager
+def checkout_git_revision(revision):
+    current_revision = get_current_revision()
+    subprocess.check_call(['git', 'checkout', '-q', revision])
+
+    try:
+        yield
+    finally:
+        subprocess.check_call(['git', 'checkout', '-q', current_revision])
+
+
+def build_install(revision):
+    build_dir = '_build'
+    dest_dir = os.path.abspath(sanitize_path(revision))
+    print(format_title(f'# Building and installing {revision} in {dest_dir}'),
+          end='\n\n', flush=True)
+
+    with checkout_git_revision(revision):
+        rm_rf(build_dir)
+        rm_rf(revision)
+
+        subprocess.check_call(['meson', build_dir,
+                               '--prefix=/usr', '--libdir=lib',
+                               '-Db_coverage=false', '-Dgtkdoc=false', '-Dtests=false'])
+        subprocess.check_call(['ninja', '-v', '-C', build_dir])
+        subprocess.check_call(['ninja', '-v', '-C', build_dir, 'install'],
+                              env={'DESTDIR': dest_dir})
+
+    return dest_dir
+
+
+def compare(old_tree, new_tree):
+    print(format_title(f'# Comparing the two ABIs'), end='\n\n', flush=True)
+
+    old_headers = os.path.join(old_tree, 'usr', 'include')
+    old_lib = os.path.join(old_tree, 'usr', 'lib', 'libfwupd.so')
+
+    new_headers = os.path.join(new_tree, 'usr', 'include')
+    new_lib = os.path.join(new_tree, 'usr', 'lib', 'libfwupd.so')
+
+    subprocess.check_call([
+        'abidiff', '--headers-dir1', old_headers, '--headers-dir2', new_headers,
+        '--drop-private-types', '--suppressions', 'contrib/ci/abidiff.suppr',
+        '--fail-no-debug-info', '--no-added-syms', old_lib, new_lib])
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('old', help='the previous revision, considered the reference')
+    parser.add_argument('new', help='the new revision, to compare to the reference')
+
+    args = parser.parse_args()
+
+    if args.old == args.new:
+        print("Let's not waste time comparing something to itself")
+        sys.exit(0)
+
+    old_tree = build_install(args.old)
+    new_tree = build_install(args.new)
+
+    try:
+        compare(old_tree, new_tree)
+
+    except subprocess.CalledProcessError:
+        sys.exit(1)
+
+    print(f'Hurray! {args.old} and {args.new} are ABI-compatible!')
