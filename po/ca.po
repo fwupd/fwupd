@@ -23,12 +23,24 @@ msgid_plural "%.0f minutes remaining"
 msgstr[0] "Manca %.0f minut"
 msgstr[1] "Manquen %.0f minuts"
 
+#. TRANSLATORS: ME stands for Management Engine, where
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Consumer ME Update"
+msgstr "Actualització ME del consumidor %s"
+
 #. TRANSLATORS: the controller is a device that has other devices
 #. * plugged into it, for example ThunderBolt, FireWire or USB,
 #. * the first %s is the device name, e.g. 'Intel ThunderBolt`
 #, c-format
 msgid "%s Controller Update"
 msgstr "Actualització del controlador %s"
+
+#. TRANSLATORS: ME stands for Management Engine (with Intel AMT),
+#. * where the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Corporate ME Update"
+msgstr "Actualització ME corporativa de %s"
 
 #. TRANSLATORS: a specific part of hardware,
 #. * the first %s is the device name, e.g. 'Unifying Receiver`
@@ -689,6 +701,11 @@ msgstr "Signatura de l'URI de les metadades"
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "Les metadades es poden obtenir des del servei de microprogramari del proveïdor Linux."
 
+#. TRANSLATORS: error message
+#, c-format
+msgid "Mismatched daemon and client, use %s instead"
+msgstr "El dimoni i el client no coincideixin, useu %s en el seu lloc"
+
 msgid "Mode"
 msgstr "Mode"
 
@@ -746,6 +763,10 @@ msgstr "Passa per alt els avisos del connector"
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Preferència sobre el camí ESP predeterminat"
+
+#. TRANSLATORS: command line option
+msgid "Override warnings and force the action"
+msgstr "Anul·la els avisos i força l'acció"
 
 #. TRANSLATORS: remote filename base
 msgid "Password"
@@ -1076,6 +1097,11 @@ msgstr "Desbloqueja el dispositiu per accedir al microprogramari"
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"
 msgstr "No estableixis l'indicador de depuració durant l'actualització"
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "Unsupported daemon version %s, client version is %s"
+msgstr "Versió %s no admesa del dimoni, la versió del client és %s"
 
 #. TRANSLATORS: section header for firmware checksum
 msgid "Update Checksum"

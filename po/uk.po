@@ -24,12 +24,24 @@ msgstr[1] "Лишилося %.0f хвилини"
 msgstr[2] "Лишилося %.0f хвилин"
 msgstr[3] "Лишилася %.0f хвилина"
 
+#. TRANSLATORS: ME stands for Management Engine, where
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Consumer ME Update"
+msgstr "Оновлення %s Consumer ME"
+
 #. TRANSLATORS: the controller is a device that has other devices
 #. * plugged into it, for example ThunderBolt, FireWire or USB,
 #. * the first %s is the device name, e.g. 'Intel ThunderBolt`
 #, c-format
 msgid "%s Controller Update"
 msgstr "Оновлення для контролера %s"
+
+#. TRANSLATORS: ME stands for Management Engine (with Intel AMT),
+#. * where the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Corporate ME Update"
+msgstr "Оновлення %s Corporate ME"
 
 #. TRANSLATORS: a specific part of hardware,
 #. * the first %s is the device name, e.g. 'Unifying Receiver`
@@ -702,6 +714,11 @@ msgstr "Підпис адреси метаданих"
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "Метадані можна отримати від служби надання мікропрограм для Linux від виробника."
 
+#. TRANSLATORS: error message
+#, c-format
+msgid "Mismatched daemon and client, use %s instead"
+msgstr "Невідповідність фонової служби і клієнта, скористайтеся краще %s"
+
 msgid "Mode"
 msgstr "Режим"
 
@@ -759,6 +776,10 @@ msgstr "Перевизначити попередження для додатк�
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Перевизначити типовий шлях до ESP"
+
+#. TRANSLATORS: command line option
+msgid "Override warnings and force the action"
+msgstr "Не зважати на попередження і примусово виконати дію"
 
 #. TRANSLATORS: remote filename base
 msgid "Password"
@@ -1089,6 +1110,11 @@ msgstr "Розблоковує пристрій для доступу до мі�
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"
 msgstr "Зняти під час оновлення прапорець діагностики"
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "Unsupported daemon version %s, client version is %s"
+msgstr "Непідтримувана версія фонової служби %s, версія клієнта — %s"
 
 #. TRANSLATORS: section header for firmware checksum
 msgid "Update Checksum"

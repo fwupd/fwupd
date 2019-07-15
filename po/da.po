@@ -23,12 +23,24 @@ msgid_plural "%.0f minutes remaining"
 msgstr[0] "%.0f minut tilbage"
 msgstr[1] "%.0f minutter tilbage"
 
+#. TRANSLATORS: ME stands for Management Engine, where
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Consumer ME Update"
+msgstr "%s ME-opdatering for forbruger"
+
 #. TRANSLATORS: the controller is a device that has other devices
 #. * plugged into it, for example ThunderBolt, FireWire or USB,
 #. * the first %s is the device name, e.g. 'Intel ThunderBolt`
 #, c-format
 msgid "%s Controller Update"
 msgstr "Kontrolleropdatering for %s"
+
+#. TRANSLATORS: ME stands for Management Engine (with Intel AMT),
+#. * where the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Corporate ME Update"
+msgstr "%s ME-opdatering for virksomhed"
 
 #. TRANSLATORS: a specific part of hardware,
 #. * the first %s is the device name, e.g. 'Unifying Receiver`
@@ -689,6 +701,11 @@ msgstr "Underskrift for metadata-URI"
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "Metadata kan hentes fra Linux Vendor Firmware Service."
 
+#. TRANSLATORS: error message
+#, c-format
+msgid "Mismatched daemon and client, use %s instead"
+msgstr "Dæmon og klient passer ikke sammen, brug %s i stedet"
+
 msgid "Mode"
 msgstr "Tilstand"
 
@@ -746,6 +763,10 @@ msgstr "Tilsidesæt advarsel for plugin"
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Tilsidesæt standard-ESP-stien"
+
+#. TRANSLATORS: command line option
+msgid "Override warnings and force the action"
+msgstr "Tilsidesæt advarsler og gennemtving handlingen"
 
 #. TRANSLATORS: remote filename base
 msgid "Password"
@@ -1076,6 +1097,11 @@ msgstr "Låser op for enheden for at få adgang til firmwaren"
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"
 msgstr "Fjern fejlsøgningsflaget under opdatering"
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "Unsupported daemon version %s, client version is %s"
+msgstr "Uunderstøttet dæmonversion %s, klientversionen er %s"
 
 #. TRANSLATORS: section header for firmware checksum
 msgid "Update Checksum"

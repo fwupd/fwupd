@@ -23,12 +23,24 @@ msgid_plural "%.0f minutes remaining"
 msgstr[0] "Manca %.0f minuto"
 msgstr[1] "Mancano %.0f minuti"
 
+#. TRANSLATORS: ME stands for Management Engine, where
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Consumer ME Update"
+msgstr "Aggiornamento Consumer ME di %s"
+
 #. TRANSLATORS: the controller is a device that has other devices
 #. * plugged into it, for example ThunderBolt, FireWire or USB,
 #. * the first %s is the device name, e.g. 'Intel ThunderBolt`
 #, c-format
 msgid "%s Controller Update"
 msgstr "Aggiornamento unità di controllo %s"
+
+#. TRANSLATORS: ME stands for Management Engine (with Intel AMT),
+#. * where the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Corporate ME Update"
+msgstr "Aggiornamento Coporate ME di %s"
 
 #. TRANSLATORS: a specific part of hardware,
 #. * the first %s is the device name, e.g. 'Unifying Receiver`
@@ -689,6 +701,11 @@ msgstr "Firma URI dei metadati"
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "Metadati possono essere scaricati da Linux Vendor Firmware Service."
 
+#. TRANSLATORS: error message
+#, c-format
+msgid "Mismatched daemon and client, use %s instead"
+msgstr "Versioni di demone e client non corrispondenti, usare %s"
+
 msgid "Mode"
 msgstr "Modalità"
 
@@ -746,6 +763,10 @@ msgstr "Scavalca l'avviso sul plugin"
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Sovrascrive il percorso ESP predefinito"
+
+#. TRANSLATORS: command line option
+msgid "Override warnings and force the action"
+msgstr "Scavalca gli avvisi e forza l'azione"
 
 #. TRANSLATORS: remote filename base
 msgid "Password"
@@ -1076,6 +1097,11 @@ msgstr "Sblocca il dispositivo per accedere al firmware"
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"
 msgstr "Ripristina il flag di debug durante l'aggiornamento"
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "Unsupported daemon version %s, client version is %s"
+msgstr "Demone versione %s non supportato, la versione del client è %s"
 
 #. TRANSLATORS: section header for firmware checksum
 msgid "Update Checksum"

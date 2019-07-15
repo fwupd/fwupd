@@ -32,6 +32,29 @@
     <binary>fwupdmgr</binary>
   </provides>
   <releases>
+    <release version="1.2.10" date="2019-07-15">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add a new experimental plugin that supports libflashrom</li>
+          <li>Add a specific error code for the low battery case</li>
+          <li>Add support for 8bitdo USB Retro Receiver</li>
+          <li>Export new API to build objects from GVariant blobs</li>
+          <li>Show a warning when running in UEFI legacy mode</li>
+          <li>Support a UEFI quirk to disable the use of the UX capsule</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Fix installing synaptics-prometheus config updates</li>
+          <li>Fix the supported list of Wacom tablets</li>
+          <li>Never set an empty device name</li>
+          <li>Prompt for reboot when unlocking on the command line if applicable</li>
+          <li>Show devices with an UpdateError in get-devices output</li>
+          <li>Support empty proxy server strings</li>
+          <li>Try harder to find duplicate UEFI boot entries</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.2.9" date="2019-05-20">
       <description>
         <p>This release adds the following features:</p>
