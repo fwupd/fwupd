@@ -32,6 +32,13 @@ if get_option('daemon')
   )
 endif
 
+if get_option('motd_integration')
+  if not get_option('systemd')
+    error('MOTD integration also needs systemd to work')
+  endif
+  subdir('motd')
+endif
+
 if get_option('systemd')
   con2 = configuration_data()
   con2.set('libexecdir', libexecdir)

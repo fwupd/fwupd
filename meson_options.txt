@@ -7,6 +7,7 @@ option('gtkdoc', type : 'boolean', value : true, description : 'enable developer
 option('introspection', type : 'boolean', value : true, description : 'generate GObject Introspection data')
 option('lvfs', type : 'boolean', value : true, description : 'enable LVFS remotes')
 option('man', type : 'boolean', value : true, description : 'enable man pages')
+option('motd_integration', type: 'boolean', value : false, description : 'integrate into message of the day (motd)')
 option('pkcs7', type : 'boolean', value : true, description : 'enable the PKCS7 verification support')
 option('plugin_altos', type : 'boolean', value : true, description : 'enable altos support')
 option('plugin_amt', type : 'boolean', value : true, description : 'enable Intel AMT support')
