@@ -2,6 +2,7 @@ subdir('builder')
 subdir('pki')
 subdir('remotes.d')
 subdir('bash-completion')
+subdir('motd')
 
 if get_option('tests')
   subdir('tests')
