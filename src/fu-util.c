@@ -55,6 +55,7 @@ struct FuUtilPrivate {
 	gboolean		 no_reboot_check;
 	gboolean		 no_unreported_check;
 	gboolean		 assume_yes;
+	gboolean		 quiet_mode;
 	gboolean		 sign;
 	gboolean		 show_all_devices;
 	/* only valid in update and downgrade */
@@ -1596,7 +1597,8 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 						  fwupd_device_get_id (dev),
 						  NULL, &error_local);
 		if (rels == NULL) {
-			g_printerr ("%s\n", error_local->message);
+			if (!priv->quiet_mode)
+				g_printerr ("%s\n", error_local->message);
 			continue;
 		}
 
@@ -2313,6 +2315,9 @@ main (int argc, char *argv[])
 		{ "assume-yes", 'y', 0, G_OPTION_ARG_NONE, &priv->assume_yes,
 			/* TRANSLATORS: command line option */
 			_("Answer yes to all questions"), NULL },
+		{ "quiet", 'y', 0, G_OPTION_ARG_NONE, &priv->quiet_mode,
+			/* TRANSLATORS: command line option */
+			_("Only show important output (typically for scripting use)"), NULL },
 		{ "sign", '\0', 0, G_OPTION_ARG_NONE, &priv->sign,
 			/* TRANSLATORS: command line option */
 			_("Sign the uploaded data with the client certificate"), NULL },
