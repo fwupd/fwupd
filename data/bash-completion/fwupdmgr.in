@@ -42,6 +42,7 @@ _fwupdmgr_opts=(
 	'--show-all-devices'
 	'--sign'
 	'--filter'
+	'--log'
 )
 
 _show_filters()

@@ -66,6 +66,8 @@ struct FuUtilPrivate {
 	FwupdDeviceFlags	 filter_exclude;
 };
 
+static GFileOutputStream *log_output = NULL;
+
 static gboolean	fu_util_report_history (FuUtilPrivate *priv, gchar **values, GError **error);
 static gboolean	fu_util_download_file	(FuUtilPrivate	*priv,
 					 SoupURI	*uri,
@@ -2080,6 +2082,41 @@ fu_util_check_polkit_actions (GError **error)
 	return TRUE;
 }
 
+static void
+fu_util_log_output (const gchar *str)
+{
+	if (log_output != NULL) {
+		g_autoptr(GError) error_local = NULL;
+		if (g_output_stream_write (G_OUTPUT_STREAM (log_output),
+					   str, strlen(str),
+					   NULL, &error_local) <0)
+			g_printerr ("%s\n", error_local->message);
+	}
+}
+
+static void
+fu_util_close_log (void)
+{
+	if (log_output != NULL) {
+		g_autoptr(GError) error_local = NULL;
+		if (!g_output_stream_close (G_OUTPUT_STREAM (log_output),
+					    NULL,
+					    &error_local)) {
+			g_printerr ("%s\n", error_local->message);
+			return;
+		}
+		g_object_unref (log_output);
+	}
+}
+
+static void
+fu_util_display_help (FuUtilPrivate *priv)
+{
+	g_autofree gchar *tmp = NULL;
+	tmp = g_option_context_get_help (priv->context, TRUE, NULL);
+	g_printerr ("%s\n", tmp);
+}
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtilPrivate, fu_util_private_free)
@@ -2101,6 +2138,7 @@ main (int argc, char *argv[])
 	g_autoptr(GPtrArray) cmd_array = fu_util_cmd_array_new ();
 	g_autofree gchar *cmd_descriptions = NULL;
 	g_autofree gchar *filter = NULL;
+	g_autofree gchar *log = NULL;
 	const GOptionEntry options[] = {
 		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
 			/* TRANSLATORS: command line option */
@@ -2123,6 +2161,9 @@ main (int argc, char *argv[])
 		{ "assume-yes", 'y', 0, G_OPTION_ARG_NONE, &priv->assume_yes,
 			/* TRANSLATORS: command line option */
 			_("Answer yes to all questions"), NULL },
+		{ "log", '\0', 0, G_OPTION_ARG_STRING, &log,
+			/* TRANSLATORS: command line option */
+			_("Log output to FILE (typically for scripting use)"), NULL },
 		{ "sign", '\0', 0, G_OPTION_ARG_NONE, &priv->sign,
 			/* TRANSLATORS: command line option */
 			_("Sign the uploaded data with the client certificate"), NULL },
@@ -2328,14 +2369,6 @@ main (int argc, char *argv[])
 	/* sort by command name */
 	fu_util_cmd_array_sort (cmd_array);
 
-	/* non-TTY consoles cannot answer questions */
-	if (isatty (fileno (stdout)) == 0) {
-		priv->no_unreported_check = TRUE;
-		priv->no_metadata_check = TRUE;
-		priv->no_reboot_check = TRUE;
-		fu_progressbar_set_interactive (priv->progressbar, FALSE);
-	}
-
 	/* get a list of the commands */
 	priv->context = g_option_context_new (NULL);
 	cmd_descriptions = fu_util_cmd_array_to_string (cmd_array);
@@ -2354,6 +2387,15 @@ main (int argc, char *argv[])
 		g_print ("%s: %s\n", _("Failed to parse arguments"),
 			 error->message);
 		return EXIT_FAILURE;
+	}
+
+	/* non-TTY consoles cannot answer questions */
+	if (log != NULL ||
+	    isatty (fileno (stdout)) == 0) {
+		priv->no_unreported_check = TRUE;
+		priv->no_metadata_check = TRUE;
+		priv->no_reboot_check = TRUE;
+		fu_progressbar_set_interactive (priv->progressbar, FALSE);
 	}
 
 	/* parse filter flags */
@@ -2442,23 +2484,40 @@ main (int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
+	/* configure stdout redirection */
+	if (log != NULL) {
+		g_autoptr(GFile) file = NULL;
+		g_autofree gchar *target_fname = NULL;
+		/* If running under systemd unit, use the directory as a base */
+		if (g_getenv ("RUNTIME_DIRECTORY") != NULL) {
+			target_fname = g_build_filename (g_getenv ("RUNTIME_DIRECTORY"),
+							 log,
+							 NULL);
+		} else {
+			target_fname = g_steal_pointer (&log);
+		}
+		file = g_file_new_for_commandline_arg (target_fname);
+		log_output = g_file_append_to (file, G_FILE_CREATE_NONE, NULL, &error);
+		if (log_output == NULL) {
+			g_printerr ("%s\n", error->message);
+			return EXIT_FAILURE;
+		}
+		g_set_print_handler (fu_util_log_output);
+	}
+
 	/* run the specified command */
 	ret = fu_util_cmd_array_run (cmd_array, priv, argv[1], (gchar**) &argv[2], &error);
 	if (!ret) {
-		if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_ARGS)) {
-			g_autofree gchar *tmp = NULL;
-			tmp = g_option_context_get_help (priv->context, TRUE, NULL);
-			g_print ("%s\n\n%s", error->message, tmp);
-			return EXIT_FAILURE;
-		}
-		if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
-			g_print ("%s\n", error->message);
-			return EXIT_NOTHING_TO_DO;
-		}
-		g_print ("%s\n", error->message);
-		return EXIT_FAILURE;
+		ret = EXIT_FAILURE;
+		g_printerr ("%s\n", error->message);
+		if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_ARGS))
+			fu_util_display_help (priv);
+		else if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
+			ret = EXIT_NOTHING_TO_DO;
+	} else {
+		ret = EXIT_SUCCESS;
 	}
+	fu_util_close_log ();
 
-	/* success */
-	return EXIT_SUCCESS;
+	return ret;
 }
