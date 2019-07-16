@@ -1096,7 +1096,8 @@ fu_engine_check_requirement_firmware (FuEngine *self, XbNode *req,
 
 		/* get the version of the other device */
 		version = fu_device_get_version (device2);
-		if (!fu_engine_require_vercmp (req, version, &error_local)) {
+		if (version != NULL &&
+		    !fu_engine_require_vercmp (req, version, &error_local)) {
 			if (g_strcmp0 (xb_node_get_attr (req, "compare"), "ge") == 0) {
 				g_set_error (error,
 					     FWUPD_ERROR,
