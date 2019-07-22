@@ -1,9 +1,8 @@
-fwupd (1.2.9-2) UNRELEASED; urgency=medium
+fwupd (1.2.9-2) unstable; urgency=medium
 
-  [ Steve McIntyre ]
   * Add Built-Using for the fwupd-*-signed packages. Closes: #932757
 
- -- Mario Limonciello <mario.limonciello@dell.com>  Fri, 12 Jul 2019 14:25:32 -0500
+ -- Steve McIntyre <93sam@debian.org>  Sun, 22 Jul 2019 17:38:23 -0300
 
 fwupd (1.2.9-1) unstable; urgency=medium
 
