@@ -14,6 +14,7 @@ Section: admin
 Architecture: SIGNARCH
 Provides: fwupd-signed
 Depends: ${shlibs:Depends}, ${misc:Depends}, fwupd (= SIGNVERSION)
+Built-Using: fwupd (= SIGNVERSION)
 Description: Tools to manage UEFI firmware updates (signed)
  fwupd provides functionality to update system firmware. It has been 
  initially designed to update firmware using UEFI capsule updates, but 
