@@ -311,6 +311,7 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_rts54hid.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_rts54hub.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_solokey.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_steelseries.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_superio.so
 %if 0%{?have_dell}
