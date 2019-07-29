@@ -136,7 +136,9 @@ fu_install_task_check_requirements (FuInstallTask *self,
 	}
 	for (guint i = 0; i < provides->len; i++) {
 		XbNode *provide = g_ptr_array_index (provides, i);
-		if (fu_device_has_guid (self->device, xb_node_get_text (provide))) {
+		g_autofree gchar *guid_str = NULL;
+		guid_str = g_ascii_strdown (xb_node_get_text (provide), -1);
+		if (fu_device_has_guid (self->device, guid_str)) {
 			matches_guid = TRUE;
 			break;
 		}
