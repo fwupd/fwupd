@@ -1218,7 +1218,7 @@ fu_device_set_id (FuDevice *self, const gchar *id)
 /**
  * fu_device_set_version:
  * @self: A #FuDevice
- * @version: a string, e.g. `1.2.3`
+ * @version: (allow-none): a string, e.g. `1.2.3`
  * @fmt: a #FwupdVersionFormat, e.g. %FWUPD_VERSION_FORMAT_TRIPLET
  *
  * Sets the device version, sanitizing the string if required.
@@ -1232,7 +1232,6 @@ fu_device_set_version (FuDevice *self, const gchar *version, FwupdVersionFormat 
 	g_autoptr(GError) error = NULL;
 
 	g_return_if_fail (FU_IS_DEVICE (self));
-	g_return_if_fail (version != NULL);
 
 	/* sanitize if required */
 	if (fu_device_has_flag (self, FWUPD_DEVICE_FLAG_ENSURE_SEMVER)) {
