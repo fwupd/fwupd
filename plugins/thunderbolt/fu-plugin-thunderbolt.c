@@ -356,12 +356,9 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 			fu_device_set_name (dev, name);
 		}
 	}
-	if (is_host) {
+	if (is_host)
 		fu_device_set_summary (dev, "Unmatched performance for high-speed I/O");
-		fu_device_add_icon (dev, "computer");
-	} else {
-		fu_device_add_icon (dev, "audio-card");
-	}
+	fu_device_add_icon (dev, "thunderbolt");
 
 	fu_device_set_quirks (dev, fu_plugin_get_quirks (plugin));
 	vendor = g_udev_device_get_sysfs_attr (device, "vendor_name");
