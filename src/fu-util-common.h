@@ -30,6 +30,8 @@ void		 fu_util_print_data		(const gchar	*title,
 						 const gchar	*msg);
 guint		 fu_util_prompt_for_number	(guint		 maxnum);
 gboolean	 fu_util_prompt_for_boolean	(gboolean	 def);
+gchar		*fu_util_ellipsize_on_word	(const gchar	*str,
+						 guint		 width);
 
 gboolean	 fu_util_print_device_tree	(GNode *n, gpointer data);
 gboolean	 fu_util_is_interesting_device	(FwupdDevice	*dev);

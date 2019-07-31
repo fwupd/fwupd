@@ -1345,6 +1345,7 @@ fu_util_prompt_for_release (FuUtilPrivate *priv, GPtrArray *rels, GError **error
 	for (guint i = 0; i < rels->len; i++) {
 		const gchar *desc_tmp;
 		g_autofree gchar *desc = NULL;
+		g_autofree gchar *desc_trunc = NULL;
 
 		rel = g_ptr_array_index (rels, i);
 
@@ -1359,7 +1360,8 @@ fu_util_prompt_for_release (FuUtilPrivate *priv, GPtrArray *rels, GError **error
 		desc = fu_util_convert_appstream_description (desc_tmp, NULL);
 		if (desc == NULL)
 			desc = g_strdup (desc_tmp);
-		g_print ("%u.\t%s (%s)\n", i + 1, fwupd_release_get_version (rel), desc);
+		desc_trunc = fu_util_ellipsize_on_word (desc, 80 - 1);
+		g_print ("%u.\t%s (%s)\n", i + 1, fwupd_release_get_version (rel), desc_trunc);
 	}
 	idx = fu_util_prompt_for_number (rels->len);
 	if (idx == 0) {

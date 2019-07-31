@@ -651,3 +651,16 @@ fu_util_warning_box (const gchar *str, guint width)
 	/* footer */
 	fu_util_warning_box_line ("╚", NULL, "╝", "═", width);
 }
+
+gchar *
+fu_util_ellipsize_on_word (const gchar *str, guint width)
+{
+	g_autoptr(GString) out = g_string_new (NULL);
+	g_autoptr(GPtrArray) lines = fu_util_strsplit_words (str, width);
+	if (lines == NULL || lines->len == 0)
+		return NULL;
+	g_string_append (out, (const gchar *) g_ptr_array_index (lines, 0));
+	if (lines->len > 1)
+		g_string_append (out, "…");
+	return g_string_free (g_steal_pointer (&out), FALSE);
+}
