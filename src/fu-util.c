@@ -1340,6 +1340,8 @@ fu_util_prompt_for_release (FuUtilPrivate *priv, GPtrArray *rels, GError **error
 
 	/* TRANSLATORS: get interactive prompt */
 	g_print ("%s\n", _("Choose a release:"));
+	/* TRANSLATORS: this is to abort the interactive prompt */
+	g_print ("0.\t%s\n", _("Cancel"));
 	for (guint i = 0; i < rels->len; i++) {
 		rel = g_ptr_array_index (rels, i);
 		g_print ("%u.\t%s (%s)\n",
@@ -1348,6 +1350,13 @@ fu_util_prompt_for_release (FuUtilPrivate *priv, GPtrArray *rels, GError **error
 			 fwupd_release_get_description (rel));
 	}
 	idx = fu_util_prompt_for_number (rels->len);
+	if (idx == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "Request canceled");
+		return NULL;
+	}
 	rel = g_ptr_array_index (rels, idx - 1);
 	return g_object_ref (rel);
 }
