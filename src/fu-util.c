@@ -1343,11 +1343,23 @@ fu_util_prompt_for_release (FuUtilPrivate *priv, GPtrArray *rels, GError **error
 	/* TRANSLATORS: this is to abort the interactive prompt */
 	g_print ("0.\t%s\n", _("Cancel"));
 	for (guint i = 0; i < rels->len; i++) {
+		const gchar *desc_tmp;
+		g_autofree gchar *desc = NULL;
+
 		rel = g_ptr_array_index (rels, i);
-		g_print ("%u.\t%s (%s)\n",
-			 i + 1,
-			 fwupd_release_get_version (rel),
-			 fwupd_release_get_description (rel));
+
+		/* no description provided */
+		desc_tmp = fwupd_release_get_description (rel);
+		if (desc_tmp == NULL) {
+			g_print ("%u.\t%s\n", i + 1, fwupd_release_get_version (rel));
+			continue;
+		}
+
+		/* remove markup, and fall back if we fail */
+		desc = fu_util_convert_appstream_description (desc_tmp, NULL);
+		if (desc == NULL)
+			desc = g_strdup (desc_tmp);
+		g_print ("%u.\t%s (%s)\n", i + 1, fwupd_release_get_version (rel), desc);
 	}
 	idx = fu_util_prompt_for_number (rels->len);
 	if (idx == 0) {
