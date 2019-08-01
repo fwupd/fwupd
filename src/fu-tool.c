@@ -789,17 +789,56 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
+fu_util_install_release (FuUtilPrivate *priv, FwupdRelease *rel, GError **error)
 {
-	g_autoptr(GPtrArray) devices = NULL;
+	FwupdRemote *remote;
+	const gchar *remote_id;
+	const gchar *uri_tmp;
+	g_auto(GStrv) argv = NULL;
 
-	/* load engine */
-	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+	uri_tmp = fwupd_release_get_uri (rel);
+	if (uri_tmp == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "release missing URI");
+		return FALSE;
+	}
+	remote_id = fwupd_release_get_remote_id (rel);
+	if (remote_id == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "failed to find remote for %s",
+			     uri_tmp);
+		return FALSE;		
+	}
+
+	remote = fu_engine_get_remote_by_id (priv->engine,
+					     remote_id,
+					     error);
+	if (remote == NULL)
 		return FALSE;
 
-	priv->current_operation = FU_UTIL_OPERATION_UPDATE;
-	g_signal_connect (priv->engine, "device-changed",
-			  G_CALLBACK (fu_util_update_device_changed_cb), priv);
+	argv = g_new0 (gchar *, 2);
+	/* local remotes have the firmware already */
+	if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_LOCAL) {
+		const gchar *fn_cache = fwupd_remote_get_filename_cache (remote);
+		g_autofree gchar *path = g_path_get_dirname (fn_cache);
+		argv[0] = g_build_filename (path, uri_tmp, NULL);
+	} else if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_DIRECTORY) {
+		argv[0] = g_strdup (uri_tmp + 7);
+	/* web remote, fu_util_install will download file */
+	} else {
+		argv[0] = fwupd_remote_build_firmware_uri (remote, uri_tmp, error);
+	}
+	return fu_util_install (priv, argv, error);
+}
+
+static gboolean
+fu_util_update_all (FuUtilPrivate *priv, GError **error)
+{
+	g_autoptr(GPtrArray) devices = NULL;
 
 	devices = fu_engine_get_devices (priv->engine, error);
 	if (devices == NULL)
@@ -807,9 +846,7 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
 		FwupdRelease *rel;
-		const gchar *remote_id;
 		const gchar *device_id;
-		const gchar *uri_tmp;
 		g_autoptr(GPtrArray) rels = NULL;
 		g_autoptr(GError) error_local = NULL;
 
@@ -827,38 +864,63 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 		}
 
 		rel = g_ptr_array_index (rels, 0);
-		uri_tmp = fwupd_release_get_uri (rel);
-		remote_id = fwupd_release_get_remote_id (rel);
-		if (remote_id != NULL) {
-			FwupdRemote *remote;
-			g_auto(GStrv) argv = NULL;
-
-			remote = fu_engine_get_remote_by_id (priv->engine,
-							     remote_id,
-							     &error_local);
-			if (remote == NULL) {
-				g_printerr ("%s\n", error_local->message);
-				continue;
-			}
-
-			argv = g_new0 (gchar *, 2);
-			/* local remotes have the firmware already */
-			if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_LOCAL) {
-				const gchar *fn_cache = fwupd_remote_get_filename_cache (remote);
-				g_autofree gchar *path = g_path_get_dirname (fn_cache);
-				argv[0] = g_build_filename (path, uri_tmp, NULL);
-			} else if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_DIRECTORY) {
-				argv[0] = g_strdup (uri_tmp + 7);
-			/* web remote, fu_util_install will download file */
-			} else {
-				argv[0] = fwupd_remote_build_firmware_uri (remote, uri_tmp, error);
-			}
-			if (!fu_util_install (priv, argv, &error_local)) {
-				g_printerr ("%s\n", error_local->message);
-				continue;
-			}
-			fu_util_display_current_message (priv);
+		if (!fu_util_install_release (priv, rel, &error_local)) {
+			g_printerr ("%s\n", error_local->message);
+			continue;	
 		}
+		fu_util_display_current_message (priv);
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_util_update_by_id (FuUtilPrivate *priv, const gchar *device_id, GError **error)
+{
+	FwupdRelease *rel;
+	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(GPtrArray) rels = NULL;
+
+	/* do not allow a partial device-id */
+	dev = fu_engine_get_device (priv->engine, device_id, error);
+	if (dev == NULL)
+		return FALSE;
+
+	/* get the releases for this device and filter for validity */
+	rels = fu_engine_get_upgrades (priv->engine, device_id, error);
+	if (rels == NULL)
+		return FALSE;
+	rel = g_ptr_array_index (rels, 0);
+	if (!fu_util_install_release (priv, rel, error))
+		return FALSE;
+	fu_util_display_current_message (priv);
+
+	return TRUE;
+}
+
+static gboolean
+fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	if (g_strv_length (values) > 1) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments");
+		return FALSE;
+	}
+
+	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+		return FALSE;
+
+	priv->current_operation = FU_UTIL_OPERATION_UPDATE;
+	g_signal_connect (priv->engine, "device-changed",
+			  G_CALLBACK (fu_util_update_device_changed_cb), priv);
+
+	if (g_strv_length (values) == 1) {
+		if (!fu_util_update_by_id (priv, values[0], error))
+			return FALSE;
+	} else {
+		if (!fu_util_update_all (priv, error))
+			return FALSE;
 	}
 
 	/* we don't want to ask anything */
