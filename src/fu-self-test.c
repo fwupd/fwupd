@@ -1947,7 +1947,7 @@ fu_keyring_gpg_func (void)
 	g_assert_no_error (error);
 	g_assert_nonnull (blob_pass);
 	blob_sig = g_bytes_new_static (sig_gpgme, strlen (sig_gpgme));
-	result_pass = fu_keyring_verify_data (keyring, blob_pass, blob_sig, &error);
+	result_pass = fu_keyring_verify_data (keyring, blob_pass, blob_sig, FU_KEYRING_VERIFY_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (result_pass);
 	g_assert_cmpint (fu_keyring_result_get_timestamp (result_pass), == , 1438072952);
@@ -1960,7 +1960,7 @@ fu_keyring_gpg_func (void)
 	blob_fail = fu_common_get_contents_bytes (fw_fail, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (blob_fail);
-	result_fail = fu_keyring_verify_data (keyring, blob_fail, blob_sig, &error);
+	result_fail = fu_keyring_verify_data (keyring, blob_fail, blob_sig, FU_KEYRING_VERIFY_FLAG_NONE, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_SIGNATURE_INVALID);
 	g_assert_null (result_fail);
 	g_clear_error (&error);
@@ -2010,7 +2010,9 @@ fu_keyring_pkcs7_func (void)
 	blob_sig = fu_common_get_contents_bytes (sig_fn, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (blob_sig);
-	result_pass = fu_keyring_verify_data (keyring, blob_pass, blob_sig, &error);
+	result_pass = fu_keyring_verify_data (keyring, blob_pass, blob_sig,
+					      FU_KEYRING_VERIFY_FLAG_DISABLE_TIME_CHECKS,
+					      &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (result_pass);
 	g_assert_cmpint (fu_keyring_result_get_timestamp (result_pass), >= , 1502871248);
@@ -2022,7 +2024,7 @@ fu_keyring_pkcs7_func (void)
 	blob_sig2 = fu_common_get_contents_bytes (sig_fn2, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (blob_sig2);
-	result_fail = fu_keyring_verify_data (keyring, blob_pass, blob_sig2, &error);
+	result_fail = fu_keyring_verify_data (keyring, blob_pass, blob_sig2, FU_KEYRING_VERIFY_FLAG_NONE, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_SIGNATURE_INVALID);
 	g_assert_null (result_fail);
 	g_clear_error (&error);
@@ -2033,7 +2035,7 @@ fu_keyring_pkcs7_func (void)
 	blob_fail = fu_common_get_contents_bytes (fw_fail, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (blob_fail);
-	result_fail = fu_keyring_verify_data (keyring, blob_fail, blob_sig, &error);
+	result_fail = fu_keyring_verify_data (keyring, blob_fail, blob_sig, FU_KEYRING_VERIFY_FLAG_NONE, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_SIGNATURE_INVALID);
 	g_assert_null (result_fail);
 	g_clear_error (&error);

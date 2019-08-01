@@ -231,6 +231,7 @@ static FuKeyringResult *
 fu_keyring_gpg_verify_data (FuKeyring *keyring,
 			    GBytes *blob,
 			    GBytes *blob_signature,
+			    FuKeyringVerifyFlags flags,
 			    GError **error)
 {
 	FuKeyringGpg *self = FU_KEYRING_GPG (keyring);

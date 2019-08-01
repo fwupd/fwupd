@@ -182,6 +182,7 @@ static FuKeyringResult *
 fu_keyring_pkcs7_verify_data (FuKeyring *keyring,
 			     GBytes *blob,
 			     GBytes *blob_signature,
+			     FuKeyringVerifyFlags flags,
 			     GError **error)
 {
 	FuKeyringPkcs7 *self = FU_KEYRING_PKCS7 (keyring);
@@ -231,6 +232,14 @@ fu_keyring_pkcs7_verify_data (FuKeyring *keyring,
 	for (gint i = 0; i < count; i++) {
 		gnutls_pkcs7_signature_info_st info;
 		gint64 signing_time = 0;
+		gnutls_certificate_verify_flags verify_flags = 0;
+
+		/* use with care */
+		if (flags & FU_KEYRING_VERIFY_FLAG_DISABLE_TIME_CHECKS) {
+			g_debug ("WARNING: disabling time checks");
+			verify_flags |= GNUTLS_VERIFY_DISABLE_TIME_CHECKS;
+			verify_flags |= GNUTLS_VERIFY_DISABLE_TRUSTED_TIME_CHECKS;
+		}
 
 		/* verify the data against the detached signature */
 		rc = gnutls_pkcs7_verify (pkcs7, self->tl,
@@ -238,7 +247,7 @@ fu_keyring_pkcs7_verify_data (FuKeyring *keyring,
 					  0,    /* vdata_size */
 					  i,    /* index */
 					  &datum, /* data */
-					  0);   /* flags */
+					  verify_flags);   /* flags */
 		if (rc < 0) {
 			g_set_error (error,
 				     FWUPD_ERROR,

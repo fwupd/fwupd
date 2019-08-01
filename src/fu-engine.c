@@ -1909,7 +1909,7 @@ fu_engine_get_existing_keyring_result (FuEngine *self,
 	blob_sig = fu_common_get_contents_bytes (fwupd_remote_get_filename_cache_sig (remote), error);
 	if (blob_sig == NULL)
 		return NULL;
-	return fu_keyring_verify_data (kr, blob, blob_sig, error);
+	return fu_keyring_verify_data (kr, blob, blob_sig, FU_KEYRING_VERIFY_FLAG_NONE, error);
 }
 
 /**
@@ -1992,7 +1992,7 @@ fu_engine_update_metadata (FuEngine *self, const gchar *remote_id,
 		pki_dir = g_build_filename (sysconfdir, "pki", "fwupd-metadata", NULL);
 		if (!fu_keyring_add_public_keys (kr, pki_dir, error))
 			return FALSE;
-		kr_result = fu_keyring_verify_data (kr, bytes_raw, bytes_sig, error);
+		kr_result = fu_keyring_verify_data (kr, bytes_raw, bytes_sig, FU_KEYRING_VERIFY_FLAG_NONE, error);
 		if (kr_result == NULL)
 			return FALSE;
 

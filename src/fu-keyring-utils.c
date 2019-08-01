@@ -167,7 +167,7 @@ fu_keyring_get_release_trust_flags (AsRelease *release,
 				fu_keyring_get_name (kr));
 		return FALSE;
 	}
-	kr_result = fu_keyring_verify_data (kr, blob_payload, blob_signature, &error_local);
+	kr_result = fu_keyring_verify_data (kr, blob_payload, blob_signature, FU_KEYRING_VERIFY_FLAG_NONE, &error_local);
 	if (kr_result == NULL) {
 		g_warning ("untrusted as failed to verify from %s keyring: %s",
 			   fu_keyring_get_name (kr),
