@@ -169,9 +169,9 @@ fu_dell_host_mst_supported (FuPlugin *plugin)
 static gboolean
 fu_dell_supported (FuPlugin *plugin)
 {
-	GBytes *de_table = NULL;
-	GBytes *da_table = NULL;
-	GBytes *enclosure = NULL;
+	g_autoptr(GBytes) de_table = NULL;
+	g_autoptr(GBytes) da_table = NULL;
+	g_autoptr(GBytes) enclosure = NULL;
 	const guint8 *value;
 	const struct da_structure *da_values;
 	gsize len;
@@ -482,7 +482,7 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 gboolean
 fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	GBytes *de_table = NULL;
+	g_autoptr(GBytes) de_table = NULL;
 	const gchar *tmp = NULL;
 	const guint16 *completion_code;
 	gsize len;

@@ -600,7 +600,7 @@ fu_plugin_get_smbios_string (FuPlugin *self, guint8 structure_type, guint8 offse
  *
  * Gets a hardware SMBIOS data.
  *
- * Returns: (transfer none): A #GBytes, or %NULL
+ * Returns: (transfer full): A #GBytes, or %NULL
  *
  * Since: 0.9.8
  **/
