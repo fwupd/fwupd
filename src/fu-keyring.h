@@ -20,12 +20,14 @@ G_DECLARE_DERIVABLE_TYPE (FuKeyring, fu_keyring, FU, KEYRING, GObject)
  * FuKeyringVerifyFlags:
  * @FU_KEYRING_VERIFY_FLAG_NONE:		No flags set
  * @FU_KEYRING_VERIFY_FLAG_USE_CLIENT_CERT:	Use client certificate to verify
+ * @FU_KEYRING_VERIFY_FLAG_DISABLE_TIME_CHECKS:	Disable checking of validity periods
  *
  * The flags to use when interacting with a keyring
  **/
 typedef enum {
-	FU_KEYRING_VERIFY_FLAG_NONE		= 0,
-	FU_KEYRING_VERIFY_FLAG_USE_CLIENT_CERT	= 1 << 1,
+	FU_KEYRING_VERIFY_FLAG_NONE			= 0,
+	FU_KEYRING_VERIFY_FLAG_USE_CLIENT_CERT		= 1 << 1,
+	FU_KEYRING_VERIFY_FLAG_DISABLE_TIME_CHECKS	= 1 << 2,
 	/*< private >*/
 	FU_KEYRING_VERIFY_FLAG_LAST
 } FuKeyringVerifyFlags;
