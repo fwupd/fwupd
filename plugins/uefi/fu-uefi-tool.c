@@ -232,8 +232,8 @@ main (int argc, char *argv[])
 	if (action_list) {
 		for (guint i = 0; i < devices->len; i++) {
 			FuUefiDevice *dev = g_ptr_array_index (devices, i);
-			g_print ("%s type, {%s} action_version %" G_GUINT32_FORMAT " can be updated "
-				 "to any action_version above %" G_GUINT32_FORMAT "\n",
+			g_print ("%s type, {%s} version %" G_GUINT32_FORMAT " can be updated "
+				 "to any version above %" G_GUINT32_FORMAT "\n",
 				 fu_uefi_device_kind_to_string (fu_uefi_device_get_kind (dev)),
 				 fu_uefi_device_get_guid (dev),
 				 fu_uefi_device_get_version (dev),
