@@ -2628,7 +2628,8 @@ fu_keyring_pkcs7_func (void)
 	g_assert_no_error (error);
 	g_assert_nonnull (blob_sig);
 	result_pass = fu_keyring_verify_data (keyring, blob_pass, blob_sig,
-					      FU_KEYRING_VERIFY_FLAG_NONE, &error);
+					      FU_KEYRING_VERIFY_FLAG_DISABLE_TIME_CHECKS,
+					      &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (result_pass);
 	g_assert_cmpint (fu_keyring_result_get_timestamp (result_pass), >= , 1502871248);
