@@ -62,6 +62,7 @@ main (int argc, char *argv[])
 	gboolean verbose = FALSE;
 	g_autofree gchar *apply = FALSE;
 	g_autofree gchar *esp_path = NULL;
+	g_autofree gchar *flags = FALSE;
 	g_autoptr(FuUtilPrivate) priv = g_new0 (FuUtilPrivate, 1);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -99,6 +100,9 @@ main (int argc, char *argv[])
 		{ "apply", 'a', 0, G_OPTION_ARG_STRING, &apply,
 			/* TRANSLATORS: command line option */
 			_("Apply firmware updates"), "GUID" },
+		{ "flags", 'f', 0, G_OPTION_ARG_STRING, &flags,
+			/* TRANSLATORS: command line option */
+			_("Use quirk flags when installing firmware"), NULL },
 		{ NULL}
 	};
 
@@ -330,6 +334,8 @@ main (int argc, char *argv[])
 			return EXIT_FAILURE;
 		}
 		fu_device_set_metadata (FU_DEVICE (dev), "EspPath", esp_path);
+		if (flags != NULL)
+			fu_device_set_custom_flags (FU_DEVICE (dev), flags);
 		if (!fu_device_write_firmware (FU_DEVICE (dev), fw,
 					       FWUPD_INSTALL_FLAG_NONE,
 					       &error_local)) {
