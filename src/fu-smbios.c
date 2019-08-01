@@ -370,7 +370,7 @@ fu_smbios_get_item_for_type (FuSmbios *self, guint8 type)
  *
  * Reads a SMBIOS data blob, which includes the SMBIOS section header.
  *
- * Returns: a #GBytes, or %NULL if invalid or not found
+ * Returns: (transfer full): a #GBytes, or %NULL if invalid or not found
  **/
 GBytes *
 fu_smbios_get_data (FuSmbios *self, guint8 type, GError **error)
@@ -385,7 +385,7 @@ fu_smbios_get_data (FuSmbios *self, guint8 type, GError **error)
 			     "no structure with type %02x", type);
 		return NULL;
 	}
-	return item->data;
+	return g_bytes_ref (item->data);
 }
 
 /**
