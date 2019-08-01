@@ -318,7 +318,13 @@ main (int argc, char *argv[])
 	if (apply != NULL) {
 		g_autoptr(FuUefiDevice) dev = fu_uefi_device_new_from_guid (apply);
 		g_autoptr(GError) error_local = NULL;
-		g_autoptr(GBytes) fw = fu_common_get_contents_bytes (argv[1], &error_local);
+		g_autoptr(GBytes) fw = NULL;
+
+		if (argv[1] == NULL) {
+			g_printerr ("capsule filename required\n");
+			return EXIT_FAILURE;
+		}
+		fw = fu_common_get_contents_bytes (argv[1], &error_local);
 		if (fw == NULL) {
 			g_printerr ("failed: %s\n", error_local->message);
 			return EXIT_FAILURE;
