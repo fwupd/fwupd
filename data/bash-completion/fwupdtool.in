@@ -32,6 +32,16 @@ _fwupdtool_opts=(
 	'--cleanup'
 )
 
+_update_opts=(
+	'--internal-only'
+	'--external-only'
+)
+
+_show_update_modifiers()
+{
+	COMPREPLY+=( $(compgen -W '${_update_opts[@]}' -- "$cur") )
+}
+
 _show_plugins()
 {
 	local plugins
@@ -90,6 +100,15 @@ _fwupdtool()
 		#output
 		elif [[ "$prev" = "${COMP_WORDS[4]}" ]]; then
 			_filedir
+		else
+			_show_modifiers
+		fi
+		;;
+	update)
+		#update modifiers
+		if [[ "$prev" = "$command" ]]; then
+			_show_update_modifiers
+		#generic modifiers
 		else
 			_show_modifiers
 		fi

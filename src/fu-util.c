@@ -57,6 +57,8 @@ struct FuUtilPrivate {
 	gboolean		 assume_yes;
 	gboolean		 sign;
 	gboolean		 show_all_devices;
+	gboolean		 internal_only;
+	gboolean		 external_only;
 	/* only valid in update and downgrade */
 	FuUtilOperation		 current_operation;
 	FwupdDevice		*current_device;
@@ -1859,6 +1861,12 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
 			continue;
 
+		/* requested to skip these devices */
+		if (priv->internal_only && !fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL))
+			continue;
+		if (priv->external_only && fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL))
+			continue;
+
 		/* get the releases for this device and filter for validity */
 		rels = fwupd_client_get_upgrades (priv->client,
 						  fwupd_device_get_id (dev),
@@ -1894,6 +1902,16 @@ fu_util_update_by_id (FuUtilPrivate *priv, const gchar *device_id, GError **erro
 	dev = fwupd_client_get_device_by_id (priv->client, device_id, NULL, error);
 	if (dev == NULL)
 		return FALSE;
+
+	/* requested to skip these devices */
+	if ((priv->internal_only && !fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL)) ||
+	    (priv->external_only && fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL))) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "No valid devices found");
+		return FALSE;
+	}
 
 	/* get devices from daemon */
 	priv->current_operation = FU_UTIL_OPERATION_UPDATE;
@@ -2289,6 +2307,12 @@ main (int argc, char *argv[])
 		{ "show-all-devices", '\0', 0, G_OPTION_ARG_NONE, &priv->show_all_devices,
 			/* TRANSLATORS: command line option */
 			_("Show devices that are not updatable"), NULL },
+		{ "internal-only", '\0', 0, G_OPTION_ARG_NONE, &priv->internal_only,
+			/* TRANSLATORS: command line option */
+			_("Only update internal devices"), NULL },
+		{ "external-only", '\0', 0, G_OPTION_ARG_NONE, &priv->external_only,
+			/* TRANSLATORS: command line option */
+			_("Only update external devices"), NULL },
 		{ NULL}
 	};
 
@@ -2519,6 +2543,10 @@ main (int argc, char *argv[])
 		priv->flags |= FWUPD_INSTALL_FLAG_FORCE;
 	if (no_history)
 		priv->flags |= FWUPD_INSTALL_FLAG_NO_HISTORY;
+	if (priv->internal_only && priv->external_only) {
+		g_printerr ("%s\n", _("Invalid options selected"));
+		return EXIT_FAILURE;
+	}
 
 	/* connect to the daemon */
 	priv->client = fwupd_client_new ();

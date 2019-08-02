@@ -43,6 +43,16 @@ _fwupdmgr_opts=(
 	'--sign'
 )
 
+_update_opts=(
+	'--internal-only'
+	'--external-only'
+)
+
+_show_update_modifiers()
+{
+	COMPREPLY+=( $(compgen -W '${_update_opts[@]}' -- "$cur") )
+}
+
 _show_modifiers()
 {
 	COMPREPLY+=( $(compgen -W '${_fwupdmgr_opts[@]}' -- "$cur") )
@@ -145,6 +155,15 @@ _fwupdmgr()
 		#find remote ID
 		elif [[ "$prev" = "${COMP_WORDS[3]}" ]]; then
 			_show_remotes
+		else
+			_show_modifiers
+		fi
+		;;
+	update)
+		#update modifiers
+		if [[ "$prev" = "$command" ]]; then
+			_show_update_modifiers
+		#generic modifiers
 		else
 			_show_modifiers
 		fi

@@ -54,6 +54,8 @@ struct FuUtilPrivate {
 	gboolean		 enable_json_state;
 	FwupdInstallFlags	 flags;
 	gboolean		 show_all_devices;
+	gboolean		 internal_only;
+	gboolean		 external_only;
 	/* only valid in update and downgrade */
 	FuUtilOperation		 current_operation;
 	FwupdDevice		*current_device;
@@ -856,6 +858,12 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
 			continue;
 
+		/* requested to skip these devices */
+		if (priv->internal_only && !fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL))
+			continue;
+		if (priv->external_only && fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL))
+			continue;
+
 		device_id = fu_device_get_id (dev);
 		rels = fu_engine_get_upgrades (priv->engine, device_id, &error_local);
 		if (rels == NULL) {
@@ -884,6 +892,16 @@ fu_util_update_by_id (FuUtilPrivate *priv, const gchar *device_id, GError **erro
 	dev = fu_engine_get_device (priv->engine, device_id, error);
 	if (dev == NULL)
 		return FALSE;
+
+	/* requested to skip these devices */
+	if ((priv->internal_only && !fwupd_device_has_flag (FWUPD_DEVICE (dev), FWUPD_DEVICE_FLAG_INTERNAL)) ||
+	    (priv->external_only && fwupd_device_has_flag (FWUPD_DEVICE (dev), FWUPD_DEVICE_FLAG_INTERNAL))) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "No valid devices found");
+		return FALSE;
+	}
 
 	/* get the releases for this device and filter for validity */
 	rels = fu_engine_get_upgrades (priv->engine, device_id, error);
@@ -1368,6 +1386,12 @@ main (int argc, char *argv[])
 		{ "enable-json-state", '\0', 0, G_OPTION_ARG_NONE, &priv->enable_json_state,
 			/* TRANSLATORS: command line option */
 			_("Save device state into a JSON file between executions"), NULL },
+		{ "internal-only", '\0', 0, G_OPTION_ARG_NONE, &priv->internal_only,
+			/* TRANSLATORS: command line option */
+			_("Only update internal devices"), NULL },
+		{ "external-only", '\0', 0, G_OPTION_ARG_NONE, &priv->external_only,
+			/* TRANSLATORS: command line option */
+			_("Only update external devices"), NULL },
 		{ NULL}
 	};
 
@@ -1547,6 +1571,10 @@ main (int argc, char *argv[])
 		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
 	if (force)
 		priv->flags |= FWUPD_INSTALL_FLAG_FORCE;
+	if (priv->internal_only && priv->external_only) {
+		g_printerr ("Invalid options selected");
+		return EXIT_FAILURE;
+	}
 
 	/* load engine */
 	priv->engine = fu_engine_new (FU_APP_FLAGS_NO_IDLE_SOURCES);
