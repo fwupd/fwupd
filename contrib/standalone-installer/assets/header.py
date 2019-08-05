@@ -221,7 +221,7 @@ def use_included_version(minimum_version):
             print("fwupd %s is already installed but this package requires %s" %
                   (version.version, minimum_version))
         else:
-            print("New enough fwupd already installed")
+            print("Using existing fwupd version %s already installed on system." % version.version)
             return False
     else:
         print("fwupd %s is installed and must be removed" % version.version)
@@ -229,18 +229,20 @@ def use_included_version(minimum_version):
 
 def remove_packaged_version(pkg, cache):
     res = False
-    while not res:
+    while True:
         res = input("Remove now (Y/N)? ")
         if res.lower() == 'n':
-            return False
-        if res.lower() == 'y':
+            res = False
             break
-        res = False
-    pkg.mark_delete()
-    res = cache.commit()
+        if res.lower() == 'y':
+            res = True
+            break
+    if res:
+        pkg.mark_delete()
+        res = cache.commit()
     if not res:
         raise Exception("Need to remove packaged version")
-    return res
+    return True
 
 def install_builtin(directory, verbose, allow_reinstall, allow_older):
     cabs = []
@@ -271,7 +273,7 @@ def run_installation (directory, verbose, allow_reinstall, allow_older, uninstal
         with open(minimum_path, "r") as rfd:
             minimum = rfd.read()
 
-    if use_included_version(minimum):
+    if not use_included_version(minimum):
         install_builtin(directory, verbose, allow_reinstall, allow_older)
         return
 
