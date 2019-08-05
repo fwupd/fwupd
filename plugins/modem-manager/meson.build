@@ -1,5 +1,9 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginMm"']
 
+install_data(['modem-manager.quirk'],
+  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
+)
+
 shared_module('fu_plugin_modem_manager',
   fu_hash,
   sources : [
