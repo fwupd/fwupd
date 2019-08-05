@@ -134,6 +134,23 @@ fu_solokey_device_open (FuUsbDevice *device, GError **error)
 }
 
 static gboolean
+fu_solokey_device_close (FuUsbDevice *device, GError **error)
+{
+	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
+
+	/* rebind kernel driver so it works as a security key again... */
+	if (!g_usb_device_release_interface (usb_device, 0x0000,
+					     G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
+					     error)) {
+		g_prefix_error (error, "failed to release interface: ");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_solokey_device_packet_tx (FuSolokeyDevice *self, GByteArray *req, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
@@ -534,6 +551,7 @@ fu_solokey_device_class_init (FuSolokeyDeviceClass *klass)
 	klass_device->write_firmware = fu_solokey_device_write_firmware;
 	klass_device->setup = fu_solokey_device_setup;
 	klass_usb_device->open = fu_solokey_device_open;
+	klass_usb_device->close = fu_solokey_device_close;
 	klass_usb_device->probe = fu_solokey_device_probe;
 }
 
