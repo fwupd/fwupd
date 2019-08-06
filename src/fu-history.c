@@ -157,11 +157,11 @@ fu_history_create_database (FuHistory *self, GError **error)
 	gint rc;
 	rc = sqlite3_exec (self->db,
 			 "BEGIN TRANSACTION;"
-			 "CREATE TABLE schema ("
+			 "CREATE TABLE IF NOT EXISTS schema ("
 			 "created timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
 			 "version INTEGER DEFAULT 0);"
 			 "INSERT INTO schema (version) VALUES (0);"
-			 "CREATE TABLE history ("
+			 "CREATE TABLE IF NOT EXISTS history ("
 			 "device_id TEXT,"
 			 "update_state INTEGER DEFAULT 0,"
 			 "update_error TEXT,"
@@ -178,7 +178,7 @@ fu_history_create_database (FuHistory *self, GError **error)
 			 "version_new TEXT,"
 			 "checksum_device TEXT DEFAULT NULL,"
 			 "protocol TEXT DEFAULT NULL);"
-			 "CREATE TABLE approved_firmware ("
+			 "CREATE TABLE IF NOT EXISTS approved_firmware ("
 			 "checksum TEXT);"
 			 "COMMIT;", NULL, NULL, NULL);
 	if (rc != SQLITE_OK) {
@@ -257,7 +257,7 @@ fu_history_migrate_database_v4 (FuHistory *self, GError **error)
 {
 	gint rc;
 	rc = sqlite3_exec (self->db,
-			   "CREATE TABLE approved_firmware (checksum TEXT);",
+			   "CREATE TABLE IF NOT EXISTS approved_firmware (checksum TEXT);",
 			   NULL, NULL, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
