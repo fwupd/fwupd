@@ -557,6 +557,12 @@ fu_util_release_get_name (FwupdRelease *release)
 			 * the first %s is the device name, e.g. 'Intel ThunderBolt` */
 			return g_strdup_printf (_("%s Controller Update"), name);
 		}
+		if (g_strcmp0 (cat, "X-ThunderboltController") == 0) {
+			/* TRANSLATORS: the Thunderbolt controller is a device that
+			 * has other high speed Thunderbolt devices plugged into it;
+			 * the first %s is the system name, e.g. 'ThinkPad P50` */
+			return g_strdup_printf (_("%s Thunderbolt Controller Update"), name);
+		}
 	}
 
 	/* TRANSLATORS: this is the fallback where we don't know if the release
