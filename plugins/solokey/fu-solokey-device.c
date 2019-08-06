@@ -120,6 +120,9 @@ fu_solokey_device_open (FuUsbDevice *device, GError **error)
 		fu_device_set_version_bootloader (FU_DEVICE (device), split[2]);
 		fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 		fu_device_remove_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
+	} else if (g_strcmp0 (split[1], "Keys") == 0 && split[2], "Solo") == 0) {
+		fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+		fu_device_remove_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
 	} else {
 		fu_device_set_version (FU_DEVICE (device), split[1], FWUPD_VERSION_FORMAT_TRIPLET);
 		fu_device_remove_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
