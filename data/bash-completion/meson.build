@@ -4,17 +4,11 @@ if bashcomp.found()
   )
 
 
-if get_option('daemon')
-    install_data(['fwupdmgr'],
-      install_dir : tgt,
-    )
-endif
-
 if get_option('agent')
     install_data(['fwupdagent'],
       install_dir : tgt,
     )
-endif
+endif # get_option('agent')
 
 # replace @libexecdir@
 fwupdtool_path = join_paths(libexecdir, 'fwupd')
@@ -27,4 +21,13 @@ configure_file(
   install: true,
   install_dir: tgt)
 
-endif
+if get_option('daemon')
+configure_file(
+  input : 'fwupdmgr.in',
+  output : 'fwupdmgr',
+  configuration : con2,
+  install: true,
+  install_dir: tgt)
+endif # get_option('daemon')
+
+endif # bashcomp.found()

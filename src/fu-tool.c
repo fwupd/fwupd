@@ -59,6 +59,8 @@ struct FuUtilPrivate {
 	FwupdDevice		*current_device;
 	gchar			*current_message;
 	FwupdDeviceFlags	 completion_flags;
+	FwupdDeviceFlags	 filter_include;
+	FwupdDeviceFlags	 filter_exclude;
 };
 
 static gboolean
@@ -279,6 +281,20 @@ fu_util_get_plugins (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_filter_device (FuUtilPrivate *priv, FwupdDevice *dev)
+{
+	if (priv->filter_include != FWUPD_DEVICE_FLAG_NONE) {
+		if (!fwupd_device_has_flag (dev, priv->filter_include))
+			return FALSE;
+	}
+	if (priv->filter_exclude != FWUPD_DEVICE_FLAG_NONE) {
+		if (fwupd_device_has_flag (dev, priv->filter_exclude))
+			return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
@@ -296,8 +312,10 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_autoptr(GPtrArray) rels = NULL;
 		g_autoptr(GError) error_local = NULL;
 
-		/* not going to have results, so save a D-Bus round-trip */
+		/* not going to have results, so save a engine round-trip */
 		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
+			continue;
+		if (!fu_util_filter_device (priv, dev))
 			continue;
 
 		/* get the releases for this device and filter for validity */
@@ -363,6 +381,8 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 	for (guint i = 0; i < array->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (array, i);
 		g_autofree gchar *tmp = NULL;
+		if (!fu_util_filter_device (priv, dev))
+			continue;
 		tmp = fwupd_device_to_string (dev);
 		g_print ("%s\n", tmp);
 	}
@@ -389,6 +409,8 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 	for (guint i = 0; i < devs->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (devs, i);
+		if (!fu_util_filter_device (priv, dev))
+			continue;
 		if (priv->show_all_devices || fu_util_is_interesting_device (dev)) {
 			g_autofree gchar *tmp = fwupd_device_to_string (dev);
 			g_print ("%s\n", tmp);
@@ -402,11 +424,33 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_util_get_device_flags (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GString) str = g_string_new (NULL);
+
+	for (FwupdDeviceFlags i = FWUPD_DEVICE_FLAG_INTERNAL; i < FWUPD_DEVICE_FLAG_UNKNOWN; i<<=1) {
+		const gchar *tmp = fwupd_device_flag_to_string (i);
+		if (tmp == NULL)
+			break;
+		if (i != FWUPD_DEVICE_FLAG_INTERNAL)
+			g_string_append (str, " ");
+		g_string_append (str, tmp);
+		g_string_append (str, " ~");
+		g_string_append (str, tmp);
+	}
+	g_print ("%s\n", str->str);
+
+	return TRUE;
+}
+
 static void
 fu_util_build_device_tree (FuUtilPrivate *priv, GNode *root, GPtrArray *devs, FuDevice *dev)
 {
 	for (guint i = 0; i < devs->len; i++) {
 		FuDevice *dev_tmp = g_ptr_array_index (devs, i);
+		if (!fu_util_filter_device (priv, FWUPD_DEVICE (dev_tmp)))
+			continue;
 		if (!priv->show_all_devices &&
 		    !fu_util_is_interesting_device (FWUPD_DEVICE (dev_tmp)))
 			continue;
@@ -445,22 +489,42 @@ fu_util_get_topology (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
-
 static FuDevice *
 fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
 {
 	FuDevice *dev;
 	guint idx;
 	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GPtrArray) devices_filtered = NULL;
 
 	/* get devices from daemon */
 	devices = fu_engine_get_devices (priv->engine, error);
 	if (devices == NULL)
 		return NULL;
 
+	/* filter results */
+	devices_filtered = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	for (guint i = 0; i < devices->len; i++) {
+		dev = g_ptr_array_index (devices, i);
+		if (!fu_util_filter_device (priv, FWUPD_DEVICE (dev)))
+			continue;
+		if (!fwupd_device_has_flag (FWUPD_DEVICE (dev), FWUPD_DEVICE_FLAG_SUPPORTED))
+			continue;
+		g_ptr_array_add (devices_filtered, g_object_ref (dev));
+	}
+
+	/* nothing */
+	if (devices_filtered->len == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "No supported devices");
+		return NULL;
+	}
+
 	/* exactly one */
-	if (devices->len == 1) {
-		dev = g_ptr_array_index (devices, 0);
+	if (devices_filtered->len == 1) {
+		dev = g_ptr_array_index (devices_filtered, 0);
 		return g_object_ref (dev);
 	}
 
@@ -468,14 +532,14 @@ fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
 	g_print ("%s\n", _("Choose a device:"));
 	/* TRANSLATORS: this is to abort the interactive prompt */
 	g_print ("0.\t%s\n", _("Cancel"));
-	for (guint i = 0; i < devices->len; i++) {
-		dev = g_ptr_array_index (devices, i);
+	for (guint i = 0; i < devices_filtered->len; i++) {
+		dev = g_ptr_array_index (devices_filtered, i);
 		g_print ("%u.\t%s (%s)\n",
 			 i + 1,
 			 fu_device_get_id (dev),
 			 fu_device_get_name (dev));
 	}
-	idx = fu_util_prompt_for_number (devices->len);
+	idx = fu_util_prompt_for_number (devices_filtered->len);
 	if (idx == 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -483,7 +547,7 @@ fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
 				     "Request canceled");
 		return NULL;
 	}
-	dev = g_ptr_array_index (devices, idx - 1);
+	dev = g_ptr_array_index (devices_filtered, idx - 1);
 	return g_object_ref (dev);
 }
 
@@ -811,7 +875,7 @@ fu_util_install_release (FuUtilPrivate *priv, FwupdRelease *rel, GError **error)
 			     FWUPD_ERROR_INVALID_FILE,
 			     "failed to find remote for %s",
 			     uri_tmp);
-		return FALSE;		
+		return FALSE;
 	}
 
 	remote = fu_engine_get_remote_by_id (priv->engine,
@@ -855,6 +919,8 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 		/* only show stuff that has metadata available */
 		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
 			continue;
+		if (!fu_util_filter_device (priv, dev))
+			continue;
 
 		device_id = fu_device_get_id (dev);
 		rels = fu_engine_get_upgrades (priv->engine, device_id, &error_local);
@@ -866,7 +932,7 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 		rel = g_ptr_array_index (rels, 0);
 		if (!fu_util_install_release (priv, rel, &error_local)) {
 			g_printerr ("%s\n", error_local->message);
-			continue;	
+			continue;
 		}
 		fu_util_display_current_message (priv);
 	}
@@ -1062,6 +1128,8 @@ fu_util_activate (FuUtilPrivate *priv, gchar **values, GError **error)
 	/* activate anything with _NEEDS_ACTIVATION */
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index (devices, i);
+		if (!fu_util_filter_device (priv, FWUPD_DEVICE (device)))
+			continue;
 		if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION))
 			continue;
 		/* TRANSLATORS: shown when shutting down to switch to the new version */
@@ -1316,7 +1384,10 @@ fu_util_get_history (FuUtilPrivate *priv, gchar **values, GError **error)
 	/* show each device */
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
-		g_autofree gchar *str = fwupd_device_to_string (dev);
+		g_autofree gchar *str = NULL;
+		if (!fu_util_filter_device (priv, dev))
+			continue;
+		str = fwupd_device_to_string (dev);
 		g_print ("%s\n", str);
 	}
 
@@ -1337,6 +1408,7 @@ main (int argc, char *argv[])
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) cmd_array = fu_util_cmd_array_new ();
 	g_autofree gchar *cmd_descriptions = NULL;
+	g_autofree gchar *filter = NULL;
 	const GOptionEntry options[] = {
 		{ "version", '\0', 0, G_OPTION_ARG_NONE, &version,
 			/* TRANSLATORS: command line option */
@@ -1368,6 +1440,10 @@ main (int argc, char *argv[])
 		{ "enable-json-state", '\0', 0, G_OPTION_ARG_NONE, &priv->enable_json_state,
 			/* TRANSLATORS: command line option */
 			_("Save device state into a JSON file between executions"), NULL },
+		{ "filter", '\0', 0, G_OPTION_ARG_STRING, &filter,
+			/* TRANSLATORS: command line option */
+			_("Filter with a set of device flags using a ~ prefix to "
+			  "exclude, e.g. 'internal,~needs-reboot'"), NULL },
 		{ NULL}
 	};
 
@@ -1429,6 +1505,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Get all devices that support firmware updates"),
 		     fu_util_get_devices);
+	fu_util_cmd_array_add (cmd_array,
+		     "get-device-flags",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Get all device flags supported by fwupd"),
+		     fu_util_get_device_flags);
 	fu_util_cmd_array_add (cmd_array,
 		     "get-topology",
 		     NULL,
@@ -1539,6 +1621,20 @@ main (int argc, char *argv[])
 			 error->message);
 		return EXIT_FAILURE;
 	}
+
+	/* parse filter flags */
+	if (filter != NULL) {
+		if (!fu_util_parse_filter_flags (filter,
+						 &priv->filter_include,
+						 &priv->filter_exclude,
+						 &error)) {
+			/* TRANSLATORS: the user didn't read the man page */
+			g_print ("%s: %s\n", _("Failed to parse flags for --filter"),
+				 error->message);
+			return EXIT_FAILURE;
+		}
+	}
+
 
 	/* set flags */
 	if (allow_reinstall)
