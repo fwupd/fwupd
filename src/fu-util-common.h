@@ -63,4 +63,10 @@ gchar		*fu_util_release_get_name	(FwupdRelease	*release);
 const gchar	*fu_util_get_systemd_unit	(void);
 gboolean	 fu_util_using_correct_daemon	(GError		**error);
 
+gboolean	 fu_util_parse_filter_flags	(const gchar *filter,
+						 FwupdDeviceFlags *include,
+						 FwupdDeviceFlags *exclude,
+						 GError **error);
+
+
 G_END_DECLS

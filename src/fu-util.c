@@ -62,6 +62,8 @@ struct FuUtilPrivate {
 	FwupdDevice		*current_device;
 	gchar			*current_message;
 	FwupdDeviceFlags	 completion_flags;
+	FwupdDeviceFlags	 filter_include;
+	FwupdDeviceFlags	 filter_exclude;
 };
 
 static gboolean	fu_util_report_history (FuUtilPrivate *priv, gchar **values, GError **error);
@@ -127,6 +129,20 @@ fu_util_update_device_changed_cb (FwupdClient *client,
 	}
 }
 
+static gboolean
+fu_util_filter_device (FuUtilPrivate *priv, FwupdDevice *dev)
+{
+	if (priv->filter_include != FWUPD_DEVICE_FLAG_NONE) {
+		if (!fwupd_device_has_flag (dev, priv->filter_include))
+			return FALSE;
+	}
+	if (priv->filter_exclude != FWUPD_DEVICE_FLAG_NONE) {
+		if (fwupd_device_has_flag (dev, priv->filter_exclude))
+			return FALSE;
+	}
+	return TRUE;
+}
+
 static FwupdDevice *
 fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
 {
@@ -144,6 +160,8 @@ fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
 	devices_filtered = g_ptr_array_new ();
 	for (guint i = 0; i < devices->len; i++) {
 		dev = g_ptr_array_index (devices, i);
+		if (!fu_util_filter_device (priv, dev))
+			continue;
 		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
 			continue;
 		g_ptr_array_add (devices_filtered, dev);
@@ -212,6 +230,8 @@ fu_util_perhaps_show_unreported (FuUtilPrivate *priv, GError **error)
 
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
+		if (!fu_util_filter_device (priv, dev))
+			continue;
 		if (fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_REPORTED))
 			continue;
 		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
@@ -401,6 +421,8 @@ fu_util_build_device_tree (FuUtilPrivate *priv, GNode *root, GPtrArray *devs, Fw
 {
 	for (guint i = 0; i < devs->len; i++) {
 		FwupdDevice *dev_tmp = g_ptr_array_index (devs, i);
+		if (!fu_util_filter_device (priv, dev_tmp))
+			continue;
 		if (!priv->show_all_devices &&
 		    !fu_util_is_interesting_device (dev_tmp))
 			continue;
@@ -455,6 +477,8 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 	for (guint i = 0; i < devs->len; i++) {
 		g_autofree gchar *tmp = NULL;
 		FwupdDevice *dev = g_ptr_array_index (devs, i);
+		if (!fu_util_filter_device (priv, dev))
+			continue;
 		if (!priv->show_all_devices) {
 			if (!fu_util_is_interesting_device (dev))
 				continue;
@@ -561,6 +585,8 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 	for (guint i = 0; i < array->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (array, i);
 		g_autofree gchar *tmp = NULL;
+		if (!fu_util_filter_device (priv, dev))
+			continue;
 		tmp = fwupd_device_to_string (dev);
 		g_print ("%s\n", tmp);
 	}
@@ -767,6 +793,8 @@ fu_util_report_history (FuUtilPrivate *priv, gchar **values, GError **error)
 		GPtrArray *devices_tmp;
 
 		/* filter, if not forcing */
+		if (!fu_util_filter_device (priv, dev))
+			continue;
 		if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 			if (fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_REPORTED))
 				continue;
@@ -854,7 +882,10 @@ fu_util_get_history (FuUtilPrivate *priv, gchar **values, GError **error)
 	/* show each device */
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
-		g_autofree gchar *str = fwupd_device_to_string (dev);
+		g_autofree gchar *str = NULL;
+		if (!fu_util_filter_device (priv, dev))
+			continue;
+		str = fwupd_device_to_string (dev);
 		g_print ("%s\n", str);
 	}
 
@@ -915,6 +946,8 @@ fu_util_verify_update_all (FuUtilPrivate *priv, GError **error)
 	for (guint i = 0; i < devs->len; i++) {
 		g_autoptr(GError) error_local = NULL;
 		FwupdDevice *dev = g_ptr_array_index (devs, i);
+		if (!fu_util_filter_device (priv, dev))
+			continue;
 		if (!fwupd_client_verify_update (priv->client,
 						 fwupd_device_get_id (dev),
 						 NULL,
@@ -1387,6 +1420,8 @@ fu_util_verify_all (FuUtilPrivate *priv, GError **error)
 	for (guint i = 0; i < devs->len; i++) {
 		g_autoptr(GError) error_local = NULL;
 		FwupdDevice *dev = g_ptr_array_index (devs, i);
+		if (!fu_util_filter_device (priv, dev))
+			continue;
 		if (!fwupd_client_verify (priv->client,
 					  fwupd_device_get_id (dev),
 					  NULL,
@@ -1552,6 +1587,8 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 
 		/* not going to have results, so save a D-Bus round-trip */
 		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
+			continue;
+		if (!fu_util_filter_device (priv, dev))
 			continue;
 
 		/* get the releases for this device and filter for validity */
@@ -1858,6 +1895,8 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 		/* not going to have results, so save a D-Bus round-trip */
 		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
 			continue;
+		if (!fu_util_filter_device (priv, dev))
+			continue;
 
 		/* get the releases for this device and filter for validity */
 		rels = fwupd_client_get_upgrades (priv->client,
@@ -2056,6 +2095,8 @@ fu_util_activate (FuUtilPrivate *priv, gchar **values, GError **error)
 	/* activate anything with _NEEDS_ACTIVATION */
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *device = g_ptr_array_index (devices, i);
+		if (!fu_util_filter_device (priv, device))
+			continue;
 		if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION))
 			continue;
 		/* TRANSLATORS: shown when shutting down to switch to the new version */
@@ -2249,6 +2290,7 @@ main (int argc, char *argv[])
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) cmd_array = fu_util_cmd_array_new ();
 	g_autofree gchar *cmd_descriptions = NULL;
+	g_autofree gchar *filter = NULL;
 	const GOptionEntry options[] = {
 		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
 			/* TRANSLATORS: command line option */
@@ -2289,6 +2331,10 @@ main (int argc, char *argv[])
 		{ "show-all-devices", '\0', 0, G_OPTION_ARG_NONE, &priv->show_all_devices,
 			/* TRANSLATORS: command line option */
 			_("Show devices that are not updatable"), NULL },
+		{ "filter", '\0', 0, G_OPTION_ARG_STRING, &filter,
+			/* TRANSLATORS: command line option */
+			_("Filter with a set of device flags using a ~ prefix to "
+			  "exclude, e.g. 'internal,~needs-reboot'"), NULL },
 		{ NULL}
 	};
 
@@ -2498,6 +2544,19 @@ main (int argc, char *argv[])
 		g_print ("%s: %s\n", _("Failed to parse arguments"),
 			 error->message);
 		return EXIT_FAILURE;
+	}
+
+	/* parse filter flags */
+	if (filter != NULL) {
+		if (!fu_util_parse_filter_flags (filter,
+						 &priv->filter_include,
+						 &priv->filter_exclude,
+						 &error)) {
+			/* TRANSLATORS: the user didn't read the man page */
+			g_print ("%s: %s\n", _("Failed to parse flags for --filter"),
+				 error->message);
+			return EXIT_FAILURE;
+		}
 	}
 
 	/* set verbose? */
