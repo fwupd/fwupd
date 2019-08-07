@@ -230,7 +230,7 @@ fu_synaprom_device_cmd_download_chunk (FuSynapromDevice *device,
 	return fu_synaprom_device_cmd_send (device, request, reply, 20000, error);
 }
 
-GBytes *
+FuFirmware *
 fu_synaprom_device_prepare_fw (FuDevice *device,
 			       GBytes *fw,
 			       FwupdInstallFlags flags,
@@ -240,18 +240,15 @@ fu_synaprom_device_prepare_fw (FuDevice *device,
 	FuSynapromFirmwareMfwHeader hdr;
 	guint32 product;
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GPtrArray) firmware = NULL;
+	g_autoptr(FuFirmware) firmware = fu_synaprom_firmware_new ();
 
 	/* parse the firmware */
 	fu_device_set_status (device, FWUPD_STATUS_DECOMPRESSING);
-	firmware = fu_synaprom_firmware_new (fw, error);
-	if (firmware == NULL)
+	if (!fu_firmware_parse (firmware, fw, flags, error))
 		return NULL;
 
 	/* check the update header product and version */
-	blob = fu_synaprom_firmware_get_bytes_by_tag (firmware,
-						      FU_SYNAPROM_FIRMWARE_TAG_MFW_HEADER,
-						      error);
+	blob = fu_firmware_get_image_by_id_bytes (firmware, "mfw-update-header", error);
 	if (blob == NULL)
 		return NULL;
 	if (g_bytes_get_size (blob) != sizeof(hdr)) {
@@ -296,10 +293,8 @@ fu_synaprom_device_prepare_fw (FuDevice *device,
 		}
 	}
 
-	/* get payload */
-	return fu_synaprom_firmware_get_bytes_by_tag (firmware,
-						      FU_SYNAPROM_FIRMWARE_TAG_MFW_PAYLOAD,
-						      error);
+	/* success */
+	return g_steal_pointer (&firmware);
 }
 
 gboolean
@@ -352,11 +347,18 @@ fu_synaprom_device_write_fw (FuSynapromDevice *self, GBytes *fw, GError **error)
 
 static gboolean
 fu_synaprom_device_write_firmware (FuDevice *device,
-				   GBytes *fw,
+				   FuFirmware *firmware,
 				   FwupdInstallFlags flags,
 				   GError **error)
 {
 	FuSynapromDevice *self = FU_SYNAPROM_DEVICE (device);
+	g_autoptr(GBytes) fw = NULL;
+
+	/* get default image */
+	fw = fu_firmware_get_image_by_id_bytes (firmware, "mfw-update-payload", error);
+	if (fw == NULL)
+		return FALSE;
+
 	return fu_synaprom_device_write_fw (self, fw, error);
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2018-2019 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -8,47 +8,42 @@
 
 #include <string.h>
 
-#include "dfu-element.h"
-#include "dfu-format-srec.h"
-#include "dfu-image.h"
-
+#include "fu-common.h"
+#include "fu-srec-firmware.h"
+#include "fu-firmware-common.h"
 #include "fu-wac-firmware.h"
 
 #include "fwupd-error.h"
+
+struct _FuWacFirmware {
+	FuFirmware		 parent_instance;
+};
+
+G_DEFINE_TYPE (FuWacFirmware, fu_wac_firmware, FU_TYPE_FIRMWARE)
 
 typedef struct {
 	guint32 addr;
 	guint32 sz;
 	guint32 prog_start_addr;
-} DfuFirmwareWacHeaderRecord;
+} FuFirmwareWacHeaderRecord;
 
-/**
- * fu_wac_firmware_parse_data:
- * @firmware: a #DfuFirmware
- * @bytes: data to parse
- * @flags: some #DfuFirmwareParseFlags
- * @error: a #GError, or %NULL
- *
- * Unpacks into a firmware object from DfuSe data.
- *
- * Returns: %TRUE for success
- **/
-gboolean
-fu_wac_firmware_parse_data (DfuFirmware *firmware,
-			 GBytes *bytes,
-			 DfuFirmwareParseFlags flags,
-			 GError **error)
+static gboolean
+fu_wac_firmware_parse (FuFirmware *firmware,
+		       GBytes *fw,
+		       guint64 addr_start,
+		       guint64 addr_end,
+		       FwupdInstallFlags flags,
+		       GError **error)
 {
 	gsize len;
 	guint8 *data;
-	g_auto(GStrv) lines = NULL;
-	g_autoptr(GString) image_buffer = NULL;
-	g_autofree gchar *data_str = NULL;
 	guint8 images_cnt = 0;
+	g_auto(GStrv) lines = NULL;
 	g_autoptr(GPtrArray) header_infos = g_ptr_array_new_with_free_func (g_free);
+	g_autoptr(GString) image_buffer = NULL;
 
 	/* check the prefix (BE) */
-	data = (guint8 *) g_bytes_get_data (bytes, &len);
+	data = (guint8 *) g_bytes_get_data (fw, &len);
 	if (memcmp (data, "WACOM", 5) != 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -58,8 +53,7 @@ fu_wac_firmware_parse_data (DfuFirmware *firmware,
 	}
 
 	/* parse each line */
-	data_str = g_strndup ((const gchar *) data, len);
-	lines = g_strsplit (data_str, "\n", -1);
+	lines = fu_common_strnsplit ((const gchar *) data, len, "\n", -1);
 	for (guint i = 0; lines[i] != NULL; i++) {
 		g_autofree gchar *cmd = g_strndup (lines[i], 2);
 
@@ -81,11 +75,11 @@ fu_wac_firmware_parse_data (DfuFirmware *firmware,
 						     cmdlen);
 					return FALSE;
 				}
-				header_image_cnt = dfu_utils_buffer_parse_uint4 (lines[i] + 5);
+				header_image_cnt = fu_firmware_strparse_uint4 (lines[i] + 5);
 				for (guint j = 0; j < header_image_cnt; j++) {
-					DfuFirmwareWacHeaderRecord *hdr = g_new0 (DfuFirmwareWacHeaderRecord, 1);
-					hdr->addr = dfu_utils_buffer_parse_uint32 (lines[i] + (j * 16) + 6);
-					hdr->sz = dfu_utils_buffer_parse_uint32 (lines[i] + (j * 16) + 14);
+					FuFirmwareWacHeaderRecord *hdr = g_new0 (FuFirmwareWacHeaderRecord, 1);
+					hdr->addr = fu_firmware_strparse_uint32 (lines[i] + (j * 16) + 6);
+					hdr->sz = fu_firmware_strparse_uint32 (lines[i] + (j * 16) + 14);
 					g_ptr_array_add (header_infos, hdr);
 					g_debug ("header_fw%u_addr: 0x%x", j, hdr->addr);
 					g_debug ("header_fw%u_sz:   0x%x", j, hdr->sz);
@@ -95,8 +89,8 @@ fu_wac_firmware_parse_data (DfuFirmware *firmware,
 
 			/* firmware headline record */
 			if (cmdlen == 13) {
-				DfuFirmwareWacHeaderRecord *hdr;
-				guint8 idx = dfu_utils_buffer_parse_uint4 (lines[i] + 2);
+				FuFirmwareWacHeaderRecord *hdr;
+				guint8 idx = fu_firmware_strparse_uint4 (lines[i] + 2);
 				if (idx == 0) {
 					g_set_error (error,
 						     FWUPD_ERROR,
@@ -114,7 +108,7 @@ fu_wac_firmware_parse_data (DfuFirmware *firmware,
 					return FALSE;
 				}
 				hdr = g_ptr_array_index (header_infos, idx - 1);
-				hdr->prog_start_addr = dfu_utils_buffer_parse_uint32 (lines[i] + 3);
+				hdr->prog_start_addr = fu_firmware_strparse_uint32 (lines[i] + 3);
 				if (hdr->prog_start_addr != hdr->addr) {
 					g_set_error (error,
 						     FWUPD_ERROR,
@@ -168,8 +162,9 @@ fu_wac_firmware_parse_data (DfuFirmware *firmware,
 		/* end */
 		if (g_strcmp0 (cmd, "S7") == 0) {
 			g_autoptr(GBytes) blob = NULL;
-			g_autoptr(DfuImage) image = dfu_image_new ();
-			DfuFirmwareWacHeaderRecord *hdr;
+			g_autoptr(FuFirmware) firmware_srec = fu_srec_firmware_new ();
+			g_autoptr(FuFirmwareImage) img = NULL;
+			FuFirmwareWacHeaderRecord *hdr;
 
 			/* get the correct relocated start address */
 			if (images_cnt >= header_infos->len) {
@@ -191,12 +186,13 @@ fu_wac_firmware_parse_data (DfuFirmware *firmware,
 
 			/* parse SREC file and add as image */
 			blob = g_bytes_new (image_buffer->str, image_buffer->len);
-			if (!dfu_image_from_srec (image, blob, hdr->addr, flags, error))
+			if (!fu_firmware_parse_full (firmware_srec, blob, hdr->addr, 0x0, flags, error))
 				return FALSE;
-
-			/* the alt-setting is used for the firmware index */
-			dfu_image_set_alt_setting (image, images_cnt);
-			dfu_firmware_add_image (firmware, image);
+			img = fu_firmware_get_image_default (firmware_srec, error);
+			if (img == NULL)
+				return FALSE;
+			fu_firmware_image_set_idx (img, images_cnt);
+			fu_firmware_add_image (firmware, img);
 			images_cnt++;
 
 			/* clear the image buffer */
@@ -226,6 +222,23 @@ fu_wac_firmware_parse_data (DfuFirmware *firmware,
 	}
 
 	/* success */
-	dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_SREC);
 	return TRUE;
+}
+
+static void
+fu_wac_firmware_init (FuWacFirmware *self)
+{
+}
+
+static void
+fu_wac_firmware_class_init (FuWacFirmwareClass *klass)
+{
+	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS (klass);
+	klass_firmware->parse = fu_wac_firmware_parse;
+}
+
+FuFirmware *
+fu_wac_firmware_new (void)
+{
+	return FU_FIRMWARE (g_object_new (FU_TYPE_WAC_FIRMWARE, NULL));
 }

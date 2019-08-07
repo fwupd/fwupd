@@ -348,7 +348,7 @@ fu_ebitdo_device_get_serial (FuEbitdoDevice *self)
 
 static gboolean
 fu_ebitdo_device_write_firmware (FuDevice *device,
-				 GBytes *fw,
+				 FuFirmware *firmware,
 				 FwupdInstallFlags flags,
 				 GError **error)
 {
@@ -358,6 +358,7 @@ fu_ebitdo_device_write_firmware (FuDevice *device,
 	const guint chunk_sz = 32;
 	guint32 payload_len;
 	guint32 serial_new[3];
+	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GError) error_local = NULL;
 	const guint32 app_key_index[16] = {
 		0x186976e5, 0xcac67acd, 0x38f27fee, 0x0a4948f1,
@@ -407,6 +408,11 @@ fu_ebitdo_device_write_firmware (FuDevice *device,
 				     msg->str);
 		return FALSE;
 	}
+
+	/* get default image */
+	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	if (fw == NULL)
+		return FALSE;
 
 	/* corrupt */
 	if (g_bytes_get_size (fw) < sizeof (FuEbitdoFirmwareHeader)) {

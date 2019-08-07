@@ -1754,7 +1754,7 @@ fu_device_write_firmware (FuDevice *self,
 			  GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
-	g_autoptr(GBytes) fw_new = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
 
 	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
@@ -1769,12 +1769,12 @@ fu_device_write_firmware (FuDevice *self,
 	}
 
 	/* prepare (e.g. decompress) firmware */
-	fw_new = fu_device_prepare_firmware (self, fw, flags, error);
-	if (fw_new == NULL)
+	firmware = fu_device_prepare_firmware (self, fw, flags, error);
+	if (firmware == NULL)
 		return FALSE;
 
 	/* call vfunc */
-	return klass->write_firmware (self, fw_new, flags, error);
+	return klass->write_firmware (self, firmware, flags, error);
 }
 
 /**
@@ -1796,7 +1796,7 @@ fu_device_write_firmware (FuDevice *self,
  *
  * Since: 1.1.2
  **/
-GBytes *
+FuFirmware *
 fu_device_prepare_firmware (FuDevice *self,
 			    GBytes *fw,
 			    FwupdInstallFlags flags,
@@ -1804,8 +1804,8 @@ fu_device_prepare_firmware (FuDevice *self,
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
 	FuDevicePrivate *priv = GET_PRIVATE (self);
-	guint64 fw_sz;
-	g_autoptr(GBytes) fw_new = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(GBytes) fw_def = NULL;
 
 	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
 	g_return_val_if_fail (fw != NULL, NULL);
@@ -1813,37 +1813,41 @@ fu_device_prepare_firmware (FuDevice *self,
 
 	/* optionally subclassed */
 	if (klass->prepare_firmware != NULL) {
-		fw_new = klass->prepare_firmware (self, fw, flags, error);
-		if (fw_new == NULL)
+		firmware = klass->prepare_firmware (self, fw, flags, error);
+		if (firmware == NULL)
 			return NULL;
 	} else {
-		fw_new = g_bytes_ref (fw);
+		firmware = fu_firmware_new_from_bytes (fw);
 	}
 
 	/* check size */
-	fw_sz = (guint64) g_bytes_get_size (fw_new);
-	if (priv->size_max > 0 && fw_sz > priv->size_max) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "firmware is %04x bytes larger than the allowed "
-			     "maximum size of %04x bytes",
-			     (guint) (fw_sz - priv->size_max),
-			     (guint) priv->size_max);
-		return NULL;
-	}
-	if (priv->size_min > 0 && fw_sz < priv->size_min) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "firmware is %04x bytes smaller than the allowed "
-			     "minimum size of %04x bytes",
-			     (guint) (priv->size_min - fw_sz),
-			     (guint) priv->size_max);
-		return NULL;
+	fw_def = fu_firmware_get_image_default_bytes (firmware, NULL);
+	if (fw_def != NULL) {
+		guint64 fw_sz = (guint64) g_bytes_get_size (fw_def);
+		if (priv->size_max > 0 && fw_sz > priv->size_max) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "firmware is %04x bytes larger than the allowed "
+				     "maximum size of %04x bytes",
+				     (guint) (fw_sz - priv->size_max),
+				     (guint) priv->size_max);
+			return NULL;
+		}
+		if (priv->size_min > 0 && fw_sz < priv->size_min) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "firmware is %04x bytes smaller than the allowed "
+				     "minimum size of %04x bytes",
+				     (guint) (priv->size_min - fw_sz),
+				     (guint) priv->size_max);
+			return NULL;
+		}
 	}
 
-	return g_steal_pointer (&fw_new);
+	/* success */
+	return g_steal_pointer (&firmware);
 }
 
 /**

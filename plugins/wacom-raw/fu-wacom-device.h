@@ -8,7 +8,6 @@
 
 #include "fu-wacom-common.h"
 #include "fu-udev-device.h"
-#include "dfu-element.h"
 
 G_BEGIN_DECLS
 

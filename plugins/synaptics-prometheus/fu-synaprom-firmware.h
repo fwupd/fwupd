@@ -7,7 +7,12 @@
 
 #pragma once
 
-#include <glib.h>
+#include "fu-firmware.h"
+
+G_BEGIN_DECLS
+
+#define FU_TYPE_SYNAPROM_FIRMWARE (fu_synaprom_firmware_get_type ())
+G_DECLARE_FINAL_TYPE (FuSynapromFirmware, fu_synaprom_firmware, FU, SYNAPROM_FIRMWARE, FuFirmware)
 
 #define FU_SYNAPROM_FIRMWARE_TAG_MFW_HEADER		0x0001
 #define FU_SYNAPROM_FIRMWARE_TAG_MFW_PAYLOAD		0x0002
@@ -34,9 +39,6 @@ typedef struct __attribute__((packed)) {
 	guint8			 unused[2];
 } FuSynapromFirmwareCfgHeader;
 
-GPtrArray	*fu_synaprom_firmware_new		(GBytes		*blob,
-							 GError		**error);
-GBytes		*fu_synaprom_firmware_get_bytes_by_tag	(GPtrArray	*firmware,
-							 guint16	 tag,
-							 GError		**error);
-GBytes		*fu_synaprom_firmware_generate		(void);
+FuFirmware		*fu_synaprom_firmware_new	(void);
+
+G_END_DECLS

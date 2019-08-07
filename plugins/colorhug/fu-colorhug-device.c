@@ -328,12 +328,18 @@ ch_colorhug_device_calculate_checksum (const guint8 *data, guint32 len)
 
 static gboolean
 fu_colorhug_device_write_firmware (FuDevice *device,
-				   GBytes *fw,
+				   FuFirmware *firmware,
 				   FwupdInstallFlags flags,
 				   GError **error)
 {
 	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
+	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
+
+	/* get default image */
+	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	if (fw == NULL)
+		return FALSE;
 
 	/* build packets */
 	chunks = fu_chunk_array_new_from_bytes (fw,

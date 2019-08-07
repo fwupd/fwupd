@@ -15,7 +15,6 @@ shared_module('fu_plugin_wacom_raw',
   ],
   include_directories : [
     include_directories('../..'),
-    include_directories('../dfu'),
     include_directories('../../src'),
     include_directories('../../libfwupd'),
   ],
@@ -26,6 +25,6 @@ shared_module('fu_plugin_wacom_raw',
     plugin_deps,
   ],
   link_with : [
-    dfu,
+    libfwupdprivate,
   ],
 )

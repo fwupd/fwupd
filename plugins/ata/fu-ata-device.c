@@ -578,14 +578,20 @@ fu_ata_device_fw_download (FuAtaDevice *self,
 
 static gboolean
 fu_ata_device_write_firmware (FuDevice *device,
-			      GBytes *fw,
+			      FuFirmware *firmware,
 			      FwupdInstallFlags flags,
 			      GError **error)
 {
 	FuAtaDevice *self = FU_ATA_DEVICE (device);
 	guint32 chunksz = (guint32) self->transfer_blocks * FU_ATA_BLOCK_SIZE;
 	guint max_size = 0xffff * FU_ATA_BLOCK_SIZE;
+	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
+
+	/* get default image */
+	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	if (fw == NULL)
+		return FALSE;
 
 	/* only one block allowed */
 	if (self->transfer_mode == ATA_SUBCMD_MICROCODE_DOWNLOAD_CHUNK)

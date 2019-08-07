@@ -112,7 +112,7 @@ fu_synaprom_config_setup (FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static GBytes *
+static FuFirmware *
 fu_synaprom_config_prepare_firmware (FuDevice *device,
 				     GBytes *fw,
 				     FwupdInstallFlags flags,
@@ -121,20 +121,17 @@ fu_synaprom_config_prepare_firmware (FuDevice *device,
 	FuSynapromConfig *self = FU_SYNAPROM_CONFIG (device);
 	FuSynapromFirmwareCfgHeader hdr;
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GPtrArray) firmware = NULL;
+	g_autoptr(FuFirmware) firmware = fu_synaprom_firmware_new ();
 	guint32 product;
 	guint32 id1;
 
 	/* parse the firmware */
 	fu_device_set_status (device, FWUPD_STATUS_DECOMPRESSING);
-	firmware = fu_synaprom_firmware_new (fw, error);
-	if (firmware == NULL)
+	if (!fu_firmware_parse (firmware, fw, flags, error))
 		return NULL;
 
 	/* check the update header product and version */
-	blob = fu_synaprom_firmware_get_bytes_by_tag (firmware,
-						      FU_SYNAPROM_FIRMWARE_TAG_CFG_HEADER,
-						      error);
+	blob = fu_firmware_get_image_by_id_bytes (firmware, "cfg-update-header", error);
 	if (blob == NULL)
 		return NULL;
 	if (g_bytes_get_size (blob) != sizeof(hdr)) {
@@ -178,19 +175,24 @@ fu_synaprom_config_prepare_firmware (FuDevice *device,
 		}
 	}
 
-	/* get payload */
-	return fu_synaprom_firmware_get_bytes_by_tag (firmware,
-						      FU_SYNAPROM_FIRMWARE_TAG_CFG_PAYLOAD,
-						      error);
+	/* success */
+	return g_steal_pointer (&firmware);
 }
 
 static gboolean
 fu_synaprom_config_write_firmware (FuDevice *device,
-				   GBytes *fw,
+				   FuFirmware *firmware,
 				   FwupdInstallFlags flags,
 				   GError **error)
 {
 	FuSynapromConfig *self = FU_SYNAPROM_CONFIG (device);
+	g_autoptr(GBytes) fw = NULL;
+
+	/* get default image */
+	fw = fu_firmware_get_image_by_id_bytes (firmware, "cfg-update-payload", error);
+	if (fw == NULL)
+		return FALSE;
+
 	/* I assume the CFG/MFW difference is detected in the device...*/
 	return fu_synaprom_device_write_fw (self->device, fw, error);
 }

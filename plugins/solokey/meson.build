@@ -10,11 +10,11 @@ shared_module('fu_plugin_solokey',
   fu_hash,
   sources : [
     'fu-solokey-device.c',
+    'fu-solokey-firmware.c',
     'fu-plugin-solokey.c',
   ],
   include_directories : [
     include_directories('../..'),
-    include_directories('../dfu'),
     include_directories('../../src'),
     include_directories('../../libfwupd'),
   ],
@@ -22,7 +22,6 @@ shared_module('fu_plugin_solokey',
   install_dir: plugin_dir,
   link_with : [
     libfwupdprivate,
-    dfu,
   ],
   c_args : cargs,
   dependencies : [

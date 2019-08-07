@@ -19,11 +19,10 @@
 static void
 fu_wac_firmware_parse_func (void)
 {
-	DfuElement *element;
-	DfuImage *image;
 	gboolean ret;
 	g_autofree gchar *fn = NULL;
-	g_autoptr(DfuFirmware) firmware = dfu_firmware_new ();
+	g_autoptr(FuFirmware) firmware = fu_wac_firmware_new ();
+	g_autoptr(FuFirmwareImage) img = NULL;
 	g_autoptr(GBytes) blob_block = NULL;
 	g_autoptr(GBytes) bytes = NULL;
 	g_autoptr(GError) error = NULL;
@@ -37,20 +36,17 @@ fu_wac_firmware_parse_func (void)
 	bytes = fu_common_get_contents_bytes (fn, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (bytes);
-	ret = fu_wac_firmware_parse_data (firmware, bytes,
-					  DFU_FIRMWARE_PARSE_FLAG_NONE, &error);
+	ret = fu_firmware_parse (firmware, bytes, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert_true (ret);
 
 	/* get image data */
-	image = dfu_firmware_get_image (firmware, 0);
-	g_assert_nonnull (image);
-	element = dfu_image_get_element_default (image);
-	g_assert_nonnull (element);
+	img = fu_firmware_get_image_default (firmware, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (img);
 
 	/* get block */
-	blob_block = dfu_element_get_contents_chunk (element, 0x8008000,
-						     1024, &error);
+	blob_block = fu_firmware_image_get_bytes_chunk (img, 0x8008000, 1024, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (blob_block);
 	fu_wac_buffer_dump ("IMG", FU_WAC_REPORT_ID_MODULE,

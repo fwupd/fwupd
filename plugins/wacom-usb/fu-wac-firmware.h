@@ -1,20 +1,18 @@
 /*
- * Copyright (C) 2018 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2018-2019 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #pragma once
 
-#include <gio/gio.h>
-
-#include "dfu-firmware.h"
+#include "fu-firmware.h"
 
 G_BEGIN_DECLS
 
-gboolean	 fu_wac_firmware_parse_data	(DfuFirmware	*firmware,
-						 GBytes		*bytes,
-						 DfuFirmwareParseFlags flags,
-						 GError		**error);
+#define FU_TYPE_WAC_FIRMWARE (fu_wac_firmware_get_type ())
+G_DECLARE_FINAL_TYPE (FuWacFirmware, fu_wac_firmware, FU, WAC_FIRMWARE, FuFirmware)
+
+FuFirmware		*fu_wac_firmware_new	(void);
 
 G_END_DECLS

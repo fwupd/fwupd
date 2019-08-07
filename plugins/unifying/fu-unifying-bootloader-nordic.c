@@ -196,14 +196,20 @@ fu_unifying_bootloader_nordic_erase (FuUnifyingBootloader *self, guint16 addr, G
 
 static gboolean
 fu_unifying_bootloader_nordic_write_firmware (FuDevice *device,
-					      GBytes *fw,
+					      FuFirmware *firmware,
 					      FwupdInstallFlags flags,
 					      GError **error)
 {
 	FuUnifyingBootloader *self = FU_UNIFYING_BOOTLOADER (device);
 	const FuUnifyingBootloaderRequest *payload;
 	guint16 addr;
+	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) reqs = NULL;
+
+	/* get default image */
+	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	if (fw == NULL)
+		return FALSE;
 
 	/* erase firmware pages up to the bootloader */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_ERASE);

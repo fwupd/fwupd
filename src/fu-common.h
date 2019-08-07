@@ -133,6 +133,8 @@ gboolean	 fu_common_bytes_is_empty	(GBytes		*bytes);
 gboolean	 fu_common_bytes_compare	(GBytes		*bytes1,
 						 GBytes		*bytes2,
 						 GError		**error);
+GBytes		*fu_common_bytes_pad		(GBytes		*bytes,
+						 gsize		 sz);
 
 typedef guint FuEndianType;
 
@@ -150,5 +152,9 @@ guint32		 fu_common_read_uint32		(const guint8	*buf,
 guint		 fu_common_string_replace	(GString	*string,
 						 const gchar	*search,
 						 const gchar	*replace);
+gchar		**fu_common_strnsplit		(const gchar	*str,
+						 gsize		 sz,
+						 const gchar	*delimiter,
+						 gint		 max_tokens);
 
 G_END_DECLS

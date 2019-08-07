@@ -595,11 +595,17 @@ fu_fastboot_device_write_qfil (FuDevice *device, FuArchive* archive, GError **er
 
 static gboolean
 fu_fastboot_device_write_firmware (FuDevice *device,
-				   GBytes *fw,
+				   FuFirmware *firmware,
 				   FwupdInstallFlags flags,
 				   GError **error)
 {
 	g_autoptr(FuArchive) archive = NULL;
+	g_autoptr(GBytes) fw = NULL;
+
+	/* get default image */
+	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	if (fw == NULL)
+		return FALSE;
 
 	/* decompress entire archive ahead of time */
 	archive = fu_archive_new (fw, FU_ARCHIVE_FLAG_IGNORE_PATH, error);
