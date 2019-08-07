@@ -86,6 +86,7 @@
 #include "dfu-target-stm.h"
 
 #include "fu-device-locker.h"
+#include "fu-firmware-common.h"
 
 #include "fwupd-error.h"
 
@@ -1120,8 +1121,8 @@ dfu_device_detach (DfuDevice *device, GError **error)
 		g_autoptr(GError) error_jabra = NULL;
 
 		/* parse string and create magic packet */
-		rep = dfu_utils_buffer_parse_uint8 (priv->jabra_detach + 0);
-		adr = dfu_utils_buffer_parse_uint8 (priv->jabra_detach + 2);
+		rep = fu_firmware_strparse_uint8 (priv->jabra_detach + 0);
+		adr = fu_firmware_strparse_uint8 (priv->jabra_detach + 2);
 		buf[0] = rep;
 		buf[1] = adr;
 		buf[2] = 0x00;
@@ -2052,7 +2053,7 @@ dfu_device_set_quirk_kv (FuDevice *device,
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_DFU_FORCE_VERSION) == 0) {
 		if (value != NULL && strlen (value) == 4) {
-			priv->force_version = dfu_utils_buffer_parse_uint16 (value);
+			priv->force_version = fu_firmware_strparse_uint16 (value);
 			return TRUE;
 		}
 		g_set_error_literal (error,

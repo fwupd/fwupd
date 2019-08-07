@@ -9,6 +9,7 @@
 #include <glib-object.h>
 #include <fwupd.h>
 
+#include "fu-firmware.h"
 #include "fu-quirks.h"
 #include "fu-common-version.h"
 
@@ -23,7 +24,7 @@ struct _FuDeviceClass
 	void			 (*to_string)		(FuDevice	*self,
 							 GString	*str);
 	gboolean		 (*write_firmware)	(FuDevice	*self,
-							 GBytes		*fw,
+							 FuFirmware	*firmware,
 							 FwupdInstallFlags flags,
 							 GError		**error);
 	GBytes			*(*read_firmware)	(FuDevice	*self,
@@ -38,7 +39,7 @@ struct _FuDeviceClass
 							 GError		**error);
 	gboolean		 (*probe)		(FuDevice	*self,
 							 GError		**error);
-	GBytes			*(*prepare_firmware)	(FuDevice	*self,
+	FuFirmware		*(*prepare_firmware)	(FuDevice	*self,
 							 GBytes		*fw,
 							 FwupdInstallFlags flags,
 							 GError		**error);
@@ -210,7 +211,7 @@ gboolean	 fu_device_write_firmware		(FuDevice	*self,
 							 GBytes		*fw,
 							 FwupdInstallFlags flags,
 							 GError		**error);
-GBytes		*fu_device_prepare_firmware		(FuDevice	*self,
+FuFirmware	*fu_device_prepare_firmware		(FuDevice	*self,
 							 GBytes		*fw,
 							 FwupdInstallFlags flags,
 							 GError		**error);

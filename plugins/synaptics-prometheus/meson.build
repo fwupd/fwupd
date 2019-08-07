@@ -66,9 +66,14 @@ if get_option('tests')
     ],
     include_directories : [
       include_directories('../..'),
+      include_directories('../../src'),
+      include_directories('../../libfwupd'),
     ],
     dependencies : [
       gio,
+    ],
+    link_with : [
+      libfwupdprivate,
     ],
     c_args : cargs
   )

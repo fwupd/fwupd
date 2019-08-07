@@ -11,26 +11,20 @@
 
 #include "fu-synaprom-firmware.h"
 
+struct _FuSynapromFirmware {
+	FuFirmware		 parent_instance;
+};
+
+G_DEFINE_TYPE (FuSynapromFirmware, fu_synaprom_firmware, FU_TYPE_FIRMWARE)
+
 typedef struct __attribute__((packed)) {
 	guint16			 tag;
 	guint32			 bufsz;
 } FuSynapromFirmwareHdr;
 
-typedef struct {
-	guint16			 tag;
-	GBytes			*bytes;
-} FuSynapromFirmwareItem;
-
 /* use only first 12 bit of 16 bits as tag value */
 #define FU_SYNAPROM_FIRMWARE_TAG_MAX			0xfff0
 #define FU_SYNAPROM_FIRMWARE_SIGSIZE			0x0100
-
-static void
-fu_synaprom_firmware_item_free (FuSynapromFirmwareItem *item)
-{
-	g_bytes_unref (item->bytes);
-	g_free (item);
-}
 
 static const gchar *
 fu_synaprom_firmware_tag_to_string (guint16 tag)
@@ -46,18 +40,21 @@ fu_synaprom_firmware_tag_to_string (guint16 tag)
 	return NULL;
 }
 
-GPtrArray *
-fu_synaprom_firmware_new (GBytes *blob, GError **error)
+static gboolean
+fu_synaprom_firmware_parse (FuFirmware *firmware,
+			    GBytes *fw,
+			    guint64 addr_start,
+			    guint64 addr_end,
+			    FwupdInstallFlags flags,
+			    GError **error)
 {
 	const guint8 *buf;
 	gsize bufsz = 0;
 	gsize offset = 0;
-	g_autoptr(GPtrArray) firmware = NULL;
 
-	g_return_val_if_fail (blob != NULL, NULL);
+	g_return_val_if_fail (fw != NULL, FALSE);
 
-	firmware = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_synaprom_firmware_item_free);
-	buf = g_bytes_get_data (blob, &bufsz);
+	buf = g_bytes_get_data (fw, &bufsz);
 
 	/* 256 byte signature as footer */
 	if (bufsz < FU_SYNAPROM_FIRMWARE_SIGSIZE + sizeof(FuSynapromFirmwareHdr)) {
@@ -65,7 +62,7 @@ fu_synaprom_firmware_new (GBytes *blob, GError **error)
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
 				     "blob is too small to be firmware");
-		return NULL;
+		return FALSE;
 	}
 	bufsz -= FU_SYNAPROM_FIRMWARE_SIGSIZE;
 
@@ -73,19 +70,20 @@ fu_synaprom_firmware_new (GBytes *blob, GError **error)
 	while (offset != bufsz) {
 		FuSynapromFirmwareHdr header;
 		guint32 hdrsz;
-		g_autofree FuSynapromFirmwareItem *item = NULL;
+		guint32 tag;
+		g_autoptr(GBytes) bytes = NULL;
+		g_autoptr(FuFirmwareImage) img = NULL;
 
 		/* verify item header */
 		memcpy (&header, buf, sizeof(header));
-		item = g_new0 (FuSynapromFirmwareItem, 1);
-		item->tag = GUINT16_FROM_LE(header.tag);
-		if (item->tag >= FU_SYNAPROM_FIRMWARE_TAG_MAX) {
+		tag = GUINT16_FROM_LE(header.tag);
+		if (tag >= FU_SYNAPROM_FIRMWARE_TAG_MAX) {
 			g_set_error (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
 				     "tag 0x%04x is too large",
-				     item->tag);
-			return NULL;
+				     tag);
+			return FALSE;
 		}
 		hdrsz = GUINT32_FROM_LE(header.bufsz);
 		offset += sizeof(header) + hdrsz;
@@ -95,41 +93,29 @@ fu_synaprom_firmware_new (GBytes *blob, GError **error)
 				     G_IO_ERROR_INVALID_DATA,
 				     "data is corrupted 0x%04x > 0x%04x",
 				     (guint) offset, (guint) bufsz);
-			return NULL;
+			return FALSE;
 		}
 
 		/* move pointer to data */
 		buf += sizeof(header);
-		item->bytes = g_bytes_new (buf, hdrsz);
+		bytes = g_bytes_new (buf, hdrsz);
 		g_debug ("adding 0x%04x (%s) with size 0x%04x",
-			 item->tag,
-			 fu_synaprom_firmware_tag_to_string (item->tag),
+			 tag,
+			 fu_synaprom_firmware_tag_to_string (tag),
 			 hdrsz);
-		g_ptr_array_add (firmware, g_steal_pointer (&item));
+		img = fu_firmware_image_new (bytes);
+		fu_firmware_image_set_idx (img, tag);
+		fu_firmware_image_set_id (img, fu_synaprom_firmware_tag_to_string (tag));
+		fu_firmware_add_image (firmware, img);
 
 		/* next item */
 		buf += hdrsz;
 	}
-	return g_steal_pointer (&firmware);
+	return TRUE;
 }
 
-GBytes *
-fu_synaprom_firmware_get_bytes_by_tag (GPtrArray *firmware, guint16 tag, GError **error)
-{
-	for (guint i = 0; i < firmware->len; i++) {
-		FuSynapromFirmwareItem *item = g_ptr_array_index (firmware, i);
-		if (item->tag == tag)
-			return g_bytes_ref (item->bytes);
-	}
-	g_set_error (error,
-		     G_IO_ERROR,
-		     G_IO_ERROR_INVALID_ARGUMENT,
-		     "no item with tag 0x%04x", tag);
-	return NULL;
-}
-
-GBytes *
-fu_synaprom_firmware_generate (void)
+static GBytes *
+fu_synaprom_firmware_write (FuFirmware *self, GError **error)
 {
 	GByteArray *blob = g_byte_array_new ();
 	const guint8 data[] = { 'R', 'H' };
@@ -162,4 +148,23 @@ fu_synaprom_firmware_generate (void)
 		g_byte_array_append (blob, &sig, 1);
 	}
 	return g_byte_array_free_to_bytes (blob);
+}
+
+static void
+fu_synaprom_firmware_init (FuSynapromFirmware *self)
+{
+}
+
+static void
+fu_synaprom_firmware_class_init (FuSynapromFirmwareClass *klass)
+{
+	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS (klass);
+	klass_firmware->parse = fu_synaprom_firmware_parse;
+	klass_firmware->write = fu_synaprom_firmware_write;
+}
+
+FuFirmware *
+fu_synaprom_firmware_new (void)
+{
+	return FU_FIRMWARE (g_object_new (FU_TYPE_SYNAPROM_FIRMWARE, NULL));
 }

@@ -23,11 +23,6 @@ DfuElement	*dfu_element_new		(void);
 
 GBytes		*dfu_element_get_contents	(DfuElement	*element);
 guint32		 dfu_element_get_address	(DfuElement	*element);
-GBytes		*dfu_element_get_contents_chunk	(DfuElement	*element,
-						 guint32	 address,
-						 guint32	 chunk_sz_max,
-						 GError		**error);
-
 void		 dfu_element_set_contents	(DfuElement	*element,
 						 GBytes		*contents);
 void		 dfu_element_set_address	(DfuElement	*element,

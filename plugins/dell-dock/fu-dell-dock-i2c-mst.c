@@ -735,7 +735,7 @@ fu_dell_dock_mst_invalidate_bank (FuDevice *symbiote, MSTBank bank_in_use,
 
 static gboolean
 fu_dell_dock_mst_write_fw (FuDevice *device,
-			   GBytes *blob_fw,
+			   FuFirmware *firmware,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
@@ -745,12 +745,19 @@ fu_dell_dock_mst_write_fw (FuDevice *device,
 	gboolean checksum = FALSE;
 	guint8 order[2] = {ESM, Bank0};
 	guint16 chip_id;
-	const guint8* data = g_bytes_get_data (blob_fw, NULL);
+	const guint8 *data;
 	g_autofree gchar *dynamic_version = NULL;
+	g_autoptr(GBytes) fw = NULL;
 
 	g_return_val_if_fail (device != NULL, FALSE);
-	g_return_val_if_fail (blob_fw != NULL, FALSE);
+	g_return_val_if_fail (FU_IS_FIRMWARE (firmware), FALSE);
 	g_return_val_if_fail (self->symbiote != NULL, FALSE);
+
+	/* get default image */
+	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	if (fw == NULL)
+		return FALSE;
+	data = g_bytes_get_data (fw, NULL);
 
 	dynamic_version = g_strdup_printf ("%02x.%02x.%02x",
 					   data[self->blob_major_offset],
@@ -787,7 +794,7 @@ fu_dell_dock_mst_write_fw (FuDevice *device,
 	for (guint phase = 0; phase < 2; phase++) {
 		g_debug ("MST: Checking bank %u", order[phase]);
 		if (!fu_dell_dock_mst_checksum_bank (self->symbiote,
-						     blob_fw,
+						     fw,
 						     order[phase],
 						     &checksum, error))
 			return FALSE;
@@ -804,11 +811,11 @@ fu_dell_dock_mst_write_fw (FuDevice *device,
 							  error))
 				return FALSE;
 			fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
-			if (!fu_dell_dock_write_flash_bank (device, blob_fw,
+			if (!fu_dell_dock_write_flash_bank (device, fw,
 						       order[phase], error))
 				return FALSE;
 			if (!fu_dell_dock_mst_checksum_bank (self->symbiote,
-							     blob_fw,
+							     fw,
 							     order[phase],
 							     &checksum,
 							     error))

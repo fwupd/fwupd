@@ -401,7 +401,7 @@ fu_uefi_device_write_update_info (FuUefiDevice *self,
 
 static gboolean
 fu_uefi_device_write_firmware (FuDevice *device,
-			       GBytes *fw,
+			       FuFirmware *firmware,
 			       FwupdInstallFlags install_flags,
 			       GError **error)
 {
@@ -411,6 +411,7 @@ fu_uefi_device_write_firmware (FuDevice *device,
 	const gchar *esp_path = fu_device_get_metadata (device, "EspPath");
 	efi_guid_t guid;
 	g_autoptr(GBytes) fixed_fw = NULL;
+	g_autoptr(GBytes) fw = NULL;
 	g_autofree gchar *basename = NULL;
 	g_autofree gchar *directory = NULL;
 	g_autofree gchar *fn = NULL;
@@ -424,6 +425,11 @@ fu_uefi_device_write_firmware (FuDevice *device,
 				     "cannot update device info with no GUID");
 		return FALSE;
 	}
+
+	/* get default image */
+	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	if (fw == NULL)
+		return FALSE;
 
 	/* save the blob to the ESP */
 	directory = fu_uefi_get_esp_path_for_os (esp_path);

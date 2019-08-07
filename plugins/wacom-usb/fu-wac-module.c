@@ -12,9 +12,6 @@
 #include "fu-wac-common.h"
 #include "fu-wac-device.h"
 
-#include "dfu-common.h"
-#include "dfu-firmware.h"
-
 #define FU_WAC_MODULE_STATUS_OK				0
 #define FU_WAC_MODULE_STATUS_BUSY			1
 #define FU_WAC_MODULE_STATUS_ERR_CRC			2

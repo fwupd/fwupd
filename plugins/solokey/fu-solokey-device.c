@@ -7,11 +7,10 @@
 #include "config.h"
 
 #include <string.h>
-#include <json-glib/json-glib.h>
 
-#include "dfu-firmware.h"
 #include "fu-chunk.h"
 #include "fu-solokey-device.h"
+#include "fu-solokey-firmware.h"
 
 struct _FuSolokeyDevice {
 	FuUsbDevice		 parent_instance;
@@ -396,30 +395,15 @@ fu_solokey_device_setup (FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static GByteArray *
-_g_base64_decode_to_byte_array (const gchar *text)
-{
-	gsize out_len = 0;
-	guchar *out = g_base64_decode (text, &out_len);
-	return g_byte_array_new_take ((guint8 *) out, out_len);
-}
-
-static GBytes *
-_g_base64_decode_to_bytes (const gchar *text)
-{
-	gsize out_len = 0;
-	guchar *out = g_base64_decode (text, &out_len);
-	return g_bytes_new_take ((guint8 *) out, out_len);
-}
-
 static gboolean
-fu_solokey_device_verify (FuSolokeyDevice *self, const gchar *base64, GError **error)
+fu_solokey_device_verify (FuSolokeyDevice *self, GBytes *fw_sig, GError **error)
 {
 	g_autoptr(GByteArray) req = g_byte_array_new ();
 	g_autoptr(GByteArray) res = NULL;
-	g_autoptr(GByteArray) sig = _g_base64_decode_to_byte_array (base64);
+	g_autoptr(GByteArray) sig = g_byte_array_new ();
 
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_VERIFY);
+	g_byte_array_append (sig, g_bytes_get_data (fw_sig, NULL), g_bytes_get_size (fw_sig));
 	fu_solokey_device_exchange (req, SOLO_BOOTLOADER_DONE, 0x00, sig);
 	res = fu_solokey_device_packet (self, SOLO_BOOTLOADER_HID_CMD_BOOT, req, error);
 	if (res == NULL)
@@ -427,75 +411,42 @@ fu_solokey_device_verify (FuSolokeyDevice *self, const gchar *base64, GError **e
 	return TRUE;
 }
 
+static FuFirmware *
+fu_solokey_device_prepare_firmware (FuDevice *device,
+				    GBytes *fw,
+				    FwupdInstallFlags flags,
+				    GError **error)
+{
+	g_autoptr(FuFirmware) firmware = fu_solokey_firmware_new ();
+	fu_device_set_status (device, FWUPD_STATUS_DECOMPRESSING);
+	if (!fu_firmware_parse (firmware, fw, flags, error))
+		return NULL;
+	return g_steal_pointer (&firmware);
+}
+
 static gboolean
 fu_solokey_device_write_firmware (FuDevice *device,
-				  GBytes *fw,
+				  FuFirmware *firmware,
 				  FwupdInstallFlags flags,
 				  GError **error)
 {
 	FuSolokeyDevice *self = FU_SOLOKEY_DEVICE (device);
-	DfuElement *element;
-	DfuImage *image;
-	JsonNode *json_root;
-	JsonObject *json_obj;
-	const gchar *base64;
-	g_autoptr(DfuFirmware) firmware = dfu_firmware_new ();
-	g_autoptr(GBytes) fw_ihex = NULL;
+	g_autoptr(FuFirmwareImage) img = NULL;
+	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GBytes) fw_sig = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
-	g_autoptr(GString) base64_websafe = NULL;
-	g_autoptr(JsonParser) parser = json_parser_new ();
 
-	/* parse JSON */
-	fu_device_set_status (device, FWUPD_STATUS_DECOMPRESSING);
-	if (!json_parser_load_from_data (parser,
-					 (const gchar *) g_bytes_get_data (fw, NULL),
-					 (gssize) g_bytes_get_size (fw),
-					 error)) {
-		g_prefix_error (error, "firmware not in JSON format: ");
+	/* get main image */
+	img = fu_firmware_get_image_by_id (firmware, NULL, error);
+	if (img == NULL)
 		return FALSE;
-	}
-	json_root = json_parser_get_root (parser);
-	json_obj = json_node_get_object (json_root);
-	if (!json_object_has_member (json_obj, "firmware")) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "JSON invalid as has no 'firmware'");
-		return FALSE;
-	}
-	if (!json_object_has_member (json_obj, "signature")) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "JSON invalid as has no 'signature'");
-		return FALSE;
-	}
-
-	/* decode */
-	base64 = json_object_get_string_member (json_obj, "firmware");
-	fw_ihex = _g_base64_decode_to_bytes (base64);
-	if (!dfu_firmware_parse_data (firmware, fw_ihex, DFU_FIRMWARE_PARSE_FLAG_NONE, error))
-		return FALSE;
-	image = dfu_firmware_get_image_default (firmware);
-	if (image == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "No image data");
-		return FALSE;
-	}
-	element = dfu_image_get_element_default	(image);
-	if (element == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "No element data");
-		return FALSE;
-	}
 
 	/* build packets */
-	chunks = fu_chunk_array_new_from_bytes (dfu_element_get_contents (element),
-						dfu_element_get_address (element),
+	fw = fu_firmware_image_get_bytes (img, error);
+	if (fw == NULL)
+		return FALSE;
+	chunks = fu_chunk_array_new_from_bytes (fw,
+						fu_firmware_image_get_addr (img),
 						0x00,	/* page_sz */
 						2048);
 
@@ -525,11 +476,10 @@ fu_solokey_device_write_firmware (FuDevice *device,
 	}
 
 	/* verify the signature and reboot back to runtime */
-	base64_websafe = g_string_new (json_object_get_string_member (json_obj, "signature"));
-	fu_common_string_replace (base64_websafe, "-", "+");
-	fu_common_string_replace (base64_websafe, "_", "/");
-	g_string_append (base64_websafe, "==");
-	return fu_solokey_device_verify (self, base64_websafe->str, error);
+	fw_sig = fu_firmware_get_image_by_id_bytes (firmware, "signature", error);
+	if (fw_sig == NULL)
+		return FALSE;
+	return fu_solokey_device_verify (self, fw_sig, error);
 }
 
 static void
@@ -549,6 +499,7 @@ fu_solokey_device_class_init (FuSolokeyDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	klass_device->write_firmware = fu_solokey_device_write_firmware;
+	klass_device->prepare_firmware = fu_solokey_device_prepare_firmware;
 	klass_device->setup = fu_solokey_device_setup;
 	klass_usb_device->open = fu_solokey_device_open;
 	klass_usb_device->close = fu_solokey_device_close;

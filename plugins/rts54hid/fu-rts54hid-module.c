@@ -212,12 +212,18 @@ fu_rts54hid_module_close (FuDevice *device, GError **error)
 
 static gboolean
 fu_rts54hid_module_write_firmware (FuDevice *module,
-				   GBytes *fw,
+				   FuFirmware *firmware,
 				   FwupdInstallFlags flags,
 				   GError **error)
 {
 	FuRts54HidModule *self = FU_RTS54HID_MODULE (module);
+	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
+
+	/* get default image */
+	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	if (fw == NULL)
+		return FALSE;
 
 	/* build packets */
 	chunks = fu_chunk_array_new_from_bytes (fw,

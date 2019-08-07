@@ -395,15 +395,21 @@ fu_nvme_device_close (FuDevice *device, GError **error)
 
 static gboolean
 fu_nvme_device_write_firmware (FuDevice *device,
-			       GBytes *fw,
+			       FuFirmware *firmware,
 			       FwupdInstallFlags flags,
 			       GError **error)
 {
 	FuNvmeDevice *self = FU_NVME_DEVICE (device);
 	g_autoptr(GBytes) fw2 = NULL;
+	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 	guint64 block_size = self->write_block_size > 0 ?
 			     self->write_block_size : 0x1000;
+
+	/* get default image */
+	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	if (fw == NULL)
+		return FALSE;
 
 	/* some vendors provide firmware files whose sizes are not multiples
 	 * of blksz *and* the device won't accept blocks of different sizes */

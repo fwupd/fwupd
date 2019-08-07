@@ -15,9 +15,6 @@
 #include "fu-wac-module-bluetooth.h"
 #include "fu-wac-module-touch.h"
 
-#include "dfu-common.h"
-#include "dfu-firmware.h"
-
 typedef struct __attribute__((packed)) {
 	guint32		 start_addr;
 	guint32		 block_sz;
@@ -481,34 +478,37 @@ fu_wac_device_switch_to_flash_loader (FuWacDevice *self, GError **error)
 						 error);
 }
 
+static FuFirmware *
+fu_wac_device_prepare_firmware (FuDevice *device,
+				    GBytes *fw,
+				    FwupdInstallFlags flags,
+				    GError **error)
+{
+	g_autoptr(FuFirmware) firmware = fu_wac_firmware_new ();
+	fu_device_set_status (device, FWUPD_STATUS_DECOMPRESSING);
+	if (!fu_firmware_parse (firmware, fw, flags, error))
+		return NULL;
+	return g_steal_pointer (&firmware);
+}
+
 static gboolean
 fu_wac_device_write_firmware (FuDevice *device,
-			      GBytes *blob,
+			      FuFirmware *firmware,
 			      FwupdInstallFlags flags,
 			      GError **error)
 {
-	DfuElement *element;
-	DfuImage *image;
 	FuWacDevice *self = FU_WAC_DEVICE (device);
 	gsize blocks_done = 0;
 	gsize blocks_total = 0;
-	g_autoptr(DfuFirmware) firmware = dfu_firmware_new ();
-	g_autoptr(GHashTable) fd_blobs = NULL;
 	g_autofree guint32 *csum_local = NULL;
+	g_autoptr(FuFirmwareImage) img = NULL;
+	g_autoptr(GHashTable) fd_blobs = NULL;
 
-	/* load .wac file, including metadata */
-	if (!fu_wac_firmware_parse_data (firmware, blob,
-					 DFU_FIRMWARE_PARSE_FLAG_NONE,
-					 error))
+	/* use the correct image from the firmware */
+	img = fu_firmware_get_image_by_idx (firmware, self->firmware_index == 1 ? 1 : 0, error);
+	if (img == NULL)
 		return FALSE;
-	if (dfu_firmware_get_format (firmware) != DFU_FIRMWARE_FORMAT_SREC) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "expected firmware format is 'srec', got '%s'",
-			     dfu_firmware_format_to_string (dfu_firmware_get_format (firmware)));
-		return FALSE;
-	}
+	g_debug ("using image at addr 0x%0x", (guint) fu_firmware_image_get_addr (img));
 
 	/* enter flash mode */
 	if (!fu_wac_device_switch_to_flash_loader (self, error))
@@ -517,28 +517,6 @@ fu_wac_device_write_firmware (FuDevice *device,
 	/* get current selected device */
 	if (!fu_wac_device_ensure_firmware_index (self, error))
 		return FALSE;
-
-	/* use the correct image from the firmware */
-	image = dfu_firmware_get_image (firmware, self->firmware_index == 1 ? 1 : 0);
-	if (image == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "no firmware image for index %" G_GUINT16_FORMAT,
-			     self->firmware_index);
-		return FALSE;
-	}
-	element = dfu_image_get_element_default (image);
-	if (element == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "no element in image %" G_GUINT16_FORMAT,
-			     self->firmware_index);
-		return FALSE;
-	}
-	g_debug ("using element at addr 0x%0x",
-		 (guint) dfu_element_get_address (element));
 
 	/* get firmware parameters (page sz and transfer sz) */
 	if (!fu_wac_device_ensure_parameters (self, error))
@@ -572,13 +550,13 @@ fu_wac_device_write_firmware (FuDevice *device,
 
 		if (fu_wav_device_flash_descriptor_is_wp (fd))
 			continue;
-		blob_tmp = dfu_element_get_contents_chunk (element,
-							   fd->start_addr,
-							   fd->block_sz,
-							   NULL);
+		blob_tmp = fu_firmware_image_get_bytes_chunk (img,
+							      fd->start_addr,
+							      fd->block_sz,
+							      NULL);
 		if (blob_tmp == NULL)
 			break;
-		blob_block = dfu_utils_bytes_pad (blob_tmp, fd->block_sz);
+		blob_block = fu_common_bytes_pad (blob_tmp, fd->block_sz);
 		g_hash_table_insert (fd_blobs, fd, blob_block);
 	}
 
@@ -898,6 +876,7 @@ fu_wac_device_class_init (FuWacDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	object_class->finalize = fu_wac_device_finalize;
+	klass_device->prepare_firmware = fu_wac_device_prepare_firmware;
 	klass_device->write_firmware = fu_wac_device_write_firmware;
 	klass_device->to_string = fu_wac_device_to_string;
 	klass_device->setup = fu_wac_device_setup;

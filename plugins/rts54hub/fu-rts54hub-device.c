@@ -309,12 +309,18 @@ fu_rts54hub_device_close (FuUsbDevice *device, GError **error)
 
 static gboolean
 fu_rts54hub_device_write_firmware (FuDevice *device,
-				   GBytes *fw,
+				   FuFirmware *firmware,
 				   FwupdInstallFlags flags,
 				   GError **error)
 {
 	FuRts54HubDevice *self = FU_RTS54HUB_DEVICE (device);
+	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
+
+	/* get default image */
+	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	if (fw == NULL)
+		return FALSE;
 
 	/* enable vendor commands */
 	if (!fu_rts54hub_device_vendor_cmd (self,
@@ -383,7 +389,7 @@ fu_rts54hub_device_write_firmware (FuDevice *device,
 	return TRUE;
 }
 
-static GBytes *
+static FuFirmware *
 fu_rts54hub_device_prepare_firmware (FuDevice *device,
 				     GBytes *fw,
 				     FwupdInstallFlags flags,
@@ -405,7 +411,7 @@ fu_rts54hub_device_prepare_firmware (FuDevice *device,
 				     "firmware needs to be dual bank");
 		return NULL;
 	}
-	return g_bytes_ref (fw);
+	return fu_firmware_new_from_bytes (fw);
 }
 
 static void

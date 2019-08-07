@@ -315,12 +315,18 @@ fu_rts54hid_device_close (FuUsbDevice *device, GError **error)
 
 static gboolean
 fu_rts54hid_device_write_firmware (FuDevice *device,
-				   GBytes *fw,
+				   FuFirmware *firmware,
 				   FwupdInstallFlags flags,
 				   GError **error)
 {
 	FuRts54HidDevice *self = FU_RTS54HID_DEVICE (device);
+	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
+
+	/* get default image */
+	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	if (fw == NULL)
+		return FALSE;
 
 	/* set MCU to high clock rate for better ISP performance */
 	if (!fu_rts54hid_device_set_clock_mode (self, TRUE, error))

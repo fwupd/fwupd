@@ -17,7 +17,6 @@ shared_module('fu_plugin_wacom_usb',
   ],
   include_directories : [
     include_directories('../..'),
-    include_directories('../dfu'),
     include_directories('../../src'),
     include_directories('../../libfwupd'),
   ],
@@ -29,7 +28,6 @@ shared_module('fu_plugin_wacom_usb',
   ],
   link_with : [
     libfwupdprivate,
-    dfu,
   ],
 )
 
@@ -46,7 +44,6 @@ if get_option('tests')
     ],
     include_directories : [
       include_directories('..'),
-      include_directories('../dfu'),
       include_directories('../..'),
       include_directories('../../libfwupd'),
       include_directories('../../src'),
@@ -59,7 +56,6 @@ if get_option('tests')
       libm,
     ],
     link_with : [
-      dfu,
       libfwupdprivate,
     ],
     c_args : cargs

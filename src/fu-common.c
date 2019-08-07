@@ -1334,6 +1334,36 @@ fu_common_bytes_compare (GBytes *bytes1, GBytes *bytes2, GError **error)
 }
 
 /**
+ * fu_common_bytes_pad:
+ * @bytes: a #GBytes
+ * @sz: the desired size in bytes
+ *
+ * Pads a GBytes to a given @sz with `0xff`.
+ *
+ * Return value: (transfer full): a #GBytes
+ **/
+GBytes *
+fu_common_bytes_pad (GBytes *bytes, gsize sz)
+{
+	gsize bytes_sz;
+
+	g_return_val_if_fail (g_bytes_get_size (bytes) <= sz, NULL);
+
+	/* pad */
+	bytes_sz = g_bytes_get_size (bytes);
+	if (bytes_sz < sz) {
+		const guint8 *data = g_bytes_get_data (bytes, NULL);
+		guint8 *data_new = g_malloc (sz);
+		memcpy (data_new, data, bytes_sz);
+		memset (data_new + bytes_sz, 0xff, sz - bytes_sz);
+		return g_bytes_new_take (data_new, sz);
+	}
+
+	/* exactly right */
+	return g_bytes_ref (bytes);
+}
+
+/**
  * fu_common_realpath:
  * @filename: a filename
  * @error: A #GError or %NULL
@@ -1358,4 +1388,28 @@ fu_common_realpath (const gchar *filename, GError **error)
 		return NULL;
 	}
 	return g_strdup (full_tmp);
+}
+
+/**
+ * fu_common_strnsplit:
+ * @str: a string to split
+ * @sz: size of @str
+ * @delimiter: a string which specifies the places at which to split the string
+ * @max_tokens: the maximum number of pieces to split @str into
+ *
+ * Splits a string into a maximum of @max_tokens pieces, using the given
+ * delimiter. If @max_tokens is reached, the remainder of string is appended
+ * to the last token.
+ *
+ * Return value: a newly-allocated NULL-terminated array of strings
+ **/
+gchar **
+fu_common_strnsplit (const gchar *str, gsize sz,
+		     const gchar *delimiter, gint max_tokens)
+{
+	if (str[sz - 1] != '\0') {
+		g_autofree gchar *str2 = g_strndup (str, sz);
+		return g_strsplit (str2, delimiter, max_tokens);
+	}
+	return g_strsplit (str, delimiter, max_tokens);
 }

@@ -362,7 +362,7 @@ fu_superio_device_setup (FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static GBytes *
+static FuFirmware *
 fu_superio_device_prepare_firmware (FuDevice *device,
 				    GBytes *fw,
 				    FwupdInstallFlags flags,
@@ -378,7 +378,7 @@ fu_superio_device_prepare_firmware (FuDevice *device,
 		if (memcmp (&buf[off], sig1, sizeof(sig1)) == 0 &&
 		    memcmp (&buf[off + 8], sig2, sizeof(sig2)) == 0) {
 			g_debug ("found signature at 0x%04x", (guint) off);
-			return g_bytes_ref (fw);
+			return fu_firmware_new_from_bytes (fw);
 		}
 	}
 	g_set_error_literal (error,

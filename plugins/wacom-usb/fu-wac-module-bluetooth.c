@@ -106,7 +106,7 @@ fu_wac_module_bluetooth_parse_blocks (const guint8 *data, gsize sz, gboolean ski
 
 static gboolean
 fu_wac_module_bluetooth_write_firmware (FuDevice *device,
-					GBytes *blob,
+					FuFirmware *firmware,
 					FwupdInstallFlags flags,
 					GError **error)
 {
@@ -117,9 +117,15 @@ fu_wac_module_bluetooth_write_firmware (FuDevice *device,
 	const guint8 buf_start[] = { 0x00 };
 	g_autoptr(GPtrArray) blocks = NULL;
 	g_autoptr(GBytes) blob_start = g_bytes_new_static (buf_start, 1);
+	g_autoptr(GBytes) fw = NULL;
+
+	/* get default image */
+	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	if (fw == NULL)
+		return FALSE;
 
 	/* build each data packet */
-	data = g_bytes_get_data (blob, &len);
+	data = g_bytes_get_data (fw, &len);
 	blocks = fu_wac_module_bluetooth_parse_blocks (data, len, TRUE);
 	blocks_total = blocks->len + 2;
 

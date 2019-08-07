@@ -18,6 +18,7 @@ static void
 fu_test_synaprom_firmware_func (void)
 {
 	const guint8 *buf;
+	gboolean ret;
 	gsize sz = 0;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuSynapromDevice) device = fu_synaprom_device_new (NULL);
@@ -25,7 +26,8 @@ fu_test_synaprom_firmware_func (void)
 	g_autoptr(GBytes) blob2 = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GPtrArray) firmware = NULL;
+	g_autoptr(FuFirmware) firmware2 = NULL;
+	g_autoptr(FuFirmware) firmware = fu_synaprom_firmware_new ();
 
 	filename = fu_test_get_filename (TESTDATADIR, "test.pkg");
 	g_assert_nonnull (filename);
@@ -36,22 +38,18 @@ fu_test_synaprom_firmware_func (void)
 	g_assert_cmpint (sz, ==, 294);
 	g_assert_cmpint (buf[0], ==, 0x01);
 	g_assert_cmpint (buf[1], ==, 0x00);
-	firmware = fu_synaprom_firmware_new (fw, &error);
+	ret = fu_firmware_parse (firmware, fw, 0, &error);
 	g_assert_no_error (error);
-	g_assert_nonnull (firmware);
+	g_assert_true (ret);
 
 	/* does not exist */
-	blob1 = fu_synaprom_firmware_get_bytes_by_tag (firmware, 0, NULL);
+	blob1 = fu_firmware_get_image_by_id_bytes (firmware, "NotGoingToExist", NULL);
 	g_assert_null (blob1);
-	blob1 = fu_synaprom_firmware_get_bytes_by_tag (firmware,
-						       FU_SYNAPROM_FIRMWARE_TAG_CFG_HEADER,
-						       NULL);
+	blob1 = fu_firmware_get_image_by_id_bytes (firmware, "cfg-update-header", NULL);
 	g_assert_null (blob1);
 
 	/* header needs to exist */
-	blob1 = fu_synaprom_firmware_get_bytes_by_tag (firmware,
-						       FU_SYNAPROM_FIRMWARE_TAG_MFW_HEADER,
-						       &error);
+	blob1 = fu_firmware_get_image_by_id_bytes (firmware, "mfw-update-header", &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (blob1);
 	buf = g_bytes_get_data (blob1, &sz);
@@ -64,8 +62,11 @@ fu_test_synaprom_firmware_func (void)
 
 	/* payload needs to exist */
 	fu_synaprom_device_set_version (device, 10, 1, 1234);
-	blob2 = fu_synaprom_device_prepare_fw (FU_DEVICE (device), fw,
-					       FWUPD_INSTALL_FLAG_NONE, &error);
+	firmware2 = fu_synaprom_device_prepare_fw (FU_DEVICE (device), fw,
+						   FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (firmware2);
+	blob2 = fu_firmware_get_image_by_id_bytes (firmware2, "mfw-update-payload", &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (blob2);
 	buf = g_bytes_get_data (blob2, &sz);

@@ -23,6 +23,7 @@
 #include "fu-device-list.h"
 #include "fu-device-private.h"
 #include "fu-engine.h"
+#include "fu-ihex-firmware.h"
 #include "fu-quirks.h"
 #include "fu-keyring.h"
 #include "fu-history.h"
@@ -33,6 +34,7 @@
 #include "fu-hash.h"
 #include "fu-hwids.h"
 #include "fu-smbios.h"
+#include "fu-srec-firmware.h"
 #include "fu-test.h"
 
 #ifdef ENABLE_GPG
@@ -3665,6 +3667,248 @@ fu_common_vercmp_func (void)
 	g_assert_cmpint (fu_common_vercmp (NULL, NULL), ==, G_MAXINT);
 }
 
+static void
+fu_firmware_ihex_func (void)
+{
+	const guint8 *data;
+	gboolean ret;
+	gsize len;
+	g_autofree gchar *filename_hex = NULL;
+	g_autofree gchar *filename_ref = NULL;
+	g_autofree gchar *str = NULL;
+	g_autoptr(FuFirmware) firmware = fu_ihex_firmware_new ();
+	g_autoptr(GBytes) data_file = NULL;
+	g_autoptr(GBytes) data_fw = NULL;
+	g_autoptr(GBytes) data_hex = NULL;
+	g_autoptr(GBytes) data_ref = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GFile) file_ref = NULL;
+	g_autoptr(GFile) file_hex = NULL;
+
+	/* load a Intel hex32 file */
+	filename_hex = fu_test_get_filename (TESTDATADIR, "firmware.hex");
+	g_assert (filename_hex != NULL);
+	file_hex = g_file_new_for_path (filename_hex);
+	data_file = g_file_load_bytes (file_hex, NULL, NULL, &error);
+	g_assert_no_error (error);
+	g_assert (data_file != NULL);
+	ret = fu_firmware_parse (firmware, data_file, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	data_fw = fu_firmware_get_image_default_bytes (firmware, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (data_fw);
+	g_assert_cmpint (g_bytes_get_size (data_fw), ==, 136);
+
+	/* did we match the reference file? */
+	filename_ref = fu_test_get_filename (TESTDATADIR, "firmware.bin");
+	g_assert (filename_ref != NULL);
+	file_ref = g_file_new_for_path (filename_ref);
+	data_ref = g_file_load_bytes (file_ref, NULL, NULL, &error);
+	g_assert_no_error (error);
+	g_assert (data_ref != NULL);
+	ret = fu_common_bytes_compare (data_fw, data_ref, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+
+	/* export a ihex file (which will be slightly different due to
+	 * non-continous regions being expanded */
+	data_hex = fu_firmware_write (firmware, &error);
+	g_assert_no_error (error);
+	g_assert (data_hex != NULL);
+	data = g_bytes_get_data (data_hex, &len);
+	str = g_strndup ((const gchar *) data, len);
+	g_assert_cmpstr (str, ==,
+			 ":104000003DEF20F000000000FACF01F0FBCF02F0FE\n"
+			 ":10401000E9CF03F0EACF04F0E1CF05F0E2CF06F0FC\n"
+			 ":10402000D9CF07F0DACF08F0F3CF09F0F4CF0AF0D8\n"
+			 ":10403000F6CF0BF0F7CF0CF0F8CF0DF0F5CF0EF078\n"
+			 ":104040000EC0F5FF0DC0F8FF0CC0F7FF0BC0F6FF68\n"
+			 ":104050000AC0F4FF09C0F3FF08C0DAFF07C0D9FFA8\n"
+			 ":1040600006C0E2FF05C0E1FF04C0EAFF03C0E9FFAC\n"
+			 ":1040700002C0FBFF01C0FAFF11003FEF20F000017A\n"
+			 ":0840800042EF20F03DEF20F0BB\n"
+			 ":00000001FF\n");
+}
+
+static void
+fu_firmware_ihex_signed_func (void)
+{
+	const guint8 *data;
+	gboolean ret;
+	gsize len;
+	g_autofree gchar *filename_shex = NULL;
+	g_autoptr(FuFirmware) firmware = fu_ihex_firmware_new ();
+	g_autoptr(GBytes) data_file = NULL;
+	g_autoptr(GBytes) data_fw = NULL;
+	g_autoptr(GBytes) data_sig = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GFile) file_hex = NULL;
+
+	/* load a signed Intel hex32 file */
+	filename_shex = fu_test_get_filename (TESTDATADIR, "firmware.shex");
+	g_assert (filename_shex != NULL);
+	file_hex = g_file_new_for_path (filename_shex);
+	data_file = g_file_load_bytes (file_hex, NULL, NULL, &error);
+	g_assert_no_error (error);
+	g_assert (data_file != NULL);
+	ret = fu_firmware_parse (firmware, data_file, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	data_fw = fu_firmware_get_image_by_id_bytes (firmware, NULL, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (data_fw);
+	g_assert_cmpint (g_bytes_get_size (data_fw), ==, 136);
+
+	/* get the signed image */
+	data_sig = fu_firmware_get_image_by_id_bytes (firmware, "signature", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (data_sig);
+	data = g_bytes_get_data (data_sig, &len);
+	g_assert_cmpint (len, ==, 8);
+	g_assert (data != NULL);
+	g_assert_cmpint (memcmp (data, "deadbeef", 8), ==, 0);
+}
+
+static void
+fu_firmware_ihex_offset_func (void)
+{
+	const guint8 *data;
+	gboolean ret;
+	gsize len;
+	g_autofree gchar *str = NULL;
+	g_autoptr(FuFirmware) firmware = fu_ihex_firmware_new ();
+	g_autoptr(FuFirmware) firmware_verify = fu_ihex_firmware_new ();
+	g_autoptr(FuFirmwareImage) img_verify = NULL;
+	g_autoptr(FuFirmwareImage) img = NULL;
+	g_autoptr(GBytes) data_bin = NULL;
+	g_autoptr(GBytes) data_dummy = NULL;
+	g_autoptr(GBytes) data_verify = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* add a 4 byte image in high memory */
+	data_dummy = g_bytes_new_static ("foo", 4);
+	img = fu_firmware_image_new (data_dummy);
+	fu_firmware_image_set_addr (img, 0x80000000);
+	fu_firmware_add_image (firmware, img);
+	data_bin = fu_firmware_write (firmware, &error);
+	g_assert_no_error (error);
+	g_assert (data_bin != NULL);
+	data = g_bytes_get_data (data_bin, &len);
+	str = g_strndup ((const gchar *) data, len);
+	g_assert_cmpstr (str, ==,
+			 ":0200000480007A\n"
+			 ":04000000666F6F00B8\n"
+			 ":00000001FF\n");
+
+	/* check we can load it too */
+	ret = fu_firmware_parse (firmware_verify, data_bin, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	img_verify = fu_firmware_get_image_default (firmware_verify, &error);
+	g_assert_no_error (error);
+	g_assert (img_verify != NULL);
+	g_assert_cmpint (fu_firmware_image_get_addr (img_verify), ==, 0x80000000);
+	data_verify = fu_firmware_image_get_bytes (img_verify, &error);
+	g_assert_no_error (error);
+	g_assert (data_verify != NULL);
+	g_assert_cmpint (g_bytes_get_size (data_verify), ==, 0x4);
+}
+
+static void
+fu_firmware_srec_func (void)
+{
+	gboolean ret;
+	g_autofree gchar *filename_srec = NULL;
+	g_autofree gchar *filename_ref = NULL;
+	g_autoptr(FuFirmware) firmware = fu_srec_firmware_new ();
+	g_autoptr(GBytes) data_ref = NULL;
+	g_autoptr(GBytes) data_srec = NULL;
+	g_autoptr(GBytes) data_bin = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GFile) file_bin = NULL;
+	g_autoptr(GFile) file_srec = NULL;
+
+	filename_srec = fu_test_get_filename (TESTDATADIR, "firmware.srec");
+	g_assert (filename_srec != NULL);
+	file_srec = g_file_new_for_path (filename_srec);
+	data_srec = g_file_load_bytes (file_srec, NULL, NULL, &error);
+	g_assert_no_error (error);
+	g_assert (data_srec != NULL);
+	ret = fu_firmware_parse (firmware, data_srec, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	data_bin = fu_firmware_get_image_default_bytes (firmware, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (data_bin);
+	g_assert_cmpint (g_bytes_get_size (data_bin), ==, 136);
+
+	/* did we match the reference file? */
+	filename_ref = fu_test_get_filename (TESTDATADIR, "firmware.bin");
+	g_assert (filename_ref != NULL);
+	file_bin = g_file_new_for_path (filename_ref);
+	data_ref = g_file_load_bytes (file_bin, NULL, NULL, &error);
+	g_assert_no_error (error);
+	g_assert (data_ref != NULL);
+	ret = fu_common_bytes_compare (data_bin, data_ref, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+}
+
+static void
+fu_firmware_func (void)
+{
+	g_autoptr(FuFirmware) firmware = fu_firmware_new ();
+	g_autoptr(FuFirmwareImage) img1 = fu_firmware_image_new (NULL);
+	g_autoptr(FuFirmwareImage) img2 = fu_firmware_image_new (NULL);
+	g_autoptr(FuFirmwareImage) img_id = NULL;
+	g_autoptr(FuFirmwareImage) img_idx = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autofree gchar *str = NULL;
+
+	fu_firmware_image_set_addr (img1, 0x200);
+	fu_firmware_image_set_idx (img1, 13);
+	fu_firmware_image_set_id (img1, "primary");
+	fu_firmware_add_image (firmware, img1);
+	fu_firmware_image_set_addr (img2, 0x400);
+	fu_firmware_image_set_idx (img2, 23);
+	fu_firmware_image_set_id (img2, "secondary");
+	fu_firmware_add_image (firmware, img2);
+
+	img_id = fu_firmware_get_image_by_id (firmware, "NotGoingToExist", &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_null (img_id);
+	g_clear_error (&error);
+	img_id = fu_firmware_get_image_by_id (firmware, "primary", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (img_id);
+	g_assert_cmpint (fu_firmware_image_get_addr (img_id), ==, 0x200);
+	g_assert_cmpint (fu_firmware_image_get_idx (img_id), ==, 13);
+	g_assert_cmpstr (fu_firmware_image_get_id (img_id), ==, "primary");
+
+	img_idx = fu_firmware_get_image_by_idx (firmware, 123456, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_null (img_idx);
+	g_clear_error (&error);
+	img_idx = fu_firmware_get_image_by_idx (firmware, 23, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (img_idx);
+	g_assert_cmpint (fu_firmware_image_get_addr (img_idx), ==, 0x400);
+	g_assert_cmpint (fu_firmware_image_get_idx (img_idx), ==, 23);
+	g_assert_cmpstr (fu_firmware_image_get_id (img_idx), ==, "secondary");
+
+	str = fu_firmware_to_string (firmware);
+	g_assert_cmpstr (str, ==, "FuFirmware:\n"
+				  "  FuFirmwareImage:\n"
+				  "  ID:                   primary\n"
+				  "  Index:                0x000d\n"
+				  "  Address:              0x0200\n"
+				  "  FuFirmwareImage:\n"
+				  "  ID:                   secondary\n"
+				  "  Index:                0x0017\n"
+				  "  Address:              0x0400\n");
+}
+
 int
 main (int argc, char **argv)
 {
@@ -3685,6 +3929,11 @@ main (int argc, char **argv)
 	/* tests go here */
 	if (g_test_slow ())
 		g_test_add_func ("/fwupd/progressbar", fu_progressbar_func);
+	g_test_add_func ("/fwupd/firmware", fu_firmware_func);
+	g_test_add_func ("/fwupd/firmware{ihex}", fu_firmware_ihex_func);
+	g_test_add_func ("/fwupd/firmware{ihex-offset}", fu_firmware_ihex_offset_func);
+	g_test_add_func ("/fwupd/firmware{ihex-signed}", fu_firmware_ihex_signed_func);
+	g_test_add_func ("/fwupd/firmware{srec}", fu_firmware_srec_func);
 	g_test_add_func ("/fwupd/archive{invalid}", fu_archive_invalid_func);
 	g_test_add_func ("/fwupd/archive{cab}", fu_archive_cab_func);
 	g_test_add_func ("/fwupd/engine{requirements-other-device}", fu_engine_requirements_other_device_func);

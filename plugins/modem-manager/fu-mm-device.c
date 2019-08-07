@@ -600,14 +600,20 @@ fu_mm_device_write_firmware_qmi_pdc (FuDevice *device, GBytes *fw, GArray **acti
 
 static gboolean
 fu_mm_device_write_firmware (FuDevice *device,
-			     GBytes *fw,
+			     FuFirmware *firmware,
 			     FwupdInstallFlags flags,
 			     GError **error)
 {
 	FuMmDevice *self = FU_MM_DEVICE (device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuArchive) archive = NULL;
+	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) array = NULL;
+
+	/* get default image */
+	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	if (fw == NULL)
+		return FALSE;
 
 	/* lock device */
 	locker = fu_device_locker_new (device, error);

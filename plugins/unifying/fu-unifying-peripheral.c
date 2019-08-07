@@ -882,7 +882,7 @@ fu_unifying_peripheral_write_firmware_pkt (FuUnifyingPeripheral *self,
 
 static gboolean
 fu_unifying_peripheral_write_firmware (FuDevice *device,
-				       GBytes *fw,
+				       FuFirmware *firmware,
 				       FwupdInstallFlags flags,
 				       GError **error)
 {
@@ -891,6 +891,7 @@ fu_unifying_peripheral_write_firmware (FuDevice *device,
 	const guint8 *data;
 	guint8 cmd = 0x04;
 	guint8 idx;
+	g_autoptr(GBytes) fw = NULL;
 
 	/* if we're in bootloader mode, we should be able to get this feature */
 	idx = fu_unifying_peripheral_feature_get_idx (self, HIDPP_FEATURE_DFU);
@@ -901,6 +902,11 @@ fu_unifying_peripheral_write_firmware (FuDevice *device,
 			     "no DFU feature available");
 		return FALSE;
 	}
+
+	/* get default image */
+	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	if (fw == NULL)
+		return FALSE;
 
 	/* flash hardware */
 	data = g_bytes_get_data (fw, &sz);
