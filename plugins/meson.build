@@ -17,6 +17,7 @@ subdir('upower')
 subdir('wacom-raw')
 subdir('wacom-usb')
 subdir('superio')
+subdir('synaptics-rmi')
 
 # depends on dfu
 subdir('csr')

@@ -1,0 +1,4 @@
+[DeviceInstanceId=HIDRAW\VEN_06CB&DEV_76AE]
+Plugin = synaptics_rmi
+Vendor = Dell
+Name = XPS 13 Synaptics Touchpad

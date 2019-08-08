@@ -332,6 +332,7 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %{_libdir}/fwupd-plugins-3/libfu_plugin_synapticsmst.so
 %endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_synaptics_prometheus.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_synaptics_rmi.so
 %if 0%{?enable_dummy}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_test.so
 %endif
