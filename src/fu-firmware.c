@@ -330,8 +330,16 @@ fu_firmware_get_image_default_bytes (FuFirmware *self, GError **error)
 gchar *
 fu_firmware_to_string (FuFirmware *self)
 {
+	FuFirmwareClass *klass = FU_FIRMWARE_GET_CLASS (self);
 	FuFirmwarePrivate *priv = GET_PRIVATE (self);
-	GString *str = g_string_new ("FuFirmware:\n");
+	GString *str = g_string_new (NULL);
+
+	/* subclassed type */
+	g_string_append_printf (str, "%s:\n", G_OBJECT_TYPE_NAME (self));
+
+	/* vfunc */
+	if (klass->to_string != NULL)
+		klass->to_string (self, str);
 
 	for (guint i = 0; i < priv->images->len; i++) {
 		FuFirmwareImage *img = g_ptr_array_index (priv->images, i);

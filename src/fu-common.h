@@ -152,6 +152,10 @@ guint32		 fu_common_read_uint32		(const guint8	*buf,
 guint		 fu_common_string_replace	(GString	*string,
 						 const gchar	*search,
 						 const gchar	*replace);
+void		 fu_common_string_append_kv	(GString	*str,
+						 guint		 key_offset,
+						 const gchar 	*key,
+						 const gchar	*value);
 gchar		**fu_common_strnsplit		(const gchar	*str,
 						 gsize		 sz,
 						 const gchar	*delimiter,
