@@ -371,7 +371,10 @@ fu_altos_device_write_firmware (FuDevice *device,
 			gsize chunk_len = 0x100;
 			if (i + 0x100 > data_len)
 				chunk_len = data_len - i;
-			memcpy (buf_tmp, data + i, chunk_len);
+			if (!fu_memcpy_safe (buf_tmp, sizeof(buf_tmp), 0,		/* dst */
+					     (const guint8 *) data, data_len, i,	/* src */
+					     chunk_len, error))
+				return FALSE;
 		}
 
 		/* verify data from device */

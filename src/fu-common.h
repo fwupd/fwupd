@@ -135,6 +135,14 @@ gboolean	 fu_common_bytes_compare	(GBytes		*bytes1,
 						 GError		**error);
 GBytes		*fu_common_bytes_pad		(GBytes		*bytes,
 						 gsize		 sz);
+gboolean	 fu_memcpy_safe			(guint8		*dst,
+						 gsize		 dst_sz,
+						 gsize		 dst_offset,
+						 const guint8	*src,
+						 gsize		 src_sz,
+						 gsize		 src_offset,
+						 gsize		 n,
+						 GError		**error);
 
 typedef guint FuEndianType;
 

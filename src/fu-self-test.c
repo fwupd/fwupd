@@ -3856,6 +3856,78 @@ fu_firmware_srec_func (void)
 }
 
 static void
+fu_memcpy_func (void)
+{
+	const guint8 src[] = {'a', 'b', 'c', 'd', 'e' };
+	gboolean ret;
+	guint8 dst[4];
+	g_autoptr(GError) error = NULL;
+
+	/* copy entire buffer */
+	ret = fu_memcpy_safe (dst, sizeof(dst), 0x0,
+			      src, sizeof(src), 0x0,
+			      4, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	g_assert (memcmp (src, dst, 4) == 0);
+
+	/* copy first char */
+	ret = fu_memcpy_safe (dst, sizeof(dst), 0x0,
+			      src, sizeof(src), 0x0,
+			      1, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	g_assert_cmpint (dst[0], ==, 'a');
+
+	/* copy last char */
+	ret = fu_memcpy_safe (dst, sizeof(dst), 0x0,
+			      src, sizeof(src), 0x4,
+			      1, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	g_assert_cmpint (dst[0], ==, 'e');
+
+	/* copy nothing */
+	ret = fu_memcpy_safe (dst, sizeof(dst), 0x0,
+			      src, sizeof(src), 0x0,
+			      0, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+
+	/* write past the end of dst */
+	ret = fu_memcpy_safe (dst, sizeof(dst), 0x0,
+			      src, sizeof(src), 0x0,
+			      5, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_WRITE);
+	g_assert_false (ret);
+	g_clear_error (&error);
+
+	/* write past the end of dst with offset */
+	ret = fu_memcpy_safe (dst, sizeof(dst), 0x1,
+			      src, sizeof(src), 0x0,
+			      4, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_WRITE);
+	g_assert_false (ret);
+	g_clear_error (&error);
+
+	/* read past past the end of dst */
+	ret = fu_memcpy_safe (dst, sizeof(dst), 0x0,
+			      src, sizeof(src), 0x0,
+			      6, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_READ);
+	g_assert_false (ret);
+	g_clear_error (&error);
+
+	/* read past the end of src with offset */
+	ret = fu_memcpy_safe (dst, sizeof(dst), 0x0,
+			      src, sizeof(src), 0x4,
+			      4, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_READ);
+	g_assert_false (ret);
+	g_clear_error (&error);
+}
+
+static void
 fu_firmware_func (void)
 {
 	g_autoptr(FuFirmware) firmware = fu_firmware_new ();
@@ -3929,6 +4001,7 @@ main (int argc, char **argv)
 	/* tests go here */
 	if (g_test_slow ())
 		g_test_add_func ("/fwupd/progressbar", fu_progressbar_func);
+	g_test_add_func ("/fwupd/memcpy", fu_memcpy_func);
 	g_test_add_func ("/fwupd/firmware", fu_firmware_func);
 	g_test_add_func ("/fwupd/firmware{ihex}", fu_firmware_ihex_func);
 	g_test_add_func ("/fwupd/firmware{ihex-offset}", fu_firmware_ihex_offset_func);

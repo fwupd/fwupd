@@ -381,8 +381,12 @@ fu_wac_device_write_block (FuWacDevice *self,
 	memset (buf, 0xff, bufsz);
 	buf[0] = FU_WAC_REPORT_ID_WRITE_BLOCK;
 	fu_common_write_uint32 (buf + 1, addr, G_LITTLE_ENDIAN);
-	if (sz > 0)
-		memcpy (buf + 5, tmp, sz);
+	if (sz > 0) {
+		if (!fu_memcpy_safe (buf, bufsz, 0x5,	/* dst */
+				     tmp, sz, 0x0,	/* src */
+				     sz, error))
+			return FALSE;
+	}
 
 	/* hit hardware */
 	return fu_wac_device_set_feature_report (self, buf, bufsz,

@@ -206,7 +206,10 @@ fu_unifying_runtime_setup_internal (FuDevice *device, GError **error)
 			g_prefix_error (error, "failed to read device config: ");
 			return FALSE;
 		}
-		memcpy (config + (i * 2), msg->data + 1, 2);
+		if (!fu_memcpy_safe (config, sizeof(config), i * 2,	/* dst */
+				     msg->data, sizeof(msg->data), 0x1,	/* src */
+				     2, error))
+			return FALSE;
 	}
 
 	/* get firmware version */

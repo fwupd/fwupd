@@ -8,6 +8,8 @@
 
 #include <string.h>
 
+#include "fu-common.h"
+
 #include "dfu-element.h"
 #include "dfu-format-metadata.h"
 #include "dfu-image.h"
@@ -188,12 +190,18 @@ dfu_firmware_to_metadata (DfuFirmware *firmware, GError **error)
 
 		/* write the key */
 		mdbuf[idx++] = (guint8) key_len;
-		memcpy(mdbuf + idx, key, key_len);
+		if (!fu_memcpy_safe (mdbuf, sizeof(mdbuf), idx,			/* dst */
+				     (const guint8 *) key, key_len, 0x0,	/* src */
+				     key_len, error))
+			return NULL;
 		idx += key_len;
 
 		/* write the value */
 		mdbuf[idx++] = (guint8) value_len;
-		memcpy(mdbuf + idx, value, value_len);
+		if (!fu_memcpy_safe (mdbuf, sizeof(mdbuf), idx,			/* dst */
+				     (const guint8 *) value, value_len, 0x0,	/* src */
+				     value_len, error))
+			return NULL;
 		idx += value_len;
 	}
 	g_debug ("metadata table was %u/%" G_GSIZE_FORMAT " bytes",

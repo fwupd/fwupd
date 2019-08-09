@@ -23,6 +23,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "fu-common.h"
+
 #include "dfu-common.h"
 #include "dfu-patch.h"
 
@@ -137,14 +139,18 @@ dfu_patch_export (DfuPatch *self, GError **error)
 	if (priv->checksum_old != NULL) {
 		gsize csum_sz = 0;
 		const guint8 *csum_data = g_bytes_get_data (priv->checksum_old, &csum_sz);
-		memcpy (data + G_STRUCT_OFFSET(DfuPatchFileHeader,checksum_old),
-			csum_data, csum_sz);
+		if (!fu_memcpy_safe (data, sz, G_STRUCT_OFFSET(DfuPatchFileHeader,checksum_old),	/* dst */
+				     csum_data, csum_sz, 0x0,						/* src */
+				     csum_sz, error))
+			return NULL;
 	}
 	if (priv->checksum_new != NULL) {
 		gsize csum_sz = 0;
 		const guint8 *csum_data = g_bytes_get_data (priv->checksum_new, &csum_sz);
-		memcpy (data + G_STRUCT_OFFSET(DfuPatchFileHeader,checksum_new),
-			csum_data, csum_sz);
+		if (!fu_memcpy_safe (data, sz, G_STRUCT_OFFSET(DfuPatchFileHeader,checksum_new),	/* dst */
+				     csum_data, csum_sz, 0x0,						/* src */
+				     csum_sz, error))
+			return NULL;
 	}
 
 	addr = sizeof(DfuPatchFileHeader);
@@ -158,9 +164,15 @@ dfu_patch_export (DfuPatch *self, GError **error)
 		chunkhdr.off = GUINT32_TO_LE (chunk->off);
 		chunkhdr.sz = GUINT32_TO_LE (sz_tmp);
 		chunkhdr.flags = 0;
-		memcpy (data + addr, &chunkhdr, sizeof(DfuPatchChunkHeader));
-		memcpy (data + addr + sizeof(DfuPatchChunkHeader), data_new, sz_tmp);
 
+		if (!fu_memcpy_safe (data, sz, addr,							/* dst */
+				     (const guint8 *) &chunkhdr, sizeof(DfuPatchChunkHeader), 0x0,	/* src */
+				     sizeof(DfuPatchChunkHeader), error))
+			return NULL;
+		if (!fu_memcpy_safe (data, sz, addr + sizeof(DfuPatchChunkHeader),			/* dst */
+				     data_new, sz_tmp, 0x0,						/* src */
+				     sz_tmp, error))
+			return NULL;
 		/* move up after the copied data */
 		addr += sizeof(DfuPatchChunkHeader) + sz_tmp;
 	}
@@ -506,7 +518,10 @@ dfu_patch_apply (DfuPatch *self, GBytes *blob, DfuPatchApplyFlags flags, GError 
 	}
 
 	data_new = g_malloc0 (sz_max);
-	memcpy (data_new, data_old, MIN (sz, sz_max));
+	if (!fu_memcpy_safe (data_new, sz_max, 0x0,			/* dst */
+			     data_old, sz, 0x0,				/* src */
+			     MIN (sz, sz_max), error))
+		return FALSE;
 	for (guint i = 0; i < priv->chunks->len; i++) {
 		DfuPatchChunk *chunk = g_ptr_array_index (priv->chunks, i);
 		const guint8 *chunk_data;
@@ -525,7 +540,10 @@ dfu_patch_apply (DfuPatch *self, GBytes *blob, DfuPatchApplyFlags flags, GError 
 		/* apply one chunk */
 		g_debug ("applying chunk %u/%u @0x%04x (length %" G_GSIZE_FORMAT ")",
 			 i + 1, priv->chunks->len, chunk->off, chunk_sz);
-		memcpy (data_new + chunk->off, chunk_data, chunk_sz);
+		if (!fu_memcpy_safe (data_new, sz_max, chunk->off,	/* dst */
+				     chunk_data, chunk_sz, 0x0,		/* src */
+				     chunk_sz, error))
+			return NULL;
 	}
 
 	/* check we got the desired hash */

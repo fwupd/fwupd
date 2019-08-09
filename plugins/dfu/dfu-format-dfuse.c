@@ -8,6 +8,8 @@
 
 #include <string.h>
 
+#include "fu-common.h"
+
 #include "dfu-element.h"
 #include "dfu-format-dfuse.h"
 #include "dfu-image.h"
@@ -232,7 +234,13 @@ dfu_image_to_dfuse (DfuImage *image)
 		gsize length;
 		GBytes *bytes = g_ptr_array_index (element_array, i);
 		const guint8 *data = g_bytes_get_data (bytes, &length);
-		memcpy (buf + offset, data, length);
+		g_autoptr(GError) error = NULL;
+		if (!fu_memcpy_safe (buf, length_total + sizeof (DfuSeImagePrefix), offset,	/* dst */
+				     data, length, 0x0,						/* src */
+				     length, &error)) {
+			g_critical ("failed to pack buffer: %s", error->message);
+			continue;
+		}
 		offset += (guint32) length;
 	}
 	return g_bytes_new_take (buf, length_total + sizeof (DfuSeImagePrefix));
@@ -300,7 +308,10 @@ dfu_firmware_to_dfuse (DfuFirmware *firmware, GError **error)
 		gsize length;
 		const guint8 *data;
 		data = g_bytes_get_data (contents, &length);
-		memcpy (buf + offset, data, length);
+		if (!fu_memcpy_safe (buf, sizeof (DfuSePrefix) + image_size_total, offset,	/* dst */
+				     data, length, 0x0,						/* src */
+				     length, error))
+			return NULL;
 		offset += (guint32) length;
 	}
 
