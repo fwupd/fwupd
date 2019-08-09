@@ -55,7 +55,10 @@ dfu_tool_parse_xtea_key (const gchar *key, guint32 *keys, GError **error)
 			guint64 tmp;
 
 			/* copy to 4-char buf (with NUL) */
-			memcpy (buf, key + i*8, 8);
+			if (!fu_memcpy_safe ((guint8 *) buf, sizeof(buf), 0x0,		/* dst */
+					     (const guint8 *) key, key_len, i * 8,	/* src */
+					     8, error))
+				return FALSE;
 			tmp = g_ascii_strtoull (buf, &endptr, 16);
 			if (endptr && endptr[0] != '\0') {
 				g_set_error (error,

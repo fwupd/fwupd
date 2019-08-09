@@ -78,8 +78,12 @@ fu_colorhug_device_msg (FuColorhugDevice *self, guint8 cmd,
 	}
 
 	/* optionally copy in data */
-	if (ibuf != NULL)
-		memcpy (buf + 1, ibuf, ibufsz);
+	if (ibuf != NULL) {
+		if (!fu_memcpy_safe (buf, sizeof(buf), 0x1,	/* dst */
+				     ibuf, ibufsz, 0x0,		/* src */
+				     ibufsz, error))
+			return FALSE;
+	}
 
 	/* request */
 	if (g_getenv ("FWUPD_COLORHUG_VERBOSE") != NULL)
@@ -151,9 +155,12 @@ fu_colorhug_device_msg (FuColorhugDevice *self, guint8 cmd,
 	}
 
 	/* copy back optional buf */
-	if (obuf != NULL)
-		memcpy (obuf, buf + 2, obufsz);
-
+	if (obuf != NULL) {
+		if (!fu_memcpy_safe (obuf, obufsz, 0x0,		/* dst */
+				     buf, sizeof(buf), 0x2,	/* src */
+				     obufsz, error))
+			return FALSE;
+	}
 	return TRUE;
 }
 
@@ -366,7 +373,10 @@ fu_colorhug_device_write_firmware (FuDevice *device,
 		fu_common_write_uint16 (buf + 0, chk->address, G_LITTLE_ENDIAN);
 		buf[2] = chk->data_sz;
 		buf[3] = ch_colorhug_device_calculate_checksum (chk->data, chk->data_sz);
-		memcpy (buf + 4, chk->data, chk->data_sz);
+		if (!fu_memcpy_safe (buf, sizeof(buf), 0x4,		/* dst */
+				     chk->data, chk->data_sz, 0x0,	/* src */
+				     chk->data_sz, error))
+			return FALSE;
 		if (!fu_colorhug_device_msg (self, CH_CMD_WRITE_FLASH,
 					     buf, sizeof(buf), /* in */
 					     NULL, 0, /* out */

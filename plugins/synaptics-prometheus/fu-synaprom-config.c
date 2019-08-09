@@ -98,7 +98,10 @@ fu_synaprom_config_setup (FuDevice *device, GError **error)
 			     GUINT32_FROM_LE(hdr.itype));
 		return FALSE;
 	}
-	memcpy (&cfg, reply->data + sizeof(hdr), sizeof(cfg));
+	if (!fu_memcpy_safe ((guint8 *) &cfg, sizeof(cfg), 0x0,		/* dst */
+			     reply->data, reply->len, sizeof(hdr),	/* src */
+			     sizeof(cfg), error))
+		return FALSE;
 	self->configid1 = GUINT32_FROM_LE(cfg.config_id1);
 	self->configid2 = GUINT32_FROM_LE(cfg.config_id2);
 	g_debug ("id1=%u, id2=%u, ver=%u",

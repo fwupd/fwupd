@@ -296,7 +296,10 @@ fu_unifying_bootloader_request (FuUnifyingBootloader *self,
 	buf_request[0x01] = req->addr >> 8;
 	buf_request[0x02] = req->addr & 0xff;
 	buf_request[0x03] = req->len;
-	memcpy (buf_request + 0x04, req->data, 28);
+	if (!fu_memcpy_safe (buf_request, sizeof(buf_request), 0x04,	/* dst */
+			     req->data, sizeof(req->data), 0x0,		/* src */
+			     sizeof(req->data), error))
+		return FALSE;
 
 	/* send request */
 	if (g_getenv ("FWUPD_UNIFYING_VERBOSE") != NULL) {

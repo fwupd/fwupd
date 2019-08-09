@@ -149,7 +149,10 @@ fu_rts54hid_device_write_flash (FuRts54HidDevice *self,
 	g_return_val_if_fail (data_sz != 0, FALSE);
 
 	memcpy (buf, &cmd_buffer, sizeof(cmd_buffer));
-	memcpy (buf + FU_RTS54HID_CMD_BUFFER_OFFSET_DATA, data, data_sz);
+	if (!fu_memcpy_safe (buf, sizeof(buf), FU_RTS54HID_CMD_BUFFER_OFFSET_DATA,	/* dst */
+			     data, data_sz, 0x0,					/* src */
+			     data_sz, error))
+		return FALSE;
 	if (!fu_rts54hid_device_set_report (self, buf, sizeof(buf), error)) {
 		g_prefix_error (error, "failed to write flash @%08x: ", (guint) addr);
 		return FALSE;

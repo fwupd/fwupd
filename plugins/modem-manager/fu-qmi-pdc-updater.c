@@ -343,6 +343,7 @@ fu_qmi_pdc_updater_load_config (WriteContext *ctx)
 	g_autoptr(GArray) chunk = NULL;
 	gsize full_size;
 	gsize chunk_size;
+	g_autoptr(GError) error = NULL;
 
 	input = qmi_message_pdc_load_config_input_new ();
 	qmi_message_pdc_load_config_input_set_token (input, ctx->token++, NULL);
@@ -355,7 +356,12 @@ fu_qmi_pdc_updater_load_config (WriteContext *ctx)
 
 	chunk = g_array_sized_new (FALSE, FALSE, sizeof (guint8), chunk_size);
 	g_array_set_size (chunk, chunk_size);
-	memcpy (chunk->data, (const guint8 *)g_bytes_get_data (ctx->blob, NULL) + ctx->offset, chunk_size);
+	if (!fu_memcpy_safe (chunk->data, chunk_size, 0x0,				/* dst */
+			     (const guint8 *)g_bytes_get_data (ctx->blob, NULL),	/* src */
+			     g_bytes_get_size (ctx->blob), ctx->offset,
+			     chunk_size, &error)) {
+		g_critical ("failed to copy chunk: %s", error->message);
+	}
 
 	qmi_message_pdc_load_config_input_set_config_chunk (input,
 							    QMI_PDC_CONFIGURATION_TYPE_SOFTWARE,

@@ -56,7 +56,10 @@ fu_ebitdo_device_send (FuEbitdoDevice *self,
 		hdr->cmd_len = GUINT16_TO_LE (in_len + 3);
 		hdr->cmd = cmd;
 		hdr->payload_len = GUINT16_TO_LE (in_len);
-		memcpy (packet + 0x08, in, in_len);
+		if (!fu_memcpy_safe (packet, sizeof(packet), 0x08,	/* dst */
+				     in, in_len, 0x0,			/* src */
+				     in_len, error))
+			return FALSE;
 		hdr->pkt_len = (guint8) (in_len + 7);
 	} else {
 		hdr->cmd_len = GUINT16_TO_LE (in_len + 1);
@@ -145,9 +148,10 @@ fu_ebitdo_device_receive (FuEbitdoDevice *self,
 					     hdr->payload_len);
 				return FALSE;
 			}
-			memcpy (out,
-				packet + sizeof(FuEbitdoPkt),
-				hdr->payload_len);
+			if (!fu_memcpy_safe (out, out_len, 0x0,					/* dst */
+					     packet, sizeof(packet), sizeof(FuEbitdoPkt),	/* src */
+					     hdr->payload_len, error))
+				return FALSE;
 		}
 		return TRUE;
 	}
@@ -163,7 +167,10 @@ fu_ebitdo_device_receive (FuEbitdoDevice *self,
 					     out_len);
 				return FALSE;
 			}
-			memcpy (out, packet + 1, 4);
+			if (!fu_memcpy_safe (out, out_len, 0x0,					/* dst */
+					     packet, sizeof(packet), 0x1,			/* src */
+					     4, error))
+				return FALSE;
 		}
 		return TRUE;
 	}
@@ -181,9 +188,10 @@ fu_ebitdo_device_receive (FuEbitdoDevice *self,
 					     hdr->cmd_len);
 				return FALSE;
 			}
-			memcpy (out,
-				packet + sizeof(FuEbitdoPkt) - 3,
-				hdr->cmd_len);
+			if (!fu_memcpy_safe (out, out_len, 0x0,					/* dst */
+					     packet, sizeof(packet), sizeof(FuEbitdoPkt) - 3,	/* src */
+					     hdr->cmd_len, error))
+				return FALSE;
 		}
 		return TRUE;
 	}

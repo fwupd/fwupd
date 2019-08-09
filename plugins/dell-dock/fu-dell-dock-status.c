@@ -78,8 +78,10 @@ fu_dell_dock_status_write (FuDevice *device,
 	if (fw == NULL)
 		return FALSE;
 	data = g_bytes_get_data (fw, &length);
-
-	memcpy (&status_version, data + self->blob_version_offset, sizeof (guint32));
+	if (!fu_memcpy_safe ((guint8 *) &status_version, sizeof(status_version), 0x0,	/* dst */
+			     data, length, self->blob_version_offset,		/* src */
+			     sizeof(status_version), error))
+		return FALSE;
 	dynamic_version = fu_dell_dock_status_ver_string (status_version);
 	g_debug ("writing status firmware version %s", dynamic_version);
 

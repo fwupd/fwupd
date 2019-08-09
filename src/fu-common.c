@@ -1431,3 +1431,73 @@ fu_common_strnsplit (const gchar *str, gsize sz,
 	}
 	return g_strsplit (str, delimiter, max_tokens);
 }
+
+/**
+ * fu_memcpy_safe:
+ * @dst: destination buffer
+ * @dst_sz: maximum size of @dst, typically `sizeof(dst)`
+ * @dst_offset: offset in bytes into @dst to copy to
+ * @src: source buffer
+ * @src_sz: maximum size of @dst, typically `sizeof(src)`
+ * @src_offset: offset in bytes into @src to copy from
+ * @n: number of bytes to copy from @src+@offset from
+ * @error: A #GError or %NULL
+ *
+ * Copies some memory using memcpy in a safe way. Providing the buffer sizes
+ * of both the destination and the source allows us to check for buffer overflow.
+ *
+ * Providing the buffer offsets also allows us to check reading past the end of
+ * the source buffer. For this reason the caller should NEVER add an offset to
+ * @src or @dst.
+ *
+ * You don't need to use this function in "obviously correct" cases, nor should
+ * you use it when performance is a concern. Only us it when you're not sure if
+ * malicious data from a device or firmware could cause memory corruption.
+ *
+ * Return value: %TRUE if the bytes were copied, %FALSE otherwise
+ **/
+gboolean
+fu_memcpy_safe (guint8 *dst, gsize dst_sz, gsize dst_offset,
+		const guint8 *src, gsize src_sz, gsize src_offset,
+		gsize n, GError **error)
+{
+	if (n == 0)
+		return TRUE;
+
+	if (n > src_sz) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_READ,
+			     "attempted to read 0x%02x bytes from buffer of 0x%02x",
+			     (guint) n, (guint) src_sz);
+		return FALSE;
+	}
+	if (n + src_offset > src_sz) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_READ,
+			     "attempted to read 0x%02x bytes at offset 0x%02x from buffer of 0x%02x",
+			     (guint) n, (guint) src_offset, (guint) src_sz);
+		return FALSE;
+	}
+	if (n > dst_sz) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_WRITE,
+			     "attempted to write 0x%02x bytes to buffer of 0x%02x",
+			     (guint) n, (guint) dst_sz);
+		return FALSE;
+	}
+	if (n + dst_offset > dst_sz) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_WRITE,
+			     "attempted to write 0x%02x bytes at offset 0x%02x to buffer of 0x%02x",
+			     (guint) n, (guint) dst_offset, (guint) dst_sz);
+		return FALSE;
+	}
+
+	/* phew! */
+	memcpy (dst + dst_offset, src + src_offset, n);
+	return TRUE;
+}

@@ -352,7 +352,10 @@ fu_csr_device_download_chunk (FuCsrDevice *self, guint16 idx, GBytes *chunk, GEr
 	buf[1] = FU_CSR_COMMAND_UPGRADE;
 	fu_common_write_uint16 (&buf[2], idx, G_LITTLE_ENDIAN);
 	fu_common_write_uint16 (&buf[4], chunk_sz, G_LITTLE_ENDIAN);
-	memcpy (buf + FU_CSR_COMMAND_HEADER_SIZE, chunk_data, chunk_sz);
+	if (!fu_memcpy_safe (buf, sizeof(buf), FU_CSR_COMMAND_HEADER_SIZE,	/* dst */
+			     chunk_data, chunk_sz, 0x0,				/* src */
+			     chunk_sz, error))
+		return FALSE;
 
 	/* hit hardware */
 	if (g_getenv ("FWUPD_CSR_VERBOSE") != NULL)
