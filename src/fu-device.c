@@ -1472,18 +1472,6 @@ fu_device_has_custom_flag (FuDevice *self, const gchar *hint)
 	return g_strv_contains ((const gchar * const *) hints, hint);
 }
 
-static void
-fwupd_pad_kv_str (GString *str, const gchar *key, const gchar *value)
-{
-	/* ignore */
-	if (key == NULL || value == NULL)
-		return;
-	g_string_append_printf (str, "  %s: ", key);
-	for (gsize i = strlen (key); i < 20; i++)
-		g_string_append (str, " ");
-	g_string_append_printf (str, "%s\n", value);
-}
-
 /**
  * fu_device_get_remove_delay:
  * @self: A #FuDevice
@@ -1649,22 +1637,22 @@ fu_device_to_string (FuDevice *self)
 	if (tmp != NULL && tmp[0] != '\0')
 		g_string_append (str, tmp);
 	if (priv->alternate_id != NULL)
-		fwupd_pad_kv_str (str, "AlternateId", priv->alternate_id);
+		fu_common_string_append_kv (str, 2, "AlternateId", priv->alternate_id);
 	if (priv->equivalent_id != NULL)
-		fwupd_pad_kv_str (str, "EquivalentId", priv->equivalent_id);
+		fu_common_string_append_kv (str, 2, "EquivalentId", priv->equivalent_id);
 	if (priv->size_min > 0) {
 		g_autofree gchar *sz = g_strdup_printf ("%" G_GUINT64_FORMAT, priv->size_min);
-		fwupd_pad_kv_str (str, "FirmwareSizeMin", sz);
+		fu_common_string_append_kv (str, 2, "FirmwareSizeMin", sz);
 	}
 	if (priv->size_max > 0) {
 		g_autofree gchar *sz = g_strdup_printf ("%" G_GUINT64_FORMAT, priv->size_max);
-		fwupd_pad_kv_str (str, "FirmwareSizeMax", sz);
+		fu_common_string_append_kv (str, 2, "FirmwareSizeMax", sz);
 	}
 	keys = g_hash_table_get_keys (priv->metadata);
 	for (GList *l = keys; l != NULL; l = l->next) {
 		const gchar *key = l->data;
 		const gchar *value = g_hash_table_lookup (priv->metadata, key);
-		fwupd_pad_kv_str (str, key, value);
+		fu_common_string_append_kv (str, 2, key, value);
 	}
 
 	/* subclassed */

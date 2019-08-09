@@ -1114,6 +1114,24 @@ fu_common_string_replace (GString *string, const gchar *search, const gchar *rep
 	return count;
 }
 
+void
+fu_common_string_append_kv (GString *str, guint key_offset, const gchar *key, const gchar *value)
+{
+	const guint align = 32;
+
+	g_return_if_fail (key_offset < align);
+
+	/* ignore */
+	if (key == NULL || value == NULL)
+		return;
+	for (gsize i = 0; i < key_offset; i++)
+		g_string_append (str, " ");
+	g_string_append_printf (str, "%s: ", key);
+	for (gsize i = strlen (key) + key_offset + 2; i < align; i++)
+		g_string_append (str, " ");
+	g_string_append_printf (str, "%s\n", value);
+}
+
 /**
  * fu_common_dump_full:
  * @log_domain: log domain, typically %G_LOG_DOMAIN or %NULL

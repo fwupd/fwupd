@@ -3900,13 +3900,13 @@ fu_firmware_func (void)
 	str = fu_firmware_to_string (firmware);
 	g_assert_cmpstr (str, ==, "FuFirmware:\n"
 				  "  FuFirmwareImage:\n"
-				  "  ID:                   primary\n"
-				  "  Index:                0x000d\n"
-				  "  Address:              0x0200\n"
+				  "    ID:                         primary\n"
+				  "    Index:                      0x000d\n"
+				  "    Address:                    0x0200\n"
 				  "  FuFirmwareImage:\n"
-				  "  ID:                   secondary\n"
-				  "  Index:                0x0017\n"
-				  "  Address:              0x0400\n");
+				  "    ID:                         secondary\n"
+				  "    Index:                      0x0017\n"
+				  "    Address:                    0x0400\n");
 }
 
 int

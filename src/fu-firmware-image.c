@@ -8,8 +8,7 @@
 
 #include "config.h"
 
-#include <string.h>
-
+#include "fu-common.h"
 #include "fu-firmware-image.h"
 
 /**
@@ -240,18 +239,6 @@ fu_firmware_image_get_bytes_chunk (FuFirmwareImage *self,
 	return g_bytes_new_from_bytes (priv->bytes, offset, chunk_sz_max);
 }
 
-static void
-fwupd_pad_kv_str (GString *str, const gchar *key, const gchar *value)
-{
-	/* ignore */
-	if (key == NULL || value == NULL)
-		return;
-	g_string_append_printf (str, "  %s: ", key);
-	for (gsize i = strlen (key); i < 20; i++)
-		g_string_append (str, " ");
-	g_string_append_printf (str, "%s\n", value);
-}
-
 /**
  * fu_firmware_image_to_string:
  * @self: A #FuFirmwareImage
@@ -268,19 +255,19 @@ fu_firmware_image_to_string (FuFirmwareImage *self)
 	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
 	GString *str = g_string_new ("  FuFirmwareImage:\n");
 	if (priv->id != NULL)
-		fwupd_pad_kv_str (str, "ID", priv->id);
+		fu_common_string_append_kv (str, 4, "ID", priv->id);
 	if (priv->idx != 0x0) {
 		g_autofree gchar *tmp = g_strdup_printf ("0x%04x", (guint) priv->idx);
-		fwupd_pad_kv_str (str, "Index", tmp);
+		fu_common_string_append_kv (str, 4, "Index", tmp);
 	}
 	if (priv->addr != 0x0) {
 		g_autofree gchar *tmp = g_strdup_printf ("0x%04x", (guint) priv->addr);
-		fwupd_pad_kv_str (str, "Address", tmp);
+		fu_common_string_append_kv (str, 4, "Address", tmp);
 	}
 	if (priv->bytes != NULL) {
 		gsize sz = g_bytes_get_size (priv->bytes);
 		g_autofree gchar *tmp = g_strdup_printf ("%04x", (guint) sz);
-		fwupd_pad_kv_str (str, "Data", tmp);
+		fu_common_string_append_kv (str, 4, "Data", tmp);
 	}
 	return g_string_free (str, FALSE);
 }

@@ -27,8 +27,10 @@ struct _FuFirmwareClass
 							 GError		**error);
 	GBytes			*(*write)		(FuFirmware	*self,
 							 GError		**error);
+	void			 (*to_string)		(FuFirmware	*self,
+							 GString	*str);
 	/*< private >*/
-	gpointer		 padding[30];
+	gpointer		 padding[29];
 };
 
 FuFirmware	*fu_firmware_new			(void);
