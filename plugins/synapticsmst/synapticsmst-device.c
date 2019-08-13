@@ -25,8 +25,6 @@
 #define EEPROM_BANK_OFFSET		0x20000
 #define EEPROM_ESM_OFFSET		0x40000
 #define ESM_CODE_SIZE			0x40000
-#define PAYLOAD_SIZE_512K		0x80000
-#define PAYLOAD_SIZE_64K		0x10000
 #define MAX_RETRY_COUNTS		10
 #define BLOCK_UNIT			64
 #define BANKTAG_0			0
@@ -42,6 +40,7 @@
 typedef struct
 {
 	SynapticsMSTDeviceKind	 kind;
+	SynapticsMSTChipKind	 chip_kind;
 	gchar			*version;
 	guint32			 board_id;
 	guint16			 chip_id;
@@ -122,6 +121,13 @@ synapticsmst_device_get_kind (SynapticsMSTDevice *device)
 {
 	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	return priv->kind;
+}
+
+SynapticsMSTChipKind
+synapticsmst_device_get_chip_kind (SynapticsMSTDevice *device)
+{
+	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
+	return priv->chip_kind;
 }
 
 guint16
@@ -389,6 +395,11 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device,
 	priv->chip_id = (byte[0] << 8) | (byte[1]);
 	priv->chip_id_str = g_strdup_printf ("VMM%02x%02x", byte[0], byte[1]);
 
+	if (priv->chip_id > 0x5000)
+		priv->chip_kind = SYNAPTICSMST_CHIP_KIND_PANAMERA;
+	else
+		priv->chip_kind = SYNAPTICSMST_CHIP_KIND_TESLA_LEAF;
+
 	/* if running on panamera, check the active bank (for debugging logs) */
 	if (priv->chip_id > 0x5000 &&
 	   !synapticsmst_device_get_active_bank_panamera (device, &bank, error))
@@ -409,13 +420,6 @@ synapticsmst_device_get_version (SynapticsMSTDevice *device)
 {
 	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	return priv->version;
-}
-
-static guint16
-synapticsmst_device_get_chip_id (SynapticsMSTDevice *device)
-{
-	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
-	return priv->chip_id;
 }
 
 const gchar *
@@ -985,47 +989,6 @@ synapticsmst_device_update_panamera_firmware (SynapticsMSTDevice *device,
 }
 
 static gboolean
-synapticsmst_device_check_firmware_content (SynapticsMSTDevice *device,
-					    GBytes *fw,
-					    SynapticsMSTChipKind chip_type,
-					    GError **error)
-{
-	gsize payload_len, payload_len_max;
-
-	switch (chip_type) {
-	case SYNAPTICSMST_CHIP_KIND_PANAMERA:
-		payload_len_max = PAYLOAD_SIZE_512K;
-		break;
-	case SYNAPTICSMST_CHIP_KIND_TESLA_LEAF:
-		payload_len_max = PAYLOAD_SIZE_64K;
-		break;
-	default:
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_INVALID_DATA,
-			     "unknown chip type %u",
-			     chip_type);
-		return FALSE;
-
-	}
-
-	/* check size */
-	payload_len = g_bytes_get_size (fw);
-	if (payload_len > payload_len_max || payload_len == 0) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_INVALID_DATA,
-			     "invalid payload size %" G_GSIZE_FORMAT "(max %" G_GSIZE_FORMAT")",
-			     payload_len,
-			     payload_len_max);
-		return FALSE;
-	}
-
-
-	return TRUE;
-}
-
-static gboolean
 synapticsmst_device_panamera_prepare_write (SynapticsMSTDevice *device, GError **error)
 {
 	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
@@ -1118,23 +1081,13 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 				    gboolean install_force,
 				    GError **error)
 {
+	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	const guint8 *payload_data;
 	gsize payload_len;
 	guint16 tmp;
-	SynapticsMSTChipKind chip_type = SYNAPTICSMST_CHIP_KIND_UNKNOWN;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	payload_data = g_bytes_get_data (fw, &payload_len);
-
-	if (synapticsmst_device_get_chip_id (device) > 0x5000)
-		chip_type = SYNAPTICSMST_CHIP_KIND_PANAMERA;
-	else
-		chip_type = SYNAPTICSMST_CHIP_KIND_TESLA_LEAF;
-
-	if (!synapticsmst_device_check_firmware_content (device, fw, chip_type, error)){
-		g_prefix_error (error, "Invalid file content: ");
-		return FALSE;
-	}
 
 	/* check firmware and board ID again */
 	tmp = (*(payload_data + ADDR_CUSTOMER_ID) << 8) + *(payload_data + ADDR_BOARD_ID);
@@ -1170,7 +1123,7 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 		return FALSE;
 
 	/* update firmware */
-	if (chip_type == SYNAPTICSMST_CHIP_KIND_PANAMERA) {
+	if (priv->chip_kind == SYNAPTICSMST_CHIP_KIND_PANAMERA) {
 		if (!synapticsmst_device_panamera_prepare_write (device, error)) {
 			g_prefix_error (error, "Failed to prepare for write: ");
 			return FALSE;

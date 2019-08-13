@@ -193,6 +193,19 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 			       FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_quirks (dev, fu_plugin_get_quirks (plugin));
 
+	switch (synapticsmst_device_get_chip_kind (device)) {
+	case SYNAPTICSMST_CHIP_KIND_TESLA_LEAF:
+		fu_device_set_firmware_size_max (dev, 0x10000);
+		fu_device_add_instance_id (dev, "MST-tesla-leaf");
+		break;
+	case SYNAPTICSMST_CHIP_KIND_PANAMERA:
+		fu_device_set_firmware_size_max (dev, 0x80000);
+		fu_device_add_instance_id (dev, "MST-panamera");
+		break;
+	default:
+		break;
+	}
+
 	/* create GUIDs and name */
 	if (!fu_plugin_synapticsmst_lookup_device (plugin, dev, device, error))
 		return FALSE;

@@ -65,6 +65,7 @@ gboolean	 synapticsmst_device_open 			(SynapticsMSTDevice *device,
 
 /* getters */
 SynapticsMSTDeviceKind synapticsmst_device_get_kind		(SynapticsMSTDevice *device);
+SynapticsMSTChipKind synapticsmst_device_get_chip_kind		(SynapticsMSTDevice *device);
 guint16		 synapticsmst_device_get_board_id	 	(SynapticsMSTDevice *device);
 const gchar	*synapticsmst_device_get_version		(SynapticsMSTDevice *device);
 const gchar 	*synapticsmst_device_get_chip_id_str 		(SynapticsMSTDevice *device);
