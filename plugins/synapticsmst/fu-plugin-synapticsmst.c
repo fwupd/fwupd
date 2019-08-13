@@ -188,7 +188,7 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_vendor (dev, "Synaptics");
 	fu_device_set_summary (dev, "Multi-Stream Transport Device");
-	fu_device_add_icon (dev, "computer");
+	fu_device_add_icon (dev, "video-display");
 	fu_device_set_version (dev, synapticsmst_device_get_version (device),
 			       FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_quirks (dev, fu_plugin_get_quirks (plugin));
