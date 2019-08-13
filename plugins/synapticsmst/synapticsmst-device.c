@@ -46,7 +46,6 @@ typedef struct
 	guint32			 board_id;
 	guint16			 chip_id;
 	gchar			*chip_id_str;
-	GPtrArray		*guids;
 	gchar			*aux_node;
 	guint8			 layer;
 	guint16			 rad;
