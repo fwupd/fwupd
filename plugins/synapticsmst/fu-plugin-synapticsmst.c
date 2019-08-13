@@ -124,7 +124,7 @@ fu_plugin_synapticsmst_lookup_device (FuPlugin *plugin,
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Unknown board_id %x",
+			     "Unknown board_id %u",
 			     board_id);
 		return FALSE;
 
