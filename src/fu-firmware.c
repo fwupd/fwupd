@@ -8,7 +8,9 @@
 
 #include "config.h"
 
+#include "fu-common.h"
 #include "fu-firmware.h"
+#include "fu-firmware-image-private.h"
 
 /**
  * SECTION:fu-firmware
@@ -335,16 +337,15 @@ fu_firmware_to_string (FuFirmware *self)
 	GString *str = g_string_new (NULL);
 
 	/* subclassed type */
-	g_string_append_printf (str, "%s:\n", G_OBJECT_TYPE_NAME (self));
+	fu_common_string_append_kv (str, 0, G_OBJECT_TYPE_NAME (self), NULL);
 
 	/* vfunc */
 	if (klass->to_string != NULL)
-		klass->to_string (self, str);
+		klass->to_string (self, 0, str);
 
 	for (guint i = 0; i < priv->images->len; i++) {
 		FuFirmwareImage *img = g_ptr_array_index (priv->images, i);
-		g_autofree gchar *tmp = fu_firmware_image_to_string (img);
-		g_string_append (str, tmp);
+		fu_firmware_image_add_string (img, 1, str);
 	}
 
 	return g_string_free (str, FALSE);

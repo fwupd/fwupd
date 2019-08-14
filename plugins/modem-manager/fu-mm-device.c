@@ -62,18 +62,13 @@ static guint signals [SIGNAL_LAST] = { 0 };
 G_DEFINE_TYPE (FuMmDevice, fu_mm_device, FU_TYPE_DEVICE)
 
 static void
-fu_mm_device_to_string (FuDevice *device, GString *str)
+fu_mm_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuMmDevice *self = FU_MM_DEVICE (device);
-	g_string_append (str, "	 FuMmDevice:\n");
-	if (self->port_at != NULL) {
-		g_string_append_printf (str, "	at-port:\t\t\t%s\n",
-					self->port_at);
-	}
-	if (self->port_qmi != NULL) {
-		g_string_append_printf (str, "	qmi-port:\t\t\t%s\n",
-					self->port_qmi);
-	}
+	if (self->port_at != NULL)
+		fu_common_string_append_kv (str, idt, "AtPort", self->port_at);
+	if (self->port_qmi != NULL)
+		fu_common_string_append_kv (str, idt, "QmiPort", self->port_qmi);
 }
 
 const gchar *

@@ -31,15 +31,14 @@ G_DEFINE_TYPE_WITH_PRIVATE (FuWacomDevice, fu_wacom_device, FU_TYPE_UDEV_DEVICE)
 #define GET_PRIVATE(o) (fu_wacom_device_get_instance_private (o))
 
 static void
-fu_wacom_device_to_string (FuDevice *device, GString *str)
+fu_wacom_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuWacomDevice *self = FU_WACOM_DEVICE (device);
 	FuWacomDevicePrivate *priv = GET_PRIVATE (self);
-	g_string_append (str, "  FuWacomDevice:\n");
-	g_string_append_printf (str, "    fd:\t\t\t%i\n", priv->fd);
-	g_string_append_printf (str, "    flash-block-size:\t0x%04x\n", priv->flash_block_size);
-	g_string_append_printf (str, "    flash-base-addr:\t0x%04x\n", priv->flash_base_addr);
-	g_string_append_printf (str, "    flash-size:\t\t0x%04x\n", priv->flash_size);
+	fu_common_string_append_ku (str, idt, "FD", (guint) priv->fd);
+	fu_common_string_append_kx (str, idt, "FlashBlockSize", priv->flash_block_size);
+	fu_common_string_append_kx (str, idt, "FlashBaseAddr", priv->flash_base_addr);
+	fu_common_string_append_kx (str, idt, "FlashSize", priv->flash_size);
 }
 
 guint

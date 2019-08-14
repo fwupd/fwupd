@@ -27,16 +27,13 @@ G_DEFINE_TYPE_WITH_PRIVATE (FuUnifyingBootloader, fu_unifying_bootloader, FU_TYP
 #define GET_PRIVATE(o) (fu_unifying_bootloader_get_instance_private (o))
 
 static void
-fu_unifying_bootloader_to_string (FuDevice *device, GString *str)
+fu_unifying_bootloader_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuUnifyingBootloader *self = FU_UNIFYING_BOOTLOADER (device);
 	FuUnifyingBootloaderPrivate *priv = GET_PRIVATE (self);
-	g_string_append_printf (str, "  FlashAddrHigh:\t0x%04x\n",
-				priv->flash_addr_hi);
-	g_string_append_printf (str, "  FlashAddrLow:\t0x%04x\n",
-				priv->flash_addr_lo);
-	g_string_append_printf (str, "  FlashBlockSize:\t0x%04x\n",
-				priv->flash_blocksize);
+	fu_common_string_append_kx (str, idt, "FlashAddrHigh", priv->flash_addr_hi);
+	fu_common_string_append_kx (str, idt, "FlashAddrLow", priv->flash_addr_lo);
+	fu_common_string_append_kx (str, idt, "FlashBlockSize", priv->flash_blocksize);
 }
 
 FuUnifyingBootloaderRequest *

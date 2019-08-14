@@ -23,12 +23,11 @@ G_DEFINE_TYPE (FuRts54HidDevice, fu_rts54hid_device, FU_TYPE_USB_DEVICE)
 #define FU_RTS54HID_DEVICE_TIMEOUT			1000 /* ms */
 
 static void
-fu_rts54hid_device_to_string (FuDevice *device, GString *str)
+fu_rts54hid_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuRts54HidDevice *self = FU_RTS54HID_DEVICE (device);
-	g_string_append (str, "  FuRts54HidDevice:\n");
-	g_string_append_printf (str, "    fw-auth: %i\n", self->fw_auth);
-	g_string_append_printf (str, "    dual-bank: %i\n", self->dual_bank);
+	fu_common_string_append_kb (str, idt, "FwAuth", self->fw_auth);
+	fu_common_string_append_kb (str, idt, "DualBank", self->dual_bank);
 }
 
 gboolean

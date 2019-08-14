@@ -35,13 +35,12 @@ typedef enum {
 } FuRts54HubVendorCmd;
 
 static void
-fu_rts54hub_device_to_string (FuDevice *device, GString *str)
+fu_rts54hub_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuRts54HubDevice *self = FU_RTS54HUB_DEVICE (device);
-	g_string_append (str, "  FuRts54HubDevice:\n");
-	g_string_append_printf (str, "    fw-auth: %i\n", self->fw_auth);
-	g_string_append_printf (str, "    dual-bank: %i\n", self->dual_bank);
-	g_string_append_printf (str, "    running-on-flash: %i\n", self->running_on_flash);
+	fu_common_string_append_kb (str, idt, "FwAuth", self->fw_auth);
+	fu_common_string_append_kb (str, idt, "DualBank", self->dual_bank);
+	fu_common_string_append_kb (str, idt, "RunningOnFlash", self->running_on_flash);
 }
 
 static gboolean

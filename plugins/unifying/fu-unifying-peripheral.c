@@ -247,23 +247,27 @@ fu_unifying_peripheral_open (FuDevice *device, GError **error)
 }
 
 static void
-fu_unifying_peripheral_to_string (FuDevice *device, GString *str)
+fu_unifying_hidpp_map_to_string (FuUnifyingHidppMap *map, guint idt, GString *str)
+{
+	g_autofree gchar *title = g_strdup_printf ("Feature%02x", map->idx);
+	g_autofree gchar *tmp = g_strdup_printf ("%s [0x%04x]",
+						 fu_unifying_hidpp_feature_to_string (map->feature),
+						 map->feature);
+	fu_common_string_append_kv (str, idt, title, tmp);
+}
+
+static void
+fu_unifying_peripheral_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuUnifyingPeripheral *self = FU_UNIFYING_PERIPHERAL (device);
-
-	g_string_append_printf (str, "  HidppVersion:\t\t%u\n", self->hidpp_version);
-	if (self->hidpp_id != HIDPP_DEVICE_ID_UNSET)
-		g_string_append_printf (str, "  HidppId:\t\t0x%02x\n", (guint) self->hidpp_id);
-	if (self->battery_level != 0)
-		g_string_append_printf (str, "  Battery-level:\t\t%u\n", self->battery_level);
-	g_string_append_printf (str, "  IsUpdatable:\t\t%i\n", self->is_updatable);
-	g_string_append_printf (str, "  IsActive:\t\t%i\n", self->is_active);
+	fu_common_string_append_ku (str, idt, "HidppVersion", self->hidpp_version);
+	fu_common_string_append_kx (str, idt, "HidppId", self->hidpp_id);
+	fu_common_string_append_ku (str, idt, "BatteryLevel", self->battery_level);
+	fu_common_string_append_kb (str, idt, "IsUpdatable", self->is_updatable);
+	fu_common_string_append_kb (str, idt, "IsActive", self->is_active);
 	for (guint i = 0; i < self->feature_index->len; i++) {
 		FuUnifyingHidppMap *map = g_ptr_array_index (self->feature_index, i);
-		g_string_append_printf (str, "  Feature%02x:\t\t%s [0x%04x]\n",
-					map->idx,
-					fu_unifying_hidpp_feature_to_string (map->feature),
-					map->feature);
+		fu_unifying_hidpp_map_to_string (map, idt, str);
 	}
 }
 

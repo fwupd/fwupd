@@ -23,13 +23,12 @@ struct _FuRts54HidModule {
 G_DEFINE_TYPE (FuRts54HidModule, fu_rts54hid_module, FU_TYPE_DEVICE)
 
 static void
-fu_rts54hid_module_to_string (FuDevice *module, GString *str)
+fu_rts54hid_module_to_string (FuDevice *module, guint idt, GString *str)
 {
 	FuRts54HidModule *self = FU_RTS54HID_MODULE (module);
-	g_string_append (str, "  FuRts54HidModule:\n");
-	g_string_append_printf (str, "    slave-addr: 0x%02x\n", self->slave_addr);
-	g_string_append_printf (str, "    i2c-speed:  0x%02x\n", self->i2c_speed);
-	g_string_append_printf (str, "    register_addr_len:  0x%02x\n", self->register_addr_len);
+	fu_common_string_append_kx (str, idt, "SlaveAddr", self->slave_addr);
+	fu_common_string_append_kx (str, idt, "I2cSpeed", self->i2c_speed);
+	fu_common_string_append_kx (str, idt, "RegisterAddrLen", self->register_addr_len);
 }
 
 static FuRts54HidDevice *
