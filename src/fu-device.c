@@ -34,6 +34,8 @@ static void fu_device_finalize			 (GObject *object);
 typedef struct {
 	gchar				*alternate_id;
 	gchar				*equivalent_id;
+	gchar				*physical_id;
+	gchar				*logical_id;
 	FuDevice			*alternate;
 	FuDevice			*parent;	/* noref */
 	FuQuirks			*quirks;
@@ -82,10 +84,10 @@ fu_device_get_property (GObject *object, guint prop_id,
 		g_value_set_uint (value, priv->progress);
 		break;
 	case PROP_PHYSICAL_ID:
-		g_value_set_string (value, fu_device_get_physical_id (self));
+		g_value_set_string (value, priv->physical_id);
 		break;
 	case PROP_LOGICAL_ID:
-		g_value_set_string (value, fu_device_get_logical_id (self));
+		g_value_set_string (value, priv->logical_id);
 		break;
 	case PROP_QUIRKS:
 		g_value_set_object (value, priv->quirks);
@@ -1307,8 +1309,9 @@ fu_device_ensure_id (FuDevice *self, GError **error)
 const gchar *
 fu_device_get_logical_id (FuDevice *self)
 {
+	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
-	return fu_device_get_metadata (self, "logical-id");
+	return priv->logical_id;
 }
 
 /**
@@ -1324,8 +1327,10 @@ fu_device_get_logical_id (FuDevice *self)
 void
 fu_device_set_logical_id (FuDevice *self, const gchar *logical_id)
 {
+	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_DEVICE (self));
-	fu_device_set_metadata (self, "logical-id", logical_id);
+	g_free (priv->logical_id);
+	priv->logical_id = g_strdup (logical_id);
 }
 
 /**
@@ -1347,9 +1352,11 @@ fu_device_set_logical_id (FuDevice *self, const gchar *logical_id)
 void
 fu_device_set_physical_id (FuDevice *self, const gchar *physical_id)
 {
+	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_DEVICE (self));
 	g_return_if_fail (physical_id != NULL);
-	fu_device_set_metadata (self, "physical-id", physical_id);
+	g_free (priv->physical_id);
+	priv->physical_id = g_strdup (physical_id);
 }
 
 /**
@@ -1368,8 +1375,9 @@ fu_device_set_physical_id (FuDevice *self, const gchar *physical_id)
 const gchar *
 fu_device_get_physical_id (FuDevice *self)
 {
+	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
-	return fu_device_get_metadata (self, "physical-id");
+	return priv->physical_id;
 }
 
 static void
@@ -1631,6 +1639,10 @@ fu_device_add_string (FuDevice *self, guint idt, GString *str)
 		fu_common_string_append_kv (str, idt + 1, "AlternateId", priv->alternate_id);
 	if (priv->equivalent_id != NULL)
 		fu_common_string_append_kv (str, idt + 1, "EquivalentId", priv->equivalent_id);
+	if (priv->physical_id != NULL)
+		fu_common_string_append_kv (str, idt + 1, "PhysicalId", priv->physical_id);
+	if (priv->logical_id != NULL)
+		fu_common_string_append_kv (str, idt + 1, "LogicalId", priv->logical_id);
 	if (priv->size_min > 0) {
 		g_autofree gchar *sz = g_strdup_printf ("%" G_GUINT64_FORMAT, priv->size_min);
 		fu_common_string_append_kv (str, idt + 1, "FirmwareSizeMin", sz);
@@ -2360,6 +2372,8 @@ fu_device_finalize (GObject *object)
 	g_ptr_array_unref (priv->parent_guids);
 	g_free (priv->alternate_id);
 	g_free (priv->equivalent_id);
+	g_free (priv->physical_id);
+	g_free (priv->logical_id);
 
 	G_OBJECT_CLASS (fu_device_parent_class)->finalize (object);
 }
