@@ -9,6 +9,7 @@
 
 #include <gio/gio.h>
 
+#include "fu-common.h"
 #include "fu-synaprom-firmware.h"
 
 struct _FuSynapromFirmware {
@@ -127,26 +128,20 @@ fu_synaprom_firmware_write (FuFirmware *self, GError **error)
 		.vmajor		= 10,
 		.vminor		= 1,
 	};
-	guint16 tag1 = GUINT16_TO_LE(FU_SYNAPROM_FIRMWARE_TAG_MFW_HEADER);
-	guint16 tag2 = GUINT16_TO_LE(FU_SYNAPROM_FIRMWARE_TAG_MFW_PAYLOAD);
-	guint32 hdrsz = GUINT32_TO_LE(sizeof(hdr));
-	guint32 datasz = GUINT32_TO_LE(sizeof(data));
 
 	/* add header */
-	g_byte_array_append (blob, (const guint8 *) &tag1, sizeof(tag1));
-	g_byte_array_append (blob, (const guint8 *) &hdrsz, sizeof(hdrsz));
+	fu_byte_array_append_uint16 (blob, FU_SYNAPROM_FIRMWARE_TAG_MFW_HEADER, G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint32 (blob, sizeof(hdr), G_LITTLE_ENDIAN);
 	g_byte_array_append (blob, (const guint8 *) &hdr, sizeof(hdr));
 
 	/* add payload */
-	g_byte_array_append (blob, (const guint8 *) &tag2, sizeof(tag2));
-	g_byte_array_append (blob, (const guint8 *) &datasz, sizeof(datasz));
+	fu_byte_array_append_uint16 (blob, FU_SYNAPROM_FIRMWARE_TAG_MFW_PAYLOAD, G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint32 (blob, sizeof(data), G_LITTLE_ENDIAN);
 	g_byte_array_append (blob, data, sizeof(data));
 
 	/* add signature */
-	for (guint i = 0; i < FU_SYNAPROM_FIRMWARE_SIGSIZE; i++) {
-		guint8 sig = 0xff;
-		g_byte_array_append (blob, &sig, 1);
-	}
+	for (guint i = 0; i < FU_SYNAPROM_FIRMWARE_SIGSIZE; i++)
+		fu_byte_array_append_uint8 (blob, 0xff);
 	return g_byte_array_free_to_bytes (blob);
 }
 

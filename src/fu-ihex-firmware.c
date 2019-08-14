@@ -230,7 +230,7 @@ fu_ihex_firmware_parse (FuFirmware *firmware,
 		case DFU_INHX32_RECORD_TYPE_SIGNATURE:
 			for (guint i = 9; i < line_end; i += 2) {
 				guint8 tmp_c = fu_firmware_strparse_uint8 (line + i);
-				g_byte_array_append (buf_signature, &tmp_c, 1);
+				fu_byte_array_append_uint8 (buf_signature, tmp_c);
 			}
 			break;
 		default:
