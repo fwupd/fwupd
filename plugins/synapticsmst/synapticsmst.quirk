@@ -39,6 +39,10 @@ DeviceKind = system
 Name = Dell dock
 DeviceKind = panamera
 
+[SynapticsMSTBoardID=513]
+Name = ThinkPad Workstation Dock
+DeviceKind = panamera
+
 [SynapticsMSTBoardID=595]
 Name = ThinkPad Thunderbolt 3 Workstation Dock
 DeviceKind = panamera
