@@ -27,10 +27,10 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevDevice, g_object_unref)
 #endif
 
 static void
-fu_unifying_runtime_to_string (FuDevice *device, GString *str)
+fu_unifying_runtime_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuUnifyingRuntime *self = FU_UNIFYING_RUNTIME (device);
-	g_string_append_printf (str, "  SignedFirmware:\t%i\n", self->signed_firmware);
+	fu_common_string_append_kb (str, idt, "SignedFirmware", self->signed_firmware);
 }
 
 static gboolean

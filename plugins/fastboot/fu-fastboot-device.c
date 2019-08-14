@@ -30,13 +30,12 @@ struct _FuFastbootDevice {
 G_DEFINE_TYPE (FuFastbootDevice, fu_fastboot_device, FU_TYPE_USB_DEVICE)
 
 static void
-fu_fastboot_device_to_string (FuDevice *device, GString *str)
+fu_fastboot_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuFastbootDevice *self = FU_FASTBOOT_DEVICE (device);
-	g_string_append (str, "  FuFastbootDevice:\n");
-	g_string_append_printf (str, "    intf:\t0x%02x\n", (guint) self->intf_nr);
-	g_string_append_printf (str, "    secure:\t%i\n", self->secure);
-	g_string_append_printf (str, "    blocksz:\t%u\n", self->blocksz);
+	fu_common_string_append_kx (str, idt, "InterfaceNumber", self->intf_nr);
+	fu_common_string_append_kx (str, idt, "BlockSize", self->blocksz);
+	fu_common_string_append_kb (str, idt, "Secure", self->secure);
 }
 
 static gboolean

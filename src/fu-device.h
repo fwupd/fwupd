@@ -22,6 +22,7 @@ struct _FuDeviceClass
 {
 	FwupdDeviceClass	 parent_class;
 	void			 (*to_string)		(FuDevice	*self,
+							 guint		 indent,
 							 GString	*str);
 	gboolean		 (*write_firmware)	(FuDevice	*self,
 							 FuFirmware	*firmware,

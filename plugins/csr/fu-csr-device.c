@@ -59,12 +59,11 @@ G_DEFINE_TYPE (FuCsrDevice, fu_csr_device, FU_TYPE_USB_DEVICE)
 #define FU_CSR_DEVICE_TIMEOUT			5000	/* ms */
 
 static void
-fu_csr_device_to_string (FuDevice *device, GString *str)
+fu_csr_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuCsrDevice *self = FU_CSR_DEVICE (device);
-	g_string_append (str, "  DfuCsrDevice:\n");
-	g_string_append_printf (str, "    state:\t\t%s\n", dfu_state_to_string (self->dfu_state));
-	g_string_append_printf (str, "    timeout:\t\t%" G_GUINT32_FORMAT "\n", self->dnload_timeout);
+	fu_common_string_append_kv (str, idt, "State", dfu_state_to_string (self->dfu_state));
+	fu_common_string_append_ku (str, idt, "DownloadTimeout", self->dnload_timeout);
 }
 
 static gboolean

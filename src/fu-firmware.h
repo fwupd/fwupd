@@ -28,6 +28,7 @@ struct _FuFirmwareClass
 	GBytes			*(*write)		(FuFirmware	*self,
 							 GError		**error);
 	void			 (*to_string)		(FuFirmware	*self,
+							 guint		 indent,
 							 GString	*str);
 	/*< private >*/
 	gpointer		 padding[29];

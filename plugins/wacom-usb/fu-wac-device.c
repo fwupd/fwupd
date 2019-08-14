@@ -79,64 +79,57 @@ fu_wav_device_flash_descriptor_is_wp (const FuWacFlashDescriptor *fd)
 }
 
 static void
-fu_wac_device_to_string (FuDevice *device, GString *str)
+fu_wac_device_flash_descriptor_to_string (FuWacFlashDescriptor *fd, guint idt, GString *str)
 {
-	GPtrArray *children;
+	fu_common_string_append_kx (str, idt, "StartAddr", fd->start_addr);
+	fu_common_string_append_kx (str, idt, "BlockSize", fd->block_sz);
+	fu_common_string_append_kx (str, idt, "WriteSize", fd->write_sz & ~0x8000);
+	fu_common_string_append_kb (str, idt, "Protected",
+				    fu_wav_device_flash_descriptor_is_wp (fd));
+}
+
+static void
+fu_wac_device_to_string (FuDevice *device, guint idt, GString *str)
+{
 	FuWacDevice *self = FU_WAC_DEVICE (device);
 	g_autoptr(GString) status_str = NULL;
 
-	g_string_append (str, "  FuWacDevice:\n");
 	if (self->firmware_index != 0xffff) {
-		g_string_append_printf (str, "    fw-index: 0x%04x\n",
-					self->firmware_index);
+		g_autofree gchar *tmp = g_strdup_printf ("0x%04x", self->firmware_index);
+		fu_common_string_append_kv (str, idt, "FwIndex", tmp);
 	}
 	if (self->loader_ver > 0) {
-		g_string_append_printf (str, "    loader-ver: 0x%04x\n",
-					(guint) self->loader_ver);
+		g_autofree gchar *tmp = g_strdup_printf ("0x%04x", (guint) self->loader_ver);
+		fu_common_string_append_kv (str, idt, "LoaderVer", tmp);
 	}
 	if (self->read_data_sz > 0) {
-		g_string_append_printf (str, "    read-data-sz: 0x%04x\n",
-					(guint) self->read_data_sz);
+		g_autofree gchar *tmp = g_strdup_printf ("0x%04x", (guint) self->read_data_sz);
+		fu_common_string_append_kv (str, idt, "ReadDataSize", tmp);
 	}
 	if (self->write_word_sz > 0) {
-		g_string_append_printf (str, "    write-word-sz: 0x%04x\n",
-					(guint) self->write_word_sz);
+		g_autofree gchar *tmp = g_strdup_printf ("0x%04x", (guint) self->write_word_sz);
+		fu_common_string_append_kv (str, idt, "WriteWordSize", tmp);
 	}
 	if (self->write_block_sz > 0) {
-		g_string_append_printf (str, "    write-block-sz: 0x%04x\n",
-					(guint) self->write_block_sz);
+		g_autofree gchar *tmp = g_strdup_printf ("0x%04x", (guint) self->write_block_sz);
+		fu_common_string_append_kv (str, idt, "WriteBlockSize", tmp);
 	}
 	if (self->nr_flash_blocks > 0) {
-		g_string_append_printf (str, "    nr-flash-blocks: 0x%04x\n",
-					(guint) self->nr_flash_blocks);
+		g_autofree gchar *tmp = g_strdup_printf ("0x%04x", (guint) self->nr_flash_blocks);
+		fu_common_string_append_kv (str, idt, "NrFlashBlocks", tmp);
 	}
 	if (self->configuration != 0xffff) {
-		g_string_append_printf (str, "    configuration: 0x%04x\n",
-					(guint) self->configuration);
+		g_autofree gchar *tmp = g_strdup_printf ("0x%04x", (guint) self->configuration);
+		fu_common_string_append_kv (str, idt, "Configuration", tmp);
 	}
 	for (guint i = 0; i < self->flash_descriptors->len; i++) {
 		FuWacFlashDescriptor *fd = g_ptr_array_index (self->flash_descriptors, i);
-		g_string_append_printf (str, "    flash-descriptor-%02u:\n", i);
-		g_string_append_printf (str, "      start-addr:\t0x%08x\n",
-					(guint) fd->start_addr);
-		g_string_append_printf (str, "      block-sz:\t0x%08x\n",
-					(guint) fd->block_sz);
-		g_string_append_printf (str, "      write-sz:\t0x%04x\n",
-					(guint) fd->write_sz & ~0x8000);
-		g_string_append_printf (str, "      protected:\t%s\n",
-					fu_wav_device_flash_descriptor_is_wp (fd) ? "yes" : "no");
+		g_autofree gchar *title = g_strdup_printf ("FlashDescriptor%02u", i);
+		fu_common_string_append_kv (str, idt, title, NULL);
+		fu_wac_device_flash_descriptor_to_string (fd, idt + 1, str);
 	}
 	status_str = fu_wac_device_status_to_string (self->status_word);
-	g_string_append_printf (str, "    status:\t\t%s\n", status_str->str);
-
-	/* print children also */
-	children = fu_device_get_children (device);
-	for (guint i = 0; i < children->len; i++) {
-		FuDevice *child = g_ptr_array_index (children, i);
-		g_autofree gchar *tmp = fu_device_to_string (FU_DEVICE (child));
-		g_string_append (str, "  FuWacDeviceChild:\n");
-		g_string_append (str, tmp);
-	}
+	fu_common_string_append_kv (str, idt, "Status", status_str->str);
 }
 
 gboolean

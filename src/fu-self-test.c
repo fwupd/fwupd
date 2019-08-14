@@ -1143,6 +1143,7 @@ fu_engine_history_func (void)
 	device_str = fu_device_to_string (device2);
 	checksum = g_compute_checksum_for_bytes (G_CHECKSUM_SHA1, blob_cab);
 	device_str_expected = g_strdup_printf (
+		"FuDevice:\n"
 		"Test Device\n"
 		"  DeviceId:             894e8c17a29428b09d10cd90d1db74ea76fbcfe8\n"
 		"  Guid:                 12345678-1234-1234-1234-123456789012\n"
@@ -1375,6 +1376,7 @@ fu_engine_history_error_func (void)
 	device_str = fu_device_to_string (device2);
 	checksum = g_compute_checksum_for_bytes (G_CHECKSUM_SHA1, blob_cab);
 	device_str_expected = g_strdup_printf (
+		"FuDevice:\n"
 		"Test Device\n"
 		"  DeviceId:             894e8c17a29428b09d10cd90d1db74ea76fbcfe8\n"
 		"  Guid:                 12345678-1234-1234-1234-123456789012\n"
@@ -3972,13 +3974,13 @@ fu_firmware_func (void)
 	str = fu_firmware_to_string (firmware);
 	g_assert_cmpstr (str, ==, "FuFirmware:\n"
 				  "  FuFirmwareImage:\n"
-				  "    ID:                         primary\n"
-				  "    Index:                      0x000d\n"
-				  "    Address:                    0x0200\n"
+				  "    ID:                  primary\n"
+				  "    Index:               0xd\n"
+				  "    Address:             0x200\n"
 				  "  FuFirmwareImage:\n"
-				  "    ID:                         secondary\n"
-				  "    Index:                      0x0017\n"
-				  "    Address:                    0x0400\n");
+				  "    ID:                  secondary\n"
+				  "    Index:               0x17\n"
+				  "    Address:             0x400\n");
 }
 
 int

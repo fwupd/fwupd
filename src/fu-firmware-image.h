@@ -26,7 +26,7 @@ struct _FuFirmwareImageClass
 };
 
 FuFirmwareImage	*fu_firmware_image_new		(GBytes			*bytes);
-gchar		*fu_firmware_image_to_string	(FuFirmwareImage	*self);
+gchar		*fu_firmware_image_to_string	(FuFirmwareImage	*selfz);
 
 const gchar	*fu_firmware_image_get_id	(FuFirmwareImage	*self);
 void		 fu_firmware_image_set_id	(FuFirmwareImage	*self,

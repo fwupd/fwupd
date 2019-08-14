@@ -92,25 +92,19 @@ fu_uefi_device_status_to_string (FuUefiDeviceStatus status)
 }
 
 static void
-fu_uefi_device_to_string (FuDevice *device, GString *str)
+fu_uefi_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE (device);
-	g_string_append (str, "  FuUefiDevice:\n");
-	g_string_append_printf (str, "    kind:\t\t\t%s\n",
-				fu_uefi_device_kind_to_string (self->kind));
-	g_string_append_printf (str, "    fw_class:\t\t\t%s\n", self->fw_class);
-	g_string_append_printf (str, "    capsule_flags:\t\t%" G_GUINT32_FORMAT "\n",
-				self->capsule_flags);
-	g_string_append_printf (str, "    fw_version:\t\t\t%" G_GUINT32_FORMAT "\n",
-				self->fw_version);
-	g_string_append_printf (str, "    fw_version_lowest:\t\t%" G_GUINT32_FORMAT "\n",
-				self->fw_version_lowest);
-	g_string_append_printf (str, "    last_attempt_status:\t%s\n",
-				fu_uefi_device_status_to_string (self->last_attempt_status));
-	g_string_append_printf (str, "    last_attempt_version:\t%" G_GUINT32_FORMAT "\n",
-				self->last_attempt_version);
-	g_string_append_printf (str, "    esp path:\t%s\n",
-				fu_device_get_metadata (device, "EspPath"));
+	fu_common_string_append_kv (str, idt, "Kind", fu_uefi_device_kind_to_string (self->kind));
+	fu_common_string_append_kv (str, idt, "FwClass", self->fw_class);
+	fu_common_string_append_kx (str, idt, "CapsuleFlags", self->capsule_flags);
+	fu_common_string_append_kx (str, idt, "FwVersion", self->fw_version);
+	fu_common_string_append_kx (str, idt, "FwVersionLowest", self->fw_version_lowest);
+	fu_common_string_append_kv (str, idt, "LastAttemptStatus",
+				    fu_uefi_device_status_to_string (self->last_attempt_status));
+	fu_common_string_append_kx (str, idt, "LastAttemptVersion", self->last_attempt_version);
+	fu_common_string_append_kv (str, idt, "EspPath",
+				    fu_device_get_metadata (device, "EspPath"));
 }
 
 FuUefiDeviceKind

@@ -9,7 +9,7 @@
 #include "config.h"
 
 #include "fu-common.h"
-#include "fu-firmware-image.h"
+#include "fu-firmware-image-private.h"
 
 /**
  * SECTION:fu-firmware_image
@@ -239,6 +239,23 @@ fu_firmware_image_get_bytes_chunk (FuFirmwareImage *self,
 	return g_bytes_new_from_bytes (priv->bytes, offset, chunk_sz_max);
 }
 
+void
+fu_firmware_image_add_string (FuFirmwareImage *self, guint idt, GString *str)
+{
+	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
+	fu_common_string_append_kv (str, idt, G_OBJECT_TYPE_NAME (self), NULL);
+	if (priv->id != NULL)
+		fu_common_string_append_kv (str, idt + 1, "ID", priv->id);
+	if (priv->idx != 0x0)
+		fu_common_string_append_kx (str, idt + 1, "Index", priv->idx);
+	if (priv->addr != 0x0)
+		fu_common_string_append_kx (str, idt + 1, "Address", priv->addr);
+	if (priv->bytes != NULL) {
+		fu_common_string_append_kx (str, idt + 1, "Data",
+					    g_bytes_get_size (priv->bytes));
+	}
+}
+
 /**
  * fu_firmware_image_to_string:
  * @self: A #FuFirmwareImage
@@ -252,23 +269,8 @@ fu_firmware_image_get_bytes_chunk (FuFirmwareImage *self,
 gchar *
 fu_firmware_image_to_string (FuFirmwareImage *self)
 {
-	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
-	GString *str = g_string_new ("  FuFirmwareImage:\n");
-	if (priv->id != NULL)
-		fu_common_string_append_kv (str, 4, "ID", priv->id);
-	if (priv->idx != 0x0) {
-		g_autofree gchar *tmp = g_strdup_printf ("0x%04x", (guint) priv->idx);
-		fu_common_string_append_kv (str, 4, "Index", tmp);
-	}
-	if (priv->addr != 0x0) {
-		g_autofree gchar *tmp = g_strdup_printf ("0x%04x", (guint) priv->addr);
-		fu_common_string_append_kv (str, 4, "Address", tmp);
-	}
-	if (priv->bytes != NULL) {
-		gsize sz = g_bytes_get_size (priv->bytes);
-		g_autofree gchar *tmp = g_strdup_printf ("%04x", (guint) sz);
-		fu_common_string_append_kv (str, 4, "Data", tmp);
-	}
+	GString *str = g_string_new (NULL);
+	fu_firmware_image_add_string (self, 0, str);
 	return g_string_free (str, FALSE);
 }
 

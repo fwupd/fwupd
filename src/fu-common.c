@@ -1115,21 +1115,44 @@ fu_common_string_replace (GString *string, const gchar *search, const gchar *rep
 }
 
 void
-fu_common_string_append_kv (GString *str, guint key_offset, const gchar *key, const gchar *value)
+fu_common_string_append_kv (GString *str, guint idt, const gchar *key, const gchar *value)
 {
-	const guint align = 32;
+	const guint align = 23;
 
-	g_return_if_fail (key_offset < align);
+	g_return_if_fail (idt * 2 < align);
 
 	/* ignore */
-	if (key == NULL || value == NULL)
+	if (key == NULL)
 		return;
-	for (gsize i = 0; i < key_offset; i++)
-		g_string_append (str, " ");
-	g_string_append_printf (str, "%s: ", key);
-	for (gsize i = strlen (key) + key_offset + 2; i < align; i++)
-		g_string_append (str, " ");
-	g_string_append_printf (str, "%s\n", value);
+	for (gsize i = 0; i < idt; i++)
+		g_string_append (str, "  ");
+	g_string_append_printf (str, "%s:", key);
+	if (value != NULL) {
+		for (gsize i = strlen (key) + idt + 1; i < align; i++)
+			g_string_append (str, " ");
+		g_string_append (str, value);
+	}
+	g_string_append (str, "\n");
+}
+
+void
+fu_common_string_append_ku (GString *str, guint idt, const gchar *key, guint64 value)
+{
+	g_autofree gchar *tmp = g_strdup_printf ("%" G_GUINT64_FORMAT, value);
+	fu_common_string_append_kv (str, idt, key, tmp);
+}
+
+void
+fu_common_string_append_kx (GString *str, guint idt, const gchar *key, guint64 value)
+{
+	g_autofree gchar *tmp = g_strdup_printf ("0x%x", (guint) value);
+	fu_common_string_append_kv (str, idt, key, tmp);
+}
+
+void
+fu_common_string_append_kb (GString *str, guint idt, const gchar *key, gboolean value)
+{
+	fu_common_string_append_kv (str, idt, key, value ? "true" : "false");
 }
 
 /**
