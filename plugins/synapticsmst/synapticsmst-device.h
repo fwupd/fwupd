@@ -46,8 +46,6 @@ typedef enum {
 	SYNAPTICSMST_CHIP_KIND_LAST
 } SynapticsMSTChipKind;
 
-#define CUSTOMERID_DELL 	0x1
-
 SynapticsMSTDevice	*synapticsmst_device_new	(SynapticsMSTDeviceKind kind,
 							 const gchar *aux_node,
 							 guint8 layer,
