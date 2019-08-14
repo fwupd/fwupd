@@ -10,6 +10,7 @@
 #include <gio/gio.h>
 #include <string.h>
 
+#include "fu-common.h"
 #include "fu-synaprom-common.h"
 
 enum {
@@ -30,7 +31,7 @@ GByteArray *
 fu_synaprom_request_new (guint8 cmd, const gpointer data, gsize len)
 {
 	GByteArray *blob = g_byte_array_new ();
-	g_byte_array_append (blob, &cmd, 1);
+	fu_byte_array_append_uint8 (blob, cmd);
 	if (data != NULL)
 		g_byte_array_append (blob, data, len);
 	return blob;

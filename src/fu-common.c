@@ -1524,3 +1524,25 @@ fu_memcpy_safe (guint8 *dst, gsize dst_sz, gsize dst_offset,
 	memcpy (dst + dst_offset, src + src_offset, n);
 	return TRUE;
 }
+
+void
+fu_byte_array_append_uint8 (GByteArray *array, guint8 data)
+{
+	g_byte_array_append (array, &data, sizeof(data));
+}
+
+void
+fu_byte_array_append_uint16 (GByteArray *array, guint16 data, FuEndianType endian)
+{
+	guint8 buf[2];
+	fu_common_write_uint16 (buf, data, endian);
+	g_byte_array_append (array, buf, sizeof(buf));
+}
+
+void
+fu_byte_array_append_uint32 (GByteArray *array, guint32 data, FuEndianType endian)
+{
+	guint8 buf[4];
+	fu_common_write_uint32 (buf, data, endian);
+	g_byte_array_append (array, buf, sizeof(buf));
+}

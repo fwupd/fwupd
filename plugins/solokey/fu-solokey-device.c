@@ -38,7 +38,7 @@ fu_solokey_device_exchange (GByteArray *req, guint8 cmd, guint32 addr, GByteArra
 	guint8 buf_len[2] = { 0x00 };
 
 	/* command */
-	g_byte_array_append (req, &cmd, sizeof(cmd));
+	fu_byte_array_append_uint8 (req, cmd);
 
 	/* first *3* bytes of the LE address */
 	fu_common_write_uint32 (buf_addr, addr, G_LITTLE_ENDIAN);
@@ -58,10 +58,8 @@ fu_solokey_device_exchange (GByteArray *req, guint8 cmd, guint32 addr, GByteArra
 	/* dummy data */
 	fu_common_write_uint16 (buf_len, 16, G_BIG_ENDIAN);
 	g_byte_array_append (req, buf_len, sizeof(buf_len));
-	for (guint i = 0; i < 16; i++) {
-		guint8 tmp = 'A';
-		g_byte_array_append (req, &tmp, sizeof(tmp));
-	}
+	for (guint i = 0; i < 16; i++)
+		fu_byte_array_append_uint8 (req, 'A');
 }
 
 static gboolean
@@ -156,10 +154,8 @@ fu_solokey_device_packet_tx (FuSolokeyDevice *self, GByteArray *req, GError **er
 	gsize actual_length = 0;
 
 	/* round up to the endpoint size */
-	for (guint i = req->len; i < SOLO_USB_HID_EP_SIZE; i++) {
-		const guint8 tmp = 0x0;
-		g_byte_array_append (req, &tmp, 1);
-	}
+	for (guint i = req->len; i < SOLO_USB_HID_EP_SIZE; i++)
+		fu_byte_array_append_uint8 (req, 0x0);
 
 	/* request */
 	if (g_getenv ("FWUPD_SOLOKEY_VERBOSE") != NULL) {
@@ -333,10 +329,8 @@ fu_solokey_device_setup_cid (FuSolokeyDevice *self, GError **error)
 		return TRUE;
 
 	/* get a channel ID */
-	for (guint i = 0; i < 8; i++) {
-		guint8 tmp = g_random_int_range (0x00, 0xff);
-		g_byte_array_append (nonce, &tmp, 1);
-	}
+	for (guint i = 0; i < 8; i++)
+		fu_byte_array_append_uint8 (nonce, g_random_int_range (0x00, 0xff));
 	res = fu_solokey_device_packet (self, 0x06, nonce, error);
 	if (res == NULL)
 		return FALSE;

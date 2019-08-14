@@ -40,6 +40,8 @@ typedef enum {
 	FU_DUMP_FLAGS_LAST
 } FuDumpFlags;
 
+typedef guint FuEndianType;
+
 /**
  * FuPathKind:
  * @FU_PATH_KIND_CACHEDIR_PKG:		The cache directory (IE /var/cache/fwupd)
@@ -144,7 +146,14 @@ gboolean	 fu_memcpy_safe			(guint8		*dst,
 						 gsize		 n,
 						 GError		**error);
 
-typedef guint FuEndianType;
+void		 fu_byte_array_append_uint8	(GByteArray	*array,
+						 guint8		 data);
+void		 fu_byte_array_append_uint16	(GByteArray	*array,
+						 guint16	 data,
+						 FuEndianType	 endian);
+void		 fu_byte_array_append_uint32	(GByteArray	*array,
+						 guint32	 data,
+						 FuEndianType	 endian);
 
 void		 fu_common_write_uint16		(guint8		*buf,
 						 guint16	 val_native,
