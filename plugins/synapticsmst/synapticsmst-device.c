@@ -39,8 +39,8 @@
 
 #define FLASH_SETTLE_TIME		5000000	/* us */
 
-typedef struct
-{
+struct _SynapticsMSTDevice {
+	GObject			 parent_instance;
 	SynapticsMSTDeviceKind	 kind;
 	gchar			*version;
 	guint32			 board_id;
@@ -53,11 +53,9 @@ typedef struct
 	gboolean		 has_cascade;
 	gchar			*fw_dir;
 	gboolean		 test_mode;
-} SynapticsMSTDevicePrivate;
+};
 
-G_DEFINE_TYPE_WITH_PRIVATE (SynapticsMSTDevice, synapticsmst_device, G_TYPE_OBJECT)
-
-#define GET_PRIVATE(o) (synapticsmst_device_get_instance_private (o))
+G_DEFINE_TYPE (SynapticsMSTDevice, synapticsmst_device, G_TYPE_OBJECT)
 
 SynapticsMSTDeviceKind
 synapticsmst_device_kind_from_string (const gchar *kind)
@@ -82,31 +80,29 @@ synapticsmst_device_kind_to_string (SynapticsMSTDeviceKind kind)
 static void
 synapticsmst_device_finalize (GObject *object)
 {
-	SynapticsMSTDevice *device = SYNAPTICSMST_DEVICE (object);
-	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
+	SynapticsMSTDevice *self = SYNAPTICSMST_DEVICE (object);
 
-	if (priv->fd > 0)
-		close (priv->fd);
+	if (self->fd > 0)
+		close (self->fd);
 
-	g_free (priv->fw_dir);
-	g_free (priv->aux_node);
-	g_free (priv->version);
-	g_free (priv->chip_id_str);
+	g_free (self->fw_dir);
+	g_free (self->aux_node);
+	g_free (self->version);
+	g_free (self->chip_id_str);
 	G_OBJECT_CLASS (synapticsmst_device_parent_class)->finalize (object);
 }
 
 static void
-synapticsmst_device_init (SynapticsMSTDevice *device)
+synapticsmst_device_init (SynapticsMSTDevice *self)
 {
-	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	const gchar *tmp;
 	tmp = g_getenv ("FWUPD_SYNAPTICSMST_FW_DIR");
 	if (tmp == NULL) {
-		priv->test_mode = FALSE;
-		priv->fw_dir = g_strdup ("/dev");
+		self->test_mode = FALSE;
+		self->fw_dir = g_strdup ("/dev");
 	} else {
-		priv->test_mode = TRUE;
-		priv->fw_dir = g_strdup (tmp);
+		self->test_mode = TRUE;
+		self->fw_dir = g_strdup (tmp);
 	}
 }
 
@@ -118,32 +114,29 @@ synapticsmst_device_class_init (SynapticsMSTDeviceClass *klass)
 }
 
 SynapticsMSTDeviceKind
-synapticsmst_device_get_kind (SynapticsMSTDevice *device)
+synapticsmst_device_get_kind (SynapticsMSTDevice *self)
 {
-	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
-	return priv->kind;
+	return self->kind;
 }
 
 guint16
-synapticsmst_device_get_board_id (SynapticsMSTDevice *device)
+synapticsmst_device_get_board_id (SynapticsMSTDevice *self)
 {
-	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
-	return priv->board_id;
+	return self->board_id;
 }
 
 static gboolean
-synapticsmst_device_enable_remote_control (SynapticsMSTDevice *device, GError **error)
+synapticsmst_device_enable_remote_control (SynapticsMSTDevice *self, GError **error)
 {
-	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	g_autoptr(SynapticsMSTConnection) connection = NULL;
 
 	/* in test mode we need to open a different file node instead */
-	if (priv->test_mode) {
+	if (self->test_mode) {
 		g_autofree gchar *filename = NULL;
-		close(priv->fd);
+		close(self->fd);
 		filename = g_strdup_printf ("%s/remote/%s",
-					    priv->fw_dir,
-					    priv->aux_node);
+					    self->fw_dir,
+					    self->aux_node);
 		if (!g_file_test (filename, G_FILE_TEST_EXISTS)) {
 			g_set_error (error,
 			     	G_IO_ERROR,
@@ -152,8 +145,8 @@ synapticsmst_device_enable_remote_control (SynapticsMSTDevice *device, GError **
 			     	filename);
 			return FALSE;
 		}
-		priv->fd = open (filename, O_RDWR);
-		if (priv->fd == -1) {
+		self->fd = open (filename, O_RDWR);
+		if (self->fd == -1) {
 			g_set_error (error,
 				     G_IO_ERROR,
 				     g_io_error_from_errno (errno),
@@ -164,7 +157,7 @@ synapticsmst_device_enable_remote_control (SynapticsMSTDevice *device, GError **
 		return TRUE;
 	}
 
-	connection = synapticsmst_common_new (priv->fd, priv->layer, priv->rad);
+	connection = synapticsmst_common_new (self->fd, self->layer, self->rad);
 	if (!synapticsmst_common_enable_remote_control (connection, error))
 		return FALSE;
 
@@ -172,18 +165,17 @@ synapticsmst_device_enable_remote_control (SynapticsMSTDevice *device, GError **
 }
 
 static gboolean
-synapticsmst_device_disable_remote_control (SynapticsMSTDevice *device, GError **error)
+synapticsmst_device_disable_remote_control (SynapticsMSTDevice *self, GError **error)
 {
-	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	g_autoptr(SynapticsMSTConnection) connection = NULL;
 
 	/* in test mode we need to open a different file node instead */
-	if (priv->test_mode) {
+	if (self->test_mode) {
 		g_autofree gchar *filename = NULL;
-		close(priv->fd);
+		close(self->fd);
 		filename = g_strdup_printf ("%s/%s",
-					    priv->fw_dir,
-					    priv->aux_node);
+					    self->fw_dir,
+					    self->aux_node);
 		if (!g_file_test (filename, G_FILE_TEST_EXISTS)) {
 			g_set_error (error,
 			     	G_IO_ERROR,
@@ -192,8 +184,8 @@ synapticsmst_device_disable_remote_control (SynapticsMSTDevice *device, GError *
 			     	filename);
 			return FALSE;
 		}
-		priv->fd = open (filename, O_RDWR);
-		if (priv->fd == -1) {
+		self->fd = open (filename, O_RDWR);
+		if (self->fd == -1) {
 			g_set_error (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_PERMISSION_DENIED,
@@ -204,7 +196,7 @@ synapticsmst_device_disable_remote_control (SynapticsMSTDevice *device, GError *
 		return TRUE;
 	}
 
-	connection = synapticsmst_common_new (priv->fd, priv->layer, priv->rad);
+	connection = synapticsmst_common_new (self->fd, self->layer, self->rad);
 	if (!synapticsmst_common_disable_remote_control (connection, error))
 		return FALSE;
 
@@ -212,33 +204,32 @@ synapticsmst_device_disable_remote_control (SynapticsMSTDevice *device, GError *
 }
 
 gboolean
-synapticsmst_device_scan_cascade_device (SynapticsMSTDevice *device,
+synapticsmst_device_scan_cascade_device (SynapticsMSTDevice *self,
 					 GError **error,
 					 guint8 tx_port)
 {
-	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
-	guint8 layer = priv->layer + 1;
-	guint16 rad = priv->rad | (tx_port << (2 * (priv->layer)));
+	guint8 layer = self->layer + 1;
+	guint16 rad = self->rad | (tx_port << (2 * (self->layer)));
 	guint8 byte[4];
 	g_autoptr(SynapticsMSTConnection) connection = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
-	if (priv->test_mode)
+	if (self->test_mode)
 		return TRUE;
 
 	/* reset */
-	priv->has_cascade = FALSE;
+	self->has_cascade = FALSE;
 
 	/* enable remote control and disable on exit */
-	locker = fu_device_locker_new_full (device,
+	locker = fu_device_locker_new_full (self,
 					    (FuDeviceLockerFunc) synapticsmst_device_enable_remote_control,
 					    (FuDeviceLockerFunc) synapticsmst_device_disable_remote_control,
 					    error);
 	if (locker == NULL)
 		return FALSE;
 
-	connection = synapticsmst_common_new (priv->fd, layer, rad);
+	connection = synapticsmst_common_new (self->fd, layer, rad);
 	if (!synapticsmst_common_read (connection, REG_RC_CAP, byte, 1, &error_local)) {
 		g_debug ("No cascade device found: %s", error_local->message);
 		return TRUE;
@@ -251,26 +242,25 @@ synapticsmst_device_scan_cascade_device (SynapticsMSTDevice *device,
 			return FALSE;
 		}
 		if (byte[0] == 0x90 && byte[1] == 0xCC && byte[2] == 0x24)
-			priv->has_cascade = TRUE;
+			self->has_cascade = TRUE;
 	}
 
 	return TRUE;
 }
 
 static gboolean
-synapticsmst_device_read_board_id (SynapticsMSTDevice *device,
+synapticsmst_device_read_board_id (SynapticsMSTDevice *self,
 				   SynapticsMSTConnection *connection,
 				   guint8 *byte,
 				   GError **error)
 {
-	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 
-	if (priv->test_mode) {
+	if (self->test_mode) {
 		g_autofree gchar *filename = NULL;
 		gint fd;
 		filename = g_strdup_printf ("%s/remote/%s_eeprom",
-					    priv->fw_dir,
-					    priv->aux_node);
+					    self->fw_dir,
+					    self->aux_node);
 		if (!g_file_test (filename, G_FILE_TEST_EXISTS)) {
 			g_set_error (error,
 				     G_IO_ERROR,
@@ -314,16 +304,15 @@ synapticsmst_device_read_board_id (SynapticsMSTDevice *device,
 }
 
 static gboolean
-synapticsmst_device_get_active_bank_panamera (SynapticsMSTDevice *device,
+synapticsmst_device_get_active_bank_panamera (SynapticsMSTDevice *self,
 					      guint8 *bank_out,
 					      GError **error)
 {
 	g_autoptr(SynapticsMSTConnection) connection = NULL;
-	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	guint32 dwData[16];
 
 	/* get used bank */
-	connection = synapticsmst_common_new (priv->fd, priv->layer, priv->rad);
+	connection = synapticsmst_common_new (self->fd, self->layer, self->rad);
 	if (!synapticsmst_common_rc_get_command (connection,
 						 UPDC_READ_FROM_MEMORY,
 						 ((sizeof(dwData)/sizeof(dwData[0]))*4),
@@ -343,23 +332,22 @@ synapticsmst_device_get_active_bank_panamera (SynapticsMSTDevice *device,
 }
 
 gboolean
-synapticsmst_device_enumerate_device (SynapticsMSTDevice *device,
+synapticsmst_device_enumerate_device (SynapticsMSTDevice *self,
 				      GError **error)
 {
-	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	guint8 byte[16];
 	guint8 bank;
 	g_autoptr(SynapticsMSTConnection) connection = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
-	if (!synapticsmst_device_open (device, error)) {
+	if (!synapticsmst_device_open (self, error)) {
 		g_prefix_error (error, "Failed to open device in DP Aux Node %s: ",
-				synapticsmst_device_get_aux_node (device));
+				synapticsmst_device_get_aux_node (self));
 		return FALSE;
 	}
 
 	/* enable remote control and disable on exit */
-	locker = fu_device_locker_new_full (device,
+	locker = fu_device_locker_new_full (self,
 					    (FuDeviceLockerFunc) synapticsmst_device_enable_remote_control,
 					    (FuDeviceLockerFunc) synapticsmst_device_disable_remote_control,
 					    error);
@@ -367,18 +355,18 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device,
 		return FALSE;
 
 	/* read firmware version */
-	connection = synapticsmst_common_new (priv->fd, priv->layer, priv->rad);
+	connection = synapticsmst_common_new (self->fd, self->layer, self->rad);
 	if (!synapticsmst_common_read (connection, REG_FIRMWARE_VERSION,
 				       byte, 3, error))
 		return FALSE;
 
-	priv->version = g_strdup_printf ("%1d.%02d.%03d", byte[0], byte[1], byte[2]);
+	self->version = g_strdup_printf ("%1d.%02d.%03d", byte[0], byte[1], byte[2]);
 
 	/* read board ID */
-	if (!synapticsmst_device_read_board_id (device, connection, byte, error))
+	if (!synapticsmst_device_read_board_id (self, connection, byte, error))
 		return FALSE;
-	priv->board_id = (byte[0] << 8) | (byte[1]);
-	g_debug ("BoardID %x", priv->board_id);
+	self->board_id = (byte[0] << 8) | (byte[1]);
+	g_debug ("BoardID %x", self->board_id);
 
 	/* read board chip_id */
 	if (!synapticsmst_common_read (connection, REG_CHIP_ID,
@@ -386,76 +374,68 @@ synapticsmst_device_enumerate_device (SynapticsMSTDevice *device,
 		g_prefix_error (error, "failed to read chip id: ");
 		return FALSE;
 	}
-	priv->chip_id = (byte[0] << 8) | (byte[1]);
-	priv->chip_id_str = g_strdup_printf ("VMM%02x%02x", byte[0], byte[1]);
+	self->chip_id = (byte[0] << 8) | (byte[1]);
+	self->chip_id_str = g_strdup_printf ("VMM%02x%02x", byte[0], byte[1]);
 
 	/* if running on panamera, check the active bank (for debugging logs) */
-	if (priv->chip_id > 0x5000 &&
-	   !synapticsmst_device_get_active_bank_panamera (device, &bank, error))
+	if (self->chip_id > 0x5000 &&
+	   !synapticsmst_device_get_active_bank_panamera (self, &bank, error))
 		return FALSE;
 
 	return TRUE;
 }
 
 const gchar *
-synapticsmst_device_get_aux_node (SynapticsMSTDevice *device)
+synapticsmst_device_get_aux_node (SynapticsMSTDevice *self)
 {
-	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
-	return priv->aux_node;
+	return self->aux_node;
 }
 
 const gchar *
-synapticsmst_device_get_version (SynapticsMSTDevice *device)
+synapticsmst_device_get_version (SynapticsMSTDevice *self)
 {
-	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
-	return priv->version;
+	return self->version;
 }
 
 static guint16
-synapticsmst_device_get_chip_id (SynapticsMSTDevice *device)
+synapticsmst_device_get_chip_id (SynapticsMSTDevice *self)
 {
-	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
-	return priv->chip_id;
+	return self->chip_id;
 }
 
 const gchar *
-synapticsmst_device_get_chip_id_str (SynapticsMSTDevice *device)
+synapticsmst_device_get_chip_id_str (SynapticsMSTDevice *self)
 {
-	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
-	return priv->chip_id_str;
+	return self->chip_id_str;
 }
 
 
 guint16
-synapticsmst_device_get_rad (SynapticsMSTDevice *device)
+synapticsmst_device_get_rad (SynapticsMSTDevice *self)
 {
-	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
-	return priv->rad;
+	return self->rad;
 }
 
 guint8
-synapticsmst_device_get_layer (SynapticsMSTDevice *device)
+synapticsmst_device_get_layer (SynapticsMSTDevice *self)
 {
-	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
-	return priv->layer;
+	return self->layer;
 }
 
 gboolean
-synapticsmst_device_get_cascade (SynapticsMSTDevice *device)
+synapticsmst_device_get_cascade (SynapticsMSTDevice *self)
 {
-	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
-	return priv->has_cascade;
+	return self->has_cascade;
 }
 
 static gboolean
-synapticsmst_device_get_flash_checksum (SynapticsMSTDevice *device,
+synapticsmst_device_get_flash_checksum (SynapticsMSTDevice *self,
 					guint32 length, guint32 offset,
 					guint32 *checksum, GError **error)
 {
-	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	g_autoptr(SynapticsMSTConnection) connection = NULL;
 
-	connection = synapticsmst_common_new (priv->fd, priv->layer, priv->rad);
+	connection = synapticsmst_common_new (self->fd, self->layer, self->rad);
 	if (!synapticsmst_common_rc_special_get_command (connection,
 							UPDC_CAL_EEPROM_CHECKSUM,
 							length, offset,
@@ -528,16 +508,15 @@ synapticsmst_device_get_crc (guint16 crc, guint8 type, guint32 length, const gui
 }
 
 static gboolean
-synapticsmst_device_set_flash_sector_erase (SynapticsMSTDevice *device,
+synapticsmst_device_set_flash_sector_erase (SynapticsMSTDevice *self,
 					    guint16 rc_cmd,
 					    guint16 offset,
 					    GError **error)
 {
-	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	guint16 us_data;
 	g_autoptr(SynapticsMSTConnection) connection = NULL;
 
-	connection = synapticsmst_common_new (priv->fd, priv->layer, priv->rad);
+	connection = synapticsmst_common_new (self->fd, self->layer, self->rad);
 	/* Need to add Wp control ? */
 	us_data = rc_cmd + offset;
 
@@ -554,13 +533,12 @@ synapticsmst_device_set_flash_sector_erase (SynapticsMSTDevice *device,
 }
 
 static gboolean
-synapticsmst_device_update_esm (SynapticsMSTDevice *device,
+synapticsmst_device_update_esm (SynapticsMSTDevice *self,
 				const guint8 *payload_data,
 				GFileProgressCallback progress_cb,
 				gpointer progress_data,
 				GError **error)
 {
-	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	guint32 checksum = 0;
 	guint32 esm_sz = ESM_CODE_SIZE;
 	guint32 flash_checksum = 0;
@@ -568,11 +546,11 @@ synapticsmst_device_update_esm (SynapticsMSTDevice *device,
 	guint32 write_loops = 0;
 	g_autoptr(SynapticsMSTConnection) connection = NULL;
 
-	connection = synapticsmst_common_new (priv->fd, priv->layer, priv->rad);
+	connection = synapticsmst_common_new (self->fd, self->layer, self->rad);
 
 	for (guint32 i = 0; i < esm_sz; i++)
 		checksum += *(payload_data + EEPROM_ESM_OFFSET +i);
-	if (!synapticsmst_device_get_flash_checksum (device,
+	if (!synapticsmst_device_get_flash_checksum (self,
 						    esm_sz,
 						    EEPROM_ESM_OFFSET,
 						    &flash_checksum, error)) {
@@ -595,7 +573,7 @@ synapticsmst_device_update_esm (SynapticsMSTDevice *device,
 
 		/* erase ESM firmware; erase failure is fatal */
 		for (guint32 j = 0; j < 4; j++)	{
-			if (!synapticsmst_device_set_flash_sector_erase (device,
+			if (!synapticsmst_device_set_flash_sector_erase (self,
 									 FLASH_SECTOR_ERASE_64K,
 									 j + 4,
 									 error)) {
@@ -634,7 +612,7 @@ synapticsmst_device_update_esm (SynapticsMSTDevice *device,
 		flash_checksum = 0;
 		for (guint32 i = 0; i < esm_sz; i++)
 			checksum += *(payload_data + EEPROM_ESM_OFFSET +i);
-		if (!synapticsmst_device_get_flash_checksum (device,
+		if (!synapticsmst_device_get_flash_checksum (self,
 							     esm_sz,
 							     EEPROM_ESM_OFFSET,
 							     &flash_checksum,
@@ -661,14 +639,13 @@ synapticsmst_device_update_esm (SynapticsMSTDevice *device,
 }
 
 static gboolean
-synapticsmst_device_update_tesla_leaf_firmware (SynapticsMSTDevice *device,
+synapticsmst_device_update_tesla_leaf_firmware (SynapticsMSTDevice *self,
 						guint32 payload_len,
 						const guint8 *payload_data,
 						GFileProgressCallback progress_cb,
 						gpointer progress_data,
 						GError **error)
 {
-	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	g_autoptr(SynapticsMSTConnection) connection = NULL;
 	guint32 data_to_write = 0;
 	guint32 offset = 0;
@@ -680,12 +657,12 @@ synapticsmst_device_update_tesla_leaf_firmware (SynapticsMSTDevice *device,
 	if (payload_len % BLOCK_UNIT)
 		write_loops++;
 
-	connection = synapticsmst_common_new (priv->fd, priv->layer, priv->rad);
+	connection = synapticsmst_common_new (self->fd, self->layer, self->rad);
 	for (guint32 retries_cnt = 0; ; retries_cnt++) {
 		guint32 checksum = 0;
 		guint32 flash_checksum = 0;
 
-		if (!synapticsmst_device_set_flash_sector_erase (device, 0xffff, 0, error))
+		if (!synapticsmst_device_set_flash_sector_erase (self, 0xffff, 0, error))
 			return FALSE;
 		g_debug ("Waiting for flash clear to settle");
 		g_usleep (FLASH_SETTLE_TIME);
@@ -727,7 +704,7 @@ synapticsmst_device_update_tesla_leaf_firmware (SynapticsMSTDevice *device,
 		for (guint32 i = 0; i < payload_len; i++)
 			checksum += *(payload_data + i);
 
-		if (!synapticsmst_device_get_flash_checksum (device,
+		if (!synapticsmst_device_get_flash_checksum (self,
 								payload_len,
 								0,
 								&flash_checksum,
@@ -752,7 +729,7 @@ synapticsmst_device_update_tesla_leaf_firmware (SynapticsMSTDevice *device,
 }
 
 static gboolean
-synapticsmst_device_update_panamera_firmware (SynapticsMSTDevice *device,
+synapticsmst_device_update_panamera_firmware (SynapticsMSTDevice *self,
 					      guint32 payload_len,
 					      const guint8 *payload_data,
 					      GFileProgressCallback progress_cb,
@@ -771,10 +748,9 @@ synapticsmst_device_update_panamera_firmware (SynapticsMSTDevice *device,
 	struct tm *pTM;
 	time_t timeptr;
 	g_autoptr(SynapticsMSTConnection) connection = NULL;
-	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 
 	/* get used bank */
-	if (!synapticsmst_device_get_active_bank_panamera (device, &bank_in_use, error))
+	if (!synapticsmst_device_get_active_bank_panamera (self, &bank_in_use, error))
 		return FALSE;
 	if (bank_in_use == BANKTAG_1)
 		bank_to_update = BANKTAG_0;
@@ -805,10 +781,10 @@ synapticsmst_device_update_panamera_firmware (SynapticsMSTDevice *device,
 
 		/* erase storage */
 		erase_offset = bank_to_update * 2;
-		if (!synapticsmst_device_set_flash_sector_erase (device,
+		if (!synapticsmst_device_set_flash_sector_erase (self,
 								 FLASH_SECTOR_ERASE_64K, erase_offset++, error))
 			return FALSE;
-		if (!synapticsmst_device_set_flash_sector_erase (device,
+		if (!synapticsmst_device_set_flash_sector_erase (self,
 								 FLASH_SECTOR_ERASE_64K, erase_offset, error))
 			return FALSE;
 		g_debug ("Waiting for flash clear to settle");
@@ -817,7 +793,7 @@ synapticsmst_device_update_panamera_firmware (SynapticsMSTDevice *device,
 		/* write */
 		write_idx = 0;
 		write_offset = EEPROM_BANK_OFFSET * bank_to_update;
-		connection = synapticsmst_common_new (priv->fd, priv->layer, priv->rad);
+		connection = synapticsmst_common_new (self->fd, self->layer, self->rad);
 		for (guint32 i = 0; i < write_loops ; i++ ) {
 			g_autoptr(GError) error_local = NULL;
 			if (!synapticsmst_common_rc_set_command (connection,
@@ -943,7 +919,7 @@ synapticsmst_device_update_panamera_firmware (SynapticsMSTDevice *device,
 			guint32 erase_offset;
 			/* offset for last 4k of bank# */
 			erase_offset = (EEPROM_BANK_OFFSET * bank_in_use + EEPROM_BANK_OFFSET - 0x1000) / 0x1000;
-			if (!synapticsmst_device_set_flash_sector_erase (device,
+			if (!synapticsmst_device_set_flash_sector_erase (self,
 									 FLASH_SECTOR_ERASE_4K,
 									 erase_offset,
 									 error))
@@ -985,7 +961,7 @@ synapticsmst_device_update_panamera_firmware (SynapticsMSTDevice *device,
 }
 
 static gboolean
-synapticsmst_device_check_firmware_content (SynapticsMSTDevice *device,
+synapticsmst_device_check_firmware_content (SynapticsMSTDevice *self,
 					    GBytes *fw,
 					    SynapticsMSTChipKind chip_type,
 					    GError **error)
@@ -1026,15 +1002,14 @@ synapticsmst_device_check_firmware_content (SynapticsMSTDevice *device,
 }
 
 static gboolean
-synapticsmst_device_panamera_prepare_write (SynapticsMSTDevice *device, GError **error)
+synapticsmst_device_panamera_prepare_write (SynapticsMSTDevice *self, GError **error)
 {
-	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	guint32 dwData[4] = {0};
 	g_autoptr(SynapticsMSTConnection) connection = NULL;
 
 	/* Need to detect flash mode and ESM first ? */
 	/* disable flash Quad mode and ESM/HDCP2.2*/
-	connection = synapticsmst_common_new (priv->fd, priv->layer, priv->rad);
+	connection = synapticsmst_common_new (self->fd, self->layer, self->rad);
 
 	/* disable ESM first */
 	dwData[0] = 0x21;
@@ -1090,16 +1065,15 @@ synapticsmst_device_panamera_prepare_write (SynapticsMSTDevice *device, GError *
 }
 
 static gboolean
-synapticsmst_device_restart (SynapticsMSTDevice *device,
+synapticsmst_device_restart (SynapticsMSTDevice *self,
 			     GError **error)
 {
 	g_autoptr(SynapticsMSTConnection) connection = NULL;
-	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	guint8 dwData[4] = {0xF5, 0, 0 ,0};
 	g_autoptr(GError) error_local = NULL;
 
 	/* issue the reboot command, ignore return code (triggers before returning) */
-	connection = synapticsmst_common_new (priv->fd, priv->layer, priv->rad);
+	connection = synapticsmst_common_new (self->fd, self->layer, self->rad);
 	if (!synapticsmst_common_rc_set_command (connection,
 						 UPDC_WRITE_TO_MEMORY,
 						 4, (gint) 0x2000FC, (guint8*) &dwData,
@@ -1110,7 +1084,7 @@ synapticsmst_device_restart (SynapticsMSTDevice *device,
 }
 
 gboolean
-synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
+synapticsmst_device_write_firmware (SynapticsMSTDevice *self,
 				    GBytes *fw,
 				    GFileProgressCallback progress_cb,
 				    gpointer progress_data,
@@ -1126,19 +1100,19 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 
 	payload_data = g_bytes_get_data (fw, &payload_len);
 
-	if (synapticsmst_device_get_chip_id (device) > 0x5000)
+	if (synapticsmst_device_get_chip_id (self) > 0x5000)
 		chip_type = SYNAPTICSMST_CHIP_KIND_PANAMERA;
 	else
 		chip_type = SYNAPTICSMST_CHIP_KIND_TESLA_LEAF;
 
-	if (!synapticsmst_device_check_firmware_content (device, fw, chip_type, error)){
+	if (!synapticsmst_device_check_firmware_content (self, fw, chip_type, error)){
 		g_prefix_error (error, "Invalid file content: ");
 		return FALSE;
 	}
 
 	/* check firmware and board ID again */
 	tmp = (*(payload_data + ADDR_CUSTOMER_ID) << 8) + *(payload_data + ADDR_BOARD_ID);
-	if (tmp != synapticsmst_device_get_board_id (device) && !install_force) {
+	if (tmp != synapticsmst_device_get_board_id (self) && !install_force) {
 		g_set_error_literal (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
@@ -1147,21 +1121,21 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 	}
 
 	/* open device */
-	if (!synapticsmst_device_open (device, error)) {
+	if (!synapticsmst_device_open (self, error)) {
 		g_prefix_error (error,
 				"can't open DP Aux node %s",
-				synapticsmst_device_get_aux_node (device));
+				synapticsmst_device_get_aux_node (self));
 		return FALSE;
 	}
 
 	/* enable remote control and disable on exit */
 	if (reboot) {
-		locker = fu_device_locker_new_full (device,
+		locker = fu_device_locker_new_full (self,
 						(FuDeviceLockerFunc) synapticsmst_device_enable_remote_control,
 						(FuDeviceLockerFunc) synapticsmst_device_restart,
 						error);
 	} else {
-		locker = fu_device_locker_new_full (device,
+		locker = fu_device_locker_new_full (self,
 						(FuDeviceLockerFunc) synapticsmst_device_enable_remote_control,
 						(FuDeviceLockerFunc) synapticsmst_device_disable_remote_control,
 						error);
@@ -1171,11 +1145,11 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 
 	/* update firmware */
 	if (chip_type == SYNAPTICSMST_CHIP_KIND_PANAMERA) {
-		if (!synapticsmst_device_panamera_prepare_write (device, error)) {
+		if (!synapticsmst_device_panamera_prepare_write (self, error)) {
 			g_prefix_error (error, "Failed to prepare for write: ");
 			return FALSE;
 		}
-		if (!synapticsmst_device_update_esm (device,
+		if (!synapticsmst_device_update_esm (self,
 						     payload_data,
 						     progress_cb,
 						     progress_data,
@@ -1183,7 +1157,7 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 			g_prefix_error (error, "ESM update failed: ");
 			return FALSE;
 		}
-		if (!synapticsmst_device_update_panamera_firmware (device,
+		if (!synapticsmst_device_update_panamera_firmware (self,
 								   payload_len,
 								   payload_data,
 								   progress_cb,
@@ -1193,7 +1167,7 @@ synapticsmst_device_write_firmware (SynapticsMSTDevice *device,
 			return FALSE;
 		}
 	} else {
-		if (!synapticsmst_device_update_tesla_leaf_firmware (device,
+		if (!synapticsmst_device_update_tesla_leaf_firmware (self,
 								     payload_len,
 								     payload_data,
 								     progress_cb,
@@ -1213,32 +1187,29 @@ synapticsmst_device_new (SynapticsMSTDeviceKind kind,
 			 guint8 layer,
 			 guint16 rad)
 {
-	SynapticsMSTDevice *device;
-	SynapticsMSTDevicePrivate *priv;
+	SynapticsMSTDevice *self;
 
-	device = g_object_new (SYNAPTICSMST_TYPE_DEVICE, NULL);
-	priv = GET_PRIVATE (device);
+	self = g_object_new (SYNAPTICSMST_TYPE_DEVICE, NULL);
 
-	priv->aux_node = g_strdup(aux_node);
-	priv->kind = kind;
-	priv->version = NULL;
-	priv->layer = layer;
-	priv->rad = rad;
-	priv->has_cascade = FALSE;
+	self->aux_node = g_strdup(aux_node);
+	self->kind = kind;
+	self->version = NULL;
+	self->layer = layer;
+	self->rad = rad;
+	self->has_cascade = FALSE;
 
-	return SYNAPTICSMST_DEVICE (device);
+	return SYNAPTICSMST_DEVICE (self);
 }
 
 gboolean
-synapticsmst_device_open (SynapticsMSTDevice *device, GError **error)
+synapticsmst_device_open (SynapticsMSTDevice *self, GError **error)
 {
-	SynapticsMSTDevicePrivate *priv = GET_PRIVATE (device);
 	g_autofree gchar *filename = NULL;
 	guint8 byte[4];
 	g_autoptr(SynapticsMSTConnection) connection = NULL;
 
 	/* file doesn't exist on this system */
-	filename = g_strdup_printf ("%s/%s", priv->fw_dir, priv->aux_node);
+	filename = g_strdup_printf ("%s/%s", self->fw_dir, self->aux_node);
 	if (!g_file_test (filename, G_FILE_TEST_EXISTS)) {
 		g_set_error (error,
 			     G_IO_ERROR,
@@ -1249,8 +1220,8 @@ synapticsmst_device_open (SynapticsMSTDevice *device, GError **error)
 	}
 
 	/* can't open aux node, try use sudo to get the permission */
-	priv->fd = open (filename, O_RDWR);
-	if (priv->fd == -1) {
+	self->fd = open (filename, O_RDWR);
+	if (self->fd == -1) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     g_io_error_from_errno (errno),
@@ -1259,7 +1230,7 @@ synapticsmst_device_open (SynapticsMSTDevice *device, GError **error)
 		return FALSE;
 	}
 
-	connection = synapticsmst_common_new (priv->fd, 0, 0);
+	connection = synapticsmst_common_new (self->fd, 0, 0);
 	if (!synapticsmst_common_read (connection, REG_RC_CAP, byte, 1, error)) {
 		g_prefix_error (error, "failed to read device: ");
 		return FALSE;
