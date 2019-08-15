@@ -8,8 +8,9 @@ shared_module('fu_plugin_synapticsmst',
   fu_hash,
   sources : [
     'fu-plugin-synapticsmst.c',
-    'synapticsmst-common.c',
-    'synapticsmst-device.c',
+    'fu-synapticsmst-common.c',
+    'fu-synapticsmst-connection.c',
+    'fu-synapticsmst-device.c',
   ],
   include_directories : [
     include_directories('../..'),
@@ -38,8 +39,9 @@ if get_option('tests')
     fu_hash,
     sources : [
       'fu-self-test.c',
-      'synapticsmst-common.c',
-      'synapticsmst-device.c',
+      'fu-synapticsmst-common.c',
+      'fu-synapticsmst-connection.c',
+      'fu-synapticsmst-device.c',
     ],
     include_directories : [
       include_directories('../..'),

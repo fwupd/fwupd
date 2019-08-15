@@ -1,14 +1,14 @@
 /*
  * Copyright (C) 2017 Mario Limonciello <mario.limonciello@dell.com>
  * Copyright (C) 2017 Peichen Huang <peichenhuang@tw.synaptics.com>
- * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2017-2019 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #include "config.h"
-#include "synapticsmst-device.h"
-#include "synapticsmst-common.h"
+#include "fu-synapticsmst-device.h"
+#include "fu-synapticsmst-common.h"
 #include "fu-plugin-vfuncs.h"
 #include "fu-device-metadata.h"
 
@@ -16,7 +16,7 @@
 #define SYNAPTICS_UPDATE_ENUMERATE_TRIES 3
 
 static gboolean
-syanpticsmst_check_amdgpu_safe (GError **error)
+fu_synapticsmst_check_amdgpu_safe (GError **error)
 {
 	gsize bufsz = 0;
 	g_autofree gchar *buf = NULL;
@@ -40,7 +40,7 @@ syanpticsmst_check_amdgpu_safe (GError **error)
 }
 
 static gboolean
-synapticsmst_common_check_supported_system (FuPlugin *plugin, GError **error)
+fu_synapticsmst_check_supported_system (FuPlugin *plugin, GError **error)
 {
 
 	if (g_getenv ("FWUPD_SYNAPTICSMST_FW_DIR") != NULL) {
@@ -49,7 +49,7 @@ synapticsmst_common_check_supported_system (FuPlugin *plugin, GError **error)
 	}
 
 	/* See https://github.com/hughsie/fwupd/issues/1121 for more details */
-	if (!syanpticsmst_check_amdgpu_safe (error))
+	if (!fu_synapticsmst_check_amdgpu_safe (error))
 		return FALSE;
 
 	if (!g_file_test (SYSFS_DRM_DP_AUX, G_FILE_TEST_IS_DIR)) {
@@ -65,10 +65,10 @@ synapticsmst_common_check_supported_system (FuPlugin *plugin, GError **error)
 /* creates MST-$str-$BOARDID */
 static void
 fu_plugin_synapticsmst_create_simple_guid (FuDevice *fu_device,
-					   SynapticsMSTDevice *device,
+					   FuSynapticsmstDevice *device,
 					   const gchar *str)
 {
-	guint16 board_id = synapticsmst_device_get_board_id (device);
+	guint16 board_id = fu_synapticsmst_device_get_board_id (device);
 	g_autofree gchar *devid = g_strdup_printf ("MST-%s-%u", str, board_id);
 	fu_device_add_instance_id (fu_device, devid);
 }
@@ -76,10 +76,10 @@ fu_plugin_synapticsmst_create_simple_guid (FuDevice *fu_device,
 /* creates MST-$str-$chipid-$BOARDID */
 static void
 fu_plugin_synapticsmst_create_complex_guid (FuDevice *fu_device,
-					    SynapticsMSTDevice *device,
+					    FuSynapticsmstDevice *device,
 					    const gchar *device_kind)
 {
-	const gchar *chip_id_str = synapticsmst_device_get_chip_id_str (device);
+	const gchar *chip_id_str = fu_synapticsmst_device_get_chip_id_str (device);
 	g_autofree gchar *chip_id_down = g_ascii_strdown (chip_id_str, -1);
 	g_autofree gchar *tmp = g_strdup_printf ("%s-%s", device_kind, chip_id_down);
 
@@ -89,13 +89,13 @@ fu_plugin_synapticsmst_create_complex_guid (FuDevice *fu_device,
 static gboolean
 fu_plugin_synapticsmst_lookup_device (FuPlugin *plugin,
 				      FuDevice *fu_device,
-				      SynapticsMSTDevice *device,
+				      FuSynapticsmstDevice *device,
 				      GError **error)
 {
 	const gchar *board_str;
 	const gchar *guid_template;
-	guint16 board_id = synapticsmst_device_get_board_id (device);
-	const gchar *chip_id_str = synapticsmst_device_get_chip_id_str (device);
+	guint16 board_id = fu_synapticsmst_device_get_board_id (device);
+	const gchar *chip_id_str = fu_synapticsmst_device_get_chip_id_str (device);
 	g_autofree gchar *group = NULL;
 	g_autofree gchar *name = NULL;
 
@@ -113,7 +113,7 @@ fu_plugin_synapticsmst_lookup_device (FuPlugin *plugin,
 					      FU_QUIRKS_NAME);
 	if (board_str == NULL)
 		board_str = "Unknown Platform";
-	name = g_strdup_printf ("Synaptics %s inside %s", synapticsmst_device_get_chip_id_str (device),
+	name = g_strdup_printf ("Synaptics %s inside %s", fu_synapticsmst_device_get_chip_id_str (device),
 				board_str);
 	fu_device_set_name (fu_device, name);
 
@@ -150,7 +150,7 @@ fu_plugin_synapticsmst_lookup_device (FuPlugin *plugin,
 
 static gboolean
 fu_plugin_synaptics_add_device (FuPlugin *plugin,
-				SynapticsMSTDevice *device,
+				FuSynapticsmstDevice *device,
 				GError **error)
 {
 	g_autoptr(FuDevice) dev = NULL;
@@ -162,8 +162,8 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 	guint8 layer;
 	guint16 rad;
 
-	aux_node = synapticsmst_device_get_aux_node (device);
-	if (!synapticsmst_device_enumerate_device (device,
+	aux_node = fu_synapticsmst_device_get_aux_node (device);
+	if (!fu_synapticsmst_device_enumerate_device (device,
 						   error)) {
 		g_prefix_error (error, "Error enumerating device at %s: ", aux_node);
 		return FALSE;
@@ -172,9 +172,9 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 	/* create the device */
 	dev = fu_device_new ();
 	/* Store $KIND-$AUXNODE-$LAYER-$RAD as device ID */
-	layer = synapticsmst_device_get_layer (device);
-	rad = synapticsmst_device_get_rad (device);
-	kind_str = synapticsmst_device_kind_to_string (synapticsmst_device_get_kind (device));
+	layer = fu_synapticsmst_device_get_layer (device);
+	rad = fu_synapticsmst_device_get_rad (device);
+	kind_str = fu_synapticsmst_mode_to_string (fu_synapticsmst_device_get_kind (device));
 	dev_id_str = g_strdup_printf ("MST-%s-%s-%u-%u",
 				      kind_str, aux_node, layer, rad);
 	fu_device_set_id (dev, dev_id_str);
@@ -189,7 +189,7 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 	fu_device_set_vendor (dev, "Synaptics");
 	fu_device_set_summary (dev, "Multi-Stream Transport Device");
 	fu_device_add_icon (dev, "video-display");
-	fu_device_set_version (dev, synapticsmst_device_get_version (device),
+	fu_device_set_version (dev, fu_synapticsmst_device_get_version (device),
 			       FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_quirks (dev, fu_plugin_get_quirks (plugin));
 
@@ -209,15 +209,15 @@ fu_plugin_synaptics_add_device (FuPlugin *plugin,
 
 static gboolean
 fu_plugin_synaptics_scan_cascade (FuPlugin *plugin,
-				  SynapticsMSTDevice *device,
+				  FuSynapticsmstDevice *device,
 				  GError **error)
 {
-	g_autoptr(SynapticsMSTDevice) cascade_device = NULL;
+	g_autoptr(FuSynapticsmstDevice) cascade_device = NULL;
 	FuDevice *fu_dev = NULL;
 	const gchar *aux_node;
 
-	aux_node = synapticsmst_device_get_aux_node (device);
-	if (!synapticsmst_device_open (device, error)) {
+	aux_node = fu_synapticsmst_device_get_aux_node (device);
+	if (!fu_synapticsmst_device_open (device, error)) {
 		g_prefix_error (error,
 				"failed to open aux node %s again",
 				aux_node);
@@ -225,19 +225,19 @@ fu_plugin_synaptics_scan_cascade (FuPlugin *plugin,
 	}
 
 	for (guint8 j = 0; j < 2; j++) {
-		guint8 layer = synapticsmst_device_get_layer (device) + 1;
-		guint16 rad = synapticsmst_device_get_rad (device) | (j << (2 * (layer - 1)));
+		guint8 layer = fu_synapticsmst_device_get_layer (device) + 1;
+		guint16 rad = fu_synapticsmst_device_get_rad (device) | (j << (2 * (layer - 1)));
 		g_autofree gchar *dev_id_str = NULL;
 		dev_id_str = g_strdup_printf ("MST-REMOTE-%s-%u-%u",
 					      aux_node, layer, rad);
 		fu_dev = fu_plugin_cache_lookup (plugin, dev_id_str);
 
 		/* run the scan */
-		if (!synapticsmst_device_scan_cascade_device (device, error, j))
+		if (!fu_synapticsmst_device_scan_cascade_device (device, error, j))
 			return FALSE;
 
 		/* check if cascaded device was found */
-		if (!synapticsmst_device_get_cascade (device)) {
+		if (!fu_synapticsmst_device_get_cascade (device)) {
 			/* not found, nothing new to see here, move along */
 			if (fu_dev == NULL)
 				continue;
@@ -250,7 +250,7 @@ fu_plugin_synaptics_scan_cascade (FuPlugin *plugin,
 			}
 		/* Found a device, add it */
 		} else {
-			cascade_device = synapticsmst_device_new (SYNAPTICSMST_DEVICE_KIND_REMOTE,
+			cascade_device = fu_synapticsmst_device_new (FU_SYNAPTICSMST_MODE_REMOTE,
 								  aux_node, layer, rad);
 			/* new device */
 			if (fu_dev == NULL) {
@@ -309,7 +309,7 @@ fu_plugin_synapticsmst_enumerate (FuPlugin *plugin,
 	do {
 		g_autofree gchar *dev_id_str = NULL;
 		g_autoptr(GError) error_local = NULL;
-		g_autoptr(SynapticsMSTDevice) device = NULL;
+		g_autoptr(FuSynapticsmstDevice) device = NULL;
 		FuDevice *fu_dev = NULL;
 
 		aux_node = g_dir_read_name (dir);
@@ -320,8 +320,8 @@ fu_plugin_synapticsmst_enumerate (FuPlugin *plugin,
 		fu_dev = fu_plugin_cache_lookup (plugin, dev_id_str);
 
 		/* If we open successfully a device exists here */
-		device = synapticsmst_device_new (SYNAPTICSMST_DEVICE_KIND_DIRECT, aux_node, 0, 0);
-		if (!synapticsmst_device_open (device, &error_local)) {
+		device = fu_synapticsmst_device_new (FU_SYNAPTICSMST_MODE_DIRECT, aux_node, 0, 0);
+		if (!fu_synapticsmst_device_open (device, &error_local)) {
 			/* No device exists here, but was there - remove from DB */
 			if (fu_dev != NULL) {
 				g_debug ("Removing devices on %s", aux_node);
@@ -367,8 +367,8 @@ fu_plugin_update (FuPlugin *plugin,
 		  FwupdInstallFlags flags,
 		  GError **error)
 {
-	g_autoptr(SynapticsMSTDevice) device = NULL;
-	SynapticsMSTDeviceKind kind;
+	g_autoptr(FuSynapticsmstDevice) device = NULL;
+	FuSynapticsmstMode kind;
 	const gchar *aux_node;
 	guint8 layer;
 	guint8 rad;
@@ -376,7 +376,7 @@ fu_plugin_update (FuPlugin *plugin,
 	gboolean install_force;
 
 	/* extract details to build a new device */
-	kind = synapticsmst_device_kind_from_string (fu_device_get_metadata (dev, "SynapticsMSTKind"));
+	kind = fu_synapticsmst_mode_from_string (fu_device_get_metadata (dev, "SynapticsMSTKind"));
 	aux_node = fu_device_get_metadata (dev, "SynapticsMSTAuxNode");
 	layer = g_ascii_strtoull (fu_device_get_metadata (dev, "SynapticsMSTLayer"), NULL, 0);
 	rad = g_ascii_strtoull (fu_device_get_metadata (dev, "SynapticsMSTRad"), NULL, 0);
@@ -388,15 +388,15 @@ fu_plugin_update (FuPlugin *plugin,
 	fu_device_set_status (dev, FWUPD_STATUS_DEVICE_BUSY);
 	g_usleep (SYNAPTICS_FLASH_MODE_DELAY * 1000000);
 
-	device = synapticsmst_device_new (kind, aux_node, layer, rad);
+	device = fu_synapticsmst_device_new (kind, aux_node, layer, rad);
 
-	if (!synapticsmst_device_enumerate_device (device, error))
+	if (!fu_synapticsmst_device_enumerate_device (device, error))
 		return FALSE;
 	reboot = !fu_device_has_custom_flag (dev, "skip-restart");
 	install_force = (flags & FWUPD_INSTALL_FLAG_FORCE) != 0 ||
 			fu_device_has_custom_flag (dev, "ignore-board-id");
 	fu_device_set_status (dev, FWUPD_STATUS_DEVICE_WRITE);
-	if (!synapticsmst_device_write_firmware (device, blob_fw,
+	if (!fu_synapticsmst_device_write_firmware (device, blob_fw,
 						 fu_synapticsmst_write_progress_cb,
 						 dev,
 						 reboot,
@@ -416,7 +416,7 @@ fu_plugin_update (FuPlugin *plugin,
 	for (guint i = 1; i <= SYNAPTICS_UPDATE_ENUMERATE_TRIES; i++) {
 		g_autoptr(GError) error_local = NULL;
 		g_usleep (SYNAPTICS_FLASH_MODE_DELAY * 1000000);
-		if (!synapticsmst_device_enumerate_device (device,
+		if (!fu_synapticsmst_device_enumerate_device (device,
 							   &error_local)) {
 			g_warning ("Unable to find device after %u seconds: %s",
 				   SYNAPTICS_FLASH_MODE_DELAY * i,
@@ -431,7 +431,7 @@ fu_plugin_update (FuPlugin *plugin,
 			}
 		}
 	}
-	fu_device_set_version (dev, synapticsmst_device_get_version (device),
+	fu_device_set_version (dev, fu_synapticsmst_device_get_version (device),
 			       FWUPD_VERSION_FORMAT_TRIPLET);
 
 	return TRUE;
@@ -474,7 +474,7 @@ fu_plugin_synapticsmst_coldplug (FuPlugin *plugin, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
 	/* verify that this is a supported system */
-	if (!synapticsmst_common_check_supported_system (plugin, error))
+	if (!fu_synapticsmst_check_supported_system (plugin, error))
 		return FALSE;
 
 	/* look for host devices or already plugged in dock devices */
