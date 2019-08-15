@@ -92,7 +92,6 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_set_description(d,v)		fwupd_device_set_description(FWUPD_DEVICE(d),v)
 #define fu_device_set_flags(d,v)		fwupd_device_set_flags(FWUPD_DEVICE(d),v)
 #define fu_device_set_modified(d,v)		fwupd_device_set_modified(FWUPD_DEVICE(d),v)
-#define fu_device_set_plugin(d,v)		fwupd_device_set_plugin(FWUPD_DEVICE(d),v)
 #define fu_device_set_serial(d,v)		fwupd_device_set_serial(FWUPD_DEVICE(d),v)
 #define fu_device_set_summary(d,v)		fwupd_device_set_summary(FWUPD_DEVICE(d),v)
 #define fu_device_set_update_error(d,v)		fwupd_device_set_update_error(FWUPD_DEVICE(d),v)
@@ -224,6 +223,8 @@ gboolean	 fu_device_detach			(FuDevice	*self,
 							 GError		**error);
 void		 fu_device_incorporate			(FuDevice	*self,
 							 FuDevice	*donor);
+void		 fu_device_set_plugin			(FuDevice	*self,
+							 const gchar	*plugin);
 gboolean	 fu_device_open				(FuDevice	*self,
 							 GError		**error);
 gboolean	 fu_device_close			(FuDevice	*self,

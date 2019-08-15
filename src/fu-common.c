@@ -1041,6 +1041,15 @@ fu_common_get_path (FuPathKind path_kind)
 #else
 	return NULL;
 #endif
+	case FU_PATH_KIND_ICONDIR:
+		tmp = g_getenv ("FWUPD_ICONDIR");
+		if (tmp != NULL)
+			return g_strdup (tmp);
+		tmp = g_getenv ("SNAP");
+		if (tmp != NULL)
+			return g_build_filename (tmp, DATADIR, "icons", "fwupd", NULL);
+		return g_build_filename (DATADIR, "icons", "fwupd", NULL);
+
 	/* this shouldn't happen */
 	default:
 		g_warning ("cannot build path for unknown kind %u", path_kind);

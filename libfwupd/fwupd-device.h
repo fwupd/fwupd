@@ -89,6 +89,9 @@ void		 fwupd_device_set_modified		(FwupdDevice	*device,
 GPtrArray	*fwupd_device_get_checksums		(FwupdDevice	*device);
 void		 fwupd_device_add_checksum		(FwupdDevice	*device,
 							 const gchar	*checksum);
+const gchar	*fwupd_device_get_plugin_logo		(FwupdDevice	*device);
+void		 fwupd_device_set_plugin_logo		(FwupdDevice	*device,
+							 const gchar	*plugin_logo);
 const gchar	*fwupd_device_get_plugin		(FwupdDevice	*device);
 void		 fwupd_device_set_plugin		(FwupdDevice	*device,
 							 const gchar	*plugin);

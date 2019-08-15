@@ -2298,6 +2298,34 @@ fu_device_incorporate_from_component (FuDevice *self, XbNode *component)
 		fwupd_device_set_update_message (FWUPD_DEVICE (self), tmp);
 }
 
+/**
+ * fu_device_set_plugin:
+ * @self: A #FuDevice
+ * @plugin: A #gchar
+ *
+ * Sets the plugin and plugin logo
+ *
+ * Since: 1.0.0
+ **/
+void
+fu_device_set_plugin (FuDevice *self, const gchar *plugin)
+{
+	g_return_if_fail (FU_IS_DEVICE (self));
+	fwupd_device_set_plugin (FWUPD_DEVICE (self), plugin);
+
+	/* set the logo if we have one */
+	if (plugin != NULL) {
+		g_autofree gchar *logo = NULL;
+		g_autofree gchar *datadir = NULL;
+		g_autofree gchar *filename = NULL;
+		datadir = fu_common_get_path (FU_PATH_KIND_ICONDIR);
+		filename = g_strdup_printf ("%s.png", plugin);
+		logo = g_build_filename (datadir, "plugins", filename, NULL);
+		if (g_file_test (logo, G_FILE_TEST_EXISTS))
+			fwupd_device_set_plugin_logo (FWUPD_DEVICE (self), logo);
+	}
+}
+
 static void
 fu_device_class_init (FuDeviceClass *klass)
 {
