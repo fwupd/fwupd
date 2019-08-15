@@ -40,6 +40,8 @@ struct _FuDeviceClass
 							 GError		**error);
 	gboolean		 (*probe)		(FuDevice	*self,
 							 GError		**error);
+	gboolean		 (*rescan)		(FuDevice	*self,
+							 GError		**error);
 	FuFirmware		*(*prepare_firmware)	(FuDevice	*self,
 							 GBytes		*fw,
 							 FwupdInstallFlags flags,
@@ -110,6 +112,7 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_get_modified(d)		fwupd_device_get_modified(FWUPD_DEVICE(d))
 #define fu_device_get_guids(d)			fwupd_device_get_guids(FWUPD_DEVICE(d))
 #define fu_device_get_guid_default(d)		fwupd_device_get_guid_default(FWUPD_DEVICE(d))
+#define fu_device_get_instance_ids(d)		fwupd_device_get_instance_ids(FWUPD_DEVICE(d))
 #define fu_device_get_icons(d)			fwupd_device_get_icons(FWUPD_DEVICE(d))
 #define fu_device_get_name(d)			fwupd_device_get_name(FWUPD_DEVICE(d))
 #define fu_device_get_serial(d)			fwupd_device_get_serial(FWUPD_DEVICE(d))
@@ -231,6 +234,8 @@ gboolean	 fu_device_close			(FuDevice	*self,
 gboolean	 fu_device_probe			(FuDevice	*self,
 							 GError		**error);
 gboolean	 fu_device_setup			(FuDevice	*self,
+							 GError		**error);
+gboolean	 fu_device_rescan			(FuDevice	*self,
 							 GError		**error);
 gboolean	 fu_device_activate			(FuDevice	*self,
 							 GError		**error);
