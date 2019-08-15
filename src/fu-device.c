@@ -1267,6 +1267,7 @@ fu_device_set_version (FuDevice *self, const gchar *version, FwupdVersionFormat 
 gboolean
 fu_device_ensure_id (FuDevice *self, GError **error)
 {
+	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_autofree gchar *device_id = NULL;
 
 	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
@@ -1277,7 +1278,7 @@ fu_device_ensure_id (FuDevice *self, GError **error)
 		return TRUE;
 
 	/* nothing we can do! */
-	if (fu_device_get_physical_id (self) == NULL) {
+	if (priv->physical_id == NULL) {
 		g_autofree gchar *tmp = fu_device_to_string (self);
 		g_set_error (error,
 			     G_IO_ERROR,
@@ -2253,6 +2254,10 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 		fu_device_set_alternate_id (self, fu_device_get_alternate_id (donor));
 	if (priv->equivalent_id == NULL)
 		fu_device_set_equivalent_id (self, fu_device_get_equivalent_id (donor));
+	if (priv->physical_id == NULL && priv_donor->physical_id != NULL)
+		fu_device_set_physical_id (self, priv_donor->physical_id);
+	if (priv->logical_id == NULL && priv_donor->logical_id != NULL)
+		fu_device_set_logical_id (self, priv_donor->logical_id);
 	if (priv->quirks == NULL)
 		fu_device_set_quirks (self, fu_device_get_quirks (donor));
 	g_rw_lock_reader_lock (&priv_donor->parent_guids_mutex);
