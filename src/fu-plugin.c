@@ -1977,6 +1977,7 @@ fu_plugin_init (FuPlugin *self)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	priv->enabled = TRUE;
+	priv->udev_subsystems = g_ptr_array_new_with_free_func (g_free);
 	priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
 					       g_free, (GDestroyNotify) g_object_unref);
 	g_rw_lock_init (&priv->devices_mutex);
