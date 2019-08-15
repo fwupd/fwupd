@@ -1,3 +1,5 @@
+<img src=dell.png>
+
 Dell Support
 ============
 

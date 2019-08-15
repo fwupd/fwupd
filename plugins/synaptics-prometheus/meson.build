@@ -4,6 +4,10 @@ install_data(['synaptics-prometheus.quirk'],
   install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
 )
 
+install_data(['synaptics-prometheus.png'],
+  install_dir : join_paths(datadir, 'icons', 'fwupd', 'plugins')
+)
+
 shared_module('fu_plugin_synaptics_prometheus',
   fu_hash,
   sources : [

@@ -1,4 +1,7 @@
-# Synaptics MST
+<img src=synapticsmst.png>
+
+Synaptics MST
+============
 
 This plugin supports querying and flashing Synaptics MST hubs used in Dell systems
 and docks.

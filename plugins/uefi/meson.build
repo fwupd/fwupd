@@ -11,6 +11,10 @@ install_data(['uefi.quirk'],
   install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
 )
 
+install_data(['uefi.png'],
+  install_dir : join_paths(datadir, 'icons', 'fwupd', 'plugins')
+)
+
 shared_module('fu_plugin_uefi',
   fu_hash,
   sources : [

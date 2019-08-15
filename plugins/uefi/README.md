@@ -1,3 +1,5 @@
+<img src=uefi.png>
+
 UEFI Support
 ============
 

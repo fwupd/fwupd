@@ -1,3 +1,5 @@
+<img src=ebitdo.png>
+
 8Bitdo Support
 ==============
 

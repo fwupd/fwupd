@@ -1,3 +1,5 @@
+<img src=redfish.png height=75>
+
 Redfish Support
 ===============
 

@@ -1,4 +1,7 @@
+<img src=../synapticsmst/synapticsmst.png>
+
 Synaptics Prometheus
+
 ====================
 
 Introduction

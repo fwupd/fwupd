@@ -1,5 +1,9 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginRedfish"']
 
+install_data(['redfish.png'],
+  install_dir : join_paths(datadir, 'icons', 'fwupd', 'plugins')
+)
+
 shared_module('fu_plugin_redfish',
   fu_hash,
   sources : [

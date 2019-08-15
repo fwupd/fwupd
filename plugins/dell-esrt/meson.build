@@ -4,6 +4,10 @@ install_data(['metadata.xml'],
   install_dir : join_paths(datadir, 'fwupd', 'remotes.d', 'dell-esrt')
 )
 
+install_data(['dell-esrt.png'],
+  install_dir : join_paths(datadir, 'icons', 'fwupd', 'plugins')
+)
+
 shared_module('fu_plugin_dell_esrt',
   fu_hash,
   sources : [

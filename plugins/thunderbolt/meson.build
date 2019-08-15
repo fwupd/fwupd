@@ -1,5 +1,9 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginThunderbolt"']
 
+install_data(['thunderbolt.png'],
+  install_dir : join_paths(datadir, 'icons', 'fwupd', 'plugins')
+)
+
 fu_plugin_thunderbolt = shared_module('fu_plugin_thunderbolt',
   fu_hash,
   sources : [

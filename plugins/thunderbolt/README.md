@@ -1,3 +1,5 @@
+<img src=thunderbolt.png>
+
 Thunderbolt™ Support
 ====================
 

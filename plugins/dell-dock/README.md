@@ -1,3 +1,5 @@
+<img src=../dell/dell.png>
+
 Dell USB-C Dock
 =========
 

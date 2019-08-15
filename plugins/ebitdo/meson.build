@@ -4,6 +4,10 @@ install_data(['ebitdo.quirk'],
   install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
 )
 
+install_data(['ebitdo.png'],
+  install_dir : join_paths(datadir, 'icons', 'fwupd', 'plugins')
+)
+
 shared_module('fu_plugin_ebitdo',
   fu_hash,
   sources : [

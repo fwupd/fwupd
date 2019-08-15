@@ -6,6 +6,10 @@ install_data([
   install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
 )
 
+install_data(['nvme.png'],
+  install_dir : join_paths(datadir, 'icons', 'fwupd', 'plugins')
+)
+
 shared_module('fu_plugin_nvme',
   fu_hash,
   sources : [
