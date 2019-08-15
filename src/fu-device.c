@@ -2101,6 +2101,41 @@ fu_device_probe (FuDevice *self, GError **error)
 }
 
 /**
+ * fu_device_rescan:
+ * @self: A #FuDevice
+ * @error: A #GError, or %NULL
+ *
+ * Rescans a device, re-adding GUIDs or flags based on some hardware change.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.2.11
+ **/
+gboolean
+fu_device_rescan (FuDevice *self, GError **error)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+
+	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* remove all GUIDs */
+	g_ptr_array_set_size (fu_device_get_instance_ids (self), 0);
+	g_ptr_array_set_size (fu_device_get_guids (self), 0);
+
+	/* subclassed */
+	if (klass->rescan != NULL) {
+		if (!klass->rescan (self, error)) {
+			fu_device_convert_instance_ids (self);
+			return FALSE;
+		}
+	}
+
+	fu_device_convert_instance_ids (self);
+	return TRUE;
+}
+
+/**
  * fu_device_convert_instance_ids:
  * @self: A #FuDevice
  *
