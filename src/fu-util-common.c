@@ -9,7 +9,9 @@
 #include <stdio.h>
 #include <glib/gi18n.h>
 #include <gusb.h>
+#include <xmlb.h>
 
+#include "fu-common.h"
 #include "fu-util-common.h"
 #include "fu-device.h"
 
@@ -727,4 +729,315 @@ fu_util_parse_filter_flags (const gchar *filter, FwupdDeviceFlags *include,
 	}
 
 	return TRUE;
+}
+
+gchar *
+fu_util_convert_description (const gchar *xml, GError **error)
+{
+	g_autoptr(GString) str = g_string_new (NULL);
+	g_autoptr(XbNode) n = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+
+	/* parse XML */
+	silo = xb_silo_new_from_xml (xml, error);
+	if (silo == NULL)
+		return NULL;
+
+	n = xb_silo_get_root (silo);
+	while (n != NULL) {
+		g_autoptr(XbNode) n2 = NULL;
+
+		/* support <p>, <ul>, <ol> and <li>, ignore all else */
+		if (g_strcmp0 (xb_node_get_element (n), "p") == 0) {
+			g_string_append_printf (str, "%s\n\n", xb_node_get_text (n));
+		} else if (g_strcmp0 (xb_node_get_element (n), "ul") == 0) {
+			g_autoptr(GPtrArray) children = xb_node_get_children (n);
+			for (guint i = 0; i < children->len; i++) {
+				XbNode *nc = g_ptr_array_index (children, i);
+				if (g_strcmp0 (xb_node_get_element (nc), "li") == 0) {
+					g_string_append_printf (str, " • %s\n",
+								xb_node_get_text (nc));
+				}
+			}
+			g_string_append (str, "\n");
+		} else if (g_strcmp0 (xb_node_get_element (n), "ol") == 0) {
+			g_autoptr(GPtrArray) children = xb_node_get_children (n);
+			for (guint i = 0; i < children->len; i++) {
+				XbNode *nc = g_ptr_array_index (children, i);
+				if (g_strcmp0 (xb_node_get_element (nc), "li") == 0) {
+					g_string_append_printf (str, " %u. %s\n",
+								i + 1,
+								xb_node_get_text (nc));
+				}
+			}
+			g_string_append (str, "\n");
+		}
+
+		n2 = xb_node_get_next (n);
+		g_set_object (&n, n2);
+	}
+
+	/* remove extra newline */
+	if (str->len > 0)
+		g_string_truncate (str, str->len - 1);
+
+	/* success */
+	return g_string_free (g_steal_pointer (&str), FALSE);
+}
+
+static gchar *
+fu_util_time_to_str (guint64 tmp)
+{
+	g_return_val_if_fail (tmp != 0, NULL);
+
+	/* seconds */
+	if (tmp < 60) {
+		/* TRANSLATORS: duration in seconds */
+		return g_strdup_printf (ngettext ("%u second", "%u seconds",
+						  (gint) tmp),
+					(guint) tmp);
+	}
+
+	/* minutes */
+	tmp /= 60;
+	if (tmp < 60) {
+		/* TRANSLATORS: duration in minutes */
+		return g_strdup_printf (ngettext ("%u minute", "%u minutes",
+						  (gint) tmp),
+					(guint) tmp);
+	}
+
+	/* hours */
+	tmp /= 60;
+	if (tmp < 60) {
+		/* TRANSLATORS: duration in minutes */
+		return g_strdup_printf (ngettext ("%u hour", "%u hours",
+						  (gint) tmp),
+					(guint) tmp);
+	}
+
+	/* days */
+	tmp /= 24;
+	/* TRANSLATORS: duration in days! */
+	return g_strdup_printf (ngettext ("%u day", "%u days",
+					  (gint) tmp),
+				(guint) tmp);
+}
+
+gchar *
+fu_util_device_to_string (FwupdDevice *dev, guint idt)
+{
+	FwupdUpdateState state;
+	GPtrArray *guids = fwupd_device_get_guids (dev);
+	GString *str = g_string_new (NULL);
+	const gchar *tmp;
+	const gchar *tmp2;
+	guint64 flags = fwupd_device_get_flags (dev);
+	g_autoptr(GString) flags_str = g_string_new (NULL);
+
+	/* some fields are intentionally not included and are only shown in --verbose */
+	if (g_getenv ("FWUPD_VERBOSE") != NULL) {
+		g_autofree gchar *debug_str = NULL;
+		debug_str = fwupd_device_to_string (dev);
+		g_string_append (str, debug_str);
+		return g_string_free (str, FALSE);
+	}
+
+	/* all devices have a name */
+	fu_common_string_append_kv (str, idt, fwupd_device_get_name (dev), NULL);
+
+	/* TRANSLATORS: ID for hardware, typically a SHA1 sum */
+	fu_common_string_append_kv (str, idt + 1, _("Device ID"),
+				    fwupd_device_get_id (dev));
+
+	/* summary */
+	tmp = fwupd_device_get_summary (dev);
+	if (tmp != NULL) {
+		/* TRANSLATORS: one line summary of device */
+		fu_common_string_append_kv (str, idt + 1, _("Summary"), tmp);
+	}
+
+	/* description */
+	tmp = fwupd_device_get_description (dev);
+	if (tmp != NULL) {
+		g_autofree gchar *desc = NULL;
+		desc = fu_util_convert_description (tmp, NULL);
+		/* TRANSLATORS: multiline description of device */
+		fu_common_string_append_kv (str, idt + 1, _("Description"), desc);
+	}
+
+	/* versions */
+	tmp = fwupd_device_get_version (dev);
+	if (tmp != NULL) {
+		/* TRANSLATORS: version number of current firmware */
+		fu_common_string_append_kv (str, idt + 1, _("Current version"), tmp);
+	}
+	tmp = fwupd_device_get_version_lowest (dev);
+	if (tmp != NULL) {
+		/* TRANSLATORS: smallest version number installable on device */
+		fu_common_string_append_kv (str, idt + 1, _("Minimum Version"), tmp);
+	}
+	tmp = fwupd_device_get_version_bootloader (dev);
+	if (tmp != NULL) {
+		/* TRANSLATORS: firmware version of bootloader */
+		fu_common_string_append_kv (str, idt + 1, _("Bootloader Version"), tmp);
+	}
+
+	/* vendor */
+	tmp = fwupd_device_get_vendor (dev);
+	tmp2 = fwupd_device_get_vendor_id (dev);
+	if (tmp != NULL && tmp2 != NULL) {
+		g_autofree gchar *both = g_strdup_printf ("%s (%s)", tmp, tmp2);
+		/* TRANSLATORS: manufacturer of hardware */
+		fu_common_string_append_kv (str, idt + 1, _("Vendor"), both);
+	} else if (tmp != NULL) {
+		/* TRANSLATORS: manufacturer of hardware */
+		fu_common_string_append_kv (str, idt + 1, _("Vendor"), tmp);
+	} else if (tmp2 != NULL) {
+		/* TRANSLATORS: manufacturer of hardware */
+		fu_common_string_append_kv (str, idt + 1, _("Vendor"), tmp2);
+	}
+
+	/* install duration */
+	if (fwupd_device_get_install_duration (dev) > 0) {
+		g_autofree gchar *time = fu_util_time_to_str (fwupd_device_get_install_duration (dev));
+		/* TRANSLATORS: length of time the update takes to apply */
+		fu_common_string_append_kv (str, idt + 1, _("Install Duration"), time);
+	}
+
+	/* serial # */
+	tmp = fwupd_device_get_serial (dev);
+	if (tmp != NULL) {
+		/* TRANSLATORS: serial number of hardware */
+		fu_common_string_append_kv (str, idt + 1, _("Serial Number"), tmp);
+	}
+
+	/* update state */
+	state = fwupd_device_get_update_state (dev);
+	if (state != FWUPD_UPDATE_STATE_UNKNOWN) {
+		/* TRANSLATORS: hardware state, e.g. "pending" */
+		fu_common_string_append_kv (str, idt + 1, _("Update State"),
+					    fwupd_update_state_to_string (state));
+	}
+	tmp = fwupd_device_get_update_error (dev);
+	if (tmp != NULL) {
+		/* TRANSLATORS: error message from last update attempt */
+		fu_common_string_append_kv (str, idt + 1, _("Update Error"), tmp);
+	}
+	tmp = fwupd_device_get_update_message (dev);
+	if (tmp != NULL) {
+		/* TRANSLATORS: helpful messages from last update */
+		fu_common_string_append_kv (str, idt + 1, _("Update Message"), tmp);
+	}
+
+	for (guint i = 0; i < 64; i++) {
+		if ((flags & ((guint64) 1 << i)) == 0)
+			continue;
+		g_string_append_printf (flags_str, "%s|",
+					fwupd_device_flag_to_string ((guint64) 1 << i));
+	}
+	if (str->len == 0) {
+		/* TRANSLATORS: device properties */
+		fu_common_string_append_kv (flags_str, idt + 1, _("Flags"),
+					    fwupd_device_flag_to_string (0));
+	} else {
+		g_string_truncate (flags_str, flags_str->len - 1);
+		/* TRANSLATORS: device properties */
+		fu_common_string_append_kv (str, idt + 1, _("Flags"), flags_str->str);
+	}
+
+	/* all GUIDs for this hardware */
+	for (guint i = 0; i < guids->len; i++) {
+		tmp = g_ptr_array_index (guids, i);
+		if (i == 0) {
+			/* TRANSLATORS: global ID common to all similar hardware */
+			fu_common_string_append_kv (str, idt + 1, ngettext ("GUID", "GUIDs", guids->len), tmp);
+		} else {
+			fu_common_string_append_kv (str, idt + 1, "", tmp);
+		}
+	}
+	return g_string_free (str, FALSE);
+}
+
+gchar *
+fu_util_release_to_string (FwupdRelease *rel, guint idt)
+{
+	GString *str = g_string_new (NULL);
+	guint64 flags = fwupd_release_get_flags (rel);
+	g_autoptr(GString) flags_str = g_string_new (NULL);
+
+	g_return_val_if_fail (FWUPD_IS_RELEASE (rel), NULL);
+
+	/* TRANSLATORS: version number of new firmware */
+	fu_common_string_append_kv (str, idt, _("Version"),
+				    fwupd_release_get_version (rel));
+
+	if (fwupd_release_get_remote_id (rel) != NULL) {
+		/* TRANSLATORS: the server the file is coming from */
+		fu_common_string_append_kv (str, idt + 1, _("Remote ID"),
+					    fwupd_release_get_remote_id (rel));
+	}
+	if (fwupd_release_get_summary (rel) != NULL) {
+		/* TRANSLATORS: one line summary of device */
+		fu_common_string_append_kv (str, idt + 1, _("Summary"),
+					    fwupd_release_get_summary (rel));
+	}
+	if (fwupd_release_get_description (rel) != NULL) {
+		g_autofree gchar *desc = NULL;
+		desc = fu_util_convert_description (fwupd_release_get_description (rel), NULL);
+		/* TRANSLATORS: multiline description of device */
+		fu_common_string_append_kv (str, idt + 1, _("Description"), desc);
+	}
+	if (fwupd_release_get_license (rel) != NULL) {
+		/* TRANSLATORS: e.g. GPLv2+, Non free etc */
+		fu_common_string_append_kv (str, idt + 1, _("License"),
+					    fwupd_release_get_license (rel));
+	}
+	if (fwupd_release_get_size (rel) != 0) {
+		/* TRANSLATORS: file size of the download */
+		fu_common_string_append_kx (str, idt + 1, _("Size"),
+					    fwupd_release_get_size (rel));
+	}
+	if (fwupd_release_get_details_url (rel) != NULL) {
+		/* TRANSLATORS: more details about the update link */
+		fu_common_string_append_kv (str, idt + 1, _("Details"),
+					    fwupd_release_get_details_url (rel));
+	}
+	if (fwupd_release_get_source_url (rel) != NULL) {
+		/* TRANSLATORS: source (as in code) link */
+		fu_common_string_append_kv (str, idt + 1, _("Source"),
+					    fwupd_release_get_source_url (rel));
+	}
+	if (fwupd_release_get_vendor (rel) != NULL) {
+		/* TRANSLATORS: manufacturer of hardware */
+		fu_common_string_append_kv (str, idt + 1, _("Vendor"),
+					    fwupd_release_get_vendor (rel));
+	}
+	if (fwupd_release_get_install_duration (rel) != 0) {
+		g_autofree gchar *tmp = fu_util_time_to_str (fwupd_release_get_install_duration (rel));
+		/* TRANSLATORS: length of time the update takes to apply */
+		fu_common_string_append_kv (str, idt + 1, _("Duration"), tmp);
+	}
+	if (fwupd_release_get_update_message (rel) != NULL) {
+		/* TRANSLATORS: helpful messages for the update */
+		fu_common_string_append_kv (str, idt + 1, _("Update Message"),
+					    fwupd_release_get_update_message (rel));
+	}
+
+	for (guint i = 0; i < 64; i++) {
+		if ((flags & ((guint64) 1 << i)) == 0)
+			continue;
+		g_string_append_printf (flags_str, "%s|",
+					fwupd_release_flag_to_string ((guint64) 1 << i));
+	}
+	if (flags_str->len == 0) {
+		/* TRANSLATORS: release properties */
+		fu_common_string_append_kv (str, idt + 1, _("Flags"), fwupd_release_flag_to_string (0));
+	} else {
+		g_string_truncate (flags_str, flags_str->len - 1);
+		/* TRANSLATORS: release properties */
+		fu_common_string_append_kv (str, idt + 1, _("Flags"), flags_str->str);
+	}
+
+	return g_string_free (str, FALSE);
 }

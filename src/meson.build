@@ -153,6 +153,7 @@ fwupdagent = executable(
     giounix,
     gudev,
     gusb,
+    libxmlb,
     soup,
   ],
   link_with : [

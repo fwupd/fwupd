@@ -306,60 +306,6 @@ fu_util_perhaps_show_unreported (FuUtilPrivate *priv, GError **error)
 	return fu_util_report_history (priv, NULL, error);
 }
 
-static gchar *
-fu_util_convert_appstream_description (const gchar *xml, GError **error)
-{
-	g_autoptr(GString) str = g_string_new (NULL);
-	g_autoptr(XbNode) n = NULL;
-	g_autoptr(XbSilo) silo = NULL;
-
-	/* parse XML */
-	silo = xb_silo_new_from_xml (xml, error);
-	if (silo == NULL)
-		return NULL;
-
-	n = xb_silo_get_root (silo);
-	while (n != NULL) {
-		g_autoptr(XbNode) n2 = NULL;
-
-		/* support <p>, <ul>, <ol> and <li>, ignore all else */
-		if (g_strcmp0 (xb_node_get_element (n), "p") == 0) {
-			g_string_append_printf (str, "%s\n\n", xb_node_get_text (n));
-		} else if (g_strcmp0 (xb_node_get_element (n), "ul") == 0) {
-			g_autoptr(GPtrArray) children = xb_node_get_children (n);
-			for (guint i = 0; i < children->len; i++) {
-				XbNode *nc = g_ptr_array_index (children, i);
-				if (g_strcmp0 (xb_node_get_element (nc), "li") == 0) {
-					g_string_append_printf (str, " • %s\n",
-								xb_node_get_text (nc));
-				}
-			}
-			g_string_append (str, "\n");
-		} else if (g_strcmp0 (xb_node_get_element (n), "ol") == 0) {
-			g_autoptr(GPtrArray) children = xb_node_get_children (n);
-			for (guint i = 0; i < children->len; i++) {
-				XbNode *nc = g_ptr_array_index (children, i);
-				if (g_strcmp0 (xb_node_get_element (nc), "li") == 0) {
-					g_string_append_printf (str, " %u. %s\n",
-								i + 1,
-								xb_node_get_text (nc));
-				}
-			}
-			g_string_append (str, "\n");
-		}
-
-		n2 = xb_node_get_next (n);
-		g_set_object (&n, n2);
-	}
-
-	/* remove extra newline */
-	if (str->len > 0)
-		g_string_truncate (str, str->len - 1);
-
-	/* success */
-	return g_string_free (g_steal_pointer (&str), FALSE);
-}
-
 static gboolean
 fu_util_modify_remote_warning (FuUtilPrivate *priv, FwupdRemote *remote, GError **error)
 {
@@ -370,7 +316,7 @@ fu_util_modify_remote_warning (FuUtilPrivate *priv, FwupdRemote *remote, GError 
 	warning_markup = fwupd_remote_get_agreement (remote);
 	if (warning_markup == NULL)
 		return TRUE;
-	warning_plain = fu_util_convert_appstream_description (warning_markup, error);
+	warning_plain = fu_util_convert_description (warning_markup, error);
 	if (warning_plain == NULL)
 		return FALSE;
 
@@ -483,7 +429,7 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 			if (!fu_util_is_interesting_device (dev))
 				continue;
 		}
-		tmp = fwupd_device_to_string (dev);
+		tmp = fu_util_device_to_string (dev, 0);
 		g_print ("%s\n", tmp);
 	}
 
@@ -587,7 +533,7 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_autofree gchar *tmp = NULL;
 		if (!fu_util_filter_device (priv, dev))
 			continue;
-		tmp = fwupd_device_to_string (dev);
+		tmp = fu_util_device_to_string (dev, 0);
 		g_print ("%s\n", tmp);
 	}
 	return TRUE;
@@ -885,7 +831,7 @@ fu_util_get_history (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_autofree gchar *str = NULL;
 		if (!fu_util_filter_device (priv, dev))
 			continue;
-		str = fwupd_device_to_string (dev);
+		str = fu_util_device_to_string (dev, 0);
 		g_print ("%s\n", str);
 	}
 
@@ -1269,7 +1215,7 @@ fu_util_get_results (FuUtilPrivate *priv, gchar **values, GError **error)
 	rel = fwupd_client_get_results (priv->client, fwupd_device_get_id (dev), NULL, error);
 	if (rel == NULL)
 		return FALSE;
-	tmp = fwupd_device_to_string (rel);
+	tmp = fu_util_device_to_string (rel, 0);
 	g_print ("%s", tmp);
 	return TRUE;
 }
@@ -1291,57 +1237,8 @@ fu_util_get_releases (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_print ("%s:\n", fwupd_device_get_name (dev));
 	for (guint i = 0; i < rels->len; i++) {
 		FwupdRelease *rel = g_ptr_array_index (rels, i);
-		FwupdReleaseFlags flags = fwupd_release_get_flags (rel);
-		GPtrArray *checksums;
-		const gchar *tmp;
-
-		/* TRANSLATORS: section header for release version number */
-		fu_util_print_data (_("Version"), fwupd_release_get_version (rel));
-
-		/* TRANSLATORS: section header for the release name */
-		fu_util_print_data (_("Name"), fu_util_release_get_name (rel));
-
-		/* TRANSLATORS: section header for the release one line summary */
-		fu_util_print_data (_("Summary"), fwupd_release_get_summary (rel));
-
-		/* TRANSLATORS: section header for the remote the file is coming from */
-		fu_util_print_data (_("Remote"), fwupd_release_get_remote_id (rel));
-
-		/* TRANSLATORS: section header for firmware URI */
-		fu_util_print_data (_("URI"), fwupd_release_get_uri (rel));
-		tmp = fwupd_release_get_description (rel);
-		if (tmp != NULL) {
-			g_autofree gchar *desc = NULL;
-			desc = fu_util_convert_appstream_description (tmp, NULL);
-			/* TRANSLATORS: section header for firmware description */
-			fu_util_print_data (_("Description"), desc);
-		}
-		checksums = fwupd_release_get_checksums (rel);
-		for (guint j = 0; j < checksums->len; j++) {
-			const gchar *checksum = g_ptr_array_index (checksums, j);
-			g_autofree gchar *checksum_display = NULL;
-			checksum_display = fwupd_checksum_format_for_display (checksum);
-			/* TRANSLATORS: section header for firmware checksum */
-			fu_util_print_data (_("Checksum"), checksum_display);
-		}
-
-		/* show flags if set */
-		if (flags != FWUPD_RELEASE_FLAG_NONE) {
-			g_autoptr(GString) str = g_string_new ("");
-			for (guint j = 0; j < 64; j++) {
-				if ((flags & ((guint64) 1 << j)) == 0)
-					continue;
-				g_string_append_printf (str, "%s,",
-							fwupd_release_flag_to_string ((guint64) 1 << j));
-			}
-			if (str->len == 0) {
-				g_string_append (str, fwupd_release_flag_to_string (0));
-			} else {
-				g_string_truncate (str, str->len - 1);
-			}
-			/* TRANSLATORS: section header for firmware flags */
-			fu_util_print_data (_("Flags"), str->str);
-		}
+		g_autofree gchar *tmp = fu_util_release_to_string (rel, 0);
+		g_print ("%s", tmp);
 
 		/* new line between all but last entries */
 		if (i != rels->len - 1)
@@ -1389,7 +1286,7 @@ fu_util_prompt_for_release (FuUtilPrivate *priv, GPtrArray *rels, GError **error
 		}
 
 		/* remove markup, and fall back if we fail */
-		desc = fu_util_convert_appstream_description (desc_tmp, NULL);
+		desc = fu_util_convert_description (desc_tmp, NULL);
 		if (desc == NULL)
 			desc = g_strdup (desc_tmp);
 		g_print ("%u.\t%s (%s)\n", i + 1, fwupd_release_get_version (rel), desc);
@@ -1526,45 +1423,6 @@ fu_util_perhaps_refresh_remotes (FuUtilPrivate *priv, GError **error)
 	return fu_util_download_metadata (priv, error);
 }
 
-static gchar *
-fu_util_time_to_str (guint64 tmp)
-{
-	g_return_val_if_fail (tmp != 0, NULL);
-
-	/* seconds */
-	if (tmp < 60) {
-		/* TRANSLATORS: duration in seconds */
-		return g_strdup_printf (ngettext ("%u second", "%u seconds",
-						  (gint) tmp),
-					(guint) tmp);
-	}
-
-	/* minutes */
-	tmp /= 60;
-	if (tmp < 60) {
-		/* TRANSLATORS: duration in minutes */
-		return g_strdup_printf (ngettext ("%u minute", "%u minutes",
-						  (gint) tmp),
-					(guint) tmp);
-	}
-
-	/* hours */
-	tmp /= 60;
-	if (tmp < 60) {
-		/* TRANSLATORS: duration in minutes */
-		return g_strdup_printf (ngettext ("%u hour", "%u hours",
-						  (gint) tmp),
-					(guint) tmp);
-	}
-
-	/* days */
-	tmp /= 24;
-	/* TRANSLATORS: duration in days! */
-	return g_strdup_printf (ngettext ("%u day", "%u days",
-					  (gint) tmp),
-				(guint) tmp);
-}
-
 static gboolean
 fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 {
@@ -1580,8 +1438,7 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
-		GPtrArray *guids;
-		const gchar *tmp;
+		g_autofree gchar *tmp = NULL;
 		g_autoptr(GPtrArray) rels = NULL;
 		g_autoptr(GError) error_local = NULL;
 
@@ -1600,74 +1457,16 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 			continue;
 		}
 
-		/* TRANSLATORS: first replacement is device name */
-		g_print (_("%s has firmware updates:"), fwupd_device_get_name (dev));
-		g_print ("\n");
-
-		/* TRANSLATORS: ID for hardware, typically a SHA1 sum */
-		fu_util_print_data (_("Device ID"), fwupd_device_get_id (dev));
-
-		/* TRANSLATORS: a GUID for the hardware */
-		guids = fwupd_device_get_guids (dev);
-		for (guint j = 0; j < guids->len; j++) {
-			tmp = g_ptr_array_index (guids, j);
-			fu_util_print_data (_("GUID"), tmp);
-		}
+		/* TRANSLATORS: list of devices */
+		g_print ("%s\n", _("Firmware updates:"));
+		tmp = fu_util_device_to_string (dev, 0);
+		g_print ("%s", tmp);
 
 		/* print all releases */
 		for (guint j = 0; j < rels->len; j++) {
 			FwupdRelease *rel = g_ptr_array_index (rels, j);
-			guint64 duration;
-			GPtrArray *checksums;
-
-			/* TRANSLATORS: Appstream ID for the hardware type */
-			fu_util_print_data (_("ID"), fwupd_release_get_appstream_id (rel));
-
-			/* TRANSLATORS: section header for firmware version */
-			fu_util_print_data (_("Update Version"),
-					    fwupd_release_get_version (rel));
-
-			/* TRANSLATORS: section header for the release name */
-			fu_util_print_data (_("Update Name"), fu_util_release_get_name (rel));
-
-			/* TRANSLATORS: section header for the release one line summary */
-			fu_util_print_data (_("Update Summary"), fwupd_release_get_summary (rel));
-
-			/* TRANSLATORS: section header for remote ID, e.g. lvfs-testing */
-			fu_util_print_data (_("Update Remote ID"),
-					    fwupd_release_get_remote_id (rel));
-
-			/* optional approximate duration */
-			duration = fwupd_release_get_install_duration (rel);
-			if (duration > 0) {
-				g_autofree gchar *str = fu_util_time_to_str (duration);
-				/* TRANSLATORS: section header for the amount
-				 * of time it takes to install the update */
-				fu_util_print_data (_("Update Duration"), str);
-			}
-
-			checksums = fwupd_release_get_checksums (rel);
-			for (guint k = 0; k < checksums->len; k++) {
-				const gchar *checksum = g_ptr_array_index (checksums, k);
-				g_autofree gchar *checksum_display = NULL;
-				checksum_display = fwupd_checksum_format_for_display (checksum);
-				/* TRANSLATORS: section header for firmware checksum */
-				fu_util_print_data (_("Update Checksum"), checksum_display);
-			}
-
-			/* TRANSLATORS: section header for firmware remote http:// */
-			fu_util_print_data (_("Update Location"), fwupd_release_get_uri (rel));
-
-			/* convert XML -> text */
-			tmp = fwupd_release_get_description (rel);
-			if (tmp != NULL) {
-				g_autofree gchar *md = NULL;
-				md = fu_util_convert_appstream_description (tmp, NULL);
-				if (md != NULL) {
-					/* TRANSLATORS: section header for long firmware desc */
-					fu_util_print_data (_("Update Description"), md);
-				}
-			}
+			g_autofree gchar *tmp2 = fu_util_release_to_string (rel, 1);
+			g_print ("%s\n", tmp2);
 		}
 	}
 
