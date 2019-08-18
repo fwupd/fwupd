@@ -1126,9 +1126,12 @@ fu_common_string_append_kv (GString *str, guint idt, const gchar *key, const gch
 		return;
 	for (gsize i = 0; i < idt; i++)
 		g_string_append (str, "  ");
-	g_string_append_printf (str, "%s:", key);
+	if (key[0] != '\0') {
+		g_string_append_printf (str, "%s:", key);
+		idt++;
+	}
 	if (value != NULL) {
-		for (gsize i = strlen (key) + idt + 1; i < align; i++)
+		for (gsize i = strlen (key) + idt; i < align; i++)
 			g_string_append (str, " ");
 		g_string_append (str, value);
 	}

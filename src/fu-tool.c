@@ -326,7 +326,7 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 			g_printerr ("%s\n", error_local->message);
 			continue;
 		}
-		g_print ("%s", fwupd_device_to_string (dev));
+		g_print ("%s", fu_util_device_to_string (dev, 0));
 		g_print (" Release information:\n");
 		/* print all releases */
 		for (guint j = 0; j < rels->len; j++) {
@@ -383,7 +383,7 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_autofree gchar *tmp = NULL;
 		if (!fu_util_filter_device (priv, dev))
 			continue;
-		tmp = fwupd_device_to_string (dev);
+		tmp = fu_util_device_to_string (dev, 0);
 		g_print ("%s\n", tmp);
 	}
 	return TRUE;
@@ -412,7 +412,7 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 		if (!fu_util_filter_device (priv, dev))
 			continue;
 		if (priv->show_all_devices || fu_util_is_interesting_device (dev)) {
-			g_autofree gchar *tmp = fwupd_device_to_string (dev);
+			g_autofree gchar *tmp = fu_util_device_to_string (dev, 0);
 			g_print ("%s\n", tmp);
 		}
 	}
@@ -1280,7 +1280,7 @@ fu_util_device_added_cb (FwupdClient *client,
 			 FwupdDevice *device,
 			 gpointer user_data)
 {
-	g_autofree gchar *tmp = fwupd_device_to_string (device);
+	g_autofree gchar *tmp = fu_util_device_to_string (device, 0);
 	/* TRANSLATORS: this is when a device is hotplugged */
 	g_print ("%s\n%s", _("Device added:"), tmp);
 }
@@ -1290,7 +1290,7 @@ fu_util_device_removed_cb (FwupdClient *client,
 			   FwupdDevice *device,
 			   gpointer user_data)
 {
-	g_autofree gchar *tmp = fwupd_device_to_string (device);
+	g_autofree gchar *tmp = fu_util_device_to_string (device, 0);
 	/* TRANSLATORS: this is when a device is hotplugged */
 	g_print ("%s\n%s", _("Device removed:"), tmp);
 }
@@ -1300,7 +1300,7 @@ fu_util_device_changed_cb (FwupdClient *client,
 			   FwupdDevice *device,
 			   gpointer user_data)
 {
-	g_autofree gchar *tmp = fwupd_device_to_string (device);
+	g_autofree gchar *tmp = fu_util_device_to_string (device, 0);
 	/* TRANSLATORS: this is when a device has been updated */
 	g_print ("%s\n%s", _("Device changed:"), tmp);
 }
@@ -1387,7 +1387,7 @@ fu_util_get_history (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_autofree gchar *str = NULL;
 		if (!fu_util_filter_device (priv, dev))
 			continue;
-		str = fwupd_device_to_string (dev);
+		str = fu_util_device_to_string (dev, 0);
 		g_print ("%s\n", str);
 	}
 
