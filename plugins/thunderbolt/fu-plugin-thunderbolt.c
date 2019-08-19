@@ -337,6 +337,7 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 						     is_native ? "-native" : "");
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 		} else {
+			device_id = g_strdup ("TBT-fixed");
 			fu_device_set_update_error (dev, "Missing non-active nvmem");
 		}
 	} else {
@@ -347,6 +348,8 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 
 	fu_device_set_metadata (dev, "sysfs-path", devpath);
 	name = g_udev_device_get_sysfs_attr (device, "device_name");
+	if (name == NULL && is_host)
+		name = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_PRODUCT_NAME);
 	if (name != NULL) {
 		if (is_host) {
 			g_autofree gchar *pretty_name = NULL;
