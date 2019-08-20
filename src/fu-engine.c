@@ -2362,6 +2362,16 @@ fu_engine_load_metadata_store (FuEngine *self, FuEngineLoadFlags flags, GError *
 	return TRUE;
 }
 
+static void
+fu_engine_config_changed_cb (FuConfig *config, FuEngine *self)
+{
+	g_autoptr(GError) error_local = NULL;
+	if (!fu_engine_load_metadata_store (self, FU_ENGINE_LOAD_FLAG_NONE,
+					    &error_local))
+		g_warning ("Failed to reload metadata store: %s",
+			   error_local->message);
+}
+
 static FuKeyringResult *
 fu_engine_get_existing_keyring_result (FuEngine *self,
 				       FuKeyring *kr,
@@ -4669,6 +4679,10 @@ fu_engine_init (FuEngine *self)
 	self->runtime_versions = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	self->compile_versions = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	self->approved_firmware = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
+
+	g_signal_connect (self->config, "changed",
+			  G_CALLBACK (fu_engine_config_changed_cb),
+			  self);
 
 	g_signal_connect (self->idle, "notify::status",
 			  G_CALLBACK (fu_engine_idle_status_notify_cb), self);
