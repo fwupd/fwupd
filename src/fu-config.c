@@ -20,6 +20,14 @@
 #include "fwupd-error.h"
 #include "fwupd-remote-private.h"
 
+
+enum {
+	SIGNAL_CHANGED,
+	SIGNAL_LAST
+};
+
+static guint signals[SIGNAL_LAST] = { 0 };
+
 static void fu_config_finalize	 (GObject *obj);
 
 struct _FuConfig
@@ -39,6 +47,13 @@ struct _FuConfig
 };
 
 G_DEFINE_TYPE (FuConfig, fu_config, G_TYPE_OBJECT)
+
+static void
+fu_config_emit_changed (FuConfig *self)
+{
+	g_debug ("::configuration changed");
+	g_signal_emit (self, signals[SIGNAL_CHANGED], 0);
+}
 
 static GPtrArray *
 fu_config_get_config_paths (void)
@@ -80,6 +95,7 @@ fu_config_monitor_changed_cb (GFileMonitor *monitor,
 	g_debug ("%s changed, reloading all configs", filename);
 	if (!fu_config_load (self, FU_CONFIG_LOAD_FLAG_NONE, &error))
 		g_warning ("failed to rescan config: %s", error->message);
+	fu_config_emit_changed (self);
 }
 
 static guint64
@@ -603,6 +619,12 @@ fu_config_class_init (FuConfigClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	object_class->finalize = fu_config_finalize;
+
+	signals[SIGNAL_CHANGED] =
+		g_signal_new ("changed",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      0, NULL, NULL, g_cclosure_marshal_VOID__VOID,
+			      G_TYPE_NONE, 0);
 }
 
 static void
