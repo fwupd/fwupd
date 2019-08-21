@@ -51,4 +51,4 @@ means the hardware keeps working while probing, and also allows us to detect
 paired devices.
 
 [1] https://www.mousejack.com/
-[2] https://pwr.github.io/Solaar/
+[2] https://pwr-Solaar.github.io/Solaar/
