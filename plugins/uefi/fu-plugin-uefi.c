@@ -549,6 +549,13 @@ fu_plugin_uefi_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GError **er
 		if (name != NULL)
 			fu_device_set_name (FU_DEVICE (dev), name);
 	}
+	/* set fallback vendor if nothing else is set */
+	if (fu_device_get_vendor (FU_DEVICE (dev)) == NULL &&
+	    fu_uefi_device_get_kind (dev) == FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE) {
+		const gchar *vendor = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER);
+		if (vendor != NULL)
+			fu_device_set_vendor (FU_DEVICE (dev), vendor);
+	}
 
 	/* success */
 	return TRUE;
