@@ -37,7 +37,7 @@ Name:      fwupd
 Version:   #VERSION#
 Release:   0.#BUILD#%{?alphatag}%{?dist}
 License:   LGPLv2+
-URL:       https://github.com/hughsie/fwupd
+URL:       https://github.com/fwupd/fwupd
 Source0:   http://people.freedesktop.org/~hughsient/releases/%{name}-%{version}.tar.xz
 
 BuildRequires: gettext

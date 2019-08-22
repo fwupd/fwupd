@@ -1,4 +1,4 @@
 [wrap-git]
 directory = flashrom
-url = https://github.com/hughsie/flashrom.git
+url = https://github.com/fwupd/flashrom.git
 revision = wip/hughsie/fwupd

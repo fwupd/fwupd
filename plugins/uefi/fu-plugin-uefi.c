@@ -392,7 +392,7 @@ fu_plugin_update (FuPlugin *plugin,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "%s only has %" G_GUINT32_FORMAT " flashes left -- "
-				     "see https://github.com/hughsie/fwupd/wiki/Dell-TPM:-flashes-left for more information.",
+				     "see https://github.com/fwupd/fwupd/wiki/Dell-TPM:-flashes-left for more information.",
 				     fu_device_get_name (device), flashes_left);
 			return FALSE;
 		}
@@ -677,7 +677,7 @@ fu_plugin_uefi_ensure_esp_path (FuPlugin *plugin, GError **error)
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_FILENAME,
 				     "Unable to determine EFI system partition location, "
-				     "See https://github.com/hughsie/fwupd/wiki/Determining-EFI-system-partition-location");
+				     "See https://github.com/fwupd/fwupd/wiki/Determining-EFI-system-partition-location");
 		return FALSE;
 	}
 
