@@ -2075,7 +2075,7 @@ fu_util_check_polkit_actions (GError **error)
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_AUTH_FAILED,
-				     "PolicyKit files are missing, see https://github.com/hughsie/fwupd/wiki/PolicyKit-files-are-missing");
+				     "PolicyKit files are missing, see https://github.com/fwupd/fwupd/wiki/PolicyKit-files-are-missing");
 		return FALSE;
 	}
 

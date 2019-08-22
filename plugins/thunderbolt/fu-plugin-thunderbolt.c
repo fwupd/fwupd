@@ -688,7 +688,7 @@ fu_plugin_update (FuPlugin *plugin,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
 				     "%s. "
-				     "See https://github.com/hughsie/fwupd/wiki/Thunderbolt:-Validation-failed-or-unknown-device for more information.",
+				     "See https://github.com/fwupd/fwupd/wiki/Thunderbolt:-Validation-failed-or-unknown-device for more information.",
 				     msg);
 			return FALSE;
 		}

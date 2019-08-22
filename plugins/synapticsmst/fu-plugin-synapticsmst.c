@@ -48,7 +48,7 @@ fu_synapticsmst_check_supported_system (FuPlugin *plugin, GError **error)
 		return TRUE;
 	}
 
-	/* See https://github.com/hughsie/fwupd/issues/1121 for more details */
+	/* See https://github.com/fwupd/fwupd/issues/1121 for more details */
 	if (!fu_synapticsmst_check_amdgpu_safe (error))
 		return FALSE;
 

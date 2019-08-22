@@ -3,4 +3,4 @@
 
 version=3
 opts=filenamemangle=s/.+\/v?(\d\S*)\.tar\.gz/fwupd-$1\.tar\.gz/ \
-https://github.com/hughsie/fwupd/tags .*/v?(\d\S*)\.tar\.gz
+https://github.com/fwupd/fwupd/tags .*/v?(\d\S*)\.tar\.gz
