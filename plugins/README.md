@@ -7,6 +7,9 @@ and writing different firmware) as well as ways quirk their behavior.
 You can find more information about the architecture in the developers section
 of the [fwupd website](https://fwupd.org).
 
+You can use the [fwupd developer documentation](https://fwupd.github.io) to assist
+with APIs available to write the plugin.
+
 If you have a firmware specification and would like to see support
 in this project, please file an issue and share the spec.  Patches are also
 welcome.
