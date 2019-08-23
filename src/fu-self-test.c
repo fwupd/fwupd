@@ -567,10 +567,13 @@ fu_engine_requirements_other_device_func (void)
 static void
 fu_engine_device_priority_func (void)
 {
+	FuDevice *device;
 	g_autoptr(FuDevice) device1 = fu_device_new ();
 	g_autoptr(FuDevice) device2 = fu_device_new ();
 	g_autoptr(FuDevice) device3 = fu_device_new ();
-	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuDevice) device4 = fu_device_new ();
+	g_autoptr(FuDevice) device5 = fu_device_new ();
+	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new ();
@@ -589,6 +592,7 @@ fu_engine_device_priority_func (void)
 	fu_device_set_priority (device2, 1);
 	fu_device_set_plugin (device2, "redfish");
 	fu_device_add_instance_id (device2, "GUID1");
+	fu_device_set_name (device2, "123");
 	fu_device_convert_instance_ids (device2);
 	fu_engine_add_device (engine, device2);
 	fu_device_set_id (device3, "id3");
@@ -614,6 +618,37 @@ fu_engine_device_priority_func (void)
 	device = fu_engine_get_device (engine, "c48feddbbcfee514f530ce8f7f2dccd98b6cc150", &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert_null (device);
+	g_clear_error (&error);
+
+	/* add extra devices that should sort */
+	fu_device_set_id (device4, "id4");
+	fu_device_set_priority (device4, 0);
+	fu_device_set_plugin (device4, "redfish");
+	fu_device_add_instance_id (device4, "GUID4");
+	fu_device_set_name (device4, "BCD");
+	fu_device_convert_instance_ids (device4);
+	fu_engine_add_device (engine, device4);
+	fu_device_set_id (device5, "id5");
+	fu_device_set_priority (device5, 0);
+	fu_device_set_plugin (device5, "uefi");
+	fu_device_add_instance_id (device5, "GUID5");
+	fu_device_set_name (device5, "ABC");
+	fu_device_convert_instance_ids (device5);
+	fu_engine_add_device (engine, device5);
+
+	/* make sure the devices are all sorted properly */
+	devices = fu_engine_get_devices (engine, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (devices);
+	g_assert_cmpint (devices->len, ==, 3);
+
+	/* first should be top priority device */
+	device = g_ptr_array_index (devices, 0);
+	g_assert_cmpstr (fu_device_get_name (device), ==, "123");
+	device = g_ptr_array_index (devices, 1);
+	g_assert_cmpstr (fu_device_get_name (device), ==, "ABC");
+	device = g_ptr_array_index (devices, 2);
+	g_assert_cmpstr (fu_device_get_name (device), ==, "BCD");
 }
 
 static void
