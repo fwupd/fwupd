@@ -15,7 +15,7 @@ in this project, please file an issue and share the spec.  Patches are also
 welcome.
 
 We will not accept plugins that upgrade hardware using a proprietary Linux
-executable, library, or DBus interface.
+executable, proprietary UEFI executable, proprietary library, or DBus interface.
 
 Plugin interaction
 ------------------

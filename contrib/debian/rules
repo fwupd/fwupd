@@ -48,7 +48,7 @@ override_dh_auto_configure:
 	else \
 		export FLASHROM="-Dplugin_flashrom=false"; \
 	fi; \
-	dh_auto_configure -- $$UEFI $$DELL $$FLASHROM $$CI -Dplugin_dummy=true --libexecdir=/usr/lib
+	dh_auto_configure -- $$UEFI $$DELL $$FLASHROM $$CI -Dplugin_dummy=true -Dgtkdoc=true --libexecdir=/usr/lib
 
 override_dh_install:
 	find debian/tmp/usr -type f -name "*a" -print | xargs rm -f
