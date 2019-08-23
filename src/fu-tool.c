@@ -389,10 +389,28 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+static void
+fu_util_build_device_tree (FuUtilPrivate *priv, GNode *root, GPtrArray *devs, FuDevice *dev)
+{
+	for (guint i = 0; i < devs->len; i++) {
+		FuDevice *dev_tmp = g_ptr_array_index (devs, i);
+		if (!fu_util_filter_device (priv, FWUPD_DEVICE (dev_tmp)))
+			continue;
+		if (!priv->show_all_devices &&
+		    !fu_util_is_interesting_device (FWUPD_DEVICE (dev_tmp)))
+			continue;
+		if (fu_device_get_parent (dev_tmp) == dev) {
+			GNode *child = g_node_append_data (root, dev_tmp);
+			fu_util_build_device_tree (priv, child, devs, dev_tmp);
+		}
+	}
+}
+
 static gboolean
 fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devs = NULL;
+	g_autoptr(GNode) root = g_node_new (NULL);
 
 	/* load engine */
 	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
@@ -407,15 +425,11 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_print ("%s\n", _("No hardware detected with firmware update capability"));
 		return TRUE;
 	}
-	for (guint i = 0; i < devs->len; i++) {
-		FwupdDevice *dev = g_ptr_array_index (devs, i);
-		if (!fu_util_filter_device (priv, dev))
-			continue;
-		if (priv->show_all_devices || fu_util_is_interesting_device (dev)) {
-			g_autofree gchar *tmp = fu_util_device_to_string (dev, NULL, NULL);
-			g_print ("%s\n", tmp);
-		}
-	}
+
+	fu_util_build_device_tree (priv, root, devs, NULL);
+	g_node_traverse (root, G_PRE_ORDER, G_TRAVERSE_ALL, -1,
+			 fu_util_print_device_tree, priv);
+
 
 	/* save the device state for other applications to see */
 	if (!fu_util_save_current_state (priv, error))
@@ -440,51 +454,6 @@ fu_util_get_device_flags (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_string_append (str, tmp);
 	}
 	g_print ("%s\n", str->str);
-
-	return TRUE;
-}
-
-static void
-fu_util_build_device_tree (FuUtilPrivate *priv, GNode *root, GPtrArray *devs, FuDevice *dev)
-{
-	for (guint i = 0; i < devs->len; i++) {
-		FuDevice *dev_tmp = g_ptr_array_index (devs, i);
-		if (!fu_util_filter_device (priv, FWUPD_DEVICE (dev_tmp)))
-			continue;
-		if (!priv->show_all_devices &&
-		    !fu_util_is_interesting_device (FWUPD_DEVICE (dev_tmp)))
-			continue;
-		if (fu_device_get_parent (dev_tmp) == dev) {
-			GNode *child = g_node_append_data (root, dev_tmp);
-			fu_util_build_device_tree (priv, child, devs, dev_tmp);
-		}
-	}
-}
-
-static gboolean
-fu_util_get_topology (FuUtilPrivate *priv, gchar **values, GError **error)
-{
-	g_autoptr(GNode) root = g_node_new (NULL);
-	g_autoptr(GPtrArray) devs = NULL;
-
-	/* load engine */
-	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
-		return FALSE;
-
-	/* print */
-	devs = fu_engine_get_devices (priv->engine, error);
-	if (devs == NULL)
-		return FALSE;
-
-	/* print */
-	if (devs->len == 0) {
-		/* TRANSLATORS: nothing attached that can be upgraded */
-		g_print ("%s\n", _("No hardware detected with firmware update capability"));
-		return TRUE;
-	}
-	fu_util_build_device_tree (priv, root, devs, NULL);
-	g_node_traverse (root, G_PRE_ORDER, G_TRAVERSE_ALL, -1,
-			 fu_util_print_device_tree, priv);
 
 	return TRUE;
 }
@@ -1500,7 +1469,7 @@ main (int argc, char *argv[])
 		     _("Gets the list of updates for connected hardware"),
 		     fu_util_get_updates);
 	fu_util_cmd_array_add (cmd_array,
-		     "get-devices",
+		     "get-devices,get-topology",
 		     NULL,
 		     /* TRANSLATORS: command description */
 		     _("Get all devices that support firmware updates"),
@@ -1511,12 +1480,6 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Get all device flags supported by fwupd"),
 		     fu_util_get_device_flags);
-	fu_util_cmd_array_add (cmd_array,
-		     "get-topology",
-		     NULL,
-		     /* TRANSLATORS: command description */
-		     _("Get all devices according to the system topology"),
-		     fu_util_get_topology);
 	fu_util_cmd_array_add (cmd_array,
 		     "watch",
 		     NULL,
