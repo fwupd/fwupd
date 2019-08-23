@@ -70,7 +70,8 @@ gboolean	 fu_util_parse_filter_flags	(const gchar *filter,
 gchar		*fu_util_convert_description	(const gchar	*xml,
 						 GError		**error);
 gchar		*fu_util_device_to_string	(FwupdDevice	*dev,
-						 guint		 idt);
+						 const gchar *name_prefix,
+						 const gchar *details_prefix);
 gchar		*fu_util_release_to_string	(FwupdRelease	*rel,
 						 guint		 idt);
 

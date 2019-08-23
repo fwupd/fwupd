@@ -431,7 +431,7 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 			if (!fu_util_is_interesting_device (dev))
 				continue;
 		}
-		tmp = fu_util_device_to_string (dev, 0);
+		tmp = fu_util_device_to_string (dev, NULL, NULL);
 		g_print ("%s\n", tmp);
 	}
 
@@ -535,7 +535,7 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_autofree gchar *tmp = NULL;
 		if (!fu_util_filter_device (priv, dev))
 			continue;
-		tmp = fu_util_device_to_string (dev, 0);
+		tmp = fu_util_device_to_string (dev, NULL, NULL);
 		g_print ("%s\n", tmp);
 	}
 	return TRUE;
@@ -833,7 +833,7 @@ fu_util_get_history (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_autofree gchar *str = NULL;
 		if (!fu_util_filter_device (priv, dev))
 			continue;
-		str = fu_util_device_to_string (dev, 0);
+		str = fu_util_device_to_string (dev, NULL, NULL);
 		g_print ("%s\n", str);
 	}
 
@@ -1217,7 +1217,7 @@ fu_util_get_results (FuUtilPrivate *priv, gchar **values, GError **error)
 	rel = fwupd_client_get_results (priv->client, fwupd_device_get_id (dev), NULL, error);
 	if (rel == NULL)
 		return FALSE;
-	tmp = fu_util_device_to_string (rel, 0);
+	tmp = fu_util_device_to_string (rel, NULL, NULL);
 	g_print ("%s", tmp);
 	return TRUE;
 }
@@ -1463,7 +1463,7 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 
 		/* TRANSLATORS: list of devices */
 		g_print ("%s\n", _("Firmware updates:"));
-		tmp = fu_util_device_to_string (dev, 0);
+		tmp = fu_util_device_to_string (dev, NULL, NULL);
 		g_print ("%s", tmp);
 
 		/* print all releases */
