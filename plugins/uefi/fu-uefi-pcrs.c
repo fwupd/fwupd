@@ -61,6 +61,7 @@ fu_uefi_pcrs_parse_line (const gchar *line, gpointer user_data)
 	/* parse hash */
 	str = g_string_new (split[1]);
 	fu_common_string_replace (str, " ", "");
+	fu_common_string_replace (str, "0x", "");
 	if ((str->len != 40 && str->len != 64) || !_g_string_isxdigit (str)) {
 		g_debug ("not SHA-1 or SHA-256, skipping: %s", split[1]);
 		return;
@@ -144,10 +145,14 @@ fu_uefi_pcrs_setup (FuUefiPcrs *self, GError **error)
 	} else {
 		g_autofree gchar *argv0 = NULL;
 
-		/* old name, then new name */
+		/* tpm2-tools 2 tool name */
 		argv0 = fu_common_find_program_in_path ("tpm2_listpcrs", NULL);
 		if (argv0 == NULL)
+			/* tpm2-tools 3 tool name */
 			argv0 = fu_common_find_program_in_path ("tpm2_pcrlist", error);
+		if (argv0 == NULL)
+			/* tpm2-tools 4 tool name */
+			argv0 = fu_common_find_program_in_path ("tpm2_pcrread", error);
 		if (argv0 == NULL)
 			return FALSE;
 		if (!fu_uefi_pcrs_setup_tpm20 (self, argv0, error))
