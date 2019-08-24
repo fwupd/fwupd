@@ -43,13 +43,17 @@ fu_uefi_pcrs_2_0_func (void)
 	g_autoptr(FuUefiPcrs) pcrs = fu_uefi_pcrs_new ();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) pcr0s = NULL;
+	g_autoptr(GPtrArray) pcr1s = NULL;
 	g_autoptr(GPtrArray) pcrXs = NULL;
 
 	g_setenv ("FWUPD_UEFI_TPM2_YAML_DATA",
 		  "sha1 :\n"
 		  "  0  : cbd9e4112727bc75761001abcb2dddd87a66caf5\n"
 		  "sha256 :\n"
-		  "  0  : 122de8b579cce17b0703ca9f9716d6f99125af9569e7303f51ea7f85d317f01e\n", TRUE);
+		  /* old output format of tpm2_listpcrs and tpm2_pcrlist */
+		  "  0  : 122de8b579cce17b0703ca9f9716d6f99125af9569e7303f51ea7f85d317f01e\n"
+		  /* new output format of tpm2_pcrread */
+		  "  1 : 0x0D89E7CA2C487EED36DB5684826B4ABF0904D3BDCD74E61999573570CF3F9C75\n", TRUE);
 
 	ret = fu_uefi_pcrs_setup (pcrs, &error);
 	g_assert_no_error (error);
@@ -57,6 +61,9 @@ fu_uefi_pcrs_2_0_func (void)
 	pcr0s = fu_uefi_pcrs_get_checksums (pcrs, 0);
 	g_assert_nonnull (pcr0s);
 	g_assert_cmpint (pcr0s->len, ==, 2);
+	pcr1s = fu_uefi_pcrs_get_checksums (pcrs, 1);
+	g_assert_nonnull (pcr1s);
+	g_assert_cmpint (pcr1s->len, ==, 1);
 	pcrXs = fu_uefi_pcrs_get_checksums (pcrs, 999);
 	g_assert_nonnull (pcrXs);
 	g_assert_cmpint (pcrXs->len, ==, 0);
