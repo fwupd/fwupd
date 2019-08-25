@@ -16,17 +16,18 @@ def usage(return_code):
         out = sys.stdout
     else:
         out = sys.stderr
-    out.write("usage: fu-hash.py <DAEMON> <HEADER>")
+    out.write("usage: fu-hash.py <HEADER> <SRC1> <SRC2>...")
     sys.exit(return_code)
 
 if __name__ == '__main__':
     if {'-?', '--help', '--usage'}.intersection(set(sys.argv)):
         usage(0)
-    if len(sys.argv) != 3:
+    if len(sys.argv) < 3:
         usage(1)
-    with open(sys.argv[1], 'rb') as f:
-        buf = f.read()
-        csum = hashlib.sha256(buf).hexdigest()
-        with open(sys.argv[2], 'w') as f2:
-            f2.write('#pragma once\n')
-            f2.write('#define FU_BUILD_HASH "%s"\n' % csum)
+    m = hashlib.sha256()
+    for argv in sys.argv[2:]:
+        with open(argv, 'rb') as f:
+            m.update(f.read())
+    with open(sys.argv[1], 'w') as f2:
+        f2.write('#pragma once\n')
+        f2.write('#define FU_BUILD_HASH "%s"\n' % m.hexdigest())

@@ -180,11 +180,11 @@ resources_src = gnome.compile_resources(
 
 fu_hash = custom_target(
   'fu-hash.h',
-  input : libfwupdprivate,
+  input : libfwupdprivate_src,
   output : 'fu-hash.h',
   command : [python3.path(),
              join_paths(meson.current_source_dir(), 'fu-hash.py'),
-             '@INPUT@', '@OUTPUT@']
+             '@OUTPUT@', '@INPUT@']
 )
 
 fwupdtool = executable(
