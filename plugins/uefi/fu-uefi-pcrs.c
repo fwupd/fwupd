@@ -180,13 +180,14 @@ fu_uefi_pcrs_setup (FuUefiPcrs *self, GError **error)
 	g_autofree gchar *devpath = NULL;
 	g_autofree gchar *sysfstpmdir = NULL;
 	g_autofree gchar *fn_pcrs = NULL;
+	const gchar *tpm_server_running = g_getenv ("TPM_SERVER_RUNNING");
 
 	g_return_val_if_fail (FU_IS_UEFI_PCRS (self), FALSE);
 
 	/* check the TPM device exists at all */
 	sysfstpmdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_TPM);
 	devpath = g_build_filename (sysfstpmdir, "tpm0", NULL);
-	if (!g_file_test (devpath, G_FILE_TEST_EXISTS)) {
+	if (!g_file_test (devpath, G_FILE_TEST_EXISTS) && (tpm_server_running == NULL)) {
 		g_set_error_literal (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_NOT_SUPPORTED,

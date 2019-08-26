@@ -25,12 +25,47 @@ fu_uefi_pcrs_1_2_func (void)
 	g_autoptr(GPtrArray) pcr0s = NULL;
 	g_autoptr(GPtrArray) pcrXs = NULL;
 
+	g_setenv ("FWUPD_SYSFSTPMDIR", TESTDATADIR, TRUE);
+
 	ret = fu_uefi_pcrs_setup (pcrs, &error);
 	g_assert_no_error (error);
 	g_assert_true (ret);
 	pcr0s = fu_uefi_pcrs_get_checksums (pcrs, 0);
 	g_assert_nonnull (pcr0s);
 	g_assert_cmpint (pcr0s->len, ==, 1);
+	pcrXs = fu_uefi_pcrs_get_checksums (pcrs, 999);
+	g_assert_nonnull (pcrXs);
+	g_assert_cmpint (pcrXs->len, ==, 0);
+
+	g_unsetenv ("FWUPD_SYSFSTPMDIR");
+}
+
+static void
+fu_uefi_pcrs_2_0_func (void)
+{
+	g_autofree gchar *devpath = NULL;
+	g_autofree gchar *sysfstpmdir = NULL;
+	const gchar *tpm_server_running = g_getenv ("TPM_SERVER_RUNNING");
+	gboolean ret;
+	g_autoptr(FuUefiPcrs) pcrs = fu_uefi_pcrs_new ();
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) pcr0s = NULL;
+	g_autoptr(GPtrArray) pcrXs = NULL;
+
+	sysfstpmdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_TPM);
+	devpath = g_build_filename (sysfstpmdir, "tpm0", NULL);
+
+	if (!g_file_test (devpath, G_FILE_TEST_EXISTS) && (tpm_server_running == NULL)) {
+		g_test_skip ("no physical or simulated TPM 2.0 device available");
+		return;
+	}
+
+	ret = fu_uefi_pcrs_setup (pcrs, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	pcr0s = fu_uefi_pcrs_get_checksums (pcrs, 0);
+	g_assert_nonnull (pcr0s);
+	g_assert_cmpint (pcr0s->len, >=, 2);
 	pcrXs = fu_uefi_pcrs_get_checksums (pcrs, 999);
 	g_assert_nonnull (pcrXs);
 	g_assert_cmpint (pcrXs->len, ==, 0);
@@ -271,7 +306,6 @@ main (int argc, char **argv)
 	g_test_init (&argc, &argv, NULL);
 	g_setenv ("FWUPD_SYSFSFWDIR", TESTDATADIR, TRUE);
 	g_setenv ("FWUPD_SYSFSDRIVERDIR", TESTDATADIR, TRUE);
-	g_setenv ("FWUPD_SYSFSTPMDIR", TESTDATADIR, TRUE);
 
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask (NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
@@ -279,6 +313,7 @@ main (int argc, char **argv)
 
 	/* tests go here */
 	g_test_add_func ("/uefi/pcrs1.2", fu_uefi_pcrs_1_2_func);
+	g_test_add_func ("/uefi/pcrs2.0", fu_uefi_pcrs_2_0_func);
 	g_test_add_func ("/uefi/ucs2", fu_uefi_ucs2_func);
 	g_test_add_func ("/uefi/variable", fu_uefi_vars_func);
 	g_test_add_func ("/uefi/bgrt", fu_uefi_bgrt_func);
