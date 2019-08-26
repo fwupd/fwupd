@@ -10,6 +10,8 @@
 
 #include <glib.h>
 
+#define SYNAPTICS_FLASH_MODE_DELAY	3	/* seconds */
+
 /**
  * FuSynapticsmstMode:
  * @FU_SYNAPTICSMST_MODE_UNKNOWN:		Type invalid or not known
@@ -35,7 +37,6 @@ typedef enum {
 	FU_SYNAPTICSMST_FAMILY_LAST
 } FuSynapticsmstFamily;
 
-FuSynapticsmstMode	 fu_synapticsmst_mode_from_string	(const gchar	*mode);
-const gchar		*fu_synapticsmst_mode_to_string		(FuSynapticsmstMode mode);
+const gchar		*fu_synapticsmst_mode_to_string		(FuSynapticsmstMode	 mode);
 const gchar		*fu_synapticsmst_family_to_string	(FuSynapticsmstFamily	 family);
 FuSynapticsmstFamily	 fu_synapticsmst_family_from_chip_id	(guint16		 chip_id);

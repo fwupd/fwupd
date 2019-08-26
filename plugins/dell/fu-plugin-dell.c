@@ -85,9 +85,6 @@ struct da_structure {
 #define UNIV_CBL_DESC		"Universal Cable"
 #define TBT_CBL_DESC		"Thunderbolt Cable"
 
-/* supported host related GUIDs */
-#define MST_GPIO_GUID		EFI_GUID (0xF24F9bE4, 0x2a13, 0x4344, 0xBC05, 0x01, 0xCE, 0xF7, 0xDA, 0xEF, 0x92)
-
 /**
  * Devices that should allow modeswitching
  */
@@ -117,24 +114,6 @@ static guint8 enclosure_whitelist [] = { 0x03, /* desktop */
 					 0x21, /* IoT gateway */
 					 0x22, /* embedded PC */};
 
-/**
-  * Systems containing host MST device
-  */
-static guint16 systems_host_mst [] =	{ 0x062d, /* Latitude E7250 */
-					  0x062e, /* Latitude E7450 */
-					  0x062a, /* Latitude E5250 */
-					  0x062b, /* Latitude E5450 */
-					  0x062c, /* Latitude E5550 */
-					  0x06db, /* Latitude E7270 */
-					  0x06dc, /* Latitude E7470 */
-					  0x06dd, /* Latitude E5270 */
-					  0x06de, /* Latitude E5470 */
-					  0x06df, /* Latitude E5570 */
-					  0x06e0, /* Precision 3510 */
-					  0x071d, /* Latitude Rugged 7214 */
-					  0x071e, /* Latitude Rugged 5414 */
-					  0x071c, /* Latitude Rugged 7414 */};
-
 static guint16
 fu_dell_get_system_id (FuPlugin *plugin)
 {
@@ -150,20 +129,6 @@ fu_dell_get_system_id (FuPlugin *plugin)
 		system_id = (guint16) sysinfo_get_dell_system_id ();
 
 	return system_id;
-}
-
-static gboolean
-fu_dell_host_mst_supported (FuPlugin *plugin)
-{
-	guint16 system_id;
-
-	system_id = fu_dell_get_system_id (plugin);
-	if (system_id == 0)
-		return FALSE;
-	for (guint i = 0; i < G_N_ELEMENTS (systems_host_mst); i++)
-		if (systems_host_mst[i] == system_id)
-			return TRUE;
-	return FALSE;
 }
 
 static gboolean
@@ -473,9 +438,6 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 		return FALSE;
 	}
 
-#if defined (HAVE_SYNAPTICS)
-	fu_plugin_request_recoldplug (plugin);
-#endif
 	return TRUE;
 }
 
@@ -742,82 +704,6 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 	}
 }
 
-static gboolean
-fu_dell_toggle_flash (FuPlugin *plugin, FuDevice *device,
-		      gboolean enable, GError **error)
-{
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	gboolean has_host = fu_dell_host_mst_supported (plugin);
-	gboolean has_dock;
-	guint32 dock_location;
-	const gchar *tmp;
-
-	if (device) {
-		if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE))
-			return TRUE;
-		tmp = fu_device_get_plugin (device);
-		if (g_strcmp0 (tmp, "synapticsmst") != 0)
-			return TRUE;
-		g_debug ("preparing/cleaning update for %s", tmp);
-	}
-
-	/* Dock MST Hub */
-	has_dock = fu_dell_detect_dock (data->smi_obj, &dock_location);
-	if (has_dock) {
-		if (!fu_dell_toggle_dock_mode (data->smi_obj, enable,
-					       dock_location, error))
-			g_debug ("unable to change dock to %d", enable);
-		else
-			g_debug ("Toggled dock mode to %d", enable);
-	}
-
-	/* System MST hub */
-	if (has_host) {
-		if (!fu_dell_toggle_host_mode (data->smi_obj, MST_GPIO_GUID, enable))
-			g_debug ("Unable to toggle MST hub GPIO to %d", enable);
-		else
-			g_debug ("Toggled MST hub GPIO to %d", enable);
-	}
-
-#if defined (HAVE_SYNAPTICS)
-	/* set a delay to allow OS response to settling the GPIO change */
-	if (enable && device == NULL && (has_dock || has_host))
-		fu_plugin_set_coldplug_delay (plugin, DELL_FLASH_MODE_DELAY * 1000);
-#endif
-	return TRUE;
-}
-
-gboolean
-fu_plugin_update_prepare (FuPlugin *plugin,
-			  FwupdInstallFlags flags,
-			  FuDevice *device,
-			  GError **error)
-{
-
-	return fu_dell_toggle_flash (plugin, device, TRUE, error);
-}
-
-gboolean
-fu_plugin_update_cleanup (FuPlugin *plugin,
-			  FwupdInstallFlags flags,
-			  FuDevice *device,
-			  GError **error)
-{
-	return fu_dell_toggle_flash (plugin, device , FALSE, error);
-}
-
-gboolean
-fu_plugin_coldplug_prepare (FuPlugin *plugin, GError **error)
-{
-	return fu_dell_toggle_flash (plugin, NULL, TRUE, error);
-}
-
-gboolean
-fu_plugin_coldplug_cleanup (FuPlugin *plugin, GError **error)
-{
-	return fu_dell_toggle_flash (plugin, NULL, FALSE, error);
-}
-
 void
 fu_plugin_init (FuPlugin *plugin)
 {
@@ -911,12 +797,6 @@ fu_plugin_dell_coldplug (FuPlugin *plugin, GError **error)
 
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
-{
-	return fu_plugin_dell_coldplug (plugin, error);
-}
-
-gboolean
-fu_plugin_recoldplug (FuPlugin *plugin, GError **error)
 {
 	return fu_plugin_dell_coldplug (plugin, error);
 }

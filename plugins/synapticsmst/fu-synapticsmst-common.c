@@ -9,16 +9,6 @@
 
 #include "fu-synapticsmst-common.h"
 
-FuSynapticsmstMode
-fu_synapticsmst_mode_from_string (const gchar *mode)
-{
-	if (g_strcmp0 (mode, "DIRECT") == 0)
-		return FU_SYNAPTICSMST_MODE_DIRECT;
-	if (g_strcmp0 (mode, "REMOTE") == 0)
-		return FU_SYNAPTICSMST_MODE_REMOTE;
-	return FU_SYNAPTICSMST_MODE_UNKNOWN;
-}
-
 const gchar *
 fu_synapticsmst_mode_to_string (FuSynapticsmstMode mode)
 {
