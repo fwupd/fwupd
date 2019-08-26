@@ -10,6 +10,7 @@ extraction:
       - libcogl-pango-dev
       - python3-pil
       - python3-cairo
+      - libssl-dev
     after_prepare:
     - "wget -O libxmlb.zip https://github.com/hughsie/libxmlb/archive/0.1.7.zip"
     - "mkdir -p subprojects/libxmlb"
@@ -17,6 +18,15 @@ extraction:
     - "wget -O flashrom.zip https://github.com/hughsie/flashrom/archive/wip/hughsie/fwupd.zip"
     - "mkdir -p subprojects/flashrom"
     - "bsdtar --strip-components=1 -xvf flashrom.zip -C subprojects/flashrom"
+    - "cd $LGTM_WORKSPACE"
+    - "mkdir installdir"
+    - "wget https://github.com/tpm2-software/tpm2-tss/releases/download/2.3.0/tpm2-tss-2.3.0.tar.gz"
+    - "tar xf tpm2-tss-2.3.0.tar.gz"
+    - "cd tpm2-tss-2.3.0"
+    - "./configure --prefix=$LGTM_WORKSPACE/installdir/usr --disable-doxygen-doc"
+    - "make install"
+    - "export PKG_CONFIG_PATH=$LGTM_WORKSPACE/installdir/usr/lib/pkgconfig:$PKG_CONFIG_PATH"
+    - "export LD_LIBRARY_PATH=$LGTM_WORKSPACE/installdir/usr/lib:$LD_LIBRARY_PATH"
     index:
       build_command:
       - "meson setup build"

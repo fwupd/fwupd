@@ -66,6 +66,18 @@ parts:
       - -share/
       - -etc/
       - -lib/*.a
+  tpm2-tss:
+    plugin: autotools
+    source: https://github.com/tpm2-software/tpm2-tss/releases/download/2.3.0/tpm2-tss-2.3.0.tar.gz
+    configflags:
+      - --disable-doxygen-doc
+    prime:
+     - -include
+     - -bin
+     - -share/man
+     - -lib/pkgconfig
+    build-packages:
+     - libssl-dev
   meson:
     plugin: python
     source: https://github.com/mesonbuild/meson/releases/download/0.47.2/meson-0.47.2.tar.gz
@@ -324,7 +336,7 @@ parts:
       - -usr/share/gir-1.0
       - -usr/share/upstart
       - -usr/lib/*/pkgconfig
-    after: [gudev, gusb, gnu-efi, libefivar-fixpkgconfig, libsmbios, build-introspection, gettext, modemmanager, libmbim, libqmi]
+    after: [gudev, gusb, gnu-efi, libefivar-fixpkgconfig, libsmbios, build-introspection, gettext, modemmanager, libmbim, libqmi, tpm2-tss]
   fix-bash-completion:
     plugin: make
     source: contrib/snap/fix-bash-completion
