@@ -70,6 +70,7 @@ struct _FuEngine
 	FuPluginList		*plugin_list;
 	GPtrArray		*plugin_filter;
 	GPtrArray		*udev_subsystems;
+	GHashTable		*udev_changed_ids;	/* sysfs:FuEngineUdevChangedHelper */
 	FuSmbios		*smbios;
 	FuHwids			*hwids;
 	FuQuirks		*quirks;
@@ -3938,10 +3939,69 @@ fu_engine_udev_device_remove (FuEngine *self, GUdevDevice *udev_device)
 	}
 }
 
+typedef struct {
+	FuEngine	*self;
+	GUdevDevice	*udev_device;
+	guint		 idle_id;
+} FuEngineUdevChangedHelper;
+
+static void
+fu_engine_udev_changed_helper_free (FuEngineUdevChangedHelper *helper)
+{
+	if (helper->idle_id != 0)
+		g_source_remove (helper->idle_id);
+	g_object_unref (helper->self);
+	g_object_unref (helper->udev_device);
+	g_free (helper);
+}
+
+static FuEngineUdevChangedHelper *
+fu_engine_udev_changed_helper_new (FuEngine *self, GUdevDevice *udev_device)
+{
+	FuEngineUdevChangedHelper *helper = g_new0 (FuEngineUdevChangedHelper, 1);
+	helper->self = g_object_ref (self);
+	helper->udev_device = g_object_ref (udev_device);
+	return helper;
+}
+
+static gboolean
+fu_engine_udev_changed_cb (gpointer user_data)
+{
+	FuEngineUdevChangedHelper *helper = (FuEngineUdevChangedHelper *) user_data;
+	GPtrArray *plugins = fu_plugin_list_get_all (helper->self->plugin_list);
+	g_autoptr(FuUdevDevice) device = fu_udev_device_new (helper->udev_device);
+
+	/* run all plugins */
+	for (guint j = 0; j < plugins->len; j++) {
+		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
+		g_autoptr(GError) error = NULL;
+		if (!fu_plugin_runner_udev_device_changed (plugin_tmp, device, &error)) {
+			if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+				g_debug ("%s ignoring: %s",
+					 fu_plugin_get_name (plugin_tmp),
+					 error->message);
+				continue;
+			}
+			g_warning ("%s failed to change udev device %s: %s",
+				   fu_plugin_get_name (plugin_tmp),
+				   g_udev_device_get_sysfs_path (helper->udev_device),
+				   error->message);
+		}
+	}
+
+	/* device done, so remove ref */
+	helper->idle_id = 0;
+	g_hash_table_remove (helper->self->udev_changed_ids,
+			     g_udev_device_get_sysfs_path (helper->udev_device));
+	return FALSE;
+}
+
 static void
 fu_engine_udev_device_changed (FuEngine *self, GUdevDevice *udev_device)
 {
+	const gchar *sysfs_path = g_udev_device_get_sysfs_path (udev_device);
 	g_autoptr(GPtrArray) devices = NULL;
+	FuEngineUdevChangedHelper *helper;
 
 	/* emit changed on any that match */
 	devices = fu_device_list_get_all (self->device_list);
@@ -3950,10 +4010,20 @@ fu_engine_udev_device_changed (FuEngine *self, GUdevDevice *udev_device)
 		if (!FU_IS_UDEV_DEVICE (device))
 			continue;
 		if (g_strcmp0 (fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (device)),
-			       g_udev_device_get_sysfs_path (udev_device)) == 0) {
+			       sysfs_path) == 0) {
 			fu_udev_device_emit_changed (FU_UDEV_DEVICE (device));
 		}
 	}
+
+	/* run all plugins, with per-device rate limiting */
+	if (g_hash_table_remove (self->udev_changed_ids, sysfs_path)) {
+		g_debug ("re-adding rate-limited timeout for %s", sysfs_path);
+	} else {
+		g_debug ("adding rate-limited timeout for %s", sysfs_path);
+	}
+	helper = fu_engine_udev_changed_helper_new (self, udev_device);
+	helper->idle_id = g_timeout_add (500, fu_engine_udev_changed_cb, helper);
+	g_hash_table_insert (self->udev_changed_ids, g_strdup (sysfs_path), helper);
 }
 
 static void
@@ -4676,6 +4746,8 @@ fu_engine_init (FuEngine *self)
 	self->plugin_list = fu_plugin_list_new ();
 	self->plugin_filter = g_ptr_array_new_with_free_func (g_free);
 	self->udev_subsystems = g_ptr_array_new_with_free_func (g_free);
+	self->udev_changed_ids = g_hash_table_new_full (g_str_hash, g_str_equal,
+							g_free, (GDestroyNotify) fu_engine_udev_changed_helper_free);
 	self->runtime_versions = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	self->compile_versions = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	self->approved_firmware = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
@@ -4733,6 +4805,7 @@ fu_engine_finalize (GObject *obj)
 	g_object_unref (self->device_list);
 	g_ptr_array_unref (self->plugin_filter);
 	g_ptr_array_unref (self->udev_subsystems);
+	g_hash_table_unref (self->udev_changed_ids);
 	g_hash_table_unref (self->runtime_versions);
 	g_hash_table_unref (self->compile_versions);
 	g_hash_table_unref (self->approved_firmware);

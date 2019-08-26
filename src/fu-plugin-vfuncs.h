@@ -80,6 +80,9 @@ gboolean	 fu_plugin_usb_device_added		(FuPlugin	*plugin,
 gboolean	 fu_plugin_udev_device_added		(FuPlugin	*plugin,
 							 FuUdevDevice	*device,
 							 GError		**error);
+gboolean	 fu_plugin_udev_device_changed		(FuPlugin	*plugin,
+							 FuUdevDevice	*device,
+							 GError		**error);
 gboolean	 fu_plugin_device_removed		(FuPlugin	*plugin,
 							 FuDevice	*device,
 							 GError		**error);
