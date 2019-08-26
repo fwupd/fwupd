@@ -6,6 +6,8 @@
 
 #include "config.h"
 
+#include <tss2/tss2_esys.h>
+
 #include "fu-common.h"
 #include "fu-uefi-pcrs.h"
 
@@ -20,6 +22,12 @@ struct _FuUefiPcrs {
 };
 
 G_DEFINE_TYPE (FuUefiPcrs, fu_uefi_pcrs, G_TYPE_OBJECT)
+
+static void Esys_Finalize_autoptr_cleanup (ESYS_CONTEXT *esys_context)
+{
+	Esys_Finalize (&esys_context);
+}
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (ESYS_CONTEXT, Esys_Finalize_autoptr_cleanup)
 
 static gboolean
 _g_string_isxdigit (GString *str)
@@ -61,7 +69,6 @@ fu_uefi_pcrs_parse_line (const gchar *line, gpointer user_data)
 	/* parse hash */
 	str = g_string_new (split[1]);
 	fu_common_string_replace (str, " ", "");
-	fu_common_string_replace (str, "0x", "");
 	if ((str->len != 40 && str->len != 64) || !_g_string_isxdigit (str)) {
 		g_debug ("not SHA-1 or SHA-256, skipping: %s", split[1]);
 		return;
@@ -72,15 +79,6 @@ fu_uefi_pcrs_parse_line (const gchar *line, gpointer user_data)
 	item->checksum = g_string_free (g_steal_pointer (&str), FALSE);
 	g_ptr_array_add (self->items, item);
 	g_debug ("added PCR-%02u=%s", item->idx, item->checksum);
-}
-
-static gboolean
-fu_uefi_pcrs_setup_dummy (FuUefiPcrs *self, const gchar *test_yaml, GError **error)
-{
-	g_auto(GStrv) lines = g_strsplit (test_yaml, "\n", -1);
-	for (guint i = 0; lines[i] != NULL; i++)
-		fu_uefi_pcrs_parse_line (lines[i], self);
-	return TRUE;
 }
 
 static gboolean
@@ -103,10 +101,77 @@ fu_uefi_pcrs_setup_tpm12 (FuUefiPcrs *self, const gchar *fn_pcrs, GError **error
 }
 
 static gboolean
-fu_uefi_pcrs_setup_tpm20 (FuUefiPcrs *self, const gchar *argv0, GError **error)
+fu_uefi_pcrs_setup_tpm20 (FuUefiPcrs *self, GError **error)
 {
-	const gchar *argv[] = { argv0, NULL };
-	return fu_common_spawn_sync (argv, fu_uefi_pcrs_parse_line, self, 1500, NULL, error);
+	TSS2_RC rc;
+	g_autoptr(ESYS_CONTEXT) ctx = NULL;
+	g_autofree TPMS_CAPABILITY_DATA *capability_data = NULL;
+	TPML_PCR_SELECTION pcr_selection_in = { 0, };
+	g_autofree TPML_DIGEST *pcr_values = NULL;
+
+	/* suppress warning messages about missing TCTI libraries for tpm2-tss <2.3 */
+	if (g_getenv ("FWUPD_UEFI_VERBOSE") == NULL) {
+		g_setenv ("TSS2_LOG", "esys+error", FALSE);
+	}
+
+	rc = Esys_Initialize (&ctx, NULL, NULL);
+	if (rc != TSS2_RC_SUCCESS) {
+		g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+		                     "failed to initialize TPM library");
+		return FALSE;
+	}
+	rc = Esys_Startup (ctx, TPM2_SU_CLEAR);
+	if (rc != TSS2_RC_SUCCESS) {
+		g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+		                     "failed to initialize TPM");
+		return FALSE;
+	}
+
+	/* get hash algorithms supported by the TPM */
+	rc = Esys_GetCapability (ctx, ESYS_TR_NONE, ESYS_TR_NONE, ESYS_TR_NONE,
+	                         TPM2_CAP_PCRS, 0, 1, NULL, &capability_data);
+	if (rc != TSS2_RC_SUCCESS) {
+		g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+		                     "failed to get hash algorithms supported by TPM");
+		return FALSE;
+	}
+
+	/* fetch PCR 0 for every supported hash algorithm */
+	pcr_selection_in.count = capability_data->data.assignedPCR.count;
+	for (guint i = 0; i < pcr_selection_in.count; i++) {
+		pcr_selection_in.pcrSelections[i].hash =
+			capability_data->data.assignedPCR.pcrSelections[i].hash;
+		pcr_selection_in.pcrSelections[i].sizeofSelect =
+			capability_data->data.assignedPCR.pcrSelections[i].sizeofSelect;
+		pcr_selection_in.pcrSelections[i].pcrSelect[0] = 0b00000001;
+	}
+
+	rc = Esys_PCR_Read (ctx, ESYS_TR_NONE, ESYS_TR_NONE, ESYS_TR_NONE,
+	                    &pcr_selection_in, NULL, NULL, &pcr_values);
+	if (rc != TSS2_RC_SUCCESS) {
+		g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+		                     "failed to read PCR values from TPM");
+		return FALSE;
+	}
+
+	for (guint i = 0; i < pcr_values->count; i++) {
+		FuUefiPcrItem *item;
+		g_autoptr(GString) str = NULL;
+
+		str = g_string_new (NULL);
+		for (guint j = 0; j < pcr_values->digests[i].size; j++) {
+			g_string_append_printf (str, "%02x", pcr_values->digests[i].buffer[j]);
+		}
+
+		item = g_new0 (FuUefiPcrItem, 1);
+		item->idx = 0; /* constant PCR index 0, since we only read this single PCR */
+		item->checksum = g_string_free (g_steal_pointer (&str), FALSE);
+		g_ptr_array_add (self->items, item);
+		g_debug ("added PCR-%02u=%s", item->idx, item->checksum);
+	}
+
+	/* success */
+	return TRUE;
 }
 
 gboolean
@@ -115,7 +180,6 @@ fu_uefi_pcrs_setup (FuUefiPcrs *self, GError **error)
 	g_autofree gchar *devpath = NULL;
 	g_autofree gchar *sysfstpmdir = NULL;
 	g_autofree gchar *fn_pcrs = NULL;
-	const gchar *test_yaml = g_getenv ("FWUPD_UEFI_TPM2_YAML_DATA");
 
 	g_return_val_if_fail (FU_IS_UEFI_PCRS (self), FALSE);
 
@@ -131,31 +195,14 @@ fu_uefi_pcrs_setup (FuUefiPcrs *self, GError **error)
 	}
 	fn_pcrs = g_build_filename (devpath, "pcrs", NULL);
 
-	/* fake device */
-	if (test_yaml != NULL) {
-		if (!fu_uefi_pcrs_setup_dummy (self, test_yaml, error))
-			return FALSE;
-
 	/* look for TPM 1.2 */
-	} else if (g_file_test (fn_pcrs, G_FILE_TEST_EXISTS)) {
+	if (g_file_test (fn_pcrs, G_FILE_TEST_EXISTS)) {
 		if (!fu_uefi_pcrs_setup_tpm12 (self, fn_pcrs, error))
 			return FALSE;
 
 	/* assume TPM 2.0 */
 	} else {
-		g_autofree gchar *argv0 = NULL;
-
-		/* tpm2-tools 2 tool name */
-		argv0 = fu_common_find_program_in_path ("tpm2_listpcrs", NULL);
-		if (argv0 == NULL)
-			/* tpm2-tools 3 tool name */
-			argv0 = fu_common_find_program_in_path ("tpm2_pcrlist", error);
-		if (argv0 == NULL)
-			/* tpm2-tools 4 tool name */
-			argv0 = fu_common_find_program_in_path ("tpm2_pcrread", error);
-		if (argv0 == NULL)
-			return FALSE;
-		if (!fu_uefi_pcrs_setup_tpm20 (self, argv0, error))
+		if (!fu_uefi_pcrs_setup_tpm20 (self, error))
 			return FALSE;
 	}
 

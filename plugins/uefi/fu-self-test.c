@@ -37,57 +37,6 @@ fu_uefi_pcrs_1_2_func (void)
 }
 
 static void
-fu_uefi_pcrs_2_0_func (void)
-{
-	gboolean ret;
-	g_autoptr(FuUefiPcrs) pcrs = fu_uefi_pcrs_new ();
-	g_autoptr(GError) error = NULL;
-	g_autoptr(GPtrArray) pcr0s = NULL;
-	g_autoptr(GPtrArray) pcr1s = NULL;
-	g_autoptr(GPtrArray) pcrXs = NULL;
-
-	g_setenv ("FWUPD_UEFI_TPM2_YAML_DATA",
-		  "sha1 :\n"
-		  "  0  : cbd9e4112727bc75761001abcb2dddd87a66caf5\n"
-		  "sha256 :\n"
-		  /* old output format of tpm2_listpcrs and tpm2_pcrlist */
-		  "  0  : 122de8b579cce17b0703ca9f9716d6f99125af9569e7303f51ea7f85d317f01e\n"
-		  /* new output format of tpm2_pcrread */
-		  "  1 : 0x0D89E7CA2C487EED36DB5684826B4ABF0904D3BDCD74E61999573570CF3F9C75\n", TRUE);
-
-	ret = fu_uefi_pcrs_setup (pcrs, &error);
-	g_assert_no_error (error);
-	g_assert_true (ret);
-	pcr0s = fu_uefi_pcrs_get_checksums (pcrs, 0);
-	g_assert_nonnull (pcr0s);
-	g_assert_cmpint (pcr0s->len, ==, 2);
-	pcr1s = fu_uefi_pcrs_get_checksums (pcrs, 1);
-	g_assert_nonnull (pcr1s);
-	g_assert_cmpint (pcr1s->len, ==, 1);
-	pcrXs = fu_uefi_pcrs_get_checksums (pcrs, 999);
-	g_assert_nonnull (pcrXs);
-	g_assert_cmpint (pcrXs->len, ==, 0);
-}
-
-static void
-fu_uefi_pcrs_2_0_failure_func (void)
-{
-	gboolean ret;
-	g_autoptr(FuUefiPcrs) pcrs = fu_uefi_pcrs_new ();
-	g_autoptr(GError) error = NULL;
-
-	g_setenv ("FWUPD_UEFI_TPM2_YAML_DATA",
-		  "Something is not working properly!\n"
-		  "999:hello\n"
-		  "0:dave\n"
-		  "\n", TRUE);
-
-	ret = fu_uefi_pcrs_setup (pcrs, &error);
-	g_assert_error (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED);
-	g_assert_false (ret);
-}
-
-static void
 fu_uefi_ucs2_func (void)
 {
 	g_autofree guint16 *str1 = NULL;
@@ -330,8 +279,6 @@ main (int argc, char **argv)
 
 	/* tests go here */
 	g_test_add_func ("/uefi/pcrs1.2", fu_uefi_pcrs_1_2_func);
-	g_test_add_func ("/uefi/pcrs2.0", fu_uefi_pcrs_2_0_func);
-	g_test_add_func ("/uefi/pcrs2.0{failure}", fu_uefi_pcrs_2_0_failure_func);
 	g_test_add_func ("/uefi/ucs2", fu_uefi_ucs2_func);
 	g_test_add_func ("/uefi/variable", fu_uefi_vars_func);
 	g_test_add_func ("/uefi/bgrt", fu_uefi_bgrt_func);

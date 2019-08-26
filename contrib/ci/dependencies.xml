@@ -1291,4 +1291,27 @@
       <package />
     </distro>
   </dependency>
+  <dependency type="build" id="libtss2-dev">
+    <distro id="arch">
+      <package>tpm2-tss</package>
+    </distro>
+    <distro id="centos">
+      <package>tpm2-tss-devel</package>
+    </distro>
+    <distro id="fedora">
+      <package>tpm2-tss-devel</package>
+    </distro>
+    <distro id="debian">
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="libgcrypt-devel">
+    <distro id="fedora">
+      <package />
+    </distro>
+  </dependency>
 </dependencies>
