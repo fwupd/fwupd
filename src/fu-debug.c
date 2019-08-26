@@ -17,6 +17,7 @@ typedef struct {
 	GOptionGroup	*group;
 	gboolean	 verbose;
 	gboolean	 console;
+	gboolean	 no_timestamp;
 	gchar		**plugin_verbose;
 	gchar		**daemon_verbose;
 } FuDebug;
@@ -73,11 +74,13 @@ fu_debug_handler_cb (const gchar *log_domain,
 		return;
 
 	/* time header */
-	tmp = g_strdup_printf ("%02i:%02i:%02i:%04i",
-			       g_date_time_get_hour (dt),
-			       g_date_time_get_minute (dt),
-			       g_date_time_get_second (dt),
-			       g_date_time_get_microsecond (dt) / 1000);
+	if (!self->no_timestamp) {
+		tmp = g_strdup_printf ("%02i:%02i:%02i:%04i",
+				       g_date_time_get_hour (dt),
+				       g_date_time_get_minute (dt),
+				       g_date_time_get_second (dt),
+				       g_date_time_get_microsecond (dt) / 1000);
+	}
 
 	/* each file should have set this */
 	if (log_domain == NULL)
@@ -129,6 +132,9 @@ fu_debug_pre_parse_hook (GOptionContext *context,
 		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &self->verbose,
 		  /* TRANSLATORS: turn on all debugging */
 		  N_("Show debugging information for all domains"), NULL },
+		{ "no-timestamp", '\0', 0, G_OPTION_ARG_NONE, &self->no_timestamp,
+		  /* TRANSLATORS: turn on all debugging */
+		  N_("Do not include timestamp prefix"), NULL },
 		{ "plugin-verbose", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &self->plugin_verbose,
 		  /* TRANSLATORS: this is for plugin development */
 		  N_("Show plugin verbose information"), "PLUGIN-NAME" },
