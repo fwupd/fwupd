@@ -16,23 +16,47 @@ static void
 _plugin_device_added_cb (FuPlugin *plugin, FuDevice *device, gpointer user_data)
 {
 	GPtrArray **devices = (GPtrArray **) user_data;
-	g_ptr_array_add (*devices, device);
+	g_ptr_array_add (*devices, g_object_ref (device));
 }
 
 static void
-fu_plugin_synapticsmst_func (void)
+_test_add_fake_devices_from_dir (FuPlugin *plugin, const gchar *path)
+{
+	const gchar *basename;
+	gboolean ret;
+	g_autoptr(FuQuirks) quirks = fu_quirks_new ();
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GDir) dir = g_dir_open (path, 0, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (dir);
+	while ((basename = g_dir_read_name (dir)) != NULL) {
+		g_autofree gchar *fn = g_build_filename (path, basename, NULL);
+		g_autoptr(FuUdevDevice) dev = NULL;
+		if (!g_str_has_prefix (basename, "drm_dp_aux"))
+			continue;
+		dev = g_object_new (FU_TYPE_UDEV_DEVICE,
+				    "quirks", quirks,
+				    "physical-id", "PCI_SLOT_NAME=0000:3e:00.0",
+				    "logical-id", basename,
+				    "subsystem", "drm_dp_aux_dev",
+				    "device-file", fn,
+				    NULL);
+		g_debug ("creating drm_dp_aux_dev object backed by %s", fn);
+		ret = fu_plugin_runner_udev_device_added (plugin, dev, &error);
+		g_assert_no_error (error);
+		g_assert (ret);
+	}
+}
+
+/* test with no Synaptics MST devices */
+static void
+fu_plugin_synapticsmst_none_func (void)
 {
 	gboolean ret;
-	guint device_count;
-	GPtrArray *devices = NULL;
+	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
 	g_autoptr(GError) error = NULL;
-	FuDevice *device = NULL;
-	g_autoptr(FuPlugin) plugin = NULL;
-	const gchar *test_directory;
+	g_autoptr(GPtrArray) devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 
-	devices = g_ptr_array_new ();
-
-	plugin = fu_plugin_new ();
 	g_signal_connect (plugin, "device-added",
 			  G_CALLBACK (_plugin_device_added_cb),
 			  &devices);
@@ -43,35 +67,36 @@ fu_plugin_synapticsmst_func (void)
 	g_assert_no_error (error);
 	g_assert (ret);
 
-	/* Test with no Synaptics MST devices */
-	test_directory = SOURCEDIR "/tests/no_devices";
-	g_assert(g_file_test (test_directory, G_FILE_TEST_IS_DIR));
+	_test_add_fake_devices_from_dir (plugin, SOURCEDIR "/tests/no_devices");
+	g_assert_cmpint (devices->len, ==, 0);
+}
 
-	g_setenv ("FWUPD_SYNAPTICSMST_FW_DIR", test_directory, TRUE);
-	ret = fu_plugin_runner_coldplug (plugin, &error);
+/* emulate adding/removing a Dell TB16 dock */
+static void
+fu_plugin_synapticsmst_tb16_func (void)
+{
+	gboolean ret;
+	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+
+	g_signal_connect (plugin, "device-added",
+			  G_CALLBACK (_plugin_device_added_cb),
+			  &devices);
+	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_synapticsmst.so", &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	ret = fu_plugin_runner_startup (plugin, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
-	/* Emulate adding/removing a Dell TB16 dock */
-	test_directory = SOURCEDIR "/tests/tb16_dock";
-
-	g_assert (g_file_test (test_directory, G_FILE_TEST_IS_DIR));
-
-	g_setenv ("FWUPD_SYNAPTICSMST_FW_DIR", test_directory, TRUE);
-	ret = fu_plugin_runner_coldplug (plugin, &error);
-	g_assert_no_error (error);
-	g_assert (ret);
-
-	device_count = devices->len;
-	g_assert_cmpuint (device_count, ==, 2);
-
-	for (guint i = 0; i < device_count; i++) {
-		device = g_ptr_array_index (devices, i);
-		g_assert_cmpstr (fu_device_get_version (device), ==, "3.10.002");
-		g_ptr_array_remove (devices, device);
-		fu_plugin_device_remove (plugin, device);
+	_test_add_fake_devices_from_dir (plugin, SOURCEDIR "/tests/tb16_dock");
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device = g_ptr_array_index (devices, i);
+		g_autofree gchar *tmp = fu_device_to_string (device);
+		g_debug ("%s", tmp);
 	}
-	g_ptr_array_unref (devices);
+	g_assert_cmpint (devices->len, ==, 2);
 }
 
 int
@@ -85,6 +110,7 @@ main (int argc, char **argv)
 	g_assert_cmpint (g_mkdir_with_parents ("/tmp/fwupd-self-test/var/lib/fwupd", 0755), ==, 0);
 
 	/* tests go here */
-	g_test_add_func ("/fwupd/plugin{synapticsmst}", fu_plugin_synapticsmst_func);
+	g_test_add_func ("/fwupd/plugin/synapticsmst{none}", fu_plugin_synapticsmst_none_func);
+	g_test_add_func ("/fwupd/plugin/synapticsmst{tb16}", fu_plugin_synapticsmst_tb16_func);
 	return g_test_run ();
 }

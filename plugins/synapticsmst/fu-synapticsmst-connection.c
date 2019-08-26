@@ -40,18 +40,20 @@ fu_synapticsmst_connection_aux_node_read (FuSynapticsmstConnection *self,
 					  gint length, GError **error)
 {
 	if (lseek (self->fd, offset, SEEK_SET) != offset) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "failed to lseek");
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "failed to lseek to 0x%x on layer:%u, rad:0x%x",
+			     offset, self->layer, self->rad);
 		return FALSE;
 	}
 
 	if (read (self->fd, buf, length) != length) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "failed to read");
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "failed to read 0x%x bytes on layer:%u, rad:0x%x",
+			     (guint) length, self->layer, self->rad);
 		return FALSE;
 	}
 
@@ -64,18 +66,20 @@ fu_synapticsmst_connection_aux_node_write (FuSynapticsmstConnection *self,
 					   gint length, GError **error)
 {
 	if (lseek (self->fd, offset, SEEK_SET) != offset) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "failed to lseek");
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "failed to lseek to 0x%x on layer:%u, rad:0x%x",
+			     offset, self->layer, self->rad);
 		return FALSE;
 	}
 
 	if (write (self->fd, buf, length) != length) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "failed to write");
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "failed to write 0x%x bytes on layer:%u, rad:0x%x",
+			     (guint) length, self->layer, self->rad);
 		return FALSE;
 	}
 
@@ -472,26 +476,13 @@ fu_synapticsmst_connection_enable_rc (FuSynapticsmstConnection *self, GError **e
 
 	for (gint i = 0; i <= self->layer; i++) {
 		g_autoptr(FuSynapticsmstConnection) connection_tmp = NULL;
-		g_autoptr(GError) error_local = NULL;
 		connection_tmp = fu_synapticsmst_connection_new (self->fd, i, self->rad);
 		if (!fu_synapticsmst_connection_rc_set_command (connection_tmp,
 								UPDC_ENABLE_RC,
 								5, 0, (guint8*)sc,
-								&error_local)) {
-			g_debug ("Failed to enable remote control in layer %d: %s, retrying",
-				 i, error_local->message);
-
-			if (!fu_synapticsmst_connection_disable_rc (connection_tmp, error))
-				return FALSE;
-			if (!fu_synapticsmst_connection_rc_set_command (connection_tmp,
-									UPDC_ENABLE_RC,
-									5, 0, (guint8*)sc,
-									error)) {
-				g_prefix_error (error,
-						"failed to enable remote control in layer %d: ",
-						i);
-				return FALSE;
-			}
+								error)) {
+			g_prefix_error (error, "failed to enable remote control: ");
+			return FALSE;
 		}
 	}
 
@@ -508,9 +499,7 @@ fu_synapticsmst_connection_disable_rc (FuSynapticsmstConnection *self, GError **
 								UPDC_DISABLE_RC,
 								0, 0, NULL,
 								error)) {
-			g_prefix_error (error,
-					"failed to disable remote control in layer %d: ",
-					i);
+			g_prefix_error (error, "failed to disable remote control: ");
 			return FALSE;
 		}
 	}
