@@ -382,7 +382,7 @@ fu_util_build_device_tree (FuUtilPrivate *priv, GNode *root, GPtrArray *devs, Fw
 }
 
 static gboolean
-fu_util_get_topology (FuUtilPrivate *priv, gchar **values, GError **error)
+fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GNode) root = g_node_new (NULL);
 	g_autoptr(GPtrArray) devs = NULL;
@@ -401,39 +401,6 @@ fu_util_get_topology (FuUtilPrivate *priv, gchar **values, GError **error)
 	fu_util_build_device_tree (priv, root, devs, NULL);
 	g_node_traverse (root, G_PRE_ORDER, G_TRAVERSE_ALL, -1,
 			 fu_util_print_device_tree, priv);
-
-	return TRUE;
-}
-
-static gboolean
-fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
-{
-	g_autoptr(GPtrArray) devs = NULL;
-
-	/* get results from daemon */
-	devs = fwupd_client_get_devices (priv->client, NULL, error);
-	if (devs == NULL)
-		return FALSE;
-
-	/* print */
-	if (devs->len == 0) {
-		/* TRANSLATORS: nothing attached that can be upgraded */
-		g_print ("%s\n", _("No hardware detected with firmware update capability"));
-		return TRUE;
-	}
-
-	for (guint i = 0; i < devs->len; i++) {
-		g_autofree gchar *tmp = NULL;
-		FwupdDevice *dev = g_ptr_array_index (devs, i);
-		if (!fu_util_filter_device (priv, dev))
-			continue;
-		if (!priv->show_all_devices) {
-			if (!fu_util_is_interesting_device (dev))
-				continue;
-		}
-		tmp = fu_util_device_to_string (dev, 0);
-		g_print ("%s\n", tmp);
-	}
 
 	/* nag? */
 	if (!fu_util_perhaps_show_unreported (priv, error))
@@ -2204,17 +2171,11 @@ main (int argc, char *argv[])
 
 	/* add commands */
 	fu_util_cmd_array_add (cmd_array,
-		     "get-devices",
+		     "get-devices,get-topology",
 		     NULL,
 		     /* TRANSLATORS: command description */
 		     _("Get all devices that support firmware updates"),
 		     fu_util_get_devices);
-	fu_util_cmd_array_add (cmd_array,
-		     "get-topology",
-		     NULL,
-		     /* TRANSLATORS: command description */
-		     _("Get all devices according to the system topology"),
-		     fu_util_get_topology);
 	fu_util_cmd_array_add (cmd_array,
 		     "get-history",
 		     NULL,
