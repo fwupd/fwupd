@@ -156,6 +156,25 @@ fu_archive_cab_func (void)
 }
 
 static void
+fu_common_string_append_kv_func (void)
+{
+	g_autoptr(GString) str = g_string_new (NULL);
+	fu_common_string_append_kv (str, 0, "hdr", NULL);
+	fu_common_string_append_kv (str, 0, "key", "value");
+	fu_common_string_append_kv (str, 0, "key1", "value1");
+	fu_common_string_append_kv (str, 1, "key2", "value2");
+	fu_common_string_append_kv (str, 1, "", "value2");
+	fu_common_string_append_kv (str, 2, "key3", "value3");
+	g_assert_cmpstr (str->str, ==,
+			 "hdr:\n"
+			 "key:                     value\n"
+			 "key1:                    value1\n"
+			 "  key2:                  value2\n"
+			 "                         value2\n"
+			 "    key3:                value3\n");
+}
+
+static void
 fu_common_version_guess_format_func (void)
 {
 	g_assert_cmpint (fu_common_version_guess_format (NULL), ==, FWUPD_VERSION_FORMAT_UNKNOWN);
@@ -4062,6 +4081,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/keyring{pkcs7-self-signed}", fu_keyring_pkcs7_self_signed_func);
 	g_test_add_func ("/fwupd/plugin{build-hash}", fu_plugin_hash_func);
 	g_test_add_func ("/fwupd/chunk", fu_chunk_func);
+	g_test_add_func ("/fwupd/common{string-append-kv}", fu_common_string_append_kv_func);
 	g_test_add_func ("/fwupd/common{version-guess-format}", fu_common_version_guess_format_func);
 	g_test_add_func ("/fwupd/common{version}", fu_common_version_func);
 	g_test_add_func ("/fwupd/common{vercmp}", fu_common_vercmp_func);

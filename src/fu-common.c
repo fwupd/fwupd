@@ -1126,7 +1126,8 @@ fu_common_string_replace (GString *string, const gchar *search, const gchar *rep
 void
 fu_common_string_append_kv (GString *str, guint idt, const gchar *key, const gchar *value)
 {
-	const guint align = 23;
+	const guint align = 25;
+	gsize keysz;
 
 	g_return_if_fail (idt * 2 < align);
 
@@ -1137,10 +1138,12 @@ fu_common_string_append_kv (GString *str, guint idt, const gchar *key, const gch
 		g_string_append (str, "  ");
 	if (key[0] != '\0') {
 		g_string_append_printf (str, "%s:", key);
-		idt++;
+		keysz = (idt * 2) + strlen (key) + 1;
+	} else {
+		keysz = idt * 2;
 	}
 	if (value != NULL) {
-		for (gsize i = strlen (key) + idt; i < align; i++)
+		for (gsize i = keysz; i < align; i++)
 			g_string_append (str, " ");
 		g_string_append (str, value);
 	}
