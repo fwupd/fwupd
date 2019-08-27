@@ -79,6 +79,7 @@ warning_flags = [
   '-Wno-cast-function-type',
   '-Wno-address-of-packed-member',  # incompatible with g_autoptr()
   '-Wno-unknown-pragmas',
+  '-Wno-deprecated-declarations',
   '-Wno-discarded-qualifiers',
   '-Wno-missing-field-initializers',
   '-Wno-strict-aliasing',
