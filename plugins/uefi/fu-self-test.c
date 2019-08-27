@@ -65,7 +65,7 @@ fu_uefi_pcrs_2_0_func (void)
 	g_assert_true (ret);
 	pcr0s = fu_uefi_pcrs_get_checksums (pcrs, 0);
 	g_assert_nonnull (pcr0s);
-	g_assert_cmpint (pcr0s->len, >=, 2);
+	g_assert_cmpint (pcr0s->len, >=, 1);
 	pcrXs = fu_uefi_pcrs_get_checksums (pcrs, 999);
 	g_assert_nonnull (pcrXs);
 	g_assert_cmpint (pcrXs->len, ==, 0);
