@@ -871,12 +871,18 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 		return NULL;
 	}
 
-	/* all devices have a name */
-	fu_common_string_append_kv (str, idt, fwupd_device_get_name (dev), NULL);
+	tmp = fwupd_device_get_name (dev);
+	if (tmp == NULL) {
+		/* TRANSLATORS: Name of hardware */
+		tmp = _("Unknown Device");
+	}
+	fu_common_string_append_kv (str, idt, tmp, NULL);
 
-	/* TRANSLATORS: ID for hardware, typically a SHA1 sum */
-	fu_common_string_append_kv (str, idt + 1, _("Device ID"),
-				    fwupd_device_get_id (dev));
+	tmp = fwupd_device_get_id (dev);
+	if (tmp != NULL) {
+		/* TRANSLATORS: ID for hardware, typically a SHA1 sum */
+		fu_common_string_append_kv (str, idt + 1, _("Device ID"), tmp);
+	}
 
 	/* summary */
 	tmp = fwupd_device_get_summary (dev);
@@ -964,11 +970,7 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 		g_string_append_printf (flags_str, "%s|",
 					fwupd_device_flag_to_string ((guint64) 1 << i));
 	}
-	if (str->len == 0) {
-		/* TRANSLATORS: device properties */
-		fu_common_string_append_kv (flags_str, idt + 1, _("Flags"),
-					    fwupd_device_flag_to_string (0));
-	} else {
+	if (flags_str->len > 0) {
 		g_string_truncate (flags_str, flags_str->len - 1);
 		/* TRANSLATORS: device properties */
 		fu_common_string_append_kv (str, idt + 1, _("Flags"), flags_str->str);
