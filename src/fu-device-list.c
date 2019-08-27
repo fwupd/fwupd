@@ -702,6 +702,7 @@ fu_device_list_wait_for_replug (FuDeviceList *self, FuDevice *device, GError **e
 	if (item->replug_id != 0) {
 		g_debug ("waited for replug");
 		g_source_remove (item->replug_id);
+		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 		item->replug_id = 0;
 		return TRUE;
 	}

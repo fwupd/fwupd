@@ -1527,6 +1527,7 @@ fu_device_list_replug_auto_func (void)
 	ret = fu_device_list_wait_for_replug (device_list, device1, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
+	g_assert_false (fu_device_has_flag (device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG));
 
 	/* check device2 now has parent too */
 	g_assert (fu_device_get_parent (device2) == parent);
@@ -1536,6 +1537,7 @@ fu_device_list_replug_auto_func (void)
 	ret = fu_device_list_wait_for_replug (device_list, device2, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert (!ret);
+	g_assert_true (fu_device_has_flag (device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG));
 }
 
 static void
@@ -1585,6 +1587,7 @@ fu_device_list_replug_user_func (void)
 	ret = fu_device_list_wait_for_replug (device_list, device1, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
+	g_assert_false (fu_device_has_flag (device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG));
 }
 
 static void
