@@ -740,8 +740,7 @@ fu_dell_dock_ec_write_fw (FuDevice *device,
 	guint8 progress1 = 0, progress0 = 0;
 	gsize fw_size = 0;
 	const guint8 *data;
-	gsize write_size =
-	    (fw_size / HIDI2C_MAX_WRITE) >= 1 ? HIDI2C_MAX_WRITE : fw_size;
+	gsize write_size = 0;
 	gsize nwritten = 0;
 	guint32 address = 0 | 0xff << 24;
 	g_autofree gchar *dynamic_version = NULL;
@@ -755,6 +754,7 @@ fu_dell_dock_ec_write_fw (FuDevice *device,
 	if (fw == NULL)
 		return FALSE;
 	data = g_bytes_get_data (fw, &fw_size);
+	write_size =  (fw_size / HIDI2C_MAX_WRITE) >= 1 ? HIDI2C_MAX_WRITE : fw_size;
 
 	dynamic_version = g_strndup ((gchar *) data + self->blob_version_offset, 11);
 	g_debug ("writing EC firmware version %s", dynamic_version);
