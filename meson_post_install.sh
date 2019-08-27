@@ -11,6 +11,4 @@ LOCALSTATEDIR=$2
     echo 'Updating systemd deps'
     mkdir -p ${DESTDIR}${SYSTEMDUNITDIR}/system-update.target.wants
     ln -sf ../fwupd-offline-update.service ${DESTDIR}${SYSTEMDUNITDIR}/system-update.target.wants/fwupd-offline-update.service
-    echo 'Creating stateful directory'
-    mkdir -p ${DESTDIR}${LOCALSTATEDIR}/lib/fwupd
 #fi
