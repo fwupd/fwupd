@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
+#define G_LOG_DOMAIN				"FuMain"
+
 #include <config.h>
 
 #include <stdio.h>
@@ -145,7 +147,7 @@ fu_util_print_device_tree (GNode *n, gpointer data)
 	g_auto(GStrv) split = NULL;
 
 	/* root node */
-	if (dev == NULL) {
+	if (dev == NULL && g_getenv ("FWUPD_VERBOSE") == NULL) {
 		g_print ("○\n");
 		return FALSE;
 	}
