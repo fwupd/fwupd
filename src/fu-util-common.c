@@ -154,6 +154,8 @@ fu_util_print_device_tree (GNode *n, gpointer data)
 
 	/* get split lines */
 	tmp = fu_util_device_to_string (dev, idx);
+	if (tmp == NULL)
+		return FALSE;
 	split = g_strsplit (tmp, "\n", -1);
 	for (guint i = 0; split[i] != NULL; i++) {
 		g_autoptr(GString) str = g_string_new (NULL);
@@ -865,8 +867,8 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 	if (g_getenv ("FWUPD_VERBOSE") != NULL) {
 		g_autofree gchar *debug_str = NULL;
 		debug_str = fwupd_device_to_string (dev);
-		g_string_append (str, debug_str);
-		return g_string_free (str, FALSE);
+		g_debug ("%s", debug_str);
+		return NULL;
 	}
 
 	/* all devices have a name */
