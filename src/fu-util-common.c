@@ -140,37 +140,58 @@ gboolean
 fu_util_print_device_tree (GNode *n, gpointer data)
 {
 	FwupdDevice *dev = FWUPD_DEVICE (n->data);
-	const gchar *name;
-	g_autoptr(GString) str = g_string_new (NULL);
+	guint idx = g_node_depth (n) - 1;
+	g_autofree gchar *tmp = NULL;
+	g_auto(GStrv) split = NULL;
 
 	/* root node */
 	if (dev == NULL) {
 		g_print ("○\n");
 		return FALSE;
 	}
+	if (n->parent == NULL)
+		return FALSE;
 
-	/* add previous branches */
-	for (GNode *c = n->parent; c->parent != NULL; c = c->parent) {
-		if (g_node_next_sibling (c) == NULL)
+	/* get split lines */
+	tmp = fu_util_device_to_string (dev, idx);
+	split = g_strsplit (tmp, "\n", -1);
+	for (guint i = 0; split[i] != NULL; i++) {
+		g_autoptr(GString) str = g_string_new (NULL);
+
+		/* device header */
+		if (i == 0) {
+			if (g_node_next_sibling (n) == NULL)
+				g_string_prepend (str, "└─");
+			else
+				g_string_prepend (str, "├─");
+
+		/* device properties */
+		} else {
+			g_string_prepend (str, n->children == NULL ? "  " : " │");
+			g_string_prepend (str, g_node_next_sibling (n) == NULL ? " " : "│");
+			g_string_append (str, " ");
+		}
+
+		/* ancestors */
+		for (GNode *c = n->parent; c->parent != NULL; c = c->parent) {
+			if (g_node_next_sibling (c) != NULL || idx == 0) {
+				g_string_prepend (str, "│ ");
+				continue;
+			}
 			g_string_prepend (str, "  ");
-		else
-			g_string_prepend (str, "│ ");
+		}
+
+		/* empty line */
+		if (split[i][0] == '\0') {
+			g_print ("%s\n", str->str);
+			continue;
+		}
+
+		/* dump to the console */
+		g_string_append (str, split[i] + (idx * 2));
+		g_print ("%s\n", str->str);
 	}
 
-	/* add this branch */
-	if (g_node_last_sibling (n) == n)
-		g_string_append (str, "└─ ");
-	else
-		g_string_append (str, "├─ ");
-
-	/* dump to the console */
-	name = fwupd_device_get_name (dev);
-	if (name == NULL)
-		name = "Unknown device";
-	g_string_append (str, name);
-	for (guint i = strlen (name) + 2 * g_node_depth (n); i < 45; i++)
-		g_string_append_c (str, ' ');
-	g_print ("%s %s\n", str->str, fu_device_get_id (dev));
 	return FALSE;
 }
 
