@@ -8,6 +8,7 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/utsname.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <string.h>
@@ -36,6 +37,37 @@ typedef void (*UEventNotify) (FuPlugin	  *plugin,
 struct FuPluginData {
 	GUdevClient   *udev;
 };
+
+static gboolean
+fu_plugin_thunderbolt_safe_kernel (FuPlugin *plugin, GError **error)
+{
+	g_autofree gchar *minimum_kernel = NULL;
+	struct utsname name_tmp;
+
+	memset (&name_tmp, 0, sizeof(struct utsname));
+	if (uname (&name_tmp) < 0) {
+		g_debug ("Failed to read current kernel version");
+		return TRUE;
+	}
+
+	minimum_kernel = fu_plugin_get_config_value (plugin, "MinimumKernelVersion");
+	if (minimum_kernel == NULL) {
+		g_debug ("Ignoring kernel safety checks");
+		return TRUE;
+	}
+
+	if (fu_common_vercmp (name_tmp.release, minimum_kernel) < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "kernel %s may not have full Thunderbolt support",
+			     name_tmp.release);
+		return FALSE;
+	}
+	g_debug ("Using kernel %s (minimum %s)", name_tmp.release, minimum_kernel);
+
+	return TRUE;
+}
 
 static gchar *
 fu_plugin_thunderbolt_gen_id_from_syspath (const gchar *syspath)
@@ -625,6 +657,12 @@ fu_plugin_thunderbolt_coldplug (FuPlugin *plugin, GError **error)
 	g_list_free (devices);
 
 	return TRUE;
+}
+
+gboolean
+fu_plugin_startup (FuPlugin *plugin, GError **error)
+{
+	return fu_plugin_thunderbolt_safe_kernel (plugin, error);
 }
 
 gboolean
