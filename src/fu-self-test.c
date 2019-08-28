@@ -420,6 +420,7 @@ fu_engine_requirements_device_func (void)
 		"    <firmware compare=\"ge\" version=\"1.2.3\"/>"
 		"    <firmware compare=\"eq\" version=\"4.5.6\">bootloader</firmware>"
 		"    <firmware compare=\"eq\" version=\"FFFF\">vendor-id</firmware>"
+		"    <id compare=\"ge\" version=\"4.0.0\">org.kernel</id>"
 		"  </requires>"
 		"  <provides>"
 		"    <firmware type=\"flashed\">12345678-1234-1234-1234-123456789012</firmware>"

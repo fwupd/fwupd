@@ -1305,9 +1305,6 @@ fu_engine_get_report_metadata (FuEngine *self)
 		g_hash_table_insert (hash,
 				     g_strdup ("CpuArchitecture"),
 				     g_strdup (name_tmp.machine));
-		g_hash_table_insert (hash,
-				     g_strdup ("KernelVersion"),
-				     g_strdup (name_tmp.release));
 	}
 
 	/* add the kernel boot time so we can detect a reboot */
@@ -4740,6 +4737,7 @@ fu_engine_idle_status_notify_cb (FuIdle *idle, GParamSpec *pspec, FuEngine *self
 static void
 fu_engine_init (FuEngine *self)
 {
+	struct utsname uname_tmp;
 	self->percentage = 0;
 	self->status = FWUPD_STATUS_IDLE;
 	self->config = fu_config_new ();
@@ -4772,6 +4770,11 @@ fu_engine_init (FuEngine *self)
 #if G_USB_CHECK_VERSION(0,3,1)
 	fu_engine_add_runtime_version (self, "org.freedesktop.gusb", g_usb_version_string ());
 #endif
+
+	/* optional kernel version */
+	memset (&uname_tmp, 0, sizeof(uname_tmp));
+	if (uname (&uname_tmp) >= 0)
+		fu_engine_add_runtime_version (self, "org.kernel", uname_tmp.release);
 
 	g_hash_table_insert (self->compile_versions,
 			     g_strdup ("com.redhat.fwupdate"),
