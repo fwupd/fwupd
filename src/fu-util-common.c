@@ -858,7 +858,6 @@ gchar *
 fu_util_device_to_string (FwupdDevice *dev, guint idt)
 {
 	FwupdUpdateState state;
-	GPtrArray *guids = fwupd_device_get_guids (dev);
 	GString *str = g_string_new (NULL);
 	const gchar *tmp;
 	const gchar *tmp2;
@@ -978,16 +977,6 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 		fu_common_string_append_kv (str, idt + 1, _("Flags"), flags_str->str);
 	}
 
-	/* all GUIDs for this hardware */
-	for (guint i = 0; i < guids->len; i++) {
-		tmp = g_ptr_array_index (guids, i);
-		if (i == 0) {
-			/* TRANSLATORS: global ID common to all similar hardware */
-			fu_common_string_append_kv (str, idt + 1, ngettext ("GUID", "GUIDs", guids->len), tmp);
-		} else {
-			fu_common_string_append_kv (str, idt + 1, "", tmp);
-		}
-	}
 	return g_string_free (str, FALSE);
 }
 
