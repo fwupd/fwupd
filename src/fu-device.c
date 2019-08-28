@@ -2109,7 +2109,7 @@ fu_device_probe (FuDevice *self, GError **error)
  *
  * Returns: %TRUE for success
  *
- * Since: 1.2.11
+ * Since: 1.3.1
  **/
 gboolean
 fu_device_rescan (FuDevice *self, GError **error)

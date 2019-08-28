@@ -39,7 +39,7 @@ G_DEFINE_TYPE_WITH_PRIVATE (FuFirmware, fu_firmware, G_TYPE_OBJECT)
  *
  * Returns: %TRUE for success
  *
- * Since: 1.2.11
+ * Since: 1.3.1
  **/
 gboolean
 fu_firmware_parse_full (FuFirmware *self,
@@ -77,7 +77,7 @@ fu_firmware_parse_full (FuFirmware *self,
  *
  * Returns: %TRUE for success
  *
- * Since: 1.2.11
+ * Since: 1.3.1
  **/
 gboolean
 fu_firmware_parse (FuFirmware *self, GBytes *fw, FwupdInstallFlags flags, GError **error)
@@ -94,7 +94,7 @@ fu_firmware_parse (FuFirmware *self, GBytes *fw, FwupdInstallFlags flags, GError
  *
  * Returns: (transfer full): a #GBytes
  *
- * Since: 1.2.11
+ * Since: 1.3.1
  **/
 GBytes *
 fu_firmware_write (FuFirmware *self, GError **error)
@@ -121,7 +121,7 @@ fu_firmware_write (FuFirmware *self, GError **error)
  *
  * If an image with the same ID is already present it is replaced.
  *
- * Since: 1.2.11
+ * Since: 1.3.1
  **/
 void
 fu_firmware_add_image (FuFirmware *self, FuFirmwareImage *img)
@@ -140,7 +140,7 @@ fu_firmware_add_image (FuFirmware *self, FuFirmwareImage *img)
  *
  * Returns: (transfer container) (element-type FuFirmwareImage): images
  *
- * Since: 1.2.11
+ * Since: 1.3.1
  **/
 GPtrArray *
 fu_firmware_get_images (FuFirmware *self)
@@ -168,7 +168,7 @@ fu_firmware_get_images (FuFirmware *self)
  *
  * Returns: (transfer full): a #FuFirmwareImage, or %NULL if the image is not found
  *
- * Since: 1.2.11
+ * Since: 1.3.1
  **/
 FuFirmwareImage *
 fu_firmware_get_image_by_id (FuFirmware *self, const gchar *id, GError **error)
@@ -200,7 +200,7 @@ fu_firmware_get_image_by_id (FuFirmware *self, const gchar *id, GError **error)
  *
  * Returns: (transfer full): a #GBytes of a #FuFirmwareImage, or %NULL if the image is not found
  *
- * Since: 1.2.11
+ * Since: 1.3.1
  **/
 GBytes *
 fu_firmware_get_image_by_id_bytes (FuFirmware *self, const gchar *id, GError **error)
@@ -221,7 +221,7 @@ fu_firmware_get_image_by_id_bytes (FuFirmware *self, const gchar *id, GError **e
  *
  * Returns: (transfer full): a #FuFirmwareImage, or %NULL if the image is not found
  *
- * Since: 1.2.11
+ * Since: 1.3.1
  **/
 FuFirmwareImage *
 fu_firmware_get_image_by_idx (FuFirmware *self, guint64 idx, GError **error)
@@ -253,7 +253,7 @@ fu_firmware_get_image_by_idx (FuFirmware *self, guint64 idx, GError **error)
  *
  * Returns: (transfer full): a #GBytes of a #FuFirmwareImage, or %NULL if the image is not found
  *
- * Since: 1.2.11
+ * Since: 1.3.1
  **/
 GBytes *
 fu_firmware_get_image_by_idx_bytes (FuFirmware *self, guint64 idx, GError **error)
@@ -276,7 +276,7 @@ fu_firmware_get_image_by_idx_bytes (FuFirmware *self, guint64 idx, GError **erro
  *
  * Returns: (transfer full): a #FuFirmwareImage, or %NULL if the image is not found
  *
- * Since: 1.2.11
+ * Since: 1.3.1
  **/
 FuFirmwareImage *
 fu_firmware_get_image_default (FuFirmware *self, GError **error)
@@ -308,7 +308,7 @@ fu_firmware_get_image_default (FuFirmware *self, GError **error)
  *
  * Returns: (transfer full): a #GBytes of the image, or %NULL if the image is not found
  *
- * Since: 1.2.11
+ * Since: 1.3.1
  **/
 GBytes *
 fu_firmware_get_image_default_bytes (FuFirmware *self, GError **error)
@@ -327,7 +327,7 @@ fu_firmware_get_image_default_bytes (FuFirmware *self, GError **error)
  *
  * Returns: a string value, or %NULL for invalid.
  *
- * Since: 1.2.11
+ * Since: 1.3.1
  **/
 gchar *
 fu_firmware_to_string (FuFirmware *self)
@@ -381,7 +381,7 @@ fu_firmware_class_init (FuFirmwareClass *klass)
  *
  * Returns: a #FuFirmware
  *
- * Since: 1.2.11
+ * Since: 1.3.1
  **/
 FuFirmware *
 fu_firmware_new (void)
@@ -398,7 +398,7 @@ fu_firmware_new (void)
  *
  * Returns: a #FuFirmware
  *
- * Since: 1.2.11
+ * Since: 1.3.1
  **/
 FuFirmware *
 fu_firmware_new_from_bytes (GBytes *fw)

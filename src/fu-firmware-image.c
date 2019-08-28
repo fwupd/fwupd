@@ -33,7 +33,7 @@ G_DEFINE_TYPE_WITH_PRIVATE (FuFirmwareImage, fu_firmware_image, G_TYPE_OBJECT)
  * @self: a #FuPlugin
  * @id: image ID, e.g. "config"
  *
- * Since: 1.2.11
+ * Since: 1.3.1
  **/
 void
 fu_firmware_image_set_id (FuFirmwareImage *self, const gchar *id)
@@ -53,7 +53,7 @@ fu_firmware_image_set_id (FuFirmwareImage *self, const gchar *id)
  *
  * Returns: image ID, e.g. "config"
  *
- * Since: 1.2.11
+ * Since: 1.3.1
  **/
 const gchar *
 fu_firmware_image_get_id (FuFirmwareImage *self)
@@ -70,7 +70,7 @@ fu_firmware_image_get_id (FuFirmwareImage *self)
  *
  * Sets the base address of the image.
  *
- * Since: 1.2.11
+ * Since: 1.3.1
  **/
 void
 fu_firmware_image_set_addr (FuFirmwareImage *self, guint64 addr)
@@ -88,7 +88,7 @@ fu_firmware_image_set_addr (FuFirmwareImage *self, guint64 addr)
  *
  * Returns: integer
  *
- * Since: 1.2.11
+ * Since: 1.3.1
  **/
 guint64
 fu_firmware_image_get_addr (FuFirmwareImage *self)
@@ -105,7 +105,7 @@ fu_firmware_image_get_addr (FuFirmwareImage *self)
  *
  * Sets the index of the image which is used for ordering.
  *
- * Since: 1.2.11
+ * Since: 1.3.1
  **/
 void
 fu_firmware_image_set_idx (FuFirmwareImage *self, guint64 idx)
@@ -123,7 +123,7 @@ fu_firmware_image_set_idx (FuFirmwareImage *self, guint64 idx)
  *
  * Returns: integer
  *
- * Since: 1.2.11
+ * Since: 1.3.1
  **/
 guint64
 fu_firmware_image_get_idx (FuFirmwareImage *self)
@@ -140,7 +140,7 @@ fu_firmware_image_get_idx (FuFirmwareImage *self)
  *
  * Sets the contents of the image if not created with fu_firmware_image_new().
  *
- * Since: 1.2.11
+ * Since: 1.3.1
  **/
 void
 fu_firmware_image_set_bytes (FuFirmwareImage *self, GBytes *bytes)
@@ -161,7 +161,7 @@ fu_firmware_image_set_bytes (FuFirmwareImage *self, GBytes *bytes)
  *
  * Returns: (transfer full): a #GBytes of the bytes, or %NULL if the bytes is not set
  *
- * Since: 1.2.11
+ * Since: 1.3.1
  **/
 GBytes *
 fu_firmware_image_get_bytes (FuFirmwareImage *self, GError **error)
@@ -196,7 +196,7 @@ fu_firmware_image_get_bytes (FuFirmwareImage *self, GError **error)
  *
  * Return value: (transfer full): a #GBytes, or %NULL
  *
- * Since: 1.2.11
+ * Since: 1.3.1
  **/
 GBytes *
 fu_firmware_image_get_bytes_chunk (FuFirmwareImage *self,
@@ -264,7 +264,7 @@ fu_firmware_image_add_string (FuFirmwareImage *self, guint idt, GString *str)
  *
  * Returns: a string value, or %NULL for invalid.
  *
- * Since: 1.2.11
+ * Since: 1.3.1
  **/
 gchar *
 fu_firmware_image_to_string (FuFirmwareImage *self)
@@ -306,7 +306,7 @@ fu_firmware_image_class_init (FuFirmwareImageClass *klass)
  *
  * Returns: a #FuFirmwareImage
  *
- * Since: 1.2.11
+ * Since: 1.3.1
  **/
 FuFirmwareImage *
 fu_firmware_image_new (GBytes *bytes)

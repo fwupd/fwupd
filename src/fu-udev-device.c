@@ -344,7 +344,7 @@ fu_udev_device_get_subsystem (FuUdevDevice *self)
  *
  * Returns: a device file, or NULL if unset
  *
- * Since: 1.2.11
+ * Since: 1.3.1
  **/
 const gchar *
 fu_udev_device_get_device_file (FuUdevDevice *self)
