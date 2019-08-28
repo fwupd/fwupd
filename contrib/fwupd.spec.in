@@ -232,6 +232,7 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %if 0%{?have_redfish}
 %config(noreplace)%{_sysconfdir}/fwupd/redfish.conf
 %endif
+%config(noreplace)%{_sysconfdir}/fwupd/thunderbolt.conf
 %dir %{_libexecdir}/fwupd
 %{_libexecdir}/fwupd/fwupd
 %{_libexecdir}/fwupd/fwupdtool
