@@ -371,3 +371,10 @@ LIBFWUPD_1.2.10 {
     fwupd_remote_array_from_variant;
   local: *;
 } LIBFWUPD_1.2.9;
+
+LIBFWUPD_1.3.1 {
+  global:
+    fwupd_remote_get_remotes_dir;
+    fwupd_remote_set_remotes_dir;
+  local: *;
+} LIBFWUPD_1.2.10;

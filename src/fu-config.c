@@ -200,12 +200,19 @@ fu_config_add_remotes_for_path (FuConfig *self, const gchar *path, GError **erro
 	while ((tmp = g_dir_read_name (dir)) != NULL) {
 		g_autofree gchar *filename = g_build_filename (path_remotes, tmp, NULL);
 		g_autoptr(FwupdRemote) remote = fwupd_remote_new ();
+		g_autofree gchar *localstatedir = NULL;
+		g_autofree gchar *remotesdir = NULL;
 
 		/* skip invalid files */
 		if (!g_str_has_suffix (tmp, ".conf")) {
 			g_debug ("skipping invalid file %s", filename);
 			continue;
 		}
+
+		/* set directory to store data */
+		localstatedir = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR_PKG);
+		remotesdir = g_build_filename (localstatedir, "remotes.d", NULL);
+		fwupd_remote_set_remotes_dir (remote, remotesdir);
 
 		/* load from keyfile */
 		g_debug ("loading config from %s", filename);

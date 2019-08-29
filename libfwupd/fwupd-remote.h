@@ -51,6 +51,7 @@ FwupdRemote	*fwupd_remote_new			(void);
 const gchar	*fwupd_remote_get_id			(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_title			(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_agreement		(FwupdRemote	*self);
+const gchar	*fwupd_remote_get_remotes_dir		(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_checksum		(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_username		(FwupdRemote	*self);
 const gchar	*fwupd_remote_get_password		(FwupdRemote	*self);
