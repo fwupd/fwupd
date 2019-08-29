@@ -138,38 +138,48 @@ fu_util_prompt_for_boolean (gboolean def)
 	return FALSE;
 }
 
-gboolean
-fu_util_print_device_tree (GNode *n, gpointer data)
+static gboolean
+fu_util_traverse_tree (GNode *n, gpointer data)
 {
-	FwupdDevice *dev = FWUPD_DEVICE (n->data);
 	guint idx = g_node_depth (n) - 1;
 	g_autofree gchar *tmp = NULL;
 	g_auto(GStrv) split = NULL;
 
+	/* get split lines */
+	if (FWUPD_IS_DEVICE (n->data)) {
+		FwupdDevice *dev = FWUPD_DEVICE (n->data);
+		tmp = fu_util_device_to_string (dev, idx);
+	} else if (FWUPD_IS_REMOTE (n->data)) {
+		FwupdRemote *remote = FWUPD_REMOTE (n->data);
+		tmp = fu_util_remote_to_string (remote, idx);
+	} else if (FWUPD_IS_RELEASE (n->data)) {
+		FwupdRelease *release = FWUPD_RELEASE (n->data);
+		tmp = fu_util_release_to_string (release, idx);
+		g_debug ("%s", tmp);
+	}
+
 	/* root node */
-	if (dev == NULL && g_getenv ("FWUPD_VERBOSE") == NULL) {
+	if (n->data == NULL && g_getenv ("FWUPD_VERBOSE") == NULL) {
 		g_print ("○\n");
 		return FALSE;
 	}
 	if (n->parent == NULL)
 		return FALSE;
 
-	/* get split lines */
-	tmp = fu_util_device_to_string (dev, idx);
 	if (tmp == NULL)
 		return FALSE;
 	split = g_strsplit (tmp, "\n", -1);
 	for (guint i = 0; split[i] != NULL; i++) {
 		g_autoptr(GString) str = g_string_new (NULL);
 
-		/* device header */
+		/* header */
 		if (i == 0) {
 			if (g_node_next_sibling (n) == NULL)
 				g_string_prepend (str, "└─");
 			else
 				g_string_prepend (str, "├─");
 
-		/* device properties */
+		/* properties */
 		} else {
 			g_string_prepend (str, n->children == NULL ? "  " : " │");
 			g_string_prepend (str, g_node_next_sibling (n) == NULL ? " " : "│");
@@ -197,6 +207,13 @@ fu_util_print_device_tree (GNode *n, gpointer data)
 	}
 
 	return FALSE;
+}
+
+void
+fu_util_print_tree (GNode *n, gpointer data)
+{
+	g_node_traverse (n, G_PRE_ORDER, G_TRAVERSE_ALL, -1,
+			 fu_util_traverse_tree, data);
 }
 
 gboolean
@@ -989,8 +1006,10 @@ fu_util_release_to_string (FwupdRelease *rel, guint idt)
 
 	g_return_val_if_fail (FWUPD_IS_RELEASE (rel), NULL);
 
+	fu_common_string_append_kv (str, idt, fwupd_release_get_name (rel), NULL);
+
 	/* TRANSLATORS: version number of new firmware */
-	fu_common_string_append_kv (str, idt, _("Version"),
+	fu_common_string_append_kv (str, idt + 1 , _("Version"),
 				    fwupd_release_get_version (rel));
 
 	if (fwupd_release_get_remote_id (rel) != NULL) {
@@ -1003,21 +1022,16 @@ fu_util_release_to_string (FwupdRelease *rel, guint idt)
 		fu_common_string_append_kv (str, idt + 1, _("Summary"),
 					    fwupd_release_get_summary (rel));
 	}
-	if (fwupd_release_get_description (rel) != NULL) {
-		g_autofree gchar *desc = NULL;
-		desc = fu_util_convert_description (fwupd_release_get_description (rel), NULL);
-		/* TRANSLATORS: multiline description of device */
-		fu_common_string_append_kv (str, idt + 1, _("Description"), desc);
-	}
 	if (fwupd_release_get_license (rel) != NULL) {
 		/* TRANSLATORS: e.g. GPLv2+, Non free etc */
 		fu_common_string_append_kv (str, idt + 1, _("License"),
 					    fwupd_release_get_license (rel));
 	}
 	if (fwupd_release_get_size (rel) != 0) {
+		g_autofree gchar *tmp = NULL;
+		tmp = g_format_size (fwupd_release_get_size (rel));
 		/* TRANSLATORS: file size of the download */
-		fu_common_string_append_kx (str, idt + 1, _("Size"),
-					    fwupd_release_get_size (rel));
+		fu_common_string_append_kv (str, idt + 1, _("Size"), tmp);
 	}
 	if (fwupd_release_get_details_url (rel) != NULL) {
 		/* TRANSLATORS: more details about the update link */
@@ -1058,6 +1072,129 @@ fu_util_release_to_string (FwupdRelease *rel, guint idt)
 		g_string_truncate (flags_str, flags_str->len - 1);
 		/* TRANSLATORS: release properties */
 		fu_common_string_append_kv (str, idt + 1, _("Flags"), flags_str->str);
+	}
+	if (fwupd_release_get_description (rel) != NULL) {
+		g_autofree gchar *desc = NULL;
+		desc = fu_util_convert_description (fwupd_release_get_description (rel), NULL);
+		/* TRANSLATORS: multiline description of device */
+		fu_common_string_append_kv (str, idt + 1, _("Description"), desc);
+	}
+
+	return g_string_free (str, FALSE);
+}
+
+gchar *
+fu_util_remote_to_string (FwupdRemote *remote, guint idt)
+{
+	GString *str = g_string_new (NULL);
+	FwupdRemoteKind kind = fwupd_remote_get_kind (remote);
+	FwupdKeyringKind keyring_kind = fwupd_remote_get_keyring_kind (remote);
+	const gchar *tmp;
+	gint priority;
+	gdouble age;
+
+	g_return_val_if_fail (FWUPD_IS_REMOTE (remote), NULL);
+
+	fu_common_string_append_kv (str, idt,
+				    fwupd_remote_get_title (remote), NULL);
+
+	/* TRANSLATORS: remote identifier, e.g. lvfs-testing */
+	fu_common_string_append_kv (str, idt + 1, _("Remote ID"),
+				    fwupd_remote_get_id (remote));
+
+	/* TRANSLATORS: remote type, e.g. remote or local */
+	fu_common_string_append_kv (str, idt + 1, _("Type"),
+				    fwupd_remote_kind_to_string (kind));
+
+	/* TRANSLATORS: keyring type, e.g. GPG or PKCS7 */
+	if (keyring_kind != FWUPD_KEYRING_KIND_UNKNOWN) {
+		fu_common_string_append_kv (str, idt + 1, _("Keyring"),
+					    fwupd_keyring_kind_to_string (keyring_kind));
+	}
+
+	/* TRANSLATORS: if the remote is enabled */
+	fu_common_string_append_kv (str, idt + 1, _("Enabled"),
+				    fwupd_remote_get_enabled (remote) ? "true" : "false");
+
+	tmp = fwupd_remote_get_checksum (remote);
+	if (tmp != NULL) {
+		/* TRANSLATORS: remote checksum */
+		fu_common_string_append_kv (str, idt + 1, _("Checksum"), tmp);
+	}
+
+	/* optional parameters */
+	age = fwupd_remote_get_age (remote);
+	if (kind == FWUPD_REMOTE_KIND_DOWNLOAD &&
+		age > 0 && age != G_MAXUINT64) {
+		const gchar *unit = "s";
+		g_autofree gchar *age_str = NULL;
+		if (age > 60) {
+			age /= 60.f;
+			unit = "m";
+		}
+		if (age > 60) {
+			age /= 60.f;
+			unit = "h";
+		}
+		if (age > 24) {
+			age /= 24.f;
+			unit = "d";
+		}
+		if (age > 7) {
+			age /= 7.f;
+			unit = "w";
+		}
+		age_str = g_strdup_printf ("%.2f%s", age, unit);
+		/* TRANSLATORS: the age of the metadata */
+		fu_common_string_append_kv (str, idt + 1, _("Age"), age_str);
+	}
+	priority = fwupd_remote_get_priority (remote);
+	if (priority != 0) {
+		g_autofree gchar *priority_str = NULL;
+		priority_str = g_strdup_printf ("%i", priority);
+		/* TRANSLATORS: the numeric priority */
+		fu_common_string_append_kv (str, idt + 1, _("Priority"), priority_str);
+	}
+	tmp = fwupd_remote_get_username (remote);
+	if (tmp != NULL) {
+		/* TRANSLATORS: remote filename base */
+		fu_common_string_append_kv (str, idt + 1, _("Username"), tmp);
+	}
+	tmp = fwupd_remote_get_password (remote);
+	if (tmp != NULL) {
+		g_autofree gchar *hidden = g_strnfill (strlen (tmp), '*');
+		/* TRANSLATORS: remote filename base */
+		fu_common_string_append_kv (str, idt + 1, _("Password"), hidden);
+	}
+	tmp = fwupd_remote_get_filename_cache (remote);
+	if (tmp != NULL) {
+		/* TRANSLATORS: filename of the local file */
+		fu_common_string_append_kv (str, idt + 1, _("Filename"), tmp);
+	}
+	tmp = fwupd_remote_get_filename_cache_sig (remote);
+	if (tmp != NULL) {
+		/* TRANSLATORS: filename of the local file */
+		fu_common_string_append_kv (str, idt + 1, _("Filename Signature"), tmp);
+	}
+	tmp = fwupd_remote_get_metadata_uri (remote);
+	if (tmp != NULL) {
+		/* TRANSLATORS: remote URI */
+		fu_common_string_append_kv (str, idt + 1, _("Metadata URI"), tmp);
+	}
+	tmp = fwupd_remote_get_metadata_uri_sig (remote);
+	if (tmp != NULL) {
+		/* TRANSLATORS: remote URI */
+		fu_common_string_append_kv (str, idt + 1, _("Metadata Signature"), tmp);
+	}
+	tmp = fwupd_remote_get_firmware_base_uri (remote);
+	if (tmp != NULL) {
+		/* TRANSLATORS: remote URI */
+		fu_common_string_append_kv (str, idt + 1, _("Firmware Base URI"), tmp);
+	}
+	tmp = fwupd_remote_get_report_uri (remote);
+	if (tmp != NULL) {
+		/* TRANSLATORS: URI to send success/failure reports */
+		fu_common_string_append_kv (str, idt + 1, _("Report URI"), tmp);
 	}
 
 	return g_string_free (str, FALSE);

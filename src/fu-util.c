@@ -399,8 +399,7 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 		return TRUE;
 	}
 	fu_util_build_device_tree (priv, root, devs, NULL);
-	g_node_traverse (root, G_PRE_ORDER, G_TRAVERSE_ALL, -1,
-			 fu_util_print_device_tree, priv);
+	fu_util_print_tree (root, priv);
 
 	/* nag? */
 	if (!fu_util_perhaps_show_unreported (priv, error))
@@ -485,6 +484,7 @@ static gboolean
 fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) array = NULL;
+	g_autoptr(GNode) root = g_node_new (NULL);
 
 	/* check args */
 	if (g_strv_length (values) != 1) {
@@ -499,12 +499,12 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	for (guint i = 0; i < array->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (array, i);
-		g_autofree gchar *tmp = NULL;
 		if (!fu_util_filter_device (priv, dev))
 			continue;
-		tmp = fu_util_device_to_string (dev, 0);
-		g_print ("%s\n", tmp);
+		g_node_append_data (root, dev);
 	}
+	fu_util_print_tree (root, priv);
+
 	return TRUE;
 }
 
@@ -788,6 +788,7 @@ static gboolean
 fu_util_get_history (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GNode) root = g_node_new (NULL);
 
 	/* get all devices from the history database */
 	devices = fwupd_client_get_history (priv->client, NULL, error);
@@ -797,12 +798,11 @@ fu_util_get_history (FuUtilPrivate *priv, gchar **values, GError **error)
 	/* show each device */
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
-		g_autofree gchar *str = NULL;
 		if (!fu_util_filter_device (priv, dev))
 			continue;
-		str = fu_util_device_to_string (dev, 0);
-		g_print ("%s\n", str);
+		g_node_append_data (root, dev);
 	}
+	fu_util_print_tree (root, priv);
 
 	return TRUE;
 }
@@ -1194,6 +1194,7 @@ fu_util_get_releases (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(GPtrArray) rels = NULL;
+	g_autoptr(GNode) root = g_node_new (NULL);
 
 	dev = fu_util_get_device_or_prompt (priv, values, error);
 	if (dev == NULL)
@@ -1203,16 +1204,19 @@ fu_util_get_releases (FuUtilPrivate *priv, gchar **values, GError **error)
 	rels = fwupd_client_get_releases (priv->client, fwupd_device_get_id (dev), NULL, error);
 	if (rels == NULL)
 		return FALSE;
-	g_print ("%s:\n", fwupd_device_get_name (dev));
+
+	if (rels->len == 0) {
+		/* TRANSLATORS: no repositories to download from */
+		g_print ("%s\n", _("No releases available"));
+		return TRUE;
+	}
+
 	for (guint i = 0; i < rels->len; i++) {
 		FwupdRelease *rel = g_ptr_array_index (rels, i);
-		g_autofree gchar *tmp = fu_util_release_to_string (rel, 0);
-		g_print ("%s", tmp);
-
-		/* new line between all but last entries */
-		if (i != rels->len - 1)
-			g_print ("\n");
+		g_node_append_data (root, rel);
 	}
+	fu_util_print_tree (root, priv);
+
 	return TRUE;
 }
 
@@ -1397,6 +1401,7 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
 	gboolean supported = FALSE;
+	g_autoptr(GNode) root = g_node_new (NULL);
 
 	/* are the remotes very old */
 	if (!fu_util_perhaps_refresh_remotes (priv, error))
@@ -1408,9 +1413,9 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
-		g_autofree gchar *tmp = NULL;
 		g_autoptr(GPtrArray) rels = NULL;
 		g_autoptr(GError) error_local = NULL;
+		GNode *child;
 
 		/* not going to have results, so save a D-Bus round-trip */
 		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
@@ -1427,19 +1432,17 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 			g_printerr ("%s\n", error_local->message);
 			continue;
 		}
+		child = g_node_append_data (root, dev);
 
-		/* TRANSLATORS: list of devices */
-		g_print ("%s\n", _("Firmware updates:"));
-		tmp = fu_util_device_to_string (dev, 0);
-		g_print ("%s", tmp);
-
-		/* print all releases */
+		/* add all releases */
 		for (guint j = 0; j < rels->len; j++) {
 			FwupdRelease *rel = g_ptr_array_index (rels, j);
-			g_autofree gchar *tmp2 = fu_util_release_to_string (rel, 1);
-			g_print ("%s\n", tmp2);
+			g_node_append_data (child, g_object_ref (rel));
 		}
 	}
+
+	if (g_node_n_nodes (root, G_TRAVERSE_ALL) > 1)
+		fu_util_print_tree (root, priv);
 
 	/* nag? */
 	if (!fu_util_perhaps_show_unreported (priv, error))
@@ -1461,125 +1464,24 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	g_autoptr(GNode) root = g_node_new (NULL);
 	g_autoptr(GPtrArray) remotes = NULL;
 
-	/* print any updates */
 	remotes = fwupd_client_get_remotes (priv->client, NULL, error);
 	if (remotes == NULL)
 		return FALSE;
-	for (guint i = 0; i < remotes->len; i++) {
-		FwupdRemote *remote = g_ptr_array_index (remotes, i);
-		FwupdRemoteKind kind = fwupd_remote_get_kind (remote);
-		FwupdKeyringKind keyring_kind = fwupd_remote_get_keyring_kind (remote);
-		const gchar *tmp;
-		gint priority;
-		gdouble age;
 
-		/* TRANSLATORS: remote identifier, e.g. lvfs-testing */
-		fu_util_print_data (_("Remote ID"),
-				    fwupd_remote_get_id (remote));
-
-		/* TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service" */
-		fu_util_print_data (_("Title"),
-				    fwupd_remote_get_title (remote));
-
-		/* TRANSLATORS: remote type, e.g. remote or local */
-		fu_util_print_data (_("Type"),
-				    fwupd_remote_kind_to_string (kind));
-
-		/* TRANSLATORS: keyring type, e.g. GPG or PKCS7 */
-		if (keyring_kind != FWUPD_KEYRING_KIND_UNKNOWN) {
-			fu_util_print_data (_("Keyring"),
-					    fwupd_keyring_kind_to_string (keyring_kind));
-		}
-
-		/* TRANSLATORS: if the remote is enabled */
-		fu_util_print_data (_("Enabled"),
-				    fwupd_remote_get_enabled (remote) ? "true" : "false");
-
-		/* TRANSLATORS: remote checksum */
-		fu_util_print_data (_("Checksum"),
-				    fwupd_remote_get_checksum (remote));
-
-		/* optional parameters */
-		age = fwupd_remote_get_age (remote);
-		if (kind == FWUPD_REMOTE_KIND_DOWNLOAD &&
-		    age > 0 && age != G_MAXUINT64) {
-			const gchar *unit = "s";
-			g_autofree gchar *age_str = NULL;
-			if (age > 60) {
-				age /= 60.f;
-				unit = "m";
-			}
-			if (age > 60) {
-				age /= 60.f;
-				unit = "h";
-			}
-			if (age > 24) {
-				age /= 24.f;
-				unit = "d";
-			}
-			if (age > 7) {
-				age /= 7.f;
-				unit = "w";
-			}
-			age_str = g_strdup_printf ("%.2f%s", age, unit);
-			/* TRANSLATORS: the age of the metadata */
-			fu_util_print_data (_("Age"), age_str);
-		}
-		priority = fwupd_remote_get_priority (remote);
-		if (priority != 0) {
-			g_autofree gchar *priority_str = NULL;
-			priority_str = g_strdup_printf ("%i", priority);
-			/* TRANSLATORS: the numeric priority */
-			fu_util_print_data (_("Priority"), priority_str);
-		}
-		tmp = fwupd_remote_get_username (remote);
-		if (tmp != NULL) {
-			/* TRANSLATORS: remote filename base */
-			fu_util_print_data (_("Username"), tmp);
-		}
-		tmp = fwupd_remote_get_password (remote);
-		if (tmp != NULL) {
-			g_autofree gchar *hidden = g_strnfill (strlen (tmp), '*');
-			/* TRANSLATORS: remote filename base */
-			fu_util_print_data (_("Password"), hidden);
-		}
-		tmp = fwupd_remote_get_filename_cache (remote);
-		if (tmp != NULL) {
-			/* TRANSLATORS: filename of the local file */
-			fu_util_print_data (_("Filename"), tmp);
-		}
-		tmp = fwupd_remote_get_filename_cache_sig (remote);
-		if (tmp != NULL) {
-			/* TRANSLATORS: filename of the local file */
-			fu_util_print_data (_("Filename Signature"), tmp);
-		}
-		tmp = fwupd_remote_get_metadata_uri (remote);
-		if (tmp != NULL) {
-			/* TRANSLATORS: remote URI */
-			fu_util_print_data (_("Metadata URI"), tmp);
-		}
-		tmp = fwupd_remote_get_metadata_uri_sig (remote);
-		if (tmp != NULL) {
-			/* TRANSLATORS: remote URI */
-			fu_util_print_data (_("Metadata URI Signature"), tmp);
-		}
-		tmp = fwupd_remote_get_firmware_base_uri (remote);
-		if (tmp != NULL) {
-			/* TRANSLATORS: remote URI */
-			fu_util_print_data (_("Firmware Base URI"), tmp);
-		}
-		tmp = fwupd_remote_get_report_uri (remote);
-		if (tmp != NULL) {
-			/* TRANSLATORS: URI to send success/failure reports */
-			fu_util_print_data (_("Report URI"), tmp);
-		}
-
-		/* newline */
-		if (i != remotes->len - 1)
-			g_print ("\n");
+	if (remotes->len == 0) {
+		/* TRANSLATORS: no repositories to download from */
+		g_print ("%s\n", _("No remotes available"));
+		return TRUE;
 	}
+
+	for (guint i = 0; i < remotes->len; i++) {
+		FwupdRemote *remote_tmp = g_ptr_array_index (remotes, i);
+		g_node_append_data (root, remote_tmp);
+	}
+	fu_util_print_tree (root, priv);
 
 	return TRUE;
 }
