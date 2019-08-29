@@ -16,6 +16,8 @@
 #include "fu-uefi-pcrs.h"
 #include "fu-uefi-vars.h"
 
+#include "fwupd-error.h"
+
 static void
 fu_uefi_pcrs_1_2_func (void)
 {
@@ -43,26 +45,20 @@ fu_uefi_pcrs_1_2_func (void)
 static void
 fu_uefi_pcrs_2_0_func (void)
 {
-	g_autofree gchar *devpath = NULL;
-	g_autofree gchar *sysfstpmdir = NULL;
-	const gchar *tpm_server_running = g_getenv ("TPM_SERVER_RUNNING");
-	gboolean ret;
 	g_autoptr(FuUefiPcrs) pcrs = fu_uefi_pcrs_new ();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) pcr0s = NULL;
 	g_autoptr(GPtrArray) pcrXs = NULL;
+	const gchar *tpm_server_running = g_getenv ("TPM_SERVER_RUNNING");
 
-	sysfstpmdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_TPM);
-	devpath = g_build_filename (sysfstpmdir, "tpm0", NULL);
-
-	if (!g_file_test (devpath, G_FILE_TEST_EXISTS) && (tpm_server_running == NULL)) {
-		g_test_skip ("no physical or simulated TPM 2.0 device available");
-		return;
+	if (!fu_uefi_pcrs_setup (pcrs, &error)) {
+		if (tpm_server_running == NULL &&
+		    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+			g_test_skip ("no physical or simulated TPM 2.0 device available");
+			return;
+		}
 	}
-
-	ret = fu_uefi_pcrs_setup (pcrs, &error);
 	g_assert_no_error (error);
-	g_assert_true (ret);
 	pcr0s = fu_uefi_pcrs_get_checksums (pcrs, 0);
 	g_assert_nonnull (pcr0s);
 	g_assert_cmpint (pcr0s->len, >=, 1);
