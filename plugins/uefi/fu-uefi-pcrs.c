@@ -10,6 +10,7 @@
 
 #include "fu-common.h"
 #include "fu-uefi-pcrs.h"
+#include "fwupd-error.h"
 
 typedef struct {
 	guint		 idx;
@@ -116,7 +117,7 @@ fu_uefi_pcrs_setup_tpm20 (FuUefiPcrs *self, GError **error)
 
 	rc = Esys_Initialize (&ctx, NULL, NULL);
 	if (rc != TSS2_RC_SUCCESS) {
-		g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+		g_set_error_literal (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND,
 		                     "failed to initialize TPM library");
 		return FALSE;
 	}
@@ -180,23 +181,13 @@ fu_uefi_pcrs_setup (FuUefiPcrs *self, GError **error)
 	g_autofree gchar *devpath = NULL;
 	g_autofree gchar *sysfstpmdir = NULL;
 	g_autofree gchar *fn_pcrs = NULL;
-	const gchar *tpm_server_running = g_getenv ("TPM_SERVER_RUNNING");
 
 	g_return_val_if_fail (FU_IS_UEFI_PCRS (self), FALSE);
 
-	/* check the TPM device exists at all */
+	/* look for TPM 1.2 */
 	sysfstpmdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_TPM);
 	devpath = g_build_filename (sysfstpmdir, "tpm0", NULL);
-	if (!g_file_test (devpath, G_FILE_TEST_EXISTS) && (tpm_server_running == NULL)) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_NOT_SUPPORTED,
-				     "no TPM device found");
-		return FALSE;
-	}
 	fn_pcrs = g_build_filename (devpath, "pcrs", NULL);
-
-	/* look for TPM 1.2 */
 	if (g_file_test (fn_pcrs, G_FILE_TEST_EXISTS)) {
 		if (!fu_uefi_pcrs_setup_tpm12 (self, fn_pcrs, error))
 			return FALSE;
