@@ -2207,13 +2207,13 @@ main (int argc, char *argv[])
 		     _("Gets details about a firmware file"),
 		     fu_util_get_details);
 	fu_util_cmd_array_add (cmd_array,
-		     "get-updates",
+		     "get-updates,get-upgrades",
 		     NULL,
 		     /* TRANSLATORS: command description */
 		     _("Gets the list of updates for connected hardware"),
 		     fu_util_get_updates);
 	fu_util_cmd_array_add (cmd_array,
-		     "update",
+		     "update,upgrade",
 		     NULL,
 		     /* TRANSLATORS: command description */
 		     _("Updates all firmware to latest versions available"),

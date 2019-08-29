@@ -1460,7 +1460,7 @@ main (int argc, char *argv[])
 		     _("Show history of firmware updates"),
 		     fu_util_get_history);
 	fu_util_cmd_array_add (cmd_array,
-		     "get-updates",
+		     "get-updates,get-upgrades",
 		     NULL,
 		     /* TRANSLATORS: command description */
 		     _("Gets the list of updates for connected hardware"),
@@ -1526,7 +1526,7 @@ main (int argc, char *argv[])
 		     _("Monitor the daemon for events"),
 		     fu_util_monitor);
 	fu_util_cmd_array_add (cmd_array,
-		     "update",
+		     "update,upgrade",
 		     NULL,
 		     /* TRANSLATORS: command description */
 		     _("Update all devices that match local metadata"),
