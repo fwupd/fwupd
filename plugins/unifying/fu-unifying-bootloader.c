@@ -76,8 +76,7 @@ fu_unifying_bootloader_parse_requests (FuUnifyingBootloader *self, GBytes *fw, G
 				     payload->len);
 			return NULL;
 		}
-		payload->addr = ((guint16) fu_unifying_buffer_read_uint8 (tmp + 0x03)) << 8;
-		payload->addr |= fu_unifying_buffer_read_uint8 (tmp + 0x05);
+		payload->addr = fu_firmware_strparse_uint16 (tmp + 0x03);
 		payload->cmd = FU_UNIFYING_BOOTLOADER_CMD_WRITE_RAM_BUFFER;
 
 		rec_type = fu_unifying_buffer_read_uint8 (tmp + 0x07);
