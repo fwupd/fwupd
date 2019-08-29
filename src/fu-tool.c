@@ -298,6 +298,7 @@ static gboolean
 fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GNode) root = g_node_new (NULL);
 
 	/* load engine */
 	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
@@ -311,6 +312,7 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
 		g_autoptr(GPtrArray) rels = NULL;
 		g_autoptr(GError) error_local = NULL;
+		GNode *child;
 
 		/* not going to have results, so save a engine round-trip */
 		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
@@ -326,15 +328,15 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 			g_printerr ("%s\n", error_local->message);
 			continue;
 		}
-		g_print ("%s", fu_util_device_to_string (dev, 0));
-		g_print (" Release information:\n");
-		/* print all releases */
+		child = g_node_append_data (root, dev);
+
 		for (guint j = 0; j < rels->len; j++) {
 			FwupdRelease *rel = g_ptr_array_index (rels, j);
-			g_print ("%s\n", fwupd_release_to_string (rel));
+			g_node_append_data (child, g_object_ref (rel));
 		}
 	}
-
+	if (g_node_n_nodes (root, G_TRAVERSE_ALL) > 1)
+		fu_util_print_tree (root, priv);
 	/* save the device state for other applications to see */
 	if (!fu_util_save_current_state (priv, error))
 		return FALSE;
@@ -347,6 +349,7 @@ static gboolean
 fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) array = NULL;
+	g_autoptr(GNode) root = g_node_new (NULL);
 	gint fd;
 
 	/* load engine */
@@ -380,12 +383,12 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	for (guint i = 0; i < array->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (array, i);
-		g_autofree gchar *tmp = NULL;
 		if (!fu_util_filter_device (priv, dev))
 			continue;
-		tmp = fu_util_device_to_string (dev, 0);
-		g_print ("%s\n", tmp);
+		g_node_append_data (root, dev);
 	}
+	fu_util_print_tree (root, priv);
+
 	return TRUE;
 }
 
@@ -448,8 +451,7 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 		return TRUE;
 	}
 	fu_util_build_device_tree (priv, root, devs, NULL);
-	g_node_traverse (root, G_PRE_ORDER, G_TRAVERSE_ALL, -1,
-			 fu_util_print_device_tree, priv);
+	fu_util_print_tree (root, priv);
 
 	/* save the device state for other applications to see */
 	return fu_util_save_current_state (priv, error);
@@ -1337,6 +1339,7 @@ static gboolean
 fu_util_get_history (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GNode) root = g_node_new (NULL);
 
 	/* load engine */
 	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
@@ -1350,12 +1353,11 @@ fu_util_get_history (FuUtilPrivate *priv, gchar **values, GError **error)
 	/* show each device */
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
-		g_autofree gchar *str = NULL;
 		if (!fu_util_filter_device (priv, dev))
 			continue;
-		str = fu_util_device_to_string (dev, 0);
-		g_print ("%s\n", str);
+		g_node_append_data (root, dev);
 	}
+	fu_util_print_tree (root, priv);
 
 	return TRUE;
 }
