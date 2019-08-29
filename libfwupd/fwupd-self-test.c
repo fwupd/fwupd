@@ -142,10 +142,17 @@ fwupd_remote_download_func (void)
 {
 	gboolean ret;
 	g_autofree gchar *fn = NULL;
+	g_autofree gchar *directory = NULL;
 	g_autoptr(FwupdRemote) remote = NULL;
 	g_autoptr(GError) error = NULL;
 
 	remote = fwupd_remote_new ();
+	directory = g_build_filename (LOCALSTATEDIR,
+				      "lib",
+				      "fwupd",
+				      "remotes.d",
+				      NULL);
+	fwupd_remote_set_remotes_dir (remote, directory);
 	fn = g_build_filename (FU_SELF_TEST_REMOTES_DIR, "remotes.d", "lvfs.conf", NULL);
 	ret = fwupd_remote_load_from_filename (remote, fn, NULL, &error);
 	g_assert_no_error (error);
@@ -172,9 +179,16 @@ fwupd_remote_baseuri_func (void)
 	g_autofree gchar *firmware_uri = NULL;
 	g_autofree gchar *fn = NULL;
 	g_autoptr(FwupdRemote) remote = NULL;
+	g_autofree gchar *directory = NULL;
 	g_autoptr(GError) error = NULL;
 
 	remote = fwupd_remote_new ();
+	directory = g_build_filename (LOCALSTATEDIR,
+				      "lib",
+				      "fwupd",
+				      "remotes.d",
+				      NULL);
+	fwupd_remote_set_remotes_dir (remote, directory);
 	fn = g_build_filename (TESTDATADIR, "tests", "firmware-base-uri.conf", NULL);
 	ret = fwupd_remote_load_from_filename (remote, fn, NULL, &error);
 	g_assert_no_error (error);
@@ -202,8 +216,15 @@ fwupd_remote_nopath_func (void)
 	g_autofree gchar *fn = NULL;
 	g_autoptr(FwupdRemote) remote = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autofree gchar *directory = NULL;
 
 	remote = fwupd_remote_new ();
+	directory = g_build_filename (LOCALSTATEDIR,
+				      "lib",
+				      "fwupd",
+				      "remotes.d",
+				      NULL);
+	fwupd_remote_set_remotes_dir (remote, directory);
 	fn = g_build_filename (TESTDATADIR, "tests", "firmware-nopath.conf", NULL);
 	ret = fwupd_remote_load_from_filename (remote, fn, NULL, &error);
 	g_assert_no_error (error);
