@@ -215,7 +215,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 # delete most files from the subproject
 rm ${RPM_BUILD_ROOT}%{_includedir}/libflashrom.h
 rm ${RPM_BUILD_ROOT}%{_libdir}/libflashrom.so
-rm ${RPM_BUILD_ROOT}%{_libdir}/pkgconfig/libflashrom.pc
+rm ${RPM_BUILD_ROOT}%{_libdir}/pkgconfig/flashrom.pc
 rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %endif
 
