@@ -12,6 +12,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <tss2/tss2_esys.h>
 
 #include "fwupd-common.h"
 #include "fu-plugin-dell.h"
@@ -522,6 +523,117 @@ fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 	return TRUE;
 }
 
+static void Esys_Finalize_autoptr_cleanup (ESYS_CONTEXT *esys_context)
+{
+	Esys_Finalize (&esys_context);
+}
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (ESYS_CONTEXT, Esys_Finalize_autoptr_cleanup)
+
+static gchar *
+fu_plugin_dell_get_tpm_capability (ESYS_CONTEXT *ctx, guint32 query)
+{
+	TSS2_RC rc;
+	guint32 val;
+	gchar result[5] = {'\0'};
+	g_autofree TPMS_CAPABILITY_DATA *capability = NULL;
+	rc = Esys_GetCapability (ctx, ESYS_TR_NONE, ESYS_TR_NONE, ESYS_TR_NONE,
+	                         TPM2_CAP_TPM_PROPERTIES, query, 1, NULL, &capability);
+	if (rc != TSS2_RC_SUCCESS) {
+		g_debug ("capability request failed for query %x", query);
+		return NULL;
+	}
+	if (capability->data.tpmProperties.count == 0) {
+		g_debug ("no properties returned for query %x", query);
+		return NULL;
+	}
+	if (capability->data.tpmProperties.tpmProperty[0].property != query) {
+		g_debug ("wrong query returned (got %x expected %x)",
+			 capability->data.tpmProperties.tpmProperty[0].property,
+			 query);
+		return NULL;
+	}
+
+	val = GUINT32_FROM_BE (capability->data.tpmProperties.tpmProperty[0].value);
+	memcpy (result, (gchar *) &val, 4);
+
+	/* convert non-ASCII into spaces */
+	for (guint i = 0; i < 4; i++) {
+		if (!g_ascii_isgraph (result[i]) && result[i] != '\0')
+			result[i] = 0x20;
+	}
+
+	return fu_common_strstrip (result);
+}
+
+static gboolean
+fu_plugin_dell_add_tpm_model (FuDevice *dev, GError **error)
+{
+	TSS2_RC rc;
+	const gchar *base = "DELL-TPM";
+	g_autoptr(ESYS_CONTEXT) ctx = NULL;
+	g_autofree gchar *family = NULL;
+	g_autofree gchar *manufacturer = NULL;
+	g_autofree gchar *vendor1 = NULL;
+	g_autofree gchar *vendor2 = NULL;
+	g_autofree gchar *vendor3 = NULL;
+	g_autofree gchar *vendor4 = NULL;
+	g_autofree gchar *v1 = NULL;
+	g_autofree gchar *v1_v2 = NULL;
+	g_autofree gchar *v1_v2_v3 = NULL;
+	g_autofree gchar *v1_v2_v3_v4 = NULL;
+
+	rc = Esys_Initialize (&ctx, NULL, NULL);
+	if (rc != TSS2_RC_SUCCESS) {
+		g_set_error_literal (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND,
+		                     "failed to initialize TPM library");
+		return FALSE;
+	}
+	rc = Esys_Startup (ctx, TPM2_SU_CLEAR);
+	if (rc != TSS2_RC_SUCCESS) {
+		g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+		                     "failed to initialize TPM");
+		return FALSE;
+	}
+
+	/* lookup guaranteed details from TPM */
+	family = fu_plugin_dell_get_tpm_capability (ctx,
+						    TPM2_PT_FAMILY_INDICATOR);
+	if (family == NULL) {
+		g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+		                     "failed to read TPM family");
+		return FALSE;
+	}
+	manufacturer = fu_plugin_dell_get_tpm_capability (ctx, TPM2_PT_MANUFACTURER);
+	if (manufacturer == NULL) {
+		g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+		                     "failed to read TPM manufacturer");
+		return FALSE;
+	}
+	vendor1 = fu_plugin_dell_get_tpm_capability (ctx, TPM2_PT_VENDOR_STRING_1);
+	if (vendor1 == NULL) {
+		g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+		                     "failed to read TPM vendor string");
+		return FALSE;
+	}
+
+	/* these are not guaranteed by spec and may be NULL */
+	vendor2 = fu_plugin_dell_get_tpm_capability (ctx, TPM2_PT_VENDOR_STRING_2);
+	vendor3 = fu_plugin_dell_get_tpm_capability (ctx, TPM2_PT_VENDOR_STRING_3);
+	vendor4 = fu_plugin_dell_get_tpm_capability (ctx, TPM2_PT_VENDOR_STRING_4);
+
+	/* add GUIDs to daemon */
+	v1 = g_strjoin ("-", base, family, manufacturer, vendor1, NULL);
+	v1_v2 = g_strconcat (v1, vendor2, NULL);
+	v1_v2_v3 = g_strconcat (v1_v2, vendor3, NULL);
+	v1_v2_v3_v4 = g_strconcat (v1_v2_v3, vendor4, NULL);
+	fu_device_add_instance_id (dev, v1);
+	fu_device_add_instance_id (dev, v1_v2);
+	fu_device_add_instance_id (dev, v1_v2_v3);
+	fu_device_add_instance_id (dev, v1_v2_v3_v4);
+
+	return TRUE;
+}
+
 gboolean
 fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 {
@@ -618,7 +730,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	/* build Standard device nodes */
 	dev = fu_device_new ();
 	fu_device_set_id (dev, tpm_id);
-	fu_device_add_guid (dev, tpm_guid);
+	fu_device_add_instance_id (dev, tpm_guid_raw);
 	fu_device_set_vendor (dev, "Dell Inc.");
 	fu_device_set_name (dev, pretty_tpm_name);
 	fu_device_set_summary (dev, "Platform TPM device");
@@ -640,13 +752,19 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 		fu_device_set_update_error (dev,
 					    "Updating disabled due to TPM ownership");
 	}
+	/* build GUIDs from TSS strings */
+	if (!fu_plugin_dell_add_tpm_model (dev, error))
+		return FALSE;
+
+	if (!fu_device_setup (dev, error))
+		return FALSE;
 	fu_plugin_device_register (plugin, dev);
 
 	/* build alternate device node */
 	if (can_switch_modes) {
 		dev_alt = fu_device_new ();
 		fu_device_set_id (dev_alt, tpm_id_alt);
-		fu_device_add_guid (dev_alt, tpm_guid_alt);
+		fu_device_add_instance_id (dev_alt, tpm_guid_raw_alt);
 		fu_device_set_vendor (dev, "Dell Inc.");
 		fu_device_set_name (dev_alt, pretty_tpm_name_alt);
 		fu_device_set_summary (dev_alt, "Alternate mode for platform TPM device");
@@ -668,6 +786,8 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 		} else {
 			fu_device_set_update_error (dev_alt, "mode switch disabled due to TPM ownership");
 		}
+		if (!fu_device_setup (dev_alt, error))
+			return FALSE;
 		fu_plugin_device_register (plugin, dev_alt);
 	}
 	else

@@ -27,6 +27,7 @@ shared_module('fu_plugin_dell',
     plugin_deps,
     efivar,
     libsmbios_c,
+    tpm2tss,
   ],
 )
 
@@ -54,6 +55,7 @@ if get_option('tests')
       sqlite,
       libsmbios_c,
       valgrind,
+      tpm2tss,
     ],
     link_with : [
       libfwupdprivate,
