@@ -16,6 +16,23 @@ These devices uses custom GUIDs for Dell-specific hardware.
 
 In both cases the `system-id` is derived from the SMBIOS Product SKU property.
 
+TPM GUIDs are also built using the TSS properties
+`TPM2_PT_FAMILY_INDICATOR`, `TPM2_PT_MANUFACTURER`, and `TPM2_PT_VENDOR_STRING_*`
+These are built hierarchically with more parts for each GUID:
+ * `DELL-TPM-$FAMILY-$MANUFACTURER-$VENDOR_STRING_1`
+ * `DELL-TPM-$FAMILY-$MANUFACTURER-$VENDOR_STRING_1$VENDOR_STRING_2`
+ * `DELL-TPM-$FAMILY-$MANUFACTURER-$VENDOR_STRING_1$VENDOR_STRING_2$VENDOR_STRING_3`
+ * `DELL-TPM-$FAMILY-$MANUFACTURER-$VENDOR_STRING_1$VENDOR_STRING_2$VENDOR_STRING_3$VENDOR_STRING_4`
+
+If there are non-ASCII values in any vendor string or any vendor is missing that octet will be skipped.
+
+Example resultant GUIDs from a real system containing a TPM from Nuvoton:
+```
+  Guid:                 7d65b10b-bb24-552d-ade5-590b3b278188 <- DELL-TPM-2.0-NTC-NPCT
+  Guid:                 6f5ddd3a-8339-5b2a-b9a6-cf3b92f6c86d <- DELL-TPM-2.0-NTC-NPCT75x
+  Guid:                 fe462d4a-e48f-5069-9172-47330fc5e838 <- DELL-TPM-2.0-NTC-NPCT75xrls
+```
+
 Build Requirements
 ------------------
 

@@ -68,6 +68,7 @@ fu_plugin_dell_tpm_func (void)
 	const guint8 fw[30] = { 'F', 'W', 0x00 };
 	gboolean ret;
 	struct tpm_status tpm_out;
+	const gchar *tpm_server_running = g_getenv ("TPM_SERVER_RUNNING");
 	g_autoptr(FuPlugin) plugin_dell = NULL;
 	g_autoptr(FuPlugin) plugin_uefi = NULL;
 	g_autoptr(GBytes) blob_fw = g_bytes_new_static (fw, sizeof(fw));
@@ -126,6 +127,13 @@ fu_plugin_dell_tpm_func (void)
 					 (guint32 *) &tpm_out, 0, 0,
 					 NULL, TRUE);
 	ret = fu_plugin_dell_detect_tpm (plugin_dell, &error);
+	if (!ret) {
+		if (tpm_server_running == NULL &&
+		    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+			g_test_skip ("no physical or simulated TPM 2.0 device available");
+			return;
+		}
+	}
 	g_assert_true (ret);
 	g_assert_cmpint (devices->len, ==, 2);
 
