@@ -824,12 +824,8 @@ fu_util_convert_description (const gchar *xml, GError **error)
 		g_set_object (&n, n2);
 	}
 
-	/* remove extra newline */
-	if (str->len > 0)
-		g_string_truncate (str, str->len - 1);
-
 	/* success */
-	return g_string_free (g_steal_pointer (&str), FALSE);
+	return fu_common_strstrip (str->str);
 }
 
 static gchar *
