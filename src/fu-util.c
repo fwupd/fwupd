@@ -375,7 +375,10 @@ fu_util_build_device_tree (FuUtilPrivate *priv, GNode *root, GPtrArray *devs, Fw
 		    !fu_util_is_interesting_device (dev_tmp))
 			continue;
 		if (fwupd_device_get_parent (dev_tmp) == dev) {
+			FwupdRelease *rel = fwupd_device_get_release_default (dev_tmp);
 			GNode *child = g_node_append_data (root, dev_tmp);
+			if (rel != NULL)
+				g_node_append_data (child, rel);
 			fu_util_build_device_tree (priv, child, devs, dev_tmp);
 		}
 	}
@@ -497,12 +500,7 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 	array = fwupd_client_get_details (priv->client, values[0], NULL, error);
 	if (array == NULL)
 		return FALSE;
-	for (guint i = 0; i < array->len; i++) {
-		FwupdDevice *dev = g_ptr_array_index (array, i);
-		if (!fu_util_filter_device (priv, dev))
-			continue;
-		g_node_append_data (root, dev);
-	}
+	fu_util_build_device_tree (priv, root, array, NULL);
 	fu_util_print_tree (root, priv);
 
 	return TRUE;
