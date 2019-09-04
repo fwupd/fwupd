@@ -637,8 +637,8 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 		}
 		fu_device_set_flashes_left (dev, out->flashes_left);
 	} else {
-		g_debug ("%s updating disabled due to TPM ownership",
-			pretty_tpm_name);
+		fu_device_set_update_error (dev,
+					    "Updating disabled due to TPM ownership");
 	}
 	fu_plugin_device_register (plugin, dev);
 
@@ -666,8 +666,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 		if ((out->status & TPM_OWN_MASK) == 0 && out->flashes_left > 0) {
 			fu_device_set_flashes_left (dev_alt, out->flashes_left);
 		} else {
-			g_debug ("%s mode switch disabled due to TPM ownership",
-				 pretty_tpm_name);
+			fu_device_set_update_error (dev_alt, "mode switch disabled due to TPM ownership");
 		}
 		fu_plugin_device_register (plugin, dev_alt);
 	}
