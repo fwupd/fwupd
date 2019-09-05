@@ -336,6 +336,7 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %if 0%{?enable_dummy}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_test.so
 %endif
+%{_libdir}/fwupd-plugins-3/libfu_plugin_thelio_io.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_thunderbolt.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_thunderbolt_power.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_udev.so
