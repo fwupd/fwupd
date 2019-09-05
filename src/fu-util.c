@@ -57,6 +57,7 @@ struct FuUtilPrivate {
 	gboolean		 assume_yes;
 	gboolean		 sign;
 	gboolean		 show_all_devices;
+	gboolean		 disable_ssl_strict;
 	/* only valid in update and downgrade */
 	FuUtilOperation		 current_operation;
 	FwupdDevice		*current_device;
@@ -2049,6 +2050,9 @@ main (int argc, char *argv[])
 		{ "show-all-devices", '\0', 0, G_OPTION_ARG_NONE, &priv->show_all_devices,
 			/* TRANSLATORS: command line option */
 			_("Show devices that are not updatable"), NULL },
+		{ "disable-ssl-strict", '\0', 0, G_OPTION_ARG_NONE, &priv->disable_ssl_strict,
+			/* TRANSLATORS: command line option */
+			_("Ignore SSL strict checks when downloading files"), NULL },
 		{ "filter", '\0', 0, G_OPTION_ARG_STRING, &filter,
 			/* TRANSLATORS: command line option */
 			_("Filter with a set of device flags using a ~ prefix to "
@@ -2248,6 +2252,15 @@ main (int argc, char *argv[])
 		g_print ("%s: %s\n", _("Failed to parse arguments"),
 			 error->message);
 		return EXIT_FAILURE;
+	}
+
+	/* allow disabling SSL strict mode for broken corporate proxies */
+	if (priv->disable_ssl_strict) {
+		/* TRANSLATORS: try to help */
+		g_printerr ("%s\n", _("WARNING: Ignoring SSL strict checks, "
+				      "to do this automatically in the future "
+				      "export DISABLE_SSL_STRICT in your environment"));
+		g_setenv ("DISABLE_SSL_STRICT", "1", TRUE);
 	}
 
 	/* non-TTY consoles cannot answer questions */
