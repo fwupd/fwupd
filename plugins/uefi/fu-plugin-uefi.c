@@ -505,16 +505,8 @@ fu_plugin_uefi_get_name_for_type (FuPlugin *plugin, FuUefiDeviceKind device_kind
 
 	/* set Display Name prefix for capsules that are not PCI cards */
 	display_name = g_string_new (fu_plugin_uefi_uefi_type_to_string (device_kind));
-	if (device_kind == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE) {
+	if (device_kind == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE)
 		g_string_prepend (display_name, "UEFI ");
-	} else {
-		const gchar *tmp;
-		tmp = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_PRODUCT_NAME);
-		if (tmp != NULL && tmp[0] != '\0') {
-			g_string_prepend (display_name, " ");
-			g_string_prepend (display_name, tmp);
-		}
-	}
 	return g_string_free (display_name, FALSE);
 }
 

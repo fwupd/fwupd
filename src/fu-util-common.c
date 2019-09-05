@@ -160,9 +160,11 @@ fu_util_traverse_tree (GNode *n, gpointer data)
 
 	/* root node */
 	if (n->data == NULL && g_getenv ("FWUPD_VERBOSE") == NULL) {
-		g_print ("○\n");
+		const gchar *str = data;
+		g_print ("%s\n│\n", str != NULL ? str : "○");
 		return FALSE;
 	}
+
 	if (n->parent == NULL)
 		return FALSE;
 

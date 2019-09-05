@@ -294,11 +294,18 @@ fu_util_filter_device (FuUtilPrivate *priv, FwupdDevice *dev)
 	return TRUE;
 }
 
+static gchar *
+fu_util_get_tree_title (FuUtilPrivate *priv)
+{
+	return g_strdup (fu_engine_get_host_product (priv->engine));
+}
+
 static gboolean
 fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GNode) root = g_node_new (NULL);
+	g_autofree gchar *title = fu_util_get_tree_title (priv);
 
 	/* load engine */
 	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
@@ -336,7 +343,7 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		}
 	}
 	if (g_node_n_nodes (root, G_TRAVERSE_ALL) > 1)
-		fu_util_print_tree (root, priv);
+		fu_util_print_tree (root, title);
 	/* save the device state for other applications to see */
 	if (!fu_util_save_current_state (priv, error))
 		return FALSE;
@@ -350,6 +357,7 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GNode) root = g_node_new (NULL);
+	g_autofree gchar *title = fu_util_get_tree_title (priv);
 	gint fd;
 
 	/* load engine */
@@ -387,7 +395,7 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 			continue;
 		g_node_append_data (root, dev);
 	}
-	fu_util_print_tree (root, priv);
+	fu_util_print_tree (root, title);
 
 	return TRUE;
 }
@@ -433,6 +441,7 @@ static gboolean
 fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GNode) root = g_node_new (NULL);
+	g_autofree gchar *title = fu_util_get_tree_title (priv);
 	g_autoptr(GPtrArray) devs = NULL;
 
 	/* load engine */
@@ -451,7 +460,7 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 		return TRUE;
 	}
 	fu_util_build_device_tree (priv, root, devs, NULL);
-	fu_util_print_tree (root, priv);
+	fu_util_print_tree (root, title);
 
 	/* save the device state for other applications to see */
 	return fu_util_save_current_state (priv, error);
@@ -1340,6 +1349,7 @@ fu_util_get_history (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GNode) root = g_node_new (NULL);
+	g_autofree gchar *title = fu_util_get_tree_title (priv);
 
 	/* load engine */
 	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
@@ -1357,7 +1367,7 @@ fu_util_get_history (FuUtilPrivate *priv, gchar **values, GError **error)
 			continue;
 		g_node_append_data (root, dev);
 	}
-	fu_util_print_tree (root, priv);
+	fu_util_print_tree (root, title);
 
 	return TRUE;
 }

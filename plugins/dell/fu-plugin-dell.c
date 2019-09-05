@@ -654,7 +654,6 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	struct tpm_status *out = NULL;
 	g_autoptr (FuDevice) dev_alt = NULL;
 	g_autoptr (FuDevice) dev = NULL;
-	const gchar *product_name = "Unknown";
 
 	fu_dell_clear_smi (data->smi_obj);
 	out = (struct tpm_status *) data->smi_obj->output;
@@ -721,11 +720,8 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 						     FWUPD_VERSION_FORMAT_QUAD);
 
 	/* make it clear that the TPM is a discrete device of the product */
-	if (!data->smi_obj->fake_smbios) {
-		product_name = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_PRODUCT_NAME);
-	}
-	pretty_tpm_name = g_strdup_printf ("%s TPM %s", product_name, tpm_mode);
-	pretty_tpm_name_alt = g_strdup_printf ("%s TPM %s", product_name, tpm_mode_alt);
+	pretty_tpm_name = g_strdup_printf ("TPM %s", tpm_mode);
+	pretty_tpm_name_alt = g_strdup_printf ("TPM %s", tpm_mode_alt);
 
 	/* build Standard device nodes */
 	dev = fu_device_new ();

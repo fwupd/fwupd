@@ -138,12 +138,12 @@ fu_plugin_dell_tpm_func (void)
 	g_assert_cmpint (devices->len, ==, 2);
 
 	/* make sure 2.0 is locked */
-	device_v20 = _find_device_by_name (devices, "Unknown TPM 2.0");
+	device_v20 = _find_device_by_name (devices, "TPM 2.0");
 	g_assert_nonnull (device_v20);
 	g_assert_true (fu_device_has_flag (device_v20, FWUPD_DEVICE_FLAG_LOCKED));
 
 	/* make sure not allowed to flash 1.2 */
-	device_v12 = _find_device_by_name (devices, "Unknown TPM 1.2");
+	device_v12 = _find_device_by_name (devices, "TPM 1.2");
 	g_assert_nonnull (device_v12);
 	g_assert_false (fu_device_has_flag (device_v12, FWUPD_DEVICE_FLAG_UPDATABLE));
 
@@ -172,12 +172,12 @@ fu_plugin_dell_tpm_func (void)
 	g_assert (ret);
 
 	/* make sure not allowed to flash 1.2 */
-	device_v12 = _find_device_by_name (devices, "Unknown TPM 1.2");
+	device_v12 = _find_device_by_name (devices, "TPM 1.2");
 	g_assert_nonnull (device_v12);
 	g_assert_false (fu_device_has_flag (device_v12, FWUPD_DEVICE_FLAG_UPDATABLE));
 
 	/* try to unlock 2.0 */
-	device_v20 = _find_device_by_name (devices, "Unknown TPM 2.0");
+	device_v20 = _find_device_by_name (devices, "TPM 2.0");
 	g_assert_nonnull (device_v20);
 	ret = fu_plugin_runner_unlock (plugin_uefi, device_v20, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
@@ -203,10 +203,10 @@ fu_plugin_dell_tpm_func (void)
 	g_assert (ret);
 
 	/* make sure allowed to flash 1.2 but not 2.0 */
-	device_v12 = _find_device_by_name (devices, "Unknown TPM 1.2");
+	device_v12 = _find_device_by_name (devices, "TPM 1.2");
 	g_assert_nonnull (device_v12);
 	g_assert_true (fu_device_has_flag (device_v12, FWUPD_DEVICE_FLAG_UPDATABLE));
-	device_v20 = _find_device_by_name (devices, "Unknown TPM 2.0");
+	device_v20 = _find_device_by_name (devices, "TPM 2.0");
 	g_assert_nonnull (device_v20);
 	g_assert_false (fu_device_has_flag (device_v20, FWUPD_DEVICE_FLAG_UPDATABLE));
 
@@ -238,10 +238,10 @@ fu_plugin_dell_tpm_func (void)
 	g_assert (ret);
 
 	/* make sure allowed to flash 2.0 but not 1.2 */
-	device_v20 = _find_device_by_name (devices, "Unknown TPM 2.0");
+	device_v20 = _find_device_by_name (devices, "TPM 2.0");
 	g_assert_nonnull (device_v20);
 	g_assert_true (fu_device_has_flag (device_v20, FWUPD_DEVICE_FLAG_UPDATABLE));
-	device_v12 = _find_device_by_name (devices, "Unknown TPM 1.2");
+	device_v12 = _find_device_by_name (devices, "TPM 1.2");
 	g_assert_nonnull (device_v12);
 	g_assert_false (fu_device_has_flag (device_v12, FWUPD_DEVICE_FLAG_UPDATABLE));
 
