@@ -542,6 +542,10 @@ fu_util_setup_networking (GError **error)
 		return NULL;
 	}
 
+	/* relax the SSL checks for broken corporate proxies */
+	if (g_getenv ("DISABLE_SSL_STRICT") != NULL)
+		g_object_set (session, SOUP_SESSION_SSL_STRICT, FALSE, NULL);
+
 	/* set the proxy */
 	http_proxy = g_getenv ("https_proxy");
 	if (http_proxy == NULL)
