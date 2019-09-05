@@ -384,11 +384,18 @@ fu_util_build_device_tree (FuUtilPrivate *priv, GNode *root, GPtrArray *devs, Fw
 	}
 }
 
+static gchar *
+fu_util_get_tree_title (FuUtilPrivate *priv)
+{
+	return g_strdup (fwupd_client_get_host_product (priv->client));
+}
+
 static gboolean
 fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GNode) root = g_node_new (NULL);
 	g_autoptr(GPtrArray) devs = NULL;
+	g_autofree gchar *title = fu_util_get_tree_title (priv);
 
 	/* get results from daemon */
 	devs = fwupd_client_get_devices (priv->client, NULL, error);
@@ -402,7 +409,7 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 		return TRUE;
 	}
 	fu_util_build_device_tree (priv, root, devs, NULL);
-	fu_util_print_tree (root, priv);
+	fu_util_print_tree (root, title);
 
 	/* nag? */
 	if (!fu_util_perhaps_show_unreported (priv, error))
@@ -488,6 +495,7 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GNode) root = g_node_new (NULL);
+	g_autofree gchar *title = fu_util_get_tree_title (priv);
 
 	/* check args */
 	if (g_strv_length (values) != 1) {
@@ -501,7 +509,7 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 	if (array == NULL)
 		return FALSE;
 	fu_util_build_device_tree (priv, root, array, NULL);
-	fu_util_print_tree (root, priv);
+	fu_util_print_tree (root, title);
 
 	return TRUE;
 }
@@ -787,6 +795,7 @@ fu_util_get_history (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GNode) root = g_node_new (NULL);
+	g_autofree gchar *title = fu_util_get_tree_title (priv);
 
 	/* get all devices from the history database */
 	devices = fwupd_client_get_history (priv->client, NULL, error);
@@ -800,7 +809,7 @@ fu_util_get_history (FuUtilPrivate *priv, gchar **values, GError **error)
 			continue;
 		g_node_append_data (root, dev);
 	}
-	fu_util_print_tree (root, priv);
+	fu_util_print_tree (root, title);
 
 	return TRUE;
 }
@@ -1193,6 +1202,7 @@ fu_util_get_releases (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(GPtrArray) rels = NULL;
 	g_autoptr(GNode) root = g_node_new (NULL);
+	g_autofree gchar *title = fu_util_get_tree_title (priv);
 
 	dev = fu_util_get_device_or_prompt (priv, values, error);
 	if (dev == NULL)
@@ -1213,7 +1223,7 @@ fu_util_get_releases (FuUtilPrivate *priv, gchar **values, GError **error)
 		FwupdRelease *rel = g_ptr_array_index (rels, i);
 		g_node_append_data (root, rel);
 	}
-	fu_util_print_tree (root, priv);
+	fu_util_print_tree (root, title);
 
 	return TRUE;
 }
@@ -1400,6 +1410,7 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GPtrArray) devices = NULL;
 	gboolean supported = FALSE;
 	g_autoptr(GNode) root = g_node_new (NULL);
+	g_autofree gchar *title = fu_util_get_tree_title (priv);
 
 	/* are the remotes very old */
 	if (!fu_util_perhaps_refresh_remotes (priv, error))
@@ -1440,7 +1451,7 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	if (g_node_n_nodes (root, G_TRAVERSE_ALL) > 1)
-		fu_util_print_tree (root, priv);
+		fu_util_print_tree (root, title);
 
 	/* nag? */
 	if (!fu_util_perhaps_show_unreported (priv, error))
@@ -1464,6 +1475,7 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GNode) root = g_node_new (NULL);
 	g_autoptr(GPtrArray) remotes = NULL;
+	g_autofree gchar *title = fu_util_get_tree_title (priv);
 
 	remotes = fwupd_client_get_remotes (priv->client, NULL, error);
 	if (remotes == NULL)
@@ -1479,7 +1491,7 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 		FwupdRemote *remote_tmp = g_ptr_array_index (remotes, i);
 		g_node_append_data (root, remote_tmp);
 	}
-	fu_util_print_tree (root, priv);
+	fu_util_print_tree (root, title);
 
 	return TRUE;
 }

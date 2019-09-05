@@ -4145,6 +4145,13 @@ fu_engine_get_tainted (FuEngine *self)
 	return self->tainted;
 }
 
+const gchar *
+fu_engine_get_host_product (FuEngine *self)
+{
+	g_return_val_if_fail (FU_IS_ENGINE (self), NULL);
+	return fu_hwids_get_value (self->hwids, FU_HWIDS_KEY_PRODUCT_NAME);
+}
+
 gboolean
 fu_engine_load_plugins (FuEngine *self, GError **error)
 {

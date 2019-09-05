@@ -1363,6 +1363,9 @@ fu_main_daemon_get_property (GDBusConnection *connection_, const gchar *sender,
 	if (g_strcmp0 (property_name, "Status") == 0)
 		return g_variant_new_uint32 (fu_engine_get_status (priv->engine));
 
+	if (g_strcmp0 (property_name, "HostProduct") == 0)
+		return g_variant_new_string (fu_engine_get_host_product (priv->engine));
+
 	/* return an error */
 	g_set_error (error,
 		     G_DBUS_ERROR,

@@ -380,8 +380,6 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 
 	fu_device_set_metadata (dev, "sysfs-path", devpath);
 	name = g_udev_device_get_sysfs_attr (device, "device_name");
-	if (name == NULL && is_host)
-		name = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_PRODUCT_NAME);
 	if (name != NULL) {
 		if (is_host) {
 			g_autofree gchar *pretty_name = NULL;

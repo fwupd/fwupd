@@ -374,6 +374,7 @@ LIBFWUPD_1.2.10 {
 
 LIBFWUPD_1.3.1 {
   global:
+    fwupd_client_get_host_product;
     fwupd_remote_get_remotes_dir;
     fwupd_remote_set_remotes_dir;
   local: *;
