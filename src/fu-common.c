@@ -835,7 +835,7 @@ fu_common_strstrip (const gchar *str)
 
 	/* find last non-space char */
 	for (guint i = head; str[i] != '\0'; i++) {
-		if (str[i] != ' ')
+		if (!g_ascii_isspace (str[i]))
 			tail = i;
 	}
 	return g_strndup (str + head, tail - head + 1);
