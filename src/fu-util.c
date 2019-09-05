@@ -2338,7 +2338,8 @@ main (int argc, char *argv[])
 	}
 
 	/* check that we have at least this version daemon running */
-	if (!fu_util_check_daemon_version (priv, &error)) {
+	if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
+	    !fu_util_check_daemon_version (priv, &error)) {
 		g_printerr ("%s\n", error->message);
 		return EXIT_FAILURE;
 	}
