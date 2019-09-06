@@ -57,7 +57,7 @@ fu_thelio_io_device_class_init (FuThelioIoDeviceClass *klass)
 FuThelioIoDevice *
 fu_thelio_io_device_new (FuUsbDevice *device)
 {
-	FuThelioIoDevice *self = g_object_new (FU_TYPE_FASTBOOT_DEVICE, NULL);
+	FuThelioIoDevice *self = g_object_new (FU_TYPE_THELIO_IO_DEVICE, NULL);
 	fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (device));
 	return self;
 }
