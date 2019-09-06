@@ -14,4 +14,4 @@ GUID Generation
 
 These devices use the standard USB DeviceInstanceId values, e.g.
 
- * `USB\VID_1209&PID_1776`
+ * `USB\VID_1209&PID_1776&REV_0001`
