@@ -19,7 +19,7 @@ G_BEGIN_DECLS
 #define	FU_UNIFYING_DEVICE_PID_BOOTLOADER_TEXAS_PICO	0xaaad
 
 /* Signed firmware are very long to verify on the device */
-#define FU_UNIFYING_DEVICE_TIMEOUT_MS			20000
+#define FU_UNIFYING_DEVICE_TIMEOUT_MS			30000
 
 guint8		 fu_unifying_buffer_read_uint8	(const gchar	*str);
 guint16		 fu_unifying_buffer_read_uint16	(const gchar	*str);
