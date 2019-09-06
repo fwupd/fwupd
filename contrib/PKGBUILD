@@ -2,7 +2,7 @@
 # Contributor: Mirco Tischler <mt-ml at gmx dot de>
 
 pkgname=fwupd
-pkgver=#VERSION#
+pkgver=dummy
 pkgrel=1
 pkgdesc='A simple daemon to allow session software to update firmware'
 arch=('i686' 'x86_64')
@@ -12,6 +12,15 @@ depends=('libgusb' 'modemmanager' 'tpm2-tss')
 makedepends=('meson' 'valgrind' 'gobject-introspection' 'gtk-doc' 'python-pillow' 'git'
              'python-cairo' 'noto-fonts' 'noto-fonts-cjk' 'python-gobject' 'vala'
              'libsoup' 'polkit' 'gcab')
+
+pkgver() {
+    cd ${pkgname}
+
+    VERSION=$(git describe | sed 's/-/.r/;s/-/./')
+    [ -z $VERSION ] && VERSION=$(head meson.build | grep ' version :' | cut -d \' -f2)
+
+    echo $VERSION
+}
 
 build() {
     cd ${pkgname}
