@@ -10,6 +10,7 @@
 %global enable_ci 0
 %global enable_tests 1
 %global enable_dummy 1
+%global enable_flashrom 1
 %global __meson_wrap_mode default
 
 # fwupd.efi is only available on these arches
@@ -154,7 +155,11 @@ Data files for installed tests.
 %else
     -Dplugin_dummy=false \
 %endif
+%if 0%{?enable_flashrom}
     -Dplugin_flashrom=true \
+%else
+    -Dplugin_flashrom=false \
+%endif
     -Dplugin_thunderbolt=true \
 %if 0%{?have_redfish}
     -Dplugin_redfish=true \
@@ -206,11 +211,13 @@ Data files for installed tests.
 
 mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 
+%if 0%{?enable_flashrom}
 # delete most files from the subproject
 rm ${RPM_BUILD_ROOT}%{_includedir}/libflashrom.h
 rm ${RPM_BUILD_ROOT}%{_libdir}/libflashrom.so
 rm ${RPM_BUILD_ROOT}%{_libdir}/pkgconfig/libflashrom.pc
 rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
+%endif
 
 %find_lang %{name}
 
@@ -303,7 +310,9 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %{_libdir}/fwupd-plugins-3/libfu_plugin_dfu.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_ebitdo.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_fastboot.so
+%if 0%{?enable_flashrom}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_flashrom.so
+%endif
 %if 0%{?have_modem_manager}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_modem_manager.so
 %endif
@@ -341,8 +350,10 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %{_datadir}/locale/*/LC_IMAGES/fwupd*
 %endif
 
+%if 0%{?enable_flashrom}
 # eww, but just until the Fedora package ships these...
 %{_libdir}/libflashrom.so.1*
+%endif
 
 %files devel
 %{_datadir}/gir-1.0/Fwupd-2.0.gir
