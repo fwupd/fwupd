@@ -106,7 +106,9 @@ Requires: libsoup%{?_isa} >= %{libsoup_version}
 Requires: bubblewrap
 Requires: shared-mime-info
 
+%if 0%{?rhel} > 7 || 0%{?fedora} > 28
 Recommends: python3
+%endif
 
 Obsoletes: fwupd-sign < 0.1.6
 Obsoletes: libebitdo < 0.7.5-3
