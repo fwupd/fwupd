@@ -530,6 +530,47 @@ fu_plugin_get_hwids (FuPlugin *self)
 }
 
 /**
+ * fu_plugin_has_custom_flag:
+ * @self: A #FuPlugin
+ * @flag: A custom text flag, specific to the plugin, e.g. `uefi-force-enable`
+ *
+ * Returns if a per-plugin HwId custom flag exists, typically added from a DMI quirk.
+ *
+ * Returns: %TRUE if the quirk entry exists
+ *
+ * Since: 1.3.1
+ **/
+gboolean
+fu_plugin_has_custom_flag (FuPlugin *self, const gchar *flag)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	GPtrArray *hwids = fu_plugin_get_hwids (self);
+
+	g_return_val_if_fail (FU_IS_PLUGIN (self), FALSE);
+	g_return_val_if_fail (flag != NULL, FALSE);
+
+	/* never set up, e.g. in tests */
+	if (hwids == NULL)
+		return FALSE;
+
+	/* search each hwid */
+	for (guint i = 0; i < hwids->len; i++) {
+		const gchar *hwid = g_ptr_array_index (hwids, i);
+		const gchar *value;
+		g_autofree gchar *key = g_strdup_printf ("HwId=%s", hwid);
+
+		/* does prefixed quirk exist */
+		value = fu_quirks_lookup_by_id (priv->quirks, key, FU_QUIRKS_FLAGS);
+		if (value != NULL) {
+			g_auto(GStrv) quirks = g_strsplit (value, ",", -1);
+			if (g_strv_contains ((const gchar * const *) quirks, flag))
+				return TRUE;
+		}
+	}
+	return FALSE;
+}
+
+/**
  * fu_plugin_check_supported:
  * @self: A #FuPlugin
  * @guid: A Hardware ID GUID, e.g. `6de5d951-d755-576b-bd09-c5cf66b27234`

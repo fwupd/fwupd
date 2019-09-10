@@ -151,5 +151,7 @@ void		 fu_plugin_add_runtime_version		(FuPlugin	*self,
 void		 fu_plugin_add_compile_version		(FuPlugin	*self,
 							 const gchar	*component_id,
 							 const gchar	*version);
+gboolean	 fu_plugin_has_custom_flag		(FuPlugin	*self,
+							 const gchar	*flag);
 
 G_END_DECLS
