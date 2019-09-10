@@ -57,6 +57,7 @@ endif
 
 if get_option('plugin_uefi')
 subdir('uefi')
+subdir('uefi-recovery')
 endif
 
 if get_option('plugin_flashrom')

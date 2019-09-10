@@ -12,6 +12,7 @@
 #include <gio/gunixmounts.h>
 #include <glib/gi18n.h>
 
+#include "fu-device-metadata.h"
 #include "fu-plugin-vfuncs.h"
 
 #include "fu-uefi-bgrt.h"
@@ -448,7 +449,7 @@ fu_plugin_uefi_register_proxy_device (FuPlugin *plugin, FuDevice *device)
 void
 fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 {
-	if (fu_device_get_metadata (device, "UefiDeviceKind") != NULL) {
+	if (fu_device_get_metadata (device, FU_DEVICE_METADATA_UEFI_DEVICE_KIND) != NULL) {
 		if (fu_device_get_guid_default (device) == NULL) {
 			g_autofree gchar *dbg = fu_device_to_string (device);
 			g_warning ("cannot create proxy device as no GUID: %s", dbg);
