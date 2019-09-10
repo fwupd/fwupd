@@ -587,8 +587,8 @@ fu_plugin_uefi_delete_old_capsules (FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_plugin_startup (FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_uefi_smbios_enabled (FuPlugin *plugin, GError **error)
 {
 	const guint8 *data;
 	gsize sz;
@@ -625,6 +625,32 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 				     "System does not support UEFI mode");
 		return FALSE;
 	}
+	return TRUE;
+}
+
+gboolean
+fu_plugin_startup (FuPlugin *plugin, GError **error)
+{
+	g_autoptr(GError) error_local = NULL;
+
+	/* some platforms have broken SMBIOS data */
+	if (fu_plugin_has_custom_flag (plugin, "uefi-force-enable"))
+		return TRUE;
+
+	/* check SMBIOS for 'UEFI Specification is supported' */
+	if (!fu_plugin_uefi_smbios_enabled (plugin, &error_local)) {
+		g_autofree gchar *fw = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
+		g_autofree gchar *fn = g_build_filename (fw, "efi", NULL);
+		if (g_file_test (fn, G_FILE_TEST_EXISTS)) {
+			g_warning ("SMBIOS BIOS Characteristics Extension Byte 2 is invalid -- "
+				   "UEFI Specification is unsupported, but %s exists: %s",
+				   fn, error_local->message);
+			return TRUE;
+		}
+		g_propagate_error (error, g_steal_pointer (&error_local));
+		return FALSE;
+	}
+
 	/* test for invalid ESP in coldplug, and set the update-error rather
 	 * than showing no output if the plugin had self-disabled here */
 	return TRUE;
