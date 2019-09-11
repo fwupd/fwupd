@@ -880,10 +880,13 @@ gchar *
 fu_util_device_to_string (FwupdDevice *dev, guint idt)
 {
 	FwupdUpdateState state;
+	GPtrArray *guids = fwupd_device_get_guids (dev);
+	GPtrArray *instance_ids = fwupd_device_get_instance_ids (dev);
 	GString *str = g_string_new (NULL);
 	const gchar *tmp;
 	const gchar *tmp2;
 	guint64 flags = fwupd_device_get_flags (dev);
+	g_autoptr(GHashTable) ids = NULL;
 	g_autoptr(GString) flags_str = g_string_new (NULL);
 
 	/* some fields are intentionally not included and are only shown in --verbose */
@@ -999,6 +1002,32 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 		fu_common_string_append_kv (str, idt + 1, _("Flags"), flags_str->str);
 	}
 
+	/* all GUIDs for this hardware, with IDs if available */
+	ids = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+	for (guint i = 0; i < instance_ids->len; i++) {
+		const gchar *instance_id = g_ptr_array_index (instance_ids, i);
+		g_hash_table_insert (ids,
+				     fwupd_guid_hash_string (instance_id),
+				     g_strdup (instance_id));
+	}
+	for (guint i = 0; i < guids->len; i++) {
+		const gchar *guid = g_ptr_array_index (guids, i);
+		const gchar *instance_id = g_hash_table_lookup (ids, guid);
+		g_autofree gchar *guid_src = NULL;
+
+		/* instance IDs are only available as root */
+		if (instance_id == NULL) {
+			guid_src = g_strdup (guid);
+		} else {
+			guid_src = g_strdup_printf ("%s ← %s", guid, instance_id);
+		}
+		if (i == 0) {
+			/* TRANSLATORS: global ID common to all similar hardware */
+			fu_common_string_append_kv (str, idt + 1, ngettext ("GUID", "GUIDs", guids->len), guid_src);
+		} else {
+			fu_common_string_append_kv (str, idt + 1, "", guid_src);
+		}
+	}
 	return g_string_free (str, FALSE);
 }
 
