@@ -87,7 +87,7 @@ BuildRequires: freetype
 BuildRequires: fontconfig
 BuildRequires: google-noto-sans-cjk-ttc-fonts
 BuildRequires: gnu-efi-devel
-BuildRequires: tpm2-tss-devel
+BuildRequires: tpm2-tss-devel >= 2.2.3
 BuildRequires: pesign
 %endif
 
