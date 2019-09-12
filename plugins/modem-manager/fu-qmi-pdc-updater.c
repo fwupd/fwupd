@@ -8,6 +8,7 @@
 
 #include <string.h>
 
+#include "fu-common.h"
 #include "fu-qmi-pdc-updater.h"
 
 #define FU_QMI_PDC_MAX_OPEN_ATTEMPTS 8
@@ -356,7 +357,7 @@ fu_qmi_pdc_updater_load_config (WriteContext *ctx)
 
 	chunk = g_array_sized_new (FALSE, FALSE, sizeof (guint8), chunk_size);
 	g_array_set_size (chunk, chunk_size);
-	if (!fu_memcpy_safe (chunk->data, chunk_size, 0x0,				/* dst */
+	if (!fu_memcpy_safe ((guint8 *)chunk->data, chunk_size, 0x0,			/* dst */
 			     (const guint8 *)g_bytes_get_data (ctx->blob, NULL),	/* src */
 			     g_bytes_get_size (ctx->blob), ctx->offset,
 			     chunk_size, &error)) {
