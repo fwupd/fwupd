@@ -54,11 +54,6 @@ msgstr "%s sisteminis atnaujinimas"
 msgid "%s Update"
 msgstr "%s atnaujinimas"
 
-#. TRANSLATORS: first replacement is device name
-#, c-format
-msgid "%s has firmware updates:"
-msgstr "%s turi programinės aparatinės įrangos atnaujinimų:"
-
 #. TRANSLATORS: command description
 msgid "Activate devices"
 msgstr "Aktyvuoti įrenginius"
@@ -197,7 +192,6 @@ msgstr "Atsisakyta"
 msgid "Changed"
 msgstr "Pakeistas"
 
-#. TRANSLATORS: section header for firmware checksum
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Kontrolinė suma"
@@ -257,7 +251,7 @@ msgstr "Išskleidžiama…"
 msgid "Decrypt firmware data"
 msgstr "Iššifruoti programinės aparatinės įrangos duomenis"
 
-#. TRANSLATORS: section header for firmware description
+#. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Aprašas"
 
@@ -485,7 +479,8 @@ msgstr "Šiame kompiuteryje programinės aparatinės įrangos atnaujinimai yra n
 msgid "Firmware updates are supported on this machine."
 msgstr "Šiame kompiuteryje yra prieinami programinės aparatinės įrangos atnaujinimai."
 
-#. TRANSLATORS: section header for firmware flags
+#. TRANSLATORS: device properties
+#. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "Vėliavėlės"
 
@@ -495,13 +490,6 @@ msgstr "Priverstinai atlikti veiksmą nepaisant visų įspėjimų"
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
 msgstr "Rastas"
-
-msgid "GUID"
-msgstr "GUID"
-
-#. TRANSLATORS: command description
-msgid "Get all devices according to the system topology"
-msgstr "Gauti visus įrenginius pagal sistemos topologiją"
 
 #. TRANSLATORS: command description
 msgid "Get all devices and possible releases"
@@ -543,7 +531,6 @@ msgstr "Gauna laidas įrenginiui"
 msgid "Gets the results from the last update"
 msgstr "Gauna rezultatus iš paskutinio atnaujinimo"
 
-#. TRANSLATORS: Appstream ID for the hardware type
 msgid "ID"
 msgstr "ID"
 
@@ -624,10 +611,6 @@ msgstr "Sujungti kelis programinės aparatinės įrangos failus į vieną"
 msgid "Metadata URI"
 msgstr "Metaduomenų URI"
 
-#. TRANSLATORS: remote URI
-msgid "Metadata URI Signature"
-msgstr "Metaduomenų URI parašas"
-
 #. TRANSLATORS: explain why no metadata available
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "Metaduomenys gali būti gauti iš Linux tiekėjų programinės aparatinės įrangos paslaugos."
@@ -648,14 +631,12 @@ msgstr "Stebėti tarnybą, ar yra įvykių"
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 #. TRANSLATORS: device name, e.g. 'ColorHug2'
-#. TRANSLATORS: section header for the release name
 msgid "Name"
 msgstr "Pavadinimas"
 
 msgid "No action specified!"
 msgstr "Nenurodytas joks veiksmas!"
 
-#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Neaptikta jokios aparatinės įrangos su programinės aparatinės įrangos atnaujinimo galimybėmis"
@@ -759,10 +740,7 @@ msgstr "Sritis"
 msgid "Reinstalling %s with %s... "
 msgstr "Iš naujo įdiegiama %s su %s... "
 
-#. TRANSLATORS: section header for the remote the file is coming from
-msgid "Remote"
-msgstr "Nuotolinė saugykla"
-
+#. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 msgid "Remote ID"
 msgstr "Nuotolinės saugyklos ID"
@@ -939,7 +917,7 @@ msgstr "Būsena"
 msgid "Status"
 msgstr "Būsena"
 
-#. TRANSLATORS: section header for the release one line summary
+#. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Santrauka"
 
@@ -959,10 +937,6 @@ msgstr "Ši programa gali tinkamai veikti tik pagrindinio naudotojo teisėmis"
 msgid "This tool can only be used by the root user"
 msgstr "Šį įrankį gali naudoti tik pagrindinis naudotojas"
 
-#. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
-msgid "Title"
-msgstr "Pavadinimas"
-
 #. TRANSLATORS: transfer size in bytes
 msgid "Transfer Size"
 msgstr "Persiuntimo dydis"
@@ -974,10 +948,6 @@ msgstr "Tipas"
 #. TRANSLATORS: program name
 msgid "UEFI Firmware Utility"
 msgstr "UEFI programinės aparatinės įrangos paslaugų programa"
-
-#. TRANSLATORS: section header for firmware URI
-msgid "URI"
-msgstr "URI"
 
 #. TRANSLATORS: currect daemon status is unknown
 msgid "Unknown"
@@ -993,39 +963,6 @@ msgstr "Atrakina įrenginį programinės aparatinės įrangos prieigai"
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"
 msgstr "Atnaujinimo metu panaikinti derinimo vėliavėlės nustatymą"
-
-#. TRANSLATORS: section header for firmware checksum
-msgid "Update Checksum"
-msgstr "Atnaujinimo kontrolinė suma"
-
-#. TRANSLATORS: section header for long firmware desc
-msgid "Update Description"
-msgstr "Atnaujinimo aprašas"
-
-#. TRANSLATORS: section header for the amount
-#. * of time it takes to install the update
-msgid "Update Duration"
-msgstr "Atnaujinimo trukmė"
-
-#. TRANSLATORS: section header for firmware remote http://
-msgid "Update Location"
-msgstr "Atnaujinimo vieta"
-
-#. TRANSLATORS: section header for the release name
-msgid "Update Name"
-msgstr "Atnaujinimo pavadinimas"
-
-#. TRANSLATORS: section header for remote ID, e.g. lvfs-testing
-msgid "Update Remote ID"
-msgstr "Atnaujinimų nuotolinės saugyklos ID"
-
-#. TRANSLATORS: section header for the release one line summary
-msgid "Update Summary"
-msgstr "Atnaujinimo santrauka"
-
-#. TRANSLATORS: section header for firmware version
-msgid "Update Version"
-msgstr "Atnaujinimo versija"
 
 #. TRANSLATORS: command description
 msgid "Update all devices that match local metadata"
@@ -1086,7 +1023,7 @@ msgstr "Naudotojo vardas"
 msgid "Verifying…"
 msgstr "Patikrinama…"
 
-#. TRANSLATORS: section header for release version number
+#. TRANSLATORS: version number of new firmware
 msgid "Version"
 msgstr "Versija"
 

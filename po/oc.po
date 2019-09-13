@@ -34,7 +34,6 @@ msgstr "Anullat"
 msgid "Changed"
 msgstr "Cambiat"
 
-#. TRANSLATORS: section header for firmware checksum
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Soma de contraròtle"
@@ -51,7 +50,7 @@ msgstr "Comanda pas trobada"
 msgid "Debugging Options"
 msgstr "Opcions de desbugatge"
 
-#. TRANSLATORS: section header for firmware description
+#. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Descripcion"
 
@@ -86,9 +85,6 @@ msgstr "Servici D-Bus de mesa a jorn dels micrologicials"
 msgid "Found"
 msgstr "Trobat"
 
-msgid "GUID"
-msgstr "GUID"
-
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
 msgstr "Obténer la lista dels periferics que supòrtan las mesas a jorn de micrologicial"
@@ -97,7 +93,6 @@ msgstr "Obténer la lista dels periferics que supòrtan las mesas a jorn de micr
 msgid "Gets details about a firmware file"
 msgstr "Obténer los detalhs d'un fichièr de micrologicial"
 
-#. TRANSLATORS: Appstream ID for the hardware type
 msgid "ID"
 msgstr "ID"
 
@@ -110,11 +105,9 @@ msgstr "Mòde"
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 #. TRANSLATORS: device name, e.g. 'ColorHug2'
-#. TRANSLATORS: section header for the release name
 msgid "Name"
 msgstr "Nom"
 
-#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Cap de material amb de capacitats de mesa a jorn del micrologicial es pas estat detectat"
@@ -167,6 +160,6 @@ msgstr "Estatut"
 msgid "Updating %s from %s to %s... "
 msgstr "Mesa a jorn de %s de %s en %s "
 
-#. TRANSLATORS: section header for release version number
+#. TRANSLATORS: version number of new firmware
 msgid "Version"
 msgstr "Version"

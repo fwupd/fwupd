@@ -67,7 +67,6 @@ msgstr "फर्मवेयर फाइल की अधिक जानक�
 msgid "Install a firmware file on this hardware"
 msgstr "फर्मवेयर फाइल को इस हार्डवेयर पर स्थापित करें "
 
-#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "अपडेट की क्षमता वाला हार्डवेयर उपलब्ध नहीं "

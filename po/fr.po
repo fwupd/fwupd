@@ -67,7 +67,6 @@ msgstr "Obtenir les détails d'un fichier de micrologiciel"
 msgid "Install a firmware file on this hardware"
 msgstr "Installer un fichier de micrologiciel sur ce matériel"
 
-#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Aucun matériel ayant des capacités de mise à jour du micrologiciel n'a été détecté"

@@ -74,11 +74,6 @@ msgstr "%sJärjestelmän päivitys"
 msgid "%s Update"
 msgstr "%sPäivitys"
 
-#. TRANSLATORS: first replacement is device name
-#, c-format
-msgid "%s has firmware updates:"
-msgstr "%s on laiteohjelmistopäivityksiä:"
-
 #. TRANSLATORS: duration in days!
 #, c-format
 msgid "%u day"
@@ -256,7 +251,6 @@ msgstr "Peruttu"
 msgid "Changed"
 msgstr "Muutettu"
 
-#. TRANSLATORS: section header for firmware checksum
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Tarkistussumma"
@@ -316,7 +310,7 @@ msgstr "Puretaan…"
 msgid "Decrypt firmware data"
 msgstr "Pura firmwaren data"
 
-#. TRANSLATORS: section header for firmware description
+#. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Kuvaus"
 
@@ -374,6 +368,10 @@ msgstr "Älä tarkista käynnistystä uudelleen päivityksen jälkeen"
 #. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
 msgstr "Älä tarkista ilmoittamattomasta historiasta"
+
+#. TRANSLATORS: turn on all debugging
+msgid "Do not include timestamp prefix"
+msgstr "Älä sisällytä aikaleiman etuliitettä"
 
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
@@ -554,7 +552,8 @@ msgstr "Ohjelmistopäivitys 'firmware' ei tue tätä laitetta"
 msgid "Firmware updates are supported on this machine."
 msgstr "Ohjelmistopäivitys 'firmware' tukee tätä laitetta"
 
-#. TRANSLATORS: section header for firmware flags
+#. TRANSLATORS: device properties
+#. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "Liput"
 
@@ -564,13 +563,6 @@ msgstr "Pakota toimenpide huomioimatta kaikki varoitukset"
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
 msgstr "Löydetty"
-
-msgid "GUID"
-msgstr "GUID"
-
-#. TRANSLATORS: command description
-msgid "Get all devices according to the system topology"
-msgstr "Hae kaikki laitteet järjestelmän topologian mukaisesti"
 
 #. TRANSLATORS: command description
 msgid "Get all devices and possible releases"
@@ -612,7 +604,6 @@ msgstr "Antaa laitteen julkaisut"
 msgid "Gets the results from the last update"
 msgstr "Saat viimeisimmän päivityksen tulokset"
 
-#. TRANSLATORS: Appstream ID for the hardware type
 msgid "ID"
 msgstr "Henkilöllisyys"
 
@@ -693,10 +684,6 @@ msgstr "Yhdistä useita firmware-tiedostoja yhteen"
 msgid "Metadata URI"
 msgstr "Metatietojen URI"
 
-#. TRANSLATORS: remote URI
-msgid "Metadata URI Signature"
-msgstr "Metatietojen URI-allekirjoitus"
-
 #. TRANSLATORS: explain why no metadata available
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "Metatiedot voidaan hankkia Linux Vendor Firmware -palvelusta."
@@ -729,14 +716,12 @@ msgstr "Seuraa tapahtumien taustaprosessia"
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 #. TRANSLATORS: device name, e.g. 'ColorHug2'
-#. TRANSLATORS: section header for the release name
 msgid "Name"
 msgstr "Nimi"
 
 msgid "No action specified!"
 msgstr "Toimintoa ei ole määritetty!"
 
-#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Ei havaittu sopivaa laitteistoa firmware päivitykselle"
@@ -844,10 +829,7 @@ msgstr "Alue"
 msgid "Reinstalling %s with %s... "
 msgstr "Uudelleenasennus %s kera %s... "
 
-#. TRANSLATORS: section header for the remote the file is coming from
-msgid "Remote"
-msgstr "Etä"
-
+#. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 msgid "Remote ID"
 msgstr "Etätunnus"
@@ -1036,7 +1018,7 @@ msgstr "Osavaltio"
 msgid "Status"
 msgstr "Tila"
 
-#. TRANSLATORS: section header for the release one line summary
+#. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Yhteenveto"
 
@@ -1063,10 +1045,6 @@ msgstr "Tämä sisältää firmwaren, jota ei ole vientikiellossa, mutta jota la
 msgid "This tool can only be used by the root user"
 msgstr "Tätä työkalua voi käyttää vain root-käyttäjä"
 
-#. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
-msgid "Title"
-msgstr "Otsikko"
-
 #. TRANSLATORS: transfer size in bytes
 msgid "Transfer Size"
 msgstr "Siirron koko"
@@ -1078,10 +1056,6 @@ msgstr "Tyyppi"
 #. TRANSLATORS: program name
 msgid "UEFI Firmware Utility"
 msgstr "UEFI firmware -apuohjelma"
-
-#. TRANSLATORS: section header for firmware URI
-msgid "URI"
-msgstr "URI"
 
 #. TRANSLATORS: currect daemon status is unknown
 msgid "Unknown"
@@ -1102,39 +1076,6 @@ msgstr "Poista virheenkorjauksen lippu päivityksen aikana"
 #, c-format
 msgid "Unsupported daemon version %s, client version is %s"
 msgstr "Ei tuettu taustaprosessin versio %s, asiakasversio on %s"
-
-#. TRANSLATORS: section header for firmware checksum
-msgid "Update Checksum"
-msgstr "Päivitä tarkistussumma"
-
-#. TRANSLATORS: section header for long firmware desc
-msgid "Update Description"
-msgstr "Päivitä kuvaus"
-
-#. TRANSLATORS: section header for the amount
-#. * of time it takes to install the update
-msgid "Update Duration"
-msgstr "Päivitä kesto"
-
-#. TRANSLATORS: section header for firmware remote http://
-msgid "Update Location"
-msgstr "Päivitä sijainti"
-
-#. TRANSLATORS: section header for the release name
-msgid "Update Name"
-msgstr "Päivitä nimi"
-
-#. TRANSLATORS: section header for remote ID, e.g. lvfs-testing
-msgid "Update Remote ID"
-msgstr "Päivitä etätunnus"
-
-#. TRANSLATORS: section header for the release one line summary
-msgid "Update Summary"
-msgstr "Päivitä yhteenveto"
-
-#. TRANSLATORS: section header for firmware version
-msgid "Update Version"
-msgstr "Päivitä versio"
 
 #. TRANSLATORS: command description
 msgid "Update all devices that match local metadata"
@@ -1187,6 +1128,10 @@ msgstr "Lataa raportti nyt?"
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
 msgstr "Firmware-raporttien lataaminen auttaa laitteistotoimittajia tunnistamaan nopeasti virheelliset ja onnistuneet päivitykset todellisissa laitteissa."
 
+#. TRANSLATORS: command line option
+msgid "Use quirk flags when installing firmware"
+msgstr "Käytä Quirk-lippuja asennettaessa laiteohjelmistoa"
+
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "Käyttäjätunnus"
@@ -1195,7 +1140,7 @@ msgstr "Käyttäjätunnus"
 msgid "Verifying…"
 msgstr "Vahvistetaan…"
 
-#. TRANSLATORS: section header for release version number
+#. TRANSLATORS: version number of new firmware
 msgid "Version"
 msgstr "Versio"
 

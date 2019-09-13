@@ -64,11 +64,6 @@ msgstr "%s rendszerfrissítés"
 msgid "%s Update"
 msgstr "%s frissítés"
 
-#. TRANSLATORS: first replacement is device name
-#, c-format
-msgid "%s has firmware updates:"
-msgstr "%s firmware frissítésekkel rendelkezik:"
-
 #. TRANSLATORS: duration in days!
 #, c-format
 msgid "%u day"
@@ -242,7 +237,6 @@ msgstr "Megszakítva"
 msgid "Changed"
 msgstr "Módosítva"
 
-#. TRANSLATORS: section header for firmware checksum
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Ellenőrzőösszeg"
@@ -302,7 +296,7 @@ msgstr "Kibontás…"
 msgid "Decrypt firmware data"
 msgstr "Firmware adatok visszafejtése"
 
-#. TRANSLATORS: section header for firmware description
+#. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Leírás"
 
@@ -540,7 +534,8 @@ msgstr "A firmware frissítések nem támogatottak ezen a gépen."
 msgid "Firmware updates are supported on this machine."
 msgstr "A firmware frissítések támogatottak ezen a gépen."
 
-#. TRANSLATORS: section header for firmware flags
+#. TRANSLATORS: device properties
+#. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "Jelzők"
 
@@ -550,13 +545,6 @@ msgstr "A művelet erőltetése, az összes figyelmeztetés mellőzése"
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
 msgstr "Megtalálva"
-
-msgid "GUID"
-msgstr "GUID"
-
-#. TRANSLATORS: command description
-msgid "Get all devices according to the system topology"
-msgstr "Az összes eszköz lekérdezése a rendszer topológiájának megfelelően"
 
 #. TRANSLATORS: command description
 msgid "Get all devices and possible releases"
@@ -598,7 +586,6 @@ msgstr "Lekéri az eszközhöz tartozó kiadásokat"
 msgid "Gets the results from the last update"
 msgstr "A legutóbbi frissítésből származó eredményeket kéri le"
 
-#. TRANSLATORS: Appstream ID for the hardware type
 msgid "ID"
 msgstr "Azonosító"
 
@@ -679,10 +666,6 @@ msgstr "Több firmware fájl egyesítése"
 msgid "Metadata URI"
 msgstr "Metaadat URI"
 
-#. TRANSLATORS: remote URI
-msgid "Metadata URI Signature"
-msgstr "Metaadat URI aláírása"
-
 #. TRANSLATORS: explain why no metadata available
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "A metaadatok nem szerezhetőek be a Linux gyártói firmware szolgáltatásból."
@@ -703,14 +686,12 @@ msgstr "A démon eseményeinek figyelése"
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 #. TRANSLATORS: device name, e.g. 'ColorHug2'
-#. TRANSLATORS: section header for the release name
 msgid "Name"
 msgstr "Név"
 
 msgid "No action specified!"
 msgstr "Nincs művelet megadva!"
 
-#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Nem észlelhető firmware frissítési képességgel rendelkező hardver"
@@ -814,10 +795,7 @@ msgstr "Régió"
 msgid "Reinstalling %s with %s... "
 msgstr "%s újratelepítése ezzel: %s…"
 
-#. TRANSLATORS: section header for the remote the file is coming from
-msgid "Remote"
-msgstr "Távoli tároló"
-
+#. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 msgid "Remote ID"
 msgstr "Távoli azonosító"
@@ -986,7 +964,7 @@ msgstr "Állapot"
 msgid "Status"
 msgstr "Állapot"
 
-#. TRANSLATORS: section header for the release one line summary
+#. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Összegzés"
 
@@ -1013,10 +991,6 @@ msgstr "Ez a távoli tároló olyan firmware-t tartalmaz, amelyre nem vonatkozik
 msgid "This tool can only be used by the root user"
 msgstr "Ezt az eszközt csak a root felhasználó használhatja"
 
-#. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
-msgid "Title"
-msgstr "Cím"
-
 #. TRANSLATORS: transfer size in bytes
 msgid "Transfer Size"
 msgstr "Átviteli méret"
@@ -1028,10 +1002,6 @@ msgstr "Típus"
 #. TRANSLATORS: program name
 msgid "UEFI Firmware Utility"
 msgstr "UEFI firmware segédprogram"
-
-#. TRANSLATORS: section header for firmware URI
-msgid "URI"
-msgstr "URI"
 
 #. TRANSLATORS: currect daemon status is unknown
 msgid "Unknown"
@@ -1047,39 +1017,6 @@ msgstr "Eszköz feloldása a firmware eléréséhez"
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"
 msgstr "A hibakeresési jelző kikapcsolása frissítéskor"
-
-#. TRANSLATORS: section header for firmware checksum
-msgid "Update Checksum"
-msgstr "Frissítés ellenőrzőösszege"
-
-#. TRANSLATORS: section header for long firmware desc
-msgid "Update Description"
-msgstr "Frissítés leírása"
-
-#. TRANSLATORS: section header for the amount
-#. * of time it takes to install the update
-msgid "Update Duration"
-msgstr "Frissítés hossza"
-
-#. TRANSLATORS: section header for firmware remote http://
-msgid "Update Location"
-msgstr "Frissítés helye"
-
-#. TRANSLATORS: section header for the release name
-msgid "Update Name"
-msgstr "Frissítés neve"
-
-#. TRANSLATORS: section header for remote ID, e.g. lvfs-testing
-msgid "Update Remote ID"
-msgstr "Távoli azonosító frissítése"
-
-#. TRANSLATORS: section header for the release one line summary
-msgid "Update Summary"
-msgstr "Frissítés összegzése"
-
-#. TRANSLATORS: section header for firmware version
-msgid "Update Version"
-msgstr "Frissítés verziója"
 
 #. TRANSLATORS: command description
 msgid "Update all devices that match local metadata"
@@ -1140,7 +1077,7 @@ msgstr "Felhasználónév"
 msgid "Verifying…"
 msgstr "Ellenőrzés…"
 
-#. TRANSLATORS: section header for release version number
+#. TRANSLATORS: version number of new firmware
 msgid "Version"
 msgstr "Verzió"
 

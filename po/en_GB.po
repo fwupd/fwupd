@@ -22,11 +22,6 @@ msgid_plural "%.0f minutes remaining"
 msgstr[0] "%.0f minute remaining"
 msgstr[1] "%.0f minutes remaining"
 
-#. TRANSLATORS: first replacement is device name
-#, c-format
-msgid "%s has firmware updates:"
-msgstr "%s has firmware updates:"
-
 #. TRANSLATORS: duration in days!
 #, c-format
 msgid "%u day"
@@ -162,7 +157,6 @@ msgstr "Cancelled"
 msgid "Changed"
 msgstr "Changed"
 
-#. TRANSLATORS: section header for firmware checksum
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Checksum"
@@ -222,7 +216,7 @@ msgstr "Decompressing…"
 msgid "Decrypt firmware data"
 msgstr "Decrypt firmware data"
 
-#. TRANSLATORS: section header for firmware description
+#. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Description"
 
@@ -439,13 +433,6 @@ msgstr "Force the action ignoring all warnings"
 msgid "Found"
 msgstr "Found"
 
-msgid "GUID"
-msgstr "GUID"
-
-#. TRANSLATORS: command description
-msgid "Get all devices according to the system topology"
-msgstr "Get all devices according to the system topology"
-
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
 msgstr "Get all devices that support firmware updates"
@@ -478,7 +465,6 @@ msgstr "Gets the releases for a device"
 msgid "Gets the results from the last update"
 msgstr "Gets the results from the last update"
 
-#. TRANSLATORS: Appstream ID for the hardware type
 msgid "ID"
 msgstr "ID"
 
@@ -555,10 +541,6 @@ msgstr "Merge multiple firmware files into one"
 msgid "Metadata URI"
 msgstr "Metadata URI"
 
-#. TRANSLATORS: remote URI
-msgid "Metadata URI Signature"
-msgstr "Metadata URI Signature"
-
 #. TRANSLATORS: explain why no metadata available
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "Metadata can be obtained from the Linux Vendor Firmware Service."
@@ -579,14 +561,12 @@ msgstr "Monitor the daemon for events"
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 #. TRANSLATORS: device name, e.g. 'ColorHug2'
-#. TRANSLATORS: section header for the release name
 msgid "Name"
 msgstr "Name"
 
 msgid "No action specified!"
 msgstr "No action specified!"
 
-#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "No hardware detected with firmware update capability"
@@ -678,10 +658,7 @@ msgstr "Region"
 msgid "Reinstalling %s with %s... "
 msgstr "Reinstalling %s with %s... "
 
-#. TRANSLATORS: section header for the remote the file is coming from
-msgid "Remote"
-msgstr "Remote"
-
+#. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 msgid "Remote ID"
 msgstr "Remote ID"
@@ -833,7 +810,7 @@ msgstr "State"
 msgid "Status"
 msgstr "Status"
 
-#. TRANSLATORS: section header for the release one line summary
+#. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Summary"
 
@@ -851,10 +828,6 @@ msgstr "This program may only work correctly as root"
 msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
 msgstr "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
 
-#. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
-msgid "Title"
-msgstr "Title"
-
 #. TRANSLATORS: transfer size in bytes
 msgid "Transfer Size"
 msgstr "Transfer Size"
@@ -866,10 +839,6 @@ msgstr "Type"
 #. TRANSLATORS: program name
 msgid "UEFI Firmware Utility"
 msgstr "UEFI Firmware Utility"
-
-#. TRANSLATORS: section header for firmware URI
-msgid "URI"
-msgstr "URI"
 
 #. TRANSLATORS: currect daemon status is unknown
 msgid "Unknown"
@@ -885,39 +854,6 @@ msgstr "Unlocks the device for firmware access"
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"
 msgstr "Unset the debugging flag during update"
-
-#. TRANSLATORS: section header for firmware checksum
-msgid "Update Checksum"
-msgstr "Update Checksum"
-
-#. TRANSLATORS: section header for long firmware desc
-msgid "Update Description"
-msgstr "Update Description"
-
-#. TRANSLATORS: section header for the amount
-#. * of time it takes to install the update
-msgid "Update Duration"
-msgstr "Update Duration"
-
-#. TRANSLATORS: section header for firmware remote http://
-msgid "Update Location"
-msgstr "Update Location"
-
-#. TRANSLATORS: section header for the release name
-msgid "Update Name"
-msgstr "Update Name"
-
-#. TRANSLATORS: section header for remote ID, e.g. lvfs-testing
-msgid "Update Remote ID"
-msgstr "Update Remote ID"
-
-#. TRANSLATORS: section header for the release one line summary
-msgid "Update Summary"
-msgstr "Update Summary"
-
-#. TRANSLATORS: section header for firmware version
-msgid "Update Version"
-msgstr "Update Version"
 
 #. TRANSLATORS: command description
 msgid "Update all devices that match local metadata"
@@ -974,7 +910,7 @@ msgstr "Username"
 msgid "Verifying…"
 msgstr "Verifying…"
 
-#. TRANSLATORS: section header for release version number
+#. TRANSLATORS: version number of new firmware
 msgid "Version"
 msgstr "Version"
 

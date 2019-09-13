@@ -15,11 +15,6 @@ msgstr ""
 "Language: id\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#. TRANSLATORS: first replacement is device name
-#, c-format
-msgid "%s has firmware updates:"
-msgstr "%s memiliki pemutakhiran firmware:"
-
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Added"
 msgstr "Ditambahkan"
@@ -107,7 +102,6 @@ msgstr "Dibatalkan"
 msgid "Changed"
 msgstr "Diubah"
 
-#. TRANSLATORS: section header for firmware checksum
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Checksum"
@@ -167,7 +161,7 @@ msgstr "Mendekompresi..."
 msgid "Decrypt firmware data"
 msgstr "Dekripsikan data firmware"
 
-#. TRANSLATORS: section header for firmware description
+#. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Deskripsi"
 
@@ -320,9 +314,6 @@ msgstr[0] "Metadata firmware belum diperbarui selama %uhari dan mungkin tidak mu
 msgid "Found"
 msgstr "Ditemukan"
 
-msgid "GUID"
-msgstr "GUID"
-
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
 msgstr "Dapatkan semua perangkat yang mendukung pemutakhiran firmware"
@@ -351,7 +342,6 @@ msgstr "Dapatkan rilis-rilis bagi sebuah peranti"
 msgid "Gets the results from the last update"
 msgstr "Dapatkan hasil dari pemutakhiran terakhir"
 
-#. TRANSLATORS: Appstream ID for the hardware type
 msgid "ID"
 msgstr "ID"
 
@@ -401,10 +391,6 @@ msgstr "Gabungkan beberapa berkas firmware menjadi satu"
 msgid "Metadata URI"
 msgstr "URI Metadata"
 
-#. TRANSLATORS: remote URI
-msgid "Metadata URI Signature"
-msgstr "Tanda Tangan URI Metadata"
-
 msgid "Mode"
 msgstr "Mode"
 
@@ -421,11 +407,9 @@ msgstr "Pantau daemon untuk kejadian"
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 #. TRANSLATORS: device name, e.g. 'ColorHug2'
-#. TRANSLATORS: section header for the release name
 msgid "Name"
 msgstr "Nama"
 
-#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Tidak terdeteksi perangkat keras dengan kapabilitas pemutakhiran firmware"
@@ -490,10 +474,7 @@ msgstr "Wilayah"
 msgid "Reinstalling %s with %s... "
 msgstr "Memasang ulang %s dengan %s..."
 
-#. TRANSLATORS: section header for the remote the file is coming from
-msgid "Remote"
-msgstr "Remote"
-
+#. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 msgid "Remote ID"
 msgstr "ID Remote"
@@ -611,16 +592,12 @@ msgstr "Keadaan"
 msgid "Status"
 msgstr "Status"
 
-#. TRANSLATORS: section header for the release one line summary
+#. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Ringkasan"
 
 msgid "Target"
 msgstr "Target"
-
-#. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
-msgid "Title"
-msgstr "Judul"
 
 #. TRANSLATORS: transfer size in bytes
 msgid "Transfer Size"
@@ -629,10 +606,6 @@ msgstr "Ukuran Transfer"
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
 msgstr "Tipe"
-
-#. TRANSLATORS: section header for firmware URI
-msgid "URI"
-msgstr "URI"
 
 #. TRANSLATORS: currect daemon status is unknown
 msgid "Unknown"
@@ -644,34 +617,6 @@ msgstr "Buka kunci perangkat untuk mengizinkan akses"
 #. TRANSLATORS: command description
 msgid "Unlocks the device for firmware access"
 msgstr "Buka kunci perangkat bagi akses firmware"
-
-#. TRANSLATORS: section header for firmware checksum
-msgid "Update Checksum"
-msgstr "Mutakhirkan Checksum"
-
-#. TRANSLATORS: section header for long firmware desc
-msgid "Update Description"
-msgstr "Mutakhirkan Keterangan"
-
-#. TRANSLATORS: section header for firmware remote http://
-msgid "Update Location"
-msgstr "Mutakhirkan Lokasi"
-
-#. TRANSLATORS: section header for the release name
-msgid "Update Name"
-msgstr "Nama Pembaruan"
-
-#. TRANSLATORS: section header for remote ID, e.g. lvfs-testing
-msgid "Update Remote ID"
-msgstr "Mutakhirkan ID Remote"
-
-#. TRANSLATORS: section header for the release one line summary
-msgid "Update Summary"
-msgstr "Ringkasan Pembaruan"
-
-#. TRANSLATORS: section header for firmware version
-msgid "Update Version"
-msgstr "Mutakhirkan Versi"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
@@ -715,7 +660,7 @@ msgstr "Nama Pengguna"
 msgid "Verifying…"
 msgstr "Verifikasi..."
 
-#. TRANSLATORS: section header for release version number
+#. TRANSLATORS: version number of new firmware
 msgid "Version"
 msgstr "Versi"
 

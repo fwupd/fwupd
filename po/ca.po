@@ -66,6 +66,13 @@ msgstr "Actualització ME de %s"
 msgid "%s System Update"
 msgstr "Actualizació del sistema %s"
 
+#. TRANSLATORS: the Thunderbolt controller is a device that
+#. * has other high speed Thunderbolt devices plugged into it;
+#. * the first %s is the system name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Thunderbolt Controller Update"
+msgstr "Actualització del controlador Thunderbolt %s"
+
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else
 #. --
@@ -73,11 +80,6 @@ msgstr "Actualizació del sistema %s"
 #, c-format
 msgid "%s Update"
 msgstr "Actualització de %s"
-
-#. TRANSLATORS: first replacement is device name
-#, c-format
-msgid "%s has firmware updates:"
-msgstr "%s té actualitzacions de microprogramari:"
 
 #. TRANSLATORS: duration in days!
 #, c-format
@@ -239,6 +241,10 @@ msgstr "Es requereix autenticació per actualitzar el microprogramari en aquesta
 msgid "Authentication is required to update the stored checksums for the device"
 msgstr "Es requereix autenticació per actualitzar les sumes de verificació emmagatzemades pels dispositius"
 
+#. TRANSLATORS: firmware version of bootloader
+msgid "Bootloader Version"
+msgstr "Versió del carregador d'arrencada"
+
 #. TRANSLATORS: command description
 msgid "Build firmware using a sandbox"
 msgstr "Construeix el microprogramari usant un entorn de proves"
@@ -256,7 +262,6 @@ msgstr "S'ha cancel·lat"
 msgid "Changed"
 msgstr "S'ha canviat"
 
-#. TRANSLATORS: section header for firmware checksum
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Suma de comprovació"
@@ -297,6 +302,10 @@ msgstr "Converteix el microprogramari al format DFU"
 msgid "Create a binary patch using two files"
 msgstr "Crea un pedaç binari emprant dos fitxers"
 
+#. TRANSLATORS: version number of current firmware
+msgid "Current version"
+msgstr "Versió actual"
+
 msgid "DFU"
 msgstr "DFU"
 
@@ -316,7 +325,7 @@ msgstr "S'està descomprimint..."
 msgid "Decrypt firmware data"
 msgstr "Desencripta les dades del microprogramari"
 
-#. TRANSLATORS: section header for firmware description
+#. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Descripció"
 
@@ -327,6 +336,10 @@ msgstr "Desconecta el dispositiu amb capacitat DFU actualment connectat"
 #. TRANSLATORS: command description
 msgid "Detach to bootloader mode"
 msgstr "Separa del mode carregador d'arrencada"
+
+#. TRANSLATORS: more details about the update link
+msgid "Details"
+msgstr "Detalls"
 
 #. TRANSLATORS: ID for hardware, typically a SHA1 sum
 msgid "Device ID"
@@ -375,6 +388,10 @@ msgstr "No realitzis el reinici després de l'actualització"
 msgid "Do not check for unreported history"
 msgstr "No comprovar si hi ha un historial sense informar"
 
+#. TRANSLATORS: turn on all debugging
+msgid "Do not include timestamp prefix"
+msgstr "No incloure el prefix de la marca de temps"
+
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
 msgstr "No escriure a la base de dades de l'historial"
@@ -414,6 +431,10 @@ msgstr "Bolca els detalls sobre un fitxer de microprogramari"
 #. TRANSLATORS: command description
 msgid "Dump information about a binary patch to the screen"
 msgstr "Bolca la informació sobre un pedaç binari a la pantalla"
+
+#. TRANSLATORS: length of time the update takes to apply
+msgid "Duration"
+msgstr "Durada"
 
 #. TRANSLATORS: ESP is EFI System Partition
 msgid "ESP specified was not valid"
@@ -489,6 +510,10 @@ msgstr "No s'han pogut carregar les peculiaritats"
 msgid "Failed to parse arguments"
 msgstr "Ha fallat en analitzar els arguments"
 
+#. TRANSLATORS: the user didn't read the man page
+msgid "Failed to parse flags for --filter"
+msgstr "Ha fallat en analitzar les etiquetes per a --filter"
+
 #. TRANSLATORS: we could not reboot for some reason
 msgid "Failed to reboot"
 msgstr "Ha fallat en tornar a arrencar"
@@ -520,6 +545,10 @@ msgstr "Nom del fitxer"
 #. TRANSLATORS: filename of the local file
 msgid "Filename Signature"
 msgstr "Signatura del nom del fitxer"
+
+#. TRANSLATORS: command line option
+msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
+msgstr "Filtra amb un conjunt d'etiquetes del dispositiu amb un prefix «~» per a excloure, p. ex., «internal,~needs-reboot»"
 
 #. TRANSLATORS: program name
 msgid "Firmware Agent"
@@ -554,7 +583,8 @@ msgstr "Les actualitzacions de microprogramari no estan admeses en aquesta màqu
 msgid "Firmware updates are supported on this machine."
 msgstr "Les actualitzacions de microprogramari estan admeses en aquesta màquina."
 
-#. TRANSLATORS: section header for firmware flags
+#. TRANSLATORS: device properties
+#. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "Etiquetes"
 
@@ -565,12 +595,9 @@ msgstr "Força l'acció ignorant tots els avisos"
 msgid "Found"
 msgstr "S'ha trobat"
 
-msgid "GUID"
-msgstr "GUID"
-
 #. TRANSLATORS: command description
-msgid "Get all devices according to the system topology"
-msgstr "Obtén tots els dispositius segons la topologia del sistema"
+msgid "Get all device flags supported by fwupd"
+msgstr "Obté totes les etiquetes admeses per «fwupd»"
 
 #. TRANSLATORS: command description
 msgid "Get all devices and possible releases"
@@ -612,13 +639,20 @@ msgstr "Obté els alliberaments per a un dispositiu"
 msgid "Gets the results from the last update"
 msgstr "Obté els resultats de l'última actualització"
 
-#. TRANSLATORS: Appstream ID for the hardware type
 msgid "ID"
 msgstr "ID"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
 msgstr "Està ociós..."
+
+#. TRANSLATORS: command line option
+msgid "Ignore SSL strict checks when downloading files"
+msgstr "Ignora les comprovacions estrictes de SSL quan es baixin els fitxers"
+
+#. TRANSLATORS: length of time the update takes to apply
+msgid "Install Duration"
+msgstr "Durada de la instal·lació"
 
 #. TRANSLATORS: command description
 msgid "Install a firmware blob on a device"
@@ -663,6 +697,10 @@ msgstr " Anell de claus"
 msgid "Less than one minute remaining"
 msgstr "Manca menys d'un minut"
 
+#. TRANSLATORS: e.g. GPLv2+, Non free etc
+msgid "License"
+msgstr "Llicència"
+
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Servei de microprogramari del proveïdor Linux (microprogramari estable)"
 
@@ -682,6 +720,10 @@ msgid "Loading…"
 msgstr "S'està carregant..."
 
 #. TRANSLATORS: command line option
+msgid "Log output to FILE (typically for scripting use)"
+msgstr "Sortida del registre a FITXER (normalment per a ús en crear scripts)"
+
+#. TRANSLATORS: command line option
 msgid "Manually whitelist specific plugins"
 msgstr "Connectors especíificats manualment a la llista blanca"
 
@@ -690,16 +732,20 @@ msgid "Merge multiple firmware files into one"
 msgstr "Fusiona múltiples fitxers de microprogramari en un de sol"
 
 #. TRANSLATORS: remote URI
-msgid "Metadata URI"
-msgstr "URI de les metadades"
+msgid "Metadata Signature"
+msgstr "Signatura de les metadades"
 
 #. TRANSLATORS: remote URI
-msgid "Metadata URI Signature"
-msgstr "Signatura de l'URI de les metadades"
+msgid "Metadata URI"
+msgstr "URI de les metadades"
 
 #. TRANSLATORS: explain why no metadata available
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "Les metadades es poden obtenir des del servei de microprogramari del proveïdor Linux."
+
+#. TRANSLATORS: smallest version number installable on device
+msgid "Minimum Version"
+msgstr "Versió mínima"
 
 #. TRANSLATORS: error message
 #, c-format
@@ -729,14 +775,12 @@ msgstr "Monitora el dimoni pels esdeveniments"
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 #. TRANSLATORS: device name, e.g. 'ColorHug2'
-#. TRANSLATORS: section header for the release name
 msgid "Name"
 msgstr "Nom"
 
 msgid "No action specified!"
 msgstr "No s'ha especificat cap acció!"
 
-#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "No s'ha detectat cap maquinari amb capacitat per a l'actualització del microprogramari"
@@ -745,9 +789,17 @@ msgstr "No s'ha detectat cap maquinari amb capacitat per a l'actualització del 
 msgid "No plugins found"
 msgstr "No s'ha trobat cap connector"
 
+#. TRANSLATORS: no repositories to download from
+msgid "No releases available"
+msgstr "No hi ha cap llançament disponible"
+
 #. TRANSLATORS: explain why no metadata available
 msgid "No remotes are currently enabled so no metadata is available."
 msgstr "Actualment, no hi ha cap remot habilitat, de manera que no hi ha metadades disponibles."
+
+#. TRANSLATORS: no repositories to download from
+msgid "No remotes available"
+msgstr "No hi ha cap remot disponible"
 
 #. TRANSLATORS: nothing was updated offline
 msgid "No updates were applied"
@@ -844,10 +896,7 @@ msgstr "Regió"
 msgid "Reinstalling %s with %s... "
 msgstr "S'està reinstal·lant %s amb %s... "
 
-#. TRANSLATORS: section header for the remote the file is coming from
-msgid "Remote"
-msgstr "Remot"
-
+#. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 msgid "Remote ID"
 msgstr "ID remot"
@@ -914,6 +963,10 @@ msgstr "Planificació..."
 #. TRANSLATORS: serial number, e.g. '00012345'
 msgid "Serial"
 msgstr "Sèrie"
+
+#. TRANSLATORS: serial number of hardware
+msgid "Serial Number"
+msgstr "Número de sèrie"
 
 #. TRANSLATORS: command description
 msgid "Set alternative name on firmware file"
@@ -1020,6 +1073,14 @@ msgstr "Signa les dades pujades amb el certificat del client"
 msgid "Signature"
 msgstr "Signatura"
 
+#. TRANSLATORS: file size of the download
+msgid "Size"
+msgstr "Mida"
+
+#. TRANSLATORS: source (as in code) link
+msgid "Source"
+msgstr "Origen"
+
 msgid "Specify Vendor/Product ID(s) of DFU device"
 msgstr "Especifiqueu el proveïdor/ID del producte del dispositiu DFU"
 
@@ -1036,7 +1097,7 @@ msgstr "Estat"
 msgid "Status"
 msgstr "Estat"
 
-#. TRANSLATORS: section header for the release one line summary
+#. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Resum"
 
@@ -1063,10 +1124,6 @@ msgstr "Aquest remot conté el microprogramari que no està embargat, però enca
 msgid "This tool can only be used by the root user"
 msgstr "Aquesta eina només pot ser usada per l'usuari «root»."
 
-#. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
-msgid "Title"
-msgstr "Títol"
-
 #. TRANSLATORS: transfer size in bytes
 msgid "Transfer Size"
 msgstr "Mida a transferir"
@@ -1079,13 +1136,13 @@ msgstr "Tipus"
 msgid "UEFI Firmware Utility"
 msgstr "Utilitat per al microprogramari UEFI"
 
-#. TRANSLATORS: section header for firmware URI
-msgid "URI"
-msgstr "URI"
-
 #. TRANSLATORS: currect daemon status is unknown
 msgid "Unknown"
 msgstr "Desconegut"
+
+#. TRANSLATORS: Name of hardware
+msgid "Unknown Device"
+msgstr "Dispositiu desconegut"
 
 msgid "Unlock the device to allow access"
 msgstr "Desbloqueja el dispositiu per a permetre l'accés"
@@ -1103,38 +1160,18 @@ msgstr "No estableixis l'indicador de depuració durant l'actualització"
 msgid "Unsupported daemon version %s, client version is %s"
 msgstr "Versió %s no admesa del dimoni, la versió del client és %s"
 
-#. TRANSLATORS: section header for firmware checksum
-msgid "Update Checksum"
-msgstr "Suma de verificació de l'actualització"
+#. TRANSLATORS: error message from last update attempt
+msgid "Update Error"
+msgstr "Error en actualitzar"
 
-#. TRANSLATORS: section header for long firmware desc
-msgid "Update Description"
-msgstr "Descripció de l'actualització"
+#. TRANSLATORS: helpful messages from last update
+#. TRANSLATORS: helpful messages for the update
+msgid "Update Message"
+msgstr "Missatge de l'actualització"
 
-#. TRANSLATORS: section header for the amount
-#. * of time it takes to install the update
-msgid "Update Duration"
-msgstr "Durada de l'actualització"
-
-#. TRANSLATORS: section header for firmware remote http://
-msgid "Update Location"
-msgstr "Ubicació de l'actualització"
-
-#. TRANSLATORS: section header for the release name
-msgid "Update Name"
-msgstr "Actualitza el nom"
-
-#. TRANSLATORS: section header for remote ID, e.g. lvfs-testing
-msgid "Update Remote ID"
-msgstr "Actualitza l'ID remot:"
-
-#. TRANSLATORS: section header for the release one line summary
-msgid "Update Summary"
-msgstr "Actualitza el resum"
-
-#. TRANSLATORS: section header for firmware version
-msgid "Update Version"
-msgstr "Versió de l'actualització"
+#. TRANSLATORS: hardware state, e.g. "pending"
+msgid "Update State"
+msgstr "Estat en actualitzar"
 
 #. TRANSLATORS: command description
 msgid "Update all devices that match local metadata"
@@ -1187,17 +1224,29 @@ msgstr "Pujo l'informe ara?"
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
 msgstr "L'enviament dels informes de microprogramari ajudarà als proveïdors de maquinari a identificar amb rapidesa les actualitzacions fallides i satisfactòries sobre els dispositius reals."
 
+#. TRANSLATORS: command line option
+msgid "Use quirk flags when installing firmware"
+msgstr "Usa les etiquetes peculiars en instal·lar el microprogramari"
+
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "Nom d'usuari"
+
+#. TRANSLATORS: manufacturer of hardware
+msgid "Vendor"
+msgstr "Venedor"
 
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
 msgstr "S'està verificant..."
 
-#. TRANSLATORS: section header for release version number
+#. TRANSLATORS: version number of new firmware
 msgid "Version"
 msgstr "Versió:"
+
+#. TRANSLATORS: try to help
+msgid "WARNING: Ignoring SSL strict checks, to do this automatically in the future export DISABLE_SSL_STRICT in your environment"
+msgstr "AVÍS: S'ignoren les comprovacions estrictes de SSL. Per a fer-ho automàticament en el futur, exporteu DISABLE_SSL_STRICT en el vostre entorn"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

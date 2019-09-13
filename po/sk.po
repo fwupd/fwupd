@@ -15,11 +15,6 @@ msgstr ""
 "Language: sk\n"
 "Plural-Forms: nplurals=4; plural=(n % 1 == 0 && n == 1 ? 0 : n % 1 == 0 && n >= 2 && n <= 4 ? 1 : n % 1 != 0 ? 2: 3);\n"
 
-#. TRANSLATORS: first replacement is device name
-#, c-format
-msgid "%s has firmware updates:"
-msgstr "Pre zariadenie %s sú dostupné aktualizácie firmvéru:"
-
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Added"
 msgstr "Pridané"
@@ -70,7 +65,6 @@ msgstr "Zrušené"
 msgid "Changed"
 msgstr "Zmenené"
 
-#. TRANSLATORS: section header for firmware checksum
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Kontrolný medzisúčet"
@@ -103,7 +97,7 @@ msgstr "Voľby ladenia"
 msgid "Decrypt firmware data"
 msgstr "Dešifruje údaje firmvéru"
 
-#. TRANSLATORS: section header for firmware description
+#. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Popis"
 
@@ -170,9 +164,6 @@ msgstr "Nástroj pre firmvéry"
 msgid "Found"
 msgstr "Nájdené"
 
-msgid "GUID"
-msgstr "GUID"
-
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
 msgstr "Získa všetky zariadenia, ktoré podporujú aktualizovanie firmvéru"
@@ -193,7 +184,6 @@ msgstr "Získa zoznam aktualizácií pre pripojený hardvér"
 msgid "Gets the results from the last update"
 msgstr "Získa výsledky z poslednej aktualizácie"
 
-#. TRANSLATORS: Appstream ID for the hardware type
 msgid "ID"
 msgstr "ID"
 
@@ -233,11 +223,9 @@ msgstr "Sleduje démona kvôli udalostiam"
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 #. TRANSLATORS: device name, e.g. 'ColorHug2'
-#. TRANSLATORS: section header for the release name
 msgid "Name"
 msgstr "Názov"
 
-#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Nezistil sa žiadny hardvér s možnosťou aktualizácie firmvéru"
@@ -338,22 +326,6 @@ msgstr "Odomknúť zariadenie na umožnenie prístupu"
 msgid "Unlocks the device for firmware access"
 msgstr "Odomkne zariadenie pre prístup k firmvéru"
 
-#. TRANSLATORS: section header for firmware checksum
-msgid "Update Checksum"
-msgstr "Kontrolný medzisúčet aktualizácie"
-
-#. TRANSLATORS: section header for long firmware desc
-msgid "Update Description"
-msgstr "Popis aktualizácie"
-
-#. TRANSLATORS: section header for firmware remote http://
-msgid "Update Location"
-msgstr "Umiestnenie aktualizácie"
-
-#. TRANSLATORS: section header for firmware version
-msgid "Update Version"
-msgstr "Verzia aktualizácie"
-
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current ROM contents"
 msgstr "Aktualizuje uložené metaúdaje s aktuálnym obsahom pamäte ROM"
@@ -369,7 +341,7 @@ msgstr "Aktualizuje všetok firmvér na najnovšiu dostupnú verziu"
 msgid "Updating %s from %s to %s... "
 msgstr "Aktualizuje sa %s z verzie %s na verziu %s... "
 
-#. TRANSLATORS: section header for release version number
+#. TRANSLATORS: version number of new firmware
 msgid "Version"
 msgstr "Verzia"
 

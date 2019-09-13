@@ -16,11 +16,6 @@ msgstr ""
 "Language: he\n"
 "Plural-Forms: nplurals=4; plural=(n == 1 && n % 1 == 0) ? 0 : (n == 2 && n % 1 == 0) ? 1: (n % 10 == 0 && n % 1 == 0 && n > 10) ? 2 : 3;\n"
 
-#. TRANSLATORS: first replacement is device name
-#, c-format
-msgid "%s has firmware updates:"
-msgstr "ישנם עדכוני קושחה עבור %s:"
-
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
 msgid "Alias to %s"
@@ -30,7 +25,6 @@ msgstr "כינוי עבור %s"
 msgid "Authentication is required to update the firmware on this machine"
 msgstr "אימות משתמש נדרש לעדכון קושחה מערכת זו"
 
-#. TRANSLATORS: section header for firmware checksum
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "סכום ביקורת"
@@ -43,7 +37,7 @@ msgstr "פקודה לא נמצאה"
 msgid "Debugging Options"
 msgstr "אפשרויות ניפוי שגיאות"
 
-#. TRANSLATORS: section header for firmware description
+#. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "תיאור"
 
@@ -90,7 +84,6 @@ msgstr "מציג פרטים אודות קובץ קושחה"
 msgid "Install a firmware file on this hardware"
 msgstr "מתקין קובץ קושחה בחומרה זו"
 
-#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "לא אותרה חומרה בעלת יכולת עדכון קושחה"
@@ -120,6 +113,6 @@ msgstr "הצג מידע ניפוי שגיאות מורחב"
 msgid "Updating %s from %s to %s... "
 msgstr "מעדכן %s מ־%s ל־%s..."
 
-#. TRANSLATORS: section header for release version number
+#. TRANSLATORS: version number of new firmware
 msgid "Version"
 msgstr "גרסא"

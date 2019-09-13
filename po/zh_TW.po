@@ -21,11 +21,6 @@ msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"
 msgstr[0] "剩下 %.0f 分鐘"
 
-#. TRANSLATORS: first replacement is device name
-#, c-format
-msgid "%s has firmware updates:"
-msgstr "%s 有韌體更新："
-
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Added"
 msgstr "已加入"
@@ -129,7 +124,6 @@ msgstr "已取消"
 msgid "Changed"
 msgstr "已變更"
 
-#. TRANSLATORS: section header for firmware checksum
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "校驗計算碼"
@@ -189,7 +183,7 @@ msgstr "解壓縮中…"
 msgid "Decrypt firmware data"
 msgstr "解密韌體資料"
 
-#. TRANSLATORS: section header for firmware description
+#. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "描述說明"
 
@@ -397,13 +391,6 @@ msgstr "此機器有韌體更新支援。"
 msgid "Found"
 msgstr "找到"
 
-msgid "GUID"
-msgstr "GUID"
-
-#. TRANSLATORS: command description
-msgid "Get all devices according to the system topology"
-msgstr "取得根據系統拓樸而得的所有裝置"
-
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
 msgstr "取得所有支援韌體更新的裝置"
@@ -436,7 +423,6 @@ msgstr "取得裝置的發行版本"
 msgid "Gets the results from the last update"
 msgstr "取得上次更新的結果"
 
-#. TRANSLATORS: Appstream ID for the hardware type
 msgid "ID"
 msgstr "ID"
 
@@ -513,10 +499,6 @@ msgstr "合併多份韌體檔案為一份"
 msgid "Metadata URI"
 msgstr "中介資料 URI"
 
-#. TRANSLATORS: remote URI
-msgid "Metadata URI Signature"
-msgstr "中介資料 URI 簽章"
-
 #. TRANSLATORS: explain why no metadata available
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "中介資料可從 Linux 廠商韌體服務取得。"
@@ -537,14 +519,12 @@ msgstr "監控幕後程式是否有活動"
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 #. TRANSLATORS: device name, e.g. 'ColorHug2'
-#. TRANSLATORS: section header for the release name
 msgid "Name"
 msgstr "名稱"
 
 msgid "No action specified!"
 msgstr "未指定動作！"
 
-#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "未偵測到具備韌體更新能力的硬體"
@@ -630,10 +610,7 @@ msgstr "地區"
 msgid "Reinstalling %s with %s... "
 msgstr "正將 %s 重新安裝為 %s 版... "
 
-#. TRANSLATORS: section header for the remote the file is coming from
-msgid "Remote"
-msgstr "遠端"
-
+#. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 msgid "Remote ID"
 msgstr "遠端 ID"
@@ -767,7 +744,7 @@ msgstr "狀態"
 msgid "Status"
 msgstr "狀態"
 
-#. TRANSLATORS: section header for the release one line summary
+#. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "摘要"
 
@@ -785,10 +762,6 @@ msgstr "此程式僅有 root 身份才能正常運作"
 msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
 msgstr "這個遠端站點包含未列入禁運，但仍處於硬體廠商測試階段的韌體。您應該確保自己在韌體更新失敗時有方法能夠手動降級韌體。"
 
-#. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
-msgid "Title"
-msgstr "標題"
-
 #. TRANSLATORS: transfer size in bytes
 msgid "Transfer Size"
 msgstr "傳輸大小"
@@ -800,10 +773,6 @@ msgstr "類型"
 #. TRANSLATORS: program name
 msgid "UEFI Firmware Utility"
 msgstr "UEFI 韌體公用程式"
-
-#. TRANSLATORS: section header for firmware URI
-msgid "URI"
-msgstr "URI"
 
 #. TRANSLATORS: currect daemon status is unknown
 msgid "Unknown"
@@ -819,34 +788,6 @@ msgstr "解鎖裝置以供韌體存取"
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"
 msgstr "取消更新期間的除錯旗標設定"
-
-#. TRANSLATORS: section header for firmware checksum
-msgid "Update Checksum"
-msgstr "更新校驗計算碼"
-
-#. TRANSLATORS: section header for long firmware desc
-msgid "Update Description"
-msgstr "更新描述說明"
-
-#. TRANSLATORS: section header for firmware remote http://
-msgid "Update Location"
-msgstr "更新位置"
-
-#. TRANSLATORS: section header for the release name
-msgid "Update Name"
-msgstr "更新名稱"
-
-#. TRANSLATORS: section header for remote ID, e.g. lvfs-testing
-msgid "Update Remote ID"
-msgstr "更新遠端 ID"
-
-#. TRANSLATORS: section header for the release one line summary
-msgid "Update Summary"
-msgstr "更新摘要"
-
-#. TRANSLATORS: section header for firmware version
-msgid "Update Version"
-msgstr "更新版本"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
@@ -894,7 +835,7 @@ msgstr "使用者名稱"
 msgid "Verifying…"
 msgstr "核驗中…"
 
-#. TRANSLATORS: section header for release version number
+#. TRANSLATORS: version number of new firmware
 msgid "Version"
 msgstr "版本"
 
