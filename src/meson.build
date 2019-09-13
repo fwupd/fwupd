@@ -1,4 +1,4 @@
-if get_option('daemon')
+if build_daemon
   install_data(['org.freedesktop.fwupd.xml'],
     install_dir : join_paths(datadir, 'dbus-1', 'interfaces')
   )
@@ -80,7 +80,7 @@ libfwupdprivate = static_library(
   ],
 )
 
-if get_option('daemon')
+if build_daemon
 fwupdmgr = executable(
   'fwupdmgr',
   sources : [
@@ -236,7 +236,7 @@ fwupdtool = executable(
   install_dir : join_paths(libexecdir, 'fwupd')
 )
 
-if get_option('daemon') and get_option('man')
+if build_daemon and get_option('man')
   help2man = find_program('help2man')
   custom_target('fwupdmgr-man',
     input : fwupdmgr,
@@ -254,7 +254,7 @@ if get_option('daemon') and get_option('man')
   )
 endif
 
-if get_option('daemon')
+if build_daemon
 executable(
   'fwupd',
   resources_src,

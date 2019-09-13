@@ -1,4 +1,4 @@
-option('daemon', type : 'boolean', value : true, description : 'enable the fwupd daemon')
+option('build', type : 'combo', choices : ['all', 'standalone', 'library'], value : 'all', description : 'build type')
 option('agent', type : 'boolean', value : true, description : 'enable the fwupd agent')
 option('consolekit', type : 'boolean', value : true, description : 'enable ConsoleKit support')
 option('firmware-packager', type : 'boolean', value : true, description : 'enable firmware-packager installation')
