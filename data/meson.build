@@ -2,18 +2,20 @@ subdir('builder')
 subdir('pki')
 subdir('remotes.d')
 subdir('bash-completion')
+
+if build_daemon
 subdir('motd')
+endif
 
 if get_option('tests')
   subdir('tests')
 endif
-if get_option('daemon')
+if build_daemon
   subdir('installed-tests')
+  install_data(['daemon.conf'],
+    install_dir : join_paths(sysconfdir, 'fwupd')
+  )
 endif
-
-install_data(['daemon.conf'],
-  install_dir : join_paths(sysconfdir, 'fwupd')
-)
 
 install_data(['org.freedesktop.fwupd.metainfo.xml'],
   install_dir: join_paths(datadir, 'metainfo')
@@ -23,17 +25,16 @@ install_data(['org.freedesktop.fwupd.svg'],
   install_dir : join_paths(datadir, 'icons', 'hicolor', 'scalable', 'apps')
 )
 
-install_data(['org.freedesktop.fwupd.conf'],
-  install_dir : join_paths(sysconfdir, 'dbus-1', 'system.d')
-)
-
-if get_option('daemon')
+if build_daemon
+  install_data(['org.freedesktop.fwupd.conf'],
+    install_dir : join_paths(sysconfdir, 'dbus-1', 'system.d')
+  )
   install_data(['90-fwupd-devices.rules'],
     install_dir : join_paths(udevdir, 'rules.d')
   )
 endif
 
-if get_option('systemd')
+if get_option('systemd') and build_daemon
   con2 = configuration_data()
   con2.set('libexecdir', libexecdir)
   con2.set('bindir', bindir)
@@ -87,7 +88,7 @@ if get_option('systemd')
   )
 endif
 
-if get_option('systemd') or get_option('elogind')
+if (get_option('systemd') or get_option('elogind')) and build_daemon
   con2 = configuration_data()
   con2.set('libexecdir', libexecdir)
 
