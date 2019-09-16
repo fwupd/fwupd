@@ -59,6 +59,7 @@ typedef struct
 	guint8			 has_sensor_id;
 	guint8			 has_query42;
 	guint8			 has_dds4_queries;
+	guint8			 f34_status_addr;
 	guint32			 config_id;
 	guint8			 sensor_id;
 	guint16			 package_id;
@@ -164,13 +165,13 @@ fu_synaptics_rmi_device_read (FuSynapticsRmiDevice *self, guint16 addr, gsize re
 					     req->data, req->len,
 					     80, FU_DUMP_FLAGS_NONE);
 		}
-		if (!fu_io_channel_write_byte_array (priv->io_channel, req, 5000,
+		if (!fu_io_channel_write_byte_array (priv->io_channel, req, RMI_DEVICE_DEFAULT_TIMEOUT,
 						     FU_IO_CHANNEL_FLAG_SINGLE_SHOT |
 						     FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO, error))
 			return NULL;
 
 		/* response */
-		res = fu_io_channel_read_byte_array (priv->io_channel, req_sz, 5000,
+		res = fu_io_channel_read_byte_array (priv->io_channel, req_sz, RMI_DEVICE_DEFAULT_TIMEOUT,
 						     FU_IO_CHANNEL_FLAG_NONE, error);
 		if (res == NULL)
 			return NULL;
@@ -264,7 +265,7 @@ fu_synaptics_rmi_device_write (FuSynapticsRmiDevice *self, guint16 addr, GByteAr
 				     80, FU_DUMP_FLAGS_NONE);
 	}
 
-	return fu_io_channel_write_byte_array (priv->io_channel, buf, 5000,
+	return fu_io_channel_write_byte_array (priv->io_channel, buf, RMI_DEVICE_DEFAULT_TIMEOUT,
 					       FU_IO_CHANNEL_FLAG_SINGLE_SHOT |
 					       FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO,
 					       error);
@@ -422,6 +423,115 @@ fu_synaptics_rmi_device_get_feature (FuSynapticsRmiDevice *self,
 #endif
 
 static gboolean
+fu_synaptics_rmi_device_read_flash_config (FuSynapticsRmiDevice *self, GError **error)
+{
+	//FIXME:
+	return TRUE;
+}
+
+static gboolean
+fu_synaptics_rmi_device_read_f34_queries_v7 (FuSynapticsRmiDevice *self, GError **error)
+{
+	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
+	guint8 offset;
+	g_autoptr(GByteArray) f34_data0 = NULL;
+	g_autoptr(GByteArray) f34_dataX = NULL;
+
+	f34_data0 = fu_synaptics_rmi_device_read (self, priv->f34->query_base, 1, error);
+	if (f34_data0 == NULL) {
+		g_prefix_error (error, "failed to read bootloader ID: ");
+		return FALSE;
+	}
+	offset = (f34_data0->data[0] & 0b00000111) + 1;
+//	priv->has_config_id = f34_data0->data & 0b00001000;
+	f34_dataX = fu_synaptics_rmi_device_read (self, priv->f34->query_base + offset, 21, error);
+	if (f34_dataX == NULL)
+		return FALSE;
+	priv->bootloader_id[0] = f34_dataX->data[0x00];
+	priv->bootloader_id[1] = f34_dataX->data[0x01];
+	priv->block_size = fu_common_read_uint16 (f34_dataX->data + 0x07, G_LITTLE_ENDIAN);
+	//priv->flash_config_length = fu_common_read_uint16 (f34_dataX->data + 0x0d, G_LITTLE_ENDIAN);
+	//priv->payload_length = fu_common_read_uint16 (f34_dataX->data + 0x0f, G_LITTLE_ENDIAN);
+	priv->build_id = fu_common_read_uint32 (f34_dataX->data + 0x02, G_LITTLE_ENDIAN);
+	return fu_synaptics_rmi_device_read_flash_config (self, error);
+}
+
+static gboolean
+fu_synaptics_rmi_device_read_f34_queries_v1 (FuSynapticsRmiDevice *self, GError **error)
+{
+	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GByteArray) f34_data0 = NULL;
+	g_autoptr(GByteArray) f34_data1 = NULL;
+	g_autoptr(GByteArray) f34_data2 = NULL;
+	g_autoptr(GByteArray) f34_data3 = NULL;
+
+	/* get bootloader ID */
+	f34_data0 = fu_synaptics_rmi_device_read (self,
+						  priv->f34->query_base,
+						  RMI_BOOTLOADER_ID_SIZE,
+						  error);
+	if (f34_data0 == NULL) {
+		g_prefix_error (error, "failed to read bootloader ID: ");
+		return FALSE;
+	}
+	priv->bootloader_id[0] = f34_data0->data[0];
+	priv->bootloader_id[1] = f34_data0->data[1];
+
+	/* get flash properties */
+	f34_data1 = fu_synaptics_rmi_device_read (self, priv->f34->query_base + 0x01, 1, error);
+	if (f34_data1 == NULL)
+		return FALSE;
+//	priv->has_new_regmap = f34_data1->data[0] & RMI_F34_HAS_NEW_REG_MAP;
+//	priv->has_config_id = f34_data1->data[0] & RMI_F34_HAS_CONFIG_ID;
+	f34_data2 = fu_synaptics_rmi_device_read (self, priv->f34->query_base + 0x02, 2, error);
+	if (f34_data2 == NULL)
+		return FALSE;
+	priv->block_size = fu_common_read_uint16 (f34_data2->data + RMI_F34_BLOCK_SIZE_V1_OFFSET, G_LITTLE_ENDIAN);
+	f34_data3 = fu_synaptics_rmi_device_read (self, priv->f34->query_base + 0x03, 8, error);
+	if (f34_data3 == NULL)
+		return FALSE;
+	priv->block_count_fw = fu_common_read_uint16 (f34_data3->data + RMI_F34_FW_BLOCKS_V1_OFFSET, G_LITTLE_ENDIAN);
+	priv->block_count_cfg = fu_common_read_uint16 (f34_data3->data + RMI_F34_CONFIG_BLOCKS_V1_OFFSET, G_LITTLE_ENDIAN);
+	priv->f34_status_addr = priv->f34->data_base + 2;
+	return TRUE;
+}
+
+static gboolean
+fu_synaptics_rmi_device_read_f34_queries_v0 (FuSynapticsRmiDevice *self, GError **error)
+{
+	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GByteArray) f34_data0 = NULL;
+	g_autoptr(GByteArray) f34_data2 = NULL;
+
+	/* get bootloader ID */
+	f34_data0 = fu_synaptics_rmi_device_read (self,
+						  priv->f34->query_base,
+						  RMI_BOOTLOADER_ID_SIZE,
+						  error);
+	if (f34_data0 == NULL) {
+		g_prefix_error (error, "failed to read bootloader ID: ");
+		return FALSE;
+	}
+	priv->bootloader_id[0] = f34_data0->data[0];
+	priv->bootloader_id[1] = f34_data0->data[1];
+
+	/* get flash properties */
+	f34_data2 = fu_synaptics_rmi_device_read (self,
+						  priv->f34->query_base + 0x2,
+						  RMI_F34_QUERY_SIZE,
+						  error);
+	if (f34_data2 == NULL)
+		return FALSE;
+//	priv->has_new_regmap = f34_data2->data[0] & RMI_F34_HAS_NEW_REG_MAP;
+//	priv->has_config_id = f34_data2->data[0] & RMI_F34_HAS_CONFIG_ID;
+	priv->block_size = fu_common_read_uint16 (f34_data2->data + RMI_F34_BLOCK_SIZE_OFFSET, G_LITTLE_ENDIAN);
+	priv->block_count_fw = fu_common_read_uint16 (f34_data2->data + RMI_F34_FW_BLOCKS_OFFSET, G_LITTLE_ENDIAN);
+	priv->block_count_cfg = fu_common_read_uint16 (f34_data2->data + RMI_F34_CONFIG_BLOCKS_OFFSET, G_LITTLE_ENDIAN);
+	priv->f34_status_addr = priv->f34->data_base + RMI_F34_BLOCK_DATA_OFFSET + priv->block_size;
+	return TRUE;
+}
+
+static gboolean
 fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 {
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE (device);
@@ -437,7 +547,6 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 	g_autoptr(GByteArray) f01_basic = NULL;
 	g_autoptr(GByteArray) f01_product_id = NULL;
 	g_autoptr(GByteArray) f34_ctrl = NULL;
-	g_autoptr(GByteArray) f34_data = NULL;
 
 	/* read basic device information */
 	if (!fu_synaptics_rmi_device_set_rma_page (self, 0x00, error))
@@ -558,28 +667,29 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 	}
 	priv->config_id = fu_common_read_uint32 (f34_ctrl->data, G_LITTLE_ENDIAN);
 
-
-	//FIXME: get Function34_Query0,1
-	priv->bootloader_id[0] = 0xde;
-	priv->bootloader_id[1] = 0xad;
+	/* get Function34_Query0,1 */
+	if (priv->f34->function_version == 0x0) {
+		if (!fu_synaptics_rmi_device_read_f34_queries_v0 (self, error)) {
+			g_prefix_error (error, "failed to read f34 queries: ");
+			return FALSE;
+		}
+	} else if (priv->f34->function_version == 0x1) {
+		if (!fu_synaptics_rmi_device_read_f34_queries_v1 (self, error)) {
+			g_prefix_error (error, "failed to read f34 queries: ");
+			return FALSE;
+		}
+	} else if (priv->f34->function_version == 0x2) {
+		if (!fu_synaptics_rmi_device_read_f34_queries_v7 (self, error)) {
+			g_prefix_error (error, "failed to read f34 queries: ");
+			return FALSE;
+		}
+	}
 	bl_ver = g_strdup_printf ("%u.0", priv->bootloader_id[1]);
 	fu_device_set_version_bootloader (device, bl_ver);
 
 	/* get Function34:FlashProgrammingEn */
-	f34_data = fu_synaptics_rmi_device_read (self, priv->f01->data_base, 1, error);
-	if (f34_data == NULL)
-		return FALSE;
-	if (f34_data->data[0] & 0x40) {
+	if (priv->bootloader_id[0] & 0x40) {
 		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
-
-		//FIXME: get Function34_Query3,4
-		priv->block_size = 0x20;
-
-		//FIXME: get Function34_Query5,6
-		priv->block_count_fw = 0x40;
-
-		//FIXME: get Function34_Query7,8
-		priv->block_count_cfg = 0x50;
 	} else {
 		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	}
@@ -701,6 +811,31 @@ fu_synaptics_rmi_device_write_block (FuSynapticsRmiDevice *self,
 }
 
 static gboolean
+fu_synaptics_rmi_device_disable_sleep (FuSynapticsRmiDevice *self, GError **error)
+{
+	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GByteArray) f01_control0 = NULL;
+
+	f01_control0 = fu_synaptics_rmi_device_read (self, priv->f01->control_base, 0x1, error);
+	if (f01_control0 == NULL) {
+		g_prefix_error (error, "failed to write get f01_control0: ");
+		return FALSE;
+	}
+	f01_control0->data[0] |= RMI_F01_CRTL0_NOSLEEP_BIT;
+	f01_control0->data[0] = (f01_control0->data[0] & ~RMI_F01_CTRL0_SLEEP_MODE_MASK) | RMI_SLEEP_MODE_NORMAL;
+	if (!fu_synaptics_rmi_device_write (self,
+					    priv->f01->control_base,
+					    f01_control0,
+					    error)) {
+		g_prefix_error (error, "failed to write f01_control0: ");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_synaptics_rmi_device_write_firmware (FuDevice *device,
 					FuFirmware *firmware,
 					FwupdInstallFlags flags,
@@ -730,6 +865,10 @@ fu_synaptics_rmi_device_write_firmware (FuDevice *device,
 						    0x00,	/* start addr */
 						    0x00,	/* page_sz */
 						    priv->block_size);
+
+	/* disable powersaving */
+	if (!fu_synaptics_rmi_device_disable_sleep (self, error))
+		return FALSE;
 
 	/* erase all */
 	//FIXME: write $3 into F34_Flash_Data3
@@ -772,21 +911,113 @@ fu_synaptics_rmi_device_write_firmware (FuDevice *device,
 }
 
 static gboolean
+fu_synaptics_rmi_device_rebind_driver (FuSynapticsRmiDevice *self, GError **error)
+{
+	const gchar *sysfs_path = fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (self));
+	const guint8 driver[] = "hidraw";
+	g_autofree gchar *fn_rebind = g_build_filename (sysfs_path, "bind", NULL);
+	g_autofree gchar *fn_unbind = g_build_filename (sysfs_path, "unbind", NULL);
+	g_autoptr(FuIOChannel) io_rebind = NULL;
+	g_autoptr(FuIOChannel) io_unbind = NULL;
+	g_autoptr(GByteArray) req = g_byte_array_new ();
+
+	/* unbind hidraw, then bind it again to get a replug */
+	g_byte_array_append (req, driver, sizeof (driver));
+	io_unbind = fu_io_channel_new_file (fn_unbind, error);
+	if (io_rebind == NULL)
+		return FALSE;
+	if (fu_io_channel_write_byte_array (io_unbind,
+					    req,
+					    RMI_DEVICE_DEFAULT_TIMEOUT,
+					    FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
+					    error))
+		return FALSE;
+	io_rebind = fu_io_channel_new_file (fn_rebind, error);
+	if (io_rebind == NULL)
+		return FALSE;
+	if (fu_io_channel_write_byte_array (io_rebind,
+					    req,
+					    RMI_DEVICE_DEFAULT_TIMEOUT,
+					    FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
+					    error))
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_synaptics_rmi_device_write_bootloader_id (FuSynapticsRmiDevice *self, GError **error)
+{
+	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
+	gint block_data_offset = RMI_F34_BLOCK_DATA_OFFSET;
+	g_autoptr(GByteArray) bootloader_id_req = g_byte_array_new ();
+
+	if (priv->f34->function_version == 0x1)
+		block_data_offset = RMI_F34_BLOCK_DATA_V1_OFFSET;
+
+	/* write bootloader_id into F34_Flash_Data0,1 */
+	g_byte_array_append (bootloader_id_req, priv->bootloader_id, sizeof(priv->bootloader_id));
+	if (!fu_synaptics_rmi_device_write (self,
+					    priv->f34->data_base + block_data_offset,
+					    bootloader_id_req, error)) {
+		g_prefix_error (error, "failed to write bootloader_id: ");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_synaptics_rmi_device_detach (FuDevice *device, GError **error)
 {
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE (device);
+	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GByteArray) interrupt_disable_req = g_byte_array_new ();
+	g_autoptr(GByteArray) enable_req = g_byte_array_new ();
 
-	/* unlock bootloader */
-	//FIXME: write priv->bootloader_id into F34_Flash_Data0,1
+	/* disable interrupts */
+	fu_byte_array_append_uint8 (interrupt_disable_req,
+				    priv->f34->interrupt_mask | priv->f01->interrupt_mask);
+	if (!fu_synaptics_rmi_device_write (self,
+					    priv->f01->control_base + 1,
+					    interrupt_disable_req,
+					    error)) {
+		g_prefix_error (error, "failed to disable interrupts: ");
+		return FALSE;
+	}
 
-	/* enable flash programming */
-	//FIXME: write $0F into F34_Flash_Data3 3:0
-
-	//FIXME: wait for ATTN, or just usleep...
-	//FIXME: read F34_Flash_Data3 and check for $0, $0, $1
-
-	/* rescan PDT */
-	return fu_synaptics_rmi_device_scan_pdt (self, error);
+	/* v7 */
+	if (priv->f34->function_version == 0x02) {
+		fu_byte_array_append_uint8 (enable_req, BOOTLOADER_PARTITION);
+		fu_byte_array_append_uint32 (enable_req, 0x0, G_LITTLE_ENDIAN);
+		fu_byte_array_append_uint8 (enable_req, CMD_V7_ENTER_BL);
+		fu_byte_array_append_uint8 (enable_req, priv->bootloader_id[0]);
+		fu_byte_array_append_uint8 (enable_req, priv->bootloader_id[1]);
+		if (!fu_synaptics_rmi_device_write (self,
+						    priv->f34->data_base + 1,
+						    enable_req,
+						    error)) {
+			g_prefix_error (error, "failed to enable programming: ");
+			return FALSE;
+		}
+	} else {
+		/* unlock bootloader and rebind kernel driver */
+		if (!fu_synaptics_rmi_device_write_bootloader_id (self, error))
+			return FALSE;
+		fu_byte_array_append_uint8 (enable_req, RMI_F34_ENABLE_FLASH_PROG);
+		if (!fu_synaptics_rmi_device_write (self,
+						    priv->f34_status_addr,
+						    enable_req,
+						    error)) {
+			g_prefix_error (error, "failed to enable programming: ");
+			return FALSE;
+		}
+	}
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+	g_usleep (1000 * RMI_F34_ENABLE_WAIT_MS);
+	return fu_synaptics_rmi_device_rebind_driver (self, error);
 }
 
 static gboolean
