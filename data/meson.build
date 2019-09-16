@@ -27,7 +27,7 @@ install_data(['org.freedesktop.fwupd.svg'],
 
 if build_daemon
   install_data(['org.freedesktop.fwupd.conf'],
-    install_dir : join_paths(sysconfdir, 'dbus-1', 'system.d')
+    install_dir : join_paths(datadir, 'dbus-1', 'system.d')
   )
   install_data(['90-fwupd-devices.rules'],
     install_dir : join_paths(udevdir, 'rules.d')
