@@ -265,7 +265,7 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %config(noreplace)%{_sysconfdir}/fwupd/remotes.d/vendor-directory.conf
 %config(noreplace)%{_sysconfdir}/pki/fwupd
 %{_sysconfdir}/pki/fwupd-metadata
-%{_sysconfdir}/dbus-1/system.d/org.freedesktop.fwupd.conf
+%{_datadir}/dbus-1/system.d/org.freedesktop.fwupd.conf
 %{_datadir}/bash-completion/completions/fwupdmgr
 %{_datadir}/bash-completion/completions/fwupdtool
 %{_datadir}/bash-completion/completions/fwupdagent
