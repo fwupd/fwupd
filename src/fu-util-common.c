@@ -1034,6 +1034,7 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 gchar *
 fu_util_release_to_string (FwupdRelease *rel, guint idt)
 {
+	GPtrArray *issues = fwupd_release_get_issues (rel);
 	GString *str = g_string_new (NULL);
 	guint64 flags = fwupd_release_get_flags (rel);
 	g_autoptr(GString) flags_str = g_string_new (NULL);
@@ -1112,6 +1113,15 @@ fu_util_release_to_string (FwupdRelease *rel, guint idt)
 		desc = fu_util_convert_description (fwupd_release_get_description (rel), NULL);
 		/* TRANSLATORS: multiline description of device */
 		fu_common_string_append_kv (str, idt + 1, _("Description"), desc);
+	}
+	for (guint i = 0; i < issues->len; i++) {
+		const gchar *issue = g_ptr_array_index (issues, i);
+		if (i == 0) {
+			/* TRANSLATORS: issue fixed with the release, e.g. CVE */
+			fu_common_string_append_kv (str, idt + 1, ngettext ("Issue", "Issues", issues->len), issue);
+		} else {
+			fu_common_string_append_kv (str, idt + 1, "", issue);
+		}
 	}
 
 	return g_string_free (str, FALSE);
