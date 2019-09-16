@@ -17,6 +17,7 @@ G_BEGIN_DECLS
 #define FWUPD_RESULT_KEY_FILENAME		"Filename"	/* s */
 #define FWUPD_RESULT_KEY_PROTOCOL		"Protocol"	/* s */
 #define FWUPD_RESULT_KEY_CATEGORIES		"Categories"	/* as */
+#define FWUPD_RESULT_KEY_ISSUES			"Issues"	/* as */
 #define FWUPD_RESULT_KEY_FLAGS			"Flags"		/* t */
 #define FWUPD_RESULT_KEY_FLASHES_LEFT		"FlashesLeft"	/* u */
 #define FWUPD_RESULT_KEY_INSTALL_DURATION	"InstallDuration"	/* u */

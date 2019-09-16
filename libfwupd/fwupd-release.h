@@ -37,6 +37,9 @@ void		 fwupd_release_set_version		(FwupdRelease	*release,
 const gchar	*fwupd_release_get_uri			(FwupdRelease	*release);
 void		 fwupd_release_set_uri			(FwupdRelease	*release,
 							 const gchar	*uri);
+GPtrArray	*fwupd_release_get_issues		(FwupdRelease	*release);
+void		 fwupd_release_add_issue		(FwupdRelease	*release,
+							 const gchar	*issue);
 GPtrArray	*fwupd_release_get_categories		(FwupdRelease	*release);
 void		 fwupd_release_add_category		(FwupdRelease	*release,
 							 const gchar	*category);

@@ -379,3 +379,10 @@ LIBFWUPD_1.3.1 {
     fwupd_remote_set_remotes_dir;
   local: *;
 } LIBFWUPD_1.2.10;
+
+LIBFWUPD_1.3.2 {
+  global:
+    fwupd_release_add_issue;
+    fwupd_release_get_issues;
+  local: *;
+} LIBFWUPD_1.3.1;
