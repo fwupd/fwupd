@@ -160,7 +160,6 @@ fu_debug_post_parse_hook (GOptionContext *context,
 	}
 
 	/* redirect all domains to be able to change FWUPD_VERBOSE at runtime */
-	g_log_set_fatal_mask (NULL, G_LOG_LEVEL_MASK);
 	g_log_set_default_handler (fu_debug_handler_cb, self);
 
 	/* are we on an actual TTY? */
