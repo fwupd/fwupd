@@ -356,6 +356,7 @@ fwupd_build_history_report_json_device (JsonBuilder *builder, FwupdDevice *dev)
 {
 	FwupdRelease *rel = fwupd_device_get_release_default (dev);
 	GPtrArray *checksums;
+	GPtrArray *guids;
 
 	/* identify the firmware used */
 	json_builder_set_member_name (builder, "Checksum");
@@ -393,8 +394,16 @@ fwupd_build_history_report_json_device (JsonBuilder *builder, FwupdDevice *dev)
 	}
 
 	/* map back to the dev type on the LVFS */
-	json_builder_set_member_name (builder, "Guid");
-	json_builder_add_string_value (builder, fwupd_device_get_guid_default (dev));
+	guids = fwupd_device_get_guids (dev);
+	if (guids->len > 0) {
+		json_builder_set_member_name (builder, "Guid");
+		json_builder_begin_array (builder);
+		for (guint i = 0; i < guids->len; i++) {
+			const gchar *guid = g_ptr_array_index (guids, i);
+			json_builder_add_string_value (builder, guid);
+		}
+		json_builder_end_array (builder);
+	}
 
 	json_builder_set_member_name (builder, "Plugin");
 	json_builder_add_string_value (builder, fwupd_device_get_plugin (dev));
