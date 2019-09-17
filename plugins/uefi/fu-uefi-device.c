@@ -475,7 +475,10 @@ fu_uefi_device_add_system_checksum (FuDevice *device, GError **error)
 	if (!fu_uefi_pcrs_setup (pcrs, &error_local)) {
 		if (g_error_matches (error_local,
 				     G_IO_ERROR,
-				     G_IO_ERROR_NOT_SUPPORTED)) {
+				     G_IO_ERROR_NOT_SUPPORTED) ||
+		    g_error_matches (error_local,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND)) {
 			g_debug ("%s", error_local->message);
 			return TRUE;
 		}
