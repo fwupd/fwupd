@@ -112,7 +112,7 @@ fu_uefi_pcrs_setup_tpm20 (FuUefiPcrs *self, GError **error)
 
 	/* suppress warning messages about missing TCTI libraries for tpm2-tss <2.3 */
 	if (g_getenv ("FWUPD_UEFI_VERBOSE") == NULL) {
-		g_setenv ("TSS2_LOG", "esys+error", FALSE);
+		g_setenv ("TSS2_LOG", "esys+error,tcti+none", FALSE);
 	}
 
 	rc = Esys_Initialize (&ctx, NULL, NULL);
