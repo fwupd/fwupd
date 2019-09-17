@@ -38,7 +38,7 @@ fu_srec_firmware_parse (FuFirmware *firmware,
 	g_auto(GStrv) lines = NULL;
 	g_autoptr(FuFirmwareImage) img = fu_firmware_image_new (NULL);
 	g_autoptr(GBytes) img_bytes = NULL;
-	g_autoptr(GString) outbuf = g_string_new (NULL);
+	g_autoptr(GByteArray) outbuf = g_byte_array_new ();
 
 	/* parse records */
 	data = g_bytes_get_data (fw, &sz);
@@ -63,7 +63,7 @@ fu_srec_firmware_parse (FuFirmware *firmware,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
 				     "invalid starting token, got '%c' at line %u",
-				     line[0], ln);
+				     line[0], ln + 1);
 			return FALSE;
 		}
 
@@ -73,7 +73,7 @@ fu_srec_firmware_parse (FuFirmware *firmware,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
 				     "record incomplete at line %u, length %u",
-				     ln, (guint) linesz);
+				     ln + 1, (guint) linesz);
 			return FALSE;
 		}
 
@@ -86,7 +86,7 @@ fu_srec_firmware_parse (FuFirmware *firmware,
 				     FWUPD_ERROR_INVALID_FILE,
 				     "count incomplete at line %u, "
 				     "length %u, expected %u",
-				     ln, (guint) linesz - 4, (guint) rec_count * 2);
+				     ln + 1, (guint) linesz - 4, (guint) rec_count * 2);
 			return FALSE;
 		}
 
@@ -104,7 +104,7 @@ fu_srec_firmware_parse (FuFirmware *firmware,
 					     FWUPD_ERROR_INVALID_FILE,
 					     "checksum incorrect line %u, "
 					     "expected %02x, got %02x",
-					     ln, rec_csum_expected, rec_csum);
+					     ln + 1, rec_csum_expected, rec_csum);
 				return FALSE;
 			}
 		}
@@ -114,10 +114,11 @@ fu_srec_firmware_parse (FuFirmware *firmware,
 		case 0:
 			addrsz = 2;
 			if (got_hdr) {
-				g_set_error_literal (error,
-						     FWUPD_ERROR,
-						     FWUPD_ERROR_INVALID_FILE,
-						     "duplicate header record");
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "duplicate header record at line %u",
+					     ln + 1);
 				return FALSE;
 			}
 			got_hdr = TRUE;
@@ -154,8 +155,8 @@ fu_srec_firmware_parse (FuFirmware *firmware,
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
-				     "invalid srec record type S%c",
-				     line[1]);
+				     "invalid srec record type S%c at line %u",
+				     line[1], ln + 1);
 			return FALSE;
 		}
 
@@ -174,6 +175,10 @@ fu_srec_firmware_parse (FuFirmware *firmware,
 			g_assert_not_reached ();
 		}
 
+		g_debug ("line %03u S%u addr:0x%04x datalen:0x%02x",
+			 ln + 1, rec_kind, rec_addr32,
+			 (guint) rec_count - addrsz - 1);
+
 		/* header */
 		if (rec_kind == 0) {
 			g_autoptr(GString) modname = g_string_new (NULL);
@@ -181,8 +186,8 @@ fu_srec_firmware_parse (FuFirmware *firmware,
 				g_set_error (error,
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_INVALID_FILE,
-					     "invalid header record address, got %04x",
-					     rec_addr32);
+					     "invalid header record address, got %04x at line %u",
+					     rec_addr32, ln + 1);
 				return FALSE;
 			}
 
@@ -204,8 +209,8 @@ fu_srec_firmware_parse (FuFirmware *firmware,
 				g_set_error (error,
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_INVALID_FILE,
-					     "count record was not valid, got 0x%02x expected 0x%02x",
-					     (guint) rec_addr32, (guint) data_cnt);
+					     "count record was not valid, got 0x%02x expected 0x%02x at line %u",
+					     (guint) rec_addr32, (guint) data_cnt, ln + 1);
 				return FALSE;
 			}
 		}
@@ -214,10 +219,11 @@ fu_srec_firmware_parse (FuFirmware *firmware,
 		if (rec_kind == 1 || rec_kind == 2 || rec_kind == 3) {
 			/* invalid */
 			if (!got_hdr) {
-				g_set_error_literal (error,
-						     FWUPD_ERROR,
-						     FWUPD_ERROR_INVALID_FILE,
-						     "missing header record");
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "missing header record at line %u",
+					     ln + 1);
 				return FALSE;
 			}
 			/* does not make sense */
@@ -225,14 +231,15 @@ fu_srec_firmware_parse (FuFirmware *firmware,
 				g_set_error (error,
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_INVALID_FILE,
-					     "invalid address 0x%x, last was 0x%x",
+					     "invalid address 0x%x, last was 0x%x at line %u",
 					     (guint) rec_addr32,
-					     (guint) addr32_last);
+					     (guint) addr32_last,
+					     ln + 1);
 				return FALSE;
 			}
 			if (rec_addr32 < addr_start) {
-				g_debug ("ignoring data at 0x%x as before start address 0x%x",
-					 (guint) rec_addr32, (guint) addr_start);
+				g_debug ("ignoring data at 0x%x as before start address 0x%x at line %u",
+					 (guint) rec_addr32, (guint) addr_start, ln + 1);
 			} else {
 				guint bytecnt = 0;
 				guint32 len_hole = rec_addr32 - addr32_last;
@@ -242,21 +249,21 @@ fu_srec_firmware_parse (FuFirmware *firmware,
 					g_set_error (error,
 						     FWUPD_ERROR,
 						     FWUPD_ERROR_INVALID_FILE,
-						     "hole of 0x%x bytes too large to fill",
-						     (guint) len_hole);
+						     "hole of 0x%x bytes too large to fill at line %u",
+						     (guint) len_hole, ln + 1);
 					return FALSE;
 				}
 				if (addr32_last > 0x0 && len_hole > 1) {
-					g_debug ("filling address 0x%08x to 0x%08x",
-						 addr32_last + 1, addr32_last + len_hole - 1);
+					g_debug ("filling address 0x%08x to 0x%08x at line %u",
+						 addr32_last + 1, addr32_last + len_hole - 1, ln + 1);
 					for (guint j = 0; j < len_hole; j++)
-						g_string_append_c (outbuf, 0xff);
+						fu_byte_array_append_uint8 (outbuf, 0xff);
 				}
 
 				/* add data */
 				for (guint8 i = 4 + (addrsz * 2); i <= rec_count * 2; i += 2) {
 					guint8 tmp = fu_firmware_strparse_uint8 (line + i);
-					g_string_append_c (outbuf, tmp);
+					fu_byte_array_append_uint8 (outbuf, tmp);
 					bytecnt++;
 				}
 				if (img_address == 0x0)
@@ -277,7 +284,7 @@ fu_srec_firmware_parse (FuFirmware *firmware,
 	}
 
 	/* add single image */
-	img_bytes = g_bytes_new (outbuf->str, outbuf->len);
+	img_bytes = g_bytes_new (outbuf->data, outbuf->len);
 	fu_firmware_image_set_bytes (img, img_bytes);
 	fu_firmware_image_set_addr (img, img_address);
 	fu_firmware_add_image (firmware, img);
