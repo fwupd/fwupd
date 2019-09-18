@@ -1789,7 +1789,6 @@ fwupd_device_to_string (FwupdDevice *device)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	GString *str;
-	g_autoptr(GHashTable) ids = NULL;
 
 	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
 
@@ -1800,22 +1799,30 @@ fwupd_device_to_string (FwupdDevice *device)
 		str = g_string_append (str, "Unknown Device\n");
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_ID, priv->id);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_PARENT_DEVICE_ID, priv->parent_id);
-	ids = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
-	for (guint i = 0; i < priv->instance_ids->len; i++) {
-		const gchar *instance_id = g_ptr_array_index (priv->instance_ids, i);
-		g_hash_table_insert (ids,
-				     fwupd_guid_hash_string (instance_id),
-				     g_strdup (instance_id));
-	}
-	for (guint i = 0; i < priv->guids->len; i++) {
-		const gchar *guid = g_ptr_array_index (priv->guids, i);
-		const gchar *instance_id = g_hash_table_lookup (ids, guid);
-		if (instance_id == NULL) {
-			fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_GUID, guid);
-		} else {
-			g_autofree gchar *tmp = NULL;
-			tmp = g_strdup_printf ("%s <- %s", guid, instance_id);
-			fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_GUID, tmp);
+	if (priv->guids->len > 0) {
+		g_autoptr(GHashTable) ids = NULL;
+		ids = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+		for (guint i = 0; i < priv->instance_ids->len; i++) {
+			const gchar *instance_id = g_ptr_array_index (priv->instance_ids, i);
+			g_hash_table_insert (ids,
+					     fwupd_guid_hash_string (instance_id),
+					     g_strdup (instance_id));
+		}
+		for (guint i = 0; i < priv->guids->len; i++) {
+			const gchar *guid = g_ptr_array_index (priv->guids, i);
+			const gchar *instance_id = g_hash_table_lookup (ids, guid);
+			if (instance_id == NULL) {
+				fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_GUID, guid);
+			} else {
+				g_autofree gchar *tmp = NULL;
+				tmp = g_strdup_printf ("%s <- %s", guid, instance_id);
+				fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_GUID, tmp);
+			}
+		}
+	} else {
+		for (guint i = 0; i < priv->instance_ids->len; i++) {
+			const gchar *instance_id = g_ptr_array_index (priv->instance_ids, i);
+			fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_INSTANCE_IDS, instance_id);
 		}
 	}
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_SERIAL, priv->serial);
