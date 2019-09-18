@@ -1340,30 +1340,27 @@ fu_common_bytes_is_empty (GBytes *bytes)
 }
 
 /**
- * fu_common_bytes_compare:
- * @bytes1: a #GBytes
- * @bytes2: another #GBytes
+ * fu_common_bytes_compare_raw:
+ * @buf1: a buffer
+ * @bufsz1: sizeof @buf1
+ * @buf2: another buffer
+ * @bufsz2: sizeof @buf2
  * @error: A #GError or %NULL
  *
- * Checks if a byte array are just empty (0xff) bytes.
+ * Compares the buffers for equality.
  *
- * Return value: %TRUE if @bytes1 and @bytes2 are identical
+ * Return value: %TRUE if @buf1 and @buf2 are identical
  **/
 gboolean
-fu_common_bytes_compare (GBytes *bytes1, GBytes *bytes2, GError **error)
+fu_common_bytes_compare_raw (const guint8 *buf1, gsize bufsz1,
+			     const guint8 *buf2, gsize bufsz2,
+			     GError **error)
 {
-	const guint8 *buf1;
-	const guint8 *buf2;
-	gsize bufsz1;
-	gsize bufsz2;
-
-	g_return_val_if_fail (bytes1 != NULL, FALSE);
-	g_return_val_if_fail (bytes2 != NULL, FALSE);
+	g_return_val_if_fail (buf1 != NULL, FALSE);
+	g_return_val_if_fail (buf2 != NULL, FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* not the same length */
-	buf1 = g_bytes_get_data (bytes1, &bufsz1);
-	buf2 = g_bytes_get_data (bytes2, &bufsz2);
 	if (bufsz1 != bufsz2) {
 		g_set_error (error,
 			     G_IO_ERROR,
@@ -1387,6 +1384,33 @@ fu_common_bytes_compare (GBytes *bytes1, GBytes *bytes2, GError **error)
 
 	/* success */
 	return TRUE;
+}
+
+/**
+ * fu_common_bytes_compare:
+ * @bytes1: a #GBytes
+ * @bytes2: another #GBytes
+ * @error: A #GError or %NULL
+ *
+ * Compares the buffers for equality.
+ *
+ * Return value: %TRUE if @bytes1 and @bytes2 are identical
+ **/
+gboolean
+fu_common_bytes_compare (GBytes *bytes1, GBytes *bytes2, GError **error)
+{
+	const guint8 *buf1;
+	const guint8 *buf2;
+	gsize bufsz1;
+	gsize bufsz2;
+
+	g_return_val_if_fail (bytes1 != NULL, FALSE);
+	g_return_val_if_fail (bytes2 != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	buf1 = g_bytes_get_data (bytes1, &bufsz1);
+	buf2 = g_bytes_get_data (bytes2, &bufsz2);
+	return fu_common_bytes_compare_raw (buf1, bufsz1, buf2, bufsz2, error);
 }
 
 /**
