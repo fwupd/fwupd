@@ -313,12 +313,31 @@ fwupd_build_user_agent (const gchar *package_name, const gchar *package_version)
 gchar *
 fwupd_build_machine_id (const gchar *salt, GError **error)
 {
+	const gchar *fn = NULL;
 	g_autofree gchar *buf = NULL;
+	g_auto(GStrv) fns = g_new0 (gchar *, 5);
 	g_autoptr(GChecksum) csum = NULL;
 	gsize sz = 0;
 
-	/* this has to exist */
-	if (!g_file_get_contents ("/etc/machine-id", &buf, &sz, error))
+	/* one of these has to exist */
+	fns[0] = g_build_filename (SYSCONFDIR, "machine-id", NULL);
+	fns[1] = g_build_filename (LOCALSTATEDIR, "lib", "dbus", "machine-id", NULL);
+	fns[2] = g_strdup ("/etc/machine-id");
+	fns[3] = g_strdup ("/var/lib/dbus/machine-id");
+	for (guint i = 0; fns[i] != NULL; i++) {
+		if (g_file_test (fns[i], G_FILE_TEST_EXISTS)) {
+			fn = fns[i];
+			break;
+		}
+	}
+	if (fn == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_READ,
+				     "The machine-id is not present");
+		return NULL;
+	}
+	if (!g_file_get_contents (fn, &buf, &sz, error))
 		return NULL;
 	if (sz == 0) {
 		g_set_error_literal (error,
