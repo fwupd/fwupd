@@ -2278,6 +2278,7 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	FuDevicePrivate *priv_donor = GET_PRIVATE (donor);
+	GPtrArray *instance_ids = fu_device_get_instance_ids (donor);
 	GPtrArray *parent_guids = fu_device_get_parent_guids (donor);
 	g_autoptr(GList) metadata_keys = NULL;
 
@@ -2316,6 +2317,13 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 	/* optional subclass */
 	if (klass->incorporate != NULL)
 		klass->incorporate (self, donor);
+
+	/* call the set_quirk_kv() vfunc for the superclassed object */
+	for (guint i = 0; i < instance_ids->len; i++) {
+		const gchar *instance_id = g_ptr_array_index (instance_ids, i);
+		g_autofree gchar *guid = fwupd_guid_hash_string (instance_id);
+		fu_device_add_guid_quirks (self, guid);
+	}
 }
 
 /**
