@@ -135,6 +135,11 @@ gboolean	 fu_common_bytes_is_empty	(GBytes		*bytes);
 gboolean	 fu_common_bytes_compare	(GBytes		*bytes1,
 						 GBytes		*bytes2,
 						 GError		**error);
+gboolean	 fu_common_bytes_compare_raw	(const guint8	*buf1,
+						 gsize		 bufsz1,
+						 const guint8	*buf2,
+						 gsize		 bufsz2,
+						 GError		**error);
 GBytes		*fu_common_bytes_pad		(GBytes		*bytes,
 						 gsize		 sz);
 gboolean	 fu_memcpy_safe			(guint8		*dst,
