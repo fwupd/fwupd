@@ -1,0 +1,10 @@
+[HwId=AAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE]
+Flags = supports-wacom-recovery
+WacomRecoveryGpioChip=INT34BB:00
+WacomRecoveryGpioLines=1,2,3
+#GPIO 1 set = GUID1
+WacomRecoveryGpio1 = #GUID1#
+#GPIO 2 set = GUID2
+WacomRecoveryGpio2 = #GUID2#
+#GPIO 3 set = GUID3
+WacomRecoveryGpio3 = #GUID3#

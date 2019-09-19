@@ -18,6 +18,10 @@ subdir('wacom-raw')
 subdir('wacom-usb')
 subdir('superio')
 
+if libgpiod.found()
+subdir('wacom-recovery')
+endif
+
 # depends on dfu
 subdir('csr')
 

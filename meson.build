@@ -212,6 +212,7 @@ endif
 gcab = find_program('gcab', required : true)
 bashcomp = dependency('bash-completion', required: false)
 python3 = find_program('python3')
+libgpiod = dependency('libgpiod', required: false)
 
 if valgrind.found()
   conf.set('HAVE_VALGRIND', '1')

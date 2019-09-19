@@ -122,6 +122,21 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency type="build" id="libgpiod-dev">
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x">libgpiod-dev:s390x</package>
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+    <distro id="fedora">
+      <package>libgpiod-devel</package>
+    </distro>
+  </dependency>
   <dependency type="build" id="libjson-glib-dev">
     <distro id="arch">
       <package>json-glib</package>
