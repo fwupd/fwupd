@@ -27,6 +27,38 @@ G_DEFINE_TYPE_WITH_PRIVATE (FuFirmware, fu_firmware, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fu_firmware_get_instance_private (o))
 
 /**
+ * fu_firmware_tokenize:
+ * @self: A #FuFirmware
+ * @image: A #GBytes
+ * @flags: some #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_FORCE
+ * @error: A #GError, or %NULL
+ *
+ * Tokenizes a firmware, typically breaking the firmware into records.
+ *
+ * Records can be enumerated using subclass-specific functionality, for example
+ * using fu_srec_firmware_get_records().
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.3.2
+ **/
+gboolean
+fu_firmware_tokenize (FuFirmware *self, GBytes *fw,
+		      FwupdInstallFlags flags, GError **error)
+{
+	FuFirmwareClass *klass = FU_FIRMWARE_GET_CLASS (self);
+
+	g_return_val_if_fail (FU_IS_FIRMWARE (self), FALSE);
+	g_return_val_if_fail (fw != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* optionally subclassed */
+	if (klass->tokenize != NULL)
+		return klass->tokenize (self, fw, flags, error);
+	return TRUE;
+}
+
+/**
  * fu_firmware_parse_full:
  * @self: A #FuFirmware
  * @image: A #GBytes
@@ -57,6 +89,10 @@ fu_firmware_parse_full (FuFirmware *self,
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* subclassed */
+	if (klass->tokenize != NULL) {
+		if (!klass->tokenize (self, fw, flags, error))
+			return FALSE;
+	}
 	if (klass->parse != NULL)
 		return klass->parse (self, fw, addr_start, addr_end, flags, error);
 
