@@ -13,6 +13,12 @@ Plugin = wacom_raw
 Guid = WacomAES
 Flags = is-bootloader
 
+# AES bootloader mode
+[DeviceInstanceId=HIDRAW\VEN_2D1F&DEV_0094]
+Plugin = wacom_raw
+Guid = WacomAES
+Flags = is-bootloader
+
 # EMR bootloader mode
 [DeviceInstanceId=HIDRAW\VEN_056A&DEV_012B]
 Plugin = wacom_raw
