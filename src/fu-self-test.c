@@ -3916,6 +3916,38 @@ fu_firmware_srec_func (void)
 }
 
 static void
+fu_firmware_srec_tokenization_func (void)
+{
+	FuSrecFirmwareRecord *rcd;
+	GPtrArray *records;
+	gboolean ret;
+	g_autoptr(FuFirmware) firmware = fu_srec_firmware_new ();
+	g_autoptr(GBytes) data_srec = NULL;
+	g_autoptr(GError) error = NULL;
+	const gchar *buf = "S3060000001400E5\r\n"
+			   "S31000000002281102000000007F0304002C\r\n"
+			   "S306000000145095\r\n"
+			   "S70500000000FA\r\n";
+	data_srec = g_bytes_new_static (buf, strlen (buf));
+	g_assert_no_error (error);
+	g_assert (data_srec != NULL);
+	ret = fu_firmware_tokenize (firmware, data_srec, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	records = fu_srec_firmware_get_records (FU_SREC_FIRMWARE (firmware));
+	g_assert_nonnull (records);
+	g_assert_cmpint (records->len, ==, 4);
+	rcd = g_ptr_array_index (records, 2);
+	g_assert_nonnull (rcd);
+	g_assert_cmpint (rcd->ln, ==, 0x3);
+	g_assert_cmpint (rcd->kind, ==, 3);
+	g_assert_cmpint (rcd->addr, ==, 0x14);
+	g_assert_cmpint (rcd->buf->len, ==, 0x1);
+	g_assert_cmpint (rcd->buf->data[0], ==, 0x50);
+}
+
+static void
 fu_memcpy_func (void)
 {
 	const guint8 src[] = {'a', 'b', 'c', 'd', 'e' };
@@ -4066,6 +4098,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/firmware{ihex}", fu_firmware_ihex_func);
 	g_test_add_func ("/fwupd/firmware{ihex-offset}", fu_firmware_ihex_offset_func);
 	g_test_add_func ("/fwupd/firmware{ihex-signed}", fu_firmware_ihex_signed_func);
+	g_test_add_func ("/fwupd/firmware{srec-tokenization}", fu_firmware_srec_tokenization_func);
 	g_test_add_func ("/fwupd/firmware{srec}", fu_firmware_srec_func);
 	g_test_add_func ("/fwupd/archive{invalid}", fu_archive_invalid_func);
 	g_test_add_func ("/fwupd/archive{cab}", fu_archive_cab_func);

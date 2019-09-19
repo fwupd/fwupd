@@ -30,14 +30,22 @@ struct _FuFirmwareClass
 	void			 (*to_string)		(FuFirmware	*self,
 							 guint		 indent,
 							 GString	*str);
+	gboolean		 (*tokenize)		(FuFirmware	*self,
+							 GBytes		*fw,
+							 FwupdInstallFlags flags,
+							 GError		**error);
 	/*< private >*/
-	gpointer		 padding[29];
+	gpointer		 padding[28];
 };
 
 FuFirmware	*fu_firmware_new			(void);
 FuFirmware	*fu_firmware_new_from_bytes		(GBytes		*fw);
 gchar		*fu_firmware_to_string			(FuFirmware	*self);
 
+gboolean	 fu_firmware_tokenize			(FuFirmware	*self,
+							 GBytes		*fw,
+							 FwupdInstallFlags flags,
+							 GError		**error);
 gboolean	 fu_firmware_parse			(FuFirmware	*self,
 							 GBytes		*fw,
 							 FwupdInstallFlags flags,
