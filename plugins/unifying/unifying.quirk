@@ -36,3 +36,7 @@ Flags = is-bootloader,is-texas
 FirmwareSizeMin = 0x4000
 CounterpartGuid = HIDRAW\VEN_046D&DEV_C52B
 InstallDuration = 18
+
+# Possible HID++ v2.0 peripheral device
+[DeviceInstanceId=HIDRAW\VEN_046D]
+Plugin = unifying
