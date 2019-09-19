@@ -47,10 +47,6 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 	if (g_strcmp0 (fu_udev_device_get_subsystem (device), "hidraw") != 0)
 		return TRUE;
 
-	/* wacom */
-	if (fu_udev_device_get_vendor (device) != FU_WACOM_DEVICE_VID)
-		return TRUE;
-
 	/* no actual device to open */
 	if (g_udev_device_get_device_file (fu_udev_device_get_dev (device)) == NULL)
 		return TRUE;
@@ -73,12 +69,7 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 		fu_plugin_device_add (plugin, FU_DEVICE (dev));
 	}
 
-	/* not supported */
-	g_set_error_literal (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Only EMR or AES devices are supported");
-	return FALSE;
+	return TRUE;
 }
 
 gboolean
