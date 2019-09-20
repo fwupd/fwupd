@@ -1203,7 +1203,7 @@ fu_engine_history_func (void)
 		"  DeviceId:             894e8c17a29428b09d10cd90d1db74ea76fbcfe8\n"
 		"  Guid:                 12345678-1234-1234-1234-123456789012\n"
 		"  Plugin:               test\n"
-		"  Flags:                updatable\n"
+		"  Flags:                updatable|historical\n"
 		"  Version:              1.2.2\n"
 		"  Created:              2018-01-07\n"
 		"  Modified:             2017-12-27\n"
@@ -1436,7 +1436,7 @@ fu_engine_history_error_func (void)
 		"  DeviceId:             894e8c17a29428b09d10cd90d1db74ea76fbcfe8\n"
 		"  Guid:                 12345678-1234-1234-1234-123456789012\n"
 		"  Plugin:               test\n"
-		"  Flags:                updatable\n"
+		"  Flags:                updatable|historical\n"
 		"  Version:              1.2.2\n"
 		"  Created:              2018-01-07\n"
 		"  Modified:             2017-12-27\n"
@@ -2520,7 +2520,7 @@ fu_history_func (void)
 	g_assert_cmpint (fu_device_get_update_state (device), ==, FWUPD_UPDATE_STATE_FAILED);
 	g_assert_cmpstr (fu_device_get_update_error (device), ==, "word");
 	g_assert_cmpstr (fu_device_get_guid_default (device), ==, "827edddd-9bb6-5632-889f-2c01255503da");
-	g_assert_cmpint (fu_device_get_flags (device), ==, FWUPD_DEVICE_FLAG_INTERNAL);
+	g_assert_cmpint (fu_device_get_flags (device), ==, FWUPD_DEVICE_FLAG_INTERNAL | FWUPD_DEVICE_FLAG_HISTORICAL);
 	g_assert_cmpint (fu_device_get_created (device), ==, 123);
 	g_assert_cmpint (fu_device_get_modified (device), ==, 456);
 	release = fu_device_get_release_default (device);

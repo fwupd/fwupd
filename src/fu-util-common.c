@@ -886,6 +886,7 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 	const gchar *tmp;
 	const gchar *tmp2;
 	guint64 flags = fwupd_device_get_flags (dev);
+	guint64 modified = fwupd_device_get_modified (dev);
 	g_autoptr(GHashTable) ids = NULL;
 	g_autoptr(GString) flags_str = g_string_new (NULL);
 
@@ -929,8 +930,13 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 	/* versions */
 	tmp = fwupd_device_get_version (dev);
 	if (tmp != NULL) {
-		/* TRANSLATORS: version number of current firmware */
-		fu_common_string_append_kv (str, idt + 1, _("Current version"), tmp);
+		if (flags & FWUPD_DEVICE_FLAG_HISTORICAL) {
+			/* TRANSLATORS: version number of previous firmware */
+			fu_common_string_append_kv (str, idt + 1, _("Previous version"), tmp);
+		} else {
+			/* TRANSLATORS: version number of current firmware */
+			fu_common_string_append_kv (str, idt + 1, _("Current version"), tmp);
+		}
 	}
 	tmp = fwupd_device_get_version_lowest (dev);
 	if (tmp != NULL) {
@@ -1002,6 +1008,16 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 		fu_common_string_append_kv (str, idt + 1, _("Flags"), flags_str->str);
 	}
 
+	/* modified date: for history devices */
+	if (modified > 0) {
+		g_autoptr(GDateTime) date = NULL;
+		g_autofree gchar *time_str = NULL;
+		date = g_date_time_new_from_unix_utc (modified);
+		time_str = g_date_time_format (date, "%F %R");
+		/* TRANSLATORS: the original time/date the device was modified */
+		fu_common_string_append_kv (str, idt +1, _("Last modified"), time_str);
+	}
+
 	/* all GUIDs for this hardware, with IDs if available */
 	ids = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	for (guint i = 0; i < instance_ids->len; i++) {
@@ -1044,7 +1060,7 @@ fu_util_release_to_string (FwupdRelease *rel, guint idt)
 	fu_common_string_append_kv (str, idt, fwupd_release_get_name (rel), NULL);
 
 	/* TRANSLATORS: version number of new firmware */
-	fu_common_string_append_kv (str, idt + 1 , _("Version"),
+	fu_common_string_append_kv (str, idt + 1 , _("New version"),
 				    fwupd_release_get_version (rel));
 
 	if (fwupd_release_get_remote_id (rel) != NULL) {
@@ -1100,10 +1116,7 @@ fu_util_release_to_string (FwupdRelease *rel, guint idt)
 		g_string_append_printf (flags_str, "%s|",
 					fwupd_release_flag_to_string ((guint64) 1 << i));
 	}
-	if (flags_str->len == 0) {
-		/* TRANSLATORS: release properties */
-		fu_common_string_append_kv (str, idt + 1, _("Flags"), fwupd_release_flag_to_string (0));
-	} else {
+	if (flags_str->len > 0) {
 		g_string_truncate (flags_str, flags_str->len - 1);
 		/* TRANSLATORS: release properties */
 		fu_common_string_append_kv (str, idt + 1, _("Flags"), flags_str->str);
