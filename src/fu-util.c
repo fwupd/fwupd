@@ -806,9 +806,15 @@ fu_util_get_history (FuUtilPrivate *priv, gchar **values, GError **error)
 	/* show each device */
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
+		FwupdRelease *rel;
+		GNode *child;
 		if (!fu_util_filter_device (priv, dev))
 			continue;
-		g_node_append_data (root, dev);
+		child = g_node_append_data (root, dev);
+
+		rel = fwupd_device_get_release_default (dev);
+		if (rel != NULL)
+			g_node_append_data (child, rel);
 	}
 	fu_util_print_tree (root, title);
 

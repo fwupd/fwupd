@@ -81,7 +81,8 @@ fu_history_device_from_stmt (sqlite3_stmt *stmt)
 		fwupd_release_set_filename (release, tmp);
 
 	/* flags */
-	fu_device_set_flags (device, sqlite3_column_int64 (stmt, 7));
+	fu_device_set_flags (device, sqlite3_column_int64 (stmt, 7) |
+				     FWUPD_DEVICE_FLAG_HISTORICAL);
 
 	/* metadata */
 	tmp = (const gchar *) sqlite3_column_text (stmt, 8);
