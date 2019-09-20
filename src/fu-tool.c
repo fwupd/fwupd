@@ -629,7 +629,7 @@ fu_util_install_task_sort_cb (gconstpointer a, gconstpointer b)
 static gboolean
 fu_util_download_out_of_process (const gchar *uri, const gchar *fn, GError **error)
 {
-	const gchar *argv[][5] = { { "wget", uri, "-o", fn, NULL },
+	const gchar *argv[][5] = { { "wget", uri, "-O", fn, NULL },
 				   { "curl", uri, "--output", fn, NULL },
 				   { NULL } };
 	for (guint i = 0; argv[i][0] != NULL; i++) {
