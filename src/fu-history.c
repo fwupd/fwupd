@@ -485,6 +485,7 @@ fu_history_modify_device (FuHistory *self, FuDevice *device,
 					 "update_state = ?1, "
 					 "update_error = ?2, "
 					 "checksum_device = ?6, "
+					 "device_modified = ?7, "
 					 "flags = ?3 "
 					 "WHERE device_id = ?4;",
 					 -1, &stmt, NULL);
@@ -498,6 +499,7 @@ fu_history_modify_device (FuHistory *self, FuDevice *device,
 					 "update_state = ?1, "
 					 "update_error = ?2, "
 					 "checksum_device = ?6, "
+					 "device_modified = ?7, "
 					 "flags = ?3 "
 					 "WHERE device_id = ?4 AND version_old = ?5;",
 					 -1, &stmt, NULL);
@@ -511,6 +513,7 @@ fu_history_modify_device (FuHistory *self, FuDevice *device,
 					 "update_state = ?1, "
 					 "update_error = ?2, "
 					 "checksum_device = ?6, "
+					 "device_modified = ?7, "
 					 "flags = ?3 "
 					 "WHERE device_id = ?4 AND version_new = ?5;",
 					 -1, &stmt, NULL);
@@ -531,6 +534,8 @@ fu_history_modify_device (FuHistory *self, FuDevice *device,
 	sqlite3_bind_text (stmt, 5, fu_device_get_version (device), -1, SQLITE_STATIC);
 	sqlite3_bind_text (stmt, 6, fwupd_checksum_get_by_kind (fu_device_get_checksums (device),
 								G_CHECKSUM_SHA1), -1, SQLITE_STATIC);
+	sqlite3_bind_int64 (stmt, 7, fu_device_get_modified (device));
+
 	return fu_history_stmt_exec (self, stmt, NULL, error);
 }
 
