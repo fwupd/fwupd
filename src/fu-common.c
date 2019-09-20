@@ -1143,11 +1143,22 @@ fu_common_string_append_kv (GString *str, guint idt, const gchar *key, const gch
 		keysz = idt * 2;
 	}
 	if (value != NULL) {
-		for (gsize i = keysz; i < align; i++)
-			g_string_append (str, " ");
-		g_string_append (str, value);
+		g_auto(GStrv) split = NULL;
+		split = g_strsplit (value, "\n", -1);
+		for (guint i = 0; split[i] != NULL; i++) {
+			if (i == 0) {
+				for (gsize j = keysz; j < align; j++)
+					g_string_append (str, " ");
+			} else {
+				for (gsize j = 0; j < idt; j++)
+					g_string_append (str, "  ");
+			}
+			g_string_append (str, split[i]);
+			g_string_append (str, "\n");
+		}
+	} else {
+		g_string_append (str, "\n");
 	}
-	g_string_append (str, "\n");
 }
 
 void
