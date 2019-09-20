@@ -1363,16 +1363,51 @@ fu_util_get_history (FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* show each device */
 	for (guint i = 0; i < devices->len; i++) {
+		g_autoptr(GPtrArray) rels = NULL;
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
 		FwupdRelease *rel;
+		const gchar *remote;
 		GNode *child;
+
 		if (!fu_util_filter_device (priv, dev))
 			continue;
 		child = g_node_append_data (root, dev);
 
 		rel = fwupd_device_get_release_default (dev);
-		if (rel != NULL)
+		if (rel == NULL)
+			continue;
+		remote = fwupd_release_get_remote_id (rel);
+
+		/* doesn't actually map to remote */
+		if (remote == NULL) {
 			g_node_append_data (child, rel);
+			continue;
+		}
+
+		/* try to lookup releases from client */
+		rels = fu_engine_get_releases (priv->engine, fwupd_device_get_id (dev), error);
+		if (rels == NULL)
+			return FALSE;
+
+		/* map to a release in client */
+		for (guint j = 0; j < rels->len; j++) {
+			FwupdRelease *rel2 = g_ptr_array_index (rels, j);
+			if (g_strcmp0 (remote,
+				       fwupd_release_get_remote_id (rel2)) != 0)
+				continue;
+			if (g_strcmp0 (fwupd_release_get_version (rel),
+				       fwupd_release_get_version (rel2)) != 0)
+				continue;
+			g_node_append_data (child, g_object_ref (rel2));
+			rel = NULL;
+			break;
+		}
+
+		/* didn't match anything */
+		if (rels->len == 0 || rel != NULL) {
+			g_node_append_data (child, rel);
+			continue;
+		}
 
 	}
 	fu_util_print_tree (root, title);
