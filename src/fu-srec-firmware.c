@@ -48,8 +48,8 @@ fu_srec_firmware_record_free (FuSrecFirmwareRecord *rcd)
 	g_free (rcd);
 }
 
-static FuSrecFirmwareRecord *
-fu_srec_firmware_record_new (guint ln, guint8 kind, guint32 addr)
+FuSrecFirmwareRecord *
+fu_srec_firmware_record_new (guint ln, FuFirmareSrecRecordKind kind, guint32 addr)
 {
 	FuSrecFirmwareRecord *rcd = g_new0 (FuSrecFirmwareRecord, 1);
 	rcd->ln = ln;
@@ -141,34 +141,34 @@ fu_srec_firmware_tokenize (FuFirmware *firmware, GBytes *fw,
 
 		/* set each command settings */
 		switch (rec_kind) {
-		case 0:
+		case FU_FIRMWARE_SREC_RECORD_KIND_S0_HEADER:
 			addrsz = 2;
 			break;
-		case 1:
+		case FU_FIRMWARE_SREC_RECORD_KIND_S1_DATA_16:
 			addrsz = 2;
 			break;
-		case 2:
+		case FU_FIRMWARE_SREC_RECORD_KIND_S2_DATA_24:
 			addrsz = 3;
 			break;
-		case 3:
+		case FU_FIRMWARE_SREC_RECORD_KIND_S3_DATA_32:
 			addrsz = 4;
 			break;
-		case 5:
+		case FU_FIRMWARE_SREC_RECORD_KIND_S5_COUNT_16:
 			addrsz = 2;
 			got_eof = TRUE;
 			break;
-		case 6:
+		case FU_FIRMWARE_SREC_RECORD_KIND_S6_COUNT_24:
 			addrsz = 3;
 			break;
-		case 7:
+		case FU_FIRMWARE_SREC_RECORD_KIND_S7_COUNT_32:
 			addrsz = 4;
 			got_eof = TRUE;
 			break;
-		case 8:
+		case FU_FIRMWARE_SREC_RECORD_KIND_S8_TERMINATION_24:
 			addrsz = 3;
 			got_eof = TRUE;
 			break;
-		case 9:
+		case FU_FIRMWARE_SREC_RECORD_KIND_S9_TERMINATION_16:
 			addrsz = 2;
 			got_eof = TRUE;
 			break;
@@ -244,7 +244,7 @@ fu_srec_firmware_parse (FuFirmware *firmware,
 		FuSrecFirmwareRecord *rcd = g_ptr_array_index (self->records, j);
 
 		/* header */
-		if (rcd->kind == 0) {
+		if (rcd->kind == FU_FIRMWARE_SREC_RECORD_KIND_S0_HEADER) {
 			g_autoptr(GString) modname = g_string_new (NULL);
 
 			/* check for duplicate */
@@ -271,7 +271,7 @@ fu_srec_firmware_parse (FuFirmware *firmware,
 		}
 
 		/* verify we got all records */
-		if (rcd->kind == 5) {
+		if (rcd->kind == FU_FIRMWARE_SREC_RECORD_KIND_S5_COUNT_16) {
 			if (rcd->addr != data_cnt) {
 				g_set_error (error,
 					     FWUPD_ERROR,
@@ -284,7 +284,9 @@ fu_srec_firmware_parse (FuFirmware *firmware,
 		}
 
 		/* data */
-		if (rcd->kind == 1 || rcd->kind == 2 || rcd->kind == 3) {
+		if (rcd->kind == FU_FIRMWARE_SREC_RECORD_KIND_S1_DATA_16 ||
+		    rcd->kind == FU_FIRMWARE_SREC_RECORD_KIND_S2_DATA_24 ||
+		    rcd->kind == FU_FIRMWARE_SREC_RECORD_KIND_S3_DATA_32) {
 			/* invalid */
 			if (!got_hdr) {
 				g_set_error (error,
