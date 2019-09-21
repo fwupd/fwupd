@@ -30,12 +30,15 @@ jobs:
 
   build-snap:
     docker:
-      - image: superm1/snapcraft-edge:latest
+      - image: ubuntu:18.04
     steps:
       - checkout
       - run:
           name: "Update apt"
           command: apt update
+      - run:
+          name: "install snapcraft"
+          command: apt install snapcraft -y
       - run:
           name: "Build Snap"
           command: snapcraft
