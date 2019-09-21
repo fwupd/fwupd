@@ -1888,7 +1888,7 @@ fwupd_client_class_init (FwupdClientClass *klass)
 	 */
 	pspec = g_param_spec_string ("host-product", NULL, NULL,
 				     NULL, G_PARAM_READABLE | G_PARAM_STATIC_NAME);
-	g_object_class_install_property (object_class, PROP_DAEMON_VERSION, pspec);
+	g_object_class_install_property (object_class, PROP_HOST_PRODUCT, pspec);
 
 }
 
