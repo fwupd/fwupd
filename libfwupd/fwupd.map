@@ -385,5 +385,7 @@ LIBFWUPD_1.3.2 {
     fwupd_client_get_host_machine_id;
     fwupd_release_add_issue;
     fwupd_release_get_issues;
+    fwupd_release_get_name_variant_suffix;
+    fwupd_release_set_name_variant_suffix;
   local: *;
 } LIBFWUPD_1.3.1;

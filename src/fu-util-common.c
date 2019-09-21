@@ -1073,6 +1073,11 @@ fu_util_release_to_string (FwupdRelease *rel, guint idt)
 		fu_common_string_append_kv (str, idt + 1, _("Summary"),
 					    fwupd_release_get_summary (rel));
 	}
+	if (fwupd_release_get_name_variant_suffix (rel) != NULL) {
+		/* TRANSLATORS: one line variant of release (e.g. 'Prerelease' or 'China') */
+		fu_common_string_append_kv (str, idt + 1, _("Variant"),
+					    fwupd_release_get_name_variant_suffix (rel));
+	}
 	if (fwupd_release_get_license (rel) != NULL) {
 		/* TRANSLATORS: e.g. GPLv2+, Non free etc */
 		fu_common_string_append_kv (str, idt + 1, _("License"),

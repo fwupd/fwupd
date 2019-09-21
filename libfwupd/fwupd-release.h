@@ -78,6 +78,9 @@ void		 fwupd_release_set_vendor		(FwupdRelease	*release,
 const gchar	*fwupd_release_get_name			(FwupdRelease	*release);
 void		 fwupd_release_set_name			(FwupdRelease	*release,
 							 const gchar	*name);
+const gchar	*fwupd_release_get_name_variant_suffix	(FwupdRelease	*release);
+void		 fwupd_release_set_name_variant_suffix	(FwupdRelease	*release,
+							 const gchar	*name_variant_suffix);
 const gchar	*fwupd_release_get_summary		(FwupdRelease	*release);
 void		 fwupd_release_set_summary		(FwupdRelease	*release,
 							 const gchar	*summary);
