@@ -77,6 +77,7 @@ struct _FuEngine
 	GHashTable		*runtime_versions;
 	GHashTable		*compile_versions;
 	GHashTable		*approved_firmware;
+	gchar			*host_machine_id;
 	gboolean		 loaded;
 };
 
@@ -4160,6 +4161,13 @@ fu_engine_get_host_product (FuEngine *self)
 	return fu_hwids_get_value (self->hwids, FU_HWIDS_KEY_PRODUCT_NAME);
 }
 
+const gchar *
+fu_engine_get_host_machine_id (FuEngine *self)
+{
+	g_return_val_if_fail (FU_IS_ENGINE (self), NULL);
+	return self->host_machine_id;
+}
+
 gboolean
 fu_engine_load_plugins (FuEngine *self, GError **error)
 {
@@ -4573,6 +4581,11 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	if (self->loaded)
 		return TRUE;
 
+	/* cache machine ID so we can use it from a sandboxed app */
+	self->host_machine_id = fwupd_build_machine_id ("fwupd", error);
+	if (self->host_machine_id == NULL)
+		return FALSE;
+
 	/* read config file */
 	if (flags & FU_ENGINE_LOAD_FLAG_READONLY_FS)
 		config_flags |= FU_CONFIG_LOAD_FLAG_READONLY_FS;
@@ -4820,6 +4833,7 @@ fu_engine_finalize (GObject *obj)
 	if (self->coldplug_id != 0)
 		g_source_remove (self->coldplug_id);
 
+	g_free (self->host_machine_id);
 	g_object_unref (self->idle);
 	g_object_unref (self->config);
 	g_object_unref (self->smbios);

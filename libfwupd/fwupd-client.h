@@ -128,6 +128,7 @@ gboolean	 fwupd_client_get_tainted		(FwupdClient	*client);
 guint		 fwupd_client_get_percentage		(FwupdClient	*client);
 const gchar	*fwupd_client_get_daemon_version	(FwupdClient	*client);
 const gchar	*fwupd_client_get_host_product		(FwupdClient	*client);
+const gchar	*fwupd_client_get_host_machine_id	(FwupdClient	*client);
 
 GPtrArray	*fwupd_client_get_remotes		(FwupdClient	*client,
 							 GCancellable	*cancellable,
