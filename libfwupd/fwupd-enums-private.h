@@ -31,6 +31,7 @@ G_BEGIN_DECLS
 #define FWUPD_RESULT_KEY_MODIFIED		"Modified"	/* t */
 #define FWUPD_RESULT_KEY_METADATA		"Metadata"	/* a{ss} */
 #define FWUPD_RESULT_KEY_NAME			"Name"		/* s */
+#define FWUPD_RESULT_KEY_NAME_VARIANT_SUFFIX	"NameVariantSuffix"	/* s */
 #define FWUPD_RESULT_KEY_PLUGIN			"Plugin"	/* s */
 #define FWUPD_RESULT_KEY_RELEASE		"Release"	/* a{sv} */
 #define FWUPD_RESULT_KEY_REMOTE_ID		"RemoteId"	/* s */

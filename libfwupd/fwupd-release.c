@@ -42,6 +42,7 @@ typedef struct {
 	gchar				*appstream_id;
 	gchar				*license;
 	gchar				*name;
+	gchar				*name_variant_suffix;
 	gchar				*summary;
 	gchar				*uri;
 	gchar				*vendor;
@@ -894,6 +895,42 @@ fwupd_release_set_name (FwupdRelease *release, const gchar *name)
 }
 
 /**
+ * fwupd_release_get_name_variant_suffix:
+ * @release: A #FwupdRelease
+ *
+ * Gets the update variant suffix.
+ *
+ * Returns: the update variant, or %NULL if unset
+ *
+ * Since: 1.3.2
+ **/
+const gchar *
+fwupd_release_get_name_variant_suffix (FwupdRelease *release)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_val_if_fail (FWUPD_IS_RELEASE (release), NULL);
+	return priv->name_variant_suffix;
+}
+
+/**
+ * fwupd_release_set_name_variant_suffix:
+ * @release: A #FwupdRelease
+ * @name_variant_suffix: the description
+ *
+ * Sets the update variant suffix.
+ *
+ * Since: 1.3.2
+ **/
+void
+fwupd_release_set_name_variant_suffix (FwupdRelease *release, const gchar *name_variant_suffix)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_if_fail (FWUPD_IS_RELEASE (release));
+	g_free (priv->name_variant_suffix);
+	priv->name_variant_suffix = g_strdup (name_variant_suffix);
+}
+
+/**
  * fwupd_release_get_trust_flags:
  * @release: A #FwupdRelease
  *
@@ -1131,6 +1168,11 @@ fwupd_release_to_variant (FwupdRelease *release)
 				       FWUPD_RESULT_KEY_NAME,
 				       g_variant_new_string (priv->name));
 	}
+	if (priv->name_variant_suffix != NULL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_NAME_VARIANT_SUFFIX,
+				       g_variant_new_string (priv->name_variant_suffix));
+	}
 	if (priv->size != 0) {
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_SIZE,
@@ -1248,6 +1290,10 @@ fwupd_release_from_key_value (FwupdRelease *release, const gchar *key, GVariant 
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_NAME) == 0) {
 		fwupd_release_set_name (release, g_variant_get_string (value, NULL));
+		return;
+	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_NAME_VARIANT_SUFFIX) == 0) {
+		fwupd_release_set_name_variant_suffix (release, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_SIZE) == 0) {
@@ -1570,6 +1616,7 @@ fwupd_release_finalize (GObject *object)
 	g_free (priv->appstream_id);
 	g_free (priv->license);
 	g_free (priv->name);
+	g_free (priv->name_variant_suffix);
 	g_free (priv->summary);
 	g_free (priv->uri);
 	g_free (priv->homepage);
