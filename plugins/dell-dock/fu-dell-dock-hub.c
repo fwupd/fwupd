@@ -53,8 +53,7 @@ fu_dell_dock_hub_write_fw (FuDevice *device,
 	FuDellDockHub *self = FU_DELL_DOCK_HUB (device);
 	gsize fw_size = 0;
 	const guint8 *data;
-	gsize write_size =
-	    (fw_size / HIDI2C_MAX_WRITE) >= 1 ? HIDI2C_MAX_WRITE : fw_size;
+	gsize write_size;
 	gsize nwritten = 0;
 	guint32 address = 0;
 	gboolean result = FALSE;
@@ -69,6 +68,8 @@ fu_dell_dock_hub_write_fw (FuDevice *device,
 	if (fw == NULL)
 		return FALSE;
 	data = g_bytes_get_data (fw, &fw_size);
+	write_size = (fw_size / HIDI2C_MAX_WRITE) >= 1 ?
+				 HIDI2C_MAX_WRITE : fw_size;
 
 	dynamic_version = g_strdup_printf ("%02x.%02x",
 					   data[self->blob_major_offset],
