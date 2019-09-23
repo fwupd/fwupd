@@ -142,6 +142,7 @@ gboolean	 fu_common_bytes_compare_raw	(const guint8	*buf1,
 						 GError		**error);
 GBytes		*fu_common_bytes_pad		(GBytes		*bytes,
 						 gsize		 sz);
+gsize		 fu_common_strwidth		(const gchar	*text);
 gboolean	 fu_memcpy_safe			(guint8		*dst,
 						 gsize		 dst_sz,
 						 gsize		 dst_offset,

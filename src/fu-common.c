@@ -1123,6 +1123,32 @@ fu_common_string_replace (GString *string, const gchar *search, const gchar *rep
 	return count;
 }
 
+/**
+ * fu_common_strwidth:
+ * @text: The string to operate on
+ *
+ * Returns the width of the string in displayed characters on the console.
+ *
+ * Returns: width of text
+ *
+ * Since: 1.3.2
+ **/
+gsize
+fu_common_strwidth (const gchar *text)
+{
+	const gchar *p = text;
+	gsize width = 0;
+	while (*p) {
+		gunichar c = g_utf8_get_char (p);
+		if (g_unichar_iswide (c))
+			width += 2;
+		else if (!g_unichar_iszerowidth (c))
+			width += 1;
+		p = g_utf8_next_char (p);
+	}
+	return width;
+}
+
 void
 fu_common_string_append_kv (GString *str, guint idt, const gchar *key, const gchar *value)
 {
@@ -1138,7 +1164,7 @@ fu_common_string_append_kv (GString *str, guint idt, const gchar *key, const gch
 		g_string_append (str, "  ");
 	if (key[0] != '\0') {
 		g_string_append_printf (str, "%s:", key);
-		keysz = (idt * 2) + strlen (key) + 1;
+		keysz = (idt * 2) + fu_common_strwidth (key) + 1;
 	} else {
 		keysz = idt * 2;
 	}
