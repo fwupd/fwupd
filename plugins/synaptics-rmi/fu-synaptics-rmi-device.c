@@ -873,6 +873,52 @@ fu_synaptics_rmi_device_write_firmware (FuDevice *device,
 	/* erase all */
 	//FIXME: write $3 into F34_Flash_Data3
 	//FIXME: wait for ATTN and check success
+	/* v7+ */
+	if (priv->f34->function_version == 0x02) {
+		g_autoptr(GByteArray) erase_cmd = g_byte_array_new ();
+		fu_byte_array_append_uint8 (erase_cmd, CORE_CODE_PARTITION);
+		fu_byte_array_append_uint32 (erase_cmd, 0x0, G_LITTLE_ENDIAN);
+		if (priv->bootloader_id[1] == 8){
+			// For bootloader v8
+			fu_byte_array_append_uint8 (erase_cmd, CMD_V7_ERASE_AP);
+		} else {
+			// For bootloader v7
+			fu_byte_array_append_uint8 (erase_cmd, CMD_V7_ERASE);
+		} 
+		fu_byte_array_append_uint8 (erase_cmd, priv->bootloader_id[0]);
+		fu_byte_array_append_uint8 (erase_cmd, priv->bootloader_id[1]);
+		//FIXME: rmi4update_poll()
+		//FIXME: Check whether device is in bootloader mode (m_inBLmode)
+		if (priv->bootloader_id[1] == 8){
+			g_usleep(1000);
+		}
+		if (!fu_synaptics_rmi_device_write (self,
+						    priv->f34->data_base + 1,
+						    erase_cmd,
+						    error)) {
+			g_prefix_error (error, "failed to enable programming: ");
+			return FALSE;
+		}
+		//FIXME: wait for ATTN and check success
+
+		if (priv->bootloader_id[1] == 7) {
+			//FIXME: rmi4update_poll()
+			//FIXME: Check whether device is in bootloader mode (m_inBLmode)
+			g_autoptr(GByteArray) eraseConfigv7_cmd = g_byte_array_new ();
+			fu_byte_array_append_uint8 (eraseConfigv7_cmd, CORE_CONFIG_PARTITION);
+			fu_byte_array_append_uint32 (eraseConfigv7_cmd, 0x0, G_LITTLE_ENDIAN);
+			fu_byte_array_append_uint8 (eraseConfigv7_cmd, CMD_V7_ERASE);
+			g_usleep(100);
+			if (!fu_synaptics_rmi_device_write (self,
+							priv->f34->data_base + 1,
+						    eraseConfigv7_cmd,
+						    error)) {
+				g_prefix_error (error, "failed to enable programming: ");
+				return FALSE;
+			}
+			//FIXME: wait RMI_F34_ENABLE_WAIT_MS for ATTN 
+		}
+	}
 
 	/* write each block */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
