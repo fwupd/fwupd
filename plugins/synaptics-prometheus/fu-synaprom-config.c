@@ -213,6 +213,7 @@ fu_synaprom_config_finalize (GObject *obj)
 {
 	FuSynapromConfig *self = FU_SYNAPROM_CONFIG (obj);
 	g_object_unref (self->device);
+	G_OBJECT_CLASS (fu_synaprom_config_parent_class)->finalize (obj);
 }
 
 static void
