@@ -59,7 +59,7 @@ const gchar *
 fu_firmware_image_get_id (FuFirmwareImage *self)
 {
 	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FU_IS_FIRMWARE_IMAGE (self), FALSE);
+	g_return_val_if_fail (FU_IS_FIRMWARE_IMAGE (self), NULL);
 	return priv->id;
 }
 
@@ -168,8 +168,8 @@ fu_firmware_image_get_bytes (FuFirmwareImage *self, GError **error)
 {
 	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
 
-	g_return_val_if_fail (FU_IS_FIRMWARE_IMAGE (self), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	g_return_val_if_fail (FU_IS_FIRMWARE_IMAGE (self), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	if (priv->bytes == NULL) {
 		g_set_error (error,

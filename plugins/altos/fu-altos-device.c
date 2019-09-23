@@ -276,7 +276,7 @@ fu_altos_device_prepare_firmware (FuDevice *device,
 {
 	g_autoptr(FuFirmware) firmware = fu_altos_firmware_new ();
 	if (!fu_firmware_parse (firmware, fw, flags, error))
-		return FALSE;
+		return NULL;
 	return g_steal_pointer (&firmware);
 }
 

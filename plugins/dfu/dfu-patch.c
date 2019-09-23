@@ -521,7 +521,7 @@ dfu_patch_apply (DfuPatch *self, GBytes *blob, DfuPatchApplyFlags flags, GError 
 	if (!fu_memcpy_safe (data_new, sz_max, 0x0,			/* dst */
 			     data_old, sz, 0x0,				/* src */
 			     MIN (sz, sz_max), error))
-		return FALSE;
+		return NULL;
 	for (guint i = 0; i < priv->chunks->len; i++) {
 		DfuPatchChunk *chunk = g_ptr_array_index (priv->chunks, i);
 		const guint8 *chunk_data;

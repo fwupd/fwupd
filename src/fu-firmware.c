@@ -137,8 +137,8 @@ fu_firmware_write (FuFirmware *self, GError **error)
 {
 	FuFirmwareClass *klass = FU_FIRMWARE_GET_CLASS (self);
 
-	g_return_val_if_fail (FU_IS_FIRMWARE (self), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	g_return_val_if_fail (FU_IS_FIRMWARE (self), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* subclassed */
 	if (klass->write != NULL)
@@ -184,7 +184,7 @@ fu_firmware_get_images (FuFirmware *self)
 	FuFirmwarePrivate *priv = GET_PRIVATE (self);
 	g_autoptr(GPtrArray) imgs = NULL;
 
-	g_return_val_if_fail (FU_IS_FIRMWARE (self), FALSE);
+	g_return_val_if_fail (FU_IS_FIRMWARE (self), NULL);
 
 	imgs = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	for (guint i = 0; i < priv->images->len; i++) {
@@ -211,8 +211,8 @@ fu_firmware_get_image_by_id (FuFirmware *self, const gchar *id, GError **error)
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE (self);
 
-	g_return_val_if_fail (FU_IS_FIRMWARE (self), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	g_return_val_if_fail (FU_IS_FIRMWARE (self), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	for (guint i = 0; i < priv->images->len; i++) {
 		FuFirmwareImage *img = g_ptr_array_index (priv->images, i);

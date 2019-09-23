@@ -212,7 +212,7 @@ fu_solokey_device_packet_rx (FuSolokeyDevice *self, GError **error)
 					      NULL, /* cancellable */
 					      error)) {
 		g_prefix_error (error, "failed to get reply: ");
-		return FALSE;
+		return NULL;
 	}
 	if (g_getenv ("FWUPD_SOLOKEY_VERBOSE") != NULL)
 		fu_common_dump_raw (G_LOG_DOMAIN, "RES", buf, actual_length);
