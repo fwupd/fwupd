@@ -80,7 +80,7 @@ fu_util_print_data (const gchar *title, const gchar *msg)
 	g_print ("%s:", title);
 
 	/* pad */
-	title_len = strlen (title) + 1;
+	title_len = fu_common_strwidth (title) + 1;
 	lines = g_strsplit (msg, "\n", -1);
 	for (guint j = 0; lines[j] != NULL; j++) {
 		for (gsize i = title_len; i < 25; i++)
@@ -495,11 +495,11 @@ fu_util_cmd_array_to_string (GPtrArray *array)
 		FuUtilCmd *item = g_ptr_array_index (array, i);
 		g_string_append (string, "  ");
 		g_string_append (string, item->name);
-		len = strlen (item->name) + 2;
+		len = fu_common_strwidth (item->name) + 2;
 		if (item->arguments != NULL) {
 			g_string_append (string, " ");
 			g_string_append (string, item->arguments);
-			len += strlen (item->arguments) + 1;
+			len += fu_common_strwidth (item->arguments) + 1;
 		}
 		if (len < max_len) {
 			for (gsize j = len; j < max_len + 1; j++)
@@ -647,7 +647,7 @@ fu_util_strsplit_words (const gchar *text, guint line_len)
 	for (guint i = 0; tokens[i] != NULL; i++) {
 
 		/* current line plus new token is okay */
-		if (curline->len + strlen (tokens[i]) < line_len) {
+		if (curline->len + fu_common_strwidth (tokens[i]) < line_len) {
 			g_string_append_printf (curline, "%s ", tokens[i]);
 			continue;
 		}
@@ -677,15 +677,15 @@ fu_util_warning_box_line (const gchar *start,
 {
 	guint offset = 0;
 	if (start != NULL) {
-		offset += g_utf8_strlen (start, -1);
+		offset += fu_common_strwidth (start);
 		g_print ("%s", start);
 	}
 	if (text != NULL) {
-		offset += g_utf8_strlen (text, -1);
+		offset += fu_common_strwidth (text);
 		g_print ("%s", text);
 	}
 	if (end != NULL)
-		offset += g_utf8_strlen (end, -1);
+		offset += fu_common_strwidth (end);
 	for (guint i = offset; i < width; i++)
 		g_print ("%s", padding);
 	if (end != NULL)
@@ -1219,7 +1219,7 @@ fu_util_remote_to_string (FwupdRemote *remote, guint idt)
 	}
 	tmp = fwupd_remote_get_password (remote);
 	if (tmp != NULL) {
-		g_autofree gchar *hidden = g_strnfill (strlen (tmp), '*');
+		g_autofree gchar *hidden = g_strnfill (fu_common_strwidth (tmp), '*');
 		/* TRANSLATORS: remote filename base */
 		fu_common_string_append_kv (str, idt + 1, _("Password"), hidden);
 	}
