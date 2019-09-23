@@ -353,6 +353,7 @@ fu_srec_firmware_finalize (GObject *object)
 {
 	FuSrecFirmware *self = FU_SREC_FIRMWARE (object);
 	g_ptr_array_unref (self->records);
+	G_OBJECT_CLASS (fu_srec_firmware_parent_class)->finalize (object);
 }
 
 static void
