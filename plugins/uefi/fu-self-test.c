@@ -50,6 +50,7 @@ fu_uefi_pcrs_2_0_func (void)
 	g_autoptr(GPtrArray) pcr0s = NULL;
 	g_autoptr(GPtrArray) pcrXs = NULL;
 	const gchar *tpm_server_running = g_getenv ("TPM_SERVER_RUNNING");
+	g_setenv ("FWUPD_FORCE_TPM2", "1", TRUE);
 
 	if (!fu_uefi_pcrs_setup (pcrs, &error)) {
 		if (tpm_server_running == NULL &&
@@ -65,6 +66,7 @@ fu_uefi_pcrs_2_0_func (void)
 	pcrXs = fu_uefi_pcrs_get_checksums (pcrs, 999);
 	g_assert_nonnull (pcrXs);
 	g_assert_cmpint (pcrXs->len, ==, 0);
+	g_unsetenv ("FWUPD_FORCE_TPM2");
 }
 
 static void
