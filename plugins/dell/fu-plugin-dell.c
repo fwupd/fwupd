@@ -835,6 +835,8 @@ fu_plugin_init (FuPlugin *plugin)
 	data->smi_obj = g_malloc0 (sizeof (FuDellSmiObj));
 	if (g_getenv ("FWUPD_DELL_VERBOSE") != NULL)
 		g_setenv ("LIBSMBIOS_C_DEBUG_OUTPUT_ALL", "1", TRUE);
+	else
+		g_setenv ("TSS2_LOG", "esys+error,tcti+none", FALSE);
 	if (fu_dell_supported (plugin))
 		data->smi_obj->smi = dell_smi_factory (DELL_SMI_DEFAULTS);
 	data->smi_obj->fake_smbios = FALSE;
