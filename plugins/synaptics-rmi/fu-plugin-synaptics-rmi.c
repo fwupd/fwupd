@@ -28,16 +28,28 @@ fu_plugin_update_detach (FuPlugin *plugin, FuDevice *device, GError **error)
 	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;
-	return fu_device_detach (device, error);
+	if (fu_device_detach (device, error)) {
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+		return TRUE;
+	} else {
+		return FALSE;
+	}
 }
 
 gboolean
 fu_plugin_update_attach (FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new (device, error);
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
+		return TRUE;
 	if (locker == NULL)
 		return FALSE;
-	return fu_device_attach (device, error);
+	if (fu_device_attach (device, error)) {
+		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+		return TRUE;
+	} else {
+		return FALSE;
+	}
 }
 
 gboolean
