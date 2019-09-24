@@ -654,6 +654,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	struct tpm_status *out = NULL;
 	g_autoptr (FuDevice) dev_alt = NULL;
 	g_autoptr (FuDevice) dev = NULL;
+	g_autoptr(GError) error_tss = NULL;
 
 	fu_dell_clear_smi (data->smi_obj);
 	out = (struct tpm_status *) data->smi_obj->output;
@@ -749,8 +750,8 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 					    "Updating disabled due to TPM ownership");
 	}
 	/* build GUIDs from TSS strings */
-	if (!fu_plugin_dell_add_tpm_model (dev, error))
-		return FALSE;
+	if (!fu_plugin_dell_add_tpm_model (dev, &error_tss))
+		g_debug ("could not build instances: %s", error_tss->message);
 
 	if (!fu_device_setup (dev, error))
 		return FALSE;
