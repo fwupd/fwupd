@@ -1270,6 +1270,9 @@ fu_util_remote_to_string (FwupdRemote *remote, guint idt)
 	if (tmp != NULL) {
 		/* TRANSLATORS: URI to send success/failure reports */
 		fu_common_string_append_kv (str, idt + 1, _("Report URI"), tmp);
+		/* TRANSLATORS: Boolean value to automatically send reports */
+		fu_common_string_append_kv (str, idt + 1, _("Automatic Reporting"),
+					    fwupd_remote_get_automatic_reports (remote) ? "true" : "false");
 	}
 
 	return g_string_free (str, FALSE);

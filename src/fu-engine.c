@@ -551,7 +551,7 @@ fu_engine_modify_remote (FuEngine *self,
 {
 	FwupdRemote *remote;
 	const gchar *filename;
-	const gchar *keys[] = { "Enabled", "MetadataURI", "FirmwareBaseURI", NULL };
+	const gchar *keys[] = { "Enabled", "MetadataURI", "FirmwareBaseURI", "AutomaticReports", NULL };
 	g_autoptr(GKeyFile) keyfile = g_key_file_new ();
 
 	/* check remote is valid */

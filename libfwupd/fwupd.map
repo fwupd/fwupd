@@ -396,5 +396,6 @@ LIBFWUPD_1.3.3 {
     fwupd_release_get_detach_image;
     fwupd_release_set_detach_caption;
     fwupd_release_set_detach_image;
+    fwupd_remote_get_automatic_reports;
   local: *;
 } LIBFWUPD_1.3.2;
