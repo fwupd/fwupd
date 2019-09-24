@@ -36,6 +36,14 @@
 #define EXIT_NOTHING_TO_DO		2
 
 typedef enum {
+	FU_UTIL_HISTORY_DO_NOTHING,
+	FU_UTIL_HISTORY_NEVER,
+	FU_UTIL_HISTORY_PROMPT,
+	FU_UTIL_HISTORY_AUTOMATIC,
+	FU_UTIL_HISTORY_LAST,
+} FuUtilHistoryAction;
+
+typedef enum {
 	FU_UTIL_OPERATION_UNKNOWN,
 	FU_UTIL_OPERATION_UPDATE,
 	FU_UTIL_OPERATION_DOWNGRADE,
@@ -209,6 +217,75 @@ fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
 }
 
 static gboolean
+fu_util_maybe_enable_automatic (FuUtilPrivate *priv, GPtrArray *remotes, GError **error)
+{
+	guint idx;
+
+	/* TRANSLATORS: Display a message asking every time an update is performed */
+	g_print ("%d.\t%s\n",
+		 FU_UTIL_HISTORY_DO_NOTHING,
+		 ngettext ("Do not upload %u report at this time, but prompt again for future updates",
+			   "Do not upload %u reports at this time, but prompt again for future updates",
+			   remotes->len));
+	/* TRANSLATORS: Display a message asking every time an update is performed */
+	g_print ("%d.\t%s\n",
+		 FU_UTIL_HISTORY_NEVER,
+		 ngettext ("Do not upload %u report, and never ask to upload reports for future updates",
+			   "Do not upload %u reports, and never ask to upload reports for future updates",
+			   remotes->len));
+	/* TRANSLATORS: Display a message asking every time an update is performed */
+	g_print ("%d.\t%s\n",
+		 FU_UTIL_HISTORY_PROMPT,
+		 ngettext ("Upload %u report just this one time, but prompt again for future updates",
+			   "Upload %u reports just this one time, but prompt again for future updates",
+			   remotes->len));
+	/* TRANSLATORS: Display a message asking every time an update is performed */
+	g_print ("%d.\t%s\n",
+		 FU_UTIL_HISTORY_AUTOMATIC,
+		 ngettext ("Upload %u report this time and automatically upload reports after completing future updates",
+			   "Upload %u reports this time and automatically upload reports after completing future updates",
+			   remotes->len));
+	idx = fu_util_prompt_for_number (FU_UTIL_HISTORY_LAST - 1);
+
+	switch (idx) {
+	case FU_UTIL_HISTORY_NEVER:
+		for (guint i = 0; i < remotes->len; i++) {
+			FwupdRemote *remote = g_ptr_array_index (remotes, i);
+			const gchar *remote_id = fwupd_remote_get_id (remote);
+			if (!fwupd_client_modify_remote (priv->client,
+							 remote_id, "ReportUri", "",
+							 NULL, error))
+				return FALSE;
+		}
+	/* fallthrough */
+	case FU_UTIL_HISTORY_DO_NOTHING:
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "Request canceled");
+		return FALSE;
+	case FU_UTIL_HISTORY_AUTOMATIC:
+		for (guint i = 0; i < remotes->len; i++) {
+			FwupdRemote *remote = g_ptr_array_index (remotes, i);
+			const gchar *remote_id = fwupd_remote_get_id (remote);
+			if (!fwupd_client_modify_remote (priv->client,
+							 remote_id, "AutomaticReports", "true",
+							 NULL, error))
+				return FALSE;
+		}
+	/* fallthrough */
+	default:
+		return TRUE;
+	}
+
+	g_set_error_literal (error,
+				FWUPD_ERROR,
+				FWUPD_ERROR_NOTHING_TO_DO,
+				"no option selected");
+	return FALSE;
+}
+
+static gboolean
 fu_util_perhaps_show_unreported (FuUtilPrivate *priv, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
@@ -217,6 +294,7 @@ fu_util_perhaps_show_unreported (FuUtilPrivate *priv, GError **error)
 	g_autoptr(GPtrArray) devices_success = g_ptr_array_new ();
 	g_autoptr(GPtrArray) remotes = NULL;
 	g_autoptr(GHashTable) remote_id_uri_map = NULL;
+	gboolean all_automatic = FALSE;
 
 	/* we don't want to ask anything */
 	if (priv->no_unreported_check) {
@@ -240,6 +318,7 @@ fu_util_perhaps_show_unreported (FuUtilPrivate *priv, GError **error)
 	remote_id_uri_map = g_hash_table_new (g_str_hash, g_str_equal);
 	for (guint i = 0; i < remotes->len; i++) {
 		FwupdRemote *remote = g_ptr_array_index (remotes, i);
+		gboolean remote_automatic;
 		if (fwupd_remote_get_id (remote) == NULL)
 			continue;
 		if (fwupd_remote_get_report_uri (remote) == NULL)
@@ -250,6 +329,12 @@ fu_util_perhaps_show_unreported (FuUtilPrivate *priv, GError **error)
 		g_hash_table_insert (remote_id_uri_map,
 				     (gpointer) fwupd_remote_get_id (remote),
 				     (gpointer) fwupd_remote_get_report_uri (remote));
+		remote_automatic = fwupd_remote_get_automatic_reports (remote);
+		g_debug ("%s is %d", fwupd_remote_get_title (remote), remote_automatic);
+		if (remote_automatic && !all_automatic)
+			all_automatic = TRUE;
+		if (!remote_automatic && all_automatic)
+			all_automatic = FALSE;
 	}
 
 	/* check that they can be reported */
@@ -296,8 +381,9 @@ fu_util_perhaps_show_unreported (FuUtilPrivate *priv, GError **error)
 		return TRUE;
 	}
 
+	g_debug ("All automatic: %d", all_automatic);
 	/* show the success and failures */
-	if (!priv->assume_yes) {
+	if (!priv->assume_yes && !all_automatic) {
 
 		/* delimit */
 		g_print ("________________________________________________\n");
@@ -331,7 +417,7 @@ fu_util_perhaps_show_unreported (FuUtilPrivate *priv, GError **error)
 		}
 
 		/* ask for permission */
-		g_print ("\n%s\n%s (%s) [Y|n]: ",
+		g_print ("\n%s\n%s (%s):",
 			 /* TRANSLATORS: explain why we want to upload */
 			 _("Uploading firmware reports helps hardware vendors"
 			   " to quickly identify failing and successful updates"
@@ -340,8 +426,8 @@ fu_util_perhaps_show_unreported (FuUtilPrivate *priv, GError **error)
 			 _("Upload report now?"),
 			 /* TRANSLATORS: metadata is downloaded from the Internet */
 			 _("Requires internet connection"));
-		if (!fu_util_prompt_for_boolean (TRUE))
-			return TRUE;
+		if (!fu_util_maybe_enable_automatic (priv, remotes, error))
+			return FALSE;
 	}
 
 	/* success */
@@ -566,8 +652,8 @@ fu_util_clear_history (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_report_history_for_uri (FuUtilPrivate *priv,
-				const gchar *report_uri,
+fu_util_report_history_for_remote (FuUtilPrivate *priv,
+				const gchar *remote_id,
 				GPtrArray *devices,
 				GError **error)
 {
@@ -575,10 +661,12 @@ fu_util_report_history_for_uri (FuUtilPrivate *priv,
 	JsonObject *json_object;
 	const gchar *server_msg = NULL;
 	guint status_code;
+	const gchar *report_uri;
 	g_autofree gchar *data = NULL;
 	g_autofree gchar *sig = NULL;
 	g_autoptr(JsonParser) json_parser = NULL;
 	g_autoptr(SoupMessage) msg = NULL;
+	g_autoptr(FwupdRemote) remote = NULL;
 
 	/* convert to JSON */
 	data = fwupd_build_history_report_json (devices, error);
@@ -594,8 +682,14 @@ fu_util_report_history_for_uri (FuUtilPrivate *priv,
 			return FALSE;
 	}
 
+	remote = fwupd_client_get_remote_by_id (priv->client, remote_id,
+						NULL, error);
+	if (remote == NULL)
+		return FALSE;
+	report_uri = fwupd_remote_get_report_uri (remote);
+
 	/* ask for permission */
-	if (!priv->assume_yes) {
+	if (!priv->assume_yes && !fwupd_remote_get_automatic_reports (remote)) {
 		fu_util_print_data (_("Target"), report_uri);
 		fu_util_print_data (_("Payload"), data);
 		if (sig != NULL)
@@ -713,7 +807,7 @@ fu_util_report_history (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GHashTable) remote_id_uri_map = NULL;
 	g_autoptr(GHashTable) report_map = NULL;
-	g_autoptr(GList) uris = NULL;
+	g_autoptr(GList) ids = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) remotes = NULL;
 	g_autoptr(GString) str = g_string_new (NULL);
@@ -767,7 +861,6 @@ fu_util_report_history (FuUtilPrivate *priv, gchar **values, GError **error)
 			if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
 				continue;
 		}
-
 		/* only send success and failure */
 		if (fwupd_device_get_update_state (dev) != FWUPD_UPDATE_STATE_FAILED &&
 		    fwupd_device_get_update_state (dev) != FWUPD_UPDATE_STATE_SUCCESS) {
@@ -790,12 +883,12 @@ fu_util_report_history (FuUtilPrivate *priv, gchar **values, GError **error)
 		}
 
 		/* add this to the hash map */
-		devices_tmp = g_hash_table_lookup (report_map, remote_uri);
+		devices_tmp = g_hash_table_lookup (report_map, remote_id);
 		if (devices_tmp == NULL) {
 			devices_tmp = g_ptr_array_new ();
-			g_hash_table_insert (report_map, g_strdup (remote_uri), devices_tmp);
+			g_hash_table_insert (report_map, g_strdup (remote_id), devices_tmp);
 		}
-		g_debug ("using %s for %s", remote_uri, fwupd_device_get_id (dev));
+		g_debug ("using %s for %s", remote_id, fwupd_device_get_id (dev));
 		g_ptr_array_add (devices_tmp, dev);
 	}
 
@@ -809,11 +902,11 @@ fu_util_report_history (FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* process each uri */
-	uris = g_hash_table_get_keys (report_map);
-	for (GList *l = uris; l != NULL; l = l->next) {
-		const gchar *uri = l->data;
-		GPtrArray *devices_tmp = g_hash_table_lookup (report_map, uri);
-		if (!fu_util_report_history_for_uri (priv, uri, devices_tmp, error))
+	ids = g_hash_table_get_keys (report_map);
+	for (GList *l = ids; l != NULL; l = l->next) {
+		const gchar *id = l->data;
+		GPtrArray *devices_tmp = g_hash_table_lookup (report_map, id);
+		if (!fu_util_report_history_for_remote (priv, id, devices_tmp, error))
 			return FALSE;
 	}
 
@@ -1691,6 +1784,30 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 }
 
 static gboolean
+fu_util_maybe_send_reports (FuUtilPrivate *priv, const gchar *remote_id,
+			    GError **error)
+{
+	g_autoptr(FwupdRemote) remote = NULL;
+	g_autoptr(GError) error_local = NULL;
+	if (remote_id == NULL) {
+		g_debug ("not sending reports, no remote");
+		return TRUE;
+	}
+	remote = fwupd_client_get_remote_by_id (priv->client,
+						remote_id,
+						NULL,
+						error);
+	if (remote == NULL)
+		return FALSE;
+	if (fwupd_remote_get_automatic_reports (remote)) {
+		if (!fu_util_report_history (priv, NULL, &error_local))
+			g_warning ("%s", error_local->message);
+	}
+
+	return TRUE;
+}
+
+static gboolean
 fu_util_update_all (FuUtilPrivate *priv, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
@@ -1705,6 +1822,7 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
 		FwupdRelease *rel;
+		const gchar *remote_id;
 		g_autoptr(GPtrArray) rels = NULL;
 		g_autoptr(GError) error_local = NULL;
 
@@ -1723,10 +1841,16 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 			continue;
 		}
 		rel = g_ptr_array_index (rels, 0);
+
 		if (!fu_util_update_device_with_release (priv, dev, rel, error))
 			return FALSE;
 
 		fu_util_display_current_message (priv);
+
+		/* send report if we're supposed to */
+		remote_id = fwupd_release_get_remote_id (rel);
+		if (!fu_util_maybe_send_reports (priv, remote_id, error))
+			return FALSE;
 	}
 
 	/* we don't want to ask anything */
@@ -1742,6 +1866,7 @@ static gboolean
 fu_util_update_by_id (FuUtilPrivate *priv, const gchar *device_id, GError **error)
 {
 	FwupdRelease *rel;
+	const gchar *remote_id;
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(GPtrArray) rels = NULL;
 
@@ -1768,6 +1893,11 @@ fu_util_update_by_id (FuUtilPrivate *priv, const gchar *device_id, GError **erro
 	/* TRANSLATORS: success message where the specific device is specified */
 	g_print ("%s\n", _("Successfully updated device"));
 	fu_util_display_current_message (priv);
+
+	/* send report if we're supposed to */
+	remote_id = fwupd_release_get_remote_id (rel);
+	if (!fu_util_maybe_send_reports (priv, remote_id, error))
+		return FALSE;
 
 	/* we don't want to ask anything */
 	if (priv->no_reboot_check) {
@@ -1850,6 +1980,7 @@ fu_util_remote_disable (FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_downgrade (FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	const gchar *remote_id;
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(FwupdRelease) rel = NULL;
 	g_autoptr(GPtrArray) rels = NULL;
@@ -1881,6 +2012,12 @@ fu_util_downgrade (FuUtilPrivate *priv, gchar **values, GError **error)
 	/* TRANSLATORS: success message where we made the firmware on the
 	 * device older than it was before */
 	g_print ("%s\n", _("Successfully downgraded device"));
+
+	/* send report if we're supposed to */
+	remote_id = fwupd_release_get_remote_id (rel);
+	if (!fu_util_maybe_send_reports (priv, remote_id, error))
+		return FALSE;
+
 	return TRUE;
 }
 
