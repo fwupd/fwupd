@@ -188,7 +188,8 @@ fu_uefi_pcrs_setup (FuUefiPcrs *self, GError **error)
 	sysfstpmdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_TPM);
 	devpath = g_build_filename (sysfstpmdir, "tpm0", NULL);
 	fn_pcrs = g_build_filename (devpath, "pcrs", NULL);
-	if (g_file_test (fn_pcrs, G_FILE_TEST_EXISTS)) {
+	if (g_file_test (fn_pcrs, G_FILE_TEST_EXISTS) &&
+	    g_getenv ("FWUPD_FORCE_TPM2") == NULL) {
 		if (!fu_uefi_pcrs_setup_tpm12 (self, fn_pcrs, error))
 			return FALSE;
 
