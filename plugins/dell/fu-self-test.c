@@ -103,6 +103,12 @@ fu_plugin_dell_tpm_func (void)
 	g_assert_no_error (error);
 	g_assert (ret);
 
+	if (tpm_server_running == NULL &&
+	    (getuid () != 0 || geteuid () != 0)) {
+		g_test_skip ("TPM tests require simulated TPM2.0 running or need root access with physical TPM");
+		return;
+	}
+
 	/* inject fake data (no TPM) */
 	tpm_out.ret = -2;
 	fu_plugin_dell_inject_fake_data (plugin_dell,
@@ -127,13 +133,6 @@ fu_plugin_dell_tpm_func (void)
 					 (guint32 *) &tpm_out, 0, 0,
 					 NULL, TRUE);
 	ret = fu_plugin_dell_detect_tpm (plugin_dell, &error);
-	if (!ret) {
-		if (tpm_server_running == NULL &&
-		    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
-			g_test_skip ("no physical or simulated TPM 2.0 device available");
-			return;
-		}
-	}
 	g_assert_true (ret);
 	g_assert_cmpint (devices->len, ==, 2);
 

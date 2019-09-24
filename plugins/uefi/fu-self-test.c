@@ -52,6 +52,12 @@ fu_uefi_pcrs_2_0_func (void)
 	const gchar *tpm_server_running = g_getenv ("TPM_SERVER_RUNNING");
 	g_setenv ("FWUPD_FORCE_TPM2", "1", TRUE);
 
+	if (tpm_server_running == NULL &&
+	    (getuid () != 0 || geteuid () != 0)) {
+		g_test_skip ("TPM2.0 tests require simulated TPM2.0 running or need root access with physical TPM");
+		return;
+	}
+
 	if (!fu_uefi_pcrs_setup (pcrs, &error)) {
 		if (tpm_server_running == NULL &&
 		    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
