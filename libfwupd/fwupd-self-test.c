@@ -504,12 +504,23 @@ fwupd_has_system_bus (void)
 static void
 fwupd_common_machine_hash_func (void)
 {
+	gsize sz = 0;
+	g_autofree gchar *buf = NULL;
 	g_autofree gchar *mhash1 = NULL;
 	g_autofree gchar *mhash2 = NULL;
 	g_autoptr(GError) error = NULL;
 
 	if (!g_file_test ("/etc/machine-id", G_FILE_TEST_EXISTS)) {
 		g_test_skip ("Missing /etc/machine-id");
+		return;
+	}
+	if (!g_file_get_contents ("/etc/machine-id", &buf, &sz, &error)) {
+		g_test_skip ("/etc/machine-id is unreadable");
+		return;
+	}
+
+	if (sz == 0) {
+		g_test_skip ("Empty /etc/machine-id");
 		return;
 	}
 
