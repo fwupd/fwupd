@@ -164,10 +164,11 @@ main (int argc, char *argv[])
 			return EXIT_FAILURE;
 		}
 	} else {
-		esp_path = fu_uefi_guess_esp_path ();
+		g_autoptr(GError) error_local = NULL;
+		esp_path = fu_uefi_guess_esp_path (&error_local);
 		if (esp_path == NULL) {
-			g_printerr ("Unable to determine EFI system partition "
-				    "location, override using --esp-path\n");
+			g_printerr ("%s: override using --esp-path\n",
+				    error_local->message);
 			return EXIT_FAILURE;
 		}
 	}

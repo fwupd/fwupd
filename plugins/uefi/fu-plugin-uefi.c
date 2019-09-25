@@ -19,6 +19,7 @@
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
 #include "fu-uefi-vars.h"
+#include "fu-uefi-udisks.h"
 
 #ifndef HAVE_GIO_2_55_0
 #pragma clang diagnostic push
@@ -376,6 +377,7 @@ fu_plugin_update (FuPlugin *plugin,
 		  FwupdInstallFlags flags,
 		  GError **error)
 {
+	FuPluginData *data = fu_plugin_get_data (plugin);
 	const gchar *str;
 	guint32 flashes_left;
 	g_autoptr(GError) error_splash = NULL;
@@ -403,12 +405,24 @@ fu_plugin_update (FuPlugin *plugin,
 
 	/* make sure that the ESP is mounted */
 	if (g_getenv ("FWUPD_UEFI_ESP_PATH") == NULL) {
-		if (!fu_plugin_uefi_esp_mounted (plugin, error))
+		/* mount the partition somewhere */
+		if (fu_uefi_udisks_objpath (data->esp_path)) {
+			g_autofree gchar *path = NULL;
+			path = fu_uefi_udisks_objpath_mount (data->esp_path, error);
+			if (path == NULL)
+				return FALSE;
+			g_debug ("Mounted ESP at %s", path);
+			g_free (data->esp_path);
+			data->esp_path = g_strdup (path);
+		} else if (!fu_plugin_uefi_esp_mounted (plugin, error)) {
 			return FALSE;
+		}
 	}
 
 	/* perform the update */
 	g_debug ("Performing UEFI capsule update");
+	if (data->esp_path != NULL)
+		fu_device_set_metadata (device, "EspPath", data->esp_path);
 	fu_device_set_status (device, FWUPD_STATUS_SCHEDULING);
 	if (!fu_plugin_uefi_update_splash (plugin, device, &error_splash)) {
 		g_debug ("failed to upload UEFI UX capsule text: %s",
@@ -559,6 +573,10 @@ fu_plugin_uefi_delete_old_capsules (FuPlugin *plugin, GError **error)
 	g_autofree gchar *pattern = NULL;
 	g_autoptr(GPtrArray) files = NULL;
 
+	/* can only do this if we're mounted */
+	if (fu_uefi_udisks_objpath (data->esp_path))
+		return TRUE;
+
 	/* delete any files matching the glob in the ESP */
 	files = fu_common_get_files_recursive (data->esp_path, error);
 	if (files == NULL)
@@ -677,16 +695,10 @@ fu_plugin_uefi_ensure_esp_path (FuPlugin *plugin, GError **error)
 	    g_ascii_strcasecmp (require_shim_for_sb, "true") == 0)
 		data->require_shim_for_sb = TRUE;
 
-	/* try to guess from heuristics */
-	data->esp_path = fu_uefi_guess_esp_path ();
-	if (data->esp_path == NULL) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_FILENAME,
-				     "Unable to determine EFI system partition location, "
-				     "See https://github.com/fwupd/fwupd/wiki/Determining-EFI-system-partition-location");
+	/* try to guess from heuristics and partitions */
+	data->esp_path = fu_uefi_guess_esp_path (error);
+	if (data->esp_path == NULL)
 		return FALSE;
-	}
 
 	/* check free space */
 	if (!fu_uefi_check_esp_free_space (data->esp_path, sz_reqd, error))
