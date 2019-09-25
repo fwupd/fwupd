@@ -194,6 +194,8 @@ fu_util_perhaps_show_unreported (FuUtilPrivate *priv, GError **error)
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) devices_failed = g_ptr_array_new ();
 	g_autoptr(GPtrArray) devices_success = g_ptr_array_new ();
+	g_autoptr(GPtrArray) remotes = NULL;
+	g_autoptr(GHashTable) remote_id_uri_map = NULL;
 
 	/* we don't want to ask anything */
 	if (priv->no_unreported_check) {
@@ -210,21 +212,58 @@ fu_util_perhaps_show_unreported (FuUtilPrivate *priv, GError **error)
 		return FALSE;
 	}
 
+	/* create a map of RemoteID to RemoteURI */
+	remotes = fwupd_client_get_remotes (priv->client, NULL, error);
+	if (remotes == NULL)
+		return FALSE;
+	remote_id_uri_map = g_hash_table_new (g_str_hash, g_str_equal);
+	for (guint i = 0; i < remotes->len; i++) {
+		FwupdRemote *remote = g_ptr_array_index (remotes, i);
+		if (fwupd_remote_get_id (remote) == NULL)
+			continue;
+		if (fwupd_remote_get_report_uri (remote) == NULL)
+			continue;
+		g_debug ("adding %s for %s",
+			 fwupd_remote_get_report_uri (remote),
+			 fwupd_remote_get_id (remote));
+		g_hash_table_insert (remote_id_uri_map,
+				     (gpointer) fwupd_remote_get_id (remote),
+				     (gpointer) fwupd_remote_get_report_uri (remote));
+	}
+
+	/* check that they can be reported */
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
+		FwupdRelease *rel = fwupd_device_get_release_default (dev);
+		const gchar *remote_id;
+		const gchar *remote_uri;
+
 		if (fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_REPORTED))
 			continue;
 		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
 			continue;
-		switch (fwupd_device_get_update_state (dev)) {
-		case FWUPD_UPDATE_STATE_FAILED:
+
+		/* find the RemoteURI to use for the device */
+		remote_id = fwupd_release_get_remote_id (rel);
+		if (remote_id == NULL) {
+			g_debug ("%s has no RemoteID", fwupd_device_get_id (dev));
+			continue;
+		}
+		remote_uri = g_hash_table_lookup (remote_id_uri_map, remote_id);
+		if (remote_uri == NULL) {
+			g_debug ("%s has no RemoteURI", remote_id);
+			continue;
+		}
+
+		/* only send success and failure */
+		if (fwupd_device_get_update_state (dev) == FWUPD_UPDATE_STATE_FAILED) {
 			g_ptr_array_add (devices_failed, dev);
-			break;
-		case FWUPD_UPDATE_STATE_SUCCESS:
+		} else if (fwupd_device_get_update_state (dev) == FWUPD_UPDATE_STATE_SUCCESS) {
 			g_ptr_array_add (devices_success, dev);
-			break;
-		default:
-			break;
+		} else {
+			g_debug ("ignoring %s with UpdateState %s",
+				 fwupd_device_get_id (dev),
+				 fwupd_update_state_to_string (fwupd_device_get_update_state (dev)));
 		}
 	}
 
