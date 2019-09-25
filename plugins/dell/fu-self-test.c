@@ -491,6 +491,7 @@ main (int argc, char **argv)
 	/* change behaviour */
 	sysfsdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
 	g_setenv ("FWUPD_UEFI_ESP_PATH", sysfsdir, TRUE);
+	g_setenv ("FWUPD_UEFI_TEST", "1", TRUE);
 	g_setenv ("FWUPD_DELL_FAKE_SMBIOS", "1", FALSE);
 
 	/* only critical and error are fatal */

@@ -13,6 +13,7 @@
 #include "fu-common.h"
 #include "fu-uefi-common.h"
 #include "fu-uefi-vars.h"
+#include "fu-uefi-udisks.h"
 
 #include "fwupd-common.h"
 #include "fwupd-error.h"
@@ -277,6 +278,10 @@ fu_uefi_check_esp_free_space (const gchar *path, guint64 required, GError **erro
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(GFileInfo) info = NULL;
 
+	/* skip the checks for unmounted disks */
+	if (fu_uefi_udisks_objpath (path))
+		return TRUE;
+
 	file = g_file_new_for_path (path);
 	info = g_file_query_filesystem_info (file,
 					     G_FILE_ATTRIBUTE_FILESYSTEM_FREE,
@@ -351,8 +356,45 @@ fu_uefi_check_esp_path (const gchar *path, GError **error)
 	return TRUE;
 }
 
+static gchar *
+fu_uefi_probe_for_esp (GError **error)
+{
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autofree gchar *found_esp = NULL;
+
+	devices = fu_uefi_udisks_get_block_devices (error);
+	if (devices == NULL)
+		return FALSE;
+	for (guint i = 0; i < devices->len; i++) {
+		const gchar *obj = g_ptr_array_index (devices, i);
+		gboolean esp = fu_uefi_udisks_objpath_is_esp (obj);
+		g_debug ("block device %s, is_esp: %d", obj, esp);
+		if (!esp)
+			continue;
+		if (found_esp != NULL) {
+			g_set_error_literal (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_INVALID_FILENAME,
+					     "Multiple EFI system partitions found, "
+					     "See https://github.com/fwupd/fwupd/wiki/Determining-EFI-system-partition-location");
+			return NULL;
+		}
+		found_esp = g_strdup (obj);
+	}
+	if (found_esp == NULL) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_FILENAME,
+				     "Unable to determine EFI system partition location, "
+				     "See https://github.com/fwupd/fwupd/wiki/Determining-EFI-system-partition-location");
+		return NULL;
+	}
+
+	return g_steal_pointer (&found_esp);
+}
+
 gchar *
-fu_uefi_guess_esp_path (void)
+fu_uefi_guess_esp_path (GError **error)
 {
 	const gchar *paths[] = {"/boot/efi", "/boot", "/efi", NULL};
 	const gchar *path_tmp;
@@ -362,16 +404,19 @@ fu_uefi_guess_esp_path (void)
 	if (path_tmp != NULL)
 		return g_strdup (path_tmp);
 
+	/* try to use known paths */
 	for (guint i = 0; paths[i] != NULL; i++) {
-		g_autoptr(GError) error = NULL;
-		if (!fu_uefi_check_esp_path (paths[i], &error)) {
-			g_debug ("ignoring ESP path: %s", error->message);
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_uefi_check_esp_path (paths[i], &error_local)) {
+			g_debug ("ignoring ESP path: %s", error_local->message);
 			continue;
 		}
 		return g_strdup (paths[i]);
 	}
 
-	return NULL;
+	/* prove udisks2 */
+	g_debug ("Using UDisks2 to probe for ESP");
+	return fu_uefi_probe_for_esp (error);
 }
 
 gboolean

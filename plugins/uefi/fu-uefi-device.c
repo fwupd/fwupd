@@ -363,7 +363,7 @@ fu_uefi_device_write_update_info (FuUefiDevice *self,
 	};
 
 	/* set the body as the device path */
-	if (g_getenv ("FWUPD_UEFI_ESP_PATH") != NULL) {
+	if (g_getenv ("FWUPD_UEFI_TEST") != NULL) {
 		g_debug ("not building device path, in tests....");
 		return TRUE;
 	}
