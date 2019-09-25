@@ -4683,10 +4683,12 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	g_signal_connect (self->usb_ctx, "device-removed",
 			  G_CALLBACK (fu_engine_usb_device_removed_cb),
 			  self);
-	g_usb_context_enumerate (self->usb_ctx);
+	if ((flags & FU_ENGINE_LOAD_FLAG_NO_ENUMERATE) == 0)
+		g_usb_context_enumerate (self->usb_ctx);
 
 	/* coldplug udev devices */
-	fu_engine_enumerate_udev (self);
+	if ((flags & FU_ENGINE_LOAD_FLAG_NO_ENUMERATE) == 0)
+		fu_engine_enumerate_udev (self);
 
 	/* update the db for devices that were updated during the reboot */
 	if (!fu_engine_update_history_database (self, error))
