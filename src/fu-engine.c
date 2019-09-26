@@ -428,6 +428,12 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 			fwupd_release_add_issue (rel, xb_node_get_text (n));
 		}
 	}
+	tmp = xb_node_query_text (component, "screenshots/screenshot/caption", NULL);
+	if (tmp != NULL)
+		fwupd_release_set_detach_caption (rel, tmp);
+	tmp = xb_node_query_text (component, "screenshots/screenshot/image", NULL);
+	if (tmp != NULL)
+		fwupd_release_set_detach_image (rel, tmp);
 	tmp = xb_node_query_text (component, "custom/value[@key='LVFS::UpdateProtocol']", NULL);
 	if (tmp != NULL)
 		fwupd_release_set_protocol (rel, tmp);
