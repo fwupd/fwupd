@@ -32,6 +32,28 @@
     <binary>fwupdmgr</binary>
   </provides>
   <releases>
+    <release version="1.3.2" date="2019-09-26">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add a plugin to detach the Thelio IO board</li>
+          <li>Add a plugin to update Conexant audio devices</li>
+          <li>Support issues in AppStream metadata</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Align the key values to the text width not the number of bytes</li>
+          <li>Display more helpful historical device information</li>
+          <li>Do not ask the user to upload a report if ReportURI is not set</li>
+          <li>Do not crash when starting tpm2-abrmd</li>
+          <li>Ensure HID++ v2.0 peripheral devices get added</li>
+          <li>Fall back to /var/lib/dbus/machine-id when required</li>
+          <li>Include all GUIDs when uploading a report</li>
+          <li>Move D-Bus conf file to datadir/dbus-1/system.d</li>
+          <li>Update device_modified in sql database during updates</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.3.1" date="2019-07-15">
       <description>
         <p>This release adds the following features:</p>

@@ -1146,10 +1146,6 @@ msgstr "Имя пользователя"
 msgid "Verifying…"
 msgstr "Проверка…"
 
-#. TRANSLATORS: version number of new firmware
-msgid "Version"
-msgstr "Версия"
-
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
 msgstr "Ожидание…"

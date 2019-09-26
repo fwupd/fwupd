@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Andika Triwidada <andika@gmail.com>, 2017-2018
+# Andika Triwidada <andika@gmail.com>, 2017-2019
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -14,6 +14,10 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: id\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+
+#. TRANSLATORS: shown when shutting down to switch to the new version
+msgid "Activating firmware update"
+msgstr "Mengaktifkan pemutakhiran firmware"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Added"
@@ -169,6 +173,10 @@ msgstr "Deskripsi"
 msgid "Detach currently attached DFU capable device"
 msgstr "Lepas perangkat mampu-DFU yang kini tercantol"
 
+#. TRANSLATORS: more details about the update link
+msgid "Details"
+msgstr "Rincian"
+
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device added:"
 msgstr "Perangkat ditambahkan:"
@@ -188,6 +196,10 @@ msgstr "Peranti yang sukses diperbarui:"
 #. TRANSLATORS: a list of failed updates
 msgid "Devices that were not updated correctly:"
 msgstr "Peranti yang tidak diperbarui dengan benar:"
+
+#. TRANSLATORS: command line option
+msgid "Display version"
+msgstr "Tampilkan versi"
 
 #. TRANSLATORS: command line option
 msgid "Do not check for old metadata"
@@ -231,6 +243,10 @@ msgstr "Curahkan rincian tentang suatu berkas firmware"
 #. TRANSLATORS: command description
 msgid "Dump information about a binary patch to the screen"
 msgstr "Curahkan informasi tentang suatu patch biner ke layar"
+
+#. TRANSLATORS: length of time the update takes to apply
+msgid "Duration"
+msgstr "Durasi"
 
 #. TRANSLATORS: if the remote is enabled
 msgid "Enabled"
@@ -330,6 +346,10 @@ msgstr "Dapatkan remote-remote yang terkonfigurasi"
 msgid "Gets the cryptographic hash of the dumped firmware"
 msgstr "Dapatkan hash kriptografis dari firmware yang dicurahkan"
 
+#. TRANSLATORS: firmware approved by the admin
+msgid "Gets the list of approved firmware."
+msgstr "Dapatkan daftar firmware yang disetujui."
+
 #. TRANSLATORS: command description
 msgid "Gets the list of updates for connected hardware"
 msgstr "Dapatkan daftar pemutakhiran bagi perangkat keras yang tersambung"
@@ -372,8 +392,17 @@ msgstr "Pasang firmware sistem yang tak ditandatangani"
 msgid "Installing firmware update…"
 msgstr "Sedang memasang pembaruan firmware..."
 
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Installing on %s…"
+msgstr "Memasang pada %s…"
+
 msgid "Keyring"
 msgstr "Keyring"
+
+#. TRANSLATORS: e.g. GPLv2+, Non free etc
+msgid "License"
+msgstr "Lisensi"
 
 #. TRANSLATORS: command description
 msgid "List currently attached DFU capable devices"
@@ -388,11 +417,19 @@ msgid "Merge multiple firmware files into one"
 msgstr "Gabungkan beberapa berkas firmware menjadi satu"
 
 #. TRANSLATORS: remote URI
+msgid "Metadata Signature"
+msgstr "Tanda Tangan Metadata"
+
+#. TRANSLATORS: remote URI
 msgid "Metadata URI"
 msgstr "URI Metadata"
 
 msgid "Mode"
 msgstr "Mode"
+
+#. TRANSLATORS: sets something in daemon.conf
+msgid "Modifies a daemon configuration value."
+msgstr "Mengubah suatu nilai konfigurasi daemon."
 
 #. TRANSLATORS: command description
 msgid "Modifies a given remote"
@@ -430,6 +467,12 @@ msgstr "Payload"
 
 msgid "Permission denied"
 msgstr "Izin ditolak"
+
+msgid "Print the version number"
+msgstr "Cetak nomor versi"
+
+msgid "Print verbose debug statements"
+msgstr "Cetak pernyataan awakutu rinci"
 
 #. TRANSLATORS: the numeric priority
 msgid "Priority"
@@ -558,6 +601,10 @@ msgstr "Atur ID vendor pada berkas firmware"
 msgid "Sets metadata on a firmware file"
 msgstr "Atur metadata pada suatu berkas firmware"
 
+#. TRANSLATORS: firmware approved by the admin
+msgid "Sets the list of approved firmware."
+msgstr "Tata daftar firmware yang disetujui."
+
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
 msgstr "Bagikan riwayat firmware dengan para pengembang"
@@ -571,6 +618,10 @@ msgid "Show debugging options"
 msgstr "Tampilkan opsi pengawakutuan"
 
 #. TRANSLATORS: command line option
+msgid "Show devices that are not updatable"
+msgstr "Tampilkan peranti yang tidak dapat dimutakhirkan"
+
+#. TRANSLATORS: command line option
 msgid "Show extra debugging information"
 msgstr "Tampilkan informasi pengawakutuan ekstra"
 
@@ -581,6 +632,14 @@ msgstr "Tampilkan riwayat pembaruan firmware"
 #. TRANSLATORS: this is for plugin development
 msgid "Show plugin verbose information"
 msgstr "Tampilkan informasi rinci pengaya"
+
+#. TRANSLATORS: file size of the download
+msgid "Size"
+msgstr "Ukuran"
+
+#. TRANSLATORS: source (as in code) link
+msgid "Source"
+msgstr "Sumber"
 
 #. TRANSLATORS: device state, i.e. appIDLE
 msgid "State"
@@ -644,6 +703,11 @@ msgstr "Mutakhirkan semua firmware ke versi terbaru yang tersedia"
 msgid "Updating %s from %s to %s... "
 msgstr "Memutakhirkan %s dari %s ke %s..."
 
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Updating %s…"
+msgstr "Memutakhirkan %s…"
+
 #. TRANSLATORS: the server sent the user a small message
 msgid "Upload message:"
 msgstr "Pesan unggah:"
@@ -659,10 +723,6 @@ msgstr "Nama Pengguna"
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
 msgstr "Verifikasi..."
-
-#. TRANSLATORS: version number of new firmware
-msgid "Version"
-msgstr "Versi"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

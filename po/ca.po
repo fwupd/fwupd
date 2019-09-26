@@ -1240,10 +1240,6 @@ msgstr "Venedor"
 msgid "Verifying…"
 msgstr "S'està verificant..."
 
-#. TRANSLATORS: version number of new firmware
-msgid "Version"
-msgstr "Versió:"
-
 #. TRANSLATORS: try to help
 msgid "WARNING: Ignoring SSL strict checks, to do this automatically in the future export DISABLE_SSL_STRICT in your environment"
 msgstr "AVÍS: S'ignoren les comprovacions estrictes de SSL. Per a fer-ho automàticament en el futur, exporteu DISABLE_SSL_STRICT en el vostre entorn"

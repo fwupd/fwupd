@@ -341,10 +341,6 @@ msgstr "Aktualizuje všetok firmvér na najnovšiu dostupnú verziu"
 msgid "Updating %s from %s to %s... "
 msgstr "Aktualizuje sa %s z verzie %s na verziu %s... "
 
-#. TRANSLATORS: version number of new firmware
-msgid "Version"
-msgstr "Verzia"
-
 #. TRANSLATORS: command description
 msgid "Watch DFU devices being hotplugged"
 msgstr "Sleduje pripojenie zariadení DFU"

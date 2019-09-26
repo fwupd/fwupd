@@ -835,10 +835,6 @@ msgstr "使用者名稱"
 msgid "Verifying…"
 msgstr "核驗中…"
 
-#. TRANSLATORS: version number of new firmware
-msgid "Version"
-msgstr "版本"
-
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
 msgstr "等候中…"

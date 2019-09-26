@@ -1023,10 +1023,6 @@ msgstr "Naudotojo vardas"
 msgid "Verifying…"
 msgstr "Patikrinama…"
 
-#. TRANSLATORS: version number of new firmware
-msgid "Version"
-msgstr "Versija"
-
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
 msgstr "Laukiama…"

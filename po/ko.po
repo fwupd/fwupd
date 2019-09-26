@@ -1125,10 +1125,6 @@ msgstr "사용자 이름"
 msgid "Verifying…"
 msgstr "검증 중…"
 
-#. TRANSLATORS: version number of new firmware
-msgid "Version"
-msgstr "버전"
-
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
 msgstr "기다리는 중…"

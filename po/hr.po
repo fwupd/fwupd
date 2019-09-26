@@ -1241,10 +1241,6 @@ msgstr "Proizvođač"
 msgid "Verifying…"
 msgstr "Provjeravanje..."
 
-#. TRANSLATORS: version number of new firmware
-msgid "Version"
-msgstr "Inačica"
-
 #. TRANSLATORS: try to help
 msgid "WARNING: Ignoring SSL strict checks, to do this automatically in the future export DISABLE_SSL_STRICT in your environment"
 msgstr "UPOZORENJE: Zanemarivanje SSL ograničenja provjera, kako bi se ovo obavljalo ubuduće automatski postavite DISABLE_SSL_STRICT u vašem radnom okruženju"

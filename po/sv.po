@@ -112,7 +112,7 @@ msgstr "Aktivera enheter"
 
 #. TRANSLATORS: command description
 msgid "Activate pending devices"
-msgstr "Aktivera väntaden enhter"
+msgstr "Aktivera väntande enheter"
 
 msgid "Activate the new firmware on the device"
 msgstr "Aktiverar den nya fasta programvaran på enheten"
@@ -555,7 +555,7 @@ msgstr "Uppdateringar av fast programvara stöds på denna maskin."
 #. TRANSLATORS: device properties
 #. TRANSLATORS: release properties
 msgid "Flags"
-msgstr "Faggor"
+msgstr "Flaggor"
 
 msgid "Force the action ignoring all warnings"
 msgstr "Tvinga åtgärden, ignorera alla varningar"
@@ -590,7 +590,7 @@ msgstr "Hämtar den kryptografiska hashen för den utskrivna versionen av den fa
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Gets the list of approved firmware."
-msgstr "Hämtar listan över godkända fast programvara."
+msgstr "Hämtar listan över godkänd fast programvara."
 
 #. TRANSLATORS: command description
 msgid "Gets the list of updates for connected hardware"
@@ -691,7 +691,7 @@ msgstr "Metadata kan hämtas från Linux Vendor Firmware Service."
 #. TRANSLATORS: error message
 #, c-format
 msgid "Mismatched daemon and client, use %s instead"
-msgstr "Demon och klient stämmer inte använd %s istället."
+msgstr "Demon och klient stämmer inte, använd %s istället"
 
 msgid "Mode"
 msgstr "Läge"
@@ -736,7 +736,7 @@ msgstr "Inga fjärrar är aktiverade för närvarande, så ingen metadata är ti
 
 #. TRANSLATORS: nothing was updated offline
 msgid "No updates were applied"
-msgstr "Inga uppdateringar applicerades."
+msgstr "Inga uppdateringar applicerades"
 
 msgid "OK"
 msgstr "OK"
@@ -860,7 +860,7 @@ msgstr "Starta om nu?"
 
 #. TRANSLATORS: configuration changes only take effect on restart
 msgid "Restart the daemon to make the change effective?"
-msgstr "Starta om demonen för att göra så att ändringarna få effekt?"
+msgstr "Starta om demonen för att göra så att ändringarna får effekt?"
 
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
@@ -1043,7 +1043,7 @@ msgstr "Denna fjärrkälla innehåller fast programvara som inte är under embar
 
 #. TRANSLATORS: the user needs to stop playing with stuff
 msgid "This tool can only be used by the root user"
-msgstr "Detta verktyg kan endast användas av administratöranvändaren"
+msgstr "Detta verktyg kan endast användas av administratörsanvändaren"
 
 #. TRANSLATORS: transfer size in bytes
 msgid "Transfer Size"
@@ -1135,10 +1135,6 @@ msgstr "Användarnamn"
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
 msgstr "Verifierar…"
-
-#. TRANSLATORS: version number of new firmware
-msgid "Version"
-msgstr "Version"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

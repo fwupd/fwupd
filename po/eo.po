@@ -87,7 +87,3 @@ msgstr "Celo"
 #. TRANSLATORS: currect daemon status is unknown
 msgid "Unknown"
 msgstr "Nekonata"
-
-#. TRANSLATORS: version number of new firmware
-msgid "Version"
-msgstr "Versio"

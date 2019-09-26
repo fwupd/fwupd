@@ -782,10 +782,6 @@ msgstr "Benutzername"
 msgid "Verifying…"
 msgstr "Überprüfung …"
 
-#. TRANSLATORS: version number of new firmware
-msgid "Version"
-msgstr "Version"
-
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
 msgstr "Warten …"

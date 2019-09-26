@@ -358,10 +358,6 @@ msgstr "Gebruikernaam"
 msgid "Verifying…"
 msgstr "Verifieer tans…"
 
-#. TRANSLATORS: version number of new firmware
-msgid "Version"
-msgstr "Weergawe"
-
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
 msgstr "Wag tans…"

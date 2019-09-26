@@ -112,7 +112,3 @@ msgstr "הצג מידע ניפוי שגיאות מורחב"
 #, c-format
 msgid "Updating %s from %s to %s... "
 msgstr "מעדכן %s מ־%s ל־%s..."
-
-#. TRANSLATORS: version number of new firmware
-msgid "Version"
-msgstr "גרסא"

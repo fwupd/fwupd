@@ -159,7 +159,3 @@ msgstr "Estatut"
 #, c-format
 msgid "Updating %s from %s to %s... "
 msgstr "Mesa a jorn de %s de %s en %s "
-
-#. TRANSLATORS: version number of new firmware
-msgid "Version"
-msgstr "Version"
