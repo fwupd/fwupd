@@ -1,15 +1,16 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: fwupd
-Source: https://github.com/hughsie/fwupd
+Source: https://github.com/fwupd/fwupd
 
 Files: *
-Copyright: 1999 Free Software Foundation, Inc.
-	   Aleksander Morgado <aleksander@aleksander.es>
+Copyright: Aleksander Morgado <aleksander@aleksander.es>
 	   Christian J. Kellner <christian@kellner.me>
 	   Dell Inc.
 	   Dell, Inc.
 	   Google, Inc.
 	   Intel Corporation.
+	   Jeremy Soller <jeremy@system76.com>
+	   Kalev Lember <klember@redhat.com>
 	   Mario Limonciello <mario.limonciello@dell.com>
 	   Max Ehrlich max.ehr@gmail.com
 	   Peichen Huang <peichenhuang@tw.synaptics.com>
@@ -20,6 +21,7 @@ Copyright: 1999 Free Software Foundation, Inc.
 	   Ryan Chang <ryan.chang@synaptics.com>
 	   Synaptics
 	   Synaptics Inc
+	   Synaptics Incorporated
 License: LGPL-2.1+
 
 Files:  *.metainfo.xml
