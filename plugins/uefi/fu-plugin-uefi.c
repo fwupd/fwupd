@@ -378,8 +378,6 @@ fu_plugin_update (FuPlugin *plugin,
 {
 	const gchar *str;
 	guint32 flashes_left;
-	g_autofree gchar *efibootmgr_path = NULL;
-	g_autofree gchar *boot_variables = NULL;
 	g_autoptr(GError) error_splash = NULL;
 
 	/* test the flash counter */
@@ -422,16 +420,6 @@ fu_plugin_update (FuPlugin *plugin,
 	/* record if we had an invalid header during update */
 	str = fu_uefi_missing_capsule_header (device) ? "True" : "False";
 	fu_plugin_add_report_metadata (plugin, "MissingCapsuleHeader", str);
-
-	/* record boot information to system log for future debugging */
-	efibootmgr_path = fu_common_find_program_in_path ("efibootmgr", NULL);
-	if (efibootmgr_path != NULL) {
-		g_autofree gchar *cmd = g_strdup_printf ("%s -v", efibootmgr_path);
-		if (!g_spawn_command_line_sync (cmd,
-						&boot_variables, NULL, NULL, error))
-			return FALSE;
-		g_message ("Boot Information:\n%s", boot_variables);
-	}
 
 	return TRUE;
 }
