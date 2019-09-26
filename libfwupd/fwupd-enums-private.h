@@ -12,6 +12,8 @@ G_BEGIN_DECLS
 #define FWUPD_RESULT_KEY_CHECKSUM		"Checksum"	/* as */
 #define FWUPD_RESULT_KEY_CREATED		"Created"	/* t */
 #define FWUPD_RESULT_KEY_DESCRIPTION		"Description"	/* s */
+#define FWUPD_RESULT_KEY_DETACH_CAPTION		"DetachCaption"	/* s */
+#define FWUPD_RESULT_KEY_DETACH_IMAGE		"DetachImage"	/* s */
 #define FWUPD_RESULT_KEY_DEVICE_ID		"DeviceId"	/* s */
 #define FWUPD_RESULT_KEY_PARENT_DEVICE_ID	"ParentDeviceId"/* s */
 #define FWUPD_RESULT_KEY_FILENAME		"Filename"	/* s */

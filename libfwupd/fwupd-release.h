@@ -69,6 +69,12 @@ void		 fwupd_release_set_protocol		(FwupdRelease	*release,
 const gchar	*fwupd_release_get_appstream_id		(FwupdRelease	*release);
 void		 fwupd_release_set_appstream_id		(FwupdRelease	*release,
 							 const gchar	*appstream_id);
+const gchar	*fwupd_release_get_detach_caption	(FwupdRelease	*release);
+void		 fwupd_release_set_detach_caption	(FwupdRelease	*release,
+							 const gchar	*detach_caption);
+const gchar	*fwupd_release_get_detach_image		(FwupdRelease	*release);
+void		 fwupd_release_set_detach_image		(FwupdRelease	*release,
+							 const gchar	*detach_image);
 const gchar	*fwupd_release_get_remote_id		(FwupdRelease	*release);
 void		 fwupd_release_set_remote_id		(FwupdRelease	*release,
 							 const gchar	*remote_id);
