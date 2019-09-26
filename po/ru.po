@@ -76,11 +76,6 @@ msgstr "Обновление системы %s"
 msgid "%s Update"
 msgstr "Обновление устройства %s"
 
-#. TRANSLATORS: first replacement is device name
-#, c-format
-msgid "%s has firmware updates:"
-msgstr "У устройства %s есть обновления прошивки:"
-
 #. TRANSLATORS: duration in days!
 #, c-format
 msgid "%u day"
@@ -268,7 +263,6 @@ msgstr "Отменено"
 msgid "Changed"
 msgstr "Изменено"
 
-#. TRANSLATORS: section header for firmware checksum
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Контрольная сумма"
@@ -328,7 +322,7 @@ msgstr "Распаковка…"
 msgid "Decrypt firmware data"
 msgstr "Расшифровать данные прошивки"
 
-#. TRANSLATORS: section header for firmware description
+#. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Описание"
 
@@ -568,7 +562,8 @@ msgstr "Обновления прошивки не поддерживаются 
 msgid "Firmware updates are supported on this machine."
 msgstr "Обновления прошивки поддерживаются на этой машине."
 
-#. TRANSLATORS: section header for firmware flags
+#. TRANSLATORS: device properties
+#. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "Флаги"
 
@@ -578,13 +573,6 @@ msgstr "Выполнить действие, игнорируя все пред�
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
 msgstr "Найдено"
-
-msgid "GUID"
-msgstr "GUID"
-
-#. TRANSLATORS: command description
-msgid "Get all devices according to the system topology"
-msgstr "Получить все устройства в соответствии с топологией системы"
 
 #. TRANSLATORS: command description
 msgid "Get all devices and possible releases"
@@ -626,7 +614,6 @@ msgstr "Получить релизы для устройства"
 msgid "Gets the results from the last update"
 msgstr "Получить результаты с последнего обновления"
 
-#. TRANSLATORS: Appstream ID for the hardware type
 msgid "ID"
 msgstr "ID"
 
@@ -707,10 +694,6 @@ msgstr "Объединить несколько файлов прошивок в
 msgid "Metadata URI"
 msgstr "URI метаданных"
 
-#. TRANSLATORS: remote URI
-msgid "Metadata URI Signature"
-msgstr "Подпись URI метаданных"
-
 #. TRANSLATORS: explain why no metadata available
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "Метаданные можно получить в Linux Vendor Firmware Service."
@@ -743,14 +726,12 @@ msgstr "Следить за событиями в фоновой службе"
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 #. TRANSLATORS: device name, e.g. 'ColorHug2'
-#. TRANSLATORS: section header for the release name
 msgid "Name"
 msgstr "Наименование"
 
 msgid "No action specified!"
 msgstr "Не определено никаких действий."
 
-#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Не обнаружено оборудования с возможностью обновления прошивки"
@@ -858,10 +839,7 @@ msgstr "Регион"
 msgid "Reinstalling %s with %s... "
 msgstr "Переустановка %s с %s…"
 
-#. TRANSLATORS: section header for the remote the file is coming from
-msgid "Remote"
-msgstr "Репозиторий"
-
+#. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 msgid "Remote ID"
 msgstr "Идентификатор репозитория"
@@ -1050,7 +1028,7 @@ msgstr "Состояние"
 msgid "Status"
 msgstr "Статус"
 
-#. TRANSLATORS: section header for the release one line summary
+#. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Сводка"
 
@@ -1077,10 +1055,6 @@ msgstr "Этот репозиторий содержит прошивки, ко�
 msgid "This tool can only be used by the root user"
 msgstr "Этот инструмент может использовать только пользователь root"
 
-#. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
-msgid "Title"
-msgstr "Заголовок"
-
 #. TRANSLATORS: transfer size in bytes
 msgid "Transfer Size"
 msgstr "Размер передачи"
@@ -1092,10 +1066,6 @@ msgstr "Тип"
 #. TRANSLATORS: program name
 msgid "UEFI Firmware Utility"
 msgstr "Средство для прошивки UEFI"
-
-#. TRANSLATORS: section header for firmware URI
-msgid "URI"
-msgstr "URI"
 
 #. TRANSLATORS: currect daemon status is unknown
 msgid "Unknown"
@@ -1116,39 +1086,6 @@ msgstr "Снять флаг отладки во время обновления"
 #, c-format
 msgid "Unsupported daemon version %s, client version is %s"
 msgstr "Неподдерживаемая фоновая служба версии %s, клиент версии %s"
-
-#. TRANSLATORS: section header for firmware checksum
-msgid "Update Checksum"
-msgstr "Контрольная сумма обновления"
-
-#. TRANSLATORS: section header for long firmware desc
-msgid "Update Description"
-msgstr "Описание обновления"
-
-#. TRANSLATORS: section header for the amount
-#. * of time it takes to install the update
-msgid "Update Duration"
-msgstr "Продолжительность обновления"
-
-#. TRANSLATORS: section header for firmware remote http://
-msgid "Update Location"
-msgstr "Расположение обновления"
-
-#. TRANSLATORS: section header for the release name
-msgid "Update Name"
-msgstr "Наименование обновления"
-
-#. TRANSLATORS: section header for remote ID, e.g. lvfs-testing
-msgid "Update Remote ID"
-msgstr "Обновить идентификатор репозитория"
-
-#. TRANSLATORS: section header for the release one line summary
-msgid "Update Summary"
-msgstr "Сводка обновления"
-
-#. TRANSLATORS: section header for firmware version
-msgid "Update Version"
-msgstr "Версия обновления"
 
 #. TRANSLATORS: command description
 msgid "Update all devices that match local metadata"
@@ -1208,10 +1145,6 @@ msgstr "Имя пользователя"
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
 msgstr "Проверка…"
-
-#. TRANSLATORS: section header for release version number
-msgid "Version"
-msgstr "Версия"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

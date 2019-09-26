@@ -40,6 +40,8 @@ typedef enum {
 	FU_DUMP_FLAGS_LAST
 } FuDumpFlags;
 
+typedef guint FuEndianType;
+
 /**
  * FuPathKind:
  * @FU_PATH_KIND_CACHEDIR_PKG:		The cache directory (IE /var/cache/fwupd)
@@ -133,8 +135,31 @@ gboolean	 fu_common_bytes_is_empty	(GBytes		*bytes);
 gboolean	 fu_common_bytes_compare	(GBytes		*bytes1,
 						 GBytes		*bytes2,
 						 GError		**error);
+gboolean	 fu_common_bytes_compare_raw	(const guint8	*buf1,
+						 gsize		 bufsz1,
+						 const guint8	*buf2,
+						 gsize		 bufsz2,
+						 GError		**error);
+GBytes		*fu_common_bytes_pad		(GBytes		*bytes,
+						 gsize		 sz);
+gsize		 fu_common_strwidth		(const gchar	*text);
+gboolean	 fu_memcpy_safe			(guint8		*dst,
+						 gsize		 dst_sz,
+						 gsize		 dst_offset,
+						 const guint8	*src,
+						 gsize		 src_sz,
+						 gsize		 src_offset,
+						 gsize		 n,
+						 GError		**error);
 
-typedef guint FuEndianType;
+void		 fu_byte_array_append_uint8	(GByteArray	*array,
+						 guint8		 data);
+void		 fu_byte_array_append_uint16	(GByteArray	*array,
+						 guint16	 data,
+						 FuEndianType	 endian);
+void		 fu_byte_array_append_uint32	(GByteArray	*array,
+						 guint32	 data,
+						 FuEndianType	 endian);
 
 void		 fu_common_write_uint16		(guint8		*buf,
 						 guint16	 val_native,
@@ -150,5 +175,25 @@ guint32		 fu_common_read_uint32		(const guint8	*buf,
 guint		 fu_common_string_replace	(GString	*string,
 						 const gchar	*search,
 						 const gchar	*replace);
+void		 fu_common_string_append_kv	(GString	*str,
+						 guint		 idt,
+						 const gchar 	*key,
+						 const gchar	*value);
+void		 fu_common_string_append_ku	(GString	*str,
+						 guint		 idt,
+						 const gchar 	*key,
+						 guint64	 value);
+void		 fu_common_string_append_kx	(GString	*str,
+						 guint		 idt,
+						 const gchar 	*key,
+						 guint64	 value);
+void		 fu_common_string_append_kb	(GString	*str,
+						 guint		 idt,
+						 const gchar 	*key,
+						 gboolean	 value);
+gchar		**fu_common_strnsplit		(const gchar	*str,
+						 gsize		 sz,
+						 const gchar	*delimiter,
+						 gint		 max_tokens);
 
 G_END_DECLS

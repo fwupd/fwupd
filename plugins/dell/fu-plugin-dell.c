@@ -12,6 +12,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <tss2/tss2_esys.h>
 
 #include "fwupd-common.h"
 #include "fu-plugin-dell.h"
@@ -85,9 +86,6 @@ struct da_structure {
 #define UNIV_CBL_DESC		"Universal Cable"
 #define TBT_CBL_DESC		"Thunderbolt Cable"
 
-/* supported host related GUIDs */
-#define MST_GPIO_GUID		EFI_GUID (0xF24F9bE4, 0x2a13, 0x4344, 0xBC05, 0x01, 0xCE, 0xF7, 0xDA, 0xEF, 0x92)
-
 /**
  * Devices that should allow modeswitching
  */
@@ -117,24 +115,6 @@ static guint8 enclosure_whitelist [] = { 0x03, /* desktop */
 					 0x21, /* IoT gateway */
 					 0x22, /* embedded PC */};
 
-/**
-  * Systems containing host MST device
-  */
-static guint16 systems_host_mst [] =	{ 0x062d, /* Latitude E7250 */
-					  0x062e, /* Latitude E7450 */
-					  0x062a, /* Latitude E5250 */
-					  0x062b, /* Latitude E5450 */
-					  0x062c, /* Latitude E5550 */
-					  0x06db, /* Latitude E7270 */
-					  0x06dc, /* Latitude E7470 */
-					  0x06dd, /* Latitude E5270 */
-					  0x06de, /* Latitude E5470 */
-					  0x06df, /* Latitude E5570 */
-					  0x06e0, /* Precision 3510 */
-					  0x071d, /* Latitude Rugged 7214 */
-					  0x071e, /* Latitude Rugged 5414 */
-					  0x071c, /* Latitude Rugged 7414 */};
-
 static guint16
 fu_dell_get_system_id (FuPlugin *plugin)
 {
@@ -153,25 +133,11 @@ fu_dell_get_system_id (FuPlugin *plugin)
 }
 
 static gboolean
-fu_dell_host_mst_supported (FuPlugin *plugin)
-{
-	guint16 system_id;
-
-	system_id = fu_dell_get_system_id (plugin);
-	if (system_id == 0)
-		return FALSE;
-	for (guint i = 0; i < G_N_ELEMENTS (systems_host_mst); i++)
-		if (systems_host_mst[i] == system_id)
-			return TRUE;
-	return FALSE;
-}
-
-static gboolean
 fu_dell_supported (FuPlugin *plugin)
 {
-	GBytes *de_table = NULL;
-	GBytes *da_table = NULL;
-	GBytes *enclosure = NULL;
+	g_autoptr(GBytes) de_table = NULL;
+	g_autoptr(GBytes) da_table = NULL;
+	g_autoptr(GBytes) enclosure = NULL;
 	const guint8 *value;
 	const struct da_structure *da_values;
 	gsize len;
@@ -473,16 +439,13 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 		return FALSE;
 	}
 
-#if defined (HAVE_SYNAPTICS)
-	fu_plugin_request_recoldplug (plugin);
-#endif
 	return TRUE;
 }
 
 gboolean
 fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	GBytes *de_table = NULL;
+	g_autoptr(GBytes) de_table = NULL;
 	const gchar *tmp = NULL;
 	const guint16 *completion_code;
 	gsize len;
@@ -560,6 +523,117 @@ fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 	return TRUE;
 }
 
+static void Esys_Finalize_autoptr_cleanup (ESYS_CONTEXT *esys_context)
+{
+	Esys_Finalize (&esys_context);
+}
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (ESYS_CONTEXT, Esys_Finalize_autoptr_cleanup)
+
+static gchar *
+fu_plugin_dell_get_tpm_capability (ESYS_CONTEXT *ctx, guint32 query)
+{
+	TSS2_RC rc;
+	guint32 val;
+	gchar result[5] = {'\0'};
+	g_autofree TPMS_CAPABILITY_DATA *capability = NULL;
+	rc = Esys_GetCapability (ctx, ESYS_TR_NONE, ESYS_TR_NONE, ESYS_TR_NONE,
+	                         TPM2_CAP_TPM_PROPERTIES, query, 1, NULL, &capability);
+	if (rc != TSS2_RC_SUCCESS) {
+		g_debug ("capability request failed for query %x", query);
+		return NULL;
+	}
+	if (capability->data.tpmProperties.count == 0) {
+		g_debug ("no properties returned for query %x", query);
+		return NULL;
+	}
+	if (capability->data.tpmProperties.tpmProperty[0].property != query) {
+		g_debug ("wrong query returned (got %x expected %x)",
+			 capability->data.tpmProperties.tpmProperty[0].property,
+			 query);
+		return NULL;
+	}
+
+	val = GUINT32_FROM_BE (capability->data.tpmProperties.tpmProperty[0].value);
+	memcpy (result, (gchar *) &val, 4);
+
+	/* convert non-ASCII into spaces */
+	for (guint i = 0; i < 4; i++) {
+		if (!g_ascii_isgraph (result[i]) && result[i] != '\0')
+			result[i] = 0x20;
+	}
+
+	return fu_common_strstrip (result);
+}
+
+static gboolean
+fu_plugin_dell_add_tpm_model (FuDevice *dev, GError **error)
+{
+	TSS2_RC rc;
+	const gchar *base = "DELL-TPM";
+	g_autoptr(ESYS_CONTEXT) ctx = NULL;
+	g_autofree gchar *family = NULL;
+	g_autofree gchar *manufacturer = NULL;
+	g_autofree gchar *vendor1 = NULL;
+	g_autofree gchar *vendor2 = NULL;
+	g_autofree gchar *vendor3 = NULL;
+	g_autofree gchar *vendor4 = NULL;
+	g_autofree gchar *v1 = NULL;
+	g_autofree gchar *v1_v2 = NULL;
+	g_autofree gchar *v1_v2_v3 = NULL;
+	g_autofree gchar *v1_v2_v3_v4 = NULL;
+
+	rc = Esys_Initialize (&ctx, NULL, NULL);
+	if (rc != TSS2_RC_SUCCESS) {
+		g_set_error_literal (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND,
+		                     "failed to initialize TPM library");
+		return FALSE;
+	}
+	rc = Esys_Startup (ctx, TPM2_SU_CLEAR);
+	if (rc != TSS2_RC_SUCCESS) {
+		g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+		                     "failed to initialize TPM");
+		return FALSE;
+	}
+
+	/* lookup guaranteed details from TPM */
+	family = fu_plugin_dell_get_tpm_capability (ctx,
+						    TPM2_PT_FAMILY_INDICATOR);
+	if (family == NULL) {
+		g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+		                     "failed to read TPM family");
+		return FALSE;
+	}
+	manufacturer = fu_plugin_dell_get_tpm_capability (ctx, TPM2_PT_MANUFACTURER);
+	if (manufacturer == NULL) {
+		g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+		                     "failed to read TPM manufacturer");
+		return FALSE;
+	}
+	vendor1 = fu_plugin_dell_get_tpm_capability (ctx, TPM2_PT_VENDOR_STRING_1);
+	if (vendor1 == NULL) {
+		g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+		                     "failed to read TPM vendor string");
+		return FALSE;
+	}
+
+	/* these are not guaranteed by spec and may be NULL */
+	vendor2 = fu_plugin_dell_get_tpm_capability (ctx, TPM2_PT_VENDOR_STRING_2);
+	vendor3 = fu_plugin_dell_get_tpm_capability (ctx, TPM2_PT_VENDOR_STRING_3);
+	vendor4 = fu_plugin_dell_get_tpm_capability (ctx, TPM2_PT_VENDOR_STRING_4);
+
+	/* add GUIDs to daemon */
+	v1 = g_strjoin ("-", base, family, manufacturer, vendor1, NULL);
+	v1_v2 = g_strconcat (v1, vendor2, NULL);
+	v1_v2_v3 = g_strconcat (v1_v2, vendor3, NULL);
+	v1_v2_v3_v4 = g_strconcat (v1_v2_v3, vendor4, NULL);
+	fu_device_add_instance_id (dev, v1);
+	fu_device_add_instance_id (dev, v1_v2);
+	fu_device_add_instance_id (dev, v1_v2_v3);
+	fu_device_add_instance_id (dev, v1_v2_v3_v4);
+
+	return TRUE;
+}
+
 gboolean
 fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 {
@@ -580,7 +654,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	struct tpm_status *out = NULL;
 	g_autoptr (FuDevice) dev_alt = NULL;
 	g_autoptr (FuDevice) dev = NULL;
-	const gchar *product_name = "Unknown";
+	g_autoptr(GError) error_tss = NULL;
 
 	fu_dell_clear_smi (data->smi_obj);
 	out = (struct tpm_status *) data->smi_obj->output;
@@ -647,16 +721,13 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 						     FWUPD_VERSION_FORMAT_QUAD);
 
 	/* make it clear that the TPM is a discrete device of the product */
-	if (!data->smi_obj->fake_smbios) {
-		product_name = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_PRODUCT_NAME);
-	}
-	pretty_tpm_name = g_strdup_printf ("%s TPM %s", product_name, tpm_mode);
-	pretty_tpm_name_alt = g_strdup_printf ("%s TPM %s", product_name, tpm_mode_alt);
+	pretty_tpm_name = g_strdup_printf ("TPM %s", tpm_mode);
+	pretty_tpm_name_alt = g_strdup_printf ("TPM %s", tpm_mode_alt);
 
 	/* build Standard device nodes */
 	dev = fu_device_new ();
 	fu_device_set_id (dev, tpm_id);
-	fu_device_add_guid (dev, tpm_guid);
+	fu_device_add_instance_id (dev, tpm_guid_raw);
 	fu_device_set_vendor (dev, "Dell Inc.");
 	fu_device_set_name (dev, pretty_tpm_name);
 	fu_device_set_summary (dev, "Platform TPM device");
@@ -675,16 +746,22 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 		}
 		fu_device_set_flashes_left (dev, out->flashes_left);
 	} else {
-		g_debug ("%s updating disabled due to TPM ownership",
-			pretty_tpm_name);
+		fu_device_set_update_error (dev,
+					    "Updating disabled due to TPM ownership");
 	}
+	/* build GUIDs from TSS strings */
+	if (!fu_plugin_dell_add_tpm_model (dev, &error_tss))
+		g_debug ("could not build instances: %s", error_tss->message);
+
+	if (!fu_device_setup (dev, error))
+		return FALSE;
 	fu_plugin_device_register (plugin, dev);
 
 	/* build alternate device node */
 	if (can_switch_modes) {
 		dev_alt = fu_device_new ();
 		fu_device_set_id (dev_alt, tpm_id_alt);
-		fu_device_add_guid (dev_alt, tpm_guid_alt);
+		fu_device_add_instance_id (dev_alt, tpm_guid_raw_alt);
 		fu_device_set_vendor (dev, "Dell Inc.");
 		fu_device_set_name (dev_alt, pretty_tpm_name_alt);
 		fu_device_set_summary (dev_alt, "Alternate mode for platform TPM device");
@@ -704,9 +781,10 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 		if ((out->status & TPM_OWN_MASK) == 0 && out->flashes_left > 0) {
 			fu_device_set_flashes_left (dev_alt, out->flashes_left);
 		} else {
-			g_debug ("%s mode switch disabled due to TPM ownership",
-				 pretty_tpm_name);
+			fu_device_set_update_error (dev_alt, "mode switch disabled due to TPM ownership");
 		}
+		if (!fu_device_setup (dev_alt, error))
+			return FALSE;
 		fu_plugin_device_register (plugin, dev_alt);
 	}
 	else
@@ -742,82 +820,6 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 	}
 }
 
-static gboolean
-fu_dell_toggle_flash (FuPlugin *plugin, FuDevice *device,
-		      gboolean enable, GError **error)
-{
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	gboolean has_host = fu_dell_host_mst_supported (plugin);
-	gboolean has_dock;
-	guint32 dock_location;
-	const gchar *tmp;
-
-	if (device) {
-		if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE))
-			return TRUE;
-		tmp = fu_device_get_plugin (device);
-		if (g_strcmp0 (tmp, "synapticsmst") != 0)
-			return TRUE;
-		g_debug ("preparing/cleaning update for %s", tmp);
-	}
-
-	/* Dock MST Hub */
-	has_dock = fu_dell_detect_dock (data->smi_obj, &dock_location);
-	if (has_dock) {
-		if (!fu_dell_toggle_dock_mode (data->smi_obj, enable,
-					       dock_location, error))
-			g_debug ("unable to change dock to %d", enable);
-		else
-			g_debug ("Toggled dock mode to %d", enable);
-	}
-
-	/* System MST hub */
-	if (has_host) {
-		if (!fu_dell_toggle_host_mode (data->smi_obj, MST_GPIO_GUID, enable))
-			g_debug ("Unable to toggle MST hub GPIO to %d", enable);
-		else
-			g_debug ("Toggled MST hub GPIO to %d", enable);
-	}
-
-#if defined (HAVE_SYNAPTICS)
-	/* set a delay to allow OS response to settling the GPIO change */
-	if (enable && device == NULL && (has_dock || has_host))
-		fu_plugin_set_coldplug_delay (plugin, DELL_FLASH_MODE_DELAY * 1000);
-#endif
-	return TRUE;
-}
-
-gboolean
-fu_plugin_update_prepare (FuPlugin *plugin,
-			  FwupdInstallFlags flags,
-			  FuDevice *device,
-			  GError **error)
-{
-
-	return fu_dell_toggle_flash (plugin, device, TRUE, error);
-}
-
-gboolean
-fu_plugin_update_cleanup (FuPlugin *plugin,
-			  FwupdInstallFlags flags,
-			  FuDevice *device,
-			  GError **error)
-{
-	return fu_dell_toggle_flash (plugin, device , FALSE, error);
-}
-
-gboolean
-fu_plugin_coldplug_prepare (FuPlugin *plugin, GError **error)
-{
-	return fu_dell_toggle_flash (plugin, NULL, TRUE, error);
-}
-
-gboolean
-fu_plugin_coldplug_cleanup (FuPlugin *plugin, GError **error)
-{
-	return fu_dell_toggle_flash (plugin, NULL, FALSE, error);
-}
-
 void
 fu_plugin_init (FuPlugin *plugin)
 {
@@ -834,6 +836,8 @@ fu_plugin_init (FuPlugin *plugin)
 	data->smi_obj = g_malloc0 (sizeof (FuDellSmiObj));
 	if (g_getenv ("FWUPD_DELL_VERBOSE") != NULL)
 		g_setenv ("LIBSMBIOS_C_DEBUG_OUTPUT_ALL", "1", TRUE);
+	else
+		g_setenv ("TSS2_LOG", "esys+error,tcti+none", FALSE);
 	if (fu_dell_supported (plugin))
 		data->smi_obj->smi = dell_smi_factory (DELL_SMI_DEFAULTS);
 	data->smi_obj->fake_smbios = FALSE;
@@ -911,12 +915,6 @@ fu_plugin_dell_coldplug (FuPlugin *plugin, GError **error)
 
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
-{
-	return fu_plugin_dell_coldplug (plugin, error);
-}
-
-gboolean
-fu_plugin_recoldplug (FuPlugin *plugin, GError **error)
 {
 	return fu_plugin_dell_coldplug (plugin, error);
 }

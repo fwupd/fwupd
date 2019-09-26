@@ -119,15 +119,14 @@ fu_ata_device_get_string (const guint16 *buf, guint start, guint end)
 }
 
 static void
-fu_ata_device_to_string (FuDevice *device, GString *str)
+fu_ata_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuAtaDevice *self = FU_ATA_DEVICE (device);
-	g_string_append (str, "  FuAtaDevice:\n");
-	g_string_append_printf (str, "    fd:\t\t\t%i\n", self->fd);
-	g_string_append_printf (str, "    transfer-mode:\t0x%x\n", (guint) self->transfer_mode);
-	g_string_append_printf (str, "    transfer-size:\t0x%x\n", (guint) self->transfer_blocks);
-	g_string_append_printf (str, "    pci-depth:\t\t%u\n", self->pci_depth);
-	g_string_append_printf (str, "    usb-depth:\t\t%u\n", self->usb_depth);
+	fu_common_string_append_ku (str, idt, "FD", (guint) self->fd);
+	fu_common_string_append_kx (str, idt, "TransferMode", self->transfer_mode);
+	fu_common_string_append_kx (str, idt, "TransferBlocks", self->transfer_blocks);
+	fu_common_string_append_ku (str, idt, "PciDepth", self->pci_depth);
+	fu_common_string_append_ku (str, idt, "UsbDepth", self->usb_depth);
 }
 
 /* https://docs.microsoft.com/en-us/windows-hardware/drivers/install/identifiers-for-ide-devices */
@@ -578,14 +577,20 @@ fu_ata_device_fw_download (FuAtaDevice *self,
 
 static gboolean
 fu_ata_device_write_firmware (FuDevice *device,
-			      GBytes *fw,
+			      FuFirmware *firmware,
 			      FwupdInstallFlags flags,
 			      GError **error)
 {
 	FuAtaDevice *self = FU_ATA_DEVICE (device);
 	guint32 chunksz = (guint32) self->transfer_blocks * FU_ATA_BLOCK_SIZE;
 	guint max_size = 0xffff * FU_ATA_BLOCK_SIZE;
+	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
+
+	/* get default image */
+	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	if (fw == NULL)
+		return FALSE;
 
 	/* only one block allowed */
 	if (self->transfer_mode == ATA_SUBCMD_MICROCODE_DOWNLOAD_CHUNK)

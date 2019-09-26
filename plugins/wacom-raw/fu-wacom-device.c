@@ -14,9 +14,9 @@
 #include <glib/gstdio.h>
 
 #include "fu-chunk.h"
+#include "fu-ihex-firmware.h"
 #include "fu-wacom-common.h"
 #include "fu-wacom-device.h"
-#include "dfu-firmware.h"
 
 typedef struct
 {
@@ -31,15 +31,14 @@ G_DEFINE_TYPE_WITH_PRIVATE (FuWacomDevice, fu_wacom_device, FU_TYPE_UDEV_DEVICE)
 #define GET_PRIVATE(o) (fu_wacom_device_get_instance_private (o))
 
 static void
-fu_wacom_device_to_string (FuDevice *device, GString *str)
+fu_wacom_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuWacomDevice *self = FU_WACOM_DEVICE (device);
 	FuWacomDevicePrivate *priv = GET_PRIVATE (self);
-	g_string_append (str, "  FuWacomDevice:\n");
-	g_string_append_printf (str, "    fd:\t\t\t%i\n", priv->fd);
-	g_string_append_printf (str, "    flash-block-size:\t0x%04x\n", priv->flash_block_size);
-	g_string_append_printf (str, "    flash-base-addr:\t0x%04x\n", priv->flash_base_addr);
-	g_string_append_printf (str, "    flash-size:\t\t0x%04x\n", priv->flash_size);
+	fu_common_string_append_ku (str, idt, "FD", (guint) priv->fd);
+	fu_common_string_append_kx (str, idt, "FlashBlockSize", priv->flash_block_size);
+	fu_common_string_append_kx (str, idt, "FlashBaseAddr", priv->flash_base_addr);
+	fu_common_string_append_kx (str, idt, "FlashSize", priv->flash_size);
 }
 
 guint
@@ -216,69 +215,56 @@ fu_wacom_device_set_version_bootloader (FuWacomDevice *self, GError **error)
 	return TRUE;
 }
 
+static FuFirmware *
+fu_wacom_device_prepare_firmware (FuDevice *device,
+				  GBytes *fw,
+				  FwupdInstallFlags flags,
+				  GError **error)
+{
+	g_autoptr(FuFirmware) firmware = fu_ihex_firmware_new ();
+	if (!fu_firmware_parse (firmware, fw, flags, error))
+		return NULL;
+	return g_steal_pointer (&firmware);
+}
+
 static gboolean
 fu_wacom_device_write_firmware (FuDevice *device,
-				GBytes *fw,
+				FuFirmware *firmware,
 				FwupdInstallFlags flags,
 				GError **error)
 {
 	FuWacomDevice *self = FU_WACOM_DEVICE (device);
 	FuWacomDevicePrivate *priv = GET_PRIVATE (self);
 	FuWacomDeviceClass *klass = FU_WACOM_DEVICE_GET_CLASS (device);
-	DfuElement *element;
-	DfuImage *image;
-	GBytes *fw_new;
-	g_autoptr(DfuFirmware) firmware = dfu_firmware_new ();
+	g_autoptr(FuFirmwareImage) img = NULL;
+	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 
-	/* parse hex file */
-	if (!dfu_firmware_parse_data (firmware, fw, DFU_FIRMWARE_PARSE_FLAG_NONE, error))
-		return FALSE;
-	if (dfu_firmware_get_format (firmware) != DFU_FIRMWARE_FORMAT_INTEL_HEX) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "expected firmware format is 'ihex', got '%s'",
-			     dfu_firmware_format_to_string (dfu_firmware_get_format (firmware)));
-		return FALSE;
-	}
-
 	/* use the correct image from the firmware */
-	image = dfu_firmware_get_image_default (firmware);
-	if (image == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "no firmware image");
+	img = fu_firmware_get_image_default (firmware, error);
+	if (img == NULL)
 		return FALSE;
-	}
-	element = dfu_image_get_element_default (image);
-	if (element == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "no element in image");
-		return FALSE;
-	}
 	g_debug ("using element at addr 0x%0x",
-		 (guint) dfu_element_get_address (element));
+		 (guint) fu_firmware_image_get_addr (img));
 
 	/* check start address and size */
-	if (dfu_element_get_address (element) != priv->flash_base_addr) {
+	if (fu_firmware_image_get_addr (img) != priv->flash_base_addr) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
 			     "base addr invalid: 0x%05x",
-			     (guint) dfu_element_get_address (element));
+			     (guint) fu_firmware_image_get_addr (img));
 		return FALSE;
 	}
-	fw_new = dfu_element_get_contents (element);
-	if (g_bytes_get_size (fw_new) > priv->flash_size) {
+	fw = fu_firmware_image_get_bytes (img, error);
+	if (fw == NULL)
+		return FALSE;
+	if (g_bytes_get_size (fw) > priv->flash_size) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
 			     "size is invalid: 0x%05x",
-			     (guint) g_bytes_get_size (fw_new));
+			     (guint) g_bytes_get_size (fw));
 		return FALSE;
 	}
 
@@ -289,7 +275,7 @@ fu_wacom_device_write_firmware (FuDevice *device,
 		return FALSE;
 
 	/* flash chunks */
-	chunks = fu_chunk_array_new_from_bytes (fw_new, priv->flash_base_addr,
+	chunks = fu_chunk_array_new_from_bytes (fw, priv->flash_base_addr,
 						0x00,	/* page_sz */
 						priv->flash_block_size);
 	return klass->write_firmware (device, chunks, error);
@@ -415,6 +401,7 @@ fu_wacom_device_class_init (FuWacomDeviceClass *klass)
 	klass_device->to_string = fu_wacom_device_to_string;
 	klass_device->open = fu_wacom_device_open;
 	klass_device->close = fu_wacom_device_close;
+	klass_device->prepare_firmware = fu_wacom_device_prepare_firmware;
 	klass_device->write_firmware = fu_wacom_device_write_firmware;
 	klass_device->attach = fu_wacom_device_attach;
 	klass_device->detach = fu_wacom_device_detach;

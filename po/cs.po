@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Ascii Wolf <mail@asciiwolf.com>, 2017
+# Ascii Wolf <mail@asciiwolf.com>, 2017,2019
 # Ascii Wolf <mail@asciiwolf.com>, 2017
 # Marek Černocký <marek@manet.cz>, 2016,2018
 msgid ""
@@ -25,11 +25,6 @@ msgstr[0] "Zbývá %.0f minuta"
 msgstr[1] "Zbývají %.0f minuty"
 msgstr[2] "Zbývá %.0f minut"
 msgstr[3] "Zbývá %.0f minuty"
-
-#. TRANSLATORS: first replacement is device name
-#, c-format
-msgid "%s has firmware updates:"
-msgstr "%s má aktualizace firmwaru:"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Added"
@@ -134,7 +129,6 @@ msgstr "Zrušeno"
 msgid "Changed"
 msgstr "Změněno"
 
-#. TRANSLATORS: section header for firmware checksum
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Kontrolní součet"
@@ -194,7 +188,7 @@ msgstr "Rozbaluje se…"
 msgid "Decrypt firmware data"
 msgstr "Dešifrovat data firmwaru"
 
-#. TRANSLATORS: section header for firmware description
+#. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Popis"
 
@@ -405,13 +399,6 @@ msgstr "Aktualizace firmwaru jsou na tomto počítači podporované."
 msgid "Found"
 msgstr "Nalezeno"
 
-msgid "GUID"
-msgstr "GUID"
-
-#. TRANSLATORS: command description
-msgid "Get all devices according to the system topology"
-msgstr "Zjistit všechna zařízení podle topologie systému"
-
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
 msgstr "Zjistit všechna zařízení podporující aktualizaci firmwaru"
@@ -444,7 +431,6 @@ msgstr "Vypsat vydání pro zařízení"
 msgid "Gets the results from the last update"
 msgstr "Vypsat výsledky z poslední aktualizace"
 
-#. TRANSLATORS: Appstream ID for the hardware type
 msgid "ID"
 msgstr "ID"
 
@@ -521,10 +507,6 @@ msgstr "Sloučit více firmwarů do jednoho"
 msgid "Metadata URI"
 msgstr "URI metadat"
 
-#. TRANSLATORS: remote URI
-msgid "Metadata URI Signature"
-msgstr "Podpis URI metadat"
-
 #. TRANSLATORS: explain why no metadata available
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "Metadata lze získat ze služby Linux Vendor Firmware."
@@ -545,14 +527,12 @@ msgstr "Sledovat události démona"
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 #. TRANSLATORS: device name, e.g. 'ColorHug2'
-#. TRANSLATORS: section header for the release name
 msgid "Name"
 msgstr "Název"
 
 msgid "No action specified!"
 msgstr "Není určena žádné akce!"
 
-#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Nebylo nalezeno žádné zařízení schopné aktualizace firmwaru"
@@ -638,10 +618,7 @@ msgstr "Oblast"
 msgid "Reinstalling %s with %s... "
 msgstr "Přeinstalovává se %s na %s…"
 
-#. TRANSLATORS: section header for the remote the file is coming from
-msgid "Remote"
-msgstr "Vzdálený zdroj"
-
+#. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 msgid "Remote ID"
 msgstr "ID vzdáleného zdroje"
@@ -775,7 +752,7 @@ msgstr "Stav"
 msgid "Status"
 msgstr "Stav"
 
-#. TRANSLATORS: section header for the release one line summary
+#. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Souhrn"
 
@@ -793,10 +770,6 @@ msgstr "Tento program může správně fungovat jen pod uživatelem root"
 msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
 msgstr "Tento zdroj obsahuje firmware, který není zakázaný, ale zatím je u výrobce stále ve stádiu testování. Měli byste se ujistit, že znáte způsob, jak se vrátit k předchozí verzi firmwaru, kdyby došlo k selhání."
 
-#. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
-msgid "Title"
-msgstr "Název"
-
 #. TRANSLATORS: transfer size in bytes
 msgid "Transfer Size"
 msgstr "Přenášená velikost"
@@ -808,10 +781,6 @@ msgstr "Typ"
 #. TRANSLATORS: program name
 msgid "UEFI Firmware Utility"
 msgstr "Nástroj pro práci s firmwarem UEFI"
-
-#. TRANSLATORS: section header for firmware URI
-msgid "URI"
-msgstr "URI"
 
 #. TRANSLATORS: currect daemon status is unknown
 msgid "Unknown"
@@ -827,34 +796,6 @@ msgstr "Odemknout zařízení pro přístup k firmwaru"
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"
 msgstr "Během aktualizace zrušit příznak ladění"
-
-#. TRANSLATORS: section header for firmware checksum
-msgid "Update Checksum"
-msgstr "Kontrolní součet aktualizace"
-
-#. TRANSLATORS: section header for long firmware desc
-msgid "Update Description"
-msgstr "Popis aktualizace"
-
-#. TRANSLATORS: section header for firmware remote http://
-msgid "Update Location"
-msgstr "Umístění aktualizace"
-
-#. TRANSLATORS: section header for the release name
-msgid "Update Name"
-msgstr "Název aktualizace"
-
-#. TRANSLATORS: section header for remote ID, e.g. lvfs-testing
-msgid "Update Remote ID"
-msgstr "ID vzdáleného zdroje aktualizace"
-
-#. TRANSLATORS: section header for the release one line summary
-msgid "Update Summary"
-msgstr "Souhrn aktualizace"
-
-#. TRANSLATORS: section header for firmware version
-msgid "Update Version"
-msgstr "Verze aktualizace"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
@@ -901,10 +842,6 @@ msgstr "Uživatelské jméno"
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
 msgstr "Ověřuje se…"
-
-#. TRANSLATORS: section header for release version number
-msgid "Version"
-msgstr "Verze"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

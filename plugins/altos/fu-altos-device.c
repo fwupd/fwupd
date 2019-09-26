@@ -268,19 +268,31 @@ fu_altos_device_write_page (FuAltosDevice *self,
 	return TRUE;
 }
 
+static FuFirmware *
+fu_altos_device_prepare_firmware (FuDevice *device,
+				  GBytes *fw,
+				  FwupdInstallFlags flags,
+				  GError **error)
+{
+	g_autoptr(FuFirmware) firmware = fu_altos_firmware_new ();
+	if (!fu_firmware_parse (firmware, fw, flags, error))
+		return NULL;
+	return g_steal_pointer (&firmware);
+}
+
 static gboolean
 fu_altos_device_write_firmware (FuDevice *device,
-				GBytes *fw,
+				FuFirmware *firmware,
 				FwupdInstallFlags flags,
 				GError **error)
 {
 	FuAltosDevice *self = FU_ALTOS_DEVICE (device);
-	GBytes *fw_blob;
 	const gchar *data;
 	const gsize data_len;
 	guint flash_len;
-	g_autoptr(FuAltosFirmware) altos_firmware = NULL;
 	g_autoptr(FuDeviceLocker) locker  = NULL;
+	g_autoptr(FuFirmwareImage) img = NULL;
+	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GString) buf = g_string_new (NULL);
 
 	/* check kind */
@@ -312,25 +324,27 @@ fu_altos_device_write_firmware (FuDevice *device,
 	}
 
 	/* load ihex blob */
-	altos_firmware = fu_altos_firmware_new ();
-	if (!fu_altos_firmware_parse (altos_firmware, fw, error))
+	img = fu_firmware_get_image_default (firmware, error);
+	if (img == NULL)
 		return FALSE;
 
 	/* check the start address */
-	if (fu_altos_firmware_get_address (altos_firmware) != self->addr_base) {
+	if (fu_firmware_image_get_addr (img) != self->addr_base) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
 			     "start address not correct %" G_GUINT64_FORMAT ":"
 			     "%" G_GUINT64_FORMAT,
-			     fu_altos_firmware_get_address (altos_firmware),
+			     fu_firmware_image_get_addr (img),
 			     self->addr_base);
 		return FALSE;
 	}
 
 	/* check firmware will fit */
-	fw_blob = fu_altos_firmware_get_data (altos_firmware);
-	data = g_bytes_get_data (fw_blob, (gsize *) &data_len);
+	fw = fu_firmware_image_get_bytes (img, error);
+	if (fw == NULL)
+		return FALSE;
+	data = g_bytes_get_data (fw, (gsize *) &data_len);
 	if (data_len > flash_len) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -357,7 +371,10 @@ fu_altos_device_write_firmware (FuDevice *device,
 			gsize chunk_len = 0x100;
 			if (i + 0x100 > data_len)
 				chunk_len = data_len - i;
-			memcpy (buf_tmp, data + i, chunk_len);
+			if (!fu_memcpy_safe (buf_tmp, sizeof(buf_tmp), 0,		/* dst */
+					     (const guint8 *) data, data_len, i,	/* src */
+					     chunk_len, error))
+				return FALSE;
 		}
 
 		/* verify data from device */
@@ -628,6 +645,7 @@ fu_altos_device_class_init (FuAltosDeviceClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	klass_device->probe = fu_altos_device_probe;
+	klass_device->prepare_firmware = fu_altos_device_prepare_firmware;
 	klass_device->write_firmware = fu_altos_device_write_firmware;
 	klass_device->read_firmware = fu_altos_device_read_firmware;
 	object_class->finalize = fu_altos_device_finalize;

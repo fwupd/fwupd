@@ -118,17 +118,16 @@ fu_superio_device_regdump (FuSuperioDevice *self, guint8 ldn, GError **error)
 }
 
 static void
-fu_superio_device_to_string (FuDevice *device, GString *str)
+fu_superio_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
 	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
-	g_string_append (str, "  FuSuperioDevice:\n");
-	g_string_append_printf (str, "    fd:\t\t\t%i\n", priv->fd);
-	g_string_append_printf (str, "    chipset:\t\t%s\n", priv->chipset);
-	g_string_append_printf (str, "    id:\t\t\t0x%04x\n", (guint) priv->id);
-	g_string_append_printf (str, "    port:\t\t0x%04x\n", (guint) priv->port);
-	g_string_append_printf (str, "    pm1-iobad0:\t\t0x%04x\n", (guint) priv->pm1_iobad0);
-	g_string_append_printf (str, "    pm1-iobad1:\t\t0x%04x\n", (guint) priv->pm1_iobad1);
+	fu_common_string_append_ku (str, idt, "FD", (guint) priv->fd);
+	fu_common_string_append_kv (str, idt, "Chipset", priv->chipset);
+	fu_common_string_append_kx (str, idt, "Id", priv->id);
+	fu_common_string_append_kx (str, idt, "Port", priv->port);
+	fu_common_string_append_kx (str, idt, "PM1_IOBAD0", priv->pm1_iobad0);
+	fu_common_string_append_kx (str, idt, "PM1_IOBAD1", priv->pm1_iobad1);
 }
 
 static guint16
@@ -362,7 +361,7 @@ fu_superio_device_setup (FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static GBytes *
+static FuFirmware *
 fu_superio_device_prepare_firmware (FuDevice *device,
 				    GBytes *fw,
 				    FwupdInstallFlags flags,
@@ -378,7 +377,7 @@ fu_superio_device_prepare_firmware (FuDevice *device,
 		if (memcmp (&buf[off], sig1, sizeof(sig1)) == 0 &&
 		    memcmp (&buf[off + 8], sig2, sizeof(sig2)) == 0) {
 			g_debug ("found signature at 0x%04x", (guint) off);
-			return g_bytes_ref (fw);
+			return fu_firmware_new_from_bytes (fw);
 		}
 	}
 	g_set_error_literal (error,

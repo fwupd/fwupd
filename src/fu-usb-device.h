@@ -8,6 +8,7 @@
 
 #include <glib-object.h>
 #include <gusb.h>
+#include <gudev/gudev.h>
 
 #include "fu-plugin.h"
 
@@ -45,5 +46,7 @@ GUsbDevice	*fu_usb_device_get_dev			(FuUsbDevice	*device);
 void		 fu_usb_device_set_dev			(FuUsbDevice	*device,
 							 GUsbDevice	*usb_device);
 gboolean	 fu_usb_device_is_open			(FuUsbDevice	*device);
+GUdevDevice	*fu_usb_device_find_udev_device		(FuUsbDevice	*device,
+							 GError		**error);
 
 G_END_DECLS

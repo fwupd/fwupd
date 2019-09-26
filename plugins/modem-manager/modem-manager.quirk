@@ -1,0 +1,11 @@
+
+# DW5821e
+[DeviceInstanceId=USB\VID_413C&PID_81D7]
+Summary = Dell DW5821e LTE modem
+CounterpartGuid = USB\VID_413C&PID_81D6
+
+# DW5821e in fastboot mode
+[DeviceInstanceId=USB\VID_413C&PID_81D6]
+Summary = Dell DW5821e LTE modem (fastboot)
+CounterpartGuid = USB\VID_413C&PID_81D7
+

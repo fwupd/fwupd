@@ -12,9 +12,6 @@
 #include "fu-wac-common.h"
 #include "fu-wac-device.h"
 
-#include "dfu-common.h"
-#include "dfu-firmware.h"
-
 #define FU_WAC_MODULE_STATUS_OK				0
 #define FU_WAC_MODULE_STATUS_BUSY			1
 #define FU_WAC_MODULE_STATUS_ERR_CRC			2
@@ -111,17 +108,16 @@ fu_wac_module_status_to_string (guint8 status)
 }
 
 static void
-fu_wac_module_to_string (FuDevice *device, GString *str)
+fu_wac_module_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuWacModule *self = FU_WAC_MODULE (device);
 	FuWacModulePrivate *priv = GET_PRIVATE (self);
-	g_string_append (str, "  FuWacSubModule:\n");
-	g_string_append_printf (str, "    fw-type:\t\t%s\n",
-				fu_wac_module_fw_type_to_string (priv->fw_type));
-	g_string_append_printf (str, "    status:\t\t%s\n",
-				fu_wac_module_status_to_string (priv->status));
-	g_string_append_printf (str, "    command:\t\t%s\n",
-				fu_wac_module_command_to_string (priv->command));
+	fu_common_string_append_kv (str, idt, "FwType",
+				    fu_wac_module_fw_type_to_string (priv->fw_type));
+	fu_common_string_append_kv (str, idt, "Status",
+				    fu_wac_module_status_to_string (priv->status));
+	fu_common_string_append_kv (str, idt, "Command",
+				    fu_wac_module_command_to_string (priv->command));
 }
 
 static gboolean

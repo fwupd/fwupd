@@ -389,6 +389,55 @@ fu_usb_device_set_dev (FuUsbDevice *device, GUsbDevice *usb_device)
 }
 
 /**
+ * fu_usb_device_find_udev_device:
+ * @device: A #FuUsbDevice
+ * @usb_device: A #GUsbDevice, or %NULL
+ *
+ * Gets the matching #GUdevDevice for the #GUsbDevice.
+ *
+ * Returns: a #GUdevDevice, or NULL if unset or invalid
+ *
+ * Since: 1.3.2
+ **/
+GUdevDevice *
+fu_usb_device_find_udev_device (FuUsbDevice *device, GError **error)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE (device);
+	g_autoptr(GList) devices = NULL;
+	g_autoptr(GUdevClient) gudev_client = g_udev_client_new (NULL);
+
+	/* find all tty devices */
+	devices = g_udev_client_query_by_subsystem (gudev_client, "usb");
+	for (GList *l = devices; l != NULL; l = l->next) {
+		GUdevDevice *dev = G_UDEV_DEVICE (l->data);
+
+		/* check correct device */
+		if (g_udev_device_get_sysfs_attr_as_int (dev, "busnum") !=
+		    g_usb_device_get_bus (priv->usb_device))
+			continue;
+		if (g_udev_device_get_sysfs_attr_as_int (dev, "devnum") !=
+		    g_usb_device_get_address (priv->usb_device))
+			continue;
+
+		/* success */
+		g_debug ("USB device %u:%u is %s",
+			 g_usb_device_get_bus (priv->usb_device),
+			 g_usb_device_get_address (priv->usb_device),
+			 g_udev_device_get_sysfs_path (dev));
+		return g_object_ref (dev);
+	}
+
+	/* failure */
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_SUPPORTED,
+		     "could not find sysfs device for %u:%u",
+		     g_usb_device_get_bus (priv->usb_device),
+		     g_usb_device_get_address (priv->usb_device));
+	return NULL;
+}
+
+/**
  * fu_usb_device_get_dev:
  * @device: A #FuUsbDevice
  *

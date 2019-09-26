@@ -31,6 +31,7 @@ static void fwupd_release_finalize	 (GObject *object);
 typedef struct {
 	GPtrArray			*checksums;
 	GPtrArray			*categories;
+	GPtrArray			*issues;
 	GHashTable			*metadata;
 	gchar				*description;
 	gchar				*filename;
@@ -41,6 +42,7 @@ typedef struct {
 	gchar				*appstream_id;
 	gchar				*license;
 	gchar				*name;
+	gchar				*name_variant_suffix;
 	gchar				*summary;
 	gchar				*uri;
 	gchar				*vendor;
@@ -237,6 +239,47 @@ fwupd_release_set_protocol (FwupdRelease *release, const gchar *protocol)
 	g_return_if_fail (FWUPD_IS_RELEASE (release));
 	g_free (priv->protocol);
 	priv->protocol = g_strdup (protocol);
+}
+
+/**
+ * fwupd_release_get_issues:
+ * @release: A #FwupdRelease
+ *
+ * Gets the list of issues fixed in this release.
+ *
+ * Returns: (element-type utf8) (transfer none): the issues, which may be empty
+ *
+ * Since: 1.3.2
+ **/
+GPtrArray *
+fwupd_release_get_issues (FwupdRelease *release)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_val_if_fail (FWUPD_IS_RELEASE (release), NULL);
+	return priv->issues;
+}
+
+/**
+ * fwupd_release_add_issue:
+ * @release: A #FwupdRelease
+ * @issue: the update issue, e.g. `CVE-2019-12345`
+ *
+ * Adds an resolved issue to this release.
+ *
+ * Since: 1.3.2
+ **/
+void
+fwupd_release_add_issue (FwupdRelease *release, const gchar *issue)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_if_fail (FWUPD_IS_RELEASE (release));
+	g_return_if_fail (issue != NULL);
+	for (guint i = 0; i < priv->issues->len; i++) {
+		const gchar *issue_tmp = g_ptr_array_index (priv->issues, i);
+		if (g_strcmp0 (issue_tmp, issue) == 0)
+			return;
+	}
+	g_ptr_array_add (priv->issues, g_strdup (issue));
 }
 
 /**
@@ -852,6 +895,42 @@ fwupd_release_set_name (FwupdRelease *release, const gchar *name)
 }
 
 /**
+ * fwupd_release_get_name_variant_suffix:
+ * @release: A #FwupdRelease
+ *
+ * Gets the update variant suffix.
+ *
+ * Returns: the update variant, or %NULL if unset
+ *
+ * Since: 1.3.2
+ **/
+const gchar *
+fwupd_release_get_name_variant_suffix (FwupdRelease *release)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_val_if_fail (FWUPD_IS_RELEASE (release), NULL);
+	return priv->name_variant_suffix;
+}
+
+/**
+ * fwupd_release_set_name_variant_suffix:
+ * @release: A #FwupdRelease
+ * @name_variant_suffix: the description
+ *
+ * Sets the update variant suffix.
+ *
+ * Since: 1.3.2
+ **/
+void
+fwupd_release_set_name_variant_suffix (FwupdRelease *release, const gchar *name_variant_suffix)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_if_fail (FWUPD_IS_RELEASE (release));
+	g_free (priv->name_variant_suffix);
+	priv->name_variant_suffix = g_strdup (name_variant_suffix);
+}
+
+/**
  * fwupd_release_get_trust_flags:
  * @release: A #FwupdRelease
  *
@@ -1089,6 +1168,11 @@ fwupd_release_to_variant (FwupdRelease *release)
 				       FWUPD_RESULT_KEY_NAME,
 				       g_variant_new_string (priv->name));
 	}
+	if (priv->name_variant_suffix != NULL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_NAME_VARIANT_SUFFIX,
+				       g_variant_new_string (priv->name_variant_suffix));
+	}
 	if (priv->size != 0) {
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_SIZE,
@@ -1110,6 +1194,14 @@ fwupd_release_to_variant (FwupdRelease *release)
 			strv[i] = (const gchar *) g_ptr_array_index (priv->categories, i);
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_CATEGORIES,
+				       g_variant_new_strv (strv, -1));
+	}
+	if (priv->issues->len > 0) {
+		g_autofree const gchar **strv = g_new0 (const gchar *, priv->issues->len + 1);
+		for (guint i = 0; i < priv->issues->len; i++)
+			strv[i] = (const gchar *) g_ptr_array_index (priv->issues, i);
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_ISSUES,
 				       g_variant_new_strv (strv, -1));
 	}
 	if (priv->checksums->len > 0) {
@@ -1200,6 +1292,10 @@ fwupd_release_from_key_value (FwupdRelease *release, const gchar *key, GVariant 
 		fwupd_release_set_name (release, g_variant_get_string (value, NULL));
 		return;
 	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_NAME_VARIANT_SUFFIX) == 0) {
+		fwupd_release_set_name_variant_suffix (release, g_variant_get_string (value, NULL));
+		return;
+	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_SIZE) == 0) {
 		fwupd_release_set_size (release, g_variant_get_uint64 (value));
 		return;
@@ -1216,6 +1312,12 @@ fwupd_release_from_key_value (FwupdRelease *release, const gchar *key, GVariant 
 		g_autofree const gchar **strv = g_variant_get_strv (value, NULL);
 		for (guint i = 0; strv[i] != NULL; i++)
 			fwupd_release_add_category (release, strv[i]);
+		return;
+	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_ISSUES) == 0) {
+		g_autofree const gchar **strv = g_variant_get_strv (value, NULL);
+		for (guint i = 0; strv[i] != NULL; i++)
+			fwupd_release_add_issue (release, strv[i]);
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_CHECKSUM) == 0) {
@@ -1374,6 +1476,15 @@ fwupd_release_to_json (FwupdRelease *release, JsonBuilder *builder)
 		}
 		json_builder_end_array (builder);
 	}
+	if (priv->issues->len > 0) {
+		json_builder_set_member_name (builder, FWUPD_RESULT_KEY_ISSUES);
+		json_builder_begin_array (builder);
+		for (guint i = 0; i < priv->issues->len; i++) {
+			const gchar *tmp = g_ptr_array_index (priv->issues, i);
+			json_builder_add_string_value (builder, tmp);
+		}
+		json_builder_end_array (builder);
+	}
 	if (priv->checksums->len > 0) {
 		json_builder_set_member_name (builder, FWUPD_RESULT_KEY_CHECKSUM);
 		json_builder_begin_array (builder);
@@ -1445,6 +1556,10 @@ fwupd_release_to_string (FwupdRelease *release)
 		const gchar *tmp = g_ptr_array_index (priv->categories, i);
 		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_CATEGORIES, tmp);
 	}
+	for (guint i = 0; i < priv->issues->len; i++) {
+		const gchar *tmp = g_ptr_array_index (priv->issues, i);
+		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_ISSUES, tmp);
+	}
 	for (guint i = 0; i < priv->checksums->len; i++) {
 		const gchar *checksum = g_ptr_array_index (priv->checksums, i);
 		g_autofree gchar *checksum_display = fwupd_checksum_format_for_display (checksum);
@@ -1484,6 +1599,7 @@ fwupd_release_init (FwupdRelease *release)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE (release);
 	priv->categories = g_ptr_array_new_with_free_func (g_free);
+	priv->issues = g_ptr_array_new_with_free_func (g_free);
 	priv->checksums = g_ptr_array_new_with_free_func (g_free);
 	priv->metadata = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 }
@@ -1500,6 +1616,7 @@ fwupd_release_finalize (GObject *object)
 	g_free (priv->appstream_id);
 	g_free (priv->license);
 	g_free (priv->name);
+	g_free (priv->name_variant_suffix);
 	g_free (priv->summary);
 	g_free (priv->uri);
 	g_free (priv->homepage);
@@ -1510,6 +1627,7 @@ fwupd_release_finalize (GObject *object)
 	g_free (priv->remote_id);
 	g_free (priv->update_message);
 	g_ptr_array_unref (priv->categories);
+	g_ptr_array_unref (priv->issues);
 	g_ptr_array_unref (priv->checksums);
 	g_hash_table_unref (priv->metadata);
 

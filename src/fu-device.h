@@ -9,6 +9,7 @@
 #include <glib-object.h>
 #include <fwupd.h>
 
+#include "fu-firmware.h"
 #include "fu-quirks.h"
 #include "fu-common-version.h"
 
@@ -21,9 +22,10 @@ struct _FuDeviceClass
 {
 	FwupdDeviceClass	 parent_class;
 	void			 (*to_string)		(FuDevice	*self,
+							 guint		 indent,
 							 GString	*str);
 	gboolean		 (*write_firmware)	(FuDevice	*self,
-							 GBytes		*fw,
+							 FuFirmware	*firmware,
 							 FwupdInstallFlags flags,
 							 GError		**error);
 	GBytes			*(*read_firmware)	(FuDevice	*self,
@@ -38,7 +40,9 @@ struct _FuDeviceClass
 							 GError		**error);
 	gboolean		 (*probe)		(FuDevice	*self,
 							 GError		**error);
-	GBytes			*(*prepare_firmware)	(FuDevice	*self,
+	gboolean		 (*rescan)		(FuDevice	*self,
+							 GError		**error);
+	FuFirmware		*(*prepare_firmware)	(FuDevice	*self,
 							 GBytes		*fw,
 							 FwupdInstallFlags flags,
 							 GError		**error);
@@ -108,6 +112,7 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_get_modified(d)		fwupd_device_get_modified(FWUPD_DEVICE(d))
 #define fu_device_get_guids(d)			fwupd_device_get_guids(FWUPD_DEVICE(d))
 #define fu_device_get_guid_default(d)		fwupd_device_get_guid_default(FWUPD_DEVICE(d))
+#define fu_device_get_instance_ids(d)		fwupd_device_get_instance_ids(FWUPD_DEVICE(d))
 #define fu_device_get_icons(d)			fwupd_device_get_icons(FWUPD_DEVICE(d))
 #define fu_device_get_name(d)			fwupd_device_get_name(FWUPD_DEVICE(d))
 #define fu_device_get_serial(d)			fwupd_device_get_serial(FWUPD_DEVICE(d))
@@ -210,7 +215,7 @@ gboolean	 fu_device_write_firmware		(FuDevice	*self,
 							 GBytes		*fw,
 							 FwupdInstallFlags flags,
 							 GError		**error);
-GBytes		*fu_device_prepare_firmware		(FuDevice	*self,
+FuFirmware	*fu_device_prepare_firmware		(FuDevice	*self,
 							 GBytes		*fw,
 							 FwupdInstallFlags flags,
 							 GError		**error);
@@ -229,6 +234,8 @@ gboolean	 fu_device_close			(FuDevice	*self,
 gboolean	 fu_device_probe			(FuDevice	*self,
 							 GError		**error);
 gboolean	 fu_device_setup			(FuDevice	*self,
+							 GError		**error);
+gboolean	 fu_device_rescan			(FuDevice	*self,
 							 GError		**error);
 gboolean	 fu_device_activate			(FuDevice	*self,
 							 GError		**error);

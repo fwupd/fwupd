@@ -31,7 +31,7 @@ void		 fu_util_print_data		(const gchar	*title,
 guint		 fu_util_prompt_for_number	(guint		 maxnum);
 gboolean	 fu_util_prompt_for_boolean	(gboolean	 def);
 
-gboolean	 fu_util_print_device_tree	(GNode *n, gpointer data);
+void		 fu_util_print_tree		(GNode *n,	gpointer data);
 gboolean	 fu_util_is_interesting_device	(FwupdDevice	*dev);
 gchar		*fu_util_get_user_cache_path	(const gchar	*fn);
 SoupSession	*fu_util_setup_networking	(GError		**error);
@@ -62,5 +62,18 @@ gchar		*fu_util_release_get_name	(FwupdRelease	*release);
 
 const gchar	*fu_util_get_systemd_unit	(void);
 gboolean	 fu_util_using_correct_daemon	(GError		**error);
+
+gboolean	 fu_util_parse_filter_flags	(const gchar *filter,
+						 FwupdDeviceFlags *include,
+						 FwupdDeviceFlags *exclude,
+						 GError **error);
+gchar		*fu_util_convert_description	(const gchar	*xml,
+						 GError		**error);
+gchar		*fu_util_device_to_string	(FwupdDevice	*dev,
+						 guint		 idt);
+gchar		*fu_util_release_to_string	(FwupdRelease	*rel,
+						 guint		 idt);
+gchar		*fu_util_remote_to_string	(FwupdRemote *remote,
+						 guint		 idt);
 
 G_END_DECLS

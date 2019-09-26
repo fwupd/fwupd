@@ -81,7 +81,8 @@ fu_history_device_from_stmt (sqlite3_stmt *stmt)
 		fwupd_release_set_filename (release, tmp);
 
 	/* flags */
-	fu_device_set_flags (device, sqlite3_column_int64 (stmt, 7));
+	fu_device_set_flags (device, sqlite3_column_int64 (stmt, 7) |
+				     FWUPD_DEVICE_FLAG_HISTORICAL);
 
 	/* metadata */
 	tmp = (const gchar *) sqlite3_column_text (stmt, 8);
@@ -157,11 +158,11 @@ fu_history_create_database (FuHistory *self, GError **error)
 	gint rc;
 	rc = sqlite3_exec (self->db,
 			 "BEGIN TRANSACTION;"
-			 "CREATE TABLE schema ("
+			 "CREATE TABLE IF NOT EXISTS schema ("
 			 "created timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
 			 "version INTEGER DEFAULT 0);"
 			 "INSERT INTO schema (version) VALUES (0);"
-			 "CREATE TABLE history ("
+			 "CREATE TABLE IF NOT EXISTS history ("
 			 "device_id TEXT,"
 			 "update_state INTEGER DEFAULT 0,"
 			 "update_error TEXT,"
@@ -178,7 +179,7 @@ fu_history_create_database (FuHistory *self, GError **error)
 			 "version_new TEXT,"
 			 "checksum_device TEXT DEFAULT NULL,"
 			 "protocol TEXT DEFAULT NULL);"
-			 "CREATE TABLE approved_firmware ("
+			 "CREATE TABLE IF NOT EXISTS approved_firmware ("
 			 "checksum TEXT);"
 			 "COMMIT;", NULL, NULL, NULL);
 	if (rc != SQLITE_OK) {
@@ -257,7 +258,7 @@ fu_history_migrate_database_v4 (FuHistory *self, GError **error)
 {
 	gint rc;
 	rc = sqlite3_exec (self->db,
-			   "CREATE TABLE approved_firmware (checksum TEXT);",
+			   "CREATE TABLE IF NOT EXISTS approved_firmware (checksum TEXT);",
 			   NULL, NULL, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
@@ -485,6 +486,7 @@ fu_history_modify_device (FuHistory *self, FuDevice *device,
 					 "update_state = ?1, "
 					 "update_error = ?2, "
 					 "checksum_device = ?6, "
+					 "device_modified = ?7, "
 					 "flags = ?3 "
 					 "WHERE device_id = ?4;",
 					 -1, &stmt, NULL);
@@ -498,6 +500,7 @@ fu_history_modify_device (FuHistory *self, FuDevice *device,
 					 "update_state = ?1, "
 					 "update_error = ?2, "
 					 "checksum_device = ?6, "
+					 "device_modified = ?7, "
 					 "flags = ?3 "
 					 "WHERE device_id = ?4 AND version_old = ?5;",
 					 -1, &stmt, NULL);
@@ -511,6 +514,7 @@ fu_history_modify_device (FuHistory *self, FuDevice *device,
 					 "update_state = ?1, "
 					 "update_error = ?2, "
 					 "checksum_device = ?6, "
+					 "device_modified = ?7, "
 					 "flags = ?3 "
 					 "WHERE device_id = ?4 AND version_new = ?5;",
 					 -1, &stmt, NULL);
@@ -531,6 +535,8 @@ fu_history_modify_device (FuHistory *self, FuDevice *device,
 	sqlite3_bind_text (stmt, 5, fu_device_get_version (device), -1, SQLITE_STATIC);
 	sqlite3_bind_text (stmt, 6, fwupd_checksum_get_by_kind (fu_device_get_checksums (device),
 								G_CHECKSUM_SHA1), -1, SQLITE_STATIC);
+	sqlite3_bind_int64 (stmt, 7, fu_device_get_modified (device));
+
 	return fu_history_stmt_exec (self, stmt, NULL, error);
 }
 

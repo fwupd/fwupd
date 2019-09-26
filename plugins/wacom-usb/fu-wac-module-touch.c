@@ -12,7 +12,7 @@
 #include "fu-wac-module-touch.h"
 
 #include "fu-chunk.h"
-#include "dfu-firmware.h"
+#include "fu-ihex-firmware.h"
 
 struct _FuWacModuleTouch
 {
@@ -21,57 +21,43 @@ struct _FuWacModuleTouch
 
 G_DEFINE_TYPE (FuWacModuleTouch, fu_wac_module_touch, FU_TYPE_WAC_MODULE)
 
+static FuFirmware *
+fu_wac_module_touch_prepare_firmware (FuDevice *device,
+				      GBytes *fw,
+				      FwupdInstallFlags flags,
+				      GError **error)
+{
+	g_autoptr(FuFirmware) firmware = fu_ihex_firmware_new ();
+	if (!fu_firmware_parse (firmware, fw, flags, error))
+		return NULL;
+	return g_steal_pointer (&firmware);
+}
+
 static gboolean
 fu_wac_module_touch_write_firmware (FuDevice *device,
-				    GBytes *blob,
+				    FuFirmware *firmware,
 				    FwupdInstallFlags flags,
 				    GError **error)
 {
-	DfuElement *element;
-	DfuImage *image;
 	FuWacModule *self = FU_WAC_MODULE (device);
 	gsize blocks_total = 0;
+	g_autoptr(FuFirmwareImage) img = NULL;
+	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
-	g_autoptr(DfuFirmware) firmware = dfu_firmware_new ();
-
-	/* load .hex file */
-	if (!dfu_firmware_parse_data (firmware, blob, DFU_FIRMWARE_PARSE_FLAG_NONE, error))
-		return FALSE;
-
-	/* check type */
-	if (dfu_firmware_get_format (firmware) != DFU_FIRMWARE_FORMAT_INTEL_HEX) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "expected firmware format is 'ihex', got '%s'",
-			     dfu_firmware_format_to_string (dfu_firmware_get_format (firmware)));
-		return FALSE;
-	}
 
 	/* use the correct image from the firmware */
-	image = dfu_firmware_get_image (firmware, 0);
-	if (image == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "no firmware image");
+	img = fu_firmware_get_image_default (firmware, error);
+	if (img == NULL)
 		return FALSE;
-	}
-	element = dfu_image_get_element_default (image);
-	if (element == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "no firmware element");
-		return FALSE;
-	}
 	g_debug ("using element at addr 0x%0x",
-		 (guint) dfu_element_get_address (element));
-	blob = dfu_element_get_contents (element);
+		 (guint) fu_firmware_image_get_addr (img));
+	fw = fu_firmware_image_get_bytes (img, error);
+	if (fw == NULL)
+		return FALSE;
 
 	/* build each data packet */
-	chunks = fu_chunk_array_new_from_bytes (blob,
-						dfu_element_get_address (element),
+	chunks = fu_chunk_array_new_from_bytes (fw,
+						fu_firmware_image_get_addr (img),
 						0x0, /* page_sz */
 						128); /* packet_sz */
 	blocks_total = chunks->len + 2;
@@ -129,6 +115,7 @@ static void
 fu_wac_module_touch_class_init (FuWacModuleTouchClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
+	klass_device->prepare_firmware = fu_wac_module_touch_prepare_firmware;
 	klass_device->write_firmware = fu_wac_module_touch_write_firmware;
 }
 

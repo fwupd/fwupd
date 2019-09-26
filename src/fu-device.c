@@ -34,6 +34,8 @@ static void fu_device_finalize			 (GObject *object);
 typedef struct {
 	gchar				*alternate_id;
 	gchar				*equivalent_id;
+	gchar				*physical_id;
+	gchar				*logical_id;
 	FuDevice			*alternate;
 	FuDevice			*parent;	/* noref */
 	FuQuirks			*quirks;
@@ -82,10 +84,10 @@ fu_device_get_property (GObject *object, guint prop_id,
 		g_value_set_uint (value, priv->progress);
 		break;
 	case PROP_PHYSICAL_ID:
-		g_value_set_string (value, fu_device_get_physical_id (self));
+		g_value_set_string (value, priv->physical_id);
 		break;
 	case PROP_LOGICAL_ID:
-		g_value_set_string (value, fu_device_get_logical_id (self));
+		g_value_set_string (value, priv->logical_id);
 		break;
 	case PROP_QUIRKS:
 		g_value_set_object (value, priv->quirks);
@@ -1218,7 +1220,7 @@ fu_device_set_id (FuDevice *self, const gchar *id)
 /**
  * fu_device_set_version:
  * @self: A #FuDevice
- * @version: a string, e.g. `1.2.3`
+ * @version: (allow-none): a string, e.g. `1.2.3`
  * @fmt: a #FwupdVersionFormat, e.g. %FWUPD_VERSION_FORMAT_TRIPLET
  *
  * Sets the device version, sanitizing the string if required.
@@ -1232,7 +1234,6 @@ fu_device_set_version (FuDevice *self, const gchar *version, FwupdVersionFormat 
 	g_autoptr(GError) error = NULL;
 
 	g_return_if_fail (FU_IS_DEVICE (self));
-	g_return_if_fail (version != NULL);
 
 	/* sanitize if required */
 	if (fu_device_has_flag (self, FWUPD_DEVICE_FLAG_ENSURE_SEMVER)) {
@@ -1266,6 +1267,7 @@ fu_device_set_version (FuDevice *self, const gchar *version, FwupdVersionFormat 
 gboolean
 fu_device_ensure_id (FuDevice *self, GError **error)
 {
+	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_autofree gchar *device_id = NULL;
 
 	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
@@ -1276,7 +1278,7 @@ fu_device_ensure_id (FuDevice *self, GError **error)
 		return TRUE;
 
 	/* nothing we can do! */
-	if (fu_device_get_physical_id (self) == NULL) {
+	if (priv->physical_id == NULL) {
 		g_autofree gchar *tmp = fu_device_to_string (self);
 		g_set_error (error,
 			     G_IO_ERROR,
@@ -1308,8 +1310,9 @@ fu_device_ensure_id (FuDevice *self, GError **error)
 const gchar *
 fu_device_get_logical_id (FuDevice *self)
 {
+	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
-	return fu_device_get_metadata (self, "logical-id");
+	return priv->logical_id;
 }
 
 /**
@@ -1325,8 +1328,10 @@ fu_device_get_logical_id (FuDevice *self)
 void
 fu_device_set_logical_id (FuDevice *self, const gchar *logical_id)
 {
+	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_DEVICE (self));
-	fu_device_set_metadata (self, "logical-id", logical_id);
+	g_free (priv->logical_id);
+	priv->logical_id = g_strdup (logical_id);
 }
 
 /**
@@ -1348,9 +1353,11 @@ fu_device_set_logical_id (FuDevice *self, const gchar *logical_id)
 void
 fu_device_set_physical_id (FuDevice *self, const gchar *physical_id)
 {
+	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_DEVICE (self));
 	g_return_if_fail (physical_id != NULL);
-	fu_device_set_metadata (self, "physical-id", physical_id);
+	g_free (priv->physical_id);
+	priv->physical_id = g_strdup (physical_id);
 }
 
 /**
@@ -1369,8 +1376,9 @@ fu_device_set_physical_id (FuDevice *self, const gchar *physical_id)
 const gchar *
 fu_device_get_physical_id (FuDevice *self)
 {
+	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
-	return fu_device_get_metadata (self, "physical-id");
+	return priv->physical_id;
 }
 
 static void
@@ -1471,18 +1479,6 @@ fu_device_has_custom_flag (FuDevice *self, const gchar *hint)
 		return FALSE;
 	hints = g_strsplit (hint_str, ",", -1);
 	return g_strv_contains ((const gchar * const *) hints, hint);
-}
-
-static void
-fwupd_pad_kv_str (GString *str, const gchar *key, const gchar *value)
-{
-	/* ignore */
-	if (key == NULL || value == NULL)
-		return;
-	g_string_append_printf (str, "  %s: ", key);
-	for (gsize i = strlen (key); i < 20; i++)
-		g_string_append (str, " ");
-	g_string_append_printf (str, "%s\n", value);
 }
 
 /**
@@ -1622,6 +1618,59 @@ fu_device_set_progress_full (FuDevice *self, gsize progress_done, gsize progress
 	fu_device_set_progress (self, (guint) percentage);
 }
 
+static void
+fu_device_add_string (FuDevice *self, guint idt, GString *str)
+{
+	GPtrArray *children;
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_autofree gchar *tmp = NULL;
+	g_autoptr(GList) keys = NULL;
+	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_reader_locker_new (&priv->metadata_mutex);
+
+	g_return_if_fail (locker != NULL);
+
+	/* subclassed type */
+	fu_common_string_append_kv (str, idt, G_OBJECT_TYPE_NAME (self), NULL);
+
+	tmp = fwupd_device_to_string (FWUPD_DEVICE (self));
+	if (tmp != NULL && tmp[0] != '\0')
+		g_string_append (str, tmp);
+	if (priv->alternate_id != NULL)
+		fu_common_string_append_kv (str, idt + 1, "AlternateId", priv->alternate_id);
+	if (priv->equivalent_id != NULL)
+		fu_common_string_append_kv (str, idt + 1, "EquivalentId", priv->equivalent_id);
+	if (priv->physical_id != NULL)
+		fu_common_string_append_kv (str, idt + 1, "PhysicalId", priv->physical_id);
+	if (priv->logical_id != NULL)
+		fu_common_string_append_kv (str, idt + 1, "LogicalId", priv->logical_id);
+	if (priv->size_min > 0) {
+		g_autofree gchar *sz = g_strdup_printf ("%" G_GUINT64_FORMAT, priv->size_min);
+		fu_common_string_append_kv (str, idt + 1, "FirmwareSizeMin", sz);
+	}
+	if (priv->size_max > 0) {
+		g_autofree gchar *sz = g_strdup_printf ("%" G_GUINT64_FORMAT, priv->size_max);
+		fu_common_string_append_kv (str, idt + 1, "FirmwareSizeMax", sz);
+	}
+	keys = g_hash_table_get_keys (priv->metadata);
+	for (GList *l = keys; l != NULL; l = l->next) {
+		const gchar *key = l->data;
+		const gchar *value = g_hash_table_lookup (priv->metadata, key);
+		fu_common_string_append_kv (str, idt + 1, key, value);
+	}
+
+	/* subclassed */
+	if (klass->to_string != NULL)
+		klass->to_string (self, idt + 1, str);
+
+	/* print children also */
+	children = fu_device_get_children (self);
+	for (guint i = 0; i < children->len; i++) {
+		FuDevice *child = g_ptr_array_index (children, i);
+		fu_device_add_string (child, idt + 1, str);
+	}
+}
+
 /**
  * fu_device_to_string:
  * @self: A #FuDevice
@@ -1636,42 +1685,8 @@ fu_device_set_progress_full (FuDevice *self, gsize progress_done, gsize progress
 gchar *
 fu_device_to_string (FuDevice *self)
 {
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
-	FuDevicePrivate *priv = GET_PRIVATE (self);
-	GString *str = g_string_new ("");
-	g_autofree gchar *tmp = NULL;
-	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_reader_locker_new (&priv->metadata_mutex);
-	g_autoptr(GList) keys = NULL;
-
-	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
-	g_return_val_if_fail (locker != NULL, NULL);
-
-	tmp = fwupd_device_to_string (FWUPD_DEVICE (self));
-	if (tmp != NULL && tmp[0] != '\0')
-		g_string_append (str, tmp);
-	if (priv->alternate_id != NULL)
-		fwupd_pad_kv_str (str, "AlternateId", priv->alternate_id);
-	if (priv->equivalent_id != NULL)
-		fwupd_pad_kv_str (str, "EquivalentId", priv->equivalent_id);
-	if (priv->size_min > 0) {
-		g_autofree gchar *sz = g_strdup_printf ("%" G_GUINT64_FORMAT, priv->size_min);
-		fwupd_pad_kv_str (str, "FirmwareSizeMin", sz);
-	}
-	if (priv->size_max > 0) {
-		g_autofree gchar *sz = g_strdup_printf ("%" G_GUINT64_FORMAT, priv->size_max);
-		fwupd_pad_kv_str (str, "FirmwareSizeMax", sz);
-	}
-	keys = g_hash_table_get_keys (priv->metadata);
-	for (GList *l = keys; l != NULL; l = l->next) {
-		const gchar *key = l->data;
-		const gchar *value = g_hash_table_lookup (priv->metadata, key);
-		fwupd_pad_kv_str (str, key, value);
-	}
-
-	/* subclassed */
-	if (klass->to_string != NULL)
-		klass->to_string (self, str);
-
+	GString *str = g_string_new (NULL);
+	fu_device_add_string (self, 0, str);
 	return g_string_free (str, FALSE);
 }
 
@@ -1755,7 +1770,7 @@ fu_device_write_firmware (FuDevice *self,
 			  GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
-	g_autoptr(GBytes) fw_new = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
 
 	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
@@ -1770,12 +1785,12 @@ fu_device_write_firmware (FuDevice *self,
 	}
 
 	/* prepare (e.g. decompress) firmware */
-	fw_new = fu_device_prepare_firmware (self, fw, flags, error);
-	if (fw_new == NULL)
+	firmware = fu_device_prepare_firmware (self, fw, flags, error);
+	if (firmware == NULL)
 		return FALSE;
 
 	/* call vfunc */
-	return klass->write_firmware (self, fw_new, flags, error);
+	return klass->write_firmware (self, firmware, flags, error);
 }
 
 /**
@@ -1797,7 +1812,7 @@ fu_device_write_firmware (FuDevice *self,
  *
  * Since: 1.1.2
  **/
-GBytes *
+FuFirmware *
 fu_device_prepare_firmware (FuDevice *self,
 			    GBytes *fw,
 			    FwupdInstallFlags flags,
@@ -1805,8 +1820,8 @@ fu_device_prepare_firmware (FuDevice *self,
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
 	FuDevicePrivate *priv = GET_PRIVATE (self);
-	guint64 fw_sz;
-	g_autoptr(GBytes) fw_new = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(GBytes) fw_def = NULL;
 
 	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
 	g_return_val_if_fail (fw != NULL, NULL);
@@ -1814,37 +1829,41 @@ fu_device_prepare_firmware (FuDevice *self,
 
 	/* optionally subclassed */
 	if (klass->prepare_firmware != NULL) {
-		fw_new = klass->prepare_firmware (self, fw, flags, error);
-		if (fw_new == NULL)
+		firmware = klass->prepare_firmware (self, fw, flags, error);
+		if (firmware == NULL)
 			return NULL;
 	} else {
-		fw_new = g_bytes_ref (fw);
+		firmware = fu_firmware_new_from_bytes (fw);
 	}
 
 	/* check size */
-	fw_sz = (guint64) g_bytes_get_size (fw_new);
-	if (priv->size_max > 0 && fw_sz > priv->size_max) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "firmware is %04x bytes larger than the allowed "
-			     "maximum size of %04x bytes",
-			     (guint) (fw_sz - priv->size_max),
-			     (guint) priv->size_max);
-		return NULL;
-	}
-	if (priv->size_min > 0 && fw_sz < priv->size_min) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "firmware is %04x bytes smaller than the allowed "
-			     "minimum size of %04x bytes",
-			     (guint) (priv->size_min - fw_sz),
-			     (guint) priv->size_max);
-		return NULL;
+	fw_def = fu_firmware_get_image_default_bytes (firmware, NULL);
+	if (fw_def != NULL) {
+		guint64 fw_sz = (guint64) g_bytes_get_size (fw_def);
+		if (priv->size_max > 0 && fw_sz > priv->size_max) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "firmware is %04x bytes larger than the allowed "
+				     "maximum size of %04x bytes",
+				     (guint) (fw_sz - priv->size_max),
+				     (guint) priv->size_max);
+			return NULL;
+		}
+		if (priv->size_min > 0 && fw_sz < priv->size_min) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "firmware is %04x bytes smaller than the allowed "
+				     "minimum size of %04x bytes",
+				     (guint) (priv->size_min - fw_sz),
+				     (guint) priv->size_max);
+			return NULL;
+		}
 	}
 
-	return g_steal_pointer (&fw_new);
+	/* success */
+	return g_steal_pointer (&firmware);
 }
 
 /**
@@ -2082,6 +2101,41 @@ fu_device_probe (FuDevice *self, GError **error)
 }
 
 /**
+ * fu_device_rescan:
+ * @self: A #FuDevice
+ * @error: A #GError, or %NULL
+ *
+ * Rescans a device, re-adding GUIDs or flags based on some hardware change.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.3.1
+ **/
+gboolean
+fu_device_rescan (FuDevice *self, GError **error)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+
+	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* remove all GUIDs */
+	g_ptr_array_set_size (fu_device_get_instance_ids (self), 0);
+	g_ptr_array_set_size (fu_device_get_guids (self), 0);
+
+	/* subclassed */
+	if (klass->rescan != NULL) {
+		if (!klass->rescan (self, error)) {
+			fu_device_convert_instance_ids (self);
+			return FALSE;
+		}
+	}
+
+	fu_device_convert_instance_ids (self);
+	return TRUE;
+}
+
+/**
  * fu_device_convert_instance_ids:
  * @self: A #FuDevice
  *
@@ -2224,6 +2278,7 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	FuDevicePrivate *priv_donor = GET_PRIVATE (donor);
+	GPtrArray *instance_ids = fu_device_get_instance_ids (donor);
 	GPtrArray *parent_guids = fu_device_get_parent_guids (donor);
 	g_autoptr(GList) metadata_keys = NULL;
 
@@ -2235,6 +2290,10 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 		fu_device_set_alternate_id (self, fu_device_get_alternate_id (donor));
 	if (priv->equivalent_id == NULL)
 		fu_device_set_equivalent_id (self, fu_device_get_equivalent_id (donor));
+	if (priv->physical_id == NULL && priv_donor->physical_id != NULL)
+		fu_device_set_physical_id (self, priv_donor->physical_id);
+	if (priv->logical_id == NULL && priv_donor->logical_id != NULL)
+		fu_device_set_logical_id (self, priv_donor->logical_id);
 	if (priv->quirks == NULL)
 		fu_device_set_quirks (self, fu_device_get_quirks (donor));
 	g_rw_lock_reader_lock (&priv_donor->parent_guids_mutex);
@@ -2258,6 +2317,13 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 	/* optional subclass */
 	if (klass->incorporate != NULL)
 		klass->incorporate (self, donor);
+
+	/* call the set_quirk_kv() vfunc for the superclassed object */
+	for (guint i = 0; i < instance_ids->len; i++) {
+		const gchar *instance_id = g_ptr_array_index (instance_ids, i);
+		g_autofree gchar *guid = fwupd_guid_hash_string (instance_id);
+		fu_device_add_guid_quirks (self, guid);
+	}
 }
 
 /**
@@ -2354,6 +2420,8 @@ fu_device_finalize (GObject *object)
 	g_ptr_array_unref (priv->parent_guids);
 	g_free (priv->alternate_id);
 	g_free (priv->equivalent_id);
+	g_free (priv->physical_id);
+	g_free (priv->logical_id);
 
 	G_OBJECT_CLASS (fu_device_parent_class)->finalize (object);
 }

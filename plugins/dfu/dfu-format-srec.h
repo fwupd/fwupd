@@ -20,10 +20,5 @@ gboolean		 dfu_firmware_from_srec		(DfuFirmware	*firmware,
 							 GBytes		*bytes,
 							 DfuFirmwareParseFlags flags,
 							 GError		**error);
-gboolean		 dfu_image_from_srec		(DfuImage	*image,
-							 GBytes		*bytes,
-							 guint32	 start_addr,
-							 DfuFirmwareParseFlags flags,
-							 GError		**error);
 
 G_END_DECLS

@@ -14,12 +14,11 @@ fu_dump_parse (const gchar *filename, GError **error)
 	gchar *data = NULL;
 	gsize len = 0;
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GPtrArray) array = NULL;
+	g_autoptr(FuFirmware) firmware = fu_synaprom_firmware_new ();
 	if (!g_file_get_contents (filename, &data, &len, error))
 		return FALSE;
 	blob = g_bytes_new_take (data, len);
-	array = fu_synaprom_firmware_new (blob, error);
-	return array != NULL;
+	return fu_firmware_parse (firmware, blob, 0, error);
 }
 
 static gboolean
@@ -28,7 +27,10 @@ fu_dump_generate (const gchar *filename, GError **error)
 	const gchar *data;
 	gsize len = 0;
 	g_autoptr(GBytes) blob = NULL;
-	blob = fu_synaprom_firmware_generate ();
+	g_autoptr(FuFirmware) firmware = fu_synaprom_firmware_new ();
+	blob = fu_firmware_write (firmware, error);
+	if (blob == NULL)
+		return FALSE;
 	data = g_bytes_get_data (blob, &len);
 	return g_file_set_contents (filename, data, len, error);
 }

@@ -73,11 +73,6 @@ msgstr "%s 시스템 업데이트"
 msgid "%s Update"
 msgstr "%s 업데이트"
 
-#. TRANSLATORS: first replacement is device name
-#, c-format
-msgid "%s has firmware updates:"
-msgstr "%s의 최신 펌웨어가 있습니다:"
-
 #. TRANSLATORS: duration in days!
 #, c-format
 msgid "%u day"
@@ -250,7 +245,6 @@ msgstr "취소함"
 msgid "Changed"
 msgstr "바뀜"
 
-#. TRANSLATORS: section header for firmware checksum
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "체크섬"
@@ -310,7 +304,7 @@ msgstr "압축 해제 중…"
 msgid "Decrypt firmware data"
 msgstr "펌웨어 데이터 복호화"
 
-#. TRANSLATORS: section header for firmware description
+#. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "설명"
 
@@ -547,7 +541,8 @@ msgstr "이 머신에서 펌웨어 업데이트를 지원하지 않습니다."
 msgid "Firmware updates are supported on this machine."
 msgstr "이 머신에서 펌웨어 업데이트를 지원합니다."
 
-#. TRANSLATORS: section header for firmware flags
+#. TRANSLATORS: device properties
+#. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "플래그"
 
@@ -557,13 +552,6 @@ msgstr "모든 경고를 무시하고 작업 강제 진행"
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
 msgstr "감지 장치"
-
-msgid "GUID"
-msgstr "GUID"
-
-#. TRANSLATORS: command description
-msgid "Get all devices according to the system topology"
-msgstr "시스템에 연결된 순서대로 모든 장치 목록 가져오기"
 
 #. TRANSLATORS: command description
 msgid "Get all devices and possible releases"
@@ -605,7 +593,6 @@ msgstr "장치 펌웨어 릴리스를 가져옵니다"
 msgid "Gets the results from the last update"
 msgstr "최근 업데이트 결과를 가져옵니다"
 
-#. TRANSLATORS: Appstream ID for the hardware type
 msgid "ID"
 msgstr "ID"
 
@@ -686,10 +673,6 @@ msgstr "다중 펌웨어 파일을 하나로 병합"
 msgid "Metadata URI"
 msgstr "메타데이터 URI"
 
-#. TRANSLATORS: remote URI
-msgid "Metadata URI Signature"
-msgstr "메타데이터 URI  서명"
-
 #. TRANSLATORS: explain why no metadata available
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "리눅스 제조사 펌웨어 서비스에서 메타데이터를 가져올 수 있습니다."
@@ -722,14 +705,12 @@ msgstr "데몬 이벤트를 감시합니다"
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 #. TRANSLATORS: device name, e.g. 'ColorHug2'
-#. TRANSLATORS: section header for the release name
 msgid "Name"
 msgstr "이름"
 
 msgid "No action specified!"
 msgstr "동작을 지정하지 않았습니다!"
 
-#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "펌웨어를 업데이트할 수 있는 하드웨어가 없음"
@@ -837,10 +818,7 @@ msgstr "메모리 영역"
 msgid "Reinstalling %s with %s... "
 msgstr "%2$s(으)로 %1$s 다시 설치하는 중... "
 
-#. TRANSLATORS: section header for the remote the file is coming from
-msgid "Remote"
-msgstr "원격"
-
+#. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 msgid "Remote ID"
 msgstr "원격 ID"
@@ -1029,7 +1007,7 @@ msgstr "상태"
 msgid "Status"
 msgstr "장치 상태"
 
-#. TRANSLATORS: section header for the release one line summary
+#. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "요약"
 
@@ -1056,10 +1034,6 @@ msgstr "이 원격 저장소에서는 하드웨어 제조사에서 검증 단계
 msgid "This tool can only be used by the root user"
 msgstr "이 도구는 루트로만 사용할 수 있습니다"
 
-#. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
-msgid "Title"
-msgstr "제목"
-
 #. TRANSLATORS: transfer size in bytes
 msgid "Transfer Size"
 msgstr "전송 용량"
@@ -1071,10 +1045,6 @@ msgstr "형식"
 #. TRANSLATORS: program name
 msgid "UEFI Firmware Utility"
 msgstr "UEFI 펌웨어 유틸리티"
-
-#. TRANSLATORS: section header for firmware URI
-msgid "URI"
-msgstr "URI"
 
 #. TRANSLATORS: currect daemon status is unknown
 msgid "Unknown"
@@ -1095,39 +1065,6 @@ msgstr "업데이트 중 디버깅 플래그 설정 해제"
 #, c-format
 msgid "Unsupported daemon version %s, client version is %s"
 msgstr "지원하지 않는 데몬 버전 %s, 클라이언트 버전 %s"
-
-#. TRANSLATORS: section header for firmware checksum
-msgid "Update Checksum"
-msgstr "업데이트 체크섬"
-
-#. TRANSLATORS: section header for long firmware desc
-msgid "Update Description"
-msgstr "업데이트 설명"
-
-#. TRANSLATORS: section header for the amount
-#. * of time it takes to install the update
-msgid "Update Duration"
-msgstr "업데이트 예상 시간"
-
-#. TRANSLATORS: section header for firmware remote http://
-msgid "Update Location"
-msgstr "업데이트 위치"
-
-#. TRANSLATORS: section header for the release name
-msgid "Update Name"
-msgstr "업데이트 이름"
-
-#. TRANSLATORS: section header for remote ID, e.g. lvfs-testing
-msgid "Update Remote ID"
-msgstr "업데이트 원격 ID"
-
-#. TRANSLATORS: section header for the release one line summary
-msgid "Update Summary"
-msgstr "업데이트 요약"
-
-#. TRANSLATORS: section header for firmware version
-msgid "Update Version"
-msgstr "업데이트 버전"
 
 #. TRANSLATORS: command description
 msgid "Update all devices that match local metadata"
@@ -1187,10 +1124,6 @@ msgstr "사용자 이름"
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
 msgstr "검증 중…"
-
-#. TRANSLATORS: section header for release version number
-msgid "Version"
-msgstr "버전"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

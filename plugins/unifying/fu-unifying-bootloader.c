@@ -8,6 +8,7 @@
 
 #include <string.h>
 
+#include "fu-firmware-common.h"
 #include "fu-unifying-common.h"
 #include "fu-unifying-bootloader.h"
 #include "fu-unifying-hidpp.h"
@@ -27,16 +28,13 @@ G_DEFINE_TYPE_WITH_PRIVATE (FuUnifyingBootloader, fu_unifying_bootloader, FU_TYP
 #define GET_PRIVATE(o) (fu_unifying_bootloader_get_instance_private (o))
 
 static void
-fu_unifying_bootloader_to_string (FuDevice *device, GString *str)
+fu_unifying_bootloader_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuUnifyingBootloader *self = FU_UNIFYING_BOOTLOADER (device);
 	FuUnifyingBootloaderPrivate *priv = GET_PRIVATE (self);
-	g_string_append_printf (str, "  FlashAddrHigh:\t0x%04x\n",
-				priv->flash_addr_hi);
-	g_string_append_printf (str, "  FlashAddrLow:\t0x%04x\n",
-				priv->flash_addr_lo);
-	g_string_append_printf (str, "  FlashBlockSize:\t0x%04x\n",
-				priv->flash_blocksize);
+	fu_common_string_append_kx (str, idt, "FlashAddrHigh", priv->flash_addr_hi);
+	fu_common_string_append_kx (str, idt, "FlashAddrLow", priv->flash_addr_lo);
+	fu_common_string_append_kx (str, idt, "FlashBlockSize", priv->flash_blocksize);
 }
 
 FuUnifyingBootloaderRequest *
@@ -60,6 +58,8 @@ fu_unifying_bootloader_parse_requests (FuUnifyingBootloader *self, GBytes *fw, G
 	for (guint i = 0; lines[i] != NULL; i++) {
 		g_autoptr(FuUnifyingBootloaderRequest) payload = NULL;
 		guint8 rec_type = 0x00;
+		guint16 offset = 0x0000;
+		gboolean exit = FALSE;
 
 		/* skip empty lines */
 		tmp = lines[i];
@@ -76,17 +76,52 @@ fu_unifying_bootloader_parse_requests (FuUnifyingBootloader *self, GBytes *fw, G
 				     payload->len);
 			return NULL;
 		}
-		payload->addr = ((guint16) fu_unifying_buffer_read_uint8 (tmp + 0x03)) << 8;
-		payload->addr |= fu_unifying_buffer_read_uint8 (tmp + 0x05);
+		payload->addr = fu_firmware_strparse_uint16 (tmp + 0x03);
+		payload->cmd = FU_UNIFYING_BOOTLOADER_CMD_WRITE_RAM_BUFFER;
 
 		rec_type = fu_unifying_buffer_read_uint8 (tmp + 0x07);
 
-		/* record type of 0xFD indicates signature data */
-		if (rec_type == 0xFD) {
-			payload->cmd = FU_UNIFYING_BOOTLOADER_CMD_WRITE_SIGNATURE;
-		} else {
-			payload->cmd = FU_UNIFYING_BOOTLOADER_CMD_WRITE_RAM_BUFFER;
+		switch (rec_type) {
+			case 0x00: /* data */
+				break;
+			case 0x01: /* EOF */
+				exit = TRUE;
+				break;
+			case 0x03: /* start segment address */
+				/* this is used to specify the start address,
+				it is doesn't mater in this context so we can
+				safely ignore it */
+				continue;
+			case 0x04: /* extended linear address */
+				offset = fu_firmware_strparse_uint16 (tmp + 0x09);
+				if (offset != 0x0000) {
+					g_set_error (error,
+						     G_IO_ERROR,
+						     G_IO_ERROR_INVALID_DATA,
+						     "extended linear addresses with offset different from 0 are not supported");
+					return NULL;
+				}
+				continue;
+			case 0x05: /* start linear address */
+				/* this is used to specify the start address,
+				it is doesn't mater in this context so we can
+				safely ignore it */
+				continue;
+			case 0xFD: /* custom - vendor */
+				/* record type of 0xFD indicates signature data */
+				payload->cmd = FU_UNIFYING_BOOTLOADER_CMD_WRITE_SIGNATURE;
+				break;
+			default:
+				g_set_error (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_INVALID_DATA,
+					     "intel hex file record type %02x not supported",
+					     rec_type);
+				return NULL;
 		}
+
+		if (exit)
+			break;
 
 		/* read the data, but skip the checksum byte */
 		for (guint j = 0; j < payload->len; j++) {
@@ -296,7 +331,10 @@ fu_unifying_bootloader_request (FuUnifyingBootloader *self,
 	buf_request[0x01] = req->addr >> 8;
 	buf_request[0x02] = req->addr & 0xff;
 	buf_request[0x03] = req->len;
-	memcpy (buf_request + 0x04, req->data, 28);
+	if (!fu_memcpy_safe (buf_request, sizeof(buf_request), 0x04,	/* dst */
+			     req->data, sizeof(req->data), 0x0,		/* src */
+			     sizeof(req->data), error))
+		return FALSE;
 
 	/* send request */
 	if (g_getenv ("FWUPD_UNIFYING_VERBOSE") != NULL) {
@@ -408,7 +446,7 @@ fu_unifying_bootloader_init (FuUnifyingBootloader *self)
 	fu_device_add_icon (FU_DEVICE (self), "preferences-desktop-keyboard");
 	fu_device_set_name (FU_DEVICE (self), "Unifying Receiver");
 	fu_device_set_summary (FU_DEVICE (self), "A miniaturised USB wireless receiver (bootloader)");
-	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_set_remove_delay (FU_DEVICE (self), FU_UNIFYING_DEVICE_TIMEOUT_MS);
 }
 
 static void

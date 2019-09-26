@@ -15,11 +15,6 @@ msgstr ""
 "Language: nl\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#. TRANSLATORS: first replacement is device name
-#, c-format
-msgid "%s has firmware updates:"
-msgstr "%s heeft firmware-updates:"
-
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Added"
 msgstr "Toegevoegd"
@@ -169,9 +164,6 @@ msgstr "Firmware-hulpmiddel"
 msgid "Found"
 msgstr "Gevonden"
 
-msgid "GUID"
-msgstr "GUID"
-
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
 msgstr "Alle apparaten verkrijgen die firmware-updates ondersteunen"
@@ -192,7 +184,6 @@ msgstr "Verkrijgt een lijst van updates voor verbonden hardware"
 msgid "Gets the results from the last update"
 msgstr "Verkrijgt de resultaten van de laatste update"
 
-#. TRANSLATORS: Appstream ID for the hardware type
 msgid "ID"
 msgstr "ID"
 
@@ -240,11 +231,9 @@ msgstr "De achtergrondservice controleren op gebeurtenissen"
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 #. TRANSLATORS: device name, e.g. 'ColorHug2'
-#. TRANSLATORS: section header for the release name
 msgid "Name"
 msgstr "Naam"
 
-#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Geen hardware aangetroffen die in staat is firmware bij te werken"
@@ -376,22 +365,6 @@ msgstr "Ontgrendel het apparaat om toegang te verlenen"
 #. TRANSLATORS: command description
 msgid "Unlocks the device for firmware access"
 msgstr "Ontgrendelt het apparaat voor firmware-toegang"
-
-#. TRANSLATORS: section header for firmware checksum
-msgid "Update Checksum"
-msgstr "Controlesom bijwerken"
-
-#. TRANSLATORS: section header for long firmware desc
-msgid "Update Description"
-msgstr "Omschrijving bijwerken"
-
-#. TRANSLATORS: section header for firmware remote http://
-msgid "Update Location"
-msgstr "Locatie bijwerken"
-
-#. TRANSLATORS: section header for firmware version
-msgid "Update Version"
-msgstr "Versie bijwerken"
 
 msgid "Update the stored device verification information"
 msgstr "Opgeslagen apparaatverificatie-informatie bijwerken"

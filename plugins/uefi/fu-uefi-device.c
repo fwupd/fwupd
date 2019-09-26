@@ -92,25 +92,19 @@ fu_uefi_device_status_to_string (FuUefiDeviceStatus status)
 }
 
 static void
-fu_uefi_device_to_string (FuDevice *device, GString *str)
+fu_uefi_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE (device);
-	g_string_append (str, "  FuUefiDevice:\n");
-	g_string_append_printf (str, "    kind:\t\t\t%s\n",
-				fu_uefi_device_kind_to_string (self->kind));
-	g_string_append_printf (str, "    fw_class:\t\t\t%s\n", self->fw_class);
-	g_string_append_printf (str, "    capsule_flags:\t\t%" G_GUINT32_FORMAT "\n",
-				self->capsule_flags);
-	g_string_append_printf (str, "    fw_version:\t\t\t%" G_GUINT32_FORMAT "\n",
-				self->fw_version);
-	g_string_append_printf (str, "    fw_version_lowest:\t\t%" G_GUINT32_FORMAT "\n",
-				self->fw_version_lowest);
-	g_string_append_printf (str, "    last_attempt_status:\t%s\n",
-				fu_uefi_device_status_to_string (self->last_attempt_status));
-	g_string_append_printf (str, "    last_attempt_version:\t%" G_GUINT32_FORMAT "\n",
-				self->last_attempt_version);
-	g_string_append_printf (str, "    esp path:\t%s\n",
-				fu_device_get_metadata (device, "EspPath"));
+	fu_common_string_append_kv (str, idt, "Kind", fu_uefi_device_kind_to_string (self->kind));
+	fu_common_string_append_kv (str, idt, "FwClass", self->fw_class);
+	fu_common_string_append_kx (str, idt, "CapsuleFlags", self->capsule_flags);
+	fu_common_string_append_kx (str, idt, "FwVersion", self->fw_version);
+	fu_common_string_append_kx (str, idt, "FwVersionLowest", self->fw_version_lowest);
+	fu_common_string_append_kv (str, idt, "LastAttemptStatus",
+				    fu_uefi_device_status_to_string (self->last_attempt_status));
+	fu_common_string_append_kx (str, idt, "LastAttemptVersion", self->last_attempt_version);
+	fu_common_string_append_kv (str, idt, "EspPath",
+				    fu_device_get_metadata (device, "EspPath"));
 }
 
 FuUefiDeviceKind
@@ -401,7 +395,7 @@ fu_uefi_device_write_update_info (FuUefiDevice *self,
 
 static gboolean
 fu_uefi_device_write_firmware (FuDevice *device,
-			       GBytes *fw,
+			       FuFirmware *firmware,
 			       FwupdInstallFlags install_flags,
 			       GError **error)
 {
@@ -411,6 +405,7 @@ fu_uefi_device_write_firmware (FuDevice *device,
 	const gchar *esp_path = fu_device_get_metadata (device, "EspPath");
 	efi_guid_t guid;
 	g_autoptr(GBytes) fixed_fw = NULL;
+	g_autoptr(GBytes) fw = NULL;
 	g_autofree gchar *basename = NULL;
 	g_autofree gchar *directory = NULL;
 	g_autofree gchar *fn = NULL;
@@ -424,6 +419,11 @@ fu_uefi_device_write_firmware (FuDevice *device,
 				     "cannot update device info with no GUID");
 		return FALSE;
 	}
+
+	/* get default image */
+	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	if (fw == NULL)
+		return FALSE;
 
 	/* save the blob to the ESP */
 	directory = fu_uefi_get_esp_path_for_os (esp_path);
@@ -475,7 +475,10 @@ fu_uefi_device_add_system_checksum (FuDevice *device, GError **error)
 	if (!fu_uefi_pcrs_setup (pcrs, &error_local)) {
 		if (g_error_matches (error_local,
 				     G_IO_ERROR,
-				     G_IO_ERROR_NOT_SUPPORTED)) {
+				     G_IO_ERROR_NOT_SUPPORTED) ||
+		    g_error_matches (error_local,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND)) {
 			g_debug ("%s", error_local->message);
 			return TRUE;
 		}

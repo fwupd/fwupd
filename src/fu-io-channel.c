@@ -107,6 +107,30 @@ fu_io_channel_write_bytes (FuIOChannel *self,
 }
 
 /**
+ * fu_io_channel_write_byte_array:
+ * @self: a #FuIOChannel
+ * @buf: buffer to write
+ * @timeout_ms: timeout in ms
+ * @flags: some #FuIOChannelFlags, e.g. %FU_IO_CHANNEL_FLAG_SINGLE_SHOT
+ * @error: a #GError, or %NULL
+ *
+ * Writes bytes to the TTY, that will fail if exceeding @timeout_ms.
+ *
+ * Returns: %TRUE if all the bytes was written
+ *
+ * Since: 1.3.2
+ **/
+gboolean
+fu_io_channel_write_byte_array (FuIOChannel *self,
+				GByteArray *buf,
+				guint timeout_ms,
+				FuIOChannelFlags flags,
+				GError **error)
+{
+	return fu_io_channel_write_raw (self, buf->data, buf->len, timeout_ms, flags, error);
+}
+
+/**
  * fu_io_channel_write_raw:
  * @self: a #FuIOChannel
  * @data: buffer to write
@@ -202,6 +226,7 @@ fu_io_channel_write_raw (FuIOChannel *self,
 	return TRUE;
 }
 
+
 /**
  * fu_io_channel_read_bytes:
  * @self: a #FuIOChannel
@@ -223,11 +248,42 @@ fu_io_channel_read_bytes (FuIOChannel *self,
 			  FuIOChannelFlags flags,
 			  GError **error)
 {
+	GByteArray *buf = fu_io_channel_read_byte_array (self,
+							 max_size,
+							 timeout_ms,
+							 flags,
+							 error);
+	if (buf == NULL)
+		return NULL;
+	return g_byte_array_free_to_bytes (buf);
+}
+
+/**
+ * fu_io_channel_read_byte_array:
+ * @self: a #FuIOChannel
+ * @max_size: maximum size of the returned blob, or -1 for no limit
+ * @timeout_ms: timeout in ms
+ * @flags: some #FuIOChannelFlags, e.g. %FU_IO_CHANNEL_FLAG_SINGLE_SHOT
+ * @error: a #GError, or %NULL
+ *
+ * Reads bytes from the TTY, that will fail if exceeding @timeout_ms.
+ *
+ * Returns: a #GByteArray, or %NULL for error
+ *
+ * Since: 1.3.2
+ **/
+GByteArray *
+fu_io_channel_read_byte_array (FuIOChannel *self,
+			       gssize max_size,
+			       guint timeout_ms,
+			       FuIOChannelFlags flags,
+			       GError **error)
+{
 	GPollFD fds = {
 		.fd = self->fd,
 		.events = G_IO_IN | G_IO_PRI | G_IO_ERR,
 	};
-	g_autoptr(GString) str = g_string_new (NULL);
+	g_autoptr(GByteArray) buf2 = g_byte_array_new ();
 
 	g_return_val_if_fail (FU_IS_IO_CHANNEL (self), NULL);
 
@@ -244,8 +300,8 @@ fu_io_channel_read_bytes (FuIOChannel *self,
 			return NULL;
 		}
 		if (len > 0)
-			g_string_append_len (str, (gchar *) buf, len);
-		return g_bytes_new (str->str, str->len);
+			g_byte_array_append (buf2, buf, len);
+		return g_steal_pointer (&buf2);
 	}
 
 	/* nonblocking IO */
@@ -286,10 +342,10 @@ fu_io_channel_read_bytes (FuIOChannel *self,
 				return NULL;
 			}
 			if (len > 0)
-				g_string_append_len (str, (gchar *) buf, len);
+				g_byte_array_append (buf2, buf, len);
 
 			/* check maximum size */
-			if (max_size > 0 && str->len >= (guint) max_size)
+			if (max_size > 0 && buf2->len >= (guint) max_size)
 				break;
 			if (flags & FU_IO_CHANNEL_FLAG_SINGLE_SHOT)
 				break;
@@ -319,7 +375,7 @@ fu_io_channel_read_bytes (FuIOChannel *self,
 	}
 
 	/* no data */
-	if (str->len == 0) {
+	if (buf2->len == 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_READ,
@@ -329,7 +385,7 @@ fu_io_channel_read_bytes (FuIOChannel *self,
 	}
 
 	/* return blob */
-	return g_bytes_new (str->str, str->len);
+	return g_steal_pointer (&buf2);
 }
 
 /**

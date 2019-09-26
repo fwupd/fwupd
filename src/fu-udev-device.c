@@ -28,6 +28,8 @@ typedef struct
 	guint16			 vendor;
 	guint16			 model;
 	guint8			 revision;
+	gchar			*subsystem;
+	gchar			*device_file;
 } FuUdevDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuUdevDevice, fu_udev_device, FU_TYPE_DEVICE)
@@ -42,6 +44,8 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevDevice, g_object_unref)
 enum {
 	PROP_0,
 	PROP_UDEV_DEVICE,
+	PROP_SUBSYSTEM,
+	PROP_DEVICE_FILE,
 	PROP_LAST
 };
 
@@ -107,6 +111,8 @@ void
 fu_udev_device_dump (FuUdevDevice *self)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	if (priv->udev_device == NULL)
+		return;
 	fu_udev_device_dump_internal (priv->udev_device);
 }
 
@@ -119,6 +125,10 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	const gchar *tmp;
 	g_autofree gchar *subsystem = NULL;
 	g_autoptr(GUdevDevice) udev_parent = NULL;
+
+	/* nothing to do */
+	if (priv->udev_device == NULL)
+		return TRUE;
 
 	/* set ven:dev:rev */
 	priv->vendor = fu_udev_device_get_sysfs_attr_as_uint64 (priv->udev_device, "vendor");
@@ -137,7 +147,7 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	/* hidraw helpfully encodes the information in a different place */
 	if (udev_parent != NULL &&
 	    priv->vendor == 0x0 && priv->model == 0x0 && priv->revision == 0x0 &&
-	    g_strcmp0 (g_udev_device_get_subsystem (priv->udev_device), "hidraw") == 0) {
+	    g_strcmp0 (priv->subsystem, "hidraw") == 0) {
 		tmp = g_udev_device_get_property (udev_parent, "HID_ID");
 		if (tmp != NULL && strlen (tmp) == 22) {
 			priv->vendor = fu_udev_device_read_uint16 (tmp + 10);
@@ -202,7 +212,7 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	}
 
 	/* set vendor ID */
-	subsystem = g_ascii_strup (fu_udev_device_get_subsystem (self), -1);
+	subsystem = g_ascii_strup (g_udev_device_get_subsystem (priv->udev_device), -1);
 	if (subsystem != NULL && priv->vendor != 0x0000) {
 		g_autofree gchar *vendor_id = NULL;
 		vendor_id = g_strdup_printf ("%s:0x%04X", subsystem, (guint) priv->vendor);
@@ -251,6 +261,8 @@ fu_udev_device_set_dev (FuUdevDevice *self, GUdevDevice *udev_device)
 	g_set_object (&priv->udev_device, udev_device);
 	if (priv->udev_device == NULL)
 		return;
+	priv->subsystem = g_strdup (g_udev_device_get_subsystem (priv->udev_device));
+	priv->device_file = g_strdup (g_udev_device_get_device_file (priv->udev_device));
 }
 
 guint
@@ -274,10 +286,18 @@ fu_udev_device_get_slot_depth (FuUdevDevice *self, const gchar *subsystem)
 static void
 fu_udev_device_incorporate (FuDevice *self, FuDevice *donor)
 {
+	FuUdevDevice *uself = FU_UDEV_DEVICE (self);
+	FuUdevDevice *udonor = FU_UDEV_DEVICE (donor);
+	FuUdevDevicePrivate *priv = GET_PRIVATE (uself);
+
 	g_return_if_fail (FU_IS_UDEV_DEVICE (self));
 	g_return_if_fail (FU_IS_UDEV_DEVICE (donor));
-	fu_udev_device_set_dev (FU_UDEV_DEVICE (self),
-				fu_udev_device_get_dev (FU_UDEV_DEVICE (donor)));
+
+	fu_udev_device_set_dev (uself, fu_udev_device_get_dev (udonor));
+	if (priv->device_file == NULL) {
+		priv->subsystem = g_strdup (fu_udev_device_get_subsystem (udonor));
+		priv->device_file = g_strdup (fu_udev_device_get_device_file (udonor));
+	}
 }
 
 /**
@@ -313,7 +333,25 @@ fu_udev_device_get_subsystem (FuUdevDevice *self)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), NULL);
-	return g_udev_device_get_subsystem (priv->udev_device);
+	return priv->subsystem;
+}
+
+/**
+ * fu_udev_device_get_device_file:
+ * @self: A #GUdevDevice
+ *
+ * Gets the device node.
+ *
+ * Returns: a device file, or NULL if unset
+ *
+ * Since: 1.3.1
+ **/
+const gchar *
+fu_udev_device_get_device_file (FuUdevDevice *self)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), NULL);
+	return priv->device_file;
 }
 
 /**
@@ -331,6 +369,8 @@ fu_udev_device_get_sysfs_path (FuUdevDevice *self)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), NULL);
+	if (priv->udev_device == NULL)
+		return NULL;
 	return g_udev_device_get_sysfs_path (priv->udev_device);
 }
 
@@ -436,8 +476,12 @@ fu_udev_device_set_physical_id (FuUdevDevice *self, const gchar *subsystem, GErr
 	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), FALSE);
 	g_return_val_if_fail (subsystem != NULL, FALSE);
 
+	/* nothing to do */
+	if (priv->udev_device == NULL)
+		return TRUE;
+
 	/* get the correct device */
-	if (g_strcmp0 (g_udev_device_get_subsystem (priv->udev_device), subsystem) == 0) {
+	if (g_strcmp0 (priv->subsystem, subsystem) == 0) {
 		udev_device = g_object_ref (priv->udev_device);
 	} else {
 		udev_device = g_udev_device_get_parent_with_subsystem (priv->udev_device,
@@ -508,6 +552,12 @@ fu_udev_device_get_property (GObject *object, guint prop_id,
 	case PROP_UDEV_DEVICE:
 		g_value_set_object (value, priv->udev_device);
 		break;
+	case PROP_SUBSYSTEM:
+		g_value_set_string (value, priv->subsystem);
+		break;
+	case PROP_DEVICE_FILE:
+		g_value_set_string (value, priv->device_file);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
@@ -519,9 +569,16 @@ fu_udev_device_set_property (GObject *object, guint prop_id,
 			     const GValue *value, GParamSpec *pspec)
 {
 	FuUdevDevice *self = FU_UDEV_DEVICE (object);
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 	switch (prop_id) {
 	case PROP_UDEV_DEVICE:
 		fu_udev_device_set_dev (self, g_value_get_object (value));
+		break;
+	case PROP_SUBSYSTEM:
+		priv->subsystem = g_value_dup_string (value);
+		break;
+	case PROP_DEVICE_FILE:
+		priv->device_file = g_value_dup_string (value);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -535,6 +592,8 @@ fu_udev_device_finalize (GObject *object)
 	FuUdevDevice *self = FU_UDEV_DEVICE (object);
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 
+	g_free (priv->subsystem);
+	g_free (priv->device_file);
 	if (priv->udev_device != NULL)
 		g_object_unref (priv->udev_device);
 
@@ -571,6 +630,18 @@ fu_udev_device_class_init (FuUdevDeviceClass *klass)
 				     G_PARAM_CONSTRUCT |
 				     G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_UDEV_DEVICE, pspec);
+
+	pspec = g_param_spec_string ("subsystem", NULL, NULL,
+				     NULL,
+				     G_PARAM_READWRITE |
+				     G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_SUBSYSTEM, pspec);
+
+	pspec = g_param_spec_string ("device-file", NULL, NULL,
+				     NULL,
+				     G_PARAM_READWRITE |
+				     G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_DEVICE_FILE, pspec);
 }
 
 /**

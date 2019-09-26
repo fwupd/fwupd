@@ -10,6 +10,7 @@
 %global enable_ci 0
 %global enable_tests 1
 %global enable_dummy 1
+%global enable_flashrom 1
 %global __meson_wrap_mode default
 
 # fwupd.efi is only available on these arches
@@ -37,7 +38,7 @@ Name:      fwupd
 Version:   #VERSION#
 Release:   0.#BUILD#%{?alphatag}%{?dist}
 License:   LGPLv2+
-URL:       https://github.com/hughsie/fwupd
+URL:       https://github.com/fwupd/fwupd
 Source0:   http://people.freedesktop.org/~hughsient/releases/%{name}-%{version}.tar.xz
 
 BuildRequires: gettext
@@ -86,6 +87,7 @@ BuildRequires: freetype
 BuildRequires: fontconfig
 BuildRequires: google-noto-sans-cjk-ttc-fonts
 BuildRequires: gnu-efi-devel
+BuildRequires: tpm2-tss-devel >= 2.2.3
 BuildRequires: pesign
 %endif
 
@@ -105,8 +107,9 @@ Requires: libsoup%{?_isa} >= %{libsoup_version}
 Requires: bubblewrap
 Requires: shared-mime-info
 
+%if 0%{?rhel} > 7 || 0%{?fedora} > 28
 Recommends: python3
-Recommends: tpm2-tools tpm2-abrmd
+%endif
 
 Obsoletes: fwupd-sign < 0.1.6
 Obsoletes: libebitdo < 0.7.5-3
@@ -152,7 +155,11 @@ Data files for installed tests.
 %else
     -Dplugin_dummy=false \
 %endif
+%if 0%{?enable_flashrom}
     -Dplugin_flashrom=true \
+%else
+    -Dplugin_flashrom=false \
+%endif
     -Dplugin_thunderbolt=true \
 %if 0%{?have_redfish}
     -Dplugin_redfish=true \
@@ -204,11 +211,13 @@ Data files for installed tests.
 
 mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 
+%if 0%{?enable_flashrom}
 # delete most files from the subproject
 rm ${RPM_BUILD_ROOT}%{_includedir}/libflashrom.h
 rm ${RPM_BUILD_ROOT}%{_libdir}/libflashrom.so
 rm ${RPM_BUILD_ROOT}%{_libdir}/pkgconfig/libflashrom.pc
 rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
+%endif
 
 %find_lang %{name}
 
@@ -232,6 +241,7 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %if 0%{?have_redfish}
 %config(noreplace)%{_sysconfdir}/fwupd/redfish.conf
 %endif
+%config(noreplace)%{_sysconfdir}/fwupd/thunderbolt.conf
 %dir %{_libexecdir}/fwupd
 %{_libexecdir}/fwupd/fwupd
 %{_libexecdir}/fwupd/fwupdtool
@@ -255,7 +265,7 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %config(noreplace)%{_sysconfdir}/fwupd/remotes.d/vendor-directory.conf
 %config(noreplace)%{_sysconfdir}/pki/fwupd
 %{_sysconfdir}/pki/fwupd-metadata
-%{_sysconfdir}/dbus-1/system.d/org.freedesktop.fwupd.conf
+%{_datadir}/dbus-1/system.d/org.freedesktop.fwupd.conf
 %{_datadir}/bash-completion/completions/fwupdmgr
 %{_datadir}/bash-completion/completions/fwupdtool
 %{_datadir}/bash-completion/completions/fwupdagent
@@ -275,6 +285,8 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %{_datadir}/fwupd/firmware-packager
 %{_unitdir}/fwupd-offline-update.service
 %{_unitdir}/fwupd.service
+%{_unitdir}/fwupd-refresh.service
+%{_unitdir}/fwupd-refresh.timer
 %{_unitdir}/system-update.target.wants/
 %dir %{_localstatedir}/lib/fwupd
 %dir %{_datadir}/fwupd/quirks.d
@@ -298,7 +310,9 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %{_libdir}/fwupd-plugins-3/libfu_plugin_dfu.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_ebitdo.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_fastboot.so
+%if 0%{?enable_flashrom}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_flashrom.so
+%endif
 %if 0%{?have_modem_manager}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_modem_manager.so
 %endif
@@ -311,20 +325,24 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_rts54hid.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_rts54hub.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_solokey.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_steelseries.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_superio.so
 %if 0%{?have_dell}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_synapticsmst.so
 %endif
+%{_libdir}/fwupd-plugins-3/libfu_plugin_synaptics_cxaudio.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_synaptics_prometheus.so
 %if 0%{?enable_dummy}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_test.so
 %endif
+%{_libdir}/fwupd-plugins-3/libfu_plugin_thelio_io.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_thunderbolt.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_thunderbolt_power.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_udev.so
 %if 0%{?have_uefi}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_uefi.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_uefi_recovery.so
 %endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_unifying.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_upower.so
@@ -335,8 +353,10 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %{_datadir}/locale/*/LC_IMAGES/fwupd*
 %endif
 
+%if 0%{?enable_flashrom}
 # eww, but just until the Fedora package ships these...
 %{_libdir}/libflashrom.so.1*
+%endif
 
 %files devel
 %{_datadir}/gir-1.0/Fwupd-2.0.gir

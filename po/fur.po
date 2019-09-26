@@ -15,11 +15,6 @@ msgstr ""
 "Language: fur\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#. TRANSLATORS: first replacement is device name
-#, c-format
-msgid "%s has firmware updates:"
-msgstr "%s al à inzornaments dal firmware:"
-
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Added"
 msgstr "Zontât"
@@ -107,7 +102,6 @@ msgstr "Anulât"
 msgid "Changed"
 msgstr "Modificât"
 
-#. TRANSLATORS: section header for firmware checksum
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Checksum"
@@ -156,7 +150,7 @@ msgstr "Daûr a decomprimi…"
 msgid "Decrypt firmware data"
 msgstr "Decifre i dâts dal firmware"
 
-#. TRANSLATORS: section header for firmware description
+#. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Descrizion"
 
@@ -274,9 +268,6 @@ msgstr[1] "I metadâts dal firmware no son stâts inzornâts par %u dîs e a pod
 msgid "Found"
 msgstr "Cjatât"
 
-msgid "GUID"
-msgstr "GUID"
-
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
 msgstr "Oten ducj i dispositîfs che a supuartin i inzornaments dal firmware"
@@ -305,7 +296,6 @@ msgstr "Al oten lis publicazions par un dispositîf"
 msgid "Gets the results from the last update"
 msgstr "Al oten i risultâts dal ultin inzornament"
 
-#. TRANSLATORS: Appstream ID for the hardware type
 msgid "ID"
 msgstr "ID"
 
@@ -351,10 +341,6 @@ msgstr "Unìs plui file firmware intun"
 msgid "Metadata URI"
 msgstr "URI metadata"
 
-#. TRANSLATORS: remote URI
-msgid "Metadata URI Signature"
-msgstr "Firme dal URI dal metadata"
-
 msgid "Mode"
 msgstr "Modalitât"
 
@@ -371,11 +357,9 @@ msgstr "Monitore il demoni pai events"
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 #. TRANSLATORS: device name, e.g. 'ColorHug2'
-#. TRANSLATORS: section header for the release name
 msgid "Name"
 msgstr "Non"
 
-#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Nissun hardware rilevât un funzionalitâts di inzornament dal firmware"
@@ -434,10 +418,7 @@ msgstr "Regjon"
 msgid "Reinstalling %s with %s... "
 msgstr "Daûr a tornâ a instalâ %s cun %s... "
 
-#. TRANSLATORS: section header for the remote the file is coming from
-msgid "Remote"
-msgstr "Rimot"
-
+#. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 msgid "Remote ID"
 msgstr "ID rimot"
@@ -548,21 +529,13 @@ msgstr "Stât"
 msgid "Status"
 msgstr "Stât"
 
-#. TRANSLATORS: section header for the release one line summary
+#. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Sintesi"
-
-#. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
-msgid "Title"
-msgstr "Titul"
 
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
 msgstr "Gjenar"
-
-#. TRANSLATORS: section header for firmware URI
-msgid "URI"
-msgstr "URI"
 
 #. TRANSLATORS: currect daemon status is unknown
 msgid "Unknown"
@@ -574,34 +547,6 @@ msgstr "Sbloche il dispositîf par permeti l'acès"
 #. TRANSLATORS: command description
 msgid "Unlocks the device for firmware access"
 msgstr "Al sbloche il dispositîf pal acès al firmware"
-
-#. TRANSLATORS: section header for firmware checksum
-msgid "Update Checksum"
-msgstr "Inzorne some di control - checksum"
-
-#. TRANSLATORS: section header for long firmware desc
-msgid "Update Description"
-msgstr "Inzorne descrizion"
-
-#. TRANSLATORS: section header for firmware remote http://
-msgid "Update Location"
-msgstr "Inzorne posizion"
-
-#. TRANSLATORS: section header for the release name
-msgid "Update Name"
-msgstr "Inzorne non"
-
-#. TRANSLATORS: section header for remote ID, e.g. lvfs-testing
-msgid "Update Remote ID"
-msgstr "Inzorne ID rimot"
-
-#. TRANSLATORS: section header for the release one line summary
-msgid "Update Summary"
-msgstr "Inzorne sintesi"
-
-#. TRANSLATORS: section header for firmware version
-msgid "Update Version"
-msgstr "Inzorne version"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
@@ -636,10 +581,6 @@ msgstr "Non utent"
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
 msgstr "Daûr a verificâ…"
-
-#. TRANSLATORS: section header for release version number
-msgid "Version"
-msgstr "Version"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

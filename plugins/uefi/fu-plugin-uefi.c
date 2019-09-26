@@ -12,6 +12,7 @@
 #include <gio/gunixmounts.h>
 #include <glib/gi18n.h>
 
+#include "fu-device-metadata.h"
 #include "fu-plugin-vfuncs.h"
 
 #include "fu-uefi-bgrt.h"
@@ -392,7 +393,7 @@ fu_plugin_update (FuPlugin *plugin,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "%s only has %" G_GUINT32_FORMAT " flashes left -- "
-				     "see https://github.com/hughsie/fwupd/wiki/Dell-TPM:-flashes-left for more information.",
+				     "see https://github.com/fwupd/fwupd/wiki/Dell-TPM:-flashes-left for more information.",
 				     fu_device_get_name (device), flashes_left);
 			return FALSE;
 		}
@@ -448,7 +449,7 @@ fu_plugin_uefi_register_proxy_device (FuPlugin *plugin, FuDevice *device)
 void
 fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 {
-	if (fu_device_get_metadata (device, "UefiDeviceKind") != NULL) {
+	if (fu_device_get_metadata (device, FU_DEVICE_METADATA_UEFI_DEVICE_KIND) != NULL) {
 		if (fu_device_get_guid_default (device) == NULL) {
 			g_autofree gchar *dbg = fu_device_to_string (device);
 			g_warning ("cannot create proxy device as no GUID: %s", dbg);
@@ -505,16 +506,8 @@ fu_plugin_uefi_get_name_for_type (FuPlugin *plugin, FuUefiDeviceKind device_kind
 
 	/* set Display Name prefix for capsules that are not PCI cards */
 	display_name = g_string_new (fu_plugin_uefi_uefi_type_to_string (device_kind));
-	if (device_kind == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE) {
+	if (device_kind == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE)
 		g_string_prepend (display_name, "UEFI ");
-	} else {
-		const gchar *tmp;
-		tmp = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_PRODUCT_NAME);
-		if (tmp != NULL && tmp[0] != '\0') {
-			g_string_prepend (display_name, " ");
-			g_string_prepend (display_name, tmp);
-		}
-	}
 	return g_string_free (display_name, FALSE);
 }
 
@@ -548,6 +541,13 @@ fu_plugin_uefi_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GError **er
 		name = fu_plugin_uefi_get_name_for_type (plugin, fu_uefi_device_get_kind (dev));
 		if (name != NULL)
 			fu_device_set_name (FU_DEVICE (dev), name);
+	}
+	/* set fallback vendor if nothing else is set */
+	if (fu_device_get_vendor (FU_DEVICE (dev)) == NULL &&
+	    fu_uefi_device_get_kind (dev) == FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE) {
+		const gchar *vendor = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER);
+		if (vendor != NULL)
+			fu_device_set_vendor (FU_DEVICE (dev), vendor);
 	}
 
 	/* success */
@@ -588,8 +588,8 @@ fu_plugin_uefi_delete_old_capsules (FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_plugin_startup (FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_uefi_smbios_enabled (FuPlugin *plugin, GError **error)
 {
 	const guint8 *data;
 	gsize sz;
@@ -626,6 +626,32 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 				     "System does not support UEFI mode");
 		return FALSE;
 	}
+	return TRUE;
+}
+
+gboolean
+fu_plugin_startup (FuPlugin *plugin, GError **error)
+{
+	g_autoptr(GError) error_local = NULL;
+
+	/* some platforms have broken SMBIOS data */
+	if (fu_plugin_has_custom_flag (plugin, "uefi-force-enable"))
+		return TRUE;
+
+	/* check SMBIOS for 'UEFI Specification is supported' */
+	if (!fu_plugin_uefi_smbios_enabled (plugin, &error_local)) {
+		g_autofree gchar *fw = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
+		g_autofree gchar *fn = g_build_filename (fw, "efi", NULL);
+		if (g_file_test (fn, G_FILE_TEST_EXISTS)) {
+			g_warning ("SMBIOS BIOS Characteristics Extension Byte 2 is invalid -- "
+				   "UEFI Specification is unsupported, but %s exists: %s",
+				   fn, error_local->message);
+			return TRUE;
+		}
+		g_propagate_error (error, g_steal_pointer (&error_local));
+		return FALSE;
+	}
+
 	/* test for invalid ESP in coldplug, and set the update-error rather
 	 * than showing no output if the plugin had self-disabled here */
 	return TRUE;
@@ -670,7 +696,7 @@ fu_plugin_uefi_ensure_esp_path (FuPlugin *plugin, GError **error)
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_FILENAME,
 				     "Unable to determine EFI system partition location, "
-				     "See https://github.com/hughsie/fwupd/wiki/Determining-EFI-system-partition-location");
+				     "See https://github.com/fwupd/fwupd/wiki/Determining-EFI-system-partition-location");
 		return FALSE;
 	}
 
@@ -774,7 +800,7 @@ fu_plugin_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_plugin_uefi_create_dummy (FuPlugin *plugin, GError **error)
+fu_plugin_uefi_create_dummy (FuPlugin *plugin, const gchar *reason, GError **error)
 {
 	const gchar *key;
 	g_autoptr(FuDevice) dev = fu_device_new ();
@@ -787,8 +813,7 @@ fu_plugin_uefi_create_dummy (FuPlugin *plugin, GError **error)
 	key = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VERSION);
 	if (key != NULL)
 		fu_device_set_version (dev, key, FWUPD_VERSION_FORMAT_PLAIN);
-	key = "Firmware can not be updated in legacy mode, switch to UEFI mode.";
-	fu_device_set_update_error (dev, key);
+	fu_device_set_update_error (dev, reason);
 
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
@@ -821,16 +846,20 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 
 	/* are the EFI dirs set up so we can update each device */
 	if (!fu_uefi_vars_supported (&error_local)) {
+		const gchar *reason = "Firmware can not be updated in legacy mode, switch to UEFI mode";
 		g_warning ("%s", error_local->message);
-		return fu_plugin_uefi_create_dummy (plugin, error);
+		return fu_plugin_uefi_create_dummy (plugin, reason, error);
 	}
 
 	/* get the directory of ESRT entries */
 	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
 	esrt_path = g_build_filename (sysfsfwdir, "efi", "esrt", NULL);
-	entries = fu_uefi_get_esrt_entry_paths (esrt_path, error);
-	if (entries == NULL)
-		return FALSE;
+	entries = fu_uefi_get_esrt_entry_paths (esrt_path, &error_local);
+	if (entries == NULL) {
+		const gchar *reason = "UEFI Capsule updates not available or enabled";
+		g_warning ("%s", error_local->message);
+		return fu_plugin_uefi_create_dummy (plugin, reason, error);
+	}
 
 	/* make sure that efivarfs is rw */
 	if (!fu_plugin_uefi_ensure_efivarfs_rw (&error_efivarfs))

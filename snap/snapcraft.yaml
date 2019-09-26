@@ -8,6 +8,7 @@ description: |
 
 grade: stable
 confinement: classic
+base: core18
 
 architectures:
   - amd64
@@ -28,78 +29,38 @@ apps:
       share/bash-completion/completions/fwupdmgr
 
 parts:
-  libefivar-dev:
-    plugin: make
-    make-parameters:
-    - prefix=/
-    - libdir=/lib
-    source: https://github.com/rhboot/efivar/releases/download/37/efivar-37.tar.bz2
-    build-packages:
-      - libpopt-dev
+  tpm2-tss:
+    plugin: autotools
+    source: https://github.com/tpm2-software/tpm2-tss/releases/download/2.3.0/tpm2-tss-2.3.0.tar.gz
+    configflags:
+      - --disable-doxygen-doc
     prime:
      - -include
      - -bin
      - -share/man
      - -lib/pkgconfig
-  #adjust the paths from libefivar
-  libefivar-fixpkgconfig:
-    plugin: make
-    source: contrib/snap/libefivar-fixpkgconfig
-    make-parameters:
-      - SNAPCRAFT_STAGE=$SNAPCRAFT_STAGE
-    after: [libefivar-dev]
-  libsmbios:
-    plugin: autotools
-    source: https://github.com/dell/libsmbios/archive/v2.4.2.tar.gz
     build-packages:
-      - libxml2-dev
-      - pkg-config
-      - autoconf
-      - automake
-      - libtool
-      - autopoint
-    prime:
-      - -include/
-      - -lib/pkgconfig
-      - -lib/python3.5
-      - -sbin/
-      - -share/
-      - -etc/
-      - -lib/*.a
+     - libssl-dev
   meson:
     plugin: python
-    source: https://github.com/mesonbuild/meson/releases/download/0.47.2/meson-0.47.2.tar.gz
+    source: https://github.com/mesonbuild/meson/releases/download/0.51.2/meson-0.51.2.tar.gz
     build-packages:
       - ninja-build
+      - python3-distutils-extra
     prime:
       - -bin
       - -etc
       - -lib
       - -share
       - -usr
-  gudev:
-    plugin: autotools
-    source: https://github.com/GNOME/libgudev/archive/232.tar.gz
-    configflags:
-      - --disable-umockdev
-    build-packages:
-      - libglib2.0-dev
-      - pkg-config
-      - libudev-dev
-      - gtk-doc-tools
-      - gnome-common
-    prime:
-      - -include
-      - -lib/girepository-1.0
-      - -lib/pkgconfig
-      - -share/
   # this is for the library only, we don't care about the daemon "in-snap"
   modemmanager:
     plugin: autotools
     source: https://gitlab.freedesktop.org/mobile-broadband/ModemManager.git
     source-tag: 1.10.0
-    after: [gudev, gettext]
     # build without these; system daemon needs them
+    build-packages:
+      - xsltproc
     configflags:
       - --without-mbim
       - --without-qmi
@@ -119,7 +80,7 @@ parts:
     plugin: autotools
     source: https://gitlab.freedesktop.org/mobile-broadband/libmbim.git
     source-tag: 1.18.0
-    after: [gudev, gettext, modemmanager]
+    after: [modemmanager]
     # build without these; system daemon needs them
     configflags:
       - --without-udev
@@ -139,7 +100,7 @@ parts:
     plugin: autotools
     source: https://gitlab.freedesktop.org/mobile-broadband/libqmi.git
     source-tag: 1.23.1
-    after: [gudev, gettext, modemmanager, libmbim]
+    after: [modemmanager, libmbim]
     # build without these; system daemon needs them
     configflags:
       - --without-udev
@@ -155,39 +116,6 @@ parts:
       - -lib/systemd
       - -lib/udev
       - -lib/girepository-1.0
-  libusb:
-    plugin: autotools
-    source: https://github.com/libusb/libusb/releases/download/v1.0.22/libusb-1.0.22.tar.bz2
-    configflags:
-     - --disable-static
-    prime:
-      - -include/
-      - -lib/pkgconfig
-  gusb:
-    plugin: meson
-    source: https://github.com/hughsie/libgusb/archive/0.3.0.tar.gz
-    meson-parameters: [--prefix=/,
-                       -Dtests=false,
-                       -Dvapi=false,
-                       -Ddocs=false]
-    build-packages:
-    - libgirepository1.0-dev
-    prime:
-    - -bin/
-    - -include
-    - -share
-    - -lib/*/pkgconfig
-    - -lib/*/girepository-1.0
-    after: [meson, libusb]
-  gnu-efi:
-    plugin: make
-    source: http://superb-dca2.dl.sourceforge.net/project/gnu-efi/gnu-efi-3.0.5.tar.bz2
-    make-parameters:
-      - PREFIX=/usr
-    make-install-var: INSTALLROOT
-    prime:
-      - -usr/include/
-      - -usr/lib
   #fetch the latest version of the signed bootloader
   #this might not match our fwupdx64.efi, but it's better than nothing
   fwup-efi-signed:
@@ -207,51 +135,18 @@ parts:
       - -usr
       - -lib
       - -var
-  #0.19.8.1 adds support for GETTEXTDATADIRS which is needed by meson's msgfmthelper
-  gettext:
-    source: https://ftp.gnu.org/pub/gnu/gettext/gettext-0.19.8.1.tar.xz
-    plugin: autotools
-    build-packages:
-    - bison
-    - libunistring-dev
-    - libxml2-dev
-    configflags:
-    - --prefix=/usr
-    - --disable-static
-    - --disable-curses
-    - --disable-java
-    - --enable-relocatable
-    - --without-emacs
-    - --without-included-glib
-    - --without-included-libunistring
-    - --without-included-libxml
-    stage-packages:
-    - libunistring0
-    - libxml2
-    - libgomp1
-    prime:
-    - -**/*.a
-    - -**/*.la
-    - -usr/bin
-    - -usr/include
-    - -usr/lib/gettext
-    - -usr/share
   fwupd:
     plugin: meson
     meson-parameters: [--prefix=/,
-                       -Defi-includedir=$SNAPCRAFT_STAGE/usr/include/efi,
-                       -Defi-ldsdir=$SNAPCRAFT_STAGE/usr/lib,
-                       -Defi-libdir=$SNAPCRAFT_STAGE/usr/lib,
                        -Dtests=false,
-                       -Ddaemon=true,
+                       -Dbuild=all,
                        -Dgtkdoc=false,
                        -Dintrospection=false,
                        -Dman=false,
                        -Dplugin_modem_manager=true,
                        -Dudevdir=$SNAPCRAFT_STAGE/lib/udev,
                        "-Dlibxmlb:gtkdoc=false",
-                       "-Dlibxmlb:introspection=false",
-                       -Dpkcs7=false]
+                       "-Dlibxmlb:introspection=false"]
     source: .
     source-type: git
     override-build: |
@@ -261,10 +156,15 @@ parts:
       - bash-completion
       - gcab
       - gnutls-dev
+      - gnu-efi
       - libarchive-dev
       - libcairo-dev
       - libelf-dev
+      - libefiboot-dev
+      - libefivar-dev
       - libftdi1-dev
+      - libgudev-1.0-dev
+      - libgusb-dev
       - libgcab-dev
       - libglib2.0-dev
       - libgpgme11-dev
@@ -272,20 +172,28 @@ parts:
       - libpango1.0-dev
       - libpci-dev
       - libpolkit-gobject-1-dev
+      - libsmbios-dev
       - libsoup2.4-dev
       - libsqlite3-dev
       - locales
       - pkg-config
+      - systemd
       - uuid-dev
     stage-packages:
       - libgcab-1.0-0
       - libarchive13
       - libassuan0
       - liblcms2-2
+      - libefivar1
+      - libefiboot1
       - libelf1
+      - libgusb2
+      - libusb-1.0-0
+      - libgudev-1.0-0
       - libgpgme11
       - libjson-glib-1.0-0
       - libpolkit-gobject-1-0
+      - libsmbios-c2
       - libsoup2.4-1
       - glib-networking
       - libglib2.0-bin
@@ -324,7 +232,7 @@ parts:
       - -usr/share/gir-1.0
       - -usr/share/upstart
       - -usr/lib/*/pkgconfig
-    after: [gudev, gusb, gnu-efi, libefivar-fixpkgconfig, libsmbios, build-introspection, gettext, modemmanager, libmbim, libqmi]
+    after: [meson, build-introspection, modemmanager, libmbim, libqmi, tpm2-tss]
   fix-bash-completion:
     plugin: make
     source: contrib/snap/fix-bash-completion

@@ -15,6 +15,7 @@ _fwupdmgr_cmd_list=(
 	'get-results'
 	'get-topology'
 	'get-updates'
+	'get-upgrades'
 	'install'
 	'modify-config'
 	'modify-remote'
@@ -23,6 +24,7 @@ _fwupdmgr_cmd_list=(
 	'set-approved-firmware'
 	'unlock'
 	'update'
+	'upgrade'
 	'verify'
 	'verify-update'
 	'--version'
@@ -41,7 +43,17 @@ _fwupdmgr_opts=(
 	'--no-reboot-check'
 	'--show-all-devices'
 	'--sign'
+	'--filter'
+	'--log'
+	'--disable-ssl-strict'
 )
+
+_show_filters()
+{
+	local flags
+	flags="$(command @libexecdir@/fwupdtool get-device-flags 2>/dev/null)"
+	COMPREPLY+=( $(compgen -W "${flags}" -- "$cur") )
+}
 
 _show_modifiers()
 {
@@ -72,6 +84,13 @@ _fwupdmgr()
 	cur=`_get_cword`
 	prev=${COMP_WORDS[COMP_CWORD-1]}
 	command=${COMP_WORDS[1]}
+
+	case $prev in
+	--filter)
+		_show_filters
+		return 0
+		;;
+	esac
 
 	case $command in
 	activate|clear-results|downgrade|get-releases|get-results|unlock|verify|verify-update)

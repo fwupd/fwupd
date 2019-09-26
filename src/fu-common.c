@@ -835,7 +835,7 @@ fu_common_strstrip (const gchar *str)
 
 	/* find last non-space char */
 	for (guint i = head; str[i] != '\0'; i++) {
-		if (str[i] != ' ')
+		if (!g_ascii_isspace (str[i]))
 			tail = i;
 	}
 	return g_strndup (str + head, tail - head + 1);
@@ -1025,14 +1025,23 @@ fu_common_get_path (FuPathKind path_kind)
 #endif
 	/* /etc/fwupd */
 	case FU_PATH_KIND_SYSCONFDIR_PKG:
+		tmp = g_getenv ("CONFIGURATION_DIRECTORY");
+		if (tmp != NULL)
+			return g_build_filename (tmp, NULL);
 		basedir = fu_common_get_path (FU_PATH_KIND_SYSCONFDIR);
 		return g_build_filename (basedir, PACKAGE_NAME, NULL);
 	/* /var/lib/fwupd */
 	case FU_PATH_KIND_LOCALSTATEDIR_PKG:
+		tmp = g_getenv ("STATE_DIRECTORY");
+		if (tmp != NULL)
+			return g_build_filename (tmp, NULL);
 		basedir = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR);
 		return g_build_filename (basedir, "lib", PACKAGE_NAME, NULL);
 	/* /var/cache/fwupd */
 	case FU_PATH_KIND_CACHEDIR_PKG:
+		tmp = g_getenv ("CACHE_DIRECTORY");
+		if (tmp != NULL)
+			return g_build_filename (tmp, NULL);
 		basedir = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR);
 		return g_build_filename (basedir, "cache", PACKAGE_NAME, NULL);
 	case FU_PATH_KIND_POLKIT_ACTIONS:
@@ -1112,6 +1121,90 @@ fu_common_string_replace (GString *string, const gchar *search, const gchar *rep
 	} while (TRUE);
 
 	return count;
+}
+
+/**
+ * fu_common_strwidth:
+ * @text: The string to operate on
+ *
+ * Returns the width of the string in displayed characters on the console.
+ *
+ * Returns: width of text
+ *
+ * Since: 1.3.2
+ **/
+gsize
+fu_common_strwidth (const gchar *text)
+{
+	const gchar *p = text;
+	gsize width = 0;
+	while (*p) {
+		gunichar c = g_utf8_get_char (p);
+		if (g_unichar_iswide (c))
+			width += 2;
+		else if (!g_unichar_iszerowidth (c))
+			width += 1;
+		p = g_utf8_next_char (p);
+	}
+	return width;
+}
+
+void
+fu_common_string_append_kv (GString *str, guint idt, const gchar *key, const gchar *value)
+{
+	const guint align = 25;
+	gsize keysz;
+
+	g_return_if_fail (idt * 2 < align);
+
+	/* ignore */
+	if (key == NULL)
+		return;
+	for (gsize i = 0; i < idt; i++)
+		g_string_append (str, "  ");
+	if (key[0] != '\0') {
+		g_string_append_printf (str, "%s:", key);
+		keysz = (idt * 2) + fu_common_strwidth (key) + 1;
+	} else {
+		keysz = idt * 2;
+	}
+	if (value != NULL) {
+		g_auto(GStrv) split = NULL;
+		split = g_strsplit (value, "\n", -1);
+		for (guint i = 0; split[i] != NULL; i++) {
+			if (i == 0) {
+				for (gsize j = keysz; j < align; j++)
+					g_string_append (str, " ");
+			} else {
+				for (gsize j = 0; j < idt; j++)
+					g_string_append (str, "  ");
+			}
+			g_string_append (str, split[i]);
+			g_string_append (str, "\n");
+		}
+	} else {
+		g_string_append (str, "\n");
+	}
+}
+
+void
+fu_common_string_append_ku (GString *str, guint idt, const gchar *key, guint64 value)
+{
+	g_autofree gchar *tmp = g_strdup_printf ("%" G_GUINT64_FORMAT, value);
+	fu_common_string_append_kv (str, idt, key, tmp);
+}
+
+void
+fu_common_string_append_kx (GString *str, guint idt, const gchar *key, guint64 value)
+{
+	g_autofree gchar *tmp = g_strdup_printf ("0x%x", (guint) value);
+	fu_common_string_append_kv (str, idt, key, tmp);
+}
+
+void
+fu_common_string_append_kb (GString *str, guint idt, const gchar *key, gboolean value)
+{
+	fu_common_string_append_kv (str, idt, key, value ? "true" : "false");
 }
 
 /**
@@ -1284,30 +1377,27 @@ fu_common_bytes_is_empty (GBytes *bytes)
 }
 
 /**
- * fu_common_bytes_compare:
- * @bytes1: a #GBytes
- * @bytes2: another #GBytes
+ * fu_common_bytes_compare_raw:
+ * @buf1: a buffer
+ * @bufsz1: sizeof @buf1
+ * @buf2: another buffer
+ * @bufsz2: sizeof @buf2
  * @error: A #GError or %NULL
  *
- * Checks if a byte array are just empty (0xff) bytes.
+ * Compares the buffers for equality.
  *
- * Return value: %TRUE if @bytes1 and @bytes2 are identical
+ * Return value: %TRUE if @buf1 and @buf2 are identical
  **/
 gboolean
-fu_common_bytes_compare (GBytes *bytes1, GBytes *bytes2, GError **error)
+fu_common_bytes_compare_raw (const guint8 *buf1, gsize bufsz1,
+			     const guint8 *buf2, gsize bufsz2,
+			     GError **error)
 {
-	const guint8 *buf1;
-	const guint8 *buf2;
-	gsize bufsz1;
-	gsize bufsz2;
-
-	g_return_val_if_fail (bytes1 != NULL, FALSE);
-	g_return_val_if_fail (bytes2 != NULL, FALSE);
+	g_return_val_if_fail (buf1 != NULL, FALSE);
+	g_return_val_if_fail (buf2 != NULL, FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* not the same length */
-	buf1 = g_bytes_get_data (bytes1, &bufsz1);
-	buf2 = g_bytes_get_data (bytes2, &bufsz2);
 	if (bufsz1 != bufsz2) {
 		g_set_error (error,
 			     G_IO_ERROR,
@@ -1331,6 +1421,63 @@ fu_common_bytes_compare (GBytes *bytes1, GBytes *bytes2, GError **error)
 
 	/* success */
 	return TRUE;
+}
+
+/**
+ * fu_common_bytes_compare:
+ * @bytes1: a #GBytes
+ * @bytes2: another #GBytes
+ * @error: A #GError or %NULL
+ *
+ * Compares the buffers for equality.
+ *
+ * Return value: %TRUE if @bytes1 and @bytes2 are identical
+ **/
+gboolean
+fu_common_bytes_compare (GBytes *bytes1, GBytes *bytes2, GError **error)
+{
+	const guint8 *buf1;
+	const guint8 *buf2;
+	gsize bufsz1;
+	gsize bufsz2;
+
+	g_return_val_if_fail (bytes1 != NULL, FALSE);
+	g_return_val_if_fail (bytes2 != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	buf1 = g_bytes_get_data (bytes1, &bufsz1);
+	buf2 = g_bytes_get_data (bytes2, &bufsz2);
+	return fu_common_bytes_compare_raw (buf1, bufsz1, buf2, bufsz2, error);
+}
+
+/**
+ * fu_common_bytes_pad:
+ * @bytes: a #GBytes
+ * @sz: the desired size in bytes
+ *
+ * Pads a GBytes to a given @sz with `0xff`.
+ *
+ * Return value: (transfer full): a #GBytes
+ **/
+GBytes *
+fu_common_bytes_pad (GBytes *bytes, gsize sz)
+{
+	gsize bytes_sz;
+
+	g_return_val_if_fail (g_bytes_get_size (bytes) <= sz, NULL);
+
+	/* pad */
+	bytes_sz = g_bytes_get_size (bytes);
+	if (bytes_sz < sz) {
+		const guint8 *data = g_bytes_get_data (bytes, NULL);
+		guint8 *data_new = g_malloc (sz);
+		memcpy (data_new, data, bytes_sz);
+		memset (data_new + bytes_sz, 0xff, sz - bytes_sz);
+		return g_bytes_new_take (data_new, sz);
+	}
+
+	/* exactly right */
+	return g_bytes_ref (bytes);
 }
 
 /**
@@ -1358,4 +1505,120 @@ fu_common_realpath (const gchar *filename, GError **error)
 		return NULL;
 	}
 	return g_strdup (full_tmp);
+}
+
+/**
+ * fu_common_strnsplit:
+ * @str: a string to split
+ * @sz: size of @str
+ * @delimiter: a string which specifies the places at which to split the string
+ * @max_tokens: the maximum number of pieces to split @str into
+ *
+ * Splits a string into a maximum of @max_tokens pieces, using the given
+ * delimiter. If @max_tokens is reached, the remainder of string is appended
+ * to the last token.
+ *
+ * Return value: a newly-allocated NULL-terminated array of strings
+ **/
+gchar **
+fu_common_strnsplit (const gchar *str, gsize sz,
+		     const gchar *delimiter, gint max_tokens)
+{
+	if (str[sz - 1] != '\0') {
+		g_autofree gchar *str2 = g_strndup (str, sz);
+		return g_strsplit (str2, delimiter, max_tokens);
+	}
+	return g_strsplit (str, delimiter, max_tokens);
+}
+
+/**
+ * fu_memcpy_safe:
+ * @dst: destination buffer
+ * @dst_sz: maximum size of @dst, typically `sizeof(dst)`
+ * @dst_offset: offset in bytes into @dst to copy to
+ * @src: source buffer
+ * @src_sz: maximum size of @dst, typically `sizeof(src)`
+ * @src_offset: offset in bytes into @src to copy from
+ * @n: number of bytes to copy from @src+@offset from
+ * @error: A #GError or %NULL
+ *
+ * Copies some memory using memcpy in a safe way. Providing the buffer sizes
+ * of both the destination and the source allows us to check for buffer overflow.
+ *
+ * Providing the buffer offsets also allows us to check reading past the end of
+ * the source buffer. For this reason the caller should NEVER add an offset to
+ * @src or @dst.
+ *
+ * You don't need to use this function in "obviously correct" cases, nor should
+ * you use it when performance is a concern. Only us it when you're not sure if
+ * malicious data from a device or firmware could cause memory corruption.
+ *
+ * Return value: %TRUE if the bytes were copied, %FALSE otherwise
+ **/
+gboolean
+fu_memcpy_safe (guint8 *dst, gsize dst_sz, gsize dst_offset,
+		const guint8 *src, gsize src_sz, gsize src_offset,
+		gsize n, GError **error)
+{
+	if (n == 0)
+		return TRUE;
+
+	if (n > src_sz) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_READ,
+			     "attempted to read 0x%02x bytes from buffer of 0x%02x",
+			     (guint) n, (guint) src_sz);
+		return FALSE;
+	}
+	if (n + src_offset > src_sz) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_READ,
+			     "attempted to read 0x%02x bytes at offset 0x%02x from buffer of 0x%02x",
+			     (guint) n, (guint) src_offset, (guint) src_sz);
+		return FALSE;
+	}
+	if (n > dst_sz) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_WRITE,
+			     "attempted to write 0x%02x bytes to buffer of 0x%02x",
+			     (guint) n, (guint) dst_sz);
+		return FALSE;
+	}
+	if (n + dst_offset > dst_sz) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_WRITE,
+			     "attempted to write 0x%02x bytes at offset 0x%02x to buffer of 0x%02x",
+			     (guint) n, (guint) dst_offset, (guint) dst_sz);
+		return FALSE;
+	}
+
+	/* phew! */
+	memcpy (dst + dst_offset, src + src_offset, n);
+	return TRUE;
+}
+
+void
+fu_byte_array_append_uint8 (GByteArray *array, guint8 data)
+{
+	g_byte_array_append (array, &data, sizeof(data));
+}
+
+void
+fu_byte_array_append_uint16 (GByteArray *array, guint16 data, FuEndianType endian)
+{
+	guint8 buf[2];
+	fu_common_write_uint16 (buf, data, endian);
+	g_byte_array_append (array, buf, sizeof(buf));
+}
+
+void
+fu_byte_array_append_uint32 (GByteArray *array, guint32 data, FuEndianType endian)
+{
+	guint8 buf[4];
+	fu_common_write_uint32 (buf, data, endian);
+	g_byte_array_append (array, buf, sizeof(buf));
 }

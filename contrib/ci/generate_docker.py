@@ -79,7 +79,7 @@ with open(out.name, 'w') as wfd:
                 wfd.write("RUN apt update -qq && \\\n")
                 wfd.write("\tapt install -yq --no-install-recommends\\\n")
             elif OS == "arch":
-                wfd.write("RUN pacman -Syu --noconfirm \\\n")
+                wfd.write("RUN pacman -Syu --noconfirm --needed\\\n")
             for i in range(0, len(deps)):
                 if i < len(deps)-1:
                     wfd.write("\t%s \\\n" % deps[i])

@@ -72,7 +72,7 @@ fu_wac_module_bluetooth_calculate_crc (const guint8 *data, gsize sz)
 }
 
 static GPtrArray *
-fu_wac_module_bluetooth_parse_blocks (const guint8 *data, gsize sz, gboolean skip_user_data)
+fu_wac_module_bluetooth_parse_blocks (const guint8 *data, gsize sz, gboolean skip_user_data, GError **error)
 {
 	const guint8 preamble[] = {0x02, 0x00, 0x0f, 0x06, 0x01, 0x08, 0x01};
 	GPtrArray *blocks = g_ptr_array_new_with_free_func (g_free);
@@ -96,7 +96,10 @@ fu_wac_module_bluetooth_parse_blocks (const guint8 *data, gsize sz, gboolean ski
 		/* if file is not in multiples of payload size */
 		if (addr + FU_WAC_MODULE_BLUETOOTH_PAYLOAD_SZ >= sz)
 			cdata_sz = sz - addr;
-		memcpy (bd->cdata, data + addr, cdata_sz);
+		if (!fu_memcpy_safe (bd->cdata, sizeof(bd->cdata), 0x0,	/* dst */
+				     data, sz, addr,			/* src */
+				     cdata_sz, error))
+			return NULL;
 		bd->crc = fu_wac_module_bluetooth_calculate_crc (bd->cdata,
 								 FU_WAC_MODULE_BLUETOOTH_PAYLOAD_SZ);
 		g_ptr_array_add (blocks, bd);
@@ -106,7 +109,7 @@ fu_wac_module_bluetooth_parse_blocks (const guint8 *data, gsize sz, gboolean ski
 
 static gboolean
 fu_wac_module_bluetooth_write_firmware (FuDevice *device,
-					GBytes *blob,
+					FuFirmware *firmware,
 					FwupdInstallFlags flags,
 					GError **error)
 {
@@ -117,10 +120,18 @@ fu_wac_module_bluetooth_write_firmware (FuDevice *device,
 	const guint8 buf_start[] = { 0x00 };
 	g_autoptr(GPtrArray) blocks = NULL;
 	g_autoptr(GBytes) blob_start = g_bytes_new_static (buf_start, 1);
+	g_autoptr(GBytes) fw = NULL;
+
+	/* get default image */
+	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	if (fw == NULL)
+		return FALSE;
 
 	/* build each data packet */
-	data = g_bytes_get_data (blob, &len);
-	blocks = fu_wac_module_bluetooth_parse_blocks (data, len, TRUE);
+	data = g_bytes_get_data (fw, &len);
+	blocks = fu_wac_module_bluetooth_parse_blocks (data, len, TRUE, error);
+	if (blocks == NULL)
+		return FALSE;
 	blocks_total = blocks->len + 2;
 
 	/* start, which will erase the module */

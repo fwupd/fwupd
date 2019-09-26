@@ -24,11 +24,6 @@ msgid_plural "%.0f minutes remaining"
 msgstr[0] "%.0f Minute verbleibt"
 msgstr[1] "%.0f Minuten verbleiben"
 
-#. TRANSLATORS: first replacement is device name
-#, c-format
-msgid "%s has firmware updates:"
-msgstr "Firmware-Aktualisierungen für %s verfügbar:"
-
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Added"
 msgstr "Hinzugefügt"
@@ -120,7 +115,6 @@ msgstr "Abgebrochen"
 msgid "Changed"
 msgstr "Geändert"
 
-#. TRANSLATORS: section header for firmware checksum
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Prüfsumme"
@@ -176,7 +170,7 @@ msgstr "Entpacken …"
 msgid "Decrypt firmware data"
 msgstr "Firmware-Daten entschlüsseln"
 
-#. TRANSLATORS: section header for firmware description
+#. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Beschreibung"
 
@@ -365,13 +359,6 @@ msgstr "Aktion erzwingen, bei der alle Warnungen ignoriert werden"
 msgid "Found"
 msgstr "Gefunden"
 
-msgid "GUID"
-msgstr "GUID"
-
-#. TRANSLATORS: command description
-msgid "Get all devices according to the system topology"
-msgstr "Ermittelt alle Geräte gemäß der Systemtopologie"
-
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
 msgstr "Alle Geräte ermitteln, die Firmware-Aktualisierungen unterstützen"
@@ -400,7 +387,6 @@ msgstr "Ermittelt die Versionen für ein Gerät"
 msgid "Gets the results from the last update"
 msgstr "Ermittelt die Ergebnisse der letzten Aktualisierung"
 
-#. TRANSLATORS: Appstream ID for the hardware type
 msgid "ID"
 msgstr "Kennung"
 
@@ -473,10 +459,6 @@ msgstr "Mehrere Firmware-Dateien in eine zusammenführen"
 msgid "Metadata URI"
 msgstr "Metadaten-URI"
 
-#. TRANSLATORS: remote URI
-msgid "Metadata URI Signature"
-msgstr "Metadaten URI-Signatur"
-
 #. TRANSLATORS: explain why no metadata available
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "Metadaten können über den Linux Vendor Firmware Service bezogen werden."
@@ -490,14 +472,12 @@ msgstr "Hintergrundprogramm auf Ereignisse überwachen"
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 #. TRANSLATORS: device name, e.g. 'ColorHug2'
-#. TRANSLATORS: section header for the release name
 msgid "Name"
 msgstr "Name"
 
 msgid "No action specified!"
 msgstr "Keine Aktion angegeben!"
 
-#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Es wurde keine Hardware erkannt, deren Firmware aktualisiert werden kann"
@@ -713,7 +693,7 @@ msgstr "Zustand"
 msgid "Status"
 msgstr "Status"
 
-#. TRANSLATORS: section header for the release one line summary
+#. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Zusammenfassung"
 
@@ -728,10 +708,6 @@ msgstr "Der LVFS ist ein kostenloser Dienst, der als unabhängige juristische Pe
 msgid "This program may only work correctly as root"
 msgstr "Dieses Programm funktioniert möglicherweise nur als root korrekt"
 
-#. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
-msgid "Title"
-msgstr "Titel"
-
 #. TRANSLATORS: transfer size in bytes
 msgid "Transfer Size"
 msgstr "Übertragungsgröße"
@@ -744,10 +720,6 @@ msgstr "Typ"
 msgid "UEFI Firmware Utility"
 msgstr "UEFI-Firmware-Dienstprogramm"
 
-#. TRANSLATORS: section header for firmware URI
-msgid "URI"
-msgstr "URI"
-
 #. TRANSLATORS: currect daemon status is unknown
 msgid "Unknown"
 msgstr "Unbekannt"
@@ -758,30 +730,6 @@ msgstr "Das Gerät entsperren, um Zugriff zu ermöglichen"
 #. TRANSLATORS: command description
 msgid "Unlocks the device for firmware access"
 msgstr "Entsperrt das Gerät für Zugriff auf die Firmware"
-
-#. TRANSLATORS: section header for firmware checksum
-msgid "Update Checksum"
-msgstr "Prüfsumme aktualisieren"
-
-#. TRANSLATORS: section header for long firmware desc
-msgid "Update Description"
-msgstr "Beschreibung aktualisieren"
-
-#. TRANSLATORS: section header for firmware remote http://
-msgid "Update Location"
-msgstr "Ort aktualisieren"
-
-#. TRANSLATORS: section header for the release name
-msgid "Update Name"
-msgstr "Aktualisierungsname"
-
-#. TRANSLATORS: section header for the release one line summary
-msgid "Update Summary"
-msgstr "Aktualisierungszusammenfassung"
-
-#. TRANSLATORS: section header for firmware version
-msgid "Update Version"
-msgstr "Version aktualisieren"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
@@ -833,10 +781,6 @@ msgstr "Benutzername"
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
 msgstr "Überprüfung …"
-
-#. TRANSLATORS: section header for release version number
-msgid "Version"
-msgstr "Version"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

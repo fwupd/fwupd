@@ -40,6 +40,7 @@ shared_module('fu_plugin_uefi',
     plugin_deps,
     efivar,
     efiboot,
+    tpm2tss,
   ],
 )
 
@@ -71,6 +72,7 @@ executable(
     gudev,
     efivar,
     efiboot,
+    tpm2tss,
   ],
   link_with : [
     libfwupdprivate,
@@ -111,6 +113,7 @@ if get_option('tests')
       plugin_deps,
       efivar,
       efiboot,
+      tpm2tss,
     ],
     link_with : [
       libfwupdprivate,

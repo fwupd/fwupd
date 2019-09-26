@@ -58,7 +58,7 @@ fu_dell_dock_status_setup (FuDevice *device, GError **error)
 
 static gboolean
 fu_dell_dock_status_write (FuDevice *device,
-			   GBytes *blob_fw,
+			   FuFirmware *firmware,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
@@ -66,18 +66,27 @@ fu_dell_dock_status_write (FuDevice *device,
 	FuDevice *parent;
 	gsize length = 0;
 	guint32 status_version = 0;
-	const guint8 *data = g_bytes_get_data (blob_fw, &length);
+	const guint8 *data;
 	g_autofree gchar *dynamic_version = NULL;
+	g_autoptr(GBytes) fw = NULL;
 
 	g_return_val_if_fail (device != NULL, FALSE);
-	g_return_val_if_fail (blob_fw != NULL, FALSE);
+	g_return_val_if_fail (FU_IS_FIRMWARE (firmware), FALSE);
 
-	memcpy (&status_version, data + self->blob_version_offset, sizeof (guint32));
+	/* get default image */
+	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	if (fw == NULL)
+		return FALSE;
+	data = g_bytes_get_data (fw, &length);
+	if (!fu_memcpy_safe ((guint8 *) &status_version, sizeof(status_version), 0x0,	/* dst */
+			     data, length, self->blob_version_offset,		/* src */
+			     sizeof(status_version), error))
+		return FALSE;
 	dynamic_version = fu_dell_dock_status_ver_string (status_version);
 	g_debug ("writing status firmware version %s", dynamic_version);
 
 	parent = fu_device_get_parent (device);
-	if (!fu_dell_dock_ec_commit_package (parent, blob_fw, error))
+	if (!fu_dell_dock_ec_commit_package (parent, fw, error))
 		return FALSE;
 
 	/* dock will reboot to re-read; this is to appease the daemon */

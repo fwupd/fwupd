@@ -23,12 +23,11 @@ G_DEFINE_TYPE (FuRts54HidDevice, fu_rts54hid_device, FU_TYPE_USB_DEVICE)
 #define FU_RTS54HID_DEVICE_TIMEOUT			1000 /* ms */
 
 static void
-fu_rts54hid_device_to_string (FuDevice *device, GString *str)
+fu_rts54hid_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuRts54HidDevice *self = FU_RTS54HID_DEVICE (device);
-	g_string_append (str, "  FuRts54HidDevice:\n");
-	g_string_append_printf (str, "    fw-auth: %i\n", self->fw_auth);
-	g_string_append_printf (str, "    dual-bank: %i\n", self->dual_bank);
+	fu_common_string_append_kb (str, idt, "FwAuth", self->fw_auth);
+	fu_common_string_append_kb (str, idt, "DualBank", self->dual_bank);
 }
 
 gboolean
@@ -149,7 +148,10 @@ fu_rts54hid_device_write_flash (FuRts54HidDevice *self,
 	g_return_val_if_fail (data_sz != 0, FALSE);
 
 	memcpy (buf, &cmd_buffer, sizeof(cmd_buffer));
-	memcpy (buf + FU_RTS54HID_CMD_BUFFER_OFFSET_DATA, data, data_sz);
+	if (!fu_memcpy_safe (buf, sizeof(buf), FU_RTS54HID_CMD_BUFFER_OFFSET_DATA,	/* dst */
+			     data, data_sz, 0x0,					/* src */
+			     data_sz, error))
+		return FALSE;
 	if (!fu_rts54hid_device_set_report (self, buf, sizeof(buf), error)) {
 		g_prefix_error (error, "failed to write flash @%08x: ", (guint) addr);
 		return FALSE;
@@ -315,12 +317,18 @@ fu_rts54hid_device_close (FuUsbDevice *device, GError **error)
 
 static gboolean
 fu_rts54hid_device_write_firmware (FuDevice *device,
-				   GBytes *fw,
+				   FuFirmware *firmware,
 				   FwupdInstallFlags flags,
 				   GError **error)
 {
 	FuRts54HidDevice *self = FU_RTS54HID_DEVICE (device);
+	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
+
+	/* get default image */
+	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	if (fw == NULL)
+		return FALSE;
 
 	/* set MCU to high clock rate for better ISP performance */
 	if (!fu_rts54hid_device_set_clock_mode (self, TRUE, error))

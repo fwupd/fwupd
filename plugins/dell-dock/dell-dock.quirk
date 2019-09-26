@@ -97,6 +97,7 @@ DellDockInstallDurationI2C=360
 DellDockBlobMajorOffset = 0x18400
 DellDockBlobMinorOffset = 0x18401
 DellDockBlobBuildOffset = 0x18402
+Icon = video-display
 
 # Thunderbolt controller
 [Guid=TBT-00d4b070]
@@ -107,6 +108,7 @@ ParentGuid = USB\VID_413C&PID_B06E&hub&embedded
 FirmwareSizeMin=0x40000
 FirmwareSizeMax=0x80000
 Flags = require-ac
+Icon = thunderbolt
 InstallDuration = 22
 DellDockInstallDurationI2C = 181
 DellDockUnlockTarget = 10

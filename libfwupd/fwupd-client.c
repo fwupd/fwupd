@@ -40,6 +40,8 @@ typedef struct {
 	gboolean			 tainted;
 	guint				 percentage;
 	gchar				*daemon_version;
+	gchar				*host_product;
+	gchar				*host_machine_id;
 	GDBusConnection			*conn;
 	GDBusProxy			*proxy;
 } FwupdClientPrivate;
@@ -59,6 +61,8 @@ enum {
 	PROP_PERCENTAGE,
 	PROP_DAEMON_VERSION,
 	PROP_TAINTED,
+	PROP_HOST_PRODUCT,
+	PROP_HOST_MACHINE_ID,
 	PROP_LAST
 };
 
@@ -101,6 +105,24 @@ fwupd_client_helper_new (void)
 #pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FwupdClientHelper, fwupd_client_helper_free)
 #pragma clang diagnostic pop
+
+static void
+fwupd_client_set_host_product (FwupdClient *client, const gchar *host_product)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_free (priv->host_product);
+	priv->host_product = g_strdup (host_product);
+	g_object_notify (G_OBJECT (client), "host-product");
+}
+
+static void
+fwupd_client_set_host_machine_id (FwupdClient *client, const gchar *host_machine_id)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_free (priv->host_machine_id);
+	priv->host_machine_id = g_strdup (host_machine_id);
+	g_object_notify (G_OBJECT (client), "host-machine-id");
+}
 
 static void
 fwupd_client_set_daemon_version (FwupdClient *client, const gchar *daemon_version)
@@ -154,6 +176,18 @@ fwupd_client_properties_changed_cb (GDBusProxy *proxy,
 		val = g_dbus_proxy_get_cached_property (proxy, "DaemonVersion");
 		if (val != NULL)
 			fwupd_client_set_daemon_version (client, g_variant_get_string (val, NULL));
+	}
+	if (g_variant_dict_contains (dict, "HostProduct")) {
+		g_autoptr(GVariant) val = NULL;
+		val = g_dbus_proxy_get_cached_property (proxy, "HostProduct");
+		if (val != NULL)
+			fwupd_client_set_host_product (client, g_variant_get_string (val, NULL));
+	}
+	if (g_variant_dict_contains (dict, "HostMachineId")) {
+		g_autoptr(GVariant) val = NULL;
+		val = g_dbus_proxy_get_cached_property (proxy, "HostMachineId");
+		if (val != NULL)
+			fwupd_client_set_host_machine_id (client, g_variant_get_string (val, NULL));
 	}
 }
 
@@ -249,6 +283,13 @@ fwupd_client_connect (FwupdClient *client, GCancellable *cancellable, GError **e
 	val2 = g_dbus_proxy_get_cached_property (priv->proxy, "Tainted");
 	if (val2 != NULL)
 		priv->tainted = g_variant_get_boolean (val2);
+	val = g_dbus_proxy_get_cached_property (priv->proxy, "HostProduct");
+	if (val != NULL)
+		fwupd_client_set_host_product (client, g_variant_get_string (val, NULL));
+	val = g_dbus_proxy_get_cached_property (priv->proxy, "HostMachineId");
+	if (val != NULL)
+		fwupd_client_set_host_machine_id (client, g_variant_get_string (val, NULL));
+
 	return TRUE;
 }
 
@@ -1151,6 +1192,42 @@ fwupd_client_get_daemon_version (FwupdClient *client)
 }
 
 /**
+ * fwupd_client_get_host_product:
+ * @client: A #FwupdClient
+ *
+ * Gets the string that represents the host running fwupd
+ *
+ * Returns: a string, or %NULL for unknown.
+ *
+ * Since: 1.3.1
+ **/
+const gchar *
+fwupd_client_get_host_product (FwupdClient *client)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	return priv->host_product;
+}
+
+/**
+ * fwupd_client_get_host_machine_id:
+ * @client: A #FwupdClient
+ *
+ * Gets the string that represents the host machine ID
+ *
+ * Returns: a string, or %NULL for unknown.
+ *
+ * Since: 1.3.2
+ **/
+const gchar *
+fwupd_client_get_host_machine_id (FwupdClient *client)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	return priv->host_machine_id;
+}
+
+/**
  * fwupd_client_get_status:
  * @client: A #FwupdClient
  *
@@ -1672,6 +1749,12 @@ fwupd_client_get_property (GObject *object, guint prop_id,
 	case PROP_DAEMON_VERSION:
 		g_value_set_string (value, priv->daemon_version);
 		break;
+	case PROP_HOST_PRODUCT:
+		g_value_set_string (value, priv->host_product);
+		break;
+	case PROP_HOST_MACHINE_ID:
+		g_value_set_string (value, priv->host_machine_id);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
@@ -1836,6 +1919,28 @@ fwupd_client_class_init (FwupdClientClass *klass)
 	pspec = g_param_spec_string ("daemon-version", NULL, NULL,
 				     NULL, G_PARAM_READABLE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_DAEMON_VERSION, pspec);
+
+	/**
+	 * FwupdClient:host-product:
+	 *
+	 * The host product string
+	 *
+	 * Since: 1.3.1
+	 */
+	pspec = g_param_spec_string ("host-product", NULL, NULL,
+				     NULL, G_PARAM_READABLE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_HOST_PRODUCT, pspec);
+
+	/**
+	 * FwupdClient:host-machine-id:
+	 *
+	 * The host machine-id string
+	 *
+	 * Since: 1.3.2
+	 */
+	pspec = g_param_spec_string ("host-machine-id", NULL, NULL,
+				     NULL, G_PARAM_READABLE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_HOST_MACHINE_ID, pspec);
 }
 
 static void
@@ -1850,6 +1955,8 @@ fwupd_client_finalize (GObject *object)
 	FwupdClientPrivate *priv = GET_PRIVATE (client);
 
 	g_free (priv->daemon_version);
+	g_free (priv->host_product);
+	g_free (priv->host_machine_id);
 	if (priv->conn != NULL)
 		g_object_unref (priv->conn);
 	if (priv->proxy != NULL)

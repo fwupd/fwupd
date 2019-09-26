@@ -32,6 +32,7 @@ G_DECLARE_FINAL_TYPE (FuEngine, fu_engine, FU, ENGINE, GObject)
 typedef enum {
 	FU_ENGINE_LOAD_FLAG_NONE		= 0,
 	FU_ENGINE_LOAD_FLAG_READONLY_FS		= 1 << 0,
+	FU_ENGINE_LOAD_FLAG_NO_ENUMERATE	= 1 << 1,
 	/*< private >*/
 	FU_ENGINE_LOAD_FLAG_LAST
 } FuEngineLoadFlags;
@@ -48,6 +49,8 @@ gboolean	 fu_engine_load				(FuEngine	*self,
 gboolean	 fu_engine_load_plugins			(FuEngine	*self,
 							 GError		**error);
 gboolean	 fu_engine_get_tainted			(FuEngine	*self);
+const gchar	*fu_engine_get_host_product		(FuEngine *self);
+const gchar	*fu_engine_get_host_machine_id		(FuEngine *self);
 FwupdStatus	 fu_engine_get_status			(FuEngine	*self);
 XbSilo		*fu_engine_get_silo_from_blob		(FuEngine	*self,
 							 GBytes		*blob_cab,

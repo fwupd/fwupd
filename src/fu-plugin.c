@@ -530,6 +530,47 @@ fu_plugin_get_hwids (FuPlugin *self)
 }
 
 /**
+ * fu_plugin_has_custom_flag:
+ * @self: A #FuPlugin
+ * @flag: A custom text flag, specific to the plugin, e.g. `uefi-force-enable`
+ *
+ * Returns if a per-plugin HwId custom flag exists, typically added from a DMI quirk.
+ *
+ * Returns: %TRUE if the quirk entry exists
+ *
+ * Since: 1.3.1
+ **/
+gboolean
+fu_plugin_has_custom_flag (FuPlugin *self, const gchar *flag)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	GPtrArray *hwids = fu_plugin_get_hwids (self);
+
+	g_return_val_if_fail (FU_IS_PLUGIN (self), FALSE);
+	g_return_val_if_fail (flag != NULL, FALSE);
+
+	/* never set up, e.g. in tests */
+	if (hwids == NULL)
+		return FALSE;
+
+	/* search each hwid */
+	for (guint i = 0; i < hwids->len; i++) {
+		const gchar *hwid = g_ptr_array_index (hwids, i);
+		const gchar *value;
+		g_autofree gchar *key = g_strdup_printf ("HwId=%s", hwid);
+
+		/* does prefixed quirk exist */
+		value = fu_quirks_lookup_by_id (priv->quirks, key, FU_QUIRKS_FLAGS);
+		if (value != NULL) {
+			g_auto(GStrv) quirks = g_strsplit (value, ",", -1);
+			if (g_strv_contains ((const gchar * const *) quirks, flag))
+				return TRUE;
+		}
+	}
+	return FALSE;
+}
+
+/**
  * fu_plugin_check_supported:
  * @self: A #FuPlugin
  * @guid: A Hardware ID GUID, e.g. `6de5d951-d755-576b-bd09-c5cf66b27234`
@@ -600,7 +641,7 @@ fu_plugin_get_smbios_string (FuPlugin *self, guint8 structure_type, guint8 offse
  *
  * Gets a hardware SMBIOS data.
  *
- * Returns: (transfer none): A #GBytes, or %NULL
+ * Returns: (transfer full): A #GBytes, or %NULL
  *
  * Since: 0.9.8
  **/
@@ -1305,6 +1346,43 @@ fu_plugin_runner_udev_device_added (FuPlugin *self, FuUdevDevice *device, GError
 	return TRUE;
 }
 
+gboolean
+fu_plugin_runner_udev_device_changed (FuPlugin *self, FuUdevDevice *device, GError **error)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	FuPluginUdevDeviceAddedFunc func = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	/* not enabled */
+	if (!priv->enabled)
+		return TRUE;
+
+	/* no object loaded */
+	if (priv->module == NULL)
+		return TRUE;
+
+	/* optional */
+	g_module_symbol (priv->module, "fu_plugin_udev_device_changed", (gpointer *) &func);
+	if (func == NULL)
+		return TRUE;
+	g_debug ("performing udev_device_changed() on %s", priv->name);
+	if (!func (self, device, &error_local)) {
+		if (error_local == NULL) {
+			g_critical ("unset error in plugin %s for udev_device_changed()",
+				    priv->name);
+			g_set_error_literal (&error_local,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "unspecified error");
+		}
+		g_propagate_prefixed_error (error, g_steal_pointer (&error_local),
+					    "failed to change device on %s: ",
+					    priv->name);
+		return FALSE;
+	}
+	return TRUE;
+}
+
 void
 fu_plugin_runner_device_removed (FuPlugin *self, FuDevice *device)
 {
@@ -1977,6 +2055,7 @@ fu_plugin_init (FuPlugin *self)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	priv->enabled = TRUE;
+	priv->udev_subsystems = g_ptr_array_new_with_free_func (g_free);
 	priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
 					       g_free, (GDestroyNotify) g_object_unref);
 	g_rw_lock_init (&priv->devices_mutex);

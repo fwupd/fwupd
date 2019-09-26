@@ -70,12 +70,14 @@ struct _FuEngine
 	FuPluginList		*plugin_list;
 	GPtrArray		*plugin_filter;
 	GPtrArray		*udev_subsystems;
+	GHashTable		*udev_changed_ids;	/* sysfs:FuEngineUdevChangedHelper */
 	FuSmbios		*smbios;
 	FuHwids			*hwids;
 	FuQuirks		*quirks;
 	GHashTable		*runtime_versions;
 	GHashTable		*compile_versions;
 	GHashTable		*approved_firmware;
+	gchar			*host_machine_id;
 	gboolean		 loaded;
 };
 
@@ -326,6 +328,7 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 	guint64 tmp64;
 	g_autofree gchar *version_rel = NULL;
 	g_autoptr(GPtrArray) cats = NULL;
+	g_autoptr(GPtrArray) issues = NULL;
 	g_autoptr(XbNode) description = NULL;
 
 	/* set from the component */
@@ -416,6 +419,13 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 		for (guint i = 0; i < cats->len; i++) {
 			XbNode *n = g_ptr_array_index (cats, i);
 			fwupd_release_add_category (rel, xb_node_get_text (n));
+		}
+	}
+	issues = xb_node_query (component, "issues/issue", 0, NULL);
+	if (issues != NULL) {
+		for (guint i = 0; i < issues->len; i++) {
+			XbNode *n = g_ptr_array_index (issues, i);
+			fwupd_release_add_issue (rel, xb_node_get_text (n));
 		}
 	}
 	tmp = xb_node_query_text (component, "custom/value[@key='LVFS::UpdateProtocol']", NULL);
@@ -1096,7 +1106,8 @@ fu_engine_check_requirement_firmware (FuEngine *self, XbNode *req,
 
 		/* get the version of the other device */
 		version = fu_device_get_version (device2);
-		if (!fu_engine_require_vercmp (req, version, &error_local)) {
+		if (version != NULL &&
+		    !fu_engine_require_vercmp (req, version, &error_local)) {
 			if (g_strcmp0 (xb_node_get_attr (req, "compare"), "ge") == 0) {
 				g_set_error (error,
 					     FWUPD_ERROR,
@@ -1303,9 +1314,6 @@ fu_engine_get_report_metadata (FuEngine *self)
 		g_hash_table_insert (hash,
 				     g_strdup ("CpuArchitecture"),
 				     g_strdup (name_tmp.machine));
-		g_hash_table_insert (hash,
-				     g_strdup ("KernelVersion"),
-				     g_strdup (name_tmp.release));
 	}
 
 	/* add the kernel boot time so we can detect a reboot */
@@ -2361,6 +2369,16 @@ fu_engine_load_metadata_store (FuEngine *self, FuEngineLoadFlags flags, GError *
 	return TRUE;
 }
 
+static void
+fu_engine_config_changed_cb (FuConfig *config, FuEngine *self)
+{
+	g_autoptr(GError) error_local = NULL;
+	if (!fu_engine_load_metadata_store (self, FU_ENGINE_LOAD_FLAG_NONE,
+					    &error_local))
+		g_warning ("Failed to reload metadata store: %s",
+			   error_local->message);
+}
+
 static FuKeyringResult *
 fu_engine_get_existing_keyring_result (FuEngine *self,
 				       FuKeyring *kr,
@@ -2727,17 +2745,23 @@ fu_engine_get_details (FuEngine *self, gint fd, GError **error)
 }
 
 static gint
-fu_engine_sort_devices_by_priority (gconstpointer a, gconstpointer b)
+fu_engine_sort_devices_by_priority_name (gconstpointer a, gconstpointer b)
 {
 	FuDevice *dev_a = *((FuDevice **) a);
 	FuDevice *dev_b = *((FuDevice **) b);
 	gint prio_a = fu_device_get_priority (dev_a);
 	gint prio_b = fu_device_get_priority (dev_b);
+	const gchar *name_a = fu_device_get_name (dev_a);
+	const gchar *name_b = fu_device_get_name (dev_b);
 
 	if (prio_a > prio_b)
 		return -1;
 	if (prio_a < prio_b)
 		return 1;
+	if (g_strcmp0 (name_a, name_b) > 0)
+		return 1;
+	if (g_strcmp0 (name_a, name_b) < 0)
+		return -1;
 	return 0;
 }
 
@@ -2766,7 +2790,7 @@ fu_engine_get_devices (FuEngine *self, GError **error)
 				     "No detected devices");
 		return NULL;
 	}
-	g_ptr_array_sort (devices, fu_engine_sort_devices_by_priority);
+	g_ptr_array_sort (devices, fu_engine_sort_devices_by_priority_name);
 	return g_steal_pointer (&devices);
 }
 
@@ -3927,10 +3951,69 @@ fu_engine_udev_device_remove (FuEngine *self, GUdevDevice *udev_device)
 	}
 }
 
+typedef struct {
+	FuEngine	*self;
+	GUdevDevice	*udev_device;
+	guint		 idle_id;
+} FuEngineUdevChangedHelper;
+
+static void
+fu_engine_udev_changed_helper_free (FuEngineUdevChangedHelper *helper)
+{
+	if (helper->idle_id != 0)
+		g_source_remove (helper->idle_id);
+	g_object_unref (helper->self);
+	g_object_unref (helper->udev_device);
+	g_free (helper);
+}
+
+static FuEngineUdevChangedHelper *
+fu_engine_udev_changed_helper_new (FuEngine *self, GUdevDevice *udev_device)
+{
+	FuEngineUdevChangedHelper *helper = g_new0 (FuEngineUdevChangedHelper, 1);
+	helper->self = g_object_ref (self);
+	helper->udev_device = g_object_ref (udev_device);
+	return helper;
+}
+
+static gboolean
+fu_engine_udev_changed_cb (gpointer user_data)
+{
+	FuEngineUdevChangedHelper *helper = (FuEngineUdevChangedHelper *) user_data;
+	GPtrArray *plugins = fu_plugin_list_get_all (helper->self->plugin_list);
+	g_autoptr(FuUdevDevice) device = fu_udev_device_new (helper->udev_device);
+
+	/* run all plugins */
+	for (guint j = 0; j < plugins->len; j++) {
+		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
+		g_autoptr(GError) error = NULL;
+		if (!fu_plugin_runner_udev_device_changed (plugin_tmp, device, &error)) {
+			if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+				g_debug ("%s ignoring: %s",
+					 fu_plugin_get_name (plugin_tmp),
+					 error->message);
+				continue;
+			}
+			g_warning ("%s failed to change udev device %s: %s",
+				   fu_plugin_get_name (plugin_tmp),
+				   g_udev_device_get_sysfs_path (helper->udev_device),
+				   error->message);
+		}
+	}
+
+	/* device done, so remove ref */
+	helper->idle_id = 0;
+	g_hash_table_remove (helper->self->udev_changed_ids,
+			     g_udev_device_get_sysfs_path (helper->udev_device));
+	return FALSE;
+}
+
 static void
 fu_engine_udev_device_changed (FuEngine *self, GUdevDevice *udev_device)
 {
+	const gchar *sysfs_path = g_udev_device_get_sysfs_path (udev_device);
 	g_autoptr(GPtrArray) devices = NULL;
+	FuEngineUdevChangedHelper *helper;
 
 	/* emit changed on any that match */
 	devices = fu_device_list_get_all (self->device_list);
@@ -3939,10 +4022,20 @@ fu_engine_udev_device_changed (FuEngine *self, GUdevDevice *udev_device)
 		if (!FU_IS_UDEV_DEVICE (device))
 			continue;
 		if (g_strcmp0 (fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (device)),
-			       g_udev_device_get_sysfs_path (udev_device)) == 0) {
+			       sysfs_path) == 0) {
 			fu_udev_device_emit_changed (FU_UDEV_DEVICE (device));
 		}
 	}
+
+	/* run all plugins, with per-device rate limiting */
+	if (g_hash_table_remove (self->udev_changed_ids, sysfs_path)) {
+		g_debug ("re-adding rate-limited timeout for %s", sysfs_path);
+	} else {
+		g_debug ("adding rate-limited timeout for %s", sysfs_path);
+	}
+	helper = fu_engine_udev_changed_helper_new (self, udev_device);
+	helper->idle_id = g_timeout_add (500, fu_engine_udev_changed_cb, helper);
+	g_hash_table_insert (self->udev_changed_ids, g_strdup (sysfs_path), helper);
 }
 
 static void
@@ -4059,6 +4152,20 @@ gboolean
 fu_engine_get_tainted (FuEngine *self)
 {
 	return self->tainted;
+}
+
+const gchar *
+fu_engine_get_host_product (FuEngine *self)
+{
+	g_return_val_if_fail (FU_IS_ENGINE (self), NULL);
+	return fu_hwids_get_value (self->hwids, FU_HWIDS_KEY_PRODUCT_NAME);
+}
+
+const gchar *
+fu_engine_get_host_machine_id (FuEngine *self)
+{
+	g_return_val_if_fail (FU_IS_ENGINE (self), NULL);
+	return self->host_machine_id;
 }
 
 gboolean
@@ -4474,6 +4581,11 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	if (self->loaded)
 		return TRUE;
 
+	/* cache machine ID so we can use it from a sandboxed app */
+	self->host_machine_id = fwupd_build_machine_id ("fwupd", error);
+	if (self->host_machine_id == NULL)
+		return FALSE;
+
 	/* read config file */
 	if (flags & FU_ENGINE_LOAD_FLAG_READONLY_FS)
 		config_flags |= FU_CONFIG_LOAD_FLAG_READONLY_FS;
@@ -4571,10 +4683,12 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	g_signal_connect (self->usb_ctx, "device-removed",
 			  G_CALLBACK (fu_engine_usb_device_removed_cb),
 			  self);
-	g_usb_context_enumerate (self->usb_ctx);
+	if ((flags & FU_ENGINE_LOAD_FLAG_NO_ENUMERATE) == 0)
+		g_usb_context_enumerate (self->usb_ctx);
 
 	/* coldplug udev devices */
-	fu_engine_enumerate_udev (self);
+	if ((flags & FU_ENGINE_LOAD_FLAG_NO_ENUMERATE) == 0)
+		fu_engine_enumerate_udev (self);
 
 	/* update the db for devices that were updated during the reboot */
 	if (!fu_engine_update_history_database (self, error))
@@ -4653,6 +4767,7 @@ fu_engine_idle_status_notify_cb (FuIdle *idle, GParamSpec *pspec, FuEngine *self
 static void
 fu_engine_init (FuEngine *self)
 {
+	struct utsname uname_tmp;
 	self->percentage = 0;
 	self->status = FWUPD_STATUS_IDLE;
 	self->config = fu_config_new ();
@@ -4665,9 +4780,15 @@ fu_engine_init (FuEngine *self)
 	self->plugin_list = fu_plugin_list_new ();
 	self->plugin_filter = g_ptr_array_new_with_free_func (g_free);
 	self->udev_subsystems = g_ptr_array_new_with_free_func (g_free);
+	self->udev_changed_ids = g_hash_table_new_full (g_str_hash, g_str_equal,
+							g_free, (GDestroyNotify) fu_engine_udev_changed_helper_free);
 	self->runtime_versions = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	self->compile_versions = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	self->approved_firmware = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
+
+	g_signal_connect (self->config, "changed",
+			  G_CALLBACK (fu_engine_config_changed_cb),
+			  self);
 
 	g_signal_connect (self->idle, "notify::status",
 			  G_CALLBACK (fu_engine_idle_status_notify_cb), self);
@@ -4679,6 +4800,11 @@ fu_engine_init (FuEngine *self)
 #if G_USB_CHECK_VERSION(0,3,1)
 	fu_engine_add_runtime_version (self, "org.freedesktop.gusb", g_usb_version_string ());
 #endif
+
+	/* optional kernel version */
+	memset (&uname_tmp, 0, sizeof(uname_tmp));
+	if (uname (&uname_tmp) >= 0)
+		fu_engine_add_runtime_version (self, "org.kernel", uname_tmp.release);
 
 	g_hash_table_insert (self->compile_versions,
 			     g_strdup ("com.redhat.fwupdate"),
@@ -4709,6 +4835,7 @@ fu_engine_finalize (GObject *obj)
 	if (self->coldplug_id != 0)
 		g_source_remove (self->coldplug_id);
 
+	g_free (self->host_machine_id);
 	g_object_unref (self->idle);
 	g_object_unref (self->config);
 	g_object_unref (self->smbios);
@@ -4718,6 +4845,7 @@ fu_engine_finalize (GObject *obj)
 	g_object_unref (self->device_list);
 	g_ptr_array_unref (self->plugin_filter);
 	g_ptr_array_unref (self->udev_subsystems);
+	g_hash_table_unref (self->udev_changed_ids);
 	g_hash_table_unref (self->runtime_versions);
 	g_hash_table_unref (self->compile_versions);
 	g_hash_table_unref (self->approved_firmware);

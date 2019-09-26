@@ -37,7 +37,7 @@ void			 fu_synaprom_device_set_version	(FuSynapromDevice *self,
 							 guint8		 vmajor,
 							 guint8		 vminor,
 							 guint32	 buildnum);
-GBytes			*fu_synaprom_device_prepare_fw	(FuDevice	*device,
+FuFirmware		*fu_synaprom_device_prepare_fw	(FuDevice	*device,
 							 GBytes		*fw,
 							 FwupdInstallFlags flags,
 							 GError		**error);

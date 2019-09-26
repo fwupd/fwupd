@@ -529,39 +529,25 @@ fu_dell_dock_ec_get_dock_data (FuDevice *device,
 }
 
 static void
-fu_dell_dock_ec_to_string (FuDevice *device, GString *str)
+fu_dell_dock_ec_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC (device);
 	gchar service_tag[8] = {0x00};
 
-	g_string_append (str, "  FuDellDellDockEc:\n");
-	g_string_append_printf (str, "\tboard ID: %u\n",
-				self->data->board_id);
-	g_string_append_printf (str, "\tpower supply: %uW\n",
-				self->data->power_supply_wattage);
-	g_string_append_printf (str, "\tstatus (port0): %x\n",
-				self->data->port0_dock_status);
-	g_string_append_printf (str, "\tstatus (port1): %x\n",
-				self->data->port1_dock_status);
+	fu_common_string_append_ku (str, idt, "BoardId", self->data->board_id);
+	fu_common_string_append_ku (str, idt, "PowerSupply", self->data->power_supply_wattage);
+	fu_common_string_append_kx (str, idt, "StatusPort0", self->data->port0_dock_status);
+	fu_common_string_append_kx (str, idt, "StatusPort1", self->data->port1_dock_status);
 	memcpy (service_tag, self->data->service_tag, 7);
-	g_string_append_printf (str, "\tservice tag: %s\n",
-				service_tag);
-	g_string_append_printf (str, "\tconfiguration: %u\n",
-				self->data->dock_configuration);
-	g_string_append_printf (str, "\tpackage firmware version: %x\n",
-				self->data->dock_firmware_pkg_ver);
-	g_string_append_printf (str, "\tmodule serial #: %08" G_GUINT64_FORMAT "\n",
-				self->data->module_serial);
-	g_string_append_printf (str, "\toriginal module serial #: %08" G_GUINT64_FORMAT "\n",
-				self->data->original_module_serial);
-	g_string_append_printf (str, "\ttype: %u\n",
-				self->data->dock_type);
-	g_string_append_printf (str, "\tmodule type: %x\n",
-				self->data->module_type);
-	g_string_append_printf (str, "\tminimum ec: %s\n",
-				self->ec_minimum_version);
-	g_string_append_printf (str, "\tpassive flow: %d\n",
-				self->passive_flow);
+	fu_common_string_append_kv (str, idt, "ServiceTag", service_tag);
+	fu_common_string_append_ku (str, idt, "Configuration", self->data->dock_configuration);
+	fu_common_string_append_kx (str, idt, "PackageFirmwareVersion", self->data->dock_firmware_pkg_ver);
+	fu_common_string_append_ku (str, idt, "ModuleSerial", self->data->module_serial);
+	fu_common_string_append_ku (str, idt, "OriginalModuleSerial", self->data->original_module_serial);
+	fu_common_string_append_ku (str, idt, "Type", self->data->dock_type);
+	fu_common_string_append_kx (str, idt, "ModuleType", self->data->module_type);
+	fu_common_string_append_kv (str, idt, "MinimumEc", self->ec_minimum_version);
+	fu_common_string_append_ku (str, idt, "PassiveFlow", self->passive_flow);
 }
 
 gboolean
@@ -745,7 +731,7 @@ fu_dell_dock_ec_commit_package (FuDevice *device, GBytes *blob_fw,
 
 static gboolean
 fu_dell_dock_ec_write_fw (FuDevice *device,
-			  GBytes *blob_fw,
+			  FuFirmware *firmware,
 			  FwupdInstallFlags flags,
 			  GError **error)
 {
@@ -753,15 +739,22 @@ fu_dell_dock_ec_write_fw (FuDevice *device,
 	FuDellDockECFWUpdateStatus status = FW_UPDATE_IN_PROGRESS;
 	guint8 progress1 = 0, progress0 = 0;
 	gsize fw_size = 0;
-	const guint8 *data = g_bytes_get_data (blob_fw, &fw_size);
-	gsize write_size =
-	    (fw_size / HIDI2C_MAX_WRITE) >= 1 ? HIDI2C_MAX_WRITE : fw_size;
+	const guint8 *data;
+	gsize write_size = 0;
 	gsize nwritten = 0;
 	guint32 address = 0 | 0xff << 24;
 	g_autofree gchar *dynamic_version = NULL;
+	g_autoptr(GBytes) fw = NULL;
 
 	g_return_val_if_fail (device != NULL, FALSE);
-	g_return_val_if_fail (blob_fw != NULL, FALSE);
+	g_return_val_if_fail (FU_IS_FIRMWARE (firmware), FALSE);
+
+	/* get default image */
+	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	if (fw == NULL)
+		return FALSE;
+	data = g_bytes_get_data (fw, &fw_size);
+	write_size =  (fw_size / HIDI2C_MAX_WRITE) >= 1 ? HIDI2C_MAX_WRITE : fw_size;
 
 	dynamic_version = g_strndup ((gchar *) data + self->blob_version_offset, 11);
 	g_debug ("writing EC firmware version %s", dynamic_version);

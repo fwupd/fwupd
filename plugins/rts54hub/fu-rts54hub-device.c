@@ -35,13 +35,12 @@ typedef enum {
 } FuRts54HubVendorCmd;
 
 static void
-fu_rts54hub_device_to_string (FuDevice *device, GString *str)
+fu_rts54hub_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuRts54HubDevice *self = FU_RTS54HUB_DEVICE (device);
-	g_string_append (str, "  FuRts54HubDevice:\n");
-	g_string_append_printf (str, "    fw-auth: %i\n", self->fw_auth);
-	g_string_append_printf (str, "    dual-bank: %i\n", self->dual_bank);
-	g_string_append_printf (str, "    running-on-flash: %i\n", self->running_on_flash);
+	fu_common_string_append_kb (str, idt, "FwAuth", self->fw_auth);
+	fu_common_string_append_kb (str, idt, "DualBank", self->dual_bank);
+	fu_common_string_append_kb (str, idt, "RunningOnFlash", self->running_on_flash);
 }
 
 static gboolean
@@ -309,12 +308,18 @@ fu_rts54hub_device_close (FuUsbDevice *device, GError **error)
 
 static gboolean
 fu_rts54hub_device_write_firmware (FuDevice *device,
-				   GBytes *fw,
+				   FuFirmware *firmware,
 				   FwupdInstallFlags flags,
 				   GError **error)
 {
 	FuRts54HubDevice *self = FU_RTS54HUB_DEVICE (device);
+	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
+
+	/* get default image */
+	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	if (fw == NULL)
+		return FALSE;
 
 	/* enable vendor commands */
 	if (!fu_rts54hub_device_vendor_cmd (self,
@@ -383,7 +388,7 @@ fu_rts54hub_device_write_firmware (FuDevice *device,
 	return TRUE;
 }
 
-static GBytes *
+static FuFirmware *
 fu_rts54hub_device_prepare_firmware (FuDevice *device,
 				     GBytes *fw,
 				     FwupdInstallFlags flags,
@@ -405,7 +410,7 @@ fu_rts54hub_device_prepare_firmware (FuDevice *device,
 				     "firmware needs to be dual bank");
 		return NULL;
 	}
-	return g_bytes_ref (fw);
+	return fu_firmware_new_from_bytes (fw);
 }
 
 static void

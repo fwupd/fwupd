@@ -10,7 +10,7 @@
   -->
 
   <vendor>System firmware update</vendor>
-  <vendor_url>https://github.com/hughsie/fwupd</vendor_url>
+  <vendor_url>https://github.com/fwupd/fwupd</vendor_url>
   <icon_name>application-x-firmware</icon_name>
 
   <action id="org.freedesktop.fwupd.update-internal-trusted">

@@ -76,11 +76,6 @@ msgstr "%s 系统更新"
 msgid "%s Update"
 msgstr "%s 更新"
 
-#. TRANSLATORS: first replacement is device name
-#, c-format
-msgid "%s has firmware updates:"
-msgstr "%s 有固件更新:"
-
 #. TRANSLATORS: duration in days!
 #, c-format
 msgid "%u day"
@@ -253,7 +248,6 @@ msgstr "已取消"
 msgid "Changed"
 msgstr "已变更"
 
-#. TRANSLATORS: section header for firmware checksum
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "校验和"
@@ -313,7 +307,7 @@ msgstr "正在解压缩…"
 msgid "Decrypt firmware data"
 msgstr "解密固件数据"
 
-#. TRANSLATORS: section header for firmware description
+#. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "描述"
 
@@ -550,7 +544,8 @@ msgstr "此机器不支持固件更新。"
 msgid "Firmware updates are supported on this machine."
 msgstr "此机器支持固件更新。"
 
-#. TRANSLATORS: section header for firmware flags
+#. TRANSLATORS: device properties
+#. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "标志"
 
@@ -560,13 +555,6 @@ msgstr "强制操作忽略所有警告"
 #. TRANSLATORS: detected a DFU device
 msgid "Found"
 msgstr "找到"
-
-msgid "GUID"
-msgstr "GUID"
-
-#. TRANSLATORS: command description
-msgid "Get all devices according to the system topology"
-msgstr "根据系统拓扑获取所有设备"
 
 #. TRANSLATORS: command description
 msgid "Get all devices and possible releases"
@@ -608,7 +596,6 @@ msgstr "获取用于设备的发行版本"
 msgid "Gets the results from the last update"
 msgstr "从最后一次更新中获取结果"
 
-#. TRANSLATORS: Appstream ID for the hardware type
 msgid "ID"
 msgstr "ID"
 
@@ -689,10 +676,6 @@ msgstr "将多个固件文件合并为一个"
 msgid "Metadata URI"
 msgstr "元数据 URI"
 
-#. TRANSLATORS: remote URI
-msgid "Metadata URI Signature"
-msgstr "元数据 URI 签名"
-
 #. TRANSLATORS: explain why no metadata available
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "可从 Linux 供应商固件服务获取元数据。"
@@ -725,14 +708,12 @@ msgstr "监视守护程序里的事件"
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 #. TRANSLATORS: device name, e.g. 'ColorHug2'
-#. TRANSLATORS: section header for the release name
 msgid "Name"
 msgstr "名称"
 
 msgid "No action specified!"
 msgstr "未指定操作！"
 
-#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "没有检测到支持更新固件的硬件"
@@ -840,10 +821,7 @@ msgstr "区域"
 msgid "Reinstalling %s with %s... "
 msgstr "正在重新安装 %s，使用 %s…"
 
-#. TRANSLATORS: section header for the remote the file is coming from
-msgid "Remote"
-msgstr "远程"
-
+#. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 msgid "Remote ID"
 msgstr "远程 ID"
@@ -1032,7 +1010,7 @@ msgstr "状态"
 msgid "Status"
 msgstr "状况"
 
-#. TRANSLATORS: section header for the release one line summary
+#. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "概览"
 
@@ -1059,10 +1037,6 @@ msgstr "此远程源包含未禁止的固件，但其仍经过硬件供应商测
 msgid "This tool can only be used by the root user"
 msgstr "此工具只能由 root 用户使用"
 
-#. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
-msgid "Title"
-msgstr "标题"
-
 #. TRANSLATORS: transfer size in bytes
 msgid "Transfer Size"
 msgstr "传输大小"
@@ -1074,10 +1048,6 @@ msgstr "类型"
 #. TRANSLATORS: program name
 msgid "UEFI Firmware Utility"
 msgstr "固件 UEFI 实用工具"
-
-#. TRANSLATORS: section header for firmware URI
-msgid "URI"
-msgstr "URI"
 
 #. TRANSLATORS: currect daemon status is unknown
 msgid "Unknown"
@@ -1098,39 +1068,6 @@ msgstr "更新期间取消设定调试标志"
 #, c-format
 msgid "Unsupported daemon version %s, client version is %s"
 msgstr "未受支持的守护进程版本 %s，客户端版本为 %s"
-
-#. TRANSLATORS: section header for firmware checksum
-msgid "Update Checksum"
-msgstr "更新校验和"
-
-#. TRANSLATORS: section header for long firmware desc
-msgid "Update Description"
-msgstr "更新说明"
-
-#. TRANSLATORS: section header for the amount
-#. * of time it takes to install the update
-msgid "Update Duration"
-msgstr "更新时长"
-
-#. TRANSLATORS: section header for firmware remote http://
-msgid "Update Location"
-msgstr "更新位置"
-
-#. TRANSLATORS: section header for the release name
-msgid "Update Name"
-msgstr "更新名称"
-
-#. TRANSLATORS: section header for remote ID, e.g. lvfs-testing
-msgid "Update Remote ID"
-msgstr "更新远程 ID"
-
-#. TRANSLATORS: section header for the release one line summary
-msgid "Update Summary"
-msgstr "更新概览"
-
-#. TRANSLATORS: section header for firmware version
-msgid "Update Version"
-msgstr "更新版本"
 
 #. TRANSLATORS: command description
 msgid "Update all devices that match local metadata"
@@ -1190,10 +1127,6 @@ msgstr "用户名"
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
 msgstr "正在验证…"
-
-#. TRANSLATORS: section header for release version number
-msgid "Version"
-msgstr "版本"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

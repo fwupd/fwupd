@@ -156,16 +156,5 @@ const gchar	*dfu_version_to_string			(DfuVersion	 version);
 
 /* helpers */
 GBytes		*dfu_utils_bytes_join_array		(GPtrArray	*chunks);
-GBytes		*dfu_utils_bytes_pad			(GBytes		*bytes,
-							 gsize		 sz);
-guint8		 dfu_utils_buffer_parse_uint4		(const gchar	*data);
-guint8		 dfu_utils_buffer_parse_uint8		(const gchar	*data);
-guint16		 dfu_utils_buffer_parse_uint16		(const gchar	*data);
-guint32		 dfu_utils_buffer_parse_uint24		(const gchar	*data);
-guint32		 dfu_utils_buffer_parse_uint32		(const gchar	*data);
-gchar		**dfu_utils_strnsplit			(const gchar	*str,
-							 gsize		 sz,
-							 const gchar	*delimiter,
-							 gint		 max_tokens);
 
 G_END_DECLS

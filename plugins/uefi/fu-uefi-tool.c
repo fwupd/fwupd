@@ -62,6 +62,7 @@ main (int argc, char *argv[])
 	gboolean verbose = FALSE;
 	g_autofree gchar *apply = FALSE;
 	g_autofree gchar *esp_path = NULL;
+	g_autofree gchar *flags = FALSE;
 	g_autoptr(FuUtilPrivate) priv = g_new0 (FuUtilPrivate, 1);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -99,6 +100,9 @@ main (int argc, char *argv[])
 		{ "apply", 'a', 0, G_OPTION_ARG_STRING, &apply,
 			/* TRANSLATORS: command line option */
 			_("Apply firmware updates"), "GUID" },
+		{ "flags", 'f', 0, G_OPTION_ARG_STRING, &flags,
+			/* TRANSLATORS: command line option */
+			_("Use quirk flags when installing firmware"), NULL },
 		{ NULL}
 	};
 
@@ -232,8 +236,8 @@ main (int argc, char *argv[])
 	if (action_list) {
 		for (guint i = 0; i < devices->len; i++) {
 			FuUefiDevice *dev = g_ptr_array_index (devices, i);
-			g_print ("%s type, {%s} action_version %" G_GUINT32_FORMAT " can be updated "
-				 "to any action_version above %" G_GUINT32_FORMAT "\n",
+			g_print ("%s type, {%s} version %" G_GUINT32_FORMAT " can be updated "
+				 "to any version above %" G_GUINT32_FORMAT "\n",
 				 fu_uefi_device_kind_to_string (fu_uefi_device_get_kind (dev)),
 				 fu_uefi_device_get_guid (dev),
 				 fu_uefi_device_get_version (dev),
@@ -318,12 +322,20 @@ main (int argc, char *argv[])
 	if (apply != NULL) {
 		g_autoptr(FuUefiDevice) dev = fu_uefi_device_new_from_guid (apply);
 		g_autoptr(GError) error_local = NULL;
-		g_autoptr(GBytes) fw = fu_common_get_contents_bytes (argv[1], &error_local);
+		g_autoptr(GBytes) fw = NULL;
+
+		if (argv[1] == NULL) {
+			g_printerr ("capsule filename required\n");
+			return EXIT_FAILURE;
+		}
+		fw = fu_common_get_contents_bytes (argv[1], &error_local);
 		if (fw == NULL) {
 			g_printerr ("failed: %s\n", error_local->message);
 			return EXIT_FAILURE;
 		}
 		fu_device_set_metadata (FU_DEVICE (dev), "EspPath", esp_path);
+		if (flags != NULL)
+			fu_device_set_custom_flags (FU_DEVICE (dev), flags);
 		if (!fu_device_write_firmware (FU_DEVICE (dev), fw,
 					       FWUPD_INSTALL_FLAG_NONE,
 					       &error_local)) {

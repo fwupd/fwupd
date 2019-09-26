@@ -20,6 +20,14 @@
 #include "fwupd-error.h"
 #include "fwupd-remote-private.h"
 
+
+enum {
+	SIGNAL_CHANGED,
+	SIGNAL_LAST
+};
+
+static guint signals[SIGNAL_LAST] = { 0 };
+
 static void fu_config_finalize	 (GObject *obj);
 
 struct _FuConfig
@@ -39,6 +47,13 @@ struct _FuConfig
 };
 
 G_DEFINE_TYPE (FuConfig, fu_config, G_TYPE_OBJECT)
+
+static void
+fu_config_emit_changed (FuConfig *self)
+{
+	g_debug ("::configuration changed");
+	g_signal_emit (self, signals[SIGNAL_CHANGED], 0);
+}
 
 static GPtrArray *
 fu_config_get_config_paths (void)
@@ -80,6 +95,7 @@ fu_config_monitor_changed_cb (GFileMonitor *monitor,
 	g_debug ("%s changed, reloading all configs", filename);
 	if (!fu_config_load (self, FU_CONFIG_LOAD_FLAG_NONE, &error))
 		g_warning ("failed to rescan config: %s", error->message);
+	fu_config_emit_changed (self);
 }
 
 static guint64
@@ -184,12 +200,19 @@ fu_config_add_remotes_for_path (FuConfig *self, const gchar *path, GError **erro
 	while ((tmp = g_dir_read_name (dir)) != NULL) {
 		g_autofree gchar *filename = g_build_filename (path_remotes, tmp, NULL);
 		g_autoptr(FwupdRemote) remote = fwupd_remote_new ();
+		g_autofree gchar *localstatedir = NULL;
+		g_autofree gchar *remotesdir = NULL;
 
 		/* skip invalid files */
 		if (!g_str_has_suffix (tmp, ".conf")) {
 			g_debug ("skipping invalid file %s", filename);
 			continue;
 		}
+
+		/* set directory to store data */
+		localstatedir = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR_PKG);
+		remotesdir = g_build_filename (localstatedir, "remotes.d", NULL);
+		fwupd_remote_set_remotes_dir (remote, remotesdir);
 
 		/* load from keyfile */
 		g_debug ("loading config from %s", filename);
@@ -229,7 +252,7 @@ fu_config_add_remotes_for_path (FuConfig *self, const gchar *path, GError **erro
 			fu_common_string_replace (agreement_markup, "$OS_RELEASE:NAME$", tmp);
 			tmp = g_hash_table_lookup (self->os_release, "BUG_REPORT_URL");
 			if (tmp == NULL)
-				tmp = "https://github.com/hughsie/fwupd/issues";
+				tmp = "https://github.com/fwupd/fwupd/issues";
 			fu_common_string_replace (agreement_markup, "$OS_RELEASE:BUG_REPORT_URL$", tmp);
 			fwupd_remote_set_agreement (remote, agreement_markup->str);
 		}
@@ -603,6 +626,12 @@ fu_config_class_init (FuConfigClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	object_class->finalize = fu_config_finalize;
+
+	signals[SIGNAL_CHANGED] =
+		g_signal_new ("changed",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      0, NULL, NULL, g_cclosure_marshal_VOID__VOID,
+			      G_TYPE_NONE, 0);
 }
 
 static void

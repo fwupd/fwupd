@@ -43,7 +43,7 @@ msgstr "Ŝanĝita"
 msgid "Choose a device:"
 msgstr "Elektu aparaton:"
 
-#. TRANSLATORS: section header for firmware description
+#. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Priskribo"
 
@@ -55,7 +55,6 @@ msgstr "Farita!"
 msgid "Found"
 msgstr "Trovita"
 
-#. TRANSLATORS: Appstream ID for the hardware type
 msgid "ID"
 msgstr "ID"
 
@@ -64,7 +63,6 @@ msgstr "Reĝimo"
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 #. TRANSLATORS: device name, e.g. 'ColorHug2'
-#. TRANSLATORS: section header for the release name
 msgid "Name"
 msgstr "Nomo"
 
@@ -89,7 +87,3 @@ msgstr "Celo"
 #. TRANSLATORS: currect daemon status is unknown
 msgid "Unknown"
 msgstr "Nekonata"
-
-#. TRANSLATORS: section header for release version number
-msgid "Version"
-msgstr "Versio"

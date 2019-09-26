@@ -268,7 +268,7 @@ fu_hwids_convert_padded_integer_cb (FuSmbios *smbios,
 				    guint8 type, guint8 offset,
 				    GError **error)
 {
-	GBytes *data;
+	g_autoptr(GBytes) data = NULL;
 	const guint8 *data_raw;
 	gsize data_sz = 0;
 	data = fu_smbios_get_data (smbios, type, error);
@@ -290,7 +290,7 @@ fu_hwids_convert_integer_cb (FuSmbios *smbios,
 			     guint8 type, guint8 offset,
 			     GError **error)
 {
-	GBytes *data;
+	g_autoptr(GBytes) data = NULL;
 	const guint8 *data_raw;
 	gsize data_sz = 0;
 	data = fu_smbios_get_data (smbios, type, error);

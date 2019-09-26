@@ -1,0 +1,17 @@
+# ThinkPad TBT3-TR Gen 2 dock
+[DeviceInstanceId=USB\VID_17EF&PID_3083]
+Guid = SYNAPTICS_CXAUDIO\CX2098X
+
+# ThinkPad TBT3-MS Gen 2 dock
+[DeviceInstanceId=USB\VID_17EF&PID_3092]
+Guid = SYNAPTICS_CXAUDIO\CX2198X
+
+[Guid=SYNAPTICS_CXAUDIO\CX2098X]
+Plugin = synaptics_cxaudio
+ChipIdBase = 20980
+
+[Guid=SYNAPTICS_CXAUDIO\CX2198X]
+Plugin = synaptics_cxaudio
+ChipIdBase = 21980
+EepromPatchValidAddr = 0x0014
+EepromPatch2ValidAddr = 0x0171

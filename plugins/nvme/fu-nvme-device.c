@@ -40,12 +40,11 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevDevice, g_object_unref)
 #endif
 
 static void
-fu_nvme_device_to_string (FuDevice *device, GString *str)
+fu_nvme_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuNvmeDevice *self = FU_NVME_DEVICE (device);
-	g_string_append (str, "  FuNvmeDevice:\n");
-	g_string_append_printf (str, "    fd:\t\t\t%i\n", self->fd);
-	g_string_append_printf (str, "    pci-depth:\t\t%u\n", self->pci_depth);
+	fu_common_string_append_ku (str, idt, "FD", (guint) self->fd);
+	fu_common_string_append_ku (str, idt, "PciDepth", self->pci_depth);
 }
 
 /* @addr_start and @addr_end are *inclusive* to match the NMVe specification */
@@ -395,15 +394,21 @@ fu_nvme_device_close (FuDevice *device, GError **error)
 
 static gboolean
 fu_nvme_device_write_firmware (FuDevice *device,
-			       GBytes *fw,
+			       FuFirmware *firmware,
 			       FwupdInstallFlags flags,
 			       GError **error)
 {
 	FuNvmeDevice *self = FU_NVME_DEVICE (device);
 	g_autoptr(GBytes) fw2 = NULL;
+	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 	guint64 block_size = self->write_block_size > 0 ?
 			     self->write_block_size : 0x1000;
+
+	/* get default image */
+	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	if (fw == NULL)
+		return FALSE;
 
 	/* some vendors provide firmware files whose sizes are not multiples
 	 * of blksz *and* the device won't accept blocks of different sizes */

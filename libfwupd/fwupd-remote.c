@@ -47,6 +47,7 @@ typedef struct {
 	guint64			 mtime;
 	gchar			**order_after;
 	gchar			**order_before;
+	gchar			*remotes_dir;
 } FwupdRemotePrivate;
 
 enum {
@@ -447,11 +448,15 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 		if (password != NULL)
 			fwupd_remote_set_password (self, password);
 
+		if (priv->remotes_dir == NULL) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "Remotes directory not set");
+			return FALSE;
+		}
 		/* set cache to /var/lib... */
-		filename_cache = g_build_filename (LOCALSTATEDIR,
-						   "lib",
-						   "fwupd",
-						   "remotes.d",
+		filename_cache = g_build_filename (priv->remotes_dir,
 						   priv->id,
 						   "metadata.xml.gz",
 						   NULL);
@@ -678,6 +683,24 @@ fwupd_remote_get_age (FwupdRemote *self)
 }
 
 /**
+ * fwupd_remote_set_remotes_dir:
+ * @self: A #FwupdRemote
+ * @directory: Remotes directory
+ *
+ * Sets the directory to store remote data
+ *
+ * Since: 1.3.1
+ **/
+void
+fwupd_remote_set_remotes_dir (FwupdRemote *self, const gchar *directory)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_REMOTE (self));
+	g_free (priv->remotes_dir);
+	priv->remotes_dir = g_strdup (directory);
+}
+
+/**
  * fwupd_remote_set_priority:
  * @self: A #FwupdRemote
  * @priority: an integer, where 1 is better
@@ -781,6 +804,24 @@ fwupd_remote_get_agreement (FwupdRemote *self)
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
 	return priv->agreement;
+}
+
+/**
+ * fwupd_remote_get_remotes_dir:
+ * @self: A #FwupdRemote
+ *
+ * Gets the base directory for storing remote metadata
+ *
+ * Returns: a string, or %NULL if unset
+ *
+ * Since: 1.3.1
+ **/
+const gchar *
+fwupd_remote_get_remotes_dir (FwupdRemote *self)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
+	return priv->remotes_dir;
 }
 
 /**
@@ -1083,6 +1124,10 @@ fwupd_remote_to_variant (FwupdRemote *self)
 		g_variant_builder_add (&builder, "{sv}", "FilenameSource",
 				       g_variant_new_string (priv->filename_source));
 	}
+	if (priv->remotes_dir != NULL) {
+		g_variant_builder_add (&builder, "{sv}", "RemotesDir",
+				       g_variant_new_string (priv->remotes_dir));
+	}
 	g_variant_builder_add (&builder, "{sv}", "Enabled",
 			       g_variant_new_boolean (priv->enabled));
 	g_variant_builder_add (&builder, "{sv}", "ApprovalRequired",
@@ -1200,6 +1245,7 @@ fwupd_remote_finalize (GObject *obj)
 	g_free (priv->password);
 	g_free (priv->title);
 	g_free (priv->agreement);
+	g_free (priv->remotes_dir);
 	g_free (priv->checksum);
 	g_free (priv->filename_cache);
 	g_free (priv->filename_cache_sig);

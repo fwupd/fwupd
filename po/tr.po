@@ -96,10 +96,6 @@ msgstr "Ürün Yazılımı Yardımcı Programı"
 msgid "Found"
 msgstr "Bulundu"
 
-msgid "GUID"
-msgstr "GUID"
-
-#. TRANSLATORS: Appstream ID for the hardware type
 msgid "ID"
 msgstr "Kimlik (ID)"
 
@@ -135,11 +131,9 @@ msgstr "Kip"
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 #. TRANSLATORS: device name, e.g. 'ColorHug2'
-#. TRANSLATORS: section header for the release name
 msgid "Name"
 msgstr "İsim"
 
-#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Ürün yazılımı güncelleme yeteneğine sahip donanım saptanamadı"
@@ -199,22 +193,6 @@ msgstr "Bilinmiyor"
 
 msgid "Unlock the device to allow access"
 msgstr "Erişime izin vermek için cihazın kilidini açın"
-
-#. TRANSLATORS: section header for firmware checksum
-msgid "Update Checksum"
-msgstr "Güncelleme Sağlaması"
-
-#. TRANSLATORS: section header for long firmware desc
-msgid "Update Description"
-msgstr "Güncelleme Açıklaması"
-
-#. TRANSLATORS: section header for firmware remote http://
-msgid "Update Location"
-msgstr "Güncelleme Konumu"
-
-#. TRANSLATORS: section header for firmware version
-msgid "Update Version"
-msgstr "Güncelleme Sürümü"
 
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"

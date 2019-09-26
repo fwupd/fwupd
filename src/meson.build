@@ -1,4 +1,4 @@
-if get_option('daemon')
+if build_daemon
   install_data(['org.freedesktop.fwupd.xml'],
     install_dir : join_paths(datadir, 'dbus-1', 'interfaces')
   )
@@ -7,7 +7,31 @@ endif
 keyring_deps = []
 keyring_src = []
 test_deps = []
-init_src = []
+libfwupdprivate_src = [
+  'fu-archive.c',
+  'fu-chunk.c',
+  'fu-common.c',
+  'fu-common-cab.c',
+  'fu-common-guid.c',
+  'fu-common-version.c',
+  'fu-device.c',
+  'fu-device-locker.c',
+  'fu-firmware.c',
+  'fu-firmware-common.c',
+  'fu-firmware-image.c',
+  'fu-hwids.c',
+  'fu-history.c',
+  'fu-ihex-firmware.c',
+  'fu-io-channel.c',
+  'fu-plugin.c',
+  'fu-progressbar.c',
+  'fu-quirks.c',
+  'fu-smbios.c',
+  'fu-srec-firmware.c',
+  'fu-test.c',
+  'fu-udev-device.c',
+  'fu-usb-device.c',
+]
 
 if get_option('gpg')
   keyring_src += 'fu-keyring-gpg.c'
@@ -24,30 +48,13 @@ if get_option('pkcs7')
 endif
 
 if get_option('systemd')
-  init_src += 'fu-systemd.c'
+  libfwupdprivate_src += 'fu-systemd.c'
 endif
 
 libfwupdprivate = static_library(
   'fwupdprivate',
   sources : [
-    init_src,
-    'fu-archive.c',
-    'fu-common.c',
-    'fu-common-guid.c',
-    'fu-common-version.c',
-    'fu-chunk.c',
-    'fu-device.c',
-    'fu-device-locker.c',
-    'fu-hwids.c',
-    'fu-history.c',
-    'fu-io-channel.c',
-    'fu-plugin.c',
-    'fu-progressbar.c',
-    'fu-quirks.c',
-    'fu-smbios.c',
-    'fu-test.c',
-    'fu-udev-device.c',
-    'fu-usb-device.c',
+    libfwupdprivate_src,
   ],
   include_directories : [
     include_directories('..'),
@@ -57,11 +64,12 @@ libfwupdprivate = static_library(
     giounix,
     gudev,
     gusb,
-    soup,
-    sqlite,
     libarchive,
+    libgcab,
     libjsonglib,
     libxmlb,
+    soup,
+    sqlite,
     valgrind,
   ],
   link_with : [
@@ -72,7 +80,7 @@ libfwupdprivate = static_library(
   ],
 )
 
-if get_option('daemon')
+if build_daemon
 fwupdmgr = executable(
   'fwupdmgr',
   sources : [
@@ -148,6 +156,7 @@ fwupdagent = executable(
     giounix,
     gudev,
     gusb,
+    libxmlb,
     soup,
   ],
   link_with : [
@@ -171,11 +180,11 @@ resources_src = gnome.compile_resources(
 
 fu_hash = custom_target(
   'fu-hash.h',
-  input : libfwupdprivate,
+  input : libfwupdprivate_src,
   output : 'fu-hash.h',
   command : [python3.path(),
              join_paths(meson.current_source_dir(), 'fu-hash.py'),
-             '@INPUT@', '@OUTPUT@']
+             '@OUTPUT@', '@INPUT@']
 )
 
 fwupdtool = executable(
@@ -185,34 +194,17 @@ fwupdtool = executable(
   sources : [
     'fu-tool.c',
     keyring_src,
-    init_src,
-    'fu-archive.c',
-    'fu-chunk.c',
-    'fu-common.c',
-    'fu-common-cab.c',
-    'fu-common-guid.c',
-    'fu-common-version.c',
+    libfwupdprivate_src,
     'fu-config.c',
-    'fu-keyring.c',
-    'fu-keyring-result.c',
-    'fu-engine.c',
-    'fu-hwids.c',
     'fu-debug.c',
-    'fu-device.c',
     'fu-device-list.c',
-    'fu-device-locker.c',
+    'fu-engine.c',
     'fu-idle.c',
     'fu-install-task.c',
-    'fu-io-channel.c',
     'fu-keyring.c',
+    'fu-keyring-result.c',
     'fu-keyring-utils.c',
-    'fu-history.c',
-    'fu-plugin.c',
     'fu-plugin-list.c',
-    'fu-quirks.c',
-    'fu-smbios.c',
-    'fu-udev-device.c',
-    'fu-usb-device.c',
     'fu-util-common.c',
   ],
   include_directories : [
@@ -244,7 +236,7 @@ fwupdtool = executable(
   install_dir : join_paths(libexecdir, 'fwupd')
 )
 
-if get_option('daemon') and get_option('man')
+if build_daemon and get_option('man')
   help2man = find_program('help2man')
   custom_target('fwupdmgr-man',
     input : fwupdmgr,
@@ -262,42 +254,25 @@ if get_option('daemon') and get_option('man')
   )
 endif
 
-if get_option('daemon')
+if build_daemon
 executable(
   'fwupd',
   resources_src,
   fu_hash,
   sources : [
     keyring_src,
-    init_src,
-    'fu-archive.c',
-    'fu-chunk.c',
-    'fu-common.c',
-    'fu-common-cab.c',
-    'fu-common-guid.c',
-    'fu-common-version.c',
+    libfwupdprivate_src,
     'fu-config.c',
-    'fu-keyring.c',
-    'fu-keyring-result.c',
-    'fu-engine.c',
-    'fu-main.c',
-    'fu-hwids.c',
     'fu-debug.c',
-    'fu-device.c',
     'fu-device-list.c',
-    'fu-device-locker.c',
+    'fu-engine.c',
     'fu-idle.c',
-    'fu-io-channel.c',
     'fu-install-task.c',
     'fu-keyring.c',
+    'fu-keyring-result.c',
     'fu-keyring-utils.c',
-    'fu-history.c',
-    'fu-plugin.c',
+    'fu-main.c',
     'fu-plugin-list.c',
-    'fu-quirks.c',
-    'fu-smbios.c',
-    'fu-udev-device.c',
-    'fu-usb-device.c',
   ],
   include_directories : [
     include_directories('..'),
@@ -343,36 +318,19 @@ if get_option('tests')
     fu_hash,
     sources : [
       keyring_src,
-      init_src,
-      'fu-self-test.c',
-      'fu-archive.c',
-      'fu-chunk.c',
-      'fu-common.c',
-      'fu-common-cab.c',
-      'fu-common-guid.c',
-      'fu-common-version.c',
+      libfwupdprivate_src,
       'fu-config.c',
-      'fu-engine.c',
-      'fu-keyring.c',
-      'fu-keyring-utils.c',
-      'fu-hwids.c',
-      'fu-device.c',
       'fu-device-list.c',
-      'fu-device-locker.c',
-      'fu-history.c',
+      'fu-engine.c',
       'fu-idle.c',
       'fu-install-task.c',
-      'fu-io-channel.c',
       'fu-keyring.c',
       'fu-keyring-result.c',
-      'fu-plugin.c',
+      'fu-keyring-utils.c',
       'fu-plugin-list.c',
-      'fu-progressbar.c',
-      'fu-quirks.c',
+      'fu-self-test.c',
       'fu-smbios.c',
       'fu-test.c',
-      'fu-udev-device.c',
-      'fu-usb-device.c',
     ],
     include_directories : [
       include_directories('..'),
@@ -424,6 +382,12 @@ if get_option('introspection')
       'fu-device.h',
       'fu-device-locker.c',
       'fu-device-locker.h',
+      'fu-firmware.c',
+      'fu-firmware.h',
+      'fu-firmware-common.c',
+      'fu-firmware-common.h',
+      'fu-firmware-image.c',
+      'fu-firmware-image.h',
       'fu-io-channel.c',
       'fu-plugin.c',
       'fu-plugin.h',

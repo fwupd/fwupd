@@ -11,6 +11,7 @@
 #include <glib.h>
 #include <glib/gi18n.h>
 
+#include "fu-common.h"
 #include "fu-progressbar.h"
 
 static void fu_progressbar_finalize	 (GObject *obj);
@@ -160,7 +161,7 @@ fu_progressbar_refresh (FuProgressbar *self, FwupdStatus status, guint percentag
 	}
 	title = fu_progressbar_status_to_string (status);
 	g_string_append (str, title);
-	for (i = g_utf8_strlen (str->str, -1); i < self->length_status; i++)
+	for (i = fu_common_strwidth (str->str); i < self->length_status; i++)
 		g_string_append_c (str, ' ');
 
 	/* add progressbar */

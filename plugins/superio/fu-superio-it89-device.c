@@ -591,13 +591,14 @@ fu_superio_it89_device_get_jedec_id (FuSuperioDevice *self, guint8 *id, GError *
 
 static gboolean
 fu_superio_it89_device_write_firmware (FuDevice *device,
-				       GBytes *fw,
+				       FuFirmware *firmware,
 				       FwupdInstallFlags flags,
 				       GError **error)
 {
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
 	guint8 id[4] = { 0x0 };
 	g_autoptr(GBytes) fw_fixed = NULL;
+	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	/* check JEDEC ID */
@@ -616,6 +617,11 @@ fu_superio_it89_device_write_firmware (FuDevice *device,
 
 	/* check eflash is writable */
 	if (!fu_superio_it89_device_check_eflash (self, error))
+		return FALSE;
+
+	/* get default image */
+	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	if (fw == NULL)
 		return FALSE;
 
 	/* disable the mirroring of e-flash */

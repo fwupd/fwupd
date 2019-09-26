@@ -20,7 +20,7 @@
       tablets and on headless servers.
     </p>
   </description>
-  <url type="bugtracker">https://github.com/hughsie/fwupd/issues</url>
+  <url type="bugtracker">https://github.com/fwupd/fwupd/issues</url>
   <url type="homepage">https://fwupd.org/</url>
   <url type="translate">https://www.transifex.com/freedesktop/fwupd/</url>
   <update_contact>richard_at_hughsie.com</update_contact>
@@ -32,6 +32,62 @@
     <binary>fwupdmgr</binary>
   </provides>
   <releases>
+    <release version="1.3.2" date="2019-09-26">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add a plugin to detach the Thelio IO board</li>
+          <li>Add a plugin to update Conexant audio devices</li>
+          <li>Support issues in AppStream metadata</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Align the key values to the text width not the number of bytes</li>
+          <li>Display more helpful historical device information</li>
+          <li>Do not ask the user to upload a report if ReportURI is not set</li>
+          <li>Do not crash when starting tpm2-abrmd</li>
+          <li>Ensure HID++ v2.0 peripheral devices get added</li>
+          <li>Fall back to /var/lib/dbus/machine-id when required</li>
+          <li>Include all GUIDs when uploading a report</li>
+          <li>Move D-Bus conf file to datadir/dbus-1/system.d</li>
+          <li>Update device_modified in sql database during updates</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.1" date="2019-07-15">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add support for the Minnowboard Turbot</li>
+          <li>Add support for the SoloKey Secure</li>
+          <li>Add support for thunderbolt kernel safety checks</li>
+          <li>Add support to integrate into the motd</li>
+          <li>Allow filtering devices when using the command line tools</li>
+          <li>Allow setting custom flags when using fwupdate</li>
+          <li>Allow specifying a firmware GUID to check any version exists</li>
+          <li>Include the kernel release as a runtime version</li>
+          <li>Print devices, remotes, releases using a tree</li>
+          <li>Publish docs to fwupd.github.io using CircleCI</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add aliases for get-upgrades and upgrade</li>
+          <li>Allow disabling SSL strict mode for broken corporate proxies</li>
+          <li>Be more accepting when trying to recover a failed database migration</li>
+          <li>Do not segfault when trying to quit the downgrade selection</li>
+          <li>Fix a possible crash when stopping the fwupd service</li>
+          <li>Fix incomplete hex file parsing in unifying plugin</li>
+          <li>Fix thunderbolt logic to work properly with ICL thunderbolt controller</li>
+          <li>Never show AppStream markup on the console</li>
+          <li>Never use memcpy() in a possibly unsafe way</li>
+          <li>Only write the new UEFI device path if different than before</li>
+          <li>Partially rewrite the Synapticsmst plugin to support more hardware</li>
+          <li>Reload metadata store when configuration changes</li>
+          <li>Use environment variables for systemd managed directories</li>
+          <li>Use tpm2-tss library to read PCR values</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.2.10" date="2019-07-15">
       <description>
         <p>This release adds the following features:</p>

@@ -17,11 +17,6 @@ msgstr ""
 "Language: sr\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#. TRANSLATORS: first replacement is device name
-#, c-format
-msgid "%s has firmware updates:"
-msgstr "%s има ажурирања за фирмвер:"
-
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Added"
 msgstr "Додао"
@@ -109,7 +104,6 @@ msgstr "Отказао"
 msgid "Changed"
 msgstr "Променио"
 
-#. TRANSLATORS: section header for firmware checksum
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Чек-сума"
@@ -169,7 +163,7 @@ msgstr "Распакујем…"
 msgid "Decrypt firmware data"
 msgstr "Дешифруј податке у фирмверу"
 
-#. TRANSLATORS: section header for firmware description
+#. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Опис"
 
@@ -324,9 +318,6 @@ msgstr[2] "Метаподаци фирмвера нису ажурирани %u 
 msgid "Found"
 msgstr "Нашао"
 
-msgid "GUID"
-msgstr "ГУИД"
-
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
 msgstr "Добави све уређаје који подржавају ажурирање фирмвера"
@@ -355,7 +346,6 @@ msgstr "Добавља издања за уређај"
 msgid "Gets the results from the last update"
 msgstr "Добавља резултате последњег ажурирања"
 
-#. TRANSLATORS: Appstream ID for the hardware type
 msgid "ID"
 msgstr "ИБ"
 
@@ -405,10 +395,6 @@ msgstr "Споји више датотека са фирмвером у једн
 msgid "Metadata URI"
 msgstr "URI метаподатака"
 
-#. TRANSLATORS: remote URI
-msgid "Metadata URI Signature"
-msgstr "Потпис URI-ја метаподатака"
-
 msgid "Mode"
 msgstr "Режим"
 
@@ -425,11 +411,9 @@ msgstr "Прати демона за догађајима"
 
 #. TRANSLATORS: interface name, e.g. "Flash"
 #. TRANSLATORS: device name, e.g. 'ColorHug2'
-#. TRANSLATORS: section header for the release name
 msgid "Name"
 msgstr "Назив"
 
-#. TRANSLATORS: nothing attached
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Нема хардвера којем се може ажурирати фирмвер"
@@ -494,10 +478,7 @@ msgstr "Област"
 msgid "Reinstalling %s with %s... "
 msgstr "Поново инсталирам %s са %s..."
 
-#. TRANSLATORS: section header for the remote the file is coming from
-msgid "Remote"
-msgstr "Удаљени"
-
+#. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 msgid "Remote ID"
 msgstr "Удаљени ИБ"
@@ -615,16 +596,12 @@ msgstr "Стање"
 msgid "Status"
 msgstr "Статус"
 
-#. TRANSLATORS: section header for the release one line summary
+#. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Сажетак"
 
 msgid "Target"
 msgstr "Мета"
-
-#. TRANSLATORS: remote title, e.g. "Linux Vendor Firmware Service"
-msgid "Title"
-msgstr "Наслов"
 
 #. TRANSLATORS: transfer size in bytes
 msgid "Transfer Size"
@@ -633,10 +610,6 @@ msgstr "Величина преноса"
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
 msgstr "Врста"
-
-#. TRANSLATORS: section header for firmware URI
-msgid "URI"
-msgstr "УРИ"
 
 #. TRANSLATORS: currect daemon status is unknown
 msgid "Unknown"
@@ -648,34 +621,6 @@ msgstr "Откључајте уређај да бисте дозволили п�
 #. TRANSLATORS: command description
 msgid "Unlocks the device for firmware access"
 msgstr "Откључава уређај за приступ фирмверу"
-
-#. TRANSLATORS: section header for firmware checksum
-msgid "Update Checksum"
-msgstr "Сума провере ажурирања"
-
-#. TRANSLATORS: section header for long firmware desc
-msgid "Update Description"
-msgstr "Опис ажурирања"
-
-#. TRANSLATORS: section header for firmware remote http://
-msgid "Update Location"
-msgstr "Место ажурирања"
-
-#. TRANSLATORS: section header for the release name
-msgid "Update Name"
-msgstr "Назив ажурирања"
-
-#. TRANSLATORS: section header for remote ID, e.g. lvfs-testing
-msgid "Update Remote ID"
-msgstr "ИБ удаљене исправке"
-
-#. TRANSLATORS: section header for the release one line summary
-msgid "Update Summary"
-msgstr "Сажетак ажурирања"
-
-#. TRANSLATORS: section header for firmware version
-msgid "Update Version"
-msgstr "Верзија ажурирања"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
@@ -718,10 +663,6 @@ msgstr "Корисничко име"
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
 msgstr "Проверавам…"
-
-#. TRANSLATORS: section header for release version number
-msgid "Version"
-msgstr "Издање"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

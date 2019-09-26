@@ -8,7 +8,7 @@ Uploaders: Steve McIntyre <93sam@debian.org>,
 Build-Depends: %%%DYNAMIC%%%
 Standards-Version: 4.3.0
 Section: admin
-Homepage: https://github.com/hughsie/fwupd
+Homepage: https://github.com/fwupd/fwupd
 Vcs-Git: https://salsa.debian.org/efi-team/fwupd.git
 Vcs-Browser: https://salsa.debian.org/efi-team/fwupd
 
@@ -23,7 +23,7 @@ Description: Firmware update daemon library
  You can either use a GUI software manager like GNOME Software to view and
  apply updates, the command-line tool or the system D-Bus interface directly.
  Firmware updates are supported for a variety of technologies.
- See <https://github.com/hughsie/fwupd> for details
+ See <https://github.com/fwupd/fwupd> for details
  .
  This package provides the library used by the daemon.
 
@@ -34,8 +34,6 @@ Depends: ${misc:Depends},
          shared-mime-info
 Recommends: python3,
 	    bolt,
-	    tpm2-tools,
-	    tpm2-abrmd,
 	    fwupd-signed
 Breaks: gir1.2-dfu-1.0 (<< 0.9.7-1),
 	libdfu1 (<< 0.9.7-1),
@@ -49,7 +47,7 @@ Description: Firmware update daemon
  You can either use a GUI software manager like GNOME Software to view and
  apply updates, the command-line tool or the system D-Bus interface directly.
  Firmware updates are supported for a variety of technologies.
- See <https://github.com/hughsie/fwupd> for details
+ See <https://github.com/fwupd/fwupd> for details
 
 Package: fwupd-tests
 Architecture: linux-any
@@ -71,7 +69,7 @@ Description: Test suite for firmware update daemon
  You can either use a GUI software manager like GNOME Software to view and
  apply updates, the command-line tool or the system D-Bus interface directly.
  Firmware updates are supported for a variety of technologies.
- See <https://github.com/hughsie/fwupd> for details
+ See <https://github.com/fwupd/fwupd> for details
  .
  This package provides a set of installed tests that can be run to validate
  the daemon in a continuous integration system.
@@ -86,7 +84,7 @@ Description: Firmware update daemon documentation (HTML format)
  You can either use a GUI software manager like GNOME Software to view and
  apply updates, the command-line tool or the system D-Bus interface directly.
  Firmware updates are supported for a variety of technologies.
- See <https://github.com/hughsie/fwupd> for details
+ See <https://github.com/fwupd/fwupd> for details
  .
  This package provides development documentation for creating a package that
  uses fwupd.
@@ -105,7 +103,7 @@ Description: development files for libfwupd
  You can either use a GUI software manager like GNOME Software to view and
  apply updates, the command-line tool or the system D-Bus interface directly.
  Firmware updates are supported for a variety of technologies.
- See <https://github.com/hughsie/fwupd> for details
+ See <https://github.com/fwupd/fwupd> for details
  .
  This package provides the development files for libfwupd
 

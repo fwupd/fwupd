@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2016 Mario Limonciello <mario.limonciello@dell.com>
  * Copyright (C) 2017 Peichen Huang <peichenhuang@tw.synaptics.com>
+ * Copyright (C) 2019 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -9,6 +10,9 @@
 
 #include <glib.h>
 #include <gio/gio.h>
+
+#define FU_TYPE_SYNAPTICSMST_CONNECTION (fu_synapticsmst_connection_get_type ())
+G_DECLARE_FINAL_TYPE (FuSynapticsmstConnection, fu_synapticsmst_connection, FU, SYNAPTICSMST_CONNECTION, GObject)
 
 #define ADDR_CUSTOMER_ID	0X10E
 #define ADDR_BOARD_ID		0x10F
@@ -54,27 +58,23 @@ typedef enum {
 	UPDC_READ_FROM_TX_DPCD		= 0x32,
 } SynapticsMstUpdcCmd;
 
-typedef struct _SynapticsMSTConnection SynapticsMSTConnection;
-
-void		 synapticsmst_common_free 			(SynapticsMSTConnection *connection);
-
-SynapticsMSTConnection	*synapticsmst_common_new 		(gint	 fd,
+FuSynapticsmstConnection	*fu_synapticsmst_connection_new (gint	 fd,
 								 guint8	 layer,
 								 guint	 rad);
 
-gboolean	 synapticsmst_common_read	 		(SynapticsMSTConnection *connection,
+gboolean	 fu_synapticsmst_connection_read		(FuSynapticsmstConnection *self,
 								 guint32	 offset,
 								 guint8		*buf,
 								 guint32	 length,
 								 GError		**error);
 
-gboolean	 synapticsmst_common_write 			(SynapticsMSTConnection *connection,
+gboolean	 fu_synapticsmst_connection_write 		(FuSynapticsmstConnection *self,
 								 guint32	 offset,
 								 const guint8 	*buf,
 								 guint32	 length,
 								 GError		**error);
 
-gboolean	 synapticsmst_common_rc_set_command 		(SynapticsMSTConnection *connection,
+gboolean	 fu_synapticsmst_connection_rc_set_command 	(FuSynapticsmstConnection *self,
 								 guint32	 rc_cmd,
 								 guint32	 length,
 								 guint32	 offset,
@@ -82,14 +82,14 @@ gboolean	 synapticsmst_common_rc_set_command 		(SynapticsMSTConnection *connecti
 								 GError		**error);
 
 
-gboolean	 synapticsmst_common_rc_get_command 		(SynapticsMSTConnection *connection,
+gboolean	 fu_synapticsmst_connection_rc_get_command 	(FuSynapticsmstConnection *self,
 								 guint32	 rc_cmd,
 								 guint32	 length,
 								 guint32	 offset,
 								 guint8		*buf,
 								 GError		**error);
 
-gboolean	 synapticsmst_common_rc_special_get_command	(SynapticsMSTConnection *connection,
+gboolean	 fu_synapticsmst_connection_rc_special_get_command(FuSynapticsmstConnection *self,
 								 guint32	 rc_cmd,
 								 guint32	 cmd_length,
 								 guint32	 cmd_offset,
@@ -98,12 +98,8 @@ gboolean	 synapticsmst_common_rc_special_get_command	(SynapticsMSTConnection *co
 								 guint8		*buf,
 								 GError		**error);
 
-gboolean	 synapticsmst_common_enable_remote_control	(SynapticsMSTConnection *connection,
+gboolean	 fu_synapticsmst_connection_enable_rc		(FuSynapticsmstConnection *self,
 								 GError **error);
 
-gboolean	 synapticsmst_common_disable_remote_control	(SynapticsMSTConnection *connection,
+gboolean	 fu_synapticsmst_connection_disable_rc		(FuSynapticsmstConnection *self,
 								 GError **error);
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(SynapticsMSTConnection, synapticsmst_common_free)
-#pragma clang diagnostic pop

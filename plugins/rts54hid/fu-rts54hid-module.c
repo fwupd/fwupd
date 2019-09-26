@@ -23,13 +23,12 @@ struct _FuRts54HidModule {
 G_DEFINE_TYPE (FuRts54HidModule, fu_rts54hid_module, FU_TYPE_DEVICE)
 
 static void
-fu_rts54hid_module_to_string (FuDevice *module, GString *str)
+fu_rts54hid_module_to_string (FuDevice *module, guint idt, GString *str)
 {
 	FuRts54HidModule *self = FU_RTS54HID_MODULE (module);
-	g_string_append (str, "  FuRts54HidModule:\n");
-	g_string_append_printf (str, "    slave-addr: 0x%02x\n", self->slave_addr);
-	g_string_append_printf (str, "    i2c-speed:  0x%02x\n", self->i2c_speed);
-	g_string_append_printf (str, "    register_addr_len:  0x%02x\n", self->register_addr_len);
+	fu_common_string_append_kx (str, idt, "SlaveAddr", self->slave_addr);
+	fu_common_string_append_kx (str, idt, "I2cSpeed", self->i2c_speed);
+	fu_common_string_append_kx (str, idt, "RegisterAddrLen", self->register_addr_len);
 }
 
 static FuRts54HidDevice *
@@ -74,7 +73,10 @@ fu_rts54hid_module_i2c_write (FuRts54HidModule *self,
 		return FALSE;
 
 	memcpy (buf, &cmd_buffer, sizeof(cmd_buffer));
-	memcpy (buf + FU_RTS54HID_CMD_BUFFER_OFFSET_DATA, data, data_sz);
+	if (!fu_memcpy_safe (buf, sizeof(buf), FU_RTS54HID_CMD_BUFFER_OFFSET_DATA,	/* dst */
+			     data, data_sz, 0x0,					/* src */
+			     data_sz, error))
+		return FALSE;
 	if (!fu_rts54hid_device_set_report (parent, buf, sizeof(buf), error)) {
 		g_prefix_error (error, "failed to write i2c @%04x: ", self->slave_addr);
 		return FALSE;
@@ -118,9 +120,9 @@ fu_rts54hid_module_i2c_read (FuRts54HidModule *self,
 	}
 	if (!fu_rts54hid_device_get_report (parent, buf, sizeof(buf), error))
 		return FALSE;
-	memcpy (data, buf + FU_RTS54HID_CMD_BUFFER_OFFSET_DATA, data_sz);
-
-	return TRUE;
+	return fu_memcpy_safe (data, data_sz, 0x0,
+			       buf, sizeof(buf), FU_RTS54HID_CMD_BUFFER_OFFSET_DATA,
+			       data_sz, error);
 }
 
 static gboolean
@@ -212,12 +214,18 @@ fu_rts54hid_module_close (FuDevice *device, GError **error)
 
 static gboolean
 fu_rts54hid_module_write_firmware (FuDevice *module,
-				   GBytes *fw,
+				   FuFirmware *firmware,
 				   FwupdInstallFlags flags,
 				   GError **error)
 {
 	FuRts54HidModule *self = FU_RTS54HID_MODULE (module);
+	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
+
+	/* get default image */
+	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	if (fw == NULL)
+		return FALSE;
 
 	/* build packets */
 	chunks = fu_chunk_array_new_from_bytes (fw,

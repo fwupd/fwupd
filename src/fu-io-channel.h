@@ -57,7 +57,17 @@ gboolean	 fu_io_channel_write_bytes	(FuIOChannel	*self,
 						 guint		 timeout_ms,
 						 FuIOChannelFlags flags,
 						 GError		**error);
+gboolean	 fu_io_channel_write_byte_array	(FuIOChannel	*self,
+						 GByteArray	*buf,
+						 guint		 timeout_ms,
+						 FuIOChannelFlags flags,
+						 GError		**error);
 GBytes		*fu_io_channel_read_bytes	(FuIOChannel	*self,
+						 gssize		 max_size,
+						 guint		 timeout_ms,
+						 FuIOChannelFlags flags,
+						 GError		**error);
+GByteArray	*fu_io_channel_read_byte_array	(FuIOChannel	*self,
 						 gssize		 max_size,
 						 guint		 timeout_ms,
 						 FuIOChannelFlags flags,

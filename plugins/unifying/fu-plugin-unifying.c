@@ -63,9 +63,10 @@ fu_plugin_update (FuPlugin *plugin,
 static gboolean
 fu_plugin_unifying_check_supported_device (FuPlugin *plugin, FuDevice *device)
 {
-	GPtrArray *guids = fu_device_get_guids (device);
-	for (guint i = 0; i < guids->len; i++) {
-		const gchar *guid = g_ptr_array_index (guids, i);
+	GPtrArray *instance_ids = fu_device_get_instance_ids (device);
+	for (guint i = 0; i < instance_ids->len; i++) {
+		const gchar *instance_id = g_ptr_array_index (instance_ids, i);
+		g_autofree gchar *guid = fwupd_guid_hash_string (instance_id);
 		if (fu_plugin_check_supported (plugin, guid))
 			return TRUE;
 	}

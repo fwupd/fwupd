@@ -163,17 +163,20 @@ fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_si
 
 	/* already exists */
 	if (var_data != NULL) {
-		efi_loadopt_attr_set (loadopt, LOAD_OPTION_ACTIVE);
-		rc = efi_set_variable (*guid, name, var_data,
-				       var_data_size, attr, 0644);
-		if (rc < 0) {
-			g_set_error_literal (error,
-					     G_IO_ERROR,
-					     G_IO_ERROR_FAILED,
-					     "could not set boot variable active");
-			return FALSE;
-		}
 
+		/* is different than before */
+		if (var_data_size != (gsize) opt_size ||
+		    memcmp (var_data, opt, opt_size) != 0) {
+			efi_loadopt_attr_set (loadopt, LOAD_OPTION_ACTIVE);
+			rc = efi_set_variable (*guid, name, opt, opt_size, attr, 0644);
+			if (rc < 0) {
+				g_set_error_literal (error,
+						     G_IO_ERROR,
+						     G_IO_ERROR_FAILED,
+						     "could not set boot variable active");
+				return FALSE;
+			}
+		}
 	/* create a new one */
 	} else {
 		g_autofree gchar *boot_next_name = NULL;

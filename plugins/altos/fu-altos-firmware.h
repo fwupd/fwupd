@@ -1,22 +1,19 @@
 /*
- * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2017-2019 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #pragma once
 
+#include "fu-firmware.h"
+
 G_BEGIN_DECLS
 
 #define FU_TYPE_ALTOS_FIRMWARE (fu_altos_firmware_get_type ())
 
-G_DECLARE_FINAL_TYPE (FuAltosFirmware, fu_altos_firmware, FU, ALTOS_FIRMWARE, GObject)
+G_DECLARE_FINAL_TYPE (FuAltosFirmware, fu_altos_firmware, FU, ALTOS_FIRMWARE, FuFirmware)
 
-FuAltosFirmware	*fu_altos_firmware_new		(void);
-GBytes		*fu_altos_firmware_get_data	(FuAltosFirmware	*self);
-guint64		 fu_altos_firmware_get_address	(FuAltosFirmware	*self);
-gboolean	 fu_altos_firmware_parse	(FuAltosFirmware	*self,
-						 GBytes			*blob,
-						 GError			**error);
+FuFirmware		*fu_altos_firmware_new		(void);
 
 G_END_DECLS

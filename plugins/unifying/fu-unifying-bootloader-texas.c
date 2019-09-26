@@ -109,14 +109,20 @@ fu_unifying_bootloader_texas_clear_ram_buffer (FuUnifyingBootloader *self, GErro
 
 static gboolean
 fu_unifying_bootloader_texas_write_firmware (FuDevice *device,
-					     GBytes *fw,
+					     FuFirmware *firmware,
 					     FwupdInstallFlags flags,
 					     GError **error)
 {
 	FuUnifyingBootloader *self = FU_UNIFYING_BOOTLOADER (device);
 	const FuUnifyingBootloaderRequest *payload;
+	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) reqs = NULL;
 	g_autoptr(FuUnifyingBootloaderRequest) req = fu_unifying_bootloader_request_new ();
+
+	/* get default image */
+	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	if (fw == NULL)
+		return FALSE;
 
 	/* transfer payload */
 	reqs = fu_unifying_bootloader_parse_requests (self, fw, error);

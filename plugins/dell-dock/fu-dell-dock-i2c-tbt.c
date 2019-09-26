@@ -53,20 +53,27 @@ G_DEFINE_TYPE (FuDellDockTbt, fu_dell_dock_tbt, FU_TYPE_DEVICE)
 
 static gboolean
 fu_dell_dock_tbt_write_fw (FuDevice *device,
-			   GBytes *blob_fw,
+			   FuFirmware *firmware,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
 	FuDellDockTbt *self = FU_DELL_DOCK_TBT (device);
 	guint32 start_offset = 0;
-	gsize image_size;
-	const guint8 *buffer = g_bytes_get_data (blob_fw, &image_size);
+	gsize image_size = 0;
+	const guint8 *buffer;
 	guint16 target_system = 0;
 	g_autoptr(GTimer) timer = g_timer_new ();
 	g_autofree gchar *dynamic_version = NULL;
+	g_autoptr(GBytes) fw = NULL;
 
 	g_return_val_if_fail (device != NULL, FALSE);
-	g_return_val_if_fail (blob_fw != NULL, FALSE);
+	g_return_val_if_fail (FU_IS_FIRMWARE (firmware), FALSE);
+
+	/* get default image */
+	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	if (fw == NULL)
+		return FALSE;
+	buffer = g_bytes_get_data (fw, &image_size);
 
 	dynamic_version = g_strdup_printf ("%02x.%02x",
 					   buffer[self->blob_major_offset],

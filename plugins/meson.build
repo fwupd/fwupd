@@ -8,8 +8,11 @@ subdir('dell-dock')
 subdir('nitrokey')
 subdir('rts54hid')
 subdir('rts54hub')
+subdir('solokey')
+subdir('synaptics-cxaudio')
 subdir('synaptics-prometheus')
 subdir('test')
+subdir('thelio-io')
 subdir('udev')
 subdir('unifying')
 subdir('upower')
@@ -56,6 +59,7 @@ endif
 
 if get_option('plugin_uefi')
 subdir('uefi')
+subdir('uefi-recovery')
 endif
 
 if get_option('plugin_flashrom')

@@ -19,6 +19,8 @@ GUID Generation
 These devices use custom GUID values, e.g.
 
  * `MST-$(device_kind)-$(chip-ID)-$(board-ID)`
+ * `MST-$(device_kind)-$(board-ID)`
+ * `MST-$(device_kind)`
 
 Please refer to the plugin source for more details about how the GUID is
 constructed for specific hardware.

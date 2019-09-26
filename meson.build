@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version : '1.2.10',
+  version : '1.3.2',
   license : 'LGPL-2.1+',
   meson_version : '>=0.47.0',
   default_options : ['warning_level=2', 'c_std=c99'],
@@ -79,6 +79,7 @@ warning_flags = [
   '-Wno-cast-function-type',
   '-Wno-address-of-packed-member',  # incompatible with g_autoptr()
   '-Wno-unknown-pragmas',
+  '-Wno-deprecated-declarations',
   '-Wno-discarded-qualifiers',
   '-Wno-missing-field-initializers',
   '-Wno-strict-aliasing',
@@ -134,6 +135,18 @@ add_project_arguments('-DFWUPD_DISABLE_DEPRECATED', language : 'c')
 add_project_arguments('-D_BSD_SOURCE', language : 'c')
 add_project_arguments('-D_XOPEN_SOURCE=700', language : 'c')
 
+# sanity check
+if get_option('build') == 'all'
+  build_standalone = true
+  build_daemon = true
+elif get_option('build') == 'standalone'
+  build_standalone = true
+  build_daemon = false
+elif get_option('build') == 'library'
+  build_standalone = false
+  build_daemon = false
+endif
+
 prefix = get_option('prefix')
 
 bindir = join_paths(prefix, get_option('bindir'))
@@ -146,11 +159,12 @@ mandir = join_paths(prefix, get_option('mandir'))
 localedir = join_paths(prefix, get_option('localedir'))
 
 gio = dependency('gio-2.0', version : '>= 2.45.8')
+giounix = dependency('gio-unix-2.0', version : '>= 2.45.8')
 if gio.version().version_compare ('>= 2.55.0')
   conf.set('HAVE_GIO_2_55_0', '1')
 endif
+if build_standalone
 gmodule = dependency('gmodule-2.0')
-giounix = dependency('gio-unix-2.0', version : '>= 2.45.8')
 gudev = dependency('gudev-1.0')
 if gudev.version().version_compare('>= 232')
   conf.set('HAVE_GUDEV_232', '1')
@@ -159,10 +173,11 @@ libxmlb = dependency('xmlb', version : '>= 0.1.7', fallback : ['libxmlb', 'libxm
 gusb = dependency('gusb', version : '>= 0.2.9')
 sqlite = dependency('sqlite3')
 libarchive = dependency('libarchive')
+endif
 libjsonglib = dependency('json-glib-1.0', version : '>= 1.1.1')
 valgrind = dependency('valgrind', required: false)
 soup = dependency('libsoup-2.4', version : '>= 2.51.92')
-if get_option('daemon')
+if build_daemon
   polkit = dependency('polkit-gobject-1', version : '>= 0.103')
   if polkit.version().version_compare('>= 0.114')
     conf.set('HAVE_POLKIT_0_114', '1')
@@ -202,15 +217,15 @@ if valgrind.found()
   conf.set('HAVE_VALGRIND', '1')
 endif
 
-if get_option('plugin_redfish')
+if build_standalone and get_option('plugin_redfish')
   efivar = dependency('efivar')
 endif
 
-if get_option('plugin_altos')
+if build_standalone and get_option('plugin_altos')
   libelf = dependency('libelf')
 endif
 
-if get_option('plugin_uefi')
+if build_standalone and get_option('plugin_uefi')
   cairo = dependency('cairo')
   fontconfig = cc.find_library('fontconfig')
   freetype = cc.find_library('freetype')
@@ -219,6 +234,7 @@ if get_option('plugin_uefi')
   efiboot = dependency('efiboot')
   objcopy = find_program ('objcopy')
   readelf = find_program ('readelf')
+  tpm2tss = dependency('tss2-esys', version : '>= 2.0')
 
   efi_app_location = join_paths(libexecdir, 'fwupd', 'efi')
   conf.set_quoted ('EFI_APP_LOCATION', efi_app_location)
@@ -247,7 +263,7 @@ if get_option('plugin_uefi')
   endif
 endif
 
-if get_option('plugin_dell')
+if build_standalone and get_option('plugin_dell')
   libsmbios_c = dependency('libsmbios_c', version : '>= 2.4.0')
   efivar = dependency('efivar')
   conf.set('HAVE_DELL', '1')
@@ -256,63 +272,64 @@ if get_option('plugin_dell')
   endif
 endif
 
-if get_option('plugin_modem_manager')
+if build_standalone and get_option('plugin_modem_manager')
   libmm_glib = dependency('mm-glib', version : '>= 1.10.0')
   add_project_arguments('-DMM_REQUIRED_VERSION="1.10.0"', language : 'c')
   libqmi_glib = dependency('qmi-glib', version : '>= 1.22.0')
   add_project_arguments('-DQMI_REQUIRED_VERSION="1.23.1"', language : 'c')
 endif
 
-if get_option('plugin_nvme')
+if build_standalone and get_option('plugin_nvme')
   if not cc.has_header('linux/nvme_ioctl.h')
     error('NVMe support requires kernel >= 4.4')
   endif
 endif
 
-if get_option('plugin_synaptics')
+if build_standalone and get_option('plugin_synaptics')
     conf.set('HAVE_SYNAPTICS', '1')
 endif
 
-if get_option('plugin_thunderbolt')
+if build_standalone and get_option('plugin_thunderbolt')
   umockdev = dependency('umockdev-1.0', required: false)
   conf.set('HAVE_THUNDERBOLT', '1')
 endif
 
-if get_option('plugin_flashrom')
+if build_standalone and get_option('plugin_flashrom')
   libflashrom = dependency('flashrom', fallback : ['flashrom', 'flashrom_dep'])
 endif
 
-if get_option('systemd')
+if build_standalone and get_option('systemd')
   systemd = dependency('systemd', version : '>= 211')
   conf.set('HAVE_SYSTEMD' , '1')
   conf.set('HAVE_LOGIND' , '1')
+  systemdunitdir = get_option('systemdunitdir')
+  if systemdunitdir == '' and get_option('systemd')
+    systemdunitdir = systemd.get_pkgconfig_variable('systemdsystemunitdir')
+  endif
 endif
 
-if get_option('elogind')
+if build_standalone and get_option('elogind')
   elogind = dependency('libelogind', version : '>= 211')
   conf.set('HAVE_LOGIND' , '1')
 endif
 
-if get_option('consolekit')
+if build_standalone and get_option('consolekit')
   conf.set('HAVE_CONSOLEKIT' , '1')
-endif
-
-systemdunitdir = get_option('systemdunitdir')
-if systemdunitdir == '' and get_option('systemd')
-  systemdunitdir = systemd.get_pkgconfig_variable('systemdsystemunitdir')
 endif
 
 gnome = import('gnome')
 i18n = import('i18n')
-
-plugin_dir = join_paths(libdir, 'fwupd-plugins-3')
 
 conf.set_quoted('BINDIR', bindir)
 conf.set_quoted('LIBEXECDIR', libexecdir)
 conf.set_quoted('DATADIR', datadir)
 conf.set_quoted('LOCALSTATEDIR', localstatedir)
 conf.set_quoted('SYSCONFDIR', sysconfdir)
+
+if build_standalone
+plugin_dir = join_paths(libdir, 'fwupd-plugins-3')
 conf.set_quoted('PLUGINDIR', plugin_dir)
+endif
 
 conf.set_quoted('GETTEXT_PACKAGE', meson.project_name())
 conf.set_quoted('PACKAGE_NAME', meson.project_name())
@@ -323,30 +340,34 @@ configure_file(
   configuration : conf
 )
 
-plugin_deps = []
-plugin_deps += libxmlb
-plugin_deps += gio
-plugin_deps += giounix
-plugin_deps += gmodule
-plugin_deps += gusb
-plugin_deps += soup
-plugin_deps += libarchive
-plugin_deps += gudev
+if build_standalone
+  plugin_deps = []
+  plugin_deps += libxmlb
+  plugin_deps += gio
+  plugin_deps += giounix
+  plugin_deps += gmodule
+  plugin_deps += gusb
+  plugin_deps += soup
+  plugin_deps += libarchive
+  plugin_deps += gudev
+endif
 
-subdir('data')
 if get_option('gtkdoc')
   gtkdocscan = find_program('gtkdoc-scan', required : true)
   subdir('docs')
 endif
 subdir('libfwupd')
-subdir('po')
-if get_option('daemon')
+if build_daemon
   subdir('policy')
 endif
-subdir('src')
-subdir('plugins')
-subdir('contrib')
+if build_standalone
+  subdir('data')
+  subdir('po')
+  subdir('src')
+  subdir('plugins')
+  subdir('contrib')
+endif
 
-if get_option('systemd') and get_option('daemon')
+if get_option('systemd') and build_daemon
   meson.add_install_script('meson_post_install.sh', systemdunitdir, localstatedir)
 endif

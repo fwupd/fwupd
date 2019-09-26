@@ -10,9 +10,9 @@
 
 #include "fu-chunk.h"
 #include "fu-csr-device.h"
+#include "fu-ihex-firmware.h"
 
 #include "dfu-common.h"
-#include "dfu-firmware.h"
 
 /**
  * FU_CSR_DEVICE_QUIRK_FLAG_REQUIRE_DELAY:
@@ -59,12 +59,11 @@ G_DEFINE_TYPE (FuCsrDevice, fu_csr_device, FU_TYPE_USB_DEVICE)
 #define FU_CSR_DEVICE_TIMEOUT			5000	/* ms */
 
 static void
-fu_csr_device_to_string (FuDevice *device, GString *str)
+fu_csr_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuCsrDevice *self = FU_CSR_DEVICE (device);
-	g_string_append (str, "  DfuCsrDevice:\n");
-	g_string_append_printf (str, "    state:\t\t%s\n", dfu_state_to_string (self->dfu_state));
-	g_string_append_printf (str, "    timeout:\t\t%" G_GUINT32_FORMAT "\n", self->dnload_timeout);
+	fu_common_string_append_kv (str, idt, "State", dfu_state_to_string (self->dfu_state));
+	fu_common_string_append_ku (str, idt, "DownloadTimeout", self->dnload_timeout);
 }
 
 static gboolean
@@ -352,7 +351,10 @@ fu_csr_device_download_chunk (FuCsrDevice *self, guint16 idx, GBytes *chunk, GEr
 	buf[1] = FU_CSR_COMMAND_UPGRADE;
 	fu_common_write_uint16 (&buf[2], idx, G_LITTLE_ENDIAN);
 	fu_common_write_uint16 (&buf[4], chunk_sz, G_LITTLE_ENDIAN);
-	memcpy (buf + FU_CSR_COMMAND_HEADER_SIZE, chunk_data, chunk_sz);
+	if (!fu_memcpy_safe (buf, sizeof(buf), FU_CSR_COMMAND_HEADER_SIZE,	/* dst */
+			     chunk_data, chunk_sz, 0x0,				/* src */
+			     chunk_sz, error))
+		return FALSE;
 
 	/* hit hardware */
 	if (g_getenv ("FWUPD_CSR_VERBOSE") != NULL)
@@ -416,70 +418,43 @@ fu_csr_device_download_chunk (FuCsrDevice *self, guint16 idx, GBytes *chunk, GEr
 	return TRUE;
 }
 
-static GBytes *
-_dfu_firmware_get_default_element_data (DfuFirmware *firmware)
-{
-	DfuElement *element;
-	DfuImage *image;
-	image = dfu_firmware_get_image_default (firmware);
-	if (image == NULL)
-		return NULL;
-	element = dfu_image_get_element_default (image);
-	if (element == NULL)
-		return NULL;
-	return dfu_element_get_contents (element);
-}
-
-static GBytes *
+static FuFirmware *
 fu_csr_device_prepare_firmware (FuDevice *device,
 				GBytes *fw,
 				FwupdInstallFlags flags,
 				GError **error)
 {
-	GBytes *blob_noftr;
-	g_autoptr(DfuFirmware) dfu_firmware = dfu_firmware_new ();
+	g_autoptr(FuFirmware) firmware = fu_ihex_firmware_new ();
 
 	/* parse the file */
-	if (!dfu_firmware_parse_data (dfu_firmware, fw,
-				      DFU_FIRMWARE_PARSE_FLAG_NONE, error))
+	if (!fu_firmware_parse (firmware, fw, flags, error))
 		return NULL;
 	if (g_getenv ("FWUPD_CSR_VERBOSE") != NULL) {
 		g_autofree gchar *fw_str = NULL;
-		fw_str = dfu_firmware_to_string (dfu_firmware);
+		fw_str = fu_firmware_to_string (firmware);
 		g_debug ("%s", fw_str);
-	}
-	if (dfu_firmware_get_format (dfu_firmware) != DFU_FIRMWARE_FORMAT_DFU) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "expected DFU firmware");
-		return NULL;
-	}
-
-	/* get the blob from the firmware file */
-	blob_noftr = _dfu_firmware_get_default_element_data (dfu_firmware);
-	if (blob_noftr == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "firmware contained no data");
-		return NULL;
 	}
 
 	/* success */
-	return g_bytes_ref (blob_noftr);
+	return g_steal_pointer (&firmware);
 }
 
 static gboolean
 fu_csr_device_download (FuDevice *device,
-			GBytes *blob,
+			FuFirmware *firmware,
 			FwupdInstallFlags flags,
 			GError **error)
 {
 	FuCsrDevice *self = FU_CSR_DEVICE (device);
 	guint16 idx;
 	g_autoptr(GBytes) blob_empty = NULL;
+	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
+
+	/* get default image */
+	blob = fu_firmware_get_image_default_bytes (firmware, error);
+	if (blob == NULL)
+		return FALSE;
 
 	/* notify UI */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);

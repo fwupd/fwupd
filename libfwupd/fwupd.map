@@ -371,3 +371,21 @@ LIBFWUPD_1.2.10 {
     fwupd_remote_array_from_variant;
   local: *;
 } LIBFWUPD_1.2.9;
+
+LIBFWUPD_1.3.1 {
+  global:
+    fwupd_client_get_host_product;
+    fwupd_remote_get_remotes_dir;
+    fwupd_remote_set_remotes_dir;
+  local: *;
+} LIBFWUPD_1.2.10;
+
+LIBFWUPD_1.3.2 {
+  global:
+    fwupd_client_get_host_machine_id;
+    fwupd_release_add_issue;
+    fwupd_release_get_issues;
+    fwupd_release_get_name_variant_suffix;
+    fwupd_release_set_name_variant_suffix;
+  local: *;
+} LIBFWUPD_1.3.1;

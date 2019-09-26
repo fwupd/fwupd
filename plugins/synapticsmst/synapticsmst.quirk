@@ -37,4 +37,12 @@ DeviceKind = system
 
 [SynapticsMSTBoardID=259]
 Name = Dell dock
-DeviceKind = panamera
+
+[SynapticsMSTBoardID=513]
+Name = ThinkPad Workstation Dock
+
+[SynapticsMSTBoardID=595]
+Name = ThinkPad Thunderbolt 3 Workstation Dock
+
+[SynapticsMSTBoardID=596]
+Name = ThinkPad USB-C Dock Gen2
