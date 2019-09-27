@@ -2183,7 +2183,7 @@ fu_util_modify_config (FuUtilPrivate *priv, gchar **values, GError **error)
 					 error))
 		return FALSE;
 	if (!priv->assume_yes) {
-		g_print ("%s\n [Y|n]: ",
+		g_print ("%s [Y|n]: ",
 			/* TRANSLATORS: configuration changes only take effect on restart */
 			 _("Restart the daemon to make the change effective?"));
 		if (!fu_util_prompt_for_boolean (FALSE))
