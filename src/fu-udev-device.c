@@ -155,13 +155,27 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 		}
 		tmp = g_udev_device_get_property (udev_parent, "HID_NAME");
 		if (tmp != NULL) {
-			g_auto(GStrv) vm = g_strsplit (tmp, " ", 2);
-			if (g_strv_length (vm) == 2) {
-				if (fu_device_get_vendor (device) == NULL)
-					fu_device_set_vendor (device, vm[0]);
-				if (fu_device_get_name (device) == NULL)
-					fu_device_set_name (device, vm[1]);
+			if (fu_device_get_name (device) == NULL)
+				fu_device_set_name (device, tmp);
+		}
+	}
+
+	/* try harder to find a vendor name the user will recognise */
+	if (fu_device_get_vendor (device) == NULL) {
+		g_autoptr(GUdevDevice) device_tmp = g_object_ref (udev_parent);
+		for (guint i = 0; i < 0xff; i++) {
+			g_autoptr(GUdevDevice) parent = NULL;
+			const gchar *id_vendor;
+			id_vendor = g_udev_device_get_property (device_tmp,
+								"ID_VENDOR_FROM_DATABASE");
+			if (id_vendor != NULL) {
+				fu_device_set_vendor (device, id_vendor);
+				break;
 			}
+			parent = g_udev_device_get_parent (device_tmp);
+			if (parent == NULL)
+				break;
+			g_set_object (&device_tmp, parent);
 		}
 	}
 
