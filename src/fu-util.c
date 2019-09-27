@@ -481,9 +481,13 @@ fu_util_download_if_required (FuUtilPrivate *priv, const gchar *perhapsfn, GErro
 static void
 fu_util_display_current_message (FuUtilPrivate *priv)
 {
-	if (priv->current_message == NULL)
+	if (priv->current_message == NULL) {
+		/* TRANSLATORS: success message */
+		g_print ("%s\n", _("Successfully installed firmware"));
 		return;
-	g_print ("%s\n", priv->current_message);
+	}
+	/* TRANSLATORS: success message */
+	g_print ("%s: %s\n", _("Successfully installed firmware"), priv->current_message);
 	g_clear_pointer (&priv->current_message, g_free);
 }
 
@@ -712,6 +716,7 @@ fu_util_report_history (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GList) uris = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) remotes = NULL;
+	g_autoptr(GString) str = g_string_new (NULL);
 
 	/* set up networking */
 	if (priv->soup_session == NULL) {
@@ -827,6 +832,13 @@ fu_util_report_history (FuUtilPrivate *priv, gchar **values, GError **error)
 			return FALSE;
 	}
 
+	/* TRANSLATORS: success message -- where the user has uploaded
+	 * success and/or failure reports to the remote server */
+	g_string_append_printf (str, ngettext ("Successfully uploaded %u report",
+					       "Successfully uploaded %u reports",
+					       g_hash_table_size (report_map)),
+					       g_hash_table_size (report_map));
+	g_print ("%s\n", str->str);
 	return TRUE;
 }
 
@@ -1213,7 +1225,10 @@ static gboolean
 fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 {
 	gboolean download_remote_enabled = FALSE;
+	guint devices_supported_cnt = 0;
+	g_autoptr(GPtrArray) devs = NULL;
 	g_autoptr(GPtrArray) remotes = NULL;
+	g_autoptr(GString) str = g_string_new (NULL);
 
 	remotes = fwupd_client_get_remotes (priv->client, NULL, error);
 	if (remotes == NULL)
@@ -1234,6 +1249,29 @@ fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 		if (!fu_util_download_metadata_enable_lvfs (priv, error))
 			return FALSE;
 	}
+
+	/* get devices from daemon */
+	devs = fwupd_client_get_devices (priv->client, NULL, error);
+	if (devs == NULL)
+		return FALSE;
+
+	/* get results */
+	for (guint i = 0; i < devs->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index (devs, i);
+		if (fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
+			devices_supported_cnt++;
+	}
+
+	/* TRANSLATORS: success message -- where 'metadata' is information
+	 * about available firmware on the remote server */
+	g_string_append (str, _("Successfully downloaded new metadata: "));
+
+	/* TRANSLATORS: how many local devices can expect updates now */
+	g_string_append_printf (str, ngettext ("%u local device supported",
+					       "%u local devices supported",
+					       devices_supported_cnt),
+					       devices_supported_cnt);
+	g_print ("%s\n", str->str);
 	return TRUE;
 }
 
@@ -1251,12 +1289,17 @@ fu_util_refresh (FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* open file */
-	return fwupd_client_update_metadata (priv->client,
-					     values[2],
-					     values[0],
-					     values[1],
-					     NULL,
-					     error);
+	if (!fwupd_client_update_metadata (priv->client,
+					   values[2],
+					   values[0],
+					   values[1],
+					   NULL,
+					   error))
+		return FALSE;
+
+	/* TRANSLATORS: success message -- the user can do this by-hand too */
+	g_print ("%s\n", _("Successfully refreshed metadata manually"));
+	return TRUE;
 }
 
 static gboolean
@@ -1722,6 +1765,8 @@ fu_util_update_by_id (FuUtilPrivate *priv, const gchar *device_id, GError **erro
 	if (!fu_util_update_device_with_release (priv, dev, rel, error))
 		return FALSE;
 
+	/* TRANSLATORS: success message where the specific device is specified */
+	g_print ("%s\n", _("Successfully updated device"));
 	fu_util_display_current_message (priv);
 
 	/* we don't want to ask anything */
@@ -1758,7 +1803,12 @@ fu_util_remote_modify (FuUtilPrivate *priv, gchar **values, GError **error)
 				     "Invalid arguments");
 		return FALSE;
 	}
-	return fu_util_modify_remote (priv, values[0], values[1], values[2], error);
+	if (!fu_util_modify_remote (priv, values[0], values[1], values[2], error))
+		return FALSE;
+
+	/* TRANSLATORS: success message for a per-remote setting change */
+	g_print ("%s\n", _("Successfully modifed remote"));
+	return TRUE;
 }
 
 static gboolean
@@ -1771,7 +1821,12 @@ fu_util_remote_enable (FuUtilPrivate *priv, gchar **values, GError **error)
 				     "Invalid arguments");
 		return FALSE;
 	}
-	return fu_util_modify_remote (priv, values[0], "Enabled", "true", error);
+	if (!fu_util_modify_remote (priv, values[0], "Enabled", "true", error))
+		return FALSE;
+
+	/* TRANSLATORS: success message */
+	g_print ("%s\n", _("Successfully enabled remote"));
+	return TRUE;
 }
 
 static gboolean
@@ -1784,7 +1839,12 @@ fu_util_remote_disable (FuUtilPrivate *priv, gchar **values, GError **error)
 				     "Invalid arguments");
 		return FALSE;
 	}
-	return fu_util_modify_remote (priv, values[0], "Enabled", "false", error);
+	if (!fu_util_modify_remote (priv, values[0], "Enabled", "false", error))
+		return FALSE;
+
+	/* TRANSLATORS: success message */
+	g_print ("%s\n", _("Successfully disabled remote"));
+	return TRUE;
 }
 
 static gboolean
@@ -1815,7 +1875,13 @@ fu_util_downgrade (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_signal_connect (priv->client, "device-changed",
 			  G_CALLBACK (fu_util_update_device_changed_cb), priv);
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
-	return fu_util_update_device_with_release (priv, dev, rel, error);
+	if (!fu_util_update_device_with_release (priv, dev, rel, error))
+		return FALSE;
+
+	/* TRANSLATORS: success message where we made the firmware on the
+	 * device older than it was before */
+	g_print ("%s\n", _("Successfully downgraded device"));
+	return TRUE;
 }
 
 static gboolean
@@ -1880,6 +1946,9 @@ fu_util_activate (FuUtilPrivate *priv, gchar **values, GError **error)
 			return FALSE;
 	}
 
+	/* TRANSLATORS: success message -- where activation is making the new
+	 * firmware take effect, usually after updating offline */
+	g_print ("%s\n", _("Successfully activated all devices"));
 	return TRUE;
 }
 
@@ -1968,6 +2037,8 @@ fu_util_modify_config (FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_systemd_unit_stop (fu_util_get_systemd_unit (), error))
 		return FALSE;
 #endif
+	/* TRANSLATORS: success message -- a per-system setting value */
+	g_print ("%s\n", _("Successfully modified configuration value"));
 	return TRUE;
 }
 
