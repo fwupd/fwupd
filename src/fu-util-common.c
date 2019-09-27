@@ -1047,6 +1047,21 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 	return g_string_free (str, FALSE);
 }
 
+static const gchar *
+fu_util_license_to_string (const gchar *license)
+{
+	if (license == NULL) {
+		/* TRANSLATORS: we don't know the license of the update */
+		return _("Unknown");
+	}
+	if (g_strcmp0 (license, "LicenseRef-proprietary") == 0 ||
+	    g_strcmp0 (license, "proprietary") == 0) {
+		/* TRANSLATORS: a non-free software license */
+		return _("Proprietary");
+	}
+	return license;
+}
+
 gchar *
 fu_util_release_to_string (FwupdRelease *rel, guint idt)
 {
@@ -1078,11 +1093,9 @@ fu_util_release_to_string (FwupdRelease *rel, guint idt)
 		fu_common_string_append_kv (str, idt + 1, _("Variant"),
 					    fwupd_release_get_name_variant_suffix (rel));
 	}
-	if (fwupd_release_get_license (rel) != NULL) {
-		/* TRANSLATORS: e.g. GPLv2+, Non free etc */
-		fu_common_string_append_kv (str, idt + 1, _("License"),
-					    fwupd_release_get_license (rel));
-	}
+	/* TRANSLATORS: e.g. GPLv2+, Proprietary etc */
+	fu_common_string_append_kv (str, idt + 1, _("License"),
+				    fu_util_license_to_string (fwupd_release_get_license (rel)));
 	if (fwupd_release_get_size (rel) != 0) {
 		g_autofree gchar *tmp = NULL;
 		tmp = g_format_size (fwupd_release_get_size (rel));
