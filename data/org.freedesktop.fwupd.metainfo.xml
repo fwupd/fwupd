@@ -32,6 +32,31 @@
     <binary>fwupdmgr</binary>
   </provides>
   <releases>
+    <release version="1.2.11" date="2019-09-28">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add support for tpm2-tools 4.X</li>
+          <li>Allow specifying a firmware GUID to check any version exists</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Actually write the new device path if different than before</li>
+          <li>Add a SynapticsMSTBoardID for a few Lenovo docks</li>
+          <li>Add the counterpart GUID for the DW5821e</li>
+          <li>Be more accepting when trying to recover a failed database migration</li>
+          <li>Do not ask the user to upload a report if ReportURI is not set</li>
+          <li>Do not segfault when trying to quit the downgrade selection</li>
+          <li>Fix a crash when stopping the fwupd service</li>
+          <li>Never show AppStream markup on the console</li>
+          <li>Relax the certificate time checks in the self tests for the legacy certificate</li>
+          <li>Reload metadata store when configuration changes</li>
+          <li>Remove replug flag after the device comes back from reboot</li>
+          <li>Update device_modified in sql database during updates</li>
+          <li>Work properly with ICL thunderbolt controller</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.2.10" date="2019-07-15">
       <description>
         <p>This release adds the following features:</p>
