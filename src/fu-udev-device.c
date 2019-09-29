@@ -161,7 +161,7 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	}
 
 	/* try harder to find a vendor name the user will recognise */
-	if (fu_device_get_vendor (device) == NULL) {
+	if (udev_parent != NULL && fu_device_get_vendor (device) == NULL) {
 		g_autoptr(GUdevDevice) device_tmp = g_object_ref (udev_parent);
 		for (guint i = 0; i < 0xff; i++) {
 			g_autoptr(GUdevDevice) parent = NULL;
