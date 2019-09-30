@@ -6,7 +6,7 @@ After=network.target network-online.target systemd-networkd.service NetworkManag
 [Service]
 Type=oneshot
 RuntimeDirectory=@motd_dir@
-CacheDirectory=fwupd
+CacheDirectory=fwupdmgr
 RuntimeDirectoryPreserve=yes
 StandardError=null
 ExecStart=@bindir@/fwupdmgr refresh
