@@ -448,6 +448,11 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency type="build" id="glibc-langpack-en">
+    <distro id="fedora">
+      <package>glibc-langpack-en</package>
+    </distro>
+  </dependency>
   <dependency type="build" id="gobject-introspection">
     <distro id="arch">
       <package />
