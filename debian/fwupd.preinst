@@ -7,3 +7,10 @@ if dpkg-maintscript-helper supports rm_conffile 2>/dev/null; then
 	dpkg-maintscript-helper rm_conffile \
 		/etc/fwupd.conf 1.0.0~ -- "$@"
 fi
+
+# 1.3.2 had fwupd-refresh.service and fwupd.service both claiming
+# this directory, but fwupd-refresh.service used DynamicUser directive
+# meaning no other unit could access it.
+if [ -L /var/cache/fwupd ]; then
+	rm -f /var/cache/fwupd
+fi
