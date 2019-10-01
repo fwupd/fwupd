@@ -1665,9 +1665,11 @@ fu_device_add_string (FuDevice *self, guint idt, GString *str)
 
 	/* print children also */
 	children = fu_device_get_children (self);
-	for (guint i = 0; i < children->len; i++) {
-		FuDevice *child = g_ptr_array_index (children, i);
-		fu_device_add_string (child, idt + 1, str);
+	if (children != NULL) {
+		for (guint i = 0; i < children->len; i++) {
+			FuDevice *child = g_ptr_array_index (children, i);
+			fu_device_add_string (child, idt + 1, str);
+		}
 	}
 }
 
