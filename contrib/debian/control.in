@@ -35,12 +35,18 @@ Depends: ${misc:Depends},
 Recommends: python3,
 	    bolt,
 	    fwupd-signed
+Provides: fwupdate
+Conflicts: fwupdate-amd64-signed,
+	   fwupdate-i386-signed,
+	   fwupdate-arm64-signed,
+	   fwupdate-armhf-signed
 Breaks: gir1.2-dfu-1.0 (<< 0.9.7-1),
 	libdfu1 (<< 0.9.7-1),
 	libdfu-dev (<< 0.9.7-1)
 Replaces: gir1.2-dfu-1.0 (<< 0.9.7-1),
 	  libdfu1 (<< 0.9.7-1),
-	  libdfu-dev (<< 0.9.7-1)
+	  libdfu-dev (<< 0.9.7-1),
+	  fwupdate (<< 12-7)
 Multi-Arch: foreign
 Description: Firmware update daemon
  fwupd is a daemon to allow session software to update device firmware.
