@@ -1,0 +1,36 @@
+From dc7e7c3808d564d5769b2845dbd66a3651f72e07 Mon Sep 17 00:00:00 2001
+From: Mario Limonciello <mario.limonciello@dell.com>
+Date: Mon, 30 Sep 2019 12:07:34 -0500
+Subject: [PATCH] trivial: fwupd-refresh: fix a clash with fwupd.service
+ (Closes: #941360)
+
+`fwupd-refresh.service` uses `DynamicUser=true` which causes systemd
+to make `/var/cache/fwupd` a symlink to `/var/cache/private/fwupd`.
+
+Individual units aren't allowed to access this directory, only the ones
+with the directive.  This means that `fwupd.service` stops working as
+soon as a user tries to start `fwupd-refresh.service`.
+
+The bug details are present in
+https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=941360
+---
+ contrib/debian/fwupd.preinst       | 7 +++++++
+ data/motd/fwupd-refresh.service.in | 2 +-
+ 2 files changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/data/motd/fwupd-refresh.service.in b/data/motd/fwupd-refresh.service.in
+index c6a6632..2cfb131 100644
+--- a/data/motd/fwupd-refresh.service.in
++++ b/data/motd/fwupd-refresh.service.in
+@@ -6,7 +6,7 @@ After=network.target network-online.target systemd-networkd.service NetworkManag
+ [Service]
+ Type=oneshot
+ RuntimeDirectory=@motd_dir@
+-CacheDirectory=fwupd
++CacheDirectory=fwupdmgr
+ RuntimeDirectoryPreserve=yes
+ StandardError=null
+ ExecStart=@bindir@/fwupdmgr refresh
+-- 
+2.7.4
+
