@@ -224,26 +224,26 @@ fu_util_maybe_enable_automatic (FuUtilPrivate *priv, GPtrArray *remotes, GError 
 	/* TRANSLATORS: Display a message asking every time an update is performed */
 	g_print ("%d.\t%s\n",
 		 FU_UTIL_HISTORY_DO_NOTHING,
-		 ngettext ("Do not upload %u report at this time, but prompt again for future updates",
-			   "Do not upload %u reports at this time, but prompt again for future updates",
+		 ngettext ("Do not upload report at this time, but prompt again for future updates",
+			   "Do not upload reports at this time, but prompt again for future updates",
 			   remotes->len));
 	/* TRANSLATORS: Display a message asking every time an update is performed */
 	g_print ("%d.\t%s\n",
 		 FU_UTIL_HISTORY_NEVER,
-		 ngettext ("Do not upload %u report, and never ask to upload reports for future updates",
-			   "Do not upload %u reports, and never ask to upload reports for future updates",
+		 ngettext ("Do not upload report, and never ask to upload reports for future updates",
+			   "Do not upload reports, and never ask to upload reports for future updates",
 			   remotes->len));
 	/* TRANSLATORS: Display a message asking every time an update is performed */
 	g_print ("%d.\t%s\n",
 		 FU_UTIL_HISTORY_PROMPT,
-		 ngettext ("Upload %u report just this one time, but prompt again for future updates",
-			   "Upload %u reports just this one time, but prompt again for future updates",
+		 ngettext ("Upload report just this one time, but prompt again for future updates",
+			   "Upload reports just this one time, but prompt again for future updates",
 			   remotes->len));
 	/* TRANSLATORS: Display a message asking every time an update is performed */
 	g_print ("%d.\t%s\n",
 		 FU_UTIL_HISTORY_AUTOMATIC,
-		 ngettext ("Upload %u report this time and automatically upload reports after completing future updates",
-			   "Upload %u reports this time and automatically upload reports after completing future updates",
+		 ngettext ("Upload report this time and automatically upload reports after completing future updates",
+			   "Upload reports this time and automatically upload reports after completing future updates",
 			   remotes->len));
 	idx = fu_util_prompt_for_number (FU_UTIL_HISTORY_LAST - 1);
 
