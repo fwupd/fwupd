@@ -423,3 +423,7 @@ if get_option('introspection')
     ],
   )
 endif
+
+if get_option('tests')
+  subdir('fuzzing')
+endif

@@ -10,6 +10,7 @@ def main():
     parser = argparse.ArgumentParser(description='Run afl-fuzz on all cores')
     parser.add_argument('--input', '-i', help='fuzzing input directory')
     parser.add_argument('--output', '-o', help='findings output directory')
+    parser.add_argument('--command', type=str, help='fuzzer tool command')
     parser.add_argument('path', type=str, help='the fuzzer tool')
     args = parser.parse_args()
     if not args.input and not args.output:
@@ -26,7 +27,10 @@ def main():
     # run the main instance
     envp = None
     argv = ['afl-fuzz', '-m300', '-i', args.input, '-o', args.output,
-            '-M', 'fuzzer00', args.path, '@@']
+            '-M', 'fuzzer00', args.path]
+    if args.command:
+        argv.append(args.command)
+    argv.append('@@')
     print(argv)
     p = subprocess.Popen(argv, env=envp)
 
@@ -34,7 +38,10 @@ def main():
     cs = []
     for i in range(1, os.cpu_count()):
         argv = ['afl-fuzz', '-m300', '-i', args.input, '-o', args.output,
-                '-S', 'fuzzer%02i' % i, args.path, '@@']
+                '-S', 'fuzzer%02i' % i, args.path]
+        if args.command:
+            argv.append(args.command)
+        argv.append('@@')
         print(argv)
         cs.append(subprocess.Popen(argv, env=envp, stdout=subprocess.DEVNULL))
 
