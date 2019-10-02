@@ -24,9 +24,3 @@ a proprietary (but docucumented) file format.
 This plugin supports the following protocol ID:
 
  * com.synaptics.rmi
-
-Fuzzing
--------
-
-    CC=afl-gcc meson --default-library=static ../
-    AFL_HARDEN=1 ninja fuzz-synaptics-rmi
