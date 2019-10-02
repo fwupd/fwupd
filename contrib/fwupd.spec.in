@@ -221,6 +221,11 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 
 %find_lang %{name}
 
+%pre
+if [ -L %{_localstatedir}/cache/fwupd ]; then
+    rm -f %{_localstatedir}/cache/fwupd
+fi
+
 %post
 %systemd_post fwupd.service
 
