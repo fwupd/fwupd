@@ -113,3 +113,15 @@ Other frontends
  A software suite available on Dell IoT gateways and Wyse thin clients with built-in fwupd support.
  The remote administration interface can be used to download and deploy firmware
  updates.
+
+
+Fuzzing
+-------
+
+There are several automated fuzzing tests in fwupd. These take some time to run:
+
+    CC=afl-gcc meson --default-library=static ../
+    AFL_HARDEN=1 ninja
+    ninja fuzz-synaptics-rmi
+    ninja fuzz-firmware
+    ninja fuzz-smbios
