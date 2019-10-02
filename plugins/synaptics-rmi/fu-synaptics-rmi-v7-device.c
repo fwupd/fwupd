@@ -381,13 +381,14 @@ fu_synaptics_rmi_v7_device_read_blocks (FuSynapticsRmiDevice *self,
 	return TRUE;
 }
 
-typedef struct {
+typedef struct __attribute__((packed)) {
 	guint16			 partition_id;
 	guint16			 partition_len;
 	guint16			 partition_addr;
 	guint16			 partition_prop;
-	guint16			 data[8];
 } RmiPartitionTbl;
+
+G_STATIC_ASSERT(sizeof(RmiPartitionTbl) == 8);
 
 static gboolean
 fu_synaptics_rmi_device_read_flash_config_v7 (FuSynapticsRmiDevice *self, GError **error)
@@ -464,7 +465,7 @@ fu_synaptics_rmi_device_read_flash_config_v7 (FuSynapticsRmiDevice *self, GError
 	}
 
 	/* parse the config length */
-	for (guint i = 0x2; i < buf_sz; i = i + 0x8) {
+	for (guint i = 0x2; i < buf_sz; i += sizeof(RmiPartitionTbl)) {
 		RmiPartitionTbl tbl;
 		if (!fu_memcpy_safe ((guint8 *) &tbl, sizeof(tbl), 0x0,			/* dst */
 				     buf, buf_sz, i,					/* src */
