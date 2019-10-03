@@ -30,8 +30,6 @@ typedef struct {
 	guint32			 build_id;
 	guint8			 bootloader_id[2];
 	guint8			 status_addr;
-	gboolean		 has_config_id;
-	gboolean		 has_new_regmap;
 } FuSynapticsRmiFlash;
 
 #define RMI_F34_HAS_NEW_REG_MAP				(1 << 0)

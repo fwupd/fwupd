@@ -509,7 +509,6 @@ fu_synaptics_rmi_v7_device_setup (FuSynapticsRmiDevice *self, GError **error)
 		return FALSE;
 	}
 	offset = (f34_data0->data[0] & 0b00000111) + 1;
-	flash->has_config_id = (f34_data0->data[0] & 0b00001000) > 0;
 	f34_dataX = fu_synaptics_rmi_device_read (self, f34->query_base + offset, 21, error);
 	if (f34_dataX == NULL)
 		return FALSE;

@@ -96,17 +96,6 @@ typedef struct
 	FuIOChannel		*io_channel;
 	FuSynapticsRmiFunction	*f01;
 	FuSynapticsRmiFunction	*f34;
-	guint8			 page;
-	guint			 num_interrupt_regs;
-	guint8			 manufacturer_id;
-	gboolean		 has_lts;
-	gboolean		 has_sensor_id;
-	gboolean		 has_query42;
-	gboolean		 has_dds4_queries;
-	guint32			 config_id;
-	guint8			 sensor_id;
-	guint16			 package_id;
-	guint16			 package_rev;
 } FuSynapticsRmiDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuSynapticsRmiDevice, fu_synaptics_rmi_device, FU_TYPE_UDEV_DEVICE)
@@ -134,8 +123,6 @@ fu_synaptics_rmi_flash_to_string (FuSynapticsRmiFlash *flash, guint idt, GString
 	fu_common_string_append_kx (str, idt, "BlockCountCfg", flash->block_count_cfg);
 	fu_common_string_append_kx (str, idt, "FlashConfigLength", flash->config_length);
 	fu_common_string_append_kx (str, idt, "PayloadLength", flash->payload_length);
-	fu_common_string_append_kb (str, idt, "HasConfigID", flash->has_config_id);
-	fu_common_string_append_kb (str, idt, "HasNewRegmap", flash->has_new_regmap);
 	fu_common_string_append_kx (str, idt, "BuildID", flash->build_id);
 }
 
@@ -146,15 +133,6 @@ fu_synaptics_rmi_device_to_string (FuDevice *device, guint idt, GString *str)
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
 	fu_common_string_append_ku (str, idt, "FD", (guint) priv->fd);
 	fu_common_string_append_kx (str, idt, "BlVer", priv->f34->function_version + 0x5);
-	fu_common_string_append_kx (str, idt, "ManufacturerID", priv->manufacturer_id);
-	fu_common_string_append_kb (str, idt, "HasLts", priv->has_lts);
-	fu_common_string_append_kb (str, idt, "HasSensorID", priv->has_sensor_id);
-	fu_common_string_append_kb (str, idt, "HasQuery42", priv->has_query42);
-	fu_common_string_append_kb (str, idt, "HasDS4Queries", priv->has_dds4_queries);
-	fu_common_string_append_kx (str, idt, "ConfigID", priv->config_id);
-	fu_common_string_append_kx (str, idt, "PackageID", priv->package_id);
-	fu_common_string_append_kx (str, idt, "PackageRev", priv->package_rev);
-	fu_common_string_append_kx (str, idt, "SensorID", priv->sensor_id);
 	fu_synaptics_rmi_flash_to_string (&priv->flash, idt, str);
 }
 
@@ -350,21 +328,13 @@ fu_synaptics_rmi_device_write (FuSynapticsRmiDevice *self, guint16 addr, GByteAr
 static gboolean
 fu_synaptics_rmi_device_set_rma_page (FuSynapticsRmiDevice *self, guint8 page, GError **error)
 {
-	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
 	g_autoptr(GByteArray) req = g_byte_array_new ();
 
-	/* same */
-	if (priv->page == page)
-		return TRUE;
-
-	/* write */
 	fu_byte_array_append_uint8 (req, page);
 	if (!fu_synaptics_rmi_device_write (self, RMI_DEVICE_PAGE_SELECT_REGISTER, req, error)) {
 		g_prefix_error (error, "failed to set RMA page 0x%x", page);
-		priv->page = 0xff;
 		return FALSE;
 	}
-	priv->page = page;
 	return TRUE;
 }
 
@@ -374,12 +344,10 @@ fu_synaptics_rmi_device_reset (FuSynapticsRmiDevice *self, GError **error)
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
 	g_autoptr(GByteArray) req = g_byte_array_new ();
 
-	g_debug ("resetting...");
 	fu_byte_array_append_uint8 (req, RMI_F01_CMD_DEVICE_RESET);
 	if (!fu_synaptics_rmi_device_write (self, priv->f01->command_base, req, error))
 		return FALSE;
 	g_usleep (1000 * RMI_F01_DEFAULT_RESET_DELAY_MS);
-	g_debug ("reset completed");
 	return TRUE;
 }
 
@@ -424,9 +392,6 @@ fu_synaptics_rmi_device_scan_pdt (FuSynapticsRmiDevice *self, GError **error)
 		if (!found)
 			break;
 	}
-
-	/* see docs */
-	priv->num_interrupt_regs = (interrupt_count + 7) / 8;
 
 	/* for debug */
 	if (g_getenv ("FWUPD_SYNAPTICS_RMI_VERBOSE") != NULL) {
@@ -492,8 +457,12 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 	guint16 addr;
 	guint16 prod_info_addr;
 	guint8 ds4_query_length = 0;
-	guint8 has_build_id_query = FALSE;
-	guint8 has_package_id_query = FALSE;
+	gboolean has_build_id_query = FALSE;
+	gboolean has_dds4_queries = FALSE;
+	gboolean has_lts;
+	gboolean has_package_id_query = FALSE;
+	gboolean has_query42;
+	gboolean has_sensor_id;
 	g_autofree gchar *bl_ver = NULL;
 	g_autofree gchar *board_id = NULL;
 	g_autofree gchar *fw_ver = NULL;
@@ -501,11 +470,7 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 	g_autoptr(GByteArray) f01_basic = NULL;
 	g_autoptr(GByteArray) f01_db = NULL;
 	g_autoptr(GByteArray) f01_product_id = NULL;
-	g_autoptr(GByteArray) f34_ctrl = NULL;
-
-	/* read basic device information */
-	if (!fu_synaptics_rmi_device_set_rma_page (self, 0x00, error))
-		return FALSE;
+	g_autoptr(GByteArray) f01_ds4 = NULL;
 
 	/* read PDT */
 	if (!fu_synaptics_rmi_device_scan_pdt (self, error))
@@ -519,10 +484,9 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 		g_prefix_error (error, "failed to read the basic query: ");
 		return FALSE;
 	}
-	priv->manufacturer_id = f01_basic->data[0];
-	priv->has_lts = (f01_basic->data[1] & RMI_DEVICE_F01_QRY1_HAS_LTS) > 0;
-	priv->has_sensor_id = (f01_basic->data[1] & RMI_DEVICE_F01_QRY1_HAS_SENSOR_ID) > 0;
-	priv->has_query42 = (f01_basic->data[1] & RMI_DEVICE_F01_QRY1_HAS_PROPS_2) > 0;
+	has_lts = (f01_basic->data[1] & RMI_DEVICE_F01_QRY1_HAS_LTS) > 0;
+	has_sensor_id = (f01_basic->data[1] & RMI_DEVICE_F01_QRY1_HAS_SENSOR_ID) > 0;
+	has_query42 = (f01_basic->data[1] & RMI_DEVICE_F01_QRY1_HAS_PROPS_2) > 0;
 
 	/* use the product ID as an instance ID */
 	addr += 11;
@@ -538,35 +502,24 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 	/* skip */
 	prod_info_addr = addr + 6;
 	addr += 10;
-	if (priv->has_lts)
+	if (has_lts)
 		addr++;
-
-	/* get sensor ID */
-	if (priv->has_sensor_id) {
-		g_autoptr(GByteArray) f01_tmp = NULL;
-		f01_tmp = fu_synaptics_rmi_device_read (self, addr++, 1, error);
-		if (f01_tmp == NULL) {
-			g_prefix_error (error, "failed to read the sensor id: ");
-			return FALSE;
-		}
-		priv->sensor_id = f01_tmp->data[0];
-	}
-
-	/* skip */
-	if (priv->has_lts)
+	if (has_sensor_id)
+		addr++;
+	if (has_lts)
 		addr += RMI_DEVICE_F01_LTS_RESERVED_SIZE;
 
 	/* read package ids */
-	if (priv->has_query42) {
+	if (has_query42) {
 		g_autoptr(GByteArray) f01_tmp = NULL;
 		f01_tmp = fu_synaptics_rmi_device_read (self, addr++, 1, error);
 		if (f01_tmp == NULL) {
 			g_prefix_error (error, "failed to read query 42: ");
 			return FALSE;
 		}
-		priv->has_dds4_queries = (f01_tmp->data[0] & RMI_DEVICE_F01_QRY42_DS4_QUERIES) > 0;
+		has_dds4_queries = (f01_tmp->data[0] & RMI_DEVICE_F01_QRY42_DS4_QUERIES) > 0;
 	}
-	if (priv->has_dds4_queries) {
+	if (has_dds4_queries) {
 		g_autoptr(GByteArray) f01_tmp = NULL;
 		f01_tmp = fu_synaptics_rmi_device_read (self, addr++, 1, error);
 		if (f01_tmp == NULL) {
@@ -575,28 +528,16 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 		}
 		ds4_query_length = f01_tmp->data[0];
 	}
-	for (guint i = 1; i <= ds4_query_length; ++i) {
-		g_autoptr(GByteArray) f01_tmp = NULL;
-		f01_tmp = fu_synaptics_rmi_device_read (self, addr++, 1, error);
-		if (f01_tmp == NULL) {
-			g_prefix_error (error, "failed to read F01 Query43.%02x: ", i);
-			return FALSE;
-		}
-		if (i == 0x1) {
-			has_package_id_query = f01_tmp->data[0] & RMI_DEVICE_F01_QRY43_01_PACKAGE_ID;
-			has_build_id_query = f01_tmp->data[0] & RMI_DEVICE_F01_QRY43_01_BUILD_ID;
-		}
+	f01_ds4 = fu_synaptics_rmi_device_read (self, addr, 0x1, error);
+	if (f01_ds4 == NULL) {
+		g_prefix_error (error, "failed to read F01 Query43: ");
+		return FALSE;
 	}
-	if (has_package_id_query) {
-		g_autoptr(GByteArray) f01_tmp = NULL;
-		f01_tmp = fu_synaptics_rmi_device_read (self, prod_info_addr++, 0x4, error);
-		if (f01_tmp == NULL) {
-			g_prefix_error (error, "failed to read package id: ");
-			return FALSE;
-		}
-		priv->package_id = fu_common_read_uint16 (f01_tmp->data, G_LITTLE_ENDIAN);
-		priv->package_rev = fu_common_read_uint16 (f01_tmp->data + 2, G_LITTLE_ENDIAN);
-	}
+	has_package_id_query = (f01_ds4->data[0] & RMI_DEVICE_F01_QRY43_01_PACKAGE_ID) > 0;
+	has_build_id_query = (f01_ds4->data[0] & RMI_DEVICE_F01_QRY43_01_BUILD_ID) > 0;
+	addr += ds4_query_length;
+	if (has_package_id_query)
+		prod_info_addr++;
 	if (has_build_id_query) {
 		g_autoptr(GByteArray) f01_tmp = NULL;
 		guint8 buf32[4] = { 0x0 };
@@ -622,12 +563,6 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 	priv->f34 = fu_synaptics_rmi_device_get_function (self, 0x34, error);
 	if (priv->f34 == NULL)
 		return FALSE;
-	f34_ctrl = fu_synaptics_rmi_device_read (self, priv->f34->control_base, 0x4, error);
-	if (f34_ctrl == NULL) {
-		g_prefix_error (error, "failed to read the config id: ");
-		return FALSE;
-	}
-	priv->config_id = fu_common_read_uint32 (f34_ctrl->data, G_LITTLE_ENDIAN);
 
 	/* set up vfuncs for each bootloader protocol version */
 	if (priv->f34->function_version == 0x0) {
@@ -1102,7 +1037,6 @@ fu_synaptics_rmi_device_init (FuSynapticsRmiDevice *self)
 	fu_device_set_name (FU_DEVICE (self), "Touchpad");
 	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	priv->functions = g_ptr_array_new_with_free_func (g_free);
-	priv->page = 0xff;
 }
 
 static void
