@@ -2030,6 +2030,64 @@ fu_util_downgrade (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_reinstall (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	const gchar *remote_id;
+	g_autoptr(FwupdRelease) rel = NULL;
+	g_autoptr(GPtrArray) rels = NULL;
+	g_autoptr(FwupdDevice) dev = fu_util_get_device_or_prompt (priv,
+								   values,
+								   error);
+	if (dev == NULL)
+		return FALSE;
+
+	/* try to lookup/match release from client */
+	rels = fwupd_client_get_releases (priv->client, fwupd_device_get_id (dev),
+					  NULL, error);
+	if (rels == NULL)
+		return FALSE;
+	for (guint j = 0; j < rels->len; j++) {
+		FwupdRelease *rel_tmp = g_ptr_array_index (rels, j);
+		if (fu_common_vercmp (fwupd_release_get_version (rel_tmp),
+		    fu_device_get_version (dev)) == 0) {
+			rel = g_object_ref (rel_tmp);
+			break;
+		}
+	}
+	if (rel == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "Unable to locate release for %s version %s",
+			     fu_device_get_name (dev),
+			     fu_device_get_version (dev));
+		return FALSE;
+	}
+
+	/* update the console if composite devices are also updated */
+	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
+	g_signal_connect (priv->client, "device-changed",
+			  G_CALLBACK (fu_util_update_device_changed_cb), priv);
+	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
+	if (!fu_util_update_device_with_release (priv, dev, rel, error))
+		return FALSE;
+	fu_util_display_current_message (priv);
+
+	/* send report if we're supposed to */
+	remote_id = fwupd_release_get_remote_id (rel);
+	if (!fu_util_maybe_send_reports (priv, remote_id, error))
+		return FALSE;
+
+	/* we don't want to ask anything */
+	if (priv->no_reboot_check) {
+		g_debug ("skipping reboot check");
+		return TRUE;
+	}
+
+	return fu_util_prompt_complete (priv->completion_flags, TRUE, error);
+}
+
+static gboolean
 fu_util_activate (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
@@ -2533,6 +2591,13 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: sets something in daemon.conf */
 		     _("Modifies a daemon configuration value."),
 		     fu_util_modify_config);
+	fu_util_cmd_array_add (cmd_array,
+		     "reinstall",
+		     "[DEVICE-ID]",
+		     /* TRANSLATORS: command description */
+		     _("Reinstall current firmware on the device."),
+		     fu_util_reinstall);
+
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();
