@@ -1,3 +1,12 @@
+fwupd (1.3.2-2) unstable; urgency=medium
+
+  * cleanup symlink from broken 1.3.2-1 if fwupd-refresh was started
+  * backport path for fwupd-refresh: fix a clash with fwupd.service (Closes: #941360)
+    (Closes: #941661)
+  * debian/control*: Update for fwupdate transition
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Thu, 03 Oct 2019 15:52:23 -0500
+
 fwupd (1.3.2-1) unstable; urgency=medium
 
   * New upstream version (1.3.2)
