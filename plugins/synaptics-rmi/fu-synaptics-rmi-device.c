@@ -394,6 +394,7 @@ fu_synaptics_rmi_device_scan_pdt (FuSynapticsRmiDevice *self, GError **error)
 
 	/* scan pages */
 	for (guint page = 0; page < RMI_DEVICE_MAX_PAGE; page++) {
+		gboolean found = FALSE;
 		guint32 page_start = RMI_DEVICE_PAGE_SIZE * page;
 		guint32 pdt_start = page_start + RMI_DEVICE_PAGE_SCAN_START;
 		guint32 pdt_end = page_start + RMI_DEVICE_PAGE_SCAN_END;
@@ -418,7 +419,10 @@ fu_synaptics_rmi_device_scan_pdt (FuSynapticsRmiDevice *self, GError **error)
 				break;
 			interrupt_count += func->interrupt_source_count;
 			g_ptr_array_add (priv->functions, g_steal_pointer (&func));
+			found = TRUE;
 		}
+		if (!found)
+			break;
 	}
 
 	/* see docs */
