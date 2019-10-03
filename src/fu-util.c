@@ -1811,6 +1811,7 @@ static gboolean
 fu_util_update_all (FuUtilPrivate *priv, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
+	gboolean supported = FALSE;
 
 	/* get devices from daemon */
 	devices = fwupd_client_get_devices (priv->client, NULL, error);
@@ -1831,6 +1832,7 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 			continue;
 		if (!fu_util_filter_device (priv, dev))
 			continue;
+		supported = TRUE;
 
 		/* get the releases for this device and filter for validity */
 		rels = fwupd_client_get_upgrades (priv->client,
@@ -1851,6 +1853,15 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 		remote_id = fwupd_release_get_remote_id (rel);
 		if (!fu_util_maybe_send_reports (priv, remote_id, error))
 			return FALSE;
+	}
+
+	/* no devices supported by LVFS or all are filtered */
+	if (!supported) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "No updatable devices");
+		return FALSE;
 	}
 
 	/* we don't want to ask anything */
