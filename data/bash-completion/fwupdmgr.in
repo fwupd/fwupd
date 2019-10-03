@@ -19,6 +19,7 @@ _fwupdmgr_cmd_list=(
 	'install'
 	'modify-config'
 	'modify-remote'
+	'reinstall'
 	'refresh'
 	'report-history'
 	'set-approved-firmware'
