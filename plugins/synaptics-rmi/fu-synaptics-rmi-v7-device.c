@@ -42,6 +42,38 @@ typedef enum {
 	RMI_PARTITION_ID_UTILITY_PARAMETER,
 } RmiPartitionId;
 
+static const gchar *
+rmi_firmware_partition_id_to_string (RmiPartitionId partition_id)
+{
+	if (partition_id == RMI_PARTITION_ID_NONE)
+		return "none";
+	if (partition_id == RMI_PARTITION_ID_BOOTLOADER)
+		return "bootloader";
+	if (partition_id == RMI_PARTITION_ID_DEVICE_CONFIG)
+		return "device-config";
+	if (partition_id == RMI_PARTITION_ID_FLASH_CONFIG)
+		return "flash-config";
+	if (partition_id == RMI_PARTITION_ID_MANUFACTURING_BLOCK)
+		return "manufacturing-block";
+	if (partition_id == RMI_PARTITION_ID_GUEST_SERIALIZATION)
+		return "guest-serialization";
+	if (partition_id == RMI_PARTITION_ID_GLOBAL_PARAMETERS)
+		return "global-parameters";
+	if (partition_id == RMI_PARTITION_ID_CORE_CODE)
+		return "core-code";
+	if (partition_id == RMI_PARTITION_ID_CORE_CONFIG)
+		return "core-config";
+	if (partition_id == RMI_PARTITION_ID_GUEST_CODE)
+		return "guest-code";
+	if (partition_id == RMI_PARTITION_ID_DISPLAY_CONFIG)
+		return "display-config";
+	if (partition_id == RMI_PARTITION_ID_EXTERNAL_TOUCH_AFE_CONFIG)
+		return "external-touch-afe-config";
+	if (partition_id == RMI_PARTITION_ID_UTILITY_PARAMETER)
+		return "utility-parameter";
+	return NULL;
+}
+
 gboolean
 fu_synaptics_rmi_v7_device_detach (FuDevice *device, GError **error)
 {
@@ -464,6 +496,12 @@ fu_synaptics_rmi_device_read_flash_config_v7 (FuSynapticsRmiDevice *self, GError
 		}
 	}
 
+	/* debugging */
+	if (g_getenv ("FWUPD_SYNAPTICS_RMI_VERBOSE") != NULL) {
+		fu_common_dump_full (G_LOG_DOMAIN, "FlashConfig", buf, buf_sz,
+				     80, FU_DUMP_FLAGS_NONE);
+	}
+
 	/* parse the config length */
 	for (guint i = 0x2; i < buf_sz; i += sizeof(RmiPartitionTbl)) {
 		RmiPartitionTbl tbl;
@@ -471,13 +509,14 @@ fu_synaptics_rmi_device_read_flash_config_v7 (FuSynapticsRmiDevice *self, GError
 				     buf, buf_sz, i,					/* src */
 				     sizeof(tbl), error))
 			return FALSE;
+		g_debug ("found partition %s (0x%02x)",
+			 rmi_firmware_partition_id_to_string (tbl.partition_id),
+			 tbl.partition_id);
 		if (tbl.partition_id == RMI_PARTITION_ID_CORE_CONFIG) {
-			g_debug ("RMI_PARTITION_ID_CORE_CONFIG is found");
 			flash->block_count_cfg = tbl.partition_len;
 			continue;
 		}
 		if (tbl.partition_id == RMI_PARTITION_ID_CORE_CODE) {
-			g_debug ("RMI_PARTITION_ID_CORE_CODE is found");
 			flash->block_count_fw = tbl.partition_len;
 			continue;
 		}
