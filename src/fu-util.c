@@ -2328,7 +2328,7 @@ main (int argc, char *argv[])
 			_("Schedule installation for next reboot when possible"), NULL },
 		{ "allow-reinstall", '\0', 0, G_OPTION_ARG_NONE, &allow_reinstall,
 			/* TRANSLATORS: command line option */
-			_("Allow re-installing existing firmware versions"), NULL },
+			_("Allow reinstalling existing firmware versions"), NULL },
 		{ "allow-older", '\0', 0, G_OPTION_ARG_NONE, &allow_older,
 			/* TRANSLATORS: command line option */
 			_("Allow downgrading firmware versions"), NULL },
