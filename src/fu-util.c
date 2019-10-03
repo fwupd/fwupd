@@ -1900,9 +1900,6 @@ fu_util_update_by_id (FuUtilPrivate *priv, const gchar *device_id, GError **erro
 	rel = g_ptr_array_index (rels, 0);
 	if (!fu_util_update_device_with_release (priv, dev, rel, error))
 		return FALSE;
-
-	/* TRANSLATORS: success message where the specific device is specified */
-	g_print ("%s\n", _("Successfully updated device"));
 	fu_util_display_current_message (priv);
 
 	/* send report if we're supposed to */
