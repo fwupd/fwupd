@@ -21,7 +21,6 @@ fu_synaptics_rmi_v6_device_setup (FuSynapticsRmiDevice *self, GError **error)
 	FuSynapticsRmiFlash *flash = fu_synaptics_rmi_device_get_flash (self);
 	FuSynapticsRmiFunction *f34;
 	g_autoptr(GByteArray) f34_data0 = NULL;
-	g_autoptr(GByteArray) f34_data1 = NULL;
 	g_autoptr(GByteArray) f34_data2 = NULL;
 	g_autoptr(GByteArray) f34_data3 = NULL;
 
@@ -40,11 +39,6 @@ fu_synaptics_rmi_v6_device_setup (FuSynapticsRmiDevice *self, GError **error)
 	flash->bootloader_id[1] = f34_data0->data[1];
 
 	/* get flash properties */
-	f34_data1 = fu_synaptics_rmi_device_read (self, f34->query_base + 0x01, 1, error);
-	if (f34_data1 == NULL)
-		return FALSE;
-	flash->has_new_regmap = (f34_data1->data[0] & RMI_F34_HAS_NEW_REG_MAP) > 0;
-	flash->has_config_id = (f34_data1->data[0] & RMI_F34_HAS_CONFIG_ID) > 0;
 	f34_data2 = fu_synaptics_rmi_device_read (self, f34->query_base + 0x02, 2, error);
 	if (f34_data2 == NULL)
 		return FALSE;

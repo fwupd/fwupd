@@ -265,8 +265,6 @@ fu_synaptics_rmi_v5_device_setup (FuSynapticsRmiDevice *self, GError **error)
 	f34_data2 = fu_synaptics_rmi_device_read (self, f34->query_base + 0x2, 0x7, error);
 	if (f34_data2 == NULL)
 		return FALSE;
-	flash->has_new_regmap = (f34_data2->data[0] & RMI_F34_HAS_NEW_REG_MAP) > 0;
-	flash->has_config_id = (f34_data2->data[0] & RMI_F34_HAS_CONFIG_ID) > 0;
 	flash->block_size = fu_common_read_uint16 (f34_data2->data + RMI_F34_BLOCK_SIZE_OFFSET, G_LITTLE_ENDIAN);
 	flash->block_count_fw = fu_common_read_uint16 (f34_data2->data + RMI_F34_FW_BLOCKS_OFFSET, G_LITTLE_ENDIAN);
 	flash->block_count_cfg = fu_common_read_uint16 (f34_data2->data + RMI_F34_CONFIG_BLOCKS_OFFSET, G_LITTLE_ENDIAN);
