@@ -541,7 +541,7 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 	if (has_build_id_query) {
 		g_autoptr(GByteArray) f01_tmp = NULL;
 		guint8 buf32[4] = { 0x0 };
-		f01_tmp = fu_synaptics_rmi_device_read (self, prod_info_addr, 0x2, error);
+		f01_tmp = fu_synaptics_rmi_device_read (self, prod_info_addr, 0x3, error);
 		if (f01_tmp == NULL) {
 			g_prefix_error (error, "failed to read build ID bytes: ");
 			return FALSE;
