@@ -74,20 +74,3 @@ fu_plugin_update (FuPlugin *plugin,
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
-
-gboolean
-fu_plugin_update_reload (FuPlugin *plugin, FuDevice *dev, GError **error)
-{
-	FuEbitdoDevice *ebitdo_dev = FU_EBITDO_DEVICE (dev);
-	g_autoptr(FuDeviceLocker) locker = NULL;
-
-	/* get the new version number */
-	locker = fu_device_locker_new (ebitdo_dev, error);
-	if (locker == NULL) {
-		g_prefix_error (error, "failed to re-open device: ");
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
-}

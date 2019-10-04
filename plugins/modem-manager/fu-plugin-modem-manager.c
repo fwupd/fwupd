@@ -383,19 +383,6 @@ fu_plugin_update_detach (FuPlugin *plugin, FuDevice *device, GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_plugin_update (FuPlugin *plugin,
-		  FuDevice *device,
-		  GBytes *blob_fw,
-		  FwupdInstallFlags flags,
-		  GError **error)
-{
-	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new (device, error);
-	if (locker == NULL)
-		return FALSE;
-	return fu_device_write_firmware (device, blob_fw, flags, error);
-}
-
 static void
 fu_plugin_mm_device_attach_finished (gpointer user_data)
 {

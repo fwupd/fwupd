@@ -108,28 +108,6 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 }
 
 gboolean
-fu_plugin_verify_attach (FuPlugin *plugin, FuDevice *device, GError **error)
-{
-	g_autoptr(FuDeviceLocker) locker = NULL;
-	locker = fu_device_locker_new (device, error);
-	if (locker == NULL)
-		return FALSE;
-	return fu_device_attach (device, error);
-}
-
-gboolean
-fu_plugin_verify_detach (FuPlugin *plugin, FuDevice *device, GError **error)
-{
-	g_autoptr(FuDeviceLocker) locker = NULL;
-	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
-		return TRUE;
-	locker = fu_device_locker_new (device, error);
-	if (locker == NULL)
-		return FALSE;
-	return fu_device_detach (device, error);
-}
-
-gboolean
 fu_plugin_verify (FuPlugin *plugin, FuDevice *device,
 		  FuPluginVerifyFlags flags, GError **error)
 {
@@ -153,39 +131,4 @@ fu_plugin_verify (FuPlugin *plugin, FuDevice *device,
 		fu_device_add_checksum (device, hash);
 	}
 	return TRUE;
-}
-
-gboolean
-fu_plugin_update_detach (FuPlugin *plugin, FuDevice *device, GError **error)
-{
-	g_autoptr(FuDeviceLocker) locker = NULL;
-	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
-		return TRUE;
-	locker = fu_device_locker_new (device, error);
-	if (locker == NULL)
-		return FALSE;
-	return fu_device_detach (device, error);
-}
-
-gboolean
-fu_plugin_update_attach (FuPlugin *plugin, FuDevice *device, GError **error)
-{
-	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new (device, error);
-	if (locker == NULL)
-		return FALSE;
-	return fu_device_attach (device, error);
-}
-
-gboolean
-fu_plugin_update (FuPlugin *plugin,
-		  FuDevice *device,
-		  GBytes *blob_fw,
-		  FwupdInstallFlags flags,
-		  GError **error)
-{
-	g_autoptr(FuDeviceLocker) locker = NULL;
-	locker = fu_device_locker_new (device, error);
-	if (locker == NULL)
-		return FALSE;
-	return fu_device_write_firmware (device, blob_fw, flags, error);
 }

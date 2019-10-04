@@ -19,38 +19,6 @@ fu_plugin_init (FuPlugin *plugin)
 }
 
 gboolean
-fu_plugin_update (FuPlugin *plugin,
-		  FuDevice *device,
-		  GBytes *blob_fw,
-		  FwupdInstallFlags flags,
-		  GError **error)
-{
-	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new (device, error);
-	if (locker == NULL)
-		return FALSE;
-	return fu_device_write_firmware (device, blob_fw, flags, error);
-}
-
-gboolean
-fu_plugin_update_attach (FuPlugin *plugin, FuDevice *device, GError **error)
-{
-	g_autoptr(FuDeviceLocker) locker = NULL;
-
-	/* open device */
-	locker = fu_device_locker_new (device, error);
-	if (locker == NULL)
-		return FALSE;
-
-	/* reset */
-	if (!fu_device_attach (device, error))
-		return FALSE;
-
-	/* wait for replug */
-	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	return TRUE;
-}
-
-gboolean
 fu_plugin_usb_device_added (FuPlugin *plugin, FuUsbDevice *device, GError **error)
 {
 	g_autoptr(FuFastbootDevice) dev = NULL;

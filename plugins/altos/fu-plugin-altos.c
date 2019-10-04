@@ -82,14 +82,3 @@ fu_plugin_verify (FuPlugin *plugin,
 	}
 	return TRUE;
 }
-
-gboolean
-fu_plugin_update (FuPlugin *plugin,
-		  FuDevice *dev,
-		  GBytes *blob_fw,
-		  FwupdInstallFlags flags,
-		  GError **error)
-{
-	fu_device_set_status (dev, FWUPD_STATUS_DEVICE_WRITE);
-	return fu_device_write_firmware (dev, blob_fw, flags, error);
-}

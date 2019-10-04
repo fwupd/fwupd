@@ -15,9 +15,4 @@ G_DECLARE_FINAL_TYPE (FuColorhugDevice, fu_colorhug_device, FU, COLORHUG_DEVICE,
 
 FuColorhugDevice *fu_colorhug_device_new		(FuUsbDevice		*device);
 
-/* object methods */
-gboolean	 fu_colorhug_device_set_flash_success	(FuColorhugDevice	*device,
-							 gboolean		 val,
-							 GError			**error);
-
 G_END_DECLS

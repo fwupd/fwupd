@@ -361,6 +361,7 @@ fu_altos_device_write_firmware (FuDevice *device,
 					    error);
 	if (locker == NULL)
 		return FALSE;
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = 0; i < flash_len; i+= 0x100) {
 		g_autoptr(GString) str = NULL;
 		guint8 buf_tmp[0x100];

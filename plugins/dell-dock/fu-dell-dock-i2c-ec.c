@@ -839,6 +839,7 @@ fu_dell_dock_ec_write_fw (FuDevice *device,
 		}
 	}
 
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
 	return TRUE;
 }
 
