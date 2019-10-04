@@ -380,39 +380,6 @@ fu_synaptics_rmi_v7_device_write_firmware (FuDevice *device,
 	return TRUE;
 }
 
-static gboolean
-fu_synaptics_rmi_v7_device_read_blocks (FuSynapticsRmiDevice *self,
-					guint32 address,
-					const guint8 *data,
-					guint32 datasz,
-					GError **error)
-{
-	FuSynapticsRmiFlash *flash = fu_synaptics_rmi_device_get_flash (self);
-	g_autoptr(GPtrArray) chunks = NULL;
-
-	/* read blocks */
-	chunks = fu_chunk_array_new (data, datasz,
-				     0x00,	/* start addr */
-				     0x00,	/* page_sz */
-				     flash->block_size);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index (chunks, i);
-		g_autoptr(GByteArray) req_tmp = NULL;
-		req_tmp = fu_synaptics_rmi_device_read (self, address, chk->data_sz, error);
-		if (req_tmp == NULL) {
-			g_prefix_error (error, "failed to read block @0x%x: ", chk->address);
-			return FALSE;
-		}
-		if (!fu_memcpy_safe ((guint8 *) chk->data, chk->data_sz, 0x0,	/* dst */
-				     req_tmp->data, req_tmp->len, 0x0,		/* src */
-				     req_tmp->len, error))
-			return FALSE;
-	}
-
-	/* success */
-	return TRUE;
-}
-
 typedef struct __attribute__((packed)) {
 	guint16			 partition_id;
 	guint16			 partition_len;
@@ -427,11 +394,11 @@ fu_synaptics_rmi_device_read_flash_config_v7 (FuSynapticsRmiDevice *self, GError
 {
 	FuSynapticsRmiFlash *flash = fu_synaptics_rmi_device_get_flash (self);
 	FuSynapticsRmiFunction *f34;
-	gsize buf_sz = (gsize) flash->block_size * (gsize) flash->config_length;
-	g_autofree guint8 *buf = g_malloc0 (buf_sz);
 	g_autoptr(GByteArray) req_addr_zero = g_byte_array_new ();
+	g_autoptr(GByteArray) req_cmd = g_byte_array_new ();
 	g_autoptr(GByteArray) req_partition_id = g_byte_array_new ();
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(GByteArray) req_transfer_length = g_byte_array_new ();
+	g_autoptr(GByteArray) res = NULL;
 
 	/* f34 */
 	f34 = fu_synaptics_rmi_device_get_function (self, 0x34, error);
@@ -456,57 +423,53 @@ fu_synaptics_rmi_device_read_flash_config_v7 (FuSynapticsRmiDevice *self, GError
 		return FALSE;
 	}
 
-	/* read back entire buffer in payload length chunks */
-	chunks = fu_chunk_array_new (buf, buf_sz, 0x0, 0x0, flash->payload_length);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chunk = g_ptr_array_index (chunks, i);
-		g_autoptr(GByteArray) req_cmd = g_byte_array_new ();
-		g_autoptr(GByteArray) req_read = g_byte_array_new ();
+	/* set transfer length */
+	fu_byte_array_append_uint16 (req_transfer_length,
+				     flash->config_length,
+				     G_LITTLE_ENDIAN);
+	if (!fu_synaptics_rmi_device_write (self,
+					    f34->data_base + 0x3,
+					    req_transfer_length,
+					    error)) {
+		g_prefix_error (error, "failed to set transfer length: ");
+		return FALSE;
+	}
 
-		/* set transfer length */
-		fu_byte_array_append_uint16 (req_read, chunk->data_sz, G_LITTLE_ENDIAN);
-		if (!fu_synaptics_rmi_device_write (self,
-						    f34->data_base + 0x3,
-						    req_read,
-						    error)) {
-			g_prefix_error (error, "failed to set transfer length: ");
-			return FALSE;
-		}
+	/* set command to read */
+	fu_byte_array_append_uint8 (req_cmd, RMI_FLASH_CMD_READ);
+	if (!fu_synaptics_rmi_device_write (self,
+					    f34->data_base + 0x4,
+					    req_cmd,
+					    error)) {
+		g_prefix_error (error, "failed to write command to read: ");
+		return FALSE;
+	}
+	if (!fu_synaptics_rmi_device_poll_wait (self, error)) {
+		g_prefix_error (error, "failed to wait: ");
+		return FALSE;
+	}
 
-		/* set command to read */
-		fu_byte_array_append_uint8 (req_cmd, RMI_FLASH_CMD_READ);
-		if (!fu_synaptics_rmi_device_write (self,
-						    f34->data_base + 0x4,
-						    req_cmd,
-						    error)) {
-			g_prefix_error (error, "failed to write command to read: ");
-			return FALSE;
-		}
-		if (!fu_synaptics_rmi_device_poll_wait (self, error)) {
-			g_prefix_error (error, "failed to get flash success: ");
-			return FALSE;
-		}
-		if (!fu_synaptics_rmi_v7_device_read_blocks (self,
-							     f34->data_base + 0x5,
-							     chunk->data,
-							     chunk->data_sz,
-							     error)) {
-			g_prefix_error (error, "failed to read @0x%x: ", chunk->address);
-			return FALSE;
-		}
+	/* read back entire buffer in blocks */
+	res = fu_synaptics_rmi_device_read (self,
+					    f34->data_base + 0x5,
+					    flash->block_size * flash->config_length,
+					    error);
+	if (res == NULL) {
+		g_prefix_error (error, "failed to read: ");
+		return FALSE;
 	}
 
 	/* debugging */
 	if (g_getenv ("FWUPD_SYNAPTICS_RMI_VERBOSE") != NULL) {
-		fu_common_dump_full (G_LOG_DOMAIN, "FlashConfig", buf, buf_sz,
+		fu_common_dump_full (G_LOG_DOMAIN, "FlashConfig", res->data, res->len,
 				     80, FU_DUMP_FLAGS_NONE);
 	}
 
 	/* parse the config length */
-	for (guint i = 0x2; i < buf_sz; i += sizeof(RmiPartitionTbl)) {
+	for (guint i = 0x2; i < res->len; i += sizeof(RmiPartitionTbl)) {
 		RmiPartitionTbl tbl;
 		if (!fu_memcpy_safe ((guint8 *) &tbl, sizeof(tbl), 0x0,			/* dst */
-				     buf, buf_sz, i,					/* src */
+				     res->data, res->len, i,				/* src */
 				     sizeof(tbl), error))
 			return FALSE;
 		g_debug ("found partition %s (0x%02x)",
