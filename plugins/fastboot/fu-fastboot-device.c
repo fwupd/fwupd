@@ -681,9 +681,12 @@ static gboolean
 fu_fastboot_device_attach (FuDevice *device, GError **error)
 {
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	return fu_fastboot_device_cmd (device, "reboot",
-				       FU_FASTBOOT_DEVICE_READ_FLAG_NONE,
-				       error);
+	if (!fu_fastboot_device_cmd (device, "reboot",
+				     FU_FASTBOOT_DEVICE_READ_FLAG_NONE,
+				     error))
+		return FALSE;
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	return TRUE;
 }
 
 static void

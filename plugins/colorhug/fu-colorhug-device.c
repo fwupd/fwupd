@@ -182,6 +182,7 @@ fu_colorhug_device_detach (FuDevice *device, GError **error)
 			     error_local->message);
 		return FALSE;
 	}
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
 
@@ -203,10 +204,11 @@ fu_colorhug_device_attach (FuDevice *device, GError **error)
 			     error_local->message);
 		return FALSE;
 	}
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
 
-gboolean
+static gboolean
 fu_colorhug_device_set_flash_success (FuColorhugDevice *self,
 				      gboolean val,
 				      GError **error)
@@ -227,6 +229,14 @@ fu_colorhug_device_set_flash_success (FuColorhugDevice *self,
 		return FALSE;
 	}
 	return TRUE;
+}
+
+
+static gboolean
+fu_colorhug_device_reload (FuDevice *device, GError **error)
+{
+	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
+	return fu_colorhug_device_set_flash_success (self, TRUE, error);
 }
 
 static gboolean
@@ -454,6 +464,7 @@ fu_colorhug_device_class_init (FuColorhugDeviceClass *klass)
 	klass_device->write_firmware = fu_colorhug_device_write_firmware;
 	klass_device->attach = fu_colorhug_device_attach;
 	klass_device->detach = fu_colorhug_device_detach;
+	klass_device->reload = fu_colorhug_device_reload;
 	klass_device->setup = fu_colorhug_device_setup;
 	klass_usb_device->open = fu_colorhug_device_open;
 	klass_usb_device->probe = fu_colorhug_device_probe;

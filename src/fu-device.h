@@ -58,8 +58,10 @@ struct _FuDeviceClass
 							 GError		**error);
 	gboolean		 (*activate)		(FuDevice	*self,
 							 GError		**error);
+	gboolean		 (*reload)		(FuDevice	*self,
+							 GError		**error);
 	/*< private >*/
-	gpointer	padding[19];
+	gpointer	padding[18];
 };
 
 /**
@@ -224,6 +226,8 @@ GBytes		*fu_device_read_firmware		(FuDevice	*self,
 gboolean	 fu_device_attach			(FuDevice	*self,
 							 GError		**error);
 gboolean	 fu_device_detach			(FuDevice	*self,
+							 GError		**error);
+gboolean	 fu_device_reload			(FuDevice	*self,
 							 GError		**error);
 void		 fu_device_incorporate			(FuDevice	*self,
 							 FuDevice	*donor);

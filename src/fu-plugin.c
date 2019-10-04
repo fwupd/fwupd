@@ -841,6 +841,66 @@ fu_plugin_set_coldplug_delay (FuPlugin *self, guint duration)
 	g_signal_emit (self, signals[SIGNAL_SET_COLDPLUG_DELAY], 0, duration);
 }
 
+static gboolean
+fu_plugin_device_attach (FuPlugin *self, FuDevice *device, GError **error)
+{
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug ("already in runtime mode, skipping");
+		return TRUE;
+	}
+	locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
+		return FALSE;
+	return fu_device_attach (device, error);
+}
+
+static gboolean
+fu_plugin_device_detach (FuPlugin *self, FuDevice *device, GError **error)
+{
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug ("already in bootloader mode, skipping");
+		return TRUE;
+	}
+	locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
+		return FALSE;
+	return fu_device_detach (device, error);
+}
+
+static gboolean
+fu_plugin_device_reload (FuPlugin *self, FuDevice *device, GError **error)
+{
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
+		return FALSE;
+	return fu_device_reload (device, error);
+}
+
+static gboolean
+fu_plugin_device_activate (FuPlugin *self, FuDevice *device, GError **error)
+{
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
+		return FALSE;
+	return fu_device_activate (device, error);
+}
+
+static gboolean
+fu_plugin_device_write_firmware (FuPlugin *self, FuDevice *device,
+				 GBytes *fw, FwupdInstallFlags flags,
+				 GError **error)
+{
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
+		return FALSE;
+	return fu_device_write_firmware (device, fw, flags, error);
+}
+
 gboolean
 fu_plugin_runner_startup (FuPlugin *self, GError **error)
 {
@@ -934,7 +994,9 @@ fu_plugin_runner_offline_setup (GError **error)
 
 static gboolean
 fu_plugin_runner_device_generic (FuPlugin *self, FuDevice *device,
-				 const gchar *symbol_name, GError **error)
+				 const gchar *symbol_name,
+				 FuPluginDeviceFunc device_func,
+				 GError **error)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginDeviceFunc func = NULL;
@@ -950,8 +1012,14 @@ fu_plugin_runner_device_generic (FuPlugin *self, FuDevice *device,
 
 	/* optional */
 	g_module_symbol (priv->module, symbol_name, (gpointer *) &func);
-	if (func == NULL)
+	if (func == NULL) {
+		if (device_func != NULL) {
+			g_debug ("running superclassed %s() on %s",
+				 symbol_name + 10, priv->name);
+			return device_func (self, device, error);
+		}
 		return TRUE;
+	}
 	g_debug ("performing %s() on %s", symbol_name + 10, priv->name);
 	if (!func (self, device, &error_local)) {
 		if (error_local == NULL) {
@@ -1233,21 +1301,27 @@ gboolean
 fu_plugin_runner_update_attach (FuPlugin *self, FuDevice *device, GError **error)
 {
 	return fu_plugin_runner_device_generic (self, device,
-						"fu_plugin_update_attach", error);
+						"fu_plugin_update_attach",
+						fu_plugin_device_attach,
+						error);
 }
 
 gboolean
 fu_plugin_runner_update_detach (FuPlugin *self, FuDevice *device, GError **error)
 {
 	return fu_plugin_runner_device_generic (self, device,
-						"fu_plugin_update_detach", error);
+						"fu_plugin_update_detach",
+						fu_plugin_device_detach,
+						error);
 }
 
 gboolean
 fu_plugin_runner_update_reload (FuPlugin *self, FuDevice *device, GError **error)
 {
 	return fu_plugin_runner_device_generic (self, device,
-						"fu_plugin_update_reload", error);
+						"fu_plugin_update_reload",
+						fu_plugin_device_reload,
+						error);
 }
 
 /**
@@ -1390,6 +1464,7 @@ fu_plugin_runner_device_removed (FuPlugin *self, FuDevice *device)
 
 	if (!fu_plugin_runner_device_generic (self, device,
 					      "fu_plugin_device_removed",
+					      NULL,
 					      &error_local))
 		g_warning ("%s", error_local->message);
 }
@@ -1516,6 +1591,7 @@ fu_plugin_runner_verify (FuPlugin *self,
 	/* run additional detach */
 	if (!fu_plugin_runner_device_generic (self, device,
 					      "fu_plugin_verify_detach",
+					      fu_plugin_device_detach,
 					      error))
 		return FALSE;
 
@@ -1537,6 +1613,7 @@ fu_plugin_runner_verify (FuPlugin *self,
 		/* make the device "work" again, but don't prefix the error */
 		if (!fu_plugin_runner_device_generic (self, device,
 						      "fu_plugin_verify_attach",
+						      fu_plugin_device_attach,
 						      &error_attach)) {
 			g_warning ("failed to attach whilst aborting verify(): %s",
 				   error_attach->message);
@@ -1547,6 +1624,7 @@ fu_plugin_runner_verify (FuPlugin *self,
 	/* run optional attach */
 	if (!fu_plugin_runner_device_generic (self, device,
 					      "fu_plugin_verify_attach",
+					      fu_plugin_device_attach,
 					      error))
 		return FALSE;
 
@@ -1572,7 +1650,9 @@ fu_plugin_runner_activate (FuPlugin *self, FuDevice *device, GError **error)
 
 	/* run vfunc */
 	if (!fu_plugin_runner_device_generic (self, device,
-					      "fu_plugin_activate", error))
+					      "fu_plugin_activate",
+					      fu_plugin_device_activate,
+					      error))
 		return FALSE;
 
 	/* update with correct flags */
@@ -1599,7 +1679,9 @@ fu_plugin_runner_unlock (FuPlugin *self, FuDevice *device, GError **error)
 
 	/* run vfunc */
 	if (!fu_plugin_runner_device_generic (self, device,
-					      "fu_plugin_unlock", error))
+					      "fu_plugin_unlock",
+					      NULL,
+					      error))
 		return FALSE;
 
 	/* update with correct flags */
@@ -1637,11 +1719,8 @@ fu_plugin_runner_update (FuPlugin *self,
 	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_update", (gpointer *) &update_func);
 	if (update_func == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "No update possible");
-		return FALSE;
+		g_debug ("running superclassed write_firmware() on %s", priv->name);
+		return fu_plugin_device_write_firmware (self, device, blob_fw, flags, error);
 	}
 
 	/* cancel the pending action */

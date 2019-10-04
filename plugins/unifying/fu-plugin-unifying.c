@@ -16,50 +16,6 @@
 #include "fu-unifying-peripheral.h"
 #include "fu-unifying-runtime.h"
 
-gboolean
-fu_plugin_update_detach (FuPlugin *plugin, FuDevice *device, GError **error)
-{
-	g_autoptr(FuDeviceLocker) locker = NULL;
-	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
-		return TRUE;
-	locker = fu_device_locker_new (device, error);
-	if (locker == NULL)
-		return FALSE;
-	return fu_device_detach (device, error);
-}
-
-gboolean
-fu_plugin_update_attach (FuPlugin *plugin, FuDevice *device, GError **error)
-{
-	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new (device, error);
-	if (locker == NULL)
-		return FALSE;
-	return fu_device_attach (device, error);
-}
-
-gboolean
-fu_plugin_update_reload (FuPlugin *plugin, FuDevice *device, GError **error)
-{
-	g_autoptr(FuDeviceLocker) locker = NULL;
-	locker = fu_device_locker_new (device, error);
-	if (locker == NULL)
-		return FALSE;
-	return TRUE;
-}
-
-gboolean
-fu_plugin_update (FuPlugin *plugin,
-		  FuDevice *device,
-		  GBytes *blob_fw,
-		  FwupdInstallFlags flags,
-		  GError **error)
-{
-	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new (device, error);
-	if (locker == NULL)
-		return FALSE;
-	return fu_device_write_firmware (device, blob_fw, flags, error);
-}
-
 static gboolean
 fu_plugin_unifying_check_supported_device (FuPlugin *plugin, FuDevice *device)
 {

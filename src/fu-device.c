@@ -1920,13 +1920,8 @@ fu_device_detach (FuDevice *self, GError **error)
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* no plugin-specific method */
-	if (klass->detach == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "not supported");
-		return FALSE;
-	}
+	if (klass->detach == NULL)
+		return TRUE;
 
 	/* call vfunc */
 	return klass->detach (self, error);
@@ -1952,16 +1947,38 @@ fu_device_attach (FuDevice *self, GError **error)
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* no plugin-specific method */
-	if (klass->attach == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "not supported");
-		return FALSE;
-	}
+	if (klass->attach == NULL)
+		return TRUE;
 
 	/* call vfunc */
 	return klass->attach (self, error);
+}
+
+/**
+ * fu_device_reload:
+ * @self: A #FuDevice
+ * @error: A #GError
+ *
+ * Reloads a device that has just gone from bootloader into application mode.
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.3.3
+ **/
+gboolean
+fu_device_reload (FuDevice *self, GError **error)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+
+	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* no plugin-specific method */
+	if (klass->reload == NULL)
+		return TRUE;
+
+	/* call vfunc */
+	return klass->reload (self, error);
 }
 
 /**

@@ -75,8 +75,11 @@ fu_thelio_io_device_detach (FuDevice *device, GError **error)
 	io_channel = fu_io_channel_new_file (fn, error);
 	if (io_channel == NULL)
 		return FALSE;
-	return fu_io_channel_write_raw (io_channel, buf, sizeof(buf),
-					500, FU_IO_CHANNEL_FLAG_SINGLE_SHOT, error);
+	if (!fu_io_channel_write_raw (io_channel, buf, sizeof(buf),
+				      500, FU_IO_CHANNEL_FLAG_SINGLE_SHOT, error))
+		return FALSE;
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	return TRUE;
 }
 
 static void

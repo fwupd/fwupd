@@ -29,17 +29,3 @@ fu_plugin_usb_device_added (FuPlugin *plugin, FuUsbDevice *device, GError **erro
 	fu_plugin_device_add (plugin, FU_DEVICE (dev));
 	return TRUE;
 }
-
-gboolean
-fu_plugin_update (FuPlugin *plugin,
-		  FuDevice *device,
-		  GBytes *blob_fw,
-		  FwupdInstallFlags flags,
-		  GError **error)
-{
-	g_autoptr(FuDeviceLocker) locker = NULL;
-	locker = fu_device_locker_new (device, error);
-	if (locker == NULL)
-		return FALSE;
-	return fu_device_write_firmware (device, blob_fw, flags, error);
-}
