@@ -553,13 +553,6 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 		priv->flash.build_id = fu_common_read_uint32 (buf32, G_LITTLE_ENDIAN);
 	}
 
-	/* set main composite version */
-	fw_ver = g_strdup_printf ("%u.%u.%u",
-				  f01_basic->data[2],
-				  f01_basic->data[3],
-				  priv->flash.build_id);
-	fu_device_set_version (device, fw_ver, FWUPD_VERSION_FORMAT_TRIPLET);
-
 	priv->f34 = fu_synaptics_rmi_device_get_function (self, 0x34, error);
 	if (priv->f34 == NULL)
 		return FALSE;
@@ -598,8 +591,6 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 		g_prefix_error (error, "failed to read bootloader status: ");
 		return FALSE;
 	}
-	bl_ver = g_strdup_printf ("%u.0", priv->flash.bootloader_id[1]);
-	fu_device_set_version_bootloader (device, bl_ver);
 
 	/* in bootloader mode */
 	f01_db = fu_synaptics_rmi_device_read (self, priv->f01->data_base, 0x1, error);
@@ -612,6 +603,15 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 	} else {
 		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	}
+
+	/* set versions */
+	fw_ver = g_strdup_printf ("%u.%u.%u",
+				  f01_basic->data[2],
+				  f01_basic->data[3],
+				  priv->flash.build_id);
+	fu_device_set_version (device, fw_ver, FWUPD_VERSION_FORMAT_TRIPLET);
+	bl_ver = g_strdup_printf ("%u.0", priv->flash.bootloader_id[1]);
+	fu_device_set_version_bootloader (device, bl_ver);
 
 	/* success */
 	return TRUE;
