@@ -153,9 +153,9 @@ fu_config_get_remote_agreement_default (FwupdRemote *self, GError **error)
 static GString *
 fu_config_get_remote_agreement_for_app (FwupdRemote *self, XbNode *component, GError **error)
 {
-	XbNode *n;
 	g_autofree gchar *tmp = NULL;
 	g_autoptr(GError) error_local = NULL;
+	g_autoptr(XbNode) n = NULL;
 
 	/* manually find the first agreement section */
 	n = xb_node_query_first (component, "agreement/agreement_section/description/*", &error_local);
