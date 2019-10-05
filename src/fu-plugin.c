@@ -871,16 +871,6 @@ fu_plugin_device_detach (FuPlugin *self, FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_plugin_device_reload (FuPlugin *self, FuDevice *device, GError **error)
-{
-	g_autoptr(FuDeviceLocker) locker = NULL;
-	locker = fu_device_locker_new (device, error);
-	if (locker == NULL)
-		return FALSE;
-	return fu_device_reload (device, error);
-}
-
-static gboolean
 fu_plugin_device_activate (FuPlugin *self, FuDevice *device, GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
@@ -1348,10 +1338,18 @@ fu_plugin_runner_update_detach (FuPlugin *self, FuDevice *device, GError **error
 gboolean
 fu_plugin_runner_update_reload (FuPlugin *self, FuDevice *device, GError **error)
 {
-	return fu_plugin_runner_device_generic (self, device,
-						"fu_plugin_update_reload",
-						fu_plugin_device_reload,
-						error);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	/* not enabled */
+	if (!priv->enabled)
+		return TRUE;
+
+	/* no object loaded */
+	locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
+		return FALSE;
+	return fu_device_reload (device, error);
 }
 
 /**
@@ -1663,7 +1661,7 @@ fu_plugin_runner_verify (FuPlugin *self,
 
 	/* run additional detach */
 	if (!fu_plugin_runner_device_generic (self, device,
-					      "fu_plugin_verify_detach",
+					      "fu_plugin_update_detach",
 					      fu_plugin_device_detach,
 					      error))
 		return FALSE;
@@ -1685,7 +1683,7 @@ fu_plugin_runner_verify (FuPlugin *self,
 					    priv->name);
 		/* make the device "work" again, but don't prefix the error */
 		if (!fu_plugin_runner_device_generic (self, device,
-						      "fu_plugin_verify_attach",
+						      "fu_plugin_update_attach",
 						      fu_plugin_device_attach,
 						      &error_attach)) {
 			g_warning ("failed to attach whilst aborting verify(): %s",
@@ -1696,7 +1694,7 @@ fu_plugin_runner_verify (FuPlugin *self,
 
 	/* run optional attach */
 	if (!fu_plugin_runner_device_generic (self, device,
-					      "fu_plugin_verify_attach",
+					      "fu_plugin_update_attach",
 					      fu_plugin_device_attach,
 					      error))
 		return FALSE;

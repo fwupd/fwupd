@@ -33,12 +33,6 @@ gboolean	 fu_plugin_verify			(FuPlugin	*plugin,
 							 FuDevice	*dev,
 							 FuPluginVerifyFlags flags,
 							 GError		**error);
-gboolean	 fu_plugin_verify_attach		(FuPlugin	*plugin,
-							 FuDevice	*dev,
-							 GError		**error);
-gboolean	 fu_plugin_verify_detach		(FuPlugin	*plugin,
-							 FuDevice	*dev,
-							 GError		**error);
 gboolean	 fu_plugin_unlock			(FuPlugin	*plugin,
 							 FuDevice	*dev,
 							 GError		**error);
@@ -55,9 +49,6 @@ gboolean	 fu_plugin_update_attach		(FuPlugin	*plugin,
 							 FuDevice	*dev,
 							 GError		**error);
 gboolean	 fu_plugin_update_detach		(FuPlugin	*plugin,
-							 FuDevice	*dev,
-							 GError		**error);
-gboolean	 fu_plugin_update_reload		(FuPlugin	*plugin,
 							 FuDevice	*dev,
 							 GError		**error);
 gboolean	 fu_plugin_update_prepare		(FuPlugin	*plugin,
