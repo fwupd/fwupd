@@ -15,17 +15,5 @@ fu_plugin_init (FuPlugin *plugin)
 {
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_REQUIRES_QUIRK, FU_QUIRKS_PLUGIN);
-}
-
-gboolean
-fu_plugin_usb_device_added (FuPlugin *plugin, FuUsbDevice *device, GError **error)
-{
-	g_autoptr(FuSteelseriesDevice) dev = NULL;
-	g_autoptr(FuDeviceLocker) locker = NULL;
-	dev = fu_steelseries_device_new (device);
-	locker = fu_device_locker_new (dev, error);
-	if (locker == NULL)
-		return FALSE;
-	fu_plugin_device_add (plugin, FU_DEVICE (dev));
-	return TRUE;
+	fu_plugin_set_device_gtype (plugin, FU_TYPE_STEELSERIES_DEVICE);
 }

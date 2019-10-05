@@ -867,11 +867,3 @@ fu_synaptics_cxaudio_device_class_init (FuSynapticsCxaudioDeviceClass *klass)
 	klass_usb_device->open = fu_synaptics_cxaudio_device_open;
 	klass_usb_device->close = fu_synaptics_cxaudio_device_close;
 }
-
-FuSynapticsCxaudioDevice *
-fu_synaptics_cxaudio_device_new (FuUsbDevice *usb_device)
-{
-	FuSynapticsCxaudioDevice *self = g_object_new (FU_TYPE_SYNAPTICS_CXAUDIO_DEVICE, NULL);
-	fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (usb_device));
-	return self;
-}

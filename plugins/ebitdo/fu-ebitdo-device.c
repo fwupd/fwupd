@@ -610,21 +610,3 @@ fu_ebitdo_device_class_init (FuEbitdoDeviceClass *klass)
 	klass_usb_device->open = fu_ebitdo_device_open;
 	klass_usb_device->probe = fu_ebitdo_device_probe;
 }
-
-/**
- * fu_ebitdo_device_new:
- *
- * Creates a new #FuEbitdoDevice.
- *
- * Returns: (transfer full): a #FuEbitdoDevice, or %NULL if not a game pad
- *
- * Since: 0.1.0
- **/
-FuEbitdoDevice *
-fu_ebitdo_device_new (FuUsbDevice *device)
-{
-	FuEbitdoDevice *self;
-	self = g_object_new (FU_TYPE_EBITDO_DEVICE, NULL);
-	fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (device));
-	return FU_EBITDO_DEVICE (self);
-}

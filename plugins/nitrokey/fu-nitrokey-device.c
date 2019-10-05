@@ -229,11 +229,3 @@ fu_nitrokey_device_class_init (FuNitrokeyDeviceClass *klass)
 	klass_usb_device->open = fu_nitrokey_device_open;
 	klass_usb_device->close = fu_nitrokey_device_close;
 }
-
-FuNitrokeyDevice *
-fu_nitrokey_device_new (FuUsbDevice *device)
-{
-	FuNitrokeyDevice *self = g_object_new (FU_TYPE_NITROKEY_DEVICE, NULL);
-	fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (device));
-	return FU_NITROKEY_DEVICE (self);
-}

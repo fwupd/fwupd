@@ -13,6 +13,4 @@ G_BEGIN_DECLS
 #define FU_TYPE_COLORHUG_DEVICE (fu_colorhug_device_get_type ())
 G_DECLARE_FINAL_TYPE (FuColorhugDevice, fu_colorhug_device, FU, COLORHUG_DEVICE, FuUsbDevice)
 
-FuColorhugDevice *fu_colorhug_device_new		(FuUsbDevice		*device);
-
 G_END_DECLS

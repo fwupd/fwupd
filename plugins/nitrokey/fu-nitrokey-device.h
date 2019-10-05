@@ -18,6 +18,4 @@ struct _FuNitrokeyDeviceClass
 	FuUsbDeviceClass	parent_class;
 };
 
-FuNitrokeyDevice *fu_nitrokey_device_new	(FuUsbDevice		*device);
-
 G_END_DECLS
