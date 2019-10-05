@@ -166,8 +166,8 @@ GByteArray *
 fu_synaptics_rmi_device_read (FuSynapticsRmiDevice *self, guint16 addr, gsize req_sz, GError **error)
 {
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
-	guint8 input_count_sz = 0;
 	g_autoptr(GByteArray) buf = g_byte_array_new ();
+	g_autoptr(GByteArray) req = g_byte_array_new ();
 
 	/* maximum size */
 	if (req_sz > 0xffff) {
@@ -178,98 +178,86 @@ fu_synaptics_rmi_device_read (FuSynapticsRmiDevice *self, guint16 addr, gsize re
 		return NULL;
 	}
 
-	/* weirdly, request a word of data, then increment in a byte-sized section */
-	for (guint i = 0; i < req_sz; i += input_count_sz) {
-		g_autoptr(GByteArray) req = g_byte_array_new ();
+	/* report then old 1 byte read count */
+	fu_byte_array_append_uint8 (req, RMI_READ_ADDR_REPORT_ID);
+	fu_byte_array_append_uint8 (req, 0x0);
 
-		/* report */
-		fu_byte_array_append_uint8 (req, RMI_READ_ADDR_REPORT_ID);
+	/* address */
+	fu_byte_array_append_uint16 (req, addr, G_LITTLE_ENDIAN);
 
-		/* old 1 byte read count */
+	/* read output count */
+	fu_byte_array_append_uint16 (req, req_sz, G_LITTLE_ENDIAN);
+
+	/* request */
+	for (guint j = req->len; j < 21; j++)
 		fu_byte_array_append_uint8 (req, 0x0);
+	if (g_getenv ("FWUPD_SYNAPTICS_RMI_VERBOSE") != NULL) {
+		fu_common_dump_full (G_LOG_DOMAIN, "ReportWrite",
+				     req->data, req->len,
+				     80, FU_DUMP_FLAGS_NONE);
+	}
+	if (!fu_io_channel_write_byte_array (priv->io_channel, req, RMI_DEVICE_DEFAULT_TIMEOUT,
+					     FU_IO_CHANNEL_FLAG_SINGLE_SHOT |
+					     FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO, error))
+		return NULL;
 
-		/* address */
-		fu_byte_array_append_uint16 (req, addr + i, G_LITTLE_ENDIAN);
-
-		/* read output count */
-		fu_byte_array_append_uint16 (req, req_sz, G_LITTLE_ENDIAN);
-
-		/* request */
-		for (guint j = req->len; j < 21; j++)
-			fu_byte_array_append_uint8 (req, 0x0);
+	/* keep reading responses until we get enough data */
+	while (buf->len < req_sz) {
+		guint8 input_count_sz = 0;
+		g_autoptr(GByteArray) res = NULL;
+		res = fu_io_channel_read_byte_array (priv->io_channel, req_sz,
+						     RMI_DEVICE_DEFAULT_TIMEOUT,
+						     FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
+						     error);
+		if (res == NULL)
+			return NULL;
+		if (res->len == 0) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "response zero sized");
+			return NULL;
+		}
 		if (g_getenv ("FWUPD_SYNAPTICS_RMI_VERBOSE") != NULL) {
-			fu_common_dump_full (G_LOG_DOMAIN, "ReportWrite",
-					     req->data, req->len,
+			fu_common_dump_full (G_LOG_DOMAIN, "ReportRead",
+					     res->data, res->len,
 					     80, FU_DUMP_FLAGS_NONE);
 		}
-		if (!fu_io_channel_write_byte_array (priv->io_channel, req, RMI_DEVICE_DEFAULT_TIMEOUT,
-						     FU_IO_CHANNEL_FLAG_SINGLE_SHOT |
-						     FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO, error))
-			return NULL;
 
-		/* keep reading responses until we get enough data */
-		while (buf->len < req_sz) {
-			g_autoptr(GByteArray) res = NULL;
-			res = fu_io_channel_read_byte_array (priv->io_channel, req_sz,
-							     RMI_DEVICE_DEFAULT_TIMEOUT,
-							     FU_IO_CHANNEL_FLAG_NONE, error);
-			if (res == NULL)
-				return NULL;
-			if (res->len == 0) {
-				g_set_error_literal (error,
-						     FWUPD_ERROR,
-						     FWUPD_ERROR_INTERNAL,
-						     "response zero sized");
-				return NULL;
-			}
-			if (g_getenv ("FWUPD_SYNAPTICS_RMI_VERBOSE") != NULL) {
-				fu_common_dump_full (G_LOG_DOMAIN, "ReportRead",
-						     res->data, res->len,
-						     80, FU_DUMP_FLAGS_NONE);
-			}
-
-			/* ignore non data report events */
-			if (res->data[HID_RMI4_REPORT_ID] != RMI_READ_DATA_REPORT_ID) {
-				g_debug ("ignoring report with ID 0x%02x",
-					 res->data[HID_RMI4_REPORT_ID]);
-				continue;
-			}
-			if (res->len < HID_RMI4_READ_INPUT_DATA) {
-				g_set_error (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INTERNAL,
-					     "response too small: 0x%02x",
-					     res->len);
-				return NULL;
-			}
-			input_count_sz = res->data[HID_RMI4_READ_INPUT_COUNT];
-			if (input_count_sz == 0) {
-				g_set_error_literal (error,
-						     FWUPD_ERROR,
-						     FWUPD_ERROR_INTERNAL,
-						     "input count zero");
-				return NULL;
-			}
-			if (input_count_sz < (guint) req_sz) {
-				g_set_error (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INTERNAL,
-					     "input count smaller 0x%02x than request 0x%02x",
-					     input_count_sz, (guint) req_sz);
-				return NULL;
-			}
-			if (input_count_sz + (guint) HID_RMI4_READ_INPUT_DATA > res->len) {
-				g_set_error (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INTERNAL,
-					     "underflow 0x%02x from expected 0x%02x",
-					     res->len, (guint) input_count_sz + HID_RMI4_READ_INPUT_DATA);
-				return NULL;
-			}
-			g_byte_array_append (buf,
-					     res->data + HID_RMI4_READ_INPUT_DATA,
-					     input_count_sz);
+		/* ignore non data report events */
+		if (res->data[HID_RMI4_REPORT_ID] != RMI_READ_DATA_REPORT_ID) {
+			g_debug ("ignoring report with ID 0x%02x",
+				 res->data[HID_RMI4_REPORT_ID]);
+			continue;
 		}
+		if (res->len < HID_RMI4_READ_INPUT_DATA) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "response too small: 0x%02x",
+				     res->len);
+			return NULL;
+		}
+		input_count_sz = res->data[HID_RMI4_READ_INPUT_COUNT];
+		if (input_count_sz == 0) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "input count zero");
+			return NULL;
+		}
+		if (input_count_sz + (guint) HID_RMI4_READ_INPUT_DATA > res->len) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "underflow 0x%02x from expected 0x%02x",
+				     res->len, (guint) input_count_sz + HID_RMI4_READ_INPUT_DATA);
+			return NULL;
+		}
+		g_byte_array_append (buf,
+				     res->data + HID_RMI4_READ_INPUT_DATA,
+				     input_count_sz);
+
 	}
 	if (g_getenv ("FWUPD_SYNAPTICS_RMI_VERBOSE") != NULL) {
 		fu_common_dump_full (G_LOG_DOMAIN, "DeviceRead", buf->data, buf->len,
