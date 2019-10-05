@@ -2027,6 +2027,26 @@ dfu_device_get_quirks_as_string (DfuDevice *device)
 	return g_string_free (str, FALSE);
 }
 
+static GBytes *
+dfu_device_read_firmware (FuDevice *device, GError **error)
+{
+	DfuDevice *self = DFU_DEVICE (device);
+	g_autoptr(DfuFirmware) dfu_firmware = NULL;
+
+	/* get data from hardware */
+	g_debug ("uploading from device->host");
+	if (!dfu_device_refresh_and_clear (self, error))
+		return NULL;
+	dfu_firmware = dfu_device_upload (self,
+					  DFU_TARGET_TRANSFER_FLAG_NONE,
+					  error);
+	if (dfu_firmware == NULL)
+		return NULL;
+
+	/* get the checksum */
+	return dfu_firmware_write_data (dfu_firmware, error);
+}
+
 static gboolean
 dfu_device_set_quirk_kv (FuDevice *device,
 			 const gchar *key,
@@ -2125,6 +2145,7 @@ dfu_device_class_init (DfuDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	klass_device->set_quirk_kv = dfu_device_set_quirk_kv;
+	klass_device->read_firmware = dfu_device_read_firmware;
 	klass_usb_device->open = dfu_device_open;
 	klass_usb_device->close = dfu_device_close;
 	klass_usb_device->probe = dfu_device_probe;

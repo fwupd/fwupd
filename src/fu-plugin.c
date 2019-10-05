@@ -901,6 +901,35 @@ fu_plugin_device_write_firmware (FuPlugin *self, FuDevice *device,
 	return fu_device_write_firmware (device, fw, flags, error);
 }
 
+static gboolean
+fu_plugin_device_read_firmware (FuPlugin *self, FuDevice *device, GError **error)
+{
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(GBytes) fw = NULL;
+	GChecksumType checksum_types[] = {
+		G_CHECKSUM_SHA1,
+		G_CHECKSUM_SHA256,
+		0 };
+	locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
+		return FALSE;
+	if (!fu_device_detach (device, error))
+		return FALSE;
+	fw = fu_device_read_firmware (device, error);
+	if (fw == NULL) {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_device_attach (device, &error_local))
+			g_debug ("ignoring: %s", error_local->message);
+		return FALSE;
+	}
+	for (guint i = 0; checksum_types[i] != 0; i++) {
+		g_autofree gchar *hash = NULL;
+		hash = g_compute_checksum_for_bytes (checksum_types[i], fw);
+		fu_device_add_checksum (device, hash);
+	}
+	return fu_device_attach (device, error);
+}
+
 gboolean
 fu_plugin_runner_startup (FuPlugin *self, GError **error)
 {
@@ -1581,8 +1610,10 @@ fu_plugin_runner_verify (FuPlugin *self,
 
 	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_verify", (gpointer *) &func);
-	if (func == NULL)
-		return TRUE;
+	if (func == NULL) {
+		g_debug ("running superclassed read_firmware() on %s", priv->name);
+		return fu_plugin_device_read_firmware (self, device, error);
+	}
 
 	/* clear any existing verification checksums */
 	checksums = fu_device_get_checksums (device);
