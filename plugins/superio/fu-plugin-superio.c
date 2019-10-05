@@ -106,29 +106,3 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	}
 	return TRUE;
 }
-
-gboolean
-fu_plugin_verify (FuPlugin *plugin, FuDevice *device,
-		  FuPluginVerifyFlags flags, GError **error)
-{
-	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(FuDeviceLocker) locker = NULL;
-	GChecksumType checksum_types[] = {
-		G_CHECKSUM_SHA1,
-		G_CHECKSUM_SHA256,
-		0 };
-
-	/* get data */
-	locker = fu_device_locker_new (device, error);
-	if (locker == NULL)
-		return FALSE;
-	fw = fu_device_read_firmware (device, error);
-	if (fw == NULL)
-		return FALSE;
-	for (guint i = 0; checksum_types[i] != 0; i++) {
-		g_autofree gchar *hash = NULL;
-		hash = g_compute_checksum_for_bytes (checksum_types[i], fw);
-		fu_device_add_checksum (device, hash);
-	}
-	return TRUE;
-}
