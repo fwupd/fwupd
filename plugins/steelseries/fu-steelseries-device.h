@@ -18,6 +18,4 @@ struct _FuSteelseriesDeviceClass
 	FuUsbDeviceClass	parent_class;
 };
 
-FuSteelseriesDevice	*fu_steelseries_device_new	(FuUsbDevice	*device);
-
 G_END_DECLS

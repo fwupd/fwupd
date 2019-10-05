@@ -565,11 +565,3 @@ fu_csr_device_class_init (FuCsrDeviceClass *klass)
 	klass_usb_device->close = fu_csr_device_close;
 	klass_usb_device->probe = fu_csr_device_probe;
 }
-
-FuCsrDevice *
-fu_csr_device_new (FuUsbDevice *device)
-{
-	FuCsrDevice *self = g_object_new (FU_TYPE_CSR_DEVICE, NULL);
-	fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (device));
-	return self;
-}

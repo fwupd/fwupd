@@ -20,7 +20,6 @@ typedef enum {
 	FU_WAC_DEVICE_FEATURE_FLAG_LAST
 } FuWacDeviceFeatureFlags;
 
-FuWacDevice	*fu_wac_device_new			(FuUsbDevice	*device);
 gboolean	 fu_wac_device_update_reset		(FuWacDevice	*self,
 							 GError		**error);
 gboolean	 fu_wac_device_get_feature_report	(FuWacDevice	*self,

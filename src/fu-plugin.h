@@ -109,6 +109,8 @@ void		 fu_plugin_device_register		(FuPlugin	*self,
 void		 fu_plugin_request_recoldplug		(FuPlugin	*self);
 void		 fu_plugin_set_coldplug_delay		(FuPlugin	*self,
 							 guint		 duration);
+void		 fu_plugin_set_device_gtype		(FuPlugin	*self,
+							 GType		 device_gtype);
 gpointer	 fu_plugin_cache_lookup			(FuPlugin	*self,
 							 const gchar	*id);
 void		 fu_plugin_cache_remove			(FuPlugin	*self,

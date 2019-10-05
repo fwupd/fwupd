@@ -712,11 +712,3 @@ fu_fastboot_device_class_init (FuFastbootDeviceClass *klass)
 	klass_usb_device->open = fu_fastboot_device_open;
 	klass_usb_device->close = fu_fastboot_device_close;
 }
-
-FuFastbootDevice *
-fu_fastboot_device_new (FuUsbDevice *device)
-{
-	FuFastbootDevice *self = g_object_new (FU_TYPE_FASTBOOT_DEVICE, NULL);
-	fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (device));
-	return self;
-}

@@ -125,11 +125,3 @@ fu_steelseries_device_class_init (FuSteelseriesDeviceClass *klass)
 	klass_usb_device->open = fu_steelseries_device_open;
 	klass_usb_device->close = fu_steelseries_device_close;
 }
-
-FuSteelseriesDevice *
-fu_steelseries_device_new (FuUsbDevice *device)
-{
-	FuSteelseriesDevice *self = g_object_new (FU_TYPE_STEELSERIES_DEVICE, NULL);
-	fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (device));
-	return self;
-}

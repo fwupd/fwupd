@@ -96,11 +96,3 @@ fu_thelio_io_device_class_init (FuThelioIoDeviceClass *klass)
 	klass_device->probe = fu_thelio_io_device_probe;
 	klass_device->detach = fu_thelio_io_device_detach;
 }
-
-FuThelioIoDevice *
-fu_thelio_io_device_new (FuUsbDevice *device)
-{
-	FuThelioIoDevice *self = g_object_new (FU_TYPE_THELIO_IO_DEVICE, NULL);
-	fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (device));
-	return self;
-}

@@ -51,6 +51,7 @@ typedef struct {
 	GHashTable		*compile_versions;
 	GPtrArray		*udev_subsystems;
 	FuSmbios		*smbios;
+	GType			 device_gtype;
 	GHashTable		*devices;	/* platform_id:GObject */
 	GRWLock			 devices_mutex;
 	GHashTable		*report_metadata;	/* key:value */
@@ -1375,6 +1376,42 @@ fu_plugin_add_udev_subsystem (FuPlugin *self, const gchar *subsystem)
 	g_ptr_array_add (priv->udev_subsystems, g_strdup (subsystem));
 }
 
+/**
+ * fu_plugin_set_device_gtype:
+ * @self: a #FuPlugin
+ * @device_gtype: a #GType `FU_TYPE_DEVICE`
+ *
+ * Sets the device #GType which is used when creating devices.
+ *
+ * If this method is used then fu_plugin_usb_device_added() is not called, and
+ * instead the object is created in the daemon for the plugin.
+ *
+ * Plugins can use this method only in fu_plugin_init()
+ *
+ * Since: 1.3.3
+ **/
+void
+fu_plugin_set_device_gtype (FuPlugin *self, GType device_gtype)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	priv->device_gtype = device_gtype;
+}
+
+static gboolean
+fu_plugin_usb_device_added (FuPlugin *self, FuUsbDevice *device, GError **error)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	dev = g_object_new (priv->device_gtype, NULL);
+	fu_device_incorporate (FU_DEVICE (dev), FU_DEVICE (device));
+	locker = fu_device_locker_new (dev, error);
+	if (locker == NULL)
+		return FALSE;
+	fu_plugin_device_add (self, FU_DEVICE (dev));
+	return TRUE;
+}
+
 gboolean
 fu_plugin_runner_usb_device_added (FuPlugin *self, FuUsbDevice *device, GError **error)
 {
@@ -1392,8 +1429,13 @@ fu_plugin_runner_usb_device_added (FuPlugin *self, FuUsbDevice *device, GError *
 
 	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_usb_device_added", (gpointer *) &func);
-	if (func == NULL)
+	if (func == NULL) {
+		if (priv->device_gtype != G_TYPE_INVALID) {
+			g_debug ("using generic usb_device_added() on %s", priv->name);
+			return fu_plugin_usb_device_added (self, device, error);
+		}
 		return TRUE;
+	}
 	g_debug ("performing usb_device_added() on %s", priv->name);
 	if (!func (self, device, &error_local)) {
 		if (error_local == NULL) {

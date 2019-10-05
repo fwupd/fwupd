@@ -499,12 +499,3 @@ fu_solokey_device_class_init (FuSolokeyDeviceClass *klass)
 	klass_usb_device->close = fu_solokey_device_close;
 	klass_usb_device->probe = fu_solokey_device_probe;
 }
-
-FuSolokeyDevice *
-fu_solokey_device_new (FuUsbDevice *device)
-{
-	FuSolokeyDevice *self = NULL;
-	self = g_object_new (FU_TYPE_SOLOKEY_DEVICE, NULL);
-	fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (device));
-	return self;
-}

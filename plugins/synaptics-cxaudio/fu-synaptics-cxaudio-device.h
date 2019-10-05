@@ -18,6 +18,4 @@ struct _FuSynapticsCxaudioDeviceClass
 	FuUsbDeviceClass	parent_class;
 };
 
-FuSynapticsCxaudioDevice	*fu_synaptics_cxaudio_device_new	(FuUsbDevice	*usb_device);
-
 G_END_DECLS
