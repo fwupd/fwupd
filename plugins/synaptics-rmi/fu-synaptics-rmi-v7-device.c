@@ -105,6 +105,13 @@ fu_synaptics_rmi_v7_device_detach (FuDevice *device, GError **error)
 		return FALSE;
 	}
 
+	/* wait for idle */
+	if (!fu_synaptics_rmi_device_wait_for_idle (self, RMI_F34_ENABLE_WAIT_MS,
+						    RMI_DEVICE_WAIT_FOR_IDLE_FLAG_NONE,
+						    error))
+		return FALSE;
+	if (!fu_synaptics_rmi_device_poll_wait (self, error))
+		return FALSE;
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
 	g_usleep (1000 * RMI_F34_ENABLE_WAIT_MS);
 	return fu_synaptics_rmi_device_rebind_driver (self, error);
