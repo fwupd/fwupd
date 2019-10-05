@@ -522,3 +522,26 @@ fu_synaptics_rmi_v7_device_setup (FuSynapticsRmiDevice *self, GError **error)
 	flash->build_id = fu_common_read_uint32 (f34_dataX->data + 0x02, G_LITTLE_ENDIAN);
 	return fu_synaptics_rmi_device_read_flash_config_v7 (self, error);
 }
+
+gboolean
+fu_synaptics_rmi_v7_device_query_status (FuSynapticsRmiDevice *self, GError **error)
+{
+	FuSynapticsRmiFunction *f01;
+	g_autoptr(GByteArray) f01_db = NULL;
+
+	/* f01 */
+	f01 = fu_synaptics_rmi_device_get_function (self, 0x01, error);
+	if (f01 == NULL)
+		return FALSE;
+	f01_db = fu_synaptics_rmi_device_read (self, f01->data_base, 0x1, error);
+	if (f01_db == NULL) {
+		g_prefix_error (error, "failed to read the f01 data base: ");
+		return FALSE;
+	}
+	if (f01_db->data[0] & 0x80) {
+		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	} else {
+		fu_device_remove_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	}
+	return TRUE;
+}

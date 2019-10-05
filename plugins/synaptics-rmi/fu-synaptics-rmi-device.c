@@ -567,14 +567,17 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 	/* set up vfuncs for each bootloader protocol version */
 	if (priv->f34->function_version == 0x0) {
 		klass_rmi->setup = fu_synaptics_rmi_v5_device_setup;
+		klass_rmi->query_status = fu_synaptics_rmi_v5_device_query_status;
 		klass_device->detach = fu_synaptics_rmi_v5_device_detach;
 		klass_device->write_firmware = fu_synaptics_rmi_v5_device_write_firmware;
 	} else if (priv->f34->function_version == 0x1) {
 		klass_rmi->setup = fu_synaptics_rmi_v6_device_setup;
+		klass_rmi->query_status = fu_synaptics_rmi_v5_device_query_status;
 		klass_device->detach = fu_synaptics_rmi_v5_device_detach;
 		klass_device->write_firmware = fu_synaptics_rmi_v5_device_write_firmware;
 	} else if (priv->f34->function_version == 0x2) {
 		klass_rmi->setup = fu_synaptics_rmi_v7_device_setup;
+		klass_rmi->query_status = fu_synaptics_rmi_v7_device_query_status;
 		klass_device->detach = fu_synaptics_rmi_v7_device_detach;
 		klass_device->write_firmware = fu_synaptics_rmi_v7_device_write_firmware;
 	} else {
@@ -589,6 +592,10 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 	/* get Function34_Query0,1 */
 	if (!klass_rmi->setup (self, error)) {
 		g_prefix_error (error, "failed to read f34 queries: ");
+		return FALSE;
+	}
+	if (!klass_rmi->query_status (self, error)) {
+		g_prefix_error (error, "failed to read bootloader status: ");
 		return FALSE;
 	}
 	bl_ver = g_strdup_printf ("%u.0", priv->flash.bootloader_id[1]);

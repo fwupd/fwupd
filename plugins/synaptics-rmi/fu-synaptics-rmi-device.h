@@ -19,6 +19,8 @@ struct _FuSynapticsRmiDeviceClass
 	FuUdevDeviceClass	parent_class;
 	gboolean		 (*setup)			(FuSynapticsRmiDevice	*self,
 								 GError			**error);
+	gboolean		 (*query_status)		(FuSynapticsRmiDevice	*self,
+								 GError			**error);
 };
 
 typedef struct {

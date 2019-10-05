@@ -271,3 +271,26 @@ fu_synaptics_rmi_v5_device_setup (FuSynapticsRmiDevice *self, GError **error)
 	flash->status_addr = f34->data_base + RMI_F34_BLOCK_DATA_OFFSET + flash->block_size;
 	return TRUE;
 }
+
+gboolean
+fu_synaptics_rmi_v5_device_query_status (FuSynapticsRmiDevice *self, GError **error)
+{
+	FuSynapticsRmiFunction *f01;
+	g_autoptr(GByteArray) f01_db = NULL;
+
+	/* f01 */
+	f01 = fu_synaptics_rmi_device_get_function (self, 0x01, error);
+	if (f01 == NULL)
+		return FALSE;
+	f01_db = fu_synaptics_rmi_device_read (self, f01->data_base, 0x1, error);
+	if (f01_db == NULL) {
+		g_prefix_error (error, "failed to read the f01 data base: ");
+		return FALSE;
+	}
+	if (f01_db->data[0] & 0x40) {
+		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	} else {
+		fu_device_remove_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	}
+	return TRUE;
+}
