@@ -294,7 +294,7 @@ static void
 fu_plugin_mm_name_owner_updated (FuPlugin *plugin)
 {
 	FuPluginData *priv = fu_plugin_get_data (plugin);
-	const gchar *name_owner;
+	g_autofree gchar *name_owner = NULL;
 	name_owner = g_dbus_object_manager_client_get_name_owner (G_DBUS_OBJECT_MANAGER_CLIENT (priv->manager));
 	if (name_owner != NULL)
 		fu_plugin_mm_setup_manager (plugin);
