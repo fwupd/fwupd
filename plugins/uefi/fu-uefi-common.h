@@ -83,6 +83,6 @@ GPtrArray	*fu_uefi_get_esrt_entry_paths	(const gchar	*esrt_path,
 						 GError		**error);
 guint64		 fu_uefi_read_file_as_uint64	(const gchar	*path,
 						 const gchar	*attr_name);
-gboolean	 fu_uefi_prefix_efi_errors	(GError		**error);
+void		 fu_uefi_print_efivar_errors	(void);
 
 G_END_DECLS

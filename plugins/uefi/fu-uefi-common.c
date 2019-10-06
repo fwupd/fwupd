@@ -419,10 +419,9 @@ fu_uefi_guess_esp_path (GError **error)
 	return fu_uefi_probe_for_esp (error);
 }
 
-gboolean
-fu_uefi_prefix_efi_errors (GError **error)
+void
+fu_uefi_print_efivar_errors (void)
 {
-	g_autoptr(GString) str = g_string_new (NULL);
 	for (gint i = 0; ; i++) {
 		gchar *filename = NULL;
 		gchar *function = NULL;
@@ -432,12 +431,8 @@ fu_uefi_prefix_efi_errors (GError **error)
 		if (efi_error_get (i, &filename, &function, &line,
 				   &message, &err) <= 0)
 			break;
-		g_string_append_printf (str, "{error #%d} %s:%d %s(): %s: %s\t",
-					i, filename, line, function,
-					message, strerror (err));
+		g_debug ("{efivar error #%d} %s:%d %s(): %s: %s\t",
+			 i, filename, line, function,
+			 message, strerror (err));
 	}
-	if (str->len > 1)
-		g_string_truncate (str, str->len - 1);
-	g_prefix_error (error, "%s: ", str->str);
-	return FALSE;
 }

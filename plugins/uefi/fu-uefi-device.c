@@ -371,7 +371,7 @@ fu_uefi_device_write_update_info (FuUefiDevice *self,
 	/* convert to EFI device path */
 	dp_buf = fu_uefi_device_build_dp_buf (filename, &dp_bufsz, error);
 	if (dp_buf == NULL) {
-		fu_uefi_prefix_efi_errors (error);
+		fu_uefi_print_efivar_errors ();
 		return FALSE;
 	}
 
@@ -387,7 +387,7 @@ fu_uefi_device_write_update_info (FuUefiDevice *self,
 				    FU_UEFI_VARS_ATTR_BOOTSERVICE_ACCESS |
 				    FU_UEFI_VARS_ATTR_RUNTIME_ACCESS,
 				    error)) {
-		fu_uefi_prefix_efi_errors (error);
+		fu_uefi_print_efivar_errors ();
 		return FALSE;
 	}
 	return TRUE;
