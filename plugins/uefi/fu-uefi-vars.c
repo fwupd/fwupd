@@ -255,8 +255,10 @@ fu_uefi_vars_set_data (const gchar *guid, const gchar *name, const guint8 *data,
 					  error);
 		if (ostr_tmp == NULL)
 			return FALSE;
-		if (!g_output_stream_close (G_OUTPUT_STREAM (ostr_tmp), NULL, error))
+		if (!g_output_stream_close (G_OUTPUT_STREAM (ostr_tmp), NULL, error)) {
+			g_prefix_error (error, "failed to touch efivarfs: ");
 			return FALSE;
+		}
 	}
 	if (!fu_uefi_vars_set_immutable (fn, FALSE, &was_immutable, error)) {
 		g_prefix_error (error, "failed to set %s as mutable: ", fn);
@@ -276,8 +278,10 @@ fu_uefi_vars_set_data (const gchar *guid, const gchar *name, const guint8 *data,
 	ostr = g_unix_output_stream_new (fd, TRUE);
 	memcpy (buf, &attr, sizeof(attr));
 	memcpy (buf + sizeof(attr), data, data_sz);
-	if (g_output_stream_write (ostr, buf, sizeof(attr) + data_sz, NULL, error) < 0)
+	if (g_output_stream_write (ostr, buf, sizeof(attr) + data_sz, NULL, error) < 0) {
+		g_prefix_error (error, "failed to write data to efivarfs: ");
 		return FALSE;
+	}
 
 	/* set as immutable again */
 	if (was_immutable && !fu_uefi_vars_set_immutable (fn, TRUE, NULL, error)) {
