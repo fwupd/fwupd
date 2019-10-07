@@ -533,19 +533,19 @@ fu_synaptics_rmi_v7_device_setup (FuSynapticsRmiDevice *self, GError **error)
 gboolean
 fu_synaptics_rmi_v7_device_query_status (FuSynapticsRmiDevice *self, GError **error)
 {
-	FuSynapticsRmiFunction *f01;
-	g_autoptr(GByteArray) f01_db = NULL;
+	FuSynapticsRmiFunction *f34;
+	g_autoptr(GByteArray) f34_data = NULL;
 
-	/* f01 */
-	f01 = fu_synaptics_rmi_device_get_function (self, 0x01, error);
-	if (f01 == NULL)
+	/* f34 */
+	f34 = fu_synaptics_rmi_device_get_function (self, 0x34, error);
+	if (f34 == NULL)
 		return FALSE;
-	f01_db = fu_synaptics_rmi_device_read (self, f01->data_base, 0x1, error);
-	if (f01_db == NULL) {
+	f34_data = fu_synaptics_rmi_device_read (self, f34->data_base, 0x1, error);
+	if (f34_data == NULL) {
 		g_prefix_error (error, "failed to read the f01 data base: ");
 		return FALSE;
 	}
-	if (f01_db->data[0] & 0x80) {
+	if (f34_data->data[0] & 0x80) {
 		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	} else {
 		fu_device_remove_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
