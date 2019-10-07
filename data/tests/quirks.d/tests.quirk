@@ -1,9 +1,6 @@
 [USB\VID_0A5C&PID_6412]
 Flags= ignore-runtime
 
-[USB\VID_FFFF&PID_FFFF]
-Flags =
-
 [ACME Inc.=True]
 Test = awesome
 

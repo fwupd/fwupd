@@ -1287,7 +1287,7 @@ main (int argc, char *argv[])
 
 	/* use quirks */
 	priv->quirks = fu_quirks_new ();
-	if (!fu_quirks_load (priv->quirks, &error)) {
+	if (!fu_quirks_load (priv->quirks, FU_QUIRKS_LOAD_FLAG_NONE, &error)) {
 		/* TRANSLATORS: quirks are device-specific workarounds */
 		g_print ("%s: %s\n", _("Failed to load quirks"), error->message);
 		return EXIT_FAILURE;

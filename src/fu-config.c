@@ -550,11 +550,9 @@ fu_config_load (FuConfig *self, FuConfigLoadFlags flags, GError **error)
 	for (guint i = 0; locales[i] != NULL; i++)
 		xb_builder_add_locale (builder, locales[i]);
 
-#if LIBXMLB_CHECK_VERSION(0,1,7)
 	/* on a read-only filesystem don't care about the cache GUID */
 	if (flags & FU_CONFIG_LOAD_FLAG_READONLY_FS)
 		compile_flags |= XB_BUILDER_COMPILE_FLAG_IGNORE_GUID;
-#endif
 
 	/* build the metainfo silo */
 	cachedirpkg = fu_common_get_path (FU_PATH_KIND_CACHEDIR_PKG);

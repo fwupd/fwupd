@@ -751,7 +751,6 @@ fu_plugin_uefi_create_dummy (FuPlugin *plugin, const gchar *reason, GError **err
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 
 	fu_device_add_icon (dev, "computer");
-	fu_device_set_plugin (dev, fu_plugin_get_name (plugin));
 	fu_device_set_id (dev, "UEFI-dummy");
 	fu_device_add_instance_id (dev, "main-system-firmware");
 	if (!fu_device_setup (dev, error))
