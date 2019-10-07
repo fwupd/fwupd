@@ -253,11 +253,15 @@ fu_util_maybe_enable_automatic (FuUtilPrivate *priv, GPtrArray *remotes, GError 
 			FwupdRemote *remote = g_ptr_array_index (remotes, i);
 			const gchar *remote_id = fwupd_remote_get_id (remote);
 			if (!fwupd_client_modify_remote (priv->client,
-							 remote_id, "ReportUri", "",
+							 remote_id, "ReportURI", "",
 							 NULL, error))
 				return FALSE;
 		}
-	/* fallthrough */
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "Reporting disabled");
+		return FALSE;
 	case FU_UTIL_HISTORY_DO_NOTHING:
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
