@@ -56,6 +56,7 @@ typedef struct {
 	guint64				 size_max;
 	gint				 open_refcount;	/* atomic */
 	GType				 specialized_gtype;
+	GPtrArray			*possible_plugins;
 } FuDevicePrivate;
 
 enum {
@@ -124,6 +125,40 @@ fu_device_set_property (GObject *object, guint prop_id,
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
 	}
+}
+
+/**
+ * fu_device_get_possible_plugins:
+ * @self: A #FuDevice
+ *
+ * Gets the list of possible plugin names, typically added from quirk files.
+ *
+ * Returns: (element-type utf-8) (transfer container): plugin names
+ *
+ * Since: 1.3.3
+ **/
+GPtrArray *
+fu_device_get_possible_plugins (FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	return g_ptr_array_ref (priv->possible_plugins);
+}
+
+/**
+ * fu_device_add_possible_plugin:
+ * @self: A #FuDevice
+ * @plugin: A plugin name, e.g. `dfu`
+ *
+ * Adds a plugin name to the list of plugins that *might* be able to handle this
+ * device. This is tyically called from a quirk handler.
+ *
+ * Since: 1.3.3
+ **/
+static void
+fu_device_add_possible_plugin (FuDevice *self, const gchar *plugin)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_ptr_array_add (priv->possible_plugins, g_strdup (plugin));
 }
 
 /**
@@ -644,7 +679,7 @@ fu_device_set_quirk_kv (FuDevice *self,
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
 
 	if (g_strcmp0 (key, FU_QUIRKS_PLUGIN) == 0) {
-		fu_device_set_plugin (self, value);
+		fu_device_add_possible_plugin (self, value);
 		return TRUE;
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_FLAGS) == 0) {
@@ -751,27 +786,25 @@ fu_device_get_specialized_gtype (FuDevice *self)
 }
 
 static void
+fu_device_quirks_iter_cb (FuQuirks *quirks, const gchar *key, const gchar *value, gpointer user_data)
+{
+	FuDevice *self = FU_DEVICE (user_data);
+	g_autoptr(GError) error = NULL;
+	if (!fu_device_set_quirk_kv (self, key, value, &error)) {
+		if (!g_error_matches (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED)) {
+			g_warning ("failed to set quirk key %s=%s: %s",
+				   key, value, error->message);
+		}
+	}
+}
+
+static void
 fu_device_add_guid_quirks (FuDevice *self, const gchar *guid)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
-	const gchar *key;
-	const gchar *value;
-	GHashTableIter iter;
-
-	/* not set */
 	if (priv->quirks == NULL)
 		return;
-	if (!fu_quirks_get_kvs_for_guid (priv->quirks, guid, &iter))
-		return;
-	while (g_hash_table_iter_next (&iter, (gpointer *) &key, (gpointer *) &value)) {
-		g_autoptr(GError) error = NULL;
-		if (!fu_device_set_quirk_kv (self, key, value, &error)) {
-			if (!g_error_matches (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED)) {
-				g_warning ("failed to set quirk key %s=%s: %s",
-					   key, value, error->message);
-			}
-		}
-	}
+	fu_quirks_lookup_by_id_iter (priv->quirks, guid, fu_device_quirks_iter_cb, self);
 }
 
 /**
@@ -2522,6 +2555,7 @@ fu_device_init (FuDevice *self)
 	priv->status = FWUPD_STATUS_IDLE;
 	priv->children = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	priv->parent_guids = g_ptr_array_new_with_free_func (g_free);
+	priv->possible_plugins = g_ptr_array_new_with_free_func (g_free);
 	g_rw_lock_init (&priv->parent_guids_mutex);
 	priv->metadata = g_hash_table_new_full (g_str_hash, g_str_equal,
 						g_free, g_free);
@@ -2547,6 +2581,7 @@ fu_device_finalize (GObject *object)
 	g_hash_table_unref (priv->metadata);
 	g_ptr_array_unref (priv->children);
 	g_ptr_array_unref (priv->parent_guids);
+	g_ptr_array_unref (priv->possible_plugins);
 	g_free (priv->alternate_id);
 	g_free (priv->equivalent_id);
 	g_free (priv->physical_id);

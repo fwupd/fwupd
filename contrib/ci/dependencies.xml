@@ -602,20 +602,18 @@
     </distro>
     <distro id="debian">
       <control>
-        <version>(>= 0.1.5)</version>
+        <version>(>= 0.1.13)</version>
       </control>
       <package variant="x86_64" />
       <package variant="s390x">libxmlb-dev:s390x</package>
       <package variant="i386" />
     </distro>
-<!--
     <distro id="ubuntu">
       <control>
-        <version>(>= 0.1.5)</version>
+        <version>(>= 0.1.13)</version>
       </control>
       <package variant="x86_64" />
     </distro>
--->
   </dependency>
   <dependency type="build" id="libarchive-dev">
     <distro id="centos">

@@ -2422,11 +2422,9 @@ fu_engine_load_metadata_store (FuEngine *self, FuEngineLoadFlags flags, GError *
 		xb_builder_import_source (builder, source);
 	}
 
-#if LIBXMLB_CHECK_VERSION(0,1,7)
 	/* on a read-only filesystem don't care about the cache GUID */
 	if (flags & FU_ENGINE_LOAD_FLAG_READONLY_FS)
 		compile_flags |= XB_BUILDER_COMPILE_FLAG_IGNORE_GUID;
-#endif
 
 	/* ensure silo is up to date */
 	cachedirpkg = fu_common_get_path (FU_PATH_KIND_CACHEDIR_PKG);
@@ -3983,9 +3981,9 @@ fu_engine_recoldplug_delay_cb (gpointer user_data)
 static void
 fu_engine_udev_device_add (FuEngine *self, GUdevDevice *udev_device)
 {
-	const gchar *plugin_name;
 	g_autoptr(FuUdevDevice) device = fu_udev_device_new (udev_device);
 	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GPtrArray) possible_plugins = NULL;
 
 	/* add any extra quirks */
 	fu_device_set_quirks (FU_DEVICE (device), self->quirks);
@@ -3997,35 +3995,32 @@ fu_engine_udev_device_add (FuEngine *self, GUdevDevice *udev_device)
 	}
 
 	/* can be specified using a quirk */
-	plugin_name = fu_device_get_plugin (FU_DEVICE (device));
-	if (plugin_name != NULL) {
-		g_auto(GStrv) plugins = g_strsplit (plugin_name, ",", -1);
-		for (guint i = 0; plugins[i] != NULL; i++) {
-			FuPlugin *plugin;
-			g_autoptr(GError) error = NULL;
+	possible_plugins = fu_device_get_possible_plugins (FU_DEVICE (device));
+	for (guint i = 0; i < possible_plugins->len; i++) {
+		FuPlugin *plugin;
+		const gchar *plugin_name = g_ptr_array_index (possible_plugins, i);
+		g_autoptr(GError) error = NULL;
 
-			plugin = fu_plugin_list_find_by_name (self->plugin_list,
-							      plugins[i], &error);
-			if (plugin == NULL) {
-				g_warning ("failed to find specified plugin %s: %s",
-					   plugin_name, error->message);
-				continue;
-			}
-			if (!fu_plugin_runner_udev_device_added (plugin, device, &error)) {
-				if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-					if (g_getenv ("FWUPD_PROBE_VERBOSE") != NULL) {
-						g_debug ("%s ignoring: %s",
-							 fu_plugin_get_name (plugin),
-							 error->message);
-					}
-					continue;
+		plugin = fu_plugin_list_find_by_name (self->plugin_list,
+						      plugin_name, &error);
+		if (plugin == NULL) {
+			g_warning ("failed to find specified plugin %s: %s",
+				   plugin_name, error->message);
+			continue;
+		}
+		if (!fu_plugin_runner_udev_device_added (plugin, device, &error)) {
+			if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+				if (g_getenv ("FWUPD_PROBE_VERBOSE") != NULL) {
+					g_debug ("%s ignoring: %s",
+						 fu_plugin_get_name (plugin),
+						 error->message);
 				}
-				g_warning ("failed to add udev device %s: %s",
-					   g_udev_device_get_sysfs_path (udev_device),
-					   error->message);
 				continue;
 			}
-			return;
+			g_warning ("failed to add udev device %s: %s",
+				   g_udev_device_get_sysfs_path (udev_device),
+				   error->message);
+			continue;
 		}
 	}
 }
@@ -4467,10 +4462,10 @@ fu_engine_usb_device_added_cb (GUsbContext *ctx,
 
 
 static void
-fu_engine_load_quirks (FuEngine *self)
+fu_engine_load_quirks (FuEngine *self, FuQuirksLoadFlags quirks_flags)
 {
 	g_autoptr(GError) error = NULL;
-	if (!fu_quirks_load (self->quirks, &error))
+	if (!fu_quirks_load (self->quirks, quirks_flags, &error))
 		g_warning ("Failed to load quirks: %s", error->message);
 }
 
@@ -4655,6 +4650,7 @@ gboolean
 fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 {
 	FuConfigLoadFlags config_flags = FU_CONFIG_LOAD_FLAG_NONE;
+	FuQuirksLoadFlags quirks_flags = FU_QUIRKS_LOAD_FLAG_NONE;
 	g_autoptr(GPtrArray) checksums = NULL;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
@@ -4703,7 +4699,10 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	/* load quirks, SMBIOS and the hwids */
 	fu_engine_load_smbios (self);
 	fu_engine_load_hwids (self);
-	fu_engine_load_quirks (self);
+	/* on a read-only filesystem don't care about the cache GUID */
+	if (flags & FU_ENGINE_LOAD_FLAG_READONLY_FS)
+		quirks_flags |= FU_QUIRKS_LOAD_FLAG_READONLY_FS;
+	fu_engine_load_quirks (self, quirks_flags);
 
 	/* load AppStream metadata */
 	if (!fu_engine_load_metadata_store (self, flags, error)) {

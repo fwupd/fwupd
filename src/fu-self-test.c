@@ -2114,20 +2114,18 @@ fu_plugin_quirks_func (void)
 	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
 	g_autoptr(GError) error = NULL;
 
-	ret = fu_quirks_load (quirks, &error);
+	ret = fu_quirks_load (quirks, FU_QUIRKS_LOAD_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	fu_plugin_set_quirks (plugin, quirks);
 
 	/* exact */
 	tmp = fu_plugin_lookup_quirk_by_id (plugin, "USB\\VID_0A5C&PID_6412", "Flags");
-	g_assert_cmpstr (tmp, ==, "MERGE_ME,ignore-runtime");
+	g_assert_cmpstr (tmp, ==, "ignore-runtime");
 	tmp = fu_plugin_lookup_quirk_by_id (plugin, "ACME Inc.=True", "Test");
 	g_assert_cmpstr (tmp, ==, "awesome");
 	tmp = fu_plugin_lookup_quirk_by_id (plugin, "CORP*", "Test");
 	g_assert_cmpstr (tmp, ==, "town");
-	tmp = fu_plugin_lookup_quirk_by_id (plugin, "USB\\VID_FFFF&PID_FFFF", "Flags");
-	g_assert_cmpstr (tmp, ==, "");
 	tmp = fu_plugin_lookup_quirk_by_id (plugin, "baz", "Unfound");
 	g_assert_cmpstr (tmp, ==, NULL);
 	tmp = fu_plugin_lookup_quirk_by_id (plugin, "unfound", "tests");
@@ -2141,29 +2139,23 @@ fu_plugin_quirks_func (void)
 static void
 fu_plugin_quirks_performance_func (void)
 {
+	gboolean ret;
 	g_autoptr(FuQuirks) quirks = fu_quirks_new ();
 	g_autoptr(GTimer) timer = g_timer_new ();
-	const gchar *keys[] = {
-		"Name", "Icon", "Children", "Plugin", "Flags",
-		"FirmwareSizeMin", "FirmwareSizeMax", NULL };
+	g_autoptr(GError) error = NULL;
+	const gchar *keys[] = { "Name", "Children", "Flags", NULL };
 
-	/* insert */
-	for (guint j = 0; j < 1000; j++) {
-		g_autofree gchar *group = NULL;
-		group = g_strdup_printf ("DeviceInstanceId=USB\\VID_0BDA&PID_%04X", j);
-		for (guint i = 0; keys[i] != NULL; i++)
-			fu_quirks_add_value (quirks, group, keys[i], "Value");
-	}
-	g_print ("insert=%.3fms ", g_timer_elapsed (timer, NULL) * 1000.f);
+	ret = fu_quirks_load (quirks, FU_QUIRKS_LOAD_FLAG_NONE, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
 
 	/* lookup */
 	g_timer_reset (timer);
 	for (guint j = 0; j < 1000; j++) {
-		g_autofree gchar *group = NULL;
-		group = g_strdup_printf ("DeviceInstanceId=USB\\VID_0BDA&PID_%04X", j);
+		const gchar *group = "DeviceInstanceId=USB\\VID_0BDA&PID_1100";
 		for (guint i = 0; keys[i] != NULL; i++) {
 			const gchar *tmp = fu_quirks_lookup_by_id (quirks, group, keys[i]);
-			g_assert_cmpstr (tmp, ==, "Value");
+			g_assert_cmpstr (tmp, !=, NULL);
 		}
 	}
 	g_print ("lookup=%.3fms ", g_timer_elapsed (timer, NULL) * 1000.f);
@@ -2179,7 +2171,7 @@ fu_plugin_quirks_device_func (void)
 	g_autoptr(FuQuirks) quirks = fu_quirks_new ();
 	g_autoptr(GError) error = NULL;
 
-	ret = fu_quirks_load (quirks, &error);
+	ret = fu_quirks_load (quirks, FU_QUIRKS_LOAD_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
