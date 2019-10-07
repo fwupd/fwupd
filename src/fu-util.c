@@ -1801,7 +1801,10 @@ fu_util_maybe_send_reports (FuUtilPrivate *priv, const gchar *remote_id,
 		return FALSE;
 	if (fwupd_remote_get_automatic_reports (remote)) {
 		if (!fu_util_report_history (priv, NULL, &error_local))
-			g_warning ("%s", error_local->message);
+			if (!g_error_matches (error_local,
+					      FWUPD_ERROR,
+					      FWUPD_ERROR_NOT_SUPPORTED))
+				g_warning ("%s", error_local->message);
 	}
 
 	return TRUE;
