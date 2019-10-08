@@ -280,12 +280,15 @@ fu_synaptics_rmi_v7_device_write_partition (FuSynapticsRmiDevice *self,
 	chunks = fu_chunk_array_new_from_bytes (bytes,
 						0x00,	/* start addr */
 						0x00,	/* page_sz */
-						flash->payload_length);
+						(gsize) flash->payload_length *
+						(gsize) flash->block_size);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
 		g_autoptr(GByteArray) req_trans_sz = g_byte_array_new ();
 		g_autoptr(GByteArray) req_cmd = g_byte_array_new ();
-		fu_byte_array_append_uint16 (req_trans_sz, chk->data_sz, G_LITTLE_ENDIAN);
+		fu_byte_array_append_uint16 (req_trans_sz,
+					     chk->data_sz / flash->block_size,
+					     G_LITTLE_ENDIAN);
 		if (!fu_synaptics_rmi_device_write (self,
 						    f34->data_base + 0x3,
 						    req_trans_sz,
