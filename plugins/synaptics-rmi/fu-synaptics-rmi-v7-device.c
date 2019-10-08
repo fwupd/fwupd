@@ -537,6 +537,7 @@ gboolean
 fu_synaptics_rmi_v7_device_query_status (FuSynapticsRmiDevice *self, GError **error)
 {
 	FuSynapticsRmiFunction *f34;
+	guint8 status;
 	g_autoptr(GByteArray) f34_data = NULL;
 
 	/* f34 */
@@ -548,10 +549,74 @@ fu_synaptics_rmi_v7_device_query_status (FuSynapticsRmiDevice *self, GError **er
 		g_prefix_error (error, "failed to read the f01 data base: ");
 		return FALSE;
 	}
-	if (f34_data->data[0] & 0x80) {
+	status = f34_data->data[0];
+	if (status & 0x80) {
 		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	} else {
 		fu_device_remove_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	}
+	if (status == 0x01) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "operation only supported in bootloader mode");
+		return FALSE;
+	}
+	if (status == 0x02) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "partition ID is not supported by the bootloader");
+		return FALSE;
+	}
+	if (status == 0x03) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "partition supported, but command not supported");
+		return FALSE;
+	}
+	if (status == 0x04) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "invalid block offset");
+		return FALSE;
+	}
+	if (status == 0x05) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "invalid transfer");
+		return FALSE;
+	}
+	if (status == 0x06) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "partition has not been erased");
+		return FALSE;
+	}
+	if (status == 0x07) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_SIGNATURE_INVALID,
+				     "flash programming key incorrect");
+		return FALSE;
+	}
+	if (status == 0x08) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "bad partition table");
+		return FALSE;
+	}
+	if (status == 0x08) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "transfer checksum failed");
+		return FALSE;
 	}
 	return TRUE;
 }
