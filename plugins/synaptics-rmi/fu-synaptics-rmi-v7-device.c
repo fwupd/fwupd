@@ -382,7 +382,7 @@ fu_synaptics_rmi_v7_device_write_firmware (FuDevice *device,
 	/* write core config */
 	if (!fu_synaptics_rmi_v7_device_write_partition (self,
 							 RMI_PARTITION_ID_CORE_CONFIG,
-							 bytes_bin,
+							 bytes_cfg,
 							 error))
 		return FALSE;
 
