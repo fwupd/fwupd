@@ -241,7 +241,7 @@ fu_synaptics_rmi_v7_device_write_blocks (FuSynapticsRmiDevice *self,
 
 static gboolean
 fu_synaptics_rmi_v7_device_write_partition (FuSynapticsRmiDevice *self,
-					    guint partition_id,
+					    RmiPartitionId partition_id,
 					    GBytes *bytes,
 					    GError **error)
 {
@@ -257,6 +257,8 @@ fu_synaptics_rmi_v7_device_write_partition (FuSynapticsRmiDevice *self,
 		return FALSE;
 
 	/* write partition id */
+	g_debug ("writing partition %s…",
+		 rmi_firmware_partition_id_to_string (partition_id));
 	fu_byte_array_append_uint8 (req_partition_id, partition_id);
 	if (!fu_synaptics_rmi_device_write (self,
 					    f34->data_base + 0x1,
@@ -355,6 +357,7 @@ fu_synaptics_rmi_v7_device_write_firmware (FuDevice *device,
 		return FALSE;
 
 	/* erase all */
+	g_debug ("erasing…");
 	if (!fu_synaptics_rmi_v7_device_erase_all (self, error)) {
 		g_prefix_error (error, "failed to erase all: ");
 		return FALSE;
