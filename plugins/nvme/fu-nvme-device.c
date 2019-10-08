@@ -505,14 +505,6 @@ fu_nvme_device_class_init (FuNvmeDeviceClass *klass)
 }
 
 FuNvmeDevice *
-fu_nvme_device_new (FuUdevDevice *device)
-{
-	FuNvmeDevice *self = g_object_new (FU_TYPE_NVME_DEVICE, NULL);
-	fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (device));
-	return self;
-}
-
-FuNvmeDevice *
 fu_nvme_device_new_from_blob (const guint8 *buf, gsize sz, GError **error)
 {
 	g_autoptr(FuNvmeDevice) self = g_object_new (FU_TYPE_NVME_DEVICE, NULL);

@@ -3901,6 +3901,12 @@ fu_engine_udev_device_add (FuEngine *self, GUdevDevice *udev_device)
 			return;
 		}
 		if (!fu_plugin_runner_udev_device_added (plugin, device, &error)) {
+			if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+				g_debug ("%s ignoring: %s",
+					 fu_plugin_get_name (plugin),
+					 error->message);
+				return;
+			}
 			g_warning ("failed to add udev device %s: %s",
 				   g_udev_device_get_sysfs_path (udev_device),
 				   error->message);

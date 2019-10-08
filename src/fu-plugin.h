@@ -121,8 +121,6 @@ void		 fu_plugin_cache_add			(FuPlugin	*self,
 gboolean	 fu_plugin_check_hwid			(FuPlugin	*self,
 							 const gchar	*hwid);
 GPtrArray	*fu_plugin_get_hwids			(FuPlugin	*self);
-gboolean	 fu_plugin_check_supported		(FuPlugin	*self,
-							 const gchar	*guid);
 const gchar	*fu_plugin_get_dmi_value		(FuPlugin	*self,
 							 const gchar	*dmi_id);
 const gchar	*fu_plugin_get_smbios_string		(FuPlugin	*self,

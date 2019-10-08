@@ -107,11 +107,3 @@ fu_optionrom_device_class_init (FuOptionromDeviceClass *klass)
 	klass_device->read_firmware = fu_optionrom_device_read_firmware;
 	klass_udev_device->probe = fu_optionrom_device_probe;
 }
-
-FuOptionromDevice *
-fu_optionrom_device_new (FuUdevDevice *device)
-{
-	FuOptionromDevice *self = g_object_new (FU_TYPE_OPTIONROM_DEVICE, NULL);
-	fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (device));
-	return self;
-}

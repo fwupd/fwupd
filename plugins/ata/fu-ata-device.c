@@ -316,6 +316,25 @@ static gboolean
 fu_ata_device_probe (FuUdevDevice *device, GError **error)
 {
 	FuAtaDevice *self = FU_ATA_DEVICE (device);
+	GUdevDevice *udev_device = fu_udev_device_get_dev (device);
+
+	/* check is valid */
+	if (g_strcmp0 (g_udev_device_get_devtype (udev_device), "disk") != 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "is not correct devtype=%s, expected disk",
+			     g_udev_device_get_devtype (udev_device));
+		return FALSE;
+	}
+	if (!g_udev_device_get_property_as_boolean (udev_device, "ID_ATA_SATA") ||
+	    !g_udev_device_get_property_as_boolean (udev_device, "ID_ATA_DOWNLOAD_MICROCODE")) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "has no ID_ATA_DOWNLOAD_MICROCODE");
+		return FALSE;
+	}
 
 	/* set the physical ID */
 	if (!fu_udev_device_set_physical_id (device, "scsi", error))
@@ -713,14 +732,6 @@ fu_ata_device_class_init (FuAtaDeviceClass *klass)
 	klass_device->close = fu_ata_device_close;
 	klass_device->write_firmware = fu_ata_device_write_firmware;
 	klass_udev_device->probe = fu_ata_device_probe;
-}
-
-FuAtaDevice *
-fu_ata_device_new (FuUdevDevice *device)
-{
-	FuAtaDevice *self = g_object_new (FU_TYPE_ATA_DEVICE, NULL);
-	fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (device));
-	return self;
 }
 
 FuAtaDevice *

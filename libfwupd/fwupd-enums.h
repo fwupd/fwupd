@@ -90,6 +90,7 @@ typedef enum {
  * @FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION:		Device update needs to be separately activated
  * @FWUPD_DEVICE_FLAG_HISTORICAL		Device is for historical data only
  * @FWUPD_DEVICE_FLAG_ENSURE_SEMVER:		Ensure the version is a valid semantic version, e.g. numbers separated with dots
+ * @FWUPD_DEVICE_FLAG_ONLY_SUPPORTED:		Only devices supported in the metadata will be opened
  *
  * The device flags.
  **/
@@ -117,6 +118,7 @@ typedef enum {
 #define FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION	(1u << 20)	/* Since: 1.2.6 */
 #define FWUPD_DEVICE_FLAG_ENSURE_SEMVER		(1u << 21)	/* Since: 1.2.9 */
 #define FWUPD_DEVICE_FLAG_HISTORICAL		(1u << 22)	/* Since: 1.3.2 */
+#define FWUPD_DEVICE_FLAG_ONLY_SUPPORTED	(1u << 23)	/* Since: 1.3.3 */
 #define FWUPD_DEVICE_FLAG_UNKNOWN		G_MAXUINT64	/* Since: 0.7.3 */
 typedef guint64 FwupdDeviceFlags;
 

@@ -1,3 +1,7 @@
+# match all devices with this udev subsystem
+[DeviceInstanceId=DRM_DP_AUX_DEV]
+Plugin = synapticsmst
+
 # GUID generation for Synaptics MST plugin
 #
 # SynapticsMSTBoardID is the 16 bit board ID which contains:

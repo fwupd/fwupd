@@ -254,6 +254,12 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 						FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
 	}
 
+	/* add subsystem to match in plugins */
+	if (subsystem != NULL) {
+		fu_device_add_instance_id_full (device, subsystem,
+						FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
+	}
+
 	/* subclassed */
 	if (klass->probe != NULL) {
 		if (!klass->probe (self, error))

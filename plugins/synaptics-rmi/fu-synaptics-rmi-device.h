@@ -48,7 +48,6 @@ typedef enum {
 	RMI_DEVICE_WAIT_FOR_IDLE_FLAG_REFRESH_F34	= (1 << 0),
 } RmiDeviceWaitForIdleFlags;
 
-FuSynapticsRmiDevice	*fu_synaptics_rmi_device_new		(FuUdevDevice		*device);
 gboolean		 fu_synaptics_rmi_device_write_bootloader_id	(FuSynapticsRmiDevice	*self,
 								 GError			**error);
 gboolean		 fu_synaptics_rmi_device_disable_irqs	(FuSynapticsRmiDevice	*self,

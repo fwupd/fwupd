@@ -38,6 +38,7 @@ void		 fu_device_set_priority			(FuDevice	*self,
 							 guint		 priority);
 void		 fu_device_set_alternate		(FuDevice	*self,
 							 FuDevice	*alternate);
+GType		 fu_device_get_specialized_gtype	(FuDevice	*self);
 gboolean	 fu_device_ensure_id			(FuDevice	*self,
 							 GError		**error);
 void		 fu_device_incorporate_from_component	(FuDevice	*device,
@@ -46,5 +47,6 @@ void		 fu_device_convert_instance_ids		(FuDevice	*self);
 void		 fu_device_add_instance_id_full		(FuDevice	*self,
 							 const gchar	*instance_id,
 							 FuDeviceInstanceFlags flags);
+gchar		*fu_device_get_guids_as_str		(FuDevice	*self);
 
 G_END_DECLS
