@@ -583,7 +583,7 @@ fu_plugin_has_custom_flag (FuPlugin *self, const gchar *flag)
  *
  * Since: 1.0.0
  **/
-gboolean
+static gboolean
 fu_plugin_check_supported (FuPlugin *self, const gchar *guid)
 {
 	gboolean retval = FALSE;
@@ -1396,13 +1396,85 @@ fu_plugin_set_device_gtype (FuPlugin *self, GType device_gtype)
 }
 
 static gboolean
+fu_plugin_check_supported_device (FuPlugin *self, FuDevice *device)
+{
+	GPtrArray *instance_ids = fu_device_get_instance_ids (device);
+	for (guint i = 0; i < instance_ids->len; i++) {
+		const gchar *instance_id = g_ptr_array_index (instance_ids, i);
+		g_autofree gchar *guid = fwupd_guid_hash_string (instance_id);
+		if (fu_plugin_check_supported (self, guid))
+			return TRUE;
+	}
+	return FALSE;
+}
+
+static gboolean
 fu_plugin_usb_device_added (FuPlugin *self, FuUsbDevice *device, GError **error)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
+	GType device_gtype = fu_device_get_specialized_gtype (FU_DEVICE (device));
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	dev = g_object_new (priv->device_gtype, NULL);
+
+	/* fall back to plugin default */
+	if (device_gtype == G_TYPE_INVALID)
+		device_gtype = priv->device_gtype;
+
+	/* create new device and incorporate existing properties */
+	dev = g_object_new (device_gtype, NULL);
+	fu_device_incorporate (dev, FU_DEVICE (device));
+
+	/* there are a lot of different devices that match, but not all respond
+	 * well to opening -- so limit some ones with issued updates */
+	if (fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_ONLY_SUPPORTED)) {
+		if (!fu_device_probe (dev, error))
+			return FALSE;
+		fu_device_convert_instance_ids (dev);
+		if (!fu_plugin_check_supported_device (self, dev)) {
+			g_autofree gchar *guids = fu_device_get_guids_as_str (dev);
+			g_debug ("%s has no updates, so ignoring device", guids);
+			return TRUE;
+		}
+	}
+
+	/* open and add */
+	locker = fu_device_locker_new (dev, error);
+	if (locker == NULL)
+		return FALSE;
+	fu_plugin_device_add (self, dev);
+	return TRUE;
+}
+
+static gboolean
+fu_plugin_udev_device_added (FuPlugin *self, FuUdevDevice *device, GError **error)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	GType device_gtype = fu_device_get_specialized_gtype (FU_DEVICE (device));
+	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	/* fall back to plugin default */
+	if (device_gtype == G_TYPE_INVALID)
+		device_gtype = priv->device_gtype;
+
+	/* create new device and incorporate existing properties */
+	dev = g_object_new (device_gtype, NULL);
 	fu_device_incorporate (FU_DEVICE (dev), FU_DEVICE (device));
+
+	/* there are a lot of different devices that match, but not all respond
+	 * well to opening -- so limit some ones with issued updates */
+	if (fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_ONLY_SUPPORTED)) {
+		if (!fu_device_probe (dev, error))
+			return FALSE;
+		fu_device_convert_instance_ids (dev);
+		if (!fu_plugin_check_supported_device (self, dev)) {
+			g_autofree gchar *guids = fu_device_get_guids_as_str (dev);
+			g_debug ("%s has no updates, so ignoring device", guids);
+			return TRUE;
+		}
+	}
+
+	/* open and add */
 	locker = fu_device_locker_new (dev, error);
 	if (locker == NULL)
 		return FALSE;
@@ -1428,7 +1500,8 @@ fu_plugin_runner_usb_device_added (FuPlugin *self, FuUsbDevice *device, GError *
 	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_usb_device_added", (gpointer *) &func);
 	if (func == NULL) {
-		if (priv->device_gtype != G_TYPE_INVALID) {
+		if (priv->device_gtype != G_TYPE_INVALID ||
+		    fu_device_get_specialized_gtype (FU_DEVICE (device)) != G_TYPE_INVALID) {
 			g_debug ("using generic usb_device_added() on %s", priv->name);
 			return fu_plugin_usb_device_added (self, device, error);
 		}
@@ -1469,8 +1542,14 @@ fu_plugin_runner_udev_device_added (FuPlugin *self, FuUdevDevice *device, GError
 
 	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_udev_device_added", (gpointer *) &func);
-	if (func == NULL)
+	if (func == NULL) {
+		if (priv->device_gtype != G_TYPE_INVALID ||
+		    fu_device_get_specialized_gtype (FU_DEVICE (device)) != G_TYPE_INVALID) {
+			g_debug ("using generic udev_device_added() on %s", priv->name);
+			return fu_plugin_udev_device_added (self, device, error);
+		}
 		return TRUE;
+	}
 	g_debug ("performing udev_device_added() on %s", priv->name);
 	if (!func (self, device, &error_local)) {
 		if (error_local == NULL) {

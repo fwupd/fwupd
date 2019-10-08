@@ -1,5 +1,9 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginOptionrom"']
 
+install_data(['optionrom.quirk'],
+  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
+)
+
 shared_module('fu_plugin_optionrom',
   fu_hash,
   sources : [

@@ -55,6 +55,7 @@ typedef struct {
 	guint64				 size_min;
 	guint64				 size_max;
 	gint				 open_refcount;	/* atomic */
+	GType				 specialized_gtype;
 } FuDevicePrivate;
 
 enum {
@@ -639,6 +640,7 @@ fu_device_set_quirk_kv (FuDevice *self,
 			const gchar *value,
 			GError **error)
 {
+	FuDevicePrivate *priv = GET_PRIVATE (self);
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
 
 	if (g_strcmp0 (key, FU_QUIRKS_PLUGIN) == 0) {
@@ -705,6 +707,21 @@ fu_device_set_quirk_kv (FuDevice *self,
 		fu_device_set_version_format (self, fwupd_version_format_from_string (value));
 		return TRUE;
 	}
+	if (g_strcmp0 (key, FU_QUIRKS_GTYPE) == 0) {
+		if (priv->specialized_gtype != G_TYPE_INVALID) {
+			g_debug ("already set GType to %s, ignoring %s",
+				 g_type_name (priv->specialized_gtype), value);
+			return TRUE;
+		}
+		priv->specialized_gtype = g_type_from_name (value);
+		if (priv->specialized_gtype == G_TYPE_INVALID) {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_NOT_FOUND,
+				     "device GType %s not supported", value);
+		}
+		return TRUE;
+	}
 	if (g_strcmp0 (key, FU_QUIRKS_CHILDREN) == 0) {
 		g_auto(GStrv) sections = g_strsplit (value, ",", -1);
 		for (guint i = 0; sections[i] != NULL; i++) {
@@ -724,6 +741,13 @@ fu_device_set_quirk_kv (FuDevice *self,
 			     G_IO_ERROR_NOT_SUPPORTED,
 			     "quirk key not supported");
 	return FALSE;
+}
+
+GType
+fu_device_get_specialized_gtype (FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	return priv->specialized_gtype;
 }
 
 static void

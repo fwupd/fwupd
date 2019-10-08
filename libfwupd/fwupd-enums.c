@@ -165,6 +165,8 @@ fwupd_device_flag_to_string (FwupdDeviceFlags device_flag)
 		return "ensure-semver";
 	if (device_flag == FWUPD_DEVICE_FLAG_HISTORICAL)
 		return "historical";
+	if (device_flag == FWUPD_DEVICE_FLAG_ONLY_SUPPORTED)
+		return "only-supported";
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -231,6 +233,8 @@ fwupd_device_flag_from_string (const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_ENSURE_SEMVER;
 	if (g_strcmp0 (device_flag, "historical") == 0)
 		return FWUPD_DEVICE_FLAG_HISTORICAL;
+	if (g_strcmp0 (device_flag, "only-supported") == 0)
+		return FWUPD_DEVICE_FLAG_ONLY_SUPPORTED;
 	return FWUPD_DEVICE_FLAG_UNKNOWN;
 }
 

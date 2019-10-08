@@ -47,5 +47,6 @@ gboolean	 fu_quirks_get_kvs_for_guid		(FuQuirks	*self,
 #define	FU_QUIRKS_FIRMWARE_SIZE			"FirmwareSize"
 #define	FU_QUIRKS_INSTALL_DURATION		"InstallDuration"
 #define	FU_QUIRKS_VERSION_FORMAT		"VersionFormat"
+#define	FU_QUIRKS_GTYPE				"GType"
 
 G_END_DECLS

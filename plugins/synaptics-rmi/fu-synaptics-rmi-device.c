@@ -1062,12 +1062,3 @@ fu_synaptics_rmi_device_class_init (FuSynapticsRmiDeviceClass *klass)
 	klass_device->setup = fu_synaptics_rmi_device_setup;
 	klass_device_udev->probe = fu_synaptics_rmi_device_probe;
 }
-
-FuSynapticsRmiDevice *
-fu_synaptics_rmi_device_new (FuUdevDevice *device)
-{
-	FuSynapticsRmiDevice *self = NULL;
-	self = g_object_new (FU_TYPE_SYNAPTICS_RMI_DEVICE, NULL);
-	fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (device));
-	return self;
-}
