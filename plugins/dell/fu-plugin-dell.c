@@ -843,7 +843,6 @@ fu_plugin_init (FuPlugin *plugin)
 	data->smi_obj->fake_smbios = FALSE;
 	if (g_getenv ("FWUPD_DELL_FAKE_SMBIOS") != NULL)
 		data->smi_obj->fake_smbios = TRUE;
-	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_REQUIRES_QUIRK, FU_QUIRKS_PLUGIN);
 
 	/* make sure that UEFI plugin is ready to receive devices */
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "uefi");

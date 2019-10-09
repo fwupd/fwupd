@@ -3875,7 +3875,6 @@ fu_engine_recoldplug_delay_cb (gpointer user_data)
 static void
 fu_engine_udev_device_add (FuEngine *self, GUdevDevice *udev_device)
 {
-	GPtrArray *plugins = fu_plugin_list_get_all (self->plugin_list);
 	const gchar *plugin_name;
 	g_autoptr(FuUdevDevice) device = fu_udev_device_new (udev_device);
 	g_autoptr(GError) error_local = NULL;
@@ -3912,35 +3911,6 @@ fu_engine_udev_device_add (FuEngine *self, GUdevDevice *udev_device)
 				   error->message);
 		}
 		return;
-	}
-
-	/* call into each plugin */
-	g_debug ("no plugin specified for udev device %s",
-		 g_udev_device_get_sysfs_path (udev_device));
-	for (guint j = 0; j < plugins->len; j++) {
-		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
-		g_autoptr(GError) error = NULL;
-
-		/* skipping plugin as requires quirk */
-		if (fu_plugin_has_rule (plugin_tmp,
-					FU_PLUGIN_RULE_REQUIRES_QUIRK,
-					FU_QUIRKS_PLUGIN)) {
-			continue;
-		}
-
-		/* run all plugins */
-		if (!fu_plugin_runner_udev_device_added (plugin_tmp, device, &error)) {
-			if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-				g_debug ("%s ignoring: %s",
-					 fu_plugin_get_name (plugin_tmp),
-					 error->message);
-				continue;
-			}
-			g_warning ("%s failed to add udev device %s: %s",
-				   fu_plugin_get_name (plugin_tmp),
-				   g_udev_device_get_sysfs_path (udev_device),
-				   error->message);
-		}
 	}
 }
 
@@ -4328,7 +4298,6 @@ fu_engine_usb_device_added_cb (GUsbContext *ctx,
 			       GUsbDevice *usb_device,
 			       FuEngine *self)
 {
-	GPtrArray *plugins = fu_plugin_list_get_all (self->plugin_list);
 	const gchar *plugin_name;
 	g_autoptr(FuUsbDevice) device = fu_usb_device_new (usb_device);
 	g_autoptr(GError) error_local = NULL;
@@ -4360,37 +4329,6 @@ fu_engine_usb_device_added_cb (GUsbContext *ctx,
 				   error->message);
 		}
 		return;
-	}
-
-	/* call into each plugin */
-	g_debug ("no plugin specified for USB device %04x:%04x",
-		 g_usb_device_get_vid (usb_device),
-		 g_usb_device_get_pid (usb_device));
-	for (guint j = 0; j < plugins->len; j++) {
-		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
-		g_autoptr(GError) error = NULL;
-
-		/* skipping plugin as requires quirk */
-		if (fu_plugin_has_rule (plugin_tmp,
-					FU_PLUGIN_RULE_REQUIRES_QUIRK,
-					FU_QUIRKS_PLUGIN)) {
-			continue;
-		}
-
-		/* create a device, then probe */
-		if (!fu_plugin_runner_usb_device_added (plugin_tmp, device, &error)) {
-			if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-				g_debug ("%s ignoring: %s",
-					 fu_plugin_get_name (plugin_tmp),
-					 error->message);
-				continue;
-			}
-			g_warning ("%s failed to add USB device %04x:%04x: %s",
-				   fu_plugin_get_name (plugin_tmp),
-				   g_usb_device_get_vid (usb_device),
-				   g_usb_device_get_pid (usb_device),
-				   error->message);
-		}
 	}
 }
 
