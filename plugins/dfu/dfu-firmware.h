@@ -25,7 +25,6 @@ struct _DfuFirmwareClass
  * @DFU_FIRMWARE_PARSE_FLAG_NONE:			No flags set
  * @DFU_FIRMWARE_PARSE_FLAG_NO_CRC_TEST:		Do not verify the CRC
  * @DFU_FIRMWARE_PARSE_FLAG_NO_VERSION_TEST:		Do not verify the DFU version
- * @DFU_FIRMWARE_PARSE_FLAG_NO_METADATA:		Do not read the metadata table
  *
  * The optional flags used for parsing.
  **/
@@ -33,7 +32,6 @@ typedef enum {
 	DFU_FIRMWARE_PARSE_FLAG_NONE			= 0,
 	DFU_FIRMWARE_PARSE_FLAG_NO_CRC_TEST		= (1 << 0),
 	DFU_FIRMWARE_PARSE_FLAG_NO_VERSION_TEST		= (1 << 1),
-	DFU_FIRMWARE_PARSE_FLAG_NO_METADATA		= (1 << 2),
 	/*< private >*/
 	DFU_FIRMWARE_PARSE_FLAG_LAST
 } DfuFirmwareParseFlags;
@@ -99,12 +97,3 @@ gboolean	 dfu_firmware_write_file	(DfuFirmware	*firmware,
 						 GFile		*file,
 						 GError		**error);
 gchar		*dfu_firmware_to_string		(DfuFirmware	*firmware);
-
-GHashTable	*dfu_firmware_get_metadata_table(DfuFirmware	*firmware);
-const gchar	*dfu_firmware_get_metadata	(DfuFirmware	*firmware,
-						 const gchar	*key);
-void		 dfu_firmware_set_metadata	(DfuFirmware	*firmware,
-						 const gchar	*key,
-						 const gchar	*value);
-void		 dfu_firmware_remove_metadata	(DfuFirmware	*firmware,
-						 const gchar	*key);

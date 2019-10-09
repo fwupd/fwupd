@@ -10,7 +10,6 @@
 
 #include "dfu-element.h"
 #include "dfu-format-dfu.h"
-#include "dfu-format-metadata.h"
 #include "dfu-format-dfuse.h"
 #include "dfu-format-raw.h"
 #include "dfu-image.h"
@@ -205,14 +204,6 @@ dfu_firmware_from_dfu (DfuFirmware *firmware,
 		return FALSE;
 	}
 
-	/* parse the optional metadata segment */
-	if ((flags & DFU_FIRMWARE_PARSE_FLAG_NO_METADATA) == 0) {
-		gsize offset = len - ftr->len;
-		g_autoptr(GBytes) md = g_bytes_new (&data[offset], ftr->len);
-		if (!dfu_firmware_from_metadata (firmware, md, flags, error))
-			return FALSE;
-	}
-
 	/* parse DfuSe prefix */
 	contents = g_bytes_new_from_bytes (bytes, 0, len - ftr->len);
 	if (dfu_firmware_get_format (firmware) == DFU_FIRMWARE_FORMAT_DFUSE)
@@ -237,26 +228,15 @@ dfu_firmware_add_footer (DfuFirmware *firmware, GBytes *contents, GError **error
 {
 	DfuFirmwareFooter *ftr;
 	const guint8 *data_bin;
-	const guint8 *data_md;
 	gsize length_bin = 0;
 	gsize length_md = 0;
 	guint32 crc_new;
 	guint8 *buf;
-	g_autoptr(GBytes) metadata_table = NULL;
-
-	/* get any file metadata */
-	metadata_table = dfu_firmware_to_metadata (firmware, error);
-	if (metadata_table == NULL)
-		return NULL;
-	data_md = g_bytes_get_data (metadata_table, &length_md);
 
 	/* add the raw firmware data */
 	data_bin = g_bytes_get_data (contents, &length_bin);
 	buf = g_malloc0 (length_bin + length_md + 0x10);
 	memcpy (buf + 0, data_bin, length_bin);
-
-	/* add the metadata table */
-	memcpy (buf + length_bin, data_md, length_md);
 
 	/* set up LE footer */
 	ftr = (DfuFirmwareFooter *) (buf + length_bin + length_md);
