@@ -1,9 +1,10 @@
-cargs = ['-DG_LOG_DOMAIN="FuPluginUdev"']
+cargs = ['-DG_LOG_DOMAIN="FuPluginOptionrom"']
 
-shared_module('fu_plugin_udev',
+shared_module('fu_plugin_optionrom',
   fu_hash,
   sources : [
-    'fu-plugin-udev.c',
+    'fu-plugin-optionrom.c',
+    'fu-optionrom-device.c',
     'fu-rom.c',
   ],
   include_directories : [
@@ -50,7 +51,7 @@ if get_option('tests')
   testdatadir = join_paths(meson.current_source_dir(), 'tests')
   cargs += '-DTESTDATADIR="' + testdatadir + '"'
   e = executable(
-    'udev-self-test',
+    'optionrom-self-test',
     fu_hash,
     sources : [
       'fu-self-test.c',
@@ -69,5 +70,5 @@ if get_option('tests')
     ],
     c_args : cargs
   )
-  test('udev-self-test', e)
+  test('optionrom-self-test', e)
 endif

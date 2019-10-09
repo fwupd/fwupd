@@ -39,11 +39,8 @@ typedef struct {
 
 struct _FuRom {
 	GObject				 parent_instance;
-	GPtrArray			*checksums;
-	GInputStream			*stream;
 	FuRomKind			 kind;
 	gchar				*version;
-	gchar				*guid;
 	guint16				 vendor_id;
 	guint16				 device_id;
 	GPtrArray			*hdrs; /* of FuRomPciHeader */
@@ -548,8 +545,6 @@ fu_rom_load_data (FuRom *self,
 	guint32 sz = buffer_sz;
 	guint32 jump = 0;
 	guint32 hdr_sz = 0;
-	g_autoptr(GChecksum) checksum_sha1 = g_checksum_new (G_CHECKSUM_SHA1);
-	g_autoptr(GChecksum) checksum_sha256 = g_checksum_new (G_CHECKSUM_SHA256);
 
 	g_return_val_if_fail (FU_IS_ROM (self), FALSE);
 
@@ -674,19 +669,6 @@ fu_rom_load_data (FuRom *self,
 	/* update checksum */
 	if (flags & FU_ROM_LOAD_FLAG_BLANK_PPID)
 		fu_rom_find_and_blank_serial_numbers (self);
-	for (guint i = 0; i < self->hdrs->len; i++) {
-		hdr = g_ptr_array_index (self->hdrs, i);
-		g_checksum_update (checksum_sha1, hdr->rom_data, hdr->rom_len);
-		g_checksum_update (checksum_sha256, hdr->rom_data, hdr->rom_len);
-	}
-
-	/* done updating checksums */
-	g_ptr_array_add (self->checksums, g_strdup (g_checksum_get_string (checksum_sha1)));
-	g_ptr_array_add (self->checksums, g_strdup (g_checksum_get_string (checksum_sha256)));
-
-	/* update guid */
-	self->guid = g_strdup_printf ("PCI\\VEN_%04X&DEV_%04X",
-				      self->vendor_id, self->device_id);
 
 	/* not known */
 	if (self->version == NULL) {
@@ -710,13 +692,13 @@ fu_rom_load_file (FuRom *self, GFile *file, FuRomLoadFlags flags,
 	g_autoptr(GError) error_local = NULL;
 	g_autofree gchar *fn = NULL;
 	g_autofree guint8 *buffer = NULL;
-	g_autoptr(GFileOutputStream) output_stream = NULL;
+	g_autoptr(GInputStream) stream = NULL;
 
 	g_return_val_if_fail (FU_IS_ROM (self), FALSE);
 
 	/* open file */
-	self->stream = G_INPUT_STREAM (g_file_read (file, cancellable, &error_local));
-	if (self->stream == NULL) {
+	stream = G_INPUT_STREAM (g_file_read (file, cancellable, &error_local));
+	if (stream == NULL) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_AUTH_FAILED,
@@ -727,6 +709,7 @@ fu_rom_load_file (FuRom *self, GFile *file, FuRomLoadFlags flags,
 	/* we have to enable the read for devices */
 	fn = g_file_get_path (file);
 	if (g_str_has_prefix (fn, "/sys")) {
+		g_autoptr(GFileOutputStream) output_stream = NULL;
 		output_stream = g_file_replace (file, NULL, FALSE, G_FILE_CREATE_NONE,
 						cancellable, error);
 		if (output_stream == NULL)
@@ -738,7 +721,7 @@ fu_rom_load_file (FuRom *self, GFile *file, FuRomLoadFlags flags,
 
 	/* read out the header */
 	buffer = g_malloc ((gsize) buffer_sz);
-	sz = g_input_stream_read (self->stream, buffer, buffer_sz,
+	sz = g_input_stream_read (stream, buffer, buffer_sz,
 				  cancellable, error);
 	if (sz < 0)
 		return FALSE;
@@ -753,7 +736,7 @@ fu_rom_load_file (FuRom *self, GFile *file, FuRomLoadFlags flags,
 	/* ensure we got enough data to fill the buffer */
 	while (sz < buffer_sz) {
 		gssize sz_chunk;
-		sz_chunk = g_input_stream_read (self->stream,
+		sz_chunk = g_input_stream_read (stream,
 						buffer + sz,
 						buffer_sz - sz,
 						cancellable,
@@ -794,13 +777,6 @@ fu_rom_get_version (FuRom *self)
 	return self->version;
 }
 
-const gchar *
-fu_rom_get_guid (FuRom *self)
-{
-	g_return_val_if_fail (FU_IS_ROM (self), NULL);
-	return self->guid;
-}
-
 guint16
 fu_rom_get_vendor (FuRom *self)
 {
@@ -815,10 +791,15 @@ fu_rom_get_model (FuRom *self)
 	return self->device_id;
 }
 
-GPtrArray *
-fu_rom_get_checksums (FuRom *self)
+GBytes *
+fu_rom_get_data (FuRom *self)
 {
-	return self->checksums;
+	GByteArray *buf = g_byte_array_new ();
+	for (guint i = 0; i < self->hdrs->len; i++) {
+		FuRomPciHeader *hdr = g_ptr_array_index (self->hdrs, i);
+		g_byte_array_append (buf, hdr->rom_data, hdr->rom_len);
+	}
+	return g_byte_array_free_to_bytes (buf);
 }
 
 static void
@@ -831,7 +812,6 @@ fu_rom_class_init (FuRomClass *klass)
 static void
 fu_rom_init (FuRom *self)
 {
-	self->checksums = g_ptr_array_new_with_free_func (g_free);
 	self->hdrs = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_rom_pci_header_free);
 }
 
@@ -841,11 +821,7 @@ fu_rom_finalize (GObject *object)
 	FuRom *self = FU_ROM (object);
 
 	g_free (self->version);
-	g_free (self->guid);
-	g_ptr_array_unref (self->checksums);
 	g_ptr_array_unref (self->hdrs);
-	if (self->stream != NULL)
-		g_object_unref (self->stream);
 
 	G_OBJECT_CLASS (fu_rom_parent_class)->finalize (object);
 }
