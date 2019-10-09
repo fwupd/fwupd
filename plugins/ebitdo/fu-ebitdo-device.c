@@ -348,12 +348,6 @@ fu_ebitdo_device_setup (FuDevice *device, GError **error)
 	return TRUE;
 }
 
-const guint32 *
-fu_ebitdo_device_get_serial (FuEbitdoDevice *self)
-{
-	return self->serial;
-}
-
 static gboolean
 fu_ebitdo_device_write_firmware (FuDevice *device,
 				 FuFirmware *firmware,
@@ -362,6 +356,7 @@ fu_ebitdo_device_write_firmware (FuDevice *device,
 {
 	FuEbitdoDevice *self = FU_EBITDO_DEVICE (device);
 	FuEbitdoFirmwareHeader *hdr;
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	const guint8 *payload_data;
 	const guint chunk_sz = 32;
 	guint32 payload_len;
@@ -377,7 +372,6 @@ fu_ebitdo_device_write_firmware (FuDevice *device,
 
 	/* not in bootloader mode, so print what to do */
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER)) {
-		GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 		g_autoptr(GString) msg = g_string_new ("Not in bootloader mode: ");
 		g_string_append (msg, "Disconnect the controller, ");
 		g_print ("1. \n");
@@ -559,6 +553,15 @@ fu_ebitdo_device_write_firmware (FuDevice *device,
 			     G_IO_ERROR_INVALID_DATA,
 			     "failed to get ACK for mark firmware as successful: %s",
 			     error_local->message);
+		return FALSE;
+	}
+
+	/* when doing a soft-reboot the device does not re-enumerate properly
+	 * so manually reboot the GUsbDevice */
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	if (!g_usb_device_reset (usb_device, error)) {
+		g_prefix_error (error, "failed to force-reset device: ");
 		return FALSE;
 	}
 
