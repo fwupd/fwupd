@@ -5,8 +5,7 @@ Plugin = dfu
 # on PC platforms the DW1820A firmware is loaded at runtime and can't
 # be stored on the device itself as the flash chip is unpopulated
 [DeviceInstanceId=USB\VID_0A5C&PID_6412]
-Plugin = dfu
-DfuFlags = ignore-runtime
+Flags = only-supported
 
 # Openmoko Freerunner / GTA02
 [DeviceInstanceId=USB\VID_1D50&PID_5119]
