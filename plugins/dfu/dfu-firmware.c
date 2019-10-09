@@ -27,9 +27,7 @@
 #include "dfu-common.h"
 #include "dfu-firmware.h"
 #include "dfu-format-dfu.h"
-#include "dfu-format-ihex.h"
 #include "dfu-format-raw.h"
-#include "dfu-format-srec.h"
 #include "dfu-image.h"
 
 #include "fwupd-error.h"
@@ -370,24 +368,12 @@ dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
 
 	/* try to get format if not already set */
 	if (priv->format == DFU_FIRMWARE_FORMAT_UNKNOWN)
-		priv->format = dfu_firmware_detect_ihex (bytes);
-	if (priv->format == DFU_FIRMWARE_FORMAT_UNKNOWN)
-		priv->format = dfu_firmware_detect_srec (bytes);
-	if (priv->format == DFU_FIRMWARE_FORMAT_UNKNOWN)
 		priv->format = dfu_firmware_detect_dfu (bytes);
 	if (priv->format == DFU_FIRMWARE_FORMAT_UNKNOWN)
 		priv->format = dfu_firmware_detect_raw (bytes);
 
 	/* handled easily */
 	switch (priv->format) {
-	case DFU_FIRMWARE_FORMAT_INTEL_HEX:
-		if (!dfu_firmware_from_ihex (firmware, bytes, flags, error))
-			return FALSE;
-		break;
-	case DFU_FIRMWARE_FORMAT_SREC:
-		if (!dfu_firmware_from_srec (firmware, bytes, flags, error))
-			return FALSE;
-		break;
 	case DFU_FIRMWARE_FORMAT_DFU:
 	case DFU_FIRMWARE_FORMAT_DFUSE:
 		if (!dfu_firmware_from_dfu (firmware, bytes, flags, error))
@@ -512,13 +498,6 @@ dfu_firmware_check_acceptable_for_format (DfuFirmware *firmware, GError **error)
 	if (priv->format == DFU_FIRMWARE_FORMAT_DFUSE)
 		return TRUE;
 
-	/* one is usual, and 2 is okay if one image is the signature */
-	if (priv->format == DFU_FIRMWARE_FORMAT_INTEL_HEX) {
-		if (priv->images->len == 2 &&
-		    dfu_firmware_get_image_by_name (firmware, "signature") != NULL)
-			return TRUE;
-	}
-
 	/* unsupported */
 	g_set_error (error,
 		     FWUPD_ERROR,
@@ -567,14 +546,6 @@ dfu_firmware_write_data (DfuFirmware *firmware, GError **error)
 	if (priv->format == DFU_FIRMWARE_FORMAT_DFU ||
 	    priv->format == DFU_FIRMWARE_FORMAT_DFUSE)
 		return dfu_firmware_to_dfu (firmware, error);
-
-	/* Intel HEX */
-	if (priv->format == DFU_FIRMWARE_FORMAT_INTEL_HEX)
-		return dfu_firmware_to_ihex (firmware, error);
-
-	/* Motorola S-record */
-	if (priv->format == DFU_FIRMWARE_FORMAT_SREC)
-		return dfu_firmware_to_srec (firmware, error);
 
 	/* invalid */
 	g_set_error (error,
@@ -695,10 +666,6 @@ dfu_firmware_format_to_string (DfuFirmwareFormat format)
 		return "dfu";
 	if (format == DFU_FIRMWARE_FORMAT_DFUSE)
 		return "dfuse";
-	if (format == DFU_FIRMWARE_FORMAT_INTEL_HEX)
-		return "ihex";
-	if (format == DFU_FIRMWARE_FORMAT_SREC)
-		return "srec";
 	return NULL;
 }
 
@@ -719,10 +686,6 @@ dfu_firmware_format_from_string (const gchar *format)
 		return DFU_FIRMWARE_FORMAT_DFU;
 	if (g_strcmp0 (format, "dfuse") == 0)
 		return DFU_FIRMWARE_FORMAT_DFUSE;
-	if (g_strcmp0 (format, "ihex") == 0)
-		return DFU_FIRMWARE_FORMAT_INTEL_HEX;
-	if (g_strcmp0 (format, "srec") == 0)
-		return DFU_FIRMWARE_FORMAT_SREC;
 	return DFU_FIRMWARE_FORMAT_UNKNOWN;
 }
 
