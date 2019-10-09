@@ -15,20 +15,6 @@
 #include "fwupd-error.h"
 
 /**
- * dfu_firmware_detect_raw: (skip)
- * @bytes: data to parse
- *
- * Attempts to sniff the data and work out the firmware format
- *
- * Returns: a #DfuFirmwareFormat, e.g. %DFU_FIRMWARE_FORMAT_RAW
- **/
-DfuFirmwareFormat
-dfu_firmware_detect_raw (GBytes *bytes)
-{
-	return DFU_FIRMWARE_FORMAT_RAW;
-}
-
-/**
  * dfu_firmware_from_raw: (skip)
  * @firmware: a #DfuFirmware
  * @bytes: data to parse
