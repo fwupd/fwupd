@@ -18,23 +18,6 @@ fu_plugin_init (FuPlugin *plugin)
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_SUPPORTS_PROTOCOL, "com.st.dfuse");
 }
 
-static void
-fu_plugin_dfu_state_changed_cb (DfuDevice *device,
-				DfuState state,
-				FuPlugin *plugin)
-{
-	switch (state) {
-	case DFU_STATE_DFU_UPLOAD_IDLE:
-		fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_DEVICE_VERIFY);
-		break;
-	case DFU_STATE_DFU_DNLOAD_IDLE:
-		fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_DEVICE_WRITE);
-		break;
-	default:
-		break;
-	}
-}
-
 gboolean
 fu_plugin_usb_device_added (FuPlugin *plugin, FuUsbDevice *dev, GError **error)
 {
@@ -55,10 +38,6 @@ fu_plugin_usb_device_added (FuPlugin *plugin, FuUsbDevice *dev, GError **error)
 		g_debug ("ignoring %s runtime", dfu_device_get_platform_id (device));
 		return TRUE;
 	}
-
-	/* watch all signals */
-	g_signal_connect (device, "state-changed",
-			  G_CALLBACK (fu_plugin_dfu_state_changed_cb), plugin);
 
 	/* this is a guess and can be overridden in the metainfo file */
 	fu_device_add_icon (device, "drive-harddisk-usb");

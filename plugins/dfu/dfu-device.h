@@ -80,14 +80,6 @@ typedef enum {
 struct _DfuDeviceClass
 {
 	FuUsbDeviceClass	 parent_class;
-	void			(*status_changed)	(DfuDevice	*device,
-							 DfuStatus	 status);
-	void			(*state_changed)	(DfuDevice	*device,
-							 DfuState	 state);
-	void			(*percentage_changed)	(DfuDevice	*device,
-							 guint		 percentage);
-	void			(*action_changed)	(DfuDevice	*device,
-							 FwupdStatus	 action);
 };
 
 DfuDevice	*dfu_device_new				(GUsbDevice	*usb_device);
