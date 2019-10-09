@@ -435,6 +435,24 @@ fu_synaptics_rmi_device_set_mode (FuSynapticsRmiDevice *self,
 	return TRUE;
 }
 
+static void
+fu_synaptics_rmi_device_set_product_id (FuSynapticsRmiDevice *self, const gchar *product_id)
+{
+	g_autofree gchar *instance_id = NULL;
+	g_auto(GStrv) product_id_split = g_strsplit (product_id, "-", 2);
+
+	/* use the product ID as an instance ID */
+	instance_id = g_strdup_printf ("SYNAPTICS_RMI\\%s", product_id);
+	fu_device_add_instance_id (FU_DEVICE (self), instance_id);
+
+	/* also add the product ID without the sub-number */
+	if (g_strv_length (product_id_split) == 2) {
+		g_autofree gchar *instance_id_major = NULL;
+		instance_id_major = g_strdup_printf ("SYNAPTICS_RMI\\%s", product_id_split[0]);
+		fu_device_add_instance_id (FU_DEVICE (self), instance_id_major);
+	}
+}
+
 static gboolean
 fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 {
@@ -452,9 +470,8 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 	gboolean has_query42;
 	gboolean has_sensor_id;
 	g_autofree gchar *bl_ver = NULL;
-	g_autofree gchar *board_id = NULL;
 	g_autofree gchar *fw_ver = NULL;
-	g_autofree gchar *instance_id = NULL;
+	g_autofree gchar *product_id = NULL;
 	g_autoptr(GByteArray) f01_basic = NULL;
 	g_autoptr(GByteArray) f01_product_id = NULL;
 	g_autoptr(GByteArray) f01_ds4 = NULL;
@@ -475,16 +492,16 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 	has_sensor_id = (f01_basic->data[1] & RMI_DEVICE_F01_QRY1_HAS_SENSOR_ID) > 0;
 	has_query42 = (f01_basic->data[1] & RMI_DEVICE_F01_QRY1_HAS_PROPS_2) > 0;
 
-	/* use the product ID as an instance ID */
+	/* get the product ID */
 	addr += 11;
 	f01_product_id = fu_synaptics_rmi_device_read (self, addr, RMI_PRODUCT_ID_LENGTH, error);
 	if (f01_product_id == NULL) {
 		g_prefix_error (error, "failed to read the product id: ");
 		return FALSE;
 	}
-	board_id = g_strndup ((const gchar *) f01_product_id->data, f01_product_id->len);
-	instance_id = g_strdup_printf ("SYNAPTICS_RMI\\%s", board_id);
-	fu_device_add_instance_id (device, instance_id);
+	product_id = g_strndup ((const gchar *) f01_product_id->data, f01_product_id->len);
+	if (product_id != NULL)
+		fu_synaptics_rmi_device_set_product_id (self, product_id);
 
 	/* skip */
 	prod_info_addr = addr + 6;
