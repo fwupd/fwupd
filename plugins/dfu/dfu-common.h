@@ -108,22 +108,6 @@ typedef enum {
 } DfuState;
 
 /**
- * DfuCipherKind:
- * @DFU_CIPHER_KIND_NONE:			No cipher detected
- * @DFU_CIPHER_KIND_XTEA:			XTEA cipher detected
- * @DFU_CIPHER_KIND_RSA:			RSA cipher detected
- *
- * The type of cipher used for transferring the firmware.
- **/
-typedef enum {
-	DFU_CIPHER_KIND_NONE,
-	DFU_CIPHER_KIND_XTEA,
-	DFU_CIPHER_KIND_RSA,
-	/*< private >*/
-	DFU_CIPHER_KIND_LAST
-} DfuCipherKind;
-
-/**
  * DfuVersion:
  * @DFU_VERSION_UNKNOWN:			Format unknown
  * @DFU_VERSION_DFU_1_0:			DFU 1.0
@@ -145,11 +129,9 @@ typedef enum {
 
 #define DFU_METADATA_KEY_LICENSE		"License"
 #define DFU_METADATA_KEY_COPYRIGHT		"Copyright"
-#define DFU_METADATA_KEY_CIPHER_KIND		"CipherKind"
 
 const gchar	*dfu_state_to_string			(DfuState	 state);
 const gchar	*dfu_status_to_string			(DfuStatus	 status);
-const gchar	*dfu_cipher_kind_to_string		(DfuCipherKind	 cipher_kind);
 const gchar	*dfu_version_to_string			(DfuVersion	 version);
 
 /* helpers */

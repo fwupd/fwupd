@@ -100,26 +100,6 @@ dfu_status_to_string (DfuStatus status)
 }
 
 /**
- * dfu_cipher_kind_to_string:
- * @cipher_kind: a #DfuCipherKind, e.g. %DFU_CIPHER_KIND_XTEA
- *
- * Converts an enumerated value to a string.
- *
- * Return value: a string
- **/
-const gchar *
-dfu_cipher_kind_to_string (DfuCipherKind cipher_kind)
-{
-	if (cipher_kind == DFU_CIPHER_KIND_NONE)
-		return "none";
-	if (cipher_kind == DFU_CIPHER_KIND_XTEA)
-		return "xtea";
-	if (cipher_kind == DFU_CIPHER_KIND_RSA)
-		return "rsa";
-	return NULL;
-}
-
-/**
  * dfu_version_to_string:
  * @version: a #DfuVersion, e.g. %DFU_VERSION_DFU_1_1
  *

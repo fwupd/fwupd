@@ -8,7 +8,6 @@ dfu = static_library(
   'dfu',
   fu_hash,
   sources : [
-    'dfu-cipher-xtea.c',
     'dfu-common.c',
     'dfu-device.c',
     'dfu-element.c',

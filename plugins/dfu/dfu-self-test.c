@@ -10,7 +10,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "dfu-cipher-xtea.h"
 #include "dfu-common.h"
 #include "dfu-device-private.h"
 #include "dfu-firmware.h"
@@ -33,61 +32,6 @@ dfu_test_get_filename (const gchar *filename)
 	if (tmp == NULL)
 		return NULL;
 	return g_strdup (full_tmp);
-}
-
-static void
-dfu_cipher_xtea_func (void)
-{
-	gboolean ret;
-	guint8 buf[] = { 'H', 'i', 'y', 'a', 'D', 'a', 'v', 'e' };
-	g_autoptr(GError) error = NULL;
-
-	ret = dfu_cipher_encrypt_xtea ("test", buf, sizeof(buf), &error);
-	g_assert_no_error (error);
-	g_assert (ret);
-
-	g_assert_cmpint (buf[0], ==, 128);
-	g_assert_cmpint (buf[1], ==, 220);
-	g_assert_cmpint (buf[2], ==, 23);
-	g_assert_cmpint (buf[3], ==, 55);
-	g_assert_cmpint (buf[4], ==, 201);
-	g_assert_cmpint (buf[5], ==, 207);
-	g_assert_cmpint (buf[6], ==, 182);
-	g_assert_cmpint (buf[7], ==, 177);
-
-	ret = dfu_cipher_decrypt_xtea ("test", buf, sizeof(buf), &error);
-	g_assert_no_error (error);
-	g_assert (ret);
-
-	g_assert_cmpint (buf[0], ==, 'H');
-	g_assert_cmpint (buf[1], ==, 'i');
-	g_assert_cmpint (buf[2], ==, 'y');
-	g_assert_cmpint (buf[3], ==, 'a');
-	g_assert_cmpint (buf[4], ==, 'D');
-	g_assert_cmpint (buf[5], ==, 'a');
-	g_assert_cmpint (buf[6], ==, 'v');
-	g_assert_cmpint (buf[7], ==, 'e');
-}
-
-static void
-dfu_firmware_xdfu_func (void)
-{
-	gboolean ret;
-	g_autofree gchar *fn = NULL;
-	g_autoptr(DfuFirmware) firmware = NULL;
-	g_autoptr(GError) error = NULL;
-	g_autoptr(GFile) file = NULL;
-
-	fn = dfu_test_get_filename ("example.xdfu");
-	g_assert (fn != NULL);
-	firmware = dfu_firmware_new ();
-	file = g_file_new_for_path (fn);
-	ret = dfu_firmware_parse_file (firmware, file,
-				       DFU_FIRMWARE_PARSE_FLAG_NONE,
-				       &error);
-	g_assert_no_error (error);
-	g_assert (ret);
-	g_assert_cmpint (dfu_firmware_get_cipher_kind (firmware), ==, DFU_CIPHER_KIND_XTEA);
 }
 
 static void
@@ -136,7 +80,6 @@ dfu_firmware_raw_func (void)
 	g_assert_cmpint (dfu_firmware_get_pid (firmware), ==, 0xffff);
 	g_assert_cmpint (dfu_firmware_get_release (firmware), ==, 0xffff);
 	g_assert_cmpint (dfu_firmware_get_format (firmware), ==, DFU_FIRMWARE_FORMAT_RAW);
-	g_assert_cmpint (dfu_firmware_get_cipher_kind (firmware), ==, DFU_CIPHER_KIND_NONE);
 	image_tmp = dfu_firmware_get_image (firmware, 0xfe);
 	g_assert (image_tmp == NULL);
 	image_tmp = dfu_firmware_get_image (firmware, 0);
@@ -220,7 +163,6 @@ dfu_firmware_dfu_func (void)
 	g_assert_cmpint (dfu_firmware_get_release (firmware), ==, 0xffff);
 	g_assert_cmpint (dfu_firmware_get_format (firmware), ==, DFU_FIRMWARE_FORMAT_DFU);
 	g_assert_cmpint (dfu_firmware_get_size (firmware), ==, 0x8eB4);
-	g_assert_cmpint (dfu_firmware_get_cipher_kind (firmware), ==, DFU_CIPHER_KIND_NONE);
 
 	/* can we roundtrip without losing data */
 	roundtrip_orig = dfu_self_test_get_bytes_for_file (file, &error);
@@ -261,7 +203,6 @@ dfu_firmware_dfuse_func (void)
 	g_assert_cmpint (dfu_firmware_get_release (firmware), ==, 0x0000);
 	g_assert_cmpint (dfu_firmware_get_format (firmware), ==, DFU_FIRMWARE_FORMAT_DFUSE);
 	g_assert_cmpint (dfu_firmware_get_size (firmware), ==, 0x168d5);
-	g_assert_cmpint (dfu_firmware_get_cipher_kind (firmware), ==, DFU_CIPHER_KIND_NONE);
 
 	/* can we roundtrip without losing data */
 	roundtrip_orig = dfu_self_test_get_bytes_for_file (file, &error);
@@ -420,13 +361,6 @@ dfu_target_dfuse_func (void)
 	g_assert (!ret);
 	ret = dfu_target_parse_sectors (target, "@Internal Flash /0x08000000/12*001a", NULL);
 	g_assert (!ret);
-
-	/* indicate a cipher being used */
-	g_assert_cmpint (dfu_target_get_cipher_kind (target), ==, DFU_CIPHER_KIND_NONE);
-	ret = dfu_target_parse_sectors (target, "@Flash|XTEA", &error);
-	g_assert_no_error (error);
-	g_assert (ret);
-	g_assert_cmpint (dfu_target_get_cipher_kind (target), ==, DFU_CIPHER_KIND_XTEA);
 }
 
 static gboolean
@@ -596,11 +530,9 @@ main (int argc, char **argv)
 	g_test_add_func ("/dfu/patch{apply}", dfu_patch_apply_func);
 	g_test_add_func ("/dfu/enums", dfu_enums_func);
 	g_test_add_func ("/dfu/target(DfuSe}", dfu_target_dfuse_func);
-	g_test_add_func ("/dfu/cipher{xtea}", dfu_cipher_xtea_func);
 	g_test_add_func ("/dfu/firmware{raw}", dfu_firmware_raw_func);
 	g_test_add_func ("/dfu/firmware{dfu}", dfu_firmware_dfu_func);
 	g_test_add_func ("/dfu/firmware{dfuse}", dfu_firmware_dfuse_func);
-	g_test_add_func ("/dfu/firmware{xdfu}", dfu_firmware_xdfu_func);
 	g_test_add_func ("/dfu/firmware{metadata}", dfu_firmware_metadata_func);
 	return g_test_run ();
 }

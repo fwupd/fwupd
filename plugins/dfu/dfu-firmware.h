@@ -72,7 +72,6 @@ guint16		 dfu_firmware_get_pid		(DfuFirmware	*firmware);
 guint16		 dfu_firmware_get_release	(DfuFirmware	*firmware);
 guint16		 dfu_firmware_get_format	(DfuFirmware	*firmware);
 guint32		 dfu_firmware_get_size		(DfuFirmware	*firmware);
-DfuCipherKind	 dfu_firmware_get_cipher_kind	(DfuFirmware	*firmware);
 
 void		 dfu_firmware_add_image		(DfuFirmware	*firmware,
 						 DfuImage	*image);
@@ -84,8 +83,6 @@ void		 dfu_firmware_set_release	(DfuFirmware	*firmware,
 						 guint16	 release);
 void		 dfu_firmware_set_format	(DfuFirmware	*firmware,
 						 DfuFirmwareFormat format);
-void		 dfu_firmware_set_cipher_kind	(DfuFirmware	*firmware,
-						 DfuCipherKind	 cipher_kind);
 
 gboolean	 dfu_firmware_parse_data	(DfuFirmware	*firmware,
 						 GBytes		*bytes,
