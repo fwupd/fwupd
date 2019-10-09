@@ -110,8 +110,6 @@ guint16		 dfu_device_get_pid			(DfuDevice	*device);
 guint16		 dfu_device_get_release			(DfuDevice	*device);
 gboolean	 dfu_device_reset			(DfuDevice	*device,
 							 GError		**error);
-gboolean	 dfu_device_attach			(DfuDevice	*device,
-							 GError		**error);
 gboolean	 dfu_device_wait_for_replug		(DfuDevice	*device,
 							 guint		 timeout,
 							 GError		**error);
@@ -125,8 +123,6 @@ gboolean	 dfu_device_download			(DfuDevice	*device,
 gboolean	 dfu_device_refresh			(DfuDevice	*device,
 							 GError		**error);
 gboolean	 dfu_device_refresh_and_clear		(DfuDevice	*device,
-							 GError		**error);
-gboolean	 dfu_device_detach			(DfuDevice	*device,
 							 GError		**error);
 gboolean	 dfu_device_abort			(DfuDevice	*device,
 							 GError		**error);
