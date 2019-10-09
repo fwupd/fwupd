@@ -14,6 +14,7 @@ The HID DeviceInstanceId values are used, e.g. `HIDRAW\VEN_06CB&DEV_4875`.
 These devices also use custom GUID values constructed using the board ID, e.g.
 
  * `SYNAPTICS_RMI\TM3038-002`
+ * `SYNAPTICS_RMI\TM3038`
 
 Firmware Format
 ---------------
