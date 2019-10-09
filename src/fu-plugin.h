@@ -67,7 +67,6 @@ typedef enum {
  * @FU_PLUGIN_RULE_CONFLICTS:		The plugin conflicts with another
  * @FU_PLUGIN_RULE_RUN_AFTER:		Order the plugin after another
  * @FU_PLUGIN_RULE_RUN_BEFORE:		Order the plugin before another
- * @FU_PLUGIN_RULE_REQUIRES_QUIRK:	Requires a specific quirk
  * @FU_PLUGIN_RULE_BETTER_THAN:		Is better than another plugin
  * @FU_PLUGIN_RULE_INHIBITS_IDLE:	The plugin inhibits the idle shutdown
  * @FU_PLUGIN_RULE_SUPPORTS_PROTOCOL:	The plugin supports a well known protocol
@@ -79,7 +78,6 @@ typedef enum {
 	FU_PLUGIN_RULE_CONFLICTS,
 	FU_PLUGIN_RULE_RUN_AFTER,
 	FU_PLUGIN_RULE_RUN_BEFORE,
-	FU_PLUGIN_RULE_REQUIRES_QUIRK,
 	FU_PLUGIN_RULE_BETTER_THAN,
 	FU_PLUGIN_RULE_INHIBITS_IDLE,
 	FU_PLUGIN_RULE_SUPPORTS_PROTOCOL,
