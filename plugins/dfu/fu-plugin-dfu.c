@@ -16,34 +16,7 @@ fu_plugin_init (FuPlugin *plugin)
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_SUPPORTS_PROTOCOL, "org.usb.dfu");
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_SUPPORTS_PROTOCOL, "com.st.dfuse");
-}
-
-gboolean
-fu_plugin_usb_device_added (FuPlugin *plugin, FuUsbDevice *dev, GError **error)
-{
-	g_autoptr(DfuDevice) device = NULL;
-	g_autoptr(FuDeviceLocker) locker = NULL;
-
-	/* open the device */
-	device = dfu_device_new (fu_usb_device_get_dev (dev));
-	fu_device_set_quirks (FU_DEVICE (device), fu_plugin_get_quirks (plugin));
-	dfu_device_set_usb_context (device, fu_plugin_get_usb_context (plugin));
-	locker = fu_device_locker_new (device, error);
-	if (locker == NULL)
-		return FALSE;
-
-	/* ignore defective runtimes */
-	if (fu_device_has_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_ONLY_SUPPORTED)) {
-		g_debug ("ignoring %s", dfu_device_get_platform_id (device));
-		return TRUE;
-	}
-
-	/* this is a guess and can be overridden in the metainfo file */
-	fu_device_add_icon (device, "drive-harddisk-usb");
-
-	/* insert to hash */
-	fu_plugin_device_add (plugin, FU_DEVICE (device));
-	return TRUE;
+	fu_plugin_set_device_gtype (plugin, DFU_TYPE_DEVICE);
 }
 
 gboolean

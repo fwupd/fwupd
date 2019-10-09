@@ -120,7 +120,6 @@ gboolean	 dfu_device_clear_status		(DfuDevice	*device,
 							 GError		**error);
 
 guint8		 dfu_device_get_interface		(DfuDevice	*device);
-gboolean	 dfu_device_is_runtime			(DfuDevice	*device);
 DfuState	 dfu_device_get_state			(DfuDevice	*device);
 DfuStatus	 dfu_device_get_status			(DfuDevice	*device);
 guint16		 dfu_device_get_transfer_size		(DfuDevice	*device);

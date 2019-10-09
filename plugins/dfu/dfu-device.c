@@ -117,6 +117,8 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE (DfuDevice, dfu_device, FU_TYPE_USB_DEVICE)
 #define GET_PRIVATE(o) (dfu_device_get_instance_private (o))
 
+static void	dfu_device_set_state (DfuDevice *device, DfuState state);
+
 /**
  * dfu_device_get_transfer_size:
  * @device: a #GUsbDevice
@@ -241,24 +243,22 @@ dfu_device_parse_iface_data (DfuDevice *device, GBytes *iface_data, GError **err
 static void
 dfu_device_guess_state_from_iface (DfuDevice *device, GUsbInterface *iface)
 {
-	DfuDevicePrivate *priv = GET_PRIVATE (device);
-
 	/* some devices use the wrong interface */
 	if (dfu_device_has_quirk (device, DFU_DEVICE_QUIRK_FORCE_DFU_MODE)) {
 		g_debug ("quirking device into DFU mode");
-		priv->state = DFU_STATE_DFU_IDLE;
+		dfu_device_set_state (device, DFU_STATE_DFU_IDLE);
 		return;
 	}
 
 	/* runtime */
 	if (g_usb_interface_get_protocol (iface) == 0x01) {
-		priv->state = DFU_STATE_APP_IDLE;
+		dfu_device_set_state (device, DFU_STATE_APP_IDLE);
 		return;
 	}
 
 	/* DFU */
 	if (g_usb_interface_get_protocol (iface) == 0x02) {
-		priv->state = DFU_STATE_DFU_IDLE;
+		dfu_device_set_state (device, DFU_STATE_DFU_IDLE);
 		return;
 	}
 	g_warning ("unable to guess initial device state from interface %u",
@@ -371,7 +371,7 @@ dfu_device_add_targets (DfuDevice *device, GError **error)
 	if (priv->targets->len == 0 &&
 	    priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
 		g_debug ("no DFU runtime, so faking device");
-		priv->state = DFU_STATE_APP_IDLE;
+		dfu_device_set_state (device, DFU_STATE_APP_IDLE);
 		priv->iface_number = 0xff;
 		priv->runtime_vid = g_usb_device_get_vid (usb_device);
 		priv->runtime_pid = g_usb_device_get_pid (usb_device);
@@ -459,25 +459,6 @@ dfu_device_set_timeout (DfuDevice *device, guint timeout_ms)
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (DFU_IS_DEVICE (device));
 	priv->timeout_ms = timeout_ms;
-}
-
-/**
- * dfu_device_is_runtime:
- * @device: a #GUsbDevice
- *
- * Gets the device mode.
- *
- * Return value: %TRUE if the device is in a runtime state
- **/
-gboolean
-dfu_device_is_runtime (DfuDevice *device)
-{
-	DfuDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (DFU_IS_DEVICE (device), FALSE);
-	if (priv->state == DFU_STATE_APP_IDLE ||
-	    priv->state == DFU_STATE_APP_DETACH)
-		return TRUE;
-	return FALSE;
 }
 
 /**
@@ -870,6 +851,14 @@ dfu_device_set_state (DfuDevice *device, DfuState state)
 		return;
 	priv->state = state;
 
+	/* set bootloader status */
+	if (state == DFU_STATE_APP_IDLE ||
+	    state == DFU_STATE_APP_DETACH) {
+		fu_device_remove_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	} else {
+		fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	}
+
 	switch (state) {
 	case DFU_STATE_DFU_UPLOAD_IDLE:
 		fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_DEVICE_VERIFY);
@@ -1084,7 +1073,7 @@ dfu_device_detach (FuDevice *device, GError **error)
 	/* already in DFU mode */
 	if (!dfu_device_refresh_and_clear (self, error))
 		return FALSE;
-	if (!dfu_device_is_runtime (self))
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
 		return TRUE;
 
 	/* no backing USB device */
@@ -1394,7 +1383,7 @@ dfu_device_open (FuUsbDevice *device, GError **error)
 	/* the device has no DFU runtime, so cheat */
 	if (priv->state == DFU_STATE_APP_IDLE &&
 	    priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
-		priv->state = DFU_STATE_APP_IDLE;
+		dfu_device_set_state (self, DFU_STATE_APP_IDLE);
 		priv->status = DFU_STATUS_OK;
 	}
 
@@ -1563,7 +1552,7 @@ dfu_device_attach (FuDevice *device, GError **error)
 	/* already in runtime mode */
 	if (!dfu_device_refresh_and_clear (self, error))
 		return FALSE;
-	if (dfu_device_is_runtime (self))
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
 		return TRUE;
 
 	/* inform UI there's going to be a re-attach */
@@ -2113,4 +2102,5 @@ dfu_device_init (DfuDevice *device)
 	priv->targets = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	priv->timeout_ms = 1500;
 	priv->transfer_size = 64;
+	fu_device_add_icon (FU_DEVICE (device), "drive-harddisk-usb");
 }
