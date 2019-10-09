@@ -33,9 +33,8 @@ fu_plugin_usb_device_added (FuPlugin *plugin, FuUsbDevice *dev, GError **error)
 		return FALSE;
 
 	/* ignore defective runtimes */
-	if (dfu_device_is_runtime (device) &&
-	    dfu_device_has_quirk (device, DFU_DEVICE_QUIRK_IGNORE_RUNTIME)) {
-		g_debug ("ignoring %s runtime", dfu_device_get_platform_id (device));
+	if (fu_device_has_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_ONLY_SUPPORTED)) {
+		g_debug ("ignoring %s", dfu_device_get_platform_id (device));
 		return TRUE;
 	}
 

@@ -591,10 +591,6 @@ dfu_device_set_quirks_from_string (DfuDevice *device, const gchar *str)
 			priv->quirks |= DFU_DEVICE_QUIRK_ATTACH_UPLOAD_DOWNLOAD;
 			continue;
 		}
-		if (g_strcmp0 (split[i], "ignore-runtime") == 0) {
-			priv->quirks |= DFU_DEVICE_QUIRK_IGNORE_RUNTIME;
-			continue;
-		}
 		if (g_strcmp0 (split[i], "action-required") == 0) {
 			priv->quirks |= DFU_DEVICE_QUIRK_ACTION_REQUIRED;
 			continue;
@@ -1953,8 +1949,6 @@ dfu_device_get_quirks_as_string (DfuDevice *device)
 		g_string_append_printf (str, "no-dfu-runtime|");
 	if (priv->quirks & DFU_DEVICE_QUIRK_ATTACH_UPLOAD_DOWNLOAD)
 		g_string_append_printf (str, "attach-upload-download|");
-	if (priv->quirks & DFU_DEVICE_QUIRK_IGNORE_RUNTIME)
-		g_string_append_printf (str, "ignore-runtime|");
 	if (priv->quirks & DFU_DEVICE_QUIRK_ACTION_REQUIRED)
 		g_string_append_printf (str, "action-required|");
 	if (priv->quirks & DFU_DEVICE_QUIRK_IGNORE_UPLOAD)
