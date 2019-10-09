@@ -17,7 +17,6 @@
 static gboolean
 fu_fuzzer_rom_parse (const gchar *fn, GError **error)
 {
-	GPtrArray *checksums;
 	g_autoptr(FuRom) rom = NULL;
 	g_autoptr(GFile) file = NULL;
 
@@ -29,14 +28,6 @@ fu_fuzzer_rom_parse (const gchar *fn, GError **error)
 	g_print ("filename:%s\n", fn);
 	g_print ("kind:%s\n", fu_rom_kind_to_string (fu_rom_get_kind (rom)));
 	g_print ("version:%s\n", fu_rom_get_version (rom));
-	checksums = fu_rom_get_checksums (rom);
-	for (guint i = 0; i < checksums->len; i++) {
-		const gchar *checksum = g_ptr_array_index (checksums, i);
-		g_autofree gchar *checksum_display = NULL;
-		checksum_display = fwupd_checksum_format_for_display (checksum);
-		g_print ("checksum:%s\n", checksum_display);
-	}
-	g_print ("guid:%s\n", fu_rom_get_guid (rom));
 	g_print ("vendor:%u\n", fu_rom_get_vendor (rom));
 	g_print ("model:%u\n\n", fu_rom_get_model (rom));
 	return TRUE;

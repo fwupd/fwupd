@@ -46,8 +46,7 @@ gboolean	 fu_rom_extract_all			(FuRom		*self,
 							 GError		**error);
 FuRomKind	 fu_rom_get_kind			(FuRom		*self);
 const gchar	*fu_rom_get_version			(FuRom		*self);
-GPtrArray	*fu_rom_get_checksums			(FuRom		*self);
-const gchar	*fu_rom_get_guid			(FuRom		*self);
+GBytes		*fu_rom_get_data			(FuRom		*self);
 guint16		 fu_rom_get_vendor			(FuRom		*self);
 guint16		 fu_rom_get_model			(FuRom		*self);
 const gchar	*fu_rom_kind_to_string			(FuRomKind	 kind);
