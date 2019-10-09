@@ -114,14 +114,6 @@ typedef struct {
 	guint			 timeout_ms;
 } DfuDevicePrivate;
 
-enum {
-	SIGNAL_STATUS_CHANGED,
-	SIGNAL_STATE_CHANGED,
-	SIGNAL_LAST
-};
-
-static guint signals [SIGNAL_LAST] = { 0 };
-
 G_DEFINE_TYPE_WITH_PRIVATE (DfuDevice, dfu_device, FU_TYPE_USB_DEVICE)
 #define GET_PRIVATE(o) (dfu_device_get_instance_private (o))
 
@@ -881,7 +873,17 @@ dfu_device_set_state (DfuDevice *device, DfuState state)
 	if (priv->state == state)
 		return;
 	priv->state = state;
-	g_signal_emit (device, signals[SIGNAL_STATE_CHANGED], 0, state);
+
+	switch (state) {
+	case DFU_STATE_DFU_UPLOAD_IDLE:
+		fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_DEVICE_VERIFY);
+		break;
+	case DFU_STATE_DFU_DNLOAD_IDLE:
+		fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_DEVICE_WRITE);
+		break;
+	default:
+		break;
+	}
 }
 
 static void
@@ -891,7 +893,6 @@ dfu_device_set_status (DfuDevice *device, DfuStatus status)
 	if (priv->status == status)
 		return;
 	priv->status = status;
-	g_signal_emit (device, signals[SIGNAL_STATUS_CHANGED], 0, status);
 }
 
 gboolean
@@ -2102,35 +2103,6 @@ dfu_device_class_init (DfuDeviceClass *klass)
 	klass_usb_device->open = dfu_device_open;
 	klass_usb_device->close = dfu_device_close;
 	klass_usb_device->probe = dfu_device_probe;
-
-	/**
-	 * DfuDevice::status-changed:
-	 * @device: the #DfuDevice instance that emitted the signal
-	 * @status: the new #DfuStatus
-	 *
-	 * The ::status-changed signal is emitted when the status changes.
-	 **/
-	signals [SIGNAL_STATUS_CHANGED] =
-		g_signal_new ("status-changed",
-			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (DfuDeviceClass, status_changed),
-			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
-			      G_TYPE_NONE, 1, G_TYPE_UINT);
-
-	/**
-	 * DfuDevice::state-changed:
-	 * @device: the #DfuDevice instance that emitted the signal
-	 * @state: the new #DfuState
-	 *
-	 * The ::state-changed signal is emitted when the state changes.
-	 **/
-	signals [SIGNAL_STATE_CHANGED] =
-		g_signal_new ("state-changed",
-			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (DfuDeviceClass, state_changed),
-			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
-			      G_TYPE_NONE, 1, G_TYPE_UINT);
-
 	object_class->finalize = dfu_device_finalize;
 }
 
