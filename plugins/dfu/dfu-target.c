@@ -538,7 +538,7 @@ dfu_target_use_alt_setting (DfuTarget *target, GError **error)
 		return FALSE;
 
 	/* use the correct setting */
-	if (!dfu_device_is_runtime (priv->device)) {
+	if (fu_device_has_flag (FU_DEVICE (priv->device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		if (!g_usb_device_set_interface_alt (usb_device,
 						     (gint) dfu_device_get_interface (priv->device),
 						     (gint) priv->alt_setting,

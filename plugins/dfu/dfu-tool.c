@@ -1191,7 +1191,7 @@ dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 			  G_CALLBACK (fu_tool_action_changed_cb), priv);
 
 	/* APP -> DFU */
-	if (dfu_device_is_runtime (device)) {
+	if (!fu_device_has_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		g_debug ("detaching");
 		if (!fu_device_detach (FU_DEVICE (device), error))
 			return FALSE;
@@ -1317,7 +1317,7 @@ dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* APP -> DFU */
-	if (dfu_device_is_runtime (device)) {
+	if (!fu_device_has_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		if (!fu_device_detach (FU_DEVICE (device), error))
 			return FALSE;
 		if (!dfu_device_wait_for_replug (device,
@@ -1556,7 +1556,7 @@ dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 			  G_CALLBACK (fu_tool_action_changed_cb), priv);
 
 	/* APP -> DFU */
-	if (dfu_device_is_runtime (device)) {
+	if (!fu_device_has_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		g_debug ("detaching");
 		if (!fu_device_detach (FU_DEVICE (device), error))
 			return FALSE;
@@ -1684,7 +1684,7 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 	g_debug ("DFU: %s", str_debug);
 
 	/* APP -> DFU */
-	if (dfu_device_is_runtime (device)) {
+	if (!fu_device_has_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		if (!fu_device_detach (FU_DEVICE (device), error))
 			return FALSE;
 		if (!dfu_device_wait_for_replug (device,
@@ -1846,7 +1846,7 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 		}
 
 		/* TRANSLATORS: device mode, e.g. application runtime or DFU */
-		is_runtime = dfu_device_is_runtime (device);
+		is_runtime = !fu_device_has_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 		dfu_tool_print_indent (_("Mode"), is_runtime ? _("Runtime") : _("DFU"), 1);
 
 		tmp = dfu_status_to_string (dfu_device_get_status (device));
