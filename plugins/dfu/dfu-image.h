@@ -11,8 +11,6 @@
 
 #include "dfu-element.h"
 
-G_BEGIN_DECLS
-
 #define DFU_TYPE_IMAGE (dfu_image_get_type ())
 G_DECLARE_DERIVABLE_TYPE (DfuImage, dfu_image, DFU, IMAGE, GObject)
 
@@ -40,5 +38,3 @@ void		 dfu_image_set_name		(DfuImage	*image,
 						 const gchar	*name);
 
 gchar		*dfu_image_to_string		(DfuImage	*image);
-
-G_END_DECLS

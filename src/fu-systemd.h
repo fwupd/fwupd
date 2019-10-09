@@ -8,8 +8,6 @@
 
 #include <glib.h>
 
-G_BEGIN_DECLS
-
 gboolean	 fu_systemd_unit_check_exists	(const gchar	*unit,
 						 GError		**error);
 gboolean	 fu_systemd_unit_stop		(const gchar	*unit,
@@ -19,5 +17,3 @@ gboolean	 fu_systemd_unit_enable		(const gchar	*unit,
 gboolean	 fu_systemd_unit_disable	(const gchar	*unit,
 						 GError		**error);
 gchar		*fu_systemd_get_default_target	(GError		**error);
-
-G_END_DECLS

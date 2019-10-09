@@ -9,8 +9,6 @@
 #include <glib-object.h>
 #include <fwupd.h>
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_FIRMWARE_IMAGE (fu_firmware_image_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuFirmwareImage, fu_firmware_image, FU, FIRMWARE_IMAGE, GObject)
 
@@ -45,5 +43,3 @@ GBytes		*fu_firmware_image_get_bytes_chunk(FuFirmwareImage	*self,
 						 guint64		 address,
 						 guint64		 chunk_sz_max,
 						 GError			**error);
-
-G_END_DECLS

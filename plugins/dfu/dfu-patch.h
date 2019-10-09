@@ -9,8 +9,6 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 
-G_BEGIN_DECLS
-
 #define DFU_TYPE_PATCH (dfu_patch_get_type ())
 G_DECLARE_DERIVABLE_TYPE (DfuPatch, dfu_patch, DFU, PATCH, GObject)
 
@@ -51,5 +49,3 @@ GBytes		*dfu_patch_apply		(DfuPatch	*self,
 						 GError		**error);
 GBytes		*dfu_patch_get_checksum_old	(DfuPatch	*self);
 GBytes		*dfu_patch_get_checksum_new	(DfuPatch	*self);
-
-G_END_DECLS

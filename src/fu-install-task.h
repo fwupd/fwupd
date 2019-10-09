@@ -11,8 +11,6 @@
 
 #include "fu-device.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_TASK (fu_install_task_get_type ())
 G_DECLARE_FINAL_TYPE (FuInstallTask, fu_install_task, FU, INSTALL_TASK, GObject)
 
@@ -28,5 +26,3 @@ gboolean	 fu_install_task_check_requirements	(FuInstallTask	*self,
 const gchar	*fu_install_task_get_action_id		(FuInstallTask	*self);
 gint		 fu_install_task_compare		(FuInstallTask	*task1,
 							 FuInstallTask	*task2);
-
-G_END_DECLS

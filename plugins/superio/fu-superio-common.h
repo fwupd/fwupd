@@ -8,8 +8,6 @@
 
 #include "fu-plugin.h"
 
-G_BEGIN_DECLS
-
 /* for all LDNs */
 #define SIO_LDNxx_IDX_LDNSEL		0x07
 #define SIO_LDNxx_IDX_CHIPID1		0x20
@@ -127,5 +125,3 @@ gboolean	 fu_superio_inb		(gint		 fd,
 					 guint16	 port,
 					 guint8		*data,
 					 GError		**error);
-
-G_END_DECLS

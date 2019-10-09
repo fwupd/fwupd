@@ -9,8 +9,6 @@
 #include <glib.h>
 #include <gusb.h>
 
-G_BEGIN_DECLS
-
 /**
  * DfuRequest:
  * @DFU_REQUEST_DETACH:				Detach
@@ -156,5 +154,3 @@ const gchar	*dfu_version_to_string			(DfuVersion	 version);
 
 /* helpers */
 GBytes		*dfu_utils_bytes_join_array		(GPtrArray	*chunks);
-
-G_END_DECLS

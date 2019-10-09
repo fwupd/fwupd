@@ -8,8 +8,6 @@
 
 #include <glib.h>
 
-G_BEGIN_DECLS
-
 typedef enum {
 	FU_UNIFYING_HIDPP_MSG_FLAG_NONE,
 	FU_UNIFYING_HIDPP_MSG_FLAG_LONGER_TIMEOUT	= 1 << 0,
@@ -54,5 +52,3 @@ const gchar	*fu_unifying_hidpp_msg_dev_id_to_string		(FuUnifyingHidppMsg	*msg);
 const gchar	*fu_unifying_hidpp_msg_rpt_id_to_string		(FuUnifyingHidppMsg	*msg);
 const gchar	*fu_unifying_hidpp_msg_sub_id_to_string		(FuUnifyingHidppMsg	*msg);
 const gchar	*fu_unifying_hidpp_msg_fcn_id_to_string		(FuUnifyingHidppMsg	*msg);
-
-G_END_DECLS

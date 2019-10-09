@@ -8,8 +8,6 @@
 
 #include <glib-object.h>
 
-G_BEGIN_DECLS
-
 #define FU_WAC_PACKET_LEN				512
 
 #define FU_WAC_REPORT_ID_COMMAND			0x01
@@ -47,5 +45,3 @@ void		 fu_wac_buffer_dump			(const gchar	*title,
 							 guint8		 cmd,
 							 const guint8	*buf,
 							 gsize		 sz);
-
-G_END_DECLS

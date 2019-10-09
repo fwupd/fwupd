@@ -10,8 +10,6 @@
 
 #include <glib-object.h>
 
-G_BEGIN_DECLS
-
 #define RMI_PRODUCT_ID_LENGTH				10
 #define RMI_DEVICE_PDT_ENTRY_SIZE			6
 
@@ -36,5 +34,3 @@ FuSynapticsRmiFunction *fu_synaptics_rmi_function_parse	(GByteArray	*buf,
 gboolean	 fu_synaptics_rmi_device_writeln	(const gchar	*fn,
 							 const gchar	*buf,
 							 GError		**error);
-
-G_END_DECLS

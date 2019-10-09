@@ -12,8 +12,6 @@
 
 #include "fu-plugin.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_USB_DEVICE (fu_usb_device_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuUsbDevice, fu_usb_device, FU, USB_DEVICE, FuDevice)
 
@@ -48,5 +46,3 @@ void		 fu_usb_device_set_dev			(FuUsbDevice	*device,
 gboolean	 fu_usb_device_is_open			(FuUsbDevice	*device);
 GUdevDevice	*fu_usb_device_find_udev_device		(FuUsbDevice	*device,
 							 GError		**error);
-
-G_END_DECLS

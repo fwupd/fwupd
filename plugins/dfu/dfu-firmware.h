@@ -12,8 +12,6 @@
 #include "dfu-common.h"
 #include "dfu-image.h"
 
-G_BEGIN_DECLS
-
 #define DFU_TYPE_FIRMWARE (dfu_firmware_get_type ())
 G_DECLARE_DERIVABLE_TYPE (DfuFirmware, dfu_firmware, DFU, FIRMWARE, GObject)
 
@@ -117,5 +115,3 @@ void		 dfu_firmware_set_metadata	(DfuFirmware	*firmware,
 						 const gchar	*value);
 void		 dfu_firmware_remove_metadata	(DfuFirmware	*firmware,
 						 const gchar	*key);
-
-G_END_DECLS

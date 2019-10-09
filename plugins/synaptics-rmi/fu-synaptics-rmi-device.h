@@ -9,8 +9,6 @@
 #include "fu-synaptics-rmi-common.h"
 #include "fu-udev-device.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_SYNAPTICS_RMI_DEVICE (fu_synaptics_rmi_device_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuSynapticsRmiDevice, fu_synaptics_rmi_device, FU, SYNAPTICS_RMI_DEVICE, FuUdevDevice)
 
@@ -76,5 +74,3 @@ gboolean		 fu_synaptics_rmi_device_rebind_driver	(FuSynapticsRmiDevice	*self,
 								 GError			**error);
 gboolean		 fu_synaptics_rmi_device_poll_wait	(FuSynapticsRmiDevice	*self,
 								 GError			**error);
-
-G_END_DECLS

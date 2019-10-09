@@ -16,8 +16,6 @@
 
 #include "fwupd-enums.h"
 
-G_BEGIN_DECLS
-
 #define DFU_TYPE_TARGET (dfu_target_get_type ())
 G_DECLARE_DERIVABLE_TYPE (DfuTarget, dfu_target, DFU, TARGET, GUsbDevice)
 
@@ -88,5 +86,3 @@ gboolean	 dfu_target_download			(DfuTarget	*target,
 gboolean	 dfu_target_mass_erase			(DfuTarget	*target,
 							 GError		**error);
 DfuCipherKind	 dfu_target_get_cipher_kind		(DfuTarget	*target);
-
-G_END_DECLS

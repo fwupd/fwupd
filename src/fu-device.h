@@ -13,8 +13,6 @@
 #include "fu-quirks.h"
 #include "fu-common-version.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_DEVICE (fu_device_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuDevice, fu_device, FU, DEVICE, FwupdDevice)
 
@@ -247,5 +245,3 @@ gboolean	 fu_device_poll				(FuDevice	*self,
 							 GError		**error);
 void		 fu_device_set_poll_interval		(FuDevice	*self,
 							 guint		 interval);
-
-G_END_DECLS

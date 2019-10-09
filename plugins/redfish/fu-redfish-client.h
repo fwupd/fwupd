@@ -8,8 +8,6 @@
 
 #include <gio/gio.h>
 
-G_BEGIN_DECLS
-
 #define REDFISH_TYPE_CLIENT (fu_redfish_client_get_type ())
 
 G_DECLARE_FINAL_TYPE (FuRedfishClient, fu_redfish_client, FU, REDFISH_CLIENT, GObject)
@@ -37,5 +35,3 @@ gboolean	 fu_redfish_client_setup	(FuRedfishClient	*self,
 gboolean	 fu_redfish_client_coldplug	(FuRedfishClient	*self,
 						 GError			**error);
 GPtrArray	*fu_redfish_client_get_devices	(FuRedfishClient	*self);
-
-G_END_DECLS

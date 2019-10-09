@@ -10,8 +10,6 @@
 #include "fu-device.h"
 #include "fu-hash.h"
 
-G_BEGIN_DECLS
-
 void		 fu_plugin_init				(FuPlugin	*plugin);
 void		 fu_plugin_destroy			(FuPlugin	*plugin);
 gboolean	 fu_plugin_startup			(FuPlugin	*plugin,
@@ -79,5 +77,3 @@ gboolean	 fu_plugin_device_removed		(FuPlugin	*plugin,
 							 GError		**error);
 void		 fu_plugin_device_registered		(FuPlugin	*plugin,
 							 FuDevice	*dev);
-
-G_END_DECLS

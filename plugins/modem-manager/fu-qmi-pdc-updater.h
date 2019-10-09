@@ -9,8 +9,6 @@
 
 #include <libqmi-glib.h>
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_QMI_PDC_UPDATER (fu_qmi_pdc_updater_get_type ())
 G_DECLARE_FINAL_TYPE (FuQmiPdcUpdater, fu_qmi_pdc_updater, FU, QMI_PDC_UPDATER, GObject)
 
@@ -26,7 +24,5 @@ gboolean	 fu_qmi_pdc_updater_activate	(FuQmiPdcUpdater	*self,
 						 GError			**error);
 gboolean	 fu_qmi_pdc_updater_close	(FuQmiPdcUpdater	*self,
 						 GError			**error);
-
-G_END_DECLS
 
 #endif /* __FU_QMI_PDC_UPDATER_H */

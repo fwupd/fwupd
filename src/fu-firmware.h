@@ -11,8 +11,6 @@
 
 #include "fu-firmware-image.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_FIRMWARE (fu_firmware_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuFirmware, fu_firmware, FU, FIRMWARE, GObject)
 
@@ -78,5 +76,3 @@ FuFirmwareImage	*fu_firmware_get_image_default		(FuFirmware	*self,
 							 GError		**error);
 GBytes		*fu_firmware_get_image_default_bytes	(FuFirmware	*self,
 							 GError		**error);
-
-G_END_DECLS

@@ -16,8 +16,6 @@
 #include "dfu-target.h"
 #include "dfu-firmware.h"
 
-G_BEGIN_DECLS
-
 #define DFU_TYPE_DEVICE (dfu_device_get_type ())
 G_DECLARE_DERIVABLE_TYPE (DfuDevice, dfu_device, DFU, DEVICE, FuUsbDevice)
 
@@ -159,5 +157,3 @@ void		 dfu_device_set_timeout			(DfuDevice	*device,
 void		 dfu_device_set_usb_context		(DfuDevice	*device,
 							 GUsbContext	*quirks);
 GUsbContext	*dfu_device_get_usb_context		(DfuDevice	*device);
-
-G_END_DECLS

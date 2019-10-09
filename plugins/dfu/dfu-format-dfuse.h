@@ -11,8 +11,6 @@
 
 #include "dfu-firmware.h"
 
-G_BEGIN_DECLS
-
 DfuFirmwareFormat	 dfu_firmware_detect_dfuse	(GBytes		*bytes);
 GBytes			*dfu_firmware_to_dfuse		(DfuFirmware	*firmware,
 							 GError		**error);
@@ -20,5 +18,3 @@ gboolean		 dfu_firmware_from_dfuse	(DfuFirmware	*firmware,
 							 GBytes		*bytes,
 							 DfuFirmwareParseFlags flags,
 							 GError		**error);
-
-G_END_DECLS

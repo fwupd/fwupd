@@ -10,8 +10,6 @@
 #include <glib.h>
 #include <efivar.h>
 
-G_BEGIN_DECLS
-
 #define EFI_CAPSULE_HEADER_FLAGS_PERSIST_ACROSS_RESET	0x00010000
 #define EFI_CAPSULE_HEADER_FLAGS_POPULATE_SYSTEM_TABLE	0x00020000
 #define EFI_CAPSULE_HEADER_FLAGS_INITIATE_RESET		0x00040000
@@ -84,5 +82,3 @@ GPtrArray	*fu_uefi_get_esrt_entry_paths	(const gchar	*esrt_path,
 guint64		 fu_uefi_read_file_as_uint64	(const gchar	*path,
 						 const gchar	*attr_name);
 void		 fu_uefi_print_efivar_errors	(void);
-
-G_END_DECLS

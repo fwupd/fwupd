@@ -8,8 +8,6 @@
 
 #include <glib.h>
 
-G_BEGIN_DECLS
-
 /**
  * SECTION:fu-device-metadata
  * @short_description: a device helper object
@@ -63,5 +61,3 @@ G_BEGIN_DECLS
  * need to be handled as a capsule update.
  */
 #define FU_DEVICE_METADATA_UEFI_CAPSULE_FLAGS	"UefiCapsuleFlags"
-
-G_END_DECLS

@@ -8,8 +8,6 @@
 
 #include "fu-usb-device.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_UNIFYING_BOOTLOADER (fu_unifying_bootloader_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuUnifyingBootloader, fu_unifying_bootloader, FU, UNIFYING_BOOTLOADER, FuUsbDevice)
 
@@ -76,5 +74,3 @@ gboolean	 fu_unifying_bootloader_request		(FuUnifyingBootloader	*self,
 guint16		 fu_unifying_bootloader_get_addr_lo	(FuUnifyingBootloader	*self);
 guint16		 fu_unifying_bootloader_get_addr_hi	(FuUnifyingBootloader	*self);
 guint16		 fu_unifying_bootloader_get_blocksize	(FuUnifyingBootloader	*self);
-
-G_END_DECLS

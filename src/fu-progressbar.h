@@ -10,8 +10,6 @@
 
 #include "fwupd-enums.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_PROGRESSBAR (fu_progressbar_get_type ())
 G_DECLARE_FINAL_TYPE (FuProgressbar, fu_progressbar, FU, PROGRESSBAR, GObject)
 
@@ -27,5 +25,3 @@ void		 fu_progressbar_set_title		(FuProgressbar	*self,
 							 const gchar	*title);
 void		 fu_progressbar_set_interactive		(FuProgressbar *self,
 							 gboolean interactive);
-
-G_END_DECLS

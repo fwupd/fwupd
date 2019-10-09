@@ -8,8 +8,6 @@
 
 #include <gio/gio.h>
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_ROM (fu_rom_get_type ())
 G_DECLARE_FINAL_TYPE (FuRom, fu_rom, FU, ROM, GObject)
 
@@ -50,5 +48,3 @@ GBytes		*fu_rom_get_data			(FuRom		*self);
 guint16		 fu_rom_get_vendor			(FuRom		*self);
 guint16		 fu_rom_get_model			(FuRom		*self);
 const gchar	*fu_rom_kind_to_string			(FuRomKind	 kind);
-
-G_END_DECLS
