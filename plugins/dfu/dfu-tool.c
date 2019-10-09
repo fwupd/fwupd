@@ -1317,9 +1317,6 @@ dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
 		} else if (g_str_has_suffix (values[0], ".bin") ||
 			   g_str_has_suffix (values[0], ".rom")) {
 			format = DFU_FIRMWARE_FORMAT_RAW;
-		} else if (g_str_has_suffix (values[0], ".ihex") ||
-			   g_str_has_suffix (values[0], ".hex")) {
-			format = DFU_FIRMWARE_FORMAT_INTEL_HEX;
 		} else {
 			g_set_error_literal (error,
 					     FWUPD_ERROR,
