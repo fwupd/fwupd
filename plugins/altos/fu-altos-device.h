@@ -8,9 +8,5 @@
 
 #include "fu-plugin.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_ALTOS_DEVICE (fu_altos_device_get_type ())
 G_DECLARE_FINAL_TYPE (FuAltosDevice, fu_altos_device, FU, ALTOS_DEVICE, FuUsbDevice)
-
-G_END_DECLS

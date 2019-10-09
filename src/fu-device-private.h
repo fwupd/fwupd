@@ -9,8 +9,6 @@
 #include <fu-device.h>
 #include <xmlb.h>
 
-G_BEGIN_DECLS
-
 /**
  * FuDeviceInstanceFlags:
  * @FU_DEVICE_INSTANCE_FLAG_NONE:		No flags set
@@ -48,5 +46,3 @@ void		 fu_device_add_instance_id_full		(FuDevice	*self,
 							 const gchar	*instance_id,
 							 FuDeviceInstanceFlags flags);
 gchar		*fu_device_get_guids_as_str		(FuDevice	*self);
-
-G_END_DECLS

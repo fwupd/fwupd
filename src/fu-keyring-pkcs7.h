@@ -8,12 +8,8 @@
 
 #include "fu-keyring.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_KEYRING_PKCS7 (fu_keyring_pkcs7_get_type ())
 
 G_DECLARE_FINAL_TYPE (FuKeyringPkcs7, fu_keyring_pkcs7, FU, KEYRING_PKCS7, FuKeyring)
 
 FuKeyring	*fu_keyring_pkcs7_new		(void);
-
-G_END_DECLS

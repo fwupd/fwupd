@@ -10,8 +10,6 @@
 
 #include "fu-device.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_PENDING (fu_history_get_type ())
 G_DECLARE_FINAL_TYPE (FuHistory, fu_history, FU, HISTORY, GObject)
 
@@ -63,5 +61,3 @@ gboolean	 fu_history_add_approved_firmware	(FuHistory	*self,
 							 GError		**error);
 GPtrArray	*fu_history_get_approved_firmware	(FuHistory	*self,
 							 GError		**error);
-
-G_END_DECLS

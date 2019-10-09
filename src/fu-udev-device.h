@@ -11,8 +11,6 @@
 
 #include "fu-plugin.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_UDEV_DEVICE (fu_udev_device_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuUdevDevice, fu_udev_device, FU, UDEV_DEVICE, FuDevice)
 
@@ -38,5 +36,3 @@ gboolean	 fu_udev_device_set_physical_id		(FuUdevDevice	*self,
 							 const gchar	*subsystem,
 							 GError		**error);
 void		 fu_udev_device_dump			(FuUdevDevice	*self);
-
-G_END_DECLS

@@ -9,8 +9,6 @@
 
 #include <glib-object.h>
 
-G_BEGIN_DECLS
-
 #if !GLIB_CHECK_VERSION(2, 61, 1)
 
 /* Backported GRWLock autoptr support for older glib versions */
@@ -49,5 +47,3 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GRWLockWriterLocker, g_rw_lock_writer_locker_free)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GRWLockReaderLocker, g_rw_lock_reader_locker_free)
 
 #endif
-
-G_END_DECLS

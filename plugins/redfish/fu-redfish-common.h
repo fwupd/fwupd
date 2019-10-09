@@ -9,8 +9,6 @@
 #include <gio/gio.h>
 #include <efivar.h>
 
-G_BEGIN_DECLS
-
 /* SMBIOS */
 #define REDFISH_SMBIOS_TABLE_TYPE			0x42
 
@@ -46,5 +44,3 @@ GBytes		*fu_redfish_common_get_evivar_raw	(efi_guid_t	 guid,
 							 GError		**error);
 gchar		*fu_redfish_common_buffer_to_ipv4	(const guint8	*buffer);
 gchar		*fu_redfish_common_buffer_to_ipv6	(const guint8	*buffer);
-
-G_END_DECLS

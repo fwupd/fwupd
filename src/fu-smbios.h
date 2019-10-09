@@ -8,8 +8,6 @@
 
 #include <glib-object.h>
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_SMBIOS (fu_smbios_get_type ())
 
 G_DECLARE_FINAL_TYPE (FuSmbios, fu_smbios, FU, SMBIOS, GObject)
@@ -38,5 +36,3 @@ const gchar	*fu_smbios_get_string		(FuSmbios	*self,
 GBytes		*fu_smbios_get_data		(FuSmbios	*self,
 						 guint8		 type,
 						 GError		**error);
-
-G_END_DECLS

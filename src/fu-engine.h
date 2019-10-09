@@ -17,8 +17,6 @@
 #include "fu-install-task.h"
 #include "fu-plugin.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_ENGINE (fu_engine_get_type ())
 G_DECLARE_FINAL_TYPE (FuEngine, fu_engine, FU, ENGINE, GObject)
 
@@ -163,5 +161,3 @@ void		 fu_engine_set_silo			(FuEngine	*self,
 							 XbSilo		*silo);
 XbNode		*fu_engine_get_component_by_guids	(FuEngine	*self,
 							 FuDevice	*device);
-
-G_END_DECLS

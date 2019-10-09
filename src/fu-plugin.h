@@ -21,8 +21,6 @@
 #include "fu-udev-device.h"
 #include "fwupd-common.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_PLUGIN (fu_plugin_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuPlugin, fu_plugin, FU, PLUGIN, GObject)
 
@@ -151,5 +149,3 @@ void		 fu_plugin_add_compile_version		(FuPlugin	*self,
 							 const gchar	*version);
 gboolean	 fu_plugin_has_custom_flag		(FuPlugin	*self,
 							 const gchar	*flag);
-
-G_END_DECLS

@@ -8,8 +8,6 @@
 
 #include <glib.h>
 
-G_BEGIN_DECLS
-
 #define	FU_UNIFYING_DEVICE_VID				0x046d
 
 #define	FU_UNIFYING_DEVICE_PID_RUNTIME			0xc52b
@@ -28,5 +26,3 @@ gchar		*fu_unifying_format_version	(const gchar	*name,
 						 guint8		 major,
 						 guint8		 minor,
 						 guint16	 build);
-
-G_END_DECLS

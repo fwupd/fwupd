@@ -8,8 +8,6 @@
 
 #include <glib.h>
 
-G_BEGIN_DECLS
-
 /* little endian */
 typedef struct __attribute__((packed)) {
 	guint32		version;

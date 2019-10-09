@@ -10,8 +10,6 @@
 
 #include "fu-plugin.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_PLUGIN_LIST (fu_plugin_list_get_type ())
 G_DECLARE_FINAL_TYPE (FuPluginList, fu_plugin_list, FU, PLUGIN_LIST, GObject)
 
@@ -24,5 +22,3 @@ FuPlugin	*fu_plugin_list_find_by_name		(FuPluginList	*self,
 							 GError		**error);
 gboolean	 fu_plugin_list_depsolve		(FuPluginList	*self,
 							 GError		**error);
-
-G_END_DECLS

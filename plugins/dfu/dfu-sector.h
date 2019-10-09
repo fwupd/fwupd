@@ -9,8 +9,6 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 
-G_BEGIN_DECLS
-
 #define DFU_TYPE_SECTOR (dfu_sector_get_type ())
 G_DECLARE_DERIVABLE_TYPE (DfuSector, dfu_sector, DFU, SECTOR, GObject)
 
@@ -46,5 +44,3 @@ guint16		 dfu_sector_get_number		(DfuSector	*sector);
 gboolean	 dfu_sector_has_cap		(DfuSector	*sector,
 						 DfuSectorCap	 cap);
 gchar		*dfu_sector_to_string		(DfuSector	*sector);
-
-G_END_DECLS

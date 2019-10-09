@@ -8,8 +8,6 @@
 
 #include <glib-object.h>
 
-G_BEGIN_DECLS
-
 typedef enum {
 	CH_ERROR_NONE,
 	CH_ERROR_UNKNOWN_CMD,
@@ -51,5 +49,3 @@ typedef enum {
 } ChError;
 
 const gchar	*ch_strerror			(ChError	 error_enum);
-
-G_END_DECLS

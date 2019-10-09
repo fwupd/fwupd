@@ -8,8 +8,6 @@
 
 #include <gio/gio.h>
 
-G_BEGIN_DECLS
-
 /**
  * FuAppFlags:
  * @FU_APP_FLAGS_NONE:			No flags set
@@ -195,5 +193,3 @@ gchar		**fu_common_strnsplit		(const gchar	*str,
 						 gsize		 sz,
 						 const gchar	*delimiter,
 						 gint		 max_tokens);
-
-G_END_DECLS

@@ -11,8 +11,6 @@
 
 #include "fu-keyring-result.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_KEYRING (fu_keyring_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuKeyring, fu_keyring, FU, KEYRING, GObject)
 
@@ -84,5 +82,3 @@ GBytes		*fu_keyring_sign_data			(FuKeyring	*keyring,
 const gchar	*fu_keyring_get_name			(FuKeyring	*self);
 void		 fu_keyring_set_name			(FuKeyring	*self,
 							 const gchar	*name);
-
-G_END_DECLS

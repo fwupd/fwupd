@@ -11,8 +11,6 @@
 #include "fu-uefi-device.h"
 #include "fu-uefi-update-info.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_UEFI_DEVICE (fu_uefi_device_get_type ())
 G_DECLARE_FINAL_TYPE (FuUefiDevice, fu_uefi_device, FU, UEFI_DEVICE, FuDevice)
 
@@ -62,5 +60,3 @@ gboolean	 fu_uefi_device_write_update_info	(FuUefiDevice	*self,
 							 const gchar	*varname,
 							 const efi_guid_t *guid,
 							 GError		**error);
-
-G_END_DECLS

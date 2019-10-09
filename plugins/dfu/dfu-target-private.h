@@ -12,8 +12,6 @@
 #include "dfu-target.h"
 #include "dfu-sector.h"
 
-G_BEGIN_DECLS
-
 DfuTarget	*dfu_target_new				(void);
 
 GBytes		*dfu_target_upload_chunk		(DfuTarget	*target,
@@ -53,5 +51,3 @@ DfuSector	*dfu_target_get_sector_for_addr		(DfuTarget	*target,
 gboolean	 dfu_target_parse_sectors		(DfuTarget	*target,
 							 const gchar	*alt_name,
 							 GError		**error);
-
-G_END_DECLS

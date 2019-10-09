@@ -10,8 +10,6 @@
 
 #include "fu-io-channel.h"
 
-G_BEGIN_DECLS
-
 /*
  * Based on the HID++ documentation provided by Nestor Lopez Casado at:
  *   https://drive.google.com/folderview?id=0BxbRzx7vEV7eWmgwazJ3NUFfQ28&usp=sharing
@@ -148,5 +146,3 @@ gboolean	 fu_unifying_hidpp_receive	(FuIOChannel		*self,
 gboolean	 fu_unifying_hidpp_transfer	(FuIOChannel		*self,
 						 FuUnifyingHidppMsg	*msg,
 						 GError			**error);
-
-G_END_DECLS

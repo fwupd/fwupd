@@ -6,8 +6,6 @@
 
 #pragma once
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_UEFI_PCRS (fu_uefi_pcrs_get_type ())
 G_DECLARE_FINAL_TYPE (FuUefiPcrs, fu_uefi_pcrs, FU, UEFI_PCRS, GObject)
 
@@ -16,5 +14,3 @@ gboolean	 fu_uefi_pcrs_setup		(FuUefiPcrs	*self,
 						 GError		**error);
 GPtrArray	*fu_uefi_pcrs_get_checksums	(FuUefiPcrs	*self,
 						 guint		 idx);
-
-G_END_DECLS

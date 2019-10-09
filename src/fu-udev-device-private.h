@@ -8,8 +8,4 @@
 
 #include "fu-udev-device.h"
 
-G_BEGIN_DECLS
-
 void		 fu_udev_device_emit_changed		(FuUdevDevice	*self);
-
-G_END_DECLS

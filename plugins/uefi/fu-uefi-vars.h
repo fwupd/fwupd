@@ -9,8 +9,6 @@
 
 #include <glib.h>
 
-G_BEGIN_DECLS
-
 #define FU_UEFI_VARS_GUID_EFI_GLOBAL			"8be4df61-93ca-11d2-aa0d-00e098032b8c"
 #define FU_UEFI_VARS_GUID_FWUPDATE			"0abba7dc-e516-4167-bbf5-4d9d1c739416"
 #define FU_UEFI_VARS_GUID_UX_CAPSULE			"3b8c8162-188c-46a4-aec9-be43f1d65697"
@@ -44,5 +42,3 @@ gboolean	 fu_uefi_vars_delete		(const gchar	*guid,
 gboolean	 fu_uefi_vars_delete_with_glob	(const gchar	*guid,
 						 const gchar	*name_glob,
 						 GError		**error);
-
-G_END_DECLS

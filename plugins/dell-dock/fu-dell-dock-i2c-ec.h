@@ -21,14 +21,10 @@
 
 #include "fu-device.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_DELL_DOCK_EC (fu_dell_dock_ec_get_type ())
 G_DECLARE_FINAL_TYPE (FuDellDockEc, fu_dell_dock_ec, FU, DELL_DOCK_EC, FuDevice)
 
 FuDellDockEc 	*fu_dell_dock_ec_new			(FuDevice *symbiote);
-
-G_END_DECLS
 
 gboolean	 fu_dell_dock_ec_needs_tbt		(FuDevice *device);
 gboolean	 fu_dell_dock_ec_tbt_passive		(FuDevice *device);
