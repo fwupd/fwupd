@@ -14,7 +14,6 @@ dfu = static_library(
     'dfu-firmware.c',
     'dfu-format-dfu.c',
     'dfu-format-dfuse.c',
-    'dfu-format-metadata.c',
     'dfu-format-raw.c',
     'dfu-image.c',
     'dfu-patch.c',

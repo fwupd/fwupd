@@ -35,7 +35,6 @@
 static void dfu_firmware_finalize			 (GObject *object);
 
 typedef struct {
-	GHashTable		*metadata;
 	GPtrArray		*images;
 	guint16			 vid;
 	guint16			 pid;
@@ -61,7 +60,6 @@ dfu_firmware_init (DfuFirmware *firmware)
 	priv->pid = 0xffff;
 	priv->release = 0xffff;
 	priv->images = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	priv->metadata = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 }
 
 static void
@@ -71,7 +69,6 @@ dfu_firmware_finalize (GObject *object)
 	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
 
 	g_ptr_array_unref (priv->images);
-	g_hash_table_destroy (priv->metadata);
 
 	G_OBJECT_CLASS (dfu_firmware_parent_class)->finalize (object);
 }
@@ -417,68 +414,6 @@ dfu_firmware_parse_file (DfuFirmware *firmware, GFile *file,
 	return dfu_firmware_parse_data (firmware, bytes, flags, error);
 }
 
-/**
- * dfu_firmware_get_metadata:
- * @firmware: a #DfuFirmware
- * @key: metadata string key
- *
- * Gets metadata from the store with a specific key.
- *
- * Return value: the metadata value, or %NULL for unset
- **/
-const gchar *
-dfu_firmware_get_metadata (DfuFirmware *firmware, const gchar *key)
-{
-	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
-	return g_hash_table_lookup (priv->metadata, key);
-}
-
-/**
- * dfu_firmware_get_metadata_table:
- * @firmware: a #DfuFirmware
- *
- * Gets all metadata from the store.
- *
- * Return value: (transfer none): the metadata hash table
- **/
-GHashTable *
-dfu_firmware_get_metadata_table (DfuFirmware *firmware)
-{
-	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
-	return priv->metadata;
-}
-
-/**
- * dfu_firmware_set_metadata:
- * @firmware: a #DfuFirmware
- * @key: metadata string key
- * @value: metadata string value
- *
- * Sets a metadata value with a specific key.
- **/
-void
-dfu_firmware_set_metadata (DfuFirmware *firmware, const gchar *key, const gchar *value)
-{
-	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
-	g_debug ("adding metadata %s=%s", key, value);
-	g_hash_table_insert (priv->metadata, g_strdup (key), g_strdup (value));
-}
-
-/**
- * dfu_firmware_remove_metadata:
- * @firmware: a #DfuFirmware
- * @key: metadata string key
- *
- * Removes a metadata item from the store
- **/
-void
-dfu_firmware_remove_metadata (DfuFirmware *firmware, const gchar *key)
-{
-	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
-	g_debug ("removing metadata %s", key);
-	g_hash_table_remove (priv->metadata, key);
-}
-
 static gboolean
 dfu_firmware_check_acceptable_for_format (DfuFirmware *firmware, GError **error)
 {
@@ -602,7 +537,6 @@ dfu_firmware_to_string (DfuFirmware *firmware)
 	DfuImage *image;
 	GString *str;
 	g_autofree gchar *release_str = NULL;
-	g_autoptr(GList) keys = NULL;
 
 	g_return_val_if_fail (DFU_IS_FIRMWARE (firmware), NULL);
 
@@ -616,15 +550,6 @@ dfu_firmware_to_string (DfuFirmware *firmware)
 	g_string_append_printf (str, "format:      %s [0x%04x]\n",
 				dfu_firmware_format_to_string (priv->format),
 				priv->format);
-
-	/* print metadata */
-	keys = g_hash_table_get_keys (priv->metadata);
-	for (GList *l = keys; l != NULL; l = l->next) {
-		const gchar *key = l->data;
-		const gchar *value;
-		value = g_hash_table_lookup (priv->metadata, key);
-		g_string_append_printf (str, "metadata:    %s=%s\n", key, value);
-	}
 
 	/* print images */
 	for (guint i = 0; i < priv->images->len; i++) {

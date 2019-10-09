@@ -824,47 +824,6 @@ dfu_tool_set_address (DfuToolPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
-dfu_tool_set_metadata (DfuToolPrivate *priv, gchar **values, GError **error)
-{
-	g_autoptr(DfuFirmware) firmware = NULL;
-	g_autoptr(GFile) file = NULL;
-
-	/* check args */
-	if (g_strv_length (values) < 3) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "Invalid arguments, expected FILE KEY VALUE"
-				     " -- e.g. `firmware.dfu Licence GPL-2.0+");
-		return FALSE;
-	}
-
-	/* open */
-	file = g_file_new_for_path (values[0]);
-	firmware = dfu_firmware_new ();
-	if (!dfu_firmware_parse_file (firmware, file,
-				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      error)) {
-		return FALSE;
-	}
-
-	/* doesn't make sense for non-DFU */
-	if (dfu_firmware_get_format (firmware) == DFU_FIRMWARE_FORMAT_RAW) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "Only possible on DFU/DfuSe images, try convert");
-		return FALSE;
-	}
-
-	/* set metadata */
-	dfu_firmware_set_metadata (firmware, values[1], values[2]);
-
-	/* write out new file */
-	return dfu_firmware_write_file (firmware, file, error);
-}
-
-static gboolean
 dfu_tool_set_alt_setting (DfuToolPrivate *priv, gchar **values, GError **error)
 {
 	DfuImage *image;
@@ -2117,12 +2076,6 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Watch DFU devices being hotplugged"),
 		     dfu_tool_watch);
-	dfu_tool_add (priv->cmd_array,
-		     "set-metadata",
-		     "FILE KEY VALUE",
-		     /* TRANSLATORS: command description */
-		     _("Sets metadata on a firmware file"),
-		     dfu_tool_set_metadata);
 	dfu_tool_add (priv->cmd_array,
 		     "replace-data",
 		     NULL,

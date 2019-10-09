@@ -127,9 +127,6 @@ typedef enum {
 	DFU_VERSION_LAST
 } DfuVersion;
 
-#define DFU_METADATA_KEY_LICENSE		"License"
-#define DFU_METADATA_KEY_COPYRIGHT		"Copyright"
-
 const gchar	*dfu_state_to_string			(DfuState	 state);
 const gchar	*dfu_status_to_string			(DfuStatus	 status);
 const gchar	*dfu_version_to_string			(DfuVersion	 version);
