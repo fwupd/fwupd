@@ -11,7 +11,6 @@
 
 #include "dfu-firmware.h"
 
-DfuFirmwareFormat	 dfu_firmware_detect_raw	(GBytes		*bytes);
 GBytes			*dfu_firmware_to_raw		(DfuFirmware	*firmware,
 							GError		**error);
 gboolean		 dfu_firmware_from_raw		(DfuFirmware	*firmware,

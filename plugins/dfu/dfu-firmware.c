@@ -366,7 +366,7 @@ dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
 	if (priv->format == DFU_FIRMWARE_FORMAT_UNKNOWN)
 		priv->format = dfu_firmware_detect_dfu (bytes);
 	if (priv->format == DFU_FIRMWARE_FORMAT_UNKNOWN)
-		priv->format = dfu_firmware_detect_raw (bytes);
+		priv->format = DFU_FIRMWARE_FORMAT_RAW;
 
 	/* handled easily */
 	switch (priv->format) {
