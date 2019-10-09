@@ -1072,35 +1072,23 @@ _g_usb_device_get_interface_for_class (GUsbDevice *dev,
 	return 0xff;
 }
 
-/**
- * dfu_device_detach:
- * @device: a #DfuDevice
- * @error: a #GError, or %NULL
- *
- * Detaches the device putting it into DFU-mode.
- *
- * Return value: %TRUE for success
- **/
-gboolean
-dfu_device_detach (DfuDevice *device, GError **error)
+static gboolean
+dfu_device_detach (FuDevice *device, GError **error)
 {
-	DfuDevicePrivate *priv = GET_PRIVATE (device);
+	DfuDevice *self = DFU_DEVICE (device);
+	DfuDevicePrivate *priv = GET_PRIVATE (self);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	const guint16 timeout_reset_ms = 1000;
 	g_autoptr(GError) error_local = NULL;
 
-	g_return_val_if_fail (DFU_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (DFU_IS_DEVICE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* already in DFU mode */
-	if (!dfu_device_is_runtime (device)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Already in DFU mode; state is %s",
-			     dfu_state_to_string (priv->state));
+	if (!dfu_device_refresh_and_clear (self, error))
 		return FALSE;
-	}
+	if (!dfu_device_is_runtime (self))
+		return TRUE;
 
 	/* no backing USB device */
 	if (usb_device == NULL) {
@@ -1108,7 +1096,7 @@ dfu_device_detach (DfuDevice *device, GError **error)
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
 			     "failed to detach: no GUsbDevice for %s",
-			     dfu_device_get_platform_id (device));
+			     dfu_device_get_platform_id (self));
 		return FALSE;
 	}
 
@@ -1171,13 +1159,13 @@ dfu_device_detach (DfuDevice *device, GError **error)
 		}
 
 		/* wait for device to re-appear */
-		fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_DEVICE_RESTART);
-		if (!dfu_device_wait_for_replug (device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE, error))
+		fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+		if (!dfu_device_wait_for_replug (self, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE, error))
 			return FALSE;
 
 		/* wait 10 seconds for DFU mode to settle */
 		g_debug ("waiting for Jabra device to settle...");
-		fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_DEVICE_BUSY);
+		fu_device_set_status (device, FWUPD_STATUS_DEVICE_BUSY);
 		g_usleep (10 * G_USEC_PER_SEC);
 
 		/* hacky workaround until Jabra has a plugin */
@@ -1190,12 +1178,11 @@ dfu_device_detach (DfuDevice *device, GError **error)
 		return TRUE;
 
 	/* ensure interface is claimed */
-	if (!dfu_device_ensure_interface (device, error))
+	if (!dfu_device_ensure_interface (self, error))
 		return FALSE;
 
 	/* inform UI there's going to be a detach:attach */
-	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_DEVICE_RESTART);
-
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
 	if (!g_usb_device_control_transfer (usb_device,
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
@@ -1217,7 +1204,7 @@ dfu_device_detach (DfuDevice *device, GError **error)
 			g_debug ("ignoring while detaching: %s", error_local->message);
 		} else {
 			/* refresh the error code */
-			dfu_device_error_fixup (device, &error_local);
+			dfu_device_error_fixup (self, &error_local);
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -1230,13 +1217,14 @@ dfu_device_detach (DfuDevice *device, GError **error)
 	/* do a host reset */
 	if ((priv->attributes & DFU_DEVICE_ATTRIBUTE_WILL_DETACH) == 0) {
 		g_debug ("doing device reset as host will not self-reset");
-		if (!dfu_device_reset (device, error))
+		if (!dfu_device_reset (self, error))
 			return FALSE;
 	}
 
 	/* success */
 	priv->force_version = 0x0;
-	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_IDLE);
+	fu_device_set_status (device, FWUPD_STATUS_IDLE);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
 
@@ -1565,35 +1553,24 @@ dfu_device_reset (DfuDevice *device, GError **error)
 	return TRUE;
 }
 
-/**
- * dfu_device_attach:
- * @device: a #DfuDevice
- * @error: a #GError, or %NULL
- *
- * Move device from DFU mode to runtime.
- *
- * Return value: %TRUE for success
- **/
-gboolean
-dfu_device_attach (DfuDevice *device, GError **error)
+static gboolean
+dfu_device_attach (FuDevice *device, GError **error)
 {
-	DfuDevicePrivate *priv = GET_PRIVATE (device);
+	DfuDevice *self = DFU_DEVICE (device);
+	DfuDevicePrivate *priv = GET_PRIVATE (self);
 	g_autoptr(DfuTarget) target = NULL;
 
 	g_return_val_if_fail (DFU_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* already in runtime mode */
-	if (dfu_device_is_runtime (device)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Already in application runtime mode");
+	if (!dfu_device_refresh_and_clear (self, error))
 		return FALSE;
-	}
+	if (dfu_device_is_runtime (self))
+		return TRUE;
 
 	/* inform UI there's going to be a re-attach */
-	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_DEVICE_RESTART);
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
 
 	/* handle m-stack DFU bootloaders */
 	if (!priv->done_upload_or_download &&
@@ -1601,7 +1578,7 @@ dfu_device_attach (DfuDevice *device, GError **error)
 		g_autoptr(GBytes) chunk = NULL;
 		g_autoptr(DfuTarget) target_zero = NULL;
 		g_debug ("doing dummy upload to work around m-stack quirk");
-		target_zero = dfu_device_get_target_by_alt_setting (device, 0, error);
+		target_zero = dfu_device_get_target_by_alt_setting (self, 0, error);
 		if (target_zero == NULL)
 			return FALSE;
 		chunk = dfu_target_upload_chunk (target_zero, 0, 0, error);
@@ -1610,7 +1587,7 @@ dfu_device_attach (DfuDevice *device, GError **error)
 	}
 
 	/* get default target */
-	target = dfu_device_get_target_by_alt_setting (device, 0, error);
+	target = dfu_device_get_target_by_alt_setting (self, 0, error);
 	if (target == NULL)
 		return FALSE;
 
@@ -1619,18 +1596,19 @@ dfu_device_attach (DfuDevice *device, GError **error)
 		return FALSE;
 
 	/* some devices need yet another reset */
-	if (dfu_device_has_quirk (device, DFU_DEVICE_QUIRK_ATTACH_EXTRA_RESET)) {
-		if (!dfu_device_wait_for_replug (device,
+	if (dfu_device_has_quirk (self, DFU_DEVICE_QUIRK_ATTACH_EXTRA_RESET)) {
+		if (!dfu_device_wait_for_replug (self,
 						 FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE,
 						 error))
 			return FALSE;
-		if (!dfu_device_reset (device, error))
+		if (!dfu_device_reset (self, error))
 			return FALSE;
 	}
 
 	/* success */
 	priv->force_version = 0x0;
-	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_IDLE);
+	fu_device_set_status (device, FWUPD_STATUS_IDLE);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
 
@@ -2119,6 +2097,8 @@ dfu_device_class_init (DfuDeviceClass *klass)
 	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	klass_device->set_quirk_kv = dfu_device_set_quirk_kv;
 	klass_device->read_firmware = dfu_device_read_firmware;
+	klass_device->attach = dfu_device_attach;
+	klass_device->detach = dfu_device_detach;
 	klass_usb_device->open = dfu_device_open;
 	klass_usb_device->close = dfu_device_close;
 	klass_usb_device->probe = dfu_device_probe;

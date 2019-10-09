@@ -69,60 +69,6 @@ fu_plugin_usb_device_added (FuPlugin *plugin, FuUsbDevice *dev, GError **error)
 }
 
 gboolean
-fu_plugin_update_detach (FuPlugin *plugin, FuDevice *dev, GError **error)
-{
-	DfuDevice *device = DFU_DEVICE (dev);
-	g_autoptr(FuDeviceLocker) locker  = NULL;
-	g_autoptr(GError) error_local = NULL;
-
-	/* open it */
-	locker = fu_device_locker_new (device, &error_local);
-	if (locker == NULL)
-		return FALSE;
-	if (!dfu_device_refresh_and_clear (device, error))
-		return FALSE;
-
-	/* already in DFU mode */
-	if (!dfu_device_is_runtime (device))
-		return TRUE;
-
-	/* detach and USB reset */
-	if (!dfu_device_detach (device, error))
-		return FALSE;
-
-	/* wait for replug */
-	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	return TRUE;
-}
-
-gboolean
-fu_plugin_update_attach (FuPlugin *plugin, FuDevice *dev, GError **error)
-{
-	DfuDevice *device = DFU_DEVICE (dev);
-	g_autoptr(FuDeviceLocker) locker  = NULL;
-	g_autoptr(GError) error_local = NULL;
-
-	/* open it */
-	locker = fu_device_locker_new (device, &error_local);
-	if (locker == NULL)
-		return FALSE;
-	if (!dfu_device_refresh_and_clear (device, error))
-		return FALSE;
-
-	/* already in runtime mode */
-	if (dfu_device_is_runtime (device))
-		return TRUE;
-
-	/* attach it */
-	if (!dfu_device_attach (device, error))
-		return FALSE;
-
-	/* wait for replug */
-	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	return TRUE;
-}
-
-gboolean
 fu_plugin_update (FuPlugin *plugin,
 		  FuDevice *dev,
 		  GBytes *blob_fw,

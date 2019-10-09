@@ -1122,7 +1122,7 @@ dfu_tool_attach (DfuToolPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	if (!dfu_device_refresh_and_clear (device, error))
 		return FALSE;
-	return dfu_device_attach (device, error);
+	return fu_device_attach (FU_DEVICE (device), error);
 }
 
 static gboolean
@@ -1193,7 +1193,7 @@ dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 	/* APP -> DFU */
 	if (dfu_device_is_runtime (device)) {
 		g_debug ("detaching");
-		if (!dfu_device_detach (device, error))
+		if (!fu_device_detach (FU_DEVICE (device), error))
 			return FALSE;
 		if (!dfu_device_wait_for_replug (device,
 						 FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE,
@@ -1229,7 +1229,7 @@ dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* do host reset */
-	if (!dfu_device_attach (device, error))
+	if (!fu_device_attach (FU_DEVICE (device), error))
 		return FALSE;
 	if (!dfu_device_wait_for_replug (device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE, error))
 		return FALSE;
@@ -1318,7 +1318,7 @@ dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
 
 	/* APP -> DFU */
 	if (dfu_device_is_runtime (device)) {
-		if (!dfu_device_detach (device, error))
+		if (!fu_device_detach (FU_DEVICE (device), error))
 			return FALSE;
 		if (!dfu_device_wait_for_replug (device,
 						 FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE,
@@ -1337,7 +1337,7 @@ dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* do host reset */
-	if (!dfu_device_attach (device, error))
+	if (!fu_device_attach (FU_DEVICE (device), error))
 		return FALSE;
 	if (!dfu_device_wait_for_replug (device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE, error))
 		return FALSE;
@@ -1558,7 +1558,7 @@ dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 	/* APP -> DFU */
 	if (dfu_device_is_runtime (device)) {
 		g_debug ("detaching");
-		if (!dfu_device_detach (device, error))
+		if (!fu_device_detach (FU_DEVICE (device), error))
 			return FALSE;
 		if (!dfu_device_wait_for_replug (device, 5000, error))
 			return FALSE;
@@ -1631,7 +1631,7 @@ dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* do host reset */
-	if (!dfu_device_attach (device, error))
+	if (!fu_device_attach (FU_DEVICE (device), error))
 		return FALSE;
 	if (!dfu_device_wait_for_replug (device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE, error))
 		return FALSE;
@@ -1685,7 +1685,7 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 
 	/* APP -> DFU */
 	if (dfu_device_is_runtime (device)) {
-		if (!dfu_device_detach (device, error))
+		if (!fu_device_detach (FU_DEVICE (device), error))
 			return FALSE;
 		if (!dfu_device_wait_for_replug (device,
 						 FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE,
@@ -1709,7 +1709,7 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* do host reset */
-	if (!dfu_device_attach (device, error))
+	if (!fu_device_attach (FU_DEVICE (device), error))
 		return FALSE;
 	if (!dfu_device_wait_for_replug (device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE, error))
 		return FALSE;
@@ -1918,7 +1918,7 @@ dfu_tool_detach (DfuToolPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	if (!dfu_device_refresh_and_clear (device, error))
 		return FALSE;
-	return dfu_device_detach (device, error);
+	return fu_device_detach (FU_DEVICE (device), error);
 }
 
 static gboolean
