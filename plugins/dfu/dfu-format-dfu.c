@@ -137,7 +137,6 @@ dfu_firmware_from_dfu (DfuFirmware *firmware,
 		       GError **error)
 {
 	DfuFirmwareFooter *ftr;
-	const gchar *cipher_str;
 	gsize len;
 	guint32 crc;
 	guint32 crc_new;
@@ -212,15 +211,6 @@ dfu_firmware_from_dfu (DfuFirmware *firmware,
 		g_autoptr(GBytes) md = g_bytes_new (&data[offset], ftr->len);
 		if (!dfu_firmware_from_metadata (firmware, md, flags, error))
 			return FALSE;
-	}
-
-	/* set this automatically */
-	cipher_str = dfu_firmware_get_metadata (firmware, DFU_METADATA_KEY_CIPHER_KIND);
-	if (cipher_str != NULL) {
-		if (g_strcmp0 (cipher_str, "XTEA") == 0)
-			dfu_firmware_set_cipher_kind (firmware, DFU_CIPHER_KIND_XTEA);
-		else
-			g_warning ("Unknown CipherKind: %s", cipher_str);
 	}
 
 	/* parse DfuSe prefix */

@@ -12,7 +12,6 @@
 #include <glib/gi18n.h>
 #include <glib-unix.h>
 
-#include "dfu-cipher-xtea.h"
 #include "dfu-device-private.h"
 #include "dfu-patch.h"
 #include "dfu-sector.h"
@@ -1472,189 +1471,6 @@ dfu_tool_watch_cancelled_cb (GCancellable *cancellable, gpointer user_data)
 	g_main_loop_quit (loop);
 }
 
-static guint8 *
-dfu_tool_get_firmware_contents_default (DfuFirmware *firmware,
-					gsize *length,
-					GError **error)
-{
-	DfuElement *element;
-	DfuImage *image;
-	GBytes *contents;
-
-	image = dfu_firmware_get_image_default (firmware);
-	if (image == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "No default image");
-		return NULL;
-	}
-	element = dfu_image_get_element (image, 0);
-	if (element == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "No default element");
-		return NULL;
-	}
-	contents = dfu_element_get_contents (element);
-	if (contents == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "No image contents");
-		return NULL;
-	}
-	return (guint8 *) g_bytes_get_data (contents, length);
-}
-
-static gboolean
-dfu_tool_encrypt (DfuToolPrivate *priv, gchar **values, GError **error)
-{
-	gsize len;
-	guint8 *data;
-	g_autoptr(DfuFirmware) firmware = NULL;
-	g_autoptr(GFile) file_in = NULL;
-	g_autoptr(GFile) file_out = NULL;
-
-	/* check args */
-	if (g_strv_length (values) < 4) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "Invalid arguments, expected "
-				     "FILENAME-IN FILENAME-OUT TYPE KEY"
-				     " -- e.g. firmware.dfu firmware.xdfu xtea deadbeef");
-		return FALSE;
-	}
-
-	/* check extensions */
-	if (!priv->force) {
-		if (!g_str_has_suffix (values[0], ".dfu")) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_NOT_SUPPORTED,
-					     "Invalid filename, expected *.dfu");
-			return FALSE;
-		}
-		if (!g_str_has_suffix (values[1], ".xdfu")) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_NOT_SUPPORTED,
-					     "Invalid filename, expected *.xdfu");
-			return FALSE;
-		}
-	}
-
-	/* open */
-	file_in = g_file_new_for_path (values[0]);
-	firmware = dfu_firmware_new ();
-	if (!dfu_firmware_parse_file (firmware, file_in,
-				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      error)) {
-		return FALSE;
-	}
-
-	/* get data */
-	data = dfu_tool_get_firmware_contents_default (firmware, &len, error);
-	if (data == NULL)
-		return FALSE;
-
-	/* check type */
-	if (g_strcmp0 (values[2], "xtea") == 0) {
-		if (!dfu_cipher_encrypt_xtea (values[3], data, (guint32) len, error))
-			return FALSE;
-		dfu_firmware_set_metadata (firmware,
-					   DFU_METADATA_KEY_CIPHER_KIND,
-					   "XTEA");
-	} else {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "unknown type '%s', expected [xtea]",
-			     values[2]);
-		return FALSE;
-	}
-
-	/* write out new file */
-	file_out = g_file_new_for_path (values[1]);
-	g_debug ("wrote %s", values[1]);
-	return dfu_firmware_write_file (firmware, file_out, error);
-}
-
-static gboolean
-dfu_tool_decrypt (DfuToolPrivate *priv, gchar **values, GError **error)
-{
-	gsize len;
-	guint8 *data;
-	g_autoptr(DfuFirmware) firmware = NULL;
-	g_autoptr(GFile) file_in = NULL;
-	g_autoptr(GFile) file_out = NULL;
-
-	/* check args */
-	if (g_strv_length (values) < 4) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "Invalid arguments, expected "
-				     "FILENAME-IN FILENAME-OUT TYPE KEY"
-				     " -- e.g. firmware.xdfu firmware.dfu xtea deadbeef");
-		return FALSE;
-	}
-
-	/* check extensions */
-	if (!priv->force) {
-		if (!g_str_has_suffix (values[0], ".xdfu")) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_NOT_SUPPORTED,
-					     "Invalid filename, expected *.xdfu");
-			return FALSE;
-		}
-		if (!g_str_has_suffix (values[1], ".dfu")) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_NOT_SUPPORTED,
-					     "Invalid filename, expected *.dfu");
-			return FALSE;
-		}
-	}
-
-	/* open */
-	file_in = g_file_new_for_path (values[0]);
-	firmware = dfu_firmware_new ();
-	if (!dfu_firmware_parse_file (firmware, file_in,
-				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      error)) {
-		return FALSE;
-	}
-
-	/* get data */
-	data = dfu_tool_get_firmware_contents_default (firmware, &len, error);
-	if (data == NULL)
-		return FALSE;
-
-	/* check type */
-	if (g_strcmp0 (values[2], "xtea") == 0) {
-		if (!dfu_cipher_decrypt_xtea (values[3], data, (guint32) len, error))
-			return FALSE;
-		dfu_firmware_remove_metadata (firmware,
-					      DFU_METADATA_KEY_CIPHER_KIND);
-	} else {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "unknown type '%s', expected [xtea]",
-			     values[2]);
-		return FALSE;
-	}
-
-	/* write out new file */
-	file_out = g_file_new_for_path (values[1]);
-	g_debug ("wrote %s", values[1]);
-	return dfu_firmware_write_file (firmware, file_out, error);
-}
-
 static gboolean
 dfu_tool_watch (DfuToolPrivate *priv, gchar **values, GError **error)
 {
@@ -1851,11 +1667,6 @@ dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 		}
 	}
 
-	/* allow forcing firmware kinds */
-	if (priv->force) {
-		flags |= DFU_TARGET_TRANSFER_FLAG_ANY_CIPHER;
-	}
-
 	/* transfer */
 	if (!dfu_target_download (target, image, flags, error))
 		return FALSE;
@@ -1928,7 +1739,6 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 	if (priv->force) {
 		flags |= DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID;
 		flags |= DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID;
-		flags |= DFU_TARGET_TRANSFER_FLAG_ANY_CIPHER;
 	}
 
 	/* transfer */
@@ -1954,7 +1764,6 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 static void
 dfu_tool_list_target (DfuTarget *target)
 {
-	DfuCipherKind cipher_kind;
 	GPtrArray *sectors;
 	const gchar *tmp;
 	g_autofree gchar *alt_id = NULL;
@@ -1975,15 +1784,6 @@ dfu_tool_list_target (DfuTarget *target)
 		g_autofree gchar *str = NULL;
 		str = g_strdup_printf ("Error: %s", error_local->message);
 		dfu_tool_print_indent (_("Name"), str, 2);
-	}
-
-	/* this is optional */
-	cipher_kind = dfu_target_get_cipher_kind (target);
-	if (cipher_kind != DFU_CIPHER_KIND_NONE) {
-		/* TRANSLATORS: this is the encryption method used when writing  */
-		dfu_tool_print_indent (_("Cipher"),
-				       dfu_cipher_kind_to_string (cipher_kind),
-				       2);
 	}
 
 	/* print sector information */
@@ -2317,18 +2117,6 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Watch DFU devices being hotplugged"),
 		     dfu_tool_watch);
-	dfu_tool_add (priv->cmd_array,
-		     "encrypt",
-		     "FILENAME-IN FILENAME-OUT TYPE KEY",
-		     /* TRANSLATORS: command description */
-		     _("Encrypt firmware data"),
-		     dfu_tool_encrypt);
-	dfu_tool_add (priv->cmd_array,
-		     "decrypt",
-		     "FILENAME-IN FILENAME-OUT TYPE KEY",
-		     /* TRANSLATORS: command description */
-		     _("Decrypt firmware data"),
-		     dfu_tool_decrypt);
 	dfu_tool_add (priv->cmd_array,
 		     "set-metadata",
 		     "FILE KEY VALUE",
