@@ -116,9 +116,9 @@ udev_device_get_sysattr_guint64 (GUdevDevice *device,
 }
 
 static guint16
-fu_plugin_thunderbolt_udev_get_id (GUdevDevice *device,
-				   const gchar *name,
-				   GError **error)
+fu_plugin_thunderbolt_udev_get_uint16 (GUdevDevice *device,
+				       const gchar *name,
+				       GError **error)
 {
 
 	guint64 id = 0;
@@ -130,7 +130,8 @@ fu_plugin_thunderbolt_udev_get_id (GUdevDevice *device,
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
-			     "vendor id overflows");
+			     "%s overflows",
+			     name);
 		return 0x0;
 	}
 
@@ -280,6 +281,7 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	gboolean is_native = FALSE;
 	guint16 did;
 	guint16 vid;
+	guint16 gen;
 	g_autofree gchar *id = NULL;
 	g_autofree gchar *version = NULL;
 	g_autofree gchar *vendor_id = NULL;
@@ -287,6 +289,7 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(GError) error_vid = NULL;
 	g_autoptr(GError) error_did = NULL;
+	g_autoptr(GError) error_gen = NULL;
 	g_autoptr(GError) error_setup = NULL;
 
 	uuid = g_udev_device_get_sysfs_attr (device, "unique_id");
@@ -313,13 +316,18 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 		return;
 	}
 
-	vid = fu_plugin_thunderbolt_udev_get_id (device, "vendor", &error_vid);
+	vid = fu_plugin_thunderbolt_udev_get_uint16 (device, "vendor", &error_vid);
 	if (vid == 0x0)
 		g_warning ("failed to get Vendor ID: %s", error_vid->message);
 
-	did = fu_plugin_thunderbolt_udev_get_id (device, "device", &error_did);
+	did = fu_plugin_thunderbolt_udev_get_uint16 (device, "device", &error_did);
 	if (did == 0x0)
 		g_warning ("failed to get Device ID: %s", error_did->message);
+
+	/* requires kernel 5.5 or later, non-fatal if not available */
+	gen = fu_plugin_thunderbolt_udev_get_uint16 (device, "generation", &error_gen);
+	if (gen == 0)
+		g_debug ("Unable to read generation: %s", error_gen->message);
 
 	dev = fu_device_new ();
 
@@ -349,7 +357,9 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	}
 	if (!is_safemode) {
 		if (fu_plugin_thunderbolt_can_update (device)) {
-			if (is_host) {
+			/* USB4 controllers don't have a concept of legacy vs native
+			 * so don't try to read a native attribute from their NVM */
+			if (is_host && gen < 4) {
 				g_autoptr(GError) native_error = NULL;
 				if (!fu_plugin_thunderbolt_is_native (device,
 								      &is_native,
