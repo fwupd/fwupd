@@ -48,6 +48,10 @@ gboolean	 fu_firmware_parse			(FuFirmware	*self,
 							 GBytes		*fw,
 							 FwupdInstallFlags flags,
 							 GError		**error);
+gboolean	 fu_firmware_parse_file			(FuFirmware	*self,
+							 GFile		*file,
+							 FwupdInstallFlags flags,
+							 GError		**error);
 gboolean	 fu_firmware_parse_full			(FuFirmware	*self,
 							 GBytes		*fw,
 							 guint64	 addr_start,
@@ -55,6 +59,9 @@ gboolean	 fu_firmware_parse_full			(FuFirmware	*self,
 							 FwupdInstallFlags flags,
 							 GError		**error);
 GBytes		*fu_firmware_write			(FuFirmware	*self,
+							 GError		**error);
+gboolean	 fu_firmware_write_file			(FuFirmware	*self,
+							 GFile		*file,
 							 GError		**error);
 
 void		 fu_firmware_add_image			(FuFirmware	*self,
