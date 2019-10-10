@@ -16,7 +16,6 @@ dfu = static_library(
     'dfu-format-dfuse.c',
     'dfu-format-raw.c',
     'dfu-image.c',
-    'dfu-patch.c',
     'dfu-sector.c',
     'dfu-target.c',
     'dfu-target-stm.c',
