@@ -22,6 +22,7 @@
 #include "fu-config.h"
 #include "fu-device-list.h"
 #include "fu-device-private.h"
+#include "fu-dfu-firmware.h"
 #include "fu-engine.h"
 #include "fu-ihex-firmware.h"
 #include "fu-quirks.h"
@@ -3948,6 +3949,49 @@ fu_firmware_srec_tokenization_func (void)
 }
 
 static void
+fu_firmware_dfu_func (void)
+{
+	gboolean ret;
+	g_autofree gchar *filename_dfu = NULL;
+	g_autofree gchar *filename_ref = NULL;
+	g_autoptr(FuFirmware) firmware = fu_dfu_firmware_new ();
+	g_autoptr(GBytes) data_ref = NULL;
+	g_autoptr(GBytes) data_dfu = NULL;
+	g_autoptr(GBytes) data_bin = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GFile) file_bin = NULL;
+	g_autoptr(GFile) file_dfu = NULL;
+
+	filename_dfu = fu_test_get_filename (TESTDATADIR, "firmware.dfu");
+	g_assert (filename_dfu != NULL);
+	file_dfu = g_file_new_for_path (filename_dfu);
+	data_dfu = g_file_load_bytes (file_dfu, NULL, NULL, &error);
+	g_assert_no_error (error);
+	g_assert (data_dfu != NULL);
+	ret = fu_firmware_parse (firmware, data_dfu, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	g_assert_cmpint (fu_dfu_firmware_get_vid (FU_DFU_FIRMWARE (firmware)), ==, 0x1234);
+	g_assert_cmpint (fu_dfu_firmware_get_pid (FU_DFU_FIRMWARE (firmware)), ==, 0x4321);
+	g_assert_cmpint (fu_dfu_firmware_get_release (FU_DFU_FIRMWARE (firmware)), ==, 0xdead);
+	data_bin = fu_firmware_get_image_default_bytes (firmware, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (data_bin);
+	g_assert_cmpint (g_bytes_get_size (data_bin), ==, 136);
+
+	/* did we match the reference file? */
+	filename_ref = fu_test_get_filename (TESTDATADIR, "firmware.bin");
+	g_assert (filename_ref != NULL);
+	file_bin = g_file_new_for_path (filename_ref);
+	data_ref = g_file_load_bytes (file_bin, NULL, NULL, &error);
+	g_assert_no_error (error);
+	g_assert (data_ref != NULL);
+	ret = fu_common_bytes_compare (data_bin, data_ref, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+}
+
+static void
 fu_memcpy_func (void)
 {
 	const guint8 src[] = {'a', 'b', 'c', 'd', 'e' };
@@ -4100,6 +4144,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/firmware{ihex-signed}", fu_firmware_ihex_signed_func);
 	g_test_add_func ("/fwupd/firmware{srec-tokenization}", fu_firmware_srec_tokenization_func);
 	g_test_add_func ("/fwupd/firmware{srec}", fu_firmware_srec_func);
+	g_test_add_func ("/fwupd/firmware{dfu}", fu_firmware_dfu_func);
 	g_test_add_func ("/fwupd/archive{invalid}", fu_archive_invalid_func);
 	g_test_add_func ("/fwupd/archive{cab}", fu_archive_cab_func);
 	g_test_add_func ("/fwupd/engine{requirements-other-device}", fu_engine_requirements_other_device_func);

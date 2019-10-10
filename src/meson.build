@@ -16,6 +16,7 @@ libfwupdprivate_src = [
   'fu-common-version.c',
   'fu-device.c',
   'fu-device-locker.c',
+  'fu-dfu-firmware.c',
   'fu-firmware.c',
   'fu-firmware-common.c',
   'fu-firmware-image.c',
