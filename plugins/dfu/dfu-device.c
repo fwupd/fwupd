@@ -1998,11 +1998,12 @@ dfu_device_get_quirks_as_string (DfuDevice *device)
 	return g_string_free (str, FALSE);
 }
 
-static GBytes *
+static FuFirmware *
 dfu_device_read_firmware (FuDevice *device, GError **error)
 {
 	DfuDevice *self = DFU_DEVICE (device);
 	g_autoptr(DfuFirmware) dfu_firmware = NULL;
+	g_autoptr(GBytes) fw = NULL;
 
 	/* get data from hardware */
 	g_debug ("uploading from device->host");
@@ -2015,7 +2016,8 @@ dfu_device_read_firmware (FuDevice *device, GError **error)
 		return NULL;
 
 	/* get the checksum */
-	return dfu_firmware_write_data (dfu_firmware, error);
+	fw = dfu_firmware_write_data (dfu_firmware, error);
+	return fu_firmware_new_from_bytes (fw);
 }
 
 static gboolean

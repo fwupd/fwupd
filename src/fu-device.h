@@ -26,7 +26,7 @@ struct _FuDeviceClass
 							 FuFirmware	*firmware,
 							 FwupdInstallFlags flags,
 							 GError		**error);
-	GBytes			*(*read_firmware)	(FuDevice	*self,
+	FuFirmware		*(*read_firmware)	(FuDevice	*self,
 							 GError		**error);
 	gboolean		 (*detach)		(FuDevice	*self,
 							 GError		**error);
@@ -218,7 +218,7 @@ FuFirmware	*fu_device_prepare_firmware		(FuDevice	*self,
 							 GBytes		*fw,
 							 FwupdInstallFlags flags,
 							 GError		**error);
-GBytes		*fu_device_read_firmware		(FuDevice	*self,
+FuFirmware	*fu_device_read_firmware		(FuDevice	*self,
 							 GError		**error);
 gboolean	 fu_device_attach			(FuDevice	*self,
 							 GError		**error);

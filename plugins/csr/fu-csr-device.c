@@ -259,11 +259,12 @@ fu_csr_device_upload_chunk (FuCsrDevice *self, GError **error)
 			    sz - FU_CSR_COMMAND_HEADER_SIZE);
 }
 
-static GBytes *
+static FuFirmware *
 fu_csr_device_upload (FuDevice *device, GError **error)
 {
 	FuCsrDevice *self = FU_CSR_DEVICE (device);
 	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr(GBytes) fw = NULL;
 	guint32 total_sz = 0;
 	gsize done_sz = 0;
 
@@ -323,7 +324,8 @@ fu_csr_device_upload (FuDevice *device, GError **error)
 	}
 
 	/* notify UI */
-	return dfu_utils_bytes_join_array (chunks);
+	fw = dfu_utils_bytes_join_array (chunks);
+	return fu_firmware_new_from_bytes (fw);
 }
 
 static gboolean

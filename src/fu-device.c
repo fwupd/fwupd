@@ -1899,11 +1899,11 @@ fu_device_prepare_firmware (FuDevice *self,
  *
  * Reads firmware from the device by calling a plugin-specific vfunc.
  *
- * Returns: (transfer full): A #GBytes, or %NULL for error
+ * Returns: (transfer full): A #FuFirmware, or %NULL for error
  *
  * Since: 1.0.8
  **/
-GBytes *
+FuFirmware *
 fu_device_read_firmware (FuDevice *self, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
