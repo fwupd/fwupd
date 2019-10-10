@@ -29,7 +29,6 @@
  * DFU 1.0 or 1.1 specification. The list of supported quirks is thus:
  *
  * * `none`:			No device quirks
- * * `action-required`:		User has to do something manually, e.g. press a button
  * * `attach-extra-reset`:	Device needs resetting twice for attach
  * * `attach-upload-download`:	An upload or download is required for attach
  * * `force-dfu-mode`:		Force DFU mode
@@ -48,7 +47,7 @@
  *
  * Since: 1.0.1
  */
-#define	FU_QUIRKS_DFU_FLAGS			"DfuFlags"
+#define	FU_QUIRKS_DFU_FLAGS			"Flags"
 
 /**
  * FU_QUIRKS_DFU_FORCE_VERSION:
@@ -94,7 +93,6 @@ static void dfu_device_finalize			 (GObject *object);
 
 typedef struct {
 	DfuDeviceAttributes	 attributes;
-	DfuDeviceQuirks		 quirks;
 	DfuState		 state;
 	DfuStatus		 status;
 	GPtrArray		*targets;
@@ -244,7 +242,7 @@ static void
 dfu_device_guess_state_from_iface (DfuDevice *device, GUsbInterface *iface)
 {
 	/* some devices use the wrong interface */
-	if (dfu_device_has_quirk (device, DFU_DEVICE_QUIRK_FORCE_DFU_MODE)) {
+	if (fu_device_has_custom_flag (FU_DEVICE (device), "force-dfu-mode")) {
 		g_debug ("quirking device into DFU mode");
 		dfu_device_set_state (device, DFU_STATE_DFU_IDLE);
 		return;
@@ -285,7 +283,7 @@ dfu_device_add_targets (DfuDevice *device, GError **error)
 		GUsbInterface *iface = g_ptr_array_index (ifaces, i);
 
 		/* some devices don't use the right class and subclass */
-		if (!dfu_device_has_quirk (device, DFU_DEVICE_QUIRK_USE_ANY_INTERFACE)) {
+		if (!fu_device_has_custom_flag (FU_DEVICE (device), "use-any-interface")) {
 			if (g_usb_interface_get_class (iface) != G_USB_DEVICE_CLASS_APPLICATION_SPECIFIC)
 				continue;
 			if (g_usb_interface_get_subclass (iface) != 0x01)
@@ -361,7 +359,7 @@ dfu_device_add_targets (DfuDevice *device, GError **error)
 
 	/* save for reset */
 	if (priv->state == DFU_STATE_APP_IDLE ||
-	    (priv->quirks & DFU_DEVICE_QUIRK_NO_PID_CHANGE)) {
+	    fu_device_has_custom_flag (FU_DEVICE (device), "no-pid-change")) {
 		priv->runtime_vid = g_usb_device_get_vid (usb_device);
 		priv->runtime_pid = g_usb_device_get_pid (usb_device);
 		priv->runtime_release = g_usb_device_get_release (usb_device);
@@ -369,7 +367,7 @@ dfu_device_add_targets (DfuDevice *device, GError **error)
 
 	/* the device has no DFU runtime, so cheat */
 	if (priv->targets->len == 0 &&
-	    priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
+	    fu_device_has_custom_flag (FU_DEVICE (device), "no-dfu-runtime")) {
 		g_debug ("no DFU runtime, so faking device");
 		dfu_device_set_state (device, DFU_STATE_APP_IDLE);
 		priv->iface_number = 0xff;
@@ -391,27 +389,10 @@ dfu_device_add_targets (DfuDevice *device, GError **error)
 	}
 
 	/* the device upload is broken */
-	if (priv->quirks & DFU_DEVICE_QUIRK_IGNORE_UPLOAD)
+	if (fu_device_has_custom_flag (FU_DEVICE (device), "ignore-upload"))
 		priv->attributes &= ~DFU_DEVICE_ATTRIBUTE_CAN_UPLOAD;
 
 	return TRUE;
-}
-
-/**
- * dfu_device_has_quirk: (skip)
- * @device: A #DfuDevice
- * @quirk: A #DfuDeviceQuirks
- *
- * Returns if a device has a specific quirk
- *
- * Return value: %TRUE if the device has this quirk
- **/
-gboolean
-dfu_device_has_quirk (DfuDevice *device, DfuDeviceQuirks quirk)
-{
-	DfuDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (DFU_IS_DEVICE (device), 0x0);
-	return (priv->quirks & quirk) > 0;
 }
 
 /**
@@ -539,60 +520,6 @@ dfu_device_remove_attribute (DfuDevice *device, DfuDeviceAttributes attribute)
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (DFU_IS_DEVICE (device));
 	priv->attributes &= ~attribute;
-}
-
-static void
-dfu_device_set_quirks_from_string (DfuDevice *device, const gchar *str)
-{
-	DfuDevicePrivate *priv = GET_PRIVATE (device);
-	g_auto(GStrv) split = g_strsplit (str, ",", -1);
-	priv->quirks = DFU_DEVICE_QUIRK_NONE;
-	for (guint i = 0; split[i] != NULL; i++) {
-		if (g_strcmp0 (split[i], "ignore-polltimeout") == 0) {
-			priv->quirks |= DFU_DEVICE_QUIRK_IGNORE_POLLTIMEOUT;
-			continue;
-		}
-		if (g_strcmp0 (split[i], "force-dfu-mode") == 0) {
-			priv->quirks |= DFU_DEVICE_QUIRK_FORCE_DFU_MODE;
-			continue;
-		}
-		if (g_strcmp0 (split[i], "no-pid-change") == 0) {
-			priv->quirks |= DFU_DEVICE_QUIRK_NO_PID_CHANGE;
-			continue;
-		}
-		if (g_strcmp0 (split[i], "no-get-status-upload") == 0) {
-			priv->quirks |= DFU_DEVICE_QUIRK_NO_GET_STATUS_UPLOAD;
-			continue;
-		}
-		if (g_strcmp0 (split[i], "no-dfu-runtime") == 0) {
-			priv->quirks |= DFU_DEVICE_QUIRK_NO_DFU_RUNTIME;
-			continue;
-		}
-		if (g_strcmp0 (split[i], "attach-upload-download") == 0) {
-			priv->quirks |= DFU_DEVICE_QUIRK_ATTACH_UPLOAD_DOWNLOAD;
-			continue;
-		}
-		if (g_strcmp0 (split[i], "action-required") == 0) {
-			priv->quirks |= DFU_DEVICE_QUIRK_ACTION_REQUIRED;
-			continue;
-		}
-		if (g_strcmp0 (split[i], "ignore-upload") == 0) {
-			priv->quirks |= DFU_DEVICE_QUIRK_IGNORE_UPLOAD;
-			continue;
-		}
-		if (g_strcmp0 (split[i], "attach-extra-reset") == 0) {
-			priv->quirks |= DFU_DEVICE_QUIRK_ATTACH_EXTRA_RESET;
-			continue;
-		}
-		if (g_strcmp0 (split[i], "use-any-interface") == 0) {
-			priv->quirks |= DFU_DEVICE_QUIRK_USE_ANY_INTERFACE;
-			continue;
-		}
-		if (g_strcmp0 (split[i], "legacy-protocol") == 0) {
-			priv->quirks |= DFU_DEVICE_QUIRK_LEGACY_PROTOCOL;
-			continue;
-		}
-	}
 }
 
 void
@@ -982,7 +909,7 @@ dfu_device_refresh (DfuDevice *device, GError **error)
 
 	/* the device has no DFU runtime, so cheat */
 	if (priv->state == DFU_STATE_APP_IDLE &&
-	    priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME)
+	    fu_device_has_custom_flag (FU_DEVICE (device), "no-dfu-runtime"))
 		return TRUE;
 
 	/* ensure interface is claimed */
@@ -1017,7 +944,7 @@ dfu_device_refresh (DfuDevice *device, GError **error)
 	}
 
 	/* some devices use the wrong state value */
-	if (dfu_device_has_quirk (device, DFU_DEVICE_QUIRK_FORCE_DFU_MODE) &&
+	if (fu_device_has_custom_flag (FU_DEVICE (device), "force-dfu-mode") &&
 	    dfu_device_get_state (device) != DFU_STATE_DFU_IDLE) {
 		g_debug ("quirking device into DFU mode");
 		dfu_device_set_state (device, DFU_STATE_DFU_IDLE);
@@ -1027,7 +954,7 @@ dfu_device_refresh (DfuDevice *device, GError **error)
 
 	/* status or state changed */
 	dfu_device_set_status (device, buf[0]);
-	if (dfu_device_has_quirk (device, DFU_DEVICE_QUIRK_IGNORE_POLLTIMEOUT)) {
+	if (fu_device_has_custom_flag (FU_DEVICE (device), "ignore-polltimeout")) {
 		priv->dnload_timeout = 5;
 	} else {
 		priv->dnload_timeout = buf[1] +
@@ -1160,7 +1087,7 @@ dfu_device_detach (FuDevice *device, GError **error)
 
 	/* the device has no DFU runtime, so cheat */
 	if (priv->state == DFU_STATE_APP_IDLE &&
-	    priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME)
+	    fu_device_has_custom_flag (FU_DEVICE (self), "no-dfu-runtime"))
 		return TRUE;
 
 	/* ensure interface is claimed */
@@ -1245,7 +1172,7 @@ dfu_device_abort (DfuDevice *device, GError **error)
 
 	/* the device has no DFU runtime, so cheat */
 	if (priv->state == DFU_STATE_APP_IDLE &&
-	    priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
+	    fu_device_has_custom_flag (FU_DEVICE (device), "no-dfu-runtime")) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -1312,7 +1239,7 @@ dfu_device_clear_status (DfuDevice *device, GError **error)
 
 	/* the device has no DFU runtime, so cheat */
 	if (priv->state == DFU_STATE_APP_IDLE &&
-	    priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
+	    fu_device_has_custom_flag (FU_DEVICE (device), "no-dfu-runtime")) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -1382,7 +1309,7 @@ dfu_device_open (FuUsbDevice *device, GError **error)
 
 	/* the device has no DFU runtime, so cheat */
 	if (priv->state == DFU_STATE_APP_IDLE &&
-	    priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME) {
+	    fu_device_has_custom_flag (FU_DEVICE (self), "no-dfu-runtime")) {
 		dfu_device_set_state (self, DFU_STATE_APP_IDLE);
 		priv->status = DFU_STATUS_OK;
 	}
@@ -1444,12 +1371,6 @@ dfu_device_probe (FuUsbDevice *device, GError **error)
 		fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
 		fu_device_set_remove_delay (FU_DEVICE (device),
 					    FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
-	}
-
-	/* needs a manual action */
-	if (dfu_device_has_quirk (self, DFU_DEVICE_QUIRK_ACTION_REQUIRED)) {
-		fu_device_add_flag (FU_DEVICE (device),
-				    FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
 	}
 
 	/* success */
@@ -1560,7 +1481,7 @@ dfu_device_attach (FuDevice *device, GError **error)
 
 	/* handle m-stack DFU bootloaders */
 	if (!priv->done_upload_or_download &&
-	    (priv->quirks & DFU_DEVICE_QUIRK_ATTACH_UPLOAD_DOWNLOAD) > 0) {
+	    fu_device_has_custom_flag (FU_DEVICE (self), "attach-upload-download")) {
 		g_autoptr(GBytes) chunk = NULL;
 		g_autoptr(DfuTarget) target_zero = NULL;
 		g_debug ("doing dummy upload to work around m-stack quirk");
@@ -1582,7 +1503,7 @@ dfu_device_attach (FuDevice *device, GError **error)
 		return FALSE;
 
 	/* some devices need yet another reset */
-	if (dfu_device_has_quirk (self, DFU_DEVICE_QUIRK_ATTACH_EXTRA_RESET)) {
+	if (fu_device_has_custom_flag (FU_DEVICE (self), "attach-extra-reset")) {
 		if (!dfu_device_wait_for_replug (self,
 						 FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE,
 						 error))
@@ -1898,56 +1819,6 @@ dfu_device_error_fixup (DfuDevice *device, GError **error)
 	}
 }
 
-/**
- * dfu_device_get_quirks_as_string: (skip)
- * @device: a #DfuDevice
- *
- * Gets a string describing the quirks set for a device.
- *
- * Return value: string, or %NULL for no quirks
- **/
-gchar *
-dfu_device_get_quirks_as_string (DfuDevice *device)
-{
-	DfuDevicePrivate *priv = GET_PRIVATE (device);
-	GString *str;
-
-	/* just append to a string */
-	str = g_string_new ("");
-	if (priv->quirks & DFU_DEVICE_QUIRK_IGNORE_POLLTIMEOUT)
-		g_string_append_printf (str, "ignore-polltimeout|");
-	if (priv->quirks & DFU_DEVICE_QUIRK_FORCE_DFU_MODE)
-		g_string_append_printf (str, "force-dfu-mode|");
-	if (priv->quirks & DFU_DEVICE_QUIRK_NO_PID_CHANGE)
-		g_string_append_printf (str, "no-pid-change|");
-	if (priv->quirks & DFU_DEVICE_QUIRK_NO_GET_STATUS_UPLOAD)
-		g_string_append_printf (str, "no-get-status-upload|");
-	if (priv->quirks & DFU_DEVICE_QUIRK_NO_DFU_RUNTIME)
-		g_string_append_printf (str, "no-dfu-runtime|");
-	if (priv->quirks & DFU_DEVICE_QUIRK_ATTACH_UPLOAD_DOWNLOAD)
-		g_string_append_printf (str, "attach-upload-download|");
-	if (priv->quirks & DFU_DEVICE_QUIRK_ACTION_REQUIRED)
-		g_string_append_printf (str, "action-required|");
-	if (priv->quirks & DFU_DEVICE_QUIRK_IGNORE_UPLOAD)
-		g_string_append_printf (str, "ignore-upload|");
-	if (priv->quirks & DFU_DEVICE_QUIRK_ATTACH_EXTRA_RESET)
-		g_string_append_printf (str, "attach-extra-reset|");
-	if (priv->quirks & DFU_DEVICE_QUIRK_USE_ANY_INTERFACE)
-		g_string_append_printf (str, "use-any-interface|");
-	if (priv->quirks & DFU_DEVICE_QUIRK_LEGACY_PROTOCOL)
-		g_string_append_printf (str, "legacy-protocol|");
-
-	/* a well behaved device */
-	if (str->len == 0) {
-		g_string_free (str, TRUE);
-		return NULL;
-	}
-
-	/* remove trailing pipe */
-	g_string_truncate (str, str->len - 1);
-	return g_string_free (str, FALSE);
-}
-
 static FuFirmware *
 dfu_device_read_firmware (FuDevice *device, GError **error)
 {
@@ -2010,10 +1881,6 @@ dfu_device_set_quirk_kv (FuDevice *device,
 	DfuDevice *self = DFU_DEVICE (device);
 	DfuDevicePrivate *priv = GET_PRIVATE (self);
 
-	if (g_strcmp0 (key, FU_QUIRKS_DFU_FLAGS) == 0) {
-		dfu_device_set_quirks_from_string (self, value);
-		return TRUE;
-	}
 	if (g_strcmp0 (key, FU_QUIRKS_DFU_JABRA_DETACH) == 0) {
 		if (value != NULL && strlen (value) == 4) {
 			priv->jabra_detach = g_strdup (value);
