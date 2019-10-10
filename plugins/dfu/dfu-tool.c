@@ -812,124 +812,6 @@ dfu_tool_set_alt_setting_name (DfuToolPrivate *priv, gchar **values, GError **er
 }
 
 static gboolean
-dfu_tool_merge (DfuToolPrivate *priv, gchar **values, GError **error)
-{
-	guint16 pid = 0xffff;
-	guint16 rel = 0xffff;
-	guint16 vid = 0xffff;
-	g_autofree gchar *str_debug = NULL;
-	g_autoptr(DfuFirmware) firmware = NULL;
-	g_autoptr(GFile) file = NULL;
-
-	/* check args */
-	if (g_strv_length (values) < 3) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "Invalid arguments, expected "
-				     "FILE-OUT FILE1 FILE2 [FILE3...]"
-				     " -- e.g. `combined.dfu lib.dfu app.dfu`");
-		return FALSE;
-	}
-
-	/* parse source files */
-	firmware = dfu_firmware_new ();
-	dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_DFUSE);
-	for (guint i = 1; values[i] != NULL; i++) {
-		GPtrArray *images;
-		g_autoptr(GFile) file_tmp = NULL;
-		g_autoptr(DfuFirmware) firmware_tmp = NULL;
-
-		/* open up source */
-		file_tmp = g_file_new_for_path (values[i]);
-		firmware_tmp = dfu_firmware_new ();
-		if (!dfu_firmware_parse_file (firmware_tmp, file_tmp,
-					      DFU_FIRMWARE_PARSE_FLAG_NONE,
-					      error)) {
-			return FALSE;
-		}
-
-		/* check same vid:pid:rel */
-		if (vid != 0xffff &&
-		    dfu_firmware_get_vid (firmware_tmp) != vid) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "Vendor ID was already set as "
-				     "0x%04x, %s is 0x%04x",
-				     vid, values[i],
-				     dfu_firmware_get_vid (firmware_tmp));
-			return FALSE;
-		}
-		if (pid != 0xffff &&
-		    dfu_firmware_get_pid (firmware_tmp) != pid) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "Product ID was already set as "
-				     "0x%04x, %s is 0x%04x",
-				     pid, values[i],
-				     dfu_firmware_get_pid (firmware_tmp));
-			return FALSE;
-		}
-		if (rel != 0xffff &&
-		    dfu_firmware_get_release (firmware_tmp) != rel) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "Release was already set as "
-				     "0x%04x, %s is 0x%04x",
-				     rel, values[i],
-				     dfu_firmware_get_release (firmware_tmp));
-			return FALSE;
-		}
-
-		/* add all images to destination */
-		images = dfu_firmware_get_images (firmware_tmp);
-		for (guint j = 0; j < images->len; j++) {
-			DfuImage *image;
-			guint8 alt_id;
-
-			/* verify the alt-setting does not already exist */
-			image = g_ptr_array_index (images, j);
-			alt_id = dfu_image_get_alt_setting (image);
-			g_print ("Adding alternative setting ID of 0x%02x\n",
-				 alt_id);
-			if (dfu_firmware_get_image (firmware, alt_id) != NULL) {
-				if (!priv->force) {
-					g_set_error (error,
-						     FWUPD_ERROR,
-						     FWUPD_ERROR_INVALID_FILE,
-						     "The alternative setting ID "
-						     "of 0x%02x has already been added",
-						     alt_id);
-					return FALSE;
-				}
-				g_print ("WARNING: The alternative setting "
-					 "ID of 0x%02x has already been added\n",
-					 alt_id);
-			}
-
-			/* add to destination */
-			dfu_firmware_add_image (firmware, image);
-		}
-
-		/* save last IDs */
-		vid = dfu_firmware_get_vid (firmware_tmp);
-		pid = dfu_firmware_get_pid (firmware_tmp);
-		rel = dfu_firmware_get_release (firmware_tmp);
-	}
-
-	/* print the new object */
-	str_debug = dfu_firmware_to_string (firmware);
-	g_print ("New merged file:\n%s\n", str_debug);
-
-	/* write out new file */
-	file = g_file_new_for_path (values[0]);
-	return dfu_firmware_write_file (firmware, file, error);
-}
-
-static gboolean
 dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 {
 	DfuFirmwareFormat format;
@@ -1835,12 +1717,6 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Convert firmware to DFU format"),
 		     dfu_tool_convert);
-	dfu_tool_add (priv->cmd_array,
-		     "merge",
-		     "FILE-OUT FILE1 FILE2 [FILE3...]",
-		     /* TRANSLATORS: command description */
-		     _("Merge multiple firmware files into one"),
-		     dfu_tool_merge);
 	dfu_tool_add (priv->cmd_array,
 		     "set-vendor",
 		     "FILE VID",
