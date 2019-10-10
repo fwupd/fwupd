@@ -106,10 +106,6 @@ gboolean	 dfu_device_wait_for_replug		(DfuDevice	*device,
 DfuFirmware	*dfu_device_upload			(DfuDevice	*device,
 							 DfuTargetTransferFlags flags,
 							 GError		**error);
-gboolean	 dfu_device_download			(DfuDevice	*device,
-							 DfuFirmware	*firmware,
-							 DfuTargetTransferFlags flags,
-							 GError		**error);
 gboolean	 dfu_device_refresh			(DfuDevice	*device,
 							 GError		**error);
 gboolean	 dfu_device_refresh_and_clear		(DfuDevice	*device,

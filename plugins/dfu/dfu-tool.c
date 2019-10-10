@@ -1645,12 +1645,10 @@ dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 static gboolean
 dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 {
-	DfuTargetTransferFlags flags = DFU_TARGET_TRANSFER_FLAG_VERIFY;
-	g_autofree gchar *str_debug = NULL;
+	FwupdInstallFlags flags = FWUPD_INSTALL_FLAG_NONE;
 	g_autoptr(DfuDevice) device = NULL;
-	g_autoptr(DfuFirmware) firmware = NULL;
+	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(FuDeviceLocker) locker  = NULL;
-	g_autoptr(GFile) file = NULL;
 
 	/* check args */
 	if (g_strv_length (values) < 1) {
@@ -1662,11 +1660,8 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* open file */
-	firmware = dfu_firmware_new ();
-	file = g_file_new_for_path (values[0]);
-	if (!dfu_firmware_parse_file (firmware, file,
-				      DFU_FIRMWARE_PARSE_FLAG_NONE,
-				      error))
+	fw = fu_common_get_contents_bytes (values[0], error);
+	if (fw == NULL)
 		return FALSE;
 
 	/* open correct device */
@@ -1678,10 +1673,6 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	if (!dfu_device_refresh (device, error))
 		return FALSE;
-
-	/* print the new object */
-	str_debug = dfu_firmware_to_string (firmware);
-	g_debug ("DFU: %s", str_debug);
 
 	/* APP -> DFU */
 	if (!fu_device_has_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
@@ -1695,17 +1686,15 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* allow wildcards */
-	if (priv->force) {
-		flags |= DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID;
-		flags |= DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID;
-	}
+	if (priv->force)
+		flags |= FWUPD_INSTALL_FLAG_FORCE;
 
 	/* transfer */
 	g_signal_connect (device, "notify::status",
 			  G_CALLBACK (fu_tool_action_changed_cb), priv);
 	g_signal_connect (device, "notify::progress",
 			  G_CALLBACK (fu_tool_action_changed_cb), priv);
-	if (!dfu_device_download (device, firmware, flags, error))
+	if (!fu_device_write_firmware (FU_DEVICE (device), fw, flags, error))
 		return FALSE;
 
 	/* do host reset */
@@ -1716,7 +1705,7 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 
 	/* success */
 	g_print ("%u bytes successfully downloaded to device\n",
-		 dfu_firmware_get_size (firmware));
+		 (guint) g_bytes_get_size (fw));
 	return TRUE;
 }
 
