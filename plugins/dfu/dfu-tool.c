@@ -1376,16 +1376,16 @@ dfu_tool_get_device_string (DfuToolPrivate *priv, DfuDevice *device)
 		locker = fu_device_locker_new (device, &error);
 		if (locker == NULL) {
 			return g_strdup_printf ("%04x:%04x [%s]",
-						dfu_device_get_vid (device),
-						dfu_device_get_pid (device),
+						fu_usb_device_get_vid (FU_USB_DEVICE (device)),
+						fu_usb_device_get_pid (FU_USB_DEVICE (device)),
 						error->message);
 		}
 		if (!dfu_device_refresh (device, &error))
 			return NULL;
 	}
 	return g_strdup_printf ("%04x:%04x [%s:%s]",
-				dfu_device_get_vid (device),
-				dfu_device_get_pid (device),
+				fu_usb_device_get_vid (FU_USB_DEVICE (device)),
+				fu_usb_device_get_pid (FU_USB_DEVICE (device)),
 				dfu_state_to_string (dfu_device_get_state (device)),
 				dfu_status_to_string (dfu_device_get_status (device)));
 }

@@ -61,9 +61,6 @@ void		 dfu_device_set_chip_id			(DfuDevice	*device,
 guint16		 dfu_device_get_runtime_vid		(DfuDevice	*device);
 guint16		 dfu_device_get_runtime_pid		(DfuDevice	*device);
 guint16		 dfu_device_get_runtime_release		(DfuDevice	*device);
-guint16		 dfu_device_get_vid			(DfuDevice	*device);
-guint16		 dfu_device_get_pid			(DfuDevice	*device);
-guint16		 dfu_device_get_release			(DfuDevice	*device);
 gboolean	 dfu_device_reset			(DfuDevice	*device,
 							 GError		**error);
 gboolean	 dfu_device_wait_for_replug		(DfuDevice	*device,
