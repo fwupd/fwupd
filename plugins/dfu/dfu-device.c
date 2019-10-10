@@ -705,54 +705,6 @@ dfu_device_get_runtime_release (DfuDevice *device)
 	return priv->runtime_release;
 }
 
-/**
- * dfu_device_get_vid:
- * @device: a #DfuDevice
- *
- * Gets the present vendor ID.
- *
- * Return value: vendor ID, or 0xffff for unknown
- **/
-guint16
-dfu_device_get_vid (DfuDevice *device)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
-	g_return_val_if_fail (DFU_IS_DEVICE (device), 0xffff);
-	return g_usb_device_get_vid (usb_device);
-}
-
-/**
- * dfu_device_get_pid:
- * @device: a #DfuDevice
- *
- * Gets the present product ID.
- *
- * Return value: product ID, or 0xffff for unknown
- **/
-guint16
-dfu_device_get_pid (DfuDevice *device)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
-	g_return_val_if_fail (DFU_IS_DEVICE (device), 0xffff);
-	return g_usb_device_get_pid (usb_device);
-}
-
-/**
- * dfu_device_get_release:
- * @device: a #DfuDevice
- *
- * Gets the present release number in BCD format.
- *
- * Return value: release number, or 0xffff for unknown
- **/
-guint16
-dfu_device_get_release (DfuDevice *device)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
-	g_return_val_if_fail (DFU_IS_DEVICE (device), 0xffff);
-	return g_usb_device_get_release (usb_device);
-}
-
 const gchar *
 dfu_device_get_chip_id (DfuDevice *device)
 {
@@ -1686,7 +1638,7 @@ dfu_device_download (DfuDevice *device,
 	if (priv->runtime_vid != 0xffff) {
 		if (!dfu_device_id_compatible (dfu_firmware_get_vid (firmware),
 					       priv->runtime_vid,
-					       dfu_device_get_vid (device))) {
+					       fu_usb_device_get_vid (FU_USB_DEVICE (device)))) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -1694,7 +1646,7 @@ dfu_device_download (DfuDevice *device,
 				     "got 0x%04x and 0x%04x\n",
 				     dfu_firmware_get_vid (firmware),
 				     priv->runtime_vid,
-				     dfu_device_get_vid (device));
+				     fu_usb_device_get_vid (FU_USB_DEVICE (device)));
 			return FALSE;
 		}
 	}
@@ -1703,7 +1655,7 @@ dfu_device_download (DfuDevice *device,
 	if (priv->runtime_pid != 0xffff) {
 		if (!dfu_device_id_compatible (dfu_firmware_get_pid (firmware),
 					       priv->runtime_pid,
-					       dfu_device_get_pid (device))) {
+					       fu_usb_device_get_pid (FU_USB_DEVICE (device)))) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -1711,7 +1663,7 @@ dfu_device_download (DfuDevice *device,
 				     "got 0x%04x and 0x%04x",
 				     dfu_firmware_get_pid (firmware),
 				     priv->runtime_pid,
-				     dfu_device_get_pid (device));
+				     fu_usb_device_get_pid (FU_USB_DEVICE (device)));
 			return FALSE;
 		}
 	}
