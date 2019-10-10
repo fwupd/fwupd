@@ -1716,19 +1716,7 @@ dfu_device_id_compatible (guint16 id_file, guint16 id_runtime, guint16 id_dev)
 	return FALSE;
 }
 
-/**
- * dfu_device_download:
- * @device: a #DfuDevice
- * @firmware: a #DfuFirmware
- * @flags: flags to use, e.g. %DFU_TARGET_TRANSFER_FLAG_VERIFY
- * @error: a #GError, or %NULL
- *
- * Downloads firmware from the host to the target, optionally verifying
- * the transfer.
- *
- * Return value: %TRUE for success
- **/
-gboolean
+static gboolean
 dfu_device_download (DfuDevice *device,
 		     DfuFirmware *firmware,
 		     DfuTargetTransferFlags flags,
@@ -1983,6 +1971,37 @@ dfu_device_read_firmware (FuDevice *device, GError **error)
 }
 
 static gboolean
+dfu_device_write_firmware (FuDevice *device,
+			   FuFirmware *firmware,
+			   FwupdInstallFlags flags,
+			   GError **error)
+{
+	DfuDevice *self = DFU_DEVICE (device);
+	DfuTargetTransferFlags transfer_flags = DFU_TARGET_TRANSFER_FLAG_VERIFY;
+	g_autoptr(DfuFirmware) dfu_firmware = NULL;
+	g_autoptr(GBytes) blob_fw = NULL;
+
+	/* open it */
+	blob_fw = fu_firmware_get_image_default_bytes (firmware, error);
+	if (blob_fw == NULL)
+		return FALSE;
+	if (!dfu_device_refresh_and_clear (self, error))
+		return FALSE;
+
+	if (flags & FWUPD_INSTALL_FLAG_FORCE) {
+		transfer_flags |= DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID;
+		transfer_flags |= DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID;
+	}
+
+	/* hit hardware */
+	dfu_firmware = dfu_firmware_new ();
+	if (!dfu_firmware_parse_data (dfu_firmware, blob_fw,
+				      DFU_FIRMWARE_PARSE_FLAG_NONE, error))
+		return FALSE;
+	return dfu_device_download (self, dfu_firmware, transfer_flags, error);
+}
+
+static gboolean
 dfu_device_set_quirk_kv (FuDevice *device,
 			 const gchar *key,
 			 const gchar *value,
@@ -2081,6 +2100,7 @@ dfu_device_class_init (DfuDeviceClass *klass)
 	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	klass_device->set_quirk_kv = dfu_device_set_quirk_kv;
 	klass_device->read_firmware = dfu_device_read_firmware;
+	klass_device->write_firmware = dfu_device_write_firmware;
 	klass_device->attach = dfu_device_attach;
 	klass_device->detach = dfu_device_detach;
 	klass_usb_device->open = dfu_device_open;
