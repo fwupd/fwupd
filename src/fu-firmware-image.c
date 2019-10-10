@@ -243,17 +243,23 @@ void
 fu_firmware_image_add_string (FuFirmwareImage *self, guint idt, GString *str)
 {
 	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
+	FuFirmwareImageClass *klass = FU_FIRMWARE_IMAGE_GET_CLASS (self);
+
 	fu_common_string_append_kv (str, idt, G_OBJECT_TYPE_NAME (self), NULL);
 	if (priv->id != NULL)
-		fu_common_string_append_kv (str, idt + 1, "ID", priv->id);
+		fu_common_string_append_kv (str, idt, "ID", priv->id);
 	if (priv->idx != 0x0)
-		fu_common_string_append_kx (str, idt + 1, "Index", priv->idx);
+		fu_common_string_append_kx (str, idt, "Index", priv->idx);
 	if (priv->addr != 0x0)
-		fu_common_string_append_kx (str, idt + 1, "Address", priv->addr);
+		fu_common_string_append_kx (str, idt, "Address", priv->addr);
 	if (priv->bytes != NULL) {
-		fu_common_string_append_kx (str, idt + 1, "Data",
+		fu_common_string_append_kx (str, idt, "Data",
 					    g_bytes_get_size (priv->bytes));
 	}
+
+	/* vfunc */
+	if (klass->to_string != NULL)
+		klass->to_string (self, idt, str);
 }
 
 /**
