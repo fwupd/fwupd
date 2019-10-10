@@ -19,8 +19,11 @@ struct _FuFirmwareImageClass
 						 GBytes			*fw,
 						 FwupdInstallFlags	 flags,
 						 GError			**error);
+	void			 (*to_string)	(FuFirmwareImage	*self,
+						 guint			 idt,
+						 GString		*str);
 	/*< private >*/
-	gpointer		 padding[30];
+	gpointer		 padding[29];
 };
 
 FuFirmwareImage	*fu_firmware_image_new		(GBytes			*bytes);

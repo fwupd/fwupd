@@ -4064,13 +4064,13 @@ fu_firmware_func (void)
 	str = fu_firmware_to_string (firmware);
 	g_assert_cmpstr (str, ==, "FuFirmware:\n"
 				  "  FuFirmwareImage:\n"
-				  "    ID:                  primary\n"
-				  "    Index:               0xd\n"
-				  "    Address:             0x200\n"
+				  "  ID:                    primary\n"
+				  "  Index:                 0xd\n"
+				  "  Address:               0x200\n"
 				  "  FuFirmwareImage:\n"
-				  "    ID:                  secondary\n"
-				  "    Index:               0x17\n"
-				  "    Address:             0x400\n");
+				  "  ID:                    secondary\n"
+				  "  Index:                 0x17\n"
+				  "  Address:               0x400\n");
 }
 
 int
