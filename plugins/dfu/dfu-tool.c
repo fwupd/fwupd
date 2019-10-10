@@ -13,7 +13,6 @@
 #include <glib-unix.h>
 
 #include "dfu-device-private.h"
-#include "dfu-patch.h"
 #include "dfu-sector.h"
 
 #include "fu-device-locker.h"
@@ -489,127 +488,6 @@ dfu_tool_bytes_replace (GBytes *data, GBytes *search, GBytes *replace)
 		}
 	}
 	return cnt;
-}
-
-static gboolean
-dfu_tool_patch_dump (DfuToolPrivate *priv, gchar **values, GError **error)
-{
-	gsize sz = 0;
-	g_autofree gchar *data = NULL;
-	g_autofree gchar *str = NULL;
-	g_autoptr(DfuPatch) patch = NULL;
-	g_autoptr(GBytes) blob = NULL;
-
-	if (g_strv_length (values) != 1) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "Invalid arguments, expected FILE.bdiff");
-		return FALSE;
-	}
-
-	/* load file */
-	if (!g_file_get_contents (values[0], &data, &sz, error))
-		return FALSE;
-	blob = g_bytes_new (data, sz);
-
-	/* dump the patch to disk */
-	patch = dfu_patch_new ();
-	if (!dfu_patch_import (patch, blob, error))
-		return FALSE;
-	str = dfu_patch_to_string (patch);
-	g_print ("%s\n", str);
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
-dfu_tool_patch_apply (DfuToolPrivate *priv, gchar **values, GError **error)
-{
-	DfuPatchApplyFlags flags = DFU_PATCH_APPLY_FLAG_NONE;
-	const gchar *data_new;
-	gsize sz_diff = 0;
-	gsize sz_new = 0;
-	gsize sz_old = 0;
-	g_autofree gchar *data_diff = NULL;
-	g_autofree gchar *data_old = NULL;
-	g_autoptr(DfuPatch) patch = NULL;
-	g_autoptr(GBytes) blob_diff = NULL;
-	g_autoptr(GBytes) blob_new = NULL;
-	g_autoptr(GBytes) blob_old = NULL;
-
-	if (g_strv_length (values) != 3) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "Invalid arguments, expected OLD.bin OUT.bdiff NEW.bin");
-		return FALSE;
-	}
-
-	/* allow the user to shoot themselves in the foot */
-	if (priv->force)
-		flags |= DFU_PATCH_APPLY_FLAG_IGNORE_CHECKSUM;
-
-	if (!g_file_get_contents (values[0], &data_old, &sz_old, error))
-		return FALSE;
-	blob_old = g_bytes_new (data_old, sz_old);
-	if (!g_file_get_contents (values[1], &data_diff, &sz_diff, error))
-		return FALSE;
-	blob_diff = g_bytes_new (data_diff, sz_diff);
-	patch = dfu_patch_new ();
-	if (!dfu_patch_import (patch, blob_diff, error))
-		return FALSE;
-	blob_new = dfu_patch_apply (patch, blob_old, flags, error);
-	if (blob_new == NULL)
-		return FALSE;
-
-	/* save to disk */
-	data_new = g_bytes_get_data (blob_new, &sz_new);
-	return g_file_set_contents (values[2], data_new, sz_new, error);
-}
-
-static gboolean
-dfu_tool_patch_create (DfuToolPrivate *priv, gchar **values, GError **error)
-{
-	const gchar *data_diff;
-	gsize sz_diff = 0;
-	gsize sz_new = 0;
-	gsize sz_old = 0;
-	g_autofree gchar *data_new = NULL;
-	g_autofree gchar *data_old = NULL;
-	g_autoptr(DfuPatch) patch = NULL;
-	g_autoptr(GBytes) blob_diff = NULL;
-	g_autoptr(GBytes) blob_new = NULL;
-	g_autoptr(GBytes) blob_old = NULL;
-
-	if (g_strv_length (values) != 3) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "Invalid arguments, expected OLD.bin NEW.bin OUT.bdiff");
-		return FALSE;
-	}
-
-	/* read files */
-	if (!g_file_get_contents (values[0], &data_old, &sz_old, error))
-		return FALSE;
-	blob_old = g_bytes_new (data_old, sz_old);
-	if (!g_file_get_contents (values[1], &data_new, &sz_new, error))
-		return FALSE;
-	blob_new = g_bytes_new (data_new, sz_new);
-
-	/* create patch */
-	patch = dfu_patch_new ();
-	if (!dfu_patch_create (patch, blob_old, blob_new, error))
-		return FALSE;
-	blob_diff = dfu_patch_export (patch, error);
-	if (blob_diff == NULL)
-		return FALSE;
-
-	/* save to disk */
-	data_diff = g_bytes_get_data (blob_diff, &sz_diff);
-	return g_file_set_contents (values[2], data_diff, sz_diff, error);
 }
 
 static gboolean
@@ -2071,24 +1949,6 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Replace data in an existing firmware file"),
 		     dfu_tool_replace_data);
-	dfu_tool_add (priv->cmd_array,
-		     "patch-create",
-		     NULL,
-		     /* TRANSLATORS: command description */
-		     _("Create a binary patch using two files"),
-		     dfu_tool_patch_create);
-	dfu_tool_add (priv->cmd_array,
-		     "patch-apply",
-		     NULL,
-		     /* TRANSLATORS: command description */
-		     _("Apply a binary patch"),
-		     dfu_tool_patch_apply);
-	dfu_tool_add (priv->cmd_array,
-		     "patch-dump",
-		     NULL,
-		     /* TRANSLATORS: command description */
-		     _("Dump information about a binary patch to the screen"),
-		     dfu_tool_patch_dump);
 
 	/* use animated progress bar */
 	priv->progressbar = fu_progressbar_new ();
