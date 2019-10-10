@@ -417,18 +417,20 @@ fu_plugin_superio_fix_signature (FuSuperioDevice *self, GBytes *fw, GError **err
 	return g_bytes_new_take (g_steal_pointer (&buf2), sz);
 }
 
-static GBytes *
+static FuFirmware *
 fu_superio_it89_device_read_firmware (FuDevice *device, GError **error)
 {
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
 	guint64 fwsize = fu_device_get_firmware_size_min (device);
 	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GBytes) fw = NULL;
 
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_READ);
 	blob = fu_superio_it89_device_read_addr (self, 0x0, fwsize,
 						 fu_superio_it89_device_progress_cb,
 						 error);
-	return fu_plugin_superio_fix_signature (self, blob, error);
+	fw = fu_plugin_superio_fix_signature (self, blob, error);
+	return fu_firmware_new_from_bytes (fw);
 }
 
 static gboolean

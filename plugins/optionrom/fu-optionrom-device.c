@@ -37,13 +37,14 @@ fu_optionrom_device_probe (FuUdevDevice *device, GError **error)
 	return TRUE;
 }
 
-static GBytes *
+static FuFirmware *
 fu_optionrom_device_read_firmware (FuDevice *device, GError **error)
 {
 	FuUdevDevice *udev_device = FU_UDEV_DEVICE (device);
 	g_autofree gchar *guid = NULL;
 	g_autofree gchar *rom_fn = NULL;
 	g_autoptr(FuRom) rom = NULL;
+	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GFile) file = NULL;
 
 	/* open the file */
@@ -81,7 +82,8 @@ fu_optionrom_device_read_firmware (FuDevice *device, GError **error)
 	fu_device_add_guid (device, guid);
 
 	/* get new data */
-	return fu_rom_get_data (rom);
+	fw = fu_rom_get_data (rom);
+	return fu_firmware_new_from_bytes (fw);
 }
 
 static void

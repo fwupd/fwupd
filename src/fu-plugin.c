@@ -896,6 +896,7 @@ static gboolean
 fu_plugin_device_read_firmware (FuPlugin *self, FuDevice *device, GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	GChecksumType checksum_types[] = {
 		G_CHECKSUM_SHA1,
@@ -906,11 +907,20 @@ fu_plugin_device_read_firmware (FuPlugin *self, FuDevice *device, GError **error
 		return FALSE;
 	if (!fu_device_detach (device, error))
 		return FALSE;
-	fw = fu_device_read_firmware (device, error);
+	firmware = fu_device_read_firmware (device, error);
+	if (firmware == NULL) {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_device_attach (device, &error_local))
+			g_debug ("ignoring attach failure: %s", error_local->message);
+		g_prefix_error (error, "failed to read firmware: ");
+		return FALSE;
+	}
+	fw = fu_firmware_write (firmware, error);
 	if (fw == NULL) {
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_device_attach (device, &error_local))
-			g_debug ("ignoring: %s", error_local->message);
+			g_debug ("ignoring attach failure: %s", error_local->message);
+		g_prefix_error (error, "failed to write firmware: ");
 		return FALSE;
 	}
 	for (guint i = 0; checksum_types[i] != 0; i++) {
