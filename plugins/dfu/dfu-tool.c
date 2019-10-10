@@ -1768,7 +1768,7 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 		gboolean is_runtime;
 		guint16 transfer_size;
 		g_autofree gchar *attrs = NULL;
-		g_autofree gchar *quirks = NULL;
+		const gchar *quirks = NULL;
 		g_autofree gchar *version = NULL;
 		g_autoptr(DfuDevice) device  = NULL;
 		g_autoptr(FuDeviceLocker) locker  = NULL;
@@ -1864,7 +1864,7 @@ dfu_tool_list (DfuToolPrivate *priv, gchar **values, GError **error)
 		}
 
 		/* quirks are NULL if none are set */
-		quirks = dfu_device_get_quirks_as_string (device);
+		quirks = fu_device_get_custom_flags (FU_DEVICE (device));
 		if (quirks != NULL) {
 			/* TRANSLATORS: device quirks, i.e. things that
 			 * it does that we have to work around */
