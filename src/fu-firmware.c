@@ -122,6 +122,31 @@ fu_firmware_parse (FuFirmware *self, GBytes *fw, FwupdInstallFlags flags, GError
 }
 
 /**
+ * fu_firmware_parse_file:
+ * @self: A #FuFirmware
+ * @file: A #GFile
+ * @flags: some #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_FORCE
+ * @error: A #GError, or %NULL
+ *
+ * Parses a firmware file, typically breaking the firmware into images.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.3.3
+ **/
+gboolean
+fu_firmware_parse_file (FuFirmware *self, GFile *file, FwupdInstallFlags flags, GError **error)
+{
+	gchar *buf = NULL;
+	gsize bufsz = 0;
+	g_autoptr(GBytes) fw = NULL;
+	if (!g_file_load_contents (file, NULL, &buf, &bufsz, NULL, error))
+		return FALSE;
+	fw = g_bytes_new_take (buf, bufsz);
+	return fu_firmware_parse (self, fw, flags, error);
+}
+
+/**
  * fu_firmware_write:
  * @self: A #FuFirmware
  * @error: A #GError, or %NULL
@@ -146,6 +171,33 @@ fu_firmware_write (FuFirmware *self, GError **error)
 
 	/* just add default blob */
 	return fu_firmware_get_image_default_bytes (self, error);
+}
+
+/**
+ * fu_firmware_write_file:
+ * @self: A #FuFirmware
+ * @file: A #GFile
+ * @error: A #GError, or %NULL
+ *
+ * Writes a firmware, typically packing the images into a binary blob.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.3.3
+ **/
+gboolean
+fu_firmware_write_file (FuFirmware *self, GFile *file, GError **error)
+{
+	g_autoptr(GBytes) blob = NULL;
+	blob = fu_firmware_write (self, error);
+	if (blob == NULL)
+		return FALSE;
+	return g_file_replace_contents (file,
+					g_bytes_get_data (blob, NULL),
+					g_bytes_get_size (blob),
+					NULL, FALSE,
+					G_FILE_CREATE_NONE,
+					NULL, NULL, error);
 }
 
 /**
