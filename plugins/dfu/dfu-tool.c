@@ -283,7 +283,7 @@ dfu_tool_set_vendor (DfuToolPrivate *priv, gchar **values, GError **error)
 	file = g_file_new_for_path (values[0]);
 	firmware = dfu_firmware_new ();
 	if (!dfu_firmware_parse_file (firmware, file,
-				      DFU_FIRMWARE_PARSE_FLAG_NONE, error)) {
+				      FWUPD_INSTALL_FLAG_NONE, error)) {
 		return FALSE;
 	}
 
@@ -324,7 +324,7 @@ dfu_tool_set_product (DfuToolPrivate *priv, gchar **values, GError **error)
 	file = g_file_new_for_path (values[0]);
 	firmware = dfu_firmware_new ();
 	if (!dfu_firmware_parse_file (firmware, file,
-				      DFU_FIRMWARE_PARSE_FLAG_NONE,
+				      FWUPD_INSTALL_FLAG_NONE,
 				      error)) {
 		return FALSE;
 	}
@@ -404,7 +404,7 @@ dfu_tool_set_release (DfuToolPrivate *priv, gchar **values, GError **error)
 	file = g_file_new_for_path (values[0]);
 	firmware = dfu_firmware_new ();
 	if (!dfu_firmware_parse_file (firmware, file,
-				      DFU_FIRMWARE_PARSE_FLAG_NONE,
+				      FWUPD_INSTALL_FLAG_NONE,
 				      error)) {
 		return FALSE;
 	}
@@ -514,7 +514,7 @@ dfu_tool_replace_data (DfuToolPrivate *priv, gchar **values, GError **error)
 	file = g_file_new_for_path (values[0]);
 	firmware = dfu_firmware_new ();
 	if (!dfu_firmware_parse_file (firmware, file,
-				      DFU_FIRMWARE_PARSE_FLAG_NONE,
+				      FWUPD_INSTALL_FLAG_NONE,
 				      error)) {
 		return FALSE;
 	}
@@ -587,7 +587,7 @@ dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 	file_out = g_file_new_for_path (values[2]);
 	firmware = dfu_firmware_new ();
 	if (!dfu_firmware_parse_file (firmware, file_in,
-				      DFU_FIRMWARE_PARSE_FLAG_NONE,
+				      FWUPD_INSTALL_FLAG_NONE,
 				      error)) {
 		return FALSE;
 	}
@@ -943,7 +943,7 @@ dfu_tool_watch (DfuToolPrivate *priv, gchar **values, GError **error)
 static gboolean
 dfu_tool_dump (DfuToolPrivate *priv, gchar **values, GError **error)
 {
-	DfuFirmwareParseFlags flags = DFU_FIRMWARE_PARSE_FLAG_NONE;
+	FwupdInstallFlags flags = FWUPD_INSTALL_FLAG_NONE;
 
 	/* check args */
 	if (g_strv_length (values) < 1) {
@@ -955,10 +955,8 @@ dfu_tool_dump (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* dump corrupt files */
-	if (priv->force) {
-		flags |= DFU_FIRMWARE_PARSE_FLAG_NO_CRC_TEST;
-		flags |= DFU_FIRMWARE_PARSE_FLAG_NO_VERSION_TEST;
-	}
+	if (priv->force)
+		flags |= FWUPD_INSTALL_FLAG_FORCE;
 
 	/* open files */
 	for (guint i = 0; values[i] != NULL; i++) {
@@ -1009,7 +1007,7 @@ dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 	firmware = dfu_firmware_new ();
 	file = g_file_new_for_path (values[0]);
 	if (!dfu_firmware_parse_file (firmware, file,
-				      DFU_FIRMWARE_PARSE_FLAG_NONE,
+				      FWUPD_INSTALL_FLAG_NONE,
 				      error))
 		return FALSE;
 

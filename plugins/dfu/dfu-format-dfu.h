@@ -16,5 +16,5 @@ GBytes			*dfu_firmware_to_dfu		(DfuFirmware	*firmware,
 							GError		**error);
 gboolean		 dfu_firmware_from_dfu		(DfuFirmware	*firmware,
 							GBytes		*bytes,
-							DfuFirmwareParseFlags flags,
+							FwupdInstallFlags flags,
 							GError		**error);

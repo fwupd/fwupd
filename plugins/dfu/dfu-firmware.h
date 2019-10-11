@@ -12,6 +12,8 @@
 #include "dfu-common.h"
 #include "dfu-image.h"
 
+#include "fwupd-enums.h"
+
 #define DFU_TYPE_FIRMWARE (dfu_firmware_get_type ())
 G_DECLARE_DERIVABLE_TYPE (DfuFirmware, dfu_firmware, DFU, FIRMWARE, GObject)
 
@@ -19,22 +21,6 @@ struct _DfuFirmwareClass
 {
 	GObjectClass		 parent_class;
 };
-
-/**
- * DfuFirmwareParseFlags:
- * @DFU_FIRMWARE_PARSE_FLAG_NONE:			No flags set
- * @DFU_FIRMWARE_PARSE_FLAG_NO_CRC_TEST:		Do not verify the CRC
- * @DFU_FIRMWARE_PARSE_FLAG_NO_VERSION_TEST:		Do not verify the DFU version
- *
- * The optional flags used for parsing.
- **/
-typedef enum {
-	DFU_FIRMWARE_PARSE_FLAG_NONE			= 0,
-	DFU_FIRMWARE_PARSE_FLAG_NO_CRC_TEST		= (1 << 0),
-	DFU_FIRMWARE_PARSE_FLAG_NO_VERSION_TEST		= (1 << 1),
-	/*< private >*/
-	DFU_FIRMWARE_PARSE_FLAG_LAST
-} DfuFirmwareParseFlags;
 
 /**
  * DfuFirmwareFormat:
@@ -84,11 +70,11 @@ void		 dfu_firmware_set_format	(DfuFirmware	*firmware,
 
 gboolean	 dfu_firmware_parse_data	(DfuFirmware	*firmware,
 						 GBytes		*bytes,
-						 DfuFirmwareParseFlags flags,
+						 FwupdInstallFlags flags,
 						 GError		**error);
 gboolean	 dfu_firmware_parse_file	(DfuFirmware	*firmware,
 						 GFile		*file,
-						 DfuFirmwareParseFlags flags,
+						 FwupdInstallFlags flags,
 						 GError		**error);
 
 GBytes		*dfu_firmware_write_data	(DfuFirmware	*firmware,
