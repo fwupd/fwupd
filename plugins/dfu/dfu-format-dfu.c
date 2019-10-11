@@ -122,7 +122,7 @@ dfu_firmware_generate_crc32 (const guint8 *data, gsize length)
  * dfu_firmware_from_dfu: (skip)
  * @firmware: a #DfuFirmware
  * @bytes: data to parse
- * @flags: some #DfuFirmwareParseFlags
+ * @flags: some #FwupdInstallFlags
  * @error: a #GError, or %NULL
  *
  * Unpacks into a firmware object from dfu data.
@@ -132,7 +132,7 @@ dfu_firmware_generate_crc32 (const guint8 *data, gsize length)
 gboolean
 dfu_firmware_from_dfu (DfuFirmware *firmware,
 		       GBytes *bytes,
-		       DfuFirmwareParseFlags flags,
+		       FwupdInstallFlags flags,
 		       GError **error)
 {
 	DfuFirmwareFooter *ftr;
@@ -163,7 +163,7 @@ dfu_firmware_from_dfu (DfuFirmware *firmware,
 	}
 
 	/* check version */
-	if ((flags & DFU_FIRMWARE_PARSE_FLAG_NO_VERSION_TEST) == 0) {
+	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 		if (dfu_firmware_get_format (firmware) != DFU_FIRMWARE_FORMAT_DFU &&
 		    dfu_firmware_get_format (firmware) != DFU_FIRMWARE_FORMAT_DFUSE) {
 			g_set_error (error,
@@ -177,7 +177,7 @@ dfu_firmware_from_dfu (DfuFirmware *firmware,
 
 	/* verify the checksum */
 	crc = GUINT32_FROM_LE (ftr->crc);
-	if ((flags & DFU_FIRMWARE_PARSE_FLAG_NO_CRC_TEST) == 0) {
+	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 		crc_new = dfu_firmware_generate_crc32 (data, len - 4);
 		if (crc != crc_new) {
 			g_set_error (error,

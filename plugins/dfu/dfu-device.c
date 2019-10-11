@@ -1819,7 +1819,7 @@ dfu_device_write_firmware (FuDevice *device,
 	/* hit hardware */
 	dfu_firmware = dfu_firmware_new ();
 	if (!dfu_firmware_parse_data (dfu_firmware, blob_fw,
-				      DFU_FIRMWARE_PARSE_FLAG_NONE, error))
+				      FWUPD_INSTALL_FLAG_NONE, error))
 		return FALSE;
 	return dfu_device_download (self, dfu_firmware, transfer_flags, error);
 }

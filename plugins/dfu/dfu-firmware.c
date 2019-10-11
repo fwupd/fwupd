@@ -340,7 +340,7 @@ dfu_firmware_set_format (DfuFirmware *firmware, DfuFirmwareFormat format)
  * dfu_firmware_parse_data:
  * @firmware: a #DfuFirmware
  * @bytes: raw firmware data
- * @flags: optional flags, e.g. %DFU_FIRMWARE_PARSE_FLAG_NO_CRC_TEST
+ * @flags: optional flags, e.g. %FWUPD_INSTALL_FLAG_FORCE
  * @error: a #GError, or %NULL
  *
  * Parses firmware data which may have an optional DFU suffix.
@@ -349,7 +349,7 @@ dfu_firmware_set_format (DfuFirmware *firmware, DfuFirmwareFormat format)
  **/
 gboolean
 dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
-			 DfuFirmwareParseFlags flags, GError **error)
+			 FwupdInstallFlags flags, GError **error)
 {
 	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
 
@@ -388,7 +388,7 @@ dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
  * dfu_firmware_parse_file:
  * @firmware: a #DfuFirmware
  * @file: a #GFile to load and parse
- * @flags: optional flags, e.g. %DFU_FIRMWARE_PARSE_FLAG_NO_CRC_TEST
+ * @flags: optional flags, e.g. %FWUPD_INSTALL_FLAG_FORCE
  * @error: a #GError, or %NULL
  *
  * Parses a DFU firmware, which may contain an optional footer.
@@ -397,7 +397,7 @@ dfu_firmware_parse_data (DfuFirmware *firmware, GBytes *bytes,
  **/
 gboolean
 dfu_firmware_parse_file (DfuFirmware *firmware, GFile *file,
-			 DfuFirmwareParseFlags flags,
+			 FwupdInstallFlags flags,
 			 GError **error)
 {
 	gchar *contents = NULL;

@@ -18,7 +18,7 @@
  * dfu_firmware_from_raw: (skip)
  * @firmware: a #DfuFirmware
  * @bytes: data to parse
- * @flags: some #DfuFirmwareParseFlags
+ * @flags: some #FwupdInstallFlags
  * @error: a #GError, or %NULL
  *
  * Unpacks into a firmware object from raw data.
@@ -28,7 +28,7 @@
 gboolean
 dfu_firmware_from_raw (DfuFirmware *firmware,
 		       GBytes *bytes,
-		       DfuFirmwareParseFlags flags,
+		       FwupdInstallFlags flags,
 		       GError **error)
 {
 	g_autoptr(DfuElement) element = NULL;
