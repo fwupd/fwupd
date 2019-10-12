@@ -167,6 +167,8 @@ fwupd_device_flag_to_string (FwupdDeviceFlags device_flag)
 		return "historical";
 	if (device_flag == FWUPD_DEVICE_FLAG_ONLY_SUPPORTED)
 		return "only-supported";
+	if (device_flag == FWUPD_DEVICE_FLAG_WILL_DISAPPEAR)
+		return "will-disappear";
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -235,6 +237,8 @@ fwupd_device_flag_from_string (const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_HISTORICAL;
 	if (g_strcmp0 (device_flag, "only-supported") == 0)
 		return FWUPD_DEVICE_FLAG_ONLY_SUPPORTED;
+	if (g_strcmp0 (device_flag, "will-disappear") == 0)
+		return FWUPD_DEVICE_FLAG_WILL_DISAPPEAR;
 	return FWUPD_DEVICE_FLAG_UNKNOWN;
 }
 
