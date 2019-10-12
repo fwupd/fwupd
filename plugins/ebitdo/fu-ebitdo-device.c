@@ -424,9 +424,11 @@ fu_ebitdo_device_write_firmware (FuDevice *device,
 		return FALSE;
 	}
 
-	/* print details about the firmware */
+
 	hdr = (FuEbitdoFirmwareHeader *) g_bytes_get_data (fw, NULL);
-	fu_ebitdo_dump_firmware_header (hdr);
+	/* print details about the firmware */
+	if (g_getenv ("FWUPD_EBITDO_VERBOSE") != NULL)
+		fu_ebitdo_dump_firmware_header (hdr);
 
 	/* check the file size */
 	payload_len = (guint32) (g_bytes_get_size (fw) - sizeof (FuEbitdoFirmwareHeader));
