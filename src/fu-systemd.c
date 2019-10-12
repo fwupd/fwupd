@@ -16,6 +16,7 @@
 #define SYSTEMD_OBJECT_PATH		"/org/freedesktop/systemd1"
 #define SYSTEMD_INTERFACE		"org.freedesktop.systemd1"
 #define SYSTEMD_MANAGER_INTERFACE	"org.freedesktop.systemd1.Manager"
+#define SYSTEMD_UNIT_INTERFACE		"org.freedesktop.systemd1.Unit"
 
 static GDBusProxy *
 fu_systemd_get_manager (GError **error)
@@ -73,7 +74,7 @@ fu_systemd_unit_get_proxy (GDBusProxy *proxy_manager, const gchar *unit, GError 
 					    G_DBUS_PROXY_FLAGS_NONE, NULL,
 					    SYSTEMD_SERVICE,
 					    path,
-					    SYSTEMD_INTERFACE,
+					    SYSTEMD_UNIT_INTERFACE,
 					    NULL, error);
 	if (proxy_unit == NULL) {
 		g_prefix_error (error, "failed to register proxy for %s: ", path);
@@ -119,8 +120,8 @@ fu_systemd_unit_stop (const gchar *unit, GError **error)
 	if (proxy_unit == NULL)
 		return FALSE;
 	val = g_dbus_proxy_call_sync (proxy_unit,
-				      "StopUnit",
-				      g_variant_new ("(ss)", unit, "replace"),
+				      "Stop",
+				      g_variant_new ("(s)", "replace"),
 				      G_DBUS_CALL_FLAGS_NONE,
 				      -1, NULL, error);
 	return val != NULL;
