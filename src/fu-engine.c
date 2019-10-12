@@ -1883,6 +1883,12 @@ fu_engine_update_attach (FuEngine *self, const gchar *device_id, GError **error)
 					      error);
 	if (plugin == NULL)
 		return FALSE;
+
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_WILL_DISAPPEAR)) {
+		g_debug ("skipping attach due to will-disappear flag");
+		return TRUE;
+	}
+
 	if (!fu_plugin_runner_update_attach (plugin, device, error))
 		return FALSE;
 	return TRUE;
@@ -1936,6 +1942,12 @@ fu_engine_update_reload (FuEngine *self, const gchar *device_id, GError **error)
 					      error);
 	if (plugin == NULL)
 		return FALSE;
+
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_WILL_DISAPPEAR)) {
+		g_debug ("skipping reload due to will-disappear flag");
+		return TRUE;
+	}
+
 	if (!fu_plugin_runner_update_reload (plugin, device, error)) {
 		g_prefix_error (error, "failed to reload device: ");
 		return FALSE;
