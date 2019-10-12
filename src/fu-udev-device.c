@@ -194,6 +194,8 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 			tmp = g_udev_device_get_property (priv->udev_device, "ID_MODEL_FROM_DATABASE");
 		if (tmp == NULL)
 			tmp = g_udev_device_get_property (priv->udev_device, "ID_MODEL");
+		if (tmp == NULL)
+			tmp = g_udev_device_get_property (priv->udev_device, "ID_PCI_CLASS_FROM_DATABASE");
 		if (tmp != NULL)
 			fu_device_set_name (device, tmp);
 	}
