@@ -362,7 +362,6 @@ fu_ebitdo_device_write_firmware (FuDevice *device,
 	guint32 payload_len;
 	guint32 serial_new[3];
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GError) error_local = NULL;
 	const guint32 app_key_index[16] = {
 		0x186976e5, 0xcac67acd, 0x38f27fee, 0x0a4948f1,
 		0xb75b7753, 0x1f8ffa5c, 0xbff8cf43, 0xc4936167,
@@ -460,20 +459,12 @@ fu_ebitdo_device_write_firmware (FuDevice *device,
 				 FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
 				 FU_EBITDO_PKT_CMD_FW_UPDATE_HEADER,
 				 (const guint8 *) hdr, sizeof(FuEbitdoFirmwareHeader),
-				 &error_local)) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_INVALID_DATA,
-			     "failed to set up firmware header: %s",
-			     error_local->message);
+				 error)) {
+		g_prefix_error (error, "failed to set up firmware header:");
 		return FALSE;
 	}
-	if (!fu_ebitdo_device_receive (self, NULL, 0, &error_local)) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_INVALID_DATA,
-			     "failed to get ACK for fw update header: %s",
-			     error_local->message);
+	if (!fu_ebitdo_device_receive (self, NULL, 0, error)) {
+		g_prefix_error (error, "failed to get ACK for fw update header: ");
 		return FALSE;
 	}
 
@@ -491,20 +482,12 @@ fu_ebitdo_device_write_firmware (FuDevice *device,
 					 FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
 					 FU_EBITDO_PKT_CMD_FW_UPDATE_DATA,
 					 payload_data + offset, chunk_sz,
-					 &error_local)) {
-			g_set_error (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "Failed to write firmware @0x%04x: %s",
-				     offset, error_local->message);
+					 error)) {
+			g_prefix_error (error, "Failed to write firmware @0x%04x: ", offset);
 			return FALSE;
 		}
-		if (!fu_ebitdo_device_receive (self, NULL, 0, &error_local)) {
-			g_set_error (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "Failed to get ACK for write firmware @0x%04x: %s",
-				     offset, error_local->message);
+		if (!fu_ebitdo_device_receive (self, NULL, 0, error)) {
+			g_prefix_error (error, "Failed to get ACK for write firmware @0x%04x: ", offset);
 			return FALSE;
 		}
 	}
@@ -524,12 +507,8 @@ fu_ebitdo_device_write_firmware (FuDevice *device,
 				 FU_EBITDO_PKT_CMD_FW_SET_ENCODE_ID,
 				 (guint8 *) serial_new,
 				 sizeof(serial_new),
-				 &error_local)) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_INVALID_DATA,
-			     "failed to set encoding ID: %s",
-			     error_local->message);
+				 error)) {
+		g_prefix_error (error, "failed to set encoding ID: ");
 		return FALSE;
 	}
 
@@ -539,20 +518,12 @@ fu_ebitdo_device_write_firmware (FuDevice *device,
 				 FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
 				 FU_EBITDO_PKT_CMD_FW_UPDATE_OK,
 				 NULL, 0,
-				 &error_local)) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_INVALID_DATA,
-			     "failed to mark firmware as successful: %s",
-			     error_local->message);
+				 error)) {
+		g_prefix_error (error, "failed to mark firmware as successful: ");
 		return FALSE;
 	}
-	if (!fu_ebitdo_device_receive (self, NULL, 0, &error_local)) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_INVALID_DATA,
-			     "failed to get ACK for mark firmware as successful: %s",
-			     error_local->message);
+	if (!fu_ebitdo_device_receive (self, NULL, 0, error)) {
+		g_prefix_error (error, "failed to get ACK for mark firmware as successful: ");
 		return FALSE;
 	}
 
