@@ -100,6 +100,11 @@ fu_plugin_verify (FuPlugin *plugin,
 		  FuPluginVerifyFlags flags,
 		  GError **error)
 {
+	if (g_strcmp0 (fu_device_get_version (device), "1.2.2") == 0) {
+		fu_device_add_checksum (device, "90d0ad436d21e0687998cd2127b2411135e1f730");
+		fu_device_add_checksum (device, "921631916a60b295605dbae6a0309f9b64e2401b3de8e8506e109fc82c586e3a");
+		return TRUE;
+	}
 	if (g_strcmp0 (fu_device_get_version (device), "1.2.3") == 0) {
 		fu_device_add_checksum (device, "7998cd212721e068b2411135e1f90d0ad436d730");
 		fu_device_add_checksum (device, "dbae6a0309b3de8e850921631916a60b2956056e109fc82c586e3f9b64e2401a");
