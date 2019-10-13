@@ -1052,50 +1052,22 @@ fu_util_clear_offline (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_verify_update_all (FuUtilPrivate *priv, GError **error)
-{
-	g_autoptr(GPtrArray) devs = NULL;
-
-	/* get devices from daemon */
-	devs = fwupd_client_get_devices (priv->client, NULL, error);
-	if (devs == NULL)
-		return FALSE;
-
-	/* get results */
-	for (guint i = 0; i < devs->len; i++) {
-		g_autoptr(GError) error_local = NULL;
-		FwupdDevice *dev = g_ptr_array_index (devs, i);
-		if (!fu_util_filter_device (priv, dev))
-			continue;
-		if (!fwupd_client_verify_update (priv->client,
-						 fwupd_device_get_id (dev),
-						 NULL,
-						 &error_local)) {
-			g_print ("%s\tFAILED: %s\n",
-				 fwupd_device_get_guid_default (dev),
-				 error_local->message);
-			continue;
-		}
-		g_print ("%s\t%s\n",
-			 fwupd_device_get_guid_default (dev),
-			 _("OK"));
-	}
-	return TRUE;
-}
-
-static gboolean
 fu_util_verify_update (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FwupdDevice) dev = NULL;
-
-	if (g_strv_length (values) == 0)
-		return fu_util_verify_update_all (priv, error);
 
 	dev = fu_util_get_device_or_prompt (priv, values, error);
 	if (dev == NULL)
 		return FALSE;
 
-	return fwupd_client_verify_update (priv->client, fwupd_device_get_id (dev), NULL, error);
+	if (!fwupd_client_verify_update (priv->client, fwupd_device_get_id (dev), NULL, error)) {
+		g_prefix_error (error, "failed to verify update %s: ", fu_device_get_name (dev));
+		return FALSE;
+	}
+	/* TRANSLATORS: success message when user refreshes device checksums */
+	g_print ("%s\n", _("Successfully updated device checksums"));
+
+	return TRUE;
 }
 
 static gboolean
@@ -1513,50 +1485,22 @@ fu_util_prompt_for_release (FuUtilPrivate *priv, GPtrArray *rels, GError **error
 }
 
 static gboolean
-fu_util_verify_all (FuUtilPrivate *priv, GError **error)
-{
-	g_autoptr(GPtrArray) devs = NULL;
-
-	/* get devices from daemon */
-	devs = fwupd_client_get_devices (priv->client, NULL, error);
-	if (devs == NULL)
-		return FALSE;
-
-	/* get results */
-	for (guint i = 0; i < devs->len; i++) {
-		g_autoptr(GError) error_local = NULL;
-		FwupdDevice *dev = g_ptr_array_index (devs, i);
-		if (!fu_util_filter_device (priv, dev))
-			continue;
-		if (!fwupd_client_verify (priv->client,
-					  fwupd_device_get_id (dev),
-					  NULL,
-					  &error_local)) {
-			g_print ("%s\tFAILED: %s\n",
-				 fwupd_device_get_guid_default (dev),
-				 error_local->message);
-			continue;
-		}
-		g_print ("%s\t%s\n",
-			 fwupd_device_get_guid_default (dev),
-			 _("OK"));
-	}
-	return TRUE;
-}
-
-static gboolean
 fu_util_verify (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FwupdDevice) dev = NULL;
-
-	if (g_strv_length (values) == 0)
-		return fu_util_verify_all (priv, error);
 
 	dev = fu_util_get_device_or_prompt (priv, values, error);
 	if (dev == NULL)
 		return FALSE;
 
-	return fwupd_client_verify (priv->client, fwupd_device_get_id (dev), NULL, error);
+	if (!fwupd_client_verify (priv->client, fwupd_device_get_id (dev), NULL, error)) {
+		g_prefix_error (error, "failed to verify %s: ", fu_device_get_name (dev));
+		return FALSE;
+	}
+	/* TRANSLATORS: success message when user verified device checksums */
+	g_print ("%s\n", _("Successfully verified device checksums"));
+
+	return TRUE;
 }
 
 static gboolean
