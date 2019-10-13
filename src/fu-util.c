@@ -252,6 +252,8 @@ fu_util_maybe_enable_automatic (FuUtilPrivate *priv, GPtrArray *remotes, GError 
 		for (guint i = 0; i < remotes->len; i++) {
 			FwupdRemote *remote = g_ptr_array_index (remotes, i);
 			const gchar *remote_id = fwupd_remote_get_id (remote);
+			if (fwupd_remote_get_report_uri (remote) == NULL)
+				continue;
 			if (!fwupd_client_modify_remote (priv->client,
 							 remote_id, "ReportURI", "",
 							 NULL, error))
@@ -272,6 +274,10 @@ fu_util_maybe_enable_automatic (FuUtilPrivate *priv, GPtrArray *remotes, GError 
 		for (guint i = 0; i < remotes->len; i++) {
 			FwupdRemote *remote = g_ptr_array_index (remotes, i);
 			const gchar *remote_id = fwupd_remote_get_id (remote);
+			if (fwupd_remote_get_report_uri (remote) == NULL)
+				continue;
+			if (fwupd_remote_get_automatic_reports (remote))
+				continue;
 			if (!fwupd_client_modify_remote (priv->client,
 							 remote_id, "AutomaticReports", "true",
 							 NULL, error))
