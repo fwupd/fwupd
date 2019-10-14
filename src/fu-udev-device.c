@@ -125,6 +125,7 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	const gchar *tmp;
 	g_autofree gchar *subsystem = NULL;
 	g_autoptr(GUdevDevice) udev_parent = NULL;
+	g_autoptr(GUdevDevice) parent_i2c = NULL;
 
 	/* nothing to do */
 	if (priv->udev_device == NULL)
@@ -261,6 +262,12 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 		fu_device_add_instance_id_full (device, subsystem,
 						FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
 	}
+
+	/* determine if we're wired internally */
+	parent_i2c = g_udev_device_get_parent_with_subsystem (priv->udev_device,
+							      "i2c", NULL);
+	if (parent_i2c != NULL)
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_INTERNAL);
 
 	/* subclassed */
 	if (klass->probe != NULL) {
