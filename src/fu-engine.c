@@ -922,13 +922,14 @@ fu_engine_verify (FuEngine *self, const gchar *device_id, GError **error)
 
 		/* get all checksums to display a useful error */
 		xb_string_append_union (xpath, "checksum[@target='device']");
-		xb_string_append_union (xpath, "checksum[@target='content']");
+		if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE))
+			xb_string_append_union (xpath, "checksum[@target='content']");
 		csums = xb_node_query (release, xpath->str, 0, NULL);
 		if (csums == NULL) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_FOUND,
-				     "No device or content checksum for %s",
+				     "No stored checksums for %s",
 				     version);
 			return FALSE;
 		}
@@ -944,7 +945,8 @@ fu_engine_verify (FuEngine *self, const gchar *device_id, GError **error)
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_FOUND,
-			     "For v%s expected %s, got %s",
+			     "For %s %s expected %s, got %s",
+			     fu_device_get_name (device),
 			     version,
 			     checksums_metadata->str,
 			     checksums_device->str);
