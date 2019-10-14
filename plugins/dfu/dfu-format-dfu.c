@@ -67,9 +67,12 @@ dfu_firmware_from_dfu (DfuFirmware *firmware,
 	if (!fu_firmware_parse (native, bytes, flags, error))
 		return FALSE;
 
-	dfu_firmware_set_vid (firmware, fu_dfu_firmware_get_vid (FU_DFU_FIRMWARE (native)));
-	dfu_firmware_set_pid (firmware, fu_dfu_firmware_get_pid (FU_DFU_FIRMWARE (native)));
-	dfu_firmware_set_release (firmware, fu_dfu_firmware_get_release (FU_DFU_FIRMWARE (native)));
+	fu_dfu_firmware_set_vid (FU_DFU_FIRMWARE (firmware),
+				 fu_dfu_firmware_get_vid (FU_DFU_FIRMWARE (native)));
+	fu_dfu_firmware_set_pid (FU_DFU_FIRMWARE (firmware),
+				 fu_dfu_firmware_get_pid (FU_DFU_FIRMWARE (native)));
+	fu_dfu_firmware_set_release (FU_DFU_FIRMWARE (firmware),
+				     fu_dfu_firmware_get_release (FU_DFU_FIRMWARE (native)));
 
 	/* parse DfuSe prefix */
 	contents = fu_firmware_get_image_default_bytes (native, error);
@@ -97,9 +100,12 @@ dfu_firmware_add_footer (DfuFirmware *firmware, GBytes *contents, GError **error
 {
 	g_autoptr(FuFirmware) native = fu_dfu_firmware_new ();
 	g_autoptr(FuFirmwareImage) image = fu_firmware_image_new (contents);
-	fu_dfu_firmware_set_vid	(FU_DFU_FIRMWARE (native), dfu_firmware_get_vid (firmware));
-	fu_dfu_firmware_set_pid	(FU_DFU_FIRMWARE (native), dfu_firmware_get_pid (firmware));
-	fu_dfu_firmware_set_release (FU_DFU_FIRMWARE (native), dfu_firmware_get_release (firmware));
+	fu_dfu_firmware_set_vid (FU_DFU_FIRMWARE (native),
+				 fu_dfu_firmware_get_vid (FU_DFU_FIRMWARE (firmware)));
+	fu_dfu_firmware_set_pid (FU_DFU_FIRMWARE (native),
+				 fu_dfu_firmware_get_pid (FU_DFU_FIRMWARE (firmware)));
+	fu_dfu_firmware_set_release (FU_DFU_FIRMWARE (native),
+				     fu_dfu_firmware_get_release (FU_DFU_FIRMWARE (firmware)));
 	fu_dfu_firmware_set_version (FU_DFU_FIRMWARE (native),
 				     dfu_convert_version (dfu_firmware_get_format (firmware)));
 	fu_firmware_add_image (native, image);
@@ -121,9 +127,10 @@ dfu_firmware_to_dfu (DfuFirmware *firmware, GError **error)
 	if (dfu_firmware_get_format (firmware) == DFU_FIRMWARE_FORMAT_DFU) {
 		GBytes *contents;
 		DfuElement *element;
-		DfuImage *image;
-		image = dfu_firmware_get_image_default (firmware);
-		g_assert (image != NULL);
+		g_autoptr(DfuImage) image = NULL;
+		image = DFU_IMAGE (fu_firmware_get_image_default (FU_FIRMWARE (firmware), error));
+		if (image == NULL)
+			return NULL;
 		element = dfu_image_get_element (image, 0);
 		if (element == NULL) {
 			g_set_error (error,

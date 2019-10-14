@@ -1518,9 +1518,9 @@ dfu_device_upload (DfuDevice *device,
 
 	/* create ahead of time */
 	firmware = dfu_firmware_new ();
-	dfu_firmware_set_vid (firmware, priv->runtime_vid);
-	dfu_firmware_set_pid (firmware, priv->runtime_pid);
-	dfu_firmware_set_release (firmware, 0xffff);
+	fu_dfu_firmware_set_vid (FU_DFU_FIRMWARE (firmware), priv->runtime_vid);
+	fu_dfu_firmware_set_pid (FU_DFU_FIRMWARE (firmware), priv->runtime_pid);
+	fu_dfu_firmware_set_release (FU_DFU_FIRMWARE (firmware), 0xffff);
 
 	/* upload from each target */
 	for (guint i = 0; i < priv->targets->len; i++) {
@@ -1551,7 +1551,7 @@ dfu_device_upload (DfuDevice *device,
 		g_signal_handler_disconnect (target, id2);
 		if (image == NULL)
 			return NULL;
-		dfu_firmware_add_image (firmware, image);
+		fu_firmware_add_image (FU_FIRMWARE (firmware), FU_FIRMWARE_IMAGE (image));
 	}
 
 	/* do not do the dummy upload for quirked devices */
@@ -1596,9 +1596,9 @@ dfu_device_download (DfuDevice *device,
 		     GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
-	GPtrArray *images;
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	gboolean ret;
+	g_autoptr(GPtrArray) images = NULL;
 
 	/* no backing USB device */
 	if (usb_device == NULL) {
@@ -1616,7 +1616,7 @@ dfu_device_download (DfuDevice *device,
 
 	/* do we allow wildcard VID:PID matches */
 	if ((flags & DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID) == 0) {
-		if (dfu_firmware_get_vid (firmware) == 0xffff) {
+		if (fu_dfu_firmware_get_vid (FU_DFU_FIRMWARE (firmware)) == 0xffff) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -1625,7 +1625,7 @@ dfu_device_download (DfuDevice *device,
 		}
 	}
 	if ((flags & DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID) == 0) {
-		if (dfu_firmware_get_pid (firmware) == 0xffff) {
+		if (fu_dfu_firmware_get_pid (FU_DFU_FIRMWARE (firmware)) == 0xffff) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -1636,7 +1636,7 @@ dfu_device_download (DfuDevice *device,
 
 	/* check vendor matches */
 	if (priv->runtime_vid != 0xffff) {
-		if (!dfu_device_id_compatible (dfu_firmware_get_vid (firmware),
+		if (!dfu_device_id_compatible (fu_dfu_firmware_get_vid (FU_DFU_FIRMWARE (firmware)),
 					       priv->runtime_vid,
 					       fu_usb_device_get_vid (FU_USB_DEVICE (device)))) {
 			g_set_error (error,
@@ -1644,7 +1644,7 @@ dfu_device_download (DfuDevice *device,
 				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "vendor ID incorrect, expected 0x%04x "
 				     "got 0x%04x and 0x%04x\n",
-				     dfu_firmware_get_vid (firmware),
+				     fu_dfu_firmware_get_vid (FU_DFU_FIRMWARE (firmware)),
 				     priv->runtime_vid,
 				     fu_usb_device_get_vid (FU_USB_DEVICE (device)));
 			return FALSE;
@@ -1653,7 +1653,7 @@ dfu_device_download (DfuDevice *device,
 
 	/* check product matches */
 	if (priv->runtime_pid != 0xffff) {
-		if (!dfu_device_id_compatible (dfu_firmware_get_pid (firmware),
+		if (!dfu_device_id_compatible (fu_dfu_firmware_get_pid (FU_DFU_FIRMWARE (firmware)),
 					       priv->runtime_pid,
 					       fu_usb_device_get_pid (FU_USB_DEVICE (device)))) {
 			g_set_error (error,
@@ -1661,7 +1661,7 @@ dfu_device_download (DfuDevice *device,
 				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "product ID incorrect, expected 0x%04x "
 				     "got 0x%04x and 0x%04x",
-				     dfu_firmware_get_pid (firmware),
+				     fu_dfu_firmware_get_pid (FU_DFU_FIRMWARE (firmware)),
 				     priv->runtime_pid,
 				     fu_usb_device_get_pid (FU_USB_DEVICE (device)));
 			return FALSE;
@@ -1669,7 +1669,7 @@ dfu_device_download (DfuDevice *device,
 	}
 
 	/* download each target */
-	images = dfu_firmware_get_images (firmware);
+	images = fu_firmware_get_images (FU_FIRMWARE (firmware));
 	if (images->len == 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
