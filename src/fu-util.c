@@ -143,13 +143,15 @@ fu_util_update_device_changed_cb (FwupdClient *client,
 static gboolean
 fu_util_filter_device (FuUtilPrivate *priv, FwupdDevice *dev)
 {
-	if (priv->filter_include != FWUPD_DEVICE_FLAG_NONE) {
-		if (!fwupd_device_has_flag (dev, priv->filter_include))
-			return FALSE;
-	}
-	if (priv->filter_exclude != FWUPD_DEVICE_FLAG_NONE) {
-		if (fwupd_device_has_flag (dev, priv->filter_exclude))
-			return FALSE;
+	for (guint i = 0; i < 64; i++) {
+		if (priv->filter_include & (1 << i)) {
+			if (!fwupd_device_has_flag (dev, (1 << i)))
+				return FALSE;
+		}
+		if (priv->filter_exclude & (1 << i)) {
+			if (fwupd_device_has_flag (dev, (1 << i)))
+				return FALSE;
+		}
 	}
 	return TRUE;
 }
@@ -173,8 +175,6 @@ fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
 		dev = g_ptr_array_index (devices, i);
 		if (!fu_util_filter_device (priv, dev))
 			continue;
-		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
-			continue;
 		g_ptr_array_add (devices_filtered, dev);
 	}
 
@@ -190,6 +190,8 @@ fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
 	/* exactly one */
 	if (devices_filtered->len == 1) {
 		dev = g_ptr_array_index (devices_filtered, 0);
+		/* TRANSLATORS: Device has been chosen by the daemon for the user */
+		g_print ("%s: %s\n", _("Selected device"), fwupd_device_get_name (dev));
 		return g_object_ref (dev);
 	}
 
@@ -1405,6 +1407,7 @@ fu_util_get_releases (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GNode) root = g_node_new (NULL);
 	g_autofree gchar *title = fu_util_get_tree_title (priv);
 
+	priv->filter_include |= FWUPD_DEVICE_FLAG_SUPPORTED;
 	dev = fu_util_get_device_or_prompt (priv, values, error);
 	if (dev == NULL)
 		return FALSE;
@@ -1510,6 +1513,7 @@ fu_util_unlock (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FwupdDevice) dev = NULL;
 
+	priv->filter_include |= FWUPD_DEVICE_FLAG_LOCKED;
 	dev = fu_util_get_device_or_prompt (priv, values, error);
 	if (dev == NULL)
 		return FALSE;
@@ -1952,6 +1956,7 @@ fu_util_downgrade (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(FwupdRelease) rel = NULL;
 	g_autoptr(GPtrArray) rels = NULL;
 
+	priv->filter_include |= FWUPD_DEVICE_FLAG_SUPPORTED;
 	dev = fu_util_get_device_or_prompt (priv, values, error);
 	if (dev == NULL)
 		return FALSE;
@@ -1994,9 +1999,10 @@ fu_util_reinstall (FuUtilPrivate *priv, gchar **values, GError **error)
 	const gchar *remote_id;
 	g_autoptr(FwupdRelease) rel = NULL;
 	g_autoptr(GPtrArray) rels = NULL;
-	g_autoptr(FwupdDevice) dev = fu_util_get_device_or_prompt (priv,
-								   values,
-								   error);
+	g_autoptr(FwupdDevice) dev = NULL;
+
+	priv->filter_include |= FWUPD_DEVICE_FLAG_SUPPORTED;
+	dev = fu_util_get_device_or_prompt (priv, values, error);
 	if (dev == NULL)
 		return FALSE;
 
