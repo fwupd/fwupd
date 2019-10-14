@@ -161,14 +161,17 @@ fu_uefi_pcrs_setup_tpm20 (FuUefiPcrs *self, GError **error)
 
 		str = g_string_new (NULL);
 		for (guint j = 0; j < pcr_values->digests[i].size; j++) {
-			g_string_append_printf (str, "%02x", pcr_values->digests[i].buffer[j]);
+			gint64 val = pcr_values->digests[i].buffer[j];
+			if (val > 0)
+				g_string_append_printf (str, "%02x", pcr_values->digests[i].buffer[j]);
 		}
-
-		item = g_new0 (FuUefiPcrItem, 1);
-		item->idx = 0; /* constant PCR index 0, since we only read this single PCR */
-		item->checksum = g_string_free (g_steal_pointer (&str), FALSE);
-		g_ptr_array_add (self->items, item);
-		g_debug ("added PCR-%02u=%s", item->idx, item->checksum);
+		if (str->len > 0) {
+			item = g_new0 (FuUefiPcrItem, 1);
+			item->idx = 0; /* constant PCR index 0, since we only read this single PCR */
+			item->checksum = g_string_free (g_steal_pointer (&str), FALSE);
+			g_ptr_array_add (self->items, item);
+			g_debug ("added PCR-%02u=%s", item->idx, item->checksum);
+		}
 	}
 
 	/* success */
