@@ -1517,7 +1517,7 @@ fu_plugin_runner_usb_device_added (FuPlugin *self, FuUsbDevice *device, GError *
 						     FWUPD_ERROR,
 						     FWUPD_ERROR_NOT_SUPPORTED))
 					return TRUE;
-				g_propagate_error (error, error_local);
+				g_propagate_error (error, g_steal_pointer (&error_local));
 				return FALSE;
 			}
 		}
@@ -1566,7 +1566,7 @@ fu_plugin_runner_udev_device_added (FuPlugin *self, FuUdevDevice *device, GError
 						     FWUPD_ERROR,
 						     FWUPD_ERROR_NOT_SUPPORTED))
 					return TRUE;
-				g_propagate_error (error, error_local);
+				g_propagate_error (error, g_steal_pointer (&error_local));
 				return FALSE;
 			}
 		}
