@@ -842,14 +842,27 @@ fu_engine_verify (FuEngine *self, const gchar *device_id, GError **error)
 	/* try again with the system metadata */
 	if (release == NULL) {
 		GPtrArray *guids = fu_device_get_guids (device);
+		FwupdVersionFormat fmt = fu_device_get_version_format (device);
 		for (guint i = 0; i < guids->len; i++) {
 			const gchar *guid = g_ptr_array_index (guids, i);
 			g_autofree gchar *xpath2 = NULL;
+			g_autoptr(GPtrArray) releases = NULL;
 			xpath2 = g_strdup_printf ("components/component/"
 						  "provides/firmware[@type='flashed'][text()='%s']/"
-						  "../../releases/release[@version='%s']",
-						  guid, version);
-			release = xb_silo_query_first (self->silo, xpath2, NULL);
+						  "../../releases/release",
+						  guid);
+			releases = xb_silo_query (self->silo, xpath2, 0, error);
+			if (releases == NULL)
+				return FALSE;
+			for (guint j = 0; j < releases->len; j++) {
+				XbNode *rel = g_ptr_array_index (releases, j);
+				const gchar *rel_ver = xb_node_get_attr (rel, "version");
+				g_autofree gchar *tmp_ver = fu_common_version_parse_from_format (rel_ver, fmt);
+				if (fu_common_vercmp (tmp_ver, version) == 0) {
+					release = g_object_ref (rel);
+					break;
+				}
+			}
 			if (release != NULL)
 				break;
 		}
