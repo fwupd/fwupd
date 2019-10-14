@@ -215,6 +215,31 @@ fu_common_version_ensure_semver (const gchar *version)
 gchar *
 fu_common_version_parse (const gchar *version)
 {
+	return fu_common_version_parse_from_format (version, FWUPD_VERSION_FORMAT_TRIPLET);
+}
+
+/**
+ * fu_common_version_parse_from_format
+ * @version: A version number
+ * @fmt: A FwupdVersionFormat
+ *
+ * Returns a dotted decimal version string from a version string using fmt.
+ * The supported formats are:
+ *
+ * - Dotted decimal, e.g. "1.2.3"
+ * - Base 16, a hex number *with* a 0x prefix, e.g. "0x10203"
+ * - Base 10, a string containing just [0-9], e.g. "66051"
+ * - Date in YYYYMMDD format, e.g. 20150915
+ *
+ * Anything with a '.' or that doesn't match [0-9] or 0x[a-f,0-9] is considered
+ * a string and returned without modification.
+ *
+ * Returns: A version number, e.g. "1.0.3"
+ *
+ */
+gchar *
+fu_common_version_parse_from_format (const gchar *version, FwupdVersionFormat fmt)
+{
 	const gchar *version_noprefix = version;
 	gchar *endptr = NULL;
 	guint64 tmp;
@@ -246,7 +271,7 @@ fu_common_version_parse (const gchar *version)
 		return g_strdup (version);
 	if (tmp == 0)
 		return g_strdup (version);
-	return fu_common_version_from_uint32 ((guint32) tmp, FWUPD_VERSION_FORMAT_TRIPLET);
+	return fu_common_version_from_uint32 ((guint32) tmp, fmt);
 }
 
 /**
