@@ -15,7 +15,7 @@
 #include "dfu-sector.h"
 #include "dfu-target-avr.h"
 #include "dfu-target-private.h"
-#include "dfu-device-private.h"
+#include "dfu-device.h"
 
 #include "fwupd-error.h"
 

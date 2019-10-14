@@ -79,7 +79,7 @@
 #include <string.h>
 
 #include "dfu-common.h"
-#include "dfu-device-private.h"
+#include "dfu-device.h"
 #include "dfu-target-avr.h"
 #include "dfu-target-private.h"
 #include "dfu-target-stm.h"

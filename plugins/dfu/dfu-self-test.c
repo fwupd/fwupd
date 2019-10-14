@@ -11,9 +11,9 @@
 #include <string.h>
 
 #include "dfu-common.h"
-#include "dfu-device-private.h"
+#include "dfu-device.h"
 #include "dfu-firmware.h"
-#include "dfu-sector-private.h"
+#include "dfu-sector.h"
 #include "dfu-target-private.h"
 
 #include "fu-test.h"

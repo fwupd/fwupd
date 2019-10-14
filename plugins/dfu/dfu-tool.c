@@ -12,7 +12,7 @@
 #include <glib/gi18n.h>
 #include <glib-unix.h>
 
-#include "dfu-device-private.h"
+#include "dfu-device.h"
 #include "dfu-sector.h"
 
 #include "fu-device-locker.h"

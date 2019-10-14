@@ -26,7 +26,7 @@
 #include <stdio.h>
 
 #include "dfu-common.h"
-#include "dfu-sector-private.h"
+#include "dfu-sector.h"
 
 typedef struct {
 	guint32			 address;
