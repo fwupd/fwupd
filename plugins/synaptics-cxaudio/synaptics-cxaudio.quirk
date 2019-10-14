@@ -6,6 +6,10 @@ Guid = SYNAPTICS_CXAUDIO\CX2098X
 [DeviceInstanceId=USB\VID_17EF&PID_3092]
 Guid = SYNAPTICS_CXAUDIO\CX2198X
 
+# ThinkPad USB-C Dock Gen2 Audio
+[DeviceInstanceId=USB\VID_17EF&PID_A396]
+Guid = SYNAPTICS_CXAUDIO\CX2198X
+
 [Guid=SYNAPTICS_CXAUDIO\CX2098X]
 Plugin = synaptics_cxaudio
 ChipIdBase = 20980
