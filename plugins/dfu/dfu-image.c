@@ -19,6 +19,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "fu-common.h"
+
 #include "dfu-common.h"
 #include "dfu-element.h"
 #include "dfu-image.h"
@@ -28,18 +30,10 @@ static void dfu_image_finalize			 (GObject *object);
 typedef struct {
 	GPtrArray		*elements;
 	gchar			 name[255];
-	guint8			 alt_setting;
 } DfuImagePrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE (DfuImage, dfu_image, G_TYPE_OBJECT)
+G_DEFINE_TYPE_WITH_PRIVATE (DfuImage, dfu_image, FU_TYPE_FIRMWARE_IMAGE)
 #define GET_PRIVATE(o) (dfu_image_get_instance_private (o))
-
-static void
-dfu_image_class_init (DfuImageClass *klass)
-{
-	GObjectClass *object_class = G_OBJECT_CLASS (klass);
-	object_class->finalize = dfu_image_finalize;
-}
 
 static void
 dfu_image_init (DfuImage *image)
@@ -139,9 +133,8 @@ dfu_image_get_element_default (DfuImage *image)
 guint8
 dfu_image_get_alt_setting (DfuImage *image)
 {
-	DfuImagePrivate *priv = GET_PRIVATE (image);
 	g_return_val_if_fail (DFU_IS_IMAGE (image), 0xff);
-	return priv->alt_setting;
+	return fu_firmware_image_get_idx (FU_FIRMWARE_IMAGE (image));
 }
 
 /**
@@ -210,9 +203,7 @@ dfu_image_add_element (DfuImage *image, DfuElement *element)
 void
 dfu_image_set_alt_setting (DfuImage *image, guint8 alt_setting)
 {
-	DfuImagePrivate *priv = GET_PRIVATE (image);
-	g_return_if_fail (DFU_IS_IMAGE (image));
-	priv->alt_setting = alt_setting;
+	fu_firmware_image_set_idx (FU_FIRMWARE_IMAGE (image), alt_setting);
 }
 
 /**
@@ -241,28 +232,14 @@ dfu_image_set_name (DfuImage *image, const gchar *name)
 		memcpy (priv->name, name, 0xff);
 }
 
-/**
- * dfu_image_to_string:
- * @image: a #DfuImage
- *
- * Returns a string representaiton of the object.
- *
- * Return value: NULL terminated string, or %NULL for invalid
- **/
-gchar *
-dfu_image_to_string (DfuImage *image)
+static void
+dfu_image_to_string (FuFirmwareImage *self, guint idt, GString *str)
 {
+	DfuImage *image = DFU_IMAGE (self);
 	DfuImagePrivate *priv = GET_PRIVATE (image);
-	GString *str;
-
-	g_return_val_if_fail (DFU_IS_IMAGE (image), NULL);
-
-	str = g_string_new ("");
-	g_string_append_printf (str, "alt_setting: 0x%02x\n", priv->alt_setting);
 	if (priv->name[0] != '\0')
-		g_string_append_printf (str, "name:        %s\n", priv->name);
-	g_string_append_printf (str, "elements:    0x%02x\n",
-				priv->elements->len);
+		fu_common_string_append_kv (str, idt, "Name", priv->name);
+	fu_common_string_append_ku (str, idt, "Elements", priv->elements->len);
 
 	/* add elements */
 	for (guint i = 0; i < priv->elements->len; i++) {
@@ -272,7 +249,13 @@ dfu_image_to_string (DfuImage *image)
 		g_string_append_printf (str, "== ELEMENT %u ==\n", i);
 		g_string_append_printf (str, "%s\n", tmp);
 	}
+}
 
-	g_string_truncate (str, str->len - 1);
-	return g_string_free (str, FALSE);
+static void
+dfu_image_class_init (DfuImageClass *klass)
+{
+	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+	FuFirmwareImageClass *firmware_image_class = FU_FIRMWARE_IMAGE_CLASS (klass);
+	object_class->finalize = dfu_image_finalize;
+	firmware_image_class->to_string = dfu_image_to_string;
 }

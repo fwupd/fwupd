@@ -23,6 +23,7 @@
 #include <stdio.h>
 
 #include "fu-common-version.h"
+#include "fu-firmware.h"
 
 #include "dfu-common.h"
 #include "dfu-firmware.h"
@@ -534,7 +535,6 @@ gchar *
 dfu_firmware_to_string (DfuFirmware *firmware)
 {
 	DfuFirmwarePrivate *priv = GET_PRIVATE (firmware);
-	DfuImage *image;
 	GString *str;
 	g_autofree gchar *release_str = NULL;
 
@@ -554,8 +554,8 @@ dfu_firmware_to_string (DfuFirmware *firmware)
 	/* print images */
 	for (guint i = 0; i < priv->images->len; i++) {
 		g_autofree gchar *tmp = NULL;
-		image = g_ptr_array_index (priv->images, i);
-		tmp = dfu_image_to_string (image);
+		FuFirmwareImage *image = g_ptr_array_index (priv->images, i);
+		tmp = fu_firmware_image_to_string (image);
 		g_string_append_printf (str, "= IMAGE %u =\n", i);
 		g_string_append_printf (str, "%s\n", tmp);
 	}
