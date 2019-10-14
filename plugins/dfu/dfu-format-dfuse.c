@@ -267,15 +267,15 @@ GBytes *
 dfu_firmware_to_dfuse (DfuFirmware *firmware, GError **error)
 {
 	DfuSePrefix *prefix;
-	GPtrArray *images;
 	guint32 image_size_total = 0;
 	guint32 offset = sizeof (DfuSePrefix);
 	g_autofree guint8 *buf = NULL;
 	g_autoptr(GPtrArray) dfuse_images = NULL;
+	g_autoptr(GPtrArray) images = NULL;
 
 	/* get all the image data */
 	dfuse_images = g_ptr_array_new_with_free_func ((GDestroyNotify) g_bytes_unref);
-	images = dfu_firmware_get_images (firmware);
+	images = fu_firmware_get_images (FU_FIRMWARE (firmware));
 	for (guint i = 0; i < images->len; i++) {
 		DfuImage *im = g_ptr_array_index (images, i);
 		GBytes *contents;
@@ -384,7 +384,7 @@ dfu_firmware_from_dfuse (DfuFirmware *firmware,
 					      &consumed, error);
 		if (image == NULL)
 			return FALSE;
-		dfu_firmware_add_image (firmware, image);
+		fu_firmware_add_image (FU_FIRMWARE (firmware), FU_FIRMWARE_IMAGE (image));
 		offset += consumed;
 		len -= consumed;
 	}

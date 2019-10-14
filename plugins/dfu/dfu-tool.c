@@ -297,7 +297,7 @@ dfu_tool_set_vendor (DfuToolPrivate *priv, gchar **values, GError **error)
 			     values[1]);
 		return FALSE;
 	}
-	dfu_firmware_set_vid (firmware, (guint16) tmp);
+	fu_dfu_firmware_set_vid (FU_DFU_FIRMWARE (firmware), (guint16) tmp);
 
 	/* write out new file */
 	return dfu_firmware_write_file (firmware, file, error);
@@ -338,7 +338,7 @@ dfu_tool_set_product (DfuToolPrivate *priv, gchar **values, GError **error)
 			     "Failed to parse PID '%s'", values[1]);
 		return FALSE;
 	}
-	dfu_firmware_set_pid (firmware, (guint16) tmp);
+	fu_dfu_firmware_set_pid (FU_DFU_FIRMWARE (firmware), (guint16) tmp);
 
 	/* write out new file */
 	return dfu_firmware_write_file (firmware, file, error);
@@ -416,7 +416,7 @@ dfu_tool_set_release (DfuToolPrivate *priv, gchar **values, GError **error)
 		if (tmp == 0xffff)
 			return FALSE;
 	}
-	dfu_firmware_set_release (firmware, (guint16) tmp);
+	fu_dfu_firmware_set_release (FU_DFU_FIRMWARE (firmware), (guint16) tmp);
 
 	/* write out new file */
 	return dfu_firmware_write_file (firmware, file, error);
@@ -493,12 +493,12 @@ dfu_tool_bytes_replace (GBytes *data, GBytes *search, GBytes *replace)
 static gboolean
 dfu_tool_replace_data (DfuToolPrivate *priv, gchar **values, GError **error)
 {
-	GPtrArray *images;
 	guint cnt = 0;
 	g_autoptr(DfuFirmware) firmware = NULL;
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(GBytes) data_search = NULL;
 	g_autoptr(GBytes) data_replace = NULL;
+	g_autoptr(GPtrArray) images = NULL;
 
 	/* check args */
 	if (g_strv_length (values) < 3) {
@@ -535,7 +535,7 @@ dfu_tool_replace_data (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* get each data segment */
-	images = dfu_firmware_get_images (firmware);
+	images = fu_firmware_get_images (FU_FIRMWARE (firmware));
 	for (guint i = 0; i < images->len; i++) {
 		DfuImage *image = g_ptr_array_index (images, i);
 		GPtrArray *elements = dfu_image_get_elements (image);
@@ -611,7 +611,7 @@ dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* print the new object */
-	str_debug = dfu_firmware_to_string (firmware);
+	str_debug = fu_firmware_to_string (FU_FIRMWARE (firmware));
 	g_debug ("DFU: %s", str_debug);
 
 	/* write out new file */
@@ -713,9 +713,9 @@ dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 	/* create new firmware object */
 	firmware = dfu_firmware_new ();
 	dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_DFU);
-	dfu_firmware_set_vid (firmware, dfu_device_get_runtime_vid (device));
-	dfu_firmware_set_pid (firmware, dfu_device_get_runtime_pid (device));
-	dfu_firmware_add_image (firmware, image);
+	fu_dfu_firmware_set_vid (FU_DFU_FIRMWARE (firmware), dfu_device_get_runtime_vid (device));
+	fu_dfu_firmware_set_pid (FU_DFU_FIRMWARE (firmware), dfu_device_get_runtime_pid (device));
+	fu_firmware_add_image (FU_FIRMWARE (firmware), FU_FIRMWARE_IMAGE (image));
 
 	/* save file */
 	file = g_file_new_for_path (values[0]);
@@ -723,7 +723,7 @@ dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* print the new object */
-	str_debug = dfu_firmware_to_string (firmware);
+	str_debug = fu_firmware_to_string (FU_FIRMWARE (firmware));
 	g_debug ("DFU: %s", str_debug);
 
 	/* success */
@@ -825,7 +825,7 @@ dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* print the new object */
-	str_debug = dfu_firmware_to_string (firmware);
+	str_debug = fu_firmware_to_string (FU_FIRMWARE (firmware));
 	g_debug ("DFU: %s", str_debug);
 
 	/* success */
@@ -974,7 +974,7 @@ dfu_tool_dump (DfuToolPrivate *priv, gchar **values, GError **error)
 				 error_local->message);
 			continue;
 		}
-		tmp = dfu_firmware_to_string (firmware);
+		tmp = fu_firmware_to_string (FU_FIRMWARE (firmware));
 		g_print ("%s\n", tmp);
 	}
 	return TRUE;
@@ -983,11 +983,11 @@ dfu_tool_dump (DfuToolPrivate *priv, gchar **values, GError **error)
 static gboolean
 dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 {
-	DfuImage *image;
 	DfuTargetTransferFlags flags = DFU_TARGET_TRANSFER_FLAG_VERIFY;
 	g_autofree gchar *str_debug = NULL;
 	g_autoptr(DfuDevice) device = NULL;
 	g_autoptr(DfuFirmware) firmware = NULL;
+	g_autoptr(DfuImage) image = NULL;
 	g_autoptr(DfuTarget) target = NULL;
 	g_autoptr(FuDeviceLocker) locker  = NULL;
 	g_autoptr(GFile) file = NULL;
@@ -1039,7 +1039,7 @@ dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* print the new object */
-	str_debug = dfu_firmware_to_string (firmware);
+	str_debug = fu_firmware_to_string (FU_FIRMWARE (firmware));
 	g_debug ("DFU: %s", str_debug);
 
 	/* get correct target on device */
@@ -1066,7 +1066,7 @@ dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 
 	/* allow overriding the firmware alt-setting */
 	if (g_strv_length (values) > 2) {
-		image = dfu_firmware_get_image_by_name (firmware, values[2]);
+		image = DFU_IMAGE (fu_firmware_get_image_by_id (FU_FIRMWARE (firmware), values[2], NULL));
 		if (image == NULL) {
 			gchar *endptr;
 			guint64 tmp = g_ascii_strtoull (values[2], &endptr, 10);
@@ -1078,26 +1078,15 @@ dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 					     values[2]);
 				return FALSE;
 			}
-			image = dfu_firmware_get_image (firmware, (guint8) tmp);
-			if (image == NULL) {
-				g_set_error (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INVALID_FILE,
-					     "could not locate image in firmware for %02x",
-					     (guint) tmp);
+			image = DFU_IMAGE (fu_firmware_get_image_by_idx (FU_FIRMWARE (firmware), tmp, error));
+			if (image == NULL)
 				return FALSE;
-			}
 		}
 	} else {
 		g_print ("WARNING: Using default firmware image\n");
-		image = dfu_firmware_get_image_default (firmware);
-		if (image == NULL) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INVALID_FILE,
-					     "no default image");
+		image = DFU_IMAGE (fu_firmware_get_image_default (FU_FIRMWARE (firmware), error));
+		if (image == NULL)
 			return FALSE;
-		}
 	}
 
 	/* transfer */
