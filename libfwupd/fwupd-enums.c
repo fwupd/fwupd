@@ -169,6 +169,10 @@ fwupd_device_flag_to_string (FwupdDeviceFlags device_flag)
 		return "only-supported";
 	if (device_flag == FWUPD_DEVICE_FLAG_WILL_DISAPPEAR)
 		return "will-disappear";
+	if (device_flag == FWUPD_DEVICE_FLAG_CAN_VERIFY)
+		return "can-verify";
+	if (device_flag == FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE)
+		return "can-verify-image";
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -239,6 +243,10 @@ fwupd_device_flag_from_string (const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_ONLY_SUPPORTED;
 	if (g_strcmp0 (device_flag, "will-disappear") == 0)
 		return FWUPD_DEVICE_FLAG_WILL_DISAPPEAR;
+	if (g_strcmp0 (device_flag, "can-verify") == 0)
+		return FWUPD_DEVICE_FLAG_CAN_VERIFY;
+	if (g_strcmp0 (device_flag, "can-verify-image") == 0)
+		return FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE;
 	return FWUPD_DEVICE_FLAG_UNKNOWN;
 }
 

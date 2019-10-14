@@ -1056,6 +1056,7 @@ fu_util_verify_update (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FwupdDevice) dev = NULL;
 
+	priv->filter_include |= FWUPD_DEVICE_FLAG_CAN_VERIFY;
 	dev = fu_util_get_device_or_prompt (priv, values, error);
 	if (dev == NULL)
 		return FALSE;
@@ -1489,6 +1490,7 @@ fu_util_verify (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FwupdDevice) dev = NULL;
 
+	priv->filter_include |= FWUPD_DEVICE_FLAG_CAN_VERIFY;
 	dev = fu_util_get_device_or_prompt (priv, values, error);
 	if (dev == NULL)
 		return FALSE;
@@ -2450,7 +2452,7 @@ main (int argc, char *argv[])
 		     "verify",
 		     "[DEVICE_ID]",
 		     /* TRANSLATORS: command description */
-		     _("Gets the cryptographic hash of the dumped firmware"),
+		     _("Checks cryptographic hash matches firmware"),
 		     fu_util_verify);
 	fu_util_cmd_array_add (cmd_array,
 		     "unlock",
@@ -2504,7 +2506,7 @@ main (int argc, char *argv[])
 		     "verify-update",
 		     "[DEVICE_ID]",
 		     /* TRANSLATORS: command description */
-		     _("Update the stored metadata with current ROM contents"),
+		     _("Update the stored cryptographic hash with current ROM contents"),
 		     fu_util_verify_update);
 	fu_util_cmd_array_add (cmd_array,
 		     "modify-remote",

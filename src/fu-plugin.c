@@ -1752,7 +1752,6 @@ fu_plugin_runner_verify (FuPlugin *self,
 	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_verify", (gpointer *) &func);
 	if (func == NULL) {
-		g_debug ("running superclassed read_firmware() on %s", priv->name);
 		return fu_plugin_device_read_firmware (self, device, error);
 	}
 

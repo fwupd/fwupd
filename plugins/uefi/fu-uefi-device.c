@@ -554,6 +554,7 @@ fu_uefi_device_probe (FuDevice *device, GError **error)
 	/* set the PCR0 as the device checksum */
 	if (self->kind == FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE) {
 		g_autoptr(GError) error_local = NULL;
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_CAN_VERIFY);
 		if (!fu_uefi_device_add_system_checksum (device, &error_local))
 			g_warning ("Failed to get PCR0s: %s", error_local->message);
 	}

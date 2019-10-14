@@ -1405,6 +1405,14 @@ fu_device_get_physical_id (FuDevice *self)
 	return priv->physical_id;
 }
 
+void
+fu_device_add_flag (FuDevice *self, FwupdDeviceFlags flag)
+{
+	if (flag & FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE)
+		flag |= FWUPD_DEVICE_FLAG_CAN_VERIFY;
+	fwupd_device_add_flag (FWUPD_DEVICE (self), flag);
+}
+
 static void
 fu_device_set_custom_flag (FuDevice *self, const gchar *hint)
 {
@@ -1911,8 +1919,10 @@ fu_device_read_firmware (FuDevice *self, GError **error)
 	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
-	/* no plugin-specific method */
-	if (klass->read_firmware == NULL) {
+
+	/* no plugin-specific method or device doesn't support */
+	if (!fu_device_has_flag (self, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE) ||
+	    klass->read_firmware == NULL) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
