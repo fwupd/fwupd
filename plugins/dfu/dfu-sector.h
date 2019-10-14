@@ -35,6 +35,12 @@ typedef enum {
 	DFU_SECTOR_CAP_LAST
 } DfuSectorCap;
 
+DfuSector	*dfu_sector_new			(guint32	 address,
+						 guint32	 size,
+						 guint32	 size_left,
+						 guint16	 zone,
+						 guint16	 number,
+						 DfuSectorCap	 cap);
 guint32		 dfu_sector_get_id		(DfuSector	*sector);
 guint32		 dfu_sector_get_address		(DfuSector	*sector);
 guint32		 dfu_sector_get_size		(DfuSector	*sector);

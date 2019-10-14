@@ -24,8 +24,8 @@
 #include <math.h>
 
 #include "dfu-common.h"
-#include "dfu-device-private.h"
-#include "dfu-sector-private.h"
+#include "dfu-device.h"
+#include "dfu-sector.h"
 #include "dfu-target-private.h"
 
 #include "fwupd-error.h"
