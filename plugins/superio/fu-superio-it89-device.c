@@ -468,7 +468,7 @@ fu_superio_it89_device_detach (FuDevice *device, GError **error)
 	}
 
 	/* success */
-	fu_device_add_flag (self, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	return TRUE;
 }
 

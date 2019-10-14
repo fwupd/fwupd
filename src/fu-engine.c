@@ -827,10 +827,12 @@ fu_engine_verify (FuEngine *self, const gchar *device_id, GError **error)
 	if (plugin == NULL)
 		return FALSE;
 
-	/* set the device firmware hash */
-	if (!fu_plugin_runner_verify (plugin, device,
-				      FU_PLUGIN_VERIFY_FLAG_NONE, error))
-		return FALSE;
+	/* update the device firmware hashes if possible */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE)) {
+		if (!fu_plugin_runner_verify (plugin, device,
+					      FU_PLUGIN_VERIFY_FLAG_NONE, error))
+			return FALSE;
+	}
 
 	/* find component in metadata */
 	version = fu_device_get_version (device);
@@ -874,7 +876,7 @@ fu_engine_verify (FuEngine *self, const gchar *device_id, GError **error)
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_FOUND,
-			     "No version %s", version);
+			     "No release found for version %s", version);
 		return FALSE;
 	}
 
