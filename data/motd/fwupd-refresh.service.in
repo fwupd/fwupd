@@ -19,3 +19,4 @@ SystemCallFilter=~@mount
 ProtectKernelModules=yes
 ProtectControlGroups=yes
 RestrictRealtime=yes
+SuccessExitStatus=2
