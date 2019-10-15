@@ -10,6 +10,10 @@ Guid = SYNAPTICS_CXAUDIO\CX2198X
 [DeviceInstanceId=USB\VID_17EF&PID_A396]
 Guid = SYNAPTICS_CXAUDIO\CX2198X
 
+# Google Pixel USB-C headphones
+[DeviceInstanceId=USB\VID_18D1&PID_5033]
+Guid = SYNAPTICS_CXAUDIO\CX2198X
+
 [Guid=SYNAPTICS_CXAUDIO\CX2098X]
 Plugin = synaptics_cxaudio
 ChipIdBase = 20980
