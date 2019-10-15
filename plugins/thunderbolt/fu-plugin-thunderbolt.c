@@ -271,7 +271,7 @@ static void
 fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 {
 	FuDevice *dev_tmp;
-	const gchar *name;
+	const gchar *name = NULL;
 	const gchar *uuid;
 	const gchar *vendor;
 	const gchar *devpath;
@@ -316,13 +316,14 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 		return;
 	}
 
+	/* these may be missing on ICL or later */
 	vid = fu_plugin_thunderbolt_udev_get_uint16 (device, "vendor", &error_vid);
 	if (vid == 0x0)
-		g_warning ("failed to get Vendor ID: %s", error_vid->message);
+		g_debug ("failed to get Vendor ID: %s", error_vid->message);
 
 	did = fu_plugin_thunderbolt_udev_get_uint16 (device, "device", &error_did);
 	if (did == 0x0)
-		g_warning ("failed to get Device ID: %s", error_did->message);
+		g_debug ("failed to get Device ID: %s", error_did->message);
 
 	/* requires kernel 5.5 or later, non-fatal if not available */
 	gen = fu_plugin_thunderbolt_udev_get_uint16 (device, "generation", &error_gen);
@@ -389,16 +390,15 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	fu_device_set_physical_id (dev, uuid);
 
 	fu_device_set_metadata (dev, "sysfs-path", devpath);
-	name = g_udev_device_get_sysfs_attr (device, "device_name");
-	if (name != NULL) {
-		if (is_host) {
-			g_autofree gchar *pretty_name = NULL;
-			pretty_name = g_strdup_printf ("%s Thunderbolt Controller", name);
-			fu_device_set_name (dev, pretty_name);
-		} else {
-			fu_device_set_name (dev, name);
-		}
+	if (!is_host)
+		name = g_udev_device_get_sysfs_attr (device, "device_name");
+	if (name == NULL) {
+		if (gen == 4)
+			name = "USB4 Controller";
+		else
+			name = "Thunderbolt Controller";
 	}
+	fu_device_set_name (dev, name);
 	if (is_host)
 		fu_device_set_summary (dev, "Unmatched performance for high-speed I/O");
 	fu_device_add_icon (dev, "thunderbolt");
