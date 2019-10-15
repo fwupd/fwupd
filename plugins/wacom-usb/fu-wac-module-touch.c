@@ -51,7 +51,7 @@ fu_wac_module_touch_write_firmware (FuDevice *device,
 		return FALSE;
 	g_debug ("using element at addr 0x%0x",
 		 (guint) fu_firmware_image_get_addr (img));
-	fw = fu_firmware_image_get_bytes (img, error);
+	fw = fu_firmware_image_write (img, error);
 	if (fw == NULL)
 		return FALSE;
 

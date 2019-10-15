@@ -436,7 +436,7 @@ fu_solokey_device_write_firmware (FuDevice *device,
 		return FALSE;
 
 	/* build packets */
-	fw = fu_firmware_image_get_bytes (img, error);
+	fw = fu_firmware_image_write (img, error);
 	if (fw == NULL)
 		return FALSE;
 	chunks = fu_chunk_array_new_from_bytes (fw,
