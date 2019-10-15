@@ -22,8 +22,10 @@ struct _FuFirmwareImageClass
 	void			 (*to_string)	(FuFirmwareImage	*self,
 						 guint			 idt,
 						 GString		*str);
+	GBytes			*(*write)	(FuFirmwareImage	*self,
+						 GError			**error);
 	/*< private >*/
-	gpointer		 padding[29];
+	gpointer		 padding[28];
 };
 
 FuFirmwareImage	*fu_firmware_image_new		(GBytes			*bytes);
@@ -40,9 +42,9 @@ void		 fu_firmware_image_set_idx	(FuFirmwareImage	*self,
 						 guint64		 idx);
 void		 fu_firmware_image_set_bytes	(FuFirmwareImage	*self,
 						 GBytes			*bytes);
-GBytes		*fu_firmware_image_get_bytes	(FuFirmwareImage	*self,
+GBytes		*fu_firmware_image_write	(FuFirmwareImage	*self,
 						 GError			**error);
-GBytes		*fu_firmware_image_get_bytes_chunk(FuFirmwareImage	*self,
+GBytes		*fu_firmware_image_write_chunk	(FuFirmwareImage	*self,
 						 guint64		 address,
 						 guint64		 chunk_sz_max,
 						 GError			**error);

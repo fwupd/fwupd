@@ -289,7 +289,7 @@ fu_altos_device_write_firmware (FuDevice *device,
 	}
 
 	/* check firmware will fit */
-	fw = fu_firmware_image_get_bytes (img, error);
+	fw = fu_firmware_image_write (img, error);
 	if (fw == NULL)
 		return FALSE;
 	data = g_bytes_get_data (fw, (gsize *) &data_len);

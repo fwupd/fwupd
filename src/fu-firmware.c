@@ -296,7 +296,7 @@ fu_firmware_get_image_by_id_bytes (FuFirmware *self, const gchar *id, GError **e
 	g_autoptr(FuFirmwareImage) img = fu_firmware_get_image_by_id (self, id, error);
 	if (img == NULL)
 		return NULL;
-	return fu_firmware_image_get_bytes (img, error);
+	return fu_firmware_image_write (img, error);
 }
 
 /**
@@ -349,7 +349,7 @@ fu_firmware_get_image_by_idx_bytes (FuFirmware *self, guint64 idx, GError **erro
 	g_autoptr(FuFirmwareImage) img = fu_firmware_get_image_by_idx (self, idx, error);
 	if (img == NULL)
 		return NULL;
-	return fu_firmware_image_get_bytes (img, error);
+	return fu_firmware_image_write (img, error);
 }
 
 /**
@@ -404,7 +404,7 @@ fu_firmware_get_image_default_bytes (FuFirmware *self, GError **error)
 	g_autoptr(FuFirmwareImage) img = fu_firmware_get_image_default (self, error);
 	if (img == NULL)
 		return NULL;
-	return fu_firmware_image_get_bytes (img, error);
+	return fu_firmware_image_write (img, error);
 }
 
 /**

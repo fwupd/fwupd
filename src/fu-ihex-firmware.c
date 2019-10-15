@@ -308,7 +308,7 @@ dfu_firmware_to_ihex_image (FuFirmwareImage *img, GString *str, GError **error)
 	g_autoptr(GBytes) bytes = NULL;
 
 	/* get data */
-	bytes = fu_firmware_image_get_bytes (img, error);
+	bytes = fu_firmware_image_write (img, error);
 	if (bytes == NULL)
 		return FALSE;
 

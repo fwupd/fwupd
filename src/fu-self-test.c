@@ -3870,7 +3870,7 @@ fu_firmware_ihex_offset_func (void)
 	g_assert_no_error (error);
 	g_assert (img_verify != NULL);
 	g_assert_cmpint (fu_firmware_image_get_addr (img_verify), ==, 0x80000000);
-	data_verify = fu_firmware_image_get_bytes (img_verify, &error);
+	data_verify = fu_firmware_image_write (img_verify, &error);
 	g_assert_no_error (error);
 	g_assert (data_verify != NULL);
 	g_assert_cmpint (g_bytes_get_size (data_verify), ==, 0x4);

@@ -547,10 +547,10 @@ fu_wac_device_write_firmware (FuDevice *device,
 
 		if (fu_wav_device_flash_descriptor_is_wp (fd))
 			continue;
-		blob_tmp = fu_firmware_image_get_bytes_chunk (img,
-							      fd->start_addr,
-							      fd->block_sz,
-							      NULL);
+		blob_tmp = fu_firmware_image_write_chunk (img,
+							  fd->start_addr,
+							  fd->block_sz,
+							  NULL);
 		if (blob_tmp == NULL)
 			break;
 		blob_block = fu_common_bytes_pad (blob_tmp, fd->block_sz);
