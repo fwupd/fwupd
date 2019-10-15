@@ -17,6 +17,7 @@ pacman -S --noconfirm ibm-sw-tpm2 tpm2-tools
 tpm_server &
 trap "kill $!" EXIT
 # extend a PCR0 value for test suite
+sleep 2
 tpm2_startup -c
 tpm2_pcrextend 0:sha1=f1d2d2f924e986ac86fdf7b36c94bcdf32beec15
 export TPM_SERVER_RUNNING=1
