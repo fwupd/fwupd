@@ -345,8 +345,10 @@ fu_util_perhaps_show_unreported (FuUtilPrivate *priv, GError **error)
 		g_debug ("%s is %d", fwupd_remote_get_title (remote), remote_automatic);
 		if (remote_automatic && !all_automatic)
 			all_automatic = TRUE;
-		if (!remote_automatic && all_automatic)
+		if (!remote_automatic && all_automatic) {
 			all_automatic = FALSE;
+			break;
+		}
 	}
 
 	/* check that they can be reported */
