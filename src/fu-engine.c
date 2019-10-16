@@ -77,6 +77,7 @@ struct _FuEngine
 	GHashTable		*runtime_versions;
 	GHashTable		*compile_versions;
 	GHashTable		*approved_firmware;
+	GHashTable		*delayed_devices;
 	gchar			*host_machine_id;
 	gboolean		 loaded;
 };
@@ -106,6 +107,36 @@ static void
 fu_engine_emit_device_changed (FuEngine *self, FuDevice *device)
 {
 	g_signal_emit (self, signals[SIGNAL_DEVICE_CHANGED], 0, device);
+}
+
+typedef struct {
+	FuEngine	*self;
+	FuDevice	*device;
+	FuPlugin	*plugin;
+	GObject		*source;
+} FuEngineDeviceDelayHelper;
+
+static void
+fu_engine_device_delay_helper_free (FuEngineDeviceDelayHelper *helper)
+{
+	g_object_unref (helper->plugin);
+	g_object_unref (helper->source);
+	g_object_unref (helper->device);
+	g_free (helper);
+}
+
+static FuEngineDeviceDelayHelper *
+fu_engine_device_delay_helper_new (FuEngine *self,
+				   GObject *source,
+				   FuPlugin *plugin,
+				   FuDevice *device)
+{
+	FuEngineDeviceDelayHelper *helper = g_new0 (FuEngineDeviceDelayHelper, 1);
+	helper->self = self; /* no ref */
+	helper->plugin = g_object_ref (plugin);
+	helper->source = g_object_ref (source);
+	helper->device = g_object_ref (device);
+	return helper;
 }
 
 /**
@@ -3901,9 +3932,27 @@ fu_engine_recoldplug_delay_cb (gpointer user_data)
 	return FALSE;
 }
 
+static gboolean
+fu_engine_udev_device_delayed_added_cb (gpointer user_data)
+{
+	FuEngineDeviceDelayHelper *helper = (FuEngineDeviceDelayHelper *) user_data;
+	GUdevDevice *udev_device = G_UDEV_DEVICE (helper->source);
+	g_autoptr(GError) error_local = NULL;
+	if (!fu_plugin_runner_udev_device_added (helper->plugin,
+						FU_UDEV_DEVICE (helper->device),
+						&error_local)) {
+		g_warning ("failed to add delayed udev device %s: %s",
+			   g_udev_device_get_sysfs_path (udev_device),
+			   error_local->message);
+	}
+	g_hash_table_remove (helper->self->delayed_devices, helper->source);
+	return G_SOURCE_REMOVE;
+}
+
 static void
 fu_engine_udev_device_add (FuEngine *self, GUdevDevice *udev_device)
 {
+	FuPlugin *plugin;
 	const gchar *plugin_name;
 	g_autoptr(FuUdevDevice) device = fu_udev_device_new (udev_device);
 	g_autoptr(GError) error_local = NULL;
@@ -3919,27 +3968,43 @@ fu_engine_udev_device_add (FuEngine *self, GUdevDevice *udev_device)
 
 	/* can be specified using a quirk */
 	plugin_name = fu_device_get_plugin (FU_DEVICE (device));
-	if (plugin_name != NULL) {
-		g_autoptr(GError) error = NULL;
-		FuPlugin *plugin = fu_plugin_list_find_by_name (self->plugin_list,
-								plugin_name, &error);
-		if (plugin == NULL) {
-			g_warning ("failed to find specified plugin %s: %s",
-				   plugin_name, error->message);
+	if (plugin_name == NULL)
+		return;
+	plugin = fu_plugin_list_find_by_name (self->plugin_list, plugin_name, &error_local);
+	if (plugin == NULL) {
+		g_warning ("failed to find specified plugin %s: %s",
+			   plugin_name, error_local->message);
+		return;
+	}
+
+	/* wait for hardware to settle */
+	if (self->loaded && fu_device_get_insert_delay (FU_DEVICE (device)) > 0) {
+		FuEngineDeviceDelayHelper *helper;
+		g_debug ("insert delay of %ums for udev device %s",
+			 fu_device_get_insert_delay (FU_DEVICE (device)),
+			 g_udev_device_get_sysfs_path (udev_device));
+		helper = fu_engine_device_delay_helper_new (self,
+							    G_OBJECT (udev_device),
+							    plugin,
+							    FU_DEVICE (device));
+		g_hash_table_insert (helper->self->delayed_devices,
+				     g_object_ref (udev_device), helper);
+		g_timeout_add (fu_device_get_insert_delay (FU_DEVICE (device)),
+			       fu_engine_udev_device_delayed_added_cb, helper);
+		return;
+	}
+
+	/* immediate add */
+	if (!fu_plugin_runner_udev_device_added (plugin, device, &error_local)) {
+		if (g_error_matches (error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			g_debug ("%s ignoring: %s",
+				 fu_plugin_get_name (plugin),
+				 error_local->message);
 			return;
 		}
-		if (!fu_plugin_runner_udev_device_added (plugin, device, &error)) {
-			if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-				g_debug ("%s ignoring: %s",
-					 fu_plugin_get_name (plugin),
-					 error->message);
-				return;
-			}
-			g_warning ("failed to add udev device %s: %s",
-				   g_udev_device_get_sysfs_path (udev_device),
-				   error->message);
-		}
-		return;
+		g_warning ("failed to add udev device %s: %s",
+			   g_udev_device_get_sysfs_path (udev_device),
+			   error_local->message);
 	}
 }
 
@@ -3947,6 +4012,13 @@ static void
 fu_engine_udev_device_remove (FuEngine *self, GUdevDevice *udev_device)
 {
 	g_autoptr(GPtrArray) devices = NULL;
+
+	/* a delayed add that never made it */
+	if (g_hash_table_remove (self->delayed_devices, udev_device)) {
+		g_debug ("udev device %s removed during insert delay",
+			 g_udev_device_get_sysfs_path (udev_device));
+		return;
+	}
 
 	/* go through each device and remove any that match */
 	devices = fu_device_list_get_all (self->device_list);
@@ -4308,6 +4380,14 @@ fu_engine_usb_device_removed_cb (GUsbContext *ctx,
 {
 	g_autoptr(GPtrArray) devices = NULL;
 
+	/* a delayed add that never made it */
+	if (g_hash_table_remove (self->delayed_devices, usb_device)) {
+		g_debug ("USB device %04x:%04x removed during insert delay",
+			 g_usb_device_get_vid (usb_device),
+			 g_usb_device_get_pid (usb_device));
+		return;
+	}
+
 	/* go through each device and remove any that match */
 	devices = fu_device_list_get_all (self->device_list);
 	for (guint i = 0; i < devices->len; i++) {
@@ -4316,10 +4396,34 @@ fu_engine_usb_device_removed_cb (GUsbContext *ctx,
 			continue;
 		if (g_strcmp0 (fu_usb_device_get_platform_id (FU_USB_DEVICE (device)),
 			       g_usb_device_get_platform_id (usb_device)) == 0) {
-			g_debug ("auto-removing GUsbDevice");
+			g_debug ("auto-removing USB device %04x:%04x [%s]",
+				 g_usb_device_get_vid (usb_device),
+				 g_usb_device_get_pid (usb_device),
+				 g_usb_device_get_platform_id (usb_device));
 			fu_device_list_remove (self->device_list, device);
 		}
 	}
+}
+
+static gboolean
+fu_engine_usb_device_delayed_added_cb (gpointer user_data)
+{
+	FuEngineDeviceDelayHelper *helper = (FuEngineDeviceDelayHelper *) user_data;
+	GUsbDevice *usb_device = G_USB_DEVICE (helper->source);
+	g_autoptr(GError) error_local = NULL;
+	g_debug ("adding delayed USB device %04x:%04x",
+		 g_usb_device_get_vid (usb_device),
+		 g_usb_device_get_pid (usb_device));
+	if (!fu_plugin_runner_usb_device_added (helper->plugin,
+						FU_USB_DEVICE (helper->device),
+						&error_local)) {
+		g_warning ("failed to add delayed USB device %04x:%04x: %s",
+			   g_usb_device_get_vid (usb_device),
+			   g_usb_device_get_pid (usb_device),
+			   error_local->message);
+	}
+	g_hash_table_remove (helper->self->delayed_devices, helper->source);
+	return G_SOURCE_REMOVE;
 }
 
 static void
@@ -4327,6 +4431,7 @@ fu_engine_usb_device_added_cb (GUsbContext *ctx,
 			       GUsbDevice *usb_device,
 			       FuEngine *self)
 {
+	FuPlugin *plugin;
 	const gchar *plugin_name;
 	g_autoptr(FuUsbDevice) device = fu_usb_device_new (usb_device);
 	g_autoptr(GError) error_local = NULL;
@@ -4342,22 +4447,39 @@ fu_engine_usb_device_added_cb (GUsbContext *ctx,
 
 	/* can be specified using a quirk */
 	plugin_name = fu_device_get_plugin (device);
-	if (plugin_name != NULL) {
-		g_autoptr(GError) error = NULL;
-		FuPlugin *plugin = fu_plugin_list_find_by_name (self->plugin_list,
-								plugin_name, &error);
-		if (plugin == NULL) {
-			g_warning ("failed to find specified plugin %s: %s",
-				   plugin_name, error->message);
-			return;
-		}
-		if (!fu_plugin_runner_usb_device_added (plugin, device, &error)) {
-			g_warning ("failed to add USB device %04x:%04x: %s",
-				   g_usb_device_get_vid (usb_device),
-				   g_usb_device_get_pid (usb_device),
-				   error->message);
-		}
+	if (plugin_name == NULL)
 		return;
+	plugin = fu_plugin_list_find_by_name (self->plugin_list, plugin_name, &error_local);
+	if (plugin == NULL) {
+		g_warning ("failed to find specified plugin %s: %s",
+			   plugin_name, error_local->message);
+		return;
+	}
+
+	/* wait for hardware to settle */
+	if (self->loaded && fu_device_get_insert_delay (FU_DEVICE (device)) > 0) {
+		FuEngineDeviceDelayHelper *helper;
+		g_debug ("insert delay of %ums for USB device %04x:%04x",
+			 fu_device_get_insert_delay (FU_DEVICE (device)),
+			 g_usb_device_get_vid (usb_device),
+			 g_usb_device_get_pid (usb_device));
+		helper = fu_engine_device_delay_helper_new (self,
+							    G_OBJECT (usb_device),
+							    plugin,
+							    FU_DEVICE (device));
+		g_hash_table_insert (helper->self->delayed_devices,
+				     g_object_ref (usb_device), helper);
+		g_timeout_add (fu_device_get_insert_delay (FU_DEVICE (device)),
+			       fu_engine_usb_device_delayed_added_cb, helper);
+		return;
+	}
+
+	/* immediate add */
+	if (!fu_plugin_runner_usb_device_added (plugin, device, &error_local)) {
+		g_warning ("failed to add USB device %04x:%04x: %s",
+			   g_usb_device_get_vid (usb_device),
+			   g_usb_device_get_pid (usb_device),
+			   error_local->message);
 	}
 }
 
@@ -4764,6 +4886,9 @@ fu_engine_init (FuEngine *self)
 	self->runtime_versions = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	self->compile_versions = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	self->approved_firmware = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
+	self->delayed_devices = g_hash_table_new_full (g_direct_hash, g_direct_equal,
+						       (GDestroyNotify) g_object_unref,
+						       (GDestroyNotify) fu_engine_device_delay_helper_free);
 
 	g_signal_connect (self->config, "changed",
 			  G_CALLBACK (fu_engine_config_changed_cb),
@@ -4828,6 +4953,7 @@ fu_engine_finalize (GObject *obj)
 	g_hash_table_unref (self->runtime_versions);
 	g_hash_table_unref (self->compile_versions);
 	g_hash_table_unref (self->approved_firmware);
+	g_hash_table_unref (self->delayed_devices);
 	g_object_unref (self->plugin_list);
 
 	G_OBJECT_CLASS (fu_engine_parent_class)->finalize (obj);

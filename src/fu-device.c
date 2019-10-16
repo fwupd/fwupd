@@ -45,6 +45,7 @@ typedef struct {
 	GRWLock				 parent_guids_mutex;
 	GPtrArray			*children;
 	guint				 remove_delay;	/* ms */
+	guint				 insert_delay;	/* ms */
 	FwupdStatus			 status;
 	guint				 progress;
 	guint				 order;
@@ -701,6 +702,10 @@ fu_device_set_quirk_kv (FuDevice *self,
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_INSTALL_DURATION) == 0) {
 		fu_device_set_install_duration (self, fu_common_strtoull (value));
+		return TRUE;
+	}
+	if (g_strcmp0 (key, FU_QUIRKS_INSERT_DELAY) == 0) {
+		fu_device_set_insert_delay (self, fu_common_strtoull (value));
 		return TRUE;
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_VERSION_FORMAT) == 0) {
@@ -1552,6 +1557,47 @@ fu_device_set_remove_delay (FuDevice *self, guint remove_delay)
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_DEVICE (self));
 	priv->remove_delay = remove_delay;
+}
+
+/**
+ * fu_device_get_insert_delay:
+ * @self: A #FuDevice
+ *
+ * Returns the delay that should be waited before attempting to access the
+ * inserted device.
+ *
+ * Returns: time in milliseconds
+ *
+ * Since: 1.3.3
+ **/
+guint
+fu_device_get_insert_delay (FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_DEVICE (self), 0);
+	return priv->insert_delay;
+}
+
+/**
+ * fu_device_set_insert_delay:
+ * @self: A #FuDevice
+ * @insert_delay: the value in ms
+ *
+ * Sets the delay that should be waited before attempting to access the
+ * inserted device.
+ *
+ * NOTE: This should only be used for devices that fail to respond. If possible
+ * attempt to poll the device in the plugin rather than sleeping a hardcoded
+ * amount of time.
+ *
+ * Since: 1.3.3
+ **/
+void
+fu_device_set_insert_delay (FuDevice *self, guint insert_delay)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_DEVICE (self));
+	priv->insert_delay = insert_delay;
 }
 
 /**

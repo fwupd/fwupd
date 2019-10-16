@@ -688,7 +688,7 @@ fu_device_list_wait_for_replug (FuDeviceList *self, FuDevice *device, GError **e
 	}
 
 	/* plugin did not specify */
-	remove_delay = fu_device_get_remove_delay (device);
+	remove_delay = fu_device_get_remove_delay (device) + fu_device_get_insert_delay (device);
 	if (remove_delay == 0) {
 		remove_delay = FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE;
 		g_warning ("plugin %s did not specify a remove delay for %s, "

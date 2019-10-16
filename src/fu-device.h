@@ -187,6 +187,9 @@ void		 fu_device_set_custom_flags		(FuDevice	*self,
 							 const gchar	*custom_flags);
 void		 fu_device_set_name			(FuDevice	*self,
 							 const gchar	*value);
+guint		 fu_device_get_insert_delay		(FuDevice	*self);
+void		 fu_device_set_insert_delay		(FuDevice	*self,
+							 guint		 insert_delay);
 guint		 fu_device_get_remove_delay		(FuDevice	*self);
 void		 fu_device_set_remove_delay		(FuDevice	*self,
 							 guint		 remove_delay);
