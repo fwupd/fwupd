@@ -124,10 +124,13 @@ fu_colorhug_device_msg (FuColorhugDevice *self, guint8 cmd,
 
 	/* check error code */
 	if (buf[0] != CH_ERROR_NONE) {
+		const gchar *msg = ch_strerror (buf[0]);
+		if (msg == NULL)
+			msg = "unknown error";
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
-				     ch_strerror (buf[0]));
+				     msg);
 		return FALSE;
 	}
 
