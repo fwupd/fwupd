@@ -510,6 +510,29 @@ fu_plugin_check_hwid (FuPlugin *self, const gchar *hwid)
 }
 
 /**
+ * fu_plugin_get_hwid_replace_value:
+ * @self: A #FuPlugin
+ * @keys: A key, e.g. `HardwareID-3` or %FU_HWIDS_KEY_PRODUCT_SKU
+ * @error: A #GError or %NULL
+ *
+ * Gets the replacement value for a specific key. All hardware IDs on a
+ * specific system can be shown using the `fwupdmgr hwids` command.
+ *
+ * Returns: (transfer full): a string, or %NULL for error.
+ *
+ * Since: 1.3.3
+ **/
+gchar *
+fu_plugin_get_hwid_replace_value (FuPlugin *self, const gchar *keys, GError **error)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	if (priv->hwids == NULL)
+		return NULL;
+
+	return fu_hwids_get_replace_values (priv->hwids, keys, error);
+}
+
+/**
  * fu_plugin_get_hwids:
  * @self: A #FuPlugin
  *
