@@ -351,8 +351,10 @@ fu_nvme_device_probe (FuUdevDevice *device, GError **error)
 
 	/* look at the PCI depth to work out if in an external enclosure */
 	self->pci_depth = fu_udev_device_get_slot_depth (device, "pci");
-	if (self->pci_depth <= 2)
+	if (self->pci_depth <= 2) {
 		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_INTERNAL);
+		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
+	}
 
 	/* all devices need at least a warm reset, but some quirked drives
 	 * need a full "cold" shutdown and startup */

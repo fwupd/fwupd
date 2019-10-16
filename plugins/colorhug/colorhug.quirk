@@ -1,7 +1,7 @@
 # ColorHug1
 [DeviceInstanceId=USB\VID_273F&PID_1000]
 Plugin = colorhug
-Flags = is-bootloader
+Flags = is-bootloader,self-recovery
 Guid = 40338ceb-b966-4eae-adae-9c32edfcc484
 FirmwareSizeMin = 0x2000
 FirmwareSizeMax = 0x8000
@@ -10,7 +10,7 @@ InstallDuration = 8
 
 [DeviceInstanceId=USB\VID_273F&PID_1001]
 Plugin = colorhug
-Flags = none
+Flags = self-recovery
 Summary = An open source display colorimeter
 Icon = colorimeter-colorhug
 Guid = 40338ceb-b966-4eae-adae-9c32edfcc484
@@ -20,7 +20,7 @@ InstallDuration = 8
 # ColorHug2
 [DeviceInstanceId=USB\VID_273F&PID_1004]
 Plugin = colorhug
-Flags = none
+Flags = self-recovery
 Summary = An open source display colorimeter
 Icon = colorimeter-colorhug
 Guid = 2082b5e0-7a64-478a-b1b2-e3404fab6dad
@@ -31,7 +31,7 @@ InstallDuration = 8
 
 [DeviceInstanceId=USB\VID_273F&PID_1005]
 Plugin = colorhug
-Flags = is-bootloader
+Flags = is-bootloader,self-recovery
 Guid = 2082b5e0-7a64-478a-b1b2-e3404fab6dad
 CounterpartGuid = USB\VID_273F&PID_1004
 InstallDuration = 8
@@ -39,7 +39,7 @@ InstallDuration = 8
 # ColorHugALS
 [DeviceInstanceId=USB\VID_273F&PID_1007]
 Plugin = colorhug
-Flags = halfsize,none
+Flags = halfsize,self-recovery
 Summary = An open source ambient light sensor
 Guid = 84f40464-9272-4ef7-9399-cd95f12da696
 FirmwareSizeMin = 0x1000
@@ -49,7 +49,7 @@ InstallDuration = 5
 
 [DeviceInstanceId=USB\VID_273F&PID_1006]
 Plugin = colorhug
-Flags = halfsize,is-bootloader
+Flags = halfsize,is-bootloader,self-recovery
 Guid = 84f40464-9272-4ef7-9399-cd95f12da696
 CounterpartGuid = USB\VID_273F&PID_1007
 InstallDuration = 5

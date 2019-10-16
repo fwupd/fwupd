@@ -343,8 +343,10 @@ fu_ata_device_probe (FuUdevDevice *device, GError **error)
 	/* look at the PCI and USB depth to work out if in an external enclosure */
 	self->pci_depth = fu_udev_device_get_slot_depth (device, "pci");
 	self->usb_depth = fu_udev_device_get_slot_depth (device, "usb");
-	if (self->pci_depth <= 2 && self->usb_depth <= 2)
+	if (self->pci_depth <= 2 && self->usb_depth <= 2) {
 		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_INTERNAL);
+		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
+	}
 
 	return TRUE;
 }

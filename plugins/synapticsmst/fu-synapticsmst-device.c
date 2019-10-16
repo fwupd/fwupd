@@ -1196,6 +1196,7 @@ fu_synapticsmst_device_rescan (FuDevice *device, GError **error)
 	case FU_SYNAPTICSMST_FAMILY_PANAMERA:
 		fu_device_set_firmware_size_max (device, 0x80000);
 		fu_device_add_instance_id (device, "MST-panamera");
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 		break;
 	default:
 		break;

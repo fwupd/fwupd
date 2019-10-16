@@ -224,6 +224,8 @@ fu_dell_dock_tbt_probe (FuDevice *device, GError **error)
 	fu_device_set_physical_id (device, fu_device_get_physical_id (parent));
 	fu_device_set_logical_id (FU_DEVICE (device), "tbt");
 	fu_device_add_instance_id (device, DELL_DOCK_TBT_INSTANCE_ID);
+	/* this is true only when connected to non-thunderbolt port */
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 
 	return TRUE;
 }
