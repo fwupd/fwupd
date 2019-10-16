@@ -379,6 +379,7 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 						     (guint) did,
 						     is_native ? "-native" : "");
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
+			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 		} else {
 			device_id = g_strdup ("TBT-fixed");
 			fu_device_set_update_error (dev, "Missing non-active nvmem");

@@ -901,6 +901,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 							"RequireShimForSecureBoot",
 							data->require_shim_for_sb);
 			fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_UPDATABLE);
+			fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 		}
 		fu_plugin_device_add (plugin, FU_DEVICE (dev));
 	}
