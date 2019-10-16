@@ -117,6 +117,28 @@ G_DEFINE_TYPE_WITH_PRIVATE (DfuDevice, dfu_device, FU_TYPE_USB_DEVICE)
 
 static void	dfu_device_set_state (DfuDevice *device, DfuState state);
 
+static void
+dfu_device_to_string (FuDevice *device, guint idt, GString *str)
+{
+	DfuDevice *self = DFU_DEVICE (device);
+	DfuDevicePrivate *priv = GET_PRIVATE (self);
+	fu_common_string_append_kv (str, idt, "State", dfu_state_to_string (priv->state));
+	fu_common_string_append_kv (str, idt, "Status", dfu_status_to_string (priv->status));
+	fu_common_string_append_kb (str, idt, "DoneUploadOrDownload", priv->done_upload_or_download);
+	fu_common_string_append_kb (str, idt, "ClaimedInterface", priv->claimed_interface);
+	if (priv->chip_id != NULL)
+		fu_common_string_append_kv (str, idt, "ChipId", priv->chip_id);
+	fu_common_string_append_kx (str, idt, "Version", priv->version);
+	fu_common_string_append_kx (str, idt, "Force_version", priv->force_version);
+	fu_common_string_append_kx (str, idt, "RuntimePid", priv->runtime_pid);
+	fu_common_string_append_kx (str, idt, "RuntimeVid", priv->runtime_vid);
+	fu_common_string_append_kx (str, idt, "RuntimeRelease", priv->runtime_release);
+	fu_common_string_append_kx (str, idt, "TransferSize", priv->transfer_size);
+	fu_common_string_append_kx (str, idt, "IfaceNumber", priv->iface_number);
+	fu_common_string_append_kx (str, idt, "DnloadTimeout", priv->dnload_timeout);
+	fu_common_string_append_kx (str, idt, "TimeoutMs", priv->timeout_ms);
+}
+
 /**
  * dfu_device_get_transfer_size:
  * @device: a #GUsbDevice
@@ -1918,6 +1940,7 @@ dfu_device_class_init (DfuDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	klass_device->set_quirk_kv = dfu_device_set_quirk_kv;
+	klass_device->to_string = dfu_device_to_string;
 	klass_device->read_firmware = dfu_device_read_firmware;
 	klass_device->write_firmware = dfu_device_write_firmware;
 	klass_device->attach = dfu_device_attach;
