@@ -92,6 +92,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	fu_device_set_id (dev, vendor);
 	fu_device_set_vendor (dev, vendor);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_icon (dev, "computer");
 	name = fu_plugin_coreboot_get_name_for_type (plugin, NULL);
 	if (name == NULL)
