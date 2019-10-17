@@ -310,6 +310,7 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %{_libdir}/fwupd-plugins-3/libfu_plugin_dell_dock.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_dfu.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_ebitdo.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_emmc.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_fastboot.so
 %if 0%{?enable_flashrom}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_flashrom.so

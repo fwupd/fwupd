@@ -537,6 +537,7 @@ fu_udev_device_set_physical_id (FuUdevDevice *self, const gchar *subsystem, GErr
 		}
 		physical_id = g_strdup_printf ("PCI_SLOT_NAME=%s", tmp);
 	} else if (g_strcmp0 (subsystem, "usb") == 0 ||
+		   g_strcmp0 (subsystem, "mmc") == 0 ||
 		   g_strcmp0 (subsystem, "scsi") == 0) {
 		tmp = g_udev_device_get_property (udev_device, "DEVPATH");
 		if (tmp == NULL) {
