@@ -2,6 +2,16 @@
 [DeviceInstanceId=USB\CLASS_FE&SUBCLASS_01]
 Plugin = dfu
 
+# Realtek USB camera
+[DeviceInstanceId=USB\VID_0BDA&PID_5850]
+CounterpartGuid = USB\VID_0BDA&PID_5800
+[DeviceInstanceId=USB\VID_0BDA&PID_5855]
+CounterpartGuid = USB\VID_0BDA&PID_5800
+[DeviceInstanceId=USB\VID_0BDA&PID_58FE]
+CounterpartGuid = USB\VID_0BDA&PID_5800
+[DeviceInstanceId=USB\VID_0BDA&PID_5800]
+Flags = detach-for-attach
+
 # on PC platforms the DW1820A firmware is loaded at runtime and can't
 # be stored on the device itself as the flash chip is unpopulated
 [DeviceInstanceId=USB\VID_0A5C&PID_6412]

@@ -42,6 +42,7 @@
  * * `use-atmel-avr`:		Device uses the ATMEL bootloader
  * * `use-protocol-zero`:	Fix up the protocol number
  * * `legacy-protocol`:		Use a legacy protocol version
+ * * `detach-for-attach`:	Requries a DFU_REQUEST_DETACH to attach
  *
  * Default value: `none`
  *
@@ -960,12 +961,52 @@ _g_usb_device_get_interface_for_class (GUsbDevice *dev,
 }
 
 static gboolean
+dfu_device_request_detach (DfuDevice *self, GError **error)
+{
+	DfuDevicePrivate *priv = GET_PRIVATE (self);
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
+	const guint16 timeout_reset_ms = 1000;
+	g_autoptr(GError) error_local = NULL;
+
+	if (!g_usb_device_control_transfer (usb_device,
+					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
+					    G_USB_DEVICE_RECIPIENT_INTERFACE,
+					    DFU_REQUEST_DETACH,
+					    timeout_reset_ms,
+					    priv->iface_number,
+					    NULL, 0, NULL,
+					    priv->timeout_ms,
+					    NULL, /* cancellable */
+					    &error_local)) {
+		/* some devices just reboot and stall the endpoint :/ */
+		if (g_error_matches (error_local,
+				     G_USB_DEVICE_ERROR,
+				     G_USB_DEVICE_ERROR_NOT_SUPPORTED) ||
+		    g_error_matches (error_local,
+				     G_USB_DEVICE_ERROR,
+				     G_USB_DEVICE_ERROR_FAILED)) {
+			g_debug ("ignoring while detaching: %s", error_local->message);
+		} else {
+			/* refresh the error code */
+			dfu_device_error_fixup (self, &error_local);
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "cannot detach device: %s",
+				     error_local->message);
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+static gboolean
 dfu_device_detach (FuDevice *device, GError **error)
 {
 	DfuDevice *self = DFU_DEVICE (device);
 	DfuDevicePrivate *priv = GET_PRIVATE (self);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
-	const guint16 timeout_reset_ms = 1000;
 	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail (DFU_IS_DEVICE (self), FALSE);
@@ -1054,9 +1095,6 @@ dfu_device_detach (FuDevice *device, GError **error)
 		g_debug ("waiting for Jabra device to settle...");
 		fu_device_set_status (device, FWUPD_STATUS_DEVICE_BUSY);
 		g_usleep (10 * G_USEC_PER_SEC);
-
-		/* hacky workaround until Jabra has a plugin */
-		usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	}
 
 	/* the device has no DFU runtime, so cheat */
@@ -1070,36 +1108,8 @@ dfu_device_detach (FuDevice *device, GError **error)
 
 	/* inform UI there's going to be a detach:attach */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	if (!g_usb_device_control_transfer (usb_device,
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					    G_USB_DEVICE_RECIPIENT_INTERFACE,
-					    DFU_REQUEST_DETACH,
-					    timeout_reset_ms,
-					    priv->iface_number,
-					    NULL, 0, NULL,
-					    priv->timeout_ms,
-					    NULL, /* cancellable */
-					    &error_local)) {
-		/* some devices just reboot and stall the endpoint :/ */
-		if (g_error_matches (error_local,
-				     G_USB_DEVICE_ERROR,
-				     G_USB_DEVICE_ERROR_NOT_SUPPORTED) ||
-		    g_error_matches (error_local,
-				     G_USB_DEVICE_ERROR,
-				     G_USB_DEVICE_ERROR_FAILED)) {
-			g_debug ("ignoring while detaching: %s", error_local->message);
-		} else {
-			/* refresh the error code */
-			dfu_device_error_fixup (self, &error_local);
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "cannot detach device: %s",
-				     error_local->message);
-			return FALSE;
-		}
-	}
+	if (!dfu_device_request_detach (self, error))
+		return FALSE;
 
 	/* do a host reset */
 	if ((priv->attributes & DFU_DEVICE_ATTRIBUTE_WILL_DETACH) == 0) {
@@ -1449,6 +1459,15 @@ dfu_device_attach (FuDevice *device, GError **error)
 
 	/* inform UI there's going to be a re-attach */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+
+	/* handle weirdness */
+	if (fu_device_has_custom_flag (device, "detach-for-attach")) {
+		if (!dfu_device_request_detach (self, error))
+			return FALSE;
+		fu_device_set_status (device, FWUPD_STATUS_IDLE);
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+		return TRUE;
+	}
 
 	/* handle m-stack DFU bootloaders */
 	if (!priv->done_upload_or_download &&
