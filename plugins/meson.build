@@ -25,6 +25,10 @@ subdir('synaptics-rmi')
 # depends on dfu
 subdir('csr')
 
+if get_option('plugin_emmc')
+subdir('emmc')
+endif
+
 if get_option('plugin_nvme')
 subdir('nvme')
 endif
