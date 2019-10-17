@@ -3958,26 +3958,34 @@ fu_engine_udev_device_add (FuEngine *self, GUdevDevice *udev_device)
 	/* can be specified using a quirk */
 	plugin_name = fu_device_get_plugin (FU_DEVICE (device));
 	if (plugin_name != NULL) {
-		g_autoptr(GError) error = NULL;
-		FuPlugin *plugin = fu_plugin_list_find_by_name (self->plugin_list,
-								plugin_name, &error);
-		if (plugin == NULL) {
-			g_warning ("failed to find specified plugin %s: %s",
-				   plugin_name, error->message);
+		g_auto(GStrv) plugins = g_strsplit (plugin_name, ",", -1);
+		for (guint i = 0; plugins[i] != NULL; i++) {
+			FuPlugin *plugin;
+			g_autoptr(GError) error = NULL;
+
+			plugin = fu_plugin_list_find_by_name (self->plugin_list,
+							      plugins[i], &error);
+			if (plugin == NULL) {
+				g_warning ("failed to find specified plugin %s: %s",
+					   plugin_name, error->message);
+				continue;
+			}
+			if (!fu_plugin_runner_udev_device_added (plugin, device, &error)) {
+				if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+					if (g_getenv ("FWUPD_PROBE_VERBOSE") != NULL) {
+						g_debug ("%s ignoring: %s",
+							 fu_plugin_get_name (plugin),
+							 error->message);
+					}
+					continue;
+				}
+				g_warning ("failed to add udev device %s: %s",
+					   g_udev_device_get_sysfs_path (udev_device),
+					   error->message);
+				continue;
+			}
 			return;
 		}
-		if (!fu_plugin_runner_udev_device_added (plugin, device, &error)) {
-			if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-				g_debug ("%s ignoring: %s",
-					 fu_plugin_get_name (plugin),
-					 error->message);
-				return;
-			}
-			g_warning ("failed to add udev device %s: %s",
-				   g_udev_device_get_sysfs_path (udev_device),
-				   error->message);
-		}
-		return;
 	}
 }
 
@@ -4381,21 +4389,35 @@ fu_engine_usb_device_added_cb (GUsbContext *ctx,
 	/* can be specified using a quirk */
 	plugin_name = fu_device_get_plugin (device);
 	if (plugin_name != NULL) {
-		g_autoptr(GError) error = NULL;
-		FuPlugin *plugin = fu_plugin_list_find_by_name (self->plugin_list,
-								plugin_name, &error);
-		if (plugin == NULL) {
-			g_warning ("failed to find specified plugin %s: %s",
-				   plugin_name, error->message);
+		g_auto(GStrv) plugins = g_strsplit (plugin_name, ",", -1);
+		for (guint i = 0; plugins[i] != NULL; i++) {
+			FuPlugin *plugin;
+			g_autoptr(GError) error = NULL;
+
+			plugin = fu_plugin_list_find_by_name (self->plugin_list,
+							      plugins[i], &error);
+			if (plugin == NULL) {
+				g_warning ("failed to find specified plugin %s: %s",
+					   plugin_name, error->message);
+				continue;
+			}
+			if (!fu_plugin_runner_usb_device_added (plugin, device, &error)) {
+				if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+					if (g_getenv ("FWUPD_PROBE_VERBOSE") != NULL) {
+						g_debug ("%s ignoring: %s",
+							 fu_plugin_get_name (plugin),
+							 error->message);
+					}
+					continue;
+				}
+				g_warning ("failed to add USB device %04x:%04x: %s",
+					   g_usb_device_get_vid (usb_device),
+					   g_usb_device_get_pid (usb_device),
+					   error->message);
+				continue;
+			}
 			return;
 		}
-		if (!fu_plugin_runner_usb_device_added (plugin, device, &error)) {
-			g_warning ("failed to add USB device %04x:%04x: %s",
-				   g_usb_device_get_vid (usb_device),
-				   g_usb_device_get_pid (usb_device),
-				   error->message);
-		}
-		return;
 	}
 }
 

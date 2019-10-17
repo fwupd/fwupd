@@ -1535,14 +1535,8 @@ fu_plugin_runner_usb_device_added (FuPlugin *self, FuUsbDevice *device, GError *
 	if (func == NULL) {
 		if (priv->device_gtype != G_TYPE_INVALID ||
 		    fu_device_get_specialized_gtype (FU_DEVICE (device)) != G_TYPE_INVALID) {
-			if (!fu_plugin_usb_device_added (self, device, &error_local)) {
-				if (g_error_matches (error_local,
-						     FWUPD_ERROR,
-						     FWUPD_ERROR_NOT_SUPPORTED))
-					return TRUE;
-				g_propagate_error (error, g_steal_pointer (&error_local));
+			if (!fu_plugin_usb_device_added (self, device, error))
 				return FALSE;
-			}
 		}
 		return TRUE;
 	}
@@ -1584,14 +1578,8 @@ fu_plugin_runner_udev_device_added (FuPlugin *self, FuUdevDevice *device, GError
 	if (func == NULL) {
 		if (priv->device_gtype != G_TYPE_INVALID ||
 		    fu_device_get_specialized_gtype (FU_DEVICE (device)) != G_TYPE_INVALID) {
-			if (!fu_plugin_udev_device_added (self, device, &error_local)) {
-				if (g_error_matches (error_local,
-						     FWUPD_ERROR,
-						     FWUPD_ERROR_NOT_SUPPORTED))
-					return TRUE;
-				g_propagate_error (error, g_steal_pointer (&error_local));
+			if (!fu_plugin_udev_device_added (self, device, error))
 				return FALSE;
-			}
 		}
 		return TRUE;
 	}
