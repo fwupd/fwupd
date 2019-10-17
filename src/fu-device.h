@@ -58,8 +58,14 @@ struct _FuDeviceClass
 							 GError		**error);
 	gboolean		 (*reload)		(FuDevice	*self,
 							 GError		**error);
+	gboolean		 (*prepare)		(FuDevice	*self,
+							 FwupdInstallFlags flags,
+							 GError		**error);
+	gboolean		 (*cleanup)		(FuDevice	*self,
+							 FwupdInstallFlags flags,
+							 GError		**error);
 	/*< private >*/
-	gpointer	padding[18];
+	gpointer	padding[16];
 };
 
 /**
@@ -226,6 +232,12 @@ gboolean	 fu_device_attach			(FuDevice	*self,
 gboolean	 fu_device_detach			(FuDevice	*self,
 							 GError		**error);
 gboolean	 fu_device_reload			(FuDevice	*self,
+							 GError		**error);
+gboolean	 fu_device_prepare			(FuDevice	*self,
+							 FwupdInstallFlags flags,
+							 GError		**error);
+gboolean	 fu_device_cleanup			(FuDevice	*self,
+							 FwupdInstallFlags flags,
 							 GError		**error);
 void		 fu_device_incorporate			(FuDevice	*self,
 							 FuDevice	*donor);

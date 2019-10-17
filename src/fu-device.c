@@ -2016,6 +2016,62 @@ fu_device_reload (FuDevice *self, GError **error)
 }
 
 /**
+ * fu_device_prepare:
+ * @self: A #FuDevice
+ * @error: A #GError
+ *
+ * Prepares a device for update. A different plugin can handle each of
+ * FuDevice->prepare(), FuDevice->detach() and FuDevice->write_firmware().
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.3.3
+ **/
+gboolean
+fu_device_prepare (FuDevice *self, FwupdInstallFlags flags, GError **error)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+
+	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* no plugin-specific method */
+	if (klass->prepare == NULL)
+		return TRUE;
+
+	/* call vfunc */
+	return klass->prepare (self, flags, error);
+}
+
+/**
+ * fu_device_cleanup:
+ * @self: A #FuDevice
+ * @error: A #GError
+ *
+ * Cleans up a device after an update. A different plugin can handle each of
+ * FuDevice->write_firmware(), FuDevice->attach() and FuDevice->cleanup().
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.3.3
+ **/
+gboolean
+fu_device_cleanup (FuDevice *self, FwupdInstallFlags flags, GError **error)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+
+	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* no plugin-specific method */
+	if (klass->cleanup == NULL)
+		return TRUE;
+
+	/* call vfunc */
+	return klass->cleanup (self, flags, error);
+}
+
+/**
  * fu_device_open:
  * @self: A #FuDevice
  * @error: A #GError, or %NULL
