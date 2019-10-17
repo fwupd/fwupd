@@ -63,9 +63,6 @@ guint16		 dfu_device_get_runtime_pid		(DfuDevice	*device);
 guint16		 dfu_device_get_runtime_release		(DfuDevice	*device);
 gboolean	 dfu_device_reset			(DfuDevice	*device,
 							 GError		**error);
-gboolean	 dfu_device_wait_for_replug		(DfuDevice	*device,
-							 guint		 timeout,
-							 GError		**error);
 DfuFirmware	*dfu_device_upload			(DfuDevice	*device,
 							 DfuTargetTransferFlags flags,
 							 GError		**error);
@@ -96,9 +93,6 @@ void		 dfu_device_set_transfer_size		(DfuDevice	*device,
 							 guint16	 transfer_size);
 void		 dfu_device_set_timeout			(DfuDevice	*device,
 							 guint		 timeout_ms);
-void		 dfu_device_set_usb_context		(DfuDevice	*device,
-							 GUsbContext	*quirks);
-GUsbContext	*dfu_device_get_usb_context		(DfuDevice	*device);
 void		 dfu_device_error_fixup			(DfuDevice	*device,
 							 GError		**error);
 guint		 dfu_device_get_download_timeout	(DfuDevice	*device);

@@ -68,49 +68,25 @@ Flags = attach-upload-download
 Plugin = dfu
 Flags = no-dfu-runtime,needs-bootloader
 
-# Jabra 410
-[DeviceInstanceId=USB\VID_0B0E&PID_0412]
-Plugin = dfu
-Flags = no-dfu-runtime
-DfuJabraDetach = 0201
-CounterpartGuid = USB\VID_0B0E&PID_0411
-
-# Jabra 510
-[DeviceInstanceId=USB\VID_0B0E&PID_0420]
-Plugin = dfu
-Flags = no-dfu-runtime
-DfuJabraDetach = 0201
-CounterpartGuid = USB\VID_0B0E&PID_0421
-
-# Jabra 710
-[DeviceInstanceId=USB\VID_0B0E&PID_2475]
-Plugin = dfu
-Flags = no-dfu-runtime
-DfuJabraDetach = 0508
-CounterpartGuid = USB\VID_0B0E&PID_0982
-
-# Jabra 810
-[DeviceInstanceId=USB\VID_0B0E&PID_2456]
-Plugin = dfu
-Flags = no-dfu-runtime
-DfuJabraDetach = 0508
-CounterpartGuid = USB\VID_0B0E&PID_0971
-
+# Jabra 410 [appIDLE & dfuIDLE]
 [DeviceInstanceId=USB\VID_0B0E&PID_0411]
 Plugin = dfu
-Flags = no-pid-change,force-dfu-mode,ignore-upload,attach-extra-reset
+Flags = no-pid-change,ignore-upload,attach-extra-reset
 
+# Jabra 510 [appIDLE & dfuIDLE]
 [DeviceInstanceId=USB\VID_0B0E&PID_0421]
 Plugin = dfu
-Flags = no-pid-change,force-dfu-mode,ignore-upload,attach-extra-reset
+Flags = no-pid-change,ignore-upload,attach-extra-reset
 
+# Jabra 710 [appIDLE & dfuIDLE]
 [DeviceInstanceId=USB\VID_0B0E&PID_0982]
 Plugin = dfu
-Flags = no-pid-change,force-dfu-mode,ignore-upload,attach-extra-reset
+Flags = no-pid-change,ignore-upload,attach-extra-reset
 
+# Jabra 810 [appIDLE & dfuIDLE]
 [DeviceInstanceId=USB\VID_0B0E&PID_0971]
 Plugin = dfu
-Flags = no-pid-change,force-dfu-mode,ignore-upload,attach-extra-reset
+Flags = no-pid-change,ignore-upload,attach-extra-reset
 
 # Atmel AT90USB Bootloader
 [DeviceInstanceId=USB\VID_03EB&PID_2FF7]

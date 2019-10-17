@@ -63,18 +63,6 @@
  */
 #define	FU_QUIRKS_DFU_FORCE_VERSION		"DfuForceVersion"
 
-/**
- * FU_QUIRKS_DFU_JABRA_DETACH:
- * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
- * @value: the two uint8_t unlock values, encoded in base 16, e.g. `0201`
- *
- * Assigns the two magic bytes sent to the Jabra hardware when the device is
- * in runtime mode to make it switch into DFU mode.
- *
- * Since: 1.0.1
- */
-#define	FU_QUIRKS_DFU_JABRA_DETACH		"DfuJabraDetach"
-
 #include "config.h"
 
 #include <string.h>
@@ -97,11 +85,9 @@ typedef struct {
 	DfuState		 state;
 	DfuStatus		 status;
 	GPtrArray		*targets;
-	GUsbContext		*usb_context;
 	gboolean		 done_upload_or_download;
 	gboolean		 claimed_interface;
 	gchar			*chip_id;
-	gchar			*jabra_detach;
 	guint16			 version;
 	guint16			 force_version;
 	guint16			 runtime_pid;
@@ -545,20 +531,6 @@ dfu_device_remove_attribute (DfuDevice *device, DfuDeviceAttributes attribute)
 	priv->attributes &= ~attribute;
 }
 
-void
-dfu_device_set_usb_context (DfuDevice *device, GUsbContext *quirks)
-{
-	DfuDevicePrivate *priv = GET_PRIVATE (device);
-	g_set_object (&priv->usb_context, quirks);
-}
-
-GUsbContext *
-dfu_device_get_usb_context (DfuDevice *device)
-{
-	DfuDevicePrivate *priv = GET_PRIVATE (device);
-	return priv->usb_context;
-}
-
 /**
  * dfu_device_new:
  *
@@ -943,23 +915,6 @@ dfu_device_refresh (DfuDevice *device, GError **error)
 	return TRUE;
 }
 
-static guint8
-_g_usb_device_get_interface_for_class (GUsbDevice *dev,
-				       guint8 intf_class,
-				       GError **error)
-{
-	g_autoptr(GPtrArray) intfs = NULL;
-	intfs = g_usb_device_get_interfaces (dev, error);
-	if (intfs == NULL)
-		return 0xff;
-	for (guint i = 0; i < intfs->len; i++) {
-		GUsbInterface *intf = g_ptr_array_index (intfs, i);
-		if (g_usb_interface_get_class (intf) == intf_class)
-			return g_usb_interface_get_number (intf);
-	}
-	return 0xff;
-}
-
 static gboolean
 dfu_device_request_detach (DfuDevice *self, GError **error)
 {
@@ -1007,7 +962,6 @@ dfu_device_detach (FuDevice *device, GError **error)
 	DfuDevice *self = DFU_DEVICE (device);
 	DfuDevicePrivate *priv = GET_PRIVATE (self);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
-	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail (DFU_IS_DEVICE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
@@ -1026,75 +980,6 @@ dfu_device_detach (FuDevice *device, GError **error)
 			     "failed to detach: no GUsbDevice for %s",
 			     dfu_device_get_platform_id (self));
 		return FALSE;
-	}
-
-	/* handle Jabra devices that need a magic HID packet */
-	if (priv->jabra_detach != NULL) {
-		guint8 adr = 0x00;
-		guint8 rep = 0x00;
-		guint8 iface_hid;
-		g_autofree guint8 *buf = g_malloc0 (33);
-		g_autoptr(GError) error_jabra = NULL;
-
-		/* parse string and create magic packet */
-		rep = fu_firmware_strparse_uint8 (priv->jabra_detach + 0);
-		adr = fu_firmware_strparse_uint8 (priv->jabra_detach + 2);
-		buf[0] = rep;
-		buf[1] = adr;
-		buf[2] = 0x00;
-		buf[3] = 0x01;
-		buf[4] = 0x85;
-		buf[5] = 0x07;
-
-		/* detach the HID interface from the kernel driver */
-		iface_hid = _g_usb_device_get_interface_for_class (usb_device,
-								   G_USB_DEVICE_CLASS_HID,
-								   &error_local);
-		if (iface_hid == 0xff) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "cannot find HID interface: %s",
-				     error_local->message);
-			return FALSE;
-		}
-		g_debug ("claiming interface 0x%02x", iface_hid);
-		if (!g_usb_device_claim_interface (usb_device, (gint) iface_hid,
-						   G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-						   &error_local)) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "cannot claim interface 0x%02x: %s",
-				     iface_hid, error_local->message);
-			return FALSE;
-		}
-
-		/* send magic to device */
-		if (!g_usb_device_control_transfer (usb_device,
-						    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-						    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-						    G_USB_DEVICE_RECIPIENT_INTERFACE,
-						    0x09,
-						    0x0200 | rep,
-						    0x0003,
-						    buf, 33, NULL,
-						    FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE,
-						    NULL, /* cancellable */
-						    &error_jabra)) {
-			g_debug ("whilst sending magic: %s, ignoring",
-				 error_jabra->message);
-		}
-
-		/* wait for device to re-appear */
-		fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-		if (!dfu_device_wait_for_replug (self, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE, error))
-			return FALSE;
-
-		/* wait 10 seconds for DFU mode to settle */
-		g_debug ("waiting for Jabra device to settle...");
-		fu_device_set_status (device, FWUPD_STATUS_DEVICE_BUSY);
-		g_usleep (10 * G_USEC_PER_SEC);
 	}
 
 	/* the device has no DFU runtime, so cheat */
@@ -1357,46 +1242,10 @@ dfu_device_probe (FuUsbDevice *device, GError **error)
 			   g_usb_device_get_pid (usb_device));
 	}
 
-	/* success */
-	return TRUE;
-}
-
-/**
- * dfu_device_wait_for_replug:
- * @device: a #DfuDevice
- * @timeout: the maximum amount of time to wait
- * @error: a #GError, or %NULL
- *
- * Waits for a DFU device to disconnect and reconnect.
- * This does rely on a #GUsbContext being set up before this is called.
- *
- * Return value: %TRUE for success
- **/
-gboolean
-dfu_device_wait_for_replug (DfuDevice *device, guint timeout, GError **error)
-{
-	DfuDevicePrivate *priv = GET_PRIVATE (device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
-	g_autoptr(GUsbDevice) usb_device2  = NULL;
-
-	/* close */
-	fu_device_close (FU_DEVICE (device), NULL);
-
-	/* watch the device disappear and re-appear */
-	usb_device2 = g_usb_context_wait_for_replug (priv->usb_context,
-						     usb_device,
-						     FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE,
-						     error);
-	if (usb_device2 == NULL)
-		return FALSE;
-
-	/* re-open with new device set */
-	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_IDLE);
-	fu_usb_device_set_dev (FU_USB_DEVICE (device), usb_device2);
-	if (!fu_device_open (FU_DEVICE (device), error))
-		return FALSE;
-	if (!dfu_device_refresh_and_clear (device, error))
-		return FALSE;
+	/* hardware rom Jabra literally reboots if you try to retry a failed
+	 * write -- there's no way to avoid blocking the daemon like this... */
+	if (fu_device_has_custom_flag (FU_DEVICE (device), "attach-extra-reset"))
+		g_usleep (10 * G_USEC_PER_SEC);
 
 	/* success */
 	return TRUE;
@@ -1494,16 +1343,6 @@ dfu_device_attach (FuDevice *device, GError **error)
 	/* normal DFU mode just needs a bus reset */
 	if (!dfu_target_attach (target, error))
 		return FALSE;
-
-	/* some devices need yet another reset */
-	if (fu_device_has_custom_flag (FU_DEVICE (self), "attach-extra-reset")) {
-		if (!dfu_device_wait_for_replug (self,
-						 FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE,
-						 error))
-			return FALSE;
-		if (!dfu_device_reset (self, error))
-			return FALSE;
-	}
 
 	/* success */
 	priv->force_version = 0x0;
@@ -1874,17 +1713,6 @@ dfu_device_set_quirk_kv (FuDevice *device,
 	DfuDevice *self = DFU_DEVICE (device);
 	DfuDevicePrivate *priv = GET_PRIVATE (self);
 
-	if (g_strcmp0 (key, FU_QUIRKS_DFU_JABRA_DETACH) == 0) {
-		if (value != NULL && strlen (value) == 4) {
-			priv->jabra_detach = g_strdup (value);
-			return TRUE;
-		}
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "unsupported jabra quirk format");
-		return FALSE;
-	}
 	if (g_strcmp0 (key, FU_QUIRKS_DFU_FORCE_VERSION) == 0) {
 		if (value != NULL && strlen (value) == 4) {
 			priv->force_version = fu_firmware_strparse_uint16 (value);
@@ -1943,10 +1771,7 @@ dfu_device_finalize (GObject *object)
 	DfuDevice *device = DFU_DEVICE (object);
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 
-	if (priv->usb_context != NULL)
-		g_object_unref (priv->usb_context);
 	g_free (priv->chip_id);
-	g_free (priv->jabra_detach);
 	g_ptr_array_unref (priv->targets);
 
 	G_OBJECT_CLASS (dfu_device_parent_class)->finalize (object);
