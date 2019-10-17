@@ -876,6 +876,130 @@ fu_util_time_to_str (guint64 tmp)
 				(guint) tmp);
 }
 
+static gchar *
+fu_util_device_flag_to_string (guint64 device_flag)
+{
+	if (device_flag == FWUPD_DEVICE_FLAG_NONE) {
+		return NULL;
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_INTERNAL) {
+		/* TRANSLATORS: Device cannot be removed easily*/
+		return _("Internal device");
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_UPDATABLE) {
+		/* TRANSLATORS: Device is updatable in this or any other mode */
+		return _("Updatable");
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_ONLY_OFFLINE) {
+		/* TRANSLATORS: Update can only be done from offline mode */
+		return _("Update requires a reboot");
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_REQUIRE_AC) {
+		/* TRANSLATORS: Must be plugged in to an outlet */
+		return _("Requires AC power");
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_LOCKED) {
+		/* TRANSLATORS: Is locked and can be unlocked */
+		return _("Device is locked");
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_SUPPORTED) {
+		/* TRANSLATORS: Is found in current metadata */
+		return _("Supported on remote server");
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER) {
+		/* TRANSLATORS: Requires a bootloader mode to be manually enabled by the user */
+		return _("Requires a bootloader");
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_NEEDS_REBOOT) {
+		/* TRANSLATORS: Requires a reboot to apply firmware or to reload hardware */
+		return _("Needs a reboot after installation");
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN) {
+		/* TRANSLATORS: Requires system shutdown to apply firmware */
+		return _("Needs shutdown after installation");
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_REPORTED) {
+		/* TRANSLATORS: Has been reported to a metadata server */
+		return _("Reported to remote server");
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_NOTIFIED) {
+		/* TRANSLATORS: User has been notified */
+		return _("User has been notified");
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION) {
+		/* skip */
+		return NULL;
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST) {
+		/* TRANSLATORS: Install composite firmware on the parent before the child */
+		return _("Install to parent device first");
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_IS_BOOTLOADER) {
+		/* TRANSLATORS: Is currently in bootloader mode */
+		return _("Is in bootloader mode");
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG) {
+		/* TRANSLATORS: The hardware is waiting to be replugged */
+		return _("Hardware is waiting to be replugged");
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_IGNORE_VALIDATION) {
+		/* TRANSLATORS: Ignore validation safety checks when flashing this device */
+		return _("Ignore validation safety checks");
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED) {
+		/* skip */
+		return NULL;
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS) {
+		/* skip */
+		return NULL;
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION) {
+		/* TRANSLATORS: Device update needs to be separately activated */
+		return _("Device update needs activation");
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_ENSURE_SEMVER) {
+		/* skip */
+		return NULL;
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_HISTORICAL) {
+		/* skip */
+		return NULL;
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_ONLY_SUPPORTED) {
+		/* skip */
+		return NULL;
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_WILL_DISAPPEAR) {
+		/* TRANSLATORS: Device will not return after update completes */
+		return _("Device will not re-appear after update completes");
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_CAN_VERIFY) {
+		/* TRANSLATORS: Device supports some form of checksum verification */
+		return _("Cryptographic hash verification is available");
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE) {
+		/* skip */
+		return NULL;
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_DUAL_IMAGE) {
+		/* TRANSLATORS: Device supports a safety mechanism for flashing */
+		return _("Device stages updates");
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_SELF_RECOVERY) {
+		/* TRANSLATORS: Device supports a safety mechanism for flashing */
+		return _("Device can recover flash failures");
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE) {
+		/* TRANSLATORS: Device remains usable during update */
+		return _("Device is usable for the duration of the update");
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN) {
+		return NULL;
+	}
+	return NULL;
+}
+
 gchar *
 fu_util_device_to_string (FwupdDevice *dev, guint idt)
 {
@@ -888,7 +1012,6 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 	guint64 flags = fwupd_device_get_flags (dev);
 	guint64 modified = fwupd_device_get_modified (dev);
 	g_autoptr(GHashTable) ids = NULL;
-	g_autoptr(GString) flags_str = g_string_new (NULL);
 
 	/* some fields are intentionally not included and are only shown in --verbose */
 	if (g_getenv ("FWUPD_VERBOSE") != NULL) {
@@ -996,18 +1119,6 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 		fu_common_string_append_kv (str, idt + 1, _("Update Message"), tmp);
 	}
 
-	for (guint i = 0; i < 64; i++) {
-		if ((flags & ((guint64) 1 << i)) == 0)
-			continue;
-		g_string_append_printf (flags_str, "%s|",
-					fwupd_device_flag_to_string ((guint64) 1 << i));
-	}
-	if (flags_str->len > 0) {
-		g_string_truncate (flags_str, flags_str->len - 1);
-		/* TRANSLATORS: device properties */
-		fu_common_string_append_kv (str, idt + 1, _("Flags"), flags_str->str);
-	}
-
 	/* modified date: for history devices */
 	if (modified > 0) {
 		g_autoptr(GDateTime) date = NULL;
@@ -1044,6 +1155,28 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 			fu_common_string_append_kv (str, idt + 1, "", guid_src);
 		}
 	}
+
+	/* TRANSLATORS: description of device ability */
+	tmp = _("Device Flags");
+	for (guint i = 0; i < 64; i++) {
+		if ((flags & ((guint64) 1 << i)) == 0)
+			continue;
+		tmp2 = fu_util_device_flag_to_string ((guint64) 1 << i);
+		if (tmp2 == NULL)
+			continue;
+		/* header */
+		if (tmp != NULL) {
+			g_autofree gchar *bullet = NULL;
+			bullet = g_strdup_printf ("• %s", tmp2);
+			fu_common_string_append_kv (str, idt + 1, tmp, bullet);
+			tmp = NULL;
+		} else {
+			g_autofree gchar *bullet = NULL;
+			bullet = g_strdup_printf ("• %s", tmp2);
+			fu_common_string_append_kv (str, idt + 1, "", bullet);
+		}
+	}
+
 	return g_string_free (str, FALSE);
 }
 
