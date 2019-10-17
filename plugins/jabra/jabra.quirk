@@ -1,0 +1,23 @@
+# Jabra 410 [runtime]
+[DeviceInstanceId=USB\VID_0B0E&PID_0412]
+Plugin = jabra
+JabraMagic = 0201
+CounterpartGuid = USB\VID_0B0E&PID_0411
+
+# Jabra 510 [runtime]
+[DeviceInstanceId=USB\VID_0B0E&PID_0420]
+Plugin = jabra
+JabraMagic = 0201
+CounterpartGuid = USB\VID_0B0E&PID_0421
+
+# Jabra 710 [runtime]
+[DeviceInstanceId=USB\VID_0B0E&PID_2475]
+Plugin = jabra
+JabraMagic = 0508
+CounterpartGuid = USB\VID_0B0E&PID_0982
+
+# Jabra 810 [runtime]
+[DeviceInstanceId=USB\VID_0B0E&PID_2456]
+Plugin = jabra
+JabraMagic = 0508
+CounterpartGuid = USB\VID_0B0E&PID_0971

@@ -239,7 +239,6 @@ dfu_tool_get_default_device (DfuToolPrivate *priv, GError **error)
 		}
 		device = dfu_device_new (usb_device);
 		fu_device_set_quirks (FU_DEVICE (device), priv->quirks);
-		dfu_device_set_usb_context (device, usb_context);
 		return device;
 	}
 
@@ -249,7 +248,6 @@ dfu_tool_get_default_device (DfuToolPrivate *priv, GError **error)
 		GUsbDevice *usb_device = g_ptr_array_index (devices, i);
 		g_autoptr(DfuDevice) device = dfu_device_new (usb_device);
 		fu_device_set_quirks (FU_DEVICE (device), priv->quirks);
-		dfu_device_set_usb_context (device, usb_context);
 		if (fu_device_probe (FU_DEVICE (device), NULL))
 			return g_steal_pointer (&device);
 	}
@@ -260,6 +258,41 @@ dfu_tool_get_default_device (DfuToolPrivate *priv, GError **error)
 			     FWUPD_ERROR_NOT_FOUND,
 			     "no DFU devices found");
 	return NULL;
+}
+
+static gboolean
+dfu_device_wait_for_replug (DfuToolPrivate *priv, DfuDevice *device, guint timeout, GError **error)
+{
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
+	g_autoptr(GUsbDevice) usb_device2  = NULL;
+	g_autoptr(GUsbContext) usb_context = NULL;
+
+	/* get all the DFU devices */
+	usb_context = g_usb_context_new (error);
+	if (usb_context == NULL)
+		return FALSE;
+
+	/* close */
+	fu_device_close (FU_DEVICE (device), NULL);
+
+	/* watch the device disappear and re-appear */
+	usb_device2 = g_usb_context_wait_for_replug (usb_context,
+						     usb_device,
+						     FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE,
+						     error);
+	if (usb_device2 == NULL)
+		return FALSE;
+
+	/* re-open with new device set */
+	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_IDLE);
+	fu_usb_device_set_dev (FU_USB_DEVICE (device), usb_device2);
+	if (!fu_device_open (FU_DEVICE (device), error))
+		return FALSE;
+	if (!dfu_device_refresh_and_clear (device, error))
+		return FALSE;
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean
@@ -671,7 +704,7 @@ dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 		g_debug ("detaching");
 		if (!fu_device_detach (FU_DEVICE (device), error))
 			return FALSE;
-		if (!dfu_device_wait_for_replug (device,
+		if (!dfu_device_wait_for_replug (priv, device,
 						 FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE,
 						 error))
 			return FALSE;
@@ -707,7 +740,7 @@ dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 	/* do host reset */
 	if (!fu_device_attach (FU_DEVICE (device), error))
 		return FALSE;
-	if (!dfu_device_wait_for_replug (device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE, error))
+	if (!dfu_device_wait_for_replug (priv, device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE, error))
 		return FALSE;
 
 	/* create new firmware object */
@@ -796,7 +829,7 @@ dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
 	if (!fu_device_has_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		if (!fu_device_detach (FU_DEVICE (device), error))
 			return FALSE;
-		if (!dfu_device_wait_for_replug (device,
+		if (!dfu_device_wait_for_replug (priv, device,
 						 FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE,
 						 error)) {
 			return FALSE;
@@ -815,7 +848,7 @@ dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
 	/* do host reset */
 	if (!fu_device_attach (FU_DEVICE (device), error))
 		return FALSE;
-	if (!dfu_device_wait_for_replug (device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE, error))
+	if (!dfu_device_wait_for_replug (priv, device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE, error))
 		return FALSE;
 
 	/* save file */
@@ -1034,7 +1067,7 @@ dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 		g_debug ("detaching");
 		if (!fu_device_detach (FU_DEVICE (device), error))
 			return FALSE;
-		if (!dfu_device_wait_for_replug (device, 5000, error))
+		if (!dfu_device_wait_for_replug (priv, device, 5000, error))
 			return FALSE;
 	}
 
@@ -1096,7 +1129,7 @@ dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 	/* do host reset */
 	if (!fu_device_attach (FU_DEVICE (device), error))
 		return FALSE;
-	if (!dfu_device_wait_for_replug (device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE, error))
+	if (!dfu_device_wait_for_replug (priv, device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE, error))
 		return FALSE;
 
 	/* success */
@@ -1141,7 +1174,7 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 	if (!fu_device_has_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		if (!fu_device_detach (FU_DEVICE (device), error))
 			return FALSE;
-		if (!dfu_device_wait_for_replug (device,
+		if (!dfu_device_wait_for_replug (priv, device,
 						 FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE,
 						 error)) {
 			return FALSE;
@@ -1163,7 +1196,7 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 	/* do host reset */
 	if (!fu_device_attach (FU_DEVICE (device), error))
 		return FALSE;
-	if (!dfu_device_wait_for_replug (device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE, error))
+	if (!dfu_device_wait_for_replug (priv, device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE, error))
 		return FALSE;
 
 	/* success */
