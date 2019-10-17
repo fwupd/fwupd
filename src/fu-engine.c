@@ -1828,12 +1828,15 @@ fu_engine_update_prepare (FuEngine *self,
 			  GError **error)
 {
 	GPtrArray *plugins = fu_plugin_list_get_all (self->plugin_list);
+	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) device = NULL;
 
 	/* the device and plugin both may have changed */
 	device = fu_engine_get_device_by_id (self, device_id, error);
 	if (device == NULL)
 		return FALSE;
+	str = fu_device_to_string (device);
+	g_debug ("performing prepare on %s", str);
 	for (guint j = 0; j < plugins->len; j++) {
 		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
 		if (!fu_plugin_runner_update_prepare (plugin_tmp, flags, device, error))
@@ -1857,11 +1860,16 @@ fu_engine_update_cleanup (FuEngine *self,
 			  GError **error)
 {
 	GPtrArray *plugins = fu_plugin_list_get_all (self->plugin_list);
+	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) device = NULL;
 
 	/* the device and plugin both may have changed */
 	device = fu_engine_get_device_by_id (self, device_id, error);
 	if (device == NULL)
+		return FALSE;
+	str = fu_device_to_string (device);
+	g_debug ("performing cleanup on %s", str);
+	if (!fu_device_cleanup (device, flags, error))
 		return FALSE;
 	for (guint j = 0; j < plugins->len; j++) {
 		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
@@ -1883,12 +1891,15 @@ static gboolean
 fu_engine_update_detach (FuEngine *self, const gchar *device_id, GError **error)
 {
 	FuPlugin *plugin;
+	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) device = NULL;
 
 	/* the device and plugin both may have changed */
 	device = fu_engine_get_device_by_id (self, device_id, error);
 	if (device == NULL)
 		return FALSE;
+	str = fu_device_to_string (device);
+	g_debug ("performing detach on %s", str);
 	plugin = fu_plugin_list_find_by_name (self->plugin_list,
 					      fu_device_get_plugin (device),
 					      error);
@@ -1903,6 +1914,7 @@ static gboolean
 fu_engine_update_attach (FuEngine *self, const gchar *device_id, GError **error)
 {
 	FuPlugin *plugin;
+	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) device = NULL;
 
 	/* the device and plugin both may have changed */
@@ -1911,6 +1923,8 @@ fu_engine_update_attach (FuEngine *self, const gchar *device_id, GError **error)
 		g_prefix_error (error, "failed to get device after update: ");
 		return FALSE;
 	}
+	str = fu_device_to_string (device);
+	g_debug ("performing attach on %s", str);
 	plugin = fu_plugin_list_find_by_name (self->plugin_list,
 					      fu_device_get_plugin (device),
 					      error);
@@ -1931,6 +1945,7 @@ gboolean
 fu_engine_activate (FuEngine *self, const gchar *device_id, GError **error)
 {
 	FuPlugin *plugin;
+	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) device = NULL;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
@@ -1941,7 +1956,8 @@ fu_engine_activate (FuEngine *self, const gchar *device_id, GError **error)
 	device = fu_device_list_get_by_id (self->device_list, device_id, error);
 	if (device == NULL)
 		return FALSE;
-
+	str = fu_device_to_string (device);
+	g_debug ("performing activate on %s", str);
 	plugin = fu_plugin_list_find_by_name (self->plugin_list,
 					      fu_device_get_plugin (device),
 					      error);
@@ -1962,6 +1978,7 @@ static gboolean
 fu_engine_update_reload (FuEngine *self, const gchar *device_id, GError **error)
 {
 	FuPlugin *plugin;
+	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) device = NULL;
 
 	/* the device and plugin both may have changed */
@@ -1970,6 +1987,8 @@ fu_engine_update_reload (FuEngine *self, const gchar *device_id, GError **error)
 		g_prefix_error (error, "failed to get device after update: ");
 		return FALSE;
 	}
+	str = fu_device_to_string (device);
+	g_debug ("performing reload on %s", str);
 	plugin = fu_plugin_list_find_by_name (self->plugin_list,
 					      fu_device_get_plugin (device),
 					      error);
@@ -1996,6 +2015,7 @@ fu_engine_update (FuEngine *self,
 		  GError **error)
 {
 	FuPlugin *plugin;
+	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) device = NULL;
 
 	/* the device and plugin both may have changed */
@@ -2004,6 +2024,8 @@ fu_engine_update (FuEngine *self,
 		g_prefix_error (error, "failed to get device after detach: ");
 		return FALSE;
 	}
+	str = fu_device_to_string (device);
+	g_debug ("performing update on %s", str);
 	plugin = fu_plugin_list_find_by_name (self->plugin_list,
 					      fu_device_get_plugin (device),
 					      error);
