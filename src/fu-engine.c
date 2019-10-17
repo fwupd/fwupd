@@ -1839,6 +1839,14 @@ fu_engine_update_prepare (FuEngine *self,
 		if (!fu_plugin_runner_update_prepare (plugin_tmp, flags, device, error))
 			return FALSE;
 	}
+
+	/* wait for device to disconnect and reconnect */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG)) {
+		if (!fu_device_list_wait_for_replug (self->device_list, device, error)) {
+			g_prefix_error (error, "failed to wait for prepare replug: ");
+			return FALSE;
+		}
+	}
 	return TRUE;
 }
 
@@ -1859,6 +1867,14 @@ fu_engine_update_cleanup (FuEngine *self,
 		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
 		if (!fu_plugin_runner_update_cleanup (plugin_tmp, flags, device, error))
 			return FALSE;
+	}
+
+	/* wait for device to disconnect and reconnect */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG)) {
+		if (!fu_device_list_wait_for_replug (self->device_list, device, error)) {
+			g_prefix_error (error, "failed to wait for cleanup replug: ");
+			return FALSE;
+		}
 	}
 	return TRUE;
 }
