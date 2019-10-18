@@ -638,7 +638,13 @@ fu_unifying_peripheral_detach (FuDevice *device, GError **error)
 			return FALSE;
 		}
 		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-		return TRUE;
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NEEDS_USER_ACTION,
+			     "%s needs to be manually restarted to complete the update."
+			     "Please unplug and reconnect the device and re-run the update",
+			     fu_device_get_name (device));
+		return FALSE;
 	}
 
 	/* this can reboot all by itself */
