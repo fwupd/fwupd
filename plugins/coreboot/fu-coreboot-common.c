@@ -12,9 +12,8 @@
 #include "fu-plugin-coreboot.h"
 
 /* Tries to convert the coreboot version string to a triplet string.
- * Returns NULL on error.
- */
-const gchar *
+ * Returns NULL on error. */
+gchar *
 fu_plugin_coreboot_version_string_to_triplet (const gchar *coreboot_version,
 					      GError **error)
 {
@@ -47,7 +46,7 @@ fu_plugin_coreboot_version_string_to_triplet (const gchar *coreboot_version,
 }
 
 /* convert firmware type to user friendly string representation */
-const gchar*
+gchar *
 fu_plugin_coreboot_get_name_for_type (FuPlugin *plugin,
 				      const gchar *vboot_partition)
 {

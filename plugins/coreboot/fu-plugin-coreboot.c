@@ -25,14 +25,14 @@ fu_plugin_init (FuPlugin *plugin)
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
-	g_autofree const gchar *triplet = NULL;
-	g_autofree gchar *name = NULL;
 	const gchar *major;
 	const gchar *minor;
 	const gchar *vendor;
 	const gchar *version;
 	GBytes *bios_table;
 	gboolean updatable = FALSE; /* TODO: Implement update support */
+	g_autofree gchar *name = NULL;
+	g_autofree gchar *triplet = NULL;
 	g_autoptr(FuDevice) dev = NULL;
 
 	/* don't inlcude FU_HWIDS_KEY_BIOS_VERSION */
@@ -94,9 +94,11 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_icon (dev, "computer");
 	name = fu_plugin_coreboot_get_name_for_type (plugin, NULL);
-	if (name == NULL)
-		name = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_PRODUCT_NAME);
-	fu_device_set_name (dev, name);
+	if (name != NULL) {
+		fu_device_set_name (dev, name);
+	} else {
+		fu_device_set_name (dev, fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_PRODUCT_NAME));
+	}
 	fu_device_set_vendor (dev, fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER));
 	fu_device_add_instance_id (dev, "main-system-firmware");
 
