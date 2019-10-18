@@ -3,6 +3,7 @@ FROM fedora:30
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
+ENV FWUPD_SKIP_DELL_TESTS 1
 RUN echo fubar > /etc/machine-id
 RUN dnf -y update
 RUN echo fubar > /etc/machine-id

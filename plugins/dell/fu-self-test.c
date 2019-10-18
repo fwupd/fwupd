@@ -75,6 +75,10 @@ fu_plugin_dell_tpm_func (void)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 
+	if (g_getenv ("FWUPD_SKIP_DELL_TESTS")) {
+		g_test_skip ("Skipping dell TPM tests per environment variable");
+		return;
+	}
 	memset (&tpm_out, 0x0, sizeof(tpm_out));
 
 	plugin_uefi = fu_plugin_new ();
