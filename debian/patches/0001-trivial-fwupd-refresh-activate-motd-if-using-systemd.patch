@@ -1,0 +1,92 @@
+From 80d6581be8580a3e5c7300760b936b0d6c8aa15f Mon Sep 17 00:00:00 2001
+From: Mario Limonciello <mario.limonciello@dell.com>
+Date: Tue, 15 Oct 2019 09:59:53 -0500
+Subject: [PATCH] trivial: fwupd-refresh: activate motd if using systemd v243
+ or later
+
+It turns out there is some bug in systemd v242 or less that runtime
+directories can't be used.  So only populate motd when we know that
+we have a newer systemd
+---
+ data/motd/fwupd-refresh.service.in |  6 ++----
+ data/motd/meson.build              | 29 +++++++++++++++++++----------
+ 2 files changed, 21 insertions(+), 14 deletions(-)
+
+diff --git a/data/motd/fwupd-refresh.service.in b/data/motd/fwupd-refresh.service.in
+index bf82ed6..d5ad37f 100644
+--- a/data/motd/fwupd-refresh.service.in
++++ b/data/motd/fwupd-refresh.service.in
+@@ -9,10 +9,6 @@ RuntimeDirectory=@motd_dir@
+ CacheDirectory=fwupdmgr
+ RuntimeDirectoryPreserve=yes
+ StandardError=null
+-ExecStart=@bindir@/fwupdmgr refresh
+-#Don't update MOTD for now until https://github.com/systemd/systemd/issues/13688
+-#is better figured out
+-#ExecStart=@bindir@/fwupdmgr get-updates --log @motd_file@
+ DynamicUser=yes
+ RestrictAddressFamilies=AF_NETLINK AF_UNIX AF_INET AF_INET6
+ SystemCallFilter=~@mount
+@@ -20,3 +16,5 @@ ProtectKernelModules=yes
+ ProtectControlGroups=yes
+ RestrictRealtime=yes
+ SuccessExitStatus=2
++ExecStart=@bindir@/fwupdmgr refresh
++@dynamic_options@
+diff --git a/data/motd/meson.build b/data/motd/meson.build
+index 9567735..3a1852b 100644
+--- a/data/motd/meson.build
++++ b/data/motd/meson.build
+@@ -1,5 +1,6 @@
+ motd_file = '85-fwupd'
+ motd_dir = 'motd.d'
++fwupdmgr_path = join_paths (bindir, 'fwupdmgr')
+ motd_fullpath = join_paths ('/run', motd_dir, motd_file)
+ con2 = configuration_data()
+ con2.set('bindir', bindir)
+@@ -7,20 +8,18 @@ con2.set('motd_file', motd_file)
+ con2.set('motd_dir', motd_dir)
+ con2.set('motd_fullpath', motd_fullpath)
+ 
+-# This file is only used in Ubuntu, which chooses to use update-motd instead
+-# of sourcing /run/motd.d/*
+-# See https://bugs.launchpad.net/ubuntu/+source/pam/+bug/399071
+-configure_file(
+-  input : '85-fwupd.motd.in',
+-  output : motd_file,
+-  configuration : con2,
+-  install: false,
+-)
+-
+ if get_option('systemd')
+   install_data(['fwupd-refresh.timer'],
+     install_dir: systemdunitdir)
+ 
++  dynamic_options = []
++  if systemd.version().version_compare('>= 243')
++    dynamic_options += 'ExecStart=' + fwupdmgr_path + ' get-updates --log ' + motd_file
++  else
++    dynamic_options += '# motd population disabled; requires systemd v243 or later'
++  endif
++  con2.set('dynamic_options', '\n'.join(dynamic_options))
++
+   configure_file(
+     input : 'fwupd-refresh.service.in',
+     output : 'fwupd-refresh.service',
+@@ -28,3 +27,13 @@ if get_option('systemd')
+     install: true,
+     install_dir: systemdunitdir)
+ endif
++
++# This file is only used in Ubuntu, which chooses to use update-motd instead
++# of sourcing /run/motd.d/*
++# See https://bugs.launchpad.net/ubuntu/+source/pam/+bug/399071
++configure_file(
++  input : '85-fwupd.motd.in',
++  output : motd_file,
++  configuration : con2,
++  install: false,
++)
+-- 
+2.7.4
+

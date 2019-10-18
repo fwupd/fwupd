@@ -2,6 +2,9 @@ fwupd (1.3.2-3) UNRELEASED; urgency=medium
 
   * backport patch for fwupd-refresh: don't try to enable LVFS if disabled
     (Closes: #942568)
+  * fwupd-refresh: backport a series of patches that essentially turns off motd
+    refresh unless running on a very new systemd (v243) due to systemd v242 bug.
+    (Closes: #942567)
 
  -- Mario Limonciello <mario.limonciello@dell.com>  Fri, 18 Oct 2019 09:26:34 -0500
 

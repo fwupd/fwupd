@@ -8,10 +8,10 @@ Subject: [PATCH] trivial: don't try to enable LVFS from systemd
  src/fu-util.c                      | 6 ++++++
  2 files changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/data/motd/fwupd-refresh.service.in b/data/motd/fwupd-refresh.service.in
-index d5ad37f..2264eb0 100644
---- a/data/motd/fwupd-refresh.service.in
-+++ b/data/motd/fwupd-refresh.service.in
+Index: fwupd/data/motd/fwupd-refresh.service.in
+===================================================================
+--- fwupd.orig/data/motd/fwupd-refresh.service.in
++++ fwupd/data/motd/fwupd-refresh.service.in
 @@ -16,5 +16,5 @@ ProtectKernelModules=yes
  ProtectControlGroups=yes
  RestrictRealtime=yes
@@ -19,11 +19,11 @@ index d5ad37f..2264eb0 100644
 -ExecStart=@bindir@/fwupdmgr refresh
 +ExecStart=@bindir@/fwupdmgr refresh --no-metadata-check
  @dynamic_options@
-diff --git a/src/fu-util.c b/src/fu-util.c
-index aeed675..5337f26 100644
---- a/src/fu-util.c
-+++ b/src/fu-util.c
-@@ -1326,6 +1326,12 @@ fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
+Index: fwupd/src/fu-util.c
+===================================================================
+--- fwupd.orig/src/fu-util.c
++++ fwupd/src/fu-util.c
+@@ -1231,6 +1231,12 @@ fu_util_download_metadata (FuUtilPrivate
  
  	/* no web remote is declared; try to enable LVFS */
  	if (!download_remote_enabled) {
@@ -36,6 +36,3 @@ index aeed675..5337f26 100644
  		if (!fu_util_download_metadata_enable_lvfs (priv, error))
  			return FALSE;
  	}
--- 
-2.7.4
-
