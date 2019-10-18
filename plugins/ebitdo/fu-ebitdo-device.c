@@ -362,6 +362,7 @@ fu_ebitdo_device_write_firmware (FuDevice *device,
 	guint32 payload_len;
 	guint32 serial_new[3];
 	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GError) error_local = NULL;
 	const guint32 app_key_index[16] = {
 		0x186976e5, 0xcac67acd, 0x38f27fee, 0x0a4948f1,
 		0xb75b7753, 0x1f8ffa5c, 0xbff8cf43, 0xc4936167,
@@ -524,8 +525,14 @@ fu_ebitdo_device_write_firmware (FuDevice *device,
 		g_prefix_error (error, "failed to mark firmware as successful: ");
 		return FALSE;
 	}
-	if (!fu_ebitdo_device_receive (self, NULL, 0, error)) {
-		g_prefix_error (error, "failed to get ACK for mark firmware as successful: ");
+	if (!fu_ebitdo_device_receive (self, NULL, 0, &error_local)) {
+		g_prefix_error (&error_local, "failed to get ACK for mark firmware as successful: ");
+		if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_WILL_DISAPPEAR)) {
+			fu_device_set_remove_delay (device, 0);
+			g_debug ("%s", error_local->message);
+			return TRUE;
+		}
+		g_propagate_error (error, g_steal_pointer (&error_local));
 		return FALSE;
 	}
 
