@@ -1326,6 +1326,12 @@ fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 
 	/* no web remote is declared; try to enable LVFS */
 	if (!download_remote_enabled) {
+		/* we don't want to ask anything */
+		if (priv->no_metadata_check) {
+			g_debug ("skipping metadata check");
+			return TRUE;
+		}
+
 		if (!fu_util_download_metadata_enable_lvfs (priv, error))
 			return FALSE;
 	}
