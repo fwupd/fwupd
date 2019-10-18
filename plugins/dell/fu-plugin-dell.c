@@ -118,9 +118,14 @@ static guint8 enclosure_whitelist [] = { 0x03, /* desktop */
 static guint16
 fu_dell_get_system_id (FuPlugin *plugin)
 {
+	FuPluginData *data = fu_plugin_get_data (plugin);
 	const gchar *system_id_str = NULL;
 	guint16 system_id = 0;
 	gchar *endptr = NULL;
+
+	/* don't care for test suite */
+	if (data->smi_obj->fake_smbios)
+		return 0;
 
 	system_id_str = fu_plugin_get_dmi_value (plugin,
 		FU_HWIDS_KEY_PRODUCT_SKU);
