@@ -8,7 +8,7 @@ Flags = is-bootloader
 InstallDuration = 120
 [DeviceInstanceId=USB\VID_0483&PID_5760]
 Plugin = ebitdo
-Flags = is-bootloader
+Flags = is-bootloader,will-disappear
 InstallDuration = 120
 
 # FC30
