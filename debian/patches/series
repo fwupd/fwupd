@@ -1,1 +1,2 @@
 0001-trivial-fwupd-refresh-fix-a-clash-with-fwupd.service.patch
+0001-trivial-don-t-try-to-enable-LVFS-from-systemd.patch
