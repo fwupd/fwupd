@@ -21,6 +21,7 @@ subdir('wacom-raw')
 subdir('wacom-usb')
 subdir('superio')
 subdir('synaptics-rmi')
+subdir('vli-usbhub')
 
 # depends on dfu
 subdir('csr')
