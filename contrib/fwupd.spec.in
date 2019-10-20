@@ -287,6 +287,7 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %{_unitdir}/fwupd.service
 %{_unitdir}/fwupd-refresh.service
 %{_unitdir}/fwupd-refresh.timer
+%{_presetdir}/fwupd-refresh.preset
 %{_unitdir}/system-update.target.wants/
 %dir %{_localstatedir}/lib/fwupd
 %dir %{_datadir}/fwupd/quirks.d

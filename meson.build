@@ -306,6 +306,7 @@ if build_standalone and get_option('systemd')
   if systemdunitdir == '' and get_option('systemd')
     systemdunitdir = systemd.get_pkgconfig_variable('systemdsystemunitdir')
   endif
+  systemdsystempresetdir = systemd.get_pkgconfig_variable('systemdsystempresetdir')
 endif
 
 if build_standalone and get_option('elogind')
