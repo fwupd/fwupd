@@ -1,0 +1,52 @@
+From d3047924d2e3a0ac199d34d2b57d5bc1bf8b6f2f Mon Sep 17 00:00:00 2001
+From: Mario Limonciello <mario.limonciello@dell.com>
+Date: Sun, 20 Oct 2019 13:30:51 -0500
+Subject: [PATCH] Add a systemd preset file for `fwupd-refresh.service`
+
+Makes `fwupd-refresh.service` strictly opt-in.
+
+Some distros are defaulting to all systemd services on and causing
+more refreshes than desirable by default, especially when using
+both `gnome-software` and `fwupd-refresh.service`
+---
+ data/motd/fwupd-refresh.preset | 1 +
+ data/motd/meson.build          | 2 ++
+ meson.build                    | 1 +
+ 3 files changed, 4 insertions(+)
+ create mode 100644 data/motd/fwupd-refresh.preset
+
+diff --git a/data/motd/fwupd-refresh.preset b/data/motd/fwupd-refresh.preset
+new file mode 100644
+index 00000000..a6b18e05
+--- /dev/null
++++ b/data/motd/fwupd-refresh.preset
+@@ -0,0 +1 @@
++disable fwupd-refresh.service
+diff --git a/data/motd/meson.build b/data/motd/meson.build
+index 3a1852bd..b583fb7f 100644
+--- a/data/motd/meson.build
++++ b/data/motd/meson.build
+@@ -11,6 +11,8 @@ con2.set('motd_fullpath', motd_fullpath)
+ if get_option('systemd')
+   install_data(['fwupd-refresh.timer'],
+     install_dir: systemdunitdir)
++  install_data(['fwupd-refresh.preset'],
++    install_dir: systemdsystempresetdir)
+
+   dynamic_options = []
+   if systemd.version().version_compare('>= 243')
+diff --git a/meson.build b/meson.build
+index 0de0d5eb..2a13eabd 100644
+--- a/meson.build
++++ b/meson.build
+@@ -306,6 +306,7 @@ if build_standalone and get_option('systemd')
+   if systemdunitdir == '' and get_option('systemd')
+     systemdunitdir = systemd.get_pkgconfig_variable('systemdsystemunitdir')
+   endif
++  systemdsystempresetdir = systemd.get_pkgconfig_variable('systemdsystempresetdir')
+ endif
+
+ if build_standalone and get_option('elogind')
+-- 
+2.20.1
+

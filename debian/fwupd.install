@@ -14,6 +14,7 @@ usr/lib/*/fwupdoffline
 usr/lib/*/fwupdtool
 usr/share/man/man1/*
 lib/systemd/system/*
+lib/systemd/system-preset/*
 lib/systemd/system-shutdown/*
 var/lib/fwupd
 lib/udev/rules.d/*
