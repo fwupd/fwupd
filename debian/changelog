@@ -1,6 +1,6 @@
-fwupd (1.3.2-4) UNRELEASED; urgency=medium
+fwupd (1.3.2-4) unstable; urgency=medium
 
-  * Disable fwupd-refresh.service by default
+  * Disable fwupd-refresh.service by default (Closes: #942630)
 
  -- Mario Limonciello <mario.limonciello@dell.com>  Sun, 20 Oct 2019 17:14:08 -0500
 
