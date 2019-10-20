@@ -11,6 +11,8 @@ con2.set('motd_fullpath', motd_fullpath)
 if get_option('systemd')
   install_data(['fwupd-refresh.timer'],
     install_dir: systemdunitdir)
+  install_data(['fwupd-refresh.preset'],
+    install_dir: systemdsystempresetdir)
 
   dynamic_options = []
   if systemd.version().version_compare('>= 243')
