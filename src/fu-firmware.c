@@ -21,10 +21,47 @@
 
 typedef struct {
 	GPtrArray			*images;	/* FuFirmwareImage */
+	gchar				*version;
 } FuFirmwarePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuFirmware, fu_firmware, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fu_firmware_get_instance_private (o))
+
+/**
+ * fu_firmware_get_version:
+ * @self: A #FuFirmware
+ *
+ * Gets an optional version that represents the firmware.
+ *
+ * Returns: a string, or %NULL
+ *
+ * Since: 1.3.3
+ **/
+const gchar *
+fu_firmware_get_version (FuFirmware *self)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_FIRMWARE (self), NULL);
+	return priv->version;
+}
+
+/**
+ * fu_firmware_set_version:
+ * @self: A #FuFirmware
+ * @version: A string version, or %NULL
+ *
+ * Sets an optional version that represents the firmware.
+ *
+ * Since: 1.3.3
+ **/
+void
+fu_firmware_set_version (FuFirmware *self, const gchar *version)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_FIRMWARE (self));
+	g_free (priv->version);
+	priv->version = g_strdup (version);
+}
 
 /**
  * fu_firmware_tokenize:
@@ -451,6 +488,7 @@ fu_firmware_finalize (GObject *object)
 {
 	FuFirmware *self = FU_FIRMWARE (object);
 	FuFirmwarePrivate *priv = GET_PRIVATE (self);
+	g_free (priv->version);
 	g_ptr_array_unref (priv->images);
 	G_OBJECT_CLASS (fu_firmware_parent_class)->finalize (object);
 }

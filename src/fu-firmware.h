@@ -39,6 +39,9 @@ struct _FuFirmwareClass
 FuFirmware	*fu_firmware_new			(void);
 FuFirmware	*fu_firmware_new_from_bytes		(GBytes		*fw);
 gchar		*fu_firmware_to_string			(FuFirmware	*self);
+const gchar	*fu_firmware_get_version		(FuFirmware	*self);
+void		 fu_firmware_set_version		(FuFirmware	*self,
+							 const gchar	*version);
 
 gboolean	 fu_firmware_tokenize			(FuFirmware	*self,
 							 GBytes		*fw,
