@@ -463,6 +463,8 @@ fu_firmware_to_string (FuFirmware *self)
 
 	/* subclassed type */
 	fu_common_string_append_kv (str, 0, G_OBJECT_TYPE_NAME (self), NULL);
+	if (priv->version != NULL)
+		fu_common_string_append_kv (str, 0, "Version", priv->version);
 
 	/* vfunc */
 	if (klass->to_string != NULL)
