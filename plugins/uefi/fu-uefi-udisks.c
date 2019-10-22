@@ -107,6 +107,33 @@ fu_uefi_udisks_objpath_is_esp (const gchar *obj)
 	return g_strcmp0 (str, ESP_DISK_TYPE) == 0;
 }
 
+gboolean
+fu_uefi_udisks_objpath_umount (const gchar *path, GError **error)
+{
+	GVariant *input;
+	GVariantBuilder builder;
+	g_autoptr(GDBusProxy) proxy = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	g_return_val_if_fail (fu_uefi_udisks_objpath (path), FALSE);
+
+	proxy = fu_uefi_udisks_get_dbus_proxy (path,
+					       UDISKS_DBUS_FILE_INTERFACE,
+					       error);
+	if (proxy == NULL)
+		return FALSE;
+
+	g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
+	input = g_variant_new ("(a{sv})", &builder);
+	val = g_dbus_proxy_call_sync (proxy,
+				      "Unmount", input,
+				      G_DBUS_CALL_FLAGS_NONE,
+				      -1, NULL, error);
+	if (val == NULL)
+		return FALSE;
+	return TRUE;
+}
+
 gchar *
 fu_uefi_udisks_objpath_mount (const gchar *path, GError **error)
 {
@@ -135,4 +162,29 @@ fu_uefi_udisks_objpath_mount (const gchar *path, GError **error)
 	g_variant_get (val, "(s)", &str);
 
 	return g_strdup (str);
+}
+
+gchar *
+fu_uefi_udisks_objpath_is_mounted (const gchar *path)
+{
+	const gchar **mountpoints = NULL;
+	g_autoptr(GDBusProxy) proxy = NULL;
+	g_autoptr(GVariant) val = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	g_return_val_if_fail (fu_uefi_udisks_objpath (path), NULL);
+
+	proxy = fu_uefi_udisks_get_dbus_proxy (path,
+					       UDISKS_DBUS_FILE_INTERFACE,
+					       &error_local);
+	if (proxy == NULL) {
+		g_warning ("%s", error_local->message);
+		return NULL;
+	}
+	val = g_dbus_proxy_get_cached_property (proxy, "MountPoints");
+	if (val == NULL)
+		return NULL;
+	mountpoints = g_variant_get_bytestring_array (val, NULL);
+
+	return g_strdup (mountpoints[0]);
 }

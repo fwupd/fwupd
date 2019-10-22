@@ -1866,6 +1866,8 @@ fu_engine_update_prepare (FuEngine *self,
 		return FALSE;
 	str = fu_device_to_string (device);
 	g_debug ("performing prepare on %s", str);
+	if (!fu_device_prepare (device, flags, error))
+		return FALSE;
 	for (guint j = 0; j < plugins->len; j++) {
 		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
 		if (!fu_plugin_runner_update_prepare (plugin_tmp, flags, device, error))
