@@ -4713,7 +4713,8 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 
 	/* add devices */
 	fu_engine_plugins_setup (self);
-	fu_engine_plugins_coldplug (self, FALSE);
+	if ((flags & FU_ENGINE_LOAD_FLAG_NO_ENUMERATE) == 0)
+		fu_engine_plugins_coldplug (self, FALSE);
 
 	/* coldplug USB devices */
 	g_signal_connect (self->usb_ctx, "device-added",
