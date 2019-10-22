@@ -86,42 +86,6 @@
       <package variant="s390x" />
     </distro>
   </dependency>
-  <dependency type="build" id="libcairo-dev">
-    <distro id="centos">
-      <package>cairo-devel</package>
-    </distro>
-    <distro id="fedora">
-      <package>cairo-devel</package>
-    </distro>
-    <distro id="debian">
-      <control />
-      <package variant="x86_64" />
-      <package variant="s390x">libcairo-dev:s390x</package>
-      <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <control />
-      <package variant="x86_64" />
-    </distro>
-  </dependency>
-  <dependency type="build" id="libcairo-gobject2">
-    <distro id="centos">
-      <package>cairo-gobject-devel</package>
-    </distro>
-    <distro id="fedora">
-      <package>cairo-gobject-devel</package>
-    </distro>
-    <distro id="debian">
-      <control />
-      <package variant="x86_64" />
-      <package variant="s390x">libcairo-gobject2:s390x</package>
-      <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <control />
-      <package variant="x86_64" />
-    </distro>
-  </dependency>
   <dependency type="build" id="libjson-glib-dev">
     <distro id="arch">
       <package>json-glib</package>
@@ -180,26 +144,6 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
-      <package variant="x86_64" />
-    </distro>
-  </dependency>
-  <dependency type="build" id="fonts-noto">
-    <distro id="arch">
-      <package>noto-fonts</package>
-    </distro>
-    <distro id="centos">
-      <package>google-noto-sans-cjk-ttc-fonts</package>
-    </distro>
-    <distro id="fedora">
-      <package>google-noto-sans-cjk-ttc-fonts</package>
-    </distro>
-    <distro id="debian">
-      <control />
-      <package variant="x86_64" />
-      <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <control />
       <package variant="x86_64" />
     </distro>
   </dependency>
@@ -290,41 +234,6 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
-      <package variant="x86_64" />
-    </distro>
-  </dependency>
-  <dependency type="build" id="libfreetype6-dev">
-    <distro id="centos">
-      <package>freetype</package>
-    </distro>
-    <distro id="fedora">
-      <package>freetype</package>
-    </distro>
-    <distro id="debian">
-      <control />
-      <package variant="x86_64" />
-      <package variant="s390x">libfreetype6-dev:s390x</package>
-      <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <control />
-      <package variant="x86_64" />
-    </distro>
-  </dependency>
-  <dependency type="build" id="fontconfig">
-    <distro id="centos">
-      <package />
-    </distro>
-    <distro id="fedora">
-      <package />
-    </distro>
-    <distro id="debian">
-      <control />
-      <package variant="x86_64" />
-      <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <control />
       <package variant="x86_64" />
     </distro>
   </dependency>
@@ -893,23 +802,6 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
-  <dependency type="build" id="gir1.2-pango-1.0">
-    <distro id="centos">
-      <package>pango-devel</package>
-    </distro>
-    <distro id="fedora">
-      <package>pango-devel</package>
-    </distro>
-    <distro id="debian">
-      <control />
-      <package variant="x86_64" />
-      <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <control />
-      <package variant="x86_64" />
-    </distro>
-  </dependency>
   <dependency type="build" id="pkg-config">
     <distro id="debian">
       <control />
@@ -1019,48 +911,12 @@
       <package />
     </distro>
   </dependency>
-  <dependency type="build" id="python3-gi-cairo">
-    <distro id="arch">
-      <package>python-cairo</package>
-    </distro>
-    <distro id="fedora">
-      <package>python3-cairo</package>
-    </distro>
-    <distro id="debian">
-      <control />
-      <package variant="x86_64" />
-      <package variant="s390x" />
-      <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <control />
-      <package variant="x86_64" />
-    </distro>
-  </dependency>
   <dependency type="build" id="python3-gobject">
     <distro id="arch">
       <package>python-gobject</package>
     </distro>
     <distro id="fedora">
       <package />
-    </distro>
-  </dependency>
-  <dependency type="build" id="python3-pil">
-    <distro id="arch">
-      <package>python-pillow</package>
-    </distro>
-    <distro id="fedora">
-      <package>python3-pillow</package>
-    </distro>
-    <distro id="debian">
-      <control />
-      <package variant="x86_64" />
-      <package variant="s390x" />
-      <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <control />
-      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="python3-requests">

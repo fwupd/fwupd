@@ -80,12 +80,6 @@ BuildRequires: efivar-devel >= 33
 
 %if 0%{?have_uefi}
 BuildRequires: efivar-devel >= 33
-BuildRequires: python3 python3-cairo python3-gobject python3-pillow
-BuildRequires: pango-devel
-BuildRequires: cairo-devel cairo-gobject-devel
-BuildRequires: freetype
-BuildRequires: fontconfig
-BuildRequires: google-noto-sans-cjk-ttc-fonts
 BuildRequires: gnu-efi-devel
 BuildRequires: tpm2-tss-devel >= 2.2.3
 BuildRequires: pesign
@@ -353,9 +347,6 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %{_libdir}/fwupd-plugins-3/libfu_plugin_wacom_raw.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_wacom_usb.so
 %ghost %{_localstatedir}/lib/fwupd/gnupg
-%if 0%{?have_uefi}
-%{_datadir}/locale/*/LC_IMAGES/fwupd*
-%endif
 
 %if 0%{?enable_flashrom}
 # eww, but just until the Fedora package ships these...

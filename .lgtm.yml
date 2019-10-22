@@ -6,10 +6,7 @@ extraction:
     prepare:
       packages:
       - bsdtar
-      - python3-gi
       - libcogl-pango-dev
-      - python3-pil
-      - python3-cairo
       - libssl-dev
     after_prepare:
     - "wget -O libxmlb.zip https://github.com/hughsie/libxmlb/archive/0.1.7.zip"

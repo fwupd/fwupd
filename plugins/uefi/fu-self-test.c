@@ -10,7 +10,6 @@
 
 #include "fu-test.h"
 #include "fu-ucs2.h"
-#include "fu-uefi-bgrt.h"
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
 #include "fu-uefi-pcrs.h"
@@ -84,60 +83,6 @@ fu_uefi_ucs2_func (void)
 	g_assert_cmpint (fu_ucs2_strlen (str1, -1), ==, 3);
 	str2 = fu_ucs2_to_uft8 (str1, -1);
 	g_assert_cmpstr ("hw!", ==, str2);
-}
-
-static void
-fu_uefi_bgrt_func (void)
-{
-	gboolean ret;
-	g_autoptr(GError) error = NULL;
-	g_autoptr(FuUefiBgrt) bgrt = fu_uefi_bgrt_new ();
-	ret = fu_uefi_bgrt_setup (bgrt, &error);
-	g_assert_no_error (error);
-	g_assert_true (ret);
-	g_assert_true (fu_uefi_bgrt_get_supported (bgrt));
-	g_assert_cmpint (fu_uefi_bgrt_get_xoffset (bgrt), ==, 123);
-	g_assert_cmpint (fu_uefi_bgrt_get_yoffset (bgrt), ==, 456);
-	g_assert_cmpint (fu_uefi_bgrt_get_width (bgrt), ==, 54);
-	g_assert_cmpint (fu_uefi_bgrt_get_height (bgrt), ==, 24);
-}
-
-static void
-fu_uefi_framebuffer_func (void)
-{
-	gboolean ret;
-	guint32 height = 0;
-	guint32 width = 0;
-	g_autoptr(GError) error = NULL;
-	ret = fu_uefi_get_framebuffer_size (&width, &height, &error);
-	g_assert_no_error (error);
-	g_assert_true (ret);
-	g_assert_cmpint (width, ==, 456);
-	g_assert_cmpint (height, ==, 789);
-}
-
-static void
-fu_uefi_bitmap_func (void)
-{
-	gboolean ret;
-	gsize sz = 0;
-	guint32 height = 0;
-	guint32 width = 0;
-	g_autofree gchar *fn = NULL;
-	g_autofree gchar *buf = NULL;
-	g_autoptr(GError) error = NULL;
-
-	fn = fu_test_get_filename (TESTDATADIR, "test.bmp");
-	g_assert (fn != NULL);
-	ret = g_file_get_contents (fn, &buf, &sz, &error);
-	g_assert_no_error (error);
-	g_assert_true (ret);
-	g_assert_nonnull (buf);
-	ret = fu_uefi_get_bitmap_size ((guint8 *)buf, sz, &width, &height, &error);
-	g_assert_no_error (error);
-	g_assert_true (ret);
-	g_assert_cmpint (width, ==, 54);
-	g_assert_cmpint (height, ==, 24);
 }
 
 static void
@@ -320,9 +265,6 @@ main (int argc, char **argv)
 	g_test_add_func ("/uefi/pcrs2.0", fu_uefi_pcrs_2_0_func);
 	g_test_add_func ("/uefi/ucs2", fu_uefi_ucs2_func);
 	g_test_add_func ("/uefi/variable", fu_uefi_vars_func);
-	g_test_add_func ("/uefi/bgrt", fu_uefi_bgrt_func);
-	g_test_add_func ("/uefi/framebuffer", fu_uefi_framebuffer_func);
-	g_test_add_func ("/uefi/bitmap", fu_uefi_bitmap_func);
 	g_test_add_func ("/uefi/device", fu_uefi_device_func);
 	g_test_add_func ("/uefi/update-info", fu_uefi_update_info_func);
 	g_test_add_func ("/uefi/plugin", fu_uefi_plugin_func);

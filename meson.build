@@ -226,9 +226,6 @@ if build_standalone and get_option('plugin_altos')
 endif
 
 if build_standalone and get_option('plugin_uefi')
-  cairo = dependency('cairo')
-  fontconfig = cc.find_library('fontconfig')
-  freetype = cc.find_library('freetype')
   efivar = dependency('efivar', version : '>= 33')
   conf.set_quoted('EFIVAR_LIBRARY_VERSION', efivar.version())
   efiboot = dependency('efiboot')
@@ -257,10 +254,6 @@ if build_standalone and get_option('plugin_uefi')
           gnu_efi_arch = ''
   endif
   conf.set_quoted('EFI_MACHINE_TYPE_NAME', EFI_MACHINE_TYPE_NAME)
-  r = run_command([python3, 'po/test-deps'])
-  if r.returncode() != 0
-    error(r.stderr())
-  endif
 endif
 
 if build_standalone and get_option('plugin_dell')

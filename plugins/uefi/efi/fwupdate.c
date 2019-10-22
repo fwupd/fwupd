@@ -448,81 +448,13 @@ fwup_delete_boot_entry(VOID)
 }
 
 static EFI_STATUS
-fwup_get_gop_mode(UINT32 *mode, EFI_HANDLE loaded_image)
-{
-	EFI_HANDLE *handles, gop_handle;
-	UINTN num_handles;
-	EFI_STATUS status;
-	EFI_GUID gop_guid = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
-	EFI_GRAPHICS_OUTPUT_PROTOCOL *gop;
-	VOID *iface;
-
-	status = LibLocateHandle(ByProtocol, &gop_guid, NULL, &num_handles,
-				 &handles);
-	if (EFI_ERROR(status))
-		return status;
-
-	if (handles == NULL || num_handles == 0)
-		return EFI_UNSUPPORTED;
-
-	for (UINTN i = 0; i < num_handles; i++) {
-		gop_handle = handles[i];
-
-		status = uefi_call_wrapper(BS->OpenProtocol, 6,
-					   gop_handle, &gop_guid, &iface,
-					   loaded_image, 0,
-					   EFI_OPEN_PROTOCOL_GET_PROTOCOL);
-		if (EFI_ERROR(status))
-		    continue;
-
-		gop = (EFI_GRAPHICS_OUTPUT_PROTOCOL *)iface;
-
-		*mode = gop->Mode->Mode;
-		return EFI_SUCCESS;
-	}
-
-	return EFI_UNSUPPORTED;
-}
-
-static inline void
-fwup_update_ux_capsule_checksum(UX_CAPSULE_HEADER *payload_hdr)
-{
-	UINT8 *buf = (UINT8 *)payload_hdr;
-	UINT8 sum = 0;
-
-	payload_hdr->checksum = 0;
-	for (UINTN i = 0; i < sizeof(*payload_hdr); i++)
-		sum = (UINT8) (sum + buf[i]);
-	payload_hdr->checksum = sum;
-}
-
-static EFI_STATUS
-fwup_check_gop_for_ux_capsule(EFI_HANDLE loaded_image,
-			      EFI_CAPSULE_HEADER *capsule)
-{
-	UX_CAPSULE_HEADER *payload_hdr;
-	EFI_STATUS rc;
-
-	payload_hdr = (UX_CAPSULE_HEADER *) (((UINT8 *) capsule) + capsule->HeaderSize);
-	rc = fwup_get_gop_mode(&payload_hdr->mode, loaded_image);
-	if (EFI_ERROR(rc))
-		return EFI_UNSUPPORTED;
-
-	fwup_update_ux_capsule_checksum(payload_hdr);
-
-	return EFI_SUCCESS;
-}
-
-static EFI_STATUS
 fwup_add_update_capsule(FWUP_UPDATE_TABLE *update, EFI_CAPSULE_HEADER **capsule_out,
-			EFI_CAPSULE_BLOCK_DESCRIPTOR *cbd_out, EFI_HANDLE loaded_image)
+			EFI_CAPSULE_BLOCK_DESCRIPTOR *cbd_out)
 {
 	EFI_STATUS rc;
 	EFI_FILE_HANDLE fh = NULL;
 	UINT8 *fbuf = NULL;
 	UINTN fsize = 0;
-	EFI_CAPSULE_HEADER *capsule;
-
 	UINTN cbd_len;
 	EFI_PHYSICAL_ADDRESS cbd_data;
 	EFI_CAPSULE_HEADER *cap_out;
@@ -548,9 +480,8 @@ fwup_add_update_capsule(FWUP_UPDATE_TABLE *update, EFI_CAPSULE_HEADER **capsule_
 
 	cbd_len = fsize;
 	cbd_data = (EFI_PHYSICAL_ADDRESS)(UINTN)fbuf;
-	capsule = cap_out = (EFI_CAPSULE_HEADER *)fbuf;
-	if (cap_out->Flags == 0 &&
-	    CompareGuid(&update->info->guid, &ux_capsule_guid) != 0) {
+	cap_out = (EFI_CAPSULE_HEADER *)fbuf;
+	if (cap_out->Flags == 0 ) {
 #if defined(__aarch64__)
 		cap_out->Flags |= update->info->capsule_flags;
 #else
@@ -558,13 +489,6 @@ fwup_add_update_capsule(FWUP_UPDATE_TABLE *update, EFI_CAPSULE_HEADER **capsule_
 					CAPSULE_FLAGS_PERSIST_ACROSS_RESET |
 					CAPSULE_FLAGS_INITIATE_RESET;
 #endif
-	}
-
-	if (CompareGuid(&update->info->guid, &ux_capsule_guid) == 0) {
-		fwup_debug(L"Checking GOP for ux capsule");
-		rc = fwup_check_gop_for_ux_capsule(loaded_image, capsule);
-		if (EFI_ERROR(rc))
-			return EFI_UNSUPPORTED;
 	}
 
 	cbd_out->Length = cbd_len;
@@ -710,14 +634,8 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *systab)
 		return EFI_OUT_OF_RESOURCES;
 	for (i = 0; i < n_updates; i++) {
 		fwup_info(L"Adding new capsule");
-		rc = fwup_add_update_capsule(updates[i], &capsules[j], &cbd_data[j], image);
+		rc = fwup_add_update_capsule(updates[i], &capsules[j], &cbd_data[j]);
 		if (EFI_ERROR(rc)) {
-			/* ignore a failing UX capsule */
-			if (rc == EFI_UNSUPPORTED &&
-			    CompareGuid(&updates[i]->info->guid, &ux_capsule_guid) == 0) {
-				fwup_debug(L"GOP unsuitable: %r", rc);
-				continue;
-			}
 			fwup_warning(L"Could not build update list: %r", rc);
 			return rc;
 		}

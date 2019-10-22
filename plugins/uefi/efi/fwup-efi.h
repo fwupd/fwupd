@@ -15,19 +15,7 @@ static __attribute__((__unused__)) EFI_GUID empty_guid =
 	{0x0,0x0,0x0,{0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0}};
 static __attribute__((__unused__))EFI_GUID fwupdate_guid =
 	{0x0abba7dc,0xe516,0x4167,{0xbb,0xf5,0x4d,0x9d,0x1c,0x73,0x94,0x16}};
-static __attribute__((__unused__))EFI_GUID ux_capsule_guid =
-	{0x3b8c8162,0x188c,0x46a4,{0xae,0xc9,0xbe,0x43,0xf1,0xd6,0x56,0x97}};
 static __attribute__((__unused__))EFI_GUID global_variable_guid = EFI_GLOBAL_VARIABLE;
-
-typedef struct {
-	UINT8		 version;
-	UINT8		 checksum;
-	UINT8		 image_type;
-	UINT8		 reserved;
-	UINT32		 mode;
-	UINT32		 x_offset;
-	UINT32		 y_offset;
-} __attribute__((__packed__)) UX_CAPSULE_HEADER;
 
 typedef struct {
 	UINT32		 update_info_version;

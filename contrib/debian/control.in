@@ -65,7 +65,6 @@ Depends: ${misc:Depends},
          gnome-desktop-testing,
          policykit-1,
          python3,
-         python3-gi,
          python3-requests,
 Breaks: fwupd (<< 0.9.4-1)
 Replaces: fwupd (<< 0.9.4-1)

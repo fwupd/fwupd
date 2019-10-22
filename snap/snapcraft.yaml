@@ -123,18 +123,6 @@ parts:
       - python3-apt
     plugin: make
     source: contrib/snap/fwup-efi-signed
-  #needed for UEFI plugin to build UX labels
-  build-introspection:
-    plugin: nil
-    stage-packages:
-      - python3-gi
-      - python3-gi-cairo
-      - python3-pil
-    prime:
-      - -etc
-      - -usr
-      - -lib
-      - -var
   fwupd:
     plugin: meson
     meson-parameters: [--prefix=/,
@@ -158,7 +146,6 @@ parts:
       - gnutls-dev
       - gnu-efi
       - libarchive-dev
-      - libcairo-dev
       - libelf-dev
       - libefiboot-dev
       - libefivar-dev
@@ -169,7 +156,6 @@ parts:
       - libglib2.0-dev
       - libgpgme11-dev
       - libjson-glib-dev
-      - libpango1.0-dev
       - libpci-dev
       - libpolkit-gobject-1-dev
       - libsmbios-dev
@@ -232,7 +218,7 @@ parts:
       - -usr/share/gir-1.0
       - -usr/share/upstart
       - -usr/lib/*/pkgconfig
-    after: [meson, build-introspection, modemmanager, libmbim, libqmi, tpm2-tss]
+    after: [meson, modemmanager, libmbim, libqmi, tpm2-tss]
   fix-bash-completion:
     plugin: make
     source: contrib/snap/fix-bash-completion

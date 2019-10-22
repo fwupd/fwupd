@@ -181,18 +181,6 @@ parts:
       - python3-apt
     plugin: make
     source: contrib/snap/fwup-efi-signed
-  #needed for UEFI plugin to build UX labels
-  build-introspection:
-    plugin: nil
-    stage-packages:
-      - python3-gi
-      - python3-gi-cairo
-      - python3-pil
-    prime:
-      - -etc
-      - -usr
-      - -lib
-      - -var
   #0.19.8.1 adds support for GETTEXTDATADIRS which is needed by meson's msgfmthelper
   gettext:
     source: https://ftp.gnu.org/pub/gnu/gettext/gettext-0.19.8.1.tar.xz
@@ -248,13 +236,11 @@ parts:
       - gcab
       - gnutls-dev
       - libarchive-dev
-      - libcairo-dev
       - libelf-dev
       - libgcab-dev
       - libglib2.0-dev
       - libgpgme11-dev
       - libjson-glib-dev
-      - libpango1.0-dev
       - libpolkit-gobject-1-dev
       - libsoup2.4-dev
       - libsqlite3-dev
@@ -308,7 +294,7 @@ parts:
       - -usr/share/gir-1.0
       - -usr/share/upstart
       - -usr/lib/*/pkgconfig
-    after: [gudev, gusb, gnu-efi, libefivar-fixpkgconfig, libsmbios, build-introspection, gettext, modemmanager, libqmi]
+    after: [gudev, gusb, gnu-efi, libefivar-fixpkgconfig, libsmbios, gettext, modemmanager, libqmi]
   fix-bash-completion:
     plugin: make
     source: contrib/snap/fix-bash-completion
