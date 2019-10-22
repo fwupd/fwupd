@@ -19,7 +19,6 @@
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
 #include "fu-uefi-vars.h"
-#include "fu-uefi-udisks.h"
 
 #ifndef HAVE_GIO_2_55_0
 #pragma clang diagnostic push
@@ -530,22 +529,28 @@ fu_plugin_uefi_test_secure_boot (FuPlugin *plugin)
 	fu_plugin_add_report_metadata (plugin, "SecureBoot", result_str);
 }
 
-static gboolean
-fu_plugin_uefi_delete_old_capsules (FuPlugin *plugin, GError **error)
+/* delete any existing .cap files to avoid the small ESP partition
+ * from running out of space when we've done lots of firmware updates
+ * -- also if the distro has changed the ESP may be different anyway */
+gboolean
+fu_plugin_update_prepare (FuPlugin *plugin,
+			  FwupdInstallFlags flags,
+			  FuDevice *device,
+			  GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data (plugin);
+	const gchar *esp_path = fu_device_get_metadata (device, "EspPath");
 	g_autofree gchar *pattern = NULL;
 	g_autoptr(GPtrArray) files = NULL;
 
-	/* can only do this if we're mounted */
-	if (fu_uefi_udisks_objpath (data->esp_path))
+	/* in case we call capsule install twice before reboot */
+	if (fu_uefi_vars_exists (FU_UEFI_VARS_GUID_EFI_GLOBAL, "BootNext"))
 		return TRUE;
 
 	/* delete any files matching the glob in the ESP */
-	files = fu_common_get_files_recursive (data->esp_path, error);
+	files = fu_common_get_files_recursive (esp_path, error);
 	if (files == NULL)
 		return FALSE;
-	pattern = g_build_filename (data->esp_path, "EFI/*/fw/fwupd-*.cap", NULL);
+	pattern = g_build_filename (esp_path, "EFI/*/fw/fwupd-*.cap", NULL);
 	for (guint i = 0; i < files->len; i++) {
 		const gchar *fn = g_ptr_array_index (files, i);
 		if (fnmatch (pattern, fn, 0) == 0) {
@@ -555,6 +560,11 @@ fu_plugin_uefi_delete_old_capsules (FuPlugin *plugin, GError **error)
 				return FALSE;
 		}
 	}
+
+	/* delete any old variables */
+	if (!fu_uefi_vars_delete_with_glob (FU_UEFI_VARS_GUID_FWUPDATE, "fwupd-*", error))
+		return FALSE;
+
 	return TRUE;
 }
 
@@ -873,18 +883,6 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	/* no devices are updatable */
 	if (error_esp != NULL || error_bootloader != NULL)
 		return TRUE;
-
-	/* delete any existing .cap files to avoid the small ESP partition
-	 * from running out of space when we've done lots of firmware updates
-	 * -- also if the distro has changed the ESP may be different anyway */
-	if (fu_uefi_vars_exists (FU_UEFI_VARS_GUID_EFI_GLOBAL, "BootNext")) {
-		g_debug ("detected BootNext, not cleaning up");
-	} else {
-		if (!fu_plugin_uefi_delete_old_capsules (plugin, error))
-			return FALSE;
-		if (!fu_uefi_vars_delete_with_glob (FU_UEFI_VARS_GUID_FWUPDATE, "fwupd-*", error))
-			return FALSE;
-	}
 
 	/* save in report metadata */
 	g_debug ("ESP mountpoint set as %s", data->esp_path);
