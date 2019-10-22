@@ -357,7 +357,7 @@ fu_uefi_check_esp_path (const gchar *path, GError **error)
 }
 
 static gchar *
-fu_uefi_probe_for_esp (GError **error)
+fu_uefi_probe_udisks_esp (GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autofree gchar *found_esp = NULL;
@@ -390,6 +390,7 @@ fu_uefi_probe_for_esp (GError **error)
 		return NULL;
 	}
 
+	g_debug ("Udisks detected objpath %s", found_esp);
 	return g_steal_pointer (&found_esp);
 }
 
@@ -414,9 +415,8 @@ fu_uefi_guess_esp_path (GError **error)
 		return g_strdup (paths[i]);
 	}
 
-	/* prove udisks2 */
-	g_debug ("Using UDisks2 to probe for ESP");
-	return fu_uefi_probe_for_esp (error);
+	/* probe using udisks2 */
+	return fu_uefi_probe_udisks_esp (error);
 }
 
 void

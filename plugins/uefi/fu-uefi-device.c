@@ -10,6 +10,7 @@
 #include <string.h>
 #include <efivar.h>
 #include <efivar/efiboot.h>
+#include <fnmatch.h>
 
 #include "fu-device-metadata.h"
 
@@ -19,6 +20,7 @@
 #include "fu-uefi-bootmgr.h"
 #include "fu-uefi-pcrs.h"
 #include "fu-uefi-vars.h"
+#include "fu-uefi-udisks.h"
 
 struct _FuUefiDevice {
 	FuDevice		 parent_instance;
@@ -31,6 +33,7 @@ struct _FuUefiDevice {
 	guint32			 last_attempt_version;
 	guint64			 fmp_hardware_instance;
 	gboolean		 missing_header;
+	gboolean		 automounted_esp;
 };
 
 G_DEFINE_TYPE (FuUefiDevice, fu_uefi_device, FU_TYPE_DEVICE)
@@ -398,6 +401,150 @@ fu_uefi_device_write_update_info (FuUefiDevice *self,
 }
 
 static gboolean
+fu_uefi_device_is_esp_mounted (FuDevice *device, GError **error)
+{
+	const gchar *esp_path = fu_device_get_metadata (device, "EspPath");
+	g_autofree gchar *contents = NULL;
+	g_auto(GStrv) lines = NULL;
+	gsize length;
+
+	if (esp_path == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "EFI System partition is not defined");
+		return FALSE;
+	}
+
+	if (!g_file_get_contents ("/proc/mounts", &contents, &length, error))
+		return FALSE;
+	lines = g_strsplit (contents, "\n", 0);
+
+	for (guint i = 0; lines[i] != NULL; i++) {
+		if (lines[i] != NULL && g_strrstr (lines[i], esp_path))
+			return TRUE;
+	}
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_SUPPORTED,
+		     "EFI System partition %s is not mounted",
+		     esp_path);
+	return FALSE;
+}
+
+static gboolean
+fu_uefi_device_check_esp_free (FuDevice *device, GError **error)
+{
+	const gchar *esp_path = fu_device_get_metadata (device, "EspPath");
+	guint64 sz_reqd = fu_device_get_metadata_integer (device, "RequireESPFreeSpace");
+	if (sz_reqd == G_MAXUINT) {
+		g_debug ("maximum size is not configured");
+		return TRUE;
+	}
+	return 	fu_uefi_check_esp_free_space (esp_path, sz_reqd, error);
+}
+
+static gboolean
+fu_uefi_device_cleanup_esp (FuDevice *device, GError **error)
+{
+	const gchar *esp_path = fu_device_get_metadata (device, "EspPath");
+	g_autofree gchar *pattern = NULL;
+	g_autoptr(GPtrArray) files = NULL;
+
+	/* in case we call capsule install twice before reboot */
+	if (fu_uefi_vars_exists (FU_UEFI_VARS_GUID_EFI_GLOBAL, "BootNext"))
+		return TRUE;
+
+	/* delete any files matching the glob in the ESP */
+	files = fu_common_get_files_recursive (esp_path, error);
+	if (files == NULL)
+		return FALSE;
+	pattern = g_build_filename (esp_path, "EFI/*/fw/fwupd-*.cap", NULL);
+	for (guint i = 0; i < files->len; i++) {
+		const gchar *fn = g_ptr_array_index (files, i);
+		if (fnmatch (pattern, fn, 0) == 0) {
+			g_autoptr(GFile) file = g_file_new_for_path (fn);
+			g_debug ("deleting %s", fn);
+			if (!g_file_delete (file, NULL, error))
+				return FALSE;
+		}
+	}
+
+	/* delete any old variables */
+	if (!fu_uefi_vars_delete_with_glob (FU_UEFI_VARS_GUID_FWUPDATE, "fwupd-*", error))
+		return FALSE;
+
+	return TRUE;
+}
+
+static gboolean
+fu_uefi_device_prepare (FuDevice *device,
+			FwupdInstallFlags flags,
+			GError **error)
+{
+	/* not set in conf, figure it out */
+	if (fu_device_get_metadata (device, "EspPath") == NULL) {
+		g_autofree gchar *guessed = NULL;
+		g_autofree gchar *detected_esp = NULL;
+		guessed = fu_uefi_guess_esp_path (error);
+		if (guessed == NULL)
+			return FALSE;
+
+		/* udisks objpath */
+		if (fu_uefi_udisks_objpath (guessed)) {
+			FuUefiDevice *self = FU_UEFI_DEVICE (device);
+			detected_esp = fu_uefi_udisks_objpath_is_mounted (guessed);
+			if (detected_esp != NULL) {
+				g_debug ("ESP already mounted @ %s", detected_esp);
+			/* not mounted */
+			} else {
+				g_debug ("Mounting ESP @ %s", guessed);
+				detected_esp = fu_uefi_udisks_objpath_mount (guessed, error);
+				if (detected_esp == NULL)
+					return FALSE;
+				self->automounted_esp = TRUE;
+			}
+		/* already mounted */
+		} else {
+			detected_esp = g_steal_pointer (&guessed);
+		}
+		fu_device_set_metadata (device, "EspPath", detected_esp);
+	}
+
+	/* sanity checks */
+	if (!fu_uefi_device_is_esp_mounted (device, error))
+		return FALSE;
+	if (!fu_uefi_device_check_esp_free (device, error))
+		return FALSE;
+	if (!fu_uefi_device_cleanup_esp (device, error))
+		return FALSE;
+
+	return TRUE;
+}
+
+static gboolean
+fu_uefi_device_cleanup (FuDevice *device,
+			FwupdInstallFlags flags,
+			GError **error)
+{
+	FuUefiDevice *self = FU_UEFI_DEVICE (device);
+	if (self->automounted_esp) {
+		g_autofree gchar *guessed = NULL;
+		guessed = fu_uefi_guess_esp_path (error);
+		if (guessed == NULL)
+			return FALSE;
+		g_debug ("Unmounting ESP @ %s", guessed);
+		if (!fu_uefi_udisks_objpath_umount (guessed, error))
+			return FALSE;
+		self->automounted_esp = FALSE;
+		/* we will detect again if necessary */
+		fu_device_remove_metadata (device, "EspPath");
+	}
+
+	return TRUE;
+}
+
+static gboolean
 fu_uefi_device_write_firmware (FuDevice *device,
 			       FuFirmware *firmware,
 			       FwupdInstallFlags install_flags,
@@ -594,7 +741,9 @@ fu_uefi_device_class_init (FuUefiDeviceClass *klass)
 	object_class->finalize = fu_uefi_device_finalize;
 	klass_device->to_string = fu_uefi_device_to_string;
 	klass_device->probe = fu_uefi_device_probe;
+	klass_device->prepare = fu_uefi_device_prepare;
 	klass_device->write_firmware = fu_uefi_device_write_firmware;
+	klass_device->cleanup = fu_uefi_device_cleanup;
 }
 
 FuUefiDevice *
