@@ -4149,7 +4149,8 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/archive{cab}", fu_archive_cab_func);
 	g_test_add_func ("/fwupd/engine{requirements-other-device}", fu_engine_requirements_other_device_func);
 	g_test_add_func ("/fwupd/device{incorporate}", fu_device_incorporate_func);
-	g_test_add_func ("/fwupd/device{poll}", fu_device_poll_func);
+	if (g_test_slow ())
+		g_test_add_func ("/fwupd/device{poll}", fu_device_poll_func);
 	g_test_add_func ("/fwupd/device-locker{success}", fu_device_locker_func);
 	g_test_add_func ("/fwupd/device-locker{fail}", fu_device_locker_fail_func);
 	g_test_add_func ("/fwupd/device{metadata}", fu_device_metadata_func);
