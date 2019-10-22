@@ -486,8 +486,6 @@ fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
 		dev = g_ptr_array_index (devices, i);
 		if (!fu_util_filter_device (priv, FWUPD_DEVICE (dev)))
 			continue;
-		if (!fwupd_device_has_flag (FWUPD_DEVICE (dev), FWUPD_DEVICE_FLAG_SUPPORTED))
-			continue;
 		g_ptr_array_add (devices_filtered, g_object_ref (dev));
 	}
 
@@ -503,6 +501,8 @@ fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
 	/* exactly one */
 	if (devices_filtered->len == 1) {
 		dev = g_ptr_array_index (devices_filtered, 0);
+		/* TRANSLATORS: Device has been chosen by the daemon for the user */
+		g_print ("%s: %s\n", _("Selected device"), fu_device_get_name (dev));
 		return g_object_ref (dev);
 	}
 
@@ -990,15 +990,6 @@ fu_util_detach (FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
 		return FALSE;
 
-	/* invalid args */
-	if (g_strv_length (values) == 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_ARGS,
-				     "Invalid arguments");
-		return FALSE;
-	}
-
 	/* get device */
 	if (g_strv_length (values) >= 1) {
 		device = fu_engine_get_device (priv->engine, values[0], error);
@@ -1026,15 +1017,6 @@ fu_util_attach (FuUtilPrivate *priv, gchar **values, GError **error)
 	/* load engine */
 	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
 		return FALSE;
-
-	/* invalid args */
-	if (g_strv_length (values) == 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_ARGS,
-				     "Invalid arguments");
-		return FALSE;
-	}
 
 	/* get device */
 	if (g_strv_length (values) >= 1) {
