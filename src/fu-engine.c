@@ -44,6 +44,10 @@
 #include "fu-udev-device-private.h"
 #include "fu-usb-device-private.h"
 
+#include "fu-dfu-firmware.h"
+#include "fu-ihex-firmware.h"
+#include "fu-srec-firmware.h"
+
 #ifdef HAVE_SYSTEMD
 #include "fu-systemd.h"
 #endif
@@ -77,6 +81,7 @@ struct _FuEngine
 	GHashTable		*runtime_versions;
 	GHashTable		*compile_versions;
 	GHashTable		*approved_firmware;
+	GHashTable		*firmware_gtypes;
 	gchar			*host_machine_id;
 	gboolean		 loaded;
 };
@@ -106,6 +111,30 @@ static void
 fu_engine_emit_device_changed (FuEngine *self, FuDevice *device)
 {
 	g_signal_emit (self, signals[SIGNAL_DEVICE_CHANGED], 0, device);
+}
+
+GPtrArray *
+fu_engine_get_firmware_gtype_ids (FuEngine *self)
+{
+	GPtrArray *firmware_gtypes = g_ptr_array_new_with_free_func (g_free);
+	g_autoptr(GList) keys = g_hash_table_get_keys (self->firmware_gtypes);
+	for (GList *l = keys; l != NULL; l = l->next) {
+		const gchar *id = l->data;
+		g_ptr_array_add (firmware_gtypes, g_strdup (id));
+	}
+	return firmware_gtypes;
+}
+
+GType
+fu_engine_get_firmware_gtype_by_id (FuEngine *self, const gchar *id)
+{
+	return GPOINTER_TO_SIZE (g_hash_table_lookup (self->firmware_gtypes, id));
+}
+
+static void
+fu_engine_add_firmware_gtype (FuEngine *self, const gchar *id, GType gtype)
+{
+	g_hash_table_insert (self->firmware_gtypes, g_strdup (id), GSIZE_TO_POINTER (gtype));
 }
 
 /**
@@ -3879,6 +3908,16 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 }
 
 static void
+fu_engine_plugin_add_firmware_gtype_cb (FuPlugin *plugin,
+					const gchar *id,
+					GType gtype,
+					gpointer user_data)
+{
+	FuEngine *self = FU_ENGINE (user_data);
+	fu_engine_add_firmware_gtype (self, id, gtype);
+}
+
+static void
 fu_engine_plugin_rules_changed_cb (FuPlugin *plugin, gpointer user_data)
 {
 	FuEngine *self = FU_ENGINE (user_data);
@@ -4271,6 +4310,9 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 		fu_plugin_set_quirks (plugin, self->quirks);
 		fu_plugin_set_runtime_versions (plugin, self->runtime_versions);
 		fu_plugin_set_compile_versions (plugin, self->compile_versions);
+		g_signal_connect (plugin, "add-firmware-gtype",
+				  G_CALLBACK (fu_engine_plugin_add_firmware_gtype_cb),
+				  self);
 		g_debug ("adding plugin %s", filename);
 
 		/* if loaded from fu_engine_load() open the plugin */
@@ -4667,6 +4709,12 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 		return FALSE;
 	}
 
+	/* add the "built-in" firmware types */
+	fu_engine_add_firmware_gtype (self, "raw", FU_TYPE_FIRMWARE);
+	fu_engine_add_firmware_gtype (self, "dfu", FU_TYPE_DFU_FIRMWARE);
+	fu_engine_add_firmware_gtype (self, "ihex", FU_TYPE_IHEX_FIRMWARE);
+	fu_engine_add_firmware_gtype (self, "srec", FU_TYPE_SREC_FIRMWARE);
+
 	/* set shared USB context */
 	self->usb_ctx = g_usb_context_new (error);
 	if (self->usb_ctx == NULL) {
@@ -4825,6 +4873,7 @@ fu_engine_init (FuEngine *self)
 	self->runtime_versions = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	self->compile_versions = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	self->approved_firmware = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
+	self->firmware_gtypes = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
 
 	g_signal_connect (self->config, "changed",
 			  G_CALLBACK (fu_engine_config_changed_cb),
@@ -4889,6 +4938,7 @@ fu_engine_finalize (GObject *obj)
 	g_hash_table_unref (self->runtime_versions);
 	g_hash_table_unref (self->compile_versions);
 	g_hash_table_unref (self->approved_firmware);
+	g_hash_table_unref (self->firmware_gtypes);
 	g_object_unref (self->plugin_list);
 
 	G_OBJECT_CLASS (fu_engine_parent_class)->finalize (obj);

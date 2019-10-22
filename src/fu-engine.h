@@ -144,6 +144,9 @@ gboolean	 fu_engine_modify_config		(FuEngine	*self,
 							 const gchar	*key,
 							 const gchar	*value,
 							 GError		**error);
+GPtrArray	*fu_engine_get_firmware_gtype_ids	(FuEngine	*engine);
+GType		 fu_engine_get_firmware_gtype_by_id	(FuEngine	*engine,
+							 const gchar	*id);
 
 /* for the self tests */
 void		 fu_engine_add_device			(FuEngine	*self,
