@@ -66,6 +66,7 @@ enum {
 	SIGNAL_RECOLDPLUG,
 	SIGNAL_SET_COLDPLUG_DELAY,
 	SIGNAL_CHECK_SUPPORTED,
+	SIGNAL_ADD_FIRMWARE_GTYPE,
 	SIGNAL_LAST
 };
 
@@ -1428,6 +1429,12 @@ fu_plugin_set_device_gtype (FuPlugin *self, GType device_gtype)
 	priv->device_gtype = device_gtype;
 }
 
+void
+fu_plugin_add_firmware_gtype (FuPlugin *self, const gchar *id, GType gtype)
+{
+	g_signal_emit (self, signals[SIGNAL_ADD_FIRMWARE_GTYPE], 0, id, gtype);
+}
+
 static gboolean
 fu_plugin_check_supported_device (FuPlugin *self, FuDevice *device)
 {
@@ -2309,6 +2316,12 @@ fu_plugin_class_init (FuPluginClass *klass)
 			      G_STRUCT_OFFSET (FuPluginClass, rules_changed),
 			      NULL, NULL, g_cclosure_marshal_VOID__VOID,
 			      G_TYPE_NONE, 0);
+	signals[SIGNAL_ADD_FIRMWARE_GTYPE] =
+		g_signal_new ("add-firmware-gtype",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (FuPluginClass, add_firmware_gtype),
+			      NULL, NULL, g_cclosure_marshal_generic,
+			      G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_GTYPE);
 }
 
 static void

@@ -9,6 +9,7 @@
 #include "fu-plugin-vfuncs.h"
 
 #include "fu-wac-device.h"
+#include "fu-wac-firmware.h"
 
 void
 fu_plugin_init (FuPlugin *plugin)
@@ -16,6 +17,7 @@ fu_plugin_init (FuPlugin *plugin)
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_SUPPORTS_PROTOCOL, "com.wacom.usb");
 	fu_plugin_set_device_gtype (plugin, FU_TYPE_WAC_DEVICE);
+	fu_plugin_add_firmware_gtype (plugin, "wacom", FU_TYPE_WAC_FIRMWARE);
 }
 
 gboolean
