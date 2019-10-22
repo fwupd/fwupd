@@ -133,7 +133,7 @@ fu_usb_device_open (FuDevice *device, GError **error)
 								  idx, error);
 			if (tmp == NULL)
 				return FALSE;
-			fu_device_set_vendor (device, tmp);
+			fu_device_set_vendor (device, g_strchomp (tmp));
 		}
 	}
 
@@ -146,7 +146,7 @@ fu_usb_device_open (FuDevice *device, GError **error)
 								  idx, error);
 			if (tmp == NULL)
 				return FALSE;
-			fu_device_set_name (device, tmp);
+			fu_device_set_name (device, g_strchomp (tmp));
 		}
 	}
 
@@ -159,7 +159,7 @@ fu_usb_device_open (FuDevice *device, GError **error)
 								  idx, error);
 			if (tmp == NULL)
 				return FALSE;
-			fu_device_set_serial (device, tmp);
+			fu_device_set_serial (device, g_strchomp (tmp));
 		}
 	}
 
