@@ -182,6 +182,7 @@ fu_plugin_uefi_write_splash_data (FuPlugin *plugin,
 				  GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
+	const gchar *esp_path = fu_device_get_metadata (device, "EspPath");
 	guint32 screen_x, screen_y;
 	gsize buf_size = g_bytes_get_size (blob);
 	gssize size;
@@ -210,7 +211,7 @@ fu_plugin_uefi_write_splash_data (FuPlugin *plugin,
 	}
 
 	/* save to a predicatable filename */
-	directory = fu_uefi_get_esp_path_for_os (data->esp_path);
+	directory = fu_uefi_get_esp_path_for_os (esp_path);
 	basename = g_strdup_printf ("fwupd-%s.cap", FU_UEFI_VARS_GUID_UX_CAPSULE);
 	fn = g_build_filename (directory, "fw", basename, NULL);
 	if (!fu_common_mkdir_parent (fn, error))
@@ -346,30 +347,6 @@ fu_plugin_uefi_update_splash (FuPlugin *plugin, FuDevice *device, GError **error
 	return fu_plugin_uefi_write_splash_data (plugin, device, image_bmp, error);
 }
 
-static gboolean
-fu_plugin_uefi_esp_mounted (FuPlugin *plugin, GError **error)
-{
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	g_autofree gchar *contents = NULL;
-	g_auto(GStrv) lines = NULL;
-	gsize length;
-
-	if (!g_file_get_contents ("/proc/mounts", &contents, &length, error))
-		return FALSE;
-	lines = g_strsplit (contents, "\n", 0);
-
-	for (guint i = 0; lines[i] != NULL; i++) {
-		if (lines[i] != NULL && g_strrstr (lines[i], data->esp_path))
-			return TRUE;
-	}
-	g_set_error (error,
-		     FWUPD_ERROR,
-		     FWUPD_ERROR_NOT_SUPPORTED,
-		     "EFI System partition %s is not mounted",
-		     data->esp_path);
-	return FALSE;
-}
-
 gboolean
 fu_plugin_update (FuPlugin *plugin,
 		  FuDevice *device,
@@ -403,37 +380,24 @@ fu_plugin_update (FuPlugin *plugin,
 	str = _("Installing firmware update…");
 	g_assert (str != NULL);
 
-	/* make sure that the ESP is mounted */
-	if (g_getenv ("FWUPD_UEFI_ESP_PATH") == NULL) {
-		/* mount the partition somewhere */
-		if (fu_uefi_udisks_objpath (data->esp_path)) {
-			g_autofree gchar *path = NULL;
-			path = fu_uefi_udisks_objpath_mount (data->esp_path, error);
-			if (path == NULL)
-				return FALSE;
-			g_debug ("Mounted ESP at %s", path);
-			g_free (data->esp_path);
-			data->esp_path = g_strdup (path);
-		} else if (!fu_plugin_uefi_esp_mounted (plugin, error)) {
-			return FALSE;
-		}
-	}
-
 	/* perform the update */
 	g_debug ("Performing UEFI capsule update");
-	if (data->esp_path != NULL)
-		fu_device_set_metadata (device, "EspPath", data->esp_path);
 	fu_device_set_status (device, FWUPD_STATUS_SCHEDULING);
 	if (!fu_plugin_uefi_update_splash (plugin, device, &error_splash)) {
 		g_debug ("failed to upload UEFI UX capsule text: %s",
 			 error_splash->message);
 	}
+
 	if (!fu_device_write_firmware (device, blob_fw, flags, error))
 		return FALSE;
 
 	/* record if we had an invalid header during update */
 	str = fu_uefi_missing_capsule_header (device) ? "True" : "False";
 	fu_plugin_add_report_metadata (plugin, "MissingCapsuleHeader", str);
+
+	/* in case the drive went through mount cycle */
+	if (data->esp_path != NULL)
+		fu_device_set_metadata (device, "EspPath", data->esp_path);
 
 	return TRUE;
 }

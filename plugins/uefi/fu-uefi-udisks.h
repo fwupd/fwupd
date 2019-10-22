@@ -11,3 +11,5 @@ gboolean	 fu_uefi_udisks_objpath			(const gchar	*path);
 gboolean	 fu_uefi_udisks_objpath_is_esp		(const gchar	*obj);
 gchar		*fu_uefi_udisks_objpath_mount		(const gchar	*path,
 							 GError		**error);
+gboolean	fu_uefi_udisks_objpath_umount		(const gchar	*path,
+							 GError		**error);
