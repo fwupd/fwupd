@@ -1627,9 +1627,9 @@ fu_common_read_uint16_safe (const guint8 *buf,
 			    GError **error)
 {
 	guint8 dst[2] = { 0x0 };
-	if (!fu_memcpy_safe (dst, sizeof (dst), 0x0,	/* dst */
+	if (!fu_memcpy_safe (dst, sizeof(dst), 0x0,	/* dst */
 			     buf, bufsz, offset,	/* src */
-			     sizeof (buf), error))
+			     sizeof(dst), error))
 		return FALSE;
 	if (value != NULL)
 		*value = fu_common_read_uint16 (dst, endian);
@@ -1662,9 +1662,9 @@ fu_common_read_uint32_safe (const guint8 *buf,
 			    GError **error)
 {
 	guint8 dst[4] = { 0x0 };
-	if (!fu_memcpy_safe (dst, sizeof (dst), 0x0,	/* dst */
+	if (!fu_memcpy_safe (dst, sizeof(dst), 0x0,	/* dst */
 			     buf, bufsz, offset,	/* src */
-			     sizeof (buf), error))
+			     sizeof(dst), error))
 		return FALSE;
 	if (value != NULL)
 		*value = fu_common_read_uint32 (dst, endian);
