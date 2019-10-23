@@ -105,6 +105,10 @@ fu_uefi_device_to_string (FuDevice *device, guint idt, GString *str)
 	fu_common_string_append_kx (str, idt, "LastAttemptVersion", self->last_attempt_version);
 	fu_common_string_append_kv (str, idt, "EspPath",
 				    fu_device_get_metadata (device, "EspPath"));
+	fu_common_string_append_ku (str, idt, "RequireESPFreeSpace",
+				    fu_device_get_metadata_integer (device, "RequireESPFreeSpace"));
+	fu_common_string_append_kb (str, idt, "RequireShimForSecureBoot",
+				    fu_device_get_metadata_boolean (device, "RequireShimForSecureBoot"));
 }
 
 FuUefiDeviceKind
