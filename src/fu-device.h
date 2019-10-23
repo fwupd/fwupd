@@ -164,6 +164,8 @@ gboolean	 fu_device_get_metadata_boolean		(FuDevice	*self,
 							 const gchar	*key);
 guint		 fu_device_get_metadata_integer		(FuDevice	*self,
 							 const gchar	*key);
+void		 fu_device_remove_metadata		(FuDevice	*self,
+							 const gchar	*key);
 void		 fu_device_set_metadata			(FuDevice	*self,
 							 const gchar	*key,
 							 const gchar	*value);

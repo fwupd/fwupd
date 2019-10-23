@@ -1104,6 +1104,26 @@ fu_device_get_metadata_integer (FuDevice *self, const gchar *key)
 }
 
 /**
+ * fu_device_remove_metadata:
+ * @self: A #FuDevice
+ * @key: the key
+ *
+ * Removes an item of metadata on the device.
+ *
+ * Since: 1.3.3
+ **/
+void
+fu_device_remove_metadata (FuDevice *self, const gchar *key)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_writer_locker_new (&priv->metadata_mutex);
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_return_if_fail (key != NULL);
+	g_return_if_fail (locker != NULL);
+	g_hash_table_remove (priv->metadata, key);
+}
+
+/**
  * fu_device_set_metadata:
  * @self: A #FuDevice
  * @key: the key
