@@ -1,6 +1,9 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginVliUsbhub"']
 
-install_data(['vli-usbhub.quirk'],
+install_data([
+  'vli-usbhub.quirk',
+  'vli-usbhub-lenovo.quirk',
+  ],
   install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
 )
 
