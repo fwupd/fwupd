@@ -1341,11 +1341,8 @@ dfu_device_probe (FuUsbDevice *device, GError **error)
 	}
 
 	/* check capabilities */
-	if (dfu_device_can_download (self)) {
-		fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
-		fu_device_set_remove_delay (FU_DEVICE (device),
-					    FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
-	}
+	if (!dfu_device_can_download (self))
+		g_warning ("%s is missing download capability", fu_device_get_name (device));
 
 	/* success */
 	return TRUE;
@@ -1965,4 +1962,6 @@ dfu_device_init (DfuDevice *device)
 	priv->timeout_ms = 1500;
 	priv->transfer_size = 64;
 	fu_device_add_icon (FU_DEVICE (device), "drive-harddisk-usb");
+	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_set_remove_delay (FU_DEVICE (device), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 }
