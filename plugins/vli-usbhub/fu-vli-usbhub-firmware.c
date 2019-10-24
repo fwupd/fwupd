@@ -13,8 +13,8 @@
 
 struct _FuVliUsbhubFirmware {
 	FuFirmwareClass		 parent_instance;
-	guint16			 device_id;
 	FuVliUsbhubDeviceKind	 device_kind;
+	FuVliUsbhubHeader	 hdr;
 };
 
 G_DEFINE_TYPE (FuVliUsbhubFirmware, fu_vli_usbhub_firmware, FU_TYPE_FIRMWARE)
@@ -30,16 +30,16 @@ guint16
 fu_vli_usbhub_firmware_get_device_id (FuVliUsbhubFirmware *self)
 {
 	g_return_val_if_fail (FU_IS_VLI_USBHUB_FIRMWARE (self), 0);
-	return self->device_id;
+	return GUINT16_FROM_BE(self->hdr.dev_id);
 }
 
 static void
 fu_vli_usbhub_firmware_to_string (FuFirmware *firmware, guint idt, GString *str)
 {
 	FuVliUsbhubFirmware *self = FU_VLI_USBHUB_FIRMWARE (firmware);
-	fu_common_string_append_kx (str, idt, "DeviceId", self->device_id);
 	fu_common_string_append_kv (str, idt, "DeviceKind",
 				    fu_vli_usbhub_device_kind_to_string (self->device_kind));
+	fu_vli_usbhub_header_to_string (&self->hdr, idt, str);
 }
 
 static gboolean
@@ -55,20 +55,18 @@ fu_vli_usbhub_firmware_parse (FuFirmware *firmware,
 	guint16 adr_ofs = 0;
 	guint16 version = 0x0;
 	guint8 tmp = 0x0;
-	FuVliUsbhubHeader hdr = { 0x0 };
 	const guint8 *buf = g_bytes_get_data (fw, &bufsz);
 	g_autoptr(FuFirmwareImage) img = fu_firmware_image_new (fw);
 
 	/* map into header */
-	if (!fu_memcpy_safe ((guint8 *) &hdr, sizeof(hdr), 0x0,
-			     buf, bufsz, 0x0, sizeof(hdr), error)) {
+	if (!fu_memcpy_safe ((guint8 *) &self->hdr, sizeof(self->hdr), 0x0,
+			     buf, bufsz, 0x0, sizeof(self->hdr), error)) {
 		g_prefix_error (error, "failed to read header: ");
 		return FALSE;
 	}
 
 	/* get firmware versions */
-	self->device_id = GUINT16_FROM_BE(hdr.dev_id);
-	switch (self->device_id) {
+	switch (GUINT16_FROM_BE(self->hdr.dev_id)) {
 	case 0x0d12:
 		/* VL81x */
 		if (!fu_common_read_uint16_safe (buf, bufsz, 0x1f4c,
@@ -76,7 +74,7 @@ fu_vli_usbhub_firmware_parse (FuFirmware *firmware,
 			g_prefix_error (error, "failed to get version: ");
 			return FALSE;
 		}
-		version |= (hdr.unknown_02 >> 4) & 0x07;
+		version |= (self->hdr.strapping1 >> 4) & 0x07;
 		if ((version & 0x0f) == 0x04 ) {
 			if (!fu_common_read_uint8_safe (buf, bufsz, 0x700d, &tmp, error)) {
 				g_prefix_error (error, "failed to get version increment: ");
@@ -93,7 +91,7 @@ fu_vli_usbhub_firmware_parse (FuFirmware *firmware,
 			g_prefix_error (error, "failed to get version: ");
 			return FALSE;
 		}
-		version |= (hdr.unknown_02 >> 4) & 0x07;
+		version |= (self->hdr.strapping1 >> 4) & 0x07;
 		if ((version & 0x0f) == 0x04)
 			version += 1;
 		break;
@@ -109,7 +107,7 @@ fu_vli_usbhub_firmware_parse (FuFirmware *firmware,
 			g_prefix_error (error, "failed to get offset version: ");
 			return FALSE;
 		}
-		version |= (hdr.unknown_02 >> 4) & 0x07;
+		version |= (self->hdr.strapping1 >> 4) & 0x07;
 	}
 
 	/* version is set */
@@ -120,19 +118,19 @@ fu_vli_usbhub_firmware_parse (FuFirmware *firmware,
 	}
 
 	/* get device type from firmware image */
-	switch (self->device_id) {
+	switch (GUINT16_FROM_BE(self->hdr.dev_id)) {
 	case 0x0d12:
 	{
 		guint16 binver1 = 0x0;
 		guint16 binver2 = 0x0;
-		guint16 u2_addr = GUINT16_FROM_BE(hdr.u2_addr) + 0x1ff1;
-		guint16 u3_addr = GUINT16_FROM_BE(hdr.u3_addr) + 0x1ffa;
-		if (!fu_common_read_uint16_safe (buf, bufsz, u2_addr,
+		guint16 usb2_fw_addr = GUINT16_FROM_BE(self->hdr.usb2_fw_addr) + 0x1ff1;
+		guint16 usb3_fw_addr = GUINT16_FROM_BE(self->hdr.usb3_fw_addr) + 0x1ffa;
+		if (!fu_common_read_uint16_safe (buf, bufsz, usb2_fw_addr,
 						 &binver1, G_LITTLE_ENDIAN, error)) {
 			g_prefix_error (error, "failed to get binver1: ");
 			return FALSE;
 		}
-		if (!fu_common_read_uint16_safe (buf, bufsz, u3_addr,
+		if (!fu_common_read_uint16_safe (buf, bufsz, usb3_fw_addr,
 						 &binver2, G_LITTLE_ENDIAN, error)) {
 			g_prefix_error (error, "failed to get binver2: ");
 			return FALSE;
@@ -144,13 +142,13 @@ fu_vli_usbhub_firmware_parse (FuFirmware *firmware,
 			self->device_kind = FU_VLI_USBHUB_DEVICE_KIND_VL813;
 
 		/* VLQ4S == VT3470 (Q4S) */
-		} else if (hdr.unknown_02 & (1 << 7)) {
+		} else if (self->hdr.strapping1 & FU_VLI_USBHUB_HEADER_STRAPPING1_Q4S) {
 			self->device_kind = FU_VLI_USBHUB_DEVICE_KIND_VL812Q4S;
 
 		/* VL812 == VT3470 (812/813) */
-		} else if (hdr.unknown_02 & (1 << 2)) {
+		} else if (self->hdr.strapping1 & FU_VLI_USBHUB_HEADER_STRAPPING1_76PIN) {
 			/* is B3 */
-			if (hdr.unknown_02 & (1 << 3))
+			if (self->hdr.strapping1 & FU_VLI_USBHUB_HEADER_STRAPPING1_B3UP)
 				self->device_kind = FU_VLI_USBHUB_DEVICE_KIND_VL812B3;
 			else
 				self->device_kind = FU_VLI_USBHUB_DEVICE_KIND_VL812B0;
@@ -158,7 +156,7 @@ fu_vli_usbhub_firmware_parse (FuFirmware *firmware,
 		/* VL811P == VT3470 */
 		} else {
 			/* is B3 */
-			if (hdr.unknown_02 & (1 << 3))
+			if (self->hdr.strapping1 & FU_VLI_USBHUB_HEADER_STRAPPING1_B3UP)
 				self->device_kind = FU_VLI_USBHUB_DEVICE_KIND_VL811PB3;
 			else
 				self->device_kind = FU_VLI_USBHUB_DEVICE_KIND_VL811PB0;

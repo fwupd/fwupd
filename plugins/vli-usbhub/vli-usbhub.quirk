@@ -27,6 +27,22 @@ Plugin = vli_usbhub
 [DeviceInstanceId=USB\VID_2109&PID_2212]
 Plugin = vli_usbhub
 
+# VL817
+[DeviceInstanceId=USB\VID_2109&PID_0817]
+Plugin = vli_usbhub
+Flags = usb3
+[DeviceInstanceId=USB\VID_2109&PID_2817]
+Plugin = vli_usbhub
+Flags = usb2
+
+# VL820
+[DeviceInstanceId=USB\VID_2109&PID_0820]
+Plugin = vli_usbhub
+Flags = usb3
+[DeviceInstanceId=USB\VID_2109&PID_2820]
+Plugin = vli_usbhub
+Flags = usb2
+
 # A25Lxxx
 [Guid=VLI_USBHUB\\SPI_3730]
 SpiCmdChipErase = 0xc7
