@@ -1602,6 +1602,39 @@ fu_memcpy_safe (guint8 *dst, gsize dst_sz, gsize dst_offset,
 }
 
 /**
+ * fu_common_read_uint8_safe:
+ * @buf: source buffer
+ * @bufsz: maximum size of @buf, typically `sizeof(buf)`
+ * @offset: offset in bytes into @buf to copy from
+ * @value: (out) (allow-none): the parsed value
+ * @error: A #GError or %NULL
+ *
+ * Read a value from a buffer in a safe way.
+ *
+ * You don't need to use this function in "obviously correct" cases, nor should
+ * you use it when performance is a concern. Only us it when you're not sure if
+ * malicious data from a device or firmware could cause memory corruption.
+ *
+ * Return value: %TRUE if @value was set, %FALSE otherwise
+ **/
+gboolean
+fu_common_read_uint8_safe (const guint8 *buf,
+			   gsize bufsz,
+			   gsize offset,
+			   guint8 *value,
+			   GError **error)
+{
+	guint8 tmp;
+	if (!fu_memcpy_safe (&tmp, sizeof(tmp), 0x0,	/* dst */
+			     buf, bufsz, offset,	/* src */
+			     sizeof(tmp), error))
+		return FALSE;
+	if (value != NULL)
+		*value = tmp;
+	return TRUE;
+}
+
+/**
  * fu_common_read_uint16_safe:
  * @buf: source buffer
  * @bufsz: maximum size of @buf, typically `sizeof(buf)`

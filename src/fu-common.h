@@ -149,6 +149,11 @@ gboolean	 fu_memcpy_safe			(guint8		*dst,
 						 gsize		 src_offset,
 						 gsize		 n,
 						 GError		**error);
+gboolean	 fu_common_read_uint8_safe	(const guint8	*buf,
+						 gsize		 bufsz,
+						 gsize		 offset,
+						 guint8		*value,
+						 GError		**error);
 gboolean	 fu_common_read_uint16_safe	(const guint8	*buf,
 						 gsize		 bufsz,
 						 gsize		 offset,
