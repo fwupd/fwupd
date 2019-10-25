@@ -312,7 +312,7 @@ fu_solokey_device_packet (FuSolokeyDevice *self, guint8 cmd,
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
-			     "commmand ID invalid, got %x", res->data[4]);
+			     "command ID invalid, got %x", res->data[4]);
 		return NULL;
 	}
 	return g_steal_pointer (&res);
