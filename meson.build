@@ -220,6 +220,7 @@ if get_option('plugin_uefi')
   efiboot = dependency('efiboot')
   objcopy = find_program ('objcopy')
   readelf = find_program ('readelf')
+  genpeimg = find_program ('genpeimg', required: false)
 
   efi_app_location = join_paths(libexecdir, 'fwupd', 'efi')
   conf.set_quoted ('EFI_APP_LOCATION', efi_app_location)
