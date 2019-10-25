@@ -1916,7 +1916,7 @@ fu_util_remote_modify (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* TRANSLATORS: success message for a per-remote setting change */
-	g_print ("%s\n", _("Successfully modifed remote"));
+	g_print ("%s\n", _("Successfully modified remote"));
 	return TRUE;
 }
 
