@@ -6,5 +6,5 @@ fwupd binary: systemd-service-file-missing-install-key lib/systemd/system/system
 fwupd: library-not-linked-against-libc usr/lib/*/fwupd-plugins-3/libfu_plugin_upower.so
 #EFI applications are PE executables
 fwupd: executable-not-elf-or-script usr/lib/fwupd/efi/*.efi
-fwupd: portable-executable-missing-security-features usr/lib/fwupd/efi/*.efi ASLR DEP/NX
+fwupd: portable-executable-missing-security-features usr/lib/fwupd/efi/*.efi SafeSEH
 fwupd: library-not-linked-against-libc usr/lib/*/fwupd-plugins-3/libfu_plugin_modem_manager.so
