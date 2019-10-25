@@ -1,4 +1,2 @@
 #github doesn't have these
 fwupd source: debian-watch-does-not-check-gpg-signature
-#to make CI happy until libxmlb lands
-fwupd source: source-is-missing
