@@ -1,0 +1,4 @@
+#EFI applications are PE executables
+fwupd-unsigned: executable-not-elf-or-script usr/lib/fwupd/efi/*.efi
+fwupd-unsigned: portable-executable-missing-security-features usr/lib/fwupd/efi/*.efi SafeSEH
+

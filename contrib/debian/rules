@@ -56,7 +56,7 @@ override_dh_install:
 	dh_install
 	#install the EFI binaries if needed
 	if [ -d debian/tmp/usr/lib/fwupd/efi/ ]; then \
-		dh_install -pfwupd usr/lib/fwupd/efi ;\
+		dh_install -pfwupd-unsigned usr/lib/fwupd/efi ;\
 		dh_install -pfwupd usr/lib/fwupd/fwupdate; \
 	fi
 	#if build with meson subproject in CI need to install this too

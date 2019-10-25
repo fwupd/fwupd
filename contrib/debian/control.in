@@ -31,6 +31,7 @@ Package: fwupd
 Architecture: linux-any
 Depends: ${misc:Depends},
          ${shlibs:Depends},
+         fwupd-unsigned (= ${binary:Version}) [amd64 arm64 armhf i386],
          shared-mime-info
 Recommends: python3,
 	    bolt,
@@ -124,6 +125,19 @@ Description: GObject introspection data for libfwupd
  .
  It can be used by packages using the GIRepository format to generate
  dynamic bindings.
+
+Package: fwupd-unsigned
+Architecture: amd64 i386 armhf arm64
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Multi-Arch: same
+Description: Firmware update daemon (EFI binaries)
+ fwupd is a daemon to allow session software to update device firmware.
+ You can either use a GUI software manager like GNOME Software to view and
+ apply updates, the command-line tool or the system D-Bus interface directly.
+ Firmware updates are supported for a variety of technologies.
+ See <https://github.com/fwupd/fwupd> for details
+ .
+ This package provides the EFI binaries.
 
 Package: fwupd-amd64-signed-template
 Architecture: amd64
