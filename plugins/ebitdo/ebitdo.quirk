@@ -84,6 +84,13 @@ Plugin = ebitdo
 Flags = will-disappear
 InstallDuration = 120
 
+# SN30 PRO+
+## Dinput mode (Start + B)
+[DeviceInstanceId=USB\VID_2DC8&PID_6002]
+Plugin = ebitdo
+Flags = will-disappear
+InstallDuration = 120
+
 # M30
 [DeviceInstanceId=USB\VID_2DC8&PID_5006]
 Plugin = ebitdo
