@@ -31,6 +31,12 @@ When the device is in "safe mode" the GUID is hardcoded using:
 
  * `TBT-$(vid)$(pid)-native` when native, and `TBT-$(vid)$(pid)` otherwise.
 
+Additionally for host system thunderbolt controllers another GUID is added
+containing the PCI slot designation of the controller.  This is intended to be
+used for systems with multiple host controllers to disambiguiate between controllers.
+
+* `TBT-$(vid)$(pid)-native-$(slot)`
+
 Runtime Power Management
 ------------------------
 
