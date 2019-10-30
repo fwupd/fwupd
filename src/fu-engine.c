@@ -1850,6 +1850,32 @@ fu_engine_get_device_by_id (FuEngine *self, const gchar *device_id, GError **err
 	return g_steal_pointer (&device2);
 }
 
+/* same as FuDevice->prepare, but with the device open */
+static gboolean
+fu_engine_device_prepare (FuEngine *self,
+			  FuDevice *device,
+			  FwupdInstallFlags flags,
+			  GError **error)
+{
+	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
+		return FALSE;
+	return fu_device_prepare (device, flags, error);
+}
+
+/* same as FuDevice->cleanup, but with the device open */
+static gboolean
+fu_engine_device_cleanup (FuEngine *self,
+			  FuDevice *device,
+			  FwupdInstallFlags flags,
+			  GError **error)
+{
+	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
+		return FALSE;
+	return fu_device_cleanup (device, flags, error);
+}
+
 static gboolean
 fu_engine_update_prepare (FuEngine *self,
 			  FwupdInstallFlags flags,
@@ -1866,7 +1892,7 @@ fu_engine_update_prepare (FuEngine *self,
 		return FALSE;
 	str = fu_device_to_string (device);
 	g_debug ("performing prepare on %s", str);
-	if (!fu_device_prepare (device, flags, error))
+	if (!fu_engine_device_prepare (self, device, flags, error))
 		return FALSE;
 	for (guint j = 0; j < plugins->len; j++) {
 		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
@@ -1900,7 +1926,7 @@ fu_engine_update_cleanup (FuEngine *self,
 		return FALSE;
 	str = fu_device_to_string (device);
 	g_debug ("performing cleanup on %s", str);
-	if (!fu_device_cleanup (device, flags, error))
+	if (!fu_engine_device_cleanup (self, device, flags, error))
 		return FALSE;
 	for (guint j = 0; j < plugins->len; j++) {
 		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
