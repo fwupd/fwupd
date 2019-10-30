@@ -42,6 +42,7 @@ _fwupdmgr_opts=(
 	'--no-unreported-check'
 	'--no-metadata-check'
 	'--no-reboot-check'
+	'--no-safety-check'
 	'--show-all-devices'
 	'--sign'
 	'--filter'

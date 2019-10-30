@@ -38,6 +38,7 @@ _fwupdtool_opts=(
 	'--cleanup'
 	'--filter'
 	'--disable-ssl-strict'
+	'--no-safety-check'
 )
 
 _show_filters()
