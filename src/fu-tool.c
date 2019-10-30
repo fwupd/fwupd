@@ -39,6 +39,7 @@ typedef enum {
 	FU_UTIL_OPERATION_UNKNOWN,
 	FU_UTIL_OPERATION_UPDATE,
 	FU_UTIL_OPERATION_INSTALL,
+	FU_UTIL_OPERATION_READ,
 	FU_UTIL_OPERATION_LAST
 } FuUtilOperation;
 
@@ -558,6 +559,11 @@ fu_util_update_device_changed_cb (FwupdClient *client,
 		str = g_strdup_printf (_("Installing on %s…"),
 				       fwupd_device_get_name (device));
 		fu_progressbar_set_title (priv->progressbar, str);
+	} else if (priv->current_operation == FU_UTIL_OPERATION_READ) {
+		/* TRANSLATORS: %1 is a device name  */
+		str = g_strdup_printf (_("Reading from %s…"),
+				       fwupd_device_get_name (device));
+		fu_progressbar_set_title (priv->progressbar, str);
 	} else {
 		g_warning ("no FuUtilOperation set");
 	}
@@ -658,6 +664,62 @@ fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* success */
 	return fu_util_prompt_complete (priv->completion_flags, TRUE, error);
+}
+
+static gboolean
+fu_util_firmware_read (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(GBytes) blob_empty = g_bytes_new (NULL, 0);
+	g_autoptr(GBytes) blob_fw = NULL;
+
+	/* invalid args */
+	if (g_strv_length (values) == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments");
+		return FALSE;
+	}
+
+	/* file already exists */
+	if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
+	    g_file_test (values[0], G_FILE_TEST_EXISTS)) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Filename already exists");
+		return FALSE;
+	}
+
+	/* write a zero lenth file to ensure the destination is writable to
+	 * avoid failing at the end of a potentially lengthy operation */
+	if (!fu_common_set_contents_bytes (values[0], blob_empty, error))
+		return FALSE;
+
+	/* load engine */
+	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+		return FALSE;
+
+	/* get device */
+	if (g_strv_length (values) >= 2) {
+		device = fu_engine_get_device (priv->engine, values[1], error);
+		if (device == NULL)
+			return FALSE;
+	} else {
+		device = fu_util_prompt_for_device (priv, error);
+		if (device == NULL)
+			return FALSE;
+	}
+	priv->current_operation = FU_UTIL_OPERATION_READ;
+	g_signal_connect (priv->engine, "device-changed",
+			  G_CALLBACK (fu_util_update_device_changed_cb), priv);
+
+	/* dump firmware */
+	blob_fw = fu_engine_firmware_read (priv->engine, device, priv->flags, error);
+	if (blob_fw == NULL)
+		return FALSE;
+	return fu_common_set_contents_bytes (values[0], blob_fw, error);
 }
 
 static gint
@@ -1685,6 +1747,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Update the stored metadata with current contents"),
 		     fu_util_verify_update);
+	fu_util_cmd_array_add (cmd_array,
+		     "firmware-read",
+		     "FILENAME [DEVICE-ID]",
+		     /* TRANSLATORS: command description */
+		     _("Read a firmware blob from a device"),
+		     fu_util_firmware_read);
 	fu_util_cmd_array_add (cmd_array,
 		     "firmware-parse",
 		     "FILENAME [FIRMWARE_TYPE]",
