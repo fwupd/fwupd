@@ -62,6 +62,7 @@ struct FuUtilPrivate {
 	gboolean		 no_metadata_check;
 	gboolean		 no_reboot_check;
 	gboolean		 no_unreported_check;
+	gboolean		 no_safety_check;
 	gboolean		 assume_yes;
 	gboolean		 sign;
 	gboolean		 show_all_devices;
@@ -1695,6 +1696,13 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 	g_autofree gchar *uri_str = NULL;
 	g_autoptr(SoupURI) uri = NULL;
 
+	if (!priv->no_safety_check && !priv->assume_yes) {
+		if (!fu_util_prompt_warning (dev,
+					     fu_util_get_tree_title (priv),
+					     error))
+			return FALSE;
+	}
+
 	/* work out what remote-specific URI fields this should use */
 	uri_tmp = fwupd_release_get_uri (rel);
 	remote_id = fwupd_release_get_remote_id (rel);
@@ -1795,6 +1803,7 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
 		FwupdRelease *rel;
 		const gchar *remote_id;
+		g_autofree gchar *upgrade_str = NULL;
 		g_autoptr(GPtrArray) rels = NULL;
 		g_autoptr(GError) error_local = NULL;
 
@@ -1814,7 +1823,13 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 			continue;
 		}
 		rel = g_ptr_array_index (rels, 0);
-
+		/* TRANSLATORS: message letting the user know an upgrade is available
+		 * %1 is the device name and %2 and %3 are version strings */
+		upgrade_str = g_strdup_printf (_("Upgrade available for %s from %s to %s"),
+					       fwupd_device_get_name (dev),
+					       fwupd_device_get_version (dev),
+					       fwupd_release_get_version (rel));
+		g_print ("%s\n", upgrade_str);
 		if (!fu_util_update_device_with_release (priv, dev, rel, error))
 			return FALSE;
 
@@ -2384,6 +2399,9 @@ main (int argc, char *argv[])
 		{ "no-reboot-check", '\0', 0, G_OPTION_ARG_NONE, &priv->no_reboot_check,
 			/* TRANSLATORS: command line option */
 			_("Do not check for reboot after update"), NULL },
+		{ "no-safety-check", '\0', 0, G_OPTION_ARG_NONE, &priv->no_safety_check,
+			/* TRANSLATORS: command line option */
+			_("Do not perform device safety checks"), NULL },
 		{ "no-history", '\0', 0, G_OPTION_ARG_NONE, &no_history,
 			/* TRANSLATORS: command line option */
 			_("Do not write to the history database"), NULL },
@@ -2616,6 +2634,7 @@ main (int argc, char *argv[])
 		priv->no_unreported_check = TRUE;
 		priv->no_metadata_check = TRUE;
 		priv->no_reboot_check = TRUE;
+		priv->no_safety_check = TRUE;
 		fu_progressbar_set_interactive (priv->progressbar, FALSE);
 	}
 

@@ -50,6 +50,7 @@ struct FuUtilPrivate {
 	FuEngine		*engine;
 	FuProgressbar		*progressbar;
 	gboolean		 no_reboot_check;
+	gboolean		 no_safety_check;
 	gboolean		 prepare_blob;
 	gboolean		 cleanup_blob;
 	gboolean		 enable_json_state;
@@ -969,6 +970,13 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 			continue;
 		}
 
+		if (!priv->no_safety_check) {
+			if (!fu_util_prompt_warning (dev,
+						     fu_util_get_tree_title (priv),
+						     error))
+				return FALSE;
+		}
+
 		rel = g_ptr_array_index (rels, 0);
 		if (!fu_util_install_release (priv, rel, &error_local)) {
 			g_printerr ("%s\n", error_local->message);
@@ -1591,6 +1599,9 @@ main (int argc, char *argv[])
 		{ "no-reboot-check", '\0', 0, G_OPTION_ARG_NONE, &priv->no_reboot_check,
 			/* TRANSLATORS: command line option */
 			_("Do not check for reboot after update"), NULL },
+		{ "no-safety-check", '\0', 0, G_OPTION_ARG_NONE, &priv->no_safety_check,
+			/* TRANSLATORS: command line option */
+			_("Do not perform device safety checks"), NULL },
 		{ "show-all-devices", '\0', 0, G_OPTION_ARG_NONE, &priv->show_all_devices,
 			/* TRANSLATORS: command line option */
 			_("Show devices that are not updatable"), NULL },
@@ -1780,6 +1791,7 @@ main (int argc, char *argv[])
 	/* non-TTY consoles cannot answer questions */
 	if (!interactive) {
 		priv->no_reboot_check = TRUE;
+		priv->no_safety_check = TRUE;
 		fu_progressbar_set_interactive (priv->progressbar, FALSE);
 	}
 

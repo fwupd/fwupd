@@ -38,6 +38,9 @@ gchar		*fu_util_get_versions		(void);
 
 void		 fu_util_warning_box		(const gchar	*str,
 						 guint		 width);
+gboolean	fu_util_prompt_warning		(FwupdDevice	*device,
+						 const gchar	*machine,
+						 GError		**error);
 gboolean	fu_util_prompt_complete		(FwupdDeviceFlags flags,
 						 gboolean prompt,
 						 GError **error);

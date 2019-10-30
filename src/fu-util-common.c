@@ -371,6 +371,52 @@ fu_util_update_reboot (GError **error)
 }
 
 gboolean
+fu_util_prompt_warning (FwupdDevice *device, const gchar *machine, GError **error)
+{
+	FwupdDeviceFlags flags;
+	g_autofree gchar *str = NULL;
+
+	/* device is already in bootloader mode */
+	flags = fwupd_device_get_flags (device);
+	if (flags & FWUPD_DEVICE_FLAG_IS_BOOTLOADER)
+		return TRUE;
+
+	/* device may reboot */
+	if ((flags & FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE) == 0) {
+		/* TRANSLATORS: warn the user before updating, %1 is a device name */
+		str = g_strdup_printf (_("%s and all connected devices may not be usable while updating."),
+					fwupd_device_get_name (device));
+	/* device can get bricked */
+	} else if ((flags & FWUPD_DEVICE_FLAG_SELF_RECOVERY) == 0) {
+		/* external device */
+		if ((flags & FWUPD_DEVICE_FLAG_INTERNAL) == 0) {
+			/* TRANSLATORS: warn the user before updating, %1 is a device name */
+			str = g_strdup_printf (_("%s must remain connected for the duration of the update to avoid damage."),
+						fwupd_device_get_name (device));
+		} else if (flags & FWUPD_DEVICE_FLAG_REQUIRE_AC) {
+			/* TRANSLATORS: warn the user before updating, %1 is a machine name */
+			str = g_strdup_printf (_("%s must remain plugged into a power source for the duration of the update to avoid damage."),
+						machine);
+		}
+	}
+	if (str != NULL) {
+		g_print ("%s %s [Y|n]: ",
+			str,
+			/* TRANSLATORS: prompt to apply the update */
+			_("Continue with update?"));
+		if (!fu_util_prompt_for_boolean (TRUE)) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOTHING_TO_DO,
+					     "Request canceled");
+			return FALSE;
+		}
+	}
+
+	return TRUE;
+}
+
+gboolean
 fu_util_prompt_complete (FwupdDeviceFlags flags, gboolean prompt, GError **error)
 {
 	if (flags & FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN) {
