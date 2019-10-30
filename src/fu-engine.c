@@ -4467,9 +4467,9 @@ fu_engine_usb_device_added_cb (GUsbContext *ctx,
 			       GUsbDevice *usb_device,
 			       FuEngine *self)
 {
-	const gchar *plugin_name;
 	g_autoptr(FuUsbDevice) device = fu_usb_device_new (usb_device);
 	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GPtrArray) possible_plugins = NULL;
 
 	/* add any extra quirks */
 	fu_device_set_quirks (FU_DEVICE (device), self->quirks);
@@ -4481,40 +4481,36 @@ fu_engine_usb_device_added_cb (GUsbContext *ctx,
 	}
 
 	/* can be specified using a quirk */
-	plugin_name = fu_device_get_plugin (device);
-	if (plugin_name != NULL) {
-		g_auto(GStrv) plugins = g_strsplit (plugin_name, ",", -1);
-		for (guint i = 0; plugins[i] != NULL; i++) {
-			FuPlugin *plugin;
-			g_autoptr(GError) error = NULL;
+	possible_plugins = fu_device_get_possible_plugins (FU_DEVICE (device));
+	for (guint i = 0; i < possible_plugins->len; i++) {
+		FuPlugin *plugin;
+		const gchar *plugin_name = g_ptr_array_index (possible_plugins, i);
+		g_autoptr(GError) error = NULL;
 
-			plugin = fu_plugin_list_find_by_name (self->plugin_list,
-							      plugins[i], &error);
-			if (plugin == NULL) {
-				g_warning ("failed to find specified plugin %s: %s",
-					   plugin_name, error->message);
-				continue;
-			}
-			if (!fu_plugin_runner_usb_device_added (plugin, device, &error)) {
-				if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-					if (g_getenv ("FWUPD_PROBE_VERBOSE") != NULL) {
-						g_debug ("%s ignoring: %s",
-							 fu_plugin_get_name (plugin),
-							 error->message);
-					}
-					continue;
+		plugin = fu_plugin_list_find_by_name (self->plugin_list,
+						      plugin_name, &error);
+		if (plugin == NULL) {
+			g_warning ("failed to find specified plugin %s: %s",
+				   plugin_name, error->message);
+			continue;
+		}
+		if (!fu_plugin_runner_usb_device_added (plugin, device, &error)) {
+			if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+				if (g_getenv ("FWUPD_PROBE_VERBOSE") != NULL) {
+					g_debug ("%s ignoring: %s",
+						 fu_plugin_get_name (plugin),
+						 error->message);
 				}
-				g_warning ("failed to add USB device %04x:%04x: %s",
-					   g_usb_device_get_vid (usb_device),
-					   g_usb_device_get_pid (usb_device),
-					   error->message);
 				continue;
 			}
-			return;
+			g_warning ("failed to add USB device %04x:%04x: %s",
+				   g_usb_device_get_vid (usb_device),
+				   g_usb_device_get_pid (usb_device),
+				   error->message);
+			continue;
 		}
 	}
 }
-
 
 static void
 fu_engine_load_quirks (FuEngine *self, FuQuirksLoadFlags quirks_flags)
