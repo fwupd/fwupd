@@ -1351,8 +1351,11 @@ dfu_device_probe (FuUsbDevice *device, GError **error)
 	}
 
 	/* check capabilities */
-	if (!dfu_device_can_download (self))
-		g_warning ("%s is missing download capability", fu_device_get_name (device));
+	if (!dfu_device_can_download (self)) {
+		g_warning ("%04x:%04x is missing download capability",
+			   g_usb_device_get_vid (usb_device),
+			   g_usb_device_get_pid (usb_device));
+	}
 
 	/* success */
 	return TRUE;
