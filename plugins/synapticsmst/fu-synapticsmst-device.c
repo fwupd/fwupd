@@ -10,9 +10,6 @@
 #include "config.h"
 
 #include <fcntl.h>
-#include <sys/errno.h>
-
-#include <glib/gstdio.h>
 
 #include "fu-synapticsmst-common.h"
 #include "fu-synapticsmst-connection.h"
@@ -45,7 +42,6 @@
 
 struct _FuSynapticsmstDevice {
 	FuUdevDevice		 parent_instance;
-	gint			 fd;
 	gchar			*system_type;
 	guint64			 write_block_size;
 	FuSynapticsmstFamily	 family;
@@ -64,8 +60,6 @@ fu_synapticsmst_device_finalize (GObject *object)
 {
 	FuSynapticsmstDevice *self = FU_SYNAPTICSMST_DEVICE (object);
 
-	if (self->fd > 0)
-		close (self->fd);
 	g_free (self->system_type);
 
 	G_OBJECT_CLASS (fu_synapticsmst_device_parent_class)->finalize (object);
@@ -83,7 +77,6 @@ static void
 fu_synapticsmst_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuSynapticsmstDevice *self = FU_SYNAPTICSMST_DEVICE (device);
-	fu_common_string_append_ku (str, idt, "FD", (guint) self->fd);
 	if (self->mode != FU_SYNAPTICSMST_MODE_UNKNOWN) {
 		fu_common_string_append_kv (str, idt, "Mode",
 					    fu_synapticsmst_mode_to_string (self->mode));
@@ -103,37 +96,12 @@ fu_synapticsmst_device_enable_rc (FuSynapticsmstDevice *self, GError **error)
 {
 	g_autoptr(FuSynapticsmstConnection) connection = NULL;
 
-	/* in test mode we need to open a different file node instead */
-	if (fu_udev_device_get_dev (FU_UDEV_DEVICE (self)) == NULL) {
-		g_autofree gchar *filename = NULL;
-		g_autofree gchar *dirname = NULL;
-		close (self->fd);
-		self->fd = 0;
-		dirname = g_path_get_dirname (fu_udev_device_get_device_file (FU_UDEV_DEVICE (self)));
-		filename = g_strdup_printf ("%s/remote/%s",
-					    dirname,
-					    fu_device_get_logical_id (FU_DEVICE (self)));
-		if (!g_file_test (filename, G_FILE_TEST_EXISTS)) {
-			g_set_error (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_NOT_FOUND,
-				     "no device exists %s",
-				     filename);
-			return FALSE;
-		}
-		self->fd = open (filename, O_RDWR);
-		if (self->fd == -1) {
-			g_set_error (error,
-				     G_IO_ERROR,
-				     g_io_error_from_errno (errno),
-				     "cannot open device %s: %s",
-				     filename, g_strerror (errno));
-			return FALSE;
-		}
+	/* in test mode */
+	if (fu_udev_device_get_dev (FU_UDEV_DEVICE (self)) == NULL)
 		return TRUE;
-	}
 
-	connection = fu_synapticsmst_connection_new (self->fd, self->layer, self->rad);
+	connection = fu_synapticsmst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
+						     self->layer, self->rad);
 	return fu_synapticsmst_connection_enable_rc (connection, error);
 }
 
@@ -142,59 +110,13 @@ fu_synapticsmst_device_disable_rc (FuSynapticsmstDevice *self, GError **error)
 {
 	g_autoptr(FuSynapticsmstConnection) connection = NULL;
 
-	/* in test mode we need to open a different file node instead */
-	if (fu_udev_device_get_dev (FU_UDEV_DEVICE (self)) == NULL) {
-		g_autofree gchar *filename = NULL;
-		g_autofree gchar *dirname = NULL;
-		close (self->fd);
-		self->fd = 0;
-		dirname = g_path_get_dirname (fu_udev_device_get_device_file (FU_UDEV_DEVICE (self)));
-		filename = g_strdup_printf ("%s/%s",
-					    dirname,
-					    fu_device_get_logical_id (FU_DEVICE (self)));
-		if (!g_file_test (filename, G_FILE_TEST_EXISTS)) {
-			g_set_error (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_NOT_FOUND,
-				     "no device exists %s",
-				     filename);
-			return FALSE;
-		}
-		self->fd = open (filename, O_RDWR);
-		if (self->fd == -1) {
-			g_set_error (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_PERMISSION_DENIED,
-				     "cannot open device %s",
-				     filename);
-			return FALSE;
-		}
+	/* in test mode */
+	if (fu_udev_device_get_dev (FU_UDEV_DEVICE (self)) == NULL)
 		return TRUE;
-	}
 
-	connection = fu_synapticsmst_connection_new (self->fd, self->layer, self->rad);
+	connection = fu_synapticsmst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
+						     self->layer, self->rad);
 	return fu_synapticsmst_connection_disable_rc (connection, error);
-}
-
-static gboolean
-fu_synapticsmst_device_open (FuDevice *device, GError **error)
-{
-	FuSynapticsmstDevice *self = FU_SYNAPTICSMST_DEVICE (device);
-
-	/* open device */
-	self->fd = g_open (fu_udev_device_get_device_file (FU_UDEV_DEVICE (device)), O_RDWR);
-	if (self->fd < 0) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_FAILED,
-			     "failed to open %s: %s",
-			     fu_udev_device_get_device_file (FU_UDEV_DEVICE (device)),
-			     strerror (errno));
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
 }
 
 static gboolean
@@ -209,25 +131,14 @@ fu_synapticsmst_device_probe (FuUdevDevice *device, GError **error)
 }
 
 static gboolean
-fu_synapticsmst_device_close (FuDevice *device, GError **error)
-{
-	FuSynapticsmstDevice *self = FU_SYNAPTICSMST_DEVICE (device);
-	if (self->fd == 0)
-		return TRUE;
-	if (!g_close (self->fd, error))
-		return FALSE;
-	self->fd = 0;
-	return TRUE;
-}
-
-static gboolean
 fu_synapticsmst_device_get_flash_checksum (FuSynapticsmstDevice *self,
 					   guint32 length, guint32 offset,
 					   guint32 *checksum, GError **error)
 {
 	g_autoptr(FuSynapticsmstConnection) connection = NULL;
 
-	connection = fu_synapticsmst_connection_new (self->fd, self->layer, self->rad);
+	connection = fu_synapticsmst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
+						     self->layer, self->rad);
 	if (!fu_synapticsmst_connection_rc_special_get_command (connection,
 							UPDC_CAL_EEPROM_CHECKSUM,
 							length, offset,
@@ -308,7 +219,8 @@ fu_synapticsmst_device_set_flash_sector_erase (FuSynapticsmstDevice *self,
 	guint16 us_data;
 	g_autoptr(FuSynapticsmstConnection) connection = NULL;
 
-	connection = fu_synapticsmst_connection_new (self->fd, self->layer, self->rad);
+	connection = fu_synapticsmst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
+						     self->layer, self->rad);
 	/* Need to add Wp control ? */
 	us_data = rc_cmd + offset;
 
@@ -336,7 +248,8 @@ fu_synapticsmst_device_update_esm (FuSynapticsmstDevice *self,
 	guint32 write_loops = 0;
 	g_autoptr(FuSynapticsmstConnection) connection = NULL;
 
-	connection = fu_synapticsmst_connection_new (self->fd, self->layer, self->rad);
+	connection = fu_synapticsmst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
+						     self->layer, self->rad);
 
 	for (guint32 i = 0; i < esm_sz; i++)
 		checksum += *(payload_data + EEPROM_ESM_OFFSET +i);
@@ -442,7 +355,8 @@ fu_synapticsmst_device_update_tesla_leaf_firmware (FuSynapticsmstDevice *self,
 	if (payload_len % BLOCK_UNIT)
 		write_loops++;
 
-	connection = fu_synapticsmst_connection_new (self->fd, self->layer, self->rad);
+	connection = fu_synapticsmst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
+						     self->layer, self->rad);
 	for (guint32 retries_cnt = 0; ; retries_cnt++) {
 		guint32 checksum = 0;
 		guint32 flash_checksum = 0;
@@ -518,7 +432,8 @@ fu_synapticsmst_device_get_active_bank_panamera (FuSynapticsmstDevice *self, GEr
 	guint32 buf[16];
 
 	/* get used bank */
-	connection = fu_synapticsmst_connection_new (self->fd, self->layer, self->rad);
+	connection = fu_synapticsmst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
+						     self->layer, self->rad);
 	if (!fu_synapticsmst_connection_rc_get_command (connection,
 						 UPDC_READ_FROM_MEMORY,
 						 ((sizeof(buf)/sizeof(buf[0]))*4),
@@ -596,7 +511,8 @@ fu_synapticsmst_device_update_panamera_firmware (FuSynapticsmstDevice *self,
 		/* write */
 		write_idx = 0;
 		write_offset = EEPROM_BANK_OFFSET * bank_to_update;
-		connection = fu_synapticsmst_connection_new (self->fd, self->layer, self->rad);
+		connection = fu_synapticsmst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
+							     self->layer, self->rad);
 		for (guint32 i = 0; i < write_loops ; i++ ) {
 			g_autoptr(GError) error_local = NULL;
 			if (!fu_synapticsmst_connection_rc_set_command (connection,
@@ -769,7 +685,8 @@ fu_synapticsmst_device_panamera_prepare_write (FuSynapticsmstDevice *self, GErro
 
 	/* Need to detect flash mode and ESM first ? */
 	/* disable flash Quad mode and ESM/HDCP2.2*/
-	connection = fu_synapticsmst_connection_new (self->fd, self->layer, self->rad);
+	connection = fu_synapticsmst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
+						     self->layer, self->rad);
 
 	/* disable ESM first */
 	buf[0] = 0x21;
@@ -832,7 +749,8 @@ fu_synapticsmst_device_restart (FuSynapticsmstDevice *self, GError **error)
 	g_autoptr(GError) error_local = NULL;
 
 	/* issue the reboot command, ignore return code (triggers before returning) */
-	connection = fu_synapticsmst_connection_new (self->fd, self->layer, self->rad);
+	connection = fu_synapticsmst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
+						     self->layer, self->rad);
 	if (!fu_synapticsmst_connection_rc_set_command (connection,
 						 UPDC_WRITE_TO_MEMORY,
 						 4, (gint) 0x2000FC, (guint8*) &buf,
@@ -1030,7 +948,8 @@ fu_synapticsmst_device_scan_cascade (FuSynapticsmstDevice *self, guint8 layer, G
 			g_debug ("no cascade device found: %s", error_local->message);
 			continue;
 		}
-		connection = fu_synapticsmst_connection_new (device_tmp->fd, layer + 1, rad);
+		connection = fu_synapticsmst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
+							     layer + 1, rad);
 		if (!fu_synapticsmst_connection_read (connection, REG_RC_CAP, byte, 1, &error_local)) {
 			g_debug ("no valid cascade device: %s", error_local->message);
 			continue;
@@ -1074,7 +993,7 @@ fu_synapticsmst_device_rescan (FuDevice *device, GError **error)
 	guint8 buf_ver[16];
 
 	/* read vendor ID */
-	connection = fu_synapticsmst_connection_new (self->fd, 0, 0);
+	connection = fu_synapticsmst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)), 0, 0);
 	if (!fu_synapticsmst_connection_read (connection, REG_RC_CAP, buf_vid, 1, error)) {
 		g_prefix_error (error, "failed to read device: ");
 		return FALSE;
@@ -1222,8 +1141,6 @@ fu_synapticsmst_device_class_init (FuSynapticsmstDeviceClass *klass)
 	FuUdevDeviceClass *klass_udev_device = FU_UDEV_DEVICE_CLASS (klass);
 	object_class->finalize = fu_synapticsmst_device_finalize;
 	klass_device->to_string = fu_synapticsmst_device_to_string;
-	klass_device->open = fu_synapticsmst_device_open;
-	klass_device->close = fu_synapticsmst_device_close;
 	klass_device->rescan = fu_synapticsmst_device_rescan;
 	klass_device->write_firmware = fu_synapticsmst_device_write_firmware;
 	klass_device->prepare_firmware = fu_synapticsmst_device_prepare_firmware;

@@ -5,9 +5,8 @@
  */
 
 #include "config.h"
-#include <fcntl.h>
+
 #include <sys/ioctl.h>
-#include <glib/gstdio.h>
 #include <linux/mmc/ioctl.h>
 
 #include "fu-chunk.h"
@@ -66,7 +65,6 @@
 
 struct _FuEmmcDevice {
 	FuUdevDevice		 parent_instance;
-	gint			 fd;
 	guint32			 sect_size;
 };
 
@@ -76,7 +74,6 @@ static void
 fu_emmc_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuEmmcDevice *self = FU_EMMC_DEVICE (device);
-	fu_common_string_append_ku (str, idt, "FD", (guint) self->fd);
 	fu_common_string_append_ku (str, idt, "SectorSize", self->sect_size);
 }
 
@@ -226,9 +223,7 @@ fu_emmc_device_probe (FuUdevDevice *device, GError **error)
 static gboolean
 fu_emmc_read_extcsd (FuEmmcDevice *self, guint8 *ext_csd, gsize ext_csd_sz, GError **error)
 {
-	gint ret = 0;
 	struct mmc_ioc_cmd idata = { 0x0 };
-
 	idata.write_flag = 0;
 	idata.opcode = MMC_SEND_EXT_CSD;
 	idata.arg = 0;
@@ -236,18 +231,9 @@ fu_emmc_read_extcsd (FuEmmcDevice *self, guint8 *ext_csd, gsize ext_csd_sz, GErr
 	idata.blksz = 512;
 	idata.blocks = 1;
 	mmc_ioc_cmd_set_data (idata, ext_csd);
-
-	ret = ioctl (self->fd, MMC_IOC_CMD, &idata);
-	if (ret != 0) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_FAILED,
-			     "failed to call ioctl: %d",
-			     ret);
-		return FALSE;
-	}
-
-	return TRUE;
+	return fu_udev_device_ioctl (FU_UDEV_DEVICE (self),
+				     MMC_IOC_CMD, (guint8 *) &idata,
+				     NULL, error);
 }
 
 static gboolean
@@ -297,37 +283,6 @@ fu_emmc_device_setup (FuDevice *device, GError **error)
 	else
 		fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
 
-	return TRUE;
-}
-
-static gboolean
-fu_emmc_device_open (FuDevice *device, GError **error)
-{
-	FuEmmcDevice *self = FU_EMMC_DEVICE (device);
-	GUdevDevice *udev_device = fu_udev_device_get_dev (FU_UDEV_DEVICE (device));
-
-	/* open device */
-	self->fd = g_open (g_udev_device_get_device_file (udev_device), O_RDWR);
-	if (self->fd < 0) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_FAILED,
-			     "failed to open %s",
-			     g_udev_device_get_device_file (udev_device));
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
-fu_emmc_device_close (FuDevice *device, GError **error)
-{
-	FuEmmcDevice *self = FU_EMMC_DEVICE (device);
-	if (!g_close (self->fd, error))
-		return FALSE;
-	self->fd = 0;
 	return TRUE;
 }
 
@@ -422,19 +377,17 @@ fu_emmc_device_write_firmware (FuDevice *device,
 	while (sect_done == 0) {
 		for (guint i = 0; i < chunks->len; i++) {
 			FuChunk *chk = g_ptr_array_index (chunks, i);
-			gint rc;
 
 			mmc_ioc_cmd_set_data (multi_cmd->cmds[1], chk->data);
 
-			rc = ioctl (self->fd, MMC_IOC_MULTI_CMD, multi_cmd);
-			if (rc != 0) {
-				g_set_error (error,
-					     G_IO_ERROR,
-					     G_IO_ERROR_FAILED,
-					     "multi-cmd ioctl failed failed: %d",
-					     rc);
+			if (!fu_udev_device_ioctl (FU_UDEV_DEVICE (self),
+						   MMC_IOC_MULTI_CMD, (guint8 *) multi_cmd,
+						   NULL, error)) {
+				g_prefix_error (error, "multi-cmd failed: ");
 				/* multi-cmd ioctl failed before exiting from ffu mode */
-				ioctl (self->fd, MMC_IOC_CMD, &multi_cmd->cmds[2]);
+				fu_udev_device_ioctl (FU_UDEV_DEVICE (self),
+						      MMC_IOC_CMD, (guint8 *) &multi_cmd->cmds[2],
+						      NULL, NULL);
 				return FALSE;
 			}
 
@@ -480,8 +433,6 @@ fu_emmc_device_write_firmware (FuDevice *device,
 	if (!ext_csd[EXT_CSD_FFU_FEATURES]) {
 		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	} else {
-		gint ret;
-
 		/* re-enter ffu mode and install the firmware */
 		multi_cmd->num_of_cmds = 2;
 
@@ -497,15 +448,14 @@ fu_emmc_device_write_firmware (FuDevice *device,
 		multi_cmd->cmds[1].write_flag = 1;
 
 		/* send ioctl with multi-cmd */
-		ret = ioctl (self->fd, MMC_IOC_MULTI_CMD, multi_cmd);
-		if (ret != 0) {
+		if (!fu_udev_device_ioctl (FU_UDEV_DEVICE (self),
+					   MMC_IOC_MULTI_CMD, (guint8 *) multi_cmd,
+					   NULL, error)) {
 			/* In case multi-cmd ioctl failed before exiting from ffu mode */
-			g_set_error (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_FAILED,
-				     "Multi-cmd ioctl failed setting install mode: %d",
-				     ret);
-			ioctl(self->fd, MMC_IOC_CMD, &multi_cmd->cmds[2]);
+			g_prefix_error (error, "multi-cmd failed setting install mode: ");
+			fu_udev_device_ioctl (FU_UDEV_DEVICE (self),
+					      MMC_IOC_CMD, (guint8 *) &multi_cmd->cmds[2],
+					      NULL, NULL);
 			return FALSE;
 		}
 
@@ -544,9 +494,7 @@ fu_emmc_device_class_init (FuEmmcDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuUdevDeviceClass *klass_udev_device = FU_UDEV_DEVICE_CLASS (klass);
 	object_class->finalize = fu_emmc_device_finalize;
-	klass_device->open = fu_emmc_device_open;
 	klass_device->setup = fu_emmc_device_setup;
-	klass_device->close = fu_emmc_device_close;
 	klass_device->to_string = fu_emmc_device_to_string;
 	klass_device->prepare_firmware = fu_emmc_device_prepare_firmware;
 	klass_udev_device->probe = fu_emmc_device_probe;

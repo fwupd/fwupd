@@ -8,13 +8,8 @@
 
 #include "config.h"
 
-#include <fcntl.h>
-#include <errno.h>
-#include <string.h>
-#include <linux/hidraw.h>
 #include <sys/ioctl.h>
-
-#include <glib/gstdio.h>
+#include <linux/hidraw.h>
 
 #include "fu-io-channel.h"
 
@@ -90,7 +85,6 @@
 
 typedef struct
 {
-	gint			 fd;
 	FuSynapticsRmiFlash	 flash;
 	GPtrArray		*functions;
 	FuIOChannel		*io_channel;
@@ -131,7 +125,6 @@ fu_synaptics_rmi_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE (device);
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
-	fu_common_string_append_ku (str, idt, "FD", (guint) priv->fd);
 	fu_common_string_append_kx (str, idt, "BlVer", priv->f34->function_version + 0x5);
 	fu_synaptics_rmi_flash_to_string (&priv->flash, idt, str);
 }
@@ -411,28 +404,12 @@ fu_synaptics_rmi_device_set_mode (FuSynapticsRmiDevice *self,
 				  FuSynapticsRmiHidMode mode,
 				  GError **error)
 {
-	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
 	const guint8 data[] = { 0x0f, mode };
-	gint rc;
-
 	if (g_getenv ("FWUPD_SYNAPTICS_RMI_VERBOSE") != NULL)
 		fu_common_dump_raw (G_LOG_DOMAIN, "SetMode", data, sizeof(data));
-	rc = ioctl (priv->fd, HIDIOCSFEATURE(sizeof(data)), data);
-	if (rc < 0) {
-		if (rc == -EPERM) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_PERMISSION_DENIED,
-					     "SetMode: permission denied");
-			return FALSE;
-		}
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "SetMode: ioctl failed with %s", strerror (rc));
-		return FALSE;
-	}
-	return TRUE;
+	return fu_udev_device_ioctl (FU_UDEV_DEVICE (self),
+				     HIDIOCSFEATURE(sizeof(data)), (guint8 *) data,
+				     NULL, error);
 }
 
 static void
@@ -610,26 +587,13 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_synaptics_rmi_device_open (FuDevice *device, GError **error)
+fu_synaptics_rmi_device_open (FuUdevDevice *device, GError **error)
 {
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE (device);
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
-	GUdevDevice *udev_device = fu_udev_device_get_dev (FU_UDEV_DEVICE (device));
-
-	/* open device */
-	priv->fd = g_open (g_udev_device_get_device_file (udev_device), O_RDWR);
-	if (priv->fd < 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "failed to open %s: %s",
-			     g_udev_device_get_device_file (udev_device),
-			     strerror (errno));
-		return FALSE;
-	}
-	priv->io_channel = fu_io_channel_unix_new (priv->fd);
 
 	/* set up touchpad so we can query it */
+	priv->io_channel = fu_io_channel_unix_new (fu_udev_device_get_fd (device));
 	if (!fu_synaptics_rmi_device_set_mode (self, HID_RMI4_MODE_ATTN_REPORTS, error))
 		return FALSE;
 
@@ -638,7 +602,7 @@ fu_synaptics_rmi_device_open (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_synaptics_rmi_device_close (FuDevice *device, GError **error)
+fu_synaptics_rmi_device_close (FuUdevDevice *device, GError **error)
 {
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE (device);
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
@@ -657,7 +621,6 @@ fu_synaptics_rmi_device_close (FuDevice *device, GError **error)
 	}
 
 	g_clear_object (&priv->io_channel);
-	priv->fd = 0;
 	return TRUE;
 }
 
@@ -1055,10 +1018,10 @@ fu_synaptics_rmi_device_class_init (FuSynapticsRmiDeviceClass *klass)
 	FuUdevDeviceClass *klass_device_udev = FU_UDEV_DEVICE_CLASS (klass);
 	object_class->finalize = fu_synaptics_rmi_device_finalize;
 	klass_device->to_string = fu_synaptics_rmi_device_to_string;
-	klass_device->open = fu_synaptics_rmi_device_open;
-	klass_device->close = fu_synaptics_rmi_device_close;
 	klass_device->prepare_firmware = fu_synaptics_rmi_device_prepare_firmware;
 	klass_device->attach = fu_synaptics_rmi_device_attach;
 	klass_device->setup = fu_synaptics_rmi_device_setup;
 	klass_device_udev->probe = fu_synaptics_rmi_device_probe;
+	klass_device_udev->open = fu_synaptics_rmi_device_open;
+	klass_device_udev->close = fu_synaptics_rmi_device_close;
 }
