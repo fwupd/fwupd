@@ -8,8 +8,11 @@
 
 #include <string.h>
 
+#include "fu-chunk.h"
+
 #include "fu-ebitdo-common.h"
 #include "fu-ebitdo-device.h"
+#include "fu-ebitdo-firmware.h"
 
 struct _FuEbitdoDevice {
 	FuUsbDevice		 parent_instance;
@@ -355,14 +358,14 @@ fu_ebitdo_device_write_firmware (FuDevice *device,
 				 GError **error)
 {
 	FuEbitdoDevice *self = FU_EBITDO_DEVICE (device);
-	FuEbitdoFirmwareHeader *hdr;
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
-	const guint8 *payload_data;
-	const guint chunk_sz = 32;
-	guint32 payload_len;
+	const guint8 *buf;
+	gsize bufsz = 0;
 	guint32 serial_new[3];
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GBytes) fw_hdr = NULL;
+	g_autoptr(GBytes) fw_payload = NULL;
 	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GPtrArray) chunks = NULL;
 	const guint32 app_key_index[16] = {
 		0x186976e5, 0xcac67acd, 0x38f27fee, 0x0a4948f1,
 		0xb75b7753, 0x1f8ffa5c, 0xbff8cf43, 0xc4936167,
@@ -411,58 +414,22 @@ fu_ebitdo_device_write_firmware (FuDevice *device,
 		return FALSE;
 	}
 
-	/* get default image */
-	fw = fu_firmware_get_image_default_bytes (firmware, error);
-	if (fw == NULL)
+	/* get header and payload */
+	fw_hdr = fu_firmware_get_image_by_id_bytes (firmware, "header", error);
+	if (fw_hdr == NULL)
 		return FALSE;
-
-	/* corrupt */
-	if (g_bytes_get_size (fw) < sizeof (FuEbitdoFirmwareHeader)) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "firmware too small for header");
+	fw_payload = fu_firmware_get_image_by_id_bytes (firmware, "payload", error);
+	if (fw_payload == NULL)
 		return FALSE;
-	}
-
-
-	hdr = (FuEbitdoFirmwareHeader *) g_bytes_get_data (fw, NULL);
-	/* print details about the firmware */
-	if (g_getenv ("FWUPD_EBITDO_VERBOSE") != NULL)
-		fu_ebitdo_dump_firmware_header (hdr);
-
-	/* check the file size */
-	payload_len = (guint32) (g_bytes_get_size (fw) - sizeof (FuEbitdoFirmwareHeader));
-	if (payload_len != GUINT32_FROM_LE (hdr->destination_len)) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_INVALID_DATA,
-			     "file size incorrect, expected 0x%04x got 0x%04x",
-			     (guint) GUINT32_FROM_LE (hdr->destination_len),
-			     (guint) payload_len);
-		return FALSE;
-	}
-
-	/* check if this is firmware */
-	for (guint i = 0; i < 4; i++) {
-		if (hdr->reserved[i] != 0x0) {
-			g_set_error (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "data invalid, reserved[%u] = 0x%04x",
-				     i, hdr->reserved[i]);
-			return FALSE;
-		}
-	}
 
 	/* set up the firmware header */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
+	buf = g_bytes_get_data (fw_hdr, &bufsz);
 	if (!fu_ebitdo_device_send (self,
-				 FU_EBITDO_PKT_TYPE_USER_CMD,
-				 FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
-				 FU_EBITDO_PKT_CMD_FW_UPDATE_HEADER,
-				 (const guint8 *) hdr, sizeof(FuEbitdoFirmwareHeader),
-				 error)) {
+				    FU_EBITDO_PKT_TYPE_USER_CMD,
+				    FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
+				    FU_EBITDO_PKT_CMD_FW_UPDATE_HEADER,
+				    buf, bufsz, error)) {
 		g_prefix_error (error, "failed to set up firmware header:");
 		return FALSE;
 	}
@@ -472,31 +439,32 @@ fu_ebitdo_device_write_firmware (FuDevice *device,
 	}
 
 	/* flash the firmware in 32 byte blocks */
-	payload_data = g_bytes_get_data (fw, NULL);
-	payload_data += sizeof(FuEbitdoFirmwareHeader);
-	for (guint32 offset = 0; offset < payload_len; offset += chunk_sz) {
+	chunks = fu_chunk_array_new_from_bytes (fw_payload, 0x0, 0x0, 32);
+	for (guint i = 0; i < chunks->len; i++) {
+		FuChunk *chunk = g_ptr_array_index (chunks, i);
 		if (g_getenv ("FWUPD_EBITDO_VERBOSE") != NULL) {
 			g_debug ("writing %u bytes to 0x%04x of 0x%04x",
-				 chunk_sz, offset, payload_len);
+				 chunk->data_sz, chunk->address, chunk->data_sz);
 		}
-		fu_device_set_progress_full (device, offset, payload_len);
 		if (!fu_ebitdo_device_send (self,
-					 FU_EBITDO_PKT_TYPE_USER_CMD,
-					 FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
-					 FU_EBITDO_PKT_CMD_FW_UPDATE_DATA,
-					 payload_data + offset, chunk_sz,
-					 error)) {
-			g_prefix_error (error, "Failed to write firmware @0x%04x: ", offset);
+					    FU_EBITDO_PKT_TYPE_USER_CMD,
+					    FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
+					    FU_EBITDO_PKT_CMD_FW_UPDATE_DATA,
+					    chunk->data, chunk->data_sz,
+					    error)) {
+			g_prefix_error (error,
+					"failed to write firmware @0x%04x: ",
+					chunk->address);
 			return FALSE;
 		}
 		if (!fu_ebitdo_device_receive (self, NULL, 0, error)) {
-			g_prefix_error (error, "Failed to get ACK for write firmware @0x%04x: ", offset);
+			g_prefix_error (error,
+					"failed to get ACK for write firmware @0x%04x: ",
+					chunk->address);
 			return FALSE;
 		}
+		fu_device_set_progress_full (device, chunk->idx, chunks->len);
 	}
-
-	/* mark as complete */
-	fu_device_set_progress_full (device, payload_len, payload_len);
 
 	/* set the "encode id" which is likely a checksum, bluetooth pairing
 	 * or maybe just security-through-obscurity -- also note:
@@ -583,6 +551,19 @@ fu_ebitdo_device_probe (FuUsbDevice *device, GError **error)
 	return TRUE;
 }
 
+static FuFirmware *
+fu_ebitdo_device_prepare_firmware (FuDevice *device,
+				   GBytes *fw,
+				   FwupdInstallFlags flags,
+				   GError **error)
+{
+	g_autoptr(FuFirmware) firmware = fu_ebitdo_firmware_new ();
+	fu_device_set_status (device, FWUPD_STATUS_DECOMPRESSING);
+	if (!fu_firmware_parse (firmware, fw, flags, error))
+		return NULL;
+	return g_steal_pointer (&firmware);
+}
+
 static void
 fu_ebitdo_device_init (FuEbitdoDevice *self)
 {
@@ -597,4 +578,5 @@ fu_ebitdo_device_class_init (FuEbitdoDeviceClass *klass)
 	klass_device->setup = fu_ebitdo_device_setup;
 	klass_usb_device->open = fu_ebitdo_device_open;
 	klass_usb_device->probe = fu_ebitdo_device_probe;
+	klass_device->prepare_firmware = fu_ebitdo_device_prepare_firmware;
 }

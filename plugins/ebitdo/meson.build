@@ -10,6 +10,7 @@ shared_module('fu_plugin_ebitdo',
     'fu-plugin-ebitdo.c',
     'fu-ebitdo-common.c',
     'fu-ebitdo-device.c',
+    'fu-ebitdo-firmware.c',
   ],
   include_directories : [
     include_directories('../..'),
