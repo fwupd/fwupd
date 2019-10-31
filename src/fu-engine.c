@@ -1617,16 +1617,19 @@ fu_engine_install (FuEngine *self,
 		if (caption != NULL) {
 			g_set_error (error,
 				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     FWUPD_ERROR_NEEDS_USER_ACTION,
 				     "Device %s needs to manually be put in update mode: %s",
 				     fu_device_get_name (device), caption);
 		} else {
 			g_set_error (error,
 				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
+				     FWUPD_ERROR_NEEDS_USER_ACTION,
 				     "Device %s needs to manually be put in update mode",
 				     fu_device_get_name (device));
 		}
+		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED_TRANSIENT);
+		if (error != NULL)
+			fu_device_set_update_error (device, (*error)->message);
 		return FALSE;
 	}
 
@@ -1727,6 +1730,9 @@ fu_engine_install (FuEngine *self,
 		    g_error_matches (error_local,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_BATTERY_LEVEL_TOO_LOW) ||
+		    g_error_matches (error_local,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NEEDS_USER_ACTION) ||
 		    g_error_matches (error_local,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_BROKEN_SYSTEM)) {
