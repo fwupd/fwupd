@@ -20,7 +20,7 @@ meson .. \
     -Dplugin_synaptics=true $@
 ninja-build dist
 popd
-VERSION=`meson introspect build --projectinfo | jq -r .version`
+VERSION=`./contrib/get-version.py`
 mkdir -p $HOME/rpmbuild/SOURCES/
 mv build/meson-dist/fwupd-$VERSION.tar.xz $HOME/rpmbuild/SOURCES/
 

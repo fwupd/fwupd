@@ -11,8 +11,7 @@ fi
 #prepare
 export DEBFULLNAME="CI Builder"
 export DEBEMAIL="ci@travis-ci.org"
-VERSION=`git describe | sed 's/-/+r/;s/-/+/'`
-[ -z $VERSION ] && VERSION=`head meson.build | grep ' version :' | cut -d \' -f2`
+VERSION=`./contrib/get-version.py | sed 's/-/+r/;s/-/+/'`
 rm -rf build/
 mkdir -p build
 shopt -s extglob
