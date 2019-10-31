@@ -13,16 +13,6 @@
 
 G_DEFINE_TYPE (FuNitrokeyDevice, fu_nitrokey_device, FU_TYPE_USB_DEVICE)
 
-static void
-_dump_to_console (const gchar *title, const guint8 *buf, gsize buf_sz)
-{
-	if (g_getenv ("FWUPD_NITROKEY_VERBOSE") == NULL)
-		return;
-	g_debug ("%s", title);
-	for (gsize i = 0; i < buf_sz; i++)
-		g_debug ("%" G_GSIZE_FORMAT "=0x%02x", i, buf[i]);
-}
-
 static gboolean
 nitrokey_execute_cmd (GUsbDevice *usb_device, guint8 command,
 		      const guint8 *buf_in, gsize buf_in_sz,
@@ -47,7 +37,8 @@ nitrokey_execute_cmd (GUsbDevice *usb_device, guint8 command,
 	fu_common_write_uint32 (&buf[NITROKEY_REQUEST_DATA_LENGTH + 1], crc_tmp, G_LITTLE_ENDIAN);
 
 	/* send request */
-	_dump_to_console ("request", buf, sizeof(buf));
+	if (g_getenv ("FWUPD_NITROKEY_VERBOSE") != NULL)
+		fu_common_dump_raw (G_LOG_DOMAIN, "request", buf, sizeof(buf));
 	ret = g_usb_device_control_transfer (usb_device,
 					     G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					     G_USB_DEVICE_REQUEST_TYPE_CLASS,
@@ -92,7 +83,8 @@ nitrokey_execute_cmd (GUsbDevice *usb_device, guint8 command,
 			     "only wrote %" G_GSIZE_FORMAT "bytes", actual_len);
 		return FALSE;
 	}
-	_dump_to_console ("response", buf, sizeof(buf));
+	if (g_getenv ("FWUPD_NITROKEY_VERBOSE") != NULL)
+		fu_common_dump_raw (G_LOG_DOMAIN, "response", buf, sizeof(buf));
 
 	/* verify this is the answer to the question we asked */
 	memcpy (&res, buf, sizeof(buf));
@@ -189,7 +181,8 @@ fu_nitrokey_device_setup (FuDevice *device, GError **error)
 		g_prefix_error (error, "failed to do get firmware version: ");
 		return FALSE;
 	}
-	_dump_to_console ("payload", buf_reply, sizeof(buf_reply));
+	if (g_getenv ("FWUPD_NITROKEY_VERBOSE") != NULL)
+		fu_common_dump_raw (G_LOG_DOMAIN, "payload", buf_reply, sizeof(buf_reply));
 	memcpy (&payload, buf_reply, sizeof(payload));
 	version = g_strdup_printf ("%u.%u", payload.VersionMajor, payload.VersionMinor);
 	fu_device_set_version (FU_DEVICE (device), version, FWUPD_VERSION_FORMAT_PAIR);
