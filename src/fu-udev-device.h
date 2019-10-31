@@ -19,7 +19,11 @@ struct _FuUdevDeviceClass
 	FuDeviceClass	parent_class;
 	gboolean	 (*probe)			(FuUdevDevice	*device,
 							 GError		**error);
-	gpointer	__reserved[31];
+	gboolean	 (*open)			(FuUdevDevice	*device,
+							 GError		**error);
+	gboolean	 (*close)			(FuUdevDevice	*device,
+							 GError		**error);
+	gpointer	__reserved[29];
 };
 
 FuUdevDevice	*fu_udev_device_new			(GUdevDevice	*udev_device);
@@ -36,3 +40,22 @@ gboolean	 fu_udev_device_set_physical_id		(FuUdevDevice	*self,
 							 const gchar	*subsystem,
 							 GError		**error);
 void		 fu_udev_device_dump			(FuUdevDevice	*self);
+void		 fu_udev_device_set_readonly		(FuUdevDevice	*self,
+							 gboolean	 readonly);
+
+gint		 fu_udev_device_get_fd			(FuUdevDevice	*self);
+void		 fu_udev_device_set_fd			(FuUdevDevice	*self,
+							 gint		 fd);
+gboolean	 fu_udev_device_ioctl			(FuUdevDevice	*self,
+							 gulong		 request,
+							 guint8		*buf,
+							 gint		*rc,
+							 GError		**error);
+gboolean	 fu_udev_device_pwrite			(FuUdevDevice	*self,
+							 goffset	 port,
+							 guint8		 data,
+							 GError		**error);
+gboolean	 fu_udev_device_pread			(FuUdevDevice	*self,
+							 goffset	 port,
+							 guint8		*data,
+							 GError		**error);

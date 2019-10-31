@@ -8,7 +8,15 @@
 
 #include "config.h"
 
+#include <fcntl.h>
 #include <string.h>
+#include <sys/errno.h>
+#include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+#include <glib/gstdio.h>
 
 #include "fu-device-private.h"
 #include "fu-udev-device-private.h"
@@ -30,6 +38,8 @@ typedef struct
 	guint8			 revision;
 	gchar			*subsystem;
 	gchar			*device_file;
+	gint			 fd;
+	gboolean		 readonly;
 } FuUdevDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuUdevDevice, fu_udev_device, FU_TYPE_DEVICE)
@@ -572,6 +582,234 @@ fu_udev_device_set_physical_id (FuUdevDevice *self, const gchar *subsystem, GErr
 	return TRUE;
 }
 
+/**
+ * fu_udev_device_get_fd:
+ * @self: A #FuUdevDevice
+ *
+ * Gets the file descriptor if the device is open.
+ *
+ * Returns: positive integer, or -1 if the device is not open
+ *
+ * Since: 1.3.3
+ **/
+gint
+fu_udev_device_get_fd (FuUdevDevice *self)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), -1);
+	return priv->fd;
+}
+
+/**
+ * fu_udev_device_set_fd:
+ * @self: A #FuUdevDevice
+ * @fd: A valid file descriptor
+ *
+ * Replace the file descriptor to use when the device has already been opened.
+ * This object will automatically close() @fd when fu_device_close() is called.
+ *
+ * Since: 1.3.3
+ **/
+void
+fu_udev_device_set_fd (FuUdevDevice *self, gint fd)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+
+	g_return_if_fail (FU_IS_UDEV_DEVICE (self));
+	g_return_if_fail (fd > 0);
+
+	if (priv->fd > 0)
+		close (priv->fd);
+	priv->fd = fd;
+}
+
+/**
+ * fu_udev_device_set_readonly:
+ * @self: A #FuUdevDevice
+ * @readonly: %TRUE if the device file should be opened readonly
+ *
+ * Sets the open mode to `O_RDONLY` use when opening the device with
+ * fu_device_open(). By default devices are opened with `O_RDWR`.
+ *
+ * Since: 1.3.3
+ **/
+void
+fu_udev_device_set_readonly (FuUdevDevice *self, gboolean readonly)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_UDEV_DEVICE (self));
+	priv->readonly = readonly;
+}
+
+static gboolean
+fu_udev_device_open (FuDevice *device, GError **error)
+{
+	FuUdevDevice *self = FU_UDEV_DEVICE (device);
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	FuUdevDeviceClass *klass = FU_UDEV_DEVICE_GET_CLASS (device);
+
+	/* open device */
+	priv->fd = g_open (priv->device_file, priv->readonly ? O_RDONLY : O_RDWR);
+	if (priv->fd < 0) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_FAILED,
+			     "failed to open %s: %s",
+			     priv->device_file,
+			     strerror (errno));
+		return FALSE;
+	}
+
+	/* subclassed */
+	if (klass->open != NULL) {
+		if (!klass->open (self, error))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_udev_device_close (FuDevice *device, GError **error)
+{
+	FuUdevDevice *self = FU_UDEV_DEVICE (device);
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	FuUdevDeviceClass *klass = FU_UDEV_DEVICE_GET_CLASS (device);
+
+	/* subclassed */
+	if (klass->close != NULL) {
+		if (!klass->close (self, error))
+			return FALSE;
+	}
+
+	/* close device */
+	if (priv->fd > 0) {
+		if (!g_close (priv->fd, error))
+			return FALSE;
+		priv->fd = 0;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+/**
+ * fu_udev_device_ioctl:
+ * @self: A #FuUdevDevice
+ * @request: request number
+ * @buf: A buffer to use, which *must* be large enough for the request
+ * @rc: (out) (allow-none): the raw return value from the ioctl
+ * @error: A #GError, or %NULL
+ *
+ * Control a device using a low-level request.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.3.3
+ **/
+gboolean
+fu_udev_device_ioctl (FuUdevDevice *self,
+		      gulong request,
+		      guint8 *buf,
+		      gint *rc,
+		      GError **error)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	gint rc_tmp;
+
+	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), FALSE);
+	g_return_val_if_fail (request != 0x0, FALSE);
+	g_return_val_if_fail (buf != NULL, FALSE);
+
+	rc_tmp = ioctl (priv->fd, request, buf);
+	if (rc != NULL)
+		*rc = rc_tmp;
+	if (rc_tmp < 0) {
+		if (rc_tmp == -EPERM) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_PERMISSION_DENIED,
+					     "permission denied");
+			return FALSE;
+		}
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "ioctl not supported: %s",
+			     strerror (errno));
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/**
+ * fu_udev_device_pwrite:
+ * @self: A #FuUdevDevice
+ * @port: offset address
+ * @data: value
+ * @error: A #GError, or %NULL
+ *
+ * Write to a file descriptor at a given offset.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.3.3
+ **/
+gboolean
+fu_udev_device_pwrite (FuUdevDevice *self, goffset port, guint8 data, GError **error)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+
+	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), FALSE);
+	g_return_val_if_fail (port != 0x0, FALSE);
+
+	if (pwrite (priv->fd, &data, 1, port) != 1) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_FAILED,
+			     "failed to write to port %04x: %s",
+			     (guint) port,
+			     strerror (errno));
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/**
+ * fu_udev_device_pread:
+ * @self: A #FuUdevDevice
+ * @port: offset address
+ * @data: (out): value
+ * @error: A #GError, or %NULL
+ *
+ * Read from a file descriptor at a given offset.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.3.3
+ **/
+gboolean
+fu_udev_device_pread (FuUdevDevice *self, goffset port, guint8 *data, GError **error)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+
+	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), FALSE);
+	g_return_val_if_fail (port != 0x0, FALSE);
+	g_return_val_if_fail (data != NULL, FALSE);
+
+	if (pread (priv->fd, data, 1, port) != 1) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_FAILED,
+			     "failed to read from port %04x: %s",
+			     (guint) port,
+			     strerror (errno));
+		return FALSE;
+	}
+	return TRUE;
+}
+
 static void
 fu_udev_device_get_property (GObject *object, guint prop_id,
 			    GValue *value, GParamSpec *pspec)
@@ -626,6 +864,8 @@ fu_udev_device_finalize (GObject *object)
 	g_free (priv->device_file);
 	if (priv->udev_device != NULL)
 		g_object_unref (priv->udev_device);
+	if (priv->fd > 0)
+		g_close (priv->fd, NULL);
 
 	G_OBJECT_CLASS (fu_udev_device_parent_class)->finalize (object);
 }
@@ -647,6 +887,8 @@ fu_udev_device_class_init (FuUdevDeviceClass *klass)
 	object_class->set_property = fu_udev_device_set_property;
 	device_class->probe = fu_udev_device_probe;
 	device_class->incorporate = fu_udev_device_incorporate;
+	device_class->open = fu_udev_device_open;
+	device_class->close = fu_udev_device_close;
 
 	signals[SIGNAL_CHANGED] =
 		g_signal_new ("changed",

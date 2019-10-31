@@ -6,12 +6,7 @@
 
 #include "config.h"
 
-#include <fcntl.h>
-#include <string.h>
-#include <sys/errno.h>
-#include <sys/ioctl.h>
 #include <scsi/sg.h>
-#include <glib/gstdio.h>
 
 #include "fu-ata-device.h"
 #include "fu-chunk.h"
@@ -74,7 +69,6 @@ struct _FuAtaDevice {
 	FuUdevDevice		 parent_instance;
 	guint			 pci_depth;
 	guint			 usb_depth;
-	gint			 fd;
 	guint16			 transfer_blocks;
 	guint8			 transfer_mode;
 };
@@ -122,7 +116,6 @@ static void
 fu_ata_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuAtaDevice *self = FU_ATA_DEVICE (device);
-	fu_common_string_append_ku (str, idt, "FD", (guint) self->fd);
 	fu_common_string_append_kx (str, idt, "TransferMode", self->transfer_mode);
 	fu_common_string_append_kx (str, idt, "TransferBlocks", self->transfer_blocks);
 	fu_common_string_append_ku (str, idt, "PciDepth", self->pci_depth);
@@ -291,28 +284,6 @@ fu_ata_device_parse_id (FuAtaDevice *self, const guint8 *buf, gsize sz, GError *
 }
 
 static gboolean
-fu_ata_device_open (FuDevice *device, GError **error)
-{
-	FuAtaDevice *self = FU_ATA_DEVICE (device);
-	GUdevDevice *udev_device = fu_udev_device_get_dev (FU_UDEV_DEVICE (device));
-
-	/* open device */
-	self->fd = g_open (g_udev_device_get_device_file (udev_device), O_RDONLY);
-	if (self->fd < 0) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_FAILED,
-			     "failed to open %s: %s",
-			     g_udev_device_get_device_file (udev_device),
-			     strerror (errno));
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
 fu_ata_device_probe (FuUdevDevice *device, GError **error)
 {
 	FuAtaDevice *self = FU_ATA_DEVICE (device);
@@ -410,14 +381,10 @@ fu_ata_device_command (FuAtaDevice *self, struct ata_tf *tf,
 	io_hdr.sbp		= sb;
 	io_hdr.pack_id		= fu_ata_device_tf_to_pack_id (tf);
 	io_hdr.timeout		= timeout_ms;
-	if (ioctl (self->fd, SG_IO, &io_hdr) == -1) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_NOT_SUPPORTED,
-			     "SG_IO not supported: %s",
-			     strerror (errno));
+	if (!fu_udev_device_ioctl (FU_UDEV_DEVICE (self),
+				   SG_IO, (guint8 *) &io_hdr,
+				   NULL, error))
 		return FALSE;
-	}
 	g_debug ("ATA_%u status=0x%x, host_status=0x%x, driver_status=0x%x",
 		io_hdr.cmd_len, io_hdr.status, io_hdr.host_status, io_hdr.driver_status);
 	fu_common_dump_raw (G_LOG_DOMAIN, "SB", sb, sizeof(sb));
@@ -529,16 +496,6 @@ fu_ata_device_activate (FuDevice *device, GError **error)
 	}
 
 	/* success */
-	return TRUE;
-}
-
-static gboolean
-fu_ata_device_close (FuDevice *device, GError **error)
-{
-	FuAtaDevice *self = FU_ATA_DEVICE (device);
-	if (!g_close (self->fd, error))
-		return FALSE;
-	self->fd = 0;
 	return TRUE;
 }
 
@@ -711,6 +668,7 @@ fu_ata_device_init (FuAtaDevice *self)
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_summary (FU_DEVICE (self), "ATA Drive");
 	fu_device_add_icon (FU_DEVICE (self), "drive-harddisk");
+	fu_udev_device_set_readonly (FU_UDEV_DEVICE (self), TRUE);
 }
 
 static void
@@ -728,10 +686,8 @@ fu_ata_device_class_init (FuAtaDeviceClass *klass)
 	object_class->finalize = fu_ata_device_finalize;
 	klass_device->to_string = fu_ata_device_to_string;
 	klass_device->set_quirk_kv = fu_ata_device_set_quirk_kv;
-	klass_device->open = fu_ata_device_open;
 	klass_device->setup = fu_ata_device_setup;
 	klass_device->activate = fu_ata_device_activate;
-	klass_device->close = fu_ata_device_close;
 	klass_device->write_firmware = fu_ata_device_write_firmware;
 	klass_udev_device->probe = fu_ata_device_probe;
 }

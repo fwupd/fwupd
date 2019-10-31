@@ -117,11 +117,3 @@ typedef enum {
 } SioLdn;
 
 const gchar	*fu_superio_ldn_to_text	(guint8		 ldn);
-gboolean	 fu_superio_outb	(gint		 fd,
-					 guint16	 port,
-					 guint8		 data,
-					 GError		**error);
-gboolean	 fu_superio_inb		(gint		 fd,
-					 guint16	 port,
-					 guint8		*data,
-					 GError		**error);
