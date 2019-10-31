@@ -2276,10 +2276,7 @@ fu_util_private_free (FuUtilPrivate *priv)
 static gboolean
 fu_util_check_daemon_version (FuUtilPrivate *priv, GError **error)
 {
-	g_autofree gchar *client = g_strdup_printf ("%i.%i.%i",
-						    FWUPD_MAJOR_VERSION,
-						    FWUPD_MINOR_VERSION,
-						    FWUPD_MICRO_VERSION);
+	g_autofree gchar *client = fu_util_get_client_version ();
 	const gchar *daemon = fwupd_client_get_daemon_version (priv->client);
 
 	if (g_strcmp0 (daemon, client) != 0) {

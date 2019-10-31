@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version : '1.3.4',
+  version : run_command('contrib/get-version.py').stdout().strip(),
   license : 'LGPL-2.1+',
   meson_version : '>=0.47.0',
   default_options : ['warning_level=2', 'c_std=c99'],
@@ -9,22 +9,19 @@ fwupd_version = meson.project_version()
 varr = fwupd_version.split('.')
 fwupd_major_version = varr[0]
 fwupd_minor_version = varr[1]
-fwupd_micro_version = varr[2]
-
+fwupd_micro_version = varr[2].split('-')[0]
 conf = configuration_data()
+
+if varr[2].contains('-')
+  fwupd_dirty_version = varr[2].split('-')[1]
+  fwupd_commit = varr[2].split('-')[2]
+  conf.set('FWUPD_DIRTY_VERSION', fwupd_dirty_version)
+  conf.set_quoted('FWUPD_COMMIT_VERSION', fwupd_commit)
+endif
 conf.set('FWUPD_MAJOR_VERSION', fwupd_major_version)
 conf.set('FWUPD_MINOR_VERSION', fwupd_minor_version)
 conf.set('FWUPD_MICRO_VERSION', fwupd_micro_version)
 conf.set_quoted('PACKAGE_VERSION', fwupd_version)
-
-archiver = find_program('git', required : false)
-if archiver.found()
-  result = run_command('git', 'describe')
-  if result.returncode() == 0
-    describe = result.stdout().strip()
-    conf.set_quoted('FWUPD_GIT_DESCRIBE', describe)
-  endif
-endif
 
 # libtool versioning - this applies to libfwupd
 #

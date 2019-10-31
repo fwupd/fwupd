@@ -34,6 +34,7 @@ gboolean	 fu_util_is_interesting_device	(FwupdDevice	*dev);
 gchar		*fu_util_get_user_cache_path	(const gchar	*fn);
 SoupSession	*fu_util_setup_networking	(GError		**error);
 
+gchar		*fu_util_get_client_version	(void);
 gchar		*fu_util_get_versions		(void);
 
 void		 fu_util_warning_box		(const gchar	*str,
