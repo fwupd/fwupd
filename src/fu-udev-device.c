@@ -349,7 +349,7 @@ fu_udev_device_get_dev (FuUdevDevice *self)
 
 /**
  * fu_udev_device_get_subsystem:
- * @self: A #GUdevDevice
+ * @self: A #FuUdevDevice
  *
  * Gets the device subsystem, e.g. "pci".
  *
@@ -367,7 +367,7 @@ fu_udev_device_get_subsystem (FuUdevDevice *self)
 
 /**
  * fu_udev_device_get_device_file:
- * @self: A #GUdevDevice
+ * @self: A #FuUdevDevice
  *
  * Gets the device node.
  *
@@ -385,7 +385,7 @@ fu_udev_device_get_device_file (FuUdevDevice *self)
 
 /**
  * fu_udev_device_get_sysfs_path:
- * @self: A #GUdevDevice
+ * @self: A #FuUdevDevice
  *
  * Gets the device sysfs path, e.g. "/sys/devices/pci0000:00/0000:00:14.0".
  *
@@ -405,7 +405,7 @@ fu_udev_device_get_sysfs_path (FuUdevDevice *self)
 
 /**
  * fu_udev_device_get_vendor:
- * @self: A #GUdevDevice
+ * @self: A #FuUdevDevice
  *
  * Gets the device vendor code.
  *
@@ -423,7 +423,7 @@ fu_udev_device_get_vendor (FuUdevDevice *self)
 
 /**
  * fu_udev_device_get_model:
- * @self: A #GUdevDevice
+ * @self: A #FuUdevDevice
  *
  * Gets the device device code.
  *
@@ -441,7 +441,7 @@ fu_udev_device_get_model (FuUdevDevice *self)
 
 /**
  * fu_udev_device_get_revision:
- * @self: A #GUdevDevice
+ * @self: A #FuUdevDevice
  *
  * Gets the device revision.
  *
@@ -482,7 +482,7 @@ fu_udev_device_get_parent_subsystems (FuUdevDevice *self)
 
 /**
  * fu_udev_device_set_physical_id:
- * @self: A #GUdevDevice
+ * @self: A #FuUdevDevice
  * @subsystem: A subsystem string, e.g. `usb`
  * @error: A #GError, or %NULL
  *
