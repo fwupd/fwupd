@@ -10,8 +10,6 @@
 #include "fu-plugin.h"
 #include "fu-smbios.h"
 
-G_BEGIN_DECLS
-
 #define FU_OFFLINE_TRIGGER_FILENAME	FU_OFFLINE_DESTDIR "/system-update"
 
 FuPlugin	*fu_plugin_new				(void);
@@ -127,5 +125,3 @@ gint		 fu_plugin_order_compare		(FuPlugin	*plugin1,
 
 /* utils */
 gchar		*fu_plugin_guess_name_from_fn           (const gchar	*filename);
-
-G_END_DECLS

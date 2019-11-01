@@ -153,24 +153,33 @@ fu_firmware_image_set_bytes (FuFirmwareImage *self, GBytes *bytes)
 }
 
 /**
- * fu_firmware_image_get_bytes:
+ * fu_firmware_image_write:
  * @self: a #FuPlugin
  * @error: A #GError, or %NULL
  *
- * Gets the contents of the bytes.
+ * Writes the image, which will try to call a superclassed ->write() function.
+ *
+ * By default (and in most cases) this just provides the value set by the
+ * fu_firmware_image_set_bytes() function.
  *
  * Returns: (transfer full): a #GBytes of the bytes, or %NULL if the bytes is not set
  *
- * Since: 1.3.1
+ * Since: 1.3.3
  **/
 GBytes *
-fu_firmware_image_get_bytes (FuFirmwareImage *self, GError **error)
+fu_firmware_image_write (FuFirmwareImage *self, GError **error)
 {
+	FuFirmwareImageClass *klass = FU_FIRMWARE_IMAGE_GET_CLASS (self);
 	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
 
 	g_return_val_if_fail (FU_IS_FIRMWARE_IMAGE (self), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
+	/* optional vfunc */
+	if (klass->write != NULL)
+		return klass->write (self, error);
+
+	/* fall back to what was set manually */
 	if (priv->bytes == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -182,7 +191,7 @@ fu_firmware_image_get_bytes (FuFirmwareImage *self, GError **error)
 }
 
 /**
- * fu_firmware_image_get_bytes_chunk:
+ * fu_firmware_image_write_chunk:
  * @self: a #FuFirmwareImage
  * @address: an address greater than dfu_element_get_address()
  * @chunk_sz_max: the size of the new chunk
@@ -199,10 +208,10 @@ fu_firmware_image_get_bytes (FuFirmwareImage *self, GError **error)
  * Since: 1.3.1
  **/
 GBytes *
-fu_firmware_image_get_bytes_chunk (FuFirmwareImage *self,
-				   guint64 address,
-				   guint64 chunk_sz_max,
-				   GError **error)
+fu_firmware_image_write_chunk (FuFirmwareImage *self,
+			       guint64 address,
+			       guint64 chunk_sz_max,
+			       GError **error)
 {
 	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
 	gsize chunk_left;
@@ -243,17 +252,23 @@ void
 fu_firmware_image_add_string (FuFirmwareImage *self, guint idt, GString *str)
 {
 	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
+	FuFirmwareImageClass *klass = FU_FIRMWARE_IMAGE_GET_CLASS (self);
+
 	fu_common_string_append_kv (str, idt, G_OBJECT_TYPE_NAME (self), NULL);
 	if (priv->id != NULL)
-		fu_common_string_append_kv (str, idt + 1, "ID", priv->id);
+		fu_common_string_append_kv (str, idt, "ID", priv->id);
 	if (priv->idx != 0x0)
-		fu_common_string_append_kx (str, idt + 1, "Index", priv->idx);
+		fu_common_string_append_kx (str, idt, "Index", priv->idx);
 	if (priv->addr != 0x0)
-		fu_common_string_append_kx (str, idt + 1, "Address", priv->addr);
+		fu_common_string_append_kx (str, idt, "Address", priv->addr);
 	if (priv->bytes != NULL) {
-		fu_common_string_append_kx (str, idt + 1, "Data",
+		fu_common_string_append_kx (str, idt, "Data",
 					    g_bytes_get_size (priv->bytes));
 	}
+
+	/* vfunc */
+	if (klass->to_string != NULL)
+		klass->to_string (self, idt, str);
 }
 
 /**

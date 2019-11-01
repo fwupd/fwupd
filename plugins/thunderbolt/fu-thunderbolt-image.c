@@ -684,7 +684,7 @@ fu_thunderbolt_image_validate (GBytes  *controller_fw,
 			g_set_error (error,
 				     FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
 				     "Unknown controller");
-			return FALSE;
+			return VALIDATION_FAILED;
 		}
 		hw_info = &unknown;
 	}

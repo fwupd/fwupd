@@ -8,8 +8,6 @@
 
 #include "fu-plugin.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_WAC_DEVICE (fu_wac_device_get_type ())
 G_DECLARE_FINAL_TYPE (FuWacDevice, fu_wac_device, FU, WAC_DEVICE, FuUsbDevice)
 
@@ -20,7 +18,6 @@ typedef enum {
 	FU_WAC_DEVICE_FEATURE_FLAG_LAST
 } FuWacDeviceFeatureFlags;
 
-FuWacDevice	*fu_wac_device_new			(FuUsbDevice	*device);
 gboolean	 fu_wac_device_update_reset		(FuWacDevice	*self,
 							 GError		**error);
 gboolean	 fu_wac_device_get_feature_report	(FuWacDevice	*self,
@@ -33,5 +30,3 @@ gboolean	 fu_wac_device_set_feature_report	(FuWacDevice	*self,
 							 gsize		 bufsz,
 							 FuWacDeviceFeatureFlags flags,
 							 GError		**error);
-
-G_END_DECLS

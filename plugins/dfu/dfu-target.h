@@ -16,8 +16,6 @@
 
 #include "fwupd-enums.h"
 
-G_BEGIN_DECLS
-
 #define DFU_TYPE_TARGET (dfu_target_get_type ())
 G_DECLARE_DERIVABLE_TYPE (DfuTarget, dfu_target, DFU, TARGET, GUsbDevice)
 
@@ -27,7 +25,6 @@ G_DECLARE_DERIVABLE_TYPE (DfuTarget, dfu_target, DFU, TARGET, GUsbDevice)
  * @DFU_TARGET_TRANSFER_FLAG_VERIFY:		Verify the download once complete
  * @DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID:	Allow downloading images with wildcard VIDs
  * @DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID:	Allow downloading images with wildcard PIDs
- * @DFU_TARGET_TRANSFER_FLAG_ANY_CIPHER:	Allow any cipher kinds to be downloaded
  * @DFU_TARGET_TRANSFER_FLAG_ADDR_HEURISTIC:	Automatically detect the address to use
  *
  * The optional flags used for transferring firmware.
@@ -37,7 +34,6 @@ typedef enum {
 	DFU_TARGET_TRANSFER_FLAG_VERIFY		= (1 << 0),
 	DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID	= (1 << 4),
 	DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID	= (1 << 5),
-	DFU_TARGET_TRANSFER_FLAG_ANY_CIPHER	= (1 << 6),
 	DFU_TARGET_TRANSFER_FLAG_ADDR_HEURISTIC	= (1 << 7),
 	/*< private >*/
 	DFU_TARGET_TRANSFER_FLAG_LAST
@@ -87,6 +83,3 @@ gboolean	 dfu_target_download			(DfuTarget	*target,
 							 GError		**error);
 gboolean	 dfu_target_mass_erase			(DfuTarget	*target,
 							 GError		**error);
-DfuCipherKind	 dfu_target_get_cipher_kind		(DfuTarget	*target);
-
-G_END_DECLS

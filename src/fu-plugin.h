@@ -21,8 +21,6 @@
 #include "fu-udev-device.h"
 #include "fwupd-common.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_PLUGIN (fu_plugin_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuPlugin, fu_plugin, FU, PLUGIN, GObject)
 
@@ -46,8 +44,11 @@ struct _FuPluginClass
 	gboolean	 (* check_supported)		(FuPlugin	*self,
 							 const gchar	*guid);
 	void		 (* rules_changed)		(FuPlugin	*self);
+	gboolean	 (* add_firmware_gtype)		(FuPlugin	*self,
+							 const gchar	*id,
+							 GType		 gtype);
 	/*< private >*/
-	gpointer	padding[22];
+	gpointer	padding[21];
 };
 
 /**
@@ -67,7 +68,6 @@ typedef enum {
  * @FU_PLUGIN_RULE_CONFLICTS:		The plugin conflicts with another
  * @FU_PLUGIN_RULE_RUN_AFTER:		Order the plugin after another
  * @FU_PLUGIN_RULE_RUN_BEFORE:		Order the plugin before another
- * @FU_PLUGIN_RULE_REQUIRES_QUIRK:	Requires a specific quirk
  * @FU_PLUGIN_RULE_BETTER_THAN:		Is better than another plugin
  * @FU_PLUGIN_RULE_INHIBITS_IDLE:	The plugin inhibits the idle shutdown
  * @FU_PLUGIN_RULE_SUPPORTS_PROTOCOL:	The plugin supports a well known protocol
@@ -79,7 +79,6 @@ typedef enum {
 	FU_PLUGIN_RULE_CONFLICTS,
 	FU_PLUGIN_RULE_RUN_AFTER,
 	FU_PLUGIN_RULE_RUN_BEFORE,
-	FU_PLUGIN_RULE_REQUIRES_QUIRK,
 	FU_PLUGIN_RULE_BETTER_THAN,
 	FU_PLUGIN_RULE_INHIBITS_IDLE,
 	FU_PLUGIN_RULE_SUPPORTS_PROTOCOL,
@@ -109,6 +108,11 @@ void		 fu_plugin_device_register		(FuPlugin	*self,
 void		 fu_plugin_request_recoldplug		(FuPlugin	*self);
 void		 fu_plugin_set_coldplug_delay		(FuPlugin	*self,
 							 guint		 duration);
+void		 fu_plugin_set_device_gtype		(FuPlugin	*self,
+							 GType		 device_gtype);
+void		 fu_plugin_add_firmware_gtype		(FuPlugin	*plugin,
+							 const gchar	*id,
+							 GType		 gtype);
 gpointer	 fu_plugin_cache_lookup			(FuPlugin	*self,
 							 const gchar	*id);
 void		 fu_plugin_cache_remove			(FuPlugin	*self,
@@ -118,9 +122,10 @@ void		 fu_plugin_cache_add			(FuPlugin	*self,
 							 gpointer	 dev);
 gboolean	 fu_plugin_check_hwid			(FuPlugin	*self,
 							 const gchar	*hwid);
+gchar		*fu_plugin_get_hwid_replace_value	(FuPlugin	*self,
+							 const gchar	*keys,
+							 GError		**error);
 GPtrArray	*fu_plugin_get_hwids			(FuPlugin	*self);
-gboolean	 fu_plugin_check_supported		(FuPlugin	*self,
-							 const gchar	*guid);
 const gchar	*fu_plugin_get_dmi_value		(FuPlugin	*self,
 							 const gchar	*dmi_id);
 const gchar	*fu_plugin_get_smbios_string		(FuPlugin	*self,
@@ -153,5 +158,3 @@ void		 fu_plugin_add_compile_version		(FuPlugin	*self,
 							 const gchar	*version);
 gboolean	 fu_plugin_has_custom_flag		(FuPlugin	*self,
 							 const gchar	*flag);
-
-G_END_DECLS

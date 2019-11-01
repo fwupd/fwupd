@@ -10,8 +10,6 @@
 #include "fu-srec-firmware.h"
 #include "fu-synaptics-cxaudio-common.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_SYNAPTICS_CXAUDIO_FIRMWARE (fu_synaptics_cxaudio_firmware_get_type ())
 G_DECLARE_FINAL_TYPE (FuSynapticsCxaudioFirmware, fu_synaptics_cxaudio_firmware, FU, SYNAPTICS_CXAUDIO_FIRMWARE, FuSrecFirmware)
 
@@ -32,5 +30,3 @@ FuFirmware			*fu_synaptics_cxaudio_firmware_new			(void);
 FuSynapticsCxaudioFileKind	 fu_synaptics_cxaudio_firmware_get_file_type		(FuSynapticsCxaudioFirmware	*self);
 FuSynapticsCxaudioDeviceKind	 fu_synaptics_cxaudio_firmware_get_devtype		(FuSynapticsCxaudioFirmware	*self);
 guint8				 fu_synaptics_cxaudio_firmware_get_layout_version	(FuSynapticsCxaudioFirmware	*self);
-
-G_END_DECLS

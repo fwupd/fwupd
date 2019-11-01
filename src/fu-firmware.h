@@ -11,8 +11,6 @@
 
 #include "fu-firmware-image.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_FIRMWARE (fu_firmware_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuFirmware, fu_firmware, FU, FIRMWARE, GObject)
 
@@ -41,6 +39,9 @@ struct _FuFirmwareClass
 FuFirmware	*fu_firmware_new			(void);
 FuFirmware	*fu_firmware_new_from_bytes		(GBytes		*fw);
 gchar		*fu_firmware_to_string			(FuFirmware	*self);
+const gchar	*fu_firmware_get_version		(FuFirmware	*self);
+void		 fu_firmware_set_version		(FuFirmware	*self,
+							 const gchar	*version);
 
 gboolean	 fu_firmware_tokenize			(FuFirmware	*self,
 							 GBytes		*fw,
@@ -50,6 +51,10 @@ gboolean	 fu_firmware_parse			(FuFirmware	*self,
 							 GBytes		*fw,
 							 FwupdInstallFlags flags,
 							 GError		**error);
+gboolean	 fu_firmware_parse_file			(FuFirmware	*self,
+							 GFile		*file,
+							 FwupdInstallFlags flags,
+							 GError		**error);
 gboolean	 fu_firmware_parse_full			(FuFirmware	*self,
 							 GBytes		*fw,
 							 guint64	 addr_start,
@@ -57,6 +62,9 @@ gboolean	 fu_firmware_parse_full			(FuFirmware	*self,
 							 FwupdInstallFlags flags,
 							 GError		**error);
 GBytes		*fu_firmware_write			(FuFirmware	*self,
+							 GError		**error);
+gboolean	 fu_firmware_write_file			(FuFirmware	*self,
+							 GFile		*file,
 							 GError		**error);
 
 void		 fu_firmware_add_image			(FuFirmware	*self,
@@ -78,5 +86,3 @@ FuFirmwareImage	*fu_firmware_get_image_default		(FuFirmware	*self,
 							 GError		**error);
 GBytes		*fu_firmware_get_image_default_bytes	(FuFirmware	*self,
 							 GError		**error);
-
-G_END_DECLS

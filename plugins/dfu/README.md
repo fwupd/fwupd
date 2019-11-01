@@ -35,4 +35,3 @@ This plugin uses the following plugin-specific quirks:
 |------------------------|---------------------------------------------|-----------------------|
 |`DfuFlags`              | Optional quirks for a DFU device which doesn't follow the DFU 1.0 or 1.1 specification | 1.0.1|
 |`DfuForceVersion`       | Forces a specific DFU version for the hardware device. This is required if the device does not set, or sets incorrectly, items in the DFU functional descriptor. |1.0.1|
-|`DfuJabraDetach`        | Assigns the two magic bytes sent to the Jabra hardware when the device is in runtime mode to make it switch into DFU mode.|1.0.1|

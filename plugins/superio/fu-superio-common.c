@@ -6,41 +6,7 @@
 
 #include "config.h"
 
-#include <sys/errno.h>
-#include <string.h>
-#include <unistd.h>
-
 #include "fu-superio-common.h"
-
-gboolean
-fu_superio_outb (gint fd, guint16 port, guint8 data, GError **error)
-{
-	if (pwrite (fd, &data, 1, (goffset) port) != 1) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_FAILED,
-			     "failed to write to port %04x: %s",
-			     (guint) port,
-			     strerror (errno));
-		return FALSE;
-	}
-	return TRUE;
-}
-
-gboolean
-fu_superio_inb (gint fd, guint16 port, guint8 *data, GError **error)
-{
-	if (pread (fd, data, 1, (goffset) port) != 1) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_FAILED,
-			     "failed to read from port %04x: %s",
-			     (guint) port,
-			     strerror (errno));
-		return FALSE;
-	}
-	return TRUE;
-}
 
 const gchar *
 fu_superio_ldn_to_text (guint8 ldn)

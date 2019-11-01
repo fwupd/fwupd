@@ -6,12 +6,6 @@
 
 #include "config.h"
 
-#include <fcntl.h>
-#include <string.h>
-#include <sys/errno.h>
-
-#include <glib/gstdio.h>
-
 #include "fu-superio-common.h"
 #include "fu-superio-device.h"
 
@@ -19,7 +13,6 @@
 
 typedef struct
 {
-	gint			 fd;
 	gchar			*chipset;
 	guint16			 port;
 	guint16			 pm1_iobad0;
@@ -44,9 +37,9 @@ fu_superio_device_regval (FuSuperioDevice *self, guint8 addr,
 			  guint8 *data, GError **error)
 {
 	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
-	if (!fu_superio_outb (priv->fd, priv->port, addr, error))
+	if (!fu_udev_device_pwrite (FU_UDEV_DEVICE (self), priv->port, addr, error))
 		return FALSE;
-	if (!fu_superio_inb (priv->fd, priv->port + 1, data, error))
+	if (!fu_udev_device_pread (FU_UDEV_DEVICE (self), priv->port + 1, data, error))
 		return FALSE;
 	return TRUE;
 }
@@ -70,9 +63,9 @@ fu_superio_device_regwrite (FuSuperioDevice *self, guint8 addr,
 			    guint8 data, GError **error)
 {
 	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
-	if (!fu_superio_outb (priv->fd, priv->port, addr, error))
+	if (!fu_udev_device_pwrite (FU_UDEV_DEVICE (self), priv->port, addr, error))
 		return FALSE;
-	if (!fu_superio_outb (priv->fd, priv->port + 1, data, error))
+	if (!fu_udev_device_pwrite (FU_UDEV_DEVICE (self), priv->port + 1, data, error))
 		return FALSE;
 	return TRUE;
 }
@@ -122,7 +115,6 @@ fu_superio_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
 	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
-	fu_common_string_append_ku (str, idt, "FD", (guint) priv->fd);
 	fu_common_string_append_kv (str, idt, "Chipset", priv->chipset);
 	fu_common_string_append_kx (str, idt, "Id", priv->id);
 	fu_common_string_append_kx (str, idt, "Port", priv->port);
@@ -158,7 +150,7 @@ fu_superio_device_wait_for (FuSuperioDevice *self, guint8 mask, gboolean set, GE
 	g_autoptr(GTimer) timer = g_timer_new ();
 	do {
 		guint8 status = 0x00;
-		if (!fu_superio_inb (priv->fd, priv->pm1_iobad1, &status, error))
+		if (!fu_udev_device_pread (FU_UDEV_DEVICE (self), priv->pm1_iobad1, &status, error))
 			return FALSE;
 		if (g_timer_elapsed (timer, NULL) > FU_PLUGIN_SUPERIO_TIMEOUT)
 			break;
@@ -180,7 +172,7 @@ fu_superio_device_ec_read (FuSuperioDevice *self, guint8 *data, GError **error)
 	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
 	if (!fu_superio_device_wait_for (self, SIO_STATUS_EC_OBF, TRUE, error))
 		return FALSE;
-	return fu_superio_inb (priv->fd, priv->pm1_iobad0, data, error);
+	return fu_udev_device_pread (FU_UDEV_DEVICE (self), priv->pm1_iobad0, data, error);
 }
 
 gboolean
@@ -189,7 +181,7 @@ fu_superio_device_ec_write0 (FuSuperioDevice *self, guint8 data, GError **error)
 	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
 	if (!fu_superio_device_wait_for (self, SIO_STATUS_EC_IBF, FALSE, error))
 		return FALSE;
-	return fu_superio_outb (priv->fd, priv->pm1_iobad0, data, error);
+	return fu_udev_device_pwrite (FU_UDEV_DEVICE (self), priv->pm1_iobad0, data, error);
 }
 
 gboolean
@@ -198,7 +190,7 @@ fu_superio_device_ec_write1 (FuSuperioDevice *self, guint8 data, GError **error)
 	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
 	if (!fu_superio_device_wait_for (self, SIO_STATUS_EC_IBF, FALSE, error))
 		return FALSE;
-	return fu_superio_outb (priv->fd, priv->pm1_iobad1, data, error);
+	return fu_udev_device_pwrite (FU_UDEV_DEVICE (self), priv->pm1_iobad1, data, error);
 }
 
 static gboolean
@@ -209,11 +201,11 @@ fu_superio_device_ec_flush (FuSuperioDevice *self, GError **error)
 	g_autoptr(GTimer) timer = g_timer_new ();
 	do {
 		guint8 unused = 0;
-		if (!fu_superio_inb (priv->fd, priv->pm1_iobad1, &status, error))
+		if (!fu_udev_device_pread (FU_UDEV_DEVICE (self), priv->pm1_iobad1, &status, error))
 			return FALSE;
 		if ((status & SIO_STATUS_EC_OBF) == 0)
 			break;
-		if (!fu_superio_inb (priv->fd, priv->pm1_iobad0, &unused, error))
+		if (!fu_udev_device_pread (FU_UDEV_DEVICE (self), priv->pm1_iobad0, &unused, error))
 			return FALSE;
 		if (g_timer_elapsed (timer, NULL) > FU_PLUGIN_SUPERIO_TIMEOUT) {
 			g_set_error_literal (error,
@@ -249,28 +241,6 @@ fu_superio_device_ec_set_param (FuSuperioDevice *self, guint8 param, guint8 data
 #endif
 
 static gboolean
-fu_superio_device_open (FuDevice *device, GError **error)
-{
-	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
-	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
-
-	/* open device */
-	priv->fd = g_open (fu_device_get_physical_id (device), O_RDWR);
-	if (priv->fd < 0) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_FAILED,
-			     "failed to open %s: %s",
-			     fu_device_get_physical_id (device),
-			     strerror (errno));
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
 fu_superio_device_probe (FuDevice *device, GError **error)
 {
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
@@ -296,7 +266,7 @@ fu_superio_device_setup (FuDevice *device, GError **error)
 	guint8 tmp = 0x0;
 
 	/* check port is valid */
-	if (!fu_superio_inb (priv->fd, priv->pm1_iobad0, &tmp, error))
+	if (!fu_udev_device_pread (FU_UDEV_DEVICE (self), priv->pm1_iobad0, &tmp, error))
 		return FALSE;
 	if (tmp != 0xff) {
 		g_set_error_literal (error,
@@ -387,17 +357,6 @@ fu_superio_device_prepare_firmware (FuDevice *device,
 	return NULL;
 }
 
-static gboolean
-fu_superio_device_close (FuDevice *device, GError **error)
-{
-	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
-	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
-	if (!g_close (priv->fd, error))
-		return FALSE;
-	priv->fd = 0;
-	return TRUE;
-}
-
 static void
 fu_superio_device_get_property (GObject *object, guint prop_id,
 				GValue *value, GParamSpec *pspec)
@@ -448,6 +407,7 @@ fu_superio_device_init (FuSuperioDevice *self)
 {
 	fu_device_set_physical_id (FU_DEVICE (self), "/dev/port");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_set_summary (FU_DEVICE (self), "Embedded Controller");
 	fu_device_add_icon (FU_DEVICE (self), "computer");
 }
@@ -488,9 +448,7 @@ fu_superio_device_class_init (FuSuperioDeviceClass *klass)
 
 	object_class->finalize = fu_superio_device_finalize;
 	klass_device->to_string = fu_superio_device_to_string;
-	klass_device->open = fu_superio_device_open;
 	klass_device->probe = fu_superio_device_probe;
 	klass_device->setup = fu_superio_device_setup;
-	klass_device->close = fu_superio_device_close;
 	klass_device->prepare_firmware = fu_superio_device_prepare_firmware;
 }

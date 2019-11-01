@@ -8,11 +8,7 @@
 
 #include "fu-firmware.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_WAC_FIRMWARE (fu_wac_firmware_get_type ())
 G_DECLARE_FINAL_TYPE (FuWacFirmware, fu_wac_firmware, FU, WAC_FIRMWARE, FuFirmware)
 
 FuFirmware		*fu_wac_firmware_new	(void);
-
-G_END_DECLS

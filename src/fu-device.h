@@ -13,8 +13,6 @@
 #include "fu-quirks.h"
 #include "fu-common-version.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_DEVICE (fu_device_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuDevice, fu_device, FU, DEVICE, FwupdDevice)
 
@@ -28,7 +26,7 @@ struct _FuDeviceClass
 							 FuFirmware	*firmware,
 							 FwupdInstallFlags flags,
 							 GError		**error);
-	GBytes			*(*read_firmware)	(FuDevice	*self,
+	FuFirmware		*(*read_firmware)	(FuDevice	*self,
 							 GError		**error);
 	gboolean		 (*detach)		(FuDevice	*self,
 							 GError		**error);
@@ -58,8 +56,16 @@ struct _FuDeviceClass
 							 GError		**error);
 	gboolean		 (*activate)		(FuDevice	*self,
 							 GError		**error);
+	gboolean		 (*reload)		(FuDevice	*self,
+							 GError		**error);
+	gboolean		 (*prepare)		(FuDevice	*self,
+							 FwupdInstallFlags flags,
+							 GError		**error);
+	gboolean		 (*cleanup)		(FuDevice	*self,
+							 FwupdInstallFlags flags,
+							 GError		**error);
 	/*< private >*/
-	gpointer	padding[19];
+	gpointer	padding[16];
 };
 
 /**
@@ -83,7 +89,6 @@ struct _FuDeviceClass
 FuDevice	*fu_device_new				(void);
 
 /* helpful casting macros */
-#define fu_device_add_flag(d,v)			fwupd_device_add_flag(FWUPD_DEVICE(d),v)
 #define fu_device_remove_flag(d,v)		fwupd_device_remove_flag(FWUPD_DEVICE(d),v)
 #define fu_device_has_flag(d,v)			fwupd_device_has_flag(FWUPD_DEVICE(d),v)
 #define fu_device_has_instance_id(d,v)		fwupd_device_has_instance_id(FWUPD_DEVICE(d),v)
@@ -144,7 +149,6 @@ gboolean	 fu_device_has_guid			(FuDevice	*self,
 							 const gchar	*guid);
 void		 fu_device_add_instance_id		(FuDevice	*self,
 							 const gchar	*instance_id);
-gchar		*fu_device_get_guids_as_str		(FuDevice	*self);
 FuDevice	*fu_device_get_alternate		(FuDevice	*self);
 FuDevice	*fu_device_get_parent			(FuDevice	*self);
 GPtrArray	*fu_device_get_children			(FuDevice	*self);
@@ -159,6 +163,8 @@ const gchar	*fu_device_get_metadata			(FuDevice	*self,
 gboolean	 fu_device_get_metadata_boolean		(FuDevice	*self,
 							 const gchar	*key);
 guint		 fu_device_get_metadata_integer		(FuDevice	*self,
+							 const gchar	*key);
+void		 fu_device_remove_metadata		(FuDevice	*self,
 							 const gchar	*key);
 void		 fu_device_set_metadata			(FuDevice	*self,
 							 const gchar	*key,
@@ -180,6 +186,8 @@ void		 fu_device_set_physical_id		(FuDevice	*self,
 const gchar	*fu_device_get_logical_id		(FuDevice	*self);
 void		 fu_device_set_logical_id		(FuDevice	*self,
 							 const gchar	*logical_id);
+void		 fu_device_add_flag			(FuDevice	*self,
+							 FwupdDeviceFlags flag);
 const gchar	*fu_device_get_custom_flags		(FuDevice	*self);
 gboolean	 fu_device_has_custom_flag		(FuDevice	*self,
 							 const gchar	*hint);
@@ -219,11 +227,19 @@ FuFirmware	*fu_device_prepare_firmware		(FuDevice	*self,
 							 GBytes		*fw,
 							 FwupdInstallFlags flags,
 							 GError		**error);
-GBytes		*fu_device_read_firmware		(FuDevice	*self,
+FuFirmware	*fu_device_read_firmware		(FuDevice	*self,
 							 GError		**error);
 gboolean	 fu_device_attach			(FuDevice	*self,
 							 GError		**error);
 gboolean	 fu_device_detach			(FuDevice	*self,
+							 GError		**error);
+gboolean	 fu_device_reload			(FuDevice	*self,
+							 GError		**error);
+gboolean	 fu_device_prepare			(FuDevice	*self,
+							 FwupdInstallFlags flags,
+							 GError		**error);
+gboolean	 fu_device_cleanup			(FuDevice	*self,
+							 FwupdInstallFlags flags,
 							 GError		**error);
 void		 fu_device_incorporate			(FuDevice	*self,
 							 FuDevice	*donor);
@@ -244,5 +260,3 @@ gboolean	 fu_device_poll				(FuDevice	*self,
 							 GError		**error);
 void		 fu_device_set_poll_interval		(FuDevice	*self,
 							 guint		 interval);
-
-G_END_DECLS

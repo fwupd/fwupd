@@ -638,7 +638,13 @@ fu_unifying_peripheral_detach (FuDevice *device, GError **error)
 			return FALSE;
 		}
 		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-		return TRUE;
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NEEDS_USER_ACTION,
+			     "%s needs to be manually restarted to complete the update."
+			     "Please unplug and reconnect the device and re-run the update",
+			     fu_device_get_name (device));
+		return FALSE;
 	}
 
 	/* this can reboot all by itself */
@@ -1014,4 +1020,8 @@ fu_unifying_peripheral_init (FuUnifyingPeripheral *self)
 	self->feature_index = g_ptr_array_new_with_free_func (g_free);
 	fu_device_add_parent_guid (FU_DEVICE (self), "HIDRAW\\VEN_046D&DEV_C52B");
 	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+
+	/* there are a lot of unifying peripherals, but not all respond
+	 * well to opening -- so limit to ones with issued updates */
+	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_ONLY_SUPPORTED);
 }

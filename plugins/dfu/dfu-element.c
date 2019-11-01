@@ -30,9 +30,7 @@ static void dfu_element_finalize			 (GObject *object);
 
 typedef struct {
 	GBytes			*contents;
-	guint32			 target_size;
 	guint32			 address;
-	guint8			 padding_value;
 } DfuElementPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (DfuElement, dfu_element, G_TYPE_OBJECT)
@@ -148,7 +146,7 @@ dfu_element_set_address (DfuElement *element, guint32 address)
  * dfu_element_to_string:
  * @element: a #DfuElement
  *
- * Returns a string representaiton of the object.
+ * Returns a string representation of the object.
  *
  * Return value: NULL terminated string, or %NULL for invalid
  **/
@@ -162,10 +160,6 @@ dfu_element_to_string (DfuElement *element)
 
 	str = g_string_new ("");
 	g_string_append_printf (str, "address:     0x%02x\n", priv->address);
-	if (priv->target_size > 0) {
-		g_string_append_printf (str, "target:      0x%04x\n",
-					priv->target_size);
-	}
 	if (priv->contents != NULL) {
 		g_string_append_printf (str, "contents:    0x%04x\n",
 					(guint32) g_bytes_get_size (priv->contents));
@@ -173,69 +167,4 @@ dfu_element_to_string (DfuElement *element)
 
 	g_string_truncate (str, str->len - 1);
 	return g_string_free (str, FALSE);
-}
-
-/**
- * dfu_element_set_padding_value:
- * @element: a #DfuElement
- * @padding_value: char value, typically 0x00 or 0xff
- *
- * Sets a the value of the padding byte to be used in the function
- * dfu_element_set_target_size().
- **/
-void
-dfu_element_set_padding_value (DfuElement *element, guint8 padding_value)
-{
-	DfuElementPrivate *priv = GET_PRIVATE (element);
-	g_return_if_fail (DFU_IS_ELEMENT (element));
-	priv->padding_value = padding_value;
-}
-
-/**
- * dfu_element_set_target_size:
- * @element: a #DfuElement
- * @target_size: size in bytes
- *
- * Sets a target size for the element. If the prepared element is smaller
- * than this then it will be padded up to the required size.
- *
- * If a padding byte other than 0x00 is required then the function
- * dfu_element_set_padding_value() should be used before this function is
- * called.
- **/
-void
-dfu_element_set_target_size (DfuElement *element, guint32 target_size)
-{
-	DfuElementPrivate *priv = GET_PRIVATE (element);
-	const guint8 *data;
-	gsize length;
-	guint8 *buf;
-
-	g_return_if_fail (DFU_IS_ELEMENT (element));
-
-	/* save for dump */
-	priv->target_size = target_size;
-
-	/* no need to pad */
-	if (priv->contents == NULL)
-		return;
-	if (g_bytes_get_size (priv->contents) >= target_size)
-		return;
-
-	/* reallocate and pad */
-	data = g_bytes_get_data (priv->contents, &length);
-	buf = g_malloc0 (target_size);
-	g_assert (buf != NULL);
-	memcpy (buf, data, length);
-
-	/* set the padding value */
-	if (priv->padding_value != 0x00) {
-		memset (buf + length,
-			priv->padding_value,
-			target_size - length);
-	}
-
-	/* replace */
-	g_bytes_unref (priv->contents);
-	priv->contents = g_bytes_new_take (buf, target_size);
 }

@@ -10,8 +10,6 @@
 
 #include "fu-smbios.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_HWIDS (fu_hwids_get_type ())
 
 G_DECLARE_FINAL_TYPE (FuHwids, fu_hwids, FU, HWIDS, GObject)
@@ -46,5 +44,3 @@ gboolean	 fu_hwids_has_guid		(FuHwids	*self,
 gboolean	 fu_hwids_setup			(FuHwids	*self,
 						 FuSmbios	*smbios,
 						 GError		**error);
-
-G_END_DECLS

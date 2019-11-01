@@ -38,10 +38,6 @@ msgstr "Cambiat"
 msgid "Checksum"
 msgstr "Soma de contraròtle"
 
-#. TRANSLATORS: this is the encryption method used when writing
-msgid "Cipher"
-msgstr "Cipher"
-
 #. TRANSLATORS: error message
 msgid "Command not found"
 msgstr "Comanda pas trobada"
@@ -81,10 +77,6 @@ msgstr "Fracàs de l'analisi dels paramètres"
 msgid "Firmware Update D-Bus Service"
 msgstr "Servici D-Bus de mesa a jorn dels micrologicials"
 
-#. TRANSLATORS: detected a DFU device
-msgid "Found"
-msgstr "Trobat"
-
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
 msgstr "Obténer la lista dels periferics que supòrtan las mesas a jorn de micrologicial"
@@ -93,36 +85,13 @@ msgstr "Obténer la lista dels periferics que supòrtan las mesas a jorn de micr
 msgid "Gets details about a firmware file"
 msgstr "Obténer los detalhs d'un fichièr de micrologicial"
 
-msgid "ID"
-msgstr "ID"
-
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Installar un fichièr de micrologicial sus aqueste material"
 
-msgid "Mode"
-msgstr "Mòde"
-
-#. TRANSLATORS: interface name, e.g. "Flash"
-#. TRANSLATORS: device name, e.g. 'ColorHug2'
-msgid "Name"
-msgstr "Nom"
-
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Cap de material amb de capacitats de mesa a jorn del micrologicial es pas estat detectat"
-
-msgid "OK"
-msgstr "D'acòrdi"
-
-#. TRANSLATORS: device quirks, i.e. things that
-#. * it does that we have to work around
-msgid "Quirks"
-msgstr "Quirks"
-
-#. TRANSLATORS: these are areas of memory on the chip
-msgid "Region"
-msgstr "Region"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
@@ -142,16 +111,6 @@ msgstr "Mostrar las opcions de desbugatge"
 #. TRANSLATORS: command line option
 msgid "Show extra debugging information"
 msgstr "Mòstra d'informacions de desbugatge complementàrias"
-
-#. TRANSLATORS: device state, i.e. appIDLE
-msgid "State"
-msgstr "Estat"
-
-#. TRANSLATORS: probably not run as root...
-#. TRANSLATORS: device has failed to report status
-#. TRANSLATORS: device status, e.g. "OK"
-msgid "Status"
-msgstr "Estatut"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are

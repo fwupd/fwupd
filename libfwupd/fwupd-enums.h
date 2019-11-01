@@ -90,6 +90,13 @@ typedef enum {
  * @FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION:		Device update needs to be separately activated
  * @FWUPD_DEVICE_FLAG_HISTORICAL		Device is for historical data only
  * @FWUPD_DEVICE_FLAG_ENSURE_SEMVER:		Ensure the version is a valid semantic version, e.g. numbers separated with dots
+ * @FWUPD_DEVICE_FLAG_ONLY_SUPPORTED:		Only devices supported in the metadata will be opened
+ * @FWUPD_DEVICE_FLAG_WILL_DISAPPEAR:		Device will disappear after update and can't be verified
+ * @FWUPD_DEVICE_FLAG_CAN_VERIFY:		Device checksums can be compared against metadata
+ * @FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE:		Image can be dumped from device for verification
+ * @FWUPD_DEVICE_FLAG_DUAL_IMAGE:		Device update architecture uses A/B partitions for updates
+ * @FWUPD_DEVICE_FLAG_SELF_RECOVERY:		In flashing mode device will only accept intended payloads
+ * @FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE:	Device remains usable while fwupd flashes or schedules the update
  *
  * The device flags.
  **/
@@ -117,6 +124,13 @@ typedef enum {
 #define FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION	(1u << 20)	/* Since: 1.2.6 */
 #define FWUPD_DEVICE_FLAG_ENSURE_SEMVER		(1u << 21)	/* Since: 1.2.9 */
 #define FWUPD_DEVICE_FLAG_HISTORICAL		(1u << 22)	/* Since: 1.3.2 */
+#define FWUPD_DEVICE_FLAG_ONLY_SUPPORTED	(1u << 23)	/* Since: 1.3.3 */
+#define FWUPD_DEVICE_FLAG_WILL_DISAPPEAR	(1u << 24)	/* Since: 1.3.3 */
+#define FWUPD_DEVICE_FLAG_CAN_VERIFY		(1u << 25)	/* Since: 1.3.3 */
+#define FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE	(1u << 26)	/* Since: 1.3.3 */
+#define FWUPD_DEVICE_FLAG_DUAL_IMAGE		(1u << 27)	/* Since: 1.3.3 */
+#define FWUPD_DEVICE_FLAG_SELF_RECOVERY		(1u << 28)	/* Since: 1.3.3 */
+#define FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE	(1u << 29)	/* Since: 1.3.3 */
 #define FWUPD_DEVICE_FLAG_UNKNOWN		G_MAXUINT64	/* Since: 0.7.3 */
 typedef guint64 FwupdDeviceFlags;
 

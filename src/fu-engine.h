@@ -17,8 +17,6 @@
 #include "fu-install-task.h"
 #include "fu-plugin.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_ENGINE (fu_engine_get_type ())
 G_DECLARE_FINAL_TYPE (FuEngine, fu_engine, FU, ENGINE, GObject)
 
@@ -98,6 +96,10 @@ gboolean	 fu_engine_verify			(FuEngine	*self,
 gboolean	 fu_engine_verify_update		(FuEngine	*self,
 							 const gchar	*device_id,
 							 GError		**error);
+GBytes		*fu_engine_firmware_read		(FuEngine	*self,
+							 FuDevice	*device,
+							 FwupdInstallFlags flags,
+							 GError		**error);
 gboolean	 fu_engine_modify_remote		(FuEngine	*self,
 							 const gchar	*remote_id,
 							 const gchar	*key,
@@ -146,6 +148,9 @@ gboolean	 fu_engine_modify_config		(FuEngine	*self,
 							 const gchar	*key,
 							 const gchar	*value,
 							 GError		**error);
+GPtrArray	*fu_engine_get_firmware_gtype_ids	(FuEngine	*engine);
+GType		 fu_engine_get_firmware_gtype_by_id	(FuEngine	*engine,
+							 const gchar	*id);
 
 /* for the self tests */
 void		 fu_engine_add_device			(FuEngine	*self,
@@ -163,5 +168,3 @@ void		 fu_engine_set_silo			(FuEngine	*self,
 							 XbSilo		*silo);
 XbNode		*fu_engine_get_component_by_guids	(FuEngine	*self,
 							 FuDevice	*device);
-
-G_END_DECLS

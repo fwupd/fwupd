@@ -9,7 +9,7 @@
 #include <fu-device.h>
 #include <xmlb.h>
 
-G_BEGIN_DECLS
+#define fu_device_set_plugin(d,v)		fwupd_device_set_plugin(FWUPD_DEVICE(d),v)
 
 /**
  * FuDeviceInstanceFlags:
@@ -38,6 +38,7 @@ void		 fu_device_set_priority			(FuDevice	*self,
 							 guint		 priority);
 void		 fu_device_set_alternate		(FuDevice	*self,
 							 FuDevice	*alternate);
+GType		 fu_device_get_specialized_gtype	(FuDevice	*self);
 gboolean	 fu_device_ensure_id			(FuDevice	*self,
 							 GError		**error);
 void		 fu_device_incorporate_from_component	(FuDevice	*device,
@@ -46,5 +47,5 @@ void		 fu_device_convert_instance_ids		(FuDevice	*self);
 void		 fu_device_add_instance_id_full		(FuDevice	*self,
 							 const gchar	*instance_id,
 							 FuDeviceInstanceFlags flags);
-
-G_END_DECLS
+gchar		*fu_device_get_guids_as_str		(FuDevice	*self);
+GPtrArray	*fu_device_get_possible_plugins		(FuDevice	*self);

@@ -9,8 +9,6 @@
 
 #include "fu-plugin.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_SYNAPROM_DEVICE (fu_synaprom_device_get_type ())
 G_DECLARE_FINAL_TYPE (FuSynapromDevice, fu_synaprom_device, FU, SYNAPROM_DEVICE, FuUsbDevice)
 
@@ -41,5 +39,3 @@ FuFirmware		*fu_synaprom_device_prepare_fw	(FuDevice	*device,
 							 GBytes		*fw,
 							 FwupdInstallFlags flags,
 							 GError		**error);
-
-G_END_DECLS

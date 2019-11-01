@@ -8,8 +8,6 @@
 
 #include <gio/gio.h>
 
-G_BEGIN_DECLS
-
 /**
  * FuAppFlags:
  * @FU_APP_FLAGS_NONE:			No flags set
@@ -151,6 +149,23 @@ gboolean	 fu_memcpy_safe			(guint8		*dst,
 						 gsize		 src_offset,
 						 gsize		 n,
 						 GError		**error);
+gboolean	 fu_common_read_uint8_safe	(const guint8	*buf,
+						 gsize		 bufsz,
+						 gsize		 offset,
+						 guint8		*value,
+						 GError		**error);
+gboolean	 fu_common_read_uint16_safe	(const guint8	*buf,
+						 gsize		 bufsz,
+						 gsize		 offset,
+						 guint16	*value,
+						 FuEndianType	 endian,
+						 GError		**error);
+gboolean	 fu_common_read_uint32_safe	(const guint8	*buf,
+						 gsize		 bufsz,
+						 gsize		 offset,
+						 guint32	*value,
+						 FuEndianType	 endian,
+						 GError		**error);
 
 void		 fu_byte_array_append_uint8	(GByteArray	*array,
 						 guint8		 data);
@@ -195,5 +210,3 @@ gchar		**fu_common_strnsplit		(const gchar	*str,
 						 gsize		 sz,
 						 const gchar	*delimiter,
 						 gint		 max_tokens);
-
-G_END_DECLS

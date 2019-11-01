@@ -51,6 +51,7 @@ typedef struct {
 	GHashTable		*compile_versions;
 	GPtrArray		*udev_subsystems;
 	FuSmbios		*smbios;
+	GType			 device_gtype;
 	GHashTable		*devices;	/* platform_id:GObject */
 	GRWLock			 devices_mutex;
 	GHashTable		*report_metadata;	/* key:value */
@@ -65,6 +66,7 @@ enum {
 	SIGNAL_RECOLDPLUG,
 	SIGNAL_SET_COLDPLUG_DELAY,
 	SIGNAL_CHECK_SUPPORTED,
+	SIGNAL_ADD_FIRMWARE_GTYPE,
 	SIGNAL_LAST
 };
 
@@ -510,6 +512,29 @@ fu_plugin_check_hwid (FuPlugin *self, const gchar *hwid)
 }
 
 /**
+ * fu_plugin_get_hwid_replace_value:
+ * @self: A #FuPlugin
+ * @keys: A key, e.g. `HardwareID-3` or %FU_HWIDS_KEY_PRODUCT_SKU
+ * @error: A #GError or %NULL
+ *
+ * Gets the replacement value for a specific key. All hardware IDs on a
+ * specific system can be shown using the `fwupdmgr hwids` command.
+ *
+ * Returns: (transfer full): a string, or %NULL for error.
+ *
+ * Since: 1.3.3
+ **/
+gchar *
+fu_plugin_get_hwid_replace_value (FuPlugin *self, const gchar *keys, GError **error)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	if (priv->hwids == NULL)
+		return NULL;
+
+	return fu_hwids_get_replace_values (priv->hwids, keys, error);
+}
+
+/**
  * fu_plugin_get_hwids:
  * @self: A #FuPlugin
  *
@@ -582,7 +607,7 @@ fu_plugin_has_custom_flag (FuPlugin *self, const gchar *flag)
  *
  * Since: 1.0.0
  **/
-gboolean
+static gboolean
 fu_plugin_check_supported (FuPlugin *self, const gchar *guid)
 {
 	gboolean retval = FALSE;
@@ -841,6 +866,95 @@ fu_plugin_set_coldplug_delay (FuPlugin *self, guint duration)
 	g_signal_emit (self, signals[SIGNAL_SET_COLDPLUG_DELAY], 0, duration);
 }
 
+static gboolean
+fu_plugin_device_attach (FuPlugin *self, FuDevice *device, GError **error)
+{
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug ("already in runtime mode, skipping");
+		return TRUE;
+	}
+	locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
+		return FALSE;
+	return fu_device_attach (device, error);
+}
+
+static gboolean
+fu_plugin_device_detach (FuPlugin *self, FuDevice *device, GError **error)
+{
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug ("already in bootloader mode, skipping");
+		return TRUE;
+	}
+	locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
+		return FALSE;
+	return fu_device_detach (device, error);
+}
+
+static gboolean
+fu_plugin_device_activate (FuPlugin *self, FuDevice *device, GError **error)
+{
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
+		return FALSE;
+	return fu_device_activate (device, error);
+}
+
+static gboolean
+fu_plugin_device_write_firmware (FuPlugin *self, FuDevice *device,
+				 GBytes *fw, FwupdInstallFlags flags,
+				 GError **error)
+{
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
+		return FALSE;
+	return fu_device_write_firmware (device, fw, flags, error);
+}
+
+static gboolean
+fu_plugin_device_read_firmware (FuPlugin *self, FuDevice *device, GError **error)
+{
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(GBytes) fw = NULL;
+	GChecksumType checksum_types[] = {
+		G_CHECKSUM_SHA1,
+		G_CHECKSUM_SHA256,
+		0 };
+	locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
+		return FALSE;
+	if (!fu_device_detach (device, error))
+		return FALSE;
+	firmware = fu_device_read_firmware (device, error);
+	if (firmware == NULL) {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_device_attach (device, &error_local))
+			g_debug ("ignoring attach failure: %s", error_local->message);
+		g_prefix_error (error, "failed to read firmware: ");
+		return FALSE;
+	}
+	fw = fu_firmware_write (firmware, error);
+	if (fw == NULL) {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_device_attach (device, &error_local))
+			g_debug ("ignoring attach failure: %s", error_local->message);
+		g_prefix_error (error, "failed to write firmware: ");
+		return FALSE;
+	}
+	for (guint i = 0; checksum_types[i] != 0; i++) {
+		g_autofree gchar *hash = NULL;
+		hash = g_compute_checksum_for_bytes (checksum_types[i], fw);
+		fu_device_add_checksum (device, hash);
+	}
+	return fu_device_attach (device, error);
+}
+
 gboolean
 fu_plugin_runner_startup (FuPlugin *self, GError **error)
 {
@@ -934,7 +1048,9 @@ fu_plugin_runner_offline_setup (GError **error)
 
 static gboolean
 fu_plugin_runner_device_generic (FuPlugin *self, FuDevice *device,
-				 const gchar *symbol_name, GError **error)
+				 const gchar *symbol_name,
+				 FuPluginDeviceFunc device_func,
+				 GError **error)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginDeviceFunc func = NULL;
@@ -950,8 +1066,14 @@ fu_plugin_runner_device_generic (FuPlugin *self, FuDevice *device,
 
 	/* optional */
 	g_module_symbol (priv->module, symbol_name, (gpointer *) &func);
-	if (func == NULL)
+	if (func == NULL) {
+		if (device_func != NULL) {
+			g_debug ("running superclassed %s() on %s",
+				 symbol_name + 10, priv->name);
+			return device_func (self, device, error);
+		}
 		return TRUE;
+	}
 	g_debug ("performing %s() on %s", symbol_name + 10, priv->name);
 	if (!func (self, device, &error_local)) {
 		if (error_local == NULL) {
@@ -1233,21 +1355,35 @@ gboolean
 fu_plugin_runner_update_attach (FuPlugin *self, FuDevice *device, GError **error)
 {
 	return fu_plugin_runner_device_generic (self, device,
-						"fu_plugin_update_attach", error);
+						"fu_plugin_update_attach",
+						fu_plugin_device_attach,
+						error);
 }
 
 gboolean
 fu_plugin_runner_update_detach (FuPlugin *self, FuDevice *device, GError **error)
 {
 	return fu_plugin_runner_device_generic (self, device,
-						"fu_plugin_update_detach", error);
+						"fu_plugin_update_detach",
+						fu_plugin_device_detach,
+						error);
 }
 
 gboolean
 fu_plugin_runner_update_reload (FuPlugin *self, FuDevice *device, GError **error)
 {
-	return fu_plugin_runner_device_generic (self, device,
-						"fu_plugin_update_reload", error);
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	/* not enabled */
+	if (!priv->enabled)
+		return TRUE;
+
+	/* no object loaded */
+	locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
+		return FALSE;
+	return fu_device_reload (device, error);
 }
 
 /**
@@ -1272,6 +1408,120 @@ fu_plugin_add_udev_subsystem (FuPlugin *self, const gchar *subsystem)
 	g_ptr_array_add (priv->udev_subsystems, g_strdup (subsystem));
 }
 
+/**
+ * fu_plugin_set_device_gtype:
+ * @self: a #FuPlugin
+ * @device_gtype: a #GType `FU_TYPE_DEVICE`
+ *
+ * Sets the device #GType which is used when creating devices.
+ *
+ * If this method is used then fu_plugin_usb_device_added() is not called, and
+ * instead the object is created in the daemon for the plugin.
+ *
+ * Plugins can use this method only in fu_plugin_init()
+ *
+ * Since: 1.3.3
+ **/
+void
+fu_plugin_set_device_gtype (FuPlugin *self, GType device_gtype)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	priv->device_gtype = device_gtype;
+}
+
+void
+fu_plugin_add_firmware_gtype (FuPlugin *self, const gchar *id, GType gtype)
+{
+	g_signal_emit (self, signals[SIGNAL_ADD_FIRMWARE_GTYPE], 0, id, gtype);
+}
+
+static gboolean
+fu_plugin_check_supported_device (FuPlugin *self, FuDevice *device)
+{
+	GPtrArray *instance_ids = fu_device_get_instance_ids (device);
+	for (guint i = 0; i < instance_ids->len; i++) {
+		const gchar *instance_id = g_ptr_array_index (instance_ids, i);
+		g_autofree gchar *guid = fwupd_guid_hash_string (instance_id);
+		if (fu_plugin_check_supported (self, guid))
+			return TRUE;
+	}
+	return FALSE;
+}
+
+static gboolean
+fu_plugin_usb_device_added (FuPlugin *self, FuUsbDevice *device, GError **error)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	GType device_gtype = fu_device_get_specialized_gtype (FU_DEVICE (device));
+	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	/* fall back to plugin default */
+	if (device_gtype == G_TYPE_INVALID)
+		device_gtype = priv->device_gtype;
+
+	/* create new device and incorporate existing properties */
+	dev = g_object_new (device_gtype, NULL);
+	fu_device_incorporate (dev, FU_DEVICE (device));
+
+	/* there are a lot of different devices that match, but not all respond
+	 * well to opening -- so limit some ones with issued updates */
+	if (fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_ONLY_SUPPORTED)) {
+		if (!fu_device_probe (dev, error))
+			return FALSE;
+		fu_device_convert_instance_ids (dev);
+		if (!fu_plugin_check_supported_device (self, dev)) {
+			g_autofree gchar *guids = fu_device_get_guids_as_str (dev);
+			g_debug ("%s has no updates, so ignoring device", guids);
+			return TRUE;
+		}
+	}
+
+	/* open and add */
+	locker = fu_device_locker_new (dev, error);
+	if (locker == NULL)
+		return FALSE;
+	fu_plugin_device_add (self, dev);
+	return TRUE;
+}
+
+static gboolean
+fu_plugin_udev_device_added (FuPlugin *self, FuUdevDevice *device, GError **error)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	GType device_gtype = fu_device_get_specialized_gtype (FU_DEVICE (device));
+	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	/* fall back to plugin default */
+	if (device_gtype == G_TYPE_INVALID)
+		device_gtype = priv->device_gtype;
+
+	/* create new device and incorporate existing properties */
+	dev = g_object_new (device_gtype, NULL);
+	fu_device_incorporate (FU_DEVICE (dev), FU_DEVICE (device));
+
+	/* there are a lot of different devices that match, but not all respond
+	 * well to opening -- so limit some ones with issued updates */
+	if (fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_ONLY_SUPPORTED)) {
+		if (!fu_device_probe (dev, error))
+			return FALSE;
+		fu_device_convert_instance_ids (dev);
+		if (!fu_plugin_check_supported_device (self, dev)) {
+			g_autofree gchar *guids = fu_device_get_guids_as_str (dev);
+			g_debug ("%s has no updates, so ignoring device", guids);
+			return TRUE;
+		}
+	}
+
+	/* open and add */
+	locker = fu_device_locker_new (dev, error);
+	if (locker == NULL)
+		return FALSE;
+	fu_plugin_device_add (self, FU_DEVICE (dev));
+	return TRUE;
+}
+
 gboolean
 fu_plugin_runner_usb_device_added (FuPlugin *self, FuUsbDevice *device, GError **error)
 {
@@ -1289,8 +1539,14 @@ fu_plugin_runner_usb_device_added (FuPlugin *self, FuUsbDevice *device, GError *
 
 	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_usb_device_added", (gpointer *) &func);
-	if (func == NULL)
+	if (func == NULL) {
+		if (priv->device_gtype != G_TYPE_INVALID ||
+		    fu_device_get_specialized_gtype (FU_DEVICE (device)) != G_TYPE_INVALID) {
+			if (!fu_plugin_usb_device_added (self, device, error))
+				return FALSE;
+		}
 		return TRUE;
+	}
 	g_debug ("performing usb_device_added() on %s", priv->name);
 	if (!func (self, device, &error_local)) {
 		if (error_local == NULL) {
@@ -1326,8 +1582,14 @@ fu_plugin_runner_udev_device_added (FuPlugin *self, FuUdevDevice *device, GError
 
 	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_udev_device_added", (gpointer *) &func);
-	if (func == NULL)
+	if (func == NULL) {
+		if (priv->device_gtype != G_TYPE_INVALID ||
+		    fu_device_get_specialized_gtype (FU_DEVICE (device)) != G_TYPE_INVALID) {
+			if (!fu_plugin_udev_device_added (self, device, error))
+				return FALSE;
+		}
 		return TRUE;
+	}
 	g_debug ("performing udev_device_added() on %s", priv->name);
 	if (!func (self, device, &error_local)) {
 		if (error_local == NULL) {
@@ -1390,6 +1652,7 @@ fu_plugin_runner_device_removed (FuPlugin *self, FuDevice *device)
 
 	if (!fu_plugin_runner_device_generic (self, device,
 					      "fu_plugin_device_removed",
+					      NULL,
 					      &error_local))
 		g_warning ("%s", error_local->message);
 }
@@ -1506,8 +1769,9 @@ fu_plugin_runner_verify (FuPlugin *self,
 
 	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_verify", (gpointer *) &func);
-	if (func == NULL)
-		return TRUE;
+	if (func == NULL) {
+		return fu_plugin_device_read_firmware (self, device, error);
+	}
 
 	/* clear any existing verification checksums */
 	checksums = fu_device_get_checksums (device);
@@ -1515,7 +1779,8 @@ fu_plugin_runner_verify (FuPlugin *self,
 
 	/* run additional detach */
 	if (!fu_plugin_runner_device_generic (self, device,
-					      "fu_plugin_verify_detach",
+					      "fu_plugin_update_detach",
+					      fu_plugin_device_detach,
 					      error))
 		return FALSE;
 
@@ -1536,7 +1801,8 @@ fu_plugin_runner_verify (FuPlugin *self,
 					    priv->name);
 		/* make the device "work" again, but don't prefix the error */
 		if (!fu_plugin_runner_device_generic (self, device,
-						      "fu_plugin_verify_attach",
+						      "fu_plugin_update_attach",
+						      fu_plugin_device_attach,
 						      &error_attach)) {
 			g_warning ("failed to attach whilst aborting verify(): %s",
 				   error_attach->message);
@@ -1546,7 +1812,8 @@ fu_plugin_runner_verify (FuPlugin *self,
 
 	/* run optional attach */
 	if (!fu_plugin_runner_device_generic (self, device,
-					      "fu_plugin_verify_attach",
+					      "fu_plugin_update_attach",
+					      fu_plugin_device_attach,
 					      error))
 		return FALSE;
 
@@ -1572,7 +1839,9 @@ fu_plugin_runner_activate (FuPlugin *self, FuDevice *device, GError **error)
 
 	/* run vfunc */
 	if (!fu_plugin_runner_device_generic (self, device,
-					      "fu_plugin_activate", error))
+					      "fu_plugin_activate",
+					      fu_plugin_device_activate,
+					      error))
 		return FALSE;
 
 	/* update with correct flags */
@@ -1599,7 +1868,9 @@ fu_plugin_runner_unlock (FuPlugin *self, FuDevice *device, GError **error)
 
 	/* run vfunc */
 	if (!fu_plugin_runner_device_generic (self, device,
-					      "fu_plugin_unlock", error))
+					      "fu_plugin_unlock",
+					      NULL,
+					      error))
 		return FALSE;
 
 	/* update with correct flags */
@@ -1637,11 +1908,8 @@ fu_plugin_runner_update (FuPlugin *self,
 	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_update", (gpointer *) &update_func);
 	if (update_func == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "No update possible");
-		return FALSE;
+		g_debug ("running superclassed write_firmware() on %s", priv->name);
+		return fu_plugin_device_write_firmware (self, device, blob_fw, flags, error);
 	}
 
 	/* cancel the pending action */
@@ -1680,9 +1948,7 @@ fu_plugin_runner_update (FuPlugin *self,
 
 		/* update history database */
 		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
-		if (!fu_history_modify_device (history, device,
-					       FU_HISTORY_FLAGS_MATCH_NEW_VERSION,
-					       error))
+		if (!fu_history_modify_device (history, device, error))
 			return FALSE;
 
 		/* delete cab file */
@@ -1721,7 +1987,7 @@ fu_plugin_runner_clear_results (FuPlugin *self, FuDevice *device, GError **error
 		return TRUE;
 
 	/* optional */
-	g_module_symbol (priv->module, "fu_plugin_get_results", (gpointer *) &func);
+	g_module_symbol (priv->module, "fu_plugin_clear_results", (gpointer *) &func);
 	if (func == NULL)
 		return TRUE;
 	g_debug ("performing clear_result() on %s", priv->name);
@@ -2048,6 +2314,12 @@ fu_plugin_class_init (FuPluginClass *klass)
 			      G_STRUCT_OFFSET (FuPluginClass, rules_changed),
 			      NULL, NULL, g_cclosure_marshal_VOID__VOID,
 			      G_TYPE_NONE, 0);
+	signals[SIGNAL_ADD_FIRMWARE_GTYPE] =
+		g_signal_new ("add-firmware-gtype",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (FuPluginClass, add_firmware_gtype),
+			      NULL, NULL, g_cclosure_marshal_generic,
+			      G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_GTYPE);
 }
 
 static void

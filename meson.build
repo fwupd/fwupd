@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version : '1.3.2',
+  version : '1.3.3',
   license : 'LGPL-2.1+',
   meson_version : '>=0.47.0',
   default_options : ['warning_level=2', 'c_std=c99'],
@@ -169,7 +169,7 @@ gudev = dependency('gudev-1.0')
 if gudev.version().version_compare('>= 232')
   conf.set('HAVE_GUDEV_232', '1')
 endif
-libxmlb = dependency('xmlb', version : '>= 0.1.7', fallback : ['libxmlb', 'libxmlb_dep'])
+libxmlb = dependency('xmlb', version : '>= 0.1.13', fallback : ['libxmlb', 'libxmlb_dep'])
 gusb = dependency('gusb', version : '>= 0.2.9')
 sqlite = dependency('sqlite3')
 libarchive = dependency('libarchive')
@@ -235,6 +235,7 @@ if build_standalone and get_option('plugin_uefi')
   objcopy = find_program ('objcopy')
   readelf = find_program ('readelf')
   tpm2tss = dependency('tss2-esys', version : '>= 2.0')
+  genpeimg = find_program ('genpeimg', required: false)
 
   efi_app_location = join_paths(libexecdir, 'fwupd', 'efi')
   conf.set_quoted ('EFI_APP_LOCATION', efi_app_location)
@@ -306,6 +307,7 @@ if build_standalone and get_option('systemd')
   if systemdunitdir == '' and get_option('systemd')
     systemdunitdir = systemd.get_pkgconfig_variable('systemdsystemunitdir')
   endif
+  systemdsystempresetdir = systemd.get_pkgconfig_variable('systemdsystempresetdir')
 endif
 
 if build_standalone and get_option('elogind')

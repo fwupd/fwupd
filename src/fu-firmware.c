@@ -21,10 +21,47 @@
 
 typedef struct {
 	GPtrArray			*images;	/* FuFirmwareImage */
+	gchar				*version;
 } FuFirmwarePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuFirmware, fu_firmware, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fu_firmware_get_instance_private (o))
+
+/**
+ * fu_firmware_get_version:
+ * @self: A #FuFirmware
+ *
+ * Gets an optional version that represents the firmware.
+ *
+ * Returns: a string, or %NULL
+ *
+ * Since: 1.3.3
+ **/
+const gchar *
+fu_firmware_get_version (FuFirmware *self)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_FIRMWARE (self), NULL);
+	return priv->version;
+}
+
+/**
+ * fu_firmware_set_version:
+ * @self: A #FuFirmware
+ * @version: A string version, or %NULL
+ *
+ * Sets an optional version that represents the firmware.
+ *
+ * Since: 1.3.3
+ **/
+void
+fu_firmware_set_version (FuFirmware *self, const gchar *version)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_FIRMWARE (self));
+	g_free (priv->version);
+	priv->version = g_strdup (version);
+}
 
 /**
  * fu_firmware_tokenize:
@@ -122,6 +159,31 @@ fu_firmware_parse (FuFirmware *self, GBytes *fw, FwupdInstallFlags flags, GError
 }
 
 /**
+ * fu_firmware_parse_file:
+ * @self: A #FuFirmware
+ * @file: A #GFile
+ * @flags: some #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_FORCE
+ * @error: A #GError, or %NULL
+ *
+ * Parses a firmware file, typically breaking the firmware into images.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.3.3
+ **/
+gboolean
+fu_firmware_parse_file (FuFirmware *self, GFile *file, FwupdInstallFlags flags, GError **error)
+{
+	gchar *buf = NULL;
+	gsize bufsz = 0;
+	g_autoptr(GBytes) fw = NULL;
+	if (!g_file_load_contents (file, NULL, &buf, &bufsz, NULL, error))
+		return FALSE;
+	fw = g_bytes_new_take (buf, bufsz);
+	return fu_firmware_parse (self, fw, flags, error);
+}
+
+/**
  * fu_firmware_write:
  * @self: A #FuFirmware
  * @error: A #GError, or %NULL
@@ -146,6 +208,33 @@ fu_firmware_write (FuFirmware *self, GError **error)
 
 	/* just add default blob */
 	return fu_firmware_get_image_default_bytes (self, error);
+}
+
+/**
+ * fu_firmware_write_file:
+ * @self: A #FuFirmware
+ * @file: A #GFile
+ * @error: A #GError, or %NULL
+ *
+ * Writes a firmware, typically packing the images into a binary blob.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.3.3
+ **/
+gboolean
+fu_firmware_write_file (FuFirmware *self, GFile *file, GError **error)
+{
+	g_autoptr(GBytes) blob = NULL;
+	blob = fu_firmware_write (self, error);
+	if (blob == NULL)
+		return FALSE;
+	return g_file_replace_contents (file,
+					g_bytes_get_data (blob, NULL),
+					g_bytes_get_size (blob),
+					NULL, FALSE,
+					G_FILE_CREATE_NONE,
+					NULL, NULL, error);
 }
 
 /**
@@ -244,7 +333,7 @@ fu_firmware_get_image_by_id_bytes (FuFirmware *self, const gchar *id, GError **e
 	g_autoptr(FuFirmwareImage) img = fu_firmware_get_image_by_id (self, id, error);
 	if (img == NULL)
 		return NULL;
-	return fu_firmware_image_get_bytes (img, error);
+	return fu_firmware_image_write (img, error);
 }
 
 /**
@@ -297,7 +386,7 @@ fu_firmware_get_image_by_idx_bytes (FuFirmware *self, guint64 idx, GError **erro
 	g_autoptr(FuFirmwareImage) img = fu_firmware_get_image_by_idx (self, idx, error);
 	if (img == NULL)
 		return NULL;
-	return fu_firmware_image_get_bytes (img, error);
+	return fu_firmware_image_write (img, error);
 }
 
 /**
@@ -352,7 +441,7 @@ fu_firmware_get_image_default_bytes (FuFirmware *self, GError **error)
 	g_autoptr(FuFirmwareImage) img = fu_firmware_get_image_default (self, error);
 	if (img == NULL)
 		return NULL;
-	return fu_firmware_image_get_bytes (img, error);
+	return fu_firmware_image_write (img, error);
 }
 
 /**
@@ -374,6 +463,8 @@ fu_firmware_to_string (FuFirmware *self)
 
 	/* subclassed type */
 	fu_common_string_append_kv (str, 0, G_OBJECT_TYPE_NAME (self), NULL);
+	if (priv->version != NULL)
+		fu_common_string_append_kv (str, 0, "Version", priv->version);
 
 	/* vfunc */
 	if (klass->to_string != NULL)
@@ -399,6 +490,7 @@ fu_firmware_finalize (GObject *object)
 {
 	FuFirmware *self = FU_FIRMWARE (object);
 	FuFirmwarePrivate *priv = GET_PRIVATE (self);
+	g_free (priv->version);
 	g_ptr_array_unref (priv->images);
 	G_OBJECT_CLASS (fu_firmware_parent_class)->finalize (object);
 }

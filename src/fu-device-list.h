@@ -10,8 +10,6 @@
 
 #include "fu-device.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_DEVICE_LIST (fu_device_list_get_type ())
 G_DECLARE_FINAL_TYPE (FuDeviceList, fu_device_list, FU, DEVICE_LIST, GObject)
 
@@ -33,5 +31,3 @@ FuDevice	*fu_device_list_get_by_guid		(FuDeviceList	*self,
 gboolean	 fu_device_list_wait_for_replug		(FuDeviceList	*self,
 							 FuDevice	*device,
 							 GError		**error);
-
-G_END_DECLS

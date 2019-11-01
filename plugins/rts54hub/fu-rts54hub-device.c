@@ -430,11 +430,3 @@ fu_rts54hub_device_class_init (FuRts54HubDeviceClass *klass)
 	klass_device->prepare_firmware = fu_rts54hub_device_prepare_firmware;
 	klass_usb_device->close = fu_rts54hub_device_close;
 }
-
-FuRts54HubDevice *
-fu_rts54hub_device_new (FuUsbDevice *device)
-{
-	FuRts54HubDevice *self = g_object_new (FU_TYPE_RTS54HUB_DEVICE, NULL);
-	fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (device));
-	return self;
-}

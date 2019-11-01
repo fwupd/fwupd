@@ -8,11 +8,5 @@
 
 #include "fu-plugin.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_SOLOKEY_DEVICE (fu_solokey_device_get_type ())
 G_DECLARE_FINAL_TYPE (FuSolokeyDevice, fu_solokey_device, FU, SOLOKEY_DEVICE, FuUsbDevice)
-
-FuSolokeyDevice *fu_solokey_device_new		(FuUsbDevice		*device);
-
-G_END_DECLS

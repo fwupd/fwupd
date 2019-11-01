@@ -8,7 +8,7 @@ Flags = is-bootloader
 InstallDuration = 120
 [DeviceInstanceId=USB\VID_0483&PID_5760]
 Plugin = ebitdo
-Flags = is-bootloader
+Flags = is-bootloader,will-disappear
 InstallDuration = 120
 
 # FC30
@@ -59,10 +59,10 @@ InstallDuration = 120
 # NES30PRO
 [DeviceInstanceId=USB\VID_2002&PID_9000]
 Plugin = ebitdo
-Flags = none
+Flags = will-disappear
 [DeviceInstanceId=USB\VID_2DC8&PID_9001]
 Plugin = ebitdo
-Flags = none
+Flags = will-disappear
 InstallDuration = 120
 
 # FC30_ARCADE
@@ -78,10 +78,17 @@ InstallDuration = 120
 ## Dinput mode (Start + B)
 [DeviceInstanceId=USB\VID_2DC8&PID_6000]
 Plugin = ebitdo
-Flags = none
+Flags = will-disappear
 [DeviceInstanceId=USB\VID_2DC8&PID_6001]
 Plugin = ebitdo
-Flags = none
+Flags = will-disappear
+InstallDuration = 120
+
+# SN30 PRO+
+## Dinput mode (Start + B)
+[DeviceInstanceId=USB\VID_2DC8&PID_6002]
+Plugin = ebitdo
+Flags = will-disappear
 InstallDuration = 120
 
 # M30

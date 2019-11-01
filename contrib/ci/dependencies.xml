@@ -215,14 +215,14 @@
   <dependency type="build" id="debhelper">
     <distro id="debian">
       <control>
-        <version>(>= 11)</version>
+        <version>(>= 12)</version>
       </control>
       <package variant="x86_64" />
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
       <control>
-        <version>(>= 11)</version>
+        <version>(>= 12)</version>
       </control>
       <package variant="x86_64" />
     </distro>
@@ -448,6 +448,11 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency type="build" id="glibc-langpack-en">
+    <distro id="fedora">
+      <package>glibc-langpack-en</package>
+    </distro>
+  </dependency>
   <dependency type="build" id="gobject-introspection">
     <distro id="arch">
       <package />
@@ -597,20 +602,18 @@
     </distro>
     <distro id="debian">
       <control>
-        <version>(>= 0.1.5)</version>
+        <version>(>= 0.1.13)</version>
       </control>
       <package variant="x86_64" />
       <package variant="s390x">libxmlb-dev:s390x</package>
       <package variant="i386" />
     </distro>
-<!--
     <distro id="ubuntu">
       <control>
-        <version>(>= 0.1.5)</version>
+        <version>(>= 0.1.13)</version>
       </control>
       <package variant="x86_64" />
     </distro>
--->
   </dependency>
   <dependency type="build" id="libarchive-dev">
     <distro id="centos">
@@ -881,6 +884,20 @@
       <control />
       <package variant="x86_64" />
       <package variant="s390x" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="mingw-w64-tools">
+    <distro id="fedora">
+      <package />
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">

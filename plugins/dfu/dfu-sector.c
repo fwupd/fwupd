@@ -26,7 +26,7 @@
 #include <stdio.h>
 
 #include "dfu-common.h"
-#include "dfu-sector-private.h"
+#include "dfu-sector.h"
 
 typedef struct {
 	guint32			 address;
@@ -212,7 +212,7 @@ dfu_sector_cap_to_string (DfuSectorCap cap)
  * dfu_sector_to_string:
  * @sector: a #DfuSector
  *
- * Returns a string representaiton of the object.
+ * Returns a string representation of the object.
  *
  * Return value: NULL terminated string, or %NULL for invalid
  **/

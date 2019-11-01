@@ -8,8 +8,6 @@
 
 #include "fu-firmware.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_SREC_FIRMWARE (fu_srec_firmware_get_type ())
 G_DECLARE_FINAL_TYPE (FuSrecFirmware, fu_srec_firmware, FU, SREC_FIRMWARE, FuFirmware)
 
@@ -39,5 +37,3 @@ GPtrArray		*fu_srec_firmware_get_records	(FuSrecFirmware	*self);
 FuSrecFirmwareRecord	*fu_srec_firmware_record_new	(guint		 ln,
 							 FuFirmareSrecRecordKind kind,
 							 guint32	 addr);
-
-G_END_DECLS

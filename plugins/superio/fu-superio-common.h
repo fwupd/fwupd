@@ -8,8 +8,6 @@
 
 #include "fu-plugin.h"
 
-G_BEGIN_DECLS
-
 /* for all LDNs */
 #define SIO_LDNxx_IDX_LDNSEL		0x07
 #define SIO_LDNxx_IDX_CHIPID1		0x20
@@ -119,13 +117,3 @@ typedef enum {
 } SioLdn;
 
 const gchar	*fu_superio_ldn_to_text	(guint8		 ldn);
-gboolean	 fu_superio_outb	(gint		 fd,
-					 guint16	 port,
-					 guint8		 data,
-					 GError		**error);
-gboolean	 fu_superio_inb		(gint		 fd,
-					 guint16	 port,
-					 guint8		*data,
-					 GError		**error);
-
-G_END_DECLS

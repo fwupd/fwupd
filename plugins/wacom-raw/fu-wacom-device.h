@@ -9,8 +9,6 @@
 #include "fu-wacom-common.h"
 #include "fu-udev-device.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_WACOM_DEVICE (fu_wacom_device_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuWacomDevice, fu_wacom_device, FU, WACOM_DEVICE, FuUdevDevice)
 
@@ -48,5 +46,3 @@ gboolean	 fu_wacom_device_check_mpu	(FuWacomDevice	*self,
 						 GError		**error);
 guint		 fu_wacom_device_get_block_sz	(FuWacomDevice	*self);
 guint		 fu_wacom_device_get_base_addr	(FuWacomDevice	*self);
-
-G_END_DECLS

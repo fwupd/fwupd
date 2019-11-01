@@ -22,6 +22,7 @@
 #include "fu-config.h"
 #include "fu-device-list.h"
 #include "fu-device-private.h"
+#include "fu-dfu-firmware.h"
 #include "fu-engine.h"
 #include "fu-ihex-firmware.h"
 #include "fu-quirks.h"
@@ -2113,20 +2114,18 @@ fu_plugin_quirks_func (void)
 	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
 	g_autoptr(GError) error = NULL;
 
-	ret = fu_quirks_load (quirks, &error);
+	ret = fu_quirks_load (quirks, FU_QUIRKS_LOAD_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	fu_plugin_set_quirks (plugin, quirks);
 
 	/* exact */
 	tmp = fu_plugin_lookup_quirk_by_id (plugin, "USB\\VID_0A5C&PID_6412", "Flags");
-	g_assert_cmpstr (tmp, ==, "MERGE_ME,ignore-runtime");
+	g_assert_cmpstr (tmp, ==, "ignore-runtime");
 	tmp = fu_plugin_lookup_quirk_by_id (plugin, "ACME Inc.=True", "Test");
 	g_assert_cmpstr (tmp, ==, "awesome");
 	tmp = fu_plugin_lookup_quirk_by_id (plugin, "CORP*", "Test");
 	g_assert_cmpstr (tmp, ==, "town");
-	tmp = fu_plugin_lookup_quirk_by_id (plugin, "USB\\VID_FFFF&PID_FFFF", "Flags");
-	g_assert_cmpstr (tmp, ==, "");
 	tmp = fu_plugin_lookup_quirk_by_id (plugin, "baz", "Unfound");
 	g_assert_cmpstr (tmp, ==, NULL);
 	tmp = fu_plugin_lookup_quirk_by_id (plugin, "unfound", "tests");
@@ -2140,29 +2139,23 @@ fu_plugin_quirks_func (void)
 static void
 fu_plugin_quirks_performance_func (void)
 {
+	gboolean ret;
 	g_autoptr(FuQuirks) quirks = fu_quirks_new ();
 	g_autoptr(GTimer) timer = g_timer_new ();
-	const gchar *keys[] = {
-		"Name", "Icon", "Children", "Plugin", "Flags",
-		"FirmwareSizeMin", "FirmwareSizeMax", NULL };
+	g_autoptr(GError) error = NULL;
+	const gchar *keys[] = { "Name", "Children", "Flags", NULL };
 
-	/* insert */
-	for (guint j = 0; j < 1000; j++) {
-		g_autofree gchar *group = NULL;
-		group = g_strdup_printf ("DeviceInstanceId=USB\\VID_0BDA&PID_%04X", j);
-		for (guint i = 0; keys[i] != NULL; i++)
-			fu_quirks_add_value (quirks, group, keys[i], "Value");
-	}
-	g_print ("insert=%.3fms ", g_timer_elapsed (timer, NULL) * 1000.f);
+	ret = fu_quirks_load (quirks, FU_QUIRKS_LOAD_FLAG_NONE, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
 
 	/* lookup */
 	g_timer_reset (timer);
 	for (guint j = 0; j < 1000; j++) {
-		g_autofree gchar *group = NULL;
-		group = g_strdup_printf ("DeviceInstanceId=USB\\VID_0BDA&PID_%04X", j);
+		const gchar *group = "DeviceInstanceId=USB\\VID_0BDA&PID_1100";
 		for (guint i = 0; keys[i] != NULL; i++) {
 			const gchar *tmp = fu_quirks_lookup_by_id (quirks, group, keys[i]);
-			g_assert_cmpstr (tmp, ==, "Value");
+			g_assert_cmpstr (tmp, !=, NULL);
 		}
 	}
 	g_print ("lookup=%.3fms ", g_timer_elapsed (timer, NULL) * 1000.f);
@@ -2178,7 +2171,7 @@ fu_plugin_quirks_device_func (void)
 	g_autoptr(FuQuirks) quirks = fu_quirks_new ();
 	g_autoptr(GError) error = NULL;
 
-	ret = fu_quirks_load (quirks, &error);
+	ret = fu_quirks_load (quirks, FU_QUIRKS_LOAD_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -2549,7 +2542,7 @@ fu_history_func (void)
 	g_object_unref (device_found);
 
 	/* remove device */
-	ret = fu_history_remove_device (history, device, release, &error);
+	ret = fu_history_remove_device (history, device, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_object_unref (device);
@@ -3869,7 +3862,7 @@ fu_firmware_ihex_offset_func (void)
 	g_assert_no_error (error);
 	g_assert (img_verify != NULL);
 	g_assert_cmpint (fu_firmware_image_get_addr (img_verify), ==, 0x80000000);
-	data_verify = fu_firmware_image_get_bytes (img_verify, &error);
+	data_verify = fu_firmware_image_write (img_verify, &error);
 	g_assert_no_error (error);
 	g_assert (data_verify != NULL);
 	g_assert_cmpint (g_bytes_get_size (data_verify), ==, 0x4);
@@ -3945,6 +3938,49 @@ fu_firmware_srec_tokenization_func (void)
 	g_assert_cmpint (rcd->addr, ==, 0x14);
 	g_assert_cmpint (rcd->buf->len, ==, 0x1);
 	g_assert_cmpint (rcd->buf->data[0], ==, 0x50);
+}
+
+static void
+fu_firmware_dfu_func (void)
+{
+	gboolean ret;
+	g_autofree gchar *filename_dfu = NULL;
+	g_autofree gchar *filename_ref = NULL;
+	g_autoptr(FuFirmware) firmware = fu_dfu_firmware_new ();
+	g_autoptr(GBytes) data_ref = NULL;
+	g_autoptr(GBytes) data_dfu = NULL;
+	g_autoptr(GBytes) data_bin = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GFile) file_bin = NULL;
+	g_autoptr(GFile) file_dfu = NULL;
+
+	filename_dfu = fu_test_get_filename (TESTDATADIR, "firmware.dfu");
+	g_assert (filename_dfu != NULL);
+	file_dfu = g_file_new_for_path (filename_dfu);
+	data_dfu = g_file_load_bytes (file_dfu, NULL, NULL, &error);
+	g_assert_no_error (error);
+	g_assert (data_dfu != NULL);
+	ret = fu_firmware_parse (firmware, data_dfu, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	g_assert_cmpint (fu_dfu_firmware_get_vid (FU_DFU_FIRMWARE (firmware)), ==, 0x1234);
+	g_assert_cmpint (fu_dfu_firmware_get_pid (FU_DFU_FIRMWARE (firmware)), ==, 0x4321);
+	g_assert_cmpint (fu_dfu_firmware_get_release (FU_DFU_FIRMWARE (firmware)), ==, 0xdead);
+	data_bin = fu_firmware_get_image_default_bytes (firmware, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (data_bin);
+	g_assert_cmpint (g_bytes_get_size (data_bin), ==, 136);
+
+	/* did we match the reference file? */
+	filename_ref = fu_test_get_filename (TESTDATADIR, "firmware.bin");
+	g_assert (filename_ref != NULL);
+	file_bin = g_file_new_for_path (filename_ref);
+	data_ref = g_file_load_bytes (file_bin, NULL, NULL, &error);
+	g_assert_no_error (error);
+	g_assert (data_ref != NULL);
+	ret = fu_common_bytes_compare (data_bin, data_ref, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
 }
 
 static void
@@ -4064,13 +4100,13 @@ fu_firmware_func (void)
 	str = fu_firmware_to_string (firmware);
 	g_assert_cmpstr (str, ==, "FuFirmware:\n"
 				  "  FuFirmwareImage:\n"
-				  "    ID:                  primary\n"
-				  "    Index:               0xd\n"
-				  "    Address:             0x200\n"
+				  "  ID:                    primary\n"
+				  "  Index:                 0xd\n"
+				  "  Address:               0x200\n"
 				  "  FuFirmwareImage:\n"
-				  "    ID:                  secondary\n"
-				  "    Index:               0x17\n"
-				  "    Address:             0x400\n");
+				  "  ID:                    secondary\n"
+				  "  Index:                 0x17\n"
+				  "  Address:               0x400\n");
 }
 
 int
@@ -4100,11 +4136,13 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/firmware{ihex-signed}", fu_firmware_ihex_signed_func);
 	g_test_add_func ("/fwupd/firmware{srec-tokenization}", fu_firmware_srec_tokenization_func);
 	g_test_add_func ("/fwupd/firmware{srec}", fu_firmware_srec_func);
+	g_test_add_func ("/fwupd/firmware{dfu}", fu_firmware_dfu_func);
 	g_test_add_func ("/fwupd/archive{invalid}", fu_archive_invalid_func);
 	g_test_add_func ("/fwupd/archive{cab}", fu_archive_cab_func);
 	g_test_add_func ("/fwupd/engine{requirements-other-device}", fu_engine_requirements_other_device_func);
 	g_test_add_func ("/fwupd/device{incorporate}", fu_device_incorporate_func);
-	g_test_add_func ("/fwupd/device{poll}", fu_device_poll_func);
+	if (g_test_slow ())
+		g_test_add_func ("/fwupd/device{poll}", fu_device_poll_func);
 	g_test_add_func ("/fwupd/device-locker{success}", fu_device_locker_func);
 	g_test_add_func ("/fwupd/device-locker{fail}", fu_device_locker_fail_func);
 	g_test_add_func ("/fwupd/device{metadata}", fu_device_metadata_func);

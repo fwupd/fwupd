@@ -27,7 +27,6 @@ fu_plugin_init (FuPlugin *plugin)
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 
 	/* allow these to be built by quirks */
-	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_REQUIRES_QUIRK, FU_QUIRKS_PLUGIN);
 	g_type_ensure (FU_TYPE_DELL_DOCK_STATUS);
 	g_type_ensure (FU_TYPE_DELL_DOCK_MST);
 
@@ -148,31 +147,6 @@ fu_plugin_device_removed (FuPlugin *plugin, FuDevice *device, GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_plugin_update (FuPlugin *plugin,
-		  FuDevice *dev,
-		  GBytes *blob_fw,
-		  FwupdInstallFlags flags,
-		  GError **error)
-{
-	g_autoptr(FuDeviceLocker) locker = NULL;
-
-	locker = fu_device_locker_new (dev, error);
-	if (locker == NULL)
-		return FALSE;
-
-	fu_device_set_status (dev, FWUPD_STATUS_DEVICE_WRITE);
-	if (!fu_device_write_firmware (dev, blob_fw, flags, error)) {
-		g_prefix_error (error,
-				"failed to update %s: ",
-				fu_device_get_name (dev));
-		return FALSE;
-	}
-	fu_device_set_status (dev, FWUPD_STATUS_DEVICE_RESTART);
-
-	return TRUE;
-}
-
 /* prefer to use EC if in the transaction and parent if it is not */
 static FuDevice *
 fu_plugin_dell_dock_get_ec (GPtrArray *devices)
@@ -239,21 +213,4 @@ fu_plugin_composite_cleanup (FuPlugin *plugin,
 		return FALSE;
 
 	return fu_dell_dock_ec_reboot_dock (parent, error);
-}
-
-gboolean
-fu_plugin_activate (FuPlugin *plugin, FuDevice *device, GError **error)
-{
-	g_autoptr(FuDeviceLocker) locker = NULL;
-	if (!FU_IS_DELL_DOCK_EC (device)) {
-		g_set_error_literal (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE,
-				     "Invalid device to activate");
-		return FALSE;
-	}
-
-	locker = fu_device_locker_new (device, error);
-	if (locker == NULL)
-		return FALSE;
-
-	return fu_device_activate (device, error);
 }

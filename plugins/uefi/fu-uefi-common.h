@@ -10,8 +10,6 @@
 #include <glib.h>
 #include <efivar.h>
 
-G_BEGIN_DECLS
-
 #define EFI_CAPSULE_HEADER_FLAGS_PERSIST_ACROSS_RESET	0x00010000
 #define EFI_CAPSULE_HEADER_FLAGS_POPULATE_SYSTEM_TABLE	0x00020000
 #define EFI_CAPSULE_HEADER_FLAGS_INITIATE_RESET		0x00040000
@@ -72,7 +70,7 @@ gboolean	 fu_uefi_get_framebuffer_size	(guint32	*width,
 						 guint32	*height,
 						 GError		**error);
 gboolean	 fu_uefi_secure_boot_enabled	(void);
-gchar		*fu_uefi_guess_esp_path		(void);
+gchar		*fu_uefi_guess_esp_path		(GError		**error);
 gboolean	 fu_uefi_check_esp_path		(const gchar	*path,
 						 GError		**error);
 gboolean	 fu_uefi_check_esp_free_space	(const gchar	*path,
@@ -83,6 +81,4 @@ GPtrArray	*fu_uefi_get_esrt_entry_paths	(const gchar	*esrt_path,
 						 GError		**error);
 guint64		 fu_uefi_read_file_as_uint64	(const gchar	*path,
 						 const gchar	*attr_name);
-gboolean	 fu_uefi_prefix_efi_errors	(GError		**error);
-
-G_END_DECLS
+void		 fu_uefi_print_efivar_errors	(void);

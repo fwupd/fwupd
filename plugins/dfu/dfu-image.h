@@ -9,16 +9,16 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 
+#include "fu-firmware-image.h"
+
 #include "dfu-element.h"
 
-G_BEGIN_DECLS
-
 #define DFU_TYPE_IMAGE (dfu_image_get_type ())
-G_DECLARE_DERIVABLE_TYPE (DfuImage, dfu_image, DFU, IMAGE, GObject)
+G_DECLARE_DERIVABLE_TYPE (DfuImage, dfu_image, DFU, IMAGE, FuFirmwareImage)
 
 struct _DfuImageClass
 {
-	GObjectClass		 parent_class;
+	FuFirmwareImageClass		 parent_class;
 };
 
 DfuImage	*dfu_image_new		(void);
@@ -38,7 +38,3 @@ void		 dfu_image_set_alt_setting	(DfuImage	*image,
 						 guint8		 alt_setting);
 void		 dfu_image_set_name		(DfuImage	*image,
 						 const gchar	*name);
-
-gchar		*dfu_image_to_string		(DfuImage	*image);
-
-G_END_DECLS

@@ -287,6 +287,7 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %{_unitdir}/fwupd.service
 %{_unitdir}/fwupd-refresh.service
 %{_unitdir}/fwupd-refresh.timer
+%{_presetdir}/fwupd-refresh.preset
 %{_unitdir}/system-update.target.wants/
 %dir %{_localstatedir}/lib/fwupd
 %dir %{_datadir}/fwupd/quirks.d
@@ -301,6 +302,7 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %{_libdir}/fwupd-plugins-3/libfu_plugin_amt.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_ata.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_colorhug.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_coreboot.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_csr.so
 %if 0%{?have_dell}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_dell.so
@@ -309,10 +311,12 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %{_libdir}/fwupd-plugins-3/libfu_plugin_dell_dock.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_dfu.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_ebitdo.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_emmc.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_fastboot.so
 %if 0%{?enable_flashrom}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_flashrom.so
 %endif
+%{_libdir}/fwupd-plugins-3/libfu_plugin_jabra.so
 %if 0%{?have_modem_manager}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_modem_manager.so
 %endif
@@ -320,6 +324,7 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %if 0%{?have_uefi}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_nvme.so
 %endif
+%{_libdir}/fwupd-plugins-3/libfu_plugin_optionrom.so
 %if 0%{?have_redfish}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_redfish.so
 %endif
@@ -333,19 +338,20 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_synaptics_cxaudio.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_synaptics_prometheus.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_synaptics_rmi.so
 %if 0%{?enable_dummy}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_test.so
 %endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_thelio_io.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_thunderbolt.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_thunderbolt_power.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_udev.so
 %if 0%{?have_uefi}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_uefi.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_uefi_recovery.so
 %endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_unifying.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_upower.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_vli_usbhub.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_wacom_raw.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_wacom_usb.so
 %ghost %{_localstatedir}/lib/fwupd/gnupg

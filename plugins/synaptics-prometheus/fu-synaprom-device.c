@@ -204,7 +204,8 @@ fu_synaprom_device_setup (FuDevice *device, GError **error)
 	}
 
 	/* add updatable config child, if this is a production sensor */
-	if (pkt.security[1] & FU_SYNAPROM_SECURITY1_PROD_SENSOR) {
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER) &&
+	    pkt.security[1] & FU_SYNAPROM_SECURITY1_PROD_SENSOR) {
 		g_autoptr(FuSynapromConfig) cfg = fu_synaprom_config_new (self);
 		if (!fu_device_setup (FU_DEVICE (cfg), error)) {
 			g_prefix_error (error, "failed to get config version: ");
@@ -434,6 +435,7 @@ static void
 fu_synaprom_device_init (FuSynapromDevice *self)
 {
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_CAN_VERIFY);
 	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_name (FU_DEVICE (self), "Prometheus");
 	fu_device_set_summary (FU_DEVICE (self), "Fingerprint reader");

@@ -1,9 +1,11 @@
 _fwupdtool_cmd_list=(
 	'activate'
 	'build-firmware'
+	'firmware-parse'
 	'get-updates'
 	'get-updgrades'
 	'get-details'
+	'get-firmware-types'
 	'get-device-flags'
 	'get-devices'
 	'get-history'
@@ -19,6 +21,7 @@ _fwupdtool_cmd_list=(
 	'smbios-dump'
 	'attach'
 	'detach'
+	'firmware-read'
 	'verify-update'
 	'watch'
 )
@@ -35,6 +38,7 @@ _fwupdtool_opts=(
 	'--cleanup'
 	'--filter'
 	'--disable-ssl-strict'
+	'--no-safety-check'
 )
 
 _show_filters()
@@ -43,6 +47,14 @@ _show_filters()
 	flags="$(command @libexecdir@/fwupdtool get-device-flags 2>/dev/null)"
 	COMPREPLY+=( $(compgen -W "${flags}" -- "$cur") )
 }
+
+_show_firmware_types()
+{
+	local firmware_types
+	firmware_types="$(command @libexecdir@/fwupdtool get-firmware-types 2>/dev/null)"
+	COMPREPLY+=( $(compgen -W "${firmware_types}" -- "$cur") )
+}
+
 
 _show_plugins()
 {
@@ -76,7 +88,7 @@ _fwupdtool()
 	esac
 
 	case $command in
-	get-details|install|install-blob)
+	get-details|install|install-blob|firmware-read)
 		#find files
 		if [[ "$prev" = "$command" ]]; then
 			_filedir
@@ -106,6 +118,17 @@ _fwupdtool()
 		#output
 		elif [[ "$prev" = "${COMP_WORDS[4]}" ]]; then
 			_filedir
+		else
+			_show_modifiers
+		fi
+		;;
+	firmware-parse)
+		#find files
+		if [[ "$prev" = "$command" ]]; then
+			_filedir
+		#firmware_type
+		elif [[ "$prev" = "${COMP_WORDS[2]}" ]]; then
+			_show_firmware_types
 		else
 			_show_modifiers
 		fi

@@ -15,7 +15,7 @@
 #include "dfu-sector.h"
 #include "dfu-target-avr.h"
 #include "dfu-target-private.h"
-#include "dfu-device-private.h"
+#include "dfu-device.h"
 
 #include "fwupd-error.h"
 
@@ -163,8 +163,8 @@ dfu_target_avr_select_memory_unit (DfuTarget *target,
 	guint8 buf[4];
 
 	/* check legacy protocol quirk */
-	if (dfu_device_has_quirk (dfu_target_get_device (target),
-				  DFU_DEVICE_QUIRK_LEGACY_PROTOCOL)) {
+	if (fu_device_has_custom_flag (FU_DEVICE (dfu_target_get_device (target)),
+				       "legacy-protocol")) {
 		g_debug ("ignoring select memory unit as legacy protocol");
 		return TRUE;
 	}
@@ -424,8 +424,8 @@ dfu_target_avr_setup (DfuTarget *target, GError **error)
 		return TRUE;
 
 	/* different methods for AVR vs. AVR32 */
-	if (dfu_device_has_quirk (dfu_target_get_device (target),
-				  DFU_DEVICE_QUIRK_LEGACY_PROTOCOL)) {
+	if (fu_device_has_custom_flag (FU_DEVICE (dfu_target_get_device (target)),
+				       "legacy-protocol")) {
 		chunk_sig = dfu_target_avr_get_chip_signature (target, error);
 		if (chunk_sig == NULL)
 			return FALSE;
@@ -548,8 +548,8 @@ dfu_target_avr_download_element (DfuTarget *target,
 	}
 
 	/* the original AVR protocol uses a half-size control block */
-	if (dfu_device_has_quirk (dfu_target_get_device (target),
-				  DFU_DEVICE_QUIRK_LEGACY_PROTOCOL)) {
+	if (fu_device_has_custom_flag (FU_DEVICE (dfu_target_get_device (target)),
+				       "legacy-protocol")) {
 		header_sz = ATMEL_AVR_CONTROL_BLOCK_SIZE;
 	}
 
@@ -572,8 +572,8 @@ dfu_target_avr_download_element (DfuTarget *target,
 
 		/* select page if required */
 		if (chk->page != page_last) {
-			if (dfu_device_has_quirk (dfu_target_get_device (target),
-						  DFU_DEVICE_QUIRK_LEGACY_PROTOCOL)) {
+			if (fu_device_has_custom_flag (FU_DEVICE (dfu_target_get_device (target)),
+						       "legacy-protocol")) {
 				if (!dfu_target_avr_select_memory_page (target,
 									chk->page,
 									error))
@@ -670,8 +670,8 @@ dfu_target_avr_upload_element (DfuTarget *target,
 
 		/* select page if required */
 		if (chk->page != page_last) {
-			if (dfu_device_has_quirk (dfu_target_get_device (target),
-						  DFU_DEVICE_QUIRK_LEGACY_PROTOCOL)) {
+			if (fu_device_has_custom_flag (FU_DEVICE (dfu_target_get_device (target)),
+						       "legacy-protocol")) {
 				if (!dfu_target_avr_select_memory_page (target,
 									chk->page,
 									error))

@@ -8,8 +8,6 @@
 
 #include <glib.h>
 
-G_BEGIN_DECLS
-
 guint32		 fu_nitrokey_perform_crc32	(const guint8	*data,
 						 gsize		 size);
 
@@ -62,5 +60,3 @@ typedef struct __attribute__((packed)) {
 	guint32		ActiveSmartCardID;
 	guint8		StickKeysNotInitiated;
 } NitrokeyGetDeviceStatusPayload;
-
-G_END_DECLS

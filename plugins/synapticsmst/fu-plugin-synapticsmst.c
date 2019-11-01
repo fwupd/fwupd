@@ -117,10 +117,6 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuSynapticsmstDevice) dev = NULL;
 
-	/* interesting device? */
-	if (g_strcmp0 (fu_udev_device_get_subsystem (device), "drm_dp_aux_dev") != 0)
-		return TRUE;
-
 	dev = fu_synapticsmst_device_new (device);
 	locker = fu_device_locker_new (dev, error);
 	if (locker == NULL)

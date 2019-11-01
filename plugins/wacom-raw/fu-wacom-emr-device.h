@@ -8,11 +8,7 @@
 
 #include "fu-wacom-device.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_WACOM_EMR_DEVICE (fu_wacom_emr_device_get_type ())
-G_DECLARE_FINAL_TYPE (FuWacomEmrDevice, fu_wacom_emr_device, FU, WACOM_EMR_DEVICE, FuUdevDevice)
+G_DECLARE_FINAL_TYPE (FuWacomEmrDevice, fu_wacom_emr_device, FU, WACOM_EMR_DEVICE, FuWacomDevice)
 
 FuWacomEmrDevice	*fu_wacom_emr_device_new	(FuUdevDevice	*device);
-
-G_END_DECLS

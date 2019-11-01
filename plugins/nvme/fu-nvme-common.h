@@ -8,8 +8,6 @@
 
 #include <glib.h>
 
-G_BEGIN_DECLS
-
 enum {
 	/*
 	 * Generic Command Status:
@@ -122,5 +120,3 @@ enum {
 };
 
 const gchar	*fu_nvme_status_to_string	(guint32	 status);
-
-G_END_DECLS

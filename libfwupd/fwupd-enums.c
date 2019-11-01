@@ -165,6 +165,20 @@ fwupd_device_flag_to_string (FwupdDeviceFlags device_flag)
 		return "ensure-semver";
 	if (device_flag == FWUPD_DEVICE_FLAG_HISTORICAL)
 		return "historical";
+	if (device_flag == FWUPD_DEVICE_FLAG_ONLY_SUPPORTED)
+		return "only-supported";
+	if (device_flag == FWUPD_DEVICE_FLAG_WILL_DISAPPEAR)
+		return "will-disappear";
+	if (device_flag == FWUPD_DEVICE_FLAG_CAN_VERIFY)
+		return "can-verify";
+	if (device_flag == FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE)
+		return "can-verify-image";
+	if (device_flag == FWUPD_DEVICE_FLAG_DUAL_IMAGE)
+		return "dual-image";
+	if (device_flag == FWUPD_DEVICE_FLAG_SELF_RECOVERY)
+		return "self-recovery";
+	if (device_flag == FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)
+		return "usable-during-update";
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -231,6 +245,20 @@ fwupd_device_flag_from_string (const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_ENSURE_SEMVER;
 	if (g_strcmp0 (device_flag, "historical") == 0)
 		return FWUPD_DEVICE_FLAG_HISTORICAL;
+	if (g_strcmp0 (device_flag, "only-supported") == 0)
+		return FWUPD_DEVICE_FLAG_ONLY_SUPPORTED;
+	if (g_strcmp0 (device_flag, "will-disappear") == 0)
+		return FWUPD_DEVICE_FLAG_WILL_DISAPPEAR;
+	if (g_strcmp0 (device_flag, "can-verify") == 0)
+		return FWUPD_DEVICE_FLAG_CAN_VERIFY;
+	if (g_strcmp0 (device_flag, "can-verify-image") == 0)
+		return FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE;
+	if (g_strcmp0 (device_flag, "dual-image") == 0)
+		return FWUPD_DEVICE_FLAG_DUAL_IMAGE;
+	if (g_strcmp0 (device_flag, "self-recovery") == 0)
+		return FWUPD_DEVICE_FLAG_SELF_RECOVERY;
+	if (g_strcmp0 (device_flag, "usable-during-update") == 0)
+		return FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE;
 	return FWUPD_DEVICE_FLAG_UNKNOWN;
 }
 

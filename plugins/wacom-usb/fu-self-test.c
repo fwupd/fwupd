@@ -46,7 +46,7 @@ fu_wac_firmware_parse_func (void)
 	g_assert_nonnull (img);
 
 	/* get block */
-	blob_block = fu_firmware_image_get_bytes_chunk (img, 0x8008000, 1024, &error);
+	blob_block = fu_firmware_image_write_chunk (img, 0x8008000, 1024, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (blob_block);
 	fu_wac_buffer_dump ("IMG", FU_WAC_REPORT_ID_MODULE,

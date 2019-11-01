@@ -18,6 +18,7 @@ typedef struct {
 	gboolean	 verbose;
 	gboolean	 console;
 	gboolean	 no_timestamp;
+	gboolean	 no_domain;
 	gchar		**plugin_verbose;
 	gchar		**daemon_verbose;
 } FuDebug;
@@ -82,20 +83,22 @@ fu_debug_handler_cb (const gchar *log_domain,
 				       g_date_time_get_microsecond (dt) / 1000);
 	}
 
-	/* each file should have set this */
-	if (log_domain == NULL)
-		log_domain = "FIXME";
-
 	/* pad out domain */
-	domain = g_string_new (log_domain);
-	for (gsize i = domain->len; i < 20; i++)
-		g_string_append (domain, " ");
+	if (!self->no_domain) {
+		/* each file should have set this */
+		if (log_domain == NULL)
+			log_domain = "FIXME";
+		domain = g_string_new (log_domain);
+		for (gsize i = domain->len; i < 20; i++)
+			g_string_append (domain, " ");
+	}
 
 	/* to file */
 	if (!self->console) {
 		if (tmp != NULL)
 			g_printerr ("%s ", tmp);
-		g_printerr ("%s ", domain->str);
+		if (domain != NULL)
+			g_printerr ("%s ", domain->str);
 		g_printerr ("%s\n", message);
 		return;
 	}
@@ -108,14 +111,16 @@ fu_debug_handler_cb (const gchar *log_domain,
 		/* critical in red */
 		if (tmp != NULL)
 			g_printerr ("%c[%dm%s ", 0x1B, 32, tmp);
-		g_printerr ("%s ", domain->str);
+		if (domain != NULL)
+			g_printerr ("%s ", domain->str);
 		g_printerr ("%c[%dm%s\n%c[%dm", 0x1B, 31, message, 0x1B, 0);
 		break;
 	default:
 		/* debug in blue */
 		if (tmp != NULL)
 			g_printerr ("%c[%dm%s ", 0x1B, 32, tmp);
-		g_printerr ("%s ", domain->str);
+		if (domain != NULL)
+			g_printerr ("%s ", domain->str);
 		g_printerr ("%c[%dm%s\n%c[%dm", 0x1B, 34, message, 0x1B, 0);
 		break;
 	}
@@ -135,6 +140,9 @@ fu_debug_pre_parse_hook (GOptionContext *context,
 		{ "no-timestamp", '\0', 0, G_OPTION_ARG_NONE, &self->no_timestamp,
 		  /* TRANSLATORS: turn on all debugging */
 		  N_("Do not include timestamp prefix"), NULL },
+		{ "no-domain", '\0', 0, G_OPTION_ARG_NONE, &self->no_domain,
+		  /* TRANSLATORS: turn on all debugging */
+		  N_("Do not include log domain prefix"), NULL },
 		{ "plugin-verbose", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &self->plugin_verbose,
 		  /* TRANSLATORS: this is for plugin development */
 		  N_("Show plugin verbose information"), "PLUGIN-NAME" },

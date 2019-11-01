@@ -12,8 +12,6 @@
 
 #include "fu-plugin.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_MM_DEVICE (fu_mm_device_get_type ())
 G_DECLARE_FINAL_TYPE (FuMmDevice, fu_mm_device, FU, MM_DEVICE, FuDevice)
 
@@ -48,7 +46,5 @@ void				 fu_mm_device_udev_add_port		(FuMmDevice	*device,
 									 const gchar	*subsystem,
 									 const gchar	*path,
 									 gint		 ifnum);
-
-G_END_DECLS
 
 #endif /* __FU_MM_DEVICE_H */

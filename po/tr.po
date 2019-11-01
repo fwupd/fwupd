@@ -48,10 +48,6 @@ msgstr "İptal Edildi"
 msgid "Changed"
 msgstr "Değişti"
 
-#. TRANSLATORS: this is the encryption method used when writing
-msgid "Cipher"
-msgstr "Şifreleme"
-
 #. TRANSLATORS: error message
 msgid "Command not found"
 msgstr "Komut bulunamadı"
@@ -63,10 +59,6 @@ msgstr "Ürün yazılımını DFU biçimine dönüştür"
 #. TRANSLATORS: decompressing the firmware file
 msgid "Decompressing…"
 msgstr "Açılıyor…"
-
-#. TRANSLATORS: command description
-msgid "Decrypt firmware data"
-msgstr "Ürün yazılımı verisinin şifresini açın"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device added:"
@@ -84,20 +76,9 @@ msgstr "Aygıt çıkarıldı:"
 msgid "Done!"
 msgstr "Bitti!"
 
-#. TRANSLATORS: command description
-msgid "Encrypt firmware data"
-msgstr "Ürün yazılımı verisini şifreleyin"
-
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
 msgstr "Ürün Yazılımı Yardımcı Programı"
-
-#. TRANSLATORS: detected a DFU device
-msgid "Found"
-msgstr "Bulundu"
-
-msgid "ID"
-msgstr "Kimlik (ID)"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -122,32 +103,9 @@ msgstr "İmzasız sistem ürün yazılımını yükle"
 msgid "Loading…"
 msgstr "Yükleniyor…"
 
-#. TRANSLATORS: command description
-msgid "Merge multiple firmware files into one"
-msgstr "Birden çok ürün yazılımı dosyasını tek dosyada birleştir"
-
-msgid "Mode"
-msgstr "Kip"
-
-#. TRANSLATORS: interface name, e.g. "Flash"
-#. TRANSLATORS: device name, e.g. 'ColorHug2'
-msgid "Name"
-msgstr "İsim"
-
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Ürün yazılımı güncelleme yeteneğine sahip donanım saptanamadı"
-
-msgid "OK"
-msgstr "Tamam"
-
-#. TRANSLATORS: DFU protocol version, e.g. 1.1
-msgid "Protocol"
-msgstr "İletişim kuralı"
-
-#. TRANSLATORS: these are areas of memory on the chip
-msgid "Region"
-msgstr "Bölge"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Removed"
@@ -161,10 +119,6 @@ msgstr "Cihaz yeniden başlatılıyor…"
 msgid "Scheduling…"
 msgstr "Zamanlanıyor…"
 
-#. TRANSLATORS: serial number, e.g. '00012345'
-msgid "Serial"
-msgstr "Seri"
-
 #. TRANSLATORS: command description
 msgid "Set product ID on firmware file"
 msgstr "Ürün yazılımı dosyası üzerindeki ürün kimliğini ayarlayın"
@@ -173,21 +127,8 @@ msgstr "Ürün yazılımı dosyası üzerindeki ürün kimliğini ayarlayın"
 msgid "Set vendor ID on firmware file"
 msgstr "Ürün yazılımı dosyası üzerindeki üretici kimliğini ayarlayın"
 
-#. TRANSLATORS: command description
-msgid "Sets metadata on a firmware file"
-msgstr "Ürün yazılımı dosyası üzerindeki üst veriyi ayarlar"
-
-#. TRANSLATORS: device state, i.e. appIDLE
-msgid "State"
-msgstr "Evre"
-
-#. TRANSLATORS: probably not run as root...
-#. TRANSLATORS: device has failed to report status
-#. TRANSLATORS: device status, e.g. "OK"
-msgid "Status"
-msgstr "Durum"
-
 #. TRANSLATORS: currect daemon status is unknown
+#. TRANSLATORS: we don't know the license of the update
 msgid "Unknown"
 msgstr "Bilinmiyor"
 

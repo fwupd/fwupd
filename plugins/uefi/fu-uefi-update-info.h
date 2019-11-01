@@ -6,8 +6,6 @@
 
 #pragma once
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_UEFI_UPDATE_INFO (fu_uefi_update_info_get_type ())
 G_DECLARE_FINAL_TYPE (FuUefiUpdateInfo, fu_uefi_update_info, FU, UEFI_UPDATE_INFO, GObject)
 
@@ -29,5 +27,3 @@ const gchar	*fu_uefi_update_info_get_capsule_fn	(FuUefiUpdateInfo	*self);
 guint32		 fu_uefi_update_info_get_capsule_flags	(FuUefiUpdateInfo	*self);
 guint64		 fu_uefi_update_info_get_hw_inst	(FuUefiUpdateInfo	*self);
 FuUefiUpdateInfoStatus fu_uefi_update_info_get_status	(FuUefiUpdateInfo	*self);
-
-G_END_DECLS

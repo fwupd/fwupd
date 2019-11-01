@@ -75,8 +75,11 @@ fu_thelio_io_device_detach (FuDevice *device, GError **error)
 	io_channel = fu_io_channel_new_file (fn, error);
 	if (io_channel == NULL)
 		return FALSE;
-	return fu_io_channel_write_raw (io_channel, buf, sizeof(buf),
-					500, FU_IO_CHANNEL_FLAG_SINGLE_SHOT, error);
+	if (!fu_io_channel_write_raw (io_channel, buf, sizeof(buf),
+				      500, FU_IO_CHANNEL_FLAG_SINGLE_SHOT, error))
+		return FALSE;
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	return TRUE;
 }
 
 static void
@@ -92,12 +95,4 @@ fu_thelio_io_device_class_init (FuThelioIoDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	klass_device->probe = fu_thelio_io_device_probe;
 	klass_device->detach = fu_thelio_io_device_detach;
-}
-
-FuThelioIoDevice *
-fu_thelio_io_device_new (FuUsbDevice *device)
-{
-	FuThelioIoDevice *self = g_object_new (FU_TYPE_THELIO_IO_DEVICE, NULL);
-	fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (device));
-	return self;
 }

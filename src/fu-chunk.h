@@ -9,8 +9,6 @@
 #include <glib.h>
 #include <gusb.h>
 
-G_BEGIN_DECLS
-
 typedef struct {
 	guint32		 idx;
 	guint32		 page;
@@ -36,5 +34,3 @@ GPtrArray	*fu_chunk_array_new_from_bytes		(GBytes		*blob,
 							 guint32	 addr_start,
 							 guint32	 page_sz,
 							 guint32	 packet_sz);
-
-G_END_DECLS

@@ -10,12 +10,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "dfu-cipher-xtea.h"
 #include "dfu-common.h"
-#include "dfu-device-private.h"
+#include "dfu-device.h"
 #include "dfu-firmware.h"
-#include "dfu-patch.h"
-#include "dfu-sector-private.h"
+#include "dfu-sector.h"
 #include "dfu-target-private.h"
 
 #include "fu-test.h"
@@ -33,61 +31,6 @@ dfu_test_get_filename (const gchar *filename)
 	if (tmp == NULL)
 		return NULL;
 	return g_strdup (full_tmp);
-}
-
-static void
-dfu_cipher_xtea_func (void)
-{
-	gboolean ret;
-	guint8 buf[] = { 'H', 'i', 'y', 'a', 'D', 'a', 'v', 'e' };
-	g_autoptr(GError) error = NULL;
-
-	ret = dfu_cipher_encrypt_xtea ("test", buf, sizeof(buf), &error);
-	g_assert_no_error (error);
-	g_assert (ret);
-
-	g_assert_cmpint (buf[0], ==, 128);
-	g_assert_cmpint (buf[1], ==, 220);
-	g_assert_cmpint (buf[2], ==, 23);
-	g_assert_cmpint (buf[3], ==, 55);
-	g_assert_cmpint (buf[4], ==, 201);
-	g_assert_cmpint (buf[5], ==, 207);
-	g_assert_cmpint (buf[6], ==, 182);
-	g_assert_cmpint (buf[7], ==, 177);
-
-	ret = dfu_cipher_decrypt_xtea ("test", buf, sizeof(buf), &error);
-	g_assert_no_error (error);
-	g_assert (ret);
-
-	g_assert_cmpint (buf[0], ==, 'H');
-	g_assert_cmpint (buf[1], ==, 'i');
-	g_assert_cmpint (buf[2], ==, 'y');
-	g_assert_cmpint (buf[3], ==, 'a');
-	g_assert_cmpint (buf[4], ==, 'D');
-	g_assert_cmpint (buf[5], ==, 'a');
-	g_assert_cmpint (buf[6], ==, 'v');
-	g_assert_cmpint (buf[7], ==, 'e');
-}
-
-static void
-dfu_firmware_xdfu_func (void)
-{
-	gboolean ret;
-	g_autofree gchar *fn = NULL;
-	g_autoptr(DfuFirmware) firmware = NULL;
-	g_autoptr(GError) error = NULL;
-	g_autoptr(GFile) file = NULL;
-
-	fn = dfu_test_get_filename ("example.xdfu");
-	g_assert (fn != NULL);
-	firmware = dfu_firmware_new ();
-	file = g_file_new_for_path (fn);
-	ret = dfu_firmware_parse_file (firmware, file,
-				       DFU_FIRMWARE_PARSE_FLAG_NONE,
-				       &error);
-	g_assert_no_error (error);
-	g_assert (ret);
-	g_assert_cmpint (dfu_firmware_get_cipher_kind (firmware), ==, DFU_CIPHER_KIND_XTEA);
 }
 
 static void
@@ -113,11 +56,11 @@ static void
 dfu_firmware_raw_func (void)
 {
 	DfuElement *element;
-	DfuImage *image_tmp;
 	GBytes *no_suffix_contents;
 	gchar buf[256];
 	gboolean ret;
 	g_autoptr(DfuFirmware) firmware = NULL;
+	g_autoptr(DfuImage) image_tmp = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GBytes) roundtrip = NULL;
 	g_autoptr(GError) error = NULL;
@@ -129,17 +72,16 @@ dfu_firmware_raw_func (void)
 
 	/* load a non DFU firmware */
 	firmware = dfu_firmware_new ();
-	ret = dfu_firmware_parse_data (firmware, fw, DFU_FIRMWARE_PARSE_FLAG_NONE, &error);
+	ret = dfu_firmware_parse_data (firmware, fw, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	g_assert_cmpint (dfu_firmware_get_vid (firmware), ==, 0xffff);
-	g_assert_cmpint (dfu_firmware_get_pid (firmware), ==, 0xffff);
-	g_assert_cmpint (dfu_firmware_get_release (firmware), ==, 0xffff);
+	g_assert_cmpint (fu_dfu_firmware_get_vid (FU_DFU_FIRMWARE (firmware)), ==, 0xffff);
+	g_assert_cmpint (fu_dfu_firmware_get_pid (FU_DFU_FIRMWARE (firmware)), ==, 0xffff);
+	g_assert_cmpint (fu_dfu_firmware_get_release (FU_DFU_FIRMWARE (firmware)), ==, 0xffff);
 	g_assert_cmpint (dfu_firmware_get_format (firmware), ==, DFU_FIRMWARE_FORMAT_RAW);
-	g_assert_cmpint (dfu_firmware_get_cipher_kind (firmware), ==, DFU_CIPHER_KIND_NONE);
-	image_tmp = dfu_firmware_get_image (firmware, 0xfe);
+	image_tmp = DFU_IMAGE (fu_firmware_get_image_by_idx (FU_FIRMWARE (firmware), 0xfe, NULL));
 	g_assert (image_tmp == NULL);
-	image_tmp = dfu_firmware_get_image (firmware, 0);
+	image_tmp = DFU_IMAGE (fu_firmware_get_image_by_idx (FU_FIRMWARE (firmware), 0, NULL));
 	g_assert (image_tmp != NULL);
 	g_assert_cmpint (dfu_image_get_size (image_tmp), ==, 256);
 	element = dfu_image_get_element (image_tmp, 0);
@@ -163,7 +105,9 @@ dfu_firmware_dfu_func (void)
 	gchar buf[256];
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
-	g_autoptr(DfuFirmware) firmware = NULL;
+	g_autoptr(DfuFirmware) firmware1 = dfu_firmware_new ();
+	g_autoptr(DfuFirmware) firmware2 = dfu_firmware_new ();
+	g_autoptr(DfuFirmware) firmware3 = dfu_firmware_new ();
 	g_autoptr(DfuImage) image = NULL;
 	g_autoptr(DfuElement) element = NULL;
 	g_autoptr(GBytes) data = NULL;
@@ -179,54 +123,50 @@ dfu_firmware_dfu_func (void)
 	fw = g_bytes_new_static (buf, 256);
 
 	/* write DFU format */
-	firmware = dfu_firmware_new ();
-	dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_DFU);
-	dfu_firmware_set_vid (firmware, 0x1234);
-	dfu_firmware_set_pid (firmware, 0x5678);
-	dfu_firmware_set_release (firmware, 0xfedc);
+	dfu_firmware_set_format (firmware1, DFU_FIRMWARE_FORMAT_DFU);
+	fu_dfu_firmware_set_vid (FU_DFU_FIRMWARE (firmware1), 0x1234);
+	fu_dfu_firmware_set_pid (FU_DFU_FIRMWARE (firmware1), 0x5678);
+	fu_dfu_firmware_set_release (FU_DFU_FIRMWARE (firmware1), 0xfedc);
 	image = dfu_image_new ();
 	element = dfu_element_new ();
 	dfu_element_set_contents (element, fw);
 	dfu_image_add_element (image, element);
-	dfu_firmware_add_image (firmware, image);
-	g_assert_cmpint (dfu_firmware_get_size (firmware), ==, 256);
-	data = dfu_firmware_write_data (firmware, &error);
+	fu_firmware_add_image (FU_FIRMWARE (firmware1), FU_FIRMWARE_IMAGE (image));
+	g_assert_cmpint (dfu_firmware_get_size (firmware1), ==, 256);
+	data = dfu_firmware_write_data (firmware1, &error);
 	g_assert_no_error (error);
 	g_assert (data != NULL);
 
 	/* can we load it again? */
-	g_ptr_array_set_size (dfu_firmware_get_images (firmware), 0);
-	ret = dfu_firmware_parse_data (firmware, data, DFU_FIRMWARE_PARSE_FLAG_NONE, &error);
+	ret = dfu_firmware_parse_data (firmware2, data, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	g_assert_cmpint (dfu_firmware_get_vid (firmware), ==, 0x1234);
-	g_assert_cmpint (dfu_firmware_get_pid (firmware), ==, 0x5678);
-	g_assert_cmpint (dfu_firmware_get_release (firmware), ==, 0xfedc);
-	g_assert_cmpint (dfu_firmware_get_format (firmware), ==, DFU_FIRMWARE_FORMAT_DFU);
-	g_assert_cmpint (dfu_firmware_get_size (firmware), ==, 256);
+	g_assert_cmpint (fu_dfu_firmware_get_vid (FU_DFU_FIRMWARE (firmware2)), ==, 0x1234);
+	g_assert_cmpint (fu_dfu_firmware_get_pid (FU_DFU_FIRMWARE (firmware2)), ==, 0x5678);
+	g_assert_cmpint (fu_dfu_firmware_get_release (FU_DFU_FIRMWARE (firmware2)), ==, 0xfedc);
+	g_assert_cmpint (dfu_firmware_get_format (firmware2), ==, DFU_FIRMWARE_FORMAT_DFU);
+	g_assert_cmpint (dfu_firmware_get_size (firmware2), ==, 256);
 
 	/* load a real firmware */
 	filename = dfu_test_get_filename ("kiibohd.dfu.bin");
 	g_assert (filename != NULL);
 	file = g_file_new_for_path (filename);
-	g_ptr_array_set_size (dfu_firmware_get_images (firmware), 0);
-	ret = dfu_firmware_parse_file (firmware, file,
-				       DFU_FIRMWARE_PARSE_FLAG_NONE,
+	ret = dfu_firmware_parse_file (firmware3, file,
+				       FWUPD_INSTALL_FLAG_NONE,
 				       &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	g_assert_cmpint (dfu_firmware_get_vid (firmware), ==, 0x1c11);
-	g_assert_cmpint (dfu_firmware_get_pid (firmware), ==, 0xb007);
-	g_assert_cmpint (dfu_firmware_get_release (firmware), ==, 0xffff);
-	g_assert_cmpint (dfu_firmware_get_format (firmware), ==, DFU_FIRMWARE_FORMAT_DFU);
-	g_assert_cmpint (dfu_firmware_get_size (firmware), ==, 0x8eB4);
-	g_assert_cmpint (dfu_firmware_get_cipher_kind (firmware), ==, DFU_CIPHER_KIND_NONE);
+	g_assert_cmpint (fu_dfu_firmware_get_vid (FU_DFU_FIRMWARE (firmware3)), ==, 0x1c11);
+	g_assert_cmpint (fu_dfu_firmware_get_pid (FU_DFU_FIRMWARE (firmware3)), ==, 0xb007);
+	g_assert_cmpint (fu_dfu_firmware_get_release (FU_DFU_FIRMWARE (firmware3)), ==, 0xffff);
+	g_assert_cmpint (dfu_firmware_get_format (firmware3), ==, DFU_FIRMWARE_FORMAT_DFU);
+	g_assert_cmpint (dfu_firmware_get_size (firmware3), ==, 0x8eB4);
 
 	/* can we roundtrip without losing data */
 	roundtrip_orig = dfu_self_test_get_bytes_for_file (file, &error);
 	g_assert_no_error (error);
 	g_assert (roundtrip_orig != NULL);
-	roundtrip = dfu_firmware_write_data (firmware, &error);
+	roundtrip = dfu_firmware_write_data (firmware3, &error);
 	g_assert_no_error (error);
 	g_assert (roundtrip != NULL);
 	ret = fu_common_bytes_compare (roundtrip, roundtrip_orig, &error);
@@ -252,16 +192,15 @@ dfu_firmware_dfuse_func (void)
 	file = g_file_new_for_path (filename);
 	firmware = dfu_firmware_new ();
 	ret = dfu_firmware_parse_file (firmware, file,
-				       DFU_FIRMWARE_PARSE_FLAG_NONE,
+				       FWUPD_INSTALL_FLAG_NONE,
 				       &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	g_assert_cmpint (dfu_firmware_get_vid (firmware), ==, 0x0483);
-	g_assert_cmpint (dfu_firmware_get_pid (firmware), ==, 0x0000);
-	g_assert_cmpint (dfu_firmware_get_release (firmware), ==, 0x0000);
+	g_assert_cmpint (fu_dfu_firmware_get_vid (FU_DFU_FIRMWARE (firmware)), ==, 0x0483);
+	g_assert_cmpint (fu_dfu_firmware_get_pid (FU_DFU_FIRMWARE (firmware)), ==, 0x0000);
+	g_assert_cmpint (fu_dfu_firmware_get_release (FU_DFU_FIRMWARE (firmware)), ==, 0x0000);
 	g_assert_cmpint (dfu_firmware_get_format (firmware), ==, DFU_FIRMWARE_FORMAT_DFUSE);
 	g_assert_cmpint (dfu_firmware_get_size (firmware), ==, 0x168d5);
-	g_assert_cmpint (dfu_firmware_get_cipher_kind (firmware), ==, DFU_CIPHER_KIND_NONE);
 
 	/* can we roundtrip without losing data */
 	roundtrip_orig = dfu_self_test_get_bytes_for_file (file, &error);
@@ -281,43 +220,6 @@ dfu_firmware_dfuse_func (void)
 
 	/* use usual image name copying */
 	g_unsetenv ("DFU_SELF_TEST_IMAGE_MEMCPY_NAME");
-}
-
-static void
-dfu_firmware_metadata_func (void)
-{
-	gboolean ret;
-	g_autofree gchar *filename = NULL;
-	g_autoptr(DfuFirmware) firmware = NULL;
-	g_autoptr(GBytes) roundtrip_orig = NULL;
-	g_autoptr(GBytes) roundtrip = NULL;
-	g_autoptr(GError) error = NULL;
-	g_autoptr(GFile) file = NULL;
-
-	/* load a DFU firmware with a metadata table */
-	filename = dfu_test_get_filename ("metadata.dfu");
-	g_assert (filename != NULL);
-	file = g_file_new_for_path (filename);
-	firmware = dfu_firmware_new ();
-	ret = dfu_firmware_parse_file (firmware, file,
-				       DFU_FIRMWARE_PARSE_FLAG_NONE,
-				       &error);
-	g_assert_no_error (error);
-	g_assert (ret);
-	g_assert_cmpint (dfu_firmware_get_size (firmware), ==, 6);
-	g_assert_cmpstr (dfu_firmware_get_metadata (firmware, "key"), ==, "value");
-	g_assert_cmpstr (dfu_firmware_get_metadata (firmware, "???"), ==, NULL);
-
-	/* can we roundtrip without losing data */
-	roundtrip_orig = dfu_self_test_get_bytes_for_file (file, &error);
-	g_assert_no_error (error);
-	g_assert (roundtrip_orig != NULL);
-	roundtrip = dfu_firmware_write_data (firmware, &error);
-	g_assert_no_error (error);
-	g_assert (roundtrip != NULL);
-	ret = fu_common_bytes_compare (roundtrip, roundtrip_orig, &error);
-	g_assert_no_error (error);
-	g_assert_true (ret);
 }
 
 static gchar *
@@ -420,163 +322,6 @@ dfu_target_dfuse_func (void)
 	g_assert (!ret);
 	ret = dfu_target_parse_sectors (target, "@Internal Flash /0x08000000/12*001a", NULL);
 	g_assert (!ret);
-
-	/* indicate a cipher being used */
-	g_assert_cmpint (dfu_target_get_cipher_kind (target), ==, DFU_CIPHER_KIND_NONE);
-	ret = dfu_target_parse_sectors (target, "@Flash|XTEA", &error);
-	g_assert_no_error (error);
-	g_assert (ret);
-	g_assert_cmpint (dfu_target_get_cipher_kind (target), ==, DFU_CIPHER_KIND_XTEA);
-}
-
-static gboolean
-dfu_patch_create_from_strings (DfuPatch *patch,
-			       const gchar *dold,
-			       const gchar *dnew,
-			       GError **error)
-{
-	guint32 sz1 = strlen (dold);
-	guint32 sz2 = strlen (dnew);
-	g_autoptr(GBytes) blob1 = g_bytes_new (dold, sz1);
-	g_autoptr(GBytes) blob2 = g_bytes_new (dnew, sz2);
-	g_debug ("compare:\n%s\n%s", dold, dnew);
-	return dfu_patch_create (patch, blob1, blob2, error);
-}
-
-static void
-dfu_patch_merges_func (void)
-{
-	const guint8 *data;
-	gboolean ret;
-	gsize sz;
-	g_autoptr(DfuPatch) patch = dfu_patch_new ();
-	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GError) error = NULL;
-
-	/* check merges happen */
-	ret = dfu_patch_create_from_strings (patch, "XXX", "YXY", &error);
-	g_assert_no_error (error);
-	g_assert (ret);
-	blob = dfu_patch_export (patch, &error);
-	g_assert_no_error (error);
-	g_assert (ret);
-	data = g_bytes_get_data (blob, &sz);
-	g_assert_cmpint (data[0x00], ==, 'D');
-	g_assert_cmpint (data[0x01], ==, 'f');
-	g_assert_cmpint (data[0x02], ==, 'u');
-	g_assert_cmpint (data[0x03], ==, 'P');
-	g_assert_cmpint (data[0x04], ==, 0x00); /* reserved */
-	g_assert_cmpint (data[0x05], ==, 0x00);
-	g_assert_cmpint (data[0x06], ==, 0x00);
-	g_assert_cmpint (data[0x07], ==, 0x00);
-	g_assert_cmpint (data[0x08 + 0x28], ==, 0x00); /* chunk1, offset */
-	g_assert_cmpint (data[0x09 + 0x28], ==, 0x00);
-	g_assert_cmpint (data[0x0a + 0x28], ==, 0x00);
-	g_assert_cmpint (data[0x0b + 0x28], ==, 0x00);
-	g_assert_cmpint (data[0x0c + 0x28], ==, 0x03); /* chunk1, size */
-	g_assert_cmpint (data[0x0d + 0x28], ==, 0x00);
-	g_assert_cmpint (data[0x0e + 0x28], ==, 0x00);
-	g_assert_cmpint (data[0x0f + 0x28], ==, 0x00);
-	g_assert_cmpint (data[0x10 + 0x28], ==, 0x00); /* reserved */
-	g_assert_cmpint (data[0x11 + 0x28], ==, 0x00);
-	g_assert_cmpint (data[0x12 + 0x28], ==, 0x00);
-	g_assert_cmpint (data[0x13 + 0x28], ==, 0x00);
-	g_assert_cmpint (data[0x14 + 0x28], ==, 'Y');
-	g_assert_cmpint (data[0x15 + 0x28], ==, 'X');
-	g_assert_cmpint (data[0x16 + 0x28], ==, 'Y');
-	g_assert_cmpint (sz, ==, 48 /* hdr */ + 12 /* chunk */ + 3 /* data */);
-}
-
-static void
-dfu_patch_apply_func (void)
-{
-	gboolean ret;
-	g_autoptr(DfuPatch) patch = dfu_patch_new ();
-	g_autoptr(GBytes) blob_new2 = NULL;
-	g_autoptr(GBytes) blob_new3 = NULL;
-	g_autoptr(GBytes) blob_new4 = NULL;
-	g_autoptr(GBytes) blob_new = NULL;
-	g_autoptr(GBytes) blob_old = NULL;
-	g_autoptr(GBytes) blob_wrong = NULL;
-	g_autoptr(GError) error = NULL;
-
-	/* create a patch */
-	blob_old = g_bytes_new_static ("helloworldhelloworldhelloworldhelloworld", 40);
-	blob_new = g_bytes_new_static ("XelloXorldhelloworldhelloworldhelloworlXXX", 42);
-	ret = dfu_patch_create (patch, blob_old, blob_new, &error);
-	g_assert_no_error (error);
-	g_assert (ret);
-
-	/* apply the patch */
-	blob_new2 = dfu_patch_apply (patch, blob_old, DFU_PATCH_APPLY_FLAG_NONE, &error);
-	g_assert_no_error (error);
-	g_assert (blob_new2 != NULL);
-	g_assert_cmpint (g_bytes_compare (blob_new, blob_new2), ==, 0);
-
-	/* check we force the patch to an unrelated blob */
-	blob_wrong = g_bytes_new_static ("wrongwrongwrongwrongwrongwrongwrongwrong", 40);
-	blob_new3 = dfu_patch_apply (patch, blob_wrong, DFU_PATCH_APPLY_FLAG_IGNORE_CHECKSUM, &error);
-	g_assert_no_error (error);
-	g_assert (blob_new3 != NULL);
-
-	/* check we can't apply the patch to an unrelated blob */
-	blob_new4 = dfu_patch_apply (patch, blob_wrong, DFU_PATCH_APPLY_FLAG_NONE, &error);
-	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
-	g_assert (blob_new4 == NULL);
-}
-
-static void
-dfu_patch_func (void)
-{
-	const guint8 *data;
-	gboolean ret;
-	gsize sz;
-	g_autoptr(DfuPatch) patch = dfu_patch_new ();
-	g_autoptr(DfuPatch) patch2 = dfu_patch_new ();
-	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GError) error = NULL;
-	g_autofree gchar *serialized_str = NULL;
-
-	/* create binary diff */
-	ret = dfu_patch_create_from_strings (patch, "XXX", "XYY", &error);
-	g_assert_no_error (error);
-	g_assert (ret);
-
-	/* check we can serialize this object to a blob */
-	blob = dfu_patch_export (patch, &error);
-	g_assert_no_error (error);
-	g_assert (ret);
-	data = g_bytes_get_data (blob, &sz);
-	g_assert_cmpint (data[0x00], ==, 'D');
-	g_assert_cmpint (data[0x01], ==, 'f');
-	g_assert_cmpint (data[0x02], ==, 'u');
-	g_assert_cmpint (data[0x03], ==, 'P');
-	g_assert_cmpint (data[0x04], ==, 0x00); /* reserved */
-	g_assert_cmpint (data[0x05], ==, 0x00);
-	g_assert_cmpint (data[0x06], ==, 0x00);
-	g_assert_cmpint (data[0x07], ==, 0x00);
-	g_assert_cmpint (data[0x08 + 0x28], ==, 0x01); /* chunk1, offset */
-	g_assert_cmpint (data[0x09 + 0x28], ==, 0x00);
-	g_assert_cmpint (data[0x0a + 0x28], ==, 0x00);
-	g_assert_cmpint (data[0x0b + 0x28], ==, 0x00);
-	g_assert_cmpint (data[0x0c + 0x28], ==, 0x02); /* chunk1, size */
-	g_assert_cmpint (data[0x0d + 0x28], ==, 0x00);
-	g_assert_cmpint (data[0x0e + 0x28], ==, 0x00);
-	g_assert_cmpint (data[0x0f + 0x28], ==, 0x00);
-	g_assert_cmpint (data[0x10 + 0x28], ==, 0x00); /* reserved */
-	g_assert_cmpint (data[0x11 + 0x28], ==, 0x00);
-	g_assert_cmpint (data[0x12 + 0x28], ==, 0x00);
-	g_assert_cmpint (data[0x13 + 0x28], ==, 0x00);
-	g_assert_cmpint (data[0x14 + 0x28], ==, 'Y');
-	g_assert_cmpint (data[0x15 + 0x28], ==, 'Y');
-	g_assert_cmpint (sz, ==, 48 /* hdr */ + 12 /* chunk */ + 2 /* data */);
-
-	/* try to load it from the serialized blob */
-	ret = dfu_patch_import (patch2, blob, &error);
-	g_assert_no_error (error);
-	g_assert (ret);
-	serialized_str = dfu_patch_to_string (patch2);
-	g_debug ("serialized blob %s", serialized_str);
 }
 
 int
@@ -591,17 +336,11 @@ main (int argc, char **argv)
 	g_setenv ("G_MESSAGES_DEBUG", "all", FALSE);
 
 	/* tests go here */
-	g_test_add_func ("/dfu/patch", dfu_patch_func);
-	g_test_add_func ("/dfu/patch{merges}", dfu_patch_merges_func);
-	g_test_add_func ("/dfu/patch{apply}", dfu_patch_apply_func);
 	g_test_add_func ("/dfu/enums", dfu_enums_func);
 	g_test_add_func ("/dfu/target(DfuSe}", dfu_target_dfuse_func);
-	g_test_add_func ("/dfu/cipher{xtea}", dfu_cipher_xtea_func);
 	g_test_add_func ("/dfu/firmware{raw}", dfu_firmware_raw_func);
 	g_test_add_func ("/dfu/firmware{dfu}", dfu_firmware_dfu_func);
 	g_test_add_func ("/dfu/firmware{dfuse}", dfu_firmware_dfuse_func);
-	g_test_add_func ("/dfu/firmware{xdfu}", dfu_firmware_xdfu_func);
-	g_test_add_func ("/dfu/firmware{metadata}", dfu_firmware_metadata_func);
 	return g_test_run ();
 }
 

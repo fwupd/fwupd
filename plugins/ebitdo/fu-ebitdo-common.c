@@ -78,14 +78,3 @@ fu_ebitdo_dump_pkt (FuEbitdoPkt *hdr)
 	g_print ("Payload Len: 0x%04x\n",
 		 GUINT16_FROM_LE (hdr->payload_len));
 }
-
-void
-fu_ebitdo_dump_firmware_header (FuEbitdoFirmwareHeader *hdr)
-{
-	g_print ("Version:             %.2f\n",
-		 (gdouble) GUINT32_FROM_LE (hdr->version) / 100.f);
-	g_print ("Destination Address: %x\n",
-		 GUINT32_FROM_LE (hdr->destination_addr));
-	g_print ("Destination Length:  %" G_GUINT32_FORMAT "\n",
-		 GUINT32_FROM_LE (hdr->destination_len));
-}

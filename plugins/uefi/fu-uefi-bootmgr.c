@@ -303,7 +303,7 @@ fu_uefi_bootmgr_bootnext (const gchar *esp_path,
 	g_autofree gchar *target_app = NULL;
 
 	/* skip for self tests */
-	if (g_getenv ("FWUPD_UEFI_ESP_PATH") != NULL)
+	if (g_getenv ("FWUPD_UEFI_TEST") != NULL)
 		return TRUE;
 
 	/* if secure boot was turned on this might need to be installed separately */

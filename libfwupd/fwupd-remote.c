@@ -48,6 +48,7 @@ typedef struct {
 	gchar			**order_after;
 	gchar			**order_before;
 	gchar			*remotes_dir;
+	gboolean		 automatic_reports;
 } FwupdRemotePrivate;
 
 enum {
@@ -55,6 +56,7 @@ enum {
 	PROP_ID,
 	PROP_ENABLED,
 	PROP_APPROVAL_REQUIRED,
+	PROP_AUTOMATIC_REPORTS,
 	PROP_LAST
 };
 
@@ -420,6 +422,9 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 	report_uri = g_key_file_get_string (kf, group, "ReportURI", NULL);
 	if (report_uri != NULL && report_uri[0] != '\0')
 		fwupd_remote_set_report_uri (self, report_uri);
+
+	/* automatic report uploading */
+	priv->automatic_reports = g_key_file_get_boolean (kf, group, "AutomaticReports", NULL);
 
 	/* DOWNLOAD-type remotes */
 	if (priv->kind == FWUPD_REMOTE_KIND_DOWNLOAD) {
@@ -955,6 +960,24 @@ fwupd_remote_get_enabled (FwupdRemote *self)
 }
 
 /**
+ * fwupd_remote_get_automatic_reports:
+ * @self: A #FwupdRemote
+ *
+ * Gets if reports should be automatically uploaded to this remote
+ *
+ * Returns: a #TRUE if the remote should have reports uploaded automatically
+ *
+ * Since: 1.3.3
+ **/
+gboolean
+fwupd_remote_get_automatic_reports (FwupdRemote *self)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), FALSE);
+	return priv->automatic_reports;
+}
+
+/**
  * fwupd_remote_get_approval_required:
  * @self: A #FwupdRemote
  *
@@ -1040,6 +1063,8 @@ fwupd_remote_set_from_variant_iter (FwupdRemote *self, GVariantIter *iter)
 			priv->mtime = g_variant_get_uint64 (value);
 		} else if (g_strcmp0 (key, "FirmwareBaseUri") == 0) {
 			fwupd_remote_set_firmware_base_uri (self, g_variant_get_string (value, NULL));
+		} else if (g_strcmp0 (key, "AutomaticReports") == 0) {
+			priv->automatic_reports = g_variant_get_boolean (value);
 		}
 	}
 }
@@ -1132,6 +1157,8 @@ fwupd_remote_to_variant (FwupdRemote *self)
 			       g_variant_new_boolean (priv->enabled));
 	g_variant_builder_add (&builder, "{sv}", "ApprovalRequired",
 			       g_variant_new_boolean (priv->approval_required));
+	g_variant_builder_add (&builder, "{sv}", "AutomaticReports",
+			       g_variant_new_boolean (priv->automatic_reports));
 	return g_variant_new ("a{sv}", &builder);
 }
 
@@ -1151,6 +1178,9 @@ fwupd_remote_get_property (GObject *obj, guint prop_id,
 		break;
 	case PROP_ID:
 		g_value_set_string (value, priv->id);
+		break;
+	case PROP_AUTOMATIC_REPORTS:
+		g_value_set_boolean (value, priv->automatic_reports);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
@@ -1174,6 +1204,9 @@ fwupd_remote_set_property (GObject *obj, guint prop_id,
 		break;
 	case PROP_ID:
 		fwupd_remote_set_id (self, g_value_get_string (value));
+		break;
+	case PROP_AUTOMATIC_REPORTS:
+		priv->automatic_reports = g_value_get_boolean (value);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
@@ -1223,6 +1256,18 @@ fwupd_remote_class_init (FwupdRemoteClass *klass)
 	pspec = g_param_spec_boolean ("approval-required", NULL, NULL,
 				      FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_APPROVAL_REQUIRED, pspec);
+
+	/**
+	* FwupdRemote:automatic-reports:
+	*
+	* The behavior for auto-uploading reports.
+	*
+	* Since: 1.3.3
+	*/
+	pspec = g_param_spec_boolean ("automatic-reports", NULL, NULL,
+				      FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_AUTOMATIC_REPORTS, pspec);
+
 }
 
 static void

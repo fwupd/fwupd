@@ -111,6 +111,7 @@ fu_dell_dock_hub_write_fw (FuDevice *device,
 	}
 
 	/* dock will reboot to re-read; this is to appease the daemon */
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
 	fu_device_set_version (device, dynamic_version, FWUPD_VERSION_FORMAT_PAIR);
 	return TRUE;
 }

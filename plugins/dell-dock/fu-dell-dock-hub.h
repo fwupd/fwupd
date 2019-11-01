@@ -19,11 +19,7 @@
 
 #include "fu-usb-device.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_DELL_DOCK_HUB (fu_dell_dock_hub_get_type ())
 G_DECLARE_FINAL_TYPE (FuDellDockHub, fu_dell_dock_hub, FU, DELL_DOCK_HUB, FuUsbDevice)
 
 FuDellDockHub 	*fu_dell_dock_hub_new		(FuUsbDevice *device);
-
-G_END_DECLS

@@ -140,10 +140,6 @@ msgstr "%s 的别名"
 msgid "Allow downgrading firmware versions"
 msgstr "允许降级固件版本"
 
-#. TRANSLATORS: command line option
-msgid "Allow re-installing existing firmware versions"
-msgstr "允许重新安装现有的固件版本"
-
 #. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "更新需要重启设备才能完成。"
@@ -156,10 +152,6 @@ msgstr "更新需要系统关机才能完成。"
 msgid "Answer yes to all questions"
 msgstr "一律用“是”回答问题"
 
-#. TRANSLATORS: command description
-msgid "Apply a binary patch"
-msgstr "应用二进制补丁"
-
 #. TRANSLATORS: command line option
 msgid "Apply firmware updates"
 msgstr "应用固件更新"
@@ -171,17 +163,8 @@ msgid_plural "Approved firmware:"
 msgstr[0] "批准的固件："
 
 #. TRANSLATORS: command description
-msgid "Attach DFU capable device back to runtime"
-msgstr "将可固件升级 (DFU) 的设备重新附到运行时上"
-
-#. TRANSLATORS: command description
 msgid "Attach to firmware mode"
 msgstr "附加到固件模式"
-
-#. TRANSLATORS: device attributes, i.e. things that
-#. * the device can do
-msgid "Attributes"
-msgstr "属性"
 
 #. TRANSLATORS: waiting for user to authenticate
 msgid "Authenticating…"
@@ -252,10 +235,6 @@ msgstr "已变更"
 msgid "Checksum"
 msgstr "校验和"
 
-#. TRANSLATORS: chip ID, e.g. "0x58200204"
-msgid "Chip ID"
-msgstr "芯片 ID"
-
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a device:"
 msgstr "选择设备："
@@ -263,10 +242,6 @@ msgstr "选择设备："
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a release:"
 msgstr "选择发行版本："
-
-#. TRANSLATORS: this is the encryption method used when writing
-msgid "Cipher"
-msgstr "加密"
 
 #. TRANSLATORS: command description
 msgid "Clears any updates scheduled to be updated offline"
@@ -284,13 +259,6 @@ msgstr "未找到命令"
 msgid "Convert firmware to DFU format"
 msgstr "将固件转换为固件升级（DFU）格式"
 
-#. TRANSLATORS: command description
-msgid "Create a binary patch using two files"
-msgstr "使用两个文件创建二进制补丁"
-
-msgid "DFU"
-msgstr "DFU"
-
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
 msgstr "固件更新实用程序"
@@ -303,17 +271,9 @@ msgstr "调试选项"
 msgid "Decompressing…"
 msgstr "正在解压缩…"
 
-#. TRANSLATORS: command description
-msgid "Decrypt firmware data"
-msgstr "解密固件数据"
-
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "描述"
-
-#. TRANSLATORS: command description
-msgid "Detach currently attached DFU capable device"
-msgstr "断开当前连接的可固件升级的设备"
 
 #. TRANSLATORS: command description
 msgid "Detach to bootloader mode"
@@ -402,10 +362,6 @@ msgstr "从文件转储 SMBIOS 数据"
 msgid "Dump details about a firmware file"
 msgstr "转储有关某固件文件的详细信息"
 
-#. TRANSLATORS: command description
-msgid "Dump information about a binary patch to the screen"
-msgstr "将二进制补丁信息输出到屏幕"
-
 #. TRANSLATORS: ESP is EFI System Partition
 msgid "ESP specified was not valid"
 msgstr "指定的 ESP 无效"
@@ -435,10 +391,6 @@ msgstr "启用此功能的风险自负，这意味着你必须就这些更新引
 #. TRANSLATORS: show the user a warning
 msgid "Enabling this remote is done at your own risk."
 msgstr "启用此远程功能后果自负。"
-
-#. TRANSLATORS: command description
-msgid "Encrypt firmware data"
-msgstr "加密固件数据"
 
 #. TRANSLATORS: command description
 msgid "Erase all firmware update history"
@@ -544,17 +496,12 @@ msgstr "此机器不支持固件更新。"
 msgid "Firmware updates are supported on this machine."
 msgstr "此机器支持固件更新。"
 
-#. TRANSLATORS: device properties
 #. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "标志"
 
 msgid "Force the action ignoring all warnings"
 msgstr "强制操作忽略所有警告"
-
-#. TRANSLATORS: detected a DFU device
-msgid "Found"
-msgstr "找到"
 
 #. TRANSLATORS: command description
 msgid "Get all devices and possible releases"
@@ -576,10 +523,6 @@ msgstr "获取有关某固件文件的详细信息"
 msgid "Gets the configured remotes"
 msgstr "获取已配置的远程位置"
 
-#. TRANSLATORS: command description
-msgid "Gets the cryptographic hash of the dumped firmware"
-msgstr "获取转储出的固件的校验和"
-
 #. TRANSLATORS: firmware approved by the admin
 msgid "Gets the list of approved firmware."
 msgstr "获取批准固件的列表。"
@@ -595,9 +538,6 @@ msgstr "获取用于设备的发行版本"
 #. TRANSLATORS: command description
 msgid "Gets the results from the last update"
 msgstr "从最后一次更新中获取结果"
-
-msgid "ID"
-msgstr "ID"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -652,10 +592,6 @@ msgstr "Linux 供应商固件服务（稳定固件）"
 msgid "Linux Vendor Firmware Service (testing firmware)"
 msgstr "Linux 供应商固件服务（测试固件）"
 
-#. TRANSLATORS: command description
-msgid "List currently attached DFU capable devices"
-msgstr "列出当前连接的可固件升级的设备"
-
 #. TRANSLATORS: command line option
 msgid "List supported firmware updates"
 msgstr "列出所支持固件的更新"
@@ -667,10 +603,6 @@ msgstr "正在加载…"
 #. TRANSLATORS: command line option
 msgid "Manually whitelist specific plugins"
 msgstr "将指定插件手动加入白名单"
-
-#. TRANSLATORS: command description
-msgid "Merge multiple firmware files into one"
-msgstr "将多个固件文件合并为一个"
 
 #. TRANSLATORS: remote URI
 msgid "Metadata URI"
@@ -684,9 +616,6 @@ msgstr "可从 Linux 供应商固件服务获取元数据。"
 #, c-format
 msgid "Mismatched daemon and client, use %s instead"
 msgstr "守护进程与客户端不匹配，使用 %s 来代替"
-
-msgid "Mode"
-msgstr "模式"
 
 #. TRANSLATORS: sets something in daemon.conf
 msgid "Modifies a daemon configuration value."
@@ -706,11 +635,6 @@ msgstr "修改守护进程配置"
 msgid "Monitor the daemon for events"
 msgstr "监视守护程序里的事件"
 
-#. TRANSLATORS: interface name, e.g. "Flash"
-#. TRANSLATORS: device name, e.g. 'ColorHug2'
-msgid "Name"
-msgstr "名称"
-
 msgid "No action specified!"
 msgstr "未指定操作！"
 
@@ -729,9 +653,6 @@ msgstr "当前尚未启用任何远程功能，因此无可用元数据。"
 #. TRANSLATORS: nothing was updated offline
 msgid "No updates were applied"
 msgstr "没有应用任何更新"
-
-msgid "OK"
-msgstr "确定"
 
 #. TRANSLATORS: command line option
 msgid "Override plugin warning"
@@ -756,9 +677,6 @@ msgstr "载荷"
 msgid "Percentage complete"
 msgstr "完成百分比"
 
-msgid "Permission denied"
-msgstr "拒绝授权"
-
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u: "
@@ -777,18 +695,9 @@ msgstr "优先级"
 msgid "Proceed with upload?"
 msgstr "确定要上传吗？"
 
-#. TRANSLATORS: DFU protocol version, e.g. 1.1
-msgid "Protocol"
-msgstr "协议"
-
 #. TRANSLATORS: command line option
 msgid "Query for firmware update support"
 msgstr "查询固件更新的支持"
-
-#. TRANSLATORS: device quirks, i.e. things that
-#. * it does that we have to work around
-msgid "Quirks"
-msgstr "特异情况"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from device into a file"
@@ -809,10 +718,6 @@ msgstr "正在重启……"
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "刷新来自远程服务器的元数据"
-
-#. TRANSLATORS: these are areas of memory on the chip
-msgid "Region"
-msgstr "区域"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
@@ -842,10 +747,6 @@ msgstr "报告 URI"
 msgid "Requires internet connection"
 msgstr "需要互联网连接"
 
-#. TRANSLATORS: command description
-msgid "Reset a DFU device"
-msgstr "重置一个 DFU 设备"
-
 #. TRANSLATORS: reboot to apply the update
 msgid "Restart now?"
 msgstr "要现在重启设备吗？"
@@ -870,9 +771,6 @@ msgstr "当使用安装比特块时运行插件组合清理例程"
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "当使用安装比特块时运行插件组合准备例程"
 
-msgid "Runtime"
-msgstr "运行时"
-
 #. TRANSLATORS: command line option
 msgid "Save device state into a JSON file between executions"
 msgstr "在执行之间保存设备状态到 JSON 文件"
@@ -884,22 +782,6 @@ msgstr "如有可能，安排安装到下次重启"
 #. TRANSLATORS: scheduing an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "正在计划…"
-
-#. TRANSLATORS: serial number, e.g. '00012345'
-msgid "Serial"
-msgstr "串口"
-
-#. TRANSLATORS: command description
-msgid "Set alternative name on firmware file"
-msgstr "设置固件文件上的替代名称"
-
-#. TRANSLATORS: command description
-msgid "Set alternative number on firmware file"
-msgstr "设置固件文件上的替代数字"
-
-#. TRANSLATORS: command description
-msgid "Set element address on firmware file"
-msgstr "设置固件文件上的元件地址"
 
 #. TRANSLATORS: command description
 msgid "Set product ID on firmware file"
@@ -914,16 +796,8 @@ msgid "Set the debugging flag during update"
 msgstr "更新期间设定调试标志"
 
 #. TRANSLATORS: command description
-msgid "Set the firmware size for the target"
-msgstr "为目标固件设置大小"
-
-#. TRANSLATORS: command description
 msgid "Set vendor ID on firmware file"
 msgstr "设置固件文件上的供应商 ID"
-
-#. TRANSLATORS: command description
-msgid "Sets metadata on a firmware file"
-msgstr "设置固件文件上的元数据"
 
 msgid "Sets the list of approved firmware"
 msgstr "设定批准固件的列表"
@@ -1000,16 +874,6 @@ msgstr "指定 DFU 设备的供应商/产品 ID"
 msgid "Specify the number of bytes per USB transfer"
 msgstr "指定每次 USB 传输的字节数"
 
-#. TRANSLATORS: device state, i.e. appIDLE
-msgid "State"
-msgstr "状态"
-
-#. TRANSLATORS: probably not run as root...
-#. TRANSLATORS: device has failed to report status
-#. TRANSLATORS: device status, e.g. "OK"
-msgid "Status"
-msgstr "状况"
-
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "概览"
@@ -1037,10 +901,6 @@ msgstr "此远程源包含未禁止的固件，但其仍经过硬件供应商测
 msgid "This tool can only be used by the root user"
 msgstr "此工具只能由 root 用户使用"
 
-#. TRANSLATORS: transfer size in bytes
-msgid "Transfer Size"
-msgstr "传输大小"
-
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
 msgstr "类型"
@@ -1050,6 +910,7 @@ msgid "UEFI Firmware Utility"
 msgstr "固件 UEFI 实用工具"
 
 #. TRANSLATORS: currect daemon status is unknown
+#. TRANSLATORS: we don't know the license of the update
 msgid "Unknown"
 msgstr "未知"
 
@@ -1083,10 +944,6 @@ msgstr "现在更新吗？"
 
 msgid "Update the stored device verification information"
 msgstr "更新存储的设备验证信息"
-
-#. TRANSLATORS: command description
-msgid "Update the stored metadata with current ROM contents"
-msgstr "使用目前的 ROM 内容更新存储的元数据"
 
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current contents"

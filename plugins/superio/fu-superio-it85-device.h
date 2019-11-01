@@ -8,9 +8,5 @@
 
 #include "fu-superio-device.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_SUPERIO_IT85_DEVICE (fu_superio_it85_device_get_type ())
 G_DECLARE_FINAL_TYPE (FuSuperioIt85Device, fu_superio_it85_device, FU, SUPERIO_IT85_DEVICE, FuSuperioDevice)
-
-G_END_DECLS

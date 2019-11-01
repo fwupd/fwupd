@@ -390,11 +390,3 @@ fu_rts54hid_device_class_init (FuRts54HidDeviceClass *klass)
 	klass_usb_device->open = fu_rts54hid_device_open;
 	klass_usb_device->close = fu_rts54hid_device_close;
 }
-
-FuRts54HidDevice *
-fu_rts54hid_device_new (FuUsbDevice *device)
-{
-	FuRts54HidDevice *self = g_object_new (FU_TYPE_RTS54HID_DEVICE, NULL);
-	fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (device));
-	return self;
-}

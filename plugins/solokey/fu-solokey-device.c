@@ -312,7 +312,7 @@ fu_solokey_device_packet (FuSolokeyDevice *self, guint8 cmd,
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
-			     "commmand ID invalid, got %x", res->data[4]);
+			     "command ID invalid, got %x", res->data[4]);
 		return NULL;
 	}
 	return g_steal_pointer (&res);
@@ -360,7 +360,7 @@ fu_solokey_device_get_version_bl (FuSolokeyDevice *self, GError **error)
 	g_autoptr(GByteArray) req = g_byte_array_new ();
 	g_autoptr(GByteArray) res = NULL;
 
-	/* pass thru data */
+	/* pass through data */
 	fu_solokey_device_exchange (req, SOLO_BOOTLOADER_VERSION, 0x00, NULL);
 	res = fu_solokey_device_packet (self, SOLO_BOOTLOADER_HID_CMD_BOOT, req, error);
 	if (res == NULL)
@@ -436,7 +436,7 @@ fu_solokey_device_write_firmware (FuDevice *device,
 		return FALSE;
 
 	/* build packets */
-	fw = fu_firmware_image_get_bytes (img, error);
+	fw = fu_firmware_image_write (img, error);
 	if (fw == NULL)
 		return FALSE;
 	chunks = fu_chunk_array_new_from_bytes (fw,
@@ -498,13 +498,4 @@ fu_solokey_device_class_init (FuSolokeyDeviceClass *klass)
 	klass_usb_device->open = fu_solokey_device_open;
 	klass_usb_device->close = fu_solokey_device_close;
 	klass_usb_device->probe = fu_solokey_device_probe;
-}
-
-FuSolokeyDevice *
-fu_solokey_device_new (FuUsbDevice *device)
-{
-	FuSolokeyDevice *self = NULL;
-	self = g_object_new (FU_TYPE_SOLOKEY_DEVICE, NULL);
-	fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (device));
-	return self;
 }

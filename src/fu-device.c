@@ -55,6 +55,8 @@ typedef struct {
 	guint64				 size_min;
 	guint64				 size_max;
 	gint				 open_refcount;	/* atomic */
+	GType				 specialized_gtype;
+	GPtrArray			*possible_plugins;
 } FuDevicePrivate;
 
 enum {
@@ -123,6 +125,40 @@ fu_device_set_property (GObject *object, guint prop_id,
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
 	}
+}
+
+/**
+ * fu_device_get_possible_plugins:
+ * @self: A #FuDevice
+ *
+ * Gets the list of possible plugin names, typically added from quirk files.
+ *
+ * Returns: (element-type utf-8) (transfer container): plugin names
+ *
+ * Since: 1.3.3
+ **/
+GPtrArray *
+fu_device_get_possible_plugins (FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	return g_ptr_array_ref (priv->possible_plugins);
+}
+
+/**
+ * fu_device_add_possible_plugin:
+ * @self: A #FuDevice
+ * @plugin: A plugin name, e.g. `dfu`
+ *
+ * Adds a plugin name to the list of plugins that *might* be able to handle this
+ * device. This is tyically called from a quirk handler.
+ *
+ * Since: 1.3.3
+ **/
+static void
+fu_device_add_possible_plugin (FuDevice *self, const gchar *plugin)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_ptr_array_add (priv->possible_plugins, g_strdup (plugin));
 }
 
 /**
@@ -639,10 +675,11 @@ fu_device_set_quirk_kv (FuDevice *self,
 			const gchar *value,
 			GError **error)
 {
+	FuDevicePrivate *priv = GET_PRIVATE (self);
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
 
 	if (g_strcmp0 (key, FU_QUIRKS_PLUGIN) == 0) {
-		fu_device_set_plugin (self, value);
+		fu_device_add_possible_plugin (self, value);
 		return TRUE;
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_FLAGS) == 0) {
@@ -705,6 +742,21 @@ fu_device_set_quirk_kv (FuDevice *self,
 		fu_device_set_version_format (self, fwupd_version_format_from_string (value));
 		return TRUE;
 	}
+	if (g_strcmp0 (key, FU_QUIRKS_GTYPE) == 0) {
+		if (priv->specialized_gtype != G_TYPE_INVALID) {
+			g_debug ("already set GType to %s, ignoring %s",
+				 g_type_name (priv->specialized_gtype), value);
+			return TRUE;
+		}
+		priv->specialized_gtype = g_type_from_name (value);
+		if (priv->specialized_gtype == G_TYPE_INVALID) {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_NOT_FOUND,
+				     "device GType %s not supported", value);
+		}
+		return TRUE;
+	}
 	if (g_strcmp0 (key, FU_QUIRKS_CHILDREN) == 0) {
 		g_auto(GStrv) sections = g_strsplit (value, ",", -1);
 		for (guint i = 0; sections[i] != NULL; i++) {
@@ -726,28 +778,33 @@ fu_device_set_quirk_kv (FuDevice *self,
 	return FALSE;
 }
 
+GType
+fu_device_get_specialized_gtype (FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	return priv->specialized_gtype;
+}
+
+static void
+fu_device_quirks_iter_cb (FuQuirks *quirks, const gchar *key, const gchar *value, gpointer user_data)
+{
+	FuDevice *self = FU_DEVICE (user_data);
+	g_autoptr(GError) error = NULL;
+	if (!fu_device_set_quirk_kv (self, key, value, &error)) {
+		if (!g_error_matches (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED)) {
+			g_warning ("failed to set quirk key %s=%s: %s",
+				   key, value, error->message);
+		}
+	}
+}
+
 static void
 fu_device_add_guid_quirks (FuDevice *self, const gchar *guid)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
-	const gchar *key;
-	const gchar *value;
-	GHashTableIter iter;
-
-	/* not set */
 	if (priv->quirks == NULL)
 		return;
-	if (!fu_quirks_get_kvs_for_guid (priv->quirks, guid, &iter))
-		return;
-	while (g_hash_table_iter_next (&iter, (gpointer *) &key, (gpointer *) &value)) {
-		g_autoptr(GError) error = NULL;
-		if (!fu_device_set_quirk_kv (self, key, value, &error)) {
-			if (!g_error_matches (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED)) {
-				g_warning ("failed to set quirk key %s=%s: %s",
-					   key, value, error->message);
-			}
-		}
-	}
+	fu_quirks_lookup_by_id_iter (priv->quirks, guid, fu_device_quirks_iter_cb, self);
 }
 
 /**
@@ -1080,6 +1137,26 @@ fu_device_get_metadata_integer (FuDevice *self, const gchar *key)
 }
 
 /**
+ * fu_device_remove_metadata:
+ * @self: A #FuDevice
+ * @key: the key
+ *
+ * Removes an item of metadata on the device.
+ *
+ * Since: 1.3.3
+ **/
+void
+fu_device_remove_metadata (FuDevice *self, const gchar *key)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_writer_locker_new (&priv->metadata_mutex);
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_return_if_fail (key != NULL);
+	g_return_if_fail (locker != NULL);
+	g_hash_table_remove (priv->metadata, key);
+}
+
+/**
  * fu_device_set_metadata:
  * @self: A #FuDevice
  * @key: the key
@@ -1381,6 +1458,14 @@ fu_device_get_physical_id (FuDevice *self)
 	return priv->physical_id;
 }
 
+void
+fu_device_add_flag (FuDevice *self, FwupdDeviceFlags flag)
+{
+	if (flag & FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE)
+		flag |= FWUPD_DEVICE_FLAG_CAN_VERIFY;
+	fwupd_device_add_flag (FWUPD_DEVICE (self), flag);
+}
+
 static void
 fu_device_set_custom_flag (FuDevice *self, const gchar *hint)
 {
@@ -1665,9 +1750,11 @@ fu_device_add_string (FuDevice *self, guint idt, GString *str)
 
 	/* print children also */
 	children = fu_device_get_children (self);
-	for (guint i = 0; i < children->len; i++) {
-		FuDevice *child = g_ptr_array_index (children, i);
-		fu_device_add_string (child, idt + 1, str);
+	if (children != NULL) {
+		for (guint i = 0; i < children->len; i++) {
+			FuDevice *child = g_ptr_array_index (children, i);
+			fu_device_add_string (child, idt + 1, str);
+		}
 	}
 }
 
@@ -1873,11 +1960,11 @@ fu_device_prepare_firmware (FuDevice *self,
  *
  * Reads firmware from the device by calling a plugin-specific vfunc.
  *
- * Returns: (transfer full): A #GBytes, or %NULL for error
+ * Returns: (transfer full): A #FuFirmware, or %NULL for error
  *
  * Since: 1.0.8
  **/
-GBytes *
+FuFirmware *
 fu_device_read_firmware (FuDevice *self, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
@@ -1885,8 +1972,10 @@ fu_device_read_firmware (FuDevice *self, GError **error)
 	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
-	/* no plugin-specific method */
-	if (klass->read_firmware == NULL) {
+
+	/* no plugin-specific method or device doesn't support */
+	if (!fu_device_has_flag (self, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE) ||
+	    klass->read_firmware == NULL) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -1918,13 +2007,8 @@ fu_device_detach (FuDevice *self, GError **error)
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* no plugin-specific method */
-	if (klass->detach == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "not supported");
-		return FALSE;
-	}
+	if (klass->detach == NULL)
+		return TRUE;
 
 	/* call vfunc */
 	return klass->detach (self, error);
@@ -1950,16 +2034,94 @@ fu_device_attach (FuDevice *self, GError **error)
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* no plugin-specific method */
-	if (klass->attach == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "not supported");
-		return FALSE;
-	}
+	if (klass->attach == NULL)
+		return TRUE;
 
 	/* call vfunc */
 	return klass->attach (self, error);
+}
+
+/**
+ * fu_device_reload:
+ * @self: A #FuDevice
+ * @error: A #GError
+ *
+ * Reloads a device that has just gone from bootloader into application mode.
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.3.3
+ **/
+gboolean
+fu_device_reload (FuDevice *self, GError **error)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+
+	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* no plugin-specific method */
+	if (klass->reload == NULL)
+		return TRUE;
+
+	/* call vfunc */
+	return klass->reload (self, error);
+}
+
+/**
+ * fu_device_prepare:
+ * @self: A #FuDevice
+ * @error: A #GError
+ *
+ * Prepares a device for update. A different plugin can handle each of
+ * FuDevice->prepare(), FuDevice->detach() and FuDevice->write_firmware().
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.3.3
+ **/
+gboolean
+fu_device_prepare (FuDevice *self, FwupdInstallFlags flags, GError **error)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+
+	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* no plugin-specific method */
+	if (klass->prepare == NULL)
+		return TRUE;
+
+	/* call vfunc */
+	return klass->prepare (self, flags, error);
+}
+
+/**
+ * fu_device_cleanup:
+ * @self: A #FuDevice
+ * @error: A #GError
+ *
+ * Cleans up a device after an update. A different plugin can handle each of
+ * FuDevice->write_firmware(), FuDevice->attach() and FuDevice->cleanup().
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.3.3
+ **/
+gboolean
+fu_device_cleanup (FuDevice *self, FwupdInstallFlags flags, GError **error)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+
+	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* no plugin-specific method */
+	if (klass->cleanup == NULL)
+		return TRUE;
+
+	/* call vfunc */
+	return klass->cleanup (self, flags, error);
 }
 
 /**
@@ -2393,6 +2555,7 @@ fu_device_init (FuDevice *self)
 	priv->status = FWUPD_STATUS_IDLE;
 	priv->children = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	priv->parent_guids = g_ptr_array_new_with_free_func (g_free);
+	priv->possible_plugins = g_ptr_array_new_with_free_func (g_free);
 	g_rw_lock_init (&priv->parent_guids_mutex);
 	priv->metadata = g_hash_table_new_full (g_str_hash, g_str_equal,
 						g_free, g_free);
@@ -2418,6 +2581,7 @@ fu_device_finalize (GObject *object)
 	g_hash_table_unref (priv->metadata);
 	g_ptr_array_unref (priv->children);
 	g_ptr_array_unref (priv->parent_guids);
+	g_ptr_array_unref (priv->possible_plugins);
 	g_free (priv->alternate_id);
 	g_free (priv->equivalent_id);
 	g_free (priv->physical_id);

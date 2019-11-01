@@ -547,10 +547,10 @@ fu_wac_device_write_firmware (FuDevice *device,
 
 		if (fu_wav_device_flash_descriptor_is_wp (fd))
 			continue;
-		blob_tmp = fu_firmware_image_get_bytes_chunk (img,
-							      fd->start_addr,
-							      fd->block_sz,
-							      NULL);
+		blob_tmp = fu_firmware_image_write_chunk (img,
+							  fd->start_addr,
+							  fd->block_sz,
+							  NULL);
 		if (blob_tmp == NULL)
 			break;
 		blob_block = fu_common_bytes_pad (blob_tmp, fd->block_sz);
@@ -879,12 +879,4 @@ fu_wac_device_class_init (FuWacDeviceClass *klass)
 	klass_device->setup = fu_wac_device_setup;
 	klass_usb_device->open = fu_wac_device_open;
 	klass_usb_device->close = fu_wac_device_close;
-}
-
-FuWacDevice *
-fu_wac_device_new (FuUsbDevice *device)
-{
-	FuWacDevice *self = g_object_new (FU_TYPE_WAC_DEVICE, NULL);
-	fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (device));
-	return self;
 }

@@ -8,8 +8,6 @@
 
 #include <glib-object.h>
 
-G_BEGIN_DECLS
-
 #define FU_WACOM_RAW_CMD_RETRIES		1000
 
 #define FU_WACOM_RAW_STATUS_REPORT_ID		0x04
@@ -72,5 +70,3 @@ gboolean	 fu_wacom_common_check_reply	(const FuWacomRawRequest *req,
 						 GError		**error);
 gboolean	 fu_wacom_common_block_is_empty	(const guint8	*data,
 						 guint16	 datasz);
-
-G_END_DECLS

@@ -9,24 +9,39 @@
 
 #include <glib-object.h>
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_QUIRKS (fu_quirks_get_type ())
 G_DECLARE_FINAL_TYPE (FuQuirks, fu_quirks, FU, QUIRKS, GObject)
 
+/**
+ * FuQuirksLoadFlags:
+ * @FU_QUIRKS_LOAD_FLAG_NONE:		No flags set
+ * @FU_QUIRKS_LOAD_FLAG_READONLY_FS:	Ignore readonly filesystem errors
+ *
+ * The flags to use when loading quirks.
+ **/
+typedef enum {
+	FU_QUIRKS_LOAD_FLAG_NONE		= 0,
+	FU_QUIRKS_LOAD_FLAG_READONLY_FS		= 1 << 0,
+	/*< private >*/
+	FU_QUIRKS_LOAD_FLAG_LAST
+} FuQuirksLoadFlags;
+
+typedef void	(*FuQuirksIter)				(FuQuirks	*self,
+							 const gchar	*key,
+							 const gchar	*value,
+							 gpointer	 user_data);
+
 FuQuirks	*fu_quirks_new				(void);
 gboolean	 fu_quirks_load				(FuQuirks	*self,
+							 FuQuirksLoadFlags load_flags,
 							 GError		**error);
 const gchar	*fu_quirks_lookup_by_id			(FuQuirks	*self,
 							 const gchar	*group,
 							 const gchar	*key);
-void		 fu_quirks_add_value			(FuQuirks	*self,
+gboolean	 fu_quirks_lookup_by_id_iter		(FuQuirks	*self,
 							 const gchar	*group,
-							 const gchar	*key,
-							 const gchar	*value);
-gboolean	 fu_quirks_get_kvs_for_guid		(FuQuirks	*self,
-							 const gchar	*guid,
-							 GHashTableIter *iter);
+							 FuQuirksIter	 iter,
+							 gpointer	 user_data);
 
 #define	FU_QUIRKS_PLUGIN			"Plugin"
 #define	FU_QUIRKS_UEFI_VERSION_FORMAT		"UefiVersionFormat"
@@ -47,5 +62,4 @@ gboolean	 fu_quirks_get_kvs_for_guid		(FuQuirks	*self,
 #define	FU_QUIRKS_FIRMWARE_SIZE			"FirmwareSize"
 #define	FU_QUIRKS_INSTALL_DURATION		"InstallDuration"
 #define	FU_QUIRKS_VERSION_FORMAT		"VersionFormat"
-
-G_END_DECLS
+#define	FU_QUIRKS_GTYPE				"GType"

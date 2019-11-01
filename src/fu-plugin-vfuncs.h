@@ -10,8 +10,6 @@
 #include "fu-device.h"
 #include "fu-hash.h"
 
-G_BEGIN_DECLS
-
 void		 fu_plugin_init				(FuPlugin	*plugin);
 void		 fu_plugin_destroy			(FuPlugin	*plugin);
 gboolean	 fu_plugin_startup			(FuPlugin	*plugin,
@@ -33,12 +31,6 @@ gboolean	 fu_plugin_verify			(FuPlugin	*plugin,
 							 FuDevice	*dev,
 							 FuPluginVerifyFlags flags,
 							 GError		**error);
-gboolean	 fu_plugin_verify_attach		(FuPlugin	*plugin,
-							 FuDevice	*dev,
-							 GError		**error);
-gboolean	 fu_plugin_verify_detach		(FuPlugin	*plugin,
-							 FuDevice	*dev,
-							 GError		**error);
 gboolean	 fu_plugin_unlock			(FuPlugin	*plugin,
 							 FuDevice	*dev,
 							 GError		**error);
@@ -55,9 +47,6 @@ gboolean	 fu_plugin_update_attach		(FuPlugin	*plugin,
 							 FuDevice	*dev,
 							 GError		**error);
 gboolean	 fu_plugin_update_detach		(FuPlugin	*plugin,
-							 FuDevice	*dev,
-							 GError		**error);
-gboolean	 fu_plugin_update_reload		(FuPlugin	*plugin,
 							 FuDevice	*dev,
 							 GError		**error);
 gboolean	 fu_plugin_update_prepare		(FuPlugin	*plugin,
@@ -88,5 +77,3 @@ gboolean	 fu_plugin_device_removed		(FuPlugin	*plugin,
 							 GError		**error);
 void		 fu_plugin_device_registered		(FuPlugin	*plugin,
 							 FuDevice	*dev);
-
-G_END_DECLS

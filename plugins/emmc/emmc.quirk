@@ -1,0 +1,3 @@
+# match all devices with this udev subsystem
+[DeviceInstanceId=BLOCK]
+Plugin = emmc

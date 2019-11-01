@@ -32,6 +32,41 @@
     <binary>fwupdmgr</binary>
   </provides>
   <releases>
+    <release version="1.3.3" date="2019-11-01">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add a plugin for systems running coreboot</li>
+          <li>Add a plugin to update eMMC devices</li>
+          <li>Add a plugin to update Synaptics RMI4 devices</li>
+          <li>Add a plugin to update VIA USB hub hardware</li>
+          <li>Add some success messages when CLI tasks have completed</li>
+          <li>Add support for automatically uploading reports</li>
+          <li>Add support for `fwupdmgr reinstall`</li>
+          <li>Allow fwupdtool to dump details of common firmware formats</li>
+          <li>Use XMLb to query quirks to reduce the RSS when running</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add several quirks for Realtek webcams</li>
+          <li>Add support for the 8bitdo SN30Pro+</li>
+          <li>Add support for the ThinkPad USB-C Dock Gen2 audio device</li>
+          <li>Always report the update-error correctly for multiple updates</li>
+          <li>Create a unique GUID for the Thunderbolt controller path</li>
+          <li>Fix a regression for Wacom EMR devices</li>
+          <li>Move the Jabra-specific detach out into its own plugin</li>
+          <li>Recognize new 'generation' Thunderbolt sysfs attribute for USB4</li>
+          <li>Reduce more boilerplate in plugins, modernizing where required</li>
+          <li>Remove unused DFU functionality</li>
+          <li>Rework ESP path detection and lifecycle to auto-unmount when required</li>
+          <li>Show a useful error for Logitech devices that cannot self-reset</li>
+          <li>Use correct method for stopping systemd units</li>
+          <li>Use device safety flags to show prompts before installing updates</li>
+          <li>Use `genpeimg` to mark ASLR and DP/NX on EFI binary</li>
+          <li>Use will-disappear flag for 8bitdo SF30/SN30 controllers</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.3.2" date="2019-09-26">
       <description>
         <p>This release adds the following features:</p>
@@ -130,7 +165,7 @@
           <li>Fix a libasan failure when reading a UEFI variable</li>
           <li>Never guess the version format from the version string</li>
           <li>Only use class-based instance IDs for quirk matching</li>
-          <li>Prompt the user to shutdown if requried when installing by ID</li>
+          <li>Prompt the user to shutdown if required when installing by ID</li>
           <li>Reset the forced version during DFU attach and detach</li>
         </ul>
       </description>

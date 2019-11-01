@@ -494,7 +494,7 @@ fu_qmi_pdc_updater_activate_config_ready (GObject *qmi_client, GAsyncResult *res
 	output = qmi_client_pdc_activate_config_finish (QMI_CLIENT_PDC (qmi_client), res, &ctx->error);
 	if (output == NULL) {
 		/* If we didn't receive a response, this is a good indication that the device
-		 * reseted itself, we can consider this a successful operation.
+		 * reset itself, we can consider this a successful operation.
 		 * Note: not using g_error_matches() to avoid matching the domain, because the
 		 * error may be either QMI_CORE_ERROR_TIMEOUT or MBIM_CORE_ERROR_TIMEOUT (same
 		 * numeric value), and we don't want to build-depend on libmbim just for this.

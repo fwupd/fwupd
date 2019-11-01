@@ -16,6 +16,7 @@ libfwupdprivate_src = [
   'fu-common-version.c',
   'fu-device.c',
   'fu-device-locker.c',
+  'fu-dfu-firmware.c',
   'fu-firmware.c',
   'fu-firmware-common.c',
   'fu-firmware-image.c',
@@ -364,6 +365,27 @@ if get_option('tests')
   test('fu-self-test', e, is_parallel:false, timeout:180)
 endif
 
+if get_option('tests')
+  # for fuzzing
+  fwupd_firmware_dump = executable(
+    'fwupd-firmware-dump',
+    sources : [
+      'fu-firmware-dump.c',
+    ],
+    include_directories : [
+      include_directories('..'),
+      include_directories('../libfwupd'),
+    ],
+    dependencies : [
+      gio,
+    ],
+    link_with : [
+      libfwupdprivate,
+    ],
+    c_args : cargs
+  )
+endif
+
 if get_option('introspection')
   gir_dep = declare_dependency(sources: gir)
   gnome.generate_gir(fwupd,
@@ -422,4 +444,8 @@ if get_option('introspection')
       'GUsb-1.0',
     ],
   )
+endif
+
+if get_option('tests')
+  subdir('fuzzing')
 endif

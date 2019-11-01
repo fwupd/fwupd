@@ -1601,6 +1601,109 @@ fu_memcpy_safe (guint8 *dst, gsize dst_sz, gsize dst_offset,
 	return TRUE;
 }
 
+/**
+ * fu_common_read_uint8_safe:
+ * @buf: source buffer
+ * @bufsz: maximum size of @buf, typically `sizeof(buf)`
+ * @offset: offset in bytes into @buf to copy from
+ * @value: (out) (allow-none): the parsed value
+ * @error: A #GError or %NULL
+ *
+ * Read a value from a buffer in a safe way.
+ *
+ * You don't need to use this function in "obviously correct" cases, nor should
+ * you use it when performance is a concern. Only us it when you're not sure if
+ * malicious data from a device or firmware could cause memory corruption.
+ *
+ * Return value: %TRUE if @value was set, %FALSE otherwise
+ **/
+gboolean
+fu_common_read_uint8_safe (const guint8 *buf,
+			   gsize bufsz,
+			   gsize offset,
+			   guint8 *value,
+			   GError **error)
+{
+	guint8 tmp;
+	if (!fu_memcpy_safe (&tmp, sizeof(tmp), 0x0,	/* dst */
+			     buf, bufsz, offset,	/* src */
+			     sizeof(tmp), error))
+		return FALSE;
+	if (value != NULL)
+		*value = tmp;
+	return TRUE;
+}
+
+/**
+ * fu_common_read_uint16_safe:
+ * @buf: source buffer
+ * @bufsz: maximum size of @buf, typically `sizeof(buf)`
+ * @offset: offset in bytes into @buf to copy from
+ * @value: (out) (allow-none): the parsed value
+ * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
+ * @error: A #GError or %NULL
+ *
+ * Read a value from a buffer using a specified endian in a safe way.
+ *
+ * You don't need to use this function in "obviously correct" cases, nor should
+ * you use it when performance is a concern. Only us it when you're not sure if
+ * malicious data from a device or firmware could cause memory corruption.
+ *
+ * Return value: %TRUE if @value was set, %FALSE otherwise
+ **/
+gboolean
+fu_common_read_uint16_safe (const guint8 *buf,
+			    gsize bufsz,
+			    gsize offset,
+			    guint16 *value,
+			    FuEndianType endian,
+			    GError **error)
+{
+	guint8 dst[2] = { 0x0 };
+	if (!fu_memcpy_safe (dst, sizeof(dst), 0x0,	/* dst */
+			     buf, bufsz, offset,	/* src */
+			     sizeof(dst), error))
+		return FALSE;
+	if (value != NULL)
+		*value = fu_common_read_uint16 (dst, endian);
+	return TRUE;
+}
+
+/**
+ * fu_common_read_uint32_safe:
+ * @buf: source buffer
+ * @bufsz: maximum size of @buf, typically `sizeof(buf)`
+ * @offset: offset in bytes into @buf to copy from
+ * @value: (out) (allow-none): the parsed value
+ * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
+ * @error: A #GError or %NULL
+ *
+ * Read a value from a buffer using a specified endian in a safe way.
+ *
+ * You don't need to use this function in "obviously correct" cases, nor should
+ * you use it when performance is a concern. Only us it when you're not sure if
+ * malicious data from a device or firmware could cause memory corruption.
+ *
+ * Return value: %TRUE if @value was set, %FALSE otherwise
+ **/
+gboolean
+fu_common_read_uint32_safe (const guint8 *buf,
+			    gsize bufsz,
+			    gsize offset,
+			    guint32 *value,
+			    FuEndianType endian,
+			    GError **error)
+{
+	guint8 dst[4] = { 0x0 };
+	if (!fu_memcpy_safe (dst, sizeof(dst), 0x0,	/* dst */
+			     buf, bufsz, offset,	/* src */
+			     sizeof(dst), error))
+		return FALSE;
+	if (value != NULL)
+		*value = fu_common_read_uint32 (dst, endian);
+	return TRUE;
+}
+
 void
 fu_byte_array_append_uint8 (GByteArray *array, guint8 data)
 {

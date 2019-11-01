@@ -1,0 +1,160 @@
+# Lenovo CS18 Ultra Dock
+[DeviceInstanceId=USB\VID_17EF&PID_3070]
+Plugin = vli_usbhub
+Flags = usb3
+[DeviceInstanceId=USB\VID_17EF&PID_3071]
+Plugin = vli_usbhub
+Flags = usb2
+
+# Lenovo CS18 Pro and Basic Dock
+[DeviceInstanceId=USB\VID_17EF&PID_3072]
+Plugin = vli_usbhub
+Flags = usb3
+[DeviceInstanceId=USB\VID_17EF&PID_3073]
+Plugin = vli_usbhub
+Flags = usb2
+
+# Lenovo TR Dock
+[DeviceInstanceId=USB\VID_17EF&PID_307F]
+Plugin = vli_usbhub
+Flags = usb3
+[DeviceInstanceId=USB\VID_17EF&PID_3080]
+Plugin = vli_usbhub
+Flags = usb2
+
+# Lenovo CS13 KG Dock
+[DeviceInstanceId=USB\VID_17EF&PID_1010]
+Plugin = vli_usbhub
+Flags = usb2,usb3
+
+# Lenovo CS13 GD Dock
+[DeviceInstanceId=USB\VID_17EF&PID_1012]
+Plugin = vli_usbhub
+Flags = usb2,usb3
+
+# Lenovo CS13 MO Dock
+[DeviceInstanceId=USB\VID_17EF&PID_1013]
+Plugin = vli_usbhub
+Flags = usb2,usb3
+
+# Lenovo Payton dock
+[DeviceInstanceId=USB\VID_17EF&PID_305A]
+Plugin = vli_usbhub
+Flags = tier1,usb2,usb3
+[DeviceInstanceId=USB\VID_17EF&PID_305B]
+Plugin = vli_usbhub
+Flags = tier2,usb2,usb3
+
+# Lenovo USB3 Ultra Dock
+[DeviceInstanceId=USB\VID_17EF&PID_1014]
+Plugin = vli_usbhub
+Flags = tier1,usb2,usb3
+[DeviceInstanceId=USB\VID_17EF&PID_1015]
+Plugin = vli_usbhub
+Flags = tier2,usb2,usb3
+
+# Lenovo USB3 Pro Dock
+[DeviceInstanceId=USB\VID_17EF&PID_1016]
+Plugin = vli_usbhub
+Flags = tier1,usb2,usb3
+[DeviceInstanceId=USB\VID_17EF&PID_1018]
+Plugin = vli_usbhub
+Flags = tier2,usb2,usb3
+
+# Lenovo Workstation D40
+[DeviceInstanceId=USB\VID_17EF&PID_1033]
+Plugin = vli_usbhub
+Flags = usb2,usb3
+
+# Lenovo Workstation S40
+[DeviceInstanceId=USB\VID_17EF&PID_1034]
+Plugin = vli_usbhub
+Flags = usb2,usb3
+
+# Lenovo Workstation v40
+[DeviceInstanceId=USB\VID_17EF&PID_1035]
+Plugin = vli_usbhub
+Flags = usb2,usb3
+
+# Lenovo One Link Plus
+[DeviceInstanceId=USB\VID_17EF&PID_1018]
+Plugin = vli_usbhub
+Flags = tier1,usb2,usb3
+[DeviceInstanceId=USB\VID_17EF&PID_1019]
+Plugin = vli_usbhub
+Flags = tier2,usb2,usb3
+
+# Lenovo Hybrid dock
+[DeviceInstanceId=USB\VID_17EF&PID_A356]
+Plugin = vli_usbhub
+Flags = tier1,usb3
+[DeviceInstanceId=USB\VID_17EF&PID_1028]
+Plugin = vli_usbhub
+Flags = tier1,usb2
+[DeviceInstanceId=USB\VID_17EF&PID_A357]
+Plugin = vli_usbhub
+Flags = tier2,usb3
+[DeviceInstanceId=USB\VID_17EF&PID_1029]
+Plugin = vli_usbhub
+Flags = tier2,usb2
+
+# Lenovo Travel hub
+[DeviceInstanceId=USB\VID_17EF&PID_7216]
+Plugin = vli_usbhub
+Flags = usb3
+[DeviceInstanceId=USB\VID_17EF&PID_7224]
+Plugin = vli_usbhub
+Flags = usb2
+
+# Lenovo Travel hub Gen2
+[DeviceInstanceId=USB\VID_17EF&PID_721D]
+Plugin = vli_usbhub
+Flags = usb3
+[DeviceInstanceId=USB\VID_17EF&PID_7225]
+Plugin = vli_usbhub
+Flags = usb2
+
+# Lenovo Mini dock
+[DeviceInstanceId=USB\VID_17EF&PID_3074]
+Plugin = vli_usbhub
+Flags = usb3
+[DeviceInstanceId=USB\VID_17EF&PID_3095]
+Plugin = vli_usbhub
+Flags = usb2
+
+# Lenovo Lenovo Travel Hub 1in3
+[DeviceInstanceId=USB\VID_17EF&PID_7228]
+Plugin = vli_usbhub
+Flags = usb3
+[DeviceInstanceId=USB\VID_17EF&PID_7226]
+Plugin = vli_usbhub
+Flags = usb2
+
+# Lenovo Lenovo 1转7 Hub
+[DeviceInstanceId=USB\VID_17EF&PID_722A]
+Plugin = vli_usbhub
+Flags = usb3
+[DeviceInstanceId=USB\VID_17EF&PID_7229]
+Plugin = vli_usbhub
+Flags = usb2
+
+# Lenovo Lenovo Gen2 dock
+[DeviceInstanceId=USB\VID_17EF&PID_A391]
+Plugin = vli_usbhub
+Flags = tier1,usb3
+[DeviceInstanceId=USB\VID_17EF&PID_A392]
+Plugin = vli_usbhub
+Flags = tier1,usb2
+[DeviceInstanceId=USB\VID_17EF&PID_A393]
+Plugin = vli_usbhub
+Flags = tier2,usb3
+[DeviceInstanceId=USB\VID_17EF&PID_A394]
+Plugin = vli_usbhub
+Flags = tier2,usb2
+[DeviceInstanceId=USB\VID_17EF&PID_A395]
+Plugin = vli_usbhub
+
+# Lenovo Powered Hub
+[DeviceInstanceId=USB\VID_17EF&PID_721C]
+Plugin = vli_usbhub
+Flags = usb2

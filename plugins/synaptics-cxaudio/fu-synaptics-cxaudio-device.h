@@ -8,8 +8,6 @@
 
 #include "fu-plugin.h"
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_SYNAPTICS_CXAUDIO_DEVICE (fu_synaptics_cxaudio_device_get_type ())
 G_DECLARE_FINAL_TYPE (FuSynapticsCxaudioDevice, fu_synaptics_cxaudio_device, FU, SYNAPTICS_CXAUDIO_DEVICE, FuUsbDevice)
 
@@ -17,7 +15,3 @@ struct _FuSynapticsCxaudioDeviceClass
 {
 	FuUsbDeviceClass	parent_class;
 };
-
-FuSynapticsCxaudioDevice	*fu_synaptics_cxaudio_device_new	(FuUsbDevice	*usb_device);
-
-G_END_DECLS

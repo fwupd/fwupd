@@ -8,8 +8,6 @@
 
 #include <glib-object.h>
 
-G_BEGIN_DECLS
-
 #define FU_TYPE_ARCHIVE (fu_archive_get_type ())
 
 G_DECLARE_FINAL_TYPE (FuArchive, fu_archive, FU, ARCHIVE, GObject)
@@ -51,5 +49,3 @@ GBytes		*fu_archive_lookup_by_fn	(FuArchive	*self,
 void		 fu_archive_iterate		(FuArchive		*self,
 						 FuArchiveIterateFunc	callback,
 						 gpointer		user_data);
-
-G_END_DECLS

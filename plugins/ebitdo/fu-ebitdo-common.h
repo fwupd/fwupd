@@ -8,16 +8,6 @@
 
 #include <glib.h>
 
-G_BEGIN_DECLS
-
-/* little endian */
-typedef struct __attribute__((packed)) {
-	guint32		version;
-	guint32		destination_addr;
-	guint32		destination_len;
-	guint32		reserved[4];
-} FuEbitdoFirmwareHeader;
-
 /* little endian */
 typedef struct __attribute__((packed)) {
 	guint8		pkt_len;
@@ -67,5 +57,4 @@ typedef enum {
 
 const gchar	*fu_ebitdo_pkt_cmd_to_string	(FuEbitdoPktCmd		 cmd);
 const gchar	*fu_ebitdo_pkt_type_to_string	(FuEbitdoPktType	 type);
-void		 fu_ebitdo_dump_firmware_header	(FuEbitdoFirmwareHeader	*hdr);
 void		 fu_ebitdo_dump_pkt		(FuEbitdoPkt		*hdr);

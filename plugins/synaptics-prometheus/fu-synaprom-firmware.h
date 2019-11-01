@@ -8,8 +8,7 @@
 #pragma once
 
 #include "fu-firmware.h"
-
-G_BEGIN_DECLS
+#include "fu-synaprom-firmware.h"
 
 #define FU_TYPE_SYNAPROM_FIRMWARE (fu_synaprom_firmware_get_type ())
 G_DECLARE_FINAL_TYPE (FuSynapromFirmware, fu_synaprom_firmware, FU, SYNAPROM_FIRMWARE, FuFirmware)
@@ -40,5 +39,3 @@ typedef struct __attribute__((packed)) {
 } FuSynapromFirmwareCfgHeader;
 
 FuFirmware		*fu_synaprom_firmware_new	(void);
-
-G_END_DECLS

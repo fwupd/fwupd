@@ -11,14 +11,10 @@
 
 #include "dfu-firmware.h"
 
-G_BEGIN_DECLS
-
 DfuFirmwareFormat	 dfu_firmware_detect_dfu	(GBytes		*bytes);
 GBytes			*dfu_firmware_to_dfu		(DfuFirmware	*firmware,
 							GError		**error);
 gboolean		 dfu_firmware_from_dfu		(DfuFirmware	*firmware,
 							GBytes		*bytes,
-							DfuFirmwareParseFlags flags,
+							FwupdInstallFlags flags,
 							GError		**error);
-
-G_END_DECLS

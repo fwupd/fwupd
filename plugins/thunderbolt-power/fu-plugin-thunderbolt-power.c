@@ -343,7 +343,9 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 
-	/* thunderbolt plugin */
+	/* We care only about the thunderbolt devices. NB: we don't care
+	 * about avoiding to auto-starting boltd here, because if there
+	 * is thunderbolt hardware present, boltd is already running */
 	if (g_strcmp0 (fu_device_get_plugin (device), "thunderbolt") == 0 &&
 	    (fu_plugin_thunderbolt_power_bolt_supported (plugin) ||
 	    fu_plugin_thunderbolt_power_kernel_supported (plugin))) {
@@ -431,12 +433,15 @@ fu_plugin_thunderbolt_power_coldplug (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 
-	if (!fu_plugin_thunderbolt_power_bolt_supported (plugin) &&
-	    !fu_plugin_thunderbolt_power_kernel_supported (plugin)) {
+	/* NB: we don't check for force-power support via bolt here
+	 * (although we later prefer that), because boltd uses the
+	 * same kernel interface and if that does not exist, we can
+	 * avoid pinging bolt, potentially auto-starting it. */
+	if (!fu_plugin_thunderbolt_power_kernel_supported (plugin)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "No support for force power via kernel or bolt");
+			     "No support for force power detected");
 		return FALSE;
 	}
 

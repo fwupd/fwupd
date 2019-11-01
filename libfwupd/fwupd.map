@@ -389,3 +389,13 @@ LIBFWUPD_1.3.2 {
     fwupd_release_set_name_variant_suffix;
   local: *;
 } LIBFWUPD_1.3.1;
+
+LIBFWUPD_1.3.3 {
+  global:
+    fwupd_release_get_detach_caption;
+    fwupd_release_get_detach_image;
+    fwupd_release_set_detach_caption;
+    fwupd_release_set_detach_image;
+    fwupd_remote_get_automatic_reports;
+  local: *;
+} LIBFWUPD_1.3.2;

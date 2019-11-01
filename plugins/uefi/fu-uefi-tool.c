@@ -163,23 +163,7 @@ main (int argc, char *argv[])
 				 error->message);
 			return EXIT_FAILURE;
 		}
-	} else {
-		esp_path = fu_uefi_guess_esp_path ();
-		if (esp_path == NULL) {
-			g_printerr ("Unable to determine EFI system partition "
-				    "location, override using --esp-path\n");
-			return EXIT_FAILURE;
-		}
 	}
-
-	/* check free space */
-	if (!fu_uefi_check_esp_free_space (esp_path,
-					   FU_UEFI_COMMON_REQUIRED_ESP_FREE_SPACE,
-					   &error)) {
-		g_printerr ("Unable to use EFI system partition: %s\n", error->message);
-		return EXIT_FAILURE;
-	}
-	g_debug ("ESP mountpoint set as %s", esp_path);
 
 	/* show the debug action_log from the last attempted update */
 	if (action_log) {
@@ -227,7 +211,8 @@ main (int argc, char *argv[])
 					   path, error_parse->message);
 				continue;
 			}
-			fu_device_set_metadata (FU_DEVICE (dev), "EspPath", esp_path);
+			if (esp_path != NULL)
+				fu_device_set_metadata (FU_DEVICE (dev), "EspPath", esp_path);
 			g_ptr_array_add (devices, g_object_ref (dev));
 		}
 	}
@@ -333,12 +318,23 @@ main (int argc, char *argv[])
 			g_printerr ("failed: %s\n", error_local->message);
 			return EXIT_FAILURE;
 		}
-		fu_device_set_metadata (FU_DEVICE (dev), "EspPath", esp_path);
 		if (flags != NULL)
 			fu_device_set_custom_flags (FU_DEVICE (dev), flags);
+		if (!fu_device_prepare (FU_DEVICE (dev),
+					FWUPD_INSTALL_FLAG_NONE,
+					&error_local)) {
+			g_printerr ("failed: %s\n", error_local->message);
+			return EXIT_FAILURE;
+		}
 		if (!fu_device_write_firmware (FU_DEVICE (dev), fw,
 					       FWUPD_INSTALL_FLAG_NONE,
 					       &error_local)) {
+			g_printerr ("failed: %s\n", error_local->message);
+			return EXIT_FAILURE;
+		}
+		if (!fu_device_cleanup (FU_DEVICE (dev),
+					FWUPD_INSTALL_FLAG_NONE,
+					&error_local)) {
 			g_printerr ("failed: %s\n", error_local->message);
 			return EXIT_FAILURE;
 		}

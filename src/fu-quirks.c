@@ -11,6 +11,7 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 #include <string.h>
+#include <xmlb.h>
 
 #include "fu-common.h"
 #include "fu-mutex.h"
@@ -50,43 +51,11 @@ static void fu_quirks_finalize	 (GObject *obj);
 struct _FuQuirks
 {
 	GObject			 parent_instance;
-	GPtrArray		*monitors;
-	GHashTable		*hash;	/* of group:{key:value} */
-	GRWLock			 hash_mutex;
+	FuQuirksLoadFlags	 load_flags;
+	XbSilo			*silo;
 };
 
 G_DEFINE_TYPE (FuQuirks, fu_quirks, G_TYPE_OBJECT)
-
-static void
-fu_quirks_monitor_changed_cb (GFileMonitor *monitor,
-			      GFile *file,
-			      GFile *other_file,
-			      GFileMonitorEvent event_type,
-			      gpointer user_data)
-{
-	FuQuirks *self = FU_QUIRKS (user_data);
-	g_autoptr(GError) error = NULL;
-	g_autofree gchar *filename = g_file_get_path (file);
-	g_debug ("%s changed, reloading all configs", filename);
-	if (!fu_quirks_load (self, &error))
-		g_warning ("failed to rescan quirks: %s", error->message);
-}
-
-static gboolean
-fu_quirks_add_inotify (FuQuirks *self, const gchar *filename, GError **error)
-{
-	GFileMonitor *monitor;
-	g_autoptr(GFile) file = g_file_new_for_path (filename);
-
-	/* set up a notify watch */
-	monitor = g_file_monitor (file, G_FILE_MONITOR_NONE, NULL, error);
-	if (monitor == NULL)
-		return FALSE;
-	g_signal_connect (monitor, "changed",
-			  G_CALLBACK (fu_quirks_monitor_changed_cb), self);
-	g_ptr_array_add (self->monitors, monitor);
-	return TRUE;
-}
 
 static gchar *
 fu_quirks_build_group_key (const gchar *group)
@@ -107,158 +76,58 @@ fu_quirks_build_group_key (const gchar *group)
 	return g_strdup (group);
 }
 
-/**
- * fu_quirks_lookup_by_id:
- * @self: A #FuPlugin
- * @group: A string group, e.g. "DeviceInstanceId=USB\VID_1235&PID_AB11"
- * @key: An ID to match the entry, e.g. "Name"
- *
- * Looks up an entry in the hardware database using a string value.
- *
- * Returns: (transfer none): values from the database, or %NULL if not found
- *
- * Since: 1.0.1
- **/
-const gchar *
-fu_quirks_lookup_by_id (FuQuirks *self, const gchar *group, const gchar *key)
+static GInputStream *
+fu_quirks_convert_quirk_to_xml_cb (XbBuilderSource *self,
+				   XbBuilderSourceCtx *ctx,
+				   gpointer user_data,
+				   GCancellable *cancellable,
+				   GError **error)
 {
-	GHashTable *kvs;
-	g_autofree gchar *group_key = NULL;
-	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_reader_locker_new (&self->hash_mutex);
-
-	g_return_val_if_fail (FU_IS_QUIRKS (self), NULL);
-	g_return_val_if_fail (group != NULL, NULL);
-	g_return_val_if_fail (key != NULL, NULL);
-	g_return_val_if_fail (locker != NULL, NULL);
-
-	group_key = fu_quirks_build_group_key (group);
-	kvs = g_hash_table_lookup (self->hash, group_key);
-	if (kvs == NULL)
-		return NULL;
-	return g_hash_table_lookup (kvs, key);
-}
-
-/**
- * fu_quirks_get_kvs_for_guid:
- * @self: A #FuPlugin
- * @guid: a GUID
- * @iter: A #GHashTableIter, typically allocated on the stack by the caller
- *
- * Looks up all entries in the hardware database using a GUID value.
- *
- * Returns: %TRUE if the GUID was found, and @iter was set
- *
- * Since: 1.1.2
- **/
-gboolean
-fu_quirks_get_kvs_for_guid (FuQuirks *self, const gchar *guid, GHashTableIter *iter)
-{
-	GHashTable *kvs;
-	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_reader_locker_new (&self->hash_mutex);
-	g_return_val_if_fail (locker != NULL, FALSE);
-	kvs = g_hash_table_lookup (self->hash, guid);
-	if (kvs == NULL)
-		return FALSE;
-	g_hash_table_iter_init (iter, kvs);
-	return TRUE;
-}
-
-static gchar *
-fu_quirks_merge_values (const gchar *old, const gchar *new)
-{
-	guint cnt = 0;
-	g_autofree gchar **resv = NULL;
-	g_auto(GStrv) newv = g_strsplit (new, ",", -1);
-	g_auto(GStrv) oldv = g_strsplit (old, ",", -1);
-
-	/* segment flags, and append if they do not already exists */
-	resv = g_new0 (gchar *, g_strv_length (oldv) + g_strv_length (newv) + 1);
-	for (guint i = 0; oldv[i] != NULL; i++) {
-		if (!g_strv_contains ((const gchar * const *) resv, oldv[i]))
-			resv[cnt++] = oldv[i];
-	}
-	for (guint i = 0; newv[i] != NULL; i++) {
-		if (!g_strv_contains ((const gchar * const *) resv, newv[i]))
-			resv[cnt++] = newv[i];
-	}
-	return g_strjoinv (",", resv);
-}
-
-/**
- * fu_quirks_add_value: (skip)
- * @self: A #FuQuirks
- * @group: group, e.g. `DeviceInstanceId=USB\VID_0BDA&PID_1100`
- * @key: group, e.g. `Name`
- * @value: group, e.g. `Unknown Device`
- *
- * Adds a value to the quirk database. Normally this is achieved by loading a
- * quirk file using fu_quirks_load().
- *
- * Since: 1.1.2
- **/
-void
-fu_quirks_add_value (FuQuirks *self, const gchar *group, const gchar *key, const gchar *value)
-{
-	GHashTable *kvs;
-	const gchar *value_old;
-	g_autofree gchar *group_key = NULL;
-	g_autofree gchar *value_new = NULL;
-	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_writer_locker_new (&self->hash_mutex);
-
-	g_return_if_fail (locker != NULL);
-
-	/* does the key already exists in our hash */
-	group_key = fu_quirks_build_group_key (group);
-	kvs = g_hash_table_lookup (self->hash, group_key);
-	if (kvs == NULL) {
-		kvs = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
-		g_hash_table_insert (self->hash,
-				     g_steal_pointer (&group_key),
-				     kvs);
-		value_new = g_strdup (value);
-	} else {
-		/* look up in the 2nd level hash */
-		value_old = g_hash_table_lookup (kvs, key);
-		if (value_old != NULL) {
-			g_debug ("already found %s=%s, merging with %s",
-				 group_key, value_old, value);
-			value_new = fu_quirks_merge_values (value_old, value);
-		} else {
-			value_new = g_strdup (value);
-		}
-	}
-
-	/* insert the new value */
-	g_hash_table_insert (kvs, g_strdup (key), g_steal_pointer (&value_new));
-}
-
-static gboolean
-fu_quirks_add_quirks_from_filename (FuQuirks *self, const gchar *filename, GError **error)
-{
-	g_autoptr(GKeyFile) kf = g_key_file_new ();
+	g_autofree gchar *xml = NULL;
 	g_auto(GStrv) groups = NULL;
+	g_autoptr(GBytes) bytes = NULL;
+	g_autoptr(GKeyFile) kf = g_key_file_new ();
+	g_autoptr(XbBuilderNode) root = xb_builder_node_new ("quirk");
 
-	/* load keyfile */
-	if (!g_key_file_load_from_file (kf, filename, G_KEY_FILE_NONE, error))
-		return FALSE;
+	/* parse keyfile */
+	bytes = xb_builder_source_ctx_get_bytes (ctx, cancellable, error);
+	if (bytes == NULL)
+		return NULL;
+	if (!g_key_file_load_from_data (kf,
+					g_bytes_get_data (bytes, NULL),
+					g_bytes_get_size (bytes),
+					G_KEY_FILE_NONE,
+					error))
+		return NULL;
 
 	/* add each set of groups and keys */
 	groups = g_key_file_get_groups (kf, NULL);
 	for (guint i = 0; groups[i] != NULL; i++) {
 		g_auto(GStrv) keys = NULL;
+		g_autofree gchar *group_id = NULL;
+		g_autoptr(XbBuilderNode) bn = NULL;
 		keys = g_key_file_get_keys (kf, groups[i], NULL, error);
 		if (keys == NULL)
-			return FALSE;
+			return NULL;
+		group_id = fu_quirks_build_group_key (groups[i]);
+		bn = xb_builder_node_insert (root, "device", "id", group_id, NULL);
 		for (guint j = 0; keys[j] != NULL; j++) {
 			g_autofree gchar *value = NULL;
-			/* get value from keyfile */
 			value = g_key_file_get_value (kf, groups[i], keys[j], error);
 			if (value == NULL)
-				return FALSE;
-			fu_quirks_add_value (self, groups[i], keys[j], value);
+				return NULL;
+			xb_builder_node_insert_text (bn,
+						     "value", value,
+						     "key", keys[j],
+						     NULL);
 		}
 	}
-	return TRUE;
+
+	/* export as XML */
+	xml = xb_builder_node_export (root, XB_NODE_EXPORT_FLAG_ADD_HEADER, error);
+	if (xml == NULL)
+		return NULL;
+	return g_memory_input_stream_new_from_data (g_steal_pointer (&xml), -1, g_free);
 }
 
 static gint
@@ -270,7 +139,8 @@ fu_quirks_filename_sort_cb (gconstpointer a, gconstpointer b)
 }
 
 static gboolean
-fu_quirks_add_quirks_for_path (FuQuirks *self, const gchar *path, GError **error)
+fu_quirks_add_quirks_for_path (FuQuirks *self, XbBuilder *builder,
+			       const gchar *path, GError **error)
 {
 	const gchar *tmp;
 	g_autofree gchar *path_hw = NULL;
@@ -300,21 +170,200 @@ fu_quirks_add_quirks_for_path (FuQuirks *self, const gchar *path, GError **error
 	/* process files */
 	for (guint i = 0; i < filenames->len; i++) {
 		const gchar *filename = g_ptr_array_index (filenames, i);
+		g_autoptr(GFile) file = g_file_new_for_path (filename);
+		g_autoptr(XbBuilderSource) source = xb_builder_source_new ();
 
 		/* load from keyfile */
-		g_debug ("loading quirks from %s", filename);
-		if (!fu_quirks_add_quirks_from_filename (self, filename, error)) {
+		xb_builder_source_add_adapter (source, "text/plain",
+					       fu_quirks_convert_quirk_to_xml_cb,
+					       NULL, NULL);
+		if (!xb_builder_source_load_file (source, file,
+						  XB_BUILDER_SOURCE_FLAG_WATCH_FILE |
+						  XB_BUILDER_SOURCE_FLAG_LITERAL_TEXT,
+						  NULL, error)) {
 			g_prefix_error (error, "failed to load %s: ", filename);
 			return FALSE;
 		}
 
 		/* watch the file for changes */
-		if (!fu_quirks_add_inotify (self, filename, error))
-			return FALSE;
+		xb_builder_import_source (builder, source);
 	}
 
 	/* success */
-	g_debug ("now %u quirk entries", g_hash_table_size (self->hash));
+	return TRUE;
+}
+
+static gboolean
+fu_quirks_check_silo (FuQuirks *self, GError **error)
+{
+	XbBuilderCompileFlags compile_flags = XB_BUILDER_COMPILE_FLAG_WATCH_BLOB;
+	g_autofree gchar *cachedirpkg = NULL;
+	g_autofree gchar *datadir = NULL;
+	g_autofree gchar *localstatedir = NULL;
+	g_autofree gchar *xmlbfn = NULL;
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(XbBuilder) builder = NULL;
+
+	/* everything is okay */
+	if (self->silo != NULL && xb_silo_is_valid (self->silo))
+		return TRUE;
+
+	/* system datadir */
+	builder = xb_builder_new ();
+	datadir = fu_common_get_path (FU_PATH_KIND_DATADIR_PKG);
+	if (!fu_quirks_add_quirks_for_path (self, builder, datadir, error))
+		return FALSE;
+
+	/* something we can write when using Ostree */
+	localstatedir = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	if (!fu_quirks_add_quirks_for_path (self, builder, localstatedir, error))
+		return FALSE;
+
+	/* load silo */
+	cachedirpkg = fu_common_get_path (FU_PATH_KIND_CACHEDIR_PKG);
+	xmlbfn = g_build_filename (cachedirpkg, "quirks.xmlb", NULL);
+	file = g_file_new_for_path (xmlbfn);
+	if (g_getenv ("XMLB_VERBOSE") != NULL) {
+		xb_builder_set_profile_flags (builder,
+					      XB_SILO_PROFILE_FLAG_XPATH |
+					      XB_SILO_PROFILE_FLAG_DEBUG);
+	}
+	if (self->load_flags & FU_QUIRKS_LOAD_FLAG_READONLY_FS)
+		compile_flags |= XB_BUILDER_COMPILE_FLAG_IGNORE_GUID;
+	self->silo = xb_builder_ensure (builder, file, compile_flags, NULL, error);
+	return self->silo != NULL;
+}
+
+/**
+ * fu_quirks_lookup_by_id:
+ * @self: A #FuPlugin
+ * @group: A string group, e.g. "DeviceInstanceId=USB\VID_1235&PID_AB11"
+ * @key: An ID to match the entry, e.g. "Name"
+ *
+ * Looks up an entry in the hardware database using a string value.
+ *
+ * Returns: (transfer none): values from the database, or %NULL if not found
+ *
+ * Since: 1.0.1
+ **/
+const gchar *
+fu_quirks_lookup_by_id (FuQuirks *self, const gchar *group, const gchar *key)
+{
+	g_autofree gchar *group_key = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(XbNode) n = NULL;
+	g_autoptr(XbQuery) query = NULL;
+
+	g_return_val_if_fail (FU_IS_QUIRKS (self), NULL);
+	g_return_val_if_fail (group != NULL, NULL);
+	g_return_val_if_fail (key != NULL, NULL);
+
+	/* ensure up to date */
+	if (!fu_quirks_check_silo (self, &error)) {
+		g_warning ("failed to build silo: %s", error->message);
+		return NULL;
+	}
+
+	/* query */
+	group_key = fu_quirks_build_group_key (group);
+	query = xb_query_new_full (self->silo,
+				   "quirk/device[@id=?]/value[@key=?]",
+				   XB_QUERY_FLAG_NONE,
+				   &error);
+	if (query == NULL) {
+		if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND))
+			return NULL;
+		if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT))
+			return NULL;
+		g_warning ("failed to build query: %s", error->message);
+		return NULL;
+	}
+	if (!xb_query_bind_str (query, 0, group_key, &error)) {
+		g_warning ("failed to bind 0: %s", error->message);
+		return NULL;
+	}
+	if (!xb_query_bind_str (query, 1, key, &error)) {
+		g_warning ("failed to bind 1: %s", error->message);
+		return NULL;
+	}
+	n = xb_silo_query_first_full (self->silo, query, &error);
+	if (n == NULL) {
+		if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND))
+			return NULL;
+		if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT))
+			return NULL;
+		g_warning ("failed to query: %s", error->message);
+		return NULL;
+	}
+	return xb_node_get_text (n);
+}
+
+/**
+ * fu_quirks_lookup_by_id_iter:
+ * @self: A #FuPlugin
+ * @guid: a GUID
+ * @iter_cb: A #FuQuirksIter
+ * @user_data: user data passed to @iter_cb
+ *
+ * Looks up all entries in the hardware database using a GUID value.
+ *
+ * Returns: %TRUE if the ID was found, and @iter was called
+ *
+ * Since: 1.3.3
+ **/
+gboolean
+fu_quirks_lookup_by_id_iter (FuQuirks *self, const gchar *group,
+			     FuQuirksIter iter_cb, gpointer user_data)
+{
+	g_autofree gchar *group_key = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) results = NULL;
+	g_autoptr(XbQuery) query = NULL;
+
+	g_return_val_if_fail (FU_IS_QUIRKS (self), FALSE);
+	g_return_val_if_fail (group != NULL, FALSE);
+	g_return_val_if_fail (iter_cb != NULL, FALSE);
+
+	/* ensure up to date */
+	if (!fu_quirks_check_silo (self, &error)) {
+		g_warning ("failed to build silo: %s", error->message);
+		return FALSE;
+	}
+
+	/* query */
+	group_key = fu_quirks_build_group_key (group);
+	query = xb_query_new_full (self->silo,
+				   "quirk/device[@id=?]/value",
+				   XB_QUERY_FLAG_NONE,
+				   &error);
+	if (query == NULL) {
+		if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND))
+			return FALSE;
+		if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT))
+			return FALSE;
+		g_warning ("failed to build query: %s", error->message);
+		return FALSE;
+	}
+	if (!xb_query_bind_str (query, 0, group_key, &error)) {
+		g_warning ("failed to bind 0: %s", error->message);
+		return FALSE;
+	}
+	results = xb_silo_query_full (self->silo, query, &error);
+	if (results == NULL) {
+		if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND))
+			return FALSE;
+		if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT))
+			return FALSE;
+		g_warning ("failed to query: %s", error->message);
+		return FALSE;
+	}
+	for (guint i = 0; i < results->len; i++) {
+		XbNode *n = g_ptr_array_index (results, i);
+		iter_cb (self,
+			 xb_node_get_attr (n, "key"),
+			 xb_node_get_text (n),
+			 user_data);
+	}
 	return TRUE;
 }
 
@@ -330,31 +379,11 @@ fu_quirks_add_quirks_for_path (FuQuirks *self, const gchar *path, GError **error
  * Since: 1.0.1
  **/
 gboolean
-fu_quirks_load (FuQuirks *self, GError **error)
+fu_quirks_load (FuQuirks *self, FuQuirksLoadFlags load_flags, GError **error)
 {
-	g_autofree gchar *datadir = NULL;
-	g_autofree gchar *localstatedir = NULL;
-
 	g_return_val_if_fail (FU_IS_QUIRKS (self), FALSE);
-
-	/* ensure empty in case we're called from a monitor change */
-	g_ptr_array_set_size (self->monitors, 0);
-	g_rw_lock_writer_lock (&self->hash_mutex);
-	g_hash_table_remove_all (self->hash);
-	g_rw_lock_writer_unlock (&self->hash_mutex);
-
-	/* system datadir */
-	datadir = fu_common_get_path (FU_PATH_KIND_DATADIR_PKG);
-	if (!fu_quirks_add_quirks_for_path (self, datadir, error))
-		return FALSE;
-
-	/* something we can write when using Ostree */
-	localstatedir = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR_PKG);
-	if (!fu_quirks_add_quirks_for_path (self, localstatedir, error))
-		return FALSE;
-
-	/* success */
-	return TRUE;
+	self->load_flags = load_flags;
+	return fu_quirks_check_silo (self, error);
 }
 
 static void
@@ -367,18 +396,14 @@ fu_quirks_class_init (FuQuirksClass *klass)
 static void
 fu_quirks_init (FuQuirks *self)
 {
-	self->monitors = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	self->hash = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, (GDestroyNotify) g_hash_table_unref);
-	g_rw_lock_init (&self->hash_mutex);
 }
 
 static void
 fu_quirks_finalize (GObject *obj)
 {
 	FuQuirks *self = FU_QUIRKS (obj);
-	g_ptr_array_unref (self->monitors);
-	g_rw_lock_clear (&self->hash_mutex);
-	g_hash_table_unref (self->hash);
+	if (self->silo != NULL)
+		g_object_unref (self->silo);
 	G_OBJECT_CLASS (fu_quirks_parent_class)->finalize (obj);
 }
 

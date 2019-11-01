@@ -8,8 +8,6 @@
 
 #include <glib.h>
 
-G_BEGIN_DECLS
-
 typedef enum {
 	FU_UEFI_DEVPATH_PARSE_FLAG_NONE		= 0,
 	FU_UEFI_DEVPATH_PARSE_FLAG_REPAIR	= 1 << 0,
@@ -24,5 +22,3 @@ GBytes		*fu_uefi_devpath_find_data	(GPtrArray	*dps,
 						 guint8		 type,
 						 guint8		 subtype,
 						 GError		**error);
-
-G_END_DECLS
