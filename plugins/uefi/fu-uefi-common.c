@@ -364,7 +364,7 @@ fu_uefi_probe_udisks_esp (GError **error)
 
 	devices = fu_uefi_udisks_get_block_devices (error);
 	if (devices == NULL)
-		return FALSE;
+		return NULL;
 	for (guint i = 0; i < devices->len; i++) {
 		const gchar *obj = g_ptr_array_index (devices, i);
 		gboolean esp = fu_uefi_udisks_objpath_is_esp (obj);

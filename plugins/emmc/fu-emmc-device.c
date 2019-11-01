@@ -301,7 +301,7 @@ fu_emmc_device_prepare_firmware (FuDevice *device,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
 			     "firmware data size (%" G_GSIZE_FORMAT ") is not aligned", fw_size);
-		return FALSE;
+		return NULL;
 	}
 
 	return fu_firmware_new_from_bytes (fw);

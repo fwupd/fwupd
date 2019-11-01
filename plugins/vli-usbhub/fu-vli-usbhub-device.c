@@ -669,7 +669,7 @@ fu_vli_usbhub_device_dump_firmware (FuVliUsbhubDevice *self, gsize bufsz, GError
 							 chk->data_sz,
 							 error)) {
 			g_prefix_error (error, "SPI data read failed @0x%x: ", chk->address);
-			return FALSE;
+			return NULL;
 		}
 		fu_device_set_progress_full (FU_DEVICE (self),
 					     (gsize) i, (gsize) chunks->len);

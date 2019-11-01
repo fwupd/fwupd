@@ -1223,7 +1223,7 @@ const gchar *
 fwupd_client_get_host_machine_id (FwupdClient *client)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (client);
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
 	return priv->host_machine_id;
 }
 

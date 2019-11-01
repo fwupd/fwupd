@@ -108,7 +108,7 @@ fu_quirks_convert_quirk_to_xml_cb (XbBuilderSource *self,
 		g_autoptr(XbBuilderNode) bn = NULL;
 		keys = g_key_file_get_keys (kf, groups[i], NULL, error);
 		if (keys == NULL)
-			return FALSE;
+			return NULL;
 		group_id = fu_quirks_build_group_key (groups[i]);
 		bn = xb_builder_node_insert (root, "device", "id", group_id, NULL);
 		for (guint j = 0; keys[j] != NULL; j++) {

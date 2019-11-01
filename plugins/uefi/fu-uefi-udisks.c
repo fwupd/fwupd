@@ -74,7 +74,7 @@ fu_uefi_udisks_get_block_devices (GError **error)
 					  G_DBUS_CALL_FLAGS_NONE,
 					  -1, NULL, error);
 	if (output == NULL)
-		return FALSE;
+		return NULL;
 	devices = g_ptr_array_new_with_free_func (g_free);
 	g_variant_get (output, "(ao)", &iter);
 	while (g_variant_iter_next (iter, "o", &obj))
