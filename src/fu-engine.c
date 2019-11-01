@@ -1057,6 +1057,15 @@ fu_engine_check_requirement_not_child (FuEngine *self, XbNode *req,
 	for (guint i = 0; i < children->len; i++) {
 		FuDevice *child = g_ptr_array_index (children, i);
 		const gchar *version = fu_device_get_version (child);
+		if (version == NULL) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "no version provided by %s, child of %s",
+				     fu_device_get_name (child),
+				     fu_device_get_name (device));
+			return FALSE;
+		}
 		if (fu_engine_require_vercmp (req, version, NULL)) {
 			g_set_error (error,
 				     FWUPD_ERROR,
