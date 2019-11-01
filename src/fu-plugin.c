@@ -1987,7 +1987,7 @@ fu_plugin_runner_clear_results (FuPlugin *self, FuDevice *device, GError **error
 		return TRUE;
 
 	/* optional */
-	g_module_symbol (priv->module, "fu_plugin_get_results", (gpointer *) &func);
+	g_module_symbol (priv->module, "fu_plugin_clear_results", (gpointer *) &func);
 	if (func == NULL)
 		return TRUE;
 	g_debug ("performing clear_result() on %s", priv->name);
