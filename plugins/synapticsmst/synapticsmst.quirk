@@ -12,7 +12,7 @@ Plugin = synapticsmst
 #  * Will map to a GUID containing HwID product SKU
 #  * These GUIDs will look like MST-${PRODUCTSKU}-${BOARDID}
 # DeviceKind != system
-#  * Will map to a GUID containing each comma delimitted substring
+#  * Will map to a GUID containing each comma delimited substring
 #  * These GUIDs will look like MST-${DEVICEKIND}-${CHIPID}-${BOARDID}
 #
 # By default the Synaptics MST device will restart after update

@@ -360,7 +360,7 @@ fu_solokey_device_get_version_bl (FuSolokeyDevice *self, GError **error)
 	g_autoptr(GByteArray) req = g_byte_array_new ();
 	g_autoptr(GByteArray) res = NULL;
 
-	/* pass thru data */
+	/* pass through data */
 	fu_solokey_device_exchange (req, SOLO_BOOTLOADER_VERSION, 0x00, NULL);
 	res = fu_solokey_device_packet (self, SOLO_BOOTLOADER_HID_CMD_BOOT, req, error);
 	if (res == NULL)

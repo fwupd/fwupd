@@ -308,7 +308,7 @@ dfu_firmware_write_file (DfuFirmware *firmware, GFile *file, GError **error)
  * dfu_firmware_format_to_string:
  * @format: a #DfuFirmwareFormat, e.g. %DFU_FIRMWARE_FORMAT_DFU
  *
- * Returns a string representaiton of the format.
+ * Returns a string representation of the format.
  *
  * Return value: NULL terminated string, or %NULL for invalid
  **/

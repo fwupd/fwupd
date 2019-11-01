@@ -35,7 +35,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	g_autofree gchar *triplet = NULL;
 	g_autoptr(FuDevice) dev = NULL;
 
-	/* don't inlcude FU_HWIDS_KEY_BIOS_VERSION */
+	/* don't include FU_HWIDS_KEY_BIOS_VERSION */
 	static const gchar *hwids[] = {
 		"HardwareID-3",
 		"HardwareID-4",

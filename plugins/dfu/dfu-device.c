@@ -42,7 +42,7 @@
  * * `use-atmel-avr`:		Device uses the ATMEL bootloader
  * * `use-protocol-zero`:	Fix up the protocol number
  * * `legacy-protocol`:		Use a legacy protocol version
- * * `detach-for-attach`:	Requries a DFU_REQUEST_DETACH to attach
+ * * `detach-for-attach`:	Requires a DFU_REQUEST_DETACH to attach
  *
  * Default value: `none`
  *
@@ -793,7 +793,7 @@ dfu_device_ensure_interface (DfuDevice *device, GError **error)
  * @error: a #GError, or %NULL
  *
  * Refreshes the cached properties on the DFU device. If there are any transers
- * in progress thay are cancelled, and if there are any pending errors they are
+ * in progress they are cancelled, and if there are any pending errors they are
  * cancelled.
  *
  * Return value: %TRUE for success

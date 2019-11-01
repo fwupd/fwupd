@@ -146,7 +146,7 @@ dfu_element_set_address (DfuElement *element, guint32 address)
  * dfu_element_to_string:
  * @element: a #DfuElement
  *
- * Returns a string representaiton of the object.
+ * Returns a string representation of the object.
  *
  * Return value: NULL terminated string, or %NULL for invalid
  **/

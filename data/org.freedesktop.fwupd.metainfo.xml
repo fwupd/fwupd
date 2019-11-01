@@ -130,7 +130,7 @@
           <li>Fix a libasan failure when reading a UEFI variable</li>
           <li>Never guess the version format from the version string</li>
           <li>Only use class-based instance IDs for quirk matching</li>
-          <li>Prompt the user to shutdown if requried when installing by ID</li>
+          <li>Prompt the user to shutdown if required when installing by ID</li>
           <li>Reset the forced version during DFU attach and detach</li>
         </ul>
       </description>

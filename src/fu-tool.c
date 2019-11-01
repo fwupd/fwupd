@@ -693,7 +693,7 @@ fu_util_firmware_read (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 
-	/* write a zero lenth file to ensure the destination is writable to
+	/* write a zero length file to ensure the destination is writable to
 	 * avoid failing at the end of a potentially lengthy operation */
 	if (!fu_common_set_contents_bytes (values[0], blob_empty, error))
 		return FALSE;
