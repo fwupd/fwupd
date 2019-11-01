@@ -1948,9 +1948,7 @@ fu_plugin_runner_update (FuPlugin *self,
 
 		/* update history database */
 		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
-		if (!fu_history_modify_device (history, device,
-					       FU_HISTORY_FLAGS_MATCH_NEW_VERSION,
-					       error))
+		if (!fu_history_modify_device (history, device, error))
 			return FALSE;
 
 		/* delete cab file */
