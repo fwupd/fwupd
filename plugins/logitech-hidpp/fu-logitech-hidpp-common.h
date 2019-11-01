@@ -19,10 +19,10 @@
 /* Signed firmware are very long to verify on the device */
 #define FU_UNIFYING_DEVICE_TIMEOUT_MS			30000
 
-guint8		 fu_unifying_buffer_read_uint8	(const gchar	*str);
-guint16		 fu_unifying_buffer_read_uint16	(const gchar	*str);
+guint8		 fu_logitech_hidpp_buffer_read_uint8	(const gchar	*str);
+guint16		 fu_logitech_hidpp_buffer_read_uint16	(const gchar	*str);
 
-gchar		*fu_unifying_format_version	(const gchar	*name,
-						 guint8		 major,
-						 guint8		 minor,
-						 guint16	 build);
+gchar		*fu_logitech_hidpp_format_version	(const gchar	*name,
+							 guint8		 major,
+							 guint8		 minor,
+							 guint16	 build);

@@ -118,13 +118,13 @@ if __name__ == '__main__':
     test.add_file('0a29848de74d26348bc5a6e24fc9f03778eddf0e-hughski-colorhug2-2.0.7.cab', '2.0.7')
     tests.append(test)
 
-    # Logitech Unifying Receiver (RQR12) using 'unifying'
+    # Logitech Unifying Receiver (RQR12) using logitech_hidpp
     test = Test('UnifyingRQR12', '9d131a0c-a606-580f-8eda-80587250b8d6')
     test.add_file('6e5ab5961ec4c577bff198ebb465106e979cf686-Logitech-Unifying-RQR12.05_B0028.cab', 'RQR12.05_B0028')
     test.add_file('938fec082652c603a1cdafde7cd25d76baadc70d-Logitech-Unifying-RQR12.07_B0029.cab', 'RQR12.07_B0029')
     tests.append(test)
 
-    # Logitech Unifying Receiver (RQR24) using 'unifying'
+    # Logitech Unifying Receiver (RQR24) using logitech_hidpp
     test = Test('UnifyingRQR24', 'cc4cbfa9-bf9d-540b-b92b-172ce31013c1')
     test.add_file('82b90b2614a9a4d0aced1ab8a4a99e228c95585c-Logitech-Unifying-RQ024.03_B0027.cab', 'RQR24.03_B0027')
     test.add_file('4511b9b0d123bdbe8a2007233318ab215a59dfe6-Logitech-Unifying-RQR24.05_B0029.cab', 'RQR24.05_B0029')

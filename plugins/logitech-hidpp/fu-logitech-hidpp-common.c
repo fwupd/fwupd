@@ -11,10 +11,10 @@
 #include <errno.h>
 #include <gio/gio.h>
 
-#include "fu-unifying-common.h"
+#include "fu-logitech-hidpp-common.h"
 
 guint8
-fu_unifying_buffer_read_uint8 (const gchar *str)
+fu_logitech_hidpp_buffer_read_uint8 (const gchar *str)
 {
 	guint64 tmp;
 	gchar buf[3] = { 0x0, 0x0, 0x0 };
@@ -24,7 +24,7 @@ fu_unifying_buffer_read_uint8 (const gchar *str)
 }
 
 guint16
-fu_unifying_buffer_read_uint16 (const gchar *str)
+fu_logitech_hidpp_buffer_read_uint16 (const gchar *str)
 {
 	guint64 tmp;
 	gchar buf[5] = { 0x0, 0x0, 0x0, 0x0, 0x0 };
@@ -34,7 +34,7 @@ fu_unifying_buffer_read_uint16 (const gchar *str)
 }
 
 gchar *
-fu_unifying_format_version (const gchar *name, guint8 major, guint8 minor, guint16 build)
+fu_logitech_hidpp_format_version (const gchar *name, guint8 major, guint8 minor, guint16 build)
 {
 	GString *str = g_string_new (NULL);
 	for (guint i = 0; i < 3; i++) {

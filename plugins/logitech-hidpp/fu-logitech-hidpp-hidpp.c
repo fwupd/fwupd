@@ -7,11 +7,11 @@
 #include "config.h"
 
 #include "fu-common.h"
-#include "fu-unifying-common.h"
-#include "fu-unifying-hidpp.h"
+#include "fu-logitech-hidpp-common.h"
+#include "fu-logitech-hidpp-hidpp.h"
 
 static gchar *
-fu_unifying_hidpp_msg_to_string (FuUnifyingHidppMsg *msg)
+fu_logitech_hidpp_msg_to_string (FuLogitechHidPpHidppMsg *msg)
 {
 	GString *str = g_string_new (NULL);
 	const gchar *tmp;
@@ -39,17 +39,17 @@ fu_unifying_hidpp_msg_to_string (FuUnifyingHidppMsg *msg)
 				flags_str->str);
 	g_string_append_printf (str, "report-id:   %02x   [%s]\n",
 				msg->report_id,
-				fu_unifying_hidpp_msg_rpt_id_to_string (msg));
-	tmp = fu_unifying_hidpp_msg_dev_id_to_string (msg);
+				fu_logitech_hidpp_msg_rpt_id_to_string (msg));
+	tmp = fu_logitech_hidpp_msg_dev_id_to_string (msg);
 	g_string_append_printf (str, "device-id:   %02x   [%s]\n",
 				msg->device_id, tmp );
 	g_string_append_printf (str, "sub-id:      %02x   [%s]\n",
 				msg->sub_id,
-				fu_unifying_hidpp_msg_sub_id_to_string (msg));
+				fu_logitech_hidpp_msg_sub_id_to_string (msg));
 	g_string_append_printf (str, "function-id: %02x   [%s]\n",
 				msg->function_id,
-				fu_unifying_hidpp_msg_fcn_id_to_string (msg));
-	if (!fu_unifying_hidpp_msg_is_error (msg, &error)) {
+				fu_logitech_hidpp_msg_fcn_id_to_string (msg));
+	if (!fu_logitech_hidpp_msg_is_error (msg, &error)) {
 		g_string_append_printf (str, "error:       %s\n",
 					error->message);
 	}
@@ -57,12 +57,12 @@ fu_unifying_hidpp_msg_to_string (FuUnifyingHidppMsg *msg)
 }
 
 gboolean
-fu_unifying_hidpp_send (FuIOChannel *io_channel,
-			FuUnifyingHidppMsg *msg,
+fu_logitech_hidpp_send (FuIOChannel *io_channel,
+			FuLogitechHidPpHidppMsg *msg,
 			guint timeout,
 			GError **error)
 {
-	gsize len = fu_unifying_hidpp_msg_get_payload_length (msg);
+	gsize len = fu_logitech_hidpp_msg_get_payload_length (msg);
 
 	/* only for HID++2.0 */
 	if (msg->hidpp_version >= 2.f)
@@ -70,7 +70,7 @@ fu_unifying_hidpp_send (FuIOChannel *io_channel,
 
 	/* detailed debugging */
 	if (g_getenv ("FWUPD_UNIFYING_VERBOSE") != NULL) {
-		g_autofree gchar *str = fu_unifying_hidpp_msg_to_string (msg);
+		g_autofree gchar *str = fu_logitech_hidpp_msg_to_string (msg);
 		fu_common_dump_raw (G_LOG_DOMAIN, "host->device", (guint8 *) msg, len);
 		g_print ("%s", str);
 	}
@@ -88,8 +88,8 @@ fu_unifying_hidpp_send (FuIOChannel *io_channel,
 }
 
 gboolean
-fu_unifying_hidpp_receive (FuIOChannel *io_channel,
-			   FuUnifyingHidppMsg *msg,
+fu_logitech_hidpp_receive (FuIOChannel *io_channel,
+			   FuLogitechHidPpHidppMsg *msg,
 			   guint timeout,
 			   GError **error)
 {
@@ -97,7 +97,7 @@ fu_unifying_hidpp_receive (FuIOChannel *io_channel,
 
 	if (!fu_io_channel_read_raw (io_channel,
 				     (guint8 *) msg,
-				     sizeof(FuUnifyingHidppMsg),
+				     sizeof(FuLogitechHidPpHidppMsg),
 				     &read_size,
 				     timeout,
 				     FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
@@ -109,19 +109,19 @@ fu_unifying_hidpp_receive (FuIOChannel *io_channel,
 	/* check long enough, but allow returning oversize packets */
 	if (g_getenv ("FWUPD_UNIFYING_VERBOSE") != NULL)
 		fu_common_dump_raw (G_LOG_DOMAIN, "device->host", (guint8 *) msg, read_size);
-	if (read_size < fu_unifying_hidpp_msg_get_payload_length (msg)) {
+	if (read_size < fu_logitech_hidpp_msg_get_payload_length (msg)) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
 			     "message length too small, "
 			     "got %" G_GSIZE_FORMAT " expected %" G_GSIZE_FORMAT,
-			     read_size, fu_unifying_hidpp_msg_get_payload_length (msg));
+			     read_size, fu_logitech_hidpp_msg_get_payload_length (msg));
 		return FALSE;
 	}
 
 	/* detailed debugging */
 	if (g_getenv ("FWUPD_UNIFYING_VERBOSE") != NULL) {
-		g_autofree gchar *str = fu_unifying_hidpp_msg_to_string (msg);
+		g_autofree gchar *str = fu_logitech_hidpp_msg_to_string (msg);
 		g_print ("%s", str);
 	}
 
@@ -130,30 +130,30 @@ fu_unifying_hidpp_receive (FuIOChannel *io_channel,
 }
 
 gboolean
-fu_unifying_hidpp_transfer (FuIOChannel *io_channel, FuUnifyingHidppMsg *msg, GError **error)
+fu_logitech_hidpp_transfer (FuIOChannel *io_channel, FuLogitechHidPpHidppMsg *msg, GError **error)
 {
 	guint timeout = FU_UNIFYING_DEVICE_TIMEOUT_MS;
 	guint ignore_cnt = 0;
-	g_autoptr(FuUnifyingHidppMsg) msg_tmp = fu_unifying_hidpp_msg_new ();
+	g_autoptr(FuLogitechHidPpHidppMsg) msg_tmp = fu_logitech_hidpp_msg_new ();
 
 	/* increase timeout for some operations */
 	if (msg->flags & FU_UNIFYING_HIDPP_MSG_FLAG_LONGER_TIMEOUT)
 		timeout *= 10;
 
 	/* send request */
-	if (!fu_unifying_hidpp_send (io_channel, msg, timeout, error))
+	if (!fu_logitech_hidpp_send (io_channel, msg, timeout, error))
 		return FALSE;
 
 	/* keep trying to receive until we get a valid reply */
 	while (1) {
 		msg_tmp->hidpp_version = msg->hidpp_version;
-		if (!fu_unifying_hidpp_receive (io_channel, msg_tmp, timeout, error)) {
+		if (!fu_logitech_hidpp_receive (io_channel, msg_tmp, timeout, error)) {
 			g_prefix_error (error, "failed to receive: ");
 			return FALSE;
 		}
 
 		/* we don't know how to handle this report packet */
-		if (fu_unifying_hidpp_msg_get_payload_length (msg_tmp) == 0x0) {
+		if (fu_logitech_hidpp_msg_get_payload_length (msg_tmp) == 0x0) {
 			g_debug ("HID++1.0 report 0x%02x has unknown length, ignoring",
 				 msg_tmp->report_id);
 			continue;
@@ -161,11 +161,11 @@ fu_unifying_hidpp_transfer (FuIOChannel *io_channel, FuUnifyingHidppMsg *msg, GE
 
 		/* maybe something is also writing to the device? --
 		 * we can't use the SwID as this is a HID++2.0 feature */
-		if (!fu_unifying_hidpp_msg_is_error (msg_tmp, error))
+		if (!fu_logitech_hidpp_msg_is_error (msg_tmp, error))
 			return FALSE;
 
 		/* is valid reply */
-		if (fu_unifying_hidpp_msg_is_reply (msg, msg_tmp))
+		if (fu_logitech_hidpp_msg_is_reply (msg, msg_tmp))
 			break;
 
 		/* to ensure compatibility when an HID++ 2.0 device is
@@ -173,14 +173,14 @@ fu_unifying_hidpp_transfer (FuIOChannel *io_channel, FuUnifyingHidppMsg *msg, GE
 		 * corresponding to an HID++ 1.0 sub-identifier which could be
 		 * sent by the receiver, must be assigned to a dummy feature */
 		if (msg->hidpp_version >= 2.f) {
-			if (fu_unifying_hidpp_msg_is_hidpp10_compat (msg_tmp)) {
+			if (fu_logitech_hidpp_msg_is_hidpp10_compat (msg_tmp)) {
 				g_debug ("ignoring HID++1.0 reply");
 				continue;
 			}
 
 			/* not us */
 			if ((msg->flags & FU_UNIFYING_HIDPP_MSG_FLAG_IGNORE_SWID) == 0) {
-				if (!fu_unifying_hidpp_msg_verify_swid (msg_tmp)) {
+				if (!fu_logitech_hidpp_msg_verify_swid (msg_tmp)) {
 					g_debug ("ignoring reply with SwId 0x%02i, expected 0x%02i",
 						 msg_tmp->function_id & 0x0f,
 						 FU_UNIFYING_HIDPP_MSG_SW_ID);
@@ -202,6 +202,6 @@ fu_unifying_hidpp_transfer (FuIOChannel *io_channel, FuUnifyingHidppMsg *msg, GE
 	};
 
 	/* copy over data */
-	fu_unifying_hidpp_msg_copy (msg, msg_tmp);
+	fu_logitech_hidpp_msg_copy (msg, msg_tmp);
 	return TRUE;
 }

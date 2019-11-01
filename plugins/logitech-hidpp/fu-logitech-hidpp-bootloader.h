@@ -8,13 +8,13 @@
 
 #include "fu-usb-device.h"
 
-#define FU_TYPE_UNIFYING_BOOTLOADER (fu_unifying_bootloader_get_type ())
-G_DECLARE_DERIVABLE_TYPE (FuUnifyingBootloader, fu_unifying_bootloader, FU, UNIFYING_BOOTLOADER, FuUsbDevice)
+#define FU_TYPE_UNIFYING_BOOTLOADER (fu_logitech_hidpp_bootloader_get_type ())
+G_DECLARE_DERIVABLE_TYPE (FuLogitechHidPpBootloader, fu_logitech_hidpp_bootloader, FU, UNIFYING_BOOTLOADER, FuUsbDevice)
 
-struct _FuUnifyingBootloaderClass
+struct _FuLogitechHidPpBootloaderClass
 {
 	FuUsbDeviceClass	parent_class;
-	gboolean		 (*setup)		(FuUnifyingBootloader	*self,
+	gboolean		 (*setup)		(FuLogitechHidPpBootloader	*self,
 							 GError			**error);
 };
 
@@ -47,7 +47,7 @@ typedef enum {
 	FU_UNIFYING_BOOTLOADER_CMD_FLASH_RAM_INVALID_ORDER	= 0xd4,
 	FU_UNIFYING_BOOTLOADER_CMD_WRITE_SIGNATURE		= 0xe0,
 	FU_UNIFYING_BOOTLOADER_CMD_LAST
-} FuUnifyingBootloaderCmd;
+} FuLogitechHidPpBootloaderCmd;
 
 /* packet to and from device */
 typedef struct __attribute__((packed)) {
@@ -55,22 +55,22 @@ typedef struct __attribute__((packed)) {
 	guint16		 addr;
 	guint8		 len;
 	guint8		 data[28];
-} FuUnifyingBootloaderRequest;
+} FuLogitechHidPpBootloaderRequest;
 
-FuUnifyingBootloaderRequest	*fu_unifying_bootloader_request_new	(void);
+FuLogitechHidPpBootloaderRequest	*fu_logitech_hidpp_bootloader_request_new	(void);
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-function"
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUnifyingBootloaderRequest, g_free);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuLogitechHidPpBootloaderRequest, g_free);
 #pragma clang diagnostic pop
 
-GPtrArray	*fu_unifying_bootloader_parse_requests	(FuUnifyingBootloader	*self,
-							 GBytes			*fw,
-							 GError			**error);
-gboolean	 fu_unifying_bootloader_request		(FuUnifyingBootloader	*self,
-							 FuUnifyingBootloaderRequest *req,
-							 GError			**error);
+GPtrArray	*fu_logitech_hidpp_bootloader_parse_requests	(FuLogitechHidPpBootloader	*self,
+								 GBytes				*fw,
+								 GError				**error);
+gboolean	 fu_logitech_hidpp_bootloader_request		(FuLogitechHidPpBootloader	*self,
+								 FuLogitechHidPpBootloaderRequest *req,
+								 GError				**error);
 
-guint16		 fu_unifying_bootloader_get_addr_lo	(FuUnifyingBootloader	*self);
-guint16		 fu_unifying_bootloader_get_addr_hi	(FuUnifyingBootloader	*self);
-guint16		 fu_unifying_bootloader_get_blocksize	(FuUnifyingBootloader	*self);
+guint16		 fu_logitech_hidpp_bootloader_get_addr_lo	(FuLogitechHidPpBootloader	*self);
+guint16		 fu_logitech_hidpp_bootloader_get_addr_hi	(FuLogitechHidPpBootloader	*self);
+guint16		 fu_logitech_hidpp_bootloader_get_blocksize	(FuLogitechHidPpBootloader	*self);

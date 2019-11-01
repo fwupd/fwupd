@@ -8,17 +8,17 @@
 
 #include <string.h>
 
-#include "fu-unifying-hidpp.h"
-#include "fu-unifying-hidpp-msg.h"
+#include "fu-logitech-hidpp-hidpp.h"
+#include "fu-logitech-hidpp-hidpp-msg.h"
 
-FuUnifyingHidppMsg *
-fu_unifying_hidpp_msg_new (void)
+FuLogitechHidPpHidppMsg *
+fu_logitech_hidpp_msg_new (void)
 {
-	return g_new0 (FuUnifyingHidppMsg, 1);
+	return g_new0 (FuLogitechHidPpHidppMsg, 1);
 }
 
 const gchar *
-fu_unifying_hidpp_msg_dev_id_to_string (FuUnifyingHidppMsg *msg)
+fu_logitech_hidpp_msg_dev_id_to_string (FuLogitechHidPpHidppMsg *msg)
 {
 	g_return_val_if_fail (msg != NULL, NULL);
 	if (msg->device_id == HIDPP_DEVICE_ID_WIRED)
@@ -31,7 +31,7 @@ fu_unifying_hidpp_msg_dev_id_to_string (FuUnifyingHidppMsg *msg)
 }
 
 const gchar *
-fu_unifying_hidpp_msg_rpt_id_to_string (FuUnifyingHidppMsg *msg)
+fu_logitech_hidpp_msg_rpt_id_to_string (FuLogitechHidPpHidppMsg *msg)
 {
 	g_return_val_if_fail (msg != NULL, NULL);
 	if (msg->report_id == HIDPP_REPORT_ID_SHORT)
@@ -44,7 +44,7 @@ fu_unifying_hidpp_msg_rpt_id_to_string (FuUnifyingHidppMsg *msg)
 }
 
 gsize
-fu_unifying_hidpp_msg_get_payload_length (FuUnifyingHidppMsg *msg)
+fu_logitech_hidpp_msg_get_payload_length (FuLogitechHidPpHidppMsg *msg)
 {
 	if (msg->report_id == HIDPP_REPORT_ID_SHORT)
 		return 0x07;
@@ -58,7 +58,7 @@ fu_unifying_hidpp_msg_get_payload_length (FuUnifyingHidppMsg *msg)
 }
 
 const gchar *
-fu_unifying_hidpp_msg_fcn_id_to_string (FuUnifyingHidppMsg *msg)
+fu_logitech_hidpp_msg_fcn_id_to_string (FuLogitechHidPpHidppMsg *msg)
 {
 	g_return_val_if_fail (msg != NULL, NULL);
 	switch (msg->sub_id) {
@@ -113,7 +113,7 @@ fu_unifying_hidpp_msg_fcn_id_to_string (FuUnifyingHidppMsg *msg)
 }
 
 const gchar *
-fu_unifying_hidpp_msg_sub_id_to_string (FuUnifyingHidppMsg *msg)
+fu_logitech_hidpp_msg_sub_id_to_string (FuLogitechHidPpHidppMsg *msg)
 {
 	g_return_val_if_fail (msg != NULL, NULL);
 	if (msg->sub_id == HIDPP_SUBID_VENDOR_SPECIFIC_KEYS)
@@ -196,7 +196,7 @@ fu_unifying_hidpp_msg_sub_id_to_string (FuUnifyingHidppMsg *msg)
 }
 
 gboolean
-fu_unifying_hidpp_msg_is_reply (FuUnifyingHidppMsg *msg1, FuUnifyingHidppMsg *msg2)
+fu_logitech_hidpp_msg_is_reply (FuLogitechHidPpHidppMsg *msg1, FuLogitechHidPpHidppMsg *msg2)
 {
 	g_return_val_if_fail (msg1 != NULL, FALSE);
 	g_return_val_if_fail (msg2 != NULL, FALSE);
@@ -219,7 +219,7 @@ fu_unifying_hidpp_msg_is_reply (FuUnifyingHidppMsg *msg1, FuUnifyingHidppMsg *ms
 
 /* HID++ error */
 gboolean
-fu_unifying_hidpp_msg_is_error (FuUnifyingHidppMsg *msg, GError **error)
+fu_logitech_hidpp_msg_is_error (FuLogitechHidPpHidppMsg *msg, GError **error)
 {
 	g_return_val_if_fail (msg != NULL, FALSE);
 	if (msg->sub_id == HIDPP_SUBID_ERROR_MSG) {
@@ -362,7 +362,7 @@ fu_unifying_hidpp_msg_is_error (FuUnifyingHidppMsg *msg, GError **error)
 }
 
 void
-fu_unifying_hidpp_msg_copy (FuUnifyingHidppMsg *msg_dst, const FuUnifyingHidppMsg *msg_src)
+fu_logitech_hidpp_msg_copy (FuLogitechHidPpHidppMsg *msg_dst, const FuLogitechHidPpHidppMsg *msg_src)
 {
 	g_return_if_fail (msg_dst != NULL);
 	g_return_if_fail (msg_src != NULL);
@@ -375,7 +375,7 @@ fu_unifying_hidpp_msg_copy (FuUnifyingHidppMsg *msg_dst, const FuUnifyingHidppMs
 
 /* filter HID++1.0 messages */
 gboolean
-fu_unifying_hidpp_msg_is_hidpp10_compat (FuUnifyingHidppMsg *msg)
+fu_logitech_hidpp_msg_is_hidpp10_compat (FuLogitechHidPpHidppMsg *msg)
 {
 	g_return_val_if_fail (msg != NULL, FALSE);
 	if (msg->sub_id == 0x40 ||
@@ -389,7 +389,7 @@ fu_unifying_hidpp_msg_is_hidpp10_compat (FuUnifyingHidppMsg *msg)
 }
 
 gboolean
-fu_unifying_hidpp_msg_verify_swid (FuUnifyingHidppMsg *msg)
+fu_logitech_hidpp_msg_verify_swid (FuLogitechHidPpHidppMsg *msg)
 {
 	g_return_val_if_fail (msg != NULL, FALSE);
 	if ((msg->function_id & 0x0f) != FU_UNIFYING_HIDPP_MSG_SW_ID)
