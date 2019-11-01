@@ -100,6 +100,15 @@ msgstr[1] "%u години"
 msgstr[2] "%u годин"
 msgstr[3] "%u година"
 
+#. TRANSLATORS: how many local devices can expect updates now
+#, c-format
+msgid "%u local device supported"
+msgid_plural "%u local devices supported"
+msgstr[0] "Передбачено підтримку %u локального пристрою"
+msgstr[1] "Передбачено підтримку %u локальних пристроїв"
+msgstr[2] "Передбачено підтримку %u локальних пристроїв"
+msgstr[3] "Передбачено підтримку %u локального пристрою"
+
 #. TRANSLATORS: duration in minutes
 #, c-format
 msgid "%u minute"
@@ -159,8 +168,8 @@ msgid "Allow downgrading firmware versions"
 msgstr "Дозволити зниження версій мікропрограми"
 
 #. TRANSLATORS: command line option
-msgid "Allow re-installing existing firmware versions"
-msgstr "Дозволити повторне встановлення наявних версій мікропрограми"
+msgid "Allow reinstalling existing firmware versions"
+msgstr "Дозволити перевстановлення наявних версій мікропрограми"
 
 #. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
@@ -173,10 +182,6 @@ msgstr "Для завершення оновлення систему слід �
 #. TRANSLATORS: command line option
 msgid "Answer yes to all questions"
 msgstr "Відповідати «так» на усі питання"
-
-#. TRANSLATORS: command description
-msgid "Apply a binary patch"
-msgstr "Застосувати бінарну латку"
 
 #. TRANSLATORS: command line option
 msgid "Apply firmware updates"
@@ -192,17 +197,8 @@ msgstr[2] "Схвалені мікропрограми:"
 msgstr[3] "Схвалена мікропрограма:"
 
 #. TRANSLATORS: command description
-msgid "Attach DFU capable device back to runtime"
-msgstr "Повернути пристрій із можливостями DFU до використання"
-
-#. TRANSLATORS: command description
 msgid "Attach to firmware mode"
 msgstr "Долучитися до режиму мікропрограми"
-
-#. TRANSLATORS: device attributes, i.e. things that
-#. * the device can do
-msgid "Attributes"
-msgstr "Атрибути"
 
 #. TRANSLATORS: waiting for user to authenticate
 msgid "Authenticating…"
@@ -252,6 +248,10 @@ msgstr "Щоб отримати доступ до оновлення мікро�
 msgid "Authentication is required to update the stored checksums for the device"
 msgstr "Щоб отримати доступ до оновлення збережених контрольних сум для пристрою, вам слід пройти розпізнавання"
 
+#. TRANSLATORS: Boolean value to automatically send reports
+msgid "Automatic Reporting"
+msgstr "Автоматичне звітування"
+
 #. TRANSLATORS: firmware version of bootloader
 msgid "Bootloader Version"
 msgstr "Версія завантажувача"
@@ -277,10 +277,6 @@ msgstr "Змінено"
 msgid "Checksum"
 msgstr "Контрольна сума"
 
-#. TRANSLATORS: chip ID, e.g. "0x58200204"
-msgid "Chip ID"
-msgstr "Ід. чипа"
-
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a device:"
 msgstr "Виберіть пристрій:"
@@ -288,10 +284,6 @@ msgstr "Виберіть пристрій:"
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a release:"
 msgstr "Виберіть випуск:"
-
-#. TRANSLATORS: this is the encryption method used when writing
-msgid "Cipher"
-msgstr "Шифр"
 
 #. TRANSLATORS: command description
 msgid "Clears any updates scheduled to be updated offline"
@@ -309,16 +301,9 @@ msgstr "Такої команди не знайдено"
 msgid "Convert firmware to DFU format"
 msgstr "Перетворити мікропрограму у формат DFU"
 
-#. TRANSLATORS: command description
-msgid "Create a binary patch using two files"
-msgstr "Створити бінарну латку на основі двох файлів"
-
 #. TRANSLATORS: version number of current firmware
 msgid "Current version"
 msgstr "Поточна версія"
-
-msgid "DFU"
-msgstr "DFU"
 
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
@@ -332,17 +317,9 @@ msgstr "Параметри діагностики"
 msgid "Decompressing…"
 msgstr "Розпаковування…"
 
-#. TRANSLATORS: command description
-msgid "Decrypt firmware data"
-msgstr "Розшифрувати дані мікропрограми"
-
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Опис"
-
-#. TRANSLATORS: command description
-msgid "Detach currently attached DFU capable device"
-msgstr "Від’єднати поточний з’єднаний пристрій із можливостями DFU"
 
 #. TRANSLATORS: command description
 msgid "Detach to bootloader mode"
@@ -400,8 +377,26 @@ msgid "Do not check for unreported history"
 msgstr "Не перевіряти, чи є ненадіслані звіти у журналі"
 
 #. TRANSLATORS: turn on all debugging
+msgid "Do not include log domain prefix"
+msgstr "Не включати префікс домену журналу"
+
+#. TRANSLATORS: turn on all debugging
 msgid "Do not include timestamp prefix"
 msgstr "Не включати префікс часової позначки"
+
+msgid "Do not upload report at this time, but prompt again for future updates"
+msgid_plural "Do not upload reports at this time, but prompt again for future updates"
+msgstr[0] "Не вивантажувати звіт цього разу, але запитати знову, якщо надалі з'являться оновлення"
+msgstr[1] "Не вивантажувати звіти цього разу, але запитати знову, якщо надалі з'являться оновлення"
+msgstr[2] "Не вивантажувати звіти цього разу, але запитати знову, якщо надалі з'являться оновлення"
+msgstr[3] "Не вивантажувати звіти цього разу, але запитати знову, якщо надалі з'являться оновлення"
+
+msgid "Do not upload report, and never ask to upload reports for future updates"
+msgid_plural "Do not upload reports, and never ask to upload reports for future updates"
+msgstr[0] "Не вивантажувати звіт цього разу і ніколи згодом про це не запитувати, якщо колись з'являться оновлення"
+msgstr[1] "Не вивантажувати звіти цього разу і ніколи згодом про це не запитувати, якщо колись з'являться оновлення"
+msgstr[2] "Не вивантажувати звіти цього разу і ніколи згодом про це не запитувати, якщо колись з'являться оновлення"
+msgstr[3] "Не вивантажувати звіти цього разу і ніколи згодом про це не запитувати, якщо колись з'являться оновлення"
 
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
@@ -439,10 +434,6 @@ msgstr "Записати дані SMBIOS з файла"
 msgid "Dump details about a firmware file"
 msgstr "Створити дамп даних щодо файла мікропрограми"
 
-#. TRANSLATORS: command description
-msgid "Dump information about a binary patch to the screen"
-msgstr "Вивести дамп інформації щодо бінарної латки на екран"
-
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Duration"
 msgstr "Тривалість"
@@ -476,10 +467,6 @@ msgstr "Наслідки вмикання цієї можливості покл
 #. TRANSLATORS: show the user a warning
 msgid "Enabling this remote is done at your own risk."
 msgstr "Вмикання цього віддаленого сховища виконано під вашу відповідальність."
-
-#. TRANSLATORS: command description
-msgid "Encrypt firmware data"
-msgstr "Зашифрувати дані мікропрограми"
 
 #. TRANSLATORS: command description
 msgid "Erase all firmware update history"
@@ -596,7 +583,6 @@ msgstr "На цьому комп'ютері не передбачено підт
 msgid "Firmware updates are supported on this machine."
 msgstr "На цьому комп'ютері передбачено підтримку оновлень мікропрограми."
 
-#. TRANSLATORS: device properties
 #. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "Прапорці"
@@ -604,9 +590,13 @@ msgstr "Прапорці"
 msgid "Force the action ignoring all warnings"
 msgstr "Виконати дію примусово, ігноруючи усі попередження"
 
-#. TRANSLATORS: detected a DFU device
-msgid "Found"
-msgstr "Знайдено"
+#. TRANSLATORS: global ID common to all similar hardware
+msgid "GUID"
+msgid_plural "GUIDs"
+msgstr[0] "GUID"
+msgstr[1] "GUID"
+msgstr[2] "GUID"
+msgstr[3] "GUID"
 
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
@@ -632,10 +622,6 @@ msgstr "Отримати параметри файла мікропрограм�
 msgid "Gets the configured remotes"
 msgstr "Отримує налаштовані віддалені пристрої"
 
-#. TRANSLATORS: command description
-msgid "Gets the cryptographic hash of the dumped firmware"
-msgstr "Отримує криптографічні хеш-суми для дампів мікропрограм"
-
 #. TRANSLATORS: firmware approved by the admin
 msgid "Gets the list of approved firmware."
 msgstr "Отримує список схвалених мікропрограм."
@@ -651,9 +637,6 @@ msgstr "Отримує випуски для пристрою"
 #. TRANSLATORS: command description
 msgid "Gets the results from the last update"
 msgstr "Отримує результати з останнього оновлення"
-
-msgid "ID"
-msgstr "Ід."
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -703,14 +686,26 @@ msgstr "Встановлюємо оновлення мікропрограми�
 msgid "Installing on %s…"
 msgstr "Встановлюємо на %s…"
 
+#. TRANSLATORS: issue fixed with the release, e.g. CVE
+msgid "Issue"
+msgid_plural "Issues"
+msgstr[0] "Вада"
+msgstr[1] "Вади"
+msgstr[2] "Вади"
+msgstr[3] "Вада"
+
 msgid "Keyring"
 msgstr "Сховище ключів"
+
+#. TRANSLATORS: the original time/date the device was modified
+msgid "Last modified"
+msgstr "Востаннє змінено"
 
 #. TRANSLATORS: time remaining for completing firmware flash
 msgid "Less than one minute remaining"
 msgstr "Лишилося менше за хвилину"
 
-#. TRANSLATORS: e.g. GPLv2+, Non free etc
+#. TRANSLATORS: e.g. GPLv2+, Proprietary etc
 msgid "License"
 msgstr "Ліцензування"
 
@@ -719,10 +714,6 @@ msgstr "Служба надання мікропрограм для Linux від
 
 msgid "Linux Vendor Firmware Service (testing firmware)"
 msgstr "Служба надання мікропрограм для Linux від виробника (тестова мікропрограма)"
-
-#. TRANSLATORS: command description
-msgid "List currently attached DFU capable devices"
-msgstr "Вивести поточний список долучених пристроїв із можливостями DFU"
 
 #. TRANSLATORS: command line option
 msgid "List supported firmware updates"
@@ -739,10 +730,6 @@ msgstr "Записати виведені дані до файла ФАЙЛ (т�
 #. TRANSLATORS: command line option
 msgid "Manually whitelist specific plugins"
 msgstr "Вручну додати певні додатки до «білого» списку"
-
-#. TRANSLATORS: command description
-msgid "Merge multiple firmware files into one"
-msgstr "Об’єднати декілька файлів мікропрограм у один"
 
 #. TRANSLATORS: remote URI
 msgid "Metadata Signature"
@@ -765,9 +752,6 @@ msgstr "Мінімальна версія"
 msgid "Mismatched daemon and client, use %s instead"
 msgstr "Невідповідність фонової служби і клієнта, скористайтеся краще %s"
 
-msgid "Mode"
-msgstr "Режим"
-
 #. TRANSLATORS: sets something in daemon.conf
 msgid "Modifies a daemon configuration value."
 msgstr "Змінює значення налаштування фонової служби."
@@ -786,10 +770,9 @@ msgstr "Зміна налаштувань фонової служби"
 msgid "Monitor the daemon for events"
 msgstr "Стежити за подіями у фоновій службі"
 
-#. TRANSLATORS: interface name, e.g. "Flash"
-#. TRANSLATORS: device name, e.g. 'ColorHug2'
-msgid "Name"
-msgstr "Назва"
+#. TRANSLATORS: version number of new firmware
+msgid "New version"
+msgstr "Нова версія"
 
 msgid "No action specified!"
 msgstr "Не вказано дії!"
@@ -818,9 +801,6 @@ msgstr "Немає доступних віддалених сховищ"
 msgid "No updates were applied"
 msgstr "Не застосовано жодного оновлення"
 
-msgid "OK"
-msgstr "Гаразд"
-
 #. TRANSLATORS: command line option
 msgid "Override plugin warning"
 msgstr "Перевизначити попередження для додатка"
@@ -844,13 +824,14 @@ msgstr "Вміст"
 msgid "Percentage complete"
 msgstr "Відсоток виконання"
 
-msgid "Permission denied"
-msgstr "Доступ заборонено"
-
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u: "
 msgstr "Будь ласка, введіть число від 0 до %u: "
+
+#. TRANSLATORS: version number of previous firmware
+msgid "Previous version"
+msgstr "Попередня версія"
 
 msgid "Print the version number"
 msgstr "Вивести номер версії"
@@ -865,18 +846,13 @@ msgstr "Пріоритетність"
 msgid "Proceed with upload?"
 msgstr "Продовжити вивантаження?"
 
-#. TRANSLATORS: DFU protocol version, e.g. 1.1
-msgid "Protocol"
-msgstr "Протокол"
+#. TRANSLATORS: a non-free software license
+msgid "Proprietary"
+msgstr "Пропрієтарна"
 
 #. TRANSLATORS: command line option
 msgid "Query for firmware update support"
 msgstr "Опитати щодо підтримки оновлення мікропрограми"
-
-#. TRANSLATORS: device quirks, i.e. things that
-#. * it does that we have to work around
-msgid "Quirks"
-msgstr "Негаразди"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from device into a file"
@@ -898,9 +874,9 @@ msgstr "Перезавантажуємо…"
 msgid "Refresh metadata from remote server"
 msgstr "Оновити метадані з віддаленого сервера"
 
-#. TRANSLATORS: these are areas of memory on the chip
-msgid "Region"
-msgstr "Регіон"
+#. TRANSLATORS: command description
+msgid "Reinstall current firmware on the device."
+msgstr "Повторно встановити поточну мікропрограму на пристрій."
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
@@ -930,10 +906,6 @@ msgstr "Адреса звіту"
 msgid "Requires internet connection"
 msgstr "Потребує з'єднання із інтернетом"
 
-#. TRANSLATORS: command description
-msgid "Reset a DFU device"
-msgstr "Відновити початковий стан пристрою DFU"
-
 #. TRANSLATORS: reboot to apply the update
 msgid "Restart now?"
 msgstr "Перезавантажити зараз?"
@@ -958,9 +930,6 @@ msgstr "Запустити процедуру чищення композиці�
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "Запустити процедуру приготування композиції додатків при використанні install-blob"
 
-msgid "Runtime"
-msgstr "Час обробляння"
-
 #. TRANSLATORS: command line option
 msgid "Save device state into a JSON file between executions"
 msgstr "Зберігати стан пристрою до файла JSON між виконаннями"
@@ -973,25 +942,9 @@ msgstr "Якщо можливо, запланувати встановлення
 msgid "Scheduling…"
 msgstr "Плануємо…"
 
-#. TRANSLATORS: serial number, e.g. '00012345'
-msgid "Serial"
-msgstr "Порядкове"
-
 #. TRANSLATORS: serial number of hardware
 msgid "Serial Number"
 msgstr "Серійний номер"
-
-#. TRANSLATORS: command description
-msgid "Set alternative name on firmware file"
-msgstr "Встановити альтернативну назву для файла мікропрограми"
-
-#. TRANSLATORS: command description
-msgid "Set alternative number on firmware file"
-msgstr "Встановити альтернативний номер для файла мікропрограми"
-
-#. TRANSLATORS: command description
-msgid "Set element address on firmware file"
-msgstr "Встановити адресу елемента для файла мікропрограми"
 
 #. TRANSLATORS: command description
 msgid "Set product ID on firmware file"
@@ -1006,16 +959,8 @@ msgid "Set the debugging flag during update"
 msgstr "Встановити під час оновлення прапорець діагностики"
 
 #. TRANSLATORS: command description
-msgid "Set the firmware size for the target"
-msgstr "Встановити розмір мікропрограми для призначення"
-
-#. TRANSLATORS: command description
 msgid "Set vendor ID on firmware file"
 msgstr "Встановити ідентифікатор виробника для файла мікропрограми"
-
-#. TRANSLATORS: command description
-msgid "Sets metadata on a firmware file"
-msgstr "Встановлює метадані щодо файла мікпропрограми"
 
 msgid "Sets the list of approved firmware"
 msgstr "Встановлення списку схвалених мікропрограм"
@@ -1100,15 +1045,50 @@ msgstr "Вказати ідентифікатори виробника/прод�
 msgid "Specify the number of bytes per USB transfer"
 msgstr "Вказати кількість байтів на один пакет передавання даних USB"
 
-#. TRANSLATORS: device state, i.e. appIDLE
-msgid "State"
-msgstr "Стан"
+#. TRANSLATORS: success message -- where activation is making the new
+#. * firmware take effect, usually after updating offline
+msgid "Successfully activated all devices"
+msgstr "Успішно активовано усі пристрої"
 
-#. TRANSLATORS: probably not run as root...
-#. TRANSLATORS: device has failed to report status
-#. TRANSLATORS: device status, e.g. "OK"
-msgid "Status"
-msgstr "Стан"
+#. TRANSLATORS: success message
+msgid "Successfully disabled remote"
+msgstr "Успішно вимкнено запис віддаленого сховища"
+
+#. TRANSLATORS: success message where we made the firmware on the
+#. * device older than it was before
+msgid "Successfully downgraded device"
+msgstr "Успішно знижено версію пристрою"
+
+#. TRANSLATORS: success message -- where 'metadata' is information
+#. * about available firmware on the remote server
+msgid "Successfully downloaded new metadata: "
+msgstr "Успішно отримано нові метадані:"
+
+#. TRANSLATORS: success message
+msgid "Successfully enabled remote"
+msgstr "Успішно увімкнено запис віддаленого сховища"
+
+#. TRANSLATORS: success message
+msgid "Successfully installed firmware"
+msgstr "Мікропрограму успішно встановлено"
+
+#. TRANSLATORS: success message -- a per-system setting value
+msgid "Successfully modified configuration value"
+msgstr "Успішно змінено значення у налаштуваннях"
+
+#. TRANSLATORS: success message -- the user can do this by-hand too
+msgid "Successfully refreshed metadata manually"
+msgstr "Метадані успішно оновлено вручну"
+
+#. TRANSLATORS: success message -- where the user has uploaded
+#. * success and/or failure reports to the remote server
+#, c-format
+msgid "Successfully uploaded %u report"
+msgid_plural "Successfully uploaded %u reports"
+msgstr[0] "Успішно вивантажено %u звіт"
+msgstr[1] "Успішно вивантажено %u звіти"
+msgstr[2] "Успішно вивантажено %u звітів"
+msgstr[3] "Успішно вивантажено %u звіт"
 
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
@@ -1137,10 +1117,6 @@ msgstr "У цьому сховищі міститься мікропрограм
 msgid "This tool can only be used by the root user"
 msgstr "Цим інструментом може користуватися лише root"
 
-#. TRANSLATORS: transfer size in bytes
-msgid "Transfer Size"
-msgstr "Об’єм перенесеного"
-
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
 msgstr "Тип"
@@ -1150,6 +1126,7 @@ msgid "UEFI Firmware Utility"
 msgstr "Засіб роботи із мікропрограмами UEFI"
 
 #. TRANSLATORS: currect daemon status is unknown
+#. TRANSLATORS: we don't know the license of the update
 msgid "Unknown"
 msgstr "Невідомий"
 
@@ -1202,10 +1179,6 @@ msgid "Update the stored device verification information"
 msgstr "Оновлення збережених даних щодо верифікації пристрою"
 
 #. TRANSLATORS: command description
-msgid "Update the stored metadata with current ROM contents"
-msgstr "Оновити збережені метадані на основі поточного вмісту ROM"
-
-#. TRANSLATORS: command description
 msgid "Update the stored metadata with current contents"
 msgstr "Оновити збережені метадані поточними даними"
 
@@ -1229,9 +1202,23 @@ msgstr "Оновлюємо %s…"
 msgid "Upload message:"
 msgstr "Повідомлення про вивантаження:"
 
+msgid "Upload report just this one time, but prompt again for future updates"
+msgid_plural "Upload reports just this one time, but prompt again for future updates"
+msgstr[0] "Вивантажити звіт цього разу, але запитати знову, якщо надалі з'являться оновлення"
+msgstr[1] "Вивантажити звіти цього разу, але запитати знову, якщо надалі з'являться оновлення"
+msgstr[2] "Вивантажити звіти цього разу, але запитати знову, якщо надалі з'являться оновлення"
+msgstr[3] "Вивантажити звіти цього разу, але запитати знову, якщо надалі з'являться оновлення"
+
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "Вивантажити звіт зараз?"
+
+msgid "Upload report this time and automatically upload reports after completing future updates"
+msgid_plural "Upload reports this time and automatically upload reports after completing future updates"
+msgstr[0] "Вивантажити звіт цього разу і автоматично вивантажувати звіти, якщо надалі з'являться оновлення"
+msgstr[1] "Вивантажити звіти цього разу і автоматично вивантажувати звіти, якщо надалі з'являться оновлення"
+msgstr[2] "Вивантажити звіти цього разу і автоматично вивантажувати звіти, якщо надалі з'являться оновлення"
+msgstr[3] "Вивантажити звіти цього разу і автоматично вивантажувати звіти, якщо надалі з'являться оновлення"
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
@@ -1244,6 +1231,10 @@ msgstr "Використовувати варіативні прапорці п�
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "Користувач"
+
+#. TRANSLATORS: one line variant of release (e.g. 'Prerelease' or 'China')
+msgid "Variant"
+msgstr "Варіант"
 
 #. TRANSLATORS: manufacturer of hardware
 msgid "Vendor"

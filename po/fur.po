@@ -32,10 +32,6 @@ msgstr "Alias a %s"
 msgid "Allow downgrading firmware versions"
 msgstr "Permet di tornâ indaûr aes versions di firmware precedentis"
 
-#. TRANSLATORS: command line option
-msgid "Allow re-installing existing firmware versions"
-msgstr "Permet di tornâ a instalâ lis versions dai firmware esistentis"
-
 #. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "Un inzornament al à bisugne che si torni a inviâ il computer par finî."
@@ -43,15 +39,6 @@ msgstr "Un inzornament al à bisugne che si torni a inviâ il computer par finî
 #. TRANSLATORS: command line option
 msgid "Answer yes to all questions"
 msgstr "Rispuint di sì a dutis lis domandis"
-
-#. TRANSLATORS: command description
-msgid "Apply a binary patch"
-msgstr "Apliche une patch binarie"
-
-#. TRANSLATORS: device attributes, i.e. things that
-#. * the device can do
-msgid "Attributes"
-msgstr "Atribûts"
 
 #. TRANSLATORS: waiting for user to authenticate
 msgid "Authenticating…"
@@ -106,10 +93,6 @@ msgstr "Modificât"
 msgid "Checksum"
 msgstr "Checksum"
 
-#. TRANSLATORS: chip ID, e.g. "0x58200204"
-msgid "Chip ID"
-msgstr "ID chip"
-
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a device:"
 msgstr "Sielç un dispositîf:"
@@ -134,10 +117,6 @@ msgstr "Comant no cjatât"
 msgid "Convert firmware to DFU format"
 msgstr "Convertìs il firmware tal formât DFU"
 
-#. TRANSLATORS: command description
-msgid "Create a binary patch using two files"
-msgstr "Cree une patch binarie doprant doi file"
-
 #. TRANSLATORS: for the --verbose arg
 msgid "Debugging Options"
 msgstr "Opzions di debug"
@@ -145,10 +124,6 @@ msgstr "Opzions di debug"
 #. TRANSLATORS: decompressing the firmware file
 msgid "Decompressing…"
 msgstr "Daûr a decomprimi…"
-
-#. TRANSLATORS: command description
-msgid "Decrypt firmware data"
-msgstr "Decifre i dâts dal firmware"
 
 #. TRANSLATORS: multiline description of device
 msgid "Description"
@@ -201,17 +176,9 @@ msgstr "Scrîf jù i dâts SMBIOS di un file"
 msgid "Dump details about a firmware file"
 msgstr "Scrîf jù i detais in merit a un file firmware"
 
-#. TRANSLATORS: command description
-msgid "Dump information about a binary patch to the screen"
-msgstr "Scrîf jù lis informazions sul schermi in merit a une patch binarie "
-
 #. TRANSLATORS: if the remote is enabled
 msgid "Enabled"
 msgstr "Abilitât"
-
-#. TRANSLATORS: command description
-msgid "Encrypt firmware data"
-msgstr "Cifre i dâts dal firmware"
 
 #. TRANSLATORS: command description
 msgid "Erase all firmware update history"
@@ -264,10 +231,6 @@ msgid_plural "Firmware metadata has not been updated for %u days and may not be 
 msgstr[0] "I metadâts dal firmware no son stâts inzornâts par %u zornade e a podaressin jessi vielis."
 msgstr[1] "I metadâts dal firmware no son stâts inzornâts par %u dîs e a podaressin jessi vielis."
 
-#. TRANSLATORS: detected a DFU device
-msgid "Found"
-msgstr "Cjatât"
-
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
 msgstr "Oten ducj i dispositîfs che a supuartin i inzornaments dal firmware"
@@ -281,10 +244,6 @@ msgid "Gets the configured remotes"
 msgstr "Al oten i rimots configurâts"
 
 #. TRANSLATORS: command description
-msgid "Gets the cryptographic hash of the dumped firmware"
-msgstr "Al oten il hash di critografie dal firmware tirât jù"
-
-#. TRANSLATORS: command description
 msgid "Gets the list of updates for connected hardware"
 msgstr "Al oten la liste di inzornaments pal hardware tacât"
 
@@ -295,9 +254,6 @@ msgstr "Al oten lis publicazions par un dispositîf"
 #. TRANSLATORS: command description
 msgid "Gets the results from the last update"
 msgstr "Al oten i risultâts dal ultin inzornament"
-
-msgid "ID"
-msgstr "ID"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -333,16 +289,9 @@ msgstr "Puarteclâfs"
 msgid "Loading…"
 msgstr "Daûr a cjariâ…"
 
-#. TRANSLATORS: command description
-msgid "Merge multiple firmware files into one"
-msgstr "Unìs plui file firmware intun"
-
 #. TRANSLATORS: remote URI
 msgid "Metadata URI"
 msgstr "URI metadata"
-
-msgid "Mode"
-msgstr "Modalitât"
 
 #. TRANSLATORS: command description
 msgid "Modifies a given remote"
@@ -355,17 +304,9 @@ msgstr "Modifiche un rimot configurât"
 msgid "Monitor the daemon for events"
 msgstr "Monitore il demoni pai events"
 
-#. TRANSLATORS: interface name, e.g. "Flash"
-#. TRANSLATORS: device name, e.g. 'ColorHug2'
-msgid "Name"
-msgstr "Non"
-
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Nissun hardware rilevât un funzionalitâts di inzornament dal firmware"
-
-msgid "OK"
-msgstr "Va ben"
 
 #. TRANSLATORS: command line option
 msgid "Override plugin warning"
@@ -375,9 +316,6 @@ msgstr "Ignore i avertiments dal plugin"
 msgid "Password"
 msgstr "Password"
 
-msgid "Permission denied"
-msgstr "Permès dineât"
-
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u: "
@@ -386,10 +324,6 @@ msgstr "Inserìs un numar di 0 a %u: "
 #. TRANSLATORS: the numeric priority
 msgid "Priority"
 msgstr "Prioritât"
-
-#. TRANSLATORS: DFU protocol version, e.g. 1.1
-msgid "Protocol"
-msgstr "Protocol"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from device into a file"
@@ -406,10 +340,6 @@ msgstr "Daûr a lei…"
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "Inzorne i metadâts dal servidôr rimot"
-
-#. TRANSLATORS: these are areas of memory on the chip
-msgid "Region"
-msgstr "Regjon"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
@@ -459,22 +389,6 @@ msgstr "Planifiche la instalazion pe volte sucessive che si torne a inviâ cuant
 msgid "Scheduling…"
 msgstr "Daûr a planificâ…"
 
-#. TRANSLATORS: serial number, e.g. '00012345'
-msgid "Serial"
-msgstr "Seriâl"
-
-#. TRANSLATORS: command description
-msgid "Set alternative name on firmware file"
-msgstr "Met il non alternatîf sul file dal firmware"
-
-#. TRANSLATORS: command description
-msgid "Set alternative number on firmware file"
-msgstr "Met il numar alternatîf sul file dal firmware"
-
-#. TRANSLATORS: command description
-msgid "Set element address on firmware file"
-msgstr "Met la direzion dal element sul file dal firmware"
-
 #. TRANSLATORS: command description
 msgid "Set product ID on firmware file"
 msgstr "Met il ID dal prodot sul file dal firmware"
@@ -484,16 +398,8 @@ msgid "Set release version on firmware file"
 msgstr "Met la version di publicazion sul file dal firmware"
 
 #. TRANSLATORS: command description
-msgid "Set the firmware size for the target"
-msgstr "Met la direzion dal firmware pe destinazion"
-
-#. TRANSLATORS: command description
 msgid "Set vendor ID on firmware file"
 msgstr "Met il ID dal produtôr sul file dal firmware"
-
-#. TRANSLATORS: command description
-msgid "Sets metadata on a firmware file"
-msgstr "Al stabilìs i metadâts suntun file firmware"
 
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
@@ -519,16 +425,6 @@ msgstr "Mostre la cronologjie dai inzoronaments dal firmware"
 msgid "Show plugin verbose information"
 msgstr "Mostre lis informazions prolissis dai plugin"
 
-#. TRANSLATORS: device state, i.e. appIDLE
-msgid "State"
-msgstr "Stât"
-
-#. TRANSLATORS: probably not run as root...
-#. TRANSLATORS: device has failed to report status
-#. TRANSLATORS: device status, e.g. "OK"
-msgid "Status"
-msgstr "Stât"
-
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Sintesi"
@@ -538,6 +434,7 @@ msgid "Type"
 msgstr "Gjenar"
 
 #. TRANSLATORS: currect daemon status is unknown
+#. TRANSLATORS: we don't know the license of the update
 msgid "Unknown"
 msgstr "No cognossût"
 
@@ -558,10 +455,6 @@ msgstr "Inzornâ cumò?"
 
 msgid "Update the stored device verification information"
 msgstr "Inzorne lis informazions di verifiche dal dispositîf archiviadis"
-
-#. TRANSLATORS: command description
-msgid "Update the stored metadata with current ROM contents"
-msgstr "Inzorne il metadât archiviât cui contignûts ROM atuâi"
 
 #. TRANSLATORS: command description
 msgid "Updates all firmware to latest versions available"

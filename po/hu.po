@@ -56,6 +56,13 @@ msgstr "%s ME frissítés"
 msgid "%s System Update"
 msgstr "%s rendszerfrissítés"
 
+#. TRANSLATORS: the Thunderbolt controller is a device that
+#. * has other high speed Thunderbolt devices plugged into it;
+#. * the first %s is the system name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Thunderbolt Controller Update"
+msgstr "%s Thunderbolt vezérlőfrissítés"
+
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else
 #. --
@@ -133,8 +140,8 @@ msgid "Allow downgrading firmware versions"
 msgstr "Firmware verziók visszafejlesztésének engedélyezése"
 
 #. TRANSLATORS: command line option
-msgid "Allow re-installing existing firmware versions"
-msgstr "Meglévő firmware verziók újratelepítésének engedélyezése"
+msgid "Allow reinstalling existing firmware versions"
+msgstr "A meglévő firmware verziók újratelepítésének engedélyezése"
 
 #. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
@@ -148,10 +155,6 @@ msgstr "Egy frissítés a rendszer újraindítását igényel a befejezéshez."
 msgid "Answer yes to all questions"
 msgstr "Igen az összes kérdésre"
 
-#. TRANSLATORS: command description
-msgid "Apply a binary patch"
-msgstr "Bináris folt alkalmazása"
-
 #. TRANSLATORS: command line option
 msgid "Apply firmware updates"
 msgstr "Firmware-frissítések alkalmazása"
@@ -164,17 +167,8 @@ msgstr[0] "Jóváhagyott firmware:"
 msgstr[1] "Jóváhagyott firmwarek:"
 
 #. TRANSLATORS: command description
-msgid "Attach DFU capable device back to runtime"
-msgstr "DFU-képes eszköz visszacsatolása a futtatókörnyezethez"
-
-#. TRANSLATORS: command description
 msgid "Attach to firmware mode"
 msgstr "Csatlakoztatás a firmware módhoz"
-
-#. TRANSLATORS: device attributes, i.e. things that
-#. * the device can do
-msgid "Attributes"
-msgstr "Attribútumok"
 
 #. TRANSLATORS: waiting for user to authenticate
 msgid "Authenticating…"
@@ -191,6 +185,10 @@ msgstr "Hitelesítés szükséges a firmware visszafejlesztéséhez ezen a gépe
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
 msgstr "Hitelesítés szükséges a firmware frissítéshez beállított távoli tároló módosításához."
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify daemon configuration"
+msgstr "Hitelesítés szükséges a démon konfigurációjának módosításához"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
@@ -220,6 +218,14 @@ msgstr "Hitelesítés szükséges a firmware frissítéséhez ezen a gépen"
 msgid "Authentication is required to update the stored checksums for the device"
 msgstr "Hitelesítés szükséges az eszköz tárolt ellenőrzőösszegeinek frissítéséhez"
 
+#. TRANSLATORS: Boolean value to automatically send reports
+msgid "Automatic Reporting"
+msgstr "Automatikus jelentés"
+
+#. TRANSLATORS: firmware version of bootloader
+msgid "Bootloader Version"
+msgstr "Rendszerbetöltő verziója"
+
 #. TRANSLATORS: command description
 msgid "Build firmware using a sandbox"
 msgstr "Firmware összeállítása egy homokozóban"
@@ -241,10 +247,6 @@ msgstr "Módosítva"
 msgid "Checksum"
 msgstr "Ellenőrzőösszeg"
 
-#. TRANSLATORS: chip ID, e.g. "0x58200204"
-msgid "Chip ID"
-msgstr "Chipazonosító"
-
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a device:"
 msgstr "Válasszon eszközt:"
@@ -252,10 +254,6 @@ msgstr "Válasszon eszközt:"
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a release:"
 msgstr "Válasszon kiadást:"
-
-#. TRANSLATORS: this is the encryption method used when writing
-msgid "Cipher"
-msgstr "Titkosító"
 
 #. TRANSLATORS: command description
 msgid "Clears any updates scheduled to be updated offline"
@@ -273,12 +271,9 @@ msgstr "A parancs nem található"
 msgid "Convert firmware to DFU format"
 msgstr "Firmware átalakítása DFU formátumra"
 
-#. TRANSLATORS: command description
-msgid "Create a binary patch using two files"
-msgstr "Bináris folt készítése két fájl használatával"
-
-msgid "DFU"
-msgstr "DFU"
+#. TRANSLATORS: version number of current firmware
+msgid "Current version"
+msgstr "Jelenlegi verzió"
 
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
@@ -292,21 +287,17 @@ msgstr "Hibakeresési beállítások"
 msgid "Decompressing…"
 msgstr "Kibontás…"
 
-#. TRANSLATORS: command description
-msgid "Decrypt firmware data"
-msgstr "Firmware adatok visszafejtése"
-
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Leírás"
 
 #. TRANSLATORS: command description
-msgid "Detach currently attached DFU capable device"
-msgstr "Jelenleg csatlakoztatott DFU-képes eszközök leválasztása"
-
-#. TRANSLATORS: command description
 msgid "Detach to bootloader mode"
 msgstr "Leválasztás a indítóbetöltő módhoz"
+
+#. TRANSLATORS: more details about the update link
+msgid "Details"
+msgstr "Részletek"
 
 #. TRANSLATORS: ID for hardware, typically a SHA1 sum
 msgid "Device ID"
@@ -355,6 +346,14 @@ msgstr "Ne ellenőrizze az újraindítást a frissítés után"
 msgid "Do not check for unreported history"
 msgstr "Ne ellenőrizze a nem jelentett előzményeket"
 
+#. TRANSLATORS: turn on all debugging
+msgid "Do not include log domain prefix"
+msgstr "Ne tartalmazza a naplózási tartomány előtagot"
+
+#. TRANSLATORS: turn on all debugging
+msgid "Do not include timestamp prefix"
+msgstr "Ne tartalmazza az időbélyeg előtagot"
+
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
 msgstr "Ne írjon az előzmények adatbázisába"
@@ -391,9 +390,9 @@ msgstr "SMBIOS adatok kiírása egy fájlból"
 msgid "Dump details about a firmware file"
 msgstr "Részletek kiírása egy firmware fájlról"
 
-#. TRANSLATORS: command description
-msgid "Dump information about a binary patch to the screen"
-msgstr "Információk kiírása a képernyőre a bináris foltról"
+#. TRANSLATORS: length of time the update takes to apply
+msgid "Duration"
+msgstr "Hossz"
 
 #. TRANSLATORS: ESP is EFI System Partition
 msgid "ESP specified was not valid"
@@ -424,10 +423,6 @@ msgstr "Csak a saját felelősségére engedélyezze ezt a funkciót, amely azt 
 #. TRANSLATORS: show the user a warning
 msgid "Enabling this remote is done at your own risk."
 msgstr "A saját felelősségére engedélyezze ezt a távoli tárolót."
-
-#. TRANSLATORS: command description
-msgid "Encrypt firmware data"
-msgstr "Firmware adatok titkosítása"
 
 #. TRANSLATORS: command description
 msgid "Erase all firmware update history"
@@ -501,6 +496,10 @@ msgstr "Fájlnév"
 msgid "Filename Signature"
 msgstr "Fájlnév aláírása"
 
+#. TRANSLATORS: command line option
+msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
+msgstr "Szűrés eszközjelzők megadásával, ~ előtag a kihagyáshoz, például „internal,~needs-reboot”"
+
 #. TRANSLATORS: program name
 msgid "Firmware Agent"
 msgstr "Firmware ügynök"
@@ -534,7 +533,6 @@ msgstr "A firmware frissítések nem támogatottak ezen a gépen."
 msgid "Firmware updates are supported on this machine."
 msgstr "A firmware frissítések támogatottak ezen a gépen."
 
-#. TRANSLATORS: device properties
 #. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "Jelzők"
@@ -542,9 +540,15 @@ msgstr "Jelzők"
 msgid "Force the action ignoring all warnings"
 msgstr "A művelet erőltetése, az összes figyelmeztetés mellőzése"
 
-#. TRANSLATORS: detected a DFU device
-msgid "Found"
-msgstr "Megtalálva"
+#. TRANSLATORS: global ID common to all similar hardware
+msgid "GUID"
+msgid_plural "GUIDs"
+msgstr[0] "GUID"
+msgstr[1] "GUID-ok"
+
+#. TRANSLATORS: command description
+msgid "Get all device flags supported by fwupd"
+msgstr "Az fwupd által támogatott összes eszközjelző lekérése"
 
 #. TRANSLATORS: command description
 msgid "Get all devices and possible releases"
@@ -566,10 +570,6 @@ msgstr "Részleteket kér le egy firmware fájlról"
 msgid "Gets the configured remotes"
 msgstr "Lekéri a beállított távoli tárolókat"
 
-#. TRANSLATORS: command description
-msgid "Gets the cryptographic hash of the dumped firmware"
-msgstr "Lekéri a kiírt firmware kriptográfiai hash-ét"
-
 #. TRANSLATORS: firmware approved by the admin
 msgid "Gets the list of approved firmware."
 msgstr "Lekéri a jóváhagyott firmwarek listáját."
@@ -586,12 +586,17 @@ msgstr "Lekéri az eszközhöz tartozó kiadásokat"
 msgid "Gets the results from the last update"
 msgstr "A legutóbbi frissítésből származó eredményeket kéri le"
 
-msgid "ID"
-msgstr "Azonosító"
-
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
 msgstr "Üresjárat…"
+
+#. TRANSLATORS: command line option
+msgid "Ignore SSL strict checks when downloading files"
+msgstr "A szogorú SSL ellenőrzések mellőzése a fájlok letöltésekor"
+
+#. TRANSLATORS: length of time the update takes to apply
+msgid "Install Duration"
+msgstr "Telepítés hossza"
 
 #. TRANSLATORS: command description
 msgid "Install a firmware blob on a device"
@@ -629,22 +634,32 @@ msgstr "Firmware frissítés telepítése…"
 msgid "Installing on %s…"
 msgstr "%s telepítése…"
 
+#. TRANSLATORS: issue fixed with the release, e.g. CVE
+msgid "Issue"
+msgid_plural "Issues"
+msgstr[0] "Probléma"
+msgstr[1] "Problémák"
+
 msgid "Keyring"
 msgstr "Kulcstartó"
+
+#. TRANSLATORS: the original time/date the device was modified
+msgid "Last modified"
+msgstr "Utoljára módosítva"
 
 #. TRANSLATORS: time remaining for completing firmware flash
 msgid "Less than one minute remaining"
 msgstr "Kevesebb mint egy perc van hátra"
+
+#. TRANSLATORS: e.g. GPLv2+, Proprietary etc
+msgid "License"
+msgstr "Licenc"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux gyártói firmware szolgáltatás (stabil firmware)"
 
 msgid "Linux Vendor Firmware Service (testing firmware)"
 msgstr "Linux gyártói firmware szolgáltatás (teszt firmware)"
-
-#. TRANSLATORS: command description
-msgid "List currently attached DFU capable devices"
-msgstr "Jelenleg csatlakoztatott DFU-képes eszközök felsorolása"
 
 #. TRANSLATORS: command line option
 msgid "List supported firmware updates"
@@ -658,9 +673,9 @@ msgstr "Betöltés…"
 msgid "Manually whitelist specific plugins"
 msgstr "Egyes bővítmények kézi fehérlistára tétele"
 
-#. TRANSLATORS: command description
-msgid "Merge multiple firmware files into one"
-msgstr "Több firmware fájl egyesítése"
+#. TRANSLATORS: remote URI
+msgid "Metadata Signature"
+msgstr "Metaadatok aláírása"
 
 #. TRANSLATORS: remote URI
 msgid "Metadata URI"
@@ -670,8 +685,9 @@ msgstr "Metaadat URI"
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "A metaadatok nem szerezhetőek be a Linux gyártói firmware szolgáltatásból."
 
-msgid "Mode"
-msgstr "Mód"
+#. TRANSLATORS: smallest version number installable on device
+msgid "Minimum Version"
+msgstr "Legkisebb verzió"
 
 #. TRANSLATORS: command description
 msgid "Modifies a given remote"
@@ -680,14 +696,16 @@ msgstr "A megadott távoli tároló módosítása"
 msgid "Modify a configured remote"
 msgstr "A beállított távoli tároló módosítása"
 
+msgid "Modify daemon configuration"
+msgstr "Démon konfigurációjának módosítása"
+
 #. TRANSLATORS: command description
 msgid "Monitor the daemon for events"
 msgstr "A démon eseményeinek figyelése"
 
-#. TRANSLATORS: interface name, e.g. "Flash"
-#. TRANSLATORS: device name, e.g. 'ColorHug2'
-msgid "Name"
-msgstr "Név"
+#. TRANSLATORS: version number of new firmware
+msgid "New version"
+msgstr "Új verzi"
 
 msgid "No action specified!"
 msgstr "Nincs művelet megadva!"
@@ -708,9 +726,6 @@ msgstr "Jelenleg nincsenek engedélyezett távoli tárolók, így nem érhetőek
 msgid "No updates were applied"
 msgstr "Nem lett frissítés alkalmazva"
 
-msgid "OK"
-msgstr "OK"
-
 #. TRANSLATORS: command line option
 msgid "Override plugin warning"
 msgstr "Bővítmény figyelmeztetés felülbírálása"
@@ -730,13 +745,14 @@ msgstr "Tartalom"
 msgid "Percentage complete"
 msgstr "Százalék kész"
 
-msgid "Permission denied"
-msgstr "Hozzáférés megtagadva"
-
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u: "
 msgstr "Adjon meg egy számot 0 és %u között:"
+
+#. TRANSLATORS: version number of previous firmware
+msgid "Previous version"
+msgstr "Előző verzió"
 
 msgid "Print the version number"
 msgstr "A verziószám kiírása."
@@ -751,18 +767,13 @@ msgstr "Prioritás"
 msgid "Proceed with upload?"
 msgstr "Folytatja a feltöltést?"
 
-#. TRANSLATORS: DFU protocol version, e.g. 1.1
-msgid "Protocol"
-msgstr "Protokoll"
+#. TRANSLATORS: a non-free software license
+msgid "Proprietary"
+msgstr "Tulajdonosi"
 
 #. TRANSLATORS: command line option
 msgid "Query for firmware update support"
 msgstr "Firmware frissítési támogatás lekérdezése"
-
-#. TRANSLATORS: device quirks, i.e. things that
-#. * it does that we have to work around
-msgid "Quirks"
-msgstr "Kompatibilitási trükkök"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from device into a file"
@@ -783,10 +794,6 @@ msgstr "Újraindítás…"
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "Metaadatok frissítése a távoli kiszolgálóról"
-
-#. TRANSLATORS: these are areas of memory on the chip
-msgid "Region"
-msgstr "Régió"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
@@ -816,10 +823,6 @@ msgstr "Jelentési URI"
 msgid "Requires internet connection"
 msgstr "Internetkapcsolat szükséges"
 
-#. TRANSLATORS: command description
-msgid "Reset a DFU device"
-msgstr "DFU eszköz visszaállítása"
-
 #. TRANSLATORS: reboot to apply the update
 msgid "Restart now?"
 msgstr "Újraindítja most?"
@@ -831,9 +834,6 @@ msgstr "Eszköz újraindítása…"
 #. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
 msgstr "A géphez tartozó összes hardverazonosító visszaadása"
-
-msgid "Runtime"
-msgstr "Futtatókörnyezet"
 
 #. TRANSLATORS: command line option
 msgid "Save device state into a JSON file between executions"
@@ -847,21 +847,9 @@ msgstr "Telepítés ütemezése a következő újraindításkor, ha lehetséges"
 msgid "Scheduling…"
 msgstr "Ütemezés…"
 
-#. TRANSLATORS: serial number, e.g. '00012345'
-msgid "Serial"
-msgstr "Sorozat"
-
-#. TRANSLATORS: command description
-msgid "Set alternative name on firmware file"
-msgstr "Alternatív név beállítása a firmware fájlon"
-
-#. TRANSLATORS: command description
-msgid "Set alternative number on firmware file"
-msgstr "Alternatív szám beállítása a firmware fájlon"
-
-#. TRANSLATORS: command description
-msgid "Set element address on firmware file"
-msgstr "Elem címének beállítása a firmware fájlban"
+#. TRANSLATORS: serial number of hardware
+msgid "Serial Number"
+msgstr "Sorozatszám"
 
 #. TRANSLATORS: command description
 msgid "Set product ID on firmware file"
@@ -876,16 +864,8 @@ msgid "Set the debugging flag during update"
 msgstr "A hibakeresési jelző beállítása frissítéskor"
 
 #. TRANSLATORS: command description
-msgid "Set the firmware size for the target"
-msgstr "A firmware méretének beállítása a célhoz"
-
-#. TRANSLATORS: command description
 msgid "Set vendor ID on firmware file"
 msgstr "Gyártóazonosító beállítása a firmware fájlon"
-
-#. TRANSLATORS: command description
-msgid "Sets metadata on a firmware file"
-msgstr "Metaadatok beállítása egy firmware fájlon"
 
 msgid "Sets the list of approved firmware"
 msgstr "Beállítja a jóváhagyott firmwarek listáját"
@@ -901,6 +881,14 @@ msgstr "Firmware frissítése előzmények megosztása a fejlesztőkkel"
 #. TRANSLATORS: command line option
 msgid "Show client and daemon versions"
 msgstr "Ügyfél és démon verziók megjelenítése"
+
+#. TRANSLATORS: this is for daemon development
+msgid "Show daemon verbose information for a particular domain"
+msgstr "A démon részletes információinak megjelenítése egy adott tartományhoz"
+
+#. TRANSLATORS: turn on all debugging
+msgid "Show debugging information for all domains"
+msgstr "Hibakeresési információk megjelenítése az összes tartományhoz"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
@@ -948,21 +936,19 @@ msgstr "Feltöltött adatok aláírása az ügyféltanúsítvánnyal"
 msgid "Signature"
 msgstr "Aláírás"
 
+#. TRANSLATORS: file size of the download
+msgid "Size"
+msgstr "Méret"
+
+#. TRANSLATORS: source (as in code) link
+msgid "Source"
+msgstr "Forrás"
+
 msgid "Specify Vendor/Product ID(s) of DFU device"
 msgstr "Adja meg a DFU eszköz gyártó-/termékazonosítóját"
 
 msgid "Specify the number of bytes per USB transfer"
 msgstr "Adja meg az USB átvitelek bájtjainak számát"
-
-#. TRANSLATORS: device state, i.e. appIDLE
-msgid "State"
-msgstr "Állapot"
-
-#. TRANSLATORS: probably not run as root...
-#. TRANSLATORS: device has failed to report status
-#. TRANSLATORS: device status, e.g. "OK"
-msgid "Status"
-msgstr "Állapot"
 
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
@@ -991,10 +977,6 @@ msgstr "Ez a távoli tároló olyan firmware-t tartalmaz, amelyre nem vonatkozik
 msgid "This tool can only be used by the root user"
 msgstr "Ezt az eszközt csak a root felhasználó használhatja"
 
-#. TRANSLATORS: transfer size in bytes
-msgid "Transfer Size"
-msgstr "Átviteli méret"
-
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
 msgstr "Típus"
@@ -1004,8 +986,13 @@ msgid "UEFI Firmware Utility"
 msgstr "UEFI firmware segédprogram"
 
 #. TRANSLATORS: currect daemon status is unknown
+#. TRANSLATORS: we don't know the license of the update
 msgid "Unknown"
 msgstr "Ismeretlen"
+
+#. TRANSLATORS: Name of hardware
+msgid "Unknown Device"
+msgstr "Ismeretlen eszköz"
 
 msgid "Unlock the device to allow access"
 msgstr "Eszköz feloldása hozzáférés engedélyezéséhez"
@@ -1017,6 +1004,19 @@ msgstr "Eszköz feloldása a firmware eléréséhez"
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"
 msgstr "A hibakeresési jelző kikapcsolása frissítéskor"
+
+#. TRANSLATORS: error message from last update attempt
+msgid "Update Error"
+msgstr "Frissítési hiba"
+
+#. TRANSLATORS: helpful messages from last update
+#. TRANSLATORS: helpful messages for the update
+msgid "Update Message"
+msgstr "Frissítési üzenet"
+
+#. TRANSLATORS: hardware state, e.g. "pending"
+msgid "Update State"
+msgstr "Frissítés állapota"
 
 #. TRANSLATORS: command description
 msgid "Update all devices that match local metadata"
@@ -1032,10 +1032,6 @@ msgstr "Frissíti most?"
 
 msgid "Update the stored device verification information"
 msgstr "A tárolt eszközellenőrzési információk frissítése"
-
-#. TRANSLATORS: command description
-msgid "Update the stored metadata with current ROM contents"
-msgstr "A tárolt metaadatok frissítése a jelenlegi ROM tartalmával"
 
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current contents"
@@ -1072,6 +1068,14 @@ msgstr "A firmware jelentések segítenek a hardvergyártóknak, hogy gyorsan az
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "Felhasználónév"
+
+#. TRANSLATORS: one line variant of release (e.g. 'Prerelease' or 'China')
+msgid "Variant"
+msgstr "Változat"
+
+#. TRANSLATORS: manufacturer of hardware
+msgid "Vendor"
+msgstr "Gyártó"
 
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"

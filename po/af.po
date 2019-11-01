@@ -66,11 +66,6 @@ msgstr "’n Bywerking vereis dat die stelsel herbegin om te voltooi."
 msgid "Answer yes to all questions"
 msgstr "Antwoord ja op alle vrae"
 
-#. TRANSLATORS: device attributes, i.e. things that
-#. * the device can do
-msgid "Attributes"
-msgstr "Attribute"
-
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Kanselleer"
@@ -88,10 +83,6 @@ msgstr "Verander"
 msgid "Checksum"
 msgstr "Kontrolesom"
 
-#. TRANSLATORS: chip ID, e.g. "0x58200204"
-msgid "Chip ID"
-msgstr "Vlokkie-ID"
-
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a device:"
 msgstr "Kies 'n toestel:"
@@ -103,9 +94,6 @@ msgstr "Kies 'n vrystelling:"
 #. TRANSLATORS: error message
 msgid "Command not found"
 msgstr "Opdrag nie gevind nie"
-
-msgid "DFU"
-msgstr "DFU"
 
 #. TRANSLATORS: decompressing the firmware file
 msgid "Decompressing…"
@@ -187,13 +175,6 @@ msgstr "Lêernaam"
 msgid "Filename Signature"
 msgstr "Lêernaamhandtekening"
 
-#. TRANSLATORS: detected a DFU device
-msgid "Found"
-msgstr "Gevind"
-
-msgid "ID"
-msgstr "ID"
-
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
 msgstr "Ledig…"
@@ -218,23 +199,9 @@ msgstr "Laai tans…"
 msgid "Metadata URI"
 msgstr "Metadata-URI"
 
-msgid "Mode"
-msgstr "Modus"
-
-#. TRANSLATORS: interface name, e.g. "Flash"
-#. TRANSLATORS: device name, e.g. 'ColorHug2'
-msgid "Name"
-msgstr "Naam"
-
-msgid "OK"
-msgstr "Goed"
-
 #. TRANSLATORS: remote filename base
 msgid "Password"
 msgstr "Wagwoord"
-
-msgid "Permission denied"
-msgstr "Toestemming gewyer"
 
 msgid "Print the version number"
 msgstr "Druk die weergawenommer"
@@ -246,17 +213,9 @@ msgstr "Prioriteit"
 msgid "Proceed with upload?"
 msgstr "Gaan voort met oplaai?"
 
-#. TRANSLATORS: DFU protocol version, e.g. 1.1
-msgid "Protocol"
-msgstr "Protokol"
-
 #. TRANSLATORS: reading from the flash chips
 msgid "Reading…"
 msgstr "Lees tans…"
-
-#. TRANSLATORS: these are areas of memory on the chip
-msgid "Region"
-msgstr "Streek"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
@@ -289,23 +248,9 @@ msgstr "Skeduleer die installasie vir die volgende herbegin indien moontlik"
 msgid "Scheduling…"
 msgstr "Skeduleer tans…"
 
-#. TRANSLATORS: serial number, e.g. '00012345'
-msgid "Serial"
-msgstr "Reeksnommer"
-
 #. TRANSLATORS: command line option
 msgid "Show devices that are not updatable"
 msgstr "Wys toestelle wat nie bygewerk kan word nie"
-
-#. TRANSLATORS: device state, i.e. appIDLE
-msgid "State"
-msgstr "Toestand"
-
-#. TRANSLATORS: probably not run as root...
-#. TRANSLATORS: device has failed to report status
-#. TRANSLATORS: device status, e.g. "OK"
-msgid "Status"
-msgstr "Status"
 
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
@@ -314,15 +259,12 @@ msgstr "Opsomming"
 msgid "Target"
 msgstr "Teiken"
 
-#. TRANSLATORS: transfer size in bytes
-msgid "Transfer Size"
-msgstr "Oordraggrootte"
-
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
 msgstr "Tipe"
 
 #. TRANSLATORS: currect daemon status is unknown
+#. TRANSLATORS: we don't know the license of the update
 msgid "Unknown"
 msgstr "Onbekend"
 

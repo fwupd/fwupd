@@ -137,10 +137,6 @@ msgstr "%s의 별칭"
 msgid "Allow downgrading firmware versions"
 msgstr "펌웨어 다운그레이드를 허용합니다"
 
-#. TRANSLATORS: command line option
-msgid "Allow re-installing existing firmware versions"
-msgstr "기존 펌웨어 버전 재설치를 허용합니다"
-
 #. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "업데이트를 완료하려면 다시 시작해야 합니다."
@@ -153,10 +149,6 @@ msgstr "업데이트를 완료하려면 시스템을 종료해야 합니다."
 msgid "Answer yes to all questions"
 msgstr "모든 질문에 예로 답하기"
 
-#. TRANSLATORS: command description
-msgid "Apply a binary patch"
-msgstr "바이너리 패치 적용"
-
 #. TRANSLATORS: command line option
 msgid "Apply firmware updates"
 msgstr "펌웨어 업데이트 적용"
@@ -168,17 +160,8 @@ msgid_plural "Approved firmware:"
 msgstr[0] "허용 펌웨어:"
 
 #. TRANSLATORS: command description
-msgid "Attach DFU capable device back to runtime"
-msgstr "DFU 기능 장치를 런타임에 연결"
-
-#. TRANSLATORS: command description
 msgid "Attach to firmware mode"
 msgstr "펌웨어 모드에 연결"
-
-#. TRANSLATORS: device attributes, i.e. things that
-#. * the device can do
-msgid "Attributes"
-msgstr "속성"
 
 #. TRANSLATORS: waiting for user to authenticate
 msgid "Authenticating…"
@@ -249,10 +232,6 @@ msgstr "바뀜"
 msgid "Checksum"
 msgstr "체크섬"
 
-#. TRANSLATORS: chip ID, e.g. "0x58200204"
-msgid "Chip ID"
-msgstr "칩 ID"
-
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a device:"
 msgstr "장치를 선택하십시오:"
@@ -260,10 +239,6 @@ msgstr "장치를 선택하십시오:"
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a release:"
 msgstr "출시 버전을 선택하십시오:"
-
-#. TRANSLATORS: this is the encryption method used when writing
-msgid "Cipher"
-msgstr "암호화 방식"
 
 #. TRANSLATORS: command description
 msgid "Clears any updates scheduled to be updated offline"
@@ -281,13 +256,6 @@ msgstr "명령을 찾을 수 없습니다"
 msgid "Convert firmware to DFU format"
 msgstr "펌웨어를 DFU 형식으로 변환"
 
-#. TRANSLATORS: command description
-msgid "Create a binary patch using two files"
-msgstr "파일 두 개를 사용하여 바이너리 패치 만들기"
-
-msgid "DFU"
-msgstr "DFU"
-
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
 msgstr "DFU 유틸리티"
@@ -300,17 +268,9 @@ msgstr "디버깅 옵션"
 msgid "Decompressing…"
 msgstr "압축 해제 중…"
 
-#. TRANSLATORS: command description
-msgid "Decrypt firmware data"
-msgstr "펌웨어 데이터 복호화"
-
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "설명"
-
-#. TRANSLATORS: command description
-msgid "Detach currently attached DFU capable device"
-msgstr "현재 연결한 DFU 기능 장치 분리"
 
 #. TRANSLATORS: command description
 msgid "Detach to bootloader mode"
@@ -399,10 +359,6 @@ msgstr "파일에 저장된 SMBIOS 데이터 덤프를 출력합니다"
 msgid "Dump details about a firmware file"
 msgstr "펌웨어 파일 세부 정보 출력"
 
-#. TRANSLATORS: command description
-msgid "Dump information about a binary patch to the screen"
-msgstr "바이너리 패치 정보를 화면으로 출력"
-
 #. TRANSLATORS: ESP is EFI System Partition
 msgid "ESP specified was not valid"
 msgstr "지정한 ESP가 올바르지 않습니다"
@@ -432,10 +388,6 @@ msgstr "이 기능의 사용은 본인의 책임이며, 업데이트로 인해�
 #. TRANSLATORS: show the user a warning
 msgid "Enabling this remote is done at your own risk."
 msgstr "이 원격 장치를 설정하는 것은 본인의 책임입니다."
-
-#. TRANSLATORS: command description
-msgid "Encrypt firmware data"
-msgstr "펌웨어 데이터 암호화"
 
 #. TRANSLATORS: command description
 msgid "Erase all firmware update history"
@@ -541,17 +493,12 @@ msgstr "이 머신에서 펌웨어 업데이트를 지원하지 않습니다."
 msgid "Firmware updates are supported on this machine."
 msgstr "이 머신에서 펌웨어 업데이트를 지원합니다."
 
-#. TRANSLATORS: device properties
 #. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "플래그"
 
 msgid "Force the action ignoring all warnings"
 msgstr "모든 경고를 무시하고 작업 강제 진행"
-
-#. TRANSLATORS: detected a DFU device
-msgid "Found"
-msgstr "감지 장치"
 
 #. TRANSLATORS: command description
 msgid "Get all devices and possible releases"
@@ -573,10 +520,6 @@ msgstr "펌웨어 파일 세부 정보를 가져옵니다"
 msgid "Gets the configured remotes"
 msgstr "원격 설정 정보를 가져옵니다"
 
-#. TRANSLATORS: command description
-msgid "Gets the cryptographic hash of the dumped firmware"
-msgstr "덤프한 펌웨어의 암호화 해시 정보를 가져옵니다"
-
 #. TRANSLATORS: firmware approved by the admin
 msgid "Gets the list of approved firmware."
 msgstr "허용된 펌웨어 목록을 가져옵니다."
@@ -592,9 +535,6 @@ msgstr "장치 펌웨어 릴리스를 가져옵니다"
 #. TRANSLATORS: command description
 msgid "Gets the results from the last update"
 msgstr "최근 업데이트 결과를 가져옵니다"
-
-msgid "ID"
-msgstr "ID"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -649,10 +589,6 @@ msgstr "리눅스 제조사 펌웨어 서비스(안정 버전 펌웨어)"
 msgid "Linux Vendor Firmware Service (testing firmware)"
 msgstr "리눅스 제조사 펌웨어 서비스(테스트 버전 펌웨어)"
 
-#. TRANSLATORS: command description
-msgid "List currently attached DFU capable devices"
-msgstr "현재 연결한 DFU 기능 장치 목록 보기"
-
 #. TRANSLATORS: command line option
 msgid "List supported firmware updates"
 msgstr "지원하는 펌웨어 업데이트 목록 표시"
@@ -664,10 +600,6 @@ msgstr "불러오는 중…"
 #. TRANSLATORS: command line option
 msgid "Manually whitelist specific plugins"
 msgstr "지정한 플러그인을 수동으로 허용 목록에 추가"
-
-#. TRANSLATORS: command description
-msgid "Merge multiple firmware files into one"
-msgstr "다중 펌웨어 파일을 하나로 병합"
 
 #. TRANSLATORS: remote URI
 msgid "Metadata URI"
@@ -681,9 +613,6 @@ msgstr "리눅스 제조사 펌웨어 서비스에서 메타데이터를 가져�
 #, c-format
 msgid "Mismatched daemon and client, use %s instead"
 msgstr "데몬과 클라이언트가 일치하지 않음, %s을(를) 대신 사용함"
-
-msgid "Mode"
-msgstr "모드"
 
 #. TRANSLATORS: sets something in daemon.conf
 msgid "Modifies a daemon configuration value."
@@ -703,11 +632,6 @@ msgstr "데몬 설정 수정"
 msgid "Monitor the daemon for events"
 msgstr "데몬 이벤트를 감시합니다"
 
-#. TRANSLATORS: interface name, e.g. "Flash"
-#. TRANSLATORS: device name, e.g. 'ColorHug2'
-msgid "Name"
-msgstr "이름"
-
 msgid "No action specified!"
 msgstr "동작을 지정하지 않았습니다!"
 
@@ -726,9 +650,6 @@ msgstr "원격 자원이 설정되지 않았으므로 메타데이터를 사용�
 #. TRANSLATORS: nothing was updated offline
 msgid "No updates were applied"
 msgstr "적용된 업데이트 없음"
-
-msgid "OK"
-msgstr "확인"
 
 #. TRANSLATORS: command line option
 msgid "Override plugin warning"
@@ -753,9 +674,6 @@ msgstr "페이로드"
 msgid "Percentage complete"
 msgstr "진행률"
 
-msgid "Permission denied"
-msgstr "권한 거부"
-
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u: "
@@ -774,18 +692,9 @@ msgstr "우선 순위"
 msgid "Proceed with upload?"
 msgstr "업로드를 진행하시겠습니까?"
 
-#. TRANSLATORS: DFU protocol version, e.g. 1.1
-msgid "Protocol"
-msgstr "프로토콜"
-
 #. TRANSLATORS: command line option
 msgid "Query for firmware update support"
 msgstr "펌웨어 업데이트 지원 조회"
-
-#. TRANSLATORS: device quirks, i.e. things that
-#. * it does that we have to work around
-msgid "Quirks"
-msgstr "특이 사항"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from device into a file"
@@ -806,10 +715,6 @@ msgstr "다시 시작하는 중..."
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "원격 서버의 메타데이터를 새로 고칩니다"
-
-#. TRANSLATORS: these are areas of memory on the chip
-msgid "Region"
-msgstr "메모리 영역"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
@@ -839,10 +744,6 @@ msgstr "보고서 URI"
 msgid "Requires internet connection"
 msgstr "인터넷 연결 필요"
 
-#. TRANSLATORS: command description
-msgid "Reset a DFU device"
-msgstr "DFU 장치 초기화"
-
 #. TRANSLATORS: reboot to apply the update
 msgid "Restart now?"
 msgstr "지금 다시 시작하시겠습니까?"
@@ -867,9 +768,6 @@ msgstr "install-blob 사용 시 플러그인 정리 루틴 실행"
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "install-blob 사용 시 플러그인 준비 루틴 실행"
 
-msgid "Runtime"
-msgstr "런타임"
-
 #. TRANSLATORS: command line option
 msgid "Save device state into a JSON file between executions"
 msgstr "실행하는 동안의 장치 상태를 JSON 파일로 저장"
@@ -881,22 +779,6 @@ msgstr "가능하다면 다음에 다시 시작할 때 설치 예약"
 #. TRANSLATORS: scheduing an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "작업 계획 중…"
-
-#. TRANSLATORS: serial number, e.g. '00012345'
-msgid "Serial"
-msgstr "시리얼"
-
-#. TRANSLATORS: command description
-msgid "Set alternative name on firmware file"
-msgstr "펌웨어 파일의 대체 명칭 설정"
-
-#. TRANSLATORS: command description
-msgid "Set alternative number on firmware file"
-msgstr "펌웨어 파일의 대체 번호 설정"
-
-#. TRANSLATORS: command description
-msgid "Set element address on firmware file"
-msgstr "펌웨어 파일의 구성요소 주소 설정"
 
 #. TRANSLATORS: command description
 msgid "Set product ID on firmware file"
@@ -911,16 +793,8 @@ msgid "Set the debugging flag during update"
 msgstr "업데이트 중 디버깅 플래그 설정"
 
 #. TRANSLATORS: command description
-msgid "Set the firmware size for the target"
-msgstr "대상 펌웨어 크기 설정"
-
-#. TRANSLATORS: command description
 msgid "Set vendor ID on firmware file"
 msgstr "펌웨어 파일의 제조사 ID 설정"
-
-#. TRANSLATORS: command description
-msgid "Sets metadata on a firmware file"
-msgstr "펌웨어 파일의 메타데이터 설정"
 
 msgid "Sets the list of approved firmware"
 msgstr "허용된 펌웨어 목록 설정"
@@ -997,16 +871,6 @@ msgstr "DFU 장치의 제조사/제품 ID 지정"
 msgid "Specify the number of bytes per USB transfer"
 msgstr "USB 전송 당 바이트 수 지정"
 
-#. TRANSLATORS: device state, i.e. appIDLE
-msgid "State"
-msgstr "상태"
-
-#. TRANSLATORS: probably not run as root...
-#. TRANSLATORS: device has failed to report status
-#. TRANSLATORS: device status, e.g. "OK"
-msgid "Status"
-msgstr "장치 상태"
-
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "요약"
@@ -1034,10 +898,6 @@ msgstr "이 원격 저장소에서는 하드웨어 제조사에서 검증 단계
 msgid "This tool can only be used by the root user"
 msgstr "이 도구는 루트로만 사용할 수 있습니다"
 
-#. TRANSLATORS: transfer size in bytes
-msgid "Transfer Size"
-msgstr "전송 용량"
-
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
 msgstr "형식"
@@ -1047,6 +907,7 @@ msgid "UEFI Firmware Utility"
 msgstr "UEFI 펌웨어 유틸리티"
 
 #. TRANSLATORS: currect daemon status is unknown
+#. TRANSLATORS: we don't know the license of the update
 msgid "Unknown"
 msgstr "알 수 없음"
 
@@ -1080,10 +941,6 @@ msgstr "지금 업데이트하시겠습니까?"
 
 msgid "Update the stored device verification information"
 msgstr "저장된 장치 검증 정보 업데이트"
-
-#. TRANSLATORS: command description
-msgid "Update the stored metadata with current ROM contents"
-msgstr "저장된 메타데이터를 현재 ROM 내용으로 업데이트합니다"
 
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current contents"

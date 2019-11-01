@@ -34,10 +34,6 @@ msgstr "Алијас на %s"
 msgid "Allow downgrading firmware versions"
 msgstr "Дозволи уназађивање издања фирмвера"
 
-#. TRANSLATORS: command line option
-msgid "Allow re-installing existing firmware versions"
-msgstr "Дозволи поновно инсталирање већ постојећих издања фирмвера"
-
 #. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "Потребно је поново покретање да би се исправка применила."
@@ -45,19 +41,6 @@ msgstr "Потребно је поново покретање да би се и�
 #. TRANSLATORS: command line option
 msgid "Answer yes to all questions"
 msgstr "Одговори са да на сва питања"
-
-#. TRANSLATORS: command description
-msgid "Apply a binary patch"
-msgstr "Примени бинарну закрпу"
-
-#. TRANSLATORS: command description
-msgid "Attach DFU capable device back to runtime"
-msgstr "Закачи уређај способан за ДФУ назад на извршно окружење"
-
-#. TRANSLATORS: device attributes, i.e. things that
-#. * the device can do
-msgid "Attributes"
-msgstr "Особине"
 
 #. TRANSLATORS: waiting for user to authenticate
 msgid "Authenticating…"
@@ -108,10 +91,6 @@ msgstr "Променио"
 msgid "Checksum"
 msgstr "Чек-сума"
 
-#. TRANSLATORS: chip ID, e.g. "0x58200204"
-msgid "Chip ID"
-msgstr "ИБ чипа"
-
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a device:"
 msgstr "Изаберите уређај:"
@@ -119,10 +98,6 @@ msgstr "Изаберите уређај:"
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a release:"
 msgstr "Изаберите издање:"
-
-#. TRANSLATORS: this is the encryption method used when writing
-msgid "Cipher"
-msgstr "Шифрар"
 
 #. TRANSLATORS: command description
 msgid "Clears any updates scheduled to be updated offline"
@@ -140,13 +115,6 @@ msgstr "Наредба није пронађена"
 msgid "Convert firmware to DFU format"
 msgstr "Претвори фирмвер у ДФУ формат"
 
-#. TRANSLATORS: command description
-msgid "Create a binary patch using two files"
-msgstr "Направи бинарну закрпу уз помоћ две датотеке"
-
-msgid "DFU"
-msgstr "ДФУ"
-
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
 msgstr "ДФУ алатка"
@@ -159,17 +127,9 @@ msgstr "Опције отклањања проблема"
 msgid "Decompressing…"
 msgstr "Распакујем…"
 
-#. TRANSLATORS: command description
-msgid "Decrypt firmware data"
-msgstr "Дешифруј податке у фирмверу"
-
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Опис"
-
-#. TRANSLATORS: command description
-msgid "Detach currently attached DFU capable device"
-msgstr "Откачи тренутно закачен уређај способан за ДФУ"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device added:"
@@ -230,17 +190,9 @@ msgstr "Ишчитај SMBIOS податке из датотеке"
 msgid "Dump details about a firmware file"
 msgstr "Истовари детаље о датотеци са фирмвером"
 
-#. TRANSLATORS: command description
-msgid "Dump information about a binary patch to the screen"
-msgstr "Избаци податке о бинарној закрпи на екран"
-
 #. TRANSLATORS: if the remote is enabled
 msgid "Enabled"
 msgstr "Омогућено"
-
-#. TRANSLATORS: command description
-msgid "Encrypt firmware data"
-msgstr "Шифруј податке у фирмверу"
 
 #. TRANSLATORS: command description
 msgid "Erase all firmware update history"
@@ -314,10 +266,6 @@ msgstr[0] "Метаподаци фирмвера нису ажурирани %u 
 msgstr[1] "Метаподаци фирмвера нису ажурирани %u дана и можда су застарели."
 msgstr[2] "Метаподаци фирмвера нису ажурирани %u дана и можда су застарели."
 
-#. TRANSLATORS: detected a DFU device
-msgid "Found"
-msgstr "Нашао"
-
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
 msgstr "Добави све уређаје који подржавају ажурирање фирмвера"
@@ -331,10 +279,6 @@ msgid "Gets the configured remotes"
 msgstr "Добавља подешена удаљена места"
 
 #. TRANSLATORS: command description
-msgid "Gets the cryptographic hash of the dumped firmware"
-msgstr "Добавља криптографски хеш извађеног фирмвера"
-
-#. TRANSLATORS: command description
 msgid "Gets the list of updates for connected hardware"
 msgstr "Добави списак свих ажурирања за повезани уређај"
 
@@ -345,9 +289,6 @@ msgstr "Добавља издања за уређај"
 #. TRANSLATORS: command description
 msgid "Gets the results from the last update"
 msgstr "Добавља резултате последњег ажурирања"
-
-msgid "ID"
-msgstr "ИБ"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -379,24 +320,13 @@ msgstr "Инсталирам ажурирање фирмвера…"
 msgid "Keyring"
 msgstr "Привезак"
 
-#. TRANSLATORS: command description
-msgid "List currently attached DFU capable devices"
-msgstr "Прикажи списак закачених уређаја способних за ДФУ"
-
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
 msgstr "Учитавам…"
 
-#. TRANSLATORS: command description
-msgid "Merge multiple firmware files into one"
-msgstr "Споји више датотека са фирмвером у једну"
-
 #. TRANSLATORS: remote URI
 msgid "Metadata URI"
 msgstr "URI метаподатака"
-
-msgid "Mode"
-msgstr "Режим"
 
 #. TRANSLATORS: command description
 msgid "Modifies a given remote"
@@ -409,17 +339,9 @@ msgstr "Измени подешени удаљени сервер"
 msgid "Monitor the daemon for events"
 msgstr "Прати демона за догађајима"
 
-#. TRANSLATORS: interface name, e.g. "Flash"
-#. TRANSLATORS: device name, e.g. 'ColorHug2'
-msgid "Name"
-msgstr "Назив"
-
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Нема хардвера којем се може ажурирати фирмвер"
-
-msgid "OK"
-msgstr "У реду"
 
 #. TRANSLATORS: command line option
 msgid "Override plugin warning"
@@ -432,24 +354,12 @@ msgstr "Лозинка"
 msgid "Payload"
 msgstr "Товар"
 
-msgid "Permission denied"
-msgstr "Приступ је одбијен"
-
 #. TRANSLATORS: the numeric priority
 msgid "Priority"
 msgstr "Важност"
 
 msgid "Proceed with upload?"
 msgstr "Наставити са отпремањем?"
-
-#. TRANSLATORS: DFU protocol version, e.g. 1.1
-msgid "Protocol"
-msgstr "Протокол"
-
-#. TRANSLATORS: device quirks, i.e. things that
-#. * it does that we have to work around
-msgid "Quirks"
-msgstr "Непрецизности"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from device into a file"
@@ -466,10 +376,6 @@ msgstr "Читам…"
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "Освежава метаподатке са удаљеног сервера"
-
-#. TRANSLATORS: these are areas of memory on the chip
-msgid "Region"
-msgstr "Област"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
@@ -499,10 +405,6 @@ msgstr "URI извештаја"
 msgid "Requires internet connection"
 msgstr "Захтева везу са интернетом"
 
-#. TRANSLATORS: command description
-msgid "Reset a DFU device"
-msgstr "Ресетуј ДФУ уређај"
-
 #. TRANSLATORS: reboot to apply the update
 msgid "Restart now?"
 msgstr "Поново покренути сада?"
@@ -515,9 +417,6 @@ msgstr "Поново покрећем уређај…"
 msgid "Return all the hardware IDs for the machine"
 msgstr "Враћа све ИБ-јеве хардвера на машини"
 
-msgid "Runtime"
-msgstr "Извршно окружење"
-
 #. TRANSLATORS: command line option
 msgid "Schedule installation for next reboot when possible"
 msgstr "Заказује инсталирање за следеће подизање система када је могуће"
@@ -525,22 +424,6 @@ msgstr "Заказује инсталирање за следеће подиза
 #. TRANSLATORS: scheduing an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Заказујем…"
-
-#. TRANSLATORS: serial number, e.g. '00012345'
-msgid "Serial"
-msgstr "Серијски"
-
-#. TRANSLATORS: command description
-msgid "Set alternative name on firmware file"
-msgstr "Подеси алтернативно име на датотеци са фирмвером"
-
-#. TRANSLATORS: command description
-msgid "Set alternative number on firmware file"
-msgstr "Подеси алтернативни број на датотеци са фирмвером"
-
-#. TRANSLATORS: command description
-msgid "Set element address on firmware file"
-msgstr "Подешава адресу елемента на датотеци фирмвера"
 
 #. TRANSLATORS: command description
 msgid "Set product ID on firmware file"
@@ -551,16 +434,8 @@ msgid "Set release version on firmware file"
 msgstr "Подеси издање објаве на датотеци са фирмвером"
 
 #. TRANSLATORS: command description
-msgid "Set the firmware size for the target"
-msgstr "Подешава величину фирмвера за мету"
-
-#. TRANSLATORS: command description
 msgid "Set vendor ID on firmware file"
 msgstr "Подеси ИБ продавца на датотеци са фирмвером"
-
-#. TRANSLATORS: command description
-msgid "Sets metadata on a firmware file"
-msgstr "Подешава метаподатке у датотеци фирмвера"
 
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
@@ -586,16 +461,6 @@ msgstr "Прикажи историјат ажурирања фирмвера"
 msgid "Show plugin verbose information"
 msgstr "Прикажи опширне податке о прикључку"
 
-#. TRANSLATORS: device state, i.e. appIDLE
-msgid "State"
-msgstr "Стање"
-
-#. TRANSLATORS: probably not run as root...
-#. TRANSLATORS: device has failed to report status
-#. TRANSLATORS: device status, e.g. "OK"
-msgid "Status"
-msgstr "Статус"
-
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Сажетак"
@@ -603,15 +468,12 @@ msgstr "Сажетак"
 msgid "Target"
 msgstr "Мета"
 
-#. TRANSLATORS: transfer size in bytes
-msgid "Transfer Size"
-msgstr "Величина преноса"
-
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
 msgstr "Врста"
 
 #. TRANSLATORS: currect daemon status is unknown
+#. TRANSLATORS: we don't know the license of the update
 msgid "Unknown"
 msgstr "Непознато"
 
@@ -632,10 +494,6 @@ msgstr "Ажурирати сада?"
 
 msgid "Update the stored device verification information"
 msgstr "Ажурирајте причуване податке потврђивања уређаја"
-
-#. TRANSLATORS: command description
-msgid "Update the stored metadata with current ROM contents"
-msgstr "Ажурирај ускладиштене метаподатке са тренутним садржајима РОМ-а"
 
 #. TRANSLATORS: command description
 msgid "Updates all firmware to latest versions available"

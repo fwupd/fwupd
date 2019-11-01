@@ -95,6 +95,13 @@ msgid_plural "%u hours"
 msgstr[0] "%u time"
 msgstr[1] "%u timer"
 
+#. TRANSLATORS: how many local devices can expect updates now
+#, c-format
+msgid "%u local device supported"
+msgid_plural "%u local devices supported"
+msgstr[0] "%u lokal enhed understøttes"
+msgstr[1] "%u lokale enheder understøttes"
+
 #. TRANSLATORS: duration in minutes
 #, c-format
 msgid "%u minute"
@@ -150,7 +157,7 @@ msgid "Allow downgrading firmware versions"
 msgstr "Tillad nedgradering af firmwareversioner"
 
 #. TRANSLATORS: command line option
-msgid "Allow re-installing existing firmware versions"
+msgid "Allow reinstalling existing firmware versions"
 msgstr "Tillad geninstallering af eksisterende firmwareversioner"
 
 #. TRANSLATORS: explain why we want to reboot
@@ -165,10 +172,6 @@ msgstr "For at fuldføre en opdatering skal systemet lukkes ned."
 msgid "Answer yes to all questions"
 msgstr "Svar ja til alle spørgsmål"
 
-#. TRANSLATORS: command description
-msgid "Apply a binary patch"
-msgstr "Anvend en binær patch"
-
 #. TRANSLATORS: command line option
 msgid "Apply firmware updates"
 msgstr "Anvend firmwareopdateringer"
@@ -181,17 +184,8 @@ msgstr[0] "Godkendt firmware:"
 msgstr[1] "Godkendt firmware:"
 
 #. TRANSLATORS: command description
-msgid "Attach DFU capable device back to runtime"
-msgstr "Tilkobl enheder som formår DFU tilbage til runtime"
-
-#. TRANSLATORS: command description
 msgid "Attach to firmware mode"
 msgstr "Tilkobl til firmwaretilstand"
-
-#. TRANSLATORS: device attributes, i.e. things that
-#. * the device can do
-msgid "Attributes"
-msgstr "Attributter"
 
 #. TRANSLATORS: waiting for user to authenticate
 msgid "Authenticating…"
@@ -241,6 +235,10 @@ msgstr "Der kræves autentifikation for at opdatere firmwaren på maskinen"
 msgid "Authentication is required to update the stored checksums for the device"
 msgstr "Der kræves autentifikation for at opdatere de gemte checksumme for enheden"
 
+#. TRANSLATORS: Boolean value to automatically send reports
+msgid "Automatic Reporting"
+msgstr "Automatisk rapportering"
+
 #. TRANSLATORS: firmware version of bootloader
 msgid "Bootloader Version"
 msgstr "Opstartsindlæser version"
@@ -266,10 +264,6 @@ msgstr "Ændret"
 msgid "Checksum"
 msgstr "Checksum"
 
-#. TRANSLATORS: chip ID, e.g. "0x58200204"
-msgid "Chip ID"
-msgstr "Chip-id"
-
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a device:"
 msgstr "Vælg en enhed:"
@@ -277,10 +271,6 @@ msgstr "Vælg en enhed:"
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a release:"
 msgstr "Vælg en udgivelse:"
-
-#. TRANSLATORS: this is the encryption method used when writing
-msgid "Cipher"
-msgstr "Krypteringsalgoritme"
 
 #. TRANSLATORS: command description
 msgid "Clears any updates scheduled to be updated offline"
@@ -298,16 +288,9 @@ msgstr "Kommandoen blev ikke fundet"
 msgid "Convert firmware to DFU format"
 msgstr "Konverter firmware til DFU-format"
 
-#. TRANSLATORS: command description
-msgid "Create a binary patch using two files"
-msgstr "Opret en binær patch ved brug af to filer"
-
 #. TRANSLATORS: version number of current firmware
 msgid "Current version"
 msgstr "Nuværende version"
-
-msgid "DFU"
-msgstr "DFU"
 
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
@@ -321,17 +304,9 @@ msgstr "Fejlsøgningsindstillinger"
 msgid "Decompressing…"
 msgstr "Udpakker …"
 
-#. TRANSLATORS: command description
-msgid "Decrypt firmware data"
-msgstr "Afkryptér firmwaredata"
-
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "Beskrivelse"
-
-#. TRANSLATORS: command description
-msgid "Detach currently attached DFU capable device"
-msgstr "Frakobl tilkoblede enheder som formår DFU"
 
 #. TRANSLATORS: command description
 msgid "Detach to bootloader mode"
@@ -389,8 +364,22 @@ msgid "Do not check for unreported history"
 msgstr "Tjek ikke efter historik som ikke er blevet rapporteret"
 
 #. TRANSLATORS: turn on all debugging
+msgid "Do not include log domain prefix"
+msgstr "Medtag ikke præfiks for logdomæne"
+
+#. TRANSLATORS: turn on all debugging
 msgid "Do not include timestamp prefix"
 msgstr "Medtag ikke tidsstempelpræfiks"
+
+msgid "Do not upload report at this time, but prompt again for future updates"
+msgid_plural "Do not upload reports at this time, but prompt again for future updates"
+msgstr[0] "Upload ikke rapport på nuværende tidspunkt men spørg igen om fremtidige opdateringer"
+msgstr[1] "Upload ikke rapporter på nuværende tidspunkt men spørg igen om fremtidige opdateringer"
+
+msgid "Do not upload report, and never ask to upload reports for future updates"
+msgid_plural "Do not upload reports, and never ask to upload reports for future updates"
+msgstr[0] "Upload ikke rapport og spørg aldrig om at uploade rapporter om fremtidige opdateringer"
+msgstr[1] "Upload ikke rapporter og spørg aldrig om at uploade rapporter om fremtidige opdateringer"
 
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
@@ -428,10 +417,6 @@ msgstr "Dump SMBIOS-data fra en fil"
 msgid "Dump details about a firmware file"
 msgstr "Dump detaljer om en firmwarefil"
 
-#. TRANSLATORS: command description
-msgid "Dump information about a binary patch to the screen"
-msgstr "Dump information om en binær patch på skærmen"
-
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Duration"
 msgstr "Varighed"
@@ -465,10 +450,6 @@ msgstr "Aktivering af funktionen sker på egen risiko. Det betydet at du skal ko
 #. TRANSLATORS: show the user a warning
 msgid "Enabling this remote is done at your own risk."
 msgstr "Aktivering af fjernen sker på egen risiko."
-
-#. TRANSLATORS: command description
-msgid "Encrypt firmware data"
-msgstr "Kryptér firmwaredata"
 
 #. TRANSLATORS: command description
 msgid "Erase all firmware update history"
@@ -583,7 +564,6 @@ msgstr "Maskinen understøtter ikke firmwareopdateringer."
 msgid "Firmware updates are supported on this machine."
 msgstr "Maskinen understøtter firmwareopdateringer."
 
-#. TRANSLATORS: device properties
 #. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "Flag"
@@ -591,9 +571,11 @@ msgstr "Flag"
 msgid "Force the action ignoring all warnings"
 msgstr "Tving handlingen og ignorer alle advarsler"
 
-#. TRANSLATORS: detected a DFU device
-msgid "Found"
-msgstr "Fundet"
+#. TRANSLATORS: global ID common to all similar hardware
+msgid "GUID"
+msgid_plural "GUIDs"
+msgstr[0] "GUID"
+msgstr[1] "GUID'er"
 
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
@@ -619,10 +601,6 @@ msgstr "Hent detaljer om en firmwarefil"
 msgid "Gets the configured remotes"
 msgstr "Henter de konfigurerede fjerne"
 
-#. TRANSLATORS: command description
-msgid "Gets the cryptographic hash of the dumped firmware"
-msgstr "Henter den kryptografiske hash fra den dumpede firmware"
-
 #. TRANSLATORS: firmware approved by the admin
 msgid "Gets the list of approved firmware."
 msgstr "Henter listen over godkendt firmware."
@@ -638,9 +616,6 @@ msgstr "Henter resultaterne fra en enhed"
 #. TRANSLATORS: command description
 msgid "Gets the results from the last update"
 msgstr "Henter resultaterne fra den sidste opdatering"
-
-msgid "ID"
-msgstr "Id"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -690,14 +665,24 @@ msgstr "Installerer firmwareopdateringer …"
 msgid "Installing on %s…"
 msgstr "Installerer på %s …"
 
+#. TRANSLATORS: issue fixed with the release, e.g. CVE
+msgid "Issue"
+msgid_plural "Issues"
+msgstr[0] "Problemstilling"
+msgstr[1] "Problemstillinger"
+
 msgid "Keyring"
 msgstr "Nøglering"
+
+#. TRANSLATORS: the original time/date the device was modified
+msgid "Last modified"
+msgstr "Sidst redigeret"
 
 #. TRANSLATORS: time remaining for completing firmware flash
 msgid "Less than one minute remaining"
 msgstr "Mindre end et minut tilbage"
 
-#. TRANSLATORS: e.g. GPLv2+, Non free etc
+#. TRANSLATORS: e.g. GPLv2+, Proprietary etc
 msgid "License"
 msgstr "Licens"
 
@@ -706,10 +691,6 @@ msgstr "Linux Vendor Firmware Service (stabilt firmware)"
 
 msgid "Linux Vendor Firmware Service (testing firmware)"
 msgstr "Linux Vendor Firmware Service (testning firmware)"
-
-#. TRANSLATORS: command description
-msgid "List currently attached DFU capable devices"
-msgstr "Vis tilkoblede enheder som formår DFU"
 
 #. TRANSLATORS: command line option
 msgid "List supported firmware updates"
@@ -726,10 +707,6 @@ msgstr "Log output til FIL (typisk til brug ved scripting)"
 #. TRANSLATORS: command line option
 msgid "Manually whitelist specific plugins"
 msgstr "Manuel hvidlistning af bestemte plugins"
-
-#. TRANSLATORS: command description
-msgid "Merge multiple firmware files into one"
-msgstr "Sammenlæg flere firmwarefiler i én"
 
 #. TRANSLATORS: remote URI
 msgid "Metadata Signature"
@@ -752,9 +729,6 @@ msgstr "Minimum version"
 msgid "Mismatched daemon and client, use %s instead"
 msgstr "Dæmon og klient passer ikke sammen, brug %s i stedet"
 
-msgid "Mode"
-msgstr "Tilstand"
-
 #. TRANSLATORS: sets something in daemon.conf
 msgid "Modifies a daemon configuration value."
 msgstr "Rediger en værdi i dæmonkonfiguration."
@@ -773,10 +747,9 @@ msgstr "Rediger dæmonkonfiguration"
 msgid "Monitor the daemon for events"
 msgstr "Overvåg dæmonen for hændelser"
 
-#. TRANSLATORS: interface name, e.g. "Flash"
-#. TRANSLATORS: device name, e.g. 'ColorHug2'
-msgid "Name"
-msgstr "Navn"
+#. TRANSLATORS: version number of new firmware
+msgid "New version"
+msgstr "Ny version"
 
 msgid "No action specified!"
 msgstr "Der er ikke angivet nogen handling!"
@@ -805,9 +778,6 @@ msgstr "Ingen tilgængelige fjerne"
 msgid "No updates were applied"
 msgstr "Der blev ikke anvendt nogen opdateringer"
 
-msgid "OK"
-msgstr "OK"
-
 #. TRANSLATORS: command line option
 msgid "Override plugin warning"
 msgstr "Tilsidesæt advarsel for plugin"
@@ -831,13 +801,14 @@ msgstr "Nyttelast"
 msgid "Percentage complete"
 msgstr "Procent fuldført"
 
-msgid "Permission denied"
-msgstr "Tilladelse nægtet"
-
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u: "
 msgstr "Indtast venligst et tal nummer 0 og %u: "
+
+#. TRANSLATORS: version number of previous firmware
+msgid "Previous version"
+msgstr "Forrige version"
 
 msgid "Print the version number"
 msgstr "Udskriv versionsnummer"
@@ -852,18 +823,13 @@ msgstr "Prioritet"
 msgid "Proceed with upload?"
 msgstr "Fortsæt med upload?"
 
-#. TRANSLATORS: DFU protocol version, e.g. 1.1
-msgid "Protocol"
-msgstr "Protokol"
+#. TRANSLATORS: a non-free software license
+msgid "Proprietary"
+msgstr "Proprietær"
 
 #. TRANSLATORS: command line option
 msgid "Query for firmware update support"
 msgstr "Forespørg om understøttelse af firmwareopdatering"
-
-#. TRANSLATORS: device quirks, i.e. things that
-#. * it does that we have to work around
-msgid "Quirks"
-msgstr "Quirks"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from device into a file"
@@ -885,9 +851,9 @@ msgstr "Genstarter …"
 msgid "Refresh metadata from remote server"
 msgstr "Genopfrisk metadata fra fjernserver"
 
-#. TRANSLATORS: these are areas of memory on the chip
-msgid "Region"
-msgstr "Område"
+#. TRANSLATORS: command description
+msgid "Reinstall current firmware on the device."
+msgstr "Geninstaller den nuværende firmware på enheden."
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
@@ -917,10 +883,6 @@ msgstr "Rapport-URI"
 msgid "Requires internet connection"
 msgstr "Kræver internetforbindelse"
 
-#. TRANSLATORS: command description
-msgid "Reset a DFU device"
-msgstr "Nulstil en DFU-enhed"
-
 #. TRANSLATORS: reboot to apply the update
 msgid "Restart now?"
 msgstr "Genstart nu?"
@@ -945,9 +907,6 @@ msgstr "Kør oprydningsrutinen for pluginkomposition når install-blob bruges"
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "Kør forberedelsesrutinen for pluginkomposition når install-blob bruges"
 
-msgid "Runtime"
-msgstr "Runtime"
-
 #. TRANSLATORS: command line option
 msgid "Save device state into a JSON file between executions"
 msgstr "Gem enhedens tilstand i en JSON-fil mellem udførsler"
@@ -960,25 +919,9 @@ msgstr "Planlægning af installation ved næste genstart, når det er muligt"
 msgid "Scheduling…"
 msgstr "Planlægger …"
 
-#. TRANSLATORS: serial number, e.g. '00012345'
-msgid "Serial"
-msgstr "Serienummer"
-
 #. TRANSLATORS: serial number of hardware
 msgid "Serial Number"
 msgstr "Serienummer"
-
-#. TRANSLATORS: command description
-msgid "Set alternative name on firmware file"
-msgstr "Indstil alternativt navn på firmwarefil"
-
-#. TRANSLATORS: command description
-msgid "Set alternative number on firmware file"
-msgstr "Indstil alternativt tal på firmwarefil"
-
-#. TRANSLATORS: command description
-msgid "Set element address on firmware file"
-msgstr "Indstil elementadresse på firmwarefil"
 
 #. TRANSLATORS: command description
 msgid "Set product ID on firmware file"
@@ -993,16 +936,8 @@ msgid "Set the debugging flag during update"
 msgstr "Indstil fejlsøgningsflaget under opdatering"
 
 #. TRANSLATORS: command description
-msgid "Set the firmware size for the target"
-msgstr "Indstil firmwarestørrelse på målet"
-
-#. TRANSLATORS: command description
 msgid "Set vendor ID on firmware file"
 msgstr "Indstil producent-id på firmwarefil"
-
-#. TRANSLATORS: command description
-msgid "Sets metadata on a firmware file"
-msgstr "Indstiller metadata på en firmwarefil"
 
 msgid "Sets the list of approved firmware"
 msgstr "Indstiller listen over godkendt firmware"
@@ -1087,15 +1022,48 @@ msgstr "Angiv producent-/produkt-id('er) for DFU-enhed"
 msgid "Specify the number of bytes per USB transfer"
 msgstr "Angiv antal bytes pr. USB-overførsel"
 
-#. TRANSLATORS: device state, i.e. appIDLE
-msgid "State"
-msgstr "Tilstand"
+#. TRANSLATORS: success message -- where activation is making the new
+#. * firmware take effect, usually after updating offline
+msgid "Successfully activated all devices"
+msgstr "Det lykkedes at aktivere alle enheder"
 
-#. TRANSLATORS: probably not run as root...
-#. TRANSLATORS: device has failed to report status
-#. TRANSLATORS: device status, e.g. "OK"
-msgid "Status"
-msgstr "Status"
+#. TRANSLATORS: success message
+msgid "Successfully disabled remote"
+msgstr "Det lykkedes at deaktivere fjern"
+
+#. TRANSLATORS: success message where we made the firmware on the
+#. * device older than it was before
+msgid "Successfully downgraded device"
+msgstr "Det lykkedes at nedgradere enhed"
+
+#. TRANSLATORS: success message -- where 'metadata' is information
+#. * about available firmware on the remote server
+msgid "Successfully downloaded new metadata: "
+msgstr "Det lykkedes at downloade ny metadata: "
+
+#. TRANSLATORS: success message
+msgid "Successfully enabled remote"
+msgstr "Det lykkedes at aktivere fjern"
+
+#. TRANSLATORS: success message
+msgid "Successfully installed firmware"
+msgstr "Det lykkedes at installere firmware"
+
+#. TRANSLATORS: success message -- a per-system setting value
+msgid "Successfully modified configuration value"
+msgstr "Det lykkedes at redigere konfigurationsværdi"
+
+#. TRANSLATORS: success message -- the user can do this by-hand too
+msgid "Successfully refreshed metadata manually"
+msgstr "Det lykkedes at opdatere metadata manuelt"
+
+#. TRANSLATORS: success message -- where the user has uploaded
+#. * success and/or failure reports to the remote server
+#, c-format
+msgid "Successfully uploaded %u report"
+msgid_plural "Successfully uploaded %u reports"
+msgstr[0] "Det lykkedes at uploade %u rapport"
+msgstr[1] "Det lykkedes at uploade %u rapporter"
 
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
@@ -1124,10 +1092,6 @@ msgstr "Fjernen indeholder firmware som der ikke er embargo på, men som stadigv
 msgid "This tool can only be used by the root user"
 msgstr "Værktøjet kan kun bruges af root-brugeren"
 
-#. TRANSLATORS: transfer size in bytes
-msgid "Transfer Size"
-msgstr "Overførselsstørrelse"
-
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
 msgstr "Type"
@@ -1137,6 +1101,7 @@ msgid "UEFI Firmware Utility"
 msgstr "UEFI-firmwareredskab"
 
 #. TRANSLATORS: currect daemon status is unknown
+#. TRANSLATORS: we don't know the license of the update
 msgid "Unknown"
 msgstr "Ukendt"
 
@@ -1189,10 +1154,6 @@ msgid "Update the stored device verification information"
 msgstr "Opdaterer de gemte informationer om enhedsverifikation"
 
 #. TRANSLATORS: command description
-msgid "Update the stored metadata with current ROM contents"
-msgstr "Opdater de gemte metadata med indholdet fra den nuværende ROM"
-
-#. TRANSLATORS: command description
 msgid "Update the stored metadata with current contents"
 msgstr "Opdater det gemte metadata med det nuværende indhold"
 
@@ -1216,9 +1177,19 @@ msgstr "Opdaterer %s …"
 msgid "Upload message:"
 msgstr "Uploadmeddelelse:"
 
+msgid "Upload report just this one time, but prompt again for future updates"
+msgid_plural "Upload reports just this one time, but prompt again for future updates"
+msgstr[0] "Upload rapport denne ene gang men spørg igen om fremtidige opdateringer"
+msgstr[1] "Upload rapporter denne ene gang men spørg igen om fremtidige opdateringer"
+
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "Upload rapport nu?"
+
+msgid "Upload report this time and automatically upload reports after completing future updates"
+msgid_plural "Upload reports this time and automatically upload reports after completing future updates"
+msgstr[0] "Upload rapport denne gang og upload automatisk rapporter efter fuldførsel af fremtidige opdateringer"
+msgstr[1] "Upload rapporter denne gang og upload automatisk rapporter efter fuldførsel af fremtidige opdateringer"
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
@@ -1231,6 +1202,10 @@ msgstr "Brug quirk-flag ved installation af firmware"
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "Brugernavn"
+
+#. TRANSLATORS: one line variant of release (e.g. 'Prerelease' or 'China')
+msgid "Variant"
+msgstr "Variant"
 
 #. TRANSLATORS: manufacturer of hardware
 msgid "Vendor"
