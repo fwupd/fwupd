@@ -37,6 +37,7 @@ fu_plugin_init (FuPlugin *plugin)
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_SUPPORTS_PROTOCOL, "com.logitech.unifying");
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_SUPPORTS_PROTOCOL, "com.logitech.unifyingsigned");
 	fu_plugin_add_udev_subsystem (plugin, "hidraw");
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_CONFLICTS, "unifying");
 
 	/* register the custom types */
 	g_type_ensure (FU_TYPE_UNIFYING_BOOTLOADER_NORDIC);
