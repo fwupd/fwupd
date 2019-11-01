@@ -28,6 +28,10 @@ fu_synapticsmst_check_amdgpu_safe (GError **error)
 	g_autofree gchar *buf = NULL;
 	g_auto(GStrv) lines = NULL;
 
+	/* no module support in the kernel, we can't test for amdgpu module */
+	if (!g_file_test ("/proc/modules", G_FILE_TEST_EXISTS))
+		return TRUE;
+
 	if (!g_file_get_contents ("/proc/modules", &buf, &bufsz, error))
 		return FALSE;
 
