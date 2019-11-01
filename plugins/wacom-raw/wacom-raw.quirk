@@ -2,6 +2,31 @@
 # need to have an extra GUID of WacomAES or WacomEMR added so that the flash
 # constants are set correctly.
 
+# Moffet 14-LGD-TPK
+[DeviceInstanceId=HIDRAW\VEN_2D1F&DEV_4970]
+Plugin = wacom_raw
+Guid = WacomAES
+
+# Moffet 14-Sharp-HH
+[DeviceInstanceId=HIDRAW\VEN_2D1F&DEV_4971]
+Plugin = wacom_raw
+Guid = WacomAES
+
+# Moffet 14-Sharp-VIA
+[DeviceInstanceId=HIDRAW\VEN_2D1F&DEV_4972]
+Plugin = wacom_raw
+Guid = WacomAES
+
+# Moffet 14-Coretronic-TPK
+[DeviceInstanceId=HIDRAW\VEN_2D1F&DEV_4973]
+Plugin = wacom_raw
+Guid = WacomAES
+
+# Moffet 14-Coretronic-HH
+[DeviceInstanceId=HIDRAW\VEN_2D1F&DEV_4974]
+Plugin = wacom_raw
+Guid = WacomAES
+
 # Dell XPS-15 9575
 [DeviceInstanceId=HIDRAW\VEN_056A&DEV_4875]
 Plugin = wacom_raw
@@ -9,12 +34,6 @@ Guid = WacomAES
 
 # AES bootloader mode
 [DeviceInstanceId=HIDRAW\VEN_056A&DEV_0094]
-Plugin = wacom_raw
-Guid = WacomAES
-Flags = is-bootloader
-
-# AES bootloader mode
-[DeviceInstanceId=HIDRAW\VEN_2D1F&DEV_0094]
 Plugin = wacom_raw
 Guid = WacomAES
 Flags = is-bootloader
