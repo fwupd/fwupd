@@ -9,43 +9,43 @@
 #include <string.h>
 
 #include "fu-firmware-common.h"
-#include "fu-unifying-common.h"
-#include "fu-unifying-bootloader.h"
-#include "fu-unifying-hidpp.h"
+#include "fu-logitech-hidpp-common.h"
+#include "fu-logitech-hidpp-bootloader.h"
+#include "fu-logitech-hidpp-hidpp.h"
 
 typedef struct
 {
 	guint16			 flash_addr_lo;
 	guint16			 flash_addr_hi;
 	guint16			 flash_blocksize;
-} FuUnifyingBootloaderPrivate;
+} FuLogitechHidPpBootloaderPrivate;
 
 #define FU_UNIFYING_DEVICE_EP1				0x81
 #define FU_UNIFYING_DEVICE_EP3				0x83
 
-G_DEFINE_TYPE_WITH_PRIVATE (FuUnifyingBootloader, fu_unifying_bootloader, FU_TYPE_USB_DEVICE)
+G_DEFINE_TYPE_WITH_PRIVATE (FuLogitechHidPpBootloader, fu_logitech_hidpp_bootloader, FU_TYPE_USB_DEVICE)
 
-#define GET_PRIVATE(o) (fu_unifying_bootloader_get_instance_private (o))
+#define GET_PRIVATE(o) (fu_logitech_hidpp_bootloader_get_instance_private (o))
 
 static void
-fu_unifying_bootloader_to_string (FuDevice *device, guint idt, GString *str)
+fu_logitech_hidpp_bootloader_to_string (FuDevice *device, guint idt, GString *str)
 {
-	FuUnifyingBootloader *self = FU_UNIFYING_BOOTLOADER (device);
-	FuUnifyingBootloaderPrivate *priv = GET_PRIVATE (self);
+	FuLogitechHidPpBootloader *self = FU_UNIFYING_BOOTLOADER (device);
+	FuLogitechHidPpBootloaderPrivate *priv = GET_PRIVATE (self);
 	fu_common_string_append_kx (str, idt, "FlashAddrHigh", priv->flash_addr_hi);
 	fu_common_string_append_kx (str, idt, "FlashAddrLow", priv->flash_addr_lo);
 	fu_common_string_append_kx (str, idt, "FlashBlockSize", priv->flash_blocksize);
 }
 
-FuUnifyingBootloaderRequest *
-fu_unifying_bootloader_request_new (void)
+FuLogitechHidPpBootloaderRequest *
+fu_logitech_hidpp_bootloader_request_new (void)
 {
-	FuUnifyingBootloaderRequest *req = g_new0 (FuUnifyingBootloaderRequest, 1);
+	FuLogitechHidPpBootloaderRequest *req = g_new0 (FuLogitechHidPpBootloaderRequest, 1);
 	return req;
 }
 
 GPtrArray *
-fu_unifying_bootloader_parse_requests (FuUnifyingBootloader *self, GBytes *fw, GError **error)
+fu_logitech_hidpp_bootloader_parse_requests (FuLogitechHidPpBootloader *self, GBytes *fw, GError **error)
 {
 	const gchar *tmp;
 	g_auto(GStrv) lines = NULL;
@@ -56,7 +56,7 @@ fu_unifying_bootloader_parse_requests (FuUnifyingBootloader *self, GBytes *fw, G
 	tmp = g_bytes_get_data (fw, NULL);
 	lines = g_strsplit_set (tmp, "\n\r", -1);
 	for (guint i = 0; lines[i] != NULL; i++) {
-		g_autoptr(FuUnifyingBootloaderRequest) payload = NULL;
+		g_autoptr(FuLogitechHidPpBootloaderRequest) payload = NULL;
 		guint8 rec_type = 0x00;
 		guint16 offset = 0x0000;
 		gboolean exit = FALSE;
@@ -66,8 +66,8 @@ fu_unifying_bootloader_parse_requests (FuUnifyingBootloader *self, GBytes *fw, G
 		if (strlen (tmp) < 5)
 			continue;
 
-		payload = fu_unifying_bootloader_request_new ();
-		payload->len = fu_unifying_buffer_read_uint8 (tmp + 0x01);
+		payload = fu_logitech_hidpp_bootloader_request_new ();
+		payload->len = fu_logitech_hidpp_buffer_read_uint8 (tmp + 0x01);
 		if (payload->len > 28) {
 			g_set_error (error,
 				     G_IO_ERROR,
@@ -79,7 +79,7 @@ fu_unifying_bootloader_parse_requests (FuUnifyingBootloader *self, GBytes *fw, G
 		payload->addr = fu_firmware_strparse_uint16 (tmp + 0x03);
 		payload->cmd = FU_UNIFYING_BOOTLOADER_CMD_WRITE_RAM_BUFFER;
 
-		rec_type = fu_unifying_buffer_read_uint8 (tmp + 0x07);
+		rec_type = fu_logitech_hidpp_buffer_read_uint8 (tmp + 0x07);
 
 		switch (rec_type) {
 			case 0x00: /* data */
@@ -134,7 +134,7 @@ fu_unifying_bootloader_parse_requests (FuUnifyingBootloader *self, GBytes *fw, G
 					     payload->len);
 				return NULL;
 			}
-			payload->data[j] = fu_unifying_buffer_read_uint8 (ptr);
+			payload->data[j] = fu_logitech_hidpp_buffer_read_uint8 (ptr);
 		}
 
 		/* no need to bound check signature addresses */
@@ -144,13 +144,13 @@ fu_unifying_bootloader_parse_requests (FuUnifyingBootloader *self, GBytes *fw, G
 		}
 
 		/* skip the bootloader */
-		if (payload->addr > fu_unifying_bootloader_get_addr_hi (self)) {
+		if (payload->addr > fu_logitech_hidpp_bootloader_get_addr_hi (self)) {
 			g_debug ("skipping write @ %04x", payload->addr);
 			continue;
 		}
 
 		/* skip the header */
-		if (payload->addr < fu_unifying_bootloader_get_addr_lo (self)) {
+		if (payload->addr < fu_logitech_hidpp_bootloader_get_addr_lo (self)) {
 			g_debug ("skipping write @ %04x", payload->addr);
 			continue;
 		}
@@ -176,36 +176,36 @@ fu_unifying_bootloader_parse_requests (FuUnifyingBootloader *self, GBytes *fw, G
 }
 
 guint16
-fu_unifying_bootloader_get_addr_lo (FuUnifyingBootloader *self)
+fu_logitech_hidpp_bootloader_get_addr_lo (FuLogitechHidPpBootloader *self)
 {
-	FuUnifyingBootloaderPrivate *priv = GET_PRIVATE (self);
+	FuLogitechHidPpBootloaderPrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_UNIFYING_BOOTLOADER (self), 0x0000);
 	return priv->flash_addr_lo;
 }
 
 guint16
-fu_unifying_bootloader_get_addr_hi (FuUnifyingBootloader *self)
+fu_logitech_hidpp_bootloader_get_addr_hi (FuLogitechHidPpBootloader *self)
 {
-	FuUnifyingBootloaderPrivate *priv = GET_PRIVATE (self);
+	FuLogitechHidPpBootloaderPrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_UNIFYING_BOOTLOADER (self), 0x0000);
 	return priv->flash_addr_hi;
 }
 
 guint16
-fu_unifying_bootloader_get_blocksize (FuUnifyingBootloader *self)
+fu_logitech_hidpp_bootloader_get_blocksize (FuLogitechHidPpBootloader *self)
 {
-	FuUnifyingBootloaderPrivate *priv = GET_PRIVATE (self);
+	FuLogitechHidPpBootloaderPrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_UNIFYING_BOOTLOADER (self), 0x0000);
 	return priv->flash_blocksize;
 }
 
 static gboolean
-fu_unifying_bootloader_attach (FuDevice *device, GError **error)
+fu_logitech_hidpp_bootloader_attach (FuDevice *device, GError **error)
 {
-	FuUnifyingBootloader *self = FU_UNIFYING_BOOTLOADER (device);
-	g_autoptr(FuUnifyingBootloaderRequest) req = fu_unifying_bootloader_request_new ();
+	FuLogitechHidPpBootloader *self = FU_UNIFYING_BOOTLOADER (device);
+	g_autoptr(FuLogitechHidPpBootloaderRequest) req = fu_logitech_hidpp_bootloader_request_new ();
 	req->cmd = FU_UNIFYING_BOOTLOADER_CMD_REBOOT;
-	if (!fu_unifying_bootloader_request (self, req, error)) {
+	if (!fu_logitech_hidpp_bootloader_request (self, req, error)) {
 		g_prefix_error (error, "failed to attach back to runtime: ");
 		return FALSE;
 	}
@@ -214,26 +214,26 @@ fu_unifying_bootloader_attach (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_unifying_bootloader_set_bl_version (FuUnifyingBootloader *self, GError **error)
+fu_logitech_hidpp_bootloader_set_bl_version (FuLogitechHidPpBootloader *self, GError **error)
 {
 	guint16 build;
 	g_autofree gchar *version = NULL;
-	g_autoptr(FuUnifyingBootloaderRequest) req = fu_unifying_bootloader_request_new ();
+	g_autoptr(FuLogitechHidPpBootloaderRequest) req = fu_logitech_hidpp_bootloader_request_new ();
 
 	/* call into hardware */
 	req->cmd = FU_UNIFYING_BOOTLOADER_CMD_GET_BL_VERSION;
-	if (!fu_unifying_bootloader_request (self, req, error)) {
+	if (!fu_logitech_hidpp_bootloader_request (self, req, error)) {
 		g_prefix_error (error, "failed to get firmware version: ");
 		return FALSE;
 	}
 
 	/* BOTxx.yy_Bzzzz
 	 * 012345678901234 */
-	build = (guint16) fu_unifying_buffer_read_uint8 ((const gchar *) req->data + 10) << 8;
-	build += fu_unifying_buffer_read_uint8 ((const gchar *) req->data + 12);
-	version = fu_unifying_format_version ("BOT",
-			fu_unifying_buffer_read_uint8 ((const gchar *) req->data + 3),
-			fu_unifying_buffer_read_uint8 ((const gchar *) req->data + 6),
+	build = (guint16) fu_logitech_hidpp_buffer_read_uint8 ((const gchar *) req->data + 10) << 8;
+	build += fu_logitech_hidpp_buffer_read_uint8 ((const gchar *) req->data + 12);
+	version = fu_logitech_hidpp_format_version ("BOT",
+			fu_logitech_hidpp_buffer_read_uint8 ((const gchar *) req->data + 3),
+			fu_logitech_hidpp_buffer_read_uint8 ((const gchar *) req->data + 6),
 			build);
 	if (version == NULL) {
 		g_prefix_error (error, "failed to format firmware version: ");
@@ -244,7 +244,7 @@ fu_unifying_bootloader_set_bl_version (FuUnifyingBootloader *self, GError **erro
 }
 
 static gboolean
-fu_unifying_bootloader_open (FuUsbDevice *device, GError **error)
+fu_logitech_hidpp_bootloader_open (FuUsbDevice *device, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
 	const guint idx = 0x00;
@@ -262,16 +262,16 @@ fu_unifying_bootloader_open (FuUsbDevice *device, GError **error)
 }
 
 static gboolean
-fu_unifying_bootloader_setup (FuDevice *device, GError **error)
+fu_logitech_hidpp_bootloader_setup (FuDevice *device, GError **error)
 {
-	FuUnifyingBootloaderClass *klass = FU_UNIFYING_BOOTLOADER_GET_CLASS (device);
-	FuUnifyingBootloader *self = FU_UNIFYING_BOOTLOADER (device);
-	FuUnifyingBootloaderPrivate *priv = GET_PRIVATE (self);
-	g_autoptr(FuUnifyingBootloaderRequest) req = fu_unifying_bootloader_request_new ();
+	FuLogitechHidPpBootloaderClass *klass = FU_UNIFYING_BOOTLOADER_GET_CLASS (device);
+	FuLogitechHidPpBootloader *self = FU_UNIFYING_BOOTLOADER (device);
+	FuLogitechHidPpBootloaderPrivate *priv = GET_PRIVATE (self);
+	g_autoptr(FuLogitechHidPpBootloaderRequest) req = fu_logitech_hidpp_bootloader_request_new ();
 
 	/* get memory map */
 	req->cmd = FU_UNIFYING_BOOTLOADER_CMD_GET_MEMINFO;
-	if (!fu_unifying_bootloader_request (self, req, error)) {
+	if (!fu_logitech_hidpp_bootloader_request (self, req, error)) {
 		g_prefix_error (error, "failed to get meminfo: ");
 		return FALSE;
 	}
@@ -290,7 +290,7 @@ fu_unifying_bootloader_setup (FuDevice *device, GError **error)
 	priv->flash_blocksize = fu_common_read_uint16 (req->data + 4, G_BIG_ENDIAN);
 
 	/* get bootloader version */
-	if (!fu_unifying_bootloader_set_bl_version (self, error))
+	if (!fu_logitech_hidpp_bootloader_set_bl_version (self, error))
 		return FALSE;
 
 	/* subclassed further */
@@ -302,7 +302,7 @@ fu_unifying_bootloader_setup (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_unifying_bootloader_close (FuUsbDevice *device, GError **error)
+fu_logitech_hidpp_bootloader_close (FuUsbDevice *device, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
 	if (usb_device != NULL) {
@@ -316,9 +316,9 @@ fu_unifying_bootloader_close (FuUsbDevice *device, GError **error)
 }
 
 gboolean
-fu_unifying_bootloader_request (FuUnifyingBootloader *self,
-			        FuUnifyingBootloaderRequest *req,
-			        GError **error)
+fu_logitech_hidpp_bootloader_request (FuLogitechHidPpBootloader *self,
+				      FuLogitechHidPpBootloaderRequest *req,
+				      GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
 	gsize actual_length = 0;
@@ -440,7 +440,7 @@ fu_unifying_bootloader_request (FuUnifyingBootloader *self,
 }
 
 static void
-fu_unifying_bootloader_init (FuUnifyingBootloader *self)
+fu_logitech_hidpp_bootloader_init (FuLogitechHidPpBootloader *self)
 {
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
@@ -452,13 +452,13 @@ fu_unifying_bootloader_init (FuUnifyingBootloader *self)
 }
 
 static void
-fu_unifying_bootloader_class_init (FuUnifyingBootloaderClass *klass)
+fu_logitech_hidpp_bootloader_class_init (FuLogitechHidPpBootloaderClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
-	klass_device->to_string = fu_unifying_bootloader_to_string;
-	klass_device->attach = fu_unifying_bootloader_attach;
-	klass_device->setup = fu_unifying_bootloader_setup;
-	klass_usb_device->open = fu_unifying_bootloader_open;
-	klass_usb_device->close = fu_unifying_bootloader_close;
+	klass_device->to_string = fu_logitech_hidpp_bootloader_to_string;
+	klass_device->attach = fu_logitech_hidpp_bootloader_attach;
+	klass_device->setup = fu_logitech_hidpp_bootloader_setup;
+	klass_usb_device->open = fu_logitech_hidpp_bootloader_open;
+	klass_usb_device->close = fu_logitech_hidpp_bootloader_close;
 }

@@ -1,24 +1,24 @@
-cargs = ['-DG_LOG_DOMAIN="FuPluginUnifying"']
+cargs = ['-DG_LOG_DOMAIN="FuPluginLogitechHidPp"']
 
 install_data([
-  'unifying.quirk',
+  'logitech-hidpp.quirk',
   ],
   install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
 )
 
 
-shared_module('fu_plugin_unifying',
+shared_module('fu_plugin_logitech_hidpp',
   fu_hash,
   sources : [
-    'fu-plugin-unifying.c',
-    'fu-unifying-bootloader.c',
-    'fu-unifying-bootloader-nordic.c',
-    'fu-unifying-bootloader-texas.c',
-    'fu-unifying-common.c',
-    'fu-unifying-hidpp.c',
-    'fu-unifying-hidpp-msg.c',
-    'fu-unifying-peripheral.c',
-    'fu-unifying-runtime.c',
+    'fu-plugin-logitech-hidpp.c',
+    'fu-logitech-hidpp-bootloader.c',
+    'fu-logitech-hidpp-bootloader-nordic.c',
+    'fu-logitech-hidpp-bootloader-texas.c',
+    'fu-logitech-hidpp-common.c',
+    'fu-logitech-hidpp-hidpp.c',
+    'fu-logitech-hidpp-hidpp-msg.c',
+    'fu-logitech-hidpp-peripheral.c',
+    'fu-logitech-hidpp-runtime.c',
   ],
   include_directories : [
     include_directories('../..'),
@@ -38,11 +38,11 @@ shared_module('fu_plugin_unifying',
 
 if get_option('tests')
   e = executable(
-    'unifying-self-test',
+    'logitech-hidpp-self-test',
     fu_hash,
     sources : [
-      'fu-unifying-self-test.c',
-      'fu-unifying-common.c',
+      'fu-logitech-hidpp-self-test.c',
+      'fu-logitech-hidpp-common.c',
     ],
     include_directories : [
       include_directories('../..'),
@@ -56,5 +56,5 @@ if get_option('tests')
     ],
     c_args : cargs,
   )
-  test('unifying-self-test', e)
+  test('logitech-hidpp-self-test', e)
 endif

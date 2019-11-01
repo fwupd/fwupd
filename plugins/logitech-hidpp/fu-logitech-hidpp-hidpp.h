@@ -133,16 +133,16 @@
 #define HIDPP_FEATURE_ONBOARD_PROFILES				0x8100
 #define HIDPP_FEATURE_MOUSE_BUTTON_SPY				0x8110
 
-#include "fu-unifying-hidpp-msg.h"
+#include "fu-logitech-hidpp-hidpp-msg.h"
 
-gboolean	 fu_unifying_hidpp_send		(FuIOChannel		*self,
-						 FuUnifyingHidppMsg	*msg,
+gboolean	 fu_logitech_hidpp_send		(FuIOChannel		*self,
+						 FuLogitechHidPpHidppMsg	*msg,
 						 guint			 timeout,
 						 GError			**error);
-gboolean	 fu_unifying_hidpp_receive	(FuIOChannel		*self,
-						 FuUnifyingHidppMsg	*msg,
+gboolean	 fu_logitech_hidpp_receive	(FuIOChannel		*self,
+						 FuLogitechHidPpHidppMsg	*msg,
 						 guint			 timeout,
 						 GError			**error);
-gboolean	 fu_unifying_hidpp_transfer	(FuIOChannel		*self,
-						 FuUnifyingHidppMsg	*msg,
+gboolean	 fu_logitech_hidpp_transfer	(FuIOChannel		*self,
+						 FuLogitechHidPpHidppMsg	*msg,
 						 GError			**error);

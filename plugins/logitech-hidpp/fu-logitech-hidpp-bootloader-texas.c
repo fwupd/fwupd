@@ -8,24 +8,24 @@
 
 #include <string.h>
 
-#include "fu-unifying-common.h"
-#include "fu-unifying-bootloader-texas.h"
+#include "fu-logitech-hidpp-common.h"
+#include "fu-logitech-hidpp-bootloader-texas.h"
 
-struct _FuUnifyingBootloaderTexas
+struct _FuLogitechHidPpBootloaderTexas
 {
-	FuUnifyingBootloader	 parent_instance;
+	FuLogitechHidPpBootloader	 parent_instance;
 };
 
-G_DEFINE_TYPE (FuUnifyingBootloaderTexas, fu_unifying_bootloader_texas, FU_TYPE_UNIFYING_BOOTLOADER)
+G_DEFINE_TYPE (FuLogitechHidPpBootloaderTexas, fu_logitech_hidpp_bootloader_texas, FU_TYPE_UNIFYING_BOOTLOADER)
 
 static gboolean
-fu_unifying_bootloader_texas_erase_all (FuUnifyingBootloader *self, GError **error)
+fu_logitech_hidpp_bootloader_texas_erase_all (FuLogitechHidPpBootloader *self, GError **error)
 {
-	g_autoptr(FuUnifyingBootloaderRequest) req = fu_unifying_bootloader_request_new ();
+	g_autoptr(FuLogitechHidPpBootloaderRequest) req = fu_logitech_hidpp_bootloader_request_new ();
 	req->cmd = FU_UNIFYING_BOOTLOADER_CMD_FLASH_RAM;
 	req->len = 0x01;	/* magic number */
 	req->data[0] = 0x00;	/* magic number */
-	if (!fu_unifying_bootloader_request (self, req, error)) {
+	if (!fu_logitech_hidpp_bootloader_request (self, req, error)) {
 		g_prefix_error (error, "failed to erase all pages: ");
 		return FALSE;
 	}
@@ -33,13 +33,13 @@ fu_unifying_bootloader_texas_erase_all (FuUnifyingBootloader *self, GError **err
 }
 
 static gboolean
-fu_unifying_bootloader_texas_compute_and_test_crc (FuUnifyingBootloader *self, GError **error)
+fu_logitech_hidpp_bootloader_texas_compute_and_test_crc (FuLogitechHidPpBootloader *self, GError **error)
 {
-	g_autoptr(FuUnifyingBootloaderRequest) req = fu_unifying_bootloader_request_new ();
+	g_autoptr(FuLogitechHidPpBootloaderRequest) req = fu_logitech_hidpp_bootloader_request_new ();
 	req->cmd = FU_UNIFYING_BOOTLOADER_CMD_FLASH_RAM;
 	req->len = 0x01;	/* magic number */
 	req->data[0] = 0x03;	/* magic number */
-	if (!fu_unifying_bootloader_request (self, req, error)) {
+	if (!fu_logitech_hidpp_bootloader_request (self, req, error)) {
 		g_prefix_error (error, "failed to compute and test CRC: ");
 		return FALSE;
 	}
@@ -54,14 +54,14 @@ fu_unifying_bootloader_texas_compute_and_test_crc (FuUnifyingBootloader *self, G
 }
 
 static gboolean
-fu_unifying_bootloader_texas_flash_ram_buffer (FuUnifyingBootloader *self, guint16 addr, GError **error)
+fu_logitech_hidpp_bootloader_texas_flash_ram_buffer (FuLogitechHidPpBootloader *self, guint16 addr, GError **error)
 {
-	g_autoptr(FuUnifyingBootloaderRequest) req = fu_unifying_bootloader_request_new ();
+	g_autoptr(FuLogitechHidPpBootloaderRequest) req = fu_logitech_hidpp_bootloader_request_new ();
 	req->cmd = FU_UNIFYING_BOOTLOADER_CMD_FLASH_RAM;
 	req->addr = addr;
 	req->len = 0x01;	/* magic number */
 	req->data[0] = 0x01;	/* magic number */
-	if (!fu_unifying_bootloader_request (self, req, error)) {
+	if (!fu_logitech_hidpp_bootloader_request (self, req, error)) {
 		g_prefix_error (error, "failed to flash ram buffer @%04x: ", addr);
 		return FALSE;
 	}
@@ -93,14 +93,14 @@ fu_unifying_bootloader_texas_flash_ram_buffer (FuUnifyingBootloader *self, guint
 }
 
 static gboolean
-fu_unifying_bootloader_texas_clear_ram_buffer (FuUnifyingBootloader *self, GError **error)
+fu_logitech_hidpp_bootloader_texas_clear_ram_buffer (FuLogitechHidPpBootloader *self, GError **error)
 {
-	g_autoptr(FuUnifyingBootloaderRequest) req = fu_unifying_bootloader_request_new ();
+	g_autoptr(FuLogitechHidPpBootloaderRequest) req = fu_logitech_hidpp_bootloader_request_new ();
 	req->cmd = FU_UNIFYING_BOOTLOADER_CMD_FLASH_RAM;
 	req->addr = 0x0000;
 	req->len = 0x01;	/* magic number */
 	req->data[0] = 0x02;	/* magic number */
-	if (!fu_unifying_bootloader_request (self, req, error)) {
+	if (!fu_logitech_hidpp_bootloader_request (self, req, error)) {
 		g_prefix_error (error, "failed to clear ram buffer @%04x: ", req->addr);
 		return FALSE;
 	}
@@ -108,16 +108,16 @@ fu_unifying_bootloader_texas_clear_ram_buffer (FuUnifyingBootloader *self, GErro
 }
 
 static gboolean
-fu_unifying_bootloader_texas_write_firmware (FuDevice *device,
+fu_logitech_hidpp_bootloader_texas_write_firmware (FuDevice *device,
 					     FuFirmware *firmware,
 					     FwupdInstallFlags flags,
 					     GError **error)
 {
-	FuUnifyingBootloader *self = FU_UNIFYING_BOOTLOADER (device);
-	const FuUnifyingBootloaderRequest *payload;
+	FuLogitechHidPpBootloader *self = FU_UNIFYING_BOOTLOADER (device);
+	const FuLogitechHidPpBootloaderRequest *payload;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) reqs = NULL;
-	g_autoptr(FuUnifyingBootloaderRequest) req = fu_unifying_bootloader_request_new ();
+	g_autoptr(FuLogitechHidPpBootloaderRequest) req = fu_logitech_hidpp_bootloader_request_new ();
 
 	/* get default image */
 	fw = fu_firmware_get_image_default_bytes (firmware, error);
@@ -125,17 +125,17 @@ fu_unifying_bootloader_texas_write_firmware (FuDevice *device,
 		return FALSE;
 
 	/* transfer payload */
-	reqs = fu_unifying_bootloader_parse_requests (self, fw, error);
+	reqs = fu_logitech_hidpp_bootloader_parse_requests (self, fw, error);
 	if (reqs == NULL)
 		return FALSE;
 
 	/* erase all flash pages */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_ERASE);
-	if (!fu_unifying_bootloader_texas_erase_all (self, error))
+	if (!fu_logitech_hidpp_bootloader_texas_erase_all (self, error))
 		return FALSE;
 
 	/* set existing RAM buffer to 0xff's */
-	if (!fu_unifying_bootloader_texas_clear_ram_buffer (self, error))
+	if (!fu_logitech_hidpp_bootloader_texas_clear_ram_buffer (self, error))
 		return FALSE;
 
 	/* write to RAM buffer */
@@ -164,7 +164,7 @@ fu_unifying_bootloader_texas_write_firmware (FuDevice *device,
 
 		req->len = payload->len;
 		memcpy (req->data, payload->data, payload->len);
-		if (!fu_unifying_bootloader_request (self, req, error)) {
+		if (!fu_logitech_hidpp_bootloader_request (self, req, error)) {
 			g_prefix_error (error,
 					"failed to write ram buffer @0x%02x: ",
 					req->addr);
@@ -193,7 +193,7 @@ fu_unifying_bootloader_texas_write_firmware (FuDevice *device,
 			guint16 addr_start = payload->addr - (7 * 0x10);
 			g_debug ("addr flush @ 0x%04x for 0x%04x",
 				 payload->addr, addr_start);
-			if (!fu_unifying_bootloader_texas_flash_ram_buffer (self,
+			if (!fu_logitech_hidpp_bootloader_texas_flash_ram_buffer (self,
 									    addr_start,
 									    error)) {
 				g_prefix_error (error,
@@ -208,7 +208,7 @@ fu_unifying_bootloader_texas_write_firmware (FuDevice *device,
 	}
 
 	/* check CRC */
-	if (!fu_unifying_bootloader_texas_compute_and_test_crc (self, error))
+	if (!fu_logitech_hidpp_bootloader_texas_compute_and_test_crc (self, error))
 		return FALSE;
 
 	/* mark as complete */
@@ -219,7 +219,7 @@ fu_unifying_bootloader_texas_write_firmware (FuDevice *device,
 }
 
 static gboolean
-fu_unifying_bootloader_texas_setup (FuUnifyingBootloader *self, GError **error)
+fu_logitech_hidpp_bootloader_texas_setup (FuLogitechHidPpBootloader *self, GError **error)
 {
 	fu_device_set_version (FU_DEVICE (self), "RQR24.00_B0000",
 			       FWUPD_VERSION_FORMAT_PLAIN);
@@ -227,15 +227,15 @@ fu_unifying_bootloader_texas_setup (FuUnifyingBootloader *self, GError **error)
 }
 
 static void
-fu_unifying_bootloader_texas_class_init (FuUnifyingBootloaderTexasClass *klass)
+fu_logitech_hidpp_bootloader_texas_class_init (FuLogitechHidPpBootloaderTexasClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUnifyingBootloaderClass *klass_device_bootloader = FU_UNIFYING_BOOTLOADER_CLASS (klass);
-	klass_device->write_firmware = fu_unifying_bootloader_texas_write_firmware;
-	klass_device_bootloader->setup = fu_unifying_bootloader_texas_setup;
+	FuLogitechHidPpBootloaderClass *klass_device_bootloader = FU_UNIFYING_BOOTLOADER_CLASS (klass);
+	klass_device->write_firmware = fu_logitech_hidpp_bootloader_texas_write_firmware;
+	klass_device_bootloader->setup = fu_logitech_hidpp_bootloader_texas_setup;
 }
 
 static void
-fu_unifying_bootloader_texas_init (FuUnifyingBootloaderTexas *self)
+fu_logitech_hidpp_bootloader_texas_init (FuLogitechHidPpBootloaderTexas *self)
 {
 }

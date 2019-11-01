@@ -10,11 +10,11 @@
 
 #include "fu-plugin-vfuncs.h"
 
-#include "fu-unifying-bootloader-nordic.h"
-#include "fu-unifying-bootloader-texas.h"
-#include "fu-unifying-common.h"
-#include "fu-unifying-peripheral.h"
-#include "fu-unifying-runtime.h"
+#include "fu-logitech-hidpp-bootloader-nordic.h"
+#include "fu-logitech-hidpp-bootloader-texas.h"
+#include "fu-logitech-hidpp-common.h"
+#include "fu-logitech-hidpp-peripheral.h"
+#include "fu-logitech-hidpp-runtime.h"
 
 gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)

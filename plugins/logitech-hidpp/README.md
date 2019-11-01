@@ -1,4 +1,4 @@
-Unifying Support
+Logitech HID Support
 ================
 
 Introduction

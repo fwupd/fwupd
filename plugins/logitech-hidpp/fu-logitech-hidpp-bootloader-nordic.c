@@ -8,22 +8,22 @@
 
 #include <string.h>
 
-#include "fu-unifying-common.h"
-#include "fu-unifying-bootloader-nordic.h"
+#include "fu-logitech-hidpp-common.h"
+#include "fu-logitech-hidpp-bootloader-nordic.h"
 
-struct _FuUnifyingBootloaderNordic
+struct _FuLogitechHidPpBootloaderNordic
 {
-	FuUnifyingBootloader	 parent_instance;
+	FuLogitechHidPpBootloader	 parent_instance;
 };
 
-G_DEFINE_TYPE (FuUnifyingBootloaderNordic, fu_unifying_bootloader_nordic, FU_TYPE_UNIFYING_BOOTLOADER)
+G_DEFINE_TYPE (FuLogitechHidPpBootloaderNordic, fu_logitech_hidpp_bootloader_nordic, FU_TYPE_UNIFYING_BOOTLOADER)
 
 static gchar *
-fu_unifying_bootloader_nordic_get_hw_platform_id (FuUnifyingBootloader *self, GError **error)
+fu_logitech_hidpp_bootloader_nordic_get_hw_platform_id (FuLogitechHidPpBootloader *self, GError **error)
 {
-	g_autoptr(FuUnifyingBootloaderRequest) req = fu_unifying_bootloader_request_new ();
+	g_autoptr(FuLogitechHidPpBootloaderRequest) req = fu_logitech_hidpp_bootloader_request_new ();
 	req->cmd = FU_UNIFYING_BOOTLOADER_CMD_GET_HW_PLATFORM_ID;
-	if (!fu_unifying_bootloader_request (self, req, error)) {
+	if (!fu_logitech_hidpp_bootloader_request (self, req, error)) {
 		g_prefix_error (error, "failed to get HW ID: ");
 		return NULL;
 	}
@@ -31,42 +31,42 @@ fu_unifying_bootloader_nordic_get_hw_platform_id (FuUnifyingBootloader *self, GE
 }
 
 static gchar *
-fu_unifying_bootloader_nordic_get_fw_version (FuUnifyingBootloader *self, GError **error)
+fu_logitech_hidpp_bootloader_nordic_get_fw_version (FuLogitechHidPpBootloader *self, GError **error)
 {
 	guint16 micro;
 
-	g_autoptr(FuUnifyingBootloaderRequest) req = fu_unifying_bootloader_request_new ();
+	g_autoptr(FuLogitechHidPpBootloaderRequest) req = fu_logitech_hidpp_bootloader_request_new ();
 	req->cmd = FU_UNIFYING_BOOTLOADER_CMD_GET_FW_VERSION;
-	if (!fu_unifying_bootloader_request (self, req, error)) {
+	if (!fu_logitech_hidpp_bootloader_request (self, req, error)) {
 		g_prefix_error (error, "failed to get firmware version: ");
 		return NULL;
 	}
 
 	/* RRRxx.yy_Bzzzz
 	 * 012345678901234*/
-	micro = (guint16) fu_unifying_buffer_read_uint8 ((const gchar *) req->data + 10) << 8;
-	micro += fu_unifying_buffer_read_uint8 ((const gchar *) req->data + 12);
-	return fu_unifying_format_version ("RQR",
-					   fu_unifying_buffer_read_uint8 ((const gchar *) req->data + 3),
-					   fu_unifying_buffer_read_uint8 ((const gchar *) req->data + 6),
-					   micro);
+	micro = (guint16) fu_logitech_hidpp_buffer_read_uint8 ((const gchar *) req->data + 10) << 8;
+	micro += fu_logitech_hidpp_buffer_read_uint8 ((const gchar *) req->data + 12);
+	return fu_logitech_hidpp_format_version ("RQR",
+					       fu_logitech_hidpp_buffer_read_uint8 ((const gchar *) req->data + 3),
+					       fu_logitech_hidpp_buffer_read_uint8 ((const gchar *) req->data + 6),
+					       micro);
 }
 
 static gboolean
-fu_unifying_bootloader_nordic_setup (FuUnifyingBootloader *self, GError **error)
+fu_logitech_hidpp_bootloader_nordic_setup (FuLogitechHidPpBootloader *self, GError **error)
 {
 	g_autofree gchar *hw_platform_id = NULL;
 	g_autofree gchar *version_fw = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* get MCU */
-	hw_platform_id = fu_unifying_bootloader_nordic_get_hw_platform_id (self, error);
+	hw_platform_id = fu_logitech_hidpp_bootloader_nordic_get_hw_platform_id (self, error);
 	if (hw_platform_id == NULL)
 		return FALSE;
 	g_debug ("hw-platform-id=%s", hw_platform_id);
 
 	/* get firmware version, which is not fatal */
-	version_fw = fu_unifying_bootloader_nordic_get_fw_version (self, &error_local);
+	version_fw = fu_logitech_hidpp_bootloader_nordic_get_fw_version (self, &error_local);
 	if (version_fw == NULL) {
 		g_warning ("failed to get firmware version: %s",
 			   error_local->message);
@@ -81,16 +81,16 @@ fu_unifying_bootloader_nordic_setup (FuUnifyingBootloader *self, GError **error)
 }
 
 static gboolean
-fu_unifying_bootloader_nordic_write_signature (FuUnifyingBootloader *self,
+fu_logitech_hidpp_bootloader_nordic_write_signature (FuLogitechHidPpBootloader *self,
 					       guint16 addr, guint8 len, const guint8 *data,
 					       GError **error)
 {
-	g_autoptr(FuUnifyingBootloaderRequest) req = fu_unifying_bootloader_request_new();
+	g_autoptr(FuLogitechHidPpBootloaderRequest) req = fu_logitech_hidpp_bootloader_request_new();
 	req->cmd = 0xC0;
 	req->addr = addr;
 	req->len = len;
 	memcpy (req->data, data, req->len);
-	if (!fu_unifying_bootloader_request (self, req, error)) {
+	if (!fu_logitech_hidpp_bootloader_request (self, req, error)) {
 		g_prefix_error (error, "failed to write sig @0x%02x: ", addr);
 		return FALSE;
 	}
@@ -106,11 +106,11 @@ fu_unifying_bootloader_nordic_write_signature (FuUnifyingBootloader *self,
 }
 
 static gboolean
-fu_unifying_bootloader_nordic_write (FuUnifyingBootloader *self,
+fu_logitech_hidpp_bootloader_nordic_write (FuLogitechHidPpBootloader *self,
 				     guint16 addr, guint8 len, const guint8 *data,
 				     GError **error)
 {
-	g_autoptr(FuUnifyingBootloaderRequest) req = fu_unifying_bootloader_request_new ();
+	g_autoptr(FuLogitechHidPpBootloaderRequest) req = fu_logitech_hidpp_bootloader_request_new ();
 	req->cmd = FU_UNIFYING_BOOTLOADER_CMD_WRITE;
 	req->addr = addr;
 	req->len = len;
@@ -123,7 +123,7 @@ fu_unifying_bootloader_nordic_write (FuUnifyingBootloader *self,
 		return FALSE;
 	}
 	memcpy (req->data, data, req->len);
-	if (!fu_unifying_bootloader_request (self, req, error)) {
+	if (!fu_logitech_hidpp_bootloader_request (self, req, error)) {
 		g_prefix_error (error, "failed to transfer fw @0x%02x: ", addr);
 		return FALSE;
 	}
@@ -165,13 +165,13 @@ fu_unifying_bootloader_nordic_write (FuUnifyingBootloader *self,
 }
 
 static gboolean
-fu_unifying_bootloader_nordic_erase (FuUnifyingBootloader *self, guint16 addr, GError **error)
+fu_logitech_hidpp_bootloader_nordic_erase (FuLogitechHidPpBootloader *self, guint16 addr, GError **error)
 {
-	g_autoptr(FuUnifyingBootloaderRequest) req = fu_unifying_bootloader_request_new ();
+	g_autoptr(FuLogitechHidPpBootloaderRequest) req = fu_logitech_hidpp_bootloader_request_new ();
 	req->cmd = FU_UNIFYING_BOOTLOADER_CMD_ERASE_PAGE;
 	req->addr = addr;
 	req->len = 0x01;
-	if (!fu_unifying_bootloader_request (self, req, error)) {
+	if (!fu_logitech_hidpp_bootloader_request (self, req, error)) {
 		g_prefix_error (error, "failed to erase fw @0x%02x: ", addr);
 		return FALSE;
 	}
@@ -195,13 +195,13 @@ fu_unifying_bootloader_nordic_erase (FuUnifyingBootloader *self, guint16 addr, G
 }
 
 static gboolean
-fu_unifying_bootloader_nordic_write_firmware (FuDevice *device,
+fu_logitech_hidpp_bootloader_nordic_write_firmware (FuDevice *device,
 					      FuFirmware *firmware,
 					      FwupdInstallFlags flags,
 					      GError **error)
 {
-	FuUnifyingBootloader *self = FU_UNIFYING_BOOTLOADER (device);
-	const FuUnifyingBootloaderRequest *payload;
+	FuLogitechHidPpBootloader *self = FU_UNIFYING_BOOTLOADER (device);
+	const FuLogitechHidPpBootloaderRequest *payload;
 	guint16 addr;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) reqs = NULL;
@@ -213,15 +213,15 @@ fu_unifying_bootloader_nordic_write_firmware (FuDevice *device,
 
 	/* erase firmware pages up to the bootloader */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_ERASE);
-	for (addr = fu_unifying_bootloader_get_addr_lo (self);
-	     addr < fu_unifying_bootloader_get_addr_hi (self);
-	     addr += fu_unifying_bootloader_get_blocksize (self)) {
-		if (!fu_unifying_bootloader_nordic_erase (self, addr, error))
+	for (addr = fu_logitech_hidpp_bootloader_get_addr_lo (self);
+	     addr < fu_logitech_hidpp_bootloader_get_addr_hi (self);
+	     addr += fu_logitech_hidpp_bootloader_get_blocksize (self)) {
+		if (!fu_logitech_hidpp_bootloader_nordic_erase (self, addr, error))
 			return FALSE;
 	}
 
 	/* transfer payload */
-	reqs = fu_unifying_bootloader_parse_requests (self, fw, error);
+	reqs = fu_logitech_hidpp_bootloader_parse_requests (self, fw, error);
 	if (reqs == NULL)
 		return FALSE;
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
@@ -230,17 +230,17 @@ fu_unifying_bootloader_nordic_write_firmware (FuDevice *device,
 		payload = g_ptr_array_index (reqs, i);
 
 		if (payload->cmd == FU_UNIFYING_BOOTLOADER_CMD_WRITE_SIGNATURE) {
-			res = fu_unifying_bootloader_nordic_write_signature (self,
-									     payload->addr,
-									     payload->len,
-									     payload->data,
-									     error);
+			res = fu_logitech_hidpp_bootloader_nordic_write_signature (self,
+										   payload->addr,
+										   payload->len,
+										   payload->data,
+										   error);
 		} else {
-			res = fu_unifying_bootloader_nordic_write (self,
-								   payload->addr,
-								   payload->len,
-								   payload->data,
-								   error);
+			res = fu_logitech_hidpp_bootloader_nordic_write (self,
+									 payload->addr,
+									 payload->len,
+									 payload->data,
+									 error);
 		}
 
 		if (!res)
@@ -250,18 +250,18 @@ fu_unifying_bootloader_nordic_write_firmware (FuDevice *device,
 
 	/* send the first managed packet last, excluding the reset vector */
 	payload = g_ptr_array_index (reqs, 0);
-	if (!fu_unifying_bootloader_nordic_write (self,
-						  payload->addr + 1,
-						  payload->len - 1,
-						  payload->data + 1,
-						  error))
+	if (!fu_logitech_hidpp_bootloader_nordic_write (self,
+							payload->addr + 1,
+							payload->len - 1,
+							payload->data + 1,
+							error))
 		return FALSE;
 
-	if (!fu_unifying_bootloader_nordic_write (self,
-						  0x0000,
-						  0x01,
-						  payload->data,
-						  error))
+	if (!fu_logitech_hidpp_bootloader_nordic_write (self,
+						      0x0000,
+						      0x01,
+						      payload->data,
+						      error))
 		return FALSE;
 
 	/* mark as complete */
@@ -272,15 +272,15 @@ fu_unifying_bootloader_nordic_write_firmware (FuDevice *device,
 }
 
 static void
-fu_unifying_bootloader_nordic_class_init (FuUnifyingBootloaderNordicClass *klass)
+fu_logitech_hidpp_bootloader_nordic_class_init (FuLogitechHidPpBootloaderNordicClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUnifyingBootloaderClass *klass_device_bootloader = FU_UNIFYING_BOOTLOADER_CLASS (klass);
-	klass_device->write_firmware = fu_unifying_bootloader_nordic_write_firmware;
-	klass_device_bootloader->setup = fu_unifying_bootloader_nordic_setup;
+	FuLogitechHidPpBootloaderClass *klass_device_bootloader = FU_UNIFYING_BOOTLOADER_CLASS (klass);
+	klass_device->write_firmware = fu_logitech_hidpp_bootloader_nordic_write_firmware;
+	klass_device_bootloader->setup = fu_logitech_hidpp_bootloader_nordic_setup;
 }
 
 static void
-fu_unifying_bootloader_nordic_init (FuUnifyingBootloaderNordic *self)
+fu_logitech_hidpp_bootloader_nordic_init (FuLogitechHidPpBootloaderNordic *self)
 {
 }
