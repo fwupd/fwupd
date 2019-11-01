@@ -969,6 +969,7 @@ fu_util_get_history (FuUtilPrivate *priv, gchar **values, GError **error)
 		FwupdRelease *rel;
 		const gchar *remote;
 		GNode *child;
+		g_autoptr(GError) error_local = NULL;
 
 		if (!fu_util_filter_device (priv, dev))
 			continue;
@@ -986,9 +987,16 @@ fu_util_get_history (FuUtilPrivate *priv, gchar **values, GError **error)
 		}
 
 		/* try to lookup releases from client */
-		rels = fwupd_client_get_releases (priv->client, fwupd_device_get_id (dev), NULL, error);
-		if (rels == NULL)
-			return FALSE;
+		rels = fwupd_client_get_releases (priv->client,
+						  fwupd_device_get_id (dev),
+						  NULL, &error_local);
+		if (rels == NULL) {
+			g_debug ("failed to get releases for %s: %s",
+				 fwupd_device_get_id (dev),
+				 error_local->message);
+			g_node_append_data (child, rel);
+			continue;
+		}
 
 		/* map to a release in client */
 		for (guint j = 0; j < rels->len; j++) {
