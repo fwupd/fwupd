@@ -3,7 +3,9 @@ Upstream-Name: fwupd
 Source: https://github.com/fwupd/fwupd
 
 Files: *
-Copyright: Aleksander Morgado <aleksander@aleksander.es>
+Copyright: 9elements Agency GmbH <patrick.rudolph@9elements.com>
+	   Aleksander Morgado <aleksander@aleksander.es>
+	   Andrew Duggan
 	   Christian J. Kellner <christian@kellner.me>
 	   Dell Inc.
 	   Dell, Inc.
@@ -21,7 +23,9 @@ Copyright: Aleksander Morgado <aleksander@aleksander.es>
 	   Ryan Chang <ryan.chang@synaptics.com>
 	   Synaptics
 	   Synaptics Inc
+	   Synaptics Inc.
 	   Synaptics Incorporated
+	   VIA Corporation
 License: LGPL-2.1+
 
 Files:  *.metainfo.xml

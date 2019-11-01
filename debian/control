@@ -8,7 +8,7 @@ Uploaders: Steve McIntyre <93sam@debian.org>,
 Build-Depends:
 	bash-completion,
 	bubblewrap,
-	debhelper (>= 11),
+	debhelper (>= 12),
 	dh-strip-nondeterminism,
 	fontconfig,
 	fonts-noto,
@@ -43,9 +43,10 @@ Build-Depends:
 	libsqlite3-dev,
 	libtool-bin,
 	libtss2-dev,
-	libxmlb-dev (>= 0.1.5),
+	libxmlb-dev (>= 0.1.13),
 	locales,
 	meson,
+	mingw-w64-tools,
 	pkg-config,
 	policykit-1 (>> 0.105-14),
 	python3-gi-cairo,
@@ -57,7 +58,7 @@ Build-Depends:
 	umockdev,
 	valac,
 	valgrind [!ia64 !riscv64 !x32 !mips !sparc64 !sh4 !ppc64 !powerpcspe !hppa !alpha !mips64el !armhf !armel !mipsel !m68k],
-Standards-Version: 4.3.0
+Standards-Version: 4.4.1
 Section: admin
 Homepage: https://github.com/fwupd/fwupd
 Vcs-Git: https://salsa.debian.org/efi-team/fwupd.git
