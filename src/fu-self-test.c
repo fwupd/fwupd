@@ -2542,7 +2542,7 @@ fu_history_func (void)
 	g_object_unref (device_found);
 
 	/* remove device */
-	ret = fu_history_remove_device (history, device, release, &error);
+	ret = fu_history_remove_device (history, device, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_object_unref (device);
