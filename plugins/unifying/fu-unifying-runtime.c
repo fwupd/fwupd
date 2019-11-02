@@ -22,10 +22,6 @@ struct _FuUnifyingRuntime
 
 G_DEFINE_TYPE (FuUnifyingRuntime, fu_unifying_runtime, FU_TYPE_UDEV_DEVICE)
 
-#ifndef HAVE_GUDEV_232
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevDevice, g_object_unref)
-#endif
-
 static void
 fu_unifying_runtime_to_string (FuDevice *device, guint idt, GString *str)
 {

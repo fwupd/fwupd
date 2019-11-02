@@ -75,13 +75,6 @@ struct _FuAtaDevice {
 
 G_DEFINE_TYPE (FuAtaDevice, fu_ata_device, FU_TYPE_UDEV_DEVICE)
 
-#ifndef HAVE_GUDEV_232
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevDevice, g_object_unref)
-#pragma clang diagnostic pop
-#endif
-
 guint8
 fu_ata_device_get_transfer_mode (FuAtaDevice *self)
 {

@@ -10,14 +10,6 @@
 #include "config.h"
 #include <gudev/gudev.h>
 
-#ifndef HAVE_GUDEV_232
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevClient, g_object_unref)
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevDevice, g_object_unref)
-#pragma clang diagnostic pop
-#endif
-
 gboolean	fu_mm_utils_get_udev_port_info	(GUdevDevice	 *dev,
 						 gchar		**device_sysfs_path,
 						 gint		 *port_ifnum,
