@@ -7,6 +7,9 @@
 #include "config.h"
 
 #include <gio/gio.h>
+
+#include "fu-udev-device.h"
+
 #include "fu-mm-utils.h"
 
 gboolean

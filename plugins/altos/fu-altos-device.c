@@ -27,13 +27,6 @@ struct _FuAltosDevice {
 
 G_DEFINE_TYPE (FuAltosDevice, fu_altos_device, FU_TYPE_USB_DEVICE)
 
-#ifndef HAVE_GUDEV_232
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevClient, g_object_unref)
-#pragma clang diagnostic pop
-#endif
-
 static void
 fu_altos_device_finalize (GObject *object)
 {
