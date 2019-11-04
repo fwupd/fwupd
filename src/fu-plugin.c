@@ -354,8 +354,8 @@ fu_plugin_open (FuPlugin *self, const gchar *filename, GError **error)
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
-			     "failed to open plugin: %s",
-			     g_module_error ());
+			     "failed to open plugin %s: %s",
+			     filename, g_module_error ());
 		return FALSE;
 	}
 

@@ -4369,8 +4369,7 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 		/* if loaded from fu_engine_load() open the plugin */
 		if (self->usb_ctx != NULL) {
 			if (!fu_plugin_open (plugin, filename, &error_local)) {
-				g_warning ("failed to open plugin %s: %s",
-					   filename, error_local->message);
+				g_warning ("%s", error_local->message);
 				continue;
 			}
 		}
