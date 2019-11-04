@@ -94,7 +94,6 @@ fu_udev_device_read_uint16 (const gchar *str)
 static void
 fu_udev_device_dump_internal (GUdevDevice *udev_device)
 {
-#ifdef HAVE_GUDEV_232
 	const gchar * const *keys;
 
 	keys = g_udev_device_get_property_keys (udev_device);
@@ -107,7 +106,6 @@ fu_udev_device_dump_internal (GUdevDevice *udev_device)
 		g_debug ("%s=[%s]", keys[i],
 			 g_udev_device_get_sysfs_attr (udev_device, keys[i]));
 	}
-#endif
 }
 
 void
