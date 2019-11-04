@@ -36,7 +36,7 @@ class Progress():
                 else:
                     status_str += ' '
             status_str += "] %d%% %s" %(percent, status)
-            status_str.erase = len(status_str)
+            self.erase = len(status_str)
             sys.stdout.write(status_str)
             sys.stdout.flush()
             if 'idle' in status:
@@ -101,8 +101,9 @@ def install(client, cab, target, older, reinstall):
         progress.status_changed(0, 'idle')
         print("%s" % glib_err)
         sys.exit(1)
+    print("\n")
 
-def check_cab(cab):
+def check_exists(cab):
     """Check that CAB file exists"""
     if not cab:
         print("Need to specify payload")
@@ -119,8 +120,8 @@ if __name__ == '__main__':
     if ARGS.command == "get-devices":
         get_devices(CLIENT)
     elif ARGS.command == "get-details":
-        check_cab(ARGS.cab)
+        check_exists(ARGS.cab)
         get_details(CLIENT, ARGS.cab)
     elif ARGS.command == "install":
-        check_cab(ARGS.cab)
+        check_exists(ARGS.cab)
         install(CLIENT, ARGS.cab, ARGS.deviceid, ARGS.allow_older, ARGS.allow_reinstall)
