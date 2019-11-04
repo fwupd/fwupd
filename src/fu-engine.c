@@ -4369,6 +4369,15 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 		/* if loaded from fu_engine_load() open the plugin */
 		if (self->usb_ctx != NULL) {
 			if (!fu_plugin_open (plugin, filename, &error_local)) {
+				g_autoptr(FuDevice) device = fu_device_new ();
+				g_autofree gchar *dev_name = g_strdup_printf ("%s device", name);
+				fu_device_set_name (device, dev_name);
+				fu_device_set_id (device, filename);
+				fu_device_set_quirks (device, self->quirks);
+				fu_device_add_instance_id (device, filename);
+				fu_device_set_update_error (device, error_local->message);
+				fu_device_setup (device, NULL);
+				fu_engine_add_device (self, device);
 				g_warning ("%s", error_local->message);
 				continue;
 			}
