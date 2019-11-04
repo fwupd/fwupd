@@ -283,6 +283,9 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %{_datadir}/metainfo/org.freedesktop.fwupd.metainfo.xml
 %{_datadir}/icons/hicolor/scalable/apps/org.freedesktop.fwupd.svg
 %{_datadir}/fwupd/firmware_packager.py
+%{_datadir}/fwupd/simple_client.py
+%{_datadir}/fwupd/add_capsule_header.py
+%{_datadir}/fwupd/install_dell_bios_exe.py
 %{_unitdir}/fwupd-offline-update.service
 %{_unitdir}/fwupd.service
 %{_unitdir}/fwupd-refresh.service
