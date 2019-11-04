@@ -53,7 +53,7 @@ typedef guint FuEndianType;
  * @FU_PATH_KIND_SYSFSDIR_FW:		The sysfs firmware location (IE /sys/firmware)
  * @FU_PATH_KIND_SYSFSDIR_DRIVERS:	The platform sysfs directory (IE /sys/bus/platform/drivers)
  * @FU_PATH_KIND_SYSFSDIR_TPM:		The TPM sysfs directory (IE /sys/class/tpm)
- * @FU_PATH_KIND_POLKIT_ACTIONS		The directory for policy kit actions (IE /usr/share/polkit-1/actions/)
+ * @FU_PATH_KIND_POLKIT_ACTIONS:	The directory for policy kit actions (IE /usr/share/polkit-1/actions/)
  *
  * Path types to use when dynamically determining a path at runtime
  **/

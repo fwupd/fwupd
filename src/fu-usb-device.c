@@ -12,7 +12,7 @@
 #include "fu-usb-device-private.h"
 
 /**
- * SECTION:fu-device
+ * SECTION:fu-usb-device
  * @short_description: a USB device
  *
  * An object that represents a USB device.
