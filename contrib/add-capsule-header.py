@@ -7,22 +7,22 @@
 import sys
 import uuid
 import argparse
-import struct
+import ctypes
 
 CAPSULE_FLAGS_PERSIST_ACROSS_RESET = 0x00010000
 CAPSULE_FLAGS_POPULATE_SYSTEM_TABLE = 0x00020000
 CAPSULE_FLAGS_INITIATE_RESET = 0x00040000
 
-def main(args):
-
+def add_header(infile, outfile, gd, fl=None):
     # parse GUID from command line
     try:
-        guid = uuid.UUID(args.guid)
+        guid = uuid.UUID(gd)
     except ValueError as e:
         print(e)
         return 1
+    import struct
     try:
-        with open(args.bin, 'rb') as f:
+        with open(infile, 'rb') as f:
             bin_data = f.read()
     except FileNotFoundError as e:
         print(e)
@@ -45,27 +45,31 @@ def main(args):
             bin_data = bin_data[hdrsz_old:]
 
     # set header flags
-    flags = CAPSULE_FLAGS_PERSIST_ACROSS_RESET | CAPSULE_FLAGS_INITIATE_RESET
-    if args.flags:
-        flags = int(args.flags, 16)
+    flags = CAPSULE_FLAGS_PERSIST_ACROSS_RESET | CAPSULE_FLAGS_INITIATE_RESET | CAPSULE_FLAGS_POPULATE_SYSTEM_TABLE
+    if fl:
+        flags = int(fl, 16)
 
     # build update capsule header
+    hdrsz = 4096
     imgsz = hdrsz + len(bin_data)
-    hdr = struct.pack('<16sIII', guid.bytes_le, hdrsz, flags, imgsz)
-    with open(args.cap, 'wb') as f:
-        f.write(hdr + bin_data)
-    print('Wrote capsule %s' % args.cap)
+    hdr = ctypes.create_string_buffer(hdrsz)
+    struct.pack_into('<16sIII', hdr, 0, guid.bytes_le, hdrsz, flags, imgsz)
+    with open(outfile, 'wb') as f:
+        f.write(hdr)
+        f.write(bin_data)
+    print('Wrote capsule %s' % outfile)
     print('GUID:      %s' % guid)
     print('HdrSz:     0x%04x' % hdrsz)
     print('Flags:     0x%04x' % flags)
     print('PayloadSz: 0x%04x' % imgsz)
     return 0
 
-parser = argparse.ArgumentParser(description='Add capsule header on firmware')
-parser.add_argument('--guid', help='GUID of the device', required=True)
-parser.add_argument('--bin', help='Path to the .bin file', required=True)
-parser.add_argument('--cap', help='Output capsule file path', required=True)
-parser.add_argument('--flags', help='Flags, e.g. 0x40000', default=None)
-args = parser.parse_args()
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Add capsule header on firmware')
+    parser.add_argument('--guid', help='GUID of the device', required=True)
+    parser.add_argument('--bin', help='Path to the .bin file', required=True)
+    parser.add_argument('--cap', help='Output capsule file path', required=True)
+    parser.add_argument('--flags', help='Flags, e.g. 0x40000', default=None)
+    args = parser.parse_args()
 
-sys.exit(main(args))
+    sys.exit(add_header(args.bin, args.cap, args.guid, args.flags))
