@@ -1,1 +1,1 @@
-subdir('firmware-packager')
+subdir('firmware_packager')
