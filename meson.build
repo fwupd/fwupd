@@ -165,10 +165,7 @@ if gio.version().version_compare ('>= 2.55.0')
 endif
 if build_standalone
 gmodule = dependency('gmodule-2.0')
-gudev = dependency('gudev-1.0')
-if gudev.version().version_compare('>= 232')
-  conf.set('HAVE_GUDEV_232', '1')
-endif
+gudev = dependency('gudev-1.0', version : '>= 232')
 libxmlb = dependency('xmlb', version : '>= 0.1.13', fallback : ['libxmlb', 'libxmlb_dep'])
 gusb = dependency('gusb', version : '>= 0.2.9')
 sqlite = dependency('sqlite3')

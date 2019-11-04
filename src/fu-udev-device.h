@@ -26,14 +26,6 @@ struct _FuUdevDeviceClass
 	gpointer	__reserved[29];
 };
 
-#ifndef HAVE_GUDEV_232
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevClient, g_object_unref)
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevDevice, g_object_unref)
-#pragma clang diagnostic pop
-#endif
-
 FuUdevDevice	*fu_udev_device_new			(GUdevDevice	*udev_device);
 GUdevDevice	*fu_udev_device_get_dev			(FuUdevDevice	*self);
 const gchar	*fu_udev_device_get_device_file		(FuUdevDevice	*self);
