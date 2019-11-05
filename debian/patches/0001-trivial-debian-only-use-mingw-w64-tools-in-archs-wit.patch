@@ -1,0 +1,42 @@
+From e6170ca6dde515f7c0fd3f13720a5a2570522472 Mon Sep 17 00:00:00 2001
+From: Mario Limonciello <mario.limonciello@dell.com>
+Date: Tue, 5 Nov 2019 11:43:44 -0600
+Subject: [PATCH] trivial: debian: only use mingw-w64-tools in archs with UEFI
+ plugin
+
+---
+ contrib/ci/dependencies.xml | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
+
+diff --git a/contrib/ci/dependencies.xml b/contrib/ci/dependencies.xml
+index eeaaccf2..94629de9 100644
+--- a/contrib/ci/dependencies.xml
++++ b/contrib/ci/dependencies.xml
+@@ -896,12 +896,22 @@
+       <package />
+     </distro>
+     <distro id="debian">
+-      <control />
++      <control>
++        <inclusive>amd64</inclusive>
++        <inclusive>arm64</inclusive>
++        <inclusive>armhf</inclusive>
++        <inclusive>i386</inclusive>
++      </control>
+       <package variant="x86_64" />
+       <package variant="i386" />
+     </distro>
+     <distro id="ubuntu">
+-      <control />
++      <control>
++        <inclusive>amd64</inclusive>
++        <inclusive>arm64</inclusive>
++        <inclusive>armhf</inclusive>
++        <inclusive>i386</inclusive>
++      </control>
+       <package variant="x86_64" />
+     </distro>
+   </dependency>
+-- 
+2.20.1
+
