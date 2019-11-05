@@ -1,0 +1,29 @@
+From 6e55cff444858f1b1c3dd5a642ba87a26d9ff2e7 Mon Sep 17 00:00:00 2001
+From: Richard Hughes <richard@hughsie.com>
+Date: Tue, 5 Nov 2019 10:44:30 +0000
+Subject: [PATCH] fastboot: Fix a regression when updating modem firmware
+
+Set `IS_BOOTLOADER` unconditionally when in fastboot mode. This seems logically
+what it is; a degraded mode that's able to update firmware without runtime
+functionality.
+
+Fixes https://github.com/fwupd/fwupd/issues/1532
+---
+ plugins/fastboot/fu-fastboot-device.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/plugins/fastboot/fu-fastboot-device.c b/plugins/fastboot/fu-fastboot-device.c
+index eba706a0..8dc56e3a 100644
+--- a/plugins/fastboot/fu-fastboot-device.c
++++ b/plugins/fastboot/fu-fastboot-device.c
+@@ -695,6 +695,7 @@ fu_fastboot_device_init (FuFastbootDevice *self)
+ 	/* this is a safe default, even using USBv1 */
+ 	self->blocksz = 512;
+ 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
++	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+ 	fu_device_set_remove_delay (FU_DEVICE (self), FASTBOOT_REMOVE_DELAY_RE_ENUMERATE);
+ }
+ 
+-- 
+2.20.1
+
