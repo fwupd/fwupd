@@ -695,6 +695,7 @@ fu_fastboot_device_init (FuFastbootDevice *self)
 	/* this is a safe default, even using USBv1 */
 	self->blocksz = 512;
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	fu_device_set_remove_delay (FU_DEVICE (self), FASTBOOT_REMOVE_DELAY_RE_ENUMERATE);
 }
 
