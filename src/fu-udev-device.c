@@ -607,8 +607,6 @@ fu_udev_device_set_fd (FuUdevDevice *self, gint fd)
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 
 	g_return_if_fail (FU_IS_UDEV_DEVICE (self));
-	g_return_if_fail (fd > 0);
-
 	if (priv->fd > 0)
 		close (priv->fd);
 	priv->fd = fd;
@@ -712,6 +710,7 @@ fu_udev_device_ioctl (FuUdevDevice *self,
 	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), FALSE);
 	g_return_val_if_fail (request != 0x0, FALSE);
 	g_return_val_if_fail (buf != NULL, FALSE);
+	g_return_val_if_fail (priv->fd > 0, FALSE);
 
 	rc_tmp = ioctl (priv->fd, request, buf);
 	if (rc != NULL)
@@ -754,6 +753,7 @@ fu_udev_device_pwrite (FuUdevDevice *self, goffset port, guint8 data, GError **e
 
 	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), FALSE);
 	g_return_val_if_fail (port != 0x0, FALSE);
+	g_return_val_if_fail (priv->fd > 0, FALSE);
 
 	if (pwrite (priv->fd, &data, 1, port) != 1) {
 		g_set_error (error,
@@ -788,6 +788,7 @@ fu_udev_device_pread (FuUdevDevice *self, goffset port, guint8 *data, GError **e
 	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), FALSE);
 	g_return_val_if_fail (port != 0x0, FALSE);
 	g_return_val_if_fail (data != NULL, FALSE);
+	g_return_val_if_fail (priv->fd > 0, FALSE);
 
 	if (pread (priv->fd, data, 1, port) != 1) {
 		g_set_error (error,
