@@ -152,7 +152,7 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	    g_strcmp0 (priv->subsystem, "hidraw") == 0) {
 		tmp = g_udev_device_get_property (udev_parent, "HID_ID");
 		if (tmp != NULL && strlen (tmp) == 22) {
-			priv->vendor = fu_udev_device_read_uint16 (tmp + 10);
+			priv->vendor = fu_udev_device_read_uint16 (tmp + 9);
 			priv->model = fu_udev_device_read_uint16 (tmp + 18);
 		}
 		tmp = g_udev_device_get_property (udev_parent, "HID_NAME");
