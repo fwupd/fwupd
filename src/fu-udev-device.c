@@ -33,8 +33,8 @@
 typedef struct
 {
 	GUdevDevice		*udev_device;
-	guint16			 vendor;
-	guint16			 model;
+	guint32			 vendor;
+	guint32			 model;
 	guint8			 revision;
 	gchar			*subsystem;
 	gchar			*device_file;
@@ -77,18 +77,30 @@ fu_udev_device_emit_changed (FuUdevDevice *self)
 	g_signal_emit (self, signals[SIGNAL_CHANGED], 0);
 }
 
-static guint64
-fu_udev_device_get_sysfs_attr_as_uint64 (GUdevDevice *udev_device, const gchar *name)
+static guint32
+fu_udev_device_get_sysfs_attr_as_uint32 (GUdevDevice *udev_device, const gchar *name)
 {
-	return fu_common_strtoull (g_udev_device_get_sysfs_attr (udev_device, name));
+	guint64 tmp = fu_common_strtoull (g_udev_device_get_sysfs_attr (udev_device, name));
+	if (tmp > G_MAXUINT32) {
+		g_warning ("reading %s for %s overflowed",
+			   name,
+			   g_udev_device_get_sysfs_path (udev_device));
+		return G_MAXUINT32;
+	}
+	return tmp;
 }
 
-static guint16
-fu_udev_device_read_uint16 (const gchar *str)
+static guint8
+fu_udev_device_get_sysfs_attr_as_uint8 (GUdevDevice *udev_device, const gchar *name)
 {
-	gchar buf[5] = { 0x0, 0x0, 0x0, 0x0, 0x0 };
-	memcpy (buf, str, 4);
-	return (guint16) g_ascii_strtoull (buf, NULL, 16);
+	guint64 tmp = fu_common_strtoull (g_udev_device_get_sysfs_attr (udev_device, name));
+	if (tmp > G_MAXUINT8) {
+		g_warning ("reading %s for %s overflowed",
+			   name,
+			   g_udev_device_get_sysfs_path (udev_device));
+		return G_MAXUINT8;
+	}
+	return tmp;
 }
 
 static void
@@ -133,17 +145,17 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 		return TRUE;
 
 	/* set ven:dev:rev */
-	priv->vendor = fu_udev_device_get_sysfs_attr_as_uint64 (priv->udev_device, "vendor");
-	priv->model = fu_udev_device_get_sysfs_attr_as_uint64 (priv->udev_device, "device");
-	priv->revision = fu_udev_device_get_sysfs_attr_as_uint64 (priv->udev_device, "revision");
+	priv->vendor = fu_udev_device_get_sysfs_attr_as_uint32 (priv->udev_device, "vendor");
+	priv->model = fu_udev_device_get_sysfs_attr_as_uint32 (priv->udev_device, "device");
+	priv->revision = fu_udev_device_get_sysfs_attr_as_uint8 (priv->udev_device, "revision");
 
 	/* fallback to the parent */
 	udev_parent = g_udev_device_get_parent (priv->udev_device);
 	if (udev_parent != NULL &&
 	    priv->vendor == 0x0 && priv->model == 0x0 && priv->revision == 0x0) {
-		priv->vendor = fu_udev_device_get_sysfs_attr_as_uint64 (udev_parent, "vendor");
-		priv->model = fu_udev_device_get_sysfs_attr_as_uint64 (udev_parent, "device");
-		priv->revision = fu_udev_device_get_sysfs_attr_as_uint64 (udev_parent, "revision");
+		priv->vendor = fu_udev_device_get_sysfs_attr_as_uint32 (udev_parent, "vendor");
+		priv->model = fu_udev_device_get_sysfs_attr_as_uint32 (udev_parent, "device");
+		priv->revision = fu_udev_device_get_sysfs_attr_as_uint8 (udev_parent, "revision");
 	}
 
 	/* hidraw helpfully encodes the information in a different place */
@@ -151,9 +163,26 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	    priv->vendor == 0x0 && priv->model == 0x0 && priv->revision == 0x0 &&
 	    g_strcmp0 (priv->subsystem, "hidraw") == 0) {
 		tmp = g_udev_device_get_property (udev_parent, "HID_ID");
-		if (tmp != NULL && strlen (tmp) == 22) {
-			priv->vendor = fu_udev_device_read_uint16 (tmp + 9);
-			priv->model = fu_udev_device_read_uint16 (tmp + 18);
+		if (tmp != NULL) {
+			g_auto(GStrv) split = g_strsplit (tmp, ":", -1);
+			if (g_strv_length (split) == 3) {
+				guint64 val = g_ascii_strtoull (split[1], NULL, 16);
+				if (val > G_MAXUINT32) {
+					g_warning ("reading %s for %s overflowed",
+						   split[1],
+						   g_udev_device_get_sysfs_path (priv->udev_device));
+				} else {
+					priv->vendor = val;
+				}
+				val = g_ascii_strtoull (split[2], NULL, 16);
+				if (val > G_MAXUINT32) {
+					g_warning ("reading %s for %s overflowed",
+						   split[2],
+						   g_udev_device_get_sysfs_path (priv->udev_device));
+				} else {
+					priv->model = val;
+				}
+			}
 		}
 		tmp = g_udev_device_get_property (udev_parent, "HID_NAME");
 		if (tmp != NULL) {
@@ -414,7 +443,7 @@ fu_udev_device_get_sysfs_path (FuUdevDevice *self)
  *
  * Since: 1.1.2
  **/
-guint16
+guint32
 fu_udev_device_get_vendor (FuUdevDevice *self)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
@@ -432,7 +461,7 @@ fu_udev_device_get_vendor (FuUdevDevice *self)
  *
  * Since: 1.1.2
  **/
-guint16
+guint32
 fu_udev_device_get_model (FuUdevDevice *self)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
