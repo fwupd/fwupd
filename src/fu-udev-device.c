@@ -638,15 +638,17 @@ fu_udev_device_open (FuDevice *device, GError **error)
 	FuUdevDeviceClass *klass = FU_UDEV_DEVICE_GET_CLASS (device);
 
 	/* open device */
-	priv->fd = g_open (priv->device_file, priv->readonly ? O_RDONLY : O_RDWR);
-	if (priv->fd < 0) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_FAILED,
-			     "failed to open %s: %s",
-			     priv->device_file,
-			     strerror (errno));
-		return FALSE;
+	if (priv->device_file != NULL) {
+		priv->fd = g_open (priv->device_file, priv->readonly ? O_RDONLY : O_RDWR);
+		if (priv->fd < 0) {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_FAILED,
+				     "failed to open %s: %s",
+				     priv->device_file,
+				     strerror (errno));
+			return FALSE;
+		}
 	}
 
 	/* subclassed */
