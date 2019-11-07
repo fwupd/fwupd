@@ -129,11 +129,16 @@ fu_usb_device_open (FuDevice *device, GError **error)
 		idx = g_usb_device_get_manufacturer_index (priv->usb_device);
 		if (idx != 0x00) {
 			g_autofree gchar *tmp = NULL;
+			g_autoptr(GError) error_local = NULL;
 			tmp = g_usb_device_get_string_descriptor (priv->usb_device,
-								  idx, error);
-			if (tmp == NULL)
-				return FALSE;
-			fu_device_set_vendor (device, g_strchomp (tmp));
+								  idx, &error_local);
+			if (tmp != NULL)
+				fu_device_set_vendor (device, g_strchomp (tmp));
+			else
+				g_debug ("failed to load manufacturer string for usb device %u:%u: %s",
+					 g_usb_device_get_bus (priv->usb_device),
+					 g_usb_device_get_address (priv->usb_device),
+					 error_local->message);
 		}
 	}
 
@@ -142,11 +147,16 @@ fu_usb_device_open (FuDevice *device, GError **error)
 		idx = g_usb_device_get_product_index (priv->usb_device);
 		if (idx != 0x00) {
 			g_autofree gchar *tmp = NULL;
+			g_autoptr(GError) error_local = NULL;
 			tmp = g_usb_device_get_string_descriptor (priv->usb_device,
-								  idx, error);
-			if (tmp == NULL)
-				return FALSE;
-			fu_device_set_name (device, g_strchomp (tmp));
+								  idx, &error_local);
+			if (tmp != NULL)
+				fu_device_set_name (device, g_strchomp (tmp));
+			else
+				g_debug ("failed to load product string for usb device %u:%u: %s",
+					 g_usb_device_get_bus (priv->usb_device),
+					 g_usb_device_get_address (priv->usb_device),
+					 error_local->message);
 		}
 	}
 
@@ -155,11 +165,16 @@ fu_usb_device_open (FuDevice *device, GError **error)
 		idx = g_usb_device_get_serial_number_index (priv->usb_device);
 		if (idx != 0x00) {
 			g_autofree gchar *tmp = NULL;
+			g_autoptr(GError) error_local = NULL;
 			tmp = g_usb_device_get_string_descriptor (priv->usb_device,
-								  idx, error);
-			if (tmp == NULL)
-				return FALSE;
-			fu_device_set_serial (device, g_strchomp (tmp));
+								  idx, &error_local);
+			if (tmp != NULL)
+				fu_device_set_serial (device, g_strchomp (tmp));
+			else
+				g_debug ("failed to load serial number string for usb device %u:%u: %s",
+					 g_usb_device_get_bus (priv->usb_device),
+					 g_usb_device_get_address (priv->usb_device),
+					 error_local->message);
 		}
 	}
 
