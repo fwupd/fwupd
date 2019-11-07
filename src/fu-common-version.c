@@ -80,6 +80,20 @@ fu_common_version_from_uint32 (guint32 val, FwupdVersionFormat kind)
 					(val >> 16) & 0xff,
 					val & 0xffff);
 	}
+	if (kind == FWUPD_VERSION_FORMAT_SURFACE_LEGACY) {
+		/* 10b.12b.10b */
+		return g_strdup_printf ("%u.%u.%u",
+					(val >> 22) & 0x3ff,
+					(val >> 10) & 0xfff,
+					val & 0x3ff);
+	}
+	if (kind == FWUPD_VERSION_FORMAT_SURFACE) {
+		/* 8b.16b.8b */
+		return g_strdup_printf ("%u.%u.%u",
+					(val >> 24) & 0xff,
+					(val >> 8) & 0xffff,
+					val & 0xff);
+	}
 	g_critical ("failed to convert version format %s: %u",
 		    fwupd_version_format_to_string (kind), val);
 	return NULL;
