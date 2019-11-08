@@ -28,6 +28,10 @@ struct _FuFirmwareImageClass
 	gpointer		 padding[28];
 };
 
+#define FU_FIRMWARE_IMAGE_ID_PAYLOAD		"payload"
+#define FU_FIRMWARE_IMAGE_ID_SIGNATURE		"signature"
+#define FU_FIRMWARE_IMAGE_ID_HEADER		"header"
+
 FuFirmwareImage	*fu_firmware_image_new		(GBytes			*bytes);
 gchar		*fu_firmware_image_to_string	(FuFirmwareImage	*self);
 

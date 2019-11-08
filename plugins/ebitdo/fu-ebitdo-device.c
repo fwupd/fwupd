@@ -416,10 +416,14 @@ fu_ebitdo_device_write_firmware (FuDevice *device,
 	}
 
 	/* get header and payload */
-	fw_hdr = fu_firmware_get_image_by_id_bytes (firmware, "header", error);
+	fw_hdr = fu_firmware_get_image_by_id_bytes (firmware,
+						    FU_FIRMWARE_IMAGE_ID_HEADER,
+						    error);
 	if (fw_hdr == NULL)
 		return FALSE;
-	fw_payload = fu_firmware_get_image_by_id_bytes (firmware, "payload", error);
+	fw_payload = fu_firmware_get_image_by_id_bytes (firmware,
+							FU_FIRMWARE_IMAGE_ID_PAYLOAD,
+							error);
 	if (fw_payload == NULL)
 		return FALSE;
 

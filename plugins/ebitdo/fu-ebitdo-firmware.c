@@ -78,13 +78,13 @@ fu_ebitdo_firmware_parse (FuFirmware *firmware,
 
 	/* add header */
 	fw_hdr = g_bytes_new_from_bytes (fw, 0x0, sizeof(FuEbitdoFirmwareHeader));
-	fu_firmware_image_set_id (img_hdr, "header");
+	fu_firmware_image_set_id (img_hdr, FU_FIRMWARE_IMAGE_ID_HEADER);
 	fu_firmware_image_set_bytes (img_hdr, fw_hdr);
 	fu_firmware_add_image (firmware, img_hdr);
 
 	/* add payload */
 	fw_payload = g_bytes_new_from_bytes (fw, sizeof(FuEbitdoFirmwareHeader), payload_len);
-	fu_firmware_image_set_id (img_payload, "payload");
+	fu_firmware_image_set_id (img_payload, FU_FIRMWARE_IMAGE_ID_PAYLOAD);
 	fu_firmware_image_set_addr (img_payload, GUINT32_FROM_LE(hdr->destination_addr));
 	fu_firmware_image_set_bytes (img_payload, fw_payload);
 	fu_firmware_add_image (firmware, img_payload);

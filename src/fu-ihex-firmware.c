@@ -268,7 +268,7 @@ fu_ihex_firmware_parse (FuFirmware *firmware,
 	if (buf_signature->len > 0) {
 		g_autoptr(GBytes) data_sig = g_bytes_new (buf_signature->data, buf_signature->len);
 		g_autoptr(FuFirmwareImage) img_sig = fu_firmware_image_new (data_sig);
-		fu_firmware_image_set_id (img_sig, "signature");
+		fu_firmware_image_set_id (img_sig, FU_FIRMWARE_IMAGE_ID_SIGNATURE);
 		fu_firmware_add_image (firmware, img_sig);
 	}
 	return TRUE;
@@ -313,7 +313,8 @@ dfu_firmware_to_ihex_image (FuFirmwareImage *img, GString *str, GError **error)
 		return FALSE;
 
 	/* special case */
-	if (g_strcmp0 (fu_firmware_image_get_id (img), "signature") == 0)
+	if (g_strcmp0 (fu_firmware_image_get_id (img),
+		       FU_FIRMWARE_IMAGE_ID_SIGNATURE) == 0)
 		record_type = DFU_INHX32_RECORD_TYPE_SIGNATURE;
 
 	/* get number of chunks */
