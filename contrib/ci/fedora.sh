@@ -26,6 +26,7 @@ mv build/meson-dist/fwupd-$VERSION.tar.xz $HOME/rpmbuild/SOURCES/
 
 #generate a spec file
 sed "s,#VERSION#,$VERSION,;
+     s,#TARBALL_VERSION#,$VERSION,;
      s,#BUILD#,1,;
      s,#LONGDATE#,`date '+%a %b %d %Y'`,;
      s,#ALPHATAG#,alpha,;
