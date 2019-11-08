@@ -3816,7 +3816,9 @@ fu_firmware_ihex_signed_func (void)
 	g_assert_cmpint (g_bytes_get_size (data_fw), ==, 136);
 
 	/* get the signed image */
-	data_sig = fu_firmware_get_image_by_id_bytes (firmware, "signature", &error);
+	data_sig = fu_firmware_get_image_by_id_bytes (firmware,
+						      FU_FIRMWARE_IMAGE_ID_SIGNATURE,
+						      &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (data_sig);
 	data = g_bytes_get_data (data_sig, &len);
