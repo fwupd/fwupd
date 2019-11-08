@@ -23,10 +23,47 @@ typedef struct {
 	GBytes			*bytes;
 	guint64			 addr;
 	guint64			 idx;
+	gchar			*version;
 } FuFirmwareImagePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuFirmwareImage, fu_firmware_image, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fu_firmware_image_get_instance_private (o))
+
+/**
+ * fu_firmware_image_get_version:
+ * @self: A #FuFirmwareImage
+ *
+ * Gets an optional version that represents the firmware image.
+ *
+ * Returns: a string, or %NULL
+ *
+ * Since: 1.3.4
+ **/
+const gchar *
+fu_firmware_image_get_version (FuFirmwareImage *self)
+{
+	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_FIRMWARE_IMAGE (self), NULL);
+	return priv->version;
+}
+
+/**
+ * fu_firmware_image_set_version:
+ * @self: A #FuFirmwareImage
+ * @version: A string version, or %NULL
+ *
+ * Sets an optional version that represents the firmware image.
+ *
+ * Since: 1.3.4
+ **/
+void
+fu_firmware_image_set_version (FuFirmwareImage *self, const gchar *version)
+{
+	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_FIRMWARE_IMAGE (self));
+	g_free (priv->version);
+	priv->version = g_strdup (version);
+}
 
 /**
  * fu_firmware_image_set_id:
@@ -261,6 +298,8 @@ fu_firmware_image_add_string (FuFirmwareImage *self, guint idt, GString *str)
 		fu_common_string_append_kx (str, idt, "Index", priv->idx);
 	if (priv->addr != 0x0)
 		fu_common_string_append_kx (str, idt, "Address", priv->addr);
+	if (priv->version != NULL)
+		fu_common_string_append_kv (str, 0, "Version", priv->version);
 	if (priv->bytes != NULL) {
 		fu_common_string_append_kx (str, idt, "Data",
 					    g_bytes_get_size (priv->bytes));
@@ -300,6 +339,7 @@ fu_firmware_image_finalize (GObject *object)
 	FuFirmwareImage *self = FU_FIRMWARE_IMAGE (object);
 	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
 	g_free (priv->id);
+	g_free (priv->version);
 	if (priv->bytes != NULL)
 		g_bytes_unref (priv->bytes);
 	G_OBJECT_CLASS (fu_firmware_image_parent_class)->finalize (object);
