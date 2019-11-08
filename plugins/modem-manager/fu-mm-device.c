@@ -486,18 +486,19 @@ fu_mm_should_be_active (const gchar *version,
 	return (g_strstr_len (version, -1, carrier_id) != NULL);
 }
 
-static void
+static gboolean
 fu_mm_qmi_pdc_archive_iterate_mcfg (FuArchive	*archive,
 				    const gchar	*filename,
 				    GBytes	*bytes,
-				    gpointer	 user_data)
+				    gpointer	 user_data,
+				    GError	**error)
 {
 	FuMmArchiveIterateCtx *ctx = user_data;
 	FuMmFileInfo *file_info;
 
 	/* filenames should be named as 'mcfg.*.mbn', e.g.: mcfg.A2.018.mbn */
 	if (!g_str_has_prefix (filename, "mcfg.") || !g_str_has_suffix (filename, ".mbn"))
-		return;
+		return TRUE;
 
 	file_info = g_new0 (FuMmFileInfo, 1);
 	file_info->filename = g_strdup (filename);
@@ -505,6 +506,7 @@ fu_mm_qmi_pdc_archive_iterate_mcfg (FuArchive	*archive,
 	file_info->active = fu_mm_should_be_active (fu_device_get_version (FU_DEVICE (ctx->device)), filename);
 	g_ptr_array_add (ctx->file_infos, file_info);
 	ctx->total_bytes += g_bytes_get_size (file_info->bytes);
+	return TRUE;
 }
 
 static gboolean
@@ -562,7 +564,11 @@ fu_mm_device_write_firmware_qmi_pdc (FuDevice *device, GBytes *fw, GArray **acti
 		return FALSE;
 
 	/* process the list of MCFG files to write */
-	fu_archive_iterate (archive, fu_mm_qmi_pdc_archive_iterate_mcfg, &archive_context);
+	if (!fu_archive_iterate (archive,
+				 fu_mm_qmi_pdc_archive_iterate_mcfg,
+				 &archive_context,
+				 error))
+		return FALSE;
 
 	for (guint i = 0; i < file_infos->len; i++) {
 		FuMmFileInfo *file_info = g_ptr_array_index (file_infos, i);
