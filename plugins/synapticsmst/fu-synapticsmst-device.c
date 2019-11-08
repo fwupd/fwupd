@@ -1047,6 +1047,13 @@ fu_synapticsmst_device_rescan (FuDevice *device, GError **error)
 		return FALSE;
 	}
 	self->chip_id = (buf_ver[0] << 8) | (buf_ver[1]);
+	if (self->chip_id == 0) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "invalid chip ID");
+		return FALSE;
+	}
 	self->family = fu_synapticsmst_family_from_chip_id (self->chip_id);
 
 	/* check the active bank for debugging */
