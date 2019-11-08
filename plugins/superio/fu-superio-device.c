@@ -20,7 +20,7 @@ typedef struct
 	guint16			 id;
 } FuSuperioDevicePrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE (FuSuperioDevice, fu_superio_device, FU_TYPE_DEVICE)
+G_DEFINE_TYPE_WITH_PRIVATE (FuSuperioDevice, fu_superio_device, FU_TYPE_UDEV_DEVICE)
 
 #define GET_PRIVATE(o) (fu_superio_device_get_instance_private (o))
 
