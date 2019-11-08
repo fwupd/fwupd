@@ -45,12 +45,14 @@ fu_plugin_superio_coldplug_chipset (FuPlugin *plugin, const gchar *chipset, GErr
 	/* create IT89xx or IT89xx */
 	if (id >> 8 == 0x85) {
 		dev = g_object_new (FU_TYPE_SUPERIO_IT85_DEVICE,
+				    "device-file", "/dev/port",
 				    "chipset", chipset,
 				    "id", id,
 				    "port", port,
 				    NULL);
 	} else if (id >> 8 == 0x89) {
 		dev = g_object_new (FU_TYPE_SUPERIO_IT89_DEVICE,
+				    "device-file", "/dev/port",
 				    "chipset", chipset,
 				    "id", id,
 				    "port", port,
