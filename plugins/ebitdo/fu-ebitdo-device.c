@@ -512,8 +512,14 @@ fu_ebitdo_device_write_firmware (FuDevice *device,
 	/* when doing a soft-reboot the device does not re-enumerate properly
 	 * so manually reboot the GUsbDevice */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	if (!g_usb_device_reset (usb_device, error)) {
-		g_prefix_error (error, "failed to force-reset device: ");
+	if (!g_usb_device_reset (usb_device, &error_local)) {
+		g_prefix_error (&error_local, "failed to force-reset device: ");
+		if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_WILL_DISAPPEAR)) {
+			fu_device_set_remove_delay (device, 0);
+			g_debug ("%s", error_local->message);
+			return TRUE;
+		}
+		g_propagate_error (error, g_steal_pointer (&error_local));
 		return FALSE;
 	}
 
