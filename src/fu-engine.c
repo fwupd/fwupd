@@ -1872,7 +1872,14 @@ fu_engine_device_cleanup (FuEngine *self,
 			  FwupdInstallFlags flags,
 			  GError **error)
 {
-	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new (device, error);
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_WILL_DISAPPEAR)) {
+		g_debug ("skipping device cleanup due to will-disappear flag");
+		return TRUE;
+	}
+
+	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;
 	return fu_device_cleanup (device, flags, error);
