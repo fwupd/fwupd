@@ -23,7 +23,7 @@ def get_version_git():
     try:
         version = subprocess.check_output(['git', 'describe'], stderr=subprocess.DEVNULL)
         return version.strip().decode('utf-8')
-    except subprocess.CalledProcessError:
+    except (subprocess.CalledProcessError, PermissionError, FileNotFoundError):
         return ''
 
 def get_version():
