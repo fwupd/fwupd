@@ -56,6 +56,17 @@
     </property>
 
     <!--***********************************************************-->
+    <property name='Interactive' type='b' access='read'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            If the daemon is running on an interactive terminal.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </property>
+
+    <!--***********************************************************-->
     <property name='Status' type='u' access='read'>
       <doc:doc>
         <doc:description>

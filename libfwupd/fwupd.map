@@ -399,3 +399,9 @@ LIBFWUPD_1.3.3 {
     fwupd_remote_get_automatic_reports;
   local: *;
 } LIBFWUPD_1.3.2;
+
+LIBFWUPD_1.3.4 {
+  global:
+    fwupd_client_get_daemon_interactive;
+  local: *;
+} LIBFWUPD_1.3.3;
