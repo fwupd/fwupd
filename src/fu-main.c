@@ -15,6 +15,7 @@
 #include <glib-unix.h>
 #include <locale.h>
 #include <polkit/polkit.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "fwupd-device-private.h"
@@ -1368,6 +1369,9 @@ fu_main_daemon_get_property (GDBusConnection *connection_, const gchar *sender,
 
 	if (g_strcmp0 (property_name, "HostMachineId") == 0)
 		return g_variant_new_string (fu_engine_get_host_machine_id (priv->engine));
+
+	if (g_strcmp0 (property_name, "Interactive") == 0)
+		return g_variant_new_boolean (isatty (fileno (stdout)) != 0);
 
 	/* return an error */
 	g_set_error (error,

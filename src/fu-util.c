@@ -2719,6 +2719,7 @@ main (int argc, char *argv[])
 #ifdef HAVE_SYSTEMD
 	/* make sure the correct daemon is in use */
 	if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
+	    !fwupd_client_get_daemon_interactive (priv->client) &&
 	    !fu_util_using_correct_daemon (&error)) {
 		g_printerr ("%s\n", error->message);
 		return EXIT_FAILURE;
