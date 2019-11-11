@@ -418,6 +418,7 @@
       <package />
     </distro>
     <distro id="debian">
+      <control />
       <package variant="x86_64" />
       <package variant="s390x" />
       <package variant="i386" />
