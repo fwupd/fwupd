@@ -92,7 +92,7 @@ udev_device_get_sysattr_guint64 (GUdevDevice *device,
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
-			     "failed get id %s for %s", name, sysfs);
+			     "missing sysfs attribute %s", name);
 		return FALSE;
 	}
 
