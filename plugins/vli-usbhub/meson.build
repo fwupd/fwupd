@@ -15,6 +15,7 @@ shared_module('fu_plugin_vli_usbhub',
     'fu-vli-usbhub-device.c',
     'fu-vli-usbhub-firmware.c',
     'fu-vli-usbhub-pd-common.c',
+    'fu-vli-usbhub-pd-device.c',
     'fu-vli-usbhub-pd-firmware.c',
   ],
   include_directories : [

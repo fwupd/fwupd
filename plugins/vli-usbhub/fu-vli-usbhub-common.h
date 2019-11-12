@@ -73,6 +73,9 @@ G_STATIC_ASSERT(sizeof(FuVliUsbhubHeader) == 0x20);
 #define VLI_USBHUB_FLASHMAP_ADDR_HD1_BACKUP	0x1800
 #define VLI_USBHUB_FLASHMAP_ADDR_HD2		0x1000
 #define VLI_USBHUB_FLASHMAP_ADDR_FW		0x2000
+#define VLI_USBHUB_FLASHMAP_ADDR_PD_LEGACY	0x10000
+#define VLI_USBHUB_FLASHMAP_ADDR_PD		0x20000
+#define VLI_USBHUB_FLASHMAP_ADDR_PD_BACKUP	0x30000
 
 guint8		 fu_vli_usbhub_header_crc8		(FuVliUsbhubHeader	*hdr);
 void		 fu_vli_usbhub_header_to_string		(FuVliUsbhubHeader	*hdr,

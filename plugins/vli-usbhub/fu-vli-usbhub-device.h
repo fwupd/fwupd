@@ -15,3 +15,17 @@ struct _FuVliUsbhubDeviceClass
 {
 	FuUsbDeviceClass	parent_class;
 };
+
+gboolean	 fu_vli_usbhub_device_spi_erase		(FuVliUsbhubDevice *self,
+							 guint32	 addr,
+							 gsize		 sz,
+							 GError		**error);
+gboolean	 fu_vli_usbhub_device_spi_write		(FuVliUsbhubDevice *self,
+							 guint32	 address,
+							 const guint8	*buf,
+							 gsize		 bufsz,
+							 GError		**error);
+GBytes		*fu_vli_usbhub_device_spi_read		(FuVliUsbhubDevice *self,
+							 guint32	 address,
+							 gsize		 bufsz,
+							 GError		**error);

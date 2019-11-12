@@ -31,6 +31,10 @@ These devices also use custom GUID values for the SPI flash configuration, e.g.
  * `VLI_USBHUB\SPI_3730`
  * `VLI_USBHUB\SPI_37`
 
+Optional PD child devices use just one extra GUID, e.g.
+
+ * `VLI_USBHUB_PD\VID_17EF&PID_3083`
+
 Quirk Use
 ---------
 
