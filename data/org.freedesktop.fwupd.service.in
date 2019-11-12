@@ -4,3 +4,4 @@ Documentation=https://fwupd.org/
 Exec=@libexecdir@/fwupd/fwupd
 User=root
 SystemdService=fwupd.service
+AssumedAppArmorLabel=unconfined
