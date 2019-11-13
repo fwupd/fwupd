@@ -14,3 +14,12 @@ gchar		*fu_plugin_coreboot_version_string_to_triplet	(const gchar	*coreboot_vers
 gchar		*fu_plugin_coreboot_get_name_for_type		(FuPlugin	*plugin,
 								const gchar	*vboot_partition);
 const gchar	*fu_plugin_coreboot_get_version_string		(FuPlugin	*plugin);
+/* fu-coreboot-sysfs.c */
+gchar		*fu_plugin_coreboot_find_cb_table		(const guint	tag,
+								gsize		*length,
+								GError 		**error);
+gchar		*fu_plugin_coreboot_find_cbmem			(const guint	id,
+								gsize		*length,
+								goffset		*address,
+								GError		**error);
+gboolean	fu_plugin_coreboot_sysfs_probe			(void);

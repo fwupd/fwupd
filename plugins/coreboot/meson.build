@@ -8,6 +8,7 @@ shared_module('fu_plugin_coreboot',
   sources : [
     'fu-plugin-coreboot.c',
     'fu-coreboot-common.c',
+    'fu-coreboot-sysfs.c',
   ],
   include_directories : [
     root_incdir,

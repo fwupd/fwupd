@@ -38,6 +38,25 @@ For example:
 
 The coreboot DMI version string always starts with `CBET`.
 
+CBMEM
+-----
+The coreboot memory object is similar to *UEFI Runtime Data*. It resides in
+DRAM and has been marked reserved in the e820 table or devicetree.
+
+The CBMEM have a known header which holds the ID and the payload length. The
+content is coreboot specific and might not be of interrest for the OS.
+
+coreboot tables
+---------------
+coreboot tables are similar to ACPI tables. They reside in CBMEM and provide
+useful information to the payload and OS.
+For example:
+* the firmware version string
+* the firmware size in bytes
+* the mainboard vendor and name
+* a list of all CBMEM buffers installed at runtime
+* a pointer to a CBMEM buffer holding the flash layout descriptor
+
 GUID Generation
 ---------------
 
