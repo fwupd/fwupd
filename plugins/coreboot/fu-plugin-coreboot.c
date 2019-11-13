@@ -27,7 +27,6 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
 	const gchar *major;
 	const gchar *minor;
-	const gchar *vendor;
 	const gchar *version;
 	GBytes *bios_table;
 	gboolean updatable = FALSE; /* TODO: Implement update support */
@@ -43,15 +42,6 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		"HardwareID-6",
 		"HardwareID-10",
 	};
-
-	vendor = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VENDOR);
-	if (vendor == NULL) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_NOT_FOUND,
-			     "Failed to get DMI value FU_HWIDS_KEY_BIOS_VENDOR");
-		return FALSE;
-	}
 
 	version = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VERSION);
 	if (version != NULL)
@@ -89,8 +79,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 
 	fu_device_set_version (dev, triplet, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_summary (dev, "Open Source system boot firmware");
-	fu_device_set_id (dev, vendor);
-	fu_device_set_vendor (dev, vendor);
+	fu_device_set_id (dev, "coreboot");
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_icon (dev, "computer");
 	name = fu_plugin_coreboot_get_name_for_type (plugin, NULL);
