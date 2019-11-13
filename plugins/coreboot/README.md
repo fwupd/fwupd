@@ -20,12 +20,23 @@ coreboot can be detected the following ways:
 coreboot version string
 -----------------------
 
-The coreboot version string always starts with `CBET`.
-After the prefix the *version*, *major*, *minor* string follows and finally
+The coreboot version string can have an optional prefix (see below).
+After the optional prefix the *major*, *minor* string follows and finally
 the *build string*, containing the exact commit and repository state, follows.
 
 For example:
+> 4.10-989-gc8a4e4b9c5-dirty
+
+**Exception on Lenovo devices:**
+
+The thinkpad_acpi kernel module requires a specific pattern in the DMI version
+string. To satisfy those requirements coreboot adds the CBETxxxx prefix to the
+DMI version string on all Lenovo devices.
+
+For example:
 > CBET4000 4.10-989-gc8a4e4b9c5-dirty
+
+The coreboot DMI version string always starts with `CBET`.
 
 GUID Generation
 ---------------

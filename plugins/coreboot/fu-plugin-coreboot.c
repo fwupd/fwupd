@@ -44,7 +44,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		"HardwareID-10",
 	};
 
-	version = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VERSION);
+	version = fu_plugin_coreboot_get_version_string (plugin);
 	if (version != NULL)
 		triplet = fu_plugin_coreboot_version_string_to_triplet (version, error);
 

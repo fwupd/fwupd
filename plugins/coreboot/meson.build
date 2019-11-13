@@ -1,5 +1,9 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginCoreboot"']
 
+install_data(['coreboot.quirk'],
+  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
+)
+
 shared_module('fu_plugin_coreboot',
   sources : [
     'fu-plugin-coreboot.c',
