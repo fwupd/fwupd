@@ -1079,11 +1079,31 @@ static gboolean
 fu_engine_check_requirement_firmware (FuEngine *self, XbNode *req,
 				      FuDevice *device, GError **error)
 {
+	guint64 depth;
+	g_autoptr(FuDevice) device_actual = g_object_ref (device);
 	g_autoptr(GError) error_local = NULL;
+
+	/* look at the parent device */
+	depth = xb_node_get_attr_as_uint (req, "depth");
+	if (depth != G_MAXUINT64) {
+		for (guint64 i = 0; i < depth; i++) {
+			FuDevice *device_tmp = fu_device_get_parent (device_actual);
+			if (device_actual == NULL) {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
+					     "No parent device for %s "
+					     "(%" G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT ")",
+					     fu_device_get_name (device_actual), i, depth);
+				return FALSE;
+			}
+			g_set_object (&device_actual, device_tmp);
+		}
+	}
 
 	/* old firmware version */
 	if (xb_node_get_text (req) == NULL) {
-		const gchar *version = fu_device_get_version (device);
+		const gchar *version = fu_device_get_version (device_actual);
 		if (!fu_engine_require_vercmp (req, version, &error_local)) {
 			if (g_strcmp0 (xb_node_get_attr (req, "compare"), "ge") == 0) {
 				g_set_error (error,
@@ -1105,7 +1125,7 @@ fu_engine_check_requirement_firmware (FuEngine *self, XbNode *req,
 
 	/* bootloader version */
 	if (g_strcmp0 (xb_node_get_text (req), "bootloader") == 0) {
-		const gchar *version = fu_device_get_version_bootloader (device);
+		const gchar *version = fu_device_get_version_bootloader (device_actual);
 		if (!fu_engine_require_vercmp (req, version, &error_local)) {
 			if (g_strcmp0 (xb_node_get_attr (req, "compare"), "ge") == 0) {
 				g_set_error (error,
@@ -1127,7 +1147,7 @@ fu_engine_check_requirement_firmware (FuEngine *self, XbNode *req,
 
 	/* vendor ID */
 	if (g_strcmp0 (xb_node_get_text (req), "vendor-id") == 0) {
-		const gchar *version = fu_device_get_vendor_id (device);
+		const gchar *version = fu_device_get_vendor_id (device_actual);
 		if (!fu_engine_require_vercmp (req, version, &error_local)) {
 			if (g_strcmp0 (xb_node_get_attr (req, "compare"), "ge") == 0) {
 				g_set_error (error,
@@ -1149,29 +1169,44 @@ fu_engine_check_requirement_firmware (FuEngine *self, XbNode *req,
 
 	/* child version */
 	if (g_strcmp0 (xb_node_get_text (req), "not-child") == 0)
-		return fu_engine_check_requirement_not_child (self, req, device, error);
+		return fu_engine_check_requirement_not_child (self, req, device_actual, error);
 
 	/* another device */
 	if (fwupd_guid_is_valid (xb_node_get_text (req))) {
 		const gchar *guid = xb_node_get_text (req);
 		const gchar *version;
-		g_autoptr(FuDevice) device2 = NULL;
 
 		/* find if the other device exists */
-		device2 = fu_device_list_get_by_guid (self->device_list, guid, error);
-		if (device2 == NULL)
-			return FALSE;
+		if (depth == G_MAXUINT64) {
+			g_autoptr(FuDevice) device_tmp = NULL;
+			device_tmp = fu_device_list_get_by_guid (self->device_list, guid, error);
+			if (device_tmp == NULL)
+				return FALSE;
+			g_set_object (&device_actual, device_tmp);
+
+		/* verify the parent device has the GUID */
+		} else {
+			if (!fu_device_has_guid (device_actual, guid)) {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
+					     "No GUID of %s on parent device %s",
+					     guid, fu_device_get_name (device_actual));
+				return FALSE;
+			}
+		}
 
 		/* get the version of the other device */
-		version = fu_device_get_version (device2);
+		version = fu_device_get_version (device_actual);
 		if (version != NULL &&
+		    xb_node_get_attr (req, "compare") != NULL &&
 		    !fu_engine_require_vercmp (req, version, &error_local)) {
 			if (g_strcmp0 (xb_node_get_attr (req, "compare"), "ge") == 0) {
 				g_set_error (error,
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_INVALID_FILE,
 					     "Not compatible with %s version %s, requires >= %s",
-					     fu_device_get_name (device2),
+					     fu_device_get_name (device_actual),
 					     version,
 					     xb_node_get_attr (req, "version"));
 			} else {
@@ -1179,7 +1214,7 @@ fu_engine_check_requirement_firmware (FuEngine *self, XbNode *req,
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_INVALID_FILE,
 					     "Not compatible with %s: %s",
-					     fu_device_get_name (device2),
+					     fu_device_get_name (device_actual),
 					     error_local->message);
 			}
 			return FALSE;
