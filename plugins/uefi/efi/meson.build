@@ -144,9 +144,7 @@ app = custom_target(efi_name,
                                '-j', '.data',
                                '-j', '.dynamic',
                                '-j', '.dynsym',
-                               '-j', '.rel',
-                               '-j', '.rela',
-                               '-j', '.reloc']
+                               '-j', '.rel*',
                                + efi_format +
                                ['@INPUT@', '@OUTPUT@'],
                     install : true,
