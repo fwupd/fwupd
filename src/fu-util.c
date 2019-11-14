@@ -1914,6 +1914,22 @@ fu_util_update_by_id (FuUtilPrivate *priv, const gchar *device_id, GError **erro
 static gboolean
 fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	if (priv->flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "--allow-older is not supported for this command");
+		return FALSE;
+	}
+
+	if (priv->flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "--allow-reinstall is not supported for this command");
+		return FALSE;
+	}
+
 	if (g_strv_length (values) == 0)
 		return fu_util_update_all (priv, error);
 	if (g_strv_length (values) == 1)
@@ -1986,6 +2002,14 @@ fu_util_downgrade (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(FwupdRelease) rel = NULL;
 	g_autoptr(GPtrArray) rels = NULL;
+
+	if (priv->flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "--allow-reinstall is not supported for this command");
+		return FALSE;
+	}
 
 	priv->filter_include |= FWUPD_DEVICE_FLAG_SUPPORTED;
 	dev = fu_util_get_device_or_prompt (priv, values, error);
