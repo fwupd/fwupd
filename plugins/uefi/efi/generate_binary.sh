@@ -8,9 +8,7 @@ $objcopy_cmd  -j .text \
               -j .data \
               -j .dynamic \
               -j .dynsym \
-              -j .rel \
-              -j .rela \
-              -j .reloc \
+              -j '.rel*' \
               $*
 
 if [ -n "${genpeimg_cmd}" ]; then
