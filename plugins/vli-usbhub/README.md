@@ -35,6 +35,10 @@ Optional PD child devices use just one extra GUID, e.g.
 
  * `VLI_USBHUB_PD\VID_17EF&PID_3083`
 
+Optional I²C child devices use just one extra GUID, e.g.
+
+ * `VLI_USBHUB_I2C\MSP430`
+
 Quirk Use
 ---------
 

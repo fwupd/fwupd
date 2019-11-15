@@ -15,6 +15,7 @@
 #include "fu-vli-usbhub-common.h"
 #include "fu-vli-usbhub-device.h"
 #include "fu-vli-usbhub-firmware.h"
+#include "fu-vli-usbhub-i2c-device.h"
 #include "fu-vli-usbhub-pd-common.h"
 #include "fu-vli-usbhub-pd-device.h"
 
@@ -81,6 +82,83 @@ fu_vli_usbhub_device_to_string (FuDevice *device, guint idt, GString *str)
 		fu_common_string_append_kv (str, idt, "H2Hdr@0x1000", NULL);
 		fu_vli_usbhub_header_to_string (&self->hd2_hdr, idt + 1, str);
 	}
+}
+
+gboolean
+fu_vli_usbhub_device_i2c_read (FuVliUsbhubDevice *self,
+			       guint8 cmd, guint8 *buf, gsize bufsz,
+			       GError **error)
+{
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
+	guint16 value = ((guint16) FU_VLI_USBHUB_I2C_ADDR_WRITE << 8) | cmd;
+	guint16 index = (guint16) FU_VLI_USBHUB_I2C_ADDR_READ << 8;
+	if (!g_usb_device_control_transfer (usb_device,
+					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_VLI_USBHUB_I2C_R_VDR, value, index,
+					    buf, bufsz, NULL,
+					    FU_VLI_USBHUB_DEVICE_TIMEOUT,
+					    NULL, error)) {
+		g_prefix_error (error, "failed to read I2C: ");
+		return FALSE;
+	}
+	if (g_getenv ("FWUPD_VLI_USBHUB_VERBOSE") != NULL)
+		fu_common_dump_raw (G_LOG_DOMAIN, "I2cReadData", buf, 0x1);
+	return TRUE;
+}
+
+gboolean
+fu_vli_usbhub_device_i2c_read_status (FuVliUsbhubDevice *self,
+				      FuVliUsbhubI2cStatus *status,
+				      GError **error)
+{
+	guint8 buf[1] = { 0xff };
+	if (!fu_vli_usbhub_device_i2c_read (self,
+					    FU_VLI_USBHUB_I2C_CMD_READ_STATUS,
+					    buf, sizeof(buf),
+					    error))
+		return FALSE;
+	if (status != NULL)
+		*status = buf[0];
+	return TRUE;
+}
+
+gboolean
+fu_vli_usbhub_device_i2c_write_data (FuVliUsbhubDevice *self,
+				     guint8 skip_s,
+				     guint8 skip_p,
+				     const guint8 *buf,
+				     gsize bufsz,
+				     GError **error)
+{
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
+	guint16 value = (((guint16) skip_s) << 8) | skip_p;
+	if (g_getenv ("FWUPD_VLI_USBHUB_VERBOSE") != NULL)
+		fu_common_dump_raw (G_LOG_DOMAIN, "I2cWriteData", buf, bufsz);
+	if (!g_usb_device_control_transfer (usb_device,
+					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_VLI_USBHUB_I2C_W_VDR, value, 0x0,
+					    (guint8 *) buf, bufsz, NULL,
+					    FU_VLI_USBHUB_DEVICE_TIMEOUT,
+					    NULL, error)) {
+		g_prefix_error (error, "failed to write I2C @0x%x: ", value);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+gboolean
+fu_vli_usbhub_device_i2c_write (FuVliUsbhubDevice *self, guint8 cmd,
+				const guint8 *buf, gsize bufsz, GError **error)
+{
+	guint8 buf2[10] = { FU_VLI_USBHUB_I2C_ADDR_WRITE, cmd, 0x0 };
+	if (!fu_memcpy_safe (buf2, sizeof(buf2), 0x2,
+			     buf, bufsz, 0x0, bufsz, error))
+		return FALSE;
+	return fu_vli_usbhub_device_i2c_write_data (self, 0x0, 0x0, buf2, bufsz + 2, error);
 }
 
 static gboolean
@@ -699,7 +777,7 @@ fu_vli_usbhub_device_probe (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_vli_usbhub_device_setup_children (FuVliUsbhubDevice *self, GError **error)
+fu_vli_usbhub_device_pd_setup (FuVliUsbhubDevice *self, GError **error)
 {
 	FuVliUsbhubPdHdr hdr = { 0x0 };
 	g_autoptr(FuDevice) dev = NULL;
@@ -751,6 +829,31 @@ fu_vli_usbhub_device_setup_children (FuVliUsbhubDevice *self, GError **error)
 	dev = fu_vli_usbhub_pd_device_new (&hdr);
 	if (!fu_device_probe (dev, &error_local)) {
 		g_warning ("cannot create PD device: %s", error_local->message);
+		return TRUE;
+	}
+	fu_device_add_child (FU_DEVICE (self), dev);
+	return TRUE;
+}
+
+static gboolean
+fu_vli_usbhub_device_i2c_setup (FuVliUsbhubDevice *self, GError **error)
+{
+	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	/* add child */
+	dev = fu_vli_usbhub_i2c_device_new (self);
+	if (!fu_device_probe (dev, error))
+		return FALSE;
+	if (!fu_device_setup (dev, &error_local)) {
+		if (g_error_matches (error_local,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND)) {
+			g_debug ("%s", error_local->message);
+		} else {
+			g_warning ("cannot create I²C device: %s",
+				   error_local->message);
+		}
 		return TRUE;
 	}
 	fu_device_add_child (FU_DEVICE (self), dev);
@@ -859,7 +962,11 @@ fu_vli_usbhub_device_setup (FuDevice *device, GError **error)
 	}
 
 	/* detect the PD child */
-	if (!fu_vli_usbhub_device_setup_children (self, error))
+	if (!fu_vli_usbhub_device_pd_setup (self, error))
+		return FALSE;
+
+	/* detect the PD child */
+	if (!fu_vli_usbhub_device_i2c_setup (self, error))
 		return FALSE;
 
 	/* success */
