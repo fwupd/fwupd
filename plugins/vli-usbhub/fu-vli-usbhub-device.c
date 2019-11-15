@@ -680,10 +680,12 @@ fu_vli_usbhub_device_dump_firmware (FuVliUsbhubDevice *self, gsize bufsz, GError
 static gboolean
 fu_vli_usbhub_device_probe (FuDevice *device, GError **error)
 {
+	guint16 usbver = fu_usb_device_get_spec (FU_USB_DEVICE (device));
+
 	/* quirks now applied... */
-	if (fu_device_has_custom_flag (device, "usb3")) {
+	if (usbver > 0x0300 || fu_device_has_custom_flag (device, "usb3")) {
 		fu_device_set_summary (device, "USB 3.x Hub");
-	} else if (fu_device_has_custom_flag (device, "usb2")) {
+	} else if (usbver > 0x0200 || fu_device_has_custom_flag (device, "usb2")) {
 		fu_device_set_summary (device, "USB 2.x Hub");
 	} else {
 		fu_device_set_summary (device, "USB Hub");
