@@ -40,6 +40,7 @@ struct _FuUsbDeviceClass
 FuUsbDevice	*fu_usb_device_new			(GUsbDevice	*usb_device);
 guint16		 fu_usb_device_get_vid			(FuUsbDevice	*self);
 guint16		 fu_usb_device_get_pid			(FuUsbDevice	*self);
+guint16		 fu_usb_device_get_spec			(FuUsbDevice	*self);
 GUsbDevice	*fu_usb_device_get_dev			(FuUsbDevice	*device);
 void		 fu_usb_device_set_dev			(FuUsbDevice	*device,
 							 GUsbDevice	*usb_device);

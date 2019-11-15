@@ -373,6 +373,30 @@ fu_usb_device_get_platform_id (FuUsbDevice *self)
 }
 
 /**
+ * fu_usb_device_get_spec:
+ * @self: A #FuUsbDevice
+ *
+ * Gets the string USB revision for the device.
+ *
+ * Return value: a specification revision in BCD format, or 0x0 if not supported
+ *
+ * Since: 1.3.4
+ **/
+guint16
+fu_usb_device_get_spec (FuUsbDevice *self)
+{
+#if G_USB_CHECK_VERSION(0,3,1)
+	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_USB_DEVICE (self), 0x0);
+	if (priv->usb_device == NULL)
+		return 0x0;
+	return g_usb_device_get_spec (priv->usb_device);
+#else
+	return 0x0;
+#endif
+}
+
+/**
  * fu_usb_device_set_dev:
  * @device: A #FuUsbDevice
  * @usb_device: A #GUsbDevice, or %NULL
