@@ -1,15 +1,15 @@
 #!/bin/sh
 output=$2
-objcopy_cmd=$(which objcopy)
-genpeimg_cmd=$(which genpeimg)
+objcopy_cmd=$(command -v objcopy)
+genpeimg_cmd=$(command -v genpeimg)
 
-$objcopy_cmd  -j .text \
+"$objcopy_cmd"  -j .text \
               -j .sdata \
               -j .data \
               -j .dynamic \
               -j .dynsym \
               -j '.rel*' \
-              $*
+              "$@"
 
 if [ -n "${genpeimg_cmd}" ]; then
         $genpeimg_cmd -d \
@@ -18,5 +18,5 @@ if [ -n "${genpeimg_cmd}" ]; then
                       +n \
                       -d \
                       +s \
-                      $output
+                      "$output"
 fi
