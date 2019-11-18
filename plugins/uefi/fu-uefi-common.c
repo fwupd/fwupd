@@ -260,7 +260,7 @@ fu_uefi_get_esp_path_for_os (const gchar *base)
 		os_release_id = "unknown";
 	/* if ID key points at something existing return it */
 	esp_path = g_build_filename (base, "EFI", os_release_id, NULL);
-	if (g_file_test (esp_path, G_FILE_TEST_IS_DIR))
+	if (g_file_test (esp_path, G_FILE_TEST_IS_DIR) || os_release == NULL)
 		return g_steal_pointer (&esp_path);
 	/* if ID key doesn't exist, try ID_LIKE */
 	id_like_id = g_hash_table_lookup (os_release, "ID_LIKE");
