@@ -12,9 +12,6 @@ GUID Generation
 
 The HID DeviceInstanceId values are used, e.g. `HIDRAW\VEN_056A&DEV_4875`.
 
-Additionally, for supported AES devices an extra GUID is added for the hardware
-ID (e.g. `WACOM\HWID_%04X`) to further disambiguate the panels.
-
 Firmware Format
 ---------------
 
