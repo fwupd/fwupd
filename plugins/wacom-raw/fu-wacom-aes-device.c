@@ -235,7 +235,7 @@ fu_wacom_aes_device_write_firmware (FuDevice *device, GPtrArray *chunks, GError 
 static void
 fu_wacom_aes_device_init (FuWacomAesDevice *self)
 {
-	fu_device_set_name (FU_DEVICE (self), "Embedded Wacom AES Device");
+	fu_device_set_name (FU_DEVICE (self), "Wacom AES Device");
 }
 
 static void
