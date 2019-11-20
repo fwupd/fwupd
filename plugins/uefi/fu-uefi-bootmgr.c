@@ -95,16 +95,15 @@ fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_si
 	efi_load_option *loadopt = NULL;
 	gchar *name = NULL;
 	gint rc;
-	gint set_entries[0x10000 / sizeof(gint)] = {0,};
 	gsize var_data_size = 0;
 	guint16 real_boot16;
 	guint32 attr;
 	guint32 boot_next = 0x10000;
 	g_autofree guint8 *var_data = NULL;
+	g_autofree guint8 *set_entries = g_malloc0 (0x10000);
 
 	while ((rc = efi_get_next_variable_name (&guid, &name)) > 0) {
 		const gchar *desc;
-		gint div, mod;
 		gint scanned = 0;
 		guint16 entry = 0;
 		g_autofree guint8 *var_data_tmp = NULL;
@@ -124,10 +123,8 @@ fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_si
 		if (scanned != 8)
 			continue;
 
-		div = entry / (sizeof(set_entries[0]) * 8);
-		mod = entry % (sizeof(set_entries[0]) * 8);
-
-		set_entries[div] |= 1 << mod;
+		/* mark this as used */
+		set_entries[entry] = 1;
 
 		rc = efi_get_variable (*guid, name, &var_data_tmp, &var_data_size, &attr);
 		if (rc < 0) {
@@ -181,9 +178,7 @@ fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_si
 	} else {
 		g_autofree gchar *boot_next_name = NULL;
 		for (guint32 value = 0; value < 0x10000; value++) {
-			gint div = value / (sizeof(set_entries[0]) * 8);
-			gint mod = value % (sizeof(set_entries[0]) * 8);
-			if (set_entries[div] & (1 << mod))
+			if (set_entries[value])
 				continue;
 			boot_next = value;
 			break;
