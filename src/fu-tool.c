@@ -14,6 +14,7 @@
 #ifdef HAVE_GIO_UNIX
 #include <glib-unix.h>
 #endif
+#include <fcntl.h>
 #include <locale.h>
 #include <stdlib.h>
 #include <unistd.h>
