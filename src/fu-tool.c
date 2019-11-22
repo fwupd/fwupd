@@ -1649,10 +1649,12 @@ main (int argc, char *argv[])
 	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 	textdomain (GETTEXT_PACKAGE);
 
+#ifdef HAVE_GETUID
 	/* ensure root user */
 	if (interactive && (getuid () != 0 || geteuid () != 0))
 		/* TRANSLATORS: we're poking around as a power user */
 		g_printerr ("%s\n", _("This program may only work correctly as root"));
+#endif
 
 	/* create helper object */
 	priv->loop = g_main_loop_new (NULL, FALSE);

@@ -113,9 +113,11 @@ main (int argc, char *argv[])
 	textdomain (GETTEXT_PACKAGE);
 
 	/* ensure root user */
+#ifdef HAVE_GETUID
 	if (getuid () != 0 || geteuid () != 0)
 		/* TRANSLATORS: we're poking around as a power user */
 		g_printerr ("%s\n", _("This program may only work correctly as root"));
+#endif
 
 	/* get a action_list of the commands */
 	priv->context = g_option_context_new (NULL);

@@ -231,6 +231,9 @@ endif
 if cc.has_header('poll.h')
   conf.set('HAVE_POLL_H', '1')
 endif
+if cc.has_function('getuid')
+  conf.set('HAVE_GETUID', '1')
+endif
 
 if build_standalone and get_option('plugin_uefi')
   cairo = dependency('cairo')

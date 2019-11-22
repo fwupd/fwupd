@@ -164,11 +164,13 @@ main (int argc, char *argv[])
 	g_unlink (FU_OFFLINE_TRIGGER_FILENAME);
 
 	/* ensure root user */
+#ifdef HAVE_GETUID
 	if (getuid () != 0 || geteuid () != 0) {
 		/* TRANSLATORS: the user needs to stop playing with stuff */
 		g_printerr ("%s\n", _("This tool can only be used by the root user"));
 		return EXIT_FAILURE;
 	}
+#endif
 
 	/* find plymouth, but not an error if not found */
 	priv->splash_cmd = g_find_program_in_path ("plymouth");
