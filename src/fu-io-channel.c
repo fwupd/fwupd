@@ -12,7 +12,9 @@
 #include <fcntl.h>
 #include <gio/gio.h>
 #include <glib/gstdio.h>
+#ifdef HAVE_POLL_H
 #include <poll.h>
+#endif
 #include <string.h>
 
 #include "fwupd-error.h"
@@ -481,6 +483,7 @@ fu_io_channel_unix_new (gint fd)
 FuIOChannel *
 fu_io_channel_new_file (const gchar *filename, GError **error)
 {
+#ifdef HAVE_POLL_H
 	gint fd = g_open (filename, O_RDWR | O_NONBLOCK, S_IRWXU);
 	if (fd < 0) {
 		g_set_error (error,
@@ -490,4 +493,11 @@ fu_io_channel_new_file (const gchar *filename, GError **error)
 		return NULL;
 	}
 	return fu_io_channel_unix_new (fd);
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "Not supported as <poll.h> is unavailable");
+	return NULL;
+#endif
 }
