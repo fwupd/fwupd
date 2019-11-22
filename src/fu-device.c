@@ -585,7 +585,7 @@ void
 fu_device_add_parent_guid (FuDevice *self, const gchar *guid)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GRWLockReaderLocker) locker = NULL;
+	g_autoptr(GRWLockWriterLocker) locker = NULL;
 
 	g_return_if_fail (FU_IS_DEVICE (self));
 	g_return_if_fail (guid != NULL);
@@ -1149,7 +1149,7 @@ void
 fu_device_remove_metadata (FuDevice *self, const gchar *key)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_writer_locker_new (&priv->metadata_mutex);
+	g_autoptr(GRWLockWriterLocker) locker = g_rw_lock_writer_locker_new (&priv->metadata_mutex);
 	g_return_if_fail (FU_IS_DEVICE (self));
 	g_return_if_fail (key != NULL);
 	g_return_if_fail (locker != NULL);
@@ -1170,7 +1170,7 @@ void
 fu_device_set_metadata (FuDevice *self, const gchar *key, const gchar *value)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_writer_locker_new (&priv->metadata_mutex);
+	g_autoptr(GRWLockWriterLocker) locker = g_rw_lock_writer_locker_new (&priv->metadata_mutex);
 	g_return_if_fail (FU_IS_DEVICE (self));
 	g_return_if_fail (key != NULL);
 	g_return_if_fail (value != NULL);
