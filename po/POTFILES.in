@@ -1,5 +1,6 @@
 data/remotes.d/lvfs.metainfo.xml
 data/remotes.d/lvfs-testing.metainfo.xml
+libfwupdplugin/fu-progressbar.c
 policy/org.freedesktop.fwupd.policy.in
 plugins/dfu/dfu-tool.c
 plugins/uefi/fu-plugin-uefi.c
@@ -10,6 +11,5 @@ src/fu-debug.c
 src/fu-main.c
 src/fu-offline.c
 src/fu-tool.c
-src/fu-progressbar.c
 src/fu-util.c
 src/fu-util-common.c

@@ -14,14 +14,15 @@ shared_module('fu_plugin_synaptics_prometheus',
     'fu-synaprom-firmware.c',
   ],
   include_directories : [
-    include_directories('../..'),
-    include_directories('../../src'),
-    include_directories('../../libfwupd'),
+    root_incdir,
+    fwupd_incdir,
+    fwupdplugin_incdir,
   ],
   install : true,
   install_dir: plugin_dir,
   link_with : [
-    libfwupdprivate,
+    fwupd,
+    fwupdplugin,
   ],
   c_args : cargs,
   dependencies : [
@@ -43,15 +44,16 @@ if get_option('tests')
       'fu-synaprom-firmware.c',
     ],
     include_directories : [
-      include_directories('../..'),
-      include_directories('../../src'),
-      include_directories('../../libfwupd'),
+      root_incdir,
+      fwupd_incdir,
+      fwupdplugin_incdir,
     ],
     dependencies : [
       plugin_deps,
     ],
     link_with : [
-      libfwupdprivate,
+      fwupd,
+      fwupdplugin,
     ],
     c_args : cargs
   )
@@ -65,15 +67,16 @@ if get_option('tests')
       'fu-synaprom-firmware.c',
     ],
     include_directories : [
-      include_directories('../..'),
-      include_directories('../../src'),
-      include_directories('../../libfwupd'),
+      root_incdir,
+      fwupd_incdir,
+      fwupdplugin_incdir,
     ],
     dependencies : [
       gio,
     ],
     link_with : [
-      libfwupdprivate,
+      fwupd,
+      fwupdplugin,
     ],
     c_args : cargs
   )

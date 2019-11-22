@@ -28,13 +28,14 @@ dfu = static_library(
     gudev,
   ],
   link_with : [
-    libfwupdprivate,
+    fwupd,
+    fwupdplugin,
   ],
   c_args : cargs,
   include_directories : [
-    include_directories('../..'),
-    include_directories('../../libfwupd'),
-    include_directories('../../src'),
+    root_incdir,
+    fwupd_incdir,
+    fwupdplugin_incdir,
   ],
 )
 
@@ -44,9 +45,9 @@ shared_module('fu_plugin_dfu',
     'fu-plugin-dfu.c',
   ],
   include_directories : [
-    include_directories('../..'),
-    include_directories('../../src'),
-    include_directories('../../libfwupd'),
+    root_incdir,
+    fwupd_incdir,
+    fwupdplugin_incdir,
   ],
   install : true,
   install_dir: plugin_dir,
@@ -55,7 +56,8 @@ shared_module('fu_plugin_dfu',
     plugin_deps,
   ],
   link_with : [
-    libfwupdprivate,
+    fwupd,
+    fwupdplugin,
     dfu,
   ],
 )
@@ -67,10 +69,9 @@ dfu_tool = executable(
     'dfu-tool.c',
   ],
   include_directories : [
-    include_directories('..'),
-    include_directories('../..'),
-    include_directories('../../src'),
-    include_directories('../../libfwupd'),
+    root_incdir,
+    fwupd_incdir,
+    fwupdplugin_incdir,
   ],
   dependencies : [
     libxmlb,
@@ -81,7 +82,8 @@ dfu_tool = executable(
   ],
   link_with : [
     dfu,
-    libfwupdprivate,
+    fwupd,
+    fwupdplugin,
   ],
   c_args : cargs,
   install : true,
@@ -118,10 +120,9 @@ if get_option('tests')
       'dfu-self-test.c'
     ],
     include_directories : [
-      include_directories('..'),
-      include_directories('../..'),
-      include_directories('../../libfwupd'),
-      include_directories('../../src'),
+      root_incdir,
+      fwupd_incdir,
+      fwupdplugin_incdir,
     ],
     dependencies : [
       libxmlb,
@@ -132,9 +133,12 @@ if get_option('tests')
     ],
     link_with : [
       dfu,
-      libfwupdprivate,
+      fwupd,
+      fwupdplugin,
     ],
     c_args : cargs
   )
   test('dfu-self-test', e)
 endif
+
+plugindfu_incdir = include_directories('.')

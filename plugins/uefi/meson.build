@@ -27,14 +27,15 @@ shared_module('fu_plugin_uefi',
     'fu-uefi-vars.c',
   ],
   include_directories : [
-    include_directories('../..'),
-    include_directories('../../src'),
-    include_directories('../../libfwupd'),
+    root_incdir,
+    fwupd_incdir,
+    fwupdplugin_incdir,
   ],
   install : true,
   install_dir: plugin_dir,
   link_with : [
-    libfwupdprivate,
+    fwupd,
+    fwupdplugin,
   ],
   c_args : cargs,
   dependencies : [
@@ -63,9 +64,9 @@ executable(
     'fu-uefi-vars.c',
   ],
   include_directories : [
-    include_directories('../..'),
-    include_directories('../../src'),
-    include_directories('../../libfwupd'),
+    root_incdir,
+    fwupd_incdir,
+    fwupdplugin_incdir,
   ],
   dependencies : [
     libxmlb,
@@ -77,7 +78,8 @@ executable(
     tpm2tss,
   ],
   link_with : [
-    libfwupdprivate,
+    fwupd,
+    fwupdplugin,
   ],
   install : true,
   install_dir : join_paths(libexecdir, 'fwupd'),
@@ -108,9 +110,9 @@ if get_option('tests')
       'fu-ucs2.c',
     ],
     include_directories : [
-      include_directories('../..'),
-      include_directories('../../src'),
-      include_directories('../../libfwupd'),
+      root_incdir,
+      fwupd_incdir,
+      fwupdplugin_incdir,
     ],
     dependencies : [
       plugin_deps,
@@ -119,7 +121,8 @@ if get_option('tests')
       tpm2tss,
     ],
     link_with : [
-      libfwupdprivate,
+      fwupd,
+      fwupdplugin,
     ],
     c_args : cargs
   )

@@ -65,6 +65,7 @@ override_dh_install:
 	fi
 	if [ ! -z "$$CI" ] && [ -f debian/tmp/usr/sbin/flashrom ]; then \
 		dh_install -pfwupd usr/sbin/flashrom ;\
+		dh_install -plibfwupd2 usr/lib/*/libflashrom.so.*; \
 	fi
 	dh_missing -a --fail-missing
 

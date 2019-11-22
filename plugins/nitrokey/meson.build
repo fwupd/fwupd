@@ -12,14 +12,14 @@ shared_module('fu_plugin_nitrokey',
     'fu-plugin-nitrokey.c',
   ],
   include_directories : [
-    include_directories('../..'),
-    include_directories('../../src'),
-    include_directories('../../libfwupd'),
+    root_incdir,
+    fwupd_incdir,
+    fwupdplugin_incdir,
   ],
   install : true,
   install_dir: plugin_dir,
   link_with : [
-    libfwupdprivate,
+    fwupdplugin,
   ],
   c_args : cargs,
   dependencies : [
@@ -36,16 +36,16 @@ if get_option('tests')
       'fu-self-test.c',
     ],
     include_directories : [
-      include_directories('../..'),
-      include_directories('../../src'),
-      include_directories('../../libfwupd'),
+      root_incdir,
+      fwupd_incdir,
+      fwupdplugin_incdir,
     ],
     dependencies : [
       plugin_deps,
       valgrind,
     ],
     link_with : [
-      libfwupdprivate,
+      fwupdplugin,
     ],
   )
   test('nitrokey-self-test', e)

@@ -46,10 +46,8 @@
 #include "fu-plugin-list.h"
 #include "fu-plugin-private.h"
 #include "fu-quirks.h"
-#include "fu-smbios.h"
-#ifdef HAVE_GUDEV
+#include "fu-smbios-private.h"
 #include "fu-udev-device-private.h"
-#endif
 #include "fu-usb-device-private.h"
 
 #include "fu-dfu-firmware.h"

@@ -11,14 +11,14 @@ shared_module('fu_plugin_steelseries',
     'fu-steelseries-device.c',
   ],
   include_directories : [
-    include_directories('../..'),
-    include_directories('../../src'),
-    include_directories('../../libfwupd'),
+    root_incdir,
+    fwupd_incdir,
+    fwupdplugin_incdir,
   ],
   install : true,
   install_dir: plugin_dir,
   link_with : [
-    libfwupdprivate,
+    fwupdplugin,
   ],
   c_args : cargs,
   dependencies : [
