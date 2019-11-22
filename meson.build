@@ -204,7 +204,7 @@ if get_option('gpg')
   conf.set('ENABLE_GPG', '1')
 endif
 libm = cc.find_library('m', required: false)
-libgcab = dependency('libgcab-1.0')
+libgcab = dependency('libgcab-1.0', fallback : ['gcab', 'gcab_dep'])
 if libgcab.version().version_compare('>= 0.8')
   conf.set('HAVE_GCAB_0_8', '1')
 endif
