@@ -243,7 +243,9 @@ fwupd_build_user_agent_system (void)
 #endif
 
 	/* current locale, e.g. "en-gb" */
+#ifdef HAVE_LC_MESSAGES
 	locale = g_strdup (setlocale (LC_MESSAGES, NULL));
+#endif
 	if (locale != NULL) {
 		g_strdelimit (locale, ".", '\0');
 		g_strdelimit (locale, "_", '-');
