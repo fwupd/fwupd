@@ -10,7 +10,9 @@
 #include <locale.h>
 #include <stdlib.h>
 #include <glib/gi18n.h>
+#ifdef HAVE_GIO_UNIX
 #include <glib-unix.h>
+#endif
 
 #include "dfu-device.h"
 #include "dfu-sector.h"
@@ -1202,6 +1204,7 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+#ifdef HAVE_GIO_UNIX
 static gboolean
 dfu_tool_sigint_cb (gpointer user_data)
 {
@@ -1210,6 +1213,7 @@ dfu_tool_sigint_cb (gpointer user_data)
 	g_cancellable_cancel (priv->cancellable);
 	return FALSE;
 }
+#endif
 
 int
 main (int argc, char *argv[])
@@ -1320,11 +1324,13 @@ main (int argc, char *argv[])
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();
+#ifdef HAVE_GIO_UNIX
 	g_unix_signal_add_full (G_PRIORITY_DEFAULT,
 				SIGINT,
 				dfu_tool_sigint_cb,
 				priv,
 				NULL);
+#endif
 
 	/* sort by command name */
 	g_ptr_array_sort (priv->cmd_array,
