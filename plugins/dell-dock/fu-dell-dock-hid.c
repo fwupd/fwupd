@@ -104,7 +104,7 @@ fu_dell_dock_hid_set_report (FuDevice *self,
 			g_debug ("attempt %d/%d: set control transfer failed: %s",
 				 i, HID_MAX_RETRIES,
 				 error_local->message);
-			sleep (1);
+			g_usleep (G_USEC_PER_SEC);
 		}
 	}
 	if (actual_len != 192) {
