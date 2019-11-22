@@ -11,7 +11,9 @@
 #include <fcntl.h>
 #include <string.h>
 #include <sys/errno.h>
+#ifdef HAVE_IOCTL_H
 #include <sys/ioctl.h>
+#endif
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -735,6 +737,7 @@ fu_udev_device_ioctl (FuUdevDevice *self,
 		      gint *rc,
 		      GError **error)
 {
+#ifdef HAVE_IOCTL_H
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 	gint rc_tmp;
 
@@ -762,6 +765,13 @@ fu_udev_device_ioctl (FuUdevDevice *self,
 		return FALSE;
 	}
 	return TRUE;
+#else
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_SUPPORTED,
+		     "Not supported as <sys/ioctl.h> not found");
+	return FALSE;
+#endif
 }
 
 /**

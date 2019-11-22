@@ -225,6 +225,9 @@ endif
 if cc.has_header('sys/utsname.h')
   conf.set('HAVE_UTSNAME_H', '1')
 endif
+if cc.has_header('sys/ioctl.h')
+  conf.set('HAVE_IOCTL_H', '1')
+endif
 if cc.has_header('poll.h')
   conf.set('HAVE_POLL_H', '1')
 endif
