@@ -556,9 +556,11 @@ fu_vli_usbhub_device_spi_erase (FuVliUsbhubDevice *self,
 				GError **error)
 {
 	g_autoptr(GPtrArray) chunks = fu_chunk_array_new (NULL, sz, addr, 0x0, 0x1000);
+	g_debug ("erasing 0x%x bytes @0x%x", (guint) sz, addr);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chunk = g_ptr_array_index (chunks, i);
-		g_debug ("erasing @0x%x", chunk->address);
+		if (g_getenv ("FWUPD_VLI_USBHUB_VERBOSE") != NULL)
+			g_debug ("erasing @0x%x", chunk->address);
 		if (!fu_vli_usbhub_device_erase_sector (self, chunk->address, error)) {
 			g_prefix_error (error,
 					"failed to erase FW sector @0x%x: ",
@@ -1086,6 +1088,8 @@ fu_vli_usbhub_device_write_block (FuVliUsbhubDevice *self,
 	}
 
 	/* write */
+	if (g_getenv ("FWUPD_VLI_USBHUB_VERBOSE") != NULL)
+		g_debug ("writing 0x%x block @0x%x", (guint) bufsz, address);
 	if (!fu_vli_usbhub_device_spi_write_enable (self, error)) {
 		g_prefix_error (error, "enabling SPI write failed: ");
 		return FALSE;
@@ -1115,6 +1119,7 @@ fu_vli_usbhub_device_spi_write (FuVliUsbhubDevice *self,
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	/* write SPI data, then CRC bytes last */
+	g_debug ("writing 0x%x bytes @0x%x", (guint) bufsz, address);
 	chunks = fu_chunk_array_new (buf, bufsz, 0x0, 0x0, FU_VLI_USBHUB_TXSIZE);
 	if (chunks->len > 1) {
 		for (guint i = 1; i < chunks->len; i++) {
