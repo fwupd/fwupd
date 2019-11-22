@@ -4373,6 +4373,7 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 	const gchar *fn;
 	g_autoptr(GDir) dir = NULL;
 	g_autofree gchar *plugin_path = NULL;
+	g_autofree gchar *suffix = g_strdup_printf (".%s", G_MODULE_SUFFIX);
 
 	/* search */
 	plugin_path = fu_common_get_path (FU_PATH_KIND_PLUGINDIR_PKG);
@@ -4386,7 +4387,7 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 		g_autoptr(GError) error_local = NULL;
 
 		/* ignore non-plugins */
-		if (!g_str_has_suffix (fn, ".so"))
+		if (!g_str_has_suffix (fn, suffix))
 			continue;
 
 		/* is blacklisted */
