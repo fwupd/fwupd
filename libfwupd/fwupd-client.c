@@ -38,6 +38,7 @@ static void fwupd_client_finalize	 (GObject *object);
 typedef struct {
 	FwupdStatus			 status;
 	gboolean			 tainted;
+	gboolean			 interactive;
 	guint				 percentage;
 	gchar				*daemon_version;
 	gchar				*host_product;
@@ -63,6 +64,7 @@ enum {
 	PROP_TAINTED,
 	PROP_HOST_PRODUCT,
 	PROP_HOST_MACHINE_ID,
+	PROP_INTERACTIVE,
 	PROP_LAST
 };
 
@@ -161,6 +163,14 @@ fwupd_client_properties_changed_cb (GDBusProxy *proxy,
 		if (val != NULL) {
 			priv->tainted = g_variant_get_boolean (val);
 			g_object_notify (G_OBJECT (client), "tainted");
+		}
+	}
+	if (g_variant_dict_contains (dict, "Interactive")) {
+		g_autoptr(GVariant) val = NULL;
+		val = g_dbus_proxy_get_cached_property (proxy, "Interactive");
+		if (val != NULL) {
+			priv->interactive = g_variant_get_boolean (val);
+			g_object_notify (G_OBJECT (client), "interactive");
 		}
 	}
 	if (g_variant_dict_contains (dict, "Percentage")) {
@@ -283,6 +293,9 @@ fwupd_client_connect (FwupdClient *client, GCancellable *cancellable, GError **e
 	val2 = g_dbus_proxy_get_cached_property (priv->proxy, "Tainted");
 	if (val2 != NULL)
 		priv->tainted = g_variant_get_boolean (val2);
+	val2 = g_dbus_proxy_get_cached_property (priv->proxy, "Interactive");
+	if (val2 != NULL)
+		priv->interactive = g_variant_get_boolean (val2);
 	val = g_dbus_proxy_get_cached_property (priv->proxy, "HostProduct");
 	if (val != NULL)
 		fwupd_client_set_host_product (client, g_variant_get_string (val, NULL));
@@ -1263,6 +1276,25 @@ fwupd_client_get_tainted (FwupdClient *client)
 	return priv->tainted;
 }
 
+
+/**
+ * fwupd_client_get_daemon_interactive:
+ * @client: A #FwupdClient
+ *
+ * Gets if the daemon is running in an interactive terminal.
+ *
+ * Returns: %TRUE if the daemon is running in an interactive terminal
+ *
+ * Since: 1.3.4
+ **/
+gboolean
+fwupd_client_get_daemon_interactive (FwupdClient *client)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	return priv->interactive;
+}
+
 /**
  * fwupd_client_update_metadata:
  * @client: A #FwupdClient
@@ -1755,6 +1787,9 @@ fwupd_client_get_property (GObject *object, guint prop_id,
 	case PROP_HOST_MACHINE_ID:
 		g_value_set_string (value, priv->host_machine_id);
 		break;
+	case PROP_INTERACTIVE:
+		g_value_set_boolean (value, priv->interactive);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
@@ -1896,6 +1931,17 @@ fwupd_client_class_init (FwupdClientClass *klass)
 	pspec = g_param_spec_boolean ("tainted", NULL, NULL, FALSE,
 				      G_PARAM_READABLE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_TAINTED, pspec);
+
+	/**
+	 * FwupdClient:interactive:
+	 *
+	 * If the daemon is running in an interactive terminal
+	 *
+	 * Since: 1.3.4
+	 */
+	pspec = g_param_spec_boolean ("interactive", NULL, NULL, FALSE,
+				      G_PARAM_READABLE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_INTERACTIVE, pspec);
 
 	/**
 	 * FwupdClient:percentage:

@@ -620,6 +620,7 @@ fu_synaptics_rmi_device_close (FuUdevDevice *device, GError **error)
 		g_debug ("ignoring: %s", error_local->message);
 	}
 
+	fu_udev_device_set_fd (device, -1);
 	g_clear_object (&priv->io_channel);
 	return TRUE;
 }

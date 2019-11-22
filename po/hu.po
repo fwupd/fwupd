@@ -25,12 +25,24 @@ msgid_plural "%.0f minutes remaining"
 msgstr[0] "%.0f perc van hátra"
 msgstr[1] "%.0f perc van hátra"
 
+#. TRANSLATORS: ME stands for Management Engine, where
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Consumer ME Update"
+msgstr "%s fogyasztói ME frissítés"
+
 #. TRANSLATORS: the controller is a device that has other devices
 #. * plugged into it, for example ThunderBolt, FireWire or USB,
 #. * the first %s is the device name, e.g. 'Intel ThunderBolt`
 #, c-format
 msgid "%s Controller Update"
 msgstr "%s vezérlőfrissítés"
+
+#. TRANSLATORS: ME stands for Management Engine (with Intel AMT),
+#. * where the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Corporate ME Update"
+msgstr "%s vállalati ME frissítés"
 
 #. TRANSLATORS: a specific part of hardware,
 #. * the first %s is the device name, e.g. 'Unifying Receiver`
@@ -71,6 +83,21 @@ msgstr "%s Thunderbolt vezérlőfrissítés"
 msgid "%s Update"
 msgstr "%s frissítés"
 
+#. TRANSLATORS: warn the user before updating, %1 is a device name
+#, c-format
+msgid "%s and all connected devices may not be usable while updating."
+msgstr "Lehet, hogy a(z) %s és az összes kapcsolódó eszköz használhatatlan lesz a frissítés alatt."
+
+#. TRANSLATORS: warn the user before updating, %1 is a device name
+#, c-format
+msgid "%s must remain connected for the duration of the update to avoid damage."
+msgstr "A károsodás elkerülése miatt szükséges, hogy a(z) %s kapcsolódva maradjon a frissítés során."
+
+#. TRANSLATORS: warn the user before updating, %1 is a machine name
+#, c-format
+msgid "%s must remain plugged into a power source for the duration of the update to avoid damage."
+msgstr "A károsodás elkerülése miatt szükséges, hogy a(z) %s csatlakoztatva maradjon egy áramforráshoz a frissítés során."
+
 #. TRANSLATORS: duration in days!
 #, c-format
 msgid "%u day"
@@ -84,6 +111,13 @@ msgid "%u hour"
 msgid_plural "%u hours"
 msgstr[0] "%u óra"
 msgstr[1] "%u óra"
+
+#. TRANSLATORS: how many local devices can expect updates now
+#, c-format
+msgid "%u local device supported"
+msgid_plural "%u local devices supported"
+msgstr[0] "%u helyi eszköz támogatott"
+msgstr[1] "%u helyi eszköz támogatott"
 
 #. TRANSLATORS: duration in minutes
 #, c-format
@@ -243,6 +277,10 @@ msgstr "Megszakítva"
 msgid "Changed"
 msgstr "Módosítva"
 
+#. TRANSLATORS: command description
+msgid "Checks cryptographic hash matches firmware"
+msgstr "Ellenőrzi, hogy a kriptográfiai hash egyezik-e a firmware-rel"
+
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Ellenőrzőösszeg"
@@ -250,6 +288,10 @@ msgstr "Ellenőrzőösszeg"
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a device:"
 msgstr "Válasszon eszközt:"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose a firmware type:"
+msgstr "Válasszon firmware típust:"
 
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a release:"
@@ -267,9 +309,17 @@ msgstr "Törli a legutóbbi frissítésből származó eredményeket"
 msgid "Command not found"
 msgstr "A parancs nem található"
 
+#. TRANSLATORS: prompt to apply the update
+msgid "Continue with update?"
+msgstr "Folytatja a frissítést?"
+
 #. TRANSLATORS: command description
 msgid "Convert firmware to DFU format"
 msgstr "Firmware átalakítása DFU formátumra"
+
+#. TRANSLATORS: Device supports some form of checksum verification
+msgid "Cryptographic hash verification is available"
+msgstr "Kriptográfiai hash ellenőrzés érhető el"
 
 #. TRANSLATORS: version number of current firmware
 msgid "Current version"
@@ -293,11 +343,15 @@ msgstr "Leírás"
 
 #. TRANSLATORS: command description
 msgid "Detach to bootloader mode"
-msgstr "Leválasztás a indítóbetöltő módhoz"
+msgstr "Leválasztás a rendszerbetöltő módhoz"
 
 #. TRANSLATORS: more details about the update link
 msgid "Details"
 msgstr "Részletek"
+
+#. TRANSLATORS: description of device ability
+msgid "Device Flags"
+msgstr "Eszközjelzők"
 
 #. TRANSLATORS: ID for hardware, typically a SHA1 sum
 msgid "Device ID"
@@ -307,13 +361,37 @@ msgstr "Eszközazonosító"
 msgid "Device added:"
 msgstr "Eszköz hozzáadva:"
 
+#. TRANSLATORS: Device supports a safety mechanism for flashing
+msgid "Device can recover flash failures"
+msgstr "Az eszköz képes helyreállni a felülírási hibák után"
+
 #. TRANSLATORS: this is when a device has been updated
 msgid "Device changed:"
 msgstr "Eszköz módosítva:"
 
+#. TRANSLATORS: Is locked and can be unlocked
+msgid "Device is locked"
+msgstr "Az eszköz zárolt"
+
+#. TRANSLATORS: Device remains usable during update
+msgid "Device is usable for the duration of the update"
+msgstr "Az eszköz használható marad a frissítés ideje alatt"
+
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device removed:"
 msgstr "Eszköz eltávolítva:"
+
+#. TRANSLATORS: Device supports a safety mechanism for flashing
+msgid "Device stages updates"
+msgstr "Az eszköz szakaszosan frissít"
+
+#. TRANSLATORS: Device update needs to be separately activated
+msgid "Device update needs activation"
+msgstr "Az eszközfrissítés aktiválást igényel"
+
+#. TRANSLATORS: Device will not return after update completes
+msgid "Device will not re-appear after update completes"
+msgstr "Az eszköz a frissítés végeztével újra meg fog jelenni"
 
 #. TRANSLATORS: a list of successful updates
 msgid "Devices that have been updated successfully:"
@@ -353,6 +431,20 @@ msgstr "Ne tartalmazza a naplózási tartomány előtagot"
 #. TRANSLATORS: turn on all debugging
 msgid "Do not include timestamp prefix"
 msgstr "Ne tartalmazza az időbélyeg előtagot"
+
+#. TRANSLATORS: command line option
+msgid "Do not perform device safety checks"
+msgstr "Ne végezzen eszköz biztonsági ellenőrzéseket"
+
+msgid "Do not upload report at this time, but prompt again for future updates"
+msgid_plural "Do not upload reports at this time, but prompt again for future updates"
+msgstr[0] "Most ne töltsön fel jelentést, de kérdezzen rá a jövőben"
+msgstr[1] "Most ne töltsön fel jelentéseket, de kérdezzen rá a jövőben"
+
+msgid "Do not upload report, and never ask to upload reports for future updates"
+msgid_plural "Do not upload reports, and never ask to upload reports for future updates"
+msgstr[0] "Ne töltsön fel jelentést, és sose kérdezzen rá a jövőben"
+msgstr[1] "Ne töltsön fel jelentéseket, és sose kérdezzen rá a jövőben"
 
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
@@ -463,6 +555,10 @@ msgstr "A trükkök betöltése sikertelen"
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
 msgstr "Nem sikerült feldolgozni az argumentumokat"
+
+#. TRANSLATORS: the user didn't read the man page
+msgid "Failed to parse flags for --filter"
+msgstr "A --filter jelzőinek feldolgozása sikertelen"
 
 #. TRANSLATORS: we could not reboot for some reason
 msgid "Failed to reboot"
@@ -586,6 +682,10 @@ msgstr "Lekéri az eszközhöz tartozó kiadásokat"
 msgid "Gets the results from the last update"
 msgstr "A legutóbbi frissítésből származó eredményeket kéri le"
 
+#. TRANSLATORS: The hardware is waiting to be replugged
+msgid "Hardware is waiting to be replugged"
+msgstr "A hardver újracsatlakoztatásra vár"
+
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
 msgstr "Üresjárat…"
@@ -593,6 +693,10 @@ msgstr "Üresjárat…"
 #. TRANSLATORS: command line option
 msgid "Ignore SSL strict checks when downloading files"
 msgstr "A szogorú SSL ellenőrzések mellőzése a fájlok letöltésekor"
+
+#. TRANSLATORS: Ignore validation safety checks when flashing this device
+msgid "Ignore validation safety checks"
+msgstr "Biztonsági ellenőrzések mellőzése"
 
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Install Duration"
@@ -615,6 +719,10 @@ msgstr "Aláírt eszköz firmware telepítése"
 msgid "Install signed system firmware"
 msgstr "Aláírt rendszer firmware telepítése"
 
+#. TRANSLATORS: Install composite firmware on the parent before the child
+msgid "Install to parent device first"
+msgstr "Elsőként telepítés a szülő eszközre"
+
 msgid "Install unsigned device firmware"
 msgstr "Nem aláírt eszköz firmware telepítése"
 
@@ -633,6 +741,14 @@ msgstr "Firmware frissítés telepítése…"
 #, c-format
 msgid "Installing on %s…"
 msgstr "%s telepítése…"
+
+#. TRANSLATORS: Device cannot be removed easily
+msgid "Internal device"
+msgstr "Belső eszköz"
+
+#. TRANSLATORS: Is currently in bootloader mode
+msgid "Is in bootloader mode"
+msgstr "Rendszerbetöltő módban van"
 
 #. TRANSLATORS: issue fixed with the release, e.g. CVE
 msgid "Issue"
@@ -665,9 +781,17 @@ msgstr "Linux gyártói firmware szolgáltatás (teszt firmware)"
 msgid "List supported firmware updates"
 msgstr "A támogatott firmware-frissítések listázása"
 
+#. TRANSLATORS: command description
+msgid "List the available firmware types"
+msgstr "Az elérhető firmware típusok listázása"
+
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
 msgstr "Betöltés…"
+
+#. TRANSLATORS: command line option
+msgid "Log output to FILE (typically for scripting use)"
+msgstr "Kimenet naplózása FÁJLba (jellemzően parancsfájlokhoz)"
 
 #. TRANSLATORS: command line option
 msgid "Manually whitelist specific plugins"
@@ -689,6 +813,15 @@ msgstr "A metaadatok nem szerezhetőek be a Linux gyártói firmware szolgáltat
 msgid "Minimum Version"
 msgstr "Legkisebb verzió"
 
+#. TRANSLATORS: error message
+#, c-format
+msgid "Mismatched daemon and client, use %s instead"
+msgstr "Eltérő démon és kliens, inkább ezt használja: %s"
+
+#. TRANSLATORS: sets something in daemon.conf
+msgid "Modifies a daemon configuration value."
+msgstr "Módosítja a démon egy konfigurációs értékét."
+
 #. TRANSLATORS: command description
 msgid "Modifies a given remote"
 msgstr "A megadott távoli tároló módosítása"
@@ -703,12 +836,24 @@ msgstr "Démon konfigurációjának módosítása"
 msgid "Monitor the daemon for events"
 msgstr "A démon eseményeinek figyelése"
 
+#. TRANSLATORS: Requires a reboot to apply firmware or to reload hardware
+msgid "Needs a reboot after installation"
+msgstr "A telepítés után újraindítást igényel"
+
+#. TRANSLATORS: Requires system shutdown to apply firmware
+msgid "Needs shutdown after installation"
+msgstr "A telepítés után kikapcsolást igényel"
+
 #. TRANSLATORS: version number of new firmware
 msgid "New version"
 msgstr "Új verzi"
 
 msgid "No action specified!"
 msgstr "Nincs művelet megadva!"
+
+#. TRANSLATORS: nothing found
+msgid "No firmware IDs found"
+msgstr "Nem találhatók firmware azonosítók"
 
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
@@ -718,9 +863,17 @@ msgstr "Nem észlelhető firmware frissítési képességgel rendelkező hardver
 msgid "No plugins found"
 msgstr "Nem található bővítmény"
 
+#. TRANSLATORS: no repositories to download from
+msgid "No releases available"
+msgstr "Nincsenek elérhető kiadások"
+
 #. TRANSLATORS: explain why no metadata available
 msgid "No remotes are currently enabled so no metadata is available."
 msgstr "Jelenleg nincsenek engedélyezett távoli tárolók, így nem érhetőek el metaadatok."
+
+#. TRANSLATORS: no repositories to download from
+msgid "No remotes available"
+msgstr "Nincsenek elérhető távoli tárolók"
 
 #. TRANSLATORS: nothing was updated offline
 msgid "No updates were applied"
@@ -733,6 +886,14 @@ msgstr "Bővítmény figyelmeztetés felülbírálása"
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Az alapértelmezett ESP útvonal felülbírálása"
+
+#. TRANSLATORS: command line option
+msgid "Override warnings and force the action"
+msgstr "Figyelmeztetések felülbírálása, és a művelet kényszerítése"
+
+#. TRANSLATORS: command description
+msgid "Parse and show details about a firmware file"
+msgstr "A firmware fájl részleteinek értelmezése és megjelenítése"
 
 #. TRANSLATORS: remote filename base
 msgid "Password"
@@ -776,12 +937,21 @@ msgid "Query for firmware update support"
 msgstr "Firmware frissítési támogatás lekérdezése"
 
 #. TRANSLATORS: command description
+msgid "Read a firmware blob from a device"
+msgstr "Egy firmware blob beolvasása egy eszközről"
+
+#. TRANSLATORS: command description
 msgid "Read firmware from device into a file"
 msgstr "Firmware beolvasása eszközről egy fájlba"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from one partition into a file"
 msgstr "Firmware beolvasása egy partícióról fájlba"
+
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Reading from %s…"
+msgstr "Olvasás a(z) %s eszközről…"
 
 #. TRANSLATORS: reading from the flash chips
 msgid "Reading…"
@@ -794,6 +964,10 @@ msgstr "Újraindítás…"
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "Metaadatok frissítése a távoli kiszolgálóról"
+
+#. TRANSLATORS: command description
+msgid "Reinstall current firmware on the device."
+msgstr "Újratelepíti a jelenlegi firmware-t az eszközön."
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
@@ -819,6 +993,18 @@ msgstr "Adatok cseréje egy meglévő firmware fájlban"
 msgid "Report URI"
 msgstr "Jelentési URI"
 
+#. TRANSLATORS: Has been reported to a metadata server
+msgid "Reported to remote server"
+msgstr "Jelentve a távoli kiszolgálónak"
+
+#. TRANSLATORS: Must be plugged in to an outlet
+msgid "Requires AC power"
+msgstr "Hálózati áramforrás szükséges"
+
+#. TRANSLATORS: Requires a bootloader mode to be manually enabled by the user
+msgid "Requires a bootloader"
+msgstr "Rendszerbetöltő szükséges"
+
 #. TRANSLATORS: metadata is downloaded from the Internet
 msgid "Requires internet connection"
 msgstr "Internetkapcsolat szükséges"
@@ -827,6 +1013,10 @@ msgstr "Internetkapcsolat szükséges"
 msgid "Restart now?"
 msgstr "Újraindítja most?"
 
+#. TRANSLATORS: configuration changes only take effect on restart
+msgid "Restart the daemon to make the change effective?"
+msgstr "Újraindítja a démont a változás életbe léptetéséhez?"
+
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
 msgstr "Eszköz újraindítása…"
@@ -834,6 +1024,14 @@ msgstr "Eszköz újraindítása…"
 #. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
 msgstr "A géphez tartozó összes hardverazonosító visszaadása"
+
+#. TRANSLATORS: command line option
+msgid "Run the plugin composite cleanup routine when using install-blob"
+msgstr "A bővítmény összetett tisztítási rutinjának futtatása az install-blob használatakor"
+
+#. TRANSLATORS: command line option
+msgid "Run the plugin composite prepare routine when using install-blob"
+msgstr "A bővítmény összetett előkészítési rutinjának futtatása az install-blob használatakor"
 
 #. TRANSLATORS: command line option
 msgid "Save device state into a JSON file between executions"
@@ -846,6 +1044,10 @@ msgstr "Telepítés ütemezése a következő újraindításkor, ha lehetséges"
 #. TRANSLATORS: scheduing an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Ütemezés…"
+
+#. TRANSLATORS: Device has been chosen by the daemon for the user
+msgid "Selected device"
+msgstr "Kiválasztott eszköz"
 
 #. TRANSLATORS: serial number of hardware
 msgid "Serial Number"
@@ -950,9 +1152,68 @@ msgstr "Adja meg a DFU eszköz gyártó-/termékazonosítóját"
 msgid "Specify the number of bytes per USB transfer"
 msgstr "Adja meg az USB átvitelek bájtjainak számát"
 
+#. TRANSLATORS: success message -- where activation is making the new
+#. * firmware take effect, usually after updating offline
+msgid "Successfully activated all devices"
+msgstr "Az összes eszköz sikeresen aktiválva"
+
+#. TRANSLATORS: success message
+msgid "Successfully disabled remote"
+msgstr "Távoli tároló sikeresen letiltva"
+
+#. TRANSLATORS: success message where we made the firmware on the
+#. * device older than it was before
+msgid "Successfully downgraded device"
+msgstr "Eszköz sikeresen visszaállítva"
+
+#. TRANSLATORS: success message -- where 'metadata' is information
+#. * about available firmware on the remote server
+msgid "Successfully downloaded new metadata: "
+msgstr "Új metaadatok sikeresen letöltve:"
+
+#. TRANSLATORS: success message
+msgid "Successfully enabled remote"
+msgstr "Távoli tároló sikeresen engedélyezve"
+
+#. TRANSLATORS: success message
+msgid "Successfully installed firmware"
+msgstr "Firmware sikeresen telepítve"
+
+#. TRANSLATORS: success message -- a per-system setting value
+msgid "Successfully modified configuration value"
+msgstr "Konfigurációs érték sikeresen módosítva"
+
+#. TRANSLATORS: success message for a per-remote setting change
+msgid "Successfully modified remote"
+msgstr "Távoli tároló sikeresen módosítva"
+
+#. TRANSLATORS: success message -- the user can do this by-hand too
+msgid "Successfully refreshed metadata manually"
+msgstr "Metaadatok kézi frissítése sikeres"
+
+#. TRANSLATORS: success message when user refreshes device checksums
+msgid "Successfully updated device checksums"
+msgstr "Eszköz ellenőrzőösszegek sikeresen frissítve"
+
+#. TRANSLATORS: success message -- where the user has uploaded
+#. * success and/or failure reports to the remote server
+#, c-format
+msgid "Successfully uploaded %u report"
+msgid_plural "Successfully uploaded %u reports"
+msgstr[0] "%u jelentés sikeresen feltöltve"
+msgstr[1] "%u jelentés sikeresen feltöltve"
+
+#. TRANSLATORS: success message when user verified device checksums
+msgid "Successfully verified device checksums"
+msgstr "Eszköz ellenőrzőösszegek sikeresen ellenőrizve"
+
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Összegzés"
+
+#. TRANSLATORS: Is found in current metadata
+msgid "Supported on remote server"
+msgstr "Távoli kiszolgálón nem támogatott "
 
 msgid "Target"
 msgstr "Cél"
@@ -1005,6 +1266,15 @@ msgstr "Eszköz feloldása a firmware eléréséhez"
 msgid "Unset the debugging flag during update"
 msgstr "A hibakeresési jelző kikapcsolása frissítéskor"
 
+#. TRANSLATORS: error message
+#, c-format
+msgid "Unsupported daemon version %s, client version is %s"
+msgstr "Nem támogatott démonverzió: %s, a kliensverzió %s"
+
+#. TRANSLATORS: Device is updatable in this or any other mode
+msgid "Updatable"
+msgstr "Frissíthet"
+
 #. TRANSLATORS: error message from last update attempt
 msgid "Update Error"
 msgstr "Frissítési hiba"
@@ -1030,6 +1300,14 @@ msgstr "A feltöltési hiba ismert probléma, további információkért látoga
 msgid "Update now?"
 msgstr "Frissíti most?"
 
+#. TRANSLATORS: Update can only be done from offline mode
+msgid "Update requires a reboot"
+msgstr "A frissítés újraindítást igényel"
+
+#. TRANSLATORS: command description
+msgid "Update the stored cryptographic hash with current ROM contents"
+msgstr "A tárolt kriptográfiai hash frissítése a jelenlegi ROM tartalmával"
+
 msgid "Update the stored device verification information"
 msgstr "A tárolt eszközellenőrzési információk frissítése"
 
@@ -1053,17 +1331,41 @@ msgstr "%s frissítése: %s -> %s…"
 msgid "Updating %s…"
 msgstr "%s frissítése…"
 
+#. TRANSLATORS: message letting the user know an upgrade is available
+#. * %1 is the device name and %2 and %3 are version strings
+#, c-format
+msgid "Upgrade available for %s from %s to %s"
+msgstr "%s frissítés érhető el, erről: %s, erre: %s"
+
 #. TRANSLATORS: the server sent the user a small message
 msgid "Upload message:"
 msgstr "Feltöltési üzenet:"
+
+msgid "Upload report just this one time, but prompt again for future updates"
+msgid_plural "Upload reports just this one time, but prompt again for future updates"
+msgstr[0] "Most töltse fel a jelentést, de kérdezzen rá a jövőben"
+msgstr[1] "Most töltse fel a jelentéseket, de kérdezzen rá a jövőben"
 
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "Feltölti most a jelentést?"
 
+msgid "Upload report this time and automatically upload reports after completing future updates"
+msgid_plural "Upload reports this time and automatically upload reports after completing future updates"
+msgstr[0] "Most töltse fel a jelentést, és automatikusan tegye meg ezt a jövőben"
+msgstr[1] "Most töltse fel a jelentéseket, és automatikusan tegye meg ezt a jövőben"
+
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
 msgstr "A firmware jelentések segítenek a hardvergyártóknak, hogy gyorsan azonosítsák a hibás és sikeres frissítéseket valós eszközökön."
+
+#. TRANSLATORS: command line option
+msgid "Use quirk flags when installing firmware"
+msgstr "Kerülőmegoldás jelzők használata a firmware telepítésekor"
+
+#. TRANSLATORS: User has been notified
+msgid "User has been notified"
+msgstr "A felhasználó értesítve"
 
 #. TRANSLATORS: remote filename base
 msgid "Username"
@@ -1080,6 +1382,10 @@ msgstr "Gyártó"
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
 msgstr "Ellenőrzés…"
+
+#. TRANSLATORS: try to help
+msgid "WARNING: Ignoring SSL strict checks, to do this automatically in the future export DISABLE_SSL_STRICT in your environment"
+msgstr "FIGYELMEZTETÉS: A szigorú SSL ellenőrzések mellőzése, ahhoz hogy ezt automatikusan megtegye a jövőben, exportálja a DISABLE_SSL_STRICT változót a környezetében"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

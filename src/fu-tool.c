@@ -1014,6 +1014,22 @@ fu_util_update_by_id (FuUtilPrivate *priv, const gchar *device_id, GError **erro
 static gboolean
 fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	if (priv->flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "--allow-older is not supported for this command");
+		return FALSE;
+	}
+
+	if (priv->flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "--allow-reinstall is not supported for this command");
+		return FALSE;
+	}
+
 	if (g_strv_length (values) > 1) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,

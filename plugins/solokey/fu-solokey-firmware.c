@@ -88,7 +88,7 @@ fu_solokey_firmware_parse (FuFirmware *firmware,
 	g_string_append (base64_websafe, "==");
 	fw_sig = _g_base64_decode_to_bytes (base64_websafe->str);
 	fu_firmware_image_set_bytes (img_sig, fw_sig);
-	fu_firmware_image_set_id (img_sig, "signature");
+	fu_firmware_image_set_id (img_sig, FU_FIRMWARE_IMAGE_ID_SIGNATURE);
 	fu_firmware_add_image (firmware, img_sig);
 	return TRUE;
 }

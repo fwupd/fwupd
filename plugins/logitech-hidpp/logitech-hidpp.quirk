@@ -1,0 +1,43 @@
+# Unifying Receiver
+[DeviceInstanceId=HIDRAW\VEN_046D&DEV_C52B]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpRuntime
+VendorId=USB:0x046D
+InstallDuration = 30
+
+# Nordic
+[DeviceInstanceId=USB\VID_046D&PID_AAAA]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpBootloaderNordic
+FirmwareSizeMin = 0x4000
+CounterpartGuid = HIDRAW\VEN_046D&DEV_C52B
+InstallDuration = 30
+
+# Nordic Pico
+[DeviceInstanceId=USB\VID_046D&PID_AAAE]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpBootloaderNordic
+FirmwareSizeMin = 0x4000
+CounterpartGuid = HIDRAW\VEN_046D&DEV_C52B
+InstallDuration = 30
+
+# Texas
+[DeviceInstanceId=USB\VID_046D&PID_AAAC]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpBootloaderTexas
+FirmwareSizeMin = 0x4000
+CounterpartGuid = HIDRAW\VEN_046D&DEV_C52B
+InstallDuration = 18
+
+# Texas Pico
+[DeviceInstanceId=USB\VID_046D&PID_AAAD]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpBootloaderTexas
+FirmwareSizeMin = 0x4000
+CounterpartGuid = HIDRAW\VEN_046D&DEV_C52B
+InstallDuration = 18
+
+# Possible HID++ v2.0 peripheral device
+[DeviceInstanceId=HIDRAW\VEN_046D]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpPeripheral

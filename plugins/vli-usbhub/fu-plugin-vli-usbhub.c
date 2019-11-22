@@ -10,12 +10,44 @@
 
 #include "fu-vli-usbhub-device.h"
 #include "fu-vli-usbhub-firmware.h"
+#include "fu-vli-usbhub-pd-firmware.h"
 
 void
 fu_plugin_init (FuPlugin *plugin)
 {
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
-	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_SUPPORTS_PROTOCOL, "com.via.vli-usbhub");
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_SUPPORTS_PROTOCOL, "com.vli.usbhub");
 	fu_plugin_set_device_gtype (plugin, FU_TYPE_VLI_USBHUB_DEVICE);
 	fu_plugin_add_firmware_gtype (plugin, "vli-usbhub", FU_TYPE_VLI_USBHUB_FIRMWARE);
+	fu_plugin_add_firmware_gtype (plugin, "vli-usbhub-pd", FU_TYPE_VLI_USBHUB_PD_FIRMWARE);
+}
+
+/* reboot the FuVliUsbhubDevice if we update the FuVliUsbhubPdDevice */
+static FuDevice *
+fu_plugin_vli_usbhub_get_parent (GPtrArray *devices)
+{
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *dev = g_ptr_array_index (devices, i);
+		FuDevice *parent = fu_device_get_parent (dev);
+		if (FU_IS_VLI_USBHUB_DEVICE (dev))
+			return g_object_ref (dev);
+		if (parent != NULL && FU_IS_VLI_USBHUB_DEVICE (parent))
+			return g_object_ref (parent);
+	}
+	return NULL;
+}
+
+gboolean
+fu_plugin_composite_cleanup (FuPlugin *plugin,
+			     GPtrArray *devices,
+			     GError **error)
+{
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(FuDevice) parent = fu_plugin_vli_usbhub_get_parent (devices);
+	if (parent == NULL)
+		return TRUE;
+	locker = fu_device_locker_new (parent, error);
+	if (locker == NULL)
+		return FALSE;
+	return fu_device_attach (parent, error);
 }

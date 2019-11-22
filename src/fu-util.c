@@ -1914,6 +1914,22 @@ fu_util_update_by_id (FuUtilPrivate *priv, const gchar *device_id, GError **erro
 static gboolean
 fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	if (priv->flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "--allow-older is not supported for this command");
+		return FALSE;
+	}
+
+	if (priv->flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "--allow-reinstall is not supported for this command");
+		return FALSE;
+	}
+
 	if (g_strv_length (values) == 0)
 		return fu_util_update_all (priv, error);
 	if (g_strv_length (values) == 1)
@@ -1986,6 +2002,14 @@ fu_util_downgrade (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(FwupdRelease) rel = NULL;
 	g_autoptr(GPtrArray) rels = NULL;
+
+	if (priv->flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "--allow-reinstall is not supported for this command");
+		return FALSE;
+	}
 
 	priv->filter_include |= FWUPD_DEVICE_FLAG_SUPPORTED;
 	dev = fu_util_get_device_or_prompt (priv, values, error);
@@ -2276,10 +2300,7 @@ fu_util_private_free (FuUtilPrivate *priv)
 static gboolean
 fu_util_check_daemon_version (FuUtilPrivate *priv, GError **error)
 {
-	g_autofree gchar *client = g_strdup_printf ("%i.%i.%i",
-						    FWUPD_MAJOR_VERSION,
-						    FWUPD_MINOR_VERSION,
-						    FWUPD_MICRO_VERSION);
+	g_autofree gchar *client = fu_util_get_client_version ();
 	const gchar *daemon = fwupd_client_get_daemon_version (priv->client);
 
 	if (g_strcmp0 (daemon, client) != 0) {
@@ -2722,6 +2743,7 @@ main (int argc, char *argv[])
 #ifdef HAVE_SYSTEMD
 	/* make sure the correct daemon is in use */
 	if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
+	    !fwupd_client_get_daemon_interactive (priv->client) &&
 	    !fu_util_using_correct_daemon (&error)) {
 		g_printerr ("%s\n", error->message);
 		return EXIT_FAILURE;

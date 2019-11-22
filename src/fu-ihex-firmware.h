@@ -11,4 +11,10 @@
 #define FU_TYPE_IHEX_FIRMWARE (fu_ihex_firmware_get_type ())
 G_DECLARE_FINAL_TYPE (FuIhexFirmware, fu_ihex_firmware, FU, IHEX_FIRMWARE, FuFirmware)
 
+typedef struct {
+	guint		 ln;
+	GString		*buf;
+} FuIhexFirmwareRecord;
+
 FuFirmware	*fu_ihex_firmware_new		(void);
+GPtrArray	*fu_ihex_firmware_get_records	(FuIhexFirmware	*self);

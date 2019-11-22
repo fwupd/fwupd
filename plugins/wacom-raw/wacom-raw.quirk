@@ -2,19 +2,88 @@
 # need to have an extra GUID of WacomAES or WacomEMR added so that the flash
 # constants are set correctly.
 
+# Dell Chromebook Enterprise 5300
+[DeviceInstanceId=HIDRAW\VEN_2D1F&DEV_4946]
+Plugin = wacom_raw
+Guid = WacomAES
+
+# Moffet 14-LGD-TPK
+[DeviceInstanceId=HIDRAW\VEN_2D1F&DEV_4970]
+Plugin = wacom_raw
+Guid = WacomAES
+
+# Moffet 14-Sharp-HH
+[DeviceInstanceId=HIDRAW\VEN_2D1F&DEV_4971]
+Plugin = wacom_raw
+Guid = WacomAES
+
+# Moffet 14-Sharp-VIA
+[DeviceInstanceId=HIDRAW\VEN_2D1F&DEV_4972]
+Plugin = wacom_raw
+Guid = WacomAES
+
+# Moffet 14-Coretronic-TPK
+[DeviceInstanceId=HIDRAW\VEN_2D1F&DEV_4973]
+Plugin = wacom_raw
+Guid = WacomAES
+
+# Moffet 14-Coretronic-HH
+[DeviceInstanceId=HIDRAW\VEN_2D1F&DEV_4974]
+Plugin = wacom_raw
+Guid = WacomAES
+
+# Dell Latitude 5175
+[DeviceInstanceId=HIDRAW\VEN_056A&DEV_4807]
+Plugin = wacom_raw
+Guid = WacomAES
+
+# Dell XPS 12 9250
+[DeviceInstanceId=HIDRAW\VEN_056A&DEV_4822]
+Plugin = wacom_raw
+Guid = WacomAES
+
+# Dell Venue 8 Pro 5855
+[DeviceInstanceId=HIDRAW\VEN_056A&DEV_4824]
+Plugin = wacom_raw
+Guid = WacomAES
+
+# Dell XPS 13 9365
+[DeviceInstanceId=HIDRAW\VEN_056A&DEV_4831]
+Plugin = wacom_raw
+Guid = WacomAES
+
+# Dell Latitude 5285
+[DeviceInstanceId=HIDRAW\VEN_056A&DEV_484C]
+Plugin = wacom_raw
+Guid = WacomAES
+
+# Dell Latitude 7390 2-in-1
+[DeviceInstanceId=HIDRAW\VEN_056A&DEV_4841]
+Plugin = wacom_raw
+Guid = WacomAES
+
 # Dell XPS-15 9575
 [DeviceInstanceId=HIDRAW\VEN_056A&DEV_4875]
 Plugin = wacom_raw
 Guid = WacomAES
 
-# AES bootloader mode
-[DeviceInstanceId=HIDRAW\VEN_056A&DEV_0094]
+# Dell Latitude 7400 2-in-1
+[DeviceInstanceId=HIDRAW\VEN_056A&DEV_48C9]
 Plugin = wacom_raw
 Guid = WacomAES
-Flags = is-bootloader
+
+# Dell XPS-15 9570
+[DeviceInstanceId=HIDRAW\VEN_056A&DEV_488F]
+Plugin = wacom_raw
+Guid = WacomAES
+
+# Dell XPS 13 7390 2-in-1
+[DeviceInstanceId=HIDRAW\VEN_056A&DEV_48ED]
+Plugin = wacom_raw
+Guid = WacomAES
 
 # AES bootloader mode
-[DeviceInstanceId=HIDRAW\VEN_2D1F&DEV_0094]
+[DeviceInstanceId=HIDRAW\VEN_056A&DEV_0094]
 Plugin = wacom_raw
 Guid = WacomAES
 Flags = is-bootloader

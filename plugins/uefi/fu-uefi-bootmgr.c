@@ -95,16 +95,14 @@ fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_si
 	efi_load_option *loadopt = NULL;
 	gchar *name = NULL;
 	gint rc;
-	gint set_entries[0x10000 / sizeof(gint)] = {0,};
 	gsize var_data_size = 0;
-	guint16 real_boot16;
 	guint32 attr;
-	guint32 boot_next = 0x10000;
+	guint16 boot_next = G_MAXUINT16;
 	g_autofree guint8 *var_data = NULL;
+	g_autofree guint8 *set_entries = g_malloc0 (G_MAXUINT16);
 
 	while ((rc = efi_get_next_variable_name (&guid, &name)) > 0) {
 		const gchar *desc;
-		gint div, mod;
 		gint scanned = 0;
 		guint16 entry = 0;
 		g_autofree guint8 *var_data_tmp = NULL;
@@ -124,10 +122,8 @@ fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_si
 		if (scanned != 8)
 			continue;
 
-		div = entry / (sizeof(set_entries[0]) * 8);
-		mod = entry % (sizeof(set_entries[0]) * 8);
-
-		set_entries[div] |= 1 << mod;
+		/* mark this as used */
+		set_entries[entry] = 1;
 
 		rc = efi_get_variable (*guid, name, &var_data_tmp, &var_data_size, &attr);
 		if (rc < 0) {
@@ -180,15 +176,13 @@ fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_si
 	/* create a new one */
 	} else {
 		g_autofree gchar *boot_next_name = NULL;
-		for (guint32 value = 0; value < 0x10000; value++) {
-			gint div = value / (sizeof(set_entries[0]) * 8);
-			gint mod = value % (sizeof(set_entries[0]) * 8);
-			if (set_entries[div] & (1 << mod))
+		for (guint16 value = 0; value < G_MAXUINT16; value++) {
+			if (set_entries[value])
 				continue;
 			boot_next = value;
 			break;
 		}
-		if (boot_next >= 0x10000) {
+		if (boot_next == G_MAXUINT16) {
 			g_set_error (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_FAILED,
@@ -196,8 +190,7 @@ fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_si
 				     boot_next);
 			return FALSE;
 		}
-		boot_next_name = g_strdup_printf ("Boot%04X",
-						  (guint) (boot_next & 0xffff));
+		boot_next_name = g_strdup_printf ("Boot%04X", (guint) boot_next);
 		rc = efi_set_variable (efi_guid_global, boot_next_name, opt, opt_size,
 				       EFI_VARIABLE_NON_VOLATILE |
 				       EFI_VARIABLE_BOOTSERVICE_ACCESS |
@@ -218,8 +211,7 @@ fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_si
 		return FALSE;
 
 	/* set the boot next */
-	real_boot16 = boot_next;
-	rc = efi_set_variable (efi_guid_global, "BootNext", (guint8 *)&real_boot16, 2,
+	rc = efi_set_variable (efi_guid_global, "BootNext", (guint8 *)&boot_next, 2,
 			       EFI_VARIABLE_NON_VOLATILE |
 			       EFI_VARIABLE_BOOTSERVICE_ACCESS |
 			       EFI_VARIABLE_RUNTIME_ACCESS,
@@ -229,7 +221,7 @@ fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_si
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
 			     "could not set BootNext(%" G_GUINT16_FORMAT ")",
-			     real_boot16);
+			     boot_next);
 		return FALSE;
 	}
 	return TRUE;

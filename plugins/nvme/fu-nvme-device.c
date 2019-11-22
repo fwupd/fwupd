@@ -23,13 +23,6 @@ struct _FuNvmeDevice {
 
 G_DEFINE_TYPE (FuNvmeDevice, fu_nvme_device, FU_TYPE_UDEV_DEVICE)
 
-#ifndef HAVE_GUDEV_232
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevDevice, g_object_unref)
-#pragma clang diagnostic pop
-#endif
-
 static void
 fu_nvme_device_to_string (FuDevice *device, guint idt, GString *str)
 {

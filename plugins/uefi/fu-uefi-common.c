@@ -242,12 +242,15 @@ fu_uefi_get_esrt_entry_paths (const gchar *esrt_path, GError **error)
 }
 
 gchar *
-fu_uefi_get_esp_path_for_os (const gchar *esp_path)
+fu_uefi_get_esp_path_for_os (const gchar *base)
 {
-	const gchar *os_release_id = NULL;
 #ifndef EFI_OS_DIR
+	const gchar *os_release_id = NULL;
+	const gchar *id_like_id;
+	g_autofree gchar *esp_path = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GHashTable) os_release = fwupd_get_os_release (&error_local);
+	/* try to lookup /etc/os-release ID key */
 	if (os_release != NULL) {
 		os_release_id = g_hash_table_lookup (os_release, "ID");
 	} else {
@@ -255,10 +258,23 @@ fu_uefi_get_esp_path_for_os (const gchar *esp_path)
 	}
 	if (os_release_id == NULL)
 		os_release_id = "unknown";
+	/* if ID key points at something existing return it */
+	esp_path = g_build_filename (base, "EFI", os_release_id, NULL);
+	if (g_file_test (esp_path, G_FILE_TEST_IS_DIR) || os_release == NULL)
+		return g_steal_pointer (&esp_path);
+	/* if ID key doesn't exist, try ID_LIKE */
+	id_like_id = g_hash_table_lookup (os_release, "ID_LIKE");
+	if (id_like_id != NULL) {
+		g_autofree gchar* id_like_path = g_build_filename (base, "EFI", id_like_id, NULL);
+		if (g_file_test (id_like_path, G_FILE_TEST_IS_DIR)) {
+			g_debug ("Using ID_LIKE key from os-release");
+			return g_steal_pointer (&id_like_path);
+		}
+	}
+	return g_steal_pointer (&esp_path);
 #else
-	os_release_id = EFI_OS_DIR;
+	return g_build_filename (base, "EFI", EFI_OS_DIR, NULL);
 #endif
-	return g_build_filename (esp_path, "EFI", os_release_id, NULL);
 }
 
 guint64

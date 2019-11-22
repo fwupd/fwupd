@@ -31,8 +31,8 @@ GUdevDevice	*fu_udev_device_get_dev			(FuUdevDevice	*self);
 const gchar	*fu_udev_device_get_device_file		(FuUdevDevice	*self);
 const gchar	*fu_udev_device_get_sysfs_path		(FuUdevDevice	*self);
 const gchar	*fu_udev_device_get_subsystem		(FuUdevDevice	*self);
-guint16		 fu_udev_device_get_vendor		(FuUdevDevice	*self);
-guint16		 fu_udev_device_get_model		(FuUdevDevice	*self);
+guint32		 fu_udev_device_get_vendor		(FuUdevDevice	*self);
+guint32		 fu_udev_device_get_model		(FuUdevDevice	*self);
 guint8		 fu_udev_device_get_revision		(FuUdevDevice	*self);
 guint		 fu_udev_device_get_slot_depth		(FuUdevDevice	*self,
 							 const gchar	*subsystem);

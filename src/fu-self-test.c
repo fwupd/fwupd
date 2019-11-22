@@ -10,7 +10,6 @@
 #include <fwupd.h>
 #include <glib-object.h>
 #include <glib/gstdio.h>
-#include <gio/gfiledescriptorbased.h>
 #include <libgcab.h>
 #include <stdlib.h>
 #include <string.h>
@@ -559,6 +558,69 @@ fu_engine_requirements_other_device_func (void)
 
 	/* check this passes */
 	task = fu_install_task_new (device1, component);
+	ret = fu_engine_check_requirements (engine, task,
+					    FWUPD_INSTALL_FLAG_NONE,
+					    &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+}
+
+static void
+fu_engine_requirements_parent_device_func (void)
+{
+	gboolean ret;
+	g_autoptr(FuDevice) device1 = fu_device_new ();
+	g_autoptr(FuDevice) device2 = fu_device_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuInstallTask) task = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new ();
+	const gchar *xml =
+		"<component>"
+		"  <requires>"
+		"    <firmware depth=\"1\" compare=\"eq\" version=\"1.2.3\"/>"
+		"    <firmware depth=\"1\">12345678-1234-1234-1234-123456789012</firmware>"
+		"  </requires>"
+		"  <provides>"
+		"    <firmware type=\"flashed\">1ff60ab2-3905-06a1-b476-0371f00c9e9b</firmware>"
+		"  </provides>"
+		"  <releases>"
+		"    <release version=\"4.5.7\">"
+		"      <checksum type=\"sha1\" filename=\"bios.bin\" target=\"content\"/>"
+		"    </release>"
+		"  </releases>"
+		"</component>";
+
+	/* no metadata in daemon */
+	fu_engine_set_silo (engine, silo_empty);
+
+	/* set up child device */
+	fu_device_set_id (device2, "child");
+	fu_device_set_name (device2, "child");
+	fu_device_set_version (device2, "4.5.6", FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_add_flag (device2, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_guid (device2, "1ff60ab2-3905-06a1-b476-0371f00c9e9b");
+
+	/* set up a parent device */
+	fu_device_set_id (device1, "parent");
+	fu_device_set_name (device1, "parent");
+	fu_device_set_version (device1, "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_add_guid (device1, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_child (device1, device2);
+	fu_engine_add_device (engine, device1);
+
+	/* import firmware metainfo */
+	silo = xb_silo_new_from_xml (xml, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (silo);
+	component = xb_silo_query_first (silo, "component", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (component);
+
+	/* check this passes */
+	task = fu_install_task_new (device2, component);
 	ret = fu_engine_check_requirements (engine, task,
 					    FWUPD_INSTALL_FLAG_NONE,
 					    &error);
@@ -3613,6 +3675,8 @@ fu_common_version_func (void)
 		{ 0xffffffff,	"18.31.255.65535",	FWUPD_VERSION_FORMAT_INTEL_ME },
 		{ 0x0b32057a,	"11.11.50.1402",	FWUPD_VERSION_FORMAT_INTEL_ME },
 		{ 0xb8320d84,	"11.8.50.3460",		FWUPD_VERSION_FORMAT_INTEL_ME2 },
+		{ 0x226a4b00,	"137.2706.768",		FWUPD_VERSION_FORMAT_SURFACE_LEGACY },
+		{ 0x6001988,	"6.25.136",		FWUPD_VERSION_FORMAT_SURFACE },
 		{ 0,		NULL }
 	};
 	struct {
@@ -3814,7 +3878,9 @@ fu_firmware_ihex_signed_func (void)
 	g_assert_cmpint (g_bytes_get_size (data_fw), ==, 136);
 
 	/* get the signed image */
-	data_sig = fu_firmware_get_image_by_id_bytes (firmware, "signature", &error);
+	data_sig = fu_firmware_get_image_by_id_bytes (firmware,
+						      FU_FIRMWARE_IMAGE_ID_SIGNATURE,
+						      &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (data_sig);
 	data = g_bytes_get_data (data_sig, &len);
@@ -4164,6 +4230,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/engine{downgrade}", fu_engine_downgrade_func);
 	g_test_add_func ("/fwupd/engine{requirements-success}", fu_engine_requirements_func);
 	g_test_add_func ("/fwupd/engine{requirements-missing}", fu_engine_requirements_missing_func);
+	g_test_add_func ("/fwupd/engine{requirements-parent-device}", fu_engine_requirements_parent_device_func);
 	g_test_add_func ("/fwupd/engine{requirements-not-child}", fu_engine_requirements_child_func);
 	g_test_add_func ("/fwupd/engine{requirements-not-child-fail}", fu_engine_requirements_child_fail_func);
 	g_test_add_func ("/fwupd/engine{requirements-unsupported}", fu_engine_requirements_unsupported_func);

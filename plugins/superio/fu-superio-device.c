@@ -20,7 +20,7 @@ typedef struct
 	guint16			 id;
 } FuSuperioDevicePrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE (FuSuperioDevice, fu_superio_device, FU_TYPE_DEVICE)
+G_DEFINE_TYPE_WITH_PRIVATE (FuSuperioDevice, fu_superio_device, FU_TYPE_UDEV_DEVICE)
 
 #define GET_PRIVATE(o) (fu_superio_device_get_instance_private (o))
 
@@ -263,18 +263,6 @@ fu_superio_device_setup (FuDevice *device, GError **error)
 	FuSuperioDeviceClass *klass = FU_SUPERIO_DEVICE_GET_CLASS (device);
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
 	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
-	guint8 tmp = 0x0;
-
-	/* check port is valid */
-	if (!fu_udev_device_pread (FU_UDEV_DEVICE (self), priv->pm1_iobad0, &tmp, error))
-		return FALSE;
-	if (tmp != 0xff) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "check port!");
-		return FALSE;
-	}
 
 	/* check ID is correct */
 	if (!fu_superio_device_check_id (self, error)) {

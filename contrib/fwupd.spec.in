@@ -6,6 +6,7 @@
 %global json_glib_version 1.1.1
 
 %define alphatag                #ALPHATAG#
+%define tarball_version         #TARBALL_VERSION#
 
 %global enable_ci 0
 %global enable_tests 1
@@ -36,10 +37,10 @@
 Summary:   Firmware update daemon
 Name:      fwupd
 Version:   #VERSION#
-Release:   0.#BUILD#%{?alphatag}%{?dist}
+Release:   999.#BUILD#%{?alphatag}%{?dist}
 License:   LGPLv2+
 URL:       https://github.com/fwupd/fwupd
-Source0:   http://people.freedesktop.org/~hughsient/releases/%{name}-%{version}.tar.xz
+Source0:   http://people.freedesktop.org/~hughsient/releases/%{name}-%{tarball_version}.tar.xz
 
 BuildRequires: gettext
 BuildRequires: glib2-devel >= %{glib2_version}
@@ -136,7 +137,7 @@ BuildArch: noarch
 Data files for installed tests.
 
 %prep
-%autosetup -p1
+%autosetup -p1 -n %{name}-%{tarball_version}
 
 %build
 
@@ -215,7 +216,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 # delete most files from the subproject
 rm ${RPM_BUILD_ROOT}%{_includedir}/libflashrom.h
 rm ${RPM_BUILD_ROOT}%{_libdir}/libflashrom.so
-rm ${RPM_BUILD_ROOT}%{_libdir}/pkgconfig/libflashrom.pc
+rm ${RPM_BUILD_ROOT}%{_libdir}/pkgconfig/flashrom.pc
 rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %endif
 
@@ -282,7 +283,10 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %{_datadir}/man/man1/fwupdmgr.1.gz
 %{_datadir}/metainfo/org.freedesktop.fwupd.metainfo.xml
 %{_datadir}/icons/hicolor/scalable/apps/org.freedesktop.fwupd.svg
-%{_datadir}/fwupd/firmware-packager
+%{_datadir}/fwupd/firmware_packager.py
+%{_datadir}/fwupd/simple_client.py
+%{_datadir}/fwupd/add_capsule_header.py
+%{_datadir}/fwupd/install_dell_bios_exe.py
 %{_unitdir}/fwupd-offline-update.service
 %{_unitdir}/fwupd.service
 %{_unitdir}/fwupd-refresh.service
@@ -349,7 +353,7 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %{_libdir}/fwupd-plugins-3/libfu_plugin_uefi.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_uefi_recovery.so
 %endif
-%{_libdir}/fwupd-plugins-3/libfu_plugin_unifying.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_logitech_hidpp.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_upower.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_vli_usbhub.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_wacom_raw.so

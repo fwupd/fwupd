@@ -14,7 +14,7 @@ an undisclosed binary file format.
 
 This plugin supports the following protocol ID:
 
- * com.via.vli-usbhub
+ * com.vli.usbhub
 
 GUID Generation
 ---------------
@@ -30,6 +30,14 @@ These devices also use custom GUID values for the SPI flash configuration, e.g.
  * `VLI_USBHUB\SPI_37303840`
  * `VLI_USBHUB\SPI_3730`
  * `VLI_USBHUB\SPI_37`
+
+Optional PD child devices use just one extra GUID, e.g.
+
+ * `VLI_USBHUB_PD\VID_17EF&PID_3083`
+
+Optional I²C child devices use just one extra GUID, e.g.
+
+ * `VLI_USBHUB_I2C\MSP430`
 
 Quirk Use
 ---------

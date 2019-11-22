@@ -412,8 +412,8 @@ fu_plugin_update_reload (FuPlugin *plugin, FuDevice *device, GError **error)
           set process-wide.
           This allows plugins to detect when they should output detailed debugging
           information that would normally be too verbose to keep in the journal.
-          For example, using <code>--plugin-verbose=unifying</code> would set
-          <code>FWUPD_UNIFYING_VERBOSE=1</code>.
+          For example, using <code>--plugin-verbose=logitech_hidpp</code> would set
+          <code>FWUPD_LOGITECH_HID_VERBOSE=1</code>.
         </para>
       </section>
 

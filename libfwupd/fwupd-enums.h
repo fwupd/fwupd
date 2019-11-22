@@ -245,6 +245,8 @@ typedef enum {
  * @FWUPD_VERSION_FORMAT_BCD:			Binary coded decimal notation
  * @FWUPD_VERSION_FORMAT_INTEL_ME:		Intel ME-style bitshifted notation
  * @FWUPD_VERSION_FORMAT_INTEL_ME2:		Intel ME-style A.B.CC.DDDD notation notation
+ * @FWUPD_VERSION_FORMAT_SURFACE_LEGACY:	Legacy Microsoft Surface 10b.12b.10b
+ * @FWUPD_VERSION_FORMAT_SURFACE:		Microsoft Surface 8b.16b.8b
  *
  * The flags used when parsing version numbers.
  *
@@ -261,6 +263,8 @@ typedef enum {
 	FWUPD_VERSION_FORMAT_BCD,			/* Since: 1.2.9 */
 	FWUPD_VERSION_FORMAT_INTEL_ME,			/* Since: 1.2.9 */
 	FWUPD_VERSION_FORMAT_INTEL_ME2,			/* Since: 1.2.9 */
+	FWUPD_VERSION_FORMAT_SURFACE_LEGACY,		/* Since: 1.3.4 */
+	FWUPD_VERSION_FORMAT_SURFACE,			/* Since: 1.3.4 */
 	/*< private >*/
 	FWUPD_VERSION_FORMAT_LAST
 } FwupdVersionFormat;

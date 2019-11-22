@@ -16,9 +16,7 @@ makedepends=('meson' 'valgrind' 'gobject-introspection' 'gtk-doc' 'python-pillow
 pkgver() {
     cd ${pkgname}
 
-    VERSION=$(git describe | sed 's/-/.r/;s/-/./')
-    [ -z $VERSION ] && VERSION=$(head meson.build | grep ' version :' | cut -d \' -f2)
-
+    VERSION=$(./contrib/get-version.py | sed 's/-/.r/;s/-/./')
     echo $VERSION
 }
 

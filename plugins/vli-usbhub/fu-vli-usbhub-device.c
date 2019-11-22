@@ -15,6 +15,9 @@
 #include "fu-vli-usbhub-common.h"
 #include "fu-vli-usbhub-device.h"
 #include "fu-vli-usbhub-firmware.h"
+#include "fu-vli-usbhub-i2c-device.h"
+#include "fu-vli-usbhub-pd-common.h"
+#include "fu-vli-usbhub-pd-device.h"
 
 #define FU_VLI_USBHUB_DEVICE_TIMEOUT		3000	/* ms */
 #define FU_VLI_USBHUB_TXSIZE			0x20	/* bytes */
@@ -79,6 +82,83 @@ fu_vli_usbhub_device_to_string (FuDevice *device, guint idt, GString *str)
 		fu_common_string_append_kv (str, idt, "H2Hdr@0x1000", NULL);
 		fu_vli_usbhub_header_to_string (&self->hd2_hdr, idt + 1, str);
 	}
+}
+
+gboolean
+fu_vli_usbhub_device_i2c_read (FuVliUsbhubDevice *self,
+			       guint8 cmd, guint8 *buf, gsize bufsz,
+			       GError **error)
+{
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
+	guint16 value = ((guint16) FU_VLI_USBHUB_I2C_ADDR_WRITE << 8) | cmd;
+	guint16 index = (guint16) FU_VLI_USBHUB_I2C_ADDR_READ << 8;
+	if (!g_usb_device_control_transfer (usb_device,
+					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_VLI_USBHUB_I2C_R_VDR, value, index,
+					    buf, bufsz, NULL,
+					    FU_VLI_USBHUB_DEVICE_TIMEOUT,
+					    NULL, error)) {
+		g_prefix_error (error, "failed to read I2C: ");
+		return FALSE;
+	}
+	if (g_getenv ("FWUPD_VLI_USBHUB_VERBOSE") != NULL)
+		fu_common_dump_raw (G_LOG_DOMAIN, "I2cReadData", buf, 0x1);
+	return TRUE;
+}
+
+gboolean
+fu_vli_usbhub_device_i2c_read_status (FuVliUsbhubDevice *self,
+				      FuVliUsbhubI2cStatus *status,
+				      GError **error)
+{
+	guint8 buf[1] = { 0xff };
+	if (!fu_vli_usbhub_device_i2c_read (self,
+					    FU_VLI_USBHUB_I2C_CMD_READ_STATUS,
+					    buf, sizeof(buf),
+					    error))
+		return FALSE;
+	if (status != NULL)
+		*status = buf[0];
+	return TRUE;
+}
+
+gboolean
+fu_vli_usbhub_device_i2c_write_data (FuVliUsbhubDevice *self,
+				     guint8 skip_s,
+				     guint8 skip_p,
+				     const guint8 *buf,
+				     gsize bufsz,
+				     GError **error)
+{
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
+	guint16 value = (((guint16) skip_s) << 8) | skip_p;
+	if (g_getenv ("FWUPD_VLI_USBHUB_VERBOSE") != NULL)
+		fu_common_dump_raw (G_LOG_DOMAIN, "I2cWriteData", buf, bufsz);
+	if (!g_usb_device_control_transfer (usb_device,
+					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_VLI_USBHUB_I2C_W_VDR, value, 0x0,
+					    (guint8 *) buf, bufsz, NULL,
+					    FU_VLI_USBHUB_DEVICE_TIMEOUT,
+					    NULL, error)) {
+		g_prefix_error (error, "failed to write I2C @0x%x: ", value);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+gboolean
+fu_vli_usbhub_device_i2c_write (FuVliUsbhubDevice *self, guint8 cmd,
+				const guint8 *buf, gsize bufsz, GError **error)
+{
+	guint8 buf2[10] = { FU_VLI_USBHUB_I2C_ADDR_WRITE, cmd, 0x0 };
+	if (!fu_memcpy_safe (buf2, sizeof(buf2), 0x2,
+			     buf, bufsz, 0x0, bufsz, error))
+		return FALSE;
+	return fu_vli_usbhub_device_i2c_write_data (self, 0x0, 0x0, buf2, bufsz + 2, error);
 }
 
 static gboolean
@@ -469,19 +549,21 @@ fu_vli_usbhub_device_erase_sector (FuVliUsbhubDevice *self, guint32 addr, GError
 	return TRUE;
 }
 
-static gboolean
-fu_vli_usbhub_device_erase_sectors (FuVliUsbhubDevice *self,
-				    guint32 addr,
-				    gsize sz,
-				    GError **error)
+gboolean
+fu_vli_usbhub_device_spi_erase (FuVliUsbhubDevice *self,
+				guint32 addr,
+				gsize sz,
+				GError **error)
 {
 	g_autoptr(GPtrArray) chunks = fu_chunk_array_new (NULL, sz, addr, 0x0, 0x1000);
+	g_debug ("erasing 0x%x bytes @0x%x", (guint) sz, addr);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chunk = g_ptr_array_index (chunks, i);
-		g_debug ("erasing @0x%x", chunk->address);
+		if (g_getenv ("FWUPD_VLI_USBHUB_VERBOSE") != NULL)
+			g_debug ("erasing @0x%x", chunk->address);
 		if (!fu_vli_usbhub_device_erase_sector (self, chunk->address, error)) {
 			g_prefix_error (error,
-					"failed to erase FW sector @0x%x",
+					"failed to erase FW sector @0x%x: ",
 					chunk->address);
 			return FALSE;
 		}
@@ -653,14 +735,17 @@ fu_vli_usbhub_device_guess_kind (FuVliUsbhubDevice *self, GError **error)
 	return TRUE;
 }
 
-static GBytes *
-fu_vli_usbhub_device_dump_firmware (FuVliUsbhubDevice *self, gsize bufsz, GError **error)
+GBytes *
+fu_vli_usbhub_device_spi_read (FuVliUsbhubDevice *self,
+			       guint32 address,
+			       gsize bufsz,
+			       GError **error)
 {
 	g_autofree guint8 *buf = g_malloc0 (bufsz);
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	/* get data from hardware */
-	chunks = fu_chunk_array_new (buf, bufsz, 0x0, 0x0, FU_VLI_USBHUB_TXSIZE);
+	chunks = fu_chunk_array_new (buf, bufsz, address, 0x0, FU_VLI_USBHUB_TXSIZE);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
 		if (!fu_vli_usbhub_device_spi_read_data (self,
@@ -680,14 +765,100 @@ fu_vli_usbhub_device_dump_firmware (FuVliUsbhubDevice *self, gsize bufsz, GError
 static gboolean
 fu_vli_usbhub_device_probe (FuDevice *device, GError **error)
 {
+	guint16 usbver = fu_usb_device_get_spec (FU_USB_DEVICE (device));
+
 	/* quirks now applied... */
-	if (fu_device_has_custom_flag (device, "usb3")) {
+	if (usbver > 0x0300 || fu_device_has_custom_flag (device, "usb3")) {
 		fu_device_set_summary (device, "USB 3.x Hub");
-	} else if (fu_device_has_custom_flag (device, "usb2")) {
+	} else if (usbver > 0x0200 || fu_device_has_custom_flag (device, "usb2")) {
 		fu_device_set_summary (device, "USB 2.x Hub");
 	} else {
 		fu_device_set_summary (device, "USB Hub");
 	}
+	return TRUE;
+}
+
+static gboolean
+fu_vli_usbhub_device_pd_setup (FuVliUsbhubDevice *self, GError **error)
+{
+	FuVliUsbhubPdHdr hdr = { 0x0 };
+	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	/* legacy location */
+	if (!fu_vli_usbhub_device_spi_read_data (self,
+						 VLI_USBHUB_FLASHMAP_ADDR_PD_LEGACY +
+						 VLI_USBHUB_PD_FLASHMAP_ADDR_LEGACY,
+						 (guint8 *) &hdr, sizeof(hdr), error)) {
+		g_prefix_error (error, "failed to read legacy PD header");
+		return FALSE;
+	}
+
+	/* new location */
+	if (GUINT16_FROM_LE (hdr.vid) != 0x2109) {
+		g_debug ("PD VID was 0x%04x trying new location",
+			 GUINT16_FROM_LE (hdr.vid));
+		if (!fu_vli_usbhub_device_spi_read_data (self,
+							 VLI_USBHUB_FLASHMAP_ADDR_PD +
+							 VLI_USBHUB_PD_FLASHMAP_ADDR,
+							 (guint8 *) &hdr, sizeof(hdr), error)) {
+			g_prefix_error (error, "failed to read PD header");
+			return FALSE;
+		}
+	}
+
+	/* emulate until we get actual hardware */
+	if (g_getenv ("VLI_USBHUB_EMULATE_PD") != NULL) {
+		gsize bufsz = 0;
+		g_autofree gchar *buf = NULL;
+		if (!g_file_get_contents (g_getenv ("VLI_USBHUB_EMULATE_PD"),
+					  &buf, &bufsz, error))
+			return FALSE;
+		if (!fu_memcpy_safe ((guint8 *) &hdr, sizeof(hdr), 0x0,
+				     (const guint8 *) buf, bufsz, 0x0, sizeof(hdr), error)) {
+			g_prefix_error (error, "failed to map emulated header: ");
+			return FALSE;
+		}
+	}
+
+	/* just empty space */
+	if (hdr.fwver == G_MAXUINT32) {
+		g_debug ("no PD device header found");
+		return TRUE;
+	}
+
+	/* add child */
+	dev = fu_vli_usbhub_pd_device_new (&hdr);
+	if (!fu_device_probe (dev, &error_local)) {
+		g_warning ("cannot create PD device: %s", error_local->message);
+		return TRUE;
+	}
+	fu_device_add_child (FU_DEVICE (self), dev);
+	return TRUE;
+}
+
+static gboolean
+fu_vli_usbhub_device_i2c_setup (FuVliUsbhubDevice *self, GError **error)
+{
+	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	/* add child */
+	dev = fu_vli_usbhub_i2c_device_new (self);
+	if (!fu_device_probe (dev, error))
+		return FALSE;
+	if (!fu_device_setup (dev, &error_local)) {
+		if (g_error_matches (error_local,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND)) {
+			g_debug ("%s", error_local->message);
+		} else {
+			g_warning ("cannot create I²C device: %s",
+				   error_local->message);
+		}
+		return TRUE;
+	}
+	fu_device_add_child (FU_DEVICE (self), dev);
 	return TRUE;
 }
 
@@ -791,6 +962,14 @@ fu_vli_usbhub_device_setup (FuDevice *device, GError **error)
 			return FALSE;
 		}
 	}
+
+	/* detect the PD child */
+	if (!fu_vli_usbhub_device_pd_setup (self, error))
+		return FALSE;
+
+	/* detect the PD child */
+	if (!fu_vli_usbhub_device_i2c_setup (self, error))
+		return FALSE;
 
 	/* success */
 	return TRUE;
@@ -909,6 +1088,8 @@ fu_vli_usbhub_device_write_block (FuVliUsbhubDevice *self,
 	}
 
 	/* write */
+	if (g_getenv ("FWUPD_VLI_USBHUB_VERBOSE") != NULL)
+		g_debug ("writing 0x%x block @0x%x", (guint) bufsz, address);
 	if (!fu_vli_usbhub_device_spi_write_enable (self, error)) {
 		g_prefix_error (error, "enabling SPI write failed: ");
 		return FALSE;
@@ -927,17 +1108,18 @@ fu_vli_usbhub_device_write_block (FuVliUsbhubDevice *self,
 	return fu_common_bytes_compare_raw (buf, bufsz, buf_tmp, bufsz, error);
 }
 
-static gboolean
-fu_vli_usbhub_device_write_blocks (FuVliUsbhubDevice *self,
-				   guint32 address,
-				   const guint8 *buf,
-				   gsize bufsz,
-				   GError **error)
+gboolean
+fu_vli_usbhub_device_spi_write (FuVliUsbhubDevice *self,
+				guint32 address,
+				const guint8 *buf,
+				gsize bufsz,
+				GError **error)
 {
 	FuChunk *chk;
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	/* write SPI data, then CRC bytes last */
+	g_debug ("writing 0x%x bytes @0x%x", (guint) bufsz, address);
 	chunks = fu_chunk_array_new (buf, bufsz, 0x0, 0x0, FU_VLI_USBHUB_TXSIZE);
 	if (chunks->len > 1) {
 		for (guint i = 1; i < chunks->len; i++) {
@@ -992,7 +1174,7 @@ fu_vli_usbhub_device_update_v1 (FuVliUsbhubDevice *self,
 	/* write in chunks */
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_WRITE);
 	buf = g_bytes_get_data (fw, &bufsz);
-	if (!fu_vli_usbhub_device_write_blocks (self, 0x0, buf, bufsz, error))
+	if (!fu_vli_usbhub_device_spi_write (self, 0x0, buf, bufsz, error))
 		return FALSE;
 
 	/* success */
@@ -1017,8 +1199,8 @@ fu_vli_usbhub_device_update_v2_recovery (FuVliUsbhubDevice *self, GBytes *fw, GE
 
 	/* write in chunks */
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_WRITE);
-	if (!fu_vli_usbhub_device_write_blocks (self, VLI_USBHUB_FLASHMAP_ADDR_HD1,
-						buf, bufsz, error))
+	if (!fu_vli_usbhub_device_spi_write (self, VLI_USBHUB_FLASHMAP_ADDR_HD1,
+					     buf, bufsz, error))
 		return FALSE;
 
 	/* success */
@@ -1150,16 +1332,16 @@ fu_vli_usbhub_device_update_v2 (FuVliUsbhubDevice *self, FuFirmware *firmware, G
 
 	/* make space */
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_ERASE);
-	if (!fu_vli_usbhub_device_erase_sectors (self, hd2_fw_addr, hd2_fw_sz, error))
+	if (!fu_vli_usbhub_device_spi_erase (self, hd2_fw_addr, hd2_fw_sz, error))
 		return FALSE;
 
 	/* perform the actual write */
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_WRITE);
-	if (!fu_vli_usbhub_device_write_blocks (self,
-						hd2_fw_addr,
-						buf_fw + hd2_fw_offset,
-						hd2_fw_sz,
-						error)) {
+	if (!fu_vli_usbhub_device_spi_write (self,
+					     hd2_fw_addr,
+					     buf_fw + hd2_fw_offset,
+					     hd2_fw_sz,
+					     error)) {
 		g_prefix_error (error, "failed to write payload: ");
 		return FALSE;
 	}
@@ -1191,7 +1373,6 @@ fu_vli_usbhub_device_update_v2 (FuVliUsbhubDevice *self, FuFirmware *firmware, G
 	}
 
 	/* success */
-	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	return TRUE;
 }
 
@@ -1201,7 +1382,9 @@ fu_vli_usbhub_device_read_firmware (FuDevice *device, GError **error)
 	FuVliUsbhubDevice *self = FU_VLI_USBHUB_DEVICE (device);
 	g_autoptr(GBytes) fw = NULL;
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_VERIFY);
-	fw = fu_vli_usbhub_device_dump_firmware (self, fu_device_get_firmware_size_max (device), error);
+	fw = fu_vli_usbhub_device_spi_read (self, 0x0,
+					    fu_device_get_firmware_size_max (device),
+					    error);
 	if (fw == NULL)
 		return NULL;
 	return fu_firmware_new_from_bytes (fw);

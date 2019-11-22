@@ -35,10 +35,11 @@ typedef enum {
  *
  * Specifies the type of archive iteration function.
  */
-typedef void	(*FuArchiveIterateFunc)		(FuArchive		*self,
+typedef gboolean (*FuArchiveIterateFunc)	(FuArchive		*self,
 						 const gchar		*filename,
 						 GBytes			*bytes,
-						 gpointer		 user_data);
+						 gpointer		 user_data,
+						 GError			**error);
 
 FuArchive	*fu_archive_new			(GBytes		*data,
 						 FuArchiveFlags	 flags,
@@ -46,6 +47,7 @@ FuArchive	*fu_archive_new			(GBytes		*data,
 GBytes		*fu_archive_lookup_by_fn	(FuArchive	*self,
 						 const gchar	*fn,
 						 GError		**error);
-void		 fu_archive_iterate		(FuArchive		*self,
+gboolean	 fu_archive_iterate		(FuArchive		*self,
 						 FuArchiveIterateFunc	callback,
-						 gpointer		user_data);
+						 gpointer		user_data,
+						 GError			**error);

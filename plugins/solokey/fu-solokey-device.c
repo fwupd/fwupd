@@ -470,7 +470,9 @@ fu_solokey_device_write_firmware (FuDevice *device,
 	}
 
 	/* verify the signature and reboot back to runtime */
-	fw_sig = fu_firmware_get_image_by_id_bytes (firmware, "signature", error);
+	fw_sig = fu_firmware_get_image_by_id_bytes (firmware,
+						    FU_FIRMWARE_IMAGE_ID_SIGNATURE,
+						    error);
 	if (fw_sig == NULL)
 		return FALSE;
 	return fu_solokey_device_verify (self, fw_sig, error);

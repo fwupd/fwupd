@@ -15,6 +15,9 @@
 #include "fu-mm-utils.h"
 #include "fu-qmi-pdc-updater.h"
 
+/* Amount of time for the modem to boot in fastboot mode. */
+#define FU_MM_DEVICE_REMOVE_DELAY_RE_ENUMERATE	20000	/* ms */
+
 /* Amount of time for the modem to be re-probed and exposed in MM after being
  * uninhibited. The timeout is long enough to cover the worst case, where the
  * modem boots without SIM card inserted (and therefore the initialization
@@ -233,7 +236,7 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 		fu_device_set_vendor (device, mm_modem_get_manufacturer (modem));
 	if (mm_modem_get_model (modem) != NULL)
 		fu_device_set_name (device, mm_modem_get_model (modem));
-	fu_device_set_version (device, version, FWUPD_VERSION_FORMAT_UNKNOWN);
+	fu_device_set_version (device, version, FWUPD_VERSION_FORMAT_PLAIN);
 	for (guint i = 0; device_ids[i] != NULL; i++)
 		fu_device_add_instance_id (device, device_ids[i]);
 
@@ -373,7 +376,7 @@ fu_mm_device_detach_fastboot (FuDevice *device, GError **error)
 	}
 
 	/* success */
-	fu_device_set_remove_delay (device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_set_remove_delay (device, FU_MM_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
@@ -483,18 +486,19 @@ fu_mm_should_be_active (const gchar *version,
 	return (g_strstr_len (version, -1, carrier_id) != NULL);
 }
 
-static void
+static gboolean
 fu_mm_qmi_pdc_archive_iterate_mcfg (FuArchive	*archive,
 				    const gchar	*filename,
 				    GBytes	*bytes,
-				    gpointer	 user_data)
+				    gpointer	 user_data,
+				    GError	**error)
 {
 	FuMmArchiveIterateCtx *ctx = user_data;
 	FuMmFileInfo *file_info;
 
 	/* filenames should be named as 'mcfg.*.mbn', e.g.: mcfg.A2.018.mbn */
 	if (!g_str_has_prefix (filename, "mcfg.") || !g_str_has_suffix (filename, ".mbn"))
-		return;
+		return TRUE;
 
 	file_info = g_new0 (FuMmFileInfo, 1);
 	file_info->filename = g_strdup (filename);
@@ -502,6 +506,7 @@ fu_mm_qmi_pdc_archive_iterate_mcfg (FuArchive	*archive,
 	file_info->active = fu_mm_should_be_active (fu_device_get_version (FU_DEVICE (ctx->device)), filename);
 	g_ptr_array_add (ctx->file_infos, file_info);
 	ctx->total_bytes += g_bytes_get_size (file_info->bytes);
+	return TRUE;
 }
 
 static gboolean
@@ -559,7 +564,11 @@ fu_mm_device_write_firmware_qmi_pdc (FuDevice *device, GBytes *fw, GArray **acti
 		return FALSE;
 
 	/* process the list of MCFG files to write */
-	fu_archive_iterate (archive, fu_mm_qmi_pdc_archive_iterate_mcfg, &archive_context);
+	if (!fu_archive_iterate (archive,
+				 fu_mm_qmi_pdc_archive_iterate_mcfg,
+				 &archive_context,
+				 error))
+		return FALSE;
 
 	for (guint i = 0; i < file_infos->len; i++) {
 		FuMmFileInfo *file_info = g_ptr_array_index (file_infos, i);
@@ -795,7 +804,7 @@ fu_mm_device_udev_new (MMManager *manager,
 	fu_device_set_physical_id (FU_DEVICE (self), info->physical_id);
 	fu_device_set_vendor (FU_DEVICE (self), info->vendor);
 	fu_device_set_name (FU_DEVICE (self), info->name);
-	fu_device_set_version (FU_DEVICE (self), info->version, FWUPD_VERSION_FORMAT_UNKNOWN);
+	fu_device_set_version (FU_DEVICE (self), info->version, FWUPD_VERSION_FORMAT_PLAIN);
 	self->update_methods = info->update_methods;
 	self->detach_fastboot_at = g_strdup (info->detach_fastboot_at);
 	self->port_at_ifnum = info->port_at_ifnum;

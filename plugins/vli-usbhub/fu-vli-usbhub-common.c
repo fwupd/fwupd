@@ -77,6 +77,7 @@ fu_vli_usbhub_header_to_string (FuVliUsbhubHeader *hdr, guint idt, GString *str)
 					    GUINT16_FROM_BE(hdr->usb2_fw_sz));
 	}
 	fu_common_string_append_kx (str, idt, "Usb3FwAddr",
+				    ((guint32) hdr->usb3_fw_addr_high) << 16 |
 				    GUINT16_FROM_BE(hdr->usb3_fw_addr));
 	fu_common_string_append_kx (str, idt, "Usb3FwSz",
 				    GUINT16_FROM_BE(hdr->usb3_fw_sz));

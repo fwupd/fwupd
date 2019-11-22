@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version : '1.3.3',
+  version : run_command('contrib/get-version.py').stdout().strip(),
   license : 'LGPL-2.1+',
   meson_version : '>=0.47.0',
   default_options : ['warning_level=2', 'c_std=c99'],
@@ -9,22 +9,19 @@ fwupd_version = meson.project_version()
 varr = fwupd_version.split('.')
 fwupd_major_version = varr[0]
 fwupd_minor_version = varr[1]
-fwupd_micro_version = varr[2]
-
+fwupd_micro_version = varr[2].split('-')[0]
 conf = configuration_data()
+
+if varr[2].contains('-')
+  fwupd_dirty_version = varr[2].split('-')[1]
+  fwupd_commit = varr[2].split('-')[2]
+  conf.set('FWUPD_DIRTY_VERSION', fwupd_dirty_version)
+  conf.set_quoted('FWUPD_COMMIT_VERSION', fwupd_commit)
+endif
 conf.set('FWUPD_MAJOR_VERSION', fwupd_major_version)
 conf.set('FWUPD_MINOR_VERSION', fwupd_minor_version)
 conf.set('FWUPD_MICRO_VERSION', fwupd_micro_version)
 conf.set_quoted('PACKAGE_VERSION', fwupd_version)
-
-archiver = find_program('git', required : false)
-if archiver.found()
-  result = run_command('git', 'describe')
-  if result.returncode() == 0
-    describe = result.stdout().strip()
-    conf.set_quoted('FWUPD_GIT_DESCRIBE', describe)
-  endif
-endif
 
 # libtool versioning - this applies to libfwupd
 #
@@ -50,7 +47,6 @@ lt_version = '@0@.@1@.@2@'.format(lt_current, lt_age, lt_revision)
 
 # get supported warning flags
 warning_flags = [
-  '-fstack-protector-strong',
   '-Waggregate-return',
   '-Wunused',
   '-Warray-bounds',
@@ -106,6 +102,10 @@ warning_flags = [
 ]
 cc = meson.get_compiler('c')
 add_project_arguments(cc.get_supported_arguments(warning_flags), language : 'c')
+
+if not meson.is_cross_build()
+  add_project_arguments('-fstack-protector-strong', language : 'c')
+endif
 
 # enable full RELRO where possible
 # FIXME: until https://github.com/mesonbuild/meson/issues/1140 is fixed
@@ -165,10 +165,7 @@ if gio.version().version_compare ('>= 2.55.0')
 endif
 if build_standalone
 gmodule = dependency('gmodule-2.0')
-gudev = dependency('gudev-1.0')
-if gudev.version().version_compare('>= 232')
-  conf.set('HAVE_GUDEV_232', '1')
-endif
+gudev = dependency('gudev-1.0', version : '>= 232')
 libxmlb = dependency('xmlb', version : '>= 0.1.13', fallback : ['libxmlb', 'libxmlb_dep'])
 gusb = dependency('gusb', version : '>= 0.2.9')
 sqlite = dependency('sqlite3')

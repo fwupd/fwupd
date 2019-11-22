@@ -19,13 +19,6 @@
 #include "fu-device-metadata.h"
 #include "fu-thunderbolt-image.h"
 
-#ifndef HAVE_GUDEV_232
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUdevDevice, g_object_unref)
-#pragma clang diagnostic pop
-#endif
-
 #define TBT_NVM_RETRY_TIMEOUT				200	/* ms */
 #define FU_PLUGIN_THUNDERBOLT_UPDATE_TIMEOUT		60000	/* ms */
 
@@ -99,7 +92,7 @@ udev_device_get_sysattr_guint64 (GUdevDevice *device,
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
-			     "failed get id %s for %s", name, sysfs);
+			     "missing sysfs attribute %s", name);
 		return FALSE;
 	}
 
