@@ -110,6 +110,12 @@ fu_vli_usbhub_i2c_device_write_firmware (FuDevice *device,
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE (fu_device_get_parent (device));
 	GPtrArray *records = fu_ihex_firmware_get_records (FU_IHEX_FIRMWARE (firmware));
 	guint16 usbver = fu_usb_device_get_spec (FU_USB_DEVICE (device));
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	/* open device */
+	locker = fu_device_locker_new (parent, error);
+	if (locker == NULL)
+		return FALSE;
 
 	/* transfer by I²C write, and check status by I²C read */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);

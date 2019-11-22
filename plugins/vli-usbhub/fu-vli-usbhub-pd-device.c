@@ -125,7 +125,15 @@ fu_vli_usbhub_pd_device_read_firmware (FuDevice *device, GError **error)
 {
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE (fu_device_get_parent (device));
 	FuVliUsbhubPdDevice *self = FU_VLI_USBHUB_PD_DEVICE (device);
+	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GBytes) fw = NULL;
+
+	/* open device */
+	locker = fu_device_locker_new (parent, error);
+	if (locker == NULL)
+		return FALSE;
+
+	/* read */
 	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_DEVICE_VERIFY);
 	fw = fu_vli_usbhub_device_spi_read (parent,
 					    fu_vli_usbhub_pd_chip_get_offset (self->chip),
@@ -146,11 +154,17 @@ fu_vli_usbhub_pd_device_write_firmware (FuDevice *device,
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE (fu_device_get_parent (device));
 	gsize bufsz = 0;
 	const guint8 *buf;
+	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
 	/* simple image */
 	fw = fu_firmware_get_image_default_bytes (firmware, error);
 	if (fw == NULL)
+		return FALSE;
+
+	/* open device */
+	locker = fu_device_locker_new (parent, error);
+	if (locker == NULL)
 		return FALSE;
 
 	/* erase */
