@@ -13,6 +13,7 @@
 #include <fnmatch.h>
 
 #include "fu-test.h"
+#include "fu-common.h"
 
 static GMainLoop *_test_loop = NULL;
 static guint _test_loop_timeout_id = 0;
@@ -54,13 +55,12 @@ fu_test_get_filename (const gchar *testdatadirs, const gchar *filename)
 {
 	g_auto(GStrv) split = g_strsplit (testdatadirs, ":", -1);
 	for (guint i = 0; split[i] != NULL; i++) {
-		gchar *tmp;
-		char full_tmp[PATH_MAX];
+		g_autofree gchar *tmp = NULL;
 		g_autofree gchar *path = NULL;
 		path = g_build_filename (split[i], filename, NULL);
-		tmp = realpath (path, full_tmp);
+		tmp = fu_common_realpath (path, NULL);
 		if (tmp != NULL)
-			return g_strdup (full_tmp);
+			return g_steal_pointer (&tmp);
 	}
 	return NULL;
 }

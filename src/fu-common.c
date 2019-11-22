@@ -1496,12 +1496,24 @@ fu_common_realpath (const gchar *filename, GError **error)
 
 	g_return_val_if_fail (filename != NULL, NULL);
 
+#ifdef HAVE_REALPATH
 	if (realpath (filename, full_tmp) == NULL) {
+#else
+	if (_fullpath (full_tmp, filename, sizeof(full_tmp)) == NULL) {
+#endif
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_INVALID_DATA,
 			     "cannot resolve path: %s",
 			     strerror (errno));
+		return NULL;
+	}
+	if (!g_file_test (full_tmp, G_FILE_TEST_EXISTS)) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "cannot find path: %s",
+			     full_tmp);
 		return NULL;
 	}
 	return g_strdup (full_tmp);

@@ -17,20 +17,16 @@
 #include "dfu-target-private.h"
 
 #include "fu-test.h"
+#include "fu-common.h"
 
 #include "fwupd-error.h"
 
 static gchar *
 dfu_test_get_filename (const gchar *filename)
 {
-	gchar *tmp;
-	char full_tmp[PATH_MAX];
 	g_autofree gchar *path = NULL;
 	path = g_build_filename (TESTDATADIR, filename, NULL);
-	tmp = realpath (path, full_tmp);
-	if (tmp == NULL)
-		return NULL;
-	return g_strdup (full_tmp);
+	return fu_common_realpath (path, NULL);
 }
 
 static void

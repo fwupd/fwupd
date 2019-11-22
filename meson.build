@@ -234,6 +234,9 @@ endif
 if cc.has_function('getuid')
   conf.set('HAVE_GETUID', '1')
 endif
+if cc.has_function('realpath')
+  conf.set('HAVE_REALPATH', '1')
+endif
 if cc.has_header_symbol('locale.h', 'LC_MESSAGES')
   conf.set('HAVE_LC_MESSAGES', '1')
 endif
