@@ -11,6 +11,10 @@
 #include <gio/gunixinputstream.h>
 #include <glib/gstdio.h>
 
+#ifdef HAVE_FNMATCH_H
+#include <fnmatch.h>
+#endif
+
 #include <archive_entry.h>
 #include <archive.h>
 #include <errno.h>
@@ -1621,6 +1625,29 @@ fu_common_realpath (const gchar *filename, GError **error)
 		return NULL;
 	}
 	return g_strdup (full_tmp);
+}
+
+/**
+ * fu_common_fnmatch:
+ * @pattern: a glob pattern, e.g. `*foo*`
+ * @str: a string to match against the pattern, e.g. `bazfoobar`
+ *
+ * Matches a string against a glob pattern.
+ *
+ * Return value: %TRUE if the string matched
+ *
+ * Since: 1.3.5
+ **/
+gboolean
+fu_common_fnmatch (const gchar *pattern, const gchar *str)
+{
+	g_return_val_if_fail (pattern != NULL, FALSE);
+	g_return_val_if_fail (str != NULL, FALSE);
+#ifdef HAVE_FNMATCH_H
+	return fnmatch (pattern, str, FNM_NOESCAPE) == 0;
+#else
+	return g_strcmp0 (pattern, str) == 0;
+#endif
 }
 
 /**

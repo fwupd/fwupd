@@ -10,7 +10,6 @@
 
 #include <limits.h>
 #include <stdlib.h>
-#include <fnmatch.h>
 
 #include "fu-test.h"
 #include "fu-common.h"
@@ -113,7 +112,7 @@ fu_test_compare_lines (const gchar *txt1, const gchar *txt2, GError **error)
 		return TRUE;
 
 	/* matches a pattern */
-	if (fnmatch (txt2, txt1, FNM_NOESCAPE) == 0)
+	if (fu_common_fnmatch (txt2, txt1))
 		return TRUE;
 
 	/* save temp files and diff them */

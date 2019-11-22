@@ -7,7 +7,9 @@
 #include "config.h"
 
 #include <glib-object.h>
+#ifdef HAVE_FNMATCH_H
 #include <fnmatch.h>
+#endif
 
 #include "fwupd-client.h"
 #include "fwupd-common.h"
@@ -27,8 +29,13 @@ fu_test_compare_lines (const gchar *txt1, const gchar *txt2, GError **error)
 		return TRUE;
 
 	/* matches a pattern */
+#ifdef HAVE_FNMATCH_H
 	if (fnmatch (txt2, txt1, FNM_NOESCAPE) == 0)
 		return TRUE;
+#else
+	if (g_strcmp0 (txt1, txt2) == 0)
+		return TRUE;
+#endif
 
 	/* save temp files and diff them */
 	if (!g_file_set_contents ("/tmp/a", txt1, -1, error))
