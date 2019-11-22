@@ -568,6 +568,8 @@ fu_util_download_if_required (FuUtilPrivate *priv, const gchar *perhapsfn, GErro
 	g_autoptr(SoupURI) uri = NULL;
 
 	/* a local file */
+	if (g_file_test (perhapsfn, G_FILE_TEST_EXISTS))
+		return g_strdup (perhapsfn);
 	uri = soup_uri_new (perhapsfn);
 	if (uri == NULL)
 		return g_strdup (perhapsfn);

@@ -152,6 +152,15 @@ fwupd_get_os_release (GError **error)
 	g_autofree gchar *buf = NULL;
 	g_auto(GStrv) lines = NULL;
 
+/* TODO: Read the Windows version */
+#ifdef _WIN32
+	hash = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+	g_hash_table_insert (hash,
+			     g_strdup("OS"),
+			     g_strdup("Windows"));
+	return hash;
+#endif
+
 	/* find the correct file */
 	for (guint i = 0; paths[i] != NULL; i++) {
 		g_debug ("looking for os-release at %s", paths[i]);
