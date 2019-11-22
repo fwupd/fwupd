@@ -8,7 +8,9 @@
 
 #include <glib-object.h>
 #include <gio/gio.h>
+#ifdef HAVE_GIO_UNIX
 #include <gio/gunixfdlist.h>
+#endif
 
 #include <fcntl.h>
 #include <string.h>
@@ -953,6 +955,7 @@ fwupd_client_get_results (FwupdClient *client, const gchar *device_id,
 	return fwupd_device_from_variant (helper->val);
 }
 
+#ifdef HAVE_GIO_UNIX
 static void
 fwupd_client_send_message_cb (GObject *source_object, GAsyncResult *res, gpointer user_data)
 {
@@ -971,6 +974,7 @@ fwupd_client_send_message_cb (GObject *source_object, GAsyncResult *res, gpointe
 		fwupd_client_fixup_dbus_error (helper->error);
 	g_main_loop_quit (helper->loop);
 }
+#endif
 
 /**
  * fwupd_client_install:
@@ -995,6 +999,7 @@ fwupd_client_install (FwupdClient *client,
 		      GCancellable *cancellable,
 		      GError **error)
 {
+#ifdef HAVE_GIO_UNIX
 	FwupdClientPrivate *priv = GET_PRIVATE (client);
 	GVariant *body;
 	GVariantBuilder builder;
@@ -1084,6 +1089,13 @@ fwupd_client_install (FwupdClient *client,
 		return FALSE;
 	}
 	return TRUE;
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "Not supported as <glib-unix.h> is unavailable");
+	return FALSE;
+#endif
 }
 
 /**
@@ -1103,6 +1115,7 @@ GPtrArray *
 fwupd_client_get_details (FwupdClient *client, const gchar *filename,
 			  GCancellable *cancellable, GError **error)
 {
+#ifdef HAVE_GIO_UNIX
 	FwupdClientPrivate *priv = GET_PRIVATE (client);
 	GVariant *body;
 	gint fd;
@@ -1166,6 +1179,13 @@ fwupd_client_get_details (FwupdClient *client, const gchar *filename,
 
 	/* return results */
 	return fwupd_device_array_from_variant (helper->val);
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "Not supported as <glib-unix.h> is unavailable");
+	return NULL;
+#endif
 }
 
 /**
@@ -1323,6 +1343,7 @@ fwupd_client_update_metadata (FwupdClient *client,
 			      GCancellable *cancellable,
 			      GError **error)
 {
+#ifdef HAVE_GIO_UNIX
 	FwupdClientPrivate *priv = GET_PRIVATE (client);
 	GVariant *body;
 	gint fd;
@@ -1396,6 +1417,13 @@ fwupd_client_update_metadata (FwupdClient *client,
 		return FALSE;
 	}
 	return TRUE;
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "Not supported as <glib-unix.h> is unavailable");
+	return FALSE;
+#endif
 }
 
 /**

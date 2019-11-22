@@ -9,7 +9,9 @@
 #include "config.h"
 
 #include <gio/gio.h>
+#ifdef HAVE_GIO_UNIX
 #include <gio/gunixinputstream.h>
+#endif
 #include <glib-object.h>
 #ifdef HAVE_GUDEV
 #include <gudev/gudev.h>
@@ -45,7 +47,9 @@
 #include "fu-plugin-private.h"
 #include "fu-quirks.h"
 #include "fu-smbios.h"
+#ifdef HAVE_GUDEV
 #include "fu-udev-device-private.h"
+#endif
 #include "fu-usb-device-private.h"
 
 #include "fu-dfu-firmware.h"
@@ -1616,6 +1620,7 @@ fu_engine_is_running_offline (FuEngine *self)
 static gboolean
 fu_engine_offline_setup (GError **error)
 {
+#ifdef HAVE_GIO_UNIX
 	gint rc;
 	g_autofree gchar *filename = NULL;
 	g_autofree gchar *symlink_target = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR_PKG);
@@ -1642,6 +1647,14 @@ fu_engine_offline_setup (GError **error)
 		return FALSE;
 	}
 	return TRUE;
+#else
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_SUPPORTED,
+		     "Not supported as <gio-unix.h> not available");
+	return FALSE;
+#endif
+
 }
 
 static gboolean
@@ -2763,6 +2776,7 @@ fu_engine_config_changed_cb (FuConfig *config, FuEngine *self)
 			   error_local->message);
 }
 
+#ifdef HAVE_GIO_UNIX
 static FuKeyringResult *
 fu_engine_get_existing_keyring_result (FuEngine *self,
 				       FuKeyring *kr,
@@ -2780,6 +2794,7 @@ fu_engine_get_existing_keyring_result (FuEngine *self,
 	return fu_keyring_verify_data (kr, blob, blob_sig,
 				       FU_KEYRING_VERIFY_FLAG_NONE, error);
 }
+#endif
 
 /**
  * fu_engine_update_metadata:
@@ -2799,6 +2814,7 @@ gboolean
 fu_engine_update_metadata (FuEngine *self, const gchar *remote_id,
 			   gint fd, gint fd_sig, GError **error)
 {
+#ifdef HAVE_GIO_UNIX
 	FwupdKeyringKind keyring_kind;
 	FwupdRemote *remote;
 	g_autoptr(GBytes) bytes_raw = NULL;
@@ -2913,6 +2929,13 @@ fu_engine_update_metadata (FuEngine *self, const gchar *remote_id,
 			return FALSE;
 	}
 	return fu_engine_load_metadata_store (self, FU_ENGINE_LOAD_FLAG_NONE, error);
+#else
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_SUPPORTED,
+		     "Not supported as <glib-unix.h> is unavailable");
+	return FALSE;
+#endif
 }
 
 /**

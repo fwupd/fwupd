@@ -10,7 +10,9 @@
 
 #include <fwupd.h>
 #include <glib/gi18n.h>
+#ifdef HAVE_GIO_UNIX
 #include <glib-unix.h>
+#endif
 #include <locale.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -117,6 +119,7 @@ fu_util_ignore_cb (const gchar *log_domain, GLogLevelFlags log_level,
 {
 }
 
+#ifdef HAVE_GIO_UNIX
 static gboolean
 fu_util_sigint_cb (gpointer user_data)
 {
@@ -125,6 +128,7 @@ fu_util_sigint_cb (gpointer user_data)
 	g_cancellable_cancel (priv->cancellable);
 	return FALSE;
 }
+#endif
 
 static void
 fu_util_private_free (FuUtilPrivate *priv)
@@ -183,9 +187,11 @@ main (int argc, char *argv[])
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();
+#ifdef HAVE_GIO_UNIX
 	g_unix_signal_add_full (G_PRIORITY_DEFAULT,
 				SIGINT, fu_util_sigint_cb,
 				priv, NULL);
+#endif
 
 	/* get a list of the commands */
 	priv->context = g_option_context_new (NULL);

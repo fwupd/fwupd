@@ -8,7 +8,9 @@
 
 #include <config.h>
 
+#ifdef HAVE_GIO_UNIX
 #include <gio/gunixinputstream.h>
+#endif
 #include <glib/gstdio.h>
 
 #ifdef HAVE_FNMATCH_H
@@ -231,6 +233,7 @@ fu_common_get_contents_bytes (const gchar *filename, GError **error)
 GBytes *
 fu_common_get_contents_fd (gint fd, gsize count, GError **error)
 {
+#ifdef HAVE_GIO_UNIX
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GInputStream) stream = NULL;
@@ -258,6 +261,13 @@ fu_common_get_contents_fd (gint fd, gsize count, GError **error)
 		return NULL;
 	}
 	return g_steal_pointer (&blob);
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "Not supported as <glib-unix.h> is unavailable");
+	return NULL;
+#endif
 }
 
 static gboolean
