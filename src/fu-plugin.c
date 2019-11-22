@@ -13,7 +13,6 @@
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
-#include <gio/gunixinputstream.h>
 #ifdef HAVE_VALGRIND
 #include <valgrind.h>
 #endif /* HAVE_VALGRIND */
