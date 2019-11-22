@@ -7,7 +7,13 @@
 #pragma once
 
 #include <glib-object.h>
+
+#ifdef HAVE_GUDEV
 #include <gudev/gudev.h>
+#else
+#define G_UDEV_TYPE_DEVICE	G_TYPE_OBJECT
+#define GUdevDevice		GObject
+#endif
 
 #include "fu-plugin.h"
 

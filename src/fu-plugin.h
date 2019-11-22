@@ -8,7 +8,6 @@
 
 #include <gio/gio.h>
 #include <gusb.h>
-#include <gudev/gudev.h>
 
 #include "fu-common.h"
 #include "fu-common-guid.h"
@@ -18,7 +17,9 @@
 #include "fu-quirks.h"
 #include "fu-hwids.h"
 #include "fu-usb-device.h"
+#ifdef HAVE_GUDEV
 #include "fu-udev-device.h"
+#endif
 #include "fwupd-common.h"
 
 #define FU_TYPE_PLUGIN (fu_plugin_get_type ())

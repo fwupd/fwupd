@@ -16,7 +16,6 @@
 #include <gio/gunixfdlist.h>
 #include <glib/gi18n.h>
 #include <glib-unix.h>
-#include <gudev/gudev.h>
 #include <json-glib/json-glib.h>
 #include <locale.h>
 #include <stdlib.h>
