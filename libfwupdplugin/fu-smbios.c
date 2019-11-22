@@ -12,7 +12,7 @@
 #include <string.h>
 
 #include "fu-common.h"
-#include "fu-smbios.h"
+#include "fu-smbios-private.h"
 #include "fwupd-error.h"
 
 struct _FuSmbios {

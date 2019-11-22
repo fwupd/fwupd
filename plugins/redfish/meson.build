@@ -8,14 +8,15 @@ shared_module('fu_plugin_redfish',
     'fu-redfish-common.c',
   ],
   include_directories : [
-    include_directories('../..'),
-    include_directories('../../src'),
-    include_directories('../../libfwupd'),
+    root_incdir,
+    fwupd_incdir,
+    fwupdplugin_incdir,
   ],
   install : true,
   install_dir: plugin_dir,
   link_with : [
-    libfwupdprivate,
+    fwupd,
+    fwupdplugin,
   ],
   c_args : cargs,
   dependencies : [
@@ -39,9 +40,9 @@ if get_option('tests')
       'fu-redfish-common.c',
     ],
     include_directories : [
-      include_directories('../..'),
-      include_directories('../../src'),
-      include_directories('../../libfwupd'),
+      root_incdir,
+      fwupd_incdir,
+      fwupdplugin_incdir,
     ],
     dependencies : [
       plugin_deps,
@@ -49,7 +50,8 @@ if get_option('tests')
       libjsonglib,
     ],
     link_with : [
-      libfwupdprivate,
+      fwupd,
+      fwupdplugin,
     ],
     c_args : cargs
   )

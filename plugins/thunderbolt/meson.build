@@ -7,14 +7,15 @@ fu_plugin_thunderbolt = shared_module('fu_plugin_thunderbolt',
     'fu-thunderbolt-image.c',
   ],
   include_directories : [
-    include_directories('../..'),
-    include_directories('../../src'),
-    include_directories('../../libfwupd'),
+    root_incdir,
+    fwupd_incdir,
+    fwupdplugin_incdir,
   ],
   install : true,
   install_dir: plugin_dir,
   link_with : [
-    libfwupdprivate,
+    fwupd,
+    fwupdplugin,
   ],
   c_args : cargs,
   dependencies : [
@@ -31,14 +32,15 @@ executable('tbtfwucli',
     'fu-thunderbolt-tool.c',
   ],
   include_directories : [
-    include_directories('../..'),
-    include_directories('../../src'),
-    include_directories('../../libfwupd'),
+    root_incdir,
+    fwupd_incdir,
+    fwupdplugin_incdir,
   ],
   c_args : cargs,
   link_with : [
     fu_plugin_thunderbolt,
-    libfwupdprivate,
+    fwupd,
+    fwupdplugin,
   ],
   dependencies : [
     plugin_deps,
@@ -60,16 +62,17 @@ if get_option('tests') and umockdev.found() and gio.version().version_compare('>
       'fu-thunderbolt-image.c',
     ],
     include_directories : [
-      include_directories('../..'),
-      include_directories('../../src'),
-      include_directories('../../libfwupd'),
+      root_incdir,
+      fwupd_incdir,
+      fwupdplugin_incdir,
     ],
     dependencies : [
       plugin_deps,
       umockdev,
     ],
     link_with : [
-      libfwupdprivate,
+      fwupd,
+      fwupdplugin,
     ],
     c_args : cargs
   )

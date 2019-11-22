@@ -19,14 +19,6 @@ FuSmbios	*fu_smbios_new			(void);
 #define FU_SMBIOS_STRUCTURE_TYPE_BASEBOARD	0x02
 #define FU_SMBIOS_STRUCTURE_TYPE_CHASSIS	0x03
 
-gboolean	 fu_smbios_setup		(FuSmbios	*self,
-						 GError		**error);
-gboolean	 fu_smbios_setup_from_path	(FuSmbios	*self,
-						 const gchar	*path,
-						 GError		**error);
-gboolean	 fu_smbios_setup_from_file	(FuSmbios	*self,
-						 const gchar	*filename,
-						 GError		**error);
 gchar		*fu_smbios_to_string		(FuSmbios	*self);
 
 const gchar	*fu_smbios_get_string		(FuSmbios	*self,

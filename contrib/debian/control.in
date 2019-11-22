@@ -12,6 +12,21 @@ Homepage: https://github.com/fwupd/fwupd
 Vcs-Git: https://salsa.debian.org/efi-team/fwupd.git
 Vcs-Browser: https://salsa.debian.org/efi-team/fwupd
 
+Package: libfwupdplugin1
+Section: libs
+Architecture: linux-any
+Depends: ${misc:Depends},
+         ${shlibs:Depends}
+Multi-Arch: same
+Description: Firmware update daemon plugin library
+ fwupd is a daemon to allow session software to update device firmware.
+ You can either use a GUI software manager like GNOME Software to view and
+ apply updates, the command-line tool or the system D-Bus interface directly.
+ Firmware updates are supported for a variety of technologies.
+ See <https://github.com/fwupd/fwupd> for details
+ .
+ This package provides the library for the interface between daemon and plugins.
+
 Package: libfwupd2
 Section: libs
 Architecture: linux-any

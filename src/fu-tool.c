@@ -25,7 +25,7 @@
 #include "fu-history.h"
 #include "fu-plugin-private.h"
 #include "fu-progressbar.h"
-#include "fu-smbios.h"
+#include "fu-smbios-private.h"
 #include "fu-util-common.h"
 #include "fu-debug.h"
 #include "fwupd-common-private.h"

@@ -1,0 +1,532 @@
+# generated automatically, do not edit!
+
+LIBFWUPDPLUGIN_0.1.0 {
+  global:
+    fu_device_add_flag;
+    fu_device_get_metadata;
+    fu_device_get_type;
+    fu_device_new;
+    fu_device_set_metadata;
+  local: *;
+};
+
+LIBFWUPDPLUGIN_0.3.5 {
+  global:
+    fu_common_vercmp;
+  local: *;
+} LIBFWUPDPLUGIN_0.1.0;
+
+LIBFWUPDPLUGIN_0.6.1 {
+  global:
+    fu_device_get_equivalent_id;
+    fu_device_set_equivalent_id;
+  local: *;
+} LIBFWUPDPLUGIN_0.3.5;
+
+LIBFWUPDPLUGIN_0.7.1 {
+  global:
+    fu_device_set_id;
+    fu_device_set_name;
+  local: *;
+} LIBFWUPDPLUGIN_0.6.1;
+
+LIBFWUPDPLUGIN_0.7.2 {
+  global:
+    fu_device_add_guid;
+    fu_device_get_alternate;
+    fu_device_set_alternate;
+  local: *;
+} LIBFWUPDPLUGIN_0.7.1;
+
+LIBFWUPDPLUGIN_0.8.0 {
+  global:
+    fu_plugin_alloc_data;
+    fu_plugin_cache_add;
+    fu_plugin_cache_lookup;
+    fu_plugin_cache_remove;
+    fu_plugin_device_add;
+    fu_plugin_device_remove;
+    fu_plugin_get_data;
+    fu_plugin_get_enabled;
+    fu_plugin_get_name;
+    fu_plugin_get_type;
+    fu_plugin_get_usb_context;
+    fu_plugin_new;
+    fu_plugin_open;
+    fu_plugin_request_recoldplug;
+    fu_plugin_runner_clear_results;
+    fu_plugin_runner_coldplug;
+    fu_plugin_runner_coldplug_cleanup;
+    fu_plugin_runner_coldplug_prepare;
+    fu_plugin_runner_get_results;
+    fu_plugin_runner_startup;
+    fu_plugin_runner_unlock;
+    fu_plugin_runner_update;
+    fu_plugin_runner_verify;
+    fu_plugin_set_coldplug_delay;
+    fu_plugin_set_enabled;
+    fu_plugin_set_name;
+    fu_plugin_set_usb_context;
+  local: *;
+} LIBFWUPDPLUGIN_0.7.2;
+
+LIBFWUPDPLUGIN_0.9.1 {
+  global:
+    fu_plugin_check_hwid;
+    fu_test_get_filename;
+    fu_test_loop_quit;
+    fu_test_loop_run_with_timeout;
+  local: *;
+} LIBFWUPDPLUGIN_0.8.0;
+
+LIBFWUPDPLUGIN_0.9.3 {
+  global:
+    fu_hwids_get_guid;
+    fu_hwids_get_guids;
+    fu_hwids_get_replace_keys;
+    fu_hwids_get_replace_values;
+    fu_hwids_get_type;
+    fu_hwids_get_value;
+    fu_hwids_has_guid;
+    fu_hwids_new;
+    fu_hwids_setup;
+  local: *;
+} LIBFWUPDPLUGIN_0.9.1;
+
+LIBFWUPDPLUGIN_0.9.5 {
+  global:
+    fu_common_get_contents_fd;
+    fu_common_set_contents_bytes;
+  local: *;
+} LIBFWUPDPLUGIN_0.9.3;
+
+LIBFWUPDPLUGIN_0.9.7 {
+  global:
+    fu_common_extract_archive;
+    fu_common_firmware_builder;
+    fu_common_get_contents_bytes;
+    fu_common_mkdir_parent;
+    fu_common_rmtree;
+    fu_common_spawn_sync;
+    fu_device_get_metadata_boolean;
+    fu_device_get_metadata_integer;
+    fu_device_set_metadata_boolean;
+    fu_device_set_metadata_integer;
+    fu_plugin_device_register;
+    fu_plugin_get_dmi_value;
+    fu_plugin_runner_device_register;
+    fu_plugin_set_hwids;
+    fu_progressbar_get_type;
+    fu_progressbar_new;
+    fu_progressbar_set_interactive;
+    fu_progressbar_set_length_percentage;
+    fu_progressbar_set_length_status;
+    fu_progressbar_set_title;
+    fu_progressbar_update;
+  local: *;
+} LIBFWUPDPLUGIN_0.9.5;
+
+LIBFWUPDPLUGIN_0.9.8 {
+  global:
+    fu_device_to_string;
+    fu_plugin_get_smbios_data;
+    fu_plugin_get_smbios_string;
+  local: *;
+} LIBFWUPDPLUGIN_0.9.7;
+
+LIBFWUPDPLUGIN_1.0.0 {
+  global:
+    fu_device_locker_get_type;
+    fu_device_locker_new;
+    fu_device_locker_new_full;
+    fu_plugin_add_rule;
+    fu_plugin_get_order;
+    fu_plugin_get_rules;
+    fu_plugin_has_rule;
+    fu_plugin_set_order;
+    fu_plugin_set_priority;
+    fu_plugin_set_smbios;
+    fu_smbios_get_data;
+    fu_smbios_get_string;
+    fu_smbios_get_type;
+    fu_smbios_new;
+    fu_smbios_setup;
+    fu_smbios_setup_from_file;
+    fu_smbios_setup_from_path;
+    fu_smbios_to_string;
+  local: *;
+} LIBFWUPDPLUGIN_0.9.8;
+
+LIBFWUPDPLUGIN_1.0.1 {
+  global:
+    fu_chunk_array_to_string;
+    fu_chunk_array_to_string;
+    fu_plugin_get_quirks;
+    fu_plugin_lookup_quirk_by_id;
+    fu_plugin_set_quirks;
+    fu_quirks_get_type;
+    fu_quirks_load;
+    fu_quirks_lookup_by_id;
+    fu_quirks_new;
+  local: *;
+} LIBFWUPDPLUGIN_1.0.0;
+
+LIBFWUPDPLUGIN_1.0.2 {
+  global:
+    fu_device_get_remove_delay;
+    fu_device_set_remove_delay;
+    fu_plugin_runner_udev_device_added;
+    fu_plugin_runner_udev_device_changed;
+    fu_plugin_runner_usb_device_added;
+    fu_usb_device_get_dev;
+    fu_usb_device_get_type;
+    fu_usb_device_new;
+    fu_usb_device_set_dev;
+  local: *;
+} LIBFWUPDPLUGIN_1.0.1;
+
+LIBFWUPDPLUGIN_1.0.3 {
+  global:
+    fu_common_read_uint16;
+    fu_common_read_uint32;
+    fu_common_write_uint16;
+    fu_common_write_uint32;
+    fu_device_get_progress;
+    fu_device_get_quirks;
+    fu_device_get_status;
+    fu_device_set_progress;
+    fu_device_set_progress_full;
+    fu_device_set_quirks;
+    fu_device_set_status;
+    fu_usb_device_is_open;
+  local: *;
+} LIBFWUPDPLUGIN_1.0.2;
+
+LIBFWUPDPLUGIN_1.0.4 {
+  global:
+    fu_plugin_add_report_metadata;
+    fu_plugin_get_report_metadata;
+    fu_plugin_runner_recoldplug;
+    fu_test_compare_lines;
+  local: *;
+} LIBFWUPDPLUGIN_1.0.3;
+
+LIBFWUPDPLUGIN_1.0.5 {
+  global:
+    fu_device_get_release_default;
+  local: *;
+} LIBFWUPDPLUGIN_1.0.4;
+
+LIBFWUPDPLUGIN_1.0.6 {
+  global:
+    fu_common_get_files_recursive;
+    fu_plugin_get_config_value;
+  local: *;
+} LIBFWUPDPLUGIN_1.0.5;
+
+LIBFWUPDPLUGIN_1.0.7 {
+  global:
+    fu_plugin_add_compile_version;
+    fu_plugin_add_runtime_version;
+    fu_plugin_set_compile_versions;
+    fu_plugin_set_runtime_versions;
+  local: *;
+} LIBFWUPDPLUGIN_1.0.6;
+
+LIBFWUPDPLUGIN_1.0.8 {
+  global:
+    fu_common_error_array_get_best;
+    fu_common_get_path;
+    fu_device_add_child;
+    fu_device_add_parent_guid;
+    fu_device_attach;
+    fu_device_detach;
+    fu_device_get_children;
+    fu_device_get_guids_as_str;
+    fu_device_get_order;
+    fu_device_get_parent;
+    fu_device_get_parent_guids;
+    fu_device_has_parent_guid;
+    fu_device_read_firmware;
+    fu_device_set_order;
+    fu_device_set_parent;
+    fu_device_write_firmware;
+    fu_plugin_guess_name_from_fn;
+    fu_plugin_name_compare;
+    fu_plugin_order_compare;
+  local: *;
+} LIBFWUPDPLUGIN_1.0.7;
+
+LIBFWUPDPLUGIN_1.0.9 {
+  global:
+    fu_plugin_runner_composite_cleanup;
+    fu_plugin_runner_composite_prepare;
+  local: *;
+} LIBFWUPDPLUGIN_1.0.8;
+
+LIBFWUPDPLUGIN_1.1.0 {
+  global:
+    fu_device_get_alternate_id;
+    fu_device_get_custom_flags;
+    fu_device_has_custom_flag;
+    fu_device_incorporate;
+    fu_device_set_alternate_id;
+    fu_device_set_custom_flags;
+  local: *;
+} LIBFWUPDPLUGIN_1.0.9;
+
+LIBFWUPDPLUGIN_1.1.1 {
+  global:
+    fu_device_get_priority;
+    fu_device_set_priority;
+    fu_plugin_get_hwids;
+    fu_plugin_get_priority;
+  local: *;
+} LIBFWUPDPLUGIN_1.1.0;
+
+LIBFWUPDPLUGIN_1.1.2 {
+  global:
+    fu_chunk_array_new;
+    fu_chunk_array_new_from_bytes;
+    fu_chunk_new;
+    fu_common_find_program_in_path;
+    fu_common_strstrip;
+    fu_common_strtoull;
+    fu_device_add_counterpart_guid;
+    fu_device_close;
+    fu_device_ensure_id;
+    fu_device_get_logical_id;
+    fu_device_get_physical_id;
+    fu_device_open;
+    fu_device_poll;
+    fu_device_prepare_firmware;
+    fu_device_probe;
+    fu_device_probe_invalidate;
+    fu_device_set_firmware_size_max;
+    fu_device_set_firmware_size_min;
+    fu_device_set_logical_id;
+    fu_device_set_physical_id;
+    fu_device_set_poll_interval;
+    fu_device_setup;
+    fu_plugin_add_udev_subsystem;
+    fu_plugin_lookup_quirk_by_id_as_uint64;
+    fu_plugin_runner_device_removed;
+    fu_plugin_runner_update_attach;
+    fu_plugin_runner_update_cleanup;
+    fu_plugin_runner_update_detach;
+    fu_plugin_runner_update_prepare;
+    fu_plugin_runner_update_reload;
+    fu_plugin_set_udev_subsystems;
+    fu_udev_device_emit_changed;
+    fu_udev_device_get_dev;
+    fu_udev_device_get_model;
+    fu_udev_device_get_revision;
+    fu_udev_device_get_subsystem;
+    fu_udev_device_get_sysfs_path;
+    fu_udev_device_get_type;
+    fu_udev_device_get_vendor;
+    fu_udev_device_new;
+    fu_udev_device_set_physical_id;
+    fu_usb_device_get_pid;
+    fu_usb_device_get_platform_id;
+    fu_usb_device_get_vid;
+  local: *;
+} LIBFWUPDPLUGIN_1.1.1;
+
+LIBFWUPDPLUGIN_1.2.0 {
+  global:
+    fu_common_cab_build_silo;
+    fu_common_string_replace;
+    fu_common_version_from_uint16;
+    fu_common_version_from_uint32;
+    fu_common_version_guess_format;
+    fu_common_version_parse;
+  local: *;
+} LIBFWUPDPLUGIN_1.1.2;
+
+LIBFWUPDPLUGIN_1.2.2 {
+  global:
+    fu_archive_get_type;
+    fu_archive_lookup_by_fn;
+    fu_archive_new;
+    fu_common_dump_bytes;
+    fu_common_dump_raw;
+    fu_device_has_guid;
+    fu_io_channel_get_type;
+    fu_io_channel_new_file;
+    fu_io_channel_read_bytes;
+    fu_io_channel_read_raw;
+    fu_io_channel_shutdown;
+    fu_io_channel_unix_get_fd;
+    fu_io_channel_unix_new;
+    fu_io_channel_write_bytes;
+    fu_io_channel_write_raw;
+  local: *;
+} LIBFWUPDPLUGIN_1.2.0;
+
+LIBFWUPDPLUGIN_1.2.4 {
+  global:
+    fu_common_bytes_align;
+    fu_common_dump_full;
+    fu_common_string_append_kb;
+    fu_common_string_append_ku;
+    fu_common_string_append_kv;
+    fu_common_string_append_kx;
+    fu_device_incorporate_from_component;
+    fu_plugin_get_build_hash;
+    fu_plugin_set_build_hash;
+    fu_udev_device_get_slot_depth;
+  local: *;
+} LIBFWUPDPLUGIN_1.2.2;
+
+LIBFWUPDPLUGIN_1.2.5 {
+  global:
+    fu_common_guid_is_plausible;
+    fu_device_add_instance_id;
+    fu_device_convert_instance_ids;
+  local: *;
+} LIBFWUPDPLUGIN_1.2.4;
+
+LIBFWUPDPLUGIN_1.2.6 {
+  global:
+    fu_common_bytes_compare;
+    fu_common_bytes_is_empty;
+    fu_common_realpath;
+    fu_device_activate;
+    fu_device_get_firmware_size_max;
+    fu_device_get_firmware_size_min;
+    fu_device_set_firmware_size;
+    fu_plugin_runner_activate;
+  local: *;
+} LIBFWUPDPLUGIN_1.2.5;
+
+LIBFWUPDPLUGIN_1.2.9 {
+  global:
+    fu_common_version_ensure_semver;
+    fu_common_version_verify_format;
+    fu_device_add_instance_id_full;
+    fu_device_set_version;
+  local: *;
+} LIBFWUPDPLUGIN_1.2.6;
+
+LIBFWUPDPLUGIN_1.3.1 {
+  global:
+    fu_byte_array_append_uint16;
+    fu_byte_array_append_uint32;
+    fu_byte_array_append_uint8;
+    fu_common_bytes_pad;
+    fu_common_strnsplit;
+    fu_device_rescan;
+    fu_firmware_add_image;
+    fu_firmware_get_image_by_id;
+    fu_firmware_get_image_by_id_bytes;
+    fu_firmware_get_image_by_idx;
+    fu_firmware_get_image_by_idx_bytes;
+    fu_firmware_get_image_default;
+    fu_firmware_get_image_default_bytes;
+    fu_firmware_get_images;
+    fu_firmware_get_type;
+    fu_firmware_image_get_addr;
+    fu_firmware_image_get_id;
+    fu_firmware_image_get_idx;
+    fu_firmware_image_get_type;
+    fu_firmware_image_new;
+    fu_firmware_image_set_addr;
+    fu_firmware_image_set_bytes;
+    fu_firmware_image_set_id;
+    fu_firmware_image_set_idx;
+    fu_firmware_image_to_string;
+    fu_firmware_image_write_chunk;
+    fu_firmware_new;
+    fu_firmware_new_from_bytes;
+    fu_firmware_parse;
+    fu_firmware_parse_full;
+    fu_firmware_strparse_uint16;
+    fu_firmware_strparse_uint24;
+    fu_firmware_strparse_uint32;
+    fu_firmware_strparse_uint4;
+    fu_firmware_strparse_uint8;
+    fu_firmware_to_string;
+    fu_firmware_write;
+    fu_ihex_firmware_get_type;
+    fu_ihex_firmware_new;
+    fu_memcpy_safe;
+    fu_plugin_has_custom_flag;
+    fu_udev_device_get_device_file;
+  local: *;
+} LIBFWUPDPLUGIN_1.2.9;
+
+LIBFWUPDPLUGIN_1.3.2 {
+  global:
+    fu_common_bytes_compare_raw;
+    fu_common_strwidth;
+    fu_firmware_tokenize;
+    fu_io_channel_read_byte_array;
+    fu_io_channel_write_byte_array;
+    fu_srec_firmware_get_records;
+    fu_srec_firmware_get_type;
+    fu_srec_firmware_new;
+    fu_srec_firmware_record_new;
+    fu_usb_device_find_udev_device;
+  local: *;
+} LIBFWUPDPLUGIN_1.3.1;
+
+LIBFWUPDPLUGIN_1.3.3 {
+  global:
+    fu_common_read_uint16_safe;
+    fu_common_read_uint32_safe;
+    fu_common_read_uint8_safe;
+    fu_common_version_parse_from_format;
+    fu_device_cleanup;
+    fu_device_get_possible_plugins;
+    fu_device_get_specialized_gtype;
+    fu_device_prepare;
+    fu_device_reload;
+    fu_device_remove_metadata;
+    fu_dfu_firmware_get_pid;
+    fu_dfu_firmware_get_release;
+    fu_dfu_firmware_get_type;
+    fu_dfu_firmware_get_version;
+    fu_dfu_firmware_get_vid;
+    fu_dfu_firmware_new;
+    fu_dfu_firmware_set_pid;
+    fu_dfu_firmware_set_release;
+    fu_dfu_firmware_set_version;
+    fu_dfu_firmware_set_vid;
+    fu_firmware_get_version;
+    fu_firmware_image_write;
+    fu_firmware_parse_file;
+    fu_firmware_set_version;
+    fu_firmware_write_file;
+    fu_plugin_add_firmware_gtype;
+    fu_plugin_get_hwid_replace_value;
+    fu_plugin_set_device_gtype;
+    fu_quirks_lookup_by_id_iter;
+    fu_udev_device_get_fd;
+    fu_udev_device_ioctl;
+    fu_udev_device_pread;
+    fu_udev_device_pwrite;
+    fu_udev_device_set_fd;
+    fu_udev_device_set_readonly;
+  local: *;
+} LIBFWUPDPLUGIN_1.3.2;
+
+LIBFWUPDPLUGIN_1.3.4 {
+  global:
+    fu_archive_iterate;
+    fu_firmware_image_get_version;
+    fu_firmware_image_set_version;
+    fu_ihex_firmware_get_records;
+    fu_usb_device_get_spec;
+  local: *;
+} LIBFWUPDPLUGIN_1.3.3;
+
+LIBFWUPDPLUGIN_1.3.5 {
+  global:
+    fu_common_fnmatch;
+    fu_device_get_protocol;
+    fu_device_incorporate_flag;
+    fu_device_set_protocol;
+    fu_plugin_is_open;
+  local: *;
+} LIBFWUPDPLUGIN_1.3.4;

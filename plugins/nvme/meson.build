@@ -14,9 +14,9 @@ shared_module('fu_plugin_nvme',
     'fu-nvme-device.c',
   ],
   include_directories : [
-    include_directories('../..'),
-    include_directories('../../src'),
-    include_directories('../../libfwupd'),
+    root_incdir,
+    fwupd_incdir,
+    fwupdplugin_incdir,
   ],
   install : true,
   install_dir: plugin_dir,
@@ -25,7 +25,8 @@ shared_module('fu_plugin_nvme',
     '-DLOCALSTATEDIR="' + localstatedir + '"',
   ],
   link_with : [
-    libfwupdprivate,
+    fwupd,
+    fwupdplugin,
   ],
   dependencies : [
     plugin_deps,
@@ -44,16 +45,16 @@ if get_option('tests')
       'fu-nvme-device.c',
     ],
     include_directories : [
-      include_directories('..'),
-      include_directories('../..'),
-      include_directories('../../libfwupd'),
-      include_directories('../../src'),
+      root_incdir,
+      fwupd_incdir,
+      fwupdplugin_incdir,
     ],
     dependencies : [
       plugin_deps,
     ],
     link_with : [
-      libfwupdprivate,
+      fwupd,
+      fwupdplugin,
     ],
     c_args : cargs
   )
