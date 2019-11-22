@@ -32,6 +32,34 @@
     <binary>fwupdmgr</binary>
   </provides>
   <releases>
+    <release version="1.3.4" date="2019-11-22">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add a new property Interactive to the daemon</li>
+          <li>Add a new script for installing a Dell BIOS from an EXE file</li>
+          <li>Add support for Foxconn T77W968 and DW5821e eSIM</li>
+          <li>Add support for matching firmware requirements on device parents</li>
+          <li>Add support for writing VIA PD and I2C devices</li>
+          <li>Add versions formats for the Microsoft Surface devices</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Allows confined snaps to activate fwupd via D-Bus</li>
+          <li>Correct Wacom panel HWID support</li>
+          <li>Don't assume all udev devices have device_file</li>
+          <li>Dynamically determine release version</li>
+          <li>Fall back to `ID_LIKE` when the path for `ID` doesn't exist</li>
+          <li>Fix a fastboot regression when updating modem firmware</li>
+          <li>Fix regression when coldplugging superio devices</li>
+          <li>Fix the linking of the UEFI update binary</li>
+          <li>Fix the vendor id of hidraw devices</li>
+          <li>Make loading USB device strings non-fatal</li>
+          <li>Reject invalid Synaptics MST chip IDs</li>
+          <li>Skip cleanup after device is done updating if required</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.3.3" date="2019-11-01">
       <description>
         <p>This release adds the following features:</p>

@@ -82,6 +82,21 @@ msgstr "Оновлення контролера Thunderbolt %s"
 msgid "%s Update"
 msgstr "Оновлення для %s"
 
+#. TRANSLATORS: warn the user before updating, %1 is a device name
+#, c-format
+msgid "%s and all connected devices may not be usable while updating."
+msgstr "%s і усі з'єднані пристрою можуть бути недоступними протягом оновлення."
+
+#. TRANSLATORS: warn the user before updating, %1 is a device name
+#, c-format
+msgid "%s must remain connected for the duration of the update to avoid damage."
+msgstr "Для уникнення пошкоджень %s має лишатися з'єднаним із комп'ютером протягом оновлення."
+
+#. TRANSLATORS: warn the user before updating, %1 is a machine name
+#, c-format
+msgid "%s must remain plugged into a power source for the duration of the update to avoid damage."
+msgstr "Для уникнення пошкоджень %s має лишатися з'єднаним із джерелом живлення протягом оновлення."
+
 #. TRANSLATORS: duration in days!
 #, c-format
 msgid "%u day"
@@ -273,6 +288,10 @@ msgstr "Скасовано"
 msgid "Changed"
 msgstr "Змінено"
 
+#. TRANSLATORS: command description
+msgid "Checks cryptographic hash matches firmware"
+msgstr "Перевірити відповідність криптографічних хешів мікропрограми"
+
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Контрольна сума"
@@ -280,6 +299,10 @@ msgstr "Контрольна сума"
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a device:"
 msgstr "Виберіть пристрій:"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose a firmware type:"
+msgstr "Виберіть тип мікропрограми:"
 
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a release:"
@@ -297,9 +320,17 @@ msgstr "Вилучає результати останнього оновлен�
 msgid "Command not found"
 msgstr "Такої команди не знайдено"
 
+#. TRANSLATORS: prompt to apply the update
+msgid "Continue with update?"
+msgstr "Продовжити оновлення?"
+
 #. TRANSLATORS: command description
 msgid "Convert firmware to DFU format"
 msgstr "Перетворити мікропрограму у формат DFU"
+
+#. TRANSLATORS: Device supports some form of checksum verification
+msgid "Cryptographic hash verification is available"
+msgstr "Доступна перевірка криптографічної хеш-суми"
 
 #. TRANSLATORS: version number of current firmware
 msgid "Current version"
@@ -329,6 +360,10 @@ msgstr "Від'єднатися до режиму завантажувача"
 msgid "Details"
 msgstr "Подробиці"
 
+#. TRANSLATORS: description of device ability
+msgid "Device Flags"
+msgstr "Прапорці пристрою"
+
 #. TRANSLATORS: ID for hardware, typically a SHA1 sum
 msgid "Device ID"
 msgstr "Ід. пристрою"
@@ -337,13 +372,37 @@ msgstr "Ід. пристрою"
 msgid "Device added:"
 msgstr "Додано пристрій:"
 
+#. TRANSLATORS: Device supports a safety mechanism for flashing
+msgid "Device can recover flash failures"
+msgstr "Пристрій може відновлюватися при невдалих оновленнях"
+
 #. TRANSLATORS: this is when a device has been updated
 msgid "Device changed:"
 msgstr "Змінено пристрій:"
 
+#. TRANSLATORS: Is locked and can be unlocked
+msgid "Device is locked"
+msgstr "Пристрій заблоковано"
+
+#. TRANSLATORS: Device remains usable during update
+msgid "Device is usable for the duration of the update"
+msgstr "Пристроєм можна користуватися протягом оновлення"
+
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device removed:"
 msgstr "Вилучено пристрій:"
+
+#. TRANSLATORS: Device supports a safety mechanism for flashing
+msgid "Device stages updates"
+msgstr "Пристрій із покроковим оновленням"
+
+#. TRANSLATORS: Device update needs to be separately activated
+msgid "Device update needs activation"
+msgstr "Оновлення пристрою потребує активації"
+
+#. TRANSLATORS: Device will not return after update completes
+msgid "Device will not re-appear after update completes"
+msgstr "Пристрій не з'явиться у списку пристроїв після завершення оновлення"
 
 #. TRANSLATORS: a list of successful updates
 msgid "Devices that have been updated successfully:"
@@ -383,6 +442,10 @@ msgstr "Не включати префікс домену журналу"
 #. TRANSLATORS: turn on all debugging
 msgid "Do not include timestamp prefix"
 msgstr "Не включати префікс часової позначки"
+
+#. TRANSLATORS: command line option
+msgid "Do not perform device safety checks"
+msgstr "Не виконувати перевірок безпечності для пристрою"
 
 msgid "Do not upload report at this time, but prompt again for future updates"
 msgid_plural "Do not upload reports at this time, but prompt again for future updates"
@@ -638,6 +701,10 @@ msgstr "Отримує випуски для пристрою"
 msgid "Gets the results from the last update"
 msgstr "Отримує результати з останнього оновлення"
 
+#. TRANSLATORS: The hardware is waiting to be replugged
+msgid "Hardware is waiting to be replugged"
+msgstr "Обладнання очікує на повторне з'єднання"
+
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
 msgstr "Бездіяльність…"
@@ -645,6 +712,10 @@ msgstr "Бездіяльність…"
 #. TRANSLATORS: command line option
 msgid "Ignore SSL strict checks when downloading files"
 msgstr "Ігнорувати результати строгої перевірки SSL під час отримання файлів"
+
+#. TRANSLATORS: Ignore validation safety checks when flashing this device
+msgid "Ignore validation safety checks"
+msgstr "Ігнорувати перевірки безпечності"
 
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Install Duration"
@@ -667,6 +738,10 @@ msgstr "Встановити підписану мікропрограму пр�
 msgid "Install signed system firmware"
 msgstr "Встановити підписану мікропрограму системи"
 
+#. TRANSLATORS: Install composite firmware on the parent before the child
+msgid "Install to parent device first"
+msgstr "Встановити спочатку на батьківському пристрої"
+
 msgid "Install unsigned device firmware"
 msgstr "Встановити непідписану мікропрограму пристрою"
 
@@ -685,6 +760,14 @@ msgstr "Встановлюємо оновлення мікропрограми�
 #, c-format
 msgid "Installing on %s…"
 msgstr "Встановлюємо на %s…"
+
+#. TRANSLATORS: Device cannot be removed easily
+msgid "Internal device"
+msgstr "Внутрішній пристрій"
+
+#. TRANSLATORS: Is currently in bootloader mode
+msgid "Is in bootloader mode"
+msgstr "Перебуває у режимі завантажувача"
 
 #. TRANSLATORS: issue fixed with the release, e.g. CVE
 msgid "Issue"
@@ -718,6 +801,10 @@ msgstr "Служба надання мікропрограм для Linux від
 #. TRANSLATORS: command line option
 msgid "List supported firmware updates"
 msgstr "Показати список підтримуваних оновлень мікропрограми"
+
+#. TRANSLATORS: command description
+msgid "List the available firmware types"
+msgstr "Вивести список доступних типів мікропрограм"
 
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
@@ -770,12 +857,24 @@ msgstr "Зміна налаштувань фонової служби"
 msgid "Monitor the daemon for events"
 msgstr "Стежити за подіями у фоновій службі"
 
+#. TRANSLATORS: Requires a reboot to apply firmware or to reload hardware
+msgid "Needs a reboot after installation"
+msgstr "Потребує перезавантаження після встановлення"
+
+#. TRANSLATORS: Requires system shutdown to apply firmware
+msgid "Needs shutdown after installation"
+msgstr "Потребує вимикання після встановлення"
+
 #. TRANSLATORS: version number of new firmware
 msgid "New version"
 msgstr "Нова версія"
 
 msgid "No action specified!"
 msgstr "Не вказано дії!"
+
+#. TRANSLATORS: nothing found
+msgid "No firmware IDs found"
+msgstr "Не знайдено ідентифікаторів мікропрограм"
 
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
@@ -812,6 +911,10 @@ msgstr "Перевизначити типовий шлях до ESP"
 #. TRANSLATORS: command line option
 msgid "Override warnings and force the action"
 msgstr "Не зважати на попередження і примусово виконати дію"
+
+#. TRANSLATORS: command description
+msgid "Parse and show details about a firmware file"
+msgstr "Обробити і показати параметри файла мікропрограми"
 
 #. TRANSLATORS: remote filename base
 msgid "Password"
@@ -855,12 +958,21 @@ msgid "Query for firmware update support"
 msgstr "Опитати щодо підтримки оновлення мікропрограми"
 
 #. TRANSLATORS: command description
+msgid "Read a firmware blob from a device"
+msgstr "Прочитати бінарну мікропрограму з пристрою"
+
+#. TRANSLATORS: command description
 msgid "Read firmware from device into a file"
 msgstr "Прочитати мікропрограму з пристрою до файла"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from one partition into a file"
 msgstr "Прочитати мікропрограму з одного розділу до файла"
+
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Reading from %s…"
+msgstr "Читаємо з %s…"
 
 #. TRANSLATORS: reading from the flash chips
 msgid "Reading…"
@@ -902,6 +1014,18 @@ msgstr "Замінити дані у наявному файлі мікропр�
 msgid "Report URI"
 msgstr "Адреса звіту"
 
+#. TRANSLATORS: Has been reported to a metadata server
+msgid "Reported to remote server"
+msgstr "Повідомлено на віддаленому сервері"
+
+#. TRANSLATORS: Must be plugged in to an outlet
+msgid "Requires AC power"
+msgstr "Потребує сталого живлення"
+
+#. TRANSLATORS: Requires a bootloader mode to be manually enabled by the user
+msgid "Requires a bootloader"
+msgstr "Потребує завантажувача"
+
 #. TRANSLATORS: metadata is downloaded from the Internet
 msgid "Requires internet connection"
 msgstr "Потребує з'єднання із інтернетом"
@@ -941,6 +1065,10 @@ msgstr "Якщо можливо, запланувати встановлення
 #. TRANSLATORS: scheduing an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Плануємо…"
+
+#. TRANSLATORS: Device has been chosen by the daemon for the user
+msgid "Selected device"
+msgstr "Вибрано пристрій"
 
 #. TRANSLATORS: serial number of hardware
 msgid "Serial Number"
@@ -1076,9 +1204,17 @@ msgstr "Мікропрограму успішно встановлено"
 msgid "Successfully modified configuration value"
 msgstr "Успішно змінено значення у налаштуваннях"
 
+#. TRANSLATORS: success message for a per-remote setting change
+msgid "Successfully modified remote"
+msgstr "Успішно змінено віддалене сховище"
+
 #. TRANSLATORS: success message -- the user can do this by-hand too
 msgid "Successfully refreshed metadata manually"
 msgstr "Метадані успішно оновлено вручну"
+
+#. TRANSLATORS: success message when user refreshes device checksums
+msgid "Successfully updated device checksums"
+msgstr "Успішно оновлено контрольні суми пристрою"
 
 #. TRANSLATORS: success message -- where the user has uploaded
 #. * success and/or failure reports to the remote server
@@ -1090,9 +1226,17 @@ msgstr[1] "Успішно вивантажено %u звіти"
 msgstr[2] "Успішно вивантажено %u звітів"
 msgstr[3] "Успішно вивантажено %u звіт"
 
+#. TRANSLATORS: success message when user verified device checksums
+msgid "Successfully verified device checksums"
+msgstr "Успішно перевірено контрольні суми пристрою"
+
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Резюме"
+
+#. TRANSLATORS: Is found in current metadata
+msgid "Supported on remote server"
+msgstr "Підтримуваний на віддаленому сервері"
 
 msgid "Target"
 msgstr "Ціль"
@@ -1150,6 +1294,10 @@ msgstr "Зняти під час оновлення прапорець діаг�
 msgid "Unsupported daemon version %s, client version is %s"
 msgstr "Непідтримувана версія фонової служби %s, версія клієнта — %s"
 
+#. TRANSLATORS: Device is updatable in this or any other mode
+msgid "Updatable"
+msgstr "Придатний до оновлення"
+
 #. TRANSLATORS: error message from last update attempt
 msgid "Update Error"
 msgstr "Помилка оновлення"
@@ -1175,6 +1323,14 @@ msgstr "Нам відомо про помилку під час оновленн
 msgid "Update now?"
 msgstr "Оновити зараз?"
 
+#. TRANSLATORS: Update can only be done from offline mode
+msgid "Update requires a reboot"
+msgstr "Оновлення потребує перезавантаження"
+
+#. TRANSLATORS: command description
+msgid "Update the stored cryptographic hash with current ROM contents"
+msgstr "Оновити збережений криптографічний хеш на основі поточних даних ROM"
+
 msgid "Update the stored device verification information"
 msgstr "Оновлення збережених даних щодо верифікації пристрою"
 
@@ -1197,6 +1353,12 @@ msgstr "Оновлюємо %s з %s до %s... "
 #, c-format
 msgid "Updating %s…"
 msgstr "Оновлюємо %s…"
+
+#. TRANSLATORS: message letting the user know an upgrade is available
+#. * %1 is the device name and %2 and %3 are version strings
+#, c-format
+msgid "Upgrade available for %s from %s to %s"
+msgstr "Виявлено оновлення для %s з %s до %s"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Upload message:"
@@ -1227,6 +1389,10 @@ msgstr "Вивантаження звітів щодо мікропрограм 
 #. TRANSLATORS: command line option
 msgid "Use quirk flags when installing firmware"
 msgstr "Використовувати варіативні прапорці при встановленні мікропрограми"
+
+#. TRANSLATORS: User has been notified
+msgid "User has been notified"
+msgstr "Сповіщено користувача"
 
 #. TRANSLATORS: remote filename base
 msgid "Username"

@@ -81,6 +81,21 @@ msgstr "%s Thunderbolt-ohjaimen päivitys"
 msgid "%s Update"
 msgstr "%sPäivitys"
 
+#. TRANSLATORS: warn the user before updating, %1 is a device name
+#, c-format
+msgid "%s and all connected devices may not be usable while updating."
+msgstr "%s ja kaikki kytketyt laitteet eivät välttämättä ole käyttökelpoisia päivityksen aikana."
+
+#. TRANSLATORS: warn the user before updating, %1 is a device name
+#, c-format
+msgid "%s must remain connected for the duration of the update to avoid damage."
+msgstr "%s on oltava kytkettynä päivityksen ajaksi vaurioiden välttämiseksi."
+
+#. TRANSLATORS: warn the user before updating, %1 is a machine name
+#, c-format
+msgid "%s must remain plugged into a power source for the duration of the update to avoid damage."
+msgstr "%s on oltava kytkettynä virtalähteeseen päivityksen ajaksi vaurioiden välttämiseksi."
+
 #. TRANSLATORS: duration in days!
 #, c-format
 msgid "%u day"
@@ -260,6 +275,10 @@ msgstr "Peruttu"
 msgid "Changed"
 msgstr "Muutettu"
 
+#. TRANSLATORS: command description
+msgid "Checks cryptographic hash matches firmware"
+msgstr "Tarkistaa salaustekniikan, joka vastaa laiteohjelmistoa"
+
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Tarkistussumma"
@@ -267,6 +286,10 @@ msgstr "Tarkistussumma"
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a device:"
 msgstr "Valitse laite:"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose a firmware type:"
+msgstr "Valitse laiteohjelman tyyppi:"
 
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a release:"
@@ -284,9 +307,17 @@ msgstr "Tyhjennä viimeisimmän päivityksen tulokset"
 msgid "Command not found"
 msgstr "Komentoa ei löytynyt"
 
+#. TRANSLATORS: prompt to apply the update
+msgid "Continue with update?"
+msgstr "Jatketaanko päivitystä?"
+
 #. TRANSLATORS: command description
 msgid "Convert firmware to DFU format"
 msgstr "Muunna firmware DFU-muotoon"
+
+#. TRANSLATORS: Device supports some form of checksum verification
+msgid "Cryptographic hash verification is available"
+msgstr "Salauksen algoritmin tarkistus on käytettävissä"
 
 #. TRANSLATORS: version number of current firmware
 msgid "Current version"
@@ -316,6 +347,10 @@ msgstr "Irrota käynnistyslataimen tilaan"
 msgid "Details"
 msgstr "Tiedot"
 
+#. TRANSLATORS: description of device ability
+msgid "Device Flags"
+msgstr "Laitteen liput"
+
 #. TRANSLATORS: ID for hardware, typically a SHA1 sum
 msgid "Device ID"
 msgstr "Laitteen tunnus"
@@ -324,13 +359,37 @@ msgstr "Laitteen tunnus"
 msgid "Device added:"
 msgstr "Laite lisätty:"
 
+#. TRANSLATORS: Device supports a safety mechanism for flashing
+msgid "Device can recover flash failures"
+msgstr "Laite voi palauttaa virheitä"
+
 #. TRANSLATORS: this is when a device has been updated
 msgid "Device changed:"
 msgstr "Laite muutettu:"
 
+#. TRANSLATORS: Is locked and can be unlocked
+msgid "Device is locked"
+msgstr "Laite on lukittu"
+
+#. TRANSLATORS: Device remains usable during update
+msgid "Device is usable for the duration of the update"
+msgstr "Laitetta voidaan käyttää päivityksen aikana"
+
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device removed:"
 msgstr "Laite poistettu:"
+
+#. TRANSLATORS: Device supports a safety mechanism for flashing
+msgid "Device stages updates"
+msgstr "Laitevyöhykkeen päivitykset"
+
+#. TRANSLATORS: Device update needs to be separately activated
+msgid "Device update needs activation"
+msgstr "Laitteen päivitys tarvitsee aktivointia"
+
+#. TRANSLATORS: Device will not return after update completes
+msgid "Device will not re-appear after update completes"
+msgstr "Laitetta ei näytetä uudelleen päivityksen päätyttyä"
 
 #. TRANSLATORS: a list of successful updates
 msgid "Devices that have been updated successfully:"
@@ -370,6 +429,10 @@ msgstr "Älä sisällytä lokiin toimialueen etuliitettä"
 #. TRANSLATORS: turn on all debugging
 msgid "Do not include timestamp prefix"
 msgstr "Älä sisällytä aikaleiman etuliitettä"
+
+#. TRANSLATORS: command line option
+msgid "Do not perform device safety checks"
+msgstr "Älä suorita laitteen turvallisuustarkastuksia"
 
 msgid "Do not upload report at this time, but prompt again for future updates"
 msgid_plural "Do not upload reports at this time, but prompt again for future updates"
@@ -617,6 +680,10 @@ msgstr "Antaa laitteen julkaisut"
 msgid "Gets the results from the last update"
 msgstr "Saat viimeisimmän päivityksen tulokset"
 
+#. TRANSLATORS: The hardware is waiting to be replugged
+msgid "Hardware is waiting to be replugged"
+msgstr "Laitteisto odottaa uudelleen kytkemistä"
+
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
 msgstr "Jouten…"
@@ -624,6 +691,10 @@ msgstr "Jouten…"
 #. TRANSLATORS: command line option
 msgid "Ignore SSL strict checks when downloading files"
 msgstr "Ohita tiukat SSL tarkistukset tiedostoja ladattaessa"
+
+#. TRANSLATORS: Ignore validation safety checks when flashing this device
+msgid "Ignore validation safety checks"
+msgstr "Ohita turvatarkastukset"
 
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Install Duration"
@@ -646,6 +717,10 @@ msgstr "Asenna allekirjoitettu laitteen firmware"
 msgid "Install signed system firmware"
 msgstr "Asenna allekirjoitettu järjestelmän firmware"
 
+#. TRANSLATORS: Install composite firmware on the parent before the child
+msgid "Install to parent device first"
+msgstr "Asenna ensin päälaitteelle"
+
 msgid "Install unsigned device firmware"
 msgstr "Asenna allekirjoittamattoman laitteen firmware"
 
@@ -664,6 +739,14 @@ msgstr "Asennetaan firmware-päivitystä…"
 #, c-format
 msgid "Installing on %s…"
 msgstr "Asentaa %s…"
+
+#. TRANSLATORS: Device cannot be removed easily
+msgid "Internal device"
+msgstr "Sisäinen laite"
+
+#. TRANSLATORS: Is currently in bootloader mode
+msgid "Is in bootloader mode"
+msgstr "On käynnistyslatain moodissa"
 
 #. TRANSLATORS: issue fixed with the release, e.g. CVE
 msgid "Issue"
@@ -695,6 +778,10 @@ msgstr "Linux-toimittajan laiteohjelmisto (firmware testaus)"
 #. TRANSLATORS: command line option
 msgid "List supported firmware updates"
 msgstr "Lista tuetuista firmware-päivityksistä"
+
+#. TRANSLATORS: command description
+msgid "List the available firmware types"
+msgstr "Luettelo käytettävissä olevista laiteohjelmistotyypeistä"
 
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
@@ -747,12 +834,24 @@ msgstr "Muokkaa taustaprosessin kokoonpanoa"
 msgid "Monitor the daemon for events"
 msgstr "Seuraa tapahtumien taustaprosessia"
 
+#. TRANSLATORS: Requires a reboot to apply firmware or to reload hardware
+msgid "Needs a reboot after installation"
+msgstr "Tarvitsee käynnistyksen asennuksen jälkeen"
+
+#. TRANSLATORS: Requires system shutdown to apply firmware
+msgid "Needs shutdown after installation"
+msgstr "Tarvitsee sammutuksen asennuksen jälkeen"
+
 #. TRANSLATORS: version number of new firmware
 msgid "New version"
 msgstr "Uusi versio"
 
 msgid "No action specified!"
 msgstr "Toimintoa ei ole määritetty!"
+
+#. TRANSLATORS: nothing found
+msgid "No firmware IDs found"
+msgstr "Laiteohjelmiston tunnuksia ei löytynyt"
 
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
@@ -789,6 +888,10 @@ msgstr "Ohita oletusarvoinen ESP-polku"
 #. TRANSLATORS: command line option
 msgid "Override warnings and force the action"
 msgstr "Ohita varoitukset ja pakota toiminto"
+
+#. TRANSLATORS: command description
+msgid "Parse and show details about a firmware file"
+msgstr "Analysoi ja näytä tiedot laiteohjelmiston tiedostosta"
 
 #. TRANSLATORS: remote filename base
 msgid "Password"
@@ -832,12 +935,21 @@ msgid "Query for firmware update support"
 msgstr "Kysely firmware-päivityksen tuesta"
 
 #. TRANSLATORS: command description
+msgid "Read a firmware blob from a device"
+msgstr "Lue laiteohjelmiston BLOB laitteesta"
+
+#. TRANSLATORS: command description
 msgid "Read firmware from device into a file"
 msgstr "Lue firmware laitteesta tiedostoon"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from one partition into a file"
 msgstr "Lue firmware osiolta tiedostoon"
+
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Reading from %s…"
+msgstr "Lukeminen %s…"
 
 #. TRANSLATORS: reading from the flash chips
 msgid "Reading…"
@@ -879,6 +991,18 @@ msgstr "Vaihda tiedot olemassa olevaan firmware-tiedostoon"
 msgid "Report URI"
 msgstr "Ilmoita URI"
 
+#. TRANSLATORS: Has been reported to a metadata server
+msgid "Reported to remote server"
+msgstr "Raportoitu etäpalvelimelle"
+
+#. TRANSLATORS: Must be plugged in to an outlet
+msgid "Requires AC power"
+msgstr "Vaatii verkkovirtaa"
+
+#. TRANSLATORS: Requires a bootloader mode to be manually enabled by the user
+msgid "Requires a bootloader"
+msgstr "Vaatii käynnistyslataimen"
+
 #. TRANSLATORS: metadata is downloaded from the Internet
 msgid "Requires internet connection"
 msgstr "Vaatii Internet-yhteyden"
@@ -918,6 +1042,10 @@ msgstr "Ajasta asennus uudelleenkäynnistykselle mahdollisuuksien mukaan"
 #. TRANSLATORS: scheduing an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Ajoitetaan…"
+
+#. TRANSLATORS: Device has been chosen by the daemon for the user
+msgid "Selected device"
+msgstr "Valittu laite"
 
 #. TRANSLATORS: serial number of hardware
 msgid "Serial Number"
@@ -1053,9 +1181,17 @@ msgstr "Laiteohjelmiston asennus onnistui"
 msgid "Successfully modified configuration value"
 msgstr "Konfigurointiarvo on muokattu onnistuneesti"
 
+#. TRANSLATORS: success message for a per-remote setting change
+msgid "Successfully modified remote"
+msgstr "Etäkäytön muokkaus onnistui"
+
 #. TRANSLATORS: success message -- the user can do this by-hand too
 msgid "Successfully refreshed metadata manually"
 msgstr "Päivitetty metatiedot manuaalisesti"
+
+#. TRANSLATORS: success message when user refreshes device checksums
+msgid "Successfully updated device checksums"
+msgstr "Laitteiden tarkistussummat päivitettiin onnistuneesti"
 
 #. TRANSLATORS: success message -- where the user has uploaded
 #. * success and/or failure reports to the remote server
@@ -1065,9 +1201,17 @@ msgid_plural "Successfully uploaded %u reports"
 msgstr[0] "Raporttien lataus %u onnistui"
 msgstr[1] "Raporttien lataus %u onnistui"
 
+#. TRANSLATORS: success message when user verified device checksums
+msgid "Successfully verified device checksums"
+msgstr "Laitteiden tarkistussummat vahvistettu onnistuneesti"
+
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Yhteenveto"
+
+#. TRANSLATORS: Is found in current metadata
+msgid "Supported on remote server"
+msgstr "Tuettu etäpalvelimella"
 
 msgid "Target"
 msgstr "Kohde"
@@ -1125,6 +1269,10 @@ msgstr "Poista virheenkorjauksen lippu päivityksen aikana"
 msgid "Unsupported daemon version %s, client version is %s"
 msgstr "Ei tuettu taustaprosessin versio %s, asiakasversio on %s"
 
+#. TRANSLATORS: Device is updatable in this or any other mode
+msgid "Updatable"
+msgstr "Päivitettävissä"
+
 #. TRANSLATORS: error message from last update attempt
 msgid "Update Error"
 msgstr "Päivitys virhe"
@@ -1150,6 +1298,14 @@ msgstr "Päivityksen epäonnistuminen on tunnettu ongelma. Saat lisätietoja tä
 msgid "Update now?"
 msgstr "Päivitä nyt?"
 
+#. TRANSLATORS: Update can only be done from offline mode
+msgid "Update requires a reboot"
+msgstr "Päivitys edellyttää käynnistyksen"
+
+#. TRANSLATORS: command description
+msgid "Update the stored cryptographic hash with current ROM contents"
+msgstr "Päivitä tallennettu salaus nykyisellä ROM-sisällöllä"
+
 msgid "Update the stored device verification information"
 msgstr "Päivitä laitteen tallennetut vahvistustiedot"
 
@@ -1172,6 +1328,12 @@ msgstr "Korotus %s -sta %s tulos %s... "
 #, c-format
 msgid "Updating %s…"
 msgstr "Päivittää %s…"
+
+#. TRANSLATORS: message letting the user know an upgrade is available
+#. * %1 is the device name and %2 and %3 are version strings
+#, c-format
+msgid "Upgrade available for %s from %s to %s"
+msgstr "Päivitys saatavilla %s alkaen %s kohde %s"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Upload message:"
@@ -1198,6 +1360,10 @@ msgstr "Firmware-raporttien lataaminen auttaa laitteistotoimittajia tunnistamaan
 #. TRANSLATORS: command line option
 msgid "Use quirk flags when installing firmware"
 msgstr "Käytä Quirk-lippuja asennettaessa laiteohjelmistoa"
+
+#. TRANSLATORS: User has been notified
+msgid "User has been notified"
+msgstr "Käyttäjälle on ilmoitettu"
 
 #. TRANSLATORS: remote filename base
 msgid "Username"
