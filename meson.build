@@ -222,6 +222,10 @@ if build_standalone and get_option('plugin_altos')
   libelf = dependency('libelf')
 endif
 
+if cc.has_header('sys/utsname.h')
+  conf.set('HAVE_UTSNAME_H', '1')
+endif
+
 if build_standalone and get_option('plugin_uefi')
   cairo = dependency('cairo')
   fontconfig = cc.find_library('fontconfig')

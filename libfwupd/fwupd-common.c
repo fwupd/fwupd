@@ -13,7 +13,9 @@
 
 #include <locale.h>
 #include <string.h>
+#ifdef HAVE_UTSNAME_H
 #include <sys/utsname.h>
+#endif
 #include <json-glib/json-glib.h>
 
 #if !GLIB_CHECK_VERSION(2,54,0)
@@ -222,12 +224,15 @@ fwupd_build_user_agent_os_release (void)
 static gchar *
 fwupd_build_user_agent_system (void)
 {
+#ifdef HAVE_UTSNAME_H
 	struct utsname name_tmp;
+#endif
 	g_autofree gchar *locale = NULL;
 	g_autofree gchar *os_release = NULL;
 	g_autoptr(GPtrArray) ids = g_ptr_array_new_with_free_func (g_free);
 
 	/* system, architecture and kernel, e.g. "Linux i686 4.14.5" */
+#ifdef HAVE_UTSNAME_H
 	memset (&name_tmp, 0, sizeof(struct utsname));
 	if (uname (&name_tmp) >= 0) {
 		g_ptr_array_add (ids, g_strdup_printf ("%s %s %s",
@@ -235,6 +240,7 @@ fwupd_build_user_agent_system (void)
 						       name_tmp.machine,
 						       name_tmp.release));
 	}
+#endif
 
 	/* current locale, e.g. "en-gb" */
 	locale = g_strdup (setlocale (LC_MESSAGES, NULL));

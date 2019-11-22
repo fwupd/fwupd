@@ -14,7 +14,9 @@
 #include <gudev/gudev.h>
 #include <fnmatch.h>
 #include <string.h>
+#ifdef HAVE_UTSNAME_H
 #include <sys/utsname.h>
+#endif
 
 #include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
@@ -1380,7 +1382,9 @@ fu_engine_get_report_metadata (FuEngine *self)
 {
 	GHashTable *hash;
 	gchar *btime;
+#ifdef HAVE_UTSNAME_H
 	struct utsname name_tmp;
+#endif
 	g_autoptr(GList) compile_keys = g_hash_table_get_keys (self->compile_versions);
 	g_autoptr(GList) runtime_keys = g_hash_table_get_keys (self->runtime_versions);
 
@@ -1402,12 +1406,14 @@ fu_engine_get_report_metadata (FuEngine *self)
 	}
 
 	/* kernel version is often important for debugging failures */
+#ifdef HAVE_UTSNAME_H
 	memset (&name_tmp, 0, sizeof (struct utsname));
 	if (uname (&name_tmp) >= 0) {
 		g_hash_table_insert (hash,
 				     g_strdup ("CpuArchitecture"),
 				     g_strdup (name_tmp.machine));
 	}
+#endif
 
 	/* add the kernel boot time so we can detect a reboot */
 	btime = fu_engine_get_boot_time ();
@@ -4947,7 +4953,9 @@ fu_engine_idle_status_notify_cb (FuIdle *idle, GParamSpec *pspec, FuEngine *self
 static void
 fu_engine_init (FuEngine *self)
 {
+#ifdef HAVE_UTSNAME_H
 	struct utsname uname_tmp;
+#endif
 	self->percentage = 0;
 	self->status = FWUPD_STATUS_IDLE;
 	self->config = fu_config_new ();
@@ -4983,9 +4991,11 @@ fu_engine_init (FuEngine *self)
 #endif
 
 	/* optional kernel version */
+#ifdef HAVE_UTSNAME_H
 	memset (&uname_tmp, 0, sizeof(uname_tmp));
 	if (uname (&uname_tmp) >= 0)
 		fu_engine_add_runtime_version (self, "org.kernel", uname_tmp.release);
+#endif
 
 	g_hash_table_insert (self->compile_versions,
 			     g_strdup ("com.redhat.fwupdate"),
