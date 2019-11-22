@@ -14,7 +14,6 @@
 #ifdef HAVE_GUDEV
 #include <gudev/gudev.h>
 #endif
-#include <fnmatch.h>
 #include <string.h>
 #ifdef HAVE_UTSNAME_H
 #include <sys/utsname.h>
@@ -1018,7 +1017,7 @@ fu_engine_require_vercmp (XbNode *req, const gchar *version, GError **error)
 		rc = fu_common_vercmp (version, version_req);
 		ret = rc >= 0;
 	} else if (g_strcmp0 (tmp, "glob") == 0) {
-		ret = fnmatch (version_req, version, 0) == 0;
+		ret = fu_common_fnmatch (version_req, version);
 	} else if (g_strcmp0 (tmp, "regex") == 0) {
 		ret = g_regex_match_simple (version_req, version, 0, 0);
 	} else {
@@ -4331,7 +4330,7 @@ fu_engine_is_plugin_name_whitelisted (FuEngine *self, const gchar *name)
 		return TRUE;
 	for (guint i = 0; i < self->plugin_filter->len; i++) {
 		const gchar *name_tmp = g_ptr_array_index (self->plugin_filter, i);
-		if (fnmatch (name_tmp, name, 0) == 0)
+		if (fu_common_fnmatch (name_tmp, name))
 			return TRUE;
 	}
 	return FALSE;

@@ -10,9 +10,10 @@
 #include <string.h>
 #include <efivar.h>
 #include <efivar/efiboot.h>
-#include <fnmatch.h>
 
 #include "fu-device-metadata.h"
+
+#include "fu-common.h"
 
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
@@ -462,7 +463,7 @@ fu_uefi_device_cleanup_esp (FuDevice *device, GError **error)
 	pattern = g_build_filename (esp_path, "EFI/*/fw/fwupd-*.cap", NULL);
 	for (guint i = 0; i < files->len; i++) {
 		const gchar *fn = g_ptr_array_index (files, i);
-		if (fnmatch (pattern, fn, 0) == 0) {
+		if (fu_common_fnmatch (pattern, fn)) {
 			g_autoptr(GFile) file = g_file_new_for_path (fn);
 			g_debug ("deleting %s", fn);
 			if (!g_file_delete (file, NULL, error))
