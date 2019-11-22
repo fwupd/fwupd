@@ -30,6 +30,10 @@ fu_vli_usbhub_pd_device_to_string (FuDevice *device, guint idt, GString *str)
 	FuVliUsbhubPdDevice *self = FU_VLI_USBHUB_PD_DEVICE (device);
 	fu_common_string_append_kv (str, idt, "ChipId",
 				    fu_vli_usbhub_pd_chip_to_string (self->chip));
+	fu_common_string_append_kx (str, idt, "FwOffset",
+				    fu_vli_usbhub_pd_chip_get_offset (self->chip));
+	fu_common_string_append_kx (str, idt, "FwSize",
+				    fu_vli_usbhub_pd_chip_get_size (self->chip));
 }
 
 static gboolean
