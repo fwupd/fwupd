@@ -328,8 +328,8 @@ fwupd_build_machine_id (const gchar *salt, GError **error)
 	gsize sz = 0;
 
 	/* one of these has to exist */
-	fns[0] = g_build_filename (SYSCONFDIR, "machine-id", NULL);
-	fns[1] = g_build_filename (LOCALSTATEDIR, "lib", "dbus", "machine-id", NULL);
+	fns[0] = g_build_filename (FWUPD_SYSCONFDIR, "machine-id", NULL);
+	fns[1] = g_build_filename (FWUPD_LOCALSTATEDIR, "lib", "dbus", "machine-id", NULL);
 	fns[2] = g_strdup ("/etc/machine-id");
 	fns[3] = g_strdup ("/var/lib/dbus/machine-id");
 	for (guint i = 0; fns[i] != NULL; i++) {

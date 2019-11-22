@@ -175,7 +175,7 @@ fu_plugin_update_prepare (FuPlugin *plugin,
 
 	/* if the original firmware doesn't exist, grab it now */
 	basename = g_strdup_printf ("flashrom-%s.bin", fu_device_get_id (device));
-	firmware_orig = g_build_filename (LOCALSTATEDIR, "lib", "fwupd",
+	firmware_orig = g_build_filename (FWUPD_LOCALSTATEDIR, "lib", "fwupd",
 					  "builder", basename, NULL);
 	if (!fu_common_mkdir_parent (firmware_orig, error))
 		return FALSE;

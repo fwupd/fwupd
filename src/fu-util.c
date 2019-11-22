@@ -2449,7 +2449,7 @@ main (int argc, char *argv[])
 
 	setlocale (LC_ALL, "");
 
-	bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+	bindtextdomain (GETTEXT_PACKAGE, FWUPD_LOCALEDIR);
 	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 	textdomain (GETTEXT_PACKAGE);
 

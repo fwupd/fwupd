@@ -94,7 +94,7 @@ static GBytes *
 fu_plugin_uefi_get_splash_data (guint width, guint height, GError **error)
 {
 	const gchar * const *langs = g_get_language_names ();
-	const gchar *localedir = LOCALEDIR;
+	const gchar *localedir = FWUPD_LOCALEDIR;
 	const gsize chunk_size = 1024 * 1024;
 	gsize buf_idx = 0;
 	gsize buf_sz = chunk_size;
