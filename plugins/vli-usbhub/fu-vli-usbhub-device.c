@@ -561,7 +561,7 @@ fu_vli_usbhub_device_spi_erase (FuVliUsbhubDevice *self,
 		g_debug ("erasing @0x%x", chunk->address);
 		if (!fu_vli_usbhub_device_erase_sector (self, chunk->address, error)) {
 			g_prefix_error (error,
-					"failed to erase FW sector @0x%x",
+					"failed to erase FW sector @0x%x: ",
 					chunk->address);
 			return FALSE;
 		}
