@@ -8,9 +8,9 @@
 
 #include <glib-object.h>
 #include <gusb.h>
-#include <gudev/gudev.h>
 
 #include "fu-plugin.h"
+#include "fu-udev-device.h"
 
 #define FU_TYPE_USB_DEVICE (fu_usb_device_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuUsbDevice, fu_usb_device, FU, USB_DEVICE, FuDevice)

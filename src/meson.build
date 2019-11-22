@@ -30,9 +30,12 @@ libfwupdprivate_src = [
   'fu-smbios.c',
   'fu-srec-firmware.c',
   'fu-test.c',
-  'fu-udev-device.c',
   'fu-usb-device.c',
 ]
+
+if get_option('gudev')
+  libfwupdprivate_src += 'fu-udev-device.c'
+endif
 
 if get_option('gpg')
   keyring_src += 'fu-keyring-gpg.c'

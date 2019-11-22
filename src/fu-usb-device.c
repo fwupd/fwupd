@@ -441,6 +441,7 @@ fu_usb_device_set_dev (FuUsbDevice *device, GUsbDevice *usb_device)
 GUdevDevice *
 fu_usb_device_find_udev_device (FuUsbDevice *device, GError **error)
 {
+#ifdef HAVE_GUDEV
 	FuUsbDevicePrivate *priv = GET_PRIVATE (device);
 	g_autoptr(GList) devices = NULL;
 	g_autoptr(GUdevClient) gudev_client = g_udev_client_new (NULL);
@@ -473,6 +474,12 @@ fu_usb_device_find_udev_device (FuUsbDevice *device, GError **error)
 		     "could not find sysfs device for %u:%u",
 		     g_usb_device_get_bus (priv->usb_device),
 		     g_usb_device_get_address (priv->usb_device));
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "Not supported as <gudev.h> is unavailable");
+#endif
 	return NULL;
 }
 

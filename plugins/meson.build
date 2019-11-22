@@ -1,4 +1,3 @@
-subdir('ata')
 subdir('dfu')
 subdir('colorhug')
 subdir('ebitdo')
@@ -6,31 +5,35 @@ subdir('fastboot')
 subdir('jabra')
 subdir('steelseries')
 subdir('dell-dock')
-subdir('logitech-hidpp')
 subdir('nitrokey')
-subdir('optionrom')
 subdir('rts54hid')
 subdir('rts54hub')
 subdir('solokey')
 subdir('synaptics-cxaudio')
 subdir('synaptics-prometheus')
 subdir('test')
-subdir('thelio-io')
 subdir('upower')
-subdir('wacom-raw')
 subdir('wacom-usb')
+subdir('vli-usbhub')
+
+if get_option('gudev')
+subdir('ata')
+subdir('logitech-hidpp')
+subdir('optionrom')
 subdir('superio')
 subdir('synaptics-rmi')
-subdir('vli-usbhub')
+subdir('thelio-io')
+subdir('wacom-raw')
+endif
 
 # depends on dfu
 subdir('csr')
 
-if get_option('plugin_emmc')
+if get_option('plugin_emmc') and get_option('gudev')
 subdir('emmc')
 endif
 
-if get_option('plugin_nvme')
+if get_option('plugin_nvme') and get_option('gudev')
 subdir('nvme')
 endif
 
@@ -38,7 +41,7 @@ if get_option('plugin_modem_manager')
 subdir('modem-manager')
 endif
 
-if get_option('plugin_altos')
+if get_option('plugin_altos') and get_option('gudev')
 subdir('altos')
 endif
 
@@ -46,7 +49,7 @@ if get_option('plugin_amt')
 subdir('amt')
 endif
 
-if get_option('plugin_thunderbolt')
+if get_option('plugin_thunderbolt') and get_option('gudev')
 subdir('thunderbolt')
 subdir('thunderbolt-power')
 endif
@@ -60,7 +63,7 @@ subdir('dell')
 subdir('dell-esrt')
 endif
 
-if get_option('plugin_synaptics')
+if get_option('plugin_synaptics') and get_option('gudev')
 subdir('synapticsmst')
 endif
 

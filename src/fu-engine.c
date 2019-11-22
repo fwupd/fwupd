@@ -11,7 +11,9 @@
 #include <gio/gio.h>
 #include <gio/gunixinputstream.h>
 #include <glib-object.h>
+#ifdef HAVE_GUDEV
 #include <gudev/gudev.h>
+#endif
 #include <fnmatch.h>
 #include <string.h>
 #ifdef HAVE_UTSNAME_H
@@ -61,7 +63,9 @@ struct _FuEngine
 	GObject			 parent_instance;
 	FuAppFlags		 app_flags;
 	GUsbContext		*usb_ctx;
+#ifdef HAVE_GUDEV
 	GUdevClient		*gudev_client;
+#endif
 	FuConfig		*config;
 	FuDeviceList		*device_list;
 	FwupdStatus		 status;
@@ -76,7 +80,9 @@ struct _FuEngine
 	FuPluginList		*plugin_list;
 	GPtrArray		*plugin_filter;
 	GPtrArray		*udev_subsystems;
+#ifdef HAVE_GUDEV
 	GHashTable		*udev_changed_ids;	/* sysfs:FuEngineUdevChangedHelper */
+#endif
 	FuSmbios		*smbios;
 	FuHwids			*hwids;
 	FuQuirks		*quirks;
@@ -4080,6 +4086,7 @@ fu_engine_recoldplug_delay_cb (gpointer user_data)
 	return FALSE;
 }
 
+#ifdef HAVE_GUDEV
 static void
 fu_engine_udev_device_add (FuEngine *self, GUdevDevice *udev_device)
 {
@@ -4251,6 +4258,7 @@ fu_engine_enumerate_udev (FuEngine *self)
 		g_list_free (devices);
 	}
 }
+#endif
 
 static void
 fu_engine_plugin_recoldplug_cb (FuPlugin *plugin, FuEngine *self)
@@ -4262,7 +4270,9 @@ fu_engine_plugin_recoldplug_cb (FuPlugin *plugin, FuEngine *self)
 	if (self->app_flags & FU_APP_FLAGS_NO_IDLE_SOURCES) {
 		g_debug ("doing direct recoldplug");
 		fu_engine_plugins_coldplug (self, TRUE);
+#ifdef HAVE_GUDEV
 		fu_engine_enumerate_udev (self);
+#endif
 		return;
 	}
 	g_debug ("scheduling a recoldplug");
@@ -4688,6 +4698,7 @@ fu_engine_update_history_database (FuEngine *self, GError **error)
 	return TRUE;
 }
 
+#ifdef HAVE_GUDEV
 static void
 fu_engine_udev_uevent_cb (GUdevClient *gudev_client,
 			  const gchar *action,
@@ -4707,6 +4718,7 @@ fu_engine_udev_uevent_cb (GUdevClient *gudev_client,
 		return;
 	}
 }
+#endif
 
 static void
 fu_engine_ensure_client_certificate (FuEngine *self)
@@ -4844,6 +4856,7 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 			  G_CALLBACK (fu_engine_device_changed_cb),
 			  self);
 
+#ifdef HAVE_GUDEV
 	/* udev watches can only be set up in _init() so set up client now */
 	if (self->udev_subsystems->len > 0) {
 		g_auto(GStrv) udev_subsystems = g_new0 (gchar *, self->udev_subsystems->len + 1);
@@ -4855,6 +4868,7 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 		g_signal_connect (self->gudev_client, "uevent",
 				  G_CALLBACK (fu_engine_udev_uevent_cb), self);
 	}
+#endif
 
 	fu_engine_set_status (self, FWUPD_STATUS_LOADING);
 
@@ -4873,9 +4887,11 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	if ((flags & FU_ENGINE_LOAD_FLAG_NO_ENUMERATE) == 0)
 		g_usb_context_enumerate (self->usb_ctx);
 
+#ifdef HAVE_GUDEV
 	/* coldplug udev devices */
 	if ((flags & FU_ENGINE_LOAD_FLAG_NO_ENUMERATE) == 0)
 		fu_engine_enumerate_udev (self);
+#endif
 
 	/* update the db for devices that were updated during the reboot */
 	if (!fu_engine_update_history_database (self, error))
@@ -4969,8 +4985,10 @@ fu_engine_init (FuEngine *self)
 	self->plugin_list = fu_plugin_list_new ();
 	self->plugin_filter = g_ptr_array_new_with_free_func (g_free);
 	self->udev_subsystems = g_ptr_array_new_with_free_func (g_free);
+#ifdef HAVE_GUDEV
 	self->udev_changed_ids = g_hash_table_new_full (g_str_hash, g_str_equal,
 							g_free, (GDestroyNotify) fu_engine_udev_changed_helper_free);
+#endif
 	self->runtime_versions = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	self->compile_versions = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	self->approved_firmware = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
@@ -5022,8 +5040,10 @@ fu_engine_finalize (GObject *obj)
 		g_object_unref (self->usb_ctx);
 	if (self->silo != NULL)
 		g_object_unref (self->silo);
+#ifdef HAVE_GUDEV
 	if (self->gudev_client != NULL)
 		g_object_unref (self->gudev_client);
+#endif
 	if (self->coldplug_id != 0)
 		g_source_remove (self->coldplug_id);
 
@@ -5037,7 +5057,9 @@ fu_engine_finalize (GObject *obj)
 	g_object_unref (self->device_list);
 	g_ptr_array_unref (self->plugin_filter);
 	g_ptr_array_unref (self->udev_subsystems);
+#ifdef HAVE_GUDEV
 	g_hash_table_unref (self->udev_changed_ids);
+#endif
 	g_hash_table_unref (self->runtime_versions);
 	g_hash_table_unref (self->compile_versions);
 	g_hash_table_unref (self->approved_firmware);
