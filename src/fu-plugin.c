@@ -107,6 +107,23 @@ typedef gboolean	 (*FuPluginUdevDeviceAddedFunc)	(FuPlugin	*self,
 							 GError		**error);
 
 /**
+ * fu_plugin_is_open:
+ * @self: A #FuPlugin
+ *
+ * Determines if the plugin is opened
+ *
+ * Returns: TRUE for opened, FALSE for not
+ *
+ * Since: 1.3.5
+ **/
+gboolean
+fu_plugin_is_open (FuPlugin *self)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	return priv->module != NULL;
+}
+
+/**
  * fu_plugin_get_name:
  * @self: A #FuPlugin
  *
