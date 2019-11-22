@@ -1192,7 +1192,7 @@ fu_engine_history_func (void)
 	fu_engine_set_silo (engine, silo_empty);
 
 	/* set up dummy plugin */
-	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_test.so", &error);
+	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_test." G_MODULE_SUFFIX, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	fu_engine_add_plugin (engine, plugin);
@@ -1322,7 +1322,7 @@ fu_engine_history_inherit (void)
 
 	/* set up dummy plugin */
 	g_setenv ("FWUPD_PLUGIN_TEST", "fail", TRUE);
-	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_test.so", &error);
+	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_test." G_MODULE_SUFFIX, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	fu_engine_add_plugin (engine, plugin);
@@ -1432,7 +1432,7 @@ fu_engine_history_error_func (void)
 
 	/* set up dummy plugin */
 	g_setenv ("FWUPD_PLUGIN_TEST", "fail", TRUE);
-	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_test.so", &error);
+	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_test." G_MODULE_SUFFIX, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	fu_engine_add_plugin (engine, plugin);
@@ -2271,7 +2271,7 @@ fu_plugin_hash_func (void)
 
 	/* create a tainted plugin */
 	g_setenv ("FWUPD_PLUGIN_TEST", "build-hash", TRUE);
-	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_test.so", &error);
+	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_test." G_MODULE_SUFFIX, &error);
 	g_assert_no_error (error);
 
 	/* make sure it tainted now */
@@ -2304,7 +2304,7 @@ fu_plugin_module_func (void)
 	/* create a fake device */
 	plugin = fu_plugin_new ();
 	g_setenv ("FWUPD_PLUGIN_TEST", "registration", TRUE);
-	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_test.so", &error);
+	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_test." G_MODULE_SUFFIX, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	ret = fu_plugin_runner_startup (plugin, &error);
@@ -3141,7 +3141,7 @@ fu_plugin_composite_func (void)
 
 	/* set up dummy plugin */
 	g_setenv ("FWUPD_PLUGIN_TEST", "composite", TRUE);
-	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_test.so", &error);
+	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_test." G_MODULE_SUFFIX, &error);
 	g_assert_no_error (error);
 	g_assert_true (ret);
 	fu_engine_add_plugin (engine, plugin);
