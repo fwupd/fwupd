@@ -42,7 +42,7 @@ Build-Depends:
 	libsoup2.4-dev,
 	libsqlite3-dev,
 	libtool-bin,
-	libtss2-dev,
+	libtss2-dev [amd64 arm64 armhf i386],
 	libxmlb-dev (>= 0.1.13),
 	locales,
 	meson,
