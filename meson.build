@@ -344,21 +344,21 @@ endif
 gnome = import('gnome')
 i18n = import('i18n')
 
-conf.set_quoted('BINDIR', bindir)
-conf.set_quoted('LIBEXECDIR', libexecdir)
-conf.set_quoted('DATADIR', datadir)
-conf.set_quoted('LOCALSTATEDIR', localstatedir)
-conf.set_quoted('SYSCONFDIR', sysconfdir)
+conf.set_quoted('FWUPD_BINDIR', bindir)
+conf.set_quoted('FWUPD_LIBEXECDIR', libexecdir)
+conf.set_quoted('FWUPD_DATADIR', datadir)
+conf.set_quoted('FWUPD_LOCALSTATEDIR', localstatedir)
+conf.set_quoted('FWUPD_SYSCONFDIR', sysconfdir)
+conf.set_quoted('FWUPD_LOCALEDIR', localedir)
 
 if build_standalone
 plugin_dir = join_paths(libdir, 'fwupd-plugins-3')
-conf.set_quoted('PLUGINDIR', plugin_dir)
+conf.set_quoted('FWUPD_PLUGINDIR', plugin_dir)
 endif
 
 conf.set_quoted('GETTEXT_PACKAGE', meson.project_name())
 conf.set_quoted('PACKAGE_NAME', meson.project_name())
 conf.set_quoted('VERSION', meson.project_version())
-conf.set_quoted('LOCALEDIR', localedir)
 configure_file(
   output : 'config.h',
   configuration : conf

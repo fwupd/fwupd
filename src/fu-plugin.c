@@ -1970,7 +1970,7 @@ fu_plugin_runner_update (FuPlugin *self,
 		/* delete cab file */
 		release = fu_device_get_release_default (device_pending);
 		tmp = fwupd_release_get_filename (release);
-		if (tmp != NULL && g_str_has_prefix (tmp, LIBEXECDIR)) {
+		if (tmp != NULL && g_str_has_prefix (tmp, FWUPD_LIBEXECDIR)) {
 			g_autoptr(GError) error_delete = NULL;
 			g_autoptr(GFile) file = NULL;
 			file = g_file_new_for_path (tmp);

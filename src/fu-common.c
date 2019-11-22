@@ -963,8 +963,8 @@ fu_common_get_path (FuPathKind path_kind)
 			return g_strdup (tmp);
 		tmp = g_getenv ("SNAP_USER_DATA");
 		if (tmp != NULL)
-			return g_build_filename (tmp, LOCALSTATEDIR, NULL);
-		return g_build_filename (LOCALSTATEDIR, NULL);
+			return g_build_filename (tmp, FWUPD_LOCALSTATEDIR, NULL);
+		return g_build_filename (FWUPD_LOCALSTATEDIR, NULL);
 	/* /sys/firmware */
 	case FU_PATH_KIND_SYSFSDIR_FW:
 		tmp = g_getenv ("FWUPD_SYSFSFWDIR");
@@ -990,8 +990,8 @@ fu_common_get_path (FuPathKind path_kind)
 			return g_strdup (tmp);
 		tmp = g_getenv ("SNAP_USER_DATA");
 		if (tmp != NULL)
-			return g_build_filename (tmp, SYSCONFDIR, NULL);
-		return g_strdup (SYSCONFDIR);
+			return g_build_filename (tmp, FWUPD_SYSCONFDIR, NULL);
+		return g_strdup (FWUPD_SYSCONFDIR);
 	/* /usr/lib/<triplet>/fwupd-plugins-3 */
 	case FU_PATH_KIND_PLUGINDIR_PKG:
 		tmp = g_getenv ("FWUPD_PLUGINDIR");
@@ -999,8 +999,8 @@ fu_common_get_path (FuPathKind path_kind)
 			return g_strdup (tmp);
 		tmp = g_getenv ("SNAP");
 		if (tmp != NULL)
-			return g_build_filename (tmp, PLUGINDIR, NULL);
-		return g_build_filename (PLUGINDIR, NULL);
+			return g_build_filename (tmp, FWUPD_PLUGINDIR, NULL);
+		return g_build_filename (FWUPD_PLUGINDIR, NULL);
 	/* /usr/share/fwupd */
 	case FU_PATH_KIND_DATADIR_PKG:
 		tmp = g_getenv ("FWUPD_DATADIR");
@@ -1008,8 +1008,8 @@ fu_common_get_path (FuPathKind path_kind)
 			return g_strdup (tmp);
 		tmp = g_getenv ("SNAP");
 		if (tmp != NULL)
-			return g_build_filename (tmp, DATADIR, PACKAGE_NAME, NULL);
-		return g_build_filename (DATADIR, PACKAGE_NAME, NULL);
+			return g_build_filename (tmp, FWUPD_DATADIR, PACKAGE_NAME, NULL);
+		return g_build_filename (FWUPD_DATADIR, PACKAGE_NAME, NULL);
 	/* /usr/libexec/fwupd/efi */
 	case FU_PATH_KIND_EFIAPPDIR:
 		tmp = g_getenv ("FWUPD_EFIAPPDIR");
