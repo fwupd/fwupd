@@ -103,11 +103,13 @@ fu_plugin_dell_tpm_func (void)
 	g_assert_no_error (error);
 	g_assert (ret);
 
+#ifdef HAVE_GETUID
 	if (tpm_server_running == NULL &&
 	    (getuid () != 0 || geteuid () != 0)) {
 		g_test_skip ("TPM tests require simulated TPM2.0 running or need root access with physical TPM");
 		return;
 	}
+#endif
 
 	/* inject fake data (no TPM) */
 	tpm_out.ret = -2;
