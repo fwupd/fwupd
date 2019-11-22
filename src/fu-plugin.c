@@ -215,7 +215,7 @@ void
 fu_plugin_cache_add (FuPlugin *self, const gchar *id, gpointer dev)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_writer_locker_new (&priv->devices_mutex);
+	g_autoptr(GRWLockWriterLocker) locker = g_rw_lock_writer_locker_new (&priv->devices_mutex);
 	g_return_if_fail (FU_IS_PLUGIN (self));
 	g_return_if_fail (id != NULL);
 	g_return_if_fail (locker != NULL);
@@ -235,7 +235,7 @@ void
 fu_plugin_cache_remove (FuPlugin *self, const gchar *id)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_writer_locker_new (&priv->devices_mutex);
+	g_autoptr(GRWLockWriterLocker) locker = g_rw_lock_writer_locker_new (&priv->devices_mutex);
 	g_return_if_fail (FU_IS_PLUGIN (self));
 	g_return_if_fail (id != NULL);
 	g_return_if_fail (locker != NULL);

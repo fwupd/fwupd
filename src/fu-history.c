@@ -371,7 +371,7 @@ fu_history_load (FuHistory *self, GError **error)
 	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(GFile) file = NULL;
-	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_writer_locker_new (&self->db_mutex);
+	g_autoptr(GRWLockWriterLocker) locker = g_rw_lock_writer_locker_new (&self->db_mutex);
 
 	/* already done */
 	if (self->db != NULL)
@@ -462,7 +462,7 @@ fu_history_modify_device (FuHistory *self, FuDevice *device, GError **error)
 {
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
-	g_autoptr(GRWLockReaderLocker) locker = NULL;
+	g_autoptr(GRWLockWriterLocker) locker = NULL;
 
 	g_return_val_if_fail (FU_IS_HISTORY (self), FALSE);
 	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
@@ -513,7 +513,7 @@ fu_history_add_device (FuHistory *self, FuDevice *device, FwupdRelease *release,
 	gint rc;
 	g_autofree gchar *metadata = NULL;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
-	g_autoptr(GRWLockReaderLocker) locker = NULL;
+	g_autoptr(GRWLockWriterLocker) locker = NULL;
 
 	g_return_val_if_fail (FU_IS_HISTORY (self), FALSE);
 	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
@@ -593,7 +593,7 @@ fu_history_remove_all_with_state (FuHistory *self,
 {
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
-	g_autoptr(GRWLockReaderLocker) locker = NULL;
+	g_autoptr(GRWLockWriterLocker) locker = NULL;
 
 	g_return_val_if_fail (FU_IS_HISTORY (self), FALSE);
 
@@ -624,7 +624,7 @@ fu_history_remove_all (FuHistory *self, GError **error)
 {
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
-	g_autoptr(GRWLockReaderLocker) locker = NULL;
+	g_autoptr(GRWLockWriterLocker) locker = NULL;
 
 	g_return_val_if_fail (FU_IS_HISTORY (self), FALSE);
 
@@ -651,7 +651,7 @@ fu_history_remove_device (FuHistory *self,  FuDevice *device, GError **error)
 {
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
-	g_autoptr(GRWLockReaderLocker) locker = NULL;
+	g_autoptr(GRWLockWriterLocker) locker = NULL;
 
 	g_return_val_if_fail (FU_IS_HISTORY (self), FALSE);
 	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
@@ -835,7 +835,7 @@ fu_history_clear_approved_firmware (FuHistory *self, GError **error)
 {
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
-	g_autoptr(GRWLockReaderLocker) locker = NULL;
+	g_autoptr(GRWLockWriterLocker) locker = NULL;
 
 	g_return_val_if_fail (FU_IS_HISTORY (self), FALSE);
 
@@ -865,7 +865,7 @@ fu_history_add_approved_firmware (FuHistory *self,
 {
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
-	g_autoptr(GRWLockReaderLocker) locker = NULL;
+	g_autoptr(GRWLockWriterLocker) locker = NULL;
 
 	g_return_val_if_fail (FU_IS_HISTORY (self), FALSE);
 	g_return_val_if_fail (checksum != NULL, FALSE);

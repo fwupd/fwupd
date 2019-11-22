@@ -118,7 +118,7 @@ fu_idle_reset (FuIdle *self)
 void
 fu_idle_uninhibit (FuIdle *self, guint32 token)
 {
-	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_writer_locker_new (&self->items_mutex);
+	g_autoptr(GRWLockWriterLocker) locker = g_rw_lock_writer_locker_new (&self->items_mutex);
 
 	g_return_if_fail (FU_IS_IDLE (self));
 	g_return_if_fail (token != 0);
@@ -139,7 +139,7 @@ guint32
 fu_idle_inhibit (FuIdle *self, const gchar *reason)
 {
 	FuIdleItem *item;
-	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_writer_locker_new (&self->items_mutex);
+	g_autoptr(GRWLockWriterLocker) locker = g_rw_lock_writer_locker_new (&self->items_mutex);
 
 	g_return_val_if_fail (FU_IS_IDLE (self), 0);
 	g_return_val_if_fail (reason != NULL, 0);
