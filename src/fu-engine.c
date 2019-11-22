@@ -4277,16 +4277,20 @@ fu_engine_plugin_set_coldplug_delay_cb (FuPlugin *plugin, guint duration, FuEngi
 void
 fu_engine_add_plugin (FuEngine *self, FuPlugin *plugin)
 {
-	/* plugin does not match built version */
-	if (fu_plugin_get_build_hash (plugin) == NULL) {
-		const gchar *name = fu_plugin_get_name (plugin);
-		g_warning ("%s should call fu_plugin_set_build_hash()", name);
-		self->tainted = TRUE;
-	} else if (g_strcmp0 (fu_plugin_get_build_hash (plugin), FU_BUILD_HASH) != 0) {
-		const gchar *name = fu_plugin_get_name (plugin);
-		g_warning ("%s has incorrect built version %s",
-				name, fu_plugin_get_build_hash (plugin));
-		self->tainted = TRUE;
+	if (fu_plugin_is_open (plugin)) {
+		/* plugin does not match built version */
+		if (fu_plugin_get_build_hash (plugin) == NULL) {
+			const gchar *name = fu_plugin_get_name (plugin);
+			g_warning ("%s should call fu_plugin_set_build_hash()",
+				   name);
+			self->tainted = TRUE;
+		} else if (g_strcmp0 (fu_plugin_get_build_hash (plugin),
+				      FU_BUILD_HASH) != 0) {
+			const gchar *name = fu_plugin_get_name (plugin);
+			g_warning ("%s has incorrect built version %s",
+				   name, fu_plugin_get_build_hash (plugin));
+			self->tainted = TRUE;
+		}
 	}
 
 	fu_plugin_list_add (self->plugin_list, plugin);
