@@ -15,6 +15,8 @@
 
 #ifdef HAVE_FNMATCH_H
 #include <fnmatch.h>
+#elif _WIN32
+#include <shlwapi.h>
 #endif
 
 #include <archive_entry.h>
@@ -1655,6 +1657,10 @@ fu_common_fnmatch (const gchar *pattern, const gchar *str)
 	g_return_val_if_fail (str != NULL, FALSE);
 #ifdef HAVE_FNMATCH_H
 	return fnmatch (pattern, str, FNM_NOESCAPE) == 0;
+#elif _WIN32
+	g_return_val_if_fail (strlen (pattern) < MAX_PATH, FALSE);
+	g_return_val_if_fail (strlen (str) < MAX_PATH, FALSE);
+	return PathMatchSpecA (str, pattern);
 #else
 	return g_strcmp0 (pattern, str) == 0;
 #endif

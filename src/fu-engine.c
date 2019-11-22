@@ -4988,11 +4988,13 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	if (self->loaded)
 		return TRUE;
 
+/* TODO: Read registry key [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography] "MachineGuid" */
+#ifndef _WIN32
 	/* cache machine ID so we can use it from a sandboxed app */
 	self->host_machine_id = fwupd_build_machine_id ("fwupd", error);
 	if (self->host_machine_id == NULL)
 		return FALSE;
-
+#endif
 	/* read config file */
 	if (flags & FU_ENGINE_LOAD_FLAG_READONLY_FS)
 		config_flags |= FU_CONFIG_LOAD_FLAG_READONLY_FS;

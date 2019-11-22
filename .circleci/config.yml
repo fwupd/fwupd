@@ -28,6 +28,33 @@ jobs:
           paths:
             - "dist/docs"
 
+  build-windows:
+    docker:
+      - image: fedora:31
+    steps:
+      - checkout
+      - run:
+          name: "Install deps"
+          command: dnf install -y diffutils
+                                  glib2-devel
+                                  git-core
+                                  gnutls-utils
+                                  meson
+                                  gcc
+                                  gcab
+                                  mingw64-gcc
+                                  mingw64-pkg-config
+                                  mingw64-glib2
+                                  mingw64-libgusb
+                                  mingw64-sqlite
+                                  mingw64-libarchive
+                                  mingw64-json-glib
+                                  mingw64-libsoup
+                                  wine
+      - run:
+          name: "Build Win32"
+          command: ./contrib/ci/build_windows.sh
+
   build-snap:
     docker:
       - image: ubuntu:18.04
@@ -102,6 +129,7 @@ workflows:
   version: 2
   main:
     jobs:
+      - build-windows
       - build-ubuntu-x86_64
       - build-snap
       - check-abi

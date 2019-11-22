@@ -150,6 +150,8 @@ fwupd_remote_download_func (void)
 	gboolean ret;
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *directory = NULL;
+	g_autofree gchar *expected_metadata = NULL;
+	g_autofree gchar *expected_signature = NULL;
 	g_autoptr(FwupdRemote) remote = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -159,6 +161,14 @@ fwupd_remote_download_func (void)
 				      "fwupd",
 				      "remotes.d",
 				      NULL);
+	expected_metadata = g_build_filename (FWUPD_LOCALSTATEDIR,
+					      "lib",
+					      "fwupd",
+					      "remotes.d",
+					      "lvfs",
+					      "metadata.xml.gz",
+					      NULL);
+	expected_signature = g_strdup_printf ("%s.asc", expected_metadata);
 	fwupd_remote_set_remotes_dir (remote, directory);
 	fn = g_build_filename (FU_SELF_TEST_REMOTES_DIR, "remotes.d", "lvfs.conf", NULL);
 	ret = fwupd_remote_load_from_filename (remote, fn, NULL, &error);
@@ -172,10 +182,8 @@ fwupd_remote_download_func (void)
 	g_assert (fwupd_remote_get_metadata_uri_sig (remote) != NULL);
 	g_assert_cmpstr (fwupd_remote_get_title (remote), ==, "Linux Vendor Firmware Service");
 	g_assert_cmpstr (fwupd_remote_get_report_uri (remote), ==, "https://fwupd.org/lvfs/firmware/report");
-	g_assert_cmpstr (fwupd_remote_get_filename_cache (remote), ==,
-			 FWUPD_LOCALSTATEDIR "/lib/fwupd/remotes.d/lvfs/metadata.xml.gz");
-	g_assert_cmpstr (fwupd_remote_get_filename_cache_sig (remote), ==,
-			 FWUPD_LOCALSTATEDIR "/lib/fwupd/remotes.d/lvfs/metadata.xml.gz.asc");
+	g_assert_cmpstr (fwupd_remote_get_filename_cache (remote), ==, expected_metadata);
+	g_assert_cmpstr (fwupd_remote_get_filename_cache_sig (remote), ==, expected_signature);
 }
 
 /* verify we used the FirmwareBaseURI just for firmware */
