@@ -108,29 +108,30 @@ fu_udev_device_get_sysfs_attr_as_uint8 (GUdevDevice *udev_device, const gchar *n
 }
 
 static void
-fu_udev_device_dump_internal (GUdevDevice *udev_device)
+fu_udev_device_to_string (FuDevice *device, guint idt, GString *str)
 {
+	FuUdevDevice *self = FU_UDEV_DEVICE (device);
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 	const gchar * const *keys;
 
-	keys = g_udev_device_get_property_keys (udev_device);
-	for (guint i = 0; keys[i] != NULL; i++) {
-		g_debug ("%s={%s}", keys[i],
-			 g_udev_device_get_property (udev_device, keys[i]));
-	}
-	keys = g_udev_device_get_sysfs_attr_keys (udev_device);
-	for (guint i = 0; keys[i] != NULL; i++) {
-		g_debug ("%s=[%s]", keys[i],
-			 g_udev_device_get_sysfs_attr (udev_device, keys[i]));
-	}
-}
-
-void
-fu_udev_device_dump (FuUdevDevice *self)
-{
-	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 	if (priv->udev_device == NULL)
 		return;
-	fu_udev_device_dump_internal (priv->udev_device);
+
+	if (g_getenv ("FU_UDEV_DEVICE_DEBUG") == NULL)
+		return;
+
+	keys = g_udev_device_get_property_keys (priv->udev_device);
+	for (guint i = 0; keys[i] != NULL; i++) {
+		fu_common_string_append_kv (str, idt, keys[i],
+					    g_udev_device_get_property (priv->udev_device,
+									keys[i]));
+	}
+	keys = g_udev_device_get_sysfs_attr_keys (priv->udev_device);
+	for (guint i = 0; keys[i] != NULL; i++) {
+		fu_common_string_append_kv (str, idt, keys[i],
+					    g_udev_device_get_sysfs_attr (priv->udev_device,
+									  keys[i]));
+	}
 }
 
 static gboolean
@@ -940,6 +941,7 @@ fu_udev_device_class_init (FuUdevDeviceClass *klass)
 	device_class->incorporate = fu_udev_device_incorporate;
 	device_class->open = fu_udev_device_open;
 	device_class->close = fu_udev_device_close;
+	device_class->to_string = fu_udev_device_to_string;
 
 	signals[SIGNAL_CHANGED] =
 		g_signal_new ("changed",
