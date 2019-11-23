@@ -31,7 +31,6 @@ shared_module('fu_plugin_synapticsmst',
 )
 
 if get_option('tests')
-  cargs += '-DFU_OFFLINE_DESTDIR="/tmp/fwupd-self-test"'
   cargs += '-DPLUGINBUILDDIR="' + meson.current_build_dir() + '"'
   cargs += '-DSOURCEDIR="' + meson.current_source_dir() + '"'
   e = executable(

@@ -1044,6 +1044,11 @@ fu_common_get_path (FuPathKind path_kind)
 			return g_build_filename (tmp, NULL);
 		basedir = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR);
 		return g_build_filename (basedir, "cache", PACKAGE_NAME, NULL);
+	case FU_PATH_KIND_OFFLINE_TRIGGER:
+		tmp = g_getenv ("FWUPD_OFFLINE_TRIGGER");
+		if (tmp != NULL)
+			return g_strdup (tmp);
+		return g_strdup ("/system-update");
 	case FU_PATH_KIND_POLKIT_ACTIONS:
 #ifdef POLKIT_ACTIONDIR
 		return g_strdup (POLKIT_ACTIONDIR);
