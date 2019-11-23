@@ -4187,6 +4187,7 @@ main (int argc, char **argv)
 	g_setenv ("FWUPD_PLUGINDIR", TESTDATADIR_SRC, TRUE);
 	g_setenv ("FWUPD_SYSCONFDIR", TESTDATADIR_SRC, TRUE);
 	g_setenv ("FWUPD_SYSFSFWDIR", TESTDATADIR_SRC, TRUE);
+	g_setenv ("FWUPD_OFFLINE_TRIGGER", "/tmp/fwupd-self-test/system-update", TRUE);
 	g_setenv ("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 
 	/* ensure empty tree */

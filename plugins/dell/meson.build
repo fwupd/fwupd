@@ -34,7 +34,6 @@ shared_module('fu_plugin_dell',
 if get_option('tests')
   testdatadir = join_paths(meson.current_source_dir(), 'tests')
   cargs += '-DTESTDATADIR="' + testdatadir + '"'
-  cargs += '-DFU_OFFLINE_DESTDIR="/tmp/fwupd-self-test"'
   cargs += '-DPLUGINBUILDDIR="' + meson.current_build_dir() + '"'
   e = executable(
     'dell-self-test',

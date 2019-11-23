@@ -106,9 +106,6 @@ fwupdmgr = executable(
     fwupd,
     libfwupdprivate,
   ],
-  c_args : [
-    '-DFU_OFFLINE_DESTDIR=""',
-  ],
   install : true,
   install_dir : bindir
 )
@@ -163,9 +160,6 @@ fwupdagent = executable(
   link_with : [
     fwupd,
     libfwupdprivate,
-  ],
-  c_args : [
-    '-DFU_OFFLINE_DESTDIR=""',
   ],
   install : true,
   install_dir : join_paths(libexecdir, 'fwupd')
@@ -229,9 +223,6 @@ fwupdtool = executable(
   link_with : [
     fwupd,
     libfwupdprivate,
-  ],
-  c_args : [
-    '-DFU_OFFLINE_DESTDIR=""',
   ],
   install : true,
   install_dir : join_paths(libexecdir, 'fwupd')
@@ -359,7 +350,6 @@ if get_option('tests')
       '-DTESTDATADIR_DST="' + testdatadir_dst + '"',
       '-DTESTDATADIR="' + testdatadir_src + ':' + testdatadir_dst + '"',
       '-DPLUGINBUILDDIR="' + pluginbuilddir + '"',
-      '-DFU_OFFLINE_DESTDIR="/tmp/fwupd-self-test"',
     ],
   )
   test('fu-self-test', e, is_parallel:false, timeout:180)
