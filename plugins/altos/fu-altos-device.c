@@ -10,7 +10,6 @@
 #include <poll.h>
 #include <string.h>
 #include <termios.h>
-#include <errno.h>
 
 #include "fu-io-channel.h"
 #include "fu-altos-device.h"
