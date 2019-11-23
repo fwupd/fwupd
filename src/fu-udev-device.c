@@ -714,15 +714,28 @@ fu_udev_device_open (FuDevice *device, GError **error)
 
 	/* open device */
 	if (priv->device_file != NULL) {
-		priv->fd = g_open (priv->device_file, priv->readonly ? O_RDONLY : O_RDWR);
-		if (priv->fd < 0) {
-			g_set_error (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_FAILED,
-				     "failed to open %s: %s",
-				     priv->device_file,
-				     strerror (errno));
-			return FALSE;
+		if (priv->readonly) {
+			priv->fd = g_open (priv->device_file, O_RDONLY, 0);
+			if (priv->fd < 0) {
+				g_set_error (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_FAILED,
+					     "failed to open %s for reading: %s",
+					     priv->device_file,
+					     strerror (errno));
+				return FALSE;
+			}
+		} else {
+			priv->fd = g_open (priv->device_file, O_RDWR, 0);
+			if (priv->fd < 0) {
+				g_set_error (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_FAILED,
+					     "failed to open %s: %s",
+					     priv->device_file,
+					     strerror (errno));
+				return FALSE;
+			}
 		}
 	}
 
