@@ -11,8 +11,6 @@
 #include <gio/gfiledescriptorbased.h>
 #include <stdlib.h>
 
-#include "fu-keyring.h"
-#include "fu-history.h"
 #include "fu-plugin-private.h"
 #include "fu-rom.h"
 #include "fu-test.h"
