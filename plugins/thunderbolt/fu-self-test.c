@@ -6,7 +6,6 @@
 
 #include "config.h"
 
-#include <errno.h>
 #include <fwupd.h>
 #include <glib.h>
 #include <glib/gprintf.h>
