@@ -243,6 +243,9 @@ endif
 if cc.has_header_symbol('locale.h', 'LC_MESSAGES')
   conf.set('HAVE_LC_MESSAGES', '1')
 endif
+if cc.has_function('pwrite', args : '-D_XOPEN_SOURCE')
+  conf.set('HAVE_PWRITE', '1')
+endif
 
 if build_standalone and get_option('plugin_uefi')
   cairo = dependency('cairo')
