@@ -1,0 +1,4 @@
+[wrap-git]
+directory = gusb
+url = https://github.com/hughsie/libgusb.git
+revision = 43b327a1e213aff00833842c455a796a068077cd
