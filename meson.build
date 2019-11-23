@@ -167,7 +167,7 @@ if build_standalone
 gmodule = dependency('gmodule-2.0')
 gudev = dependency('gudev-1.0', version : '>= 232')
 libxmlb = dependency('xmlb', version : '>= 0.1.13', fallback : ['libxmlb', 'libxmlb_dep'])
-gusb = dependency('gusb', version : '>= 0.2.9')
+gusb = dependency('gusb', version : '>= 0.2.9', fallback : ['gusb', 'gusb_dep'])
 sqlite = dependency('sqlite3')
 libarchive = dependency('libarchive')
 endif
