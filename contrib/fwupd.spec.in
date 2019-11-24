@@ -299,6 +299,7 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %{_localstatedir}/lib/fwupd/builder/README.md
 %{_libdir}/libfwupd*.so.*
 %{_libdir}/girepository-1.0/Fwupd-2.0.typelib
+%{_libdir}/girepository-1.0/FwupdPlugin-1.0.typelib
 /usr/lib/udev/rules.d/*.rules
 /usr/lib/systemd/system-shutdown/fwupd.shutdown
 %dir %{_libdir}/fwupd-plugins-3
@@ -370,11 +371,13 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 
 %files devel
 %{_datadir}/gir-1.0/Fwupd-2.0.gir
+%{_datadir}/gir-1.0/FwupdPlugin-1.0.gir
 %{_datadir}/gtk-doc/html/fwupd
 %{_datadir}/vala/vapi
 %{_includedir}/fwupd-1
 %{_libdir}/libfwupd*.so
 %{_libdir}/pkgconfig/fwupd.pc
+%{_libdir}/pkgconfig/fwupdplugin.pc
 
 %files tests
 %dir %{_datadir}/installed-tests/fwupd
