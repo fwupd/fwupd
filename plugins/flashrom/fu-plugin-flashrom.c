@@ -24,6 +24,7 @@
 #include <string.h>
 
 #include "fu-plugin-vfuncs.h"
+#include "fu-hash.h"
 #include "libflashrom.h"
 
 #define SELFCHECK_TRUE 1

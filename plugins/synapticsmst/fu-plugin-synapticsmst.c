@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-plugin-vfuncs.h"
+#include "fu-hash.h"
 
 #include "fu-synapticsmst-common.h"
 #include "fu-synapticsmst-device.h"

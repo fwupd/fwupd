@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-plugin-vfuncs.h"
+#include "fu-hash.h"
 
 #include "fu-wac-device.h"
 #include "fu-wac-firmware.h"
