@@ -50,6 +50,13 @@ fwupdplugin_headers = [
   'fu-udev-device.h',
   'fu-usb-device.h',
 ]
+install_headers(
+  'fwupdplugin.h',
+  subdir : 'fwupd-1',
+)
+install_headers([fwupdplugin_headers, 'fu-plugin-vfuncs.h'],
+  subdir : 'fwupd-1/libfwupdplugin',
+)
 
 fu_hash = custom_target(
   'fu-hash.h',
@@ -85,7 +92,6 @@ library_deps = [
   libarchive,
   libjsonglib,
   libgcab,
-  sqlite,
   valgrind,
 ]
 
@@ -112,6 +118,27 @@ fwupdplugin = shared_library(
   link_args : vflag,
   link_depends : fwupdplugin_mapfile,
   install : true
+)
+
+fwupdplugin_pkgg = import('pkgconfig')
+fwupdplugin_pkgg.generate(
+  libraries : fwupdplugin,
+  requires : [ 'gio-2.0',
+               'gmodule-2.0',
+               'gobject-2.0',
+               'gusb',
+               'fwupd',
+               'json-glib-1.0',
+               'libarchive',
+               'libgcab-1.0',
+               'libsoup-2.4',
+               'xmlb',
+  ],
+  subdirs : 'fwupd-1',
+  version : meson.project_version(),
+  name : 'fwupdplugin',
+  filebase : 'fwupdplugin',
+  description : 'library for plugins to use to interact with fwupd daemon',
 )
 
 if get_option('introspection')
@@ -142,12 +169,12 @@ if get_option('introspection')
       'GObject-2.0',
       'GUsb-1.0',
     ],
-    install : false
+    install : true
   )
   gnome.generate_vapi('fwupdplugin',
     sources : gir[0],
     packages : ['gio-2.0'],
-    install : false,
+    install : true,
   )
 
   # Verify the map file is correct -- note we can't actually use the generated

@@ -1,5 +1,7 @@
-usr/include/*
-usr/lib/*/*.so
-usr/lib/*/pkgconfig/*.pc
-usr/share/gir-1.0/*.gir
-usr/share/vala/vapi
+usr/include/fwupd-1/fwupd.h
+usr/include/fwupd-1/libfwupd
+usr/lib/*/libfwupd.so
+usr/lib/*/pkgconfig/fwupd.pc
+usr/share/gir-1.0/Fwupd-*.gir
+usr/share/vala/vapi/fwupd.deps
+usr/share/vala/vapi/fwupd.vapi

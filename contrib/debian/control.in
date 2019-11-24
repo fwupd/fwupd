@@ -140,6 +140,34 @@ Description: GObject introspection data for libfwupd
  It can be used by packages using the GIRepository format to generate
  dynamic bindings.
 
+Package: libfwupdplugin-dev
+Architecture: linux-any
+Multi-Arch: same
+Depends: libfwupd2 (= ${binary:Version}),
+         gir1.2-fwupdplugin-1.0 (= ${binary:Version}),
+         ${misc:Depends}
+Section: libdevel
+Description: development files for libfwupdplugin
+ fwupd is a daemon to allow session software to update device firmware.
+ You can either use a GUI software manager like GNOME Software to view and
+ apply updates, the command-line tool or the system D-Bus interface directly.
+ Firmware updates are supported for a variety of technologies.
+ See <https://github.com/fwupd/fwupd> for details
+ .
+ This package provides the development files for libfwupdplugin
+
+Package: gir1.2-fwupdplugin-1.0
+Architecture: linux-any
+Multi-Arch: same
+Depends: ${misc:Depends},
+         ${gir:Depends}
+Section: introspection
+Description: GObject introspection data for libfwupdplugin
+ This package provides the introspection data for libfwupdplugin.
+ .
+ It can be used by packages using the GIRepository format to generate
+ dynamic bindings.
+
 Package: fwupd-amd64-signed-template
 Architecture: amd64
 Depends: ${shlibs:Depends}, ${misc:Depends}, make | build-essential | dpkg-dev
