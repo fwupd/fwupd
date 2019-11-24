@@ -15,6 +15,7 @@
 #include <smbios_c/smi.h>
 
 #include "fu-plugin-vfuncs.h"
+#include "fu-hash.h"
 
 /* Whitelisted smbios class/select commands */
 #define CLASS_ADMIN_PROP	10

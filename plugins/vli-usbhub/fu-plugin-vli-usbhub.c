@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-plugin-vfuncs.h"
+#include "fu-hash.h"
 
 #include "fu-vli-usbhub-device.h"
 #include "fu-vli-usbhub-firmware.h"

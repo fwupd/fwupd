@@ -8,7 +8,6 @@
 
 #include "fu-plugin.h"
 #include "fu-device.h"
-#include "fu-hash.h"
 
 void		 fu_plugin_init				(FuPlugin	*plugin);
 void		 fu_plugin_destroy			(FuPlugin	*plugin);

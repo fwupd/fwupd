@@ -13,6 +13,7 @@
 
 #include "fu-device-metadata.h"
 #include "fu-plugin-vfuncs.h"
+#include "fu-hash.h"
 
 #include "fu-uefi-bgrt.h"
 #include "fu-uefi-common.h"

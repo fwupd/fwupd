@@ -14,6 +14,7 @@
 #include "fu-plugin-private.h"
 #include "fu-plugin-dell.h"
 #include "fu-plugin-vfuncs.h"
+#include "fu-hash.h"
 
 static FuDevice *
 _find_device_by_id (GPtrArray *devices, const gchar *device_id)

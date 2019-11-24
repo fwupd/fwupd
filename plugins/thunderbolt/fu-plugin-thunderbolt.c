@@ -16,6 +16,7 @@
 #include <errno.h>
 
 #include "fu-plugin-vfuncs.h"
+#include "fu-hash.h"
 #include "fu-device-metadata.h"
 #include "fu-thunderbolt-image.h"
 

@@ -18,6 +18,7 @@
 #include "fu-device.h"
 #include "fwupd-error.h"
 #include "fu-plugin-vfuncs.h"
+#include "fu-hash.h"
 
 #include "fu-dell-dock-common.h"
 

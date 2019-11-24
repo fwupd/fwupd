@@ -11,6 +11,7 @@
 
 #include "fu-thunderbolt-image.h"
 #include "fu-plugin-vfuncs.h"
+#include "fu-hash.h"
 #include "fu-test.h"
 
 static gsize

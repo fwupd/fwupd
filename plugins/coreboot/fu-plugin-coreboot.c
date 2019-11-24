@@ -12,6 +12,7 @@
 #include <glib/gstdio.h>
 
 #include "fu-plugin-vfuncs.h"
+#include "fu-hash.h"
 #include "fu-device-metadata.h"
 #include "fu-device-private.h"
 #include "fu-plugin-coreboot.h"

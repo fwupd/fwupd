@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-plugin-vfuncs.h"
+#include "fu-hash.h"
 
 #include "fu-altos-device.h"
 #include "fu-altos-firmware.h"

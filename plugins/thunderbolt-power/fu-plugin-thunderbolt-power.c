@@ -12,6 +12,7 @@
 #include <glib/gstdio.h>
 
 #include "fu-plugin-vfuncs.h"
+#include "fu-hash.h"
 #include "fu-device-metadata.h"
 
 #define BOLT_DBUS_SERVICE	"org.freedesktop.bolt"
