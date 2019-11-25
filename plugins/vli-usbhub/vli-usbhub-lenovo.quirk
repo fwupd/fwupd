@@ -17,10 +17,10 @@ Flags = usb2
 # Lenovo TR Dock
 [DeviceInstanceId=USB\VID_17EF&PID_307F]
 Plugin = vli_usbhub
-Flags = usb3
+Flags = usb3,has-shared-spi-i2c
 [DeviceInstanceId=USB\VID_17EF&PID_3080]
 Plugin = vli_usbhub
-Flags = usb2
+Flags = usb2,has-shared-spi-i2c
 
 # Lenovo CS13 KG Dock
 [DeviceInstanceId=USB\VID_17EF&PID_1010]
@@ -109,20 +109,20 @@ Flags = usb2
 # Lenovo Travel hub Gen2
 [DeviceInstanceId=USB\VID_17EF&PID_721D]
 Plugin = vli_usbhub
-Flags = usb3
+Flags = usb3,has-shared-spi-pd
 [DeviceInstanceId=USB\VID_17EF&PID_7225]
 Plugin = vli_usbhub
-Flags = usb2
+Flags = usb2,has-shared-spi-pd
 
-# Lenovo Mini dock
-[DeviceInstanceId=USB\VID_17EF&PID_3074]
+# Lenovo USB-C Mini dock
+[DeviceInstanceId=USB\VID_17EF&PID_3094]
 Plugin = vli_usbhub
-Flags = usb3
+Flags = usb3,has-shared-spi-pd
 [DeviceInstanceId=USB\VID_17EF&PID_3095]
 Plugin = vli_usbhub
-Flags = usb2
+Flags = usb2,has-shared-spi-pd
 
-# Lenovo Lenovo Travel Hub 1in3
+# Lenovo Travel Hub 1in3
 [DeviceInstanceId=USB\VID_17EF&PID_7228]
 Plugin = vli_usbhub
 Flags = usb3
@@ -130,15 +130,23 @@ Flags = usb3
 Plugin = vli_usbhub
 Flags = usb2
 
-# Lenovo Lenovo 1转7 Hub
+# Lenovo USB-C 7-in-1 Hub
 [DeviceInstanceId=USB\VID_17EF&PID_722A]
 Plugin = vli_usbhub
-Flags = usb3
+Flags = usb3,has-shared-spi-pd
 [DeviceInstanceId=USB\VID_17EF&PID_7229]
 Plugin = vli_usbhub
-Flags = usb2
+Flags = usb2,has-shared-spi-pd
 
-# Lenovo Lenovo Gen2 dock
+# Lenovo USB-C to 4 USB-A Hub
+[DeviceInstanceId=USB\VID_17EF&PID_1039]
+Plugin = vli_usbhub
+Flags = usb3,has-shared-spi-pd
+[DeviceInstanceId=USB\VID_17EF&PID_103A]
+Plugin = vli_usbhub
+Flags = usb2,has-shared-spi-pd
+
+# Lenovo Gen2 dock
 [DeviceInstanceId=USB\VID_17EF&PID_A391]
 Plugin = vli_usbhub
 Flags = tier1,usb3

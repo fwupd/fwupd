@@ -964,12 +964,16 @@ fu_vli_usbhub_device_setup (FuDevice *device, GError **error)
 	}
 
 	/* detect the PD child */
-	if (!fu_vli_usbhub_device_pd_setup (self, error))
-		return FALSE;
+	if (fu_device_has_custom_flag (device, "has-shared-spi-pd")) {
+		if (!fu_vli_usbhub_device_pd_setup (self, error))
+			return FALSE;
+	}
 
-	/* detect the PD child */
-	if (!fu_vli_usbhub_device_i2c_setup (self, error))
-		return FALSE;
+	/* detect the I²C child */
+	if (fu_device_has_custom_flag (device, "has-shared-spi-i2c")) {
+		if (!fu_vli_usbhub_device_i2c_setup (self, error))
+			return FALSE;
+	}
 
 	/* success */
 	return TRUE;
