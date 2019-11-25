@@ -15,7 +15,6 @@
 
 struct _FuSynapromConfig {
 	FuDevice		 parent_instance;
-	FuSynapromDevice	*device;
 	guint32			 configid1;		/* config ID1 */
 	guint32			 configid2;		/* config ID2 */
 };
@@ -57,15 +56,10 @@ typedef struct __attribute__((packed)) {
 
 G_DEFINE_TYPE (FuSynapromConfig, fu_synaprom_config, FU_TYPE_DEVICE)
 
-enum {
-	PROP_0,
-	PROP_DEVICE,
-	PROP_LAST
-};
-
 static gboolean
 fu_synaprom_config_setup (FuDevice *device, GError **error)
 {
+	FuDevice *parent = fu_device_get_parent (device);
 	FuSynapromConfig *self = FU_SYNAPROM_CONFIG (device);
 	FuSynapromCmdIotaFind cmd = { 0x0 };
 	FuSynapromIotaConfigVersion cfg;
@@ -79,7 +73,8 @@ fu_synaprom_config_setup (FuDevice *device, GError **error)
 	cmd.flags = GUINT16_TO_LE((guint16)FU_SYNAPROM_CMD_IOTA_FIND_FLAGS_READMAX);
 	request = fu_synaprom_request_new (FU_SYNAPROM_CMD_IOTA_FIND, &cmd, sizeof(cmd));
 	reply = fu_synaprom_reply_new (sizeof(FuSynapromReplyIotaFindHdr) + FU_SYNAPROM_MAX_IOTA_READ_SIZE);
-	if (!fu_synaprom_device_cmd_send (self->device, request, reply, 5000, error))
+	if (!fu_synaprom_device_cmd_send (FU_SYNAPROM_DEVICE (parent),
+					  request, reply, 5000, error))
 		return FALSE;
 	if (reply->len < sizeof(hdr) + sizeof(cfg)) {
 		g_set_error (error,
@@ -188,7 +183,7 @@ fu_synaprom_config_write_firmware (FuDevice *device,
 				   FwupdInstallFlags flags,
 				   GError **error)
 {
-	FuSynapromConfig *self = FU_SYNAPROM_CONFIG (device);
+	FuDevice *parent = fu_device_get_parent (device);
 	g_autoptr(GBytes) fw = NULL;
 
 	/* get default image */
@@ -197,7 +192,7 @@ fu_synaprom_config_write_firmware (FuDevice *device,
 		return FALSE;
 
 	/* I assume the CFG/MFW difference is detected in the device...*/
-	return fu_synaprom_device_write_fw (self->device, fw, error);
+	return fu_synaprom_device_write_fw (FU_SYNAPROM_DEVICE (parent), fw, error);
 }
 
 static void
@@ -209,84 +204,47 @@ fu_synaprom_config_init (FuSynapromConfig *self)
 }
 
 static void
-fu_synaprom_config_finalize (GObject *obj)
-{
-	FuSynapromConfig *self = FU_SYNAPROM_CONFIG (obj);
-	g_object_unref (self->device);
-	G_OBJECT_CLASS (fu_synaprom_config_parent_class)->finalize (obj);
-}
-
-static void
 fu_synaprom_config_constructed (GObject *obj)
 {
 	FuSynapromConfig *self = FU_SYNAPROM_CONFIG (obj);
+	FuDevice *parent = fu_device_get_parent (FU_DEVICE (self));
 	g_autofree gchar *devid = NULL;
 
 	/* append the firmware kind to the generated GUID */
 	devid = g_strdup_printf ("USB\\VID_%04X&PID_%04X-cfg",
-				 fu_usb_device_get_vid (FU_USB_DEVICE (self->device)),
-				 fu_usb_device_get_pid (FU_USB_DEVICE (self->device)));
+				 fu_usb_device_get_vid (FU_USB_DEVICE (parent)),
+				 fu_usb_device_get_pid (FU_USB_DEVICE (parent)));
 	fu_device_add_instance_id (FU_DEVICE (self), devid);
 
 	G_OBJECT_CLASS (fu_synaprom_config_parent_class)->constructed (obj);
 }
 
-static void
-fu_synaprom_config_get_property (GObject *obj, guint prop_id,
-				 GValue *value, GParamSpec *pspec)
-{
-	FuSynapromConfig *self = FU_SYNAPROM_CONFIG (obj);
-	switch (prop_id) {
-	case PROP_DEVICE:
-		g_value_set_object (value, self->device);
-		break;
-	default:
-		G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
-		break;
-	}
-}
-
-static void
-fu_synaprom_config_set_property (GObject *obj, guint prop_id,
-				 const GValue *value, GParamSpec *pspec)
-{
-	FuSynapromConfig *self = FU_SYNAPROM_CONFIG (obj);
-	switch (prop_id) {
-	case PROP_DEVICE:
-		g_set_object (&self->device, g_value_get_object (value));
-		break;
-	default:
-		G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
-		break;
-	}
-}
-
 static gboolean
 fu_synaprom_config_open (FuDevice *device, GError **error)
 {
-	FuSynapromConfig *self = FU_SYNAPROM_CONFIG (device);
-	return fu_device_open (FU_DEVICE (self->device), error);
+	FuDevice *parent = fu_device_get_parent (device);
+	return fu_device_open (parent, error);
 }
 
 static gboolean
 fu_synaprom_config_close (FuDevice *device, GError **error)
 {
-	FuSynapromConfig *self = FU_SYNAPROM_CONFIG (device);
-	return fu_device_close (FU_DEVICE (self->device), error);
+	FuDevice *parent = fu_device_get_parent (device);
+	return fu_device_close (parent, error);
 }
 
 static gboolean
 fu_synaprom_config_attach (FuDevice *device, GError **error)
 {
-	FuSynapromConfig *self = FU_SYNAPROM_CONFIG (device);
-	return fu_device_attach (FU_DEVICE (self->device), error);
+	FuDevice *parent = fu_device_get_parent (device);
+	return fu_device_attach (parent, error);
 }
 
 static gboolean
 fu_synaprom_config_detach (FuDevice *device, GError **error)
 {
-	FuSynapromConfig *self = FU_SYNAPROM_CONFIG (device);
-	return fu_device_detach (FU_DEVICE (self->device), error);
+	FuDevice *parent = fu_device_get_parent (device);
+	return fu_device_detach (parent, error);
 }
 
 static void
@@ -294,12 +252,7 @@ fu_synaprom_config_class_init (FuSynapromConfigClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
-	GParamSpec *pspec;
-
 	object_class->constructed = fu_synaprom_config_constructed;
-	object_class->finalize = fu_synaprom_config_finalize;
-	object_class->get_property = fu_synaprom_config_get_property;
-	object_class->set_property = fu_synaprom_config_set_property;
 	klass_device->write_firmware = fu_synaprom_config_write_firmware;
 	klass_device->prepare_firmware = fu_synaprom_config_prepare_firmware;
 	klass_device->open = fu_synaprom_config_open;
@@ -307,13 +260,6 @@ fu_synaprom_config_class_init (FuSynapromConfigClass *klass)
 	klass_device->setup = fu_synaprom_config_setup;
 	klass_device->attach = fu_synaprom_config_attach;
 	klass_device->detach = fu_synaprom_config_detach;
-
-	pspec = g_param_spec_object ("device", NULL, NULL,
-				     FU_TYPE_SYNAPROM_DEVICE,
-				     G_PARAM_READWRITE |
-				     G_PARAM_CONSTRUCT |
-				     G_PARAM_STATIC_NAME);
-	g_object_class_install_property (object_class, PROP_DEVICE, pspec);
 }
 
 FuSynapromConfig *
@@ -321,7 +267,7 @@ fu_synaprom_config_new (FuSynapromDevice *device)
 {
 	FuSynapromConfig *self;
 	self = g_object_new (FU_TYPE_SYNAPROM_CONFIG,
-			     "device", device,
+			     "parent", device,
 			     NULL);
 	return FU_SYNAPROM_CONFIG (self);
 }
