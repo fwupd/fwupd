@@ -574,11 +574,8 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 	}
 
 	/* set versions */
-	fw_ver = g_strdup_printf ("%u.%u.%u",
-				  f01_basic->data[2],
-				  f01_basic->data[3],
-				  priv->flash.build_id);
-	fu_device_set_version (device, fw_ver, FWUPD_VERSION_FORMAT_TRIPLET);
+	fw_ver = g_strdup_printf ("%u", priv->flash.build_id);
+	fu_device_set_version (device, fw_ver, FWUPD_VERSION_FORMAT_PLAIN);
 	bl_ver = g_strdup_printf ("%u.0", priv->flash.bootloader_id[1]);
 	fu_device_set_version_bootloader (device, bl_ver);
 
