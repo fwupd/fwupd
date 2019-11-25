@@ -186,6 +186,9 @@ void		 fu_device_set_physical_id		(FuDevice	*self,
 const gchar	*fu_device_get_logical_id		(FuDevice	*self);
 void		 fu_device_set_logical_id		(FuDevice	*self,
 							 const gchar	*logical_id);
+const gchar	*fu_device_get_protocol			(FuDevice	*self);
+void		 fu_device_set_protocol			(FuDevice	*self,
+							 const gchar	*protocol);
 void		 fu_device_add_flag			(FuDevice	*self,
 							 FwupdDeviceFlags flag);
 const gchar	*fu_device_get_custom_flags		(FuDevice	*self);

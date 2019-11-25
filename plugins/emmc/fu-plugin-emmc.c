@@ -16,6 +16,5 @@ fu_plugin_init (FuPlugin *plugin)
 {
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 	fu_plugin_add_udev_subsystem (plugin, "block");
-	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_SUPPORTS_PROTOCOL, "org.jedec.mmc");
 	fu_plugin_set_device_gtype (plugin, FU_TYPE_EMMC_DEVICE);
 }

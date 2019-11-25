@@ -332,6 +332,13 @@ dfu_device_add_targets (DfuDevice *device, GError **error)
 			priv->version = DFU_VERSION_DFU_1_1;
 		}
 
+		/* set expected protocol */
+		if (priv->version == DFU_VERSION_DFUSE) {
+			fu_device_set_protocol (FU_DEVICE (device), "com.st.dfuse");
+		} else {
+			fu_device_set_protocol (FU_DEVICE (device), "org.usb.dfu");
+		}
+
 		/* fix up the transfer size */
 		if (priv->transfer_size == 0xffff) {
 			priv->transfer_size = 0x0400;

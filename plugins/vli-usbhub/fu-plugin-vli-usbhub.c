@@ -17,7 +17,6 @@ void
 fu_plugin_init (FuPlugin *plugin)
 {
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
-	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_SUPPORTS_PROTOCOL, "com.vli.usbhub");
 	fu_plugin_set_device_gtype (plugin, FU_TYPE_VLI_USBHUB_DEVICE);
 	fu_plugin_add_firmware_gtype (plugin, "vli-usbhub", FU_TYPE_VLI_USBHUB_FIRMWARE);
 	fu_plugin_add_firmware_gtype (plugin, "vli-usbhub-pd", FU_TYPE_VLI_USBHUB_PD_FIRMWARE);
