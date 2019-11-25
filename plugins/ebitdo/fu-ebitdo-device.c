@@ -578,6 +578,7 @@ fu_ebitdo_device_prepare_firmware (FuDevice *device,
 static void
 fu_ebitdo_device_init (FuEbitdoDevice *self)
 {
+	fu_device_set_protocol (FU_DEVICE (self), "com.8bitdo");
 }
 
 static void

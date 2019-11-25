@@ -33,8 +33,6 @@ fu_plugin_init (FuPlugin *plugin)
 
 	/* currently slower performance, but more reliable in corner cases */
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_BETTER_THAN, "synapticsmst");
-	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_SUPPORTS_PROTOCOL, "com.dell.dock");
-	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_SUPPORTS_PROTOCOL, "com.synaptics.mst");
 }
 
 static gboolean

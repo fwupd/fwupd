@@ -972,6 +972,7 @@ fu_dell_dock_mst_finalize (GObject *object)
 static void
 fu_dell_dock_mst_init (FuDellDockMst *self)
 {
+	fu_device_set_protocol (FU_DEVICE (self), "com.synaptics.mst");
 }
 
 static void

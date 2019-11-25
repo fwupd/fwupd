@@ -545,6 +545,7 @@ fu_altos_device_init (FuAltosDevice *self)
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_vendor (FU_DEVICE (self), "altusmetrum.org");
 	fu_device_set_summary (FU_DEVICE (self), "A USB hardware random number generator");
+	fu_device_set_protocol (FU_DEVICE (self), "org.altusmetrum.altos");
 
 	/* requires manual step */
 	if (!fu_device_has_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER))

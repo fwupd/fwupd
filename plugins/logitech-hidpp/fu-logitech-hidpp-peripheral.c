@@ -588,6 +588,7 @@ fu_logitech_hidpp_peripheral_setup (FuDevice *device, GError **error)
 			self->is_updatable = TRUE;
 			fu_device_remove_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 		}
+		fu_device_set_protocol (FU_DEVICE (device), "com.logitech.unifyingsigned");
 	}
 	idx = fu_logitech_hidpp_peripheral_feature_get_idx (self, HIDPP_FEATURE_DFU);
 	if (idx != 0x00) {
@@ -1020,6 +1021,7 @@ fu_logitech_hidpp_peripheral_init (FuLogitechHidPpPeripheral *self)
 	self->feature_index = g_ptr_array_new_with_free_func (g_free);
 	fu_device_add_parent_guid (FU_DEVICE (self), "HIDRAW\\VEN_046D&DEV_C52B");
 	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_set_protocol (FU_DEVICE (self), "com.logitech.unifying");
 
 	/* there are a lot of unifying peripherals, but not all respond
 	 * well to opening -- so limit to ones with issued updates */

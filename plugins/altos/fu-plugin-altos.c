@@ -16,7 +16,6 @@ void
 fu_plugin_init (FuPlugin *plugin)
 {
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
-	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_SUPPORTS_PROTOCOL, "org.altusmetrum.altos");
 	fu_plugin_set_device_gtype (plugin, FU_TYPE_ALTOS_DEVICE);
 	fu_plugin_add_firmware_gtype (plugin, "altos", FU_TYPE_ALTOS_FIRMWARE);
 }

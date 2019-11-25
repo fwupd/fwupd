@@ -548,8 +548,9 @@ fu_csr_device_close (FuUsbDevice *device, GError **error)
 }
 
 static void
-fu_csr_device_init (FuCsrDevice *device)
+fu_csr_device_init (FuCsrDevice *self)
 {
+	fu_device_set_protocol (FU_DEVICE (self), "com.qualcomm.dfu");
 }
 
 static void

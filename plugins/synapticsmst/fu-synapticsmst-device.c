@@ -68,6 +68,7 @@ fu_synapticsmst_device_finalize (GObject *object)
 static void
 fu_synapticsmst_device_init (FuSynapticsmstDevice *self)
 {
+	fu_device_set_protocol (FU_DEVICE (self), "com.synaptics.mst");
 	fu_device_set_vendor (FU_DEVICE (self), "Synaptics");
 	fu_device_set_summary (FU_DEVICE (self), "Multi-Stream Transport Device");
 	fu_device_add_icon (FU_DEVICE (self), "video-display");
