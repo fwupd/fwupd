@@ -438,7 +438,7 @@ fu_util_prompt_complete (FwupdDeviceFlags flags, gboolean prompt, GError **error
 				 _("An update requires the system to shutdown to complete."),
 				 /* TRANSLATORS: shutdown to apply the update */
 				 _("Shutdown now?"));
-			if (!fu_util_prompt_for_boolean (TRUE))
+			if (!fu_util_prompt_for_boolean (FALSE))
 				return TRUE;
 		}
 		return fu_util_update_shutdown (error);
@@ -450,7 +450,7 @@ fu_util_prompt_complete (FwupdDeviceFlags flags, gboolean prompt, GError **error
 				 _("An update requires a reboot to complete."),
 				 /* TRANSLATORS: reboot to apply the update */
 				 _("Restart now?"));
-			if (!fu_util_prompt_for_boolean (TRUE))
+			if (!fu_util_prompt_for_boolean (FALSE))
 				return TRUE;
 		}
 		return fu_util_update_reboot (error);
