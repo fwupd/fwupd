@@ -249,6 +249,18 @@ fu_synaprom_config_detach (FuDevice *device, GError **error)
 }
 
 static void
+fu_synaprom_config_flags_notify_cb (FuDevice *parent, GParamSpec *pspec, FuDevice *device)
+{
+	if (fu_device_has_flag (parent, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug ("parent set IS_BOOTLOADER, mirroring to child");
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	} else {
+		g_debug ("parent unset IS_BOOTLOADER, mirroring to child");
+		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	}
+}
+
+static void
 fu_synaprom_config_class_init (FuSynapromConfigClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
@@ -270,5 +282,11 @@ fu_synaprom_config_new (FuSynapromDevice *device)
 	self = g_object_new (FU_TYPE_SYNAPROM_CONFIG,
 			     "parent", device,
 			     NULL);
+
+	/* mirror the bootloader flag on the parent to the child */
+	if (fu_device_has_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
+		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	g_signal_connect (device, "notify::flags",
+			  G_CALLBACK (fu_synaprom_config_flags_notify_cb), self);
 	return FU_SYNAPROM_CONFIG (self);
 }
