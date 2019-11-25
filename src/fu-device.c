@@ -66,6 +66,7 @@ enum {
 	PROP_PHYSICAL_ID,
 	PROP_LOGICAL_ID,
 	PROP_QUIRKS,
+	PROP_PARENT,
 	PROP_LAST
 };
 
@@ -94,6 +95,9 @@ fu_device_get_property (GObject *object, guint prop_id,
 	case PROP_QUIRKS:
 		g_value_set_object (value, priv->quirks);
 		break;
+	case PROP_PARENT:
+		g_value_set_object (value, priv->parent);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
@@ -105,6 +109,7 @@ fu_device_set_property (GObject *object, guint prop_id,
 			const GValue *value, GParamSpec *pspec)
 {
 	FuDevice *self = FU_DEVICE (object);
+	FuDevicePrivate *priv = GET_PRIVATE (self);
 	switch (prop_id) {
 	case PROP_STATUS:
 		fu_device_set_status (self, g_value_get_uint (value));
@@ -120,6 +125,10 @@ fu_device_set_property (GObject *object, guint prop_id,
 		break;
 	case PROP_QUIRKS:
 		fu_device_set_quirks (self, g_value_get_object (value));
+		break;
+	case PROP_PARENT:
+		/* noref */
+		priv->parent = g_value_get_object (value);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2546,6 +2555,13 @@ fu_device_class_init (FuDeviceClass *klass)
 				     G_PARAM_READWRITE |
 				     G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_QUIRKS, pspec);
+
+	pspec = g_param_spec_object ("parent", NULL, NULL,
+				     FU_TYPE_DEVICE,
+				     G_PARAM_READWRITE |
+				     G_PARAM_CONSTRUCT |
+				     G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_PARENT, pspec);
 }
 
 static void
