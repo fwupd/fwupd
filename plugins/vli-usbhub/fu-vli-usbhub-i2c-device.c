@@ -18,7 +18,6 @@
 struct _FuVliUsbhubI2cDevice
 {
 	FuDevice		 parent_instance;
-	FuVliUsbhubDevice	*parent;
 	FuVliUsbhubI2cChip	 chip;
 };
 
@@ -36,10 +35,10 @@ static gboolean
 fu_vli_usbhub_i2c_device_setup (FuDevice *device, GError **error)
 {
 	FuVliUsbhubI2cDevice *self = FU_VLI_USBHUB_I2C_DEVICE (device);
+	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE (fu_device_get_parent (device));
 	guint8 buf[11] = { 0x0 };
 	g_autofree gchar *instance_id = NULL;
 	g_autofree gchar *version = NULL;
-	g_autoptr(FuVliUsbhubDevice) parent = g_steal_pointer (&self->parent);
 
 	/* get versions */
 	if (!fu_vli_usbhub_device_i2c_read (parent,
@@ -255,19 +254,9 @@ fu_vli_usbhub_i2c_device_init (FuVliUsbhubI2cDevice *self)
 }
 
 static void
-fu_vli_usbhub_i2c_device_finalize (GObject *object)
-{
-	FuVliUsbhubI2cDevice *self = FU_VLI_USBHUB_I2C_DEVICE (object);
-	g_clear_object (&self->parent);
-	G_OBJECT_CLASS (fu_vli_usbhub_i2c_device_parent_class)->finalize (object);
-}
-
-static void
 fu_vli_usbhub_i2c_device_class_init (FuVliUsbhubI2cDeviceClass *klass)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	object_class->finalize = fu_vli_usbhub_i2c_device_finalize;
 	klass_device->to_string = fu_vli_usbhub_i2c_device_to_string;
 	klass_device->probe = fu_vli_usbhub_i2c_device_probe;
 	klass_device->setup = fu_vli_usbhub_i2c_device_setup;
@@ -279,7 +268,8 @@ fu_vli_usbhub_i2c_device_class_init (FuVliUsbhubI2cDeviceClass *klass)
 FuDevice *
 fu_vli_usbhub_i2c_device_new (FuVliUsbhubDevice *parent)
 {
-	FuVliUsbhubI2cDevice *self = g_object_new (FU_TYPE_VLI_USBHUB_I2C_DEVICE, NULL);
-	self->parent = g_object_ref (parent);
+	FuVliUsbhubI2cDevice *self = g_object_new (FU_TYPE_VLI_USBHUB_I2C_DEVICE,
+						   "parent", parent,
+						   NULL);
 	return FU_DEVICE (self);
 }
