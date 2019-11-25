@@ -118,6 +118,7 @@ fu_udev_device_get_sysfs_attr_as_uint8 (GUdevDevice *udev_device, const gchar *n
 static void
 fu_udev_device_to_string (FuDevice *device, guint idt, GString *str)
 {
+#ifdef HAVE_GUDEV
 	FuUdevDevice *self = FU_UDEV_DEVICE (device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 	const gchar * const *keys;
@@ -140,6 +141,7 @@ fu_udev_device_to_string (FuDevice *device, guint idt, GString *str)
 					    g_udev_device_get_sysfs_attr (priv->udev_device,
 									  keys[i]));
 	}
+#endif
 }
 
 static gboolean
