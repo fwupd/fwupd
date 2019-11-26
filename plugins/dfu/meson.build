@@ -115,7 +115,8 @@ if get_option('tests')
     'dfu-self-test',
     fu_hash,
     sources : [
-      'dfu-self-test.c'
+      'dfu-self-test.c',
+      'fu-test.c',
     ],
     include_directories : [
       include_directories('..'),

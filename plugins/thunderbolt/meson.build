@@ -56,6 +56,7 @@ if get_option('tests') and umockdev.found() and gio.version().version_compare('>
     fu_hash,
     sources : [
       'fu-self-test.c',
+      'fu-test.c',
       'fu-plugin-thunderbolt.c',
       'fu-thunderbolt-image.c',
     ],

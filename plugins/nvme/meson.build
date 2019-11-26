@@ -40,6 +40,7 @@ if get_option('tests')
     fu_hash,
     sources : [
       'fu-self-test.c',
+      'fu-test.c',
       'fu-nvme-common.c',
       'fu-nvme-device.c',
     ],

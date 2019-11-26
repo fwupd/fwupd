@@ -35,6 +35,7 @@ if get_option('tests')
     fu_hash,
     sources : [
       'fu-self-test.c',
+      'fu-test.c',
       'fu-redfish-client.c',
       'fu-redfish-common.c',
     ],

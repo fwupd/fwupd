@@ -29,7 +29,6 @@ libfwupdprivate_src = [
   'fu-quirks.c',
   'fu-smbios.c',
   'fu-srec-firmware.c',
-  'fu-test.c',
   'fu-usb-device.c',
 ]
 

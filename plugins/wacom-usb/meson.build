@@ -39,6 +39,7 @@ if get_option('tests')
     fu_hash,
     sources : [
       'fu-self-test.c',
+      'fu-test.c',
       'fu-wac-common.c',
       'fu-wac-firmware.c',
     ],

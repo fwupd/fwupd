@@ -39,6 +39,7 @@ if get_option('tests')
     fu_hash,
     sources : [
       'fu-self-test.c',
+      'fu-test.c',
       'fu-ata-device.c',
     ],
     include_directories : [

@@ -38,6 +38,7 @@ if get_option('tests')
     fu_hash,
     sources : [
       'fu-self-test.c',
+      'fu-test.c',
       'fu-synapticsmst-common.c',
       'fu-synapticsmst-connection.c',
       'fu-synapticsmst-device.c',

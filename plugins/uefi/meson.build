@@ -96,6 +96,7 @@ if get_option('tests')
     fu_hash,
     sources : [
       'fu-self-test.c',
+      'fu-test.c',
       'fu-uefi-bgrt.c',
       'fu-uefi-bootmgr.c',
       'fu-uefi-common.c',

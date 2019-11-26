@@ -37,6 +37,7 @@ if get_option('tests')
     fu_hash,
     sources : [
       'fu-self-test.c',
+      'fu-test.c',
       'fu-synaprom-common.c',
       'fu-synaprom-config.c',
       'fu-synaprom-device.c',

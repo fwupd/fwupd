@@ -34,6 +34,7 @@ if get_option('tests')
     sources : [
       'fu-nitrokey-common.c',
       'fu-self-test.c',
+      'fu-test.c',
     ],
     include_directories : [
       include_directories('../..'),
