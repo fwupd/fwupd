@@ -17,6 +17,7 @@
  * @short_description: a firmware file
  *
  * An object that represents a firmware file.
+ * See also: #FuDfuFirmware, #FuIhexFirmware, #FuSrecFirmware
  */
 
 typedef struct {
@@ -66,7 +67,7 @@ fu_firmware_set_version (FuFirmware *self, const gchar *version)
 /**
  * fu_firmware_tokenize:
  * @self: A #FuFirmware
- * @image: A #GBytes
+ * @fw: A #GBytes
  * @flags: some #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_FORCE
  * @error: A #GError, or %NULL
  *
@@ -98,7 +99,7 @@ fu_firmware_tokenize (FuFirmware *self, GBytes *fw,
 /**
  * fu_firmware_parse_full:
  * @self: A #FuFirmware
- * @image: A #GBytes
+ * @fw: A #GBytes
  * @addr_start: Start address, useful for ignoring a bootloader
  * @addr_end: End address, useful for ignoring config bytes
  * @flags: some #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_FORCE
@@ -142,7 +143,7 @@ fu_firmware_parse_full (FuFirmware *self,
 /**
  * fu_firmware_parse:
  * @self: A #FuFirmware
- * @image: A #GBytes
+ * @fw: A #GBytes
  * @flags: some #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_FORCE
  * @error: A #GError, or %NULL
  *
@@ -259,7 +260,7 @@ fu_firmware_add_image (FuFirmware *self, FuFirmwareImage *img)
 
 /**
  * fu_firmware_get_images:
- * @self: a #FuPlugin
+ * @self: a #FuFirmware
  *
  * Returns all the images in the firmware.
  *
@@ -520,7 +521,7 @@ fu_firmware_new (void)
 
 /**
  * fu_firmware_new_from_bytes:
- * @self: A #GBytes image
+ * @fw: A #GBytes image
  *
  * Creates a firmware object with the provided image set as default.
  *

@@ -36,6 +36,8 @@ G_DEFINE_TYPE (FuHwids, fu_hwids, G_TYPE_OBJECT)
  * for display.
  *
  * Returns: the string, e.g. `1.2.3`, or %NULL if not found
+ *
+ * Since: 0.9.3
  **/
 const gchar *
 fu_hwids_get_value (FuHwids *self, const gchar *key)
@@ -51,6 +53,8 @@ fu_hwids_get_value (FuHwids *self, const gchar *key)
  * Finds out if a hardware GUID exists.
  *
  * Returns: %TRUE if the GUID exists
+ *
+ * Since: 0.9.3
  **/
 gboolean
 fu_hwids_has_guid (FuHwids *self, const gchar *guid)
@@ -65,6 +69,8 @@ fu_hwids_has_guid (FuHwids *self, const gchar *guid)
  * Returns all the defined HWIDs
  *
  * Returns: (transfer none) (element-type utf-8): An array of GUIDs
+ *
+ * Since: 0.9.3
  **/
 GPtrArray *
 fu_hwids_get_guids (FuHwids *self)
@@ -108,6 +114,8 @@ fu_hwids_get_guid_for_str (const gchar *str, GError **error)
  * Gets the replacement key for a well known value.
  *
  * Returns: the replacement value, e.g. `Manufacturer&ProductName`, or %NULL for error.
+ *
+ * Since: 0.9.3
  **/
 const gchar *
 fu_hwids_get_replace_keys (FuHwids *self, const gchar *key)
@@ -197,6 +205,8 @@ fu_hwids_get_replace_keys (FuHwids *self, const gchar *key)
  * Gets the replacement values for a HardwareID key or plain key.
  *
  * Returns: a string, e.g. `LENOVO&ThinkPad T440s`, or %NULL for error.
+ *
+ * Since: 0.9.3
  **/
 gchar *
 fu_hwids_get_replace_values (FuHwids *self, const gchar *keys, GError **error)
@@ -235,6 +245,8 @@ fu_hwids_get_replace_values (FuHwids *self, const gchar *keys, GError **error)
  * Gets the GUID for a specific key.
  *
  * Returns: a string, or %NULL for error.
+ *
+ * Since: 0.9.3
  **/
 gchar *
 fu_hwids_get_guid (FuHwids *self, const gchar *keys, GError **error)
@@ -316,6 +328,8 @@ fu_hwids_convert_integer_cb (FuSmbios *smbios,
  * Reads all the SMBIOS values from the hardware.
  *
  * Returns: %TRUE for success
+ *
+ * Since: 0.9.3
  **/
 gboolean
 fu_hwids_setup (FuHwids *self, FuSmbios *smbios, GError **error)
@@ -440,6 +454,13 @@ fu_hwids_init (FuHwids *self)
 	self->array_guids = g_ptr_array_new_with_free_func (g_free);
 }
 
+/**
+ * fu_hwids_new:
+ *
+ * Creates a new #FuHwids
+ *
+ * Since: 0.9.3
+ **/
 FuHwids *
 fu_hwids_new (void)
 {

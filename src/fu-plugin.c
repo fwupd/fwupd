@@ -141,6 +141,15 @@ fu_plugin_get_name (FuPlugin *self)
 	return priv->name;
 }
 
+/**
+ * fu_plugin_set_name:
+ * @self: A #FuPlugin
+ * @name: A string
+ *
+ * Sets the plugin name.
+ *
+ * Since: 0.8.0
+ **/
 void
 fu_plugin_set_name (FuPlugin *self, const gchar *name)
 {
@@ -171,6 +180,16 @@ fu_plugin_set_build_hash (FuPlugin *self, const gchar *build_hash)
 	priv->build_hash = g_strdup (build_hash);
 }
 
+/**
+ * fu_plugin_get_build_hash:
+ * @self: A #FuPlugin
+ *
+ * Gets the build hash a plugin was generated with.
+ *
+ * Returns: (transfer none): a #gchar, or %NULL for unset.
+ *
+ * Since: 1.2.4
+ **/
 const gchar *
 fu_plugin_get_build_hash (FuPlugin *self)
 {
@@ -303,6 +322,15 @@ fu_plugin_get_usb_context (FuPlugin *self)
 	return priv->usb_ctx;
 }
 
+/**
+ * fu_plugin_set_usb_context:
+ * @self: A #FuPlugin
+ * @usb_ctx: A #FGUsbContext
+ *
+ * Sets the shared USB context for a plugin
+ *
+ * Since: 0.8.0
+ **/
 void
 fu_plugin_set_usb_context (FuPlugin *self, GUsbContext *usb_ctx)
 {
@@ -346,6 +374,16 @@ fu_plugin_set_enabled (FuPlugin *self, gboolean enabled)
 	priv->enabled = enabled;
 }
 
+/**
+ * fu_plugin_guess_name_from_fn:
+ * @filename: filename to guess
+ *
+ * Tries to guess the name of the plugin from a filename
+ *
+ * Returns: (transfer full): the guessed name of the plugin
+ *
+ * Since: 1.0.8
+ **/
 gchar *
 fu_plugin_guess_name_from_fn (const gchar *filename)
 {
@@ -359,6 +397,18 @@ fu_plugin_guess_name_from_fn (const gchar *filename)
 	return name;
 }
 
+/**
+ * fu_plugin_open:
+ * @self: A #FuPlugin
+ * @filename: The shared object filename to open
+ * @error: A #GError or NULL
+ *
+ * Opens the plugin module
+ *
+ * Returns: TRUE for success, FALSE for fail
+ *
+ * Since: 0.8.0
+ **/
 gboolean
 fu_plugin_open (FuPlugin *self, const gchar *filename, GError **error)
 {
@@ -557,7 +607,7 @@ fu_plugin_get_hwid_replace_value (FuPlugin *self, const gchar *keys, GError **er
  * Returns all the HWIDs defined in the system. All hardware IDs on a
  * specific system can be shown using the `fwupdmgr hwids` command.
  *
- * Returns: (transfer none) (element-type utf-8): An array of GUIDs
+ * Returns: (transfer none) (element-type utf8): An array of GUIDs
  *
  * Since: 1.1.1
  **/
@@ -695,6 +745,15 @@ fu_plugin_get_smbios_data (FuPlugin *self, guint8 structure_type)
 	return fu_smbios_get_data (priv->smbios, structure_type, NULL);
 }
 
+/**
+ * fu_plugin_set_hwids:
+ * @self: A #FuPlugin
+ * @hwids: A #FuHwids
+ *
+ * Sets the hwids for a plugin
+ *
+ * Since: 0.9.7
+ **/
 void
 fu_plugin_set_hwids (FuPlugin *self, FuHwids *hwids)
 {
@@ -702,6 +761,15 @@ fu_plugin_set_hwids (FuPlugin *self, FuHwids *hwids)
 	g_set_object (&priv->hwids, hwids);
 }
 
+/**
+ * fu_plugin_set_udev_subsystems:
+ * @self: A #FuPlugin
+ * @udev_subsystems: A #GPtrArray
+ *
+ * Sets the udev subsystems used by a plugin
+ *
+ * Since: 1.1.2
+ **/
 void
 fu_plugin_set_udev_subsystems (FuPlugin *self, GPtrArray *udev_subsystems)
 {
@@ -711,6 +779,15 @@ fu_plugin_set_udev_subsystems (FuPlugin *self, GPtrArray *udev_subsystems)
 	priv->udev_subsystems = g_ptr_array_ref (udev_subsystems);
 }
 
+/**
+ * fu_plugin_set_quirks:
+ * @self: A #FuPlugin
+ * @quirks: A #FuQuirks
+ *
+ * Sets the quirks for a plugin
+ *
+ * Since: 1.0.1
+ **/
 void
 fu_plugin_set_quirks (FuPlugin *self, FuQuirks *quirks)
 {
@@ -736,6 +813,15 @@ fu_plugin_get_quirks (FuPlugin *self)
 	return priv->quirks;
 }
 
+/**
+ * fu_plugin_set_runtime_versions:
+ * @self: A #FuPlugin
+ * @runtime_versions: A #GHashTables
+ *
+ * Sets the runtime versions for a plugin
+ *
+ * Since: 1.0.7
+ **/
 void
 fu_plugin_set_runtime_versions (FuPlugin *self, GHashTable *runtime_versions)
 {
@@ -766,6 +852,15 @@ fu_plugin_add_runtime_version (FuPlugin *self,
 			     g_strdup (version));
 }
 
+/**
+ * fu_plugin_set_compile_versions:
+ * @self: A #FuPlugin
+ * @compile_versions: A #GHashTables
+ *
+ * Sets the compile time versions for a plugin
+ *
+ * Since: 1.0.7
+ **/
 void
 fu_plugin_set_compile_versions (FuPlugin *self, GHashTable *compile_versions)
 {
@@ -828,7 +923,7 @@ fu_plugin_lookup_quirk_by_id (FuPlugin *self, const gchar *group, const gchar *k
  * an integer value. Values are assumed base 10, unless prefixed with "0x"
  * where they are parsed as base 16.
  *
- * Returns: (transfer none): value from the database, or 0 if not found
+ * Returns: guint64 id or 0 if not found
  *
  * Since: 1.1.2
  **/
@@ -838,6 +933,15 @@ fu_plugin_lookup_quirk_by_id_as_uint64 (FuPlugin *self, const gchar *group, cons
 	return fu_common_strtoull (fu_plugin_lookup_quirk_by_id (self, group, key));
 }
 
+/**
+ * fu_plugin_set_smbios:
+ * @self: A #FuPlugin
+ * @smbios: A #FuSmbios
+ *
+ * Sets the smbios for a plugin
+ *
+ * Since: 1.0.0
+ **/
 void
 fu_plugin_set_smbios (FuPlugin *self, FuSmbios *smbios)
 {
@@ -971,6 +1075,17 @@ fu_plugin_device_read_firmware (FuPlugin *self, FuDevice *device, GError **error
 	return fu_device_attach (device, error);
 }
 
+/**
+ * fu_plugin_runner_startup:
+ * @self: a #FuPlugin
+ * @error: a #GError or NULL
+ *
+ * Runs the startup routine for the plugin
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 0.8.0
+ **/
 gboolean
 fu_plugin_runner_startup (FuPlugin *self, GError **error)
 {
@@ -1188,6 +1303,17 @@ fu_plugin_runner_device_array_generic (FuPlugin *self, GPtrArray *devices,
 	return TRUE;
 }
 
+/**
+ * fu_plugin_runner_coldplug:
+ * @self: a #FuPlugin
+ * @error: a #GError or NULL
+ *
+ * Runs the coldplug routine for the plugin
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 0.8.0
+ **/
 gboolean
 fu_plugin_runner_coldplug (FuPlugin *self, GError **error)
 {
@@ -1224,6 +1350,17 @@ fu_plugin_runner_coldplug (FuPlugin *self, GError **error)
 	return TRUE;
 }
 
+/**
+ * fu_plugin_runner_recoldplug:
+ * @self: a #FuPlugin
+ * @error: a #GError or NULL
+ *
+ * Runs the recoldplug routine for the plugin
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 1.0.4
+ **/
 gboolean
 fu_plugin_runner_recoldplug (FuPlugin *self, GError **error)
 {
@@ -1261,6 +1398,17 @@ fu_plugin_runner_recoldplug (FuPlugin *self, GError **error)
 	return TRUE;
 }
 
+/**
+ * fu_plugin_runner_coldplug_prepare:
+ * @self: a #FuPlugin
+ * @error: a #GError or NULL
+ *
+ * Runs the coldplug_prepare routine for the plugin
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 0.8.0
+ **/
 gboolean
 fu_plugin_runner_coldplug_prepare (FuPlugin *self, GError **error)
 {
@@ -1298,6 +1446,17 @@ fu_plugin_runner_coldplug_prepare (FuPlugin *self, GError **error)
 	return TRUE;
 }
 
+/**
+ * fu_plugin_runner_coldplug_cleanup:
+ * @self: a #FuPlugin
+ * @error: a #GError or NULL
+ *
+ * Runs the coldplug_cleanup routine for the plugin
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 0.8.0
+ **/
 gboolean
 fu_plugin_runner_coldplug_cleanup (FuPlugin *self, GError **error)
 {
@@ -1335,6 +1494,18 @@ fu_plugin_runner_coldplug_cleanup (FuPlugin *self, GError **error)
 	return TRUE;
 }
 
+/**
+ * fu_plugin_runner_composite_prepare:
+ * @self: a #FuPlugin
+ * @devices: a #GPtrArray of devices
+ * @error: a #GError or NULL
+ *
+ * Runs the composite_prepare routine for the plugin
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 1.0.9
+ **/
 gboolean
 fu_plugin_runner_composite_prepare (FuPlugin *self, GPtrArray *devices, GError **error)
 {
@@ -1343,6 +1514,18 @@ fu_plugin_runner_composite_prepare (FuPlugin *self, GPtrArray *devices, GError *
 						      error);
 }
 
+/**
+ * fu_plugin_runner_composite_cleanup:
+ * @self: a #FuPlugin
+ * @devices: a #GPtrArray of devices
+ * @error: a #GError or NULL
+ *
+ * Runs the composite_cleanup routine for the plugin
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 1.0.9
+ **/
 gboolean
 fu_plugin_runner_composite_cleanup (FuPlugin *self, GPtrArray *devices, GError **error)
 {
@@ -1351,6 +1534,17 @@ fu_plugin_runner_composite_cleanup (FuPlugin *self, GPtrArray *devices, GError *
 						      error);
 }
 
+/**
+ * fu_plugin_runner_update_prepare:
+ * @self: a #FuPlugin
+ * @error: a #GError or NULL
+ *
+ * Runs the update_prepare routine for the plugin
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 1.1.2
+ **/
 gboolean
 fu_plugin_runner_update_prepare (FuPlugin *self, FwupdInstallFlags flags, FuDevice *device,
 				 GError **error)
@@ -1360,6 +1554,17 @@ fu_plugin_runner_update_prepare (FuPlugin *self, FwupdInstallFlags flags, FuDevi
 							error);
 }
 
+/**
+ * fu_plugin_runner_update_cleanup:
+ * @self: a #FuPlugin
+ * @error: a #GError or NULL
+ *
+ * Runs the update_cleanup routine for the plugin
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 1.1.2
+ **/
 gboolean
 fu_plugin_runner_update_cleanup (FuPlugin *self, FwupdInstallFlags flags, FuDevice *device,
 				 GError **error)
@@ -1369,6 +1574,18 @@ fu_plugin_runner_update_cleanup (FuPlugin *self, FwupdInstallFlags flags, FuDevi
 							error);
 }
 
+/**
+ * fu_plugin_runner_update_attach:
+ * @self: a #FuPlugin
+ * @device: a #FuDevice
+ * @error: a #GError or NULL
+ *
+ * Runs the update_attach routine for the plugin
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 1.1.2
+ **/
 gboolean
 fu_plugin_runner_update_attach (FuPlugin *self, FuDevice *device, GError **error)
 {
@@ -1378,6 +1595,18 @@ fu_plugin_runner_update_attach (FuPlugin *self, FuDevice *device, GError **error
 						error);
 }
 
+/**
+ * fu_plugin_runner_update_detach:
+ * @self: a #FuPlugin
+ * @device: A #FuDevice
+ * @error: a #GError or NULL
+ *
+ * Runs the update_detach routine for the plugin
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 1.1.2
+ **/
 gboolean
 fu_plugin_runner_update_detach (FuPlugin *self, FuDevice *device, GError **error)
 {
@@ -1387,6 +1616,17 @@ fu_plugin_runner_update_detach (FuPlugin *self, FuDevice *device, GError **error
 						error);
 }
 
+/**
+ * fu_plugin_runner_update_reload:
+ * @self: a #FuPlugin
+ * @error: a #GError or NULL
+ *
+ * Runs reload routine for a device
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 1.1.2
+ **/
 gboolean
 fu_plugin_runner_update_reload (FuPlugin *self, FuDevice *device, GError **error)
 {
@@ -1412,6 +1652,8 @@ fu_plugin_runner_update_reload (FuPlugin *self, FuDevice *device, GError **error
  * Registers the udev subsystem to be watched by the daemon.
  *
  * Plugins can use this method only in fu_plugin_init()
+ *
+ * Since: 1.1.2
  **/
 void
 fu_plugin_add_udev_subsystem (FuPlugin *self, const gchar *subsystem)
@@ -1447,6 +1689,18 @@ fu_plugin_set_device_gtype (FuPlugin *self, GType device_gtype)
 	priv->device_gtype = device_gtype;
 }
 
+/**
+ * fu_plugin_add_firmware_gtype:
+ * @self: a #FuPlugin
+ * @id: A string describing the type
+ * @gtype: a #GType `FU_TYPE_DEVICE`
+ *
+ * Adds a firmware #GType which is used when creating devices.
+ * *
+ * Plugins can use this method only in fu_plugin_init()
+ *
+ * Since: 1.3.3
+ **/
 void
 fu_plugin_add_firmware_gtype (FuPlugin *self, const gchar *id, GType gtype)
 {
@@ -1540,6 +1794,18 @@ fu_plugin_udev_device_added (FuPlugin *self, FuUdevDevice *device, GError **erro
 	return TRUE;
 }
 
+/**
+ * fu_plugin_runner_usb_device_added:
+ * @self: a #FuPlugin
+ * @device: a #FuUsbDevice
+ * @error: a #GError or NULL
+ *
+ * Call the usb_device_added routine for the plugin
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 1.0.2
+ **/
 gboolean
 fu_plugin_runner_usb_device_added (FuPlugin *self, FuUsbDevice *device, GError **error)
 {
@@ -1583,6 +1849,18 @@ fu_plugin_runner_usb_device_added (FuPlugin *self, FuUsbDevice *device, GError *
 	return TRUE;
 }
 
+/**
+ * fu_plugin_runner_udev_device_added:
+ * @self: a #FuPlugin
+ * @device: a #FuUdevDevice
+ * @error: a #GError or NULL
+ *
+ * Call the udev_device_added routine for the plugin
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 1.0.2
+ **/
 gboolean
 fu_plugin_runner_udev_device_added (FuPlugin *self, FuUdevDevice *device, GError **error)
 {
@@ -1626,6 +1904,18 @@ fu_plugin_runner_udev_device_added (FuPlugin *self, FuUdevDevice *device, GError
 	return TRUE;
 }
 
+/**
+ * fu_plugin_runner_udev_device_changed:
+ * @self: a #FuPlugin
+ * @device: a #FuUdevDevice
+ * @error: a #GError or NULL
+ *
+ * Call the udev_device_changed routine for the plugin
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 1.0.2
+ **/
 gboolean
 fu_plugin_runner_udev_device_changed (FuPlugin *self, FuUdevDevice *device, GError **error)
 {
@@ -1663,6 +1953,15 @@ fu_plugin_runner_udev_device_changed (FuPlugin *self, FuUdevDevice *device, GErr
 	return TRUE;
 }
 
+/**
+ * fu_plugin_runner_device_removed:
+ * @self: a #FuPlugin
+ * @device: a #FuDevice
+ *
+ * Call the device_removed routine for the plugin
+ *
+ * Since: 1.1.2
+ **/
 void
 fu_plugin_runner_device_removed (FuPlugin *self, FuDevice *device)
 {
@@ -1675,6 +1974,15 @@ fu_plugin_runner_device_removed (FuPlugin *self, FuDevice *device)
 		g_warning ("%s", error_local->message);
 }
 
+/**
+ * fu_plugin_runner_device_register:
+ * @self: a #FuPlugin
+ * @device: a #FuDevice
+ *
+ * Call the device_registered routine for the plugin
+ *
+ * Since: 0.9.7
+ **/
 void
 fu_plugin_runner_device_register (FuPlugin *self, FuDevice *device)
 {
@@ -1699,13 +2007,28 @@ fu_plugin_runner_device_register (FuPlugin *self, FuDevice *device)
 	}
 }
 
+/**
+ * fu_plugin_runner_schedule_update:
+ * @self: a #FuPlugin
+ * @device: a #FuDevice
+ * @release: A #FwupdRelease
+ * @blob_cab: A #GBytes
+ * @flags: #FwupdInstallFlags
+ * @error: A #GError or NULL
+ *
+ * Schedule an offline update with the plugin
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 0.8.0
+ **/
 gboolean
 fu_plugin_runner_schedule_update (FuPlugin *self,
-			     FuDevice *device,
-			     FwupdRelease *release,
-			     GBytes *blob_cab,
-			     FwupdInstallFlags flags,
-			     GError **error)
+				  FuDevice *device,
+				  FwupdRelease *release,
+				  GBytes *blob_cab,
+				  FwupdInstallFlags flags,
+				  GError **error)
 {
 	gchar tmpname[] = {"XXXXXX.cab"};
 	g_autofree gchar *dirname = NULL;
@@ -1766,6 +2089,19 @@ fu_plugin_runner_schedule_update (FuPlugin *self,
 	return fu_plugin_runner_offline_setup (error);
 }
 
+/**
+ * fu_plugin_runner_verify:
+ * @self: a #FuPlugin
+ * @device: a #FuDevice
+ * @flags: #FuPluginVerifyFlags
+ * @error: A #GError or NULL
+ *
+ * Call into the plugin's verify routine
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 0.8.0
+ **/
 gboolean
 fu_plugin_runner_verify (FuPlugin *self,
 			 FuDevice *device,
@@ -1839,6 +2175,18 @@ fu_plugin_runner_verify (FuPlugin *self,
 	return TRUE;
 }
 
+/**
+ * fu_plugin_runner_activate:
+ * @self: a #FuPlugin
+ * @device: a #FuDevice
+ * @error: A #GError or NULL
+ *
+ * Call into the plugin's activate routine
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 1.2.6
+ **/
 gboolean
 fu_plugin_runner_activate (FuPlugin *self, FuDevice *device, GError **error)
 {
@@ -1868,6 +2216,18 @@ fu_plugin_runner_activate (FuPlugin *self, FuDevice *device, GError **error)
 	return TRUE;
 }
 
+/**
+ * fu_plugin_runner_unlock:
+ * @self: a #FuPlugin
+ * @device: a #FuDevice
+ * @error: A #GError or NULL
+ *
+ * Call into the plugin's unlock routine
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 0.8.0
+ **/
 gboolean
 fu_plugin_runner_unlock (FuPlugin *self, FuDevice *device, GError **error)
 {
@@ -1898,6 +2258,20 @@ fu_plugin_runner_unlock (FuPlugin *self, FuDevice *device, GError **error)
 	return TRUE;
 }
 
+/**
+ * fu_plugin_runner_update:
+ * @self: a #FuPlugin
+ * @device: a #FuDevice
+ * @blob_fw: A #GBytes
+ * @flags: A #FwupdInstallFlags
+ * @error: A #GError or NULL
+ *
+ * Call into the plugin's update routine
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 0.8.0
+ **/
 gboolean
 fu_plugin_runner_update (FuPlugin *self,
 			 FuDevice *device,
@@ -1989,6 +2363,18 @@ fu_plugin_runner_update (FuPlugin *self,
 	return TRUE;
 }
 
+/**
+ * fu_plugin_runner_clear_results:
+ * @self: a #FuPlugin
+ * @device: a #FuDevice
+ * @error: A #GError or NULL
+ *
+ * Call into the plugin's clear results routine
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 0.8.0
+ **/
 gboolean
 fu_plugin_runner_clear_results (FuPlugin *self, FuDevice *device, GError **error)
 {
@@ -2026,6 +2412,18 @@ fu_plugin_runner_clear_results (FuPlugin *self, FuDevice *device, GError **error
 	return TRUE;
 }
 
+/**
+ * fu_plugin_runner_get_results:
+ * @self: a #FuPlugin
+ * @device: a #FuDevice
+ * @error: A #GError or NULL
+ *
+ * Call into the plugin's get results routine
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 0.8.0
+ **/
 gboolean
 fu_plugin_runner_get_results (FuPlugin *self, FuDevice *device, GError **error)
 {
@@ -2071,6 +2469,8 @@ fu_plugin_runner_get_results (FuPlugin *self, FuDevice *device, GError **error)
  * numbers.
  *
  * Returns: the integer value
+ *
+ * Since: 1.0.0
  **/
 guint
 fu_plugin_get_order (FuPlugin *self)
@@ -2086,6 +2486,8 @@ fu_plugin_get_order (FuPlugin *self)
  *
  * Sets the plugin order, where higher numbers are run after lower
  * numbers.
+ *
+ * Since: 1.0.0
  **/
 void
 fu_plugin_set_order (FuPlugin *self, guint order)
@@ -2101,6 +2503,8 @@ fu_plugin_set_order (FuPlugin *self, guint order)
  * Gets the plugin priority, where higher numbers are better.
  *
  * Returns: the integer value
+ *
+ * Since: 1.1.1
  **/
 guint
 fu_plugin_get_priority (FuPlugin *self)
@@ -2115,6 +2519,8 @@ fu_plugin_get_priority (FuPlugin *self)
  * @priority: a integer value
  *
  * Sets the plugin priority, where higher numbers are better.
+ *
+ * Since: 1.0.0
  **/
 void
 fu_plugin_set_priority (FuPlugin *self, guint priority)
@@ -2135,6 +2541,8 @@ fu_plugin_set_priority (FuPlugin *self, guint priority)
  *
  * NOTE: The depsolver is iterative and may not solve overly-complicated rules;
  * If depsolving fails then fwupd will not start.
+ *
+ * Since: 1.0.0
  **/
 void
 fu_plugin_add_rule (FuPlugin *self, FuPluginRule rule, const gchar *name)
@@ -2152,6 +2560,8 @@ fu_plugin_add_rule (FuPlugin *self, FuPluginRule rule, const gchar *name)
  * Gets the plugin IDs that should be run after this plugin.
  *
  * Returns: (element-type utf8) (transfer none): the list of plugin names, e.g. ['appstream']
+ *
+ * Since: 1.0.0
  **/
 GPtrArray *
 fu_plugin_get_rules (FuPlugin *self, FuPluginRule rule)
@@ -2169,6 +2579,8 @@ fu_plugin_get_rules (FuPlugin *self, FuPluginRule rule)
  * Gets the plugin IDs that should be run after this plugin.
  *
  * Returns: %TRUE if the name exists for the specific rule
+ *
+ * Since: 1.0.0
  **/
 gboolean
 fu_plugin_has_rule (FuPlugin *self, FuPluginRule rule, const gchar *name)
@@ -2193,6 +2605,8 @@ fu_plugin_has_rule (FuPlugin *self, FuPluginRule rule, const gchar *name)
  *
  * Any data included here will be sent to the metadata server after user
  * confirmation.
+ *
+ * Since: 1.0.4
  **/
 void
 fu_plugin_add_report_metadata (FuPlugin *self, const gchar *key, const gchar *value)
@@ -2208,6 +2622,8 @@ fu_plugin_add_report_metadata (FuPlugin *self, const gchar *key, const gchar *va
  * Returns the list of additional metadata to be added when filing a report.
  *
  * Returns: (transfer none): the map of report metadata
+ *
+ * Since: 1.0.4
  **/
 GHashTable *
 fu_plugin_get_report_metadata (FuPlugin *self)
@@ -2255,6 +2671,8 @@ fu_plugin_get_config_value (FuPlugin *self, const gchar *key)
  * Compares two plugins by their names.
  *
  * Returns: 1, 0 or -1 if @plugin1 is greater, equal, or less than @plugin2.
+ *
+ * Since: 1.0.8
  **/
 gint
 fu_plugin_name_compare (FuPlugin *plugin1, FuPlugin *plugin2)
@@ -2272,6 +2690,8 @@ fu_plugin_name_compare (FuPlugin *plugin1, FuPlugin *plugin2)
  * Compares two plugins by their depsolved order.
  *
  * Returns: 1, 0 or -1 if @plugin1 is greater, equal, or less than @plugin2.
+ *
+ * Since: 1.0.8
  **/
 gint
 fu_plugin_order_compare (FuPlugin *plugin1, FuPlugin *plugin2)
@@ -2403,6 +2823,13 @@ fu_plugin_finalize (GObject *object)
 	G_OBJECT_CLASS (fu_plugin_parent_class)->finalize (object);
 }
 
+/**
+ * fu_plugin_new:
+ *
+ * Creates a new #FuPlugin
+ *
+ * Since: 0.8.0
+ **/
 FuPlugin *
 fu_plugin_new (void)
 {

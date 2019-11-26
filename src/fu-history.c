@@ -457,6 +457,18 @@ fu_history_get_device_flags_filtered (FuDevice *device)
 	return flags;
 }
 
+/**
+ * fu_history_modify_device:
+ * @self: A #FuHistory
+ * @device: A #FuDevice
+ * @error: A #GError or NULL
+ *
+ * Modify a device in the history database
+ *
+ * Returns: @TRUE if successful, @FALSE for failure
+ *
+ * Since: 1.0.4
+ **/
 gboolean
 fu_history_modify_device (FuHistory *self, FuDevice *device, GError **error)
 {
@@ -505,6 +517,19 @@ fu_history_modify_device (FuHistory *self, FuDevice *device, GError **error)
 	return fu_history_stmt_exec (self, stmt, NULL, error);
 }
 
+/**
+ * fu_history_add_device:
+ * @self: A #FuHistory
+ * @device: A #FuDevice
+ * @release: A #FuRelease
+ * @error: A #GError or NULL
+ *
+ * Adds a device to the history database
+ *
+ * Returns: @TRUE if successful, @FALSE for failure
+ *
+ * Since: 1.0.4
+ **/
 gboolean
 fu_history_add_device (FuHistory *self, FuDevice *device, FwupdRelease *release, GError **error)
 {
@@ -586,6 +611,19 @@ fu_history_add_device (FuHistory *self, FuDevice *device, FwupdRelease *release,
 	return fu_history_stmt_exec (self, stmt, NULL, error);
 }
 
+/**
+ * fu_history_remove_all_with_state:
+ * @self: A #FuHistory
+ * @update_state: A #FwupdUpdateState
+ * @error: A #GError or NULL
+ *
+ * Remove all devices from the history database that match
+ * state update_state
+ *
+ * Returns: @TRUE if successful, @FALSE for failure
+ *
+ * Since: 1.0.4
+ **/
 gboolean
 fu_history_remove_all_with_state (FuHistory *self,
 				  FwupdUpdateState update_state,
@@ -619,6 +657,17 @@ fu_history_remove_all_with_state (FuHistory *self,
 	return fu_history_stmt_exec (self, stmt, NULL, error);
 }
 
+/**
+ * fu_history_remove_all:
+ * @self: A #FuHistory
+ * @error: A #GError or NULL
+ *
+ * Remove all devices from the history database
+ *
+ * Returns: @TRUE if successful, @FALSE for failure
+ *
+ * Since: 1.0.4
+ **/
 gboolean
 fu_history_remove_all (FuHistory *self, GError **error)
 {
@@ -646,6 +695,18 @@ fu_history_remove_all (FuHistory *self, GError **error)
 	return fu_history_stmt_exec (self, stmt, NULL, error);
 }
 
+/**
+ * fu_history_remove_device:
+ * @self: A #FuHistory
+ * @device: A #FuDevice
+ * @error: A #GError or NULL
+ *
+ * Remove a device from the history database
+ *
+ * Returns: @TRUE if successful, @FALSE for failure
+ *
+ * Since: 1.0.4
+ **/
 gboolean
 fu_history_remove_device (FuHistory *self,  FuDevice *device, GError **error)
 {
@@ -678,6 +739,19 @@ fu_history_remove_device (FuHistory *self,  FuDevice *device, GError **error)
 	return fu_history_stmt_exec (self, stmt, NULL, error);
 }
 
+
+/**
+ * fu_history_get_device_by_id:
+ * @self: A #FuHistory
+ * @device_id: A string
+ * @error: A #GError or NULL
+ *
+ * Returns the device from the history database or NULL if not found
+ *
+ * Returns: (transfer full): a #FuDevice
+ *
+ * Since: 1.0.4
+ **/
 FuDevice *
 fu_history_get_device_by_id (FuHistory *self, const gchar *device_id, GError **error)
 {
@@ -735,7 +809,17 @@ fu_history_get_device_by_id (FuHistory *self, const gchar *device_id, GError **e
 	}
 	return g_object_ref (g_ptr_array_index (array_tmp, 0));
 }
-
+/**
+ * fu_history_get_devices:
+ * @self: A #FuHistory
+ * @error: A #GError or NULL
+ *
+ * Gets the devices in the history database.
+ *
+ * Returns: (element-type #FuDevice) (transfer container): devices
+ *
+ * Since: 1.0.4
+ **/
 GPtrArray *
 fu_history_get_devices (FuHistory *self, GError **error)
 {
@@ -788,6 +872,17 @@ fu_history_get_devices (FuHistory *self, GError **error)
 	return array;
 }
 
+/**
+ * fu_history_get_approved_firmware:
+ * @self: A #FuHistory
+ * @error: A #GError or NULL
+ *
+ * Returns approved firmware records.
+ *
+ * Returns: (transfer full) (element-type gchar *): records
+ *
+ * Since: 1.2.6
+ **/
 GPtrArray *
 fu_history_get_approved_firmware (FuHistory *self, GError **error)
 {
@@ -830,6 +925,17 @@ fu_history_get_approved_firmware (FuHistory *self, GError **error)
 	return g_steal_pointer (&array);
 }
 
+/**
+ * fu_history_clear_approved_firmware:
+ * @self: A #FuHistory
+ * @error: A #GError or NULL
+ *
+ * Clear all approved firmware records
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 1.2.6
+ **/
 gboolean
 fu_history_clear_approved_firmware (FuHistory *self, GError **error)
 {
@@ -858,6 +964,18 @@ fu_history_clear_approved_firmware (FuHistory *self, GError **error)
 	return fu_history_stmt_exec (self, stmt, NULL, error);
 }
 
+/**
+ * fu_history_add_approved_firmware:
+ * @self: A #FuHistory
+ * @checksum: a string
+ * @error: A #GError or NULL
+ *
+ * Add an approved firmware record to the database
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 1.2.6
+ **/
 gboolean
 fu_history_add_approved_firmware (FuHistory *self,
 				  const gchar *checksum,
@@ -915,6 +1033,13 @@ fu_history_finalize (GObject *object)
 	G_OBJECT_CLASS (fu_history_parent_class)->finalize (object);
 }
 
+/**
+ * fu_history_new:
+ *
+ * Creates a new #FuHistory
+ *
+ * Since: 1.0.4
+ **/
 FuHistory *
 fu_history_new (void)
 {

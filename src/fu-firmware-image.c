@@ -354,7 +354,6 @@ fu_firmware_image_class_init (FuFirmwareImageClass *klass)
 
 /**
  * fu_firmware_image_new:
- * @id: Optional ID
  * @bytes: Optional #GBytes
  *
  * Creates an empty firmware_image object.

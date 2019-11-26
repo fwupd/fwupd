@@ -127,6 +127,8 @@ fu_smbios_setup_from_data (FuSmbios *self, const guint8 *buf, gsize sz, GError *
  * Reads all the SMBIOS values from a DMI blob.
  *
  * Returns: %TRUE for success
+ *
+ * Since: 1.0.0
  **/
 gboolean
 fu_smbios_setup_from_file (FuSmbios *self, const gchar *filename, GError **error)
@@ -228,7 +230,7 @@ fu_smbios_parse_ep64 (FuSmbios *self, const gchar *buf, gsize sz, GError **error
 }
 
 /**
- * fu_smbios_setup:
+ * fu_smbios_setup_from_path:
  * @self: A #FuSmbios
  * @path: A path, e.g. `/sys/firmware/dmi/tables`
  * @error: A #GError or %NULL
@@ -236,6 +238,8 @@ fu_smbios_parse_ep64 (FuSmbios *self, const gchar *buf, gsize sz, GError **error
  * Reads all the SMBIOS values from a specific path.
  *
  * Returns: %TRUE for success
+ *
+ * Since: 1.0.0
  **/
 gboolean
 fu_smbios_setup_from_path (FuSmbios *self, const gchar *path, GError **error)
@@ -308,6 +312,8 @@ fu_smbios_setup_from_path (FuSmbios *self, const gchar *path, GError **error)
  * Reads all the SMBIOS values from the hardware.
  *
  * Returns: %TRUE for success
+ *
+ * Since: 1.0.0
  **/
 gboolean
 fu_smbios_setup (FuSmbios *self, GError **error)
@@ -327,6 +333,8 @@ fu_smbios_setup (FuSmbios *self, GError **error)
  * Dumps the parsed SMBIOS data to a string.
  *
  * Returns: a UTF-8 string
+ *
+ * Since: 1.0.0
  **/
 gchar *
 fu_smbios_to_string (FuSmbios *self)
@@ -371,6 +379,8 @@ fu_smbios_get_item_for_type (FuSmbios *self, guint8 type)
  * Reads a SMBIOS data blob, which includes the SMBIOS section header.
  *
  * Returns: (transfer full): a #GBytes, or %NULL if invalid or not found
+ *
+ * Since: 1.0.0
  **/
 GBytes *
 fu_smbios_get_data (FuSmbios *self, guint8 type, GError **error)
@@ -401,6 +411,8 @@ fu_smbios_get_data (FuSmbios *self, guint8 type, GError **error)
  * https://www.dmtf.org/sites/default/files/standards/documents/DSP0134_3.1.1.pdf
  *
  * Returns: a string, or %NULL if invalid or not found
+ *
+ * Since: 1.0.0
  **/
 const gchar *
 fu_smbios_get_string (FuSmbios *self, guint8 type, guint8 offset, GError **error)
@@ -486,6 +498,8 @@ fu_smbios_init (FuSmbios *self)
  * Creates a new object to parse SMBIOS data.
  *
  * Returns: a #FuSmbios
+ *
+ * Since: 1.0.0
  **/
 FuSmbios *
 fu_smbios_new (void)

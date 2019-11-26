@@ -22,6 +22,8 @@
  * length of @data. Checking the size must be done in the caller.
  *
  * Return value: A parsed value, or 0 for error
+ *
+ * Since: 1.3.1
  **/
 guint8
 fu_firmware_strparse_uint4 (const gchar *data)
@@ -42,6 +44,8 @@ fu_firmware_strparse_uint4 (const gchar *data)
  * length of @data. Checking the size must be done in the caller.
  *
  * Return value: A parsed value, or 0 for error
+ *
+ * Since: 1.3.1
  **/
 guint8
 fu_firmware_strparse_uint8 (const gchar *data)
@@ -62,6 +66,8 @@ fu_firmware_strparse_uint8 (const gchar *data)
  * length of @data. Checking the size must be done in the caller.
  *
  * Return value: A parsed value, or 0 for error
+ *
+ * Since: 1.3.1
  **/
 guint16
 fu_firmware_strparse_uint16 (const gchar *data)
@@ -82,6 +88,8 @@ fu_firmware_strparse_uint16 (const gchar *data)
  * length of @data. Checking the size must be done in the caller.
  *
  * Return value: A parsed value, or 0 for error
+ *
+ * Since: 1.3.1
  **/
 guint32
 fu_firmware_strparse_uint24 (const gchar *data)
@@ -102,6 +110,8 @@ fu_firmware_strparse_uint24 (const gchar *data)
  * length of @data. Checking the size must be done in the caller.
  *
  * Return value: A parsed value, or 0 for error
+ *
+ * Since: 1.3.1
  **/
 guint32
 fu_firmware_strparse_uint32 (const gchar *data)

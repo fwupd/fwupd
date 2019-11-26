@@ -383,6 +383,8 @@ fu_common_cab_set_container_checksum_cb (XbBuilderFixup *self,
  * Create an AppStream silo from a cabinet archive.
  *
  * Returns: a #XbSilo, or %NULL on error
+ *
+ * Since: 1.2.0
  **/
 XbSilo *
 fu_common_cab_build_silo (GBytes *blob, guint64 size_max, GError **error)

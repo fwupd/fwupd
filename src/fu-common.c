@@ -39,6 +39,8 @@
  * Recursively removes a directory.
  *
  * Returns: %TRUE for success, %FALSE otherwise
+ *
+ * Since: 0.9.7
  **/
 gboolean
 fu_common_rmtree (const gchar *directory, GError **error)
@@ -113,7 +115,9 @@ fu_common_get_file_list_internal (GPtrArray *files, const gchar *directory, GErr
  * If any path under @directory cannot be accessed due to permissions an error
  * will be returned.
  *
- * Returns: (element-type: utf8) (transfer container): array of files, or %NULL for error
+ * Returns: (transfer container): array of files, or %NULL for error
+ *
+ * Since: 1.0.6
  **/
 GPtrArray *
 fu_common_get_files_recursive (const gchar *path, GError **error)
@@ -131,6 +135,8 @@ fu_common_get_files_recursive (const gchar *path, GError **error)
  * Creates any required directories, including any parent directories.
  *
  * Returns: %TRUE for success
+ *
+ * Since: 0.9.7
  **/
 gboolean
 fu_common_mkdir_parent (const gchar *filename, GError **error)
@@ -160,6 +166,8 @@ fu_common_mkdir_parent (const gchar *filename, GError **error)
  * required.
  *
  * Returns: %TRUE for success
+ *
+ * Since: 0.9.5
  **/
 gboolean
 fu_common_set_contents_bytes (const gchar *filename, GBytes *bytes, GError **error)
@@ -188,6 +196,8 @@ fu_common_set_contents_bytes (const gchar *filename, GBytes *bytes, GError **err
  * Reads a blob of data from a file.
  *
  * Returns: a #GBytes, or %NULL for failure
+ *
+ * Since: 0.9.7
  **/
 GBytes *
 fu_common_get_contents_bytes (const gchar *filename, GError **error)
@@ -211,6 +221,8 @@ fu_common_get_contents_bytes (const gchar *filename, GError **error)
  * Note: this will close the fd when done
  *
  * Returns: (transfer full): a #GBytes, or %NULL
+ *
+ * Since: 0.9.5
  **/
 GBytes *
 fu_common_get_contents_fd (gint fd, gsize count, GError **error)
@@ -270,6 +282,8 @@ fu_common_extract_archive_entry (struct archive_entry *entry, const gchar *dir)
  * Extracts an achive to a directory.
  *
  * Returns: %TRUE for success
+ *
+ * Since: 0.9.7
  **/
 gboolean
 fu_common_extract_archive (GBytes *blob, const gchar *dir, GError **error)
@@ -353,6 +367,17 @@ fu_common_add_argv (GPtrArray *argv, const gchar *fmt, ...)
 		g_ptr_array_add (argv, g_strdup (split[i]));
 }
 
+/**
+ * fu_common_find_program_in_path:
+ * @basename: The program to search
+ * @error: A #GError, or %NULL
+ *
+ * Looks for a program in the PATH variable
+ *
+ * Returns: a new #gchar, or %NULL for error
+ *
+ * Since: 1.1.2
+ **/
 gchar *
 fu_common_find_program_in_path (const gchar *basename, GError **error)
 {
@@ -411,6 +436,8 @@ fu_common_test_namespace_support (GError **error)
  * 5. The temporary location is deleted
  *
  * Returns: a new #GBytes, or %NULL for error
+ *
+ * Since: 0.9.7
  **/
 GBytes *
 fu_common_firmware_builder (GBytes *bytes,
@@ -631,6 +658,8 @@ fu_common_spawn_cancelled_cb (GCancellable *cancellable, FuCommonSpawnHelper *he
  * standard error will be forwarded to @handler_cb as whole lines.
  *
  * Returns: %TRUE for success
+ *
+ * Since: 0.9.7
  **/
 gboolean
 fu_common_spawn_sync (const gchar * const * argv,
@@ -688,6 +717,8 @@ fu_common_spawn_sync (const gchar * const * argv,
  * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
  *
  * Writes a value to a buffer using a specified endian.
+ *
+ * Since: 1.0.3
  **/
 void
 fu_common_write_uint16 (guint8 *buf, guint16 val_native, FuEndianType endian)
@@ -713,6 +744,8 @@ fu_common_write_uint16 (guint8 *buf, guint16 val_native, FuEndianType endian)
  * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
  *
  * Writes a value to a buffer using a specified endian.
+ *
+ * Since: 1.0.3
  **/
 void
 fu_common_write_uint32 (guint8 *buf, guint32 val_native, FuEndianType endian)
@@ -739,6 +772,8 @@ fu_common_write_uint32 (guint8 *buf, guint32 val_native, FuEndianType endian)
  * Read a value from a buffer using a specified endian.
  *
  * Returns: a value in host byte-order
+ *
+ * Since: 1.0.3
  **/
 guint16
 fu_common_read_uint16 (const guint8 *buf, FuEndianType endian)
@@ -766,6 +801,8 @@ fu_common_read_uint16 (const guint8 *buf, FuEndianType endian)
  * Read a value from a buffer using a specified endian.
  *
  * Returns: a value in host byte-order
+ *
+ * Since: 1.0.3
  **/
 guint32
 fu_common_read_uint32 (const guint8 *buf, FuEndianType endian)
@@ -793,6 +830,8 @@ fu_common_read_uint32 (const guint8 *buf, FuEndianType endian)
  * prefixed with "0x" where they are parsed as base 16.
  *
  * Returns: integer value, or 0x0 for error
+ *
+ * Since: 1.1.2
  **/
 guint64
 fu_common_strtoull (const gchar *str)
@@ -814,6 +853,8 @@ fu_common_strtoull (const gchar *str)
  * Removes leading and trailing whitespace from a constant string.
  *
  * Returns: newly allocated string
+ *
+ * Since: 1.1.2
  **/
 gchar *
 fu_common_strstrip (const gchar *str)
@@ -890,6 +931,8 @@ fu_common_error_array_matches_any (GPtrArray *errors, FwupdError *error_codes)
  * completely bespoke error where required.
  *
  * Returns: (transfer full): a #GError, never %NULL
+ *
+ * Since: 1.0.8
  **/
 GError *
 fu_common_error_array_get_best (GPtrArray *errors)
@@ -948,6 +991,8 @@ fu_common_error_array_get_best (GPtrArray *errors)
  * environment variables, for instance %FWUPD_DATADIR.
  *
  * Returns: a system path, or %NULL if invalid
+ *
+ * Since: 1.0.8
  **/
 gchar *
 fu_common_get_path (FuPathKind path_kind)
@@ -1154,6 +1199,17 @@ fu_common_strwidth (const gchar *text)
 	return width;
 }
 
+/**
+ * fu_common_string_append_kv:
+ * @str: A #GString
+ * @idt: The indent
+ * @key: A string to append
+ * @value: a string to append
+ *
+ * Appends a key and string value to a string
+ *
+ * Since: 1.2.4
+ */
 void
 fu_common_string_append_kv (GString *str, guint idt, const gchar *key, const gchar *value)
 {
@@ -1192,6 +1248,17 @@ fu_common_string_append_kv (GString *str, guint idt, const gchar *key, const gch
 	}
 }
 
+/**
+ * fu_common_string_append_ku:
+ * @str: A #GString
+ * @idt: The indent
+ * @key: A string to append
+ * @value: guint64
+ *
+ * Appends a key and unsigned integer to a string
+ *
+ * Since: 1.2.4
+ */
 void
 fu_common_string_append_ku (GString *str, guint idt, const gchar *key, guint64 value)
 {
@@ -1199,6 +1266,17 @@ fu_common_string_append_ku (GString *str, guint idt, const gchar *key, guint64 v
 	fu_common_string_append_kv (str, idt, key, tmp);
 }
 
+/**
+ * fu_common_string_append_kx:
+ * @str: A #GString
+ * @idt: The indent
+ * @key: A string to append
+ * @value: guint64
+ *
+ * Appends a key and hex integer to a string
+ *
+ * Since: 1.2.4
+ */
 void
 fu_common_string_append_kx (GString *str, guint idt, const gchar *key, guint64 value)
 {
@@ -1206,6 +1284,17 @@ fu_common_string_append_kx (GString *str, guint idt, const gchar *key, guint64 v
 	fu_common_string_append_kv (str, idt, key, tmp);
 }
 
+/**
+ * fu_common_string_append_kb:
+ * @str: A #GString
+ * @idt: The indent
+ * @key: A string to append
+ * @value: Boolean
+ *
+ * Appends a key and boolean value to a string
+ *
+ * Since: 1.2.4
+ */
 void
 fu_common_string_append_kb (GString *str, guint idt, const gchar *key, gboolean value)
 {
@@ -1368,6 +1457,8 @@ fu_common_bytes_align (GBytes *bytes, gsize blksz, gchar padval)
  * Checks if a byte array are just empty (0xff) bytes.
  *
  * Return value: %TRUE if @bytes is empty
+ *
+ * Since: 1.2.6
  **/
 gboolean
 fu_common_bytes_is_empty (GBytes *bytes)
@@ -1392,6 +1483,8 @@ fu_common_bytes_is_empty (GBytes *bytes)
  * Compares the buffers for equality.
  *
  * Return value: %TRUE if @buf1 and @buf2 are identical
+ *
+ * Since: 1.3.2
  **/
 gboolean
 fu_common_bytes_compare_raw (const guint8 *buf1, gsize bufsz1,
@@ -1437,6 +1530,8 @@ fu_common_bytes_compare_raw (const guint8 *buf1, gsize bufsz1,
  * Compares the buffers for equality.
  *
  * Return value: %TRUE if @bytes1 and @bytes2 are identical
+ *
+ * Since: 1.2.6
  **/
 gboolean
 fu_common_bytes_compare (GBytes *bytes1, GBytes *bytes2, GError **error)
@@ -1463,6 +1558,8 @@ fu_common_bytes_compare (GBytes *bytes1, GBytes *bytes2, GError **error)
  * Pads a GBytes to a given @sz with `0xff`.
  *
  * Return value: (transfer full): a #GBytes
+ *
+ * Since: 1.3.1
  **/
 GBytes *
 fu_common_bytes_pad (GBytes *bytes, gsize sz)
@@ -1493,6 +1590,8 @@ fu_common_bytes_pad (GBytes *bytes, gsize sz)
  * Finds the canonicalized absolute filename for a path.
  *
  * Return value: A filename, or %NULL if invalid or not found
+ *
+ * Since: 1.2.6
  **/
 gchar *
 fu_common_realpath (const gchar *filename, GError **error)
@@ -1536,6 +1635,8 @@ fu_common_realpath (const gchar *filename, GError **error)
  * to the last token.
  *
  * Return value: a newly-allocated NULL-terminated array of strings
+ *
+ * Since: 1.3.1
  **/
 gchar **
 fu_common_strnsplit (const gchar *str, gsize sz,
@@ -1571,6 +1672,8 @@ fu_common_strnsplit (const gchar *str, gsize sz,
  * malicious data from a device or firmware could cause memory corruption.
  *
  * Return value: %TRUE if the bytes were copied, %FALSE otherwise
+ *
+ * Since: 1.3.1
  **/
 gboolean
 fu_memcpy_safe (guint8 *dst, gsize dst_sz, gsize dst_offset,
@@ -1633,6 +1736,8 @@ fu_memcpy_safe (guint8 *dst, gsize dst_sz, gsize dst_offset,
  * malicious data from a device or firmware could cause memory corruption.
  *
  * Return value: %TRUE if @value was set, %FALSE otherwise
+ *
+ * Since: 1.3.3
  **/
 gboolean
 fu_common_read_uint8_safe (const guint8 *buf,
@@ -1667,6 +1772,8 @@ fu_common_read_uint8_safe (const guint8 *buf,
  * malicious data from a device or firmware could cause memory corruption.
  *
  * Return value: %TRUE if @value was set, %FALSE otherwise
+ *
+ * Since: 1.3.3
  **/
 gboolean
 fu_common_read_uint16_safe (const guint8 *buf,
@@ -1702,6 +1809,8 @@ fu_common_read_uint16_safe (const guint8 *buf,
  * malicious data from a device or firmware could cause memory corruption.
  *
  * Return value: %TRUE if @value was set, %FALSE otherwise
+ *
+ * Since: 1.3.3
  **/
 gboolean
 fu_common_read_uint32_safe (const guint8 *buf,
@@ -1721,12 +1830,31 @@ fu_common_read_uint32_safe (const guint8 *buf,
 	return TRUE;
 }
 
+/**
+ * fu_byte_array_append_uint8:
+ * @array: A #GByteArray
+ * @data:  #guint8
+ *
+ * Adds a 8 bit integer to a byte array
+ *
+ * Since: 1.3.1
+ **/
 void
 fu_byte_array_append_uint8 (GByteArray *array, guint8 data)
 {
 	g_byte_array_append (array, &data, sizeof(data));
 }
 
+/**
+ * fu_byte_array_append_uint16:
+ * @array: A #GByteArray
+ * @data:  #guint16
+ * @endian: #FuEndianType
+ *
+ * Adds a 16 bit integer to a byte array
+ *
+ * Since: 1.3.1
+ **/
 void
 fu_byte_array_append_uint16 (GByteArray *array, guint16 data, FuEndianType endian)
 {
@@ -1735,6 +1863,16 @@ fu_byte_array_append_uint16 (GByteArray *array, guint16 data, FuEndianType endia
 	g_byte_array_append (array, buf, sizeof(buf));
 }
 
+/**
+ * fu_byte_array_append_uint32:
+ * @array: A #GByteArray
+ * @data:  #guint32
+ * @endian: #FuEndianType
+ *
+ * Adds a 32 bit integer to a byte array
+ *
+ * Since: 1.3.1
+ **/
 void
 fu_byte_array_append_uint32 (GByteArray *array, guint32 data, FuEndianType endian)
 {
