@@ -28,6 +28,7 @@ dfu = static_library(
     gudev,
   ],
   link_with : [
+    libfwupdnoinst,
     libfwupdprivate,
   ],
   c_args : cargs,

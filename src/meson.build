@@ -29,7 +29,6 @@ libfwupdprivate_src = [
   'fu-quirks.c',
   'fu-smbios.c',
   'fu-srec-firmware.c',
-  'fu-test.c',
   'fu-usb-device.c',
 ]
 
@@ -79,8 +78,19 @@ libfwupdprivate = static_library(
   link_with : [
     fwupd,
   ],
-  c_args : [
-    '-DFU_OFFLINE_DESTDIR=""',
+)
+
+libfwupdnoinst = static_library(
+  'fwupdnoinst',
+  sources : [
+    'fu-test.c',
+  ],
+  include_directories : [
+    include_directories('..'),
+    include_directories('../libfwupd'),
+  ],
+  dependencies : [
+    giounix,
   ],
 )
 

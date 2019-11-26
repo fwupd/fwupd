@@ -119,6 +119,7 @@ if get_option('tests')
       tpm2tss,
     ],
     link_with : [
+      libfwupdnoinst,
       libfwupdprivate,
     ],
     c_args : cargs

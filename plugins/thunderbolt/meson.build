@@ -69,6 +69,7 @@ if get_option('tests') and umockdev.found() and gio.version().version_compare('>
       umockdev,
     ],
     link_with : [
+      libfwupdnoinst,
       libfwupdprivate,
     ],
     c_args : cargs

@@ -69,6 +69,7 @@ if get_option('tests')
       plugin_deps,
     ],
     link_with : [
+      libfwupdnoinst,
       libfwupdprivate,
     ],
     c_args : cargs

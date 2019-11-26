@@ -56,6 +56,7 @@ if get_option('tests')
       libm,
     ],
     link_with : [
+      libfwupdnoinst,
       libfwupdprivate,
     ],
     c_args : cargs
