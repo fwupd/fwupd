@@ -168,3 +168,9 @@ void		 fu_engine_set_silo			(FuEngine	*self,
 							 XbSilo		*silo);
 XbNode		*fu_engine_get_component_by_guids	(FuEngine	*self,
 							 FuDevice	*device);
+gboolean	 fu_engine_schedule_update		(FuEngine	*self,
+							 FuDevice	*device,
+							 FwupdRelease	*release,
+							 GBytes		*blob_cab,
+							 FwupdInstallFlags flags,
+							 GError		**error);

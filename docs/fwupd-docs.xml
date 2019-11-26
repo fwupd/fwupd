@@ -54,7 +54,6 @@
     <xi:include href="xml/fu-firmware-common.xml"/>
     <xi:include href="xml/fu-firmware-image.xml"/>
     <xi:include href="xml/fu-firmware.xml"/>
-    <xi:include href="xml/fu-history.xml"/>
     <xi:include href="xml/fu-hwids.xml"/>
     <xi:include href="xml/fu-ihex-firmware.xml"/>
     <xi:include href="xml/fu-srec-firmware.xml"/>
