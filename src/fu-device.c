@@ -324,6 +324,16 @@ fu_device_set_priority (FuDevice *self, guint priority)
 	priv->priority = priority;
 }
 
+/**
+ * fu_device_get_equivalent_id:
+ * @self: A #FuDevice
+ *
+ * Gets any equivalent ID for a device
+ *
+ * Returns: (transfer none): a #gchar or NULL
+ *
+ * Since: 0.6.1
+ **/
 const gchar *
 fu_device_get_equivalent_id (FuDevice *self)
 {
@@ -332,6 +342,15 @@ fu_device_get_equivalent_id (FuDevice *self)
 	return priv->equivalent_id;
 }
 
+/**
+ * fu_device_set_equivalent_id:
+ * @self: A #FuDevice
+ * @equivalent_id: A string
+ *
+ * Sets any equivalent ID for a device
+ *
+ * Since: 0.6.1
+ **/
 void
 fu_device_set_equivalent_id (FuDevice *self, const gchar *equivalent_id)
 {
@@ -342,7 +361,7 @@ fu_device_set_equivalent_id (FuDevice *self, const gchar *equivalent_id)
 }
 
 /**
- * fu_device_get_alternate:
+ * fu_device_get_alternate_id:
  * @self: A #FuDevice
  *
  * Gets any alternate device ID. An alternate device may be linked to the primary
@@ -361,9 +380,9 @@ fu_device_get_alternate_id (FuDevice *self)
 }
 
 /**
- * fu_device_set_alternate:
+ * fu_device_set_alternate_id:
  * @self: A #FuDevice
- * @alternate: Another #FuDevice
+ * @alternate_id: Another #FuDevice
  *
  * Sets any alternate device ID. An alternate device may be linked to the primary
  * device in some way.
@@ -447,6 +466,19 @@ fu_device_get_parent (FuDevice *self)
 	return priv->parent;
 }
 
+/**
+ * fu_device_set_parent:
+ * @self: A #FuDevice
+ * @parent: A #FuDevice
+ *
+ * Sets any parent device. An parent device is logically "above" the current
+ * device and this may be reflected in client tools.
+ *
+ * This information also allows the plugin to optionally verify the parent
+ * device, for instance checking the parent device firmware version.
+ *
+ * Since: 1.0.8
+ **/
 void
 fu_device_set_parent (FuDevice *self, FuDevice *parent)
 {
@@ -795,6 +827,16 @@ fu_device_set_quirk_kv (FuDevice *self,
 	return FALSE;
 }
 
+/**
+ * fu_device_get_specialized_gtype:
+ * @self: A #FuDevice
+ *
+ * Gets the specialized type of the device
+ *
+ * Returns:#GType
+ *
+ * Since: 1.3.3
+ **/
 GType
 fu_device_get_specialized_gtype (FuDevice *self)
 {
@@ -948,7 +990,17 @@ fu_device_has_guid (FuDevice *self, const gchar *guid)
 	return fwupd_device_has_guid (FWUPD_DEVICE (self), guid);
 }
 
-/* private */
+/**
+ * fu_device_add_instance_id_full:
+ * @self: A #FuDevice
+ * @instance_id: A Instance ID, e.g. `WacomAES`
+ * @flags: A #FuDeviceInstanceFlags
+ *
+ * Adds an instance ID with all paramters set
+ *
+ *
+ * Since: 1.2.9
+ **/
 void
 fu_device_add_instance_id_full (FuDevice *self,
 				const gchar *instance_id,
@@ -1510,6 +1562,16 @@ fu_device_get_physical_id (FuDevice *self)
 	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
 	return priv->physical_id;
 }
+
+/**
+ * fu_device_add_flag:
+ * @self: A #FuDevice
+ * @flag: A #FwupdDeviceFlags
+ *
+ * Adds a device flag to the device
+ *
+ * Since: 0.1.0
+ **/
 
 void
 fu_device_add_flag (FuDevice *self, FwupdDeviceFlags flag)
@@ -2126,6 +2188,7 @@ fu_device_reload (FuDevice *self, GError **error)
 /**
  * fu_device_prepare:
  * @self: A #FuDevice
+ * @flags: A #FwupdInstallFlags
  * @error: A #GError
  *
  * Prepares a device for update. A different plugin can handle each of
@@ -2154,6 +2217,7 @@ fu_device_prepare (FuDevice *self, FwupdInstallFlags flags, GError **error)
 /**
  * fu_device_cleanup:
  * @self: A #FuDevice
+ * @flags: A #FwupdInstallFlags
  * @error: A #GError
  *
  * Cleans up a device after an update. A different plugin can handle each of
@@ -2467,8 +2531,6 @@ fu_device_activate (FuDevice *self, GError **error)
  * This should be done in case the backing device has changed, for instance if
  * a USB device has been replugged.
  *
- * Returns: %TRUE for success
- *
  * Since: 1.1.2
  **/
 void
@@ -2660,6 +2722,13 @@ fu_device_finalize (GObject *object)
 	G_OBJECT_CLASS (fu_device_parent_class)->finalize (object);
 }
 
+/**
+ * fu_device_new:
+ *
+ * Creates a new #Fudevice
+ *
+ * Since: 0.1.0
+ **/
 FuDevice *
 fu_device_new (void)
 {

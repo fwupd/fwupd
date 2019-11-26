@@ -300,9 +300,9 @@ fu_quirks_lookup_by_id (FuQuirks *self, const gchar *group, const gchar *key)
 
 /**
  * fu_quirks_lookup_by_id_iter:
- * @self: A #FuPlugin
- * @guid: a GUID
- * @iter_cb: A #FuQuirksIter
+ * @self: A #FuQuirks
+ * @group: string of group to lookup
+ * @iter_cb: (scope async): A #FuQuirksIter
  * @user_data: user data passed to @iter_cb
  *
  * Looks up all entries in the hardware database using a GUID value.
@@ -370,6 +370,7 @@ fu_quirks_lookup_by_id_iter (FuQuirks *self, const gchar *group,
 /**
  * fu_quirks_load: (skip)
  * @self: A #FuQuirks
+ * @load_flags: A #FuQuirksLoadFlags
  * @error: A #GError, or %NULL
  *
  * Loads the various files that define the hardware quirks used in plugins.
@@ -413,6 +414,8 @@ fu_quirks_finalize (GObject *obj)
  * Creates a new quirks object.
  *
  * Return value: a new #FuQuirks
+ *
+ * Since: 1.0.1
  **/
 FuQuirks *
 fu_quirks_new (void)

@@ -13,6 +13,14 @@
 #include "fu-chunk.h"
 
 /**
+ * SECTION:fu-chunk
+ * @short_description: A packet of chunked data
+ *
+ * An object that represents a packet of data.
+ *
+ */
+
+/**
  * fu_chunk_new:
  * @idx: the packet number
  * @page: the hardware memory page
@@ -23,6 +31,8 @@
  * Creates a new packet of chunked data.
  *
  * Return value: (transfer full): a #FuChunk
+ *
+ * Since: 1.1.2
  **/
 FuChunk *
 fu_chunk_new (guint32 idx,
@@ -47,6 +57,8 @@ fu_chunk_new (guint32 idx,
  * Converts the chunked packet to a string representation.
  *
  * Return value: (transfer full): A string
+ *
+ * Since: 1.1.2
  **/
 gchar *
 fu_chunk_to_string (FuChunk *item)
@@ -76,6 +88,8 @@ fu_chunk_to_string (FuChunk *item)
  * Converts all the chunked packets in an array to a string representation.
  *
  * Return value: (transfer full): A string
+ *
+ * Since: 1.0.1
  **/
 gchar *
 fu_chunk_array_to_string (GPtrArray *chunks)
@@ -101,13 +115,15 @@ fu_chunk_array_to_string (GPtrArray *chunks)
  * cross a package boundary and is less that a specific transfer size.
  *
  * Return value: (element-type FuChunk): array of packets
+ *
+ * Since: 1.1.2
  **/
 GPtrArray *
 fu_chunk_array_new (const guint8 *data,
-		 guint32 data_sz,
-		 guint32 addr_start,
-		 guint32 page_sz,
-		 guint32 packet_sz)
+		    guint32 data_sz,
+		    guint32 addr_start,
+		    guint32 page_sz,
+		    guint32 packet_sz)
 {
 	GPtrArray *segments = NULL;
 	guint32 page_old = G_MAXUINT32;
@@ -182,12 +198,14 @@ fu_chunk_array_new (const guint8 *data,
  * cross a package boundary and is less that a specific transfer size.
  *
  * Return value: (element-type FuChunk): array of packets
+ *
+ * Since: 1.1.2
  **/
 GPtrArray *
 fu_chunk_array_new_from_bytes (GBytes *blob,
-			    guint32 addr_start,
-			    guint32 page_sz,
-			    guint32 packet_sz)
+			       guint32 addr_start,
+			       guint32 page_sz,
+			       guint32 packet_sz)
 {
 	gsize sz;
 	const guint8 *data = g_bytes_get_data (blob, &sz);

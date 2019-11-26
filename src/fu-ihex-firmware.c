@@ -14,6 +14,15 @@
 #include "fu-firmware-common.h"
 #include "fu-ihex-firmware.h"
 
+/**
+ * SECTION:fu-ihex-firmware
+ * @short_description: Ihex firmware image
+ *
+ * An object that represents a Ihex firmware image.
+ *
+ * See also: #FuFirmware
+ */
+
 struct _FuIhexFirmware {
 	FuFirmware		 parent_instance;
 	GPtrArray		*records;
@@ -434,6 +443,13 @@ fu_ihex_firmware_class_init (FuIhexFirmwareClass *klass)
 	klass_firmware->write = fu_ihex_firmware_write;
 }
 
+/**
+ * fu_ihex_firmware_new:
+ *
+ * Creates a new #FuFirmware of sub type Ihex
+ *
+ * Since: 1.3.1
+ **/
 FuFirmware *
 fu_ihex_firmware_new (void)
 {

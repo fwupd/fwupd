@@ -14,6 +14,15 @@
 #include "fu-firmware-common.h"
 #include "fu-srec-firmware.h"
 
+/**
+ * SECTION:fu-srec-firmware
+ * @short_description: SREC firmware image
+ *
+ * An object that represents a SREC firmware image.
+ *
+ * See also: #FuFirmware
+ */
+
 struct _FuSrecFirmware {
 	FuFirmware		 parent_instance;
 	GPtrArray		*records;
@@ -48,6 +57,18 @@ fu_srec_firmware_record_free (FuSrecFirmwareRecord *rcd)
 	g_free (rcd);
 }
 
+/**
+ * fu_srec_firmware_record_new:
+ * @ln: unsigned integer
+ * @kind: #FuFirmwareSrecRecordKind
+ * @addr: unsigned integer
+ *
+ * Returns a single firmware record
+ *
+ * Returns: (transfer full) (element-type FuSrecFirmwareRecord): records
+ *
+ * Since: 1.3.2
+ **/
 FuSrecFirmwareRecord *
 fu_srec_firmware_record_new (guint ln, FuFirmareSrecRecordKind kind, guint32 addr)
 {
@@ -372,6 +393,13 @@ fu_srec_firmware_class_init (FuSrecFirmwareClass *klass)
 	klass_firmware->tokenize = fu_srec_firmware_tokenize;
 }
 
+/**
+ * fu_srec_firmware_new:
+ *
+ * Creates a new #FuFirmware of sub type Srec
+ *
+ * Since: 1.3.2
+ **/
 FuFirmware *
 fu_srec_firmware_new (void)
 {

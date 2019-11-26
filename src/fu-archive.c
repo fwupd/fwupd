@@ -59,6 +59,8 @@ fu_archive_init (FuArchive *self)
  * Finds the blob referenced by filename
  *
  * Returns: (transfer none): a #GBytes, or %NULL if the filename was not found
+ *
+ * Since: 1.2.2
  **/
 GBytes *
 fu_archive_lookup_by_fn (FuArchive *self, const gchar *fn, GError **error)
@@ -82,7 +84,7 @@ fu_archive_lookup_by_fn (FuArchive *self, const gchar *fn, GError **error)
 /**
  * fu_archive_iterate:
  * @self: A #FuArchive
- * @callback: A #FuArchiveIterateFunc.
+ * @callback: (scope call): A #FuArchiveIterateFunc.
  * @user_data: User data.
  * @error: A #GError, or %NULL
  *
@@ -90,6 +92,8 @@ fu_archive_lookup_by_fn (FuArchive *self, const gchar *fn, GError **error)
  * of the files found. If any @callback returns %FALSE scanning is aborted.
  *
  * Returns: True if no @callback returned FALSE
+ *
+ * Since: 1.3.4
  */
 gboolean
 fu_archive_iterate (FuArchive *self,
@@ -225,6 +229,8 @@ fu_archive_load (FuArchive *self, GBytes *blob, FuArchiveFlags flags, GError **e
  * Parses @data as an archive and decompresses all files to memory blobs.
  *
  * Returns: a #FuArchive, or %NULL if the archive was invalid in any way.
+ *
+ * Since: 1.2.2
  **/
 FuArchive *
 fu_archive_new (GBytes *data, FuArchiveFlags flags, GError **error)

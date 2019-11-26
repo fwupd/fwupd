@@ -461,6 +461,8 @@ fu_io_channel_init (FuIOChannel *self)
  * Creates a new object to write and read from.
  *
  * Returns: a #FuIOChannel
+ *
+ * Since: 1.2.2
  **/
 FuIOChannel *
 fu_io_channel_unix_new (gint fd)
@@ -479,6 +481,8 @@ fu_io_channel_unix_new (gint fd)
  * Creates a new object to write and read from.
  *
  * Returns: a #FuIOChannel
+ *
+ * Since: 1.2.2
  **/
 FuIOChannel *
 fu_io_channel_new_file (const gchar *filename, GError **error)

@@ -345,6 +345,17 @@ fu_udev_device_set_dev (FuUdevDevice *self, GUdevDevice *udev_device)
 #endif
 }
 
+/**
+ * fu_udev_device_get_slot_depth:
+ * @self: A #FuUdevDevice
+ * @subsystem: a subsystem
+ *
+ * Determine how far up a chain a given device is
+ *
+ * Returns: unsigned integer
+ *
+ * Since: 1.2.4
+ **/
 guint
 fu_udev_device_get_slot_depth (FuUdevDevice *self, const gchar *subsystem)
 {

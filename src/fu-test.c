@@ -26,6 +26,14 @@ fu_test_hang_check_cb (gpointer user_data)
 	return G_SOURCE_REMOVE;
 }
 
+/**
+ * fu_test_loop_run_with_timeout:
+ * @timeout_ms: The timeout in milliseconds
+ *
+ * Quits the test loop after a timeout
+ *
+ * Since: 0.9.1
+ **/
 void
 fu_test_loop_run_with_timeout (guint timeout_ms)
 {
@@ -36,6 +44,13 @@ fu_test_loop_run_with_timeout (guint timeout_ms)
 	g_main_loop_run (_test_loop);
 }
 
+/**
+ * fu_test_loop_quit:
+ *
+ * Quits the test loop
+ *
+ * Since: 0.9.1
+ **/
 void
 fu_test_loop_quit (void)
 {
@@ -50,6 +65,17 @@ fu_test_loop_quit (void)
 	}
 }
 
+/**
+ * fu_test_get_filename:
+ * @testdatadirs: semicolon delimitted list of directories
+ * @filename: the filename to look for
+ *
+ * Returns the first path that matches filename in testdatadirs
+ *
+ * Returns: (transfer full): full path to file or NULL
+ *
+ * Since: 0.9.1
+ **/
 gchar *
 fu_test_get_filename (const gchar *testdatadirs, const gchar *filename)
 {
@@ -65,6 +91,18 @@ fu_test_get_filename (const gchar *testdatadirs, const gchar *filename)
 	return NULL;
 }
 
+/**
+ * fu_test_compare_lines:
+ * @txt1: First line to compare
+ * @txt2: second line to compare
+ * @error: A #GError or #NULL
+ *
+ * Compare two lines.
+ *
+ * Returns: #TRUE if identical, #FALSE if not (diff is set in error)
+ *
+ * Since: 1.0.4
+ **/
 gboolean
 fu_test_compare_lines (const gchar *txt1, const gchar *txt2, GError **error)
 {

@@ -84,6 +84,8 @@ fu_device_locker_init (FuDeviceLocker *self)
  * Think of this object as the device ownership.
  *
  * Returns: a #FuDeviceLocker, or %NULL if the @open_func failed.
+ *
+ * Since: 1.0.0
  **/
 FuDeviceLocker *
 fu_device_locker_new (gpointer device, GError **error)
@@ -130,6 +132,8 @@ fu_device_locker_new (gpointer device, GError **error)
  * Think of this object as the device ownership.
  *
  * Returns: a #FuDeviceLocker, or %NULL if the @open_func failed.
+ *
+ * Since: 1.0.0
  **/
 FuDeviceLocker *
 fu_device_locker_new_full (gpointer device,

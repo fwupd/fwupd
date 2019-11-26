@@ -355,6 +355,18 @@ fu_common_version_convert_base (FwupdVersionFormat fmt)
 	return fmt;
 }
 
+/**
+ * fu_common_version_verify_format:
+ * @version: A string, e.g. "0x1234"
+ * @fmt: a #FwupdVersionFormat
+ * @error: A #GError or %NULL
+ *
+ * Verifies if a version matches the input format.
+ *
+ * Returns: TRUE or FALSE
+ *
+ * Since: 1.2.9
+ **/
 gboolean
 fu_common_version_verify_format (const gchar *version,
 				 FwupdVersionFormat fmt,

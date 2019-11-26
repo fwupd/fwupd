@@ -109,7 +109,7 @@ void		 fu_plugin_set_coldplug_delay		(FuPlugin	*self,
 							 guint		 duration);
 void		 fu_plugin_set_device_gtype		(FuPlugin	*self,
 							 GType		 device_gtype);
-void		 fu_plugin_add_firmware_gtype		(FuPlugin	*plugin,
+void		 fu_plugin_add_firmware_gtype		(FuPlugin	*self,
 							 const gchar	*id,
 							 GType		 gtype);
 gpointer	 fu_plugin_cache_lookup			(FuPlugin	*self,

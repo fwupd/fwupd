@@ -68,7 +68,7 @@ gboolean	 fu_firmware_write_file			(FuFirmware	*self,
 							 GError		**error);
 
 void		 fu_firmware_add_image			(FuFirmware	*self,
-							 FuFirmwareImage *image);
+							 FuFirmwareImage *img);
 GPtrArray	*fu_firmware_get_images			(FuFirmware	*self);
 FuFirmwareImage *fu_firmware_get_image_by_id		(FuFirmware	*self,
 							 const gchar	*id,
