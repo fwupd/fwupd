@@ -246,6 +246,9 @@ gboolean	 fu_device_cleanup			(FuDevice	*self,
 							 GError		**error);
 void		 fu_device_incorporate			(FuDevice	*self,
 							 FuDevice	*donor);
+void		 fu_device_incorporate_flag		(FuDevice	*self,
+							 FuDevice	*donor,
+							 FwupdDeviceFlags flag);
 gboolean	 fu_device_open				(FuDevice	*self,
 							 GError		**error);
 gboolean	 fu_device_close			(FuDevice	*self,

@@ -251,13 +251,7 @@ fu_synaprom_config_detach (FuDevice *device, GError **error)
 static void
 fu_synaprom_config_flags_notify_cb (FuDevice *parent, GParamSpec *pspec, FuDevice *device)
 {
-	if (fu_device_has_flag (parent, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		g_debug ("parent set IS_BOOTLOADER, mirroring to child");
-		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
-	} else {
-		g_debug ("parent unset IS_BOOTLOADER, mirroring to child");
-		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
-	}
+	fu_device_incorporate_flag (device, parent, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 }
 
 static void
