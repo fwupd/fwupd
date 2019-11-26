@@ -45,7 +45,6 @@ guint		 fu_udev_device_get_slot_depth		(FuUdevDevice	*self,
 gboolean	 fu_udev_device_set_physical_id		(FuUdevDevice	*self,
 							 const gchar	*subsystem,
 							 GError		**error);
-void		 fu_udev_device_dump			(FuUdevDevice	*self);
 void		 fu_udev_device_set_readonly		(FuUdevDevice	*self,
 							 gboolean	 readonly);
 
