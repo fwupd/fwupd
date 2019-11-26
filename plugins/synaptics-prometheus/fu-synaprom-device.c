@@ -394,6 +394,7 @@ fu_synaprom_device_attach (FuDevice *device, GError **error)
 		g_prefix_error (error, "failed to force-reset device: ");
 		return FALSE;
 	}
+	fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	return TRUE;
 }
 
@@ -428,6 +429,7 @@ fu_synaprom_device_detach (FuDevice *device, GError **error)
 		g_prefix_error (error, "failed to force-reset device: ");
 		return FALSE;
 	}
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	return TRUE;
 }
 
