@@ -41,13 +41,31 @@
         Functionality available to plugins.
       </para>
     </partintro>
+    <xi:include href="xml/fu-archive.xml"/>
     <xi:include href="xml/fu-chunk.xml"/>
+    <xi:include href="xml/fu-common-cab.xml"/>
+    <xi:include href="xml/fu-common-guid.xml"/>
+    <xi:include href="xml/fu-common-version.xml"/>
     <xi:include href="xml/fu-common.xml"/>
     <xi:include href="xml/fu-device-locker.xml"/>
     <xi:include href="xml/fu-device-metadata.xml"/>
     <xi:include href="xml/fu-device.xml"/>
+    <xi:include href="xml/fu-dfu-firmware.xml"/>
+    <xi:include href="xml/fu-firmware-common.xml"/>
+    <xi:include href="xml/fu-firmware-image.xml"/>
+    <xi:include href="xml/fu-firmware.xml"/>
+    <xi:include href="xml/fu-history.xml"/>
+    <xi:include href="xml/fu-hwids.xml"/>
+    <xi:include href="xml/fu-ihex-firmware.xml"/>
+    <xi:include href="xml/fu-srec-firmware.xml"/>
+    <xi:include href="xml/fu-io-channel.xml"/>
+    <xi:include href="xml/fu-mutex.xml"/>
+    <xi:include href="xml/fu-plugin-vfuncs.xml"/>
     <xi:include href="xml/fu-plugin.xml"/>
+    <xi:include href="xml/fu-progressbar.xml"/>
     <xi:include href="xml/fu-quirks.xml"/>
+    <xi:include href="xml/fu-smbios.xml"/>
+    <xi:include href="xml/fu-test.xml"/>
     <xi:include href="xml/fu-udev-device.xml"/>
     <xi:include href="xml/fu-usb-device.xml"/>
   </reference>
