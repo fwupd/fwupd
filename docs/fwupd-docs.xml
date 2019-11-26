@@ -61,7 +61,6 @@
     <xi:include href="xml/fu-mutex.xml"/>
     <xi:include href="xml/fu-plugin-vfuncs.xml"/>
     <xi:include href="xml/fu-plugin.xml"/>
-    <xi:include href="xml/fu-progressbar.xml"/>
     <xi:include href="xml/fu-quirks.xml"/>
     <xi:include href="xml/fu-smbios.xml"/>
     <xi:include href="xml/fu-test.xml"/>
