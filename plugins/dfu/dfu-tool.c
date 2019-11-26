@@ -16,7 +16,6 @@
 #include "dfu-sector.h"
 
 #include "fu-device-locker.h"
-#include "fu-progressbar.h"
 
 #include "fwupd-error.h"
 
@@ -26,7 +25,6 @@ typedef struct {
 	gboolean		 force;
 	gchar			*device_vid_pid;
 	guint16			 transfer_size;
-	FuProgressbar		*progressbar;
 	FuQuirks		*quirks;
 } DfuToolPrivate;
 
@@ -47,7 +45,6 @@ dfu_tool_private_free (DfuToolPrivate *priv)
 	if (priv == NULL)
 		return;
 	g_free (priv->device_vid_pid);
-	g_object_unref (priv->progressbar);
 	g_object_unref (priv->cancellable);
 	g_object_unref (priv->quirks);
 	if (priv->cmd_array != NULL)
@@ -654,9 +651,9 @@ dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 static void
 fu_tool_action_changed_cb (FuDevice *device, GParamSpec *pspec, DfuToolPrivate *priv)
 {
-	fu_progressbar_update (priv->progressbar,
-			       fu_device_get_status (device),
-			       fu_device_get_progress (device));
+	g_print ("%s:\t%u%%\n",
+		 fwupd_status_to_string (fu_device_get_status (device)),
+		 fu_device_get_progress (device));
 }
 
 static gboolean
@@ -1312,11 +1309,6 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Replace data in an existing firmware file"),
 		     dfu_tool_replace_data);
-
-	/* use animated progress bar */
-	priv->progressbar = fu_progressbar_new ();
-	fu_progressbar_set_length_percentage (priv->progressbar, 50);
-	fu_progressbar_set_length_status (priv->progressbar, 20);
 
 	/* use quirks */
 	priv->quirks = fu_quirks_new ();
