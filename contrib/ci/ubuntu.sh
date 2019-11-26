@@ -15,7 +15,7 @@ ninja -C build test -v
 #make docs available outside of docker
 ninja -C build install -v
 mkdir -p dist/docs
-cp build/docs/libfwupd/* dist/docs -R
+cp build/docs/* dist/docs -R
 
 #run static analysis (these mostly won't be critical)
 ninja -C build scan-build -v

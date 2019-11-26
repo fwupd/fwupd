@@ -370,7 +370,7 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 
 %files devel
 %{_datadir}/gir-1.0/Fwupd-2.0.gir
-%{_datadir}/gtk-doc/html/libfwupd
+%{_datadir}/gtk-doc/html/fwupd
 %{_datadir}/vala/vapi
 %{_includedir}/fwupd-1
 %{_libdir}/libfwupd*.so

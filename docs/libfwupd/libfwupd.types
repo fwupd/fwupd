@@ -1,6 +1,0 @@
-fwupd_client_get_type
-fwupd_device_get_type
-fwupd_quirks_get_type
-fwupd_release_get_type
-fwupd_remote_get_type
-fwupd_result_get_type
