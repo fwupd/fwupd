@@ -2296,10 +2296,15 @@ fu_plugin_module_func (void)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuDevice) device2 = NULL;
 	g_autoptr(FuDevice) device3 = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GMappedFile) mapped_file = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new ();
+
+	/* no metadata in daemon */
+	fu_engine_set_silo (engine, silo_empty);
 
 	/* create a fake device */
 	plugin = fu_plugin_new ();
@@ -2342,8 +2347,8 @@ fu_plugin_module_func (void)
 	blob_cab = g_mapped_file_get_bytes (mapped_file);
 	release = fu_device_get_release_default (device);
 	fwupd_release_set_version (release, "1.2.3");
-	ret = fu_plugin_runner_schedule_update (plugin, device, release, blob_cab,
-						FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_engine_schedule_update (engine, device, release, blob_cab,
+					 FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (cnt, ==, 1);
@@ -2368,8 +2373,10 @@ fu_plugin_module_func (void)
 	pending_cap = g_strdup (fwupd_release_get_filename (release));
 
 	/* lets do this online */
-	ret = fu_plugin_runner_update (plugin, device, blob_cab,
-				       FWUPD_INSTALL_FLAG_NONE, &error);
+	fu_engine_add_device (engine, device);
+	fu_engine_add_plugin (engine, plugin);
+	ret = fu_engine_install_blob (engine, device, blob_cab,
+				      FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (cnt, ==, 4);

@@ -18,6 +18,7 @@
 #ifdef HAVE_UTSNAME_H
 #include <sys/utsname.h>
 #endif
+#include <errno.h>
 
 #include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
@@ -1612,6 +1613,143 @@ fu_engine_is_running_offline (FuEngine *self)
 #endif
 }
 
+static gboolean
+fu_engine_offline_setup (GError **error)
+{
+	gint rc;
+	g_autofree gchar *filename = NULL;
+	g_autofree gchar *symlink_target = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	g_autofree gchar *trigger = fu_common_get_path (FU_PATH_KIND_OFFLINE_TRIGGER);
+
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* does already exist */
+	filename = fu_common_realpath (trigger, NULL);
+	if (g_strcmp0 (filename, symlink_target) == 0) {
+		g_debug ("%s already points to %s, skipping creation",
+			 trigger, symlink_target);
+		return TRUE;
+	}
+
+	/* create symlink for the systemd-system-update-generator */
+	rc = symlink (symlink_target, trigger);
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Failed to create symlink %s to %s: %s",
+			     trigger, symlink_target, strerror (errno));
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_engine_offline_invalidate (GError **error)
+{
+	g_autofree gchar *trigger = fu_common_get_path (FU_PATH_KIND_OFFLINE_TRIGGER);
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GFile) file1 = NULL;
+
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	file1 = g_file_new_for_path (trigger);
+	if (!g_file_query_exists (file1, NULL))
+		return TRUE;
+	if (!g_file_delete (file1, NULL, &error_local)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Cannot delete %s: %s",
+			     trigger,
+			     error_local->message);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/**
+ * fu_engine_schedule_update:
+ * @self: a #FuEngine
+ * @device: a #FuDevice
+ * @release: A #FwupdRelease
+ * @blob_cab: A #GBytes
+ * @flags: #FwupdInstallFlags
+ * @error: A #GError or NULL
+ *
+ * Schedule an offline update for the device
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 1.3.5
+ **/
+gboolean
+fu_engine_schedule_update (FuEngine *self,
+			   FuDevice *device,
+			   FwupdRelease *release,
+			   GBytes *blob_cab,
+			   FwupdInstallFlags flags,
+			   GError **error)
+{
+	gchar tmpname[] = {"XXXXXX.cab"};
+	g_autofree gchar *dirname = NULL;
+	g_autofree gchar *filename = NULL;
+	g_autoptr(FuHistory) history = NULL;
+	g_autoptr(GFile) file = NULL;
+
+	/* id already exists */
+	history = fu_history_new ();
+	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+		g_autoptr(FuDevice) res_tmp = NULL;
+		res_tmp = fu_history_get_device_by_id (history, fu_device_get_id (device), NULL);
+		if (res_tmp != NULL &&
+		    fu_device_get_update_state (res_tmp) == FWUPD_UPDATE_STATE_PENDING) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_ALREADY_PENDING,
+				     "%s is already scheduled to be updated",
+				     fu_device_get_id (device));
+			return FALSE;
+		}
+	}
+
+	/* create directory */
+	dirname = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	file = g_file_new_for_path (dirname);
+	if (!g_file_query_exists (file, NULL)) {
+		if (!g_file_make_directory_with_parents (file, NULL, error))
+			return FALSE;
+	}
+
+	/* get a random filename */
+	for (guint i = 0; i < 6; i++)
+		tmpname[i] = (gchar) g_random_int_range ('A', 'Z');
+	filename = g_build_filename (dirname, tmpname, NULL);
+
+	/* just copy to the temp file */
+	fu_device_set_status (device, FWUPD_STATUS_SCHEDULING);
+	if (!g_file_set_contents (filename,
+				  g_bytes_get_data (blob_cab, NULL),
+				  (gssize) g_bytes_get_size (blob_cab),
+				  error))
+		return FALSE;
+
+	/* schedule for next boot */
+	g_debug ("schedule %s to be installed to %s on next boot",
+		 filename, fu_device_get_id (device));
+	fwupd_release_set_filename (release, filename);
+
+	/* add to database */
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_PENDING);
+	if (!fu_history_add_device (history, device, release, error))
+		return FALSE;
+
+	/* next boot we run offline */
+	fu_device_set_progress (device, 100);
+	return fu_engine_offline_setup (error);
+}
+
 /**
  * fu_engine_install:
  * @self: A #FuEngine
@@ -1745,8 +1883,8 @@ fu_engine_install (FuEngine *self,
 		if (release_tmp == NULL)
 			return FALSE;
 		fwupd_release_set_version (release_tmp, version_rel);
-		return fu_plugin_runner_schedule_update (plugin, device, release_tmp,
-							 blob_cab, flags, error);
+		return fu_engine_schedule_update (self, device, release_tmp,
+						  blob_cab, flags, error);
 	}
 
 	/* add device to database */
@@ -2129,6 +2267,11 @@ fu_engine_update (FuEngine *self,
 	FuPlugin *plugin;
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuDevice) device_pending = NULL;
+
+	/* cancel the pending action */
+	if (!fu_engine_offline_invalidate (error))
+		return FALSE;
 
 	/* the device and plugin both may have changed */
 	device = fu_engine_get_device_by_id (self, device_id, error);
@@ -2136,6 +2279,7 @@ fu_engine_update (FuEngine *self,
 		g_prefix_error (error, "failed to get device after detach: ");
 		return FALSE;
 	}
+	device_pending = fu_history_get_device_by_id (self->history, device_id, NULL);
 	str = fu_device_to_string (device);
 	g_debug ("performing update on %s", str);
 	plugin = fu_plugin_list_find_by_name (self->plugin_list,
@@ -2159,6 +2303,34 @@ fu_engine_update (FuEngine *self,
 				   error_cleanup->message);
 		}
 		return FALSE;
+	}
+
+	/* cleanup */
+	if (device_pending != NULL) {
+		const gchar *tmp;
+		FwupdRelease *release;
+
+		/* update history database */
+		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
+		if (!fu_history_modify_device (self->history, device, error))
+			return FALSE;
+
+		/* delete cab file */
+		release = fu_device_get_release_default (device_pending);
+		tmp = fwupd_release_get_filename (release);
+		if (tmp != NULL && g_str_has_prefix (tmp, FWUPD_LIBEXECDIR)) {
+			g_autoptr(GError) error_delete = NULL;
+			g_autoptr(GFile) file = NULL;
+			file = g_file_new_for_path (tmp);
+			if (!g_file_delete (file, NULL, &error_delete)) {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "Failed to delete %s: %s",
+					     tmp, error_delete->message);
+				return FALSE;
+			}
+		}
 	}
 	return TRUE;
 }
