@@ -4094,6 +4094,12 @@ fu_engine_udev_device_add (FuEngine *self, GUdevDevice *udev_device)
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) possible_plugins = NULL;
 
+	/* debug */
+	if (g_getenv ("FWUPD_PROBE_VERBOSE") != NULL) {
+		g_debug ("UDEV %s added",
+			 g_udev_device_get_sysfs_path (udev_device));
+	}
+
 	/* add any extra quirks */
 	fu_device_set_quirks (FU_DEVICE (device), self->quirks);
 	if (!fu_device_probe (FU_DEVICE (device), &error_local)) {
@@ -4138,6 +4144,12 @@ static void
 fu_engine_udev_device_remove (FuEngine *self, GUdevDevice *udev_device)
 {
 	g_autoptr(GPtrArray) devices = NULL;
+
+	/* debug */
+	if (g_getenv ("FWUPD_PROBE_VERBOSE") != NULL) {
+		g_debug ("UDEV %s removed",
+			 g_udev_device_get_sysfs_path (udev_device));
+	}
 
 	/* go through each device and remove any that match */
 	devices = fu_device_list_get_all (self->device_list);
@@ -4509,6 +4521,13 @@ fu_engine_usb_device_removed_cb (GUsbContext *ctx,
 {
 	g_autoptr(GPtrArray) devices = NULL;
 
+	/* debug */
+	if (g_getenv ("FWUPD_PROBE_VERBOSE") != NULL) {
+		g_debug ("USB %04x:%04x removed",
+			 g_usb_device_get_vid (usb_device),
+			 g_usb_device_get_pid (usb_device));
+	}
+
 	/* go through each device and remove any that match */
 	devices = fu_device_list_get_all (self->device_list);
 	for (guint i = 0; i < devices->len; i++) {
@@ -4531,6 +4550,13 @@ fu_engine_usb_device_added_cb (GUsbContext *ctx,
 	g_autoptr(FuUsbDevice) device = fu_usb_device_new (usb_device);
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) possible_plugins = NULL;
+
+	/* debug */
+	if (g_getenv ("FWUPD_PROBE_VERBOSE") != NULL) {
+		g_debug ("USB %04x:%04x added",
+			 g_usb_device_get_vid (usb_device),
+			 g_usb_device_get_pid (usb_device));
+	}
 
 	/* add any extra quirks */
 	fu_device_set_quirks (FU_DEVICE (device), self->quirks);
