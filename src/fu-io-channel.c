@@ -16,6 +16,7 @@
 #include <poll.h>
 #endif
 #include <string.h>
+#include <sys/stat.h>
 
 #include "fwupd-error.h"
 #include "fu-common.h"
