@@ -89,7 +89,7 @@ fu_dell_dock_hid_set_report (FuDevice *self,
 		ret = g_usb_device_control_transfer (
 		    usb_device, G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 		    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-		    G_USB_DEVICE_RECIPIENT_INTERFACE, HID_REPORT_SET, 0x0200,
+		    G_USB_DEVICE_RECIPIENT_INTERFACE, FU_HID_REPORT_SET, 0x0200,
 		    0x0000, outbuffer, 192, &actual_len,
 		    HIDI2C_TRANSACTION_TIMEOUT, NULL, &error_local);
 		if (ret)
@@ -129,7 +129,7 @@ fu_dell_dock_hid_get_report (FuDevice *self,
 		ret = g_usb_device_control_transfer (
 		    usb_device, G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
 		    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-		    G_USB_DEVICE_RECIPIENT_INTERFACE, HID_REPORT_GET, 0x0100,
+		    G_USB_DEVICE_RECIPIENT_INTERFACE, FU_HID_REPORT_GET, 0x0100,
 		    0x0000, inbuffer, 192, &actual_len,
 		    HIDI2C_TRANSACTION_TIMEOUT, NULL, &error_local);
 		if (ret)

@@ -149,8 +149,8 @@ fu_wac_device_get_feature_report (FuWacDevice *self,
 					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
 					    G_USB_DEVICE_RECIPIENT_INTERFACE,
-					    HID_REPORT_GET,		/* bRequest */
-					    HID_FEATURE | cmd,		/* wValue */
+					    FU_HID_REPORT_GET,		/* bRequest */
+					    FU_HID_FEATURE | cmd,		/* wValue */
 					    0x0000,			/* wIndex */
 					    buf, bufsz, &sz,
 					    FU_WAC_DEVICE_TIMEOUT,
@@ -200,8 +200,8 @@ fu_wac_device_set_feature_report (FuWacDevice *self,
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
 					    G_USB_DEVICE_RECIPIENT_INTERFACE,
-					    HID_REPORT_SET,		/* bRequest */
-					    HID_FEATURE | cmd,		/* wValue */
+					    FU_HID_REPORT_SET,		/* bRequest */
+					    FU_HID_FEATURE | cmd,		/* wValue */
 					    0x0000,			/* wIndex */
 					    buf, bufsz, &sz,
 					    FU_WAC_DEVICE_TIMEOUT,
