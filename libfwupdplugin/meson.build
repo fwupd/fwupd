@@ -240,7 +240,7 @@ if get_option('tests')
       '-DPLUGINBUILDDIR="' + pluginbuilddir + '"',
     ],
   )
-  test('fu-self-test', e, is_parallel:false, timeout:180)
+  test('fwupdplugin-self-test', e, is_parallel:false, timeout:180)
 endif
 
 fwupdplugin_incdir = include_directories('.')
