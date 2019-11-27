@@ -38,7 +38,8 @@ class LdVersionScript:
         if version not in self.releases:
             self.releases[version] = []
         release = self.releases[version]
-        release.append(identifier)
+        if identifier not in release:
+            release.append(identifier)
         return version
 
     def _add_cls(self, cls):

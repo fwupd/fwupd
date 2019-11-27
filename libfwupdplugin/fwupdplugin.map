@@ -160,7 +160,6 @@ LIBFWUPDPLUGIN_1.0.0 {
 LIBFWUPDPLUGIN_1.0.1 {
   global:
     fu_chunk_array_to_string;
-    fu_chunk_array_to_string;
     fu_plugin_get_quirks;
     fu_plugin_lookup_quirk_by_id;
     fu_plugin_set_quirks;
