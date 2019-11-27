@@ -2630,7 +2630,7 @@ fu_device_incorporate_flag (FuDevice *self, FuDevice *donor, FwupdDeviceFlags fl
 }
 
 /**
- * fu_device_incorporate_from_component:
+ * fu_device_incorporate_from_component: (skip):
  * @device: A #FuDevice
  * @component: A #XbNode
  *

@@ -58,7 +58,7 @@ fu_srec_firmware_record_free (FuSrecFirmwareRecord *rcd)
 }
 
 /**
- * fu_srec_firmware_record_new:
+ * fu_srec_firmware_record_new: (skip):
  * @ln: unsigned integer
  * @kind: #FuFirmwareSrecRecordKind
  * @addr: unsigned integer

@@ -21,7 +21,7 @@
  */
 
 /**
- * fu_chunk_new:
+ * fu_chunk_new: (skip):
  * @idx: the packet number
  * @page: the hardware memory page
  * @address: the address *within* the page
@@ -104,7 +104,7 @@ fu_chunk_array_to_string (GPtrArray *chunks)
 }
 
 /**
- * fu_chunk_array_new:
+ * fu_chunk_array_new: (skip):
  * @data: a linear blob of memory, or %NULL
  * @data_sz: size of @data_sz
  * @addr_start: the hardware address offset, or 0
@@ -188,7 +188,7 @@ fu_chunk_array_new (const guint8 *data,
 }
 
 /**
- * fu_chunk_array_new_from_bytes:
+ * fu_chunk_array_new_from_bytes: (skip):
  * @blob: a #GBytes
  * @addr_start: the hardware address offset, or 0
  * @page_sz: the hardware page size, or 0
