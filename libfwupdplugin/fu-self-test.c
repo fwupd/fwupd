@@ -592,34 +592,6 @@ fu_common_spawn_timeout_func (void)
 }
 
 static void
-fu_progressbar_func (void)
-{
-	g_autoptr(FuProgressbar) progressbar = fu_progressbar_new ();
-
-	fu_progressbar_set_length_status (progressbar, 20);
-	fu_progressbar_set_length_percentage (progressbar, 50);
-
-	g_print ("\n");
-	for (guint i = 0; i < 100; i++) {
-		fu_progressbar_update (progressbar, FWUPD_STATUS_DECOMPRESSING, i);
-		g_usleep (10000);
-	}
-	fu_progressbar_update (progressbar, FWUPD_STATUS_IDLE, 0);
-	for (guint i = 0; i < 100; i++) {
-		guint pc = (i > 25 && i < 75) ? 0 : i;
-		fu_progressbar_update (progressbar, FWUPD_STATUS_LOADING, pc);
-		g_usleep (10000);
-	}
-	fu_progressbar_update (progressbar, FWUPD_STATUS_IDLE, 0);
-
-	for (guint i = 0; i < 5000; i++) {
-		fu_progressbar_update (progressbar, FWUPD_STATUS_LOADING, 0);
-		g_usleep (1000);
-	}
-	fu_progressbar_update (progressbar, FWUPD_STATUS_IDLE, 0);
-}
-
-static void
 fu_common_endian_func (void)
 {
 	guint8 buf[2];
@@ -1569,8 +1541,6 @@ main (int argc, char **argv)
 	g_setenv ("FWUPD_OFFLINE_TRIGGER", "/tmp/fwupd-self-test/system-update", TRUE);
 	g_setenv ("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 
-	if (g_test_slow ())
-		g_test_add_func ("/fwupd/progressbar", fu_progressbar_func);
 	g_test_add_func ("/fwupd/plugin{delay}", fu_plugin_delay_func);
 	g_test_add_func ("/fwupd/plugin{quirks}", fu_plugin_quirks_func);
 	g_test_add_func ("/fwupd/plugin{quirks-performance}", fu_plugin_quirks_performance_func);

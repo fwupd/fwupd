@@ -29,6 +29,7 @@ fwupdmgr = executable(
   sources : [
     'fu-util.c',
     'fu-history.c',
+    'fu-progressbar.c',
     'fu-util-common.c',
     systemd_src
   ],
@@ -143,6 +144,7 @@ fwupdtool = executable(
     'fu-keyring-result.c',
     'fu-keyring-utils.c',
     'fu-plugin-list.c',
+    'fu-progressbar.c',
     'fu-util-common.c',
     systemd_src
   ],
@@ -266,6 +268,7 @@ if get_option('tests')
       'fu-keyring-result.c',
       'fu-keyring-utils.c',
       'fu-plugin-list.c',
+      'fu-progressbar.c',
       'fu-self-test.c',
       systemd_src
     ],

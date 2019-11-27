@@ -24,6 +24,7 @@
 #include "fu-install-task.h"
 #include "fu-plugin-private.h"
 #include "fu-plugin-list.h"
+#include "fu-progressbar.h"
 #include "fu-hash.h"
 #include "fu-smbios-private.h"
 
@@ -2751,6 +2752,34 @@ fu_memcpy_func (void)
 	g_clear_error (&error);
 }
 
+static void
+fu_progressbar_func (void)
+{
+	g_autoptr(FuProgressbar) progressbar = fu_progressbar_new ();
+
+	fu_progressbar_set_length_status (progressbar, 20);
+	fu_progressbar_set_length_percentage (progressbar, 50);
+
+	g_print ("\n");
+	for (guint i = 0; i < 100; i++) {
+		fu_progressbar_update (progressbar, FWUPD_STATUS_DECOMPRESSING, i);
+		g_usleep (10000);
+	}
+	fu_progressbar_update (progressbar, FWUPD_STATUS_IDLE, 0);
+	for (guint i = 0; i < 100; i++) {
+		guint pc = (i > 25 && i < 75) ? 0 : i;
+		fu_progressbar_update (progressbar, FWUPD_STATUS_LOADING, pc);
+		g_usleep (10000);
+	}
+	fu_progressbar_update (progressbar, FWUPD_STATUS_IDLE, 0);
+
+	for (guint i = 0; i < 5000; i++) {
+		fu_progressbar_update (progressbar, FWUPD_STATUS_LOADING, 0);
+		g_usleep (1000);
+	}
+	fu_progressbar_update (progressbar, FWUPD_STATUS_IDLE, 0);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -2770,6 +2799,8 @@ main (int argc, char **argv)
 	fu_self_test_mkroot ();
 
 	/* tests go here */
+	if (g_test_slow ())
+		g_test_add_func ("/fwupd/progressbar", fu_progressbar_func);
 	g_test_add_func ("/fwupd/plugin{build-hash}", fu_plugin_hash_func);
 	g_test_add_func ("/fwupd/plugin{module}", fu_plugin_module_func);
 	g_test_add_func ("/fwupd/memcpy", fu_memcpy_func);

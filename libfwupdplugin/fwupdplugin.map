@@ -113,13 +113,6 @@ LIBFWUPDPLUGIN_0.9.7 {
     fu_plugin_get_dmi_value;
     fu_plugin_runner_device_register;
     fu_plugin_set_hwids;
-    fu_progressbar_get_type;
-    fu_progressbar_new;
-    fu_progressbar_set_interactive;
-    fu_progressbar_set_length_percentage;
-    fu_progressbar_set_length_status;
-    fu_progressbar_set_title;
-    fu_progressbar_update;
   local: *;
 } LIBFWUPDPLUGIN_0.9.5;
 
