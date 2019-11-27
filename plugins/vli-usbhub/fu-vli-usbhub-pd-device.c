@@ -135,7 +135,7 @@ fu_vli_usbhub_pd_device_read_firmware (FuDevice *device, GError **error)
 	/* open device */
 	locker = fu_device_locker_new (parent, error);
 	if (locker == NULL)
-		return FALSE;
+		return NULL;
 
 	/* read */
 	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_DEVICE_VERIFY);
