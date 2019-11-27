@@ -48,6 +48,25 @@ dfu_self_test_get_bytes_for_file (GFile *file, GError **error)
 	return g_bytes_new_take (contents, length);
 }
 
+static gboolean
+fu_test_compare_lines (const gchar *txt1, const gchar *txt2, GError **error)
+{
+	g_autofree gchar *output = NULL;
+	if (g_strcmp0 (txt1, txt2) == 0)
+		return TRUE;
+	if (fu_common_fnmatch (txt2, txt1))
+		return TRUE;
+	if (!g_file_set_contents ("/tmp/a", txt1, -1, error))
+		return FALSE;
+	if (!g_file_set_contents ("/tmp/b", txt2, -1, error))
+		return FALSE;
+	if (!g_spawn_command_line_sync ("diff -urNp /tmp/b /tmp/a",
+					&output, NULL, NULL, error))
+		return FALSE;
+	g_set_error_literal (error, 1, 0, output);
+	return FALSE;
+}
+
 static void
 dfu_firmware_raw_func (void)
 {
