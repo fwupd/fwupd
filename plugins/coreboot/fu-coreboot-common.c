@@ -81,7 +81,7 @@ fu_plugin_coreboot_get_name_for_type (FuPlugin *plugin,
 }
 
 /* Returns the version string with possible quirks applied */
-gchar *
+const gchar *
 fu_plugin_coreboot_get_version_string (FuPlugin *plugin)
 {
 	const gchar *version;
