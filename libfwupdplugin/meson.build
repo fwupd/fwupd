@@ -142,8 +142,8 @@ fwupdplugin_pkgg.generate(
 )
 
 if get_option('introspection')
-  gir_dep = declare_dependency(sources: gir)
-  gir = gnome.generate_gir(fwupd,
+  gir_dep = declare_dependency(sources: fwupd_gir)
+  fwupdplugin_gir = gnome.generate_gir(fwupd,
     sources : [
       fwupdplugin_src,
       fwupdplugin_headers,
@@ -168,11 +168,12 @@ if get_option('introspection')
       'Gio-2.0',
       'GObject-2.0',
       'GUsb-1.0',
+      fwupd_gir[0],
     ],
     install : true
   )
   gnome.generate_vapi('fwupdplugin',
-    sources : gir[0],
+    sources : fwupd_gir[0],
     packages : ['gio-2.0'],
     install : true,
   )
@@ -186,7 +187,7 @@ if get_option('introspection')
   # To avoid the circular dep, and to ensure we don't change exported API
   # accidentally actually check in a version of the version script to git.
   fwupdplugin_mapfile_target = custom_target('fwupdplugin_mapfile',
-    input: gir[0],
+    input: fwupdplugin_gir[0],
     output: 'fwupdplugin.map',
     command: [
       join_paths(meson.source_root(), 'contrib', 'generate-version-script.py'),

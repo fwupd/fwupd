@@ -69,7 +69,7 @@ pkgg.generate(
 )
 
 if get_option('introspection')
-  gir = gnome.generate_gir(fwupd,
+  fwupd_gir = gnome.generate_gir(fwupd,
     sources : [
       'fwupd-client.c',
       'fwupd-client.h',
@@ -110,7 +110,7 @@ if get_option('introspection')
   )
 
   gnome.generate_vapi('fwupd',
-    sources : gir[0],
+    sources : fwupd_gir[0],
     packages : ['gio-2.0', 'libsoup-2.4'],
     install : true,
   )
@@ -124,7 +124,7 @@ if get_option('introspection')
   # To avoid the circular dep, and to ensure we don't change exported API
   # accidentally actually check in a version of the version script to git.
   mapfile_target = custom_target('fwupd_mapfile',
-    input: gir[0],
+    input: fwupd_gir[0],
     output: 'fwupd.map',
     command: [
       join_paths(meson.source_root(), 'contrib', 'generate-version-script.py'),
