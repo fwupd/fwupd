@@ -9,7 +9,6 @@
 #include <fwupd.h>
 
 #include "fu-plugin-private.h"
-#include "fu-test.h"
 
 #include "fu-redfish-common.h"
 

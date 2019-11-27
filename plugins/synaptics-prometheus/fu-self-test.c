@@ -9,7 +9,6 @@
 #include <fwupd.h>
 
 #include "fu-plugin-private.h"
-#include "fu-test.h"
 
 #include "fu-synaprom-device.h"
 #include "fu-synaprom-firmware.h"
@@ -29,8 +28,7 @@ fu_test_synaprom_firmware_func (void)
 	g_autoptr(FuFirmware) firmware2 = NULL;
 	g_autoptr(FuFirmware) firmware = fu_synaprom_firmware_new ();
 
-	filename = fu_test_get_filename (TESTDATADIR, "test.pkg");
-	g_assert_nonnull (filename);
+	filename = g_build_filename (TESTDATADIR, "test.pkg", NULL);
 	fw = fu_common_get_contents_bytes (filename, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (fw);

@@ -19,7 +19,6 @@ fwupdplugin_src = [
   'fu-quirks.c',
   'fu-smbios.c',
   'fu-srec-firmware.c',
-  'fu-test.c',
   'fu-udev-device.c',
   'fu-usb-device.c',
 ]
@@ -46,7 +45,6 @@ fwupdplugin_headers = [
   'fu-quirks.h',
   'fu-smbios.h',
   'fu-srec-firmware.h',
-  'fu-test.h',
   'fu-udev-device.h',
   'fu-usb-device.h',
 ]
@@ -241,7 +239,6 @@ if get_option('tests')
     c_args : [
       '-DTESTDATADIR_SRC="' + testdatadir_src + '"',
       '-DTESTDATADIR_DST="' + testdatadir_dst + '"',
-      '-DTESTDATADIR="' + testdatadir_src + ':' + testdatadir_dst + '"',
       '-DPLUGINBUILDDIR="' + pluginbuilddir + '"',
     ],
   )

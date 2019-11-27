@@ -16,7 +16,6 @@
 #include "dfu-sector.h"
 #include "dfu-target-private.h"
 
-#include "fu-test.h"
 #include "fu-common.h"
 
 #include "fwupd-error.h"
