@@ -59,8 +59,7 @@ fu_archive_invalid_func (void)
 	g_autoptr(GBytes) data = NULL;
 	g_autoptr(GError) error = NULL;
 
-	filename = fu_test_get_filename (TESTDATADIR, "metadata.xml");
-	g_assert_nonnull (filename);
+	filename = g_build_filename (TESTDATADIR_SRC, "metadata.xml", NULL);
 	data = fu_common_get_contents_bytes (filename, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (data);
@@ -81,8 +80,7 @@ fu_archive_cab_func (void)
 	g_autoptr(GError) error = NULL;
 	GBytes *data_tmp;
 
-	filename = fu_test_get_filename (TESTDATADIR, "colorhug/colorhug-als-3.0.2.cab");
-	g_assert_nonnull (filename);
+	filename = g_build_filename (TESTDATADIR_DST, "colorhug", "colorhug-als-3.0.2.cab", NULL);
 	data = fu_common_get_contents_bytes (filename, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (data);
@@ -250,9 +248,7 @@ fu_smbios3_func (void)
 	g_autoptr(FuSmbios) smbios = NULL;
 	g_autoptr(GError) error = NULL;
 
-	path = fu_test_get_filename (TESTDATADIR, "dmi/tables64");
-	g_assert_nonnull (path);
-
+	path = g_build_filename (TESTDATADIR_SRC, "dmi", "tables64", NULL);
 	smbios = fu_smbios_new ();
 	ret = fu_smbios_setup_from_path (smbios, path, &error);
 	g_assert_no_error (error);
@@ -469,8 +465,7 @@ fu_common_firmware_builder_func (void)
 	g_autoptr(GError) error = NULL;
 
 	/* get test file */
-	archive_fn = fu_test_get_filename (TESTDATADIR, "builder/firmware.tar");
-	g_assert (archive_fn != NULL);
+	archive_fn = g_build_filename (TESTDATADIR_DST, "builder", "firmware.tar", NULL);
 	archive_blob = fu_common_get_contents_bytes (archive_fn, &error);
 	g_assert_no_error (error);
 	g_assert (archive_blob != NULL);
@@ -570,8 +565,7 @@ fu_common_spawn_func (void)
 	g_autofree gchar *fn = NULL;
 	const gchar *argv[3] = { "replace", "test", NULL };
 
-	fn = fu_test_get_filename (TESTDATADIR, "spawn.sh");
-	g_assert (fn != NULL);
+	fn = g_build_filename (TESTDATADIR_SRC, "spawn.sh", NULL);
 	argv[0] = fn;
 	ret = fu_common_spawn_sync (argv,
 				    fu_test_stdout_cb, &lines, 0, NULL, &error);
@@ -589,8 +583,7 @@ fu_common_spawn_timeout_func (void)
 	g_autofree gchar *fn = NULL;
 	const gchar *argv[3] = { "replace", "test", NULL };
 
-	fn = fu_test_get_filename (TESTDATADIR, "spawn.sh");
-	g_assert (fn != NULL);
+	fn = g_build_filename (TESTDATADIR_SRC, "spawn.sh", NULL);
 	argv[0] = fn;
 	ret = fu_common_spawn_sync (argv, fu_test_stdout_cb, &lines, 50, NULL, &error);
 	g_assert_error (error, G_IO_ERROR, G_IO_ERROR_CANCELLED);
@@ -1268,8 +1261,7 @@ fu_firmware_ihex_func (void)
 	g_autoptr(GFile) file_hex = NULL;
 
 	/* load a Intel hex32 file */
-	filename_hex = fu_test_get_filename (TESTDATADIR, "firmware.hex");
-	g_assert (filename_hex != NULL);
+	filename_hex = g_build_filename (TESTDATADIR_SRC, "firmware.hex", NULL);
 	file_hex = g_file_new_for_path (filename_hex);
 	data_file = g_file_load_bytes (file_hex, NULL, NULL, &error);
 	g_assert_no_error (error);
@@ -1283,8 +1275,7 @@ fu_firmware_ihex_func (void)
 	g_assert_cmpint (g_bytes_get_size (data_fw), ==, 136);
 
 	/* did we match the reference file? */
-	filename_ref = fu_test_get_filename (TESTDATADIR, "firmware.bin");
-	g_assert (filename_ref != NULL);
+	filename_ref = g_build_filename (TESTDATADIR_SRC, "firmware.bin", NULL);
 	file_ref = g_file_new_for_path (filename_ref);
 	data_ref = g_file_load_bytes (file_ref, NULL, NULL, &error);
 	g_assert_no_error (error);
@@ -1328,8 +1319,7 @@ fu_firmware_ihex_signed_func (void)
 	g_autoptr(GFile) file_hex = NULL;
 
 	/* load a signed Intel hex32 file */
-	filename_shex = fu_test_get_filename (TESTDATADIR, "firmware.shex");
-	g_assert (filename_shex != NULL);
+	filename_shex = g_build_filename (TESTDATADIR_SRC, "firmware.shex", NULL);
 	file_hex = g_file_new_for_path (filename_shex);
 	data_file = g_file_load_bytes (file_hex, NULL, NULL, &error);
 	g_assert_no_error (error);
@@ -1413,8 +1403,7 @@ fu_firmware_srec_func (void)
 	g_autoptr(GFile) file_bin = NULL;
 	g_autoptr(GFile) file_srec = NULL;
 
-	filename_srec = fu_test_get_filename (TESTDATADIR, "firmware.srec");
-	g_assert (filename_srec != NULL);
+	filename_srec = g_build_filename (TESTDATADIR_SRC, "firmware.srec", NULL);
 	file_srec = g_file_new_for_path (filename_srec);
 	data_srec = g_file_load_bytes (file_srec, NULL, NULL, &error);
 	g_assert_no_error (error);
@@ -1428,8 +1417,7 @@ fu_firmware_srec_func (void)
 	g_assert_cmpint (g_bytes_get_size (data_bin), ==, 136);
 
 	/* did we match the reference file? */
-	filename_ref = fu_test_get_filename (TESTDATADIR, "firmware.bin");
-	g_assert (filename_ref != NULL);
+	filename_ref = g_build_filename (TESTDATADIR_SRC, "firmware.bin", NULL);
 	file_bin = g_file_new_for_path (filename_ref);
 	data_ref = g_file_load_bytes (file_bin, NULL, NULL, &error);
 	g_assert_no_error (error);
@@ -1485,8 +1473,7 @@ fu_firmware_dfu_func (void)
 	g_autoptr(GFile) file_bin = NULL;
 	g_autoptr(GFile) file_dfu = NULL;
 
-	filename_dfu = fu_test_get_filename (TESTDATADIR, "firmware.dfu");
-	g_assert (filename_dfu != NULL);
+	filename_dfu = g_build_filename (TESTDATADIR_SRC, "firmware.dfu", NULL);
 	file_dfu = g_file_new_for_path (filename_dfu);
 	data_dfu = g_file_load_bytes (file_dfu, NULL, NULL, &error);
 	g_assert_no_error (error);
@@ -1503,8 +1490,7 @@ fu_firmware_dfu_func (void)
 	g_assert_cmpint (g_bytes_get_size (data_bin), ==, 136);
 
 	/* did we match the reference file? */
-	filename_ref = fu_test_get_filename (TESTDATADIR, "firmware.bin");
-	g_assert (filename_ref != NULL);
+	filename_ref = g_build_filename (TESTDATADIR_SRC, "firmware.bin", NULL);
 	file_bin = g_file_new_for_path (filename_ref);
 	data_ref = g_file_load_bytes (file_bin, NULL, NULL, &error);
 	g_assert_no_error (error);

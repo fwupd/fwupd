@@ -73,7 +73,6 @@ LIBFWUPDPLUGIN_0.8.0 {
 LIBFWUPDPLUGIN_0.9.1 {
   global:
     fu_plugin_check_hwid;
-    fu_test_get_filename;
   local: *;
 } LIBFWUPDPLUGIN_0.8.0;
 

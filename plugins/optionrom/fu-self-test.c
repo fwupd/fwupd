@@ -13,7 +13,6 @@
 
 #include "fu-plugin-private.h"
 #include "fu-rom.h"
-#include "fu-test.h"
 
 static void
 fu_rom_func (void)
@@ -62,8 +61,8 @@ fu_rom_func (void)
 		g_assert (rom != NULL);
 
 		/* load file */
-		filename = fu_test_get_filename (TESTDATADIR, data[i].fn);
-		if (filename == NULL)
+		filename = g_build_filename (TESTDATADIR, data[i].fn, NULL);
+		if (!g_file_test (filename, G_FILE_TEST_EXISTS))
 			continue;
 		g_print ("\nparsing %s...", filename);
 		file = g_file_new_for_path (filename);
@@ -84,8 +83,8 @@ fu_rom_all_func (void)
 	g_autofree gchar *path = NULL;
 
 	/* may or may not exist */
-	path = fu_test_get_filename (TESTDATADIR, "roms");
-	if (path == NULL)
+	path = g_build_filename (TESTDATADIR, "roms", NULL);
+	if (!g_file_test (path, G_FILE_TEST_EXISTS))
 		return;
 	g_print ("\n");
 	dir = g_dir_open (path, 0, NULL);

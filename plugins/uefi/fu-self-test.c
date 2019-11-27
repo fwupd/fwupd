@@ -8,7 +8,6 @@
 
 #include <fwupd.h>
 
-#include "fu-test.h"
 #include "fu-ucs2.h"
 #include "fu-uefi-bgrt.h"
 #include "fu-uefi-common.h"
@@ -129,8 +128,7 @@ fu_uefi_bitmap_func (void)
 	g_autofree gchar *buf = NULL;
 	g_autoptr(GError) error = NULL;
 
-	fn = fu_test_get_filename (TESTDATADIR, "test.bmp");
-	g_assert (fn != NULL);
+	fn = g_build_filename (TESTDATADIR, "test.bmp", NULL);
 	ret = g_file_get_contents (fn, &buf, &sz, &error);
 	g_assert_no_error (error);
 	g_assert_true (ret);
@@ -149,8 +147,7 @@ fu_uefi_device_func (void)
 	g_autoptr(FuUefiDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
 
-	fn = fu_test_get_filename (TESTDATADIR, "efi/esrt/entries/entry0");
-	g_assert (fn != NULL);
+	fn = g_build_filename (TESTDATADIR, "efi/esrt/entries/entry0", NULL);
 	dev = fu_uefi_device_new_from_entry (fn, &error);
 	g_assert_nonnull (dev);
 	g_assert_no_error (error);
@@ -287,8 +284,7 @@ fu_uefi_update_info_func (void)
 	g_autoptr(FuUefiUpdateInfo) info = NULL;
 	g_autoptr(GError) error = NULL;
 
-	fn = fu_test_get_filename (TESTDATADIR, "efi/esrt/entries/entry0");
-	g_assert (fn != NULL);
+	fn = g_build_filename (TESTDATADIR, "efi/esrt/entries/entry0", NULL);
 	dev = fu_uefi_device_new_from_entry (fn, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (dev);

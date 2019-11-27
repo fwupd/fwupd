@@ -112,8 +112,7 @@ fu_engine_generate_md_func (void)
 	g_autoptr(XbNode) component = NULL;
 
 	/* put cab file somewhere we can parse it */
-	filename = fu_test_get_filename (TESTDATADIR, "colorhug/colorhug-als-3.0.2.cab");
-	g_assert_nonnull (filename);
+	filename = g_build_filename (TESTDATADIR_DST, "colorhug", "colorhug-als-3.0.2.cab", NULL);
 	data = fu_common_get_contents_bytes (filename, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (data);
@@ -827,8 +826,7 @@ fu_engine_device_unlock_func (void)
 	g_assert (ret);
 
 	/* add the hardcoded 'fwupd' metadata */
-	filename = fu_test_get_filename (TESTDATADIR, "metadata.xml");
-	g_assert (filename != NULL);
+	filename = g_build_filename (TESTDATADIR_SRC, "metadata.xml", NULL);
 	file = g_file_new_for_path (filename);
 	ret = xb_builder_source_load_file (source, file,
 					   XB_BUILDER_SOURCE_FLAG_NONE,
@@ -881,8 +879,7 @@ fu_engine_require_hwid_func (void)
 	g_assert (ret);
 
 	/* get generated file as a blob */
-	filename = fu_test_get_filename (TESTDATADIR, "missing-hwid/hwid-1.2.3.cab");
-	g_assert (filename != NULL);
+	filename = g_build_filename (TESTDATADIR_DST, "missing-hwid", "hwid-1.2.3.cab", NULL);
 	blob_cab = fu_common_get_contents_bytes	(filename, &error);
 	g_assert_no_error (error);
 	g_assert (blob_cab != NULL);
@@ -919,7 +916,6 @@ fu_engine_downgrade_func (void)
 {
 	FwupdRelease *rel;
 	gboolean ret;
-	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuDevice) device = fu_device_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(GError) error = NULL;
@@ -1003,9 +999,7 @@ fu_engine_downgrade_func (void)
 	g_assert_no_error (error);
 	g_assert (ret);
 
-	testdatadir = fu_test_get_filename (TESTDATADIR, ".");
-	g_assert (testdatadir != NULL);
-	g_setenv ("FU_SELF_TEST_REMOTES_DIR", testdatadir, TRUE);
+	g_setenv ("FU_SELF_TEST_REMOTES_DIR", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NO_ENUMERATE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -1080,7 +1074,6 @@ fu_engine_install_duration_func (void)
 {
 	FwupdRelease *rel;
 	gboolean ret;
-	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuDevice) device = fu_device_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(GError) error = NULL;
@@ -1114,9 +1107,7 @@ fu_engine_install_duration_func (void)
 	g_assert_no_error (error);
 	g_assert (ret);
 
-	testdatadir = fu_test_get_filename (TESTDATADIR, ".");
-	g_assert (testdatadir != NULL);
-	g_setenv ("FU_SELF_TEST_REMOTES_DIR", testdatadir, TRUE);
+	g_setenv ("FU_SELF_TEST_REMOTES_DIR", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NO_ENUMERATE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -1151,7 +1142,6 @@ fu_engine_history_func (void)
 	g_autofree gchar *device_str_expected = NULL;
 	g_autofree gchar *device_str = NULL;
 	g_autofree gchar *filename = NULL;
-	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuDevice) device2 = NULL;
 	g_autoptr(FuDevice) device = fu_device_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
@@ -1179,9 +1169,7 @@ fu_engine_history_func (void)
 	g_assert (ret);
 	fu_engine_add_plugin (engine, plugin);
 
-	testdatadir = fu_test_get_filename (TESTDATADIR, ".");
-	g_assert (testdatadir != NULL);
-	g_setenv ("FU_SELF_TEST_REMOTES_DIR", testdatadir, TRUE);
+	g_setenv ("FU_SELF_TEST_REMOTES_DIR", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NO_ENUMERATE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -1203,8 +1191,7 @@ fu_engine_history_func (void)
 	g_assert_cmpint (devices->len, ==, 1);
 	g_assert (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REGISTERED));
 
-	filename = fu_test_get_filename (TESTDATADIR, "missing-hwid/noreqs-1.2.3.cab");
-	g_assert (filename != NULL);
+	filename = g_build_filename (TESTDATADIR_DST, "missing-hwid", "noreqs-1.2.3.cab", NULL);
 	blob_cab = fu_common_get_contents_bytes	(filename, &error);
 	g_assert_no_error (error);
 	g_assert (blob_cab != NULL);
@@ -1287,7 +1274,6 @@ fu_engine_history_inherit (void)
 {
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
-	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuDevice) device = fu_device_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuInstallTask) task = NULL;
@@ -1308,9 +1294,7 @@ fu_engine_history_inherit (void)
 	g_assert_no_error (error);
 	g_assert (ret);
 	fu_engine_add_plugin (engine, plugin);
-	testdatadir = fu_test_get_filename (TESTDATADIR, ".");
-	g_assert (testdatadir != NULL);
-	g_setenv ("FU_SELF_TEST_REMOTES_DIR", testdatadir, TRUE);
+	g_setenv ("FU_SELF_TEST_REMOTES_DIR", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NO_ENUMERATE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -1331,8 +1315,7 @@ fu_engine_history_inherit (void)
 	g_assert_cmpint (devices->len, ==, 1);
 	g_assert (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REGISTERED));
 
-	filename = fu_test_get_filename (TESTDATADIR, "missing-hwid/noreqs-1.2.3.cab");
-	g_assert (filename != NULL);
+	filename = g_build_filename (TESTDATADIR_DST, "missing-hwid", "noreqs-1.2.3.cab", NULL);
 	blob_cab = fu_common_get_contents_bytes	(filename, &error);
 	g_assert_no_error (error);
 	g_assert (blob_cab != NULL);
@@ -1394,7 +1377,6 @@ fu_engine_history_error_func (void)
 	g_autofree gchar *device_str_expected = NULL;
 	g_autofree gchar *device_str = NULL;
 	g_autofree gchar *filename = NULL;
-	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuDevice) device2 = NULL;
 	g_autoptr(FuDevice) device = fu_device_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
@@ -1419,9 +1401,7 @@ fu_engine_history_error_func (void)
 	g_assert (ret);
 	fu_engine_add_plugin (engine, plugin);
 
-	testdatadir = fu_test_get_filename (TESTDATADIR, ".");
-	g_assert (testdatadir != NULL);
-	g_setenv ("FU_SELF_TEST_REMOTES_DIR", testdatadir, TRUE);
+	g_setenv ("FU_SELF_TEST_REMOTES_DIR", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NO_ENUMERATE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -1443,8 +1423,7 @@ fu_engine_history_error_func (void)
 	g_assert (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REGISTERED));
 
 	/* install the wrong thing */
-	filename = fu_test_get_filename (TESTDATADIR, "missing-hwid/noreqs-1.2.3.cab");
-	g_assert (filename != NULL);
+	filename = g_build_filename (TESTDATADIR_DST, "missing-hwid", "noreqs-1.2.3.cab", NULL);
 	blob_cab = fu_common_get_contents_bytes	(filename, &error);
 	g_assert_no_error (error);
 	g_assert (blob_cab != NULL);
@@ -1987,7 +1966,7 @@ fu_history_migrate_func (void)
 	g_autofree gchar *filename = NULL;
 
 	/* load old version */
-	filename = fu_test_get_filename (TESTDATADIR, "history_v1.db");
+	filename = g_build_filename (TESTDATADIR_SRC, "history_v1.db", NULL);
 	file_src = g_file_new_for_path (filename);
 	file_dst = g_file_new_for_path ("/tmp/fwupd-self-test/var/lib/fwupd/pending.db");
 	ret = g_file_copy (file_src, file_dst, G_FILE_COPY_OVERWRITE, NULL,
@@ -2091,7 +2070,7 @@ fu_plugin_module_func (void)
 	g_signal_connect (device, "notify::status",
 			  G_CALLBACK (_plugin_status_changed_cb),
 			  &cnt);
-	mapped_file_fn = fu_test_get_filename (TESTDATADIR, "colorhug/firmware.bin");
+	mapped_file_fn = g_build_filename (TESTDATADIR_SRC, "colorhug", "firmware.bin", NULL);
 	mapped_file = g_mapped_file_new (mapped_file_fn, FALSE, &error);
 	g_assert_no_error (error);
 	g_assert (mapped_file != NULL);
@@ -2318,15 +2297,13 @@ fu_keyring_gpg_func (void)
 	ret = fu_keyring_setup (keyring, &error);
 	g_assert_no_error (error);
 	g_assert_true (ret);
-	pki_dir = fu_test_get_filename (TESTDATADIR, "pki");
-	g_assert_nonnull (pki_dir);
+	pki_dir = g_build_filename (TESTDATADIR_SRC, "pki", NULL);
 	ret = fu_keyring_add_public_keys (keyring, pki_dir, &error);
 	g_assert_no_error (error);
 	g_assert_true (ret);
 
 	/* verify with GnuPG */
-	fw_pass = fu_test_get_filename (TESTDATADIR, "colorhug/firmware.bin");
-	g_assert_nonnull (fw_pass);
+	fw_pass = g_build_filename (TESTDATADIR_SRC, "colorhug", "firmware.bin", NULL);
 	blob_pass = fu_common_get_contents_bytes (fw_pass, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (blob_pass);
@@ -2341,8 +2318,7 @@ fu_keyring_gpg_func (void)
 			 "3FC6B804410ED0840D8F2F9748A6D80E4538BAC2");
 
 	/* verify will fail with GnuPG */
-	fw_fail = fu_test_get_filename (TESTDATADIR, "colorhug/colorhug-als-3.0.2.cab");
-	g_assert_nonnull (fw_fail);
+	fw_fail = g_build_filename (TESTDATADIR_DST, "colorhug", "colorhug-als-3.0.2.cab", NULL);
 	blob_fail = fu_common_get_contents_bytes (fw_fail, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (blob_fail);
@@ -2380,20 +2356,17 @@ fu_keyring_pkcs7_func (void)
 	ret = fu_keyring_setup (keyring, &error);
 	g_assert_no_error (error);
 	g_assert_true (ret);
-	pki_dir = fu_test_get_filename (TESTDATADIR_SRC, "pki");
-	g_assert_nonnull (pki_dir);
+	pki_dir = g_build_filename (TESTDATADIR_SRC, "pki", NULL);
 	ret = fu_keyring_add_public_keys (keyring, pki_dir, &error);
 	g_assert_no_error (error);
 	g_assert_true (ret);
 
 	/* verify with a signature from the old LVFS */
-	fw_pass = fu_test_get_filename (TESTDATADIR_SRC, "colorhug/firmware.bin");
-	g_assert_nonnull (fw_pass);
+	fw_pass = g_build_filename (TESTDATADIR_SRC, "colorhug", "firmware.bin", NULL);
 	blob_pass = fu_common_get_contents_bytes (fw_pass, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (blob_pass);
-	sig_fn = fu_test_get_filename (TESTDATADIR_SRC, "colorhug/firmware.bin.p7b");
-	g_assert_nonnull (sig_fn);
+	sig_fn = g_build_filename (TESTDATADIR_SRC, "colorhug", "firmware.bin.p7b", NULL);
 	blob_sig = fu_common_get_contents_bytes (sig_fn, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (blob_sig);
@@ -2406,8 +2379,7 @@ fu_keyring_pkcs7_func (void)
 	g_assert_cmpstr (fu_keyring_result_get_authority (result_pass), == , "O=Linux Vendor Firmware Project,CN=LVFS CA");
 
 	/* verify will fail with a self-signed signature */
-	sig_fn2 = fu_test_get_filename (TESTDATADIR_DST, "colorhug/firmware.bin.p7c");
-	g_assert_nonnull (sig_fn2);
+	sig_fn2 = g_build_filename (TESTDATADIR_DST, "colorhug", "firmware.bin.p7c", NULL);
 	blob_sig2 = fu_common_get_contents_bytes (sig_fn2, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (blob_sig2);
@@ -2418,8 +2390,7 @@ fu_keyring_pkcs7_func (void)
 	g_clear_error (&error);
 
 	/* verify will fail with valid signature and different data */
-	fw_fail = fu_test_get_filename (TESTDATADIR, "colorhug/colorhug-als-3.0.2.cab");
-	g_assert_nonnull (fw_fail);
+	fw_fail = g_build_filename (TESTDATADIR_DST, "colorhug", "colorhug-als-3.0.2.cab", NULL);
 	blob_fail = fu_common_get_contents_bytes (fw_fail, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (blob_fail);

@@ -10,7 +10,6 @@
 
 #include "fu-device-private.h"
 #include "fu-nvme-device.h"
-#include "fu-test.h"
 
 static void
 fu_nvme_cns_func (void)
@@ -22,8 +21,7 @@ fu_nvme_cns_func (void)
 	g_autoptr(FuNvmeDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
 
-	path = fu_test_get_filename (TESTDATADIR, "TOSHIBA_THNSN5512GPU7.bin");
-	g_assert_nonnull (path);
+	path = g_build_filename (TESTDATADIR, "TOSHIBA_THNSN5512GPU7.bin", NULL);
 	ret = g_file_get_contents (path, &data, &sz, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -45,8 +43,8 @@ fu_nvme_cns_all_func (void)
 	g_autoptr(GDir) dir = NULL;
 
 	/* may or may not exist */
-	path = fu_test_get_filename (TESTDATADIR, "blobs");
-	if (path == NULL)
+	path = g_build_filename (TESTDATADIR, "blobs", NULL);
+	if (!g_file_test (path, G_FILE_TEST_EXISTS))
 		return;
 	dir = g_dir_open (path, 0, NULL);
 	while ((fn = g_dir_read_name (dir)) != NULL) {

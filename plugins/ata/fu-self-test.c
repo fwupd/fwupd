@@ -9,7 +9,6 @@
 #include <fwupd.h>
 
 #include "fu-ata-device.h"
-#include "fu-test.h"
 
 static void
 fu_ata_id_func (void)
@@ -21,8 +20,7 @@ fu_ata_id_func (void)
 	g_autoptr(FuAtaDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
 
-	path = fu_test_get_filename (TESTDATADIR, "StarDrive-SBFM61.2.bin");
-	g_assert_nonnull (path);
+	path = g_build_filename (TESTDATADIR, "StarDrive-SBFM61.2.bin", NULL);
 	ret = g_file_get_contents (path, &data, &sz, &error);
 	g_assert_no_error (error);
 	g_assert (ret);

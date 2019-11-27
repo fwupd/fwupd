@@ -23,9 +23,7 @@ fu_plugin_thunderbolt = shared_module('fu_plugin_thunderbolt',
   ],
 )
 
-testdatadir_src = join_paths(meson.source_root(), 'data', 'tests')
-testdatadir_dst = join_paths(meson.build_root(), 'data', 'tests')
-cargs += '-DTESTDATADIR="' + testdatadir_src + ':' + testdatadir_dst + '"'
+cargs += '-DTESTDATADIR="' + join_paths(meson.source_root(), 'data', 'tests') + '"'
 executable('tbtfwucli',
   fu_hash,
   sources : [

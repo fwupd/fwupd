@@ -63,7 +63,6 @@
     <xi:include href="xml/fu-plugin.xml"/>
     <xi:include href="xml/fu-quirks.xml"/>
     <xi:include href="xml/fu-smbios.xml"/>
-    <xi:include href="xml/fu-test.xml"/>
     <xi:include href="xml/fu-udev-device.xml"/>
     <xi:include href="xml/fu-usb-device.xml"/>
   </reference>
