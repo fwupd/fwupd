@@ -271,7 +271,7 @@ fu_io_channel_read_bytes (FuIOChannel *self,
  *
  * Reads bytes from the TTY, that will fail if exceeding @timeout_ms.
  *
- * Returns: a #GByteArray, or %NULL for error
+ * Returns: (transfer full): a #GByteArray, or %NULL for error
  *
  * Since: 1.3.2
  **/

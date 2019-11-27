@@ -40,7 +40,7 @@ const gchar	*fu_quirks_lookup_by_id			(FuQuirks	*self,
 							 const gchar	*key);
 gboolean	 fu_quirks_lookup_by_id_iter		(FuQuirks	*self,
 							 const gchar	*group,
-							 FuQuirksIter	 iter,
+							 FuQuirksIter	 iter_cb,
 							 gpointer	 user_data);
 
 #define	FU_QUIRKS_PLUGIN			"Plugin"

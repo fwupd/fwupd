@@ -121,7 +121,7 @@ fu_common_get_file_list_internal (GPtrArray *files, const gchar *directory, GErr
  * If any path under @directory cannot be accessed due to permissions an error
  * will be returned.
  *
- * Returns: (transfer container): array of files, or %NULL for error
+ * Returns: (transfer container) (element-type utf8): array of files, or %NULL for error
  *
  * Since: 1.0.6
  **/
@@ -1671,7 +1671,7 @@ fu_common_fnmatch (const gchar *pattern, const gchar *str)
  * delimiter. If @max_tokens is reached, the remainder of string is appended
  * to the last token.
  *
- * Return value: a newly-allocated NULL-terminated array of strings
+ * Return value: (transfer full): a newly-allocated NULL-terminated array of strings
  *
  * Since: 1.3.1
  **/

@@ -763,7 +763,7 @@ fu_plugin_set_hwids (FuPlugin *self, FuHwids *hwids)
 /**
  * fu_plugin_set_udev_subsystems:
  * @self: A #FuPlugin
- * @udev_subsystems: A #GPtrArray
+ * @udev_subsystems: (element-type utf8): A #GPtrArray
  *
  * Sets the udev subsystems used by a plugin
  *
@@ -1440,7 +1440,7 @@ fu_plugin_runner_coldplug_cleanup (FuPlugin *self, GError **error)
 /**
  * fu_plugin_runner_composite_prepare:
  * @self: a #FuPlugin
- * @devices: a #GPtrArray of devices
+ * @devices: (element-type FuDevice): a #GPtrArray of devices
  * @error: a #GError or NULL
  *
  * Runs the composite_prepare routine for the plugin
@@ -1460,7 +1460,7 @@ fu_plugin_runner_composite_prepare (FuPlugin *self, GPtrArray *devices, GError *
 /**
  * fu_plugin_runner_composite_cleanup:
  * @self: a #FuPlugin
- * @devices: a #GPtrArray of devices
+ * @devices: (element-type FuDevice): a #GPtrArray of devices
  * @error: a #GError or NULL
  *
  * Runs the composite_cleanup routine for the plugin

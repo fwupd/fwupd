@@ -150,7 +150,7 @@ fu_device_set_property (GObject *object, guint prop_id,
  *
  * Gets the list of possible plugin names, typically added from quirk files.
  *
- * Returns: (element-type utf-8) (transfer container): plugin names
+ * Returns: (element-type utf8) (transfer container): plugin names
  *
  * Since: 1.3.3
  **/
