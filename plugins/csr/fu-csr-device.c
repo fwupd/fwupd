@@ -80,8 +80,8 @@ fu_csr_device_attach (FuDevice *device, GError **error)
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
 					    G_USB_DEVICE_RECIPIENT_INTERFACE,
-					    HID_REPORT_SET,				/* bRequest */
-					    HID_FEATURE | FU_CSR_REPORT_ID_CONTROL,	/* wValue */
+					    FU_HID_REPORT_SET,				/* bRequest */
+					    FU_HID_FEATURE | FU_CSR_REPORT_ID_CONTROL,	/* wValue */
 					    0x0000,					/* wIndex */
 					    buf, sizeof(buf), &sz,
 					    FU_CSR_DEVICE_TIMEOUT, /* timeout */
@@ -115,8 +115,8 @@ fu_csr_device_get_status (FuCsrDevice *self, GError **error)
 					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
 					    G_USB_DEVICE_RECIPIENT_INTERFACE,
-					    HID_REPORT_GET,				/* bRequest */
-					    HID_FEATURE | FU_CSR_REPORT_ID_STATUS,	/* wValue */
+					    FU_HID_REPORT_GET,				/* bRequest */
+					    FU_HID_FEATURE | FU_CSR_REPORT_ID_STATUS,	/* wValue */
 					    0x0000,					/* wIndex */
 					    buf, sizeof(buf), &sz,
 					    FU_CSR_DEVICE_TIMEOUT,
@@ -175,8 +175,8 @@ fu_csr_device_clear_status (FuCsrDevice *self, GError **error)
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
 					    G_USB_DEVICE_RECIPIENT_INTERFACE,
-					    HID_REPORT_SET,				/* bRequest */
-					    HID_FEATURE | FU_CSR_REPORT_ID_CONTROL,	/* wValue */
+					    FU_HID_REPORT_SET,				/* bRequest */
+					    FU_HID_FEATURE | FU_CSR_REPORT_ID_CONTROL,	/* wValue */
 					    0x0000,					/* wIndex */
 					    buf, sizeof(buf), &sz,
 					    FU_CSR_DEVICE_TIMEOUT,
@@ -212,8 +212,8 @@ fu_csr_device_upload_chunk (FuCsrDevice *self, GError **error)
 					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
 					    G_USB_DEVICE_RECIPIENT_INTERFACE,
-					    HID_REPORT_GET,				/* bRequest */
-					    HID_FEATURE | FU_CSR_REPORT_ID_COMMAND,	/* wValue */
+					    FU_HID_REPORT_GET,				/* bRequest */
+					    FU_HID_FEATURE | FU_CSR_REPORT_ID_COMMAND,	/* wValue */
 					    0x0000,					/* wIndex */
 					    buf, sizeof(buf), &sz,
 					    FU_CSR_DEVICE_TIMEOUT,
@@ -365,8 +365,8 @@ fu_csr_device_download_chunk (FuCsrDevice *self, guint16 idx, GBytes *chunk, GEr
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
 					    G_USB_DEVICE_RECIPIENT_INTERFACE,
-					    HID_REPORT_SET,				/* bRequest */
-					    HID_FEATURE | FU_CSR_REPORT_ID_COMMAND,	/* wValue */
+					    FU_HID_REPORT_SET,				/* bRequest */
+					    FU_HID_FEATURE | FU_CSR_REPORT_ID_COMMAND,	/* wValue */
 					    0x0000,					/* wIndex */
 					    buf,
 					    sizeof(buf),

@@ -41,7 +41,7 @@ fu_rts54hid_device_set_report (FuRts54HidDevice *self,
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
 					    G_USB_DEVICE_RECIPIENT_INTERFACE,
-					    HID_REPORT_SET,
+					    FU_HID_REPORT_SET,
 					    0x0200, 0x0000,
 					    buf, buf_sz,
 					    &actual_len,
@@ -69,7 +69,7 @@ fu_rts54hid_device_get_report (FuRts54HidDevice *self,
 					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
 					    G_USB_DEVICE_RECIPIENT_INTERFACE,
-					    HID_REPORT_GET,
+					    FU_HID_REPORT_GET,
 					    0x0100, 0x0000,
 					    buf, buf_sz,
 					    &actual_len, /* actual length */
@@ -99,7 +99,7 @@ fu_rts54hid_device_set_clock_mode (FuRts54HidDevice *self, gboolean enable, GErr
 		.bufferlen = 0,
 		.parameters = 0,
 	};
-	guint8 buf[FU_RTS54HID_REPORT_LENGTH] = { 0 };
+	guint8 buf[FU_RTS54FU_HID_REPORT_LENGTH] = { 0 };
 	memcpy (buf, &cmd_buffer, sizeof(cmd_buffer));
 	if (!fu_rts54hid_device_set_report (self, buf, sizeof(buf), error)) {
 		g_prefix_error (error, "failed to set clock-mode=%i: ", enable);
@@ -118,7 +118,7 @@ fu_rts54hid_device_reset_to_flash (FuRts54HidDevice *self, GError **error)
 		.bufferlen = 0,
 		.parameters = 0,
 	};
-	guint8 buf[FU_RTS54HID_REPORT_LENGTH] = { 0 };
+	guint8 buf[FU_RTS54FU_HID_REPORT_LENGTH] = { 0 };
 	memcpy (buf, &cmd_buffer, sizeof(cmd_buffer));
 	if (!fu_rts54hid_device_set_report (self, buf, sizeof(buf), error)) {
 		g_prefix_error (error, "failed to soft reset: ");
@@ -141,7 +141,7 @@ fu_rts54hid_device_write_flash (FuRts54HidDevice *self,
 		.bufferlen = GUINT16_TO_LE (data_sz),
 		.parameters = 0,
 	};
-	guint8 buf[FU_RTS54HID_REPORT_LENGTH] = { 0 };
+	guint8 buf[FU_RTS54FU_HID_REPORT_LENGTH] = { 0 };
 
 	g_return_val_if_fail (data_sz <= 128, FALSE);
 	g_return_val_if_fail (data != NULL, FALSE);
@@ -172,7 +172,7 @@ fu_rts54hid_device_verify_update_fw (FuRts54HidDevice *self, GError **error)
 		.bufferlen = GUINT16_TO_LE (1),
 		.parameters = 0,
 	};
-	guint8 buf[FU_RTS54HID_REPORT_LENGTH] = { 0 };
+	guint8 buf[FU_RTS54FU_HID_REPORT_LENGTH] = { 0 };
 
 	/* set then get */
 	memcpy (buf, &cmd_buffer, sizeof(cmd_buffer));
@@ -208,7 +208,7 @@ fu_rts54hid_device_erase_spare_bank (FuRts54HidDevice *self, GError **error)
 		.bufferlen = 0,
 		.parameters = 0,
 	};
-	guint8 buf[FU_RTS54HID_REPORT_LENGTH] = { 0 };
+	guint8 buf[FU_RTS54FU_HID_REPORT_LENGTH] = { 0 };
 	memcpy (buf, &cmd_buffer, sizeof(cmd_buffer));
 	if (!fu_rts54hid_device_set_report (self, buf, sizeof(buf), error)) {
 		g_prefix_error (error, "failed to erase spare bank: ");
@@ -230,7 +230,7 @@ fu_rts54hid_device_ensure_status (FuRts54HidDevice *self, GError **error)
 		.bufferlen = GUINT16_TO_LE (32),
 		.parameters = 0,
 	};
-	guint8 buf[FU_RTS54HID_REPORT_LENGTH] = { 0 };
+	guint8 buf[FU_RTS54FU_HID_REPORT_LENGTH] = { 0 };
 	g_autofree gchar *version = NULL;
 
 	/* set then get */
