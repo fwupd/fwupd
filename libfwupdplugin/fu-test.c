@@ -14,55 +14,6 @@
 #include "fu-test.h"
 #include "fu-common.h"
 
-static GMainLoop *_test_loop = NULL;
-static guint _test_loop_timeout_id = 0;
-
-static gboolean
-fu_test_hang_check_cb (gpointer user_data)
-{
-	g_main_loop_quit (_test_loop);
-	_test_loop_timeout_id = 0;
-	return G_SOURCE_REMOVE;
-}
-
-/**
- * fu_test_loop_run_with_timeout:
- * @timeout_ms: The timeout in milliseconds
- *
- * Quits the test loop after a timeout
- *
- * Since: 0.9.1
- **/
-void
-fu_test_loop_run_with_timeout (guint timeout_ms)
-{
-	g_assert (_test_loop_timeout_id == 0);
-	g_assert (_test_loop == NULL);
-	_test_loop = g_main_loop_new (NULL, FALSE);
-	_test_loop_timeout_id = g_timeout_add (timeout_ms, fu_test_hang_check_cb, NULL);
-	g_main_loop_run (_test_loop);
-}
-
-/**
- * fu_test_loop_quit:
- *
- * Quits the test loop
- *
- * Since: 0.9.1
- **/
-void
-fu_test_loop_quit (void)
-{
-	if (_test_loop_timeout_id > 0) {
-		g_source_remove (_test_loop_timeout_id);
-		_test_loop_timeout_id = 0;
-	}
-	if (_test_loop != NULL) {
-		g_main_loop_quit (_test_loop);
-		g_main_loop_unref (_test_loop);
-		_test_loop = NULL;
-	}
-}
 
 /**
  * fu_test_get_filename:

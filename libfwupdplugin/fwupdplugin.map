@@ -74,8 +74,6 @@ LIBFWUPDPLUGIN_0.9.1 {
   global:
     fu_plugin_check_hwid;
     fu_test_get_filename;
-    fu_test_loop_quit;
-    fu_test_loop_run_with_timeout;
   local: *;
 } LIBFWUPDPLUGIN_0.8.0;
 
