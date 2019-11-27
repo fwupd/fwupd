@@ -430,11 +430,11 @@ fu_usb_device_set_dev (FuUsbDevice *device, GUsbDevice *usb_device)
 /**
  * fu_usb_device_find_udev_device:
  * @device: A #FuUsbDevice
- * @usb_device: A #GUsbDevice, or %NULL
+ * @error: A #GError, or %NULL
  *
  * Gets the matching #GUdevDevice for the #GUsbDevice.
  *
- * Returns: a #GUdevDevice, or NULL if unset or invalid
+ * Returns: (transfer full): a #GUdevDevice, or NULL if unset or invalid
  *
  * Since: 1.3.2
  **/

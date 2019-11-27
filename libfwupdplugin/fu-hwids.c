@@ -68,7 +68,7 @@ fu_hwids_has_guid (FuHwids *self, const gchar *guid)
  *
  * Returns all the defined HWIDs
  *
- * Returns: (transfer none) (element-type utf-8): An array of GUIDs
+ * Returns: (transfer none) (element-type utf8): An array of GUIDs
  *
  * Since: 0.9.3
  **/

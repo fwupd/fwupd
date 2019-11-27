@@ -114,7 +114,7 @@ fu_chunk_array_to_string (GPtrArray *chunks)
  * Chunks a linear blob of memory into packets, ensuring each packet does not
  * cross a package boundary and is less that a specific transfer size.
  *
- * Return value: (element-type FuChunk): array of packets
+ * Return value: (transfer container) (element-type FuChunk): array of packets
  *
  * Since: 1.1.2
  **/
@@ -197,7 +197,7 @@ fu_chunk_array_new (const guint8 *data,
  * Chunks a linear blob of memory into packets, ensuring each packet does not
  * cross a package boundary and is less that a specific transfer size.
  *
- * Return value: (element-type FuChunk): array of packets
+ * Return value: (transfer container) (element-type FuChunk): array of packets
  *
  * Since: 1.1.2
  **/
