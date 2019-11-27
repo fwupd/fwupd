@@ -204,7 +204,6 @@ LIBFWUPDPLUGIN_1.0.4 {
     fu_plugin_add_report_metadata;
     fu_plugin_get_report_metadata;
     fu_plugin_runner_recoldplug;
-    fu_test_compare_lines;
   local: *;
 } LIBFWUPDPLUGIN_1.0.3;
 
