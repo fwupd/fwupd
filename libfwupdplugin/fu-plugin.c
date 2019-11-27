@@ -280,7 +280,7 @@ fu_plugin_get_data (FuPlugin *self)
 }
 
 /**
- * fu_plugin_alloc_data:
+ * fu_plugin_alloc_data: (skip):
  * @self: A #FuPlugin
  * @data_sz: the size to allocate
  *
