@@ -35,6 +35,10 @@
 #include "fu-keyring-pkcs7.h"
 #endif
 
+typedef struct {
+	FuPlugin	*plugin;
+} FuTest;
+
 static GMainLoop *_test_loop = NULL;
 static guint _test_loop_timeout_id = 0;
 
@@ -101,7 +105,19 @@ fu_test_compare_lines (const gchar *txt1, const gchar *txt2, GError **error)
 }
 
 static void
-fu_engine_generate_md_func (void)
+fu_test_free (FuTest *self)
+{
+	g_object_unref (self->plugin);
+	g_free (self);
+}
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuTest, fu_test_free)
+#pragma clang diagnostic pop
+
+static void
+fu_engine_generate_md_func (gconstpointer user_data)
 {
 	const gchar *tmp;
 	gboolean ret;
@@ -143,9 +159,10 @@ fu_engine_generate_md_func (void)
 }
 
 static void
-fu_plugin_hash_func (void)
+fu_plugin_hash_func (gconstpointer user_data)
 {
 	GError *error = NULL;
+	g_autofree gchar *pluginfn = NULL;
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
 	gboolean ret = FALSE;
@@ -159,8 +176,10 @@ fu_plugin_hash_func (void)
 	g_assert_false (ret);
 
 	/* create a tainted plugin */
-	g_setenv ("FWUPD_PLUGIN_TEST", "build-hash", TRUE);
-	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_test." G_MODULE_SUFFIX, &error);
+	pluginfn = g_build_filename (PLUGINBUILDDIR,
+				     "libfu_plugin_invalid." G_MODULE_SUFFIX,
+				     NULL);
+	ret = fu_plugin_open (plugin, pluginfn, &error);
 	g_assert_no_error (error);
 
 	/* make sure it tainted now */
@@ -168,11 +187,10 @@ fu_plugin_hash_func (void)
 	fu_engine_add_plugin (engine, plugin);
 	ret = fu_engine_get_tainted (engine);
 	g_assert_true (ret);
-	g_unsetenv ("FWUPD_PLUGIN_TEST");
 }
 
 static void
-fu_engine_requirements_missing_func (void)
+fu_engine_requirements_missing_func (gconstpointer user_data)
 {
 	gboolean ret;
 	g_autoptr(XbNode) component = NULL;
@@ -208,7 +226,7 @@ fu_engine_requirements_missing_func (void)
 }
 
 static void
-fu_engine_requirements_unsupported_func (void)
+fu_engine_requirements_unsupported_func (gconstpointer user_data)
 {
 	gboolean ret;
 	g_autoptr(XbNode) component = NULL;
@@ -244,7 +262,7 @@ fu_engine_requirements_unsupported_func (void)
 }
 
 static void
-fu_engine_requirements_child_func (void)
+fu_engine_requirements_child_func (gconstpointer user_data)
 {
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new ();
@@ -296,7 +314,7 @@ fu_engine_requirements_child_func (void)
 }
 
 static void
-fu_engine_requirements_child_fail_func (void)
+fu_engine_requirements_child_fail_func (gconstpointer user_data)
 {
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new ();
@@ -350,7 +368,7 @@ fu_engine_requirements_child_fail_func (void)
 }
 
 static void
-fu_engine_requirements_func (void)
+fu_engine_requirements_func (gconstpointer user_data)
 {
 	gboolean ret;
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
@@ -387,7 +405,7 @@ fu_engine_requirements_func (void)
 }
 
 static void
-fu_engine_requirements_device_func (void)
+fu_engine_requirements_device_func (gconstpointer user_data)
 {
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new ();
@@ -439,7 +457,7 @@ fu_engine_requirements_device_func (void)
 }
 
 static void
-fu_engine_requirements_version_format_func (void)
+fu_engine_requirements_version_format_func (gconstpointer user_data)
 {
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new ();
@@ -488,7 +506,7 @@ fu_engine_requirements_version_format_func (void)
 }
 
 static void
-fu_engine_requirements_other_device_func (void)
+fu_engine_requirements_other_device_func (gconstpointer user_data)
 {
 	gboolean ret;
 	g_autoptr(FuDevice) device1 = fu_device_new ();
@@ -548,7 +566,7 @@ fu_engine_requirements_other_device_func (void)
 }
 
 static void
-fu_engine_requirements_parent_device_func (void)
+fu_engine_requirements_parent_device_func (gconstpointer user_data)
 {
 	gboolean ret;
 	g_autoptr(FuDevice) device1 = fu_device_new ();
@@ -611,7 +629,7 @@ fu_engine_requirements_parent_device_func (void)
 }
 
 static void
-fu_engine_device_priority_func (void)
+fu_engine_device_priority_func (gconstpointer user_data)
 {
 	FuDevice *device;
 	g_autoptr(FuDevice) device1 = fu_device_new ();
@@ -698,7 +716,7 @@ fu_engine_device_priority_func (void)
 }
 
 static void
-fu_engine_device_parent_func (void)
+fu_engine_device_parent_func (gconstpointer user_data)
 {
 	g_autoptr(FuDevice) device1 = fu_device_new ();
 	g_autoptr(FuDevice) device2 = fu_device_new ();
@@ -745,7 +763,7 @@ fu_engine_device_parent_func (void)
 }
 
 static void
-fu_engine_partial_hash_func (void)
+fu_engine_partial_hash_func (gconstpointer user_data)
 {
 	gboolean ret;
 	g_autoptr(FuDevice) device1 = fu_device_new ();
@@ -809,7 +827,7 @@ fu_engine_partial_hash_func (void)
 }
 
 static void
-fu_engine_device_unlock_func (void)
+fu_engine_device_unlock_func (gconstpointer user_data)
 {
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
@@ -852,7 +870,7 @@ fu_engine_device_unlock_func (void)
 }
 
 static void
-fu_engine_require_hwid_func (void)
+fu_engine_require_hwid_func (gconstpointer user_data)
 {
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
@@ -913,7 +931,7 @@ fu_engine_require_hwid_func (void)
 }
 
 static void
-fu_engine_downgrade_func (void)
+fu_engine_downgrade_func (gconstpointer user_data)
 {
 	FwupdRelease *rel;
 	gboolean ret;
@@ -1071,7 +1089,7 @@ fu_engine_downgrade_func (void)
 }
 
 static void
-fu_engine_install_duration_func (void)
+fu_engine_install_duration_func (gconstpointer user_data)
 {
 	FwupdRelease *rel;
 	gboolean ret;
@@ -1136,8 +1154,9 @@ fu_engine_install_duration_func (void)
 }
 
 static void
-fu_engine_history_func (void)
+fu_engine_history_func (gconstpointer user_data)
 {
+	FuTest *self = (FuTest *) user_data;
 	gboolean ret;
 	g_autofree gchar *checksum = NULL;
 	g_autofree gchar *device_str_expected = NULL;
@@ -1148,7 +1167,6 @@ fu_engine_history_func (void)
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(FuInstallTask) task = NULL;
-	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
 	g_autoptr(FwupdDevice) device3 = NULL;
 	g_autoptr(FwupdDevice) device4 = NULL;
 	g_autoptr(GBytes) blob_cab = NULL;
@@ -1165,10 +1183,7 @@ fu_engine_history_func (void)
 	fu_engine_set_silo (engine, silo_empty);
 
 	/* set up dummy plugin */
-	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_test." G_MODULE_SUFFIX, &error);
-	g_assert_no_error (error);
-	g_assert (ret);
-	fu_engine_add_plugin (engine, plugin);
+	fu_engine_add_plugin (engine, self->plugin);
 
 	g_setenv ("FU_SELF_TEST_REMOTES_DIR", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NO_ENUMERATE, &error);
@@ -1271,14 +1286,14 @@ fu_engine_history_func (void)
 }
 
 static void
-fu_engine_history_inherit (void)
+fu_engine_history_inherit (gconstpointer user_data)
 {
+	FuTest *self = (FuTest *) user_data;
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuDevice) device = fu_device_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuInstallTask) task = NULL;
-	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -1291,10 +1306,7 @@ fu_engine_history_inherit (void)
 
 	/* set up dummy plugin */
 	g_setenv ("FWUPD_PLUGIN_TEST", "fail", TRUE);
-	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_test." G_MODULE_SUFFIX, &error);
-	g_assert_no_error (error);
-	g_assert (ret);
-	fu_engine_add_plugin (engine, plugin);
+	fu_engine_add_plugin (engine, self->plugin);
 	g_setenv ("FU_SELF_TEST_REMOTES_DIR", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NO_ENUMERATE, &error);
 	g_assert_no_error (error);
@@ -1360,7 +1372,7 @@ fu_engine_history_inherit (void)
 	g_object_unref (device);
 	engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	fu_engine_set_silo (engine, silo_empty);
-	fu_engine_add_plugin (engine, plugin);
+	fu_engine_add_plugin (engine, self->plugin);
 	device = fu_device_new ();
 	fu_device_set_id (device, "test_device");
 	fu_device_set_name (device, "Test Device");
@@ -1371,8 +1383,9 @@ fu_engine_history_inherit (void)
 }
 
 static void
-fu_engine_history_error_func (void)
+fu_engine_history_error_func (gconstpointer user_data)
 {
+	FuTest *self = (FuTest *) user_data;
 	gboolean ret;
 	g_autofree gchar *checksum = NULL;
 	g_autofree gchar *device_str_expected = NULL;
@@ -1383,7 +1396,6 @@ fu_engine_history_error_func (void)
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(FuInstallTask) task = NULL;
-	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error2 = NULL;
 	g_autoptr(GError) error = NULL;
@@ -1397,10 +1409,7 @@ fu_engine_history_error_func (void)
 
 	/* set up dummy plugin */
 	g_setenv ("FWUPD_PLUGIN_TEST", "fail", TRUE);
-	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_test." G_MODULE_SUFFIX, &error);
-	g_assert_no_error (error);
-	g_assert (ret);
-	fu_engine_add_plugin (engine, plugin);
+	fu_engine_add_plugin (engine, self->plugin);
 
 	g_setenv ("FU_SELF_TEST_REMOTES_DIR", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NO_ENUMERATE, &error);
@@ -1486,7 +1495,7 @@ _device_list_count_cb (FuDeviceList *device_list, FuDevice *device, gpointer use
 }
 
 static void
-fu_device_list_delay_func (void)
+fu_device_list_delay_func (gconstpointer user_data)
 {
 	g_autoptr(FuDevice) device1 = fu_device_new ();
 	g_autoptr(FuDevice) device2 = fu_device_new ();
@@ -1564,7 +1573,7 @@ fu_device_list_add_cb (gpointer user_data)
 }
 
 static void
-fu_device_list_replug_auto_func (void)
+fu_device_list_replug_auto_func (gconstpointer user_data)
 {
 	gboolean ret;
 	g_autoptr(FuDevice) device1 = fu_device_new ();
@@ -1625,7 +1634,7 @@ fu_device_list_replug_auto_func (void)
 }
 
 static void
-fu_device_list_replug_user_func (void)
+fu_device_list_replug_user_func (gconstpointer user_data)
 {
 	gboolean ret;
 	g_autoptr(FuDevice) device1 = fu_device_new ();
@@ -1675,7 +1684,7 @@ fu_device_list_replug_user_func (void)
 }
 
 static void
-fu_device_list_compatible_func (void)
+fu_device_list_compatible_func (gconstpointer user_data)
 {
 	g_autoptr(FuDevice) device1 = fu_device_new ();
 	g_autoptr(FuDevice) device2 = fu_device_new ();
@@ -1753,7 +1762,7 @@ fu_device_list_compatible_func (void)
 }
 
 static void
-fu_device_list_remove_chain_func (void)
+fu_device_list_remove_chain_func (gconstpointer user_data)
 {
 	g_autoptr(FuDeviceList) device_list = fu_device_list_new ();
 	g_autoptr(FuDevice) device_child = fu_device_new ();
@@ -1800,7 +1809,7 @@ fu_device_list_remove_chain_func (void)
 }
 
 static void
-fu_device_list_func (void)
+fu_device_list_func (gconstpointer user_data)
 {
 	g_autoptr(FuDeviceList) device_list = fu_device_list_new ();
 	g_autoptr(FuDevice) device1 = fu_device_new ();
@@ -1882,7 +1891,7 @@ fu_device_list_func (void)
 }
 
 static void
-fu_plugin_list_func (void)
+fu_plugin_list_func (gconstpointer user_data)
 {
 	GPtrArray *plugins;
 	FuPlugin *plugin;
@@ -1913,7 +1922,7 @@ fu_plugin_list_func (void)
 }
 
 static void
-fu_plugin_list_depsolve_func (void)
+fu_plugin_list_depsolve_func (gconstpointer user_data)
 {
 	GPtrArray *plugins;
 	FuPlugin *plugin;
@@ -1956,7 +1965,7 @@ fu_plugin_list_depsolve_func (void)
 }
 
 static void
-fu_history_migrate_func (void)
+fu_history_migrate_func (gconstpointer user_data)
 {
 	gboolean ret;
 	g_autoptr(GError) error = NULL;
@@ -2013,8 +2022,9 @@ _plugin_device_register_cb (FuPlugin *plugin, FuDevice *device, gpointer user_da
 }
 
 static void
-fu_plugin_module_func (void)
+fu_plugin_module_func (gconstpointer user_data)
 {
+	FuTest *self = (FuTest *) user_data;
 	GError *error = NULL;
 	FuDevice *device_tmp;
 	FwupdRelease *release;
@@ -2029,7 +2039,6 @@ fu_plugin_module_func (void)
 	g_autoptr(FuDevice) device3 = NULL;
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuHistory) history = NULL;
-	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GMappedFile) mapped_file = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new ();
@@ -2038,21 +2047,17 @@ fu_plugin_module_func (void)
 	fu_engine_set_silo (engine, silo_empty);
 
 	/* create a fake device */
-	plugin = fu_plugin_new ();
 	g_setenv ("FWUPD_PLUGIN_TEST", "registration", TRUE);
-	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_test." G_MODULE_SUFFIX, &error);
+	ret = fu_plugin_runner_startup (self->plugin, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	ret = fu_plugin_runner_startup (plugin, &error);
-	g_assert_no_error (error);
-	g_assert (ret);
-	g_signal_connect (plugin, "device-added",
+	g_signal_connect (self->plugin, "device-added",
 			  G_CALLBACK (_plugin_device_added_cb),
 			  &device);
-	g_signal_connect (plugin, "device-register",
+	g_signal_connect (self->plugin, "device-register",
 			  G_CALLBACK (_plugin_device_register_cb),
 			  &device);
-	ret = fu_plugin_runner_coldplug (plugin, &error);
+	ret = fu_plugin_runner_coldplug (self->plugin, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -2066,6 +2071,7 @@ fu_plugin_module_func (void)
 			 "b585990a-003e-5270-89d5-3705a17f9a43");
 	g_assert_cmpstr (fu_device_get_name (device), ==,
 			 "Integrated Webcam™");
+	g_signal_handlers_disconnect_by_data (self->plugin, &device);
 
 	/* schedule an offline update */
 	g_signal_connect (device, "notify::status",
@@ -2105,7 +2111,7 @@ fu_plugin_module_func (void)
 
 	/* lets do this online */
 	fu_engine_add_device (engine, device);
-	fu_engine_add_plugin (engine, plugin);
+	fu_engine_add_plugin (engine, self->plugin);
 	ret = fu_engine_install_blob (engine, device, blob_cab,
 				      FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error (error);
@@ -2126,14 +2132,14 @@ fu_plugin_module_func (void)
 	/* get the status */
 	device_tmp = fu_device_new ();
 	fu_device_set_id (device_tmp, "FakeDevice");
-	ret = fu_plugin_runner_get_results (plugin, device_tmp, &error);
+	ret = fu_plugin_runner_get_results (self->plugin, device_tmp, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (fu_device_get_update_state (device_tmp), ==, FWUPD_UPDATE_STATE_SUCCESS);
 	g_assert_cmpstr (fu_device_get_update_error (device_tmp), ==, NULL);
 
 	/* clear */
-	ret = fu_plugin_runner_clear_results (plugin, device_tmp, &error);
+	ret = fu_plugin_runner_clear_results (self->plugin, device_tmp, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -2148,7 +2154,7 @@ fu_plugin_module_func (void)
 }
 
 static void
-fu_history_func (void)
+fu_history_func (gconstpointer user_data)
 {
 	GError *error = NULL;
 	GPtrArray *checksums;
@@ -2267,7 +2273,7 @@ fu_history_func (void)
 }
 
 static void
-fu_keyring_gpg_func (void)
+fu_keyring_gpg_func (gconstpointer user_data)
 {
 #ifdef ENABLE_GPG
 	gboolean ret;
@@ -2334,7 +2340,7 @@ fu_keyring_gpg_func (void)
 }
 
 static void
-fu_keyring_pkcs7_func (void)
+fu_keyring_pkcs7_func (gconstpointer user_data)
 {
 #ifdef ENABLE_PKCS7
 	gboolean ret;
@@ -2406,7 +2412,7 @@ fu_keyring_pkcs7_func (void)
 }
 
 static void
-fu_keyring_pkcs7_self_signed_func (void)
+fu_keyring_pkcs7_self_signed_func (gconstpointer user_data)
 {
 #ifdef ENABLE_PKCS7
 	gboolean ret;
@@ -2513,12 +2519,12 @@ _plugin_composite_device_added_cb (FuPlugin *plugin, FuDevice *device, gpointer 
 }
 
 static void
-fu_plugin_composite_func (void)
+fu_plugin_composite_func (gconstpointer user_data)
 {
+	FuTest *self = (FuTest *) user_data;
 	GError *error = NULL;
 	gboolean ret;
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
-	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -2583,20 +2589,17 @@ fu_plugin_composite_func (void)
 
 	/* set up dummy plugin */
 	g_setenv ("FWUPD_PLUGIN_TEST", "composite", TRUE);
-	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_test." G_MODULE_SUFFIX, &error);
-	g_assert_no_error (error);
-	g_assert_true (ret);
-	fu_engine_add_plugin (engine, plugin);
+	fu_engine_add_plugin (engine, self->plugin);
 
-	ret = fu_plugin_runner_startup (plugin, &error);
+	ret = fu_plugin_runner_startup (self->plugin, &error);
 	g_assert_no_error (error);
 	g_assert_true (ret);
 	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	g_signal_connect (plugin, "device-added",
+	g_signal_connect (self->plugin, "device-added",
 			  G_CALLBACK (_plugin_composite_device_added_cb),
 			  devices);
 
-	ret = fu_plugin_runner_coldplug (plugin, &error);
+	ret = fu_plugin_runner_coldplug (self->plugin, &error);
 	g_assert_no_error (error);
 	g_assert_true (ret);
 
@@ -2681,7 +2684,7 @@ fu_plugin_composite_func (void)
 
 
 static void
-fu_memcpy_func (void)
+fu_memcpy_func (gconstpointer user_data)
 {
 	const guint8 src[] = {'a', 'b', 'c', 'd', 'e' };
 	gboolean ret;
@@ -2753,7 +2756,7 @@ fu_memcpy_func (void)
 }
 
 static void
-fu_progressbar_func (void)
+fu_progressbar_func (gconstpointer user_data)
 {
 	g_autoptr(FuProgressbar) progressbar = fu_progressbar_new ();
 
@@ -2783,6 +2786,11 @@ fu_progressbar_func (void)
 int
 main (int argc, char **argv)
 {
+	gboolean ret;
+	g_autofree gchar *pluginfn = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FuTest) self = g_new0 (FuTest, 1);
+
 	g_test_init (&argc, &argv, NULL);
 
 	/* only critical and error are fatal */
@@ -2798,46 +2806,95 @@ main (int argc, char **argv)
 	/* ensure empty tree */
 	fu_self_test_mkroot ();
 
+	/* load the test plugin */
+	self->plugin = fu_plugin_new ();
+	pluginfn = g_build_filename (PLUGINBUILDDIR,
+				     "libfu_plugin_test." G_MODULE_SUFFIX,
+				     NULL);
+	ret = fu_plugin_open (self->plugin, pluginfn, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+
 	/* tests go here */
-	if (g_test_slow ())
-		g_test_add_func ("/fwupd/progressbar", fu_progressbar_func);
-	g_test_add_func ("/fwupd/plugin{build-hash}", fu_plugin_hash_func);
-	g_test_add_func ("/fwupd/plugin{module}", fu_plugin_module_func);
-	g_test_add_func ("/fwupd/memcpy", fu_memcpy_func);
-	g_test_add_func ("/fwupd/device-list", fu_device_list_func);
-	g_test_add_func ("/fwupd/device-list{delay}", fu_device_list_delay_func);
-	g_test_add_func ("/fwupd/device-list{compatible}", fu_device_list_compatible_func);
-	g_test_add_func ("/fwupd/device-list{remove-chain}", fu_device_list_remove_chain_func);
-	g_test_add_func ("/fwupd/engine{device-unlock}", fu_engine_device_unlock_func);
-	g_test_add_func ("/fwupd/engine{history-success}", fu_engine_history_func);
-	g_test_add_func ("/fwupd/engine{history-error}", fu_engine_history_error_func);
-	if (g_test_slow ())
-		g_test_add_func ("/fwupd/device-list{replug-auto}", fu_device_list_replug_auto_func);
-	g_test_add_func ("/fwupd/device-list{replug-user}", fu_device_list_replug_user_func);
-	g_test_add_func ("/fwupd/engine{require-hwid}", fu_engine_require_hwid_func);
-	g_test_add_func ("/fwupd/engine{history-inherit}", fu_engine_history_inherit);
-	g_test_add_func ("/fwupd/engine{partial-hash}", fu_engine_partial_hash_func);
-	g_test_add_func ("/fwupd/engine{downgrade}", fu_engine_downgrade_func);
-	g_test_add_func ("/fwupd/engine{requirements-success}", fu_engine_requirements_func);
-	g_test_add_func ("/fwupd/engine{requirements-missing}", fu_engine_requirements_missing_func);
-	g_test_add_func ("/fwupd/engine{requirements-parent-device}", fu_engine_requirements_parent_device_func);
-	g_test_add_func ("/fwupd/engine{requirements-not-child}", fu_engine_requirements_child_func);
-	g_test_add_func ("/fwupd/engine{requirements-not-child-fail}", fu_engine_requirements_child_fail_func);
-	g_test_add_func ("/fwupd/engine{requirements-unsupported}", fu_engine_requirements_unsupported_func);
-	g_test_add_func ("/fwupd/engine{requirements-device}", fu_engine_requirements_device_func);
-	g_test_add_func ("/fwupd/engine{requirements-version-format}", fu_engine_requirements_version_format_func);
-	g_test_add_func ("/fwupd/engine{device-auto-parent}", fu_engine_device_parent_func);
-	g_test_add_func ("/fwupd/engine{device-priority}", fu_engine_device_priority_func);
-	g_test_add_func ("/fwupd/engine{install-duration}", fu_engine_install_duration_func);
-	g_test_add_func ("/fwupd/engine{generate-md}", fu_engine_generate_md_func);
-	g_test_add_func ("/fwupd/engine{requirements-other-device}", fu_engine_requirements_other_device_func);
-	g_test_add_func ("/fwupd/plugin{composite}", fu_plugin_composite_func);
-	g_test_add_func ("/fwupd/history", fu_history_func);
-	g_test_add_func ("/fwupd/history{migrate}", fu_history_migrate_func);
-	g_test_add_func ("/fwupd/plugin-list", fu_plugin_list_func);
-	g_test_add_func ("/fwupd/plugin-list{depsolve}", fu_plugin_list_depsolve_func);
-	g_test_add_func ("/fwupd/keyring{gpg}", fu_keyring_gpg_func);
-	g_test_add_func ("/fwupd/keyring{pkcs7}", fu_keyring_pkcs7_func);
-	g_test_add_func ("/fwupd/keyring{pkcs7-self-signed}", fu_keyring_pkcs7_self_signed_func);
+	if (g_test_slow ()) {
+		g_test_add_data_func ("/fwupd/progressbar", self,
+				      fu_progressbar_func);
+	}
+	g_test_add_data_func ("/fwupd/plugin{build-hash}", self,
+			      fu_plugin_hash_func);
+	g_test_add_data_func ("/fwupd/plugin{module}", self,
+			      fu_plugin_module_func);
+	g_test_add_data_func ("/fwupd/memcpy", self,
+			      fu_memcpy_func);
+	g_test_add_data_func ("/fwupd/device-list", self,
+			      fu_device_list_func);
+	g_test_add_data_func ("/fwupd/device-list{delay}", self,
+			      fu_device_list_delay_func);
+	g_test_add_data_func ("/fwupd/device-list{compatible}", self,
+			      fu_device_list_compatible_func);
+	g_test_add_data_func ("/fwupd/device-list{remove-chain}", self,
+			      fu_device_list_remove_chain_func);
+	g_test_add_data_func ("/fwupd/engine{device-unlock}", self,
+			      fu_engine_device_unlock_func);
+	g_test_add_data_func ("/fwupd/engine{history-success}", self,
+			      fu_engine_history_func);
+	g_test_add_data_func ("/fwupd/engine{history-error}", self,
+			      fu_engine_history_error_func);
+	if (g_test_slow ()) {
+		g_test_add_data_func ("/fwupd/device-list{replug-auto}", self,
+				      fu_device_list_replug_auto_func);
+	}
+	g_test_add_data_func ("/fwupd/device-list{replug-user}", self,
+			      fu_device_list_replug_user_func);
+	g_test_add_data_func ("/fwupd/engine{require-hwid}", self,
+			      fu_engine_require_hwid_func);
+	g_test_add_data_func ("/fwupd/engine{history-inherit}", self,
+			      fu_engine_history_inherit);
+	g_test_add_data_func ("/fwupd/engine{partial-hash}", self,
+			      fu_engine_partial_hash_func);
+	g_test_add_data_func ("/fwupd/engine{downgrade}", self,
+			      fu_engine_downgrade_func);
+	g_test_add_data_func ("/fwupd/engine{requirements-success}", self,
+			      fu_engine_requirements_func);
+	g_test_add_data_func ("/fwupd/engine{requirements-missing}", self,
+			      fu_engine_requirements_missing_func);
+	g_test_add_data_func ("/fwupd/engine{requirements-parent-device}", self,
+			      fu_engine_requirements_parent_device_func);
+	g_test_add_data_func ("/fwupd/engine{requirements-not-child}", self,
+			      fu_engine_requirements_child_func);
+	g_test_add_data_func ("/fwupd/engine{requirements-not-child-fail}", self,
+			      fu_engine_requirements_child_fail_func);
+	g_test_add_data_func ("/fwupd/engine{requirements-unsupported}", self,
+			      fu_engine_requirements_unsupported_func);
+	g_test_add_data_func ("/fwupd/engine{requirements-device}", self,
+			      fu_engine_requirements_device_func);
+	g_test_add_data_func ("/fwupd/engine{requirements-version-format}", self,
+			      fu_engine_requirements_version_format_func);
+	g_test_add_data_func ("/fwupd/engine{device-auto-parent}", self,
+			      fu_engine_device_parent_func);
+	g_test_add_data_func ("/fwupd/engine{device-priority}", self,
+			      fu_engine_device_priority_func);
+	g_test_add_data_func ("/fwupd/engine{install-duration}", self,
+			      fu_engine_install_duration_func);
+	g_test_add_data_func ("/fwupd/engine{generate-md}", self,
+			      fu_engine_generate_md_func);
+	g_test_add_data_func ("/fwupd/engine{requirements-other-device}", self,
+			      fu_engine_requirements_other_device_func);
+	g_test_add_data_func ("/fwupd/plugin{composite}", self,
+			      fu_plugin_composite_func);
+	g_test_add_data_func ("/fwupd/history", self,
+			      fu_history_func);
+	g_test_add_data_func ("/fwupd/history{migrate}", self,
+			      fu_history_migrate_func);
+	g_test_add_data_func ("/fwupd/plugin-list", self,
+			      fu_plugin_list_func);
+	g_test_add_data_func ("/fwupd/plugin-list{depsolve}", self,
+			      fu_plugin_list_depsolve_func);
+	g_test_add_data_func ("/fwupd/keyring{gpg}", self,
+			      fu_keyring_gpg_func);
+	g_test_add_data_func ("/fwupd/keyring{pkcs7}", self,
+			      fu_keyring_pkcs7_func);
+	g_test_add_data_func ("/fwupd/keyring{pkcs7-self-signed}", self,
+			      fu_keyring_pkcs7_self_signed_func);
 	return g_test_run ();
 }

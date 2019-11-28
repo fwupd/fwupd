@@ -56,11 +56,15 @@ fu_plugin_synapticsmst_none_func (void)
 	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	g_autofree gchar *pluginfn = NULL;
 
 	g_signal_connect (plugin, "device-added",
 			  G_CALLBACK (_plugin_device_added_cb),
 			  &devices);
-	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_synapticsmst.so", &error);
+	pluginfn = g_build_filename (PLUGINBUILDDIR,
+				     "libfu_plugin_synapticsmst." G_MODULE_SUFFIX,
+				     NULL);
+	ret = fu_plugin_open (plugin, pluginfn, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	ret = fu_plugin_runner_startup (plugin, &error);
@@ -79,11 +83,15 @@ fu_plugin_synapticsmst_tb16_func (void)
 	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	g_autofree gchar *pluginfn = NULL;
 
 	g_signal_connect (plugin, "device-added",
 			  G_CALLBACK (_plugin_device_added_cb),
 			  &devices);
-	ret = fu_plugin_open (plugin, PLUGINBUILDDIR "/libfu_plugin_synapticsmst.so", &error);
+	pluginfn = g_build_filename (PLUGINBUILDDIR,
+				     "libfu_plugin_synapticsmst." G_MODULE_SUFFIX,
+				     NULL);
+	ret = fu_plugin_open (plugin, pluginfn, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	ret = fu_plugin_runner_startup (plugin, &error);
