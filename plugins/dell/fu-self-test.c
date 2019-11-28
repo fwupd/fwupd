@@ -70,16 +70,25 @@ fu_plugin_dell_tpm_func (void)
 	gboolean ret;
 	struct tpm_status tpm_out;
 	const gchar *tpm_server_running = g_getenv ("TPM_SERVER_RUNNING");
+	g_autofree gchar *pluginfn_uefi = NULL;
+	g_autofree gchar *pluginfn_dell = NULL;
 	g_autoptr(FuPlugin) plugin_dell = NULL;
 	g_autoptr(FuPlugin) plugin_uefi = NULL;
 	g_autoptr(GBytes) blob_fw = g_bytes_new_static (fw, sizeof(fw));
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 
+	pluginfn_uefi = g_build_filename (PLUGINBUILDDIR, "..", "uefi",
+					  "libfu_plugin_uefi." G_MODULE_SUFFIX,
+					  NULL);
+	pluginfn_dell = g_build_filename (PLUGINBUILDDIR,
+					  "libfu_plugin_dell." G_MODULE_SUFFIX,
+					  NULL);
+
 	memset (&tpm_out, 0x0, sizeof(tpm_out));
 
 	plugin_uefi = fu_plugin_new ();
-	ret = fu_plugin_open (plugin_uefi, PLUGINBUILDDIR "/../uefi/libfu_plugin_uefi.so", &error);
+	ret = fu_plugin_open (plugin_uefi, pluginfn_uefi, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	ret = fu_plugin_runner_startup (plugin_uefi, &error);
@@ -91,7 +100,7 @@ fu_plugin_dell_tpm_func (void)
 			  devices);
 
 	plugin_dell = fu_plugin_new ();
-	ret = fu_plugin_open (plugin_dell, PLUGINBUILDDIR "/libfu_plugin_dell.so", &error);
+	ret = fu_plugin_open (plugin_dell, pluginfn_dell, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	ret = fu_plugin_runner_startup (plugin_dell, &error);
@@ -271,12 +280,21 @@ fu_plugin_dell_dock_func (void)
 	guint32 out[4] = { 0x0, 0x0, 0x0, 0x0 };
 	DOCK_UNION buf;
 	DOCK_INFO *dock_info;
+	g_autofree gchar *pluginfn_uefi = NULL;
+	g_autofree gchar *pluginfn_dell = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(FuPlugin) plugin_uefi = fu_plugin_new ();
 	g_autoptr(FuPlugin) plugin_dell = fu_plugin_new ();
 
-	ret = fu_plugin_open (plugin_uefi, PLUGINBUILDDIR "/../uefi/libfu_plugin_uefi.so", &error);
+	pluginfn_uefi = g_build_filename (PLUGINBUILDDIR, "..", "uefi",
+					  "libfu_plugin_uefi." G_MODULE_SUFFIX,
+					  NULL);
+	pluginfn_dell = g_build_filename (PLUGINBUILDDIR,
+					  "libfu_plugin_dell." G_MODULE_SUFFIX,
+					  NULL);
+
+	ret = fu_plugin_open (plugin_uefi, pluginfn_uefi, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	ret = fu_plugin_runner_startup (plugin_uefi, &error);
@@ -286,7 +304,7 @@ fu_plugin_dell_dock_func (void)
 	g_signal_connect (plugin_uefi, "device-added",
 			  G_CALLBACK (_plugin_device_added_cb),
 			  devices);
-	ret = fu_plugin_open (plugin_dell, PLUGINBUILDDIR "/libfu_plugin_dell.so", &error);
+	ret = fu_plugin_open (plugin_dell, pluginfn_dell, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	ret = fu_plugin_runner_startup (plugin_dell, &error);

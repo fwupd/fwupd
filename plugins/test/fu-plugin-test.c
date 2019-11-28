@@ -16,10 +16,7 @@ struct FuPluginData {
 void
 fu_plugin_init (FuPlugin *plugin)
 {
-	if (g_strcmp0 (g_getenv ("FWUPD_PLUGIN_TEST"), "build-hash") == 0)
-		fu_plugin_set_build_hash (plugin, "invalid");
-	else
-		fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
+	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 	fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 	g_debug ("init");
 }

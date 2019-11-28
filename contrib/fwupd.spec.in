@@ -347,6 +347,7 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %{_libdir}/fwupd-plugins-3/libfu_plugin_synaptics_rmi.so
 %if 0%{?enable_dummy}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_test.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_invalid.so
 %endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_thelio_io.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_thunderbolt.so
