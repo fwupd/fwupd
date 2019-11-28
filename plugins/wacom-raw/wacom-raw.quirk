@@ -22,16 +22,6 @@ Guid = WacomAES
 Plugin = wacom_raw
 Guid = WacomAES
 
-# Moffet 14-Coretronic-TPK
-[DeviceInstanceId=HIDRAW\VEN_2D1F&DEV_4973]
-Plugin = wacom_raw
-Guid = WacomAES
-
-# Moffet 14-Coretronic-HH
-[DeviceInstanceId=HIDRAW\VEN_2D1F&DEV_4974]
-Plugin = wacom_raw
-Guid = WacomAES
-
 # Dell Latitude 5175
 [DeviceInstanceId=HIDRAW\VEN_056A&DEV_4807]
 Plugin = wacom_raw
