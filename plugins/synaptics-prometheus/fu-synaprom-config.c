@@ -265,6 +265,7 @@ fu_synaprom_config_class_init (FuSynapromConfigClass *klass)
 	klass_device->open = fu_synaprom_config_open;
 	klass_device->close = fu_synaprom_config_close;
 	klass_device->setup = fu_synaprom_config_setup;
+	klass_device->reload = fu_synaprom_config_setup;
 	klass_device->attach = fu_synaprom_config_attach;
 	klass_device->detach = fu_synaprom_config_detach;
 }
