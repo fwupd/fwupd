@@ -204,7 +204,8 @@ fu_synaprom_device_setup (FuDevice *device, GError **error)
 	}
 
 	/* add updatable config child, if this is a production sensor */
-	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER) &&
+	if (fu_device_get_children (device)->len == 0 &&
+	    !fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER) &&
 	    pkt.security[1] & FU_SYNAPROM_SECURITY1_PROD_SENSOR) {
 		g_autoptr(FuSynapromConfig) cfg = fu_synaprom_config_new (self);
 		if (!fu_device_setup (FU_DEVICE (cfg), error)) {
@@ -454,6 +455,7 @@ fu_synaprom_device_class_init (FuSynapromDeviceClass *klass)
 	klass_device->write_firmware = fu_synaprom_device_write_firmware;
 	klass_device->prepare_firmware = fu_synaprom_device_prepare_fw;
 	klass_device->setup = fu_synaprom_device_setup;
+	klass_device->reload = fu_synaprom_device_setup;
 	klass_device->attach = fu_synaprom_device_attach;
 	klass_device->detach = fu_synaprom_device_detach;
 	klass_usb_device->open = fu_synaprom_device_open;
