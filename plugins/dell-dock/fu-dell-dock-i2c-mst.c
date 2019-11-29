@@ -185,11 +185,12 @@ fu_dell_dock_mst_write_register (FuDevice *symbiote,
 				 GError **error)
 {
 	g_autofree guint8 *buffer = g_malloc0 (length + 4);
-	memcpy (buffer, &address, 4);
-	memcpy (buffer + 4, data, length);
 
 	g_return_val_if_fail (symbiote != NULL, FALSE);
 	g_return_val_if_fail (data != NULL, FALSE);
+
+	memcpy (buffer, &address, 4);
+	memcpy (buffer + 4, data, length);
 
 	/* write the offset we're querying */
 	return fu_dell_dock_hid_i2c_write (symbiote, buffer, length + 4,
