@@ -35,6 +35,7 @@ G_BEGIN_DECLS
 #define FWUPD_RESULT_KEY_NAME			"Name"		/* s */
 #define FWUPD_RESULT_KEY_NAME_VARIANT_SUFFIX	"NameVariantSuffix"	/* s */
 #define FWUPD_RESULT_KEY_PLUGIN			"Plugin"	/* s */
+#define FWUPD_RESULT_KEY_PROTOCOL		"Protocol"	/* s */
 #define FWUPD_RESULT_KEY_RELEASE		"Release"	/* a{sv} */
 #define FWUPD_RESULT_KEY_REMOTE_ID		"RemoteId"	/* s */
 #define FWUPD_RESULT_KEY_SERIAL			"Serial"	/* s */
