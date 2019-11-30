@@ -409,6 +409,8 @@ LIBFWUPD_1.3.4 {
 LIBFWUPD_1.3.6 {
   global:
     fwupd_device_get_protocol;
+    fwupd_device_get_version_raw;
     fwupd_device_set_protocol;
+    fwupd_device_set_version_raw;
   local: *;
 } LIBFWUPD_1.3.4;
