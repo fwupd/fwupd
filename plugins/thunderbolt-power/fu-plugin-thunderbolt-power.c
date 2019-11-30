@@ -12,6 +12,7 @@
 #include <glib/gstdio.h>
 
 #include "fu-plugin-vfuncs.h"
+#include "fu-hash.h"
 #include "fu-device-metadata.h"
 
 #define BOLT_DBUS_SERVICE	"org.freedesktop.bolt"
@@ -186,7 +187,7 @@ fu_plugin_thunderbolt_power_kernel_force_power (FuPlugin *plugin, gboolean enabl
 		return FALSE;
 	}
 	g_debug ("Setting force power to %d using kernel", enable);
-	fd = g_open (data->force_path, O_WRONLY);
+	fd = g_open (data->force_path, O_WRONLY, 0);
 	if (fd == -1) {
 		g_set_error (error,
 			     FWUPD_ERROR,

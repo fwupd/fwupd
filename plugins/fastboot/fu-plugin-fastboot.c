@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-plugin-vfuncs.h"
+#include "fu-hash.h"
 
 #include "fu-fastboot-device.h"
 
@@ -14,6 +15,5 @@ void
 fu_plugin_init (FuPlugin *plugin)
 {
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
-	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_SUPPORTS_PROTOCOL, "com.google.fastboot");
 	fu_plugin_set_device_gtype (plugin, FU_TYPE_FASTBOOT_DEVICE);
 }

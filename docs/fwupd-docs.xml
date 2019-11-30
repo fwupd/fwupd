@@ -1,0 +1,448 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+               "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[
+  <!ENTITY % local.common.attrib "xmlns:xi  CDATA  #FIXED 'http://www.w3.org/2003/XInclude'">
+]>
+<book id="index">
+  <bookinfo>
+    <title>fwupd Reference Manual</title>
+  </bookinfo>
+
+  <reference id="intro">
+    <title>About fwupd</title>
+    <partintro>
+      <para>
+        fwupd is a daemon for updating firmware.
+      </para>
+    </partintro>
+  </reference>
+
+  <reference id="libfwupd">
+    <title>libfwupd</title>
+    <partintro>
+      <para>
+        Functionality exported by libfwupd for client applications.
+      </para>
+    </partintro>
+    <xi:include href="xml/fwupd-client.xml"/>
+    <xi:include href="xml/fwupd-device.xml"/>
+    <xi:include href="xml/fwupd-release.xml"/>
+    <xi:include href="xml/fwupd-remote.xml"/>
+    <xi:include href="xml/fwupd-error.xml"/>
+    <xi:include href="xml/fwupd-enums.xml"/>
+    <xi:include href="xml/fwupd-version.xml"/>
+  </reference>
+
+  <reference id="plugin-reference">
+    <title>Plugin Reference</title>
+    <partintro>
+      <para>
+        Functionality available to plugins.
+      </para>
+    </partintro>
+    <xi:include href="xml/fu-archive.xml"/>
+    <xi:include href="xml/fu-chunk.xml"/>
+    <xi:include href="xml/fu-common-cab.xml"/>
+    <xi:include href="xml/fu-common-guid.xml"/>
+    <xi:include href="xml/fu-common-version.xml"/>
+    <xi:include href="xml/fu-common.xml"/>
+    <xi:include href="xml/fu-device-locker.xml"/>
+    <xi:include href="xml/fu-device-metadata.xml"/>
+    <xi:include href="xml/fu-device.xml"/>
+    <xi:include href="xml/fu-dfu-firmware.xml"/>
+    <xi:include href="xml/fu-firmware-common.xml"/>
+    <xi:include href="xml/fu-firmware-image.xml"/>
+    <xi:include href="xml/fu-firmware.xml"/>
+    <xi:include href="xml/fu-hwids.xml"/>
+    <xi:include href="xml/fu-ihex-firmware.xml"/>
+    <xi:include href="xml/fu-srec-firmware.xml"/>
+    <xi:include href="xml/fu-io-channel.xml"/>
+    <xi:include href="xml/fu-mutex.xml"/>
+    <xi:include href="xml/fu-plugin-vfuncs.xml"/>
+    <xi:include href="xml/fu-plugin.xml"/>
+    <xi:include href="xml/fu-quirks.xml"/>
+    <xi:include href="xml/fu-smbios.xml"/>
+    <xi:include href="xml/fu-udev-device.xml"/>
+    <xi:include href="xml/fu-usb-device.xml"/>
+  </reference>
+
+  <reference id="tutorial">
+    <title>Plugin Tutorial</title>
+    <partintro>
+      <section>
+        <title>Introduction</title>
+        <para>
+          At the heart of fwupd is a plugin loader that gets run at startup,
+          when devices get hotplugged and when updates are done.
+          The idea is we have lots of small plugins that each do one thing, and
+          are ordered by dependencies against each other at runtime.
+          Using plugins we can add support for new hardware or new policies
+          without making big changes all over the source tree.
+        </para>
+        <para>
+          There are broadly 3 types of plugin methods:
+        </para>
+        <itemizedlist>
+          <listitem>
+            <para>
+              <emphasis role="strong">Mechanism</emphasis>: Upload binary data
+              into a specific hardware device.
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              <emphasis role="strong">Policy</emphasis>: Control the system when
+              updates are happening, e.g. preventing the user from powering-off.
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              <emphasis role="strong">Helpers</emphasis>: Providing more
+              metadata about devices, for instance handling device quirks.
+            </para>
+          </listitem>
+        </itemizedlist>
+        <para>
+          In general, building things out-of-tree isn't something that we think is
+          a very good idea; the API and ABI <emphasis>internal</emphasis> to fwupd is still
+          changing and there's a huge benefit to getting plugins upstream where
+          they can undergo review and be ported as the API adapts.
+          For this reason we don't install the plugin headers onto the system,
+          although you can of course just install the <code>.so</code> binary file
+          manually.
+        </para>
+
+        <para>
+          A plugin only needs to define the vfuncs that are required, and the
+          plugin name is taken automatically from the suffix of the
+          <filename>.so</filename> file.
+        </para>
+        <example>
+          <title>A sample plugin</title>
+          <programlisting>
+/*
+ * Copyright (C) 2017 Richard Hughes
+ */
+
+#include &lt;fu-plugin.h&gt;
+#include &lt;fu-plugin-vfuncs.h&gt;
+
+struct FuPluginData {
+ gpointer proxy;
+};
+
+void
+fu_plugin_initialize (FuPlugin *plugin)
+{
+  fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_BEFORE, "dfu");
+  fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
+}
+
+void
+fu_plugin_destroy (FuPlugin *plugin)
+{
+  FuPluginData *data = fu_plugin_get_data (plugin);
+  destroy_proxy (data->proxy);
+}
+
+gboolean
+fu_plugin_startup (FuPlugin *plugin, GError **error)
+{
+  FuPluginData *data = fu_plugin_get_data (plugin);
+  data->proxy = create_proxy ();
+  if (data->proxy == NULL) {
+    g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
+                 "failed to create proxy");
+    return FALSE;
+  }
+  return TRUE;
+}
+          </programlisting>
+        </example>
+
+        <para>
+          We have to define when our plugin is run in reference to other plugins,
+          in this case, making sure we run before the <code>dfu</code> plugin.
+          For most plugins it does not matter in what order they are run and
+          this information is not required.
+        </para>
+      </section>
+
+      <section>
+        <title>Creating an abstract device</title>
+        <para>
+          This section shows how you would create a device which is exported
+          to the daemon and thus can be queried and updated by the client software.
+          The example here is all hardcoded, and a true plugin would have to
+          derive the details about the <code>FuDevice</code> from the hardware,
+          for example reading data from <code>sysfs</code> or <code>/dev</code>.
+        </para>
+        <example>
+          <title>Example adding a custom device</title>
+          <programlisting>
+#include &lt;fu-plugin.h&gt;
+
+gboolean
+fu_plugin_coldplug (FuPlugin *plugin, GError **error)
+{
+  g_autoptr(FuDevice) dev = NULL;
+  fu_device_set_id (dev, "dummy-1:2:3");
+  fu_device_add_guid (dev, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
+  fu_device_set_version (dev, "1.2.3");
+  fu_device_get_version_lowest (dev, "1.2.2");
+  fu_device_get_version_bootloader (dev, "0.1.2");
+  fu_device_add_icon (dev, "computer");
+  fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
+  fu_plugin_device_add (plugin, dev);
+  return TRUE;
+}
+          </programlisting>
+        </example>
+        <para>
+          This shows a lot of the plugin architecture in action. Some notable points:
+        </para>
+        <itemizedlist>
+          <listitem>
+            <para>
+              The device ID (<code>dummy-1:2:3</code>) has to be unique on the
+              system between all plugins, so including the plugin name as a
+              prefix is probably a good idea.
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              The GUID value can be generated automatically using
+              <code>fu_device_add_guid(dev,"some-identifier")</code> but is quoted
+              here explicitly.
+              The GUID value has to match the <code>provides</code> value in the
+              <code>.metainfo.xml</code> file for the firmware update to succeed.
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              Setting a display name and an icon is a good idea in case the
+              GUI software needs to display the device to the user.
+              Icons can be specified using a full path, although icon theme names
+              should be preferred for most devices.
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              The <code>FWUPD_DEVICE_FLAG_UPDATABLE</code> flag tells the client
+              code that the device is in a state where it can be updated.
+              If the device needs to be in a special mode (e.g. a bootloader) then
+              the <code>FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER</code> flag can also be
+              used.
+              If the update should only be allowed when there is AC power available
+              to the computer (i.e. not on battery) then
+              <code>FWUPD_DEVICE_FLAG_REQUIRE_AC</code> should be used as well.
+              There are other flags and the API documentation should be used when
+              choosing what flags to use for each kind of device.
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              Setting the lowest allows client software to refuse downgrading
+              the device to specific versions.
+              This is required in case the upgrade migrates some kind of data-store
+              so as to be incompatible with previous versions.
+              Similarly, setting the version of the bootloader (if known) allows
+              the firmware to depend on a specific bootloader version, for instance
+              allowing signed firmware to only be installable on hardware with
+              a bootloader new enough to deploy it
+            </para>
+          </listitem>
+        </itemizedlist>
+      </section>
+
+      <section>
+        <title>Mechanism Plugins</title>
+        <para>
+          Although it would be a wonderful world if we could update all hardware
+          using a standard shared protocol this is not the universe we live in.
+          Using a mechanism like DFU or UpdateCapsule means that fwupd will just
+          work without requiring any special code, but for the real world we need
+          to support vendor-specific update protocols with layers of backwards
+          compatibility.
+        </para>
+        <para>
+          When a plugin has created a device that is <code>FWUPD_DEVICE_FLAG_UPDATABLE</code>
+          we can ask the daemon to update the device with a suitable
+          <code>.cab</code> file.
+          When this is done the daemon checks the update for compatibility with
+          the device, and then calls the vfuncs to update the device.
+        </para>
+
+        <example>
+          <title>Updating a device</title>
+          <programlisting>
+gboolean
+fu_plugin_update (FuPlugin *plugin,
+                  FuDevice *dev,
+                  GBytes *blob_fw,
+                  FwupdInstallFlags flags,
+                  GError **error)
+{
+  gsize sz = 0;
+  guint8 *buf = g_bytes_get_data (blob_fw, &amp;sz);
+  /* write 'buf' of size 'sz' to the hardware */
+  return TRUE;
+}
+          </programlisting>
+        </example>
+        <para>
+          It's important to note that the <code>blob_fw</code> is the binary
+          firmware file (e.g. <code>.dfu</code>) and <emphasis role="strong">not</emphasis>
+          the <code>.cab</code> binary data.
+        </para>
+        <para>
+          If <code>FWUPD_INSTALL_FLAG_FORCE</code> is used then the usual checks
+          done by the flashing process can be relaxed (e.g. checking for quirks),
+          but please don't brick the users hardware even if they ask you to.
+        </para>
+      </section>
+
+      <section>
+        <title>Policy Helpers</title>
+        <para>
+          For some hardware, we might want to do an action before or after
+          the actual firmware is squirted into the device.
+          This could be something as simple as checking the system battery
+          level is over a certain threshold, or it could be as complicated as
+          ensuring a vendor-specific GPIO is asserted when specific types
+          of hardware are updated.
+        </para>
+
+        <example>
+          <title>Running before a device update</title>
+          <programlisting>
+gboolean
+fu_plugin_update_prepare (FuPlugin *plugin, FuDevice *device, GError **error)
+{
+  if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REQUIRE_AC &amp;&amp; !on_ac_power ()) {
+    g_set_error_literal (error,
+                         FWUPD_ERROR,
+                         FWUPD_ERROR_AC_POWER_REQUIRED,
+                         "Cannot install update "
+                         "when not on AC power");
+    return FALSE;
+  }
+  return TRUE;
+}
+          </programlisting>
+        </example>
+        <example>
+          <title>Running after a device update</title>
+          <programlisting>
+gboolean
+fu_plugin_update_cleanup (FuPlugin *plugin, FuDevice *device, GError **error)
+{
+  return g_file_set_contents ("/var/lib/fwupd/something",
+                              fu_device_get_id (device), -1, error);
+}
+          </programlisting>
+        </example>
+      </section>
+
+      <section>
+        <title>Detaching to bootloader mode</title>
+        <para>
+          Some hardware can only be updated in a special bootloader mode, which
+          for most devices can be switched to automatically.
+          In some cases the user to do something manually, for instance
+          re-inserting the hardware with a secret button pressed.
+        </para>
+        <para>
+          Before the device update is performed the fwupd daemon runs an optional
+          <code>update_detach()</code> vfunc which switches the device to
+          bootloader mode.
+          After the update (or if the update fails) an the daemon runs an
+          optional <code>update_attach()</code> vfunc which should switch the
+          hardware back to runtime mode.
+          Finally an optional <code>update_reload()</code> vfunc is run to
+          get the new firmware version from the hardware.
+        </para>
+        <para>
+          The optional vfuncs are <emphasis role="strong">only</emphasis> run
+          on the plugin currently registered to handle the device ID, although
+          the registered plugin can change during the attach and detach phases.
+        </para>
+
+        <example>
+          <title>Running before a device update</title>
+          <programlisting>
+gboolean
+fu_plugin_update_detach (FuPlugin *plugin, FuDevice *device, GError **error)
+{
+  if (hardware_in_bootloader)
+    return TRUE;
+  return _device_detach(device, error);
+}
+          </programlisting>
+        </example>
+        <example>
+          <title>Running after a device update</title>
+          <programlisting>
+gboolean
+fu_plugin_update_attach (FuPlugin *plugin, FuDevice *device, GError **error)
+{
+  if (!hardware_in_bootloader)
+    return TRUE;
+  return _device_attach(device, error);
+}
+          </programlisting>
+        </example>
+        <example>
+          <title>Running after a device update on success</title>
+          <programlisting>
+gboolean
+fu_plugin_update_reload (FuPlugin *plugin, FuDevice *device, GError **error)
+{
+  g_autofree gchar *version = _get_version(plugin, device, error);
+  if (version == NULL)
+    return FALSE;
+  fu_device_set_version(device, version);
+  return TRUE;
+}
+          </programlisting>
+        </example>
+      </section>
+
+      <section>
+        <title>The Plugin Object Cache</title>
+        <para>
+          The fwupd daemon provides a per-plugin cache which allows objects
+          to be added, removed and queried using a specified key.
+          Objects added to the cache must be <code>GObject</code>s to enable the
+          cache objects to be properly refcounted.
+        </para>
+      </section>
+
+      <section>
+        <title>Debugging a Plugin</title>
+        <para>
+          If the fwupd daemon is started with <code>--plugin-verbose=$plugin</code>
+          then the environment variable <code>FWUPD_$PLUGIN_VERBOSE</code> is
+          set process-wide.
+          This allows plugins to detect when they should output detailed debugging
+          information that would normally be too verbose to keep in the journal.
+          For example, using <code>--plugin-verbose=logitech_hidpp</code> would set
+          <code>FWUPD_LOGITECH_HID_VERBOSE=1</code>.
+        </para>
+      </section>
+
+    </partintro>
+  </reference>
+
+  <index id="api-index-full">
+    <title>API Index</title>
+    <xi:include href="xml/api-index-full.xml"><xi:fallback /></xi:include>
+  </index>
+
+  <index id="deprecated-api-index" role="deprecated">
+    <title>Index of deprecated API</title>
+    <xi:include href="xml/api-index-deprecated.xml"><xi:fallback /></xi:include>
+  </index>
+  <xi:include href="xml/annotation-glossary.xml"><xi:fallback /></xi:include>
+</book>

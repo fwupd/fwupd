@@ -13,6 +13,7 @@
 
 #include "fu-device-metadata.h"
 #include "fu-plugin-vfuncs.h"
+#include "fu-hash.h"
 
 #include "fu-uefi-bgrt.h"
 #include "fu-uefi-common.h"
@@ -36,7 +37,6 @@ fu_plugin_init (FuPlugin *plugin)
 	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 	data->bgrt = fu_uefi_bgrt_new ();
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "upower");
-	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_SUPPORTS_PROTOCOL, "org.uefi.capsule");
 	fu_plugin_add_compile_version (plugin, "com.redhat.efivar", EFIVAR_LIBRARY_VERSION);
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 }
@@ -94,7 +94,7 @@ static GBytes *
 fu_plugin_uefi_get_splash_data (guint width, guint height, GError **error)
 {
 	const gchar * const *langs = g_get_language_names ();
-	const gchar *localedir = LOCALEDIR;
+	const gchar *localedir = FWUPD_LOCALEDIR;
 	const gsize chunk_size = 1024 * 1024;
 	gsize buf_idx = 0;
 	gsize buf_sz = chunk_size;

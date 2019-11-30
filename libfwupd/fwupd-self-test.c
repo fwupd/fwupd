@@ -7,7 +7,9 @@
 #include "config.h"
 
 #include <glib-object.h>
+#ifdef HAVE_FNMATCH_H
 #include <fnmatch.h>
+#endif
 
 #include "fwupd-client.h"
 #include "fwupd-common.h"
@@ -27,8 +29,13 @@ fu_test_compare_lines (const gchar *txt1, const gchar *txt2, GError **error)
 		return TRUE;
 
 	/* matches a pattern */
+#ifdef HAVE_FNMATCH_H
 	if (fnmatch (txt2, txt1, FNM_NOESCAPE) == 0)
 		return TRUE;
+#else
+	if (g_strcmp0 (txt1, txt2) == 0)
+		return TRUE;
+#endif
 
 	/* save temp files and diff them */
 	if (!g_file_set_contents ("/tmp/a", txt1, -1, error))
@@ -147,7 +154,7 @@ fwupd_remote_download_func (void)
 	g_autoptr(GError) error = NULL;
 
 	remote = fwupd_remote_new ();
-	directory = g_build_filename (LOCALSTATEDIR,
+	directory = g_build_filename (FWUPD_LOCALSTATEDIR,
 				      "lib",
 				      "fwupd",
 				      "remotes.d",
@@ -166,9 +173,9 @@ fwupd_remote_download_func (void)
 	g_assert_cmpstr (fwupd_remote_get_title (remote), ==, "Linux Vendor Firmware Service");
 	g_assert_cmpstr (fwupd_remote_get_report_uri (remote), ==, "https://fwupd.org/lvfs/firmware/report");
 	g_assert_cmpstr (fwupd_remote_get_filename_cache (remote), ==,
-			 LOCALSTATEDIR "/lib/fwupd/remotes.d/lvfs/metadata.xml.gz");
+			 FWUPD_LOCALSTATEDIR "/lib/fwupd/remotes.d/lvfs/metadata.xml.gz");
 	g_assert_cmpstr (fwupd_remote_get_filename_cache_sig (remote), ==,
-			 LOCALSTATEDIR "/lib/fwupd/remotes.d/lvfs/metadata.xml.gz.asc");
+			 FWUPD_LOCALSTATEDIR "/lib/fwupd/remotes.d/lvfs/metadata.xml.gz.asc");
 }
 
 /* verify we used the FirmwareBaseURI just for firmware */
@@ -183,7 +190,7 @@ fwupd_remote_baseuri_func (void)
 	g_autoptr(GError) error = NULL;
 
 	remote = fwupd_remote_new ();
-	directory = g_build_filename (LOCALSTATEDIR,
+	directory = g_build_filename (FWUPD_LOCALSTATEDIR,
 				      "lib",
 				      "fwupd",
 				      "remotes.d",
@@ -219,7 +226,7 @@ fwupd_remote_nopath_func (void)
 	g_autofree gchar *directory = NULL;
 
 	remote = fwupd_remote_new ();
-	directory = g_build_filename (LOCALSTATEDIR,
+	directory = g_build_filename (FWUPD_LOCALSTATEDIR,
 				      "lib",
 				      "fwupd",
 				      "remotes.d",

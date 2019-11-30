@@ -141,6 +141,7 @@ main (int argc, char *argv[])
 	guint cnt = 0;
 	g_autofree gchar *link = NULL;
 	g_autofree gchar *target = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	g_autofree gchar *trigger = fu_common_get_path (FU_PATH_KIND_OFFLINE_TRIGGER);
 	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(FwupdClient) client = NULL;
 	g_autoptr(GError) error = NULL;
@@ -149,26 +150,28 @@ main (int argc, char *argv[])
 
 	setlocale (LC_ALL, "");
 
-	bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+	bindtextdomain (GETTEXT_PACKAGE, FWUPD_LOCALEDIR);
 	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 	textdomain (GETTEXT_PACKAGE);
 
 	/* verify this is pointing to our cache */
-	link = g_file_read_link (FU_OFFLINE_TRIGGER_FILENAME, NULL);
+	link = g_file_read_link (trigger, NULL);
 	if (link == NULL)
 		return EXIT_SUCCESS;
 	if (g_strcmp0 (link, target) != 0)
 		return EXIT_SUCCESS;
 
 	/* do this first to avoid a loop if this tool segfaults */
-	g_unlink (FU_OFFLINE_TRIGGER_FILENAME);
+	g_unlink (trigger);
 
 	/* ensure root user */
+#ifdef HAVE_GETUID
 	if (getuid () != 0 || geteuid () != 0) {
 		/* TRANSLATORS: the user needs to stop playing with stuff */
 		g_printerr ("%s\n", _("This tool can only be used by the root user"));
 		return EXIT_FAILURE;
 	}
+#endif
 
 	/* find plymouth, but not an error if not found */
 	priv->splash_cmd = g_find_program_in_path ("plymouth");

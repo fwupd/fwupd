@@ -9,7 +9,6 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <fnmatch.h>
 #include <linux/fs.h>
 #include <string.h>
 #include <sys/ioctl.h>
@@ -154,7 +153,7 @@ fu_uefi_vars_delete_with_glob (const gchar *guid, const gchar *name_glob, GError
 		return FALSE;
 	nameguid_glob = g_strdup_printf ("%s-%s", name_glob, guid);
 	while ((fn = g_dir_read_name (dir)) != NULL) {
-		if (fnmatch (nameguid_glob, fn, 0) == 0) {
+		if (fu_common_fnmatch (nameguid_glob, fn)) {
 			g_autofree gchar *keyfn = g_build_filename (efivardir, fn, NULL);
 			g_autoptr(GFile) file = g_file_new_for_path (keyfn);
 			if (!fu_uefi_vars_set_immutable (keyfn, FALSE, NULL, error)) {

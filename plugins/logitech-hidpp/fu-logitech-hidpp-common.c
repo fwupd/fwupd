@@ -8,7 +8,6 @@
 
 #include <string.h>
 #include <fcntl.h>
-#include <errno.h>
 #include <gio/gio.h>
 
 #include "fu-logitech-hidpp-common.h"

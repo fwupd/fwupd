@@ -11,7 +11,7 @@
 
 #include "fu-thunderbolt-image.h"
 #include "fu-plugin-vfuncs.h"
-#include "fu-test.h"
+#include "fu-hash.h"
 
 static gsize
 read_farb_pointer (gchar *image)

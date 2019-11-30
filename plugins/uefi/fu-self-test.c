@@ -8,7 +8,6 @@
 
 #include <fwupd.h>
 
-#include "fu-test.h"
 #include "fu-ucs2.h"
 #include "fu-uefi-bgrt.h"
 #include "fu-uefi-common.h"
@@ -52,11 +51,13 @@ fu_uefi_pcrs_2_0_func (void)
 	const gchar *tpm_server_running = g_getenv ("TPM_SERVER_RUNNING");
 	g_setenv ("FWUPD_FORCE_TPM2", "1", TRUE);
 
+#ifdef HAVE_GETUID
 	if (tpm_server_running == NULL &&
 	    (getuid () != 0 || geteuid () != 0)) {
 		g_test_skip ("TPM2.0 tests require simulated TPM2.0 running or need root access with physical TPM");
 		return;
 	}
+#endif
 
 	if (!fu_uefi_pcrs_setup (pcrs, &error)) {
 		if (tpm_server_running == NULL &&
@@ -127,8 +128,7 @@ fu_uefi_bitmap_func (void)
 	g_autofree gchar *buf = NULL;
 	g_autoptr(GError) error = NULL;
 
-	fn = fu_test_get_filename (TESTDATADIR, "test.bmp");
-	g_assert (fn != NULL);
+	fn = g_build_filename (TESTDATADIR, "test.bmp", NULL);
 	ret = g_file_get_contents (fn, &buf, &sz, &error);
 	g_assert_no_error (error);
 	g_assert_true (ret);
@@ -147,8 +147,7 @@ fu_uefi_device_func (void)
 	g_autoptr(FuUefiDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
 
-	fn = fu_test_get_filename (TESTDATADIR, "efi/esrt/entries/entry0");
-	g_assert (fn != NULL);
+	fn = g_build_filename (TESTDATADIR, "efi/esrt/entries/entry0", NULL);
 	dev = fu_uefi_device_new_from_entry (fn, &error);
 	g_assert_nonnull (dev);
 	g_assert_no_error (error);
@@ -285,8 +284,7 @@ fu_uefi_update_info_func (void)
 	g_autoptr(FuUefiUpdateInfo) info = NULL;
 	g_autoptr(GError) error = NULL;
 
-	fn = fu_test_get_filename (TESTDATADIR, "efi/esrt/entries/entry0");
-	g_assert (fn != NULL);
+	fn = g_build_filename (TESTDATADIR, "efi/esrt/entries/entry0", NULL);
 	dev = fu_uefi_device_new_from_entry (fn, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (dev);

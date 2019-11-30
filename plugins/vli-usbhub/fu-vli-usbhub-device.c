@@ -964,12 +964,16 @@ fu_vli_usbhub_device_setup (FuDevice *device, GError **error)
 	}
 
 	/* detect the PD child */
-	if (!fu_vli_usbhub_device_pd_setup (self, error))
-		return FALSE;
+	if (fu_device_has_custom_flag (device, "has-shared-spi-pd")) {
+		if (!fu_vli_usbhub_device_pd_setup (self, error))
+			return FALSE;
+	}
 
-	/* detect the PD child */
-	if (!fu_vli_usbhub_device_i2c_setup (self, error))
-		return FALSE;
+	/* detect the I²C child */
+	if (fu_device_has_custom_flag (device, "has-shared-spi-i2c")) {
+		if (!fu_vli_usbhub_device_i2c_setup (self, error))
+			return FALSE;
+	}
 
 	/* success */
 	return TRUE;
@@ -1498,6 +1502,7 @@ fu_vli_usbhub_device_init (FuVliUsbhubDevice *self)
 	self->spi_cmd_read_id		= 0x9f;
 	self->spi_cmd_read_id_sz = 2;
 	fu_device_add_icon (FU_DEVICE (self), "audio-card");
+	fu_device_set_protocol (FU_DEVICE (self), "com.vli.usbhub");
 	fu_device_set_firmware_size_max (FU_DEVICE (self), 0x20000);
 	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 }

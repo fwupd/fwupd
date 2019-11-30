@@ -38,10 +38,10 @@ Flags = usb2
 # VL820
 [DeviceInstanceId=USB\VID_2109&PID_0820]
 Plugin = vli_usbhub
-Flags = usb3
+Flags = usb3,has-shared-spi-pd
 [DeviceInstanceId=USB\VID_2109&PID_2820]
 Plugin = vli_usbhub
-Flags = usb2
+Flags = usb2,has-shared-spi-pd
 
 # A25Lxxx
 [Guid=VLI_USBHUB\\SPI_3730]

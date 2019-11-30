@@ -21,14 +21,15 @@ shared_module('fu_plugin_logitech_hidpp',
     'fu-logitech-hidpp-runtime.c',
   ],
   include_directories : [
-    include_directories('../..'),
-    include_directories('../../src'),
-    include_directories('../../libfwupd'),
+    root_incdir,
+    fwupd_incdir,
+    fwupdplugin_incdir,
   ],
   install : true,
   install_dir: plugin_dir,
   link_with : [
-    libfwupdprivate,
+    fwupd,
+    fwupdplugin,
   ],
   c_args : cargs,
   dependencies : [
@@ -45,14 +46,16 @@ if get_option('tests')
       'fu-logitech-hidpp-common.c',
     ],
     include_directories : [
-      include_directories('../..'),
-      include_directories('../../libfwupd'),
+      root_incdir,
+      fwupd_incdir,
+      fwupdplugin_incdir,
     ],
     dependencies : [
       plugin_deps,
     ],
     link_with : [
-      libfwupdprivate,
+      fwupd,
+      fwupdplugin,
     ],
     c_args : cargs,
   )

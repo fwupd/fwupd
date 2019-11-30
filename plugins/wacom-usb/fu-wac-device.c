@@ -149,8 +149,8 @@ fu_wac_device_get_feature_report (FuWacDevice *self,
 					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
 					    G_USB_DEVICE_RECIPIENT_INTERFACE,
-					    HID_REPORT_GET,		/* bRequest */
-					    HID_FEATURE | cmd,		/* wValue */
+					    FU_HID_REPORT_GET,		/* bRequest */
+					    FU_HID_FEATURE | cmd,		/* wValue */
 					    0x0000,			/* wIndex */
 					    buf, bufsz, &sz,
 					    FU_WAC_DEVICE_TIMEOUT,
@@ -200,8 +200,8 @@ fu_wac_device_set_feature_report (FuWacDevice *self,
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
 					    G_USB_DEVICE_RECIPIENT_INTERFACE,
-					    HID_REPORT_SET,		/* bRequest */
-					    HID_FEATURE | cmd,		/* wValue */
+					    FU_HID_REPORT_SET,		/* bRequest */
+					    FU_HID_FEATURE | cmd,		/* wValue */
 					    0x0000,			/* wIndex */
 					    buf, bufsz, &sz,
 					    FU_WAC_DEVICE_TIMEOUT,
@@ -850,6 +850,7 @@ fu_wac_device_init (FuWacDevice *self)
 	self->checksums = g_array_new (FALSE, FALSE, sizeof(guint32));
 	self->configuration = 0xffff;
 	self->firmware_index = 0xffff;
+	fu_device_set_protocol (FU_DEVICE (self), "com.wacom.usb");
 	fu_device_add_icon (FU_DEVICE (self), "input-tablet");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_install_duration (FU_DEVICE (self), 10);

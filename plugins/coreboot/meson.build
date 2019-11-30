@@ -1,19 +1,24 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginCoreboot"']
 
+install_data(['coreboot.quirk'],
+  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
+)
+
 shared_module('fu_plugin_coreboot',
   sources : [
     'fu-plugin-coreboot.c',
     'fu-coreboot-common.c',
   ],
   include_directories : [
-    include_directories('../..'),
-    include_directories('../../src'),
-    include_directories('../../libfwupd'),
+    root_incdir,
+    fwupd_incdir,
+    fwupdplugin_incdir,
   ],
   install : true,
   install_dir: plugin_dir,
   link_with : [
-    libfwupdprivate,
+    fwupd,
+    fwupdplugin,
   ],
   c_args : [
     cargs,

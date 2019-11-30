@@ -1,4 +1,4 @@
-#/bin/sh
+#!/bin/sh
 
 # do something with the old firmware
 sha1sum /boot/flashrom-librem15v3.bin

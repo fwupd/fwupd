@@ -61,7 +61,7 @@ fu_rts54hid_module_i2c_write (FuRts54HidModule *self,
 				   .data_sz = self->register_addr_len,
 				   .speed = self->i2c_speed | 0x80},
 	};
-	guint8 buf[FU_RTS54HID_REPORT_LENGTH] = { 0 };
+	guint8 buf[FU_RTS54FU_HID_REPORT_LENGTH] = { 0 };
 
 	g_return_val_if_fail (data_sz <= 128, FALSE);
 	g_return_val_if_fail (data != NULL, FALSE);
@@ -101,7 +101,7 @@ fu_rts54hid_module_i2c_read (FuRts54HidModule *self,
 				   .data_sz = self->register_addr_len,
 				   .speed = self->i2c_speed | 0x80},
 	};
-	guint8 buf[FU_RTS54HID_REPORT_LENGTH] = { 0 };
+	guint8 buf[FU_RTS54FU_HID_REPORT_LENGTH] = { 0 };
 
 	g_return_val_if_fail (data_sz <= 192, FALSE);
 	g_return_val_if_fail (data != NULL, FALSE);

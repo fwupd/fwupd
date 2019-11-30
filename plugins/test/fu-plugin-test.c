@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-plugin-vfuncs.h"
+#include "fu-hash.h"
 
 struct FuPluginData {
 	GMutex			 mutex;
@@ -19,7 +20,6 @@ fu_plugin_init (FuPlugin *plugin)
 		fu_plugin_set_build_hash (plugin, "invalid");
 	else
 		fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
-	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_SUPPORTS_PROTOCOL, "com.acme.test");
 	fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 	g_debug ("init");
 }
@@ -42,6 +42,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	fu_device_add_icon (device, "preferences-desktop-keyboard");
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_CAN_VERIFY);
+	fu_device_set_protocol (device, "com.acme.test");
 	fu_device_set_summary (device, "A fake webcam");
 	fu_device_set_vendor (device, "ACME Corp.");
 	fu_device_set_vendor_id (device, "USB:0x046D");

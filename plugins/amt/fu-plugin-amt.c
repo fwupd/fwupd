@@ -15,6 +15,7 @@
 #include <sys/ioctl.h>
 
 #include "fu-plugin-vfuncs.h"
+#include "fu-hash.h"
 
 typedef struct {
 	uuid_le guid;

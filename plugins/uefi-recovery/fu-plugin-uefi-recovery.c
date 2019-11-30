@@ -8,6 +8,7 @@
 
 #include "fu-device-metadata.h"
 #include "fu-plugin-vfuncs.h"
+#include "fu-hash.h"
 
 void
 fu_plugin_init (FuPlugin *plugin)

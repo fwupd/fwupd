@@ -65,6 +65,13 @@ msgstr "%s ME 업데이트"
 msgid "%s System Update"
 msgstr "%s 시스템 업데이트"
 
+#. TRANSLATORS: the Thunderbolt controller is a device that
+#. * has other high speed Thunderbolt devices plugged into it;
+#. * the first %s is the system name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Thunderbolt Controller Update"
+msgstr "%s Thunderbolt 컨트롤러 업데이트"
+
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else
 #. --
@@ -72,6 +79,21 @@ msgstr "%s 시스템 업데이트"
 #, c-format
 msgid "%s Update"
 msgstr "%s 업데이트"
+
+#. TRANSLATORS: warn the user before updating, %1 is a device name
+#, c-format
+msgid "%s and all connected devices may not be usable while updating."
+msgstr "업데이트 중에는 %s 및 연결된 모든 장치를 사용할 수 없을 수도 있습니다."
+
+#. TRANSLATORS: warn the user before updating, %1 is a device name
+#, c-format
+msgid "%s must remain connected for the duration of the update to avoid damage."
+msgstr "장치 손상을 방지하려면 업데이트 중 %s의 연결을 계속 유지해야 합니다."
+
+#. TRANSLATORS: warn the user before updating, %1 is a machine name
+#, c-format
+msgid "%s must remain plugged into a power source for the duration of the update to avoid damage."
+msgstr "장치 손상을 방지하려면 업데이트 중 %s을(를) 전원에 계속 연결해 두어야 합니다."
 
 #. TRANSLATORS: duration in days!
 #, c-format
@@ -84,6 +106,12 @@ msgstr[0] "%u일"
 msgid "%u hour"
 msgid_plural "%u hours"
 msgstr[0] "%u시간"
+
+#. TRANSLATORS: how many local devices can expect updates now
+#, c-format
+msgid "%u local device supported"
+msgid_plural "%u local devices supported"
+msgstr[0] "로컬 장치 %u개를 지원함"
 
 #. TRANSLATORS: duration in minutes
 #, c-format
@@ -136,6 +164,10 @@ msgstr "%s의 별칭"
 #. TRANSLATORS: command line option
 msgid "Allow downgrading firmware versions"
 msgstr "펌웨어 다운그레이드를 허용합니다"
+
+#. TRANSLATORS: command line option
+msgid "Allow reinstalling existing firmware versions"
+msgstr "기존 펌웨어 버전 재설치를 허용합니다"
 
 #. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
@@ -211,6 +243,14 @@ msgstr "이 머신의 펌웨어를 업데이트하려면 인증해야 합니다"
 msgid "Authentication is required to update the stored checksums for the device"
 msgstr "저장된 체크섬을 업데이트하려면 인증해야 합니다"
 
+#. TRANSLATORS: Boolean value to automatically send reports
+msgid "Automatic Reporting"
+msgstr "자동 보고"
+
+#. TRANSLATORS: firmware version of bootloader
+msgid "Bootloader Version"
+msgstr "부트로더 버전"
+
 #. TRANSLATORS: command description
 msgid "Build firmware using a sandbox"
 msgstr "샌드박스에서 펌웨어를 빌드합니다"
@@ -228,6 +268,10 @@ msgstr "취소함"
 msgid "Changed"
 msgstr "바뀜"
 
+#. TRANSLATORS: command description
+msgid "Checks cryptographic hash matches firmware"
+msgstr "암호화 해시가 펌웨어와 일치하는지 확인합니다"
+
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "체크섬"
@@ -235,6 +279,10 @@ msgstr "체크섬"
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a device:"
 msgstr "장치를 선택하십시오:"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose a firmware type:"
+msgstr "펌웨어 종류를 선택하십시오:"
 
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a release:"
@@ -252,9 +300,21 @@ msgstr "최근 업데이트 결과를 지웁니다"
 msgid "Command not found"
 msgstr "명령을 찾을 수 없습니다"
 
+#. TRANSLATORS: prompt to apply the update
+msgid "Continue with update?"
+msgstr "업데이트를 계속 진행하시겠습니까?"
+
 #. TRANSLATORS: command description
 msgid "Convert firmware to DFU format"
 msgstr "펌웨어를 DFU 형식으로 변환"
+
+#. TRANSLATORS: Device supports some form of checksum verification
+msgid "Cryptographic hash verification is available"
+msgstr "암호화 해시 검사 사용 가능"
+
+#. TRANSLATORS: version number of current firmware
+msgid "Current version"
+msgstr "현재 버전"
 
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
@@ -276,6 +336,14 @@ msgstr "설명"
 msgid "Detach to bootloader mode"
 msgstr "부트로더 모드로 전환"
 
+#. TRANSLATORS: more details about the update link
+msgid "Details"
+msgstr "자세한 정보"
+
+#. TRANSLATORS: description of device ability
+msgid "Device Flags"
+msgstr "장치 플래그"
+
 #. TRANSLATORS: ID for hardware, typically a SHA1 sum
 msgid "Device ID"
 msgstr "장치 ID"
@@ -284,13 +352,37 @@ msgstr "장치 ID"
 msgid "Device added:"
 msgstr "장치 추가됨:"
 
+#. TRANSLATORS: Device supports a safety mechanism for flashing
+msgid "Device can recover flash failures"
+msgstr "장치 업데이트 실패 시 복구 가능"
+
 #. TRANSLATORS: this is when a device has been updated
 msgid "Device changed:"
 msgstr "장치 상태 바뀜:"
 
+#. TRANSLATORS: Is locked and can be unlocked
+msgid "Device is locked"
+msgstr "장치가 잠김"
+
+#. TRANSLATORS: Device remains usable during update
+msgid "Device is usable for the duration of the update"
+msgstr "업데이트 중 장치를 사용할 수 있음"
+
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device removed:"
 msgstr "장치 제거됨:"
+
+#. TRANSLATORS: Device supports a safety mechanism for flashing
+msgid "Device stages updates"
+msgstr "안전한 업데이트 지원"
+
+#. TRANSLATORS: Device update needs to be separately activated
+msgid "Device update needs activation"
+msgstr "장치 업데이트 활성화 필요"
+
+#. TRANSLATORS: Device will not return after update completes
+msgid "Device will not re-appear after update completes"
+msgstr "업데이트 후 장치가 다시 표시되지 않음"
 
 #. TRANSLATORS: a list of successful updates
 msgid "Devices that have been updated successfully:"
@@ -322,6 +414,26 @@ msgstr "업데이트 후 다시 시작 검사하지 않기"
 #. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
 msgstr "보고되지 않은 과거 기록 검사하지 않기"
+
+#. TRANSLATORS: turn on all debugging
+msgid "Do not include log domain prefix"
+msgstr "로그 도메인 접두사를 포함하지 않기"
+
+#. TRANSLATORS: turn on all debugging
+msgid "Do not include timestamp prefix"
+msgstr "timestamp 접두사를 포함하지 않기"
+
+#. TRANSLATORS: command line option
+msgid "Do not perform device safety checks"
+msgstr "장치 안정성 검사를 실행하지 않습니다"
+
+msgid "Do not upload report at this time, but prompt again for future updates"
+msgid_plural "Do not upload reports at this time, but prompt again for future updates"
+msgstr[0] "지금 보고서를 업로드하지 않고 다음에 업데이트할 때 묻기"
+
+msgid "Do not upload report, and never ask to upload reports for future updates"
+msgid_plural "Do not upload reports, and never ask to upload reports for future updates"
+msgstr[0] "보고서를 업로드하지 않고 다음에 업데이트할 때에도 다시 묻지 않기"
 
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
@@ -358,6 +470,10 @@ msgstr "파일에 저장된 SMBIOS 데이터 덤프를 출력합니다"
 #. TRANSLATORS: command description
 msgid "Dump details about a firmware file"
 msgstr "펌웨어 파일 세부 정보 출력"
+
+#. TRANSLATORS: length of time the update takes to apply
+msgid "Duration"
+msgstr "예상 시간"
 
 #. TRANSLATORS: ESP is EFI System Partition
 msgid "ESP specified was not valid"
@@ -429,6 +545,10 @@ msgstr "특이 사항을 불러올 수 없음"
 msgid "Failed to parse arguments"
 msgstr "인자 해석에 실패했습니다"
 
+#. TRANSLATORS: the user didn't read the man page
+msgid "Failed to parse flags for --filter"
+msgstr "--filter에 전달한 플래그 해석에 실패함"
+
 #. TRANSLATORS: we could not reboot for some reason
 msgid "Failed to reboot"
 msgstr "다시 시작할 수 없음"
@@ -460,6 +580,10 @@ msgstr "파일 이름"
 #. TRANSLATORS: filename of the local file
 msgid "Filename Signature"
 msgstr "파일 이름 서명"
+
+#. TRANSLATORS: command line option
+msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
+msgstr "플래그로 장치를 필터하며, ~ 기호를 앞에 붙이면 제외할 수 있습니다. 예: 'internal,~needs-reboot'"
 
 #. TRANSLATORS: program name
 msgid "Firmware Agent"
@@ -500,6 +624,15 @@ msgstr "플래그"
 msgid "Force the action ignoring all warnings"
 msgstr "모든 경고를 무시하고 작업 강제 진행"
 
+#. TRANSLATORS: global ID common to all similar hardware
+msgid "GUID"
+msgid_plural "GUIDs"
+msgstr[0] "GUID"
+
+#. TRANSLATORS: command description
+msgid "Get all device flags supported by fwupd"
+msgstr "fwupd를 지원하는 모든 장치 정보를 가져옵니다"
+
 #. TRANSLATORS: command description
 msgid "Get all devices and possible releases"
 msgstr "모든 장치와 릴리스 가져오기"
@@ -536,9 +669,25 @@ msgstr "장치 펌웨어 릴리스를 가져옵니다"
 msgid "Gets the results from the last update"
 msgstr "최근 업데이트 결과를 가져옵니다"
 
+#. TRANSLATORS: The hardware is waiting to be replugged
+msgid "Hardware is waiting to be replugged"
+msgstr "하드웨어를 다시 연결해야 함"
+
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
 msgstr "대기 중…"
+
+#. TRANSLATORS: command line option
+msgid "Ignore SSL strict checks when downloading files"
+msgstr "파일을 다운로드할 때 SSL 엄격한 검사를 건너뜁니다"
+
+#. TRANSLATORS: Ignore validation safety checks when flashing this device
+msgid "Ignore validation safety checks"
+msgstr "장치 안정성 검사 무시"
+
+#. TRANSLATORS: length of time the update takes to apply
+msgid "Install Duration"
+msgstr "설치 예상 시간"
 
 #. TRANSLATORS: command description
 msgid "Install a firmware blob on a device"
@@ -556,6 +705,10 @@ msgstr "서명된 장치 펌웨어 설치"
 
 msgid "Install signed system firmware"
 msgstr "서명된 시스템 펌웨어 설치"
+
+#. TRANSLATORS: Install composite firmware on the parent before the child
+msgid "Install to parent device first"
+msgstr "부모 장치에 먼저 설치"
 
 msgid "Install unsigned device firmware"
 msgstr "서명되지 않은 장치 펌웨어 설치"
@@ -576,12 +729,33 @@ msgstr "펌웨어 업데이트 설치 중…"
 msgid "Installing on %s…"
 msgstr "%s에 설치 중..."
 
+#. TRANSLATORS: Device cannot be removed easily
+msgid "Internal device"
+msgstr "내장 장치"
+
+#. TRANSLATORS: Is currently in bootloader mode
+msgid "Is in bootloader mode"
+msgstr "현재 부트로더 모드에 있음"
+
+#. TRANSLATORS: issue fixed with the release, e.g. CVE
+msgid "Issue"
+msgid_plural "Issues"
+msgstr[0] "문제점"
+
 msgid "Keyring"
 msgstr "키 모음"
+
+#. TRANSLATORS: the original time/date the device was modified
+msgid "Last modified"
+msgstr "마지막으로 수정한 날짜"
 
 #. TRANSLATORS: time remaining for completing firmware flash
 msgid "Less than one minute remaining"
 msgstr "1분 미만 남음"
+
+#. TRANSLATORS: e.g. GPLv2+, Proprietary etc
+msgid "License"
+msgstr "라이선스"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "리눅스 제조사 펌웨어 서비스(안정 버전 펌웨어)"
@@ -593,13 +767,25 @@ msgstr "리눅스 제조사 펌웨어 서비스(테스트 버전 펌웨어)"
 msgid "List supported firmware updates"
 msgstr "지원하는 펌웨어 업데이트 목록 표시"
 
+#. TRANSLATORS: command description
+msgid "List the available firmware types"
+msgstr "사용 가능한 펌웨어 종류를 표시합니다"
+
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
 msgstr "불러오는 중…"
 
 #. TRANSLATORS: command line option
+msgid "Log output to FILE (typically for scripting use)"
+msgstr "FILE로 로그를 출력합니다(스크립트 사용 시 유용함)"
+
+#. TRANSLATORS: command line option
 msgid "Manually whitelist specific plugins"
 msgstr "지정한 플러그인을 수동으로 허용 목록에 추가"
+
+#. TRANSLATORS: remote URI
+msgid "Metadata Signature"
+msgstr "메타데이터 서명"
 
 #. TRANSLATORS: remote URI
 msgid "Metadata URI"
@@ -608,6 +794,10 @@ msgstr "메타데이터 URI"
 #. TRANSLATORS: explain why no metadata available
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
 msgstr "리눅스 제조사 펌웨어 서비스에서 메타데이터를 가져올 수 있습니다."
+
+#. TRANSLATORS: smallest version number installable on device
+msgid "Minimum Version"
+msgstr "최소 버전"
 
 #. TRANSLATORS: error message
 #, c-format
@@ -632,8 +822,24 @@ msgstr "데몬 설정 수정"
 msgid "Monitor the daemon for events"
 msgstr "데몬 이벤트를 감시합니다"
 
+#. TRANSLATORS: Requires a reboot to apply firmware or to reload hardware
+msgid "Needs a reboot after installation"
+msgstr "설치 후 다시 시작 필요함"
+
+#. TRANSLATORS: Requires system shutdown to apply firmware
+msgid "Needs shutdown after installation"
+msgstr "설치 후 종료 필요함"
+
+#. TRANSLATORS: version number of new firmware
+msgid "New version"
+msgstr "새 버전"
+
 msgid "No action specified!"
 msgstr "동작을 지정하지 않았습니다!"
+
+#. TRANSLATORS: nothing found
+msgid "No firmware IDs found"
+msgstr "펌웨어 ID를 찾을 수 없음"
 
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
@@ -643,9 +849,17 @@ msgstr "펌웨어를 업데이트할 수 있는 하드웨어가 없음"
 msgid "No plugins found"
 msgstr "플러그인을 찾을 수 없음"
 
+#. TRANSLATORS: no repositories to download from
+msgid "No releases available"
+msgstr "사용 가능한 릴리스 없음"
+
 #. TRANSLATORS: explain why no metadata available
 msgid "No remotes are currently enabled so no metadata is available."
 msgstr "원격 자원이 설정되지 않았으므로 메타데이터를 사용할 수 없습니다."
+
+#. TRANSLATORS: no repositories to download from
+msgid "No remotes available"
+msgstr "원격 저장소 없음"
 
 #. TRANSLATORS: nothing was updated offline
 msgid "No updates were applied"
@@ -663,6 +877,10 @@ msgstr "기본 ESP 경로 재정의"
 msgid "Override warnings and force the action"
 msgstr "경고를 무시하고 강제로 작업 진행"
 
+#. TRANSLATORS: command description
+msgid "Parse and show details about a firmware file"
+msgstr "펌웨어 파일을 처리하고 세부 정보를 표시합니다"
+
 #. TRANSLATORS: remote filename base
 msgid "Password"
 msgstr "암호"
@@ -679,6 +897,10 @@ msgstr "진행률"
 msgid "Please enter a number from 0 to %u: "
 msgstr "0에서 %u까지의 숫자 중 하나를 입력하십시오:"
 
+#. TRANSLATORS: version number of previous firmware
+msgid "Previous version"
+msgstr "이전 버전"
+
 msgid "Print the version number"
 msgstr "버전 번호 표시"
 
@@ -692,9 +914,17 @@ msgstr "우선 순위"
 msgid "Proceed with upload?"
 msgstr "업로드를 진행하시겠습니까?"
 
+#. TRANSLATORS: a non-free software license
+msgid "Proprietary"
+msgstr "독점적"
+
 #. TRANSLATORS: command line option
 msgid "Query for firmware update support"
 msgstr "펌웨어 업데이트 지원 조회"
+
+#. TRANSLATORS: command description
+msgid "Read a firmware blob from a device"
+msgstr "장치에서 펌웨어 바이너리를 읽습니다"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from device into a file"
@@ -703,6 +933,11 @@ msgstr "장치 펌웨어를 읽어 파일에 기록"
 #. TRANSLATORS: command description
 msgid "Read firmware from one partition into a file"
 msgstr "파티션에서 펌웨어를 읽어 파일에 기록"
+
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Reading from %s…"
+msgstr "%s에서 읽는 중..."
 
 #. TRANSLATORS: reading from the flash chips
 msgid "Reading…"
@@ -715,6 +950,10 @@ msgstr "다시 시작하는 중..."
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "원격 서버의 메타데이터를 새로 고칩니다"
+
+#. TRANSLATORS: command description
+msgid "Reinstall current firmware on the device."
+msgstr "장치에 현재 펌웨어를 다시 설치합니다."
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
@@ -739,6 +978,18 @@ msgstr "기존 펌웨어 파일의 데이터 교체"
 #. TRANSLATORS: URI to send success/failure reports
 msgid "Report URI"
 msgstr "보고서 URI"
+
+#. TRANSLATORS: Has been reported to a metadata server
+msgid "Reported to remote server"
+msgstr "원격 서버에 보고됨"
+
+#. TRANSLATORS: Must be plugged in to an outlet
+msgid "Requires AC power"
+msgstr "AC 전원 필요함"
+
+#. TRANSLATORS: Requires a bootloader mode to be manually enabled by the user
+msgid "Requires a bootloader"
+msgstr "부트로더 모드 진입 필요함"
 
 #. TRANSLATORS: metadata is downloaded from the Internet
 msgid "Requires internet connection"
@@ -779,6 +1030,14 @@ msgstr "가능하다면 다음에 다시 시작할 때 설치 예약"
 #. TRANSLATORS: scheduing an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "작업 계획 중…"
+
+#. TRANSLATORS: Device has been chosen by the daemon for the user
+msgid "Selected device"
+msgstr "선택한 장치"
+
+#. TRANSLATORS: serial number of hardware
+msgid "Serial Number"
+msgstr "일련 번호"
 
 #. TRANSLATORS: command description
 msgid "Set product ID on firmware file"
@@ -865,15 +1124,81 @@ msgstr "클라이언트 인증서로 업로드된 데이터 서명"
 msgid "Signature"
 msgstr "서명"
 
+#. TRANSLATORS: file size of the download
+msgid "Size"
+msgstr "크기"
+
+#. TRANSLATORS: source (as in code) link
+msgid "Source"
+msgstr "원본"
+
 msgid "Specify Vendor/Product ID(s) of DFU device"
 msgstr "DFU 장치의 제조사/제품 ID 지정"
 
 msgid "Specify the number of bytes per USB transfer"
 msgstr "USB 전송 당 바이트 수 지정"
 
+#. TRANSLATORS: success message -- where activation is making the new
+#. * firmware take effect, usually after updating offline
+msgid "Successfully activated all devices"
+msgstr "모든 장치를 활성화함"
+
+#. TRANSLATORS: success message
+msgid "Successfully disabled remote"
+msgstr "원격 저장소를 비활성화함"
+
+#. TRANSLATORS: success message where we made the firmware on the
+#. * device older than it was before
+msgid "Successfully downgraded device"
+msgstr "장치를 다운그레이드함"
+
+#. TRANSLATORS: success message -- where 'metadata' is information
+#. * about available firmware on the remote server
+msgid "Successfully downloaded new metadata: "
+msgstr "새 메타데이터를 다운로드함:"
+
+#. TRANSLATORS: success message
+msgid "Successfully enabled remote"
+msgstr "원격 저장소를 활성화함"
+
+#. TRANSLATORS: success message
+msgid "Successfully installed firmware"
+msgstr "펌웨어 설치 성공"
+
+#. TRANSLATORS: success message -- a per-system setting value
+msgid "Successfully modified configuration value"
+msgstr "설정을 수정함"
+
+#. TRANSLATORS: success message for a per-remote setting change
+msgid "Successfully modified remote"
+msgstr "원격 저장소를 수정함"
+
+#. TRANSLATORS: success message -- the user can do this by-hand too
+msgid "Successfully refreshed metadata manually"
+msgstr "메타데이터를 수동으로 업데이트함"
+
+#. TRANSLATORS: success message when user refreshes device checksums
+msgid "Successfully updated device checksums"
+msgstr "장치 체크섬을 업데이트함"
+
+#. TRANSLATORS: success message -- where the user has uploaded
+#. * success and/or failure reports to the remote server
+#, c-format
+msgid "Successfully uploaded %u report"
+msgid_plural "Successfully uploaded %u reports"
+msgstr[0] "보고서 %u개 업로드함"
+
+#. TRANSLATORS: success message when user verified device checksums
+msgid "Successfully verified device checksums"
+msgstr "장치 체크섬을 검증함"
+
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "요약"
+
+#. TRANSLATORS: Is found in current metadata
+msgid "Supported on remote server"
+msgstr "원격 서버에서 지원함"
 
 msgid "Target"
 msgstr "대상"
@@ -911,6 +1236,10 @@ msgstr "UEFI 펌웨어 유틸리티"
 msgid "Unknown"
 msgstr "알 수 없음"
 
+#. TRANSLATORS: Name of hardware
+msgid "Unknown Device"
+msgstr "알 수 없는 장치"
+
 msgid "Unlock the device to allow access"
 msgstr "접근을 허용하려면 장치 잠금을 해제하십시오"
 
@@ -927,6 +1256,23 @@ msgstr "업데이트 중 디버깅 플래그 설정 해제"
 msgid "Unsupported daemon version %s, client version is %s"
 msgstr "지원하지 않는 데몬 버전 %s, 클라이언트 버전 %s"
 
+#. TRANSLATORS: Device is updatable in this or any other mode
+msgid "Updatable"
+msgstr "업데이트 가능"
+
+#. TRANSLATORS: error message from last update attempt
+msgid "Update Error"
+msgstr "업데이트 오류"
+
+#. TRANSLATORS: helpful messages from last update
+#. TRANSLATORS: helpful messages for the update
+msgid "Update Message"
+msgstr "업데이트 메시지"
+
+#. TRANSLATORS: hardware state, e.g. "pending"
+msgid "Update State"
+msgstr "업데이트 상태"
+
 #. TRANSLATORS: command description
 msgid "Update all devices that match local metadata"
 msgstr "로컬 메타데이터와 일치하는 모든 장치 업데이트"
@@ -938,6 +1284,14 @@ msgstr "알 수 없는 이유로 업데이트가 실패했습니다. 더 많은 
 #. TRANSLATORS: ask the user if we can update the metadata
 msgid "Update now?"
 msgstr "지금 업데이트하시겠습니까?"
+
+#. TRANSLATORS: Update can only be done from offline mode
+msgid "Update requires a reboot"
+msgstr "업데이트 시 다시 시작 필요함"
+
+#. TRANSLATORS: command description
+msgid "Update the stored cryptographic hash with current ROM contents"
+msgstr "현재 ROM 내용으로 저장된 암호화 해시를 업데이트합니다"
 
 msgid "Update the stored device verification information"
 msgstr "저장된 장치 검증 정보 업데이트"
@@ -962,25 +1316,59 @@ msgstr "%2$s에서 %3$s(으)로 %1$s 업데이트 중... "
 msgid "Updating %s…"
 msgstr "%s 업데이트 중..."
 
+#. TRANSLATORS: message letting the user know an upgrade is available
+#. * %1 is the device name and %2 and %3 are version strings
+#, c-format
+msgid "Upgrade available for %s from %s to %s"
+msgstr "%s 업그레이드 사용 가능: %s에서 %s(으)로"
+
 #. TRANSLATORS: the server sent the user a small message
 msgid "Upload message:"
 msgstr "업로드 메시지:"
+
+msgid "Upload report just this one time, but prompt again for future updates"
+msgid_plural "Upload reports just this one time, but prompt again for future updates"
+msgstr[0] "이번 한 번만 보고서를 업로드하고 다음에 업데이트할 때 묻기"
 
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "지금 보고서를 업로드하시겠습니까?"
 
+msgid "Upload report this time and automatically upload reports after completing future updates"
+msgid_plural "Upload reports this time and automatically upload reports after completing future updates"
+msgstr[0] "이번 한 번 보고서를 업로드하고 다음에 업데이트할 때 보고서를 자동으로 업로드하기"
+
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
 msgstr "펌웨어 보고서를 업로드하면 하드웨어 제작사에서 실제 장치에 업데이트를 적용했을 때 성공 및 실패 여부를 빠르게 알 수 있습니다."
+
+#. TRANSLATORS: command line option
+msgid "Use quirk flags when installing firmware"
+msgstr "펌웨어를 설치할 때 quirk 플래그 사용"
+
+#. TRANSLATORS: User has been notified
+msgid "User has been notified"
+msgstr "사용자에게 알림이 표시됨"
 
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "사용자 이름"
 
+#. TRANSLATORS: one line variant of release (e.g. 'Prerelease' or 'China')
+msgid "Variant"
+msgstr "파생형"
+
+#. TRANSLATORS: manufacturer of hardware
+msgid "Vendor"
+msgstr "제조사"
+
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
 msgstr "검증 중…"
+
+#. TRANSLATORS: try to help
+msgid "WARNING: Ignoring SSL strict checks, to do this automatically in the future export DISABLE_SSL_STRICT in your environment"
+msgstr "경고: SSL 엄격 검사를 건너뜁니다. 이 옵션을 자동으로 지정하려면 DISABLE_SSL_STRICT 환경 변수를 지정하십시오"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

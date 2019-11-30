@@ -10,13 +10,14 @@
 #include <locale.h>
 #include <stdlib.h>
 #include <glib/gi18n.h>
+#ifdef HAVE_GIO_UNIX
 #include <glib-unix.h>
+#endif
 
 #include "dfu-device.h"
 #include "dfu-sector.h"
 
 #include "fu-device-locker.h"
-#include "fu-progressbar.h"
 
 #include "fwupd-error.h"
 
@@ -26,7 +27,6 @@ typedef struct {
 	gboolean		 force;
 	gchar			*device_vid_pid;
 	guint16			 transfer_size;
-	FuProgressbar		*progressbar;
 	FuQuirks		*quirks;
 } DfuToolPrivate;
 
@@ -47,7 +47,6 @@ dfu_tool_private_free (DfuToolPrivate *priv)
 	if (priv == NULL)
 		return;
 	g_free (priv->device_vid_pid);
-	g_object_unref (priv->progressbar);
 	g_object_unref (priv->cancellable);
 	g_object_unref (priv->quirks);
 	if (priv->cmd_array != NULL)
@@ -654,9 +653,9 @@ dfu_tool_convert (DfuToolPrivate *priv, gchar **values, GError **error)
 static void
 fu_tool_action_changed_cb (FuDevice *device, GParamSpec *pspec, DfuToolPrivate *priv)
 {
-	fu_progressbar_update (priv->progressbar,
-			       fu_device_get_status (device),
-			       fu_device_get_progress (device));
+	g_print ("%s:\t%u%%\n",
+		 fwupd_status_to_string (fu_device_get_status (device)),
+		 fu_device_get_progress (device));
 }
 
 static gboolean
@@ -1205,6 +1204,7 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+#ifdef HAVE_GIO_UNIX
 static gboolean
 dfu_tool_sigint_cb (gpointer user_data)
 {
@@ -1213,6 +1213,7 @@ dfu_tool_sigint_cb (gpointer user_data)
 	g_cancellable_cancel (priv->cancellable);
 	return FALSE;
 }
+#endif
 
 int
 main (int argc, char *argv[])
@@ -1240,7 +1241,7 @@ main (int argc, char *argv[])
 
 	setlocale (LC_ALL, "");
 
-	bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+	bindtextdomain (GETTEXT_PACKAGE, FWUPD_LOCALEDIR);
 	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 	textdomain (GETTEXT_PACKAGE);
 
@@ -1313,11 +1314,6 @@ main (int argc, char *argv[])
 		     _("Replace data in an existing firmware file"),
 		     dfu_tool_replace_data);
 
-	/* use animated progress bar */
-	priv->progressbar = fu_progressbar_new ();
-	fu_progressbar_set_length_percentage (priv->progressbar, 50);
-	fu_progressbar_set_length_status (priv->progressbar, 20);
-
 	/* use quirks */
 	priv->quirks = fu_quirks_new ();
 	if (!fu_quirks_load (priv->quirks, FU_QUIRKS_LOAD_FLAG_NONE, &error)) {
@@ -1328,11 +1324,13 @@ main (int argc, char *argv[])
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();
+#ifdef HAVE_GIO_UNIX
 	g_unix_signal_add_full (G_PRIORITY_DEFAULT,
 				SIGINT,
 				dfu_tool_sigint_cb,
 				priv,
 				NULL);
+#endif
 
 	/* sort by command name */
 	g_ptr_array_sort (priv->cmd_array,

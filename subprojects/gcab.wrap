@@ -1,0 +1,4 @@
+[wrap-git]
+directory = gcab
+url = https://gitlab.gnome.org/GNOME/gcab.git
+revision = b55268ac1020cd6c033acb52f2e6ae984bf5c9fd

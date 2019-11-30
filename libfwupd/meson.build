@@ -27,8 +27,8 @@ install_headers([
   subdir : 'fwupd-1/libfwupd',
 )
 
-mapfile = 'fwupd.map'
-vflag = '-Wl,--version-script,@0@/@1@'.format(meson.current_source_dir(), mapfile)
+fwupd_mapfile = 'fwupd.map'
+vflag = '-Wl,--version-script,@0@/@1@'.format(meson.current_source_dir(), fwupd_mapfile)
 fwupd = shared_library(
   'fwupd',
   sources : [
@@ -40,8 +40,8 @@ fwupd = shared_library(
     'fwupd-release.c',
     'fwupd-remote.c',
   ],
-  soversion : lt_current,
-  version : lt_version,
+  soversion : libfwupd_lt_current,
+  version : libfwupd_lt_version,
   dependencies : [
     giounix,
     soup,
@@ -51,9 +51,9 @@ fwupd = shared_library(
       cargs,
       '-DLOCALSTATEDIR="' + localstatedir + '"',
     ],
-  include_directories : include_directories('..'),
+  include_directories : root_incdir,
   link_args : vflag,
-  link_depends : mapfile,
+  link_depends : fwupd_mapfile,
   install : true
 )
 
@@ -69,7 +69,7 @@ pkgg.generate(
 )
 
 if get_option('introspection')
-  gir = gnome.generate_gir(fwupd,
+  fwupd_gir = gnome.generate_gir(fwupd,
     sources : [
       'fwupd-client.c',
       'fwupd-client.h',
@@ -110,7 +110,7 @@ if get_option('introspection')
   )
 
   gnome.generate_vapi('fwupd',
-    sources : gir[0],
+    sources : fwupd_gir[0],
     packages : ['gio-2.0', 'libsoup-2.4'],
     install : true,
   )
@@ -123,17 +123,16 @@ if get_option('introspection')
   #
   # To avoid the circular dep, and to ensure we don't change exported API
   # accidentally actually check in a version of the version script to git.
-  mapfile_target = custom_target('mapfile',
-    input: gir[0],
+  mapfile_target = custom_target('fwupd_mapfile',
+    input: fwupd_gir[0],
     output: 'fwupd.map',
     command: [
-      join_paths(meson.current_source_dir(), 'generate-version-script.py'),
+      join_paths(meson.source_root(), 'contrib', 'generate-version-script.py'),
       'LIBFWUPD',
       '@INPUT@',
       '@OUTPUT@',
     ],
   )
-  diffcmd = find_program('diff')
   test('fwupd-exported-api', diffcmd,
        args : [
         '-urNp',
@@ -152,7 +151,7 @@ if get_option('tests')
       'fwupd-self-test.c'
     ],
     include_directories : [
-      include_directories('..'),
+      root_incdir,
     ],
     dependencies : [
       gio,
@@ -170,3 +169,5 @@ if get_option('tests')
   )
   test('fwupd-self-test', e)
 endif
+
+fwupd_incdir = include_directories('.')

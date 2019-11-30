@@ -108,14 +108,16 @@ main (int argc, char *argv[])
 
 	setlocale (LC_ALL, "");
 
-	bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+	bindtextdomain (GETTEXT_PACKAGE, FWUPD_LOCALEDIR);
 	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 	textdomain (GETTEXT_PACKAGE);
 
 	/* ensure root user */
+#ifdef HAVE_GETUID
 	if (getuid () != 0 || geteuid () != 0)
 		/* TRANSLATORS: we're poking around as a power user */
 		g_printerr ("%s\n", _("This program may only work correctly as root"));
+#endif
 
 	/* get a action_list of the commands */
 	priv->context = g_option_context_new (NULL);

@@ -16,9 +16,9 @@ shared_module('fu_plugin_wacom_usb',
     'fu-plugin-wacom-usb.c',
   ],
   include_directories : [
-    include_directories('../..'),
-    include_directories('../../src'),
-    include_directories('../../libfwupd'),
+    root_incdir,
+    fwupd_incdir,
+    fwupdplugin_incdir,
   ],
   install : true,
   install_dir: plugin_dir,
@@ -27,7 +27,8 @@ shared_module('fu_plugin_wacom_usb',
     plugin_deps,
   ],
   link_with : [
-    libfwupdprivate,
+    fwupd,
+    fwupdplugin,
   ],
 )
 
@@ -43,10 +44,9 @@ if get_option('tests')
       'fu-wac-firmware.c',
     ],
     include_directories : [
-      include_directories('..'),
-      include_directories('../..'),
-      include_directories('../../libfwupd'),
-      include_directories('../../src'),
+      root_incdir,
+      fwupd_incdir,
+      fwupdplugin_incdir,
     ],
     dependencies : [
       libxmlb,
@@ -56,7 +56,8 @@ if get_option('tests')
       libm,
     ],
     link_with : [
-      libfwupdprivate,
+      fwupd,
+      fwupdplugin,
     ],
     c_args : cargs
   )

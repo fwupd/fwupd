@@ -7,7 +7,6 @@
 
 #include "config.h"
 
-#include <errno.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -16,6 +15,7 @@
 #include <smbios_c/smi.h>
 
 #include "fu-plugin-vfuncs.h"
+#include "fu-hash.h"
 
 /* Whitelisted smbios class/select commands */
 #define CLASS_ADMIN_PROP	10

@@ -61,6 +61,7 @@ typedef struct {
 enum {
 	PROP_0,
 	PROP_VERSION_FORMAT,
+	PROP_FLAGS,
 	PROP_LAST
 };
 
@@ -875,7 +876,10 @@ fwupd_device_set_flags (FwupdDevice *device, guint64 flags)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	if (priv->flags == flags)
+		return;
 	priv->flags = flags;
+	g_object_notify (G_OBJECT (device), "flags");
 }
 
 /**
@@ -892,7 +896,12 @@ fwupd_device_add_flag (FwupdDevice *device, FwupdDeviceFlags flag)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	if (flag == 0)
+		return;
+	if ((priv->flags & flag) > 0)
+		return;
 	priv->flags |= flag;
+	g_object_notify (G_OBJECT (device), "flags");
 }
 
 /**
@@ -909,7 +918,12 @@ fwupd_device_remove_flag (FwupdDevice *device, FwupdDeviceFlags flag)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	if (flag == 0)
+		return;
+	if ((priv->flags & flag) == 0)
+		return;
 	priv->flags &= ~flag;
+	g_object_notify (G_OBJECT (device), "flags");
 }
 
 /**
@@ -1880,6 +1894,9 @@ fwupd_device_get_property (GObject *object, guint prop_id,
 	case PROP_VERSION_FORMAT:
 		g_value_set_uint (value, priv->version_format);
 		break;
+	case PROP_FLAGS:
+		g_value_set_uint64 (value, priv->flags);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
@@ -1894,6 +1911,9 @@ fwupd_device_set_property (GObject *object, guint prop_id,
 	switch (prop_id) {
 	case PROP_VERSION_FORMAT:
 		fwupd_device_set_version_format (self, g_value_get_uint (value));
+		break;
+	case PROP_FLAGS:
+		fwupd_device_set_flags (self, g_value_get_uint64 (value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1918,6 +1938,14 @@ fwupd_device_class_init (FwupdDeviceClass *klass)
 				   G_PARAM_READWRITE |
 				   G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_VERSION_FORMAT, pspec);
+
+	pspec = g_param_spec_uint64 ("flags", NULL, NULL,
+				     FWUPD_DEVICE_FLAG_NONE,
+				     FWUPD_DEVICE_FLAG_UNKNOWN,
+				     FWUPD_DEVICE_FLAG_NONE,
+				     G_PARAM_READWRITE |
+				     G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_FLAGS, pspec);
 }
 
 static void

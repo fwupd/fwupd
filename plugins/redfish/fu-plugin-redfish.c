@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-plugin-vfuncs.h"
+#include "fu-hash.h"
 
 #include "fu-redfish-client.h"
 #include "fu-redfish-common.h"
@@ -120,7 +121,6 @@ fu_plugin_init (FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 	data->client = fu_redfish_client_new ();
-	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_SUPPORTS_PROTOCOL, "org.dmtf.redfish");
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 }
 

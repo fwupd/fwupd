@@ -1,0 +1,7 @@
+usr/include/fwupd-1/fwupdplugin.h
+usr/include/fwupd-1/libfwupdplugin
+usr/lib/*/libfwupdplugin.so
+usr/lib/*/pkgconfig/fwupdplugin.pc
+usr/share/gir-1.0/FwupdPlugin-*.gir
+usr/share/vala/vapi/fwupdplugin.deps
+usr/share/vala/vapi/fwupdplugin.vapi

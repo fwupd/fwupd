@@ -1,4 +1,4 @@
-#/bin/sh
+#!/bin/sh
 echo "this is a test"
 sleep 1
 echo "this is another line1"

@@ -32,6 +32,23 @@
     <binary>fwupdmgr</binary>
   </provides>
   <releases>
+    <release version="1.3.5" date="2019-11-29">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Convert libfwupdprivate to a shared library libfwupdplugin</li>
+          <li>Create a REV_00 instance ID as this may be what the vendor needs to target</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Improve coreboot version detection</li>
+          <li>Invert default behavior to be safer for reboot and shutdown prompts</li>
+          <li>Reload the Synaptics prometheus device version after update</li>
+          <li>Use the correct unlocker when using GRWLock</li>
+          <li>Whitelist VIA USB hub PD and I²C devices</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.3.4" date="2019-11-22">
       <description>
         <p>This release adds the following features:</p>

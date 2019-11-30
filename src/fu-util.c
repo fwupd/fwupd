@@ -15,8 +15,9 @@
 #include <gio/gio.h>
 #include <gio/gunixfdlist.h>
 #include <glib/gi18n.h>
+#ifdef HAVE_GIO_UNIX
 #include <glib-unix.h>
-#include <gudev/gudev.h>
+#endif
 #include <json-glib/json-glib.h>
 #include <locale.h>
 #include <stdlib.h>
@@ -145,12 +146,13 @@ static gboolean
 fu_util_filter_device (FuUtilPrivate *priv, FwupdDevice *dev)
 {
 	for (guint i = 0; i < 64; i++) {
-		if (priv->filter_include & (1 << i)) {
-			if (!fwupd_device_has_flag (dev, (1 << i)))
+		FwupdDeviceFlags flag = 1LLU << i;
+		if (priv->filter_include & flag) {
+			if (!fwupd_device_has_flag (dev, flag))
 				return FALSE;
 		}
-		if (priv->filter_exclude & (1 << i)) {
-			if (fwupd_device_has_flag (dev, (1 << i)))
+		if (priv->filter_exclude & flag) {
+			if (fwupd_device_has_flag (dev, flag))
 				return FALSE;
 		}
 	}
@@ -2271,6 +2273,7 @@ fu_util_ignore_cb (const gchar *log_domain, GLogLevelFlags log_level,
 {
 }
 
+#ifdef HAVE_GIO_UNIX
 static gboolean
 fu_util_sigint_cb (gpointer user_data)
 {
@@ -2279,6 +2282,7 @@ fu_util_sigint_cb (gpointer user_data)
 	g_cancellable_cancel (priv->cancellable);
 	return FALSE;
 }
+#endif
 
 static void
 fu_util_private_free (FuUtilPrivate *priv)
@@ -2449,7 +2453,7 @@ main (int argc, char *argv[])
 
 	setlocale (LC_ALL, "");
 
-	bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+	bindtextdomain (GETTEXT_PACKAGE, FWUPD_LOCALEDIR);
 	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 	textdomain (GETTEXT_PACKAGE);
 
@@ -2621,9 +2625,11 @@ main (int argc, char *argv[])
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();
+#ifdef HAVE_GIO_UNIX
 	g_unix_signal_add_full (G_PRIORITY_DEFAULT,
 				SIGINT, fu_util_sigint_cb,
 				priv, NULL);
+#endif
 
 	/* sort by command name */
 	fu_util_cmd_array_sort (cmd_array);

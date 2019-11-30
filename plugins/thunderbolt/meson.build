@@ -7,14 +7,15 @@ fu_plugin_thunderbolt = shared_module('fu_plugin_thunderbolt',
     'fu-thunderbolt-image.c',
   ],
   include_directories : [
-    include_directories('../..'),
-    include_directories('../../src'),
-    include_directories('../../libfwupd'),
+    root_incdir,
+    fwupd_incdir,
+    fwupdplugin_incdir,
   ],
   install : true,
   install_dir: plugin_dir,
   link_with : [
-    libfwupdprivate,
+    fwupd,
+    fwupdplugin,
   ],
   c_args : cargs,
   dependencies : [
@@ -22,23 +23,22 @@ fu_plugin_thunderbolt = shared_module('fu_plugin_thunderbolt',
   ],
 )
 
-testdatadir_src = join_paths(meson.source_root(), 'data', 'tests')
-testdatadir_dst = join_paths(meson.build_root(), 'data', 'tests')
-cargs += '-DTESTDATADIR="' + testdatadir_src + ':' + testdatadir_dst + '"'
+cargs += '-DTESTDATADIR="' + join_paths(meson.source_root(), 'data', 'tests') + '"'
 executable('tbtfwucli',
   fu_hash,
   sources : [
     'fu-thunderbolt-tool.c',
   ],
   include_directories : [
-    include_directories('../..'),
-    include_directories('../../src'),
-    include_directories('../../libfwupd'),
+    root_incdir,
+    fwupd_incdir,
+    fwupdplugin_incdir,
   ],
   c_args : cargs,
   link_with : [
     fu_plugin_thunderbolt,
-    libfwupdprivate,
+    fwupd,
+    fwupdplugin,
   ],
   dependencies : [
     plugin_deps,
@@ -50,7 +50,6 @@ install_data(['thunderbolt.conf'],
 )
 # we use functions from 2.52 in the tests
 if get_option('tests') and umockdev.found() and gio.version().version_compare('>= 2.52')
-  cargs += '-DFU_OFFLINE_DESTDIR="/tmp/fwupd-self-test"'
   cargs += '-DPLUGINBUILDDIR="' + meson.current_build_dir() + '"'
   e = executable(
     'thunderbolt-self-test',
@@ -61,16 +60,17 @@ if get_option('tests') and umockdev.found() and gio.version().version_compare('>
       'fu-thunderbolt-image.c',
     ],
     include_directories : [
-      include_directories('../..'),
-      include_directories('../../src'),
-      include_directories('../../libfwupd'),
+      root_incdir,
+      fwupd_incdir,
+      fwupdplugin_incdir,
     ],
     dependencies : [
       plugin_deps,
       umockdev,
     ],
     link_with : [
-      libfwupdprivate,
+      fwupd,
+      fwupdplugin,
     ],
     c_args : cargs
   )

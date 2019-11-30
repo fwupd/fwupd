@@ -200,6 +200,15 @@ fu_progressbar_refresh (FuProgressbar *self, FwupdStatus status, guint percentag
 	}
 }
 
+/**
+ * fu_progressbar_set_title:
+ * @self: A #FuProgressbar
+ * @title: A string
+ *
+ * Sets progressbar title
+ *
+ * Since: 0.9.7
+ **/
 void
 fu_progressbar_set_title (FuProgressbar *self, const gchar *title)
 {
@@ -266,6 +275,16 @@ fu_progressbar_spin_start (FuProgressbar *self)
 	self->timer_id = g_timeout_add (40, fu_progressbar_spin_cb, self);
 }
 
+/**
+ * fu_progressbar_update:
+ * @self: A #FuProgressbar
+ * @status: A #FwupdStatus
+ * @percentage: unsigned integer
+ *
+ * Refreshes a progressbar
+ *
+ * Since: 0.9.7
+ **/
 void
 fu_progressbar_update (FuProgressbar *self, FwupdStatus status, guint percentage)
 {
@@ -314,6 +333,15 @@ fu_progressbar_update (FuProgressbar *self, FwupdStatus status, guint percentage
 	self->percentage = percentage;
 }
 
+/**
+ * fu_progressbar_set_interactive:
+ * @self: A #FuProgressbar
+ * @interactive: #gboolean
+ *
+ * Marks the progressbar as interactive or not
+ *
+ * Since: 0.9.7
+ **/
 void
 fu_progressbar_set_interactive (FuProgressbar *self, gboolean interactive)
 {
@@ -321,6 +349,15 @@ fu_progressbar_set_interactive (FuProgressbar *self, gboolean interactive)
 	self->interactive = interactive;
 }
 
+/**
+ * fu_progressbar_set_length_status:
+ * @self: A #FuProgressbar
+ * @len: unsigned integer
+ *
+ * Sets the length of the progressbar status
+ *
+ * Since: 0.9.7
+ **/
 void
 fu_progressbar_set_length_status (FuProgressbar *self, guint len)
 {
@@ -329,6 +366,15 @@ fu_progressbar_set_length_status (FuProgressbar *self, guint len)
 	self->length_status = len;
 }
 
+/**
+ * fu_progressbar_set_length_percentage:
+ * @self: A #FuProgressbar
+ * @len: unsigned integer
+ *
+ * Sets the length of the progressba percentage
+ *
+ * Since: 0.9.7
+ **/
 void
 fu_progressbar_set_length_percentage (FuProgressbar *self, guint len)
 {
@@ -366,6 +412,13 @@ fu_progressbar_finalize (GObject *obj)
 	G_OBJECT_CLASS (fu_progressbar_parent_class)->finalize (obj);
 }
 
+/**
+ * fu_progressbar_new:
+ *
+ * Creates a new #FuProgressbar
+ *
+ * Since: 0.9.7
+ **/
 FuProgressbar *
 fu_progressbar_new (void)
 {

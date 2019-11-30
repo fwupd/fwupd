@@ -13,7 +13,9 @@
 
 #include <locale.h>
 #include <string.h>
+#ifdef HAVE_UTSNAME_H
 #include <sys/utsname.h>
+#endif
 #include <json-glib/json-glib.h>
 
 #if !GLIB_CHECK_VERSION(2,54,0)
@@ -222,12 +224,15 @@ fwupd_build_user_agent_os_release (void)
 static gchar *
 fwupd_build_user_agent_system (void)
 {
+#ifdef HAVE_UTSNAME_H
 	struct utsname name_tmp;
+#endif
 	g_autofree gchar *locale = NULL;
 	g_autofree gchar *os_release = NULL;
 	g_autoptr(GPtrArray) ids = g_ptr_array_new_with_free_func (g_free);
 
 	/* system, architecture and kernel, e.g. "Linux i686 4.14.5" */
+#ifdef HAVE_UTSNAME_H
 	memset (&name_tmp, 0, sizeof(struct utsname));
 	if (uname (&name_tmp) >= 0) {
 		g_ptr_array_add (ids, g_strdup_printf ("%s %s %s",
@@ -235,9 +240,12 @@ fwupd_build_user_agent_system (void)
 						       name_tmp.machine,
 						       name_tmp.release));
 	}
+#endif
 
 	/* current locale, e.g. "en-gb" */
+#ifdef HAVE_LC_MESSAGES
 	locale = g_strdup (setlocale (LC_MESSAGES, NULL));
+#endif
 	if (locale != NULL) {
 		g_strdelimit (locale, ".", '\0');
 		g_strdelimit (locale, "_", '-');
@@ -320,8 +328,8 @@ fwupd_build_machine_id (const gchar *salt, GError **error)
 	gsize sz = 0;
 
 	/* one of these has to exist */
-	fns[0] = g_build_filename (SYSCONFDIR, "machine-id", NULL);
-	fns[1] = g_build_filename (LOCALSTATEDIR, "lib", "dbus", "machine-id", NULL);
+	fns[0] = g_build_filename (FWUPD_SYSCONFDIR, "machine-id", NULL);
+	fns[1] = g_build_filename (FWUPD_LOCALSTATEDIR, "lib", "dbus", "machine-id", NULL);
 	fns[2] = g_strdup ("/etc/machine-id");
 	fns[3] = g_strdup ("/var/lib/dbus/machine-id");
 	for (guint i = 0; fns[i] != NULL; i++) {

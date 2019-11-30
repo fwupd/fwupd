@@ -16,6 +16,7 @@
 #include <errno.h>
 
 #include "fu-plugin-vfuncs.h"
+#include "fu-hash.h"
 #include "fu-device-metadata.h"
 #include "fu-thunderbolt-image.h"
 
@@ -406,6 +407,7 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	if (is_host)
 		fu_device_set_summary (dev, "Unmatched performance for high-speed I/O");
 	fu_device_add_icon (dev, "thunderbolt");
+	fu_device_set_protocol (dev, "com.intel.thunderbolt");
 
 	fu_device_set_quirks (dev, fu_plugin_get_quirks (plugin));
 	vendor = g_udev_device_get_sysfs_attr (device, "vendor_name");
@@ -639,7 +641,6 @@ fu_plugin_init (FuPlugin *plugin)
 	const gchar *subsystems[] = { "thunderbolt", NULL };
 
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
-	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_SUPPORTS_PROTOCOL, "com.intel.thunderbolt");
 	data->udev = g_udev_client_new (subsystems);
 	g_signal_connect (data->udev, "uevent",
 			  G_CALLBACK (udev_uevent_cb), plugin);

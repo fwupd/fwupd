@@ -988,6 +988,7 @@ fu_dell_dock_ec_init (FuDellDockEc *self)
 {
 	self->data = g_new0 (FuDellDockDockDataStructure, 1);
 	self->raw_versions = g_new0 (FuDellDockDockPackageFWVersion, 1);
+	fu_device_set_protocol (FU_DEVICE (self), "com.dell.dock");
 }
 
 static void
