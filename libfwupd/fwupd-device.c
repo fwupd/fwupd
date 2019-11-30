@@ -44,6 +44,7 @@ typedef struct {
 	gchar				*vendor_id;
 	gchar				*homepage;
 	gchar				*plugin;
+	gchar				*protocol;
 	gchar				*version;
 	gchar				*version_lowest;
 	gchar				*version_bootloader;
@@ -62,6 +63,7 @@ enum {
 	PROP_0,
 	PROP_VERSION_FORMAT,
 	PROP_FLAGS,
+	PROP_PROTOCOL,
 	PROP_LAST
 };
 
@@ -845,6 +847,42 @@ fwupd_device_set_plugin (FwupdDevice *device, const gchar *plugin)
 }
 
 /**
+ * fwupd_device_get_protocol:
+ * @device: A #FwupdDevice
+ *
+ * Gets the protocol that the device uses for updating.
+ *
+ * Returns: the protocol name, or %NULL if unset
+ *
+ * Since: 1.3.6
+ **/
+const gchar *
+fwupd_device_get_protocol (FwupdDevice *device)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	return priv->protocol;
+}
+
+/**
+ * fwupd_device_set_protocol:
+ * @device: A #FwupdDevice
+ * @protocol: the protocol name, e.g. `com.hughski.colorhug`
+ *
+ * Sets the protocol that is used to update the device.
+ *
+ * Since: 1.3.6
+ **/
+void
+fwupd_device_set_protocol (FwupdDevice *device, const gchar *protocol)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	g_free (priv->protocol);
+	priv->protocol = g_strdup (protocol);
+}
+
+/**
  * fwupd_device_get_flags:
  * @device: A #FwupdDevice
  *
@@ -1061,6 +1099,8 @@ fwupd_device_incorporate (FwupdDevice *self, FwupdDevice *donor)
 		fwupd_device_set_vendor_id (self, priv_donor->vendor_id);
 	if (priv->plugin == NULL)
 		fwupd_device_set_plugin (self, priv_donor->plugin);
+	if (priv->protocol == NULL)
+		fwupd_device_set_protocol (self, priv_donor->protocol);
 	if (priv->update_error == NULL)
 		fwupd_device_set_update_error (self, priv_donor->update_error);
 	if (priv->update_message == NULL)
@@ -1196,6 +1236,11 @@ fwupd_device_to_variant_full (FwupdDevice *device, FwupdDeviceFlags flags)
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_PLUGIN,
 				       g_variant_new_string (priv->plugin));
+	}
+	if (priv->protocol != NULL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_PROTOCOL,
+				       g_variant_new_string (priv->protocol));
 	}
 	if (priv->version != NULL) {
 		g_variant_builder_add (&builder, "{sv}",
@@ -1377,6 +1422,10 @@ fwupd_device_from_key_value (FwupdDevice *device, const gchar *key, GVariant *va
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_PLUGIN) == 0) {
 		fwupd_device_set_plugin (device, g_variant_get_string (value, NULL));
+		return;
+	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_PROTOCOL) == 0) {
+		fwupd_device_set_protocol (device, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_VERSION) == 0) {
@@ -1731,6 +1780,7 @@ fwupd_device_to_json (FwupdDevice *device, JsonBuilder *builder)
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
+	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_PROTOCOL, priv->protocol);
 	if (priv->flags != FWUPD_DEVICE_FLAG_NONE) {
 		json_builder_set_member_name (builder, FWUPD_RESULT_KEY_FLAGS);
 		json_builder_begin_array (builder);
@@ -1843,6 +1893,7 @@ fwupd_device_to_string (FwupdDevice *device)
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_PROTOCOL, priv->protocol);
 	fwupd_pad_kv_dfl (str, FWUPD_RESULT_KEY_FLAGS, priv->flags);
 	for (guint i = 0; i < priv->checksums->len; i++) {
 		const gchar *checksum = g_ptr_array_index (priv->checksums, i);
@@ -1897,6 +1948,9 @@ fwupd_device_get_property (GObject *object, guint prop_id,
 	case PROP_FLAGS:
 		g_value_set_uint64 (value, priv->flags);
 		break;
+	case PROP_PROTOCOL:
+		g_value_set_string (value, priv->protocol);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
@@ -1914,6 +1968,9 @@ fwupd_device_set_property (GObject *object, guint prop_id,
 		break;
 	case PROP_FLAGS:
 		fwupd_device_set_flags (self, g_value_get_uint64 (value));
+		break;
+	case PROP_PROTOCOL:
+		fwupd_device_set_protocol (self, g_value_get_string (value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1946,6 +2003,11 @@ fwupd_device_class_init (FwupdDeviceClass *klass)
 				     G_PARAM_READWRITE |
 				     G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_FLAGS, pspec);
+
+	pspec = g_param_spec_string ("protocol", NULL, NULL, NULL,
+				     G_PARAM_READWRITE |
+				     G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_PROTOCOL, pspec);
 }
 
 static void
@@ -1976,6 +2038,7 @@ fwupd_device_finalize (GObject *object)
 	g_free (priv->vendor);
 	g_free (priv->vendor_id);
 	g_free (priv->plugin);
+	g_free (priv->protocol);
 	g_free (priv->update_error);
 	g_free (priv->update_message);
 	g_free (priv->version);

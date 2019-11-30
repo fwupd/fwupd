@@ -92,6 +92,9 @@ void		 fwupd_device_add_checksum		(FwupdDevice	*device,
 const gchar	*fwupd_device_get_plugin		(FwupdDevice	*device);
 void		 fwupd_device_set_plugin		(FwupdDevice	*device,
 							 const gchar	*plugin);
+const gchar	*fwupd_device_get_protocol		(FwupdDevice	*device);
+void		 fwupd_device_set_protocol		(FwupdDevice	*device,
+							 const gchar	*protocol);
 const gchar	*fwupd_device_get_vendor		(FwupdDevice	*device);
 void		 fwupd_device_set_vendor		(FwupdDevice	*device,
 							 const gchar	*vendor);

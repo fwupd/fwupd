@@ -36,7 +36,6 @@ typedef struct {
 	gchar				*equivalent_id;
 	gchar				*physical_id;
 	gchar				*logical_id;
-	gchar				*protocol;
 	FuDevice			*alternate;
 	FuDevice			*parent;	/* noref */
 	FuQuirks			*quirks;
@@ -66,7 +65,6 @@ enum {
 	PROP_PROGRESS,
 	PROP_PHYSICAL_ID,
 	PROP_LOGICAL_ID,
-	PROP_PROTOCOL,
 	PROP_QUIRKS,
 	PROP_PARENT,
 	PROP_LAST
@@ -93,9 +91,6 @@ fu_device_get_property (GObject *object, guint prop_id,
 		break;
 	case PROP_LOGICAL_ID:
 		g_value_set_string (value, priv->logical_id);
-		break;
-	case PROP_PROTOCOL:
-		g_value_set_string (value, priv->protocol);
 		break;
 	case PROP_QUIRKS:
 		g_value_set_object (value, priv->quirks);
@@ -127,9 +122,6 @@ fu_device_set_property (GObject *object, guint prop_id,
 		break;
 	case PROP_LOGICAL_ID:
 		fu_device_set_logical_id (self, g_value_get_string (value));
-		break;
-	case PROP_PROTOCOL:
-		fu_device_set_protocol (self, g_value_get_string (value));
 		break;
 	case PROP_QUIRKS:
 		fu_device_set_quirks (self, g_value_get_object (value));
@@ -1493,9 +1485,8 @@ fu_device_set_logical_id (FuDevice *self, const gchar *logical_id)
 const gchar *
 fu_device_get_protocol (FuDevice *self)
 {
-	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
-	return priv->protocol;
+	return fwupd_device_get_protocol (FWUPD_DEVICE (self));
 }
 
 /**
@@ -1510,10 +1501,8 @@ fu_device_get_protocol (FuDevice *self)
 void
 fu_device_set_protocol (FuDevice *self, const gchar *protocol)
 {
-	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_DEVICE (self));
-	g_free (priv->protocol);
-	priv->protocol = g_strdup (protocol);
+	fwupd_device_set_protocol (FWUPD_DEVICE (self), protocol);
 }
 
 /**
@@ -1844,8 +1833,6 @@ fu_device_add_string (FuDevice *self, guint idt, GString *str)
 		fu_common_string_append_kv (str, idt + 1, "PhysicalId", priv->physical_id);
 	if (priv->logical_id != NULL)
 		fu_common_string_append_kv (str, idt + 1, "LogicalId", priv->logical_id);
-	if (priv->protocol != NULL)
-		fu_common_string_append_kv (str, idt + 1, "Protocol", priv->protocol);
 	if (priv->size_min > 0) {
 		g_autofree gchar *sz = g_strdup_printf ("%" G_GUINT64_FORMAT, priv->size_min);
 		fu_common_string_append_kv (str, idt + 1, "FirmwareSizeMin", sz);
@@ -2573,8 +2560,6 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 		fu_device_set_physical_id (self, priv_donor->physical_id);
 	if (priv->logical_id == NULL && priv_donor->logical_id != NULL)
 		fu_device_set_logical_id (self, priv_donor->logical_id);
-	if (priv->protocol == NULL && priv_donor->protocol != NULL)
-		fu_device_set_protocol (self, priv_donor->protocol);
 	if (priv->quirks == NULL)
 		fu_device_set_quirks (self, fu_device_get_quirks (donor));
 	g_rw_lock_reader_lock (&priv_donor->parent_guids_mutex);
@@ -2676,11 +2661,6 @@ fu_device_class_init (FuDeviceClass *klass)
 				     G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_LOGICAL_ID, pspec);
 
-	pspec = g_param_spec_string ("protocol", NULL, NULL, NULL,
-				     G_PARAM_READWRITE |
-				     G_PARAM_STATIC_NAME);
-	g_object_class_install_property (object_class, PROP_PROTOCOL, pspec);
-
 	pspec = g_param_spec_uint ("progress", NULL, NULL,
 				   0, 100, 0,
 				   G_PARAM_READWRITE |
@@ -2739,7 +2719,6 @@ fu_device_finalize (GObject *object)
 	g_free (priv->equivalent_id);
 	g_free (priv->physical_id);
 	g_free (priv->logical_id);
-	g_free (priv->protocol);
 
 	G_OBJECT_CLASS (fu_device_parent_class)->finalize (object);
 }
