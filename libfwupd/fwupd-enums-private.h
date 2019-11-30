@@ -51,6 +51,7 @@ G_BEGIN_DECLS
 #define FWUPD_RESULT_KEY_VENDOR			"Vendor"	/* s */
 #define FWUPD_RESULT_KEY_VERSION_BOOTLOADER	"VersionBootloader"	/* s */
 #define FWUPD_RESULT_KEY_VERSION_FORMAT		"VersionFormat"	/* u */
+#define FWUPD_RESULT_KEY_VERSION_RAW		"VersionRaw"	/* u */
 #define FWUPD_RESULT_KEY_VERSION_LOWEST		"VersionLowest"	/* s */
 #define FWUPD_RESULT_KEY_VERSION		"Version"	/* s */
 

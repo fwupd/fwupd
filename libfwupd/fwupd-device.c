@@ -49,6 +49,7 @@ typedef struct {
 	gchar				*version_lowest;
 	gchar				*version_bootloader;
 	FwupdVersionFormat		 version_format;
+	guint32				 version_raw;
 	GPtrArray			*checksums;
 	guint32				 flashes_left;
 	guint32				 install_duration;
@@ -1113,6 +1114,8 @@ fwupd_device_incorporate (FwupdDevice *self, FwupdDevice *donor)
 		fwupd_device_set_version_bootloader (self, priv_donor->version_bootloader);
 	if (priv->version_format == FWUPD_VERSION_FORMAT_UNKNOWN)
 		fwupd_device_set_version_format (self, priv_donor->version_format);
+	if (priv->version_raw == 0)
+		fwupd_device_set_version_raw (self, priv_donor->version_raw);
 	for (guint i = 0; i < priv_donor->guids->len; i++) {
 		const gchar *tmp = g_ptr_array_index (priv_donor->guids, i);
 		fwupd_device_add_guid (self, tmp);
@@ -1256,6 +1259,11 @@ fwupd_device_to_variant_full (FwupdDevice *device, FwupdDeviceFlags flags)
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_VERSION_BOOTLOADER,
 				       g_variant_new_string (priv->version_bootloader));
+	}
+	if (priv->version_raw > 0) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_VERSION_RAW,
+				       g_variant_new_uint32 (priv->version_raw));
 	}
 	if (priv->flashes_left > 0) {
 		g_variant_builder_add (&builder, "{sv}",
@@ -1464,6 +1472,10 @@ fwupd_device_from_key_value (FwupdDevice *device, const gchar *key, GVariant *va
 		fwupd_device_set_version_format (device, g_variant_get_uint32 (value));
 		return;
 	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_VERSION_RAW) == 0) {
+		fwupd_device_set_version_raw (device, g_variant_get_uint32 (value));
+		return;
+	}
 }
 
 static void
@@ -1591,6 +1603,41 @@ fwupd_device_set_version_format (FwupdDevice *device, FwupdVersionFormat version
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
 	priv->version_format = version_format;
+}
+
+/**
+ * fwupd_device_get_version_raw:
+ * @device: A #FwupdDevice
+ *
+ * Gets the raw version number from the hardware before converted to a string.
+ *
+ * Returns: the hardware version, or 0 if unset
+ *
+ * Since: 1.3.6
+ **/
+guint32
+fwupd_device_get_version_raw (FwupdDevice *device)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (device), 0);
+	return priv->version_raw;
+}
+
+/**
+ * fwupd_device_set_version_raw:
+ * @device: A #FwupdDevice
+ * @version_raw: the raw hardware version
+ *
+ * Sets the raw version number from the hardware before converted to a string.
+ *
+ * Since: 1.3.6
+ **/
+void
+fwupd_device_set_version_raw (FwupdDevice *device, guint32 version_raw)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	priv->version_raw = version_raw;
 }
 
 /**
@@ -1810,6 +1857,8 @@ fwupd_device_to_json (FwupdDevice *device, JsonBuilder *builder)
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_VERSION_FORMAT,
 				      fwupd_version_format_to_string (priv->version_format));
 	fwupd_device_json_add_int (builder, FWUPD_RESULT_KEY_FLASHES_LEFT, priv->flashes_left);
+	if (priv->version_raw > 0)
+		fwupd_device_json_add_int (builder, FWUPD_RESULT_KEY_VERSION_RAW, priv->version_raw);
 	if (priv->icons->len > 0) {
 		json_builder_set_member_name (builder, "Icons");
 		json_builder_begin_array (builder);
@@ -1909,6 +1958,10 @@ fwupd_device_to_string (FwupdDevice *device)
 			  fwupd_version_format_to_string (priv->version_format));
 	if (priv->flashes_left < 2)
 		fwupd_pad_kv_int (str, FWUPD_RESULT_KEY_FLASHES_LEFT, priv->flashes_left);
+	if (priv->version_raw > 0) {
+		g_autofree gchar *tmp = g_strdup_printf ("0x%08x", (guint) priv->version_raw);
+		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_VERSION_RAW, tmp);
+	}
 	if (priv->icons->len > 0) {
 		g_autoptr(GString) tmp = g_string_new (NULL);
 		for (guint i = 0; i < priv->icons->len; i++) {
