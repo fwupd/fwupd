@@ -1628,16 +1628,19 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 			continue;
 		if (!fu_util_filter_device (priv, dev))
 			continue;
-		supported = TRUE;
 
 		/* get the releases for this device and filter for validity */
 		rels = fwupd_client_get_upgrades (priv->client,
 						  fwupd_device_get_id (dev),
 						  NULL, &error_local);
 		if (rels == NULL) {
-			g_printerr ("%s\n", error_local->message);
+			if (g_error_matches (error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
+				g_debug ("%s\n", error_local->message);
+			else
+				g_printerr ("%s\n", error_local->message);
 			continue;
 		}
+		supported = TRUE;
 		child = g_node_append_data (root, dev);
 
 		/* add all releases */
@@ -1822,16 +1825,19 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 			continue;
 		if (!fu_util_filter_device (priv, dev))
 			continue;
-		supported = TRUE;
 
 		/* get the releases for this device and filter for validity */
 		rels = fwupd_client_get_upgrades (priv->client,
 						  fwupd_device_get_id (dev),
 						  NULL, &error_local);
 		if (rels == NULL) {
-			g_printerr ("%s\n", error_local->message);
+			if (g_error_matches (error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
+				g_debug ("%s\n", error_local->message);
+			else
+				g_printerr ("%s\n", error_local->message);
 			continue;
 		}
+		supported = TRUE;
 		rel = g_ptr_array_index (rels, 0);
 		/* TRANSLATORS: message letting the user know an upgrade is available
 		 * %1 is the device name and %2 and %3 are version strings */

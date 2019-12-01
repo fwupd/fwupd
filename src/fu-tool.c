@@ -340,7 +340,10 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 					       fwupd_device_get_id (dev),
 					       &error_local);
 		if (rels == NULL) {
-			g_printerr ("%s\n", error_local->message);
+			if (g_error_matches (error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
+				g_debug ("%s\n", error_local->message);
+			else
+				g_printerr ("%s\n", error_local->message);
 			continue;
 		}
 		child = g_node_append_data (root, dev);
@@ -971,7 +974,10 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 		device_id = fu_device_get_id (dev);
 		rels = fu_engine_get_upgrades (priv->engine, device_id, &error_local);
 		if (rels == NULL) {
-			g_printerr ("%s\n", error_local->message);
+			if (g_error_matches (error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
+				g_debug ("%s\n", error_local->message);
+			else
+				g_printerr ("%s\n", error_local->message);
 			continue;
 		}
 
