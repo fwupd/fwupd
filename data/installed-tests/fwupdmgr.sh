@@ -2,6 +2,7 @@
 
 exec 2>&1
 dirname=`dirname $0`
+device=08d460be0f1f9f128413f816022a6439e0078018
 
 # ---
 echo "Getting the list of remotes..."
@@ -15,7 +16,7 @@ rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
 # ---
 echo "Update the device hash database..."
-fwupdmgr verify-update
+fwupdmgr verify-update $device
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
 # ---
@@ -25,7 +26,7 @@ rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
 # ---
 echo "Testing the verification of firmware..."
-fwupdmgr verify
+fwupdmgr verify $device
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
 # ---
@@ -45,17 +46,17 @@ rc=$?; if [[ $rc != 2 ]]; then exit $rc; fi
 
 # ---
 echo "Testing the verification of firmware (again)..."
-fwupdmgr verify
+fwupdmgr verify $device
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
 # ---
 echo "Downgrading to older release (requires network access)"
-fwupdmgr downgrade
+fwupdmgr downgrade $device
 rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
 
 # ---
 echo "Downgrading to older release (should be none)"
-fwupdmgr downgrade
+fwupdmgr downgrade $device
 rc=$?; if [[ $rc != 2 ]]; then exit $rc; fi
 
 # ---
