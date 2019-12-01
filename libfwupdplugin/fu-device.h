@@ -223,7 +223,7 @@ void		 fu_device_set_quirks			(FuDevice	*self,
 FuQuirks	*fu_device_get_quirks			(FuDevice	*self);
 FwupdRelease	*fu_device_get_release_default		(FuDevice	*self);
 gboolean	 fu_device_write_firmware		(FuDevice	*self,
-							 GBytes		*fw,
+							 GBytes		*firmware,
 							 FwupdInstallFlags flags,
 							 GError		**error);
 FuFirmware	*fu_device_prepare_firmware		(FuDevice	*self,

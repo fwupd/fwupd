@@ -1957,7 +1957,7 @@ fu_device_get_release_default (FuDevice *self)
 /**
  * fu_device_write_firmware:
  * @self: A #FuDevice
- * @fw: A #GBytes
+ * @firmware: A #GBytes
  * @flags: #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_FORCE
  * @error: A #GError
  *
@@ -1969,12 +1969,12 @@ fu_device_get_release_default (FuDevice *self)
  **/
 gboolean
 fu_device_write_firmware (FuDevice *self,
-			  GBytes *fw,
+			  GBytes *firmware,
 			  FwupdInstallFlags flags,
 			  GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
-	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(FuFirmware) fu_fw = NULL;
 
 	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
@@ -1989,12 +1989,12 @@ fu_device_write_firmware (FuDevice *self,
 	}
 
 	/* prepare (e.g. decompress) firmware */
-	firmware = fu_device_prepare_firmware (self, fw, flags, error);
-	if (firmware == NULL)
+	fu_fw = fu_device_prepare_firmware (self, firmware, flags, error);
+	if (fu_fw == NULL)
 		return FALSE;
 
 	/* call vfunc */
-	return klass->write_firmware (self, firmware, flags, error);
+	return klass->write_firmware (self, fu_fw, flags, error);
 }
 
 /**
