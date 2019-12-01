@@ -1062,7 +1062,7 @@ msgstr "Zapisuje stan urządzenia do pliku JSON między wykonaniami"
 msgid "Schedule installation for next reboot when possible"
 msgstr "Planuje instalację podczas następnego ponownego uruchomienia"
 
-#. TRANSLATORS: scheduing an update to be done on the next boot
+#. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Planowanie…"
 

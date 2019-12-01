@@ -1041,7 +1041,7 @@ msgstr "Eszköz állapotának mentése JSON fájlba a végrehajtások között"
 msgid "Schedule installation for next reboot when possible"
 msgstr "Telepítés ütemezése a következő újraindításkor, ha lehetséges"
 
-#. TRANSLATORS: scheduing an update to be done on the next boot
+#. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Ütemezés…"
 

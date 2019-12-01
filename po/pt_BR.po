@@ -1042,7 +1042,7 @@ msgstr "Salva o estado do dispositivo em um arquivo JSON entre execuções"
 msgid "Schedule installation for next reboot when possible"
 msgstr "Agenda instalação para próxima reinicialização quando possível"
 
-#. TRANSLATORS: scheduing an update to be done on the next boot
+#. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Agendando…"
 

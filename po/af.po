@@ -244,7 +244,7 @@ msgstr "Herbegin tans toestel…"
 msgid "Schedule installation for next reboot when possible"
 msgstr "Skeduleer die installasie vir die volgende herbegin indien moontlik"
 
-#. TRANSLATORS: scheduing an update to be done on the next boot
+#. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Skeduleer tans…"
 

@@ -787,7 +787,7 @@ msgstr "Spara enhetstillstånd i en JSON-fil mellan körningar"
 msgid "Schedule installation for next reboot when possible"
 msgstr "Schemalägg om möjligt installationen till nästa uppstart"
 
-#. TRANSLATORS: scheduing an update to be done on the next boot
+#. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Schemalägger…"
 

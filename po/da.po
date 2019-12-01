@@ -1039,7 +1039,7 @@ msgstr "Gem enhedens tilstand i en JSON-fil mellem udførsler"
 msgid "Schedule installation for next reboot when possible"
 msgstr "Planlægning af installation ved næste genstart, når det er muligt"
 
-#. TRANSLATORS: scheduing an update to be done on the next boot
+#. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Planlægger …"
 

@@ -859,7 +859,7 @@ msgstr "Spremi stanje uređaja u JSON datoteku između izvršavanja"
 msgid "Schedule installation for next reboot when possible"
 msgstr "Zakaži instalaciju pri sljedećem pokretanju kada je moguće"
 
-#. TRANSLATORS: scheduing an update to be done on the next boot
+#. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Zakazivanje..."
 

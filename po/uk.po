@@ -1062,7 +1062,7 @@ msgstr "Зберігати стан пристрою до файла JSON між
 msgid "Schedule installation for next reboot when possible"
 msgstr "Якщо можливо, запланувати встановлення на наступне перезавантаження"
 
-#. TRANSLATORS: scheduing an update to be done on the next boot
+#. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Плануємо…"
 

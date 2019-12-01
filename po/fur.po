@@ -385,7 +385,7 @@ msgstr "Torne ducj i ID dal hardware pe machine"
 msgid "Schedule installation for next reboot when possible"
 msgstr "Planifiche la instalazion pe volte sucessive che si torne a inviâ cuant che al è pussibil"
 
-#. TRANSLATORS: scheduing an update to be done on the next boot
+#. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Daûr a planificâ…"
 

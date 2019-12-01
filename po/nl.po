@@ -226,7 +226,7 @@ msgstr "Bezig met herstarten van apparaat..."
 msgid "Schedule installation for next reboot when possible"
 msgstr "De installatie inplannen voor de volgende herstart, indien mogelijk"
 
-#. TRANSLATORS: scheduing an update to be done on the next boot
+#. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Bezig met inplannen..."
 

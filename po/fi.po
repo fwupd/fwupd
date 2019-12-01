@@ -1039,7 +1039,7 @@ msgstr "Tallenna laitteen tila JSON-tiedostoon suoritusten välillä"
 msgid "Schedule installation for next reboot when possible"
 msgstr "Ajasta asennus uudelleenkäynnistykselle mahdollisuuksien mukaan"
 
-#. TRANSLATORS: scheduing an update to be done on the next boot
+#. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Ajoitetaan…"
 

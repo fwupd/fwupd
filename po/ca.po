@@ -1039,7 +1039,7 @@ msgstr "Desa l'estat del dispositiu en un fitxer JSON entre les execucions"
 msgid "Schedule installation for next reboot when possible"
 msgstr "Planifica la instal·lació per al següent reinici quan sigui posible"
 
-#. TRANSLATORS: scheduing an update to be done on the next boot
+#. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Planificació..."
 
