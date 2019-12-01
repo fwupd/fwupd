@@ -1,0 +1,122 @@
+From 19d948ea3952fed3f05f2564dce8564c8f669384 Mon Sep 17 00:00:00 2001
+From: Mario Limonciello <mario.limonciello@dell.com>
+Date: Sat, 30 Nov 2019 18:21:38 -0600
+Subject: [PATCH 3/3] trivial: installed-tests: try to display journal for
+ failed tests
+
+This should help make debugging from CI infrastructures such as
+autopkgtest easier.
+---
+ data/installed-tests/fwupdmgr.sh | 37 +++++++++++++++++++-------------
+ 1 file changed, 22 insertions(+), 15 deletions(-)
+
+diff --git a/data/installed-tests/fwupdmgr.sh b/data/installed-tests/fwupdmgr.sh
+index f9a419f8..1de360f8 100755
+--- a/data/installed-tests/fwupdmgr.sh
++++ b/data/installed-tests/fwupdmgr.sh
+@@ -4,80 +4,87 @@ exec 2>&1
+ dirname=`dirname $0`
+ device=08d460be0f1f9f128413f816022a6439e0078018
+ 
++error()
++{
++        rc=$1
++        journalctl -u fwupd -b || true
++        exit $rc
++}
++
+ # ---
+ echo "Getting the list of remotes..."
+ fwupdmgr get-remotes
+-rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
++rc=$?; if [[ $rc != 0 ]]; then error $rc; fi
+ 
+ # ---
+ echo "Enabling fwupd-tests remote..."
+ fwupdmgr enable-remote fwupd-tests
+-rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
++rc=$?; if [[ $rc != 0 ]]; then error $rc; fi
+ 
+ # ---
+ echo "Update the device hash database..."
+ fwupdmgr verify-update $device
+-rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
++rc=$?; if [[ $rc != 0 ]]; then error $rc; fi
+ 
+ # ---
+ echo "Getting devices (should be one)..."
+ fwupdmgr get-devices --no-unreported-check
+-rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
++rc=$?; if [[ $rc != 0 ]]; then error $rc; fi
+ 
+ # ---
+ echo "Testing the verification of firmware..."
+ fwupdmgr verify $device
+-rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
++rc=$?; if [[ $rc != 0 ]]; then error $rc; fi
+ 
+ # ---
+ echo "Getting updates (should be one)..."
+ fwupdmgr --no-unreported-check --no-metadata-check get-updates
+-rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
++rc=$?; if [[ $rc != 0 ]]; then error $rc; fi
+ 
+ # ---
+ echo "Installing test firmware..."
+ fwupdmgr install ${dirname}/fakedevice124.cab
+-rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
++rc=$?; if [[ $rc != 0 ]]; then error $rc; fi
+ 
+ # ---
+ echo "Getting updates (should be none)..."
+ fwupdmgr --no-unreported-check --no-metadata-check get-updates
+-rc=$?; if [[ $rc != 2 ]]; then exit $rc; fi
++rc=$?; if [[ $rc != 2 ]]; then error $rc; fi
+ 
+ # ---
+ echo "Testing the verification of firmware (again)..."
+ fwupdmgr verify $device
+-rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
++rc=$?; if [[ $rc != 0 ]]; then error $rc; fi
+ 
+ # ---
+ echo "Downgrading to older release (requires network access)"
+ fwupdmgr downgrade $device
+-rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
++rc=$?; if [[ $rc != 0 ]]; then error $rc; fi
+ 
+ # ---
+ echo "Downgrading to older release (should be none)"
+ fwupdmgr downgrade $device
+-rc=$?; if [[ $rc != 2 ]]; then exit $rc; fi
++rc=$?; if [[ $rc != 2 ]]; then error $rc; fi
+ 
+ # ---
+ echo "Updating all devices to latest release (requires network access)"
+ fwupdmgr --no-unreported-check --no-metadata-check --no-reboot-check update
+-rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
++rc=$?; if [[ $rc != 0 ]]; then error $rc; fi
+ 
+ # ---
+ echo "Getting updates (should be none)..."
+ fwupdmgr --no-unreported-check --no-metadata-check get-updates
+-rc=$?; if [[ $rc != 2 ]]; then exit $rc; fi
++rc=$?; if [[ $rc != 2 ]]; then error $rc; fi
+ 
+ # ---
+ echo "Refreshing from the LVFS (requires network access)..."
+ fwupdmgr refresh
+-rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
++rc=$?; if [[ $rc != 0 ]]; then error $rc; fi
+ 
+ # ---
+ echo "Flashing actual devices (requires specific hardware)"
+ ${dirname}/hardware.py
+-rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
++rc=$?; if [[ $rc != 0 ]]; then error $rc; fi
+ 
+ # success!
+ exit 0
+-- 
+2.20.1
+

@@ -1,1 +1,4 @@
 0001-trivial-ci-don-t-let-bad-symlinks-cause-debian-build.patch
+0001-trivial-installed-tests-explicitly-choose-webcam-dev.patch
+0003-trivial-installed-tests-try-to-display-journal-for-f.patch
+
