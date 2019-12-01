@@ -143,7 +143,7 @@ Description: GObject introspection data for libfwupd
 Package: libfwupdplugin-dev
 Architecture: linux-any
 Multi-Arch: same
-Depends: libfwupd2 (= ${binary:Version}),
+Depends: libfwupdplugin1 (= ${binary:Version}),
          gir1.2-fwupdplugin-1.0 (= ${binary:Version}),
          ${misc:Depends}
 Section: libdevel
