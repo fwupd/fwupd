@@ -1,0 +1,26 @@
+From 8c8ab29fe2208c55b5a7ef733068b73d200c8090 Mon Sep 17 00:00:00 2001
+From: Mario Limonciello <mario.limonciello@dell.com>
+Date: Sat, 30 Nov 2019 18:43:24 -0600
+Subject: [PATCH] trivial: ci: don't let bad symlinks cause debian build
+ failures
+
+---
+ contrib/ci/generate_debian.py | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/contrib/ci/generate_debian.py b/contrib/ci/generate_debian.py
+index 73b39f61..cc5c92ad 100755
+--- a/contrib/ci/generate_debian.py
++++ b/contrib/ci/generate_debian.py
+@@ -124,6 +124,8 @@ def update_debian_copyright (directory):
+                     lines = rfd.readlines(220)
+             except UnicodeDecodeError:
+                 continue
++            except FileNotFoundError:
++                continue
+             for line in lines:
+                 if 'Copyright (C) ' in line:
+                     parts = line.split ('Copyright (C)')[1].strip() #split out the copyright header
+-- 
+2.20.1
+
