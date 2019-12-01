@@ -31,6 +31,7 @@ endif
 	dh $@ --with gir
 
 override_dh_auto_clean: regenerate_control
+	rm -fr obj-*
 	rm -fr debian/build
 ifeq (ubuntu,$(SB_STYLE))
 	rm -rf debian/fwupd-images
