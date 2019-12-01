@@ -115,7 +115,7 @@ msgstr "Kaldırıldı"
 msgid "Restarting device…"
 msgstr "Cihaz yeniden başlatılıyor…"
 
-#. TRANSLATORS: scheduing an update to be done on the next boot
+#. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Zamanlanıyor…"
 

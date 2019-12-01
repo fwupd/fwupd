@@ -561,7 +561,7 @@ msgstr "Vrátit všechna ID hardwaru počítače"
 msgid "Schedule installation for next reboot when possible"
 msgstr "Pokud je to možné, naplánovat instalaci na příští restart"
 
-#. TRANSLATORS: scheduing an update to be done on the next boot
+#. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Plánuje se…"
 

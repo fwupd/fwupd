@@ -779,7 +779,7 @@ msgstr "在执行之间保存设备状态到 JSON 文件"
 msgid "Schedule installation for next reboot when possible"
 msgstr "如有可能，安排安装到下次重启"
 
-#. TRANSLATORS: scheduing an update to be done on the next boot
+#. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "正在计划…"
 

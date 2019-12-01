@@ -421,7 +421,7 @@ msgstr "Враћа све ИБ-јеве хардвера на машини"
 msgid "Schedule installation for next reboot when possible"
 msgstr "Заказује инсталирање за следеће подизање система када је могуће"
 
-#. TRANSLATORS: scheduing an update to be done on the next boot
+#. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Заказујем…"
 
