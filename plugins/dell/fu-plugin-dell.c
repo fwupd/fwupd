@@ -852,6 +852,9 @@ fu_plugin_init (FuPlugin *plugin)
 
 	/* make sure that UEFI plugin is ready to receive devices */
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "uefi");
+
+	/* our TPM device is upgradable! */
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_BETTER_THAN, "tpm");
 }
 
 void

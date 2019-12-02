@@ -11,6 +11,10 @@ Pin-Priority: 800\n\
 \n\
 Package: lintian\n\
 Pin: release a=unstable\n\
+Pin-Priority: 901\n\
+\n\
+Package: tpm-udev\n\
+Pin: release a=unstable\n\
 Pin-Priority: 901\n'\
  > /etc/apt/preferences
 RUN cat /etc/apt/preferences
