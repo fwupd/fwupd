@@ -29,6 +29,10 @@ endif
 # depends on dfu
 subdir('csr')
 
+if get_option('plugin_tpm') and get_option('gudev')
+subdir('tpm')
+endif
+
 if get_option('plugin_emmc') and get_option('gudev')
 subdir('emmc')
 endif

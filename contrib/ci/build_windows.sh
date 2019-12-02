@@ -22,6 +22,7 @@ meson .. \
     -Dplugin_altos=false \
     -Dplugin_dell=false \
     -Dplugin_nvme=false \
+    -Dplugin_tpm=false \
     -Dsystemd=false \
     -Dplugin_emmc=false \
     -Dplugin_amt=false \
