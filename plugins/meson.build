@@ -31,6 +31,7 @@ subdir('csr')
 
 if get_option('plugin_tpm') and get_option('gudev')
 subdir('tpm')
+subdir('tpm-eventlog')
 endif
 
 if get_option('plugin_emmc') and get_option('gudev')

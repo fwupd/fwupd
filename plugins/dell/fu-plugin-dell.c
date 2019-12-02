@@ -732,6 +732,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	dev = fu_device_new ();
 	fu_device_set_physical_id (dev, "DEVNAME=/dev/tpm0");
 	fu_device_add_instance_id (dev, tpm_guid_raw);
+	fu_device_add_instance_id (dev, "system-tpm");
 	fu_device_set_vendor (dev, "Dell Inc.");
 	fu_device_set_name (dev, pretty_tpm_name);
 	fu_device_set_summary (dev, "Platform TPM device");
