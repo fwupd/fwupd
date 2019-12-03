@@ -344,6 +344,10 @@ static void
 fu_udev_device_set_dev (FuUdevDevice *self, GUdevDevice *udev_device)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+#ifdef HAVE_GUDEV
+	const gchar *summary;
+	g_autoptr(GUdevDevice) parent = NULL;
+#endif
 
 	g_return_if_fail (FU_IS_UDEV_DEVICE (self));
 
@@ -354,6 +358,16 @@ fu_udev_device_set_dev (FuUdevDevice *self, GUdevDevice *udev_device)
 #ifdef HAVE_GUDEV
 	priv->subsystem = g_strdup (g_udev_device_get_subsystem (priv->udev_device));
 	priv->device_file = g_strdup (g_udev_device_get_device_file (priv->udev_device));
+
+	/* try to get one line summary */
+	summary = g_udev_device_get_sysfs_attr (priv->udev_device, "description");
+	if (summary == NULL) {
+		parent = g_udev_device_get_parent (priv->udev_device);
+		if (parent != NULL)
+			summary = g_udev_device_get_sysfs_attr (parent, "description");
+	}
+	if (summary != NULL)
+		fu_device_set_summary (FU_DEVICE (self), summary);
 #endif
 }
 
