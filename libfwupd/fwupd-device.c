@@ -49,7 +49,7 @@ typedef struct {
 	gchar				*version_lowest;
 	gchar				*version_bootloader;
 	FwupdVersionFormat		 version_format;
-	guint32				 version_raw;
+	guint64				 version_raw;
 	GPtrArray			*checksums;
 	guint32				 flashes_left;
 	guint32				 install_duration;
@@ -1263,7 +1263,7 @@ fwupd_device_to_variant_full (FwupdDevice *device, FwupdDeviceFlags flags)
 	if (priv->version_raw > 0) {
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_VERSION_RAW,
-				       g_variant_new_uint32 (priv->version_raw));
+				       g_variant_new_uint64 (priv->version_raw));
 	}
 	if (priv->flashes_left > 0) {
 		g_variant_builder_add (&builder, "{sv}",
@@ -1473,7 +1473,7 @@ fwupd_device_from_key_value (FwupdDevice *device, const gchar *key, GVariant *va
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_VERSION_RAW) == 0) {
-		fwupd_device_set_version_raw (device, g_variant_get_uint32 (value));
+		fwupd_device_set_version_raw (device, g_variant_get_uint64 (value));
 		return;
 	}
 }
@@ -1615,7 +1615,7 @@ fwupd_device_set_version_format (FwupdDevice *device, FwupdVersionFormat version
  *
  * Since: 1.3.6
  **/
-guint32
+guint64
 fwupd_device_get_version_raw (FwupdDevice *device)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
@@ -1633,7 +1633,7 @@ fwupd_device_get_version_raw (FwupdDevice *device)
  * Since: 1.3.6
  **/
 void
-fwupd_device_set_version_raw (FwupdDevice *device, guint32 version_raw)
+fwupd_device_set_version_raw (FwupdDevice *device, guint64 version_raw)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
@@ -1959,7 +1959,7 @@ fwupd_device_to_string (FwupdDevice *device)
 	if (priv->flashes_left < 2)
 		fwupd_pad_kv_int (str, FWUPD_RESULT_KEY_FLASHES_LEFT, priv->flashes_left);
 	if (priv->version_raw > 0) {
-		g_autofree gchar *tmp = g_strdup_printf ("0x%08x", (guint) priv->version_raw);
+		g_autofree gchar *tmp = g_strdup_printf ("0x%x", (guint) priv->version_raw);
 		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_VERSION_RAW, tmp);
 	}
 	if (priv->icons->len > 0) {

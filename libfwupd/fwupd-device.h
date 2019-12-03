@@ -62,9 +62,9 @@ void		 fwupd_device_set_version_lowest	(FwupdDevice	*device,
 const gchar	*fwupd_device_get_version_bootloader	(FwupdDevice	*device);
 void		 fwupd_device_set_version_bootloader	(FwupdDevice	*device,
 							 const gchar	*version_bootloader);
-guint32		 fwupd_device_get_version_raw		(FwupdDevice	*device);
+guint64		 fwupd_device_get_version_raw		(FwupdDevice	*device);
 void		 fwupd_device_set_version_raw		(FwupdDevice	*device,
-							 guint32	version_raw);
+							 guint64	version_raw);
 FwupdVersionFormat fwupd_device_get_version_format	(FwupdDevice	*device);
 void		 fwupd_device_set_version_format	(FwupdDevice	*device,
 							 FwupdVersionFormat version_format);
