@@ -136,6 +136,13 @@ fu_common_version_from_uint32 (guint32 val, FwupdVersionFormat kind)
 					(val >> 8) & 0xffff,
 					val & 0xff);
 	}
+	if (kind == FWUPD_VERSION_FORMAT_DELL_BIOS) {
+		/* BB.CC.DD */
+		return g_strdup_printf ("%u.%u.%u",
+					(val >> 16) & 0xff,
+					(val >> 8) & 0xff,
+					val & 0xff);
+	}
 	g_critical ("failed to convert version format %s: %u",
 		    fwupd_version_format_to_string (kind), val);
 	return NULL;
@@ -393,6 +400,8 @@ fu_common_version_convert_base (FwupdVersionFormat fmt)
 	if (fmt == FWUPD_VERSION_FORMAT_INTEL_ME ||
 	    fmt == FWUPD_VERSION_FORMAT_INTEL_ME2)
 		return FWUPD_VERSION_FORMAT_QUAD;
+	if (fmt == FWUPD_VERSION_FORMAT_DELL_BIOS)
+		return FWUPD_VERSION_FORMAT_TRIPLET;
 	if (fmt == FWUPD_VERSION_FORMAT_BCD)
 		return FWUPD_VERSION_FORMAT_PAIR;
 	return fmt;

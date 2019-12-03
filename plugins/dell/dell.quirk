@@ -34,7 +34,7 @@ Plugin = synapticsmst
 ParentGuid = e7ca1f36-bf73-4574-afe6-a4ccacabf479
 
 [SmbiosManufacturer=Dell Inc.]
-UefiVersionFormat = quad
+UefiVersionFormat = dell-bios
 
 [SmbiosManufacturer=Alienware]
-UefiVersionFormat = quad
+UefiVersionFormat = dell-bios
