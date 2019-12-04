@@ -52,7 +52,8 @@ fu_common_version_from_uint32 (guint32 val, FwupdVersionFormat kind)
 					(val >> 16) & 0xffff,
 					val & 0xffff);
 	}
-	if (kind == FWUPD_VERSION_FORMAT_NUMBER) {
+	if (kind == FWUPD_VERSION_FORMAT_NUMBER ||
+	    kind == FWUPD_VERSION_FORMAT_PLAIN) {
 		/* AABBCCDD */
 		return g_strdup_printf ("%" G_GUINT32_FORMAT, val);
 	}
@@ -109,7 +110,8 @@ fu_common_version_from_uint16 (guint16 val, FwupdVersionFormat kind)
 					(guint) (val >> 8) & 0xff,
 					(guint) val & 0xff);
 	}
-	if (kind == FWUPD_VERSION_FORMAT_NUMBER) {
+	if (kind == FWUPD_VERSION_FORMAT_NUMBER ||
+	    kind == FWUPD_VERSION_FORMAT_PLAIN) {
 		return g_strdup_printf ("%" G_GUINT16_FORMAT, val);
 	}
 	g_critical ("failed to convert version format %s: %u",
