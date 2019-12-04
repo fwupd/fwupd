@@ -111,10 +111,11 @@ fu_install_task_check_requirements (FuInstallTask *self,
 {
 	const gchar *tmp;
 	const gchar *version;
-	const gchar *version_release;
+	const gchar *version_release_raw;
 	const gchar *version_lowest;
 	gboolean matches_guid = FALSE;
 	gint vercmp;
+	g_autofree gchar *version_release = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) provides = NULL;
 	g_autoptr(XbNode) release = NULL;
@@ -209,8 +210,8 @@ fu_install_task_check_requirements (FuInstallTask *self,
 	}
 
 	/* is this a downgrade or re-install */
-	version_release = xb_node_get_attr (release, "version");
-	if (version_release == NULL) {
+	version_release_raw = xb_node_get_attr (release, "version");
+	if (version_release_raw == NULL) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
@@ -273,6 +274,8 @@ fu_install_task_check_requirements (FuInstallTask *self,
 	}
 
 	/* check semver */
+	version_release = fu_common_version_parse_from_format (version_release_raw,
+							       fu_device_get_version_format (self->device));
 	vercmp = fu_common_vercmp (version, version_release);
 	if (vercmp == 0 && (flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) == 0) {
 		g_set_error (error,
