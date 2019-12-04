@@ -1165,13 +1165,10 @@ fu_util_activate (FuUtilPrivate *priv, gchar **values, GError **error)
 			has_pending = TRUE;
 		}
 	}
-	if (!has_pending) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOTHING_TO_DO,
-				     "No firmware to activate");
-		return FALSE;
 
+	if (!has_pending) {
+    		g_printerr ("No firmware to activate\n");
+    		return TRUE;
 	}
 
 	/* load engine */
