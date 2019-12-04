@@ -18,6 +18,46 @@
 #define FU_COMMON_VERSION_DECODE_BCD(val)	((((val) >> 4) & 0x0f) * 10 + ((val) & 0x0f))
 
 /**
+ * fu_common_version_from_uint64:
+ * @val: A raw version number
+ * @kind: version kind used for formatting, e.g. %FWUPD_VERSION_FORMAT_QUAD
+ *
+ * Returns a dotted decimal version string from a 64 bit number.
+ *
+ * Returns: A version number, e.g. "1.2.3.4", or %NULL if not supported
+ *
+ * Since: 1.3.6
+ **/
+gchar *
+fu_common_version_from_uint64 (guint64 val, FwupdVersionFormat kind)
+{
+	if (kind == FWUPD_VERSION_FORMAT_QUAD) {
+		/* AABB.CCDD.EEFF.GGHH */
+		return g_strdup_printf ("%" G_GUINT64_FORMAT "."
+					"%" G_GUINT64_FORMAT "."
+					"%" G_GUINT64_FORMAT "."
+					"%" G_GUINT64_FORMAT "",
+					(val >> 48) & 0xffff,
+					(val >> 32) & 0xffff,
+					(val >> 16) & 0xffff,
+					val & 0xffff);
+	}
+	if (kind == FWUPD_VERSION_FORMAT_PAIR) {
+		/* AABBCCDD.EEFFGGHH */
+		return g_strdup_printf ("%" G_GUINT64_FORMAT ".%" G_GUINT64_FORMAT "",
+					(val >> 32) & 0xffffffff,
+					val & 0xffffffff);
+	}
+	if (kind == FWUPD_VERSION_FORMAT_NUMBER) {
+		/* AABBCCDD */
+		return g_strdup_printf ("%" G_GUINT64_FORMAT, val);
+	}
+	g_critical ("failed to convert version format %s: %" G_GUINT64_FORMAT "",
+		    fwupd_version_format_to_string (kind), val);
+	return NULL;
+}
+
+/**
  * fu_common_version_from_uint32:
  * @val: A uint32le version number
  * @kind: version kind used for formatting, e.g. %FWUPD_VERSION_FORMAT_TRIPLET
