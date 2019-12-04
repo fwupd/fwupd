@@ -278,7 +278,7 @@ fu_common_version_parse (const gchar *version)
 /**
  * fu_common_version_parse_from_format
  * @version: A version number
- * @fmt: A FwupdVersionFormat
+ * @fmt: A FwupdVersionFormat, e.g. %FWUPD_VERSION_FORMAT_TRIPLET
  *
  * Returns a dotted decimal version string from a version string using fmt.
  * The supported formats are:
