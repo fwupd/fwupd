@@ -1959,7 +1959,14 @@ fwupd_device_to_string (FwupdDevice *device)
 	if (priv->flashes_left < 2)
 		fwupd_pad_kv_int (str, FWUPD_RESULT_KEY_FLASHES_LEFT, priv->flashes_left);
 	if (priv->version_raw > 0) {
-		g_autofree gchar *tmp = g_strdup_printf ("0x%x", (guint) priv->version_raw);
+		g_autofree gchar *tmp = NULL;
+		if (priv->version_raw > 0xffffffff) {
+			tmp = g_strdup_printf ("0x%08x%08x",
+					       (guint) (priv->version_raw >> 32),
+					       (guint) (priv->version_raw & 0xffffffff));
+		} else {
+			tmp = g_strdup_printf ("0x%08x", (guint) priv->version_raw);
+		}
 		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_VERSION_RAW, tmp);
 	}
 	if (priv->icons->len > 0) {
