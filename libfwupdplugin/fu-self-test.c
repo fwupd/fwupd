@@ -1186,7 +1186,8 @@ fu_common_version_func (void)
 	/* check version parsing */
 	for (i = 0; version_parse[i].old != NULL; i++) {
 		g_autofree gchar *ver = NULL;
-		ver = fu_common_version_parse (version_parse[i].old);
+		ver = fu_common_version_parse_from_format (version_parse[i].old,
+							   FWUPD_VERSION_FORMAT_TRIPLET);
 		g_assert_cmpstr (ver, ==, version_parse[i].new);
 	}
 }
