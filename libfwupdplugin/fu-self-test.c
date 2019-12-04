@@ -1120,6 +1120,19 @@ fu_common_version_func (void)
 		{ 0,		NULL }
 	};
 	struct {
+		guint64 val;
+		const gchar *ver;
+		FwupdVersionFormat flags;
+	} version_from_uint64[] = {
+		{ 0x0,		"0.0.0.0",		FWUPD_VERSION_FORMAT_QUAD },
+		{ 0xff,		"0.0.0.255",		FWUPD_VERSION_FORMAT_QUAD },
+		{ 0xffffffffffffffff, "65535.65535.65535.65535", FWUPD_VERSION_FORMAT_QUAD },
+		{ 0xff,		"0.255",		FWUPD_VERSION_FORMAT_PAIR },
+		{ 0xffffffffffffffff, "4294967295.4294967295", FWUPD_VERSION_FORMAT_PAIR },
+		{ 0x0,		"0",			FWUPD_VERSION_FORMAT_NUMBER },
+		{ 0,		NULL }
+	};
+	struct {
 		guint16 val;
 		const gchar *ver;
 		FwupdVersionFormat flags;
@@ -1151,6 +1164,12 @@ fu_common_version_func (void)
 	};
 
 	/* check version conversion */
+	for (i = 0; version_from_uint64[i].ver != NULL; i++) {
+		g_autofree gchar *ver = NULL;
+		ver = fu_common_version_from_uint64 (version_from_uint64[i].val,
+						    version_from_uint64[i].flags);
+		g_assert_cmpstr (ver, ==, version_from_uint64[i].ver);
+	}
 	for (i = 0; version_from_uint32[i].ver != NULL; i++) {
 		g_autofree gchar *ver = NULL;
 		ver = fu_common_version_from_uint32 (version_from_uint32[i].val,
