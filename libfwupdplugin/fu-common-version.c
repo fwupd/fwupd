@@ -442,8 +442,8 @@ fu_common_version_verify_format (const gchar *version,
 
 /**
  * fu_common_vercmp:
- * @version_a: the release version, e.g. 1.2.3
- * @version_b: the release version, e.g. 1.2.3.1
+ * @version_a: the semver release version, e.g. 1.2.3
+ * @version_b: the semver release version, e.g. 1.2.3.1
  *
  * Compares version numbers for sorting.
  *
@@ -455,8 +455,6 @@ gint
 fu_common_vercmp (const gchar *version_a, const gchar *version_b)
 {
 	guint longest_split;
-	g_autofree gchar *str_a = NULL;
-	g_autofree gchar *str_b = NULL;
 	g_auto(GStrv) split_a = NULL;
 	g_auto(GStrv) split_b = NULL;
 
@@ -469,10 +467,8 @@ fu_common_vercmp (const gchar *version_a, const gchar *version_b)
 		return 0;
 
 	/* split into sections, and try to parse */
-	str_a = fu_common_version_parse (version_a);
-	str_b = fu_common_version_parse (version_b);
-	split_a = g_strsplit (str_a, ".", -1);
-	split_b = g_strsplit (str_b, ".", -1);
+	split_a = g_strsplit (version_a, ".", -1);
+	split_b = g_strsplit (version_b, ".", -1);
 	longest_split = MAX (g_strv_length (split_a), g_strv_length (split_b));
 	for (guint i = 0; i < longest_split; i++) {
 		gchar *endptr_a = NULL;

@@ -1199,10 +1199,6 @@ fu_common_vercmp_func (void)
 	g_assert_cmpint (fu_common_vercmp ("1.2.3", "1.2.3"), ==, 0);
 	g_assert_cmpint (fu_common_vercmp ("001.002.003", "001.002.003"), ==, 0);
 
-	/* same, not dotted decimal */
-	g_assert_cmpint (fu_common_vercmp ("1.2.3", "0x1020003"), ==, 0);
-	g_assert_cmpint (fu_common_vercmp ("0x10203", "0x10203"), ==, 0);
-
 	/* upgrade and downgrade */
 	g_assert_cmpint (fu_common_vercmp ("1.2.3", "1.2.4"), <, 0);
 	g_assert_cmpint (fu_common_vercmp ("001.002.000", "001.002.009"), <, 0);
