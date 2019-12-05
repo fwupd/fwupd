@@ -150,11 +150,11 @@ fu_tpm_eventlog_device_class_init (FuTpmEventlogDeviceClass *klass)
 }
 
 static gchar *
-fu_common_read_strhex_safe (const guint8 *buf,
-			    gsize bufsz,
-			    gsize offset,
-			    gsize length,
-			    GError **error)
+fu_tpm_eventlog_read_strhex_safe (const guint8 *buf,
+				  gsize bufsz,
+				  gsize offset,
+				  gsize length,
+				  GError **error)
 {
 	g_autoptr(GString) csum = g_string_new (NULL);
 	g_autofree guint8 *digest = g_malloc0 (length);
@@ -223,7 +223,7 @@ fu_tpm_eventlog_device_parse_blob_v2 (FuTpmEventlogDevice *self,
 
 			/* build checksum */
 			idx += sizeof(alg_type);
-			csum_tmp = fu_common_read_strhex_safe (buf, bufsz, idx, alg_size, error);
+			csum_tmp = fu_tpm_eventlog_read_strhex_safe (buf, bufsz, idx, alg_size, error);
 			if (csum_tmp == NULL)
 				return FALSE;
 
@@ -312,10 +312,10 @@ fu_tpm_eventlog_device_parse_blob (FuTpmEventlogDevice *self,
 			g_autofree guint8 *data = NULL;
 
 			/* build checksum */
-			csum = fu_common_read_strhex_safe (buf, bufsz,
-							   idx + FU_TPM_EVENTLOG_V1_IDX_DIGEST,
-							   TPM2_SHA1_DIGEST_SIZE,
-							   error);
+			csum = fu_tpm_eventlog_read_strhex_safe (buf, bufsz,
+								 idx + FU_TPM_EVENTLOG_V1_IDX_DIGEST,
+								 TPM2_SHA1_DIGEST_SIZE,
+								 error);
 			if (csum == NULL)
 				return FALSE;
 
