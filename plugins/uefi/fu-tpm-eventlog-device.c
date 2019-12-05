@@ -243,8 +243,8 @@ fu_tpm_eventlog_device_parse_blob_v2 (FuTpmEventlogDevice *self,
 		/* save blob if PCR=0 */
 		idx += sizeof(datasz);
 		if (pcr == ESYS_TR_PCR0) {
-			g_autofree guint8 *data = NULL;
 			FuTpmEventlogDeviceItem *item;
+			g_autofree guint8 *data = NULL;
 
 			/* build item */
 			data = g_malloc0 (datasz);
