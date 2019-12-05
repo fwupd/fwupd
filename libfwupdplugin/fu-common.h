@@ -53,6 +53,7 @@ typedef guint FuEndianType;
  * @FU_PATH_KIND_SYSFSDIR_FW:		The sysfs firmware location (IE /sys/firmware)
  * @FU_PATH_KIND_SYSFSDIR_DRIVERS:	The platform sysfs directory (IE /sys/bus/platform/drivers)
  * @FU_PATH_KIND_SYSFSDIR_TPM:		The TPM sysfs directory (IE /sys/class/tpm)
+ * @FU_PATH_KIND_SYSFS_SECURITY_TPM:	The kernel security directory for TPM measurements (IE /sys/kernel/security/tpm0)
  * @FU_PATH_KIND_POLKIT_ACTIONS:	The directory for policy kit actions (IE /usr/share/polkit-1/actions/)
  * @FU_PATH_KIND_OFFLINE_TRIGGER:	The file for the offline trigger (IE /system-update)
  *
@@ -70,6 +71,7 @@ typedef enum {
 	FU_PATH_KIND_SYSFSDIR_FW,
 	FU_PATH_KIND_SYSFSDIR_DRIVERS,
 	FU_PATH_KIND_SYSFSDIR_TPM,
+	FU_PATH_KIND_SYSFS_SECURITY_TPM,
 	FU_PATH_KIND_POLKIT_ACTIONS,
 	FU_PATH_KIND_OFFLINE_TRIGGER,
 	/*< private >*/

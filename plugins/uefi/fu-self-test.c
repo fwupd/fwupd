@@ -307,45 +307,36 @@ fu_uefi_update_info_func (void)
 static void
 fu_test_tpm_eventlog_parse_v1_func (void)
 {
-	gboolean ret;
-	gsize bufsz = 0;
 	g_autofree gchar *fn = NULL;
-	g_autofree guint8 *buf = NULL;
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuTpmEventlogDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
 
-	fn = g_build_filename (TESTDATADIR, "eventlog", "binary_bios_measurements-v1", NULL);
-	ret = g_file_get_contents (fn, (gchar **) &buf, &bufsz, &error);
-	g_assert_no_error (error);
-	g_assert_true (ret);
+	fn = g_build_filename (TESTDATADIR, "eventlog", "v1", NULL);
+	g_setenv ("FWUPD_SYSFSSECURITYTPM", fn, TRUE);
 
-	dev = fu_tpm_eventlog_device_new (buf, bufsz, &error);
+	dev = fu_tpm_eventlog_device_new (&error);
 	g_assert_no_error (error);
 	g_assert_nonnull (dev);
 	str = fu_device_to_string (FU_DEVICE (dev));
 	g_print ("%s\n", str);
 	g_assert_nonnull (g_strstr_len (str, -1, "231f248f12ef9f38549f1bda7a859b781b5caab0"));
 	g_assert_nonnull (g_strstr_len (str, -1, "9069ca78e7450a285173431b3e52c5c25299e473"));
+	g_unsetenv ("FWUPD_SYSFSSECURITYTPM");
 }
 
 static void
 fu_test_tpm_eventlog_parse_v2_func (void)
 {
-	gboolean ret;
-	gsize bufsz = 0;
 	g_autofree gchar *fn = NULL;
-	g_autofree guint8 *buf = NULL;
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuTpmEventlogDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
 
-	fn = g_build_filename (TESTDATADIR, "eventlog", "binary_bios_measurements-v2", NULL);
-	ret = g_file_get_contents (fn, (gchar **) &buf, &bufsz, &error);
-	g_assert_no_error (error);
-	g_assert_true (ret);
+	fn = g_build_filename (TESTDATADIR, "eventlog", "v2", NULL);
+	g_setenv ("FWUPD_SYSFSSECURITYTPM", fn, TRUE);
 
-	dev = fu_tpm_eventlog_device_new (buf, bufsz, &error);
+	dev = fu_tpm_eventlog_device_new (&error);
 	g_assert_no_error (error);
 	g_assert_nonnull (dev);
 	str = fu_device_to_string (FU_DEVICE (dev));
@@ -353,6 +344,7 @@ fu_test_tpm_eventlog_parse_v2_func (void)
 	g_assert_nonnull (g_strstr_len (str, -1, "19ce8e1347a709d2b485d519695e3ce10b939485"));
 	g_assert_nonnull (g_strstr_len (str, -1, "9069ca78e7450a285173431b3e52c5c25299e473"));
 	g_assert_nonnull (g_strstr_len (str, -1, "Boot Guard Measured"));
+	g_unsetenv ("FWUPD_SYSFSSECURITYTPM");
 }
 
 

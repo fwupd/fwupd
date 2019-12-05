@@ -311,20 +311,10 @@ main (int argc, char *argv[])
 	}
 
 	if (action_pcr) {
-		gsize bufsz = 0;
-		const gchar *fn = "/sys/kernel/security/tpm0/binary_bios_measurements";
-		g_autofree gchar *str = NULL;
-		g_autofree guint8 *buf = NULL;
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(FuTpmEventlogDevice) dev = NULL;
 
-		if (!g_file_get_contents (fn, (gchar **) &buf, &bufsz, &error_local))
-			return EXIT_FAILURE;
-		if (bufsz == 0) {
-			g_printerr ("failed to read from file %s", fn);
-			return EXIT_FAILURE;
-		}
-		dev = fu_tpm_eventlog_device_new (buf, bufsz, &error_local);
+		dev = fu_tpm_eventlog_device_new (&error_local);
 		if (dev == NULL) {
 			g_printerr ("failed: %s\n", error_local->message);
 			return EXIT_FAILURE;

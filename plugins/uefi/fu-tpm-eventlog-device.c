@@ -276,10 +276,24 @@ fu_tpm_eventlog_device_parse_blob_v2 (FuTpmEventlogDevice *self,
 
 static gboolean
 fu_tpm_eventlog_device_parse_blob (FuTpmEventlogDevice *self,
-				   const guint8 *buf, gsize bufsz,
 				   GError **error)
 {
 	gchar sig[] = FU_TPM_EVENTLOG_V2_HDR_SIGNATURE;
+	gsize bufsz = 0;
+	g_autofree guint8 *buf = NULL;
+	g_autofree gchar *dir = fu_common_get_path (FU_PATH_KIND_SYSFS_SECURITY_TPM);
+	g_autofree gchar *fn = g_build_filename (dir, "binary_bios_measurements", NULL);
+
+	if (!g_file_get_contents (fn, (gchar **) &buf, &bufsz, error))
+		return FALSE;
+
+	if (bufsz == 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "failed to read data from %s", fn);
+		return FALSE;
+	}
 
 	/* look for TCG v2 signature */
 	if (!fu_memcpy_safe ((guint8 *) sig, sizeof(sig), 0x0,		/* dst */
@@ -341,15 +355,13 @@ fu_tpm_eventlog_device_parse_blob (FuTpmEventlogDevice *self,
 }
 
 FuTpmEventlogDevice *
-fu_tpm_eventlog_device_new (const guint8 *buf, gsize bufsz, GError **error)
+fu_tpm_eventlog_device_new (GError **error)
 {
 	g_autoptr(FuTpmEventlogDevice) self = NULL;
 
-	g_return_val_if_fail (buf != NULL, NULL);
-
 	/* create object */
 	self = g_object_new (FU_TYPE_TPM_EVENTLOG_DEVICE, NULL);
-	if (!fu_tpm_eventlog_device_parse_blob (self, buf, bufsz, error))
+	if (!fu_tpm_eventlog_device_parse_blob (self, error))
 		return NULL;
 	return FU_TPM_EVENTLOG_DEVICE (g_steal_pointer (&self));
 }

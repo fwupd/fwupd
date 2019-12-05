@@ -1044,6 +1044,12 @@ fu_common_get_path (FuPathKind path_kind)
 		if (tmp != NULL)
 			return g_strdup (tmp);
 		return g_strdup ("/sys/bus/platform/drivers");
+	/* /sys/kernel/security/tpm0 */
+	case FU_PATH_KIND_SYSFS_SECURITY_TPM:
+		tmp = g_getenv ("FWUPD_SYSFSSECURITYTPM");
+		if (tmp != NULL)
+			return g_strdup (tmp);
+		return g_strdup ("/sys/kernel/security/tpm0/");
 	/* /etc */
 	case FU_PATH_KIND_SYSCONFDIR:
 		tmp = g_getenv ("FWUPD_SYSCONFDIR");

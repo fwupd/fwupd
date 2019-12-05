@@ -11,7 +11,5 @@
 #define FU_TYPE_TPM_EVENTLOG_DEVICE (fu_tpm_eventlog_device_get_type ())
 G_DECLARE_FINAL_TYPE (FuTpmEventlogDevice, fu_tpm_eventlog_device, FU, TPM_EVENTLOG_DEVICE, FuDevice)
 
-FuTpmEventlogDevice *fu_tpm_eventlog_device_new		(const guint8	*buf,
-							 gsize		 bufsz,
-							 GError		**error);
+FuTpmEventlogDevice *fu_tpm_eventlog_device_new		(GError		**error);
 gchar		*fu_tpm_eventlog_device_report_metadata	(FuTpmEventlogDevice *self);

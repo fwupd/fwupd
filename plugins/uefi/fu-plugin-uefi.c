@@ -764,22 +764,8 @@ fu_plugin_uefi_create_dummy (FuPlugin *plugin, const gchar *reason, GError **err
 static gboolean
 fu_plugin_uefi_read_event_log (FuPlugin *plugin, GError **error)
 {
-	gsize bufsz = 0;
-	const gchar *fn = "/sys/kernel/security/tpm0/binary_bios_measurements";
 	g_autofree gchar *str = NULL;
-	g_autofree guint8 *buf = NULL;
-	g_autoptr(FuTpmEventlogDevice) dev = NULL;
-
-	if (!g_file_get_contents (fn, (gchar **) &buf, &bufsz, error))
-		return FALSE;
-	if (bufsz == 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "failed to read data from %s", fn);
-		return FALSE;
-	}
-	dev = fu_tpm_eventlog_device_new (buf, bufsz, error);
+	g_autoptr(FuTpmEventlogDevice) dev = fu_tpm_eventlog_device_new (error);
 	if (dev == NULL)
 		return FALSE;
 	if (!fu_device_setup (FU_DEVICE (dev), error))
