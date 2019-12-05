@@ -43,7 +43,7 @@ typedef struct
 	gchar			*subsystem;
 	gchar			*device_file;
 	gint			 fd;
-	gboolean		 readonly;
+	FuUdevDeviceFlags	 flags;
 } FuUdevDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuUdevDevice, fu_udev_device, FU_TYPE_DEVICE)
@@ -728,7 +728,29 @@ fu_udev_device_set_readonly (FuUdevDevice *self, gboolean readonly)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_UDEV_DEVICE (self));
-	priv->readonly = readonly;
+	priv->flags = readonly ? FU_UDEV_DEVICE_FLAG_OPEN_READ :
+				 FU_UDEV_DEVICE_FLAG_OPEN_READ |
+				 FU_UDEV_DEVICE_FLAG_OPEN_WRITE;
+}
+
+/**
+ * fu_udev_device_set_flags:
+ * @self: A #FuUdevDevice
+ * @flags: a #FuUdevDeviceFlags, e.g. %FU_UDEV_DEVICE_FLAG_OPEN_READ
+ *
+ * Sets the parameters to use when opening the device.
+ *
+ * For example %FU_UDEV_DEVICE_FLAG_OPEN_READ means that fu_device_open()
+ * would use `O_RDONLY` rather than `O_RDWR` which is the default.
+ *
+ * Since: 1.3.6
+ **/
+void
+fu_udev_device_set_flags (FuUdevDevice *self, FuUdevDeviceFlags flags)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_UDEV_DEVICE (self));
+	priv->flags = flags;
 }
 
 static gboolean
@@ -739,29 +761,25 @@ fu_udev_device_open (FuDevice *device, GError **error)
 	FuUdevDeviceClass *klass = FU_UDEV_DEVICE_GET_CLASS (device);
 
 	/* open device */
-	if (priv->device_file != NULL) {
-		if (priv->readonly) {
-			priv->fd = g_open (priv->device_file, O_RDONLY, 0);
-			if (priv->fd < 0) {
-				g_set_error (error,
-					     G_IO_ERROR,
-					     G_IO_ERROR_FAILED,
-					     "failed to open %s for reading: %s",
-					     priv->device_file,
-					     strerror (errno));
-				return FALSE;
-			}
+	if (priv->device_file != NULL && priv->flags != FU_UDEV_DEVICE_FLAG_NONE) {
+		gint flags;
+		if (priv->flags & FU_UDEV_DEVICE_FLAG_OPEN_READ &&
+		    priv->flags & FU_UDEV_DEVICE_FLAG_OPEN_WRITE) {
+			flags = O_RDWR;
+		} else if (priv->flags & FU_UDEV_DEVICE_FLAG_OPEN_WRITE) {
+			flags = O_WRONLY;
 		} else {
-			priv->fd = g_open (priv->device_file, O_RDWR, 0);
-			if (priv->fd < 0) {
-				g_set_error (error,
-					     G_IO_ERROR,
-					     G_IO_ERROR_FAILED,
-					     "failed to open %s: %s",
-					     priv->device_file,
-					     strerror (errno));
-				return FALSE;
-			}
+			flags = O_RDONLY;
+		}
+		priv->fd = g_open (priv->device_file, flags, 0);
+		if (priv->fd < 0) {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_FAILED,
+				     "failed to open %s: %s",
+				     priv->device_file,
+				     strerror (errno));
+			return FALSE;
 		}
 	}
 
@@ -1005,6 +1023,9 @@ fu_udev_device_finalize (GObject *object)
 static void
 fu_udev_device_init (FuUdevDevice *self)
 {
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	priv->flags = FU_UDEV_DEVICE_FLAG_OPEN_READ |
+		      FU_UDEV_DEVICE_FLAG_OPEN_WRITE;
 }
 
 static void
