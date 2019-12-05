@@ -15,6 +15,8 @@ shared_module('fu_plugin_uefi',
   fu_hash,
   sources : [
     'fu-plugin-uefi.c',
+    'fu-tpm-eventlog-common.c',
+    'fu-tpm-eventlog-device.c',
     'fu-uefi-bgrt.c',
     'fu-ucs2.c',
     'fu-uefi-bootmgr.c',
@@ -98,6 +100,8 @@ if get_option('tests')
     fu_hash,
     sources : [
       'fu-self-test.c',
+      'fu-tpm-eventlog-common.c',
+      'fu-tpm-eventlog-device.c',
       'fu-uefi-bgrt.c',
       'fu-uefi-bootmgr.c',
       'fu-uefi-common.c',

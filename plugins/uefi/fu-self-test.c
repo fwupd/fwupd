@@ -14,6 +14,8 @@
 #include "fu-uefi-device.h"
 #include "fu-uefi-pcrs.h"
 #include "fu-uefi-vars.h"
+#include "fu-tpm-eventlog-common.h"
+#include "fu-tpm-eventlog-device.h"
 
 #include "fwupd-error.h"
 
@@ -302,6 +304,58 @@ fu_uefi_update_info_func (void)
 			 "/EFI/fedora/fw/fwupd-697bd920-12cf-4da9-8385-996909bc6559.cap");
 }
 
+static void
+fu_test_tpm_eventlog_parse_v1_func (void)
+{
+	gboolean ret;
+	gsize bufsz = 0;
+	g_autofree gchar *fn = NULL;
+	g_autofree guint8 *buf = NULL;
+	g_autofree gchar *str = NULL;
+	g_autoptr(FuTpmEventlogDevice) dev = NULL;
+	g_autoptr(GError) error = NULL;
+
+	fn = g_build_filename (TESTDATADIR, "eventlog", "binary_bios_measurements-v1", NULL);
+	ret = g_file_get_contents (fn, (gchar **) &buf, &bufsz, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+
+	dev = fu_tpm_eventlog_device_new (buf, bufsz, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (dev);
+	str = fu_device_to_string (FU_DEVICE (dev));
+	g_print ("%s\n", str);
+	g_assert_nonnull (g_strstr_len (str, -1, "231f248f12ef9f38549f1bda7a859b781b5caab0"));
+	g_assert_nonnull (g_strstr_len (str, -1, "9069ca78e7450a285173431b3e52c5c25299e473"));
+}
+
+static void
+fu_test_tpm_eventlog_parse_v2_func (void)
+{
+	gboolean ret;
+	gsize bufsz = 0;
+	g_autofree gchar *fn = NULL;
+	g_autofree guint8 *buf = NULL;
+	g_autofree gchar *str = NULL;
+	g_autoptr(FuTpmEventlogDevice) dev = NULL;
+	g_autoptr(GError) error = NULL;
+
+	fn = g_build_filename (TESTDATADIR, "eventlog", "binary_bios_measurements-v2", NULL);
+	ret = g_file_get_contents (fn, (gchar **) &buf, &bufsz, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+
+	dev = fu_tpm_eventlog_device_new (buf, bufsz, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (dev);
+	str = fu_device_to_string (FU_DEVICE (dev));
+	g_print ("%s\n", str);
+	g_assert_nonnull (g_strstr_len (str, -1, "19ce8e1347a709d2b485d519695e3ce10b939485"));
+	g_assert_nonnull (g_strstr_len (str, -1, "9069ca78e7450a285173431b3e52c5c25299e473"));
+	g_assert_nonnull (g_strstr_len (str, -1, "Boot Guard Measured"));
+}
+
+
 int
 main (int argc, char **argv)
 {
@@ -324,5 +378,8 @@ main (int argc, char **argv)
 	g_test_add_func ("/uefi/device", fu_uefi_device_func);
 	g_test_add_func ("/uefi/update-info", fu_uefi_update_info_func);
 	g_test_add_func ("/uefi/plugin", fu_uefi_plugin_func);
+	g_test_add_func ("/tpm-eventlog/parse{v1}", fu_test_tpm_eventlog_parse_v1_func);
+	g_test_add_func ("/tpm-eventlog/parse{v2}", fu_test_tpm_eventlog_parse_v2_func);
+
 	return g_test_run ();
 }

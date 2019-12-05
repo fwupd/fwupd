@@ -20,6 +20,8 @@
 #include "fu-uefi-device.h"
 #include "fu-uefi-vars.h"
 
+#include "fu-tpm-eventlog-device.h"
+
 #ifndef HAVE_GIO_2_55_0
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-function"
@@ -759,6 +761,37 @@ fu_plugin_uefi_create_dummy (FuPlugin *plugin, const gchar *reason, GError **err
 
 	return TRUE;
 }
+static gboolean
+fu_plugin_uefi_read_event_log (FuPlugin *plugin, GError **error)
+{
+	gsize bufsz = 0;
+	const gchar *fn = "/sys/kernel/security/tpm0/binary_bios_measurements";
+	g_autofree gchar *str = NULL;
+	g_autofree guint8 *buf = NULL;
+	g_autoptr(FuTpmEventlogDevice) dev = NULL;
+
+	if (!g_file_get_contents (fn, (gchar **) &buf, &bufsz, error))
+		return FALSE;
+	if (bufsz == 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "failed to read data from %s", fn);
+		return FALSE;
+	}
+	dev = fu_tpm_eventlog_device_new (buf, bufsz, error);
+	if (dev == NULL)
+		return FALSE;
+	if (!fu_device_setup (FU_DEVICE (dev), error))
+		return FALSE;
+
+	/* add optional report metadata */
+	str = fu_tpm_eventlog_device_report_metadata (dev);
+	g_debug ("using TPM event log report data of:\n%s", str);
+	fu_plugin_add_report_metadata (plugin, "TpmEventLog", str);
+	fu_plugin_device_add (plugin, FU_DEVICE (dev));
+	return TRUE;
+}
 
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
@@ -771,6 +804,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	g_autoptr(GError) error_bootloader = NULL;
 	g_autoptr(GError) error_efivarfs = NULL;
 	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GError) error_eventlog = NULL;
 	g_autoptr(GPtrArray) entries = NULL;
 
 	/* are the EFI dirs set up so we can update each device */
@@ -841,5 +875,8 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	g_debug ("UX Capsule support : %s", str);
 	fu_plugin_add_report_metadata (plugin, "UEFIUXCapsule", str);
 
+	/* read the TPM event log */
+	if (!fu_plugin_uefi_read_event_log (plugin, &error_eventlog))
+		g_warning ("%s", error_eventlog->message);
 	return TRUE;
 }
