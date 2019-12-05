@@ -53,6 +53,8 @@ executable(
   resources_src,
   fu_hash,
   sources : [
+    'fu-tpm-eventlog-common.c',
+    'fu-tpm-eventlog-device.c',
     'fu-uefi-tool.c',
     'fu-uefi-bgrt.c',
     'fu-ucs2.c',

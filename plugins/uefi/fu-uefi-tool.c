@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "fu-tpm-eventlog-device.h"
 #include "fu-ucs2.h"
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
@@ -54,6 +55,7 @@ main (int argc, char *argv[])
 	gboolean action_info = FALSE;
 	gboolean action_list = FALSE;
 	gboolean action_log = FALSE;
+	gboolean action_pcr = FALSE;
 	gboolean action_set_debug = FALSE;
 	gboolean action_supported = FALSE;
 	gboolean action_unset_debug = FALSE;
@@ -85,6 +87,9 @@ main (int argc, char *argv[])
 		{ "info", 'i', 0, G_OPTION_ARG_NONE, &action_info,
 			/* TRANSLATORS: command line option */
 			_("Show the information of firmware update status"), NULL },
+		{ "pcr",  'P', 0, G_OPTION_ARG_NONE, &action_pcr,
+			/* TRANSLATORS: command line option */
+			_("Shows TPM event log used for constructing platform configuration registers (PCR)"), NULL },
 		{ "enable", 'e', 0, G_OPTION_ARG_NONE, &action_enable,
 			/* TRANSLATORS: command line option */
 			_("Enable firmware update support on supported systems"), NULL },
@@ -146,7 +151,7 @@ main (int argc, char *argv[])
 	/* nothing specified */
 	if (!action_enable && !action_info && !action_list && !action_log &&
 	    !action_set_debug && !action_supported && !action_unset_debug &&
-	    !action_version && apply == NULL) {
+	    !action_version && !action_pcr && apply == NULL) {
 		g_autofree gchar *tmp = NULL;
 		tmp = g_option_context_get_help (priv->context, TRUE, NULL);
 		g_printerr ("%s\n\n%s", _("No action specified!"), tmp);
@@ -303,6 +308,28 @@ main (int argc, char *argv[])
 			return EXIT_FAILURE;
 		}
 		g_print ("%s\n", _("Disabled fwupdate debugging"));
+	}
+
+	if (action_pcr) {
+		gsize bufsz = 0;
+		const gchar *fn = "/sys/kernel/security/tpm0/binary_bios_measurements";
+		g_autofree gchar *str = NULL;
+		g_autofree guint8 *buf = NULL;
+		g_autoptr(GError) error_local = NULL;
+		g_autoptr(FuTpmEventlogDevice) dev = NULL;
+
+		if (!g_file_get_contents (fn, (gchar **) &buf, &bufsz, &error_local))
+			return EXIT_FAILURE;
+		if (bufsz == 0) {
+			g_printerr ("failed to read from file %s", fn);
+			return EXIT_FAILURE;
+		}
+		dev = fu_tpm_eventlog_device_new (buf, bufsz, &error_local);
+		if (dev == NULL) {
+			g_printerr ("failed: %s\n", error_local->message);
+			return EXIT_FAILURE;
+		}
+		g_print ("%s\n", fu_device_to_string (FU_DEVICE (dev)));
 	}
 
 	/* apply firmware updates */
