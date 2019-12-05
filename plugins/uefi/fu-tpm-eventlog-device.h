@@ -13,3 +13,5 @@ G_DECLARE_FINAL_TYPE (FuTpmEventlogDevice, fu_tpm_eventlog_device, FU, TPM_EVENT
 
 FuTpmEventlogDevice *fu_tpm_eventlog_device_new		(GError		**error);
 gchar		*fu_tpm_eventlog_device_report_metadata	(FuTpmEventlogDevice *self);
+gchar 		*fu_tpm_eventlog_print_pcr		(FuDevice	*device,
+							 guint		 pcr);

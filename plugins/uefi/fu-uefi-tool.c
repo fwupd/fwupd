@@ -55,13 +55,13 @@ main (int argc, char *argv[])
 	gboolean action_info = FALSE;
 	gboolean action_list = FALSE;
 	gboolean action_log = FALSE;
-	gboolean action_pcr = FALSE;
 	gboolean action_set_debug = FALSE;
 	gboolean action_supported = FALSE;
 	gboolean action_unset_debug = FALSE;
 	gboolean action_version = FALSE;
 	gboolean ret;
 	gboolean verbose = FALSE;
+	gint action_pcr = -1;
 	g_autofree gchar *apply = FALSE;
 	g_autofree gchar *esp_path = NULL;
 	g_autofree gchar *flags = FALSE;
@@ -87,9 +87,9 @@ main (int argc, char *argv[])
 		{ "info", 'i', 0, G_OPTION_ARG_NONE, &action_info,
 			/* TRANSLATORS: command line option */
 			_("Show the information of firmware update status"), NULL },
-		{ "pcr",  'P', 0, G_OPTION_ARG_NONE, &action_pcr,
+		{ "pcr",  'P', 0, G_OPTION_ARG_INT, &action_pcr,
 			/* TRANSLATORS: command line option */
-			_("Shows TPM event log used for constructing platform configuration registers (PCR)"), NULL },
+			_("Shows TPM event log used for constructing platform configuration registers (PCR)"), "PCR" },
 		{ "enable", 'e', 0, G_OPTION_ARG_NONE, &action_enable,
 			/* TRANSLATORS: command line option */
 			_("Enable firmware update support on supported systems"), NULL },
@@ -151,7 +151,7 @@ main (int argc, char *argv[])
 	/* nothing specified */
 	if (!action_enable && !action_info && !action_list && !action_log &&
 	    !action_set_debug && !action_supported && !action_unset_debug &&
-	    !action_version && !action_pcr && apply == NULL) {
+	    !action_version && action_pcr == -1 && apply == NULL) {
 		g_autofree gchar *tmp = NULL;
 		tmp = g_option_context_get_help (priv->context, TRUE, NULL);
 		g_printerr ("%s\n\n%s", _("No action specified!"), tmp);
@@ -310,7 +310,7 @@ main (int argc, char *argv[])
 		g_print ("%s\n", _("Disabled fwupdate debugging"));
 	}
 
-	if (action_pcr) {
+	if (action_pcr >= 0) {
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(FuTpmEventlogDevice) dev = NULL;
 
@@ -319,7 +319,7 @@ main (int argc, char *argv[])
 			g_printerr ("failed: %s\n", error_local->message);
 			return EXIT_FAILURE;
 		}
-		g_print ("%s\n", fu_device_to_string (FU_DEVICE (dev)));
+		g_print ("%s\n", fu_tpm_eventlog_print_pcr (FU_DEVICE (dev), action_pcr));
 	}
 
 	/* apply firmware updates */

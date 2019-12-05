@@ -45,6 +45,7 @@ typedef struct {
 	FuTpmEventlogItemKind	 kind;
 	gchar			*checksum;
 	GBytes			*blob;
+	guint8			pcr;
 } FuTpmEventlogDeviceItem;
 
 static gchar *
@@ -88,9 +89,26 @@ fu_tpm_eventlog_device_to_string (FuDevice *device, guint idt, GString *str)
 		fu_common_string_append_kv (str, idt, "Items", NULL);
 		for (guint i = 0; i < self->items->len; i++) {
 			FuTpmEventlogDeviceItem *item = g_ptr_array_index (self->items, i);
-			fu_tpm_eventlog_device_item_to_string (item, idt + 1, str);
+			if (item->pcr == 0 || g_getenv ("FWUPD_TPM_PRINT_ALL_PCRS"))
+				fu_tpm_eventlog_device_item_to_string (item, idt + 1, str);
 		}
 	}
+}
+
+gchar *
+fu_tpm_eventlog_print_pcr (FuDevice *device, guint pcr)
+{
+	FuTpmEventlogDevice *self = FU_TPM_EVENTLOG_DEVICE (device);
+	GString *str = g_string_new ("");
+	if (self->items->len > 0) {
+		g_string_append_printf (str, "PCR %u\n", pcr);
+		for (guint i = 0; i < self->items->len; i++) {
+			FuTpmEventlogDeviceItem *item = g_ptr_array_index (self->items, i);
+			if (item->pcr == pcr)
+				fu_tpm_eventlog_device_item_to_string (item, 1, str);
+		}
+	}
+	return g_string_free (str, FALSE);
 }
 
 gchar *
@@ -99,7 +117,11 @@ fu_tpm_eventlog_device_report_metadata (FuTpmEventlogDevice *self)
 	GString *str = g_string_new ("");
 	for (guint i = 0; i < self->items->len; i++) {
 		FuTpmEventlogDeviceItem *item = g_ptr_array_index (self->items, i);
-		g_autofree gchar *blobstr = fu_tpm_eventlog_device_blobstr (item->blob);
+		g_autofree gchar *blobstr = NULL;
+		if (item->pcr != 0)
+			continue;
+
+		blobstr = fu_tpm_eventlog_device_blobstr (item->blob);
 		g_string_append_printf (str, "0x%08x %s", item->kind, item->checksum);
 		if (blobstr != NULL)
 			g_string_append_printf (str, " [%s]", blobstr);
@@ -184,7 +206,9 @@ fu_tpm_eventlog_device_parse_blob_v2 (FuTpmEventlogDevice *self,
 		guint32 event_type = 0;
 		guint32 digestcnt = 0;
 		guint32 datasz = 0;
+		FuTpmEventlogDeviceItem *item;
 		g_autofree gchar *csum = NULL;
+		g_autofree guint8 *data = NULL;
 
 		/* read entry */
 		if (!fu_common_read_uint32_safe	(buf, bufsz,
@@ -240,31 +264,28 @@ fu_tpm_eventlog_device_parse_blob_v2 (FuTpmEventlogDevice *self,
 						 &datasz, G_LITTLE_ENDIAN, error))
 			return FALSE;
 
-		/* save blob if PCR=0 */
+		/* save blob */
 		idx += sizeof(datasz);
-		if (pcr == ESYS_TR_PCR0) {
-			FuTpmEventlogDeviceItem *item;
-			g_autofree guint8 *data = NULL;
 
-			/* build item */
-			data = g_malloc0 (datasz);
-			if (!fu_memcpy_safe (data, datasz, 0x0,		/* dst */
-					     buf, bufsz, idx, datasz,	/* src */
-					     error))
-				return FALSE;
+		/* build item */
+		data = g_malloc0 (datasz);
+		if (!fu_memcpy_safe (data, datasz, 0x0,		/* dst */
+					buf, bufsz, idx, datasz,	/* src */
+					error))
+			return FALSE;
 
-			/* not normally required */
-			if (g_getenv ("FWUPD_TPM_EVENTLOG_VERBOSE") != NULL) {
-				fu_common_dump_full (G_LOG_DOMAIN, "Event Data",
-						     data, datasz, 20,
-						     FU_DUMP_FLAGS_SHOW_ASCII);
-			}
-			item = g_new0 (FuTpmEventlogDeviceItem, 1);
-			item->kind = event_type;
-			item->checksum = g_steal_pointer (&csum);
-			item->blob = g_bytes_new_take (g_steal_pointer (&data), datasz);
-			g_ptr_array_add (self->items, item);
+		/* not normally required */
+		if (g_getenv ("FWUPD_TPM_EVENTLOG_VERBOSE") != NULL) {
+			fu_common_dump_full (G_LOG_DOMAIN, "Event Data",
+						data, datasz, 20,
+						FU_DUMP_FLAGS_SHOW_ASCII);
 		}
+		item = g_new0 (FuTpmEventlogDeviceItem, 1);
+		item->kind = event_type;
+		item->checksum = g_steal_pointer (&csum);
+		item->blob = g_bytes_new_take (g_steal_pointer (&data), datasz);
+		item->pcr = pcr;
+		g_ptr_array_add (self->items, item);
 
 		/* next entry */
 		idx += datasz;
@@ -308,6 +329,9 @@ fu_tpm_eventlog_device_parse_blob (FuTpmEventlogDevice *self,
 		guint32 datasz = 0;
 		guint32 pcr = 0;
 		guint32 event_type = 0;
+		FuTpmEventlogDeviceItem *item;
+		g_autofree gchar *csum = NULL;
+		g_autofree guint8 *data = NULL;
 		if (!fu_common_read_uint32_safe	(buf, bufsz,
 						 idx + FU_TPM_EVENTLOG_V1_IDX_PCR,
 						 &pcr, G_LITTLE_ENDIAN, error))
@@ -320,35 +344,32 @@ fu_tpm_eventlog_device_parse_blob (FuTpmEventlogDevice *self,
 						 idx + FU_TPM_EVENTLOG_V1_IDX_EVENT_SIZE,
 						 &datasz, G_LITTLE_ENDIAN, error))
 			return FALSE;
-		if (pcr == ESYS_TR_PCR0) {
-			FuTpmEventlogDeviceItem *item;
-			g_autofree gchar *csum = NULL;
-			g_autofree guint8 *data = NULL;
 
-			/* build checksum */
-			csum = fu_tpm_eventlog_read_strhex_safe (buf, bufsz,
-								 idx + FU_TPM_EVENTLOG_V1_IDX_DIGEST,
-								 TPM2_SHA1_DIGEST_SIZE,
-								 error);
-			if (csum == NULL)
-				return FALSE;
+		/* build checksum */
+		csum = fu_tpm_eventlog_read_strhex_safe (buf, bufsz,
+								idx + FU_TPM_EVENTLOG_V1_IDX_DIGEST,
+								TPM2_SHA1_DIGEST_SIZE,
+								error);
+		if (csum == NULL)
+			return FALSE;
 
-			/* build item */
-			data = g_malloc0 (datasz);
-			if (!fu_memcpy_safe (data, datasz, 0x0,			/* dst */
-					     buf, bufsz, idx + FU_TPM_EVENTLOG_V1_SIZE, datasz,	/* src */
-					     error))
-				return FALSE;
-			item = g_new0 (FuTpmEventlogDeviceItem, 1);
-			item->kind = event_type;
-			item->checksum = g_steal_pointer (&csum);
-			item->blob = g_bytes_new_take (g_steal_pointer (&data), datasz);
-			g_ptr_array_add (self->items, item);
+		/* build item */
+		data = g_malloc0 (datasz);
+		if (!fu_memcpy_safe (data, datasz, 0x0,			/* dst */
+					buf, bufsz, idx + FU_TPM_EVENTLOG_V1_SIZE, datasz,	/* src */
+					error))
+			return FALSE;
+		item = g_new0 (FuTpmEventlogDeviceItem, 1);
+		item->kind = event_type;
+		item->checksum = g_steal_pointer (&csum);
+		item->blob = g_bytes_new_take (g_steal_pointer (&data), datasz);
+		item->pcr = pcr;
+		g_ptr_array_add (self->items, item);
 
-			/* not normally required */
-			if (g_getenv ("FWUPD_TPM_EVENTLOG_VERBOSE") != NULL)
-				fu_common_dump_bytes (G_LOG_DOMAIN, "Event Data", item->blob);
-		}
+		/* not normally required */
+		if (g_getenv ("FWUPD_TPM_EVENTLOG_VERBOSE") != NULL)
+			fu_common_dump_bytes (G_LOG_DOMAIN, "Event Data", item->blob);
+
 		idx += datasz;
 	}
 	return TRUE;
