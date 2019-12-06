@@ -169,6 +169,7 @@ fu_install_task_check_requirements (FuInstallTask *self,
 				    FwupdInstallFlags flags,
 				    GError **error)
 {
+	const gchar *protocol;
 	const gchar *version;
 	const gchar *version_release_raw;
 	const gchar *version_lowest;
@@ -207,6 +208,22 @@ fu_install_task_check_requirements (FuInstallTask *self,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_FOUND,
 				     "No supported devices found");
+		return FALSE;
+	}
+
+	/* does the protocol match */
+	protocol = xb_node_query_text (self->component,
+				       "custom/value[@key='LVFS::UpdateProtocol']",
+				       NULL);
+	if (fu_device_get_protocol (self->device) != NULL && protocol != NULL &&
+	    g_strcmp0 (fu_device_get_protocol (self->device), protocol) != 0 &&
+	    (flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "Device %s doesn't support %s",
+			     fu_device_get_name (self->device),
+			     protocol);
 		return FALSE;
 	}
 
