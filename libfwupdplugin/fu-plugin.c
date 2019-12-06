@@ -2394,6 +2394,7 @@ GPtrArray *
 fu_plugin_get_rules (FuPlugin *self, FuPluginRule rule)
 {
 	FuPluginPrivate *priv = fu_plugin_get_instance_private (self);
+	g_return_val_if_fail (rule < FU_PLUGIN_RULE_LAST, NULL);
 	return priv->rules[rule];
 }
 
