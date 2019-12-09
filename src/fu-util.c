@@ -1621,6 +1621,7 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
+		g_autofree gchar *upgrade_str = NULL;
 		g_autoptr(GPtrArray) rels = NULL;
 		g_autoptr(GError) error_local = NULL;
 		GNode *child;
@@ -1637,7 +1638,11 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 						  fwupd_device_get_id (dev),
 						  NULL, &error_local);
 		if (rels == NULL) {
-			g_printerr ("%s\n", error_local->message);
+			/* TRANSLATORS: message letting the user know no device upgrade available
+			* %1 is the device name */
+			upgrade_str = g_strdup_printf (_("No upgrades for %s"),
+						      fwupd_device_get_name (dev));
+			g_printerr ("%s: %s\n", upgrade_str, error_local->message);
 			continue;
 		}
 		child = g_node_append_data (root, dev);
@@ -1831,7 +1836,11 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 						  fwupd_device_get_id (dev),
 						  NULL, &error_local);
 		if (rels == NULL) {
-			g_printerr ("%s\n", error_local->message);
+			/* TRANSLATORS: message letting the user know no device upgrade available
+			* %1 is the device name */
+			upgrade_str = g_strdup_printf (_("No upgrades for %s"),
+						      fwupd_device_get_name (dev));
+			g_printerr ("%s: %s\n", upgrade_str, error_local->message);
 			continue;
 		}
 		rel = g_ptr_array_index (rels, 0);
@@ -2024,8 +2033,14 @@ fu_util_downgrade (FuUtilPrivate *priv, gchar **values, GError **error)
 	rels = fwupd_client_get_downgrades (priv->client,
 					    fwupd_device_get_id (dev),
 					    NULL, error);
-	if (rels == NULL)
+	if (rels == NULL) {
+		/* TRANSLATORS: message letting the user know no device downgrade available
+		 * %1 is the device name */
+		g_autofree gchar *downgrade_str = g_strdup_printf (_("No downgrades for %s"),
+								   fwupd_device_get_name (dev));
+		g_prefix_error (error, "%s: ", downgrade_str);
 		return FALSE;
+	}
 
 	/* get the chosen release */
 	rel = fu_util_prompt_for_release (priv, rels, error);

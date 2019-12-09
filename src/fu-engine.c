@@ -3494,12 +3494,10 @@ fu_engine_get_releases_for_device (FuEngine *self, FuDevice *device, GError **er
 
 	/* only show devices that can be updated */
 	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "ignoring %s [%s] as not updatable",
-			     fu_device_get_name (device),
-			     fu_device_get_id (device));
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "is not updatable");
 		return NULL;
 	}
 
@@ -3516,11 +3514,10 @@ fu_engine_get_releases_for_device (FuEngine *self, FuDevice *device, GError **er
 	if (components == NULL) {
 		if (g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) ||
 		    g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOTHING_TO_DO,
-				     "No releases for %s",
-				     fu_device_get_name (device));
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOTHING_TO_DO,
+					     "No releases found");
 			return NULL;
 		}
 		g_propagate_error (error, g_steal_pointer (&error_local));
@@ -3551,13 +3548,13 @@ fu_engine_get_releases_for_device (FuEngine *self, FuDevice *device, GError **er
 	if (releases->len == 0) {
 		if (error_all != NULL) {
 			g_propagate_prefixed_error (error, g_steal_pointer (&error_all),
-						    "No releases found for device: ");
+						    "No releases found: ");
 			return NULL;
 		}
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOTHING_TO_DO,
-			     "No releases found for device");
+			     "No releases found");
 		return NULL;
 	}
 	return releases;
@@ -3677,14 +3674,14 @@ fu_engine_get_downgrades (FuEngine *self, const gchar *device_id, GError **error
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOTHING_TO_DO,
-				     "No downgrades for device, current is %s: %s",
+				     "current version is %s: %s",
 				     fu_device_get_version (device),
 				     error_str->str);
 		} else {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOTHING_TO_DO,
-				     "No downgrades for device, current is %s",
+				     "current version is %s",
 				     fu_device_get_version (device));
 		}
 		return NULL;
@@ -3770,11 +3767,10 @@ fu_engine_get_upgrades (FuEngine *self, const gchar *device_id, GError **error)
 
 	/* don't show upgrades again until we reboot */
 	if (fu_device_get_update_state (device) == FWUPD_UPDATE_STATE_NEEDS_REBOOT) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOTHING_TO_DO,
-			     "No upgrades for %s: A reboot is pending",
-			     fu_device_get_name (device));
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "A reboot is pending");
 		return NULL;
 	}
 
@@ -3826,16 +3822,14 @@ fu_engine_get_upgrades (FuEngine *self, const gchar *device_id, GError **error)
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOTHING_TO_DO,
-				     "No upgrades for %s, current is %s: %s",
-				     fu_device_get_name (device),
+				     "current version is %s: %s",
 				     fu_device_get_version (device),
 				     error_str->str);
 		} else {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOTHING_TO_DO,
-				     "No upgrades for %s, current is %s",
-				     fu_device_get_name (device),
+				     "current version is %s",
 				     fu_device_get_version (device));
 		}
 		return NULL;
