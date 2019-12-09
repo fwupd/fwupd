@@ -797,7 +797,8 @@ fu_engine_check_requirement_firmware (FuEngine *self, AsRequire *req,
 	}
 
 	/* vendor ID */
-	if (g_strcmp0 (as_require_get_value (req), "vendor-id") == 0) {
+	if (g_strcmp0 (as_require_get_value (req), "vendor-id") == 0 &&
+	    fu_device_get_vendor_id (device) != NULL) {
 		const gchar *version = fu_device_get_vendor_id (device);
 		if (!as_require_version_compare (req, version, &error_local)) {
 			if (as_require_get_compare (req) == AS_REQUIRE_COMPARE_GE) {
