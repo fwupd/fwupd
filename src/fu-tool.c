@@ -325,6 +325,7 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
+		g_autofree gchar *upgrade_str = NULL;
 		g_autoptr(GPtrArray) rels = NULL;
 		g_autoptr(GError) error_local = NULL;
 		GNode *child;
@@ -340,7 +341,11 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 					       fwupd_device_get_id (dev),
 					       &error_local);
 		if (rels == NULL) {
-			g_printerr ("%s\n", error_local->message);
+			/* TRANSLATORS: message letting the user know no device upgrade available
+			* %1 is the device name */
+			upgrade_str = g_strdup_printf (_("No upgrades for %s"),
+						      fwupd_device_get_name (dev));
+			g_printerr ("%s: %s\n", upgrade_str, error_local->message);
 			continue;
 		}
 		child = g_node_append_data (root, dev);
