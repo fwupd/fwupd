@@ -1058,7 +1058,8 @@ fu_engine_check_requirement_firmware (FuEngine *self, XbNode *req,
 	}
 
 	/* vendor ID */
-	if (g_strcmp0 (xb_node_get_text (req), "vendor-id") == 0) {
+	if (g_strcmp0 (xb_node_get_text (req), "vendor-id") == 0 &&
+	    fu_device_get_vendor_id (device) != NULL) {
 		const gchar *version = fu_device_get_vendor_id (device);
 		if (!fu_engine_require_vercmp (req, version, &error_local)) {
 			if (g_strcmp0 (xb_node_get_attr (req, "compare"), "ge") == 0) {
