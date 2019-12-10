@@ -37,6 +37,11 @@ used for systems with multiple host controllers to disambiguiate between control
 
 * `TBT-$(vid)$(pid)-native-$(slot)`
 
+Vendor ID Security
+------------------
+
+The vendor ID is set from the udev vendor, for example set to `TBT:0x$(vid)`
+
 Runtime Power Management
 ------------------------
 

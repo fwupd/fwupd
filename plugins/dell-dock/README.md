@@ -48,6 +48,11 @@ These devices use several different generation schemes, e.g.
  * MST Hub: `MST-panamera-vmm5331-259`
  * Thunderbolt Controller: `TBT-00d4b070`
 
+Vendor ID Security
+------------------
+
+The vendor ID is set from the USB vendor, in this instance set to `USB:0x413C`
+
 Custom flag use:
 ----------------
 This plugin uses the following plugin-specific custom flags:

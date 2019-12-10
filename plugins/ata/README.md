@@ -34,6 +34,11 @@ These device use the Microsoft DeviceInstanceId values, e.g.
 See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/identifiers-for-ide-devices
 for more details.
 
+Vendor ID Security
+------------------
+
+No vendor ID is set as there is no vendor field in the IDENTIFY response.
+
 Quirk use
 ---------
 This plugin uses the following plugin-specific quirks:

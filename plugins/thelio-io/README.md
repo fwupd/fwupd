@@ -15,3 +15,8 @@ GUID Generation
 These devices use the standard USB DeviceInstanceId values, e.g.
 
  * `USB\VID_1209&PID_1776&REV_0001`
+
+Vendor ID Security
+------------------
+
+The vendor ID is set from the USB vendor, in this instance set to `USB:0x1209`

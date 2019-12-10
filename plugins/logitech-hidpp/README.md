@@ -41,6 +41,12 @@ When in runtime mode, the HID raw DeviceInstanceId values are used:
  * `HIDRAW\VEN_046D&DEV_C52B`
  * `HIDRAW\VEN_046D`
 
+Vendor ID Security
+------------------
+
+The vendor ID is set from the vendor ID, in this instance set to `USB:0x046D`
+in bootloader and `HIDRAW:0x046D` in runtime mode.
+
 Design Notes
 ------------
 

@@ -19,3 +19,9 @@ These devices use the standard USB DeviceInstanceId values, e.g.
  * `USB\VID_20A0&PID_4109&REV_0001`
  * `USB\VID_20A0&PID_4109`
  * `USB\VID_20A0`
+
+Vendor ID Security
+------------------
+
+The vendor ID is set from the USB vendor, in this instance set to `USB:0x20A0`
+in runtime mode and `USB:0x03EB` in bootloader mode.

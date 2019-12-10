@@ -33,6 +33,13 @@ system device the `main-system-firmware` GUID is also added.
 For compatibility with Windows 10, the plugin also adds GUIDs of the form
 `UEFI\RES_{$(esrt)}`.
 
+Vendor ID Security
+------------------
+
+The vendor ID is set from the BIOS vendor, for example `DMI:LENOVO` for all
+devices that are not marked as supporting Firmware Management Protocol. For FMP
+device no vendor ID is set.
+
 UEFI Unlock Support
 -------------------
 
