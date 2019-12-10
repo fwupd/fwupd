@@ -781,7 +781,8 @@ fu_engine_check_requirements (AsApp *app, FuDevice *device, GError **error)
 							error)) {
 			return FALSE;
 		}
-		if (!fu_engine_check_version_requirement (app,
+		if (fu_device_get_vendor_id (device) != NULL &&
+		    !fu_engine_check_version_requirement (app,
 							AS_REQUIRE_KIND_FIRMWARE,
 							"vendor-id",
 							fu_device_get_vendor_id (device),
