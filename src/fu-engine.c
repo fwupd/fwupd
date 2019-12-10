@@ -106,6 +106,9 @@ enum {
 	SIGNAL_LAST
 };
 
+static void
+fu_engine_config_changed_cb (FuConfig *config, FuEngine *self);
+
 static guint signals[SIGNAL_LAST] = { 0 };
 
 G_DEFINE_TYPE (FuEngine, fu_engine, G_TYPE_OBJECT)
@@ -621,7 +624,14 @@ fu_engine_modify_remote (FuEngine *self,
 		return FALSE;
 	}
 	g_key_file_set_string (keyfile, "fwupd Remote", key, value);
-	return g_key_file_save_to_file (keyfile, filename, error);
+	g_debug ("Reloading configuration files");
+	if (!g_key_file_save_to_file (keyfile, filename, error))
+		return FALSE;
+	if (!fu_config_load (self->config, FU_CONFIG_LOAD_FLAG_NONE, error))
+		return FALSE;
+	fu_engine_config_changed_cb (self->config, self);
+
+	return TRUE;
 }
 
 /**
