@@ -557,6 +557,16 @@ fu_plugin_uefi_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GError **er
 			fu_device_set_vendor (FU_DEVICE (dev), vendor);
 	}
 
+	/* set vendor ID as the BIOS vendor */
+	if (fu_uefi_device_get_kind (dev) != FU_UEFI_DEVICE_KIND_FMP) {
+		const gchar *dmi_vendor;
+		dmi_vendor = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VENDOR);
+		if (dmi_vendor != NULL) {
+			g_autofree gchar *vendor_id = g_strdup_printf ("DMI:%s", dmi_vendor);
+			fu_device_set_vendor_id (FU_DEVICE (dev), vendor_id);
+		}
+	}
+
 	/* success */
 	return TRUE;
 }
