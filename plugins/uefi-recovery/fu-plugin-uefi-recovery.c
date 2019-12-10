@@ -35,6 +35,7 @@ gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
 	GPtrArray *hwids = fu_plugin_get_hwids (plugin);
+	const gchar *dmi_vendor;
 	g_autoptr(FuDevice) device = fu_device_new ();
 	fu_device_set_id (device, "uefi-recovery");
 	fu_device_set_name (device, "System Firmware ESRT Recovery");
@@ -49,6 +50,14 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		const gchar *hwid = g_ptr_array_index (hwids, i);
 		fu_device_add_guid (device, hwid);
 	}
+
+	/* set vendor ID as the BIOS vendor */
+	dmi_vendor = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VENDOR);
+	if (dmi_vendor != NULL) {
+		g_autofree gchar *vendor_id = g_strdup_printf ("DMI:%s", dmi_vendor);
+		fu_device_set_vendor_id (device, vendor_id);
+	}
+
 	fu_plugin_device_register (plugin, device);
 	return TRUE;
 }
