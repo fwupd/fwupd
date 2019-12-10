@@ -286,6 +286,7 @@ fu_plugin_dock_node (FuPlugin *plugin, const gchar *platform,
 		dock_name = g_strdup_printf ("Dell %s", dock_type);
 	}
 	fu_device_set_vendor (dev, "Dell Inc.");
+	fu_device_set_vendor_id (dev, "PCI:0x1028");
 	fu_device_set_name (dev, dock_name);
 	fu_device_set_metadata (dev, FU_DEVICE_METADATA_UEFI_DEVICE_KIND, "device-firmware");
 	if (type == DOCK_TYPE_TB16) {
@@ -734,6 +735,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	fu_device_add_instance_id (dev, tpm_guid_raw);
 	fu_device_add_instance_id (dev, "system-tpm");
 	fu_device_set_vendor (dev, "Dell Inc.");
+	fu_device_set_vendor_id (dev, "PCI:0x1028");
 	fu_device_set_name (dev, pretty_tpm_name);
 	fu_device_set_summary (dev, "Platform TPM device");
 	fu_device_set_version (dev, version_str, FWUPD_VERSION_FORMAT_QUAD);
@@ -768,6 +770,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 		fu_device_set_id (dev_alt, tpm_id_alt);
 		fu_device_add_instance_id (dev_alt, tpm_guid_raw_alt);
 		fu_device_set_vendor (dev, "Dell Inc.");
+		fu_device_set_vendor_id (dev, "PCI:0x1028");
 		fu_device_set_name (dev_alt, pretty_tpm_name_alt);
 		fu_device_set_summary (dev_alt, "Alternate mode for platform TPM device");
 		fu_device_add_flag (dev_alt, FWUPD_DEVICE_FLAG_INTERNAL);
