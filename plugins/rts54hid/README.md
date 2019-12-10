@@ -33,6 +33,11 @@ Child I²C devices are created using the device number as a suffix, for instance
 
  * `USB\VID_0BDA&PID_1100&I2C_01`
 
+Vendor ID Security
+------------------
+
+The vendor ID is set from the USB vendor, in this instance set to `USB:0x0BDA`
+
 Quirk use
 ---------
 This plugin uses the following plugin-specific quirks:

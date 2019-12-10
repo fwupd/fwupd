@@ -27,6 +27,11 @@ These devices use the standard USB DeviceInstanceId values, e.g.
  * `USB\VID_273F&PID_1003`
  * `USB\VID_273F`
 
+Vendor ID Security
+------------------
+
+The vendor ID is set from the USB vendor, for example `USB:0x0A12`
+
 Quirk use
 ---------
 This plugin uses the following plugin-specific quirks:

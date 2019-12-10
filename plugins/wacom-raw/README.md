@@ -31,3 +31,8 @@ This plugin uses the following plugin-specific quirks:
 | `WacomI2cFlashBlockSize`| Block size to transfer firmware     | 1.2.4                 |
 | `WacomI2cFlashBaseAddr` | Base address for firmware           | 1.2.4                 |
 | `WacomI2cFlashSize`     | Maximum size of the firmware zone   | 1.2.4                 |
+
+Vendor ID Security
+------------------
+
+The vendor ID is set from the udev vendor, in this instance set to `HIDRAW:0x056A`

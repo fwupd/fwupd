@@ -33,6 +33,11 @@ Example resultant GUIDs from a real system containing a TPM from Nuvoton:
   Guid:                 fe462d4a-e48f-5069-9172-47330fc5e838 <- DELL-TPM-2.0-NTC-NPCT75xrls
 ```
 
+Vendor ID Security
+------------------
+
+The vendor ID is hardcoded to `TPM:DELL`.
+
 Build Requirements
 ------------------
 

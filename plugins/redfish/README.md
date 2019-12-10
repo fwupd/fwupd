@@ -26,6 +26,11 @@ GUID Generation
 These devices use the provided GUID provided in the `SoftwareId` parameter
 without modification. Devices without GUIDs are not supported.
 
+Vendor ID Security
+------------------
+
+No vendor ID is set as there is no vendor field in the schema.
+
 Setting Service IP Manually
 ---------------------------
 

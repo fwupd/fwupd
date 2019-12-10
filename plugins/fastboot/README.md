@@ -38,3 +38,8 @@ This plugin uses the following plugin-specific quirk:
 | Quirk                  | Description                      | Minimum fwupd version |
 |------------------------|----------------------------------|-----------------------|
 | `FastbootBlockSize`    | Block size to use for transfers  | 1.2.2                 |
+
+Vendor ID Security
+------------------
+
+The vendor ID is set from the USB vendor, for example `USB:0x18D1`

@@ -16,6 +16,11 @@ These device use the ModemManager "Firmware Device IDs" as the GUID, e.g.
  * `USB\VID_413C&PID_81D7`
  * `USB\VID_413C`
 
+Vendor ID Security
+------------------
+
+The vendor ID is set from the USB vendor, for example `USB:0x413C`
+
 Update method: fastboot
 -----------------------
 

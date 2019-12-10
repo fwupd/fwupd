@@ -31,6 +31,11 @@ These devices also use custom GUID values, e.g.
  * `SYNAPTICS_CXAUDIO\CX2198X`
  * `SYNAPTICS_CXAUDIO\CX21985`
 
+Vendor ID Security
+------------------
+
+The vendor ID is set from the USB vendor, in this instance set to `USB:0x17EF`
+
 Quirk Use
 ---------
 

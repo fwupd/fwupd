@@ -34,6 +34,11 @@ These devices use the standard USB DeviceInstanceId values, e.g.
  * `USB\VID_1D50&PID_60C6`
  * `USB\VID_1D50`
 
+Vendor ID Security
+------------------
+
+The vendor ID is set from the USB vendor, in this instance set to `USB:0x1D50`
+
 ### List Information
 
 Command:    `l\n`

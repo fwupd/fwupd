@@ -39,3 +39,8 @@ These devices use the standard USB DeviceInstanceId values, e.g.
  * `USB\VID_056A&PID_0378&REV_0001`
  * `USB\VID_056A&PID_0378`
  * `USB\VID_056A`
+
+Vendor ID Security
+------------------
+
+The vendor ID is set from the USB vendor, for example set to `USB:0x056A`

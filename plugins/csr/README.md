@@ -34,3 +34,8 @@ These devices use the standard USB DeviceInstanceId values, e.g.
  * `USB\VID_0A12&PID_1337&REV_2520`
  * `USB\VID_0A12&PID_1337`
  * `USB\VID_0A12`
+
+Vendor ID Security
+------------------
+
+The vendor ID is set from the USB vendor, in this instance set to `USB:0x0A12`

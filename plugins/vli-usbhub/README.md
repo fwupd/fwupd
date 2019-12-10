@@ -39,6 +39,11 @@ Optional I²C child devices use just one extra GUID, e.g.
 
  * `VLI_USBHUB_I2C\MSP430`
 
+Vendor ID Security
+------------------
+
+The vendor ID is set from the USB vendor, for example set to `USB:0x2109`
+
 Quirk Use
 ---------
 

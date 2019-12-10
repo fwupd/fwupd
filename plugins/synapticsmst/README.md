@@ -25,6 +25,11 @@ These devices use custom GUID values, e.g.
 Please refer to the plugin source for more details about how the GUID is
 constructed for specific hardware.
 
+Vendor ID Security
+------------------
+
+The vendor ID is set from the PCI vendor, for example set to `DRM_DP_AUX_DEV:0x$(vid)`
+
 ## Requirements
 ### (Kernel) DP Aux Interface
 Kernel 4.6 introduced an DRM DP Aux interface for manipulation of the registers
