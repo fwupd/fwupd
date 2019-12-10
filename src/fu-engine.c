@@ -46,6 +46,7 @@
 #include "fu-plugin-list.h"
 #include "fu-plugin-private.h"
 #include "fu-quirks.h"
+#include "fu-remote-list.h"
 #include "fu-smbios-private.h"
 #include "fu-udev-device-private.h"
 #include "fu-usb-device-private.h"
@@ -69,6 +70,7 @@ struct _FuEngine
 	GUdevClient		*gudev_client;
 #endif
 	FuConfig		*config;
+	FuRemoteList		*remote_list;
 	FuDeviceList		*device_list;
 	FwupdStatus		 status;
 	gboolean		 tainted;
@@ -400,7 +402,7 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 	remote_id = xb_node_query_text (component, "../custom/value[@key='fwupd::RemoteId']", NULL);
 	if (remote_id != NULL) {
 		fwupd_release_set_remote_id (rel, remote_id);
-		remote = fu_config_get_remote_by_id (self->config, remote_id);
+		remote = fu_remote_list_get_by_id (self->remote_list, remote_id);
 		if (remote == NULL)
 			g_warning ("no remote found for release %s", version_rel);
 	}
@@ -566,7 +568,7 @@ fu_engine_modify_config (FuEngine *self, const gchar *key, const gchar *value, G
 	}
 
 	/* modify, effective next reboot */
-	return fu_config_modify_and_save (self->config, key, value, error);
+	return fu_config_set_key_value (self->config, key, value, error);
 }
 
 /**
@@ -588,20 +590,7 @@ fu_engine_modify_remote (FuEngine *self,
 			 const gchar *value,
 			 GError **error)
 {
-	FwupdRemote *remote;
-	const gchar *filename;
 	const gchar *keys[] = { "Enabled", "MetadataURI", "FirmwareBaseURI", "ReportURI", "AutomaticReports", NULL };
-	g_autoptr(GKeyFile) keyfile = g_key_file_new ();
-
-	/* check remote is valid */
-	remote = fu_config_get_remote_by_id (self->config, remote_id);
-	if (remote == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_FOUND,
-			     "remote %s not found", remote_id);
-		return FALSE;
-	}
 
 	/* check keys are valid */
 	if (!g_strv_contains (keys, key)) {
@@ -611,17 +600,7 @@ fu_engine_modify_remote (FuEngine *self,
 			     "key %s not supported", key);
 		return FALSE;
 	}
-
-	/* modify the remote filename */
-	filename = fwupd_remote_get_filename_source (remote);
-	if (!g_key_file_load_from_file (keyfile, filename,
-					G_KEY_FILE_KEEP_COMMENTS,
-					error)) {
-		g_prefix_error (error, "failed to load %s: ", filename);
-		return FALSE;
-	}
-	g_key_file_set_string (keyfile, "fwupd Remote", key, value);
-	return g_key_file_save_to_file (keyfile, filename, error);
+	return fu_remote_list_set_key_value (self->remote_list, remote_id, key, value, error);
 }
 
 /**
@@ -2662,7 +2641,7 @@ fu_engine_load_metadata_store (FuEngine *self, FuEngineLoadFlags flags, GError *
 	}
 
 	/* load each enabled metadata file */
-	remotes = fu_config_get_remotes (self->config);
+	remotes = fu_remote_list_get_all (self->remote_list);
 	for (guint i = 0; i < remotes->len; i++) {
 		const gchar *path = NULL;
 		g_autoptr(GError) error_local = NULL;
@@ -2781,6 +2760,12 @@ fu_engine_load_metadata_store (FuEngine *self, FuEngineLoadFlags flags, GError *
 static void
 fu_engine_config_changed_cb (FuConfig *config, FuEngine *self)
 {
+	fu_idle_set_timeout (self->idle, fu_config_get_idle_timeout (config));
+}
+
+static void
+fu_engine_remote_list_changed_cb (FuRemoteList *remote_list, FuEngine *self)
+{
 	g_autoptr(GError) error_local = NULL;
 	if (!fu_engine_load_metadata_store (self, FU_ENGINE_LOAD_FLAG_NONE,
 					    &error_local))
@@ -2847,7 +2832,7 @@ fu_engine_update_metadata (FuEngine *self, const gchar *remote_id,
 	stream_sig = g_unix_input_stream_new (fd_sig, TRUE);
 
 	/* check remote is valid */
-	remote = fu_config_get_remote_by_id (self->config, remote_id);
+	remote = fu_remote_list_get_by_id (self->remote_list, remote_id);
 	if (remote == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -3306,7 +3291,7 @@ fu_engine_get_remotes (FuEngine *self, GError **error)
 	g_return_val_if_fail (FU_IS_ENGINE (self), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
-	remotes = fu_config_get_remotes (self->config);
+	remotes = fu_remote_list_get_all (self->remote_list);
 	if (remotes->len == 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -4985,7 +4970,7 @@ fu_engine_ensure_client_certificate (FuEngine *self)
 gboolean
 fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 {
-	FuConfigLoadFlags config_flags = FU_CONFIG_LOAD_FLAG_NONE;
+	FuRemoteListLoadFlags remote_list_flags = FU_REMOTE_LIST_LOAD_FLAG_NONE;
 	FuQuirksLoadFlags quirks_flags = FU_QUIRKS_LOAD_FLAG_NONE;
 	g_autoptr(GPtrArray) checksums = NULL;
 
@@ -5004,10 +4989,16 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 		return FALSE;
 #endif
 	/* read config file */
-	if (flags & FU_ENGINE_LOAD_FLAG_READONLY_FS)
-		config_flags |= FU_CONFIG_LOAD_FLAG_READONLY_FS;
-	if (!fu_config_load (self->config, config_flags, error)) {
+	if (!fu_config_load (self->config, error)) {
 		g_prefix_error (error, "Failed to load config: ");
+		return FALSE;
+	}
+
+	/* read remotes */
+	if (flags & FU_ENGINE_LOAD_FLAG_READONLY_FS)
+		remote_list_flags |= FU_REMOTE_LIST_LOAD_FLAG_READONLY_FS;
+	if (!fu_remote_list_load (self->remote_list, remote_list_flags, error)) {
+		g_prefix_error (error, "Failed to load remotes: ");
 		return FALSE;
 	}
 
@@ -5204,6 +5195,7 @@ fu_engine_init (FuEngine *self)
 	self->percentage = 0;
 	self->status = FWUPD_STATUS_IDLE;
 	self->config = fu_config_new ();
+	self->remote_list = fu_remote_list_new ();
 	self->device_list = fu_device_list_new ();
 	self->smbios = fu_smbios_new ();
 	self->hwids = fu_hwids_new ();
@@ -5224,6 +5216,9 @@ fu_engine_init (FuEngine *self)
 
 	g_signal_connect (self->config, "changed",
 			  G_CALLBACK (fu_engine_config_changed_cb),
+			  self);
+	g_signal_connect (self->remote_list, "changed",
+			  G_CALLBACK (fu_engine_remote_list_changed_cb),
 			  self);
 
 	g_signal_connect (self->idle, "notify::status",
@@ -5278,6 +5273,7 @@ fu_engine_finalize (GObject *obj)
 	g_free (self->host_machine_id);
 	g_object_unref (self->idle);
 	g_object_unref (self->config);
+	g_object_unref (self->remote_list);
 	g_object_unref (self->smbios);
 	g_object_unref (self->quirks);
 	g_object_unref (self->hwids);
