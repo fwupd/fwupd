@@ -145,6 +145,7 @@ fwupdtool = executable(
     'fu-keyring-utils.c',
     'fu-plugin-list.c',
     'fu-progressbar.c',
+    'fu-remote-list.c',
     'fu-util-common.c',
     systemd_src
   ],
@@ -212,6 +213,7 @@ executable(
     'fu-keyring-utils.c',
     'fu-main.c',
     'fu-plugin-list.c',
+    'fu-remote-list.c',
     systemd_src
   ],
   include_directories : [
@@ -269,6 +271,7 @@ if get_option('tests')
       'fu-keyring-utils.c',
       'fu-plugin-list.c',
       'fu-progressbar.c',
+      'fu-remote-list.c',
       'fu-self-test.c',
       systemd_src
     ],
