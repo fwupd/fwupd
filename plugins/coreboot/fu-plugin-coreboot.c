@@ -91,6 +91,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	}
 	fu_device_set_vendor (dev, fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER));
 	fu_device_add_instance_id (dev, "main-system-firmware");
+	fu_device_set_vendor_id (dev, "DMI:coreboot");
 
 	for (guint i = 0; i < G_N_ELEMENTS (hwids); i++) {
 		char *str;
