@@ -433,7 +433,7 @@ fu_util_prompt_complete (FwupdDeviceFlags flags, gboolean prompt, GError **error
 {
 	if (flags & FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN) {
 		if (prompt) {
-			g_print ("\n%s %s [Y|n]: ",
+			g_print ("\n%s %s [y|N]: ",
 				 /* TRANSLATORS: explain why we want to shutdown */
 				 _("An update requires the system to shutdown to complete."),
 				 /* TRANSLATORS: shutdown to apply the update */
@@ -445,7 +445,7 @@ fu_util_prompt_complete (FwupdDeviceFlags flags, gboolean prompt, GError **error
 	}
 	if (flags & FWUPD_DEVICE_FLAG_NEEDS_REBOOT) {
 		if (prompt) {
-			g_print ("\n%s %s [Y|n]: ",
+			g_print ("\n%s %s [y|N]: ",
 				 /* TRANSLATORS: explain why we want to reboot */
 				 _("An update requires a reboot to complete."),
 				 /* TRANSLATORS: reboot to apply the update */
