@@ -43,6 +43,9 @@ typedef struct {
 	GDBusProxy		*proxy_uid;
 	GMainLoop		*loop;
 	GFileMonitor		*argv0_monitor;
+#if GLIB_CHECK_VERSION(2,63,3)
+	GMemoryMonitor		*memory_monitor;
+#endif
 	PolkitAuthority		*authority;
 	guint			 owner_id;
 	FuEngine		*engine;
@@ -1464,6 +1467,23 @@ fu_main_argv_changed_cb (GFileMonitor *monitor, GFile *file, GFile *other_file,
 	g_main_loop_quit (priv->loop);
 }
 
+#if GLIB_CHECK_VERSION(2,63,3)
+static void
+fu_main_memory_monitor_warning_cb (GMemoryMonitor *memory_monitor,
+				   GMemoryMonitorWarningLevel level,
+				   FuMainPrivate *priv)
+{
+	/* can do straight away? */
+	if (priv->update_in_progress) {
+		g_warning ("OOM during a firmware update, ignoring");
+		priv->pending_sigterm = TRUE;
+		return;
+	}
+	g_debug ("OOM event, shutting down");
+	g_main_loop_quit (priv->loop);
+}
+#endif
+
 static GDBusNodeInfo *
 fu_main_load_introspection (const gchar *filename, GError **error)
 {
@@ -1502,6 +1522,10 @@ fu_main_private_free (FuMainPrivate *priv)
 		g_object_unref (priv->argv0_monitor);
 	if (priv->introspection_daemon != NULL)
 		g_dbus_node_info_unref (priv->introspection_daemon);
+#if GLIB_CHECK_VERSION(2,63,3)
+	if (priv->memory_monitor != NULL)
+		g_object_unref (priv->memory_monitor);
+#endif
 	g_free (priv);
 }
 
@@ -1585,6 +1609,13 @@ main (int argc, char *argv[])
 						   NULL, &error);
 	g_signal_connect (priv->argv0_monitor, "changed",
 			  G_CALLBACK (fu_main_argv_changed_cb), priv);
+
+#if GLIB_CHECK_VERSION(2,63,3)
+	/* shut down on low memory event as we can just rescan hardware */
+	priv->memory_monitor = g_memory_monitor_dup_default ();
+	g_signal_connect (G_OBJECT (priv->memory_monitor), "low-memory-warning",
+			  G_CALLBACK (fu_main_memory_monitor_warning_cb), priv);
+#endif
 
 	/* load introspection from file */
 	priv->introspection_daemon = fu_main_load_introspection (FWUPD_DBUS_INTERFACE ".xml",
