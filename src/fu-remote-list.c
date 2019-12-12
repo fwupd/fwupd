@@ -46,25 +46,6 @@ fu_remote_list_emit_changed (FuRemoteList *self)
 	g_signal_emit (self, signals[SIGNAL_CHANGED], 0);
 }
 
-static GPtrArray *
-fu_remote_list_get_all_paths (void)
-{
-	GPtrArray *paths = g_ptr_array_new_with_free_func (g_free);
-	const gchar *system_prefixlibdir = "/usr/lib/fwupd";
-	g_autofree gchar *remotesdir = NULL;
-
-	/* use sysremotes, and then fall back to /etc */
-	remotesdir = fu_common_get_path (FU_PATH_KIND_SYSCONFDIR_PKG);
-	if (g_file_test (remotesdir, G_FILE_TEST_EXISTS))
-		g_ptr_array_add (paths, g_steal_pointer (&remotesdir));
-
-	/* add in system-wide locations */
-	if (g_file_test (system_prefixlibdir, G_FILE_TEST_EXISTS))
-		g_ptr_array_add (paths, g_strdup (system_prefixlibdir));
-
-	return paths;
-}
-
 static void
 fu_remote_list_monitor_changed_cb (GFileMonitor *monitor,
 				   GFile *file,
@@ -350,29 +331,22 @@ gboolean
 fu_remote_list_reload (FuRemoteList *self, GError **error)
 {
 	guint depsolve_check;
-	g_autoptr(GPtrArray) paths = NULL;
+	g_autofree gchar *remotesdir = NULL;
 
 	/* clear */
 	g_ptr_array_set_size (self->array, 0);
 	g_ptr_array_set_size (self->monitors, 0);
 
-	/* get a list of all remotes paths */
-	paths = fu_remote_list_get_all_paths ();
-	if (paths->len == 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_FOUND,
-				     "No search paths found");
-		return FALSE;
+	/* use sysremotes, and then fall back to /etc */
+	remotesdir = fu_common_get_path (FU_PATH_KIND_SYSCONFDIR_PKG);
+	if (!g_file_test (remotesdir, G_FILE_TEST_EXISTS)) {
+		g_debug ("no remotes found");
+		return TRUE;
 	}
 
 	/* look for all remote_list */
-	for (guint i = 0; i < paths->len; i++) {
-		const gchar *path = g_ptr_array_index (paths, i);
-		g_debug ("using remotes path of %s", path);
-		if (!fu_remote_list_add_for_path (self, path, error))
-			return FALSE;
-	}
+	if (!fu_remote_list_add_for_path (self, remotesdir, error))
+		return FALSE;
 
 	/* depsolve */
 	for (depsolve_check = 0; depsolve_check < 100; depsolve_check++) {
