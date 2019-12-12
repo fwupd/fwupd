@@ -11,10 +11,10 @@
 #include "fu-plugin-vfuncs.h"
 #include "fu-hash.h"
 
-#include "fu-synapticsmst-common.h"
-#include "fu-synapticsmst-device.h"
+#include "fu-synaptics-mst-common.h"
+#include "fu-synaptics-mst-device.h"
 
-#define FU_SYNAPTICSMST_DRM_REPLUG_DELAY	5 /* s */
+#define FU_SYNAPTICS_MST_DRM_REPLUG_DELAY	5 /* s */
 
 struct FuPluginData {
 	GPtrArray		*devices;
@@ -23,7 +23,7 @@ struct FuPluginData {
 
 /* see https://github.com/hughsie/fwupd/issues/1121 for more details */
 static gboolean
-fu_synapticsmst_check_amdgpu_safe (GError **error)
+fu_synaptics_mst_check_amdgpu_safe (GError **error)
 {
 	gsize bufsz = 0;
 	g_autofree gchar *buf = NULL;
@@ -42,7 +42,7 @@ fu_synapticsmst_check_amdgpu_safe (GError **error)
 			g_set_error_literal (error,
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_INTERNAL,
-					     "amdgpu has known issues with synapticsmst");
+					     "amdgpu has known issues with synaptics_mst");
 			return FALSE;
 		}
 	}
@@ -51,7 +51,7 @@ fu_synapticsmst_check_amdgpu_safe (GError **error)
 }
 
 static void
-fu_plugin_synapticsmst_device_rescan (FuPlugin *plugin, FuDevice *device)
+fu_plugin_synaptics_mst_device_rescan (FuPlugin *plugin, FuDevice *device)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -78,21 +78,21 @@ fu_plugin_synapticsmst_device_rescan (FuPlugin *plugin, FuDevice *device)
 
 /* reprobe all existing devices added by this plugin */
 static void
-fu_plugin_synapticsmst_rescan (FuPlugin *plugin)
+fu_plugin_synaptics_mst_rescan (FuPlugin *plugin)
 {
 	FuPluginData *priv = fu_plugin_get_data (plugin);
 	for (guint i = 0; i < priv->devices->len; i++) {
 		FuDevice *device = FU_DEVICE (g_ptr_array_index (priv->devices, i));
-		fu_plugin_synapticsmst_device_rescan (plugin, device);
+		fu_plugin_synaptics_mst_device_rescan (plugin, device);
 	}
 }
 
 static gboolean
-fu_plugin_synapticsmst_rescan_cb (gpointer user_data)
+fu_plugin_synaptics_mst_rescan_cb (gpointer user_data)
 {
 	FuPlugin *plugin = FU_PLUGIN (user_data);
 	FuPluginData *priv = fu_plugin_get_data (plugin);
-	fu_plugin_synapticsmst_rescan (plugin);
+	fu_plugin_synaptics_mst_rescan (plugin);
 	priv->drm_changed_id = 0;
 	return FALSE;
 }
@@ -109,8 +109,8 @@ fu_plugin_udev_device_changed (FuPlugin *plugin, FuUdevDevice *device, GError **
 	/* recoldplug all drm_dp_aux_dev devices after a *long* delay */
 	if (priv->drm_changed_id != 0)
 		g_source_remove (priv->drm_changed_id);
-	priv->drm_changed_id = g_timeout_add_seconds (FU_SYNAPTICSMST_DRM_REPLUG_DELAY,
-						      fu_plugin_synapticsmst_rescan_cb,
+	priv->drm_changed_id = g_timeout_add_seconds (FU_SYNAPTICS_MST_DRM_REPLUG_DELAY,
+						      fu_plugin_synaptics_mst_rescan_cb,
 						      plugin);
 	return TRUE;
 }
@@ -120,19 +120,19 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 {
 	FuPluginData *priv = fu_plugin_get_data (plugin);
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(FuSynapticsmstDevice) dev = NULL;
+	g_autoptr(FuSynapticsMstDevice) dev = NULL;
 
-	dev = fu_synapticsmst_device_new (device);
+	dev = fu_synaptics_mst_device_new (device);
 	locker = fu_device_locker_new (dev, error);
 	if (locker == NULL)
 		return FALSE;
 
 	/* for DeviceKind=system devices */
-	fu_synapticsmst_device_set_system_type (FU_SYNAPTICSMST_DEVICE (dev),
+	fu_synaptics_mst_device_set_system_type (FU_SYNAPTICS_MST_DEVICE (dev),
 						fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_PRODUCT_SKU));
 
 	/* this might fail if there is nothing connected */
-	fu_plugin_synapticsmst_device_rescan (plugin, FU_DEVICE (dev));
+	fu_plugin_synaptics_mst_device_rescan (plugin, FU_DEVICE (dev));
 	g_ptr_array_add (priv->devices, g_steal_pointer (&dev));
 	return TRUE;
 }
@@ -140,7 +140,7 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
-	return fu_synapticsmst_check_amdgpu_safe (error);
+	return fu_synaptics_mst_check_amdgpu_safe (error);
 }
 
 gboolean

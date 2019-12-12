@@ -50,7 +50,7 @@ _test_add_fake_devices_from_dir (FuPlugin *plugin, const gchar *path)
 
 /* test with no Synaptics MST devices */
 static void
-fu_plugin_synapticsmst_none_func (void)
+fu_plugin_synaptics_mst_none_func (void)
 {
 	gboolean ret;
 	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
@@ -62,7 +62,7 @@ fu_plugin_synapticsmst_none_func (void)
 			  G_CALLBACK (_plugin_device_added_cb),
 			  &devices);
 	pluginfn = g_build_filename (PLUGINBUILDDIR,
-				     "libfu_plugin_synapticsmst." G_MODULE_SUFFIX,
+				     "libfu_plugin_synaptics_mst." G_MODULE_SUFFIX,
 				     NULL);
 	ret = fu_plugin_open (plugin, pluginfn, &error);
 	g_assert_no_error (error);
@@ -77,7 +77,7 @@ fu_plugin_synapticsmst_none_func (void)
 
 /* emulate adding/removing a Dell TB16 dock */
 static void
-fu_plugin_synapticsmst_tb16_func (void)
+fu_plugin_synaptics_mst_tb16_func (void)
 {
 	gboolean ret;
 	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
@@ -89,7 +89,7 @@ fu_plugin_synapticsmst_tb16_func (void)
 			  G_CALLBACK (_plugin_device_added_cb),
 			  &devices);
 	pluginfn = g_build_filename (PLUGINBUILDDIR,
-				     "libfu_plugin_synapticsmst." G_MODULE_SUFFIX,
+				     "libfu_plugin_synaptics_mst." G_MODULE_SUFFIX,
 				     NULL);
 	ret = fu_plugin_open (plugin, pluginfn, &error);
 	g_assert_no_error (error);
@@ -118,7 +118,7 @@ main (int argc, char **argv)
 	g_assert_cmpint (g_mkdir_with_parents ("/tmp/fwupd-self-test/var/lib/fwupd", 0755), ==, 0);
 
 	/* tests go here */
-	g_test_add_func ("/fwupd/plugin/synapticsmst{none}", fu_plugin_synapticsmst_none_func);
-	g_test_add_func ("/fwupd/plugin/synapticsmst{tb16}", fu_plugin_synapticsmst_tb16_func);
+	g_test_add_func ("/fwupd/plugin/synaptics_mst{none}", fu_plugin_synaptics_mst_none_func);
+	g_test_add_func ("/fwupd/plugin/synaptics_mst{tb16}", fu_plugin_synaptics_mst_tb16_func);
 	return g_test_run ();
 }

@@ -8,13 +8,13 @@
 
 #include "config.h"
 
-#include "fu-synapticsmst-connection.h"
-#include "fu-synapticsmst-common.h"
+#include "fu-synaptics-mst-connection.h"
+#include "fu-synaptics-mst-common.h"
 
 #define UNIT_SIZE		32
 #define MAX_WAIT_TIME 		3  /* unit : second */
 
-struct _FuSynapticsmstConnection {
+struct _FuSynapticsMstConnection {
 	GObject		 parent_instance;
 	gint		 fd;		/* not owned by the connection */
 	guint8		 layer;
@@ -22,20 +22,20 @@ struct _FuSynapticsmstConnection {
 	guint8		 rad;
 };
 
-G_DEFINE_TYPE (FuSynapticsmstConnection, fu_synapticsmst_connection, G_TYPE_OBJECT)
+G_DEFINE_TYPE (FuSynapticsMstConnection, fu_synaptics_mst_connection, G_TYPE_OBJECT)
 
 static void
-fu_synapticsmst_connection_init (FuSynapticsmstConnection *self)
+fu_synaptics_mst_connection_init (FuSynapticsMstConnection *self)
 {
 }
 
 static void
-fu_synapticsmst_connection_class_init (FuSynapticsmstConnectionClass *klass)
+fu_synaptics_mst_connection_class_init (FuSynapticsMstConnectionClass *klass)
 {
 }
 
 static gboolean
-fu_synapticsmst_connection_aux_node_read (FuSynapticsmstConnection *self,
+fu_synaptics_mst_connection_aux_node_read (FuSynapticsMstConnection *self,
 					  guint32 offset, guint8 *buf,
 					  gint length, GError **error)
 {
@@ -61,9 +61,9 @@ fu_synapticsmst_connection_aux_node_read (FuSynapticsmstConnection *self,
 }
 
 static gboolean
-fu_synapticsmst_connection_aux_node_write (FuSynapticsmstConnection *self,
-					   guint32 offset, const guint8 *buf,
-					   gint length, GError **error)
+fu_synaptics_mst_connection_aux_node_write (FuSynapticsMstConnection *self,
+					    guint32 offset, const guint8 *buf,
+					    gint length, GError **error)
 {
 	if (lseek (self->fd, offset, SEEK_SET) != offset) {
 		g_set_error (error,
@@ -87,29 +87,29 @@ fu_synapticsmst_connection_aux_node_write (FuSynapticsmstConnection *self,
 }
 
 static gboolean
-fu_synapticsmst_connection_bus_read (FuSynapticsmstConnection *self,
-				     guint32 offset,
-				     guint8 *buf,
-				     guint32 length, GError **error)
+fu_synaptics_mst_connection_bus_read (FuSynapticsMstConnection *self,
+				      guint32 offset,
+				      guint8 *buf,
+				      guint32 length, GError **error)
 {
-	return fu_synapticsmst_connection_aux_node_read (self, offset, buf,
+	return fu_synaptics_mst_connection_aux_node_read (self, offset, buf,
 							 length, error);
 }
 
 static gboolean
-fu_synapticsmst_connection_bus_write (FuSynapticsmstConnection *self,
-				      guint32 offset,
-				      const guint8 *buf,
-				      guint32 length, GError **error)
+fu_synaptics_mst_connection_bus_write (FuSynapticsMstConnection *self,
+				       guint32 offset,
+				       const guint8 *buf,
+				       guint32 length, GError **error)
 {
-	return fu_synapticsmst_connection_aux_node_write (self, offset, buf,
+	return fu_synaptics_mst_connection_aux_node_write (self, offset, buf,
 							  length, error);
 }
 
-FuSynapticsmstConnection *
-fu_synapticsmst_connection_new (gint fd, guint8 layer, guint rad)
+FuSynapticsMstConnection *
+fu_synaptics_mst_connection_new (gint fd, guint8 layer, guint rad)
 {
-	FuSynapticsmstConnection *self = g_object_new (FU_TYPE_SYNAPTICSMST_CONNECTION, NULL);
+	FuSynapticsMstConnection *self = g_object_new (FU_TYPE_SYNAPTICS_MST_CONNECTION, NULL);
 	self->fd = fd;
 	self->layer = layer;
 	self->remain_layer = layer;
@@ -118,9 +118,9 @@ fu_synapticsmst_connection_new (gint fd, guint8 layer, guint rad)
 }
 
 gboolean
-fu_synapticsmst_connection_read (FuSynapticsmstConnection *self,
-				 guint32 offset, guint8 *buf,
-				 guint32 length, GError **error)
+fu_synaptics_mst_connection_read (FuSynapticsMstConnection *self,
+				  guint32 offset, guint8 *buf,
+				  guint32 length, GError **error)
 {
 	if (self->layer && self->remain_layer) {
 		guint8 node;
@@ -128,19 +128,19 @@ fu_synapticsmst_connection_read (FuSynapticsmstConnection *self,
 
 		self->remain_layer--;
 		node = (self->rad >> self->remain_layer * 2) & 0x03;
-		result =  fu_synapticsmst_connection_rc_get_command (self,
-								     UPDC_READ_FROM_TX_DPCD + node,
-								     length, offset, (guint8 *)buf,
-								     error);
+		result =  fu_synaptics_mst_connection_rc_get_command (self,
+								      UPDC_READ_FROM_TX_DPCD + node,
+								      length, offset, (guint8 *)buf,
+								      error);
 		self->remain_layer++;
 		return result;
 	}
 
-	return fu_synapticsmst_connection_bus_read (self, offset, buf, length, error);
+	return fu_synaptics_mst_connection_bus_read (self, offset, buf, length, error);
 }
 
 gboolean
-fu_synapticsmst_connection_write (FuSynapticsmstConnection *self,
+fu_synaptics_mst_connection_write (FuSynapticsMstConnection *self,
 				  guint32 offset,
 				  const guint8 *buf,
 				  guint32 length, GError **error)
@@ -151,24 +151,24 @@ fu_synapticsmst_connection_write (FuSynapticsmstConnection *self,
 
 		self->remain_layer--;
 		node = (self->rad >> self->remain_layer * 2) & 0x03;
-		result =  fu_synapticsmst_connection_rc_set_command (self,
-								     UPDC_WRITE_TO_TX_DPCD + node,
-								     length, offset, (guint8 *)buf,
-								     error);
+		result =  fu_synaptics_mst_connection_rc_set_command (self,
+								      UPDC_WRITE_TO_TX_DPCD + node,
+								      length, offset, (guint8 *)buf,
+								      error);
 		self->remain_layer++;
 		return result;
 	}
 
-	return fu_synapticsmst_connection_bus_write (self, offset, buf, length, error);
+	return fu_synaptics_mst_connection_bus_write (self, offset, buf, length, error);
 }
 
 gboolean
-fu_synapticsmst_connection_rc_set_command (FuSynapticsmstConnection *self,
-					   guint32 rc_cmd,
-					   guint32 length,
-					   guint32 offset,
-					   const guint8 *buf,
-					   GError **error)
+fu_synaptics_mst_connection_rc_set_command (FuSynapticsMstConnection *self,
+					    guint32 rc_cmd,
+					    guint32 length,
+					    guint32 offset,
+					    const guint8 *buf,
+					    GError **error)
 {
 	guint32 cur_offset = offset;
 	guint32 cur_length;
@@ -187,28 +187,28 @@ fu_synapticsmst_connection_rc_set_command (FuSynapticsmstConnection *self,
 
 		if (cur_length) {
 			/* write data */
-			if (!fu_synapticsmst_connection_write (self,
-							       REG_RC_DATA,
-							       buf, cur_length,
-							       error)) {
+			if (!fu_synaptics_mst_connection_write (self,
+							        REG_RC_DATA,
+							        buf, cur_length,
+							        error)) {
 				g_prefix_error (error, "failure writing data register: ");
 				return FALSE;
 			}
 
 			/* write offset */
-			if (!fu_synapticsmst_connection_write (self,
-							       REG_RC_OFFSET,
-							       (guint8 *)&cur_offset, 4,
-							       error)) {
+			if (!fu_synaptics_mst_connection_write (self,
+							        REG_RC_OFFSET,
+							        (guint8 *)&cur_offset, 4,
+							        error)) {
 				g_prefix_error (error, "failure writing offset register: ");
 				return FALSE;
 			}
 
 			/* write length */
-			if (!fu_synapticsmst_connection_write (self,
-							       REG_RC_LEN,
-							       (guint8 *)&cur_length, 4,
-							       error)) {
+			if (!fu_synaptics_mst_connection_write (self,
+							        REG_RC_LEN,
+							        (guint8 *)&cur_length, 4,
+							        error)) {
 				g_prefix_error (error, "failure writing length register: ");
 				return FALSE;
 			}
@@ -216,10 +216,10 @@ fu_synapticsmst_connection_rc_set_command (FuSynapticsmstConnection *self,
 
 		/* send command */
 		cmd = 0x80 | rc_cmd;
-		if (!fu_synapticsmst_connection_write (self,
-						       REG_RC_CMD,
-						       (guint8 *)&cmd, 1,
-						       error)) {
+		if (!fu_synaptics_mst_connection_write (self,
+						        REG_RC_CMD,
+						        (guint8 *)&cmd, 1,
+						        error)) {
 			g_prefix_error (error, "failed to write command: ");
 			return FALSE;
 		}
@@ -229,10 +229,10 @@ fu_synapticsmst_connection_rc_set_command (FuSynapticsmstConnection *self,
 		deadline = t_spec.tv_sec + MAX_WAIT_TIME;
 
 		do {
-			if (!fu_synapticsmst_connection_read (self,
-							      REG_RC_CMD,
-							      (guint8 *)&readData, 2,
-							      error)) {
+			if (!fu_synaptics_mst_connection_read (self,
+							       REG_RC_CMD,
+							       (guint8 *)&readData, 2,
+							       error)) {
 				g_prefix_error (error, "failed to read command: ");
 				return FALSE;
 			}
@@ -265,12 +265,12 @@ fu_synapticsmst_connection_rc_set_command (FuSynapticsmstConnection *self,
 }
 
 gboolean
-fu_synapticsmst_connection_rc_get_command (FuSynapticsmstConnection *self,
-					   guint32 rc_cmd,
-					   guint32 length,
-					   guint32 offset,
-					   guint8 *buf,
-					   GError **error)
+fu_synaptics_mst_connection_rc_get_command (FuSynapticsMstConnection *self,
+					    guint32 rc_cmd,
+					    guint32 length,
+					    guint32 offset,
+					    guint8 *buf,
+					    GError **error)
 {
 	guint32 cur_offset = offset;
 	guint32 cur_length;
@@ -289,19 +289,19 @@ fu_synapticsmst_connection_rc_get_command (FuSynapticsmstConnection *self,
 
 		if (cur_length) {
 			/* write offset */
-			if (!fu_synapticsmst_connection_write (self,
-							       REG_RC_OFFSET,
-							       (guint8 *)&cur_offset, 4,
-							       error)) {
+			if (!fu_synaptics_mst_connection_write (self,
+							        REG_RC_OFFSET,
+							        (guint8 *)&cur_offset, 4,
+							        error)) {
 				g_prefix_error (error, "failed to write offset: ");
 				return FALSE;
 			}
 
 			/* write length */
-			if (!fu_synapticsmst_connection_write (self,
-							       REG_RC_LEN,
-							       (guint8 *)&cur_length, 4,
-							       error)) {
+			if (!fu_synaptics_mst_connection_write (self,
+							        REG_RC_LEN,
+							        (guint8 *)&cur_length, 4,
+							        error)) {
 				g_prefix_error (error, "failed to write length: ");
 				return FALSE;
 			}
@@ -309,10 +309,10 @@ fu_synapticsmst_connection_rc_get_command (FuSynapticsmstConnection *self,
 
 		/* send command */
 		cmd = 0x80 | rc_cmd;
-		if (!fu_synapticsmst_connection_write (self,
-						       REG_RC_CMD,
-						       (guint8 *)&cmd, 1,
-						       error)) {
+		if (!fu_synaptics_mst_connection_write (self,
+						        REG_RC_CMD,
+						        (guint8 *)&cmd, 1,
+						        error)) {
 			g_prefix_error (error, "failed to write command: ");
 			return FALSE;
 		}
@@ -322,10 +322,10 @@ fu_synapticsmst_connection_rc_get_command (FuSynapticsmstConnection *self,
 		deadline = t_spec.tv_sec + MAX_WAIT_TIME;
 
 		do {
-			if (!fu_synapticsmst_connection_read (self,
-							      REG_RC_CMD,
-							      (guint8 *)&readData, 2,
-							      error)) {
+			if (!fu_synaptics_mst_connection_read (self,
+							       REG_RC_CMD,
+							       (guint8 *)&readData, 2,
+							       error)) {
 				g_prefix_error (error, "failed to read command: ");
 				return FALSE;
 			}
@@ -350,11 +350,11 @@ fu_synapticsmst_connection_rc_get_command (FuSynapticsmstConnection *self,
 		}
 
 		if (cur_length) {
-			if (!fu_synapticsmst_connection_read (self,
-							      REG_RC_DATA,
-							      buf,
-							      cur_length,
-							      error)) {
+			if (!fu_synaptics_mst_connection_read (self,
+							       REG_RC_DATA,
+							       buf,
+							       cur_length,
+							       error)) {
 				g_prefix_error (error, "failed to read data: ");
 				return FALSE;
 			}
@@ -369,14 +369,14 @@ fu_synapticsmst_connection_rc_get_command (FuSynapticsmstConnection *self,
 }
 
 gboolean
-fu_synapticsmst_connection_rc_special_get_command (FuSynapticsmstConnection *self,
-						   guint32 rc_cmd,
-						   guint32 cmd_length,
-						   guint32 cmd_offset,
-						   guint8 *cmd_data,
-						   guint32 length,
-						   guint8 *buf,
-						   GError **error)
+fu_synaptics_mst_connection_rc_special_get_command (FuSynapticsMstConnection *self,
+						    guint32 rc_cmd,
+						    guint32 cmd_length,
+						    guint32 cmd_offset,
+						    guint8 *cmd_data,
+						    guint32 length,
+						    guint8 *buf,
+						    GError **error)
 {
 	guint32 readData = 0;
 	guint32 cmd;
@@ -386,30 +386,30 @@ fu_synapticsmst_connection_rc_special_get_command (FuSynapticsmstConnection *sel
 	if (cmd_length) {
 		/* write cmd data */
 		if (cmd_data != NULL) {
-			if (!fu_synapticsmst_connection_write (self,
-							       REG_RC_DATA,
-							       cmd_data,
-							       cmd_length,
-							       error)) {
+			if (!fu_synaptics_mst_connection_write (self,
+							        REG_RC_DATA,
+							        cmd_data,
+							        cmd_length,
+							        error)) {
 				g_prefix_error (error, "Failed to write command data: ");
 				return FALSE;
 			}
 		}
 
 		/* write offset */
-		if (!fu_synapticsmst_connection_write (self,
-						       REG_RC_OFFSET,
-						       (guint8 *)&cmd_offset, 4,
-						       error)) {
+		if (!fu_synaptics_mst_connection_write (self,
+						        REG_RC_OFFSET,
+						        (guint8 *)&cmd_offset, 4,
+						        error)) {
 			g_prefix_error (error, "failed to write offset: ");
 			return FALSE;
 		}
 
 		/* write length */
-		if (!fu_synapticsmst_connection_write (self,
-						       REG_RC_LEN,
-						       (guint8 *)&cmd_length, 4,
-						       error)) {
+		if (!fu_synaptics_mst_connection_write (self,
+						        REG_RC_LEN,
+						        (guint8 *)&cmd_length, 4,
+						        error)) {
 			g_prefix_error (error, "failed to write length: ");
 			return FALSE;
 		}
@@ -417,10 +417,10 @@ fu_synapticsmst_connection_rc_special_get_command (FuSynapticsmstConnection *sel
 
 	/* send command */
 	cmd = 0x80 | rc_cmd;
-	if (!fu_synapticsmst_connection_write (self,
-					REG_RC_CMD,
-					(guint8 *)&cmd, 1,
-					error)) {
+	if (!fu_synaptics_mst_connection_write (self,
+						REG_RC_CMD,
+						(guint8 *)&cmd, 1,
+						error)) {
 		g_prefix_error (error, "failed to write command: ");
 		return FALSE;
 	}
@@ -429,10 +429,10 @@ fu_synapticsmst_connection_rc_special_get_command (FuSynapticsmstConnection *sel
 	clock_gettime (CLOCK_REALTIME, &t_spec);
 	deadline = t_spec.tv_sec + MAX_WAIT_TIME;
 	do {
-		if (!fu_synapticsmst_connection_read (self,
-						REG_RC_CMD,
-						(guint8 *)&readData, 2,
-						error)) {
+		if (!fu_synaptics_mst_connection_read (self,
+						       REG_RC_CMD,
+						       (guint8 *)&readData, 2,
+						       error)) {
 			g_prefix_error (error, "failed to read command: ");
 			return FALSE;
 		}
@@ -458,10 +458,10 @@ fu_synapticsmst_connection_rc_special_get_command (FuSynapticsmstConnection *sel
 	}
 
 	if (length) {
-		if (!fu_synapticsmst_connection_read (self,
-						      REG_RC_DATA,
-						      buf, length,
-						      error)) {
+		if (!fu_synaptics_mst_connection_read (self,
+						       REG_RC_DATA,
+						       buf, length,
+						       error)) {
 			g_prefix_error (error, "failed to read length: ");
 		}
 	}
@@ -470,17 +470,17 @@ fu_synapticsmst_connection_rc_special_get_command (FuSynapticsmstConnection *sel
 }
 
 gboolean
-fu_synapticsmst_connection_enable_rc (FuSynapticsmstConnection *self, GError **error)
+fu_synaptics_mst_connection_enable_rc (FuSynapticsMstConnection *self, GError **error)
 {
 	const gchar *sc = "PRIUS";
 
 	for (gint i = 0; i <= self->layer; i++) {
-		g_autoptr(FuSynapticsmstConnection) connection_tmp = NULL;
-		connection_tmp = fu_synapticsmst_connection_new (self->fd, i, self->rad);
-		if (!fu_synapticsmst_connection_rc_set_command (connection_tmp,
-								UPDC_ENABLE_RC,
-								5, 0, (guint8*)sc,
-								error)) {
+		g_autoptr(FuSynapticsMstConnection) connection_tmp = NULL;
+		connection_tmp = fu_synaptics_mst_connection_new (self->fd, i, self->rad);
+		if (!fu_synaptics_mst_connection_rc_set_command (connection_tmp,
+								 UPDC_ENABLE_RC,
+								 5, 0, (guint8*)sc,
+								 error)) {
 			g_prefix_error (error, "failed to enable remote control: ");
 			return FALSE;
 		}
@@ -490,15 +490,15 @@ fu_synapticsmst_connection_enable_rc (FuSynapticsmstConnection *self, GError **e
 }
 
 gboolean
-fu_synapticsmst_connection_disable_rc (FuSynapticsmstConnection *self, GError **error)
+fu_synaptics_mst_connection_disable_rc (FuSynapticsMstConnection *self, GError **error)
 {
 	for (gint i = self->layer; i >= 0; i--) {
-		g_autoptr(FuSynapticsmstConnection) connection_tmp = NULL;
-		connection_tmp = fu_synapticsmst_connection_new (self->fd, i, self->rad);
-		if (!fu_synapticsmst_connection_rc_set_command (connection_tmp,
-								UPDC_DISABLE_RC,
-								0, 0, NULL,
-								error)) {
+		g_autoptr(FuSynapticsMstConnection) connection_tmp = NULL;
+		connection_tmp = fu_synaptics_mst_connection_new (self->fd, i, self->rad);
+		if (!fu_synaptics_mst_connection_rc_set_command (connection_tmp,
+								 UPDC_DISABLE_RC,
+								 0, 0, NULL,
+								 error)) {
 			g_prefix_error (error, "failed to disable remote control: ");
 			return FALSE;
 		}

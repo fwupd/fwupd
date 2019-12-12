@@ -1,16 +1,16 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsMST"']
 
-install_data(['synapticsmst.quirk'],
+install_data(['synaptics-mst.quirk'],
   install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
 )
 
-shared_module('fu_plugin_synapticsmst',
+shared_module('fu_plugin_synaptics_mst',
   fu_hash,
   sources : [
-    'fu-plugin-synapticsmst.c',
-    'fu-synapticsmst-common.c',
-    'fu-synapticsmst-connection.c',
-    'fu-synapticsmst-device.c',
+    'fu-plugin-synaptics-mst.c',
+    'fu-synaptics-mst-common.c',
+    'fu-synaptics-mst-connection.c',
+    'fu-synaptics-mst-device.c',
   ],
   include_directories : [
     root_incdir,
@@ -35,13 +35,13 @@ if get_option('tests')
   cargs += '-DPLUGINBUILDDIR="' + meson.current_build_dir() + '"'
   cargs += '-DSOURCEDIR="' + meson.current_source_dir() + '"'
   e = executable(
-    'synapticsmst-self-test',
+    'synaptics-mst-self-test',
     fu_hash,
     sources : [
       'fu-self-test.c',
-      'fu-synapticsmst-common.c',
-      'fu-synapticsmst-connection.c',
-      'fu-synapticsmst-device.c',
+      'fu-synaptics-mst-common.c',
+      'fu-synaptics-mst-connection.c',
+      'fu-synaptics-mst-device.c',
     ],
     include_directories : [
       root_incdir,
@@ -61,6 +61,6 @@ if get_option('tests')
       cargs,
     ],
   )
-  test('synapticsmst-self-test', e,
+  test('synaptics-mst-self-test', e,
     env: ['FWUPD_LOCALSTATEDIR=/tmp/fwupd-self-test/var'])
 endif

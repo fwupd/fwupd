@@ -341,7 +341,7 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %{_libdir}/fwupd-plugins-3/libfu_plugin_steelseries.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_superio.so
 %if 0%{?have_dell}
-%{_libdir}/fwupd-plugins-3/libfu_plugin_synapticsmst.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_synaptics_mst.so
 %endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_synaptics_cxaudio.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_synaptics_prometheus.so
