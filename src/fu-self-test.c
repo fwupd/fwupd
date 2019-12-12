@@ -1020,7 +1020,7 @@ fu_engine_downgrade_func (gconstpointer user_data)
 	g_assert_no_error (error);
 	g_assert (ret);
 
-	g_setenv ("FU_SELF_TEST_REMOTES_DIR", TESTDATADIR_SRC, TRUE);
+	g_setenv ("CONFIGURATION_DIRECTORY", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NO_ENUMERATE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -1128,7 +1128,7 @@ fu_engine_install_duration_func (gconstpointer user_data)
 	g_assert_no_error (error);
 	g_assert (ret);
 
-	g_setenv ("FU_SELF_TEST_REMOTES_DIR", TESTDATADIR_SRC, TRUE);
+	g_setenv ("CONFIGURATION_DIRECTORY", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NO_ENUMERATE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -1187,7 +1187,7 @@ fu_engine_history_func (gconstpointer user_data)
 	/* set up dummy plugin */
 	fu_engine_add_plugin (engine, self->plugin);
 
-	g_setenv ("FU_SELF_TEST_REMOTES_DIR", TESTDATADIR_SRC, TRUE);
+	g_setenv ("CONFIGURATION_DIRECTORY", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NO_ENUMERATE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -1309,7 +1309,7 @@ fu_engine_history_inherit (gconstpointer user_data)
 	/* set up dummy plugin */
 	g_setenv ("FWUPD_PLUGIN_TEST", "fail", TRUE);
 	fu_engine_add_plugin (engine, self->plugin);
-	g_setenv ("FU_SELF_TEST_REMOTES_DIR", TESTDATADIR_SRC, TRUE);
+	g_setenv ("CONFIGURATION_DIRECTORY", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NO_ENUMERATE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -1413,7 +1413,7 @@ fu_engine_history_error_func (gconstpointer user_data)
 	g_setenv ("FWUPD_PLUGIN_TEST", "fail", TRUE);
 	fu_engine_add_plugin (engine, self->plugin);
 
-	g_setenv ("FU_SELF_TEST_REMOTES_DIR", TESTDATADIR_SRC, TRUE);
+	g_setenv ("CONFIGURATION_DIRECTORY", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NO_ENUMERATE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
