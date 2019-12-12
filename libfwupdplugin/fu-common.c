@@ -1087,21 +1087,21 @@ fu_common_get_path (FuPathKind path_kind)
 	/* /etc/fwupd */
 	case FU_PATH_KIND_SYSCONFDIR_PKG:
 		tmp = g_getenv ("CONFIGURATION_DIRECTORY");
-		if (tmp != NULL)
+		if (tmp != NULL && g_file_test (tmp, G_FILE_TEST_EXISTS))
 			return g_build_filename (tmp, NULL);
 		basedir = fu_common_get_path (FU_PATH_KIND_SYSCONFDIR);
 		return g_build_filename (basedir, PACKAGE_NAME, NULL);
 	/* /var/lib/fwupd */
 	case FU_PATH_KIND_LOCALSTATEDIR_PKG:
 		tmp = g_getenv ("STATE_DIRECTORY");
-		if (tmp != NULL)
+		if (tmp != NULL && g_file_test (tmp, G_FILE_TEST_EXISTS))
 			return g_build_filename (tmp, NULL);
 		basedir = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR);
 		return g_build_filename (basedir, "lib", PACKAGE_NAME, NULL);
 	/* /var/cache/fwupd */
 	case FU_PATH_KIND_CACHEDIR_PKG:
 		tmp = g_getenv ("CACHE_DIRECTORY");
-		if (tmp != NULL)
+		if (tmp != NULL && g_file_test (tmp, G_FILE_TEST_EXISTS))
 			return g_build_filename (tmp, NULL);
 		basedir = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR);
 		return g_build_filename (basedir, "cache", PACKAGE_NAME, NULL);
