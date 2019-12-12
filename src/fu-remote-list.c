@@ -50,16 +50,8 @@ static GPtrArray *
 fu_remote_list_get_all_paths (void)
 {
 	GPtrArray *paths = g_ptr_array_new_with_free_func (g_free);
-	const gchar *remotes_dir;
 	const gchar *system_prefixlibdir = "/usr/lib/fwupd";
 	g_autofree gchar *remotesdir = NULL;
-
-	/* only set by the self test program */
-	remotes_dir = g_getenv ("FU_SELF_TEST_REMOTES_DIR");
-	if (remotes_dir != NULL) {
-		g_ptr_array_add (paths, g_strdup (remotes_dir));
-		return paths;
-	}
 
 	/* use sysremotes, and then fall back to /etc */
 	remotesdir = fu_common_get_path (FU_PATH_KIND_SYSCONFDIR_PKG);
