@@ -1119,15 +1119,16 @@ fu_engine_check_requirement_firmware (FuEngine *self, XbNode *req,
 			if (g_strcmp0 (xb_node_get_attr (req, "compare"), "ge") == 0) {
 				g_set_error (error,
 					     FWUPD_ERROR,
-					     FWUPD_ERROR_INVALID_FILE,
+					     FWUPD_ERROR_NOT_SUPPORTED,
 					     "Not compatible with bootloader version %s, requires >= %s",
-					     version, xb_node_get_attr (req, "version"));
+                                             version, xb_node_get_attr (req, "version"));
+
 			} else {
-				g_set_error (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INVALID_FILE,
-					     "Not compatible with bootloader version: %s",
-					     error_local->message);
+				g_debug ("Bootloader is not compatible: %s", error_local->message);
+				g_set_error_literal (error,
+						     FWUPD_ERROR,
+						     FWUPD_ERROR_NOT_SUPPORTED,
+						     "Bootloader is not compatible");
 			}
 			return FALSE;
 		}
