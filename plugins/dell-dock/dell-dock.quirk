@@ -13,9 +13,6 @@
 # SPDX-License-Identifier: LGPL-2.1+ OR MIT
 #
 
-[DellDockUnlockTargets]
-synapticsmst = 9
-
 # Used to make plugin probe the devices
 [DeviceInstanceId=USB\VID_413C&PID_B06F]
 Name = Unprobed Dell accessory endpoint
