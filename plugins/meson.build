@@ -69,7 +69,7 @@ subdir('dell-esrt')
 endif
 
 if get_option('plugin_synaptics') and get_option('gudev')
-subdir('synapticsmst')
+subdir('synaptics-mst')
 endif
 
 if get_option('plugin_uefi')

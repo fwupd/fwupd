@@ -11,8 +11,8 @@
 #include <glib.h>
 #include <gio/gio.h>
 
-#define FU_TYPE_SYNAPTICSMST_CONNECTION (fu_synapticsmst_connection_get_type ())
-G_DECLARE_FINAL_TYPE (FuSynapticsmstConnection, fu_synapticsmst_connection, FU, SYNAPTICSMST_CONNECTION, GObject)
+#define FU_TYPE_SYNAPTICS_MST_CONNECTION (fu_synaptics_mst_connection_get_type ())
+G_DECLARE_FINAL_TYPE (FuSynapticsMstConnection, fu_synaptics_mst_connection, FU, SYNAPTICS_MST_CONNECTION, GObject)
 
 #define ADDR_CUSTOMER_ID	0X10E
 #define ADDR_BOARD_ID		0x10F
@@ -58,23 +58,23 @@ typedef enum {
 	UPDC_READ_FROM_TX_DPCD		= 0x32,
 } SynapticsMstUpdcCmd;
 
-FuSynapticsmstConnection	*fu_synapticsmst_connection_new (gint	 fd,
+FuSynapticsMstConnection	*fu_synaptics_mst_connection_new (gint	 fd,
 								 guint8	 layer,
 								 guint	 rad);
 
-gboolean	 fu_synapticsmst_connection_read		(FuSynapticsmstConnection *self,
+gboolean	 fu_synaptics_mst_connection_read		(FuSynapticsMstConnection *self,
 								 guint32	 offset,
 								 guint8		*buf,
 								 guint32	 length,
 								 GError		**error);
 
-gboolean	 fu_synapticsmst_connection_write 		(FuSynapticsmstConnection *self,
+gboolean	 fu_synaptics_mst_connection_write 		(FuSynapticsMstConnection *self,
 								 guint32	 offset,
 								 const guint8 	*buf,
 								 guint32	 length,
 								 GError		**error);
 
-gboolean	 fu_synapticsmst_connection_rc_set_command 	(FuSynapticsmstConnection *self,
+gboolean	 fu_synaptics_mst_connection_rc_set_command 	(FuSynapticsMstConnection *self,
 								 guint32	 rc_cmd,
 								 guint32	 length,
 								 guint32	 offset,
@@ -82,14 +82,14 @@ gboolean	 fu_synapticsmst_connection_rc_set_command 	(FuSynapticsmstConnection *
 								 GError		**error);
 
 
-gboolean	 fu_synapticsmst_connection_rc_get_command 	(FuSynapticsmstConnection *self,
+gboolean	 fu_synaptics_mst_connection_rc_get_command 	(FuSynapticsMstConnection *self,
 								 guint32	 rc_cmd,
 								 guint32	 length,
 								 guint32	 offset,
 								 guint8		*buf,
 								 GError		**error);
 
-gboolean	 fu_synapticsmst_connection_rc_special_get_command(FuSynapticsmstConnection *self,
+gboolean	 fu_synaptics_mst_connection_rc_special_get_command(FuSynapticsMstConnection *self,
 								 guint32	 rc_cmd,
 								 guint32	 cmd_length,
 								 guint32	 cmd_offset,
@@ -98,8 +98,8 @@ gboolean	 fu_synapticsmst_connection_rc_special_get_command(FuSynapticsmstConnec
 								 guint8		*buf,
 								 GError		**error);
 
-gboolean	 fu_synapticsmst_connection_enable_rc		(FuSynapticsmstConnection *self,
+gboolean	 fu_synaptics_mst_connection_enable_rc		(FuSynapticsMstConnection *self,
 								 GError **error);
 
-gboolean	 fu_synapticsmst_connection_disable_rc		(FuSynapticsmstConnection *self,
+gboolean	 fu_synaptics_mst_connection_disable_rc		(FuSynapticsMstConnection *self,
 								 GError **error);

@@ -56,7 +56,7 @@ Here is an example output from a Dell WD15 dock:
 Dell WD15/TB16 wired Dock Synaptics VMM3332
   Guid:                 653cd006-5433-57db-8632-0413af4d3fcc
   DeviceID:             MST-1-1-0-0
-  Plugin:               synapticsmst
+  Plugin:               synaptics_mst
   Flags:                allow-online
   Version:              3.10.002
   Created:              2017-01-13

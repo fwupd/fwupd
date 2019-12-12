@@ -1,6 +1,6 @@
 # match all devices with this udev subsystem
 [DeviceInstanceId=DRM_DP_AUX_DEV]
-Plugin = synapticsmst
+Plugin = synaptics_mst
 
 # GUID generation for Synaptics MST plugin
 #
