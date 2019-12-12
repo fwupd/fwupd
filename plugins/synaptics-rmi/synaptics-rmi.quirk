@@ -1,2 +1,3 @@
 [DeviceInstanceId=HIDRAW\VEN_06CB]
 Plugin = synaptics_rmi
+Vendor = Synaptics
