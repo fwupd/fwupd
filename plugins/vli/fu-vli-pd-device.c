@@ -56,6 +56,7 @@ fu_vli_pd_device_setup (FuVliDevice *vli_device, GError **error)
 	FwupdVersionFormat verfmt = fu_device_get_version_format (FU_DEVICE (self));
 	guint32 version_raw;
 	guint8 verbuf[4] = { 0x0 };
+	guint8 status = 0x0;
 	g_autofree gchar *version_str = NULL;
 
 	/* get version */
@@ -68,6 +69,12 @@ fu_vli_pd_device_setup (FuVliDevice *vli_device, GError **error)
 	version_str = g_strdup_printf ("%02X.%02X.%02X.%02X",
 				       verbuf[0], verbuf[1], verbuf[2], verbuf[3]);
 	fu_device_set_version (FU_DEVICE (self), version_str, verfmt);
+
+	/* get bootloader mode */
+	if (!fu_vli_pd_device_vdr_reg_read (self, 0x00F7, &status, error))
+		return FALSE;
+	if ((status & 0x80) == 0x00)
+		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 
 	/* TODO: detect any I²C child, e.g. parade device */
 
@@ -116,62 +123,6 @@ fu_vli_pd_device_prepare_firmware (FuDevice *device,
 }
 
 static gboolean
-fu_vli_pd_device_reset_to_romcode (FuVliPdDevice *self, GError **error)
-{
-	guint8 tmp = 0;
-	gboolean is_vl103 = FALSE;
-
-	/* is VL103, i.e. new reset VDR_0xC0 */
-	if (!fu_vli_pd_device_vdr_reg_read (self, 0x0018, &tmp, error))
-		return FALSE;
-	if (tmp == 0x80) // 0x90 is VL104
-		is_vl103 = 1;
-
-	/* reset from SPI_Code into ROM_Code */
-	for (guint i = 0; i < 6; i++) {
-		g_autoptr(GError) error_local = NULL;
-
-		/* try to read status */
-		if (!fu_vli_pd_device_vdr_reg_read (self, 0x00F7, &tmp, &error_local)) {
-			if (i == 5) {
-				g_propagate_error (error, g_steal_pointer (&error_local));
-				return FALSE;
-			}
-			g_debug ("ignoring: %s", error_local->message);
-		} else {
-			if ((tmp & 0x80) == 0x00) {
-				break;
-			} else if (is_vl103) {
-				if (!fu_vli_device_raw_read (FU_VLI_DEVICE (self),
-								 0xC0, 0x0, 0x0,
-								 NULL, 0x0, error))
-					return FALSE;
-			} else {
-				/* patch APP5 FW bug (2AF2 -> 2AE2) */
-				if (!fu_vli_pd_device_vdr_reg_write (self, 0x2AE2, 0x1E, error))
-					return FALSE;
-				if (!fu_vli_pd_device_vdr_reg_write (self, 0x2AE3, 0xC3, error))
-					return FALSE;
-				if (!fu_vli_pd_device_vdr_reg_write (self, 0x2AE4, 0x5A, error))
-					return FALSE;
-				if (!fu_vli_pd_device_vdr_reg_write (self, 0x2AE5, 0x87, error))
-					return FALSE;
-				if (!fu_vli_device_raw_read (FU_VLI_DEVICE (self),
-							     0xA0, 0x0, 0x0,
-							     NULL, 0x0, error))
-					return FALSE;
-				if (!fu_vli_device_raw_read (FU_VLI_DEVICE (self),
-							     0xB0, 0x0, 0x0,
-							     NULL, 0x0, error))
-					return FALSE;
-			}
-		}
-		g_usleep (1900 * 1000);
-	}
-	return TRUE;
-}
-
-static gboolean
 fu_vli_pd_device_write_gpios (FuVliPdDevice *self, GError **error)
 {
 	/* write GPIO 4&5, 7 then 3 */
@@ -201,14 +152,6 @@ fu_vli_pd_device_write_firmware (FuDevice *device,
 	if (fw == NULL)
 		return FALSE;
 
-	/* write GPIOs */
-	if (!fu_vli_pd_device_write_gpios (self, error))
-		return FALSE;
-
-	/* reset from SPI_Code into ROM_Code */
-	if (!fu_vli_pd_device_reset_to_romcode (self, error))
-		return FALSE;
-
 	/* write GPIOs in new mode */
 	if (!fu_vli_pd_device_write_gpios (self, error))
 		return FALSE;
@@ -227,11 +170,55 @@ fu_vli_pd_device_write_firmware (FuDevice *device,
 	/* write in chunks */
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_WRITE);
 	buf = g_bytes_get_data (fw, &bufsz);
-	if (!fu_vli_device_spi_write (FU_VLI_DEVICE (self), 0x0000000000000000000000000000000000000000000000000,
+	if (!fu_vli_device_spi_write (FU_VLI_DEVICE (self), 0x0,
 				      buf, bufsz, error))
 		return FALSE;
 
+//FIXME: understand Ofs64K and how that affects things
+
 	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_vli_pd_device_detach (FuDevice *device, GError **error)
+{
+	FuVliPdDevice *self = FU_VLI_PD_DEVICE (device);
+	guint8 tmp = 0;
+	g_autoptr(GError) error_local = NULL;
+
+	/* write GPIOs */
+	if (!fu_vli_pd_device_write_gpios (self, error))
+		return FALSE;
+
+	/* reset from SPI_Code into ROM_Code */
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+
+	/* is VL103, i.e. new reset */
+	if (!fu_vli_pd_device_vdr_reg_read (self, 0x0018, &tmp, error))
+		return FALSE;
+	if (tmp == 0x80) {
+		if (!fu_vli_device_raw_write (FU_VLI_DEVICE (self),
+					      0xC0, 0x0, 0x0, error))
+			return FALSE;
+	} else {
+		/* patch APP5 FW bug (2AF2 -> 2AE2) */
+		if (!fu_vli_pd_device_vdr_reg_write (self, 0x2AE2, 0x1E, error))
+			return FALSE;
+		if (!fu_vli_pd_device_vdr_reg_write (self, 0x2AE3, 0xC3, error))
+			return FALSE;
+		if (!fu_vli_pd_device_vdr_reg_write (self, 0x2AE4, 0x5A, error))
+			return FALSE;
+		if (!fu_vli_pd_device_vdr_reg_write (self, 0x2AE5, 0x87, error))
+			return FALSE;
+		if (!fu_vli_device_raw_write (FU_VLI_DEVICE (self),
+					      0xA0, 0x0, 0x0, error))
+			return FALSE;
+		if (!fu_vli_device_raw_write (FU_VLI_DEVICE (self),
+					      0xB0, 0x0, 0x0, error))
+			return FALSE;
+	}
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
 
@@ -253,5 +240,6 @@ fu_vli_pd_device_class_init (FuVliPdDeviceClass *klass)
 	klass_device->read_firmware = fu_vli_pd_device_read_firmware;
 	klass_device->write_firmware = fu_vli_pd_device_write_firmware;
 	klass_device->prepare_firmware = fu_vli_pd_device_prepare_firmware;
+	klass_device->detach = fu_vli_pd_device_detach;
 	klass_vli_device->setup = fu_vli_pd_device_setup;
 }
