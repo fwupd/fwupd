@@ -171,6 +171,7 @@ fu_vli_device_vdr_reg_read (FuVliDevice *self,
 			    guint8 fun_num,
 			    guint16 offset,
 			    guint8 *buf,
+			    gsize bufsz,
 			    GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
@@ -179,7 +180,7 @@ fu_vli_device_vdr_reg_read (FuVliDevice *self,
 					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
 					    G_USB_DEVICE_RECIPIENT_DEVICE,
 					    fun_num, offset, 0x0,
-					    buf, 0x1, NULL,
+					    buf, bufsz, NULL,
 					    FU_VLI_DEVICE_TIMEOUT,
 					    NULL, error)) {
 		g_prefix_error (error,

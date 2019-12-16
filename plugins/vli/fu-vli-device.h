@@ -31,6 +31,7 @@ gboolean	 fu_vli_device_vdr_reg_read		(FuVliDevice	*self,
 							 guint8		 fun_num,
 							 guint16	 offset,
 							 guint8		*buf,
+							 gsize		 bufsz,
 							 GError		**error);
 gboolean	 fu_vli_device_vdr_reg_write		(FuVliDevice	*self,
 							 guint8		 fun_num,
