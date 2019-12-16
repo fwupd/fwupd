@@ -63,58 +63,58 @@ fu_vli_usbhub_device_vdr_unlock_813 (FuVliUsbhubDevice *self, GError **error)
 static gboolean
 fu_vli_usbhub_device_disable_u1u2 (FuVliUsbhubDevice *self, GError **error)
 {
-	guint8 fun_num, buf;
+	guint8 buf;
 	guint16 offset;
 
 	/* clear Reg[0xF8A2] bit_3 & bit_7 -- also
 	 * clear Total Switch / Flag To Disable FW Auto-Reload Function */
-	fun_num = 0xf8;
 	offset = 0xa2;
-	if (!fu_vli_device_vdr_reg_read (FU_VLI_DEVICE (self), fun_num, offset, &buf, 0x1, error)) {
+	if (!fu_vli_device_raw_read (FU_VLI_DEVICE (self), 0xf8, offset, 0x0,
+				     &buf, 0x1, error)) {
 		g_prefix_error (error, "reg offset 0x%x: ", offset);
 		return FALSE;
 	}
 	buf &= 0x77;
-	if (!fu_vli_device_vdr_reg_write (FU_VLI_DEVICE (self), fun_num, offset, buf, error)) {
+	if (!fu_vli_device_raw_write (FU_VLI_DEVICE (self), 0xf8, offset, buf, error)) {
 		g_prefix_error (error, "reg offset 0x%x: ", offset);
 		return FALSE;
 	}
 
 	/* clear Reg[0xF832] bit_0 & bit_1 */
-	fun_num = 0xf8;
 	offset = 0x32;
-	if (!fu_vli_device_vdr_reg_read (FU_VLI_DEVICE (self), fun_num, offset, &buf, 0x1, error)) {
+	if (!fu_vli_device_raw_read (FU_VLI_DEVICE (self), 0xf8, offset, 0x0,
+					 &buf, 0x1, error)) {
 		g_prefix_error (error, "reg offset 0x%x: ", offset);
 		return FALSE;
 	}
 	buf &= 0xfc;
-	if (!fu_vli_device_vdr_reg_write (FU_VLI_DEVICE (self), fun_num, offset, buf, error)) {
+	if (!fu_vli_device_raw_write (FU_VLI_DEVICE (self), 0xf8, offset, buf, error)) {
 		g_prefix_error (error, "reg offset 0x%x: ", offset);
 		return FALSE;
 	}
 
 	/* clear Reg[0xF920] bit_1 & bit_2 */
-	fun_num = 0xf9;
 	offset = 0x20;
-	if (!fu_vli_device_vdr_reg_read (FU_VLI_DEVICE (self), fun_num, offset, &buf, 0x1, error)) {
+	if (!fu_vli_device_raw_read (FU_VLI_DEVICE (self), 0xf9, offset, 0x0,
+					 &buf, 0x1, error)) {
 		g_prefix_error (error, "reg offset 0x%x: ", offset);
 		return FALSE;
 	}
 	buf &= 0xf9;
-	if (!fu_vli_device_vdr_reg_write (FU_VLI_DEVICE (self), fun_num, offset, buf, error)) {
+	if (!fu_vli_device_raw_write (FU_VLI_DEVICE (self), 0xf9, offset, buf, error)) {
 		g_prefix_error (error, "reg offset 0x%x: ", offset);
 		return FALSE;
 	}
 
 	/* set Reg[0xF836] bit_3 */
-	fun_num = 0xf8;
 	offset = 0x36;
-	if (!fu_vli_device_vdr_reg_read (FU_VLI_DEVICE (self), fun_num, offset, &buf, 0x1, error)) {
+	if (!fu_vli_device_raw_read (FU_VLI_DEVICE (self), 0xf8, offset, 0x0,
+					 &buf, 0x1, error)) {
 		g_prefix_error (error, "reg offset 0x%x: ", offset);
 		return FALSE;
 	}
 	buf |= 0x08;
-	if (!fu_vli_device_vdr_reg_write (FU_VLI_DEVICE (self), fun_num, offset, buf, error)) {
+	if (!fu_vli_device_raw_write (FU_VLI_DEVICE (self), 0xf8, offset, buf, error)) {
 		g_prefix_error (error, "reg offset 0x%x: ", offset);
 		return FALSE;
 	}
@@ -135,35 +135,43 @@ fu_vli_usbhub_device_guess_kind (FuVliUsbhubDevice *self, GError **error)
 	guint8 chipver2 = 0x0;
 	gint tPid = g_usb_device_get_pid (usb_device) & 0x0fff;
 
-	if (!fu_vli_device_vdr_reg_read (FU_VLI_DEVICE (self), 0xf8, 0x8c, &chipver, 0x1, error)) {
+	if (!fu_vli_device_raw_read (FU_VLI_DEVICE (self), 0xf8, 0x8c, 0x0,
+				     &chipver, 0x1, error)) {
 		g_prefix_error (error, "Read_ChipVer failed: ");
 		return FALSE;
 	}
-	if (!fu_vli_device_vdr_reg_read (FU_VLI_DEVICE (self), 0xf6, 0x3f, &chipver2, 0x1, error)) {
+	if (!fu_vli_device_raw_read (FU_VLI_DEVICE (self), 0xf6, 0x3f, 0x0,
+				     &chipver2, 0x1, error)) {
 		g_prefix_error (error, "Read_ChipVer2 failed: ");
 		return FALSE;
 	}
-	if (!fu_vli_device_vdr_reg_read (FU_VLI_DEVICE (self), 0xf8, 0x00, &b811P812, 0x1, error)) {
+	if (!fu_vli_device_raw_read (FU_VLI_DEVICE (self), 0xf8, 0x00, 0x0,
+				     &b811P812, 0x1, error)) {
 		g_prefix_error (error, "Read_811P812 failed: ");
 		return FALSE;
 	}
-	if (!fu_vli_device_vdr_reg_read (FU_VLI_DEVICE (self), 0xf8, 0x8e, &chipid1, 0x1, error)) {
+	if (!fu_vli_device_raw_read (FU_VLI_DEVICE (self), 0xf8, 0x8e, 0x0,
+				     &chipid1, 0x1, error)) {
 		g_prefix_error (error, "Read_ChipID1 failed: ");
 		return FALSE;
 	}
-	if (!fu_vli_device_vdr_reg_read (FU_VLI_DEVICE (self), 0xf8, 0x8f, &chipid2, 0x1, error)) {
+	if (!fu_vli_device_raw_read (FU_VLI_DEVICE (self), 0xf8, 0x8f, 0x0,
+				     &chipid2, 0x1, error)) {
 		g_prefix_error (error, "Read_ChipID2 failed: ");
 		return FALSE;
 	}
-	if (!fu_vli_device_vdr_reg_read (FU_VLI_DEVICE (self), 0xf6, 0x4e, &chipid12, 0x1, error)) {
+	if (!fu_vli_device_raw_read (FU_VLI_DEVICE (self), 0xf6, 0x4e, 0x0,
+				     &chipid12, 0x1, error)) {
 		g_prefix_error (error, "Read_ChipID12 failed: ");
 		return FALSE;
 	}
-	if (!fu_vli_device_vdr_reg_read (FU_VLI_DEVICE (self), 0xf6, 0x4f, &chipid22, 0x1, error)) {
+	if (!fu_vli_device_raw_read (FU_VLI_DEVICE (self), 0xf6, 0x4f, 0x0,
+				     &chipid22, 0x1, error)) {
 		g_prefix_error (error, "Read_ChipID22 failed: ");
 		return FALSE;
 	}
-	if (!fu_vli_device_vdr_reg_read (FU_VLI_DEVICE (self), 0xf6, 0x51, &b820Q7Q8, 0x1, error)) {
+	if (!fu_vli_device_raw_read (FU_VLI_DEVICE (self), 0xf6, 0x51, 0x0,
+				     &b820Q7Q8, 0x1, error)) {
 		g_prefix_error (error, "Read_820Q7Q8 failed: ");
 		return FALSE;
 	}

@@ -53,7 +53,14 @@ void
 fu_vli_device_set_kind (FuVliDevice *self, FuVliDeviceKind device_kind)
 {
 	FuVliDevicePrivate *priv = GET_PRIVATE (self);
+	guint32 sz;
+
 	priv->kind = device_kind;
+
+	/* size is optional */
+	sz = fu_vli_common_device_kind_get_size (device_kind);
+	if (sz > 0)
+		fu_device_set_firmware_size_max (FU_DEVICE (self), sz);
 }
 
 FuVliDeviceKind
@@ -167,35 +174,36 @@ fu_vli_device_i2c_write (FuVliDevice *self, guint8 cmd,
 }
 
 gboolean
-fu_vli_device_vdr_reg_read (FuVliDevice *self,
-			    guint8 fun_num,
-			    guint16 offset,
-			    guint8 *buf,
-			    gsize bufsz,
-			    GError **error)
+fu_vli_device_raw_read (FuVliDevice *self,
+			guint8 request,
+			guint16 value,
+			guint16 idx,
+			guint8 *buf,
+			gsize bufsz,
+			GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
 	if (!g_usb_device_control_transfer (usb_device,
 					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
 					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
 					    G_USB_DEVICE_RECIPIENT_DEVICE,
-					    fun_num, offset, 0x0,
+					    request, value, idx,
 					    buf, bufsz, NULL,
 					    FU_VLI_DEVICE_TIMEOUT,
 					    NULL, error)) {
 		g_prefix_error (error,
-				"failed to read VDR register 0x%x offset 0x%x: ",
-				fun_num, offset);
+				"failed to read raw req:0x%x, val:0x%x, idx:0x%x: ",
+				request, value, idx);
 		return FALSE;
 	}
 	return TRUE;
 }
 
 gboolean
-fu_vli_device_vdr_reg_write (FuVliDevice *self,
-			     guint8 fun_num,
-			     guint16 offset,
-			     guint8 value,
+fu_vli_device_raw_write (FuVliDevice *self,
+			     guint8 request,
+			     guint16 value,
+			     guint16 idx,
 			     GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
@@ -203,13 +211,13 @@ fu_vli_device_vdr_reg_write (FuVliDevice *self,
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
 					    G_USB_DEVICE_RECIPIENT_DEVICE,
-					    fun_num, offset, (guint16) value,
+					    request, value, idx,
 					    NULL, 0x0, NULL,
 					    FU_VLI_DEVICE_TIMEOUT,
 					    NULL, error)) {
 		g_prefix_error (error,
 				"failed to write VDR register 0x%x offset 0x%x value 0x%x: ",
-				fun_num, offset, value);
+				request, value, idx);
 		return FALSE;
 	}
 	return TRUE;
@@ -274,10 +282,10 @@ fu_vli_device_spi_read_status (FuVliDevice *self, guint8 *status, GError **error
 
 gboolean
 fu_vli_device_spi_read (FuVliDevice *self,
-			     guint32 data_addr,
-			     guint8 *buf,
-			     gsize length,
-			     GError **error)
+			guint32 data_addr,
+			guint8 *buf,
+			gsize length,
+			GError **error)
 {
 	FuVliDevicePrivate *priv = GET_PRIVATE (self);
 	guint16 index = ((data_addr << 8) & 0xff00) | ((data_addr >> 8) & 0x00ff);

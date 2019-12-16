@@ -27,16 +27,17 @@ void		 fu_vli_device_set_kind			(FuVliDevice	*self,
 							 FuVliDeviceKind device_kind);
 FuVliDeviceKind	 fu_vli_device_get_kind			(FuVliDevice	*self);
 
-gboolean	 fu_vli_device_vdr_reg_read		(FuVliDevice	*self,
-							 guint8		 fun_num,
-							 guint16	 offset,
+gboolean	 fu_vli_device_raw_read			(FuVliDevice	*self,
+							 guint8		 request,
+							 guint16	 value,
+							 guint16	 idx,
 							 guint8		*buf,
 							 gsize		 bufsz,
 							 GError		**error);
-gboolean	 fu_vli_device_vdr_reg_write		(FuVliDevice	*self,
-							 guint8		 fun_num,
-							 guint16	 offset,
-							 guint8		 value,
+gboolean	 fu_vli_device_raw_write		(FuVliDevice	*self,
+							 guint8		 request,
+							 guint16	 value,
+							 guint16	 idx,
 							 GError		**error);
 
 gboolean	 fu_vli_device_spi_write_enable		(FuVliDevice	*self,
