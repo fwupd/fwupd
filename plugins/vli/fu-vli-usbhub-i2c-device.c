@@ -12,13 +12,12 @@
 
 #include "fu-vli-usbhub-common.h"
 #include "fu-vli-usbhub-device.h"
-#include "fu-vli-usbhub-i2c-common.h"
 #include "fu-vli-usbhub-i2c-device.h"
 
 struct _FuVliUsbhubI2cDevice
 {
 	FuDevice		 parent_instance;
-	FuVliUsbhubI2cChip	 chip;
+	FuVliDeviceKind		 device_kind;
 };
 
 G_DEFINE_TYPE (FuVliUsbhubI2cDevice, fu_vli_usbhub_i2c_device, FU_TYPE_DEVICE)
@@ -27,8 +26,8 @@ static void
 fu_vli_usbhub_i2c_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuVliUsbhubI2cDevice *self = FU_VLI_USBHUB_I2C_DEVICE (device);
-	fu_common_string_append_kv (str, idt, "ChipId",
-				    fu_vli_usbhub_i2c_chip_to_string (self->chip));
+	fu_common_string_append_kv (str, idt, "DeviceKind",
+				    fu_vli_common_device_kind_to_string (self->device_kind));
 }
 
 static gboolean
@@ -41,9 +40,9 @@ fu_vli_usbhub_i2c_device_setup (FuDevice *device, GError **error)
 	g_autofree gchar *version = NULL;
 
 	/* get versions */
-	if (!fu_vli_usbhub_device_i2c_read (parent,
-					    FU_VLI_USBHUB_I2C_CMD_READ_VERSIONS,
-					    buf, sizeof(buf), error)) {
+	if (!fu_vli_device_i2c_read (FU_VLI_DEVICE (parent),
+				     FU_VLI_I2C_CMD_READ_VERSIONS,
+				     buf, sizeof(buf), error)) {
 		g_prefix_error (error, "failed to read versions: ");
 		return FALSE;
 	}
@@ -53,13 +52,13 @@ fu_vli_usbhub_i2c_device_setup (FuDevice *device, GError **error)
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_FOUND,
 			     "no %s device detected",
-			     fu_vli_usbhub_i2c_chip_to_string (self->chip));
+			     fu_vli_common_device_kind_to_string (self->device_kind));
 		return FALSE;
 	}
 
 	/* add instance ID */
 	instance_id = g_strdup_printf ("VLI_USBHUB_I2C\\%s",
-				       fu_vli_usbhub_i2c_chip_to_string (self->chip));
+				       fu_vli_common_device_kind_to_string (self->device_kind));
 	fu_device_add_instance_id (device, instance_id);
 
 	/* set version */
@@ -73,10 +72,11 @@ fu_vli_usbhub_i2c_device_detach (FuDevice *device, GError **error)
 {
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE (fu_device_get_parent (device));
 	const guint8 buf[] = {
-		FU_VLI_USBHUB_I2C_ADDR_WRITE,
-		FU_VLI_USBHUB_I2C_CMD_UPGRADE,
+		FU_VLI_I2C_ADDR_WRITE,
+		FU_VLI_I2C_CMD_UPGRADE,
 	};
-	if (!fu_vli_usbhub_device_i2c_write_data (parent, 0, 0, buf, sizeof(buf), error))
+	if (!fu_vli_device_i2c_write_data (FU_VLI_DEVICE (parent),
+					   0, 0, buf, sizeof(buf), error))
 		return FALSE;
 
 	/* avoid power instability */
@@ -164,8 +164,8 @@ fu_vli_usbhub_i2c_device_write_firmware (FuDevice *device,
 		}
 
 		/* write each record directly to the hardware */
-		buf[0] = FU_VLI_USBHUB_I2C_ADDR_WRITE;
-		buf[1] = FU_VLI_USBHUB_I2C_CMD_WRITE;
+		buf[0] = FU_VLI_I2C_ADDR_WRITE;
+		buf[1] = FU_VLI_I2C_CMD_WRITE;
 		buf[2] = 0x3a; /* ':' */
 		buf[3] = req_len;
 		buf[4] = fu_firmware_strparse_uint8 (line + 3);
@@ -177,30 +177,30 @@ fu_vli_usbhub_i2c_device_write_firmware (FuDevice *device,
 		bufsz = req_len + 8;
 
 		for (retry = 0; retry < 5; retry++) {
-			FuVliUsbhubI2cStatus status = 0xff;
+			FuVliDeviceI2cStatus status = 0xff;
 			g_autoptr(GError) error_local = NULL;
 
 			g_usleep (5 * 1000);
 			if (usbver >= 0x0300 || bufsz <= 32) {
-				if (!fu_vli_usbhub_device_i2c_write_data (parent,
-									  0, 0,
-									  buf,
-									  bufsz,
-									  error))
+				if (!fu_vli_device_i2c_write_data (FU_VLI_DEVICE (parent),
+								   0, 0,
+								   buf,
+								   bufsz,
+								   error))
 					return FALSE;
 			} else {
 				/* for U2, hub data buffer <= 32 bytes */
-				if (!fu_vli_usbhub_device_i2c_write_data (parent,
-									  0, 1,
-									  buf,
-									  32,
-									  error))
+				if (!fu_vli_device_i2c_write_data (FU_VLI_DEVICE (parent),
+								   0, 1,
+								   buf,
+								   32,
+								   error))
 					return FALSE;
-				if (!fu_vli_usbhub_device_i2c_write_data (parent,
-									  1, 0,
-									  buf + 32,
-									  bufsz - 32,
-									  error))
+				if (!fu_vli_device_i2c_write_data (FU_VLI_DEVICE (parent),
+								   1, 0,
+								   buf + 32,
+								   bufsz - 32,
+								   error))
 					return FALSE;
 			}
 
@@ -210,11 +210,11 @@ fu_vli_usbhub_i2c_device_write_firmware (FuDevice *device,
 
 			/* read data to check status */
 			g_usleep (5 * 1000);
-			if (!fu_vli_usbhub_device_i2c_read_status (parent,
-								   &status,
-								   error))
+			if (!fu_vli_device_i2c_read_status (FU_VLI_DEVICE (parent),
+							    &status,
+							    error))
 				return FALSE;
-			if (!fu_vli_usbhub_i2c_check_status (status, &error_local)) {
+			if (!fu_vli_common_i2c_status_check (status, &error_local)) {
 				g_warning ("error on try %u: %s",
 					   retry + 1, error_local->message);
 			} else {
@@ -239,8 +239,8 @@ static gboolean
 fu_vli_usbhub_i2c_device_probe (FuDevice *device, GError **error)
 {
 	FuVliUsbhubI2cDevice *self = FU_VLI_USBHUB_I2C_DEVICE (device);
-	self->chip = FU_VLI_USBHUB_I2C_CHIP_MSP430;
-	fu_device_set_name (device, fu_vli_usbhub_i2c_chip_to_string (self->chip));
+	self->device_kind = FU_VLI_DEVICE_KIND_MSP430;
+	fu_device_set_name (device, fu_vli_common_device_kind_to_string (self->device_kind));
 	return TRUE;
 }
 

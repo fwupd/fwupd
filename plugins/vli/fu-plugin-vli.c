@@ -17,14 +17,16 @@ void
 fu_plugin_init (FuPlugin *plugin)
 {
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
-	fu_plugin_set_device_gtype (plugin, FU_TYPE_VLI_USBHUB_DEVICE);
 	fu_plugin_add_firmware_gtype (plugin, "vli-usbhub", FU_TYPE_VLI_USBHUB_FIRMWARE);
 	fu_plugin_add_firmware_gtype (plugin, "vli-usbhub-pd", FU_TYPE_VLI_USBHUB_PD_FIRMWARE);
+
+	/* register the custom types */
+	g_type_ensure (FU_TYPE_VLI_USBHUB_DEVICE);
 }
 
 /* reboot the FuVliUsbhubDevice if we update the FuVliUsbhubPdDevice */
 static FuDevice *
-fu_plugin_vli_usbhub_get_parent (GPtrArray *devices)
+fu_plugin_vli_get_parent (GPtrArray *devices)
 {
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *dev = g_ptr_array_index (devices, i);
@@ -43,7 +45,7 @@ fu_plugin_composite_cleanup (FuPlugin *plugin,
 			     GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(FuDevice) parent = fu_plugin_vli_usbhub_get_parent (devices);
+	g_autoptr(FuDevice) parent = fu_plugin_vli_get_parent (devices);
 	if (parent == NULL)
 		return TRUE;
 	locker = fu_device_locker_new (parent, error);

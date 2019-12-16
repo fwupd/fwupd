@@ -1,46 +1,61 @@
 # 3470_Class
 [DeviceInstanceId=USB\VID_2109&PID_0810]
-Plugin = vli_usbhub
+Plugin = vli
+GType = FuVliUsbhubDevice
 [DeviceInstanceId=USB\VID_2109&PID_0811]
-Plugin = vli_usbhub
+Plugin = vli
+GType = FuVliUsbhubDevice
 [DeviceInstanceId=USB\VID_2109&PID_0812]
-Plugin = vli_usbhub
+Plugin = vli
+GType = FuVliUsbhubDevice
 [DeviceInstanceId=USB\VID_2109&PID_0813]
-Plugin = vli_usbhub
+Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = needs-unlock-legacy813
 [DeviceInstanceId=USB\VID_2109&PID_8110]
-Plugin = vli_usbhub
+Plugin = vli
+GType = FuVliUsbhubDevice
 [DeviceInstanceId=USB\VID_2109&PID_8113]
-Plugin = vli_usbhub
+Plugin = vli
+GType = FuVliUsbhubDevice
 
 # 3507_Class
 [DeviceInstanceId=USB\VID_2109&PID_0210]
-Plugin = vli_usbhub
+Plugin = vli
+GType = FuVliUsbhubDevice
 
 # 3545_Class
 [DeviceInstanceId=USB\VID_2109&PID_0211]
-Plugin = vli_usbhub
+Plugin = vli
+GType = FuVliUsbhubDevice
 [DeviceInstanceId=USB\VID_2109&PID_2211]
-Plugin = vli_usbhub
+Plugin = vli
+GType = FuVliUsbhubDevice
 [DeviceInstanceId=USB\VID_2109&PID_0212]
-Plugin = vli_usbhub
+Plugin = vli
+GType = FuVliUsbhubDevice
 [DeviceInstanceId=USB\VID_2109&PID_2212]
-Plugin = vli_usbhub
+Plugin = vli
+GType = FuVliUsbhubDevice
 
 # VL817
 [DeviceInstanceId=USB\VID_2109&PID_0817]
-Plugin = vli_usbhub
+Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = usb3
 [DeviceInstanceId=USB\VID_2109&PID_2817]
-Plugin = vli_usbhub
+Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = usb2
 
 # VL820
 [DeviceInstanceId=USB\VID_2109&PID_0820]
-Plugin = vli_usbhub
+Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = usb3,has-shared-spi-pd
 [DeviceInstanceId=USB\VID_2109&PID_2820]
-Plugin = vli_usbhub
+Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = usb2,has-shared-spi-pd
 
 # A25Lxxx

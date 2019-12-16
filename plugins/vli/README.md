@@ -1,10 +1,10 @@
-VIA USB Hub Support
-===================
+VIA Support
+===========
 
 Introduction
 ------------
 
-This plugin is used to update USB hubs from VIA.
+This plugin is used to update USB hubs and PD controllers from VIA.
 
 Firmware Format
 ---------------
@@ -12,9 +12,10 @@ Firmware Format
 The daemon will decompress the cabinet archive and extract a firmware blob in
 an undisclosed binary file format.
 
-This plugin supports the following protocol ID:
+This plugin supports the following protocol IDs:
 
  * com.vli.usbhub
+ * com.vli.pd
 
 GUID Generation
 ---------------
@@ -61,7 +62,8 @@ instance attribute, rather then the flash part as the ID is required to query
 the other flash chip parameters. For example:
 
     [DeviceInstanceId=USB\VID_2109&PID_0210]
-    Plugin = vli_usbhub
+    Plugin = vli
+    GType = FuVliUsbhubDevice
     SpiCmdReadId = 0xf8
     SpiCmdReadIdSz = 4
 
