@@ -18,3 +18,5 @@ FuFirmware		*fu_vli_usbhub_pd_firmware_new		(void);
 FuVliDeviceKind		 fu_vli_usbhub_pd_firmware_get_kind	(FuVliUsbhubPdFirmware	*self);
 guint16			 fu_vli_usbhub_pd_firmware_get_vid	(FuVliUsbhubPdFirmware	*self);
 guint16			 fu_vli_usbhub_pd_firmware_get_pid	(FuVliUsbhubPdFirmware	*self);
+void			 fu_vli_usbhub_pd_firmware_add_offset	(FuVliUsbhubPdFirmware	*self,
+								 gsize			 offset);
