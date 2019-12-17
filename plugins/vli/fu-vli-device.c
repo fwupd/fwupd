@@ -7,6 +7,8 @@
 
 #include "config.h"
 
+#include "fu-chunk.h"
+
 #include "fu-vli-device.h"
 
 typedef struct {
@@ -67,6 +69,352 @@ fu_vli_device_get_spi_cmd (FuVliDevice *self,
 	}
 	if (cmd != NULL)
 		*cmd = priv->spi_cmds[req];
+	return TRUE;
+}
+
+gboolean
+fu_vli_device_reset (FuVliDevice *self, GError **error)
+{
+	FuVliDeviceClass *klass = FU_VLI_DEVICE_GET_CLASS (self);
+	if (klass->reset != NULL) {
+		if (!klass->reset (self, error)) {
+			g_prefix_error (error, "failed to reset device: ");
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_vli_device_spi_write_enable (FuVliDevice *self, GError **error)
+{
+	FuVliDeviceClass *klass = FU_VLI_DEVICE_GET_CLASS (self);
+	if (klass->spi_write_enable != NULL) {
+		if (!klass->spi_write_enable (self, error)) {
+			g_prefix_error (error, "failed to write enable SPI: ");
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_vli_device_spi_chip_erase (FuVliDevice *self, GError **error)
+{
+	FuVliDeviceClass *klass = FU_VLI_DEVICE_GET_CLASS (self);
+	if (klass->spi_chip_erase != NULL) {
+		if (!klass->spi_chip_erase (self, error)) {
+			g_prefix_error (error, "failed to erase SPI data: ");
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_vli_device_spi_write_status (FuVliDevice *self, guint8 status, GError **error)
+{
+	FuVliDeviceClass *klass = FU_VLI_DEVICE_GET_CLASS (self);
+	if (klass->spi_write_status != NULL) {
+		if (!klass->spi_write_status (self, status, error)) {
+			g_prefix_error (error, "failed to write SPI status 0x%x: ", status);
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_vli_device_spi_read_status (FuVliDevice *self, guint8 *status, GError **error)
+{
+	FuVliDeviceClass *klass = FU_VLI_DEVICE_GET_CLASS (self);
+	if (klass->spi_read_status != NULL) {
+		if (!klass->spi_read_status (self, status, error)) {
+			g_prefix_error (error, "failed to read status: ");
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_vli_device_spi_sector_erase (FuVliDevice *self, guint32 addr, GError **error)
+{
+	FuVliDeviceClass *klass = FU_VLI_DEVICE_GET_CLASS (self);
+	if (klass->spi_sector_erase != NULL) {
+		if (!klass->spi_sector_erase (self, addr, error)) {
+			g_prefix_error (error, "failed to erase SPI data @0x%x: ", addr);
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+gboolean
+fu_vli_device_spi_read_block (FuVliDevice *self, guint32 addr,
+			      guint8 *buf, gsize bufsz, GError **error)
+{
+	FuVliDeviceClass *klass = FU_VLI_DEVICE_GET_CLASS (self);
+	if (klass->spi_read_data != NULL) {
+		if (!klass->spi_read_data (self, addr, buf, bufsz, error)) {
+			g_prefix_error (error, "failed to read SPI data @0x%x: ", addr);
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_vli_device_spi_write_data (FuVliDevice *self, guint32 addr,
+			      const guint8 *buf, gsize bufsz, GError **error)
+{
+	FuVliDeviceClass *klass = FU_VLI_DEVICE_GET_CLASS (self);
+	if (klass->spi_write_data != NULL) {
+		if (!klass->spi_write_data (self, addr, buf, bufsz, error)) {
+			g_prefix_error (error, "failed to write SPI data @0x%x: ", addr);
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_vli_device_spi_wait_finish (FuVliDevice *self, GError **error)
+{
+	const guint32 rdy_cnt = 2;
+	guint32 cnt = 0;
+
+	for (guint32 idx = 0; idx < 1000; idx++) {
+		guint8 status = 0x7f;
+
+		/* must get bit[1:0] == 0 twice in a row for success */
+		if (!fu_vli_device_spi_read_status (self, &status, error))
+			return FALSE;
+		if ((status & 0x03) == 0x00) {
+			if (cnt++ >= rdy_cnt)
+				return TRUE;
+		} else {
+			cnt = 0;
+		}
+		g_usleep (500 * 1000);
+	}
+	g_set_error (error,
+		     G_IO_ERROR,
+		     G_IO_ERROR_FAILED,
+		     "failed to wait for SPI");
+	return FALSE;
+}
+
+gboolean
+fu_vli_device_spi_erase_sector (FuVliDevice *self, guint32 addr, GError **error)
+{
+	const guint32 bufsz = 0x1000;
+
+	/* erase sector */
+	if (!fu_vli_device_spi_write_enable (self, error)) {
+		g_prefix_error (error, "->spi_write_enable failed: ");
+		return FALSE;
+	}
+	if (!fu_vli_device_spi_write_status (self, 0x00, error)) {
+		g_prefix_error (error, "->spi_write_status failed: ");
+		return FALSE;
+	}
+	if (!fu_vli_device_spi_write_enable (self, error)) {
+		g_prefix_error (error, "->spi_write_enable failed: ");
+		return FALSE;
+	}
+	if (!fu_vli_device_spi_sector_erase (self, addr, error)) {
+		g_prefix_error (error, "->spi_sector_erase failed");
+		return FALSE;
+	}
+	if (!fu_vli_device_spi_wait_finish (self, error)) {
+		g_prefix_error (error, "->spi_wait_finish failed");
+		return FALSE;
+	}
+
+	/* verify it really was blanked */
+	for (guint32 offset = 0; offset < bufsz; offset += FU_VLI_DEVICE_TXSIZE) {
+		guint8 buf[FU_VLI_DEVICE_TXSIZE] = { 0x0 };
+		if (!fu_vli_device_spi_read_block (self,
+						  addr + offset,
+						  buf, sizeof (buf),
+						  error)) {
+			g_prefix_error (error, "failed to read back empty: ");
+			return FALSE;
+		}
+		for (guint i = 0; i < sizeof(buf); i++) {
+			if (buf[i] != 0xff) {
+				g_set_error (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_FAILED,
+					     "failed to check blank @0x%x",
+					     addr + offset + i);
+				return FALSE;
+			}
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
+GBytes *
+fu_vli_device_spi_read (FuVliDevice *self, guint32 address, gsize bufsz, GError **error)
+{
+	g_autofree guint8 *buf = g_malloc0 (bufsz);
+	g_autoptr(GPtrArray) chunks = NULL;
+
+	/* get data from hardware */
+	chunks = fu_chunk_array_new (buf, bufsz, address, 0x0, FU_VLI_DEVICE_TXSIZE);
+	for (guint i = 0; i < chunks->len; i++) {
+		FuChunk *chk = g_ptr_array_index (chunks, i);
+		if (!fu_vli_device_spi_read_block (self,
+						  chk->address,
+						  (guint8 *) chk->data,
+						  chk->data_sz,
+						  error)) {
+			g_prefix_error (error, "SPI data read failed @0x%x: ", chk->address);
+			return NULL;
+		}
+		fu_device_set_progress_full (FU_DEVICE (self),
+					     (gsize) i, (gsize) chunks->len);
+	}
+	return g_bytes_new_take (g_steal_pointer (&buf), bufsz);
+}
+
+gboolean
+fu_vli_device_spi_write_block (FuVliDevice *self,
+			       guint32 address,
+			       const guint8 *buf,
+			       gsize bufsz,
+			       GError **error)
+{
+	g_autofree guint8 *buf_tmp = g_malloc0 (bufsz);
+
+	/* sanity check */
+	if (bufsz > FU_VLI_DEVICE_TXSIZE) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_FAILED,
+			     "cannot write 0x%x in one block",
+			     (guint) bufsz);
+		return FALSE;
+	}
+
+	/* write */
+	if (g_getenv ("FWUPD_VLI_USBHUB_VERBOSE") != NULL)
+		g_debug ("writing 0x%x block @0x%x", (guint) bufsz, address);
+	if (!fu_vli_device_spi_write_enable (self, error)) {
+		g_prefix_error (error, "enabling SPI write failed: ");
+		return FALSE;
+	}
+	if (!fu_vli_device_spi_write_data (self, address, buf, bufsz, error)) {
+		g_prefix_error (error, "SPI data write failed: ");
+		return FALSE;
+	}
+	g_usleep (800);
+
+	/* verify */
+	if (!fu_vli_device_spi_read_block (self, address, buf_tmp, bufsz, error)) {
+		g_prefix_error (error, "SPI data read failed: ");
+		return FALSE;
+	}
+	return fu_common_bytes_compare_raw (buf, bufsz, buf_tmp, bufsz, error);
+}
+
+gboolean
+fu_vli_device_spi_write (FuVliDevice *self,
+			 guint32 address,
+			 const guint8 *buf,
+			 gsize bufsz,
+			 GError **error)
+{
+	FuChunk *chk;
+	g_autoptr(GPtrArray) chunks = NULL;
+
+	/* write SPI data, then CRC bytes last */
+	g_debug ("writing 0x%x bytes @0x%x", (guint) bufsz, address);
+	chunks = fu_chunk_array_new (buf, bufsz, 0x0, 0x0, FU_VLI_DEVICE_TXSIZE);
+	if (chunks->len > 1) {
+		for (guint i = 1; i < chunks->len; i++) {
+			chk = g_ptr_array_index (chunks, i);
+			if (!fu_vli_device_spi_write_block (self,
+							    chk->address + address,
+							    chk->data,
+							    chk->data_sz,
+							    error)) {
+				g_prefix_error (error, "failed to write block 0x%x: ", chk->idx);
+				return FALSE;
+			}
+			fu_device_set_progress_full (FU_DEVICE (self),
+						     (gsize) i - 1,
+						     (gsize) chunks->len);
+		}
+	}
+	chk = g_ptr_array_index (chunks, 0);
+	if (!fu_vli_device_spi_write_block (self,
+					    chk->address + address,
+					    chk->data,
+					    chk->data_sz,
+					    error)) {
+		g_prefix_error (error, "failed to write CRC block: ");
+		return FALSE;
+	}
+	fu_device_set_progress_full (FU_DEVICE (self), (gsize) chunks->len, (gsize) chunks->len);
+	return TRUE;
+}
+
+gboolean
+fu_vli_device_spi_erase_all (FuVliDevice *self, GError **error)
+{
+	if (!fu_vli_device_spi_write_enable (self, error))
+		return FALSE;
+	if (!fu_vli_device_spi_write_status (self, 0x00, error))
+		return FALSE;
+	if (!fu_vli_device_spi_write_enable (self, error))
+		return FALSE;
+	if (!fu_vli_device_spi_chip_erase (self, error))
+		return FALSE;
+	g_usleep (4 * G_USEC_PER_SEC);
+
+	/* verify chip was erased */
+	for (guint addr = 0; addr < 0x10000; addr += 0x1000) {
+		guint8 buf[FU_VLI_DEVICE_TXSIZE] = { 0x0 };
+		if (!fu_vli_device_spi_read_block (self, addr, buf, sizeof(buf), error)) {
+			g_prefix_error (error, "failed to read @0x%x: ", addr);
+			return FALSE;
+		}
+		for (guint i = 0; i < sizeof(buf); i++) {
+			if (buf[i] != 0xff) {
+				g_set_error (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_FAILED,
+					     "failed to verify erase @0x%x: ", addr);
+				return FALSE;
+			}
+		}
+	}
+	return TRUE;
+}
+
+gboolean
+fu_vli_device_spi_erase (FuVliDevice *self, guint32 addr, gsize sz, GError **error)
+{
+	g_autoptr(GPtrArray) chunks = fu_chunk_array_new (NULL, sz, addr, 0x0, 0x1000);
+	g_debug ("erasing 0x%x bytes @0x%x", (guint) sz, addr);
+	for (guint i = 0; i < chunks->len; i++) {
+		FuChunk *chunk = g_ptr_array_index (chunks, i);
+		if (g_getenv ("FWUPD_VLI_USBHUB_VERBOSE") != NULL)
+			g_debug ("erasing @0x%x", chunk->address);
+		if (!fu_vli_device_spi_erase_sector (FU_VLI_DEVICE (self), chunk->address, error)) {
+			g_prefix_error (error,
+					"failed to erase FW sector @0x%x: ",
+					chunk->address);
+			return FALSE;
+		}
+		fu_device_set_progress_full (FU_DEVICE (self),
+					     (gsize) i, (gsize) chunks->len);
+	}
 	return TRUE;
 }
 
@@ -197,6 +545,32 @@ fu_vli_device_setup (FuDevice *device, GError **error)
 }
 
 static gboolean
+fu_vli_device_attach (FuDevice *device, GError **error)
+{
+	g_autoptr(GError) error_local = NULL;
+
+	/* replug, and ignore the device going away */
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	if (!fu_vli_device_reset (FU_VLI_DEVICE (device), &error_local)) {
+		if (g_error_matches (error_local,
+				     G_USB_DEVICE_ERROR,
+				     G_USB_DEVICE_ERROR_NO_DEVICE) ||
+		    g_error_matches (error_local,
+				     G_USB_DEVICE_ERROR,
+				     G_USB_DEVICE_ERROR_FAILED)) {
+			g_debug ("ignoring %s", error_local->message);
+		} else {
+			g_propagate_prefixed_error (error,
+						    g_steal_pointer (&error_local),
+						    "failed to restart device: ");
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_vli_device_set_quirk_kv (FuDevice *device,
 			    const gchar *key,
 			    const gchar *value,
@@ -261,4 +635,5 @@ fu_vli_device_class_init (FuVliDeviceClass *klass)
 	klass_device->to_string = fu_vli_device_to_string;
 	klass_device->set_quirk_kv = fu_vli_device_set_quirk_kv;
 	klass_device->setup = fu_vli_device_setup;
+	klass_device->attach = fu_vli_device_attach;
 }

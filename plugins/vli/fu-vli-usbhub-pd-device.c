@@ -147,10 +147,10 @@ fu_vli_usbhub_pd_device_read_firmware (FuDevice *device, GError **error)
 
 	/* read */
 	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_DEVICE_VERIFY);
-	fw = fu_vli_usbhub_device_spi_read (parent,
-					    fu_vli_common_device_kind_get_offset (self->device_kind),
-					    fu_device_get_firmware_size_max (device),
-					    error);
+	fw = fu_vli_device_spi_read (FU_VLI_DEVICE (parent),
+				     fu_vli_common_device_kind_get_offset (self->device_kind),
+				     fu_device_get_firmware_size_max (device),
+				     error);
 	if (fw == NULL)
 		return NULL;
 	return fu_firmware_new_from_bytes (fw);
@@ -182,19 +182,16 @@ fu_vli_usbhub_pd_device_write_firmware (FuDevice *device,
 	/* erase */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_ERASE);
 	buf = g_bytes_get_data (fw, &bufsz);
-	if (!fu_vli_usbhub_device_spi_erase (parent,
-					     fu_vli_common_device_kind_get_offset (self->device_kind),
-					     bufsz,
-					     error))
+	if (!fu_vli_device_spi_erase (FU_VLI_DEVICE (parent),
+				      fu_vli_common_device_kind_get_offset (self->device_kind),
+				      bufsz, error))
 		return FALSE;
 
 	/* write */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
-	if (!fu_vli_usbhub_device_spi_write (parent,
-					     fu_vli_common_device_kind_get_offset (self->device_kind),
-					     buf,
-					     bufsz,
-					     error))
+	if (!fu_vli_device_spi_write (FU_VLI_DEVICE (parent),
+				      fu_vli_common_device_kind_get_offset (self->device_kind),
+				      buf, bufsz, error))
 		return FALSE;
 
 	/* success */
