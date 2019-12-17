@@ -8,14 +8,15 @@
 
 #include "fu-plugin.h"
 
+#include "fu-vli-device.h"
 #include "fu-vli-usbhub-i2c-common.h"
 
 #define FU_TYPE_VLI_USBHUB_DEVICE (fu_vli_usbhub_device_get_type ())
-G_DECLARE_FINAL_TYPE (FuVliUsbhubDevice, fu_vli_usbhub_device, FU, VLI_USBHUB_DEVICE, FuUsbDevice)
+G_DECLARE_FINAL_TYPE (FuVliUsbhubDevice, fu_vli_usbhub_device, FU, VLI_USBHUB_DEVICE, FuVliDevice)
 
 struct _FuVliUsbhubDeviceClass
 {
-	FuUsbDeviceClass	parent_class;
+	FuVliDeviceClass	parent_class;
 };
 
 gboolean	 fu_vli_usbhub_device_spi_erase		(FuVliUsbhubDevice *self,

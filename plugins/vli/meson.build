@@ -12,6 +12,7 @@ shared_module('fu_plugin_vli',
   sources : [
     'fu-plugin-vli.c',
     'fu-vli-common.c',
+    'fu-vli-device.c',
     'fu-vli-usbhub-common.c',
     'fu-vli-usbhub-device.c',
     'fu-vli-usbhub-firmware.c',
