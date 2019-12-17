@@ -1,6 +1,7 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginVliUsbhub"']
 
 install_data([
+  'vli-pd.quirk',
   'vli-usbhub.quirk',
   'vli-usbhub-lenovo.quirk',
   ],
@@ -14,6 +15,7 @@ shared_module('fu_plugin_vli',
     'fu-vli-common.c',
     'fu-vli-device.c',
     'fu-vli-pd-common.c',
+    'fu-vli-pd-device.c',
     'fu-vli-pd-firmware.c',
     'fu-vli-usbhub-common.c',
     'fu-vli-usbhub-device.c',

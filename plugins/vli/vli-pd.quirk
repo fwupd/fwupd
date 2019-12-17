@@ -1,0 +1,139 @@
+[DeviceInstanceId=USB\VID_17EF&PID_3070]
+Plugin = vli
+GType = FuVliPdDevice
+
+# Generic
+[DeviceInstanceId=USB\VID_0800&PID_0800]
+Plugin = vli
+GType = FuVliPdDevice
+DeviceKind = VL100
+[DeviceInstanceId=USB\VID_2109&PID_0100]
+Plugin = vli
+GType = FuVliPdDevice
+DeviceKind = VL100
+[DeviceInstanceId=USB\VID_2109&PID_0101]
+Plugin = vli
+GType = FuVliPdDevice
+DeviceKind = VL101
+[DeviceInstanceId=USB\VID_2109&PID_0102]
+Plugin = vli
+GType = FuVliPdDevice
+DeviceKind = VL102
+[DeviceInstanceId=USB\VID_2109&PID_0103]
+Plugin = vli
+GType = FuVliPdDevice
+DeviceKind = VL103
+[DeviceInstanceId=USB\VID_2109&PID_0104]
+Plugin = vli
+GType = FuVliPdDevice
+DeviceKind = VL104
+[DeviceInstanceId=USB\VID_2109&PID_0105]
+Plugin = vli
+GType = FuVliPdDevice
+DeviceKind = VL105
+[DeviceInstanceId=USB\VID_2109&PID_0106]
+Plugin = vli
+GType = FuVliPdDevice
+DeviceKind = VL106
+[DeviceInstanceId=USB\VID_2109&PID_0107]
+Plugin = vli
+GType = FuVliPdDevice
+DeviceKind = VL107
+
+[DeviceInstanceId=USB\VID_2109&PID_D101]
+Plugin = vli
+GType = FuVliPdDevice
+[DeviceInstanceId=USB\VID_2109&PID_D102]
+Plugin = vli
+GType = FuVliPdDevice
+
+# Lenovo VGA
+[DeviceInstanceId=USB\VID_17EF&PID_7211]
+Plugin = vli
+GType = FuVliPdDevice
+
+# Lenovo HDMI
+[DeviceInstanceId=USB\VID_17EF&PID_7212]
+Plugin = vli
+GType = FuVliPdDevice
+
+# Lenovo
+[DeviceInstanceId=USB\VID_17EF&PID_7215]
+Plugin = vli
+GType = FuVliPdDevice
+[DeviceInstanceId=USB\VID_17EF&PID_7217]
+Plugin = vli
+GType = FuVliPdDevice
+[DeviceInstanceId=USB\VID_17EF&PID_721C]
+Plugin = vli
+GType = FuVliPdDevice
+[DeviceInstanceId=USB\VID_17EF&PID_7223]
+Plugin = vli
+GType = FuVliPdDevice
+
+# Samsung
+[DeviceInstanceId=USB\VID_04E8&PID_A025]
+Plugin = vli
+GType = FuVliPdDevice
+[DeviceInstanceId=USB\VID_04E8&PID_A048]
+Plugin = vli
+GType = FuVliPdDevice
+
+[DeviceInstanceId=USB\VID_2109&PID_8880]
+Plugin = vli
+GType = FuVliPdDevice
+
+# VL671,U3TT, VT3547
+[DeviceInstanceId=USB\VID_2109&PID_8881]
+Plugin = vli
+GType = FuVliPdDevice
+[DeviceInstanceId=USB\VID_2109&PID_8882]
+Plugin = vli
+GType = FuVliPdDevice
+[DeviceInstanceId=USB\VID_2109&PID_8883]
+Plugin = vli
+GType = FuVliPdDevice
+
+# Realtek
+[DeviceInstanceId=USB\VID_2109&PID_8884]
+Plugin = vli
+GType = FuVliPdDevice
+
+# VL650, VT3555
+[DeviceInstanceId=USB\VID_2109&PID_8885]
+Plugin = vli
+GType = FuVliPdDevice
+
+# MStar, VT3518
+[DeviceInstanceId=USB\VID_2109&PID_8886]
+Plugin = vli
+GType = FuVliPdDevice
+
+[DeviceInstanceId=USB\VID_2109&PID_8887]
+Plugin = vli
+GType = FuVliPdDevice
+
+[DeviceInstanceId=USB\VID_2109&PID_8889]
+Plugin = vli
+GType = FuVliPdDevice
+
+# Novatek, VT3538
+[DeviceInstanceId=USB\VID_2109&PID_888A]
+Plugin = vli
+GType = FuVliPdDevice
+
+[DeviceInstanceId=USB\VID_2109&PID_888B]
+Plugin = vli
+GType = FuVliPdDevice
+[DeviceInstanceId=USB\VID_2109&PID_888C]
+Plugin = vli
+GType = FuVliPdDevice
+[DeviceInstanceId=USB\VID_2109&PID_888D]
+Plugin = vli
+GType = FuVliPdDevice
+[DeviceInstanceId=USB\VID_2109&PID_888E]
+Plugin = vli
+GType = FuVliPdDevice
+[DeviceInstanceId=USB\VID_2109&PID_888F]
+Plugin = vli
+GType = FuVliPdDevice

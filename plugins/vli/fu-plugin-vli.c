@@ -9,6 +9,7 @@
 #include "fu-plugin-vfuncs.h"
 #include "fu-hash.h"
 
+#include "fu-vli-pd-device.h"
 #include "fu-vli-pd-firmware.h"
 #include "fu-vli-usbhub-device.h"
 #include "fu-vli-usbhub-firmware.h"
@@ -22,6 +23,7 @@ fu_plugin_init (FuPlugin *plugin)
 
 	/* register the custom types */
 	g_type_ensure (FU_TYPE_VLI_USBHUB_DEVICE);
+	g_type_ensure (FU_TYPE_VLI_PD_DEVICE);
 }
 
 /* reboot the FuVliUsbhubDevice if we update the FuVliUsbhubPdDevice */

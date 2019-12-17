@@ -14,6 +14,7 @@ an undisclosed binary file format.
 
 This plugin supports the following protocol ID:
 
+ * com.vli.pd
  * com.vli.usbhub
 
 GUID Generation
