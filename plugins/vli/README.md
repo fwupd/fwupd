@@ -62,6 +62,7 @@ the other flash chip parameters. For example:
 
     [DeviceInstanceId=USB\VID_2109&PID_0210]
     Plugin = vli
+    GType = FuVliUsbhubDevice
     SpiCmdReadId = 0xf8
     SpiCmdReadIdSz = 4
 

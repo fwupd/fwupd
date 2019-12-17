@@ -1,168 +1,210 @@
 # Lenovo CS18 Ultra Dock
 [DeviceInstanceId=USB\VID_17EF&PID_3070]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = usb3
 [DeviceInstanceId=USB\VID_17EF&PID_3071]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = usb2
 
 # Lenovo CS18 Pro and Basic Dock
 [DeviceInstanceId=USB\VID_17EF&PID_3072]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = usb3
 [DeviceInstanceId=USB\VID_17EF&PID_3073]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = usb2
 
 # Lenovo TR Dock
 [DeviceInstanceId=USB\VID_17EF&PID_307F]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = usb3,has-shared-spi-i2c
 [DeviceInstanceId=USB\VID_17EF&PID_3080]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = usb2,has-shared-spi-i2c
 
 # Lenovo CS13 KG Dock
 [DeviceInstanceId=USB\VID_17EF&PID_1010]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = usb2,usb3
 
 # Lenovo CS13 GD Dock
 [DeviceInstanceId=USB\VID_17EF&PID_1012]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = usb2,usb3
 
 # Lenovo CS13 MO Dock
 [DeviceInstanceId=USB\VID_17EF&PID_1013]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = usb2,usb3
 
 # Lenovo Payton dock
 [DeviceInstanceId=USB\VID_17EF&PID_305A]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = tier1,usb2,usb3
 [DeviceInstanceId=USB\VID_17EF&PID_305B]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = tier2,usb2,usb3
 
 # Lenovo USB3 Ultra Dock
 [DeviceInstanceId=USB\VID_17EF&PID_1014]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = tier1,usb2,usb3
 [DeviceInstanceId=USB\VID_17EF&PID_1015]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = tier2,usb2,usb3
 
 # Lenovo USB3 Pro Dock
 [DeviceInstanceId=USB\VID_17EF&PID_1016]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = tier1,usb2,usb3
 [DeviceInstanceId=USB\VID_17EF&PID_1018]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = tier2,usb2,usb3
 
 # Lenovo Workstation D40
 [DeviceInstanceId=USB\VID_17EF&PID_1033]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = usb2,usb3
 
 # Lenovo Workstation S40
 [DeviceInstanceId=USB\VID_17EF&PID_1034]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = usb2,usb3
 
 # Lenovo Workstation v40
 [DeviceInstanceId=USB\VID_17EF&PID_1035]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = usb2,usb3
 
 # Lenovo One Link Plus
 [DeviceInstanceId=USB\VID_17EF&PID_1018]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = tier1,usb2,usb3
 [DeviceInstanceId=USB\VID_17EF&PID_1019]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = tier2,usb2,usb3
 
 # Lenovo Hybrid dock
 [DeviceInstanceId=USB\VID_17EF&PID_A356]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = tier1,usb3
 [DeviceInstanceId=USB\VID_17EF&PID_1028]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = tier1,usb2
 [DeviceInstanceId=USB\VID_17EF&PID_A357]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = tier2,usb3
 [DeviceInstanceId=USB\VID_17EF&PID_1029]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = tier2,usb2
 
 # Lenovo Travel hub
 [DeviceInstanceId=USB\VID_17EF&PID_7216]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = usb3
 [DeviceInstanceId=USB\VID_17EF&PID_7224]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = usb2
 
 # Lenovo Travel hub Gen2
 [DeviceInstanceId=USB\VID_17EF&PID_721D]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = usb3,has-shared-spi-pd
 [DeviceInstanceId=USB\VID_17EF&PID_7225]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = usb2,has-shared-spi-pd
 
 # Lenovo USB-C Mini dock
 [DeviceInstanceId=USB\VID_17EF&PID_3094]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = usb3,has-shared-spi-pd
 [DeviceInstanceId=USB\VID_17EF&PID_3095]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = usb2,has-shared-spi-pd
 
 # Lenovo Travel Hub 1in3
 [DeviceInstanceId=USB\VID_17EF&PID_7228]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = usb3
 [DeviceInstanceId=USB\VID_17EF&PID_7226]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = usb2
 
 # Lenovo USB-C 7-in-1 Hub
 [DeviceInstanceId=USB\VID_17EF&PID_722A]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = usb3,has-shared-spi-pd
 [DeviceInstanceId=USB\VID_17EF&PID_7229]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = usb2,has-shared-spi-pd
 
 # Lenovo USB-C to 4 USB-A Hub
 [DeviceInstanceId=USB\VID_17EF&PID_1039]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = usb3,has-shared-spi-pd
 [DeviceInstanceId=USB\VID_17EF&PID_103A]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = usb2,has-shared-spi-pd
 
 # Lenovo Gen2 dock
 [DeviceInstanceId=USB\VID_17EF&PID_A391]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = tier1,usb3
 [DeviceInstanceId=USB\VID_17EF&PID_A392]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = tier1,usb2
 [DeviceInstanceId=USB\VID_17EF&PID_A393]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = tier2,usb3
 [DeviceInstanceId=USB\VID_17EF&PID_A394]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = tier2,usb2
 [DeviceInstanceId=USB\VID_17EF&PID_A395]
 Plugin = vli
+GType = FuVliUsbhubDevice
 
 # Lenovo Powered Hub
 [DeviceInstanceId=USB\VID_17EF&PID_721C]
 Plugin = vli
+GType = FuVliUsbhubDevice
 Flags = usb2
