@@ -7,65 +7,66 @@
 
 #include "config.h"
 
-#include "fu-vli-usbhub-pd-firmware.h"
+#include "fu-vli-pd-common.h"
+#include "fu-vli-pd-firmware.h"
 
-struct _FuVliUsbhubPdFirmware {
+struct _FuVliPdFirmware {
 	FuFirmwareClass		 parent_instance;
 	FuVliDeviceKind		 device_kind;
-	FuVliUsbhubPdHdr	 hdr;
+	FuVliPdHdr		 hdr;
 	GArray			*offsets;
 };
 
-G_DEFINE_TYPE (FuVliUsbhubPdFirmware, fu_vli_usbhub_pd_firmware, FU_TYPE_FIRMWARE)
+G_DEFINE_TYPE (FuVliPdFirmware, fu_vli_pd_firmware, FU_TYPE_FIRMWARE)
 
 FuVliDeviceKind
-fu_vli_usbhub_pd_firmware_get_kind (FuVliUsbhubPdFirmware *self)
+fu_vli_pd_firmware_get_kind (FuVliPdFirmware *self)
 {
-	g_return_val_if_fail (FU_IS_VLI_USBHUB_PD_FIRMWARE (self), 0);
+	g_return_val_if_fail (FU_IS_VLI_PD_FIRMWARE (self), 0);
 	return self->device_kind;
 }
 
 guint16
-fu_vli_usbhub_pd_firmware_get_vid (FuVliUsbhubPdFirmware *self)
+fu_vli_pd_firmware_get_vid (FuVliPdFirmware *self)
 {
-	g_return_val_if_fail (FU_IS_VLI_USBHUB_PD_FIRMWARE (self), 0);
+	g_return_val_if_fail (FU_IS_VLI_PD_FIRMWARE (self), 0);
 	return GUINT16_FROM_LE (self->hdr.vid);
 }
 
 guint16
-fu_vli_usbhub_pd_firmware_get_pid (FuVliUsbhubPdFirmware *self)
+fu_vli_pd_firmware_get_pid (FuVliPdFirmware *self)
 {
-	g_return_val_if_fail (FU_IS_VLI_USBHUB_PD_FIRMWARE (self), 0);
+	g_return_val_if_fail (FU_IS_VLI_PD_FIRMWARE (self), 0);
 	return GUINT16_FROM_LE (self->hdr.pid);
 }
 
 static void
-fu_vli_usbhub_pd_firmware_to_string (FuFirmware *firmware, guint idt, GString *str)
+fu_vli_pd_firmware_to_string (FuFirmware *firmware, guint idt, GString *str)
 {
-	FuVliUsbhubPdFirmware *self = FU_VLI_USBHUB_PD_FIRMWARE (firmware);
+	FuVliPdFirmware *self = FU_VLI_PD_FIRMWARE (firmware);
 	fu_common_string_append_kv (str, idt, "DeviceKind",
 				    fu_vli_common_device_kind_to_string (self->device_kind));
 	fu_common_string_append_kx (str, idt, "VID",
-				    fu_vli_usbhub_pd_firmware_get_vid (self));
+				    fu_vli_pd_firmware_get_vid (self));
 	fu_common_string_append_kx (str, idt, "PID",
-				    fu_vli_usbhub_pd_firmware_get_pid (self));
+				    fu_vli_pd_firmware_get_pid (self));
 }
 
 void
-fu_vli_usbhub_pd_firmware_add_offset (FuVliUsbhubPdFirmware *self, gsize offset)
+fu_vli_pd_firmware_add_offset (FuVliPdFirmware *self, gsize offset)
 {
 	g_array_append_val (self->offsets, offset);
 }
 
 static gboolean
-fu_vli_usbhub_pd_firmware_parse (FuFirmware *firmware,
-				 GBytes *fw,
-				 guint64 addr_start,
-				 guint64 addr_end,
-				 FwupdInstallFlags flags,
-				 GError **error)
+fu_vli_pd_firmware_parse (FuFirmware *firmware,
+			  GBytes *fw,
+			  guint64 addr_start,
+			  guint64 addr_end,
+			  FwupdInstallFlags flags,
+			  GError **error)
 {
-	FuVliUsbhubPdFirmware *self = FU_VLI_USBHUB_PD_FIRMWARE (firmware);
+	FuVliPdFirmware *self = FU_VLI_PD_FIRMWARE (firmware);
 	gsize bufsz = 0;
 	guint32 fwver;
 	const guint8 *buf = g_bytes_get_data (fw, &bufsz);
@@ -96,7 +97,7 @@ fu_vli_usbhub_pd_firmware_parse (FuFirmware *firmware,
 
 	/* guess device kind from fwver */
 	fwver = GUINT32_FROM_BE (self->hdr.fwver);
-	self->device_kind = fu_vli_usbhub_pd_guess_device_kind (fwver);
+	self->device_kind = fu_vli_pd_common_guess_device_kind (fwver);
 	if (self->device_kind == FU_VLI_DEVICE_KIND_UNKNOWN) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -144,31 +145,31 @@ fu_vli_usbhub_pd_firmware_parse (FuFirmware *firmware,
 }
 
 static void
-fu_vli_usbhub_pd_firmware_init (FuVliUsbhubPdFirmware *self)
+fu_vli_pd_firmware_init (FuVliPdFirmware *self)
 {
 	self->offsets = g_array_new (FALSE, FALSE, sizeof(gsize));
 }
 
 static void
-fu_vli_usbhub_pd_firmware_finalize (GObject *object)
+fu_vli_pd_firmware_finalize (GObject *object)
 {
-	FuVliUsbhubPdFirmware *self = FU_VLI_USBHUB_PD_FIRMWARE (object);
+	FuVliPdFirmware *self = FU_VLI_PD_FIRMWARE (object);
 	g_array_unref (self->offsets);
-	G_OBJECT_CLASS (fu_vli_usbhub_pd_firmware_parent_class)->finalize (object);
+	G_OBJECT_CLASS (fu_vli_pd_firmware_parent_class)->finalize (object);
 }
 
 static void
-fu_vli_usbhub_pd_firmware_class_init (FuVliUsbhubPdFirmwareClass *klass)
+fu_vli_pd_firmware_class_init (FuVliPdFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS (klass);
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
-	klass_firmware->parse = fu_vli_usbhub_pd_firmware_parse;
-	klass_firmware->to_string = fu_vli_usbhub_pd_firmware_to_string;
-	object_class->finalize = fu_vli_usbhub_pd_firmware_finalize;
+	klass_firmware->parse = fu_vli_pd_firmware_parse;
+	klass_firmware->to_string = fu_vli_pd_firmware_to_string;
+	object_class->finalize = fu_vli_pd_firmware_finalize;
 }
 
 FuFirmware *
-fu_vli_usbhub_pd_firmware_new (void)
+fu_vli_pd_firmware_new (void)
 {
-	return FU_FIRMWARE (g_object_new (FU_TYPE_VLI_USBHUB_PD_FIRMWARE, NULL));
+	return FU_FIRMWARE (g_object_new (FU_TYPE_VLI_PD_FIRMWARE, NULL));
 }

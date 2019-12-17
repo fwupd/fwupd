@@ -778,7 +778,7 @@ fu_vli_usbhub_device_probe (FuDevice *device, GError **error)
 static gboolean
 fu_vli_usbhub_device_pd_setup (FuVliUsbhubDevice *self, GError **error)
 {
-	FuVliUsbhubPdHdr hdr = { 0x0 };
+	FuVliPdHdr hdr = { 0x0 };
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(GError) error_local = NULL;
 

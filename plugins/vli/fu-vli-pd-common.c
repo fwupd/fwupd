@@ -7,10 +7,10 @@
 
 #include "config.h"
 
-#include "fu-vli-usbhub-pd-common.h"
+#include "fu-vli-pd-common.h"
 
 FuVliDeviceKind
-fu_vli_usbhub_pd_guess_device_kind (guint32 fwver)
+fu_vli_pd_common_guess_device_kind (guint32 fwver)
 {
 	guint32 tmp = (fwver & 0x0f000000) >> 24;
 	if (tmp == 0x01 || tmp == 0x02 || tmp == 0x03)
@@ -26,22 +26,4 @@ fu_vli_usbhub_pd_guess_device_kind (guint32 fwver)
 	if (tmp == 0x0c)
 		return FU_VLI_DEVICE_KIND_VL105;
 	return FU_VLI_DEVICE_KIND_UNKNOWN;
-}
-
-guint32
-fu_vli_usbhub_pd_get_offset_for_device_kind (FuVliDeviceKind device_kind)
-{
-	if (device_kind == FU_VLI_DEVICE_KIND_VL100)
-		return 0x10000;
-	if (device_kind == FU_VLI_DEVICE_KIND_VL101)
-		return 0x10000;
-	if (device_kind == FU_VLI_DEVICE_KIND_VL102)
-		return 0x20000;
-	if (device_kind == FU_VLI_DEVICE_KIND_VL103)
-		return 0x20000;
-	if (device_kind == FU_VLI_DEVICE_KIND_VL104)
-		return 0x20000;
-	if (device_kind == FU_VLI_DEVICE_KIND_VL105)
-		return 0x20000;
-	return 0x0;
 }

@@ -9,16 +9,18 @@
 
 #include <string.h>
 
+#include "fu-vli-pd-common.h"
+#include "fu-vli-pd-firmware.h"
+
 #include "fu-vli-usbhub-common.h"
 #include "fu-vli-usbhub-device.h"
 #include "fu-vli-usbhub-pd-common.h"
 #include "fu-vli-usbhub-pd-device.h"
-#include "fu-vli-usbhub-pd-firmware.h"
 
 struct _FuVliUsbhubPdDevice
 {
 	FuDevice		 parent_instance;
-	FuVliUsbhubPdHdr	 hdr;
+	FuVliPdHdr		 hdr;
 	FuVliDeviceKind		 device_kind;
 };
 
@@ -31,7 +33,7 @@ fu_vli_usbhub_pd_device_to_string (FuDevice *device, guint idt, GString *str)
 	fu_common_string_append_kv (str, idt, "DeviceKind",
 				    fu_vli_common_device_kind_to_string (self->device_kind));
 	fu_common_string_append_kx (str, idt, "FwOffset",
-				    fu_vli_usbhub_pd_get_offset_for_device_kind (self->device_kind));
+				    fu_vli_common_device_kind_get_offset (self->device_kind));
 	fu_common_string_append_kx (str, idt, "FwSize",
 				    fu_vli_common_device_kind_get_size (self->device_kind));
 }
@@ -47,7 +49,7 @@ fu_vli_usbhub_pd_device_probe (FuDevice *device, GError **error)
 
 	/* get version */
 	fwver = GUINT32_FROM_BE (self->hdr.fwver);
-	self->device_kind = fu_vli_usbhub_pd_guess_device_kind (fwver);
+	self->device_kind = fu_vli_pd_common_guess_device_kind (fwver);
 	if (self->device_kind == FU_VLI_DEVICE_KIND_UNKNOWN) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -68,7 +70,7 @@ fu_vli_usbhub_pd_device_probe (FuDevice *device, GError **error)
 	fu_device_add_instance_id (device, instance_id1);
 
 	/* these have a backup section */
-	if (fu_vli_usbhub_pd_get_offset_for_device_kind (self->device_kind) == VLI_USBHUB_FLASHMAP_ADDR_PD)
+	if (fu_vli_common_device_kind_get_offset (self->device_kind) == VLI_USBHUB_FLASHMAP_ADDR_PD)
 		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
 
 	/* success */
@@ -83,11 +85,11 @@ fu_vli_usbhub_pd_device_prepare_firmware (FuDevice *device,
 {
 	FuVliUsbhubPdDevice *self = FU_VLI_USBHUB_PD_DEVICE (device);
 	FuVliDeviceKind device_kind;
-	g_autoptr(FuFirmware) firmware = fu_vli_usbhub_pd_firmware_new ();
+	g_autoptr(FuFirmware) firmware = fu_vli_pd_firmware_new ();
 
 	/* add the two offset locations the header can be found */
-	fu_vli_usbhub_pd_firmware_add_offset (FU_VLI_USBHUB_PD_FIRMWARE (firmware), VLI_USBHUB_PD_FLASHMAP_ADDR_LEGACY);
-	fu_vli_usbhub_pd_firmware_add_offset (FU_VLI_USBHUB_PD_FIRMWARE (firmware), VLI_USBHUB_PD_FLASHMAP_ADDR);
+	fu_vli_pd_firmware_add_offset (FU_VLI_PD_FIRMWARE (firmware), VLI_USBHUB_PD_FLASHMAP_ADDR_LEGACY);
+	fu_vli_pd_firmware_add_offset (FU_VLI_PD_FIRMWARE (firmware), VLI_USBHUB_PD_FLASHMAP_ADDR);
 
 	/* check size */
 	if (g_bytes_get_size (fw) < fu_device_get_firmware_size_min (device)) {
@@ -113,7 +115,7 @@ fu_vli_usbhub_pd_device_prepare_firmware (FuDevice *device,
 	fu_device_set_status (device, FWUPD_STATUS_DECOMPRESSING);
 	if (!fu_firmware_parse (firmware, fw, flags, error))
 		return NULL;
-	device_kind = fu_vli_usbhub_pd_firmware_get_kind (FU_VLI_USBHUB_PD_FIRMWARE (firmware));
+	device_kind = fu_vli_pd_firmware_get_kind (FU_VLI_PD_FIRMWARE (firmware));
 	if (self->device_kind != device_kind) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -145,7 +147,7 @@ fu_vli_usbhub_pd_device_read_firmware (FuDevice *device, GError **error)
 	/* read */
 	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_DEVICE_VERIFY);
 	fw = fu_vli_usbhub_device_spi_read (parent,
-					    fu_vli_usbhub_pd_get_offset_for_device_kind (self->device_kind),
+					    fu_vli_common_device_kind_get_offset (self->device_kind),
 					    fu_device_get_firmware_size_max (device),
 					    error);
 	if (fw == NULL)
@@ -180,7 +182,7 @@ fu_vli_usbhub_pd_device_write_firmware (FuDevice *device,
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_ERASE);
 	buf = g_bytes_get_data (fw, &bufsz);
 	if (!fu_vli_usbhub_device_spi_erase (parent,
-					     fu_vli_usbhub_pd_get_offset_for_device_kind (self->device_kind),
+					     fu_vli_common_device_kind_get_offset (self->device_kind),
 					     bufsz,
 					     error))
 		return FALSE;
@@ -188,7 +190,7 @@ fu_vli_usbhub_pd_device_write_firmware (FuDevice *device,
 	/* write */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 	if (!fu_vli_usbhub_device_spi_write (parent,
-					     fu_vli_usbhub_pd_get_offset_for_device_kind (self->device_kind),
+					     fu_vli_common_device_kind_get_offset (self->device_kind),
 					     buf,
 					     bufsz,
 					     error))
@@ -221,7 +223,7 @@ fu_vli_usbhub_pd_device_class_init (FuVliUsbhubPdDeviceClass *klass)
 }
 
 FuDevice *
-fu_vli_usbhub_pd_device_new (FuVliUsbhubPdHdr *hdr)
+fu_vli_usbhub_pd_device_new (FuVliPdHdr *hdr)
 {
 	FuVliUsbhubPdDevice *self = g_object_new (FU_TYPE_VLI_USBHUB_PD_DEVICE, NULL);
 	memcpy (&self->hdr, hdr, sizeof(self->hdr));
