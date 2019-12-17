@@ -19,7 +19,7 @@ struct _FuVliUsbhubPdDevice
 {
 	FuDevice		 parent_instance;
 	FuVliUsbhubPdHdr	 hdr;
-	FuVliUsbhubPdChip	 chip;
+	FuVliDeviceKind		 device_kind;
 };
 
 G_DEFINE_TYPE (FuVliUsbhubPdDevice, fu_vli_usbhub_pd_device, FU_TYPE_DEVICE)
@@ -28,12 +28,12 @@ static void
 fu_vli_usbhub_pd_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuVliUsbhubPdDevice *self = FU_VLI_USBHUB_PD_DEVICE (device);
-	fu_common_string_append_kv (str, idt, "ChipId",
-				    fu_vli_usbhub_pd_chip_to_string (self->chip));
+	fu_common_string_append_kv (str, idt, "DeviceKind",
+				    fu_vli_common_device_kind_to_string (self->device_kind));
 	fu_common_string_append_kx (str, idt, "FwOffset",
-				    fu_vli_usbhub_pd_chip_get_offset (self->chip));
+				    fu_vli_usbhub_pd_get_offset_for_device_kind (self->device_kind));
 	fu_common_string_append_kx (str, idt, "FwSize",
-				    fu_vli_usbhub_pd_chip_get_size (self->chip));
+				    fu_vli_common_device_kind_get_size (self->device_kind));
 }
 
 static gboolean
@@ -47,16 +47,16 @@ fu_vli_usbhub_pd_device_probe (FuDevice *device, GError **error)
 
 	/* get version */
 	fwver = GUINT32_FROM_BE (self->hdr.fwver);
-	self->chip = fu_vli_usbhub_pd_guess_chip (fwver);
-	if (self->chip == FU_VLI_USBHUB_PD_CHIP_UNKNOWN) {
+	self->device_kind = fu_vli_usbhub_pd_guess_device_kind (fwver);
+	if (self->device_kind == FU_VLI_DEVICE_KIND_UNKNOWN) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "PD version invalid [0x%x]", fwver);
 		return FALSE;
 	}
-	fu_device_set_firmware_size (device, fu_vli_usbhub_pd_chip_get_size (self->chip));
-	fu_device_set_name (device, fu_vli_usbhub_pd_chip_to_string (self->chip));
+	fu_device_set_firmware_size (device, fu_vli_common_device_kind_get_size (self->device_kind));
+	fu_device_set_name (device, fu_vli_common_device_kind_to_string (self->device_kind));
 
 	/* use header to populate device info */
 	fwver_str = fu_common_version_from_uint32 (fwver, FWUPD_VERSION_FORMAT_QUAD);
@@ -68,7 +68,7 @@ fu_vli_usbhub_pd_device_probe (FuDevice *device, GError **error)
 	fu_device_add_instance_id (device, instance_id1);
 
 	/* these have a backup section */
-	if (fu_vli_usbhub_pd_chip_get_offset (self->chip) == VLI_USBHUB_FLASHMAP_ADDR_PD)
+	if (fu_vli_usbhub_pd_get_offset_for_device_kind (self->device_kind) == VLI_USBHUB_FLASHMAP_ADDR_PD)
 		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
 
 	/* success */
@@ -82,7 +82,7 @@ fu_vli_usbhub_pd_device_prepare_firmware (FuDevice *device,
 				       GError **error)
 {
 	FuVliUsbhubPdDevice *self = FU_VLI_USBHUB_PD_DEVICE (device);
-	FuVliUsbhubPdChip chip;
+	FuVliDeviceKind device_kind;
 	g_autoptr(FuFirmware) firmware = fu_vli_usbhub_pd_firmware_new ();
 
 	/* check size */
@@ -109,14 +109,14 @@ fu_vli_usbhub_pd_device_prepare_firmware (FuDevice *device,
 	fu_device_set_status (device, FWUPD_STATUS_DECOMPRESSING);
 	if (!fu_firmware_parse (firmware, fw, flags, error))
 		return NULL;
-	chip = fu_vli_usbhub_pd_firmware_get_chip (FU_VLI_USBHUB_PD_FIRMWARE (firmware));
-	if (self->chip != chip) {
+	device_kind = fu_vli_usbhub_pd_firmware_get_kind (FU_VLI_USBHUB_PD_FIRMWARE (firmware));
+	if (self->device_kind != device_kind) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
 			     "firmware incompatible, got %s, expected %s",
-			     fu_vli_usbhub_pd_chip_to_string (chip),
-			     fu_vli_usbhub_pd_chip_to_string (self->chip));
+			     fu_vli_common_device_kind_to_string (device_kind),
+			     fu_vli_common_device_kind_to_string (self->device_kind));
 		return NULL;
 	}
 
@@ -141,7 +141,7 @@ fu_vli_usbhub_pd_device_read_firmware (FuDevice *device, GError **error)
 	/* read */
 	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_DEVICE_VERIFY);
 	fw = fu_vli_usbhub_device_spi_read (parent,
-					    fu_vli_usbhub_pd_chip_get_offset (self->chip),
+					    fu_vli_usbhub_pd_get_offset_for_device_kind (self->device_kind),
 					    fu_device_get_firmware_size_max (device),
 					    error);
 	if (fw == NULL)
@@ -176,7 +176,7 @@ fu_vli_usbhub_pd_device_write_firmware (FuDevice *device,
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_ERASE);
 	buf = g_bytes_get_data (fw, &bufsz);
 	if (!fu_vli_usbhub_device_spi_erase (parent,
-					     fu_vli_usbhub_pd_chip_get_offset (self->chip),
+					     fu_vli_usbhub_pd_get_offset_for_device_kind (self->device_kind),
 					     bufsz,
 					     error))
 		return FALSE;
@@ -184,7 +184,7 @@ fu_vli_usbhub_pd_device_write_firmware (FuDevice *device,
 	/* write */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 	if (!fu_vli_usbhub_device_spi_write (parent,
-					     fu_vli_usbhub_pd_chip_get_offset (self->chip),
+					     fu_vli_usbhub_pd_get_offset_for_device_kind (self->device_kind),
 					     buf,
 					     bufsz,
 					     error))

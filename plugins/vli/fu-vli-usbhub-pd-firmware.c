@@ -11,17 +11,17 @@
 
 struct _FuVliUsbhubPdFirmware {
 	FuFirmwareClass		 parent_instance;
-	FuVliUsbhubPdChip	 chip;
+	FuVliDeviceKind		 device_kind;
 	FuVliUsbhubPdHdr	 hdr;
 };
 
 G_DEFINE_TYPE (FuVliUsbhubPdFirmware, fu_vli_usbhub_pd_firmware, FU_TYPE_FIRMWARE)
 
-FuVliUsbhubPdChip
-fu_vli_usbhub_pd_firmware_get_chip (FuVliUsbhubPdFirmware *self)
+FuVliDeviceKind
+fu_vli_usbhub_pd_firmware_get_kind (FuVliUsbhubPdFirmware *self)
 {
 	g_return_val_if_fail (FU_IS_VLI_USBHUB_PD_FIRMWARE (self), 0);
-	return self->chip;
+	return self->device_kind;
 }
 
 guint16
@@ -42,8 +42,8 @@ static void
 fu_vli_usbhub_pd_firmware_to_string (FuFirmware *firmware, guint idt, GString *str)
 {
 	FuVliUsbhubPdFirmware *self = FU_VLI_USBHUB_PD_FIRMWARE (firmware);
-	fu_common_string_append_kv (str, idt, "ChipId",
-				    fu_vli_usbhub_pd_chip_to_string (self->chip));
+	fu_common_string_append_kv (str, idt, "DeviceKind",
+				    fu_vli_common_device_kind_to_string (self->device_kind));
 	fu_common_string_append_kx (str, idt, "VID",
 				    fu_vli_usbhub_pd_firmware_get_vid (self));
 	fu_common_string_append_kx (str, idt, "PID",
@@ -85,8 +85,8 @@ fu_vli_usbhub_pd_firmware_parse (FuFirmware *firmware,
 		}
 	}
 	fwver = GUINT32_FROM_BE (self->hdr.fwver);
-	self->chip = fu_vli_usbhub_pd_guess_chip (fwver);
-	if (self->chip == FU_VLI_USBHUB_PD_CHIP_UNKNOWN) {
+	self->device_kind = fu_vli_usbhub_pd_guess_device_kind (fwver);
+	if (self->device_kind == FU_VLI_DEVICE_KIND_UNKNOWN) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
@@ -97,13 +97,13 @@ fu_vli_usbhub_pd_firmware_parse (FuFirmware *firmware,
 	fu_firmware_set_version (firmware, fwver_str);
 
 	/* check size */
-	if (bufsz != fu_vli_usbhub_pd_chip_get_size (self->chip)) {
+	if (bufsz != fu_vli_common_device_kind_get_size (self->device_kind)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
 			     "size invalid, got 0x%x expected 0x%x",
 			     (guint) bufsz,
-			     fu_vli_usbhub_pd_chip_get_size (self->chip));
+			     fu_vli_common_device_kind_get_size (self->device_kind));
 		return FALSE;
 	}
 

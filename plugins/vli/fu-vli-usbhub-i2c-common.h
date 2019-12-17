@@ -10,11 +10,6 @@
 #include "fu-plugin.h"
 
 typedef enum {
-	FU_VLI_USBHUB_I2C_CHIP_UNKNOWN,
-	FU_VLI_USBHUB_I2C_CHIP_MSP430,
-} FuVliUsbhubI2cChip;
-
-typedef enum {
 	FU_VLI_USBHUB_I2C_STATUS_OK,
 	FU_VLI_USBHUB_I2C_STATUS_HEADER,
 	FU_VLI_USBHUB_I2C_STATUS_COMMAND,
@@ -35,6 +30,5 @@ typedef enum {
 #define FU_VLI_USBHUB_I2C_R_VDR			0xa0	/* read vendor comand */
 #define FU_VLI_USBHUB_I2C_W_VDR			0xb0	/* write vendor comand */
 
-const gchar	*fu_vli_usbhub_i2c_chip_to_string	(FuVliUsbhubI2cChip	 chip);
 gboolean	 fu_vli_usbhub_i2c_check_status		(FuVliUsbhubI2cStatus	 status,
 							 GError			**error);

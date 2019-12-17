@@ -18,7 +18,7 @@
 struct _FuVliUsbhubI2cDevice
 {
 	FuDevice		 parent_instance;
-	FuVliUsbhubI2cChip	 chip;
+	FuVliDeviceKind		 device_kind;
 };
 
 G_DEFINE_TYPE (FuVliUsbhubI2cDevice, fu_vli_usbhub_i2c_device, FU_TYPE_DEVICE)
@@ -27,8 +27,8 @@ static void
 fu_vli_usbhub_i2c_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuVliUsbhubI2cDevice *self = FU_VLI_USBHUB_I2C_DEVICE (device);
-	fu_common_string_append_kv (str, idt, "ChipId",
-				    fu_vli_usbhub_i2c_chip_to_string (self->chip));
+	fu_common_string_append_kv (str, idt, "DeviceKind",
+				    fu_vli_common_device_kind_to_string (self->device_kind));
 }
 
 static gboolean
@@ -53,13 +53,13 @@ fu_vli_usbhub_i2c_device_setup (FuDevice *device, GError **error)
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_FOUND,
 			     "no %s device detected",
-			     fu_vli_usbhub_i2c_chip_to_string (self->chip));
+			     fu_vli_common_device_kind_to_string (self->device_kind));
 		return FALSE;
 	}
 
 	/* add instance ID */
 	instance_id = g_strdup_printf ("VLI_USBHUB_I2C\\%s",
-				       fu_vli_usbhub_i2c_chip_to_string (self->chip));
+				       fu_vli_common_device_kind_to_string (self->device_kind));
 	fu_device_add_instance_id (device, instance_id);
 
 	/* set version */
@@ -239,8 +239,8 @@ static gboolean
 fu_vli_usbhub_i2c_device_probe (FuDevice *device, GError **error)
 {
 	FuVliUsbhubI2cDevice *self = FU_VLI_USBHUB_I2C_DEVICE (device);
-	self->chip = FU_VLI_USBHUB_I2C_CHIP_MSP430;
-	fu_device_set_name (device, fu_vli_usbhub_i2c_chip_to_string (self->chip));
+	self->device_kind = FU_VLI_DEVICE_KIND_MSP430;
+	fu_device_set_name (device, fu_vli_common_device_kind_to_string (self->device_kind));
 	return TRUE;
 }
 
