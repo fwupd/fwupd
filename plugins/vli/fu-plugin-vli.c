@@ -24,7 +24,7 @@ fu_plugin_init (FuPlugin *plugin)
 
 /* reboot the FuVliUsbhubDevice if we update the FuVliUsbhubPdDevice */
 static FuDevice *
-fu_plugin_vli_usbhub_get_parent (GPtrArray *devices)
+fu_plugin_vli_get_parent (GPtrArray *devices)
 {
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *dev = g_ptr_array_index (devices, i);
@@ -43,7 +43,7 @@ fu_plugin_composite_cleanup (FuPlugin *plugin,
 			     GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(FuDevice) parent = fu_plugin_vli_usbhub_get_parent (devices);
+	g_autoptr(FuDevice) parent = fu_plugin_vli_get_parent (devices);
 	if (parent == NULL)
 		return TRUE;
 	locker = fu_device_locker_new (parent, error);
