@@ -9,23 +9,6 @@
 
 #include "fu-vli-usbhub-pd-common.h"
 
-guint16
-fu_vli_usbhub_pd_crc16 (const guint8 *buf, gsize bufsz)
-{
-	guint16 crc = 0xffff;
-	for (gsize len = bufsz; len > 0; len--) {
-		crc = (guint16) (crc ^ (*buf++));
-		for (guint8 i = 0; i < 8; i++) {
-			if (crc & 0x1) {
-				crc = (crc >> 1) ^ 0xa001;     
-			} else {
-				crc >>= 1;
-			}
-		} 
-	}
-	return ~crc;  
-}
-
 FuVliDeviceKind
 fu_vli_usbhub_pd_guess_device_kind (guint32 fwver)
 {
