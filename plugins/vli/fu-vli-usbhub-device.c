@@ -19,7 +19,6 @@
 #include "fu-vli-usbhub-pd-common.h"
 #include "fu-vli-usbhub-pd-device.h"
 
-#define FU_VLI_USBHUB_DEVICE_TIMEOUT		3000	/* ms */
 #define FU_VLI_USBHUB_TXSIZE			0x20	/* bytes */
 
 struct _FuVliUsbhubDevice
@@ -29,31 +28,9 @@ struct _FuVliUsbhubDevice
 	guint8			 update_protocol;
 	FuVliUsbhubHeader	 hd1_hdr;	/* factory */
 	FuVliUsbhubHeader	 hd2_hdr;	/* update */
-	guint32			 flash_id;
-	guint8			 spi_cmd_read_id;
-	guint8			 spi_cmd_read_id_sz;
-	guint8			 spi_cmd_page_prog;
-	guint8			 spi_cmd_chip_erase;
-	guint8			 spi_cmd_read_data;
-	guint8			 spi_cmd_read_status;
-	guint8			 spi_cmd_sector_erase;
-	guint8			 spi_cmd_write_en;
-	guint8			 spi_cmd_write_status;
 };
 
 G_DEFINE_TYPE (FuVliUsbhubDevice, fu_vli_usbhub_device, FU_TYPE_VLI_DEVICE)
-
-static gchar *
-fu_vli_usbhub_device_get_flash_id_str (FuVliUsbhubDevice *self)
-{
-	if (self->spi_cmd_read_id_sz == 4)
-		return g_strdup_printf ("%08X", self->flash_id);
-	if (self->spi_cmd_read_id_sz == 2)
-		return g_strdup_printf ("%04X", self->flash_id);
-	if (self->spi_cmd_read_id_sz == 1)
-		return g_strdup_printf ("%02X", self->flash_id);
-	return g_strdup_printf ("%X", self->flash_id);
-}
 
 static void
 fu_vli_usbhub_device_to_string (FuVliDevice *device, guint idt, GString *str)
@@ -61,18 +38,6 @@ fu_vli_usbhub_device_to_string (FuVliDevice *device, guint idt, GString *str)
 	FuVliUsbhubDevice *self = FU_VLI_USBHUB_DEVICE (device);
 	fu_common_string_append_kb (str, idt, "DisablePowersave", self->disable_powersave);
 	fu_common_string_append_kx (str, idt, "UpdateProtocol", self->update_protocol);
-	if (self->flash_id != 0x0) {
-		g_autofree gchar *tmp = fu_vli_usbhub_device_get_flash_id_str (self);
-		fu_common_string_append_kv (str, idt, "FlashId", tmp);
-	}
-	fu_common_string_append_kx (str, idt, "SpiCmdReadId", self->spi_cmd_read_id);
-	fu_common_string_append_kx (str, idt, "SpiCmdReadIdSz", self->spi_cmd_read_id_sz);
-	fu_common_string_append_kx (str, idt, "SpiCmdChipErase", self->spi_cmd_chip_erase);
-	fu_common_string_append_kx (str, idt, "SpiCmdPageProg", self->spi_cmd_page_prog);
-	fu_common_string_append_kx (str, idt, "SpiCmdReadData", self->spi_cmd_read_data);
-	fu_common_string_append_kx (str, idt, "SpiCmdSectorErase", self->spi_cmd_sector_erase);
-	fu_common_string_append_kx (str, idt, "SpiCmdWriteEn", self->spi_cmd_write_en);
-	fu_common_string_append_kx (str, idt, "SpiCmdWriteStatus", self->spi_cmd_write_status);
 	if (self->update_protocol >= 0x2) {
 		fu_common_string_append_kv (str, idt, "H1Hdr@0x0", NULL);
 		fu_vli_usbhub_header_to_string (&self->hd1_hdr, idt + 1, str);
@@ -95,7 +60,7 @@ fu_vli_usbhub_device_i2c_read (FuVliUsbhubDevice *self,
 					    G_USB_DEVICE_RECIPIENT_DEVICE,
 					    FU_VLI_USBHUB_I2C_R_VDR, value, index,
 					    buf, bufsz, NULL,
-					    FU_VLI_USBHUB_DEVICE_TIMEOUT,
+					    FU_VLI_DEVICE_TIMEOUT,
 					    NULL, error)) {
 		g_prefix_error (error, "failed to read I2C: ");
 		return FALSE;
@@ -139,7 +104,7 @@ fu_vli_usbhub_device_i2c_write_data (FuVliUsbhubDevice *self,
 					    G_USB_DEVICE_RECIPIENT_DEVICE,
 					    FU_VLI_USBHUB_I2C_W_VDR, value, 0x0,
 					    (guint8 *) buf, bufsz, NULL,
-					    FU_VLI_USBHUB_DEVICE_TIMEOUT,
+					    FU_VLI_DEVICE_TIMEOUT,
 					    NULL, error)) {
 		g_prefix_error (error, "failed to write I2C @0x%x: ", value);
 		return FALSE;
@@ -168,7 +133,7 @@ fu_vli_usbhub_device_vdr_unlock_813 (FuVliUsbhubDevice *self, GError **error)
 					    G_USB_DEVICE_RECIPIENT_DEVICE,
 					    0x85, 0x8786, 0x8988,
 					    NULL, 0x0, NULL,
-					    FU_VLI_USBHUB_DEVICE_TIMEOUT,
+					    FU_VLI_DEVICE_TIMEOUT,
 					    NULL, error)) {
 		g_prefix_error (error, "failed to UnLock_VL813: ");
 		return FALSE;
@@ -190,7 +155,7 @@ fu_vli_usbhub_device_vdr_read_register (FuVliUsbhubDevice *self,
 					    G_USB_DEVICE_RECIPIENT_DEVICE,
 					    fun_num, offset, 0x0,
 					    buf, 0x1, NULL,
-					    FU_VLI_USBHUB_DEVICE_TIMEOUT,
+					    FU_VLI_DEVICE_TIMEOUT,
 					    NULL, error)) {
 		g_prefix_error (error,
 				"failed to read VDR register 0x%x offset 0x%x: ",
@@ -214,7 +179,7 @@ fu_vli_usbhub_device_vdr_write_register (FuVliUsbhubDevice *self,
 					    G_USB_DEVICE_RECIPIENT_DEVICE,
 					    fun_num, offset, (guint16) value,
 					    NULL, 0x0, NULL,
-					    FU_VLI_USBHUB_DEVICE_TIMEOUT,
+					    FU_VLI_DEVICE_TIMEOUT,
 					    NULL, error)) {
 		g_prefix_error (error,
 				"failed to write VDR register 0x%x offset 0x%x value 0x%x: ",
@@ -225,53 +190,23 @@ fu_vli_usbhub_device_vdr_write_register (FuVliUsbhubDevice *self,
 }
 
 static gboolean
-fu_vli_usbhub_device_spi_read_flash_id (FuVliUsbhubDevice *self, GError **error)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
-	guint8 buf[4] = { 0x0 };
-	if (!g_usb_device_control_transfer (usb_device,
-					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					    G_USB_DEVICE_RECIPIENT_DEVICE,
-					    0xc0 | (self->spi_cmd_read_id_sz * 2),
-					    self->spi_cmd_read_id, 0x0000,
-					    buf, sizeof(buf), NULL,
-					    FU_VLI_USBHUB_DEVICE_TIMEOUT,
-					    NULL, error)) {
-		g_prefix_error (error, "failed to read chip ID: ");
-		return FALSE;
-	}
-	if (g_getenv ("FWUPD_VLI_USBHUB_VERBOSE") != NULL)
-		fu_common_dump_raw (G_LOG_DOMAIN, "SpiCmdReadId", buf, sizeof(buf));
-	if (self->spi_cmd_read_id_sz == 4)
-		self->flash_id = fu_common_read_uint32 (buf, G_BIG_ENDIAN);
-	else if (self->spi_cmd_read_id_sz == 2)
-		self->flash_id = fu_common_read_uint16 (buf, G_BIG_ENDIAN);
-	else if (self->spi_cmd_read_id_sz == 1)
-		self->flash_id = buf[0];
-	return TRUE;
-}
-
-static gboolean
 fu_vli_usbhub_device_spi_read_status (FuVliUsbhubDevice *self, guint8 *status, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
+	guint8 spi_cmd = 0x0;
 
 	/* sanity check */
-	if (self->spi_cmd_read_status == 0x0) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_NOT_SUPPORTED,
-				     "No value for SpiCmdReadStatus");
+	if (!fu_vli_device_get_spi_cmd (FU_VLI_DEVICE (self),
+					FU_VLI_DEVICE_SPI_REQ_READ_STATUS,
+					&spi_cmd, error))
 		return FALSE;
-	}
 	if (!g_usb_device_control_transfer (usb_device,
 					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
 					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
 					    G_USB_DEVICE_RECIPIENT_DEVICE,
-					    0xc1, self->spi_cmd_read_status, 0x0000,
+					    0xc1, spi_cmd, 0x0000,
 					    status, 0x1, NULL,
-					    FU_VLI_USBHUB_DEVICE_TIMEOUT,
+					    FU_VLI_DEVICE_TIMEOUT,
 					    NULL, error)) {
 		g_prefix_error (error, "failed to read status: ");
 		return FALSE;
@@ -286,25 +221,25 @@ fu_vli_usbhub_device_spi_read_data (FuVliUsbhubDevice *self,
 				    gsize length,
 				    GError **error)
 {
-	guint16 index = ((data_addr << 8) & 0xff00) | ((data_addr >> 8) & 0x00ff);
-	guint16 value = ((data_addr >> 8) & 0xff00) | self->spi_cmd_read_data;
+	guint8 spi_cmd = 0x0;
+	guint16 value;
+	guint16 index;
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
 
 	/* sanity check */
-	if (self->spi_cmd_read_data == 0x0) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_NOT_SUPPORTED,
-				     "No value for SpiCmdReadData");
+	if (!fu_vli_device_get_spi_cmd (FU_VLI_DEVICE (self),
+					FU_VLI_DEVICE_SPI_REQ_READ_DATA,
+					&spi_cmd, error))
 		return FALSE;
-	}
+	value = ((data_addr >> 8) & 0xff00) | spi_cmd;
+	index = ((data_addr << 8) & 0xff00) | ((data_addr >> 8) & 0x00ff);
 	if (!g_usb_device_control_transfer (usb_device,
 					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
 					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
 					    G_USB_DEVICE_RECIPIENT_DEVICE,
 					    0xc4, value, index,
 					    buf, length, NULL,
-					    FU_VLI_USBHUB_DEVICE_TIMEOUT,
+					    FU_VLI_DEVICE_TIMEOUT,
 					    NULL, error)) {
 		g_prefix_error (error, "failed to read SPI data @0x%x: ", data_addr);
 		return FALSE;
@@ -316,22 +251,20 @@ static gboolean
 fu_vli_usbhub_device_spi_write_status (FuVliUsbhubDevice *self, guint8 status, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
+	guint8 spi_cmd = 0x0;
 
 	/* sanity check */
-	if (self->spi_cmd_write_status == 0x0) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_NOT_SUPPORTED,
-				     "No value for SpiCmdWriteStatus");
+	if (!fu_vli_device_get_spi_cmd (FU_VLI_DEVICE (self),
+					FU_VLI_DEVICE_SPI_REQ_WRITE_STATUS,
+					&spi_cmd, error))
 		return FALSE;
-	}
 	if (!g_usb_device_control_transfer (usb_device,
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
 					    G_USB_DEVICE_RECIPIENT_DEVICE,
-					    0xd1, self->spi_cmd_write_status, 0x0000,
+					    0xd1, spi_cmd, 0x0000,
 					    &status, 0x1, NULL,
-					    FU_VLI_USBHUB_DEVICE_TIMEOUT,
+					    FU_VLI_DEVICE_TIMEOUT,
 					    NULL, error)) {
 		g_prefix_error (error, "failed to write SPI status 0x%x", status);
 		return FALSE;
@@ -346,22 +279,20 @@ static gboolean
 fu_vli_usbhub_device_spi_write_enable (FuVliUsbhubDevice *self, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
+	guint8 spi_cmd = 0x0;
 
 	/* sanity check */
-	if (self->spi_cmd_write_en == 0x0) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_NOT_SUPPORTED,
-				     "No value for SpiCmdWriteEn");
+	if (!fu_vli_device_get_spi_cmd (FU_VLI_DEVICE (self),
+					FU_VLI_DEVICE_SPI_REQ_WRITE_EN,
+					&spi_cmd, error))
 		return FALSE;
-	}
 	if (!g_usb_device_control_transfer (usb_device,
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
 					    G_USB_DEVICE_RECIPIENT_DEVICE,
-					    0xd1, self->spi_cmd_write_en, 0x0000,
+					    0xd1, spi_cmd, 0x0000,
 					    NULL, 0x0, NULL,
-					    FU_VLI_USBHUB_DEVICE_TIMEOUT,
+					    FU_VLI_DEVICE_TIMEOUT,
 					    NULL, error)) {
 		g_prefix_error (error, "failed to write enable SPI: ");
 		return FALSE;
@@ -373,22 +304,20 @@ static gboolean
 fu_vli_usbhub_device_spi_erase_chip (FuVliUsbhubDevice *self, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
+	guint8 spi_cmd = 0x0;
 
 	/* sanity check */
-	if (self->spi_cmd_chip_erase == 0x0) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_NOT_SUPPORTED,
-				     "No value for SpiCmdChipErase");
+	if (!fu_vli_device_get_spi_cmd (FU_VLI_DEVICE (self),
+					FU_VLI_DEVICE_SPI_REQ_CHIP_ERASE,
+					&spi_cmd, error))
 		return FALSE;
-	}
 	if (!g_usb_device_control_transfer (usb_device,
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
 					    G_USB_DEVICE_RECIPIENT_DEVICE,
-					    0xd1, self->spi_cmd_chip_erase, 0x0000,
+					    0xd1, spi_cmd, 0x0000,
 					    NULL, 0x0, NULL,
-					    FU_VLI_USBHUB_DEVICE_TIMEOUT,
+					    FU_VLI_DEVICE_TIMEOUT,
 					    NULL, error)) {
 		g_prefix_error (error, "failed to erase SPI: ");
 		return FALSE;
@@ -399,25 +328,25 @@ fu_vli_usbhub_device_spi_erase_chip (FuVliUsbhubDevice *self, GError **error)
 static gboolean
 fu_vli_usbhub_device_spi_erase_sector (FuVliUsbhubDevice *self, guint32 data_addr, GError **error)
 {
-	guint16 index = ((data_addr << 8) & 0xff00) | ((data_addr >> 8) & 0x00ff);
-	guint16 value = ((data_addr >> 8) & 0xff00) | self->spi_cmd_sector_erase;
+	guint8 spi_cmd = 0x0;
+	guint16 value;
+	guint16 index;
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
 
 	/* sanity check */
-	if (self->spi_cmd_sector_erase == 0x0) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_NOT_SUPPORTED,
-				     "No value for SpiCmdSectorErase");
+	if (!fu_vli_device_get_spi_cmd (FU_VLI_DEVICE (self),
+					FU_VLI_DEVICE_SPI_REQ_SECTOR_ERASE,
+					&spi_cmd, error))
 		return FALSE;
-	}
+	value = ((data_addr >> 8) & 0xff00) | spi_cmd;
+	index = ((data_addr << 8) & 0xff00) | ((data_addr >> 8) & 0x00ff);
 	if (!g_usb_device_control_transfer (usb_device,
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
 					    G_USB_DEVICE_RECIPIENT_DEVICE,
 					    0xd4, value, index,
 					    NULL, 0x0, NULL,
-					    FU_VLI_USBHUB_DEVICE_TIMEOUT,
+					    FU_VLI_DEVICE_TIMEOUT,
 					    NULL, error)) {
 		g_prefix_error (error, "failed to erase SPI sector @0x%x: ", data_addr);
 		return FALSE;
@@ -433,24 +362,24 @@ fu_vli_usbhub_device_spi_write_data (FuVliUsbhubDevice *self,
 				     GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
-	guint16 value = ((data_addr >> 8) & 0xff00) | self->spi_cmd_page_prog;
-	guint16 index = ((data_addr << 8) & 0xff00) | ((data_addr >> 8) & 0x00ff);
+	guint8 spi_cmd = 0x0;
+	guint16 value;
+	guint16 index;
 
 	/* sanity check */
-	if (self->spi_cmd_page_prog == 0x0) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_NOT_SUPPORTED,
-				     "No value for SpiCmdPageProg");
+	if (!fu_vli_device_get_spi_cmd (FU_VLI_DEVICE (self),
+					FU_VLI_DEVICE_SPI_REQ_PAGE_PROG,
+					&spi_cmd, error))
 		return FALSE;
-	}
+	value = ((data_addr >> 8) & 0xff00) | spi_cmd;
+	index = ((data_addr << 8) & 0xff00) | ((data_addr >> 8) & 0x00ff);
 	if (!g_usb_device_control_transfer (usb_device,
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
 					    G_USB_DEVICE_RECIPIENT_DEVICE,
 					    0xd4, value, index,
 					    (guint8 *) buf, length, NULL,
-					    FU_VLI_USBHUB_DEVICE_TIMEOUT,
+					    FU_VLI_DEVICE_TIMEOUT,
 					    NULL, error)) {
 		g_prefix_error (error, "failed to write SPI @0x%x: ", data_addr);
 		return FALSE;
@@ -464,14 +393,6 @@ fu_vli_usbhub_device_spi_wait_finish (FuVliUsbhubDevice *self, GError **error)
 	const guint32 rdy_cnt = 2;
 	guint32 cnt = 0;
 
-	/* sanity check */
-	if (self->spi_cmd_read_status == 0x0) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_NOT_SUPPORTED,
-				     "No value for SpiCmdReadStatus");
-		return FALSE;
-	}
 	for (guint32 idx = 0; idx < 1000; idx++) {
 		guint8 status = 0x7f;
 
@@ -863,7 +784,6 @@ static gboolean
 fu_vli_usbhub_device_setup (FuVliDevice *device, GError **error)
 {
 	FuVliUsbhubDevice *self = FU_VLI_USBHUB_DEVICE (device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
 	g_autoptr(GError) error_tmp = NULL;
 
 	/* try to read a block of data which will fail for 813-type devices */
@@ -884,37 +804,6 @@ fu_vli_usbhub_device_setup (FuVliDevice *device, GError **error)
 	} else {
 		if (!fu_vli_usbhub_device_guess_kind (self, error))
 			return FALSE;
-	}
-
-	/* get the flash chip attached */
-	if (!fu_vli_usbhub_device_spi_read_flash_id (self, error)) {
-		g_prefix_error (error, "failed to read SPI chip ID: ");
-		return FALSE;
-	}
-	if (self->flash_id != 0x0) {
-		g_autofree gchar *spi_id = NULL;
-		g_autofree gchar *devid1 = NULL;
-		g_autofree gchar *devid2 = NULL;
-		g_autofree gchar *flash_id = fu_vli_usbhub_device_get_flash_id_str (self);
-		g_debug ("using flash part %s", flash_id);
-
-		/* load the SPI parameters from quirks */
-		spi_id = g_strdup_printf ("VLI_USBHUB\\SPI_%s", flash_id);
-		fu_device_add_instance_id (FU_DEVICE (self), spi_id);
-
-		/* add extra instance IDs to include the SPI variant */
-		devid2 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&SPI_%s&REV_%04X",
-					  g_usb_device_get_vid (usb_device),
-					  g_usb_device_get_pid (usb_device),
-					  flash_id,
-					  g_usb_device_get_release (usb_device));
-		fu_device_add_instance_id (FU_DEVICE (self), devid2);
-		devid1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&SPI_%s",
-					  g_usb_device_get_vid (usb_device),
-					  g_usb_device_get_pid (usb_device),
-					  flash_id);
-		fu_device_add_instance_id (FU_DEVICE (self), devid1);
-
 	}
 
 	/* read HD1 (factory) header */
@@ -1437,7 +1326,7 @@ fu_vli_usbhub_device_attach (FuDevice *device, GError **error)
 					    G_USB_DEVICE_RECIPIENT_DEVICE,
 					    0xf6, 0x40, 0x02,
 					    NULL, 0x0, NULL,
-					    FU_VLI_USBHUB_DEVICE_TIMEOUT,
+					    FU_VLI_DEVICE_TIMEOUT,
 					    NULL, &error_local)) {
 		if (g_error_matches (error_local,
 				     G_USB_DEVICE_ERROR,
@@ -1456,48 +1345,9 @@ fu_vli_usbhub_device_attach (FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static gboolean
-fu_vli_usbhub_device_set_quirk_kv (FuDevice *device,
-				   const gchar *key,
-				   const gchar *value,
-				   GError **error)
-{
-	FuVliUsbhubDevice *self = FU_VLI_USBHUB_DEVICE (device);
-	if (g_strcmp0 (key, "SpiCmdReadId") == 0) {
-		self->spi_cmd_read_id = fu_common_strtoull (value);
-		return TRUE;
-	}
-	if (g_strcmp0 (key, "SpiCmdReadIdSz") == 0) {
-		self->spi_cmd_read_id_sz = fu_common_strtoull (value);
-		return TRUE;
-	}
-	if (g_strcmp0 (key, "SpiCmdChipErase") == 0) {
-		self->spi_cmd_chip_erase = fu_common_strtoull (value);
-		return TRUE;
-	}
-	if (g_strcmp0 (key, "SpiCmdSectorErase") == 0) {
-		self->spi_cmd_sector_erase = fu_common_strtoull (value);
-		return TRUE;
-	}
-	g_set_error_literal (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "quirk key not supported");
-	return FALSE;
-}
-
 static void
 fu_vli_usbhub_device_init (FuVliUsbhubDevice *self)
 {
-	self->spi_cmd_write_status	= 0x01;
-	self->spi_cmd_page_prog		= 0x02;
-	self->spi_cmd_read_data		= 0x03;
-	self->spi_cmd_read_status	= 0x05;
-	self->spi_cmd_write_en		= 0x06;
-	self->spi_cmd_sector_erase	= 0x20;
-	self->spi_cmd_chip_erase	= 0x60;
-	self->spi_cmd_read_id		= 0x9f;
-	self->spi_cmd_read_id_sz = 2;
 	fu_device_add_icon (FU_DEVICE (self), "audio-card");
 	fu_device_set_protocol (FU_DEVICE (self), "com.vli.usbhub");
 	fu_device_set_firmware_size_max (FU_DEVICE (self), 0x20000);
@@ -1509,7 +1359,6 @@ fu_vli_usbhub_device_class_init (FuVliUsbhubDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuVliDeviceClass *klass_vli_device = FU_VLI_DEVICE_CLASS (klass);
-	klass_device->set_quirk_kv = fu_vli_usbhub_device_set_quirk_kv;
 	klass_device->probe = fu_vli_usbhub_device_probe;
 	klass_device->read_firmware = fu_vli_usbhub_device_read_firmware;
 	klass_device->write_firmware = fu_vli_usbhub_device_write_firmware;
