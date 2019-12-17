@@ -13,6 +13,7 @@ struct _FuVliUsbhubPdFirmware {
 	FuFirmwareClass		 parent_instance;
 	FuVliDeviceKind		 device_kind;
 	FuVliUsbhubPdHdr	 hdr;
+	GArray			*offsets;
 };
 
 G_DEFINE_TYPE (FuVliUsbhubPdFirmware, fu_vli_usbhub_pd_firmware, FU_TYPE_FIRMWARE)
@@ -50,6 +51,12 @@ fu_vli_usbhub_pd_firmware_to_string (FuFirmware *firmware, guint idt, GString *s
 				    fu_vli_usbhub_pd_firmware_get_pid (self));
 }
 
+void
+fu_vli_usbhub_pd_firmware_add_offset (FuVliUsbhubPdFirmware *self, gsize offset)
+{
+	g_array_append_val (self->offsets, offset);
+}
+
 static gboolean
 fu_vli_usbhub_pd_firmware_parse (FuFirmware *firmware,
 				 GBytes *fw,
@@ -66,24 +73,28 @@ fu_vli_usbhub_pd_firmware_parse (FuFirmware *firmware,
 	g_autoptr(FuFirmwareImage) img = fu_firmware_image_new (fw);
 
 	/* map into header */
-	if (!fu_memcpy_safe ((guint8 *) &self->hdr, sizeof(self->hdr), 0x0,
-			     buf, bufsz, VLI_USBHUB_PD_FLASHMAP_ADDR_LEGACY,
-			     sizeof(self->hdr), error)) {
-		g_prefix_error (error, "failed to read header @0x%x: ", (guint) 0x4000);
-		return FALSE;
-	}
-
-	/* look for info @0x1000 (for anything newer) */
-	if (GUINT16_FROM_LE (self->hdr.vid) != 0x2109) {
-		g_debug ("VID was 0x%04x trying new location",
-			 GUINT16_FROM_LE (self->hdr.vid));
+	if (self->offsets->len == 0) {
 		if (!fu_memcpy_safe ((guint8 *) &self->hdr, sizeof(self->hdr), 0x0,
-				     buf, bufsz, VLI_USBHUB_PD_FLASHMAP_ADDR,
+				     buf, bufsz, 0x0,
 				     sizeof(self->hdr), error)) {
-			g_prefix_error (error, "failed to read header @0x%x: ", (guint) 0x1003);
+			g_prefix_error (error, "failed to read header: ");
 			return FALSE;
 		}
+	} else {
+		for (guint i = 0; i < self->offsets->len; i++) {
+			gsize offset = g_array_index (self->offsets, gsize, i);
+			if (!fu_memcpy_safe ((guint8 *) &self->hdr, sizeof(self->hdr), 0x0,
+					     buf, bufsz, offset,
+					     sizeof(self->hdr), error)) {
+				g_prefix_error (error, "failed to read header @0x%x: ", (guint) offset);
+				return FALSE;
+			}
+			if (GUINT16_FROM_LE (self->hdr.vid) == 0x2109)
+				break;
+		}
 	}
+
+	/* guess device kind from fwver */
 	fwver = GUINT32_FROM_BE (self->hdr.fwver);
 	self->device_kind = fu_vli_usbhub_pd_guess_device_kind (fwver);
 	if (self->device_kind == FU_VLI_DEVICE_KIND_UNKNOWN) {
@@ -135,14 +146,25 @@ fu_vli_usbhub_pd_firmware_parse (FuFirmware *firmware,
 static void
 fu_vli_usbhub_pd_firmware_init (FuVliUsbhubPdFirmware *self)
 {
+	self->offsets = g_array_new (FALSE, FALSE, sizeof(gsize));
+}
+
+static void
+fu_vli_usbhub_pd_firmware_finalize (GObject *object)
+{
+	FuVliUsbhubPdFirmware *self = FU_VLI_USBHUB_PD_FIRMWARE (object);
+	g_array_unref (self->offsets);
+	G_OBJECT_CLASS (fu_vli_usbhub_pd_firmware_parent_class)->finalize (object);
 }
 
 static void
 fu_vli_usbhub_pd_firmware_class_init (FuVliUsbhubPdFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS (klass);
+	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	klass_firmware->parse = fu_vli_usbhub_pd_firmware_parse;
 	klass_firmware->to_string = fu_vli_usbhub_pd_firmware_to_string;
+	object_class->finalize = fu_vli_usbhub_pd_firmware_finalize;
 }
 
 FuFirmware *
