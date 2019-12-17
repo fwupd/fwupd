@@ -25,7 +25,7 @@
 struct _FuVliUsbhubDevice
 {
 	FuUsbDevice		 parent_instance;
-	FuVliUsbhubDeviceKind	 kind;
+	FuVliDeviceKind		 kind;
 	gboolean		 disable_powersave;
 	guint8			 update_protocol;
 	FuVliUsbhubHeader	 hd1_hdr;	/* factory */
@@ -61,7 +61,7 @@ fu_vli_usbhub_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuVliUsbhubDevice *self = FU_VLI_USBHUB_DEVICE (device);
 	fu_common_string_append_kv (str, idt, "DeviceKind",
-				    fu_vli_usbhub_device_kind_to_string (self->kind));
+				    fu_vli_common_device_kind_to_string (self->kind));
 	fu_common_string_append_kb (str, idt, "DisablePowersave", self->disable_powersave);
 	fu_common_string_append_kx (str, idt, "UpdateProtocol", self->update_protocol);
 	if (self->flash_id != 0x0) {
@@ -691,38 +691,38 @@ fu_vli_usbhub_device_guess_kind (FuVliUsbhubDevice *self, GError **error)
 	g_debug ("b820Q7Q8 = 0x%02x", b820Q7Q8);
 
 	if (chipid2 == 0x35 && chipid1 == 0x07) {
-		self->kind = FU_VLI_USBHUB_DEVICE_KIND_VL210;
+		self->kind = FU_VLI_DEVICE_KIND_VL210;
 	} else if (chipid2 == 0x35 && chipid1 == 0x18) {
 		if (b820Q7Q8 & (1 << 2))
-			self->kind = FU_VLI_USBHUB_DEVICE_KIND_VL820Q8;
+			self->kind = FU_VLI_DEVICE_KIND_VL820Q8;
 		else
-			self->kind = FU_VLI_USBHUB_DEVICE_KIND_VL820Q7;
+			self->kind = FU_VLI_DEVICE_KIND_VL820Q7;
 	} else if (chipid2 == 0x35 && chipid1 == 0x31) {
-		self->kind = FU_VLI_USBHUB_DEVICE_KIND_VL815;
+		self->kind = FU_VLI_DEVICE_KIND_VL815;
 	} else if (chipid2 == 0x35 && chipid1 == 0x38) {
-		self->kind = FU_VLI_USBHUB_DEVICE_KIND_VL817;
+		self->kind = FU_VLI_DEVICE_KIND_VL817;
 	} else if (chipid2 == 0x35 && chipid1 == 0x45) {
-		self->kind = FU_VLI_USBHUB_DEVICE_KIND_VL211;
+		self->kind = FU_VLI_DEVICE_KIND_VL211;
 	} else if (chipid22 == 0x35 && chipid12 == 0x53) {
-		self->kind = FU_VLI_USBHUB_DEVICE_KIND_VL120;
+		self->kind = FU_VLI_DEVICE_KIND_VL120;
 	} else if (chipid2 == 0x35 && chipid1 == 0x57) {
-		self->kind = FU_VLI_USBHUB_DEVICE_KIND_VL819;
+		self->kind = FU_VLI_DEVICE_KIND_VL819;
 	} else if (tPid == 0x810) {
-		self->kind = FU_VLI_USBHUB_DEVICE_KIND_VL810;
+		self->kind = FU_VLI_DEVICE_KIND_VL810;
 	} else if (tPid == 0x811) {
-		self->kind = FU_VLI_USBHUB_DEVICE_KIND_VL811;
+		self->kind = FU_VLI_DEVICE_KIND_VL811;
 	} else if ((b811P812 & ((1 << 5) | (1 << 4))) == 0) {
 		if (chipver == 0x10)
-			self->kind = FU_VLI_USBHUB_DEVICE_KIND_VL811PB0;
+			self->kind = FU_VLI_DEVICE_KIND_VL811PB0;
 		else
-			self->kind = FU_VLI_USBHUB_DEVICE_KIND_VL811PB3;
+			self->kind = FU_VLI_DEVICE_KIND_VL811PB3;
 	} else if ((b811P812 & ((1 << 5) | (1 << 4))) == (1 << 4)) {
-		self->kind = FU_VLI_USBHUB_DEVICE_KIND_VL812Q4S;
+		self->kind = FU_VLI_DEVICE_KIND_VL812Q4S;
 	} else if ((b811P812 & ((1 << 5) | (1 << 4))) == ((1 << 5) | (1 << 4))) {
 		if (chipver == 0x10)
-			self->kind = FU_VLI_USBHUB_DEVICE_KIND_VL812B0;
+			self->kind = FU_VLI_DEVICE_KIND_VL812B0;
 		else
-			self->kind = FU_VLI_USBHUB_DEVICE_KIND_VL812B3;
+			self->kind = FU_VLI_DEVICE_KIND_VL812B3;
 	} else {
 		g_set_error (error,
 			     G_IO_ERROR,
@@ -883,7 +883,7 @@ fu_vli_usbhub_device_setup (FuDevice *device, GError **error)
 		}
 		g_debug ("813 unlock OK");
 		/* VL813 & VL210 have same PID (0x0813), and only VL813 can reply */
-		self->kind = FU_VLI_USBHUB_DEVICE_KIND_VL813;
+		self->kind = FU_VLI_DEVICE_KIND_VL813;
 	} else {
 		if (!fu_vli_usbhub_device_guess_kind (self, error))
 			return FALSE;
@@ -986,7 +986,7 @@ fu_vli_usbhub_device_prepare_firmware (FuDevice *device,
 				       GError **error)
 {
 	FuVliUsbhubDevice *self = FU_VLI_USBHUB_DEVICE (device);
-	FuVliUsbhubDeviceKind device_kind;
+	FuVliDeviceKind device_kind;
 	guint16 device_id;
 	g_autoptr(FuFirmware) firmware = fu_vli_usbhub_firmware_new ();
 
@@ -1020,8 +1020,8 @@ fu_vli_usbhub_device_prepare_firmware (FuDevice *device,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
 			     "firmware incompatible, got %s, expected %s",
-			     fu_vli_usbhub_device_kind_to_string (device_kind),
-			     fu_vli_usbhub_device_kind_to_string (self->kind));
+			     fu_vli_common_device_kind_to_string (device_kind),
+			     fu_vli_common_device_kind_to_string (self->kind));
 		return NULL;
 	}
 	device_id = fu_vli_usbhub_firmware_get_device_id (FU_VLI_USBHUB_FIRMWARE (firmware));

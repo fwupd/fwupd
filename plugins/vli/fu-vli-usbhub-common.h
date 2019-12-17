@@ -9,25 +9,7 @@
 
 #include "fu-plugin.h"
 
-typedef enum {
-	FU_VLI_USBHUB_DEVICE_KIND_VL120		= 0x0120,
-	FU_VLI_USBHUB_DEVICE_KIND_VL210		= 0x0210,
-	FU_VLI_USBHUB_DEVICE_KIND_VL211		= 0x0211,
-	FU_VLI_USBHUB_DEVICE_KIND_VL212		= 0x0212,
-	FU_VLI_USBHUB_DEVICE_KIND_VL810		= 0x0810,
-	FU_VLI_USBHUB_DEVICE_KIND_VL811		= 0x0811,
-	FU_VLI_USBHUB_DEVICE_KIND_VL811PB0	= 0x8110,
-	FU_VLI_USBHUB_DEVICE_KIND_VL811PB3	= 0x8113,
-	FU_VLI_USBHUB_DEVICE_KIND_VL812B0	= 0xA812,
-	FU_VLI_USBHUB_DEVICE_KIND_VL812B3	= 0xB812,
-	FU_VLI_USBHUB_DEVICE_KIND_VL812Q4S	= 0xC812,
-	FU_VLI_USBHUB_DEVICE_KIND_VL813		= 0x0813,
-	FU_VLI_USBHUB_DEVICE_KIND_VL815		= 0x0815,
-	FU_VLI_USBHUB_DEVICE_KIND_VL817		= 0x0817,
-	FU_VLI_USBHUB_DEVICE_KIND_VL819		= 0x0819,
-	FU_VLI_USBHUB_DEVICE_KIND_VL820Q7	= 0xA820,
-	FU_VLI_USBHUB_DEVICE_KIND_VL820Q8	= 0xB820,
-} FuVliUsbhubDeviceKind;
+#include "fu-vli-common.h"
 
 typedef struct __attribute__ ((packed)) {
 	guint16		 dev_id;		/* 0x00, BE */
@@ -81,4 +63,3 @@ guint8		 fu_vli_usbhub_header_crc8		(FuVliUsbhubHeader	*hdr);
 void		 fu_vli_usbhub_header_to_string		(FuVliUsbhubHeader	*hdr,
 							 guint			 idt,
 							 GString		 *str);
-const gchar	*fu_vli_usbhub_device_kind_to_string	(FuVliUsbhubDeviceKind	 device_kind);

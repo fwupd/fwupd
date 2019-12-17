@@ -15,6 +15,6 @@
 G_DECLARE_FINAL_TYPE (FuVliUsbhubPdFirmware, fu_vli_usbhub_pd_firmware, FU, VLI_USBHUB_PD_FIRMWARE, FuFirmware)
 
 FuFirmware		*fu_vli_usbhub_pd_firmware_new		(void);
-FuVliUsbhubPdChip	 fu_vli_usbhub_pd_firmware_get_chip	(FuVliUsbhubPdFirmware	*self);
+FuVliDeviceKind		 fu_vli_usbhub_pd_firmware_get_kind	(FuVliUsbhubPdFirmware	*self);
 guint16			 fu_vli_usbhub_pd_firmware_get_vid	(FuVliUsbhubPdFirmware	*self);
 guint16			 fu_vli_usbhub_pd_firmware_get_pid	(FuVliUsbhubPdFirmware	*self);

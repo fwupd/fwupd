@@ -25,46 +25,6 @@ fu_vli_usbhub_header_crc8 (FuVliUsbhubHeader *hdr)
 	return (guint8) (crc >> 8);
 }
 
-const gchar *
-fu_vli_usbhub_device_kind_to_string (FuVliUsbhubDeviceKind device_kind)
-{
-	if (device_kind == FU_VLI_USBHUB_DEVICE_KIND_VL810)
-		return "VL810";
-	if (device_kind == FU_VLI_USBHUB_DEVICE_KIND_VL811)
-		return "VL811";
-	if (device_kind == FU_VLI_USBHUB_DEVICE_KIND_VL811PB0)
-		return "VL811PB0";
-	if (device_kind == FU_VLI_USBHUB_DEVICE_KIND_VL811PB3)
-		return "VL811PB3";
-	if (device_kind == FU_VLI_USBHUB_DEVICE_KIND_VL812B0)
-		return "VL812B0";
-	if (device_kind == FU_VLI_USBHUB_DEVICE_KIND_VL812B3)
-		return "VL812B3";
-	if (device_kind == FU_VLI_USBHUB_DEVICE_KIND_VL812Q4S)
-		return "VL812Q4S";
-	if (device_kind == FU_VLI_USBHUB_DEVICE_KIND_VL813)
-		return "VL813";
-	if (device_kind == FU_VLI_USBHUB_DEVICE_KIND_VL815)
-		return "VL815";
-	if (device_kind == FU_VLI_USBHUB_DEVICE_KIND_VL817)
-		return "VL817";
-	if (device_kind == FU_VLI_USBHUB_DEVICE_KIND_VL819)
-		return "VL819";
-	if (device_kind == FU_VLI_USBHUB_DEVICE_KIND_VL820Q7)
-		return "VL820Q7";
-	if (device_kind == FU_VLI_USBHUB_DEVICE_KIND_VL820Q8)
-		return "VL820Q8";
-	if (device_kind == FU_VLI_USBHUB_DEVICE_KIND_VL120)
-		return "VL120";
-	if (device_kind == FU_VLI_USBHUB_DEVICE_KIND_VL210)
-		return "VL210";
-	if (device_kind == FU_VLI_USBHUB_DEVICE_KIND_VL211)
-		return "VL211";
-	if (device_kind == FU_VLI_USBHUB_DEVICE_KIND_VL212)
-		return "VL212";
-	return NULL;
-}
-
 void
 fu_vli_usbhub_header_to_string (FuVliUsbhubHeader *hdr, guint idt, GString *str)
 {

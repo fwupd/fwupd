@@ -13,13 +13,13 @@
 
 struct _FuVliUsbhubFirmware {
 	FuFirmwareClass		 parent_instance;
-	FuVliUsbhubDeviceKind	 device_kind;
+	FuVliDeviceKind		 device_kind;
 	FuVliUsbhubHeader	 hdr;
 };
 
 G_DEFINE_TYPE (FuVliUsbhubFirmware, fu_vli_usbhub_firmware, FU_TYPE_FIRMWARE)
 
-FuVliUsbhubDeviceKind
+FuVliDeviceKind
 fu_vli_usbhub_firmware_get_device_kind (FuVliUsbhubFirmware *self)
 {
 	g_return_val_if_fail (FU_IS_VLI_USBHUB_FIRMWARE (self), 0);
@@ -38,7 +38,7 @@ fu_vli_usbhub_firmware_to_string (FuFirmware *firmware, guint idt, GString *str)
 {
 	FuVliUsbhubFirmware *self = FU_VLI_USBHUB_FIRMWARE (firmware);
 	fu_common_string_append_kv (str, idt, "DeviceKind",
-				    fu_vli_usbhub_device_kind_to_string (self->device_kind));
+				    fu_vli_common_device_kind_to_string (self->device_kind));
 	fu_vli_usbhub_header_to_string (&self->hdr, idt, str);
 }
 
@@ -139,37 +139,37 @@ fu_vli_usbhub_firmware_parse (FuFirmware *firmware,
 		/* VL813 == VT3470 */
 		if ((binver1 == 0xb770 && binver2 == 0xb770) ||
 		    (binver1 == 0xb870 && binver2 == 0xb870)) {
-			self->device_kind = FU_VLI_USBHUB_DEVICE_KIND_VL813;
+			self->device_kind = FU_VLI_DEVICE_KIND_VL813;
 
 		/* VLQ4S == VT3470 (Q4S) */
 		} else if (self->hdr.strapping1 & FU_VLI_USBHUB_HEADER_STRAPPING1_Q4S) {
-			self->device_kind = FU_VLI_USBHUB_DEVICE_KIND_VL812Q4S;
+			self->device_kind = FU_VLI_DEVICE_KIND_VL812Q4S;
 
 		/* VL812 == VT3470 (812/813) */
 		} else if (self->hdr.strapping1 & FU_VLI_USBHUB_HEADER_STRAPPING1_76PIN) {
 			/* is B3 */
 			if (self->hdr.strapping1 & FU_VLI_USBHUB_HEADER_STRAPPING1_B3UP)
-				self->device_kind = FU_VLI_USBHUB_DEVICE_KIND_VL812B3;
+				self->device_kind = FU_VLI_DEVICE_KIND_VL812B3;
 			else
-				self->device_kind = FU_VLI_USBHUB_DEVICE_KIND_VL812B0;
+				self->device_kind = FU_VLI_DEVICE_KIND_VL812B0;
 
 		/* VL811P == VT3470 */
 		} else {
 			/* is B3 */
 			if (self->hdr.strapping1 & FU_VLI_USBHUB_HEADER_STRAPPING1_B3UP)
-				self->device_kind = FU_VLI_USBHUB_DEVICE_KIND_VL811PB3;
+				self->device_kind = FU_VLI_DEVICE_KIND_VL811PB3;
 			else
-				self->device_kind = FU_VLI_USBHUB_DEVICE_KIND_VL811PB0;
+				self->device_kind = FU_VLI_DEVICE_KIND_VL811PB0;
 		}
 		break;
 	}
 	case 0x0507:
 		/* VL210 == VT3507 */
-		self->device_kind = FU_VLI_USBHUB_DEVICE_KIND_VL210;
+		self->device_kind = FU_VLI_DEVICE_KIND_VL210;
 		break;
 	case 0x0545:
 		/* VL211 == VT3545 */
-		self->device_kind = FU_VLI_USBHUB_DEVICE_KIND_VL211;
+		self->device_kind = FU_VLI_DEVICE_KIND_VL211;
 		break;
 	case 0x0518:
 		/* VL820 == VT3518 */
@@ -178,21 +178,21 @@ fu_vli_usbhub_firmware_parse (FuFirmware *firmware,
 			return FALSE;
 		}
 		if (tmp & (1 << 0))
-			self->device_kind = FU_VLI_USBHUB_DEVICE_KIND_VL820Q8;
+			self->device_kind = FU_VLI_DEVICE_KIND_VL820Q8;
 		else
-			self->device_kind = FU_VLI_USBHUB_DEVICE_KIND_VL820Q7;
+			self->device_kind = FU_VLI_DEVICE_KIND_VL820Q7;
 		break;
 	case 0x0538:
 		/* VL817 == VT3538 */
-		self->device_kind = FU_VLI_USBHUB_DEVICE_KIND_VL817;
+		self->device_kind = FU_VLI_DEVICE_KIND_VL817;
 		break;
 	case 0x0553:
 		/* VL120 == VT3553 */
-		self->device_kind = FU_VLI_USBHUB_DEVICE_KIND_VL120;
+		self->device_kind = FU_VLI_DEVICE_KIND_VL120;
 		break;
 	case 0x0557:
 		/* VL819 == VT3557 */
-		self->device_kind = FU_VLI_USBHUB_DEVICE_KIND_VL819;
+		self->device_kind = FU_VLI_DEVICE_KIND_VL819;
 		break;
 	default:
 		break;
