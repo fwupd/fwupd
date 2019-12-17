@@ -66,6 +66,7 @@ typedef enum {
 void		 fu_vli_device_set_kind			(FuVliDevice	*self,
 							 FuVliDeviceKind device_kind);
 FuVliDeviceKind	 fu_vli_device_get_kind			(FuVliDevice	*self);
+guint32		 fu_vli_device_get_offset		(FuVliDevice	*self);
 gboolean	 fu_vli_device_reset			(FuVliDevice	*self,
 							 GError		**error);
 gboolean	 fu_vli_device_get_spi_cmd		(FuVliDevice	*self,

@@ -445,6 +445,13 @@ fu_vli_device_get_kind (FuVliDevice *self)
 	return priv->kind;
 }
 
+guint32
+fu_vli_device_get_offset (FuVliDevice *self)
+{
+	FuVliDevicePrivate *priv = GET_PRIVATE (self);
+	return fu_vli_common_device_kind_get_offset (priv->kind);
+}
+
 static void
 fu_vli_device_to_string (FuDevice *device, guint idt, GString *str)
 {
