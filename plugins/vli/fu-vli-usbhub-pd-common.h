@@ -20,7 +20,5 @@ typedef struct __attribute__ ((packed)) {
 #define VLI_USBHUB_PD_FLASHMAP_ADDR_LEGACY		0x4000
 #define VLI_USBHUB_PD_FLASHMAP_ADDR			0x1003
 
-guint16		 fu_vli_usbhub_pd_crc16			(const guint8		*buf,
-							 gsize			 bufsz);
 guint32		 fu_vli_usbhub_pd_get_offset_for_device_kind	(FuVliDeviceKind	 device_kind);
 FuVliDeviceKind	 fu_vli_usbhub_pd_guess_device_kind		(guint32		 fwver);
