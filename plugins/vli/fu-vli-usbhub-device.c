@@ -142,48 +142,36 @@ fu_vli_usbhub_device_vdr_unlock_813 (FuVliUsbhubDevice *self, GError **error)
 }
 
 static gboolean
-fu_vli_usbhub_device_vdr_read_register (FuVliUsbhubDevice *self,
-					guint8 fun_num,
-					guint16 offset,
-					guint8 *buf,
-					GError **error)
+fu_vli_usbhub_device_read_reg (FuVliUsbhubDevice *self, guint16 addr, guint8 *buf, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
 	if (!g_usb_device_control_transfer (usb_device,
 					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
 					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
 					    G_USB_DEVICE_RECIPIENT_DEVICE,
-					    fun_num, offset, 0x0,
+					    addr >> 8, addr & 0xff, 0x0,
 					    buf, 0x1, NULL,
 					    FU_VLI_DEVICE_TIMEOUT,
 					    NULL, error)) {
-		g_prefix_error (error,
-				"failed to read VDR register 0x%x offset 0x%x: ",
-				fun_num, offset);
+		g_prefix_error (error, "failed to read register 0x%x: ", addr);
 		return FALSE;
 	}
 	return TRUE;
 }
 
 static gboolean
-fu_vli_usbhub_device_vdr_write_register (FuVliUsbhubDevice *self,
-					 guint8 fun_num,
-					 guint16 offset,
-					 guint8 value,
-					 GError **error)
+fu_vli_usbhub_device_write_reg (FuVliUsbhubDevice *self, guint16 addr, guint8 value, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
 	if (!g_usb_device_control_transfer (usb_device,
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
 					    G_USB_DEVICE_RECIPIENT_DEVICE,
-					    fun_num, offset, (guint16) value,
+					    addr >> 8, addr & 0xff, (guint16) value,
 					    NULL, 0x0, NULL,
 					    FU_VLI_DEVICE_TIMEOUT,
 					    NULL, error)) {
-		g_prefix_error (error,
-				"failed to write VDR register 0x%x offset 0x%x value 0x%x: ",
-				fun_num, offset, value);
+		g_prefix_error (error, "failed to write register 0x%x: ", addr);
 		return FALSE;
 	}
 	return TRUE;
@@ -301,7 +289,7 @@ fu_vli_usbhub_device_spi_write_enable (FuVliUsbhubDevice *self, GError **error)
 }
 
 static gboolean
-fu_vli_usbhub_device_spi_erase_chip (FuVliUsbhubDevice *self, GError **error)
+fu_vli_usbhub_device_spi_chip_erase (FuVliUsbhubDevice *self, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
 	guint8 spi_cmd = 0x0;
@@ -326,7 +314,7 @@ fu_vli_usbhub_device_spi_erase_chip (FuVliUsbhubDevice *self, GError **error)
 }
 
 static gboolean
-fu_vli_usbhub_device_spi_erase_sector (FuVliUsbhubDevice *self, guint32 data_addr, GError **error)
+fu_vli_usbhub_device_spi_sector_erase (FuVliUsbhubDevice *self, guint32 data_addr, GError **error)
 {
 	guint8 spi_cmd = 0x0;
 	guint16 value;
@@ -415,7 +403,7 @@ fu_vli_usbhub_device_spi_wait_finish (FuVliUsbhubDevice *self, GError **error)
 }
 
 static gboolean
-fu_vli_usbhub_device_erase_sector (FuVliUsbhubDevice *self, guint32 addr, GError **error)
+fu_vli_usbhub_device_sector_erase (FuVliUsbhubDevice *self, guint32 addr, GError **error)
 {
 	const guint32 bufsz = 0x1000;
 
@@ -432,8 +420,8 @@ fu_vli_usbhub_device_erase_sector (FuVliUsbhubDevice *self, guint32 addr, GError
 		g_prefix_error (error, "fu_vli_usbhub_device_spi_write_enable failed: ");
 		return FALSE;
 	}
-	if (!fu_vli_usbhub_device_spi_erase_sector (self, addr, error)) {
-		g_prefix_error (error, "fu_vli_usbhub_device_spi_erase_sector failed");
+	if (!fu_vli_usbhub_device_spi_sector_erase (self, addr, error)) {
+		g_prefix_error (error, "fu_vli_usbhub_device_spi_sector_erase failed");
 		return FALSE;
 	}
 	if (!fu_vli_usbhub_device_spi_wait_finish (self, error)) {
@@ -479,7 +467,7 @@ fu_vli_usbhub_device_spi_erase (FuVliUsbhubDevice *self,
 		FuChunk *chunk = g_ptr_array_index (chunks, i);
 		if (g_getenv ("FWUPD_VLI_USBHUB_VERBOSE") != NULL)
 			g_debug ("erasing @0x%x", chunk->address);
-		if (!fu_vli_usbhub_device_erase_sector (self, chunk->address, error)) {
+		if (!fu_vli_usbhub_device_sector_erase (self, chunk->address, error)) {
 			g_prefix_error (error,
 					"failed to erase FW sector @0x%x: ",
 					chunk->address);
@@ -495,61 +483,36 @@ fu_vli_usbhub_device_spi_erase (FuVliUsbhubDevice *self,
 static gboolean
 fu_vli_usbhub_device_disable_u1u2 (FuVliUsbhubDevice *self, GError **error)
 {
-	guint8 fun_num, buf;
-	guint16 offset;
+	guint8 buf = 0x0;
 
 	/* clear Reg[0xF8A2] bit_3 & bit_7 -- also
 	 * clear Total Switch / Flag To Disable FW Auto-Reload Function */
-	fun_num = 0xf8;
-	offset = 0xa2;
-	if (!fu_vli_usbhub_device_vdr_read_register (self, fun_num, offset, &buf, error)) {
-		g_prefix_error (error, "reg offset 0x%x: ", offset);
+	if (!fu_vli_usbhub_device_read_reg (self, 0xf8a2, &buf, error))
 		return FALSE;
-	}
 	buf &= 0x77;
-	if (!fu_vli_usbhub_device_vdr_write_register (self, fun_num, offset, buf, error)) {
-		g_prefix_error (error, "reg offset 0x%x: ", offset);
+	if (!fu_vli_usbhub_device_write_reg (self, 0xf8a2, buf, error))
 		return FALSE;
-	}
 
 	/* clear Reg[0xF832] bit_0 & bit_1 */
-	fun_num = 0xf8;
-	offset = 0x32;
-	if (!fu_vli_usbhub_device_vdr_read_register (self, fun_num, offset, &buf, error)) {
-		g_prefix_error (error, "reg offset 0x%x: ", offset);
+	if (!fu_vli_usbhub_device_read_reg (self, 0xf832, &buf, error))
 		return FALSE;
-	}
 	buf &= 0xfc;
-	if (!fu_vli_usbhub_device_vdr_write_register (self, fun_num, offset, buf, error)) {
-		g_prefix_error (error, "reg offset 0x%x: ", offset);
+	if (!fu_vli_usbhub_device_write_reg (self, 0xf832, buf, error))
 		return FALSE;
-	}
 
 	/* clear Reg[0xF920] bit_1 & bit_2 */
-	fun_num = 0xf9;
-	offset = 0x20;
-	if (!fu_vli_usbhub_device_vdr_read_register (self, fun_num, offset, &buf, error)) {
-		g_prefix_error (error, "reg offset 0x%x: ", offset);
+	if (!fu_vli_usbhub_device_read_reg (self, 0xf920, &buf, error))
 		return FALSE;
-	}
 	buf &= 0xf9;
-	if (!fu_vli_usbhub_device_vdr_write_register (self, fun_num, offset, buf, error)) {
-		g_prefix_error (error, "reg offset 0x%x: ", offset);
+	if (!fu_vli_usbhub_device_write_reg (self, 0xf920, buf, error))
 		return FALSE;
-	}
 
 	/* set Reg[0xF836] bit_3 */
-	fun_num = 0xf8;
-	offset = 0x36;
-	if (!fu_vli_usbhub_device_vdr_read_register (self, fun_num, offset, &buf, error)) {
-		g_prefix_error (error, "reg offset 0x%x: ", offset);
+	if (!fu_vli_usbhub_device_read_reg (self, 0xf836, &buf, error))
 		return FALSE;
-	}
 	buf |= 0x08;
-	if (!fu_vli_usbhub_device_vdr_write_register (self, fun_num, offset, buf, error)) {
-		g_prefix_error (error, "reg offset 0x%x: ", offset);
+	if (!fu_vli_usbhub_device_write_reg (self, 0xf836, buf, error))
 		return FALSE;
-	}
 	return TRUE;
 }
 
@@ -567,35 +530,35 @@ fu_vli_usbhub_device_guess_kind (FuVliUsbhubDevice *self, GError **error)
 	guint8 chipver2 = 0x0;
 	gint tPid = g_usb_device_get_pid (usb_device) & 0x0fff;
 
-	if (!fu_vli_usbhub_device_vdr_read_register (self, 0xf8, 0x8c, &chipver, error)) {
+	if (!fu_vli_usbhub_device_read_reg (self, 0xf88c, &chipver, error)) {
 		g_prefix_error (error, "Read_ChipVer failed: ");
 		return FALSE;
 	}
-	if (!fu_vli_usbhub_device_vdr_read_register (self, 0xf6, 0x3f, &chipver2, error)) {
+	if (!fu_vli_usbhub_device_read_reg (self, 0xf63f, &chipver2, error)) {
 		g_prefix_error (error, "Read_ChipVer2 failed: ");
 		return FALSE;
 	}
-	if (!fu_vli_usbhub_device_vdr_read_register (self, 0xf8, 0x00, &b811P812, error)) {
+	if (!fu_vli_usbhub_device_read_reg (self, 0xf800, &b811P812, error)) {
 		g_prefix_error (error, "Read_811P812 failed: ");
 		return FALSE;
 	}
-	if (!fu_vli_usbhub_device_vdr_read_register (self, 0xf8, 0x8e, &chipid1, error)) {
+	if (!fu_vli_usbhub_device_read_reg (self, 0xf88e, &chipid1, error)) {
 		g_prefix_error (error, "Read_ChipID1 failed: ");
 		return FALSE;
 	}
-	if (!fu_vli_usbhub_device_vdr_read_register (self, 0xf8, 0x8f, &chipid2, error)) {
+	if (!fu_vli_usbhub_device_read_reg (self, 0xf88f, &chipid2, error)) {
 		g_prefix_error (error, "Read_ChipID2 failed: ");
 		return FALSE;
 	}
-	if (!fu_vli_usbhub_device_vdr_read_register (self, 0xf6, 0x4e, &chipid12, error)) {
+	if (!fu_vli_usbhub_device_read_reg (self, 0xf64e, &chipid12, error)) {
 		g_prefix_error (error, "Read_ChipID12 failed: ");
 		return FALSE;
 	}
-	if (!fu_vli_usbhub_device_vdr_read_register (self, 0xf6, 0x4f, &chipid22, error)) {
+	if (!fu_vli_usbhub_device_read_reg (self, 0xf64f, &chipid22, error)) {
 		g_prefix_error (error, "Read_ChipID22 failed: ");
 		return FALSE;
 	}
-	if (!fu_vli_usbhub_device_vdr_read_register (self, 0xf6, 0x51, &b820Q7Q8, error)) {
+	if (!fu_vli_usbhub_device_read_reg (self, 0xf651, &b820Q7Q8, error)) {
 		g_prefix_error (error, "Read_820Q7Q8 failed: ");
 		return FALSE;
 	}
@@ -934,7 +897,7 @@ fu_vli_usbhub_device_erase_all (FuVliUsbhubDevice *self, GError **error)
 		return FALSE;
 	if (!fu_vli_usbhub_device_spi_write_enable (self, error))
 		return FALSE;
-	if (!fu_vli_usbhub_device_spi_erase_chip (self, error))
+	if (!fu_vli_usbhub_device_spi_chip_erase (self, error))
 		return FALSE;
 	g_usleep (4 * G_USEC_PER_SEC);
 
@@ -1081,7 +1044,7 @@ fu_vli_usbhub_device_update_v2_recovery (FuVliUsbhubDevice *self, GBytes *fw, GE
 	/* erase */
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_ERASE);
 	for (guint32 addr = 0; addr < bufsz; addr += 0x1000) {
-		if (!fu_vli_usbhub_device_erase_sector (self, addr, error)) {
+		if (!fu_vli_usbhub_device_sector_erase (self, addr, error)) {
 			g_prefix_error (error, "failed to erase sector @0x%x", addr);
 			return FALSE;
 		}
@@ -1117,7 +1080,7 @@ fu_vli_usbhub_device_hd1_recover (FuVliUsbhubDevice *self, FuVliUsbhubHeader *hd
 	}
 
 	/* write new header block */
-	if (!fu_vli_usbhub_device_erase_sector (self, VLI_USBHUB_FLASHMAP_ADDR_HD1, error)) {
+	if (!fu_vli_usbhub_device_sector_erase (self, VLI_USBHUB_FLASHMAP_ADDR_HD1, error)) {
 		g_prefix_error (error,
 				"failed to erase header1 sector at 0x%x: ",
 				(guint) VLI_USBHUB_FLASHMAP_ADDR_HD1);
@@ -1162,7 +1125,7 @@ fu_vli_usbhub_device_update_v2 (FuVliUsbhubDevice *self, FuFirmware *firmware, G
 		if (self->hd1_hdr.next_ptr != VLI_USBHUB_FLASHMAP_IDX_HD2) {
 
 			/* backup HD1 before recovering */
-			if (!fu_vli_usbhub_device_erase_sector (self, VLI_USBHUB_FLASHMAP_ADDR_HD2, error)) {
+			if (!fu_vli_usbhub_device_sector_erase (self, VLI_USBHUB_FLASHMAP_ADDR_HD2, error)) {
 				g_prefix_error (error, "failed to erase sector at header 1: ");
 				return FALSE;
 			}
@@ -1249,7 +1212,7 @@ fu_vli_usbhub_device_update_v2 (FuVliUsbhubDevice *self, FuFirmware *firmware, G
 	self->hd2_hdr.prev_ptr = VLI_USBHUB_FLASHMAP_IDX_HD1;
 	self->hd2_hdr.next_ptr = VLI_USBHUB_FLASHMAP_IDX_INVALID;
 	self->hd2_hdr.checksum = fu_vli_usbhub_header_crc8 (&self->hd2_hdr);
-	if (!fu_vli_usbhub_device_erase_sector (self, VLI_USBHUB_FLASHMAP_ADDR_HD2, error)) {
+	if (!fu_vli_usbhub_device_sector_erase (self, VLI_USBHUB_FLASHMAP_ADDR_HD2, error)) {
 		g_prefix_error (error, "failed to erase sectors for HD2: ");
 		return FALSE;
 	}
