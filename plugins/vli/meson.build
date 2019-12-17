@@ -7,10 +7,10 @@ install_data([
   install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
 )
 
-shared_module('fu_plugin_vli_usbhub',
+shared_module('fu_plugin_vli',
   fu_hash,
   sources : [
-    'fu-plugin-vli-usbhub.c',
+    'fu-plugin-vli.c',
     'fu-vli-usbhub-common.c',
     'fu-vli-usbhub-device.c',
     'fu-vli-usbhub-firmware.c',

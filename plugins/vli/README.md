@@ -1,5 +1,5 @@
-VIA USB Hub Support
-===================
+VIA Support
+===========
 
 Introduction
 ------------
@@ -61,7 +61,7 @@ instance attribute, rather then the flash part as the ID is required to query
 the other flash chip parameters. For example:
 
     [DeviceInstanceId=USB\VID_2109&PID_0210]
-    Plugin = vli_usbhub
+    Plugin = vli
     SpiCmdReadId = 0xf8
     SpiCmdReadIdSz = 4
 
