@@ -688,20 +688,6 @@ fu_vli_usbhub_device_pd_setup (FuVliUsbhubDevice *self, GError **error)
 		}
 	}
 
-	/* emulate until we get actual hardware */
-	if (g_getenv ("VLI_USBHUB_EMULATE_PD") != NULL) {
-		gsize bufsz = 0;
-		g_autofree gchar *buf = NULL;
-		if (!g_file_get_contents (g_getenv ("VLI_USBHUB_EMULATE_PD"),
-					  &buf, &bufsz, error))
-			return FALSE;
-		if (!fu_memcpy_safe ((guint8 *) &hdr, sizeof(hdr), 0x0,
-				     (const guint8 *) buf, bufsz, 0x0, sizeof(hdr), error)) {
-			g_prefix_error (error, "failed to map emulated header: ");
-			return FALSE;
-		}
-	}
-
 	/* just empty space */
 	if (hdr.fwver == G_MAXUINT32) {
 		g_debug ("no PD device header found");
