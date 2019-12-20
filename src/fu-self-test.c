@@ -544,6 +544,8 @@ fu_engine_requirements_other_device_func (gconstpointer user_data)
 
 	/* set up a different device */
 	fu_device_set_id (device2, "id2");
+	fu_device_set_vendor_id (device2, "USB:FFFF");
+	fu_device_set_protocol (device2, "com.acme");
 	fu_device_set_name (device2, "Secondary firmware");
 	fu_device_set_version (device2, "4.5.6", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_vendor_id (device2, "FFFF");
@@ -607,6 +609,8 @@ fu_engine_requirements_parent_device_func (gconstpointer user_data)
 
 	/* set up a parent device */
 	fu_device_set_id (device1, "parent");
+	fu_device_set_vendor_id (device1, "USB:FFFF");
+	fu_device_set_protocol (device1, "com.acme");
 	fu_device_set_name (device1, "parent");
 	fu_device_set_version (device1, "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_guid (device1, "12345678-1234-1234-1234-123456789012");
@@ -649,12 +653,16 @@ fu_engine_device_priority_func (gconstpointer user_data)
 
 	/* add low prio then high then low */
 	fu_device_set_id (device1, "id1");
+	fu_device_set_vendor_id (device1, "USB:FFFF");
+	fu_device_set_protocol (device1, "com.acme");
 	fu_device_set_priority (device1, 0);
 	fu_device_set_plugin (device1, "udev");
 	fu_device_add_instance_id (device1, "GUID1");
 	fu_device_convert_instance_ids (device1);
 	fu_engine_add_device (engine, device1);
 	fu_device_set_id (device2, "id2");
+	fu_device_set_vendor_id (device2, "USB:FFFF");
+	fu_device_set_protocol (device2, "com.acme");
 	fu_device_set_priority (device2, 1);
 	fu_device_set_plugin (device2, "redfish");
 	fu_device_add_instance_id (device2, "GUID1");
@@ -662,6 +670,8 @@ fu_engine_device_priority_func (gconstpointer user_data)
 	fu_device_convert_instance_ids (device2);
 	fu_engine_add_device (engine, device2);
 	fu_device_set_id (device3, "id3");
+	fu_device_set_vendor_id (device3, "USB:FFFF");
+	fu_device_set_protocol (device3, "com.acme");
 	fu_device_set_priority (device3, 0);
 	fu_device_set_plugin (device3, "uefi");
 	fu_device_add_instance_id (device3, "GUID1");
@@ -688,6 +698,8 @@ fu_engine_device_priority_func (gconstpointer user_data)
 
 	/* add extra devices that should sort */
 	fu_device_set_id (device4, "id4");
+	fu_device_set_vendor_id (device4, "USB:FFFF");
+	fu_device_set_protocol (device4, "com.acme");
 	fu_device_set_priority (device4, 0);
 	fu_device_set_plugin (device4, "redfish");
 	fu_device_add_instance_id (device4, "GUID4");
@@ -695,6 +707,8 @@ fu_engine_device_priority_func (gconstpointer user_data)
 	fu_device_convert_instance_ids (device4);
 	fu_engine_add_device (engine, device4);
 	fu_device_set_id (device5, "id5");
+	fu_device_set_vendor_id (device5, "USB:FFFF");
+	fu_device_set_protocol (device5, "com.acme");
 	fu_device_set_priority (device5, 0);
 	fu_device_set_plugin (device5, "uefi");
 	fu_device_add_instance_id (device5, "GUID5");
@@ -731,6 +745,8 @@ fu_engine_device_parent_func (gconstpointer user_data)
 
 	/* add child */
 	fu_device_set_id (device1, "child");
+	fu_device_set_vendor_id (device2, "USB:FFFF");
+	fu_device_set_protocol (device2, "com.acme");
 	fu_device_add_instance_id (device1, "child-GUID-1");
 	fu_device_add_parent_guid (device1, "parent-GUID");
 	fu_device_convert_instance_ids (device1);
@@ -738,6 +754,8 @@ fu_engine_device_parent_func (gconstpointer user_data)
 
 	/* parent */
 	fu_device_set_id (device2, "parent");
+	fu_device_set_vendor_id (device2, "USB:FFFF");
+	fu_device_set_protocol (device2, "com.acme");
 	fu_device_add_instance_id (device2, "parent-GUID");
 	fu_device_set_vendor (device2, "oem");
 	fu_device_convert_instance_ids (device2);
@@ -787,10 +805,14 @@ fu_engine_partial_hash_func (gconstpointer user_data)
 
 	/* add two dummy devices */
 	fu_device_set_id (device1, "device1");
+	fu_device_set_vendor_id (device1, "USB:FFFF");
+	fu_device_set_protocol (device1, "com.acme");
 	fu_device_set_plugin (device1, "test");
 	fu_device_add_guid (device1, "12345678-1234-1234-1234-123456789012");
 	fu_engine_add_device (engine, device1);
 	fu_device_set_id (device2, "device21");
+	fu_device_set_vendor_id (device2, "USB:FFFF");
+	fu_device_set_protocol (device2, "com.acme");
 	fu_device_set_plugin (device2, "test");
 	fu_device_set_equivalent_id (device2, "b92f5b7560b84ca005a79f5a15de3c003ce494cf");
 	fu_device_add_guid (device2, "12345678-1234-1234-1234-123456789012");
@@ -862,6 +884,8 @@ fu_engine_device_unlock_func (gconstpointer user_data)
 
 	/* add a dummy device */
 	fu_device_set_id (device, "UEFI-dummy-dev0");
+	fu_device_set_vendor_id (device, "USB:FFFF");
+	fu_device_set_protocol (device, "com.acme");
 	fu_device_add_guid (device, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_LOCKED);
 	fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_PLAIN);
@@ -910,6 +934,8 @@ fu_engine_require_hwid_func (gconstpointer user_data)
 
 	/* add a dummy device */
 	fu_device_set_id (device, "test_device");
+	fu_device_set_vendor_id (device, "USB:FFFF");
+	fu_device_set_protocol (device, "com.acme");
 	fu_device_set_version (device, "1.2.2", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
@@ -1042,6 +1068,8 @@ fu_engine_downgrade_func (gconstpointer user_data)
 	/* add a device so we can get upgrades and downgrades */
 	fu_device_set_version (device, "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_id (device, "test_device");
+	fu_device_set_vendor_id (device, "USB:FFFF");
+	fu_device_set_protocol (device, "com.acme");
 	fu_device_set_name (device, "Test Device");
 	fu_device_add_guid (device, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
@@ -1136,6 +1164,8 @@ fu_engine_install_duration_func (gconstpointer user_data)
 	/* add a device so we can get the install duration */
 	fu_device_set_version (device, "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_id (device, "test_device");
+	fu_device_set_vendor_id (device, "USB:FFFF");
+	fu_device_set_protocol (device, "com.acme");
 	fu_device_add_guid (device, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
 	fu_device_set_install_duration (device, 999);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
@@ -1196,6 +1226,8 @@ fu_engine_history_func (gconstpointer user_data)
 	/* add a device so we can get upgrade it */
 	fu_device_set_version (device, "1.2.2", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_id (device, "test_device");
+	fu_device_set_vendor_id (device, "USB:FFFF");
+	fu_device_set_protocol (device, "com.acme");
 	fu_device_set_name (device, "Test Device");
 	fu_device_set_plugin (device, "test");
 	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
@@ -1318,6 +1350,8 @@ fu_engine_history_inherit (gconstpointer user_data)
 	/* add a device so we can get upgrade it */
 	fu_device_set_version (device, "1.2.2", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_id (device, "test_device");
+	fu_device_set_vendor_id (device, "USB:FFFF");
+	fu_device_set_protocol (device, "com.acme");
 	fu_device_set_name (device, "Test Device");
 	fu_device_set_plugin (device, "test");
 	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
@@ -1377,6 +1411,8 @@ fu_engine_history_inherit (gconstpointer user_data)
 	fu_engine_add_plugin (engine, self->plugin);
 	device = fu_device_new ();
 	fu_device_set_id (device, "test_device");
+	fu_device_set_vendor_id (device, "USB:FFFF");
+	fu_device_set_protocol (device, "com.acme");
 	fu_device_set_name (device, "Test Device");
 	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
 	fu_device_set_version (device, "1.2.2", FWUPD_VERSION_FORMAT_TRIPLET);
@@ -1422,6 +1458,8 @@ fu_engine_history_error_func (gconstpointer user_data)
 	/* add a device so we can get upgrade it */
 	fu_device_set_version (device, "1.2.2", FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_id (device, "test_device");
+	fu_device_set_vendor_id (device, "USB:FFFF");
+	fu_device_set_protocol (device, "com.acme");
 	fu_device_set_name (device, "Test Device");
 	fu_device_set_plugin (device, "test");
 	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");

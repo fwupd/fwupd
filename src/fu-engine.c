@@ -4140,6 +4140,14 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 		}
 	}
 
+	/* does the device not have an assigned protocol */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE) &&
+	    fu_device_get_protocol (device) == NULL) {
+		g_warning ("device %s [%s] does define an update protocol",
+			   fu_device_get_id (device),
+			   fu_device_get_name (device));
+	}
+
 	/* if this device is locked get some metadata from AppStream */
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_LOCKED)) {
 		g_autoptr(XbNode) component = fu_engine_get_component_by_guids (self, device);
@@ -4188,6 +4196,14 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 	/* notify all plugins about this new device */
 	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REGISTERED))
 		fu_engine_plugin_device_register (self, device);
+
+	/* does the device *still* not have a vendor ID? */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE) &&
+	    fu_device_get_vendor_id (device) == NULL) {
+		g_warning ("device %s [%s] does not define a vendor-id!",
+			   fu_device_get_id (device),
+			   fu_device_get_name (device));
+	}
 
 	/* create new device */
 	fu_device_list_add (self->device_list, device);
