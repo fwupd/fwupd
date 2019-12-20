@@ -38,6 +38,7 @@ typedef enum {
 } FuVliDeviceKind;
 
 const gchar	*fu_vli_common_device_kind_to_string	(FuVliDeviceKind	 device_kind);
+FuVliDeviceKind	 fu_vli_common_device_kind_from_string	(const gchar		*device_kind);
 guint32		 fu_vli_common_device_kind_get_size	(FuVliDeviceKind	 device_kind);
 guint32		 fu_vli_common_device_kind_get_offset	(FuVliDeviceKind	 device_kind);
 

@@ -38,3 +38,30 @@ shared_module('fu_plugin_vli',
     plugin_deps,
   ],
 )
+
+if get_option('tests')
+  testdatadir = join_paths(meson.current_source_dir(), 'data')
+  cargs += '-DTESTDATADIR="' + testdatadir + '"'
+  e = executable(
+    'vli-self-test',
+    fu_hash,
+    sources : [
+      'fu-self-test.c',
+      'fu-vli-common.c',
+    ],
+    include_directories : [
+      root_incdir,
+      fwupd_incdir,
+      fwupdplugin_incdir,
+    ],
+    dependencies : [
+      plugin_deps,
+    ],
+    link_with : [
+      fwupd,
+      fwupdplugin,
+    ],
+    c_args : cargs
+  )
+  test('vli-self-test', e)
+endif
