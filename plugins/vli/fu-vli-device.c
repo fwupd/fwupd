@@ -220,6 +220,18 @@ fu_vli_device_set_quirk_kv (FuDevice *device,
 		priv->spi_cmds[FU_VLI_DEVICE_SPI_REQ_SECTOR_ERASE] = fu_common_strtoull (value);
 		return TRUE;
 	}
+	if (g_strcmp0 (key, "DeviceKind") == 0) {
+		priv->kind = fu_vli_common_device_kind_from_string (value);
+		if (priv->kind == FU_VLI_DEVICE_KIND_UNKNOWN) {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_NOT_SUPPORTED,
+				     "DeviceKind %s is not supported",
+				     value);
+			return FALSE;
+		}
+		return TRUE;
+	}
 	g_set_error_literal (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
