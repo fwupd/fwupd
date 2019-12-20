@@ -250,6 +250,7 @@ static void
 fu_vli_usbhub_i2c_device_init (FuVliUsbhubI2cDevice *self)
 {
 	fu_device_add_icon (FU_DEVICE (self), "audio-card");
+	fu_device_set_protocol (FU_DEVICE (self), "com.vli.i2c");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_logical_id (FU_DEVICE (self), "I2C");
 	fu_device_set_summary (FU_DEVICE (self), "I²C Dock Management Device");
