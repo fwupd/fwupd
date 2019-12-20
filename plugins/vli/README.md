@@ -31,13 +31,13 @@ These devices also use custom GUID values for the SPI flash configuration, e.g.
  * `VLI_USBHUB\SPI_3730`
  * `VLI_USBHUB\SPI_37`
 
-Optional PD child devices use just one extra GUID, e.g.
+Optional PD child devices sharing the SPI flash use just one extra GUID, e.g.
 
- * `VLI_USBHUB_PD\VID_17EF&PID_3083`
+ * `USB\VID_17EF&PID_3083&DEV_VL102`
 
 Optional I²C child devices use just one extra GUID, e.g.
 
- * `VLI_USBHUB_I2C\MSP430`
+ * `USB\VID_17EF&PID_3083&I2C_MSP430`
 
 Vendor ID Security
 ------------------

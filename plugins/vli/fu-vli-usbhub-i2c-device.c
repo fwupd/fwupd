@@ -58,7 +58,9 @@ fu_vli_usbhub_i2c_device_setup (FuDevice *device, GError **error)
 	}
 
 	/* add instance ID */
-	instance_id = g_strdup_printf ("VLI_USBHUB_I2C\\%s",
+	instance_id = g_strdup_printf ("USB\\VID_%04X&PID_%04X&I2C_%s",
+				       fu_usb_device_get_vid (FU_USB_DEVICE (parent)),
+				       fu_usb_device_get_pid (FU_USB_DEVICE (parent)),
 				       fu_vli_common_device_kind_to_string (self->device_kind));
 	fu_device_add_instance_id (device, instance_id);
 
