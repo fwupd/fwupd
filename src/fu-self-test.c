@@ -1368,6 +1368,78 @@ fu_engine_history_func (gconstpointer user_data)
 }
 
 static void
+fu_engine_multiple_rels_func (gconstpointer user_data)
+{
+	FuTest *self = (FuTest *) user_data;
+	gboolean ret;
+	g_autofree gchar *filename = NULL;
+	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuInstallTask) task = NULL;
+	g_autoptr(GBytes) blob_cab = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo_empty = xb_silo_new ();
+	g_autoptr(XbSilo) silo = NULL;
+
+	/* ensure empty tree */
+	fu_self_test_mkroot ();
+
+	/* no metadata in daemon */
+	fu_engine_set_silo (engine, silo_empty);
+
+	/* set up dummy plugin */
+	fu_engine_add_plugin (engine, self->plugin);
+
+	g_setenv ("CONFIGURATION_DIRECTORY", TESTDATADIR_SRC, TRUE);
+	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NO_ENUMERATE, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	g_assert_cmpint (fu_engine_get_status (engine), ==, FWUPD_STATUS_IDLE);
+
+	/* add a device so we can get upgrade it */
+	fu_device_set_version (device, "1.2.2", FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_id (device, "test_device");
+	fu_device_set_vendor_id (device, "USB:FFFF");
+	fu_device_set_protocol (device, "com.acme");
+	fu_device_set_name (device, "Test Device");
+	fu_device_set_plugin (device, "test");
+	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_checksum (device, "0123456789abcdef0123456789abcdef01234567");
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES);
+	fu_device_set_created (device, 1515338000);
+	fu_engine_add_device (engine, device);
+
+	filename = g_build_filename (TESTDATADIR_DST, "multiple-rels", "multiple-rels-1.2.4.cab", NULL);
+	blob_cab = fu_common_get_contents_bytes	(filename, &error);
+	g_assert_no_error (error);
+	g_assert (blob_cab != NULL);
+	silo = fu_engine_get_silo_from_blob (engine, blob_cab, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (silo);
+
+	/* get component */
+	component = xb_silo_query_first (silo, "components/component/id[text()='com.hughski.test.firmware']/..", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (component);
+
+	/* set up counter */
+	fu_device_set_metadata_integer (device, "nr-update", 0);
+
+	/* install it */
+	task = fu_install_task_new (device, component);
+	ret = fu_engine_install (engine, task, blob_cab,
+				 FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* check we did 1.2.2 -> 1.2.3 -> 1.2.4 */
+	g_assert_cmpint (fu_device_get_metadata_integer (device, "nr-update"), ==, 2);
+	g_assert_cmpstr (fu_device_get_version (device), ==, "1.2.4");
+}
+
+static void
 fu_engine_history_inherit (gconstpointer user_data)
 {
 	FuTest *self = (FuTest *) user_data;
@@ -2928,6 +3000,8 @@ main (int argc, char **argv)
 			      fu_device_list_remove_chain_func);
 	g_test_add_data_func ("/fwupd/engine{device-unlock}", self,
 			      fu_engine_device_unlock_func);
+	g_test_add_data_func ("/fwupd/engine{multiple-releases}", self,
+			      fu_engine_multiple_rels_func);
 	g_test_add_data_func ("/fwupd/engine{history-success}", self,
 			      fu_engine_history_func);
 	g_test_add_data_func ("/fwupd/engine{history-error}", self,

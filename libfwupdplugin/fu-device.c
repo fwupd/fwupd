@@ -1571,6 +1571,8 @@ fu_device_add_flag (FuDevice *self, FwupdDeviceFlags flag)
 {
 	if (flag & FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE)
 		flag |= FWUPD_DEVICE_FLAG_CAN_VERIFY;
+	if (flag & FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES)
+		flag |= FWUPD_DEVICE_FLAG_VERSION_CHECK_REQUIRED;
 	fwupd_device_add_flag (FWUPD_DEVICE (self), flag);
 }
 
