@@ -1755,83 +1755,23 @@ fu_engine_schedule_update (FuEngine *self,
 	return fu_engine_offline_setup (error);
 }
 
-/**
- * fu_engine_install:
- * @self: A #FuEngine
- * @task: A #FuInstallTask
- * @blob_cab: The #GBytes of the .cab file
- * @flags: The #FwupdInstallFlags, e.g. %FWUPD_DEVICE_FLAG_UPDATABLE
- * @error: A #GError, or %NULL
- *
- * Installs a specific firmware file on a device.
- *
- * By this point all the requirements and tests should have been done in
- * fu_engine_check_requirements() so this should not fail before running
- * the plugin loader.
- *
- * Returns: %TRUE for success
- **/
-gboolean
-fu_engine_install (FuEngine *self,
-		   FuInstallTask *task,
-		   GBytes *blob_cab,
-		   FwupdInstallFlags flags,
-		   GError **error)
+static gboolean
+fu_engine_install_release (FuEngine *self,
+			   FuDevice *device,
+			   XbNode *component,
+			   XbNode *rel,
+			   FwupdInstallFlags flags,
+			   GError **error)
 {
-	XbNode *component = fu_install_task_get_component (task);
 	FuPlugin *plugin;
 	GBytes *blob_fw;
 	const gchar *tmp = NULL;
 	g_autofree gchar *release_key = NULL;
 	g_autofree gchar *version_orig = NULL;
 	g_autofree gchar *version_rel = NULL;
-	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuDevice) device_tmp = NULL;
 	g_autoptr(GBytes) blob_fw2 = NULL;
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(XbNode) rel = NULL;
-
-	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
-	g_return_val_if_fail (XB_IS_NODE (component), FALSE);
-	g_return_val_if_fail (blob_cab != NULL, FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-	/* not in bootloader mode */
-	device = g_object_ref (fu_install_task_get_device (task));
-	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER)) {
-		const gchar *caption = NULL;
-		caption = xb_node_query_text (component,
-					      "screenshots/screenshot/caption",
-					      NULL);
-		if (caption != NULL) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NEEDS_USER_ACTION,
-				     "Device %s needs to manually be put in update mode: %s",
-				     fu_device_get_name (device), caption);
-		} else {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NEEDS_USER_ACTION,
-				     "Device %s needs to manually be put in update mode",
-				     fu_device_get_name (device));
-		}
-		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED_TRANSIENT);
-		if (error != NULL)
-			fu_device_set_update_error (device, (*error)->message);
-		return FALSE;
-	}
-
-	/* parse the DriverVer */
-	rel = xb_node_query_first (component, "releases/release", &error_local);
-	if (rel == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "No releases in the firmware component: %s",
-			     error_local->message);
-		return FALSE;
-	}
 
 	/* get the blob */
 	tmp = xb_node_query_attr (rel, "checksum[@target='content']", "filename", NULL);
@@ -1875,21 +1815,6 @@ fu_engine_install (FuEngine *self,
 	if (version_rel == NULL) {
 		g_prefix_error (error, "failed to get release version: ");
 		return FALSE;
-	}
-	if ((flags & FWUPD_INSTALL_FLAG_OFFLINE) > 0 &&
-	    !fu_engine_is_running_offline (self)) {
-		g_autoptr(FwupdRelease) release_tmp = NULL;
-		plugin = fu_plugin_list_find_by_name (self->plugin_list, "upower", NULL);
-		if (plugin != NULL) {
-			if (!fu_plugin_runner_update_prepare (plugin, flags, device, error))
-				return FALSE;
-		}
-		release_tmp = fu_engine_create_release_metadata (self, plugin, error);
-		if (release_tmp == NULL)
-			return FALSE;
-		fwupd_release_set_version (release_tmp, version_rel);
-		return fu_engine_schedule_update (self, device, release_tmp,
-						  blob_cab, flags, error);
 	}
 
 	/* add device to database */
@@ -1985,10 +1910,113 @@ fu_engine_install (FuEngine *self,
 	}
 
 	/* success */
-	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
 	if ((flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0 &&
 	    !fu_history_modify_device (self->history, device, error))
 		return FALSE;
+	return TRUE;
+}
+
+/**
+ * fu_engine_install:
+ * @self: A #FuEngine
+ * @task: A #FuInstallTask
+ * @blob_cab: The #GBytes of the .cab file
+ * @flags: The #FwupdInstallFlags, e.g. %FWUPD_DEVICE_FLAG_UPDATABLE
+ * @error: A #GError, or %NULL
+ *
+ * Installs a specific firmware file on a device.
+ *
+ * By this point all the requirements and tests should have been done in
+ * fu_engine_check_requirements() so this should not fail before running
+ * the plugin loader.
+ *
+ * Returns: %TRUE for success
+ **/
+gboolean
+fu_engine_install (FuEngine *self,
+		   FuInstallTask *task,
+		   GBytes *blob_cab,
+		   FwupdInstallFlags flags,
+		   GError **error)
+{
+	XbNode *component = fu_install_task_get_component (task);
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(XbNode) rel_newest = NULL;
+
+	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
+	g_return_val_if_fail (XB_IS_NODE (component), FALSE);
+	g_return_val_if_fail (blob_cab != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* not in bootloader mode */
+	device = g_object_ref (fu_install_task_get_device (task));
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER)) {
+		const gchar *caption = NULL;
+		caption = xb_node_query_text (component,
+					      "screenshots/screenshot/caption",
+					      NULL);
+		if (caption != NULL) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NEEDS_USER_ACTION,
+				     "Device %s needs to manually be put in update mode: %s",
+				     fu_device_get_name (device), caption);
+		} else {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NEEDS_USER_ACTION,
+				     "Device %s needs to manually be put in update mode",
+				     fu_device_get_name (device));
+		}
+		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED_TRANSIENT);
+		if (error != NULL)
+			fu_device_set_update_error (device, (*error)->message);
+		return FALSE;
+	}
+
+	/* get the newest version */
+	rel_newest = xb_node_query_first (component, "releases/release", &error_local);
+	if (rel_newest == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "No releases in the firmware component: %s",
+			     error_local->message);
+		return FALSE;
+	}
+
+	/* schedule this for the next reboot if not in system-update.target,
+	 * but first check if allowed on battery power */
+	if ((flags & FWUPD_INSTALL_FLAG_OFFLINE) > 0 &&
+	    !fu_engine_is_running_offline (self)) {
+		FuPlugin *plugin;
+		g_autoptr(FwupdRelease) release_tmp = NULL;
+		g_autofree gchar *version_rel = NULL;
+		version_rel = fu_engine_get_release_version (self, device, rel_newest, error);
+		if (version_rel == NULL) {
+			g_prefix_error (error, "failed to get release version: ");
+			return FALSE;
+		}
+		plugin = fu_plugin_list_find_by_name (self->plugin_list, "upower", NULL);
+		if (plugin != NULL) {
+			if (!fu_plugin_runner_update_prepare (plugin, flags, device, error))
+				return FALSE;
+		}
+		release_tmp = fu_engine_create_release_metadata (self, plugin, error);
+		if (release_tmp == NULL)
+			return FALSE;
+		fwupd_release_set_version (release_tmp, version_rel);
+		return fu_engine_schedule_update (self, device, release_tmp,
+						  blob_cab, flags, error);
+	}
+
+	/* install only the newest version */
+	if (!fu_engine_install_release (self, device, component, rel_newest, flags, error))
+		return FALSE;
+
+	/* success */
+	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
 	return TRUE;
 }
 
