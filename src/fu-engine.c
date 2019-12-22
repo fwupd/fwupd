@@ -1916,6 +1916,53 @@ fu_engine_install_release (FuEngine *self,
 	return TRUE;
 }
 
+typedef struct {
+	gboolean	 ret;
+	GError		**error;
+	FuEngine	*self;
+	FuDevice	*device;
+} FuEngineSortHelper;
+
+static gint
+fu_engine_sort_release_versions_cb (gconstpointer a, gconstpointer b, gpointer user_data)
+{
+	FuEngineSortHelper *helper = (FuEngineSortHelper *) user_data;
+	XbNode *na = *((XbNode **) a);
+	XbNode *nb = *((XbNode **) b);
+	g_autofree gchar *va = NULL;
+	g_autofree gchar *vb = NULL;
+
+	/* already failed */
+	if (!helper->ret)
+		return 0;
+
+	/* get the semver from the release */
+	va = fu_engine_get_release_version (helper->self, helper->device, na, helper->error);
+	if (va == NULL) {
+		g_prefix_error (helper->error, "failed to get release version: ");
+		return 0;
+	}
+	vb = fu_engine_get_release_version (helper->self, helper->device, nb, helper->error);
+	if (vb == NULL) {
+		g_prefix_error (helper->error, "failed to get release version: ");
+		return 0;
+	}
+	return fu_common_vercmp (va, vb);
+}
+
+static gboolean
+fu_engine_sort_releases (FuEngine *self, FuDevice *device, GPtrArray *rels, GError **error)
+{
+	FuEngineSortHelper helper = {
+		.ret = TRUE,
+		.self = self,
+		.device = device,
+		.error = error,
+	};
+	g_ptr_array_sort_with_data (rels, fu_engine_sort_release_versions_cb, &helper);
+	return helper.ret;
+}
+
 /**
  * fu_engine_install:
  * @self: A #FuEngine
@@ -2011,9 +2058,29 @@ fu_engine_install (FuEngine *self,
 						  blob_cab, flags, error);
 	}
 
-	/* install only the newest version */
-	if (!fu_engine_install_release (self, device, component, rel_newest, flags, error))
-		return FALSE;
+	/* install each intermediate release, or install only the newest version */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES)) {
+		g_autoptr(GPtrArray) rels = NULL;
+		rels = xb_node_query (component, "releases/release", 0, &error_local);
+		if (rels == NULL) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "No releases in the firmware component: %s",
+				     error_local->message);
+			return FALSE;
+		}
+		if (!fu_engine_sort_releases (self, device, rels, error))
+			return FALSE;
+		for (guint i = 0; i < rels->len; i++) {
+			XbNode *rel = g_ptr_array_index (rels, i);
+			if (!fu_engine_install_release (self, device, component, rel, flags, error))
+				return FALSE;
+		}
+	} else {
+		if (!fu_engine_install_release (self, device, component, rel_newest, flags, error))
+			return FALSE;
+	}
 
 	/* success */
 	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);

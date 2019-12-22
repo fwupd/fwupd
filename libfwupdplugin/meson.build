@@ -208,6 +208,7 @@ if get_option('tests')
     colorhug_test_firmware,
     builder_test_firmware,
     hwid_test_firmware,
+    multiple_rels_test_firmware,
     noreqs_test_firmware,
     fu_hash,
   ]

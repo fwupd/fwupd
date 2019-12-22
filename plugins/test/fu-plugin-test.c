@@ -125,6 +125,19 @@ fu_plugin_verify (FuPlugin *plugin,
 	return FALSE;
 }
 
+static gchar *
+fu_plugin_test_get_version (GBytes *blob_fw)
+{
+	const gchar *str = g_bytes_get_data (blob_fw, NULL);
+	guint64 val = 0;
+	if (str == NULL)
+		return NULL;
+	val = fu_common_strtoull (str);
+	if (val == 0x0)
+		return NULL;
+	return fu_common_version_from_uint32 (val, FWUPD_VERSION_FORMAT_TRIPLET);
+}
+
 gboolean
 fu_plugin_update (FuPlugin *plugin,
 		  FuDevice *device,
@@ -172,10 +185,15 @@ fu_plugin_update (FuPlugin *plugin,
 	if (requires_activation) {
 		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 	} else {
-		if (flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) {
-			fu_device_set_version (device, "1.2.2", FWUPD_VERSION_FORMAT_TRIPLET);
+		g_autofree gchar *ver = fu_plugin_test_get_version (blob_fw);
+		if (ver != NULL) {
+			fu_device_set_version (device, ver, FWUPD_VERSION_FORMAT_TRIPLET);
 		} else {
-			fu_device_set_version (device, "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET);
+			if (flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) {
+				fu_device_set_version (device, "1.2.2", FWUPD_VERSION_FORMAT_TRIPLET);
+			} else {
+				fu_device_set_version (device, "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET);
+			}
 		}
 	}
 
