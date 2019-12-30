@@ -17,6 +17,7 @@
 static gboolean
 fu_plugin_superio_coldplug_chipset (FuPlugin *plugin, const gchar *chipset, GError **error)
 {
+	const gchar *dmi_vendor;
 	g_autoptr(FuSuperioDevice) dev = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autofree gchar *key = g_strdup_printf ("SuperIO=%s", chipset);
@@ -64,6 +65,13 @@ fu_plugin_superio_coldplug_chipset (FuPlugin *plugin, const gchar *chipset, GErr
 			     G_IO_ERROR_NOT_SUPPORTED,
 			     "SuperIO chip %s has unsupported Id", chipset);
 		return FALSE;
+	}
+
+	/* set vendor ID as the motherboard vendor */
+	dmi_vendor = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BASEBOARD_MANUFACTURER);
+	if (dmi_vendor != NULL) {
+		g_autofree gchar *vendor_id = g_strdup_printf ("DMI:%s", dmi_vendor);
+		fu_device_set_vendor_id (FU_DEVICE (dev), vendor_id);
 	}
 
 	/* unlock */

@@ -11,16 +11,19 @@ Guid = WacomAES
 [DeviceInstanceId=HIDRAW\VEN_2D1F&DEV_4970]
 Plugin = wacom_raw
 Guid = WacomAES
+Flags = self-recovery
 
 # Moffet 14-Sharp-HH
 [DeviceInstanceId=HIDRAW\VEN_2D1F&DEV_4971]
 Plugin = wacom_raw
 Guid = WacomAES
+Flags = self-recovery
 
 # Moffet 14-Sharp-VIA
 [DeviceInstanceId=HIDRAW\VEN_2D1F&DEV_4972]
 Plugin = wacom_raw
 Guid = WacomAES
+Flags = self-recovery
 
 # Dell Latitude 5175
 [DeviceInstanceId=HIDRAW\VEN_056A&DEV_4807]

@@ -19,3 +19,8 @@ These devices use the following instance values:
  * `EMMC\%NAME%`
  * `EMMC\%MANFID%&%OEMID%`
  * `EMMC\%MANFID%&%OEMID%&%NAME%`
+
+Vendor ID Security
+------------------
+
+The vendor ID is set from the EMMC vendor, for example set to `EMMC:{$manfid}`

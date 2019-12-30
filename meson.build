@@ -155,10 +155,17 @@ prefix = get_option('prefix')
 
 bindir = join_paths(prefix, get_option('bindir'))
 libdir = join_paths(prefix, get_option('libdir'))
-datadir = join_paths(prefix, get_option('datadir'))
 libexecdir = join_paths(prefix, get_option('libexecdir'))
-sysconfdir = join_paths(prefix, get_option('sysconfdir'))
-localstatedir = join_paths(prefix, get_option('localstatedir'))
+#this ends up in compiled code, ignore prefix
+if host_machine.system() == 'windows'
+  sysconfdir = get_option('sysconfdir')
+  localstatedir = get_option('localstatedir')
+  datadir = get_option('datadir')
+else
+  datadir = join_paths(prefix, get_option('datadir'))
+  sysconfdir = join_paths(prefix, get_option('sysconfdir'))
+  localstatedir = join_paths(prefix, get_option('localstatedir'))
+endif
 mandir = join_paths(prefix, get_option('mandir'))
 localedir = join_paths(prefix, get_option('localedir'))
 
@@ -223,6 +230,13 @@ gcab = find_program('gcab', required : true)
 bashcomp = dependency('bash-completion', required: false)
 python3 = find_program('python3')
 
+platform_deps = []
+if get_option('default_library') != 'static'
+  if host_machine.system() == 'windows'
+    platform_deps += cc.find_library('shlwapi')
+  endif
+endif
+
 if valgrind.found()
   conf.set('HAVE_VALGRIND', '1')
 endif
@@ -261,6 +275,10 @@ if cc.has_header_symbol('locale.h', 'LC_MESSAGES')
 endif
 if cc.has_function('pwrite', args : '-D_XOPEN_SOURCE')
   conf.set('HAVE_PWRITE', '1')
+endif
+
+if build_standalone and get_option('plugin_tpm')
+  tpm2tss = dependency('tss2-esys', version : '>= 2.0')
 endif
 
 if build_standalone and get_option('plugin_uefi')
@@ -368,7 +386,11 @@ conf.set_quoted('FWUPD_SYSCONFDIR', sysconfdir)
 conf.set_quoted('FWUPD_LOCALEDIR', localedir)
 
 if build_standalone
-plugin_dir = join_paths(libdir, 'fwupd-plugins-3')
+if host_machine.system() == 'windows'
+  plugin_dir = 'fwupd-plugins-3'
+else
+  plugin_dir = join_paths(libdir, 'fwupd-plugins-3')
+endif
 conf.set_quoted('FWUPD_PLUGINDIR', plugin_dir)
 endif
 

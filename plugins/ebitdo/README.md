@@ -31,3 +31,16 @@ These devices use the standard USB DeviceInstanceId values, e.g.
  * `USB\VID_2DC8&PID_AB11&REV_0001`
  * `USB\VID_2DC8&PID_AB11`
  * `USB\VID_2DC8`
+
+Vendor ID Security
+------------------
+
+The vendor ID is set from the USB vendor, which is set to various different
+values depending on the model and device mode. The list of USB VIDs used is:
+
+ * `USB:0x2DC8`
+ * `USB:0x0483`
+ * `USB:0x1002`
+ * `USB:0x1235`
+ * `USB:0x2002`
+ * `USB:0x8000`

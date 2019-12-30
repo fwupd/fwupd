@@ -16,6 +16,12 @@ These devices also use custom GUID values constructed using the board ID, e.g.
  * `SYNAPTICS_RMI\TM3038-002`
  * `SYNAPTICS_RMI\TM3038`
 
+
+Vendor ID Security
+------------------
+
+The vendor ID is set from the udev vendor, in this instance set to `HIDRAW:0x06CB`
+
 Firmware Format
 ---------------
 

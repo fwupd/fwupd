@@ -211,47 +211,47 @@ msgstr "Autenticando…"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on a removable device"
-msgstr "É requerida autenticação para fazer downgrade da versão do firmware em um dispositivo removível"
+msgstr "Autenticação é necessária para fazer downgrade da versão do firmware em um dispositivo removível"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on this machine"
-msgstr "É requerida autenticação para fazer downgrade da versão do firmware nesta máquina"
+msgstr "Autenticação é necessária para fazer downgrade da versão do firmware nesta máquina"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
-msgstr "É requerida autenticação para modificar um remoto configurado usado para atualizações de firmware"
+msgstr "Autenticação é necessária para modificar um remoto configurado usado para atualizações de firmware"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify daemon configuration"
-msgstr "É requerida autenticação para modificar uma configuração de daemon"
+msgstr "Autenticação é necessária para modificar uma configuração de daemon"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
-msgstr "É requirida autenticação para definir a lista de firmwares aprovados"
+msgstr "Autenticação é necessária para definir a lista de firmwares aprovados"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to sign data using the client certificate"
-msgstr "É requirida autenticação para assinar dados usando o certificado client"
+msgstr "Autenticação é necessária para assinar dados usando o certificado do cliente"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
-msgstr "É requirida autenticação para alternar para nova versão de firmware"
+msgstr "Autenticação é necessária para alternar para nova versão de firmware"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to unlock a device"
-msgstr "É requerida autenticação para desbloquear um dispositivo"
+msgstr "Autenticação é necessária para desbloquear um dispositivo"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on a removable device"
-msgstr "É requerida autenticação para atualizar o firmware em dispositivo removível"
+msgstr "Autenticação é necessária para atualizar o firmware em dispositivo removível"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on this machine"
-msgstr "É requerida autenticação para atualizar o firmware nesta máquina"
+msgstr "Autenticação é necessária para atualizar o firmware nesta máquina"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the stored checksums for the device"
-msgstr "É requerida autenticação para atualizar as somas de verificação armazenadas para o dispositivo"
+msgstr "Autenticação é necessária para atualizar as somas de verificação armazenadas para o dispositivo"
 
 #. TRANSLATORS: Boolean value to automatically send reports
 msgid "Automatic Reporting"
@@ -557,6 +557,10 @@ msgstr "Falha ao carregar peculiaridades"
 msgid "Failed to parse arguments"
 msgstr "Falha ao interpretar argumentos"
 
+#. TRANSLATORS: failed to read measurements file
+msgid "Failed to parse file"
+msgstr "Falha ao analisar o arquivo"
+
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse flags for --filter"
 msgstr "Falha ao analisar opções para --filter"
@@ -852,6 +856,12 @@ msgstr "Nova versão"
 msgid "No action specified!"
 msgstr "Nenhuma ação especificada!"
 
+#. TRANSLATORS: message letting the user know no device downgrade available
+#. * %1 is the device name
+#, c-format
+msgid "No downgrades for %s"
+msgstr "Nenhum downgrade para %s"
+
 #. TRANSLATORS: nothing found
 msgid "No firmware IDs found"
 msgstr "Nenhum ID de firmware encontrado"
@@ -879,6 +889,16 @@ msgstr "Nenhum remoto disponível"
 #. TRANSLATORS: nothing was updated offline
 msgid "No updates were applied"
 msgstr "Nenhuma atualização foi aplicada"
+
+#. TRANSLATORS: message letting the user know no device upgrade available
+#. * %1 is the device name
+#, c-format
+msgid "No upgrades for %s"
+msgstr "Nenhuma atualização para %s"
+
+#. TRANSLATORS: command line option
+msgid "Only show single PCR value"
+msgstr "Mostra apenas valor único de PCR"
 
 #. TRANSLATORS: command line option
 msgid "Override plugin warning"
@@ -1042,7 +1062,7 @@ msgstr "Salva o estado do dispositivo em um arquivo JSON entre execuções"
 msgid "Schedule installation for next reboot when possible"
 msgstr "Agenda instalação para próxima reinicialização quando possível"
 
-#. TRANSLATORS: scheduing an update to be done on the next boot
+#. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Agendando…"
 
@@ -1310,7 +1330,7 @@ msgid "Update the stored cryptographic hash with current ROM contents"
 msgstr "Atualiza o hash criptográfico armazenado com o atual conteúdo da ROM"
 
 msgid "Update the stored device verification information"
-msgstr "Atualizar as informações de verificação do dispositivo armazenado"
+msgstr "Atualizar as informações de verificação armazenadas do dispositivo"
 
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current contents"

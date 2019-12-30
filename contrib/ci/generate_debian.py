@@ -124,6 +124,8 @@ def update_debian_copyright (directory):
                     lines = rfd.readlines(220)
             except UnicodeDecodeError:
                 continue
+            except FileNotFoundError:
+                continue
             for line in lines:
                 if 'Copyright (C) ' in line:
                     parts = line.split ('Copyright (C)')[1].strip() #split out the copyright header

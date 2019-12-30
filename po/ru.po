@@ -797,7 +797,7 @@ msgstr "Сохранить состояние устройства в файл J
 msgid "Schedule installation for next reboot when possible"
 msgstr "Запланировать установку на следующую перезагрузку, если это возможно"
 
-#. TRANSLATORS: scheduing an update to be done on the next boot
+#. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Планировка…"
 

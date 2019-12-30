@@ -553,7 +553,7 @@ msgstr "回傳所有機器的硬體 ID"
 msgid "Schedule installation for next reboot when possible"
 msgstr "安排下次重新開機時若可行便安裝"
 
-#. TRANSLATORS: scheduing an update to be done on the next boot
+#. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "排程中…"
 

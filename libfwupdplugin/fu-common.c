@@ -15,6 +15,8 @@
 
 #ifdef HAVE_FNMATCH_H
 #include <fnmatch.h>
+#elif _WIN32
+#include <shlwapi.h>
 #endif
 
 #include <archive_entry.h>
@@ -1085,21 +1087,21 @@ fu_common_get_path (FuPathKind path_kind)
 	/* /etc/fwupd */
 	case FU_PATH_KIND_SYSCONFDIR_PKG:
 		tmp = g_getenv ("CONFIGURATION_DIRECTORY");
-		if (tmp != NULL)
+		if (tmp != NULL && g_file_test (tmp, G_FILE_TEST_EXISTS))
 			return g_build_filename (tmp, NULL);
 		basedir = fu_common_get_path (FU_PATH_KIND_SYSCONFDIR);
 		return g_build_filename (basedir, PACKAGE_NAME, NULL);
 	/* /var/lib/fwupd */
 	case FU_PATH_KIND_LOCALSTATEDIR_PKG:
 		tmp = g_getenv ("STATE_DIRECTORY");
-		if (tmp != NULL)
+		if (tmp != NULL && g_file_test (tmp, G_FILE_TEST_EXISTS))
 			return g_build_filename (tmp, NULL);
 		basedir = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR);
 		return g_build_filename (basedir, "lib", PACKAGE_NAME, NULL);
 	/* /var/cache/fwupd */
 	case FU_PATH_KIND_CACHEDIR_PKG:
 		tmp = g_getenv ("CACHE_DIRECTORY");
-		if (tmp != NULL)
+		if (tmp != NULL && g_file_test (tmp, G_FILE_TEST_EXISTS))
 			return g_build_filename (tmp, NULL);
 		basedir = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR);
 		return g_build_filename (basedir, "cache", PACKAGE_NAME, NULL);
@@ -1655,6 +1657,10 @@ fu_common_fnmatch (const gchar *pattern, const gchar *str)
 	g_return_val_if_fail (str != NULL, FALSE);
 #ifdef HAVE_FNMATCH_H
 	return fnmatch (pattern, str, FNM_NOESCAPE) == 0;
+#elif _WIN32
+	g_return_val_if_fail (strlen (pattern) < MAX_PATH, FALSE);
+	g_return_val_if_fail (strlen (str) < MAX_PATH, FALSE);
+	return PathMatchSpecA (str, pattern);
 #else
 	return g_strcmp0 (pattern, str) == 0;
 #endif

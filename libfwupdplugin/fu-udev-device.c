@@ -43,7 +43,7 @@ typedef struct
 	gchar			*subsystem;
 	gchar			*device_file;
 	gint			 fd;
-	gboolean		 readonly;
+	FuUdevDeviceFlags	 flags;
 } FuUdevDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuUdevDevice, fu_udev_device, FU_TYPE_DEVICE)
@@ -115,13 +115,31 @@ fu_udev_device_get_sysfs_attr_as_uint8 (GUdevDevice *udev_device, const gchar *n
 #endif
 }
 
+#ifdef HAVE_GUDEV
+static void
+fu_udev_device_to_string_raw (GUdevDevice *udev_device, guint idt, GString *str)
+{
+	const gchar * const *keys;
+	keys = g_udev_device_get_property_keys (udev_device);
+	for (guint i = 0; keys[i] != NULL; i++) {
+		fu_common_string_append_kv (str, idt, keys[i],
+					    g_udev_device_get_property (udev_device, keys[i]));
+	}
+	keys = g_udev_device_get_sysfs_attr_keys (udev_device);
+	for (guint i = 0; keys[i] != NULL; i++) {
+		fu_common_string_append_kv (str, idt, keys[i],
+					    g_udev_device_get_sysfs_attr (udev_device, keys[i]));
+	}
+}
+#endif
+
 static void
 fu_udev_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 #ifdef HAVE_GUDEV
 	FuUdevDevice *self = FU_UDEV_DEVICE (device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
-	const gchar * const *keys;
+	g_autoptr(GUdevDevice) udev_parent = NULL;
 
 	if (priv->udev_device == NULL)
 		return;
@@ -129,17 +147,11 @@ fu_udev_device_to_string (FuDevice *device, guint idt, GString *str)
 	if (g_getenv ("FU_UDEV_DEVICE_DEBUG") == NULL)
 		return;
 
-	keys = g_udev_device_get_property_keys (priv->udev_device);
-	for (guint i = 0; keys[i] != NULL; i++) {
-		fu_common_string_append_kv (str, idt, keys[i],
-					    g_udev_device_get_property (priv->udev_device,
-									keys[i]));
-	}
-	keys = g_udev_device_get_sysfs_attr_keys (priv->udev_device);
-	for (guint i = 0; keys[i] != NULL; i++) {
-		fu_common_string_append_kv (str, idt, keys[i],
-					    g_udev_device_get_sysfs_attr (priv->udev_device,
-									  keys[i]));
+	fu_udev_device_to_string_raw (priv->udev_device, idt, str);
+	udev_parent = g_udev_device_get_parent (priv->udev_device);
+	if (udev_parent != NULL) {
+		fu_common_string_append_kv (str, idt, "Parent", NULL);
+		fu_udev_device_to_string_raw (udev_parent, idt + 1, str);
 	}
 #endif
 }
@@ -332,6 +344,10 @@ static void
 fu_udev_device_set_dev (FuUdevDevice *self, GUdevDevice *udev_device)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+#ifdef HAVE_GUDEV
+	const gchar *summary;
+	g_autoptr(GUdevDevice) parent = NULL;
+#endif
 
 	g_return_if_fail (FU_IS_UDEV_DEVICE (self));
 
@@ -342,6 +358,16 @@ fu_udev_device_set_dev (FuUdevDevice *self, GUdevDevice *udev_device)
 #ifdef HAVE_GUDEV
 	priv->subsystem = g_strdup (g_udev_device_get_subsystem (priv->udev_device));
 	priv->device_file = g_strdup (g_udev_device_get_device_file (priv->udev_device));
+
+	/* try to get one line summary */
+	summary = g_udev_device_get_sysfs_attr (priv->udev_device, "description");
+	if (summary == NULL) {
+		parent = g_udev_device_get_parent (priv->udev_device);
+		if (parent != NULL)
+			summary = g_udev_device_get_sysfs_attr (parent, "description");
+	}
+	if (summary != NULL)
+		fu_device_set_summary (FU_DEVICE (self), summary);
 #endif
 }
 
@@ -627,6 +653,16 @@ fu_udev_device_set_physical_id (FuUdevDevice *self, const gchar *subsystem, GErr
 			return FALSE;
 		}
 		physical_id = g_strdup_printf ("HID_PHYS=%s", tmp);
+	} else if (g_strcmp0 (subsystem, "tpm") == 0) {
+		tmp = g_udev_device_get_property (udev_device, "DEVNAME");
+		if (tmp == NULL) {
+			g_set_error_literal (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_NOT_FOUND,
+					     "failed to find DEVPATH");
+			return FALSE;
+		}
+		physical_id = g_strdup_printf ("DEVNAME=%s", tmp);
 	} else {
 		g_set_error (error,
 			     G_IO_ERROR,
@@ -702,7 +738,29 @@ fu_udev_device_set_readonly (FuUdevDevice *self, gboolean readonly)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_UDEV_DEVICE (self));
-	priv->readonly = readonly;
+	priv->flags = readonly ? FU_UDEV_DEVICE_FLAG_OPEN_READ :
+				 FU_UDEV_DEVICE_FLAG_OPEN_READ |
+				 FU_UDEV_DEVICE_FLAG_OPEN_WRITE;
+}
+
+/**
+ * fu_udev_device_set_flags:
+ * @self: A #FuUdevDevice
+ * @flags: a #FuUdevDeviceFlags, e.g. %FU_UDEV_DEVICE_FLAG_OPEN_READ
+ *
+ * Sets the parameters to use when opening the device.
+ *
+ * For example %FU_UDEV_DEVICE_FLAG_OPEN_READ means that fu_device_open()
+ * would use `O_RDONLY` rather than `O_RDWR` which is the default.
+ *
+ * Since: 1.3.6
+ **/
+void
+fu_udev_device_set_flags (FuUdevDevice *self, FuUdevDeviceFlags flags)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_UDEV_DEVICE (self));
+	priv->flags = flags;
 }
 
 static gboolean
@@ -713,29 +771,25 @@ fu_udev_device_open (FuDevice *device, GError **error)
 	FuUdevDeviceClass *klass = FU_UDEV_DEVICE_GET_CLASS (device);
 
 	/* open device */
-	if (priv->device_file != NULL) {
-		if (priv->readonly) {
-			priv->fd = g_open (priv->device_file, O_RDONLY, 0);
-			if (priv->fd < 0) {
-				g_set_error (error,
-					     G_IO_ERROR,
-					     G_IO_ERROR_FAILED,
-					     "failed to open %s for reading: %s",
-					     priv->device_file,
-					     strerror (errno));
-				return FALSE;
-			}
+	if (priv->device_file != NULL && priv->flags != FU_UDEV_DEVICE_FLAG_NONE) {
+		gint flags;
+		if (priv->flags & FU_UDEV_DEVICE_FLAG_OPEN_READ &&
+		    priv->flags & FU_UDEV_DEVICE_FLAG_OPEN_WRITE) {
+			flags = O_RDWR;
+		} else if (priv->flags & FU_UDEV_DEVICE_FLAG_OPEN_WRITE) {
+			flags = O_WRONLY;
 		} else {
-			priv->fd = g_open (priv->device_file, O_RDWR, 0);
-			if (priv->fd < 0) {
-				g_set_error (error,
-					     G_IO_ERROR,
-					     G_IO_ERROR_FAILED,
-					     "failed to open %s: %s",
-					     priv->device_file,
-					     strerror (errno));
-				return FALSE;
-			}
+			flags = O_RDONLY;
+		}
+		priv->fd = g_open (priv->device_file, flags, 0);
+		if (priv->fd < 0) {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_FAILED,
+				     "failed to open %s: %s",
+				     priv->device_file,
+				     strerror (errno));
+			return FALSE;
 		}
 	}
 
@@ -979,6 +1033,9 @@ fu_udev_device_finalize (GObject *object)
 static void
 fu_udev_device_init (FuUdevDevice *self)
 {
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	priv->flags = FU_UDEV_DEVICE_FLAG_OPEN_READ |
+		      FU_UDEV_DEVICE_FLAG_OPEN_WRITE;
 }
 
 static void

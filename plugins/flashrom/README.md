@@ -23,3 +23,8 @@ GUID Generation
 These device uses hardware ID values which are derived from SMBIOS. They should
 match the values provided by `fwupdtool hwids` or the `ComputerHardwareIds.exe`
 Windows utility.
+
+Vendor ID Security
+------------------
+
+The vendor ID is set from the BIOS vendor, for example `DMI:Google`

@@ -18,6 +18,47 @@
 #define FU_COMMON_VERSION_DECODE_BCD(val)	((((val) >> 4) & 0x0f) * 10 + ((val) & 0x0f))
 
 /**
+ * fu_common_version_from_uint64:
+ * @val: A raw version number
+ * @kind: version kind used for formatting, e.g. %FWUPD_VERSION_FORMAT_QUAD
+ *
+ * Returns a dotted decimal version string from a 64 bit number.
+ *
+ * Returns: A version number, e.g. "1.2.3.4", or %NULL if not supported
+ *
+ * Since: 1.3.6
+ **/
+gchar *
+fu_common_version_from_uint64 (guint64 val, FwupdVersionFormat kind)
+{
+	if (kind == FWUPD_VERSION_FORMAT_QUAD) {
+		/* AABB.CCDD.EEFF.GGHH */
+		return g_strdup_printf ("%" G_GUINT64_FORMAT "."
+					"%" G_GUINT64_FORMAT "."
+					"%" G_GUINT64_FORMAT "."
+					"%" G_GUINT64_FORMAT "",
+					(val >> 48) & 0xffff,
+					(val >> 32) & 0xffff,
+					(val >> 16) & 0xffff,
+					val & 0xffff);
+	}
+	if (kind == FWUPD_VERSION_FORMAT_PAIR) {
+		/* AABBCCDD.EEFFGGHH */
+		return g_strdup_printf ("%" G_GUINT64_FORMAT ".%" G_GUINT64_FORMAT "",
+					(val >> 32) & 0xffffffff,
+					val & 0xffffffff);
+	}
+	if (kind == FWUPD_VERSION_FORMAT_NUMBER ||
+	    kind == FWUPD_VERSION_FORMAT_PLAIN) {
+		/* AABBCCDD */
+		return g_strdup_printf ("%" G_GUINT64_FORMAT, val);
+	}
+	g_critical ("failed to convert version format %s: %" G_GUINT64_FORMAT "",
+		    fwupd_version_format_to_string (kind), val);
+	return NULL;
+}
+
+/**
  * fu_common_version_from_uint32:
  * @val: A uint32le version number
  * @kind: version kind used for formatting, e.g. %FWUPD_VERSION_FORMAT_TRIPLET
@@ -52,7 +93,8 @@ fu_common_version_from_uint32 (guint32 val, FwupdVersionFormat kind)
 					(val >> 16) & 0xffff,
 					val & 0xffff);
 	}
-	if (kind == FWUPD_VERSION_FORMAT_NUMBER) {
+	if (kind == FWUPD_VERSION_FORMAT_NUMBER ||
+	    kind == FWUPD_VERSION_FORMAT_PLAIN) {
 		/* AABBCCDD */
 		return g_strdup_printf ("%" G_GUINT32_FORMAT, val);
 	}
@@ -94,6 +136,13 @@ fu_common_version_from_uint32 (guint32 val, FwupdVersionFormat kind)
 					(val >> 8) & 0xffff,
 					val & 0xff);
 	}
+	if (kind == FWUPD_VERSION_FORMAT_DELL_BIOS) {
+		/* BB.CC.DD */
+		return g_strdup_printf ("%u.%u.%u",
+					(val >> 16) & 0xff,
+					(val >> 8) & 0xff,
+					val & 0xff);
+	}
 	g_critical ("failed to convert version format %s: %u",
 		    fwupd_version_format_to_string (kind), val);
 	return NULL;
@@ -123,7 +172,8 @@ fu_common_version_from_uint16 (guint16 val, FwupdVersionFormat kind)
 					(guint) (val >> 8) & 0xff,
 					(guint) val & 0xff);
 	}
-	if (kind == FWUPD_VERSION_FORMAT_NUMBER) {
+	if (kind == FWUPD_VERSION_FORMAT_NUMBER ||
+	    kind == FWUPD_VERSION_FORMAT_PLAIN) {
 		return g_strdup_printf ("%" G_GUINT16_FORMAT, val);
 	}
 	g_critical ("failed to convert version format %s: %u",
@@ -235,7 +285,7 @@ fu_common_version_parse (const gchar *version)
 /**
  * fu_common_version_parse_from_format
  * @version: A version number
- * @fmt: A FwupdVersionFormat
+ * @fmt: A FwupdVersionFormat, e.g. %FWUPD_VERSION_FORMAT_TRIPLET
  *
  * Returns a dotted decimal version string from a version string using fmt.
  * The supported formats are:
@@ -350,6 +400,8 @@ fu_common_version_convert_base (FwupdVersionFormat fmt)
 	if (fmt == FWUPD_VERSION_FORMAT_INTEL_ME ||
 	    fmt == FWUPD_VERSION_FORMAT_INTEL_ME2)
 		return FWUPD_VERSION_FORMAT_QUAD;
+	if (fmt == FWUPD_VERSION_FORMAT_DELL_BIOS)
+		return FWUPD_VERSION_FORMAT_TRIPLET;
 	if (fmt == FWUPD_VERSION_FORMAT_BCD)
 		return FWUPD_VERSION_FORMAT_PAIR;
 	return fmt;
@@ -399,8 +451,8 @@ fu_common_version_verify_format (const gchar *version,
 
 /**
  * fu_common_vercmp:
- * @version_a: the release version, e.g. 1.2.3
- * @version_b: the release version, e.g. 1.2.3.1
+ * @version_a: the semver release version, e.g. 1.2.3
+ * @version_b: the semver release version, e.g. 1.2.3.1
  *
  * Compares version numbers for sorting.
  *
@@ -412,8 +464,6 @@ gint
 fu_common_vercmp (const gchar *version_a, const gchar *version_b)
 {
 	guint longest_split;
-	g_autofree gchar *str_a = NULL;
-	g_autofree gchar *str_b = NULL;
 	g_auto(GStrv) split_a = NULL;
 	g_auto(GStrv) split_b = NULL;
 
@@ -426,10 +476,8 @@ fu_common_vercmp (const gchar *version_a, const gchar *version_b)
 		return 0;
 
 	/* split into sections, and try to parse */
-	str_a = fu_common_version_parse (version_a);
-	str_b = fu_common_version_parse (version_b);
-	split_a = g_strsplit (str_a, ".", -1);
-	split_b = g_strsplit (str_b, ".", -1);
+	split_a = g_strsplit (version_a, ".", -1);
+	split_b = g_strsplit (version_b, ".", -1);
 	longest_split = MAX (g_strv_length (split_a), g_strv_length (split_b));
 	for (guint i = 0; i < longest_split; i++) {
 		gchar *endptr_a = NULL;

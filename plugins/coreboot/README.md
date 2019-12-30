@@ -52,3 +52,8 @@ The following HWIDs are added on coreboot enabled platforms:
 
 They do match the values provided by `fwupdtool hwids` or
 the `ComputerHardwareIds.exe` Windows utility.
+
+Vendor ID Security
+------------------
+
+The vendor ID is set from the BIOS vendor, in this instance `DMI:coreboot`

@@ -46,6 +46,7 @@
 #include "fu-plugin-list.h"
 #include "fu-plugin-private.h"
 #include "fu-quirks.h"
+#include "fu-remote-list.h"
 #include "fu-smbios-private.h"
 #include "fu-udev-device-private.h"
 #include "fu-usb-device-private.h"
@@ -69,6 +70,7 @@ struct _FuEngine
 	GUdevClient		*gudev_client;
 #endif
 	FuConfig		*config;
+	FuRemoteList		*remote_list;
 	FuDeviceList		*device_list;
 	FwupdStatus		 status;
 	gboolean		 tainted;
@@ -400,7 +402,7 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 	remote_id = xb_node_query_text (component, "../custom/value[@key='fwupd::RemoteId']", NULL);
 	if (remote_id != NULL) {
 		fwupd_release_set_remote_id (rel, remote_id);
-		remote = fu_config_get_remote_by_id (self->config, remote_id);
+		remote = fu_remote_list_get_by_id (self->remote_list, remote_id);
 		if (remote == NULL)
 			g_warning ("no remote found for release %s", version_rel);
 	}
@@ -566,7 +568,7 @@ fu_engine_modify_config (FuEngine *self, const gchar *key, const gchar *value, G
 	}
 
 	/* modify, effective next reboot */
-	return fu_config_modify_and_save (self->config, key, value, error);
+	return fu_config_set_key_value (self->config, key, value, error);
 }
 
 /**
@@ -588,20 +590,7 @@ fu_engine_modify_remote (FuEngine *self,
 			 const gchar *value,
 			 GError **error)
 {
-	FwupdRemote *remote;
-	const gchar *filename;
 	const gchar *keys[] = { "Enabled", "MetadataURI", "FirmwareBaseURI", "ReportURI", "AutomaticReports", NULL };
-	g_autoptr(GKeyFile) keyfile = g_key_file_new ();
-
-	/* check remote is valid */
-	remote = fu_config_get_remote_by_id (self->config, remote_id);
-	if (remote == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_FOUND,
-			     "remote %s not found", remote_id);
-		return FALSE;
-	}
 
 	/* check keys are valid */
 	if (!g_strv_contains (keys, key)) {
@@ -611,17 +600,7 @@ fu_engine_modify_remote (FuEngine *self,
 			     "key %s not supported", key);
 		return FALSE;
 	}
-
-	/* modify the remote filename */
-	filename = fwupd_remote_get_filename_source (remote);
-	if (!g_key_file_load_from_file (keyfile, filename,
-					G_KEY_FILE_KEEP_COMMENTS,
-					error)) {
-		g_prefix_error (error, "failed to load %s: ", filename);
-		return FALSE;
-	}
-	g_key_file_set_string (keyfile, "fwupd Remote", key, value);
-	return g_key_file_save_to_file (keyfile, filename, error);
+	return fu_remote_list_set_key_value (self->remote_list, remote_id, key, value, error);
 }
 
 /**
@@ -1140,15 +1119,16 @@ fu_engine_check_requirement_firmware (FuEngine *self, XbNode *req,
 			if (g_strcmp0 (xb_node_get_attr (req, "compare"), "ge") == 0) {
 				g_set_error (error,
 					     FWUPD_ERROR,
-					     FWUPD_ERROR_INVALID_FILE,
+					     FWUPD_ERROR_NOT_SUPPORTED,
 					     "Not compatible with bootloader version %s, requires >= %s",
-					     version, xb_node_get_attr (req, "version"));
+                                             version, xb_node_get_attr (req, "version"));
+
 			} else {
-				g_set_error (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INVALID_FILE,
-					     "Not compatible with bootloader version: %s",
-					     error_local->message);
+				g_debug ("Bootloader is not compatible: %s", error_local->message);
+				g_set_error_literal (error,
+						     FWUPD_ERROR,
+						     FWUPD_ERROR_NOT_SUPPORTED,
+						     "Bootloader is not compatible");
 			}
 			return FALSE;
 		}
@@ -1156,22 +1136,15 @@ fu_engine_check_requirement_firmware (FuEngine *self, XbNode *req,
 	}
 
 	/* vendor ID */
-	if (g_strcmp0 (xb_node_get_text (req), "vendor-id") == 0) {
+	if (g_strcmp0 (xb_node_get_text (req), "vendor-id") == 0 &&
+	    fu_device_get_vendor_id (device_actual) != NULL) {
 		const gchar *version = fu_device_get_vendor_id (device_actual);
 		if (!fu_engine_require_vercmp (req, version, &error_local)) {
-			if (g_strcmp0 (xb_node_get_attr (req, "compare"), "ge") == 0) {
-				g_set_error (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INVALID_FILE,
-					     "Not compatible with vendor %s, requires >= %s",
-					     version, xb_node_get_attr (req, "version"));
-			} else {
-				g_set_error (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INVALID_FILE,
-					     "Not compatible with vendor: %s",
-					     error_local->message);
-			}
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "Not compatible with vendor: %s",
+				     error_local->message);
 			return FALSE;
 		}
 		return TRUE;
@@ -1570,6 +1543,7 @@ fu_engine_install_tasks (FuEngine *self,
 static FwupdRelease *
 fu_engine_create_release_metadata (FuEngine *self, FuPlugin *plugin, GError **error)
 {
+	GPtrArray *metadata_sources;
 	const gchar *tmp;
 	g_autoptr(FwupdRelease) release = fwupd_release_new ();
 	g_autoptr(GHashTable) metadata_hash = NULL;
@@ -1584,6 +1558,26 @@ fu_engine_create_release_metadata (FuEngine *self, FuPlugin *plugin, GError **er
 	metadata_hash = fu_engine_get_report_metadata (self);
 	fwupd_release_add_metadata (release, metadata_hash);
 	fwupd_release_add_metadata (release, fu_plugin_get_report_metadata (plugin));
+
+	/* allow other plugins to contribute metadata too */
+	metadata_sources = fu_plugin_get_rules (plugin, FU_PLUGIN_RULE_METADATA_SOURCE);
+	for (guint i = 0; i < metadata_sources->len; i++) {
+		FuPlugin *plugin_tmp;
+		const gchar *plugin_name = g_ptr_array_index (metadata_sources, i);
+		g_autoptr(GError) error_local = NULL;
+
+		plugin_tmp = fu_plugin_list_find_by_name (self->plugin_list,
+							  plugin_name,
+							  &error_local);
+		if (plugin_tmp == NULL) {
+			g_warning ("could not add metadata for %s: %s",
+				   plugin_name,
+				   error_local->message);
+			continue;
+		}
+		fwupd_release_add_metadata (release,
+					    fu_plugin_get_report_metadata (plugin_tmp));
+	}
 
 	/* add details from os-release as metadata */
 	tmp = g_hash_table_lookup (os_release, "ID");
@@ -2648,7 +2642,7 @@ fu_engine_load_metadata_store (FuEngine *self, FuEngineLoadFlags flags, GError *
 	}
 
 	/* load each enabled metadata file */
-	remotes = fu_config_get_remotes (self->config);
+	remotes = fu_remote_list_get_all (self->remote_list);
 	for (guint i = 0; i < remotes->len; i++) {
 		const gchar *path = NULL;
 		g_autoptr(GError) error_local = NULL;
@@ -2767,6 +2761,12 @@ fu_engine_load_metadata_store (FuEngine *self, FuEngineLoadFlags flags, GError *
 static void
 fu_engine_config_changed_cb (FuConfig *config, FuEngine *self)
 {
+	fu_idle_set_timeout (self->idle, fu_config_get_idle_timeout (config));
+}
+
+static void
+fu_engine_remote_list_changed_cb (FuRemoteList *remote_list, FuEngine *self)
+{
 	g_autoptr(GError) error_local = NULL;
 	if (!fu_engine_load_metadata_store (self, FU_ENGINE_LOAD_FLAG_NONE,
 					    &error_local))
@@ -2833,7 +2833,7 @@ fu_engine_update_metadata (FuEngine *self, const gchar *remote_id,
 	stream_sig = g_unix_input_stream_new (fd_sig, TRUE);
 
 	/* check remote is valid */
-	remote = fu_config_get_remote_by_id (self->config, remote_id);
+	remote = fu_remote_list_get_by_id (self->remote_list, remote_id);
 	if (remote == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -3292,7 +3292,7 @@ fu_engine_get_remotes (FuEngine *self, GError **error)
 	g_return_val_if_fail (FU_IS_ENGINE (self), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
-	remotes = fu_config_get_remotes (self->config);
+	remotes = fu_remote_list_get_all (self->remote_list);
 	if (remotes->len == 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -3480,12 +3480,10 @@ fu_engine_get_releases_for_device (FuEngine *self, FuDevice *device, GError **er
 
 	/* only show devices that can be updated */
 	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "ignoring %s [%s] as not updatable",
-			     fu_device_get_name (device),
-			     fu_device_get_id (device));
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "is not updatable");
 		return NULL;
 	}
 
@@ -3502,11 +3500,10 @@ fu_engine_get_releases_for_device (FuEngine *self, FuDevice *device, GError **er
 	if (components == NULL) {
 		if (g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) ||
 		    g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOTHING_TO_DO,
-				     "No releases for %s",
-				     fu_device_get_name (device));
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOTHING_TO_DO,
+					     "No releases found");
 			return NULL;
 		}
 		g_propagate_error (error, g_steal_pointer (&error_local));
@@ -3537,13 +3534,13 @@ fu_engine_get_releases_for_device (FuEngine *self, FuDevice *device, GError **er
 	if (releases->len == 0) {
 		if (error_all != NULL) {
 			g_propagate_prefixed_error (error, g_steal_pointer (&error_all),
-						    "No releases found for device: ");
+						    "No releases found: ");
 			return NULL;
 		}
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOTHING_TO_DO,
-			     "No releases found for device");
+			     "No releases found");
 		return NULL;
 	}
 	return releases;
@@ -3663,14 +3660,14 @@ fu_engine_get_downgrades (FuEngine *self, const gchar *device_id, GError **error
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOTHING_TO_DO,
-				     "No downgrades for device, current is %s: %s",
+				     "current version is %s: %s",
 				     fu_device_get_version (device),
 				     error_str->str);
 		} else {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOTHING_TO_DO,
-				     "No downgrades for device, current is %s",
+				     "current version is %s",
 				     fu_device_get_version (device));
 		}
 		return NULL;
@@ -3756,11 +3753,10 @@ fu_engine_get_upgrades (FuEngine *self, const gchar *device_id, GError **error)
 
 	/* don't show upgrades again until we reboot */
 	if (fu_device_get_update_state (device) == FWUPD_UPDATE_STATE_NEEDS_REBOOT) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOTHING_TO_DO,
-			     "No upgrades for %s: A reboot is pending",
-			     fu_device_get_name (device));
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "A reboot is pending");
 		return NULL;
 	}
 
@@ -3812,16 +3808,14 @@ fu_engine_get_upgrades (FuEngine *self, const gchar *device_id, GError **error)
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOTHING_TO_DO,
-				     "No upgrades for %s, current is %s: %s",
-				     fu_device_get_name (device),
+				     "current version is %s: %s",
 				     fu_device_get_version (device),
 				     error_str->str);
 		} else {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOTHING_TO_DO,
-				     "No upgrades for %s, current is %s",
-				     fu_device_get_name (device),
+				     "current version is %s",
 				     fu_device_get_version (device));
 		}
 		return NULL;
@@ -4977,7 +4971,7 @@ fu_engine_ensure_client_certificate (FuEngine *self)
 gboolean
 fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 {
-	FuConfigLoadFlags config_flags = FU_CONFIG_LOAD_FLAG_NONE;
+	FuRemoteListLoadFlags remote_list_flags = FU_REMOTE_LIST_LOAD_FLAG_NONE;
 	FuQuirksLoadFlags quirks_flags = FU_QUIRKS_LOAD_FLAG_NONE;
 	g_autoptr(GPtrArray) checksums = NULL;
 
@@ -4988,16 +4982,24 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	if (self->loaded)
 		return TRUE;
 
+/* TODO: Read registry key [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography] "MachineGuid" */
+#ifndef _WIN32
 	/* cache machine ID so we can use it from a sandboxed app */
 	self->host_machine_id = fwupd_build_machine_id ("fwupd", error);
 	if (self->host_machine_id == NULL)
 		return FALSE;
-
+#endif
 	/* read config file */
-	if (flags & FU_ENGINE_LOAD_FLAG_READONLY_FS)
-		config_flags |= FU_CONFIG_LOAD_FLAG_READONLY_FS;
-	if (!fu_config_load (self->config, config_flags, error)) {
+	if (!fu_config_load (self->config, error)) {
 		g_prefix_error (error, "Failed to load config: ");
+		return FALSE;
+	}
+
+	/* read remotes */
+	if (flags & FU_ENGINE_LOAD_FLAG_READONLY_FS)
+		remote_list_flags |= FU_REMOTE_LIST_LOAD_FLAG_READONLY_FS;
+	if (!fu_remote_list_load (self->remote_list, remote_list_flags, error)) {
+		g_prefix_error (error, "Failed to load remotes: ");
 		return FALSE;
 	}
 
@@ -5194,6 +5196,7 @@ fu_engine_init (FuEngine *self)
 	self->percentage = 0;
 	self->status = FWUPD_STATUS_IDLE;
 	self->config = fu_config_new ();
+	self->remote_list = fu_remote_list_new ();
 	self->device_list = fu_device_list_new ();
 	self->smbios = fu_smbios_new ();
 	self->hwids = fu_hwids_new ();
@@ -5214,6 +5217,9 @@ fu_engine_init (FuEngine *self)
 
 	g_signal_connect (self->config, "changed",
 			  G_CALLBACK (fu_engine_config_changed_cb),
+			  self);
+	g_signal_connect (self->remote_list, "changed",
+			  G_CALLBACK (fu_engine_remote_list_changed_cb),
 			  self);
 
 	g_signal_connect (self->idle, "notify::status",
@@ -5268,6 +5274,7 @@ fu_engine_finalize (GObject *obj)
 	g_free (self->host_machine_id);
 	g_object_unref (self->idle);
 	g_object_unref (self->config);
+	g_object_unref (self->remote_list);
 	g_object_unref (self->smbios);
 	g_object_unref (self->quirks);
 	g_object_unref (self->hwids);

@@ -565,6 +565,11 @@ fu_common_spawn_func (void)
 	g_autofree gchar *fn = NULL;
 	const gchar *argv[3] = { "replace", "test", NULL };
 
+#ifdef _WIN32
+	g_test_skip ("Known failures on Windows right now, skipping spawn func test");
+	return;
+#endif
+
 	fn = g_build_filename (TESTDATADIR_SRC, "spawn.sh", NULL);
 	argv[0] = fn;
 	ret = fu_common_spawn_sync (argv,
@@ -582,6 +587,11 @@ fu_common_spawn_timeout_func (void)
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *fn = NULL;
 	const gchar *argv[3] = { "replace", "test", NULL };
+
+#ifdef _WIN32
+	g_test_skip ("Known failures on Windows right now, skipping spawn timeout test");
+	return;
+#endif
 
 	fn = g_build_filename (TESTDATADIR_SRC, "spawn.sh", NULL);
 	argv[0] = fn;
@@ -1107,6 +1117,20 @@ fu_common_version_func (void)
 		{ 0xb8320d84,	"11.8.50.3460",		FWUPD_VERSION_FORMAT_INTEL_ME2 },
 		{ 0x226a4b00,	"137.2706.768",		FWUPD_VERSION_FORMAT_SURFACE_LEGACY },
 		{ 0x6001988,	"6.25.136",		FWUPD_VERSION_FORMAT_SURFACE },
+		{ 0x00ff0001,	"255.0.1",		FWUPD_VERSION_FORMAT_DELL_BIOS },
+		{ 0,		NULL }
+	};
+	struct {
+		guint64 val;
+		const gchar *ver;
+		FwupdVersionFormat flags;
+	} version_from_uint64[] = {
+		{ 0x0,		"0.0.0.0",		FWUPD_VERSION_FORMAT_QUAD },
+		{ 0xff,		"0.0.0.255",		FWUPD_VERSION_FORMAT_QUAD },
+		{ 0xffffffffffffffff, "65535.65535.65535.65535", FWUPD_VERSION_FORMAT_QUAD },
+		{ 0xff,		"0.255",		FWUPD_VERSION_FORMAT_PAIR },
+		{ 0xffffffffffffffff, "4294967295.4294967295", FWUPD_VERSION_FORMAT_PAIR },
+		{ 0x0,		"0",			FWUPD_VERSION_FORMAT_NUMBER },
 		{ 0,		NULL }
 	};
 	struct {
@@ -1141,6 +1165,12 @@ fu_common_version_func (void)
 	};
 
 	/* check version conversion */
+	for (i = 0; version_from_uint64[i].ver != NULL; i++) {
+		g_autofree gchar *ver = NULL;
+		ver = fu_common_version_from_uint64 (version_from_uint64[i].val,
+						    version_from_uint64[i].flags);
+		g_assert_cmpstr (ver, ==, version_from_uint64[i].ver);
+	}
 	for (i = 0; version_from_uint32[i].ver != NULL; i++) {
 		g_autofree gchar *ver = NULL;
 		ver = fu_common_version_from_uint32 (version_from_uint32[i].val,
@@ -1157,7 +1187,8 @@ fu_common_version_func (void)
 	/* check version parsing */
 	for (i = 0; version_parse[i].old != NULL; i++) {
 		g_autofree gchar *ver = NULL;
-		ver = fu_common_version_parse (version_parse[i].old);
+		ver = fu_common_version_parse_from_format (version_parse[i].old,
+							   FWUPD_VERSION_FORMAT_TRIPLET);
 		g_assert_cmpstr (ver, ==, version_parse[i].new);
 	}
 }
@@ -1168,10 +1199,6 @@ fu_common_vercmp_func (void)
 	/* same */
 	g_assert_cmpint (fu_common_vercmp ("1.2.3", "1.2.3"), ==, 0);
 	g_assert_cmpint (fu_common_vercmp ("001.002.003", "001.002.003"), ==, 0);
-
-	/* same, not dotted decimal */
-	g_assert_cmpint (fu_common_vercmp ("1.2.3", "0x1020003"), ==, 0);
-	g_assert_cmpint (fu_common_vercmp ("0x10203", "0x10203"), ==, 0);
 
 	/* upgrade and downgrade */
 	g_assert_cmpint (fu_common_vercmp ("1.2.3", "1.2.4"), <, 0);

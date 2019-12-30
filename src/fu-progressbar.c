@@ -72,7 +72,7 @@ fu_progressbar_status_to_string (FwupdStatus status)
 		return _("Verifying…");
 		break;
 	case FWUPD_STATUS_SCHEDULING:
-		/* TRANSLATORS: scheduing an update to be done on the next boot */
+		/* TRANSLATORS: scheduling an update to be done on the next boot */
 		return _("Scheduling…");
 		break;
 	case FWUPD_STATUS_DOWNLOADING:

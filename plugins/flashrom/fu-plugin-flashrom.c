@@ -85,8 +85,10 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	GPtrArray *hwids = fu_plugin_get_hwids (plugin);
+	const gchar *dmi_vendor;
 	g_autoptr(GPtrArray) devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 
+	dmi_vendor = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VENDOR);
 	for (guint i = 0; i < hwids->len; i++) {
 		const gchar *guid = g_ptr_array_index (hwids, i);
 		const gchar *quirk_str;
@@ -110,6 +112,10 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 					       fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VERSION),
 					       FWUPD_VERSION_FORMAT_UNKNOWN);
 			fu_device_add_guid (dev, guid);
+			if (dmi_vendor != NULL) {
+				g_autofree gchar *vendor_id = g_strdup_printf ("DMI:%s", dmi_vendor);
+				fu_device_set_vendor_id (FU_DEVICE (dev), vendor_id);
+			}
 			g_ptr_array_add (devices, g_steal_pointer (&dev));
 			break;
 		}

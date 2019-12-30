@@ -35,6 +35,7 @@ G_BEGIN_DECLS
 #define FWUPD_RESULT_KEY_NAME			"Name"		/* s */
 #define FWUPD_RESULT_KEY_NAME_VARIANT_SUFFIX	"NameVariantSuffix"	/* s */
 #define FWUPD_RESULT_KEY_PLUGIN			"Plugin"	/* s */
+#define FWUPD_RESULT_KEY_PROTOCOL		"Protocol"	/* s */
 #define FWUPD_RESULT_KEY_RELEASE		"Release"	/* a{sv} */
 #define FWUPD_RESULT_KEY_REMOTE_ID		"RemoteId"	/* s */
 #define FWUPD_RESULT_KEY_SERIAL			"Serial"	/* s */
@@ -50,6 +51,7 @@ G_BEGIN_DECLS
 #define FWUPD_RESULT_KEY_VENDOR			"Vendor"	/* s */
 #define FWUPD_RESULT_KEY_VERSION_BOOTLOADER	"VersionBootloader"	/* s */
 #define FWUPD_RESULT_KEY_VERSION_FORMAT		"VersionFormat"	/* u */
+#define FWUPD_RESULT_KEY_VERSION_RAW		"VersionRaw"	/* t */
 #define FWUPD_RESULT_KEY_VERSION_LOWEST		"VersionLowest"	/* s */
 #define FWUPD_RESULT_KEY_VERSION		"Version"	/* s */
 

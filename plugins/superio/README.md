@@ -22,3 +22,8 @@ GUID Generation
 These devices use a custom GUID generated using the SuperIO chipset name:
 
  * `SuperIO-$(chipset)`, for example `SuperIO-IT8512`
+
+Vendor ID Security
+------------------
+
+The vendor ID is set from the baseboard vendor, for example `DMI:Star Labs`

@@ -32,6 +32,22 @@ struct _FuUdevDeviceClass
 	gpointer	__reserved[29];
 };
 
+/**
+ * FuUdevDeviceFlags:
+ * @FU_UDEV_DEVICE_FLAG_NONE:			No flags set
+ * @FU_UDEV_DEVICE_FLAG_OPEN_READ:		Open the device read-only
+ * @FU_UDEV_DEVICE_FLAG_OPEN_WRITE:		Open the device write-only
+ *
+ * Flags used when opening the device using fu_device_open().
+ **/
+typedef enum {
+	FU_UDEV_DEVICE_FLAG_NONE		= 0,
+	FU_UDEV_DEVICE_FLAG_OPEN_READ		= 1 << 0,
+	FU_UDEV_DEVICE_FLAG_OPEN_WRITE		= 1 << 1,
+	/*< private >*/
+	FU_UDEV_DEVICE_FLAG_LAST
+} FuUdevDeviceFlags;
+
 FuUdevDevice	*fu_udev_device_new			(GUdevDevice	*udev_device);
 GUdevDevice	*fu_udev_device_get_dev			(FuUdevDevice	*self);
 const gchar	*fu_udev_device_get_device_file		(FuUdevDevice	*self);
@@ -46,7 +62,10 @@ gboolean	 fu_udev_device_set_physical_id		(FuUdevDevice	*self,
 							 const gchar	*subsystem,
 							 GError		**error);
 void		 fu_udev_device_set_readonly		(FuUdevDevice	*self,
-							 gboolean	 readonly);
+							 gboolean	 readonly)
+G_GNUC_DEPRECATED_FOR(fu_udev_device_set_flags);
+void		 fu_udev_device_set_flags		(FuUdevDevice	*self,
+							 FuUdevDeviceFlags flags);
 
 gint		 fu_udev_device_get_fd			(FuUdevDevice	*self);
 void		 fu_udev_device_set_fd			(FuUdevDevice	*self,

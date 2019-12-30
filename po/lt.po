@@ -694,7 +694,7 @@ msgstr "Įrašyti įrenginio būseną tarp paleidimų į JSON failą"
 msgid "Schedule installation for next reboot when possible"
 msgstr "Kai įmanoma, suplanuoti įdiegimą kitam paleidimui iš naujo"
 
-#. TRANSLATORS: scheduing an update to be done on the next boot
+#. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Suplanuojama…"
 

@@ -868,6 +868,7 @@ test_set_up (ThunderboltTest *tt, gconstpointer params)
 {
 	TestFlags flags = GPOINTER_TO_UINT(params);
 	gboolean ret;
+	g_autofree gchar *pluginfn = NULL;
 	g_autofree gchar *sysfs = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -880,7 +881,10 @@ test_set_up (ThunderboltTest *tt, gconstpointer params)
 	tt->plugin = fu_plugin_new ();
 	g_assert_nonnull (tt->plugin);
 
-	ret = fu_plugin_open (tt->plugin, PLUGINBUILDDIR "/libfu_plugin_thunderbolt.so", &error);
+	pluginfn = g_build_filename (PLUGINBUILDDIR,
+				     "libfu_plugin_thunderbolt." G_MODULE_SUFFIX,
+				     NULL);
+	ret = fu_plugin_open (tt->plugin, pluginfn, &error);
 
 	g_assert_no_error (error);
 	g_assert_true (ret);

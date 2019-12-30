@@ -241,12 +241,13 @@ typedef enum {
  * @FWUPD_VERSION_FORMAT_NUMBER:		A single integer version number
  * @FWUPD_VERSION_FORMAT_PAIR:			Two AABB.CCDD version numbers
  * @FWUPD_VERSION_FORMAT_TRIPLET:		Microsoft-style AA.BB.CCDD version numbers
- * @FWUPD_VERSION_FORMAT_QUAD:			Dell-style AA.BB.CC.DD version numbers
+ * @FWUPD_VERSION_FORMAT_QUAD:			UEFI-style AA.BB.CC.DD version numbers
  * @FWUPD_VERSION_FORMAT_BCD:			Binary coded decimal notation
  * @FWUPD_VERSION_FORMAT_INTEL_ME:		Intel ME-style bitshifted notation
  * @FWUPD_VERSION_FORMAT_INTEL_ME2:		Intel ME-style A.B.CC.DDDD notation notation
  * @FWUPD_VERSION_FORMAT_SURFACE_LEGACY:	Legacy Microsoft Surface 10b.12b.10b
  * @FWUPD_VERSION_FORMAT_SURFACE:		Microsoft Surface 8b.16b.8b
+ * @FWUPD_VERSION_FORMAT_DELL_BIOS:		Dell BIOS BB.CC.DD style
  *
  * The flags used when parsing version numbers.
  *
@@ -265,6 +266,7 @@ typedef enum {
 	FWUPD_VERSION_FORMAT_INTEL_ME2,			/* Since: 1.2.9 */
 	FWUPD_VERSION_FORMAT_SURFACE_LEGACY,		/* Since: 1.3.4 */
 	FWUPD_VERSION_FORMAT_SURFACE,			/* Since: 1.3.4 */
+	FWUPD_VERSION_FORMAT_DELL_BIOS,			/* Since: 1.3.6 */
 	/*< private >*/
 	FWUPD_VERSION_FORMAT_LAST
 } FwupdVersionFormat;

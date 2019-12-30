@@ -29,6 +29,11 @@ endif
 # depends on dfu
 subdir('csr')
 
+if get_option('plugin_tpm') and get_option('gudev')
+subdir('tpm')
+subdir('tpm-eventlog')
+endif
+
 if get_option('plugin_emmc') and get_option('gudev')
 subdir('emmc')
 endif
@@ -64,7 +69,7 @@ subdir('dell-esrt')
 endif
 
 if get_option('plugin_synaptics') and get_option('gudev')
-subdir('synapticsmst')
+subdir('synaptics-mst')
 endif
 
 if get_option('plugin_uefi')

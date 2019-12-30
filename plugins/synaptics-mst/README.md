@@ -25,6 +25,11 @@ These devices use custom GUID values, e.g.
 Please refer to the plugin source for more details about how the GUID is
 constructed for specific hardware.
 
+Vendor ID Security
+------------------
+
+The vendor ID is set from the PCI vendor, for example set to `DRM_DP_AUX_DEV:0x$(vid)`
+
 ## Requirements
 ### (Kernel) DP Aux Interface
 Kernel 4.6 introduced an DRM DP Aux interface for manipulation of the registers
@@ -51,7 +56,7 @@ Here is an example output from a Dell WD15 dock:
 Dell WD15/TB16 wired Dock Synaptics VMM3332
   Guid:                 653cd006-5433-57db-8632-0413af4d3fcc
   DeviceID:             MST-1-1-0-0
-  Plugin:               synapticsmst
+  Plugin:               synaptics_mst
   Flags:                allow-online
   Version:              3.10.002
   Created:              2017-01-13

@@ -5,6 +5,7 @@ install_data(['coreboot.quirk'],
 )
 
 shared_module('fu_plugin_coreboot',
+  fu_hash,
   sources : [
     'fu-plugin-coreboot.c',
     'fu-coreboot-common.c',

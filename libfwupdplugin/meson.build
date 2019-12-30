@@ -89,6 +89,7 @@ library_deps = [
   libjsonglib,
   libgcab,
   valgrind,
+  platform_deps,
 ]
 
 fwupdplugin_mapfile = 'fwupdplugin.map'

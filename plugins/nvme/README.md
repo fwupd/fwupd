@@ -49,3 +49,8 @@ This plugin uses the following plugin-specific quirks:
 |------------------------|---------------------------------------------|-----------------------|
 | `NvmeBlockSize`        | The block size used for NVMe writes         | 1.1.3                 |
 | `Flags`                | `force-align` if image should be padded     | 1.2.4                 |
+
+Vendor ID Security
+------------------
+
+The vendor ID is set from the udev vendor, for example set to `NVME:0x1179`

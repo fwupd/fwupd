@@ -518,3 +518,10 @@ LIBFWUPDPLUGIN_1.3.5 {
     fu_plugin_is_open;
   local: *;
 } LIBFWUPDPLUGIN_1.3.4;
+
+LIBFWUPDPLUGIN_1.3.6 {
+  global:
+    fu_common_version_from_uint64;
+    fu_udev_device_set_flags;
+  local: *;
+} LIBFWUPDPLUGIN_1.3.5;

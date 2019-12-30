@@ -11,11 +11,11 @@
 
 #include <fcntl.h>
 
-#include "fu-synapticsmst-common.h"
-#include "fu-synapticsmst-connection.h"
-#include "fu-synapticsmst-device.h"
+#include "fu-synaptics-mst-common.h"
+#include "fu-synaptics-mst-connection.h"
+#include "fu-synaptics-mst-device.h"
 
-#define FU_SYNAPTICSMST_ID_CTRL_SIZE	0x1000
+#define FU_SYNAPTICS_MST_ID_CTRL_SIZE	0x1000
 #define SYNAPTICS_UPDATE_ENUMERATE_TRIES 3
 
 #define BIT(n)				(1 << (n))
@@ -40,12 +40,12 @@
 
 #define FLASH_SETTLE_TIME		5000000	/* us */
 
-struct _FuSynapticsmstDevice {
+struct _FuSynapticsMstDevice {
 	FuUdevDevice		 parent_instance;
 	gchar			*system_type;
 	guint64			 write_block_size;
-	FuSynapticsmstFamily	 family;
-	FuSynapticsmstMode	 mode;
+	FuSynapticsMstFamily	 family;
+	FuSynapticsMstMode	 mode;
 	guint8			 active_bank;
 	guint8			 layer;
 	guint16			 rad;		/* relative address */
@@ -53,36 +53,37 @@ struct _FuSynapticsmstDevice {
 	guint16			 chip_id;
 };
 
-G_DEFINE_TYPE (FuSynapticsmstDevice, fu_synapticsmst_device, FU_TYPE_UDEV_DEVICE)
+G_DEFINE_TYPE (FuSynapticsMstDevice, fu_synaptics_mst_device, FU_TYPE_UDEV_DEVICE)
 
 static void
-fu_synapticsmst_device_finalize (GObject *object)
+fu_synaptics_mst_device_finalize (GObject *object)
 {
-	FuSynapticsmstDevice *self = FU_SYNAPTICSMST_DEVICE (object);
+	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE (object);
 
 	g_free (self->system_type);
 
-	G_OBJECT_CLASS (fu_synapticsmst_device_parent_class)->finalize (object);
+	G_OBJECT_CLASS (fu_synaptics_mst_device_parent_class)->finalize (object);
 }
 
 static void
-fu_synapticsmst_device_init (FuSynapticsmstDevice *self)
+fu_synaptics_mst_device_init (FuSynapticsMstDevice *self)
 {
 	fu_device_set_protocol (FU_DEVICE (self), "com.synaptics.mst");
 	fu_device_set_vendor (FU_DEVICE (self), "Synaptics");
+	fu_device_set_vendor_id (FU_DEVICE (self), "DRM_DP_AUX_DEV:0x06CB");
 	fu_device_set_summary (FU_DEVICE (self), "Multi-Stream Transport Device");
 	fu_device_add_icon (FU_DEVICE (self), "video-display");
 }
 
 static void
-fu_synapticsmst_device_to_string (FuDevice *device, guint idt, GString *str)
+fu_synaptics_mst_device_to_string (FuDevice *device, guint idt, GString *str)
 {
-	FuSynapticsmstDevice *self = FU_SYNAPTICSMST_DEVICE (device);
-	if (self->mode != FU_SYNAPTICSMST_MODE_UNKNOWN) {
+	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE (device);
+	if (self->mode != FU_SYNAPTICS_MST_MODE_UNKNOWN) {
 		fu_common_string_append_kv (str, idt, "Mode",
-					    fu_synapticsmst_mode_to_string (self->mode));
+					    fu_synaptics_mst_mode_to_string (self->mode));
 	}
-	if (self->family == FU_SYNAPTICSMST_FAMILY_PANAMERA)
+	if (self->family == FU_SYNAPTICS_MST_FAMILY_PANAMERA)
 		fu_common_string_append_kx (str, idt, "ActiveBank", self->active_bank);
 	fu_common_string_append_kx (str, idt, "Layer", self->layer);
 	fu_common_string_append_kx (str, idt, "Rad", self->rad);
@@ -93,35 +94,35 @@ fu_synapticsmst_device_to_string (FuDevice *device, guint idt, GString *str)
 }
 
 static gboolean
-fu_synapticsmst_device_enable_rc (FuSynapticsmstDevice *self, GError **error)
+fu_synaptics_mst_device_enable_rc (FuSynapticsMstDevice *self, GError **error)
 {
-	g_autoptr(FuSynapticsmstConnection) connection = NULL;
+	g_autoptr(FuSynapticsMstConnection) connection = NULL;
 
 	/* in test mode */
 	if (fu_udev_device_get_dev (FU_UDEV_DEVICE (self)) == NULL)
 		return TRUE;
 
-	connection = fu_synapticsmst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
-						     self->layer, self->rad);
-	return fu_synapticsmst_connection_enable_rc (connection, error);
+	connection = fu_synaptics_mst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
+						      self->layer, self->rad);
+	return fu_synaptics_mst_connection_enable_rc (connection, error);
 }
 
 static gboolean
-fu_synapticsmst_device_disable_rc (FuSynapticsmstDevice *self, GError **error)
+fu_synaptics_mst_device_disable_rc (FuSynapticsMstDevice *self, GError **error)
 {
-	g_autoptr(FuSynapticsmstConnection) connection = NULL;
+	g_autoptr(FuSynapticsMstConnection) connection = NULL;
 
 	/* in test mode */
 	if (fu_udev_device_get_dev (FU_UDEV_DEVICE (self)) == NULL)
 		return TRUE;
 
-	connection = fu_synapticsmst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
-						     self->layer, self->rad);
-	return fu_synapticsmst_connection_disable_rc (connection, error);
+	connection = fu_synaptics_mst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
+						      self->layer, self->rad);
+	return fu_synaptics_mst_connection_disable_rc (connection, error);
 }
 
 static gboolean
-fu_synapticsmst_device_probe (FuUdevDevice *device, GError **error)
+fu_synaptics_mst_device_probe (FuUdevDevice *device, GError **error)
 {
 	g_autofree gchar *logical_id = NULL;
 	logical_id = g_path_get_basename (fu_udev_device_get_sysfs_path(device));
@@ -132,20 +133,20 @@ fu_synapticsmst_device_probe (FuUdevDevice *device, GError **error)
 }
 
 static gboolean
-fu_synapticsmst_device_get_flash_checksum (FuSynapticsmstDevice *self,
-					   guint32 length, guint32 offset,
-					   guint32 *checksum, GError **error)
+fu_synaptics_mst_device_get_flash_checksum (FuSynapticsMstDevice *self,
+					    guint32 length, guint32 offset,
+					    guint32 *checksum, GError **error)
 {
-	g_autoptr(FuSynapticsmstConnection) connection = NULL;
+	g_autoptr(FuSynapticsMstConnection) connection = NULL;
 
-	connection = fu_synapticsmst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
-						     self->layer, self->rad);
-	if (!fu_synapticsmst_connection_rc_special_get_command (connection,
-							UPDC_CAL_EEPROM_CHECKSUM,
-							length, offset,
-							NULL, 4,
-							(guint8 *)checksum,
-							error)) {
+	connection = fu_synaptics_mst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
+						      self->layer, self->rad);
+	if (!fu_synaptics_mst_connection_rc_special_get_command (connection,
+								 UPDC_CAL_EEPROM_CHECKSUM,
+								 length, offset,
+								 NULL, 4,
+								 (guint8 *)checksum,
+								 error)) {
 		g_prefix_error (error, "failed to get flash checksum: ");
 		return FALSE;
 	}
@@ -154,7 +155,7 @@ fu_synapticsmst_device_get_flash_checksum (FuSynapticsmstDevice *self,
 }
 
 static guint16
-fu_synapticsmst_device_get_crc (guint16 crc, guint8 type, guint32 length, const guint8 *payload_data)
+fu_synaptics_mst_device_get_crc (guint16 crc, guint8 type, guint32 length, const guint8 *payload_data)
 {
 	static const guint16 CRC16_table[] = {
 		0x0000, 0x8005, 0x800f, 0x000a, 0x801b, 0x001e, 0x0014, 0x8011, 0x8033, 0x0036, 0x003c, 0x8039, 0x0028, 0x802d, 0x8027, 0x0022,
@@ -212,23 +213,23 @@ fu_synapticsmst_device_get_crc (guint16 crc, guint8 type, guint32 length, const 
 }
 
 static gboolean
-fu_synapticsmst_device_set_flash_sector_erase (FuSynapticsmstDevice *self,
+fu_synaptics_mst_device_set_flash_sector_erase (FuSynapticsMstDevice *self,
 					    guint16 rc_cmd,
 					    guint16 offset,
 					    GError **error)
 {
 	guint16 us_data;
-	g_autoptr(FuSynapticsmstConnection) connection = NULL;
+	g_autoptr(FuSynapticsMstConnection) connection = NULL;
 
-	connection = fu_synapticsmst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
-						     self->layer, self->rad);
+	connection = fu_synaptics_mst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
+						      self->layer, self->rad);
 	/* Need to add Wp control ? */
 	us_data = rc_cmd + offset;
 
-	if (!fu_synapticsmst_connection_rc_set_command (connection,
-						UPDC_FLASH_ERASE,
-						2, 0, (guint8 *)&us_data,
-						error)) {
+	if (!fu_synaptics_mst_connection_rc_set_command (connection,
+							 UPDC_FLASH_ERASE,
+							 2, 0, (guint8 *)&us_data,
+							 error)) {
 		g_prefix_error (error, "can't sector erase flash at offset %x",
 				offset);
 		return FALSE;
@@ -238,23 +239,23 @@ fu_synapticsmst_device_set_flash_sector_erase (FuSynapticsmstDevice *self,
 }
 
 static gboolean
-fu_synapticsmst_device_update_esm (FuSynapticsmstDevice *self,
-				   const guint8 *payload_data,
-				   GError **error)
+fu_synaptics_mst_device_update_esm (FuSynapticsMstDevice *self,
+				    const guint8 *payload_data,
+				    GError **error)
 {
 	guint32 checksum = 0;
 	guint32 esm_sz = ESM_CODE_SIZE;
 	guint32 flash_checksum = 0;
 	guint32 unit_sz = BLOCK_UNIT;
 	guint32 write_loops = 0;
-	g_autoptr(FuSynapticsmstConnection) connection = NULL;
+	g_autoptr(FuSynapticsMstConnection) connection = NULL;
 
-	connection = fu_synapticsmst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
-						     self->layer, self->rad);
+	connection = fu_synaptics_mst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
+						      self->layer, self->rad);
 
 	for (guint32 i = 0; i < esm_sz; i++)
 		checksum += *(payload_data + EEPROM_ESM_OFFSET +i);
-	if (!fu_synapticsmst_device_get_flash_checksum (self,
+	if (!fu_synaptics_mst_device_get_flash_checksum (self,
 						    esm_sz,
 						    EEPROM_ESM_OFFSET,
 						    &flash_checksum, error)) {
@@ -277,10 +278,10 @@ fu_synapticsmst_device_update_esm (FuSynapticsmstDevice *self,
 
 		/* erase ESM firmware; erase failure is fatal */
 		for (guint32 j = 0; j < 4; j++)	{
-			if (!fu_synapticsmst_device_set_flash_sector_erase (self,
-									 FLASH_SECTOR_ERASE_64K,
-									 j + 4,
-									 error)) {
+			if (!fu_synaptics_mst_device_set_flash_sector_erase (self,
+									     FLASH_SECTOR_ERASE_64K,
+									     j + 4,
+									     error)) {
 				g_prefix_error (error, "failed to erase sector %u: ", j);
 				return FALSE;
 			}
@@ -292,12 +293,12 @@ fu_synapticsmst_device_update_esm (FuSynapticsmstDevice *self,
 		/* write firmware */
 		for (guint32 i = 0; i < write_loops; i++) {
 			g_autoptr(GError) error_local = NULL;
-			if (!fu_synapticsmst_connection_rc_set_command (connection,
-								 UPDC_WRITE_TO_EEPROM,
-								 unit_sz,
-								 write_offset,
-								 esm_code_ptr + write_idx,
-								 &error_local)) {
+			if (!fu_synaptics_mst_connection_rc_set_command (connection,
+									 UPDC_WRITE_TO_EEPROM,
+									 unit_sz,
+									 write_offset,
+									 esm_code_ptr + write_idx,
+									 &error_local)) {
 				g_warning ("failed to write ESM: %s", error_local->message);
 				break;
 			}
@@ -313,11 +314,11 @@ fu_synapticsmst_device_update_esm (FuSynapticsmstDevice *self,
 		flash_checksum = 0;
 		for (guint32 i = 0; i < esm_sz; i++)
 			checksum += *(payload_data + EEPROM_ESM_OFFSET +i);
-		if (!fu_synapticsmst_device_get_flash_checksum (self,
-							     esm_sz,
-							     EEPROM_ESM_OFFSET,
-							     &flash_checksum,
-							     error))
+		if (!fu_synaptics_mst_device_get_flash_checksum (self,
+								 esm_sz,
+								 EEPROM_ESM_OFFSET,
+								 &flash_checksum,
+								 error))
 			return FALSE;
 
 		/* ESM update done */
@@ -340,12 +341,12 @@ fu_synapticsmst_device_update_esm (FuSynapticsmstDevice *self,
 }
 
 static gboolean
-fu_synapticsmst_device_update_tesla_leaf_firmware (FuSynapticsmstDevice *self,
-						   guint32 payload_len,
-						   const guint8 *payload_data,
-						   GError **error)
+fu_synaptics_mst_device_update_tesla_leaf_firmware (FuSynapticsMstDevice *self,
+						    guint32 payload_len,
+						    const guint8 *payload_data,
+						    GError **error)
 {
-	g_autoptr(FuSynapticsmstConnection) connection = NULL;
+	g_autoptr(FuSynapticsMstConnection) connection = NULL;
 	guint32 data_to_write = 0;
 	guint32 offset = 0;
 	guint32 write_loops = 0;
@@ -356,13 +357,13 @@ fu_synapticsmst_device_update_tesla_leaf_firmware (FuSynapticsmstDevice *self,
 	if (payload_len % BLOCK_UNIT)
 		write_loops++;
 
-	connection = fu_synapticsmst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
-						     self->layer, self->rad);
+	connection = fu_synaptics_mst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
+						      self->layer, self->rad);
 	for (guint32 retries_cnt = 0; ; retries_cnt++) {
 		guint32 checksum = 0;
 		guint32 flash_checksum = 0;
 
-		if (!fu_synapticsmst_device_set_flash_sector_erase (self, 0xffff, 0, error))
+		if (!fu_synaptics_mst_device_set_flash_sector_erase (self, 0xffff, 0, error))
 			return FALSE;
 		g_debug ("Waiting for flash clear to settle");
 		g_usleep (FLASH_SETTLE_TIME);
@@ -373,19 +374,19 @@ fu_synapticsmst_device_update_tesla_leaf_firmware (FuSynapticsmstDevice *self,
 
 			if (data_to_write < BLOCK_UNIT)
 				length = data_to_write;
-			if (!fu_synapticsmst_connection_rc_set_command (connection,
-								 UPDC_WRITE_TO_EEPROM,
-								 length, offset,
-								 payload_data + offset,
-								 &error_local)) {
-				g_warning ("Failed to write flash offset 0x%04x: %s, retrying",
-					   offset, error_local->message);
-				/* repeat once */
-				if (!fu_synapticsmst_connection_rc_set_command (connection,
+			if (!fu_synaptics_mst_connection_rc_set_command (connection,
 									 UPDC_WRITE_TO_EEPROM,
 									 length, offset,
 									 payload_data + offset,
-									 error)) {
+									 &error_local)) {
+				g_warning ("Failed to write flash offset 0x%04x: %s, retrying",
+					   offset, error_local->message);
+				/* repeat once */
+				if (!fu_synaptics_mst_connection_rc_set_command (connection,
+										 UPDC_WRITE_TO_EEPROM,
+										 length, offset,
+										 payload_data + offset,
+										 error)) {
 					g_prefix_error (error, "can't write flash offset 0x%04x: ",
 							offset);
 					return FALSE;
@@ -402,11 +403,11 @@ fu_synapticsmst_device_update_tesla_leaf_firmware (FuSynapticsmstDevice *self,
 		for (guint32 i = 0; i < payload_len; i++)
 			checksum += *(payload_data + i);
 
-		if (!fu_synapticsmst_device_get_flash_checksum (self,
-								payload_len,
-								0,
-								&flash_checksum,
-								error))
+		if (!fu_synaptics_mst_device_get_flash_checksum (self,
+								 payload_len,
+								 0,
+								 &flash_checksum,
+								 error))
 			return FALSE;
 		if (checksum == flash_checksum)
 			break;
@@ -427,19 +428,19 @@ fu_synapticsmst_device_update_tesla_leaf_firmware (FuSynapticsmstDevice *self,
 }
 
 static gboolean
-fu_synapticsmst_device_get_active_bank_panamera (FuSynapticsmstDevice *self, GError **error)
+fu_synaptics_mst_device_get_active_bank_panamera (FuSynapticsMstDevice *self, GError **error)
 {
-	g_autoptr(FuSynapticsmstConnection) connection = NULL;
+	g_autoptr(FuSynapticsMstConnection) connection = NULL;
 	guint32 buf[16];
 
 	/* get used bank */
-	connection = fu_synapticsmst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
+	connection = fu_synaptics_mst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
 						     self->layer, self->rad);
-	if (!fu_synapticsmst_connection_rc_get_command (connection,
-						 UPDC_READ_FROM_MEMORY,
-						 ((sizeof(buf)/sizeof(buf[0]))*4),
-						 (gint) 0x20010c, (guint8*) buf,
-						 error)) {
+	if (!fu_synaptics_mst_connection_rc_get_command (connection,
+							 UPDC_READ_FROM_MEMORY,
+							 ((sizeof(buf)/sizeof(buf[0]))*4),
+							 (gint) 0x20010c, (guint8*) buf,
+							 error)) {
 		g_prefix_error (error, "get active bank failed: ");
 		return FALSE;
 	}
@@ -451,10 +452,10 @@ fu_synapticsmst_device_get_active_bank_panamera (FuSynapticsmstDevice *self, GEr
 }
 
 static gboolean
-fu_synapticsmst_device_update_panamera_firmware (FuSynapticsmstDevice *self,
-						 guint32 payload_len,
-						 const guint8 *payload_data,
-						 GError **error)
+fu_synaptics_mst_device_update_panamera_firmware (FuSynapticsMstDevice *self,
+						  guint32 payload_len,
+						  const guint8 *payload_data,
+						  GError **error)
 {
 
 	guint16 crc_tmp = 0;
@@ -466,10 +467,10 @@ fu_synapticsmst_device_update_panamera_firmware (FuSynapticsmstDevice *self,
 	guint8 tagData[16];
 	struct tm *pTM;
 	time_t timeptr;
-	g_autoptr(FuSynapticsmstConnection) connection = NULL;
+	g_autoptr(FuSynapticsMstConnection) connection = NULL;
 
 	/* get used bank */
-	if (!fu_synapticsmst_device_get_active_bank_panamera (self, error))
+	if (!fu_synaptics_mst_device_get_active_bank_panamera (self, error))
 		return FALSE;
 	if (self->active_bank == BANKTAG_1)
 		bank_to_update = BANKTAG_0;
@@ -500,11 +501,11 @@ fu_synapticsmst_device_update_panamera_firmware (FuSynapticsmstDevice *self,
 
 		/* erase storage */
 		erase_offset = bank_to_update * 2;
-		if (!fu_synapticsmst_device_set_flash_sector_erase (self,
-								 FLASH_SECTOR_ERASE_64K, erase_offset++, error))
+		if (!fu_synaptics_mst_device_set_flash_sector_erase (self,
+								     FLASH_SECTOR_ERASE_64K, erase_offset++, error))
 			return FALSE;
-		if (!fu_synapticsmst_device_set_flash_sector_erase (self,
-								 FLASH_SECTOR_ERASE_64K, erase_offset, error))
+		if (!fu_synaptics_mst_device_set_flash_sector_erase (self,
+								     FLASH_SECTOR_ERASE_64K, erase_offset, error))
 			return FALSE;
 		g_debug ("Waiting for flash clear to settle");
 		g_usleep (FLASH_SETTLE_TIME);
@@ -512,19 +513,19 @@ fu_synapticsmst_device_update_panamera_firmware (FuSynapticsmstDevice *self,
 		/* write */
 		write_idx = 0;
 		write_offset = EEPROM_BANK_OFFSET * bank_to_update;
-		connection = fu_synapticsmst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
+		connection = fu_synaptics_mst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
 							     self->layer, self->rad);
 		for (guint32 i = 0; i < write_loops ; i++ ) {
 			g_autoptr(GError) error_local = NULL;
-			if (!fu_synapticsmst_connection_rc_set_command (connection,
-								UPDC_WRITE_TO_EEPROM,
-								unit_sz,
-								write_offset,
-								payload_data + write_idx,
-								&error_local)) {
+			if (!fu_synaptics_mst_connection_rc_set_command (connection,
+									 UPDC_WRITE_TO_EEPROM,
+									 unit_sz,
+									 write_offset,
+									 payload_data + write_idx,
+									 &error_local)) {
 				g_warning ("Write failed: %s, retrying", error_local->message);
 				/* repeat once */
-				if (!fu_synapticsmst_connection_rc_set_command (connection,
+				if (!fu_synaptics_mst_connection_rc_set_command (connection,
 									 UPDC_WRITE_TO_EEPROM,
 									 unit_sz,
 									 write_offset,
@@ -543,14 +544,14 @@ fu_synapticsmst_device_update_panamera_firmware (FuSynapticsmstDevice *self,
 		}
 
 		/* verify CRC */
-		checksum = fu_synapticsmst_device_get_crc (0, 16, fw_size, payload_data );
+		checksum = fu_synaptics_mst_device_get_crc (0, 16, fw_size, payload_data );
 		for (guint32 i = 0; i < 4; i++) {
 			g_usleep (1000);	/* wait crc calculation */
-			if (!fu_synapticsmst_connection_rc_special_get_command (connection,
-									UPDC_CAL_EEPROM_CHECK_CRC16,
-									fw_size, (EEPROM_BANK_OFFSET * bank_to_update),
-									NULL, 4, (guint8 *)(&flash_checksum),
-									error)) {
+			if (!fu_synaptics_mst_connection_rc_special_get_command (connection,
+										 UPDC_CAL_EEPROM_CHECK_CRC16,
+										 fw_size, (EEPROM_BANK_OFFSET * bank_to_update),
+										 NULL, 4, (guint8 *)(&flash_checksum),
+										 error)) {
 				g_prefix_error (error, "Failed to get flash checksum: ");
 				return FALSE;
 			}
@@ -576,31 +577,31 @@ fu_synapticsmst_device_update_panamera_firmware (FuSynapticsmstDevice *self,
 	tagData[1] = pTM->tm_mon + 1;
 	tagData[2] = pTM->tm_mday;
 	tagData[3] = pTM->tm_year + 1900 - 2000;
-	crc_tmp = fu_synapticsmst_device_get_crc (0, 16, fw_size, payload_data);
+	crc_tmp = fu_synaptics_mst_device_get_crc (0, 16, fw_size, payload_data);
 	tagData[0] = bank_to_update;
 	tagData[4] = (crc_tmp >> 8) & 0xff;
 	tagData[5] = crc_tmp & 0xff;
-	tagData[15] = (guint8) fu_synapticsmst_device_get_crc (0, 8, 15, tagData);
+	tagData[15] = (guint8) fu_synaptics_mst_device_get_crc (0, 8, 15, tagData);
 	g_debug ("tag date %x %x %x crc %x %x %x %x", tagData[1], tagData[2], tagData[3], tagData[0], tagData[4], tagData[5], tagData[15]);
 
 	for (guint32 retries_cnt = 0; ; retries_cnt++) {
 		gboolean match = TRUE;
-		if (!fu_synapticsmst_connection_rc_set_command (connection,
-							 UPDC_WRITE_TO_EEPROM,
-							 16,
-							 (EEPROM_BANK_OFFSET * bank_to_update + EEPROM_TAG_OFFSET),
-							 tagData,
-							 error)) {
+		if (!fu_synaptics_mst_connection_rc_set_command (connection,
+								 UPDC_WRITE_TO_EEPROM,
+								 16,
+								 (EEPROM_BANK_OFFSET * bank_to_update + EEPROM_TAG_OFFSET),
+								 tagData,
+								 error)) {
 			g_prefix_error (error, "failed to write tag: ");
 			return FALSE;
 		}
 		g_usleep (200);
-		if (!fu_synapticsmst_connection_rc_get_command (connection,
-							 UPDC_READ_FROM_EEPROM,
-							 16,
-							 (EEPROM_BANK_OFFSET * bank_to_update + EEPROM_TAG_OFFSET),
-							 readBuf,
-							 error)) {
+		if (!fu_synaptics_mst_connection_rc_get_command (connection,
+								 UPDC_READ_FROM_EEPROM,
+								 16,
+								 (EEPROM_BANK_OFFSET * bank_to_update + EEPROM_TAG_OFFSET),
+								 readBuf,
+								 error)) {
 			g_prefix_error (error, "failed to read tag: ");
 			return FALSE;
 		}
@@ -622,11 +623,11 @@ fu_synapticsmst_device_update_panamera_firmware (FuSynapticsmstDevice *self,
 	}
 
 	/* set tag invalid*/
-	if (!fu_synapticsmst_connection_rc_get_command (connection,
-						 UPDC_READ_FROM_EEPROM, 1,
-						 (EEPROM_BANK_OFFSET * self->active_bank + EEPROM_TAG_OFFSET + 15),
-						 tagData,
-						 error)) {
+	if (!fu_synaptics_mst_connection_rc_get_command (connection,
+							 UPDC_READ_FROM_EEPROM, 1,
+							 (EEPROM_BANK_OFFSET * self->active_bank + EEPROM_TAG_OFFSET + 15),
+							 tagData,
+							 error)) {
 		g_prefix_error (error, "failed to read tag from flash: ");
 		return FALSE;
 	}
@@ -637,28 +638,28 @@ fu_synapticsmst_device_update_panamera_firmware (FuSynapticsmstDevice *self,
 			guint32 erase_offset;
 			/* offset for last 4k of bank# */
 			erase_offset = (EEPROM_BANK_OFFSET * self->active_bank + EEPROM_BANK_OFFSET - 0x1000) / 0x1000;
-			if (!fu_synapticsmst_device_set_flash_sector_erase (self,
-									 FLASH_SECTOR_ERASE_4K,
-									 erase_offset,
-									 error))
+			if (!fu_synaptics_mst_device_set_flash_sector_erase (self,
+									     FLASH_SECTOR_ERASE_4K,
+									     erase_offset,
+									     error))
 				return FALSE;
 		/* CRC8 is 0xff, set it to 0x00 */
 		} else {
 			tagData[1] = 0x00;
-			if (!fu_synapticsmst_connection_rc_set_command (connection,
-								 UPDC_WRITE_TO_EEPROM, 1,
-								 (EEPROM_BANK_OFFSET * self->active_bank + EEPROM_TAG_OFFSET + 15),
-								 &tagData[1],
-								 error)) {
+			if (!fu_synaptics_mst_connection_rc_set_command (connection,
+									 UPDC_WRITE_TO_EEPROM, 1,
+									 (EEPROM_BANK_OFFSET * self->active_bank + EEPROM_TAG_OFFSET + 15),
+									 &tagData[1],
+									 error)) {
 				g_prefix_error (error, "failed to clear CRC: ");
 				return FALSE;
 			}
 		}
-		if (!fu_synapticsmst_connection_rc_get_command (connection,
-							 UPDC_READ_FROM_EEPROM, 1,
-							 (EEPROM_BANK_OFFSET * self->active_bank + EEPROM_TAG_OFFSET + 15),
-							 readBuf,
-							 error)) {
+		if (!fu_synaptics_mst_connection_rc_get_command (connection,
+								 UPDC_READ_FROM_EEPROM, 1,
+								 (EEPROM_BANK_OFFSET * self->active_bank + EEPROM_TAG_OFFSET + 15),
+								 readBuf,
+								 error)) {
 			g_prefix_error (error, "failed to read CRC from flash: ");
 			return FALSE;
 		}
@@ -679,22 +680,22 @@ fu_synapticsmst_device_update_panamera_firmware (FuSynapticsmstDevice *self,
 }
 
 static gboolean
-fu_synapticsmst_device_panamera_prepare_write (FuSynapticsmstDevice *self, GError **error)
+fu_synaptics_mst_device_panamera_prepare_write (FuSynapticsMstDevice *self, GError **error)
 {
 	guint32 buf[4] = {0};
-	g_autoptr(FuSynapticsmstConnection) connection = NULL;
+	g_autoptr(FuSynapticsMstConnection) connection = NULL;
 
 	/* Need to detect flash mode and ESM first ? */
 	/* disable flash Quad mode and ESM/HDCP2.2*/
-	connection = fu_synapticsmst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
-						     self->layer, self->rad);
+	connection = fu_synaptics_mst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
+						      self->layer, self->rad);
 
 	/* disable ESM first */
 	buf[0] = 0x21;
-	if (!fu_synapticsmst_connection_rc_set_command (connection,
-						UPDC_WRITE_TO_MEMORY,
-						4, (gint)REG_ESM_DISABLE, (guint8*)buf,
-						error)) {
+	if (!fu_synaptics_mst_connection_rc_set_command (connection,
+							 UPDC_WRITE_TO_MEMORY,
+							 4, (gint)REG_ESM_DISABLE, (guint8*)buf,
+							 error)) {
 		g_prefix_error (error, "ESM disable failed: ");
 		return FALSE;
 	}
@@ -703,38 +704,38 @@ fu_synapticsmst_device_panamera_prepare_write (FuSynapticsmstDevice *self, GErro
 	g_usleep (200);
 
 	/* disable QUAD mode */
-	if (!fu_synapticsmst_connection_rc_get_command (connection,
-						UPDC_READ_FROM_MEMORY,
-						((sizeof(buf)/sizeof(buf[0]))*4),
-						(gint)REG_QUAD_DISABLE, (guint8*)buf,
-						error)) {
+	if (!fu_synaptics_mst_connection_rc_get_command (connection,
+							 UPDC_READ_FROM_MEMORY,
+							 ((sizeof(buf)/sizeof(buf[0]))*4),
+							 (gint)REG_QUAD_DISABLE, (guint8*)buf,
+							 error)) {
 		g_prefix_error (error, "quad query failed: ");
 		return FALSE;
 	}
 
 	buf[0] = 0x00;
-	if (!fu_synapticsmst_connection_rc_set_command (connection,
-						UPDC_WRITE_TO_MEMORY,
-						4, (gint)REG_QUAD_DISABLE, (guint8*)buf,
-						error)) {
+	if (!fu_synaptics_mst_connection_rc_set_command (connection,
+							 UPDC_WRITE_TO_MEMORY,
+							 4, (gint)REG_QUAD_DISABLE, (guint8*)buf,
+							 error)) {
 		g_prefix_error (error, "quad disable failed: ");
 		return FALSE;
 	}
 
 	/* disable HDCP2.2 */
-	if (!fu_synapticsmst_connection_rc_get_command (connection,
-						UPDC_READ_FROM_MEMORY,
-						4, (gint)REG_HDCP22_DISABLE, (guint8*)buf,
-						error)) {
+	if (!fu_synaptics_mst_connection_rc_get_command (connection,
+							 UPDC_READ_FROM_MEMORY,
+							 4, (gint)REG_HDCP22_DISABLE, (guint8*)buf,
+							 error)) {
 		g_prefix_error (error, "HDCP query failed: ");
 		return FALSE;
 	}
 
 	buf[0] = buf[0] & (~BIT(2));
-	if (!fu_synapticsmst_connection_rc_set_command (connection,
-						UPDC_WRITE_TO_MEMORY,
-						4, (gint)REG_HDCP22_DISABLE, (guint8*)buf,
-						error)) {
+	if (!fu_synaptics_mst_connection_rc_set_command (connection,
+							 UPDC_WRITE_TO_MEMORY,
+							 4, (gint)REG_HDCP22_DISABLE, (guint8*)buf,
+							 error)) {
 		g_prefix_error (error, "HDCP disable failed: ");
 		return FALSE;
 	}
@@ -743,31 +744,31 @@ fu_synapticsmst_device_panamera_prepare_write (FuSynapticsmstDevice *self, GErro
 }
 
 static gboolean
-fu_synapticsmst_device_restart (FuSynapticsmstDevice *self, GError **error)
+fu_synaptics_mst_device_restart (FuSynapticsMstDevice *self, GError **error)
 {
-	g_autoptr(FuSynapticsmstConnection) connection = NULL;
+	g_autoptr(FuSynapticsMstConnection) connection = NULL;
 	guint8 buf[4] = {0xF5, 0, 0 ,0};
 	g_autoptr(GError) error_local = NULL;
 
 	/* issue the reboot command, ignore return code (triggers before returning) */
-	connection = fu_synapticsmst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
-						     self->layer, self->rad);
-	if (!fu_synapticsmst_connection_rc_set_command (connection,
-						 UPDC_WRITE_TO_MEMORY,
-						 4, (gint) 0x2000FC, (guint8*) &buf,
-						 &error_local))
+	connection = fu_synaptics_mst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
+						      self->layer, self->rad);
+	if (!fu_synaptics_mst_connection_rc_set_command (connection,
+							 UPDC_WRITE_TO_MEMORY,
+							 4, (gint) 0x2000FC, (guint8*) &buf,
+							 &error_local))
 		g_debug ("failed to restart: %s", error_local->message);
 
 	return TRUE;
 }
 
 static FuFirmware *
-fu_synapticsmst_device_prepare_firmware (FuDevice *device,
-					 GBytes *fw,
-					 FwupdInstallFlags flags,
-					 GError **error)
+fu_synaptics_mst_device_prepare_firmware (FuDevice *device,
+					  GBytes *fw,
+					  FwupdInstallFlags flags,
+					  GError **error)
 {
-	FuSynapticsmstDevice *self = FU_SYNAPTICSMST_DEVICE (device);
+	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE (device);
 
 	/* check firmware and board ID match */
 	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
@@ -791,12 +792,12 @@ fu_synapticsmst_device_prepare_firmware (FuDevice *device,
 }
 
 static gboolean
-fu_synapticsmst_device_write_firmware (FuDevice *device,
-				       FuFirmware *firmware,
-				       FwupdInstallFlags flags,
-				       GError **error)
+fu_synaptics_mst_device_write_firmware (FuDevice *device,
+				        FuFirmware *firmware,
+				        FwupdInstallFlags flags,
+				        GError **error)
 {
-	FuSynapticsmstDevice *self = FU_SYNAPTICSMST_DEVICE (device);
+	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE (device);
 	g_autoptr(GBytes) fw = NULL;
 	const guint8 *payload_data;
 	gsize payload_len;
@@ -811,44 +812,44 @@ fu_synapticsmst_device_write_firmware (FuDevice *device,
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 	if (!fu_device_has_custom_flag (device, "skip-restart")) {
 		locker = fu_device_locker_new_full (self,
-						(FuDeviceLockerFunc) fu_synapticsmst_device_enable_rc,
-						(FuDeviceLockerFunc) fu_synapticsmst_device_restart,
+						(FuDeviceLockerFunc) fu_synaptics_mst_device_enable_rc,
+						(FuDeviceLockerFunc) fu_synaptics_mst_device_restart,
 						error);
 		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 		fu_device_set_remove_delay (FU_DEVICE (self), 10000); /* a long time */
 	} else {
 		locker = fu_device_locker_new_full (self,
-						(FuDeviceLockerFunc) fu_synapticsmst_device_enable_rc,
-						(FuDeviceLockerFunc) fu_synapticsmst_device_disable_rc,
+						(FuDeviceLockerFunc) fu_synaptics_mst_device_enable_rc,
+						(FuDeviceLockerFunc) fu_synaptics_mst_device_disable_rc,
 						error);
 	}
 	if (locker == NULL)
 		return FALSE;
 
 	/* update firmware */
-	if (self->family == FU_SYNAPTICSMST_FAMILY_PANAMERA) {
-		if (!fu_synapticsmst_device_panamera_prepare_write (self, error)) {
+	if (self->family == FU_SYNAPTICS_MST_FAMILY_PANAMERA) {
+		if (!fu_synaptics_mst_device_panamera_prepare_write (self, error)) {
 			g_prefix_error (error, "Failed to prepare for write: ");
 			return FALSE;
 		}
-		if (!fu_synapticsmst_device_update_esm (self,
-							payload_data,
-							error)) {
+		if (!fu_synaptics_mst_device_update_esm (self,
+							 payload_data,
+							 error)) {
 			g_prefix_error (error, "ESM update failed: ");
 			return FALSE;
 		}
-		if (!fu_synapticsmst_device_update_panamera_firmware (self,
-								      payload_len,
-								      payload_data,
-								      error)) {
+		if (!fu_synaptics_mst_device_update_panamera_firmware (self,
+								       payload_len,
+								       payload_data,
+								       error)) {
 			g_prefix_error (error, "Firmware update failed: ");
 			return FALSE;
 		}
 	} else {
-		if (!fu_synapticsmst_device_update_tesla_leaf_firmware (self,
-									payload_len,
-									payload_data,
-									error)) {
+		if (!fu_synaptics_mst_device_update_tesla_leaf_firmware (self,
+									 payload_len,
+									 payload_data,
+									 error)) {
 			g_prefix_error (error, "Firmware update failed: ");
 			return FALSE;
 		}
@@ -857,19 +858,19 @@ fu_synapticsmst_device_write_firmware (FuDevice *device,
 	return TRUE;
 }
 
-FuSynapticsmstDevice *
-fu_synapticsmst_device_new (FuUdevDevice *device)
+FuSynapticsMstDevice *
+fu_synaptics_mst_device_new (FuUdevDevice *device)
 {
-	FuSynapticsmstDevice *self = g_object_new (FU_TYPE_SYNAPTICSMST_DEVICE, NULL);
+	FuSynapticsMstDevice *self = g_object_new (FU_TYPE_SYNAPTICS_MST_DEVICE, NULL);
 	fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (device));
 	return self;
 }
 
 static gboolean
-fu_synapticsmst_device_read_board_id (FuSynapticsmstDevice *self,
-				      FuSynapticsmstConnection *connection,
-				      guint8 *byte,
-				      GError **error)
+fu_synaptics_mst_device_read_board_id (FuSynapticsMstDevice *self,
+				       FuSynapticsMstConnection *connection,
+				       guint8 *byte,
+				       GError **error)
 {
 	/* in test mode we need to open a different file node instead */
 	if (fu_udev_device_get_dev (FU_UDEV_DEVICE (self)) == NULL) {
@@ -911,11 +912,11 @@ fu_synapticsmst_device_read_board_id (FuSynapticsmstDevice *self,
 	}
 
 	/* get board ID via MCU address 0x170E instead of flash access due to HDCP2.2 running */
-	if (!fu_synapticsmst_connection_rc_get_command (connection,
-						UPDC_READ_FROM_MEMORY,
-						2,
-						(gint)ADDR_MEMORY_CUSTOMER_ID, byte,
-						error)) {
+	if (!fu_synaptics_mst_connection_rc_get_command (connection,
+							 UPDC_READ_FROM_MEMORY,
+							 2,
+							 (gint)ADDR_MEMORY_CUSTOMER_ID, byte,
+							 error)) {
 		g_prefix_error (error, "Memory query failed: ");
 		return FALSE;
 	}
@@ -923,7 +924,7 @@ fu_synapticsmst_device_read_board_id (FuSynapticsmstDevice *self,
 }
 
 static gboolean
-fu_synapticsmst_device_scan_cascade (FuSynapticsmstDevice *self, guint8 layer, GError **error)
+fu_synaptics_mst_device_scan_cascade (FuSynapticsMstDevice *self, guint8 layer, GError **error)
 {
 	/* in test mode we skip this */
 	if (fu_udev_device_get_dev (FU_UDEV_DEVICE (self)) == NULL)
@@ -933,54 +934,54 @@ fu_synapticsmst_device_scan_cascade (FuSynapticsmstDevice *self, guint8 layer, G
 	for (guint16 rad = 0; rad <= 2; rad++) {
 		guint8 byte[4];
 		g_autoptr(FuDeviceLocker) locker = NULL;
-		g_autoptr(FuSynapticsmstConnection) connection = NULL;
-		g_autoptr(FuSynapticsmstDevice) device_tmp = NULL;
+		g_autoptr(FuSynapticsMstConnection) connection = NULL;
+		g_autoptr(FuSynapticsMstDevice) device_tmp = NULL;
 		g_autoptr(GError) error_local = NULL;
 
 		/* enable remote control and disable on exit */
-		device_tmp = fu_synapticsmst_device_new (FU_UDEV_DEVICE (self));
+		device_tmp = fu_synaptics_mst_device_new (FU_UDEV_DEVICE (self));
 		device_tmp->layer = layer;
 		device_tmp->rad = rad;
 		locker = fu_device_locker_new_full (device_tmp,
-						    (FuDeviceLockerFunc) fu_synapticsmst_device_enable_rc,
-						    (FuDeviceLockerFunc) fu_synapticsmst_device_disable_rc,
+						    (FuDeviceLockerFunc) fu_synaptics_mst_device_enable_rc,
+						    (FuDeviceLockerFunc) fu_synaptics_mst_device_disable_rc,
 						    &error_local);
 		if (locker == NULL) {
 			g_debug ("no cascade device found: %s", error_local->message);
 			continue;
 		}
-		connection = fu_synapticsmst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
-							     layer + 1, rad);
-		if (!fu_synapticsmst_connection_read (connection, REG_RC_CAP, byte, 1, &error_local)) {
+		connection = fu_synaptics_mst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
+							      layer + 1, rad);
+		if (!fu_synaptics_mst_connection_read (connection, REG_RC_CAP, byte, 1, &error_local)) {
 			g_debug ("no valid cascade device: %s", error_local->message);
 			continue;
 		}
 
 		/* check recursively for more devices */
 		g_clear_object (&locker);
-		self->mode = FU_SYNAPTICSMST_MODE_REMOTE;
+		self->mode = FU_SYNAPTICS_MST_MODE_REMOTE;
 		self->layer = layer + 1;
 		self->rad = rad;
-		if (!fu_synapticsmst_device_scan_cascade (self, layer + 1, error))
+		if (!fu_synaptics_mst_device_scan_cascade (self, layer + 1, error))
 			return FALSE;
 	}
 	return TRUE;
 }
 
 void
-fu_synapticsmst_device_set_system_type (FuSynapticsmstDevice *self, const gchar *system_type)
+fu_synaptics_mst_device_set_system_type (FuSynapticsMstDevice *self, const gchar *system_type)
 {
-	g_return_if_fail (FU_IS_SYNAPTICSMST_DEVICE (self));
+	g_return_if_fail (FU_IS_SYNAPTICS_MST_DEVICE (self));
 	self->system_type = g_strdup (system_type);
 }
 
 static gboolean
-fu_synapticsmst_device_rescan (FuDevice *device, GError **error)
+fu_synaptics_mst_device_rescan (FuDevice *device, GError **error)
 {
-	FuSynapticsmstDevice *self = FU_SYNAPTICSMST_DEVICE (device);
+	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE (device);
 	FuQuirks *quirks;
 	guint8 buf_vid[4];
-	g_autoptr(FuSynapticsmstConnection) connection = NULL;
+	g_autoptr(FuSynapticsMstConnection) connection = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autofree gchar *version = NULL;
 	g_autofree gchar *guid1 = NULL;
@@ -994,14 +995,14 @@ fu_synapticsmst_device_rescan (FuDevice *device, GError **error)
 	guint8 buf_ver[16];
 
 	/* read vendor ID */
-	connection = fu_synapticsmst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)), 0, 0);
-	if (!fu_synapticsmst_connection_read (connection, REG_RC_CAP, buf_vid, 1, error)) {
+	connection = fu_synaptics_mst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)), 0, 0);
+	if (!fu_synaptics_mst_connection_read (connection, REG_RC_CAP, buf_vid, 1, error)) {
 		g_prefix_error (error, "failed to read device: ");
 		return FALSE;
 	}
 	if (buf_vid[0] & 0x04) {
-		if (!fu_synapticsmst_connection_read (connection, REG_VENDOR_ID,
-					       buf_vid, 3, error)) {
+		if (!fu_synaptics_mst_connection_read (connection, REG_VENDOR_ID,
+						       buf_vid, 3, error)) {
 			g_prefix_error (error, "failed to read vendor ID: ");
 			return FALSE;
 		}
@@ -1016,20 +1017,20 @@ fu_synapticsmst_device_rescan (FuDevice *device, GError **error)
 	}
 
 	/* direct */
-	self->mode = FU_SYNAPTICSMST_MODE_DIRECT;
+	self->mode = FU_SYNAPTICS_MST_MODE_DIRECT;
 	self->layer = 0;
 	self->rad = 0;
 
 	/* enable remote control and disable on exit */
 	locker = fu_device_locker_new_full (self,
-					    (FuDeviceLockerFunc) fu_synapticsmst_device_enable_rc,
-					    (FuDeviceLockerFunc) fu_synapticsmst_device_disable_rc,
+					    (FuDeviceLockerFunc) fu_synaptics_mst_device_enable_rc,
+					    (FuDeviceLockerFunc) fu_synaptics_mst_device_disable_rc,
 					    error);
 	if (locker == NULL)
 		return FALSE;
 
 	/* read firmware version */
-	if (!fu_synapticsmst_connection_read (connection, REG_FIRMWARE_VERSION,
+	if (!fu_synaptics_mst_connection_read (connection, REG_FIRMWARE_VERSION,
 					      buf_ver, 3, error))
 		return FALSE;
 
@@ -1037,13 +1038,13 @@ fu_synapticsmst_device_rescan (FuDevice *device, GError **error)
 	fu_device_set_version (FU_DEVICE (self), version, FWUPD_VERSION_FORMAT_TRIPLET);
 
 	/* read board ID */
-	if (!fu_synapticsmst_device_read_board_id (self, connection, buf_ver, error))
+	if (!fu_synaptics_mst_device_read_board_id (self, connection, buf_ver, error))
 		return FALSE;
 	self->board_id = fu_common_read_uint16 (buf_ver, G_BIG_ENDIAN);
 
 	/* read board chip_id */
-	if (!fu_synapticsmst_connection_read (connection, REG_CHIP_ID,
-					      buf_ver, 2, error)) {
+	if (!fu_synaptics_mst_connection_read (connection, REG_CHIP_ID,
+					       buf_ver, 2, error)) {
 		g_prefix_error (error, "failed to read chip id: ");
 		return FALSE;
 	}
@@ -1055,17 +1056,17 @@ fu_synapticsmst_device_rescan (FuDevice *device, GError **error)
 				     "invalid chip ID");
 		return FALSE;
 	}
-	self->family = fu_synapticsmst_family_from_chip_id (self->chip_id);
+	self->family = fu_synaptics_mst_family_from_chip_id (self->chip_id);
 
 	/* check the active bank for debugging */
-	if (self->family == FU_SYNAPTICSMST_FAMILY_PANAMERA) {
-		if (!fu_synapticsmst_device_get_active_bank_panamera (self, error))
+	if (self->family == FU_SYNAPTICS_MST_FAMILY_PANAMERA) {
+		if (!fu_synaptics_mst_device_get_active_bank_panamera (self, error))
 			return FALSE;
 	}
 
 	/* recursively look for cascade devices */
 	g_clear_object (&locker);
-	if (!fu_synapticsmst_device_scan_cascade (self, 0, error))
+	if (!fu_synaptics_mst_device_scan_cascade (self, 0, error))
 		return FALSE;
 
 	/* set up the device name via quirks */
@@ -1082,7 +1083,7 @@ fu_synapticsmst_device_rescan (FuDevice *device, GError **error)
 
 	/* this is a host system, use system ID */
 	guid_template = fu_quirks_lookup_by_id (quirks, group, "DeviceKind");
-	name_family = fu_synapticsmst_family_to_string (self->family);
+	name_family = fu_synaptics_mst_family_to_string (self->family);
 	if (g_strcmp0 (guid_template, "system") == 0) {
 		g_autofree gchar *guid = NULL;
 		guid = g_strdup_printf ("MST-%s-%s-%u",
@@ -1112,15 +1113,15 @@ fu_synapticsmst_device_rescan (FuDevice *device, GError **error)
 
 	/* detect chip family */
 	switch (self->family) {
-	case FU_SYNAPTICSMST_FAMILY_TESLA:
+	case FU_SYNAPTICS_MST_FAMILY_TESLA:
 		fu_device_set_firmware_size_max (device, 0x10000);
 		fu_device_add_instance_id (device, "MST-tesla");
 		break;
-	case FU_SYNAPTICSMST_FAMILY_LEAF:
+	case FU_SYNAPTICS_MST_FAMILY_LEAF:
 		fu_device_set_firmware_size_max (device, 0x10000);
 		fu_device_add_instance_id (device, "MST-leaf");
 		break;
-	case FU_SYNAPTICSMST_FAMILY_PANAMERA:
+	case FU_SYNAPTICS_MST_FAMILY_PANAMERA:
 		fu_device_set_firmware_size_max (device, 0x80000);
 		fu_device_add_instance_id (device, "MST-panamera");
 		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_DUAL_IMAGE);
@@ -1142,15 +1143,15 @@ fu_synapticsmst_device_rescan (FuDevice *device, GError **error)
 }
 
 static void
-fu_synapticsmst_device_class_init (FuSynapticsmstDeviceClass *klass)
+fu_synaptics_mst_device_class_init (FuSynapticsMstDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuUdevDeviceClass *klass_udev_device = FU_UDEV_DEVICE_CLASS (klass);
-	object_class->finalize = fu_synapticsmst_device_finalize;
-	klass_device->to_string = fu_synapticsmst_device_to_string;
-	klass_device->rescan = fu_synapticsmst_device_rescan;
-	klass_device->write_firmware = fu_synapticsmst_device_write_firmware;
-	klass_device->prepare_firmware = fu_synapticsmst_device_prepare_firmware;
-	klass_udev_device->probe = fu_synapticsmst_device_probe;
+	object_class->finalize = fu_synaptics_mst_device_finalize;
+	klass_device->to_string = fu_synaptics_mst_device_to_string;
+	klass_device->rescan = fu_synaptics_mst_device_rescan;
+	klass_device->write_firmware = fu_synaptics_mst_device_write_firmware;
+	klass_device->prepare_firmware = fu_synaptics_mst_device_prepare_firmware;
+	klass_udev_device->probe = fu_synaptics_mst_device_probe;
 }

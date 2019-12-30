@@ -15,3 +15,8 @@ GUID Generation
 
 All the HwId GUIDs are used for the fake UEFI device, and so should be used in
 the firmware metadata for releases that should recover the system.
+
+Vendor ID Security
+------------------
+
+The vendor ID is set from the BIOS vendor, for example `DMI:LENOVO`

@@ -1329,13 +1329,9 @@
       <package>tpm2-tss-devel</package>
     </distro>
     <distro id="debian">
-      <control>
-        <inclusive>amd64</inclusive>
-        <inclusive>arm64</inclusive>
-        <inclusive>armhf</inclusive>
-        <inclusive>i386</inclusive>
-      </control>
+      <control />
       <package variant="x86_64" />
+      <package variant="s390x">libtss2-dev:s390x</package>
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">

@@ -26,3 +26,23 @@ shared_module('fu_plugin_test',
     plugin_deps,
   ],
 )
+
+shared_module('fu_plugin_invalid',
+  sources : [
+    'fu-plugin-invalid.c',
+  ],
+  include_directories : [
+    root_incdir,
+    fwupd_incdir,
+    fwupdplugin_incdir,
+  ],
+  install : install_dummy,
+  install_dir: plugin_dir,
+  link_with : [
+    fwupdplugin,
+  ],
+  c_args : cargs,
+  dependencies : [
+    plugin_deps,
+  ],
+)

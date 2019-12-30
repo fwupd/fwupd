@@ -37,6 +37,7 @@ fu_plugin_init (FuPlugin *plugin)
 	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 	data->bgrt = fu_uefi_bgrt_new ();
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "upower");
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "tpm_eventlog");
 	fu_plugin_add_compile_version (plugin, "com.redhat.efivar", EFIVAR_LIBRARY_VERSION);
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 }
@@ -554,6 +555,16 @@ fu_plugin_uefi_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GError **er
 		const gchar *vendor = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER);
 		if (vendor != NULL)
 			fu_device_set_vendor (FU_DEVICE (dev), vendor);
+	}
+
+	/* set vendor ID as the BIOS vendor */
+	if (fu_uefi_device_get_kind (dev) != FU_UEFI_DEVICE_KIND_FMP) {
+		const gchar *dmi_vendor;
+		dmi_vendor = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VENDOR);
+		if (dmi_vendor != NULL) {
+			g_autofree gchar *vendor_id = g_strdup_printf ("DMI:%s", dmi_vendor);
+			fu_device_set_vendor_id (FU_DEVICE (dev), vendor_id);
+		}
 	}
 
 	/* success */

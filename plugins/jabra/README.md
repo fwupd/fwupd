@@ -21,3 +21,8 @@ This plugin uses the following plugin-specific quirks:
 | Quirk         | Description                                  | fwupd version |
 |---------------|----------------------------------------------|---------------|
 |`JabraMagic`   | Two magic bytes sent to detach into DFU mode.|1.3.3          |
+
+Vendor ID Security
+------------------
+
+The vendor ID is set from the USB vendor, in this instance set to `USB:0x0A12`

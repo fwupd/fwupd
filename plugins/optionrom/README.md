@@ -19,3 +19,8 @@ These devices use the standard USB DeviceInstanceId values, e.g.
  * `PCI\VEN_%04X&DEV_%04X`
 
 Additionally, GUIDs found in OptionROMs may also be added.
+
+Vendor ID Security
+------------------
+
+The device is not upgradable and thus requires no vendor ID set.

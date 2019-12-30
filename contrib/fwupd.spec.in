@@ -249,6 +249,7 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %{_libexecdir}/fwupd/fwupdtool
 %{_libexecdir}/fwupd/fwupdagent
 %{_libexecdir}/fwupd/fwupdoffline
+%{_libexecdir}/fwupd/fwupdtpmevlog
 %if 0%{?have_uefi}
 %{_libexecdir}/fwupd/efi/*.efi
 %{_libexecdir}/fwupd/efi/*.efi.signed
@@ -340,17 +341,20 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %{_libdir}/fwupd-plugins-3/libfu_plugin_steelseries.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_superio.so
 %if 0%{?have_dell}
-%{_libdir}/fwupd-plugins-3/libfu_plugin_synapticsmst.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_synaptics_mst.so
 %endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_synaptics_cxaudio.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_synaptics_prometheus.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_synaptics_rmi.so
 %if 0%{?enable_dummy}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_test.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_invalid.so
 %endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_thelio_io.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_thunderbolt.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_thunderbolt_power.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_tpm.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_tpm_eventlog.so
 %if 0%{?have_uefi}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_uefi.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_uefi_recovery.so

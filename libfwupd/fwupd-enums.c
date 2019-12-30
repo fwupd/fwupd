@@ -497,6 +497,8 @@ fwupd_version_format_from_string (const gchar *str)
 		return FWUPD_VERSION_FORMAT_SURFACE_LEGACY;
 	if (g_strcmp0 (str, "surface") == 0)
 		return FWUPD_VERSION_FORMAT_SURFACE;
+	if (g_strcmp0 (str, "dell-bios") == 0)
+		return FWUPD_VERSION_FORMAT_DELL_BIOS;
 	return FWUPD_VERSION_FORMAT_UNKNOWN;
 }
 
@@ -533,5 +535,7 @@ fwupd_version_format_to_string (FwupdVersionFormat kind)
 		return "surface-legacy";
 	if (kind == FWUPD_VERSION_FORMAT_SURFACE)
 		return "surface";
+	if (kind == FWUPD_VERSION_FORMAT_DELL_BIOS)
+		return "dell-bios";
 	return NULL;
 }

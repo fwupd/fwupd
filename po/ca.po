@@ -554,6 +554,10 @@ msgstr "No s'han pogut carregar les peculiaritats"
 msgid "Failed to parse arguments"
 msgstr "Ha fallat en analitzar els arguments"
 
+#. TRANSLATORS: failed to read measurements file
+msgid "Failed to parse file"
+msgstr "Ha fallat en analitzar el fitxer"
+
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse flags for --filter"
 msgstr "Ha fallat en analitzar les etiquetes per a --filter"
@@ -849,6 +853,12 @@ msgstr "Versió nova"
 msgid "No action specified!"
 msgstr "No s'ha especificat cap acció!"
 
+#. TRANSLATORS: message letting the user know no device downgrade available
+#. * %1 is the device name
+#, c-format
+msgid "No downgrades for %s"
+msgstr "No hi ha cap desactualització per a %s"
+
 #. TRANSLATORS: nothing found
 msgid "No firmware IDs found"
 msgstr "No s'ha trobat cap ID de microprogramari"
@@ -876,6 +886,16 @@ msgstr "No hi ha cap remot disponible"
 #. TRANSLATORS: nothing was updated offline
 msgid "No updates were applied"
 msgstr "No s’han aplicat les actualitzacions"
+
+#. TRANSLATORS: message letting the user know no device upgrade available
+#. * %1 is the device name
+#, c-format
+msgid "No upgrades for %s"
+msgstr "No hi ha cap actualització per a %s"
+
+#. TRANSLATORS: command line option
+msgid "Only show single PCR value"
+msgstr "Mostra només un únic valor de PCR"
 
 #. TRANSLATORS: command line option
 msgid "Override plugin warning"
@@ -1039,7 +1059,7 @@ msgstr "Desa l'estat del dispositiu en un fitxer JSON entre les execucions"
 msgid "Schedule installation for next reboot when possible"
 msgstr "Planifica la instal·lació per al següent reinici quan sigui posible"
 
-#. TRANSLATORS: scheduing an update to be done on the next boot
+#. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Planificació..."
 
@@ -1230,7 +1250,7 @@ msgid "This program may only work correctly as root"
 msgstr "Aquest programa només pot funcionar correctament com a «root»"
 
 msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
-msgstr "Aquest remot conté el microprogramari que no està embargat, però encara l'ha provat el proveïdor del maquinari. Haureu d'assegurar-vos que teniu una manera de baixar manualment el microprogramari si l'actualització del microprogramari no funciona."
+msgstr "Aquest remot conté microprogramari que no està embargat, però encara l'ha de provar el proveïdor del maquinari. Haureu d'assegurar-vos que teniu una manera de desactualitzar manualment el microprogramari si l'actualització del microprogramari no funciona."
 
 #. TRANSLATORS: the user needs to stop playing with stuff
 msgid "This tool can only be used by the root user"
