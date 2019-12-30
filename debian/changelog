@@ -1,6 +1,8 @@
 fwupd (1.3.6-1) UNRELEASED; urgency=medium
 
   * New upstream version (1.3.6)
+    - Fixes shutdown failed with exit 2 (Fixes: #947205)
+    - Fixes motd issue, requires newer systemd though as well (Fixes: #943343)
   * Drop all patches from previous upload, now upstream.
 
  -- Mario Limonciello <mario.limonciello@dell.com>  Mon, 30 Dec 2019 17:23:21 -0600
