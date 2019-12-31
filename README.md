@@ -7,11 +7,11 @@ fwupd
 
 This project aims to make updating firmware on Linux automatic, safe and reliable.
 
-Additional information is available at the website: https://fwupd.org
+Additional information is available at the website: https://fwupd.org/
 
 ## Compiling
 
-The most up to date compilation instructions are available in the [Wiki](https://github.com/fwupd/fwupd/wiki/Compilation)
+The most up to date compilation instructions are available in the [Wiki](https://github.com/fwupd/fwupd/wiki/Compilation).
 
 LVFS
 ----
@@ -72,7 +72,7 @@ To clear the local history of updates:
 
  Only updates that were distributed from the LVFS will be reported to the LVFS.
 
-Enterprise Use
+Enterprise use
 --------------
 
 The flow of updates can be controlled in the enterprise using the
@@ -100,7 +100,7 @@ Other frontends
  1. [GNOME Software](https://wiki.gnome.org/Apps/Software) is the graphical
  frontend available. When compiled with firmware support, it will check for
  updates periodically and automatically download firmware in the background.
- After the firmware has been downloaded a popup will be displayed in Gnome
+ After the firmware has been downloaded a popup will be displayed in GNOME
  Software to perform the update.
 
 2. [KDE Discover](https://userbase.kde.org/Discover) is the software centre,
