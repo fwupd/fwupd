@@ -32,6 +32,23 @@
     <binary>fwupdmgr</binary>
   </provides>
   <releases>
+    <release version="1.2.12" date="2019-12-31">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add support for the DW5821e/eSIM</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Avoid checking for bolt support when not required</li>
+          <li>Correct HWID support in wacom-raw</li>
+          <li>Fix offset of vendor id of hidraw devices</li>
+          <li>Make loading vendor/product/serial strings non-fatal</li>
+          <li>Only check the vendor ID if the device has one set</li>
+          <li>Use more systemd directives for directories</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.2.11" date="2019-09-28">
       <description>
         <p>This release adds the following features:</p>
