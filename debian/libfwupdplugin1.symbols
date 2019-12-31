@@ -34,6 +34,7 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  LIBFWUPDPLUGIN_1.3.3@LIBFWUPDPLUGIN_1.3.3 1.3.3
  LIBFWUPDPLUGIN_1.3.4@LIBFWUPDPLUGIN_1.3.4 1.3.4
  LIBFWUPDPLUGIN_1.3.5@LIBFWUPDPLUGIN_1.3.5 1.3.5
+ LIBFWUPDPLUGIN_1.3.6@LIBFWUPDPLUGIN_1.3.6 1.3.6
  fu_archive_get_type@LIBFWUPDPLUGIN_1.2.2 1.2.2
  fu_archive_iterate@LIBFWUPDPLUGIN_1.3.4 1.3.4
  fu_archive_lookup_by_fn@LIBFWUPDPLUGIN_1.2.2 1.2.2
@@ -87,6 +88,7 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  fu_common_version_ensure_semver@LIBFWUPDPLUGIN_1.2.9 1.2.9
  fu_common_version_from_uint16@LIBFWUPDPLUGIN_1.2.0 1.2.0
  fu_common_version_from_uint32@LIBFWUPDPLUGIN_1.2.0 1.2.0
+ fu_common_version_from_uint64@LIBFWUPDPLUGIN_1.3.6 1.3.6
  fu_common_version_guess_format@LIBFWUPDPLUGIN_1.2.0 1.2.0
  fu_common_version_parse@LIBFWUPDPLUGIN_1.2.0 1.2.0
  fu_common_version_parse_from_format@LIBFWUPDPLUGIN_1.3.3 1.3.3
@@ -366,6 +368,7 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  fu_udev_device_pread@LIBFWUPDPLUGIN_1.3.3 1.3.3
  fu_udev_device_pwrite@LIBFWUPDPLUGIN_1.3.3 1.3.3
  fu_udev_device_set_fd@LIBFWUPDPLUGIN_1.3.3 1.3.3
+ fu_udev_device_set_flags@LIBFWUPDPLUGIN_1.3.6 1.3.6
  fu_udev_device_set_physical_id@LIBFWUPDPLUGIN_1.1.2 1.1.2
  fu_udev_device_set_readonly@LIBFWUPDPLUGIN_1.3.3 1.3.3
  fu_usb_device_find_udev_device@LIBFWUPDPLUGIN_1.3.2 1.3.2
