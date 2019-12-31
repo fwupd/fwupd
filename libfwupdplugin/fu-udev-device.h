@@ -37,6 +37,7 @@ struct _FuUdevDeviceClass
  * @FU_UDEV_DEVICE_FLAG_NONE:			No flags set
  * @FU_UDEV_DEVICE_FLAG_OPEN_READ:		Open the device read-only
  * @FU_UDEV_DEVICE_FLAG_OPEN_WRITE:		Open the device write-only
+ * @FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT:	Get the vendor ID fallback from the parent
  *
  * Flags used when opening the device using fu_device_open().
  **/
@@ -44,6 +45,7 @@ typedef enum {
 	FU_UDEV_DEVICE_FLAG_NONE		= 0,
 	FU_UDEV_DEVICE_FLAG_OPEN_READ		= 1 << 0,
 	FU_UDEV_DEVICE_FLAG_OPEN_WRITE		= 1 << 1,
+	FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT	= 1 << 2,
 	/*< private >*/
 	FU_UDEV_DEVICE_FLAG_LAST
 } FuUdevDeviceFlags;
