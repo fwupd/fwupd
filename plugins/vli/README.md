@@ -44,6 +44,7 @@ Optional PD child devices sharing the SPI flash use just one extra GUID, e.g.
 Optional I²C child devices use just one extra GUID, e.g.
 
  * `USB\VID_17EF&PID_3083&I2C_MSP430`
+ * `USB\VID_17EF&PID_3083&I2C_PS186`
 
 Vendor ID Security
 ------------------
