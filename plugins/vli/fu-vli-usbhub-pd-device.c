@@ -57,7 +57,6 @@ fu_vli_usbhub_pd_device_probe (FuDevice *device, GError **error)
 			     "PD version invalid [0x%x]", fwver);
 		return FALSE;
 	}
-	fu_device_set_firmware_size (device, fu_vli_common_device_kind_get_size (self->device_kind));
 	fu_device_set_name (device, fu_vli_common_device_kind_to_string (self->device_kind));
 
 	/* use header to populate device info */
