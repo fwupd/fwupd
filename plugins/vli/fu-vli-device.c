@@ -14,6 +14,7 @@
 typedef struct {
 	FuUsbDevice		 parent_instance;
 	FuVliDeviceKind		 kind;
+	gboolean		 spi_auto_detect;
 	FuVliDeviceSpiReq	 spi_cmds[FU_VLI_DEVICE_SPI_REQ_LAST];
 	guint8			 spi_cmd_read_id_sz;
 	guint32			 flash_id;
@@ -460,6 +461,7 @@ fu_vli_device_to_string (FuDevice *device, guint idt, GString *str)
 	FuVliDevicePrivate *priv = GET_PRIVATE (self);
 	fu_common_string_append_kv (str, idt, "DeviceKind",
 				    fu_vli_common_device_kind_to_string (priv->kind));
+	fu_common_string_append_kb (str, idt, "SpiAutoDetect", priv->spi_auto_detect);
 	if (priv->flash_id != 0x0) {
 		g_autofree gchar *tmp = fu_vli_device_get_flash_id_str (self);
 		fu_common_string_append_kv (str, idt, "FlashId", tmp);
@@ -510,37 +512,38 @@ fu_vli_device_setup (FuDevice *device, GError **error)
 	FuVliDevice *self = FU_VLI_DEVICE (device);
 	FuVliDevicePrivate *priv = GET_PRIVATE (self);
 	FuVliDeviceClass *klass = FU_VLI_DEVICE_GET_CLASS (device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
 
 	/* get the flash chip attached */
-	if (!fu_vli_device_spi_read_flash_id (self, error)) {
-		g_prefix_error (error, "failed to read SPI chip ID: ");
-		return FALSE;
-	}
-	if (priv->flash_id != 0x0) {
-		g_autofree gchar *spi_id = NULL;
-		g_autofree gchar *devid1 = NULL;
-		g_autofree gchar *devid2 = NULL;
-		g_autofree gchar *flash_id = fu_vli_device_get_flash_id_str (self);
-		g_debug ("using flash part %s", flash_id);
+	if (priv->spi_auto_detect) {
+		GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
+		if (!fu_vli_device_spi_read_flash_id (self, error)) {
+			g_prefix_error (error, "failed to read SPI chip ID: ");
+			return FALSE;
+		}
+		if (priv->flash_id != 0x0) {
+			g_autofree gchar *spi_id = NULL;
+			g_autofree gchar *devid1 = NULL;
+			g_autofree gchar *devid2 = NULL;
+			g_autofree gchar *flash_id = fu_vli_device_get_flash_id_str (self);
+			g_debug ("using flash part %s", flash_id);
 
-		/* load the SPI parameters from quirks */
-		spi_id = g_strdup_printf ("VLI_USBHUB\\SPI_%s", flash_id);
-		fu_device_add_instance_id (FU_DEVICE (self), spi_id);
+			/* load the SPI parameters from quirks */
+			spi_id = g_strdup_printf ("VLI_USBHUB\\SPI_%s", flash_id);
+			fu_device_add_instance_id (FU_DEVICE (self), spi_id);
 
-		/* add extra instance IDs to include the SPI variant */
-		devid2 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&SPI_%s&REV_%04X",
-					  g_usb_device_get_vid (usb_device),
-					  g_usb_device_get_pid (usb_device),
-					  flash_id,
-					  g_usb_device_get_release (usb_device));
-		fu_device_add_instance_id (device, devid2);
-		devid1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&SPI_%s",
-					  g_usb_device_get_vid (usb_device),
-					  g_usb_device_get_pid (usb_device),
-					  flash_id);
-		fu_device_add_instance_id (device, devid1);
-
+			/* add extra instance IDs to include the SPI variant */
+			devid2 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&SPI_%s&REV_%04X",
+						  g_usb_device_get_vid (usb_device),
+						  g_usb_device_get_pid (usb_device),
+						  flash_id,
+						  g_usb_device_get_release (usb_device));
+			fu_device_add_instance_id (device, devid2);
+			devid1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&SPI_%s",
+						  g_usb_device_get_vid (usb_device),
+						  g_usb_device_get_pid (usb_device),
+						  flash_id);
+			fu_device_add_instance_id (device, devid1);
+		}
 	}
 
 	/* subclassed further */
@@ -601,6 +604,10 @@ fu_vli_device_set_quirk_kv (FuDevice *device,
 		priv->spi_cmds[FU_VLI_DEVICE_SPI_REQ_SECTOR_ERASE] = fu_common_strtoull (value);
 		return TRUE;
 	}
+	if (g_strcmp0 (key, "SpiAutoDetect") == 0) {
+		priv->spi_auto_detect = fu_common_strtoull (value) > 0;
+		return TRUE;
+	}
 	if (g_strcmp0 (key, "DeviceKind") == 0) {
 		priv->kind = fu_vli_common_device_kind_from_string (value);
 		if (priv->kind == FU_VLI_DEVICE_KIND_UNKNOWN) {
@@ -633,6 +640,7 @@ fu_vli_device_init (FuVliDevice *self)
 	priv->spi_cmds[FU_VLI_DEVICE_SPI_REQ_CHIP_ERASE]	= 0x60;
 	priv->spi_cmds[FU_VLI_DEVICE_SPI_REQ_READ_ID]		= 0x9f;
 	priv->spi_cmd_read_id_sz = 2;
+	priv->spi_auto_detect = TRUE;
 }
 
 static void
