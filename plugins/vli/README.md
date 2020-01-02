@@ -54,6 +54,7 @@ This plugin uses the following plugin-specific quirks:
 | Quirk                      | Description                      | Minimum fwupd version |
 |----------------------------|----------------------------------|-----------------------|
 | `DeviceKind`               | Device kind, e.g. `VL102`        | 1.3.7                 |
+| `SpiAutoDetect`            | SPI autodetect (default 0x1)     | 1.3.7                 |
 | `SpiCmdChipErase`          | Flash command to erase chip      | 1.3.3                 |
 | `SpiCmdChipErase`          | Flash command to erase sector    | 1.3.3                 |
 | `SpiCmdReadId`             | Flash command to read the ID     | 1.3.3                 |
