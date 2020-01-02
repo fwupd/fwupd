@@ -436,7 +436,14 @@ void
 fu_vli_device_set_kind (FuVliDevice *self, FuVliDeviceKind device_kind)
 {
 	FuVliDevicePrivate *priv = GET_PRIVATE (self);
+	guint32 sz;
+
 	priv->kind = device_kind;
+
+	/* set maximum firmware size */
+	sz = fu_vli_common_device_kind_get_size (device_kind);
+	if (sz > 0x0)
+		fu_device_set_firmware_size_max (FU_DEVICE (self), sz);
 }
 
 FuVliDeviceKind
@@ -609,8 +616,9 @@ fu_vli_device_set_quirk_kv (FuDevice *device,
 		return TRUE;
 	}
 	if (g_strcmp0 (key, "DeviceKind") == 0) {
-		priv->kind = fu_vli_common_device_kind_from_string (value);
-		if (priv->kind == FU_VLI_DEVICE_KIND_UNKNOWN) {
+		FuVliDeviceKind device_kind;
+		device_kind = fu_vli_common_device_kind_from_string (value);
+		if (device_kind == FU_VLI_DEVICE_KIND_UNKNOWN) {
 			g_set_error (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_NOT_SUPPORTED,
@@ -618,6 +626,7 @@ fu_vli_device_set_quirk_kv (FuDevice *device,
 				     value);
 			return FALSE;
 		}
+		fu_vli_device_set_kind (self, device_kind);
 		return TRUE;
 	}
 	g_set_error_literal (error,
