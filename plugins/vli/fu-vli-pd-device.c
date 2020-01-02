@@ -11,6 +11,7 @@
 
 #include "fu-vli-pd-device.h"
 #include "fu-vli-pd-firmware.h"
+#include "fu-vli-pd-parade-device.h"
 
 struct _FuVliPdDevice
 {
@@ -242,6 +243,33 @@ fu_vli_pd_device_reset_vl103 (FuVliDevice *device, GError **error)
 }
 
 static gboolean
+fu_vli_pd_device_parade_setup (FuVliPdDevice *self, GError **error)
+{
+	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	/* add child */
+	dev = fu_vli_pd_parade_device_new (FU_VLI_DEVICE (self));
+	if (!fu_device_probe (dev, &error_local)) {
+		if (g_error_matches (error_local,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND)) {
+			g_debug ("%s", error_local->message);
+		} else {
+			g_warning ("cannot create I²C parade device: %s",
+				   error_local->message);
+		}
+		return TRUE;
+	}
+	if (!fu_device_setup (dev, error)) {
+		g_prefix_error (error, "failed to set up parade device: ");
+		return FALSE;
+	}
+	fu_device_add_child (FU_DEVICE (self), dev);
+	return TRUE;
+}
+
+static gboolean
 fu_vli_pd_device_setup (FuVliDevice *device, GError **error)
 {
 	FuVliPdDevice *self = FU_VLI_PD_DEVICE (device);
@@ -307,7 +335,11 @@ fu_vli_pd_device_setup (FuVliDevice *device, GError **error)
 	else
 		fu_device_remove_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 
-	/* TODO: detect any I²C child, e.g. parade device */
+	/* detect any I²C child, e.g. parade device */
+	if (fu_device_has_custom_flag (FU_DEVICE (self), "has-i2c-ps186")) {
+		if (!fu_vli_pd_device_parade_setup (self, error))
+			return FALSE;
+	}
 
 	/* success */
 	return TRUE;
