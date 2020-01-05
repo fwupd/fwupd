@@ -49,16 +49,16 @@ override_dh_auto_configure:
 	else \
 		export FLASHROM="-Dplugin_flashrom=false"; \
 	fi; \
-	dh_auto_configure -- $$UEFI $$DELL $$FLASHROM $$CI -Dplugin_dummy=true -Dgtkdoc=true --libexecdir=/usr/lib
+	dh_auto_configure -- $$UEFI $$DELL $$FLASHROM $$CI -Dplugin_dummy=true -Dgtkdoc=true
 
 override_dh_install:
 	find debian/tmp/usr -type f -name "*a" -print | xargs rm -f
 	sed -i 's,wheel,sudo,' ./debian/tmp/usr/share/polkit-1/rules.d/org.freedesktop.fwupd.rules
 	dh_install
 	#install the EFI binaries if needed
-	if [ -d debian/tmp/usr/lib/fwupd/efi/ ]; then \
-		dh_install -pfwupd usr/lib/fwupd/efi ;\
-		dh_install -pfwupd usr/lib/fwupd/fwupdate; \
+	if [ -d debian/tmp/usr/libexec/fwupd/efi/ ]; then \
+		dh_install -pfwupd usr/libexec/fwupd/efi ;\
+		dh_install -pfwupd usr/libexec/fwupd/fwupdate; \
 	fi
 	#if build with meson subproject in CI need to install this too
 	if [ ! -z "$$CI" ] && [ -f debian/tmp/usr/lib/xb-tool ]; then \
@@ -103,9 +103,9 @@ override_dh_auto_test:
 override_dh_builddeb:
 	dh_builddeb
 ifeq (ubuntu,$(SB_STYLE))
-	if [ -d debian/tmp/usr/lib/fwupd/efi/ ]; then \
+	if [ -d debian/tmp/usr/libexec/fwupd/efi/ ]; then \
 		mkdir -p debian/fwupd-images/$(deb_version) ;\
-		cp debian/tmp/usr/lib/fwupd/efi/fwupd*.efi debian/fwupd-images/$(deb_version) ;\
+		cp debian/tmp/usr/libexec/fwupd/efi/fwupd*.efi debian/fwupd-images/$(deb_version) ;\
 		echo $(deb_version) > debian/fwupd-images/$(deb_version)/version ;\
 		tar -C debian/fwupd-images -czvf ../$(tar_name) . ;\
 		dpkg-distaddfile $(tar_name) raw-uefi - ;\

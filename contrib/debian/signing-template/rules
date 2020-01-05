@@ -4,12 +4,12 @@
 PACKAGE_NAME  := fwupd
 SIG_PKG_NAME  := fwupd-SIGNARCH-signed
 SIGNATURE_DIR := debian/signatures/$(PACKAGE_NAME)
-BINARY        := $(shell find /usr/lib/fwupd/efi -name '*.efi' | xargs basename)
+BINARY        := $(shell find /usr/libexec/fwupd/efi -name '*.efi' | xargs basename)
 
 %:
 	dh $@
 
 override_dh_auto_build:
-	cp /usr/lib/fwupd/efi/$(BINARY) .
-	sbattach --attach $(SIGNATURE_DIR)/usr/lib/fwupd/efi/$(BINARY).sig $(BINARY)
+	cp /usr/libexec/fwupd/efi/$(BINARY) .
+	sbattach --attach $(SIGNATURE_DIR)/usr/libexec/fwupd/efi/$(BINARY).sig $(BINARY)
 	mv $(BINARY) $(BINARY).signed
