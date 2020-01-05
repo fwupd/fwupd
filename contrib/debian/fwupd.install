@@ -8,11 +8,11 @@ usr/share/icons/*
 usr/share/polkit-1/*
 usr/share/locale
 usr/share/metainfo/*
-usr/lib/*/fwupd
-usr/lib/*/fwupdagent
-usr/lib/*/fwupdoffline
-usr/lib/*/fwupdtool
-usr/lib/*/fwupdtpmevlog
+usr/libexec/fwupd/fwupd
+usr/libexec/fwupd/fwupdagent
+usr/libexec/fwupd/fwupdoffline
+usr/libexec/fwupd/fwupdtool
+usr/libexec/fwupd/fwupdtpmevlog
 usr/share/man/man1/*
 lib/systemd/system/*
 lib/systemd/system-preset/*
