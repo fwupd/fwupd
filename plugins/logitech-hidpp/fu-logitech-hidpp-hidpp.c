@@ -63,6 +63,7 @@ fu_logitech_hidpp_send (FuIOChannel *io_channel,
 			GError **error)
 {
 	gsize len = fu_logitech_hidpp_msg_get_payload_length (msg);
+	FuIOChannelFlags write_flags = FU_IO_CHANNEL_FLAG_FLUSH_INPUT;
 
 	/* only for HID++2.0 */
 	if (msg->hidpp_version >= 2.f)
@@ -75,10 +76,13 @@ fu_logitech_hidpp_send (FuIOChannel *io_channel,
 		g_print ("%s", str);
 	}
 
+	/* only use blocking IO when it will be a short timeout for reboot */
+	if ((msg->flags & FU_UNIFYING_HIDPP_MSG_FLAG_LONGER_TIMEOUT) == 0)
+		write_flags |= FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO;
+
 	/* HID */
 	if (!fu_io_channel_write_raw (io_channel, (guint8 *) msg, len, timeout,
-				      FU_IO_CHANNEL_FLAG_FLUSH_INPUT |
-				      FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO, error)) {
+				      write_flags, error)) {
 		g_prefix_error (error, "failed to send: ");
 		return FALSE;
 	}
