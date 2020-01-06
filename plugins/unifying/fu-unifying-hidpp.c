@@ -76,7 +76,7 @@ fu_unifying_hidpp_send (FuIOChannel *io_channel,
 	}
 
 	/* HID */
-	if (!fu_io_channel_write_raw (io_channel, (guint8 *) msg, len, 1500,
+	if (!fu_io_channel_write_raw (io_channel, (guint8 *) msg, len, timeout,
 				      FU_IO_CHANNEL_FLAG_FLUSH_INPUT |
 				      FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO, error)) {
 		g_prefix_error (error, "failed to send: ");
