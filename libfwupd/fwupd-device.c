@@ -51,6 +51,7 @@ typedef struct {
 	FwupdVersionFormat		 version_format;
 	guint64				 version_raw;
 	GPtrArray			*checksums;
+	GPtrArray			*children;
 	guint32				 flashes_left;
 	guint32				 install_duration;
 	FwupdUpdateState		 update_state;
@@ -110,6 +111,24 @@ fwupd_device_add_checksum (FwupdDevice *device, const gchar *checksum)
 			return;
 	}
 	g_ptr_array_add (priv->checksums, g_strdup (checksum));
+}
+
+/**
+ * fwupd_device_get_children:
+ * @device: A #FwupdDevice
+ *
+ * Gets the device children. These can only be assigned using fwupd_device_set_parent().
+ *
+ * Returns: (element-type FwupdDevice) (transfer none): the children, which may be empty
+ *
+ * Since: 1.3.7
+ **/
+GPtrArray *
+fwupd_device_get_children (FwupdDevice *device)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	return priv->children;
 }
 
 /**
@@ -287,8 +306,10 @@ void
 fwupd_device_set_parent (FwupdDevice *device, FwupdDevice *parent)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	FwupdDevicePrivate *priv_parent = GET_PRIVATE (parent);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
 	g_set_object (&priv->parent, parent);
+	g_ptr_array_add (priv_parent->children, g_object_ref (device));
 }
 
 /**
@@ -2078,6 +2099,7 @@ fwupd_device_init (FwupdDevice *device)
 	priv->instance_ids = g_ptr_array_new_with_free_func (g_free);
 	priv->icons = g_ptr_array_new_with_free_func (g_free);
 	priv->checksums = g_ptr_array_new_with_free_func (g_free);
+	priv->children = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	priv->releases = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 }
 
@@ -2108,6 +2130,7 @@ fwupd_device_finalize (GObject *object)
 	g_ptr_array_unref (priv->instance_ids);
 	g_ptr_array_unref (priv->icons);
 	g_ptr_array_unref (priv->checksums);
+	g_ptr_array_unref (priv->children);
 	g_ptr_array_unref (priv->releases);
 
 	G_OBJECT_CLASS (fwupd_device_parent_class)->finalize (object);
