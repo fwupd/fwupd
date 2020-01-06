@@ -218,6 +218,18 @@ fu_util_print_tree (GNode *n, gpointer data)
 			 fu_util_traverse_tree, data);
 }
 
+static gboolean
+fu_util_is_interesting_child (FwupdDevice *dev)
+{
+	GPtrArray *children = fwupd_device_get_children (dev);
+	for (guint i = 0; i < children->len; i++) {
+		FwupdDevice *child = g_ptr_array_index (children, i);
+		if (fu_util_is_interesting_device (child))
+			return TRUE;
+	}
+	return FALSE;
+}
+
 gboolean
 fu_util_is_interesting_device (FwupdDevice *dev)
 {
@@ -227,6 +239,8 @@ fu_util_is_interesting_device (FwupdDevice *dev)
 		return TRUE;
 	/* device not plugged in, get-details */
 	if (fwupd_device_get_flags (dev) == 0)
+		return TRUE;
+	if (fu_util_is_interesting_child (dev))
 		return TRUE;
 	return FALSE;
 }
