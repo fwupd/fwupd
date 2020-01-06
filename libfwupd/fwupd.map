@@ -418,5 +418,6 @@ LIBFWUPD_1.3.6 {
 LIBFWUPD_1.3.7 {
   global:
     fwupd_device_array_ensure_parents;
+    fwupd_device_get_children;
   local: *;
 } LIBFWUPD_1.3.6;

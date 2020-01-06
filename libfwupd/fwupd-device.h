@@ -41,6 +41,7 @@ void		 fwupd_device_set_parent_id		(FwupdDevice	*device,
 FwupdDevice	*fwupd_device_get_parent		(FwupdDevice	*device);
 void		 fwupd_device_set_parent		(FwupdDevice	*device,
 							 FwupdDevice	*parent);
+GPtrArray	*fwupd_device_get_children		(FwupdDevice	*device);
 const gchar	*fwupd_device_get_name			(FwupdDevice	*device);
 void		 fwupd_device_set_name			(FwupdDevice	*device,
 							 const gchar	*name);
