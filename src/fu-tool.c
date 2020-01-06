@@ -86,6 +86,7 @@ fu_util_save_current_state (FuUtilPrivate *priv, GError **error)
 	devices = fu_engine_get_devices (priv->engine, error);
 	if (devices == NULL)
 		return FALSE;
+	fwupd_device_array_ensure_parents (devices);
 
 	/* create header */
 	builder = json_builder_new ();
@@ -323,6 +324,7 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 	devices = fu_engine_get_devices (priv->engine, error);
 	if (devices == NULL)
 		return FALSE;
+	fwupd_device_array_ensure_parents (devices);
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
 		g_autofree gchar *upgrade_str = NULL;
@@ -472,6 +474,7 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_print ("%s\n", _("No hardware detected with firmware update capability"));
 		return TRUE;
 	}
+	fwupd_device_array_ensure_parents (devs);
 	fu_util_build_device_tree (priv, root, devs, NULL);
 	fu_util_print_tree (root, title);
 
@@ -491,6 +494,7 @@ fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
 	devices = fu_engine_get_devices (priv->engine, error);
 	if (devices == NULL)
 		return NULL;
+	fwupd_device_array_ensure_parents (devices);
 
 	/* filter results */
 	devices_filtered = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
@@ -804,6 +808,7 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 		devices_possible = fu_engine_get_devices (priv->engine, error);
 		if (devices_possible == NULL)
 			return FALSE;
+		fwupd_device_array_ensure_parents (devices_possible);
 	} else if (g_strv_length (values) == 2) {
 		FuDevice *device = fu_engine_get_device (priv->engine,
 							 values[1],
@@ -960,6 +965,7 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 	devices = fu_engine_get_devices (priv->engine, error);
 	if (devices == NULL)
 		return FALSE;
+	fwupd_device_array_ensure_parents (devices);
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
 		FwupdRelease *rel;

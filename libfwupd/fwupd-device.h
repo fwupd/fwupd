@@ -137,5 +137,6 @@ gint		 fwupd_device_compare			(FwupdDevice	*device1,
 
 FwupdDevice	*fwupd_device_from_variant		(GVariant	*value);
 GPtrArray	*fwupd_device_array_from_variant	(GVariant	*value);
+void		 fwupd_device_array_ensure_parents	(GPtrArray	*devices);
 
 G_END_DECLS
