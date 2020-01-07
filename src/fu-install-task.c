@@ -152,6 +152,35 @@ fu_install_task_check_verfmt (FuInstallTask *self,
 	return TRUE;
 }
 
+static gboolean
+fu_install_task_check_requirements_version_check (FuInstallTask *self, GError **error)
+{
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GPtrArray) reqs = NULL;
+
+	reqs = xb_node_query (fu_install_task_get_component (self),
+			      "requires/*", 0, &error_local);
+	if (reqs == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     error_local->message);
+		return FALSE;
+	}
+	for (guint i = 0; i < reqs->len; i++) {
+		XbNode *req = g_ptr_array_index (reqs, i);
+		if (g_strcmp0 (xb_node_get_element (req), "firmware") == 0 &&
+		    xb_node_get_text (req) == NULL) {
+			return TRUE;
+		}
+	}
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "no firmware requirement");
+	return FALSE;
+}
+
 /**
  * fu_install_task_check_requirements:
  * @self: A #FuInstallTask
@@ -209,6 +238,14 @@ fu_install_task_check_requirements (FuInstallTask *self,
 				     FWUPD_ERROR_NOT_FOUND,
 				     "No supported devices found");
 		return FALSE;
+	}
+
+	/* device requries a version check */
+	if (fu_device_has_flag (self->device, FWUPD_DEVICE_FLAG_VERSION_CHECK_REQUIRED)) {
+		if (!fu_install_task_check_requirements_version_check (self, error)) {
+			g_prefix_error (error, "device requires firmware with a version check: ");
+			return FALSE;
+		}
 	}
 
 	/* does the protocol match */

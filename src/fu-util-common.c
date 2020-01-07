@@ -1066,6 +1066,10 @@ fu_util_device_flag_to_string (guint64 device_flag)
 		/* TRANSLATORS: Device remains usable during update */
 		return _("Device is usable for the duration of the update");
 	}
+	if (device_flag == FWUPD_DEVICE_FLAG_VERSION_CHECK_REQUIRED) {
+		/* TRANSLATORS: a version check is required for all firmware */
+		return _("Device firmware is required to have a version check");
+	}
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN) {
 		return NULL;
 	}

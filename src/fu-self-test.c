@@ -226,6 +226,53 @@ fu_engine_requirements_missing_func (gconstpointer user_data)
 }
 
 static void
+fu_engine_requirements_version_require_func (gconstpointer user_data)
+{
+	gboolean ret;
+	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuInstallTask) task = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+	const gchar *xml =
+		"<component>"
+		"  <provides>"
+		"    <firmware type=\"flashed\">12345678-1234-1234-1234-123456789012</firmware>"
+		"  </provides>"
+		"  <releases>"
+		"    <release version=\"1.2.4\">"
+		"    </release>"
+		"  </releases>"
+		"</component>";
+
+	/* set up a dummy device */
+	fu_device_set_version (device, "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version_bootloader (device, "4.5.6");
+	fu_device_set_vendor_id (device, "FFFF");
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_VERSION_CHECK_REQUIRED);
+	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
+
+	/* make the component require one thing */
+	silo = xb_silo_new_from_xml (xml, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (silo);
+	component = xb_silo_query_first (silo, "component", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (component);
+
+	/* check this fails */
+	task = fu_install_task_new (device, component);
+	ret = fu_engine_check_requirements (engine, task,
+					    FWUPD_INSTALL_FLAG_NONE,
+					    &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert (g_str_has_prefix (error->message, "device requires firmware with a version check"));
+	g_assert (!ret);
+}
+
+static void
 fu_engine_requirements_unsupported_func (gconstpointer user_data)
 {
 	gboolean ret;
@@ -439,6 +486,7 @@ fu_engine_requirements_device_func (gconstpointer user_data)
 	fu_device_set_version_bootloader (device, "4.5.6");
 	fu_device_set_vendor_id (device, "FFFF");
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_VERSION_CHECK_REQUIRED);
 	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
 
 	/* make the component require three things */
@@ -2902,6 +2950,8 @@ main (int argc, char **argv)
 			      fu_engine_requirements_func);
 	g_test_add_data_func ("/fwupd/engine{requirements-missing}", self,
 			      fu_engine_requirements_missing_func);
+	g_test_add_data_func ("/fwupd/engine{requirements-version-require}", self,
+			      fu_engine_requirements_version_require_func);
 	g_test_add_data_func ("/fwupd/engine{requirements-parent-device}", self,
 			      fu_engine_requirements_parent_device_func);
 	g_test_add_data_func ("/fwupd/engine{requirements-not-child}", self,
