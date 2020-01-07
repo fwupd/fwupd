@@ -270,6 +270,7 @@ fu_logitech_hidpp_runtime_detach (FuDevice *device, GError **error)
 {
 	FuLogitechHidPpRuntime *self = FU_UNIFYING_RUNTIME (device);
 	g_autoptr(FuLogitechHidPpHidppMsg) msg = fu_logitech_hidpp_msg_new ();
+	g_autoptr(GError) error_local = NULL;
 	msg->report_id = HIDPP_REPORT_ID_SHORT;
 	msg->device_id = HIDPP_DEVICE_ID_RECEIVER;
 	msg->sub_id = HIDPP_SUBID_SET_REGISTER;
@@ -279,9 +280,14 @@ fu_logitech_hidpp_runtime_detach (FuDevice *device, GError **error)
 	msg->data[2] = 'P';
 	msg->hidpp_version = 1;
 	msg->flags = FU_UNIFYING_HIDPP_MSG_FLAG_LONGER_TIMEOUT;
-	if (!fu_logitech_hidpp_send (self->io_channel, msg, FU_UNIFYING_DEVICE_TIMEOUT_MS, error)) {
-		g_prefix_error (error, "failed to detach to bootloader: ");
-		return FALSE;
+	if (!fu_logitech_hidpp_send (self->io_channel, msg, FU_UNIFYING_DEVICE_TIMEOUT_MS, &error_local)) {
+		if (g_error_matches (error_local, FWUPD_ERROR, FWUPD_ERROR_WRITE)) {
+			g_debug ("failed to detach to bootloader: %s", error_local->message);
+		} else {
+			g_prefix_error (&error_local, "failed to detach to bootloader: ");
+			g_propagate_error (error, g_steal_pointer (&error_local));
+			return FALSE;
+		}
 	}
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
