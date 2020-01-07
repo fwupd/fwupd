@@ -97,6 +97,7 @@ typedef enum {
  * @FWUPD_DEVICE_FLAG_DUAL_IMAGE:		Device update architecture uses A/B partitions for updates
  * @FWUPD_DEVICE_FLAG_SELF_RECOVERY:		In flashing mode device will only accept intended payloads
  * @FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE:	Device remains usable while fwupd flashes or schedules the update
+ * @FWUPD_DEVICE_FLAG_VERSION_CHECK_REQUIRED:	All firmware updates for this device require a firmware version check
  *
  * The device flags.
  **/
@@ -131,6 +132,7 @@ typedef enum {
 #define FWUPD_DEVICE_FLAG_DUAL_IMAGE		(1u << 27)	/* Since: 1.3.3 */
 #define FWUPD_DEVICE_FLAG_SELF_RECOVERY		(1u << 28)	/* Since: 1.3.3 */
 #define FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE	(1u << 29)	/* Since: 1.3.3 */
+#define FWUPD_DEVICE_FLAG_VERSION_CHECK_REQUIRED (1u << 30)	/* Since: 1.3.7 */
 #define FWUPD_DEVICE_FLAG_UNKNOWN		G_MAXUINT64	/* Since: 0.7.3 */
 typedef guint64 FwupdDeviceFlags;
 
