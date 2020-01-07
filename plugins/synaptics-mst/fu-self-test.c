@@ -48,6 +48,15 @@ _test_add_fake_devices_from_dir (FuPlugin *plugin, const gchar *path)
 	}
 }
 
+static void
+fu_plugin_synaptics_check_error (GError *error)
+{
+	if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED))
+		g_test_skip ("Skipping tests due to unsupported configuration");
+	else
+		g_assert_no_error (error);
+}
+
 /* test with no Synaptics MST devices */
 static void
 fu_plugin_synaptics_mst_none_func (void)
@@ -68,8 +77,10 @@ fu_plugin_synaptics_mst_none_func (void)
 	g_assert_no_error (error);
 	g_assert (ret);
 	ret = fu_plugin_runner_startup (plugin, &error);
-	g_assert_no_error (error);
-	g_assert (ret);
+	if (!ret) {
+		fu_plugin_synaptics_check_error (error);
+		return;
+	}
 
 	_test_add_fake_devices_from_dir (plugin, SOURCEDIR "/tests/no_devices");
 	g_assert_cmpint (devices->len, ==, 0);
@@ -95,8 +106,10 @@ fu_plugin_synaptics_mst_tb16_func (void)
 	g_assert_no_error (error);
 	g_assert (ret);
 	ret = fu_plugin_runner_startup (plugin, &error);
-	g_assert_no_error (error);
-	g_assert (ret);
+	if (!ret) {
+		fu_plugin_synaptics_check_error (error);
+		return;
+	}
 
 	_test_add_fake_devices_from_dir (plugin, SOURCEDIR "/tests/tb16_dock");
 	for (guint i = 0; i < devices->len; i++) {
