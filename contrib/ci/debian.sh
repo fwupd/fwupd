@@ -31,20 +31,6 @@ fi
 EDITOR=/bin/true dch --create --package fwupd -v $VERSION "CI Build"
 debuild --no-lintian --preserve-envvar CI --preserve-envvar CC
 
-#check lintian output
-#suppress tags that are side effects of building in docker this way
-lintian ../*changes \
-	-IE \
-	--pedantic \
-	--no-tag-display-limit \
-	--suppress-tags bad-distribution-in-changes-file \
-	--suppress-tags source-contains-unsafe-symlink \
-	--suppress-tags changelog-should-mention-nmu \
-	--suppress-tags debian-watch-file-in-native-package \
-	--suppress-tags source-nmu-has-incorrect-version-number \
-	--suppress-tags no-symbols-control-file \
-	--allow-root
-
 #if invoked outside of CI
 if [ ! -f /.dockerenv ]; then
 	echo "Not running in a container, please manually install packages"
