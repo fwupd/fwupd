@@ -271,6 +271,7 @@ fu_remote_list_set_key_value (FuRemoteList *self,
 		g_prefix_error (error, "failed to load %s: ", filename);
 		return FALSE;
 	}
+	fu_remote_list_emit_changed (self);
 	return TRUE;
 }
 
