@@ -41,7 +41,7 @@ fu_synaptics_mst_check_amdgpu_safe (GError **error)
 		if (g_str_has_prefix (lines[i], "amdgpu ")) {
 			g_set_error_literal (error,
 					     FWUPD_ERROR,
-					     FWUPD_ERROR_INTERNAL,
+					     FWUPD_ERROR_NOT_SUPPORTED,
 					     "amdgpu has known issues with synaptics_mst");
 			return FALSE;
 		}

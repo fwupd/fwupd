@@ -68,6 +68,10 @@ fu_plugin_synaptics_mst_none_func (void)
 	g_assert_no_error (error);
 	g_assert (ret);
 	ret = fu_plugin_runner_startup (plugin, &error);
+	if (!ret && g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+		g_test_skip ("Skipping tests due to unsupported configuration");
+		return;
+	}
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -95,6 +99,10 @@ fu_plugin_synaptics_mst_tb16_func (void)
 	g_assert_no_error (error);
 	g_assert (ret);
 	ret = fu_plugin_runner_startup (plugin, &error);
+	if (!ret && g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+		g_test_skip ("Skipping tests due to unsupported configuration");
+		return;
+	}
 	g_assert_no_error (error);
 	g_assert (ret);
 
