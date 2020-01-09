@@ -7,9 +7,9 @@
 import os
 import subprocess
 import sys
-import xml.etree.ElementTree as etree
 import tempfile
 import shutil
+from generate_dependencies import parse_dependencies
 
 def get_container_cmd():
     '''return docker or podman as container manager'''
@@ -18,34 +18,6 @@ def get_container_cmd():
         return 'docker'
     if shutil.which('podman'):
         return 'podman'
-
-def parse_dependencies(OS, SUBOS, requested_type):
-    deps = []
-    dep = ''
-    tree = etree.parse(os.path.join(directory, "dependencies.xml"))
-    root = tree.getroot()
-    for child in root:
-        if not "type" in child.attrib or not "id" in child.attrib:
-            continue
-        for distro in child:
-            if not "id" in distro.attrib:
-                continue
-            if distro.attrib["id"] != OS:
-                continue
-            packages = distro.findall("package")
-            for package in packages:
-                if SUBOS:
-                    if not 'variant' in package.attrib:
-                        continue
-                    if package.attrib['variant'] != SUBOS:
-                        continue
-                if package.text:
-                    dep = package.text
-                else:
-                    dep = child.attrib["id"]
-                if child.attrib["type"] == requested_type and dep:
-                    deps.append(dep)
-    return deps
 
 directory = os.path.dirname(sys.argv[0])
 TARGET=os.getenv('OS')
