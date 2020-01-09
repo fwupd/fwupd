@@ -104,6 +104,8 @@ Each distribution will have ***package*** elements and ***control*** elements.
 * ___inclusive___ elements represent an inclusive list of architectures to be installed on
 * ___exclusive___ elements represent an exclusive list of architectures to not be installed on
 
+For convenience there is also a standalone script __generate_dependencies.py__ that parses ___dependencies.xml___.
+
 Dockerfile.in
 -------------
 The ***Dockerfile.in*** file will be used as a template to build the container.  No hardcoded dependencies should be put in this file.  They should be stored in ***dependencies.xml***.
