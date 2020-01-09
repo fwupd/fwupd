@@ -26,7 +26,7 @@ fu_tpm_eventlog_pcr_to_string (gint pcr)
 	if (pcr == 6)
 		return "State transitions and wake events";
 	if (pcr == 7)
-		return "Platform manufacturer specifc measurements";
+		return "Platform manufacturer specific measurements";
 	if (pcr >= 8 && pcr <= 15)
 		return "Static operating system";
 	if (pcr == 16)
