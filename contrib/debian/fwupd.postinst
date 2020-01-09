@@ -9,3 +9,24 @@ if dpkg-maintscript-helper supports rm_conffile 2>/dev/null; then
 	dpkg-maintscript-helper rm_conffile \
 		/etc/fwupd/remotes.d/fwupd.conf 1.2.7~ -- "$@"
 fi
+
+# Clean up from fwupdate->fwupd transition
+# This can be removed after bullseye and focal are released
+EFIDIR=$(dpkg-vendor --query vendor | awk '{ print tolower($$0) }')
+if [ "${DPKG_MAINTSCRIPT_ARCH}" = "amd64" ]; then
+	EFI_NAME=x64
+elif [ "${DPKG_MAINTSCRIPT_ARCH}" = "i386" ]; then
+	EFI_NAME=ia32
+elif [ "${DPKG_MAINTSCRIPT_ARCH}" = "arm64" ]; then
+	EFI_NAME=aa64
+elif [ "${DPKG_MAINTSCRIPT_ARCH}" = "armhf" ]; then
+	EFI_NAME=arm
+fi
+rm -f /boot/efi/EFI/$EFIDIR/fwup$EFI_NAME.efi
+rm -f /var/lib/fwupdate/done
+rm -f /var/cache/fwupdate/done
+for dir in /var/cache/fwupdate /var/lib/fwupdate; do
+	if [ -d $dir ]; then
+	        rmdir --parents --ignore-fail-on-non-empty $dir || true
+	fi
+done
