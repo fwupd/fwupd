@@ -2508,7 +2508,7 @@ main (int argc, char *argv[])
 		     fu_util_report_history);
 	fu_util_cmd_array_add (cmd_array,
 		     "install",
-		     "FILE [ID]",
+		     "FILE [DEVICE-ID]",
 		     /* TRANSLATORS: command description */
 		     _("Install a firmware file on this hardware"),
 		     fu_util_install);
@@ -2532,19 +2532,19 @@ main (int argc, char *argv[])
 		     fu_util_update);
 	fu_util_cmd_array_add (cmd_array,
 		     "verify",
-		     "[DEVICE_ID]",
+		     "[DEVICE-ID]",
 		     /* TRANSLATORS: command description */
 		     _("Checks cryptographic hash matches firmware"),
 		     fu_util_verify);
 	fu_util_cmd_array_add (cmd_array,
 		     "unlock",
-		     "DEVICE_ID",
+		     "DEVICE-ID",
 		     /* TRANSLATORS: command description */
 		     _("Unlocks the device for firmware access"),
 		     fu_util_unlock);
 	fu_util_cmd_array_add (cmd_array,
 		     "clear-results",
-		     "DEVICE_ID",
+		     "DEVICE-ID",
 		     /* TRANSLATORS: command description */
 		     _("Clears the results from the last update"),
 		     fu_util_clear_results);
@@ -2556,13 +2556,13 @@ main (int argc, char *argv[])
 		     fu_util_clear_offline);
 	fu_util_cmd_array_add (cmd_array,
 		     "get-results",
-		     "DEVICE_ID",
+		     "DEVICE-ID",
 		     /* TRANSLATORS: command description */
 		     _("Gets the results from the last update"),
 		     fu_util_get_results);
 	fu_util_cmd_array_add (cmd_array,
 		     "get-releases",
-		     "[DEVICE_ID]",
+		     "[DEVICE-ID]",
 		     /* TRANSLATORS: command description */
 		     _("Gets the releases for a device"),
 		     fu_util_get_releases);
@@ -2574,19 +2574,19 @@ main (int argc, char *argv[])
 		     fu_util_get_remotes);
 	fu_util_cmd_array_add (cmd_array,
 		     "downgrade",
-		     "[DEVICE_ID]",
+		     "[DEVICE-ID]",
 		     /* TRANSLATORS: command description */
 		     _("Downgrades the firmware on a device"),
 		     fu_util_downgrade);
 	fu_util_cmd_array_add (cmd_array,
 		     "refresh",
-		     "[FILE FILE_SIG REMOTE_ID]",
+		     "[FILE FILE_SIG REMOTE-ID]",
 		     /* TRANSLATORS: command description */
 		     _("Refresh metadata from remote server"),
 		     fu_util_refresh);
 	fu_util_cmd_array_add (cmd_array,
 		     "verify-update",
-		     "[DEVICE_ID]",
+		     "[DEVICE-ID]",
 		     /* TRANSLATORS: command description */
 		     _("Update the stored cryptographic hash with current ROM contents"),
 		     fu_util_verify_update);

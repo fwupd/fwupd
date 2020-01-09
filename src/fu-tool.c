@@ -1738,7 +1738,7 @@ main (int argc, char *argv[])
 		     fu_util_install_blob);
 	fu_util_cmd_array_add (cmd_array,
 		     "install",
-		     "FILE [ID]",
+		     "FILE [DEVICE-ID]",
 		     /* TRANSLATORS: command description */
 		     _("Install a firmware file on this hardware"),
 		     fu_util_install);
@@ -1787,7 +1787,7 @@ main (int argc, char *argv[])
 		     fu_util_self_sign);
 	fu_util_cmd_array_add (cmd_array,
 		     "verify-update",
-		     "[DEVICE_ID]",
+		     "[DEVICE-ID]",
 		     /* TRANSLATORS: command description */
 		     _("Update the stored metadata with current contents"),
 		     fu_util_verify_update);
@@ -1799,7 +1799,7 @@ main (int argc, char *argv[])
 		     fu_util_firmware_read);
 	fu_util_cmd_array_add (cmd_array,
 		     "firmware-parse",
-		     "FILENAME [FIRMWARE_TYPE]",
+		     "FILENAME [FIRMWARE-TYPE]",
 		     /* TRANSLATORS: command description */
 		     _("Parse and show details about a firmware file"),
 		     fu_util_firmware_parse);
