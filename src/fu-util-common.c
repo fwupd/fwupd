@@ -909,7 +909,17 @@ fu_util_convert_description (const gchar *xml, GError **error)
 	return fu_common_strstrip (str->str);
 }
 
-static gchar *
+/**
+ * fu_util_time_to_str:
+ * @tmp: the time in seconds
+ *
+ * Converts a timestamp to a 'pretty' translated string
+ *
+ * Return value: (transfer full): A string
+ *
+ * Since: 1.3.7
+ **/
+gchar *
 fu_util_time_to_str (guint64 tmp)
 {
 	g_return_val_if_fail (tmp != 0, NULL);
