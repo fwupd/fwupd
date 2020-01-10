@@ -1315,6 +1315,27 @@ fu_util_download_metadata_enable_lvfs (FuUtilPrivate *priv, GError **error)
 }
 
 static gboolean
+fu_util_check_oldest_remote (FuUtilPrivate *priv, guint64 *age_oldest, GError **error)
+{
+	g_autoptr(GPtrArray) remotes = NULL;
+
+	/* get the age of the oldest enabled remotes */
+	remotes = fwupd_client_get_remotes (priv->client, NULL, error);
+	if (remotes == NULL)
+		return FALSE;
+	for (guint i = 0; i < remotes->len; i++) {
+		FwupdRemote *remote = g_ptr_array_index (remotes, i);
+		if (!fwupd_remote_get_enabled (remote))
+			continue;
+		if (fwupd_remote_get_kind (remote) != FWUPD_REMOTE_KIND_DOWNLOAD)
+			continue;
+		if (fwupd_remote_get_age (remote) > *age_oldest)
+			*age_oldest = fwupd_remote_get_age (remote);
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 {
 	gboolean download_remote_enabled = FALSE;
@@ -1322,6 +1343,26 @@ fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 	g_autoptr(GPtrArray) devs = NULL;
 	g_autoptr(GPtrArray) remotes = NULL;
 	g_autoptr(GString) str = g_string_new (NULL);
+
+	/* metadata refreshed recently */
+	if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+		guint64 age_oldest = 0;
+		const guint64 age_limit_hours = 24;
+
+		if (!fu_util_check_oldest_remote (priv, &age_oldest, error))
+			return FALSE;
+		if (age_oldest < 60 * 60 * age_limit_hours) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     /* TRANSLATORS: error message for a user who ran fwupdmgr refresh recently
+				        %1 is an already translated timestamp such as 6 hours or 15 seconds */
+				     "Firmware metadata last refresh: %s ago. "
+				     "Use --force to refresh again.",
+				     fu_util_time_to_str (age_oldest));
+			return FALSE;
+		}
+	}
 
 	remotes = fwupd_client_get_remotes (priv->client, NULL, error);
 	if (remotes == NULL)
@@ -1553,7 +1594,6 @@ fu_util_unlock (FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_perhaps_refresh_remotes (FuUtilPrivate *priv, GError **error)
 {
-	g_autoptr(GPtrArray) remotes = NULL;
 	guint64 age_oldest = 0;
 	const guint64 age_limit_days = 30;
 
@@ -1563,19 +1603,8 @@ fu_util_perhaps_refresh_remotes (FuUtilPrivate *priv, GError **error)
 		return TRUE;
 	}
 
-	/* get the age of the oldest enabled remotes */
-	remotes = fwupd_client_get_remotes (priv->client, NULL, error);
-	if (remotes == NULL)
+	if (!fu_util_check_oldest_remote (priv, &age_oldest, error))
 		return FALSE;
-	for (guint i = 0; i < remotes->len; i++) {
-		FwupdRemote *remote = g_ptr_array_index (remotes, i);
-		if (!fwupd_remote_get_enabled (remote))
-			continue;
-		if (fwupd_remote_get_kind (remote) != FWUPD_REMOTE_KIND_DOWNLOAD)
-			continue;
-		if (fwupd_remote_get_age (remote) > age_oldest)
-			age_oldest = fwupd_remote_get_age (remote);
-	}
 
 	/* metadata is new enough */
 	if (age_oldest < 60 * 60 * 24 * age_limit_days)
