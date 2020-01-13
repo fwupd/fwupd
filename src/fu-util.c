@@ -77,8 +77,6 @@ struct FuUtilPrivate {
 	FwupdDeviceFlags	 filter_exclude;
 };
 
-static GFileOutputStream *log_output = NULL;
-
 static gboolean	fu_util_report_history (FuUtilPrivate *priv, gchar **values, GError **error);
 static gboolean	fu_util_download_file	(FuUtilPrivate	*priv,
 					 SoupURI	*uri,
@@ -2385,33 +2383,6 @@ fu_util_check_polkit_actions (GError **error)
 }
 
 static void
-fu_util_log_output (const gchar *str)
-{
-	if (log_output != NULL) {
-		g_autoptr(GError) error_local = NULL;
-		if (g_output_stream_write (G_OUTPUT_STREAM (log_output),
-					   str, strlen(str),
-					   NULL, &error_local) <0)
-			g_printerr ("%s\n", error_local->message);
-	}
-}
-
-static void
-fu_util_close_log (void)
-{
-	if (log_output != NULL) {
-		g_autoptr(GError) error_local = NULL;
-		if (!g_output_stream_close (G_OUTPUT_STREAM (log_output),
-					    NULL,
-					    &error_local)) {
-			g_printerr ("%s\n", error_local->message);
-			return;
-		}
-		g_object_unref (log_output);
-	}
-}
-
-static void
 fu_util_display_help (FuUtilPrivate *priv)
 {
 	g_autofree gchar *tmp = NULL;
@@ -2463,9 +2434,6 @@ main (int argc, char *argv[])
 		{ "assume-yes", 'y', 0, G_OPTION_ARG_NONE, &priv->assume_yes,
 			/* TRANSLATORS: command line option */
 			_("Answer yes to all questions"), NULL },
-		{ "log", '\0', 0, G_OPTION_ARG_STRING, &log,
-			/* TRANSLATORS: command line option */
-			_("Log output to FILE (typically for scripting use)"), NULL },
 		{ "sign", '\0', 0, G_OPTION_ARG_NONE, &priv->sign,
 			/* TRANSLATORS: command line option */
 			_("Sign the uploaded data with the client certificate"), NULL },
@@ -2710,8 +2678,7 @@ main (int argc, char *argv[])
 	}
 
 	/* non-TTY consoles cannot answer questions */
-	if (log != NULL ||
-	    isatty (fileno (stdout)) == 0) {
+	if (isatty (fileno (stdout)) == 0) {
 		priv->no_unreported_check = TRUE;
 		priv->no_metadata_check = TRUE;
 		priv->no_reboot_check = TRUE;
@@ -2808,27 +2775,6 @@ main (int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	/* configure stdout redirection */
-	if (log != NULL) {
-		g_autoptr(GFile) file = NULL;
-		g_autofree gchar *target_fname = NULL;
-		/* If running under systemd unit, use the directory as a base */
-		if (g_getenv ("RUNTIME_DIRECTORY") != NULL) {
-			target_fname = g_build_filename (g_getenv ("RUNTIME_DIRECTORY"),
-							 log,
-							 NULL);
-		} else {
-			target_fname = g_steal_pointer (&log);
-		}
-		file = g_file_new_for_commandline_arg (target_fname);
-		log_output = g_file_append_to (file, G_FILE_CREATE_NONE, NULL, &error);
-		if (log_output == NULL) {
-			g_printerr ("%s\n", error->message);
-			return EXIT_FAILURE;
-		}
-		g_set_print_handler (fu_util_log_output);
-	}
-
 	/* run the specified command */
 	ret = fu_util_cmd_array_run (cmd_array, priv, argv[1], (gchar**) &argv[2], &error);
 	if (!ret) {
@@ -2841,7 +2787,6 @@ main (int argc, char *argv[])
 	} else {
 		ret = EXIT_SUCCESS;
 	}
-	fu_util_close_log ();
 
 	return ret;
 }

@@ -5,9 +5,7 @@ After=network.target network-online.target systemd-networkd.service NetworkManag
 
 [Service]
 Type=oneshot
-RuntimeDirectory=@motd_dir@
 CacheDirectory=fwupdmgr
-RuntimeDirectoryPreserve=yes
 StandardError=null
 DynamicUser=yes
 RestrictAddressFamilies=AF_NETLINK AF_UNIX AF_INET AF_INET6
@@ -17,4 +15,3 @@ ProtectControlGroups=yes
 RestrictRealtime=yes
 SuccessExitStatus=2
 ExecStart=@bindir@/fwupdmgr refresh --no-metadata-check
-@dynamic_options@

@@ -397,6 +397,12 @@ endif
 conf.set_quoted('GETTEXT_PACKAGE', meson.project_name())
 conf.set_quoted('PACKAGE_NAME', meson.project_name())
 conf.set_quoted('VERSION', meson.project_version())
+
+motd_file = '85-fwupd'
+motd_dir = 'motd.d'
+conf.set_quoted('MOTD_FILE', motd_file)
+conf.set_quoted('MOTD_DIR', motd_dir)
+
 configure_file(
   output : 'config.h',
   configuration : conf
