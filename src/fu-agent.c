@@ -71,6 +71,48 @@ fu_util_add_devices_json (FuUtilPrivate *priv, JsonBuilder *builder, GError **er
 }
 
 static gboolean
+fu_util_add_updates_json (FuUtilPrivate *priv, JsonBuilder *builder, GError **error)
+{
+	g_autoptr(GPtrArray) devices = NULL;
+
+	/* get devices from daemon */
+	devices = fwupd_client_get_devices (priv->client, NULL, error);
+	if (devices == NULL)
+		return FALSE;
+	json_builder_set_member_name (builder, "Devices");
+	json_builder_begin_array (builder);
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index (devices, i);
+		g_autoptr(GPtrArray) rels = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		/* not going to have results, so save a D-Bus round-trip */
+		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
+			continue;
+
+		/* get the releases for this device and filter for validity */
+		rels = fwupd_client_get_upgrades (priv->client,
+						  fwupd_device_get_id (dev),
+						  NULL, &error_local);
+		if (rels == NULL) {
+			g_debug ("no upgrades: %s", error_local->message);
+			continue;
+		}
+		for (guint j = 0; j < rels->len; j++) {
+			FwupdRelease *rel = g_ptr_array_index (rels, j);
+			fwupd_device_add_release (dev, rel);
+		}
+
+		/* add to builder */
+		json_builder_begin_object (builder);
+		fwupd_device_to_json (dev, builder);
+		json_builder_end_object (builder);
+	}
+	json_builder_end_array (builder);
+	return TRUE;
+}
+
+static gboolean
 fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autofree gchar *data = NULL;
@@ -91,6 +133,49 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 	builder = json_builder_new ();
 	json_builder_begin_object (builder);
 	if (!fu_util_add_devices_json (priv, builder, error))
+		return FALSE;
+	json_builder_end_object (builder);
+
+	/* export as a string */
+	json_root = json_builder_get_root (builder);
+	json_generator = json_generator_new ();
+	json_generator_set_pretty (json_generator, TRUE);
+	json_generator_set_root (json_generator, json_root);
+	data = json_generator_to_data (json_generator, NULL);
+	if (data == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "Failed to convert to JSON string");
+		return FALSE;
+	}
+
+	/* just print */
+	g_print ("%s\n", data);
+	return TRUE;
+}
+
+static gboolean
+fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autofree gchar *data = NULL;
+	g_autoptr(JsonBuilder) builder = NULL;
+	g_autoptr(JsonGenerator) json_generator = NULL;
+	g_autoptr(JsonNode) json_root = NULL;
+
+	/* check args */
+	if (g_strv_length (values) != 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments");
+		return FALSE;
+	}
+
+	/* create header */
+	builder = json_builder_new ();
+	json_builder_begin_object (builder);
+	if (!fu_util_add_updates_json (priv, builder, error))
 		return FALSE;
 	json_builder_end_object (builder);
 
@@ -181,6 +266,11 @@ main (int argc, char *argv[])
 			       /* TRANSLATORS: command description */
 			       _("Get all devices and possible releases"),
 			       fu_util_get_devices);
+	fu_util_cmd_array_add (cmd_array,
+			       "get-updates,get-upgrades", NULL,
+			       /* TRANSLATORS: command description */
+			       _("Gets the list of updates for connected hardware"),
+			       fu_util_get_updates);
 
 	/* sort by command name */
 	fu_util_cmd_array_sort (cmd_array);
