@@ -91,6 +91,7 @@ endif
 if (get_option('systemd') or get_option('elogind')) and build_daemon
   con2 = configuration_data()
   con2.set('libexecdir', libexecdir)
+  con2.set('motd_dir', motd_dir)
 
   # replace @libexecdir@
   configure_file(
