@@ -295,7 +295,7 @@ fu_common_extract_archive_entry (struct archive_entry *entry, const gchar *dir)
  * @dir: a directory name to extract to
  * @error: A #GError, or %NULL
  *
- * Extracts an achive to a directory.
+ * Extracts an archive to a directory.
  *
  * Returns: %TRUE for success
  *

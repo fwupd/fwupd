@@ -207,7 +207,7 @@ fu_tpm_device_setup (FuDevice *device, GError **error)
 	id4 = g_strdup_printf ("TPM\\VEN_%s&MOD_%s&VER_%s", manufacturer, model, family);
 	fu_device_add_instance_id (device, id4);
 
-	/* enforce vendors can only ship updates for thier own hardware */
+	/* enforce vendors can only ship updates for their own hardware */
 	vendor_id = g_strdup_printf ("TPM:%s", manufacturer);
 	fu_device_set_vendor_id (device, vendor_id);
 	tmp = fu_tpm_device_convert_manufacturer (manufacturer);

@@ -25,7 +25,7 @@
  * @plugin: A #FuPlugin
  *
  * Initializes the plugin.
- * Sets up any static data structures fo the plugin.
+ * Sets up any static data structures for the plugin.
  * Most plugins should call fu_plugin_set_build_hash in here.
  *
  * Since: 0.8.0
