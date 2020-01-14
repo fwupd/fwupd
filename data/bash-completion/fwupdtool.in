@@ -3,7 +3,7 @@ _fwupdtool_cmd_list=(
 	'build-firmware'
 	'firmware-parse'
 	'get-updates'
-	'get-updgrades'
+	'get-upgrades'
 	'get-details'
 	'get-firmware-types'
 	'get-device-flags'
