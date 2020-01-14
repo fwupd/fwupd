@@ -493,7 +493,7 @@ fu_plugin_device_add (FuPlugin *self, FuDevice *device)
  *
  * Plugins do not have to call this manually as this is done automatically
  * when using fu_plugin_device_add(). They may wish to use this manually
- * if for intance the coldplug should be ignored based on the metadata
+ * if for instance the coldplug should be ignored based on the metadata
  * set from other plugins.
  *
  * Since: 0.9.7
@@ -953,7 +953,7 @@ fu_plugin_set_smbios (FuPlugin *self, FuSmbios *smbios)
  * @self: A #FuPlugin
  * @duration: A delay in milliseconds
  *
- * Set the minimum time that should be waited inbetween the call to
+ * Set the minimum time that should be waited in-between the call to
  * fu_plugin_coldplug_prepare() and fu_plugin_coldplug(). This is usually going
  * to be the minimum hardware initialisation time from a datasheet.
  *

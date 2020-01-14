@@ -89,7 +89,7 @@ fu_logitech_hidpp_bootloader_parse_requests (FuLogitechHidPpBootloader *self, GB
 				break;
 			case 0x03: /* start segment address */
 				/* this is used to specify the start address,
-				it is doesn't mater in this context so we can
+				it is doesn't matter in this context so we can
 				safely ignore it */
 				continue;
 			case 0x04: /* extended linear address */
@@ -104,7 +104,7 @@ fu_logitech_hidpp_bootloader_parse_requests (FuLogitechHidPpBootloader *self, GB
 				continue;
 			case 0x05: /* start linear address */
 				/* this is used to specify the start address,
-				it is doesn't mater in this context so we can
+				it is doesn't matter in this context so we can
 				safely ignore it */
 				continue;
 			case 0xFD: /* custom - vendor */

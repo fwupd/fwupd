@@ -992,7 +992,7 @@ fu_device_has_guid (FuDevice *self, const gchar *guid)
  * @instance_id: A Instance ID, e.g. `WacomAES`
  * @flags: A #FuDeviceInstanceFlags
  *
- * Adds an instance ID with all paramters set
+ * Adds an instance ID with all parameters set
  *
  *
  * Since: 1.2.9

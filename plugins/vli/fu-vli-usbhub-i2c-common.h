@@ -27,8 +27,8 @@ typedef enum {
 #define FU_VLI_USBHUB_I2C_CMD_UPGRADE		0x34
 #define FU_VLI_USBHUB_I2C_CMD_READ_VERSIONS	0x40
 
-#define FU_VLI_USBHUB_I2C_R_VDR			0xa0	/* read vendor comand */
-#define FU_VLI_USBHUB_I2C_W_VDR			0xb0	/* write vendor comand */
+#define FU_VLI_USBHUB_I2C_R_VDR			0xa0	/* read vendor command */
+#define FU_VLI_USBHUB_I2C_W_VDR			0xb0	/* write vendor command */
 
 gboolean	 fu_vli_usbhub_i2c_check_status		(FuVliUsbhubI2cStatus	 status,
 							 GError			**error);

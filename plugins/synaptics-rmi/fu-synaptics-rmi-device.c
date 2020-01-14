@@ -708,7 +708,7 @@ fu_synaptics_rmi_device_poll_wait (FuSynapticsRmiDevice *self, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
 
-	/* try to poll every 20ms fro up to 400ms */
+	/* try to poll every 20ms for up to 400ms */
 	for (guint i = 0; i < 20; i++) {
 		g_usleep (1000 * 20);
 		g_clear_error (&error_local);

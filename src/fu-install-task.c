@@ -240,7 +240,7 @@ fu_install_task_check_requirements (FuInstallTask *self,
 		return FALSE;
 	}
 
-	/* device requries a version check */
+	/* device requires a version check */
 	if (fu_device_has_flag (self->device, FWUPD_DEVICE_FLAG_VERSION_CHECK_REQUIRED)) {
 		if (!fu_install_task_check_requirements_version_check (self, error)) {
 			g_prefix_error (error, "device requires firmware with a version check: ");
