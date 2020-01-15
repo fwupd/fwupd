@@ -3,11 +3,12 @@ set -e
 #prep
 export LC_ALL=C.UTF-8
 export DESTDIR=`pwd`/dist
-build=`pwd`/build
+build=`pwd`/build-win32
 rm -rf $DESTDIR $build
 
 #build
-mkdir -p $build $target && cd $build
+mkdir -p $build $DESTDIR && cd $build
+echo $(../contrib/get-version.py) > $DESTDIR/VERSION
 meson .. \
     --cross-file=../contrib/mingw64.cross \
     --prefix=/ \
@@ -43,6 +44,10 @@ ninja -v
 #prepare archive to run on Windows
 ninja -v install
 cd $DESTDIR
+
+# create a setup binary
+mkdir -p $DESTDIR/setup
+makensis -NOCD $build/contrib/setup-win32.nsi
 
 #so that it's actually executable
 cp /usr/x86_64-w64-mingw32/sys-root/mingw/bin/*.dll .
