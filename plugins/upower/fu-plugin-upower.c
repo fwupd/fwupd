@@ -49,6 +49,14 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 		g_prefix_error (error, "failed to connect to upower: ");
 		return FALSE;
 	}
+	if (g_dbus_proxy_get_name_owner (data->upower_proxy) == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "no owner for %s",
+			     g_dbus_proxy_get_name (data->upower_proxy));
+		return FALSE;
+	}
 	data->display_proxy =
 		g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
 					       G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS,
