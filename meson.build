@@ -442,3 +442,13 @@ endif
 if get_option('systemd') and build_daemon
   meson.add_install_script('meson_post_install.sh', systemdunitdir, localstatedir)
 endif
+
+makensis = find_program('makensis', required : false)
+if makensis.found()
+  run_target(
+    'makensis',
+    command: [
+      makensis,
+      join_paths(meson.source_root(), 'contrib', 'setup-win32.nsi'),
+  ])
+endif
