@@ -50,7 +50,7 @@ fu_firmware_image_get_version (FuFirmwareImage *self)
 /**
  * fu_firmware_image_set_version:
  * @self: A #FuFirmwareImage
- * @version: A string version, or %NULL
+ * @version: (nullable): A string version, or %NULL
  *
  * Sets an optional version that represents the firmware image.
  *
@@ -68,7 +68,7 @@ fu_firmware_image_set_version (FuFirmwareImage *self, const gchar *version)
 /**
  * fu_firmware_image_set_id:
  * @self: a #FuPlugin
- * @id: image ID, e.g. "config"
+ * @id: (nullable): image ID, e.g. "config"
  *
  * Since: 1.3.1
  **/
@@ -77,7 +77,6 @@ fu_firmware_image_set_id (FuFirmwareImage *self, const gchar *id)
 {
 	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_FIRMWARE_IMAGE (self));
-	g_return_if_fail (id != NULL);
 	g_free (priv->id);
 	priv->id = g_strdup (id);
 }
