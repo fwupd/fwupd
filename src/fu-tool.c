@@ -1658,6 +1658,11 @@ main (int argc, char *argv[])
 		{ NULL}
 	};
 
+#ifdef _WIN32
+	/* workaround Windows setting the codepage to 1252 */
+	g_setenv ("LANG", "C.UTF-8", FALSE);
+#endif
+
 	setlocale (LC_ALL, "");
 
 	bindtextdomain (GETTEXT_PACKAGE, FWUPD_LOCALEDIR);
