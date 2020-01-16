@@ -12,6 +12,9 @@ if get_option('tests')
 endif
 if build_daemon
   subdir('installed-tests')
+endif
+
+if build_standalone
   install_data(['daemon.conf'],
     install_dir : join_paths(sysconfdir, 'fwupd')
   )
