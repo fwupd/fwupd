@@ -17,16 +17,28 @@ fwup_delete_variable(CHAR16 *name, EFI_GUID *guid)
 {
 	EFI_STATUS rc;
 	UINT32 attrs = 0;
+	UINTN size = 0;
+	_cleanup_free VOID *buf = NULL;
 
 	/* get the attrs so we can delete it */
-	rc = uefi_call_wrapper(RT->GetVariable, 5, name, guid, &attrs, NULL, NULL);
+	rc = uefi_call_wrapper(RT->GetVariable, 5, name, guid, &attrs, &size, NULL);
 	if (EFI_ERROR(rc)) {
-		if (rc == EFI_NOT_FOUND) {
+		if (rc == EFI_BUFFER_TOO_SMALL) {
+			buf = fwup_malloc(size);
+			if (buf == NULL)
+				return EFI_OUT_OF_RESOURCES;
+			rc = uefi_call_wrapper(RT->GetVariable, 5, name, guid, &attrs, &size, buf);
+			if (EFI_ERROR(rc)) {
+				fwup_debug(L"Could not get attr: %r", rc);
+				return rc;
+			}
+		} else if (rc == EFI_NOT_FOUND) {
 			fwup_debug(L"Not deleting variable '%s' as not found", name);
 			return EFI_SUCCESS;
+		} else {
+			fwup_debug(L"Could not get variable '%s' for delete: %r", name, rc);
+			return rc;
 		}
-		fwup_debug(L"Could not get variable '%s' for delete: %r", name, rc);
-		return rc;
 	}
 	return uefi_call_wrapper(RT->SetVariable, 5, name, guid, attrs, 0, NULL);
 }
