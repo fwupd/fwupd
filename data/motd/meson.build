@@ -6,7 +6,7 @@ if get_option('systemd')
     install_dir: systemdsystempresetdir)
   install_data(['fwupd-refresh.service'],
     install_dir: systemdunitdir)
-  motd_fullpath = join_paths ('/run', motd_dir, motd_file)
+  motd_fullpath = join_paths ('/run', motd_dir, 'fwupd', motd_file)
 else
   motd_fullpath = join_paths (localstatedir, motd_dir, motd_file)
 endif
