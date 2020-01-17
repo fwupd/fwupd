@@ -1972,7 +1972,7 @@ fu_engine_update_metadata (FuEngine *self, const gchar *remote_id,
 		return FALSE;
 
 	/* read signature */
-	bytes_sig = g_input_stream_read_bytes (stream_sig, 0x800, NULL, error);
+	bytes_sig = g_input_stream_read_bytes (stream_sig, 0x100000, NULL, error);
 	if (bytes_sig == NULL)
 		return FALSE;
 
