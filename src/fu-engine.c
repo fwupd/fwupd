@@ -2885,7 +2885,6 @@ fu_engine_remote_list_changed_cb (FuRemoteList *remote_list, FuEngine *self)
 	fu_engine_emit_changed (self);
 }
 
-#ifdef HAVE_GIO_UNIX
 static FuKeyringResult *
 fu_engine_get_existing_keyring_result (FuEngine *self,
 				       FuKeyring *kr,
@@ -2903,45 +2902,33 @@ fu_engine_get_existing_keyring_result (FuEngine *self,
 	return fu_keyring_verify_data (kr, blob, blob_sig,
 				       FU_KEYRING_VERIFY_FLAG_NONE, error);
 }
-#endif
 
 /**
- * fu_engine_update_metadata:
+ * fu_engine_update_metadata_bytes:
  * @self: A #FuEngine
  * @remote_id: A remote ID, e.g. `lvfs`
- * @fd: file descriptor of the metadata
- * @fd_sig: file descriptor of the metadata signature
+ * @bytes_raw: Blob of metadata
+ * @bytes_sig: Blob of metadata signature
  * @error: A #GError, or %NULL
  *
  * Updates the metadata for a specific remote.
  *
- * Note: this will close the fds when done
- *
  * Returns: %TRUE for success
  **/
 gboolean
-fu_engine_update_metadata (FuEngine *self, const gchar *remote_id,
-			   gint fd, gint fd_sig, GError **error)
+fu_engine_update_metadata_bytes (FuEngine *self, const gchar *remote_id,
+			        GBytes *bytes_raw, GBytes *bytes_sig, GError **error)
 {
-#ifdef HAVE_GIO_UNIX
 	FwupdKeyringKind keyring_kind;
 	FwupdRemote *remote;
-	g_autoptr(GBytes) bytes_raw = NULL;
-	g_autoptr(GBytes) bytes_sig = NULL;
-	g_autoptr(GInputStream) stream_fd = NULL;
-	g_autoptr(GInputStream) stream_sig = NULL;
 	g_autofree gchar *pki_dir = NULL;
 	g_autofree gchar *sysconfdir = NULL;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
 	g_return_val_if_fail (remote_id != NULL, FALSE);
-	g_return_val_if_fail (fd > 0, FALSE);
-	g_return_val_if_fail (fd_sig > 0, FALSE);
+	g_return_val_if_fail (bytes_raw != NULL, FALSE);
+	g_return_val_if_fail (bytes_sig != NULL, FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-	/* ensures the fd's are closed on error */
-	stream_fd = g_unix_input_stream_new (fd, TRUE);
-	stream_sig = g_unix_input_stream_new (fd_sig, TRUE);
 
 	/* check remote is valid */
 	remote = fu_remote_list_get_by_id (self->remote_list, remote_id);
@@ -2959,16 +2946,6 @@ fu_engine_update_metadata (FuEngine *self, const gchar *remote_id,
 			     "remote %s not enabled", remote_id);
 		return FALSE;
 	}
-
-	/* read the entire file into memory */
-	bytes_raw = g_input_stream_read_bytes (stream_fd, 0x100000, NULL, error);
-	if (bytes_raw == NULL)
-		return FALSE;
-
-	/* read signature */
-	bytes_sig = g_input_stream_read_bytes (stream_sig, 0x800, NULL, error);
-	if (bytes_sig == NULL)
-		return FALSE;
 
 	/* verify file */
 	keyring_kind = fwupd_remote_get_keyring_kind (remote);
@@ -3041,7 +3018,56 @@ fu_engine_update_metadata (FuEngine *self, const gchar *remote_id,
 		return FALSE;
 	fu_engine_emit_changed (self);
 	return TRUE;
+}
 
+/**
+ * fu_engine_update_metadata:
+ * @self: A #FuEngine
+ * @remote_id: A remote ID, e.g. `lvfs`
+ * @fd: file descriptor of the metadata
+ * @fd_sig: file descriptor of the metadata signature
+ * @error: A #GError, or %NULL
+ *
+ * Updates the metadata for a specific remote.
+ *
+ * Note: this will close the fds when done
+ *
+ * Returns: %TRUE for success
+ **/
+gboolean
+fu_engine_update_metadata (FuEngine *self, const gchar *remote_id,
+			   gint fd, gint fd_sig, GError **error)
+{
+#ifdef HAVE_GIO_UNIX
+	g_autoptr(GBytes) bytes_raw = NULL;
+	g_autoptr(GBytes) bytes_sig = NULL;
+	g_autoptr(GInputStream) stream_fd = NULL;
+	g_autoptr(GInputStream) stream_sig = NULL;
+
+	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
+	g_return_val_if_fail (remote_id != NULL, FALSE);
+	g_return_val_if_fail (fd > 0, FALSE);
+	g_return_val_if_fail (fd_sig > 0, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* ensures the fd's are closed on error */
+	stream_fd = g_unix_input_stream_new (fd, TRUE);
+	stream_sig = g_unix_input_stream_new (fd_sig, TRUE);
+
+	/* read the entire file into memory */
+	bytes_raw = g_input_stream_read_bytes (stream_fd, 0x100000, NULL, error);
+	if (bytes_raw == NULL)
+		return FALSE;
+
+	/* read signature */
+	bytes_sig = g_input_stream_read_bytes (stream_sig, 0x800, NULL, error);
+	if (bytes_sig == NULL)
+		return FALSE;
+
+	/* update with blobs */
+	return fu_engine_update_metadata_bytes (self, remote_id,
+						bytes_raw, bytes_sig,
+						error);
 #else
 	g_set_error (error,
 		     FWUPD_ERROR,

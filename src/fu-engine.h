@@ -87,6 +87,11 @@ gboolean	 fu_engine_update_metadata		(FuEngine	*self,
 							 gint		 fd,
 							 gint		 fd_sig,
 							 GError		**error);
+gboolean	 fu_engine_update_metadata_bytes	(FuEngine	*self,
+							 const gchar	*remote_id,
+							 GBytes		*bytes_raw,
+							 GBytes		*bytes_sig,
+							 GError		**error);
 gboolean	 fu_engine_unlock			(FuEngine	*self,
 							 const gchar	*device_id,
 							 GError		**error);
