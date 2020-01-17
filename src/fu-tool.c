@@ -1600,6 +1600,69 @@ fu_util_get_history (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_refresh_remote (FuUtilPrivate *priv, FwupdRemote *remote, GError **error)
+{
+	g_autofree gchar *fn_raw = NULL;
+	g_autofree gchar *fn_sig = NULL;
+	g_autoptr(GBytes) bytes_raw = NULL;
+	g_autoptr(GBytes) bytes_sig = NULL;
+
+	/* payload */
+	fn_raw = fu_util_get_user_cache_path (fwupd_remote_get_metadata_uri (remote));
+	if (!fu_common_mkdir_parent (fn_raw, error))
+		return FALSE;
+	if (!fu_util_download_out_of_process (fwupd_remote_get_metadata_uri (remote),
+					      fn_raw, error))
+		return FALSE;
+	bytes_raw = fu_common_get_contents_bytes (fn_raw, error);
+	if (bytes_raw == NULL)
+		return FALSE;
+
+	/* signature */
+	fn_sig = fu_util_get_user_cache_path (fwupd_remote_get_metadata_uri_sig (remote));
+	if (!fu_util_download_out_of_process (fwupd_remote_get_metadata_uri_sig (remote),
+					      fn_sig, error))
+		return FALSE;
+	bytes_sig = fu_common_get_contents_bytes (fn_sig, error);
+	if (bytes_sig == NULL)
+		return FALSE;
+
+	/* send to daemon */
+	g_debug ("updating %s", fwupd_remote_get_id (remote));
+	return fu_engine_update_metadata_bytes (priv->engine,
+						fwupd_remote_get_id (remote),
+						bytes_raw,
+						bytes_sig,
+						error);
+
+}
+
+static gboolean
+fu_util_refresh (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GPtrArray) remotes = NULL;
+
+	/* load engine */
+	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+		return FALSE;
+
+	/* download new metadata */
+	remotes = fu_engine_get_remotes (priv->engine, error);
+	if (remotes == NULL)
+		return FALSE;
+	for (guint i = 0; i < remotes->len; i++) {
+		FwupdRemote *remote = g_ptr_array_index (remotes, i);
+		if (!fwupd_remote_get_enabled (remote))
+			continue;
+		if (fwupd_remote_get_kind (remote) != FWUPD_REMOTE_KIND_DOWNLOAD)
+			continue;
+		if (!fu_util_refresh_remote (priv, remote, error))
+			return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GNode) root = g_node_new (NULL);
@@ -1851,6 +1914,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Gets the configured remotes"),
 		     fu_util_get_remotes);
+	fu_util_cmd_array_add (cmd_array,
+		     "refresh",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Refresh metadata from remote server"),
+		     fu_util_refresh);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();
