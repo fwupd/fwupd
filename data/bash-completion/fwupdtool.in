@@ -10,6 +10,7 @@ _fwupdtool_cmd_list=(
 	'get-devices'
 	'get-history'
 	'get-plugins'
+	'get-remotes'
 	'get-topology'
 	'hwids'
 	'update'
