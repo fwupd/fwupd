@@ -62,6 +62,7 @@ if get_option('systemd') and build_daemon
     dynamic_options += ['ReadWriteDirectories=' + ' '.join(rw_directories)]
   endif
   con2.set('dynamic_options', '\n'.join(dynamic_options))
+  con2.set('motd_dir', motd_dir)
 
   # replace @bindir@
   configure_file(
@@ -94,7 +95,6 @@ endif
 if (get_option('systemd') or get_option('elogind')) and build_daemon
   con2 = configuration_data()
   con2.set('libexecdir', libexecdir)
-  con2.set('motd_dir', motd_dir)
 
   # replace @libexecdir@
   configure_file(
