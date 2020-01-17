@@ -1599,6 +1599,37 @@ fu_util_get_history (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GNode) root = g_node_new (NULL);
+	g_autoptr(GPtrArray) remotes = NULL;
+	g_autofree gchar *title = fu_util_get_tree_title (priv);
+
+	/* load engine */
+	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+		return FALSE;
+
+	/* list remotes */
+	remotes = fu_engine_get_remotes (priv->engine, error);
+	if (remotes == NULL)
+		return FALSE;
+	if (remotes->len == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "no remotes available");
+		return FALSE;
+	}
+	for (guint i = 0; i < remotes->len; i++) {
+		FwupdRemote *remote_tmp = g_ptr_array_index (remotes, i);
+		g_node_append_data (root, remote_tmp);
+	}
+	fu_util_print_tree (root, title);
+
+	return TRUE;
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -1814,6 +1845,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("List the available firmware types"),
 		     fu_util_get_firmware_types);
+	fu_util_cmd_array_add (cmd_array,
+		     "get-remotes",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Gets the configured remotes"),
+		     fu_util_get_remotes);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();
