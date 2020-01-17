@@ -408,7 +408,7 @@ fwup_delete_boot_entry(VOID)
 		/* check if the variable name is Boot#### */
 		if (CompareGuid(&vendor_guid, &global_variable_guid) != 0)
 			continue;
-		if (StrCmp(variable_name, L"Boot") != 0)
+		if ((StrLen(variable_name) != 8) || (StrnCmp(variable_name, L"Boot", 4) != 0))
 			continue;
 
 		UINTN info_size = 0;
@@ -427,8 +427,9 @@ fwup_delete_boot_entry(VOID)
 		 * check with EFI_LOAD_OPTION description
 		 */
 		EFI_LOAD_OPTION *load_op = (EFI_LOAD_OPTION *) info_ptr;
-		if (_StrHasPrefix(load_op->description, L"Linux Firmware Updater") ||
-		    _StrHasPrefix(load_op->description, L"Linux-Firmware-Updater")) {
+
+		if (_StrHasPrefix(&load_op->description, L"Linux Firmware Updater") ||
+		    _StrHasPrefix(&load_op->description, L"Linux-Firmware-Updater")) {
 			/* delete the boot path from BootOrder list */
 			rc = fwup_delete_boot_order(variable_name, vendor_guid);
 			if (EFI_ERROR(rc)) {
