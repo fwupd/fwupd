@@ -339,6 +339,7 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %if 0%{?enable_flashrom}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_flashrom.so
 %endif
+%{_libdir}/fwupd-plugins-3/libfu_plugin_fresco_pd.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_jabra.so
 %if 0%{?have_modem_manager}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_modem_manager.so

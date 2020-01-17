@@ -1,0 +1,7 @@
+# FL7102
+[Guid=USB\VID_1D5C&PID_7102]
+Plugin = fresco_pd
+
+# FL7112
+[Guid=USB\VID_1D5C&PID_7112]
+Plugin = fresco_pd
