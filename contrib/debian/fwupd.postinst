@@ -29,6 +29,6 @@ rm -f /var/lib/fwupdate/done
 rm -f /var/cache/fwupdate/done
 for dir in /var/cache/fwupdate /var/lib/fwupdate; do
 	if [ -d $dir ]; then
-	        rmdir --parents --ignore-fail-on-non-empty $dir || true
+	        rmdir --ignore-fail-on-non-empty $dir || true
 	fi
 done
