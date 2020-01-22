@@ -1038,7 +1038,7 @@ fu_synaptics_mst_device_rescan (FuDevice *device, GError **error)
 					      buf_ver, 3, error))
 		return FALSE;
 
-	version = g_strdup_printf ("%1d.%02d.%03d", buf_ver[0], buf_ver[1], buf_ver[2]);
+	version = g_strdup_printf ("%1d.%02d.%02d", buf_ver[0], buf_ver[1], buf_ver[2]);
 	fu_device_set_version (FU_DEVICE (self), version, FWUPD_VERSION_FORMAT_TRIPLET);
 
 	/* read board ID */
