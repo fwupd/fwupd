@@ -20,6 +20,12 @@ struct _FuTpmEventlogDevice {
 
 G_DEFINE_TYPE (FuTpmEventlogDevice, fu_tpm_eventlog_device, FU_TYPE_DEVICE)
 
+GPtrArray *
+fu_tpm_eventlog_device_get_checksums (FuTpmEventlogDevice *self, guint8 pcr, GError **error)
+{
+	return fu_tpm_eventlog_calc_checksums (self->items, pcr, error);
+}
+
 static void
 fu_tpm_eventlog_device_to_string (FuDevice *device, guint idt, GString *str)
 {
@@ -37,6 +43,8 @@ gchar *
 fu_tpm_eventlog_device_report_metadata (FuTpmEventlogDevice *self)
 {
 	GString *str = g_string_new ("");
+	g_autoptr(GPtrArray) pcrs = NULL;
+
 	for (guint i = 0; i < self->items->len; i++) {
 		FuTpmEventlogItem *item = g_ptr_array_index (self->items, i);
 		g_autofree gchar *blobstr = fu_tpm_eventlog_blobstr (item->blob);
@@ -45,6 +53,13 @@ fu_tpm_eventlog_device_report_metadata (FuTpmEventlogDevice *self)
 		if (blobstr != NULL)
 			g_string_append_printf (str, " [%s]", blobstr);
 		g_string_append (str, "\n");
+	}
+	pcrs = fu_tpm_eventlog_calc_checksums (self->items, 0, NULL);
+	if (pcrs != NULL) {
+		for (guint j = 0; j < pcrs->len; j++) {
+			const gchar *csum = g_ptr_array_index (pcrs, j);
+			g_string_append_printf (str, "PCR0: %s\n", csum);
+		}
 	}
 	if (str->len > 0)
 		g_string_truncate (str, str->len - 1);

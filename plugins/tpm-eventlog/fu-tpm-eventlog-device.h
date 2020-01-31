@@ -15,3 +15,6 @@ FuTpmEventlogDevice *fu_tpm_eventlog_device_new		(const guint8	*buf,
 							 gsize		 bufsz,
 							 GError		**error);
 gchar		*fu_tpm_eventlog_device_report_metadata	(FuTpmEventlogDevice *self);
+GPtrArray	*fu_tpm_eventlog_device_get_checksums	(FuTpmEventlogDevice *self,
+							 guint8		 pcr,
+							 GError		**error);

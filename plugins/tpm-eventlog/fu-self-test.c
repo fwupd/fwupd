@@ -14,6 +14,7 @@
 static void
 fu_test_tpm_eventlog_parse_v1_func (void)
 {
+	const gchar *tmp;
 	gboolean ret;
 	gsize bufsz = 0;
 	g_autofree gchar *fn = NULL;
@@ -21,6 +22,7 @@ fu_test_tpm_eventlog_parse_v1_func (void)
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuTpmEventlogDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) pcr0s = NULL;
 
 	fn = g_build_filename (TESTDATADIR, "binary_bios_measurements-v1", NULL);
 	ret = g_file_get_contents (fn, (gchar **) &buf, &bufsz, &error);
@@ -34,11 +36,19 @@ fu_test_tpm_eventlog_parse_v1_func (void)
 	g_print ("%s\n", str);
 	g_assert_nonnull (g_strstr_len (str, -1, "231f248f12ef9f38549f1bda7a859b781b5caab0"));
 	g_assert_nonnull (g_strstr_len (str, -1, "9069ca78e7450a285173431b3e52c5c25299e473"));
+
+	pcr0s = fu_tpm_eventlog_device_get_checksums (dev, 0, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (pcr0s);
+	g_assert_cmpint (pcr0s->len, ==, 1);
+	tmp = g_ptr_array_index (pcr0s, 0);
+	g_assert_cmpstr (tmp, ==, "543ae96e57b6fc4003531cd0dab1d9ba7f8166e0");
 }
 
 static void
 fu_test_tpm_eventlog_parse_v2_func (void)
 {
+	const gchar *tmp;
 	gboolean ret;
 	gsize bufsz = 0;
 	g_autofree gchar *fn = NULL;
@@ -46,6 +56,7 @@ fu_test_tpm_eventlog_parse_v2_func (void)
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuTpmEventlogDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) pcr0s = NULL;
 
 	fn = g_build_filename (TESTDATADIR, "binary_bios_measurements-v2", NULL);
 	ret = g_file_get_contents (fn, (gchar **) &buf, &bufsz, &error);
@@ -60,6 +71,13 @@ fu_test_tpm_eventlog_parse_v2_func (void)
 	g_assert_nonnull (g_strstr_len (str, -1, "19ce8e1347a709d2b485d519695e3ce10b939485"));
 	g_assert_nonnull (g_strstr_len (str, -1, "9069ca78e7450a285173431b3e52c5c25299e473"));
 	g_assert_nonnull (g_strstr_len (str, -1, "Boot Guard Measured"));
+
+	pcr0s = fu_tpm_eventlog_device_get_checksums (dev, 0, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (pcr0s);
+	g_assert_cmpint (pcr0s->len, ==, 1);
+	tmp = g_ptr_array_index (pcr0s, 0);
+	g_assert_cmpstr (tmp, ==, "ebead4b31c7c49e193c440cd6ee90bc1b61a3ca6");
 }
 
 int
