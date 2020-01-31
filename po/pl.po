@@ -815,10 +815,6 @@ msgid "Loading…"
 msgstr "Wczytywanie…"
 
 #. TRANSLATORS: command line option
-msgid "Log output to FILE (typically for scripting use)"
-msgstr "Zapisuje wyjście do PLIKU (zazwyczaj do używania w skryptach)"
-
-#. TRANSLATORS: command line option
 msgid "Manually whitelist specific plugins"
 msgstr "Ręcznie wstawia podane wtyczki na białą listę"
 
@@ -1289,7 +1285,7 @@ msgstr "Typ"
 msgid "UEFI Firmware Utility"
 msgstr "Narzędzie oprogramowania sprzętowego UEFI"
 
-#. TRANSLATORS: currect daemon status is unknown
+#. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 msgid "Unknown"
 msgstr "Nieznane"

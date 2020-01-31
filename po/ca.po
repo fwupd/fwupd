@@ -792,10 +792,6 @@ msgid "Loading…"
 msgstr "S'està carregant..."
 
 #. TRANSLATORS: command line option
-msgid "Log output to FILE (typically for scripting use)"
-msgstr "Sortida del registre a FITXER (normalment per a ús en crear scripts)"
-
-#. TRANSLATORS: command line option
 msgid "Manually whitelist specific plugins"
 msgstr "Connectors especíificats manualment a la llista blanca"
 
@@ -1264,7 +1260,7 @@ msgstr "Tipus"
 msgid "UEFI Firmware Utility"
 msgstr "Utilitat per al microprogramari UEFI"
 
-#. TRANSLATORS: currect daemon status is unknown
+#. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 msgid "Unknown"
 msgstr "Desconegut"

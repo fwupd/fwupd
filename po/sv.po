@@ -917,7 +917,7 @@ msgstr "Typ"
 msgid "UEFI Firmware Utility"
 msgstr "Verktyg för fast UEFI-programvara"
 
-#. TRANSLATORS: currect daemon status is unknown
+#. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 msgid "Unknown"
 msgstr "Okänd"

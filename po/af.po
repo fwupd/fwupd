@@ -263,7 +263,7 @@ msgstr "Teiken"
 msgid "Type"
 msgstr "Tipe"
 
-#. TRANSLATORS: currect daemon status is unknown
+#. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 msgid "Unknown"
 msgstr "Onbekend"

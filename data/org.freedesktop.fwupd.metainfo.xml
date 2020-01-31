@@ -32,6 +32,32 @@
     <binary>fwupdmgr</binary>
   </provides>
   <releases>
+    <release version="1.3.7" date="2020-01-31">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add 'get-remotes' and 'refresh' to fwupdtool</li>
+          <li>Add support for standalone VIA PD devices</li>
+          <li>Allow applying all releases to get to a target version</li>
+          <li>Discourage command line metadata refreshes more than once per day</li>
+          <li>Generate a win32 setup binary</li>
+          <li>Get the list of updates in JSON format from fwupdagent</li>
+          <li>Move MOTD population into the daemon</li>
+          <li>Shut down automatically when there is system memory pressure</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Correctly delete UEFI variables</li>
+          <li>Correctly import PKCS-7 remote metadata</li>
+          <li>Disable the battery percentage checks if UPower is unavailable</li>
+          <li>Do not always get the vendor ID for udev devices using the parent</li>
+          <li>Fix display of UTF-8 characters on Windows</li>
+          <li>Show the device parent if there is an interesting child</li>
+          <li>Use a different protocol ID for VIA i2c devices</li>
+          <li>Use the correct timeout for Logitech IO channel writes</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.3.6" date="2019-12-30">
       <description>
         <p>This release adds the following features:</p>

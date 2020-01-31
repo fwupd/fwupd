@@ -792,10 +792,6 @@ msgid "Loading…"
 msgstr "Ladataan…"
 
 #. TRANSLATORS: command line option
-msgid "Log output to FILE (typically for scripting use)"
-msgstr "Kirjaa tuloste tiedostoon (yleensä komentosarjojen käyttöä varten)"
-
-#. TRANSLATORS: command line option
 msgid "Manually whitelist specific plugins"
 msgstr "Luetteloi tiettyjä lisäosia manuaalisesti"
 
@@ -1264,7 +1260,7 @@ msgstr "Tyyppi"
 msgid "UEFI Firmware Utility"
 msgstr "UEFI firmware -apuohjelma"
 
-#. TRANSLATORS: currect daemon status is unknown
+#. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 msgid "Unknown"
 msgstr "Tuntematon"

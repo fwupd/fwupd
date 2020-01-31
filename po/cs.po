@@ -643,7 +643,7 @@ msgstr "Typ"
 msgid "UEFI Firmware Utility"
 msgstr "Nástroj pro práci s firmwarem UEFI"
 
-#. TRANSLATORS: currect daemon status is unknown
+#. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 msgid "Unknown"
 msgstr "Neznámý"

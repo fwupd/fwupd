@@ -664,10 +664,6 @@ msgid "Loading…"
 msgstr "Učitavanje..."
 
 #. TRANSLATORS: command line option
-msgid "Log output to FILE (typically for scripting use)"
-msgstr "Zapisuj izlaz u DATOTEKU (uobičajeno za upotrebu sa skriptama)"
-
-#. TRANSLATORS: command line option
 msgid "Manually whitelist specific plugins"
 msgstr "Ručno dopusti određene priključke"
 
@@ -1001,7 +997,7 @@ msgstr "Vrsta"
 msgid "UEFI Firmware Utility"
 msgstr "UEFI firmver pomagalo"
 
-#. TRANSLATORS: currect daemon status is unknown
+#. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 msgid "Unknown"
 msgstr "Nepoznat"
