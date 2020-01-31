@@ -64,15 +64,10 @@ fu_engine_update_motd (FuEngine *self, GError **error)
 	}
 
 	str = g_string_new ("");
-	if (upgrade_count == 1) {
-		g_string_append_printf (str,
-					_("%u device has a firmware upgrade available."),
-					upgrade_count);
-	} else {
-		g_string_append_printf (str,
-					_("%u devices have a firmware upgrade available."),
-					upgrade_count);
-	}
+	g_string_append_printf (str, ngettext ("%u device has a firmware upgrade available.",
+					       "%u devices have a firmware upgrade available.",
+					       upgrade_count),
+					       upgrade_count);
 	g_string_append_printf (str,
 				"\n%s\n",
 				_("Run `fwupdmgr get-upgrades` for more information."));
