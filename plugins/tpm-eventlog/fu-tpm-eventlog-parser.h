@@ -10,14 +10,6 @@
 
 #include "fu-tpm-eventlog-common.h"
 
-typedef struct {
-	guint8			 pcr;
-	FuTpmEventlogItemKind	 kind;
-	gchar			*checksum_sha1;
-	gchar			*checksum_sha256;
-	GBytes			*blob;
-} FuTpmEventlogItem;
-
 typedef enum {
 	FU_TPM_EVENTLOG_PARSER_FLAG_NONE		= 0,
 	FU_TPM_EVENTLOG_PARSER_FLAG_ALL_PCRS		= 1 << 0,

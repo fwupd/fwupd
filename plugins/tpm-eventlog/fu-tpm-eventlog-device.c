@@ -40,7 +40,8 @@ fu_tpm_eventlog_device_report_metadata (FuTpmEventlogDevice *self)
 	for (guint i = 0; i < self->items->len; i++) {
 		FuTpmEventlogItem *item = g_ptr_array_index (self->items, i);
 		g_autofree gchar *blobstr = fu_tpm_eventlog_blobstr (item->blob);
-		g_string_append_printf (str, "0x%08x %s", item->kind, item->checksum_sha1);
+		g_autofree gchar *checksum = fu_tpm_eventlog_strhex (item->checksum_sha1);
+		g_string_append_printf (str, "0x%08x %s", item->kind, checksum);
 		if (blobstr != NULL)
 			g_string_append_printf (str, " [%s]", blobstr);
 		g_string_append (str, "\n");

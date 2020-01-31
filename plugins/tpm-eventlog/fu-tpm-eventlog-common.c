@@ -131,6 +131,17 @@ fu_tpm_eventlog_item_kind_to_string (FuTpmEventlogItemKind event_type)
 }
 
 gchar *
+fu_tpm_eventlog_strhex (GBytes *blob)
+{
+	GString *csum = g_string_new (NULL);
+	gsize bufsz = 0;
+	const guint8 *buf = g_bytes_get_data (blob, &bufsz);
+	for (guint i = 0; i < bufsz; i++)
+		g_string_append_printf (csum, "%02x", buf[i]);
+	return g_string_free (csum, FALSE);
+}
+
+gchar *
 fu_tpm_eventlog_blobstr (GBytes *blob)
 {
 	gboolean has_printable = FALSE;
