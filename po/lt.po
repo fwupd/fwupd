@@ -809,7 +809,7 @@ msgstr "Tipas"
 msgid "UEFI Firmware Utility"
 msgstr "UEFI programinės aparatinės įrangos paslaugų programa"
 
-#. TRANSLATORS: currect daemon status is unknown
+#. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 msgid "Unknown"
 msgstr "Nežinoma"

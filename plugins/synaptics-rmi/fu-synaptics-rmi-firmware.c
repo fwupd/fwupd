@@ -143,8 +143,7 @@ fu_synaptics_rmi_firmware_add_image (FuFirmware *firmware, const gchar *id,
 {
 	g_autoptr(GBytes) bytes = g_bytes_new (data, sz);
 	g_autoptr(FuFirmwareImage) img = fu_firmware_image_new (bytes);
-	if (id != NULL)
-		fu_firmware_image_set_id (img, id);
+	fu_firmware_image_set_id (img, id);
 	fu_firmware_add_image (firmware, img);
 }
 

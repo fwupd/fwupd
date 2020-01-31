@@ -36,6 +36,7 @@
 #include "fu-device-list.h"
 #include "fu-device-private.h"
 #include "fu-engine.h"
+#include "fu-engine-helper.h"
 #include "fu-hwids.h"
 #include "fu-idle.h"
 #include "fu-keyring-utils.h"
@@ -117,6 +118,14 @@ fu_engine_emit_changed (FuEngine *self)
 {
 	g_signal_emit (self, signals[SIGNAL_CHANGED], 0);
 	fu_engine_idle_reset (self);
+
+	/* update the motd */
+	if (self->loaded &&
+	    fu_config_get_update_motd (self->config)) {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_engine_update_motd (self, &error_local))
+			g_debug ("%s", error_local->message);
+	}
 }
 
 static void
@@ -551,6 +560,7 @@ fu_engine_modify_config (FuEngine *self, const gchar *key, const gchar *value, G
 		"BlacklistPlugins",
 		"IdleTimeout",
 		"VerboseDomains",
+		"UpdateMotd",
 		NULL };
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
@@ -1755,83 +1765,23 @@ fu_engine_schedule_update (FuEngine *self,
 	return fu_engine_offline_setup (error);
 }
 
-/**
- * fu_engine_install:
- * @self: A #FuEngine
- * @task: A #FuInstallTask
- * @blob_cab: The #GBytes of the .cab file
- * @flags: The #FwupdInstallFlags, e.g. %FWUPD_DEVICE_FLAG_UPDATABLE
- * @error: A #GError, or %NULL
- *
- * Installs a specific firmware file on a device.
- *
- * By this point all the requirements and tests should have been done in
- * fu_engine_check_requirements() so this should not fail before running
- * the plugin loader.
- *
- * Returns: %TRUE for success
- **/
-gboolean
-fu_engine_install (FuEngine *self,
-		   FuInstallTask *task,
-		   GBytes *blob_cab,
-		   FwupdInstallFlags flags,
-		   GError **error)
+static gboolean
+fu_engine_install_release (FuEngine *self,
+			   FuDevice *device,
+			   XbNode *component,
+			   XbNode *rel,
+			   FwupdInstallFlags flags,
+			   GError **error)
 {
-	XbNode *component = fu_install_task_get_component (task);
 	FuPlugin *plugin;
 	GBytes *blob_fw;
 	const gchar *tmp = NULL;
 	g_autofree gchar *release_key = NULL;
 	g_autofree gchar *version_orig = NULL;
 	g_autofree gchar *version_rel = NULL;
-	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(FuDevice) device_tmp = NULL;
 	g_autoptr(GBytes) blob_fw2 = NULL;
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(XbNode) rel = NULL;
-
-	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
-	g_return_val_if_fail (XB_IS_NODE (component), FALSE);
-	g_return_val_if_fail (blob_cab != NULL, FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-	/* not in bootloader mode */
-	device = g_object_ref (fu_install_task_get_device (task));
-	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER)) {
-		const gchar *caption = NULL;
-		caption = xb_node_query_text (component,
-					      "screenshots/screenshot/caption",
-					      NULL);
-		if (caption != NULL) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NEEDS_USER_ACTION,
-				     "Device %s needs to manually be put in update mode: %s",
-				     fu_device_get_name (device), caption);
-		} else {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NEEDS_USER_ACTION,
-				     "Device %s needs to manually be put in update mode",
-				     fu_device_get_name (device));
-		}
-		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED_TRANSIENT);
-		if (error != NULL)
-			fu_device_set_update_error (device, (*error)->message);
-		return FALSE;
-	}
-
-	/* parse the DriverVer */
-	rel = xb_node_query_first (component, "releases/release", &error_local);
-	if (rel == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "No releases in the firmware component: %s",
-			     error_local->message);
-		return FALSE;
-	}
 
 	/* get the blob */
 	tmp = xb_node_query_attr (rel, "checksum[@target='content']", "filename", NULL);
@@ -1875,21 +1825,6 @@ fu_engine_install (FuEngine *self,
 	if (version_rel == NULL) {
 		g_prefix_error (error, "failed to get release version: ");
 		return FALSE;
-	}
-	if ((flags & FWUPD_INSTALL_FLAG_OFFLINE) > 0 &&
-	    !fu_engine_is_running_offline (self)) {
-		g_autoptr(FwupdRelease) release_tmp = NULL;
-		plugin = fu_plugin_list_find_by_name (self->plugin_list, "upower", NULL);
-		if (plugin != NULL) {
-			if (!fu_plugin_runner_update_prepare (plugin, flags, device, error))
-				return FALSE;
-		}
-		release_tmp = fu_engine_create_release_metadata (self, plugin, error);
-		if (release_tmp == NULL)
-			return FALSE;
-		fwupd_release_set_version (release_tmp, version_rel);
-		return fu_engine_schedule_update (self, device, release_tmp,
-						  blob_cab, flags, error);
 	}
 
 	/* add device to database */
@@ -1961,8 +1896,8 @@ fu_engine_install (FuEngine *self,
 
 	/* for online updates, verify the version changed if not a re-install */
 	if (version_rel != NULL &&
-	    g_strcmp0 (version_orig, version_rel) != 0 &&
-	    g_strcmp0 (version_orig, fu_device_get_version (device)) == 0) {
+	    fu_common_vercmp (version_orig, version_rel) != 0 &&
+	    fu_common_vercmp (version_orig, fu_device_get_version (device)) == 0) {
 		g_autofree gchar *str = NULL;
 		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
 		str = g_strdup_printf ("device version not updated on success, %s != %s",
@@ -1985,10 +1920,184 @@ fu_engine_install (FuEngine *self,
 	}
 
 	/* success */
-	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
 	if ((flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0 &&
 	    !fu_history_modify_device (self->history, device, error))
 		return FALSE;
+
+	/* make the UI update */
+	fu_engine_emit_changed (self);
+
+	return TRUE;
+}
+
+typedef struct {
+	gboolean	 ret;
+	GError		**error;
+	FuEngine	*self;
+	FuDevice	*device;
+} FuEngineSortHelper;
+
+static gint
+fu_engine_sort_release_versions_cb (gconstpointer a, gconstpointer b, gpointer user_data)
+{
+	FuEngineSortHelper *helper = (FuEngineSortHelper *) user_data;
+	XbNode *na = *((XbNode **) a);
+	XbNode *nb = *((XbNode **) b);
+	g_autofree gchar *va = NULL;
+	g_autofree gchar *vb = NULL;
+
+	/* already failed */
+	if (!helper->ret)
+		return 0;
+
+	/* get the semver from the release */
+	va = fu_engine_get_release_version (helper->self, helper->device, na, helper->error);
+	if (va == NULL) {
+		g_prefix_error (helper->error, "failed to get release version: ");
+		return 0;
+	}
+	vb = fu_engine_get_release_version (helper->self, helper->device, nb, helper->error);
+	if (vb == NULL) {
+		g_prefix_error (helper->error, "failed to get release version: ");
+		return 0;
+	}
+	return fu_common_vercmp (va, vb);
+}
+
+static gboolean
+fu_engine_sort_releases (FuEngine *self, FuDevice *device, GPtrArray *rels, GError **error)
+{
+	FuEngineSortHelper helper = {
+		.ret = TRUE,
+		.self = self,
+		.device = device,
+		.error = error,
+	};
+	g_ptr_array_sort_with_data (rels, fu_engine_sort_release_versions_cb, &helper);
+	return helper.ret;
+}
+
+/**
+ * fu_engine_install:
+ * @self: A #FuEngine
+ * @task: A #FuInstallTask
+ * @blob_cab: The #GBytes of the .cab file
+ * @flags: The #FwupdInstallFlags, e.g. %FWUPD_DEVICE_FLAG_UPDATABLE
+ * @error: A #GError, or %NULL
+ *
+ * Installs a specific firmware file on a device.
+ *
+ * By this point all the requirements and tests should have been done in
+ * fu_engine_check_requirements() so this should not fail before running
+ * the plugin loader.
+ *
+ * Returns: %TRUE for success
+ **/
+gboolean
+fu_engine_install (FuEngine *self,
+		   FuInstallTask *task,
+		   GBytes *blob_cab,
+		   FwupdInstallFlags flags,
+		   GError **error)
+{
+	XbNode *component = fu_install_task_get_component (task);
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(XbNode) rel_newest = NULL;
+
+	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
+	g_return_val_if_fail (XB_IS_NODE (component), FALSE);
+	g_return_val_if_fail (blob_cab != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* not in bootloader mode */
+	device = g_object_ref (fu_install_task_get_device (task));
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER)) {
+		const gchar *caption = NULL;
+		caption = xb_node_query_text (component,
+					      "screenshots/screenshot/caption",
+					      NULL);
+		if (caption != NULL) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NEEDS_USER_ACTION,
+				     "Device %s needs to manually be put in update mode: %s",
+				     fu_device_get_name (device), caption);
+		} else {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NEEDS_USER_ACTION,
+				     "Device %s needs to manually be put in update mode",
+				     fu_device_get_name (device));
+		}
+		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED_TRANSIENT);
+		if (error != NULL)
+			fu_device_set_update_error (device, (*error)->message);
+		return FALSE;
+	}
+
+	/* get the newest version */
+	rel_newest = xb_node_query_first (component, "releases/release", &error_local);
+	if (rel_newest == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "No releases in the firmware component: %s",
+			     error_local->message);
+		return FALSE;
+	}
+
+	/* schedule this for the next reboot if not in system-update.target,
+	 * but first check if allowed on battery power */
+	if ((flags & FWUPD_INSTALL_FLAG_OFFLINE) > 0 &&
+	    !fu_engine_is_running_offline (self)) {
+		FuPlugin *plugin;
+		g_autoptr(FwupdRelease) release_tmp = NULL;
+		g_autofree gchar *version_rel = NULL;
+		version_rel = fu_engine_get_release_version (self, device, rel_newest, error);
+		if (version_rel == NULL) {
+			g_prefix_error (error, "failed to get release version: ");
+			return FALSE;
+		}
+		plugin = fu_plugin_list_find_by_name (self->plugin_list, "upower", NULL);
+		if (plugin != NULL) {
+			if (!fu_plugin_runner_update_prepare (plugin, flags, device, error))
+				return FALSE;
+		}
+		release_tmp = fu_engine_create_release_metadata (self, plugin, error);
+		if (release_tmp == NULL)
+			return FALSE;
+		fwupd_release_set_version (release_tmp, version_rel);
+		return fu_engine_schedule_update (self, device, release_tmp,
+						  blob_cab, flags, error);
+	}
+
+	/* install each intermediate release, or install only the newest version */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES)) {
+		g_autoptr(GPtrArray) rels = NULL;
+		rels = xb_node_query (component, "releases/release", 0, &error_local);
+		if (rels == NULL) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "No releases in the firmware component: %s",
+				     error_local->message);
+			return FALSE;
+		}
+		if (!fu_engine_sort_releases (self, device, rels, error))
+			return FALSE;
+		for (guint i = 0; i < rels->len; i++) {
+			XbNode *rel = g_ptr_array_index (rels, i);
+			if (!fu_engine_install_release (self, device, component, rel, flags, error))
+				return FALSE;
+		}
+	} else {
+		if (!fu_engine_install_release (self, device, component, rel_newest, flags, error))
+			return FALSE;
+	}
+
+	/* success */
+	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
 	return TRUE;
 }
 
@@ -2436,7 +2545,6 @@ fu_engine_install_blob (FuEngine *self,
 
 	/* make the UI update */
 	fu_engine_set_status (self, FWUPD_STATUS_IDLE);
-	fu_engine_emit_changed (self);
 	g_debug ("Updating %s took %f seconds", fu_device_get_name (device),
 		 g_timer_elapsed (timer, NULL));
 	return TRUE;
@@ -2772,9 +2880,11 @@ fu_engine_remote_list_changed_cb (FuRemoteList *remote_list, FuEngine *self)
 					    &error_local))
 		g_warning ("Failed to reload metadata store: %s",
 			   error_local->message);
+
+	/* make the UI update */
+	fu_engine_emit_changed (self);
 }
 
-#ifdef HAVE_GIO_UNIX
 static FuKeyringResult *
 fu_engine_get_existing_keyring_result (FuEngine *self,
 				       FuKeyring *kr,
@@ -2792,45 +2902,33 @@ fu_engine_get_existing_keyring_result (FuEngine *self,
 	return fu_keyring_verify_data (kr, blob, blob_sig,
 				       FU_KEYRING_VERIFY_FLAG_NONE, error);
 }
-#endif
 
 /**
- * fu_engine_update_metadata:
+ * fu_engine_update_metadata_bytes:
  * @self: A #FuEngine
  * @remote_id: A remote ID, e.g. `lvfs`
- * @fd: file descriptor of the metadata
- * @fd_sig: file descriptor of the metadata signature
+ * @bytes_raw: Blob of metadata
+ * @bytes_sig: Blob of metadata signature
  * @error: A #GError, or %NULL
  *
  * Updates the metadata for a specific remote.
  *
- * Note: this will close the fds when done
- *
  * Returns: %TRUE for success
  **/
 gboolean
-fu_engine_update_metadata (FuEngine *self, const gchar *remote_id,
-			   gint fd, gint fd_sig, GError **error)
+fu_engine_update_metadata_bytes (FuEngine *self, const gchar *remote_id,
+			        GBytes *bytes_raw, GBytes *bytes_sig, GError **error)
 {
-#ifdef HAVE_GIO_UNIX
 	FwupdKeyringKind keyring_kind;
 	FwupdRemote *remote;
-	g_autoptr(GBytes) bytes_raw = NULL;
-	g_autoptr(GBytes) bytes_sig = NULL;
-	g_autoptr(GInputStream) stream_fd = NULL;
-	g_autoptr(GInputStream) stream_sig = NULL;
 	g_autofree gchar *pki_dir = NULL;
 	g_autofree gchar *sysconfdir = NULL;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
 	g_return_val_if_fail (remote_id != NULL, FALSE);
-	g_return_val_if_fail (fd > 0, FALSE);
-	g_return_val_if_fail (fd_sig > 0, FALSE);
+	g_return_val_if_fail (bytes_raw != NULL, FALSE);
+	g_return_val_if_fail (bytes_sig != NULL, FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-	/* ensures the fd's are closed on error */
-	stream_fd = g_unix_input_stream_new (fd, TRUE);
-	stream_sig = g_unix_input_stream_new (fd_sig, TRUE);
 
 	/* check remote is valid */
 	remote = fu_remote_list_get_by_id (self->remote_list, remote_id);
@@ -2848,16 +2946,6 @@ fu_engine_update_metadata (FuEngine *self, const gchar *remote_id,
 			     "remote %s not enabled", remote_id);
 		return FALSE;
 	}
-
-	/* read the entire file into memory */
-	bytes_raw = g_input_stream_read_bytes (stream_fd, 0x100000, NULL, error);
-	if (bytes_raw == NULL)
-		return FALSE;
-
-	/* read signature */
-	bytes_sig = g_input_stream_read_bytes (stream_sig, 0x800, NULL, error);
-	if (bytes_sig == NULL)
-		return FALSE;
 
 	/* verify file */
 	keyring_kind = fwupd_remote_get_keyring_kind (remote);
@@ -2926,7 +3014,60 @@ fu_engine_update_metadata (FuEngine *self, const gchar *remote_id,
 						   bytes_sig, error))
 			return FALSE;
 	}
-	return fu_engine_load_metadata_store (self, FU_ENGINE_LOAD_FLAG_NONE, error);
+	if (!fu_engine_load_metadata_store (self, FU_ENGINE_LOAD_FLAG_NONE, error))
+		return FALSE;
+	fu_engine_emit_changed (self);
+	return TRUE;
+}
+
+/**
+ * fu_engine_update_metadata:
+ * @self: A #FuEngine
+ * @remote_id: A remote ID, e.g. `lvfs`
+ * @fd: file descriptor of the metadata
+ * @fd_sig: file descriptor of the metadata signature
+ * @error: A #GError, or %NULL
+ *
+ * Updates the metadata for a specific remote.
+ *
+ * Note: this will close the fds when done
+ *
+ * Returns: %TRUE for success
+ **/
+gboolean
+fu_engine_update_metadata (FuEngine *self, const gchar *remote_id,
+			   gint fd, gint fd_sig, GError **error)
+{
+#ifdef HAVE_GIO_UNIX
+	g_autoptr(GBytes) bytes_raw = NULL;
+	g_autoptr(GBytes) bytes_sig = NULL;
+	g_autoptr(GInputStream) stream_fd = NULL;
+	g_autoptr(GInputStream) stream_sig = NULL;
+
+	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
+	g_return_val_if_fail (remote_id != NULL, FALSE);
+	g_return_val_if_fail (fd > 0, FALSE);
+	g_return_val_if_fail (fd_sig > 0, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* ensures the fd's are closed on error */
+	stream_fd = g_unix_input_stream_new (fd, TRUE);
+	stream_sig = g_unix_input_stream_new (fd_sig, TRUE);
+
+	/* read the entire file into memory */
+	bytes_raw = g_input_stream_read_bytes (stream_fd, 0x100000, NULL, error);
+	if (bytes_raw == NULL)
+		return FALSE;
+
+	/* read signature */
+	bytes_sig = g_input_stream_read_bytes (stream_sig, 0x100000, NULL, error);
+	if (bytes_sig == NULL)
+		return FALSE;
+
+	/* update with blobs */
+	return fu_engine_update_metadata_bytes (self, remote_id,
+						bytes_raw, bytes_sig,
+						error);
 #else
 	g_set_error (error,
 		     FWUPD_ERROR,
@@ -4140,6 +4281,14 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 		}
 	}
 
+	/* does the device not have an assigned protocol */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE) &&
+	    fu_device_get_protocol (device) == NULL) {
+		g_warning ("device %s [%s] does not define an update protocol",
+			   fu_device_get_id (device),
+			   fu_device_get_name (device));
+	}
+
 	/* if this device is locked get some metadata from AppStream */
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_LOCKED)) {
 		g_autoptr(XbNode) component = fu_engine_get_component_by_guids (self, device);
@@ -4189,6 +4338,14 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REGISTERED))
 		fu_engine_plugin_device_register (self, device);
 
+	/* does the device *still* not have a vendor ID? */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE) &&
+	    fu_device_get_vendor_id (device) == NULL) {
+		g_warning ("device %s [%s] does not define a vendor-id!",
+			   fu_device_get_id (device),
+			   fu_device_get_name (device));
+	}
+
 	/* create new device */
 	fu_device_list_add (self->device_list, device);
 
@@ -4199,6 +4356,8 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 
 	/* sometimes inherit flags from recent history */
 	fu_engine_device_inherit_history (self, device);
+
+	fu_engine_emit_changed (self);
 }
 
 static void
@@ -4564,8 +4723,10 @@ fu_engine_get_tainted (FuEngine *self)
 const gchar *
 fu_engine_get_host_product (FuEngine *self)
 {
+	const gchar *result = NULL;
 	g_return_val_if_fail (FU_IS_ENGINE (self), NULL);
-	return fu_hwids_get_value (self->hwids, FU_HWIDS_KEY_PRODUCT_NAME);
+	result = fu_hwids_get_value (self->hwids, FU_HWIDS_KEY_PRODUCT_NAME);
+	return result != NULL ? result : "Unknown Product";
 }
 
 const gchar *
@@ -5119,6 +5280,9 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 
 	fu_engine_set_status (self, FWUPD_STATUS_IDLE);
 	self->loaded = TRUE;
+
+	/* let clients know engine finished starting up */
+	fu_engine_emit_changed (self);
 
 	/* success */
 	return TRUE;

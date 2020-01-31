@@ -42,6 +42,7 @@ jobs:
                                   meson
                                   gcc
                                   gcab
+                                  mingw32-nsis
                                   mingw64-gcc
                                   mingw64-pkg-config
                                   mingw64-glib2
@@ -54,6 +55,13 @@ jobs:
       - run:
           name: "Build Win32"
           command: ./contrib/ci/build_windows.sh
+      - persist_to_workspace:
+          root: .
+          paths:
+            - "dist/setup/*.exe"
+            - "dist/VERSION"
+      - store_artifacts:
+          path: dist/setup
 
   build-snap:
     docker:
@@ -125,6 +133,18 @@ jobs:
             echo $SNAPCRAFT_LOGIN_FILE | base64 --decode --ignore-garbage > .snapcraft/snapcraft.cfg
             snapcraft push *.snap --release stable
 
+  publish-github-exe-release:
+    docker:
+      - image: circleci/golang:1.8
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: "Publish Release on GitHub"
+          command: |
+            go get github.com/tcnksm/ghr
+            VERSION=$(cat dist/VERSION)
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${VERSION} ./dist/setup/
 workflows:
   version: 2
   main:
@@ -142,6 +162,20 @@ workflows:
   deploy:
     jobs:
       - build-ubuntu-x86_64:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^\d+\.\d+\.\d+$/
+      - build-windows:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^\d+\.\d+\.\d+$/
+      - publish-github-exe-release:
+          requires:
+            - build-windows
           filters:
             branches:
               ignore: /.*/

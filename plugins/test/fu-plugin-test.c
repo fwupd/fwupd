@@ -63,6 +63,8 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		g_autoptr(FuDevice) child2 = NULL;
 
 		child1 = fu_device_new ();
+		fu_device_set_vendor_id (child1, "USB:FFFF");
+		fu_device_set_protocol (child1, "com.acme");
 		fu_device_set_physical_id (child1, "fake");
 		fu_device_set_logical_id (child1, "child1");
 		fu_device_add_guid (child1, "7fddead7-12b5-4fb9-9fa0-6d30305df755");
@@ -73,6 +75,8 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		fu_plugin_device_add (plugin, child1);
 
 		child2 = fu_device_new ();
+		fu_device_set_vendor_id (child2, "USB:FFFF");
+		fu_device_set_protocol (child2, "com.acme");
 		fu_device_set_physical_id (child2, "fake");
 		fu_device_set_logical_id (child2, "child2");
 		fu_device_add_guid (child2, "b8fe6b45-8702-4bcd-8120-ef236caac76f");
@@ -119,6 +123,19 @@ fu_plugin_verify (FuPlugin *plugin,
 		     FWUPD_ERROR_NOT_SUPPORTED,
 		     "no checksum for %s", fu_device_get_version (device));
 	return FALSE;
+}
+
+static gchar *
+fu_plugin_test_get_version (GBytes *blob_fw)
+{
+	const gchar *str = g_bytes_get_data (blob_fw, NULL);
+	guint64 val = 0;
+	if (str == NULL)
+		return NULL;
+	val = fu_common_strtoull (str);
+	if (val == 0x0)
+		return NULL;
+	return fu_common_version_from_uint32 (val, FWUPD_VERSION_FORMAT_TRIPLET);
 }
 
 gboolean
@@ -168,10 +185,15 @@ fu_plugin_update (FuPlugin *plugin,
 	if (requires_activation) {
 		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 	} else {
-		if (flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) {
-			fu_device_set_version (device, "1.2.2", FWUPD_VERSION_FORMAT_TRIPLET);
+		g_autofree gchar *ver = fu_plugin_test_get_version (blob_fw);
+		if (ver != NULL) {
+			fu_device_set_version (device, ver, FWUPD_VERSION_FORMAT_TRIPLET);
 		} else {
-			fu_device_set_version (device, "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET);
+			if (flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) {
+				fu_device_set_version (device, "1.2.2", FWUPD_VERSION_FORMAT_TRIPLET);
+			} else {
+				fu_device_set_version (device, "1.2.3", FWUPD_VERSION_FORMAT_TRIPLET);
+			}
 		}
 	}
 

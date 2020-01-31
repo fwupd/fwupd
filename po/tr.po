@@ -127,7 +127,7 @@ msgstr "Ürün yazılımı dosyası üzerindeki ürün kimliğini ayarlayın"
 msgid "Set vendor ID on firmware file"
 msgstr "Ürün yazılımı dosyası üzerindeki üretici kimliğini ayarlayın"
 
-#. TRANSLATORS: currect daemon status is unknown
+#. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 msgid "Unknown"
 msgstr "Bilinmiyor"

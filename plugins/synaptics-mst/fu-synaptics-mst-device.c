@@ -73,6 +73,10 @@ fu_synaptics_mst_device_init (FuSynapticsMstDevice *self)
 	fu_device_set_vendor_id (FU_DEVICE (self), "DRM_DP_AUX_DEV:0x06CB");
 	fu_device_set_summary (FU_DEVICE (self), "Multi-Stream Transport Device");
 	fu_device_add_icon (FU_DEVICE (self), "video-display");
+	fu_udev_device_set_flags (FU_UDEV_DEVICE (self),
+				  FU_UDEV_DEVICE_FLAG_OPEN_READ |
+				  FU_UDEV_DEVICE_FLAG_OPEN_WRITE |
+				  FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
 }
 
 static void
@@ -1034,7 +1038,7 @@ fu_synaptics_mst_device_rescan (FuDevice *device, GError **error)
 					      buf_ver, 3, error))
 		return FALSE;
 
-	version = g_strdup_printf ("%1d.%02d.%03d", buf_ver[0], buf_ver[1], buf_ver[2]);
+	version = g_strdup_printf ("%1d.%02d.%02d", buf_ver[0], buf_ver[1], buf_ver[2]);
 	fu_device_set_version (FU_DEVICE (self), version, FWUPD_VERSION_FORMAT_TRIPLET);
 
 	/* read board ID */

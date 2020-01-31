@@ -71,6 +71,8 @@ gboolean	 fu_util_parse_filter_flags	(const gchar *filter,
 						 GError **error);
 gchar		*fu_util_convert_description	(const gchar	*xml,
 						 GError		**error);
+gchar		*fu_util_time_to_str		(guint64	 tmp);
+
 gchar		*fu_util_device_to_string	(FwupdDevice	*dev,
 						 guint		 idt);
 gchar		*fu_util_release_to_string	(FwupdRelease	*rel,

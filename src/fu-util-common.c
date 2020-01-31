@@ -218,6 +218,18 @@ fu_util_print_tree (GNode *n, gpointer data)
 			 fu_util_traverse_tree, data);
 }
 
+static gboolean
+fu_util_is_interesting_child (FwupdDevice *dev)
+{
+	GPtrArray *children = fwupd_device_get_children (dev);
+	for (guint i = 0; i < children->len; i++) {
+		FwupdDevice *child = g_ptr_array_index (children, i);
+		if (fu_util_is_interesting_device (child))
+			return TRUE;
+	}
+	return FALSE;
+}
+
 gboolean
 fu_util_is_interesting_device (FwupdDevice *dev)
 {
@@ -227,6 +239,8 @@ fu_util_is_interesting_device (FwupdDevice *dev)
 		return TRUE;
 	/* device not plugged in, get-details */
 	if (fwupd_device_get_flags (dev) == 0)
+		return TRUE;
+	if (fu_util_is_interesting_child (dev))
 		return TRUE;
 	return FALSE;
 }
@@ -895,7 +909,17 @@ fu_util_convert_description (const gchar *xml, GError **error)
 	return fu_common_strstrip (str->str);
 }
 
-static gchar *
+/**
+ * fu_util_time_to_str:
+ * @tmp: the time in seconds
+ *
+ * Converts a timestamp to a 'pretty' translated string
+ *
+ * Return value: (transfer full): A string
+ *
+ * Since: 1.3.7
+ **/
+gchar *
 fu_util_time_to_str (guint64 tmp)
 {
 	g_return_val_if_fail (tmp != 0, NULL);
@@ -1051,6 +1075,14 @@ fu_util_device_flag_to_string (guint64 device_flag)
 	if (device_flag == FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE) {
 		/* TRANSLATORS: Device remains usable during update */
 		return _("Device is usable for the duration of the update");
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_VERSION_CHECK_REQUIRED) {
+		/* TRANSLATORS: a version check is required for all firmware */
+		return _("Device firmware is required to have a version check");
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES) {
+		/* TRANSLATORS: a version check is required for all firmware */
+		return _("Device is required to install all provided releases");
 	}
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN) {
 		return NULL;

@@ -909,7 +909,7 @@ msgstr "类型"
 msgid "UEFI Firmware Utility"
 msgstr "固件 UEFI 实用工具"
 
-#. TRANSLATORS: currect daemon status is unknown
+#. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 msgid "Unknown"
 msgstr "未知"

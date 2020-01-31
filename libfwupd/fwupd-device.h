@@ -41,6 +41,7 @@ void		 fwupd_device_set_parent_id		(FwupdDevice	*device,
 FwupdDevice	*fwupd_device_get_parent		(FwupdDevice	*device);
 void		 fwupd_device_set_parent		(FwupdDevice	*device,
 							 FwupdDevice	*parent);
+GPtrArray	*fwupd_device_get_children		(FwupdDevice	*device);
 const gchar	*fwupd_device_get_name			(FwupdDevice	*device);
 void		 fwupd_device_set_name			(FwupdDevice	*device,
 							 const gchar	*name);
@@ -137,5 +138,6 @@ gint		 fwupd_device_compare			(FwupdDevice	*device1,
 
 FwupdDevice	*fwupd_device_from_variant		(GVariant	*value);
 GPtrArray	*fwupd_device_array_from_variant	(GVariant	*value);
+void		 fwupd_device_array_ensure_parents	(GPtrArray	*devices);
 
 G_END_DECLS

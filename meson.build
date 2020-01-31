@@ -397,6 +397,12 @@ endif
 conf.set_quoted('GETTEXT_PACKAGE', meson.project_name())
 conf.set_quoted('PACKAGE_NAME', meson.project_name())
 conf.set_quoted('VERSION', meson.project_version())
+
+motd_file = '85-fwupd'
+motd_dir = 'motd.d'
+conf.set_quoted('MOTD_FILE', motd_file)
+conf.set_quoted('MOTD_DIR', motd_dir)
+
 configure_file(
   output : 'config.h',
   configuration : conf
@@ -435,4 +441,14 @@ endif
 
 if get_option('systemd') and build_daemon
   meson.add_install_script('meson_post_install.sh', systemdunitdir, localstatedir)
+endif
+
+makensis = find_program('makensis', required : false)
+if makensis.found()
+  run_target(
+    'makensis',
+    command: [
+      makensis,
+      join_paths(meson.source_root(), 'contrib', 'setup-win32.nsi'),
+  ])
 endif

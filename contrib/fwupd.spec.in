@@ -171,9 +171,11 @@ Data files for installed tests.
 %if 0%{?have_uefi}
     -Dplugin_uefi=true \
     -Dplugin_nvme=true \
+    -Dplugin_tpm=true \
 %else
     -Dplugin_uefi=false \
     -Dplugin_nvme=false \
+    -Dplugin_tpm=false \
 %endif
 %if 0%{?have_dell}
     -Dplugin_dell=true \
@@ -249,11 +251,11 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %{_libexecdir}/fwupd/fwupdtool
 %{_libexecdir}/fwupd/fwupdagent
 %{_libexecdir}/fwupd/fwupdoffline
-%{_libexecdir}/fwupd/fwupdtpmevlog
 %if 0%{?have_uefi}
 %{_libexecdir}/fwupd/efi/*.efi
 %{_libexecdir}/fwupd/efi/*.efi.signed
 %{_libexecdir}/fwupd/fwupdate
+%{_libexecdir}/fwupd/fwupdtpmevlog
 %endif
 %{_bindir}/dfu-tool
 %{_bindir}/fwupdmgr
@@ -353,15 +355,15 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %{_libdir}/fwupd-plugins-3/libfu_plugin_thelio_io.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_thunderbolt.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_thunderbolt_power.so
+%if 0%{?have_uefi}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_tpm.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_tpm_eventlog.so
-%if 0%{?have_uefi}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_uefi.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_uefi_recovery.so
 %endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_logitech_hidpp.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_upower.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_vli_usbhub.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_vli.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_wacom_raw.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_wacom_usb.so
 %ghost %{_localstatedir}/lib/fwupd/gnupg

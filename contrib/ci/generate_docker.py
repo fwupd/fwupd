@@ -9,6 +9,15 @@ import subprocess
 import sys
 import xml.etree.ElementTree as etree
 import tempfile
+import shutil
+
+def get_container_cmd():
+    '''return docker or podman as container manager'''
+
+    if shutil.which('docker'):
+        return 'docker'
+    if shutil.which('podman'):
+        return 'podman'
 
 def parse_dependencies(OS, SUBOS, requested_type):
     deps = []
@@ -96,7 +105,8 @@ with open(out.name, 'w') as wfd:
         else:
             wfd.write(line)
     wfd.flush()
-    args = ["docker", "build", "-t", "fwupd-%s" % TARGET]
+    cmd = get_container_cmd()
+    args = [cmd, "build", "-t", "fwupd-%s" % TARGET]
     if 'http_proxy' in os.environ:
         args += ['--build-arg=http_proxy=%s' % os.environ['http_proxy']]
     if 'https_proxy' in os.environ:

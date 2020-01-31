@@ -743,6 +743,10 @@ fu_device_set_quirk_kv (FuDevice *self,
 		fu_device_set_vendor_id (self, value);
 		return TRUE;
 	}
+	if (g_strcmp0 (key, FU_QUIRKS_PROTOCOL) == 0) {
+		fu_device_set_protocol (self, value);
+		return TRUE;
+	}
 	if (g_strcmp0 (key, FU_QUIRKS_VERSION) == 0) {
 		fu_device_set_version (self, value, fu_device_get_version_format (self));
 		return TRUE;
@@ -988,7 +992,7 @@ fu_device_has_guid (FuDevice *self, const gchar *guid)
  * @instance_id: A Instance ID, e.g. `WacomAES`
  * @flags: A #FuDeviceInstanceFlags
  *
- * Adds an instance ID with all paramters set
+ * Adds an instance ID with all parameters set
  *
  *
  * Since: 1.2.9
@@ -1567,6 +1571,8 @@ fu_device_add_flag (FuDevice *self, FwupdDeviceFlags flag)
 {
 	if (flag & FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE)
 		flag |= FWUPD_DEVICE_FLAG_CAN_VERIFY;
+	if (flag & FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES)
+		flag |= FWUPD_DEVICE_FLAG_VERSION_CHECK_REQUIRED;
 	fwupd_device_add_flag (FWUPD_DEVICE (self), flag);
 }
 

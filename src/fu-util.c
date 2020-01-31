@@ -77,8 +77,6 @@ struct FuUtilPrivate {
 	FwupdDeviceFlags	 filter_exclude;
 };
 
-static GFileOutputStream *log_output = NULL;
-
 static gboolean	fu_util_report_history (FuUtilPrivate *priv, gchar **values, GError **error);
 static gboolean	fu_util_download_file	(FuUtilPrivate	*priv,
 					 SoupURI	*uri,
@@ -1315,6 +1313,27 @@ fu_util_download_metadata_enable_lvfs (FuUtilPrivate *priv, GError **error)
 }
 
 static gboolean
+fu_util_check_oldest_remote (FuUtilPrivate *priv, guint64 *age_oldest, GError **error)
+{
+	g_autoptr(GPtrArray) remotes = NULL;
+
+	/* get the age of the oldest enabled remotes */
+	remotes = fwupd_client_get_remotes (priv->client, NULL, error);
+	if (remotes == NULL)
+		return FALSE;
+	for (guint i = 0; i < remotes->len; i++) {
+		FwupdRemote *remote = g_ptr_array_index (remotes, i);
+		if (!fwupd_remote_get_enabled (remote))
+			continue;
+		if (fwupd_remote_get_kind (remote) != FWUPD_REMOTE_KIND_DOWNLOAD)
+			continue;
+		if (fwupd_remote_get_age (remote) > *age_oldest)
+			*age_oldest = fwupd_remote_get_age (remote);
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 {
 	gboolean download_remote_enabled = FALSE;
@@ -1322,6 +1341,26 @@ fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 	g_autoptr(GPtrArray) devs = NULL;
 	g_autoptr(GPtrArray) remotes = NULL;
 	g_autoptr(GString) str = g_string_new (NULL);
+
+	/* metadata refreshed recently */
+	if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+		guint64 age_oldest = 0;
+		const guint64 age_limit_hours = 24;
+
+		if (!fu_util_check_oldest_remote (priv, &age_oldest, error))
+			return FALSE;
+		if (age_oldest < 60 * 60 * age_limit_hours) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     /* TRANSLATORS: error message for a user who ran fwupdmgr refresh recently
+				        %1 is an already translated timestamp such as 6 hours or 15 seconds */
+				     "Firmware metadata last refresh: %s ago. "
+				     "Use --force to refresh again.",
+				     fu_util_time_to_str (age_oldest));
+			return FALSE;
+		}
+	}
 
 	remotes = fwupd_client_get_remotes (priv->client, NULL, error);
 	if (remotes == NULL)
@@ -1553,7 +1592,6 @@ fu_util_unlock (FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_perhaps_refresh_remotes (FuUtilPrivate *priv, GError **error)
 {
-	g_autoptr(GPtrArray) remotes = NULL;
 	guint64 age_oldest = 0;
 	const guint64 age_limit_days = 30;
 
@@ -1563,19 +1601,8 @@ fu_util_perhaps_refresh_remotes (FuUtilPrivate *priv, GError **error)
 		return TRUE;
 	}
 
-	/* get the age of the oldest enabled remotes */
-	remotes = fwupd_client_get_remotes (priv->client, NULL, error);
-	if (remotes == NULL)
+	if (!fu_util_check_oldest_remote (priv, &age_oldest, error))
 		return FALSE;
-	for (guint i = 0; i < remotes->len; i++) {
-		FwupdRemote *remote = g_ptr_array_index (remotes, i);
-		if (!fwupd_remote_get_enabled (remote))
-			continue;
-		if (fwupd_remote_get_kind (remote) != FWUPD_REMOTE_KIND_DOWNLOAD)
-			continue;
-		if (fwupd_remote_get_age (remote) > age_oldest)
-			age_oldest = fwupd_remote_get_age (remote);
-	}
 
 	/* metadata is new enough */
 	if (age_oldest < 60 * 60 * 24 * age_limit_days)
@@ -2356,33 +2383,6 @@ fu_util_check_polkit_actions (GError **error)
 }
 
 static void
-fu_util_log_output (const gchar *str)
-{
-	if (log_output != NULL) {
-		g_autoptr(GError) error_local = NULL;
-		if (g_output_stream_write (G_OUTPUT_STREAM (log_output),
-					   str, strlen(str),
-					   NULL, &error_local) <0)
-			g_printerr ("%s\n", error_local->message);
-	}
-}
-
-static void
-fu_util_close_log (void)
-{
-	if (log_output != NULL) {
-		g_autoptr(GError) error_local = NULL;
-		if (!g_output_stream_close (G_OUTPUT_STREAM (log_output),
-					    NULL,
-					    &error_local)) {
-			g_printerr ("%s\n", error_local->message);
-			return;
-		}
-		g_object_unref (log_output);
-	}
-}
-
-static void
 fu_util_display_help (FuUtilPrivate *priv)
 {
 	g_autofree gchar *tmp = NULL;
@@ -2434,9 +2434,6 @@ main (int argc, char *argv[])
 		{ "assume-yes", 'y', 0, G_OPTION_ARG_NONE, &priv->assume_yes,
 			/* TRANSLATORS: command line option */
 			_("Answer yes to all questions"), NULL },
-		{ "log", '\0', 0, G_OPTION_ARG_STRING, &log,
-			/* TRANSLATORS: command line option */
-			_("Log output to FILE (typically for scripting use)"), NULL },
 		{ "sign", '\0', 0, G_OPTION_ARG_NONE, &priv->sign,
 			/* TRANSLATORS: command line option */
 			_("Sign the uploaded data with the client certificate"), NULL },
@@ -2508,7 +2505,7 @@ main (int argc, char *argv[])
 		     fu_util_report_history);
 	fu_util_cmd_array_add (cmd_array,
 		     "install",
-		     "FILE [ID]",
+		     "FILE [DEVICE-ID]",
 		     /* TRANSLATORS: command description */
 		     _("Install a firmware file on this hardware"),
 		     fu_util_install);
@@ -2532,19 +2529,19 @@ main (int argc, char *argv[])
 		     fu_util_update);
 	fu_util_cmd_array_add (cmd_array,
 		     "verify",
-		     "[DEVICE_ID]",
+		     "[DEVICE-ID]",
 		     /* TRANSLATORS: command description */
 		     _("Checks cryptographic hash matches firmware"),
 		     fu_util_verify);
 	fu_util_cmd_array_add (cmd_array,
 		     "unlock",
-		     "DEVICE_ID",
+		     "DEVICE-ID",
 		     /* TRANSLATORS: command description */
 		     _("Unlocks the device for firmware access"),
 		     fu_util_unlock);
 	fu_util_cmd_array_add (cmd_array,
 		     "clear-results",
-		     "DEVICE_ID",
+		     "DEVICE-ID",
 		     /* TRANSLATORS: command description */
 		     _("Clears the results from the last update"),
 		     fu_util_clear_results);
@@ -2556,13 +2553,13 @@ main (int argc, char *argv[])
 		     fu_util_clear_offline);
 	fu_util_cmd_array_add (cmd_array,
 		     "get-results",
-		     "DEVICE_ID",
+		     "DEVICE-ID",
 		     /* TRANSLATORS: command description */
 		     _("Gets the results from the last update"),
 		     fu_util_get_results);
 	fu_util_cmd_array_add (cmd_array,
 		     "get-releases",
-		     "[DEVICE_ID]",
+		     "[DEVICE-ID]",
 		     /* TRANSLATORS: command description */
 		     _("Gets the releases for a device"),
 		     fu_util_get_releases);
@@ -2574,19 +2571,19 @@ main (int argc, char *argv[])
 		     fu_util_get_remotes);
 	fu_util_cmd_array_add (cmd_array,
 		     "downgrade",
-		     "[DEVICE_ID]",
+		     "[DEVICE-ID]",
 		     /* TRANSLATORS: command description */
 		     _("Downgrades the firmware on a device"),
 		     fu_util_downgrade);
 	fu_util_cmd_array_add (cmd_array,
 		     "refresh",
-		     "[FILE FILE_SIG REMOTE_ID]",
+		     "[FILE FILE_SIG REMOTE-ID]",
 		     /* TRANSLATORS: command description */
 		     _("Refresh metadata from remote server"),
 		     fu_util_refresh);
 	fu_util_cmd_array_add (cmd_array,
 		     "verify-update",
-		     "[DEVICE_ID]",
+		     "[DEVICE-ID]",
 		     /* TRANSLATORS: command description */
 		     _("Update the stored cryptographic hash with current ROM contents"),
 		     fu_util_verify_update);
@@ -2681,8 +2678,7 @@ main (int argc, char *argv[])
 	}
 
 	/* non-TTY consoles cannot answer questions */
-	if (log != NULL ||
-	    isatty (fileno (stdout)) == 0) {
+	if (isatty (fileno (stdout)) == 0) {
 		priv->no_unreported_check = TRUE;
 		priv->no_metadata_check = TRUE;
 		priv->no_reboot_check = TRUE;
@@ -2779,27 +2775,6 @@ main (int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	/* configure stdout redirection */
-	if (log != NULL) {
-		g_autoptr(GFile) file = NULL;
-		g_autofree gchar *target_fname = NULL;
-		/* If running under systemd unit, use the directory as a base */
-		if (g_getenv ("RUNTIME_DIRECTORY") != NULL) {
-			target_fname = g_build_filename (g_getenv ("RUNTIME_DIRECTORY"),
-							 log,
-							 NULL);
-		} else {
-			target_fname = g_steal_pointer (&log);
-		}
-		file = g_file_new_for_commandline_arg (target_fname);
-		log_output = g_file_append_to (file, G_FILE_CREATE_NONE, NULL, &error);
-		if (log_output == NULL) {
-			g_printerr ("%s\n", error->message);
-			return EXIT_FAILURE;
-		}
-		g_set_print_handler (fu_util_log_output);
-	}
-
 	/* run the specified command */
 	ret = fu_util_cmd_array_run (cmd_array, priv, argv[1], (gchar**) &argv[2], &error);
 	if (!ret) {
@@ -2812,7 +2787,6 @@ main (int argc, char *argv[])
 	} else {
 		ret = EXIT_SUCCESS;
 	}
-	fu_util_close_log ();
 
 	return ret;
 }

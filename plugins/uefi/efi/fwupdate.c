@@ -408,7 +408,9 @@ fwup_delete_boot_entry(VOID)
 		/* check if the variable name is Boot#### */
 		if (CompareGuid(&vendor_guid, &global_variable_guid) != 0)
 			continue;
-		if (StrCmp(variable_name, L"Boot") != 0)
+		if (StrLen(variable_name) != 8)
+			continue;
+		if (StrnCmp(variable_name, L"Boot", 4) != 0)
 			continue;
 
 		UINTN info_size = 0;

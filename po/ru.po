@@ -927,7 +927,7 @@ msgstr "Тип"
 msgid "UEFI Firmware Utility"
 msgstr "Средство для прошивки UEFI"
 
-#. TRANSLATORS: currect daemon status is unknown
+#. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 msgid "Unknown"
 msgstr "Неизвестно"

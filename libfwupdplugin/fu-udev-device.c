@@ -182,6 +182,7 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	/* fallback to the parent */
 	udev_parent = g_udev_device_get_parent (priv->udev_device);
 	if (udev_parent != NULL &&
+	    priv->flags & FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT &&
 	    priv->vendor == 0x0 && priv->model == 0x0 && priv->revision == 0x0) {
 		priv->vendor = fu_udev_device_get_sysfs_attr_as_uint32 (udev_parent, "vendor");
 		priv->model = fu_udev_device_get_sysfs_attr_as_uint32 (udev_parent, "device");
@@ -222,7 +223,8 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	}
 
 	/* try harder to find a vendor name the user will recognise */
-	if (udev_parent != NULL && fu_device_get_vendor (device) == NULL) {
+	if (priv->flags & FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT &&
+	    udev_parent != NULL && fu_device_get_vendor (device) == NULL) {
 		g_autoptr(GUdevDevice) device_tmp = g_object_ref (udev_parent);
 		for (guint i = 0; i < 0xff; i++) {
 			g_autoptr(GUdevDevice) parent = NULL;

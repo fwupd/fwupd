@@ -86,6 +86,7 @@ fu_util_save_current_state (FuUtilPrivate *priv, GError **error)
 	devices = fu_engine_get_devices (priv->engine, error);
 	if (devices == NULL)
 		return FALSE;
+	fwupd_device_array_ensure_parents (devices);
 
 	/* create header */
 	builder = json_builder_new ();
@@ -323,6 +324,7 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 	devices = fu_engine_get_devices (priv->engine, error);
 	if (devices == NULL)
 		return FALSE;
+	fwupd_device_array_ensure_parents (devices);
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
 		g_autofree gchar *upgrade_str = NULL;
@@ -472,6 +474,7 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_print ("%s\n", _("No hardware detected with firmware update capability"));
 		return TRUE;
 	}
+	fwupd_device_array_ensure_parents (devs);
 	fu_util_build_device_tree (priv, root, devs, NULL);
 	fu_util_print_tree (root, title);
 
@@ -491,6 +494,7 @@ fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
 	devices = fu_engine_get_devices (priv->engine, error);
 	if (devices == NULL)
 		return NULL;
+	fwupd_device_array_ensure_parents (devices);
 
 	/* filter results */
 	devices_filtered = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
@@ -804,6 +808,7 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 		devices_possible = fu_engine_get_devices (priv->engine, error);
 		if (devices_possible == NULL)
 			return FALSE;
+		fwupd_device_array_ensure_parents (devices_possible);
 	} else if (g_strv_length (values) == 2) {
 		FuDevice *device = fu_engine_get_device (priv->engine,
 							 values[1],
@@ -960,6 +965,7 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 	devices = fu_engine_get_devices (priv->engine, error);
 	if (devices == NULL)
 		return FALSE;
+	fwupd_device_array_ensure_parents (devices);
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
 		FwupdRelease *rel;
@@ -1593,6 +1599,100 @@ fu_util_get_history (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_util_refresh_remote (FuUtilPrivate *priv, FwupdRemote *remote, GError **error)
+{
+	g_autofree gchar *fn_raw = NULL;
+	g_autofree gchar *fn_sig = NULL;
+	g_autoptr(GBytes) bytes_raw = NULL;
+	g_autoptr(GBytes) bytes_sig = NULL;
+
+	/* payload */
+	fn_raw = fu_util_get_user_cache_path (fwupd_remote_get_metadata_uri (remote));
+	if (!fu_common_mkdir_parent (fn_raw, error))
+		return FALSE;
+	if (!fu_util_download_out_of_process (fwupd_remote_get_metadata_uri (remote),
+					      fn_raw, error))
+		return FALSE;
+	bytes_raw = fu_common_get_contents_bytes (fn_raw, error);
+	if (bytes_raw == NULL)
+		return FALSE;
+
+	/* signature */
+	fn_sig = fu_util_get_user_cache_path (fwupd_remote_get_metadata_uri_sig (remote));
+	if (!fu_util_download_out_of_process (fwupd_remote_get_metadata_uri_sig (remote),
+					      fn_sig, error))
+		return FALSE;
+	bytes_sig = fu_common_get_contents_bytes (fn_sig, error);
+	if (bytes_sig == NULL)
+		return FALSE;
+
+	/* send to daemon */
+	g_debug ("updating %s", fwupd_remote_get_id (remote));
+	return fu_engine_update_metadata_bytes (priv->engine,
+						fwupd_remote_get_id (remote),
+						bytes_raw,
+						bytes_sig,
+						error);
+
+}
+
+static gboolean
+fu_util_refresh (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GPtrArray) remotes = NULL;
+
+	/* load engine */
+	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+		return FALSE;
+
+	/* download new metadata */
+	remotes = fu_engine_get_remotes (priv->engine, error);
+	if (remotes == NULL)
+		return FALSE;
+	for (guint i = 0; i < remotes->len; i++) {
+		FwupdRemote *remote = g_ptr_array_index (remotes, i);
+		if (!fwupd_remote_get_enabled (remote))
+			continue;
+		if (fwupd_remote_get_kind (remote) != FWUPD_REMOTE_KIND_DOWNLOAD)
+			continue;
+		if (!fu_util_refresh_remote (priv, remote, error))
+			return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GNode) root = g_node_new (NULL);
+	g_autoptr(GPtrArray) remotes = NULL;
+	g_autofree gchar *title = fu_util_get_tree_title (priv);
+
+	/* load engine */
+	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+		return FALSE;
+
+	/* list remotes */
+	remotes = fu_engine_get_remotes (priv->engine, error);
+	if (remotes == NULL)
+		return FALSE;
+	if (remotes->len == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "no remotes available");
+		return FALSE;
+	}
+	for (guint i = 0; i < remotes->len; i++) {
+		FwupdRemote *remote_tmp = g_ptr_array_index (remotes, i);
+		g_node_append_data (root, remote_tmp);
+	}
+	fu_util_print_tree (root, title);
+
+	return TRUE;
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -1651,6 +1751,11 @@ main (int argc, char *argv[])
 			  "exclude, e.g. 'internal,~needs-reboot'"), NULL },
 		{ NULL}
 	};
+
+#ifdef _WIN32
+	/* workaround Windows setting the codepage to 1252 */
+	g_setenv ("LANG", "C.UTF-8", FALSE);
+#endif
 
 	setlocale (LC_ALL, "");
 
@@ -1732,7 +1837,7 @@ main (int argc, char *argv[])
 		     fu_util_install_blob);
 	fu_util_cmd_array_add (cmd_array,
 		     "install",
-		     "FILE [ID]",
+		     "FILE [DEVICE-ID]",
 		     /* TRANSLATORS: command description */
 		     _("Install a firmware file on this hardware"),
 		     fu_util_install);
@@ -1781,7 +1886,7 @@ main (int argc, char *argv[])
 		     fu_util_self_sign);
 	fu_util_cmd_array_add (cmd_array,
 		     "verify-update",
-		     "[DEVICE_ID]",
+		     "[DEVICE-ID]",
 		     /* TRANSLATORS: command description */
 		     _("Update the stored metadata with current contents"),
 		     fu_util_verify_update);
@@ -1793,7 +1898,7 @@ main (int argc, char *argv[])
 		     fu_util_firmware_read);
 	fu_util_cmd_array_add (cmd_array,
 		     "firmware-parse",
-		     "FILENAME [FIRMWARE_TYPE]",
+		     "FILENAME [FIRMWARE-TYPE]",
 		     /* TRANSLATORS: command description */
 		     _("Parse and show details about a firmware file"),
 		     fu_util_firmware_parse);
@@ -1803,6 +1908,18 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("List the available firmware types"),
 		     fu_util_get_firmware_types);
+	fu_util_cmd_array_add (cmd_array,
+		     "get-remotes",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Gets the configured remotes"),
+		     fu_util_get_remotes);
+	fu_util_cmd_array_add (cmd_array,
+		     "refresh",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Refresh metadata from remote server"),
+		     fu_util_refresh);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();

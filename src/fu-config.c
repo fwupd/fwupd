@@ -33,6 +33,7 @@ struct _FuConfig
 	guint64			 archive_size_max;
 	guint			 idle_timeout;
 	gchar			*config_file;
+	gboolean		 update_motd;
 };
 
 G_DEFINE_TYPE (FuConfig, fu_config, G_TYPE_OBJECT)
@@ -125,6 +126,12 @@ fu_config_reload (FuConfig *self, GError **error)
 					 NULL);
 	if (domains != NULL && domains[0] != '\0')
 		g_setenv ("FWUPD_VERBOSE", domains, TRUE);
+
+	/* whether to update the motd on changes */
+	self->update_motd = g_key_file_get_boolean (keyfile,
+						   "fwupd",
+						   "UpdateMotd",
+						   NULL);
 
 	return TRUE;
 }
@@ -221,6 +228,13 @@ fu_config_get_approved_firmware (FuConfig *self)
 {
 	g_return_val_if_fail (FU_IS_CONFIG (self), NULL);
 	return self->approved_firmware;
+}
+
+gboolean
+fu_config_get_update_motd (FuConfig *self)
+{
+	g_return_val_if_fail (FU_IS_CONFIG (self), FALSE);
+	return self->update_motd;
 }
 
 static void

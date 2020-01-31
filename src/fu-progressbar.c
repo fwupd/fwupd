@@ -91,7 +91,7 @@ fu_progressbar_status_to_string (FwupdStatus status)
 		break;
 	}
 
-	/* TRANSLATORS: currect daemon status is unknown */
+	/* TRANSLATORS: current daemon status is unknown */
 	return _("Unknown");
 }
 

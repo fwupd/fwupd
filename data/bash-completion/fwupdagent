@@ -1,5 +1,7 @@
 _fwupdagent_cmd_list=(
 	'get-devices'
+	'get-updates'
+	'get-upgrades'
 )
 
 _fwupdagent_opts=(

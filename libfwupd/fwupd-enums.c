@@ -179,6 +179,10 @@ fwupd_device_flag_to_string (FwupdDeviceFlags device_flag)
 		return "self-recovery";
 	if (device_flag == FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)
 		return "usable-during-update";
+	if (device_flag == FWUPD_DEVICE_FLAG_VERSION_CHECK_REQUIRED)
+		return "version-check-required";
+	if (device_flag == FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES)
+		return "install-all-releases";
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -259,6 +263,10 @@ fwupd_device_flag_from_string (const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_SELF_RECOVERY;
 	if (g_strcmp0 (device_flag, "usable-during-update") == 0)
 		return FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE;
+	if (g_strcmp0 (device_flag, "version-check-required") == 0)
+		return FWUPD_DEVICE_FLAG_VERSION_CHECK_REQUIRED;
+	if (g_strcmp0 (device_flag, "install-all-releases") == 0)
+		return FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES;
 	return FWUPD_DEVICE_FLAG_UNKNOWN;
 }
 

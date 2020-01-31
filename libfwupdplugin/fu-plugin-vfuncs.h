@@ -25,7 +25,7 @@
  * @plugin: A #FuPlugin
  *
  * Initializes the plugin.
- * Sets up any static data structures fo the plugin.
+ * Sets up any static data structures for the plugin.
  * Most plugins should call fu_plugin_set_build_hash in here.
  *
  * Since: 0.8.0
@@ -95,8 +95,6 @@ gboolean	 fu_plugin_coldplug_cleanup		(FuPlugin	*plugin,
 /**
  * fu_plugin_recoldplug:
  * @plugin: A #FuPlugin
- * @dev: A #FuDevice
- * @flags: A #FuPluginVerifyFlags
  * @error: A #GError or NULL
  *
  * Re-runs the coldplug routine for devices.
@@ -221,6 +219,7 @@ gboolean	 fu_plugin_update_detach		(FuPlugin	*plugin,
 /**
  * fu_plugin_update_prepare:
  * @plugin: A #FuPlugin
+ * @flags: A #FwupdInstallFlags
  * @dev: A #FuDevice
  * @error: A #GError or NULL
  *
@@ -235,6 +234,7 @@ gboolean	 fu_plugin_update_prepare		(FuPlugin	*plugin,
 /**
  * fu_plugin_update_cleanup
  * @plugin: A #FuPlugin
+ * @flags: A #FwupdInstallFlags
  * @dev: A #FuDevice
  * @error: A #GError or NULL
  *
@@ -325,7 +325,7 @@ gboolean	 fu_plugin_device_removed		(FuPlugin	*plugin,
 							 FuDevice	*device,
 							 GError		**error);
 /**
- * fu_plugin_device_removed
+ * fu_plugin_device_registered
  * @plugin: A #FuPlugin
  * @device: A #FuDevice
  *

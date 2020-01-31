@@ -1,5 +1,5 @@
-VIA USB Hub Support
-===================
+VIA Support
+===========
 
 Introduction
 ------------
@@ -14,6 +14,8 @@ an undisclosed binary file format.
 
 This plugin supports the following protocol ID:
 
+ * com.vli.i2c
+ * com.vli.pd
  * com.vli.usbhub
 
 GUID Generation
@@ -31,13 +33,13 @@ These devices also use custom GUID values for the SPI flash configuration, e.g.
  * `VLI_USBHUB\SPI_3730`
  * `VLI_USBHUB\SPI_37`
 
-Optional PD child devices use just one extra GUID, e.g.
+Optional PD child devices sharing the SPI flash use just one extra GUID, e.g.
 
- * `VLI_USBHUB_PD\VID_17EF&PID_3083`
+ * `USB\VID_17EF&PID_3083&DEV_VL102`
 
 Optional I²C child devices use just one extra GUID, e.g.
 
- * `VLI_USBHUB_I2C\MSP430`
+ * `USB\VID_17EF&PID_3083&I2C_MSP430`
 
 Vendor ID Security
 ------------------
@@ -51,6 +53,8 @@ This plugin uses the following plugin-specific quirks:
 
 | Quirk                      | Description                      | Minimum fwupd version |
 |----------------------------|----------------------------------|-----------------------|
+| `DeviceKind`               | Device kind, e.g. `VL102`        | 1.3.7                 |
+| `SpiAutoDetect`            | SPI autodetect (default 0x1)     | 1.3.7                 |
 | `SpiCmdChipErase`          | Flash command to erase chip      | 1.3.3                 |
 | `SpiCmdChipErase`          | Flash command to erase sector    | 1.3.3                 |
 | `SpiCmdReadId`             | Flash command to read the ID     | 1.3.3                 |
@@ -61,7 +65,8 @@ instance attribute, rather then the flash part as the ID is required to query
 the other flash chip parameters. For example:
 
     [DeviceInstanceId=USB\VID_2109&PID_0210]
-    Plugin = vli_usbhub
+    Plugin = vli
+    GType = FuVliUsbhubDevice
     SpiCmdReadId = 0xf8
     SpiCmdReadIdSz = 4
 

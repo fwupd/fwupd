@@ -14,7 +14,7 @@ subdir('synaptics-prometheus')
 subdir('test')
 subdir('upower')
 subdir('wacom-usb')
-subdir('vli-usbhub')
+subdir('vli')
 
 if get_option('gudev')
 subdir('ata')

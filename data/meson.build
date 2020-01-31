@@ -12,6 +12,9 @@ if get_option('tests')
 endif
 if build_daemon
   subdir('installed-tests')
+endif
+
+if build_standalone
   install_data(['daemon.conf'],
     install_dir : join_paths(sysconfdir, 'fwupd')
   )
@@ -59,6 +62,7 @@ if get_option('systemd') and build_daemon
     dynamic_options += ['ReadWriteDirectories=' + ' '.join(rw_directories)]
   endif
   con2.set('dynamic_options', '\n'.join(dynamic_options))
+  con2.set('motd_dir', motd_dir)
 
   # replace @bindir@
   configure_file(
