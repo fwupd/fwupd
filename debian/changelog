@@ -1,3 +1,9 @@
+fwupd (1.3.7-2) UNRELEASED; urgency=medium
+
+  * Backport a patch to fix fwupd-refresh.service (Fixes: #950407, Fixes: #950408)
+
+ -- Mario Limonciello <mario.limonciello.dell.com>  Sun, 02 Feb 2020 08:40:25 -0600
+
 fwupd (1.3.7-1) unstable; urgency=medium
 
   * New upstream version (1.3.7)

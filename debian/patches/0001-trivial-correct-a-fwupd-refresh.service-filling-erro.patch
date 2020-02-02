@@ -1,0 +1,49 @@
+From 5d8c244b2e054503ce493fa6cb3a621953b17f99 Mon Sep 17 00:00:00 2001
+From: Mario Limonciello <mario.limonciello@dell.com>
+Date: Sat, 1 Feb 2020 06:51:36 -0600
+Subject: [PATCH] trivial: correct a fwupd-refresh.service filling error
+
+---
+ ...wupd-refresh.service => fwupd-refresh.service.in} |  0
+ data/motd/meson.build                                | 12 ++++++++++--
+ 2 files changed, 10 insertions(+), 2 deletions(-)
+ rename data/motd/{fwupd-refresh.service => fwupd-refresh.service.in} (100%)
+
+diff --git a/data/motd/fwupd-refresh.service b/data/motd/fwupd-refresh.service.in
+similarity index 100%
+rename from data/motd/fwupd-refresh.service
+rename to data/motd/fwupd-refresh.service.in
+diff --git a/data/motd/meson.build b/data/motd/meson.build
+index f16862ac..22c20a0e 100644
+--- a/data/motd/meson.build
++++ b/data/motd/meson.build
+@@ -4,16 +4,24 @@ if get_option('systemd')
+     install_dir: systemdunitdir)
+   install_data(['fwupd-refresh.preset'],
+     install_dir: systemdsystempresetdir)
+-  install_data(['fwupd-refresh.service'],
+-    install_dir: systemdunitdir)
+   motd_fullpath = join_paths ('/run', motd_dir, 'fwupd', motd_file)
+ else
+   motd_fullpath = join_paths (localstatedir, motd_dir, motd_file)
+ endif
+ 
+ con2 = configuration_data()
++con2.set('bindir', bindir)
+ con2.set('motd_fullpath', motd_fullpath)
+ 
++if get_option('systemd')
++  configure_file(
++    input : 'fwupd-refresh.service.in',
++    output : 'fwupd-refresh.service',
++    configuration : con2,
++    install: true,
++    install_dir: systemdunitdir,
++  )
++endif
+ 
+ # This file is only used in Ubuntu, which chooses to use update-motd instead
+ # of sourcing /run/motd.d/*
+-- 
+2.24.0
+
