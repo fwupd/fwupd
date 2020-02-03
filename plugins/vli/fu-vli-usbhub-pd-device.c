@@ -201,6 +201,7 @@ static void
 fu_vli_usbhub_pd_device_init (FuVliUsbhubPdDevice *self)
 {
 	fu_device_add_icon (FU_DEVICE (self), "audio-card");
+	fu_device_set_protocol (FU_DEVICE (self), "com.vli.usbhub");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_set_install_duration (FU_DEVICE (self), 15); /* seconds */
