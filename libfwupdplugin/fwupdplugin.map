@@ -525,3 +525,9 @@ LIBFWUPDPLUGIN_1.3.6 {
     fu_udev_device_set_flags;
   local: *;
 } LIBFWUPDPLUGIN_1.3.5;
+
+LIBFWUPDPLUGIN_1.3.8 {
+  global:
+    fu_common_kernel_locked_down;
+  local: *;
+} LIBFWUPDPLUGIN_1.3.6;

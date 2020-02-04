@@ -1044,6 +1044,12 @@ fu_common_get_path (FuPathKind path_kind)
 		if (tmp != NULL)
 			return g_strdup (tmp);
 		return g_strdup ("/sys/bus/platform/drivers");
+	/* /sys/kernel/security */
+	case FU_PATH_KIND_SYSFSDIR_SECURITY:
+		tmp = g_getenv ("FWUPD_SYSFSSECURITYDIR");
+		if (tmp != NULL)
+			return g_strdup (tmp);
+		return g_strdup ("/sys/kernel/security");
 	/* /etc */
 	case FU_PATH_KIND_SYSCONFDIR:
 		tmp = g_getenv ("FWUPD_SYSCONFDIR");
@@ -1922,4 +1928,38 @@ fu_byte_array_append_uint32 (GByteArray *array, guint32 data, FuEndianType endia
 	guint8 buf[4];
 	fu_common_write_uint32 (buf, data, endian);
 	g_byte_array_append (array, buf, sizeof(buf));
+}
+
+/**
+ * fu_common_kernel_locked_down:
+ *
+ * Determines if kernel lockdown in effect
+ *
+ * Since: 1.3.8
+ **/
+gboolean
+fu_common_kernel_locked_down (void)
+{
+#ifndef _WIN32
+	gsize len = 0;
+	g_autofree gchar *dir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_SECURITY);
+	g_autofree gchar *fname = g_build_filename (dir, "lockdown", NULL);
+	g_autofree gchar *data = NULL;
+	g_auto(GStrv) options = NULL;
+
+	if (!g_file_test (fname, G_FILE_TEST_EXISTS))
+		return FALSE;
+	if (!g_file_get_contents (fname, &data, &len, NULL))
+		return FALSE;
+	if (len < 1)
+		return FALSE;
+	options = g_strsplit (data, " ", -1);
+	for (guint i = 0; options[i] != NULL; i++) {
+		if (g_strcmp0 (options[i], "[none]") == 0)
+			return FALSE;
+	}
+	return TRUE;
+#else
+	return FALSE;
+#endif
 }
