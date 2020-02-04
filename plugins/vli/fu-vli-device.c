@@ -554,8 +554,21 @@ fu_vli_device_setup (FuDevice *device, GError **error)
 	}
 
 	/* subclassed further */
-	if (klass->setup != NULL)
-		return klass->setup (self, error);
+	if (klass->setup != NULL) {
+		if (!klass->setup (self, error))
+			return FALSE;
+	}
+
+	/* add extra DEV GUID too */
+	if (priv->kind != FU_VLI_DEVICE_KIND_UNKNOWN) {
+		GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
+		g_autofree gchar *devid1 = NULL;
+		devid1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&DEV_%s",
+					  g_usb_device_get_vid (usb_device),
+					  g_usb_device_get_pid (usb_device),
+					  fu_vli_common_device_kind_to_string (priv->kind));
+		fu_device_add_instance_id (device, devid1);
+	}
 
 	/* success */
 	return TRUE;
