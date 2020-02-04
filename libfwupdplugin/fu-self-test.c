@@ -454,6 +454,28 @@ fu_plugin_quirks_device_func (void)
 	g_assert (fu_device_has_flag (device_tmp, FWUPD_DEVICE_FLAG_UPDATABLE));
 }
 
+static void fu_common_kernel_lockdown_func (void)
+{
+	gboolean ret;
+	g_autofree gchar *old_kernel_dir = g_build_filename (TESTDATADIR_SRC,
+							     "lockdown", NULL);
+	g_autofree gchar *locked_dir = g_build_filename (TESTDATADIR_SRC,
+							 "lockdown", "locked", NULL);
+	g_autofree gchar *none_dir = g_build_filename (TESTDATADIR_SRC,
+							"lockedown", "none", NULL);
+
+	g_setenv ("FWUPD_SYSFSSECURITYDIR", old_kernel_dir, TRUE);
+	ret = fu_common_kernel_locked_down ();
+	g_assert_false (ret);
+
+	g_setenv ("FWUPD_SYSFSSECURITYDIR", locked_dir, TRUE);
+	ret = fu_common_kernel_locked_down ();
+	g_assert_true (ret);
+
+	g_setenv ("FWUPD_SYSFSSECURITYDIR", none_dir, TRUE);
+	ret = fu_common_kernel_locked_down ();
+	g_assert_false (ret);
+}
 
 static void
 fu_common_firmware_builder_func (void)
@@ -1590,6 +1612,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/common{spawn)", fu_common_spawn_func);
 	g_test_add_func ("/fwupd/common{spawn-timeout)", fu_common_spawn_timeout_func);
 	g_test_add_func ("/fwupd/common{firmware-builder}", fu_common_firmware_builder_func);
+	g_test_add_func ("/fwupd/common{kernel-lockdown}", fu_common_kernel_lockdown_func);
 	g_test_add_func ("/fwupd/hwids", fu_hwids_func);
 	g_test_add_func ("/fwupd/smbios", fu_smbios_func);
 	g_test_add_func ("/fwupd/smbios3", fu_smbios3_func);
