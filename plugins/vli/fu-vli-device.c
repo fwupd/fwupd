@@ -368,6 +368,7 @@ fu_vli_device_spi_write (FuVliDevice *self,
 gboolean
 fu_vli_device_spi_erase_all (FuVliDevice *self, GError **error)
 {
+	fu_device_set_progress (FU_DEVICE (self), 0);
 	if (!fu_vli_device_spi_write_enable (self, error))
 		return FALSE;
 	if (!fu_vli_device_spi_write_status (self, 0x00, error))
@@ -394,6 +395,8 @@ fu_vli_device_spi_erase_all (FuVliDevice *self, GError **error)
 				return FALSE;
 			}
 		}
+		fu_device_set_progress_full (FU_DEVICE (self),
+					     (gsize) addr, (gsize) 0x10000);
 	}
 	return TRUE;
 }
