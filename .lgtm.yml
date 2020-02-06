@@ -6,6 +6,7 @@ extraction:
     prepare:
       packages:
       - python3-gi
+      - libarchive-tools
       - libcogl-pango-dev
       - python3-pil
       - python3-cairo
