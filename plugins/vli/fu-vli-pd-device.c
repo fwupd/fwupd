@@ -252,8 +252,16 @@ fu_vli_pd_device_setup (FuVliDevice *device, GError **error)
 	FuVliDeviceClass *klass = FU_VLI_DEVICE_GET_CLASS (device);
 
 	/* get version */
-	if (!fu_vli_pd_device_read_regs (self, 0x0, verbuf, sizeof(verbuf), error))
+	if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (self)),
+					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    0xe2, 0x0001, 0x0000,
+					    verbuf, sizeof(verbuf), NULL,
+					    1000, NULL, error)) {
+		g_prefix_error (error, "failed to get version: ");
 		return FALSE;
+	}
 	version_raw = fu_common_read_uint32 (verbuf, G_BIG_ENDIAN);
 	fu_device_set_version_raw (FU_DEVICE (self), version_raw);
 	version_str = fu_common_version_from_uint32 (version_raw, FWUPD_VERSION_FORMAT_QUAD);
