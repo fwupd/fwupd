@@ -5,7 +5,6 @@ extraction:
   cpp:
     prepare:
       packages:
-      - bsdtar
       - python3-gi
       - libcogl-pango-dev
       - python3-pil
