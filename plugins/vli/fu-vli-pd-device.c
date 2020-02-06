@@ -422,6 +422,7 @@ fu_vli_pd_device_detach (FuDevice *device, GError **error)
 {
 	FuVliPdDevice *self = FU_VLI_PD_DEVICE (device);
 	guint8 tmp = 0;
+	g_autoptr(GError) error_local = NULL;
 
 	/* write GPIOs */
 	if (!fu_vli_pd_device_write_gpios (self, error))
@@ -453,8 +454,18 @@ fu_vli_pd_device_detach (FuDevice *device, GError **error)
 
 	/* reset from SPI_Code into ROM_Code */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	if (!fu_vli_device_reset (FU_VLI_DEVICE (device), error))
-		return FALSE;
+	if (!fu_vli_device_reset (FU_VLI_DEVICE (device), &error_local)) {
+		if (g_error_matches (error_local,
+				     G_USB_DEVICE_ERROR,
+				     G_USB_DEVICE_ERROR_FAILED)) {
+			g_debug ("ignoring %s", error_local->message);
+		} else {
+			g_propagate_prefixed_error (error,
+						    g_steal_pointer (&error_local),
+						    "failed to restart device: ");
+			return FALSE;
+		}
+	}
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
