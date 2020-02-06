@@ -446,6 +446,13 @@ fu_vli_device_set_kind (FuVliDevice *self, FuVliDeviceKind device_kind)
 		fu_device_set_firmware_size_max (FU_DEVICE (self), sz);
 }
 
+void
+fu_vli_device_set_spi_auto_detect (FuVliDevice *self, gboolean spi_auto_detect)
+{
+	FuVliDevicePrivate *priv = GET_PRIVATE (self);
+	priv->spi_auto_detect = spi_auto_detect;
+}
+
 FuVliDeviceKind
 fu_vli_device_get_kind (FuVliDevice *self)
 {
