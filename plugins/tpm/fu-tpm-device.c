@@ -75,7 +75,7 @@ fu_tpm_device_get_string (ESYS_CONTEXT *ctx, guint32 query, GError **error)
 
 	/* convert non-ASCII into spaces */
 	for (guint i = 0; i < 4; i++) {
-		if (!g_ascii_isgraph (result[i]) && result[i] != '\0')
+		if (!g_ascii_isgraph (result[i]))
 			result[i] = 0x20;
 	}
 
