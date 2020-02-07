@@ -633,5 +633,12 @@ fu_synaptics_rmi_v7_device_query_status (FuSynapticsRmiDevice *self, GError **er
 				     "transfer checksum failed");
 		return FALSE;
 	}
+	if (status == 0x1f) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "flash hardware failure");
+		return FALSE;
+	}
 	return TRUE;
 }
