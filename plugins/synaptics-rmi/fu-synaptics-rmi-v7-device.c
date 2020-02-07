@@ -626,7 +626,7 @@ fu_synaptics_rmi_v7_device_query_status (FuSynapticsRmiDevice *self, GError **er
 				     "bad partition table");
 		return FALSE;
 	}
-	if (status == 0x08) {
+	if (status == 0x09) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
