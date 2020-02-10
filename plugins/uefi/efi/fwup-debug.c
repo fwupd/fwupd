@@ -58,12 +58,12 @@ fwup_log(FwupLogLevel level, const char *func, const char *file, const int line,
 
 	if (debugging) {
 		_cleanup_free CHAR16 *out1 = NULL;
-		out1 = PoolPrint(L"%a:%d:%a(): %s", file, line, func, tmp);
+		out1 = PoolPrint(L"%a:%d:%a(): %s\n", file, line, func, tmp);
 		if (out1 == NULL) {
 			Print(L"fwupdate: Allocation for debug log failed!\n");
 			return;
 		}
-		Print(L"%s\n", out1);
+		Print(L"%s", out1);
 		fwupd_debug_efivar_append(out1);
 	} else {
 		switch (level) {
