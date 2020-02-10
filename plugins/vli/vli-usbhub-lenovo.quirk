@@ -50,31 +50,31 @@ Flags = usb2,usb3
 [DeviceInstanceId=USB\VID_17EF&PID_305A]
 Plugin = vli
 GType = FuVliUsbhubDevice
-Flags = tier1,usb2,usb3
+Flags = usb2,usb3
 [DeviceInstanceId=USB\VID_17EF&PID_305B]
 Plugin = vli
 GType = FuVliUsbhubDevice
-Flags = tier2,usb2,usb3
+Flags = usb2,usb3
 
 # Lenovo USB3 Ultra Dock
 [DeviceInstanceId=USB\VID_17EF&PID_1014]
 Plugin = vli
 GType = FuVliUsbhubDevice
-Flags = tier1,usb2,usb3
+Flags = usb2,usb3
 [DeviceInstanceId=USB\VID_17EF&PID_1015]
 Plugin = vli
 GType = FuVliUsbhubDevice
-Flags = tier2,usb2,usb3
+Flags = usb2,usb3
 
 # Lenovo USB3 Pro Dock
 [DeviceInstanceId=USB\VID_17EF&PID_1016]
 Plugin = vli
 GType = FuVliUsbhubDevice
-Flags = tier1,usb2,usb3
+Flags = usb2,usb3
 [DeviceInstanceId=USB\VID_17EF&PID_1018]
 Plugin = vli
 GType = FuVliUsbhubDevice
-Flags = tier2,usb2,usb3
+Flags = usb2,usb3
 
 # Lenovo Workstation D40
 [DeviceInstanceId=USB\VID_17EF&PID_1033]
@@ -98,29 +98,29 @@ Flags = usb2,usb3
 [DeviceInstanceId=USB\VID_17EF&PID_1018]
 Plugin = vli
 GType = FuVliUsbhubDevice
-Flags = tier1,usb2,usb3
+Flags = usb2,usb3
 [DeviceInstanceId=USB\VID_17EF&PID_1019]
 Plugin = vli
 GType = FuVliUsbhubDevice
-Flags = tier2,usb2,usb3
+Flags = usb2,usb3
 
 # Lenovo Hybrid dock
 [DeviceInstanceId=USB\VID_17EF&PID_A356]
 Plugin = vli
 GType = FuVliUsbhubDevice
-Flags = tier1,usb3
+Flags = usb3
 [DeviceInstanceId=USB\VID_17EF&PID_1028]
 Plugin = vli
 GType = FuVliUsbhubDevice
-Flags = tier1,usb2
+Flags = usb2
 [DeviceInstanceId=USB\VID_17EF&PID_A357]
 Plugin = vli
 GType = FuVliUsbhubDevice
-Flags = tier2,usb3
+Flags = usb3
 [DeviceInstanceId=USB\VID_17EF&PID_1029]
 Plugin = vli
 GType = FuVliUsbhubDevice
-Flags = tier2,usb2
+Flags = usb2
 
 # Lenovo Travel hub
 [DeviceInstanceId=USB\VID_17EF&PID_7216]
@@ -186,19 +186,19 @@ Flags = usb2,has-shared-spi-pd
 [DeviceInstanceId=USB\VID_17EF&PID_A391]
 Plugin = vli
 GType = FuVliUsbhubDevice
-Flags = tier1,usb3
+Flags = usb3
 [DeviceInstanceId=USB\VID_17EF&PID_A392]
 Plugin = vli
 GType = FuVliUsbhubDevice
-Flags = tier1,usb2
+Flags = usb2
 [DeviceInstanceId=USB\VID_17EF&PID_A393]
 Plugin = vli
 GType = FuVliUsbhubDevice
-Flags = tier2,usb3
+Flags = usb3
 [DeviceInstanceId=USB\VID_17EF&PID_A394]
 Plugin = vli
 GType = FuVliUsbhubDevice
-Flags = tier2,usb2
+Flags = usb2
 [DeviceInstanceId=USB\VID_17EF&PID_A395]
 Plugin = vli
 GType = FuVliUsbhubDevice
