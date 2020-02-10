@@ -1,14 +1,17 @@
 # ThinkPad TBT3-TR Gen 2 dock
 [DeviceInstanceId=USB\VID_17EF&PID_3083]
 Guid = SYNAPTICS_CXAUDIO\CX2098X
+ParentGuid = TBT-01081720
 
 # ThinkPad TBT3-MS Gen 2 dock
 [DeviceInstanceId=USB\VID_17EF&PID_3092]
 Guid = SYNAPTICS_CXAUDIO\CX2198X
+ParentGuid = USB\VID_17EF&PID_308F
 
 # ThinkPad USB-C Dock Gen2 Audio
 [DeviceInstanceId=USB\VID_17EF&PID_A396]
 Guid = SYNAPTICS_CXAUDIO\CX2198X
+ParentGuid = USB\VID_17EF&PID_1039
 
 # Google Pixel USB-C headphones
 [DeviceInstanceId=USB\VID_18D1&PID_5033]
