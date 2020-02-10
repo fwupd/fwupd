@@ -1,3 +1,11 @@
+fwupd (1.3.7-3) unstable; urgency=medium
+
+  * Backport some patches from upstream.
+    - Revert a commit to fix UEFI updates hanging on many Dell systems.
+    - Adjust motd output to contain more whitespace
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Mon, 10 Feb 2020 12:55:12 -0600
+
 fwupd (1.3.7-2) unstable; urgency=medium
 
   * Backport a patch to fix fwupd-refresh.service (Fixes: #950407, Fixes: #950408)

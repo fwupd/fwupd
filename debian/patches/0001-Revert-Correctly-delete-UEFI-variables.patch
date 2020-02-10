@@ -1,0 +1,70 @@
+From d5bf8e45f22505eb9281e83357067cdb0bf6d54e Mon Sep 17 00:00:00 2001
+From: Mario Limonciello <mario.limonciello@dell.com>
+Date: Mon, 10 Feb 2020 11:56:38 -0600
+Subject: [PATCH] Revert "Correctly delete UEFI variables"
+
+This reverts commit 44f55e2ee6df0b317df3029675afce86219cd9cd.
+
+This behavior caused fwupdx64.efi to loop for a very long time until
+either aborting, running out of memory or some other problems.
+Fixes: #1756
+Fixes: #1751
+---
+ plugins/uefi/efi/fwup-efi.c | 19 ++++---------------
+ plugins/uefi/efi/fwupdate.c |  4 +---
+ 2 files changed, 5 insertions(+), 18 deletions(-)
+
+diff --git a/plugins/uefi/efi/fwup-efi.c b/plugins/uefi/efi/fwup-efi.c
+index db864e10..8da6b202 100644
+--- a/plugins/uefi/efi/fwup-efi.c
++++ b/plugins/uefi/efi/fwup-efi.c
+@@ -17,27 +17,16 @@ fwup_delete_variable(CHAR16 *name, EFI_GUID *guid)
+ {
+ 	EFI_STATUS rc;
+ 	UINT32 attrs = 0;
+-	UINTN size = 0;
+ 
+ 	/* get the attrs so we can delete it */
+-	rc = uefi_call_wrapper(RT->GetVariable, 5, name, guid, &attrs, &size, NULL);
++	rc = uefi_call_wrapper(RT->GetVariable, 5, name, guid, &attrs, NULL, NULL);
+ 	if (EFI_ERROR(rc)) {
+-		if (rc == EFI_BUFFER_TOO_SMALL) {
+-			_cleanup_free VOID *buf = fwup_malloc(size);
+-			if (buf == NULL)
+-				return EFI_OUT_OF_RESOURCES;
+-			rc = uefi_call_wrapper(RT->GetVariable, 5, name, guid, &attrs, &size, buf);
+-			if (EFI_ERROR(rc)) {
+-				fwup_debug(L"Could not get attr: %r", rc);
+-				return rc;
+-			}
+-		} else if (rc == EFI_NOT_FOUND) {
++		if (rc == EFI_NOT_FOUND) {
+ 			fwup_debug(L"Not deleting variable '%s' as not found", name);
+ 			return EFI_SUCCESS;
+-		} else {
+-			fwup_debug(L"Could not get variable '%s' for delete: %r", name, rc);
+-			return rc;
+ 		}
++		fwup_debug(L"Could not get variable '%s' for delete: %r", name, rc);
++		return rc;
+ 	}
+ 	return uefi_call_wrapper(RT->SetVariable, 5, name, guid, attrs, 0, NULL);
+ }
+diff --git a/plugins/uefi/efi/fwupdate.c b/plugins/uefi/efi/fwupdate.c
+index abacc10b..f4c740a3 100644
+--- a/plugins/uefi/efi/fwupdate.c
++++ b/plugins/uefi/efi/fwupdate.c
+@@ -408,9 +408,7 @@ fwup_delete_boot_entry(VOID)
+ 		/* check if the variable name is Boot#### */
+ 		if (CompareGuid(&vendor_guid, &global_variable_guid) != 0)
+ 			continue;
+-		if (StrLen(variable_name) != 8)
+-			continue;
+-		if (StrnCmp(variable_name, L"Boot", 4) != 0)
++		if (StrCmp(variable_name, L"Boot") != 0)
+ 			continue;
+ 
+ 		UINTN info_size = 0;
+-- 
+2.24.0
+

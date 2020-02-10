@@ -1,0 +1,80 @@
+From d89bf61c0ec3a4d9821ced609e78d7acfd0e78c2 Mon Sep 17 00:00:00 2001
+From: Mario Limonciello <mario.limonciello@dell.com>
+Date: Thu, 6 Feb 2020 16:38:46 -0600
+Subject: [PATCH] trivial: fu-engine-helper: Add whitespace to motd
+
+This matches the optional other lines that show updates.
+
+Current experience:
+
+```
+Welcome to Ubuntu Focal Fossa (development branch) (GNU/Linux 5.4.0-12-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+ * Multipass 1.0 is out! Get Ubuntu VMs on demand on your Linux, Windows or
+   Mac. Supports cloud-init for fast, local, cloud devops simulation.
+
+     https://multipass.run/
+1 device has a firmware upgrade available.
+Run `fwupdmgr get-upgrades` for more information.
+
+10 updates can be installed immediately.
+0 of these updates are security updates.
+To see these additional updates run: apt list --upgradable
+
+Last login: Thu Jan 16 21:00:01 2020 from 127.0.0.1
+```
+
+Updated experience:
+
+```
+Welcome to Ubuntu Focal Fossa (development branch) (GNU/Linux 5.4.0-12-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+ * Multipass 1.0 is out! Get Ubuntu VMs on demand on your Linux, Windows or
+   Mac. Supports cloud-init for fast, local, cloud devops simulation.
+
+     https://multipass.run/
+
+1 device has a firmware upgrade available.
+Run `fwupdmgr get-upgrades` for more information.
+
+10 updates can be installed immediately.
+0 of these updates are security updates.
+To see these additional updates run: apt list --upgradable
+
+Last login: Thu Feb  6 16:29:12 2020 from 127.0.0.1
+```
+---
+ src/fu-engine-helper.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/fu-engine-helper.c b/src/fu-engine-helper.c
+index 6260a10c..82ec7efe 100644
+--- a/src/fu-engine-helper.c
++++ b/src/fu-engine-helper.c
+@@ -63,13 +63,13 @@ fu_engine_update_motd (FuEngine *self, GError **error)
+ 		return output != NULL;
+ 	}
+ 
+-	str = g_string_new ("");
++	str = g_string_new ("\n");
+ 	g_string_append_printf (str, ngettext ("%u device has a firmware upgrade available.",
+ 					       "%u devices have a firmware upgrade available.",
+ 					       upgrade_count),
+ 					       upgrade_count);
+ 	g_string_append_printf (str,
+-				"\n%s\n",
++				"\n%s\n\n",
+ 				_("Run `fwupdmgr get-upgrades` for more information."));
+ 	return g_file_set_contents (target, str->str, str->len, error);
+ }
+-- 
+2.24.0
+
