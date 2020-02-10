@@ -109,8 +109,8 @@ fu_usb_device_query_hub (FuUsbDevice *self, GError **error)
 	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
 	gsize sz = 0;
 	guint16 value = 0x29;
-	guint8 data[0x0c] = {0x0};
-	guint8 removable = 0xff;
+	guint8 data[0x0c] = { 0x0 };
+	g_autofree gchar *devid = NULL;
 
 	/* longer descriptor for SuperSpeed */
 	if (fu_usb_device_get_spec (self) >= 0x0300)
@@ -130,17 +130,18 @@ fu_usb_device_query_hub (FuUsbDevice *self, GError **error)
 		fu_common_dump_raw (G_LOG_DOMAIN, "HUB_DT", data, sz);
 
 	/* see http://www.usblyzer.com/usb-hub-class-decoder.htm */
-	if (sz == 0x09)
-		removable = data[7];
-	else if (sz == 0x0c)
-		removable = data[10];
-	if (removable != 0xff) {
-		g_autofree gchar *devid2 = NULL;
-		devid2 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&HUB_%02X",
+	if (sz == 0x09) {
+		devid = g_strdup_printf ("USB\\VID_%04X&PID_%04X&HUB_%02X",
 					  g_usb_device_get_vid (priv->usb_device),
 					  g_usb_device_get_pid (priv->usb_device),
-					  removable);
-		fu_device_add_instance_id (FU_DEVICE (self), devid2);
+					  data[7]);
+		fu_device_add_instance_id (FU_DEVICE (self), devid);
+	} else if (sz == 0x0c) {
+		devid = g_strdup_printf ("USB\\VID_%04X&PID_%04X&HUB_%02X%02X",
+					 g_usb_device_get_vid (priv->usb_device),
+					 g_usb_device_get_pid (priv->usb_device),
+					 data[11], data[10]);
+		fu_device_add_instance_id (FU_DEVICE (self), devid);
 	}
 	return TRUE;
 }
