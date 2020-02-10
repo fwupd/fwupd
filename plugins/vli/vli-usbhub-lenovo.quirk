@@ -203,6 +203,26 @@ Flags = usb2
 Plugin = vli
 GType = FuVliUsbhubDevice
 
+# Lenovo Modularized dock (with VIA USB PID?!)
+[DeviceInstanceId=USB\VID_2109&PID_1822]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb3
+[DeviceInstanceId=USB\VID_2109&PID_2822]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb2
+[DeviceInstanceId=USB\VID_2109&PID_3822]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb3
+ParentGuid = USB\VID_2109&PID_1822
+[DeviceInstanceId=USB\VID_2109&PID_4822]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb2
+ParentGuid = USB\VID_2109&PID_2822
+
 # Lenovo Powered Hub
 [DeviceInstanceId=USB\VID_17EF&PID_721C]
 Plugin = vli
