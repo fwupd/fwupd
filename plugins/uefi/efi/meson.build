@@ -101,6 +101,7 @@ efi_ldflags = ['-T',
                '-nostdlib',
                '-znocombreloc',
                '-L', efi_ldsdir,
+               '-L', efi_libdir,
                join_paths(efi_ldsdir, arch_crt)]
 if efi_arch == 'aarch64' or efi_arch == 'arm'
   # Aarch64 and ARM32 don't have an EFI capable objcopy. Use 'binary'
