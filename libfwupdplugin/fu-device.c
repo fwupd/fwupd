@@ -109,7 +109,6 @@ fu_device_set_property (GObject *object, guint prop_id,
 			const GValue *value, GParamSpec *pspec)
 {
 	FuDevice *self = FU_DEVICE (object);
-	FuDevicePrivate *priv = GET_PRIVATE (self);
 	switch (prop_id) {
 	case PROP_STATUS:
 		fu_device_set_status (self, g_value_get_uint (value));
@@ -127,8 +126,7 @@ fu_device_set_property (GObject *object, guint prop_id,
 		fu_device_set_quirks (self, g_value_get_object (value));
 		break;
 	case PROP_PARENT:
-		/* noref */
-		priv->parent = g_value_get_object (value);
+		fu_device_set_parent (self, g_value_get_object (value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
