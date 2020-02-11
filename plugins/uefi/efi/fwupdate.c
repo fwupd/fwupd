@@ -317,82 +317,6 @@ fwup_open_file(EFI_DEVICE_PATH *dp, EFI_FILE_HANDLE *fh)
 	return EFI_SUCCESS;
 }
 
-/* TODO: move to gnu-efi: https://github.com/vathpela/gnu-efi/issues/7 */
-static BOOLEAN
-_StrHasPrefix(IN CONST CHAR16 *s1, IN CONST CHAR16 *s2)
-{
-	while (*s2) {
-		if (*s1 == L'\0' || *s1 != *s2)
-			return FALSE;
-		s1  += 1;
-		s2  += 1;
-	}
-	return TRUE;
-}
-
-static EFI_STATUS
-fwup_delete_boot_entry(VOID)
-{
-	EFI_STATUS rc;
-	UINTN variable_name_size = 0;
-	_cleanup_free CHAR16 *variable_name = NULL;
-	EFI_GUID vendor_guid = empty_guid;
-
-	variable_name = fwup_malloc0(GNVN_BUF_SIZE * 2);
-	if (variable_name == NULL)
-		return EFI_OUT_OF_RESOURCES;
-
-	while (1) {
-		variable_name_size = GNVN_BUF_SIZE;
-		rc = uefi_call_wrapper(RT->GetNextVariableName, 3,
-				       &variable_name_size, variable_name,
-				       &vendor_guid);
-		if (rc == EFI_NOT_FOUND)
-			break;
-		/* ignore any huge names */
-		if (rc == EFI_BUFFER_TOO_SMALL)
-			continue;
-		if (EFI_ERROR(rc)) {
-			fwup_warning(L"Could not get variable name: %r", rc);
-			return rc;
-		}
-
-		/* check if the variable name is Boot#### */
-		if (CompareGuid(&vendor_guid, &global_variable_guid) != 0)
-			continue;
-		if (StrCmp(variable_name, L"Boot") != 0)
-			continue;
-
-		UINTN info_size = 0;
-		_cleanup_free VOID *info_ptr = NULL;
-
-		/* get the data */
-		rc = fwup_get_variable(variable_name, &vendor_guid,
-				       &info_ptr, &info_size, NULL);
-		if (EFI_ERROR(rc))
-			return rc;
-		if (info_size < sizeof(EFI_LOAD_OPTION))
-			continue;
-
-		/*
-		 * check if the boot path created by fwupdate,
-		 * check with EFI_LOAD_OPTION description
-		 */
-		EFI_LOAD_OPTION *load_op = (EFI_LOAD_OPTION *) info_ptr;
-		if (_StrHasPrefix(load_op->description, L"Linux Firmware Updater") ||
-		    _StrHasPrefix(load_op->description, L"Linux-Firmware-Updater")) {
-			rc = fwup_delete_variable(variable_name, &vendor_guid);
-			if (EFI_ERROR(rc)) {
-				fwup_warning(L"Failed to delete boot entry");
-				return rc;
-			}
-			break;
-		}
-	}
-
-	return EFI_SUCCESS;
-}
-
 static EFI_STATUS
 fwup_get_gop_mode(UINT32 *mode, EFI_HANDLE loaded_image)
 {
@@ -527,11 +451,6 @@ fwup_apply_capsules(EFI_CAPSULE_HEADER **capsules,
 {
 	UINT64 max_capsule_size;
 	EFI_STATUS rc;
-
-	/* still try to apply capsule on failure */
-	rc = fwup_delete_boot_entry();
-	if (EFI_ERROR(rc))
-		fwup_warning(L"Could not delete boot entry: %r", rc);
 
 	rc = uefi_call_wrapper(RT->QueryCapsuleCapabilities, 4, capsules,
 				num_updates, &max_capsule_size, reset);
