@@ -559,7 +559,9 @@ fu_udev_device_get_parent_subsystems (FuUdevDevice *self)
 	GString *str = g_string_new (NULL);
 	g_autoptr(GUdevDevice) udev_device = g_object_ref (priv->udev_device);
 
-	/* find subsystems of all parent devices */
+	/* find subsystems of self and all parent devices */
+	if (priv->subsystem != NULL)
+		g_string_append_printf (str, "%s,", priv->subsystem);
 	while (TRUE) {
 		g_autoptr(GUdevDevice) parent = g_udev_device_get_parent (udev_device);
 		if (parent == NULL)
