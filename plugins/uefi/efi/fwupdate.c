@@ -317,54 +317,6 @@ fwup_open_file(EFI_DEVICE_PATH *dp, EFI_FILE_HANDLE *fh)
 	return EFI_SUCCESS;
 }
 
-static EFI_STATUS
-fwup_delete_boot_order(CHAR16 *name, EFI_GUID guid)
-{
-	UINT16 boot_num;
-	EFI_STATUS rc;
-	UINTN info_size = 0;
-	UINT32 attrs = 0;
-	_cleanup_free VOID *info_ptr = NULL;
-	_cleanup_free UINT16 *new_info_ptr = NULL;
-	UINT8 num_found = FALSE;
-	UINTN new_list_num = 0;
-
-	/* get boot hex number */
-	boot_num = xtoi((CHAR16 *)((UINT8 *)name + sizeof(L"Boot")));
-
-	rc = fwup_get_variable(L"BootOrder", &guid, &info_ptr, &info_size, &attrs);
-	if (EFI_ERROR(rc))
-		return rc;
-
-	new_info_ptr = fwup_malloc(info_size);
-	if (new_info_ptr == NULL)
-		return EFI_OUT_OF_RESOURCES;
-
-	for (UINTN i = 0; i < (info_size / sizeof(UINT16)) ; i++) {
-		if (((UINT16 *)info_ptr)[i] != boot_num) {
-			new_info_ptr[i] = ((UINT16 *)info_ptr)[i];
-			new_list_num++;
-
-		} else {
-			num_found = TRUE;
-		}
-	}
-
-	/* if not in the BootOrder list, do not update BootOrder */
-	if (!num_found)
-		return EFI_SUCCESS;
-
-	rc = uefi_call_wrapper(RT->SetVariable, 5, L"BootOrder", &guid,
-				attrs, new_list_num * sizeof(UINT16),
-				new_info_ptr);
-	if (EFI_ERROR(rc)) {
-		fwup_warning(L"Could not update variable status for '%s': %r",
-			     name, rc);
-		return rc;
-	}
-	return rc;
-}
-
 /* TODO: move to gnu-efi: https://github.com/vathpela/gnu-efi/issues/7 */
 static BOOLEAN
 _StrHasPrefix(IN CONST CHAR16 *s1, IN CONST CHAR16 *s2)
@@ -429,12 +381,6 @@ fwup_delete_boot_entry(VOID)
 		EFI_LOAD_OPTION *load_op = (EFI_LOAD_OPTION *) info_ptr;
 		if (_StrHasPrefix(load_op->description, L"Linux Firmware Updater") ||
 		    _StrHasPrefix(load_op->description, L"Linux-Firmware-Updater")) {
-			/* delete the boot path from BootOrder list */
-			rc = fwup_delete_boot_order(variable_name, vendor_guid);
-			if (EFI_ERROR(rc)) {
-				fwup_warning(L"Failed to delete boot entry from BootOrder");
-				return rc;
-			}
 			rc = fwup_delete_variable(variable_name, &vendor_guid);
 			if (EFI_ERROR(rc)) {
 				fwup_warning(L"Failed to delete boot entry");
