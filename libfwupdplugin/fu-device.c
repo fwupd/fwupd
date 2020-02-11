@@ -478,7 +478,10 @@ fu_device_set_parent (FuDevice *self, FuDevice *parent)
 
 	g_return_if_fail (FU_IS_DEVICE (self));
 
-	g_object_add_weak_pointer (G_OBJECT (parent), (gpointer *) &priv->parent);
+	if (priv->parent != NULL)
+		g_object_remove_weak_pointer (G_OBJECT (priv->parent), (gpointer *) &priv->parent);
+	if (parent != NULL)
+		g_object_add_weak_pointer (G_OBJECT (parent), (gpointer *) &priv->parent);
 	priv->parent = parent;
 
 	/* this is what goes over D-Bus */
