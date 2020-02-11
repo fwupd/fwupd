@@ -657,7 +657,8 @@ fu_udev_device_set_physical_id (FuUdevDevice *self, const gchar *subsystem, GErr
 			return FALSE;
 		}
 		physical_id = g_strdup_printf ("HID_PHYS=%s", tmp);
-	} else if (g_strcmp0 (subsystem, "tpm") == 0) {
+	} else if (g_strcmp0 (subsystem, "tpm") == 0 ||
+		   g_strcmp0 (subsystem, "drm_dp_aux_dev") == 0) {
 		tmp = g_udev_device_get_property (udev_device, "DEVNAME");
 		if (tmp == NULL) {
 			g_set_error_literal (error,
