@@ -104,6 +104,8 @@ fu_altos_device_tty_write (FuAltosDevice *self,
 	/* lets assume this is text */
 	if (data_len < 0)
 		data_len = strlen (data);
+	if (g_getenv ("FWUPD_ALTOS_VERBOSE") != NULL)
+		fu_common_dump_raw (G_LOG_DOMAIN, "write", (const guint8 *) data, (gsize) data_len);
 	return fu_io_channel_write_raw (self->io_channel,
 					(const guint8 *) data,
 					(gsize) data_len,
@@ -123,6 +125,8 @@ fu_altos_device_tty_read (FuAltosDevice *self,
 					timeout_ms, FU_IO_CHANNEL_FLAG_NONE, error);
 	if (buf == NULL)
 		return NULL;
+	if (g_getenv ("FWUPD_ALTOS_VERBOSE") != NULL)
+		fu_common_dump_bytes (G_LOG_DOMAIN, "read", buf);
 	return g_string_new_len (g_bytes_get_data (buf, NULL), g_bytes_get_size (buf));
 }
 
