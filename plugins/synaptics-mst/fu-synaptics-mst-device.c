@@ -131,7 +131,7 @@ fu_synaptics_mst_device_probe (FuUdevDevice *device, GError **error)
 	g_autofree gchar *logical_id = NULL;
 	logical_id = g_path_get_basename (fu_udev_device_get_sysfs_path(device));
 	fu_device_set_logical_id (FU_DEVICE (device), logical_id);
-	if (!fu_udev_device_set_physical_id (device, "pci", error))
+	if (!fu_udev_device_set_physical_id (device, "pci,drm_dp_aux_dev", error))
 		return FALSE;
 	return TRUE;
 }
