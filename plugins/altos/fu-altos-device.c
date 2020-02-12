@@ -462,8 +462,10 @@ fu_altos_device_probe_bootloader (FuAltosDevice *self, GError **error)
 	if (!fu_altos_device_tty_write (self, "v\n", -1, error))
 		return FALSE;
 	str = fu_altos_device_tty_read (self, 100, -1, error);
-	if (str == NULL)
+	if (str == NULL) {
+		g_prefix_error (error, "failed to get version information: ");
 		return FALSE;
+	}
 
 	/* parse each line */
 	lines = g_strsplit_set (str->str, "\n\r", -1);
