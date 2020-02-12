@@ -27,6 +27,17 @@ struct _FuAltosDevice {
 G_DEFINE_TYPE (FuAltosDevice, fu_altos_device, FU_TYPE_USB_DEVICE)
 
 static void
+fu_altos_device_to_string (FuDevice *device, guint idt, GString *str)
+{
+	FuAltosDevice *self = FU_ALTOS_DEVICE (device);
+	fu_common_string_append_kv (str, idt, "TTY", self->tty);
+	if (self->addr_base != 0x0)
+		fu_common_string_append_kx (str, idt, "AddrBase", self->addr_base);
+	if (self->addr_bound != 0x0)
+		fu_common_string_append_kx (str, idt, "AddrBound", self->addr_bound);
+}
+
+static void
 fu_altos_device_finalize (GObject *object)
 {
 	FuAltosDevice *self = FU_ALTOS_DEVICE (object);
@@ -557,6 +568,7 @@ fu_altos_device_class_init (FuAltosDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
+	klass_device->to_string = fu_altos_device_to_string;
 	klass_device->probe = fu_altos_device_probe;
 	klass_device->prepare_firmware = fu_altos_device_prepare_firmware;
 	klass_device->write_firmware = fu_altos_device_write_firmware;
