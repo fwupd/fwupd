@@ -126,7 +126,7 @@ fu_ebitdo_device_receive (FuEbitdoDevice *self,
 			     G_IO_ERROR,
 			     G_IO_ERROR_INVALID_DATA,
 			     "failed to retrieve from device on ep 0x%02x: %s",
-			     (guint) FU_EBITDO_USB_BOOTLOADER_EP_IN,
+			     (guint) ep_in,
 			     error_local->message);
 		return FALSE;
 	}
