@@ -368,6 +368,7 @@ fu_vli_device_spi_write (FuVliDevice *self,
 gboolean
 fu_vli_device_spi_erase_all (FuVliDevice *self, GError **error)
 {
+	fu_device_set_progress (FU_DEVICE (self), 0);
 	if (!fu_vli_device_spi_write_enable (self, error))
 		return FALSE;
 	if (!fu_vli_device_spi_write_status (self, 0x00, error))
@@ -394,6 +395,8 @@ fu_vli_device_spi_erase_all (FuVliDevice *self, GError **error)
 				return FALSE;
 			}
 		}
+		fu_device_set_progress_full (FU_DEVICE (self),
+					     (gsize) addr, (gsize) 0x10000);
 	}
 	return TRUE;
 }
@@ -444,6 +447,13 @@ fu_vli_device_set_kind (FuVliDevice *self, FuVliDeviceKind device_kind)
 	sz = fu_vli_common_device_kind_get_size (device_kind);
 	if (sz > 0x0)
 		fu_device_set_firmware_size_max (FU_DEVICE (self), sz);
+}
+
+void
+fu_vli_device_set_spi_auto_detect (FuVliDevice *self, gboolean spi_auto_detect)
+{
+	FuVliDevicePrivate *priv = GET_PRIVATE (self);
+	priv->spi_auto_detect = spi_auto_detect;
 }
 
 FuVliDeviceKind
@@ -554,8 +564,21 @@ fu_vli_device_setup (FuDevice *device, GError **error)
 	}
 
 	/* subclassed further */
-	if (klass->setup != NULL)
-		return klass->setup (self, error);
+	if (klass->setup != NULL) {
+		if (!klass->setup (self, error))
+			return FALSE;
+	}
+
+	/* add extra DEV GUID too */
+	if (priv->kind != FU_VLI_DEVICE_KIND_UNKNOWN) {
+		GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
+		g_autofree gchar *devid1 = NULL;
+		devid1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&DEV_%s",
+					  g_usb_device_get_vid (usb_device),
+					  g_usb_device_get_pid (usb_device),
+					  fu_vli_common_device_kind_to_string (priv->kind));
+		fu_device_add_instance_id (device, devid1);
+	}
 
 	/* success */
 	return TRUE;

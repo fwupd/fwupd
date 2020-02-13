@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Antoni Bella Pérez <antonibella5@yahoo.com>, 2017-2019
+# Antoni Bella Pérez <antonibella5@yahoo.com>, 2017-2020
 # Robert Antoni Buj Gelonch <rbuj@fedoraproject.org>, 2017
 msgid ""
 msgstr ""
@@ -102,6 +102,12 @@ msgid "%u day"
 msgid_plural "%u days"
 msgstr[0] "%u dia"
 msgstr[1] "%u dies"
+
+#, c-format
+msgid "%u device has a firmware upgrade available."
+msgid_plural "%u devices have a firmware upgrade available."
+msgstr[0] " %u dispositiu té una actualització de microprogramari disponible."
+msgstr[1] "%u dispositius tenen una actualització de microprogramari disponible."
 
 #. TRANSLATORS: duration in minutes
 #, c-format
@@ -367,9 +373,17 @@ msgstr "El dispositiu pot recuperar fallades de flaix"
 msgid "Device changed:"
 msgstr "S'ha canviat el dispositiu:"
 
+#. TRANSLATORS: a version check is required for all firmware
+msgid "Device firmware is required to have a version check"
+msgstr "És obligatori el microprogramari del dispositiu per a comprovar la versió"
+
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
 msgstr "El dispositiu està bloquejat"
+
+#. TRANSLATORS: a version check is required for all firmware
+msgid "Device is required to install all provided releases"
+msgstr "El dispositiu és necessari per instal·lar totes les versions llançades"
 
 #. TRANSLATORS: Device remains usable during update
 msgid "Device is usable for the duration of the update"
@@ -1038,6 +1052,9 @@ msgstr "S'està reiniciant el dispositiu..."
 #. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
 msgstr "Retorna tots els ID del maquinari de la màquina"
+
+msgid "Run `fwupdmgr get-upgrades` for more information."
+msgstr "Per a més informació executeu «fwupdmgr get-upgrades»."
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"

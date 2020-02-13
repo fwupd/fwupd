@@ -32,7 +32,6 @@ jobs:
     docker:
       - image: fedora:31
     steps:
-      - checkout
       - run:
           name: "Install deps"
           command: dnf install -y diffutils
@@ -40,6 +39,7 @@ jobs:
                                   git-core
                                   gnutls-utils
                                   meson
+                                  git
                                   gcc
                                   gcab
                                   mingw32-nsis
@@ -52,6 +52,7 @@ jobs:
                                   mingw64-json-glib
                                   mingw64-libsoup
                                   wine
+      - checkout
       - run:
           name: "Build Win32"
           command: ./contrib/ci/build_windows.sh
@@ -67,13 +68,13 @@ jobs:
     docker:
       - image: ubuntu:18.04
     steps:
-      - checkout
       - run:
           name: "Update apt"
           command: apt update
       - run:
           name: "install snapcraft"
-          command: apt install snapcraft -y
+          command: apt install snapcraft git -y
+      - checkout
       - run:
           name: "Build Snap"
           command: snapcraft
@@ -104,6 +105,7 @@ jobs:
             git config user.name "Documentation deployment Bot"
             rm -rf *
             cp ../html/* . -R
+            git add .
             git commit -a --allow-empty -m "Trigger deployment"
             git push git@github.com:fwupd/fwupd.github.io.git
 

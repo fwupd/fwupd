@@ -4,7 +4,7 @@
 #
 # Translators:
 # scootergrisen, 2019
-# scootergrisen, 2019
+# scootergrisen, 2019-2020
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -102,6 +102,12 @@ msgid "%u day"
 msgid_plural "%u days"
 msgstr[0] "%u dag"
 msgstr[1] "%u dage"
+
+#, c-format
+msgid "%u device has a firmware upgrade available."
+msgid_plural "%u devices have a firmware upgrade available."
+msgstr[0] "%u enhed har en tilgængelig firmwareopgradering."
+msgstr[1] "%u enheder har en tilgængelig firmwareopgradering."
 
 #. TRANSLATORS: duration in minutes
 #, c-format
@@ -367,9 +373,17 @@ msgstr "Enheden kan gendannes efter mislykkedes flash"
 msgid "Device changed:"
 msgstr "Enhed ændret:"
 
+#. TRANSLATORS: a version check is required for all firmware
+msgid "Device firmware is required to have a version check"
+msgstr "Enhedsfirmware kræves for at have et versiontjek"
+
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
 msgstr "Enheden er låst"
+
+#. TRANSLATORS: a version check is required for all firmware
+msgid "Device is required to install all provided releases"
+msgstr "Enhed kræves for at installere alle leverede udgivelser"
 
 #. TRANSLATORS: Device remains usable during update
 msgid "Device is usable for the duration of the update"
@@ -1038,6 +1052,9 @@ msgstr "Genstarter enhed …"
 #. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
 msgstr "Returner alle maskinens hardware-id'er"
+
+msgid "Run `fwupdmgr get-upgrades` for more information."
+msgstr "Kør `fwupdmgr get-upgrades` for mere information."
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"

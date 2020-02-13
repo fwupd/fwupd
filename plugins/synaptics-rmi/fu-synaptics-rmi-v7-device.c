@@ -465,7 +465,7 @@ fu_synaptics_rmi_device_read_flash_config_v7 (FuSynapticsRmiDevice *self, GError
 	/* read back entire buffer in blocks */
 	res = fu_synaptics_rmi_device_read (self,
 					    f34->data_base + 0x5,
-					    flash->block_size * flash->config_length,
+					    (guint32) flash->block_size * (guint32) flash->config_length,
 					    error);
 	if (res == NULL) {
 		g_prefix_error (error, "failed to read: ");
@@ -533,6 +533,18 @@ fu_synaptics_rmi_v7_device_setup (FuSynapticsRmiDevice *self, GError **error)
 	flash->config_length = fu_common_read_uint16 (f34_dataX->data + 0x0d, G_LITTLE_ENDIAN);
 	flash->payload_length = fu_common_read_uint16 (f34_dataX->data + 0x0f, G_LITTLE_ENDIAN);
 	flash->build_id = fu_common_read_uint32 (f34_dataX->data + 0x02, G_LITTLE_ENDIAN);
+
+	/* sanity check */
+	if ((guint32) flash->block_size * (guint32) flash->config_length > G_MAXUINT16) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "block size 0x%x or config length 0x%x invalid",
+			     flash->block_size, flash->config_length);
+		return FALSE;
+	}
+
+	/* read flash config */
 	return fu_synaptics_rmi_device_read_flash_config_v7 (self, error);
 }
 
@@ -614,11 +626,18 @@ fu_synaptics_rmi_v7_device_query_status (FuSynapticsRmiDevice *self, GError **er
 				     "bad partition table");
 		return FALSE;
 	}
-	if (status == 0x08) {
+	if (status == 0x09) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
 				     "transfer checksum failed");
+		return FALSE;
+	}
+	if (status == 0x1f) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "flash hardware failure");
 		return FALSE;
 	}
 	return TRUE;

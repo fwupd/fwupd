@@ -1,0 +1,72 @@
+Bus 003 Device 002: ID 1d5c:7102 Fresco Logic Generic Billboard Device
+Device Descriptor:
+  bLength                18
+  bDescriptorType         1
+  bcdUSB               2.01
+  bDeviceClass           17 
+  bDeviceSubClass         0 
+  bDeviceProtocol         0 
+  bMaxPacketSize0        64
+  idVendor           0x1d5c Fresco Logic
+  idProduct          0x7102 
+  bcdDevice            1.00
+  iManufacturer           1 Fresco Logic, Inc
+  iProduct                2 Generic Billboard Device
+  iSerial                 0 
+  bNumConfigurations      1
+  Configuration Descriptor:
+    bLength                 9
+    bDescriptorType         2
+    wTotalLength       0x0012
+    bNumInterfaces          1
+    bConfigurationValue     1
+    iConfiguration          0 
+    bmAttributes         0xc0
+      Self Powered
+    MaxPower                0mA
+    Interface Descriptor:
+      bLength                 9
+      bDescriptorType         4
+      bInterfaceNumber        0
+      bAlternateSetting       0
+      bNumEndpoints           0
+      bInterfaceClass        17 
+      bInterfaceSubClass      0 
+      bInterfaceProtocol      0 
+      iInterface              0 
+Binary Object Store Descriptor:
+  bLength                 5
+  bDescriptorType        15
+  wTotalLength       0x0050
+  bNumDeviceCaps          3
+  USB 2.0 Extension Device Capability:
+    bLength                 7
+    bDescriptorType        16
+    bDevCapabilityType      2
+    bmAttributes   0x00000006
+      BESL Link Power Management (LPM) Supported
+  Container ID Device Capability:
+    bLength                20
+    bDescriptorType        16
+    bDevCapabilityType      4
+    bReserved               0
+    ContainerID             {00000000-0000-0000-0000-000000000000}
+  Billboard Capability:
+    bLength                    48
+    bDescriptorType            16
+    bDevCapabilityType         13
+    iAddtionalInfoURL           4 www.frescologic.com
+    bNumberOfAlternateModes     1
+    bPreferredAlternateMode     0
+    VCONN Power                 0 1W
+    bmConfigured                03 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+    bcdVersion               1.10
+    bAdditionalFailureInfo      0
+    bReserved                   0
+    Alternate Modes supported by Device Container:
+    Alternate Mode 0 : Alternate Mode configuration successful
+      wSVID[0]                    0x0000
+      bAlternateMode[0]           0
+      iAlternateModeString[0]     0 
+Device Status:     0x0001
+  Self Powered

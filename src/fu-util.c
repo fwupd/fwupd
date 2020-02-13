@@ -286,15 +286,15 @@ fu_util_maybe_enable_automatic (FuUtilPrivate *priv, GPtrArray *remotes, GError 
 							 NULL, error))
 				return FALSE;
 		}
-	/* fallthrough */
-	default:
 		return TRUE;
+	default:
+		break;
 	}
 
 	g_set_error_literal (error,
-				FWUPD_ERROR,
-				FWUPD_ERROR_NOTHING_TO_DO,
-				"no option selected");
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOTHING_TO_DO,
+			     "invalid option selected");
 	return FALSE;
 }
 

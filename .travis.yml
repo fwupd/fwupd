@@ -10,7 +10,6 @@ env:
   - OS=debian-x86_64
   - OS=arch
   - OS=debian-i386
-  - OS=debian-s390x
 
 install:
   - ./contrib/ci/generate_docker.py

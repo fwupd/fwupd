@@ -7,7 +7,7 @@
 # Derek W. Stavis <dekestavis@gmail.com>, 2016
 # Derek W. Stavis <dekestavis@gmail.com>, 2015-2016
 # Rafael Fontenelle <rafaelff@gnome.org>, 2017-2018
-# Rafael Fontenelle <rffontenelle@gmail.com>, 2015-2019
+# Rafael Fontenelle <rffontenelle@gmail.com>, 2015-2020
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -105,6 +105,12 @@ msgid "%u day"
 msgid_plural "%u days"
 msgstr[0] "%u dia"
 msgstr[1] "%u dias"
+
+#, c-format
+msgid "%u device has a firmware upgrade available."
+msgid_plural "%u devices have a firmware upgrade available."
+msgstr[0] " %u dispositivo tem uma atualização de firmware disponível."
+msgstr[1] "%u dispositivos têm uma atualização de firmware disponível."
 
 #. TRANSLATORS: duration in minutes
 #, c-format
@@ -370,9 +376,17 @@ msgstr "O dispositivo pode recuperar falhas de flashing"
 msgid "Device changed:"
 msgstr "Dispositivo modificado:"
 
+#. TRANSLATORS: a version check is required for all firmware
+msgid "Device firmware is required to have a version check"
+msgstr "Firmware de dispositivo é necessário para ter uma verificação de versão"
+
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
 msgstr "O dispositivo está travado"
+
+#. TRANSLATORS: a version check is required for all firmware
+msgid "Device is required to install all provided releases"
+msgstr "Um dispositivo é necessário para instalar todos os lançamentos fornecidos"
 
 #. TRANSLATORS: Device remains usable during update
 msgid "Device is usable for the duration of the update"
@@ -1041,6 +1055,9 @@ msgstr "Reiniciando dispositivo…"
 #. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
 msgstr "Retorna todos os IDs de hardware para a máquina"
+
+msgid "Run `fwupdmgr get-upgrades` for more information."
+msgstr "Execute `fwupdmgr get-upgrades` para mais informações."
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"

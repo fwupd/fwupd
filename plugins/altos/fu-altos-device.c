@@ -27,6 +27,17 @@ struct _FuAltosDevice {
 G_DEFINE_TYPE (FuAltosDevice, fu_altos_device, FU_TYPE_USB_DEVICE)
 
 static void
+fu_altos_device_to_string (FuDevice *device, guint idt, GString *str)
+{
+	FuAltosDevice *self = FU_ALTOS_DEVICE (device);
+	fu_common_string_append_kv (str, idt, "TTY", self->tty);
+	if (self->addr_base != 0x0)
+		fu_common_string_append_kx (str, idt, "AddrBase", self->addr_base);
+	if (self->addr_bound != 0x0)
+		fu_common_string_append_kx (str, idt, "AddrBound", self->addr_bound);
+}
+
+static void
 fu_altos_device_finalize (GObject *object)
 {
 	FuAltosDevice *self = FU_ALTOS_DEVICE (object);
@@ -93,6 +104,8 @@ fu_altos_device_tty_write (FuAltosDevice *self,
 	/* lets assume this is text */
 	if (data_len < 0)
 		data_len = strlen (data);
+	if (g_getenv ("FWUPD_ALTOS_VERBOSE") != NULL)
+		fu_common_dump_raw (G_LOG_DOMAIN, "write", (const guint8 *) data, (gsize) data_len);
 	return fu_io_channel_write_raw (self->io_channel,
 					(const guint8 *) data,
 					(gsize) data_len,
@@ -112,6 +125,8 @@ fu_altos_device_tty_read (FuAltosDevice *self,
 					timeout_ms, FU_IO_CHANNEL_FLAG_NONE, error);
 	if (buf == NULL)
 		return NULL;
+	if (g_getenv ("FWUPD_ALTOS_VERBOSE") != NULL)
+		fu_common_dump_bytes (G_LOG_DOMAIN, "read", buf);
 	return g_string_new_len (g_bytes_get_data (buf, NULL), g_bytes_get_size (buf));
 }
 
@@ -451,8 +466,10 @@ fu_altos_device_probe_bootloader (FuAltosDevice *self, GError **error)
 	if (!fu_altos_device_tty_write (self, "v\n", -1, error))
 		return FALSE;
 	str = fu_altos_device_tty_read (self, 100, -1, error);
-	if (str == NULL)
+	if (str == NULL) {
+		g_prefix_error (error, "failed to get version information: ");
 		return FALSE;
+	}
 
 	/* parse each line */
 	lines = g_strsplit_set (str->str, "\n\r", -1);
@@ -557,6 +574,7 @@ fu_altos_device_class_init (FuAltosDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
+	klass_device->to_string = fu_altos_device_to_string;
 	klass_device->probe = fu_altos_device_probe;
 	klass_device->prepare_firmware = fu_altos_device_prepare_firmware;
 	klass_device->write_firmware = fu_altos_device_write_firmware;

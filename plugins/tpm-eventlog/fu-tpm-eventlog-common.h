@@ -42,8 +42,20 @@ typedef enum {
 	EV_EFI_VARIABLE_AUTHORITY		= 0x800000e0
 } FuTpmEventlogItemKind;
 
+typedef struct {
+	guint8			 pcr;
+	FuTpmEventlogItemKind	 kind;
+	GBytes			*checksum_sha1;
+	GBytes			*checksum_sha256;
+	GBytes			*blob;
+} FuTpmEventlogItem;
+
 const gchar 	*fu_tpm_eventlog_pcr_to_string		(gint		 pcr);
 const gchar	*fu_tpm_eventlog_hash_to_string		(TPM2_ALG_ID	 hash_kind);
 guint32		 fu_tpm_eventlog_hash_get_size		(TPM2_ALG_ID	 hash_kind);
 const gchar	*fu_tpm_eventlog_item_kind_to_string	(FuTpmEventlogItemKind	 event_type);
+gchar		*fu_tpm_eventlog_strhex			(GBytes		*blob);
 gchar		*fu_tpm_eventlog_blobstr		(GBytes		*blob);
+GPtrArray	*fu_tpm_eventlog_calc_checksums		(GPtrArray	*items,
+							 guint8		 pcr,
+							 GError		**error);

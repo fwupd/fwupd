@@ -4,7 +4,7 @@
 #
 # Translators:
 # Gianvito Cavasoli <gianvito@gmx.it>, 2016
-# Milo Casagrande <milo@ubuntu.com>, 2017-2019
+# Milo Casagrande <milo@ubuntu.com>, 2017-2020
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -102,6 +102,12 @@ msgid "%u day"
 msgid_plural "%u days"
 msgstr[0] "%u giorno"
 msgstr[1] "%u giorni"
+
+#, c-format
+msgid "%u device has a firmware upgrade available."
+msgid_plural "%u devices have a firmware upgrade available."
+msgstr[0] "%u dispositivo ha un aggiornamento firmware disponibile."
+msgstr[1] "%u dispositivi hanno un aggiornamento firmware disponibile."
 
 #. TRANSLATORS: duration in minutes
 #, c-format
@@ -367,9 +373,17 @@ msgstr "Il dispositivo è in grado di correggere problemi di flash"
 msgid "Device changed:"
 msgstr "Dispositivo modificato:"
 
+#. TRANSLATORS: a version check is required for all firmware
+msgid "Device firmware is required to have a version check"
+msgstr "È richiesto il firmware dispositivo per eseguire un controllo della versione"
+
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
 msgstr "Il dispositivo è bloccato"
+
+#. TRANSLATORS: a version check is required for all firmware
+msgid "Device is required to install all provided releases"
+msgstr "È richiesto un dispositivo per installare tutti i rilasci forniti"
 
 #. TRANSLATORS: Device remains usable during update
 msgid "Device is usable for the duration of the update"
@@ -1038,6 +1052,9 @@ msgstr "Riavvio del dispositivo…"
 #. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
 msgstr "Fornisce tutti gli ID hardware per un dispositivo"
+
+msgid "Run `fwupdmgr get-upgrades` for more information."
+msgstr "Per maggiori informazioni eseguire «fwupdmgr get-upgrades»."
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"

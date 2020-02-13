@@ -33,10 +33,10 @@ fu_plugin_vli_get_parent (GPtrArray *devices)
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *dev = g_ptr_array_index (devices, i);
 		FuDevice *parent = fu_device_get_parent (dev);
-		if (FU_IS_VLI_USBHUB_DEVICE (dev))
-			return g_object_ref (dev);
 		if (parent != NULL && FU_IS_VLI_USBHUB_DEVICE (parent))
 			return g_object_ref (parent);
+		if (FU_IS_VLI_USBHUB_DEVICE (dev))
+			return g_object_ref (dev);
 	}
 	return NULL;
 }

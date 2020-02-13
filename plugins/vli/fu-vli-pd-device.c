@@ -11,6 +11,7 @@
 
 #include "fu-vli-pd-device.h"
 #include "fu-vli-pd-firmware.h"
+#include "fu-vli-pd-parade-device.h"
 
 struct _FuVliPdDevice
 {
@@ -242,6 +243,33 @@ fu_vli_pd_device_reset_vl103 (FuVliDevice *device, GError **error)
 }
 
 static gboolean
+fu_vli_pd_device_parade_setup (FuVliPdDevice *self, GError **error)
+{
+	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	/* add child */
+	dev = fu_vli_pd_parade_device_new (FU_VLI_DEVICE (self));
+	if (!fu_device_probe (dev, &error_local)) {
+		if (g_error_matches (error_local,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND)) {
+			g_debug ("%s", error_local->message);
+		} else {
+			g_warning ("cannot create I²C parade device: %s",
+				   error_local->message);
+		}
+		return TRUE;
+	}
+	if (!fu_device_setup (dev, error)) {
+		g_prefix_error (error, "failed to set up parade device: ");
+		return FALSE;
+	}
+	fu_device_add_child (FU_DEVICE (self), dev);
+	return TRUE;
+}
+
+static gboolean
 fu_vli_pd_device_setup (FuVliDevice *device, GError **error)
 {
 	FuVliPdDevice *self = FU_VLI_PD_DEVICE (device);
@@ -252,8 +280,16 @@ fu_vli_pd_device_setup (FuVliDevice *device, GError **error)
 	FuVliDeviceClass *klass = FU_VLI_DEVICE_GET_CLASS (device);
 
 	/* get version */
-	if (!fu_vli_pd_device_read_regs (self, 0x0, verbuf, sizeof(verbuf), error))
+	if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (self)),
+					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    0xe2, 0x0001, 0x0000,
+					    verbuf, sizeof(verbuf), NULL,
+					    1000, NULL, error)) {
+		g_prefix_error (error, "failed to get version: ");
 		return FALSE;
+	}
 	version_raw = fu_common_read_uint32 (verbuf, G_BIG_ENDIAN);
 	fu_device_set_version_raw (FU_DEVICE (self), version_raw);
 	version_str = fu_common_version_from_uint32 (version_raw, FWUPD_VERSION_FORMAT_QUAD);
@@ -299,7 +335,11 @@ fu_vli_pd_device_setup (FuVliDevice *device, GError **error)
 	else
 		fu_device_remove_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 
-	/* TODO: detect any I²C child, e.g. parade device */
+	/* detect any I²C child, e.g. parade device */
+	if (fu_device_has_custom_flag (FU_DEVICE (self), "has-i2c-ps186")) {
+		if (!fu_vli_pd_device_parade_setup (self, error))
+			return FALSE;
+	}
 
 	/* success */
 	return TRUE;
@@ -422,6 +462,7 @@ fu_vli_pd_device_detach (FuDevice *device, GError **error)
 {
 	FuVliPdDevice *self = FU_VLI_PD_DEVICE (device);
 	guint8 tmp = 0;
+	g_autoptr(GError) error_local = NULL;
 
 	/* write GPIOs */
 	if (!fu_vli_pd_device_write_gpios (self, error))
@@ -453,8 +494,18 @@ fu_vli_pd_device_detach (FuDevice *device, GError **error)
 
 	/* reset from SPI_Code into ROM_Code */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	if (!fu_vli_device_reset (FU_VLI_DEVICE (device), error))
-		return FALSE;
+	if (!fu_vli_device_reset (FU_VLI_DEVICE (device), &error_local)) {
+		if (g_error_matches (error_local,
+				     G_USB_DEVICE_ERROR,
+				     G_USB_DEVICE_ERROR_FAILED)) {
+			g_debug ("ignoring %s", error_local->message);
+		} else {
+			g_propagate_prefixed_error (error,
+						    g_steal_pointer (&error_local),
+						    "failed to restart device: ");
+			return FALSE;
+		}
+	}
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
@@ -465,8 +516,10 @@ fu_vli_pd_device_init (FuVliPdDevice *self)
 	fu_device_add_icon (FU_DEVICE (self), "audio-card");
 	fu_device_set_protocol (FU_DEVICE (self), "com.vli.pd");
 	fu_device_set_summary (FU_DEVICE (self), "USB PD");
+	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_vli_device_set_spi_auto_detect (FU_VLI_DEVICE (self), FALSE);
 }
 
 static void

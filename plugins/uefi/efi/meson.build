@@ -30,10 +30,17 @@ if not have_gnu_efi
   error('gnu-efi support requested, but headers were not found')
 endif
 
-arch_lds = 'elf_@0@_efi.lds'.format(gnu_efi_path_arch)
+arch_lds = 'efi.lds'
+arch_crt = 'crt0.o'
 if efi_ldsdir == ''
-  efi_ldsdir = join_paths(efi_libdir, 'gnuefi')
+  efi_ldsdir = join_paths(efi_libdir, 'gnuefi', gnu_efi_path_arch)
   cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds))
+  if cmd.returncode() != 0
+    arch_lds = 'elf_@0@_efi.lds'.format(gnu_efi_path_arch)
+    arch_crt = 'crt0-efi-@0@.o'.format(gnu_efi_path_arch)
+    efi_ldsdir = join_paths(efi_libdir, 'gnuefi')
+    cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds))
+  endif
   if cmd.returncode() != 0
     efi_ldsdir = efi_libdir
     cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds))
@@ -93,8 +100,9 @@ efi_ldflags = ['-T',
                '-Bsymbolic',
                '-nostdlib',
                '-znocombreloc',
+               '-L', efi_ldsdir,
                '-L', efi_libdir,
-               join_paths(efi_ldsdir, 'crt0-efi-@0@.o'.format(gnu_efi_path_arch))]
+               join_paths(efi_ldsdir, arch_crt)]
 if efi_arch == 'aarch64' or efi_arch == 'arm'
   # Aarch64 and ARM32 don't have an EFI capable objcopy. Use 'binary'
   # instead, and add required symbols manually.

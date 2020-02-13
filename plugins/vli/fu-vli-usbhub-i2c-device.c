@@ -150,11 +150,12 @@ fu_vli_usbhub_i2c_device_write_firmware (FuDevice *device,
 
 		/* length, 16-bit address, type */
 		req_len = fu_firmware_strparse_uint8 (line + 1);
-		if (req_len > 64) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_NOT_SUPPORTED,
-					     "max write is 64 bytes");
+		if (req_len >= sizeof(buf) - 7) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "line too long; buffer size is 0x%x bytes",
+				     (guint) sizeof(buf));
 			return FALSE;
 		}
 		if (9 + (guint) req_len * 2 > (guint) rcd->buf->len) {

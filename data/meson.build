@@ -32,6 +32,9 @@ if build_daemon
   install_data(['org.freedesktop.fwupd.conf'],
     install_dir : join_paths(datadir, 'dbus-1', 'system.d')
   )
+endif
+
+if build_daemon and get_option('gudev')
   install_data(['90-fwupd-devices.rules'],
     install_dir : join_paths(udevdir, 'rules.d')
   )

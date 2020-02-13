@@ -109,7 +109,6 @@ fu_device_set_property (GObject *object, guint prop_id,
 			const GValue *value, GParamSpec *pspec)
 {
 	FuDevice *self = FU_DEVICE (object);
-	FuDevicePrivate *priv = GET_PRIVATE (self);
 	switch (prop_id) {
 	case PROP_STATUS:
 		fu_device_set_status (self, g_value_get_uint (value));
@@ -127,8 +126,7 @@ fu_device_set_property (GObject *object, guint prop_id,
 		fu_device_set_quirks (self, g_value_get_object (value));
 		break;
 	case PROP_PARENT:
-		/* noref */
-		priv->parent = g_value_get_object (value);
+		fu_device_set_parent (self, g_value_get_object (value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -478,7 +476,10 @@ fu_device_set_parent (FuDevice *self, FuDevice *parent)
 
 	g_return_if_fail (FU_IS_DEVICE (self));
 
-	g_object_add_weak_pointer (G_OBJECT (parent), (gpointer *) &priv->parent);
+	if (priv->parent != NULL)
+		g_object_remove_weak_pointer (G_OBJECT (priv->parent), (gpointer *) &priv->parent);
+	if (parent != NULL)
+		g_object_add_weak_pointer (G_OBJECT (parent), (gpointer *) &priv->parent);
 	priv->parent = parent;
 
 	/* this is what goes over D-Bus */

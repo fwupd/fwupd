@@ -103,7 +103,17 @@ fu_plugin_init (FuPlugin *plugin)
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
-	GPtrArray *hwids = fu_plugin_get_hwids (plugin);
+	GPtrArray *hwids;
+
+	if (fu_common_kernel_locked_down ()) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "not supported when kernel locked down");
+		return FALSE;
+	}
+
+	hwids = fu_plugin_get_hwids (plugin);
 	for (guint i = 0; i < hwids->len; i++) {
 		const gchar *tmp;
 		const gchar *guid = g_ptr_array_index (hwids, i);

@@ -32,6 +32,29 @@
     <binary>fwupdmgr</binary>
   </provides>
   <releases>
+    <release version="1.3.8" date="2020-02-13">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add an extra instance ID to disambiguate USB hubs</li>
+          <li>Add a plugin to update PD controllers by Fresco Logic</li>
+          <li>Replay the TPM event log to get the PCRx values</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Fix updating Synaptics MST devics with no PCI parent</li>
+          <li>Correctly reset VL100 PD devices</li>
+          <li>Do not rewrite BootOrder in the EFI helper</li>
+          <li>Do not use vercmp when the device version format is plain</li>
+          <li>Fix firmware regression in the EFI capsule helper</li>
+          <li>Ignore Unifying detach failures</li>
+          <li>Make the cxaudio version match that of the existing Windows tools</li>
+          <li>Set up more parent devices for various Lenovo USB hubs</li>
+          <li>Support the new gnuefi file locations</li>
+          <li>Use the correct command to get the VLI device firmware version</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.3.7" date="2020-01-31">
       <description>
         <p>This release adds the following features:</p>

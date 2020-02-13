@@ -460,7 +460,7 @@ fu_uefi_device_cleanup_esp (FuDevice *device, GError **error)
 	files = fu_common_get_files_recursive (esp_path, error);
 	if (files == NULL)
 		return FALSE;
-	pattern = g_build_filename (esp_path, "EFI/*/fw/fwupd-*.cap", NULL);
+	pattern = g_build_filename (esp_path, "EFI/*/fw/fwupd*.cap", NULL);
 	for (guint i = 0; i < files->len; i++) {
 		const gchar *fn = g_ptr_array_index (files, i);
 		if (fu_common_fnmatch (pattern, fn)) {
@@ -472,7 +472,7 @@ fu_uefi_device_cleanup_esp (FuDevice *device, GError **error)
 	}
 
 	/* delete any old variables */
-	if (!fu_uefi_vars_delete_with_glob (FU_UEFI_VARS_GUID_FWUPDATE, "fwupd-*", error))
+	if (!fu_uefi_vars_delete_with_glob (FU_UEFI_VARS_GUID_FWUPDATE, "fwupd*-*", error))
 		return FALSE;
 
 	return TRUE;

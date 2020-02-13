@@ -118,6 +118,14 @@ Obsoletes: libebitdo < 0.7.5-3
 Obsoletes: libdfu < 1.0.0
 Obsoletes: fwupd-labels < 1.1.0-1
 
+%if 0%{?rhel} > 7
+Obsoletes: fwupdate < 11-4
+Obsoletes: fwupdate-efi < 11-4
+
+Provides: fwupdate
+Provides: fwupdate-efi
+%endif
+
 %description
 fwupd is a daemon to allow session software to update device firmware.
 
@@ -211,6 +219,9 @@ Data files for installed tests.
 %endif
 %global fwup_efi_fn $RPM_BUILD_ROOT%{_libexecdir}/fwupd/efi/fwupd%{efiarch}.efi
 %pesign -s -i %{fwup_efi_fn} -o %{fwup_efi_fn}.signed
+%if 0%{?rhel} > 7
+ln -s %{_libexecdir}/fwupd/fwupdate $RPM_BUILD_ROOT%{_bindir}/fwupdate
+%endif
 %endif
 
 mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
@@ -255,6 +266,9 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %{_libexecdir}/fwupd/efi/*.efi
 %{_libexecdir}/fwupd/efi/*.efi.signed
 %{_libexecdir}/fwupd/fwupdate
+%if 0%{?rhel} > 7
+%{_bindir}/fwupdate
+%endif
 %{_libexecdir}/fwupd/fwupdtpmevlog
 %endif
 %{_bindir}/dfu-tool
@@ -325,6 +339,7 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %if 0%{?enable_flashrom}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_flashrom.so
 %endif
+%{_libdir}/fwupd-plugins-3/libfu_plugin_fresco_pd.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_jabra.so
 %if 0%{?have_modem_manager}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_modem_manager.so

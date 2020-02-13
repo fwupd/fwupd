@@ -552,14 +552,16 @@ fu_udev_device_get_revision (FuUdevDevice *self)
 }
 
 #ifdef HAVE_GUDEV
-static GString *
+static gchar *
 fu_udev_device_get_parent_subsystems (FuUdevDevice *self)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 	GString *str = g_string_new (NULL);
 	g_autoptr(GUdevDevice) udev_device = g_object_ref (priv->udev_device);
 
-	/* find subsystems of all parent devices */
+	/* find subsystems of self and all parent devices */
+	if (priv->subsystem != NULL)
+		g_string_append_printf (str, "%s,", priv->subsystem);
 	while (TRUE) {
 		g_autoptr(GUdevDevice) parent = g_udev_device_get_parent (udev_device);
 		if (parent == NULL)
@@ -572,14 +574,14 @@ fu_udev_device_get_parent_subsystems (FuUdevDevice *self)
 	}
 	if (str->len > 0)
 		g_string_truncate (str, str->len - 1);
-	return str;
+	return g_string_free (str, FALSE);
 }
 #endif
 
 /**
  * fu_udev_device_set_physical_id:
  * @self: A #FuUdevDevice
- * @subsystem: A subsystem string, e.g. `usb`
+ * @subsystems: A subsystem string, e.g. `pci,usb`
  * @error: A #GError, or %NULL
  *
  * Sets the physical ID from the device subsystem. Plugins should choose the
@@ -591,38 +593,46 @@ fu_udev_device_get_parent_subsystems (FuUdevDevice *self)
  * Since: 1.1.2
  **/
 gboolean
-fu_udev_device_set_physical_id (FuUdevDevice *self, const gchar *subsystem, GError **error)
+fu_udev_device_set_physical_id (FuUdevDevice *self, const gchar *subsystems, GError **error)
 {
 #ifdef HAVE_GUDEV
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	const gchar *subsystem = NULL;
 	const gchar *tmp;
 	g_autofree gchar *physical_id = NULL;
+	g_auto(GStrv) split = NULL;
 	g_autoptr(GUdevDevice) udev_device = NULL;
 
 	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), FALSE);
-	g_return_val_if_fail (subsystem != NULL, FALSE);
+	g_return_val_if_fail (subsystems != NULL, FALSE);
 
 	/* nothing to do */
 	if (priv->udev_device == NULL)
 		return TRUE;
 
-	/* get the correct device */
-	if (g_strcmp0 (priv->subsystem, subsystem) == 0) {
-		udev_device = g_object_ref (priv->udev_device);
-	} else {
+	/* look for each subsystem in turn */
+	split = g_strsplit (subsystems, ",", -1);
+	for (guint i = 0; split[i] != NULL; i++) {
+		subsystem = split[i];
+		if (g_strcmp0 (priv->subsystem, subsystem) == 0) {
+			udev_device = g_object_ref (priv->udev_device);
+			break;
+		}
 		udev_device = g_udev_device_get_parent_with_subsystem (priv->udev_device,
 								       subsystem, NULL);
-		if (udev_device == NULL) {
-			g_autoptr(GString) str = NULL;
-			str = fu_udev_device_get_parent_subsystems (self);
-			g_set_error (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_NOT_FOUND,
-				     "failed to find device with subsystem %s, only got %s",
-				     subsystem, str->str);
-			return FALSE;
-		}
+		if (udev_device != NULL)
+			break;
 	}
+	if (udev_device == NULL) {
+		g_autofree gchar *str = fu_udev_device_get_parent_subsystems (self);
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_FOUND,
+			     "failed to find device with subsystems %s, only got %s",
+			     subsystems, str);
+		return FALSE;
+	}
+
 	if (g_strcmp0 (subsystem, "pci") == 0) {
 		tmp = g_udev_device_get_property (udev_device, "PCI_SLOT_NAME");
 		if (tmp == NULL) {
@@ -655,7 +665,8 @@ fu_udev_device_set_physical_id (FuUdevDevice *self, const gchar *subsystem, GErr
 			return FALSE;
 		}
 		physical_id = g_strdup_printf ("HID_PHYS=%s", tmp);
-	} else if (g_strcmp0 (subsystem, "tpm") == 0) {
+	} else if (g_strcmp0 (subsystem, "tpm") == 0 ||
+		   g_strcmp0 (subsystem, "drm_dp_aux_dev") == 0) {
 		tmp = g_udev_device_get_property (udev_device, "DEVNAME");
 		if (tmp == NULL) {
 			g_set_error_literal (error,

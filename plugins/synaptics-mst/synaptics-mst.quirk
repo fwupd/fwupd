@@ -42,11 +42,13 @@ DeviceKind = system
 [SynapticsMSTBoardID=259]
 Name = Dell dock
 
-[SynapticsMSTBoardID=513]
-Name = ThinkPad Workstation Dock
+# ThinkPad Workstation Dock
+[DeviceInstanceId=MST-tesla-vmm2322-513]
+ParentGuid = USB\VID_17EF&PID_305A
 
-[SynapticsMSTBoardID=595]
-Name = ThinkPad Thunderbolt 3 Workstation Dock
+# ThinkPad Thunderbolt 3 Workstation Dock
+[DeviceInstanceId=MST-panamera-vmm5322-595]
+ParentGuid = TBT-01081720
 
 [SynapticsMSTBoardID=596]
 Name = ThinkPad USB-C Dock Gen2

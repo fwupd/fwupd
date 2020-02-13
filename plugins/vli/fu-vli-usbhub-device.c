@@ -751,6 +751,7 @@ fu_vli_usbhub_device_update_v2_recovery (FuVliUsbhubDevice *self, GBytes *fw, GE
 			g_prefix_error (error, "failed to erase sector @0x%x", addr);
 			return FALSE;
 		}
+		fu_device_set_progress_full (FU_DEVICE (self), (gsize) addr, bufsz);
 	}
 
 	/* write in chunks */

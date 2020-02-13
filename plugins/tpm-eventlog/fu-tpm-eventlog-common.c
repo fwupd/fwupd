@@ -131,6 +131,17 @@ fu_tpm_eventlog_item_kind_to_string (FuTpmEventlogItemKind event_type)
 }
 
 gchar *
+fu_tpm_eventlog_strhex (GBytes *blob)
+{
+	GString *csum = g_string_new (NULL);
+	gsize bufsz = 0;
+	const guint8 *buf = g_bytes_get_data (blob, &bufsz);
+	for (guint i = 0; i < bufsz; i++)
+		g_string_append_printf (csum, "%02x", buf[i]);
+	return g_string_free (csum, FALSE);
+}
+
+gchar *
 fu_tpm_eventlog_blobstr (GBytes *blob)
 {
 	gboolean has_printable = FALSE;
@@ -150,4 +161,73 @@ fu_tpm_eventlog_blobstr (GBytes *blob)
 	if (!has_printable)
 		return NULL;
 	return g_string_free (g_steal_pointer (&str), FALSE);
+}
+
+GPtrArray *
+fu_tpm_eventlog_calc_checksums (GPtrArray *items, guint8 pcr, GError **error)
+{
+	guint cnt_sha1 = 0;
+	guint cnt_sha256 = 0;
+	guint8 digest_sha1[TPM2_SHA1_DIGEST_SIZE] = { 0x0 };
+	guint8 digest_sha256[TPM2_SHA256_DIGEST_SIZE] = { 0x0 };
+	gsize digest_sha1_len = sizeof(digest_sha1);
+	gsize digest_sha256_len = sizeof(digest_sha256);
+	g_autoptr(GPtrArray) csums = g_ptr_array_new_with_free_func (g_free);
+
+	/* sanity check */
+	if (items->len == 0) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "no event log data");
+		return NULL;
+	}
+
+	/* take existing PCR hash, append new measurement to that,
+	 * hash that with the same algorithm */
+	for (guint i = 0; i < items->len; i++) {
+		FuTpmEventlogItem *item = g_ptr_array_index (items, i);
+		if (item->pcr != pcr)
+			continue;
+		if (item->checksum_sha1 != NULL) {
+			g_autoptr(GChecksum) csum_sha1 = g_checksum_new (G_CHECKSUM_SHA1);
+			g_checksum_update (csum_sha1,
+					   (const guchar *) digest_sha1,
+					   digest_sha1_len);
+			g_checksum_update (csum_sha1,
+					   (const guchar *) g_bytes_get_data (item->checksum_sha1, NULL),
+					   g_bytes_get_size (item->checksum_sha1));
+			g_checksum_get_digest (csum_sha1, digest_sha1, &digest_sha1_len);
+			cnt_sha1++;
+		}
+		if (item->checksum_sha256 != NULL) {
+			g_autoptr(GChecksum) csum_sha256 = g_checksum_new (G_CHECKSUM_SHA256);
+			g_checksum_update (csum_sha256,
+					   (const guchar *) digest_sha256,
+					   digest_sha256_len);
+			g_checksum_update (csum_sha256,
+					   (const guchar *) g_bytes_get_data (item->checksum_sha256, NULL),
+					   g_bytes_get_size (item->checksum_sha256));
+			g_checksum_get_digest (csum_sha256, digest_sha256, &digest_sha256_len);
+			cnt_sha256++;
+		}
+	}
+	if (cnt_sha1 == 0 && cnt_sha256 == 0) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "no SHA1 or SHA256 data");
+		return NULL;
+	}
+	if (cnt_sha1 > 0) {
+		g_autoptr(GBytes) blob_sha1 = NULL;
+		blob_sha1 = g_bytes_new_static (digest_sha1, sizeof(digest_sha1));
+		g_ptr_array_add (csums, fu_tpm_eventlog_strhex (blob_sha1));
+	}
+	if (cnt_sha256 > 0) {
+		g_autoptr(GBytes) blob_sha256 = NULL;
+		blob_sha256 = g_bytes_new_static (digest_sha256, sizeof(digest_sha256));
+		g_ptr_array_add (csums, fu_tpm_eventlog_strhex (blob_sha256));
+	}
+	return g_steal_pointer (&csums);
 }

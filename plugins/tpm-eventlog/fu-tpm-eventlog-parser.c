@@ -37,8 +37,10 @@ static void
 fu_tpm_eventlog_parser_item_free (FuTpmEventlogItem *item)
 {
 	g_bytes_unref (item->blob);
-	g_free (item->checksum_sha1);
-	g_free (item->checksum_sha256);
+	if (item->checksum_sha1 != NULL)
+		g_bytes_unref (item->checksum_sha1);
+	if (item->checksum_sha256 != NULL)
+		g_bytes_unref (item->checksum_sha256);
 	g_free (item);
 }
 
@@ -54,30 +56,17 @@ fu_tpm_eventlog_item_to_string (FuTpmEventlogItem *item, guint idt, GString *str
 	fu_common_string_append_kx (str, idt, "Type", item->kind);
 	tmp = fu_tpm_eventlog_item_kind_to_string (item->kind);
 	if (tmp != NULL)
-		fu_common_string_append_kv (str, idt, "Description", tmp);;
-	fu_common_string_append_kv (str, idt, "ChecksumSha1", item->checksum_sha1);
-	if (item->checksum_sha256 != NULL)
-		fu_common_string_append_kv (str, idt, "ChecksumSha256", item->checksum_sha256);
+		fu_common_string_append_kv (str, idt, "Description", tmp);
+	if (item->checksum_sha1 != NULL) {
+		g_autofree gchar *csum = fu_tpm_eventlog_strhex (item->checksum_sha1);
+		fu_common_string_append_kv (str, idt, "ChecksumSha1", csum);
+	}
+	if (item->checksum_sha256 != NULL) {
+		g_autofree gchar *csum = fu_tpm_eventlog_strhex (item->checksum_sha256);
+		fu_common_string_append_kv (str, idt, "ChecksumSha256", csum);
+	}
 	if (blobstr != NULL)
 		fu_common_string_append_kv (str, idt, "BlobStr", blobstr);
-}
-
-static gchar *
-fu_tpm_eventlog_read_strhex_safe (const guint8 *buf,
-				  gsize bufsz,
-				  gsize offset,
-				  gsize length,
-				  GError **error)
-{
-	g_autoptr(GString) csum = g_string_new (NULL);
-	g_autofree guint8 *digest = g_malloc0 (length);
-	if (!fu_memcpy_safe (digest, length, 0x0,	/* dst */
-			     buf, bufsz, offset,	/* src */
-			     length, error))
-		return FALSE;
-	for (guint i = 0; i < length; i++)
-		g_string_append_printf (csum, "%02x", digest[i]);
-	return g_string_free (g_steal_pointer (&csum), FALSE);
 }
 
 static GPtrArray *
@@ -99,8 +88,8 @@ fu_tpm_eventlog_parser_parse_blob_v2 (const guint8 *buf, gsize bufsz,
 		guint32 event_type = 0;
 		guint32 digestcnt = 0;
 		guint32 datasz = 0;
-		g_autofree gchar *checksum_sha1 = NULL;
-		g_autofree gchar *checksum_sha256 = NULL;
+		g_autoptr(GBytes) checksum_sha1 = NULL;
+		g_autoptr(GBytes) checksum_sha256 = NULL;
 
 		/* read entry */
 		if (!fu_common_read_uint32_safe	(buf, bufsz,
@@ -140,20 +129,19 @@ fu_tpm_eventlog_parser_parse_blob_v2 (const guint8 *buf, gsize bufsz,
 			idx += sizeof(alg_type);
 			if (alg_type == TPM2_ALG_SHA1 ||
 			    flags & FU_TPM_EVENTLOG_PARSER_FLAG_ALL_ALGS) {
-				g_autofree gchar *csum_tmp = NULL;
-				csum_tmp = fu_tpm_eventlog_read_strhex_safe (buf,
-									     bufsz,
-									     idx,
-									     alg_size,
-									     error);
-				if (csum_tmp == NULL)
+				g_autofree guint8 *digest = g_malloc0 (alg_size);
+
+				/* copy hash */
+				if (!fu_memcpy_safe (digest, alg_size, 0x0,	/* dst */
+						     buf, bufsz, idx,		/* src */
+						     alg_size, error))
 					return NULL;
 
 				/* save this for analysis */
 				if (alg_type == TPM2_ALG_SHA1)
-					checksum_sha1 = g_steal_pointer (&csum_tmp);
+					checksum_sha1 = g_bytes_new_take (g_steal_pointer (&digest), alg_size);
 				else if (alg_type == TPM2_ALG_SHA256)
-					checksum_sha256 = g_steal_pointer (&csum_tmp);
+					checksum_sha1 = g_bytes_new_take (g_steal_pointer (&digest), alg_size);
 			}
 
 			/* next block */
@@ -255,27 +243,25 @@ fu_tpm_eventlog_parser_new (const guint8 *buf, gsize bufsz,
 		if (pcr == ESYS_TR_PCR0 ||
 		    flags & FU_TPM_EVENTLOG_PARSER_FLAG_ALL_PCRS) {
 			FuTpmEventlogItem *item;
-			g_autofree gchar *csum = NULL;
+			guint8 digest[TPM2_SHA1_DIGEST_SIZE] = { 0x0 };
 			g_autofree guint8 *data = NULL;
 
-			/* build checksum */
-			csum = fu_tpm_eventlog_read_strhex_safe (buf, bufsz,
-								 idx + FU_TPM_EVENTLOG_V1_IDX_DIGEST,
-								 TPM2_SHA1_DIGEST_SIZE,
-								 error);
-			if (csum == NULL)
+			/* copy hash */
+			if (!fu_memcpy_safe (digest, sizeof(digest), 0x0,			/* dst */
+					     buf, bufsz, idx + FU_TPM_EVENTLOG_V1_IDX_DIGEST,	/* src */
+					     sizeof(digest), error))
 				return NULL;
 
 			/* build item */
 			data = g_malloc0 (datasz);
-			if (!fu_memcpy_safe (data, datasz, 0x0,			/* dst */
-					     buf, bufsz, idx + FU_TPM_EVENTLOG_V1_SIZE, datasz,	/* src */
-					     error))
+			if (!fu_memcpy_safe (data, datasz, 0x0,					/* dst */
+					     buf, bufsz, idx + FU_TPM_EVENTLOG_V1_SIZE,		/* src */
+					     datasz, error))
 				return NULL;
 			item = g_new0 (FuTpmEventlogItem, 1);
 			item->pcr = pcr;
 			item->kind = event_type;
-			item->checksum_sha1 = g_steal_pointer (&csum);
+			item->checksum_sha1 = g_bytes_new (digest, sizeof(digest));
 			item->blob = g_bytes_new_take (g_steal_pointer (&data), datasz);
 			g_ptr_array_add (items, item);
 
