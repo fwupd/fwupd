@@ -9,7 +9,7 @@
 #include "fu-plugin-vfuncs.h"
 #include "fu-hash.h"
 
-#define MINIMUM_BATTERY_PERCENTAGE	30
+#define MINIMUM_BATTERY_PERCENTAGE	10
 
 struct FuPluginData {
 	GDBusProxy		*upower_proxy;
