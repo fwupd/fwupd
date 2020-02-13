@@ -507,6 +507,51 @@ fu_engine_requirements_device_func (gconstpointer user_data)
 }
 
 static void
+fu_engine_requirements_device_plain_func (gconstpointer user_data)
+{
+	gboolean ret;
+	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuInstallTask) task = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+	const gchar *xml =
+		"<component>"
+		"  <provides>"
+		"    <firmware type=\"flashed\">12345678-1234-1234-1234-123456789012</firmware>"
+		"  </provides>"
+		"  <releases>"
+		"    <release version=\"51H0AALB\">"
+		"      <checksum type=\"sha1\" filename=\"bios.bin\" target=\"content\"/>"
+		"    </release>"
+		"  </releases>"
+		"</component>";
+
+	/* set up a dummy device */
+	fu_device_set_version (device, "5101AALB", FWUPD_VERSION_FORMAT_PLAIN);
+	fu_device_set_vendor_id (device, "FFFF");
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
+
+	/* make the component require three things */
+	silo = xb_silo_new_from_xml (xml, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (silo);
+	component = xb_silo_query_first (silo, "component", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (component);
+
+	/* check this passes */
+	task = fu_install_task_new (device, component);
+	ret = fu_engine_check_requirements (engine, task,
+					    FWUPD_INSTALL_FLAG_NONE,
+					    &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+}
+
+static void
 fu_engine_requirements_version_format_func (gconstpointer user_data)
 {
 	gboolean ret;
@@ -3036,6 +3081,8 @@ main (int argc, char **argv)
 			      fu_engine_requirements_unsupported_func);
 	g_test_add_data_func ("/fwupd/engine{requirements-device}", self,
 			      fu_engine_requirements_device_func);
+	g_test_add_data_func ("/fwupd/engine{requirements-device-plain}", self,
+			      fu_engine_requirements_device_plain_func);
 	g_test_add_data_func ("/fwupd/engine{requirements-version-format}", self,
 			      fu_engine_requirements_version_format_func);
 	g_test_add_data_func ("/fwupd/engine{device-auto-parent}", self,

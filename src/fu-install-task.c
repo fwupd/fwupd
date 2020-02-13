@@ -356,9 +356,14 @@ fu_install_task_check_requirements (FuInstallTask *self,
 	}
 
 	/* check semver */
-	version_release = fu_common_version_parse_from_format (version_release_raw,
-							       fu_device_get_version_format (self->device));
-	vercmp = fu_common_vercmp (version, version_release);
+	if (fu_device_get_version_format (self->device) == FWUPD_VERSION_FORMAT_PLAIN) {
+		version_release = g_strdup (version_release_raw);
+		vercmp = g_strcmp0 (version, version_release);
+	} else {
+		version_release = fu_common_version_parse_from_format (version_release_raw,
+								       fu_device_get_version_format (self->device));
+		vercmp = fu_common_vercmp (version, version_release);
+	}
 	if (vercmp == 0 && (flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) == 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
