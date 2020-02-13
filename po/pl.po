@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Piotr Drąg <piotrdrag@gmail.com>, 2015-2019
+# Piotr Drąg <piotrdrag@gmail.com>, 2015-2020
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -105,6 +105,14 @@ msgstr[0] "%u dzień"
 msgstr[1] "%u dni"
 msgstr[2] "%u dni"
 msgstr[3] "%u dni"
+
+#, c-format
+msgid "%u device has a firmware upgrade available."
+msgid_plural "%u devices have a firmware upgrade available."
+msgstr[0] "%u urządzenie ma dostępną aktualizację oprogramowania sprzętowego."
+msgstr[1] "%u urządzenia mają dostępną aktualizację oprogramowania sprzętowego."
+msgstr[2] "%u urządzeń ma dostępną aktualizację oprogramowania sprzętowego."
+msgstr[3] "%u urządzeń ma dostępną aktualizację oprogramowania sprzętowego."
 
 #. TRANSLATORS: duration in minutes
 #, c-format
@@ -380,9 +388,17 @@ msgstr "Urządzenie może przywrócić się po niepowodzeniu wgrywania"
 msgid "Device changed:"
 msgstr "Zmieniono urządzenie:"
 
+#. TRANSLATORS: a version check is required for all firmware
+msgid "Device firmware is required to have a version check"
+msgstr "Oprogramowanie sprzętowe urządzenia musi mieć test wersji"
+
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
 msgstr "Urządzenie jest zablokowane"
+
+#. TRANSLATORS: a version check is required for all firmware
+msgid "Device is required to install all provided releases"
+msgstr "Urządzenie musi zainstalować wszystkie podane wydania"
 
 #. TRANSLATORS: Device remains usable during update
 msgid "Device is usable for the duration of the update"
@@ -1061,6 +1077,9 @@ msgstr "Ponowne uruchamianie urządzenia…"
 #. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
 msgstr "Zwraca wszystkie identyfikatory sprzętu dla komputera"
+
+msgid "Run `fwupdmgr get-upgrades` for more information."
+msgstr "Polecenie „fwupdmgr get-upgrades” wyświetli więcej informacji."
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"

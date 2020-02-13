@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Yuri Chornoivan <yurchor@ukr.net>, 2015-2019
+# Yuri Chornoivan <yurchor@ukr.net>, 2015-2020
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -105,6 +105,14 @@ msgstr[0] "%u день"
 msgstr[1] "%u дні"
 msgstr[2] "%u днів"
 msgstr[3] "%u день"
+
+#, c-format
+msgid "%u device has a firmware upgrade available."
+msgid_plural "%u devices have a firmware upgrade available."
+msgstr[0] "Для %u пристрою випущено оновлення мікропрограми."
+msgstr[1] "Для %u пристроїв випущено оновлення мікропрограм."
+msgstr[2] "Для %u пристроїв випущено оновлення мікропрограм."
+msgstr[3] "Для %u пристрою випущено оновлення мікропрограм."
 
 #. TRANSLATORS: duration in minutes
 #, c-format
@@ -380,9 +388,17 @@ msgstr "Пристрій може відновлюватися при невда
 msgid "Device changed:"
 msgstr "Змінено пристрій:"
 
+#. TRANSLATORS: a version check is required for all firmware
+msgid "Device firmware is required to have a version check"
+msgstr "Для перевірки версії потрібна мікропрограма пристрою"
+
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
 msgstr "Пристрій заблоковано"
+
+#. TRANSLATORS: a version check is required for all firmware
+msgid "Device is required to install all provided releases"
+msgstr "Для встановлення усіх наданих випусків потрібен пристрій"
 
 #. TRANSLATORS: Device remains usable during update
 msgid "Device is usable for the duration of the update"
@@ -1061,6 +1077,9 @@ msgstr "Перезапускаємо пристрій…"
 #. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
 msgstr "Повернути усі ідентифікатори апаратного забезпечення комп’ютера"
+
+msgid "Run `fwupdmgr get-upgrades` for more information."
+msgstr "Віддайте команду «fwupdmgr get-upgrades», щоб дізнатися більше."
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
