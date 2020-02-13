@@ -1,3 +1,11 @@
 # match all devices with this udev subsystem
 [DeviceInstanceId=BLOCK]
 Plugin = ata
+
+[DeviceInstanceId=OUI\000c50]
+Vendor = Seagate
+VendorId = ATA:0x1BB1
+
+[DeviceInstanceId=OUI\002538]
+Vendor = Samsung
+VendorId = ATA:0x144D

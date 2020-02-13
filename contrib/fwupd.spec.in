@@ -234,6 +234,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %files -f %{name}.lang
 %doc README.md AUTHORS
 %license COPYING
+%config(noreplace)%{_sysconfdir}/fwupd/ata.conf
 %config(noreplace)%{_sysconfdir}/fwupd/daemon.conf
 %config(noreplace)%{_sysconfdir}/fwupd/upower.conf
 %if 0%{?have_uefi}
