@@ -6,7 +6,7 @@ Uploaders: Steve McIntyre <93sam@debian.org>,
            Matthias Klumpp <mak@debian.org>,
            Mario Limonciello <mario.limonciello@dell.com>
 Build-Depends: %%%DYNAMIC%%%
-Standards-Version: 4.4.1
+Standards-Version: 4.5.0
 Section: admin
 Homepage: https://github.com/fwupd/fwupd
 Vcs-Git: https://salsa.debian.org/efi-team/fwupd.git
