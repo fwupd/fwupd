@@ -1,4 +1,4 @@
-fwupd (1.3.8-1) UNRELEASED; urgency=medium
+fwupd (1.3.8-1) unstable; urgency=medium
 
   * New upstream version (1.3.8)
   * Drop all existing patches
@@ -7,7 +7,7 @@ fwupd (1.3.8-1) UNRELEASED; urgency=medium
    - A logic error with report uploading
   * Update standards version
 
- -- Mario Limonciello <mario.limonciello@dell.com>  Thu, 13 Feb 2020 15:44:15 -0600
+ -- Mario Limonciello <mario.limonciello@dell.com>  Fri, 14 Feb 2020 09:41:27 -0600
 
 fwupd (1.3.7-3) unstable; urgency=medium
 
