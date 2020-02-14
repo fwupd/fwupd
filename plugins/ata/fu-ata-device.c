@@ -357,10 +357,12 @@ fu_ata_device_command (FuAtaDevice *self, struct ata_tf *tf,
 	cdb[7] = tf->lbah;
 	cdb[8] = tf->dev;
 	cdb[9] = tf->command;
-	fu_common_dump_raw (G_LOG_DOMAIN, "CBD", cdb, sizeof(cdb));
-	if (dxfer_direction == SG_DXFER_TO_DEV && dxferp != NULL) {
-		fu_common_dump_raw (G_LOG_DOMAIN, "outgoing_data",
-				    dxferp, dxfer_len);
+	if (g_getenv ("FWUPD_ATA_VERBOSE") != NULL) {
+		fu_common_dump_raw (G_LOG_DOMAIN, "CBD", cdb, sizeof(cdb));
+		if (dxfer_direction == SG_DXFER_TO_DEV && dxferp != NULL) {
+			fu_common_dump_raw (G_LOG_DOMAIN, "outgoing_data",
+					    dxferp, dxfer_len);
+		}
 	}
 
 	/* hit hardware */
@@ -380,7 +382,8 @@ fu_ata_device_command (FuAtaDevice *self, struct ata_tf *tf,
 		return FALSE;
 	g_debug ("ATA_%u status=0x%x, host_status=0x%x, driver_status=0x%x",
 		io_hdr.cmd_len, io_hdr.status, io_hdr.host_status, io_hdr.driver_status);
-	fu_common_dump_raw (G_LOG_DOMAIN, "SB", sb, sizeof(sb));
+	if (g_getenv ("FWUPD_ATA_VERBOSE") != NULL)
+		fu_common_dump_raw (G_LOG_DOMAIN, "SB", sb, sizeof(sb));
 
 	/* error check */
 	if (io_hdr.status && io_hdr.status != SG_CHECK_CONDITION) {
@@ -446,6 +449,8 @@ fu_ata_device_setup (FuDevice *device, GError **error)
 		g_prefix_error (error, "failed to IDENTIFY");
 		return FALSE;
 	}
+	if (g_getenv ("FWUPD_ATA_VERBOSE") != NULL)
+		fu_common_dump_raw (G_LOG_DOMAIN, "IDENTIFY", id, sizeof(id));
 	if (!fu_ata_device_parse_id (self, id, sizeof(id), error))
 		return FALSE;
 
