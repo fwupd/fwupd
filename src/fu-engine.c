@@ -1767,7 +1767,7 @@ fu_engine_schedule_update (FuEngine *self,
 
 static gboolean
 fu_engine_install_release (FuEngine *self,
-			   FuDevice *device,
+			   FuDevice *device_orig,
 			   XbNode *component,
 			   XbNode *rel,
 			   FwupdInstallFlags flags,
@@ -1780,6 +1780,7 @@ fu_engine_install_release (FuEngine *self,
 	g_autofree gchar *version_orig = NULL;
 	g_autofree gchar *version_rel = NULL;
 	g_autoptr(FuDevice) device_tmp = NULL;
+	g_autoptr(FuDevice) device = g_object_ref (device_orig);
 	g_autoptr(GBytes) blob_fw2 = NULL;
 	g_autoptr(GError) error_local = NULL;
 
