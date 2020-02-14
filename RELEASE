@@ -10,6 +10,11 @@ git log --format="%s" --cherry-pick --right-only $(git describe --tags --abbrev=
 Add any user visible changes into ../data/org.freedesktop.fwupd.metainfo.xml
 appstream-util appdata-to-news ../data/org.freedesktop.fwupd.metainfo.xml > NEWS
 
+1.5. Update ESRT names:
+
+fwupdmgr refresh
+ninja-build uefi-update-quirk
+
 2. Update translations:
 
 ninja-build fwupd-pot
