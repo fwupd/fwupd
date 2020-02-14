@@ -292,6 +292,7 @@ if build_standalone and get_option('plugin_uefi')
   readelf = find_program ('readelf')
   tpm2tss = dependency('tss2-esys', version : '>= 2.0')
   genpeimg = find_program ('genpeimg', required: false)
+  udisks2 = dependency('udisks2')
 
   efi_app_location = join_paths(libexecdir, 'fwupd', 'efi')
   conf.set_quoted ('EFI_APP_LOCATION', efi_app_location)
