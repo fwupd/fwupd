@@ -12,7 +12,7 @@ OUT="$DIR/files.json"
 BINARY=$(find debian/tmp -name '*.efi' | xargs basename)
 
 # Actually needs full path within the binary deb
-BINARY="usr/lib/${SOURCE}/efi/${BINARY}"
+BINARY="usr/libexec/${SOURCE}/efi/${BINARY}"
 
 rm -f $OUT
 

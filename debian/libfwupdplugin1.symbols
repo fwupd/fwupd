@@ -1,4 +1,5 @@
 libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
+* Build-Depends-Package: libfwupdplugin-dev
  LIBFWUPDPLUGIN_0.1.0@LIBFWUPDPLUGIN_0.1.0 0.1.0
  LIBFWUPDPLUGIN_0.3.5@LIBFWUPDPLUGIN_0.3.5 0.3.5
  LIBFWUPDPLUGIN_0.6.1@LIBFWUPDPLUGIN_0.6.1 0.6.1
