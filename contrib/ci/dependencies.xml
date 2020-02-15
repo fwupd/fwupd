@@ -426,6 +426,15 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency type="build" id="libglib2.0-doc">
+    <distro id="debian">
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
   <dependency type="build" id="libglib2.0-dev">
     <distro id="centos">
       <package>glib2-devel</package>
