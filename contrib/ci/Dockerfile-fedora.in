@@ -7,6 +7,8 @@ RUN echo fubar > /etc/machine-id
 RUN dnf -y update
 RUN echo fubar > /etc/machine-id
 %%%INSTALL_DEPENDENCIES_COMMAND%%%
+RUN dnf -y update glib2 glib2-devel --releasever=32
+RUN dnf -y install flashrom-devel --enablerepo=updates-testing
 RUN mkdir /github/workspace
 WORKDIR /github/workspace
 COPY . .
