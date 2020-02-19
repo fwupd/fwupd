@@ -52,9 +52,6 @@ makensis -NOCD $build/contrib/setup-win32.nsi
 #so that it's actually executable
 cp /usr/x86_64-w64-mingw32/sys-root/mingw/bin/*.dll .
 
-#move these so they work
-mv fwupd/*.exe .
-
 #remove static archives
 find -type f -name "*.dll.a" | xargs rm -f
 
