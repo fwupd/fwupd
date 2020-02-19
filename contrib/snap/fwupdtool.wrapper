@@ -1,2 +1,2 @@
 #!/bin/sh
-exec "$SNAP/fwupd-command" $SNAP/libexec/fwupd/fwupdtool $@
+exec "$SNAP/fwupd-command" $SNAP/bin/fwupdtool $@

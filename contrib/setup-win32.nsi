@@ -60,7 +60,7 @@ Section "fwupd"
 
   # fwupd
   File "dfu-tool.exe"
-  File "fwupd/fwupdtool.exe"
+  File "fwupdtool.exe"
   File "libfwupd-2.dll"
   File "libfwupdplugin-1.dll"
   File "libgcab-1.0-0.dll"
