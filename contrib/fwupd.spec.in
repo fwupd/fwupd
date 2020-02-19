@@ -215,9 +215,6 @@ Data files for installed tests.
 %endif
 %global fwup_efi_fn $RPM_BUILD_ROOT%{_libexecdir}/fwupd/efi/fwupd%{efiarch}.efi
 %pesign -s -i %{fwup_efi_fn} -o %{fwup_efi_fn}.signed
-%if 0%{?rhel} > 7
-ln -s %{_libexecdir}/fwupd/fwupdate $RPM_BUILD_ROOT%{_bindir}/fwupdate
-%endif
 %endif
 
 mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
@@ -252,10 +249,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %if 0%{?have_uefi}
 %{_libexecdir}/fwupd/efi/*.efi
 %{_libexecdir}/fwupd/efi/*.efi.signed
-%{_libexecdir}/fwupd/fwupdate
-%if 0%{?rhel} > 7
 %{_bindir}/fwupdate
-%endif
 %{_libexecdir}/fwupd/fwupdtpmevlog
 %endif
 %{_bindir}/dfu-tool
@@ -290,6 +284,9 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_datadir}/man/man1/fwupdagent.1.gz
 %{_datadir}/man/man1/dfu-tool.1.gz
 %{_datadir}/man/man1/fwupdmgr.1.gz
+%if 0%{?have_uefi}
+%{_datadir}/man/man1/fwupdate.1.gz
+%endif
 %{_datadir}/metainfo/org.freedesktop.fwupd.metainfo.xml
 %{_datadir}/icons/hicolor/scalable/apps/org.freedesktop.fwupd.svg
 %{_datadir}/fwupd/firmware_packager.py
