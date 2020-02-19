@@ -260,8 +260,6 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %config(noreplace)%{_sysconfdir}/fwupd/thunderbolt.conf
 %dir %{_libexecdir}/fwupd
 %{_libexecdir}/fwupd/fwupd
-%{_libexecdir}/fwupd/fwupdtool
-%{_libexecdir}/fwupd/fwupdagent
 %{_libexecdir}/fwupd/fwupdoffline
 %if 0%{?have_uefi}
 %{_libexecdir}/fwupd/efi/*.efi
@@ -274,6 +272,8 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %endif
 %{_bindir}/dfu-tool
 %{_bindir}/fwupdmgr
+%{_bindir}/fwupdtool
+%{_bindir}/fwupdagent
 %dir %{_sysconfdir}/fwupd
 %dir %{_sysconfdir}/fwupd/remotes.d
 %if 0%{?have_dell}
@@ -298,6 +298,8 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %{_datadir}/polkit-1/actions/org.freedesktop.fwupd.policy
 %{_datadir}/polkit-1/rules.d/org.freedesktop.fwupd.rules
 %{_datadir}/dbus-1/system-services/org.freedesktop.fwupd.service
+%{_datadir}/man/man1/fwupdtool.1.gz
+%{_datadir}/man/man1/fwupdagent.1.gz
 %{_datadir}/man/man1/dfu-tool.1.gz
 %{_datadir}/man/man1/fwupdmgr.1.gz
 %{_datadir}/metainfo/org.freedesktop.fwupd.metainfo.xml
