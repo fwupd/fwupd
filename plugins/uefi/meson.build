@@ -46,7 +46,7 @@ shared_module('fu_plugin_uefi',
   ],
 )
 
-executable(
+fwupdate = executable(
   'fwupdate',
   resources_src,
   fu_hash,
@@ -82,9 +82,26 @@ executable(
     fwupdplugin,
   ],
   install : true,
-  install_dir : join_paths(libexecdir, 'fwupd'),
+  install_dir : bindir,
   c_args : cargs,
 )
+
+if get_option('man')
+  custom_target('fwupdate-man',
+    input : fwupdate,
+    output : 'fwupdate.1',
+    command : [
+      help2man, '@INPUT@',
+      '--no-info',
+      '--output', '@OUTPUT@',
+      '--name', 'fwupd',
+      '--manual', 'User Commands',
+      '--version-string', fwupd_version,
+    ],
+    install : true,
+    install_dir : join_paths(mandir, 'man1'),
+  )
+endif
 
 install_data(['uefi.conf'],
   install_dir:  join_paths(sysconfdir, 'fwupd')
