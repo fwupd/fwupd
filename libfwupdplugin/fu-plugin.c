@@ -2528,6 +2528,26 @@ fu_plugin_get_config_value (FuPlugin *self, const gchar *key)
 }
 
 /**
+ * fu_plugin_get_config_value_boolean:
+ * @self: a #FuPlugin
+ * @key: A settings key
+ *
+ * Return the boolean value of a key if it's been configured
+ *
+ * Returns: %TRUE if the value is `true` (case insensitive), %FALSE otherwise
+ *
+ * Since: 1.3.9
+ **/
+gboolean
+fu_plugin_get_config_value_boolean (FuPlugin *self, const gchar *key)
+{
+	g_autofree gchar *tmp = fu_plugin_get_config_value (self, key);
+	if (tmp == NULL)
+		return FALSE;
+	return g_ascii_strcasecmp (tmp, "true");
+}
+
+/**
  * fu_plugin_name_compare:
  * @plugin1: first #FuPlugin to compare.
  * @plugin2: second #FuPlugin to compare.

@@ -534,6 +534,7 @@ LIBFWUPDPLUGIN_1.3.8 {
 
 LIBFWUPDPLUGIN_1.3.9 {
   global:
+    fu_plugin_get_config_value_boolean;
     fu_plugin_runner_device_created;
   local: *;
 } LIBFWUPDPLUGIN_1.3.8;
