@@ -400,7 +400,7 @@ fu_plugin_update (FuPlugin *plugin,
 static gboolean
 fu_plugin_uefi_load_config (FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	gboolean shim_needed = FALSE;
+	gboolean disable_shim;
 	guint64 sz_reqd = FU_UEFI_COMMON_REQUIRED_ESP_FREE_SPACE;
 	g_autofree gchar *require_esp_free_space = NULL;
 	g_autofree gchar *require_shim_for_sb = NULL;
@@ -413,13 +413,10 @@ fu_plugin_uefi_load_config (FuPlugin *plugin, FuDevice *device, GError **error)
 	fu_device_set_metadata_integer (device, "RequireESPFreeSpace", sz_reqd);
 
 	/* shim used for SB or not? */
-	require_shim_for_sb = fu_plugin_get_config_value (plugin, "RequireShimForSecureBoot");
-	if (require_shim_for_sb == NULL ||
-	    g_ascii_strcasecmp (require_shim_for_sb, "true") == 0)
-		shim_needed = TRUE;
+	disable_shim = fu_plugin_get_config_value_boolean (plugin, "DisableShimForSecureBoot");
 	fu_device_set_metadata_boolean (device,
 					"RequireShimForSecureBoot",
-					shim_needed);
+					!disable_shim);
 
 	/* load ESP from file */
 	esp_path = fu_plugin_get_config_value (plugin, "OverrideESPMountPoint");

@@ -151,6 +151,8 @@ void		 fu_plugin_add_report_metadata		(FuPlugin	*self,
 							 const gchar	*value);
 gchar		*fu_plugin_get_config_value		(FuPlugin	*self,
 							 const gchar	*key);
+gboolean	 fu_plugin_get_config_value_boolean	(FuPlugin	*self,
+							 const gchar	*key);
 void		 fu_plugin_add_runtime_version		(FuPlugin	*self,
 							 const gchar	*component_id,
 							 const gchar	*version);
