@@ -531,3 +531,9 @@ LIBFWUPDPLUGIN_1.3.8 {
     fu_common_kernel_locked_down;
   local: *;
 } LIBFWUPDPLUGIN_1.3.6;
+
+LIBFWUPDPLUGIN_1.3.9 {
+  global:
+    fu_plugin_runner_device_created;
+  local: *;
+} LIBFWUPDPLUGIN_1.3.8;

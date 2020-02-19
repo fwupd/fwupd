@@ -1678,6 +1678,8 @@ fu_plugin_usb_device_added (FuPlugin *self, FuUsbDevice *device, GError **error)
 	/* create new device and incorporate existing properties */
 	dev = g_object_new (device_gtype, NULL);
 	fu_device_incorporate (dev, FU_DEVICE (device));
+	if (!fu_plugin_runner_device_created (self, dev, error))
+		return FALSE;
 
 	/* there are a lot of different devices that match, but not all respond
 	 * well to opening -- so limit some ones with issued updates */
@@ -1715,6 +1717,8 @@ fu_plugin_udev_device_added (FuPlugin *self, FuUdevDevice *device, GError **erro
 	/* create new device and incorporate existing properties */
 	dev = g_object_new (device_gtype, NULL);
 	fu_device_incorporate (FU_DEVICE (dev), FU_DEVICE (device));
+	if (!fu_plugin_runner_device_created (self, dev, error))
+		return FALSE;
 
 	/* there are a lot of different devices that match, but not all respond
 	 * well to opening -- so limit some ones with issued updates */
@@ -1948,6 +1952,38 @@ fu_plugin_runner_device_register (FuPlugin *self, FuDevice *device)
 		g_debug ("performing fu_plugin_device_registered() on %s", priv->name);
 		func (self, device);
 	}
+}
+
+/**
+ * fu_plugin_runner_device_created:
+ * @self: a #FuPlugin
+ * @device: a #FuDevice
+ * @error: a #GError or NULL
+ *
+ * Call the device_created routine for the plugin
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 1.3.9
+ **/
+gboolean
+fu_plugin_runner_device_created (FuPlugin *self, FuDevice *device, GError **error)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	FuPluginDeviceFunc func = NULL;
+
+	/* not enabled */
+	if (!priv->enabled)
+		return TRUE;
+	if (priv->module == NULL)
+		return TRUE;
+
+	/* optional */
+	g_module_symbol (priv->module, "fu_plugin_device_created", (gpointer *) &func);
+	if (func == NULL)
+		return TRUE;
+	g_debug ("performing fu_plugin_device_created() on %s", priv->name);
+	return func (self, device, error);
 }
 
 /**
