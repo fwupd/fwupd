@@ -427,7 +427,9 @@ fu_dell_dock_ec_get_dock_info (FuDevice *device,
 	}
 
 	/* minimum EC version this code will support */
-	if (fu_common_vercmp (self->ec_version, self->ec_minimum_version) < 0) {
+	if (fu_common_vercmp_full (self->ec_version,
+				   self->ec_minimum_version,
+				   FWUPD_VERSION_FORMAT_QUAD) < 0) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
 			     "dock containing EC version %s is not supported",
 			     self->ec_version);
@@ -439,7 +441,7 @@ fu_dell_dock_ec_get_dock_info (FuDevice *device,
 
 	/* Determine if the passive flow should be used when flashing */
 	hub_version = fu_device_get_version (self->symbiote);
-	if (fu_common_vercmp (hub_version, "1.42") >= 0) {
+	if (fu_common_vercmp_full (hub_version, "1.42", FWUPD_VERSION_FORMAT_PAIR) >= 0) {
 		g_debug ("using passive flow");
 		self->passive_flow = PASSIVE_REBOOT_MASK;
 		fu_device_set_custom_flags (device, "skip-restart");
