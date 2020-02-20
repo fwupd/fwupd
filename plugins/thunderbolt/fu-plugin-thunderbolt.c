@@ -50,7 +50,9 @@ fu_plugin_thunderbolt_safe_kernel (FuPlugin *plugin, GError **error)
 		return TRUE;
 	}
 
-	if (fu_common_vercmp (name_tmp.release, minimum_kernel) < 0) {
+	if (fu_common_vercmp_full (name_tmp.release,
+				   minimum_kernel,
+				   FWUPD_VERSION_FORMAT_TRIPLET) < 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,

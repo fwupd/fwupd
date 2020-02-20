@@ -534,6 +534,7 @@ LIBFWUPDPLUGIN_1.3.8 {
 
 LIBFWUPDPLUGIN_1.3.9 {
   global:
+    fu_common_vercmp_full;
     fu_plugin_get_config_value_boolean;
     fu_plugin_runner_device_created;
   local: *;

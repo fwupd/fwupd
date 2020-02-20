@@ -450,6 +450,29 @@ fu_common_version_verify_format (const gchar *version,
 }
 
 /**
+ * fu_common_vercmp_full:
+ * @version_a: the semver release version, e.g. 1.2.3
+ * @version_b: the semver release version, e.g. 1.2.3.1
+ * @fmt: a #FwupdVersionFormat, e.g. %FWUPD_VERSION_FORMAT_PLAIN
+ *
+ * Compares version numbers for sorting taking into account the version format
+ * if required.
+ *
+ * Returns: -1 if a < b, +1 if a > b, 0 if they are equal, and %G_MAXINT on error
+ *
+ * Since: 1.3.9
+ */
+gint
+fu_common_vercmp_full (const gchar *version_a,
+		       const gchar *version_b,
+		       FwupdVersionFormat fmt)
+{
+	if (fmt == FWUPD_VERSION_FORMAT_PLAIN)
+		return g_strcmp0 (version_a, version_b);
+	return fu_common_vercmp (version_a, version_b);
+}
+
+/**
  * fu_common_vercmp:
  * @version_a: the semver release version, e.g. 1.2.3
  * @version_b: the semver release version, e.g. 1.2.3.1

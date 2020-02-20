@@ -345,7 +345,8 @@ fu_install_task_check_requirements (FuInstallTask *self,
 	/* compare to the lowest supported version, if it exists */
 	version_lowest = fu_device_get_version_lowest (self->device);
 	if (version_lowest != NULL &&
-	    fu_common_vercmp (version_lowest, version) > 0 &&
+	    fu_common_vercmp_full (version_lowest, version,
+				   fu_device_get_version_format (self->device)) > 0 &&
 	    (flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -358,12 +359,12 @@ fu_install_task_check_requirements (FuInstallTask *self,
 	/* check semver */
 	if (fu_device_get_version_format (self->device) == FWUPD_VERSION_FORMAT_PLAIN) {
 		version_release = g_strdup (version_release_raw);
-		vercmp = g_strcmp0 (version, version_release);
 	} else {
 		version_release = fu_common_version_parse_from_format (version_release_raw,
 								       fu_device_get_version_format (self->device));
-		vercmp = fu_common_vercmp (version, version_release);
 	}
+	vercmp = fu_common_vercmp_full (version, version_release,
+					fu_device_get_version_format (self->device));
 	if (vercmp == 0 && (flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) == 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
