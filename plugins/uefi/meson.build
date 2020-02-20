@@ -105,7 +105,7 @@ if get_option('man')
       help2man, '@INPUT@',
       '--no-info',
       '--output', '@OUTPUT@',
-      '--name', 'fwupd',
+      '--name', 'Debugging utility for UEFI firmware updates',
       '--manual', 'User Commands',
       '--version-string', fwupd_version,
     ],
