@@ -314,11 +314,12 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GNode) root = g_node_new (NULL);
-	g_autofree gchar *title = fu_util_get_tree_title (priv);
+	g_autofree gchar *title = NULL;
 
 	/* load engine */
 	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
 		return FALSE;
+	title = fu_util_get_tree_title (priv);
 
 	/* get devices from daemon */
 	devices = fu_engine_get_devices (priv->engine, error);
@@ -382,12 +383,13 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GNode) root = g_node_new (NULL);
-	g_autofree gchar *title = fu_util_get_tree_title (priv);
+	g_autofree gchar *title = NULL;
 	gint fd;
 
 	/* load engine */
 	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
 		return FALSE;
+	title = fu_util_get_tree_title (priv);
 
 	/* check args */
 	if (g_strv_length (values) != 1) {
@@ -466,12 +468,13 @@ static gboolean
 fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GNode) root = g_node_new (NULL);
-	g_autofree gchar *title = fu_util_get_tree_title (priv);
+	g_autofree gchar *title = NULL;
 	g_autoptr(GPtrArray) devs = NULL;
 
 	/* load engine */
 	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
 		return FALSE;
+	title = fu_util_get_tree_title (priv);
 
 	/* print */
 	devs = fu_engine_get_devices (priv->engine, error);
@@ -1558,11 +1561,12 @@ fu_util_get_history (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GNode) root = g_node_new (NULL);
-	g_autofree gchar *title = fu_util_get_tree_title (priv);
+	g_autofree gchar *title = NULL;
 
 	/* load engine */
 	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
 		return FALSE;
+	title = fu_util_get_tree_title (priv);
 
 	/* get all devices from the history database */
 	devices = fu_engine_get_history (priv->engine, error);
@@ -1691,11 +1695,12 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GNode) root = g_node_new (NULL);
 	g_autoptr(GPtrArray) remotes = NULL;
-	g_autofree gchar *title = fu_util_get_tree_title (priv);
+	g_autofree gchar *title = NULL;
 
 	/* load engine */
 	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
 		return FALSE;
+	title = fu_util_get_tree_title (priv);
 
 	/* list remotes */
 	remotes = fu_engine_get_remotes (priv->engine, error);
