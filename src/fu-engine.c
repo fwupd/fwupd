@@ -891,7 +891,7 @@ fu_engine_verify (FuEngine *self, const gchar *device_id, GError **error)
 				XbNode *rel = g_ptr_array_index (releases, j);
 				const gchar *rel_ver = xb_node_get_attr (rel, "version");
 				g_autofree gchar *tmp_ver = fu_common_version_parse_from_format (rel_ver, fmt);
-				if (fu_common_vercmp (tmp_ver, version) == 0) {
+				if (fu_common_vercmp_full (tmp_ver, version, fmt) == 0) {
 					release = g_object_ref (rel);
 					break;
 				}
@@ -973,7 +973,10 @@ fu_engine_verify (FuEngine *self, const gchar *device_id, GError **error)
 }
 
 static gboolean
-fu_engine_require_vercmp (XbNode *req, const gchar *version, GError **error)
+fu_engine_require_vercmp (XbNode *req,
+			  const gchar *version,
+			  FwupdVersionFormat fmt,
+			  GError **error)
 {
 	gboolean ret = FALSE;
 	gint rc = 0;
@@ -981,22 +984,22 @@ fu_engine_require_vercmp (XbNode *req, const gchar *version, GError **error)
 	const gchar *version_req = xb_node_get_attr (req, "version");
 
 	if (g_strcmp0 (tmp, "eq") == 0) {
-		rc = fu_common_vercmp (version, version_req);
+		rc = fu_common_vercmp_full (version, version_req, fmt);
 		ret = rc == 0;
 	} else if (g_strcmp0 (tmp, "ne") == 0) {
-		rc = fu_common_vercmp (version, version_req);
+		rc = fu_common_vercmp_full (version, version_req, fmt);
 		ret = rc != 0;
 	} else if (g_strcmp0 (tmp, "lt") == 0) {
-		rc = fu_common_vercmp (version, version_req);
+		rc = fu_common_vercmp_full (version, version_req, fmt);
 		ret = rc < 0;
 	} else if (g_strcmp0 (tmp, "gt") == 0) {
-		rc = fu_common_vercmp (version, version_req);
+		rc = fu_common_vercmp_full (version, version_req, fmt);
 		ret = rc > 0;
 	} else if (g_strcmp0 (tmp, "le") == 0) {
-		rc = fu_common_vercmp (version, version_req);
+		rc = fu_common_vercmp_full (version, version_req, fmt);
 		ret = rc <= 0;
 	} else if (g_strcmp0 (tmp, "ge") == 0) {
-		rc = fu_common_vercmp (version, version_req);
+		rc = fu_common_vercmp_full (version, version_req, fmt);
 		ret = rc >= 0;
 	} else if (g_strcmp0 (tmp, "glob") == 0) {
 		ret = fu_common_fnmatch (version_req, version);
@@ -1052,7 +1055,9 @@ fu_engine_check_requirement_not_child (FuEngine *self, XbNode *req,
 				     fu_device_get_name (device));
 			return FALSE;
 		}
-		if (fu_engine_require_vercmp (req, version, NULL)) {
+		if (fu_engine_require_vercmp (req, version,
+					      fu_device_get_version_format (child),
+					      NULL)) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -1093,7 +1098,9 @@ fu_engine_check_requirement_firmware (FuEngine *self, XbNode *req,
 	/* old firmware version */
 	if (xb_node_get_text (req) == NULL) {
 		const gchar *version = fu_device_get_version (device_actual);
-		if (!fu_engine_require_vercmp (req, version, &error_local)) {
+		if (!fu_engine_require_vercmp (req, version,
+					       fu_device_get_version_format (device_actual),
+					       &error_local)) {
 			if (g_strcmp0 (xb_node_get_attr (req, "compare"), "ge") == 0) {
 				g_set_error (error,
 					     FWUPD_ERROR,
@@ -1115,7 +1122,9 @@ fu_engine_check_requirement_firmware (FuEngine *self, XbNode *req,
 	/* bootloader version */
 	if (g_strcmp0 (xb_node_get_text (req), "bootloader") == 0) {
 		const gchar *version = fu_device_get_version_bootloader (device_actual);
-		if (!fu_engine_require_vercmp (req, version, &error_local)) {
+		if (!fu_engine_require_vercmp (req, version,
+					       fu_device_get_version_format (device_actual),
+					       &error_local)) {
 			if (g_strcmp0 (xb_node_get_attr (req, "compare"), "ge") == 0) {
 				g_set_error (error,
 					     FWUPD_ERROR,
@@ -1139,7 +1148,9 @@ fu_engine_check_requirement_firmware (FuEngine *self, XbNode *req,
 	if (g_strcmp0 (xb_node_get_text (req), "vendor-id") == 0 &&
 	    fu_device_get_vendor_id (device_actual) != NULL) {
 		const gchar *version = fu_device_get_vendor_id (device_actual);
-		if (!fu_engine_require_vercmp (req, version, &error_local)) {
+		if (!fu_engine_require_vercmp (req, version,
+					       fu_device_get_version_format (device_actual),
+					       &error_local)) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
@@ -1183,7 +1194,9 @@ fu_engine_check_requirement_firmware (FuEngine *self, XbNode *req,
 		version = fu_device_get_version (device_actual);
 		if (version != NULL &&
 		    xb_node_get_attr (req, "compare") != NULL &&
-		    !fu_engine_require_vercmp (req, version, &error_local)) {
+		    !fu_engine_require_vercmp (req, version,
+					       fu_device_get_version_format (device_actual),
+					       &error_local)) {
 			if (g_strcmp0 (xb_node_get_attr (req, "compare"), "ge") == 0) {
 				g_set_error (error,
 					     FWUPD_ERROR,
@@ -1229,7 +1242,7 @@ fu_engine_check_requirement_id (FuEngine *self, XbNode *req, GError **error)
 			     xb_node_get_text (req));
 		return FALSE;
 	}
-	if (!fu_engine_require_vercmp (req, version, &error_local)) {
+	if (!fu_engine_require_vercmp (req, version, FWUPD_VERSION_FORMAT_UNKNOWN, &error_local)) {
 		if (g_strcmp0 (xb_node_get_attr (req, "compare"), "ge") == 0) {
 			g_set_error (error,
 				     FWUPD_ERROR,
@@ -1764,6 +1777,7 @@ fu_engine_install_release (FuEngine *self,
 			   GError **error)
 {
 	FuPlugin *plugin;
+	FwupdVersionFormat fmt;
 	GBytes *blob_fw;
 	const gchar *tmp = NULL;
 	g_autofree gchar *release_key = NULL;
@@ -1886,9 +1900,10 @@ fu_engine_install_release (FuEngine *self,
 	}
 
 	/* for online updates, verify the version changed if not a re-install */
+	fmt = fu_device_get_version_format (device);
 	if (version_rel != NULL &&
-	    fu_common_vercmp (version_orig, version_rel) != 0 &&
-	    fu_common_vercmp (version_orig, fu_device_get_version (device)) == 0) {
+	    fu_common_vercmp_full (version_orig, version_rel, fmt) != 0 &&
+	    fu_common_vercmp_full (version_orig, fu_device_get_version (device), fmt) == 0) {
 		g_autofree gchar *str = NULL;
 		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
 		str = g_strdup_printf ("device version not updated on success, %s != %s",
@@ -1952,7 +1967,7 @@ fu_engine_sort_release_versions_cb (gconstpointer a, gconstpointer b, gpointer u
 		g_prefix_error (helper->error, "failed to get release version: ");
 		return 0;
 	}
-	return fu_common_vercmp (va, vb);
+	return fu_common_vercmp_full (va, vb, fu_device_get_version_format (helper->device));
 }
 
 static gboolean
@@ -3469,12 +3484,14 @@ fu_engine_get_remote_by_id (FuEngine *self, const gchar *remote_id, GError **err
 
 
 static gint
-fu_engine_sort_releases_cb (gconstpointer a, gconstpointer b)
+fu_engine_sort_releases_cb (gconstpointer a, gconstpointer b, gpointer user_data)
 {
+	FuDevice *device = FU_DEVICE (user_data);
 	FwupdRelease *rel_a = FWUPD_RELEASE (*((FwupdRelease **) a));
 	FwupdRelease *rel_b = FWUPD_RELEASE (*((FwupdRelease **) b));
-	return fu_common_vercmp (fwupd_release_get_version (rel_b),
-				fwupd_release_get_version (rel_a));
+	return fu_common_vercmp_full (fwupd_release_get_version (rel_b),
+				      fwupd_release_get_version (rel_a),
+				      fu_device_get_version_format (device));
 }
 
 static gboolean
@@ -3497,6 +3514,7 @@ fu_engine_add_releases_for_device_component (FuEngine *self,
 					     GPtrArray *releases,
 					     GError **error)
 {
+	FwupdVersionFormat fmt = fu_device_get_version_format (device);
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuInstallTask) task = fu_install_task_new (device, component);
 	g_autoptr(GPtrArray) releases_tmp = NULL;
@@ -3551,8 +3569,9 @@ fu_engine_add_releases_for_device_component (FuEngine *self,
 			continue;
 
 		/* test for upgrade or downgrade */
-		vercmp = fu_common_vercmp (fwupd_release_get_version (rel),
-					  fu_device_get_version (device));
+		vercmp = fu_common_vercmp_full (fwupd_release_get_version (rel),
+						fu_device_get_version (device),
+						fmt);
 		if (vercmp > 0)
 			fwupd_release_add_flag (rel, FWUPD_RELEASE_FLAG_IS_UPGRADE);
 		else if (vercmp < 0)
@@ -3560,8 +3579,9 @@ fu_engine_add_releases_for_device_component (FuEngine *self,
 
 		/* lower than allowed to downgrade to */
 		if (fu_device_get_version_lowest (device) != NULL &&
-		    fu_common_vercmp (fwupd_release_get_version (rel),
-				      fu_device_get_version_lowest (device)) < 0) {
+		    fu_common_vercmp_full (fwupd_release_get_version (rel),
+					   fu_device_get_version_lowest (device),
+					   fmt) < 0) {
 			fwupd_release_add_flag (rel, FWUPD_RELEASE_FLAG_BLOCKED_VERSION);
 		}
 
@@ -3715,7 +3735,7 @@ fu_engine_get_releases (FuEngine *self, const gchar *device_id, GError **error)
 				     "No releases for device");
 		return NULL;
 	}
-	g_ptr_array_sort (releases, fu_engine_sort_releases_cb);
+	g_ptr_array_sort_with_data (releases, fu_engine_sort_releases_cb, device);
 	return g_steal_pointer (&releases);
 }
 
@@ -3805,7 +3825,7 @@ fu_engine_get_downgrades (FuEngine *self, const gchar *device_id, GError **error
 		}
 		return NULL;
 	}
-	g_ptr_array_sort (releases, fu_engine_sort_releases_cb);
+	g_ptr_array_sort_with_data (releases, fu_engine_sort_releases_cb, device);
 	return g_steal_pointer (&releases);
 }
 
@@ -3953,7 +3973,7 @@ fu_engine_get_upgrades (FuEngine *self, const gchar *device_id, GError **error)
 		}
 		return NULL;
 	}
-	g_ptr_array_sort (releases, fu_engine_sort_releases_cb);
+	g_ptr_array_sort_with_data (releases, fu_engine_sort_releases_cb, device);
 	return g_steal_pointer (&releases);
 }
 
@@ -4230,8 +4250,9 @@ fu_engine_device_inherit_history (FuEngine *self, FuDevice *device)
 	 * we can't just check for version_new=version to allow for re-installs */
 	if (fu_device_has_flag (device_history, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
 		FwupdRelease *release = fu_device_get_release_default (device_history);
-		if (fu_common_vercmp (fu_device_get_version (device),
-				      fwupd_release_get_version (release)) != 0) {
+		if (fu_common_vercmp_full (fu_device_get_version (device),
+					   fwupd_release_get_version (release),
+					   fu_device_get_version_format (device)) != 0) {
 			g_debug ("inheriting needs-activation for %s as version %s != %s",
 				 fu_device_get_name (device),
 				 fu_device_get_version (device),
@@ -4998,8 +5019,9 @@ fu_engine_update_history_device (FuEngine *self, FuDevice *dev_history, GError *
 	}
 
 	/* the system is running with the new firmware version */
-	if (fu_common_vercmp (fu_device_get_version (dev),
-			      fwupd_release_get_version (rel_history)) == 0) {
+	if (fu_common_vercmp_full (fu_device_get_version (dev),
+				   fwupd_release_get_version (rel_history),
+				   fu_device_get_version_format (dev)) == 0) {
 		GPtrArray *checksums;
 		g_debug ("installed version %s matching history %s",
 			 fu_device_get_version (dev),
