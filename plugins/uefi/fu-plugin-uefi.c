@@ -472,7 +472,7 @@ fu_plugin_uefi_get_version_format_for_type (FuPlugin *plugin, FuUefiDeviceKind d
 
 	/* we have no information for devices */
 	if (device_kind == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE)
-		return FWUPD_VERSION_FORMAT_TRIPLET;
+		return FWUPD_VERSION_FORMAT_PLAIN;
 
 	content = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER);
 	if (content == NULL)
