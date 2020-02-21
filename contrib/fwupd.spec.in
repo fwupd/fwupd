@@ -296,9 +296,9 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %{_datadir}/man/man1/fwupdagent.1.gz
 %{_datadir}/man/man1/dfu-tool.1.gz
 %{_datadir}/man/man1/fwupdmgr.1.gz
-%{_datadir}/man/man1/fwupdtpmevlog.1.gz
 %if 0%{?have_uefi}
 %{_datadir}/man/man1/fwupdate.1.gz
+%{_datadir}/man/man1/fwupdtpmevlog.1.gz
 %endif
 %{_datadir}/metainfo/org.freedesktop.fwupd.metainfo.xml
 %{_datadir}/icons/hicolor/scalable/apps/org.freedesktop.fwupd.svg
