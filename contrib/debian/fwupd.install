@@ -1,8 +1,4 @@
-usr/bin/dfu-tool
-usr/bin/fwupdmgr
-usr/bin/fwupdagent
-usr/bin/fwupdtool
-usr/bin/fwupdtpmevlog
+usr/bin/*
 etc/*
 usr/share/bash-completion
 usr/share/fwupd/*
