@@ -2544,7 +2544,7 @@ fu_plugin_get_config_value_boolean (FuPlugin *self, const gchar *key)
 	g_autofree gchar *tmp = fu_plugin_get_config_value (self, key);
 	if (tmp == NULL)
 		return FALSE;
-	return g_ascii_strcasecmp (tmp, "true");
+	return g_ascii_strcasecmp (tmp, "true") == 0;
 }
 
 /**
