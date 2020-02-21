@@ -405,7 +405,7 @@ fu_ata_device_parse_id (FuAtaDevice *self, const guint8 *buf, gsize sz, GError *
 	/* ask user to report data */
 	if (self->oui != 0x0 && !has_oui_quirk && self->unknown_oui_report) {
 		const gchar *url = "https://github.com/fwupd/fwupd/wiki/ATA-Disk:-OUI-Quirk-Required";
-		g_printerr ("OUI quirk required, please see %s!\n", url);
+		g_printerr ("\nOUI quirk required, please see %s!\n", url);
 		g_printerr ("---\n");
 		g_printerr ("[DeviceInstanceId=OUI\\%06x]\n", self->oui);
 		if (fu_device_get_vendor_id (FU_DEVICE (self)) != NULL) {
