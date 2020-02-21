@@ -58,11 +58,6 @@ override_dh_install:
 	#install the EFI binaries if needed
 	if [ -d debian/tmp/usr/libexec/fwupd/efi/ ]; then \
 		dh_install -pfwupd usr/libexec/fwupd/efi ;\
-		dh_install -pfwupd usr/bin/fwupdate; \
-	fi
-	#if build with meson subproject in CI need to install this too
-	if [ ! -z "$$CI" ] && [ -f debian/tmp/usr/lib/xb-tool ]; then \
-		dh_install -pfwupd usr/lib/xb-tool ;\
 	fi
 	if [ ! -z "$$CI" ] && [ -f debian/tmp/usr/sbin/flashrom ]; then \
 		dh_install -pfwupd usr/sbin/flashrom ;\
