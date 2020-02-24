@@ -13,21 +13,6 @@ Sets the plugin to use for a specific hardware device.
 * Key: the device ID, e.g. `DeviceInstanceId=USB\VID_0763&PID_2806`
 * Value: the plugin name, e.g. `csr`
 * Minimum fwupd version: **1.1.0**
-### UefiVersionFormat
-Assigns the version format to use for a specific manufacturer. A specific version
-format is sometimes chosen to match the appearance of other systems or
-specifications.
-* Key: a %FU_HWIDS_KEY_MANUFACTURER, e.g. `Alienware`
-* Value: the version format, e.g. `none`
-* Supported values: `none`, `use-triplet`
-* Minimum fwupd version: **1.0.1**
-### ComponentIDs
-Assigns the version format to use for a specific AppStream component. A specific
-version format is sometimes chosen to match the appearance of other systems or
-specifications.
-* Key: the optionally wildcarded AppStream ID e.g. `com.dell.uefi*.firmware`
-* Value: the version format, e.g. `none`
-* Minimum fwupd version: **1.0.1**
 ### Flags
 Assigns optional quirks to use for a 8bitdo device
 * Key: the device ID, e.g. `DeviceInstanceId=USB\VID_0763&PID_2806`
