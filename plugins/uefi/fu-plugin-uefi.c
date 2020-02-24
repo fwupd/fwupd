@@ -463,30 +463,6 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 	}
 }
 
-static FwupdVersionFormat
-fu_plugin_uefi_get_version_format_for_type (FuPlugin *plugin, FuUefiDeviceKind device_kind)
-{
-	const gchar *content;
-	const gchar *quirk;
-	g_autofree gchar *group = NULL;
-
-	/* we have no information for devices */
-	if (device_kind == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE)
-		return FWUPD_VERSION_FORMAT_TRIPLET;
-
-	content = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER);
-	if (content == NULL)
-		return FWUPD_VERSION_FORMAT_TRIPLET;
-
-	/* any quirks match */
-	group = g_strdup_printf ("SmbiosManufacturer=%s", content);
-	quirk = fu_plugin_lookup_quirk_by_id (plugin, group,
-					      FU_QUIRKS_UEFI_VERSION_FORMAT);
-	if (quirk == NULL)
-		return FWUPD_VERSION_FORMAT_TRIPLET;
-	return fwupd_version_format_from_string (quirk);
-}
-
 static const gchar *
 fu_plugin_uefi_uefi_type_to_string (FuUefiDeviceKind device_kind)
 {
@@ -519,12 +495,6 @@ static gboolean
 fu_plugin_uefi_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GError **error)
 {
 	FuUefiDeviceKind device_kind;
-	FwupdVersionFormat version_format;
-
-	/* set default version format */
-	device_kind = fu_uefi_device_get_kind (dev);
-	version_format = fu_plugin_uefi_get_version_format_for_type (plugin, device_kind);
-	fu_device_set_version_format (FU_DEVICE (dev), version_format);
 
 	/* probe to get add GUIDs (and hence any quirk fixups) */
 	if (!fu_device_probe (FU_DEVICE (dev), error))
@@ -540,6 +510,7 @@ fu_plugin_uefi_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GError **er
 	}
 
 	/* set fallback name if nothing else is set */
+	device_kind = fu_uefi_device_get_kind (dev);
 	if (fu_device_get_name (FU_DEVICE (dev)) == NULL) {
 		g_autofree gchar *name = NULL;
 		name = fu_plugin_uefi_get_name_for_type (plugin, device_kind);
@@ -761,6 +732,7 @@ fu_plugin_uefi_create_dummy (FuPlugin *plugin, const gchar *reason, GError **err
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
+	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_MD_SET_VERFMT);
 
 	fu_device_add_icon (dev, "computer");
 	fu_device_set_id (dev, "UEFI-dummy");

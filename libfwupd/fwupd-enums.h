@@ -101,6 +101,7 @@ typedef enum {
  * @FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES:	Install each intermediate release rather than jumping direct to newest
  * @FWUPD_DEVICE_FLAG_MD_SET_NAME:		Set the device name from the metadata <name> if available
  * @FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY:	Set the device name from the metadata <category> if available
+ * @FWUPD_DEVICE_FLAG_MD_SET_VERFMT:		Set the device version format from the metadata if available
  *
  * The device flags.
  **/
@@ -139,6 +140,7 @@ typedef enum {
 #define FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES	(1u << 31)	/* Since: 1.3.7 */
 #define FWUPD_DEVICE_FLAG_MD_SET_NAME		(1llu << 32)	/* Since: 1.3.9 */
 #define FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY	(1llu << 33)	/* Since: 1.3.9 */
+#define FWUPD_DEVICE_FLAG_MD_SET_VERFMT		(1llu << 34)	/* Since: 1.3.9 */
 #define FWUPD_DEVICE_FLAG_UNKNOWN		G_MAXUINT64	/* Since: 0.7.3 */
 typedef guint64 FwupdDeviceFlags;
 

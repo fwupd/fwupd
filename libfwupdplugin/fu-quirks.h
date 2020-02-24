@@ -44,8 +44,6 @@ gboolean	 fu_quirks_lookup_by_id_iter		(FuQuirks	*self,
 							 gpointer	 user_data);
 
 #define	FU_QUIRKS_PLUGIN			"Plugin"
-#define	FU_QUIRKS_UEFI_VERSION_FORMAT		"UefiVersionFormat"
-#define	FU_QUIRKS_DAEMON_VERSION_FORMAT		"ComponentIDs"
 #define	FU_QUIRKS_FLAGS				"Flags"
 #define	FU_QUIRKS_SUMMARY			"Summary"
 #define	FU_QUIRKS_ICON				"Icon"

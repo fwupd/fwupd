@@ -695,6 +695,7 @@ fu_uefi_device_probe (FuDevice *device, GError **error)
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_REQUIRE_AC);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_MD_SET_VERFMT);
 
 	/* add icons */
 	if (self->kind == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE) {
@@ -726,6 +727,7 @@ static void
 fu_uefi_device_init (FuUefiDevice *self)
 {
 	fu_device_set_protocol (FU_DEVICE (self), "org.uefi.capsule");
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_NUMBER);
 }
 
 static void
