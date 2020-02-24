@@ -13,3 +13,7 @@ VendorId = ATA:0x144D
 [DeviceInstanceId=OUI\001517]
 Vendor = Intel
 VendorId = ATA:0x8086
+
+[DeviceInstanceId=OUI\0004cf]
+Vendor = Seagate
+VendorId = ATA:0x1BB1
