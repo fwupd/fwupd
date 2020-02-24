@@ -540,22 +540,24 @@ fu_plugin_uefi_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GError **er
 	}
 
 	/* set fallback name if nothing else is set */
-	if (fu_device_get_name (FU_DEVICE (dev)) == 0) {
+	if (fu_device_get_name (FU_DEVICE (dev)) == NULL) {
 		g_autofree gchar *name = NULL;
-		name = fu_plugin_uefi_get_name_for_type (plugin, fu_uefi_device_get_kind (dev));
+		name = fu_plugin_uefi_get_name_for_type (plugin, device_kind);
 		if (name != NULL)
 			fu_device_set_name (FU_DEVICE (dev), name);
+		if (device_kind != FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE)
+			fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY);
 	}
 	/* set fallback vendor if nothing else is set */
 	if (fu_device_get_vendor (FU_DEVICE (dev)) == NULL &&
-	    fu_uefi_device_get_kind (dev) == FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE) {
+	    device_kind == FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE) {
 		const gchar *vendor = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER);
 		if (vendor != NULL)
 			fu_device_set_vendor (FU_DEVICE (dev), vendor);
 	}
 
 	/* set vendor ID as the BIOS vendor */
-	if (fu_uefi_device_get_kind (dev) != FU_UEFI_DEVICE_KIND_FMP) {
+	if (device_kind != FU_UEFI_DEVICE_KIND_FMP) {
 		const gchar *dmi_vendor;
 		dmi_vendor = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VENDOR);
 		if (dmi_vendor != NULL) {

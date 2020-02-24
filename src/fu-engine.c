@@ -2743,6 +2743,107 @@ fu_engine_create_metadata (FuEngine *self, XbBuilder *builder,
 	return TRUE;
 }
 
+static void
+fu_engine_md_refresh_device_supported (FuEngine *self, FuDevice *device, XbNode *component)
+{
+	/* was supported, now unsupported */
+	if (component == NULL) {
+		if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_SUPPORTED)) {
+			fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_SUPPORTED);
+			fu_engine_emit_device_changed (self, device);
+		}
+		return;
+	}
+
+	/* was unsupported, now supported */
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_SUPPORTED)) {
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_SUPPORTED);
+		fu_engine_emit_device_changed (self, device);
+	}
+}
+
+static void
+fu_engine_md_refresh_device_name (FuEngine *self, FuDevice *device, XbNode *component)
+{
+	const gchar *name = NULL;
+
+	/* require data */
+	if (component == NULL)
+		return;
+
+	/* copy 1:1 */
+	name = xb_node_query_text (component, "name", NULL);
+	if (name != NULL)
+		fu_device_set_name (device, name);
+}
+
+static const gchar *
+fu_common_device_category_to_name (const gchar *cat)
+{
+	if (g_strcmp0 (cat, "X-EmbeddedController") == 0)
+		return "Embedded Controller";
+	if (g_strcmp0 (cat, "X-ManagementEngine") == 0)
+		return "Intel Management Engine";
+	if (g_strcmp0 (cat, "X-CorporateManagementEngine") == 0)
+		return "Intel Management Engine";
+	if (g_strcmp0 (cat, "X-ConsumerManagementEngine") == 0)
+		return "Intel Management Engine";
+	if (g_strcmp0 (cat, "X-ThunderboltController") == 0)
+		return "Thunderbolt Controller";
+	if (g_strcmp0 (cat, "X-PlatformSecurityProcessor") == 0)
+		return "Platform Security Processor";
+	return NULL;
+}
+
+static void
+fu_engine_md_refresh_device_name_category (FuEngine *self, FuDevice *device, XbNode *component)
+{
+	const gchar *name = NULL;
+	g_autoptr(GPtrArray) cats = NULL;
+
+	/* require data */
+	if (component == NULL)
+		return;
+
+	/* get AppStream and safe-compat categories */
+	cats = xb_node_query (component, "categories/category|X-categories/category", 0, NULL);
+	if (cats == NULL)
+		return;
+	for (guint i = 0; i < cats->len; i++) {
+		XbNode *n = g_ptr_array_index (cats, i);
+		name = fu_common_device_category_to_name (xb_node_get_text (n));
+		if (name != NULL)
+			break;
+	}
+	if (name != NULL)
+		fu_device_set_name (device, name);
+}
+
+static void
+fu_engine_md_refresh_device (FuEngine *self, FuDevice *device)
+{
+	g_autoptr(XbNode) component = fu_engine_get_component_by_guids (self, device);
+
+	/* set or clear the SUPPORTED flag */
+	fu_engine_md_refresh_device_supported (self, device, component);
+
+	/* set the name */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_MD_SET_NAME))
+		fu_engine_md_refresh_device_name (self, device, component);
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY))
+		fu_engine_md_refresh_device_name_category (self, device, component);
+}
+
+static void
+fu_engine_md_refresh_devices (FuEngine *self)
+{
+	g_autoptr(GPtrArray) devices = fu_device_list_get_all (self->device_list);
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device = g_ptr_array_index (devices, i);
+		fu_engine_md_refresh_device (self, device);
+	}
+}
+
 static gboolean
 fu_engine_load_metadata_store (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 {
@@ -2751,7 +2852,6 @@ fu_engine_load_metadata_store (FuEngine *self, FuEngineLoadFlags flags, GError *
 	g_autofree gchar *cachedirpkg = NULL;
 	g_autofree gchar *xmlbfn = NULL;
 	g_autoptr(GFile) xmlb = NULL;
-	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(XbBuilder) builder = xb_builder_new ();
 
@@ -2860,25 +2960,7 @@ fu_engine_load_metadata_store (FuEngine *self, FuEngineLoadFlags flags, GError *
 					NULL, error))
 		return FALSE;
 
-	/* did any devices SUPPORTED state change? */
-	devices = fu_device_list_get_all (self->device_list);
-	for (guint i = 0; i < devices->len; i++) {
-		FuDevice *device = g_ptr_array_index (devices, i);
-		if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_SUPPORTED)) {
-			if (!fu_engine_is_device_supported (self, device)) {
-				/* was supported, now unsupported */
-				fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_SUPPORTED);
-				fu_engine_emit_device_changed (self, device);
-			}
-		} else {
-			/* was unsupported, now supported */
-			if (fu_engine_is_device_supported (self, device)) {
-				fu_device_add_flag (device, FWUPD_DEVICE_FLAG_SUPPORTED);
-				fu_engine_emit_device_changed (self, device);
-			}
-		}
-	}
-
+	/* success */
 	return TRUE;
 }
 
@@ -2896,6 +2978,9 @@ fu_engine_remote_list_changed_cb (FuRemoteList *remote_list, FuEngine *self)
 					    &error_local))
 		g_warning ("Failed to reload metadata store: %s",
 			   error_local->message);
+
+	/* set device properties from the metadata */
+	fu_engine_md_refresh_devices (self);
 
 	/* make the UI update */
 	fu_engine_emit_changed (self);
@@ -3032,6 +3117,7 @@ fu_engine_update_metadata_bytes (FuEngine *self, const gchar *remote_id,
 	}
 	if (!fu_engine_load_metadata_store (self, FU_ENGINE_LOAD_FLAG_NONE, error))
 		return FALSE;
+	fu_engine_md_refresh_devices (self);
 	fu_engine_emit_changed (self);
 	return TRUE;
 }
@@ -5303,6 +5389,9 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	if ((flags & FU_ENGINE_LOAD_FLAG_NO_ENUMERATE) == 0)
 		fu_engine_enumerate_udev (self);
 #endif
+
+	/* set device properties from the metadata */
+	fu_engine_md_refresh_devices (self);
 
 	/* update the db for devices that were updated during the reboot */
 	if (!fu_engine_update_history_database (self, error))

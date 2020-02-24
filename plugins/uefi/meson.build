@@ -7,21 +7,6 @@ if efi_os_dir != ''
   cargs += '-DEFI_OS_DIR="' + efi_os_dir + '"'
 endif
 
-run_target('uefi-update-quirk',
-  command: [
-    python3.path(),
-    join_paths(meson.current_source_dir(), 'generate-quirk.py'),
-    '/var/lib/fwupd/remotes.d/lvfs/metadata.xml.gz', 'uefi-lvfs-generated.quirk'
-  ]
-)
-
-install_data([
-    'uefi.quirk',
-    'uefi-lvfs-generated.quirk',
-  ],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
-
 shared_module('fu_plugin_uefi',
   fu_hash,
   sources : [

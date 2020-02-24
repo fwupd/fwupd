@@ -1084,6 +1084,14 @@ fu_util_device_flag_to_string (guint64 device_flag)
 		/* TRANSLATORS: a version check is required for all firmware */
 		return _("Device is required to install all provided releases");
 	}
+	if (device_flag == FWUPD_DEVICE_FLAG_MD_SET_NAME) {
+		/* skip */
+		return NULL;
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY) {
+		/* skip */
+		return NULL;
+	}
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN) {
 		return NULL;
 	}

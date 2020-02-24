@@ -183,6 +183,10 @@ fwupd_device_flag_to_string (FwupdDeviceFlags device_flag)
 		return "version-check-required";
 	if (device_flag == FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES)
 		return "install-all-releases";
+	if (device_flag == FWUPD_DEVICE_FLAG_MD_SET_NAME)
+		return "md-set-name";
+	if (device_flag == FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY)
+		return "md-set-name-category";
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -267,6 +271,10 @@ fwupd_device_flag_from_string (const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_VERSION_CHECK_REQUIRED;
 	if (g_strcmp0 (device_flag, "install-all-releases") == 0)
 		return FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES;
+	if (g_strcmp0 (device_flag, "md-set-name") == 0)
+		return FWUPD_DEVICE_FLAG_MD_SET_NAME;
+	if (g_strcmp0 (device_flag, "md-set-name-category") == 0)
+		return FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY;
 	return FWUPD_DEVICE_FLAG_UNKNOWN;
 }
 

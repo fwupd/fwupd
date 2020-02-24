@@ -1,17 +1,14 @@
 # Lenovo ThinkStation P920/P720
 [Guid=cc850e7a-6713-4fe3-8144-321a9e485ae0]
 VersionFormat = intel-me
-Name = Intel Management Engine
 
 # Lenovo ThinkStation P520/P520c
 [Guid=e3af51e5-5afb-4b48-b5cb-13bf26becaab]
 VersionFormat = intel-me
-Name = Intel Management Engine
 
 # Lenovo ThinkStation P330/P330 Tiny & ThinkCentre M920X/M920q
 [Guid=5b92717b-2cad-4a96-a13b-9d65781df8bf]
 VersionFormat = intel-me2
-Name = Intel Management Engine
 
 # Star Labs LabTop (Mk III)
 [Guid=8265d473-a6c2-42b4-897b-bc220faa2d32]
