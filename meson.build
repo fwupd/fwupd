@@ -219,13 +219,7 @@ if get_option('gpg')
   conf.set('ENABLE_GPG', '1')
 endif
 libm = cc.find_library('m', required: false)
-libgcab = dependency('libgcab-1.0', fallback : ['gcab', 'gcab_dep'])
-if libgcab.version().version_compare('>= 0.8')
-  conf.set('HAVE_GCAB_0_8', '1')
-endif
-if libgcab.version().version_compare('>= 1.0')
-  conf.set('HAVE_GCAB_1_0', '1')
-endif
+libgcab = dependency('libgcab-1.0', version : '>= 1.0', fallback : ['gcab', 'gcab_dep'])
 gcab = find_program('gcab', required : true)
 bashcomp = dependency('bash-completion', required: false)
 python3 = find_program('python3')

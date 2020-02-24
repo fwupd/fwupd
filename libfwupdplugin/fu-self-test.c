@@ -642,7 +642,6 @@ fu_common_endian_func (void)
 static GBytes *
 _build_cab (GCabCompression compression, ...)
 {
-#ifdef HAVE_GCAB_1_0
 	gboolean ret;
 	va_list args;
 	g_autoptr(GCabCabinet) cabinet = NULL;
@@ -694,9 +693,6 @@ _build_cab (GCabCompression compression, ...)
 	g_assert_no_error (error);
 	g_assert (ret);
 	return g_memory_output_stream_steal_as_bytes (G_MEMORY_OUTPUT_STREAM (op));
-#else
-	return NULL;
-#endif
 }
 
 static void
@@ -734,10 +730,6 @@ fu_common_store_cab_func (void)
 			   "firmware.dfu", "world",
 			   "firmware.dfu.asc", "signature",
 			   NULL);
-	if (blob == NULL) {
-		g_test_skip ("libgcab too old");
-		return;
-	}
 	silo = fu_common_cab_build_silo (blob, 10240, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (silo);
@@ -784,10 +776,6 @@ fu_common_store_cab_unsigned_func (void)
 	"</component>",
 			   "firmware.bin", "world",
 			   NULL);
-	if (blob == NULL) {
-		g_test_skip ("libgcab too old");
-		return;
-	}
 	silo = fu_common_cab_build_silo (blob, 10240, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (silo);
@@ -829,10 +817,6 @@ fu_common_store_cab_folder_func (void)
 	"</component>",
 			   "lvfs\\firmware.bin", "world",
 			   NULL);
-	if (blob == NULL) {
-		g_test_skip ("libgcab too old");
-		return;
-	}
 	silo = fu_common_cab_build_silo (blob, 10240, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (silo);
@@ -860,10 +844,6 @@ fu_common_store_cab_error_no_metadata_func (void)
 			   "foo.txt", "hello",
 			   "bar.txt", "world",
 			   NULL);
-	if (blob == NULL) {
-		g_test_skip ("libgcab too old");
-		return;
-	}
 	silo = fu_common_cab_build_silo (blob, 10240, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_null (silo);
@@ -889,10 +869,6 @@ fu_common_store_cab_error_wrong_size_func (void)
 	"</component>",
 			   "firmware.bin", "world",
 			   NULL);
-	if (blob == NULL) {
-		g_test_skip ("libgcab too old");
-		return;
-	}
 	silo = fu_common_cab_build_silo (blob, 10240, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_null (silo);
@@ -917,10 +893,6 @@ fu_common_store_cab_error_missing_file_func (void)
 	"</component>",
 			   "firmware.bin", "world",
 			   NULL);
-	if (blob == NULL) {
-		g_test_skip ("libgcab too old");
-		return;
-	}
 	silo = fu_common_cab_build_silo (blob, 10240, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_null (silo);
@@ -943,10 +915,6 @@ fu_common_store_cab_error_size_func (void)
 	"</component>",
 			   "firmware.bin", "world",
 			   NULL);
-	if (blob == NULL) {
-		g_test_skip ("libgcab too old");
-		return;
-	}
 	silo = fu_common_cab_build_silo (blob, 123, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_null (silo);
@@ -971,10 +939,6 @@ fu_common_store_cab_error_wrong_checksum_func (void)
 	"</component>",
 			   "firmware.bin", "world",
 			   NULL);
-	if (blob == NULL) {
-		g_test_skip ("libgcab too old");
-		return;
-	}
 	silo = fu_common_cab_build_silo (blob, 10240, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_null (silo);
