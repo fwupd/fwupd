@@ -15,52 +15,18 @@
 
 #include "fwupd-error.h"
 
-#ifndef HAVE_GCAB_1_0
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(GCabCabinet, g_object_unref)
-#endif
-
 static GCabFile *
 _gcab_cabinet_get_file_by_name (GCabCabinet *cabinet, const gchar *basename)
 {
 	GPtrArray *folders = gcab_cabinet_get_folders (cabinet);
 	for (guint i = 0; i < folders->len; i++) {
 		GCabFolder *cabfolder = GCAB_FOLDER (g_ptr_array_index (folders, i));
-#ifdef HAVE_GCAB_1_0
 		GCabFile *cabfile = gcab_folder_get_file_by_name (cabfolder, basename);
 		if (cabfile != NULL)
 			return cabfile;
-#else
-		g_autoptr(GSList) files = gcab_folder_get_files (cabfolder);
-		for (GSList *l = files; l != NULL; l = l->next) {
-			GCabFile *cabfile = GCAB_FILE (l->data);
-			if (g_strcmp0 (gcab_file_get_extract_name (cabfile), basename) == 0)
-				return cabfile;
-		}
-#endif
 	}
 	return NULL;
 }
-
-#ifndef HAVE_GCAB_1_0
-static GBytes *
-_gcab_file_get_bytes (GCabFile *cabfile)
-{
-	GBytes *blob = NULL;
-	g_autofree gchar *fn = NULL;
-	g_autoptr(GError) error_local = NULL;
-
-	fn = g_build_filename (g_object_get_data (G_OBJECT (cabfile),
-						  "fwupd::DecompressPath"),
-			       gcab_file_get_extract_name (cabfile),
-			       NULL);
-	blob = fu_common_get_contents_bytes (fn, &error_local);
-	if (blob == NULL) {
-		g_warning ("failed to read temp file: %s", error_local->message);
-		return NULL;
-	}
-	return blob;
-}
-#endif
 
 /* sets the firmware and signature blobs on XbNode */
 static gboolean
@@ -96,11 +62,7 @@ fu_common_store_from_cab_release (XbNode *release, GCabCabinet *cabinet, GError 
 			     basename);
 		return FALSE;
 	}
-#ifdef HAVE_GCAB_1_0
 	blob = gcab_file_get_bytes (cabfile);
-#else
-	blob = _gcab_file_get_bytes (cabfile);
-#endif
 	if (blob == NULL) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -154,11 +116,7 @@ fu_common_store_from_cab_release (XbNode *release, GCabCabinet *cabinet, GError 
 		cabfile = _gcab_cabinet_get_file_by_name (cabinet, basename_sig);
 		if (cabfile != NULL) {
 			g_autofree gchar *release_key_sig = NULL;
-#ifdef HAVE_GCAB_1_0
 			blob = gcab_file_get_bytes (cabfile);
-#else
-			blob = _gcab_file_get_bytes (cabfile);
-#endif
 			if (blob == NULL) {
 				g_set_error (error,
 					     FWUPD_ERROR,
@@ -190,11 +148,7 @@ fu_common_store_from_cab_file (XbBuilder *builder, GCabCabinet *cabinet,
 	xb_builder_source_set_prefix (source, "components");
 
 	/* parse file */
-#ifdef HAVE_GCAB_1_0
 	blob = gcab_file_get_bytes (cabfile);
-#else
-	blob = _gcab_file_get_bytes (cabfile);
-#endif
 	if (blob == NULL) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -291,15 +245,6 @@ fu_common_store_file_cb (GCabFile *file, gpointer user_data)
 	/* ignore the dirname completely */
 	basename = g_path_get_basename (name);
 	gcab_file_set_extract_name (file, basename);
-
-#ifndef HAVE_GCAB_1_0
-	/* set this for old versions of GCab */
-	g_object_set_data_full (G_OBJECT (file),
-				"fwupd::DecompressPath",
-				g_strdup (helper->decompress_path),
-				g_free);
-#endif
-
 	return TRUE;
 }
 
@@ -396,10 +341,6 @@ fu_common_cab_build_silo (GBytes *blob, guint64 size_max, GError **error)
 	};
 	GPtrArray *folders;
 	g_autofree gchar *container_checksum = NULL;
-#ifndef HAVE_GCAB_1_0
-	g_autofree gchar *tmp_path = NULL;
-	g_autoptr(GFile) tmp_file = NULL;
-#endif
 	g_autoptr(XbSilo) silo = NULL;
 	g_autoptr(XbBuilder) builder = xb_builder_new ();
 	g_autoptr(XbBuilderFixup) fixup = NULL;
@@ -421,7 +362,6 @@ fu_common_cab_build_silo (GBytes *blob, guint64 size_max, GError **error)
 	if (!gcab_cabinet_load (cabinet, ip, NULL, error))
 		return NULL;
 
-#ifdef HAVE_GCAB_1_0
 	/* check the size is sane */
 	if (gcab_cabinet_get_size (cabinet) > size_max) {
 		g_autofree gchar *sz_val = g_format_size (gcab_cabinet_get_size (cabinet));
@@ -444,29 +384,6 @@ fu_common_cab_build_silo (GBytes *blob, guint64 size_max, GError **error)
 				     error_local->message);
 		return NULL;
 	}
-#else
-	/* decompress to /tmp */
-	tmp_path = g_dir_make_tmp ("fwupd-XXXXXX", &error_local);
-	if (tmp_path == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "failed to create temp dir: %s",
-			     error_local->message);
-		return NULL;
-	}
-	helper.decompress_path = tmp_path;
-	tmp_file = g_file_new_for_path (tmp_path);
-	if (!gcab_cabinet_extract_simple (cabinet, tmp_file,
-					  fu_common_store_file_cb, &helper,
-					  NULL, &error_local)) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     error_local->message);
-		return NULL;
-	}
-#endif
 
 	/* the file callback set an error */
 	if (helper.error != NULL) {

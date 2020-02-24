@@ -1086,7 +1086,7 @@ fu_engine_require_hwid_func (gconstpointer user_data)
 	g_autoptr(XbSilo) silo_empty = xb_silo_new ();
 	g_autoptr(XbSilo) silo = NULL;
 
-#if !defined(HAVE_GCAB_0_8) && defined(__s390x__)
+#if defined(__s390x__)
 	/* See https://github.com/fwupd/fwupd/issues/318 for more information */
 	g_test_skip ("Skipping HWID test on s390x due to known problem with gcab");
 	return;
@@ -2747,7 +2747,6 @@ fu_keyring_pkcs7_self_signed_func (gconstpointer user_data)
 static GBytes *
 _build_cab (GCabCompression compression, ...)
 {
-#ifdef HAVE_GCAB_1_0
 	gboolean ret;
 	va_list args;
 	g_autoptr(GCabCabinet) cabinet = NULL;
@@ -2799,9 +2798,6 @@ _build_cab (GCabCompression compression, ...)
 	g_assert_no_error (error);
 	g_assert (ret);
 	return g_memory_output_stream_steal_as_bytes (G_MEMORY_OUTPUT_STREAM (op));
-#else
-	return NULL;
-#endif
 }
 
 static void
@@ -2868,10 +2864,6 @@ fu_plugin_composite_func (gconstpointer user_data)
 	"</component>",
 			   "firmware.bin", "world",
 			   NULL);
-	if (blob == NULL) {
-		g_test_skip ("libgcab too old");
-		return;
-	}
 	silo = fu_common_cab_build_silo (blob, 10240, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (silo);
