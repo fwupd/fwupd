@@ -322,7 +322,7 @@ fu_engine_set_device_version_format (FuEngine *self, FuDevice *device, XbNode *c
 static gchar *
 fu_engine_get_release_version (FuEngine *self, FuDevice *dev, XbNode *rel, GError **error)
 {
-	FwupdVersionFormat fmt = FWUPD_VERSION_FORMAT_TRIPLET;
+	FwupdVersionFormat fmt = fu_device_get_version_format (dev);
 	const gchar *version;
 	guint64 ver_uint32;
 
@@ -340,24 +340,14 @@ fu_engine_get_release_version (FuEngine *self, FuDevice *dev, XbNode *rel, GErro
 	if (g_strstr_len (version, -1, ".") != NULL)
 		return g_strdup (version);
 
-	/* specified in metadata or from a quirk */
-	fmt = fu_device_get_version_format (dev);
-	if (fmt == FWUPD_VERSION_FORMAT_UNKNOWN) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "version format unset and version %s ambiguous",
-			     version);
-		return NULL;
-	}
-
 	/* don't touch my version! */
 	if (fmt == FWUPD_VERSION_FORMAT_PLAIN)
 		return g_strdup (version);
 
 	/* parse as integer */
 	ver_uint32 = fu_common_strtoull (version);
-	if (ver_uint32 == 0 || ver_uint32 > G_MAXUINT32)
+	if (fmt == FWUPD_VERSION_FORMAT_UNKNOWN ||
+	    ver_uint32 == 0 || ver_uint32 > G_MAXUINT32)
 		return g_strdup (version);
 
 	/* convert to dotted decimal */
