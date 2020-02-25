@@ -60,9 +60,9 @@ fu_vli_usbhub_pd_device_probe (FuDevice *device, GError **error)
 	fu_device_set_name (device, fu_vli_common_device_kind_to_string (self->device_kind));
 
 	/* use header to populate device info */
-	fwver_str = fu_common_version_from_uint32 (fwver, FWUPD_VERSION_FORMAT_QUAD);
-	fu_device_set_version (device, fwver_str, FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_version_raw (device, fwver);
+	fwver_str = fu_common_version_from_uint32 (fwver, FWUPD_VERSION_FORMAT_QUAD);
+	fu_device_set_version (device, fwver_str);
 	instance_id1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&DEV_%s",
 					GUINT16_FROM_LE (self->hdr.vid),
 					GUINT16_FROM_LE (self->hdr.pid),
@@ -204,6 +204,7 @@ fu_vli_usbhub_pd_device_init (FuVliUsbhubPdDevice *self)
 	fu_device_set_protocol (FU_DEVICE (self), "com.vli.usbhub");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_install_duration (FU_DEVICE (self), 15); /* seconds */
 	fu_device_set_logical_id (FU_DEVICE (self), "PD");
 	fu_device_set_summary (FU_DEVICE (self), "USB-C Power Delivery Device");

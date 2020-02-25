@@ -221,8 +221,7 @@ fu_logitech_hidpp_bootloader_texas_write_firmware (FuDevice *device,
 static gboolean
 fu_logitech_hidpp_bootloader_texas_setup (FuLogitechHidPpBootloader *self, GError **error)
 {
-	fu_device_set_version (FU_DEVICE (self), "RQR24.00_B0000",
-			       FWUPD_VERSION_FORMAT_PLAIN);
+	fu_device_set_version (FU_DEVICE (self), "RQR24.00_B0000");
 	return TRUE;
 }
 

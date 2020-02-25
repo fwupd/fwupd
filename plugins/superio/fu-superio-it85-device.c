@@ -59,7 +59,7 @@ fu_superio_it85_device_setup (FuSuperioDevice *self, GError **error)
 		g_prefix_error (error, "failed to get EC version: ");
 		return FALSE;
 	}
-	fu_device_set_version (FU_DEVICE (self), version, FWUPD_VERSION_FORMAT_UNKNOWN);
+	fu_device_set_version (FU_DEVICE (self), version);
 	return TRUE;
 }
 

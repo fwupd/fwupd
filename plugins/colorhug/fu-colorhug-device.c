@@ -326,7 +326,7 @@ fu_colorhug_device_setup (FuDevice *device, GError **error)
 		version = fu_colorhug_device_get_version (self, &error_local);
 		if (version != NULL) {
 			g_debug ("obtained fwver using API '%s'", version);
-			fu_device_set_version (device, version, FWUPD_VERSION_FORMAT_TRIPLET);
+			fu_device_set_version (device, version);
 		} else {
 			g_warning ("failed to get firmware version: %s",
 				   error_local->message);
@@ -456,6 +456,7 @@ fu_colorhug_device_init (FuColorhugDevice *self)
 	/* this is the application code */
 	self->start_addr = CH_EEPROM_ADDR_RUNCODE;
 	fu_device_set_protocol (FU_DEVICE (self), "com.hughski.colorhug");
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_remove_delay (FU_DEVICE (self),
 				    FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 }

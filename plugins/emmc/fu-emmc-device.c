@@ -216,8 +216,10 @@ fu_emmc_device_probe (FuUdevDevice *device, GError **error)
 
 	/* firwmare version */
 	tmp = g_udev_device_get_sysfs_attr (udev_parent, "fwrev");
-	if (tmp != NULL)
-		fu_device_set_version (FU_DEVICE (device), tmp, FWUPD_VERSION_FORMAT_NUMBER);
+	if (tmp != NULL) {
+		fu_device_set_version_format (FU_DEVICE (device), FWUPD_VERSION_FORMAT_NUMBER);
+		fu_device_set_version (FU_DEVICE (device), tmp);
+	}
 
 	return TRUE;
 }

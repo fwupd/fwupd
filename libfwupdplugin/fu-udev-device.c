@@ -243,10 +243,12 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	}
 
 	/* set the version if the revision has been set */
-	if (fu_device_get_version (device) == NULL) {
+	if (fu_device_get_version (device) == NULL &&
+	    fu_device_get_version_format (device) == FWUPD_VERSION_FORMAT_UNKNOWN) {
 		if (priv->revision != 0x00) {
 			g_autofree gchar *version = g_strdup_printf ("%02x", priv->revision);
-			fu_device_set_version (device, version, FWUPD_VERSION_FORMAT_PLAIN);
+			fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_PLAIN);
+			fu_device_set_version (device, version);
 		}
 	}
 
@@ -284,10 +286,11 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	}
 
 	/* set revision */
-	if (fu_device_get_version (device) == NULL) {
+	if (fu_device_get_version (device) == NULL &&
+	    fu_device_get_version_format (device) == FWUPD_VERSION_FORMAT_UNKNOWN) {
 		tmp = g_udev_device_get_property (priv->udev_device, "ID_REVISION");
 		if (tmp != NULL)
-			fu_device_set_version (device, tmp, FWUPD_VERSION_FORMAT_UNKNOWN);
+			fu_device_set_version (device, tmp);
 	}
 
 	/* set vendor ID */

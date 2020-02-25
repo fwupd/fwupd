@@ -144,7 +144,7 @@ fu_synaprom_device_set_version (FuSynapromDevice *self,
 
 	/* set display version */
 	str = g_strdup_printf ("%02u.%02u.%u", vmajor, vminor, buildnum);
-	fu_device_set_version (FU_DEVICE (self), str, FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version (FU_DEVICE (self), str);
 
 	/* we need this for checking the firmware compatibility later */
 	self->vmajor = vmajor;
@@ -421,6 +421,7 @@ fu_synaprom_device_init (FuSynapromDevice *self)
 {
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_CAN_VERIFY);
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_protocol (FU_DEVICE (self), "com.synaptics.prometheus");
 	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_name (FU_DEVICE (self), "Prometheus");

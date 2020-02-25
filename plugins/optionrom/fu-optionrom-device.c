@@ -68,8 +68,7 @@ fu_optionrom_device_read_firmware (FuDevice *device, GError **error)
 			 fu_device_get_id (device),
 			 fu_device_get_version (device),
 			 fu_rom_get_version (rom));
-		fu_device_set_version (device, fu_rom_get_version (rom),
-				       FWUPD_VERSION_FORMAT_UNKNOWN);
+		fu_device_set_version (device, fu_rom_get_version (rom));
 	}
 
 	/* Also add the GUID from the firmware as the firmware may be more

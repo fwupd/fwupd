@@ -167,7 +167,7 @@ fu_vli_pd_parade_device_read_fw_ver (FuVliPdParadeDevice *self, GError **error)
 
 	/* format version triplet */
 	version_str = g_strdup_printf ("%u.%u.%u", buf[0], buf[1], buf[2]);
-	fu_device_set_version (FU_DEVICE (self), version_str, FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version (FU_DEVICE (self), version_str);
 	return TRUE;
 }
 
@@ -663,6 +663,7 @@ fu_vli_pd_parade_device_init (FuVliPdParadeDevice *self)
 	self->page7 = 0x1E;
 	fu_device_add_icon (FU_DEVICE (self), "video-display");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_protocol (FU_DEVICE (self), "com.vli.i2c");
 	fu_device_set_install_duration (FU_DEVICE (self), 15); /* seconds */
 	fu_device_set_logical_id (FU_DEVICE (self), "PS186");

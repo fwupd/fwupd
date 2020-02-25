@@ -382,9 +382,7 @@ fu_ata_device_parse_id (FuAtaDevice *self, const guint8 *buf, gsize sz, GError *
 		g_autofree gchar *tmp = NULL;
 		tmp = fu_ata_device_get_string (id, 23, 26);
 		if (tmp != NULL)
-			fu_device_set_version (device, tmp, FWUPD_VERSION_FORMAT_PLAIN);
-	} else {
-		fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_PLAIN);
+			fu_device_set_version (device, tmp);
 	}
 
 	/* get OUI if set */
@@ -837,6 +835,7 @@ fu_ata_device_init (FuAtaDevice *self)
 	fu_device_set_summary (FU_DEVICE (self), "ATA Drive");
 	fu_device_add_icon (FU_DEVICE (self), "drive-harddisk");
 	fu_device_set_protocol (FU_DEVICE (self), "org.t13.ata");
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_udev_device_set_flags (FU_UDEV_DEVICE (self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
 }
 

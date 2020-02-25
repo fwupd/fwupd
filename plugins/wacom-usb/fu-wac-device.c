@@ -689,7 +689,7 @@ fu_wac_device_add_modules_bluetooth (FuWacDevice *self, GError **error)
 	module = fu_wac_module_bluetooth_new (usb_device);
 	fu_device_add_child (FU_DEVICE (self), FU_DEVICE (module));
 	fu_device_set_name (FU_DEVICE (module), name);
-	fu_device_set_version (FU_DEVICE (module), version, FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_set_version (FU_DEVICE (module), version);
 	return TRUE;
 }
 
@@ -759,7 +759,7 @@ fu_wac_device_add_modules (FuWacDevice *self, GError **error)
 						fu_device_get_name (FU_DEVICE (self)));
 			fu_device_add_child (FU_DEVICE (self), FU_DEVICE (module));
 			fu_device_set_name (FU_DEVICE (module), name);
-			fu_device_set_version (FU_DEVICE (module), version, FWUPD_VERSION_FORMAT_PAIR);
+			fu_device_set_version (FU_DEVICE (module), version);
 			break;
 		case FU_WAC_MODULE_FW_TYPE_BLUETOOTH:
 			module = fu_wac_module_bluetooth_new (usb_device);
@@ -767,10 +767,10 @@ fu_wac_device_add_modules (FuWacDevice *self, GError **error)
 						fu_device_get_name (FU_DEVICE (self)));
 			fu_device_add_child (FU_DEVICE (self), FU_DEVICE (module));
 			fu_device_set_name (FU_DEVICE (module), name);
-			fu_device_set_version (FU_DEVICE (module), version, FWUPD_VERSION_FORMAT_PAIR);
+			fu_device_set_version (FU_DEVICE (module), version);
 			break;
 		case FU_WAC_MODULE_FW_TYPE_MAIN:
-			fu_device_set_version (FU_DEVICE (self), version, FWUPD_VERSION_FORMAT_PAIR);
+			fu_device_set_version (FU_DEVICE (self), version);
 			break;
 		default:
 			g_warning ("unknown submodule type 0x%0x", fw_type);
@@ -853,6 +853,7 @@ fu_wac_device_init (FuWacDevice *self)
 	fu_device_set_protocol (FU_DEVICE (self), "com.wacom.usb");
 	fu_device_add_icon (FU_DEVICE (self), "input-tablet");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_install_duration (FU_DEVICE (self), 10);
 }
 

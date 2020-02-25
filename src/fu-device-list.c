@@ -457,8 +457,8 @@ fu_device_list_replace (FuDeviceList *self, FuDeviceItem *item, FuDevice *device
 	    fu_device_get_version (device) == NULL) {
 		const gchar *version = fu_device_get_version (item->device);
 		g_debug ("copying old version %s to new device", version);
-		fu_device_set_version (device, version,
-				       fu_device_get_version_format (item->device));
+		fu_device_set_version_format (device, fu_device_get_version_format (item->device));
+		fu_device_set_version (device, version);
 	}
 
 	/* always use the runtime version */
@@ -466,8 +466,8 @@ fu_device_list_replace (FuDeviceList *self, FuDeviceItem *item, FuDevice *device
 	    fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER)) {
 		const gchar *version = fu_device_get_version (item->device);
 		g_debug ("forcing runtime version %s to new device", version);
-		fu_device_set_version (device, version,
-				       fu_device_get_version_format (item->device));
+		fu_device_set_version_format (device, fu_device_get_version_format (item->device));
+		fu_device_set_version (device, version);
 	}
 
 	/* allow another plugin to handle the write too */

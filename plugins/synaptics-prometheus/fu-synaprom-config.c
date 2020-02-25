@@ -105,7 +105,7 @@ fu_synaprom_config_setup (FuDevice *device, GError **error)
 
 	/* no downgrades are allowed */
 	version = g_strdup_printf ("%04u", GUINT16_FROM_LE(cfg.version));
-	fu_device_set_version (FU_DEVICE (self), version, FWUPD_VERSION_FORMAT_PLAIN);
+	fu_device_set_version (FU_DEVICE (self), version);
 	fu_device_set_version_lowest (FU_DEVICE (self), version);
 	return TRUE;
 }
@@ -200,6 +200,7 @@ fu_synaprom_config_init (FuSynapromConfig *self)
 {
 	fu_device_set_protocol (FU_DEVICE (self), "com.synaptics.prometheus.config");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_logical_id (FU_DEVICE (self), "cfg");
 	fu_device_set_name (FU_DEVICE (self), "Prometheus IOTA Config");
 }

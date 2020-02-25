@@ -297,8 +297,9 @@ fu_plugin_dock_node (FuPlugin *plugin, const gchar *platform,
 	fu_device_add_icon (dev, "computer");
 	fu_device_add_guid (dev, component_guid);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
+	fu_device_set_version_format (dev, version_format);
 	if (version != NULL) {
-		fu_device_set_version (dev, version, version_format);
+		fu_device_set_version (dev, version);
 		if (fu_plugin_dell_capsule_supported (plugin)) {
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
@@ -738,7 +739,8 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	fu_device_set_vendor_id (dev, "PCI:0x1028");
 	fu_device_set_name (dev, pretty_tpm_name);
 	fu_device_set_summary (dev, "Platform TPM device");
-	fu_device_set_version (dev, version_str, FWUPD_VERSION_FORMAT_QUAD);
+	fu_device_set_version_format (dev, FWUPD_VERSION_FORMAT_QUAD);
+	fu_device_set_version (dev, version_str);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_icon (dev, "computer");

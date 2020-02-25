@@ -531,8 +531,9 @@ fu_plugin_amt_create_device (GError **error)
 			continue;
 		}
 	}
+	fu_device_set_version_format (dev, FWUPD_VERSION_FORMAT_INTEL_ME);
 	if (version_fw->len > 0)
-		fu_device_set_version (dev, version_fw->str, FWUPD_VERSION_FORMAT_INTEL_ME);
+		fu_device_set_version (dev, version_fw->str);
 	if (version_bl->len > 0)
 		fu_device_set_version_bootloader (dev, version_bl->str);
 

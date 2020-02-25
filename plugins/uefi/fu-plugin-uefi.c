@@ -736,7 +736,8 @@ fu_plugin_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
 	fu_device_set_flags (device_alt, device_flags_alt & ~FWUPD_DEVICE_FLAG_UPDATABLE);
 
 	/* make sure that this unlocked device can be updated */
-	fu_device_set_version (device, "0.0.0.0", FWUPD_VERSION_FORMAT_QUAD);
+	fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_QUAD);
+	fu_device_set_version (device, "0.0.0.0");
 	return TRUE;
 }
 
@@ -746,6 +747,7 @@ fu_plugin_uefi_create_dummy (FuPlugin *plugin, const gchar *reason, GError **err
 	const gchar *key;
 	g_autoptr(FuDevice) dev = fu_device_new ();
 
+	fu_device_set_version_format (dev, FWUPD_VERSION_FORMAT_PLAIN);
 	key = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER);
 	if (key != NULL)
 		fu_device_set_vendor (dev, key);
@@ -753,7 +755,7 @@ fu_plugin_uefi_create_dummy (FuPlugin *plugin, const gchar *reason, GError **err
 	fu_device_set_name (dev, key);
 	key = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VERSION);
 	if (key != NULL)
-		fu_device_set_version (dev, key, FWUPD_VERSION_FORMAT_PLAIN);
+		fu_device_set_version (dev, key);
 	fu_device_set_update_error (dev, reason);
 
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);

@@ -185,7 +185,7 @@ fu_nitrokey_device_setup (FuDevice *device, GError **error)
 		fu_common_dump_raw (G_LOG_DOMAIN, "payload", buf_reply, sizeof(buf_reply));
 	memcpy (&payload, buf_reply, sizeof(payload));
 	version = g_strdup_printf ("%u.%u", payload.VersionMajor, payload.VersionMinor);
-	fu_device_set_version (FU_DEVICE (device), version, FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_set_version (FU_DEVICE (device), version);
 
 	/* success */
 	return TRUE;
@@ -211,6 +211,7 @@ fu_nitrokey_device_init (FuNitrokeyDevice *device)
 {
 	fu_device_set_remove_delay (FU_DEVICE (device), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_set_version_format (FU_DEVICE (device), FWUPD_VERSION_FORMAT_PAIR);
 }
 
 static void
