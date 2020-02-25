@@ -8,6 +8,7 @@
 
 #include <glib-object.h>
 #include <xmlb.h>
+#include <jcat.h>
 
 #define FU_TYPE_CABINET (fu_cabinet_get_type ())
 
@@ -28,6 +29,8 @@ typedef enum {
 FuCabinet	*fu_cabinet_new			(void);
 void		 fu_cabinet_set_size_max	(FuCabinet		*self,
 						 guint64		 size_max);
+void		 fu_cabinet_set_jcat_context	(FuCabinet		*self,
+						 JcatContext		*jcat_context);
 gboolean	 fu_cabinet_parse		(FuCabinet		*self,
 						 GBytes			*data,
 						 FuCabinetParseFlags	 flags,

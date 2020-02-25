@@ -14,6 +14,7 @@
 #include "fu-cabinet.h"
 #include "fu-common.h"
 
+#include "fwupd-enums.h"
 #include "fwupd-error.h"
 
 struct _FuCabinet {
@@ -23,6 +24,8 @@ struct _FuCabinet {
 	gchar			*container_checksum;
 	XbBuilder		*builder;
 	XbSilo			*silo;
+	JcatContext		*jcat_context;
+	JcatFile		*jcat_file;
 };
 
 G_DEFINE_TYPE (FuCabinet, fu_cabinet, G_TYPE_OBJECT)
@@ -37,6 +40,8 @@ fu_cabinet_finalize (GObject *obj)
 		g_object_unref (self->builder);
 	g_free (self->container_checksum);
 	g_object_unref (self->gcab_cabinet);
+	g_object_unref (self->jcat_context);
+	g_object_unref (self->jcat_file);
 	G_OBJECT_CLASS (fu_cabinet_parent_class)->finalize (obj);
 }
 
@@ -53,6 +58,8 @@ fu_cabinet_init (FuCabinet *self)
 	self->size_max = 1024 * 1024 * 100;
 	self->gcab_cabinet = gcab_cabinet_new ();
 	self->builder = xb_builder_new ();
+	self->jcat_file = jcat_file_new ();
+	self->jcat_context = jcat_context_new ();
 }
 
 /**
@@ -69,6 +76,24 @@ fu_cabinet_set_size_max (FuCabinet *self, guint64 size_max)
 {
 	g_return_if_fail (FU_IS_CABINET (self));
 	self->size_max = size_max;
+}
+
+/**
+ * fu_cabinet_set_jcat_context: (skip):
+ * @self: A #FuCabinet
+ * @jcat_context: (nullable): A #JcatContext
+ *
+ * Sets the Jcat context, which is used for setting the trust flags on the
+ * each release in the archive.
+ *
+ * Since: 1.4.0
+ **/
+void
+fu_cabinet_set_jcat_context (FuCabinet *self, JcatContext *jcat_context)
+{
+	g_return_if_fail (FU_IS_CABINET (self));
+	g_return_if_fail (JCAT_IS_CONTEXT (jcat_context));
+	g_set_object (&self->jcat_context, jcat_context);
 }
 
 /**
@@ -111,11 +136,18 @@ fu_cabinet_parse_release (FuCabinet *self, XbNode *release, GError **error)
 	GCabFile *cabfile;
 	GBytes *blob;
 	const gchar *csum_filename = NULL;
-	const gchar *suffixes[] = { "asc", "p7b", "p7c", NULL };
 	g_autofree gchar *basename = NULL;
-	g_autofree gchar *release_key = NULL;
 	g_autoptr(XbNode) csum_tmp = NULL;
+	g_autoptr(XbNode) metadata_trust = NULL;
 	g_autoptr(XbNode) nsize = NULL;
+	g_autoptr(JcatItem) item = NULL;
+	g_autoptr(GBytes) release_flags_blob = NULL;
+	FwupdReleaseFlags release_flags = FWUPD_RELEASE_FLAG_NONE;
+
+	/* we set this with XbBuilderSource before the silo was created */
+	metadata_trust = xb_node_query_first (release, "../../info/metadata_trust", NULL);
+	if (metadata_trust != NULL)
+		release_flags |= FWUPD_RELEASE_FLAG_TRUSTED_METADATA;
 
 	/* ensure we always have a content checksum */
 	csum_tmp = xb_node_query_first (release, "checksum[@target='content']", NULL);
@@ -148,8 +180,7 @@ fu_cabinet_parse_release (FuCabinet *self, XbNode *release, GError **error)
 	}
 
 	/* set the blob */
-	release_key = g_strdup_printf ("fwupd::ReleaseBlob(%s)", basename);
-	xb_node_set_data (release, release_key, blob);
+	xb_node_set_data (release, "fwupd::FirmwareBlob", blob);
 
 	/* set as metadata if unset, but error if specified and incorrect */
 	nsize = xb_node_query_first (release, "size[@type='installed']", NULL);
@@ -185,15 +216,38 @@ fu_cabinet_parse_release (FuCabinet *self, XbNode *release, GError **error)
 		}
 	}
 
-	/* if the signing file exists, set that too */
-	for (guint i = 0; suffixes[i] != NULL; i++) {
+	/* find out if the payload is signed, falling back to detached */
+	item = jcat_file_get_item_by_id (self->jcat_file, basename, NULL);
+	if (item != NULL) {
+		g_autoptr(GError) error_local = NULL;
+		g_autoptr(GPtrArray) results = NULL;
+		results = jcat_context_verify_item (self->jcat_context,
+						    blob, item,
+						    JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
+						    JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
+						    &error_local);
+		if (results == NULL) {
+			g_debug ("failed to verify payload %s: %s",
+				 basename, error_local->message);
+		} else {
+			g_debug ("verified payload %s: %u",
+				 basename, results->len);
+			release_flags |= FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD;
+		}
+
+	/* legacy GPG detached signature */
+	} else {
 		g_autofree gchar *basename_sig = NULL;
-		basename_sig = g_strdup_printf ("%s.%s", basename, suffixes[i]);
+		basename_sig = g_strdup_printf ("%s.asc", basename);
 		cabfile = fu_cabinet_get_file_by_name (self, basename_sig);
 		if (cabfile != NULL) {
-			g_autofree gchar *release_key_sig = NULL;
-			blob = gcab_file_get_bytes (cabfile);
-			if (blob == NULL) {
+			GBytes *data_sig;
+			g_autoptr(JcatResult) jcat_result = NULL;
+			g_autoptr(JcatBlob) jcat_blob = NULL;
+			g_autoptr(GError) error_local = NULL;
+
+			data_sig = gcab_file_get_bytes (cabfile);
+			if (data_sig == NULL) {
 				g_set_error (error,
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_INVALID_FILE,
@@ -201,11 +255,24 @@ fu_cabinet_parse_release (FuCabinet *self, XbNode *release, GError **error)
 					     basename_sig);
 				return FALSE;
 			}
-			release_key_sig = g_strdup_printf ("fwupd::ReleaseBlob(%s)",
-							   basename_sig);
-			xb_node_set_data (release, release_key_sig, blob);
+			jcat_blob = jcat_blob_new (JCAT_BLOB_KIND_GPG, data_sig);
+			jcat_result = jcat_context_verify_blob (self->jcat_context,
+								blob, jcat_blob,
+								JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
+								&error_local);
+			if (jcat_result == NULL) {
+				g_debug ("failed to verify payload %s using detached: %s",
+					 basename, error_local->message);
+			} else {
+				g_debug ("verified payload %s using detached", basename);
+				release_flags |= FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD;
+			}
 		}
 	}
+
+	/* this means we can get the data from fu_keyring_get_release_flags */
+	release_flags_blob = g_bytes_new (&release_flags, sizeof(release_flags));
+	xb_node_set_data (release, "fwupd::ReleaseFlags", release_flags_blob);
 
 	/* success */
 	return TRUE;
@@ -283,11 +350,22 @@ fu_cabinet_set_container_checksum_cb (XbBuilderFixup *builder_fixup,
 
 /* adds each GCabFile to the silo */
 static gboolean
-fu_cabinet_build_silo_file (FuCabinet *self, GCabFile *cabfile, GError **error)
+fu_cabinet_build_silo_file (FuCabinet *self,
+			    GCabFile *cabfile,
+			    FwupdReleaseFlags release_flags,
+			    GError **error)
 {
 	GBytes *blob;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(XbBuilderSource) source = xb_builder_source_new ();
+	g_autoptr(XbBuilderNode) bn_info = xb_builder_node_new ("info");
+
+	/* indicate the metainfo file was signed */
+	if (release_flags & FWUPD_RELEASE_FLAG_TRUSTED_METADATA) {
+		g_autoptr(XbBuilderNode) bn_trust = NULL;
+		xb_builder_node_insert (bn_info, "metadata_trust", NULL);
+	}
+	xb_builder_source_set_info (source, bn_info);
 
 	/* rewrite to be under a components root */
 	xb_builder_source_set_prefix (source, "components");
@@ -318,6 +396,71 @@ fu_cabinet_build_silo_file (FuCabinet *self, GCabFile *cabfile, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_cabinet_build_silo_metainfo (FuCabinet *self, GCabFile *cabfile, GError **error)
+{
+	FwupdReleaseFlags release_flags = FWUPD_RELEASE_FLAG_NONE;
+	const gchar *fn = gcab_file_get_extract_name (cabfile);
+	g_autoptr(JcatItem) item = NULL;
+
+	/* validate against the Jcat file */
+	item = jcat_file_get_item_by_id (self->jcat_file, fn, NULL);
+	if (item == NULL) {
+		g_debug ("failed to verify %s: no JcatItem", fn);
+	} else {
+		g_autoptr(GError) error_local = NULL;
+		g_autoptr(GPtrArray) results = NULL;
+		results = jcat_context_verify_item (self->jcat_context,
+						    gcab_file_get_bytes (cabfile),
+						    item,
+						    JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
+						    JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
+						    &error_local);
+		if (results == NULL) {
+			g_debug ("failed to verify %s: %s",
+				 fn, error_local->message);
+		} else {
+			g_debug ("verified metadata %s: %u",
+				 fn, results->len);
+			release_flags |= FWUPD_RELEASE_FLAG_TRUSTED_METADATA;
+		}
+	}
+
+	/* actually parse the XML now */
+	g_debug ("processing file: %s", fn);
+	if (!fu_cabinet_build_silo_file (self, cabfile, release_flags, error)) {
+		g_prefix_error (error, "%s could not be loaded: ",
+				gcab_file_get_extract_name (cabfile));
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+/* load the firmware.jcat files if included */
+static gboolean
+fu_cabinet_build_jcat_folder (FuCabinet *self, GCabFolder *cabfolder, GError **error)
+{
+	g_autoptr(GSList) cabfiles = gcab_folder_get_files (cabfolder);
+	for (GSList *l = cabfiles; l != NULL; l = l->next) {
+		GCabFile *cabfile = GCAB_FILE (l->data);
+		const gchar *fn = gcab_file_get_extract_name (cabfile);
+		if (g_str_has_suffix (fn, ".jcat")) {
+			GBytes *data_jcat = gcab_file_get_bytes (cabfile);
+			g_autoptr(GInputStream) istream = NULL;
+			istream = g_memory_input_stream_new_from_bytes (data_jcat);
+			if (!jcat_file_import_stream (self->jcat_file,
+						      istream,
+						      JCAT_IMPORT_FLAG_NONE,
+						      NULL,
+						      error))
+				return FALSE;
+		}
+	}
+	return TRUE;
+}
+
 /* adds each GCabFolder to the silo */
 static gboolean
 fu_cabinet_build_silo_folder (FuCabinet *self, GCabFolder *cabfolder, GError **error)
@@ -326,14 +469,10 @@ fu_cabinet_build_silo_folder (FuCabinet *self, GCabFolder *cabfolder, GError **e
 	for (GSList *l = cabfiles; l != NULL; l = l->next) {
 		GCabFile *cabfile = GCAB_FILE (l->data);
 		const gchar *fn = gcab_file_get_extract_name (cabfile);
-		g_debug ("processing file: %s", fn);
-		if (g_str_has_suffix (fn, ".metainfo.xml")) {
-			if (!fu_cabinet_build_silo_file (self, cabfile, error)) {
-				g_prefix_error (error, "%s could not be loaded: ",
-						gcab_file_get_extract_name (cabfile));
-				return FALSE;
-			}
-		}
+		if (!g_str_has_suffix (fn, ".metainfo.xml"))
+			continue;
+		if (!fu_cabinet_build_silo_metainfo (self, cabfile, error))
+			return FALSE;
 	}
 	return TRUE;
 }
@@ -352,8 +491,17 @@ fu_cabinet_build_silo (FuCabinet *self, GBytes *data, GError **error)
 					      XB_SILO_PROFILE_FLAG_DEBUG);
 	}
 
-	/* look at each folder */
+	/* load Jcat */
 	folders = gcab_cabinet_get_folders (self->gcab_cabinet);
+	if (self->jcat_context != NULL) {
+		for (guint i = 0; i < folders->len; i++) {
+			GCabFolder *cabfolder = GCAB_FOLDER (g_ptr_array_index (folders, i));
+			if (!fu_cabinet_build_jcat_folder (self, cabfolder, error))
+				return FALSE;
+		}
+	}
+
+	/* adds each metainfo file to the silo */
 	for (guint i = 0; i < folders->len; i++) {
 		GCabFolder *cabfolder = GCAB_FOLDER (g_ptr_array_index (folders, i));
 		g_debug ("processing folder: %u/%u", i + 1, folders->len);

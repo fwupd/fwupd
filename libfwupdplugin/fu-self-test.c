@@ -746,9 +746,7 @@ fu_common_store_cab_func (void)
 	csum = xb_node_query_first (rel, "checksum[@target='content']", &error);
 	g_assert_nonnull (csum);
 	g_assert_cmpstr (xb_node_get_text (csum), ==, "7c211433f02071597741e6ff5a8ea34789abbf43");
-	blob_tmp = xb_node_get_data (rel, "fwupd::ReleaseBlob(firmware.dfu)");
-	g_assert_nonnull (blob_tmp);
-	blob_tmp = xb_node_get_data (rel, "fwupd::ReleaseBlob(firmware.dfu.asc)");
+	blob_tmp = xb_node_get_data (rel, "fwupd::FirmwareBlob");
 	g_assert_nonnull (blob_tmp);
 	req = xb_node_query_first (component, "requires/id", &error);
 	g_assert_no_error (error);
@@ -791,10 +789,8 @@ fu_common_store_cab_unsigned_func (void)
 	g_assert_cmpstr (xb_node_get_attr (rel, "version"), ==, "1.2.3");
 	csum = xb_node_query_first (rel, "checksum[@target='content']", &error);
 	g_assert_null (csum);
-	blob_tmp = xb_node_get_data (rel, "fwupd::ReleaseBlob(firmware.bin)");
+	blob_tmp = xb_node_get_data (rel, "fwupd::FirmwareBlob");
 	g_assert_nonnull (blob_tmp);
-	blob_tmp = xb_node_get_data (rel, "fwupd::ReleaseBlob(firmware.bin.asc)");
-	g_assert_null (blob_tmp);
 }
 
 static void
@@ -830,7 +826,7 @@ fu_common_store_cab_folder_func (void)
 	g_assert_no_error (error);
 	g_assert_nonnull (rel);
 	g_assert_cmpstr (xb_node_get_attr (rel, "version"), ==, "1.2.3");
-	blob_tmp = xb_node_get_data (rel, "fwupd::ReleaseBlob(firmware.bin)");
+	blob_tmp = xb_node_get_data (rel, "fwupd::FirmwareBlob");
 	g_assert_nonnull (blob_tmp);
 }
 

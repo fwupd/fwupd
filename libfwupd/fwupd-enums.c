@@ -401,6 +401,8 @@ fwupd_keyring_kind_from_string (const gchar *keyring_kind)
 		return FWUPD_KEYRING_KIND_GPG;
 	if (g_strcmp0 (keyring_kind, "pkcs7") == 0)
 		return FWUPD_KEYRING_KIND_PKCS7;
+	if (g_strcmp0 (keyring_kind, "jcat") == 0)
+		return FWUPD_KEYRING_KIND_JCAT;
 	return FWUPD_KEYRING_KIND_UNKNOWN;
 }
 
@@ -423,6 +425,8 @@ fwupd_keyring_kind_to_string (FwupdKeyringKind keyring_kind)
 		return "gpg";
 	if (keyring_kind == FWUPD_KEYRING_KIND_PKCS7)
 		return "pkcs7";
+	if (keyring_kind == FWUPD_KEYRING_KIND_JCAT)
+		return "jcat";
 	return NULL;
 }
 

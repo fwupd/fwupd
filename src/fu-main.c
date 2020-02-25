@@ -17,6 +17,7 @@
 #include <polkit/polkit.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <jcat.h>
 
 #include "fwupd-device-private.h"
 #include "fwupd-release-private.h"
@@ -900,10 +901,10 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			g_debug ("got option %s", prop_key);
 			if (g_strcmp0 (prop_key, "add-timestamp") == 0 &&
 			    g_variant_get_boolean (prop_value) == TRUE)
-				helper->flags |= FU_KEYRING_SIGN_FLAG_ADD_TIMESTAMP;
+				helper->flags |= JCAT_SIGN_FLAG_ADD_TIMESTAMP;
 			if (g_strcmp0 (prop_key, "add-cert") == 0 &&
 			    g_variant_get_boolean (prop_value) == TRUE)
-				helper->flags |= FU_KEYRING_SIGN_FLAG_ADD_CERT;
+				helper->flags |= JCAT_SIGN_FLAG_ADD_CERT;
 			g_variant_unref (prop_value);
 		}
 

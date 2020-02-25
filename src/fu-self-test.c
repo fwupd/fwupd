@@ -19,7 +19,6 @@
 #include "fu-device-list.h"
 #include "fu-device-private.h"
 #include "fu-engine.h"
-#include "fu-keyring.h"
 #include "fu-history.h"
 #include "fu-install-task.h"
 #include "fu-plugin-private.h"
@@ -27,13 +26,6 @@
 #include "fu-progressbar.h"
 #include "fu-hash.h"
 #include "fu-smbios-private.h"
-
-#ifdef ENABLE_GPG
-#include "fu-keyring-gpg.h"
-#endif
-#ifdef ENABLE_PKCS7
-#include "fu-keyring-pkcs7.h"
-#endif
 
 typedef struct {
 	FuPlugin	*plugin;
@@ -2591,185 +2583,6 @@ fu_history_func (gconstpointer user_data)
 	g_assert_cmpstr (g_ptr_array_index (approved_firmware, 1), ==, "bar");
 }
 
-static void
-fu_keyring_gpg_func (gconstpointer user_data)
-{
-#ifdef ENABLE_GPG
-	gboolean ret;
-	g_autofree gchar *fw_fail = NULL;
-	g_autofree gchar *fw_pass = NULL;
-	g_autofree gchar *pki_dir = NULL;
-	g_autoptr(FuKeyring) keyring = NULL;
-	g_autoptr(FuKeyringResult) result_fail = NULL;
-	g_autoptr(FuKeyringResult) result_pass = NULL;
-	g_autoptr(GBytes) blob_fail = NULL;
-	g_autoptr(GBytes) blob_pass = NULL;
-	g_autoptr(GBytes) blob_sig = NULL;
-	g_autoptr(GError) error = NULL;
-	const gchar *sig_gpgme =
-	"-----BEGIN PGP SIGNATURE-----\n"
-	"Version: GnuPG v1\n\n"
-	"iQEcBAABCAAGBQJVt0B4AAoJEEim2A5FOLrCFb8IAK+QTLY34Wu8xZ8nl6p3JdMu"
-	"HOaifXAmX7291UrsFRwdabU2m65pqxQLwcoFrqGv738KuaKtu4oIwo9LIrmmTbEh"
-	"IID8uszxBt0bMdcIHrvwd+ADx+MqL4hR3guXEE3YOBTLvv2RF1UBcJPInNf/7Ui1"
-	"3lW1c3trL8RAJyx1B5RdKqAMlyfwiuvKM5oT4SN4uRSbQf+9mt78ZSWfJVZZH/RR"
-	"H9q7PzR5GdmbsRPM0DgC27Trvqjo3MzoVtoLjIyEb/aWqyulUbnJUNKPYTnZgkzM"
-	"v2yVofWKIM3e3wX5+MOtf6EV58mWa2cHJQ4MCYmpKxbIvAIZagZ4c9A8BA6tQWg="
-	"=fkit\n"
-	"-----END PGP SIGNATURE-----\n";
-
-	/* add keys to keyring */
-	keyring = fu_keyring_gpg_new ();
-	ret = fu_keyring_setup (keyring, &error);
-	g_assert_no_error (error);
-	g_assert_true (ret);
-	pki_dir = g_build_filename (TESTDATADIR_SRC, "pki", NULL);
-	ret = fu_keyring_add_public_keys (keyring, pki_dir, &error);
-	g_assert_no_error (error);
-	g_assert_true (ret);
-
-	/* verify with GnuPG */
-	fw_pass = g_build_filename (TESTDATADIR_SRC, "colorhug", "firmware.bin", NULL);
-	blob_pass = fu_common_get_contents_bytes (fw_pass, &error);
-	g_assert_no_error (error);
-	g_assert_nonnull (blob_pass);
-	blob_sig = g_bytes_new_static (sig_gpgme, strlen (sig_gpgme));
-	result_pass = fu_keyring_verify_data (keyring, blob_pass, blob_sig,
-					      FU_KEYRING_VERIFY_FLAG_NONE,
-					      &error);
-	g_assert_no_error (error);
-	g_assert_nonnull (result_pass);
-	g_assert_cmpint (fu_keyring_result_get_timestamp (result_pass), == , 1438072952);
-	g_assert_cmpstr (fu_keyring_result_get_authority (result_pass), == ,
-			 "3FC6B804410ED0840D8F2F9748A6D80E4538BAC2");
-
-	/* verify will fail with GnuPG */
-	fw_fail = g_build_filename (TESTDATADIR_DST, "colorhug", "colorhug-als-3.0.2.cab", NULL);
-	blob_fail = fu_common_get_contents_bytes (fw_fail, &error);
-	g_assert_no_error (error);
-	g_assert_nonnull (blob_fail);
-	result_fail = fu_keyring_verify_data (keyring, blob_fail, blob_sig,
-					      FU_KEYRING_VERIFY_FLAG_NONE, &error);
-	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_SIGNATURE_INVALID);
-	g_assert_null (result_fail);
-	g_clear_error (&error);
-#else
-	g_test_skip ("no GnuPG support enabled");
-#endif
-}
-
-static void
-fu_keyring_pkcs7_func (gconstpointer user_data)
-{
-#ifdef ENABLE_PKCS7
-	gboolean ret;
-	g_autofree gchar *fw_fail = NULL;
-	g_autofree gchar *fw_pass = NULL;
-	g_autofree gchar *pki_dir = NULL;
-	g_autofree gchar *sig_fn = NULL;
-	g_autofree gchar *sig_fn2 = NULL;
-	g_autoptr(FuKeyring) keyring = NULL;
-	g_autoptr(FuKeyringResult) result_fail = NULL;
-	g_autoptr(FuKeyringResult) result_pass = NULL;
-	g_autoptr(GBytes) blob_fail = NULL;
-	g_autoptr(GBytes) blob_pass = NULL;
-	g_autoptr(GBytes) blob_sig = NULL;
-	g_autoptr(GBytes) blob_sig2 = NULL;
-	g_autoptr(GError) error = NULL;
-
-	/* add keys to keyring */
-	keyring = fu_keyring_pkcs7_new ();
-	ret = fu_keyring_setup (keyring, &error);
-	g_assert_no_error (error);
-	g_assert_true (ret);
-	pki_dir = g_build_filename (TESTDATADIR_SRC, "pki", NULL);
-	ret = fu_keyring_add_public_keys (keyring, pki_dir, &error);
-	g_assert_no_error (error);
-	g_assert_true (ret);
-
-	/* verify with a signature from the old LVFS */
-	fw_pass = g_build_filename (TESTDATADIR_SRC, "colorhug", "firmware.bin", NULL);
-	blob_pass = fu_common_get_contents_bytes (fw_pass, &error);
-	g_assert_no_error (error);
-	g_assert_nonnull (blob_pass);
-	sig_fn = g_build_filename (TESTDATADIR_SRC, "colorhug", "firmware.bin.p7b", NULL);
-	blob_sig = fu_common_get_contents_bytes (sig_fn, &error);
-	g_assert_no_error (error);
-	g_assert_nonnull (blob_sig);
-	result_pass = fu_keyring_verify_data (keyring, blob_pass, blob_sig,
-					      FU_KEYRING_VERIFY_FLAG_DISABLE_TIME_CHECKS,
-					      &error);
-	g_assert_no_error (error);
-	g_assert_nonnull (result_pass);
-	g_assert_cmpint (fu_keyring_result_get_timestamp (result_pass), >= , 1502871248);
-	g_assert_cmpstr (fu_keyring_result_get_authority (result_pass), == , "O=Linux Vendor Firmware Project,CN=LVFS CA");
-
-	/* verify will fail with a self-signed signature */
-	sig_fn2 = g_build_filename (TESTDATADIR_DST, "colorhug", "firmware.bin.p7c", NULL);
-	blob_sig2 = fu_common_get_contents_bytes (sig_fn2, &error);
-	g_assert_no_error (error);
-	g_assert_nonnull (blob_sig2);
-	result_fail = fu_keyring_verify_data (keyring, blob_pass, blob_sig2,
-					      FU_KEYRING_VERIFY_FLAG_NONE, &error);
-	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_SIGNATURE_INVALID);
-	g_assert_null (result_fail);
-	g_clear_error (&error);
-
-	/* verify will fail with valid signature and different data */
-	fw_fail = g_build_filename (TESTDATADIR_DST, "colorhug", "colorhug-als-3.0.2.cab", NULL);
-	blob_fail = fu_common_get_contents_bytes (fw_fail, &error);
-	g_assert_no_error (error);
-	g_assert_nonnull (blob_fail);
-	result_fail = fu_keyring_verify_data (keyring, blob_fail, blob_sig,
-					      FU_KEYRING_VERIFY_FLAG_NONE, &error);
-	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_SIGNATURE_INVALID);
-	g_assert_null (result_fail);
-	g_clear_error (&error);
-#else
-	g_test_skip ("no GnuTLS support enabled");
-#endif
-}
-
-static void
-fu_keyring_pkcs7_self_signed_func (gconstpointer user_data)
-{
-#ifdef ENABLE_PKCS7
-	gboolean ret;
-	g_autoptr(FuKeyring) kr = NULL;
-	g_autoptr(FuKeyringResult) kr_result = NULL;
-	g_autoptr(GBytes) payload = NULL;
-	g_autoptr(GBytes) signature = NULL;
-	g_autoptr(GError) error = NULL;
-
-#ifndef HAVE_GNUTLS_3_6_0
-	/* required to create the private key correctly */
-	g_test_skip ("GnuTLS version too old");
-	return;
-#endif
-
-	/* create detached signature and verify */
-	kr = fu_keyring_pkcs7_new ();
-	ret = fu_keyring_setup (kr, &error);
-	g_assert_no_error (error);
-	g_assert_true (ret);
-	payload = fu_common_get_contents_bytes ("/etc/machine-id", &error);
-	g_assert_no_error (error);
-	g_assert_nonnull (payload);
-	signature = fu_keyring_sign_data (kr, payload, FU_KEYRING_SIGN_FLAG_ADD_TIMESTAMP, &error);
-	g_assert_no_error (error);
-	g_assert_nonnull (signature);
-	ret = fu_common_set_contents_bytes ("/tmp/test.p7b", signature, &error);
-	g_assert_no_error (error);
-	g_assert_true (ret);
-	kr_result = fu_keyring_verify_data (kr, payload, signature,
-					    FU_KEYRING_VERIFY_FLAG_USE_CLIENT_CERT, &error);
-	g_assert_no_error (error);
-	g_assert_nonnull (kr_result);
-#else
-	g_test_skip ("no GnuTLS support enabled");
-#endif
-}
-
 static GBytes *
 _build_cab (GCabCompression compression, ...)
 {
@@ -3209,11 +3022,5 @@ main (int argc, char **argv)
 			      fu_plugin_list_func);
 	g_test_add_data_func ("/fwupd/plugin-list{depsolve}", self,
 			      fu_plugin_list_depsolve_func);
-	g_test_add_data_func ("/fwupd/keyring{gpg}", self,
-			      fu_keyring_gpg_func);
-	g_test_add_data_func ("/fwupd/keyring{pkcs7}", self,
-			      fu_keyring_pkcs7_func);
-	g_test_add_data_func ("/fwupd/keyring{pkcs7-self-signed}", self,
-			      fu_keyring_pkcs7_self_signed_func);
 	return g_test_run ();
 }

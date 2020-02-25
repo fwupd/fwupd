@@ -187,6 +187,7 @@ else
   gudev = dependency('', required : false)
 endif
 libxmlb = dependency('xmlb', version : '>= 0.1.13', fallback : ['libxmlb', 'libxmlb_dep'])
+libjcat = dependency('jcat', version : '>= 0.1.0', fallback : ['libjcat', 'libjcat_dep'])
 gusb = dependency('gusb', version : '>= 0.2.9', fallback : ['gusb', 'gusb_dep'])
 sqlite = dependency('sqlite3')
 libarchive = dependency('libarchive')
@@ -205,18 +206,6 @@ if build_daemon
     udev = dependency('udev')
     udevdir = udev.get_pkgconfig_variable('udevdir')
   endif
-endif
-if get_option('pkcs7')
-  gnutls = dependency('gnutls', version : '>= 3.4.4.1')
-  if gnutls.version().version_compare('>= 3.6.0')
-    conf.set('HAVE_GNUTLS_3_6_0', '1')
-  endif
-  conf.set('ENABLE_PKCS7', '1')
-endif
-if get_option('gpg')
-  gpgme = cc.find_library('gpgme')
-  gpgerror = cc.find_library('gpg-error')
-  conf.set('ENABLE_GPG', '1')
 endif
 libm = cc.find_library('m', required: false)
 libgcab = dependency('libgcab-1.0', version : '>= 1.0', fallback : ['gcab', 'gcab_dep'])

@@ -8,12 +8,12 @@
 
 #include <xmlb.h>
 #include <glib-object.h>
+#include <jcat.h>
 
 #include "fwupd-device.h"
 #include "fwupd-enums.h"
 
 #include "fu-common.h"
-#include "fu-keyring.h"
 #include "fu-install-task.h"
 #include "fu-plugin.h"
 
@@ -147,7 +147,7 @@ void		 fu_engine_add_approved_firmware	(FuEngine	*self,
 							 const gchar	*checksum);
 gchar		*fu_engine_self_sign			(FuEngine	*self,
 							 const gchar	*value,
-							 FuKeyringSignFlags flags,
+							 JcatSignFlags flags,
 							 GError		**error);
 gboolean	 fu_engine_modify_config		(FuEngine	*self,
 							 const gchar	*key,

@@ -633,6 +633,11 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency type="build" id="libjcat-dev">
+    <distro id="fedora">
+      <package>libjcat-devel</package>
+    </distro>
+  </dependency>
   <dependency type="build" id="libarchive-dev">
     <distro id="centos">
       <package>libarchive-devel</package>
