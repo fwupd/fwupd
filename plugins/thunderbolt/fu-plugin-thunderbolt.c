@@ -410,7 +410,7 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 		fu_device_set_summary (dev, "Unmatched performance for high-speed I/O");
 	fu_device_add_icon (dev, "thunderbolt");
 	fu_device_set_protocol (dev, "com.intel.thunderbolt");
-
+	fu_device_set_version_format (dev, FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_quirks (dev, fu_plugin_get_quirks (plugin));
 	vendor = g_udev_device_get_sysfs_attr (device, "vendor_name");
 	if (vendor != NULL)
@@ -422,7 +422,7 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	if (device_id_with_path != NULL)
 		fu_device_add_instance_id (dev, device_id_with_path);
 	if (version != NULL)
-		fu_device_set_version (dev, version, FWUPD_VERSION_FORMAT_PAIR);
+		fu_device_set_version (dev, version);
 	if (is_host)
 		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
@@ -481,7 +481,7 @@ fu_plugin_thunderbolt_change (FuPlugin *plugin, GUdevDevice *device)
 	}
 
 	version = fu_plugin_thunderbolt_udev_get_version (device);
-	fu_device_set_version (dev, version, FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_set_version (dev, version);
 }
 
 static gboolean

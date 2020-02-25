@@ -318,8 +318,10 @@ fu_fastboot_device_setup (FuDevice *device, GError **error)
 	/* bootloader version */
 	if (!fu_fastboot_device_getvar (device, "version-bootloader", &version_bootloader, error))
 		return FALSE;
-	if (version_bootloader != NULL && version_bootloader[0] != '\0')
+	if (version_bootloader != NULL && version_bootloader[0] != '\0') {
+		fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_PAIR);
 		fu_device_set_version_bootloader (device, version_bootloader);
+	}
 
 	/* serialno */
 	if (!fu_fastboot_device_getvar (device, "serialno", &serialno, error))

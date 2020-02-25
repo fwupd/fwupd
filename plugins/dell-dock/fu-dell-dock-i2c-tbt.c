@@ -137,7 +137,8 @@ fu_dell_dock_tbt_write_fw (FuDevice *device,
 
 	/* dock will reboot to re-read; this is to appease the daemon */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	fu_device_set_version (device, dynamic_version, FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_set_version (device, dynamic_version);
 
 	return TRUE;
 }
@@ -195,8 +196,10 @@ fu_dell_dock_tbt_setup (FuDevice *device, GError **error)
 	/* set version from EC if we know it */
 	parent = fu_device_get_parent (device);
 	version = fu_dell_dock_ec_get_tbt_version (parent);
-	if (version != NULL)
-		fu_device_set_version (device, version, FWUPD_VERSION_FORMAT_PAIR);
+	if (version != NULL) {
+		fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_PAIR);
+		fu_device_set_version (device, version);
+	}
 
 	/* minimum version of NVM that supports this feature */
 	if (version == NULL ||

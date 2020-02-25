@@ -108,9 +108,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 			fu_device_set_name (dev, fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_PRODUCT_NAME));
 			fu_device_set_vendor (dev, fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER));
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_ENSURE_SEMVER);
-			fu_device_set_version (dev,
-					       fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VERSION),
-					       FWUPD_VERSION_FORMAT_UNKNOWN);
+			fu_device_set_version (dev, fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VERSION));
 			fu_device_add_guid (dev, guid);
 			if (dmi_vendor != NULL) {
 				g_autofree gchar *vendor_id = g_strdup_printf ("DMI:%s", dmi_vendor);

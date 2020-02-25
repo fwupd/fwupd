@@ -372,7 +372,8 @@ fu_dell_dock_ec_get_dock_info (FuDevice *device,
 			    device_entry[i].version.version_8[2],
 			    device_entry[i].version.version_8[3]);
 			g_debug ("\tParsed version %s", self->ec_version);
-			fu_device_set_version (FU_DEVICE (self), self->ec_version, FWUPD_VERSION_FORMAT_QUAD);
+			fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_QUAD);
+			fu_device_set_version (FU_DEVICE (self), self->ec_version);
 
 		} else if (map->device_type == FU_DELL_DOCK_DEVICETYPE_MST) {
 			self->raw_versions->mst_version = device_entry[i].version.version_32;
@@ -792,7 +793,8 @@ fu_dell_dock_ec_write_fw (FuDevice *device,
 		return FALSE;
 
 	/* dock will reboot to re-read; this is to appease the daemon */
-	fu_device_set_version (device, dynamic_version, FWUPD_VERSION_FORMAT_QUAD);
+	fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_QUAD);
+	fu_device_set_version (device, dynamic_version);
 
 	/* activate passive behavior */
 	if (self->passive_flow)

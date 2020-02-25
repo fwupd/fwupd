@@ -749,7 +749,7 @@ fu_device_set_quirk_kv (FuDevice *self,
 		return TRUE;
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_VERSION) == 0) {
-		fu_device_set_version (self, value, fu_device_get_version_format (self));
+		fu_device_set_version (self, value);
 		return TRUE;
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_ICON) == 0) {
@@ -1361,17 +1361,40 @@ fu_device_set_id (FuDevice *self, const gchar *id)
 }
 
 /**
+ * fu_device_set_version_format:
+ * @self: A #FwupdDevice
+ * @fmt: the #FwupdVersionFormat, e.g. %FWUPD_VERSION_FORMAT_PLAIN
+ *
+ * Sets the version format.
+ *
+ * Since: 1.3.9
+ **/
+void
+fu_device_set_version_format (FuDevice *self, FwupdVersionFormat fmt)
+{
+	/* same */
+	if (fu_device_get_version_format (self) == fmt)
+		return;
+	if (fu_device_get_version_format (self) != FWUPD_VERSION_FORMAT_UNKNOWN) {
+		g_debug ("changing verfmt for %s: %s->%s",
+			 fu_device_get_id (self),
+			 fwupd_version_format_to_string (fu_device_get_version_format (self)),
+			 fwupd_version_format_to_string (fmt));
+	}
+	fwupd_device_set_version_format (FWUPD_DEVICE (self), fmt);
+}
+
+/**
  * fu_device_set_version:
  * @self: A #FuDevice
  * @version: (allow-none): a string, e.g. `1.2.3`
- * @fmt: a #FwupdVersionFormat, e.g. %FWUPD_VERSION_FORMAT_TRIPLET
  *
  * Sets the device version, sanitizing the string if required.
  *
  * Since: 1.2.9
  **/
 void
-fu_device_set_version (FuDevice *self, const gchar *version, FwupdVersionFormat fmt)
+fu_device_set_version (FuDevice *self, const gchar *version)
 {
 	g_autofree gchar *version_safe = NULL;
 	g_autoptr(GError) error = NULL;
@@ -1388,11 +1411,103 @@ fu_device_set_version (FuDevice *self, const gchar *version, FwupdVersionFormat 
 	}
 
 	/* print a console warning for an invalid version, if semver */
-	if (!fu_common_version_verify_format (version_safe, fmt, &error))
+	if (!fu_common_version_verify_format (version_safe, fu_device_get_version_format (self), &error))
 		g_warning ("%s", error->message);
 
-	fu_device_set_version_format (self, fmt);
-	fwupd_device_set_version (FWUPD_DEVICE (self), version_safe);
+	/* if different */
+	if (g_strcmp0 (fu_device_get_version (self), version_safe) != 0) {
+		if (fu_device_get_version (self) != NULL) {
+			g_debug ("changing version for %s: %s->%s",
+				 fu_device_get_id (self),
+				 fu_device_get_version (self),
+				 version_safe);
+		}
+		fwupd_device_set_version (FWUPD_DEVICE (self), version_safe);
+	}
+}
+
+/**
+ * fu_device_set_version_lowest:
+ * @self: A #FuDevice
+ * @version: (allow-none): a string, e.g. `1.2.3`
+ *
+ * Sets the device lowest version, sanitizing the string if required.
+ *
+ * Since: 1.3.9
+ **/
+void
+fu_device_set_version_lowest (FuDevice *self, const gchar *version)
+{
+	g_autofree gchar *version_safe = NULL;
+	g_autoptr(GError) error = NULL;
+
+	g_return_if_fail (FU_IS_DEVICE (self));
+
+	/* sanitize if required */
+	if (fu_device_has_flag (self, FWUPD_DEVICE_FLAG_ENSURE_SEMVER)) {
+		version_safe = fu_common_version_ensure_semver (version);
+		if (g_strcmp0 (version, version_safe) != 0)
+			g_debug ("converted '%s' to '%s'", version, version_safe);
+	} else {
+		version_safe = g_strdup (version);
+	}
+
+	/* print a console warning for an invalid version, if semver */
+	if (!fu_common_version_verify_format (version_safe, fu_device_get_version_format (self), &error))
+		g_warning ("%s", error->message);
+
+	/* if different */
+	if (g_strcmp0 (fu_device_get_version_lowest (self), version_safe) != 0) {
+		if (fu_device_get_version_lowest (self) != NULL) {
+			g_debug ("changing version lowest for %s: %s->%s",
+				 fu_device_get_id (self),
+				 fu_device_get_version_lowest (self),
+				 version_safe);
+		}
+		fwupd_device_set_version_lowest (FWUPD_DEVICE (self), version_safe);
+	}
+}
+
+/**
+ * fu_device_set_version_bootloader:
+ * @self: A #FuDevice
+ * @version: (allow-none): a string, e.g. `1.2.3`
+ *
+ * Sets the device bootloader version, sanitizing the string if required.
+ *
+ * Since: 1.3.9
+ **/
+void
+fu_device_set_version_bootloader (FuDevice *self, const gchar *version)
+{
+	g_autofree gchar *version_safe = NULL;
+	g_autoptr(GError) error = NULL;
+
+	g_return_if_fail (FU_IS_DEVICE (self));
+
+	/* sanitize if required */
+	if (fu_device_has_flag (self, FWUPD_DEVICE_FLAG_ENSURE_SEMVER)) {
+		version_safe = fu_common_version_ensure_semver (version);
+		if (g_strcmp0 (version, version_safe) != 0)
+			g_debug ("converted '%s' to '%s'", version, version_safe);
+	} else {
+		version_safe = g_strdup (version);
+	}
+
+	/* print a console warning for an invalid version, if semver */
+	if (!fu_common_version_verify_format (version_safe, fu_device_get_version_format (self), &error))
+		g_warning ("%s", error->message);
+
+	/* if different */
+	if (g_strcmp0 (fu_device_get_version_bootloader (self), version_safe) != 0) {
+		if (fu_device_get_version_bootloader (self) != NULL) {
+			g_debug ("changing version for %s: %s->%s",
+				 fu_device_get_id (self),
+				 fu_device_get_version_bootloader (self),
+				 version_safe);
+		}
+		fwupd_device_set_version_bootloader (FWUPD_DEVICE (self), version_safe);
+	}
 }
 
 /**

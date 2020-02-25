@@ -624,7 +624,7 @@ fu_synaptics_cxaudio_device_setup (FuDevice *device, GError **error)
 	}
 	version_patch = g_strdup_printf ("%02X-%02X-%02X",
 					 verbuf_patch[0], verbuf_patch[1], verbuf_patch[2]);
-	fu_device_set_version (device, version_patch, FWUPD_VERSION_FORMAT_PLAIN);
+	fu_device_set_version (device, version_patch);
 
 	/* find out if patch supports additional capabilities (optional) */
 	cap_str = g_usb_device_get_string_descriptor (usb_device,
@@ -850,6 +850,7 @@ fu_synaptics_cxaudio_device_init (FuSynapticsCxaudioDevice *self)
 	self->sw_reset_supported = TRUE;
 	fu_device_add_icon (FU_DEVICE (self), "audio-card");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_install_duration (FU_DEVICE (self), 3); /* seconds */
 	fu_device_set_protocol (FU_DEVICE (self), "com.synaptics.cxaudio");
 	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);

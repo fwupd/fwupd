@@ -63,14 +63,6 @@ fu_solokey_device_exchange (GByteArray *req, guint8 cmd, guint32 addr, GByteArra
 }
 
 static gboolean
-fu_solokey_device_probe (FuUsbDevice *device, GError **error)
-{
-	/* always disregard the bcdVersion */
-	fu_device_set_version (FU_DEVICE (device), NULL, FWUPD_VERSION_FORMAT_UNKNOWN);
-	return TRUE;
-}
-
-static gboolean
 fu_solokey_device_open (FuUsbDevice *device, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
@@ -124,7 +116,7 @@ fu_solokey_device_open (FuUsbDevice *device, GError **error)
 		fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 		fu_device_remove_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
 	} else {
-		fu_device_set_version (FU_DEVICE (device), split[1], FWUPD_VERSION_FORMAT_TRIPLET);
+		fu_device_set_version (FU_DEVICE (device), split[1]);
 		fu_device_remove_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 		fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
 	}
@@ -487,6 +479,7 @@ fu_solokey_device_init (FuSolokeyDevice *self)
 	self->cid = 0xffffffff;
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_protocol (FU_DEVICE (self), "com.solokeys");
 	fu_device_set_name (FU_DEVICE (self), "Solo Secure");
 	fu_device_set_summary (FU_DEVICE (self), "An open source FIDO2 security key");
@@ -503,5 +496,4 @@ fu_solokey_device_class_init (FuSolokeyDeviceClass *klass)
 	klass_device->setup = fu_solokey_device_setup;
 	klass_usb_device->open = fu_solokey_device_open;
 	klass_usb_device->close = fu_solokey_device_close;
-	klass_usb_device->probe = fu_solokey_device_probe;
 }

@@ -125,7 +125,7 @@ fu_wacom_aes_device_setup (FuDevice *device, GError **error)
 
 	/* get firmware version */
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		fu_device_set_version (device, "0.0", FWUPD_VERSION_FORMAT_PAIR);
+		fu_device_set_version (device, "0.0");
 		/* get the recovery PID if supported */
 		if (!fu_wacom_aes_add_recovery_hwid (device, &error_local))
 			g_debug ("failed to get HwID: %s", error_local->message);
@@ -142,7 +142,7 @@ fu_wacom_aes_device_setup (FuDevice *device, GError **error)
 			return FALSE;
 		fw_ver = fu_common_read_uint16 (data + 11, G_LITTLE_ENDIAN);
 		version = g_strdup_printf ("%04x.%02x", fw_ver, data[13]);
-		fu_device_set_version (device, version, FWUPD_VERSION_FORMAT_PAIR);
+		fu_device_set_version (device, version);
 	}
 
 	/* success */
@@ -236,6 +236,7 @@ static void
 fu_wacom_aes_device_init (FuWacomAesDevice *self)
 {
 	fu_device_set_name (FU_DEVICE (self), "Wacom AES Device");
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PAIR);
 }
 
 static void

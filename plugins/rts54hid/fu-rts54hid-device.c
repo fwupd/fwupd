@@ -246,7 +246,7 @@ fu_rts54hid_device_ensure_status (FuRts54HidDevice *self, GError **error)
 
 	/* hub version is more accurate than bcdVersion */
 	version = g_strdup_printf ("%x.%x", buf[0x40 + 10], buf[0x40 + 11]);
-	fu_device_set_version (FU_DEVICE (self), version, FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_set_version (FU_DEVICE (self), version);
 	return TRUE;
 }
 
@@ -378,6 +378,7 @@ static void
 fu_rts54hid_device_init (FuRts54HidDevice *self)
 {
 	fu_device_set_protocol (FU_DEVICE (self), "com.realtek.rts54");
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PAIR);
 }
 
 static void

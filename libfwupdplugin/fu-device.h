@@ -106,9 +106,6 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_set_update_state(d,v)		fwupd_device_set_update_state(FWUPD_DEVICE(d),v)
 #define fu_device_set_vendor(d,v)		fwupd_device_set_vendor(FWUPD_DEVICE(d),v)
 #define fu_device_set_vendor_id(d,v)		fwupd_device_set_vendor_id(FWUPD_DEVICE(d),v)
-#define fu_device_set_version_lowest(d,v)	fwupd_device_set_version_lowest(FWUPD_DEVICE(d),v)
-#define fu_device_set_version_bootloader(d,v)	fwupd_device_set_version_bootloader(FWUPD_DEVICE(d),v)
-#define fu_device_set_version_format(d,v)	fwupd_device_set_version_format(FWUPD_DEVICE(d),v)
 #define fu_device_set_version_raw(d,v)		fwupd_device_set_version_raw(FWUPD_DEVICE(d),v)
 #define fu_device_set_version_lowest_raw(d,v)	fwupd_device_set_version_lowest_raw(FWUPD_DEVICE(d),v)
 #define fu_device_set_version_bootloader_raw(d,v)	fwupd_device_set_version_bootloader_raw(FWUPD_DEVICE(d),v)
@@ -183,9 +180,14 @@ void		 fu_device_set_metadata_integer		(FuDevice	*self,
 							 guint		 value);
 void		 fu_device_set_id			(FuDevice	*self,
 							 const gchar	*id);
-void		 fu_device_set_version			(FuDevice	*self,
-							 const gchar	*version,
+void		 fu_device_set_version_format		(FuDevice	*self,
 							 FwupdVersionFormat fmt);
+void		 fu_device_set_version			(FuDevice	*self,
+							 const gchar	*version);
+void		 fu_device_set_version_lowest		(FuDevice	*self,
+							 const gchar	*version);
+void		 fu_device_set_version_bootloader	(FuDevice	*self,
+							 const gchar	*version);
 const gchar	*fu_device_get_physical_id		(FuDevice	*self);
 void		 fu_device_set_physical_id		(FuDevice	*self,
 							 const gchar	*physical_id);

@@ -293,7 +293,7 @@ fu_vli_pd_device_setup (FuVliDevice *device, GError **error)
 	version_raw = fu_common_read_uint32 (verbuf, G_BIG_ENDIAN);
 	fu_device_set_version_raw (FU_DEVICE (self), version_raw);
 	version_str = fu_common_version_from_uint32 (version_raw, FWUPD_VERSION_FORMAT_QUAD);
-	fu_device_set_version (FU_DEVICE (self), version_str, FWUPD_VERSION_FORMAT_QUAD);
+	fu_device_set_version (FU_DEVICE (self), version_str);
 
 	/* get device kind if not already in ROM mode */
 	if (fu_vli_device_get_kind (device) == FU_VLI_DEVICE_KIND_UNKNOWN) {
@@ -519,6 +519,7 @@ fu_vli_pd_device_init (FuVliPdDevice *self)
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_vli_device_set_spi_auto_detect (FU_VLI_DEVICE (self), FALSE);
 }
 

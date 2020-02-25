@@ -236,7 +236,7 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 		fu_device_set_vendor (device, mm_modem_get_manufacturer (modem));
 	if (mm_modem_get_model (modem) != NULL)
 		fu_device_set_name (device, mm_modem_get_model (modem));
-	fu_device_set_version (device, version, FWUPD_VERSION_FORMAT_PLAIN);
+	fu_device_set_version (device, version);
 	for (guint i = 0; device_ids[i] != NULL; i++)
 		fu_device_add_instance_id (device, device_ids[i]);
 
@@ -710,6 +710,7 @@ fu_mm_device_init (FuMmDevice *self)
 {
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION);
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_summary (FU_DEVICE (self), "Mobile broadband device");
 	fu_device_add_icon (FU_DEVICE (self), "network-modem");
 }
@@ -804,7 +805,7 @@ fu_mm_device_udev_new (MMManager *manager,
 	fu_device_set_physical_id (FU_DEVICE (self), info->physical_id);
 	fu_device_set_vendor (FU_DEVICE (self), info->vendor);
 	fu_device_set_name (FU_DEVICE (self), info->name);
-	fu_device_set_version (FU_DEVICE (self), info->version, FWUPD_VERSION_FORMAT_PLAIN);
+	fu_device_set_version (FU_DEVICE (self), info->version);
 	self->update_methods = info->update_methods;
 	self->detach_fastboot_at = g_strdup (info->detach_fastboot_at);
 	self->port_at_ifnum = info->port_at_ifnum;

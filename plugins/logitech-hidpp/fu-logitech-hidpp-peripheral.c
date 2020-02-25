@@ -343,8 +343,7 @@ fu_logitech_hidpp_peripheral_fetch_firmware_info (FuLogitechHidPpPeripheral *sel
 					     build);
 		g_debug ("firmware entity 0x%02x version is %s", i, version);
 		if (msg->data[0] == 0) {
-			fu_device_set_version (FU_DEVICE (self), version,
-					       FWUPD_VERSION_FORMAT_PLAIN);
+			fu_device_set_version (FU_DEVICE (self), version);
 			self->cached_fw_entity = i;
 		} else if (msg->data[0] == 1) {
 			fu_device_set_version_bootloader (FU_DEVICE (self), version);
@@ -596,9 +595,7 @@ fu_logitech_hidpp_peripheral_setup (FuDevice *device, GError **error)
 		fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 		if (fu_device_get_version (device) == NULL) {
 			g_debug ("repairing device in bootloader mode");
-			fu_device_set_version (FU_DEVICE (device),
-					       "MPK00.00_B0000",
-					       FWUPD_VERSION_FORMAT_PLAIN);
+			fu_device_set_version (FU_DEVICE (device), "MPK00.00_B0000");
 		}
 	}
 
@@ -1022,6 +1019,7 @@ fu_logitech_hidpp_peripheral_init (FuLogitechHidPpPeripheral *self)
 	fu_device_add_parent_guid (FU_DEVICE (self), "HIDRAW\\VEN_046D&DEV_C52B");
 	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_protocol (FU_DEVICE (self), "com.logitech.unifying");
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PLAIN);
 
 	/* there are a lot of unifying peripherals, but not all respond
 	 * well to opening -- so limit to ones with issued updates */

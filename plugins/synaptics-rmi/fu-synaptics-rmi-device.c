@@ -578,8 +578,8 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 				  f01_basic->data[2],
 				  f01_basic->data[3],
 				  priv->flash.build_id);
-	fu_device_set_version (device, fw_ver, FWUPD_VERSION_FORMAT_TRIPLET);
-	bl_ver = g_strdup_printf ("%u.0", priv->flash.bootloader_id[1]);
+	fu_device_set_version (device, fw_ver);
+	bl_ver = g_strdup_printf ("%u.0.0", priv->flash.bootloader_id[1]);
 	fu_device_set_version_bootloader (device, bl_ver);
 
 	/* success */
@@ -1000,6 +1000,7 @@ fu_synaptics_rmi_device_init (FuSynapticsRmiDevice *self)
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_name (FU_DEVICE (self), "Touchpad");
 	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_TRIPLET);
 	priv->functions = g_ptr_array_new_with_free_func (g_free);
 }
 

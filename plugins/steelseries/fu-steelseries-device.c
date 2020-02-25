@@ -87,7 +87,7 @@ fu_steelseries_device_setup (FuDevice *device, GError **error)
 		return FALSE;
 	}
 	version = g_strdup_printf ("%i.%i.%i", data[0], data[1], data[2]);
-	fu_device_set_version (FU_DEVICE (device), version, FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version (FU_DEVICE (device), version);
 
 	/* success */
 	return TRUE;
@@ -114,6 +114,7 @@ fu_steelseries_device_close (FuUsbDevice *device, GError **error)
 static void
 fu_steelseries_device_init (FuSteelseriesDevice *device)
 {
+	fu_device_set_version_format (FU_DEVICE (device), FWUPD_VERSION_FORMAT_TRIPLET);
 }
 
 static void

@@ -77,8 +77,8 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		return FALSE;
 	}
 	dev = fu_device_new ();
-
-	fu_device_set_version (dev, triplet, FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version_format (dev, FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version (dev, triplet);
 	fu_device_set_summary (dev, "Open Source system boot firmware");
 	fu_device_set_id (dev, "coreboot");
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);

@@ -190,7 +190,8 @@ fu_nvme_device_set_version (FuNvmeDevice *self, const gchar *version, GError **e
 
 	/* unset */
 	if (fmt == FWUPD_VERSION_FORMAT_UNKNOWN || fmt == FWUPD_VERSION_FORMAT_PLAIN) {
-		fu_device_set_version (FU_DEVICE (self), version, FWUPD_VERSION_FORMAT_PLAIN);
+		fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PLAIN);
+		fu_device_set_version (FU_DEVICE (self), version);
 		return TRUE;
 	}
 
@@ -207,7 +208,8 @@ fu_nvme_device_set_version (FuNvmeDevice *self, const gchar *version, GError **e
 			return FALSE;
 		}
 		version_new = fu_common_version_from_uint32 (tmp, FWUPD_VERSION_FORMAT_QUAD);
-		fu_device_set_version (FU_DEVICE (self), version_new, fmt);
+		fu_device_set_version_format (FU_DEVICE (self), fmt);
+		fu_device_set_version (FU_DEVICE (self), version_new);
 		return TRUE;
 	}
 
