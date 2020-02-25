@@ -421,9 +421,15 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	for (guint i = 0; i < array->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (array, i);
+		FwupdRelease *rel;
+		GNode *child;
 		if (!fu_util_filter_device (priv, dev))
 			continue;
-		g_node_append_data (root, dev);
+		child = g_node_append_data (root, dev);
+		rel = fwupd_device_get_release_default (dev);
+		if (rel != NULL)
+			g_node_append_data (child, rel);
+
 	}
 	fu_util_print_tree (root, title);
 
