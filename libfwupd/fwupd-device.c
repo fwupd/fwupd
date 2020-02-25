@@ -50,6 +50,8 @@ typedef struct {
 	gchar				*version_bootloader;
 	FwupdVersionFormat		 version_format;
 	guint64				 version_raw;
+	guint64				 version_lowest_raw;
+	guint64				 version_bootloader_raw;
 	GPtrArray			*checksums;
 	GPtrArray			*children;
 	guint32				 flashes_left;
@@ -727,6 +729,41 @@ fwupd_device_set_version_lowest (FwupdDevice *device, const gchar *version_lowes
 }
 
 /**
+ * fwupd_device_get_version_lowest_raw:
+ * @device: A #FwupdDevice
+ *
+ * Gets the lowest version of firmware the device will accept in raw format.
+ *
+ * Returns: integer version number, or %0 if unset
+ *
+ * Since: 1.3.9
+ **/
+guint64
+fwupd_device_get_version_lowest_raw (FwupdDevice *device)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (device), 0);
+	return priv->version_lowest_raw;
+}
+
+/**
+ * fwupd_device_set_version_lowest_raw:
+ * @device: A #FwupdDevice
+ * @version_lowest_raw: the raw hardware version
+ *
+ * Sets the raw lowest version number from the hardware before converted to a string.
+ *
+ * Since: 1.3.9
+ **/
+void
+fwupd_device_set_version_lowest_raw (FwupdDevice *device, guint64 version_lowest_raw)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	priv->version_lowest_raw = version_lowest_raw;
+}
+
+/**
  * fwupd_device_get_version_bootloader:
  * @device: A #FwupdDevice
  *
@@ -760,6 +797,41 @@ fwupd_device_set_version_bootloader (FwupdDevice *device, const gchar *version_b
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
 	g_free (priv->version_bootloader);
 	priv->version_bootloader = g_strdup (version_bootloader);
+}
+
+/**
+ * fwupd_device_get_version_bootloader_raw:
+ * @device: A #FwupdDevice
+ *
+ * Gets the bootloader version of firmware the device will accept in raw format.
+ *
+ * Returns: integer version number, or %0 if unset
+ *
+ * Since: 1.3.9
+ **/
+guint64
+fwupd_device_get_version_bootloader_raw (FwupdDevice *device)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (device), 0);
+	return priv->version_bootloader_raw;
+}
+
+/**
+ * fwupd_device_set_version_bootloader_raw:
+ * @device: A #FwupdDevice
+ * @version_bootloader_raw: the raw hardware version
+ *
+ * Sets the raw bootloader version number from the hardware before converted to a string.
+ *
+ * Since: 1.3.9
+ **/
+void
+fwupd_device_set_version_bootloader_raw (FwupdDevice *device, guint64 version_bootloader_raw)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	priv->version_bootloader_raw = version_bootloader_raw;
 }
 
 /**
@@ -1137,6 +1209,10 @@ fwupd_device_incorporate (FwupdDevice *self, FwupdDevice *donor)
 		fwupd_device_set_version_format (self, priv_donor->version_format);
 	if (priv->version_raw == 0)
 		fwupd_device_set_version_raw (self, priv_donor->version_raw);
+	if (priv->version_lowest_raw == 0)
+		fwupd_device_set_version_lowest_raw (self, priv_donor->version_lowest_raw);
+	if (priv->version_bootloader_raw == 0)
+		fwupd_device_set_version_bootloader_raw (self, priv_donor->version_bootloader_raw);
 	for (guint i = 0; i < priv_donor->guids->len; i++) {
 		const gchar *tmp = g_ptr_array_index (priv_donor->guids, i);
 		fwupd_device_add_guid (self, tmp);
@@ -1284,6 +1360,16 @@ fwupd_device_to_variant_full (FwupdDevice *device, FwupdDeviceFlags flags)
 	if (priv->version_raw > 0) {
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_VERSION_RAW,
+				       g_variant_new_uint64 (priv->version_raw));
+	}
+	if (priv->version_lowest_raw > 0) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_VERSION_LOWEST_RAW,
+				       g_variant_new_uint64 (priv->version_raw));
+	}
+	if (priv->version_bootloader_raw > 0) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_VERSION_BOOTLOADER_RAW,
 				       g_variant_new_uint64 (priv->version_raw));
 	}
 	if (priv->flashes_left > 0) {
@@ -1495,6 +1581,14 @@ fwupd_device_from_key_value (FwupdDevice *device, const gchar *key, GVariant *va
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_VERSION_RAW) == 0) {
 		fwupd_device_set_version_raw (device, g_variant_get_uint64 (value));
+		return;
+	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_VERSION_LOWEST_RAW) == 0) {
+		fwupd_device_set_version_lowest_raw (device, g_variant_get_uint64 (value));
+		return;
+	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_VERSION_BOOTLOADER_RAW) == 0) {
+		fwupd_device_set_version_bootloader_raw (device, g_variant_get_uint64 (value));
 		return;
 	}
 }
@@ -1880,6 +1974,10 @@ fwupd_device_to_json (FwupdDevice *device, JsonBuilder *builder)
 	fwupd_device_json_add_int (builder, FWUPD_RESULT_KEY_FLASHES_LEFT, priv->flashes_left);
 	if (priv->version_raw > 0)
 		fwupd_device_json_add_int (builder, FWUPD_RESULT_KEY_VERSION_RAW, priv->version_raw);
+	if (priv->version_lowest_raw > 0)
+		fwupd_device_json_add_int (builder, FWUPD_RESULT_KEY_VERSION_LOWEST_RAW, priv->version_lowest_raw);
+	if (priv->version_bootloader_raw > 0)
+		fwupd_device_json_add_int (builder, FWUPD_RESULT_KEY_VERSION_BOOTLOADER_RAW, priv->version_bootloader_raw);
 	if (priv->icons->len > 0) {
 		json_builder_set_member_name (builder, "Icons");
 		json_builder_begin_array (builder);
@@ -1906,6 +2004,17 @@ fwupd_device_to_json (FwupdDevice *device, JsonBuilder *builder)
 		}
 		json_builder_end_array (builder);
 	}
+}
+
+static gchar *
+fwupd_device_verstr_raw (guint64 value_raw)
+{
+	if (value_raw > 0xffffffff) {
+		return g_strdup_printf ("0x%08x%08x",
+				        (guint) (value_raw >> 32),
+				        (guint) (value_raw & 0xffffffff));
+	}
+	return g_strdup_printf ("0x%08x", (guint) value_raw);
 }
 
 /**
@@ -1980,15 +2089,16 @@ fwupd_device_to_string (FwupdDevice *device)
 	if (priv->flashes_left < 2)
 		fwupd_pad_kv_int (str, FWUPD_RESULT_KEY_FLASHES_LEFT, priv->flashes_left);
 	if (priv->version_raw > 0) {
-		g_autofree gchar *tmp = NULL;
-		if (priv->version_raw > 0xffffffff) {
-			tmp = g_strdup_printf ("0x%08x%08x",
-					       (guint) (priv->version_raw >> 32),
-					       (guint) (priv->version_raw & 0xffffffff));
-		} else {
-			tmp = g_strdup_printf ("0x%08x", (guint) priv->version_raw);
-		}
+		g_autofree gchar *tmp = fwupd_device_verstr_raw (priv->version_raw);
 		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_VERSION_RAW, tmp);
+	}
+	if (priv->version_lowest_raw > 0) {
+		g_autofree gchar *tmp = fwupd_device_verstr_raw (priv->version_lowest_raw);
+		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_VERSION_LOWEST_RAW, tmp);
+	}
+	if (priv->version_bootloader_raw > 0) {
+		g_autofree gchar *tmp = fwupd_device_verstr_raw (priv->version_bootloader_raw);
+		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_VERSION_BOOTLOADER_RAW, tmp);
 	}
 	if (priv->icons->len > 0) {
 		g_autoptr(GString) tmp = g_string_new (NULL);
