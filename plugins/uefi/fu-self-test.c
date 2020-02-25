@@ -13,7 +13,6 @@
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
 #include "fu-uefi-pcrs.h"
-#include "fu-uefi-vars.h"
 
 #include "fwupd-error.h"
 
@@ -167,66 +166,6 @@ fu_uefi_device_func (void)
 }
 
 static void
-fu_uefi_vars_func (void)
-{
-	gboolean ret;
-	gsize sz = 0;
-	guint32 attr = 0;
-	g_autofree guint8 *data = NULL;
-	g_autoptr(GError) error = NULL;
-
-	/* check supported */
-	ret = fu_uefi_vars_supported (&error);
-	g_assert_no_error (error);
-	g_assert_true (ret);
-
-	/* check existing keys */
-	g_assert_false (fu_uefi_vars_exists (FU_UEFI_VARS_GUID_EFI_GLOBAL, "NotGoingToExist"));
-	g_assert_true (fu_uefi_vars_exists (FU_UEFI_VARS_GUID_EFI_GLOBAL, "SecureBoot"));
-
-	/* write and read a key */
-	ret = fu_uefi_vars_set_data (FU_UEFI_VARS_GUID_EFI_GLOBAL, "Test",
-				     (guint8 *) "1", 1,
-				     FU_UEFI_VARS_ATTR_NON_VOLATILE |
-				     FU_UEFI_VARS_ATTR_RUNTIME_ACCESS,
-				     &error);
-	g_assert_no_error (error);
-	g_assert_true (ret);
-	ret = fu_uefi_vars_get_data (FU_UEFI_VARS_GUID_EFI_GLOBAL, "Test",
-				     &data, &sz, &attr, &error);
-	g_assert_no_error (error);
-	g_assert_true (ret);
-	g_assert_cmpint (sz, ==, 1);
-	g_assert_cmpint (attr, ==, FU_UEFI_VARS_ATTR_NON_VOLATILE |
-				   FU_UEFI_VARS_ATTR_RUNTIME_ACCESS);
-	g_assert_cmpint (data[0], ==, '1');
-
-	/* delete single key */
-	ret = fu_uefi_vars_delete (FU_UEFI_VARS_GUID_EFI_GLOBAL, "Test", &error);
-	g_assert_no_error (error);
-	g_assert_true (ret);
-	g_assert_false (fu_uefi_vars_exists (FU_UEFI_VARS_GUID_EFI_GLOBAL, "Test"));
-
-	/* delete multiple keys */
-	ret = fu_uefi_vars_set_data (FU_UEFI_VARS_GUID_EFI_GLOBAL, "Test1", (guint8 *)"1", 1, 0, &error);
-	g_assert_no_error (error);
-	g_assert_true (ret);
-	ret = fu_uefi_vars_set_data (FU_UEFI_VARS_GUID_EFI_GLOBAL, "Test2", (guint8 *)"1", 1, 0, &error);
-	g_assert_no_error (error);
-	g_assert_true (ret);
-	ret = fu_uefi_vars_delete_with_glob (FU_UEFI_VARS_GUID_EFI_GLOBAL, "Test*", &error);
-	g_assert_no_error (error);
-	g_assert_true (ret);
-	g_assert_false (fu_uefi_vars_exists (FU_UEFI_VARS_GUID_EFI_GLOBAL, "Test1"));
-	g_assert_false (fu_uefi_vars_exists (FU_UEFI_VARS_GUID_EFI_GLOBAL, "Test2"));
-
-	/* read a key that doesn't exist */
-	ret = fu_uefi_vars_get_data (FU_UEFI_VARS_GUID_EFI_GLOBAL, "NotGoingToExist", NULL, NULL, NULL, &error);
-	g_assert_error (error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND);
-	g_assert_false (ret);
-}
-
-static void
 fu_uefi_plugin_func (void)
 {
 	FuUefiDevice *dev;
@@ -317,7 +256,6 @@ main (int argc, char **argv)
 	g_test_add_func ("/uefi/pcrs1.2", fu_uefi_pcrs_1_2_func);
 	g_test_add_func ("/uefi/pcrs2.0", fu_uefi_pcrs_2_0_func);
 	g_test_add_func ("/uefi/ucs2", fu_uefi_ucs2_func);
-	g_test_add_func ("/uefi/variable", fu_uefi_vars_func);
 	g_test_add_func ("/uefi/bgrt", fu_uefi_bgrt_func);
 	g_test_add_func ("/uefi/framebuffer", fu_uefi_framebuffer_func);
 	g_test_add_func ("/uefi/bitmap", fu_uefi_bitmap_func);

@@ -18,7 +18,7 @@
 #include "fu-uefi-bgrt.h"
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
-#include "fu-uefi-vars.h"
+#include "fu-efivar.h"
 
 #ifndef HAVE_GIO_2_55_0
 #pragma clang diagnostic push
@@ -208,7 +208,7 @@ fu_plugin_uefi_write_splash_data (FuPlugin *plugin,
 
 	/* save to a predicatable filename */
 	directory = fu_uefi_get_esp_path_for_os (esp_path);
-	basename = g_strdup_printf ("fwupd-%s.cap", FU_UEFI_VARS_GUID_UX_CAPSULE);
+	basename = g_strdup_printf ("fwupd-%s.cap", FU_EFIVAR_GUID_UX_CAPSULE);
 	fn = g_build_filename (directory, "fw", basename, NULL);
 	if (!fu_common_mkdir_parent (fn, error))
 		return FALSE;
@@ -289,7 +289,7 @@ fu_plugin_uefi_update_splash (FuPlugin *plugin, FuDevice *device, GError **error
 	/* no UX capsule support, so deleting var if it exists */
 	if (fu_device_has_custom_flag (device, "no-ux-capsule")) {
 		g_debug ("not providing UX capsule");
-		return fu_uefi_vars_delete (FU_UEFI_VARS_GUID_FWUPDATE,
+		return fu_efivar_delete (FU_EFIVAR_GUID_FWUPDATE,
 					    "fwupd-ux-capsule", error);
 	}
 
@@ -545,7 +545,7 @@ static void
 fu_plugin_uefi_test_secure_boot (FuPlugin *plugin)
 {
 	const gchar *result_str = "Disabled";
-	if (fu_uefi_secure_boot_enabled ())
+	if (fu_efivar_secure_boot_enabled ())
 		result_str = "Enabled";
 	g_debug ("SecureBoot is: %s", result_str);
 	fu_plugin_add_report_metadata (plugin, "SecureBoot", result_str);
@@ -763,7 +763,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	g_autoptr(GPtrArray) entries = NULL;
 
 	/* are the EFI dirs set up so we can update each device */
-	if (!fu_uefi_vars_supported (&error_local)) {
+	if (!fu_efivar_supported (&error_local)) {
 		const gchar *reason = "Firmware can not be updated in legacy mode, switch to UEFI mode";
 		g_warning ("%s", error_local->message);
 		return fu_plugin_uefi_create_dummy (plugin, reason, error);
@@ -786,7 +786,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	/* if secure boot is enabled ensure we have a signed fwupd.efi */
 	bootloader = fu_uefi_get_built_app_path (&error_bootloader);
 	if (bootloader == NULL) {
-		if (fu_uefi_secure_boot_enabled ())
+		if (fu_efivar_secure_boot_enabled ())
 			g_prefix_error (&error_bootloader, "missing signed bootloader for secure boot: ");
 		g_warning ("%s", error_bootloader->message);
 	}

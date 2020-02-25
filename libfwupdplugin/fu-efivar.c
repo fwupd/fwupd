@@ -9,35 +9,48 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <linux/fs.h>
 #include <string.h>
+#ifndef _WIN32
+#include <linux/fs.h>
 #include <sys/ioctl.h>
 #include <gio/gunixinputstream.h>
 #include <gio/gunixoutputstream.h>
+#endif
 
 #include "fu-common.h"
-#include "fu-uefi-vars.h"
+#include "fu-efivar.h"
 
 #include "fwupd-error.h"
 
 static gchar *
-fu_uefi_vars_get_path (void)
+fu_efivar_get_path (void)
 {
 	g_autofree gchar *sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
 	return g_build_filename (sysfsfwdir, "efi", "efivars", NULL);
 }
 
 static gchar *
-fu_uefi_vars_get_filename (const gchar *guid, const gchar *name)
+fu_efivar_get_filename (const gchar *guid, const gchar *name)
 {
-	g_autofree gchar *efivardir = fu_uefi_vars_get_path ();
+	g_autofree gchar *efivardir = fu_efivar_get_path ();
 	return g_strdup_printf ("%s/%s-%s", efivardir, name, guid);
 }
 
+/**
+ * fu_efivar_supported:
+ * @error: #GError
+ *
+ * Determines if the kernel supports EFI variables
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.4.0
+ **/
 gboolean
-fu_uefi_vars_supported (GError **error)
+fu_efivar_supported (GError **error)
 {
-	g_autofree gchar *efivardir = fu_uefi_vars_get_path ();
+#ifndef _WIN32
+	g_autofree gchar *efivardir = fu_efivar_get_path ();
 	if (!g_file_test (efivardir, G_FILE_TEST_IS_DIR)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -47,14 +60,22 @@ fu_uefi_vars_supported (GError **error)
 		return FALSE;
 	}
 	return TRUE;
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "efivarfs not currently supported on Windows");
+	return FALSE;
+#endif
 }
 
 static gboolean
-fu_uefi_vars_set_immutable_fd (int fd,
-			       gboolean value,
-			       gboolean *value_old,
-			       GError **error)
+fu_efivar_set_immutable_fd (int fd,
+			     gboolean value,
+			     gboolean *value_old,
+			     GError **error)
 {
+#ifndef _WIN32
 	guint flags;
 	gboolean is_immutable;
 	int rc;
@@ -103,14 +124,22 @@ fu_uefi_vars_set_immutable_fd (int fd,
 		return FALSE;
 	}
 	return TRUE;
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "efivarfs not currently supported on Windows");
+	return FALSE;
+#endif
 }
 
 static gboolean
-fu_uefi_vars_set_immutable (const gchar *fn,
-			    gboolean value,
-			    gboolean *value_old,
-			    GError **error)
+fu_efivar_set_immutable (const gchar *fn,
+			  gboolean value,
+			  gboolean *value_old,
+			  GError **error)
 {
+#ifndef _WIN32
 	gint fd;
 	g_autoptr(GInputStream) istr = NULL;
 
@@ -125,29 +154,60 @@ fu_uefi_vars_set_immutable (const gchar *fn,
 		return FALSE;
 	}
 	istr = g_unix_input_stream_new (fd, TRUE);
-	return fu_uefi_vars_set_immutable_fd (fd, value, value_old, error);
+	return fu_efivar_set_immutable_fd (fd, value, value_old, error);
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "efivarfs not currently supported on Windows");
+	return FALSE;
+#endif
 }
 
+/**
+ * fu_efivar_delete:
+ * @guid: Globally unique identifier
+ * @name: Variable name
+ * @error: #GError
+ *
+ * Removes a variable from NVRAM
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.4.0
+ **/
 gboolean
-fu_uefi_vars_delete (const gchar *guid, const gchar *name, GError **error)
+fu_efivar_delete (const gchar *guid, const gchar *name, GError **error)
 {
-	g_autofree gchar *fn = fu_uefi_vars_get_filename (guid, name);
+	g_autofree gchar *fn = fu_efivar_get_filename (guid, name);
 	g_autoptr(GFile) file = g_file_new_for_path (fn);
 	if (!g_file_query_exists (file, NULL))
 		return TRUE;
-	if (!fu_uefi_vars_set_immutable (fn, FALSE, NULL, error)) {
+	if (!fu_efivar_set_immutable (fn, FALSE, NULL, error)) {
 		g_prefix_error (error, "failed to set %s as mutable: ", fn);
 		return FALSE;
 	}
 	return g_file_delete (file, NULL, error);
 }
 
+/**
+ * fu_efivar_delete_with_glob:
+ * @guid: Globally unique identifier
+ * @name_glob: Variable name
+ * @error: #GError
+ *
+ * Removes a group of variables from NVRAM
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.4.0
+ **/
 gboolean
-fu_uefi_vars_delete_with_glob (const gchar *guid, const gchar *name_glob, GError **error)
+fu_efivar_delete_with_glob (const gchar *guid, const gchar *name_glob, GError **error)
 {
 	const gchar *fn;
 	g_autofree gchar *nameguid_glob = NULL;
-	g_autofree gchar *efivardir = fu_uefi_vars_get_path ();
+	g_autofree gchar *efivardir = fu_efivar_get_path ();
 	g_autoptr(GDir) dir = g_dir_open (efivardir, 0, error);
 	if (dir == NULL)
 		return FALSE;
@@ -156,7 +216,7 @@ fu_uefi_vars_delete_with_glob (const gchar *guid, const gchar *name_glob, GError
 		if (fu_common_fnmatch (nameguid_glob, fn)) {
 			g_autofree gchar *keyfn = g_build_filename (efivardir, fn, NULL);
 			g_autoptr(GFile) file = g_file_new_for_path (keyfn);
-			if (!fu_uefi_vars_set_immutable (keyfn, FALSE, NULL, error)) {
+			if (!fu_efivar_set_immutable (keyfn, FALSE, NULL, error)) {
 				g_prefix_error (error, "failed to set %s as mutable: ", keyfn);
 				return FALSE;
 			}
@@ -167,22 +227,49 @@ fu_uefi_vars_delete_with_glob (const gchar *guid, const gchar *name_glob, GError
 	return TRUE;
 }
 
+/**
+ * fu_efivar_exists:
+ * @guid: Globally unique identifier
+ * @name: Variable name
+ *
+ * Test if a variable exists
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.4.0
+ **/
 gboolean
-fu_uefi_vars_exists (const gchar *guid, const gchar *name)
+fu_efivar_exists (const gchar *guid, const gchar *name)
 {
-	g_autofree gchar *fn = fu_uefi_vars_get_filename (guid, name);
+	g_autofree gchar *fn = fu_efivar_get_filename (guid, name);
 	return g_file_test (fn, G_FILE_TEST_EXISTS);
 }
 
+/**
+ * fu_efivar_get_data:
+ * @guid: Globally unique identifier
+ * @name: Variable name
+ * @data: Data to set
+ * @data_sz: Size of data
+ * @attr: Attributes
+ * @error: A #GError
+ *
+ * Gets the data from a UEFI variable in NVRAM
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.4.0
+ **/
 gboolean
-fu_uefi_vars_get_data (const gchar *guid, const gchar *name, guint8 **data,
+fu_efivar_get_data (const gchar *guid, const gchar *name, guint8 **data,
 		       gsize *data_sz, guint32 *attr, GError **error)
 {
+#ifndef _WIN32
 	gssize attr_sz;
 	gssize data_sz_tmp;
 	guint32 attr_tmp;
 	guint64 sz;
-	g_autofree gchar *fn = fu_uefi_vars_get_filename (guid, name);
+	g_autofree gchar *fn = fu_efivar_get_filename (guid, name);
 	g_autoptr(GFile) file = g_file_new_for_path (fn);
 	g_autoptr(GFileInfo) info = NULL;
 	g_autoptr(GInputStream) istr = NULL;
@@ -232,16 +319,39 @@ fu_uefi_vars_get_data (const gchar *guid, const gchar *name, guint8 **data,
 		*data = g_steal_pointer (&data_tmp);
 	}
 	return TRUE;
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "efivarfs not currently supported on Windows");
+	return FALSE;
+#endif
 }
 
+/**
+ * fu_efivar_set_data:
+ * @guid: Globally unique identifier
+ * @name: Variable name
+ * @data: Data to set
+ * @sz: Size of data
+ * @attr: Attributes
+ * @error: A #GError
+ *
+ * Sets the data to a UEFI variable in NVRAM
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.4.0
+ **/
 gboolean
-fu_uefi_vars_set_data (const gchar *guid, const gchar *name, const guint8 *data,
-		       gsize data_sz, guint32 attr, GError **error)
+fu_efivar_set_data (const gchar *guid, const gchar *name, const guint8 *data,
+		     gsize sz, guint32 attr, GError **error)
 {
+#ifndef _WIN32
 	int fd;
 	gboolean was_immutable;
-	g_autofree gchar *fn = fu_uefi_vars_get_filename (guid, name);
-	g_autofree guint8 *buf = g_malloc0 (sizeof(guint32) + data_sz);
+	g_autofree gchar *fn = fu_efivar_get_filename (guid, name);
+	g_autofree guint8 *buf = g_malloc0 (sizeof(guint32) + sz);
 	g_autoptr(GFile) file = g_file_new_for_path (fn);
 	g_autoptr(GOutputStream) ostr = NULL;
 
@@ -259,7 +369,7 @@ fu_uefi_vars_set_data (const gchar *guid, const gchar *name, const guint8 *data,
 			return FALSE;
 		}
 	}
-	if (!fu_uefi_vars_set_immutable (fn, FALSE, &was_immutable, error)) {
+	if (!fu_efivar_set_immutable (fn, FALSE, &was_immutable, error)) {
 		g_prefix_error (error, "failed to set %s as mutable: ", fn);
 		return FALSE;
 	}
@@ -276,18 +386,49 @@ fu_uefi_vars_set_data (const gchar *guid, const gchar *name, const guint8 *data,
 	}
 	ostr = g_unix_output_stream_new (fd, TRUE);
 	memcpy (buf, &attr, sizeof(attr));
-	memcpy (buf + sizeof(attr), data, data_sz);
-	if (g_output_stream_write (ostr, buf, sizeof(attr) + data_sz, NULL, error) < 0) {
+	memcpy (buf + sizeof(attr), data, sz);
+	if (g_output_stream_write (ostr, buf, sizeof(attr) + sz, NULL, error) < 0) {
 		g_prefix_error (error, "failed to write data to efivarfs: ");
 		return FALSE;
 	}
 
 	/* set as immutable again */
-	if (was_immutable && !fu_uefi_vars_set_immutable (fn, TRUE, NULL, error)) {
+	if (was_immutable && !fu_efivar_set_immutable (fn, TRUE, NULL, error)) {
 		g_prefix_error (error, "failed to set %s as immutable: ", fn);
 		return FALSE;
 	}
 
 	/* success */
 	return TRUE;
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "efivarfs not currently supported on Windows");
+	return FALSE;
+#endif
+}
+
+/**
+ * fu_efivar_secure_boot_enabled:
+ * @error: #GError
+ *
+ * Determines if secure boot was enabled
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.4.0
+ **/
+gboolean
+fu_efivar_secure_boot_enabled (void)
+{
+	gsize data_size = 0;
+	g_autofree guint8 *data = NULL;
+
+	if (!fu_efivar_get_data (FU_EFIVAR_GUID_EFI_GLOBAL, "SecureBoot",
+				    &data, &data_size, NULL, NULL))
+		return FALSE;
+	if (data_size >= 1 && data[0] & 1)
+		return TRUE;
+	return FALSE;
 }

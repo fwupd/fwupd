@@ -1540,6 +1540,66 @@ fu_firmware_func (void)
 				  "  Address:               0x400\n");
 }
 
+static void
+fu_efivar_func (void)
+{
+	gboolean ret;
+	gsize sz = 0;
+	guint32 attr = 0;
+	g_autofree guint8 *data = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* check supported */
+	ret = fu_efivar_supported (&error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+
+	/* check existing keys */
+	g_assert_false (fu_efivar_exists (FU_EFIVAR_GUID_EFI_GLOBAL, "NotGoingToExist"));
+	g_assert_true (fu_efivar_exists (FU_EFIVAR_GUID_EFI_GLOBAL, "SecureBoot"));
+
+	/* write and read a key */
+	ret = fu_efivar_set_data (FU_EFIVAR_GUID_EFI_GLOBAL, "Test",
+				     (guint8 *) "1", 1,
+				     FU_EFIVAR_ATTR_NON_VOLATILE |
+				     FU_EFIVAR_ATTR_RUNTIME_ACCESS,
+				     &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	ret = fu_efivar_get_data (FU_EFIVAR_GUID_EFI_GLOBAL, "Test",
+				     &data, &sz, &attr, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	g_assert_cmpint (sz, ==, 1);
+	g_assert_cmpint (attr, ==, FU_EFIVAR_ATTR_NON_VOLATILE |
+				   FU_EFIVAR_ATTR_RUNTIME_ACCESS);
+	g_assert_cmpint (data[0], ==, '1');
+
+	/* delete single key */
+	ret = fu_efivar_delete (FU_EFIVAR_GUID_EFI_GLOBAL, "Test", &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	g_assert_false (fu_efivar_exists (FU_EFIVAR_GUID_EFI_GLOBAL, "Test"));
+
+	/* delete multiple keys */
+	ret = fu_efivar_set_data (FU_EFIVAR_GUID_EFI_GLOBAL, "Test1", (guint8 *)"1", 1, 0, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	ret = fu_efivar_set_data (FU_EFIVAR_GUID_EFI_GLOBAL, "Test2", (guint8 *)"1", 1, 0, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	ret = fu_efivar_delete_with_glob (FU_EFIVAR_GUID_EFI_GLOBAL, "Test*", &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	g_assert_false (fu_efivar_exists (FU_EFIVAR_GUID_EFI_GLOBAL, "Test1"));
+	g_assert_false (fu_efivar_exists (FU_EFIVAR_GUID_EFI_GLOBAL, "Test2"));
+
+	/* read a key that doesn't exist */
+	ret = fu_efivar_get_data (FU_EFIVAR_GUID_EFI_GLOBAL, "NotGoingToExist", NULL, NULL, NULL, &error);
+	g_assert_error (error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND);
+	g_assert_false (ret);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -1578,6 +1638,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/common{spawn-timeout)", fu_common_spawn_timeout_func);
 	g_test_add_func ("/fwupd/common{firmware-builder}", fu_common_firmware_builder_func);
 	g_test_add_func ("/fwupd/common{kernel-lockdown}", fu_common_kernel_lockdown_func);
+	g_test_add_func ("/fwupd/efivar", fu_efivar_func);
 	g_test_add_func ("/fwupd/hwids", fu_hwids_func);
 	g_test_add_func ("/fwupd/smbios", fu_smbios_func);
 	g_test_add_func ("/fwupd/smbios3", fu_smbios3_func);
