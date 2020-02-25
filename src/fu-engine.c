@@ -97,6 +97,7 @@ struct _FuEngine
 	GHashTable		*approved_firmware;
 	GHashTable		*firmware_gtypes;
 	gchar			*host_machine_id;
+	JcatContext		*jcat_context;
 	gboolean		 loaded;
 };
 
@@ -1728,8 +1729,7 @@ fu_engine_install_release (FuEngine *self,
 	FuPlugin *plugin;
 	FwupdVersionFormat fmt;
 	GBytes *blob_fw;
-	const gchar *tmp = NULL;
-	g_autofree gchar *release_key = NULL;
+	const gchar *tmp;
 	g_autofree gchar *version_orig = NULL;
 	g_autofree gchar *version_rel = NULL;
 	g_autoptr(FuDevice) device_tmp = NULL;
@@ -1737,19 +1737,13 @@ fu_engine_install_release (FuEngine *self,
 	g_autoptr(GBytes) blob_fw2 = NULL;
 	g_autoptr(GError) error_local = NULL;
 
-	/* get the blob */
-	tmp = xb_node_query_attr (rel, "checksum[@target='content']", "filename", NULL);
-	if (tmp == NULL)
-		tmp = "firmware.bin";
-
-	/* not all devices have to use the same blob */
-	release_key = g_strdup_printf ("fwupd::ReleaseBlob(%s)", tmp);
-	blob_fw = xb_node_get_data (rel, release_key);
+	/* get per-release firmware blob */
+	blob_fw = xb_node_get_data (rel, "fwupd::FirmwareBlob");
 	if (blob_fw == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_READ,
-			     "Failed to get firmware blob using %s", tmp);
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "Failed to get firmware blob from release");
 		return FALSE;
 	}
 
@@ -2994,22 +2988,82 @@ fu_engine_remote_list_changed_cb (FuRemoteList *remote_list, FuEngine *self)
 	fu_engine_emit_changed (self);
 }
 
-static FuKeyringResult *
-fu_engine_get_existing_keyring_result (FuEngine *self,
-				       FuKeyring *kr,
-				       FwupdRemote *remote,
-				       GError **error)
+static gint
+fu_engine_sort_jcat_results_timestamp_cb (gconstpointer a, gconstpointer b)
+{
+	JcatResult *ra = *((JcatResult **) a);
+	JcatResult *rb = *((JcatResult **) b);
+	if (jcat_result_get_timestamp (ra) < jcat_result_get_timestamp (rb))
+		return -1;
+	if (jcat_result_get_timestamp (ra) > jcat_result_get_timestamp (rb))
+		return 1;
+	return 0;
+}
+
+static JcatResult *
+fu_engine_get_system_jcat_result (FuEngine *self, FwupdRemote *remote, GError **error)
 {
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GBytes) blob_sig = NULL;
+	g_autoptr(GInputStream) istream = NULL;
+	g_autoptr(GPtrArray) results = NULL;
+	g_autoptr(JcatItem) jcat_item = NULL;
+	g_autoptr(JcatFile) jcat_file = jcat_file_new ();
+
 	blob = fu_common_get_contents_bytes (fwupd_remote_get_filename_cache (remote), error);
 	if (blob == NULL)
 		return NULL;
 	blob_sig = fu_common_get_contents_bytes (fwupd_remote_get_filename_cache_sig (remote), error);
 	if (blob_sig == NULL)
 		return NULL;
-	return fu_keyring_verify_data (kr, blob, blob_sig,
-				       FU_KEYRING_VERIFY_FLAG_NONE, error);
+	istream = g_memory_input_stream_new_from_bytes (blob_sig);
+	if (!jcat_file_import_stream (jcat_file, istream,
+				      JCAT_IMPORT_FLAG_NONE,
+				      NULL, error))
+		return NULL;
+	jcat_item = jcat_file_get_item_default (jcat_file, error);
+	if (jcat_item == NULL)
+		return NULL;
+	results = jcat_context_verify_item (self->jcat_context,
+					    blob, jcat_item,
+					    JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
+					    JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
+					    error);
+	if (results == NULL)
+		return NULL;
+	g_ptr_array_sort (results, fu_engine_sort_jcat_results_timestamp_cb);
+
+	/* return the newest one */
+	return g_object_ref (g_ptr_array_index (results, 0));
+}
+
+static gboolean
+fu_engine_validate_result_timestamp (JcatResult *jcat_result,
+				     JcatResult *jcat_result_old,
+				     GError **error)
+{
+	gint64 delta = 0;
+
+	g_return_val_if_fail (JCAT_IS_RESULT (jcat_result), FALSE);
+	g_return_val_if_fail (JCAT_IS_RESULT (jcat_result_old), FALSE);
+
+	if (jcat_result_get_timestamp (jcat_result) > 0 &&
+	    jcat_result_get_timestamp (jcat_result_old) > 0) {
+		delta = jcat_result_get_timestamp (jcat_result) -
+			jcat_result_get_timestamp (jcat_result_old);
+	}
+	if (delta < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "new signing timestamp was %"
+			     G_GINT64_FORMAT " seconds older",
+			     -delta);
+		return FALSE;
+	}
+	if (delta > 0)
+		g_debug ("timestamp increased, so no rollback");
+	return TRUE;
 }
 
 /**
@@ -3017,7 +3071,7 @@ fu_engine_get_existing_keyring_result (FuEngine *self,
  * @self: A #FuEngine
  * @remote_id: A remote ID, e.g. `lvfs`
  * @bytes_raw: Blob of metadata
- * @bytes_sig: Blob of metadata signature
+ * @bytes_sig: Blob of metadata signature, typically Jcat binary format
  * @error: A #GError, or %NULL
  *
  * Updates the metadata for a specific remote.
@@ -3059,31 +3113,41 @@ fu_engine_update_metadata_bytes (FuEngine *self, const gchar *remote_id,
 	/* verify file */
 	keyring_kind = fwupd_remote_get_keyring_kind (remote);
 	if (keyring_kind != FWUPD_KEYRING_KIND_NONE) {
-		g_autoptr(FuKeyring) kr = NULL;
-		g_autoptr(FuKeyringResult) kr_result = NULL;
-		g_autoptr(FuKeyringResult) kr_result_old = NULL;
+		JcatResult *jcat_result;
 		g_autoptr(GError) error_local = NULL;
-		kr = fu_keyring_create_for_kind (keyring_kind, error);
-		if (kr == NULL)
+		g_autoptr(GInputStream) istream = NULL;
+		g_autoptr(GPtrArray) results = NULL;
+		g_autoptr(JcatFile) jcat_file = jcat_file_new ();
+		g_autoptr(JcatItem) jcat_item = NULL;
+		g_autoptr(JcatResult) jcat_result_old = NULL;
+
+		/* load Jcat file */
+		istream = g_memory_input_stream_new_from_bytes (bytes_sig);
+		if (!jcat_file_import_stream (jcat_file, istream,
+					      JCAT_IMPORT_FLAG_NONE,
+					      NULL, error))
 			return FALSE;
-		if (!fu_keyring_setup (kr, error))
+
+		/* this should only be signing one thing */
+		jcat_item = jcat_file_get_item_default (jcat_file, error);
+		if (jcat_item == NULL)
 			return FALSE;
-		sysconfdir = fu_common_get_path (FU_PATH_KIND_SYSCONFDIR);
-		pki_dir = g_build_filename (sysconfdir, "pki", "fwupd-metadata", NULL);
-		if (!fu_keyring_add_public_keys (kr, pki_dir, error))
-			return FALSE;
-		kr_result = fu_keyring_verify_data (kr, bytes_raw, bytes_sig,
-						    FU_KEYRING_VERIFY_FLAG_NONE,
+		results = jcat_context_verify_item (self->jcat_context,
+						    bytes_raw, jcat_item,
+						    JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
+						    JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
 						    error);
-		if (kr_result == NULL)
+		if (results == NULL)
 			return FALSE;
+
+		/* return the newest one */
+		g_ptr_array_sort (results, fu_engine_sort_jcat_results_timestamp_cb);
+		jcat_result = g_ptr_array_index (results, 0);
 
 		/* verify the metadata was signed later than the existing
 		 * metadata for this remote to mitigate a rollback attack */
-		kr_result_old = fu_engine_get_existing_keyring_result (self, kr,
-								       remote,
-								       &error_local);
-		if (kr_result_old == NULL) {
+		jcat_result_old = fu_engine_get_system_jcat_result (self, remote, &error_local);
+		if (jcat_result_old == NULL) {
 			if (g_error_matches (error_local,
 					     G_FILE_ERROR,
 					     G_FILE_ERROR_NOENT)) {
@@ -3094,23 +3158,10 @@ fu_engine_update_metadata_bytes (FuEngine *self, const gchar *remote_id,
 					   error_local->message);
 			}
 		} else {
-			gint64 delta = 0;
-			if (fu_keyring_result_get_timestamp (kr_result) > 0 &&
-			    fu_keyring_result_get_timestamp (kr_result_old) > 0) {
-				delta = fu_keyring_result_get_timestamp (kr_result) -
-					fu_keyring_result_get_timestamp (kr_result_old);
-			}
-			if (delta < 0) {
-				g_set_error (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INVALID_FILE,
-					     "new signing timestamp was %"
-					     G_GINT64_FORMAT " seconds older",
-					     -delta);
+			if (!fu_engine_validate_result_timestamp (jcat_result,
+								  jcat_result_old,
+								  error))
 				return FALSE;
-			} else if (delta > 0) {
-				g_debug ("timestamp increased, so no rollback");
-			}
 		}
 	}
 
@@ -3210,6 +3261,7 @@ fu_engine_get_silo_from_blob (FuEngine *self, GBytes *blob_cab, GError **error)
 	/* load file */
 	fu_engine_set_status (self, FWUPD_STATUS_DECOMPRESSING);
 	fu_cabinet_set_size_max (cabinet, fu_engine_get_archive_size_max (self));
+	fu_cabinet_set_jcat_context (cabinet, self->jcat_context);
 	if (!fu_cabinet_parse (cabinet, blob_cab, FU_CABINET_PARSE_FLAG_NONE, error))
 		return NULL;
 	silo = fu_cabinet_get_silo (cabinet);
@@ -3952,31 +4004,30 @@ fu_engine_add_approved_firmware (FuEngine *self, const gchar *checksum)
 gchar *
 fu_engine_self_sign (FuEngine *self,
 		     const gchar *value,
-		     FuKeyringSignFlags flags,
+		     JcatSignFlags flags,
 		     GError **error)
 {
-	g_autoptr(FuKeyring) kr = NULL;
-	g_autoptr(FuKeyringResult) kr_result = NULL;
+	g_autoptr(JcatBlob) jcat_signature = NULL;
+	g_autoptr(JcatEngine) jcat_engine = NULL;
+	g_autoptr(JcatResult) jcat_result = NULL;
 	g_autoptr(GBytes) payload = NULL;
-	g_autoptr(GBytes) signature = NULL;
 
 	/* create detached signature and verify */
-	kr = fu_keyring_create_for_kind (FWUPD_KEYRING_KIND_PKCS7, error);
-	if (kr == NULL)
-		return NULL;
-	if (!fu_keyring_setup (kr, error))
+	jcat_engine = jcat_context_get_engine (self->jcat_context,
+					       JCAT_BLOB_KIND_PKCS7,
+					       error);
+	if (jcat_engine == NULL)
 		return NULL;
 	payload = g_bytes_new (value, strlen (value));
-	signature = fu_keyring_sign_data (kr, payload, flags, error);
-	if (signature == NULL)
+	jcat_signature = jcat_engine_self_sign (jcat_engine, payload, flags, error);
+	if (jcat_signature == NULL)
 		return NULL;
-	kr_result = fu_keyring_verify_data (kr, payload, signature,
-					    FU_KEYRING_VERIFY_FLAG_USE_CLIENT_CERT,
-					    error);
-	if (kr_result == NULL)
+	jcat_result = jcat_engine_self_verify (jcat_engine, payload,
+					       jcat_blob_get_data (jcat_signature),
+					       JCAT_VERIFY_FLAG_NONE, error);
+	if (jcat_result == NULL)
 		return NULL;
-	return g_strndup (g_bytes_get_data (signature, NULL),
-			  g_bytes_get_size (signature));
+	return jcat_blob_get_data_as_string (jcat_signature);
 }
 
 /**
@@ -5219,23 +5270,21 @@ fu_engine_udev_uevent_cb (GUdevClient *gudev_client,
 static void
 fu_engine_ensure_client_certificate (FuEngine *self)
 {
-	g_autoptr(FuKeyring) kr = NULL;
 	g_autoptr(GBytes) blob = g_bytes_new_static ("test\0", 5);
-	g_autoptr(GBytes) sig = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(JcatBlob) jcat_sig = NULL;
+	g_autoptr(JcatEngine) jcat_engine = NULL;
 
 	/* create keyring and sign dummy data to ensure certificate exists */
-	kr = fu_keyring_create_for_kind (FWUPD_KEYRING_KIND_PKCS7, &error);
-	if (kr == NULL) {
+	jcat_engine = jcat_context_get_engine (self->jcat_context,
+					       JCAT_BLOB_KIND_PKCS7,
+					       &error);
+	if (jcat_engine == NULL) {
 		g_message ("failed to create keyring: %s", error->message);
 		return;
 	}
-	if (!fu_keyring_setup (kr, &error)) {
-		g_message ("failed to setup keyring: %s", error->message);
-		return;
-	}
-	sig = fu_keyring_sign_data (kr, blob, FU_KEYRING_SIGN_FLAG_NONE, &error);
-	if (sig == NULL) {
+	jcat_sig = jcat_engine_self_sign (jcat_engine, blob, JCAT_SIGN_FLAG_NONE, &error);
+	if (jcat_sig == NULL) {
 		g_message ("failed to sign using keyring: %s", error->message);
 		return;
 	}
@@ -5486,6 +5535,10 @@ fu_engine_init (FuEngine *self)
 #ifdef HAVE_UTSNAME_H
 	struct utsname uname_tmp;
 #endif
+	g_autofree gchar *keyring_path = NULL;
+	g_autofree gchar *pkidir_fw = NULL;
+	g_autofree gchar *pkidir_md = NULL;
+	g_autofree gchar *sysconfdir = NULL;
 	self->percentage = 0;
 	self->status = FWUPD_STATUS_IDLE;
 	self->config = fu_config_new ();
@@ -5517,6 +5570,16 @@ fu_engine_init (FuEngine *self)
 
 	g_signal_connect (self->idle, "notify::status",
 			  G_CALLBACK (fu_engine_idle_status_notify_cb), self);
+
+	/* setup Jcat context */
+	self->jcat_context = jcat_context_new ();
+	keyring_path = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	jcat_context_set_keyring_path (self->jcat_context, keyring_path);
+	sysconfdir = fu_common_get_path (FU_PATH_KIND_SYSCONFDIR);
+	pkidir_fw = g_build_filename (sysconfdir, "pki", "fwupd", NULL);
+	jcat_context_add_public_keys (self->jcat_context, pkidir_fw);
+	pkidir_md = g_build_filename (sysconfdir, "pki", "fwupd-metadata", NULL);
+	jcat_context_add_public_keys (self->jcat_context, pkidir_md);
 
 	/* add some runtime versions of things the daemon depends on */
 	fu_engine_add_runtime_version (self, "org.freedesktop.fwupd", VERSION);
@@ -5573,6 +5636,7 @@ fu_engine_finalize (GObject *obj)
 	g_object_unref (self->hwids);
 	g_object_unref (self->history);
 	g_object_unref (self->device_list);
+	g_object_unref (self->jcat_context);
 	g_ptr_array_unref (self->plugin_filter);
 	g_ptr_array_unref (self->udev_subsystems);
 #ifdef HAVE_GUDEV

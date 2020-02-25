@@ -232,6 +232,7 @@ typedef enum {
  * @FWUPD_KEYRING_KIND_NONE:			No verification
  * @FWUPD_KEYRING_KIND_GPG:			Verification using GPG
  * @FWUPD_KEYRING_KIND_PKCS7:			Verification using PKCS7
+ * @FWUPD_KEYRING_KIND_JCAT:			Verification using Jcat
  *
  * The update state.
  **/
@@ -240,6 +241,7 @@ typedef enum {
 	FWUPD_KEYRING_KIND_NONE,			/* Since: 0.9.7 */
 	FWUPD_KEYRING_KIND_GPG,				/* Since: 0.9.7 */
 	FWUPD_KEYRING_KIND_PKCS7,			/* Since: 0.9.7 */
+	FWUPD_KEYRING_KIND_JCAT,			/* Since: 1.4.0 */
 	/*< private >*/
 	FWUPD_KEYRING_KIND_LAST
 } FwupdKeyringKind;

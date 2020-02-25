@@ -168,14 +168,14 @@ fwupd_remote_download_func (void)
 					      "lvfs",
 					      "metadata.xml.gz",
 					      NULL);
-	expected_signature = g_strdup_printf ("%s.asc", expected_metadata);
+	expected_signature = g_strdup_printf ("%s.jcat", expected_metadata);
 	fwupd_remote_set_remotes_dir (remote, directory);
 	fn = g_build_filename (FU_SELF_TEST_REMOTES_DIR, "remotes.d", "lvfs.conf", NULL);
 	ret = fwupd_remote_load_from_filename (remote, fn, NULL, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (fwupd_remote_get_kind (remote), ==, FWUPD_REMOTE_KIND_DOWNLOAD);
-	g_assert_cmpint (fwupd_remote_get_keyring_kind (remote), ==, FWUPD_KEYRING_KIND_GPG);
+	g_assert_cmpint (fwupd_remote_get_keyring_kind (remote), ==, FWUPD_KEYRING_KIND_JCAT);
 	g_assert_cmpint (fwupd_remote_get_priority (remote), ==, 0);
 	g_assert (fwupd_remote_get_enabled (remote));
 	g_assert (fwupd_remote_get_metadata_uri (remote) != NULL);
@@ -209,14 +209,14 @@ fwupd_remote_baseuri_func (void)
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (fwupd_remote_get_kind (remote), ==, FWUPD_REMOTE_KIND_DOWNLOAD);
-	g_assert_cmpint (fwupd_remote_get_keyring_kind (remote), ==, FWUPD_KEYRING_KIND_GPG);
+	g_assert_cmpint (fwupd_remote_get_keyring_kind (remote), ==, FWUPD_KEYRING_KIND_JCAT);
 	g_assert_cmpint (fwupd_remote_get_priority (remote), ==, 0);
 	g_assert (fwupd_remote_get_enabled (remote));
 	g_assert_cmpstr (fwupd_remote_get_checksum (remote), ==, NULL);
 	g_assert_cmpstr (fwupd_remote_get_metadata_uri (remote), ==,
 			 "https://s3.amazonaws.com/lvfsbucket/downloads/firmware.xml.gz");
 	g_assert_cmpstr (fwupd_remote_get_metadata_uri_sig (remote), ==,
-			 "https://s3.amazonaws.com/lvfsbucket/downloads/firmware.xml.gz.asc");
+			 "https://s3.amazonaws.com/lvfsbucket/downloads/firmware.xml.gz.jcat");
 	firmware_uri = fwupd_remote_build_firmware_uri (remote, "http://bbc.co.uk/firmware.cab", &error);
 	g_assert_no_error (error);
 	g_assert_cmpstr (firmware_uri, ==, "https://my.fancy.cdn/firmware.cab");
@@ -245,14 +245,14 @@ fwupd_remote_nopath_func (void)
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (fwupd_remote_get_kind (remote), ==, FWUPD_REMOTE_KIND_DOWNLOAD);
-	g_assert_cmpint (fwupd_remote_get_keyring_kind (remote), ==, FWUPD_KEYRING_KIND_GPG);
+	g_assert_cmpint (fwupd_remote_get_keyring_kind (remote), ==, FWUPD_KEYRING_KIND_JCAT);
 	g_assert_cmpint (fwupd_remote_get_priority (remote), ==, 0);
 	g_assert (fwupd_remote_get_enabled (remote));
 	g_assert_cmpstr (fwupd_remote_get_checksum (remote), ==, NULL);
 	g_assert_cmpstr (fwupd_remote_get_metadata_uri (remote), ==,
 			 "https://s3.amazonaws.com/lvfsbucket/downloads/firmware.xml.gz");
 	g_assert_cmpstr (fwupd_remote_get_metadata_uri_sig (remote), ==,
-			 "https://s3.amazonaws.com/lvfsbucket/downloads/firmware.xml.gz.asc");
+			 "https://s3.amazonaws.com/lvfsbucket/downloads/firmware.xml.gz.jcat");
 	firmware_uri = fwupd_remote_build_firmware_uri (remote, "firmware.cab", &error);
 	g_assert_no_error (error);
 	g_assert_cmpstr (firmware_uri, ==, "https://s3.amazonaws.com/lvfsbucket/downloads/firmware.cab");

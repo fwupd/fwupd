@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <libsoup/soup.h>
+#include <jcat.h>
 
 #include "fu-device-private.h"
 #include "fu-engine.h"
@@ -1376,8 +1377,8 @@ fu_util_self_sign (FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
 		return FALSE;
 	sig = fu_engine_self_sign (priv->engine, values[0],
-				   FU_KEYRING_SIGN_FLAG_ADD_TIMESTAMP |
-				   FU_KEYRING_SIGN_FLAG_ADD_CERT, error);
+				   JCAT_SIGN_FLAG_ADD_TIMESTAMP |
+				   JCAT_SIGN_FLAG_ADD_CERT, error);
 	if (sig == NULL)
 		return FALSE;
 	g_print ("%s\n", sig);

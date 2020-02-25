@@ -544,6 +544,7 @@ LIBFWUPDPLUGIN_1.4.0 {
     fu_cabinet_get_type;
     fu_cabinet_new;
     fu_cabinet_parse;
+    fu_cabinet_set_jcat_context;
     fu_cabinet_set_size_max;
     fu_device_get_root;
     fu_device_set_version_bootloader;
