@@ -400,6 +400,9 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 
+	/* implied, important for get-details on a device not in your system */
+	priv->show_all_devices = TRUE;
+
 	/* open file */
 	fd = open (values[0], O_RDONLY);
 	if (fd < 0) {
