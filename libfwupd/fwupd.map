@@ -421,3 +421,12 @@ LIBFWUPD_1.3.7 {
     fwupd_device_get_children;
   local: *;
 } LIBFWUPD_1.3.6;
+
+LIBFWUPD_1.3.9 {
+  global:
+    fwupd_device_get_version_bootloader_raw;
+    fwupd_device_get_version_lowest_raw;
+    fwupd_device_set_version_bootloader_raw;
+    fwupd_device_set_version_lowest_raw;
+  local: *;
+} LIBFWUPD_1.3.7;

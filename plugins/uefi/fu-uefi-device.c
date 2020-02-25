@@ -686,6 +686,7 @@ fu_uefi_device_probe (FuDevice *device, GError **error)
 	if (self->fw_version_lowest != 0) {
 		version_lowest = fu_common_version_from_uint32 (self->fw_version_lowest,
 							        version_format);
+		fu_device_set_version_lowest_raw (device, self->fw_version_lowest);
 		fu_device_set_version_lowest (device, version_lowest);
 	}
 
