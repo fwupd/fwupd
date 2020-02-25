@@ -3238,6 +3238,8 @@ fu_engine_get_result_from_component (FuEngine *self, XbNode *component, GError *
 			fu_device_set_name (dev, fu_device_get_name (device));
 			fu_device_set_flags (dev, fu_device_get_flags (device));
 			fu_device_set_id (dev, fu_device_get_id (device));
+			fu_device_set_version_format (dev, fu_device_get_version_format (device));
+			fu_device_set_version (dev, fu_device_get_version (device));
 		}
 
 		/* add GUID */
