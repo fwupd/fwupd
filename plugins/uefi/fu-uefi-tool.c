@@ -17,7 +17,7 @@
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
 #include "fu-uefi-update-info.h"
-#include "fu-uefi-vars.h"
+#include "fu-efivar.h"
 
 /* custom return code */
 #define EXIT_NOTHING_TO_DO		2
@@ -174,7 +174,7 @@ main (int argc, char *argv[])
 		g_autofree guint16 *buf_ucs2 = NULL;
 		g_autofree gchar *str = NULL;
 		g_autoptr(GError) error_local = NULL;
-		if (!fu_uefi_vars_get_data (FU_UEFI_VARS_GUID_FWUPDATE,
+		if (!fu_efivar_get_data (FU_EFIVAR_GUID_FWUPDATE,
 					    "FWUPDATE_DEBUG_LOG",
 					    &buf, &sz, NULL,
 					    &error_local)) {
@@ -280,7 +280,7 @@ main (int argc, char *argv[])
 	if (action_set_debug) {
 		const guint8 data = 1;
 		g_autoptr(GError) error_local = NULL;
-		if (!fu_uefi_vars_set_data (FU_UEFI_VARS_GUID_FWUPDATE,
+		if (!fu_efivar_set_data (FU_EFIVAR_GUID_FWUPDATE,
 					    "FWUPDATE_VERBOSE",
 					    &data, sizeof(data),
 					    EFI_VARIABLE_NON_VOLATILE |
@@ -296,7 +296,7 @@ main (int argc, char *argv[])
 	/* unset the debugging flag during update */
 	if (action_unset_debug) {
 		g_autoptr(GError) error_local = NULL;
-		if (!fu_uefi_vars_delete (FU_UEFI_VARS_GUID_FWUPDATE,
+		if (!fu_efivar_delete (FU_EFIVAR_GUID_FWUPDATE,
 					  "FWUPDATE_VERBOSE",
 					  &error_local)) {
 			g_printerr ("failed: %s\n", error_local->message);

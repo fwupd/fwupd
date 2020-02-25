@@ -16,6 +16,7 @@
 #include "fu-ucs2.h"
 #include "fu-uefi-bootmgr.h"
 #include "fu-uefi-common.h"
+#include "fu-efivar.h"
 
 /* XXX PJFIX: this should be in efiboot-loadopt.h in efivar */
 #define LOAD_OPTION_ACTIVE      0x00000001
@@ -322,7 +323,7 @@ fu_uefi_bootmgr_bootnext (const gchar *esp_path,
 			filepath = shim_app;
 		}
 	} else {
-		if (fu_uefi_secure_boot_enabled () &&
+		if (fu_efivar_secure_boot_enabled () &&
 		    (flags & FU_UEFI_BOOTMGR_FLAG_USE_SHIM_FOR_SB) > 0) {
 			g_set_error_literal (error,
 					     FWUPD_ERROR,

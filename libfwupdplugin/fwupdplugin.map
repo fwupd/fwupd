@@ -548,6 +548,13 @@ LIBFWUPDPLUGIN_1.4.0 {
     fu_device_set_version_bootloader;
     fu_device_set_version_format;
     fu_device_set_version_lowest;
+    fu_efivar_delete;
+    fu_efivar_delete_with_glob;
+    fu_efivar_exists;
+    fu_efivar_get_data;
+    fu_efivar_secure_boot_enabled;
+    fu_efivar_set_data;
+    fu_efivar_supported;
     fu_plugin_get_config_value_boolean;
     fu_plugin_runner_device_created;
   local: *;

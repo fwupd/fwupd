@@ -12,7 +12,7 @@
 
 #include "fu-common.h"
 #include "fu-uefi-common.h"
-#include "fu-uefi-vars.h"
+#include "fu-efivar.h"
 #include "fu-uefi-udisks.h"
 
 #include "fwupd-common.h"
@@ -87,7 +87,7 @@ fu_uefi_get_built_app_path (GError **error)
 	const gchar *suffix;
 	g_autofree gchar *source_path = NULL;
 	g_autofree gchar *prefix = NULL;
-	if (fu_uefi_secure_boot_enabled ())
+	if (fu_efivar_secure_boot_enabled ())
 		extension = ".signed";
 	suffix = fu_uefi_bootmgr_get_suffix (error);
 	if (suffix == NULL)
@@ -196,20 +196,6 @@ fu_uefi_get_bitmap_size (const guint8 *buf,
 	if (height != NULL)
 		*height = fu_common_read_uint32 (buf + 22, G_LITTLE_ENDIAN);
 	return TRUE;
-}
-
-gboolean
-fu_uefi_secure_boot_enabled (void)
-{
-	gsize data_size = 0;
-	g_autofree guint8 *data = NULL;
-
-	if (!fu_uefi_vars_get_data (FU_UEFI_VARS_GUID_EFI_GLOBAL, "SecureBoot",
-				    &data, &data_size, NULL, NULL))
-		return FALSE;
-	if (data_size >= 1 && data[0] & 1)
-		return TRUE;
-	return FALSE;
 }
 
 static gint
