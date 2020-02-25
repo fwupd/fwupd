@@ -648,6 +648,10 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 				     "Invalid arguments");
 		return FALSE;
 	}
+
+	/* implied, important for get-details on a device not in your system */
+	priv->show_all_devices = TRUE;
+
 	array = fwupd_client_get_details (priv->client, values[0], NULL, error);
 	if (array == NULL)
 		return FALSE;
