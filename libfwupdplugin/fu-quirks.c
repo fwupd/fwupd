@@ -174,9 +174,15 @@ fu_quirks_add_quirks_for_path (FuQuirks *self, XbBuilder *builder,
 		g_autoptr(XbBuilderSource) source = xb_builder_source_new ();
 
 		/* load from keyfile */
+#if LIBXMLB_CHECK_VERSION(0,1,15)
+		xb_builder_source_add_simple_adapter (source, "text/plain,.quirk",
+						      fu_quirks_convert_quirk_to_xml_cb,
+						      NULL, NULL);
+#else
 		xb_builder_source_add_adapter (source, "text/plain,.quirk",
 					       fu_quirks_convert_quirk_to_xml_cb,
 					       NULL, NULL);
+#endif
 		if (!xb_builder_source_load_file (source, file,
 						  XB_BUILDER_SOURCE_FLAG_WATCH_FILE |
 						  XB_BUILDER_SOURCE_FLAG_LITERAL_TEXT,
