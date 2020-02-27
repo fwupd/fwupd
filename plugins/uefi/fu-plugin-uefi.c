@@ -722,6 +722,11 @@ fu_plugin_uefi_create_dummy (FuPlugin *plugin, const gchar *reason, GError **err
 	key = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER);
 	if (key != NULL)
 		fu_device_set_vendor (dev, key);
+	key = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VENDOR);
+	if (key != NULL) {
+		g_autofree gchar *vendor_id = g_strdup_printf ("DMI:%s", key);
+		fu_device_set_vendor_id (FU_DEVICE (dev), vendor_id);
+	}
 	key = fu_plugin_uefi_get_name_for_type (plugin, FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE);
 	fu_device_set_name (dev, key);
 	key = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VERSION);
