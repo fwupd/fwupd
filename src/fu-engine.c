@@ -29,6 +29,7 @@
 #include "fwupd-remote-private.h"
 #include "fwupd-resources.h"
 
+#include "fu-cabinet.h"
 #include "fu-common-cab.h"
 #include "fu-common.h"
 #include "fu-config.h"
@@ -3186,6 +3187,7 @@ fu_engine_update_metadata (FuEngine *self, const gchar *remote_id,
 XbSilo *
 fu_engine_get_silo_from_blob (FuEngine *self, GBytes *blob_cab, GError **error)
 {
+	g_autoptr(FuCabinet) cabinet = fu_cabinet_new ();
 	g_autoptr(XbSilo) silo = NULL;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), NULL);
@@ -3194,12 +3196,10 @@ fu_engine_get_silo_from_blob (FuEngine *self, GBytes *blob_cab, GError **error)
 
 	/* load file */
 	fu_engine_set_status (self, FWUPD_STATUS_DECOMPRESSING);
-	silo = fu_common_cab_build_silo (blob_cab,
-					 fu_engine_get_archive_size_max (self),
-					 error);
-	if (silo == NULL)
+	fu_cabinet_set_size_max (cabinet, fu_engine_get_archive_size_max (self));
+	if (!fu_cabinet_parse (cabinet, blob_cab, FU_CABINET_PARSE_FLAG_NONE, error))
 		return NULL;
-
+	silo = fu_cabinet_get_silo (cabinet);
 	fu_engine_set_status (self, FWUPD_STATUS_IDLE);
 	return g_steal_pointer (&silo);
 }

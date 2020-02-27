@@ -1,5 +1,6 @@
 fwupdplugin_src = [
   'fu-archive.c',
+  'fu-cabinet.c',
   'fu-chunk.c',
   'fu-common.c',
   'fu-common-cab.c',
@@ -24,6 +25,7 @@ fwupdplugin_src = [
 
 fwupdplugin_headers = [
   'fu-archive.h',
+  'fu-cabinet.h',
   'fu-chunk.h',
   'fu-common.h',
   'fu-common-cab.h',

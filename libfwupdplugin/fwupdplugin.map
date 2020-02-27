@@ -534,6 +534,11 @@ LIBFWUPDPLUGIN_1.3.8 {
 
 LIBFWUPDPLUGIN_1.3.9 {
   global:
+    fu_cabinet_get_silo;
+    fu_cabinet_get_type;
+    fu_cabinet_new;
+    fu_cabinet_parse;
+    fu_cabinet_set_size_max;
     fu_common_vercmp_full;
     fu_device_set_version_bootloader;
     fu_device_set_version_format;
