@@ -66,7 +66,7 @@ fu_vli_usbhub_i2c_device_setup (FuDevice *device, GError **error)
 
 	/* set version */
 	version = g_strdup_printf ("%x.%x.%x", buf[0], buf[1], buf[2]);
-	fu_device_set_version (device, version, FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version (device, version, FWUPD_VERSION_FORMAT_PAIR);
 	return TRUE;
 }
 
