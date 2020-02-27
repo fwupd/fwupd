@@ -65,7 +65,7 @@ fu_vli_usbhub_i2c_device_setup (FuDevice *device, GError **error)
 	fu_device_add_instance_id (device, instance_id);
 
 	/* set version */
-	version = g_strdup_printf ("%x.%x.%x", buf[0], buf[1], buf[2]);
+	version = g_strdup_printf ("%x.%x", buf[1], buf[2]);
 	fu_device_set_version (device, version);
 	return TRUE;
 }
@@ -253,7 +253,7 @@ fu_vli_usbhub_i2c_device_init (FuVliUsbhubI2cDevice *self)
 	fu_device_add_icon (FU_DEVICE (self), "audio-card");
 	fu_device_set_protocol (FU_DEVICE (self), "com.vli.i2c");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_logical_id (FU_DEVICE (self), "I2C");
 	fu_device_set_summary (FU_DEVICE (self), "I²C Dock Management Device");
 }
