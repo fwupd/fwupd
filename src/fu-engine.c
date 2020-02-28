@@ -5243,6 +5243,9 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	FuRemoteListLoadFlags remote_list_flags = FU_REMOTE_LIST_LOAD_FLAG_NONE;
 	FuQuirksLoadFlags quirks_flags = FU_QUIRKS_LOAD_FLAG_NONE;
 	g_autoptr(GPtrArray) checksums = NULL;
+#ifndef _WIN32
+	g_autoptr(GError) error_local = NULL;
+#endif
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
@@ -5254,9 +5257,9 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 /* TODO: Read registry key [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography] "MachineGuid" */
 #ifndef _WIN32
 	/* cache machine ID so we can use it from a sandboxed app */
-	self->host_machine_id = fwupd_build_machine_id ("fwupd", error);
+	self->host_machine_id = fwupd_build_machine_id ("fwupd", &error_local);
 	if (self->host_machine_id == NULL)
-		return FALSE;
+		g_debug ("%s", error_local->message);
 #endif
 	/* read config file */
 	if (!fu_config_load (self->config, error)) {
