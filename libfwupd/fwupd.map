@@ -422,7 +422,7 @@ LIBFWUPD_1.3.7 {
   local: *;
 } LIBFWUPD_1.3.6;
 
-LIBFWUPD_1.3.9 {
+LIBFWUPD_1.4.0 {
   global:
     fwupd_device_get_version_bootloader_raw;
     fwupd_device_get_version_lowest_raw;

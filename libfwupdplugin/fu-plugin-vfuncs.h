@@ -332,7 +332,7 @@ gboolean	 fu_plugin_device_removed		(FuPlugin	*plugin,
  *
  * Function run when the subclassed device has been created.
  *
- * Since: 1.3.9
+ * Since: 1.4.0
  **/
 gboolean	 fu_plugin_device_created		(FuPlugin	*plugin,
 							 FuDevice	*dev,

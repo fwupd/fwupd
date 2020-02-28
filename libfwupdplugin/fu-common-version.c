@@ -460,7 +460,7 @@ fu_common_version_verify_format (const gchar *version,
  *
  * Returns: -1 if a < b, +1 if a > b, 0 if they are equal, and %G_MAXINT on error
  *
- * Since: 1.3.9
+ * Since: 1.4.0
  */
 gint
 fu_common_vercmp_full (const gchar *version_a,

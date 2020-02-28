@@ -532,7 +532,7 @@ LIBFWUPDPLUGIN_1.3.8 {
   local: *;
 } LIBFWUPDPLUGIN_1.3.6;
 
-LIBFWUPDPLUGIN_1.3.9 {
+LIBFWUPDPLUGIN_1.4.0 {
   global:
     fu_cabinet_get_silo;
     fu_cabinet_get_type;

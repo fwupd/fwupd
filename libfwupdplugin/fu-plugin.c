@@ -1964,7 +1964,7 @@ fu_plugin_runner_device_register (FuPlugin *self, FuDevice *device)
  *
  * Returns: #TRUE for success, #FALSE for failure
  *
- * Since: 1.3.9
+ * Since: 1.4.0
  **/
 gboolean
 fu_plugin_runner_device_created (FuPlugin *self, FuDevice *device, GError **error)
@@ -2536,7 +2536,7 @@ fu_plugin_get_config_value (FuPlugin *self, const gchar *key)
  *
  * Returns: %TRUE if the value is `true` (case insensitive), %FALSE otherwise
  *
- * Since: 1.3.9
+ * Since: 1.4.0
  **/
 gboolean
 fu_plugin_get_config_value_boolean (FuPlugin *self, const gchar *key)

@@ -1367,7 +1367,7 @@ fu_device_set_id (FuDevice *self, const gchar *id)
  *
  * Sets the version format.
  *
- * Since: 1.3.9
+ * Since: 1.4.0
  **/
 void
 fu_device_set_version_format (FuDevice *self, FwupdVersionFormat fmt)
@@ -1433,7 +1433,7 @@ fu_device_set_version (FuDevice *self, const gchar *version)
  *
  * Sets the device lowest version, sanitizing the string if required.
  *
- * Since: 1.3.9
+ * Since: 1.4.0
  **/
 void
 fu_device_set_version_lowest (FuDevice *self, const gchar *version)
@@ -1475,7 +1475,7 @@ fu_device_set_version_lowest (FuDevice *self, const gchar *version)
  *
  * Sets the device bootloader version, sanitizing the string if required.
  *
- * Since: 1.3.9
+ * Since: 1.4.0
  **/
 void
 fu_device_set_version_bootloader (FuDevice *self, const gchar *version)

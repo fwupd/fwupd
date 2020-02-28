@@ -62,7 +62,7 @@ fu_cabinet_init (FuCabinet *self)
  *
  * Sets the maximum size of the decompressed cabinet file.
  *
- * Since: 1.3.9
+ * Since: 1.4.0
  **/
 void
 fu_cabinet_set_size_max (FuCabinet *self, guint64 size_max)
@@ -80,7 +80,7 @@ fu_cabinet_set_size_max (FuCabinet *self, guint64 size_max)
  *
  * Returns: (transfer full): a #XbSilo, or %NULL if the archive has not been parsed
  *
- * Since: 1.3.9
+ * Since: 1.4.0
  **/
 XbSilo *
 fu_cabinet_get_silo (FuCabinet *self)
@@ -499,7 +499,7 @@ fu_cabinet_decompress (FuCabinet *self, GBytes *data, GError **error)
  *
  * Returns: %TRUE for success
  *
- * Since: 1.3.9
+ * Since: 1.4.0
  **/
 gboolean
 fu_cabinet_parse (FuCabinet *self,
@@ -565,7 +565,7 @@ fu_cabinet_parse (FuCabinet *self,
  *
  * Returns: a #FuCabinet
  *
- * Since: 1.3.9
+ * Since: 1.4.0
  **/
 FuCabinet *
 fu_cabinet_new (void)

@@ -736,7 +736,7 @@ fwupd_device_set_version_lowest (FwupdDevice *device, const gchar *version_lowes
  *
  * Returns: integer version number, or %0 if unset
  *
- * Since: 1.3.9
+ * Since: 1.4.0
  **/
 guint64
 fwupd_device_get_version_lowest_raw (FwupdDevice *device)
@@ -753,7 +753,7 @@ fwupd_device_get_version_lowest_raw (FwupdDevice *device)
  *
  * Sets the raw lowest version number from the hardware before converted to a string.
  *
- * Since: 1.3.9
+ * Since: 1.4.0
  **/
 void
 fwupd_device_set_version_lowest_raw (FwupdDevice *device, guint64 version_lowest_raw)
@@ -807,7 +807,7 @@ fwupd_device_set_version_bootloader (FwupdDevice *device, const gchar *version_b
  *
  * Returns: integer version number, or %0 if unset
  *
- * Since: 1.3.9
+ * Since: 1.4.0
  **/
 guint64
 fwupd_device_get_version_bootloader_raw (FwupdDevice *device)
@@ -824,7 +824,7 @@ fwupd_device_get_version_bootloader_raw (FwupdDevice *device)
  *
  * Sets the raw bootloader version number from the hardware before converted to a string.
  *
- * Since: 1.3.9
+ * Since: 1.4.0
  **/
 void
 fwupd_device_set_version_bootloader_raw (FwupdDevice *device, guint64 version_bootloader_raw)
