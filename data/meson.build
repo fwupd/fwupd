@@ -2,6 +2,7 @@ subdir('builder')
 subdir('pki')
 subdir('remotes.d')
 subdir('bash-completion')
+subdir('fish-completion')
 
 if build_daemon
 subdir('motd')

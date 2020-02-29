@@ -1,6 +1,7 @@
 usr/bin/*
 etc/*
 usr/share/bash-completion
+usr/share/fish/vendor_completions.d
 usr/share/fwupd/*
 usr/share/dbus-1/*
 usr/share/icons/*
