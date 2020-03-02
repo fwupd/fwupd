@@ -28,6 +28,18 @@ jobs:
           paths:
             - "dist/docs"
 
+  build-chromeos-x86_64:
+    machine:
+      image: circleci/classic:latest
+    steps:
+      - checkout
+      - run:
+          name: "Build container"
+          command: OS=debian-x86_64 ./contrib/ci/generate_docker.py
+      - run:
+          name: "Run build script"
+          command: docker run --privileged -e CI=true -t -v `pwd`/dist:/build/dist fwupd-debian-x86_64 ./contrib/ci/trust.sh
+
   build-windows:
     docker:
       - image: fedora:31
@@ -161,6 +173,7 @@ workflows:
       - build-ubuntu-x86_64
       - build-snap
       - check-abi
+      - build-chromeos-x86_64
       - publish-edge:
           requires:
             - build-snap
