@@ -17,3 +17,7 @@ VendorId = ATA:0x8086
 [DeviceInstanceId=OUI\0004cf]
 Vendor = Seagate
 VendorId = ATA:0x1BB1
+
+[DeviceInstanceId=OUI\00a075]
+Vendor = Micron
+VendorId = ATA:0x1344
