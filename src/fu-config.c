@@ -120,12 +120,12 @@ fu_config_get_remote_agreement_default (FwupdRemote *self, GError **error)
 
 	/* this is designed as a fallback; the actual warning should ideally
 	 * come from the LVFS instance that is serving the remote */
-	g_string_append_printf (str, "%s\n",
+	g_string_append_printf (str, "<p>%s</p>",
 				/* TRANSLATORS: show the user a warning */
 				_("Your distributor may not have verified any of "
 				  "the firmware updates for compatibility with your "
 				  "system or connected devices."));
-	g_string_append_printf (str, "%s\n",
+	g_string_append_printf (str, "<p>%s</p>",
 				/* TRANSLATORS: show the user a warning */
 				_("Enabling this remote is done at your own risk."));
 	return str;
