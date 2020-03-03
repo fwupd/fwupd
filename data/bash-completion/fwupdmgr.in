@@ -66,7 +66,7 @@ _show_device_ids()
 	local description
 	OLDIFS=$IFS
 	IFS=$'\n'
-	description="$(command fwupdmgr get-devices | command awk '!/DeviceId/ { line = $0 }; /DeviceId/ { print $2 " {" line "}"}')"
+	description="$(command fwupdagent get-devices 2>/dev/null | sed -e 's,"Name" :,,; s,",,g; s,\,,,g; s,[[:space:]]\+,,' | command awk '!/DeviceId/ { line = $0 }; /DeviceId/ { print $3 " { "line" }"}')"
 	COMPREPLY+=( $(compgen -W "${description}" -- "$cur") )
 	IFS=$OLDIFS
 }
@@ -74,7 +74,7 @@ _show_device_ids()
 _show_remotes()
 {
 	local remotes
-	remotes="$(command fwupdmgr get-remotes | command awk '/Remote ID/ { print $3 }')"
+	remotes="$(command fwupdmgr get-remotes | command awk '/Remote ID/ { print $4 }')"
 	COMPREPLY+=( $(compgen -W "${remotes}" -- "$cur") )
 }
 

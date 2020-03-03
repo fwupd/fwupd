@@ -538,11 +538,20 @@ fu_util_cmd_array_run (GPtrArray *array,
 		       gchar **values,
 		       GError **error)
 {
+	g_auto(GStrv) values_copy = g_new0 (gchar *, g_strv_length (values) + 1);
+
+	/* clear out bash completion sentinel */
+	for (guint i = 0; values[i] != NULL; i++) {
+		if (g_strcmp0 (values[i], "{") == 0)
+			break;
+		values_copy[i] = g_strdup (values[i]);
+	}
+
 	/* find command */
 	for (guint i = 0; i < array->len; i++) {
 		FuUtilCmd *item = g_ptr_array_index (array, i);
 		if (g_strcmp0 (item->name, command) == 0)
-			return item->callback (priv, values, error);
+			return item->callback (priv, values_copy, error);
 	}
 
 	/* not found */
