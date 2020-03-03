@@ -1,5 +1,9 @@
 function __fish_fwupdmgr_devices --description 'Get device IDs used by fwupdmgr'
-    fwupdmgr get-devices | string replace -f -r '.*Device ID:\s*(.*)' '$1'
+    set -l ids (fwupdmgr get-devices | string replace -f -r '.*Device ID:\s*(.*)' '$1')
+    set -l names (fwupdmgr get-devices | string replace -f -r '.*─(.*):$' '$1')
+    for i in (seq (count $ids))
+        echo -e "$ids[$i]\t$names[$i]"
+    end
 end
 
 function __fish_fwupdmgr_remotes --description 'Get remote IDs used by fwupdmgr'
