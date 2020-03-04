@@ -30,6 +30,9 @@
   </content_rating>
   <provides>
     <binary>fwupdmgr</binary>
+    <binary>fwupdtool</binary>
+    <binary>fwupdtpmevlog</binary>
+    <binary>fwupdagent</binary>
   </provides>
   <releases>
     <release version="1.3.8" date="2020-02-13">
