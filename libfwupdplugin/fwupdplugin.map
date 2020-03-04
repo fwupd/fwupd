@@ -532,6 +532,12 @@ LIBFWUPDPLUGIN_1.3.8 {
   local: *;
 } LIBFWUPDPLUGIN_1.3.6;
 
+LIBFWUPDPLUGIN_1.3.9 {
+  global:
+    fu_common_vercmp_full;
+  local: *;
+} LIBFWUPDPLUGIN_1.3.8;
+
 LIBFWUPDPLUGIN_1.4.0 {
   global:
     fu_cabinet_get_silo;
@@ -539,11 +545,10 @@ LIBFWUPDPLUGIN_1.4.0 {
     fu_cabinet_new;
     fu_cabinet_parse;
     fu_cabinet_set_size_max;
-    fu_common_vercmp_full;
     fu_device_set_version_bootloader;
     fu_device_set_version_format;
     fu_device_set_version_lowest;
     fu_plugin_get_config_value_boolean;
     fu_plugin_runner_device_created;
   local: *;
-} LIBFWUPDPLUGIN_1.3.8;
+} LIBFWUPDPLUGIN_1.3.9;
