@@ -1,3 +1,34 @@
+fwupd (1.3.9-1) unstable; urgency=medium
+
+  [ Mario Limonciello ]
+  * New upstream stable release (1.3.9)
+    - Moves some binaries from usr/libexec into usr/bin
+    - Adds fish completion script.
+    - Inhibit all power management actions using logind when updating
+  * Bug fixes:
+    - Always check for PLAIN when doing vercmp() operations
+    - Always return AppStream markup for remote agreements
+    - Apply UEFI capsule update even with single valid capsule
+    - Check the device protocol before de-duping devices
+    - Copy the version and format from donor device in get-details
+    - Correctly append the release to devices in `fwupdtool get-details`
+    - Decrease minimum battery requirement to 10%
+    - Discard the reason upgrades aren't available
+    - Do not fail loading in /etc/machine-id is not available
+    - Fix a critical warning when installing some firmware
+    - For the `get-details` command make sure to always show devices
+    - Set the MSP430 version format to pair
+    - Switch off the ATA verbose logging by default
+    - Use unknown for version format by default on get-details
+  * Drop all existing patches.
+
+  [ Laurent Bigonville ]
+  * debian/control.in: Add libglib2.0-doc to Build-Depends-Indep
+  * Move the daemons from /usr/lib/fwupd to /usr/libexec/fwupd
+  * debian/*.symbols: Add the Build-Depends-Package field
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Wed, 04 Mar 2020 10:32:33 -0600
+
 fwupd (1.3.8-1) unstable; urgency=medium
 
   * New upstream version (1.3.8)
