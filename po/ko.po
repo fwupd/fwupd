@@ -884,12 +884,6 @@ msgstr "원격 저장소 없음"
 msgid "No updates were applied"
 msgstr "적용된 업데이트 없음"
 
-#. TRANSLATORS: message letting the user know no device upgrade available
-#. * %1 is the device name
-#, c-format
-msgid "No upgrades for %s"
-msgstr "%s의 업그레이드 없음"
-
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "단일 PCR 값만 표시"

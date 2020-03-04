@@ -901,12 +901,6 @@ msgstr "Inga fjärrarkiv tillgängliga"
 msgid "No updates were applied"
 msgstr "Inga uppdateringar applicerades"
 
-#. TRANSLATORS: message letting the user know no device upgrade available
-#. * %1 is the device name
-#, c-format
-msgid "No upgrades for %s"
-msgstr "Inga uppgraderingar för %s"
-
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Visa endast enkelt PCR-värde"
@@ -1396,7 +1390,7 @@ msgstr "Att skicka upp rapporter för fastprogramvara hjälper hårdvaruförsäl
 
 #. TRANSLATORS: command line option
 msgid "Use quirk flags when installing firmware"
-msgstr "Använd nyckflaggor vid installation av fastprogramvara"
+msgstr "Använd specialflaggor vid installation av fastprogramvara"
 
 #. TRANSLATORS: User has been notified
 msgid "User has been notified"

@@ -897,12 +897,6 @@ msgstr "Ingen tilgængelige fjerne"
 msgid "No updates were applied"
 msgstr "Der blev ikke anvendt nogen opdateringer"
 
-#. TRANSLATORS: message letting the user know no device upgrade available
-#. * %1 is the device name
-#, c-format
-msgid "No upgrades for %s"
-msgstr "Ingen opgraderinger til %s"
-
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Vis kun én PCR-værdi"

@@ -900,12 +900,6 @@ msgstr "Nenhum remoto disponível"
 msgid "No updates were applied"
 msgstr "Nenhuma atualização foi aplicada"
 
-#. TRANSLATORS: message letting the user know no device upgrade available
-#. * %1 is the device name
-#, c-format
-msgid "No upgrades for %s"
-msgstr "Nenhuma atualização para %s"
-
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Mostra apenas valor único de PCR"
