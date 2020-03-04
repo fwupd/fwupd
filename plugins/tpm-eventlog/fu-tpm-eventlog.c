@@ -11,6 +11,7 @@
 #include <fwupd.h>
 #include <glib/gi18n.h>
 #include <locale.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -76,6 +77,7 @@ main (int argc, char *argv[])
 {
 	const gchar *fn;
 	gboolean verbose = FALSE;
+	gboolean interactive = isatty (fileno (stdout)) != 0;
 	gint pcr = -1;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GOptionContext) context = g_option_context_new (NULL);
@@ -89,13 +91,24 @@ main (int argc, char *argv[])
 		{ NULL}
 	};
 
+#ifdef HAVE_GETUID
+	/* ensure root user */
+	if (argc < 2 && interactive && (getuid () != 0 || geteuid () != 0))
+		/* TRANSLATORS: we're poking around as a power user */
+		g_printerr ("%s\n", _("This program may only work correctly as root"));
+#endif
+
 	setlocale (LC_ALL, "");
 	bindtextdomain (GETTEXT_PACKAGE, FWUPD_LOCALEDIR);
 	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 	textdomain (GETTEXT_PACKAGE);
 
 	/* TRANSLATORS: program name */
+	g_set_application_name (_("fwupd TPM event log utility"));
 	g_option_context_add_main_entries (context, options, NULL);
+	g_option_context_set_description (context,
+		"This tool will read and parse the TPM event log "
+		"from the system firwmare.");
 	if (!g_option_context_parse (context, &argc, &argv, &error)) {
 		/* TRANSLATORS: the user didn't read the man page */
 		g_print ("%s: %s\n", _("Failed to parse arguments"),

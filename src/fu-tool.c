@@ -314,11 +314,12 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GNode) root = g_node_new (NULL);
-	g_autofree gchar *title = fu_util_get_tree_title (priv);
+	g_autofree gchar *title = NULL;
 
 	/* load engine */
 	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
 		return FALSE;
+	title = fu_util_get_tree_title (priv);
 
 	/* get devices from daemon */
 	devices = fu_engine_get_devices (priv->engine, error);
@@ -333,8 +334,16 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		GNode *child;
 
 		/* not going to have results, so save a engine round-trip */
-		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
+		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE))
 			continue;
+		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED)) {
+			/* TRANSLATORS: message letting the user know no device upgrade available due to missing on LVFS
+			* %1 is the device name */
+			g_autofree gchar *tmp = g_strdup_printf (_("• %s has no available firmware updates"),
+								 fwupd_device_get_name (dev));
+			g_printerr ("%s\n", tmp);
+			continue;
+		}
 		if (!fu_util_filter_device (priv, dev))
 			continue;
 
@@ -345,9 +354,11 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		if (rels == NULL) {
 			/* TRANSLATORS: message letting the user know no device upgrade available
 			* %1 is the device name */
-			upgrade_str = g_strdup_printf (_("No upgrades for %s"),
-						      fwupd_device_get_name (dev));
-			g_printerr ("%s: %s\n", upgrade_str, error_local->message);
+			g_autofree gchar *tmp = g_strdup_printf (_("• %s has the latest available firmware version"),
+								 fwupd_device_get_name (dev));
+			g_printerr ("%s\n", tmp);
+			/* discard the actual reason from user, but leave for debugging */
+			g_debug ("%s", error_local->message);
 			continue;
 		}
 		child = g_node_append_data (root, dev);
@@ -372,12 +383,13 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) array = NULL;
 	g_autoptr(GNode) root = g_node_new (NULL);
-	g_autofree gchar *title = fu_util_get_tree_title (priv);
+	g_autofree gchar *title = NULL;
 	gint fd;
 
 	/* load engine */
 	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
 		return FALSE;
+	title = fu_util_get_tree_title (priv);
 
 	/* check args */
 	if (g_strv_length (values) != 1) {
@@ -387,6 +399,9 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 				     "Invalid arguments");
 		return FALSE;
 	}
+
+	/* implied, important for get-details on a device not in your system */
+	priv->show_all_devices = TRUE;
 
 	/* open file */
 	fd = open (values[0], O_RDONLY);
@@ -406,9 +421,15 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	for (guint i = 0; i < array->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (array, i);
+		FwupdRelease *rel;
+		GNode *child;
 		if (!fu_util_filter_device (priv, dev))
 			continue;
-		g_node_append_data (root, dev);
+		child = g_node_append_data (root, dev);
+		rel = fwupd_device_get_release_default (dev);
+		if (rel != NULL)
+			g_node_append_data (child, rel);
+
 	}
 	fu_util_print_tree (root, title);
 
@@ -456,12 +477,13 @@ static gboolean
 fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GNode) root = g_node_new (NULL);
-	g_autofree gchar *title = fu_util_get_tree_title (priv);
+	g_autofree gchar *title = NULL;
 	g_autoptr(GPtrArray) devs = NULL;
 
 	/* load engine */
 	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
 		return FALSE;
+	title = fu_util_get_tree_title (priv);
 
 	/* print */
 	devs = fu_engine_get_devices (priv->engine, error);
@@ -976,15 +998,29 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 		if (!fu_util_is_interesting_device (dev))
 			continue;
 		/* only show stuff that has metadata available */
-		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
+		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE))
 			continue;
+		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED)) {
+			/* TRANSLATORS: message letting the user know no device upgrade available due to missing on LVFS
+			* %1 is the device name */
+			g_autofree gchar *tmp = g_strdup_printf (_("• %s has no available firmware updates"),
+								 fwupd_device_get_name (dev));
+			g_printerr ("%s\n", tmp);
+			continue;
+		}
 		if (!fu_util_filter_device (priv, dev))
 			continue;
 
 		device_id = fu_device_get_id (dev);
 		rels = fu_engine_get_upgrades (priv->engine, device_id, &error_local);
 		if (rels == NULL) {
-			g_printerr ("%s\n", error_local->message);
+			/* TRANSLATORS: message letting the user know no device upgrade available
+			* %1 is the device name */
+			g_autofree gchar *tmp = g_strdup_printf (_("• %s has the latest available firmware version"),
+								 fwupd_device_get_name (dev));
+			g_printerr ("%s\n", tmp);
+			/* discard the actual reason from user, but leave for debugging */
+			g_debug ("%s", error_local->message);
 			continue;
 		}
 
@@ -1534,11 +1570,12 @@ fu_util_get_history (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GNode) root = g_node_new (NULL);
-	g_autofree gchar *title = fu_util_get_tree_title (priv);
+	g_autofree gchar *title = NULL;
 
 	/* load engine */
 	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
 		return FALSE;
+	title = fu_util_get_tree_title (priv);
 
 	/* get all devices from the history database */
 	devices = fu_engine_get_history (priv->engine, error);
@@ -1667,11 +1704,12 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GNode) root = g_node_new (NULL);
 	g_autoptr(GPtrArray) remotes = NULL;
-	g_autofree gchar *title = fu_util_get_tree_title (priv);
+	g_autofree gchar *title = NULL;
 
 	/* load engine */
 	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
 		return FALSE;
+	title = fu_util_get_tree_title (priv);
 
 	/* list remotes */
 	remotes = fu_engine_get_remotes (priv->engine, error);

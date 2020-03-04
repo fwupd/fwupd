@@ -77,8 +77,25 @@ fwupdtpmevlog = executable(
     fwupdplugin,
   ],
   install : true,
-  install_dir : join_paths(libexecdir, 'fwupd')
+  install_dir : bindir
 )
+
+if get_option('man')
+  custom_target('fwupdtpmevlog-man',
+    input : fwupdtpmevlog,
+    output : 'fwupdtpmevlog.1',
+    command : [
+      help2man, '@INPUT@',
+      '--no-info',
+      '--output', '@OUTPUT@',
+      '--name', 'Debugging utility for the TPM event log',
+      '--manual', 'User Commands',
+      '--version-string', fwupd_version,
+    ],
+    install : true,
+    install_dir : join_paths(mandir, 'man1'),
+  )
+endif
 
 run_target('fuzz-tpm-eventlog',
   command: [

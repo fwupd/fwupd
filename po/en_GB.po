@@ -883,12 +883,6 @@ msgstr "No remotes available"
 msgid "No updates were applied"
 msgstr "No updates were applied"
 
-#. TRANSLATORS: message letting the user know no device upgrade available
-#. * %1 is the device name
-#, c-format
-msgid "No upgrades for %s"
-msgstr "No upgrades for %s"
-
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Only show single PCR value"

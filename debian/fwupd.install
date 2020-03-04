@@ -1,7 +1,7 @@
-usr/bin/dfu-tool
-usr/bin/fwupdmgr
+usr/bin/*
 etc/*
 usr/share/bash-completion
+usr/share/fish/vendor_completions.d
 usr/share/fwupd/*
 usr/share/dbus-1/*
 usr/share/icons/*
@@ -9,10 +9,7 @@ usr/share/polkit-1/*
 usr/share/locale
 usr/share/metainfo/*
 usr/libexec/fwupd/fwupd
-usr/libexec/fwupd/fwupdagent
 usr/libexec/fwupd/fwupdoffline
-usr/libexec/fwupd/fwupdtool
-usr/libexec/fwupd/fwupdtpmevlog
 usr/share/man/man1/*
 lib/systemd/system/*
 lib/systemd/system-preset/*

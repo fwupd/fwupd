@@ -83,7 +83,7 @@ fwupdagent = executable(
     fwupdplugin,
   ],
   install : true,
-  install_dir : join_paths(libexecdir, 'fwupd')
+  install_dir : bindir
 )
 endif
 
@@ -174,7 +174,7 @@ fwupdtool = executable(
     fwupdplugin
   ],
   install : true,
-  install_dir : join_paths(libexecdir, 'fwupd')
+  install_dir : bindir
 )
 
 if build_daemon and get_option('man')
@@ -186,7 +186,37 @@ if build_daemon and get_option('man')
       help2man, '@INPUT@',
       '--no-info',
       '--output', '@OUTPUT@',
-      '--name', 'fwupd',
+      '--name', 'Firmware update manager client utility',
+      '--manual', 'User Commands',
+      '--version-string', fwupd_version,
+    ],
+    install : true,
+    install_dir : join_paths(mandir, 'man1'),
+  )
+  custom_target('fwupdagent-man',
+    input : fwupdagent,
+    output : 'fwupdagent.1',
+    command : [
+      help2man, '@INPUT@',
+      '--no-info',
+      '--output', '@OUTPUT@',
+      '--name', 'Firmware updating agent',
+      '--manual', 'User Commands',
+      '--version-string', fwupd_version,
+    ],
+    install : true,
+    install_dir : join_paths(mandir, 'man1'),
+  )
+endif
+if get_option('man')
+  custom_target('fwupdtool-man',
+    input : fwupdtool,
+    output : 'fwupdtool.1',
+    command : [
+      help2man, '@INPUT@',
+      '--no-info',
+      '--output', '@OUTPUT@',
+      '--name', 'Standalone firmware update utility',
       '--manual', 'User Commands',
       '--version-string', fwupd_version,
     ],

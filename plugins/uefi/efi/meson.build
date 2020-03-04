@@ -48,6 +48,16 @@ if efi_ldsdir == ''
       error('Cannot find @0@'.format(arch_lds))
     endif
   endif
+else
+  cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds))
+  if cmd.returncode() != 0
+    arch_lds = 'elf_@0@_efi.lds'.format(gnu_efi_path_arch)
+    arch_crt = 'crt0-efi-@0@.o'.format(gnu_efi_path_arch)
+    cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds))
+  endif
+  if cmd.returncode() != 0
+    error('Cannot find @0@'.format(arch_lds))
+  endif
 endif
 
 message('efi-libdir: "@0@"'.format(efi_libdir))

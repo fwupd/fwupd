@@ -521,12 +521,6 @@ msgstr "Nissun rimot disponibil"
 msgid "No updates were applied"
 msgstr "Nol è stât aplicât nissun inzornament"
 
-#. TRANSLATORS: message letting the user know no device upgrade available
-#. * %1 is the device name
-#, c-format
-msgid "No upgrades for %s"
-msgstr "Nissun inzornament par %s"
-
 #. TRANSLATORS: command line option
 msgid "Override plugin warning"
 msgstr "Ignore i avertiments dal plugin"

@@ -577,16 +577,17 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *systab)
 		fwup_info(L"Adding new capsule");
 		rc = fwup_add_update_capsule(updates[i], &capsules[j], &cbd_data[j], image);
 		if (EFI_ERROR(rc)) {
-			/* ignore a failing UX capsule */
-			if (rc == EFI_UNSUPPORTED &&
-			    CompareGuid(&updates[i]->info->guid, &ux_capsule_guid) == 0) {
-				fwup_debug(L"GOP unsuitable: %r", rc);
-				continue;
-			}
-			fwup_warning(L"Could not build update list: %r", rc);
-			return rc;
+			/* ignore a failing capsule */
+			fwup_warning(L"Could not add capsule with guid %g for update: %r",
+				     updates[i]->info->guid, rc);
+			continue;
 		}
 		j++;
+	}
+
+	if (j == 0) {
+		fwup_warning(L"Could not build update list: %r\n", rc);
+		return rc;
 	}
 	n_updates = j;
 	fwup_debug(L"n_updates: %d", n_updates);

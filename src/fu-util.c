@@ -286,16 +286,12 @@ fu_util_maybe_enable_automatic (FuUtilPrivate *priv, GPtrArray *remotes, GError 
 							 NULL, error))
 				return FALSE;
 		}
-		return TRUE;
+		break;
 	default:
 		break;
 	}
 
-	g_set_error_literal (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOTHING_TO_DO,
-			     "invalid option selected");
-	return FALSE;
+	return TRUE;
 }
 
 static gboolean
@@ -652,6 +648,10 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 				     "Invalid arguments");
 		return FALSE;
 	}
+
+	/* implied, important for get-details on a device not in your system */
+	priv->show_all_devices = TRUE;
+
 	array = fwupd_client_get_details (priv->client, values[0], NULL, error);
 	if (array == NULL)
 		return FALSE;
@@ -1648,14 +1648,21 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
-		g_autofree gchar *upgrade_str = NULL;
 		g_autoptr(GPtrArray) rels = NULL;
 		g_autoptr(GError) error_local = NULL;
 		GNode *child;
 
 		/* not going to have results, so save a D-Bus round-trip */
-		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
+		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE))
 			continue;
+		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED)) {
+			/* TRANSLATORS: message letting the user know no device upgrade available due to missing on LVFS
+			* %1 is the device name */
+			g_autofree gchar *tmp = g_strdup_printf (_("• %s has no available firmware updates"),
+								 fwupd_device_get_name (dev));
+			g_printerr ("%s\n", tmp);
+			continue;
+		}
 		if (!fu_util_filter_device (priv, dev))
 			continue;
 		supported = TRUE;
@@ -1667,9 +1674,11 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		if (rels == NULL) {
 			/* TRANSLATORS: message letting the user know no device upgrade available
 			* %1 is the device name */
-			upgrade_str = g_strdup_printf (_("No upgrades for %s"),
-						      fwupd_device_get_name (dev));
-			g_printerr ("%s: %s\n", upgrade_str, error_local->message);
+			g_autofree gchar *tmp = g_strdup_printf (_("• %s has the latest available firmware version"),
+								 fwupd_device_get_name (dev));
+			g_printerr ("%s\n", tmp);
+			/* discard the actual reason from user, but leave for debugging */
+			g_debug ("%s", error_local->message);
 			continue;
 		}
 		child = g_node_append_data (root, dev);
@@ -1852,8 +1861,16 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 		g_autoptr(GError) error_local = NULL;
 
 		/* not going to have results, so save a D-Bus round-trip */
-		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
+		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE))
 			continue;
+		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED)) {
+			/* TRANSLATORS: message letting the user know no device upgrade available due to missing on LVFS
+			* %1 is the device name */
+			g_autofree gchar *tmp = g_strdup_printf (_("• %s has no available firmware updates"),
+								 fwupd_device_get_name (dev));
+			g_printerr ("%s\n", tmp);
+			continue;
+		}
 		if (!fu_util_filter_device (priv, dev))
 			continue;
 		supported = TRUE;
@@ -1865,9 +1882,11 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 		if (rels == NULL) {
 			/* TRANSLATORS: message letting the user know no device upgrade available
 			* %1 is the device name */
-			upgrade_str = g_strdup_printf (_("No upgrades for %s"),
-						      fwupd_device_get_name (dev));
-			g_printerr ("%s: %s\n", upgrade_str, error_local->message);
+			g_autofree gchar *tmp = g_strdup_printf (_("• %s has the latest available firmware version"),
+								 fwupd_device_get_name (dev));
+			g_printerr ("%s\n", tmp);
+			/* discard the actual reason from user, but leave for debugging */
+			g_debug ("%s", error_local->message);
 			continue;
 		}
 		rel = g_ptr_array_index (rels, 0);
@@ -2114,8 +2133,9 @@ fu_util_reinstall (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	for (guint j = 0; j < rels->len; j++) {
 		FwupdRelease *rel_tmp = g_ptr_array_index (rels, j);
-		if (fu_common_vercmp (fwupd_release_get_version (rel_tmp),
-		    fu_device_get_version (dev)) == 0) {
+		if (fu_common_vercmp_full (fwupd_release_get_version (rel_tmp),
+					   fu_device_get_version (dev),
+					   fwupd_device_get_version_format (dev)) == 0) {
 			rel = g_object_ref (rel_tmp);
 			break;
 		}

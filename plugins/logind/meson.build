@@ -1,9 +1,9 @@
-cargs = ['-DG_LOG_DOMAIN="FuPluginUpower"']
+cargs = ['-DG_LOG_DOMAIN="FuPluginLogind"']
 
-shared_module('fu_plugin_upower',
+shared_module('fu_plugin_logind',
   fu_hash,
   sources : [
-    'fu-plugin-upower.c',
+    'fu-plugin-logind.c',
   ],
   include_directories : [
     root_incdir,
@@ -20,8 +20,4 @@ shared_module('fu_plugin_upower',
   dependencies : [
     plugin_deps,
   ],
-)
-
-install_data(['upower.conf'],
-  install_dir:  join_paths(sysconfdir, 'fwupd')
 )

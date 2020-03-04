@@ -27,6 +27,10 @@ subdir('thelio-io')
 subdir('wacom-raw')
 endif
 
+if get_option('systemd')
+subdir('logind')
+endif
+
 # depends on dfu
 subdir('csr')
 

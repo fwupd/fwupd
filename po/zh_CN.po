@@ -888,12 +888,6 @@ msgstr "无可用远程源"
 msgid "No updates were applied"
 msgstr "没有应用任何更新"
 
-#. TRANSLATORS: message letting the user know no device upgrade available
-#. * %1 is the device name
-#, c-format
-msgid "No upgrades for %s"
-msgstr "%s 无可用升级"
-
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "只显示单 PCR 值"

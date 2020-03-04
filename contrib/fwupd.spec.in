@@ -219,9 +219,6 @@ Data files for installed tests.
 %endif
 %global fwup_efi_fn $RPM_BUILD_ROOT%{_libexecdir}/fwupd/efi/fwupd%{efiarch}.efi
 %pesign -s -i %{fwup_efi_fn} -o %{fwup_efi_fn}.signed
-%if 0%{?rhel} > 7
-ln -s %{_libexecdir}/fwupd/fwupdate $RPM_BUILD_ROOT%{_bindir}/fwupdate
-%endif
 %endif
 
 mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
@@ -250,6 +247,7 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %doc README.md AUTHORS
 %license COPYING
 %config(noreplace)%{_sysconfdir}/fwupd/daemon.conf
+%config(noreplace)%{_sysconfdir}/fwupd/upower.conf
 %if 0%{?have_uefi}
 %config(noreplace)%{_sysconfdir}/fwupd/uefi.conf
 %endif
@@ -259,20 +257,17 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %config(noreplace)%{_sysconfdir}/fwupd/thunderbolt.conf
 %dir %{_libexecdir}/fwupd
 %{_libexecdir}/fwupd/fwupd
-%{_libexecdir}/fwupd/fwupdtool
-%{_libexecdir}/fwupd/fwupdagent
 %{_libexecdir}/fwupd/fwupdoffline
 %if 0%{?have_uefi}
 %{_libexecdir}/fwupd/efi/*.efi
 %{_libexecdir}/fwupd/efi/*.efi.signed
-%{_libexecdir}/fwupd/fwupdate
-%if 0%{?rhel} > 7
 %{_bindir}/fwupdate
-%endif
-%{_libexecdir}/fwupd/fwupdtpmevlog
+%{_bindir}/fwupdtpmevlog
 %endif
 %{_bindir}/dfu-tool
 %{_bindir}/fwupdmgr
+%{_bindir}/fwupdtool
+%{_bindir}/fwupdagent
 %dir %{_sysconfdir}/fwupd
 %dir %{_sysconfdir}/fwupd/remotes.d
 %if 0%{?have_dell}
@@ -288,6 +283,7 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %{_datadir}/bash-completion/completions/fwupdmgr
 %{_datadir}/bash-completion/completions/fwupdtool
 %{_datadir}/bash-completion/completions/fwupdagent
+%{_datadir}/fish/vendor_completions.d/fwupdmgr.fish
 %{_datadir}/fwupd/metainfo/org.freedesktop.fwupd*.metainfo.xml
 %if 0%{?have_dell}
 %{_datadir}/fwupd/remotes.d/dell-esrt/metadata.xml
@@ -297,8 +293,14 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %{_datadir}/polkit-1/actions/org.freedesktop.fwupd.policy
 %{_datadir}/polkit-1/rules.d/org.freedesktop.fwupd.rules
 %{_datadir}/dbus-1/system-services/org.freedesktop.fwupd.service
+%{_datadir}/man/man1/fwupdtool.1.gz
+%{_datadir}/man/man1/fwupdagent.1.gz
 %{_datadir}/man/man1/dfu-tool.1.gz
 %{_datadir}/man/man1/fwupdmgr.1.gz
+%if 0%{?have_uefi}
+%{_datadir}/man/man1/fwupdate.1.gz
+%{_datadir}/man/man1/fwupdtpmevlog.1.gz
+%endif
 %{_datadir}/metainfo/org.freedesktop.fwupd.metainfo.xml
 %{_datadir}/icons/hicolor/scalable/apps/org.freedesktop.fwupd.svg
 %{_datadir}/fwupd/firmware_packager.py
@@ -376,6 +378,7 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %{_libdir}/fwupd-plugins-3/libfu_plugin_uefi.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_uefi_recovery.so
 %endif
+%{_libdir}/fwupd-plugins-3/libfu_plugin_logind.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_logitech_hidpp.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_upower.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_vli.so
