@@ -18,6 +18,14 @@ VendorId = ATA:0x8086
 Vendor = Seagate
 VendorId = ATA:0x1BB1
 
+[DeviceInstanceId=OUI\0014ee]
+Vendor = Western Digital
+VendorId = ATA:0x101C
+
 [DeviceInstanceId=OUI\00a075]
 Vendor = Micron
 VendorId = ATA:0x1344
+
+[DeviceInstanceId=OUI\5cd2e4]
+Vendor = Intel
+VendorId = ATA:0x8086
