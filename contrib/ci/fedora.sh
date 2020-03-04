@@ -7,7 +7,6 @@ git config tar.tar.xz.command "xz -c"
 mkdir -p build && pushd build
 rm -rf *
 meson .. \
-    -Db_sanitize=address \
     -Dgtkdoc=true \
     -Dman=true \
     -Dtests=true \
