@@ -328,6 +328,11 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency type="build" id="flashrom-dev">
+    <distro id="fedora">
+      <package>flashrom-devel</package>
+    </distro>
+  </dependency>
   <dependency type="build" id="gcab">
     <distro id="centos">
       <package />
