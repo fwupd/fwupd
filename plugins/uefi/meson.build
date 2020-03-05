@@ -7,6 +7,9 @@ if efi_os_dir != ''
   cargs += '-DEFI_OS_DIR="' + efi_os_dir + '"'
 endif
 
+install_data(['uefi.quirk'],
+  install_dir: join_paths(datadir, 'fwupd', 'quirks.d'))
+
 shared_module('fu_plugin_uefi',
   fu_hash,
   sources : [
