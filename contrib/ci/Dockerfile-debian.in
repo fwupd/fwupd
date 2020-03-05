@@ -9,11 +9,11 @@ Package: *\n\
 Pin: release a=unstable\n\
 Pin-Priority: 800\n\
 \n\
-Package: lintian\n\
+Package: libflashrom-dev\n\
 Pin: release a=unstable\n\
 Pin-Priority: 901\n\
 \n\
-Package: tpm-udev\n\
+Package: libflashrom1\n\
 Pin: release a=unstable\n\
 Pin-Priority: 901\n'\
  > /etc/apt/preferences
