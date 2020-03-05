@@ -16,7 +16,6 @@
 #include "fu-vli-usbhub-device.h"
 #include "fu-vli-usbhub-firmware.h"
 #include "fu-vli-usbhub-i2c-device.h"
-#include "fu-vli-usbhub-pd-common.h"
 #include "fu-vli-usbhub-pd-device.h"
 
 struct _FuVliUsbhubDevice
