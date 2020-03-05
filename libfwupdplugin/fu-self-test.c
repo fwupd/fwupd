@@ -1105,6 +1105,7 @@ fu_common_version_func (void)
 		{ 0x226a4b00,	"137.2706.768",		FWUPD_VERSION_FORMAT_SURFACE_LEGACY },
 		{ 0x6001988,	"6.25.136",		FWUPD_VERSION_FORMAT_SURFACE },
 		{ 0x00ff0001,	"255.0.1",		FWUPD_VERSION_FORMAT_DELL_BIOS },
+		{ 0xc8,		"0x000000c8",		FWUPD_VERSION_FORMAT_HEX },
 		{ 0,		NULL }
 	};
 	struct {
@@ -1118,6 +1119,7 @@ fu_common_version_func (void)
 		{ 0xff,		"0.255",		FWUPD_VERSION_FORMAT_PAIR },
 		{ 0xffffffffffffffff, "4294967295.4294967295", FWUPD_VERSION_FORMAT_PAIR },
 		{ 0x0,		"0",			FWUPD_VERSION_FORMAT_NUMBER },
+		{ 0x11000000c8,		"0x00000011000000c8",	FWUPD_VERSION_FORMAT_HEX },
 		{ 0,		NULL }
 	};
 	struct {
