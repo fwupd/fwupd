@@ -2431,7 +2431,6 @@ main (int argc, char *argv[])
 	g_autoptr(GPtrArray) cmd_array = fu_util_cmd_array_new ();
 	g_autofree gchar *cmd_descriptions = NULL;
 	g_autofree gchar *filter = NULL;
-	g_autofree gchar *log = NULL;
 	const GOptionEntry options[] = {
 		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
 			/* TRANSLATORS: command line option */

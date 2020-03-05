@@ -328,7 +328,6 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 	fwupd_device_array_ensure_parents (devices);
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
-		g_autofree gchar *upgrade_str = NULL;
 		g_autoptr(GPtrArray) rels = NULL;
 		g_autoptr(GError) error_local = NULL;
 		GNode *child;
