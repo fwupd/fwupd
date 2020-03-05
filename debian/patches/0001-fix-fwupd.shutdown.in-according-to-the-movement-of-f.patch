@@ -1,0 +1,23 @@
+From d9597df863ca21e0fb2ff821f0c612e0eb0558b2 Mon Sep 17 00:00:00 2001
+From: Dennis Kadioglu <dkadioglu@web.de>
+Date: Thu, 5 Mar 2020 09:37:56 +0100
+Subject: [PATCH] fix fwupd.shutdown.in according to the movement of fwupdtool
+ to bindir
+
+---
+ data/fwupd.shutdown.in | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/data/fwupd.shutdown.in b/data/fwupd.shutdown.in
+index 4c027e7a..53b33455 100755
+--- a/data/fwupd.shutdown.in
++++ b/data/fwupd.shutdown.in
+@@ -4,4 +4,4 @@
+ [ -f @localstatedir@/lib/fwupd/pending.db ] || exit 0
+ 
+ # activate firmware when we have a read-only filesysten
+-@libexecdir@/fwupd/fwupdtool activate
++@bindir@/fwupdtool activate
+-- 
+2.25.0
+

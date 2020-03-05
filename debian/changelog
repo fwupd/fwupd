@@ -1,3 +1,9 @@
+fwupd (1.3.9-2) UNRELEASED; urgency=medium
+
+  * Backport a patch to correct an error with shutdown script.
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Thu, 05 Mar 2020 17:02:17 -0600
+
 fwupd (1.3.9-1) unstable; urgency=medium
 
   [ Mario Limonciello ]
