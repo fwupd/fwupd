@@ -53,6 +53,10 @@ fu_common_version_from_uint64 (guint64 val, FwupdVersionFormat kind)
 		/* AABBCCDD */
 		return g_strdup_printf ("%" G_GUINT64_FORMAT, val);
 	}
+	if (kind == FWUPD_VERSION_FORMAT_HEX) {
+		/* 0xAABBCCDDEEFFGGHH */
+		return g_strdup_printf ("0x%08x%08x", (guint32) (val >> 32), (guint32) (val & 0xffffffff));
+	}
 	g_critical ("failed to convert version format %s: %" G_GUINT64_FORMAT "",
 		    fwupd_version_format_to_string (kind), val);
 	return NULL;
@@ -143,6 +147,10 @@ fu_common_version_from_uint32 (guint32 val, FwupdVersionFormat kind)
 					(val >> 8) & 0xff,
 					val & 0xff);
 	}
+	if (kind == FWUPD_VERSION_FORMAT_HEX) {
+		/* 0xAABBCCDD */
+		return g_strdup_printf ("0x%08x", val);
+	}
 	g_critical ("failed to convert version format %s: %u",
 		    fwupd_version_format_to_string (kind), val);
 	return NULL;
@@ -175,6 +183,10 @@ fu_common_version_from_uint16 (guint16 val, FwupdVersionFormat kind)
 	if (kind == FWUPD_VERSION_FORMAT_NUMBER ||
 	    kind == FWUPD_VERSION_FORMAT_PLAIN) {
 		return g_strdup_printf ("%" G_GUINT16_FORMAT, val);
+	}
+	if (kind == FWUPD_VERSION_FORMAT_HEX) {
+		/* 0xAABB */
+		return g_strdup_printf ("0x%04x", val);
 	}
 	g_critical ("failed to convert version format %s: %u",
 		    fwupd_version_format_to_string (kind), val);
@@ -404,6 +416,8 @@ fu_common_version_convert_base (FwupdVersionFormat fmt)
 		return FWUPD_VERSION_FORMAT_TRIPLET;
 	if (fmt == FWUPD_VERSION_FORMAT_BCD)
 		return FWUPD_VERSION_FORMAT_PAIR;
+	if (fmt == FWUPD_VERSION_FORMAT_HEX)
+		return FWUPD_VERSION_FORMAT_NUMBER;
 	return fmt;
 }
 
