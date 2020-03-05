@@ -4,4 +4,4 @@
 [ -f @localstatedir@/lib/fwupd/pending.db ] || exit 0
 
 # activate firmware when we have a read-only filesysten
-@libexecdir@/fwupd/fwupdtool activate
+@bindir@/fwupdtool activate
