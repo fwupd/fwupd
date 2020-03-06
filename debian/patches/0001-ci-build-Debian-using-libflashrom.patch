@@ -1,0 +1,57 @@
+From 197b0d10a73eca5330e818e11f6cc9ad751ae218 Mon Sep 17 00:00:00 2001
+From: Mario Limonciello <mario.limonciello@dell.com>
+Date: Wed, 4 Mar 2020 20:58:13 -0600
+Subject: [PATCH] ci: build Debian using libflashrom
+
+The package is now in unstable in the 1.2-4 package.
+---
+ contrib/ci/Dockerfile-debian.in |  4 ++--
+ contrib/ci/dependencies.xml     | 14 ++++++++++++++
+ 2 files changed, 18 insertions(+), 14 deletions(-)
+
+diff --git a/contrib/ci/Dockerfile-debian.in b/contrib/ci/Dockerfile-debian.in
+index d4c07989..b82e11ab 100644
+--- a/contrib/ci/Dockerfile-debian.in
++++ b/contrib/ci/Dockerfile-debian.in
+@@ -9,11 +9,11 @@ Package: *\n\
+ Pin: release a=unstable\n\
+ Pin-Priority: 800\n\
+ \n\
+-Package: lintian\n\
++Package: libflashrom-dev\n\
+ Pin: release a=unstable\n\
+ Pin-Priority: 901\n\
+ \n\
+-Package: tpm-udev\n\
++Package: libflashrom1\n\
+ Pin: release a=unstable\n\
+ Pin-Priority: 901\n'\
+  > /etc/apt/preferences
+diff --git a/contrib/ci/dependencies.xml b/contrib/ci/dependencies.xml
+index 407bc1c0..559530d6 100644
+--- a/contrib/ci/dependencies.xml
++++ b/contrib/ci/dependencies.xml
+@@ -328,6 +328,20 @@
+       <package variant="x86_64" />
+     </distro>
+   </dependency>
++  <dependency type="build" id="libflashrom-dev">
++    <distro id="fedora">
++      <package>flashrom-devel</package>
++    </distro>
++    <distro id="debian">
++      <control />
++      <package variant="x86_64" />
++      <package variant="i386" />
++    </distro>
++    <distro id="ubuntu">
++      <control />
++      <package variant="x86_64" />
++    </distro>
++  </dependency>
+   <dependency type="build" id="gcab">
+     <distro id="centos">
+       <package />
+-- 
+2.25.0
+

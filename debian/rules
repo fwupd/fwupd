@@ -22,8 +22,10 @@ deb_version := $(shell dpkg-parsechangelog --show-field Version)
 ifeq (yes,$(shell dpkg-vendor --derives-from Ubuntu && echo yes))
 	SB_STYLE := ubuntu
 	tar_name := fwupd_$(deb_version)_$(DEB_HOST_ARCH).tar.gz
+	export FLASHROM=-Dplugin_flashrom=false
 else
 	TMPLDIR  := debian/fwupd-$(DEB_HOST_ARCH)-signed-template/usr/share/code-signing/fwupd-$(DEB_HOST_ARCH)-signed-template
+	export FLASHROM=-Dplugin_flashrom=true
 endif
 
 %:
@@ -48,11 +50,6 @@ override_dh_auto_configure:
 	else \
 		export UEFI="-Dplugin_uefi=false -Dplugin_redfish=false -Dplugin_nvme=false"; \
 	fi; \
-	if [ ! -z "$$CI" ]; then \
-		export FLASHROM="-Dplugin_flashrom=true"; \
-	else \
-		export FLASHROM="-Dplugin_flashrom=false"; \
-	fi; \
 	dh_auto_configure -- $$UEFI $$DELL $$FLASHROM $$CI -Dplugin_dummy=true -Dgtkdoc=true
 
 override_dh_install:
@@ -67,13 +64,6 @@ override_dh_install:
 	#if build with meson subproject in CI need to install this too
 	if [ ! -z "$$CI" ] && [ -f debian/tmp/usr/lib/xb-tool ]; then \
 		dh_install -pfwupd usr/lib/xb-tool ;\
-	fi
-	if [ ! -z "$$CI" ] && [ -f debian/tmp/usr/sbin/flashrom ]; then \
-		dh_install -pfwupd usr/sbin/flashrom ;\
-		dh_install -plibfwupd2 usr/lib/*/libflashrom.so.*; \
-		dh_install -plibfwupd-dev usr/include/libflashrom.h; \
-		dh_install -plibfwupd-dev usr/lib/*/libflashrom.so; \
-		dh_install -plibfwupd-dev usr/lib/*/pkgconfig/flashrom.pc; \
 	fi
 	dh_missing -a --fail-missing
 
