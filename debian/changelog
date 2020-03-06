@@ -1,10 +1,10 @@
-fwupd (1.3.9-2) UNRELEASED; urgency=medium
+fwupd (1.3.9-2) unstable; urgency=medium
 
   * Backport a patch to correct an error with shutdown script.
   * Enable flashrom plugin for Debian.
     - This is turned off for Ubuntu for now since flashrom is in universe.
 
- -- Mario Limonciello <mario.limonciello@dell.com>  Thu, 05 Mar 2020 17:02:17 -0600
+ -- Mario Limonciello <mario.limonciello@dell.com>  Thu, 05 Mar 2020 20:03:03 -0600
 
 fwupd (1.3.9-1) unstable; urgency=medium
 
