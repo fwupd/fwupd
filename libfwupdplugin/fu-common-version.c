@@ -437,6 +437,7 @@ fu_common_version_verify_format (const gchar *version,
 				 GError **error)
 {
 	FwupdVersionFormat fmt_base = fu_common_version_convert_base (fmt);
+	FwupdVersionFormat fmt_guess;
 
 	/* don't touch */
 	if (fmt == FWUPD_VERSION_FORMAT_PLAIN)
@@ -449,13 +450,15 @@ fu_common_version_verify_format (const gchar *version,
 	}
 
 	/* check the base format */
-	if (fu_common_version_guess_format (version) != fmt_base) {
+	fmt_guess = fu_common_version_guess_format (version);
+	if (fmt_guess != fmt_base) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_INVALID_DATA,
-			     "%s is not a valid %s",
+			     "%s is not a valid %s (guessed %s)",
 			     version,
-			     fwupd_version_format_to_string (fmt));
+			     fwupd_version_format_to_string (fmt),
+			     fwupd_version_format_to_string (fmt_guess));
 		return FALSE;
 	}
 	return TRUE;
