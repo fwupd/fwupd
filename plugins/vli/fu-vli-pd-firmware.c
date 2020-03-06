@@ -85,7 +85,7 @@ fu_vli_pd_firmware_parse (FuFirmware *firmware,
 	}
 
 	/* fall back to legacy location */
-	if (!fu_vli_pd_firmware_validate_header (firmware)) {
+	if (!fu_vli_pd_firmware_validate_header (self)) {
 		if (!fu_memcpy_safe ((guint8 *) &self->hdr, sizeof(self->hdr), 0x0,
 				     buf, bufsz, VLI_USBHUB_PD_FLASHMAP_ADDR_LEGACY,
 				     sizeof(self->hdr), error)) {
@@ -95,7 +95,7 @@ fu_vli_pd_firmware_parse (FuFirmware *firmware,
 	}
 
 	/* urgh, not found */
-	if (!fu_vli_pd_firmware_validate_header (firmware)) {
+	if (!fu_vli_pd_firmware_validate_header (self)) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
@@ -161,7 +161,6 @@ static void
 fu_vli_pd_firmware_class_init (FuVliPdFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS (klass);
-	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	klass_firmware->parse = fu_vli_pd_firmware_parse;
 	klass_firmware->to_string = fu_vli_pd_firmware_to_string;
 }
