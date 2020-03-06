@@ -380,9 +380,7 @@ fu_common_version_guess_format (const gchar *version)
 	split = g_strsplit (version, ".", -1);
 	sz = g_strv_length (split);
 	if (sz == 1) {
-		if (g_str_has_prefix (version, "0x"))
-			version += 2;
-		if (_g_ascii_is_digits (version))
+		if (g_str_has_prefix (version, "0x") || _g_ascii_is_digits (version))
 			return FWUPD_VERSION_FORMAT_NUMBER;
 		return FWUPD_VERSION_FORMAT_PLAIN;
 	}
