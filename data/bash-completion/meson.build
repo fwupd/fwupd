@@ -21,13 +21,13 @@ configure_file(
   install: true,
   install_dir: tgt)
 
-if build_daemon
+if build_daemon and get_option('agent')
 configure_file(
   input : 'fwupdmgr.in',
   output : 'fwupdmgr',
   configuration : con2,
   install: true,
   install_dir: tgt)
-endif # build_daemon
+endif # build_daemon and get_option('agent')
 
 endif # bashcomp.found()
