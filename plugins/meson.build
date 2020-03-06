@@ -1,3 +1,4 @@
+subdir('cpu')
 subdir('dfu')
 subdir('colorhug')
 subdir('ebitdo')
