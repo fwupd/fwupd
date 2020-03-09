@@ -1,6 +1,7 @@
 _fwupdtool_cmd_list=(
 	'activate'
 	'build-firmware'
+	'firmware-convert'
 	'firmware-parse'
 	'get-updates'
 	'get-upgrades'
@@ -130,6 +131,23 @@ _fwupdtool()
 			_filedir
 		#firmware_type
 		elif [[ "$prev" = "${COMP_WORDS[2]}" ]]; then
+			_show_firmware_types
+		else
+			_show_modifiers
+		fi
+		;;
+	firmware-convert)
+		#file in
+		if [[ "$prev" = "$command" ]]; then
+			_filedir
+		#file out
+		elif [[ "$prev" = "${COMP_WORDS[2]}" ]]; then
+			_filedir
+		#firmware_type in
+		elif [[ "$prev" = "${COMP_WORDS[3]}" ]]; then
+			_show_firmware_types
+		#firmware_type out
+		elif [[ "$prev" = "${COMP_WORDS[4]}" ]]; then
 			_show_firmware_types
 		else
 			_show_modifiers
