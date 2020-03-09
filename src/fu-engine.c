@@ -337,6 +337,9 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 	if (tmp != NULL)
 		fwupd_release_set_vendor (rel, tmp);
 
+	/* refresh the device and release to the new version format too */
+	fu_engine_md_refresh_device_from_component (self, dev, component);
+
 	/* the version is fixed up at runtime */
 	version_rel = fu_engine_get_release_version (self, dev, release, error);
 	if (version_rel == NULL)
