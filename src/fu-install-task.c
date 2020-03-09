@@ -334,12 +334,14 @@ fu_install_task_check_requirements (FuInstallTask *self,
 	}
 
 	/* check the version formats match if set in the release */
-	verfmts = xb_node_query (self->component,
-				 "custom/value[@key='LVFS::VersionFormat']",
-				 0, NULL);
-	if (verfmts != NULL) {
-		if (!fu_install_task_check_verfmt (self, verfmts, flags, error))
-			return FALSE;
+	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+		verfmts = xb_node_query (self->component,
+					"custom/value[@key='LVFS::VersionFormat']",
+					0, NULL);
+		if (verfmts != NULL) {
+			if (!fu_install_task_check_verfmt (self, verfmts, flags, error))
+				return FALSE;
+		}
 	}
 
 	/* compare to the lowest supported version, if it exists */

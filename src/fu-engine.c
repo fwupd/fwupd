@@ -2811,12 +2811,9 @@ fu_engine_md_refresh_device_verfmt (FuEngine *self, FuDevice *device, XbNode *co
 	}
 }
 
-static void
+void
 fu_engine_md_refresh_device_from_component (FuEngine *self, FuDevice *device, XbNode *component)
 {
-	/* set or clear the SUPPORTED flag */
-	fu_engine_md_refresh_device_supported (self, device, component);
-
 	/* set the name */
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_MD_SET_NAME))
 		fu_engine_md_refresh_device_name (self, device, component);
@@ -2835,6 +2832,11 @@ fu_engine_md_refresh_devices (FuEngine *self)
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index (devices, i);
 		g_autoptr(XbNode) component = fu_engine_get_component_by_guids (self, device);
+
+		/* set or clear the SUPPORTED flag */
+		fu_engine_md_refresh_device_supported (self, device, component);
+
+		/* fixup the name and format as needed */
 		fu_engine_md_refresh_device_from_component (self, device, component);
 	}
 }
