@@ -73,19 +73,6 @@ fu_vli_device_get_spi_cmd (FuVliDevice *self,
 	return TRUE;
 }
 
-gboolean
-fu_vli_device_reset (FuVliDevice *self, GError **error)
-{
-	FuVliDeviceClass *klass = FU_VLI_DEVICE_GET_CLASS (self);
-	if (klass->reset != NULL) {
-		if (!klass->reset (self, error)) {
-			g_prefix_error (error, "failed to reset device: ");
-			return FALSE;
-		}
-	}
-	return TRUE;
-}
-
 static gboolean
 fu_vli_device_spi_write_enable (FuVliDevice *self, GError **error)
 {
@@ -585,35 +572,6 @@ fu_vli_device_setup (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_vli_device_attach (FuDevice *device, GError **error)
-{
-	g_autoptr(GError) error_local = NULL;
-
-	/* replug, and ignore the device going away */
-	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	if (!fu_vli_device_reset (FU_VLI_DEVICE (device), &error_local)) {
-		if (g_error_matches (error_local,
-				     G_USB_DEVICE_ERROR,
-				     G_USB_DEVICE_ERROR_NO_DEVICE) ||
-		    g_error_matches (error_local,
-				     G_USB_DEVICE_ERROR,
-				     G_USB_DEVICE_ERROR_TIMED_OUT) ||
-		    g_error_matches (error_local,
-				     G_USB_DEVICE_ERROR,
-				     G_USB_DEVICE_ERROR_FAILED)) {
-			g_debug ("ignoring %s", error_local->message);
-		} else {
-			g_propagate_prefixed_error (error,
-						    g_steal_pointer (&error_local),
-						    "failed to restart device: ");
-			return FALSE;
-		}
-	}
-	return TRUE;
-}
-
-static gboolean
 fu_vli_device_set_quirk_kv (FuDevice *device,
 			    const gchar *key,
 			    const gchar *value,
@@ -685,5 +643,4 @@ fu_vli_device_class_init (FuVliDeviceClass *klass)
 	klass_device->to_string = fu_vli_device_to_string;
 	klass_device->set_quirk_kv = fu_vli_device_set_quirk_kv;
 	klass_device->setup = fu_vli_device_setup;
-	klass_device->attach = fu_vli_device_attach;
 }
