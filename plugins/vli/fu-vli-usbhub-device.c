@@ -39,8 +39,10 @@ fu_vli_usbhub_device_to_string (FuVliDevice *device, guint idt, GString *str)
 	if (self->update_protocol >= 0x2) {
 		fu_common_string_append_kv (str, idt, "H1Hdr@0x0", NULL);
 		fu_vli_usbhub_header_to_string (&self->hd1_hdr, idt + 1, str);
-		fu_common_string_append_kv (str, idt, "H2Hdr@0x1000", NULL);
-		fu_vli_usbhub_header_to_string (&self->hd2_hdr, idt + 1, str);
+		if (self->hd2_hdr.dev_id != 0xffff) {
+			fu_common_string_append_kv (str, idt, "H2Hdr@0x1000", NULL);
+			fu_vli_usbhub_header_to_string (&self->hd2_hdr, idt + 1, str);
+		}
 	}
 }
 
