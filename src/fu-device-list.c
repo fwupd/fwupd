@@ -318,9 +318,27 @@ fu_device_list_device_delayed_remove_cb (gpointer user_data)
 {
 	FuDeviceItem *item = (FuDeviceItem *) user_data;
 	FuDeviceList *self = FU_DEVICE_LIST (item->self);
+	GPtrArray *children;
 
 	/* no longer valid */
 	item->remove_id = 0;
+
+	/* remove any children associated with device */
+	children = fu_device_get_children (item->device);
+	for (guint j = 0; j < children->len; j++) {
+		FuDevice *child = g_ptr_array_index (children, j);
+		FuDeviceItem *child_item = fu_device_list_find_by_id (self,
+								      fu_device_get_id (child),
+								      NULL);
+		if (child_item == NULL) {
+			g_debug ("device %s not found", fu_device_get_id (child));
+			continue;
+		}
+		fu_device_list_emit_device_removed (self, child);
+		g_rw_lock_writer_lock (&self->devices_mutex);
+		g_ptr_array_remove (self->devices, child_item);
+		g_rw_lock_writer_unlock (&self->devices_mutex);
+	}
 
 	/* just remove now */
 	g_debug ("doing delayed removal");
@@ -385,6 +403,12 @@ fu_device_list_remove (FuDeviceList *self, FuDevice *device)
 		item->remove_id = 0;
 	}
 
+	/* delay the removal and check for replug */
+	if (fu_device_get_remove_delay (item->device) > 0) {
+		fu_device_list_remove_with_delay (item);
+		return;
+	}
+
 	/* remove any children associated with device */
 	children = fu_device_get_children (device);
 	for (guint j = 0; j < children->len; j++) {
@@ -396,20 +420,10 @@ fu_device_list_remove (FuDeviceList *self, FuDevice *device)
 			g_debug ("device %s not found", fu_device_get_id (child));
 			continue;
 		}
-		if (fu_device_get_remove_delay (child_item->device) > 0) {
-			fu_device_list_remove_with_delay (child_item);
-			continue;
-		}
 		fu_device_list_emit_device_removed (self, child);
 		g_rw_lock_writer_lock (&self->devices_mutex);
 		g_ptr_array_remove (self->devices, child_item);
 		g_rw_lock_writer_unlock (&self->devices_mutex);
-	}
-
-	/* delay the removal and check for replug */
-	if (fu_device_get_remove_delay (item->device) > 0) {
-		fu_device_list_remove_with_delay (item);
-		return;
 	}
 
 	/* remove right now */
