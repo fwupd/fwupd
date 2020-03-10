@@ -124,6 +124,7 @@ fu_vli_usbhub_i2c_device_write_firmware (FuDevice *device,
 	GPtrArray *records = fu_ihex_firmware_get_records (FU_IHEX_FIRMWARE (firmware));
 	guint16 usbver = fu_usb_device_get_spec (FU_USB_DEVICE (parent));
 	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(FuDevice) root = NULL;
 
 	/* open device */
 	locker = fu_device_locker_new (parent, error);
@@ -245,6 +246,16 @@ fu_vli_usbhub_i2c_device_write_firmware (FuDevice *device,
 		}
 		fu_device_set_progress_full (device, (gsize) j, (gsize) records->len);
 	}
+
+	/* the device automatically reboots */
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+	fu_device_set_progress (device, 0);
+
+	/* this is unusual, but the MSP device reboot takes down the entire hub
+	 * for ~60 seconds and we don't want the parent device removing us */
+	root = fu_device_get_root (device);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	fu_device_set_remove_delay (root, 120000);
 
 	/* success */
 	return TRUE;
