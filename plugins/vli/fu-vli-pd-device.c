@@ -403,11 +403,13 @@ fu_vli_pd_device_read_firmware (FuDevice *device, GError **error)
 static gboolean
 fu_vli_pd_device_write_gpios (FuVliPdDevice *self, GError **error)
 {
-	/* write GPIO 4&5, 7 then 3 */
+	/* disable UART-Rx mode */
 	if (!fu_vli_pd_device_write_reg (self, 0x0015, 0x7F, error))
 		return FALSE;
+	/* disable 'Watch Mode', chip is not in debug mode */
 	if (!fu_vli_pd_device_write_reg (self, 0x0019, 0x00, error))
 		return FALSE;
+	/* GPIO3 output enable, switch/CMOS/Boost control pin */
 	if (!fu_vli_pd_device_write_reg (self, 0x001C, 0x02, error))
 		return FALSE;
 	return TRUE;
