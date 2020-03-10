@@ -325,16 +325,36 @@ fu_vli_usbhub_device_spi_write_data (FuVliDevice *self,
 }
 
 static gboolean
-fu_vli_usbhub_device_reset (FuVliDevice *device, GError **error)
+fu_vli_usbhub_device_attach (FuDevice *device, GError **error)
 {
-	return g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (device)),
-					      G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					      G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					      G_USB_DEVICE_RECIPIENT_DEVICE,
-					      0xf6, 0x0040, 0x0002,
-					      NULL, 0x0, NULL,
-					      FU_VLI_DEVICE_TIMEOUT,
-					      NULL, error);
+	g_autoptr(GError) error_local = NULL;
+
+	/* replug, and ignore the device going away */
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (device)),
+					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    0xf6, 0x0040, 0x0002,
+					    NULL, 0x0, NULL,
+					    FU_VLI_DEVICE_TIMEOUT,
+					    NULL, &error_local)) {
+		if (g_error_matches (error_local,
+				     G_USB_DEVICE_ERROR,
+				     G_USB_DEVICE_ERROR_NO_DEVICE) ||
+		    g_error_matches (error_local,
+				     G_USB_DEVICE_ERROR,
+				     G_USB_DEVICE_ERROR_FAILED)) {
+			g_debug ("ignoring %s", error_local->message);
+		} else {
+			g_propagate_prefixed_error (error,
+						    g_steal_pointer (&error_local),
+						    "failed to restart device: ");
+			return FALSE;
+		}
+	}
+	return TRUE;
 }
 
 /* disable hub sleep states -- not really required by 815~ hubs */
@@ -995,9 +1015,9 @@ fu_vli_usbhub_device_class_init (FuVliUsbhubDeviceClass *klass)
 	klass_device->read_firmware = fu_vli_usbhub_device_read_firmware;
 	klass_device->write_firmware = fu_vli_usbhub_device_write_firmware;
 	klass_device->prepare_firmware = fu_vli_usbhub_device_prepare_firmware;
+	klass_device->attach = fu_vli_usbhub_device_attach;
 	klass_vli_device->to_string = fu_vli_usbhub_device_to_string;
 	klass_vli_device->setup = fu_vli_usbhub_device_setup;
-	klass_vli_device->reset = fu_vli_usbhub_device_reset;
 	klass_vli_device->spi_chip_erase = fu_vli_usbhub_device_spi_chip_erase;
 	klass_vli_device->spi_sector_erase = fu_vli_usbhub_device_spi_sector_erase;
 	klass_vli_device->spi_read_data = fu_vli_usbhub_device_spi_read_data;
