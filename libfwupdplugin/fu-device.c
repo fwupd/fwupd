@@ -572,6 +572,9 @@ fu_device_add_child (FuDevice *self, FuDevice *child)
 		}
 	}
 
+	/* ensure the ID is converted */
+	fu_device_ensure_id (child, NULL);
+
 	/* ensure the parent is also set on the child */
 	fu_device_set_parent (child, self);
 
