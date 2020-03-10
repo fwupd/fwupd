@@ -2075,20 +2075,28 @@ fu_engine_get_device_by_id (FuEngine *self, const gchar *device_id, GError **err
 {
 	g_autoptr(FuDevice) device1 = NULL;
 	g_autoptr(FuDevice) device2 = NULL;
+	g_autoptr(FuDevice) root = NULL;
 
 	/* find device */
 	device1 = fu_device_list_get_by_id (self->device_list, device_id, error);
 	if (device1 == NULL)
 		return NULL;
 
-	/* no replug required */
-	if (!fu_device_has_flag (device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG))
-		return g_steal_pointer (&device1);
-
 	/* wait for device to disconnect and reconnect */
-	if (!fu_device_list_wait_for_replug (self->device_list, device1, error)) {
-		g_prefix_error (error, "failed to wait for detach replug: ");
-		return NULL;
+	root = fu_device_get_root (device1);
+	if (fu_device_has_flag (device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG)) {
+		if (!fu_device_list_wait_for_replug (self->device_list, device1, error)) {
+			g_prefix_error (error, "failed to wait for detach replug: ");
+			return NULL;
+		}
+	} else if (fu_device_has_flag (root, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG)) {
+		if (!fu_device_list_wait_for_replug (self->device_list, root, error)) {
+			g_prefix_error (error, "failed to wait for detach replug: ");
+			return NULL;
+		}
+	} else {
+		/* no replug required */
+		return g_steal_pointer (&device1);
 	}
 
 	/* get the new device */
