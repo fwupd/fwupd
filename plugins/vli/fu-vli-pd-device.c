@@ -525,6 +525,9 @@ fu_vli_pd_device_attach (FuDevice *device, GError **error)
 				     G_USB_DEVICE_ERROR_NO_DEVICE) ||
 		    g_error_matches (error_local,
 				     G_USB_DEVICE_ERROR,
+				     G_USB_DEVICE_ERROR_TIMED_OUT) ||
+		    g_error_matches (error_local,
+				     G_USB_DEVICE_ERROR,
 				     G_USB_DEVICE_ERROR_FAILED)) {
 			g_debug ("ignoring %s", error_local->message);
 		} else {
