@@ -978,6 +978,34 @@ fu_device_poll_func (void)
 }
 
 static void
+fu_device_parent_func (void)
+{
+	g_autoptr(FuDevice) child = fu_device_new ();
+	g_autoptr(FuDevice) child_root = NULL;
+	g_autoptr(FuDevice) grandparent = fu_device_new ();
+	g_autoptr(FuDevice) grandparent_root = NULL;
+	g_autoptr(FuDevice) parent = fu_device_new ();
+	g_autoptr(FuDevice) parent_root = NULL;
+
+	/* set up three layer family */
+	fu_device_add_child (grandparent, parent);
+	fu_device_add_child (parent, child);
+
+	/* check parents */
+	g_assert (fu_device_get_parent (child) == parent);
+	g_assert (fu_device_get_parent (parent) == grandparent);
+	g_assert (fu_device_get_parent (grandparent) == NULL);
+
+	/* check root */
+	child_root = fu_device_get_root (child);
+	g_assert (child_root == grandparent);
+	parent_root = fu_device_get_root (parent);
+	g_assert (parent_root == grandparent);
+	grandparent_root = fu_device_get_root (child);
+	g_assert (grandparent_root == grandparent);
+}
+
+static void
 fu_device_incorporate_func (void)
 {
 	g_autoptr(FuDevice) device = fu_device_new ();
@@ -1653,6 +1681,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/firmware{dfu}", fu_firmware_dfu_func);
 	g_test_add_func ("/fwupd/archive{invalid}", fu_archive_invalid_func);
 	g_test_add_func ("/fwupd/archive{cab}", fu_archive_cab_func);
+	g_test_add_func ("/fwupd/device{parent}", fu_device_parent_func);
 	g_test_add_func ("/fwupd/device{incorporate}", fu_device_incorporate_func);
 	if (g_test_slow ())
 		g_test_add_func ("/fwupd/device{poll}", fu_device_poll_func);
