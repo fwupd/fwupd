@@ -108,6 +108,8 @@ fu_ihex_firmware_tokenize (FuFirmware *firmware, GBytes *fw,
 	for (guint ln = 0; lines[ln] != NULL; ln++) {
 		g_autoptr(FuIhexFirmwareRecord) rcd = NULL;
 		g_strdelimit (lines[ln], "\r\x1a", '\0');
+		if (lines[ln][0] == '\0')
+			continue;
 		rcd = fu_ihex_firmware_record_new (ln + 1, lines[ln]);
 		g_ptr_array_add (self->records, g_steal_pointer (&rcd));
 	}
