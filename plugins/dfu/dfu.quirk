@@ -62,6 +62,8 @@ Flags = force-dfu-mode
 Flags = attach-upload-download
 [DeviceInstanceId=USB\VID_273F&PID_100A]
 Flags = attach-upload-download
+[DeviceInstanceId=USB\VID_273F&PID_1008]
+Flags = attach-upload-download
 
 # HydraBus
 [DeviceInstanceId=USB\VID_1D50&PID_60A7]
