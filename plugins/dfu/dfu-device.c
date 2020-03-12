@@ -964,6 +964,13 @@ dfu_device_request_detach (DfuDevice *self, GError **error)
 }
 
 static gboolean
+dfu_device_reload (FuDevice *device, GError **error)
+{
+	DfuDevice *self = DFU_DEVICE (device);
+	return dfu_device_refresh_and_clear (self, error);
+}
+
+static gboolean
 dfu_device_detach (FuDevice *device, GError **error)
 {
 	DfuDevice *self = DFU_DEVICE (device);
@@ -1796,6 +1803,7 @@ dfu_device_class_init (DfuDeviceClass *klass)
 	klass_device->write_firmware = dfu_device_write_firmware;
 	klass_device->attach = dfu_device_attach;
 	klass_device->detach = dfu_device_detach;
+	klass_device->reload = dfu_device_reload;
 	klass_usb_device->open = dfu_device_open;
 	klass_usb_device->close = dfu_device_close;
 	klass_usb_device->probe = dfu_device_probe;
