@@ -412,22 +412,17 @@ fu_vli_pd_device_write_firmware (FuDevice *device,
 		return FALSE;
 
 	/* erase */
-	fu_device_set_status (device, FWUPD_STATUS_DEVICE_ERASE);
+	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_ERASE);
 	if (!fu_vli_device_spi_erase_all (FU_VLI_DEVICE (self), error))
 		return FALSE;
 
 	/* write in chunks */
-	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
+	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_WRITE);
 	buf = g_bytes_get_data (fw, &bufsz);
 	if (!fu_vli_device_spi_write (FU_VLI_DEVICE (self),
 				      fu_vli_device_get_offset (FU_VLI_DEVICE (self)),
 				      buf, bufsz, error))
 		return FALSE;
-
-	/* wait for hardware to settle? */
-	fu_device_set_status (device, FWUPD_STATUS_DEVICE_BUSY);
-	fu_device_set_progress (device, 0);
-	g_usleep (10 * G_USEC_PER_SEC);
 
 	/* success */
 	return TRUE;
