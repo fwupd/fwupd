@@ -38,6 +38,8 @@ struct _FuDeviceList
 	GObject			 parent_instance;
 	GPtrArray		*devices;	/* of FuDeviceItem */
 	GRWLock			 devices_mutex;
+	GMainLoop		*replug_loop;	/* block waiting for replug */
+	guint			 replug_id;	/* timeout the loop */
 };
 
 enum {
@@ -53,8 +55,6 @@ typedef struct {
 	FuDevice		*device;
 	FuDevice		*device_old;
 	FuDeviceList		*self;		/* no ref */
-	GMainLoop		*replug_loop;	/* block waiting for replug */
-	guint			 replug_id;	/* timeout the loop */
 	guint			 remove_id;
 } FuDeviceItem;
 
@@ -496,9 +496,11 @@ fu_device_list_replace (FuDeviceList *self, FuDeviceItem *item, FuDevice *device
 	fu_device_list_emit_device_changed (self, device);
 
 	/* we were waiting for this... */
-	if (g_main_loop_is_running (item->replug_loop)) {
+	if (fu_device_has_flag (item->device_old, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG) &&
+	    g_main_loop_is_running (self->replug_loop)) {
 		g_debug ("quitting replug loop");
-		g_main_loop_quit (item->replug_loop);
+		fu_device_remove_flag (item->device_old, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+		g_main_loop_quit (self->replug_loop);
 	}
 }
 
@@ -603,7 +605,6 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 	item = g_new0 (FuDeviceItem, 1);
 	item->self = self; /* no ref */
 	item->device = g_object_ref (device);
-	item->replug_loop = g_main_loop_new (NULL, FALSE);
 	g_rw_lock_writer_lock (&self->devices_mutex);
 	g_ptr_array_add (self->devices, item);
 	g_rw_lock_writer_unlock (&self->devices_mutex);
@@ -643,14 +644,14 @@ fu_device_list_get_by_guid (FuDeviceList *self, const gchar *guid, GError **erro
 static gboolean
 fu_device_list_replug_cb (gpointer user_data)
 {
-	FuDeviceItem *item = (FuDeviceItem *) user_data;
+	FuDeviceList *self = FU_DEVICE_LIST (user_data);
 
 	/* no longer valid */
-	item->replug_id = 0;
+	self->replug_id = 0;
 
 	/* quit loop */
 	g_debug ("device did not replug");
-	g_main_loop_quit (item->replug_loop);
+	g_main_loop_quit (self->replug_loop);
 	return FALSE;
 }
 
@@ -678,6 +679,7 @@ fu_device_list_wait_for_replug (FuDeviceList *self, FuDevice *device, GError **e
 	g_return_val_if_fail (FU_IS_DEVICE_LIST (self), FALSE);
 	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	g_return_val_if_fail (self->replug_id == 0, FALSE);
 
 	/* not found */
 	item = fu_device_list_find_by_device (self, device);
@@ -704,25 +706,28 @@ fu_device_list_wait_for_replug (FuDeviceList *self, FuDevice *device, GError **e
 	}
 
 	/* time to unplug and then re-plug */
-	item->replug_id = g_timeout_add (remove_delay, fu_device_list_replug_cb, item);
-	g_main_loop_run (item->replug_loop);
+	self->replug_id = g_timeout_add (remove_delay, fu_device_list_replug_cb, self);
+	g_main_loop_run (self->replug_loop);
 
-	/* the loop was quit without the timer */
-	if (item->replug_id != 0) {
-		g_debug ("waited for replug");
-		g_source_remove (item->replug_id);
-		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-		item->replug_id = 0;
-		return TRUE;
+	/* cancel timeout if still pending */
+	if (self->replug_id != 0) {
+		g_source_remove (self->replug_id);
+		self->replug_id = 0;
 	}
 
 	/* device was not added back to the device list */
-	g_set_error (error,
-		     FWUPD_ERROR,
-		     FWUPD_ERROR_NOT_FOUND,
-		     "device %s did not come back",
-		     fu_device_get_id (device));
-	return FALSE;
+	if (fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
+			     "device %s did not come back",
+			     fu_device_get_id (device));
+		return FALSE;
+	}
+
+	/* the loop was quit without the timer */
+	g_debug ("waited for replug");
+	return TRUE;
 }
 
 /**
@@ -778,11 +783,8 @@ fu_device_list_item_free (FuDeviceItem *item)
 {
 	if (item->remove_id != 0)
 		g_source_remove (item->remove_id);
-	if (item->replug_id != 0)
-		g_source_remove (item->replug_id);
 	if (item->device_old != NULL)
 		g_object_unref (item->device_old);
-	g_main_loop_unref (item->replug_loop);
 	g_object_unref (item->device);
 	g_free (item);
 }
@@ -814,6 +816,7 @@ static void
 fu_device_list_init (FuDeviceList *self)
 {
 	self->devices = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_device_list_item_free);
+	self->replug_loop = g_main_loop_new (NULL, FALSE);
 	g_rw_lock_init (&self->devices_mutex);
 }
 
@@ -822,7 +825,10 @@ fu_device_list_finalize (GObject *obj)
 {
 	FuDeviceList *self = FU_DEVICE_LIST (obj);
 
+	if (self->replug_id != 0)
+		g_source_remove (self->replug_id);
 	g_ptr_array_unref (self->devices);
+	g_main_loop_unref (self->replug_loop);
 	g_rw_lock_clear (&self->devices_mutex);
 
 	G_OBJECT_CLASS (fu_device_list_parent_class)->finalize (obj);
