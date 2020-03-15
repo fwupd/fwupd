@@ -281,7 +281,8 @@ fu_uefi_bootmgr_bootnext (const gchar *esp_path,
 			  GError **error)
 {
 	const gchar *filepath;
-	gboolean use_fwup_path = FALSE;
+	gboolean use_fwup_path = TRUE;
+	gboolean secure_boot = FALSE;
 	gsize loader_sz = 0;
 	gssize opt_size = 0;
 	gssize sz, dp_size = 0;
@@ -304,34 +305,36 @@ fu_uefi_bootmgr_bootnext (const gchar *esp_path,
 	if (source_app == NULL)
 		return FALSE;
 
-	/* test to make sure shim is there if we need it */
-	shim_app = fu_uefi_get_esp_app_path (esp_path, "shim", error);
-	if (shim_app == NULL)
-		return FALSE;
-	if (g_file_test (shim_app, G_FILE_TEST_EXISTS)) {
-		/* use a custom copy of shim for firmware updates */
-		if (flags & FU_UEFI_BOOTMGR_FLAG_USE_SHIM_UNIQUE) {
-			shim_cpy = fu_uefi_get_esp_app_path (esp_path, "shimfwupd", error);
-			if (shim_cpy == NULL)
-				return FALSE;
-			if (!fu_uefi_cmp_asset (shim_app, shim_cpy)) {
-				if (!fu_uefi_copy_asset (shim_app, shim_cpy, error))
+	/* test if we should use shim */
+	secure_boot = fu_efivar_secure_boot_enabled ();
+	if (secure_boot) {
+		/* test to make sure shim is there if we need it */
+		shim_app = fu_uefi_get_esp_app_path (esp_path, "shim", error);
+		if (shim_app == NULL)
+			return FALSE;
+
+		if (g_file_test (shim_app, G_FILE_TEST_EXISTS)) {
+			/* use a custom copy of shim for firmware updates */
+			if (flags & FU_UEFI_BOOTMGR_FLAG_USE_SHIM_UNIQUE) {
+				shim_cpy = fu_uefi_get_esp_app_path (esp_path, "shimfwupd", error);
+				if (shim_cpy == NULL)
 					return FALSE;
+				if (!fu_uefi_cmp_asset (shim_app, shim_cpy)) {
+					if (!fu_uefi_copy_asset (shim_app, shim_cpy, error))
+						return FALSE;
+				}
+				filepath = shim_cpy;
+			} else {
+				filepath = shim_app;
 			}
-			filepath = shim_cpy;
-		} else {
-			filepath = shim_app;
-		}
-	} else {
-		if (fu_efivar_secure_boot_enabled () &&
-		    (flags & FU_UEFI_BOOTMGR_FLAG_USE_SHIM_FOR_SB) > 0) {
+			use_fwup_path = FALSE;
+		} else if ((flags & FU_UEFI_BOOTMGR_FLAG_USE_SHIM_FOR_SB) > 0) {
 			g_set_error_literal (error,
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_BROKEN_SYSTEM,
 					     "Secure boot is enabled, but shim isn't installed to the EFI system partition");
 			return FALSE;
 		}
-		use_fwup_path = TRUE;
 	}
 
 	/* test if correct asset in place */
