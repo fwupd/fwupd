@@ -1,2 +1,3 @@
 0001-fix-fwupd.shutdown.in-according-to-the-movement-of-f.patch
 0001-ci-build-Debian-using-libflashrom.patch
+0001-uefi-Don-t-use-shim-for-non-secure-boot-configuratio.patch
