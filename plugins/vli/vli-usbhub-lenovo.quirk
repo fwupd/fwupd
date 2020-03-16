@@ -60,17 +60,6 @@ Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2,usb3
 
-# Lenovo Payton dock
-[DeviceInstanceId=USB\VID_17EF&PID_305A]
-Plugin = vli
-GType = FuVliUsbhubDevice
-Flags = usb2,usb3
-[DeviceInstanceId=USB\VID_17EF&PID_305B]
-Plugin = vli
-GType = FuVliUsbhubDevice
-Flags = usb2,usb3
-ParentGuid = USB\VID_17EF&PID_305A
-
 # Lenovo USB3 Ultra Dock
 [DeviceInstanceId=USB\VID_17EF&PID_1014]
 Plugin = vli
