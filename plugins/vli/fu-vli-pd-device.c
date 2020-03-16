@@ -36,6 +36,10 @@ fu_vli_pd_device_read_regs (FuVliPdDevice *self, guint16 addr,
 		g_prefix_error (error, "failed to write register @0x%x: ", addr);
 		return FALSE;
 	}
+	if (g_getenv ("FWUPD_VLI_USBHUB_VERBOSE") != NULL) {
+		g_autofree gchar *title = g_strdup_printf ("ReadRegs@0x%x", addr);
+		fu_common_dump_raw (G_LOG_DOMAIN, title, buf, bufsz);
+	}
 	return TRUE;
 }
 
@@ -48,6 +52,10 @@ fu_vli_pd_device_read_reg (FuVliPdDevice *self, guint16 addr, guint8 *value, GEr
 static gboolean
 fu_vli_pd_device_write_reg (FuVliPdDevice *self, guint16 addr, guint8 value, GError **error)
 {
+	if (g_getenv ("FWUPD_VLI_USBHUB_VERBOSE") != NULL) {
+		g_autofree gchar *title = g_strdup_printf ("WriteReg@0x%x", addr);
+		fu_common_dump_raw (G_LOG_DOMAIN, title, &value, sizeof(value));
+	}
 	if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (self)),
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
