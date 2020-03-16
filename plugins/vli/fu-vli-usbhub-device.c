@@ -636,9 +636,12 @@ fu_vli_usbhub_device_setup (FuVliDevice *device, GError **error)
 		fu_device_set_install_duration (FU_DEVICE (self), 15); /* seconds */
 		break;
 	default:
-		g_warning ("unknown update protocol, device_id=0x%x",
-			   GUINT16_FROM_BE(self->hd1_hdr.dev_id));
-		break;
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_SUPPORTED,
+			     "hardware is not supported, dev_id=0x%x",
+			     GUINT16_FROM_BE(self->hd1_hdr.dev_id));
+		return FALSE;
 	}
 
 	/* read HD2 (update) header */
