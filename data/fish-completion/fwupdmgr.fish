@@ -59,7 +59,7 @@ complete -c fwupdmgr -n '__fish_use_subcommand' -x -a verify -d 'Checks cryptogr
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a verify-update -d 'Update the stored cryptographic hash with current ROM contents'
 
 # commands exclusively consuming device IDs
-set -l deviceid_consumers activate clear-results downgrade get-releases get-results reinstall unlock verify verify-update
+set -l deviceid_consumers activate clear-results downgrade get-releases get-results reinstall unlock update verify verify-update
 # complete device IDs
 complete -c fwupdmgr -n "__fish_seen_subcommand_from $deviceid_consumers" -x -a "(__fish_fwupdmgr_devices)"
 # complete files and device IDs
