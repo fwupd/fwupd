@@ -229,6 +229,9 @@ fu_logitech_hidpp_runtime_setup_internal (FuDevice *device, GError **error)
 		if ((self->version_bl_major == 0x01 && config[8] >= 0x04) ||
 		    (self->version_bl_major == 0x03 && config[8] >= 0x02)) {
 			self->signed_firmware = TRUE;
+			fu_device_set_protocol (device, "com.logitech.unifyingsigned");
+		} else {
+			fu_device_set_protocol (device, "com.logitech.unifying");
 		}
 	}
 
@@ -324,5 +327,4 @@ fu_logitech_hidpp_runtime_init (FuLogitechHidPpRuntime *self)
 	fu_device_set_name (FU_DEVICE (self), "Unifying Receiver");
 	fu_device_set_summary (FU_DEVICE (self), "A miniaturised USB wireless receiver");
 	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
-	fu_device_set_protocol (FU_DEVICE (self), "com.logitech.unifying");
 }
