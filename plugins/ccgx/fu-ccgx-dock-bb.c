@@ -7,9 +7,12 @@
 #include "config.h"
 
 #include <string.h>
+
+#include "fwupd-error.h"
+
 #include "fu-common-version.h"
 #include "fu-usb-device.h"
-#include "fwupd-error.h"
+
 #include "fu-ccgx-dock-bb.h"
 #include "fu-ccgx-common.h"
 #include "fu-ccgx-hpi.h"
@@ -18,35 +21,35 @@
 #include "fu-ccgx-cyacd-file.h"
 
 /* i2c slave address for pd device */
-#define PD_I2C_SLAVE_ADDRESS 0x08
+#define PD_I2C_SLAVE_ADDRESS		0x08
 
 /* hid Interface number */
-#define USB_HID_INF_NUM 1
+#define USB_HID_INF_NUM			1
 
 /* usb i2c interface number */
-#define USB_I2C_INF_NUM 0
+#define USB_I2C_INF_NUM			0
 
 /* gen2 dock model name */
-#define CCGX_GEN2_DOCK_MODEL_NAME "Gen2"
+#define CCGX_GEN2_DOCK_MODEL_NAME	"Gen2"
 
 struct _FuCcgxDockBb {
-	FuUsbDevice	parent_instance;
-	guint16	usb_inf_num;			/* usb Interface Number */
+	FuUsbDevice	 parent_instance;
+	guint16		 usb_inf_num;			/* usb Interface Number */
 	CyHPIHandle	*hpi_handle;			/* hpi handle for pd device i2c */
-	PDDeviceData	pd_device_data;			/* pd device Information data */
-	DMDevice	dm_device;			/* device manager device type */
-	guint16	quirks_silicon_id;		/* silicon id in quirks */
-	guint16	quirks_fw_app_type;		/* fw application type in quirks */
-	gboolean	flag_dm_has_child;		/* flag that indicate device manager has child */
-	FWImageType	fw_image_type;			/* firmware Image type */
-	gboolean	fw_primary_update_only;		/* only update primary image */
-	gchar*		fw_update_message;		/* update message */
-	gchar*		fw_update_message_primary;	/* update message postfix for primary */
-	gchar*		fw_update_message_backup;	/* update message postfix for backup */
-	gchar*		model_name;			/* dock model name */
-	gboolean	fw_update_success;		/* fw update success flag */
-	gboolean	device_removed;			/* device is removed */
-	gboolean	claimed_interface;		/* usb interface claimed */
+	PDDeviceData	 pd_device_data;		/* pd device Information data */
+	DMDevice	 dm_device;			/* device manager device type */
+	guint16		 quirks_silicon_id;		/* silicon id in quirks */
+	guint16		 quirks_fw_app_type;		/* fw application type in quirks */
+	gboolean	 flag_dm_has_child;		/* flag that indicate device manager has child */
+	FWImageType	 fw_image_type;			/* firmware Image type */
+	gboolean	 fw_primary_update_only;	/* only update primary image */
+	gchar		*fw_update_message;		/* update message */
+	gchar		*fw_update_message_primary;	/* update message postfix for primary */
+	gchar		*fw_update_message_backup;	/* update message postfix for backup */
+	gchar		*model_name;			/* dock model name */
+	gboolean	 fw_update_success;		/* fw update success flag */
+	gboolean	 device_removed;		/* device is removed */
+	gboolean	 claimed_interface;		/* usb interface claimed */
 };
 
 G_DEFINE_TYPE (FuCcgxDockBb, fu_ccgx_dock_bb, FU_TYPE_USB_DEVICE)
@@ -62,52 +65,63 @@ fu_ccgx_dock_bb_pd_i2c_configure (FuDevice *device, GError **error)
 	guint8 slave_address = PD_I2C_SLAVE_ADDRESS;
 
 	/* setup I2C */
-	if (!fu_ccgx_hpi_cmd_setup (FU_DEVICE(device), hpi_handle, dm_device, usb_inf_num, slave_address, error)) {
+	if (!fu_ccgx_hpi_cmd_setup (FU_DEVICE(device),
+				    hpi_handle,
+				    dm_device,
+				    usb_inf_num,
+				    slave_address,
+				    error)) {
 		return FALSE;
 	}
 
 	/* get device data from device */
-	if (!fu_ccgx_hpi_cmd_get_device_data (FU_DEVICE(device),hpi_handle, &self->pd_device_data, error)) {
+	if (!fu_ccgx_hpi_cmd_get_device_data (FU_DEVICE(device),
+					      hpi_handle,
+					      &self->pd_device_data,
+					      error)) {
 		return FALSE;
 	}
 
 	/* check Silicon ID */
 	if (self->pd_device_data.silicon_id != self->quirks_silicon_id) {
-		g_set_error(error,FWUPD_ERROR,
-			FWUPD_ERROR_NOT_SUPPORTED,
-			"silicon id mismatch");
-		g_warning("silicon id mismatch 0x%04X / 0x%04X", self->pd_device_data.silicon_id,self->quirks_silicon_id);
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "silicon id mismatch: got 0x%04X expected 0x%04X",
+			     self->pd_device_data.silicon_id,
+			     self->quirks_silicon_id);
 		return FALSE;
 	}
 
+	/* check version type */
 	if (self->pd_device_data.fw_mode != FW_MODE_BOOT) {
-		/* check version type */
 		if (self->pd_device_data.current_version.ver.type != self->quirks_fw_app_type) {
-			g_set_error(error,FWUPD_ERROR,
-				FWUPD_ERROR_NOT_SUPPORTED,
-				"application type mismatch");
-			g_warning("applicatin type mismatch 0x%02X / 0x%02X", self->pd_device_data.current_version.ver.type,self->quirks_fw_app_type);
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "application type mismatch: got 0x%02X expected 0x%02X",
+				     self->pd_device_data.current_version.ver.type,
+				     self->quirks_fw_app_type);
 			return FALSE;
 		}
 	}
-        return TRUE;
+	return TRUE;
 }
 
 /* write firmware for pd i2c device */
 static gboolean
 fu_ccgx_dock_bb_pd_i2c_write_fw (FuDevice *device,
-				 guint8* fw_buffer,
+				 guint8 *fw_buffer,
 				 gsize fw_size,
 				 FwupdInstallFlags flags,
 				 GError **error)
 {
 	FuCcgxDockBb *self = FU_CCGX_DOCK_BB (device);
-	CyHPIHandle* hpi_handle = self->hpi_handle;
+	CyHPIHandle *hpi_handle = self->hpi_handle;
 	guint32 fw_pos = 0;
-	g_autofree guint8* row_buffer = NULL;
 	guint16 row_num = 0;
 	guint16 row_size = 0;
-	guint8* row_data = NULL;
+	guint8 *row_data = NULL;
 	FWMode update_fw_mode = 0;
 	CyacdFileInfo cyacd_file_info = {0};
 	CyacdFileHandle cyacd_handle_array[CYACD_HANDLE_MAX_COUNT] = {0};
@@ -116,14 +130,13 @@ fu_ccgx_dock_bb_pd_i2c_write_fw (FuDevice *device,
 	guint32 index = 0;
 	CCGxMetaData* metadata = NULL;
 	PDFWAppVersion update_fw_version = {0};
-	g_autofree gchar *update_str_version = NULL;
 	gsize update_fw_size = 0;
+	g_autofree gchar *update_str_version = NULL;
+	g_autofree guint8 *row_buffer = g_malloc0 (CYACD_ROW_BUFFER_SIZE);
 
-	row_buffer = g_malloc0 (CYACD_ROW_BUFFER_SIZE);
-	g_return_val_if_fail (row_buffer != NULL, FALSE);
-
-	handle_count =  fu_ccgx_cyacd_file_init_handle(cyacd_handle_array,
-						CYACD_HANDLE_MAX_COUNT, fw_buffer, fw_size);
+	handle_count =  fu_ccgx_cyacd_file_init_handle (cyacd_handle_array,
+							CYACD_HANDLE_MAX_COUNT,
+							fw_buffer, fw_size);
 
 	if (self->fw_image_type != FW_IMAGE_TYPE_DUAL_SYMMETRIC &&
 		 self->fw_image_type != FW_IMAGE_TYPE_DUAL_ASYMMETRIC) {
@@ -261,7 +274,7 @@ fu_ccgx_dock_bb_pd_i2c_write_fw (FuDevice *device,
 		/* read flash data */
 		fu_device_set_status (device,FWUPD_STATUS_DEVICE_WRITE);
 
-		g_debug ("Writing Firmware ...");
+		g_debug ("Writing Firmware...");
 
 		while (fu_ccgx_cyacd_file_read_row (cyacd_handle, row_buffer,CYACD_ROW_BUFFER_SIZE)) {
 			row_num = *((guint16*)(&row_buffer[0]));
@@ -311,7 +324,7 @@ fu_ccgx_dock_bb_write_fw (FuDevice *device,
 			  GError **error)
 {
 	FuCcgxDockBb *self = FU_CCGX_DOCK_BB (device);
-	const guint8* fw_buffer = NULL;
+	const guint8 *fw_buffer = NULL;
 	gsize fw_size = 0;
 	g_autoptr(GBytes) fw = NULL;
 
@@ -379,19 +392,19 @@ fu_ccgx_dock_bb_set_quirk_kv (FuDevice *device,
 		return FALSE;
 	}
 	if (g_strcmp0 (key, "UpdateMessage") == 0) {
-		self->fw_update_message = g_strdup(value);
+		self->fw_update_message = g_strdup (value);
 		return TRUE;
 	}
 	if (g_strcmp0 (key, "UpdateMessagePrimary") == 0) {
-		self->fw_update_message_primary = g_strdup(value);
+		self->fw_update_message_primary = g_strdup (value);
 		return TRUE;
 	}
 	if (g_strcmp0 (key, "UpdateMessageBackup") == 0) {
-		self->fw_update_message_backup = g_strdup(value);
+		self->fw_update_message_backup = g_strdup (value);
 		return TRUE;
 	}
 	if (g_strcmp0 (key, "ModelName") == 0) {
-		self->model_name = g_strdup(value);
+		self->model_name = g_strdup (value);
 		return TRUE;
 	}
 	return FALSE;
@@ -456,7 +469,8 @@ fu_ccgx_dock_bb_setup (FuDevice *device, GError **error)
 	g_autofree gchar *device_str_version = NULL;
 	g_autofree gchar *update_message = NULL;
 
-	if (self->dm_device == DM_DEVICE_EXTERNAL_BB) { /* dm device type is external BB */
+	/* dm device type is external BB */
+	if (self->dm_device == DM_DEVICE_EXTERNAL_BB) {
 		g_debug ("Turn to MFG mode");
 
 		if (!fu_ccgx_hid_enable_mfg_mode (device, self->usb_inf_num, error)) {
@@ -468,7 +482,8 @@ fu_ccgx_dock_bb_setup (FuDevice *device, GError **error)
 		fu_device_add_flag (FU_DEVICE(device), FWUPD_DEVICE_FLAG_WILL_DISAPPEAR);
 		self->device_removed = TRUE;
 
-	} else if (self->dm_device == DM_DEVICE_PD_I2C) { /* dm device type is pd i2c */
+	/* dm device type is pd i2c */
+	} else if (self->dm_device == DM_DEVICE_PD_I2C) {
 
 		/* configure device */
 		if (!fu_ccgx_dock_bb_pd_i2c_configure(device,error)) {
@@ -530,9 +545,6 @@ fu_ccgx_dock_bb_setup (FuDevice *device, GError **error)
 		} else {
 			update_message = g_strdup_printf("%s", self->fw_update_message);
 		}
-
-		g_return_val_if_fail (update_message != NULL, FALSE);
-
 		fwupd_device_set_update_message (FWUPD_DEVICE(device), update_message);
 	}
 	return TRUE;
@@ -675,9 +687,9 @@ gboolean
 fu_ccgx_dock_bb_reboot (FuDevice *device, GError **error)
 {
 	FuCcgxDockBb *self = FU_CCGX_DOCK_BB (device);
-	g_autoptr(GError) error_local = NULL;
 	gboolean need_to_enter_alt_mode = FALSE;
-	CyHPIHandle*  hpi_handle = self->hpi_handle;
+	CyHPIHandle *hpi_handle = self->hpi_handle;
+	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail (hpi_handle != NULL, FALSE);
 
@@ -686,10 +698,8 @@ fu_ccgx_dock_bb_reboot (FuDevice *device, GError **error)
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "reboot not supported due to no usb");
-		g_warning ("no usb, reboot fail");
 		return FALSE;
 	}
-
 	if (self->dm_device != DM_DEVICE_PD_I2C) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -703,17 +713,17 @@ fu_ccgx_dock_bb_reboot (FuDevice *device, GError **error)
 	    self->pd_device_data.fw_mode == FW_MODE_FW2  &&
 	    self->pd_device_data.fw_metadata[FW_MODE_FW1].metadata_valid == CCGX_METADATA_VALID_SIG &&
 	    g_strcmp0 (self->model_name, CCGX_GEN2_DOCK_MODEL_NAME) == 0) {
-	    need_to_enter_alt_mode = TRUE;
+		need_to_enter_alt_mode = TRUE;
 	}
 
 	if (need_to_enter_alt_mode) {
 		/* jump to Alt FW */
-		g_debug ("Jump to Alt FW ... ");
+		g_debug ("jump to alt fw...");
 		if (!fu_ccgx_hpi_cmd_jump_to_alt_fw(device, hpi_handle, error))
 			return FALSE;
 	} else {
 		/* reset device */
-		g_debug ("Reset Device ... ");
+		g_debug ("reset device...");
 		if (!fu_ccgx_hpi_cmd_reset_device(device, hpi_handle, error))
 			return FALSE;
 	}

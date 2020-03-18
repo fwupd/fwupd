@@ -38,8 +38,8 @@ typedef enum
 				* BYTE[3:2]  :Signature "CY"
 				* BYTE[4]    : Current operating mode.
 				*      BIT(1:0) - 0 = Bootloader
-				*                 1 = FW image 1
-				*                 2 = FW image 2
+				*		 1 = FW image 1
+				*		 2 = FW image 2
 				* BYTE[5]    : Bootloader information.
 				*      BIT(0)  - This bit is set if the boot-loader
 				*      supports security (SHA2 checksum at boot).
@@ -48,8 +48,8 @@ typedef enum
 				*      BIT(2)  - This bit is set if the boot-loader
 				*      supports application priority feature.
 				*      BIT(4:3) - Flash row size information
-				*              0 = Row size of 128 bytes
-				*              1 = Row size of 256 bytes
+				*	      0 = Row size of 128 bytes
+				*	      1 = Row size of 256 bytes
 				* BYTE[6]    : Boot mode reason
 				*      BIT(0)  - This bit is set if the firmware
 				*      requested a jump to boot-loader
@@ -57,9 +57,9 @@ typedef enum
 				*      BIT(2)  - FW image 1 status. Set if invalid.
 				*      BIT(3)  - FW image 2 status. Set if invalid.
 				*      BIT(5:4) - Application priority setting
-				*              0 = Default priority - most recent image.
-				*              1 = Image1 higher priority.
-				*              2 = Image2 higher priority.
+				*	      0 = Default priority - most recent image.
+				*	      1 = Image1 higher priority.
+				*	      2 = Image2 higher priority.
 				* BYTE[7]    : Reserved
 				* BYTE[11:8] : Silicon ID
 				* BYTE[19:12]: Bootloader version
@@ -126,7 +126,7 @@ typedef enum
 					 * PARAM[1:0]: Row ID
 					 * PARAM[5:2]: Reserved. */
 	HID_RQT_CMD_VALIDATE_FW,
-                                        /**
+					/**
 					 * Validate firmware request.
 					 * PARAM[0]  : Firmware	image number to	validate.
 					 * PARAM[5:1]: Reserved. */

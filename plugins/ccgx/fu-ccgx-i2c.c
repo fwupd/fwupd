@@ -157,7 +157,7 @@ i2c_reset (FuDevice *device, CyI2CDeviceHandle *handle, guint8 mode, GError **er
 }
 
 static gboolean
-i2c_get_status (FuDevice *device, CyI2CDeviceHandle* handle, guint8 mode, guint8* i2c_status, GError **error)
+i2c_get_status (FuDevice *device, CyI2CDeviceHandle* handle, guint8 mode, guint8 *i2c_status, GError **error)
 {
 	g_autoptr(GError) error_local =	NULL;
 	GUsbDevice *usb_device = NULL;
@@ -296,9 +296,8 @@ fu_ccgx_i2c_read (FuDevice *device, CyI2CDeviceHandle *handle, CyI2CDataConfig *
 	guint64 elapsed_time = 0;
 	g_autoptr(GTimer) start_time = g_timer_new ();
 
-	if (i2c_get_status (device, handle, mode, (guint8*)i2c_status, error) == FALSE) {
-		g_prefix_error (error, "i2c read error:");
-		g_warning ("i2c get status error in %s", __func__);
+	if (!i2c_get_status (device, handle, mode, (guint8*)i2c_status, error)) {
+		g_prefix_error (error, "i2c read error: ");
 		return FALSE;
 	}
 
@@ -331,13 +330,12 @@ fu_ccgx_i2c_read (FuDevice *device, CyI2CDeviceHandle *handle, CyI2CDataConfig *
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "i2c read error: control xfer: %s", 
 			     error_local->message);
-		g_warning ("control xfer error in %s", __func__);
 		return FALSE;
 	}
 
 	ep_num = handle->ep.bulk_in;
 
-	if (g_usb_device_bulk_transfer (usb_device,
+	if (!g_usb_device_bulk_transfer (usb_device,
 					ep_num,
 					data_buffer->buffer,
 					data_buffer->length,
@@ -345,64 +343,60 @@ fu_ccgx_i2c_read (FuDevice *device, CyI2CDeviceHandle *handle, CyI2CDataConfig *
 					io_timeout,
 					NULL,
 					&error_local)) {
-
-		g_usleep (I2C_READ_WRITE_DELAY_US); /* 10 msec delay */
-
-		elapsed_time = g_timer_elapsed (start_time, NULL) * 1000.f;
-
-		/* giving an extra 10 msec to notification to findout the status */
-		if (io_timeout > elapsed_time) {
-			io_timeout = io_timeout - elapsed_time;
-		}
-
-		if (io_timeout < 10) {
-			io_timeout = 10;
-		}
-
-		byte_pending = data_buffer->length;
-
-		if (wait_for_notification (device, handle, &byte_pending, io_timeout, error)) {
-			data_buffer->transfer_count = (data_buffer->length - byte_pending);
-			return TRUE;
-		} else {
-			data_buffer->transfer_count = data_buffer->length;
-			g_prefix_error (error, "i2c read error:");
-			g_warning ("wait for notification error in %s", __func__);
-		}
-	} else {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "i2c read error: bulk xfer: %s", 
 			     error_local->message);
-		g_warning ("bulk xfer error in %s", __func__);
 
 		if (g_error_matches (error_local,
 				     G_USB_DEVICE_ERROR,
 				     G_USB_DEVICE_ERROR_TIMED_OUT)) {
+			g_autoptr(GError) error_reset1 = NULL;
+			if (!i2c_reset (device, handle, mode, &error_reset1)) {
+				g_warning ("i2c reset error in %s: ", error_reset1->message);
+				return FALSE;
+			}
+		} else if (g_error_matches (error_local,
+					    G_USB_DEVICE_ERROR,
+					    G_USB_DEVICE_ERROR_IO)) {
+			g_autoptr(GError) error_reset1 = NULL;
+			g_autoptr(GError) error_reset2 = NULL;
+			if (!g_usb_device_reset (usb_device, &error_reset1)) {
+				g_warning ("usb dev error: %s", error_reset1->message);
+			}
 
-			if (i2c_reset (device, handle, mode, NULL) == FALSE) {
-				g_warning ("i2c reset error in %s", __func__);
+			/* 10 msec delay */
+			g_usleep (I2C_READ_WRITE_DELAY_US);
+
+			if (!i2c_reset (device, handle, mode, &error_reset2)) {
+				g_warning ("i2c reset error in %s", error_reset2->message);
 			}
 		}
-
-		if (g_error_matches (error_local,
-				     G_USB_DEVICE_ERROR,
-				     G_USB_DEVICE_ERROR_IO)) {
-
-			if (g_usb_device_reset(usb_device, NULL) == FALSE) {
-				g_warning ("usb dev error in %s", __func__);
-			}
-
-			g_usleep (I2C_READ_WRITE_DELAY_US); /* 10 msec delay */
-
-			if (i2c_reset (device, handle,	mode, NULL) == FALSE) {
-				g_warning ("i2c reset error in %s", __func__);
-			}
-		}
+		return FALSE;
 	}
 
-	return FALSE;
+	/* 10 msec delay */
+	g_usleep (I2C_READ_WRITE_DELAY_US);
+
+	elapsed_time = g_timer_elapsed (start_time, NULL) * 1000.f;
+
+	/* giving an extra 10 msec to notification to findout the status */
+	if (io_timeout > elapsed_time)
+		io_timeout = io_timeout - elapsed_time;
+	if (io_timeout < 10)
+		io_timeout = 10;
+
+	byte_pending = data_buffer->length;
+
+	if (!wait_for_notification (device, handle, &byte_pending, io_timeout, error)) {
+		data_buffer->transfer_count = data_buffer->length;
+		g_prefix_error (error, "i2c read error: ");
+		return FALSE;
+	}
+
+	data_buffer->transfer_count = (data_buffer->length - byte_pending);
+	return TRUE;
 }
 
 /**
@@ -436,8 +430,7 @@ fu_ccgx_i2c_write (FuDevice *device, CyI2CDeviceHandle *handle, CyI2CDataConfig 
 	g_autoptr(GError) error_local = NULL;
 
 	if (!i2c_get_status (device, handle, mode, (guint8*)i2c_status, error)) {
-		g_prefix_error (error, "i2c write error:");
-		g_warning ("i2c get status error in %s", __func__);
+		g_prefix_error (error, "i2c get status error: ");
 		return FALSE;
 	}
 
@@ -502,8 +495,7 @@ fu_ccgx_i2c_write (FuDevice *device, CyI2CDeviceHandle *handle, CyI2CDataConfig 
 			return TRUE;
 		} else {
 			data_buffer->transfer_count = data_buffer->length;
-			g_prefix_error (error, "i2c write error:");
-			g_warning ("wait for notification error in %s", __func__);
+			g_prefix_error (error, "i2c wait for notification error: ");
 		}
 
 	} else {
@@ -515,8 +507,8 @@ fu_ccgx_i2c_write (FuDevice *device, CyI2CDeviceHandle *handle, CyI2CDataConfig 
 		if (g_error_matches (error_local,
 				     G_USB_DEVICE_ERROR,
 				     G_USB_DEVICE_ERROR_TIMED_OUT)){
-			if (i2c_reset (device, handle, mode, NULL) == FALSE) {
-				g_warning ("i2c reset error in %s", __func__);
+			if (!i2c_reset (device, handle, mode, NULL)) {
+				g_warning ("i2c reset error");
 			}
 		}
 
@@ -524,15 +516,14 @@ fu_ccgx_i2c_write (FuDevice *device, CyI2CDeviceHandle *handle, CyI2CDataConfig 
 				     G_USB_DEVICE_ERROR,
 				     G_USB_DEVICE_ERROR_IO)) {
 
-			if (g_usb_device_reset(usb_device, NULL) == FALSE) {
-
-				g_warning ("usb dev error in %s", __func__);
+			if (!g_usb_device_reset(usb_device, NULL)) {
+				g_warning ("usb dev error");
 			}
 
 			g_usleep (I2C_READ_WRITE_DELAY_US); /* 10 msec delay */
 
-			if (i2c_reset (device, handle,	mode, NULL) == FALSE) {
-				g_warning ("i2c	reset error in %s", __func__);
+			if (!i2c_reset (device, handle,	mode, NULL)) {
+				g_warning ("i2c	reset error");
 			}
 		}
 	}
@@ -569,7 +560,7 @@ fu_ccgx_i2c_write_no_resp (FuDevice *device,CyI2CDeviceHandle* handle, CyI2CData
 	g_autoptr(GTimer) start_time = g_timer_new ();
 
 	if (!i2c_get_status (device, handle, mode, (guint8*)i2c_status, error)) {
-		g_prefix_error (error, "i2c write error:");
+		g_prefix_error (error, "i2c write error: ");
 		return FALSE;
 	}
 
@@ -602,7 +593,6 @@ fu_ccgx_i2c_write_no_resp (FuDevice *device,CyI2CDeviceHandle* handle, CyI2CData
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "i2c write	error: control xfer: %s", 
 			     error_local->message);
-		g_warning ("control xfer error in %s", __func__);
 		return FALSE;
 	}
 
@@ -623,28 +613,25 @@ fu_ccgx_i2c_write_no_resp (FuDevice *device,CyI2CDeviceHandle* handle, CyI2CData
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "i2c read error: bulk xfer: %s", 
 			     error_local->message);
-		g_warning ("bulk xfer error in %s", __func__);
 
 		if (g_error_matches (error_local,
 				     G_USB_DEVICE_ERROR,
 				     G_USB_DEVICE_ERROR_TIMED_OUT)) {
 			if (i2c_reset (device, handle,	mode, NULL) == FALSE) {
-				g_warning ("i2c	reset error in %s", __func__);
+				g_warning ("i2c reset error");
 			}
-		}
-
-		if (g_error_matches (error_local,
-				     G_USB_DEVICE_ERROR,
-				     G_USB_DEVICE_ERROR_IO)) {
+		} else if (g_error_matches (error_local,
+					    G_USB_DEVICE_ERROR,
+					    G_USB_DEVICE_ERROR_IO)) {
 
 			if (g_usb_device_reset(usb_device, NULL) == FALSE) {
-				g_warning ("usb	dev error in %s", __func__);
+				g_warning ("usb dev error");
 			}
 
 			g_usleep (I2C_READ_WRITE_DELAY_US); /* 10 msec delay */
 
 			if (i2c_reset (device, handle, mode, NULL) == FALSE) {
-				g_warning ("i2c reset error in %s", __func__);
+				g_warning ("i2c reset error");
 			}
 		}
 	}
@@ -705,7 +692,6 @@ fu_ccgx_i2c_get_config (FuDevice *device,
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "i2c get config error: control xfer: %s", 
 			     error_local->message);
-		g_warning ("control xfer error in %s", __func__);
 		return FALSE;
 	}
 

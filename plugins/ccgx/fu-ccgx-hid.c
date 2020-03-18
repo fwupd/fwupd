@@ -16,7 +16,7 @@ hid_set_report (FuDevice *self, gint inf_num , guint8 *data, gsize data_size, GE
 	GUsbDevice *usb_device = NULL;
 	guint16 value = 0;
 	gsize actual_len = 0;
-	guint8* buffer;
+	guint8 *buffer;
 	gsize buffer_size;
 	int report_number;
 
@@ -40,23 +40,21 @@ hid_set_report (FuDevice *self, gint inf_num , guint8 *data, gsize data_size, GE
 	value = (2 /* hid output */ << 8) | report_number;
 
 	if (!g_usb_device_control_transfer (usb_device,
-		G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-		G_USB_DEVICE_REQUEST_TYPE_CLASS,
-		G_USB_DEVICE_RECIPIENT_INTERFACE,
-		FU_HID_REPORT_SET, /* request*/
-		value,   /* value */
-		inf_num, /* idx */
-		buffer,
-		buffer_size,
-		&actual_len,
-		CCGX_HID_TIMEOUT, NULL, &error_local)) {
-
+					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
+					    G_USB_DEVICE_RECIPIENT_INTERFACE,
+					    FU_HID_REPORT_SET, /* request*/
+					    value,   /* value */
+					    inf_num, /* idx */
+					    buffer,
+					    buffer_size,
+					    &actual_len,
+					    CCGX_HID_TIMEOUT, NULL, &error_local)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "USB HID write error: control xfer: %s", 
 			     error_local->message);
-		g_warning ("control xfer error in %s", __func__);
 		return FALSE;
 	}
 	return TRUE;
@@ -90,7 +88,7 @@ fu_ccgx_hid_enable_mfg_mode (FuDevice *self, gint inf_num, GError **error)
 {
 	guint8 data[5] = {0xEE, 0xBC, 0xA6, 0xB9, 0xA8};
 	if (!hid_set_report(self, inf_num, data, sizeof(data), error)) {
-		g_prefix_error (error, "mfg mode error:");
+		g_prefix_error (error, "mfg mode error: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -111,7 +109,7 @@ gboolean
 fu_ccgx_hid_enable_usb_bridge_mode (FuDevice *self, gint inf_num, GError **error)
 {
 	if (!hid_handle_rqt_cmd(self,inf_num,HID_RQT_CMD_I2C_BRIDGE_CTRL,'B',0,error)) {
-		g_prefix_error (error, "usb bridge mode error:");
+		g_prefix_error (error, "usb bridge mode error: ");
 		return FALSE;
 	}
 	return TRUE;
