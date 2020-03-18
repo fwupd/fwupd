@@ -4,6 +4,10 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
+#include "config.h"
+
+#include "fu-usb-device.h"
+
 #include "fu-ccgx-common.h"
 #include "fu-ccgx-i2c.h"
 

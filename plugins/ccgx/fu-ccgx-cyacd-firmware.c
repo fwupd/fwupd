@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-common.h"
+
 #include "fu-ccgx-cyacd-firmware.h"
 
 struct _FuCcgxCyacdFirmware {

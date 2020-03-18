@@ -6,18 +6,7 @@
 
 #pragma once
 
-#include "config.h"
-
-#include <string.h>
-#include <sys/time.h>
-#include <unistd.h>
-#include "fu-device.h"
-#include "fu-common-version.h"
-#include "fu-usb-device.h"
-#include "fwupd-error.h"
-
-/* ccgx plugin version (internal only) major.minor.rev.build*/
-#define CCGX_PLUGIN_VERSION	"0.1.0.4"
+#include <glib-object.h>
 
 /* pd firmware application version */
 typedef struct __attribute__((packed)) {

@@ -4,9 +4,11 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
+#include "config.h"
+
 #include "fu-ccgx-common.h"
-#include "fu-ccgx-hpi.h"
 #include "fu-ccgx-cyacd-file.h"
+#include "fu-ccgx-hpi.h"
 
 #define MAX_NO_PORTS				0x02
 #define SI_ID_COMP_VAL_HPI			0x1800
@@ -1165,7 +1167,10 @@ fu_ccgx_hpi_get_fw_version (FuDevice *device,
  * Returns: %TRUE for success
 */
 gboolean
-fu_ccgx_hpi_cmd_get_device_data (FuDevice *device, CyHPIHandle *hpi_handle,	PDDeviceData *device_data, GError **error)
+fu_ccgx_hpi_cmd_get_device_data (FuDevice *device,
+				 CyHPIHandle *hpi_handle,
+				 PDDeviceData *device_data,
+				 GError **error)
 {
 	guint32 device_versions[6] = {0};
 	guint8 device_mode = 0;
@@ -1416,7 +1421,7 @@ fu_ccgx_hpi_cmd_write_flash (FuDevice *device, CyHPIHandle *hpi_handle, guint16 
 		return FALSE;
 	}
 
-	g_usleep (HPI_CMD_FALSH_READ_WRITE_DELAY_US);
+	g_usleep (HPI_CMD_FLASH_READ_WRITE_DELAY_US);
 
 	/* send write command */
 	if (!fu_ccgx_hpi_write_flash (device, hpi_handle, row_num, error)) {
@@ -1424,7 +1429,7 @@ fu_ccgx_hpi_cmd_write_flash (FuDevice *device, CyHPIHandle *hpi_handle, guint16 
 		return FALSE;
 	}
 
-	g_usleep (HPI_CMD_FALSH_READ_WRITE_DELAY_US); /* wait until flash is written */
+	g_usleep (HPI_CMD_FLASH_READ_WRITE_DELAY_US); /* wait until flash is written */
 
 	if (!fu_ccgx_hpi_get_event (device, hpi_handle, HPI_REG_SECTION_DEV, &hpi_event, HPI_CMD_COMMAND_RESPONSE_TIME_MS ,error)) {
 		g_warning("write flash resp error");
@@ -1472,14 +1477,20 @@ fu_ccgx_hpi_cmd_read_flash (FuDevice *device,
 	(void)fu_ccgx_hpi_clear_all_event(device,hpi_handle,HPI_CMD_COMMAND_CLEAR_EVENT_TIME_MS,error);
 
 	if (!fu_ccgx_hpi_read_flash(device, hpi_handle, row_num, error)) {
-		g_warning("read flash cmd error");
+		g_prefix_error (error, "read flash cmd error: ");
 		return FALSE;
 	}
 
-	g_usleep (HPI_CMD_FALSH_READ_WRITE_DELAY_US); /* wait until flash is reaad */
+	/* wait until flash is reaad */
+	g_usleep (HPI_CMD_FLASH_READ_WRITE_DELAY_US);
 
-	if (!fu_ccgx_hpi_get_event (device, hpi_handle,  HPI_REG_SECTION_DEV, &hpi_event, HPI_CMD_COMMAND_RESPONSE_TIME_MS, error)) {
-		g_warning("read flash resp error");
+	if (!fu_ccgx_hpi_get_event (device,
+				   hpi_handle,
+				   HPI_REG_SECTION_DEV,
+				   &hpi_event,
+				   HPI_CMD_COMMAND_RESPONSE_TIME_MS,
+				   error)) {
+		g_prefix_error (error, "read flash resp error: ");
 		return FALSE;
 	}
 
@@ -1491,7 +1502,7 @@ fu_ccgx_hpi_cmd_read_flash (FuDevice *device,
 		return FALSE;
 	}
 
-	g_usleep (HPI_CMD_FALSH_READ_WRITE_DELAY_US);
+	g_usleep (HPI_CMD_FLASH_READ_WRITE_DELAY_US);
 
 	if (hpi_handle->hpi_addr_byte > 1) {
 		reg_addr = HPI_DEV_REG_FLASH_MEM;

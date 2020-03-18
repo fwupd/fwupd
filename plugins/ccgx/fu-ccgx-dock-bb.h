@@ -5,8 +5,6 @@
  */
 #pragma once
 
-#include "config.h"
-
 #include "fu-usb-device.h"
 
 #define FU_TYPE_CCGX_DOCK_BB (fu_ccgx_dock_bb_get_type ())

@@ -4,11 +4,10 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#pragma	once
-
-#include "config.h"
+#pragma once
 
 #include "fu-device.h"
+
 #include "fu-ccgx-i2c.h"
 #include "fu-ccgx-common.h"
 
@@ -21,13 +20,13 @@ typedef struct __attribute__((packed))
 	FWMode			 fw_mode;	/* fw mode; 0(boot), 1(FW1), 2(FW2) */
 } CyHPIHandle;
 
-#define HPI_CMD_FALSH_READ_WRITE_DELAY_US	30000	/* 30 ms */
-#define HPI_CMD_ENTER_FLASH_MODE_DELAY_US	20000	/* 20 ms */
-#define HPI_CMD_SETUP_EVENT_WAIT_TIME_MS	200	/* 200 ms */
-#define HPI_CMD_SETUP_EVENT_CLEAR_TIME_MS	150	/* 100 ms */
-#define HPI_CMD_COMMAND_RESPONSE_TIME_MS	500	/* 500 ms */
-#define HPI_CMD_COMMAND_CLEAR_EVENT_TIME_MS	30	/* 30 ms */
-#define HPI_CMD_RESET_COMPLETE_DELAY_US		150000	/* 150 ms */
+#define HPI_CMD_FLASH_READ_WRITE_DELAY_US	30000
+#define HPI_CMD_ENTER_FLASH_MODE_DELAY_US	20000
+#define HPI_CMD_SETUP_EVENT_WAIT_TIME_MS	200
+#define HPI_CMD_SETUP_EVENT_CLEAR_TIME_MS	150
+#define HPI_CMD_COMMAND_RESPONSE_TIME_MS	500
+#define HPI_CMD_COMMAND_CLEAR_EVENT_TIME_MS	30
+#define HPI_CMD_RESET_COMPLETE_DELAY_US		150000
 
 gboolean	 fu_ccgx_hpi_cmd_setup			(FuDevice	*device,
 							 CyHPIHandle	*hpi_handle,

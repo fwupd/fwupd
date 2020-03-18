@@ -6,11 +6,10 @@
 
 #pragma once
 
-#include <string.h>
-#include <sys/time.h>
-#include <unistd.h>
 #include "fu-device.h"
+
 #include "fwupd-error.h"
+
 #include "fu-ccgx-common.h"
 
 /* max Row data size of cyacd file */

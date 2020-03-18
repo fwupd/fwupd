@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include "config.h"
-
 #include <glib-object.h>
 
 #include "fu-device.h"

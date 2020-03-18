@@ -6,10 +6,6 @@
 
 #pragma once
 
-#include "config.h"
-
-#include "fu-firmware.h"
-
 #include "fu-ccgx-common.h"
 #include "fu-ccgx-cyacd-file.h"
 

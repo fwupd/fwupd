@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include <string.h>
+
 #include "fu-ccgx-cyacd-file.h"
 
 static guint8
@@ -148,16 +149,15 @@ fu_ccgx_cyacd_file_init_handle (CyacdFileHandle *handle_array, guint32 num_of_ar
  * fu_ccgx_cyacd_file_set_pos
  *
  * @handle: Cyacd File Handle
- * @pos	cyacd data buffer
+ * @pos: cyacd data buffer
  *
- * Set position	in cyacd buffer in cyacd handle
+ * Set position in cyacd buffer in cyacd handle
  */
 void
 fu_ccgx_cyacd_file_set_pos (CyacdFileHandle *handle, guint32 pos)
 {
-	if (handle != NULL) {
+	if (handle != NULL)
 		handle->pos = pos;
-	}
 }
 
 /**
@@ -172,11 +172,9 @@ fu_ccgx_cyacd_file_set_pos (CyacdFileHandle *handle, guint32 pos)
 guint32
 fu_ccgx_cyacd_file_get_pos (CyacdFileHandle *handle)
 {
-	guint32 pos = 0;
-	if (handle != NULL) {
-		pos = handle->pos;
-	}
-	return pos;
+	if (handle == NULL)
+		return 0;
+	return handle->pos;
 }
 
 static gboolean
@@ -187,7 +185,7 @@ cyacd_buffer_read_header (CyacdFileHandle *handle, guint16 *silicon_id)
 
 	g_return_val_if_fail (ascii_buffer != NULL , FALSE);
 	g_return_val_if_fail (silicon_id != NULL , FALSE);
-	fu_ccgx_cyacd_file_set_pos(handle, 0);
+	fu_ccgx_cyacd_file_set_pos (handle, 0);
 
 	if (cyacd_buffer_read_line (handle, ascii_buffer, CYACD_ROW_ASCII_BUFFER_SIZE)) {
 		convert_ascii_to_hex (ascii_buffer, sizeof(ascii_buffer), hex_buffer, sizeof(hex_buffer));
