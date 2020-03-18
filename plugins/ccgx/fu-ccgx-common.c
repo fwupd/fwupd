@@ -74,7 +74,7 @@ static CCGxPartInfo ccgx_known_parts[] = {
 	{"CCG6DF", "CYPD6127-96BZXI",		0x300111C0, 0x80,  0x10000},
 	{"CCG6SF", "CYPD6128-96BZXI",		0x330011C3, 0x80,  0x10000},
 	{"CCG6SF", "CYPD6127-48LQXI",		0x330111C3, 0x80,  0x10000},
-	{NULL, NULL,				0x0, 0x0,  0x0},
+	{"", "",				0x0, 0x0,  0x0},
 };
 
 /**

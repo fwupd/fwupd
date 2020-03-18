@@ -104,7 +104,7 @@ typedef enum
 /* hid vendor request commands for HID_REPORT_ID_RQT_CMD report id */
 typedef enum
 {
-	HID_RQT_CMD_RESERVED = 0,       /* reserved command id */
+	HID_RQT_CMD_RESERVED = 0,	/* reserved command id */
 	HID_RQT_CMD_JUMP,
 					/**
 					 * Jump	request.

@@ -6,14 +6,10 @@
 
 #include "config.h"
 
-#include "fu-device.h"
 #include "fu-hash.h"
 #include "fu-plugin-vfuncs.h"
 
-#include "fwupd-error.h"
-
 #include "fu-ccgx-cyacd-firmware.h"
-#include "fu-ccgx-common.h"
 #include "fu-ccgx-dock-bb.h"
 
 void
@@ -25,7 +21,7 @@ fu_plugin_init (FuPlugin *plugin)
 }
 
 static FuDevice *
-fu_plugin_ccgx_dock_get_bb(GPtrArray *devices)
+fu_plugin_ccgx_dock_get_bb (GPtrArray *devices)
 {
 	FuDevice *parent = NULL;
 	for (guint i = 0; i < devices->len; i++) {

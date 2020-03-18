@@ -66,7 +66,7 @@ typedef enum {
 	DM_DEVICE_INTERNAL_BB,		/* internal billboard for cs18 Dock */
 	DM_DEVICE_PD_I2C,		/* pd i2c device for gen2 / hybrid dock */
 	DM_DEVICE_PD_I2CM,		/* pd i2cm device  for ds18 dock u2 */
-	DM_DEVICE_PD_HID,		/* pd hid device for ds18 dock u1*/
+	DM_DEVICE_PD_HID,		/* pd hid device for ds18 dock u1 */
 	DM_DEVICE_DMC			/* dock management controller */
 } DMDevice;
 
@@ -80,10 +80,10 @@ typedef enum {
 
 /* ccgx part information */
 typedef struct __attribute__((packed)) {
-	gint8	family_name[16];	/* family name of device */
-	gint8	part_name[32];		/* part name of device */
+	gchar	family_name[16];	/* family name of device */
+	gchar	part_name[32];		/* part name of device */
 	guint32	silicon_id;		/* 32 bit silicon ID */
-	guint32	flash_row_size;		/* size of a flash row in Byte*/
+	guint32	flash_row_size;		/* size of a flash row in Byte */
 	guint32	flash_size;		/* total size of Flash in Byte */
 } CCGxPartInfo;
 
