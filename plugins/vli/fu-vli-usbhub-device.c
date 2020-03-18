@@ -87,14 +87,14 @@ fu_vli_usbhub_device_i2c_read_status (FuVliUsbhubDevice *self,
 
 gboolean
 fu_vli_usbhub_device_i2c_write_data (FuVliUsbhubDevice *self,
-				     guint8 skip_s,
-				     guint8 skip_p,
+				     guint8 disable_start_bit,
+				     guint8 disable_end_bit,
 				     const guint8 *buf,
 				     gsize bufsz,
 				     GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
-	guint16 value = (((guint16) skip_s) << 8) | skip_p;
+	guint16 value = (((guint16) disable_start_bit) << 8) | disable_end_bit;
 	if (g_getenv ("FWUPD_VLI_USBHUB_VERBOSE") != NULL)
 		fu_common_dump_raw (G_LOG_DOMAIN, "I2cWriteData", buf, bufsz);
 	if (!g_usb_device_control_transfer (usb_device,

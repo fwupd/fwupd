@@ -33,8 +33,8 @@ gboolean	 fu_vli_usbhub_device_i2c_write		(FuVliUsbhubDevice *self,
 							 gsize		 bufsz,
 							 GError		**error);
 gboolean	 fu_vli_usbhub_device_i2c_write_data	(FuVliUsbhubDevice *self,
-							 guint8		 skip_s,
-							 guint8		 skip_p,
+							 guint8		 disable_start_bit,
+							 guint8		 disable_end_bit,
 							 const guint8	*buf,
 							 gsize		 bufsz,
 							 GError		**error);
