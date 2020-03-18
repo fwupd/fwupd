@@ -17,6 +17,7 @@ subdir('test')
 subdir('upower')
 subdir('wacom-usb')
 subdir('vli')
+subdir('ccgx')
 
 if get_option('gudev')
 subdir('ata')
