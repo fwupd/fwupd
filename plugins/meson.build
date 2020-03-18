@@ -1,3 +1,4 @@
+subdir('ccgx')
 subdir('cpu')
 subdir('dfu')
 subdir('colorhug')
