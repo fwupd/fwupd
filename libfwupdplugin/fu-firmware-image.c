@@ -298,7 +298,7 @@ fu_firmware_image_add_string (FuFirmwareImage *self, guint idt, GString *str)
 	if (priv->addr != 0x0)
 		fu_common_string_append_kx (str, idt, "Address", priv->addr);
 	if (priv->version != NULL)
-		fu_common_string_append_kv (str, 0, "Version", priv->version);
+		fu_common_string_append_kv (str, idt, "Version", priv->version);
 	if (priv->bytes != NULL) {
 		fu_common_string_append_kx (str, idt, "Data",
 					    g_bytes_get_size (priv->bytes));
