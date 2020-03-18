@@ -5,7 +5,7 @@ If you have any concerns please let us know.
 
 ## Supported Versions
 
-The `1.2.x` and `1.1.x` branches are fully supported by the upstream authors.
+The `1.3.x`, `1.2.x` and `1.1.x` branches are fully supported by the upstream authors.
 Additionally, the `1.0.x` branch is supported for security and bug fixes.
 
 Older releases than this are unsupported by upstream but may be supported by
@@ -16,6 +16,7 @@ is unwilling to update to a supported version.
 
 | Version | Supported          |
 | ------- | ------------------ |
+| 1.3.x   | :heavy_check_mark: |
 | 1.2.x   | :heavy_check_mark: |
 | 1.1.x   | :heavy_check_mark: |
 | 1.0.x   | :white_check_mark: |

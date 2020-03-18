@@ -2811,14 +2811,9 @@ fu_engine_md_refresh_device_verfmt (FuEngine *self, FuDevice *device, XbNode *co
 	}
 }
 
-static void
-fu_engine_md_refresh_device (FuEngine *self, FuDevice *device)
+void
+fu_engine_md_refresh_device_from_component (FuEngine *self, FuDevice *device, XbNode *component)
 {
-	g_autoptr(XbNode) component = fu_engine_get_component_by_guids (self, device);
-
-	/* set or clear the SUPPORTED flag */
-	fu_engine_md_refresh_device_supported (self, device, component);
-
 	/* set the name */
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_MD_SET_NAME))
 		fu_engine_md_refresh_device_name (self, device, component);
@@ -2836,7 +2831,13 @@ fu_engine_md_refresh_devices (FuEngine *self)
 	g_autoptr(GPtrArray) devices = fu_device_list_get_all (self->device_list);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index (devices, i);
-		fu_engine_md_refresh_device (self, device);
+		g_autoptr(XbNode) component = fu_engine_get_component_by_guids (self, device);
+
+		/* set or clear the SUPPORTED flag */
+		fu_engine_md_refresh_device_supported (self, device, component);
+
+		/* fixup the name and format as needed */
+		fu_engine_md_refresh_device_from_component (self, device, component);
 	}
 }
 
@@ -3243,6 +3244,7 @@ fu_engine_get_result_from_component (FuEngine *self, XbNode *component, GError *
 			fu_device_set_name (dev, fu_device_get_name (device));
 			fu_device_set_flags (dev, fu_device_get_flags (device));
 			fu_device_set_id (dev, fu_device_get_id (device));
+			fu_device_set_version_raw (dev, fu_device_get_version_raw (device));
 			fu_device_set_version_format (dev, fu_device_get_version_format (device));
 			fu_device_set_version (dev, fu_device_get_version (device));
 		}
@@ -3380,6 +3382,7 @@ fu_engine_get_details (FuEngine *self, gint fd, GError **error)
 			fwupd_release_set_remote_id (rel, remote_id);
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED);
 		}
+		fu_engine_md_refresh_device_from_component (self, dev, component);
 		g_ptr_array_add (details, dev);
 	}
 	return g_steal_pointer (&details);
