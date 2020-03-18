@@ -230,9 +230,6 @@ fu_unifying_runtime_setup_internal (FuDevice *device, GError **error)
 		if ((self->version_bl_major == 0x01 && config[8] >= 0x04) ||
 		    (self->version_bl_major == 0x03 && config[8] >= 0x02)) {
 			self->signed_firmware = TRUE;
-			fu_device_set_protocol (device, "com.logitech.unifyingsigned");
-		} else {
-			fu_device_set_protocol (device, "com.logitech.unifying");
 		}
 	}
 
