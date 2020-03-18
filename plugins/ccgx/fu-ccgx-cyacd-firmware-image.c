@@ -8,9 +8,14 @@
 #include "config.h"
 
 #include "fu-common.h"
+#include "fu-common-version.h"
 #include "fu-firmware-common.h"
 
+#include "fu-ccgx-common.h"
 #include "fu-ccgx-cyacd-firmware-image.h"
+
+/* offset stored appication version for CCGx */
+#define CCGX_APP_VERSION_OFFSET		228  /* 128+64+32+4 */
 
 struct _FuCcgxCyacdFirmwareImage {
 	FuFirmwareImageClass	 parent_instance;
@@ -35,6 +40,102 @@ fu_ccgx_cyacd_firmware_image_record_free (FuCcgxCyacdFirmwareImageRecord *rcd)
 }
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuCcgxCyacdFirmwareImageRecord, fu_ccgx_cyacd_firmware_image_record_free)
+
+gboolean
+fu_ccgx_cyacd_firmware_image_parse_md_block (FuCcgxCyacdFirmwareImage *self, GError **error)
+{
+	FuCcgxCyacdFirmwareImageRecord *rcd;
+	CCGxMetaData metadata;
+	const guint8 *buf;
+	gsize bufsz = 0;
+	gsize md_offset = 0;
+	guint32 fw_size = 0;
+	guint32	rcd_version_idx = 0;
+	guint32 version = 0;
+	guint8 checksum_calc = 0;
+	g_autofree gchar *version_str = NULL;
+
+	/* sanity check */
+	if (self->records->len == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "no records added to image");
+		return FALSE;
+	}
+
+	/* read metadata from correct ofsset */
+	rcd = g_ptr_array_index (self->records, self->records->len - 1);
+	buf = g_bytes_get_data (rcd->data, &bufsz);
+	switch (bufsz) {
+	case 0x80:
+		md_offset = 0x40;
+		break;
+	case 0x100:
+		md_offset = 0xC0;
+		break;
+	default:
+		break;
+	}
+	if (!fu_memcpy_safe ((guint8 *) &metadata, sizeof(metadata), 0x0, /* dst */
+			     buf, bufsz, md_offset, sizeof(metadata), error)) /* src */
+		return FALSE;
+
+	/* sanity check */
+	if (metadata.metadata_valid != CCGX_METADATA_VALID_SIG) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "invalid metadata 0x@%x, expected 0x%04x, got 0x%04x",
+			     (guint) md_offset,
+			     (guint) CCGX_METADATA_VALID_SIG,
+			     (guint) metadata.metadata_valid);
+		return FALSE;
+	}
+	for (guint i = 0; i < self->records->len - 1; i++) {
+		rcd = g_ptr_array_index (self->records, i);
+		buf = g_bytes_get_data (rcd->data, &bufsz);
+		fw_size += bufsz;
+		for (gsize j = 0; j < bufsz; j++)
+			checksum_calc += buf[j];
+	}
+	if (fw_size != metadata.fw_size)  {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "firmware size invalid, got %02x, expected %02x",
+			     fw_size, metadata.fw_size);
+		return FALSE;
+	}
+	checksum_calc = 1 + ~checksum_calc;
+	if (metadata.fw_checksum != checksum_calc)  {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "checksum invalid, got %02x, expected %02x",
+			     checksum_calc, metadata.fw_checksum);
+		return FALSE;
+	}
+
+	/* get version */
+	rcd_version_idx = CCGX_APP_VERSION_OFFSET / bufsz;
+	if (rcd_version_idx >= self->records->len) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "invalid version index of %02x",
+			     rcd_version_idx);
+		return FALSE;
+	}
+	rcd = g_ptr_array_index (self->records, rcd_version_idx);
+	buf = g_bytes_get_data (rcd->data, &bufsz);
+	if (!fu_common_read_uint32_safe (buf, bufsz, CCGX_APP_VERSION_OFFSET % bufsz,
+					 &version, G_LITTLE_ENDIAN, error))
+		return FALSE;
+	version_str = fu_common_version_from_uint32 (version, FWUPD_VERSION_FORMAT_QUAD);
+	fu_firmware_image_set_version (FU_FIRMWARE_IMAGE (self), version_str);
+	return TRUE;
+}
 
 gboolean
 fu_ccgx_cyacd_firmware_image_parse_header (FuCcgxCyacdFirmwareImage *self,

@@ -74,6 +74,8 @@ fu_ccgx_cyacd_firmware_parse (FuFirmware *firmware,
 	}
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmwareImage *img = g_ptr_array_index (images, i);
+		if (!fu_ccgx_cyacd_firmware_image_parse_md_block (FU_CCGX_CYACD_FIRMWARE_IMAGE (img), error))
+			return FALSE;
 		fu_firmware_add_image (firmware, img);
 	}
 

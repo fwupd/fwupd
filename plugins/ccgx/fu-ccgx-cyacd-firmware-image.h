@@ -22,6 +22,8 @@ FuFirmwareImage	*fu_ccgx_cyacd_firmware_image_new		(void);
 gboolean	 fu_ccgx_cyacd_firmware_image_parse_header	(FuCcgxCyacdFirmwareImage	*self,
 								 const gchar			*line,
 								 GError				**error);
+gboolean	 fu_ccgx_cyacd_firmware_image_parse_md_block	(FuCcgxCyacdFirmwareImage	*self,
+								 GError				**error);
 gboolean	 fu_ccgx_cyacd_firmware_image_add_record	(FuCcgxCyacdFirmwareImage	*self,
 								 const gchar			*line,
 								 GError				**error);
