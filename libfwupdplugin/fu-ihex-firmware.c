@@ -358,7 +358,7 @@ fu_ihex_firmware_emit_chunk (GString *str,
 }
 
 static gboolean
-dfu_firmware_to_ihex_image (FuFirmwareImage *img, GString *str, GError **error)
+fu_ihex_firmware_image_to_string (FuFirmwareImage *img, GString *str, GError **error)
 {
 	const guint8 *data;
 	const guint chunk_size = 16;
@@ -395,7 +395,7 @@ dfu_firmware_to_ihex_image (FuFirmwareImage *img, GString *str, GError **error)
 		}
 		address_tmp &= 0xffff;
 		fu_ihex_firmware_emit_chunk (str, address_tmp,
-					      record_type, data + i, chunk_len);
+					     record_type, data + i, chunk_len);
 	}
 	return TRUE;
 }
@@ -411,7 +411,7 @@ fu_ihex_firmware_write (FuFirmware *firmware, GError **error)
 	imgs = fu_firmware_get_images (firmware);
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmwareImage *img = g_ptr_array_index (imgs, i);
-		if (!dfu_firmware_to_ihex_image (img, str, error))
+		if (!fu_ihex_firmware_image_to_string (img, str, error))
 			return NULL;
 	}
 
