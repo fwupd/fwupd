@@ -9,6 +9,8 @@
 #include <string.h>
 
 #include "fu-chunk.h"
+#include "fu-hid-device.h"
+
 #include "fu-rts54hid-common.h"
 #include "fu-rts54hid-module.h"
 #include "fu-rts54hid-device.h"
@@ -77,7 +79,10 @@ fu_rts54hid_module_i2c_write (FuRts54HidModule *self,
 			     data, data_sz, 0x0,					/* src */
 			     data_sz, error))
 		return FALSE;
-	if (!fu_rts54hid_device_set_report (parent, buf, sizeof(buf), error)) {
+	if (!fu_hid_device_set_report (FU_HID_DEVICE (parent), 0x0, buf, sizeof(buf),
+				       FU_RTS54HID_DEVICE_TIMEOUT * 2,
+				       FU_HID_DEVICE_FLAG_NONE,
+				       error)) {
 		g_prefix_error (error, "failed to write i2c @%04x: ", self->slave_addr);
 		return FALSE;
 	}
@@ -114,11 +119,17 @@ fu_rts54hid_module_i2c_read (FuRts54HidModule *self,
 
 	/* read from module */
 	memcpy (buf, &cmd_buffer, sizeof(cmd_buffer));
-	if (!fu_rts54hid_device_set_report (parent, buf, sizeof(buf), error)) {
+	if (!fu_hid_device_set_report (FU_HID_DEVICE (parent), 0x0, buf, sizeof(buf),
+				       FU_RTS54HID_DEVICE_TIMEOUT * 2,
+				       FU_HID_DEVICE_FLAG_NONE,
+				       error)) {
 		g_prefix_error (error, "failed to write i2c @%04x: ", self->slave_addr);
 		return FALSE;
 	}
-	if (!fu_rts54hid_device_get_report (parent, buf, sizeof(buf), error))
+	if (!fu_hid_device_get_report (FU_HID_DEVICE (parent), 0x0, buf, sizeof(buf),
+				       FU_RTS54HID_DEVICE_TIMEOUT,
+				       FU_HID_DEVICE_FLAG_NONE,
+				       error))
 		return FALSE;
 	return fu_memcpy_safe (data, data_sz, 0x0,
 			       buf, sizeof(buf), FU_RTS54HID_CMD_BUFFER_OFFSET_DATA,

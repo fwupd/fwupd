@@ -19,7 +19,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include "fu-usb-device.h"
+#include "fu-hid-device.h"
 #include "fwupd-error.h"
 
 #include "fu-dell-dock-hid.h"
@@ -81,17 +81,14 @@ fu_dell_dock_hid_set_report (FuDevice *self,
 			     guint8 *outbuffer,
 			     GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
 	gboolean ret;
-	gsize actual_len = 0;
 	for (gint i = 1; i <= HID_MAX_RETRIES; i++) {
 		g_autoptr(GError) error_local = NULL;
-		ret = g_usb_device_control_transfer (
-		    usb_device, G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-		    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-		    G_USB_DEVICE_RECIPIENT_INTERFACE, FU_HID_REPORT_SET, 0x0200,
-		    0x0000, outbuffer, 192, &actual_len,
-		    HIDI2C_TRANSACTION_TIMEOUT, NULL, &error_local);
+		ret = fu_hid_device_set_report (FU_HID_DEVICE (self), 0x0,
+						outbuffer, 192,
+						HIDI2C_TRANSACTION_TIMEOUT,
+						FU_HID_DEVICE_FLAG_NONE,
+						&error_local);
 		if (ret)
 			break;
 		if (i == HID_MAX_RETRIES ||
@@ -107,11 +104,6 @@ fu_dell_dock_hid_set_report (FuDevice *self,
 			g_usleep (G_USEC_PER_SEC);
 		}
 	}
-	if (actual_len != 192) {
-		g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
-			     "only wrote %" G_GSIZE_FORMAT "bytes", actual_len);
-		return FALSE;
-	}
 
 	return TRUE;
 }
@@ -121,17 +113,14 @@ fu_dell_dock_hid_get_report (FuDevice *self,
 			     guint8 *inbuffer,
 			     GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
 	gboolean ret;
-	gsize actual_len = 0;
 	for (gint i = 1; i <= HID_MAX_RETRIES; i++) {
 		g_autoptr(GError) error_local = NULL;
-		ret = g_usb_device_control_transfer (
-		    usb_device, G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-		    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-		    G_USB_DEVICE_RECIPIENT_INTERFACE, FU_HID_REPORT_GET, 0x0100,
-		    0x0000, inbuffer, 192, &actual_len,
-		    HIDI2C_TRANSACTION_TIMEOUT, NULL, &error_local);
+		ret = fu_hid_device_get_report (FU_HID_DEVICE (self), 0x0,
+						inbuffer, 192,
+						HIDI2C_TRANSACTION_TIMEOUT,
+						FU_HID_DEVICE_FLAG_NONE,
+						&error_local);
 		if (ret)
 			break;
 		if (i == HID_MAX_RETRIES ||
@@ -145,11 +134,6 @@ fu_dell_dock_hid_get_report (FuDevice *self,
 				 i, HID_MAX_RETRIES,
 				 error_local->message);
 		}
-	}
-	if (actual_len != 192) {
-		g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
-			     "only read %" G_GSIZE_FORMAT "bytes", actual_len);
-		return FALSE;
 	}
 
 	return TRUE;

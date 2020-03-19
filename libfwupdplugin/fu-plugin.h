@@ -17,6 +17,7 @@
 #include "fu-quirks.h"
 #include "fu-hwids.h"
 #include "fu-usb-device.h"
+//#include "fu-hid-device.h"
 #ifdef HAVE_GUDEV
 #include "fu-udev-device.h"
 #endif

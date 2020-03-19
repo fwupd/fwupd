@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include "fu-firmware-common.h"
+#include "fu-hid-device.h"
 #include "fu-logitech-hidpp-common.h"
 #include "fu-logitech-hidpp-bootloader.h"
 #include "fu-logitech-hidpp-hidpp.h"
@@ -23,7 +24,7 @@ typedef struct
 #define FU_UNIFYING_DEVICE_EP1				0x81
 #define FU_UNIFYING_DEVICE_EP3				0x83
 
-G_DEFINE_TYPE_WITH_PRIVATE (FuLogitechHidPpBootloader, fu_logitech_hidpp_bootloader, FU_TYPE_USB_DEVICE)
+G_DEFINE_TYPE_WITH_PRIVATE (FuLogitechHidPpBootloader, fu_logitech_hidpp_bootloader, FU_TYPE_HID_DEVICE)
 
 #define GET_PRIVATE(o) (fu_logitech_hidpp_bootloader_get_instance_private (o))
 
@@ -342,18 +343,11 @@ fu_logitech_hidpp_bootloader_request (FuLogitechHidPpBootloader *self,
 				    buf_request, sizeof (buf_request));
 	}
 	if (usb_device != NULL) {
-		if (!g_usb_device_control_transfer (usb_device,
-						    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-						    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-						    G_USB_DEVICE_RECIPIENT_INTERFACE,
-						    FU_HID_REPORT_SET,
-						    0x0200, 0x0000,
-						    buf_request,
-						    sizeof (buf_request),
-						    &actual_length,
-						    FU_UNIFYING_DEVICE_TIMEOUT_MS,
-						    NULL,
-						    error)) {
+		if (!fu_hid_device_set_report (FU_HID_DEVICE (self), 0x0,
+					       buf_request, sizeof(buf_request),
+					       FU_UNIFYING_DEVICE_TIMEOUT_MS,
+					       FU_HID_DEVICE_FLAG_NONE,
+					       error)) {
 			g_prefix_error (error, "failed to send data: ");
 			return FALSE;
 		}

@@ -556,6 +556,12 @@ LIBFWUPDPLUGIN_1.4.0 {
     fu_efivar_secure_boot_enabled;
     fu_efivar_set_data;
     fu_efivar_supported;
+    fu_hid_device_get_interface;
+    fu_hid_device_get_report;
+    fu_hid_device_get_type;
+    fu_hid_device_new;
+    fu_hid_device_set_interface;
+    fu_hid_device_set_report;
     fu_plugin_get_config_value_boolean;
     fu_plugin_runner_device_created;
   local: *;
