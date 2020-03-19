@@ -1,0 +1,8 @@
+# Lenovo Gen2 Dock
+[DeviceInstanceId=USB\VID_17EF&PID_A38F]
+Plugin = ccgx
+GType = FuCcgxHidDevice
+
+[DeviceInstanceId=USB\VID_04B4&PID_521A]
+Plugin = ccgx
+GType = FuCcgxHpiDevice

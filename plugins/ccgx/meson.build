@@ -1,11 +1,17 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginCcgx"']
 
+install_data(['ccgx.quirk'],
+  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
+)
+
 shared_module('fu_plugin_ccgx',
   fu_hash,
   sources : [
     'fu-plugin-ccgx.c',
     'fu-ccgx-cyacd-firmware.c',
     'fu-ccgx-cyacd-firmware-image.c',
+    'fu-ccgx-hid-device.c',
+    'fu-ccgx-hpi-device.c',
   ],
   include_directories : [
     root_incdir,
