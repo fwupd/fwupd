@@ -22,6 +22,7 @@ fwupdplugin_src = [
   'fu-efivar.c',
   'fu-udev-device.c',
   'fu-usb-device.c',
+  'fu-hid-device.c',
 ]
 
 fwupdplugin_headers = [
@@ -49,6 +50,7 @@ fwupdplugin_headers = [
   'fu-efivar.h',
   'fu-udev-device.h',
   'fu-usb-device.h',
+  'fu-hid-device.h',
 ]
 install_headers(
   'fwupdplugin.h',

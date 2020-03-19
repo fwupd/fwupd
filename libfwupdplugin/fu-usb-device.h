@@ -15,16 +15,6 @@
 #define FU_TYPE_USB_DEVICE (fu_usb_device_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuUsbDevice, fu_usb_device, FU, USB_DEVICE, FuDevice)
 
-/* HID */
-#define FU_HID_REPORT_GET				0x01
-#define FU_HID_REPORT_SET				0x09
-
-#define FU_HID_REPORT_TYPE_INPUT			0x01
-#define FU_HID_REPORT_TYPE_OUTPUT			0x02
-#define FU_HID_REPORT_TYPE_FEATURE			0x03
-
-#define FU_HID_FEATURE					0x0300
-
 struct _FuUsbDeviceClass
 {
 	FuDeviceClass	parent_class;

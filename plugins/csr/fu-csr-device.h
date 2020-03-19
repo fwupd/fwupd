@@ -6,7 +6,8 @@
 
 #pragma once
 
+#include "fu-hid-device.h"
 #include "fu-plugin.h"
 
 #define FU_TYPE_CSR_DEVICE (fu_csr_device_get_type ())
-G_DECLARE_FINAL_TYPE (FuCsrDevice, fu_csr_device, FU, CSR_DEVICE, FuUsbDevice)
+G_DECLARE_FINAL_TYPE (FuCsrDevice, fu_csr_device, FU, CSR_DEVICE, FuHidDevice)
