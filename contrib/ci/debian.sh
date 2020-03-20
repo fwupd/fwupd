@@ -42,6 +42,7 @@ lintian ../*changes \
 	--suppress-tags debian-watch-file-in-native-package \
 	--suppress-tags source-nmu-has-incorrect-version-number \
 	--suppress-tags no-symbols-control-file \
+	--suppress-tags gzip-file-is-not-multi-arch-same-safe \
 	--allow-root
 
 #if invoked outside of CI
