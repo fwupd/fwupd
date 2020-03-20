@@ -29,6 +29,8 @@ apps:
       share/bash-completion/completions/fwupdmgr
   fwupdtpmevlog:
     command: fwupdtpmevlog.wrapper
+  fwupdagent:
+    command: fwupdagent.wrapper
 
 parts:
   tpm2-tss:
@@ -269,3 +271,4 @@ parts:
     - fwupd.wrapper
     - fwupdmgr.wrapper
     - fwupdtpmevlog.wrapper
+    - fwupdagent.wrapper
