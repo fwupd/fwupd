@@ -78,6 +78,12 @@ jobs:
       - run:
           name: "Build Snap"
           command: snapcraft
+      - run:
+          command: |
+            mkdir -p /tmp/snaps
+            cp *.snap /tmp/snaps
+      - store_artifacts:
+          path: /tmp/snaps
       - persist_to_workspace:
           root: .
           paths:
