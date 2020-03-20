@@ -43,6 +43,7 @@ lintian ../*changes \
 	--suppress-tags source-nmu-has-incorrect-version-number \
 	--suppress-tags no-symbols-control-file \
 	--suppress-tags gzip-file-is-not-multi-arch-same-safe \
+	--suppress-tags binary-is-wrong-architecture \
 	--allow-root
 
 #if invoked outside of CI
