@@ -10,7 +10,7 @@
 
 #include "fu-chunk.h"
 #include "fu-csr-device.h"
-#include "fu-ihex-firmware.h"
+#include "fu-dfu-firmware.h"
 
 #include "dfu-common.h"
 
@@ -332,7 +332,7 @@ fu_csr_device_prepare_firmware (FuDevice *device,
 				FwupdInstallFlags flags,
 				GError **error)
 {
-	g_autoptr(FuFirmware) firmware = fu_ihex_firmware_new ();
+	g_autoptr(FuFirmware) firmware = fu_dfu_firmware_new ();
 
 	/* parse the file */
 	if (!fu_firmware_parse (firmware, fw, flags, error))
