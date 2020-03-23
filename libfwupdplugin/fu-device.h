@@ -154,6 +154,7 @@ gboolean	 fu_device_has_guid			(FuDevice	*self,
 void		 fu_device_add_instance_id		(FuDevice	*self,
 							 const gchar	*instance_id);
 FuDevice	*fu_device_get_alternate		(FuDevice	*self);
+FuDevice	*fu_device_get_root			(FuDevice	*self);
 FuDevice	*fu_device_get_parent			(FuDevice	*self);
 GPtrArray	*fu_device_get_children			(FuDevice	*self);
 void		 fu_device_add_child			(FuDevice	*self,

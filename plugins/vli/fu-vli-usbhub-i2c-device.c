@@ -65,7 +65,7 @@ fu_vli_usbhub_i2c_device_setup (FuDevice *device, GError **error)
 	fu_device_add_instance_id (device, instance_id);
 
 	/* set version */
-	version = g_strdup_printf ("%x.%x", buf[1], buf[2]);
+	version = g_strdup_printf ("%x.%x", buf[0], buf[1]);
 	fu_device_set_version (device, version);
 	return TRUE;
 }
@@ -74,19 +74,31 @@ static gboolean
 fu_vli_usbhub_i2c_device_detach (FuDevice *device, GError **error)
 {
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE (fu_device_get_parent (device));
+	FuVliUsbhubI2cStatus status = 0xff;
+	g_autoptr(FuDeviceLocker) locker = NULL;
 	const guint8 buf[] = {
 		FU_VLI_USBHUB_I2C_ADDR_WRITE,
 		FU_VLI_USBHUB_I2C_CMD_UPGRADE,
 	};
+
+	/* open device */
+	locker = fu_device_locker_new (parent, error);
+	if (locker == NULL)
+		return FALSE;
 	if (!fu_vli_usbhub_device_i2c_write_data (parent, 0, 0, buf, sizeof(buf), error))
 		return FALSE;
 
-	/* avoid power instability */
+	/* avoid power instability by waiting T1 */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	g_usleep (5000);
+	fu_device_set_progress (device, 0);
+	g_usleep (G_USEC_PER_SEC);
 
-	/* success */
-	return TRUE;
+	/* check the device came back */
+	if (!fu_vli_usbhub_device_i2c_read_status (parent, &status, error)) {
+		g_prefix_error (error, "device did not come back after detach");
+		return FALSE;
+	}
+	return fu_vli_usbhub_i2c_check_status (status, error);
 }
 
 static FuFirmware *
@@ -110,8 +122,9 @@ fu_vli_usbhub_i2c_device_write_firmware (FuDevice *device,
 {
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE (fu_device_get_parent (device));
 	GPtrArray *records = fu_ihex_firmware_get_records (FU_IHEX_FIRMWARE (firmware));
-	guint16 usbver = fu_usb_device_get_spec (FU_USB_DEVICE (device));
+	guint16 usbver = fu_usb_device_get_spec (FU_USB_DEVICE (parent));
 	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(FuDevice) root = NULL;
 
 	/* open device */
 	locker = fu_device_locker_new (parent, error);
@@ -233,6 +246,16 @@ fu_vli_usbhub_i2c_device_write_firmware (FuDevice *device,
 		}
 		fu_device_set_progress_full (device, (gsize) j, (gsize) records->len);
 	}
+
+	/* the device automatically reboots */
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+	fu_device_set_progress (device, 0);
+
+	/* this is unusual, but the MSP device reboot takes down the entire hub
+	 * for ~60 seconds and we don't want the parent device removing us */
+	root = fu_device_get_root (device);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	fu_device_set_remove_delay (root, 120000);
 
 	/* success */
 	return TRUE;

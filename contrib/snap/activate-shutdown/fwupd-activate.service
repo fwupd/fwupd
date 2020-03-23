@@ -1,6 +1,6 @@
 [Unit]
 Description=Activate fwupd updates
-RequiresMountsFor=/snap/fwupd/current
+After=snapd.service
 
 [Service]
 Type=oneshot

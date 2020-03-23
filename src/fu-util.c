@@ -2542,7 +2542,7 @@ main (int argc, char *argv[])
 		     fu_util_get_updates);
 	fu_util_cmd_array_add (cmd_array,
 		     "update,upgrade",
-		     NULL,
+		     "[DEVICE-ID]",
 		     /* TRANSLATORS: command description */
 		     _("Updates all firmware to latest versions available"),
 		     fu_util_update);
