@@ -7,8 +7,6 @@
 #pragma once
 
 #include <glib-object.h>
-
 #include "fu-device.h"
 
-
-gboolean		fu_ccgx_hid_enable_mfg_mode (FuDevice *self, gint inf_num, GError **error);
+gboolean	fu_ccgx_hid_enable_mfg_mode (FuDevice *self, gint inf_num, GError **error);

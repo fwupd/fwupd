@@ -5,9 +5,7 @@
  */
 
 #include "config.h"
-
 #include "fu-usb-device.h"
-
 #include "fu-ccgx-common.h"
 #include "fu-ccgx-hid.h"
 
@@ -56,18 +54,6 @@ fu_ccgx_hid_set_report (FuDevice *self,
 	return TRUE;
 }
 
-static gboolean
-fu_ccgx_hid_handle_rqt_cmd (FuDevice *self,
-			    gint inf_num,
-			    guint8 cmd,
-			    guint8 param_0,
-			    guint8 param_1,
-			    GError **error)
-{
-	guint8 data[HID_RQT_CMD_SIZE] = { HID_REPORT_ID_RQT, cmd, param_0, param_1 };
-	return fu_ccgx_hid_set_report (self, inf_num, data, HID_RQT_CMD_SIZE, error);
-}
-
 /**
  * fu_ccgx_hid_enable_mfg_mode:
  * @self: #FuDevice
@@ -85,31 +71,6 @@ fu_ccgx_hid_enable_mfg_mode (FuDevice *self, gint inf_num, GError **error)
 	guint8 data[5] = {0xEE, 0xBC, 0xA6, 0xB9, 0xA8};
 	if (!fu_ccgx_hid_set_report (self, inf_num, data, sizeof(data), error)) {
 		g_prefix_error (error, "mfg mode error: ");
-		return FALSE;
-	}
-	return TRUE;
-}
-
-/**
- * fu_ccgx_hid_enable_usb_bridge_mode:
- * @self: #FuDevice
- * @inf_num: USB Interface number
- * @error: a #GError or %NULL
- *
- *  Change Billboard device to USB bridge mode device
- *  It is command for internal Billboard device
- *
- * Returns: %TRUE for success
-*/
-gboolean
-fu_ccgx_hid_enable_usb_bridge_mode (FuDevice *self, gint inf_num, GError **error)
-{
-	if (!fu_ccgx_hid_handle_rqt_cmd (self,
-					 inf_num,
-					 HID_RQT_CMD_I2C_BRIDGE_CTRL,
-					 'B', 0,
-					 error)) {
-		g_prefix_error (error, "usb bridge mode error: ");
 		return FALSE;
 	}
 	return TRUE;
