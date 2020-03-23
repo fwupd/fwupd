@@ -5,10 +5,11 @@
  */
 
 #include "config.h"
-
 #include "fu-ccgx-common.h"
 #include "fu-ccgx-cyacd-file.h"
 #include "fu-ccgx-hpi.h"
+
+#define HPI_EVENT_WAIT_DELAY_US 1000 /* 1 msec */
 
 #define MAX_NO_PORTS				0x02
 #define SI_ID_COMP_VAL_HPI			0x1800
@@ -360,7 +361,7 @@ fu_ccgx_hpi_reg_read (FuDevice *device,
 	data_buffer.transfer_count = 0;
 
 	if (!fu_ccgx_i2c_write(device, i2c_handle, &data_cfg, &data_buffer, error)) {
-		g_prefix_error (error, "fu_ccgx_hpi_reg_read - write error: ");
+		g_prefix_error (error, "i2c write error: ");
 		return FALSE;
 	}
 
@@ -371,7 +372,7 @@ fu_ccgx_hpi_reg_read (FuDevice *device,
 	data_buffer.length = size;
 
 	if (!fu_ccgx_i2c_read(device, i2c_handle, &data_cfg, &data_buffer, error)) {
-		g_prefix_error (error, "fu_ccgx_hpi_reg_read - read	error: ");
+		g_prefix_error (error, "i2c read error: ");
 		return FALSE;
 	}
 
@@ -414,7 +415,7 @@ fu_ccgx_hpi_reg_write (FuDevice *device,
 	data_buffer.transfer_count = 0;
 
 	if (!fu_ccgx_i2c_write(device, i2c_handle, &data_cfg, &data_buffer, error)) {
-		g_prefix_error (error, "fu_ccgx_hpi_reg_write error: ");
+		g_prefix_error (error, "i2c write error: ");
 		return FALSE;
 	}
 
@@ -454,7 +455,7 @@ fu_ccgx_hpi_reg_write_no_resp (FuDevice *device,
 	data_buffer.transfer_count = 0;
 
 	if (!fu_ccgx_i2c_write_no_resp (device, i2c_handle, &data_cfg, &data_buffer, error)) {
-		g_prefix_error (error, "fu_ccgx_hpi_reg_write_no_resp error: ");
+		g_prefix_error (error, "i2c write no resp error: ");
 		return FALSE;
 	}
 
@@ -477,7 +478,7 @@ fu_ccgx_hpi_clear_intr (FuDevice *device,
 	}
 
 	if (!fu_ccgx_hpi_reg_write (device, &handle->i2c_handle,handle->hpi_addr_byte, HPI_DEV_REG_INTR_ADDR, &fu_ccgx_hpi_clear_intr, 1,error)) {
-		g_prefix_error (error, "fu_ccgx_hpi_clear_intr error: ");
+		g_prefix_error (error, "hpi reg write error: ");
 		return FALSE;
 	}
 
@@ -498,7 +499,7 @@ fu_ccgx_hpi_read_event_reg (FuDevice *device,
 		/* first read the response register */
 		if (!fu_ccgx_hpi_reg_read (device, &handle->i2c_handle,handle->hpi_addr_byte,
 				fu_ccgx_hpi_reg_addr_gen (section, HPI_REG_PART_PDDATA_READ, 0), data_buffer, 4,error)) {
-			g_prefix_error (error, "fu_ccgx_hpi_read_event_reg - read response reg error:");
+			g_prefix_error (error, "hpi reg read response error: ");
 			return FALSE;
 		}
 
@@ -509,7 +510,7 @@ fu_ccgx_hpi_read_event_reg (FuDevice *device,
 			if (!fu_ccgx_hpi_reg_read (device, &handle->i2c_handle, handle->hpi_addr_byte,
 					fu_ccgx_hpi_reg_addr_gen (section, HPI_REG_PART_PDDATA_READ, 4), event->event_data,
 					event->event_length, error)) {
-				g_prefix_error (error, "fu_ccgx_hpi_read_event_reg - read event data error:");
+				g_prefix_error (error, "hpi reg read event error: ");
 				return FALSE;
 			}
 		}
@@ -517,7 +518,7 @@ fu_ccgx_hpi_read_event_reg (FuDevice *device,
 	else
 	{
 		if (!fu_ccgx_hpi_reg_read (device, &handle->i2c_handle,handle->hpi_addr_byte, CY_PD_REG_RESPONSE_ADDR ,data_buffer, 2, error)) {
-			g_prefix_error (error, "fu_ccgx_hpi_read_event_reg - read response reg error:");
+			g_prefix_error (error, "hpi reg read response error: ");
 			return FALSE;
 		}
 		event->event_code   = data_buffer[0];
@@ -527,7 +528,7 @@ fu_ccgx_hpi_read_event_reg (FuDevice *device,
 			/* read the data memory */
 			if (!fu_ccgx_hpi_reg_read (device, &handle->i2c_handle, handle->hpi_addr_byte,
 				       CY_PD_REG_BOOTDATA_MEMEORY_ADDR,event->event_data, event->event_length,error)) {
-				g_prefix_error (error, "fu_ccgx_hpi_read_event_reg - read event data error:");
+				g_prefix_error (error, "hpi reg read event error: ");
 				return FALSE;
 			}
 		}
@@ -536,30 +537,32 @@ fu_ccgx_hpi_read_event_reg (FuDevice *device,
 	return fu_ccgx_hpi_clear_intr (device, handle, section, error);
 }
 
+/* return event count, -1: error, 0: no event */
 static gint8
-fu_ccgx_hpi_app_read_intr_reg (FuDevice *device, CyHPIHandle *handle, HPIRegSection section, HPIEvent *event_array, GError **error)
+fu_ccgx_hpi_app_read_intr_reg (FuDevice *device, CyHPIHandle *handle, HPIRegSection section, HPIEvent *event_array)
 {
 	gint8 event_count = -1;
 	guint8 intr_reg =0;
-	guint8 i;
+	guint8 index;
+	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail (handle != NULL, -1);
 
 	if (!fu_ccgx_hpi_reg_read (device, &handle->i2c_handle,handle->hpi_addr_byte,
-		fu_ccgx_hpi_reg_addr_gen (HPI_REG_SECTION_DEV, HPI_REG_PART_REG, HPI_DEV_REG_INTR_ADDR), &intr_reg, 1, error)) {
-		g_prefix_error (error, "read_intr_reg  read intr reg error:");
+		fu_ccgx_hpi_reg_addr_gen (HPI_REG_SECTION_DEV, HPI_REG_PART_REG, HPI_DEV_REG_INTR_ADDR), &intr_reg, 1, &error_local)) {
+		g_warning ("read intr reg error:%s",error_local->message);
 		return -1;
 	}
 
 	event_count = 0;
 	/* device section will not come here. */
-	for (i = 0; i <= handle->num_of_ports; i++) {
+	for (index = 0; index <= handle->num_of_ports; index++) {
 		/* check wheteher this section is needed */
-		if ((section == i) || (section == HPI_REG_SECTION_ALL)) {
+		if ((section == index) || (section == HPI_REG_SECTION_ALL)) {
 			/* check whether this section has any event/response */
-			if ((1 << i) & intr_reg) {
-				if (!fu_ccgx_hpi_read_event_reg (device, handle, section, &event_array[i], error)) {
-					g_prefix_error (error, "read_intr_reg  read event error:");
+			if ((1 << index) & intr_reg) {
+				if (!fu_ccgx_hpi_read_event_reg (device, handle, section, &event_array[index], &error_local)) {
+					g_warning ("read event reg error:%s",error_local->message);
 					return -1;
 				}
 				event_count++;
@@ -570,26 +573,26 @@ fu_ccgx_hpi_app_read_intr_reg (FuDevice *device, CyHPIHandle *handle, HPIRegSect
 	return event_count;
 }
 
-static gboolean
-fu_ccgx_hpi_wait_for_event (FuDevice *device, CyHPIHandle *handle, HPIRegSection section, HPIEvent *event_array, guint32 timeout_ms, GError **error)
+/* return event count, -1: error, 0: no event */
+static gint8
+fu_ccgx_hpi_wait_for_event (FuDevice *device, CyHPIHandle *handle, HPIRegSection section, HPIEvent *event_array, guint32 timeout_ms)
 {
 	guint64 elapsed_time_ms = 0;
 	g_autoptr(GTimer) start_time = g_timer_new ();
-	gint8 event_count;
+	gint8 event_count = -1;
 
-	g_return_val_if_fail (handle != NULL, FALSE);
-	g_return_val_if_fail (event_array != NULL, FALSE);
+	g_return_val_if_fail (handle != NULL, -1);
+	g_return_val_if_fail (event_array != NULL, -1);
 
 	do {
-			event_count = fu_ccgx_hpi_app_read_intr_reg (device,handle, section, event_array,error);
-			elapsed_time_ms = g_timer_elapsed (start_time, NULL) * 1000.f;
-			if (event_count > 0)
-				return TRUE;
-			else if (event_count< 0)
-				break;
+		event_count = fu_ccgx_hpi_app_read_intr_reg (device,handle, section, event_array);
+		elapsed_time_ms = g_timer_elapsed (start_time, NULL) * 1000.f;
+		if (event_count != 0) 
+			break;
+		g_usleep(HPI_EVENT_WAIT_DELAY_US); 
 	} while	(elapsed_time_ms <= timeout_ms);
 
-	return FALSE;
+	return event_count;
 }
 
 /**
@@ -609,7 +612,7 @@ fu_ccgx_hpi_get_device_mode (FuDevice *device, CyHPIHandle *handle, guint8 *devi
 	g_return_val_if_fail (handle != NULL, FALSE);
 	g_return_val_if_fail (device_mode != NULL, FALSE);
 	if (!fu_ccgx_hpi_reg_read (device, &handle->i2c_handle, handle->hpi_addr_byte, CY_PD_REG_DEVICE_MODE_ADDR, device_mode, 1, error)) {
-		g_prefix_error (error, "get device mode	error: ");
+		g_prefix_error (error, "hpi reg read error: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -633,7 +636,7 @@ fu_ccgx_hpi_get_silicon_id (FuDevice *device, CyHPIHandle *handle,	guint16 *sid,
 	g_return_val_if_fail (sid != NULL, FALSE);
 
 	if (!fu_ccgx_hpi_reg_read(device, &handle->i2c_handle, handle->hpi_addr_byte, CY_PD_SILICON_ID, (guint8*)sid, 2, error)) {
-		g_prefix_error (error, "get silicon id error: ");
+		g_prefix_error (error, "hpi reg read error: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -664,7 +667,7 @@ fu_ccgx_hpi_get_device_version (FuDevice *device, CyHPIHandle *handle, guint32* 
 		size = HPI_DEVICE_VERSION_SIZE_HPIV2;
 
 	if (!fu_ccgx_hpi_reg_read (device, &handle->i2c_handle, handle->hpi_addr_byte, CY_PD_GET_VERSION, (guint8*)version, size, error)) {
-		g_prefix_error (error, "get version error: ");
+		g_prefix_error (error, "hpi reg read error: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -686,7 +689,7 @@ fu_ccgx_hpi_jump_to_boot (FuDevice *device, CyHPIHandle *handle, GError **error)
 	guint8 jump_sig = CY_PD_JUMP_TO_BOOT_CMD_SIG;
 	g_return_val_if_fail (handle != NULL, FALSE);
 	if (!fu_ccgx_hpi_reg_write (device, &handle->i2c_handle, handle->hpi_addr_byte, CY_PD_JUMP_TO_BOOT_REG_ADDR, &jump_sig, 1, error)) {
-		g_prefix_error (error, "jump to boot error: ");
+		g_prefix_error (error, "hpi reg write error: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -709,7 +712,7 @@ fu_ccgx_hpi_jump_to_alt_fw (FuDevice *device, CyHPIHandle *handle, GError **erro
 	g_return_val_if_fail (handle != NULL, FALSE);
 
 	if (!fu_ccgx_hpi_reg_write (device, &handle->i2c_handle, handle->hpi_addr_byte, CY_PD_JUMP_TO_BOOT_REG_ADDR, &jump_sig, 1, error)) {
-		g_prefix_error (error, "jump to alt mode error: ");
+		g_prefix_error (error, "hpi reg write error: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -731,7 +734,7 @@ fu_ccgx_hpi_enter_flash_mode (FuDevice *device, CyHPIHandle *handle, GError **er
 	guint8 enter_flash_sig = CY_PD_ENTER_FLASHING_MODE_CMD_SIG;
 	g_return_val_if_fail (handle != NULL, FALSE);
 	if (!fu_ccgx_hpi_reg_write (device, &handle->i2c_handle, handle->hpi_addr_byte, CY_PD_REG_ENTER_FLASH_MODE_ADDR, &enter_flash_sig, 1,error)) {
-		g_prefix_error (error, "enter flash mode error: ");
+		g_prefix_error (error, "hpi reg write error: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -753,7 +756,7 @@ fu_ccgx_hpi_leave_flash_mode (FuDevice *device, CyHPIHandle *handle, GError **er
 	guint8 enter_flash_sig = 0;
 	g_return_val_if_fail (handle != NULL, FALSE);
 	if (!fu_ccgx_hpi_reg_write (device, &handle->i2c_handle, handle->hpi_addr_byte, CY_PD_REG_ENTER_FLASH_MODE_ADDR, &enter_flash_sig, 1, error)) {
-		g_prefix_error (error, "leave flash mode error: ");
+		g_prefix_error (error, "hpi reg write error: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -783,7 +786,7 @@ fu_ccgx_hpi_write_flash (FuDevice *device, CyHPIHandle *handle, guint16 row_num,
 
 	g_return_val_if_fail (handle != NULL, FALSE);
 	if (!fu_ccgx_hpi_reg_write(device, &handle->i2c_handle, handle->hpi_addr_byte, CY_PD_REG_FLASH_READ_WRITE_ADDR, flash_cmd, 4, error)) {
-		g_prefix_error (error, "write flash error: ");
+		g_prefix_error (error, "hpi reg write error: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -813,7 +816,7 @@ fu_ccgx_hpi_read_flash (FuDevice *device, CyHPIHandle *handle, guint16 row_num, 
 
 	g_return_val_if_fail (handle != NULL, FALSE);
 	if (!fu_ccgx_hpi_reg_write(device, &handle->i2c_handle, handle->hpi_addr_byte, CY_PD_REG_FLASH_READ_WRITE_ADDR, flash_cmd, 4, error)) {
-		g_prefix_error (error, "read flash error: ");
+		g_prefix_error (error, "hpi reg write error: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -835,7 +838,7 @@ fu_ccgx_hpi_validate_fw (FuDevice *device,CyHPIHandle *handle, guint8 fw_index, 
 {
 	g_return_val_if_fail (handle != NULL, FALSE);
 	if (!fu_ccgx_hpi_reg_write(device, &handle->i2c_handle, handle->hpi_addr_byte, CY_PD_REG_VALIDATE_FW_ADDR, &fw_index, 1, error)) {
-		g_prefix_error (error, "validate fw error: ");
+		g_prefix_error (error, "hpi reg write error: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -860,7 +863,7 @@ fu_ccgx_hpi_reset_device (FuDevice *device, CyHPIHandle *handle, GError **error)
 
 	g_return_val_if_fail (handle != NULL, FALSE);
 	if (!fu_ccgx_hpi_reg_write_no_resp(device, &handle->i2c_handle, handle->hpi_addr_byte, CY_PD_REG_RESET_ADDR, reset_cmd, 2, error)) {
-		g_prefix_error (error, "reset device error: ");
+		g_prefix_error (error, "hpi reg write error: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -880,18 +883,25 @@ fu_ccgx_hpi_reset_device (FuDevice *device, CyHPIHandle *handle, GError **error)
  * Returns: %TRUE for success
 */
 static gboolean
-fu_ccgx_hpi_get_event (FuDevice *device, CyHPIHandle *handle, HPIRegSection reg_section, CyPDResp*	event, guint32 io_timeout, GError **error )
+fu_ccgx_hpi_get_event (FuDevice *device, CyHPIHandle *handle, HPIRegSection reg_section, CyPDResp* event, guint32 io_timeout, GError **error)
 {
 	HPIEvent event_array[HPI_REG_SECTION_ALL + 1] = {0};
 	guint32 timeout_ms = io_timeout;
-
+	gint8 event_count = 0;
+	
 	g_return_val_if_fail (handle != NULL, FALSE);
 	g_return_val_if_fail (event != NULL, FALSE);
-	if (fu_ccgx_hpi_wait_for_event(device,handle,reg_section,event_array,timeout_ms,error)) {
-		*event = event_array[reg_section].event_code;
-		return TRUE;
+	
+	event_count = fu_ccgx_hpi_wait_for_event (device, handle, reg_section, event_array, timeout_ms);
+	if (event_count <= 0) {
+		g_set_error (error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				   "hpi wait for event error count=%d",event_count);
+		return FALSE;
 	}
-	return FALSE;
+	*event = event_array[reg_section].event_code;
+	return TRUE;
 }
 
 /**
@@ -903,26 +913,40 @@ fu_ccgx_hpi_get_event (FuDevice *device, CyHPIHandle *handle, HPIRegSection reg_
  *
  * Clear all event from device
  *
+ * Returns: %TRUE for success
 */
-static void
-fu_ccgx_hpi_clear_all_event (FuDevice *device,
-			     CyHPIHandle *handle,
-			     guint32 io_timeout,
-			     GError **error)
+static gboolean
+fu_ccgx_hpi_clear_all_event (FuDevice *device, CyHPIHandle *handle, guint32 io_timeout, GError **error)
 {
-	g_autoptr(GError) error_local = NULL;
 	HPIEvent event_array[HPI_REG_SECTION_ALL + 1] = {0};
 	guint32 timeout_ms = io_timeout;
 	guint8 section;
+	gint8 event_count = 0;
 
-	g_return_if_fail (handle != NULL);
+	g_return_val_if_fail (handle != NULL, FALSE);
+	
 	if (timeout_ms == 0) {
-		fu_ccgx_hpi_app_read_intr_reg (device, handle, HPI_REG_SECTION_ALL, event_array, &error_local);
+		event_count = fu_ccgx_hpi_app_read_intr_reg (device, handle, HPI_REG_SECTION_ALL, event_array);
+		if (event_count < 0) {
+			g_set_error (error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "hpi read intr reg error count=%d",event_count);
+			return FALSE;
+		}
 	} else {
-		for (section = 0; section < handle->num_of_ports; section++) {
-			fu_ccgx_hpi_wait_for_event (device, handle, section, event_array, timeout_ms, &error_local);
+		for (section = 0; section < HPI_REG_SECTION_ALL; section++) {
+			event_count = fu_ccgx_hpi_wait_for_event (device, handle, section, event_array, timeout_ms);
+			if (event_count < 0) {
+				g_set_error (error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_NOT_SUPPORTED,
+						    "hpi wait for event error count=%d",event_count);
+				return FALSE;
+			}
 		}
 	}
+	return TRUE;
 }
 
 /**
@@ -954,7 +978,7 @@ fu_ccgx_hpi_hpi_write_reg (FuDevice *device,
 				    reg_data,
 				    size,
 				    error)) {
-		g_prefix_error (error, "write reg error: ");
+		g_prefix_error (error, "hpi reg write error: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -989,7 +1013,7 @@ fu_ccgx_hpi_read_reg (FuDevice *device,
 				   reg_data,
 				   size,
 				   error)) {
-		g_prefix_error (error, "read reg error: ");
+		g_prefix_error (error, "hpi reg read error: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -1022,7 +1046,7 @@ fu_ccgx_hpi_configure (FuDevice *device,
 	handle->num_of_ports = 1;
 
 	if (!fu_ccgx_i2c_get_config(device, &handle->i2c_handle, &i2c_config, error)) {
-		g_prefix_error (error, "fu_ccgx_hpi_configure  get config error: ");
+		g_prefix_error (error, "i2c get config error: ");
 		return FALSE;
 	}
 
@@ -1030,12 +1054,12 @@ fu_ccgx_hpi_configure (FuDevice *device,
 	i2c_config.is_master = TRUE;
 
 	if (!fu_ccgx_i2c_set_config(device,&handle->i2c_handle,&i2c_config,error)) {
-		g_prefix_error (error, "fu_ccgx_hpi_configure -set config error: ");
+		g_prefix_error (error, "i2c set config error: ");
 		return FALSE;
 	}
 
 	if (!fu_ccgx_hpi_get_device_mode(device,handle,&mode,error)) {
-		g_prefix_error (error, "fu_ccgx_hpi_configure -get device mode: ");
+		g_prefix_error (error, "hpi get devide mode error: ");
 		return FALSE;
 	}
 
@@ -1080,8 +1104,7 @@ fu_ccgx_hpi_cmd_setup (FuDevice *device,
 {
 	CyI2CDeviceHandle *i2c_handle = &hpi_handle->i2c_handle;
 	guint8 device_mode = 0;
-	guint32	hpi_event = 0;
-	g_autoptr(GError) error_local = NULL;
+	HPIEvent event_array[HPI_REG_SECTION_ALL + 1] = {0};
 
 	g_return_val_if_fail (hpi_handle != NULL, FALSE);
 
@@ -1097,63 +1120,32 @@ fu_ccgx_hpi_cmd_setup (FuDevice *device,
 		i2c_handle->ep.bulk_in = PD_I2CM_USB_EP_BULK_IN;
 		i2c_handle->ep.intr_in = PD_I2CM_USB_EP_INTR_IN;
 	} else {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "i2c setup not supported device");
+		g_set_error_literal (error,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"i2c setup not supported device");
 		return FALSE;
 	}
 
 	if  (!fu_ccgx_hpi_configure (device, hpi_handle, &device_mode, error)) {
-		g_prefix_error (error, "i2c_setup error: ");
+		g_prefix_error (error, "hpi configure error: ");
 		return FALSE;
 	}
 
-	if (fu_ccgx_hpi_get_event (device, hpi_handle, HPI_REG_SECTION_DEV, &hpi_event,
-			   HPI_CMD_SETUP_EVENT_WAIT_TIME_MS, &error_local)) {
-		if (hpi_event == CY_PD_RESP_RESET_COMPLETE) {  /* reset completed */
-			g_usleep (HPI_CMD_RESET_COMPLETE_DELAY_US);  /* at least sleep 100 msec */
-		}
+	if (fu_ccgx_hpi_wait_for_event (device, hpi_handle, HPI_REG_SECTION_DEV, 
+							    event_array, HPI_CMD_SETUP_EVENT_WAIT_TIME_MS) > 0) {
+		if (event_array[HPI_REG_SECTION_DEV].event_code == CY_PD_RESP_RESET_COMPLETE)
+			g_usleep (HPI_CMD_RESET_COMPLETE_DELAY_US);  
 	}
 
-	fu_ccgx_hpi_clear_all_event (device, hpi_handle, HPI_CMD_SETUP_EVENT_CLEAR_TIME_MS, &error_local);
+	if (!fu_ccgx_hpi_clear_all_event (device, hpi_handle, HPI_CMD_SETUP_EVENT_CLEAR_TIME_MS, error)) {
+		g_prefix_error (error, "hpi clear all event error: ");
+		return FALSE;
+	}
+
 	return TRUE;
 }
 
-static gboolean
-fu_ccgx_hpi_get_fw_version (FuDevice *device,
-			    CyHPIHandle *hpi_handle,
-			    guint32 start_row,
-			    guint32 row_size,
-			    PDFWAppVersion *fw_version,
-			    GError **error)
-{
-	guint32 version_row_index = 0;
-	guint32 version_row_offset = 0;
-	gint32 version_row_num = 0;
-	g_autofree guint8 *row_buffer = NULL;
-
-	version_row_index = CCGX_APP_VERSION_OFFSET / row_size;
-	version_row_offset = CCGX_APP_VERSION_OFFSET % row_size;
-
-	version_row_num = start_row + version_row_index;
-	row_buffer = g_malloc0 (row_size);
-
-	g_return_val_if_fail (hpi_handle != NULL, FALSE);
-	g_return_val_if_fail (fw_version != NULL, FALSE);
-	g_return_val_if_fail (row_buffer != NULL, FALSE);
-
-	if (!fu_ccgx_hpi_cmd_read_flash (device, hpi_handle, version_row_num, row_buffer, row_size, error)) {
-		g_prefix_error (error, "get fw version error: ");
-		return FALSE;
-	}
-
-	fw_version->val= (guint32) (row_buffer[version_row_offset + 3] << 24 |
-					row_buffer[version_row_offset + 2] << 16 |
-					row_buffer[version_row_offset + 1] << 8 |
-					row_buffer[version_row_offset + 0]);
-	return TRUE;
- }
 
 /**
  * fu_ccgx_hpi_cmd_get_device_data:
@@ -1183,41 +1175,49 @@ fu_ccgx_hpi_cmd_get_device_data (FuDevice *device,
 	guint32 fw_meta_offset = 0;
 	guint8 fw_index = 0;
 	CCGxMetaData *metadata = NULL;
-	PDFWAppVersion *fw_version = NULL;
 
 	g_return_val_if_fail (hpi_handle != NULL, FALSE);
 	g_return_val_if_fail (device_data != NULL, FALSE);
 
 	if (!fu_ccgx_hpi_get_device_mode (device,hpi_handle,&device_mode,error)) {
+		g_prefix_error (error, "hpi get device mode error: ");
 		return FALSE;
 	}
 
 	device_data->fw_mode = (FWMode)(device_mode & 0x03);
 
 	if (!fu_ccgx_hpi_get_silicon_id (device,hpi_handle,&silicon_id,error)) {
+		g_prefix_error (error, "hpi get silicon id error: ");
 		return FALSE;
 	}
 
 	device_data->silicon_id = (guint16)silicon_id;
 
 	device_data->current_version.val = 0;
+	if (device_data->fw_mode == FW_MODE_BOOT) {
+		g_set_error_literal (error,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"device is boot mode");
+		return FALSE;
+	}
+	
 	if (device_data->fw_mode != FW_MODE_BOOT) {
 		if (!fu_ccgx_hpi_get_device_version (device, hpi_handle, device_versions, error)) {
+			g_prefix_error (error, "hpi get device version error: ");
 			return FALSE;
 		}
 		device_data->fw_version[FW_MODE_FW1].val = device_versions[3];
 		device_data->fw_version[FW_MODE_FW2].val = device_versions[5];
 		device_data->current_version.val = device_data->fw_version[device_data->fw_mode].val ;
-	} else {
-		g_warning("device in boot mode");
 	}
 
 	ccgx_info = fu_ccgx_util_find_ccgx_info (silicon_id);
 	if (ccgx_info == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "not supported Silicon ID");
+		g_set_error_literal (error,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"not supported Silicon ID");
 		return FALSE;
 	}
 
@@ -1225,10 +1225,10 @@ fu_ccgx_hpi_cmd_get_device_data (FuDevice *device,
 	device_data->fw_row_size = row_size;
 
 	if (row_size > CYACD_FLASH_ROW_MAX) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Not row size");
+		g_set_error_literal (error,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"Not row size");
 		return FALSE;
 	}
 
@@ -1243,9 +1243,9 @@ fu_ccgx_hpi_cmd_get_device_data (FuDevice *device,
 	} else {
 		fw_meta_offset = 0;
 		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "not support row size");
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "not support row size");
 		return FALSE;
 	}
 
@@ -1255,6 +1255,7 @@ fu_ccgx_hpi_cmd_get_device_data (FuDevice *device,
 
 	device_data->fw_meta_valid = FALSE;
 	if (!fu_ccgx_hpi_cmd_enter_flash_mode(device,hpi_handle,error)) {
+		g_prefix_error (error, "hpi cmd enter flash mode error: ");
 		return FALSE;
 	}
 
@@ -1264,41 +1265,33 @@ fu_ccgx_hpi_cmd_get_device_data (FuDevice *device,
 	fw_index = FW_MODE_FW1;
 	fw_meta_row_num = device_data->fw1_meta_row_num;
 
-	(void)fu_ccgx_hpi_clear_all_event (device, hpi_handle, 10, error);
+	if (!fu_ccgx_hpi_clear_all_event (device, hpi_handle, 10, error)) {
+		g_prefix_error (error, "fw1 meta hpi clear all event error: ");
+		return FALSE;
+	}
 
 	if (!fu_ccgx_hpi_cmd_read_flash (device, hpi_handle, fw_meta_row_num, row_buffer, row_size,error)) {
+		g_prefix_error (error, "fw1 meta hpi cmd read flash error: ");
 		return FALSE;
 	}
 
 	metadata = &device_data->fw_metadata[fw_index];
 	memcpy(metadata,&row_buffer[fw_meta_offset],sizeof(CCGxMetaData));
-
-	fw_version = &device_data->fw_version[fw_index];
-	if (metadata->metadata_valid == CCGX_METADATA_VALID_SIG) {
-		if (!fu_ccgx_hpi_get_fw_version(device,  hpi_handle, (metadata->last_boot_row + 1), row_size ,fw_version, error)) {
-			return FALSE;
-		}
-	}
 
 	/* fw2 meta data */
 	fw_index = FW_MODE_FW2;
 	fw_meta_row_num = device_data->fw2_meta_row_num;
 
 	if (!fu_ccgx_hpi_cmd_read_flash (device, hpi_handle, fw_meta_row_num, row_buffer, row_size, error)) {
+		g_prefix_error (error, "fw2 meta hpi cmd read flash error: ");
 		return FALSE;
 	}
 
 	metadata = &device_data->fw_metadata[fw_index];
 	memcpy(metadata,&row_buffer[fw_meta_offset],sizeof(CCGxMetaData));
 
-	fw_version = &device_data->fw_version[fw_index];
-	if (metadata->metadata_valid == CCGX_METADATA_VALID_SIG) {
-		if (!fu_ccgx_hpi_get_fw_version(device,  hpi_handle, (metadata->last_boot_row + 1), row_size ,fw_version, error)) {
-			return FALSE;
-		}
-	}
-
 	if (!fu_ccgx_hpi_cmd_leave_flash_mode(device,hpi_handle,error)) {
+		g_prefix_error (error, "hpi cmd leave flash error: ");
 		return FALSE;
 	}
 
@@ -1324,23 +1317,26 @@ fu_ccgx_hpi_cmd_enter_flash_mode (FuDevice *device, CyHPIHandle *hpi_handle,  GE
 
 	g_return_val_if_fail (hpi_handle != NULL, FALSE);
 
-	(void)fu_ccgx_hpi_clear_all_event(device,hpi_handle,HPI_CMD_COMMAND_CLEAR_EVENT_TIME_MS,error);
+	if (!fu_ccgx_hpi_clear_all_event (device, hpi_handle, HPI_CMD_COMMAND_CLEAR_EVENT_TIME_MS, error)) {
+		g_prefix_error (error, "hpi clear all event error: ");
+		return FALSE;
+	}
 
 	if (!fu_ccgx_hpi_enter_flash_mode (device, hpi_handle, error)) {
-		g_warning("enter flash mode cmd	error");
+		g_prefix_error (error, "hpi enter flash mode error: ");
 		return FALSE;
 	}
 
 	if (!fu_ccgx_hpi_get_event (device, hpi_handle, HPI_REG_SECTION_DEV, &hpi_event, HPI_CMD_COMMAND_RESPONSE_TIME_MS ,error)) {
-		g_warning("enter flash mode resp error");
+		g_prefix_error (error, "hpi get event error: ");
 		return FALSE;
 	}
 
 	if (hpi_event != CY_PD_RESP_SUCCESS) {
 		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "enter flash mode resp code error:	0x%x", hpi_event);
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				    "hpi resp code error: 0x%x", hpi_event);
 		return FALSE;
 	}
 	return TRUE;
@@ -1362,23 +1358,27 @@ fu_ccgx_hpi_cmd_leave_flash_mode (FuDevice *device, CyHPIHandle *hpi_handle, GEr
 	CyPDResp hpi_event = 0;
 
 	g_return_val_if_fail (hpi_handle != NULL, FALSE);
-	(void)fu_ccgx_hpi_clear_all_event(device,hpi_handle,HPI_CMD_COMMAND_CLEAR_EVENT_TIME_MS,error);
+
+	if (!fu_ccgx_hpi_clear_all_event (device, hpi_handle, HPI_CMD_COMMAND_CLEAR_EVENT_TIME_MS, error)) {
+		g_prefix_error (error, "hpi clear all event error: ");
+		return FALSE;
+	}
 
 	if (!fu_ccgx_hpi_leave_flash_mode (device, hpi_handle, error)) {
-		 g_warning("leave flash mode cmd error");
+		 g_warning("hpi leave flash mode cmd error");
 		 return	FALSE;
 	}
 
 	if (!fu_ccgx_hpi_get_event (device, hpi_handle, HPI_REG_SECTION_DEV, &hpi_event, HPI_CMD_COMMAND_RESPONSE_TIME_MS ,error)) {
-		g_warning("leave flash mode resp error");
+		g_warning("hpi get event error");
 		return FALSE;
 	}
 
 	if (hpi_event != CY_PD_RESP_SUCCESS) {
 		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "leave flash mode resp code error: 0x%x", hpi_event);
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				    "hpi resp code error: 0x%x", hpi_event);
 		return FALSE;
 	}
 	return TRUE;
@@ -1407,7 +1407,10 @@ fu_ccgx_hpi_cmd_write_flash (FuDevice *device, CyHPIHandle *hpi_handle, guint16 
 	g_return_val_if_fail (data != NULL, FALSE);
 	g_return_val_if_fail (size > 0, FALSE);
 
-	(void)fu_ccgx_hpi_clear_all_event(device,hpi_handle,HPI_CMD_COMMAND_CLEAR_EVENT_TIME_MS,error);
+	if (!fu_ccgx_hpi_clear_all_event (device, hpi_handle, HPI_CMD_COMMAND_CLEAR_EVENT_TIME_MS, error)) {
+		g_prefix_error (error, "hpi clear all event error: ");
+		return FALSE;
+	}
 
 	if (hpi_handle->hpi_addr_byte > 1) {
 		reg_addr = HPI_DEV_REG_FLASH_MEM;
@@ -1415,9 +1418,9 @@ fu_ccgx_hpi_cmd_write_flash (FuDevice *device, CyHPIHandle *hpi_handle, guint16 
 		reg_addr = CY_PD_REG_BOOTDATA_MEMEORY_ADDR;
 	}
 
-	/* write Data to memory */
+	/* write data to memory */
 	if (!fu_ccgx_hpi_hpi_write_reg(device,hpi_handle, reg_addr, data, size,error)) {
-		g_warning("write data to memory error");
+		g_prefix_error (error, "hpi write (data) reg error: ");
 		return FALSE;
 	}
 
@@ -1425,22 +1428,22 @@ fu_ccgx_hpi_cmd_write_flash (FuDevice *device, CyHPIHandle *hpi_handle, guint16 
 
 	/* send write command */
 	if (!fu_ccgx_hpi_write_flash (device, hpi_handle, row_num, error)) {
-		g_warning("write flash cmd error");
+		g_prefix_error (error, "hpi write flash error: ");
 		return FALSE;
 	}
 
 	g_usleep (HPI_CMD_FLASH_READ_WRITE_DELAY_US); /* wait until flash is written */
 
 	if (!fu_ccgx_hpi_get_event (device, hpi_handle, HPI_REG_SECTION_DEV, &hpi_event, HPI_CMD_COMMAND_RESPONSE_TIME_MS ,error)) {
-		g_warning("write flash resp error");
+		g_prefix_error (error, "hpi get  event error: ");
 		return FALSE;
 	}
 
 	if (hpi_event != CY_PD_RESP_SUCCESS) {
 		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "write flash resp code error: 0x%x", hpi_event);
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				    "hpi resp code error: 0x%x", hpi_event);
 		return FALSE;
 	}
 	return TRUE;
@@ -1474,10 +1477,13 @@ fu_ccgx_hpi_cmd_read_flash (FuDevice *device,
 	g_return_val_if_fail (data != NULL, FALSE);
 	g_return_val_if_fail (size > 0, FALSE);
 
-	(void)fu_ccgx_hpi_clear_all_event(device,hpi_handle,HPI_CMD_COMMAND_CLEAR_EVENT_TIME_MS,error);
+	if (!fu_ccgx_hpi_clear_all_event (device, hpi_handle, HPI_CMD_COMMAND_CLEAR_EVENT_TIME_MS, error)) {
+		g_prefix_error (error, "hpi clear all event error: ");
+		return FALSE;
+	}
 
 	if (!fu_ccgx_hpi_read_flash(device, hpi_handle, row_num, error)) {
-		g_prefix_error (error, "read flash cmd error: ");
+		g_prefix_error (error, "hpi read flash error: ");
 		return FALSE;
 	}
 
@@ -1490,15 +1496,15 @@ fu_ccgx_hpi_cmd_read_flash (FuDevice *device,
 				   &hpi_event,
 				   HPI_CMD_COMMAND_RESPONSE_TIME_MS,
 				   error)) {
-		g_prefix_error (error, "read flash resp error: ");
+		g_prefix_error (error, "hpi get event error: ");
 		return FALSE;
 	}
 
 	if (hpi_event != CY_PD_RESP_FLASH_DATA_AVAILABLE) {
 		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "read flash resp code error: 0x%x", hpi_event);
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "flash data is not available resp: 0x%x", hpi_event);
 		return FALSE;
 	}
 
@@ -1511,7 +1517,7 @@ fu_ccgx_hpi_cmd_read_flash (FuDevice *device,
 	}
 
 	if (!fu_ccgx_hpi_read_reg(device,hpi_handle, reg_addr, data, size,error)) {
-		g_warning("read data from memory error");
+		g_prefix_error (error, "hpi read (data) reg error: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -1538,24 +1544,27 @@ fu_ccgx_hpi_cmd_validate_fw (FuDevice *device,
 
 	g_return_val_if_fail (hpi_handle != NULL, FALSE);
 
-	(void)fu_ccgx_hpi_clear_all_event (device,hpi_handle,HPI_CMD_COMMAND_CLEAR_EVENT_TIME_MS,error);
+	if (!fu_ccgx_hpi_clear_all_event (device, hpi_handle, HPI_CMD_COMMAND_CLEAR_EVENT_TIME_MS, error)) {
+		g_prefix_error (error, "hpi clear all event error: ");
+		return FALSE;
+	}
 
 	if (!fu_ccgx_hpi_validate_fw (device, hpi_handle, fw_index,error)) {
-		g_warning("validate fw cmd error");
+		g_prefix_error (error, "hpi validate fw error: ");
 		return FALSE;
 	}
 
 	if (!fu_ccgx_hpi_get_event (device, hpi_handle, HPI_REG_SECTION_DEV, &hpi_event, HPI_CMD_COMMAND_RESPONSE_TIME_MS ,error)) {
-		g_warning("validate fw resp error");
+		g_prefix_error (error, "hpi get event error: ");
 		return FALSE;
 	}
 
 	if (hpi_event != CY_PD_RESP_SUCCESS) {
 		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "validate fw resp code error: 0x%x", 
-			     hpi_event);
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				    "hpi resp code error: 0x%x", hpi_event);
+		return FALSE;
 	}
 	return TRUE;
 }
@@ -1575,10 +1584,13 @@ fu_ccgx_hpi_cmd_reset_device (FuDevice *device, CyHPIHandle *hpi_handle, GError 
 {
 	g_return_val_if_fail (hpi_handle != NULL, FALSE);
 
-	(void)fu_ccgx_hpi_clear_all_event (device, hpi_handle, HPI_CMD_COMMAND_CLEAR_EVENT_TIME_MS,	error);
+	if (!fu_ccgx_hpi_clear_all_event (device, hpi_handle, HPI_CMD_COMMAND_CLEAR_EVENT_TIME_MS, error)) {
+		g_prefix_error (error, "hpi clear all event error: ");
+		return FALSE;
+	}
 
 	if (!fu_ccgx_hpi_reset_device(device,hpi_handle,error)) {
-		g_warning("reset device cmd error");
+		g_prefix_error (error, "hpi reset device error: ");
 	}
 	return TRUE;
 }
@@ -1598,10 +1610,13 @@ fu_ccgx_hpi_cmd_jump_to_alt_fw (FuDevice *device, CyHPIHandle *hpi_handle,  GErr
 {
 	g_return_val_if_fail (hpi_handle != NULL, FALSE);
 
-	(void)fu_ccgx_hpi_clear_all_event(device,hpi_handle,HPI_CMD_COMMAND_CLEAR_EVENT_TIME_MS,error);
+	if (!fu_ccgx_hpi_clear_all_event (device, hpi_handle, HPI_CMD_COMMAND_CLEAR_EVENT_TIME_MS, error)) {
+		g_prefix_error (error, "hpi clear all event error: ");
+		return FALSE;
+	}
 
 	if (!fu_ccgx_hpi_jump_to_alt_fw(device,hpi_handle,error)) {
-		g_warning("jump to alt fw cmd error");
+		g_prefix_error (error, "hpi jump to alt fw error: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -1623,10 +1638,13 @@ fu_ccgx_hpi_cmd_jump_to_boot (FuDevice *device, CyHPIHandle *hpi_handle, GError 
 {
 	g_return_val_if_fail (hpi_handle != NULL, FALSE);
 
-	(void)fu_ccgx_hpi_clear_all_event(device,hpi_handle,HPI_CMD_COMMAND_CLEAR_EVENT_TIME_MS,error);
+	if (!fu_ccgx_hpi_clear_all_event (device, hpi_handle, HPI_CMD_COMMAND_CLEAR_EVENT_TIME_MS, error)) {
+		g_prefix_error (error, "hpi clear all event error: ");
+		return FALSE;
+	}
 
 	if (!fu_ccgx_hpi_jump_to_boot(device,hpi_handle,error)) {
-		g_warning("jump to boot cmd error");
+		g_prefix_error (error, "hpi jump to boot error: ");
 		return FALSE;
 	}
 	return TRUE;
