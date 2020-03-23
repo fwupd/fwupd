@@ -46,10 +46,10 @@ fu_ccgx_cyacd_firmware_parse (FuFirmware *firmware,
 							CYACD_HANDLE_MAX_COUNT,
 							fw_buffer, fw_size);
 	if (handle_count == 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "invalid cyacd firmware");
+		g_set_error_literal (error,
+						FWUPD_ERROR,
+						FWUPD_ERROR_NOT_SUPPORTED,
+						"invalid cyacd firmware");
 		return FALSE;
 	}
 
@@ -59,10 +59,10 @@ fu_ccgx_cyacd_firmware_parse (FuFirmware *firmware,
 
 		/* parse cyacd data */
 		if (!fu_ccgx_cyacd_file_parse (cyacd_handle, &cyacd_info)) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "cyacd parsing error");
+			g_set_error_literal (error,
+							FWUPD_ERROR,
+							FWUPD_ERROR_NOT_SUPPORTED,
+							"cyacd parsing error");
 			return FALSE;
 		}
 
@@ -71,10 +71,10 @@ fu_ccgx_cyacd_firmware_parse (FuFirmware *firmware,
 
 		if (cyacd_info.silicon_id != self->silicon_id ||
 		    cyacd_info.app_version.ver.type != self->app_type ) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "cyacd silicon id and app type mismatch");
+			g_set_error_literal (error,
+							FWUPD_ERROR,
+							FWUPD_ERROR_NOT_SUPPORTED,
+							"cyacd silicon id and app type mismatch");
 			return FALSE;
 		}
 
