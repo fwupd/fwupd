@@ -30,6 +30,7 @@ typedef struct
 {
 	FuUsbDevice		*usb_device;
 	guint8			 interface;
+	gboolean		 interface_autodetect;
 } FuHidDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuHidDevice, fu_hid_device, FU_TYPE_USB_DEVICE)
@@ -80,6 +81,30 @@ fu_hid_device_open (FuUsbDevice *device, GError **error)
 	FuHidDeviceClass *klass = FU_HID_DEVICE_GET_CLASS (device);
 	FuHidDevicePrivate *priv = GET_PRIVATE (self);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
+
+	/* auto-detect */
+	if (priv->interface_autodetect) {
+		g_autoptr(GPtrArray) ifaces = NULL;
+		ifaces = g_usb_device_get_interfaces (usb_device, error);
+		if (ifaces == NULL)
+			return FALSE;
+		for (guint i = 0; i < ifaces->len; i++) {
+			GUsbInterface *iface = g_ptr_array_index (ifaces, i);
+			if (g_usb_interface_get_class (iface) == G_USB_DEVICE_CLASS_HID) {
+				priv->interface = g_usb_interface_get_number (iface);
+				priv->interface_autodetect = FALSE;
+				break;
+			}
+		}
+		if (priv->interface_autodetect) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
+					     "could not autodetect HID interface");
+			return FALSE;
+		}
+		g_debug ("autodetected HID interface of 0x%02x", priv->interface);
+	}
 
 	/* claim */
 	if (!g_usb_device_claim_interface (usb_device, priv->interface,
@@ -132,6 +157,10 @@ fu_hid_device_close (FuUsbDevice *device, GError **error)
  *
  * Sets the HID USB interface number.
  *
+ * In most cases the HID interface is auto-detected, but this function can be
+ * used where there are multiple HID interfaces or where the device USB
+ * interface descriptor is invalid.
+ *
  * Since: 1.4.0
  **/
 void
@@ -140,6 +169,7 @@ fu_hid_device_set_interface (FuHidDevice *self, guint8 interface)
 	FuHidDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_HID_DEVICE (self));
 	priv->interface = interface;
+	priv->interface_autodetect = FALSE;
 }
 
 /**
@@ -287,8 +317,10 @@ fu_hid_device_get_report (FuHidDevice *self,
 }
 
 static void
-fu_hid_device_init (FuHidDevice *device)
+fu_hid_device_init (FuHidDevice *self)
 {
+	FuHidDevicePrivate *priv = GET_PRIVATE (self);
+	priv->interface_autodetect = TRUE;
 }
 
 /**
