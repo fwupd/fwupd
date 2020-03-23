@@ -92,6 +92,7 @@ fu_csr_device_get_status (FuCsrDevice *self, GError **error)
 				       FU_CSR_REPORT_ID_STATUS,
 				       buf, sizeof(buf),
 				       FU_CSR_DEVICE_TIMEOUT,
+				       FU_HID_DEVICE_FLAG_ALLOW_TRUNC |
 				       FU_HID_DEVICE_FLAG_IS_FEATURE,
 				       error)) {
 		g_prefix_error (error, "failed to GetStatus: ");
@@ -155,6 +156,7 @@ fu_csr_device_upload_chunk (FuCsrDevice *self, GError **error)
 				       FU_CSR_REPORT_ID_COMMAND,
 				       buf, sizeof(buf),
 				       FU_CSR_DEVICE_TIMEOUT,
+				       FU_HID_DEVICE_FLAG_ALLOW_TRUNC |
 				       FU_HID_DEVICE_FLAG_IS_FEATURE,
 				       error)) {
 		g_prefix_error (error, "failed to ReadFirmware: ");
