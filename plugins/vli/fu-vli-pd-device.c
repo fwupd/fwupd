@@ -280,7 +280,7 @@ fu_vli_pd_device_setup (FuVliDevice *device, GError **error)
 	if (fu_vli_device_get_kind (device) == FU_VLI_DEVICE_KIND_UNKNOWN) {
 		if (!fu_vli_pd_device_read_reg (self, 0x0018, &tmp, error))
 			return FALSE;
-		switch (tmp) {
+		switch (tmp & 0xF0) {
 		case 0x00:
 			fu_vli_device_set_kind (device, FU_VLI_DEVICE_KIND_VL100);
 			break;
@@ -298,7 +298,7 @@ fu_vli_pd_device_setup (FuVliDevice *device, GError **error)
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
-				     "unable to map 0x0018=%0x02x to device kind",
+				     "unable to map 0x0018=0x%02X to device kind",
 				     tmp);
 			return FALSE;
 		}
