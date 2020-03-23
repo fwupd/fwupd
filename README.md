@@ -95,7 +95,7 @@ Additionally, the list of approved firmware can be supplemented using
 `fwupdmgr set-approved-firmware baz` or using the D-Bus interface.
 
 Other frontends
----------------
+----------------
 
  1. [GNOME Software](https://wiki.gnome.org/Apps/Software) is the graphical
  frontend available. When compiled with firmware support, it will check for

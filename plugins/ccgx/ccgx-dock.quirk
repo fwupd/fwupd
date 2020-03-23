@@ -1,0 +1,103 @@
+#
+# Copyright (C) 2020 Cypress Semiconductor Corporation.
+#
+# SPDX-License-Identifier: LGPL-2.1+
+#
+
+#######################################################
+## Gen2 Dock 
+#######################################################
+[DeviceInstanceId=USB\VID_17EF&PID_A38F]
+Name = Lenovo Gen2 Dock Billboard
+Plugin = ccgx
+GType = FuCcgxDockBb
+ParentGuid = USB\VID_17EF&PID_A392
+
+[DeviceInstanceId=USB\VID_04B4&PID_521A]
+Name = Lenovo Gen2 Dock USB Serial Bridge
+Plugin = ccgx
+GType = FuCcgxDockBb
+ParentGuid = USB\VID_17EF&PID_A392
+
+# Billboard Controller for Gen2 Dock
+[Guid=USB\VID_17EF&PID_A38F&bb]
+Name = Gen2 Dock Billboard
+Summary = USB-C Docking Billboard
+Plugin = ccgx
+GType = FuCcgxDockBb
+Vendor = Lenovo Inc
+Flags = require-ac,cy-device-external-bb
+
+# CCG PD IC Controller for Gen2 Dock
+[Guid=USB\VID_04B4&PID_521A&bb]
+Name = CCGx PD Controller
+Summary = USB-C PD controller
+Plugin = ccgx
+GType = FuCcgxDockBb
+Vendor = Cypress Semiconductor
+FirmwareSizeMin  = 0x000222
+FirmwareSizeMax = 0x042420
+InstallDuration = 60
+Flags = require-ac,dual-image,self-recovery,cy-device-pd-i2c,cy-fw-image-dual-asymmetric
+DeviceSiliconID = 0x1F00
+DeviceFWAppType = 0x6D64
+ModelName = Gen2
+UpdateMessage = Firmware update will complete after the dock reboot. The dock will not be available for approximately 1 minute.
+UpdateMessagePrimary = Please run firmware update again to upgrade Primary Firmware.
+UpdateMessageBackup = Please run firmware update again to upgrade Backup Firmware.
+
+#######################################################
+## Hybrid Dock 
+#######################################################
+[DeviceInstanceId=USB\VID_17EF&PID_A354]
+Name = Lenovo Hybrid Dock Type-C Billboard
+Plugin = ccgx
+GType = FuCcgxDockBb
+ParentGuid = USB\VID_17EF&PID_1028
+
+[DeviceInstanceId=USB\VID_17EF&PID_A35F]
+Name = Lenovo Hybrid Dock Type-A Billboard
+Plugin = ccgx
+GType = FuCcgxDockBb
+ParentGuid = USB\VID_17EF&PID_1028
+
+[DeviceInstanceId=USB\VID_04B4&PID_5218]
+Name = Lenovo Hybrid Dock Billobard USB Serial Bridge
+Plugin = ccgx
+GType = FuCcgxDockBb
+ParentGuid = USB\VID_17EF&PID_1028
+
+# Billboard Controller for Hbyrid Dock Type-C
+[Guid=USB\VID_17EF&PID_A354&bb]
+Name = Hybrid Dock Billboard
+Summary = USB-C Docking Billboard
+Plugin = ccgx
+GType = FuCcgxDockBb
+Vendor = Lenovo Inc
+Flags = require-ac,cy-device-external-bb
+
+
+# Billboard Controller for Hbyrid Dock Type-A
+[Guid=USB\VID_17EF&PID_A35F&bb]
+Name = Hybrid Dock Billboard
+Summary = USB-C Docking Billboard
+Plugin = ccgx
+GType = FuCcgxDockBb
+Vendor = Lenovo Inc
+Flags = require-ac,cy-device-external-bb
+
+# CCG PD IC Controller for Hybid Dock
+[Guid=USB\VID_04B4&PID_5218&bb]
+Name = CCGx PD Controller
+Summary = USB-C PD controller
+Plugin = ccgx
+GType = FuCcgxDockBb
+Vendor = Cypress Semiconductor
+FirmwareSizeMin  = 0x000222
+FirmwareSizeMax = 0x042420
+InstallDuration = 60
+Flags = require-ac,dual-image,self-recovery,cy-device-pd-i2c,cy-fw-image-dual-symmetric
+DeviceSiliconID = 0x1F00
+DeviceFWAppType = 0x6432
+ModelName = Hyrid
+UpdateMessage = Firmware update will complete after the dock reboot. The dock will not be available for approximately 1 minute.
