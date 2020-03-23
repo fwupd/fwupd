@@ -5,7 +5,6 @@
  */
 
 #include "config.h"
-
 #include "fu-ccgx-common.h"
 
 /* ccgx part information */
