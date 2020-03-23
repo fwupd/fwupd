@@ -215,7 +215,8 @@ fu_hid_device_set_report (FuHidDevice *self,
 	}
 	if ((flags & FU_HID_DEVICE_FLAG_ALLOW_TRUNC) == 0 && actual_len != bufsz) {
 		g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
-			     "only wrote %" G_GSIZE_FORMAT "bytes", actual_len);
+			     "wrote %" G_GSIZE_FORMAT ", requested %" G_GSIZE_FORMAT " bytes",
+			     actual_len, bufsz);
 		return FALSE;
 	}
 	return TRUE;
@@ -278,7 +279,8 @@ fu_hid_device_get_report (FuHidDevice *self,
 		fu_common_dump_raw (G_LOG_DOMAIN, "HID::GetReport", buf, actual_len);
 	if ((flags & FU_HID_DEVICE_FLAG_ALLOW_TRUNC) == 0 && actual_len != bufsz) {
 		g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
-			     "only read %" G_GSIZE_FORMAT "bytes", actual_len);
+			     "read %" G_GSIZE_FORMAT ", requested %" G_GSIZE_FORMAT " bytes",
+			     actual_len, bufsz);
 		return FALSE;
 	}
 	return TRUE;
