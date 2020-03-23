@@ -18,5 +18,3 @@ FuFirmware		*fu_vli_pd_firmware_new		(void);
 FuVliDeviceKind		 fu_vli_pd_firmware_get_kind	(FuVliPdFirmware	*self);
 guint16			 fu_vli_pd_firmware_get_vid	(FuVliPdFirmware	*self);
 guint16			 fu_vli_pd_firmware_get_pid	(FuVliPdFirmware	*self);
-void			 fu_vli_pd_firmware_add_offset	(FuVliPdFirmware	*self,
-							 gsize			 offset);

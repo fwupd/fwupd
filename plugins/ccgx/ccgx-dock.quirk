@@ -5,7 +5,7 @@
 #
 
 #######################################################
-## Gen2 Dock 
+## Gen2 Dock
 #######################################################
 [DeviceInstanceId=USB\VID_17EF&PID_A38F]
 Name = Lenovo Gen2 Dock Billboard
@@ -47,7 +47,7 @@ UpdateMessagePrimary = Please run firmware update again to upgrade Primary Firmw
 UpdateMessageBackup = Please run firmware update again to upgrade Backup Firmware.
 
 #######################################################
-## Hybrid Dock 
+## Hybrid Dock
 #######################################################
 [DeviceInstanceId=USB\VID_17EF&PID_A354]
 Name = Lenovo Hybrid Dock Type-C Billboard
@@ -75,7 +75,6 @@ Plugin = ccgx
 GType = FuCcgxDockBb
 Vendor = Lenovo Inc
 Flags = require-ac,cy-device-external-bb
-
 
 # Billboard Controller for Hbyrid Dock Type-A
 [Guid=USB\VID_17EF&PID_A35F&bb]

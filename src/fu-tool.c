@@ -2013,7 +2013,7 @@ main (int argc, char *argv[])
 		     fu_util_monitor);
 	fu_util_cmd_array_add (cmd_array,
 		     "update,upgrade",
-		     NULL,
+		     "[DEVICE-ID]",
 		     /* TRANSLATORS: command description */
 		     _("Update all devices that match local metadata"),
 		     fu_util_update);

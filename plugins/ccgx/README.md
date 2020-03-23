@@ -3,12 +3,13 @@ Cypress support
 
 Introduction
 ------------
-This plugin can flash firmware on Cypress CCGx USB-C controller family of 
+This plugin can flash firmware on Cypress CCGx USB-C controller family of
 devices used in dock solutions.
 
 Supported devices:
-* Lenovo Gen2 Dock
-* Lenovo Hybrid Dock
+
+ * Lenovo Gen2 Dock
+ * Lenovo Hybrid Dock
 
 Firmware Format
 ---------------
@@ -34,9 +35,3 @@ Vendor ID Security
 ------------------
 
 The vendor ID is set from the USB vendor, for example set to `USB:0x04b4`
-
-Custom flag use:
-----------------
-This plugin uses the following plugin-specific custom flags:
-
-* `skip-restart`: Don't run the reset or reboot procedure of the component

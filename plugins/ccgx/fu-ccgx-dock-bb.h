@@ -5,11 +5,10 @@
  */
 #pragma once
 
-#include "config.h"
-#include <gusb.h>
-#include "fu-device.h"
+#include "fu-usb-device.h"
 
 #define FU_TYPE_CCGX_DOCK_BB (fu_ccgx_dock_bb_get_type ())
 G_DECLARE_FINAL_TYPE (FuCcgxDockBb, fu_ccgx_dock_bb, FU, CCGX_DOCK_BB, FuUsbDevice)
 
-gboolean	fu_ccgx_dock_bb_reboot (FuDevice *device, GError **error);
+gboolean	fu_ccgx_dock_bb_reboot		(FuDevice	*device,
+						 GError		**error);

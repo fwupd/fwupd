@@ -457,6 +457,31 @@ fu_device_get_parent (FuDevice *self)
 }
 
 /**
+ * fu_device_get_root:
+ * @self: A #FuDevice
+ *
+ * Gets the root parent device. A parent device is logically "above" the current
+ * device and this may be reflected in client tools.
+ *
+ * If there is no parent device defined, then @self is returned.
+ *
+ * Returns: (transfer full): a #FuDevice
+ *
+ * Since: 1.4.0
+ **/
+FuDevice *
+fu_device_get_root (FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
+	while (priv->parent != NULL) {
+		self = priv->parent;
+		priv = GET_PRIVATE (self);
+	}
+	return g_object_ref (self);
+}
+
+/**
  * fu_device_set_parent:
  * @self: A #FuDevice
  * @parent: A #FuDevice
@@ -546,6 +571,9 @@ fu_device_add_child (FuDevice *self, FuDevice *child)
 			fu_device_add_icon (child, icon_name);
 		}
 	}
+
+	/* ensure the ID is converted */
+	fu_device_ensure_id (child, NULL);
 
 	/* ensure the parent is also set on the child */
 	fu_device_set_parent (child, self);

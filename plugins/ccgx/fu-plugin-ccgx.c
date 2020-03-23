@@ -5,12 +5,11 @@
  */
 
 #include "config.h"
-#include "fu-device.h"
-#include "fwupd-error.h"
-#include "fu-plugin-vfuncs.h"
+
 #include "fu-hash.h"
+#include "fu-plugin-vfuncs.h"
+
 #include "fu-ccgx-cyacd-firmware.h"
-#include "fu-ccgx-common.h"
 #include "fu-ccgx-dock-bb.h"
 
 void
@@ -18,26 +17,20 @@ fu_plugin_init (FuPlugin *plugin)
 {
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 	fu_plugin_add_firmware_gtype (plugin, "ccgx-cyacd", FU_TYPE_CCGX_CYACD_FIRMWARE);
-	fu_plugin_set_device_gtype(plugin, FU_TYPE_CCGX_DOCK_BB); 
+	fu_plugin_set_device_gtype (plugin, FU_TYPE_CCGX_DOCK_BB);
 }
 
-
-static FuDevice*
-fu_plugin_ccgx_dock_get_bb(GPtrArray *devices)
+static FuDevice *
+fu_plugin_ccgx_dock_get_bb (GPtrArray *devices)
 {
 	FuDevice *parent = NULL;
-
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *dev = g_ptr_array_index (devices, i);
-		if (FU_IS_CCGX_DOCK_BB (dev)) {
+		if (FU_IS_CCGX_DOCK_BB (dev))
 			return dev;
-		}
-
 		parent = fu_device_get_parent (dev);
-
-		if (parent != NULL && FU_IS_CCGX_DOCK_BB (parent)) {
+		if (parent != NULL && FU_IS_CCGX_DOCK_BB (parent))
 			return parent;
-		}
 	}
 	return NULL;
 }
@@ -48,13 +41,11 @@ fu_plugin_composite_cleanup (FuPlugin *plugin,
 			     GError **error)
 {
 	FuDevice *device = fu_plugin_ccgx_dock_get_bb (devices);
-	g_autoptr(FuDeviceLocker) locker = NULL;
-
-	//DEBUG_FUNC_NAME;
-	if (device) {
-		locker = fu_device_locker_new (device, error);
-		g_return_val_if_fail (locker != NULL, FALSE);
-		return  fu_ccgx_dock_bb_reboot (device, error);
+	if (device != NULL) {
+		g_autoptr(FuDeviceLocker) locker = fu_device_locker_new (device, error);
+		if (locker == NULL)
+			return FALSE;
+		return fu_ccgx_dock_bb_reboot (device, error);
 	}
 	return TRUE;
 }

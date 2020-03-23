@@ -16,7 +16,6 @@
 #include "fu-vli-usbhub-device.h"
 #include "fu-vli-usbhub-firmware.h"
 #include "fu-vli-usbhub-i2c-device.h"
-#include "fu-vli-usbhub-pd-common.h"
 #include "fu-vli-usbhub-pd-device.h"
 
 struct _FuVliUsbhubDevice
@@ -39,8 +38,10 @@ fu_vli_usbhub_device_to_string (FuVliDevice *device, guint idt, GString *str)
 	if (self->update_protocol >= 0x2) {
 		fu_common_string_append_kv (str, idt, "H1Hdr@0x0", NULL);
 		fu_vli_usbhub_header_to_string (&self->hd1_hdr, idt + 1, str);
-		fu_common_string_append_kv (str, idt, "H2Hdr@0x1000", NULL);
-		fu_vli_usbhub_header_to_string (&self->hd2_hdr, idt + 1, str);
+		if (self->hd2_hdr.dev_id != 0xffff) {
+			fu_common_string_append_kv (str, idt, "H2Hdr@0x1000", NULL);
+			fu_vli_usbhub_header_to_string (&self->hd2_hdr, idt + 1, str);
+		}
 	}
 }
 
@@ -325,16 +326,36 @@ fu_vli_usbhub_device_spi_write_data (FuVliDevice *self,
 }
 
 static gboolean
-fu_vli_usbhub_device_reset (FuVliDevice *device, GError **error)
+fu_vli_usbhub_device_attach (FuDevice *device, GError **error)
 {
-	return g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (device)),
-					      G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					      G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					      G_USB_DEVICE_RECIPIENT_DEVICE,
-					      0xf6, 0x0040, 0x0002,
-					      NULL, 0x0, NULL,
-					      FU_VLI_DEVICE_TIMEOUT,
-					      NULL, error);
+	g_autoptr(GError) error_local = NULL;
+
+	/* replug, and ignore the device going away */
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (device)),
+					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    0xf6, 0x0040, 0x0002,
+					    NULL, 0x0, NULL,
+					    FU_VLI_DEVICE_TIMEOUT,
+					    NULL, &error_local)) {
+		if (g_error_matches (error_local,
+				     G_USB_DEVICE_ERROR,
+				     G_USB_DEVICE_ERROR_NO_DEVICE) ||
+		    g_error_matches (error_local,
+				     G_USB_DEVICE_ERROR,
+				     G_USB_DEVICE_ERROR_FAILED)) {
+			g_debug ("ignoring %s", error_local->message);
+		} else {
+			g_propagate_prefixed_error (error,
+						    g_steal_pointer (&error_local),
+						    "failed to restart device: ");
+			return FALSE;
+		}
+	}
+	return TRUE;
 }
 
 /* disable hub sleep states -- not really required by 815~ hubs */
@@ -615,9 +636,12 @@ fu_vli_usbhub_device_setup (FuVliDevice *device, GError **error)
 		fu_device_set_install_duration (FU_DEVICE (self), 15); /* seconds */
 		break;
 	default:
-		g_warning ("unknown update protocol, device_id=0x%x",
-			   GUINT16_FROM_BE(self->hd1_hdr.dev_id));
-		break;
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_SUPPORTED,
+			     "hardware is not supported, dev_id=0x%x",
+			     GUINT16_FROM_BE(self->hd1_hdr.dev_id));
+		return FALSE;
 	}
 
 	/* read HD2 (update) header */
@@ -995,9 +1019,9 @@ fu_vli_usbhub_device_class_init (FuVliUsbhubDeviceClass *klass)
 	klass_device->read_firmware = fu_vli_usbhub_device_read_firmware;
 	klass_device->write_firmware = fu_vli_usbhub_device_write_firmware;
 	klass_device->prepare_firmware = fu_vli_usbhub_device_prepare_firmware;
+	klass_device->attach = fu_vli_usbhub_device_attach;
 	klass_vli_device->to_string = fu_vli_usbhub_device_to_string;
 	klass_vli_device->setup = fu_vli_usbhub_device_setup;
-	klass_vli_device->reset = fu_vli_usbhub_device_reset;
 	klass_vli_device->spi_chip_erase = fu_vli_usbhub_device_spi_chip_erase;
 	klass_vli_device->spi_sector_erase = fu_vli_usbhub_device_spi_sector_erase;
 	klass_vli_device->spi_read_data = fu_vli_usbhub_device_spi_read_data;

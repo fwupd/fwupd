@@ -14,7 +14,6 @@
 
 #include "fu-vli-usbhub-common.h"
 #include "fu-vli-usbhub-device.h"
-#include "fu-vli-usbhub-pd-common.h"
 #include "fu-vli-usbhub-pd-device.h"
 
 struct _FuVliUsbhubPdDevice
@@ -86,10 +85,6 @@ fu_vli_usbhub_pd_device_prepare_firmware (FuDevice *device,
 	FuVliUsbhubPdDevice *self = FU_VLI_USBHUB_PD_DEVICE (device);
 	FuVliDeviceKind device_kind;
 	g_autoptr(FuFirmware) firmware = fu_vli_pd_firmware_new ();
-
-	/* add the two offset locations the header can be found */
-	fu_vli_pd_firmware_add_offset (FU_VLI_PD_FIRMWARE (firmware), VLI_USBHUB_PD_FLASHMAP_ADDR_LEGACY);
-	fu_vli_pd_firmware_add_offset (FU_VLI_PD_FIRMWARE (firmware), VLI_USBHUB_PD_FLASHMAP_ADDR);
 
 	/* check size */
 	if (g_bytes_get_size (fw) < fu_device_get_firmware_size_min (device)) {
