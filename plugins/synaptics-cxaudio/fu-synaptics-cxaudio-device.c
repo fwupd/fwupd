@@ -768,7 +768,6 @@ fu_synaptics_cxaudio_device_init (FuSynapticsCxaudioDevice *self)
 	fu_device_set_install_duration (FU_DEVICE (self), 3); /* seconds */
 	fu_device_set_protocol (FU_DEVICE (self), "com.synaptics.cxaudio");
 	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
-	fu_hid_device_set_interface (FU_HID_DEVICE (self), FU_SYNAPTICS_CXAUDIO_HID_INTERFACE);
 }
 
 static void

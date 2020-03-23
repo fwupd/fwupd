@@ -42,7 +42,6 @@ fu_ccgx_hid_device_init (FuCcgxHidDevice *self)
 	fu_device_set_protocol (FU_DEVICE (self), "com.cypress.ccgx");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_WILL_DISAPPEAR);
-	fu_hid_device_set_interface (FU_HID_DEVICE (self), 0x01);
 }
 
 static void
