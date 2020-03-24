@@ -62,3 +62,4 @@ gboolean	 fu_quirks_lookup_by_id_iter		(FuQuirks	*self,
 #define	FU_QUIRKS_VERSION_FORMAT		"VersionFormat"
 #define	FU_QUIRKS_GTYPE				"GType"
 #define	FU_QUIRKS_PROTOCOL			"Protocol"
+#define	FU_QUIRKS_UPDATE_MESSAGE		"UpdateMessage"
