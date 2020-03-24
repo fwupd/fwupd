@@ -69,6 +69,20 @@ struct _FuDeviceClass
 };
 
 /**
+ * FuDeviceInstanceFlags:
+ * @FU_DEVICE_INSTANCE_FLAG_NONE:		No flags set
+ * @FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS:	Only use instance ID for quirk matching
+ *
+ * The flags to use when interacting with a device instance
+ **/
+typedef enum {
+	FU_DEVICE_INSTANCE_FLAG_NONE		= 0,
+	FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS	= 1 << 0,
+	/*< private >*/
+	FU_DEVICE_INSTANCE_FLAG_LAST
+} FuDeviceInstanceFlags;
+
+/**
  * FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE:
  *
  * The default removal delay for device re-enumeration taking into account a
@@ -153,6 +167,9 @@ gboolean	 fu_device_has_guid			(FuDevice	*self,
 							 const gchar	*guid);
 void		 fu_device_add_instance_id		(FuDevice	*self,
 							 const gchar	*instance_id);
+void		 fu_device_add_instance_id_full		(FuDevice	*self,
+							 const gchar	*instance_id,
+							 FuDeviceInstanceFlags flags);
 FuDevice	*fu_device_get_alternate		(FuDevice	*self);
 FuDevice	*fu_device_get_root			(FuDevice	*self);
 FuDevice	*fu_device_get_parent			(FuDevice	*self);

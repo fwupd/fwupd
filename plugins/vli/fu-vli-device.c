@@ -543,7 +543,8 @@ fu_vli_device_setup (FuDevice *device, GError **error)
 
 			/* load the SPI parameters from quirks */
 			spi_id = g_strdup_printf ("VLI_USBHUB\\SPI_%s", flash_id);
-			fu_device_add_instance_id (FU_DEVICE (self), spi_id);
+			fu_device_add_instance_id_full (FU_DEVICE (self), spi_id,
+							FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
 
 			/* add extra instance IDs to include the SPI variant */
 			devid2 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&SPI_%s&REV_%04X",
