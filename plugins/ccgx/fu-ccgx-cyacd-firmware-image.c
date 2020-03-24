@@ -21,6 +21,7 @@ struct _FuCcgxCyacdFirmwareImage {
 	FuFirmwareImageClass	 parent_instance;
 	GPtrArray		*records;
 	guint16			 app_type;
+	guint16			 silicon_id;
 };
 
 G_DEFINE_TYPE (FuCcgxCyacdFirmwareImage, fu_ccgx_cyacd_firmware_image, FU_TYPE_FIRMWARE_IMAGE)
@@ -37,6 +38,13 @@ fu_ccgx_cyacd_firmware_image_get_app_type (FuCcgxCyacdFirmwareImage *self)
 {
 	g_return_val_if_fail (FU_IS_CCGX_CYACD_FIRMWARE_IMAGE (self), 0);
 	return self->app_type;
+}
+
+guint16
+fu_ccgx_cyacd_firmware_image_get_silicon_id (FuCcgxCyacdFirmwareImage *self)
+{
+	g_return_val_if_fail (FU_IS_CCGX_CYACD_FIRMWARE_IMAGE (self), 0);
+	return self->silicon_id;
 }
 
 static void
@@ -158,8 +166,7 @@ fu_ccgx_cyacd_firmware_image_parse_header (FuCcgxCyacdFirmwareImage *self,
 				     "invalid header, expected == 12 chars");
 		return FALSE;
 	}
-	fu_firmware_image_set_addr (FU_FIRMWARE_IMAGE (self),
-				    fu_firmware_strparse_uint32 (line));
+	self->silicon_id = fu_firmware_strparse_uint32 (line) >> 16;
 	return TRUE;
 }
 
@@ -220,6 +227,10 @@ fu_ccgx_cyacd_firmware_image_add_record (FuCcgxCyacdFirmwareImage *self,
 			     checksum_calc, checksum_file);
 		return FALSE;
 	}
+
+	/* first data entry */
+	if (self->records->len == 0)
+		fu_firmware_image_set_addr (FU_FIRMWARE_IMAGE (self), rcd->row_number);
 
 	/* success */
 	g_ptr_array_add (self->records, g_steal_pointer (&rcd));
