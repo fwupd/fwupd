@@ -11,6 +11,7 @@
 #include "fu-ccgx-hpi-common.h"
 #include "fu-ccgx-hpi-device.h"
 #include "fu-ccgx-cyacd-firmware.h"
+#include "fu-ccgx-cyacd-firmware-image.h"
 
 struct _FuCcgxHpiDevice
 {
@@ -332,6 +333,7 @@ fu_ccgx_hpi_device_prepare_firmware (FuDevice *device,
 	images = fu_firmware_get_images (firmware);
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmwareImage *img = g_ptr_array_index (images, i);
+		guint16 fw_app_type = fu_ccgx_cyacd_firmware_image_get_app_type (FU_CCGX_CYACD_FIRMWARE_IMAGE (img));
 		if (fu_firmware_image_get_addr (img) != self->silicon_id) {
 			g_set_error (error,
 				     FWUPD_ERROR,
@@ -340,6 +342,15 @@ fu_ccgx_hpi_device_prepare_firmware (FuDevice *device,
 				     "expected 0x%x, got 0x%x",
 				     i, self->silicon_id,
 				     (guint) fu_firmware_image_get_addr (img));
+			return NULL;
+		}
+		if (fw_app_type != self->fw_app_type) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "app type mismatch on image %u, "
+				     "expected 0x%x, got 0x%x",
+				     i, self->fw_app_type, fw_app_type);
 			return NULL;
 		}
 	}
