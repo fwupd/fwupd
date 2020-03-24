@@ -7,12 +7,15 @@
 
 #include "config.h"
 
+#include "fu-ccgx-hpi-common.h"
 #include "fu-ccgx-hpi-device.h"
 #include "fu-ccgx-cyacd-firmware.h"
 
 struct _FuCcgxHpiDevice
 {
 	FuUsbDevice		 parent_instance;
+	guint8			 inf_num;	/* USB interface number */
+	guint8			 scb_index;
 	guint16			 silicon_id;
 	guint16			 fw_app_type;
 };
@@ -23,8 +26,68 @@ static void
 fu_ccgx_hpi_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE (device);
+	fu_common_string_append_kx (str, idt, "InfNum", self->inf_num);
+	fu_common_string_append_kx (str, idt, "ScbIndex", self->scb_index);
 	fu_common_string_append_kx (str, idt, "SiliconId", self->silicon_id);
 	fu_common_string_append_kx (str, idt, "FwAppType", self->fw_app_type);
+}
+
+static gboolean
+fu_ccgx_hpi_device_get_i2c_config (FuCcgxHpiDevice *self,
+				   CyI2CConfig *i2c_config,
+				   GError **error)
+{
+	g_autoptr(GError) error_local = NULL;
+	if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (self)),
+					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    CY_I2C_GET_CONFIG_CMD,
+					    ((guint16) self->scb_index) << CY_SCB_INDEX_POS,
+					    0x0,
+					    (guint8 *) i2c_config,
+					    sizeof(*i2c_config),
+					    NULL,
+					    FU_CCGX_HPI_WAIT_TIMEOUT,
+					    NULL,
+					    &error_local)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "i2c get config error: control xfer: %s",
+			     error_local->message);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_ccgx_hpi_device_set_i2c_config (FuCcgxHpiDevice *self,
+				   CyI2CConfig *i2c_config,
+				   GError **error)
+{
+	g_autoptr(GError) error_local = NULL;
+	if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (self)),
+					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    CY_I2C_SET_CONFIG_CMD,
+					    ((guint16) self->scb_index) << CY_SCB_INDEX_POS,
+					    0x0,
+					    (guint8 *) i2c_config,
+					    sizeof(*i2c_config),
+					    NULL,
+					    FU_CCGX_HPI_WAIT_TIMEOUT,
+					    NULL,
+					    &error_local)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "i2c set config error: control xfer: %s",
+			     error_local->message);
+		return FALSE;
+	}
+	return TRUE;
 }
 
 static gboolean
@@ -86,6 +149,22 @@ fu_ccgx_hpi_write_firmware (FuDevice *device,
 static gboolean
 fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 {
+	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE (device);
+	CyI2CConfig i2c_config = { 0x0 };
+
+	/* set the new config */
+	if (!fu_ccgx_hpi_device_get_i2c_config (self, &i2c_config, error)) {
+		g_prefix_error (error, "get config error: ");
+		return FALSE;
+	}
+	i2c_config.frequency = FU_CCGX_HPI_FREQ;
+	i2c_config.is_master = TRUE;
+	i2c_config.is_msb_first = TRUE;
+	if (!fu_ccgx_hpi_device_set_i2c_config (self, &i2c_config, error)) {
+		g_prefix_error (error, "set config error: ");
+		return FALSE;
+	}
+
 	/* success */
 	return TRUE;
 }
@@ -127,8 +206,10 @@ fu_ccgx_hpi_device_set_quirk_kv (FuDevice *device,
 static gboolean
 fu_ccgx_hpi_device_open (FuUsbDevice *device, GError **error)
 {
+	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE (device);
 	g_autoptr(GError) error_local = NULL;
-	if (!g_usb_device_claim_interface (fu_usb_device_get_dev (device), 0x0,
+	if (!g_usb_device_claim_interface (fu_usb_device_get_dev (device),
+					   self->inf_num,
 					   G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
 					   &error_local)) {
 		g_set_error (error,
@@ -144,8 +225,10 @@ fu_ccgx_hpi_device_open (FuUsbDevice *device, GError **error)
 static gboolean
 fu_ccgx_hpi_device_close (FuUsbDevice *device, GError **error)
 {
+	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE (device);
 	g_autoptr(GError) error_local = NULL;
-	if (!g_usb_device_release_interface (fu_usb_device_get_dev (device), 0x0,
+	if (!g_usb_device_release_interface (fu_usb_device_get_dev (device),
+					     self->inf_num,
 					     G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
 					     &error_local)) {
 		g_set_error (error,
@@ -161,12 +244,17 @@ fu_ccgx_hpi_device_close (FuUsbDevice *device, GError **error)
 static void
 fu_ccgx_hpi_device_init (FuCcgxHpiDevice *self)
 {
+	self->inf_num = 0x0;
 	fu_device_set_protocol (FU_DEVICE (self), "com.cypress.ccgx");
 	fu_device_set_install_duration (FU_DEVICE (self), 60);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
+
+	/* this might not be true for future hardware */
+	if (self->inf_num > 0)
+		self->scb_index = 1;
 }
 
 static void
