@@ -485,6 +485,13 @@ fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 		}
 	}
 
+	/* not supported in boot mode */
+	if (self->fw_mode == FW_MODE_BOOT) {
+		fu_device_remove_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	} else {
+		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	}
+
 	/* success */
 	return TRUE;
 }
