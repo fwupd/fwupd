@@ -34,6 +34,7 @@ struct _FuCcgxHpiDevice
 G_DEFINE_TYPE (FuCcgxHpiDevice, fu_ccgx_hpi_device, FU_TYPE_USB_DEVICE)
 
 #define HPI_CMD_SETUP_EVENT_WAIT_TIME_MS	200
+#define HPI_CMD_SETUP_EVENT_CLEAR_TIME_MS	150
 #define HPI_CMD_RESET_COMPLETE_DELAY_US		150000
 
 static void
@@ -515,6 +516,36 @@ fu_ccgx_hpi_device_get_event (FuCcgxHpiDevice *self,
 }
 
 static gboolean
+fu_ccgx_hpi_device_clear_all_events (FuCcgxHpiDevice *self,
+				     guint32 io_timeout,
+				     GError **error)
+{
+	HPIEvent event_array[HPI_REG_SECTION_ALL + 1] = { 0x0 };
+	if (io_timeout == 0) {
+		return fu_ccgx_hpi_device_app_read_intr_reg (self,
+							     HPI_REG_SECTION_ALL,
+							     event_array,
+							     NULL,
+							     error);
+	}
+	for (guint8 i = 0; i < self->num_ports; i++) {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_ccgx_hpi_device_wait_for_event (self, i, event_array,
+							io_timeout, &error_local)) {
+			if (!g_error_matches (error_local,
+					      G_IO_ERROR,
+					      G_IO_ERROR_TIMED_OUT)) {
+				g_propagate_prefixed_error (error,
+							    g_steal_pointer (&error_local),
+							    "failed to clear events: ");
+				return FALSE;
+			}
+		}
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_ccgx_hpi_device_attach (FuDevice *device, GError **error)
 {
 	g_set_error_literal (error,
@@ -720,8 +751,10 @@ fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 			g_usleep (HPI_CMD_RESET_COMPLETE_DELAY_US);
 	}
 
-	/* success */
-	return TRUE;
+	/* start with no events in the queue */
+	return fu_ccgx_hpi_device_clear_all_events (self,
+						    HPI_CMD_SETUP_EVENT_CLEAR_TIME_MS,
+						    error);
 }
 
 static gboolean
