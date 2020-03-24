@@ -8,6 +8,7 @@ shared_module('fu_plugin_ccgx',
   fu_hash,
   sources : [
     'fu-plugin-ccgx.c',
+    'fu-ccgx-common.c',
     'fu-ccgx-cyacd-firmware.c',
     'fu-ccgx-cyacd-firmware-image.c',
     'fu-ccgx-hid-device.c',
