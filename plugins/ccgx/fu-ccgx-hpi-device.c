@@ -26,6 +26,8 @@ struct _FuCcgxHpiDevice
 	guint8			 ep_bulk_in;
 	guint8			 ep_bulk_out;
 	guint8			 ep_intr_in;
+	guint32			 flash_row_size;
+	guint32			 flash_size;
 };
 
 G_DEFINE_TYPE (FuCcgxHpiDevice, fu_ccgx_hpi_device, FU_TYPE_USB_DEVICE)
@@ -45,6 +47,8 @@ fu_ccgx_hpi_device_to_string (FuDevice *device, guint idt, GString *str)
 	fu_common_string_append_kx (str, idt, "EpBulkIn", self->ep_bulk_in);
 	fu_common_string_append_kx (str, idt, "EpBulkOut", self->ep_bulk_out);
 	fu_common_string_append_kx (str, idt, "EpIntrIn", self->ep_intr_in);
+	fu_common_string_append_kx (str, idt, "FlashRowSize", self->flash_row_size);
+	fu_common_string_append_kx (str, idt, "FlashSize", self->flash_size);
 }
 
 static gboolean
@@ -357,6 +361,42 @@ fu_ccgx_hpi_write_firmware (FuDevice *device,
 }
 
 static gboolean
+fu_ccgx_hpi_device_ensure_silicon_id (FuCcgxHpiDevice *self, GError **error)
+{
+	guint8 buf[2] = { 0x0 };
+	g_autofree gchar *instance_id = NULL;
+
+	if (!fu_ccgx_hpi_device_reg_read (self, CY_PD_SILICON_ID,
+					  buf, sizeof(buf), error)) {
+		g_prefix_error (error, "get silicon id error: ");
+		return FALSE;
+	}
+	if (!fu_common_read_uint16_safe (buf, sizeof(buf),
+					0x0, &self->silicon_id,
+					G_LITTLE_ENDIAN, error))
+		return FALSE;
+
+	/* add quirks */
+	instance_id = g_strdup_printf ("CCGX\\SID_%X", self->silicon_id);
+	fu_device_add_instance_id_full (FU_DEVICE (self),
+					instance_id,
+					FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
+
+	/* sanity check */
+	if (self->flash_row_size == 0x0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "Invalid row size for Instance ID: %s",
+			     instance_id);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 {
 	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE (device);
@@ -391,6 +431,10 @@ fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 				       fu_usb_device_get_pid (FU_USB_DEVICE (device)),
 				       fu_ccgx_fw_mode_to_string (self->fw_mode));
 	fu_device_add_instance_id (device, instance_id);
+
+	/* get silicon ID */
+	if (!fu_ccgx_hpi_device_ensure_silicon_id (self, error))
+		return FALSE;
 
 	/* success */
 	return TRUE;
@@ -427,6 +471,34 @@ fu_ccgx_hpi_device_set_quirk_kv (FuDevice *device,
 				     "invalid FwAppType");
 		return FALSE;
 	}
+	if (g_strcmp0 (key, "FlashRowSize") == 0) {
+		guint64 tmp = fu_common_strtoull (value);
+		if (tmp < G_MAXUINT32) {
+			self->flash_row_size = tmp;
+			return TRUE;
+		}
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "invalid FlashRowSize");
+		return FALSE;
+	}
+	if (g_strcmp0 (key, "FlashSize") == 0) {
+		guint64 tmp = fu_common_strtoull (value);
+		if (tmp < G_MAXUINT32) {
+			self->flash_size = tmp;
+			return TRUE;
+		}
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "invalid FlashSize");
+		return FALSE;
+	}
+	g_set_error_literal (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_SUPPORTED,
+			     "no supported");
 	return FALSE;
 }
 

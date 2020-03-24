@@ -1,6 +1,9 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginCcgx"']
 
-install_data(['ccgx.quirk'],
+install_data([
+  'ccgx-ids.quirk',
+  'ccgx.quirk',
+  ],
   install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
 )
 
