@@ -6,3 +6,6 @@ GType = FuCcgxHidDevice
 [DeviceInstanceId=USB\VID_04B4&PID_521A]
 Plugin = ccgx
 GType = FuCcgxHpiDevice
+
+[DeviceInstanceId=USB\VID_04B4&PID_521A&MODE_FW1]
+UpdateMessage = Run firmware update again to upgrade the primary firmware.

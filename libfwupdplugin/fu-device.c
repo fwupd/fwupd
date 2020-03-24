@@ -780,6 +780,10 @@ fu_device_set_quirk_kv (FuDevice *self,
 		fu_device_set_version (self, value);
 		return TRUE;
 	}
+	if (g_strcmp0 (key, FU_QUIRKS_UPDATE_MESSAGE) == 0) {
+		fu_device_set_update_message (self, value);
+		return TRUE;
+	}
 	if (g_strcmp0 (key, FU_QUIRKS_ICON) == 0) {
 		fu_device_add_icon (self, value);
 		return TRUE;
