@@ -29,7 +29,8 @@ typedef void (*UEventNotify) (FuPlugin	  *plugin,
 			      gpointer     user_data);
 
 struct FuPluginData {
-	GUdevClient   *udev;
+	GUdevClient	*udev;
+	guint		 multi_thunderbolt_host;
 };
 
 static gboolean
@@ -266,6 +267,7 @@ fu_plugin_thunderbolt_can_update (GUdevDevice *udevice)
 static void
 fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 {
+	FuPluginData *data = fu_plugin_get_data (plugin);
 	FuDevice *dev_tmp;
 	const gchar *name = NULL;
 	const gchar *uuid;
@@ -282,6 +284,7 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	g_autofree gchar *version = NULL;
 	g_autofree gchar *vendor_id = NULL;
 	g_autofree gchar *device_id = NULL;
+	g_autofree gchar *device_id_with_list = NULL;
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(GError) error_vid = NULL;
 	g_autoptr(GError) error_did = NULL;
@@ -368,6 +371,12 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 				fu_plugin_add_report_metadata (plugin,
 							       "ThunderboltNative",
 							       is_native ? "True" : "False");
+				data->multi_thunderbolt_host++;
+				device_id_with_list = g_strdup_printf ("TBT-%04x%04x%s-host%u",
+									(guint) vid,
+									(guint) did,
+									is_native ? "-native" : "",
+									data->multi_thunderbolt_host);
 			}
 			vendor_id = g_strdup_printf ("TBT:0x%04X", (guint) vid);
 			device_id = g_strdup_printf ("TBT-%04x%04x%s",
@@ -409,6 +418,8 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 		fu_device_set_vendor_id (dev, vendor_id);
 	if (device_id != NULL)
 		fu_device_add_instance_id (dev, device_id);
+	if (device_id_with_list != NULL)
+		fu_device_add_instance_id (dev, device_id_with_list);
 	if (version != NULL)
 		fu_device_set_version (dev, version);
 	if (is_host)

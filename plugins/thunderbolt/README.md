@@ -31,6 +31,13 @@ When the device is in "safe mode" the GUID is hardcoded using:
 
  * `TBT-$(vid)$(pid)-native` when native, and `TBT-$(vid)$(pid)` otherwise.
 
+Additionally for host system thunderbolt controllers another GUID is added
+containing the PCI enumeration order.  This is intended to be
+used for systems with multiple host controllers to disambiguiate between controllers.
+The controller number field will be 1-indexed.
+
+* `TBT-$(vid)$(pid)-native-host$(number)`
+
 Vendor ID Security
 ------------------
 
