@@ -456,6 +456,7 @@ fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 						 0x0c, &ver_fw1,
 						 G_LITTLE_ENDIAN, error))
 			return FALSE;
+		self->fw_app_type = ver_fw1 & 0xffff;
 		if (!fu_common_read_uint32_safe (bufver, sizeof(bufver),
 						 0x14, &ver_fw2,
 						 G_LITTLE_ENDIAN, error))
@@ -494,18 +495,6 @@ fu_ccgx_hpi_device_set_quirk_kv (FuDevice *device,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
 				     "invalid SiliconId");
-		return FALSE;
-	}
-	if (g_strcmp0 (key, "FwAppType") == 0) {
-		guint64 tmp = fu_common_strtoull (value);
-		if (tmp < G_MAXUINT16) {
-			self->fw_app_type = tmp;
-			return TRUE;
-		}
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "invalid FwAppType");
 		return FALSE;
 	}
 	if (g_strcmp0 (key, "FlashRowSize") == 0) {
