@@ -31,4 +31,5 @@ typedef enum {
 	FW_MODE_LAST
 } FWMode;
 
+gchar		*fu_ccgx_version_to_string		(guint32	 val);
 const gchar	*fu_ccgx_fw_mode_to_string		(FWMode		 val);
