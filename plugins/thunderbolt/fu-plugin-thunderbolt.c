@@ -282,6 +282,7 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 	g_autofree gchar *version = NULL;
 	g_autofree gchar *vendor_id = NULL;
 	g_autofree gchar *device_id = NULL;
+	g_autofree gchar *domain_id = NULL;
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(GError) error_vid = NULL;
 	g_autoptr(GError) error_did = NULL;
@@ -357,6 +358,7 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 			/* USB4 controllers don't have a concept of legacy vs native
 			 * so don't try to read a native attribute from their NVM */
 			if (is_host && gen < 4) {
+				g_autofree gchar *domain = g_path_get_basename (devpath);
 				g_autoptr(GError) native_error = NULL;
 				if (!fu_plugin_thunderbolt_is_native (device,
 								      &is_native,
@@ -368,6 +370,12 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 				fu_plugin_add_report_metadata (plugin,
 							       "ThunderboltNative",
 							       is_native ? "True" : "False");
+				domain_id = g_strdup_printf ("TBT-%04x%04x%s-controller%s",
+								(guint) vid,
+								(guint) did,
+								is_native ? "-native" : "",
+								domain);
+
 			}
 			vendor_id = g_strdup_printf ("TBT:0x%04X", (guint) vid);
 			device_id = g_strdup_printf ("TBT-%04x%04x%s",
@@ -409,6 +417,8 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 		fu_device_set_vendor_id (dev, vendor_id);
 	if (device_id != NULL)
 		fu_device_add_instance_id (dev, device_id);
+	if (domain_id != NULL)
+		fu_device_add_instance_id (dev, domain_id);
 	if (version != NULL)
 		fu_device_set_version (dev, version, FWUPD_VERSION_FORMAT_PAIR);
 	if (is_host)
