@@ -58,7 +58,7 @@ with open(out.name, 'w') as wfd:
                 wfd.write("RUN yum -y install \\\n")
             elif OS == "debian" or OS == "ubuntu":
                 wfd.write("RUN apt update -qq && \\\n")
-                wfd.write("\tapt install -yq --no-install-recommends\\\n")
+                wfd.write("\tDEBIAN_FRONTEND=noninteractive apt install -yq --no-install-recommends\\\n")
             elif OS == "arch":
                 wfd.write("RUN pacman -Syu --noconfirm --needed\\\n")
             for i in range(0, len(deps)):
