@@ -33,3 +33,36 @@ fu_ccgx_fw_mode_to_string (FWMode val)
 	return NULL;
 }
 
+const gchar *
+fu_ccgx_fw_image_type_to_string (FWImageType val)
+{
+	if (val == FW_IMAGE_TYPE_SINGLE)
+		return "single";
+	if (val == FW_IMAGE_TYPE_DUAL_SYMMETRIC)
+		return "dual-symmetric";
+	if (val == FW_IMAGE_TYPE_DUAL_ASYMMETRIC)
+		return "dual-asymmetric";
+	return NULL;
+}
+
+FWImageType
+fu_ccgx_fw_image_type_from_string (const gchar *val)
+{
+	if (g_strcmp0 (val, "single") == 0)
+		return FW_IMAGE_TYPE_SINGLE;
+	if (g_strcmp0 (val, "dual-symmetric") == 0)
+		return FW_IMAGE_TYPE_DUAL_SYMMETRIC;
+	if (g_strcmp0 (val, "dual-asymmetric") == 0)
+		return FW_IMAGE_TYPE_DUAL_ASYMMETRIC;
+	return FW_IMAGE_TYPE_UNKNOWN;
+}
+
+FWMode
+fu_ccgx_fw_mode_get_alternate (FWMode fw_mode)
+{
+	if (fw_mode == FW_MODE_FW1)
+		return FW_MODE_FW2;
+	if (fw_mode == FW_MODE_FW2)
+		return FW_MODE_FW1;
+	return FW_MODE_BOOT;
+}
