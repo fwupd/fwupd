@@ -20,6 +20,7 @@
 struct _FuCcgxCyacdFirmwareImage {
 	FuFirmwareImageClass	 parent_instance;
 	GPtrArray		*records;
+	guint16			 app_type;
 };
 
 G_DEFINE_TYPE (FuCcgxCyacdFirmwareImage, fu_ccgx_cyacd_firmware_image, FU_TYPE_FIRMWARE_IMAGE)
@@ -29,6 +30,13 @@ fu_ccgx_cyacd_firmware_image_get_records (FuCcgxCyacdFirmwareImage *self)
 {
 	g_return_val_if_fail (FU_IS_CCGX_CYACD_FIRMWARE_IMAGE (self), NULL);
 	return self->records;
+}
+
+guint16
+fu_ccgx_cyacd_firmware_image_get_app_type (FuCcgxCyacdFirmwareImage *self)
+{
+	g_return_val_if_fail (FU_IS_CCGX_CYACD_FIRMWARE_IMAGE (self), 0);
+	return self->app_type;
 }
 
 static void
@@ -132,7 +140,8 @@ fu_ccgx_cyacd_firmware_image_parse_md_block (FuCcgxCyacdFirmwareImage *self, GEr
 	if (!fu_common_read_uint32_safe (buf, bufsz, CCGX_APP_VERSION_OFFSET % bufsz,
 					 &version, G_LITTLE_ENDIAN, error))
 		return FALSE;
-	version_str = fu_common_version_from_uint32 (version, FWUPD_VERSION_FORMAT_QUAD);
+	self->app_type = version & 0xffff;
+	version_str = fu_ccgx_version_to_string (version);
 	fu_firmware_image_set_version (FU_FIRMWARE_IMAGE (self), version_str);
 	return TRUE;
 }

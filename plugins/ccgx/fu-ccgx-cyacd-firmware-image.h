@@ -28,3 +28,4 @@ gboolean	 fu_ccgx_cyacd_firmware_image_add_record	(FuCcgxCyacdFirmwareImage	*sel
 								 const gchar			*line,
 								 GError				**error);
 GPtrArray	*fu_ccgx_cyacd_firmware_image_get_records	(FuCcgxCyacdFirmwareImage	*self);
+guint16		 fu_ccgx_cyacd_firmware_image_get_app_type	(FuCcgxCyacdFirmwareImage	*self);
