@@ -9,3 +9,16 @@ GType = FuCcgxHpiDevice
 
 [DeviceInstanceId=USB\VID_04B4&PID_521A&MODE_FW1]
 UpdateMessage = Run firmware update again to upgrade the primary firmware.
+
+# Lenovo Hybrid Dock (symmetric, so FWx are both 'primary')
+[DeviceInstanceId=USB\VID_17EF&PID_A354]
+Plugin = ccgx
+GType = FuCcgxHidDevice
+
+[DeviceInstanceId=USB\VID_17EF&PID_A35F]
+Plugin = ccgx
+GType = FuCcgxHidDevice
+
+[DeviceInstanceId=USB\VID_04B4&PID_5218]
+Plugin = ccgx
+GType = FuCcgxHpiDevice
