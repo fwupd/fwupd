@@ -573,15 +573,16 @@ fu_ccgx_hpi_device_prepare_firmware (FuDevice *device,
 	images = fu_firmware_get_images (firmware);
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmwareImage *img = g_ptr_array_index (images, i);
-		guint16 fw_app_type = fu_ccgx_cyacd_firmware_image_get_app_type (FU_CCGX_CYACD_FIRMWARE_IMAGE (img));
-		if (fu_firmware_image_get_addr (img) != self->silicon_id) {
+		FuCcgxCyacdFirmwareImage *img_ccgx = FU_CCGX_CYACD_FIRMWARE_IMAGE (img);
+		guint16 fw_app_type = fu_ccgx_cyacd_firmware_image_get_app_type (img_ccgx);
+		guint16 fw_silicon_id = fu_ccgx_cyacd_firmware_image_get_silicon_id (img_ccgx);
+		if (fw_silicon_id != self->silicon_id) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "silicon id mismatch on image %u, "
 				     "expected 0x%x, got 0x%x",
-				     i, self->silicon_id,
-				     (guint) fu_firmware_image_get_addr (img));
+				     i, self->silicon_id, fw_silicon_id);
 			return NULL;
 		}
 		if (fw_app_type != self->fw_app_type) {
