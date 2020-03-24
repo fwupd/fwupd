@@ -436,6 +436,43 @@ fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 	if (!fu_ccgx_hpi_device_ensure_silicon_id (self, error))
 		return FALSE;
 
+	/* get correct version if not in boot mode */
+	if (self->fw_mode != FW_MODE_BOOT) {
+		guint16 bufsz;
+		guint32 ver_fw1 = 0;
+		guint32 ver_fw2 = 0;
+		guint8 bufver[HPI_DEVICE_VERSION_SIZE_HPIV2] = { 0x0 };
+
+		bufsz = self->hpi_addrsz == 1 ? HPI_DEVICE_VERSION_SIZE_HPIV1 :
+						HPI_DEVICE_VERSION_SIZE_HPIV2;
+		if (!fu_ccgx_hpi_device_reg_read (self,
+						  CY_PD_GET_VERSION,
+						  bufver, bufsz,
+						  error)) {
+			g_prefix_error (error, "get version error: ");
+			return FALSE;
+		}
+		if (!fu_common_read_uint32_safe (bufver, sizeof(bufver),
+						 0x0c, &ver_fw1,
+						 G_LITTLE_ENDIAN, error))
+			return FALSE;
+		if (!fu_common_read_uint32_safe (bufver, sizeof(bufver),
+						 0x14, &ver_fw2,
+						 G_LITTLE_ENDIAN, error))
+			return FALSE;
+		/* these seem swapped, but we can only update the "other" image
+		 * whilst running in the current image */
+		if (self->fw_mode == FW_MODE_FW2) {
+			g_autofree gchar *version = fu_ccgx_version_to_string (ver_fw1);
+			fu_device_set_version_raw (device, ver_fw1);
+			fu_device_set_version (device, version);
+		} else if (self->fw_mode == FW_MODE_FW1) {
+			g_autofree gchar *version = fu_ccgx_version_to_string (ver_fw2);
+			fu_device_set_version_raw (device, ver_fw2);
+			fu_device_set_version (device, version);
+		}
+	}
+
 	/* success */
 	return TRUE;
 }
@@ -552,6 +589,7 @@ fu_ccgx_hpi_device_init (FuCcgxHpiDevice *self)
 	self->ep_intr_in = PD_I2C_USB_EP_INTR_IN;
 	fu_device_set_protocol (FU_DEVICE (self), "com.cypress.ccgx");
 	fu_device_set_install_duration (FU_DEVICE (self), 60);
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
