@@ -33,6 +33,9 @@ struct _FuCcgxHpiDevice
 
 G_DEFINE_TYPE (FuCcgxHpiDevice, fu_ccgx_hpi_device, FU_TYPE_USB_DEVICE)
 
+#define HPI_CMD_SETUP_EVENT_WAIT_TIME_MS	200
+#define HPI_CMD_RESET_COMPLETE_DELAY_US		150000
+
 static void
 fu_ccgx_hpi_device_to_string (FuDevice *device, guint idt, GString *str)
 {
@@ -306,6 +309,212 @@ fu_ccgx_hpi_device_reg_read (FuCcgxHpiDevice *self,
 }
 
 static gboolean
+fu_ccgx_hpi_device_reg_write (FuCcgxHpiDevice *self,
+			      guint16 addr,
+			      guint8 *buf,
+			      guint16 bufsz,
+			      GError **error)
+{
+	g_autofree guint8 *bufhw = g_malloc0 (bufsz + self->hpi_addrsz + 1);
+	for (guint32 i = 0; i < self->hpi_addrsz; i++)
+		bufhw[i] = (guint8) (addr >> (8*i));
+	memcpy (&bufhw[self->hpi_addrsz], buf, bufsz);
+	if (!fu_ccgx_hpi_device_i2c_write (self, bufhw, bufsz + self->hpi_addrsz,
+				       CY_I2C_DATA_CONFIG_STOP | CY_I2C_DATA_CONFIG_NAK,
+				       error)) {
+		g_prefix_error (error, "reg write error: ");
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_ccgx_hpi_device_clear_intr (FuCcgxHpiDevice *self,
+			       HPIRegSection section,
+			       GError **error)
+{
+	guint8 intr = 0;
+	for (guint8 i = 0; i <= self->num_ports; i++) {
+		if (i == section || section == HPI_REG_SECTION_ALL)
+			intr |= 1 << i;
+	}
+	if (!fu_ccgx_hpi_device_reg_write (self, HPI_DEV_REG_INTR_ADDR,
+					   &intr, sizeof(intr),
+					   error)) {
+		g_prefix_error (error, "failed to clear interrupt: ");
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static guint16
+fu_ccgx_hpi_device_reg_addr_gen (guint8 section, guint8 part, guint8 addr)
+{
+	return (((guint16) section) << 12) | (((guint16) part) << 8) | addr;
+}
+
+static gboolean
+fu_ccgx_hpi_device_read_event_reg (FuCcgxHpiDevice *self,
+				   HPIRegSection section,
+				   HPIEvent *event,
+				   GError **error)
+{
+
+	if (section != HPI_REG_SECTION_DEV) {
+		guint16 reg_addr;
+		guint8 buf[4] = { 0x0 };
+
+		/* first read the response register */
+		reg_addr = fu_ccgx_hpi_device_reg_addr_gen (section,
+							    HPI_REG_PART_PDDATA_READ,
+							    0);
+		if (!fu_ccgx_hpi_device_reg_read (self,
+					   reg_addr,
+					   buf, sizeof(buf),
+					   error)) {
+			g_prefix_error (error, "read response reg error:");
+			return FALSE;
+		}
+
+		/* byte 1 is reserved and should read as zero */
+		buf[1] = 0;
+		memcpy ((guint8 *) event, buf, sizeof(buf));
+		if (event->event_length != 0) {
+			reg_addr = fu_ccgx_hpi_device_reg_addr_gen (section,
+								    HPI_REG_PART_PDDATA_READ,
+								    sizeof(buf));
+			if (!fu_ccgx_hpi_device_reg_read (self,
+							  reg_addr,
+							  event->event_data,
+							  event->event_length,
+							  error)) {
+				g_prefix_error (error, "read event data error:");
+				return FALSE;
+			}
+		}
+	} else {
+		guint8 buf[2] = { 0x0 };
+		if (!fu_ccgx_hpi_device_reg_read (self,
+						  CY_PD_REG_RESPONSE_ADDR,
+						  buf, sizeof(buf),
+						  error)) {
+			g_prefix_error (error, "read response reg error:");
+			return FALSE;
+		}
+		event->event_code   = buf[0];
+		event->event_length = buf[1];
+		if (event->event_length != 0) {
+			/* read the data memory */
+			if (!fu_ccgx_hpi_device_reg_read (self,
+							  CY_PD_REG_BOOTDATA_MEMORY_ADDR,
+							  event->event_data,
+							  event->event_length,
+							  error)) {
+				g_prefix_error (error, "read event data error:");
+				return FALSE;
+			}
+		}
+	}
+
+	/* success */
+	return fu_ccgx_hpi_device_clear_intr (self, section, error);
+}
+
+static gboolean
+fu_ccgx_hpi_device_app_read_intr_reg (FuCcgxHpiDevice *self,
+				      HPIRegSection section,
+				      HPIEvent *event_array,
+				      guint8 *event_count,
+				      GError **error)
+{
+	guint16 reg_addr;
+	guint8 event_count_tmp = 0;
+	guint8 intr_reg = 0;
+
+	reg_addr = fu_ccgx_hpi_device_reg_addr_gen (HPI_REG_SECTION_DEV,
+						    HPI_REG_PART_REG,
+						    HPI_DEV_REG_INTR_ADDR);
+	if (!fu_ccgx_hpi_device_reg_read (self,
+					  reg_addr,
+					  &intr_reg,
+					  sizeof(intr_reg),
+					  error)) {
+		g_prefix_error (error, "read intr reg error: ");
+		return FALSE;
+	}
+
+	/* device section will not come here */
+	for (guint8 i = 0; i <= self->num_ports; i++) {
+		/* check if this section is needed */
+		if (section == i || section == HPI_REG_SECTION_ALL) {
+			/* check whether this section has any event/response */
+			if ((1 << i) & intr_reg) {
+				if (!fu_ccgx_hpi_device_read_event_reg (self,
+									section,
+									&event_array[i],
+									error)) {
+					g_prefix_error (error, "read event error: ");
+					return FALSE;
+				}
+				event_count_tmp++;
+			}
+		}
+	}
+	if (event_count != NULL)
+		*event_count = event_count_tmp;
+	return TRUE;
+}
+
+static gboolean
+fu_ccgx_hpi_device_wait_for_event (FuCcgxHpiDevice *self,
+				   HPIRegSection section,
+				   HPIEvent *event_array,
+				   guint32 timeout_ms,
+				   GError **error)
+{
+	guint8 event_count = 0;
+	g_autoptr(GTimer) start_time = g_timer_new ();
+	do {
+		if (!fu_ccgx_hpi_device_app_read_intr_reg (self,
+							   section,
+							   event_array,
+							   &event_count,
+							   error))
+			return FALSE;
+		if (event_count > 0)
+			return TRUE;
+	} while (g_timer_elapsed (start_time, NULL) * 1000.f <= timeout_ms);
+
+	/* timed out */
+	g_set_error (error,
+		     G_IO_ERROR,
+		     G_IO_ERROR_TIMED_OUT,
+		     "failed to wait for event in %ums",
+		     timeout_ms);
+	return FALSE;
+}
+
+static gboolean
+fu_ccgx_hpi_device_get_event (FuCcgxHpiDevice *self,
+			      HPIRegSection reg_section,
+			      CyPDResp *event,
+			      guint32 io_timeout,
+			      GError **error )
+{
+	HPIEvent event_array[HPI_REG_SECTION_ALL + 1] = { 0x0 };
+	if (!fu_ccgx_hpi_device_wait_for_event (self,
+						reg_section,
+						event_array,
+						io_timeout,
+						error)) {
+		g_prefix_error (error, "failed to get event: ");
+		return FALSE;
+	}
+	*event = event_array[reg_section].event_code;
+	return TRUE;
+}
+
+static gboolean
 fu_ccgx_hpi_device_attach (FuDevice *device, GError **error)
 {
 	g_set_error_literal (error,
@@ -412,8 +621,10 @@ fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 {
 	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE (device);
 	CyI2CConfig i2c_config = { 0x0 };
+	guint32 hpi_event = 0;
 	guint8 mode = 0;
 	g_autofree gchar *instance_id = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* set the new config */
 	if (!fu_ccgx_hpi_device_get_i2c_config (self, &i2c_config, error)) {
@@ -490,6 +701,23 @@ fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 		fu_device_remove_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	} else {
 		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	}
+
+	/* if we are coming back from reset, wait for hardware to settle */
+	if (!fu_ccgx_hpi_device_get_event (self,
+					   HPI_REG_SECTION_DEV,
+					   &hpi_event,
+					   HPI_CMD_SETUP_EVENT_WAIT_TIME_MS,
+					   &error_local)) {
+		if (!g_error_matches (error_local,
+				      G_IO_ERROR,
+				      G_IO_ERROR_TIMED_OUT)) {
+			g_propagate_error (error, g_steal_pointer (&error_local));
+			return FALSE;
+		}
+	} else {
+		if (hpi_event == CY_PD_RESP_RESET_COMPLETE)
+			g_usleep (HPI_CMD_RESET_COMPLETE_DELAY_US);
 	}
 
 	/* success */
