@@ -19,7 +19,7 @@ G_DEFINE_TYPE (FuCcgxHidDevice, fu_ccgx_hid_device, FU_TYPE_HID_DEVICE)
 #define FU_CCGX_HID_DEVICE_TIMEOUT	5000 /* ms */
 
 static gboolean
-fu_ccgx_hid_device_detach (FuDevice *device, GError **error)
+fu_ccgx_hid_device_enable_hpi_mode (FuDevice *device, GError **error)
 {
 	guint8 buf[5] = {0xEE, 0xBC, 0xA6, 0xB9, 0xA8};
 
@@ -29,11 +29,28 @@ fu_ccgx_hid_device_detach (FuDevice *device, GError **error)
 				       FU_CCGX_HID_DEVICE_TIMEOUT,
 				       FU_HID_DEVICE_FLAG_NONE,
 				       error)) {
-		g_prefix_error (error, "mfg mode error: ");
+		g_prefix_error (error, "switch to HPI mode error: ");
 		return FALSE;
 	}
+	return TRUE;
+}
+
+static gboolean
+fu_ccgx_hid_device_detach (FuDevice *device, GError **error)
+{
+	if (!fu_ccgx_hid_device_enable_hpi_mode (device, error))
+		return FALSE;
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
+}
+
+static gboolean
+fu_ccgx_hid_device_setup (FuDevice *device, GError **error)
+{
+	/* This seems insane... but we need to switch the device from HID
+	 * mode to HPI mode at startup. The device continues to function
+	 * exactly as before and no user-visible effects are noted */
+	return fu_ccgx_hid_device_enable_hpi_mode (device, error);
 }
 
 static void
@@ -49,4 +66,5 @@ fu_ccgx_hid_device_class_init (FuCcgxHidDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	klass_device->detach = fu_ccgx_hid_device_detach;
+	klass_device->setup = fu_ccgx_hid_device_setup;
 }
