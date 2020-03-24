@@ -57,7 +57,6 @@ fu_ata_oui_func (void)
 	fu_device_convert_instance_ids (FU_DEVICE (dev));
 	str = fu_device_to_string (FU_DEVICE (dev));
 	g_debug ("%s", str);
-	g_assert_true (fu_device_has_guid (FU_DEVICE (dev), "OUI\\002538"));
 	g_assert_cmpint (fu_ata_device_get_transfer_mode (dev), ==, 0xe);
 	g_assert_cmpint (fu_ata_device_get_transfer_blocks (dev), ==, 0x1);
 	g_assert_cmpstr (fu_device_get_serial (FU_DEVICE (dev)), ==, "S3Z1NB0K862928X");

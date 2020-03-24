@@ -66,13 +66,17 @@ fu_wacom_device_check_mpu (FuWacomDevice *self, GError **error)
 
 	/* W9013 */
 	if (rsp.resp == 0x2e) {
-		fu_device_add_instance_id (FU_DEVICE (self), "WacomEMR_W9013");
+		fu_device_add_instance_id_full (FU_DEVICE (self),
+						"WacomEMR_W9013",
+						FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
 		return TRUE;
 	}
 
 	/* W9021 */
 	if (rsp.resp == 0x45) {
-		fu_device_add_instance_id (FU_DEVICE (self), "WacomEMR_W9021");
+		fu_device_add_instance_id_full (FU_DEVICE (self),
+						"WacomEMR_W9021",
+						FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
 		return TRUE;
 	}
 
