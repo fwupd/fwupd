@@ -7,6 +7,7 @@
 
 #include "config.h"
 
+#include "fu-ccgx-common.h"
 #include "fu-ccgx-hpi-common.h"
 #include "fu-ccgx-hpi-device.h"
 #include "fu-ccgx-cyacd-firmware.h"
@@ -18,6 +19,13 @@ struct _FuCcgxHpiDevice
 	guint8			 scb_index;
 	guint16			 silicon_id;
 	guint16			 fw_app_type;
+	guint8			 hpi_addrsz;	/* hpiv1: 1 byte, hpiv2: 2 byte	*/
+	guint8			 num_ports;	/* max number of ports	*/
+	FWMode			 fw_mode;
+	guint8			 slave_address;
+	guint8			 ep_bulk_in;
+	guint8			 ep_bulk_out;
+	guint8			 ep_intr_in;
 };
 
 G_DEFINE_TYPE (FuCcgxHpiDevice, fu_ccgx_hpi_device, FU_TYPE_USB_DEVICE)
@@ -30,6 +38,43 @@ fu_ccgx_hpi_device_to_string (FuDevice *device, guint idt, GString *str)
 	fu_common_string_append_kx (str, idt, "ScbIndex", self->scb_index);
 	fu_common_string_append_kx (str, idt, "SiliconId", self->silicon_id);
 	fu_common_string_append_kx (str, idt, "FwAppType", self->fw_app_type);
+	fu_common_string_append_kx (str, idt, "HpiAddrsz", self->hpi_addrsz);
+	fu_common_string_append_kx (str, idt, "NumPorts", self->num_ports);
+	fu_common_string_append_kv (str, idt, "FWMode",
+				    fu_ccgx_fw_mode_to_string (self->fw_mode));
+	fu_common_string_append_kx (str, idt, "EpBulkIn", self->ep_bulk_in);
+	fu_common_string_append_kx (str, idt, "EpBulkOut", self->ep_bulk_out);
+	fu_common_string_append_kx (str, idt, "EpIntrIn", self->ep_intr_in);
+}
+
+static gboolean
+fu_ccgx_hpi_device_get_i2c_status (FuCcgxHpiDevice *self,
+				   guint8 mode,
+				   guint8 *i2c_status, /* out */
+				   GError **error)
+{
+	g_autoptr(GError) error_local =	NULL;
+	if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (self)),
+					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    CY_I2C_GET_STATUS_CMD,
+					    (((guint16) self->scb_index) << CY_SCB_INDEX_POS) | mode,
+					    0x0,
+					    (guint8 *) &i2c_status,
+					    CY_I2C_GET_STATUS_LEN,
+					    NULL,
+					    FU_CCGX_HPI_WAIT_TIMEOUT,
+					    NULL,
+					    &error_local)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "failed to get i2c status: %s",
+			     error_local->message);
+		return FALSE;
+	}
+	return TRUE;
 }
 
 static gboolean
@@ -85,6 +130,171 @@ fu_ccgx_hpi_device_set_i2c_config (FuCcgxHpiDevice *self,
 			     FWUPD_ERROR_INTERNAL,
 			     "i2c set config error: control xfer: %s",
 			     error_local->message);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_ccgx_hpi_device_wait_for_notify (FuCcgxHpiDevice *self,
+				    guint16 *bytes_pending,
+				    GError **error)
+{
+	guint8 buf[CY_I2C_EVENT_NOTIFICATION_LEN] = { 0x0 };
+	g_autoptr(GError) error_local = NULL;
+
+	if (!g_usb_device_interrupt_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (self)),
+					      self->ep_intr_in,
+					      buf, sizeof(buf), NULL,
+					      FU_CCGX_HPI_WAIT_TIMEOUT,
+					      NULL, &error_local)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "failed to get i2c event: %s",
+			     error_local->message);
+		return FALSE;
+	}
+
+	/* @bytes_pending available on failure */
+	if (buf[0] & CY_I2C_ERROR_BIT) {
+		if (bytes_pending != NULL) {
+			if (!fu_common_read_uint16_safe (buf, sizeof(buf), 0x01,
+							 bytes_pending, G_LITTLE_ENDIAN,
+							 error))
+				return FALSE;
+		}
+		/* write */
+		if (buf[0] & 0x80) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "i2c status error in i2c write [0x%x] event: %s",
+				     (guint8) buf[0], error_local->message);
+		/* read */
+		} else {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "i2c status error in i2c read [0x%x] event: %s",
+				     (guint8) buf[0], error_local->message);
+		}
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_ccgx_hpi_device_i2c_read (FuCcgxHpiDevice *self,
+			     guint8 *buf, gsize bufsz,
+			     CyI2CDataConfigBits cfg_bits,
+			     GError **error)
+{
+	guint8 i2c_status = 0x0;
+	guint8 slave_address = 0;
+
+	if (!fu_ccgx_hpi_device_get_i2c_status (self, CY_I2C_MODE_READ, &i2c_status, error)) {
+		g_prefix_error (error, "i2c read error: ");
+		return FALSE;
+	}
+	slave_address = (self->slave_address & 0x7F) | (self->scb_index << 7);
+	if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (self)),
+					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    CY_I2C_READ_CMD,
+					    (((guint16) slave_address) << 8) | cfg_bits,
+					    bufsz, NULL, 0x0, NULL,
+					    FU_CCGX_HPI_WAIT_TIMEOUT, NULL,
+					    error)) {
+		g_prefix_error (error, "i2c read error: control xfer: ");
+		return FALSE;
+	}
+	if (!g_usb_device_bulk_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (self)),
+					 self->ep_bulk_in,
+					 buf, bufsz, NULL,
+					 FU_CCGX_HPI_WAIT_TIMEOUT,
+					 NULL, error)) {
+		g_prefix_error (error, "i2c read error: bulk xfer: ");
+		return FALSE;
+	}
+
+	/* 10 msec delay */
+	g_usleep (I2C_READ_WRITE_DELAY_US);
+	if (!fu_ccgx_hpi_device_wait_for_notify (self, NULL, error)) {
+		g_prefix_error (error, "i2c read error: ");
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_ccgx_hpi_device_i2c_write (FuCcgxHpiDevice *self,
+			      guint8 *buf, gsize bufsz,
+			      CyI2CDataConfigBits cfg_bits,
+			      GError **error)
+{
+	guint8 i2c_status = 0x0;
+	guint8 slave_address;
+	g_autoptr(GError) error_local = NULL;
+
+	if (!fu_ccgx_hpi_device_get_i2c_status (self,
+						CY_I2C_MODE_WRITE,
+						&i2c_status,
+						error)) {
+		g_prefix_error (error, "i2c get status error: ");
+		return FALSE;
+	}
+	slave_address = (self->slave_address & 0x7F) | (self->scb_index << 7);
+	if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (self)),
+					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    CY_I2C_WRITE_CMD,
+					    ((guint16) slave_address << 8) | (cfg_bits & CY_I2C_DATA_CONFIG_STOP),
+					    bufsz, /* idx */
+					    NULL, 0x0, NULL,
+					    FU_CCGX_HPI_WAIT_TIMEOUT,
+					    NULL, error)) {
+		g_prefix_error (error, "i2c write error: control xfer: ");
+		return FALSE;
+	}
+	if (!g_usb_device_bulk_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (self)),
+					self->ep_bulk_out, buf, bufsz, NULL,
+					FU_CCGX_HPI_WAIT_TIMEOUT,
+					NULL, error)) {
+		g_prefix_error (error, "i2c write error: bulk xfer: ");
+		return FALSE;
+	}
+
+	/* 10 msec delay */
+	g_usleep (I2C_READ_WRITE_DELAY_US);
+	if (!fu_ccgx_hpi_device_wait_for_notify (self, NULL, error)) {
+		g_prefix_error (error, "i2c wait for notification error: ");
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_ccgx_hpi_device_reg_read (FuCcgxHpiDevice *self,
+			     guint16 addr,
+			     guint8 *buf,
+			     guint16 bufsz,
+			     GError **error)
+{
+	g_autofree guint8 *bufhw = g_malloc0 (self->hpi_addrsz + 1);
+	for (guint32 i = 0; i < self->hpi_addrsz; i++)
+		bufhw[i] = (guint8) (addr >> (8 * i));
+	if (!fu_ccgx_hpi_device_i2c_write (self, bufhw, self->hpi_addrsz,
+					   CY_I2C_DATA_CONFIG_NAK, error)) {
+		g_prefix_error (error, "write error: ");
+		return FALSE;
+	}
+	if (!fu_ccgx_hpi_device_i2c_read (self, buf, bufsz,
+					  CY_I2C_DATA_CONFIG_STOP | CY_I2C_DATA_CONFIG_NAK,
+					  error)) {
+		g_prefix_error (error, "read error: ");
 		return FALSE;
 	}
 	return TRUE;
@@ -151,6 +361,8 @@ fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 {
 	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE (device);
 	CyI2CConfig i2c_config = { 0x0 };
+	guint8 mode = 0;
+	g_autofree gchar *instance_id = NULL;
 
 	/* set the new config */
 	if (!fu_ccgx_hpi_device_get_i2c_config (self, &i2c_config, error)) {
@@ -164,6 +376,21 @@ fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 		g_prefix_error (error, "set config error: ");
 		return FALSE;
 	}
+	if (!fu_ccgx_hpi_device_reg_read (self, CY_PD_REG_DEVICE_MODE_ADDR,
+					  &mode, 1, error)) {
+		g_prefix_error (error, "get device mode error: ");
+		return FALSE;
+	}
+	self->hpi_addrsz = mode & 0x80 ? 2 : 1;
+	self->num_ports = (mode >> 2) & 0x03 ? 2 : 1;
+	self->fw_mode = (FWMode) (mode & 0x03);
+
+	/* add extra instance ID */
+	instance_id = g_strdup_printf ("USB\\VID_%04X&PID_%04X&MODE_%s",
+				       fu_usb_device_get_vid (FU_USB_DEVICE (device)),
+				       fu_usb_device_get_pid (FU_USB_DEVICE (device)),
+				       fu_ccgx_fw_mode_to_string (self->fw_mode));
+	fu_device_add_instance_id (device, instance_id);
 
 	/* success */
 	return TRUE;
@@ -245,6 +472,12 @@ static void
 fu_ccgx_hpi_device_init (FuCcgxHpiDevice *self)
 {
 	self->inf_num = 0x0;
+	self->hpi_addrsz = 1;
+	self->num_ports = 1;
+	self->slave_address = PD_I2C_SLAVE_ADDRESS;
+	self->ep_bulk_out = PD_I2C_USB_EP_BULK_OUT;
+	self->ep_bulk_in = PD_I2C_USB_EP_BULK_IN;
+	self->ep_intr_in = PD_I2C_USB_EP_INTR_IN;
 	fu_device_set_protocol (FU_DEVICE (self), "com.cypress.ccgx");
 	fu_device_set_install_duration (FU_DEVICE (self), 60);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
