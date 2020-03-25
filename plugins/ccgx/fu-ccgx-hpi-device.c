@@ -306,6 +306,9 @@ fu_ccgx_hpi_device_reg_read (FuCcgxHpiDevice *self,
 		g_prefix_error (error, "read error: ");
 		return FALSE;
 	}
+
+	/* 5 ms */
+	g_usleep (5000);
 	return TRUE;
 }
 
