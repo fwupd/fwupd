@@ -206,6 +206,14 @@ fu_ccgx_hpi_device_i2c_read (FuCcgxHpiDevice *self,
 		g_prefix_error (error, "i2c read error: ");
 		return FALSE;
 	}
+	if (i2c_status & CY_I2C_ERROR_BIT) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "i2c status error in i2c read: 0x%x",
+			     (guint8) i2c_status);
+		return FALSE;
+	}
 	slave_address = (self->slave_address & 0x7F) | (self->scb_index << 7);
 	if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (self)),
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
@@ -252,6 +260,14 @@ fu_ccgx_hpi_device_i2c_write (FuCcgxHpiDevice *self,
 						&i2c_status,
 						error)) {
 		g_prefix_error (error, "i2c get status error: ");
+		return FALSE;
+	}
+	if (i2c_status & CY_I2C_ERROR_BIT) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "i2c status error in i2c write: 0x%x",
+			     (guint8) i2c_status);
 		return FALSE;
 	}
 	slave_address = (self->slave_address & 0x7F) | (self->scb_index << 7);
