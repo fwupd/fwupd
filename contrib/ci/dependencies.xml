@@ -328,12 +328,16 @@
       <package>flashrom-devel</package>
     </distro>
     <distro id="debian">
-      <control />
+      <control>
+        <exclusive>ia64</exclusive>
+      </control>
       <package variant="x86_64" />
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
-      <control />
+      <control>
+        <exclusive>ia64</exclusive>
+      </control>
       <package variant="x86_64" />
     </distro>
   </dependency>
