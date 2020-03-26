@@ -192,6 +192,17 @@ fu_vli_usbhub_pd_device_write_firmware (FuDevice *device,
 	return TRUE;
 }
 
+/* reboot the parent FuVliUsbhubDevice if we update the FuVliUsbhubPdDevice */
+static gboolean
+fu_vli_usbhub_pd_device_attach (FuDevice *device, GError **error)
+{
+	FuDevice *parent = fu_device_get_parent (device);
+	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new (parent, error);
+	if (locker == NULL)
+		return FALSE;
+	return fu_device_attach (parent, error);
+}
+
 static void
 fu_vli_usbhub_pd_device_init (FuVliUsbhubPdDevice *self)
 {
@@ -211,6 +222,7 @@ fu_vli_usbhub_pd_device_class_init (FuVliUsbhubPdDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	klass_device->to_string = fu_vli_usbhub_pd_device_to_string;
 	klass_device->probe = fu_vli_usbhub_pd_device_probe;
+	klass_device->attach = fu_vli_usbhub_pd_device_attach;
 	klass_device->read_firmware = fu_vli_usbhub_pd_device_read_firmware;
 	klass_device->write_firmware = fu_vli_usbhub_pd_device_write_firmware;
 	klass_device->prepare_firmware = fu_vli_usbhub_pd_device_prepare_firmware;

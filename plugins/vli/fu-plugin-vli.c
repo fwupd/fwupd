@@ -25,33 +25,3 @@ fu_plugin_init (FuPlugin *plugin)
 	g_type_ensure (FU_TYPE_VLI_USBHUB_DEVICE);
 	g_type_ensure (FU_TYPE_VLI_PD_DEVICE);
 }
-
-/* reboot the FuVliUsbhubDevice if we update the FuVliUsbhubPdDevice */
-static FuDevice *
-fu_plugin_vli_get_parent (GPtrArray *devices)
-{
-	for (guint i = 0; i < devices->len; i++) {
-		FuDevice *dev = g_ptr_array_index (devices, i);
-		FuDevice *parent = fu_device_get_parent (dev);
-		if (parent != NULL && FU_IS_VLI_USBHUB_DEVICE (parent))
-			return g_object_ref (parent);
-		if (FU_IS_VLI_USBHUB_DEVICE (dev))
-			return g_object_ref (dev);
-	}
-	return NULL;
-}
-
-gboolean
-fu_plugin_composite_cleanup (FuPlugin *plugin,
-			     GPtrArray *devices,
-			     GError **error)
-{
-	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(FuDevice) parent = fu_plugin_vli_get_parent (devices);
-	if (parent == NULL)
-		return TRUE;
-	locker = fu_device_locker_new (parent, error);
-	if (locker == NULL)
-		return FALSE;
-	return fu_device_attach (parent, error);
-}
