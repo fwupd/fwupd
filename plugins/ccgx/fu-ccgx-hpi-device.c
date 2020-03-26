@@ -44,6 +44,7 @@ G_DEFINE_TYPE (FuCcgxHpiDevice, fu_ccgx_hpi_device, FU_TYPE_USB_DEVICE)
 #define HPI_CMD_COMMAND_RESPONSE_TIME_MS	500
 #define HPI_CMD_COMMAND_CLEAR_EVENT_TIME_MS	30
 #define HPI_CMD_RESET_COMPLETE_DELAY_US		150000
+#define HPI_CMD_RESET_RETRY_CNT			3
 
 static void
 fu_ccgx_hpi_device_to_string (FuDevice *device, guint idt, GString *str)
@@ -66,21 +67,51 @@ fu_ccgx_hpi_device_to_string (FuDevice *device, guint idt, GString *str)
 	fu_common_string_append_kx (str, idt, "FlashSize", self->flash_size);
 }
 
+typedef struct {
+	guint8		 mode;
+	guint8		*i2c_status;
+} FuCcgxHpiDeviceRetryHelper;
+
 static gboolean
-fu_ccgx_hpi_device_get_i2c_status (FuCcgxHpiDevice *self,
-				   guint8 mode,
-				   guint8 *i2c_status, /* out */
-				   GError **error)
+fu_ccgx_hpi_device_reset_cb (FuDevice *device, gpointer user_data, GError **error)
 {
-	g_autoptr(GError) error_local =	NULL;
+	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE (device);
+	FuCcgxHpiDeviceRetryHelper *helper = (FuCcgxHpiDeviceRetryHelper *) user_data;
+	g_autoptr(GError) error_local = NULL;
+	if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (self)),
+					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    CY_I2C_RESET_CMD,
+					    (self->scb_index << CY_SCB_INDEX_POS) | helper->mode,
+					    0x0, NULL, 0x0, NULL,
+					    FU_CCGX_HPI_WAIT_TIMEOUT,
+					    NULL, &error_local)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "failed to reset i2c: %s",
+			     error_local->message);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_ccgx_hpi_device_get_i2c_status_cb (FuDevice *device, gpointer user_data, GError **error)
+{
+	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE (device);
+	FuCcgxHpiDeviceRetryHelper *helper = (FuCcgxHpiDeviceRetryHelper *) user_data;
+	g_autoptr(GError) error_local = NULL;
+
 	if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (self)),
 					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
 					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
 					    G_USB_DEVICE_RECIPIENT_DEVICE,
 					    CY_I2C_GET_STATUS_CMD,
-					    (((guint16) self->scb_index) << CY_SCB_INDEX_POS) | mode,
+					    (((guint16) self->scb_index) << CY_SCB_INDEX_POS) | helper->mode,
 					    0x0,
-					    (guint8 *) &i2c_status,
+					    helper->i2c_status,
 					    CY_I2C_GET_STATUS_LEN,
 					    NULL,
 					    FU_CCGX_HPI_WAIT_TIMEOUT,
@@ -94,6 +125,22 @@ fu_ccgx_hpi_device_get_i2c_status (FuCcgxHpiDevice *self,
 		return FALSE;
 	}
 	return TRUE;
+}
+
+static gboolean
+fu_ccgx_hpi_device_get_i2c_status (FuCcgxHpiDevice *self,
+				   guint8 mode,
+				   guint8 *i2c_status, /* out */
+				   GError **error)
+{
+	FuCcgxHpiDeviceRetryHelper helper = {
+		.mode = mode,
+		.i2c_status = i2c_status,
+	};
+	return fu_device_retry (FU_DEVICE (self),
+				fu_ccgx_hpi_device_get_i2c_status_cb,
+				HPI_CMD_RESET_RETRY_CNT,
+				&helper, error);
 }
 
 static gboolean
@@ -1393,6 +1440,16 @@ fu_ccgx_hpi_device_init (FuCcgxHpiDevice *self)
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
+
+	/* we can recover the I²C link using reset */
+	fu_device_retry_add_recovery (FU_DEVICE (self),
+				      G_USB_DEVICE_ERROR,
+				      G_USB_DEVICE_ERROR_IO,
+				      fu_ccgx_hpi_device_reset_cb);
+	fu_device_retry_add_recovery (FU_DEVICE (self),
+				      G_USB_DEVICE_ERROR,
+				      G_USB_DEVICE_ERROR_TIMED_OUT,
+				      fu_ccgx_hpi_device_reset_cb);
 
 	/* this might not be true for future hardware */
 	if (self->inf_num > 0)
