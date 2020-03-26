@@ -282,8 +282,7 @@ fu_usb_device_close (FuDevice *device, GError **error)
 			return FALSE;
 	}
 
-	g_clear_object (&priv->usb_device_locker);
-	return TRUE;
+	return fu_device_locker_close (priv->usb_device_locker, error);
 }
 
 static gboolean

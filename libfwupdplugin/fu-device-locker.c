@@ -80,7 +80,8 @@ fu_device_locker_init (FuDeviceLocker *self)
 gboolean
 fu_device_locker_close (FuDeviceLocker *self, GError **error)
 {
-	g_return_val_if_fail (FU_IS_DEVICE_LOCKER (self), NULL);
+	g_return_val_if_fail (FU_IS_DEVICE_LOCKER (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 	if (!self->device_open)
 		return TRUE;
 	if (!self->close_func (self->device, error))
