@@ -21,3 +21,5 @@ FuDeviceLocker	*fu_device_locker_new_full	(gpointer		 device,
 						 FuDeviceLockerFunc	 open_func,
 						 FuDeviceLockerFunc	 close_func,
 						 GError			**error);
+gboolean	 fu_device_locker_close		(FuDeviceLocker		*self,
+						 GError			**error);
