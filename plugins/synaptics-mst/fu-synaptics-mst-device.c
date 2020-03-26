@@ -963,7 +963,10 @@ fu_synaptics_mst_device_scan_cascade (FuSynapticsMstDevice *self, guint8 layer, 
 		}
 
 		/* check recursively for more devices */
-		g_clear_object (&locker);
+		if (!fu_device_locker_close (locker, &error_local)) {
+			g_debug ("faile to close parent: %s", error_local->message);
+			continue;
+		}
 		self->mode = FU_SYNAPTICS_MST_MODE_REMOTE;
 		self->layer = layer + 1;
 		self->rad = rad;
@@ -1070,7 +1073,10 @@ fu_synaptics_mst_device_rescan (FuDevice *device, GError **error)
 	}
 
 	/* recursively look for cascade devices */
-	g_clear_object (&locker);
+	if (!fu_device_locker_close (locker, error)) {
+		g_prefix_error (error, "failed to close parent: ");
+		return FALSE;
+	}
 	if (!fu_synaptics_mst_device_scan_cascade (self, 0, error))
 		return FALSE;
 
