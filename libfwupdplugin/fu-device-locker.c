@@ -64,6 +64,32 @@ fu_device_locker_init (FuDeviceLocker *self)
 }
 
 /**
+ * fu_device_locker_close:
+ * @self: A #FuDeviceLocker
+ * @error: A #GError, or %NULL
+ *
+ * Closes the locker before it gets cleaned up.
+ *
+ * This function can be used to manually close a device managed by a locker,
+ * and allows the caller to properly handle the error.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.4.0
+ **/
+gboolean
+fu_device_locker_close (FuDeviceLocker *self, GError **error)
+{
+	g_return_val_if_fail (FU_IS_DEVICE_LOCKER (self), NULL);
+	if (!self->device_open)
+		return TRUE;
+	if (!self->close_func (self->device, error))
+		return FALSE;
+	self->device_open = FALSE;
+	return TRUE;
+}
+
+/**
  * fu_device_locker_new:
  * @device: A #GObject
  * @error: A #GError, or %NULL
