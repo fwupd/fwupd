@@ -972,6 +972,32 @@ fu_udev_device_pwrite (FuUdevDevice *self, goffset port, guint8 data, GError **e
 }
 
 /**
+ * fu_udev_device_get_parent_name
+ * @self: A #FuUdevDevice
+ *
+ * Returns the name of the direct ancestor of this device
+ *
+ * Returns: string or NULL if unset or invalid
+ *
+ * Since: 1.4.5
+ **/
+gchar *
+fu_udev_device_get_parent_name (FuUdevDevice *self)
+{
+#ifdef HAVE_GUDEV
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GUdevDevice) parent = NULL;
+
+	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), NULL);
+
+	parent = g_udev_device_get_parent (priv->udev_device);
+	return parent == NULL ? NULL : g_strdup (g_udev_device_get_name (parent));
+#else
+	return NULL;
+#endif
+}
+
+/**
  * fu_udev_device_get_sysfs_attr:
  * @self: A #FuUdevDevice
  * @attr: name of attribute to get
