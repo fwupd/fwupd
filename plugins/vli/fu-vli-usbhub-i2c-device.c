@@ -114,6 +114,56 @@ fu_vli_usbhub_i2c_device_prepare_firmware (FuDevice *device,
 	return g_steal_pointer (&firmware);
 }
 
+typedef struct {
+	guint8		 command;
+	guint8		 buf[0x40];
+	gsize		 bufsz;
+	guint8		 len;
+} FuVliUsbhubDeviceRequest;
+
+static gboolean
+fu_vli_usbhub_i2c_device_write_firmware_cb (FuDevice *device, gpointer user_data, GError **error)
+{
+	FuVliUsbhubDeviceRequest *req = (FuVliUsbhubDeviceRequest *) user_data;
+	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE (fu_device_get_parent (device));
+	FuVliUsbhubI2cStatus status = 0xff;
+
+	g_usleep (5 * 1000);
+	if (fu_usb_device_get_spec (FU_USB_DEVICE (parent)) >= 0x0300 ||
+	    req->bufsz <= 32) {
+		if (!fu_vli_usbhub_device_i2c_write_data (parent,
+							  0, 0,
+							  req->buf,
+							  req->bufsz,
+							  error))
+			return FALSE;
+	} else {
+		/* for U2, hub data buffer <= 32 bytes */
+		if (!fu_vli_usbhub_device_i2c_write_data (parent,
+							  0, 1,
+							  req->buf,
+							  32,
+							  error))
+			return FALSE;
+		if (!fu_vli_usbhub_device_i2c_write_data (parent,
+							  1, 0,
+							  req->buf + 32,
+							  req->bufsz - 32,
+							  error))
+			return FALSE;
+	}
+
+	/* end of file, no need to check status */
+	if (req->len == 0 && req->buf[6] == 0x01 && req->buf[7] == 0xFF)
+		return TRUE;
+
+	/* read data to check status */
+	g_usleep (5 * 1000);
+	if (!fu_vli_usbhub_device_i2c_read_status (parent, &status, error))
+		return FALSE;
+	return fu_vli_usbhub_i2c_check_status (status, error);
+}
+
 static gboolean
 fu_vli_usbhub_i2c_device_write_firmware (FuDevice *device,
 					FuFirmware *firmware,
@@ -122,7 +172,6 @@ fu_vli_usbhub_i2c_device_write_firmware (FuDevice *device,
 {
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE (fu_device_get_parent (device));
 	GPtrArray *records = fu_ihex_firmware_get_records (FU_IHEX_FIRMWARE (firmware));
-	guint16 usbver = fu_usb_device_get_spec (FU_USB_DEVICE (parent));
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuDevice) root = NULL;
 
@@ -135,11 +184,8 @@ fu_vli_usbhub_i2c_device_write_firmware (FuDevice *device,
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint j = 0; j < records->len; j++) {
 		FuIhexFirmwareRecord *rcd = g_ptr_array_index (records, j);
+		FuVliUsbhubDeviceRequest req = { 0x0 };
 		const gchar *line = rcd->buf->str;
-		gsize bufsz;
-		guint8 buf[0x40] = { 0x0 };
-		guint8 req_len;
-		guint retry;
 
 		/* check there's enough data for the smallest possible record */
 		if (rcd->buf->len < 11) {
@@ -162,16 +208,16 @@ fu_vli_usbhub_i2c_device_write_firmware (FuDevice *device,
 		}
 
 		/* length, 16-bit address, type */
-		req_len = fu_firmware_strparse_uint8 (line + 1);
-		if (req_len >= sizeof(buf) - 7) {
+		req.len = fu_firmware_strparse_uint8 (line + 1);
+		if (req.len >= sizeof(req.buf) - 7) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "line too long; buffer size is 0x%x bytes",
-				     (guint) sizeof(buf));
+				     (guint) sizeof(req.buf));
 			return FALSE;
 		}
-		if (9 + (guint) req_len * 2 > (guint) rcd->buf->len) {
+		if (9 + (guint) req.len * 2 > (guint) rcd->buf->len) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
@@ -180,70 +226,23 @@ fu_vli_usbhub_i2c_device_write_firmware (FuDevice *device,
 		}
 
 		/* write each record directly to the hardware */
-		buf[0] = FU_VLI_USBHUB_I2C_ADDR_WRITE;
-		buf[1] = FU_VLI_USBHUB_I2C_CMD_WRITE;
-		buf[2] = 0x3a; /* ':' */
-		buf[3] = req_len;
-		buf[4] = fu_firmware_strparse_uint8 (line + 3);
-		buf[5] = fu_firmware_strparse_uint8 (line + 5);
-		buf[6] = fu_firmware_strparse_uint8 (line + 7);
-		for (guint8 i = 0; i < req_len; i++)
-			buf[7 + i] = fu_firmware_strparse_uint8 (line + 9 + (i * 2));
-		buf[7 + req_len] = fu_firmware_strparse_uint8 (line + 9+ (req_len * 2));
-		bufsz = req_len + 8;
+		req.buf[0] = FU_VLI_USBHUB_I2C_ADDR_WRITE;
+		req.buf[1] = FU_VLI_USBHUB_I2C_CMD_WRITE;
+		req.buf[2] = 0x3a; /* ':' */
+		req.buf[3] = req.len;
+		req.buf[4] = fu_firmware_strparse_uint8 (line + 3);
+		req.buf[5] = fu_firmware_strparse_uint8 (line + 5);
+		req.buf[6] = fu_firmware_strparse_uint8 (line + 7);
+		for (guint8 i = 0; i < req.len; i++)
+			req.buf[7 + i] = fu_firmware_strparse_uint8 (line + 9 + (i * 2));
+		req.buf[7 + req.len] = fu_firmware_strparse_uint8 (line + 9+ (req.len * 2));
+		req.bufsz = req.len + 8;
 
-		for (retry = 0; retry < 5; retry++) {
-			FuVliUsbhubI2cStatus status = 0xff;
-			g_autoptr(GError) error_local = NULL;
-
-			g_usleep (5 * 1000);
-			if (usbver >= 0x0300 || bufsz <= 32) {
-				if (!fu_vli_usbhub_device_i2c_write_data (parent,
-									  0, 0,
-									  buf,
-									  bufsz,
-									  error))
-					return FALSE;
-			} else {
-				/* for U2, hub data buffer <= 32 bytes */
-				if (!fu_vli_usbhub_device_i2c_write_data (parent,
-									  0, 1,
-									  buf,
-									  32,
-									  error))
-					return FALSE;
-				if (!fu_vli_usbhub_device_i2c_write_data (parent,
-									  1, 0,
-									  buf + 32,
-									  bufsz - 32,
-									  error))
-					return FALSE;
-			}
-
-			/* end of file, no need to check status */
-			if (req_len == 0 && buf[6] == 0x01 && buf[7] == 0xFF)
-				break;
-
-			/* read data to check status */
-			g_usleep (5 * 1000);
-			if (!fu_vli_usbhub_device_i2c_read_status (parent,
-								   &status,
-								   error))
-				return FALSE;
-			if (!fu_vli_usbhub_i2c_check_status (status, &error_local)) {
-				g_warning ("error on try %u: %s",
-					   retry + 1, error_local->message);
-			} else {
-				break;
-			}
-		}
-		if (retry >= 5) {
-			g_set_error_literal (error,
-					     G_IO_ERROR,
-					     G_IO_ERROR_NOT_SUPPORTED,
-					     "I²C status retry failed");
+		/* retry this if it fails */
+		if (!fu_device_retry (device,
+				      fu_vli_usbhub_i2c_device_write_firmware_cb,
+				      5, &req, error))
 			return FALSE;
-		}
 		fu_device_set_progress_full (device, (gsize) j, (gsize) records->len);
 	}
 
