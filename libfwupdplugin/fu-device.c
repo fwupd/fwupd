@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2018 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2020 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -57,7 +57,14 @@ typedef struct {
 	gint				 open_refcount;	/* atomic */
 	GType				 specialized_gtype;
 	GPtrArray			*possible_plugins;
+	GPtrArray			*retry_recs;	/* of FuDeviceRetryRecovery */
 } FuDevicePrivate;
+
+typedef struct {
+	GQuark				 domain;
+	gint				 code;
+	FuDeviceRetryFunc		 recovery_func;
+} FuDeviceRetryRecovery;
 
 enum {
 	PROP_0,
@@ -166,6 +173,117 @@ fu_device_add_possible_plugin (FuDevice *self, const gchar *plugin)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_ptr_array_add (priv->possible_plugins, g_strdup (plugin));
+}
+
+/**
+ * fu_device_retry_add_recovery:
+ * @self: A #FuDevice
+ * @domain: A #GQuark, or %0 for all domains
+ * @code: A #GError code
+ * @func: (scope async): A function to recover the device
+ *
+ * Sets the optional function to be called when fu_device_retry() fails, which
+ * is possibly a device reset.
+ *
+ * Since: 1.4.0
+ **/
+void
+fu_device_retry_add_recovery (FuDevice *self,
+			      GQuark domain,
+			      gint code,
+			      FuDeviceRetryFunc func)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	FuDeviceRetryRecovery *rec;
+
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_return_if_fail (domain != 0);
+	g_return_if_fail (func != NULL);
+
+	rec = g_new (FuDeviceRetryRecovery, 1);
+	rec->domain = domain;
+	rec->code = code;
+	rec->recovery_func = func;
+	g_ptr_array_add (priv->retry_recs, rec);
+}
+
+/**
+ * fu_device_retry:
+ * @self: A #FuDevice
+ * @func: (scope async): A function to execute
+ * @count: The number of tries to try the function
+ * @user_data: (nullable): a helper to pass to @user_data
+ * @error: A #GError
+ *
+ * Calls a specific function a number of times, optionally handling the error
+ * with a reset action.
+ *
+ * If fu_device_retry_add_recovery() has not been used then all errors are
+ * considered non-fatal until the last try.
+ *
+ * If the reset function returns %FALSE, then the function returns straight away
+ * without processing any pending retries.
+ *
+ * Since: 1.4.0
+ **/
+gboolean
+fu_device_retry (FuDevice *self,
+		 FuDeviceRetryFunc func,
+		 guint count,
+		 gpointer user_data,
+		 GError **error)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+
+	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
+	g_return_val_if_fail (func != NULL, FALSE);
+	g_return_val_if_fail (count >= 1, FALSE);
+	g_return_val_if_fail (error != NULL, FALSE);
+
+	for (guint i = 0; ; i++) {
+		g_autoptr(GError) error_local =	NULL;
+
+		/* run function, if success return success */
+		if (func (self, user_data, &error_local))
+			break;
+
+		/* sanity check */
+		if (error_local == NULL) {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_FAILED,
+				     "exec failed but no error set!");
+			return FALSE;
+		}
+
+		/* too many retries */
+		if (i >= count - 1) {
+			g_propagate_prefixed_error (error,
+						    g_steal_pointer (&error_local),
+						    "failed after %u retries: ",
+						    count);
+			return FALSE;
+		}
+
+		/* show recoverable error on the console */
+		if (priv->retry_recs->len == 0) {
+			g_debug ("failed on try %u of %u: %s",
+				 i + 1, count, error_local->message);
+			continue;
+		}
+
+		/* find the condition that matches */
+		for (guint j = 0; j < priv->retry_recs->len; j++) {
+			FuDeviceRetryRecovery *rec = g_ptr_array_index (priv->retry_recs, j);
+			if (g_error_matches (error_local, rec->domain, rec->code)) {
+				if (!rec->recovery_func (self, user_data, error))
+					return FALSE;
+			}
+		}
+	}
+
+	/* success */
+	return TRUE;
 }
 
 /**
@@ -2843,6 +2961,7 @@ fu_device_init (FuDevice *self)
 	priv->children = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	priv->parent_guids = g_ptr_array_new_with_free_func (g_free);
 	priv->possible_plugins = g_ptr_array_new_with_free_func (g_free);
+	priv->retry_recs = g_ptr_array_new_with_free_func (g_free);
 	g_rw_lock_init (&priv->parent_guids_mutex);
 	priv->metadata = g_hash_table_new_full (g_str_hash, g_str_equal,
 						g_free, g_free);
@@ -2869,6 +2988,7 @@ fu_device_finalize (GObject *object)
 	g_ptr_array_unref (priv->children);
 	g_ptr_array_unref (priv->parent_guids);
 	g_ptr_array_unref (priv->possible_plugins);
+	g_ptr_array_unref (priv->retry_recs);
 	g_free (priv->alternate_id);
 	g_free (priv->equivalent_id);
 	g_free (priv->physical_id);

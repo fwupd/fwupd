@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2018 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2020 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -99,6 +99,10 @@ typedef enum {
  * e.g. unplug, press a magic button and then replug.
  */
 #define FU_DEVICE_REMOVE_DELAY_USER_REPLUG		40000
+
+typedef gboolean (*FuDeviceRetryFunc)			(FuDevice	*device,
+							 gpointer	 user_data,
+							 GError		**error);
 
 FuDevice	*fu_device_new				(void);
 
@@ -293,3 +297,12 @@ gboolean	 fu_device_poll				(FuDevice	*self,
 							 GError		**error);
 void		 fu_device_set_poll_interval		(FuDevice	*self,
 							 guint		 interval);
+void		 fu_device_retry_add_recovery		(FuDevice	*self,
+							 GQuark		 domain,
+							 gint		 code,
+							 FuDeviceRetryFunc func);
+gboolean	 fu_device_retry			(FuDevice	*self,
+							 FuDeviceRetryFunc func,
+							 guint		 count,
+							 gpointer	 user_data,
+							 GError		**error);

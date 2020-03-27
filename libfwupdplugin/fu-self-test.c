@@ -1626,6 +1626,94 @@ fu_efivar_func (void)
 	g_assert_false (ret);
 }
 
+typedef struct {
+	guint cnt_success;
+	guint cnt_failed;
+} FuDeviceRetryHelper;
+
+static gboolean
+fu_device_retry_success (FuDevice *device, gpointer user_data, GError **error)
+{
+	FuDeviceRetryHelper *helper = (FuDeviceRetryHelper *) user_data;
+	helper->cnt_success++;
+	return TRUE;
+}
+
+static gboolean
+fu_device_retry_failed (FuDevice *device, gpointer user_data, GError **error)
+{
+	FuDeviceRetryHelper *helper = (FuDeviceRetryHelper *) user_data;
+	helper->cnt_failed++;
+	g_set_error_literal (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "failed");
+	return FALSE;
+}
+
+static gboolean
+fu_device_retry_success_3rd_try (FuDevice *device, gpointer user_data, GError **error)
+{
+	FuDeviceRetryHelper *helper = (FuDeviceRetryHelper *) user_data;
+	if (helper->cnt_failed == 2) {
+		helper->cnt_success++;
+		return TRUE;
+	}
+	helper->cnt_failed++;
+	g_set_error_literal (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "failed");
+	return FALSE;
+}
+
+static void
+fu_device_retry_success_func (void)
+{
+	gboolean ret;
+	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(GError) error = NULL;
+	FuDeviceRetryHelper helper = {
+		.cnt_success = 0,
+		.cnt_failed = 0,
+	};
+	fu_device_retry_add_recovery (device, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, fu_device_retry_failed);
+	ret = fu_device_retry (device, fu_device_retry_success, 3, &helper, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	g_assert_cmpint (helper.cnt_success, ==, 1);
+	g_assert_cmpint (helper.cnt_failed, ==, 0);
+}
+
+static void
+fu_device_retry_failed_func (void)
+{
+	gboolean ret;
+	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(GError) error = NULL;
+	FuDeviceRetryHelper helper = {
+		.cnt_success = 0,
+		.cnt_failed = 0,
+	};
+	fu_device_retry_add_recovery (device, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, fu_device_retry_success);
+	ret = fu_device_retry (device, fu_device_retry_failed, 3, &helper, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
+	g_assert_true (!ret);
+	g_assert_cmpint (helper.cnt_success, ==, 2); /* do not reset for the last failure */
+	g_assert_cmpint (helper.cnt_failed, ==, 3);
+}
+
+static void
+fu_device_retry_hardware_func (void)
+{
+	gboolean ret;
+	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(GError) error = NULL;
+	FuDeviceRetryHelper helper = {
+		.cnt_success = 0,
+		.cnt_failed = 0,
+	};
+	ret = fu_device_retry (device, fu_device_retry_success_3rd_try, 3, &helper, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	g_assert_cmpint (helper.cnt_success, ==, 1);
+	g_assert_cmpint (helper.cnt_failed, ==, 2);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -1686,5 +1774,8 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/device{metadata}", fu_device_metadata_func);
 	g_test_add_func ("/fwupd/device{open-refcount}", fu_device_open_refcount_func);
 	g_test_add_func ("/fwupd/device{version-format}", fu_device_version_format_func);
+	g_test_add_func ("/fwupd/device{retry-success}", fu_device_retry_success_func);
+	g_test_add_func ("/fwupd/device{retry-failed}", fu_device_retry_failed_func);
+	g_test_add_func ("/fwupd/device{retry-hardware}", fu_device_retry_hardware_func);
 	return g_test_run ();
 }
