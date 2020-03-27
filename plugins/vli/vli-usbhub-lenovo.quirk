@@ -200,6 +200,7 @@ Flags = usb3
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2
+ParentGuid = USB\VID_17EF&PID_A391
 [DeviceInstanceId=USB\VID_17EF&PID_A393]
 Plugin = vli
 GType = FuVliUsbhubDevice
