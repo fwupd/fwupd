@@ -164,6 +164,7 @@ fu_dell_dock_hub_finalize (GObject *object)
 static void
 fu_dell_dock_hub_init (FuDellDockHub *self)
 {
+	fu_device_retry_set_delay (FU_DEVICE (self), 1000);
 }
 
 static void

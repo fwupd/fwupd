@@ -77,35 +77,34 @@ typedef struct __attribute__ ((packed)) {
 } FuTbtCmdBuffer;
 
 static gboolean
+fu_dell_dock_hid_set_report_cb (FuDevice *self, gpointer user_data, GError **error)
+{
+	guint8 *outbuffer = (guint8 *) user_data;
+	return fu_hid_device_set_report (FU_HID_DEVICE (self), 0x0,
+					 outbuffer, 192,
+					 HIDI2C_TRANSACTION_TIMEOUT,
+					 FU_HID_DEVICE_FLAG_NONE,
+					 error);
+}
+
+static gboolean
 fu_dell_dock_hid_set_report (FuDevice *self,
 			     guint8 *outbuffer,
 			     GError **error)
 {
-	gboolean ret;
-	for (gint i = 1; i <= HID_MAX_RETRIES; i++) {
-		g_autoptr(GError) error_local = NULL;
-		ret = fu_hid_device_set_report (FU_HID_DEVICE (self), 0x0,
-						outbuffer, 192,
-						HIDI2C_TRANSACTION_TIMEOUT,
-						FU_HID_DEVICE_FLAG_NONE,
-						&error_local);
-		if (ret)
-			break;
-		if (i == HID_MAX_RETRIES ||
-		    g_error_matches (error_local,
-				     G_USB_DEVICE_ERROR,
-				     G_USB_DEVICE_ERROR_NO_DEVICE)) {
-			g_propagate_error (error, g_steal_pointer (&error_local));
-			return FALSE;
-		} else {
-			g_debug ("attempt %d/%d: set control transfer failed: %s",
-				 i, HID_MAX_RETRIES,
-				 error_local->message);
-			g_usleep (G_USEC_PER_SEC);
-		}
-	}
+	return fu_device_retry (self, fu_dell_dock_hid_set_report_cb,
+				HID_MAX_RETRIES, outbuffer, error);
+}
 
-	return TRUE;
+static gboolean
+fu_dell_dock_hid_get_report_cb (FuDevice *self, gpointer user_data, GError **error)
+{
+	guint8 *inbuffer = (guint8 *) user_data;
+	return fu_hid_device_get_report (FU_HID_DEVICE (self), 0x0,
+					 inbuffer, 192,
+					 HIDI2C_TRANSACTION_TIMEOUT,
+					 FU_HID_DEVICE_FLAG_NONE,
+					 error);
 }
 
 static gboolean
@@ -113,30 +112,8 @@ fu_dell_dock_hid_get_report (FuDevice *self,
 			     guint8 *inbuffer,
 			     GError **error)
 {
-	gboolean ret;
-	for (gint i = 1; i <= HID_MAX_RETRIES; i++) {
-		g_autoptr(GError) error_local = NULL;
-		ret = fu_hid_device_get_report (FU_HID_DEVICE (self), 0x0,
-						inbuffer, 192,
-						HIDI2C_TRANSACTION_TIMEOUT,
-						FU_HID_DEVICE_FLAG_NONE,
-						&error_local);
-		if (ret)
-			break;
-		if (i == HID_MAX_RETRIES ||
-		    g_error_matches (error_local,
-				     G_USB_DEVICE_ERROR,
-				     G_USB_DEVICE_ERROR_NO_DEVICE)) {
-			g_propagate_error (error, g_steal_pointer (&error_local));
-			return FALSE;
-		} else {
-			g_debug ("attempt %d/%d: get control transfer failed: %s",
-				 i, HID_MAX_RETRIES,
-				 error_local->message);
-		}
-	}
-
-	return TRUE;
+	return fu_device_retry (self, fu_dell_dock_hid_get_report_cb,
+				HID_MAX_RETRIES, inbuffer, error);
 }
 
 gboolean
