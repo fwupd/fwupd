@@ -58,6 +58,7 @@ typedef struct {
 	GType				 specialized_gtype;
 	GPtrArray			*possible_plugins;
 	GPtrArray			*retry_recs;	/* of FuDeviceRetryRecovery */
+	guint				 retry_delay;
 } FuDevicePrivate;
 
 typedef struct {
@@ -208,6 +209,23 @@ fu_device_retry_add_recovery (FuDevice *self,
 }
 
 /**
+ * fu_device_retry_set_delay:
+ * @self: A #FuDevice
+ * @delay: delay in ms
+ *
+ * Sets the recovery delay between failed retries.
+ *
+ * Since: 1.4.0
+ **/
+void
+fu_device_retry_set_delay (FuDevice *self, guint delay)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_DEVICE (self));
+	priv->retry_delay = delay;
+}
+
+/**
  * fu_device_retry:
  * @self: A #FuDevice
  * @func: (scope async): A function to execute
@@ -242,6 +260,10 @@ fu_device_retry (FuDevice *self,
 
 	for (guint i = 0; ; i++) {
 		g_autoptr(GError) error_local =	NULL;
+
+		/* delay */
+		if (i > 0 && priv->retry_delay > 0)
+			g_usleep (priv->retry_delay * 1000);
 
 		/* run function, if success return success */
 		if (func (self, user_data, &error_local))
