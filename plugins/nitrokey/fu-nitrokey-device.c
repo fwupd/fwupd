@@ -11,7 +11,7 @@
 #include "fu-nitrokey-common.h"
 #include "fu-nitrokey-device.h"
 
-G_DEFINE_TYPE (FuNitrokeyDevice, fu_nitrokey_device, FU_TYPE_USB_DEVICE)
+G_DEFINE_TYPE (FuNitrokeyDevice, fu_nitrokey_device, FU_TYPE_HID_DEVICE)
 
 typedef struct {
 	guint8		 command;
@@ -25,10 +25,7 @@ static gboolean
 nitrokey_execute_cmd_cb (FuDevice *device, gpointer user_data, GError **error)
 {
 	NitrokeyRequest *req = (NitrokeyRequest *) user_data;
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	NitrokeyHidResponse res;
-	gboolean ret;
-	gsize actual_len = 0;
 	guint32 crc_tmp;
 	guint8 buf[64];
 
@@ -41,55 +38,21 @@ nitrokey_execute_cmd_cb (FuDevice *device, gpointer user_data, GError **error)
 	fu_common_write_uint32 (&buf[NITROKEY_REQUEST_DATA_LENGTH + 1], crc_tmp, G_LITTLE_ENDIAN);
 
 	/* send request */
-	if (g_getenv ("FWUPD_NITROKEY_VERBOSE") != NULL)
-		fu_common_dump_raw (G_LOG_DOMAIN, "request", buf, sizeof(buf));
-	ret = g_usb_device_control_transfer (usb_device,
-					     G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					     G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					     G_USB_DEVICE_RECIPIENT_INTERFACE,
-					     0x09, 0x0300, 0x0002,
-					     buf, sizeof(buf),
-					     &actual_len,
-					     NITROKEY_TRANSACTION_TIMEOUT,
-					     NULL,
-					     error);
-	if (!ret) {
-		g_prefix_error (error, "failed to do HOST_TO_DEVICE: ");
+	if (!fu_hid_device_set_report (FU_HID_DEVICE (device),
+				       0x0002, buf, sizeof(buf),
+				       NITROKEY_TRANSACTION_TIMEOUT,
+				       FU_HID_DEVICE_FLAG_IS_FEATURE,
+				       error))
 		return FALSE;
-	}
-	if (actual_len != sizeof(buf)) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_FAILED,
-			     "only wrote %" G_GSIZE_FORMAT "bytes", actual_len);
-		return FALSE;
-	}
 
 	/* get response */
 	memset (buf, 0x00, sizeof(buf));
-	ret = g_usb_device_control_transfer (usb_device,
-					     G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					     G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					     G_USB_DEVICE_RECIPIENT_INTERFACE,
-					     0x01, 0x0300, 0x0002,
-					     buf, sizeof(buf),
-					     &actual_len,
-					     NITROKEY_TRANSACTION_TIMEOUT,
-					     NULL,
-					     error);
-	if (!ret) {
-		g_prefix_error (error, "failed to do DEVICE_TO_HOST: ");
+	if (!fu_hid_device_get_report (FU_HID_DEVICE (device),
+				       0x0002, buf, sizeof(buf),
+				       NITROKEY_TRANSACTION_TIMEOUT,
+				       FU_HID_DEVICE_FLAG_IS_FEATURE,
+				       error))
 		return FALSE;
-	}
-	if (actual_len != sizeof(res)) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_FAILED,
-			     "only wrote %" G_GSIZE_FORMAT "bytes", actual_len);
-		return FALSE;
-	}
-	if (g_getenv ("FWUPD_NITROKEY_VERBOSE") != NULL)
-		fu_common_dump_raw (G_LOG_DOMAIN, "response", buf, sizeof(buf));
 
 	/* verify this is the answer to the question we asked */
 	memcpy (&res, buf, sizeof(buf));
@@ -141,23 +104,6 @@ nitrokey_execute_cmd_full (FuDevice *device, guint8 command,
 }
 
 static gboolean
-fu_nitrokey_device_open (FuUsbDevice *device, GError **error)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
-
-	/* claim interface */
-	if (!g_usb_device_claim_interface (usb_device, 0x02, /* idx */
-					   G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					   error)) {
-		g_prefix_error (error, "failed to do claim nitrokey: ");
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
 fu_nitrokey_device_setup (FuDevice *device, GError **error)
 {
 	NitrokeyGetDeviceStatusPayload payload;
@@ -183,21 +129,6 @@ fu_nitrokey_device_setup (FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static gboolean
-fu_nitrokey_device_close (FuUsbDevice *device, GError **error)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
-	g_autoptr(GError) error_local = NULL;
-
-	/* reconnect kernel driver */
-	if (!g_usb_device_release_interface (usb_device, 0x02,
-					     G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					     &error_local)) {
-		g_warning ("failed to release interface: %s", error_local->message);
-	}
-	return TRUE;
-}
-
 static void
 fu_nitrokey_device_init (FuNitrokeyDevice *device)
 {
@@ -211,8 +142,5 @@ static void
 fu_nitrokey_device_class_init (FuNitrokeyDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	klass_device->setup = fu_nitrokey_device_setup;
-	klass_usb_device->open = fu_nitrokey_device_open;
-	klass_usb_device->close = fu_nitrokey_device_close;
 }
