@@ -181,10 +181,13 @@ fu_device_add_possible_plugin (FuDevice *self, const gchar *plugin)
  * @self: A #FuDevice
  * @domain: A #GQuark, or %0 for all domains
  * @code: A #GError code
- * @func: (scope async): A function to recover the device
+ * @func: (scope async) (nullable): A function to recover the device
  *
  * Sets the optional function to be called when fu_device_retry() fails, which
  * is possibly a device reset.
+ *
+ * If @func is %NULL then recovery is not possible and an error is returned
+ * straight away.
  *
  * Since: 1.4.0
  **/
@@ -199,7 +202,6 @@ fu_device_retry_add_recovery (FuDevice *self,
 
 	g_return_if_fail (FU_IS_DEVICE (self));
 	g_return_if_fail (domain != 0);
-	g_return_if_fail (func != NULL);
 
 	rec = g_new (FuDeviceRetryRecovery, 1);
 	rec->domain = domain;
@@ -298,8 +300,16 @@ fu_device_retry (FuDevice *self,
 		for (guint j = 0; j < priv->retry_recs->len; j++) {
 			FuDeviceRetryRecovery *rec = g_ptr_array_index (priv->retry_recs, j);
 			if (g_error_matches (error_local, rec->domain, rec->code)) {
-				if (!rec->recovery_func (self, user_data, error))
+				if (rec->recovery_func != NULL) {
+					if (!rec->recovery_func (self, user_data, error))
+						return FALSE;
+				} else {
+					g_set_error (error,
+						     G_IO_ERROR,
+						     G_IO_ERROR_FAILED,
+						     "device recovery not possible");
 					return FALSE;
+				}
 			}
 		}
 	}
