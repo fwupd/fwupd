@@ -297,6 +297,8 @@ gboolean	 fu_device_poll				(FuDevice	*self,
 							 GError		**error);
 void		 fu_device_set_poll_interval		(FuDevice	*self,
 							 guint		 interval);
+void		 fu_device_retry_set_delay		(FuDevice	*self,
+							 guint		 delay);
 void		 fu_device_retry_add_recovery		(FuDevice	*self,
 							 GQuark		 domain,
 							 gint		 code,

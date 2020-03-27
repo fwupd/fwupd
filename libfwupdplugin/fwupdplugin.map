@@ -550,6 +550,7 @@ LIBFWUPDPLUGIN_1.4.0 {
     fu_device_locker_close;
     fu_device_retry;
     fu_device_retry_add_recovery;
+    fu_device_retry_set_delay;
     fu_device_set_version_bootloader;
     fu_device_set_version_format;
     fu_device_set_version_lowest;
