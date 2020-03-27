@@ -13,26 +13,30 @@
 
 G_DEFINE_TYPE (FuNitrokeyDevice, fu_nitrokey_device, FU_TYPE_USB_DEVICE)
 
+typedef struct {
+	guint8		 command;
+	const guint8	*buf_in;
+	gsize		 buf_in_sz;
+	guint8		*buf_out;
+	gsize		 buf_out_sz;
+} NitrokeyRequest;
+
 static gboolean
-nitrokey_execute_cmd (GUsbDevice *usb_device, guint8 command,
-		      const guint8 *buf_in, gsize buf_in_sz,
-		      guint8 *buf_out, gsize buf_out_sz,
-		      GCancellable *cancellable, GError **error)
+nitrokey_execute_cmd_cb (FuDevice *device, gpointer user_data, GError **error)
 {
+	NitrokeyRequest *req = (NitrokeyRequest *) user_data;
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	NitrokeyHidResponse res;
 	gboolean ret;
 	gsize actual_len = 0;
 	guint32 crc_tmp;
 	guint8 buf[64];
 
-	g_return_val_if_fail (buf_in_sz <= NITROKEY_REQUEST_DATA_LENGTH, FALSE);
-	g_return_val_if_fail (buf_out_sz <= NITROKEY_REPLY_DATA_LENGTH, FALSE);
-
 	/* create the request */
 	memset (buf, 0x00, sizeof(buf));
-	buf[0] = command;
-	if (buf_in != NULL)
-		memcpy (&buf[1], buf_in, buf_in_sz);
+	buf[0] = req->command;
+	if (req->buf_in != NULL)
+		memcpy (&buf[1], req->buf_in, req->buf_in_sz);
 	crc_tmp = fu_nitrokey_perform_crc32 (buf, sizeof(buf) - 4);
 	fu_common_write_uint32 (&buf[NITROKEY_REQUEST_DATA_LENGTH + 1], crc_tmp, G_LITTLE_ENDIAN);
 
@@ -47,7 +51,8 @@ nitrokey_execute_cmd (GUsbDevice *usb_device, guint8 command,
 					     buf, sizeof(buf),
 					     &actual_len,
 					     NITROKEY_TRANSACTION_TIMEOUT,
-					     NULL, error);
+					     NULL,
+					     error);
 	if (!ret) {
 		g_prefix_error (error, "failed to do HOST_TO_DEVICE: ");
 		return FALSE;
@@ -109,42 +114,30 @@ nitrokey_execute_cmd (GUsbDevice *usb_device, guint8 command,
 	}
 
 	/* copy out the payload */
-	if (buf_out != NULL)
-		memcpy (buf_out, &res.payload, buf_out_sz);
+	if (req->buf_out != NULL)
+		memcpy (req->buf_out, &res.payload, req->buf_out_sz);
 
 	/* success */
 	return TRUE;
 }
 
 static gboolean
-nitrokey_execute_cmd_full (GUsbDevice *usb_device, guint8 command,
+nitrokey_execute_cmd_full (FuDevice *device, guint8 command,
 			   const guint8 *buf_in, gsize buf_in_sz,
 			   guint8 *buf_out, gsize buf_out_sz,
-			   GCancellable *cancellable, GError **error)
+			   GError **error)
 {
-	for (guint i = 0; i < NITROKEY_NR_RETRIES; i++) {
-		g_autoptr(GError) error_local = NULL;
-		gboolean ret;
-		ret = nitrokey_execute_cmd (usb_device, command,
-					    buf_in, buf_in_sz,
-					    buf_out, buf_out_sz,
-					    cancellable, &error_local);
-		if (ret)
-			return TRUE;
-		if (g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_FAILED)) {
-			if (error != NULL)
-				*error = g_steal_pointer (&error_local);
-			return FALSE;
-		}
-		g_warning ("retrying command: %s", error_local->message);
-		g_usleep (100 * 1000);
-	}
-
-	/* failed */
-	g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
-		     "failed to issue command after %i retries",
-		     NITROKEY_NR_RETRIES);
-	return FALSE;
+	NitrokeyRequest req = {
+		.command = command,
+		.buf_in = buf_in,
+		.buf_in_sz = buf_in_sz,
+		.buf_out = buf_out,
+		.buf_out_sz = buf_out_sz,
+	};
+	g_return_val_if_fail (buf_in_sz <= NITROKEY_REQUEST_DATA_LENGTH, FALSE);
+	g_return_val_if_fail (buf_out_sz <= NITROKEY_REPLY_DATA_LENGTH, FALSE);
+	return fu_device_retry (device, nitrokey_execute_cmd_cb,
+				NITROKEY_NR_RETRIES, &req, error);
 }
 
 static gboolean
@@ -167,17 +160,16 @@ fu_nitrokey_device_open (FuUsbDevice *device, GError **error)
 static gboolean
 fu_nitrokey_device_setup (FuDevice *device, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	NitrokeyGetDeviceStatusPayload payload;
 	guint8 buf_reply[NITROKEY_REPLY_DATA_LENGTH];
 	g_autofree gchar *version = NULL;
 
 	/* get firmware version */
-	if (!nitrokey_execute_cmd_full (usb_device,
+	if (!nitrokey_execute_cmd_full (device,
 					NITROKEY_CMD_GET_DEVICE_STATUS,
 					NULL, 0,
 					buf_reply, sizeof(buf_reply),
-					NULL, error)) {
+					error)) {
 		g_prefix_error (error, "failed to do get firmware version: ");
 		return FALSE;
 	}
@@ -212,6 +204,7 @@ fu_nitrokey_device_init (FuNitrokeyDevice *device)
 	fu_device_set_remove_delay (FU_DEVICE (device), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_version_format (FU_DEVICE (device), FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_retry_set_delay (FU_DEVICE (device), 100);
 }
 
 static void
