@@ -83,6 +83,14 @@ fu_usb_device_finalize (GObject *object)
 static void
 fu_usb_device_init (FuUsbDevice *device)
 {
+	fu_device_retry_add_recovery (FU_DEVICE (device),
+				      G_USB_DEVICE_ERROR,
+				      G_USB_DEVICE_ERROR_NO_DEVICE,
+				      NULL);
+	fu_device_retry_add_recovery (FU_DEVICE (device),
+				      G_USB_DEVICE_ERROR,
+				      G_USB_DEVICE_ERROR_PERMISSION_DENIED,
+				      NULL);
 }
 
 /**
