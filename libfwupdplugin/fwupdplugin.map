@@ -580,3 +580,9 @@ LIBFWUPDPLUGIN_1.4.1 {
     fu_device_set_proxy_guid;
   local: *;
 } LIBFWUPDPLUGIN_1.4.0;
+
+LIBFWUPDPLUGIN_1.4.5 {
+  global:
+    fu_udev_device_get_sysfs_attr;
+  local: *;
+} LIBFWUPDPLUGIN_1.4.1;
