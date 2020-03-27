@@ -944,6 +944,57 @@ fu_udev_device_pwrite (FuUdevDevice *self, goffset port, guint8 data, GError **e
 }
 
 /**
+ * fu_udev_device_get_sysfs_attr:
+ * @self: A #FuUdevDevice
+ * @attr: name of attribute to get
+ * @error: A #GError, or %NULL
+ *
+ * Reads an arbitrary sysfs attribute 'attr' associated with UDEV device
+ *
+ * Returns: string or NULL
+ *
+ * Since: 1.4.2
+ **/
+const gchar *
+fu_udev_device_get_sysfs_attr (FuUdevDevice *self, const gchar *attr,
+			       GError **error)
+{
+#ifdef HAVE_GUDEV
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	const gchar *result;
+
+	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), FALSE);
+	g_return_val_if_fail (attr != NULL, FALSE);
+
+	/* nothing to do */
+	if (priv->udev_device == NULL) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_NOT_FOUND,
+				     "not yet initialized");
+		return NULL;
+	}
+	result = g_udev_device_get_sysfs_attr (priv->udev_device, attr);
+	if (result == NULL) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_FOUND,
+			     "attribute %s returned no data",
+			     attr);
+		return FALSE;
+	}
+
+	return result;
+#endif
+	g_set_error_literal (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_FAILED,
+			     "not supported");
+	return NULL;
+
+}
+
+/**
  * fu_udev_device_pread:
  * @self: A #FuUdevDevice
  * @port: offset address
