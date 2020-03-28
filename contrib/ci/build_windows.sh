@@ -8,7 +8,6 @@ rm -rf $DESTDIR $build
 
 #build
 mkdir -p $build $DESTDIR && cd $build
-echo $(../contrib/get-version.py) > $DESTDIR/VERSION
 meson .. \
     --cross-file=../contrib/mingw64.cross \
     --prefix=/ \
@@ -41,6 +40,7 @@ meson .. \
     -Dlibjcat:gpg=false \
     -Dlibjcat:introspection=false \
     -Dgudev=false $@
+meson introspect . --projectinfo | jq -r .version > $DESTDIR/VERSION
 ninja -v
 
 #prepare archive to run on Windows
