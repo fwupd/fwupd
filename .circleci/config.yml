@@ -50,6 +50,7 @@ jobs:
                                   glib2-devel
                                   git-core
                                   gnutls-utils
+                                  jq
                                   meson
                                   git
                                   gcc

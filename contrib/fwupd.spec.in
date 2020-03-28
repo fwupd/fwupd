@@ -6,7 +6,6 @@
 %global json_glib_version 1.1.1
 
 %define alphatag                #ALPHATAG#
-%define tarball_version         #TARBALL_VERSION#
 
 %global enable_ci 0
 %global enable_tests 1
@@ -36,10 +35,10 @@
 Summary:   Firmware update daemon
 Name:      fwupd
 Version:   #VERSION#
-Release:   999.#BUILD#%{?alphatag}%{?dist}
+Release:   0.#BUILD#%{?alphatag}%{?dist}
 License:   LGPLv2+
 URL:       https://github.com/fwupd/fwupd
-Source0:   http://people.freedesktop.org/~hughsient/releases/%{name}-%{tarball_version}.tar.xz
+Source0:   http://people.freedesktop.org/~hughsient/releases/%{name}-%{version}.tar.xz
 
 BuildRequires: gettext
 BuildRequires: glib2-devel >= %{glib2_version}
@@ -146,7 +145,7 @@ BuildArch: noarch
 Data files for installed tests.
 
 %prep
-%autosetup -p1 -n %{name}-%{tarball_version}
+%autosetup -p1
 
 %build
 

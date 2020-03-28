@@ -1,16 +1,12 @@
 fwupd Release Notes
 
-0. Create release version
+Write release entries:
 
-export release_ver=
-
-1. Write release entries:
-
-git log --format="%s" --cherry-pick --right-only $(git describe --tags --abbrev=0)..HEAD | grep -i -v trivial | grep -v Merge | sort | uniq
+git log --format="%s" --cherry-pick --right-only 1.3.9... | grep -i -v trivial | grep -v Merge | sort | uniq
 Add any user visible changes into ../data/org.freedesktop.fwupd.metainfo.xml
 appstream-util appdata-to-news ../data/org.freedesktop.fwupd.metainfo.xml > NEWS
 
-2. Update translations:
+Update translations:
 
 ninja-build fwupd-pot
 tx push --source
@@ -18,7 +14,10 @@ tx pull --all --force --minimum-perc=5
 ninja-build fix-translations
 git add ../po/*.po
 
-3. Commit changes to git:
+2. Commit changes to git:
+
+# MAKE SURE THIS IS CORRECT
+export release_ver="1.4.0"
 
 git commit -a -m "Release fwupd ${release_ver}"
 git tag -s -f -m "Release fwupd ${release_ver}" "${release_ver}"
@@ -26,14 +25,21 @@ git tag -s -f -m "Release fwupd ${release_ver}" "${release_ver}"
 git push --tags
 git push
 
-4. Generate the tarball:
+3. Generate the tarball:
 
 ninja dist
 
-4a. Generate the additional verification metadata
+3a. Generate the additional verification metadata
 
 gpg -b -a meson-dist/fwupd-${release_ver}.tar.xz
 
-5. Upload tarball:
+4. Upload tarball:
 
 scp meson-dist/fwupd-${release_ver}.tar.* hughsient@people.freedesktop.org:~/public_html/releases
+
+5. Do post release version bump in meson.build
+
+6. Commit changes:
+
+git commit -a -m "trivial: post release version bump"
+git push

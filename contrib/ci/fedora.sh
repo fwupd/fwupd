@@ -19,14 +19,13 @@ meson .. \
     -Dplugin_synaptics=true $@
 ninja-build dist
 popd
-VERSION=`./contrib/get-version.py`
+VERSION=`meson introspect build --projectinfo | jq -r .version`
 RPMVERSION=${VERSION//-/.}
 mkdir -p $HOME/rpmbuild/SOURCES/
 mv build/meson-dist/fwupd-$VERSION.tar.xz $HOME/rpmbuild/SOURCES/
 
 #generate a spec file
 sed "s,#VERSION#,$RPMVERSION,;
-     s,#TARBALL_VERSION#,$VERSION,;
      s,#BUILD#,1,;
      s,#LONGDATE#,`date '+%a %b %d %Y'`,;
      s,#ALPHATAG#,alpha,;
