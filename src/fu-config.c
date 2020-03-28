@@ -34,6 +34,7 @@ struct _FuConfig
 	guint			 idle_timeout;
 	gchar			*config_file;
 	gboolean		 update_motd;
+	gboolean		 enumerate_all_devices;
 };
 
 G_DEFINE_TYPE (FuConfig, fu_config, G_TYPE_OBJECT)
@@ -55,6 +56,7 @@ fu_config_reload (FuConfig *self, GError **error)
 	g_auto(GStrv) plugins = NULL;
 	g_autofree gchar *domains = NULL;
 	g_autoptr(GKeyFile) keyfile = g_key_file_new ();
+	g_autoptr(GError) error_enumerate_all = NULL;
 
 	g_debug ("loading config values from %s", self->config_file);
 	if (!g_key_file_load_from_file (keyfile, self->config_file,
@@ -132,6 +134,17 @@ fu_config_reload (FuConfig *self, GError **error)
 						   "fwupd",
 						   "UpdateMotd",
 						   NULL);
+
+	/* whether to only show supported devices for some plugins */
+	self->enumerate_all_devices = g_key_file_get_boolean (keyfile,
+							      "fwupd",
+							      "EnumerateAllDevices",
+							      &error_enumerate_all);
+	/* if error parsing or missing, we want to default to true */
+	if (!self->enumerate_all_devices && error_enumerate_all != NULL) {
+		g_debug ("failed to read EnumerateAllDevices key: %s", error_enumerate_all->message);
+		self->enumerate_all_devices = TRUE;
+	}
 
 	return TRUE;
 }
@@ -235,6 +248,13 @@ fu_config_get_update_motd (FuConfig *self)
 {
 	g_return_val_if_fail (FU_IS_CONFIG (self), FALSE);
 	return self->update_motd;
+}
+
+gboolean
+fu_config_get_enumerate_all_devices (FuConfig *self)
+{
+	g_return_val_if_fail (FU_IS_CONFIG (self), FALSE);
+	return self->enumerate_all_devices;
 }
 
 static void

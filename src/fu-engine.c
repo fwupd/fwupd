@@ -501,6 +501,7 @@ fu_engine_modify_config (FuEngine *self, const gchar *key, const gchar *value, G
 		"IdleTimeout",
 		"VerboseDomains",
 		"UpdateMotd",
+		"EnumerateAllDevices",
 		NULL };
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
@@ -4880,6 +4881,10 @@ fu_engine_plugin_check_supported_cb (FuPlugin *plugin, const gchar *guid, FuEngi
 {
 	g_autoptr(XbNode) n = NULL;
 	g_autofree gchar *xpath = NULL;
+
+	if (fu_config_get_enumerate_all_devices (self->config))
+		return TRUE;
+
 	xpath = g_strdup_printf ("components/component/"
 				 "provides/firmware[@type='flashed'][text()='%s']",
 				 guid);
