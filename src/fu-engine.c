@@ -3764,7 +3764,7 @@ fu_engine_add_releases_for_device_component (FuEngine *self,
 	return TRUE;
 }
 
-static GPtrArray *
+GPtrArray *
 fu_engine_get_releases_for_device (FuEngine *self, FuDevice *device, GError **error)
 {
 	GPtrArray *device_guids;
