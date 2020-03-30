@@ -72,7 +72,7 @@ parts:
     after: [nettle]
   meson:
     plugin: python
-    source: https://github.com/mesonbuild/meson/releases/download/0.51.2/meson-0.51.2.tar.gz
+    source: https://github.com/mesonbuild/meson/releases/download/0.54.0/meson-0.54.0.tar.gz
     build-packages:
       - ninja-build
       - python3-distutils-extra
