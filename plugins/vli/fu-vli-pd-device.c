@@ -598,6 +598,9 @@ fu_vli_pd_device_kind_changed_cb (FuVliDevice *device, GParamSpec *pspec, gpoint
 	if (fu_vli_device_get_kind (device) == FU_VLI_DEVICE_KIND_VL103) {
 		klass_device->attach = fu_vli_pd_device_attach_vl103;
 		klass_device->detach = fu_vli_pd_device_detach_vl103;
+
+		/* wait for USB-C timeout */
+		fu_device_set_remove_delay (FU_DEVICE (device), 10000);
 	} else {
 		klass_device->attach = fu_vli_pd_device_attach;
 		klass_device->detach = fu_vli_pd_device_detach;
