@@ -19,6 +19,7 @@ _fwupdtool_cmd_list=(
 	'install'
 	'install-blob'
 	'monitor'
+	'reinstall'
 	'self-sign'
 	'smbios-dump'
 	'attach'
@@ -100,7 +101,7 @@ _fwupdtool()
 			_show_modifiers
 		fi
 		;;
-	attach|detach|activate|verify-update)
+	attach|detach|activate|verify-update|reinstall)
 		if [[ "$prev" = "$command" ]]; then
 			_show_device_ids
 		#modifiers
