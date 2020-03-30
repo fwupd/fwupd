@@ -56,6 +56,7 @@ fu_config_reload (FuConfig *self, GError **error)
 	g_auto(GStrv) plugins = NULL;
 	g_autofree gchar *domains = NULL;
 	g_autoptr(GKeyFile) keyfile = g_key_file_new ();
+	g_autoptr(GError) error_update_motd = NULL;
 	g_autoptr(GError) error_enumerate_all = NULL;
 
 	g_debug ("loading config values from %s", self->config_file);
@@ -133,7 +134,11 @@ fu_config_reload (FuConfig *self, GError **error)
 	self->update_motd = g_key_file_get_boolean (keyfile,
 						   "fwupd",
 						   "UpdateMotd",
-						   NULL);
+						   &error_update_motd);
+	if (!self->update_motd && error_update_motd != NULL) {
+		g_debug ("failed to read UpdateMotd key: %s", error_update_motd->message);
+		self->update_motd = TRUE;
+	}
 
 	/* whether to only show supported devices for some plugins */
 	self->enumerate_all_devices = g_key_file_get_boolean (keyfile,
