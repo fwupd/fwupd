@@ -17,17 +17,14 @@ conf.set('FWUPD_MINOR_VERSION', fwupd_minor_version)
 conf.set('FWUPD_MICRO_VERSION', fwupd_micro_version)
 conf.set_quoted('PACKAGE_VERSION', fwupd_version)
 
-# non tagged builds
+# get source version, falling back to package version
 git = find_program('git', required : false)
 if git.found()
-  git_version = run_command(git, 'describe').stdout().strip()
-  if git_version.contains('-')
-    fwupd_dirty_version = git_version.split('-')[1]
-    fwupd_commit = git_version.split('-')[2]
-    conf.set('FWUPD_DIRTY_VERSION', fwupd_dirty_version)
-    conf.set_quoted('FWUPD_COMMIT_VERSION', fwupd_commit)
-  endif
+  source_version = run_command(git, 'describe').stdout().strip()
+else
+  source_version = fwupd_version
 endif
+conf.set_quoted('SOURCE_VERSION', source_version)
 
 # libtool versioning - this applies to libfwupd
 #
