@@ -1294,6 +1294,33 @@ fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 		fu_device_set_version (device, version);
 	}
 
+	/* add extra instance IDs */
+	if (self->silicon_id != 0x0) {
+		g_autofree gchar *instance_id1 = NULL;
+		instance_id1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&SID_%04X",
+						fu_usb_device_get_vid (FU_USB_DEVICE (device)),
+						fu_usb_device_get_pid (FU_USB_DEVICE (device)),
+						self->silicon_id);
+		fu_device_add_instance_id (device, instance_id1);
+	}
+	if (self->silicon_id != 0x0 && self->fw_app_type != 0x0) {
+		g_autofree gchar *instance_id2 = NULL;
+		g_autofree gchar *instance_id3 = NULL;
+		instance_id2 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&SID_%04X&APP_%04X",
+						fu_usb_device_get_vid (FU_USB_DEVICE (device)),
+						fu_usb_device_get_pid (FU_USB_DEVICE (device)),
+						self->silicon_id,
+						self->fw_app_type);
+		fu_device_add_instance_id (device, instance_id2);
+		instance_id3 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&SID_%04X&APP_%04X&MODE_%s",
+						fu_usb_device_get_vid (FU_USB_DEVICE (device)),
+						fu_usb_device_get_pid (FU_USB_DEVICE (device)),
+						self->silicon_id,
+						self->fw_app_type,
+						fu_ccgx_fw_mode_to_string (self->fw_mode));
+		fu_device_add_instance_id (device, instance_id3);
+	}
+
 	/* not supported in boot mode */
 	if (self->fw_mode == FW_MODE_BOOT) {
 		fu_device_remove_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);

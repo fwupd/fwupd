@@ -66,11 +66,13 @@ These devices use the standard USB DeviceInstanceId values, e.g.
 
  * `USB\VID_17EF&PID_A38F`
 
-They additionally add one InstanceId which corresponds to the device mode, e.g.
+They additionally add other instance IDs which corresponds to the silicon ID,
+application ID and device mode, e.g.
 
  * `USB\VID_17EF&PID_A38F&MODE_BOOT`
- * `USB\VID_17EF&PID_A38F&MODE_FW1`
- * `USB\VID_17EF&PID_A38F&MODE_FW2`
+ * `USB\VID_17EF&PID_A38F&SID_1234`
+ * `USB\VID_17EF&PID_A38F&SID_1234&APP_5678`
+ * `USB\VID_17EF&PID_A38F&SID_1234&APP_5678&MODE_FW2`
 
 Vendor ID Security
 ------------------
