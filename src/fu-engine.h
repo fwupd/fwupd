@@ -159,6 +159,9 @@ GType		 fu_engine_get_firmware_gtype_by_id	(FuEngine	*engine,
 void		 fu_engine_md_refresh_device_from_component (FuEngine	*self,
 							 FuDevice	*device,
 							 XbNode		*component);
+GPtrArray	*fu_engine_get_releases_for_device 	(FuEngine	*self,
+							FuDevice	*device,
+							GError		**error);
 
 /* for the self tests */
 void		 fu_engine_add_device			(FuEngine	*self,
