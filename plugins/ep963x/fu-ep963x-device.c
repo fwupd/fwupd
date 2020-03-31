@@ -54,10 +54,10 @@ fu_ep963x_device_write_icp (FuEp963xDevice *self,
 	/* wait for hardware */
 	for (guint i = 0; i < 5; i++) {
 		guint8 bufhw[FU_EP963_FEATURE_ID1_SIZE] = {
-			FU_EP963_FEATURE_ID1_SIZE,
+			FU_EP963_USB_CONTROL_ID,
 			cmd,
 		};
-		if (!fu_ep963x_device_write (self, FU_EP963_FEATURE_ID1_SIZE,
+		if (!fu_ep963x_device_write (self, FU_EP963_USB_CONTROL_ID,
 					     cmd, buf, bufsz, error))
 			return FALSE;
 		if (!fu_hid_device_get_report (FU_HID_DEVICE (self), 0x00,
@@ -67,7 +67,7 @@ fu_ep963x_device_write_icp (FuEp963xDevice *self,
 					       error)) {
 			return FALSE;
 		}
-		if (bufhw[7] == FU_EP963_ICP_DONE) {
+		if (bufhw[2] == FU_EP963_USB_STATE_READY) {
 			/* optional data */
 			if (buf != NULL) {
 				if (!fu_memcpy_safe (buf, bufsz, 0x0,
@@ -76,57 +76,6 @@ fu_ep963x_device_write_icp (FuEp963xDevice *self,
 					return FALSE;
 			}
 			return TRUE;
-		}
-		g_usleep (100 * 1000);
-	}
-
-	/* failed */
-	g_set_error_literal (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_WRITE,
-			     "failed to wait for icp-done");
-	return FALSE;
-}
-
-static gboolean
-fu_ep963x_device_write_smbus (FuEp963xDevice *self,
-			      guint8 cmd, guint8 *buf, gsize bufsz,
-			      GError **error)
-{
-	guint8 bufhw[FU_EP963_FEATURE_ID1_SIZE] = { 0x0 };
-	guint8 usb_state = FU_EP963_USB_STATE_UNKNOWN;
-
-	/* send request */
-	if (!fu_ep963x_device_write (self, FU_EP963_FEATURE_ID1_SIZE,
-				     cmd, buf, bufsz, error))
-		return FALSE;
-
-	/* wait for hardware */
-	for (guint i = 0; i < 16; i++) {
-		bufhw[0] = FU_EP963_FEATURE_ID1_SIZE;
-		bufhw[1] = cmd;
-		if (!fu_hid_device_get_report (FU_HID_DEVICE (self), 0x00,
-					       bufhw, sizeof(bufhw),
-					       FU_EP963_DEVICE_TIMEOUT,
-					       FU_HID_DEVICE_FLAG_IS_FEATURE,
-					       error)) {
-			return FALSE;
-		}
-		if (bufhw[0x07] != FU_EP963_SMBUS_ERROR_NONE) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_WRITE,
-				     "smbus failed %s",
-				     fu_ep963x_smbus_strerror (bufhw[0x07]));
-			return FALSE;
-		}
-		if (bufhw[0x02] == FU_EP963_USB_STATE_READY)
-			return TRUE;
-
-		/* USB state changed, so reset counter */
-		if (usb_state != bufhw[0x02]) {
-			usb_state = bufhw[0x02];
-			i = 0;
 		}
 		g_usleep (100 * 1000);
 	}
@@ -152,7 +101,7 @@ fu_ep963x_device_detach (FuDevice *device, GError **error)
 		return TRUE;
 	}
 
-	if (!fu_ep963x_device_write_icp (self, FU_EP963_OPCODE_SUBMCU_ENTER_ICP,
+	if (!fu_ep963x_device_write_icp (self, FU_EP963_ICP_ENTER,
 					 buf, sizeof(buf),
 					 &error_local)) {
 		g_set_error (error,
@@ -172,7 +121,6 @@ static gboolean
 fu_ep963x_device_attach (FuDevice *device, GError **error)
 {
 	FuEp963xDevice *self = FU_EP963X_DEVICE (device);
-	const guint8 buf[] = { 0x00 };
 	g_autoptr(GError) error_local = NULL;
 
 	/* sanity check */
@@ -182,9 +130,10 @@ fu_ep963x_device_attach (FuDevice *device, GError **error)
 	}
 
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	if (!fu_ep963x_device_write_icp (self, 0x02,
-					 buf, sizeof(buf),
-					 &error_local)) {
+	if (!fu_ep963x_device_write (self,
+				     FU_EP963_USB_CONTROL_ID,
+				     FU_EP963_OPCODE_SUBMCU_PROGRAM_FINISHED,
+				     NULL, 0, &error_local)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_WRITE,
@@ -237,6 +186,31 @@ fu_ep963x_device_prepare_firmware (FuDevice *device,
 }
 
 static gboolean
+fu_ep963x_device_wait_cb (FuDevice *device, gpointer user_data, GError **error)
+{
+	guint8 bufhw[FU_EP963_FEATURE_ID1_SIZE] = {
+		FU_EP963_USB_CONTROL_ID,
+		FU_EP963_OPCODE_SUBMCU_PROGRAM_BLOCK,
+		0xFF,
+	};
+	if (!fu_hid_device_get_report (FU_HID_DEVICE (device), 0x00,
+				       bufhw, sizeof(bufhw),
+				       FU_EP963_DEVICE_TIMEOUT,
+				       FU_HID_DEVICE_FLAG_IS_FEATURE,
+				       error)) {
+		return FALSE;
+	}
+	if (bufhw[2] != FU_EP963_USB_STATE_READY) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_BUSY,
+				     "hardware is not ready");
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_ep963x_device_write_firmware (FuDevice *device,
 				 FuFirmware *firmware,
 				 FwupdInstallFlags flags,
@@ -256,7 +230,7 @@ fu_ep963x_device_write_firmware (FuDevice *device,
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 	if (!fu_ep963x_device_write (self,
 				     FU_EP963_USB_CONTROL_ID,
-				     FU_EP963_OPCODE_SUBMCU_RESET_BLOCK_IDX,
+				     FU_EP963_OPCODE_SUBMCU_ENTER_ICP,
 				     NULL, 0, &error_local)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -273,6 +247,19 @@ fu_ep963x_device_write_firmware (FuDevice *device,
 		FuChunk *blk = g_ptr_array_index (blocks, i);
 		guint8 buf[] = { i };
 		g_autoptr(GPtrArray) chunks = NULL;
+
+		/* set the block index */
+		if (!fu_ep963x_device_write (self,
+					     FU_EP963_USB_CONTROL_ID,
+					     FU_EP963_OPCODE_SUBMCU_RESET_BLOCK_IDX,
+					     buf, sizeof(buf), &error_local)) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_WRITE,
+				     "failed to reset block index: %s",
+				     error_local->message);
+			return FALSE;
+		}
 
 		/* 4 byte chunks */
 		chunks = fu_chunk_array_new (blk->data, blk->data_sz,
@@ -299,8 +286,10 @@ fu_ep963x_device_write_firmware (FuDevice *device,
 		}
 
 		/* program block */
-		if (!fu_ep963x_device_write_smbus (self, FU_EP963_OPCODE_SUBMCU_PROGRAM_BLOCK,
-						   buf, sizeof(buf), &error_local)) {
+		if (!fu_ep963x_device_write (self,
+					     FU_EP963_USB_CONTROL_ID,
+					     FU_EP963_OPCODE_SUBMCU_PROGRAM_BLOCK,
+					     buf, sizeof(buf), &error_local)) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_WRITE,
@@ -309,6 +298,10 @@ fu_ep963x_device_write_firmware (FuDevice *device,
 				     error_local->message);
 			return FALSE;
 		}
+
+		/* wait for program finished */
+		if (!fu_device_retry (device, fu_ep963x_device_wait_cb, 5, NULL, error))
+			return FALSE;
 
 		/* update progress */
 		fu_device_set_progress_full (device, (gsize) i, (gsize) chunks->len);
@@ -326,6 +319,7 @@ fu_ep963x_device_init (FuEp963xDevice *self)
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_NUMBER);
 	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_firmware_size (FU_DEVICE (self), FU_EP963_FIRMWARE_SIZE);
+	fu_device_retry_set_delay (FU_DEVICE (self), 100);
 }
 
 static void
