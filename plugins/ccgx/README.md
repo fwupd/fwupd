@@ -69,7 +69,6 @@ These devices use the standard USB DeviceInstanceId values, e.g.
 They additionally add other instance IDs which corresponds to the silicon ID,
 application ID and device mode, e.g.
 
- * `USB\VID_17EF&PID_A38F&MODE_BOOT`
  * `USB\VID_17EF&PID_A38F&SID_1234`
  * `USB\VID_17EF&PID_A38F&SID_1234&APP_5678`
  * `USB\VID_17EF&PID_A38F&SID_1234&APP_5678&MODE_FW2`
