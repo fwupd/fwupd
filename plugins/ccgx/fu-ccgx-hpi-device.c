@@ -1214,7 +1214,6 @@ fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 	CyI2CConfig i2c_config = { 0x0 };
 	guint32 hpi_event = 0;
 	guint8 mode = 0;
-	g_autofree gchar *instance_id = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* set the new config */
@@ -1238,13 +1237,6 @@ fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 	self->num_ports = (mode >> 2) & 0x03 ? 2 : 1;
 	self->fw_mode = (FWMode) (mode & 0x03);
 
-	/* add extra instance ID */
-	instance_id = g_strdup_printf ("USB\\VID_%04X&PID_%04X&MODE_%s",
-				       fu_usb_device_get_vid (FU_USB_DEVICE (device)),
-				       fu_usb_device_get_pid (FU_USB_DEVICE (device)),
-				       fu_ccgx_fw_mode_to_string (self->fw_mode));
-	fu_device_add_instance_id (device, instance_id);
-
 	/* get silicon ID */
 	if (!fu_ccgx_hpi_device_ensure_silicon_id (self, error))
 		return FALSE;
@@ -1252,10 +1244,8 @@ fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 	/* get correct version if not in boot mode */
 	if (self->fw_mode != FW_MODE_BOOT) {
 		guint16 bufsz;
-		guint32 version_raw = 0;
 		guint32 versions[FW_MODE_LAST] = { 0x0 };
 		guint8 bufver[HPI_DEVICE_VERSION_SIZE_HPIV2] = { 0x0 };
-		g_autofree gchar *version = NULL;
 
 		bufsz = self->hpi_addrsz == 1 ? HPI_DEVICE_VERSION_SIZE_HPIV1 :
 						HPI_DEVICE_VERSION_SIZE_HPIV2;
@@ -1272,7 +1262,6 @@ fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 						 0x0c, &versions[FW_MODE_FW1],
 						 G_LITTLE_ENDIAN, error))
 			return FALSE;
-		self->fw_app_type = versions[FW_MODE_FW1] & 0xffff;
 
 		/* fw2 */
 		if (!fu_common_read_uint32_safe (bufver, sizeof(bufver),
@@ -1280,45 +1269,42 @@ fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 						 G_LITTLE_ENDIAN, error))
 			return FALSE;
 
-		/* asymmetric these seem swapped, but we can only update the
-		 * "other" image whilst running in the current image */
-		if (self->fw_image_type == FW_IMAGE_TYPE_DUAL_SYMMETRIC) {
-			version_raw = versions[self->fw_mode];
-		} else if (self->fw_image_type == FW_IMAGE_TYPE_DUAL_ASYMMETRIC) {
-			version_raw = versions[fu_ccgx_fw_mode_get_alternate (self->fw_mode)];
+		self->fw_app_type = versions[self->fw_mode] & 0xffff;
+
+		if (self->silicon_id != 0x0 && self->fw_app_type != 0x0) {
+			guint32 version_raw = 0;
+			g_autofree gchar *instance_id1 = NULL;
+			g_autofree gchar *instance_id2 = NULL;
+			g_autofree gchar *version = NULL;
+
+			/* we get fw_image_type from the quirk */
+			instance_id1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&SID_%04X&APP_%04X",
+							fu_usb_device_get_vid (FU_USB_DEVICE (device)),
+							fu_usb_device_get_pid (FU_USB_DEVICE (device)),
+							self->silicon_id,
+							self->fw_app_type);
+			fu_device_add_instance_id (device, instance_id1);
+			instance_id2 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&SID_%04X&APP_%04X&MODE_%s",
+							fu_usb_device_get_vid (FU_USB_DEVICE (device)),
+							fu_usb_device_get_pid (FU_USB_DEVICE (device)),
+							self->silicon_id,
+							self->fw_app_type,
+							fu_ccgx_fw_mode_to_string (self->fw_mode));
+			fu_device_add_instance_id (device, instance_id2);
+
+			/* asymmetric these seem swapped, but we can only update the
+			 * "other" image whilst running in the current image */
+			if (self->fw_image_type == FW_IMAGE_TYPE_DUAL_SYMMETRIC) {
+				version_raw = versions[self->fw_mode];
+			} else if (self->fw_image_type == FW_IMAGE_TYPE_DUAL_ASYMMETRIC) {
+				version_raw = versions[fu_ccgx_fw_mode_get_alternate (self->fw_mode)];
+			}
+
+			/* set device */
+			version = fu_ccgx_version_to_string (version_raw);
+			fu_device_set_version_raw (device, version_raw);
+			fu_device_set_version (device, version);
 		}
-
-		/* set device */
-		version = fu_ccgx_version_to_string (version_raw);
-		fu_device_set_version_raw (device, version_raw);
-		fu_device_set_version (device, version);
-	}
-
-	/* add extra instance IDs */
-	if (self->silicon_id != 0x0) {
-		g_autofree gchar *instance_id1 = NULL;
-		instance_id1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&SID_%04X",
-						fu_usb_device_get_vid (FU_USB_DEVICE (device)),
-						fu_usb_device_get_pid (FU_USB_DEVICE (device)),
-						self->silicon_id);
-		fu_device_add_instance_id (device, instance_id1);
-	}
-	if (self->silicon_id != 0x0 && self->fw_app_type != 0x0) {
-		g_autofree gchar *instance_id2 = NULL;
-		g_autofree gchar *instance_id3 = NULL;
-		instance_id2 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&SID_%04X&APP_%04X",
-						fu_usb_device_get_vid (FU_USB_DEVICE (device)),
-						fu_usb_device_get_pid (FU_USB_DEVICE (device)),
-						self->silicon_id,
-						self->fw_app_type);
-		fu_device_add_instance_id (device, instance_id2);
-		instance_id3 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&SID_%04X&APP_%04X&MODE_%s",
-						fu_usb_device_get_vid (FU_USB_DEVICE (device)),
-						fu_usb_device_get_pid (FU_USB_DEVICE (device)),
-						self->silicon_id,
-						self->fw_app_type,
-						fu_ccgx_fw_mode_to_string (self->fw_mode));
-		fu_device_add_instance_id (device, instance_id3);
 	}
 
 	/* not supported in boot mode */
