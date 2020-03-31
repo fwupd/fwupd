@@ -2573,30 +2573,6 @@ fu_engine_set_silo (FuEngine *self, XbSilo *silo)
 }
 
 static gboolean
-fu_engine_is_device_supported (FuEngine *self, FuDevice *device)
-{
-	g_autoptr(XbNode) component = NULL;
-
-	/* sanity check */
-	if (self->silo == NULL) {
-		g_critical ("FuEngine silo not set up");
-		return FALSE;
-	}
-
-	/* no device version */
-	if (fu_device_get_version (device) == NULL)
-		return FALSE;
-
-	/* match the GUIDs in the XML */
-	component = fu_engine_get_component_by_guids (self, device);
-	if (component == NULL)
-		return FALSE;
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
 fu_engine_appstream_upgrade_cb (XbBuilderFixup *self,
 				XbBuilderNode *bn,
 				gpointer user_data,
@@ -2687,10 +2663,34 @@ fu_engine_create_metadata (FuEngine *self, XbBuilder *builder,
 }
 
 static void
-fu_engine_md_refresh_device_supported (FuEngine *self, FuDevice *device, XbNode *component)
+fu_engine_ensure_device_supported (FuEngine *self, FuDevice *device)
 {
+	gboolean is_supported = FALSE;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) releases = NULL;
+
+	/* get all releases that pass the requirements */
+	releases = fu_engine_get_releases_for_device (self,
+						      device,
+						      &error);
+	if (releases == NULL) {
+		if (!g_error_matches (error,
+				      FWUPD_ERROR,
+				      FWUPD_ERROR_NOTHING_TO_DO) &&
+		    !g_error_matches (error,
+				      FWUPD_ERROR,
+				      FWUPD_ERROR_NOT_SUPPORTED)) {
+			g_warning ("failed to get releases for %s: %s",
+				   fu_device_get_name (device),
+				   error->message);
+		}
+	} else {
+		if (releases->len > 0)
+			is_supported = TRUE;
+	}
+
 	/* was supported, now unsupported */
-	if (component == NULL) {
+	if (!is_supported) {
 		if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_SUPPORTED)) {
 			fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_SUPPORTED);
 			fu_engine_emit_device_changed (self, device);
@@ -2840,7 +2840,7 @@ fu_engine_md_refresh_devices (FuEngine *self)
 		g_autoptr(XbNode) component = fu_engine_get_component_by_guids (self, device);
 
 		/* set or clear the SUPPORTED flag */
-		fu_engine_md_refresh_device_supported (self, device, component);
+		fu_engine_ensure_device_supported (self, device);
 
 		/* fixup the name and format as needed */
 		fu_engine_md_refresh_device_from_component (self, device, component);
@@ -4523,10 +4523,8 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 	/* create new device */
 	fu_device_list_add (self->device_list, device);
 
-	/* match the metadata at this point so clients can tell if the
-	 * device is worthy */
-	if (fu_engine_is_device_supported (self, device))
-		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_SUPPORTED);
+	/* match the metadata so clients can tell if the device is worthy */
+	fu_engine_ensure_device_supported (self, device);
 
 	/* sometimes inherit flags from recent history */
 	fu_engine_device_inherit_history (self, device);
