@@ -9,9 +9,14 @@ extraction:
       - libarchive-tools
       - libcogl-pango-dev
       - python3-pil
+      - python3-pip
+      - python3-setuptools
+      - python3-wheel
       - python3-cairo
       - libssl-dev
     after_prepare:
+    - python3 -m pip install --user "meson >= 0.52.0"
+    - export PATH="$HOME/.local/bin:$PATH"
     - "wget -O libxmlb.zip https://github.com/hughsie/libxmlb/archive/0.1.13.zip"
     - "mkdir -p subprojects/libxmlb"
     - "bsdtar --strip-components=1 -xvf libxmlb.zip -C subprojects/libxmlb"
