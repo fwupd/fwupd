@@ -956,9 +956,8 @@ fu_engine_device_parent_func (gconstpointer user_data)
 
 	/* verify both children were adopted */
 	g_assert (fu_device_get_parent (device3) == device2);
-	g_assert (fu_device_get_parent (device1) == device2);
 	g_assert_cmpstr (fu_device_get_vendor (device3), ==, "oem");
-	g_assert_cmpstr (fu_device_get_vendor (device1), ==, "oem");
+	g_assert_cmpstr (fu_device_get_parent_id (device1), ==, fu_device_get_id (device2));
 
 	/* verify order */
 	g_assert_cmpint (fu_device_get_order (device1), ==, 0);
@@ -2738,11 +2737,11 @@ fu_plugin_composite_func (gconstpointer user_data)
 		} else if (g_strcmp0 (fu_device_get_id (device),
 					"c0a0a4aa6480ac28eea1ce164fbb466ca934e1ff") == 0) {
 			g_assert_cmpstr (fu_device_get_version (device), ==, "1");
-			g_assert_nonnull (fu_device_get_parent (device));
+			g_assert_nonnull (fu_device_get_parent_id (device));
 		} else if (g_strcmp0 (fu_device_get_id (device),
 					"bf455e9f371d2608d1cb67660fd2b335d3f6ef73") == 0) {
 			g_assert_cmpstr (fu_device_get_version (device), ==, "10");
-			g_assert_nonnull (fu_device_get_parent (device));
+			g_assert_nonnull (fu_device_get_parent_id (device));
 		}
 	}
 
