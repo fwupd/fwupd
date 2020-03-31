@@ -4360,7 +4360,7 @@ fu_engine_adopt_children (FuEngine *self, FuDevice *device)
 					 fu_device_get_id (device),
 					 fu_device_get_name (device_tmp),
 					 fu_device_get_id (device_tmp));
-				fu_device_add_child (device_tmp, device);
+				fu_device_set_parent_id (device, fu_device_get_id (device_tmp));
 				break;
 			}
 		}
@@ -4380,7 +4380,7 @@ fu_engine_adopt_children (FuEngine *self, FuDevice *device)
 					 fu_device_get_id (device_tmp),
 					 fu_device_get_name (device),
 					 fu_device_get_id (device));
-				fu_device_add_child (device, device_tmp);
+				fu_device_set_parent_id (device_tmp, fu_device_get_id (device));
 			}
 		}
 	}
