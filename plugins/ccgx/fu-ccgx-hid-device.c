@@ -12,6 +12,7 @@
 struct _FuCcgxHidDevice
 {
 	FuHidDevice		 parent_instance;
+	guint			 setup_id;
 };
 
 G_DEFINE_TYPE (FuCcgxHidDevice, fu_ccgx_hid_device, FU_TYPE_HID_DEVICE)
@@ -45,12 +46,46 @@ fu_ccgx_hid_device_detach (FuDevice *device, GError **error)
 }
 
 static gboolean
+fu_ccgx_hid_device_setup_cb (gpointer user_data)
+{
+	FuCcgxHidDevice *self = FU_CCGX_HID_DEVICE (user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	/* do this in idle so that the original HID device gets added */
+	locker = fu_device_locker_new (self, &error);
+	if (locker == NULL) {
+		g_warning ("failed to open HID device: %s",
+			   error->message);
+	} else {
+		if (!fu_ccgx_hid_device_detach (FU_DEVICE (self), &error)) {
+			g_warning ("failed to detach to HPI mode: %s",
+				   error->message);
+		}
+	}
+
+	/* never again */
+	self->setup_id = 0;
+	return G_SOURCE_REMOVE;
+}
+
+static gboolean
 fu_ccgx_hid_device_setup (FuDevice *device, GError **error)
 {
+	FuCcgxHidDevice *self = FU_CCGX_HID_DEVICE (device);
 	/* This seems insane... but we need to switch the device from HID
 	 * mode to HPI mode at startup. The device continues to function
 	 * exactly as before and no user-visible effects are noted */
-	return fu_ccgx_hid_device_enable_hpi_mode (device, error);
+	self->setup_id = g_timeout_add (1000, fu_ccgx_hid_device_setup_cb, self);
+	return TRUE;
+}
+
+static void
+fu_ccgx_hid_device_finalize (GObject *object)
+{
+	FuCcgxHidDevice *self = FU_CCGX_HID_DEVICE (object);
+	if (self->setup_id != 0)
+		g_source_remove (self->setup_id);
 }
 
 static void
@@ -65,6 +100,8 @@ static void
 fu_ccgx_hid_device_class_init (FuCcgxHidDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
+	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+	object_class->finalize = fu_ccgx_hid_device_finalize;
 	klass_device->detach = fu_ccgx_hid_device_detach;
 	klass_device->setup = fu_ccgx_hid_device_setup;
 }
