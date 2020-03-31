@@ -16,7 +16,7 @@
 
 #define FU_EP963_USB_CONTROL_ID			0x01
 
-#define FU_EP963_ICP_ENTER			0x81
+#define FU_EP963_ICP_ENTER			0x40
 #define FU_EP963_ICP_EXIT			0x82
 #define FU_EP963_ICP_BANK			0x83
 #define FU_EP963_ICP_ADDRESS			0x84
