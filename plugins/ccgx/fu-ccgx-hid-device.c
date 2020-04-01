@@ -50,7 +50,16 @@ fu_ccgx_hid_device_setup (FuDevice *device, GError **error)
 	/* This seems insane... but we need to switch the device from HID
 	 * mode to HPI mode at startup. The device continues to function
 	 * exactly as before and no user-visible effects are noted */
-	return fu_ccgx_hid_device_enable_hpi_mode (device, error);
+	if (!fu_ccgx_hid_device_enable_hpi_mode (device, error))
+		return FALSE;
+
+	/* never add this device, the daemon does not expect the device to
+	 * disconnect before it is added */
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "device is replugging into HPI mode");
+	return FALSE;
 }
 
 static void
