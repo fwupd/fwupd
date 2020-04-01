@@ -1,0 +1,43 @@
+From d195cb1af9cd2ed3c289ad477056796f2187cb3c Mon Sep 17 00:00:00 2001
+From: Paul Menzel <pmenzel@molgen.mpg.de>
+Date: Wed, 1 Apr 2020 13:08:59 +0200
+Subject: [PATCH] data/motd/fwupd-refresh: Only order after network.target
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+From [Lennart’s answer on systemd-devel][1]:
+
+> fwupd.target should not list the various network management solutions,
+> that is unnecessary, and ordering after network.target should be
+> sufficient to achieve the same, in a generic fashion. i.e. network
+> managers should order themselves before network.target, so that
+> ordering yourself after that automatically orders you after all
+> implementations at once...
+
+So, remove the unneeded targets. As the service unit is not
+installed/enabled, and instead called by a timer, the system will most
+probably be online already.
+
+[1]: https://lists.freedesktop.org/archives/systemd-devel/2020-March/044205.html
+     "Best practices for starting unit only if network is online"
+---
+ data/motd/fwupd-refresh.service.in | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/data/motd/fwupd-refresh.service.in b/data/motd/fwupd-refresh.service.in
+index 8a67a3fd..21bd7896 100644
+--- a/data/motd/fwupd-refresh.service.in
++++ b/data/motd/fwupd-refresh.service.in
+@@ -1,7 +1,7 @@
+ [Unit]
+ Description=Refresh fwupd metadata and update motd
+ Documentation=man:fwupdmgr(1)
+-After=network.target network-online.target systemd-networkd.service NetworkManager.service connman.service
++After=network.target
+ 
+ [Service]
+ Type=oneshot
+-- 
+2.25.1
+

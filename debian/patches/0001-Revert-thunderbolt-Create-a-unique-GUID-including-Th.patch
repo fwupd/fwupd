@@ -1,0 +1,76 @@
+From 9c022171b101da15f8783a9ca44186deb4fd1a72 Mon Sep 17 00:00:00 2001
+From: Mario Limonciello <mario.limonciello@dell.com>
+Date: Tue, 24 Mar 2020 14:01:40 -0500
+Subject: [PATCH] Revert "thunderbolt: Create a unique GUID including
+ Thunderbolt controller path"
+
+This reverts commit 7e38dffdcbbed046e1e5e6beb6eb3790b9f137ba.
+---
+ plugins/thunderbolt/README.md               |  6 ------
+ plugins/thunderbolt/fu-plugin-thunderbolt.c | 12 ------------
+ 2 files changed, 18 deletions(-)
+
+diff --git a/plugins/thunderbolt/README.md b/plugins/thunderbolt/README.md
+index 42e31c21..63a2f703 100644
+--- a/plugins/thunderbolt/README.md
++++ b/plugins/thunderbolt/README.md
+@@ -31,12 +31,6 @@ When the device is in "safe mode" the GUID is hardcoded using:
+ 
+  * `TBT-$(vid)$(pid)-native` when native, and `TBT-$(vid)$(pid)` otherwise.
+ 
+-Additionally for host system thunderbolt controllers another GUID is added
+-containing the PCI slot designation of the controller.  This is intended to be
+-used for systems with multiple host controllers to disambiguiate between controllers.
+-
+-* `TBT-$(vid)$(pid)-native-$(slot)`
+-
+ Vendor ID Security
+ ------------------
+ 
+diff --git a/plugins/thunderbolt/fu-plugin-thunderbolt.c b/plugins/thunderbolt/fu-plugin-thunderbolt.c
+index d5f838fa..204a7201 100644
+--- a/plugins/thunderbolt/fu-plugin-thunderbolt.c
++++ b/plugins/thunderbolt/fu-plugin-thunderbolt.c
+@@ -282,7 +282,6 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
+ 	g_autofree gchar *version = NULL;
+ 	g_autofree gchar *vendor_id = NULL;
+ 	g_autofree gchar *device_id = NULL;
+-	g_autofree gchar *device_id_with_path = NULL;
+ 	g_autoptr(FuDevice) dev = NULL;
+ 	g_autoptr(GError) error_vid = NULL;
+ 	g_autoptr(GError) error_did = NULL;
+@@ -359,7 +358,6 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
+ 			 * so don't try to read a native attribute from their NVM */
+ 			if (is_host && gen < 4) {
+ 				g_autoptr(GError) native_error = NULL;
+-				g_autoptr(GUdevDevice) udev_parent = NULL;
+ 				if (!fu_plugin_thunderbolt_is_native (device,
+ 								      &is_native,
+ 								      &native_error)) {
+@@ -370,14 +368,6 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
+ 				fu_plugin_add_report_metadata (plugin,
+ 							       "ThunderboltNative",
+ 							       is_native ? "True" : "False");
+-				udev_parent = g_udev_device_get_parent_with_subsystem (device, "pci", NULL);
+-				if (udev_parent != NULL)
+-					device_id_with_path = g_strdup_printf ("TBT-%04x%04x%s-%s",
+-									       (guint) vid,
+-									       (guint) did,
+-									       is_native ? "-native" : "",
+-									       g_udev_device_get_property (udev_parent,
+-													   "PCI_SLOT_NAME"));
+ 			}
+ 			vendor_id = g_strdup_printf ("TBT:0x%04X", (guint) vid);
+ 			device_id = g_strdup_printf ("TBT-%04x%04x%s",
+@@ -419,8 +409,6 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
+ 		fu_device_set_vendor_id (dev, vendor_id);
+ 	if (device_id != NULL)
+ 		fu_device_add_instance_id (dev, device_id);
+-	if (device_id_with_path != NULL)
+-		fu_device_add_instance_id (dev, device_id_with_path);
+ 	if (version != NULL)
+ 		fu_device_set_version (dev, version, FWUPD_VERSION_FORMAT_PAIR);
+ 	if (is_host)
+-- 
+2.25.1
+

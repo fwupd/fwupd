@@ -1,0 +1,50 @@
+From 7512fe10f54273b0c3557732011415db97d9d91a Mon Sep 17 00:00:00 2001
+From: Mario Limonciello <mario.limonciello@dell.com>
+Date: Tue, 31 Mar 2020 12:33:54 -0500
+Subject: [PATCH] logitech_hidpp: set the bootloader protocol
+
+---
+ .../logitech-hidpp/fu-logitech-hidpp-bootloader.c | 15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
+
+diff --git a/plugins/logitech-hidpp/fu-logitech-hidpp-bootloader.c b/plugins/logitech-hidpp/fu-logitech-hidpp-bootloader.c
+index 6b32194d..7aad8b9d 100644
+--- a/plugins/logitech-hidpp/fu-logitech-hidpp-bootloader.c
++++ b/plugins/logitech-hidpp/fu-logitech-hidpp-bootloader.c
+@@ -217,6 +217,8 @@ static gboolean
+ fu_logitech_hidpp_bootloader_set_bl_version (FuLogitechHidPpBootloader *self, GError **error)
+ {
+ 	guint16 build;
++	guint8 major;
++	guint8 minor;
+ 	g_autofree gchar *version = NULL;
+ 	g_autoptr(FuLogitechHidPpBootloaderRequest) req = fu_logitech_hidpp_bootloader_request_new ();
+ 
+@@ -231,15 +233,20 @@ fu_logitech_hidpp_bootloader_set_bl_version (FuLogitechHidPpBootloader *self, GE
+ 	 * 012345678901234 */
+ 	build = (guint16) fu_logitech_hidpp_buffer_read_uint8 ((const gchar *) req->data + 10) << 8;
+ 	build += fu_logitech_hidpp_buffer_read_uint8 ((const gchar *) req->data + 12);
+-	version = fu_logitech_hidpp_format_version ("BOT",
+-			fu_logitech_hidpp_buffer_read_uint8 ((const gchar *) req->data + 3),
+-			fu_logitech_hidpp_buffer_read_uint8 ((const gchar *) req->data + 6),
+-			build);
++	major = fu_logitech_hidpp_buffer_read_uint8 ((const gchar *) req->data + 3);
++	minor = fu_logitech_hidpp_buffer_read_uint8 ((const gchar *) req->data + 6);
++	version = fu_logitech_hidpp_format_version ("BOT", major, minor, build);
+ 	if (version == NULL) {
+ 		g_prefix_error (error, "failed to format firmware version: ");
+ 		return FALSE;
+ 	}
+ 	fu_device_set_version_bootloader (FU_DEVICE (self), version);
++
++	if ((major == 0x01 && minor >= 0x04) ||
++	    (major == 0x03 && minor >= 0x02))
++		fu_device_set_protocol (FU_DEVICE (self), "com.logitech.unifyingsigned");
++	else
++		fu_device_set_protocol (FU_DEVICE (self), "com.logitech.unifying");
+ 	return TRUE;
+ }
+ 
+-- 
+2.25.1
+

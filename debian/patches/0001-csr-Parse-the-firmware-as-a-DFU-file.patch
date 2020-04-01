@@ -1,0 +1,38 @@
+From 60af4a8bb03566b9747331a76c8f47e81e7cf5fa Mon Sep 17 00:00:00 2001
+From: Richard Hughes <richard@hughsie.com>
+Date: Sun, 22 Mar 2020 15:58:10 +0000
+Subject: [PATCH] csr: Parse the firmware as a DFU file
+
+This was changed to Intel hex in 7afd7cba0d327b155b2201c9fbb5414ced9cfe06,
+probbaly due to a copy-paste mistake. Change it back to DFU.
+
+Fixes https://github.com/fwupd/fwupd/issues/1890
+---
+ plugins/csr/fu-csr-device.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/plugins/csr/fu-csr-device.c b/plugins/csr/fu-csr-device.c
+index ea76a062..09161a3f 100644
+--- a/plugins/csr/fu-csr-device.c
++++ b/plugins/csr/fu-csr-device.c
+@@ -10,7 +10,7 @@
+ 
+ #include "fu-chunk.h"
+ #include "fu-csr-device.h"
+-#include "fu-ihex-firmware.h"
++#include "fu-dfu-firmware.h"
+ 
+ #include "dfu-common.h"
+ 
+@@ -426,7 +426,7 @@ fu_csr_device_prepare_firmware (FuDevice *device,
+ 				FwupdInstallFlags flags,
+ 				GError **error)
+ {
+-	g_autoptr(FuFirmware) firmware = fu_ihex_firmware_new ();
++	g_autoptr(FuFirmware) firmware = fu_dfu_firmware_new ();
+ 
+ 	/* parse the file */
+ 	if (!fu_firmware_parse (firmware, fw, flags, error))
+-- 
+2.25.1
+
