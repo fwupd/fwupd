@@ -325,3 +325,9 @@ DfuAltName = @Flash/0x0/1*16Kg
 # ATxmega32E5	[USER]		USER=0x8000
 [AvrChipId=0x1e954c]
 DfuAltName = @Flash/0x0/1*32Kg
+
+# STM32F745 dfuse bootloader
+[DeviceInstanceId=USB\VID_0483&PID_DF11]
+Plugin = dfu
+DfuForceVersion = 011a
+DfuForceTimeout = 5000
