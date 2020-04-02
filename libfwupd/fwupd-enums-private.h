@@ -22,6 +22,7 @@ G_BEGIN_DECLS
 #define FWUPD_RESULT_KEY_ISSUES			"Issues"	/* as */
 #define FWUPD_RESULT_KEY_FLAGS			"Flags"		/* t */
 #define FWUPD_RESULT_KEY_FLASHES_LEFT		"FlashesLeft"	/* u */
+#define FWUPD_RESULT_KEY_URGENCY		"Urgency"	/* u */
 #define FWUPD_RESULT_KEY_INSTALL_DURATION	"InstallDuration"	/* u */
 #define FWUPD_RESULT_KEY_GUID			"Guid"		/* as */
 #define FWUPD_RESULT_KEY_INSTANCE_IDS		"InstanceIds"	/* as */

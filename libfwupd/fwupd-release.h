@@ -125,6 +125,9 @@ void		 fwupd_release_remove_flag		(FwupdRelease	*release,
 							 FwupdReleaseFlags flag);
 gboolean	 fwupd_release_has_flag			(FwupdRelease	*release,
 							 FwupdReleaseFlags flag);
+FwupdReleaseUrgency fwupd_release_get_urgency		(FwupdRelease	*release);
+void		 fwupd_release_set_urgency		(FwupdRelease	*release,
+							 FwupdReleaseUrgency urgency);
 guint32		 fwupd_release_get_install_duration	(FwupdRelease	*release);
 void		 fwupd_release_set_install_duration	(FwupdRelease	*release,
 							 guint32	 duration);

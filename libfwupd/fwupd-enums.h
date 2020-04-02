@@ -167,6 +167,26 @@ typedef guint64 FwupdDeviceFlags;
 typedef guint64 FwupdReleaseFlags;
 
 /**
+ * FwupdReleaseUrgency:
+ * @FWUPD_RELEASE_URGENCY_UNKNOWN:		Unknown
+ * @FWUPD_RELEASE_URGENCY_LOW:			Low
+ * @FWUPD_RELEASE_URGENCY_MEDIUM:		Medium
+ * @FWUPD_RELEASE_URGENCY_HIGH:			High
+ * @FWUPD_RELEASE_URGENCY_CRITICAL:		Critical, e.g. a security fix
+ *
+ * The release urgency.
+ **/
+typedef enum {
+	FWUPD_RELEASE_URGENCY_UNKNOWN,				/* Since: 1.4.0 */
+	FWUPD_RELEASE_URGENCY_LOW,				/* Since: 1.4.0 */
+	FWUPD_RELEASE_URGENCY_MEDIUM,				/* Since: 1.4.0 */
+	FWUPD_RELEASE_URGENCY_HIGH,				/* Since: 1.4.0 */
+	FWUPD_RELEASE_URGENCY_CRITICAL,				/* Since: 1.4.0 */
+	/*< private >*/
+	FWUPD_RELEASE_URGENCY_LAST
+} FwupdReleaseUrgency;
+
+/**
  * FwupdInstallFlags:
  * @FWUPD_INSTALL_FLAG_NONE:			No flags set
  * @FWUPD_INSTALL_FLAG_OFFLINE:			Schedule this for next boot
@@ -291,6 +311,8 @@ const gchar	*fwupd_device_flag_to_string		(FwupdDeviceFlags device_flag);
 FwupdDeviceFlags fwupd_device_flag_from_string		(const gchar	*device_flag);
 const gchar	*fwupd_release_flag_to_string		(FwupdReleaseFlags release_flag);
 FwupdReleaseFlags fwupd_release_flag_from_string	(const gchar	*release_flag);
+const gchar	*fwupd_release_urgency_to_string	(FwupdReleaseUrgency release_urgency);
+FwupdReleaseUrgency fwupd_release_urgency_from_string	(const gchar	*release_urgency);
 const gchar	*fwupd_update_state_to_string		(FwupdUpdateState update_state);
 FwupdUpdateState fwupd_update_state_from_string		(const gchar	*update_state);
 const gchar	*fwupd_trust_flag_to_string		(FwupdTrustFlags trust_flag);

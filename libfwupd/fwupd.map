@@ -429,6 +429,10 @@ LIBFWUPD_1.4.0 {
     fwupd_device_set_version_bootloader_raw;
     fwupd_device_set_version_lowest_raw;
     fwupd_release_get_created;
+    fwupd_release_get_urgency;
     fwupd_release_set_created;
+    fwupd_release_set_urgency;
+    fwupd_release_urgency_from_string;
+    fwupd_release_urgency_to_string;
   local: *;
 } LIBFWUPD_1.3.7;

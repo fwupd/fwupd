@@ -1286,6 +1286,29 @@ fu_util_license_to_string (const gchar *license)
 	return license;
 }
 
+static const gchar *
+fu_util_release_urgency_to_string (FwupdReleaseUrgency release_urgency)
+{
+	if (release_urgency == FWUPD_RELEASE_URGENCY_LOW) {
+		/* TRANSLATORS: the release urgency */
+		return _("Low");
+	}
+	if (release_urgency == FWUPD_RELEASE_URGENCY_MEDIUM) {
+		/* TRANSLATORS: the release urgency */
+		return _("Medium");
+	}
+	if (release_urgency == FWUPD_RELEASE_URGENCY_HIGH) {
+		/* TRANSLATORS: the release urgency */
+		return _("High");
+	}
+	if (release_urgency == FWUPD_RELEASE_URGENCY_CRITICAL) {
+		/* TRANSLATORS: the release urgency */
+		return _("Critical");
+	}
+	/* TRANSLATORS: unknown release urgency */
+	return _("Unknown");
+}
+
 gchar *
 fu_util_release_to_string (FwupdRelease *rel, guint idt)
 {
@@ -1332,6 +1355,12 @@ fu_util_release_to_string (FwupdRelease *rel, guint idt)
 		g_autofree gchar *tmp = g_date_time_format (date, "%F");
 		/* TRANSLATORS: when the update was built */
 		fu_common_string_append_kv (str, idt + 1, _("Created"), tmp);
+	}
+	if (fwupd_release_get_urgency (rel) != FWUPD_RELEASE_URGENCY_UNKNOWN) {
+		FwupdReleaseUrgency tmp = fwupd_release_get_urgency (rel);
+		/* TRANSLATORS: how important the release is */
+		fu_common_string_append_kv (str, idt + 1, _("Urgency"),
+					    fu_util_release_urgency_to_string (tmp));
 	}
 	if (fwupd_release_get_details_url (rel) != NULL) {
 		/* TRANSLATORS: more details about the update link */
