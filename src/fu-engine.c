@@ -404,6 +404,9 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 	tmp64 = xb_node_get_attr_as_uint (release, "install_duration");
 	if (tmp64 != G_MAXUINT64)
 		fwupd_release_set_install_duration (rel, tmp64);
+	tmp64 = xb_node_get_attr_as_uint (release, "timestamp");
+	if (tmp64 != G_MAXUINT64)
+		fwupd_release_set_created (rel, tmp64);
 	cats = xb_node_query (component, "categories/category", 0, NULL);
 	if (cats != NULL) {
 		for (guint i = 0; i < cats->len; i++) {
