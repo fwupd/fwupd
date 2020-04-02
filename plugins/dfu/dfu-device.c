@@ -1738,6 +1738,18 @@ dfu_device_set_quirk_kv (FuDevice *device,
 				     "invalid DFU version");
 		return FALSE;
 	}
+	if (g_strcmp0 (key, "DfuForceTimeout") == 0) {
+		guint64 tmp = fu_common_strtoull (value);
+		if (tmp < G_MAXUINT) {
+			priv->timeout_ms = tmp;
+			return TRUE;
+		}
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "invalid DFU timeout");
+		return FALSE;
+	}
 
 	/* failed */
 	g_set_error_literal (error,
