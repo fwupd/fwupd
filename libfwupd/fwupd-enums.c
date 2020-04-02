@@ -489,6 +489,54 @@ fwupd_release_flag_from_string (const gchar *release_flag)
 }
 
 /**
+ * fwupd_release_urgency_to_string:
+ * @release_urgency: A #FwupdReleaseUrgency, e.g. %FWUPD_RELEASE_URGENCY_HIGH
+ *
+ * Converts an enumerated value to a string.
+ *
+ * Return value: identifier string
+ *
+ * Since: 1.4.0
+ **/
+const gchar *
+fwupd_release_urgency_to_string (FwupdReleaseUrgency release_urgency)
+{
+	if (release_urgency == FWUPD_RELEASE_URGENCY_LOW)
+		return "low";
+	if (release_urgency == FWUPD_RELEASE_URGENCY_MEDIUM)
+		return "medium";
+	if (release_urgency == FWUPD_RELEASE_URGENCY_HIGH)
+		return "high";
+	if (release_urgency == FWUPD_RELEASE_URGENCY_CRITICAL)
+		return "critical";
+	return NULL;
+}
+
+/**
+ * fwupd_release_urgency_from_string:
+ * @release_urgency: A string, e.g. `trusted-payload`
+ *
+ * Converts a string to an enumerated value.
+ *
+ * Return value: enumerated value
+ *
+ * Since: 1.4.0
+ **/
+FwupdReleaseUrgency
+fwupd_release_urgency_from_string (const gchar *release_urgency)
+{
+	if (g_strcmp0 (release_urgency, "low") == 0)
+		return FWUPD_RELEASE_URGENCY_LOW;
+	if (g_strcmp0 (release_urgency, "medium") == 0)
+		return FWUPD_RELEASE_URGENCY_MEDIUM;
+	if (g_strcmp0 (release_urgency, "high") == 0)
+		return FWUPD_RELEASE_URGENCY_HIGH;
+	if (g_strcmp0 (release_urgency, "critical") == 0)
+		return FWUPD_RELEASE_URGENCY_CRITICAL;
+	return FWUPD_RELEASE_URGENCY_UNKNOWN;
+}
+
+/**
  * fwupd_version_format_from_string:
  * @str: A string, e.g. `quad`
  *

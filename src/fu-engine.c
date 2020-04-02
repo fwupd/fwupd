@@ -401,6 +401,9 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 			fwupd_release_set_size (rel, *sizeptr);
 		}
 	}
+	tmp = xb_node_get_attr (release, "urgency");
+	if (tmp != NULL)
+		fwupd_release_set_urgency (rel, fwupd_release_urgency_from_string (tmp));
 	tmp64 = xb_node_get_attr_as_uint (release, "install_duration");
 	if (tmp64 != G_MAXUINT64)
 		fwupd_release_set_install_duration (rel, tmp64);
