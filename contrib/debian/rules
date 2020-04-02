@@ -46,9 +46,6 @@ override_dh_auto_configure:
 	else \
 		export UEFI="-Dplugin_uefi=false -Dplugin_redfish=false -Dplugin_nvme=false"; \
 	fi; \
-	if [ ! -z "$$CI" ]; then \
-		export CI="-Dlibjcat:introspection=false $$CI"; \
-	fi; \
 	dh_auto_configure -- $$UEFI $$DELL $$FLASHROM $$CI -Dplugin_dummy=true -Dgtkdoc=true
 
 override_dh_install:
@@ -58,16 +55,6 @@ override_dh_install:
 	#install the EFI binaries if needed
 	if [ -d debian/tmp/usr/libexec/fwupd/efi/ ]; then \
 		dh_install -pfwupd usr/libexec/fwupd/efi ;\
-	fi
-	#libjcat built as a subproject for CI
-	if [ ! -z "$$CI" ]; then \
-		dh_install -plibfwupd-dev usr/include/libjcat-1; \
-		dh_install -plibfwupd2 usr/lib/*/libjcat.so.*; \
-		dh_install -plibfwupd-dev usr/lib/*/libjcat.so; \
-		dh_install -plibfwupd-dev usr/lib/*/pkgconfig/jcat.pc; \
-		dh_install -plibfwupd-dev usr/libexec/jcat-tool; \
-		dh_install -plibfwupd-dev usr/share/gir-1.0/Jcat*; \
-		dh_install -pfwupd-tests usr/libexec/installed-tests/libjcat; \
 	fi
 	dh_missing -a --fail-missing
 
