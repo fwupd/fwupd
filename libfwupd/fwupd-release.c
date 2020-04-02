@@ -51,6 +51,7 @@ typedef struct {
 	gchar				*version;
 	gchar				*remote_id;
 	guint64				 size;
+	guint64				 created;
 	guint32				 install_duration;
 	FwupdReleaseFlags		 flags;
 	gchar				*update_message;
@@ -825,6 +826,41 @@ fwupd_release_set_size (FwupdRelease *release, guint64 size)
 }
 
 /**
+ * fwupd_release_get_created:
+ * @release: A #FwupdRelease
+ *
+ * Gets when the update was created.
+ *
+ * Returns: UTC timestamp in UNIX format, or 0 if unset
+ *
+ * Since: 1.4.0
+ **/
+guint64
+fwupd_release_get_created (FwupdRelease *release)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_val_if_fail (FWUPD_IS_RELEASE (release), 0);
+	return priv->created;
+}
+
+/**
+ * fwupd_release_set_created:
+ * @release: A #FwupdRelease
+ * @created: UTC timestamp in UNIX format
+ *
+ * Sets when the update was created.
+ *
+ * Since: 1.4.0
+ **/
+void
+fwupd_release_set_created (FwupdRelease *release, guint64 created)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_if_fail (FWUPD_IS_RELEASE (release));
+	priv->created = created;
+}
+
+/**
  * fwupd_release_get_summary:
  * @release: A #FwupdRelease
  *
@@ -1262,6 +1298,11 @@ fwupd_release_to_variant (FwupdRelease *release)
 				       FWUPD_RESULT_KEY_SIZE,
 				       g_variant_new_uint64 (priv->size));
 	}
+	if (priv->created != 0) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_CREATED,
+				       g_variant_new_uint64 (priv->created));
+	}
 	if (priv->summary != NULL) {
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_SUMMARY,
@@ -1390,6 +1431,10 @@ fwupd_release_from_key_value (FwupdRelease *release, const gchar *key, GVariant 
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_SIZE) == 0) {
 		fwupd_release_set_size (release, g_variant_get_uint64 (value));
+		return;
+	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_CREATED) == 0) {
+		fwupd_release_set_created (release, g_variant_get_uint64 (value));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_SUMMARY) == 0) {
@@ -1588,6 +1633,7 @@ fwupd_release_to_json (FwupdRelease *release, JsonBuilder *builder)
 	}
 	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_LICENSE, priv->license);
 	fwupd_release_json_add_int (builder, FWUPD_RESULT_KEY_SIZE, priv->size);
+	fwupd_release_json_add_int (builder, FWUPD_RESULT_KEY_CREATED, priv->created);
 	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_URI, priv->uri);
 	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_HOMEPAGE, priv->homepage);
 	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_DETAILS_URL, priv->details_url);
@@ -1661,6 +1707,7 @@ fwupd_release_to_string (FwupdRelease *release)
 	}
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_LICENSE, priv->license);
 	fwupd_pad_kv_siz (str, FWUPD_RESULT_KEY_SIZE, priv->size);
+	fwupd_pad_kv_siz (str, FWUPD_RESULT_KEY_CREATED, priv->created);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_URI, priv->uri);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_HOMEPAGE, priv->homepage);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DETAILS_URL, priv->details_url);

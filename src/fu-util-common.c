@@ -1326,6 +1326,13 @@ fu_util_release_to_string (FwupdRelease *rel, guint idt)
 		/* TRANSLATORS: file size of the download */
 		fu_common_string_append_kv (str, idt + 1, _("Size"), tmp);
 	}
+	if (fwupd_release_get_created (rel) != 0) {
+		gint64 value = (gint64) fwupd_release_get_created (rel);
+		g_autoptr(GDateTime) date = g_date_time_new_from_unix_utc (value);
+		g_autofree gchar *tmp = g_date_time_format (date, "%F");
+		/* TRANSLATORS: when the update was built */
+		fu_common_string_append_kv (str, idt + 1, _("Created"), tmp);
+	}
 	if (fwupd_release_get_details_url (rel) != NULL) {
 		/* TRANSLATORS: more details about the update link */
 		fu_common_string_append_kv (str, idt + 1, _("Details"),

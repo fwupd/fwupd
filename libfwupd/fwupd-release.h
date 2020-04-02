@@ -105,6 +105,9 @@ void		 fwupd_release_set_source_url		(FwupdRelease	*release,
 guint64		 fwupd_release_get_size			(FwupdRelease	*release);
 void		 fwupd_release_set_size			(FwupdRelease	*release,
 							 guint64	 size);
+guint64		 fwupd_release_get_created		(FwupdRelease	*release);
+void		 fwupd_release_set_created		(FwupdRelease	*release,
+							 guint64	 created);
 const gchar	*fwupd_release_get_license		(FwupdRelease	*release);
 void		 fwupd_release_set_license		(FwupdRelease	*release,
 							 const gchar	*license);
