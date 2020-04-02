@@ -2741,6 +2741,8 @@ fu_common_device_category_to_name (const gchar *cat)
 		return "Thunderbolt Controller";
 	if (g_strcmp0 (cat, "X-PlatformSecurityProcessor") == 0)
 		return "Platform Security Processor";
+	if (g_strcmp0 (cat, "X-CpuMicrocode") == 0)
+		return "CPU Microcode";
 	return NULL;
 }
 
