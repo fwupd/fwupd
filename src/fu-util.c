@@ -1259,24 +1259,26 @@ fu_util_download_metadata_for_remote (FuUtilPrivate *priv,
 	g_autoptr(SoupURI) uri = NULL;
 	g_autoptr(SoupURI) uri_sig = NULL;
 
-	/* generate some plausible local filenames */
-	basename = g_path_get_basename (fwupd_remote_get_filename_cache (remote));
-	basename_id = g_strdup_printf ("%s-%s", fwupd_remote_get_id (remote), basename);
-
-	/* download the metadata */
-	filename = fu_util_get_user_cache_path (basename_id);
-	if (!fu_common_mkdir_parent (filename, error))
-		return FALSE;
-	uri = soup_uri_new (fwupd_remote_get_metadata_uri (remote));
-	if (!fu_util_download_file (priv, uri, filename, NULL, error))
-		return FALSE;
-
 	/* download the signature */
 	basename_asc = g_path_get_basename (fwupd_remote_get_filename_cache_sig (remote));
 	basename_id_asc = g_strdup_printf ("%s-%s", fwupd_remote_get_id (remote), basename_asc);
 	filename_asc = fu_util_get_user_cache_path (basename_id_asc);
+	if (!fu_common_mkdir_parent (filename_asc, error))
+		return FALSE;
 	uri_sig = soup_uri_new (fwupd_remote_get_metadata_uri_sig (remote));
 	if (!fu_util_download_file (priv, uri_sig, filename_asc, NULL, error))
+		return FALSE;
+
+	/* find the download URI of the metadata from the JCat file */
+	if (!fwupd_remote_load_signature (remote, filename_asc, error))
+		return FALSE;
+
+	/* download the metadata */
+	basename = g_path_get_basename (fwupd_remote_get_filename_cache (remote));
+	basename_id = g_strdup_printf ("%s-%s", fwupd_remote_get_id (remote), basename);
+	filename = fu_util_get_user_cache_path (basename_id);
+	uri = soup_uri_new (fwupd_remote_get_metadata_uri (remote));
+	if (!fu_util_download_file (priv, uri, filename, NULL, error))
 		return FALSE;
 
 	/* send all this to fwupd */

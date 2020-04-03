@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include <libsoup/soup.h>
+#include <jcat.h>
 
 #include "fwupd-deprecated.h"
 #include "fwupd-enums-private.h"
@@ -894,6 +895,72 @@ fwupd_remote_get_metadata_uri (FwupdRemote *self)
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
 	return priv->metadata_uri;
+}
+
+/**
+ * fwupd_remote_load_signature:
+ * @self: A #FwupdRemote
+ * @filename: A filename
+ * @error: the #GError, or %NULL
+ *
+ * Parses the signature, updating the metadata URI as appropriate.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.4.0
+ **/
+gboolean
+fwupd_remote_load_signature (FwupdRemote *self, const gchar *filename, GError **error)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	const gchar *id;
+	g_autofree gchar *basename = NULL;
+	g_autofree gchar *baseuri = NULL;
+	g_autofree gchar *metadata_uri = NULL;
+	g_autoptr(GFile) gfile = NULL;
+	g_autoptr(JcatFile) jcat_file = jcat_file_new ();
+	g_autoptr(JcatItem) jcat_item = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), FALSE);
+	g_return_val_if_fail (filename != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* load JCat file */
+	gfile = g_file_new_for_path (filename);
+	if (!jcat_file_import_file (jcat_file, gfile, JCAT_IMPORT_FLAG_NONE, NULL, error))
+		return FALSE;
+
+	/* this seems pointless to get the item by ID then just read the ID,
+	 * but _get_item_by_id() uses the AliasIds as a fallback */
+	basename = g_path_get_basename (priv->metadata_uri);
+	jcat_item = jcat_file_get_item_by_id (jcat_file, basename, NULL);
+	if (jcat_item == NULL) {
+		/* if we're using libjcat 0.1.0 just get the default item */
+		jcat_item = jcat_file_get_item_default (jcat_file, error);
+		if (jcat_item == NULL)
+			return FALSE;
+	}
+	id = jcat_item_get_id (jcat_item);
+	if (id == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "No ID for JCat item");
+		return FALSE;
+	}
+
+	/* replace the URI if required */
+	baseuri = g_path_get_dirname (priv->metadata_uri);
+	metadata_uri = g_build_filename (baseuri, id, NULL);
+	if (g_strcmp0 (metadata_uri, priv->metadata_uri) != 0) {
+		g_debug ("changing metadata URI from %s to %s",
+			 priv->metadata_uri, metadata_uri);
+		g_free (priv->metadata_uri);
+		priv->metadata_uri = g_steal_pointer (&metadata_uri);
+	}
+
+	/* success */
+	return TRUE;
 }
 
 /**
