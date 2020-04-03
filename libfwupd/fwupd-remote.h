@@ -72,6 +72,9 @@ FwupdKeyringKind fwupd_remote_get_keyring_kind		(FwupdRemote	*self);
 gchar		*fwupd_remote_build_firmware_uri	(FwupdRemote	*self,
 							 const gchar	*url,
 							 GError		**error);
+gboolean	 fwupd_remote_load_signature		(FwupdRemote	*self,
+							 const gchar	*filename,
+							 GError		**error);
 
 FwupdRemote	*fwupd_remote_from_variant		(GVariant	*value);
 GPtrArray	*fwupd_remote_array_from_variant	(GVariant	*value);
