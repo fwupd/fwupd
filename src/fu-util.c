@@ -1170,7 +1170,8 @@ fu_util_download_file (FuUtilPrivate *priv,
 			     "Failed to parse URI %s", uri_str);
 		return FALSE;
 	}
-	if (g_str_has_suffix (uri_str, ".asc") ||
+	if (g_str_has_suffix (uri_str, ".jcat") ||
+	    g_str_has_suffix (uri_str, ".asc") ||
 	    g_str_has_suffix (uri_str, ".p7b") ||
 	    g_str_has_suffix (uri_str, ".p7c")) {
 		/* TRANSLATORS: downloading new signing file */
