@@ -1,0 +1,13 @@
+{
+  "name": "8Bitdo NES30Pro",
+  "guids": [
+    "c6566b1b-0c6e-5d2e-9376-78c23ab57bf2"
+  ],
+  "interactive": true,
+  "releases": [
+    {
+      "version": "4.01",
+      "file": "1cb9a0277f536ecd81ca1cea6fd80d60cdbbdcd8-8Bitdo-SFC30PRO_NES30PRO-4.01.cab"
+    }
+  ]
+}

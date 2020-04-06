@@ -1,0 +1,13 @@
+{
+  "name": "8Bitdo SFC30",
+  "guids": [
+    "a7fcfbaf-e9e8-59f4-920d-7691dc6c8699"
+  ],
+  "interactive": true,
+  "releases": [
+    {
+      "version": "4.01",
+      "file": "fe066b57c69265f4cce8a999a5f8ab90d1c13b24-8Bitdo-SFC30_NES30_SFC30_SNES30-4.01.cab"
+    }
+  ]
+}

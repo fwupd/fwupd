@@ -1,0 +1,14 @@
+{
+  "name": "AIAIAI H05",
+  "guids": [
+    "7e8318e1-27ae-55e4-a7a7-a35eff60e9bf"
+  ],
+  "runtime": false,
+  "interactive": true,
+  "releases": [
+    {
+      "version": "1.6",
+      "file": "84279d6bab52262080531acac701523604f3e649-AIAIAI-H05-1.6.cab"
+    }
+  ]
+}

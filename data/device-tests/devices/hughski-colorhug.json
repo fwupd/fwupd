@@ -1,0 +1,16 @@
+{
+  "name": "Hughski ColorHug",
+  "guids": [
+    "40338ceb-b966-4eae-adae-9c32edfcc484"
+  ],
+  "releases": [
+    {
+      "version": "1.2.5",
+      "file": "9a4e77009da7d3b5f15a1388afeb9e5d41a5a8ae-hughski-colorhug2-1.2.5.cab"
+    },
+    {
+      "version": "1.2.6",
+      "file": "aa1b94b36c91929fbf75551b8a376d7292f8c51c-hughski-colorhug-1.2.6.cab"
+    }
+  ]
+}

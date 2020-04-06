@@ -1,0 +1,16 @@
+{
+  "name": "Ugreen CM260",
+  "guids": [
+    "7afc5bff-be55-5e95-81ca-584f13207b1d"
+  ],
+  "releases": [
+    {
+      "version": "7.2.1.0",
+      "file": "53cd390673287a99e5d4cc4cf30b5fade0f5e708fe0b1bd424bf36467642d76c-Ugreen-CM260-7.2.1.0.cab"
+    },
+    {
+      "version": "7.2.1.0",
+      "file": "eec2c6216fa86077504587633fc8d018a366a1cfe3df8dd9c575c2e8ef0ef423-Ugreen-CM260-7.2.2.0.cab"
+    }
+  ]
+}

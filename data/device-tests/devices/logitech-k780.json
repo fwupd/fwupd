@@ -1,0 +1,16 @@
+{
+  "name": "Logitech K780",
+  "guids": [
+    "3932ba15-2bbe-5bbb-817e-6c74e7088509"
+  ],
+  "releases": [
+    {
+      "version": "MPK01.02_B0021",
+      "file": "454f1034f5efeb531163d90852ef33afd3fafeeb-Logitech-K780-MPK01.02_B0021.cab"
+    },
+    {
+      "version": "MPK01.03_B0024",
+      "file": "b0dffe84c6d3681e7ae5f27509781bc1cf924dd7-Logitech-K780-MPK01.03_B0024.cab"
+    }
+  ]
+}

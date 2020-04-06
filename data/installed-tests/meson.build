@@ -14,7 +14,6 @@ configure_file(
 install_data([
     'fwupdmgr.sh',
     'fwupd-tests.xml',
-    'hardware.py',
   ],
   install_dir : 'share/installed-tests/fwupd',
 )
