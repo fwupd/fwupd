@@ -673,7 +673,7 @@ fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
 			return FALSE;
 		}
 	}
-	priv->flags = FWUPD_INSTALL_FLAG_NO_HISTORY;
+	priv->flags |= FWUPD_INSTALL_FLAG_NO_HISTORY;
 	if (!fu_engine_install_blob (priv->engine, device, blob_fw, priv->flags, error))
 		return FALSE;
 	if (priv->cleanup_blob) {
