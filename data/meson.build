@@ -10,9 +10,9 @@ endif
 
 if get_option('tests')
   subdir('tests')
-endif
-if build_daemon
-  subdir('installed-tests')
+  if build_daemon
+    subdir('installed-tests')
+  endif
 endif
 
 if build_standalone
