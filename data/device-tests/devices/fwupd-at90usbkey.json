@@ -1,0 +1,16 @@
+{
+  "name": "LVFS AT90USBKEY",
+  "guids": [
+    "c1874c52-5f6a-5864-926d-ea84bcdc82ea"
+  ],
+  "releases": [
+    {
+      "version": "1.23",
+      "file": "b6bef375597e848971f230cf992c9740f7bf5b92-at90usbkey123.cab"
+    },
+    {
+      "version": "1.24",
+      "file": "47807fd4a94a4d5514ac6bf7a73038e00ed63225-at90usbkey124.cab"
+    }
+  ]
+}
