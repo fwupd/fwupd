@@ -44,7 +44,6 @@ lintian ../*changes \
 	--suppress-tags source-nmu-has-incorrect-version-number \
 	--suppress-tags no-symbols-control-file \
 	--suppress-tags gzip-file-is-not-multi-arch-same-safe \
-	--suppress-tags binary-is-wrong-architecture \
 	--suppress-tags missing-dependency-on-libc \
 	--suppress-tags arch-dependent-file-not-in-arch-specific-directory \
 	--allow-root
