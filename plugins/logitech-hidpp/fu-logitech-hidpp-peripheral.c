@@ -163,7 +163,8 @@ fu_logitech_hidpp_peripheral_ping (FuLogitechHidPpPeripheral *self, GError **err
 	fu_logitech_hidpp_peripheral_refresh_updatable (self);
 
 	/* if the HID++ ID is unset, grab it from the reply */
-	if (self->hidpp_id == HIDPP_DEVICE_ID_UNSET) {
+	if (self->hidpp_id == HIDPP_DEVICE_ID_UNSET &&
+	    msg->device_id != HIDPP_DEVICE_ID_UNSET) {
 		self->hidpp_id = msg->device_id;
 		g_debug ("HID++ ID is %02x", self->hidpp_id);
 	}
@@ -503,6 +504,15 @@ fu_logitech_hidpp_peripheral_setup (FuDevice *device, GError **error)
 	/* ping device to get HID++ version */
 	if (!fu_logitech_hidpp_peripheral_ping (self, error))
 		return FALSE;
+
+	/* did not get ID */
+	if (self->hidpp_id == HIDPP_DEVICE_ID_UNSET) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_FAILED,
+				     "no HID++ ID");
+		return FALSE;
+	}
 
 	/* add known root for HID++2.0 */
 	g_ptr_array_set_size (self->feature_index, 0);
