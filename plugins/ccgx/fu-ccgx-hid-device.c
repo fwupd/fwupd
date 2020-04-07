@@ -12,27 +12,44 @@
 struct _FuCcgxHidDevice
 {
 	FuHidDevice		 parent_instance;
+	guint			 setup_id;
 };
 
 G_DEFINE_TYPE (FuCcgxHidDevice, fu_ccgx_hid_device, FU_TYPE_HID_DEVICE)
 
-#define FU_CCGX_HID_DEVICE_TIMEOUT	5000 /* ms */
+#define FU_CCGX_HID_DEVICE_TIMEOUT		5000 /* ms */
+#define FU_CCGX_HID_DEVICE_RETRY_DELAY_US 	30000
+#define FU_CCGX_HID_DEVICE_RETRY_CNT 		5
 
 static gboolean
 fu_ccgx_hid_device_enable_hpi_mode (FuDevice *device, GError **error)
 {
 	guint8 buf[5] = {0xEE, 0xBC, 0xA6, 0xB9, 0xA8};
-
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	if (!fu_hid_device_set_report (FU_HID_DEVICE (device), buf[0],
-				       buf, sizeof(buf),
-				       FU_CCGX_HID_DEVICE_TIMEOUT,
-				       FU_HID_DEVICE_FLAG_NONE,
-				       error)) {
-		g_prefix_error (error, "switch to HPI mode error: ");
-		return FALSE;
+	for (gint retry = 1 ; retry <= FU_CCGX_HID_DEVICE_RETRY_CNT ; retry++) {
+		g_autoptr(GError) error_local = NULL;
+		if (retry > 1) {
+			g_usleep (FU_CCGX_HID_DEVICE_RETRY_DELAY_US);
+			g_debug ("hid command retry %d",(gint)(retry-1));
+		}
+		if (!fu_hid_device_set_report (FU_HID_DEVICE (device), buf[0],
+				      	       buf, sizeof(buf),
+				       	       FU_CCGX_HID_DEVICE_TIMEOUT,
+				       	       FU_HID_DEVICE_FLAG_NONE,
+				       	       &error_local)) {
+			if (retry == FU_CCGX_HID_DEVICE_RETRY_CNT ||
+				g_error_matches (error_local,
+						 G_USB_DEVICE_ERROR,
+						 G_USB_DEVICE_ERROR_NO_DEVICE)) {
+				g_propagate_error (error, g_steal_pointer (&error_local));
+				g_prefix_error (error, "switch to HPI mode error: ");
+				return FALSE;
+			}
+			continue;
+		}
+		return TRUE;
 	}
-	return TRUE;
+	return FALSE;
 }
 
 static gboolean
@@ -45,21 +62,46 @@ fu_ccgx_hid_device_detach (FuDevice *device, GError **error)
 }
 
 static gboolean
+fu_ccgx_hid_device_setup_cb (gpointer user_data)
+{
+	FuCcgxHidDevice *self = FU_CCGX_HID_DEVICE (user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	/* do this in idle so that the original HID device gets added */
+	locker = fu_device_locker_new (self, &error);
+	if (locker == NULL) {
+		g_warning ("failed to open HID device: %s",
+			   error->message);
+	} else {
+		if (!fu_ccgx_hid_device_detach (FU_DEVICE (self), &error)) {
+			g_warning ("failed to detach to HPI mode: %s",
+				   error->message);
+		}
+	}
+
+	/* never again */
+	self->setup_id = 0;
+	return G_SOURCE_REMOVE;
+}
+
+static gboolean
 fu_ccgx_hid_device_setup (FuDevice *device, GError **error)
 {
+	FuCcgxHidDevice *self = FU_CCGX_HID_DEVICE (device);
 	/* This seems insane... but we need to switch the device from HID
 	 * mode to HPI mode at startup. The device continues to function
 	 * exactly as before and no user-visible effects are noted */
-	if (!fu_ccgx_hid_device_enable_hpi_mode (device, error))
-		return FALSE;
+	self->setup_id = g_timeout_add (1000, fu_ccgx_hid_device_setup_cb, self);
+	return TRUE;
+}
 
-	/* never add this device, the daemon does not expect the device to
-	 * disconnect before it is added */
-	g_set_error_literal (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "device is replugging into HPI mode");
-	return FALSE;
+static void
+fu_ccgx_hid_device_finalize (GObject *object)
+{
+	FuCcgxHidDevice *self = FU_CCGX_HID_DEVICE (object);
+	if (self->setup_id != 0)
+		g_source_remove (self->setup_id);
 }
 
 static void
@@ -74,6 +116,8 @@ static void
 fu_ccgx_hid_device_class_init (FuCcgxHidDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
+	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+	object_class->finalize = fu_ccgx_hid_device_finalize;
 	klass_device->detach = fu_ccgx_hid_device_detach;
 	klass_device->setup = fu_ccgx_hid_device_setup;
 }
