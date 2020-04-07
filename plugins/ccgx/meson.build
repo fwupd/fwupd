@@ -14,6 +14,7 @@ shared_module('fu_plugin_ccgx',
     'fu-ccgx-common.c',
     'fu-ccgx-firmware.c',
     'fu-ccgx-hid-device.c',
+    'fu-ccgx-hpi-common.c',
     'fu-ccgx-hpi-device.c',
   ],
   include_directories : [

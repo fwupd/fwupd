@@ -370,3 +370,5 @@ typedef enum {
 	HPI_EVENT_TB_ENTERED			= 0xB0,
 	HPI_EVENT_TB_EXITED
 } HPIResp;
+
+const gchar	*fu_ccgx_pd_resp_to_string		(CyPDResp	 val);

@@ -709,7 +709,8 @@ fu_ccgx_hpi_validate_fw (FuCcgxHpiDevice *self, guint8 fw_index, GError **error)
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
-			     "validate fw resp code error: 0x%x",
+			     "validate failed: %s [0x%x]",
+			     fu_ccgx_pd_resp_to_string (hpi_event),
 			     hpi_event);
 		return FALSE;
 	}
@@ -745,7 +746,9 @@ fu_ccgx_hpi_enter_flash_mode (FuCcgxHpiDevice *self, GError **error)
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
-			     "enter flash mode resp code error:	0x%x", hpi_event);
+			     "enter flash failed: %s [0x%x]",
+			     fu_ccgx_pd_resp_to_string (hpi_event),
+			     hpi_event);
 		return FALSE;
 	}
 
@@ -783,7 +786,9 @@ fu_ccgx_hpi_leave_flash_mode (FuCcgxHpiDevice *self, GError **error)
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
-			     "leave flash mode resp code error: 0x%x", hpi_event);
+			     "leave flash mode failed: %s [0x%x]",
+			     fu_ccgx_pd_resp_to_string (hpi_event),
+			     hpi_event);
 		return FALSE;
 	}
 
@@ -838,7 +843,9 @@ fu_ccgx_hpi_write_flash (FuCcgxHpiDevice *self,
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
-			     "write flash resp code error: 0x%x", hpi_event);
+			     "write flash failed: %s [0x%x]",
+			     fu_ccgx_pd_resp_to_string (hpi_event),
+			     hpi_event);
 		return FALSE;
 	}
 	return TRUE;
@@ -884,7 +891,9 @@ fu_ccgx_hpi_read_flash (FuCcgxHpiDevice *self,
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
-			     "read flash resp code error: 0x%x", hpi_event);
+			     "read flash failed: %s [0x%x]",
+			     fu_ccgx_pd_resp_to_string (hpi_event),
+			     hpi_event);
 		return FALSE;
 	}
 	addr_tmp = self->hpi_addrsz > 1 ? HPI_DEV_REG_FLASH_MEM : CY_PD_REG_BOOTDATA_MEMORY_ADDR;
