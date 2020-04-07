@@ -67,11 +67,11 @@ fu_ccgx_hpi_device_to_string (FuDevice *device, guint idt, GString *str)
 }
 
 static gboolean
-fu_ccgx_hpi_device_get_i2c_status (FuCcgxHpiDevice *self,
-				   guint8 mode,
-				   guint8 *i2c_status, /* out */
-				   GError **error)
+fu_ccgx_hpi_device_check_i2c_status (FuCcgxHpiDevice *self,
+				     guint8 mode,
+				     GError **error)
 {
+	guint8 buf[CY_I2C_GET_STATUS_LEN] = { 0x0 };
 	g_autoptr(GError) error_local =	NULL;
 	if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (self)),
 					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
@@ -80,8 +80,7 @@ fu_ccgx_hpi_device_get_i2c_status (FuCcgxHpiDevice *self,
 					    CY_I2C_GET_STATUS_CMD,
 					    (((guint16) self->scb_index) << CY_SCB_INDEX_POS) | mode,
 					    0x0,
-					    (guint8 *) &i2c_status,
-					    CY_I2C_GET_STATUS_LEN,
+					    buf, sizeof(buf),
 					    NULL,
 					    FU_CCGX_HPI_WAIT_TIMEOUT,
 					    NULL,
@@ -91,6 +90,22 @@ fu_ccgx_hpi_device_get_i2c_status (FuCcgxHpiDevice *self,
 			     FWUPD_ERROR_INTERNAL,
 			     "failed to get i2c status: %s",
 			     error_local->message);
+		return FALSE;
+	}
+	if (buf[0] & CY_I2C_ERROR_BIT) {
+		if (buf[0] & 0x80) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_WRITE,
+				     "i2c status write error: 0x%x",
+				     buf[0]);
+			return FALSE;
+		}
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_READ,
+			     "i2c status read error: 0x%x",
+			     buf[0]);
 		return FALSE;
 	}
 	return TRUE;
@@ -183,21 +198,19 @@ fu_ccgx_hpi_device_wait_for_notify (FuCcgxHpiDevice *self,
 							 error))
 				return FALSE;
 		}
-		/* write */
 		if (buf[0] & 0x80) {
 			g_set_error (error,
 				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "i2c status error in i2c write [0x%x] event: %s",
-				     (guint8) buf[0], error_local->message);
-		/* read */
-		} else {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "i2c status error in i2c read [0x%x] event: %s",
-				     (guint8) buf[0], error_local->message);
+				     FWUPD_ERROR_WRITE,
+				     "i2c status write error: 0x%x",
+				     buf[0]);
+			return FALSE;
 		}
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_READ,
+			     "i2c status read error: 0x%x",
+			     buf[0]);
 		return FALSE;
 	}
 	return TRUE;
@@ -209,19 +222,10 @@ fu_ccgx_hpi_device_i2c_read (FuCcgxHpiDevice *self,
 			     CyI2CDataConfigBits cfg_bits,
 			     GError **error)
 {
-	guint8 i2c_status = 0x0;
 	guint8 slave_address = 0;
 
-	if (!fu_ccgx_hpi_device_get_i2c_status (self, CY_I2C_MODE_READ, &i2c_status, error)) {
+	if (!fu_ccgx_hpi_device_check_i2c_status (self, CY_I2C_MODE_READ, error)) {
 		g_prefix_error (error, "i2c read error: ");
-		return FALSE;
-	}
-	if (i2c_status & CY_I2C_ERROR_BIT) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "i2c status error in i2c read: 0x%x",
-			     (guint8) i2c_status);
 		return FALSE;
 	}
 	slave_address = (self->slave_address & 0x7F) | (self->scb_index << 7);
@@ -261,23 +265,11 @@ fu_ccgx_hpi_device_i2c_write (FuCcgxHpiDevice *self,
 			      CyI2CDataConfigBits cfg_bits,
 			      GError **error)
 {
-	guint8 i2c_status = 0x0;
 	guint8 slave_address;
 	g_autoptr(GError) error_local = NULL;
 
-	if (!fu_ccgx_hpi_device_get_i2c_status (self,
-						CY_I2C_MODE_WRITE,
-						&i2c_status,
-						error)) {
+	if (!fu_ccgx_hpi_device_check_i2c_status (self, CY_I2C_MODE_WRITE, error)) {
 		g_prefix_error (error, "i2c get status error: ");
-		return FALSE;
-	}
-	if (i2c_status & CY_I2C_ERROR_BIT) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "i2c status error in i2c write: 0x%x",
-			     (guint8) i2c_status);
 		return FALSE;
 	}
 	slave_address = (self->slave_address & 0x7F) | (self->scb_index << 7);
@@ -317,14 +309,10 @@ fu_ccgx_hpi_device_i2c_write_no_resp (FuCcgxHpiDevice *self,
 				      CyI2CDataConfigBits cfg_bits,
 				      GError **error)
 {
-	guint8 i2c_status = 0x0;
 	guint8 slave_address = 0;
 	g_autoptr(GError) error_local = NULL;
 
-	if (!fu_ccgx_hpi_device_get_i2c_status (self,
-						CY_I2C_MODE_WRITE,
-						&i2c_status,
-						error)) {
+	if (!fu_ccgx_hpi_device_check_i2c_status (self, CY_I2C_MODE_WRITE, error)) {
 		g_prefix_error (error, "i2c write error: ");
 		return FALSE;
 	}
