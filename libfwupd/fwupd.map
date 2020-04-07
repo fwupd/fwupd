@@ -424,8 +424,10 @@ LIBFWUPD_1.3.7 {
 
 LIBFWUPD_1.4.0 {
   global:
+    fwupd_device_get_status;
     fwupd_device_get_version_bootloader_raw;
     fwupd_device_get_version_lowest_raw;
+    fwupd_device_set_status;
     fwupd_device_set_version_bootloader_raw;
     fwupd_device_set_version_lowest_raw;
     fwupd_release_get_created;
