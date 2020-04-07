@@ -470,8 +470,14 @@ fu_device_list_add_missing_guids (FuDevice *device_new, FuDevice *device_old)
 	for (guint i = 0; i < guids_old->len; i++) {
 		const gchar *guid_tmp = g_ptr_array_index (guids_old, i);
 		if (!fu_device_has_guid (device_new, guid_tmp)) {
-			g_debug ("adding GUID %s to device", guid_tmp);
-			fu_device_add_counterpart_guid (device_new, guid_tmp);
+			if (fu_device_has_flag (device_new, FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS)) {
+				g_debug ("adding GUID %s to device", guid_tmp);
+				fu_device_add_counterpart_guid (device_new, guid_tmp);
+			} else {
+				g_debug ("not adding GUID %s to device, use "
+					 "FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS if required",
+					 guid_tmp);
+			}
 		}
 	}
 }

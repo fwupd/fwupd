@@ -581,6 +581,7 @@ static void
 fu_ebitdo_device_init (FuEbitdoDevice *self)
 {
 	fu_device_set_protocol (FU_DEVICE (self), "com.8bitdo");
+	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS);
 }
 
 static void
