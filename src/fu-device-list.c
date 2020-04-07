@@ -313,6 +313,36 @@ fu_device_list_get_by_guids (FuDeviceList *self, GPtrArray *guids)
 	return NULL;
 }
 
+static FuDeviceItem *
+fu_device_list_get_by_guids_removed (FuDeviceList *self, GPtrArray *guids)
+{
+	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_reader_locker_new (&self->devices_mutex);
+	g_return_val_if_fail (locker != NULL, NULL);
+	for (guint i = 0; i < self->devices->len; i++) {
+		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
+		if (item->remove_id == 0)
+			continue;
+		for (guint j = 0; j < guids->len; j++) {
+			const gchar *guid = g_ptr_array_index (guids, j);
+			if (fu_device_has_guid (item->device, guid))
+				return item;
+		}
+	}
+	for (guint i = 0; i < self->devices->len; i++) {
+		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
+		if (item->device_old == NULL)
+			continue;
+		if (item->remove_id == 0)
+			continue;
+		for (guint j = 0; j < guids->len; j++) {
+			const gchar *guid = g_ptr_array_index (guids, j);
+			if (fu_device_has_guid (item->device_old, guid))
+				return item;
+		}
+	}
+	return NULL;
+}
+
 static gboolean
 fu_device_list_device_delayed_remove_cb (gpointer user_data)
 {
@@ -583,8 +613,8 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 	}
 
 	/* verify a compatible device does not already exist */
-	item = fu_device_list_get_by_guids (self, fu_device_get_guids (device));
-	if (item != NULL && item->remove_id != 0) {
+	item = fu_device_list_get_by_guids_removed (self, fu_device_get_guids (device));
+	if (item != NULL) {
 		g_debug ("found compatible device %s recently removed, reusing "
 			 "item from plugin %s for plugin %s",
 			 fu_device_get_id (item->device),
@@ -595,6 +625,7 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 	}
 
 	/* added the same device, supporting same protocol, from a different plugin */
+	item = fu_device_list_get_by_guids (self, fu_device_get_guids (device));
 	if (item != NULL &&
 	    g_strcmp0 (fu_device_get_plugin (item->device),
 		       fu_device_get_plugin (device)) != 0 &&
