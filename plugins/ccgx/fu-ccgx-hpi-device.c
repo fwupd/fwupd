@@ -969,14 +969,16 @@ fu_ccgx_hpi_device_prepare_firmware (FuDevice *device,
 			     self->silicon_id, fw_silicon_id);
 		return NULL;
 	}
-	fw_app_type = fu_ccgx_firmware_get_app_type (FU_CCGX_FIRMWARE (firmware));
-	if (fw_app_type != self->fw_app_type) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "app type mismatch, expected 0x%x, got 0x%x",
-			     self->fw_app_type, fw_app_type);
-		return NULL;
+	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+		fw_app_type = fu_ccgx_firmware_get_app_type (FU_CCGX_FIRMWARE (firmware));
+		if (fw_app_type != self->fw_app_type) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "app type mismatch, expected 0x%x, got 0x%x",
+				     self->fw_app_type, fw_app_type);
+			return NULL;
+		}
 	}
 	fw_mode = fu_ccgx_firmware_get_fw_mode (FU_CCGX_FIRMWARE (firmware));
 	if (fw_mode != fu_ccgx_fw_mode_get_alternate (self->fw_mode)) {
