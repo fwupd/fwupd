@@ -17,9 +17,13 @@ struct _FuCcgxHidDevice
 G_DEFINE_TYPE (FuCcgxHidDevice, fu_ccgx_hid_device, FU_TYPE_HID_DEVICE)
 
 #define FU_CCGX_HID_DEVICE_TIMEOUT	5000 /* ms */
+#define FU_CCGX_HID_DEVICE_RETRY_DELAY	30 /* ms */
+#define FU_CCGX_HID_DEVICE_RETRY_CNT	5
 
 static gboolean
-fu_ccgx_hid_device_enable_hpi_mode (FuDevice *device, GError **error)
+fu_ccgx_hid_device_enable_hpi_mode_cb (FuDevice *device,
+				       gpointer user_data,
+				       GError **error)
 {
 	guint8 buf[5] = {0xEE, 0xBC, 0xA6, 0xB9, 0xA8};
 
@@ -38,7 +42,10 @@ fu_ccgx_hid_device_enable_hpi_mode (FuDevice *device, GError **error)
 static gboolean
 fu_ccgx_hid_device_detach (FuDevice *device, GError **error)
 {
-	if (!fu_ccgx_hid_device_enable_hpi_mode (device, error))
+	if (!fu_device_retry (device,
+			      fu_ccgx_hid_device_enable_hpi_mode_cb,
+			      FU_CCGX_HID_DEVICE_RETRY_CNT,
+			      NULL, error))
 		return FALSE;
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
@@ -50,7 +57,10 @@ fu_ccgx_hid_device_setup (FuDevice *device, GError **error)
 	/* This seems insane... but we need to switch the device from HID
 	 * mode to HPI mode at startup. The device continues to function
 	 * exactly as before and no user-visible effects are noted */
-	if (!fu_ccgx_hid_device_enable_hpi_mode (device, error))
+	if (!fu_device_retry (device,
+			      fu_ccgx_hid_device_enable_hpi_mode_cb,
+			      FU_CCGX_HID_DEVICE_RETRY_CNT,
+			      NULL, error))
 		return FALSE;
 
 	/* never add this device, the daemon does not expect the device to
@@ -68,6 +78,7 @@ fu_ccgx_hid_device_init (FuCcgxHidDevice *self)
 	fu_device_set_protocol (FU_DEVICE (self), "com.cypress.ccgx");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_WILL_DISAPPEAR);
+	fu_device_retry_set_delay (FU_DEVICE (self), FU_CCGX_HID_DEVICE_RETRY_DELAY);
 }
 
 static void
