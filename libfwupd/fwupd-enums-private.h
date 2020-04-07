@@ -41,6 +41,7 @@ G_BEGIN_DECLS
 #define FWUPD_RESULT_KEY_REMOTE_ID		"RemoteId"	/* s */
 #define FWUPD_RESULT_KEY_SERIAL			"Serial"	/* s */
 #define FWUPD_RESULT_KEY_SIZE			"Size"		/* t */
+#define FWUPD_RESULT_KEY_STATUS			"Status"	/* u */
 #define FWUPD_RESULT_KEY_SUMMARY		"Summary"	/* s */
 #define FWUPD_RESULT_KEY_TRUST_FLAGS		"TrustFlags"	/* t */
 #define FWUPD_RESULT_KEY_UPDATE_MESSAGE		"UpdateMessage"	/* s */

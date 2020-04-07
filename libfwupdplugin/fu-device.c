@@ -45,7 +45,6 @@ typedef struct {
 	GRWLock				 parent_guids_mutex;
 	GPtrArray			*children;
 	guint				 remove_delay;	/* ms */
-	FwupdStatus			 status;
 	guint				 progress;
 	guint				 order;
 	guint				 priority;
@@ -69,7 +68,6 @@ typedef struct {
 
 enum {
 	PROP_0,
-	PROP_STATUS,
 	PROP_PROGRESS,
 	PROP_PHYSICAL_ID,
 	PROP_LOGICAL_ID,
@@ -88,9 +86,6 @@ fu_device_get_property (GObject *object, guint prop_id,
 	FuDevice *self = FU_DEVICE (object);
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	switch (prop_id) {
-	case PROP_STATUS:
-		g_value_set_uint (value, priv->status);
-		break;
 	case PROP_PROGRESS:
 		g_value_set_uint (value, priv->progress);
 		break;
@@ -118,9 +113,6 @@ fu_device_set_property (GObject *object, guint prop_id,
 {
 	FuDevice *self = FU_DEVICE (object);
 	switch (prop_id) {
-	case PROP_STATUS:
-		fu_device_set_status (self, g_value_get_uint (value));
-		break;
 	case PROP_PROGRESS:
 		fu_device_set_progress (self, g_value_get_uint (value));
 		break;
@@ -2027,9 +2019,8 @@ fu_device_set_remove_delay (FuDevice *self, guint remove_delay)
 FwupdStatus
 fu_device_get_status (FuDevice *self)
 {
-	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_DEVICE (self), 0);
-	return priv->status;
+	return fwupd_device_get_status (FWUPD_DEVICE (self));
 }
 
 /**
@@ -2044,12 +2035,8 @@ fu_device_get_status (FuDevice *self)
 void
 fu_device_set_status (FuDevice *self, FwupdStatus status)
 {
-	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_DEVICE (self));
-	if (priv->status == status)
-		return;
-	priv->status = status;
-	g_object_notify (G_OBJECT (self), "status");
+	fwupd_device_set_status (FWUPD_DEVICE (self), status);
 }
 
 /**
@@ -2946,14 +2933,6 @@ fu_device_class_init (FuDeviceClass *klass)
 	object_class->get_property = fu_device_get_property;
 	object_class->set_property = fu_device_set_property;
 
-	pspec = g_param_spec_uint ("status", NULL, NULL,
-				   FWUPD_STATUS_UNKNOWN,
-				   FWUPD_STATUS_LAST,
-				   FWUPD_STATUS_UNKNOWN,
-				   G_PARAM_READWRITE |
-				   G_PARAM_STATIC_NAME);
-	g_object_class_install_property (object_class, PROP_STATUS, pspec);
-
 	pspec = g_param_spec_string ("physical-id", NULL, NULL, NULL,
 				     G_PARAM_READWRITE |
 				     G_PARAM_STATIC_NAME);
@@ -2988,7 +2967,6 @@ static void
 fu_device_init (FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
-	priv->status = FWUPD_STATUS_IDLE;
 	priv->children = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	priv->parent_guids = g_ptr_array_new_with_free_func (g_free);
 	priv->possible_plugins = g_ptr_array_new_with_free_func (g_free);

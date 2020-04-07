@@ -59,6 +59,7 @@ typedef struct {
 	FwupdUpdateState		 update_state;
 	gchar				*update_error;
 	gchar				*update_message;
+	FwupdStatus			 status;
 	GPtrArray			*releases;
 	FwupdDevice			*parent;
 } FwupdDevicePrivate;
@@ -68,6 +69,7 @@ enum {
 	PROP_VERSION_FORMAT,
 	PROP_FLAGS,
 	PROP_PROTOCOL,
+	PROP_STATUS,
 	PROP_LAST
 };
 
@@ -1397,6 +1399,11 @@ fwupd_device_to_variant_full (FwupdDevice *device, FwupdDeviceFlags flags)
 				       FWUPD_RESULT_KEY_UPDATE_STATE,
 				       g_variant_new_uint32 (priv->update_state));
 	}
+	if (priv->status != FWUPD_STATUS_UNKNOWN) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_STATUS,
+				       g_variant_new_uint32 (priv->status));
+	}
 	if (priv->version_format != FWUPD_VERSION_FORMAT_UNKNOWN) {
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_VERSION_FORMAT,
@@ -1573,6 +1580,10 @@ fwupd_device_from_key_value (FwupdDevice *device, const gchar *key, GVariant *va
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_STATE) == 0) {
 		fwupd_device_set_update_state (device, g_variant_get_uint32 (value));
+		return;
+	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_STATUS) == 0) {
+		fwupd_device_set_status (device, g_variant_get_uint32 (value));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_VERSION_FORMAT) == 0) {
@@ -1881,6 +1892,43 @@ fwupd_device_add_release (FwupdDevice *device, FwupdRelease *release)
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
 	g_ptr_array_add (priv->releases, g_object_ref (release));
 }
+/**
+ * fwupd_device_get_status:
+ * @self: A #FwupdDevice
+ *
+ * Returns what the device is currently doing.
+ *
+ * Returns: the status value, e.g. %FWUPD_STATUS_DEVICE_WRITE
+ *
+ * Since: 1.4.0
+ **/
+FwupdStatus
+fwupd_device_get_status (FwupdDevice *self)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), 0);
+	return priv->status;
+}
+
+/**
+ * fwupd_device_set_status:
+ * @self: A #FwupdDevice
+ * @status: the status value, e.g. %FWUPD_STATUS_DEVICE_WRITE
+ *
+ * Sets what the device is currently doing.
+ *
+ * Since: 1.4.0
+ **/
+void
+fwupd_device_set_status (FwupdDevice *self, FwupdStatus status)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
+	if (priv->status == status)
+		return;
+	priv->status = status;
+	g_object_notify (G_OBJECT (self), "status");
+}
 
 static void
 fwupd_pad_kv_ups (GString *str, const gchar *key, FwupdUpdateState value)
@@ -1991,6 +2039,7 @@ fwupd_device_to_json (FwupdDevice *device, JsonBuilder *builder)
 	fwupd_device_json_add_int (builder, FWUPD_RESULT_KEY_CREATED, priv->created);
 	fwupd_device_json_add_int (builder, FWUPD_RESULT_KEY_MODIFIED, priv->modified);
 	fwupd_device_json_add_int (builder, FWUPD_RESULT_KEY_UPDATE_STATE, priv->update_state);
+	fwupd_device_json_add_int (builder, FWUPD_RESULT_KEY_STATUS, priv->status);
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_UPDATE_ERROR, priv->update_error);
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->update_message);
 	if (priv->releases->len > 0) {
@@ -2042,6 +2091,10 @@ fwupd_device_to_string (FwupdDevice *device)
 		str = g_string_append (str, "Unknown Device\n");
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_ID, priv->id);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_PARENT_DEVICE_ID, priv->parent_id);
+	if (priv->status != FWUPD_STATUS_UNKNOWN) {
+		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_STATUS,
+				  fwupd_status_to_string (priv->status));
+	}
 	if (priv->guids->len > 0) {
 		g_autoptr(GHashTable) ids = NULL;
 		ids = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
@@ -2142,6 +2195,9 @@ fwupd_device_get_property (GObject *object, guint prop_id,
 	case PROP_PROTOCOL:
 		g_value_set_string (value, priv->protocol);
 		break;
+	case PROP_STATUS:
+		g_value_set_uint (value, priv->status);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
@@ -2162,6 +2218,9 @@ fwupd_device_set_property (GObject *object, guint prop_id,
 		break;
 	case PROP_PROTOCOL:
 		fwupd_device_set_protocol (self, g_value_get_string (value));
+		break;
+	case PROP_STATUS:
+		fwupd_device_set_status (self, g_value_get_uint (value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2199,6 +2258,14 @@ fwupd_device_class_init (FwupdDeviceClass *klass)
 				     G_PARAM_READWRITE |
 				     G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_PROTOCOL, pspec);
+
+	pspec = g_param_spec_uint ("status", NULL, NULL,
+				   FWUPD_STATUS_UNKNOWN,
+				   FWUPD_STATUS_LAST,
+				   FWUPD_STATUS_UNKNOWN,
+				   G_PARAM_READWRITE |
+				   G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_STATUS, pspec);
 }
 
 static void
