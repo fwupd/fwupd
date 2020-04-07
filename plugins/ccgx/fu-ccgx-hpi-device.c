@@ -37,7 +37,7 @@ struct _FuCcgxHpiDevice
 
 G_DEFINE_TYPE (FuCcgxHpiDevice, fu_ccgx_hpi_device, FU_TYPE_USB_DEVICE)
 
-#define HPI_CMD_FLASH_READ_WRITE_DELAY_US	30000
+#define HPI_CMD_REG_READ_WRITE_DELAY_US	10000
 #define HPI_CMD_ENTER_FLASH_MODE_DELAY_US	20000
 #define HPI_CMD_SETUP_EVENT_WAIT_TIME_MS	200
 #define HPI_CMD_SETUP_EVENT_CLEAR_TIME_MS	150
@@ -395,7 +395,7 @@ fu_ccgx_hpi_device_reg_read_cb (FuDevice *device, gpointer user_data, GError **e
 		g_prefix_error (error, "read error: ");
 		return FALSE;
 	}
-	g_usleep (HPI_CMD_FLASH_READ_WRITE_DELAY_US);
+	g_usleep (HPI_CMD_REG_READ_WRITE_DELAY_US);
 	return TRUE;
 }
 
@@ -434,7 +434,7 @@ fu_ccgx_hpi_device_reg_write_cb (FuDevice *device, gpointer user_data, GError **
 		g_prefix_error (error, "reg write error: ");
 		return FALSE;
 	}
-	g_usleep (HPI_CMD_FLASH_READ_WRITE_DELAY_US);
+	g_usleep (HPI_CMD_REG_READ_WRITE_DELAY_US);
 	return TRUE;
 }
 
@@ -474,7 +474,7 @@ fu_ccgx_hpi_device_reg_write_no_resp (FuCcgxHpiDevice *self,
 		g_prefix_error (error, "reg write no-resp error: ");
 		return FALSE;
 	}
-	g_usleep (HPI_CMD_FLASH_READ_WRITE_DELAY_US);
+	g_usleep (HPI_CMD_REG_READ_WRITE_DELAY_US);
 	return TRUE;
 }
 
