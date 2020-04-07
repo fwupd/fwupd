@@ -44,6 +44,8 @@ G_DEFINE_TYPE (FuCcgxHpiDevice, fu_ccgx_hpi_device, FU_TYPE_USB_DEVICE)
 #define HPI_CMD_COMMAND_RESPONSE_TIME_MS	500
 #define HPI_CMD_COMMAND_CLEAR_EVENT_TIME_MS	30
 #define HPI_CMD_RESET_COMPLETE_DELAY_US		150000
+#define HPI_CMD_RETRY_DELAY			30 /* ms */
+#define HPI_CMD_RESET_RETRY_CNT			3
 
 static void
 fu_ccgx_hpi_device_to_string (FuDevice *device, guint idt, GString *str)
@@ -64,6 +66,38 @@ fu_ccgx_hpi_device_to_string (FuDevice *device, guint idt, GString *str)
 	fu_common_string_append_kx (str, idt, "EpIntrIn", self->ep_intr_in);
 	fu_common_string_append_kx (str, idt, "FlashRowSize", self->flash_row_size);
 	fu_common_string_append_kx (str, idt, "FlashSize", self->flash_size);
+}
+
+typedef struct {
+	guint8			 mode;
+	guint16			 addr;
+	guint8			*buf;
+	gsize			 bufsz;
+} FuCcgxHpiDeviceRetryHelper;
+
+static gboolean
+fu_ccgx_hpi_device_i2c_reset_cb (FuDevice *device, gpointer user_data, GError **error)
+{
+	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE (device);
+	FuCcgxHpiDeviceRetryHelper *helper = (FuCcgxHpiDeviceRetryHelper *) user_data;
+	g_autoptr(GError) error_local = NULL;
+	if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (self)),
+					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    CY_I2C_RESET_CMD,
+					    (self->scb_index << CY_SCB_INDEX_POS) | helper->mode,
+					    0x0, NULL, 0x0, NULL,
+					    FU_CCGX_HPI_WAIT_TIMEOUT,
+					    NULL, &error_local)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "failed to reset i2c: %s",
+			     error_local->message);
+		return FALSE;
+	}
+	return TRUE;
 }
 
 static gboolean
@@ -342,21 +376,20 @@ fu_ccgx_hpi_device_i2c_write_no_resp (FuCcgxHpiDevice *self,
 }
 
 static gboolean
-fu_ccgx_hpi_device_reg_read (FuCcgxHpiDevice *self,
-			     guint16 addr,
-			     guint8 *buf,
-			     guint16 bufsz,
-			     GError **error)
+fu_ccgx_hpi_device_reg_read_cb (FuDevice *device, gpointer user_data, GError **error)
 {
+	FuCcgxHpiDeviceRetryHelper *helper = (FuCcgxHpiDeviceRetryHelper *) user_data;
+	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE (device);
 	g_autofree guint8 *bufhw = g_malloc0 (self->hpi_addrsz);
+
 	for (guint32 i = 0; i < self->hpi_addrsz; i++)
-		bufhw[i] = (guint8) (addr >> (8 * i));
+		bufhw[i] = (guint8) (helper->addr >> (8 * i));
 	if (!fu_ccgx_hpi_device_i2c_write (self, bufhw, self->hpi_addrsz,
 					   CY_I2C_DATA_CONFIG_NAK, error)) {
 		g_prefix_error (error, "write error: ");
 		return FALSE;
 	}
-	if (!fu_ccgx_hpi_device_i2c_read (self, buf, bufsz,
+	if (!fu_ccgx_hpi_device_i2c_read (self, helper->buf, helper->bufsz,
 					  CY_I2C_DATA_CONFIG_STOP | CY_I2C_DATA_CONFIG_NAK,
 					  error)) {
 		g_prefix_error (error, "read error: ");
@@ -367,24 +400,61 @@ fu_ccgx_hpi_device_reg_read (FuCcgxHpiDevice *self,
 }
 
 static gboolean
-fu_ccgx_hpi_device_reg_write (FuCcgxHpiDevice *self,
-			      guint16 addr,
-			      guint8 *buf,
-			      guint16 bufsz,
-			      GError **error)
+fu_ccgx_hpi_device_reg_read (FuCcgxHpiDevice *self,
+			     guint16 addr,
+			     guint8 *buf,
+			     gsize bufsz,
+			     GError **error)
 {
-	g_autofree guint8 *bufhw = g_malloc0 (bufsz + self->hpi_addrsz);
+	FuCcgxHpiDeviceRetryHelper helper = {
+		.addr = addr,
+		.mode = CY_I2C_MODE_READ,
+		.buf = buf,
+		.bufsz = bufsz,
+	};
+	return fu_device_retry (FU_DEVICE (self),
+				fu_ccgx_hpi_device_reg_read_cb,
+				HPI_CMD_RESET_RETRY_CNT,
+				&helper, error);
+}
+
+static gboolean
+fu_ccgx_hpi_device_reg_write_cb (FuDevice *device, gpointer user_data, GError **error)
+{
+	FuCcgxHpiDeviceRetryHelper *helper = (FuCcgxHpiDeviceRetryHelper *) user_data;
+	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE (device);
+	g_autofree guint8 *bufhw = g_malloc0 (helper->bufsz + self->hpi_addrsz);
+
 	for (guint32 i = 0; i < self->hpi_addrsz; i++)
-		bufhw[i] = (guint8) (addr >> (8*i));
-	memcpy (&bufhw[self->hpi_addrsz], buf, bufsz);
-	if (!fu_ccgx_hpi_device_i2c_write (self, bufhw, bufsz + self->hpi_addrsz,
-				       CY_I2C_DATA_CONFIG_STOP | CY_I2C_DATA_CONFIG_NAK,
-				       error)) {
+		bufhw[i] = (guint8) (helper->addr >> (8*i));
+	memcpy (&bufhw[self->hpi_addrsz], helper->buf, helper->bufsz);
+	if (!fu_ccgx_hpi_device_i2c_write (self, bufhw, helper->bufsz + self->hpi_addrsz,
+					   CY_I2C_DATA_CONFIG_STOP | CY_I2C_DATA_CONFIG_NAK,
+					   error)) {
 		g_prefix_error (error, "reg write error: ");
 		return FALSE;
 	}
 	g_usleep (HPI_CMD_FLASH_READ_WRITE_DELAY_US);
 	return TRUE;
+}
+
+static gboolean
+fu_ccgx_hpi_device_reg_write (FuCcgxHpiDevice *self,
+			      guint16 addr,
+			      guint8 *buf,
+			      gsize bufsz,
+			      GError **error)
+{
+	FuCcgxHpiDeviceRetryHelper helper = {
+		.addr = addr,
+		.mode = CY_I2C_MODE_WRITE,
+		.buf = buf,
+		.bufsz = bufsz,
+	};
+	return fu_device_retry (FU_DEVICE (self),
+				fu_ccgx_hpi_device_reg_write_cb,
+				HPI_CMD_RESET_RETRY_CNT,
+				&helper, error);
 }
 
 static gboolean
@@ -1405,6 +1475,17 @@ fu_ccgx_hpi_device_init (FuCcgxHpiDevice *self)
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
+	fu_device_retry_set_delay (FU_DEVICE (self), HPI_CMD_RETRY_DELAY);
+
+	/* we can recover the I²C link using reset */
+	fu_device_retry_add_recovery (FU_DEVICE (self),
+				      FWUPD_ERROR,
+				      FWUPD_ERROR_READ,
+				      fu_ccgx_hpi_device_i2c_reset_cb);
+	fu_device_retry_add_recovery (FU_DEVICE (self),
+				      FWUPD_ERROR,
+				      FWUPD_ERROR_WRITE,
+				      fu_ccgx_hpi_device_i2c_reset_cb);
 
 	/* this might not be true for future hardware */
 	if (self->inf_num > 0)
