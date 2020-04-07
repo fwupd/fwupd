@@ -384,7 +384,7 @@ fu_ccgx_hpi_device_i2c_write_no_resp (FuCcgxHpiDevice *self,
 					    ((guint16) slave_address << 8) | (cfg_bits & CY_I2C_DATA_CONFIG_STOP),
 					    bufsz, NULL, 0x0, NULL,
 					    FU_CCGX_HPI_WAIT_TIMEOUT,
-					    NULL, &error_local)) {
+					    NULL, error)) {
 		g_prefix_error (error, "i2c write error: control xfer: ");
 		return FALSE;
 	}
