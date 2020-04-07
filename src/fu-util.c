@@ -112,6 +112,15 @@ fu_util_update_device_changed_cb (FwupdClient *client,
 	    fwupd_device_compare (priv->current_device, device) == 0)
 		return;
 
+	/* ignore indirect devices that might have changed */
+	if (fwupd_device_get_status (device) == FWUPD_STATUS_IDLE ||
+	    fwupd_device_get_status (device) == FWUPD_STATUS_UNKNOWN) {
+		g_debug ("ignoring %s with status %s",
+			 fwupd_device_get_name (device),
+			 fwupd_status_to_string (fwupd_device_get_status (device)));
+		return;
+	}
+
 	/* show message in progressbar */
 	if (priv->current_operation == FU_UTIL_OPERATION_UPDATE) {
 		/* TRANSLATORS: %1 is a device name */
