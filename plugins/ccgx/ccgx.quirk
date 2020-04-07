@@ -19,10 +19,12 @@ UpdateMessage = Run firmware update again to upgrade the primary firmware.
 [DeviceInstanceId=USB\VID_17EF&PID_A354]
 Plugin = ccgx
 GType = FuCcgxHidDevice
+ParentGuid = USB\VID_17EF&PID_1028
 
 [DeviceInstanceId=USB\VID_17EF&PID_A35F]
 Plugin = ccgx
 GType = FuCcgxHidDevice
+ParentGuid = USB\VID_17EF&PID_1028
 
 [DeviceInstanceId=USB\VID_04B4&PID_5218]
 Plugin = ccgx
@@ -30,3 +32,5 @@ GType = FuCcgxHpiDevice
 
 [DeviceInstanceId=USB\VID_04B4&PID_5218&SID_1F00&APP_6462]
 ImageKind = dual-symmetric
+ParentGuid = USB\VID_17EF&PID_1028
+
