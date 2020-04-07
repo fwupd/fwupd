@@ -2252,6 +2252,7 @@ fu_device_write_firmware (FuDevice *self,
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
 	g_autoptr(FuFirmware) firmware = NULL;
+	g_autofree gchar *str = NULL;
 
 	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
@@ -2269,6 +2270,8 @@ fu_device_write_firmware (FuDevice *self,
 	firmware = fu_device_prepare_firmware (self, fw, flags, error);
 	if (firmware == NULL)
 		return FALSE;
+	str = fu_firmware_to_string (firmware);
+	g_debug ("installing onto %s:\n%s", fu_device_get_id (self), str);
 
 	/* call vfunc */
 	return klass->write_firmware (self, firmware, flags, error);
