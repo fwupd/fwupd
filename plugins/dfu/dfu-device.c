@@ -1837,5 +1837,6 @@ dfu_device_init (DfuDevice *device)
 	priv->transfer_size = 64;
 	fu_device_add_icon (FU_DEVICE (device), "drive-harddisk-usb");
 	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS);
 	fu_device_set_remove_delay (FU_DEVICE (device), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 }
