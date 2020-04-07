@@ -568,13 +568,22 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 		return;
 	}
 
+	/* verify a device with same connection does not already exist */
+	item = fu_device_list_find_by_connection (self,
+						  fu_device_get_physical_id (device),
+						  fu_device_get_logical_id (device));
+	if (item != NULL && item->remove_id != 0) {
+		g_debug ("found physical device %s recently removed, reusing "
+			 "item from plugin %s for plugin %s",
+			 fu_device_get_id (item->device),
+			 fu_device_get_plugin (item->device),
+			 fu_device_get_plugin (device));
+		fu_device_list_replace (self, item, device);
+		return;
+	}
+
 	/* verify a compatible device does not already exist */
 	item = fu_device_list_get_by_guids (self, fu_device_get_guids (device));
-	if (item == NULL) {
-		item = fu_device_list_find_by_connection (self,
-							  fu_device_get_physical_id (device),
-							  fu_device_get_logical_id (device));
-	}
 	if (item != NULL && item->remove_id != 0) {
 		g_debug ("found compatible device %s recently removed, reusing "
 			 "item from plugin %s for plugin %s",
