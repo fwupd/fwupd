@@ -178,6 +178,10 @@ fu_wac_module_set_feature (FuWacModule *self,
 			 [2] = command,
 			 [3 ... FU_WAC_PACKET_LEN - 1] = 0xff };
 
+	/* sanity check */
+	g_return_val_if_fail (FU_IS_WAC_MODULE (self), FALSE);
+	g_return_val_if_fail (FU_IS_WAC_DEVICE (parent_device), FALSE);
+
 	/* verify the size of the blob */
 	if (blob != NULL) {
 		data = g_bytes_get_data (blob, &len);
