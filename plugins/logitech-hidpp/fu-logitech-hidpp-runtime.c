@@ -219,6 +219,7 @@ fu_logitech_hidpp_runtime_setup_internal (FuDevice *device, GError **error)
 	/* get bootloader version */
 	if (self->version_bl_major > 0) {
 		g_autofree gchar *version_bl = NULL;
+		g_autofree gchar *devid3 = NULL;
 		version_bl = fu_logitech_hidpp_format_version ("BOT",
 						self->version_bl_major,
 						config[8],
@@ -230,9 +231,16 @@ fu_logitech_hidpp_runtime_setup_internal (FuDevice *device, GError **error)
 		    (self->version_bl_major == 0x03 && config[8] >= 0x02)) {
 			self->signed_firmware = TRUE;
 			fu_device_set_protocol (device, "com.logitech.unifyingsigned");
+			devid3 = g_strdup_printf ("HIDRAW\\VEN_%04X&DEV_%04X&TYPE_SIGNED",
+						  fu_udev_device_get_vendor (FU_UDEV_DEVICE (device)),
+						  fu_udev_device_get_model (FU_UDEV_DEVICE (device)));
 		} else {
 			fu_device_set_protocol (device, "com.logitech.unifying");
+			devid3 = g_strdup_printf ("HIDRAW\\VEN_%04X&DEV_%04X&TYPE_LEGACY",
+						  fu_udev_device_get_vendor (FU_UDEV_DEVICE (device)),
+						  fu_udev_device_get_model (FU_UDEV_DEVICE (device)));
 		}
+		fu_device_add_instance_id (FU_DEVICE (device), devid3);
 	}
 
 	/* enable HID++ notifications */
