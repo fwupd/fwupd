@@ -641,6 +641,12 @@
     <distro id="fedora">
       <package>libjcat-devel</package>
     </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x" />
+      <package variant="i386" />
+    </distro>
   </dependency>
   <dependency type="build" id="libarchive-dev">
     <distro id="centos">
