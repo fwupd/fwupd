@@ -354,6 +354,12 @@ fu_synaprom_device_attach (FuDevice *device, GError **error)
 	gsize actual_len = 0;
 	guint8 data[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
+	/* sanity check */
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug ("already in runtime mode, skipping");
+		return TRUE;
+	}
+
 	ret = g_usb_device_control_transfer (usb_device,
 					     G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					     G_USB_DEVICE_REQUEST_TYPE_VENDOR,
@@ -388,6 +394,12 @@ fu_synaprom_device_detach (FuDevice *device, GError **error)
 	gboolean ret;
 	gsize actual_len = 0;
 	guint8 data[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00 };
+
+	/* sanity check */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug ("already in bootloader mode, skipping");
+		return TRUE;
+	}
 
 	ret = g_usb_device_control_transfer (usb_device,
 					     G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,

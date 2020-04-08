@@ -983,6 +983,12 @@ fu_synaptics_rmi_device_attach (FuDevice *device, GError **error)
 {
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE (device);
 
+	/* sanity check */
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug ("already in runtime mode, skipping");
+		return TRUE;
+	}
+
 	/* reset device */
 	if (!fu_synaptics_rmi_device_reset (self, error))
 		return FALSE;

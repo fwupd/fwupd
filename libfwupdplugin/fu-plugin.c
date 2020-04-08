@@ -989,10 +989,6 @@ static gboolean
 fu_plugin_device_attach (FuPlugin *self, FuDevice *device, GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		g_debug ("already in runtime mode, skipping");
-		return TRUE;
-	}
 	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;
@@ -1003,10 +999,6 @@ static gboolean
 fu_plugin_device_detach (FuPlugin *self, FuDevice *device, GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		g_debug ("already in bootloader mode, skipping");
-		return TRUE;
-	}
 	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;

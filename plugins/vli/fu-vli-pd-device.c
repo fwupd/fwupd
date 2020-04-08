@@ -442,6 +442,12 @@ fu_vli_pd_device_detach_vl103 (FuDevice *device, GError **error)
 	FuVliPdDevice *self = FU_VLI_PD_DEVICE (device);
 	g_autoptr(GError) error_local = NULL;
 
+	/* sanity check */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug ("already in bootloader mode, skipping");
+		return TRUE;
+	}
+
 	/* write GPIOs */
 	if (!fu_vli_pd_device_write_gpios (self, error))
 		return FALSE;
@@ -477,6 +483,12 @@ fu_vli_pd_device_detach (FuDevice *device, GError **error)
 	FuVliPdDevice *self = FU_VLI_PD_DEVICE (device);
 	guint8 tmp = 0;
 	g_autoptr(GError) error_local = NULL;
+
+	/* sanity check */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug ("already in bootloader mode, skipping");
+		return TRUE;
+	}
 
 	/* write GPIOs */
 	if (!fu_vli_pd_device_write_gpios (self, error))
@@ -537,6 +549,12 @@ static gboolean
 fu_vli_pd_device_attach (FuDevice *device, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
+
+	/* sanity check */
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug ("already in runtime mode, skipping");
+		return TRUE;
+	}
 
 	/* chip reset command works only for non-VL103 */
 	if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (device)),

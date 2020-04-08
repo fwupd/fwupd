@@ -106,6 +106,10 @@ fu_wacom_device_detach (FuDevice *device, GError **error)
 		FU_WACOM_RAW_FW_REPORT_ID,
 		FU_WACOM_RAW_FW_CMD_DETACH,
 	};
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug ("already in runtime mode, skipping");
+		return TRUE;
+	}
 	if (!fu_wacom_device_set_feature (self, buf, sizeof(buf), error)) {
 		g_prefix_error (error, "failed to switch to bootloader mode: ");
 		return FALSE;
@@ -125,6 +129,10 @@ fu_wacom_device_attach (FuDevice *device, GError **error)
 		.echo = FU_WACOM_RAW_ECHO_DEFAULT,
 		0x00
 	};
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug ("already in runtime mode, skipping");
+		return TRUE;
+	}
 	if (!fu_wacom_device_set_feature (self, (const guint8 *) &req, sizeof(req), error)) {
 		g_prefix_error (error, "failed to switch to runtime mode: ");
 		return FALSE;
