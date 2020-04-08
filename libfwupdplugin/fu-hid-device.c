@@ -216,7 +216,7 @@ fu_hid_device_set_report (FuHidDevice *self,
 			  GError **error)
 {
 	FuHidDevicePrivate *priv = GET_PRIVATE (self);
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
+	GUsbDevice *usb_device;
 	gsize actual_len = 0;
 	guint16 wvalue = (FU_HID_REPORT_TYPE_OUTPUT << 8) | value;
 
@@ -230,6 +230,7 @@ fu_hid_device_set_report (FuHidDevice *self,
 
 	if (g_getenv ("FU_HID_DEVICE_VERBOSE") != NULL)
 		fu_common_dump_raw (G_LOG_DOMAIN, "HID::SetReport", buf, bufsz);
+	usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
 	if (!g_usb_device_control_transfer (usb_device,
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
@@ -278,7 +279,7 @@ fu_hid_device_get_report (FuHidDevice *self,
 			  GError **error)
 {
 	FuHidDevicePrivate *priv = GET_PRIVATE (self);
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
+	GUsbDevice *usb_device;
 	gsize actual_len = 0;
 	guint16 wvalue = (FU_HID_REPORT_TYPE_INPUT << 8) | value;
 
@@ -292,6 +293,7 @@ fu_hid_device_get_report (FuHidDevice *self,
 
 	if (g_getenv ("FU_HID_DEVICE_VERBOSE") != NULL)
 		fu_common_dump_raw (G_LOG_DOMAIN, "HID::GetReport", buf, actual_len);
+	usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
 	if (!g_usb_device_control_transfer (usb_device,
 					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
