@@ -134,6 +134,7 @@ if __name__ == '__main__':
 
     # run each test
     for fn in sorted(device_fns):
+        print('{}:'.format(fn))
         with open(fn, 'r') as f:
             try:
                 obj = json.load(f)
