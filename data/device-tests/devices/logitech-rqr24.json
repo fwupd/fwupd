@@ -3,6 +3,7 @@
   "guids": [
     "cc4cbfa9-bf9d-540b-b92b-172ce31013c1"
   ],
+  "protocol": "com.logitech.unifying",
   "releases": [
     {
       "version": "RQR24.03_B0027",

@@ -4,6 +4,7 @@
     "9d131a0c-a606-580f-8eda-80587250b8d6",
     "d637baf7-3ab5-502a-8169-2545302e44e2"
   ],
+  "protocol": "com.logitech.unifyingsigned",
   "releases": [
     {
       "version": "RQR12.11_B0032",
