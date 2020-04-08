@@ -1,0 +1,12 @@
+{
+  "name": "Prometheus Fingerprint Reader",
+  "guids": [
+    "8088f861-6318-5b1e-9ce4-fbddbedb09ac"
+  ],
+  "releases": [
+    {
+      "version": "10.01.3121519",
+      "file": "7c260a13ea6df444f7a1fa8fa2bf431876a8c7203b6aeac371564aad30756ff1-Synaptics-Prometheus-10.01.3121519.cab"
+    }
+  ]
+}
