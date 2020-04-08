@@ -355,7 +355,7 @@ fu_wac_device_erase_block (FuWacDevice *self, guint32 addr, GError **error)
 						 error);
 }
 
-gboolean
+static gboolean
 fu_wac_device_update_reset (FuWacDevice *self, GError **error)
 {
 	guint8 buf[] = { [0] = FU_WAC_REPORT_ID_UPDATE_RESET,
@@ -779,6 +779,14 @@ fu_wac_device_close (FuUsbDevice *device, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_wac_device_cleanup (FuDevice *device, FwupdInstallFlags flags, GError **error)
+{
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	return fu_wac_device_update_reset (FU_WAC_DEVICE (device), error);
+}
+
 static void
 fu_wac_device_init (FuWacDevice *self)
 {
@@ -816,5 +824,6 @@ fu_wac_device_class_init (FuWacDeviceClass *klass)
 	klass_device->write_firmware = fu_wac_device_write_firmware;
 	klass_device->to_string = fu_wac_device_to_string;
 	klass_device->setup = fu_wac_device_setup;
+	klass_device->cleanup = fu_wac_device_cleanup;
 	klass_usb_device->close = fu_wac_device_close;
 }
