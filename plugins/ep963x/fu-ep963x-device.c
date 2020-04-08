@@ -146,6 +146,12 @@ fu_ep963x_device_detach (FuDevice *device, GError **error)
 	const guint8 buf[] = { 'E', 'P', '9', '6', '3' };
 	g_autoptr(GError) error_local = NULL;
 
+	/* sanity check */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug ("already in bootloader mode, skipping");
+		return TRUE;
+	}
+
 	if (!fu_ep963x_device_write_icp (self, FU_EP963_OPCODE_SUBMCU_ENTER_ICP,
 					 buf, sizeof(buf),
 					 &error_local)) {
@@ -168,6 +174,12 @@ fu_ep963x_device_attach (FuDevice *device, GError **error)
 	FuEp963xDevice *self = FU_EP963X_DEVICE (device);
 	const guint8 buf[] = { 0x00 };
 	g_autoptr(GError) error_local = NULL;
+
+	/* sanity check */
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug ("already in runtime mode, skipping");
+		return TRUE;
+	}
 
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
 	if (!fu_ep963x_device_write_icp (self, 0x02,

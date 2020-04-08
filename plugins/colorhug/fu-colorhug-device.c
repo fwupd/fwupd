@@ -173,6 +173,12 @@ fu_colorhug_device_detach (FuDevice *device, GError **error)
 	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
 	g_autoptr(GError) error_local = NULL;
 
+	/* sanity check */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug ("already in bootloader mode, skipping");
+		return TRUE;
+	}
+
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
 	if (!fu_colorhug_device_msg (self, CH_CMD_RESET,
 				     NULL, 0, /* in */
@@ -194,6 +200,12 @@ fu_colorhug_device_attach (FuDevice *device, GError **error)
 {
 	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
 	g_autoptr(GError) error_local = NULL;
+
+	/* sanity check */
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug ("already in runtime mode, skipping");
+		return TRUE;
+	}
 
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
 	if (!fu_colorhug_device_msg (self, CH_CMD_BOOT_FLASH,
