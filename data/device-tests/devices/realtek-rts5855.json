@@ -1,0 +1,16 @@
+{
+  "name": "Realtek RTS5855 Webcam",
+  "guids": [
+    "9829f051-47f5-55e7-87dc-a49cf55602e2"
+  ],
+  "releases": [
+    {
+      "version": "0.4",
+      "file": "ff989c4b71c92a4a217dfb2f82c1c87691b8eb31-rts5855_v0.4.cab"
+    },
+    {
+      "version": "0.3",
+      "file": "ed5c411d6b74c363209f408f87618fa5c31b50ab-v0.3.cab"
+    }
+  ]
+}
