@@ -463,6 +463,37 @@ fu_device_list_add_missing_guids (FuDevice *device_new, FuDevice *device_old)
 }
 
 static void
+fu_device_list_item_finalized_cb (gpointer data, GObject *where_the_object_was)
+{
+	FuDeviceItem *item = (FuDeviceItem *) data;
+	FuDeviceList *self = FU_DEVICE_LIST (item->self);
+
+	g_critical ("FuDevice %p was finalized without being removed from "
+		    "FuDeviceList, removing item!",
+		    where_the_object_was);
+	g_rw_lock_writer_lock (&self->devices_mutex);
+	g_ptr_array_remove (self->devices, item);
+	g_rw_lock_writer_unlock (&self->devices_mutex);
+}
+
+/* this should never be required, and yet here we are */
+static void
+fu_device_list_item_set_device (FuDeviceItem *item, FuDevice *device)
+{
+	if (item->device != NULL) {
+		g_object_weak_unref (G_OBJECT (item->device),
+				     fu_device_list_item_finalized_cb,
+				     item);
+	}
+	if (device != NULL) {
+		g_object_weak_ref (G_OBJECT (device),
+				   fu_device_list_item_finalized_cb,
+				   item);
+	}
+	g_set_object (&item->device, device);
+}
+
+static void
 fu_device_list_replace (FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 {
 	/* clear timeout if scheduled */
@@ -522,7 +553,7 @@ fu_device_list_replace (FuDeviceList *self, FuDeviceItem *item, FuDevice *device
 
 	/* assign the new device */
 	g_set_object (&item->device_old, item->device);
-	g_set_object (&item->device, device);
+	fu_device_list_item_set_device (item, device);
 	fu_device_list_emit_device_changed (self, device);
 
 	/* we were waiting for this... */
@@ -644,7 +675,7 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 	/* add helper */
 	item = g_new0 (FuDeviceItem, 1);
 	item->self = self; /* no ref */
-	item->device = g_object_ref (device);
+	fu_device_list_item_set_device (item, device);
 	g_rw_lock_writer_lock (&self->devices_mutex);
 	g_ptr_array_add (self->devices, item);
 	g_rw_lock_writer_unlock (&self->devices_mutex);
@@ -848,7 +879,7 @@ fu_device_list_item_free (FuDeviceItem *item)
 		g_source_remove (item->remove_id);
 	if (item->device_old != NULL)
 		g_object_unref (item->device_old);
-	g_object_unref (item->device);
+	fu_device_list_item_set_device (item, NULL);
 	g_free (item);
 }
 
