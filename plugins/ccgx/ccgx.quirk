@@ -12,9 +12,6 @@ GType = FuCcgxHpiDevice
 ImageKind = dual-asymmetric
 ParentGuid = USB\VID_17EF&PID_A391
 
-[DeviceInstanceId=USB\VID_04B4&PID_521A&SID_1F00&APP_6D64&MODE_FW1]
-UpdateMessage = Run firmware update again to upgrade the primary firmware.
-
 # Lenovo Hybrid Dock
 [DeviceInstanceId=USB\VID_17EF&PID_A354]
 Plugin = ccgx
