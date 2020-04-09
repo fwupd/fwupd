@@ -47,35 +47,6 @@ fu_plugin_dell_dock_create_node (FuPlugin *plugin,
 	if (locker == NULL)
 		return FALSE;
 
-	fu_plugin_device_add (plugin, device);
-
-	return TRUE;
-}
-
-static gboolean
-fu_plugin_dell_dock_probe (FuPlugin *plugin,
-			   FuDevice *symbiote,
-			   GError **error)
-{
-	g_autoptr(FuDellDockEc) ec_device = NULL;
-
-	/* create all static endpoints */
-	ec_device = fu_dell_dock_ec_new (symbiote);
-	if (!fu_plugin_dell_dock_create_node (plugin,
-					      FU_DEVICE (ec_device),
-					      error))
-		return FALSE;
-
-	/* create TBT endpoint if Thunderbolt SKU and Thunderbolt link inactive */
-	if (fu_dell_dock_ec_needs_tbt (FU_DEVICE (ec_device))) {
-		g_autoptr(FuDellDockTbt) tbt_device = fu_dell_dock_tbt_new ();
-		fu_device_add_child (FU_DEVICE (ec_device), FU_DEVICE (tbt_device));
-		if (!fu_plugin_dell_dock_create_node (plugin,
-						      FU_DEVICE (tbt_device),
-						      error))
-			return FALSE;
-	}
-
 	return TRUE;
 }
 
@@ -84,39 +55,54 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 			    FuUsbDevice *device,
 			    GError **error)
 {
+	g_autoptr(FuDevice) hub_device = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(FuDellDockHub) hub = fu_dell_dock_hub_new (device);
-	FuDevice *fu_device = FU_DEVICE (hub);
-	const gchar *key = NULL;
 
-	locker = fu_device_locker_new (fu_device, error);
+	/* create a new opened device based on the generic USB device */
+	hub_device = FU_DEVICE (fu_dell_dock_hub_new (device));
+	locker = fu_device_locker_new (hub_device, error);
 	if (locker == NULL)
 		return FALSE;
-	fu_plugin_device_add (plugin, fu_device);
+	fu_plugin_device_add (plugin, hub_device);
 
-	if (fu_device_has_custom_flag (fu_device, "has-bridge")) {
+	/* create EC parent */
+	if (fu_device_has_custom_flag (hub_device, "has-bridge")) {
+		const gchar *hub_id = NULL;
+		g_autoptr(FuDevice) ec_device = NULL;
 		g_autoptr(GError) error_local = NULL;
 
-		/* only add the device with parent to cache */
-		key = fu_device_get_id (fu_device);
-		if (fu_plugin_cache_lookup (plugin, key) != NULL) {
-			g_debug ("Ignoring already added device %s", key);
+		/* does the hub already exist? */
+		hub_id = fu_device_get_id (hub_device);
+		if (fu_plugin_cache_lookup (plugin, hub_id) != NULL) {
+			g_warning ("ignoring already added device %s", hub_id);
 			return TRUE;
 		}
-		fu_plugin_cache_add (plugin, key, fu_device);
 
-		/* probe for extended devices */
-		if (!fu_plugin_dell_dock_probe (plugin,
-						fu_device,
-						&error_local)) {
-			g_warning ("Failed to probe bridged devices for %s: %s",
-				   key,
-				   error_local->message);
+		/* create all virtual devices */
+		ec_device = FU_DEVICE (fu_dell_dock_ec_new (hub_device));
+		if (!fu_plugin_dell_dock_create_node (plugin, ec_device, &error_local)) {
+			g_warning ("failed to probe bridged devices for %s: %s",
+				   hub_id, error_local->message);
+			return TRUE;
 		}
+
+		/* create TBT endpoint if Thunderbolt SKU and Thunderbolt link inactive */
+		if (fu_dell_dock_ec_needs_tbt (ec_device)) {
+			g_autoptr(FuDevice) tbt_device = FU_DEVICE (fu_dell_dock_tbt_new ());
+			fu_device_add_child (ec_device, tbt_device);
+			if (!fu_plugin_dell_dock_create_node (plugin, tbt_device, &error_local)) {
+				g_warning ("failed to probe TBT device for %s: %s",
+					   hub_id, error_local->message);
+			}
+		}
+
+		/* allow getting the EC device from the HUB */
+		fu_plugin_cache_add (plugin, hub_id, ec_device);
+		fu_plugin_device_add (plugin, ec_device);
 	}
 
 	/* clear updatable flag if parent doesn't have it */
-	fu_dell_dock_clone_updatable (fu_device);
+	fu_dell_dock_clone_updatable (hub_device);
 
 	return TRUE;
 }
@@ -125,43 +111,36 @@ gboolean
 fu_plugin_device_removed (FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	const gchar *device_key = fu_device_get_id (device);
-	FuDevice *dev;
-	FuDevice *parent;
+	FuDevice *ec_device;
 
-	/* only the device with bridge will be in cache */
-	dev = fu_plugin_cache_lookup (plugin, device_key);
-	if (dev == NULL)
+	/* get the parent EC device from the just-removed HUB device ID */
+	ec_device = fu_plugin_cache_lookup (plugin, device_key);
+	if (ec_device == NULL)
 		return TRUE;
+
+	/* remove virtual parent and also remove child devices */
+	g_debug ("removing virtual EC for %s (%s)",
+		 fu_device_get_name (ec_device),
+		 fu_device_get_id (ec_device));
+	fu_plugin_device_remove (plugin, ec_device);
 	fu_plugin_cache_remove (plugin, device_key);
-
-	/* find the parent and ask daemon to remove whole chain  */
-	parent = fu_device_get_parent (dev);
-	if (parent != NULL && FU_IS_DELL_DOCK_EC (parent)) {
-		g_debug ("Removing %s (%s)",
-			 fu_device_get_name (parent),
-			 fu_device_get_id (parent));
-		fu_plugin_device_remove (plugin, parent);
-	}
-
 	return TRUE;
 }
 
-/* prefer to use EC if in the transaction and parent if it is not */
+/* get the virtual EC for any device in the array */
 static FuDevice *
-fu_plugin_dell_dock_get_ec (GPtrArray *devices)
+fu_plugin_dell_dock_get_ec (FuPlugin *plugin, GPtrArray *devices)
 {
-	FuDevice *ec_parent = NULL;
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *dev = g_ptr_array_index (devices, i);
-		FuDevice *parent;
+		FuDevice *dev_tmp;
 		if (FU_IS_DELL_DOCK_EC (dev))
 			return dev;
-		parent = fu_device_get_parent (dev);
-		if (parent != NULL && FU_IS_DELL_DOCK_EC (parent))
-			ec_parent = parent;
+		dev_tmp = fu_plugin_cache_lookup (plugin, fu_device_get_id (dev));
+		if (dev_tmp != NULL)
+			return dev_tmp;
 	}
-
-	return ec_parent;
+	return NULL;
 }
 
 gboolean
@@ -169,7 +148,7 @@ fu_plugin_composite_prepare (FuPlugin *plugin,
 			     GPtrArray *devices,
 			     GError **error)
 {
-	FuDevice *parent = fu_plugin_dell_dock_get_ec (devices);
+	FuDevice *parent = fu_plugin_dell_dock_get_ec (plugin, devices);
 	gboolean remaining_replug = FALSE;
 
 	if (parent == NULL)
@@ -201,7 +180,7 @@ fu_plugin_composite_cleanup (FuPlugin *plugin,
 			     GPtrArray *devices,
 			     GError **error)
 {
-	FuDevice *parent = fu_plugin_dell_dock_get_ec (devices);
+	FuDevice *parent = fu_plugin_dell_dock_get_ec (plugin, devices);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	if (parent == NULL)
