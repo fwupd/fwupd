@@ -958,7 +958,6 @@ fu_engine_device_parent_func (gconstpointer user_data)
 	g_assert (fu_device_get_parent (device3) == device2);
 	g_assert (fu_device_get_parent (device1) == device2);
 	g_assert_cmpstr (fu_device_get_vendor (device3), ==, "oem");
-	g_assert_cmpstr (fu_device_get_vendor (device1), ==, "oem");
 
 	/* verify order */
 	g_assert_cmpint (fu_device_get_order (device1), ==, 0);
