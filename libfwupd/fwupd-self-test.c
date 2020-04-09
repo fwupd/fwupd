@@ -442,6 +442,11 @@ fwupd_client_devices_func (void)
 
 	/* only run if running fwupd is new enough */
 	ret = fwupd_client_connect (client, NULL, &error);
+	if (ret == FALSE && g_error_matches (error, G_DBUS_ERROR, G_DBUS_ERROR_TIMED_OUT)) {
+		g_debug ("%s", error->message);
+		g_test_skip ("timeout connecting to daemon");
+		return;
+	}
 	g_assert_no_error (error);
 	g_assert_true (ret);
 	if (fwupd_client_get_daemon_version (client) == NULL) {
@@ -491,6 +496,11 @@ fwupd_client_remotes_func (void)
 
 	/* only run if running fwupd is new enough */
 	ret = fwupd_client_connect (client, NULL, &error);
+	if (ret == FALSE && g_error_matches (error, G_DBUS_ERROR, G_DBUS_ERROR_TIMED_OUT)) {
+		g_debug ("%s", error->message);
+		g_test_skip ("timeout connecting to daemon");
+		return;
+	}
 	g_assert_no_error (error);
 	g_assert_true (ret);
 	if (fwupd_client_get_daemon_version (client) == NULL) {
