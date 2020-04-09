@@ -1,0 +1,12 @@
+{
+  "name": "Dell WD19TB Dock (USB2)",
+  "guids": [
+    "568ffa1e-a0db-5287-9ea3-872b60f7730b"
+  ],
+  "releases": [
+    {
+      "version": "01.47",
+      "file": "WD19FirmwareUpdateLinux_01.00.15.cab"
+    }
+  ]
+}
