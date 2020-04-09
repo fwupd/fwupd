@@ -1,0 +1,12 @@
+{
+  "name": "Dell WD19TB Dock (MST)",
+  "guids": [
+    "89fec0b6-6b76-5008-b82c-5e5c6c164007"
+  ],
+  "releases": [
+    {
+      "version": "05.04.03",
+      "file": "WD19FirmwareUpdateLinux_01.00.15.cab"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "Dell WD19TB Dock (TBT)",
+  "guids": [
+    "c94770ca-1773-592c-b20a-e87243bc7cd0"
+  ],
+  "releases": [
+    {
+      "version": "43.00",
+      "file": "WD19FirmwareUpdateLinux_01.00.15.cab"
+    }
+  ]
+}
