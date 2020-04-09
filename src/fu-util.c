@@ -2113,9 +2113,7 @@ fu_util_downgrade (FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_util_update_device_with_release (priv, dev, rel, error))
 		return FALSE;
 
-	/* TRANSLATORS: success message where we made the firmware on the
-	 * device older than it was before */
-	g_print ("%s\n", _("Successfully downgraded device"));
+	fu_util_display_current_message (priv);
 
 	/* send report if we're supposed to */
 	remote_id = fwupd_release_get_remote_id (rel);
