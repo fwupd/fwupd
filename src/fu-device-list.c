@@ -357,7 +357,17 @@ fu_device_list_device_delayed_remove_cb (gpointer user_data)
 	children = fu_device_get_children (item->device);
 	for (guint j = 0; j < children->len; j++) {
 		FuDevice *child = g_ptr_array_index (children, j);
+		FuDeviceItem *child_item = fu_device_list_find_by_id (self,
+								      fu_device_get_id (child),
+								      NULL);
+		if (child_item == NULL) {
+			g_debug ("device %s not found", fu_device_get_id (child));
+			continue;
+		}
 		fu_device_list_emit_device_removed (self, child);
+		g_rw_lock_writer_lock (&self->devices_mutex);
+		g_ptr_array_remove (self->devices, child_item);
+		g_rw_lock_writer_unlock (&self->devices_mutex);
 	}
 
 	/* just remove now */
@@ -433,7 +443,17 @@ fu_device_list_remove (FuDeviceList *self, FuDevice *device)
 	children = fu_device_get_children (device);
 	for (guint j = 0; j < children->len; j++) {
 		FuDevice *child = g_ptr_array_index (children, j);
+		FuDeviceItem *child_item = fu_device_list_find_by_id (self,
+								      fu_device_get_id (child),
+								      NULL);
+		if (child_item == NULL) {
+			g_debug ("device %s not found", fu_device_get_id (child));
+			continue;
+		}
 		fu_device_list_emit_device_removed (self, child);
+		g_rw_lock_writer_lock (&self->devices_mutex);
+		g_ptr_array_remove (self->devices, child_item);
+		g_rw_lock_writer_unlock (&self->devices_mutex);
 	}
 
 	/* remove right now */
