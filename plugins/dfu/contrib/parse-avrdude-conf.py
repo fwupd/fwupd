@@ -19,6 +19,7 @@ def _find_part_by_id(parts, part_id):
             return part
     return None
 
+
 # finds a memory layout for a part, climbing up the tree to the parent if reqd.
 def _find_mem_layout(parts, part):
     if 'memory-application' in part:
@@ -26,13 +27,14 @@ def _find_mem_layout(parts, part):
         if memory_flash:
             return memory_flash
 
-    #look at the parent
+    # look at the parent
     if 'parent' in part:
         parent = _find_part_by_id(parts, part['parent'])
         if parent:
             return _find_mem_layout(parts, parent)
         print('no parent ', part['parent'], 'found for', part['id'])
     return None
+
 
 # parses the weird syntax of avrdude.conf and makes lots of nested dictionaries
 def _parse_parts(fn_source):
@@ -100,9 +102,11 @@ def _parse_parts(fn_source):
             continue
     return parts
 
+
 def _get_longest_substring(s1, s2):
     match = SequenceMatcher(None, s1, s2).find_longest_match(0, len(s1), 0, len(s2))
-    return s2[match.b: match.b + match.size]
+    return s2[match.b : match.b + match.size]
+
 
 # writes important data to the quirks file
 def _write_quirks(parts, fn_destination):
@@ -148,12 +152,15 @@ def _write_quirks(parts, fn_destination):
 
     for chip_id in results:
         result = results[chip_id]
-        outp.append('# ' + result['desc'] + '	[USER]		USER=0x%x' % result['size'] + '\n')
+        outp.append(
+            '# ' + result['desc'] + '	[USER]		USER=0x%x' % result['size'] + '\n'
+        )
         outp.append(chip_id + '=' + result['mem_layout'] + '\n\n')
 
     # write file
     print("writing", fn_destination)
     open(fn_destination, 'w').writelines(outp)
+
 
 if __name__ == '__main__':
     if len(sys.argv) != 3:

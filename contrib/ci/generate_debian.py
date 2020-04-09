@@ -8,8 +8,9 @@ import os
 import sys
 import xml.etree.ElementTree as etree
 
+
 def parse_control_dependencies(requested_type):
-    TARGET=os.getenv('OS')
+    TARGET = os.getenv('OS')
     deps = []
     dep = ''
 
@@ -25,11 +26,13 @@ def parse_control_dependencies(requested_type):
             SUBOS = split[1]
     else:
         import lsb_release
+
         OS = lsb_release.get_distro_information()['ID'].lower()
         import platform
+
         SUBOS = platform.machine()
 
-    tree = etree.parse(os.path.join(os.path.dirname (sys.argv[0]), "dependencies.xml"))
+    tree = etree.parse(os.path.join(os.path.dirname(sys.argv[0]), "dependencies.xml"))
     root = tree.getroot()
     for child in root:
         if not "type" in child.attrib or not "id" in child.attrib:
@@ -80,6 +83,7 @@ def parse_control_dependencies(requested_type):
                     deps.append(dep)
     return deps
 
+
 def update_debian_control(target):
     control_in = os.path.join(target, 'control.in')
     control_out = os.path.join(target, 'control')
@@ -102,7 +106,8 @@ def update_debian_control(target):
             else:
                 wfd.write(line)
 
-def update_debian_copyright (directory):
+
+def update_debian_copyright(directory):
     copyright_in = os.path.join(directory, 'copyright.in')
     copyright_out = os.path.join(directory, 'copyright')
 
@@ -114,13 +119,13 @@ def update_debian_copyright (directory):
     copyrights = []
     for root, dirs, files in os.walk('.'):
         for file in files:
-            target = os.path.join (root, file)
-            #skip translations and license file
+            target = os.path.join(root, file)
+            # skip translations and license file
             if target.startswith('./po/') or file == "COPYING":
                 continue
             try:
                 with open(target, 'r') as rfd:
-                    #read about the first few lines of the file only
+                    # read about the first few lines of the file only
                     lines = rfd.readlines(220)
             except UnicodeDecodeError:
                 continue
@@ -128,8 +133,10 @@ def update_debian_copyright (directory):
                 continue
             for line in lines:
                 if 'Copyright (C) ' in line:
-                    parts = line.split ('Copyright (C)')[1].strip() #split out the copyright header
-                    partition = parts.partition(' ')[2] # remove the year string
+                    parts = line.split('Copyright (C)')[
+                        1
+                    ].strip()  # split out the copyright header
+                    partition = parts.partition(' ')[2]  # remove the year string
                     copyrights += ["%s" % partition]
     copyrights = "\n\t   ".join(sorted(set(copyrights)))
     with open(copyright_in, 'r') as rfd:
@@ -145,6 +152,7 @@ def update_debian_copyright (directory):
             else:
                 wfd.write(line)
 
-directory = os.path.join (os.getcwd(), 'debian')
+
+directory = os.path.join(os.getcwd(), 'debian')
 update_debian_control(directory)
 update_debian_copyright(directory)
