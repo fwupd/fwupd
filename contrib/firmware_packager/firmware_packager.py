@@ -21,6 +21,7 @@ def cd(path):
     yield
     os.chdir(prev_cwd)
 
+
 firmware_metainfo_template = """
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="firmware">
@@ -52,7 +53,9 @@ firmware_metainfo_template = """
 def make_firmware_metainfo(firmware_info, dst):
     local_info = vars(firmware_info)
     local_info["firmware_id"] = local_info["device_guid"][0:8]
-    firmware_metainfo = firmware_metainfo_template.format(**local_info, timestamp=time.time())
+    firmware_metainfo = firmware_metainfo_template.format(
+        **local_info, timestamp=time.time()
+    )
 
     with open(os.path.join(dst, 'firmware.metainfo.xml'), 'w') as f:
         f.write(firmware_metainfo)
@@ -71,16 +74,22 @@ def get_firmware_bin(root, bin_path, dst):
 def create_firmware_cab(exe, folder):
     with cd(folder):
         if os.name == "nt":
-          directive = os.path.join (folder, "directive")
-          with open (directive, 'w') as wfd:
-            wfd.write('.OPTION EXPLICIT\r\n')
-            wfd.write('.Set CabinetNameTemplate=firmware.cab\r\n')
-            wfd.write('.Set DiskDirectory1=.\r\n')
-            wfd.write('firmware.bin\r\n')
-            wfd.write('firmware.metainfo.xml\r\n')
-          command = ['makecab.exe', '/f', directive]
+            directive = os.path.join(folder, "directive")
+            with open(directive, 'w') as wfd:
+                wfd.write('.OPTION EXPLICIT\r\n')
+                wfd.write('.Set CabinetNameTemplate=firmware.cab\r\n')
+                wfd.write('.Set DiskDirectory1=.\r\n')
+                wfd.write('firmware.bin\r\n')
+                wfd.write('firmware.metainfo.xml\r\n')
+            command = ['makecab.exe', '/f', directive]
         else:
-          command = ['gcab', '--create', 'firmware.cab', 'firmware.bin', 'firmware.metainfo.xml']
+            command = [
+                'gcab',
+                '--create',
+                'firmware.cab',
+                'firmware.bin',
+                'firmware.metainfo.xml',
+            ]
         subprocess.check_call(command)
 
 
@@ -104,19 +113,50 @@ def main(args):
         print('Done')
         shutil.copy(os.path.join(dir, 'firmware.cab'), args.out)
 
+
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Create fwupd packaged from windows executables')
-    parser.add_argument('--firmware-name', help='Name of the firmware package can be customized (e.g. DellTBT)', required=True)
-    parser.add_argument('--firmware-summary', help='One line description of the firmware package')
-    parser.add_argument('--firmware-description', help='Longer description of the firmware package')
-    parser.add_argument('--device-guid', help='GUID of the device this firmware will run on, this *must* match the output of one of the GUIDs in `fwupdmgr get-devices`', required=True)
+    parser = argparse.ArgumentParser(
+        description='Create fwupd packaged from windows executables'
+    )
+    parser.add_argument(
+        '--firmware-name',
+        help='Name of the firmware package can be customized (e.g. DellTBT)',
+        required=True,
+    )
+    parser.add_argument(
+        '--firmware-summary', help='One line description of the firmware package'
+    )
+    parser.add_argument(
+        '--firmware-description', help='Longer description of the firmware package'
+    )
+    parser.add_argument(
+        '--device-guid',
+        help='GUID of the device this firmware will run on, this *must* match the output of one of the GUIDs in `fwupdmgr get-devices`',
+        required=True,
+    )
     parser.add_argument('--firmware-homepage', help='Website for the firmware provider')
-    parser.add_argument('--contact-info', help='Email address of the firmware developer')
-    parser.add_argument('--developer-name', help='Name of the firmware developer', required=True)
-    parser.add_argument('--release-version', help='Version number of the firmware package', required=True)
-    parser.add_argument('--release-description', help='Description of the firmware release')
-    parser.add_argument('--exe', help='(optional) Executable file to extract firmware from')
-    parser.add_argument('--bin', help='Path to the .bin file (Relative if inside the executable; Absolute if outside) to use as the firmware image', required=True)
+    parser.add_argument(
+        '--contact-info', help='Email address of the firmware developer'
+    )
+    parser.add_argument(
+        '--developer-name', help='Name of the firmware developer', required=True
+    )
+    parser.add_argument(
+        '--release-version',
+        help='Version number of the firmware package',
+        required=True,
+    )
+    parser.add_argument(
+        '--release-description', help='Description of the firmware release'
+    )
+    parser.add_argument(
+        '--exe', help='(optional) Executable file to extract firmware from'
+    )
+    parser.add_argument(
+        '--bin',
+        help='Path to the .bin file (Relative if inside the executable; Absolute if outside) to use as the firmware image',
+        required=True,
+    )
     parser.add_argument('--out', help='Output cab file path', required=True)
     args = parser.parse_args()
 

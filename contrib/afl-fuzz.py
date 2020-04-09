@@ -6,6 +6,7 @@ import sys
 import subprocess
 import os
 
+
 def main():
     parser = argparse.ArgumentParser(description='Run afl-fuzz on all cores')
     parser.add_argument('--input', '-i', help='fuzzing input directory')
@@ -26,8 +27,17 @@ def main():
 
     # run the main instance
     envp = None
-    argv = ['afl-fuzz', '-m300', '-i', args.input, '-o', args.output,
-            '-M', 'fuzzer00', args.path]
+    argv = [
+        'afl-fuzz',
+        '-m300',
+        '-i',
+        args.input,
+        '-o',
+        args.output,
+        '-M',
+        'fuzzer00',
+        args.path,
+    ]
     if args.command:
         argv.append(args.command)
     argv.append('@@')
@@ -37,8 +47,17 @@ def main():
     # run the secondary instances
     cs = []
     for i in range(1, os.cpu_count()):
-        argv = ['afl-fuzz', '-m300', '-i', args.input, '-o', args.output,
-                '-S', 'fuzzer%02i' % i, args.path]
+        argv = [
+            'afl-fuzz',
+            '-m300',
+            '-i',
+            args.input,
+            '-o',
+            args.output,
+            '-S',
+            'fuzzer%02i' % i,
+            args.path,
+        ]
         if args.command:
             argv.append(args.command)
         argv.append('@@')
@@ -53,6 +72,7 @@ def main():
     for c in cs:
         c.terminate()
     return 0
+
 
 if __name__ == '__main__':
     sys.exit(main())

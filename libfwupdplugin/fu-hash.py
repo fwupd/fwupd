@@ -10,6 +10,7 @@ SPDX-License-Identifier: LGPL-2.1+
 import sys
 import hashlib
 
+
 def usage(return_code):
     """ print usage and exit with the supplied return code """
     if return_code == 0:
@@ -18,6 +19,7 @@ def usage(return_code):
         out = sys.stderr
     out.write("usage: fu-hash.py <HEADER> <SRC1> <SRC2>...")
     sys.exit(return_code)
+
 
 if __name__ == '__main__':
     if {'-?', '--help', '--usage'}.intersection(set(sys.argv)):
