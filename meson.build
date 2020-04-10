@@ -21,6 +21,9 @@ conf.set_quoted('PACKAGE_VERSION', fwupd_version)
 git = find_program('git', required : false)
 if git.found()
   source_version = run_command(git, 'describe').stdout().strip()
+  if source_version == ''
+    source_version = fwupd_version
+  endif
 else
   source_version = fwupd_version
 endif
