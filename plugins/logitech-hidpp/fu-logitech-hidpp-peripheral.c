@@ -508,8 +508,8 @@ fu_logitech_hidpp_peripheral_setup (FuDevice *device, GError **error)
 	/* did not get ID */
 	if (self->hidpp_id == HIDPP_DEVICE_ID_UNSET) {
 		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_FAILED,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "no HID++ ID");
 		return FALSE;
 	}
