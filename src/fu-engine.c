@@ -2244,6 +2244,7 @@ fu_engine_update_attach (FuEngine *self, const gchar *device_id, GError **error)
 	FuPlugin *plugin;
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuDevice) device_attach = NULL;
 
 	/* the device and plugin both may have changed */
 	device = fu_engine_get_device_by_id (self, device_id, error);
@@ -2251,22 +2252,29 @@ fu_engine_update_attach (FuEngine *self, const gchar *device_id, GError **error)
 		g_prefix_error (error, "failed to get device after update: ");
 		return FALSE;
 	}
-	str = fu_device_to_string (device);
-	g_debug ("performing attach on %s", str);
-	plugin = fu_plugin_list_find_by_name (self->plugin_list,
-					      fu_device_get_plugin (device),
-					      error);
-	if (plugin == NULL)
-		return FALSE;
-
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_WILL_DISAPPEAR)) {
 		g_debug ("skipping attach due to will-disappear flag");
 		return TRUE;
 	}
 
-	if (!fu_plugin_runner_update_attach (plugin, device, error))
+	/* use another device */
+	if (fu_device_get_attach_guid (device) != NULL) {
+		device_attach = fu_device_list_get_by_guid (self->device_list,
+							    fu_device_get_attach_guid (device),
+							    error);
+		if (device_attach == NULL)
+			return FALSE;
+	} else {
+		device_attach = g_object_ref (device);
+	}
+	str = fu_device_to_string (device_attach);
+	g_debug ("performing attach on %s", str);
+	plugin = fu_plugin_list_find_by_name (self->plugin_list,
+					      fu_device_get_plugin (device_attach),
+					      error);
+	if (plugin == NULL)
 		return FALSE;
-	return TRUE;
+	return fu_plugin_runner_update_attach (plugin, device_attach, error);
 }
 
 gboolean

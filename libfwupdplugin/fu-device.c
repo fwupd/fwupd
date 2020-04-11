@@ -58,6 +58,7 @@ typedef struct {
 	GPtrArray			*possible_plugins;
 	GPtrArray			*retry_recs;	/* of FuDeviceRetryRecovery */
 	guint				 retry_delay;
+	gchar				*attach_guid;
 } FuDevicePrivate;
 
 typedef struct {
@@ -900,6 +901,10 @@ fu_device_set_quirk_kv (FuDevice *self,
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_NAME) == 0) {
 		fu_device_set_name (self, value);
+		return TRUE;
+	}
+	if (g_strcmp0 (key, FU_QUIRKS_ATTACH_GUID) == 0) {
+		fu_device_set_attach_guid (self, value);
 		return TRUE;
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_SUMMARY) == 0) {
@@ -1767,6 +1772,49 @@ fu_device_set_logical_id (FuDevice *self, const gchar *logical_id)
 }
 
 /**
+ * fu_device_get_attach_guid:
+ * @self: A #FuDevice
+ *
+ * Gets the GUID to use to attach the hardware.
+ *
+ * Returns: a string value, or %NULL if never set.
+ *
+ * Since: 1.4.0
+ **/
+const gchar *
+fu_device_get_attach_guid (FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
+	return priv->attach_guid;
+}
+
+/**
+ * fu_device_set_attach_guid:
+ * @self: A #FuDevice
+ * @attach_guid: a string, e.g. `USB\VID_17EF&PID_3070`
+ *
+ * Sets the GUID of the device that should be used to attach the hardware back
+ * into runtime mode. For instance, two USB hub devices might be in tier1 and
+ * tier2 configuration, and only the tier1 device controls the power for both
+ * devices.
+ *
+ * Another example is a virtual GPIO or EC device which controls the power
+ * for all silicon on a PCB. In this case we need to use this as a proxy rather
+ * than the updated device itself.
+ *
+ * Since: 1.4.0
+ **/
+void
+fu_device_set_attach_guid (FuDevice *self, const gchar *attach_guid)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_free (priv->attach_guid);
+	priv->attach_guid = g_strdup (attach_guid);
+}
+
+/**
  * fu_device_get_protocol:
  * @self: A #FuDevice
  *
@@ -2124,6 +2172,8 @@ fu_device_add_string (FuDevice *self, guint idt, GString *str)
 		fu_common_string_append_kv (str, idt + 1, "PhysicalId", priv->physical_id);
 	if (priv->logical_id != NULL)
 		fu_common_string_append_kv (str, idt + 1, "LogicalId", priv->logical_id);
+	if (priv->attach_guid != NULL)
+		fu_common_string_append_kv (str, idt + 1, "AttachGuid", priv->attach_guid);
 	if (priv->size_min > 0) {
 		g_autofree gchar *sz = g_strdup_printf ("%" G_GUINT64_FORMAT, priv->size_min);
 		fu_common_string_append_kv (str, idt + 1, "FirmwareSizeMin", sz);
@@ -2854,6 +2904,8 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 		fu_device_set_physical_id (self, priv_donor->physical_id);
 	if (priv->logical_id == NULL && priv_donor->logical_id != NULL)
 		fu_device_set_logical_id (self, priv_donor->logical_id);
+	if (priv->attach_guid == NULL && priv_donor->attach_guid != NULL)
+		fu_device_set_attach_guid (self, priv_donor->attach_guid);
 	if (priv->quirks == NULL)
 		fu_device_set_quirks (self, fu_device_get_quirks (donor));
 	g_rw_lock_reader_lock (&priv_donor->parent_guids_mutex);
@@ -3006,6 +3058,7 @@ fu_device_finalize (GObject *object)
 	g_free (priv->equivalent_id);
 	g_free (priv->physical_id);
 	g_free (priv->logical_id);
+	g_free (priv->attach_guid);
 
 	G_OBJECT_CLASS (fu_device_parent_class)->finalize (object);
 }
