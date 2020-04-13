@@ -974,6 +974,34 @@ fu_device_poll_func (void)
 }
 
 static void
+fu_device_flags_func (void)
+{
+	g_autoptr(FuDevice) device = fu_device_new ();
+
+	g_assert_cmpint (fu_device_get_flags (device), ==, FWUPD_DEVICE_FLAG_NONE);
+
+	/* remove IS_BOOTLOADER if is a BOOTLOADER */
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
+	g_assert_cmpint (fu_device_get_flags (device), ==, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
+	fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
+
+	/* check implication */
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
+	g_assert_cmpint (fu_device_get_flags (device), ==, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE |
+							   FWUPD_DEVICE_FLAG_CAN_VERIFY);
+	fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_CAN_VERIFY |
+				       FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
+
+	/* negation */
+	fu_device_set_custom_flags (device, "is-bootloader,updatable");
+	g_assert_cmpint (fu_device_get_flags (device), ==, FWUPD_DEVICE_FLAG_IS_BOOTLOADER |
+							   FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_set_custom_flags (device, "~is-bootloader");
+	g_assert_cmpint (fu_device_get_flags (device), ==, FWUPD_DEVICE_FLAG_UPDATABLE);
+}
+
+static void
 fu_device_parent_func (void)
 {
 	g_autoptr(FuDevice) child = fu_device_new ();
@@ -1765,6 +1793,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/firmware{dfu}", fu_firmware_dfu_func);
 	g_test_add_func ("/fwupd/archive{invalid}", fu_archive_invalid_func);
 	g_test_add_func ("/fwupd/archive{cab}", fu_archive_cab_func);
+	g_test_add_func ("/fwupd/device{flags}", fu_device_flags_func);
 	g_test_add_func ("/fwupd/device{parent}", fu_device_parent_func);
 	g_test_add_func ("/fwupd/device{incorporate}", fu_device_incorporate_func);
 	if (g_test_slow ())
