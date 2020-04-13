@@ -1859,6 +1859,17 @@ fu_device_get_physical_id (FuDevice *self)
 void
 fu_device_add_flag (FuDevice *self, FwupdDeviceFlags flag)
 {
+	/* none is not used as an "exported" flag */
+	if (flag == FWUPD_DEVICE_FLAG_NONE)
+		return;
+
+	/* being both a bootloader and requiring a bootloader is invalid */
+	if (flag & FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER)
+		fu_device_remove_flag (self, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	if (flag & FWUPD_DEVICE_FLAG_IS_BOOTLOADER)
+		fu_device_remove_flag (self, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
+
+	/* one implies the other */
 	if (flag & FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE)
 		flag |= FWUPD_DEVICE_FLAG_CAN_VERIFY;
 	if (flag & FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES)
@@ -1871,24 +1882,20 @@ fu_device_set_custom_flag (FuDevice *self, const gchar *hint)
 {
 	FwupdDeviceFlags flag;
 
+	/* is this a negated device flag */
+	if (g_str_has_prefix (hint, "~")) {
+		flag = fwupd_device_flag_from_string (hint + 1);
+		if (flag != FWUPD_DEVICE_FLAG_UNKNOWN)
+			fu_device_remove_flag (self, flag);
+		return;
+	}
+
 	/* is this a known device flag */
 	flag = fwupd_device_flag_from_string (hint);
-	if (flag == FWUPD_DEVICE_FLAG_UNKNOWN)
-		return;
-
-	/* being both a bootloader and requiring a bootloader is invalid */
-	if (flag == FWUPD_DEVICE_FLAG_NONE ||
-	    flag == FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER) {
-		fu_device_remove_flag (self, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
-	}
-	if (flag == FWUPD_DEVICE_FLAG_NONE ||
-	    flag == FWUPD_DEVICE_FLAG_IS_BOOTLOADER) {
-		fu_device_remove_flag (self, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
-	}
-
-	/* none is not used as an "exported" flag */
-	if (flag != FWUPD_DEVICE_FLAG_NONE)
+	if (flag != FWUPD_DEVICE_FLAG_UNKNOWN) {
 		fu_device_add_flag (self, flag);
+		return;
+	}
 }
 
 /**
