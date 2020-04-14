@@ -54,13 +54,13 @@ fu_plugin_dell_dock_create_node (FuPlugin *plugin,
 
 static gboolean
 fu_plugin_dell_dock_probe (FuPlugin *plugin,
-			   FuDevice *symbiote,
+			   FuDevice *proxy,
 			   GError **error)
 {
 	g_autoptr(FuDellDockEc) ec_device = NULL;
 
 	/* create all static endpoints */
-	ec_device = fu_dell_dock_ec_new (symbiote);
+	ec_device = fu_dell_dock_ec_new (proxy);
 	if (!fu_plugin_dell_dock_create_node (plugin,
 					      FU_DEVICE (ec_device),
 					      error))
@@ -68,7 +68,7 @@ fu_plugin_dell_dock_probe (FuPlugin *plugin,
 
 	/* create TBT endpoint if Thunderbolt SKU and Thunderbolt link inactive */
 	if (fu_dell_dock_ec_needs_tbt (FU_DEVICE (ec_device))) {
-		g_autoptr(FuDellDockTbt) tbt_device = fu_dell_dock_tbt_new ();
+		g_autoptr(FuDellDockTbt) tbt_device = fu_dell_dock_tbt_new (proxy);
 		fu_device_add_child (FU_DEVICE (ec_device), FU_DEVICE (tbt_device));
 		if (!fu_plugin_dell_dock_create_node (plugin,
 						      FU_DEVICE (tbt_device),
