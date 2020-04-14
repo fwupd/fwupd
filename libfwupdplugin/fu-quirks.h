@@ -51,6 +51,7 @@ gboolean	 fu_quirks_lookup_by_id_iter		(FuQuirks	*self,
 #define	FU_QUIRKS_GUID				"Guid"
 #define	FU_QUIRKS_COUNTERPART_GUID		"CounterpartGuid"
 #define	FU_QUIRKS_PARENT_GUID			"ParentGuid"
+#define	FU_QUIRKS_PROXY_GUID			"ProxyGuid"
 #define	FU_QUIRKS_CHILDREN			"Children"
 #define	FU_QUIRKS_VERSION			"Version"
 #define	FU_QUIRKS_VENDOR			"Vendor"

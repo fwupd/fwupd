@@ -4391,6 +4391,54 @@ fu_engine_adopt_children (FuEngine *self, FuDevice *device)
 }
 
 static void
+fu_engine_set_proxy_device (FuEngine *self, FuDevice *device)
+{
+	GPtrArray *guids;
+	g_autoptr(FuDevice) proxy = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+
+	if (fu_device_get_proxy (device) != NULL)
+		return;
+	if (fu_device_get_proxy_guid (device) == NULL)
+		return;
+
+	/* find the proxy GUID in any existing device */
+	proxy = fu_device_list_get_by_guid (self->device_list,
+					    fu_device_get_proxy_guid (device),
+					    NULL);
+	if (proxy != NULL) {
+		g_debug ("setting proxy of %s to %s for %s",
+			 fu_device_get_id (proxy),
+			 fu_device_get_id (device),
+			 fu_device_get_proxy_guid (device));
+		fu_device_set_proxy (device, proxy);
+		return;
+	}
+
+	/* are we the parent of an existing device */
+	guids = fu_device_get_guids (device);
+	for (guint j = 0; j < guids->len; j++) {
+		const gchar *guid = g_ptr_array_index (guids, j);
+		devices = fu_device_list_get_active (self->device_list);
+		for (guint i = 0; i < devices->len; i++) {
+			FuDevice *device_tmp = g_ptr_array_index (devices, i);
+			if (g_strcmp0 (fu_device_get_proxy_guid (device_tmp), guid) == 0) {
+				g_debug ("adding proxy of %s to %s for %s",
+					 fu_device_get_id (device),
+					 fu_device_get_id (device_tmp),
+					 guid);
+				fu_device_set_proxy (device_tmp, device);
+				return;
+			}
+		}
+	}
+
+	/* nothing found */
+	g_warning ("did not find proxy device %s",
+		   fu_device_get_proxy_guid (device));
+}
+
+static void
 fu_engine_device_inherit_history (FuEngine *self, FuDevice *device)
 {
 	g_autoptr(FuDevice) device_history = NULL;
@@ -4487,6 +4535,9 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 
 	/* adopt any required children, which may or may not already exist */
 	fu_engine_adopt_children (self, device);
+
+	/* set the proxy device if specified by GUID */
+	fu_engine_set_proxy_device (self, device);
 
 	/* set any alternate objects on the device from the ID */
 	if (fu_device_get_alternate_id (device) != NULL) {
