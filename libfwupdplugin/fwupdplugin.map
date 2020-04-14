@@ -575,6 +575,8 @@ LIBFWUPDPLUGIN_1.4.0 {
 LIBFWUPDPLUGIN_1.4.1 {
   global:
     fu_device_get_proxy;
+    fu_device_get_proxy_guid;
     fu_device_set_proxy;
+    fu_device_set_proxy_guid;
   local: *;
 } LIBFWUPDPLUGIN_1.4.0;
