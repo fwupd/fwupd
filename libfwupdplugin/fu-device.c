@@ -643,6 +643,13 @@ fu_device_set_parent (FuDevice *self, FuDevice *parent)
 
 	g_return_if_fail (FU_IS_DEVICE (self));
 
+	/* if unspecified, always child before parent */
+	if (parent != NULL &&
+	    fu_device_get_order (parent) == fu_device_get_order (self)) {
+		g_debug ("auto-setting %s order", fu_device_get_id (parent));
+		fu_device_set_order (parent, fu_device_get_order (self) + 1);
+	}
+
 	if (priv->parent != NULL)
 		g_object_remove_weak_pointer (G_OBJECT (priv->parent), (gpointer *) &priv->parent);
 	if (parent != NULL)
