@@ -30,6 +30,7 @@ static void fwupd_device_finalize	 (GObject *object);
 typedef struct {
 	gchar				*id;
 	gchar				*parent_id;
+	gchar				*physical_id;
 	guint64				 created;
 	guint64				 modified;
 	guint64				 flags;
@@ -277,6 +278,53 @@ fwupd_device_set_parent_id (FwupdDevice *device, const gchar *parent_id)
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
 	g_free (priv->parent_id);
 	priv->parent_id = g_strdup (parent_id);
+}
+
+/**
+ * fwupd_device_set_physical_id:
+ * @device: A #FwupdDevice
+ * @physical_id: a string that identifies the physical device connection
+ *
+ * Sets the physical ID on the device which represents the electrical connection
+ * of the device to the system. Multiple #FuDevices can share a physical ID.
+ *
+ * The physical ID is used to remove logical devices when a physical device has
+ * been removed from the system.
+ *
+ * A sysfs or devpath is not a physical ID, but could be something like
+ * `PCI_SLOT_NAME=0000:3e:00.0`.
+ *
+ * Since: 1.4.1
+ **/
+void
+fwupd_device_set_physical_id (FwupdDevice *device, const gchar *physical_id)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	g_return_if_fail (physical_id != NULL);
+	g_free (priv->physical_id);
+	priv->physical_id = g_strdup (physical_id);
+}
+
+/**
+ * fwupd_device_get_physical_id:
+ * @device: A #FwupdDevice
+ *
+ * Gets the physical ID set for the device, which represents the electrical
+ * connection used to compare devices.
+ *
+ * Multiple #FwupdDevices can share a single physical ID.
+ *
+ * Returns: a string value, or %NULL if never set.
+ *
+ * Since: 1.4.1
+ **/
+const gchar *
+fwupd_device_get_physical_id (FwupdDevice *device)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	return priv->physical_id;
 }
 
 /**
@@ -1274,6 +1322,11 @@ fwupd_device_to_variant_full (FwupdDevice *device, FwupdDeviceFlags flags)
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_GUID,
 				       g_variant_new_strv (tmp, priv->guids->len));
+	}
+	if (priv->physical_id != NULL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_PHYSICAL_ID,
+				       g_variant_new_string (priv->physical_id));
 	}
 	if (priv->icons->len > 0) {
 		const gchar * const *tmp = (const gchar * const *) priv->icons->pdata;
@@ -2291,6 +2344,7 @@ fwupd_device_finalize (GObject *object)
 	g_free (priv->description);
 	g_free (priv->id);
 	g_free (priv->parent_id);
+	g_free (priv->physical_id);
 	g_free (priv->name);
 	g_free (priv->serial);
 	g_free (priv->summary);

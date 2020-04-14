@@ -1252,6 +1252,12 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 		}
 	}
 
+	tmp = fwupd_device_get_physical_id (dev);
+	if (tmp != NULL) {
+		/* TRANSLATORS: Physical ID for hardware */
+		fu_common_string_append_kv (str, idt + 1, _("Physical ID"), tmp);
+	}
+
 	/* TRANSLATORS: description of device ability */
 	tmp = _("Device Flags");
 	for (guint i = 0; i < 64; i++) {

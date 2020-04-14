@@ -26,6 +26,7 @@ G_BEGIN_DECLS
 #define FWUPD_RESULT_KEY_INSTALL_DURATION	"InstallDuration"	/* u */
 #define FWUPD_RESULT_KEY_GUID			"Guid"		/* as */
 #define FWUPD_RESULT_KEY_INSTANCE_IDS		"InstanceIds"	/* as */
+#define FWUPD_RESULT_KEY_PHYSICAL_ID		"PhysicalId"	/* s */
 #define FWUPD_RESULT_KEY_HOMEPAGE		"Homepage"	/* s */
 #define FWUPD_RESULT_KEY_DETAILS_URL		"DetailsUrl"	/* s */
 #define FWUPD_RESULT_KEY_SOURCE_URL		"SourceUrl"	/* s */

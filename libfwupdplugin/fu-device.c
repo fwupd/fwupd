@@ -34,7 +34,6 @@ static void fu_device_finalize			 (GObject *object);
 typedef struct {
 	gchar				*alternate_id;
 	gchar				*equivalent_id;
-	gchar				*physical_id;
 	gchar				*logical_id;
 	FuDevice			*alternate;
 	FuDevice			*parent;	/* noref */
@@ -90,7 +89,8 @@ fu_device_get_property (GObject *object, guint prop_id,
 		g_value_set_uint (value, priv->progress);
 		break;
 	case PROP_PHYSICAL_ID:
-		g_value_set_string (value, priv->physical_id);
+		g_value_set_string (value,
+				    fu_device_get_physical_id (self));
 		break;
 	case PROP_LOGICAL_ID:
 		g_value_set_string (value, priv->logical_id);
@@ -1706,8 +1706,8 @@ fu_device_set_version_bootloader (FuDevice *self, const gchar *version)
 gboolean
 fu_device_ensure_id (FuDevice *self, GError **error)
 {
-	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_autofree gchar *device_id = NULL;
+	gchar *physical_id = fu_device_get_physical_id (self);
 
 	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
@@ -1717,7 +1717,7 @@ fu_device_ensure_id (FuDevice *self, GError **error)
 		return TRUE;
 
 	/* nothing we can do! */
-	if (priv->physical_id == NULL) {
+	if (physical_id == NULL) {
 		g_autofree gchar *tmp = fu_device_to_string (self);
 		g_set_error (error,
 			     G_IO_ERROR,
@@ -1728,7 +1728,7 @@ fu_device_ensure_id (FuDevice *self, GError **error)
 
 	/* logical may be NULL */
 	device_id = g_strjoin (":",
-			       fu_device_get_physical_id (self),
+			       physical_id,
 			       fu_device_get_logical_id (self),
 			       NULL);
 	fu_device_set_id (self, device_id);
@@ -1825,11 +1825,7 @@ fu_device_set_protocol (FuDevice *self, const gchar *protocol)
 void
 fu_device_set_physical_id (FuDevice *self, const gchar *physical_id)
 {
-	FuDevicePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FU_IS_DEVICE (self));
-	g_return_if_fail (physical_id != NULL);
-	g_free (priv->physical_id);
-	priv->physical_id = g_strdup (physical_id);
+	fwupd_device_set_physical_id (FWUPD_DEVICE (self), physical_id);
 }
 
 /**
@@ -1848,9 +1844,7 @@ fu_device_set_physical_id (FuDevice *self, const gchar *physical_id)
 const gchar *
 fu_device_get_physical_id (FuDevice *self)
 {
-	FuDevicePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
-	return priv->physical_id;
+	return fwupd_device_get_physical_id (FWUPD_DEVICE (self));
 }
 
 /**
@@ -2121,6 +2115,7 @@ fu_device_add_string (FuDevice *self, guint idt, GString *str)
 	g_autofree gchar *tmp = NULL;
 	g_autoptr(GList) keys = NULL;
 	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_reader_locker_new (&priv->metadata_mutex);
+	const gchar *physical_id = fu_device_get_physical_id (self);
 
 	g_return_if_fail (locker != NULL);
 
@@ -2134,8 +2129,8 @@ fu_device_add_string (FuDevice *self, guint idt, GString *str)
 		fu_common_string_append_kv (str, idt + 1, "AlternateId", priv->alternate_id);
 	if (priv->equivalent_id != NULL)
 		fu_common_string_append_kv (str, idt + 1, "EquivalentId", priv->equivalent_id);
-	if (priv->physical_id != NULL)
-		fu_common_string_append_kv (str, idt + 1, "PhysicalId", priv->physical_id);
+	if (physical_id != NULL)
+		fu_common_string_append_kv (str, idt + 1, "PhysicalId", physical_id);
 	if (priv->logical_id != NULL)
 		fu_common_string_append_kv (str, idt + 1, "LogicalId", priv->logical_id);
 	if (priv->size_min > 0) {
@@ -2858,6 +2853,7 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 	FuDevicePrivate *priv_donor = GET_PRIVATE (donor);
 	GPtrArray *instance_ids = fu_device_get_instance_ids (donor);
 	GPtrArray *parent_guids = fu_device_get_parent_guids (donor);
+	const gchar * physical_id = fu_device_get_physical_id (donor);
 	g_autoptr(GList) metadata_keys = NULL;
 
 	g_return_if_fail (FU_IS_DEVICE (self));
@@ -2868,8 +2864,8 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 		fu_device_set_alternate_id (self, fu_device_get_alternate_id (donor));
 	if (priv->equivalent_id == NULL)
 		fu_device_set_equivalent_id (self, fu_device_get_equivalent_id (donor));
-	if (priv->physical_id == NULL && priv_donor->physical_id != NULL)
-		fu_device_set_physical_id (self, priv_donor->physical_id);
+	if (fu_device_get_physical_id (self) == NULL && physical_id != NULL)
+		fu_device_set_physical_id (self, physical_id);
 	if (priv->logical_id == NULL && priv_donor->logical_id != NULL)
 		fu_device_set_logical_id (self, priv_donor->logical_id);
 	if (priv->quirks == NULL)
@@ -3022,7 +3018,6 @@ fu_device_finalize (GObject *object)
 	g_ptr_array_unref (priv->retry_recs);
 	g_free (priv->alternate_id);
 	g_free (priv->equivalent_id);
-	g_free (priv->physical_id);
 	g_free (priv->logical_id);
 
 	G_OBJECT_CLASS (fu_device_parent_class)->finalize (object);
