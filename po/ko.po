@@ -309,10 +309,6 @@ msgstr "명령을 찾을 수 없습니다"
 msgid "Continue with update?"
 msgstr "업데이트를 계속 진행하시겠습니까?"
 
-#. TRANSLATORS: command description
-msgid "Convert firmware to DFU format"
-msgstr "펌웨어를 DFU 형식으로 변환"
-
 #. TRANSLATORS: Device supports some form of checksum verification
 msgid "Cryptographic hash verification is available"
 msgstr "암호화 해시 검사 사용 가능"
@@ -479,10 +475,6 @@ msgstr "다운로드 중…"
 #. TRANSLATORS: command description
 msgid "Dump SMBIOS data from a file"
 msgstr "파일에 저장된 SMBIOS 데이터 덤프를 출력합니다"
-
-#. TRANSLATORS: command description
-msgid "Dump details about a firmware file"
-msgstr "펌웨어 파일 세부 정보 출력"
 
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Duration"
@@ -884,12 +876,6 @@ msgstr "원격 저장소 없음"
 msgid "No updates were applied"
 msgstr "적용된 업데이트 없음"
 
-#. TRANSLATORS: message letting the user know no device upgrade available
-#. * %1 is the device name
-#, c-format
-msgid "No upgrades for %s"
-msgstr "%s의 업그레이드 없음"
-
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "단일 PCR 값만 표시"
@@ -1071,21 +1057,9 @@ msgstr "선택한 장치"
 msgid "Serial Number"
 msgstr "일련 번호"
 
-#. TRANSLATORS: command description
-msgid "Set product ID on firmware file"
-msgstr "펌웨어 파일의 제품 ID 설정"
-
-#. TRANSLATORS: command description
-msgid "Set release version on firmware file"
-msgstr "펌웨어 파일의 릴리스 버전 설정"
-
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
 msgstr "업데이트 중 디버깅 플래그 설정"
-
-#. TRANSLATORS: command description
-msgid "Set vendor ID on firmware file"
-msgstr "펌웨어 파일의 제조사 ID 설정"
 
 msgid "Sets the list of approved firmware"
 msgstr "허용된 펌웨어 목록 설정"
@@ -1179,11 +1153,6 @@ msgstr "모든 장치를 활성화함"
 msgid "Successfully disabled remote"
 msgstr "원격 저장소를 비활성화함"
 
-#. TRANSLATORS: success message where we made the firmware on the
-#. * device older than it was before
-msgid "Successfully downgraded device"
-msgstr "장치를 다운그레이드함"
-
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata: "
@@ -1265,6 +1234,7 @@ msgstr "UEFI 펌웨어 유틸리티"
 
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
+#. TRANSLATORS: unknown release urgency
 msgid "Unknown"
 msgstr "알 수 없음"
 

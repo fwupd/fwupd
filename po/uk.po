@@ -332,10 +332,6 @@ msgstr "Такої команди не знайдено"
 msgid "Continue with update?"
 msgstr "Продовжити оновлення?"
 
-#. TRANSLATORS: command description
-msgid "Convert firmware to DFU format"
-msgstr "Перетворити мікропрограму у формат DFU"
-
 #. TRANSLATORS: Device supports some form of checksum verification
 msgid "Cryptographic hash verification is available"
 msgstr "Доступна перевірка криптографічної хеш-суми"
@@ -508,10 +504,6 @@ msgstr "Отримуємо дані…"
 #. TRANSLATORS: command description
 msgid "Dump SMBIOS data from a file"
 msgstr "Записати дані SMBIOS з файла"
-
-#. TRANSLATORS: command description
-msgid "Dump details about a firmware file"
-msgstr "Створити дамп даних щодо файла мікропрограми"
 
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Duration"
@@ -922,12 +914,6 @@ msgstr "Немає доступних віддалених сховищ"
 msgid "No updates were applied"
 msgstr "Не застосовано жодного оновлення"
 
-#. TRANSLATORS: message letting the user know no device upgrade available
-#. * %1 is the device name
-#, c-format
-msgid "No upgrades for %s"
-msgstr "Немає оновлень для %s"
-
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Показувати лише одне значення PCR"
@@ -1109,21 +1095,9 @@ msgstr "Вибрано пристрій"
 msgid "Serial Number"
 msgstr "Серійний номер"
 
-#. TRANSLATORS: command description
-msgid "Set product ID on firmware file"
-msgstr "Встановити ідентифікатор продукту для файла мікропрограми"
-
-#. TRANSLATORS: command description
-msgid "Set release version on firmware file"
-msgstr "Встановити версію випуску для файла мікропрограми"
-
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
 msgstr "Встановити під час оновлення прапорець діагностики"
-
-#. TRANSLATORS: command description
-msgid "Set vendor ID on firmware file"
-msgstr "Встановити ідентифікатор виробника для файла мікропрограми"
 
 msgid "Sets the list of approved firmware"
 msgstr "Встановлення списку схвалених мікропрограм"
@@ -1217,11 +1191,6 @@ msgstr "Успішно активовано усі пристрої"
 msgid "Successfully disabled remote"
 msgstr "Успішно вимкнено запис віддаленого сховища"
 
-#. TRANSLATORS: success message where we made the firmware on the
-#. * device older than it was before
-msgid "Successfully downgraded device"
-msgstr "Успішно знижено версію пристрою"
-
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata: "
@@ -1306,6 +1275,7 @@ msgstr "Засіб роботи із мікропрограмами UEFI"
 
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
+#. TRANSLATORS: unknown release urgency
 msgid "Unknown"
 msgstr "Невідомий"
 
@@ -1476,3 +1446,20 @@ msgstr "Записуємо…"
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
 msgstr "Виробник вашого дистрибутива може не перевіряти усі оновлення мікропрограми на сумісність із вашою системою або з’єднаними із нею пристроями."
+
+#. TRANSLATORS: program name
+msgid "fwupd TPM event log utility"
+msgstr "Допоміжна програма для роботи із записами подій журналу TPM fwupd"
+
+#. TRANSLATORS: message letting the user know no device upgrade available due
+#. to missing on LVFS
+#. * %1 is the device name
+#, c-format
+msgid "• %s has no available firmware updates"
+msgstr "• %s не має доступних оновлень мікропрограми"
+
+#. TRANSLATORS: message letting the user know no device upgrade available
+#. * %1 is the device name
+#, c-format
+msgid "• %s has the latest available firmware version"
+msgstr "• Для %s встановлено найсвіжішу доступну версію мікропрограми"

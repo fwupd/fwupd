@@ -136,10 +136,6 @@ msgstr "Smazat výsledky z poslední aktualizace"
 msgid "Command not found"
 msgstr "Příkaz nebyl nalezen"
 
-#. TRANSLATORS: command description
-msgid "Convert firmware to DFU format"
-msgstr "Převést firmware do formátu DFU"
-
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
 msgstr "Nástroj pro práci s DFU"
@@ -229,10 +225,6 @@ msgstr "Stahuje se…"
 #. TRANSLATORS: command description
 msgid "Dump SMBIOS data from a file"
 msgstr "Vypsat data SMBIOS ze souboru"
-
-#. TRANSLATORS: command description
-msgid "Dump details about a firmware file"
-msgstr "Vypsat podrobnosti o souboru s firmwarem"
 
 #. TRANSLATORS: ESP is EFI System Partition
 msgid "ESP specified was not valid"
@@ -565,21 +557,9 @@ msgstr "Pokud je to možné, naplánovat instalaci na příští restart"
 msgid "Scheduling…"
 msgstr "Plánuje se…"
 
-#. TRANSLATORS: command description
-msgid "Set product ID on firmware file"
-msgstr "Nastavit ID produktu v souboru s firmwarem"
-
-#. TRANSLATORS: command description
-msgid "Set release version on firmware file"
-msgstr "Nastavit verzi vydání v souboru s firmwarem"
-
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
 msgstr "Během aktualizace nastavit příznak ladění"
-
-#. TRANSLATORS: command description
-msgid "Set vendor ID on firmware file"
-msgstr "Nastavit ID výrobce v souboru s firmwarem"
 
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
@@ -645,6 +625,7 @@ msgstr "Nástroj pro práci s firmwarem UEFI"
 
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
+#. TRANSLATORS: unknown release urgency
 msgid "Unknown"
 msgstr "Neznámý"
 

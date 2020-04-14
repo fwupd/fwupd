@@ -320,10 +320,6 @@ msgstr "Comando não encontrado"
 msgid "Continue with update?"
 msgstr "Continuar com a atualização?"
 
-#. TRANSLATORS: command description
-msgid "Convert firmware to DFU format"
-msgstr "Converte um firmware para formato DFU"
-
 #. TRANSLATORS: Device supports some form of checksum verification
 msgid "Cryptographic hash verification is available"
 msgstr "A verificação criptográfica de hash está disponível"
@@ -492,10 +488,6 @@ msgstr "Baixando…"
 #. TRANSLATORS: command description
 msgid "Dump SMBIOS data from a file"
 msgstr "Despeja dados SMBIOS a partir de um arquivo"
-
-#. TRANSLATORS: command description
-msgid "Dump details about a firmware file"
-msgstr "Despeja os detalhes sobre um arquivo firmware"
 
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Duration"
@@ -900,12 +892,6 @@ msgstr "Nenhum remoto disponível"
 msgid "No updates were applied"
 msgstr "Nenhuma atualização foi aplicada"
 
-#. TRANSLATORS: message letting the user know no device upgrade available
-#. * %1 is the device name
-#, c-format
-msgid "No upgrades for %s"
-msgstr "Nenhuma atualização para %s"
-
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Mostra apenas valor único de PCR"
@@ -1087,21 +1073,9 @@ msgstr "Dispositivo selecionado"
 msgid "Serial Number"
 msgstr "Número de série"
 
-#. TRANSLATORS: command description
-msgid "Set product ID on firmware file"
-msgstr "Define o ID de produto no arquivo de firmware"
-
-#. TRANSLATORS: command description
-msgid "Set release version on firmware file"
-msgstr "Define a versão de lançamento no arquivo de firmware"
-
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
 msgstr "Define a opção de depuração durante atualização"
-
-#. TRANSLATORS: command description
-msgid "Set vendor ID on firmware file"
-msgstr "Define o ID de fornecedor no arquivo de firmware"
 
 msgid "Sets the list of approved firmware"
 msgstr "Define a lista de firmwares aprovados"
@@ -1195,11 +1169,6 @@ msgstr "Todos os dispositivos ativados com sucesso"
 msgid "Successfully disabled remote"
 msgstr "Remoto desabilitado com sucesso"
 
-#. TRANSLATORS: success message where we made the firmware on the
-#. * device older than it was before
-msgid "Successfully downgraded device"
-msgstr "Downgrade do dispositivo feito com sucesso"
-
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata: "
@@ -1282,6 +1251,7 @@ msgstr "Utilitário de Firmware UEFI"
 
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
+#. TRANSLATORS: unknown release urgency
 msgid "Unknown"
 msgstr "Desconhecido"
 
@@ -1448,3 +1418,20 @@ msgstr "Escrevendo…"
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
 msgstr "Seu distribuidor pode não ter verificado qualquer das atualizações de firmware para compatibilidade com seu sistema ou dispositivos conectados."
+
+#. TRANSLATORS: program name
+msgid "fwupd TPM event log utility"
+msgstr "Utilitário de registro de eventos TPM do fwupd"
+
+#. TRANSLATORS: message letting the user know no device upgrade available due
+#. to missing on LVFS
+#. * %1 is the device name
+#, c-format
+msgid "• %s has no available firmware updates"
+msgstr "• %s possui nenhuma atualização de firmware disponível"
+
+#. TRANSLATORS: message letting the user know no device upgrade available
+#. * %1 is the device name
+#, c-format
+msgid "• %s has the latest available firmware version"
+msgstr "• %s possui a última versão do firmware disponível"

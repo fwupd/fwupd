@@ -131,10 +131,6 @@ msgstr "清除上次更新的結果"
 msgid "Command not found"
 msgstr "找不到指令"
 
-#. TRANSLATORS: command description
-msgid "Convert firmware to DFU format"
-msgstr "將韌體轉換為 DFU 格式"
-
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
 msgstr "DFU 公用程式"
@@ -224,10 +220,6 @@ msgstr "下載中…"
 #. TRANSLATORS: command description
 msgid "Dump SMBIOS data from a file"
 msgstr "從檔案傾印 SMBIOUS 資料"
-
-#. TRANSLATORS: command description
-msgid "Dump details about a firmware file"
-msgstr "傾印韌體檔案的相關細節"
 
 #. TRANSLATORS: ESP is EFI System Partition
 msgid "ESP specified was not valid"
@@ -557,21 +549,9 @@ msgstr "安排下次重新開機時若可行便安裝"
 msgid "Scheduling…"
 msgstr "排程中…"
 
-#. TRANSLATORS: command description
-msgid "Set product ID on firmware file"
-msgstr "設定韌體檔案產品 ID"
-
-#. TRANSLATORS: command description
-msgid "Set release version on firmware file"
-msgstr "設定韌體檔案發行版本"
-
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
 msgstr "在更新期間設定除錯旗標"
-
-#. TRANSLATORS: command description
-msgid "Set vendor ID on firmware file"
-msgstr "設定韌體檔案廠商 ID"
 
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
@@ -637,6 +617,7 @@ msgstr "UEFI 韌體公用程式"
 
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
+#. TRANSLATORS: unknown release urgency
 msgid "Unknown"
 msgstr "未知"
 

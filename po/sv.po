@@ -321,10 +321,6 @@ msgstr "Kommandot hittades inte"
 msgid "Continue with update?"
 msgstr "Fortsätta med uppdatering?"
 
-#. TRANSLATORS: command description
-msgid "Convert firmware to DFU format"
-msgstr "Konvertera fast programvara till DFU-format"
-
 #. TRANSLATORS: Device supports some form of checksum verification
 msgid "Cryptographic hash verification is available"
 msgstr "Kryptografiskt hashverifiering är tillgänglig"
@@ -493,10 +489,6 @@ msgstr "Laddar ner..."
 #. TRANSLATORS: command description
 msgid "Dump SMBIOS data from a file"
 msgstr "Dumpa SMBIOS data från en fil"
-
-#. TRANSLATORS: command description
-msgid "Dump details about a firmware file"
-msgstr "Skriv ut detaljer om fast programvarufil"
 
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Duration"
@@ -901,12 +893,6 @@ msgstr "Inga fjärrarkiv tillgängliga"
 msgid "No updates were applied"
 msgstr "Inga uppdateringar applicerades"
 
-#. TRANSLATORS: message letting the user know no device upgrade available
-#. * %1 is the device name
-#, c-format
-msgid "No upgrades for %s"
-msgstr "Inga uppgraderingar för %s"
-
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Visa endast enkelt PCR-värde"
@@ -1088,21 +1074,9 @@ msgstr "Vald enhet"
 msgid "Serial Number"
 msgstr "Serienummer"
 
-#. TRANSLATORS: command description
-msgid "Set product ID on firmware file"
-msgstr "Ange produkt-ID för den fasta programvarufilen"
-
-#. TRANSLATORS: command description
-msgid "Set release version on firmware file"
-msgstr "Ange utgåveversion för den fasta programvarufilen"
-
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
 msgstr "Ställ in felsökningsflaggan under uppdatering"
-
-#. TRANSLATORS: command description
-msgid "Set vendor ID on firmware file"
-msgstr "Ange tillverkar-ID för den fasta programvarufilen"
 
 msgid "Sets the list of approved firmware"
 msgstr "Sätter listan av godkända fasta programvaror"
@@ -1196,11 +1170,6 @@ msgstr "Aktiverade framgångsrikt alla enheter"
 msgid "Successfully disabled remote"
 msgstr "Inaktiverade framgångsrikt fjärrarkiv"
 
-#. TRANSLATORS: success message where we made the firmware on the
-#. * device older than it was before
-msgid "Successfully downgraded device"
-msgstr "Nedgraderade enhet framgångsrikt"
-
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata: "
@@ -1283,6 +1252,7 @@ msgstr "Verktyg för fast UEFI-programvara"
 
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
+#. TRANSLATORS: unknown release urgency
 msgid "Unknown"
 msgstr "Okänd"
 
@@ -1396,7 +1366,7 @@ msgstr "Att skicka upp rapporter för fastprogramvara hjälper hårdvaruförsäl
 
 #. TRANSLATORS: command line option
 msgid "Use quirk flags when installing firmware"
-msgstr "Använd nyckflaggor vid installation av fastprogramvara"
+msgstr "Använd specialflaggor vid installation av fastprogramvara"
 
 #. TRANSLATORS: User has been notified
 msgid "User has been notified"
