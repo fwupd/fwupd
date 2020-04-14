@@ -1851,6 +1851,8 @@ fu_device_add_string (FuDevice *self, guint idt, GString *str)
 		g_autofree gchar *sz = g_strdup_printf ("%" G_GUINT64_FORMAT, priv->size_max);
 		fu_common_string_append_kv (str, idt + 1, "FirmwareSizeMax", sz);
 	}
+	if (priv->order > 0)
+		fu_common_string_append_ku (str, idt + 1, "Order", priv->order);
 	keys = g_hash_table_get_keys (priv->metadata);
 	for (GList *l = keys; l != NULL; l = l->next) {
 		const gchar *key = l->data;
