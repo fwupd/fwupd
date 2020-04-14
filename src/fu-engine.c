@@ -4335,17 +4335,8 @@ fu_engine_plugin_device_added_cb (FuPlugin *plugin,
 				  FuDevice *device,
 				  gpointer user_data)
 {
-	FuEngine *self = (FuEngine *) user_data;
-	gint priority = fu_plugin_get_priority (plugin);
-	GPtrArray *children = fu_device_get_children (device);
-	/* set the priority to 1 greater than biggest child */
-	for (guint i = 0; i < children->len; i++) {
-		FuDevice *child = g_ptr_array_index (children, i);
-		gint child_priority = fu_device_get_priority (child);
-		if (child_priority >= priority)
-			priority = child_priority + 1;
-	}
-	fu_device_set_priority (device, priority);
+	FuEngine *self = FU_ENGINE (user_data);
+	fu_device_set_priority (device, fu_plugin_get_priority (plugin));
 	fu_engine_add_device (self, device);
 }
 
