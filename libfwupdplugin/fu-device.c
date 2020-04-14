@@ -1853,6 +1853,8 @@ fu_device_add_string (FuDevice *self, guint idt, GString *str)
 	}
 	if (priv->order > 0)
 		fu_common_string_append_ku (str, idt + 1, "Order", priv->order);
+	if (priv->priority > 0)
+		fu_common_string_append_ku (str, idt + 1, "Priority", priv->priority);
 	keys = g_hash_table_get_keys (priv->metadata);
 	for (GList *l = keys; l != NULL; l = l->next) {
 		const gchar *key = l->data;
