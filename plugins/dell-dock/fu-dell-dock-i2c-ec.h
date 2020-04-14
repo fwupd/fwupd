@@ -24,7 +24,7 @@
 #define FU_TYPE_DELL_DOCK_EC (fu_dell_dock_ec_get_type ())
 G_DECLARE_FINAL_TYPE (FuDellDockEc, fu_dell_dock_ec, FU, DELL_DOCK_EC, FuDevice)
 
-FuDellDockEc 	*fu_dell_dock_ec_new			(FuDevice *symbiote);
+FuDellDockEc 	*fu_dell_dock_ec_new			(FuDevice *proxy);
 
 gboolean	 fu_dell_dock_ec_needs_tbt		(FuDevice *device);
 gboolean	 fu_dell_dock_ec_tbt_passive		(FuDevice *device);
@@ -42,4 +42,3 @@ guint32		 fu_dell_dock_ec_get_status_version	(FuDevice *device);
 gboolean	 fu_dell_dock_ec_commit_package 	(FuDevice *device,
 							 GBytes *blob_fw,
 							 GError **error);
-FuDevice 	*fu_dell_dock_ec_get_symbiote		(FuDevice *device);
