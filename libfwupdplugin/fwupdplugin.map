@@ -571,3 +571,10 @@ LIBFWUPDPLUGIN_1.4.0 {
     fu_plugin_runner_device_created;
   local: *;
 } LIBFWUPDPLUGIN_1.3.9;
+
+LIBFWUPDPLUGIN_1.4.1 {
+  global:
+    fu_device_get_proxy;
+    fu_device_set_proxy;
+  local: *;
+} LIBFWUPDPLUGIN_1.4.0;

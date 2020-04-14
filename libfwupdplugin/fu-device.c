@@ -38,6 +38,7 @@ typedef struct {
 	gchar				*logical_id;
 	FuDevice			*alternate;
 	FuDevice			*parent;	/* noref */
+	FuDevice			*proxy;		/* noref */
 	FuQuirks			*quirks;
 	GHashTable			*metadata;
 	GRWLock				 metadata_mutex;
@@ -73,6 +74,7 @@ enum {
 	PROP_LOGICAL_ID,
 	PROP_QUIRKS,
 	PROP_PARENT,
+	PROP_PROXY,
 	PROP_LAST
 };
 
@@ -101,6 +103,9 @@ fu_device_get_property (GObject *object, guint prop_id,
 	case PROP_PARENT:
 		g_value_set_object (value, priv->parent);
 		break;
+	case PROP_PROXY:
+		g_value_set_object (value, priv->proxy);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
@@ -127,6 +132,9 @@ fu_device_set_property (GObject *object, guint prop_id,
 		break;
 	case PROP_PARENT:
 		fu_device_set_parent (self, g_value_get_object (value));
+		break;
+	case PROP_PROXY:
+		fu_device_set_proxy (self, g_value_get_object (value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -659,6 +667,54 @@ fu_device_set_parent (FuDevice *self, FuDevice *parent)
 	/* this is what goes over D-Bus */
 	fwupd_device_set_parent_id (FWUPD_DEVICE (self),
 				    parent != NULL ? fu_device_get_id (parent) : NULL);
+}
+
+/**
+ * fu_device_set_proxy:
+ * @self: A #FuDevice
+ * @proxy: A #FuDevice
+ *
+ * Sets any proxy device. A proxy device can be used to perform an action on
+ * behalf of another device, for instance attach()ing it after a successful
+ * update.
+ *
+ * Since: 1.4.1
+ **/
+void
+fu_device_set_proxy (FuDevice *self, FuDevice *proxy)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+
+	g_return_if_fail (FU_IS_DEVICE (self));
+
+	if (priv->proxy != NULL)
+		g_object_remove_weak_pointer (G_OBJECT (priv->proxy), (gpointer *) &priv->proxy);
+	if (proxy != NULL)
+		g_object_add_weak_pointer (G_OBJECT (proxy), (gpointer *) &priv->proxy);
+	priv->proxy = proxy;
+}
+
+/**
+ * fu_device_get_proxy:
+ * @self: A #FuDevice
+ *
+ * Gets any proxy device. A proxy device can be used to perform an action on
+ * behalf of another device, for instance attach()ing it after a successful
+ * update.
+ *
+ * The proxy object is not refcounted and if destroyed this function will then
+ * return %NULL.
+ *
+ * Returns: (transfer none): a #FuDevice or %NULL
+ *
+ * Since: 1.4.1
+ **/
+FuDevice *
+fu_device_get_proxy (FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
+	return priv->proxy;
 }
 
 /**
@@ -2142,6 +2198,8 @@ fu_device_add_string (FuDevice *self, guint idt, GString *str)
 		fu_common_string_append_kv (str, idt + 1, "PhysicalId", priv->physical_id);
 	if (priv->logical_id != NULL)
 		fu_common_string_append_kv (str, idt + 1, "LogicalId", priv->logical_id);
+	if (priv->proxy != NULL)
+		fu_common_string_append_kv (str, idt + 1, "Proxy", fu_device_get_id (priv->proxy));
 	if (priv->size_min > 0) {
 		g_autofree gchar *sz = g_strdup_printf ("%" G_GUINT64_FORMAT, priv->size_min);
 		fu_common_string_append_kv (str, idt + 1, "FirmwareSizeMin", sz);
@@ -2876,6 +2934,8 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 		fu_device_set_physical_id (self, priv_donor->physical_id);
 	if (priv->logical_id == NULL && priv_donor->logical_id != NULL)
 		fu_device_set_logical_id (self, priv_donor->logical_id);
+	if (priv->proxy == NULL && priv_donor->proxy != NULL)
+		fu_device_set_proxy (self, priv_donor->proxy);
 	if (priv->quirks == NULL)
 		fu_device_set_quirks (self, fu_device_get_quirks (donor));
 	g_rw_lock_reader_lock (&priv_donor->parent_guids_mutex);
@@ -2986,7 +3046,13 @@ fu_device_class_init (FuDeviceClass *klass)
 				     G_PARAM_READWRITE |
 				     G_PARAM_CONSTRUCT |
 				     G_PARAM_STATIC_NAME);
-	g_object_class_install_property (object_class, PROP_PARENT, pspec);
+
+	pspec = g_param_spec_object ("proxy", NULL, NULL,
+				     FU_TYPE_DEVICE,
+				     G_PARAM_READWRITE |
+				     G_PARAM_CONSTRUCT |
+				     G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_PROXY, pspec);
 }
 
 static void
@@ -3013,6 +3079,8 @@ fu_device_finalize (GObject *object)
 		g_object_unref (priv->alternate);
 	if (priv->parent != NULL)
 		g_object_remove_weak_pointer (G_OBJECT (priv->parent), (gpointer *) &priv->parent);
+	if (priv->proxy != NULL)
+		g_object_remove_weak_pointer (G_OBJECT (priv->proxy), (gpointer *) &priv->proxy);
 	if (priv->quirks != NULL)
 		g_object_unref (priv->quirks);
 	if (priv->poll_id != 0)
