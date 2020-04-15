@@ -311,39 +311,6 @@ fu_synaptics_cxaudio_device_eeprom_read_string (FuSynapticsCxaudioDevice *self,
 }
 
 static gboolean
-fu_synaptics_cxaudio_device_reset (FuSynapticsCxaudioDevice *self, GError **error)
-{
-	guint8 tmp = 1 << 6;
-	g_autoptr(GError) error_local = NULL;
-
-	/* is disabled on EVK board using jumper */
-	if (!self->sw_reset_supported) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "software reset is not supported");
-		return FALSE;
-	}
-
-	/* this fails on success */
-	if (!fu_synaptics_cxaudio_device_operation (self,
-						    FU_SYNAPTICS_CXAUDIO_OPERATION_WRITE,
-						    FU_SYNAPTICS_CXAUDIO_MEM_KIND_CPX_RAM,
-						    FU_SYNAPTICS_CXAUDIO_REG_RESET_ADDR, &tmp, sizeof(tmp),
-						    FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_NONE,
-						    error)) {
-		if (g_error_matches (error_local,
-				     G_USB_DEVICE_ERROR,
-				     G_USB_DEVICE_ERROR_FAILED)) {
-			return TRUE;
-		}
-		g_propagate_error (error, g_steal_pointer (&error_local));
-		return FALSE;
-	}
-	return TRUE;
-}
-
-static gboolean
 fu_synaptics_cxaudio_device_ensure_patch_level (FuSynapticsCxaudioDevice *self, GError **error)
 {
 	guint8 tmp = 0x0;
@@ -718,14 +685,41 @@ fu_synaptics_cxaudio_device_write_firmware (FuDevice *device,
 							     7, error))
 		return FALSE;
 
-	/* if supported, self reset */
-	if (self->sw_reset_supported) {
-		fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-		return fu_synaptics_cxaudio_device_reset (self, error);
-	}
-
 	/* success */
+	return TRUE;
+}
+
+
+static gboolean
+fu_synaptics_cxaudio_device_attach (FuDevice *device, GError **error)
+{
+	FuSynapticsCxaudioDevice *self = FU_SYNAPTICS_CXAUDIO_DEVICE (device);
+	guint8 tmp = 1 << 6;
+	g_autoptr(GError) error_local = NULL;
+
+	/* is disabled on EVK board using jumper */
+	if (!self->sw_reset_supported)
+		return TRUE;
+
+	/* wait for re-enumeration */
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+
+	/* this fails on success */
+	if (!fu_synaptics_cxaudio_device_operation (self,
+						    FU_SYNAPTICS_CXAUDIO_OPERATION_WRITE,
+						    FU_SYNAPTICS_CXAUDIO_MEM_KIND_CPX_RAM,
+						    FU_SYNAPTICS_CXAUDIO_REG_RESET_ADDR, &tmp, sizeof(tmp),
+						    FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_NONE,
+						    error)) {
+		if (g_error_matches (error_local,
+				     G_USB_DEVICE_ERROR,
+				     G_USB_DEVICE_ERROR_FAILED)) {
+			return TRUE;
+		}
+		g_propagate_error (error, g_steal_pointer (&error_local));
+		return FALSE;
+	}
 	return TRUE;
 }
 
@@ -779,5 +773,6 @@ fu_synaptics_cxaudio_device_class_init (FuSynapticsCxaudioDeviceClass *klass)
 	klass_device->set_quirk_kv = fu_synaptics_cxaudio_device_set_quirk_kv;
 	klass_device->setup = fu_synaptics_cxaudio_device_setup;
 	klass_device->write_firmware = fu_synaptics_cxaudio_device_write_firmware;
+	klass_device->attach = fu_synaptics_cxaudio_device_attach;
 	klass_device->prepare_firmware = fu_synaptics_cxaudio_device_prepare_firmware;
 }
