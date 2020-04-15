@@ -191,6 +191,8 @@ fwupd_device_flag_to_string (FwupdDeviceFlags device_flag)
 		return "md-set-verfmt";
 	if (device_flag == FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS)
 		return "add-counterpart-guids";
+	if (device_flag == FWUPD_DEVICE_FLAG_ANOTHER_INSTALL_REQUIRED)
+		return "another-install-required";
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -283,6 +285,8 @@ fwupd_device_flag_from_string (const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_MD_SET_VERFMT;
 	if (g_strcmp0 (device_flag, "add-counterpart-guids") == 0)
 		return FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS;
+	if (g_strcmp0 (device_flag, "another-install-required") == 0)
+		return FWUPD_DEVICE_FLAG_ANOTHER_INSTALL_REQUIRED;
 	return FWUPD_DEVICE_FLAG_UNKNOWN;
 }
 

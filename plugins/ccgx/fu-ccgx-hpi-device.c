@@ -1353,6 +1353,12 @@ fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 			g_usleep (HPI_CMD_RESET_COMPLETE_DELAY_US);
 	}
 
+	/* need to do FW2 now */
+	if (self->fw_mode == FW_MODE_FW1)
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_ANOTHER_INSTALL_REQUIRED);
+	else
+		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_ANOTHER_INSTALL_REQUIRED);
+
 	/* start with no events in the queue */
 	return fu_ccgx_hpi_device_clear_all_events (self,
 						    HPI_CMD_SETUP_EVENT_CLEAR_TIME_MS,

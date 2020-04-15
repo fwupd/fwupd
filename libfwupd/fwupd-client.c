@@ -45,6 +45,7 @@ typedef struct {
 	gchar				*daemon_version;
 	gchar				*host_product;
 	gchar				*host_machine_id;
+	gchar				*device_id_restart;
 	GDBusConnection			*conn;
 	GDBusProxy			*proxy;
 } FwupdClientPrivate;
@@ -210,6 +211,7 @@ fwupd_client_signal_cb (GDBusProxy *proxy,
 			GVariant *parameters,
 			FwupdClient *client)
 {
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
 	g_autoptr(FwupdDevice) dev = NULL;
 	if (g_strcmp0 (signal_name, "Changed") == 0) {
 		g_debug ("Emitting ::changed()");
@@ -235,6 +237,13 @@ fwupd_client_signal_cb (GDBusProxy *proxy,
 		g_signal_emit (client, signals[SIGNAL_DEVICE_CHANGED], 0, dev);
 		g_debug ("Emitting ::device-changed(%s)",
 			 fwupd_device_get_id (dev));
+
+		/* save this in case we need to do ANOTHER_WRITE_REQUIRED */
+		if (fwupd_device_get_status (dev) == FWUPD_STATUS_DEVICE_RESTART &&
+		    g_strcmp0 (priv->device_id_restart, fwupd_device_get_id (dev)) != 0) {
+			g_free (priv->device_id_restart);
+			priv->device_id_restart = g_strdup (fwupd_device_get_id (dev));
+		}
 		return;
 	}
 	g_debug ("Unknown signal name '%s' from %s", signal_name, sender_name);
@@ -976,30 +985,15 @@ fwupd_client_send_message_cb (GObject *source_object, GAsyncResult *res, gpointe
 }
 #endif
 
-/**
- * fwupd_client_install:
- * @client: A #FwupdClient
- * @device_id: the device ID
- * @filename: the filename to install
- * @install_flags: the #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_REINSTALL
- * @cancellable: the #GCancellable, or %NULL
- * @error: the #GError, or %NULL
- *
- * Install a file onto a specific device.
- *
- * Returns: %TRUE for success
- *
- * Since: 0.7.0
- **/
-gboolean
-fwupd_client_install (FwupdClient *client,
-		      const gchar *device_id,
-		      const gchar *filename,
-		      FwupdInstallFlags install_flags,
-		      GCancellable *cancellable,
-		      GError **error)
-{
 #ifdef HAVE_GIO_UNIX
+static gboolean
+fwupd_client_install_try (FwupdClient *client,
+			 const gchar *device_id,
+			 const gchar *filename,
+			 FwupdInstallFlags install_flags,
+			 GCancellable *cancellable,
+			 GError **error)
+{
 	FwupdClientPrivate *priv = GET_PRIVATE (client);
 	GVariant *body;
 	GVariantBuilder builder;
@@ -1008,16 +1002,6 @@ fwupd_client_install (FwupdClient *client,
 	g_autoptr(FwupdClientHelper) helper = NULL;
 	g_autoptr(GDBusMessage) request = NULL;
 	g_autoptr(GUnixFDList) fd_list = NULL;
-
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
-	g_return_val_if_fail (device_id != NULL, FALSE);
-	g_return_val_if_fail (filename != NULL, FALSE);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-	/* connect */
-	if (!fwupd_client_connect (client, cancellable, error))
-		return FALSE;
 
 	/* set options */
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
@@ -1088,6 +1072,81 @@ fwupd_client_install (FwupdClient *client,
 		helper->error = NULL;
 		return FALSE;
 	}
+	return TRUE;
+}
+#endif
+
+/**
+ * fwupd_client_install:
+ * @client: A #FwupdClient
+ * @device_id: the device ID
+ * @filename: the filename to install
+ * @install_flags: the #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_REINSTALL
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Install a file onto a specific device.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 0.7.0
+ **/
+gboolean
+fwupd_client_install (FwupdClient *client,
+		      const gchar *device_id,
+		      const gchar *filename,
+		      FwupdInstallFlags install_flags,
+		      GCancellable *cancellable,
+		      GError **error)
+{
+#ifdef HAVE_GIO_UNIX
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (device_id != NULL, FALSE);
+	g_return_val_if_fail (filename != NULL, FALSE);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* connect */
+	if (!fwupd_client_connect (client, cancellable, error))
+		return FALSE;
+
+	/* allow ANOTHER_WRITE_REQUIRED */
+	for (guint retries = 0; ; retries++) {
+		g_autoptr(FwupdDevice) device = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		/* daemon got stuck */
+		if (retries > 5) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "aborting device install loop, limit 5");
+			return FALSE;
+		}
+		if (retries > 0)
+			g_debug ("install try %u", retries + 1);
+		if (!fwupd_client_install_try (client, device_id, filename,
+					       install_flags, cancellable, error))
+			return FALSE;
+
+		/* device not found is perfectly fine */
+		if (priv->device_id_restart == NULL)
+			break;
+		device = fwupd_client_get_device_by_id (client,
+							priv->device_id_restart,
+							cancellable,
+							&error_local);
+		if (device == NULL) {
+			g_debug ("failed to find device: %s", error_local->message);
+			break;
+		}
+		if (!fwupd_device_has_flag (device, FWUPD_DEVICE_FLAG_ANOTHER_INSTALL_REQUIRED))
+			break;
+	}
+
+	/* success */
 	return TRUE;
 #else
 	g_set_error_literal (error,
