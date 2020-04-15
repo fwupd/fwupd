@@ -9,3 +9,7 @@ Flags = use-shim-unique,no-ux-capsule
 # Silicom Minnowboard Turbot D0/D1 PLATFORM
 [HwId=386c2f52-44ec-55d3-b802-47631bfb8451]
 Flags = uefi-force-enable
+
+# Dynabook (né Toshiba) X30, X40
+[Guid=28108d08-5027-42c2-a5b8-92d6ede9b97b]
+VersionFormat = bcd
