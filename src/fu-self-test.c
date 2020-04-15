@@ -998,7 +998,7 @@ fu_engine_partial_hash_func (gconstpointer user_data)
 	fu_device_set_protocol (device2, "com.acme");
 	fu_device_set_plugin (device2, "test");
 	fu_device_set_equivalent_id (device2, "b92f5b7560b84ca005a79f5a15de3c003ce494cf");
-	fu_device_add_guid (device2, "12345678-1234-1234-1234-123456789012");
+	fu_device_add_guid (device2, "87654321-1234-1234-1234-123456789012");
 	fu_engine_add_device (engine, device2);
 
 	/* match nothing */
