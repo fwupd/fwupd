@@ -349,11 +349,16 @@ if build_standalone and get_option('systemd')
   systemd = dependency('systemd', version : '>= 211')
   conf.set('HAVE_SYSTEMD' , '1')
   conf.set('HAVE_LOGIND' , '1')
-  systemdunitdir = get_option('systemdunitdir')
-  if systemdunitdir == '' and get_option('systemd')
+  systemd_root_prefix = get_option('systemd_root_prefix')
+  if systemd_root_prefix == ''
     systemdunitdir = systemd.get_pkgconfig_variable('systemdsystemunitdir')
+    systemdsystempresetdir = systemd.get_pkgconfig_variable('systemdsystempresetdir')
+    systemd_shutdown_dir = systemd.get_pkgconfig_variable('systemdshutdowndir')
+  else
+    systemdunitdir = systemd.get_pkgconfig_variable('systemdsystemunitdir', define_variable: ['rootprefix', systemd_root_prefix])
+    systemdsystempresetdir = systemd.get_pkgconfig_variable('systemdsystempresetdir', define_variable: ['rootprefix', systemd_root_prefix])
+    systemd_shutdown_dir = systemd.get_pkgconfig_variable('systemdshutdowndir', define_variable: ['rootprefix', systemd_root_prefix])
   endif
-  systemdsystempresetdir = systemd.get_pkgconfig_variable('systemdsystempresetdir')
 endif
 
 if build_standalone and get_option('elogind')
