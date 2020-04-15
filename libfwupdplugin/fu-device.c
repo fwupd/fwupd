@@ -965,6 +965,10 @@ fu_device_set_quirk_kv (FuDevice *self,
 		fu_device_set_install_duration (self, fu_common_strtoull (value));
 		return TRUE;
 	}
+	if (g_strcmp0 (key, FU_QUIRKS_PRIORITY) == 0) {
+		fu_device_set_priority (self, fu_common_strtoull (value));
+		return TRUE;
+	}
 	if (g_strcmp0 (key, FU_QUIRKS_VERSION_FORMAT) == 0) {
 		fu_device_set_version_format (self, fwupd_version_format_from_string (value));
 		return TRUE;
