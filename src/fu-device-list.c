@@ -661,11 +661,9 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 		return;
 	}
 
-	/* added the same device, supporting same protocol, from a different plugin */
+	/* added the same device, supporting same protocol */
 	item = fu_device_list_get_by_guids (self, fu_device_get_guids (device));
 	if (item != NULL &&
-	    g_strcmp0 (fu_device_get_plugin (item->device),
-		       fu_device_get_plugin (device)) != 0 &&
 	    g_strcmp0 (fu_device_get_protocol (item->device),
 		       fu_device_get_protocol (device)) == 0) {
 		if (fu_device_get_priority (device) < fu_device_get_priority (item->device)) {
