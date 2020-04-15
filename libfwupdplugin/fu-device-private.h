@@ -19,9 +19,6 @@ void		 fu_device_set_parent			(FuDevice	*self,
 guint		 fu_device_get_order			(FuDevice	*self);
 void		 fu_device_set_order			(FuDevice	*self,
 							 guint		 order);
-guint		 fu_device_get_priority			(FuDevice	*self);
-void		 fu_device_set_priority			(FuDevice	*self,
-							 guint		 priority);
 void		 fu_device_set_alternate		(FuDevice	*self,
 							 FuDevice	*alternate);
 GType		 fu_device_get_specialized_gtype	(FuDevice	*self);

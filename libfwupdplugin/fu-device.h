@@ -220,6 +220,9 @@ void		 fu_device_set_logical_id		(FuDevice	*self,
 const gchar	*fu_device_get_protocol			(FuDevice	*self);
 void		 fu_device_set_protocol			(FuDevice	*self,
 							 const gchar	*protocol);
+guint		 fu_device_get_priority			(FuDevice	*self);
+void		 fu_device_set_priority			(FuDevice	*self,
+							 guint		 priority);
 void		 fu_device_add_flag			(FuDevice	*self,
 							 FwupdDeviceFlags flag);
 const gchar	*fu_device_get_custom_flags		(FuDevice	*self);
