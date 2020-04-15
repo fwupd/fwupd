@@ -807,6 +807,7 @@ fu_synaptics_cxaudio_device_write_firmware (FuDevice *device,
 	/* if supported, self reset */
 	if (self->sw_reset_supported) {
 		fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 		return fu_synaptics_cxaudio_device_reset (self, error);
 	}
 
