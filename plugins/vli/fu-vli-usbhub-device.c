@@ -504,6 +504,9 @@ fu_vli_usbhub_device_probe (FuDevice *device, GError **error)
 	/* quirks now applied... */
 	if (usbver > 0x0300 || fu_device_has_custom_flag (device, "usb3")) {
 		fu_device_set_summary (device, "USB 3.x Hub");
+		/* prefer to show the USB 3 device and only fall back to the
+		 * USB 2 version as a recovery */
+		fu_device_set_priority (device, 1);
 	} else if (usbver > 0x0200 || fu_device_has_custom_flag (device, "usb2")) {
 		fu_device_set_summary (device, "USB 2.x Hub");
 	} else {
