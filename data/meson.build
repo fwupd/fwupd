@@ -92,7 +92,7 @@ if get_option('systemd') and build_daemon
     output : 'fwupd.shutdown',
     configuration : con2,
     install: true,
-    install_dir: systemd.get_pkgconfig_variable('systemdshutdowndir'),
+    install_dir: systemd_shutdown_dir,
   )
 endif
 
