@@ -4336,7 +4336,16 @@ fu_engine_plugin_device_added_cb (FuPlugin *plugin,
 				  gpointer user_data)
 {
 	FuEngine *self = FU_ENGINE (user_data);
-	fu_device_set_priority (device, fu_plugin_get_priority (plugin));
+
+	/* plugin has prio and device not already set from quirk */
+	if (fu_plugin_get_priority (plugin) > 0 &&
+	    fu_device_get_priority (device) == 0) {
+		g_debug ("auto-setting %s priority to %u",
+			 fu_device_get_id (device),
+			 fu_plugin_get_priority (plugin));
+		fu_device_set_priority (device, fu_plugin_get_priority (plugin));
+	}
+
 	fu_engine_add_device (self, device);
 }
 
