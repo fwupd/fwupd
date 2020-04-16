@@ -2122,8 +2122,10 @@ fu_engine_device_prepare (FuEngine *self,
 			  GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new (device, error);
-	if (locker == NULL)
+	if (locker == NULL) {
+		g_prefix_error (error, "failed to open device for prepare: ");
 		return FALSE;
+	}
 	return fu_device_prepare (device, flags, error);
 }
 
@@ -2142,8 +2144,10 @@ fu_engine_device_cleanup (FuEngine *self,
 	}
 
 	locker = fu_device_locker_new (device, error);
-	if (locker == NULL)
+	if (locker == NULL) {
+		g_prefix_error (error, "failed to open device for cleanup: ");
 		return FALSE;
+	}
 	return fu_device_cleanup (device, flags, error);
 }
 
@@ -2419,8 +2423,10 @@ fu_engine_firmware_read (FuEngine *self,
 
 	/* open, detach, read, attach, serialize */
 	locker = fu_device_locker_new (device, error);
-	if (locker == NULL)
+	if (locker == NULL) {
+		g_prefix_error (error, "failed to open device for firmware read: ");
 		return NULL;
+	}
 	if (!fu_device_detach (device, error))
 		return NULL;
 	firmware = fu_device_read_firmware (device, error);
