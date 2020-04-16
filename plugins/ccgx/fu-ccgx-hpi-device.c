@@ -1271,6 +1271,30 @@ fu_ccgx_hpi_device_setup_with_fw_mode (FuCcgxHpiDevice *self)
 				  fu_ccgx_fw_mode_to_string (self->fw_mode));
 }
 
+static void
+fu_ccgx_hpi_device_setup_with_app_type (FuCcgxHpiDevice *self)
+{
+	if (self->silicon_id != 0x0 && self->fw_app_type != 0x0) {
+		g_autofree gchar *instance_id1 = NULL;
+		g_autofree gchar *instance_id2 = NULL;
+
+		/* we get fw_image_type from the quirk */
+		instance_id1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&SID_%04X&APP_%04X",
+						fu_usb_device_get_vid (FU_USB_DEVICE (self)),
+						fu_usb_device_get_pid (FU_USB_DEVICE (self)),
+						self->silicon_id,
+						self->fw_app_type);
+		fu_device_add_instance_id (FU_DEVICE (self), instance_id1);
+		instance_id2 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&SID_%04X&APP_%04X&MODE_%s",
+						fu_usb_device_get_vid (FU_USB_DEVICE (self)),
+						fu_usb_device_get_pid (FU_USB_DEVICE (self)),
+						self->silicon_id,
+						self->fw_app_type,
+						fu_ccgx_fw_mode_to_string (self->fw_mode));
+		fu_device_add_instance_id (FU_DEVICE (self), instance_id2);
+	}
+}
+
 static gboolean
 fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 {
@@ -1335,34 +1359,16 @@ fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 						 G_LITTLE_ENDIAN, error))
 			return FALSE;
 
+		/* add GUIDs that are specific to the firmware app type */
 		self->fw_app_type = versions[self->fw_mode] & 0xffff;
+		fu_ccgx_hpi_device_setup_with_app_type (self);
 
-		if (self->silicon_id != 0x0 && self->fw_app_type != 0x0) {
-			g_autofree gchar *instance_id1 = NULL;
-			g_autofree gchar *instance_id2 = NULL;
-
-			/* we get fw_image_type from the quirk */
-			instance_id1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&SID_%04X&APP_%04X",
-							fu_usb_device_get_vid (FU_USB_DEVICE (device)),
-							fu_usb_device_get_pid (FU_USB_DEVICE (device)),
-							self->silicon_id,
-							self->fw_app_type);
-			fu_device_add_instance_id (device, instance_id1);
-			instance_id2 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&SID_%04X&APP_%04X&MODE_%s",
-							fu_usb_device_get_vid (FU_USB_DEVICE (device)),
-							fu_usb_device_get_pid (FU_USB_DEVICE (device)),
-							self->silicon_id,
-							self->fw_app_type,
-							fu_ccgx_fw_mode_to_string (self->fw_mode));
-			fu_device_add_instance_id (device, instance_id2);
-
-			/* asymmetric these seem swapped, but we can only update the
-			 * "other" image whilst running in the current image */
-			if (self->fw_image_type == FW_IMAGE_TYPE_DUAL_SYMMETRIC) {
-				fu_ccgx_hpi_device_set_version_raw (self, versions[self->fw_mode]);
-			} else if (self->fw_image_type == FW_IMAGE_TYPE_DUAL_ASYMMETRIC) {
-				fu_ccgx_hpi_device_set_version_raw (self, versions[fu_ccgx_fw_mode_get_alternate (self->fw_mode)]);
-			}
+		/* asymmetric these seem swapped, but we can only update the
+		 * "other" image whilst running in the current image */
+		if (self->fw_image_type == FW_IMAGE_TYPE_DUAL_SYMMETRIC) {
+			fu_ccgx_hpi_device_set_version_raw (self, versions[self->fw_mode]);
+		} else if (self->fw_image_type == FW_IMAGE_TYPE_DUAL_ASYMMETRIC) {
+			fu_ccgx_hpi_device_set_version_raw (self, versions[fu_ccgx_fw_mode_get_alternate (self->fw_mode)]);
 		}
 	}
 
