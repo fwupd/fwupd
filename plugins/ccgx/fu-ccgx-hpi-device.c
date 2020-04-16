@@ -64,8 +64,10 @@ fu_ccgx_hpi_device_to_string (FuDevice *device, guint idt, GString *str)
 	fu_common_string_append_kx (str, idt, "EpBulkIn", self->ep_bulk_in);
 	fu_common_string_append_kx (str, idt, "EpBulkOut", self->ep_bulk_out);
 	fu_common_string_append_kx (str, idt, "EpIntrIn", self->ep_intr_in);
-	fu_common_string_append_kx (str, idt, "FlashRowSize", self->flash_row_size);
-	fu_common_string_append_kx (str, idt, "FlashSize", self->flash_size);
+	if (self->flash_row_size > 0)
+		fu_common_string_append_kx (str, idt, "FlashRowSize", self->flash_row_size);
+	if (self->flash_size > 0)
+		fu_common_string_append_kx (str, idt, "FlashSize", self->flash_size);
 }
 
 typedef struct {
