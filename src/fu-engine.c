@@ -4480,6 +4480,7 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 {
 	GPtrArray *blacklisted_devices;
 	GPtrArray *device_guids;
+	g_autoptr(XbNode) component = NULL;
 
 	/* device has no GUIDs set! */
 	device_guids = fu_device_get_guids (device);
@@ -4516,8 +4517,8 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 	}
 
 	/* if this device is locked get some metadata from AppStream */
+	component = fu_engine_get_component_by_guids (self, device);
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_LOCKED)) {
-		g_autoptr(XbNode) component = fu_engine_get_component_by_guids (self, device);
 		if (component != NULL) {
 			g_autoptr(XbNode) release = NULL;
 			release = xb_node_query_first (component,
@@ -4584,6 +4585,10 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 
 	/* create new device */
 	fu_device_list_add (self->device_list, device);
+
+	/* fixup the name and format as needed from cached metadata */
+	if (component != NULL)
+		fu_engine_md_refresh_device_from_component (self, device, component);
 
 	/* match the metadata so clients can tell if the device is worthy */
 	fu_engine_ensure_device_supported (self, device);
