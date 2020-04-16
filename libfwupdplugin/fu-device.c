@@ -1968,7 +1968,6 @@ fu_device_get_physical_id (FuDevice *self)
  *
  * Since: 0.1.0
  **/
-
 void
 fu_device_add_flag (FuDevice *self, FwupdDeviceFlags flag)
 {
