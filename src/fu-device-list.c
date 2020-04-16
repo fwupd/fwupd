@@ -565,6 +565,8 @@ fu_device_list_replace (FuDeviceList *self, FuDeviceItem *item, FuDevice *device
 
 	/* copy the parent if not already set */
 	if (fu_device_get_parent (item->device) != NULL &&
+	    fu_device_get_parent (item->device) != device &&
+	    fu_device_get_parent (device) != item->device &&
 	    fu_device_get_parent (device) == NULL) {
 		FuDevice *parent = fu_device_get_parent (item->device);
 		g_debug ("copying parent %s to new device", fu_device_get_id (parent));
