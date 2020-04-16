@@ -620,10 +620,6 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 	if (item != NULL && item->remove_id != 0) {
 		g_debug ("found existing device %s, reusing item",
 			 fu_device_get_id (item->device));
-		if (item->remove_id != 0) {
-			g_source_remove (item->remove_id);
-			item->remove_id = 0;
-		}
 		fu_device_list_replace (self, item, device);
 		return;
 	}
