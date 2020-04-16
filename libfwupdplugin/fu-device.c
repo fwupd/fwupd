@@ -53,6 +53,7 @@ typedef struct {
 	guint				 poll_id;
 	gboolean			 done_probe;
 	gboolean			 done_setup;
+	gboolean			 device_id_valid;
 	guint64				 size_min;
 	guint64				 size_max;
 	gint				 open_refcount;	/* atomic */
@@ -1598,6 +1599,7 @@ fu_device_set_id (FuDevice *self, const gchar *id)
 	id_hash = g_compute_checksum_for_string (G_CHECKSUM_SHA1, id, -1);
 	g_debug ("using %s for %s", id_hash, id);
 	fwupd_device_set_id (FWUPD_DEVICE (self), id_hash);
+	priv->device_id_valid = TRUE;
 
 	/* ensure the parent ID is set */
 	for (guint i = 0; i < priv->children->len; i++) {
@@ -1778,7 +1780,7 @@ fu_device_ensure_id (FuDevice *self, GError **error)
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* already set */
-	if (fu_device_get_id (self) != NULL)
+	if (priv->device_id_valid)
 		return TRUE;
 
 	/* nothing we can do! */
@@ -1836,6 +1838,7 @@ fu_device_set_logical_id (FuDevice *self, const gchar *logical_id)
 	g_return_if_fail (FU_IS_DEVICE (self));
 	g_free (priv->logical_id);
 	priv->logical_id = g_strdup (logical_id);
+	priv->device_id_valid = FALSE;
 }
 
 /**
@@ -1932,6 +1935,7 @@ fu_device_set_physical_id (FuDevice *self, const gchar *physical_id)
 	g_return_if_fail (physical_id != NULL);
 	g_free (priv->physical_id);
 	priv->physical_id = g_strdup (physical_id);
+	priv->device_id_valid = FALSE;
 }
 
 /**
@@ -2697,6 +2701,10 @@ fu_device_open (FuDevice *self, GError **error)
 	if (!fu_device_setup (self, error))
 		return FALSE;
 
+	/* ensure the device ID is still valid */
+	if (!fu_device_ensure_id (self, error))
+		return FALSE;
+
 	/* success */
 	return TRUE;
 }
@@ -3001,6 +3009,10 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 
 	/* now the base class, where all the interesting bits are */
 	fwupd_device_incorporate (FWUPD_DEVICE (self), FWUPD_DEVICE (donor));
+
+	/* set by the superclass */
+	if (fu_device_get_id (self) != NULL)
+		priv->device_id_valid = TRUE;
 
 	/* optional subclass */
 	if (klass->incorporate != NULL)
