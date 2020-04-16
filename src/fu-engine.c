@@ -1455,6 +1455,8 @@ fu_engine_install_tasks (FuEngine *self,
 	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	for (guint i = 0; i < install_tasks->len; i++) {
 		FuInstallTask *task = g_ptr_array_index (install_tasks, i);
+		g_debug ("composite update %u: %s", i + 1,
+			 fu_device_get_id (fu_install_task_get_device (task)));
 		g_ptr_array_add (devices, g_object_ref (fu_install_task_get_device (task)));
 	}
 	if (!fu_engine_composite_prepare (self, devices, error)) {
