@@ -1231,6 +1231,14 @@ fu_ccgx_hpi_device_ensure_silicon_id (FuCcgxHpiDevice *self, GError **error)
 	return TRUE;
 }
 
+static void
+fu_ccgx_hpi_device_set_version_raw (FuCcgxHpiDevice *self, guint32 version_raw)
+{
+	g_autofree gchar *version = fu_ccgx_version_to_string (version_raw);
+	fu_device_set_version (FU_DEVICE (self), version);
+	fu_device_set_version_raw (FU_DEVICE (self), version_raw);
+}
+
 static gboolean
 fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 {
@@ -1296,10 +1304,8 @@ fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 		self->fw_app_type = versions[self->fw_mode] & 0xffff;
 
 		if (self->silicon_id != 0x0 && self->fw_app_type != 0x0) {
-			guint32 version_raw = 0;
 			g_autofree gchar *instance_id1 = NULL;
 			g_autofree gchar *instance_id2 = NULL;
-			g_autofree gchar *version = NULL;
 
 			/* we get fw_image_type from the quirk */
 			instance_id1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&SID_%04X&APP_%04X",
@@ -1319,15 +1325,10 @@ fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 			/* asymmetric these seem swapped, but we can only update the
 			 * "other" image whilst running in the current image */
 			if (self->fw_image_type == FW_IMAGE_TYPE_DUAL_SYMMETRIC) {
-				version_raw = versions[self->fw_mode];
+				fu_ccgx_hpi_device_set_version_raw (self, versions[self->fw_mode]);
 			} else if (self->fw_image_type == FW_IMAGE_TYPE_DUAL_ASYMMETRIC) {
-				version_raw = versions[fu_ccgx_fw_mode_get_alternate (self->fw_mode)];
+				fu_ccgx_hpi_device_set_version_raw (self, versions[fu_ccgx_fw_mode_get_alternate (self->fw_mode)]);
 			}
-
-			/* set device */
-			version = fu_ccgx_version_to_string (version_raw);
-			fu_device_set_version_raw (device, version_raw);
-			fu_device_set_version (device, version);
 		}
 	}
 
