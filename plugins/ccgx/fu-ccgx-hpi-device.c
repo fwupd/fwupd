@@ -1239,6 +1239,13 @@ fu_ccgx_hpi_device_set_version_raw (FuCcgxHpiDevice *self, guint32 version_raw)
 	fu_device_set_version_raw (FU_DEVICE (self), version_raw);
 }
 
+static void
+fu_ccgx_hpi_device_setup_with_fw_mode (FuCcgxHpiDevice *self)
+{
+	fu_device_set_logical_id (FU_DEVICE (self),
+				  fu_ccgx_fw_mode_to_string (self->fw_mode));
+}
+
 static gboolean
 fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 {
@@ -1268,6 +1275,7 @@ fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 	self->hpi_addrsz = mode & 0x80 ? 2 : 1;
 	self->num_ports = (mode >> 2) & 0x03 ? 2 : 1;
 	self->fw_mode = (FWMode) (mode & 0x03);
+	fu_ccgx_hpi_device_setup_with_fw_mode (self);
 
 	/* get silicon ID */
 	if (!fu_ccgx_hpi_device_ensure_silicon_id (self, error))
