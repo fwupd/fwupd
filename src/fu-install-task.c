@@ -438,7 +438,8 @@ fu_install_task_finalize (GObject *object)
 {
 	FuInstallTask *self = FU_INSTALL_TASK (object);
 
-	g_object_unref (self->component);
+	if (self->component != NULL)
+		g_object_unref (self->component);
 	if (self->device != NULL)
 		g_object_unref (self->device);
 
@@ -487,7 +488,8 @@ fu_install_task_new (FuDevice *device, XbNode *component)
 {
 	FuInstallTask *self;
 	self = g_object_new (FU_TYPE_TASK, NULL);
-	self->component = g_object_ref (component);
+	if (component != NULL)
+		self->component = g_object_ref (component);
 	if (device != NULL)
 		self->device = g_object_ref (device);
 	return FU_INSTALL_TASK (self);
