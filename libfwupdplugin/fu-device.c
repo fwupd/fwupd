@@ -1839,6 +1839,7 @@ fu_device_set_logical_id (FuDevice *self, const gchar *logical_id)
 	g_free (priv->logical_id);
 	priv->logical_id = g_strdup (logical_id);
 	priv->device_id_valid = FALSE;
+	g_object_notify (G_OBJECT (self), "logical-id");
 }
 
 /**
@@ -1936,6 +1937,7 @@ fu_device_set_physical_id (FuDevice *self, const gchar *physical_id)
 	g_free (priv->physical_id);
 	priv->physical_id = g_strdup (physical_id);
 	priv->device_id_valid = FALSE;
+	g_object_notify (G_OBJECT (self), "physical-id");
 }
 
 /**
