@@ -511,6 +511,16 @@ fu_ebitdo_device_write_firmware (FuDevice *device,
 		return FALSE;
 	}
 
+	/* success! */
+	return TRUE;
+}
+
+static gboolean
+fu_ebitdo_device_attach (FuDevice *device, GError **error)
+{
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
+	g_autoptr(GError) error_local = NULL;
+
 	/* when doing a soft-reboot the device does not re-enumerate properly
 	 * so manually reboot the GUsbDevice */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
@@ -591,6 +601,7 @@ fu_ebitdo_device_class_init (FuEbitdoDeviceClass *klass)
 	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	klass_device->write_firmware = fu_ebitdo_device_write_firmware;
 	klass_device->setup = fu_ebitdo_device_setup;
+	klass_device->attach = fu_ebitdo_device_attach;
 	klass_usb_device->open = fu_ebitdo_device_open;
 	klass_usb_device->probe = fu_ebitdo_device_probe;
 	klass_device->prepare_firmware = fu_ebitdo_device_prepare_firmware;
