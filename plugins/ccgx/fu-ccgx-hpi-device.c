@@ -1188,7 +1188,7 @@ fu_ccgx_hpi_write_firmware (FuDevice *device,
 
 	/* success */
 	self->enter_alt_mode = TRUE;
-	return fu_device_attach (device, error);
+	return TRUE;
 }
 
 static gboolean
