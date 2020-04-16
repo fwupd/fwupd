@@ -7,7 +7,10 @@
 
 #pragma once
 
+#include "fu-ccgx-common.h"
 #include "fu-usb-device.h"
 
 #define FU_TYPE_CCGX_HPI_DEVICE (fu_ccgx_hpi_device_get_type ())
 G_DECLARE_FINAL_TYPE (FuCcgxHpiDevice, fu_ccgx_hpi_device, FU, CCGX_HPI_DEVICE, FuUsbDevice)
+
+FWMode		 fu_ccgx_hpi_device_get_fw_mode		(FuCcgxHpiDevice	*self);

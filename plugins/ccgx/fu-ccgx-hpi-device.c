@@ -102,6 +102,13 @@ fu_ccgx_hpi_device_i2c_reset_cb (FuDevice *device, gpointer user_data, GError **
 	return TRUE;
 }
 
+FWMode
+fu_ccgx_hpi_device_get_fw_mode (FuCcgxHpiDevice *self)
+{
+	g_return_val_if_fail (FU_IS_CCGX_HPI_DEVICE (self), 0);
+	return self->fw_mode;
+}
+
 static gboolean
 fu_ccgx_hpi_device_check_i2c_status (FuCcgxHpiDevice *self,
 				     guint8 mode,
@@ -1336,21 +1343,37 @@ fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 		/* add GUIDs that are specific to the firmware app type */
 		self->fw_app_type = versions[self->fw_mode] & 0xffff;
 		fu_ccgx_hpi_device_setup_with_app_type (self);
+		fu_ccgx_hpi_device_set_version_raw (self, versions[self->fw_mode]);
 
-		/* asymmetric these seem swapped, but we can only update the
-		 * "other" image whilst running in the current image */
-		if (self->fw_image_type == FW_IMAGE_TYPE_DUAL_SYMMETRIC) {
-			fu_ccgx_hpi_device_set_version_raw (self, versions[self->fw_mode]);
-		} else if (self->fw_image_type == FW_IMAGE_TYPE_DUAL_ASYMMETRIC) {
-			fu_ccgx_hpi_device_set_version_raw (self, versions[fu_ccgx_fw_mode_get_alternate (self->fw_mode)]);
+		/* add child so we can install FW1 then FW2 */
+		if (self->fw_image_type == FW_IMAGE_TYPE_DUAL_ASYMMETRIC) {
+			FuDeviceClass *klass_child;
+			g_autoptr(FuCcgxHpiDevice) child = NULL;
+
+			/* create virtual child */
+			child = g_object_new (FU_TYPE_CCGX_HPI_DEVICE, NULL);
+			klass_child = FU_DEVICE_GET_CLASS (child);
+			fu_device_set_quirks (FU_DEVICE (child), fu_device_get_quirks (device));
+			fu_device_add_flag (FU_DEVICE (child), FWUPD_DEVICE_FLAG_NO_GUID_MATCHING);
+			//fu_device_add_flag (FU_DEVICE (child), FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST);
+			fu_device_add_flag (FU_DEVICE (child), FWUPD_DEVICE_FLAG_UPDATABLE);
+			fu_device_set_proxy (FU_DEVICE (child), FU_DEVICE (self));
+			fu_usb_device_set_dev (FU_USB_DEVICE (child),
+					       fu_usb_device_get_dev (FU_USB_DEVICE (device)));
+			child->fw_mode = fu_ccgx_fw_mode_get_alternate (self->fw_mode);
+			child->silicon_id = self->silicon_id;
+			child->fw_app_type = self->fw_app_type;
+			child->fw_image_type = self->fw_image_type;
+			klass_child->setup = NULL;
+			fu_ccgx_hpi_device_set_version_raw (child, versions[fu_ccgx_fw_mode_get_alternate (self->fw_mode)]);
+			fu_ccgx_hpi_device_setup_with_fw_mode (child);
+			fu_ccgx_hpi_device_setup_with_app_type (child);
+			fu_device_add_child (device, FU_DEVICE (child));
+
+			/* change how the parent device behaves */
+			fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_NO_GUID_MATCHING);
+//			fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_WILL_DISAPPEAR);
 		}
-	}
-
-	/* not supported in boot mode */
-	if (self->fw_mode == FW_MODE_BOOT) {
-		fu_device_remove_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	} else {
-		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	}
 
 	/* if we are coming back from reset, wait for hardware to settle */
