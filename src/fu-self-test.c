@@ -2906,6 +2906,43 @@ fu_progressbar_func (gconstpointer user_data)
 	fu_progressbar_update (progressbar, FWUPD_STATUS_IDLE, 0);
 }
 
+static gint
+fu_install_task_compare_func_cb (gconstpointer a, gconstpointer b)
+{
+	FuInstallTask *task_a = *((FuInstallTask **) a);
+	FuInstallTask *task_b = *((FuInstallTask **) b);
+	return fu_install_task_compare (task_a, task_b);
+}
+
+static void
+fu_install_task_compare_func (gconstpointer user_data)
+{
+	FuDevice *device_tmp;
+	g_autoptr(GPtrArray) install_tasks = NULL;
+	g_autoptr(FuDevice) device1 = fu_device_new ();
+	g_autoptr(FuDevice) device2 = fu_device_new ();
+	g_autoptr(FuDevice) device3 = fu_device_new ();
+
+	install_tasks = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+
+	fu_device_set_order (device1, 99);
+	g_ptr_array_add (install_tasks, fu_install_task_new (device1, NULL));
+	fu_device_set_order (device2, 11);
+	g_ptr_array_add (install_tasks, fu_install_task_new (device2, NULL));
+	fu_device_set_order (device3, 33);
+	g_ptr_array_add (install_tasks, fu_install_task_new (device3, NULL));
+
+	/* order the install tasks */
+	g_ptr_array_sort (install_tasks, fu_install_task_compare_func_cb);
+	g_assert_cmpint (install_tasks->len, ==, 3);
+	device_tmp = fu_install_task_get_device (g_ptr_array_index (install_tasks, 0));
+	g_assert_cmpint (fu_device_get_order (device_tmp), ==, 11);
+	device_tmp = fu_install_task_get_device (g_ptr_array_index (install_tasks, 1));
+	g_assert_cmpint (fu_device_get_order (device_tmp), ==, 33);
+	device_tmp = fu_install_task_get_device (g_ptr_array_index (install_tasks, 2));
+	g_assert_cmpint (fu_device_get_order (device_tmp), ==, 99);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -2957,6 +2994,8 @@ main (int argc, char **argv)
 			      fu_device_list_compatible_func);
 	g_test_add_data_func ("/fwupd/device-list{remove-chain}", self,
 			      fu_device_list_remove_chain_func);
+	g_test_add_data_func ("/fwupd/install-task{compare}", self,
+			      fu_install_task_compare_func);
 	g_test_add_data_func ("/fwupd/engine{device-unlock}", self,
 			      fu_engine_device_unlock_func);
 	g_test_add_data_func ("/fwupd/engine{multiple-releases}", self,
