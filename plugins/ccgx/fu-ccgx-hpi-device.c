@@ -33,6 +33,7 @@ struct _FuCcgxHpiDevice
 	guint32			 flash_row_size;
 	guint32			 flash_size;
 	gboolean		 enter_alt_mode;
+	gchar*			 device_name;
 };
 
 G_DEFINE_TYPE (FuCcgxHpiDevice, fu_ccgx_hpi_device, FU_TYPE_USB_DEVICE)
@@ -1240,7 +1241,7 @@ fu_ccgx_hpi_device_set_version_raw (FuCcgxHpiDevice *self, guint32 version_raw)
 }
 
 static const gchar *
-fu_ccgx_hpi_device_get_name (FuCcgxHpiDevice *self)
+fu_ccgx_hpi_device_get_fw_name (FuCcgxHpiDevice *self)
 {
 	/* asymmetric FW1 is a backup bootloader */
 	if (self->fw_image_type == FW_IMAGE_TYPE_DUAL_ASYMMETRIC ) {
@@ -1250,16 +1251,12 @@ fu_ccgx_hpi_device_get_name (FuCcgxHpiDevice *self)
 			return "Backup";
 		if (self->fw_mode == FW_MODE_FW2)
 			return "Primary";
+	} else {
+		if (self->fw_mode == FW_MODE_BOOT)
+			return "Boot";
+		if (self->fw_mode == FW_MODE_FW1 || self->fw_mode == FW_MODE_FW2)
+			return "Main";
 	}
-
-	/* symmetric, but still interesting if debugging */
-	if (self->fw_mode == FW_MODE_BOOT)
-		return "Boot";
-	if (self->fw_mode == FW_MODE_FW1)
-		return "FW1";
-	if (self->fw_mode == FW_MODE_FW2)
-		return "FW2";
-
 	/* nothing better to return */
 	return "unknown";
 }
@@ -1303,6 +1300,7 @@ fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 	guint32 hpi_event = 0;
 	guint8 mode = 0;
 	g_autofree gchar *name = NULL;
+	g_autofree gchar *summary = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* set the new config */
@@ -1380,8 +1378,14 @@ fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 	}
 
 	/* set name to be more descriptive */
-	name = g_strdup_printf ("USB-I2C Bridge (%s)", fu_ccgx_hpi_device_get_name (self));
+	if (self->device_name) 
+		name = g_strdup_printf ("%s (%s)", self->device_name, fu_ccgx_hpi_device_get_fw_name (self));
+	else
+		name = g_strdup_printf ("USB-I2C Bridge (%s)", fu_ccgx_hpi_device_get_fw_name (self));
 	fu_device_set_name (FU_DEVICE (self), name);
+	
+	summary = g_strdup_printf ("PD-IC %s Firmware", fu_ccgx_hpi_device_get_fw_name (self));
+	fu_device_set_summary (FU_DEVICE (self), summary);
 
 	/* if we are coming back from reset, wait for hardware to settle */
 	if (!fu_ccgx_hpi_device_get_event (self,
@@ -1458,6 +1462,10 @@ fu_ccgx_hpi_device_set_quirk_kv (FuDevice *device,
 				     G_IO_ERROR_INVALID_DATA,
 				     "invalid ImageKind");
 		return FALSE;
+	}
+	if (g_strcmp0 (key, "DeviceName") == 0) {
+		self->device_name = g_strdup(value);
+		return TRUE;
 	}
 	g_set_error_literal (error,
 			     G_IO_ERROR,
@@ -1540,10 +1548,19 @@ fu_ccgx_hpi_device_init (FuCcgxHpiDevice *self)
 }
 
 static void
+fu_ccgx_hpi_device_finalize (GObject *object)
+{
+	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE (object);
+	if (self->device_name)
+		g_free (self->device_name);
+}
+
+static void
 fu_ccgx_hpi_device_class_init (FuCcgxHpiDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
+	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	klass_device->to_string = fu_ccgx_hpi_device_to_string;
 	klass_device->write_firmware = fu_ccgx_hpi_write_firmware;
 	klass_device->prepare_firmware = fu_ccgx_hpi_device_prepare_firmware;
@@ -1552,4 +1569,5 @@ fu_ccgx_hpi_device_class_init (FuCcgxHpiDeviceClass *klass)
 	klass_device->set_quirk_kv = fu_ccgx_hpi_device_set_quirk_kv;
 	klass_usb_device->open = fu_ccgx_hpi_device_open;
 	klass_usb_device->close = fu_ccgx_hpi_device_close;
+	object_class->finalize = fu_ccgx_hpi_device_finalize;
 }
