@@ -1298,7 +1298,6 @@ fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 	CyI2CConfig i2c_config = { 0x0 };
 	guint32 hpi_event = 0;
 	guint8 mode = 0;
-	g_autofree gchar *name = NULL;
 	g_autofree gchar *summary = NULL;
 	g_autoptr(GError) error_local = NULL;
 
@@ -1376,10 +1375,8 @@ fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	}
 
-	/* set default device name */
-	if (fu_device_get_name(FU_DEVICE (self)) == NULL) 
-		fu_device_set_name (FU_DEVICE (self), "USB-I2C Bridge");		
-	summary = g_strdup_printf ("PD-IC %s Firmware", fu_ccgx_hpi_device_get_fw_name (self));
+	/* update device summery */
+	summary = g_strdup_printf ("CCGx PD Device (%s Firmware)", fu_ccgx_hpi_device_get_fw_name (self));
 	fu_device_set_summary (FU_DEVICE (self), summary);
 
 	/* if we are coming back from reset, wait for hardware to settle */
@@ -1458,6 +1455,10 @@ fu_ccgx_hpi_device_set_quirk_kv (FuDevice *device,
 				     "invalid ImageKind");
 		return FALSE;
 	}
+	g_set_error_literal (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_SUPPORTED,
+			     "no supported");
 	return FALSE;
 }
 
