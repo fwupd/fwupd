@@ -65,7 +65,7 @@ fu_vli_usbhub_device_i2c_read (FuVliUsbhubDevice *self,
 		return FALSE;
 	}
 	if (g_getenv ("FWUPD_VLI_USBHUB_VERBOSE") != NULL)
-		fu_common_dump_raw (G_LOG_DOMAIN, "I2cReadData", buf, 0x1);
+		fu_common_dump_raw (G_LOG_DOMAIN, "I2cReadData", buf, bufsz);
 	return TRUE;
 }
 
