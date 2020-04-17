@@ -37,7 +37,6 @@ fu_vli_usbhub_i2c_device_setup (FuDevice *device, GError **error)
 	FuVliUsbhubI2cDevice *self = FU_VLI_USBHUB_I2C_DEVICE (device);
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE (fu_device_get_parent (device));
 	guint8 buf[11] = { 0x0 };
-	g_autofree gchar *instance_id = NULL;
 	g_autofree gchar *version = NULL;
 
 	/* get versions */
@@ -56,13 +55,6 @@ fu_vli_usbhub_i2c_device_setup (FuDevice *device, GError **error)
 			     fu_vli_common_device_kind_to_string (self->device_kind));
 		return FALSE;
 	}
-
-	/* add instance ID */
-	instance_id = g_strdup_printf ("USB\\VID_%04X&PID_%04X&I2C_%s",
-				       fu_usb_device_get_vid (FU_USB_DEVICE (parent)),
-				       fu_usb_device_get_pid (FU_USB_DEVICE (parent)),
-				       fu_vli_common_device_kind_to_string (self->device_kind));
-	fu_device_add_instance_id (device, instance_id);
 
 	/* set version */
 	version = g_strdup_printf ("%x.%x", buf[0], buf[1]);
@@ -261,9 +253,20 @@ fu_vli_usbhub_i2c_device_write_firmware (FuDevice *device,
 static gboolean
 fu_vli_usbhub_i2c_device_probe (FuDevice *device, GError **error)
 {
+	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE (fu_device_get_parent (device));
 	FuVliUsbhubI2cDevice *self = FU_VLI_USBHUB_I2C_DEVICE (device);
+	g_autofree gchar *instance_id = NULL;
+
 	self->device_kind = FU_VLI_DEVICE_KIND_MSP430;
 	fu_device_set_name (device, fu_vli_common_device_kind_to_string (self->device_kind));
+
+	/* add instance ID */
+	instance_id = g_strdup_printf ("USB\\VID_%04X&PID_%04X&I2C_%s",
+				       fu_usb_device_get_vid (FU_USB_DEVICE (parent)),
+				       fu_usb_device_get_pid (FU_USB_DEVICE (parent)),
+				       fu_vli_common_device_kind_to_string (self->device_kind));
+	fu_device_add_instance_id (device, instance_id);
+
 	return TRUE;
 }
 
