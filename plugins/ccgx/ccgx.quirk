@@ -12,6 +12,14 @@ GType = FuCcgxHpiDevice
 ImageKind = dual-asymmetric
 ParentGuid = USB\VID_17EF&PID_A391
 
+[DeviceInstanceId=USB\VID_04B4&PID_521A&SID_1F00&APP_6D64&MODE_FW1]
+Name = ThinkPad USB-C Dock Gen2 PD Backup Controller
+Summary = CCGx Power Delivery Device (Backup Firmware)
+
+[DeviceInstanceId=USB\VID_04B4&PID_521A&SID_1F00&APP_6D64&MODE_FW2]
+Name = ThinkPad USB-C Dock Gen2 PD Main Controller
+Summary = CCGx Power Delivery Device (Main Firmware)
+
 # Lenovo Hybrid Dock
 [DeviceInstanceId=USB\VID_17EF&PID_A354]
 Plugin = ccgx
@@ -28,6 +36,7 @@ Plugin = ccgx
 GType = FuCcgxHpiDevice
 
 [DeviceInstanceId=USB\VID_04B4&PID_5218&SID_1F00&APP_6462]
+Name = ThinkPad USB-C Dock Hybrid PD Controller
+Summary = CCGx Power Delivery Device
 ImageKind = dual-symmetric
 ParentGuid = USB\VID_17EF&PID_1028
-

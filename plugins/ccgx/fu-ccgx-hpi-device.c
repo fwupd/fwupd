@@ -1239,31 +1239,6 @@ fu_ccgx_hpi_device_set_version_raw (FuCcgxHpiDevice *self, guint32 version_raw)
 	fu_device_set_version_raw (FU_DEVICE (self), version_raw);
 }
 
-static const gchar *
-fu_ccgx_hpi_device_get_name (FuCcgxHpiDevice *self)
-{
-	/* asymmetric FW1 is a backup bootloader */
-	if (self->fw_image_type == FW_IMAGE_TYPE_DUAL_ASYMMETRIC ) {
-		if (self->fw_mode == FW_MODE_BOOT)
-			return "Boot";
-		if (self->fw_mode == FW_MODE_FW1)
-			return "Backup";
-		if (self->fw_mode == FW_MODE_FW2)
-			return "Primary";
-	}
-
-	/* symmetric, but still interesting if debugging */
-	if (self->fw_mode == FW_MODE_BOOT)
-		return "Boot";
-	if (self->fw_mode == FW_MODE_FW1)
-		return "FW1";
-	if (self->fw_mode == FW_MODE_FW2)
-		return "FW2";
-
-	/* nothing better to return */
-	return "unknown";
-}
-
 static void
 fu_ccgx_hpi_device_setup_with_fw_mode (FuCcgxHpiDevice *self)
 {
@@ -1302,7 +1277,6 @@ fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 	CyI2CConfig i2c_config = { 0x0 };
 	guint32 hpi_event = 0;
 	guint8 mode = 0;
-	g_autofree gchar *name = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* set the new config */
@@ -1378,10 +1352,6 @@ fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 	} else {
 		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	}
-
-	/* set name to be more descriptive */
-	name = g_strdup_printf ("USB-I2C Bridge (%s)", fu_ccgx_hpi_device_get_name (self));
-	fu_device_set_name (FU_DEVICE (self), name);
 
 	/* if we are coming back from reset, wait for hardware to settle */
 	if (!fu_ccgx_hpi_device_get_event (self,
