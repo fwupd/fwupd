@@ -71,6 +71,16 @@ GType = FuVliPdDevice
 Plugin = vli
 GType = FuVliPdDevice
 
+# Lenovo Mini Dock
+[DeviceInstanceId=USB\VID_17EF&PID_3093]
+Plugin = vli
+GType = FuVliPdDevice
+
+# Lenovo USB-C to 4 USB-A Hub
+[DeviceInstanceId=USB\VID_17EF&PID_103B]
+Plugin = vli
+GType = FuVliPdDevice
+
 # Samsung
 [DeviceInstanceId=USB\VID_04E8&PID_A025]
 Plugin = vli
