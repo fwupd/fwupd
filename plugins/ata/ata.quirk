@@ -2,6 +2,10 @@
 [DeviceInstanceId=BLOCK]
 Plugin = ata
 
+[DeviceInstanceId=OUI\000039]
+Vendor = Toshiba
+VendorId = ATA:0x1179
+
 [DeviceInstanceId=OUI\000c50]
 Vendor = Seagate
 VendorId = ATA:0x1BB1
