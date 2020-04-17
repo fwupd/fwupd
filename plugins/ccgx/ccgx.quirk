@@ -9,8 +9,8 @@ Plugin = ccgx
 GType = FuCcgxHpiDevice
 
 [DeviceInstanceId=USB\VID_04B4&PID_521A&SID_1F00&APP_6D64]
+Name = ThinkPad USB-C Dock Gen2 PD Controller
 ImageKind = dual-asymmetric
-DeviceName = ThinkPad USB-C Dock Gen2 PD Controller
 ParentGuid = USB\VID_17EF&PID_A391
 
 # Lenovo Hybrid Dock
@@ -29,7 +29,7 @@ Plugin = ccgx
 GType = FuCcgxHpiDevice
 
 [DeviceInstanceId=USB\VID_04B4&PID_5218&SID_1F00&APP_6462]
+Name = ThinkPad USB-C Dock Hybrid PD Controller
 ImageKind = dual-symmetric
-DeviceName = ThinkPad USB-C Dock Hybrid PD Controller
 ParentGuid = USB\VID_17EF&PID_1028
 
