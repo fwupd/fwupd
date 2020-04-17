@@ -660,6 +660,13 @@ fu_device_set_parent (FuDevice *self, FuDevice *parent)
 		fu_device_set_order (parent, fu_device_get_order (self) + 1);
 	}
 
+	/* if the parent has quirks, make the child inherit it */
+	if (parent != NULL) {
+		if (fu_device_get_quirks (self) == NULL &&
+		    fu_device_get_quirks (parent) != NULL)
+			fu_device_set_quirks (self, fu_device_get_quirks (parent));
+	}
+
 	if (priv->parent != NULL)
 		g_object_remove_weak_pointer (G_OBJECT (priv->parent), (gpointer *) &priv->parent);
 	if (parent != NULL)
