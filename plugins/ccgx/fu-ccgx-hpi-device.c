@@ -1172,7 +1172,7 @@ fu_ccgx_hpi_write_firmware (FuDevice *device,
 		}
 
 		/* update progress */
-		fu_device_set_progress_full (device, (gsize) i, (gsize) records->len);
+		fu_device_set_progress_full (device, (gsize) i, (gsize) records->len - 1);
 	}
 
 	/* validate fw */
