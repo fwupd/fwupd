@@ -664,7 +664,8 @@ fu_vli_usbhub_device_setup (FuVliDevice *device, GError **error)
 	}
 
 	/* detect the I²C child */
-	if (fu_device_has_custom_flag (FU_DEVICE (self), "has-shared-spi-i2c")) {
+	if (fu_usb_device_get_spec (FU_USB_DEVICE (self)) > 0x0300 &&
+	    fu_device_has_custom_flag (FU_DEVICE (self), "has-shared-spi-i2c")) {
 		if (!fu_vli_usbhub_device_i2c_setup (self, error))
 			return FALSE;
 	}
