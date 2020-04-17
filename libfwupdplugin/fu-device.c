@@ -3105,6 +3105,7 @@ fu_device_class_init (FuDeviceClass *klass)
 				     G_PARAM_READWRITE |
 				     G_PARAM_CONSTRUCT |
 				     G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_PARENT, pspec);
 
 	pspec = g_param_spec_object ("proxy", NULL, NULL,
 				     FU_TYPE_DEVICE,
