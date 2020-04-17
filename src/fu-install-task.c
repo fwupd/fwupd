@@ -276,7 +276,8 @@ fu_install_task_check_requirements (FuInstallTask *self,
 	}
 
 	/* no update abilities */
-	if (!fu_device_has_flag (self->device, FWUPD_DEVICE_FLAG_UPDATABLE)) {
+	if (!fu_device_has_flag (self->device, FWUPD_DEVICE_FLAG_UPDATABLE) &&
+	    !fu_device_has_flag (self->device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,

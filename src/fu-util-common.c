@@ -962,7 +962,8 @@ fu_util_device_flag_to_string (guint64 device_flag)
 		/* TRANSLATORS: Device cannot be removed easily*/
 		return _("Internal device");
 	}
-	if (device_flag == FWUPD_DEVICE_FLAG_UPDATABLE) {
+	if (device_flag == FWUPD_DEVICE_FLAG_UPDATABLE ||
+	    device_flag == FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN) {
 		/* TRANSLATORS: Device is updatable in this or any other mode */
 		return _("Updatable");
 	}
