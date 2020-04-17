@@ -75,11 +75,13 @@ GType = FuVliPdDevice
 [DeviceInstanceId=USB\VID_17EF&PID_3093]
 Plugin = vli
 GType = FuVliPdDevice
+Flags = attach-with-gpiob
 
 # Lenovo USB-C to 4 USB-A Hub
 [DeviceInstanceId=USB\VID_17EF&PID_103B]
 Plugin = vli
 GType = FuVliPdDevice
+Flags = attach-with-gpiob
 
 # Samsung
 [DeviceInstanceId=USB\VID_04E8&PID_A025]

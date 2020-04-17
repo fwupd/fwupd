@@ -593,6 +593,36 @@ fu_vli_pd_device_attach (FuDevice *device, GError **error)
 	return TRUE;
 }
 
+#define VL817_ADDR_GPIO_OUTPUT_ENABLE		0x60A0	/* 0=input, 1=output */
+#define VL817_ADDR_GPIO_SET_OUTPUT_DATA		0x60A1	/* 0=low, 1=high */
+#define VL817_ADDR_GPIO_GET_INPUT_DATA		0x60A2	/* 0=low, 1=high */
+
+static gboolean
+fu_vli_pd_device_attach_vl817_gpiob (FuDevice *device, GError **error)
+{
+	FuVliPdDevice *self = FU_VLI_PD_DEVICE (device);
+	guint8 tmp = 0xff;
+
+	/* set GPIOB output enable */
+	if (!fu_vli_pd_device_read_reg (self, VL817_ADDR_GPIO_OUTPUT_ENABLE,
+					&tmp, error))
+		return FALSE;
+	if (!fu_vli_pd_device_write_reg (self, VL817_ADDR_GPIO_OUTPUT_ENABLE,
+					 tmp | 1 << 1, error))
+		return FALSE;
+
+	/* set GPIOB low to trigger reset */
+	if (!fu_vli_pd_device_read_reg (self, VL817_ADDR_GPIO_SET_OUTPUT_DATA,
+					&tmp, error))
+		return FALSE;
+	if (!fu_vli_pd_device_write_reg (self, VL817_ADDR_GPIO_SET_OUTPUT_DATA,
+					 tmp | 1 << 1, error))
+		return FALSE;
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	return TRUE;
+}
+
 static gboolean
 fu_vli_pd_device_attach_vl103 (FuDevice *device, GError **error)
 {
@@ -622,6 +652,10 @@ fu_vli_pd_device_kind_changed_cb (FuVliDevice *device, GParamSpec *pspec, gpoint
 
 		/* wait for USB-C timeout */
 		fu_device_set_remove_delay (FU_DEVICE (device), 10000);
+	} else if (fu_vli_device_get_kind (device) == FU_VLI_DEVICE_KIND_VL817 &&
+		   fu_device_has_custom_flag (FU_DEVICE (device), "attach-with-gpiob")) {
+		klass_device->attach = fu_vli_pd_device_attach_vl817_gpiob;
+		klass_device->detach = fu_vli_pd_device_detach;
 	} else {
 		klass_device->attach = fu_vli_pd_device_attach;
 		klass_device->detach = fu_vli_pd_device_detach;
