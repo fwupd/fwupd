@@ -650,13 +650,19 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 	/* verify a compatible device does not already exist */
 	item = fu_device_list_get_by_guids_removed (self, fu_device_get_guids (device));
 	if (item != NULL) {
-		g_debug ("found compatible device %s recently removed, reusing "
-			 "item from plugin %s for plugin %s",
-			 fu_device_get_id (item->device),
-			 fu_device_get_plugin (item->device),
-			 fu_device_get_plugin (device));
-		fu_device_list_replace (self, item, device);
-		return;
+		if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NO_GUID_MATCHING)) {
+			g_debug ("found compatible device %s recently removed, reusing "
+				 "item from plugin %s for plugin %s",
+				 fu_device_get_id (item->device),
+				 fu_device_get_plugin (item->device),
+				 fu_device_get_plugin (device));
+			fu_device_list_replace (self, item, device);
+			return;
+		} else {
+			g_debug ("not adding matching %s for device add, use "
+				 "FWUPD_DEVICE_FLAG_NO_GUID_MATCHING if required",
+				 fu_device_get_id (item->device));
+		}
 	}
 
 	/* added the same device, supporting same protocol */
@@ -664,28 +670,34 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 	if (item != NULL &&
 	    g_strcmp0 (fu_device_get_protocol (item->device),
 		       fu_device_get_protocol (device)) == 0) {
-		if (fu_device_get_priority (device) < fu_device_get_priority (item->device)) {
-			g_debug ("ignoring device %s [%s] as better device %s [%s] already exists",
-				 fu_device_get_id (device),
-				 fu_device_get_plugin (device),
+		if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NO_GUID_MATCHING)) {
+			if (fu_device_get_priority (device) < fu_device_get_priority (item->device)) {
+				g_debug ("ignoring device %s [%s] as better device %s [%s] already exists",
+					 fu_device_get_id (device),
+					 fu_device_get_plugin (device),
+					 fu_device_get_id (item->device),
+					 fu_device_get_plugin (item->device));
+				return;
+			}
+			if (fu_device_get_priority (device) == fu_device_get_priority (item->device)) {
+				g_warning ("ignoring device %s [%s] existing device %s [%s] already exists",
+					   fu_device_get_id (device),
+					   fu_device_get_plugin (device),
+					   fu_device_get_id (item->device),
+					   fu_device_get_plugin (item->device));
+				return;
+			}
+			g_debug ("removing device %s [%s] as better device %s [%s] added",
 				 fu_device_get_id (item->device),
-				 fu_device_get_plugin (item->device));
-			return;
+				 fu_device_get_plugin (item->device),
+				 fu_device_get_id (device),
+				 fu_device_get_plugin (device));
+			fu_device_list_remove (self, item->device);
+		} else {
+			g_debug ("not adding matching %s for device add, use "
+				 "FWUPD_DEVICE_FLAG_NO_GUID_MATCHING if required",
+				 fu_device_get_id (item->device));
 		}
-		if (fu_device_get_priority (device) == fu_device_get_priority (item->device)) {
-			g_warning ("ignoring device %s [%s] existing device %s [%s] already exists",
-				   fu_device_get_id (device),
-				   fu_device_get_plugin (device),
-				   fu_device_get_id (item->device),
-				   fu_device_get_plugin (item->device));
-			return;
-		}
-		g_debug ("removing device %s [%s] as better device %s [%s] added",
-			 fu_device_get_id (item->device),
-			 fu_device_get_plugin (item->device),
-			 fu_device_get_id (device),
-			 fu_device_get_plugin (device));
-		fu_device_list_remove (self, item->device);
 	}
 
 	/* add helper */
