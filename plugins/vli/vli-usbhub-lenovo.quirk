@@ -162,12 +162,18 @@ Flags = usb2,has-shared-spi-pd
 [DeviceInstanceId=USB\VID_17EF&PID_3094]
 Plugin = vli
 GType = FuVliUsbhubDevice
-Flags = usb3,has-shared-spi-pd
+Flags = usb3,has-shared-spi-pd,attach-with-gpiob
 CounterpartGuid = USB\VID_17EF&PID_3095
 [DeviceInstanceId=USB\VID_17EF&PID_3095]
 Plugin = vli
 GType = FuVliUsbhubDevice
-Flags = usb2,has-shared-spi-pd
+Flags = usb2,attach-with-gpiob
+ParentGuid = USB\VID_17EF&PID_3094
+[DeviceInstanceId=USB\VID_17EF&PID_3097]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb2
+ParentGuid = USB\VID_17EF&PID_3094
 
 # Lenovo Travel Hub 1in3
 [DeviceInstanceId=USB\VID_17EF&PID_7228]
@@ -195,12 +201,12 @@ Flags = usb2,has-shared-spi-pd
 [DeviceInstanceId=USB\VID_17EF&PID_1039]
 Plugin = vli
 GType = FuVliUsbhubDevice
-Flags = usb3,has-shared-spi-pd
+Flags = usb3,has-shared-spi-pd,attach-with-gpiob
 CounterpartGuid = USB\VID_17EF&PID_103A
 [DeviceInstanceId=USB\VID_17EF&PID_103A]
 Plugin = vli
 GType = FuVliUsbhubDevice
-Flags = usb2,has-shared-spi-pd
+Flags = usb2,has-shared-spi-pd,attach-with-gpiob
 
 # Lenovo Gen2 dock
 [DeviceInstanceId=USB\VID_17EF&PID_A391]

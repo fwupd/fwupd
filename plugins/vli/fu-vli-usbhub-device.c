@@ -325,10 +325,47 @@ fu_vli_usbhub_device_spi_write_data (FuVliDevice *self,
 	return TRUE;
 }
 
+#define VL817_ADDR_GPIO_OUTPUT_ENABLE		0xF6A0	/* 0=input, 1=output */
+#define VL817_ADDR_GPIO_SET_OUTPUT_DATA		0xF6A1	/* 0=low, 1=high */
+#define VL817_ADDR_GPIO_GET_INPUT_DATA		0xF6A2	/* 0=low, 1=high */
+
+static gboolean
+fu_vli_usbhub_device_attach_vl817_gpiob (FuDevice *device, GError **error)
+{
+	FuVliUsbhubDevice *self = FU_VLI_USBHUB_DEVICE (device);
+	guint8 tmp = 0x0;
+
+	/* set GPIOB output enable */
+	if (!fu_vli_usbhub_device_read_reg (self, VL817_ADDR_GPIO_OUTPUT_ENABLE,
+					    &tmp, error))
+		return FALSE;
+	if (!fu_vli_usbhub_device_write_reg (self, VL817_ADDR_GPIO_OUTPUT_ENABLE,
+					     tmp | (1 << 1), error))
+		return FALSE;
+
+	/* toggle GPIOB to trigger reset */
+	if (!fu_vli_usbhub_device_read_reg (self, VL817_ADDR_GPIO_SET_OUTPUT_DATA,
+					    &tmp, error))
+		return FALSE;
+	if (!fu_vli_usbhub_device_write_reg (self, VL817_ADDR_GPIO_SET_OUTPUT_DATA,
+					     tmp ^ (1 << 1), error))
+		return FALSE;
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	return TRUE;
+}
+
 static gboolean
 fu_vli_usbhub_device_attach (FuDevice *device, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
+
+	/* the proxy might be using a GPIO instead */
+	if (fu_device_get_proxy (device) != NULL) {
+		FuDevice *proxy = fu_device_get_proxy (device);
+		g_debug ("using proxy device %s", fu_device_get_id (proxy));
+		return fu_device_attach (proxy, error);
+	}
 
 	/* replug, and ignore the device going away */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
@@ -1007,11 +1044,24 @@ fu_vli_usbhub_device_write_firmware (FuDevice *device,
 }
 
 static void
+fu_vli_usbhub_device_kind_changed_cb (FuVliDevice *device, GParamSpec *pspec, gpointer user_data)
+{
+	FuDeviceClass *klass_device = FU_DEVICE_GET_CLASS (device);
+	if (fu_vli_device_get_kind (device) == FU_VLI_DEVICE_KIND_VL817 &&
+	    fu_device_has_custom_flag (FU_DEVICE (device), "attach-with-gpiob"))
+		klass_device->attach = fu_vli_usbhub_device_attach_vl817_gpiob;
+}
+
+static void
 fu_vli_usbhub_device_init (FuVliUsbhubDevice *self)
 {
 	fu_device_add_icon (FU_DEVICE (self), "audio-card");
 	fu_device_set_protocol (FU_DEVICE (self), "com.vli.usbhub");
 	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+
+	/* connect up attach or detach vfuncs when kind is known */
+	g_signal_connect (self, "notify::kind",
+			  G_CALLBACK (fu_vli_usbhub_device_kind_changed_cb), NULL);
 }
 
 static void
