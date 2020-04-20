@@ -645,7 +645,7 @@ fu_util_get_device (FuUtilPrivate *priv, const gchar *id, GError **error)
 			return NULL;
 		return fu_util_prompt_for_device (priv, devices, error);
 	}
-	return fu_util_get_device (priv, id, error);
+	return fu_engine_get_device (priv->engine, id, error);
 }
 
 static gboolean
