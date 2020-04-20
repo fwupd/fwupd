@@ -3535,6 +3535,44 @@ fu_engine_get_device (FuEngine *self, const gchar *device_id, GError **error)
 }
 
 /**
+ * fu_engine_get_devices_by_guid:
+ * @self: A #FuEngine
+ * @guid: A GUID
+ * @error: A #GError, or %NULL
+ *
+ * Gets a specific device.
+ *
+ * Returns: (transfer full): a device, or %NULL if not found
+ **/
+GPtrArray *
+fu_engine_get_devices_by_guid (FuEngine *self, const gchar *guid, GError **error)
+{
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GPtrArray) devices_tmp = NULL;
+
+	/* find the devices by GUID */
+	devices_tmp = fu_device_list_get_all (self->device_list);
+	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	for (guint i = 0; i < devices_tmp->len; i++) {
+		FuDevice *dev_tmp = g_ptr_array_index (devices_tmp, i);
+		if (fu_device_has_guid (dev_tmp, guid))
+			g_ptr_array_add (devices, g_object_ref (dev_tmp));
+	}
+
+	/* nothing */
+	if (devices->len == 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
+			     "failed to find any device providing %s", guid);
+		return NULL;
+	}
+
+	/* success */
+	return g_steal_pointer (&devices);
+}
+
+/**
  * fu_engine_get_history:
  * @self: A #FuEngine
  * @error: A #GError, or %NULL

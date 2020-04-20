@@ -60,6 +60,9 @@ GPtrArray	*fu_engine_get_devices			(FuEngine	*self,
 FuDevice	*fu_engine_get_device			(FuEngine	*self,
 							 const gchar	*device_id,
 							 GError		**error);
+GPtrArray	*fu_engine_get_devices_by_guid		(FuEngine	*self,
+							 const gchar	*guid,
+							 GError		**error);
 GPtrArray	*fu_engine_get_history			(FuEngine	*self,
 							 GError		**error);
 FwupdRemote 	*fu_engine_get_remote_by_id		(FuEngine	*self,
