@@ -1079,19 +1079,19 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 }
 
 static gboolean
-fu_util_update_by_id (FuUtilPrivate *priv, const gchar *device_id, GError **error)
+fu_util_update_by_id (FuUtilPrivate *priv, const gchar *id, GError **error)
 {
 	FwupdRelease *rel;
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(GPtrArray) rels = NULL;
 
-	/* do not allow a partial device-id */
-	dev = fu_util_get_device (priv, device_id, error);
+	/* do not allow a partial device-id, lookup GUIDs */
+	dev = fu_util_get_device (priv, id, error);
 	if (dev == NULL)
 		return FALSE;
 
 	/* get the releases for this device and filter for validity */
-	rels = fu_engine_get_upgrades (priv->engine, device_id, error);
+	rels = fu_engine_get_upgrades (priv->engine, fu_device_get_id (dev), error);
 	if (rels == NULL)
 		return FALSE;
 	rel = g_ptr_array_index (rels, 0);
