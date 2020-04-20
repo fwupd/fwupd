@@ -439,3 +439,9 @@ LIBFWUPD_1.4.0 {
     fwupd_remote_load_signature;
   local: *;
 } LIBFWUPD_1.3.7;
+
+LIBFWUPD_1.4.1 {
+  global:
+    fwupd_device_id_is_valid;
+  local: *;
+} LIBFWUPD_1.4.0;
