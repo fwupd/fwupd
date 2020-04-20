@@ -585,6 +585,19 @@ fwupd_common_machine_hash_func (void)
 }
 
 static void
+fwupd_common_device_id_func (void)
+{
+	g_assert_false (fwupd_device_id_is_valid (NULL));
+	g_assert_false (fwupd_device_id_is_valid (""));
+	g_assert_false (fwupd_device_id_is_valid ("1ff60ab2-3905-06a1-b476-0371f00c9e9b"));
+	g_assert_false (fwupd_device_id_is_valid ("aaaaaad3fae86d95e5d56626129d00e332c4b8dac95442"));
+	g_assert_false (fwupd_device_id_is_valid ("x3fae86d95e5d56626129d00e332c4b8dac95442"));
+	g_assert_false (fwupd_device_id_is_valid ("D3FAE86D95E5D56626129D00E332C4B8DAC95442"));
+	g_assert_false (fwupd_device_id_is_valid (FWUPD_DEVICE_ID_ANY));
+	g_assert_true (fwupd_device_id_is_valid ("d3fae86d95e5d56626129d00e332c4b8dac95442"));
+}
+
+static void
 fwupd_common_guid_func (void)
 {
 	g_autofree gchar *guid1 = NULL;
@@ -648,6 +661,7 @@ main (int argc, char **argv)
 	/* tests go here */
 	g_test_add_func ("/fwupd/enums", fwupd_enums_func);
 	g_test_add_func ("/fwupd/common{machine-hash}", fwupd_common_machine_hash_func);
+	g_test_add_func ("/fwupd/common{device-id}", fwupd_common_device_id_func);
 	g_test_add_func ("/fwupd/common{guid}", fwupd_common_guid_func);
 	g_test_add_func ("/fwupd/release", fwupd_release_func);
 	g_test_add_func ("/fwupd/device", fwupd_device_func);

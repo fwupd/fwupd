@@ -1588,9 +1588,9 @@ fu_device_set_name (FuDevice *self, const gchar *value)
  * device, so that any similar device plugged into a different slot will
  * have a different @id string.
  *
- * The @id will be converted to a SHA1 hash before the device is added to the
- * daemon, and plugins should not assume that the ID that is set here is the
- * same as what is returned by fu_device_get_id().
+ * The @id will be converted to a SHA1 hash if required before the device is
+ * added to the daemon, and plugins should not assume that the ID that is set
+ * here is the same as what is returned by fu_device_get_id().
  *
  * Since: 0.7.1
  **/
@@ -1603,8 +1603,13 @@ fu_device_set_id (FuDevice *self, const gchar *id)
 	g_return_if_fail (FU_IS_DEVICE (self));
 	g_return_if_fail (id != NULL);
 
-	id_hash = g_compute_checksum_for_string (G_CHECKSUM_SHA1, id, -1);
-	g_debug ("using %s for %s", id_hash, id);
+	/* allow sane device-id to be set directly */
+	if (fwupd_device_id_is_valid (id)) {
+		id_hash = g_strdup (id);
+	} else {
+		id_hash = g_compute_checksum_for_string (G_CHECKSUM_SHA1, id, -1);
+		g_debug ("using %s for %s", id_hash, id);
+	}
 	fwupd_device_set_id (FWUPD_DEVICE (self), id_hash);
 	priv->device_id_valid = TRUE;
 
