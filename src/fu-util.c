@@ -1960,7 +1960,7 @@ fu_util_update_by_id (FuUtilPrivate *priv, const gchar *device_id, GError **erro
 	g_autoptr(GPtrArray) rels = NULL;
 
 	/* do not allow a partial device-id */
-	dev = fwupd_client_get_device_by_id (priv->client, device_id, NULL, error);
+	dev = fu_util_get_device_by_id (priv, device_id, error);
 	if (dev == NULL)
 		return FALSE;
 
