@@ -442,6 +442,7 @@ LIBFWUPD_1.4.0 {
 
 LIBFWUPD_1.4.1 {
   global:
+    fwupd_client_get_devices_by_guid;
     fwupd_device_id_is_valid;
   local: *;
 } LIBFWUPD_1.4.0;

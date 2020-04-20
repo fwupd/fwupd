@@ -505,7 +505,7 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static FuDevice *
-fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
+fu_util_prompt_for_device (FuUtilPrivate *priv, GPtrArray *devices_opt, GError **error)
 {
 	FuDevice *dev;
 	guint idx;
@@ -513,9 +513,13 @@ fu_util_prompt_for_device (FuUtilPrivate *priv, GError **error)
 	g_autoptr(GPtrArray) devices_filtered = NULL;
 
 	/* get devices from daemon */
-	devices = fu_engine_get_devices (priv->engine, error);
-	if (devices == NULL)
-		return NULL;
+	if (devices_opt != NULL) {
+		devices = g_ptr_array_ref (devices_opt);
+	} else {
+		devices = fu_engine_get_devices (priv->engine, error);
+		if (devices == NULL)
+			return NULL;
+	}
 	fwupd_device_array_ensure_parents (devices);
 
 	/* filter results */
@@ -631,6 +635,19 @@ fu_util_display_current_message (FuUtilPrivate *priv)
 	g_clear_pointer (&priv->current_message, g_free);
 }
 
+static FuDevice *
+fu_util_get_device (FuUtilPrivate *priv, const gchar *id, GError **error)
+{
+	if (fwupd_guid_is_valid (id)) {
+		g_autoptr(GPtrArray) devices = NULL;
+		devices = fu_engine_get_devices_by_guid (priv->engine, id, error);
+		if (devices == NULL)
+			return NULL;
+		return fu_util_prompt_for_device (priv, devices, error);
+	}
+	return fu_util_get_device (priv, id, error);
+}
+
 static gboolean
 fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
 {
@@ -659,11 +676,11 @@ fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* get device */
 	if (g_strv_length (values) >= 2) {
-		device = fu_engine_get_device (priv->engine, values[1], error);
+		device = fu_util_get_device (priv, values[1], error);
 		if (device == NULL)
 			return FALSE;
 	} else {
-		device = fu_util_prompt_for_device (priv, error);
+		device = fu_util_prompt_for_device (priv, NULL, error);
 		if (device == NULL)
 			return FALSE;
 	}
@@ -690,9 +707,9 @@ fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_autoptr(GError) error_local = NULL;
 
 		/* get the possibly new device from the old ID */
-		device_new = fu_engine_get_device (priv->engine,
-						   fu_device_get_id (device),
-						   &error_local);
+		device_new = fu_util_get_device (priv,
+						 fu_device_get_id (device),
+						 &error_local);
 		if (device_new == NULL) {
 			g_debug ("failed to find new device: %s",
 				 error_local->message);
@@ -749,11 +766,11 @@ fu_util_firmware_read (FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* get device */
 	if (g_strv_length (values) >= 2) {
-		device = fu_engine_get_device (priv->engine, values[1], error);
+		device = fu_util_get_device (priv, values[1], error);
 		if (device == NULL)
 			return FALSE;
 	} else {
-		device = fu_util_prompt_for_device (priv, error);
+		device = fu_util_prompt_for_device (priv, NULL, error);
 		if (device == NULL)
 			return FALSE;
 	}
@@ -841,9 +858,7 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 			return FALSE;
 		fwupd_device_array_ensure_parents (devices_possible);
 	} else if (g_strv_length (values) == 2) {
-		FuDevice *device = fu_engine_get_device (priv->engine,
-							 values[1],
-							 error);
+		FuDevice *device = fu_util_get_device (priv, values[1], error);
 		if (device == NULL)
 			return FALSE;
 		devices_possible = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
@@ -1071,7 +1086,7 @@ fu_util_update_by_id (FuUtilPrivate *priv, const gchar *device_id, GError **erro
 	g_autoptr(GPtrArray) rels = NULL;
 
 	/* do not allow a partial device-id */
-	dev = fu_engine_get_device (priv->engine, device_id, error);
+	dev = fu_util_get_device (priv, device_id, error);
 	if (dev == NULL)
 		return FALSE;
 
@@ -1160,7 +1175,7 @@ fu_util_reinstall (FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
 		return FALSE;
 
-	dev = fu_engine_get_device (priv->engine, values[0], error);
+	dev = fu_util_get_device (priv, values[0], error);
 	if (dev == NULL)
 		return FALSE;
 
@@ -1222,11 +1237,11 @@ fu_util_detach (FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* get device */
 	if (g_strv_length (values) >= 1) {
-		device = fu_engine_get_device (priv->engine, values[0], error);
+		device = fu_util_get_device (priv, values[0], error);
 		if (device == NULL)
 			return FALSE;
 	} else {
-		device = fu_util_prompt_for_device (priv, error);
+		device = fu_util_prompt_for_device (priv, NULL, error);
 		if (device == NULL)
 			return FALSE;
 	}
@@ -1250,11 +1265,11 @@ fu_util_attach (FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* get device */
 	if (g_strv_length (values) >= 1) {
-		device = fu_engine_get_device (priv->engine, values[0], error);
+		device = fu_util_get_device (priv, values[0], error);
 		if (device == NULL)
 			return FALSE;
 	} else {
-		device = fu_util_prompt_for_device (priv, error);
+		device = fu_util_prompt_for_device (priv, NULL, error);
 		if (device == NULL)
 			return FALSE;
 	}
@@ -1726,11 +1741,11 @@ fu_util_verify_update (FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* get device */
 	if (g_strv_length (values) == 1) {
-		dev = fu_engine_get_device (priv->engine, values[1], error);
+		dev = fu_util_get_device (priv, values[1], error);
 		if (dev == NULL)
 			return FALSE;
 	} else {
-		dev = fu_util_prompt_for_device (priv, error);
+		dev = fu_util_prompt_for_device (priv, NULL, error);
 		if (dev == NULL)
 			return FALSE;
 	}
@@ -2055,31 +2070,31 @@ main (int argc, char *argv[])
 		     fu_util_install_blob);
 	fu_util_cmd_array_add (cmd_array,
 		     "install",
-		     "FILE [DEVICE-ID]",
+		     "FILE [DEVICE-ID|GUID]",
 		     /* TRANSLATORS: command description */
 		     _("Install a firmware file on this hardware"),
 		     fu_util_install);
 	fu_util_cmd_array_add (cmd_array,
 		     "reinstall",
-		     "DEVICE-ID",
+		     "DEVICE-ID|GUID",
 		     /* TRANSLATORS: command description */
 		     _("Reinstall firmware on a device"),
 		     fu_util_reinstall);
 	fu_util_cmd_array_add (cmd_array,
 		     "attach",
-		     "DEVICE-ID",
+		     "DEVICE-ID|GUID",
 		     /* TRANSLATORS: command description */
 		     _("Attach to firmware mode"),
 		     fu_util_attach);
 	fu_util_cmd_array_add (cmd_array,
 		     "detach",
-		     "DEVICE-ID",
+		     "DEVICE-ID|GUID",
 		     /* TRANSLATORS: command description */
 		     _("Detach to bootloader mode"),
 		     fu_util_detach);
 	fu_util_cmd_array_add (cmd_array,
 		     "activate",
-		     "[DEVICE-ID]",
+		     "[DEVICE-ID|GUID]",
 		     /* TRANSLATORS: command description */
 		     _("Activate pending devices"),
 		     fu_util_activate);
@@ -2097,7 +2112,7 @@ main (int argc, char *argv[])
 		     fu_util_monitor);
 	fu_util_cmd_array_add (cmd_array,
 		     "update,upgrade",
-		     "[DEVICE-ID]",
+		     "[DEVICE-ID|GUID]",
 		     /* TRANSLATORS: command description */
 		     _("Update all devices that match local metadata"),
 		     fu_util_update);
@@ -2110,13 +2125,13 @@ main (int argc, char *argv[])
 		     fu_util_self_sign);
 	fu_util_cmd_array_add (cmd_array,
 		     "verify-update",
-		     "[DEVICE-ID]",
+		     "[DEVICE-ID|GUID]",
 		     /* TRANSLATORS: command description */
 		     _("Update the stored metadata with current contents"),
 		     fu_util_verify_update);
 	fu_util_cmd_array_add (cmd_array,
 		     "firmware-read",
-		     "FILENAME [DEVICE-ID]",
+		     "FILENAME [DEVICE-ID|GUID]",
 		     /* TRANSLATORS: command description */
 		     _("Read a firmware blob from a device"),
 		     fu_util_firmware_read);

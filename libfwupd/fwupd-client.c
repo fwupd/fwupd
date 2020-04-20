@@ -470,6 +470,60 @@ fwupd_client_get_device_by_id (FwupdClient *client,
 }
 
 /**
+ * fwupd_client_get_devices_by_guid:
+ * @client: A #FwupdClient
+ * @guid: the GUID, e.g. `e22c4520-43dc-5bb3-8245-5787fead9b63`
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Gets any devices that provide a specific GUID. An error is returned if no
+ * devices contains this GUID.
+ *
+ * Returns: (element-type FwupdDevice) (transfer container): devices or %NULL
+ *
+ * Since: 1.4.1
+ **/
+GPtrArray *
+fwupd_client_get_devices_by_guid (FwupdClient *client,
+				  const gchar *guid,
+				  GCancellable *cancellable,
+				  GError **error)
+{
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GPtrArray) devices_tmp = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (guid != NULL, NULL);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* get all the devices */
+	devices_tmp = fwupd_client_get_devices (client, cancellable, error);
+	if (devices_tmp == NULL)
+		return NULL;
+
+	/* find the devices by GUID (client side) */
+	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	for (guint i = 0; i < devices_tmp->len; i++) {
+		FwupdDevice *dev_tmp = g_ptr_array_index (devices_tmp, i);
+		if (fwupd_device_has_guid (dev_tmp, guid))
+			g_ptr_array_add (devices, g_object_ref (dev_tmp));
+	}
+
+	/* nothing */
+	if (devices->len == 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
+			     "failed to find any device providing %s", guid);
+		return NULL;
+	}
+
+	/* success */
+	return g_steal_pointer (&devices);
+}
+
+/**
  * fwupd_client_get_releases:
  * @client: A #FwupdClient
  * @device_id: the device ID
