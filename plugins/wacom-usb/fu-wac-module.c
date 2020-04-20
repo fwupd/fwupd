@@ -185,19 +185,13 @@ fu_wac_module_set_feature (FuWacModule *self,
 	/* verify the size of the blob */
 	if (blob != NULL) {
 		data = g_bytes_get_data (blob, &len);
-		if (len > 509) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "Submodule SetFeature blob larger than "
-				     "buffer %" G_GSIZE_FORMAT, len);
+		if (!fu_memcpy_safe (buf, sizeof(buf), 0x03,	/* dst */
+				     data, len, 0x0,		/* src */
+				     len, error)) {
+			g_prefix_error (error, "Submodule blob larger than buffer: ");
 			return FALSE;
 		}
 	}
-
-	/* build packet */
-	if (len > 0)
-		memcpy (&buf[3], data, len);
 
 	/* tell the daemon the current status */
 	switch (command) {
