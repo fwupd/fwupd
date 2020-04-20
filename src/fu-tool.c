@@ -645,6 +645,17 @@ fu_util_get_device (FuUtilPrivate *priv, const gchar *id, GError **error)
 			return NULL;
 		return fu_util_prompt_for_device (priv, devices, error);
 	}
+
+	/* did this look like a GUID? */
+	for (guint i = 0; id[i] != '\0'; i++) {
+		if (id[i] == '-') {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_ARGS,
+					     "Invalid arguments");
+			return FALSE;
+		}
+	}
 	return fu_engine_get_device (priv->engine, id, error);
 }
 
