@@ -35,8 +35,9 @@ typedef enum {
 typedef enum {
 	FW_IMAGE_TYPE_UNKNOWN = 0,
 	FW_IMAGE_TYPE_SINGLE,
-	FW_IMAGE_TYPE_DUAL_SYMMETRIC,
-	FW_IMAGE_TYPE_DUAL_ASYMMETRIC,
+	FW_IMAGE_TYPE_DUAL_SYMMETRIC,		/* A/B runtime */
+	FW_IMAGE_TYPE_DUAL_ASYMMETRIC,		/* A=bootloader (fixed), B=runtime */
+	FW_IMAGE_TYPE_DUAL_ASYMMETRIC_VARIABLE,	/* A=bootloader (variable), B=runtime */
 } FWImageType;
 
 gchar		*fu_ccgx_version_to_string		(guint32	 val);

@@ -42,6 +42,8 @@ fu_ccgx_fw_image_type_to_string (FWImageType val)
 		return "dual-symmetric";
 	if (val == FW_IMAGE_TYPE_DUAL_ASYMMETRIC)
 		return "dual-asymmetric";
+	if (val == FW_IMAGE_TYPE_DUAL_ASYMMETRIC_VARIABLE)
+		return "dual-asymmetric-variable";
 	return NULL;
 }
 
@@ -54,6 +56,8 @@ fu_ccgx_fw_image_type_from_string (const gchar *val)
 		return FW_IMAGE_TYPE_DUAL_SYMMETRIC;
 	if (g_strcmp0 (val, "dual-asymmetric") == 0)
 		return FW_IMAGE_TYPE_DUAL_ASYMMETRIC;
+	if (g_strcmp0 (val, "dual-asymmetric-variable") == 0)
+		return FW_IMAGE_TYPE_DUAL_ASYMMETRIC_VARIABLE;
 	return FW_IMAGE_TYPE_UNKNOWN;
 }
 
