@@ -32,7 +32,6 @@ struct _FuCcgxHpiDevice
 	guint8			 ep_intr_in;
 	guint32			 flash_row_size;
 	guint32			 flash_size;
-	gboolean		 enter_alt_mode;
 };
 
 G_DEFINE_TYPE (FuCcgxHpiDevice, fu_ccgx_hpi_device, FU_TYPE_USB_DEVICE)
@@ -918,48 +917,58 @@ fu_ccgx_hpi_read_flash (FuCcgxHpiDevice *self,
 }
 
 static gboolean
+fu_ccgx_hpi_device_detach (FuDevice *device, GError **error)
+{
+	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE (device);
+	guint8 buf[] = {
+		CY_PD_JUMP_TO_ALT_FW_CMD_SIG,
+	};
+
+	/* not required */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER) ||
+	    self->fw_image_type == FW_IMAGE_TYPE_DUAL_SYMMETRIC)
+		return TRUE;
+
+	/* jump to Alt FW */
+	if (!fu_ccgx_hpi_device_clear_all_events (self,
+						  HPI_CMD_COMMAND_CLEAR_EVENT_TIME_MS,
+						  error))
+		return FALSE;
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+	if (!fu_ccgx_hpi_device_reg_write (self,
+					   CY_PD_JUMP_TO_BOOT_REG_ADDR,
+					   buf, sizeof(buf),
+					   error)) {
+		g_prefix_error (error, "jump to alt mode error: ");
+		return FALSE;
+	}
+
+	/* sym not required */
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_ccgx_hpi_device_attach (FuDevice *device, GError **error)
 {
 	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE (device);
-
-	/* jump to Alt FW */
-	if (self->fw_image_type == FW_IMAGE_TYPE_DUAL_ASYMMETRIC &&
-	    self->fw_mode == FW_MODE_FW2 &&
-	    self->enter_alt_mode) {
-		guint8 buf[] = {
-			CY_PD_JUMP_TO_ALT_FW_CMD_SIG,
-		};
-		if (!fu_ccgx_hpi_device_clear_all_events (self,
-							  HPI_CMD_COMMAND_CLEAR_EVENT_TIME_MS,
-							  error))
-			return FALSE;
-		fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-		if (!fu_ccgx_hpi_device_reg_write (self,
-						   CY_PD_JUMP_TO_BOOT_REG_ADDR,
+	guint8 buf[] = {
+		CY_PD_DEVICE_RESET_CMD_SIG,
+		CY_PD_REG_RESET_DEVICE_CMD,
+	};
+	if (!fu_ccgx_hpi_device_clear_all_events (self,
+						  HPI_CMD_COMMAND_CLEAR_EVENT_TIME_MS,
+						  error))
+		return FALSE;
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+	if (!fu_ccgx_hpi_device_reg_write_no_resp (self,
+						   CY_PD_REG_RESET_ADDR,
 						   buf, sizeof(buf),
 						   error)) {
-			g_prefix_error (error, "jump to alt mode error: ");
-			return FALSE;
-		}
-
-	/* just reset device */
-	} else {
-		guint8 buf[] = {
-			CY_PD_DEVICE_RESET_CMD_SIG,
-			CY_PD_REG_RESET_DEVICE_CMD,
-		};
-		if (!fu_ccgx_hpi_device_clear_all_events (self,
-							  HPI_CMD_COMMAND_CLEAR_EVENT_TIME_MS,
-							  error))
-			return FALSE;
-		fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-		if (!fu_ccgx_hpi_device_reg_write_no_resp (self,
-							   CY_PD_REG_RESET_ADDR,
-							   buf, sizeof(buf),
-							   error)) {
-			g_prefix_error (error, "reset device error: ");
-			return FALSE;
-		}
+		g_prefix_error (error, "reset device error: ");
+		return FALSE;
 	}
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
@@ -1187,7 +1196,6 @@ fu_ccgx_hpi_write_firmware (FuDevice *device,
 		return FALSE;
 
 	/* success */
-	self->enter_alt_mode = TRUE;
 	return TRUE;
 }
 
@@ -1337,12 +1345,11 @@ fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 		self->fw_app_type = versions[self->fw_mode] & 0xffff;
 		fu_ccgx_hpi_device_setup_with_app_type (self);
 
-		/* asymmetric these seem swapped, but we can only update the
-		 * "other" image whilst running in the current image */
-		if (self->fw_image_type == FW_IMAGE_TYPE_DUAL_SYMMETRIC) {
+		/* if running in bootloader force an upgrade to any version */
+		if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+			fu_ccgx_hpi_device_set_version_raw (self, 0x0);
+		} else {
 			fu_ccgx_hpi_device_set_version_raw (self, versions[self->fw_mode]);
-		} else if (self->fw_image_type == FW_IMAGE_TYPE_DUAL_ASYMMETRIC) {
-			fu_ccgx_hpi_device_set_version_raw (self, versions[fu_ccgx_fw_mode_get_alternate (self->fw_mode)]);
 		}
 	}
 
@@ -1517,6 +1524,7 @@ fu_ccgx_hpi_device_class_init (FuCcgxHpiDeviceClass *klass)
 	klass_device->to_string = fu_ccgx_hpi_device_to_string;
 	klass_device->write_firmware = fu_ccgx_hpi_write_firmware;
 	klass_device->prepare_firmware = fu_ccgx_hpi_device_prepare_firmware;
+	klass_device->detach = fu_ccgx_hpi_device_detach;
 	klass_device->attach = fu_ccgx_hpi_device_attach;
 	klass_device->setup = fu_ccgx_hpi_device_setup;
 	klass_device->set_quirk_kv = fu_ccgx_hpi_device_set_quirk_kv;
