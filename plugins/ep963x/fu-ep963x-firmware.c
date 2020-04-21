@@ -41,16 +41,6 @@ fu_ep963x_firmware_parse (FuFirmware *firmware,
 		return FALSE;
 	}
 
-	/* check padding */
-	if (len % FU_EP963_TRANSFER_BLOCK_SIZE != 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "firmware size padding incorrect, expected 0x%x",
-			     (guint) FU_EP963_TRANSFER_BLOCK_SIZE);
-		return FALSE;
-	}
-
 	/* check signature */
 	if (memcmp (data + 16, "EP963", 5) != 0) {
 		g_set_error_literal (error,
