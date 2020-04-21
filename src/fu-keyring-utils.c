@@ -40,8 +40,6 @@ fu_keyring_get_release_flags (XbNode *release,
 		return FALSE;
 	}
 	if (g_bytes_get_size (blob) != sizeof(FwupdReleaseFlags)) {
-		g_critical ("invalid fwupd::ReleaseFlags set by loader");
-		return TRUE;
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
