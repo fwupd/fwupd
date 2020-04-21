@@ -10,15 +10,16 @@ GType = FuCcgxHpiDevice
 
 [DeviceInstanceId=USB\VID_04B4&PID_521A&SID_1F00&APP_6D64]
 ImageKind = dual-asymmetric
+Name = ThinkPad USB-C Dock Gen2 PD Controller
 ParentGuid = USB\VID_17EF&PID_A391
 
 [DeviceInstanceId=USB\VID_04B4&PID_521A&SID_1F00&APP_6D64&MODE_FW1]
-Name = ThinkPad USB-C Dock Gen2 PD Backup Controller
-Summary = CCGx Power Delivery Device (Backup Firmware)
+Summary = CCGx Power Delivery Device (Bootloader)
+Flags = is-bootloader
 
 [DeviceInstanceId=USB\VID_04B4&PID_521A&SID_1F00&APP_6D64&MODE_FW2]
-Name = ThinkPad USB-C Dock Gen2 PD Main Controller
-Summary = CCGx Power Delivery Device (Main Firmware)
+Summary = CCGx Power Delivery Device
+CounterpartGuid = USB\VID_04B4&PID_521A&SID_1F00&APP_6D64&MODE_FW1
 
 # Lenovo Hybrid Dock
 [DeviceInstanceId=USB\VID_17EF&PID_A354]
