@@ -12,7 +12,10 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+
+#ifdef HAVE_TSS2
 #include <tss2/tss2_esys.h>
+#endif
 
 #include "fwupd-common.h"
 #include "fu-plugin-dell.h"
@@ -510,6 +513,7 @@ fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 	return TRUE;
 }
 
+#ifdef HAVE_TSS2
 static void Esys_Finalize_autoptr_cleanup (ESYS_CONTEXT *esys_context)
 {
 	Esys_Finalize (&esys_context);
@@ -551,10 +555,12 @@ fu_plugin_dell_get_tpm_capability (ESYS_CONTEXT *ctx, guint32 query)
 
 	return fu_common_strstrip (result);
 }
+#endif
 
 static gboolean
 fu_plugin_dell_add_tpm_model (FuDevice *dev, GError **error)
 {
+#ifdef HAVE_TSS2
 	TSS2_RC rc;
 	const gchar *base = "DELL-TPM";
 	g_autoptr(ESYS_CONTEXT) ctx = NULL;
@@ -617,7 +623,7 @@ fu_plugin_dell_add_tpm_model (FuDevice *dev, GError **error)
 	fu_device_add_instance_id (dev, v1_v2);
 	fu_device_add_instance_id (dev, v1_v2_v3);
 	fu_device_add_instance_id (dev, v1_v2_v3_v4);
-
+#endif
 	return TRUE;
 }
 
