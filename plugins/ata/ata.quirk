@@ -37,3 +37,7 @@ VendorId = ATA:0x1344
 [DeviceInstanceId=OUI\5cd2e4]
 Vendor = Intel
 VendorId = ATA:0x8086
+
+[DeviceInstanceId=OUI\707c18]
+Vendor = ADATA
+VendorId = ATA:0x1CC1
