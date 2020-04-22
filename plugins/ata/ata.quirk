@@ -22,6 +22,10 @@ VendorId = ATA:0x101C
 Vendor = Intel
 VendorId = ATA:0x8086
 
+[DeviceInstanceId=OUI\002303]
+Vendor = LITE-ON
+VendorId = ATA:0x14A4
+
 [DeviceInstanceId=OUI\002538]
 Vendor = Samsung
 VendorId = ATA:0x144D
