@@ -653,7 +653,7 @@ fu_util_get_device (FuUtilPrivate *priv, const gchar *id, GError **error)
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_INVALID_ARGS,
 					     "Invalid arguments");
-			return FALSE;
+			return NULL;
 		}
 	}
 	return fu_engine_get_device (priv->engine, id, error);

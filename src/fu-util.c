@@ -1047,7 +1047,7 @@ fu_util_get_device_by_id (FuUtilPrivate *priv, const gchar *id, GError **error)
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_INVALID_ARGS,
 					     "Invalid arguments");
-			return FALSE;
+			return NULL;
 		}
 	}
 	return fwupd_client_get_device_by_id (priv->client, id, NULL, error);
