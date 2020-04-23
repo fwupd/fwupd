@@ -333,7 +333,7 @@ fu_plugin_thunderbolt_add (FuPlugin *plugin, GUdevDevice *device)
 
 	version = fu_plugin_thunderbolt_udev_get_version (device);
 	/* test for safe mode */
-	if (is_host && version == NULL) {
+	if (is_host && version == NULL && gen < 4) {
 		g_autoptr(GError) error_local = NULL;
 		g_autofree gchar *test_safe = NULL;
 		g_autofree gchar *safe_path = NULL;
