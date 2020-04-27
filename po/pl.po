@@ -24,6 +24,12 @@ msgstr[1] "Pozostały %.0f minuty"
 msgstr[2] "Pozostało %.0f minut"
 msgstr[3] "Pozostało %.0f minut"
 
+#. TRANSLATORS: the CPU microcode is firmware loaded onto the CPU
+#. * at system bootup
+#, c-format
+msgid "%s CPU Microcode Update"
+msgstr "Aktualizacja mikrokodu procesora %s"
+
 #. TRANSLATORS: ME stands for Management Engine, where
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
@@ -331,6 +337,18 @@ msgstr "Nie odnaleziono polecenia"
 #. TRANSLATORS: prompt to apply the update
 msgid "Continue with update?"
 msgstr "Kontynuować aktualizację?"
+
+#. TRANSLATORS: command description
+msgid "Convert a firmware file"
+msgstr "Konwertuje plik oprogramowania sprzętowego"
+
+#. TRANSLATORS: when the update was built
+msgid "Created"
+msgstr "Utworzono"
+
+#. TRANSLATORS: the release urgency
+msgid "Critical"
+msgstr "Krytyczna"
 
 #. TRANSLATORS: Device supports some form of checksum verification
 msgid "Cryptographic hash verification is available"
@@ -717,6 +735,10 @@ msgstr "Uzyskuje wyniki z ostatniej aktualizacji"
 msgid "Hardware is waiting to be replugged"
 msgstr "Sprzęt czeka na ponowne podłączenie"
 
+#. TRANSLATORS: the release urgency
+msgid "High"
+msgstr "Wysoka"
+
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
 msgstr "Bezczynne…"
@@ -822,9 +844,17 @@ msgstr "Wyświetla listę dostępnych typów oprogramowania sprzętowego"
 msgid "Loading…"
 msgstr "Wczytywanie…"
 
+#. TRANSLATORS: the release urgency
+msgid "Low"
+msgstr "Niska"
+
 #. TRANSLATORS: command line option
 msgid "Manually whitelist specific plugins"
 msgstr "Ręcznie wstawia podane wtyczki na białą listę"
+
+#. TRANSLATORS: the release urgency
+msgid "Medium"
+msgstr "Średnia"
 
 #. TRANSLATORS: remote URI
 msgid "Metadata Signature"
@@ -1007,6 +1037,10 @@ msgstr "Odświeża metadane ze zdalnego serwera"
 #. TRANSLATORS: command description
 msgid "Reinstall current firmware on the device."
 msgstr "Ponownie instaluje obecne oprogramowanie sprzętowe na urządzeniu."
+
+#. TRANSLATORS: command description
+msgid "Reinstall firmware on a device"
+msgstr "Ponownie instaluje oprogramowanie sprzętowe na urządzeniu"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
@@ -1390,6 +1424,10 @@ msgstr[3] "Wysłanie zgłoszeń tym razem i automatyczne wysyłanie zgłoszeń 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
 msgstr "Wysyłanie zgłoszeń o oprogramowaniu sprzętowym pomaga dostawcom sprzętu szybko identyfikować nieudane i udane aktualizacje na prawdziwych urządzeniach."
+
+#. TRANSLATORS: how important the release is
+msgid "Urgency"
+msgstr "Pilność"
 
 #. TRANSLATORS: command line option
 msgid "Use quirk flags when installing firmware"

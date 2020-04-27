@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Ascii Wolf <mail@asciiwolf.com>, 2017,2019
+# Ascii Wolf <mail@asciiwolf.com>, 2017,2019-2020
 # Ascii Wolf <mail@asciiwolf.com>, 2017
 # Marek Černocký <marek@manet.cz>, 2016,2018
 msgid ""
@@ -46,6 +46,10 @@ msgstr "Alias pro %s"
 #. TRANSLATORS: command line option
 msgid "Allow downgrading firmware versions"
 msgstr "Povolit přechod na nižší verze firmwaru"
+
+#. TRANSLATORS: command line option
+msgid "Allow reinstalling existing firmware versions"
+msgstr "Povolit reinstalaci stávající verze firmwaru"
 
 #. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
@@ -508,6 +512,10 @@ msgstr "Čte se…"
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "Aktualizovat metadata ze vzdáleného serveru"
+
+#. TRANSLATORS: command description
+msgid "Reinstall firmware on a device"
+msgstr "Přeinstalovat firmware na zařízení"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number

@@ -32,6 +32,32 @@
     <binary>fwupdmgr</binary>
   </provides>
   <releases>
+    <release version="1.4.1" date="2020-04-27">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Allow adding a device 'proxy' device that can do actions on it</li>
+          <li>Allow specifying the device on the command line by GUID</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add a device quirk that forces an explicit device-id match</li>
+          <li>Allow a device to set the logical or physical ID during ->setup()</li>
+          <li>Correctly format firmware version of Dynabook X30 and X40</li>
+          <li>Do not show safe mode errors for USB4 host controllers</li>
+          <li>Do not show the USB 2 VLI recovery devices for USB 3 hubs</li>
+          <li>Fix the correct DeviceID set by GetDetails</li>
+          <li>Make the EP963X plugin actually work on real hardware</li>
+          <li>Make the tss2-esys dep conditional for RHEL 8</li>
+          <li>Only update the FW2 partition of the ThinkPad USB-C Dock Gen2</li>
+          <li>Prefer to update the child device first if the order is unspecified</li>
+          <li>Refresh device name and format before setting supported flag</li>
+          <li>Reset the progressbar time estimate if the percentage is invalid</li>
+          <li>Set the CCGX device name and summary from quirk files</li>
+          <li>Wait for the cxaudio device to reboot after writing firmware</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.4.0" date="2020-04-14">
       <description>
         <p>This release adds the following features:</p>

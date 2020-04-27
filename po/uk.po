@@ -24,6 +24,12 @@ msgstr[1] "Лишилося %.0f хвилини"
 msgstr[2] "Лишилося %.0f хвилин"
 msgstr[3] "Лишилася %.0f хвилина"
 
+#. TRANSLATORS: the CPU microcode is firmware loaded onto the CPU
+#. * at system bootup
+#, c-format
+msgid "%s CPU Microcode Update"
+msgstr "Оновлення мікропрограми процесора %s"
+
 #. TRANSLATORS: ME stands for Management Engine, where
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
@@ -331,6 +337,18 @@ msgstr "Такої команди не знайдено"
 #. TRANSLATORS: prompt to apply the update
 msgid "Continue with update?"
 msgstr "Продовжити оновлення?"
+
+#. TRANSLATORS: command description
+msgid "Convert a firmware file"
+msgstr "Перетворити файл мікропрограми"
+
+#. TRANSLATORS: when the update was built
+msgid "Created"
+msgstr "Створено"
+
+#. TRANSLATORS: the release urgency
+msgid "Critical"
+msgstr "Критичний"
 
 #. TRANSLATORS: Device supports some form of checksum verification
 msgid "Cryptographic hash verification is available"
@@ -717,6 +735,10 @@ msgstr "Отримує результати з останнього оновле
 msgid "Hardware is waiting to be replugged"
 msgstr "Обладнання очікує на повторне з'єднання"
 
+#. TRANSLATORS: the release urgency
+msgid "High"
+msgstr "Високий"
+
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
 msgstr "Бездіяльність…"
@@ -822,9 +844,17 @@ msgstr "Вивести список доступних типів мікропр
 msgid "Loading…"
 msgstr "Завантаження…"
 
+#. TRANSLATORS: the release urgency
+msgid "Low"
+msgstr "Низький"
+
 #. TRANSLATORS: command line option
 msgid "Manually whitelist specific plugins"
 msgstr "Вручну додати певні додатки до «білого» списку"
+
+#. TRANSLATORS: the release urgency
+msgid "Medium"
+msgstr "Середній"
 
 #. TRANSLATORS: remote URI
 msgid "Metadata Signature"
@@ -1007,6 +1037,10 @@ msgstr "Оновити метадані з віддаленого сервера
 #. TRANSLATORS: command description
 msgid "Reinstall current firmware on the device."
 msgstr "Повторно встановити поточну мікропрограму на пристрій."
+
+#. TRANSLATORS: command description
+msgid "Reinstall firmware on a device"
+msgstr "Повторно встановити мікропрограму на пристрій"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
@@ -1390,6 +1424,10 @@ msgstr[3] "Вивантажити звіти цього разу і автома
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
 msgstr "Вивантаження звітів щодо мікропрограм допомагає виробникам обладнання швидко виявляти проблеми та дізнаватися про успішне оновлення на реальних пристроях."
+
+#. TRANSLATORS: how important the release is
+msgid "Urgency"
+msgstr "Рівень важливості"
 
 #. TRANSLATORS: command line option
 msgid "Use quirk flags when installing firmware"

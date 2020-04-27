@@ -25,6 +25,12 @@ msgstr[0] "%.0f minuta preostala"
 msgstr[1] "%.0f minute preostale"
 msgstr[2] "%.0f minuta preostalo"
 
+#. TRANSLATORS: the CPU microcode is firmware loaded onto the CPU
+#. * at system bootup
+#, c-format
+msgid "%s CPU Microcode Update"
+msgstr "%s nadopuna CPU mikrokôda"
+
 #. TRANSLATORS: ME stands for Management Engine, where
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
@@ -325,6 +331,18 @@ msgstr "Naredba nije pronađena"
 #. TRANSLATORS: prompt to apply the update
 msgid "Continue with update?"
 msgstr "Nastavi s nadopunom?"
+
+#. TRANSLATORS: command description
+msgid "Convert a firmware file"
+msgstr "Pretvori datoteku firmvera"
+
+#. TRANSLATORS: when the update was built
+msgid "Created"
+msgstr "Stvoreno"
+
+#. TRANSLATORS: the release urgency
+msgid "Critical"
+msgstr "Kritična"
 
 #. TRANSLATORS: Device supports some form of checksum verification
 msgid "Cryptographic hash verification is available"
@@ -707,6 +725,10 @@ msgstr "Prikaži rezultate posljednje nadopune"
 msgid "Hardware is waiting to be replugged"
 msgstr "Hardver čeka da ponovno bude spojen"
 
+#. TRANSLATORS: the release urgency
+msgid "High"
+msgstr "Visoka"
+
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
 msgstr "Mirovanje..."
@@ -811,9 +833,17 @@ msgstr "Prikaži dostupne vrste firmvera"
 msgid "Loading…"
 msgstr "Učitavanje..."
 
+#. TRANSLATORS: the release urgency
+msgid "Low"
+msgstr "Niska"
+
 #. TRANSLATORS: command line option
 msgid "Manually whitelist specific plugins"
 msgstr "Ručno dopusti određene priključke"
+
+#. TRANSLATORS: the release urgency
+msgid "Medium"
+msgstr "Srednja"
 
 #. TRANSLATORS: remote URI
 msgid "Metadata Signature"
@@ -993,6 +1023,10 @@ msgstr "Osvježi metapodatke s udaljenog poslužitelja"
 #. TRANSLATORS: command description
 msgid "Reinstall current firmware on the device."
 msgstr "Ponovno instaliraj trenutni firmver na uređaju."
+
+#. TRANSLATORS: command description
+msgid "Reinstall firmware on a device"
+msgstr "Ponovno instaliraj firmver na uređaj"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
@@ -1373,6 +1407,10 @@ msgstr[2] "Pošalji izvještaje samo ovaj puta i automatski pošalji izvještaje
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
 msgstr "Slanje izvještaja firmvera pomaže proizvođačima hardvera brzo otkrivanje nedostatka i brzu nadopunu na stvarnim uređajima."
+
+#. TRANSLATORS: how important the release is
+msgid "Urgency"
+msgstr "Hitnost"
 
 #. TRANSLATORS: command line option
 msgid "Use quirk flags when installing firmware"

@@ -23,6 +23,12 @@ msgid_plural "%.0f minutes remaining"
 msgstr[0] "%.0f minuuttia jäljellä"
 msgstr[1] "%.0f minuuttia jäljellä"
 
+#. TRANSLATORS: the CPU microcode is firmware loaded onto the CPU
+#. * at system bootup
+#, c-format
+msgid "%s CPU Microcode Update"
+msgstr "%s CPU Microcode päivitys"
+
 #. TRANSLATORS: ME stands for Management Engine, where
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
@@ -316,6 +322,18 @@ msgstr "Komentoa ei löytynyt"
 #. TRANSLATORS: prompt to apply the update
 msgid "Continue with update?"
 msgstr "Jatketaanko päivitystä?"
+
+#. TRANSLATORS: command description
+msgid "Convert a firmware file"
+msgstr "Muunna laiteohjelmiston 'firmware' tiedosto"
+
+#. TRANSLATORS: when the update was built
+msgid "Created"
+msgstr "Luotu"
+
+#. TRANSLATORS: the release urgency
+msgid "Critical"
+msgstr "Kriittinen"
 
 #. TRANSLATORS: Device supports some form of checksum verification
 msgid "Cryptographic hash verification is available"
@@ -694,6 +712,10 @@ msgstr "Saat viimeisimmän päivityksen tulokset"
 msgid "Hardware is waiting to be replugged"
 msgstr "Laitteisto odottaa uudelleen kytkemistä"
 
+#. TRANSLATORS: the release urgency
+msgid "High"
+msgstr "Korkea"
+
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
 msgstr "Jouten…"
@@ -797,9 +819,17 @@ msgstr "Luettelo käytettävissä olevista laiteohjelmistotyypeistä"
 msgid "Loading…"
 msgstr "Ladataan…"
 
+#. TRANSLATORS: the release urgency
+msgid "Low"
+msgstr "Matala"
+
 #. TRANSLATORS: command line option
 msgid "Manually whitelist specific plugins"
 msgstr "Luetteloi tiettyjä lisäosia manuaalisesti"
+
+#. TRANSLATORS: the release urgency
+msgid "Medium"
+msgstr "Keskitaso"
 
 #. TRANSLATORS: remote URI
 msgid "Metadata Signature"
@@ -982,6 +1012,10 @@ msgstr "Päivitä etäpalvelimen metatiedot"
 #. TRANSLATORS: command description
 msgid "Reinstall current firmware on the device."
 msgstr "Asenna nykyinen laiteohjelmisto laitteeseen."
+
+#. TRANSLATORS: command description
+msgid "Reinstall firmware on a device"
+msgstr "Asenna laiteohjelmisto 'firmware' uudelleen laitteelle"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
@@ -1359,6 +1393,10 @@ msgstr[1] "Lataa raportit tällä kertaa ja lähetä raportit automaattisesti, k
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
 msgstr "Firmware-raporttien lataaminen auttaa laitteistotoimittajia tunnistamaan nopeasti virheelliset ja onnistuneet päivitykset todellisissa laitteissa."
+
+#. TRANSLATORS: how important the release is
+msgid "Urgency"
+msgstr "Kiireellisyys"
 
 #. TRANSLATORS: command line option
 msgid "Use quirk flags when installing firmware"
