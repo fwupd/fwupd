@@ -33,11 +33,6 @@ fu_keyring_get_release_flags (XbNode *release,
 	if (blob == NULL) {
 		g_debug ("no fwupd::ReleaseFlags set by loader");
 		return TRUE;
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "no fwupd::ReleaseFlags set by loader");
-		return FALSE;
 	}
 	if (g_bytes_get_size (blob) != sizeof(FwupdReleaseFlags)) {
 		g_set_error_literal (error,
