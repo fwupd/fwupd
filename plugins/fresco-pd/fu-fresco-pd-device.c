@@ -248,8 +248,7 @@ fu_fresco_pd_device_panther_reset_device (FuFrescoPdDevice *self, GError **error
 			return TRUE;
 		}
 		g_propagate_prefixed_error (error, g_steal_pointer (&error_local),
-					    "failed to reset device [%i]",
-					    error_local->code);
+					    "failed to reset device: ");
 		return FALSE;
 	}
 	return TRUE;
