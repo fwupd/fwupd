@@ -116,7 +116,7 @@ dfu_device_to_string (FuDevice *device, guint idt, GString *str)
 	if (priv->chip_id != NULL)
 		fu_common_string_append_kv (str, idt, "ChipId", priv->chip_id);
 	fu_common_string_append_kx (str, idt, "Version", priv->version);
-	fu_common_string_append_kx (str, idt, "Force_version", priv->force_version);
+	fu_common_string_append_kx (str, idt, "ForceVersion", priv->force_version);
 	fu_common_string_append_kx (str, idt, "RuntimePid", priv->runtime_pid);
 	fu_common_string_append_kx (str, idt, "RuntimeVid", priv->runtime_vid);
 	fu_common_string_append_kx (str, idt, "RuntimeRelease", priv->runtime_release);
