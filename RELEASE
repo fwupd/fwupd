@@ -4,7 +4,7 @@ Write release entries:
 
 git log --format="%s" --cherry-pick --right-only 1.4.1... | grep -i -v trivial | grep -v Merge | sort | uniq
 Add any user visible changes into ../data/org.freedesktop.fwupd.metainfo.xml
-appstream-util appdata-to-news ../data/org.freedesktop.fwupd.metainfo.xml > NEWS
+appstream-util appdata-to-news ../data/org.freedesktop.fwupd.metainfo.xml > ../NEWS
 
 Update translations:
 
