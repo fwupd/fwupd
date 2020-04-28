@@ -106,8 +106,8 @@ fu_wacom_device_detach (FuDevice *device, GError **error)
 		FU_WACOM_RAW_FW_REPORT_ID,
 		FU_WACOM_RAW_FW_CMD_DETACH,
 	};
-	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		g_debug ("already in runtime mode, skipping");
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug ("already in bootloader mode, skipping");
 		return TRUE;
 	}
 	if (!fu_wacom_device_set_feature (self, buf, sizeof(buf), error)) {
