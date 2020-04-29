@@ -45,6 +45,8 @@ fu_vli_usbhub_pd_device_probe (FuDevice *device, GError **error)
 	guint32 fwver;
 	g_autofree gchar *fwver_str = NULL;
 	g_autofree gchar *instance_id1 = NULL;
+	g_autofree gchar *instance_id2 = NULL;
+	g_autofree gchar *instance_id3 = NULL;
 
 	/* get version */
 	fwver = GUINT32_FROM_BE (self->hdr.fwver);
@@ -67,6 +69,16 @@ fu_vli_usbhub_pd_device_probe (FuDevice *device, GError **error)
 					GUINT16_FROM_LE (self->hdr.pid),
 					fu_vli_common_device_kind_to_string (self->device_kind));
 	fu_device_add_instance_id (device, instance_id1);
+
+	/* add standard GUIDs in order of priority */
+	instance_id2 = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
+					GUINT16_FROM_LE (self->hdr.vid),
+					GUINT16_FROM_LE (self->hdr.pid));
+	fu_device_add_instance_id (device, instance_id2);
+	instance_id3 = g_strdup_printf ("USB\\VID_%04X",
+					GUINT16_FROM_LE (self->hdr.vid));
+	fu_device_add_instance_id_full (device, instance_id3,
+					FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
 
 	/* these have a backup section */
 	if (fu_vli_common_device_kind_get_offset (self->device_kind) == VLI_USBHUB_FLASHMAP_ADDR_PD)
