@@ -64,7 +64,6 @@ endif
 
 if get_option('plugin_thunderbolt') and get_option('gudev')
 subdir('thunderbolt')
-subdir('thunderbolt-power')
 endif
 
 if get_option('plugin_redfish')
