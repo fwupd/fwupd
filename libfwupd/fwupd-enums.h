@@ -123,6 +123,7 @@ typedef enum {
  * @FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS:	Add counterpart GUIDs from an alternate mode like bootloader
  * @FWUPD_DEVICE_FLAG_NO_GUID_MATCHING:		Force an explicit ID match when adding devices to the device list
  * @FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN:		Device is updatable but should not be called by the client
+ * @FWUPD_DEVICE_FLAG_SKIPS_RESTART:		Device relies upon activation or power cycle to load firmware
  *
  * The device flags.
  **/
@@ -165,6 +166,7 @@ typedef enum {
 #define FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS	(1llu << 35)	/* Since: 1.4.0 */
 #define FWUPD_DEVICE_FLAG_NO_GUID_MATCHING	(1llu << 36)	/* Since: 1.4.1 */
 #define FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN	(1llu << 37)	/* Since: 1.4.1 */
+#define FWUPD_DEVICE_FLAG_SKIPS_RESTART		(1llu << 38)	/* Since: 1.4.5 */
 #define FWUPD_DEVICE_FLAG_UNKNOWN		G_MAXUINT64	/* Since: 0.7.3 */
 typedef guint64 FwupdDeviceFlags;
 
