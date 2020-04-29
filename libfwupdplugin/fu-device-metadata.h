@@ -18,13 +18,6 @@
  * See also: #FuDevice
  */
 
-/**
- * FU_DEVICE_METADATA_TBT_CAN_FORCE_POWER:
- *
- * If the system can force-enable the Thunderbolt controller.
- * Consumed by the thunderbolt plugin.
- */
-#define FU_DEVICE_METADATA_TBT_CAN_FORCE_POWER	"Thunderbolt::CanForcePower"
 
 /**
  * FU_DEVICE_METADATA_TBT_IS_SAFE_MODE:

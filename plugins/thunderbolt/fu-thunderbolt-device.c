@@ -240,21 +240,6 @@ fu_thunderbolt_device_setup (FuDevice *device, GError **error)
 	self->devpath = g_strdup (fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (device)));
 	fu_device_set_metadata (device, "sysfs-path", self->devpath);
 
-/*	TODO:
-	force power handling from old plugin on remove
-	 on supported systems other plugins may use a GPIO to force
-	 power on supported devices even when in low power mode --
-	 this will happen in coldplug_prepare and prepare_for_update
-	if (fu_thunderbolt_device_is_host (device) &&
-	    !fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG) &&
-	    fu_device_get_metadata_boolean (dev, FU_DEVICE_METADATA_TBT_CAN_FORCE_POWER)) {
-		g_debug ("ignoring remove event as force powered");
-		return;
-	}
-
-	fu_plugin_device_remove (plugin, dev);
-*/
-
 	/* these may be missing on ICL or later */
 	vid = fu_udev_device_get_vendor (FU_UDEV_DEVICE (self));
 	if (vid == 0x0)
