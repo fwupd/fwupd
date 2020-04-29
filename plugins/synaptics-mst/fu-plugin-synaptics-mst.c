@@ -155,7 +155,7 @@ fu_plugin_update (FuPlugin *plugin,
 		return FALSE;
 	if (!fu_device_write_firmware (device, blob_fw, flags, error))
 		return FALSE;
-	if (!fu_device_has_custom_flag (device, "skip-restart"))
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_SKIPS_RESTART))
 		fu_plugin_device_remove (plugin, device);
 	return TRUE;
 }
