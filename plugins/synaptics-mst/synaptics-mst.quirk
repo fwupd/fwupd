@@ -16,7 +16,7 @@ Plugin = synaptics_mst
 #  * These GUIDs will look like MST-${DEVICEKIND}-${CHIPID}-${BOARDID}
 #
 # By default the Synaptics MST device will restart after update
-# To override this behavior add the custom flag "skip-restart"
+# To override this behavior add FWUPD_DEVICE_FLAG_SKIPS_RESTART
 #
 
 [SynapticsMSTBoardID=272]

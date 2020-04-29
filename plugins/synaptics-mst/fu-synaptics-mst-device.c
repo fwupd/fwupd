@@ -815,7 +815,7 @@ fu_synaptics_mst_device_write_firmware (FuDevice *device,
 
 	/* enable remote control and disable on exit */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
-	if (!fu_device_has_custom_flag (device, "skip-restart")) {
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_SKIPS_RESTART)) {
 		locker = fu_device_locker_new_full (self,
 						(FuDeviceLockerFunc) fu_synaptics_mst_device_enable_rc,
 						(FuDeviceLockerFunc) fu_synaptics_mst_device_restart,
