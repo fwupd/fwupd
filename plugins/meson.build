@@ -79,7 +79,6 @@ if not get_option('gudev')
   error('gudev is required for plugin_thunderbolt')
 endif
 subdir('thunderbolt')
-subdir('thunderbolt-power')
 endif
 
 if get_option('plugin_redfish')
