@@ -195,6 +195,8 @@ fwupd_device_flag_to_string (FwupdDeviceFlags device_flag)
 		return "no-guid-matching";
 	if (device_flag == FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN)
 		return "updatable-hidden";
+	if (device_flag == FWUPD_DEVICE_FLAG_SKIPS_RESTART)
+		return "skips-restart";
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -291,6 +293,8 @@ fwupd_device_flag_from_string (const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_NO_GUID_MATCHING;
 	if (g_strcmp0 (device_flag, "updatable-hidden") == 0)
 		return FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN;
+	if (g_strcmp0 (device_flag, "skips-restart") == 0)
+		return FWUPD_DEVICE_FLAG_SKIPS_RESTART;
 	return FWUPD_DEVICE_FLAG_UNKNOWN;
 }
 

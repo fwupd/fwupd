@@ -433,7 +433,7 @@ fu_dell_dock_ec_get_dock_info (FuDevice *device,
 	if (fu_common_vercmp_full (hub_version, "1.42", FWUPD_VERSION_FORMAT_PAIR) >= 0) {
 		g_debug ("using passive flow");
 		self->passive_flow = PASSIVE_REBOOT_MASK;
-		fu_device_set_custom_flags (device, "skip-restart");
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_SKIPS_RESTART);
 	} else {
 		g_debug ("not using passive flow (EC: %s Hub2: %s)",
 			 self->ec_version, hub_version);
@@ -788,7 +788,7 @@ fu_dell_dock_ec_write_fw (FuDevice *device,
 	if (self->passive_flow)
 		self->passive_flow |= PASSIVE_RESET_MASK;
 
-	if (fu_device_has_custom_flag (device, "skip-restart")) {
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_SKIPS_RESTART)) {
 		g_debug ("Skipping EC reset per quirk request");
 		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 		return TRUE;

@@ -577,7 +577,7 @@ fu_thunderbolt_device_write_firmware (FuDevice *device,
 		return FALSE;
 	}
 
-	if (fu_device_has_custom_flag (device, "skip-restart")) {
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_SKIPS_RESTART)) {
 		g_debug ("Skipping Thunderbolt reset per quirk request");
 		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 		return TRUE;
