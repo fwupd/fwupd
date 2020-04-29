@@ -62,7 +62,7 @@ fu_tmp_eventlog_process (const gchar *fn, gint pcr, GError **error)
 			continue;
 		for (guint j = 0; j < pcrs->len; j++) {
 			const gchar *csum = g_ptr_array_index (pcrs, j);
-			g_autofree gchar *title = g_strdup_printf ("%u", i);
+			g_autofree gchar *title = g_strdup_printf ("%x", i);
 			fu_common_string_append_kv (str, 1, title, csum);
 		}
 	}
