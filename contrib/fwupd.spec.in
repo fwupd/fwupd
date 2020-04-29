@@ -375,7 +375,6 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_thelio_io.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_thunderbolt.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_thunderbolt_power.so
 %if 0%{?have_uefi}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_tpm.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_tpm_eventlog.so
