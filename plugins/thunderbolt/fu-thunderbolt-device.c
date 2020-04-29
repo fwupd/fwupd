@@ -325,10 +325,9 @@ fu_thunderbolt_device_setup (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_thunderbolt_device_trigger_update (FuThunderboltDevice	*self,
-				      GError			**error)
+fu_thunderbolt_device_trigger_update (FuDevice *device, GError **error)
 {
-
+	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE (device);
 	ssize_t n;
 	int fd;
 	int r;
@@ -576,7 +575,13 @@ fu_thunderbolt_device_write_firmware (FuDevice *device,
 		return FALSE;
 	}
 
-	if (!fu_thunderbolt_device_trigger_update (self, error)) {
+	if (fu_device_has_custom_flag (device, "skip-restart")) {
+		g_debug ("Skipping Thunderbolt reset per quirk request");
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+		return TRUE;
+	}
+
+	if (!fu_thunderbolt_device_trigger_update (FU_DEVICE (self), error)) {
 		g_prefix_error (error, "could not start thunderbolt device upgrade: ");
 		return FALSE;
 	}
