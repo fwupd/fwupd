@@ -55,7 +55,7 @@ fu_tmp_eventlog_process (const gchar *fn, gint pcr, GError **error)
 		fu_tpm_eventlog_item_to_string (item, 0, str);
 		g_string_append (str, "\n");
 	}
-	fu_common_string_append_kv (str, 0, "PCRs", NULL);
+	fu_common_string_append_kv (str, 0, "Reconstructed PCRs", NULL);
 	for (guint8 i = 0; i < 10; i++) {
 		g_autoptr(GPtrArray) pcrs = fu_tpm_eventlog_calc_checksums (items, i, NULL);
 		if (pcrs == NULL)
