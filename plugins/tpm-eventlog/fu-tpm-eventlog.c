@@ -36,6 +36,7 @@ fu_tmp_eventlog_process (const gchar *fn, gint pcr, GError **error)
 	g_autofree guint8 *buf = NULL;
 	g_autoptr(GPtrArray) items = NULL;
 	g_autoptr(GString) str = g_string_new (NULL);
+	gint max_pcr = 0;
 
 	/* parse this */
 	if (!g_file_get_contents (fn, (gchar **) &buf, &bufsz, error))
@@ -50,19 +51,29 @@ fu_tmp_eventlog_process (const gchar *fn, gint pcr, GError **error)
 
 	for (guint i = 0; i < items->len; i++) {
 		FuTpmEventlogItem *item = g_ptr_array_index (items, i);
+		if (item->pcr > max_pcr)
+			max_pcr = item->pcr;
 		if (pcr >= 0 && item->pcr != pcr)
 			continue;
 		fu_tpm_eventlog_item_to_string (item, 0, str);
 		g_string_append (str, "\n");
 	}
+	if (pcr > max_pcr) {
+		g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
+			     "invalid PCR specified: %d", pcr);
+		return FALSE;
+	}
 	fu_common_string_append_kv (str, 0, "Reconstructed PCRs", NULL);
-	for (guint8 i = 0; i < 10; i++) {
+	for (guint8 i = 0; i <= max_pcr; i++) {
 		g_autoptr(GPtrArray) pcrs = fu_tpm_eventlog_calc_checksums (items, i, NULL);
 		if (pcrs == NULL)
 			continue;
 		for (guint j = 0; j < pcrs->len; j++) {
 			const gchar *csum = g_ptr_array_index (pcrs, j);
-			g_autofree gchar *title = g_strdup_printf ("%x", i);
+			g_autofree gchar *title = NULL;
+			if (pcr >= 0 && i != (guint) pcr)
+				continue;
+			title = g_strdup_printf ("%x", i);
 			fu_common_string_append_kv (str, 1, title, csum);
 		}
 	}
