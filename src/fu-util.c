@@ -2434,14 +2434,6 @@ fu_util_check_polkit_actions (GError **error)
 	return TRUE;
 }
 
-static void
-fu_util_display_help (FuUtilPrivate *priv)
-{
-	g_autofree gchar *tmp = NULL;
-	tmp = g_option_context_get_help (priv->context, TRUE, NULL);
-	g_printerr ("%s\n", tmp);
-}
-
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtilPrivate, fu_util_private_free)
@@ -2829,15 +2821,17 @@ main (int argc, char *argv[])
 	/* run the specified command */
 	ret = fu_util_cmd_array_run (cmd_array, priv, argv[1], (gchar**) &argv[2], &error);
 	if (!ret) {
-		ret = EXIT_FAILURE;
 		g_printerr ("%s\n", error->message);
-		if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_ARGS))
-			fu_util_display_help (priv);
-		else if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
-			ret = EXIT_NOTHING_TO_DO;
-	} else {
-		ret = EXIT_SUCCESS;
+		if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_ARGS)) {
+			/* TRANSLATORS: error message explaining command to run to how to get help */
+			g_printerr ("\n%s\n", _("Use fwupdmgr --help for help"));
+		} else if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
+			g_debug ("%s\n", error->message);
+			return EXIT_NOTHING_TO_DO;
+		}
+		return EXIT_FAILURE;
 	}
 
-	return ret;
+	/* success */
+	return EXIT_SUCCESS;
 }
