@@ -2277,17 +2277,14 @@ main (int argc, char *argv[])
 	/* run the specified command */
 	ret = fu_util_cmd_array_run (cmd_array, priv, argv[1], (gchar**) &argv[2], &error);
 	if (!ret) {
+		g_printerr ("%s\n", error->message);
 		if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_ARGS)) {
-			g_autofree gchar *tmp = NULL;
-			tmp = g_option_context_get_help (priv->context, TRUE, NULL);
-			g_print ("%s\n\n%s", error->message, tmp);
-			return EXIT_FAILURE;
-		}
-		if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
-			g_print ("%s\n", error->message);
+			/* TRANSLATORS: error message explaining command to run to how to get help */
+			g_printerr ("\n%s\n", _("Use fwupdtool --help for help"));
+		} else if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
+			g_debug ("%s\n", error->message);
 			return EXIT_NOTHING_TO_DO;
 		}
-		g_print ("%s\n", error->message);
 		return EXIT_FAILURE;
 	}
 
