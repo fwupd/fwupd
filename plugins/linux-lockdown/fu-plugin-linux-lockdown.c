@@ -8,7 +8,6 @@
 
 #include "fu-plugin-vfuncs.h"
 #include "fu-hash.h"
-#include "fu-linux-swap.h"
 
 struct FuPluginData {
 	GFile			*file;
@@ -33,11 +32,11 @@ fu_plugin_destroy (FuPlugin *plugin)
 }
 
 static void
-fu_plugin_linux_swap_changed_cb (GFileMonitor *monitor,
-				 GFile *file,
-				 GFile *other_file,
-				 GFileMonitorEvent event_type,
-				 gpointer user_data)
+fu_plugin_linux_lockdown_changed_cb (GFileMonitor *monitor,
+				     GFile *file,
+				     GFile *other_file,
+				     GFileMonitorEvent event_type,
+				     gpointer user_data)
 {
 	FuPlugin *plugin = FU_PLUGIN (user_data);
 	fu_plugin_security_changed (plugin);
@@ -47,17 +46,17 @@ gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
+	g_autofree gchar *path = NULL;
 	g_autofree gchar *fn = NULL;
-	g_autofree gchar *procfs = NULL;
 
-	procfs = fu_common_get_path (FU_PATH_KIND_PROCFS);
-	fn = g_build_filename (procfs, "swaps", NULL);
+	path = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_SECURITY);
+	fn = g_build_filename (path, "lockdown", NULL);
 	data->file = g_file_new_for_path (fn);
 	data->monitor = g_file_monitor (data->file, G_FILE_MONITOR_NONE, NULL, error);
 	if (data->monitor == NULL)
 		return FALSE;
 	g_signal_connect (data->monitor, "changed",
-			  G_CALLBACK (fu_plugin_linux_swap_changed_cb), plugin);
+			  G_CALLBACK (fu_plugin_linux_lockdown_changed_cb), plugin);
 	return TRUE;
 }
 
@@ -67,44 +66,29 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	gsize bufsz = 0;
 	g_autofree gchar *buf = NULL;
-	g_autoptr(FuLinuxSwap) swap = NULL;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* create attr */
-	attr = fwupd_security_attr_new ("org.kernel.Swap");
+	attr = fwupd_security_attr_new ("org.kernel.CheckLockdown");
+	fwupd_security_attr_set_name (attr, "Linux Kernel");
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
-	fwupd_security_attr_set_name (attr, "Linux Swap");
 	fu_security_attrs_append (attrs, attr);
 
-	/* load list of swaps */
+	/* load file */
 	if (!g_file_load_contents (data->file, NULL, &buf, &bufsz, NULL, &error_local)) {
 		g_autofree gchar *fn = g_file_get_path (data->file);
 		g_warning ("could not open %s: %s", fn, error_local->message);
 		fwupd_security_attr_set_result (attr, "Could not open file");
 		return;
 	}
-	swap = fu_linux_swap_new (buf, bufsz, &error_local);
-	if (swap == NULL) {
-		g_autofree gchar *fn = g_file_get_path (data->file);
-		g_warning ("could not parse %s: %s", fn, error_local->message);
-		fwupd_security_attr_set_result (attr, "Could not parse file");
-		return;
-	}
-
-	/* none configured */
-	if (!fu_linux_swap_get_enabled (swap)) {
-		fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-		return;
-	}
-
-	/* add security attribute */
-	if (!fu_linux_swap_get_encrypted (swap)) {
-		fwupd_security_attr_set_result (attr, "Not encrypted");
+	if (g_strstr_len (buf, bufsz, "[integrity]") == NULL &&
+	    g_strstr_len (buf, bufsz, "[confidentiality]") == NULL) {
+		fwupd_security_attr_set_result (attr, "Not locked down");
 		return;
 	}
 
 	/* success */
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-	fwupd_security_attr_set_result (attr, "Encrypted");
+	fwupd_security_attr_set_result (attr, "Locked down");
 }

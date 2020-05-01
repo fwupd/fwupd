@@ -12,6 +12,7 @@
 
 struct _FuTpmDevice {
 	FuUdevDevice		 parent_instance;
+	gchar			*family;
 };
 
 G_DEFINE_TYPE (FuTpmDevice, fu_tpm_device, FU_TYPE_UDEV_DEVICE)
@@ -21,6 +22,12 @@ static void Esys_Finalize_autoptr_cleanup (ESYS_CONTEXT *esys_context)
 	Esys_Finalize (&esys_context);
 }
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (ESYS_CONTEXT, Esys_Finalize_autoptr_cleanup)
+
+const gchar *
+fu_tpm_device_get_family (FuTpmDevice *self)
+{
+	return self->family;
+}
 
 static gboolean
 fu_tpm_device_probe (FuUdevDevice *device, GError **error)
@@ -134,6 +141,7 @@ fu_tpm_device_convert_manufacturer (const gchar *manufacturer)
 static gboolean
 fu_tpm_device_setup (FuDevice *device, GError **error)
 {
+	FuTpmDevice *self = FU_TPM_DEVICE (device);
 	FwupdVersionFormat verfmt;
 	TSS2_RC rc;
 	const gchar *tmp;
@@ -141,7 +149,6 @@ fu_tpm_device_setup (FuDevice *device, GError **error)
 	guint32 version1 = 0;
 	guint32 version2 = 0;
 	guint64 version_raw;
-	g_autofree gchar *family = NULL;
 	g_autofree gchar *id1 = NULL;
 	g_autofree gchar *id2 = NULL;
 	g_autofree gchar *id3 = NULL;
@@ -171,8 +178,8 @@ fu_tpm_device_setup (FuDevice *device, GError **error)
 	}
 
 	/* lookup guaranteed details from TPM */
-	family = fu_tpm_device_get_string (ctx, TPM2_PT_FAMILY_INDICATOR, error);
-	if (family == NULL) {
+	self->family = fu_tpm_device_get_string (ctx, TPM2_PT_FAMILY_INDICATOR, error);
+	if (self->family == NULL) {
 		g_prefix_error (error, "failed to read TPM family");
 		return FALSE;
 	}
@@ -202,9 +209,9 @@ fu_tpm_device_setup (FuDevice *device, GError **error)
 	fu_device_add_instance_id (device, id1);
 	id2 = g_strdup_printf ("TPM\\VEN_%s&MOD_%s", manufacturer, model);
 	fu_device_add_instance_id (device, id2);
-	id3 = g_strdup_printf ("TPM\\VEN_%s&DEV_%04X&VER_%s", manufacturer, tpm_type, family);
+	id3 = g_strdup_printf ("TPM\\VEN_%s&DEV_%04X&VER_%s", manufacturer, tpm_type, self->family);
 	fu_device_add_instance_id (device, id3);
-	id4 = g_strdup_printf ("TPM\\VEN_%s&MOD_%s&VER_%s", manufacturer, model, family);
+	id4 = g_strdup_printf ("TPM\\VEN_%s&MOD_%s&VER_%s", manufacturer, model, self->family);
 	fu_device_add_instance_id (device, id4);
 
 	/* enforce vendors can only ship updates for their own hardware */
@@ -245,6 +252,8 @@ fu_tpm_device_init (FuTpmDevice *self)
 static void
 fu_tpm_device_finalize (GObject *object)
 {
+	FuTpmDevice *self = FU_TPM_DEVICE (object);
+	g_free (self->family);
 	G_OBJECT_CLASS (fu_tpm_device_parent_class)->finalize (object);
 }
 
