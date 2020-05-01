@@ -499,6 +499,8 @@ fu_plugin_uefi_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GError **er
 	/* probe to get add GUIDs (and hence any quirk fixups) */
 	if (!fu_device_probe (FU_DEVICE (dev), error))
 		return FALSE;
+	if (!fu_device_setup (FU_DEVICE (dev), error))
+		return FALSE;
 
 	/* if not already set by quirks */
 	if (fu_device_get_custom_flags (FU_DEVICE (dev)) == NULL) {
