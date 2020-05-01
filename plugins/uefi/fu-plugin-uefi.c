@@ -91,6 +91,28 @@ fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 	return TRUE;
 }
 
+void
+fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
+{
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	/* create attr */
+	attr = fwupd_security_attr_new ("com.uefi.SecureBoot");
+	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
+	fwupd_security_attr_set_name (attr, "UEFI Secure Boot");
+	fu_security_attrs_append (attrs, attr);
+
+	/* SB disabled */
+	if (!fu_efivar_secure_boot_enabled ()) {
+		fwupd_security_attr_set_result (attr, "Disabled");
+		return;
+	}
+
+	/* success */
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_set_result (attr, "Enabled");
+}
+
 static GBytes *
 fu_plugin_uefi_get_splash_data (guint width, guint height, GError **error)
 {
