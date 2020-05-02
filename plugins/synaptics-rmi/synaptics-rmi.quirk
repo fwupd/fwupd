@@ -1,3 +1,10 @@
 [DeviceInstanceId=HIDRAW\VEN_06CB]
 Plugin = synaptics_rmi
 Vendor = Synaptics
+
+[DeviceInstanceId=HIDRAW\VEN_06CB&DEV_4875]
+Flags = ~only-supported
+[DeviceInstanceId=HIDRAW\VEN_06CB&DEV_76AF]
+Flags = ~only-supported
+[DeviceInstanceId=HIDRAW\VEN_06CB&DEV_CD8B]
+Flags = ~only-supported
