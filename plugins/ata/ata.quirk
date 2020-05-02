@@ -41,3 +41,8 @@ VendorId = ATA:0x8086
 [DeviceInstanceId=OUI\707c18]
 Vendor = ADATA
 VendorId = ATA:0x1CC1
+
+[DeviceInstanceId=OUI\001b44]
+Vendor = SanDisk
+VendorId = ATA:0x15B7
+
