@@ -871,6 +871,14 @@ dfu_device_refresh (DfuDevice *device, GError **error)
 	if (!dfu_device_ensure_interface (device, error))
 		return FALSE;
 
+	/* Device that cannot communicate via the USB after the
+	 * Manifestation phase indicated this limitation to the
+	 * host by clearing bmAttributes bit bitManifestationTolerant.
+	 * so we assume the operation was succesful */
+	if (priv->state == DFU_STATE_DFU_MANIFEST &&
+	    !(priv->attributes & DFU_DEVICE_ATTRIBUTE_MANIFEST_TOL))
+		return TRUE;
+
 	if (!g_usb_device_control_transfer (usb_device,
 					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,

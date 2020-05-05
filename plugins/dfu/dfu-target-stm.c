@@ -29,6 +29,8 @@ G_DEFINE_TYPE (DfuTargetStm, dfu_target_stm, DFU_TYPE_TARGET)
 static gboolean
 dfu_target_stm_attach (DfuTarget *target, GError **error)
 {
+	/* downloading empty payload will cause a dfu to leave,
+	 * the returned status will be dfuMANIFEST and expect the device to disconnect */
 	g_autoptr(GBytes) bytes_tmp = g_bytes_new (NULL, 0);
 	return dfu_target_download_chunk (target, 2, bytes_tmp, error);
 }

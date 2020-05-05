@@ -938,8 +938,11 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 	/* do host reset */
 	if (!fu_device_attach (FU_DEVICE (device), error))
 		return FALSE;
-	if (!dfu_device_wait_for_replug (priv, device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE, error))
-		return FALSE;
+
+	if (dfu_device_has_attribute (device, DFU_DEVICE_ATTRIBUTE_MANIFEST_TOL)) {
+		if (!dfu_device_wait_for_replug (priv, device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE, error))
+			return FALSE;
+	}
 
 	/* success */
 	g_print ("%u bytes successfully downloaded to device\n",
