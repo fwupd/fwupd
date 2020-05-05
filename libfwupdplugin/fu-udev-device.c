@@ -951,7 +951,7 @@ fu_udev_device_pwrite (FuUdevDevice *self, goffset port, guint8 data, GError **e
  *
  * Returns: string or NULL if unset or invalid
  *
- * Since: 1.4.2
+ * Since: 1.5.0
  **/
 gchar *
 fu_udev_device_get_parent_name (FuUdevDevice *self)
@@ -979,7 +979,7 @@ fu_udev_device_get_parent_name (FuUdevDevice *self)
  *
  * Returns: string or NULL
  *
- * Since: 1.4.2
+ * Since: 1.5.0
  **/
 const gchar *
 fu_udev_device_get_sysfs_attr (FuUdevDevice *self, const gchar *attr,

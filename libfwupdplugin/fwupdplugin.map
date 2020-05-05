@@ -581,7 +581,7 @@ LIBFWUPDPLUGIN_1.4.1 {
   local: *;
 } LIBFWUPDPLUGIN_1.4.0;
 
-LIBFWUPDPLUGIN_1.4.2 {
+LIBFWUPDPLUGIN_1.5.0 {
   global:
     fu_udev_device_get_parent_name;
     fu_udev_device_get_sysfs_attr;
