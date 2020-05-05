@@ -198,6 +198,15 @@ dfu_target_parse_sector (DfuTarget *target,
 		return FALSE;
 	}
 
+	/* handle weirdness */
+	if (fu_device_has_custom_flag (FU_DEVICE (dfu_target_get_device (target)),
+				       "absent-sector-size")) {
+		if (tmp[1] == '\0') {
+			tmp[1] = tmp[0];
+			tmp[0] = 'B';
+		}
+	}
+
 	/* get multiplier */
 	switch (tmp[0]) {
 	case 'B':		/* byte */

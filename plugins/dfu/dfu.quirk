@@ -325,6 +325,7 @@ DfuAltName = @Flash/0x0/1*32Kg
 
 # STM32F745 dfuse bootloader
 [DeviceInstanceId=USB\VID_0483&PID_DF11]
+Flags = absent-sector-size
 Plugin = dfu
 DfuForceVersion = 011a
 DfuForceTimeout = 5000
