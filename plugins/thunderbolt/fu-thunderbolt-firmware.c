@@ -12,26 +12,8 @@
 #include "fu-common.h"
 #include "fu-thunderbolt-firmware.h"
 
-typedef enum {
-	_SECTION_DIGITAL,
-	_SECTION_DROM,
-	_SECTION_ARC_PARAMS,
-	_SECTION_DRAM_UCODE,
-	_SECTION_LAST
-} FuThunderboltSection;
-
-typedef enum {
-	_FAMILY_UNKNOWN,
-	_FAMILY_FR,
-	_FAMILY_WR,
-	_FAMILY_AR,
-	_FAMILY_AR_C,
-	_FAMILY_TR,
-	_FAMILY_BB,
-} FuThunderboltFamily;
-
-struct _FuThunderboltFirmware {
-	FuFirmwareClass			 parent_instance;
+typedef struct
+{
 	guint32				 sections[_SECTION_LAST];
 	FuThunderboltFamily		 family;
 	gboolean			 is_host;
@@ -43,9 +25,11 @@ struct _FuThunderboltFirmware {
 	guint				 gen;
 	guint				 ports;
 	guint8				 flash_size;
-};
+} FuThunderboltFirmwarePrivate;
 
-G_DEFINE_TYPE (FuThunderboltFirmware, fu_thunderbolt_firmware, FU_TYPE_FIRMWARE)
+G_DEFINE_TYPE_WITH_PRIVATE (FuThunderboltFirmware, fu_thunderbolt_firmware, FU_TYPE_FIRMWARE)
+
+#define GET_PRIVATE(o) (fu_thunderbolt_firmware_get_instance_private (o))
 
 typedef struct {
 	guint16				 id;
@@ -61,50 +45,64 @@ enum {
 gboolean
 fu_thunderbolt_firmware_is_host (FuThunderboltFirmware *self)
 {
+	FuThunderboltFirmwarePrivate *priv;
 	g_return_val_if_fail (FU_IS_THUNDERBOLT_FIRMWARE (self), FALSE);
-	return self->is_host;
+	priv = GET_PRIVATE (self);
+	return priv->is_host;
 }
 
 gboolean
 fu_thunderbolt_firmware_is_native (FuThunderboltFirmware *self)
 {
+	FuThunderboltFirmwarePrivate *priv;
 	g_return_val_if_fail (FU_IS_THUNDERBOLT_FIRMWARE (self), FALSE);
-	return self->is_native;
+	priv = GET_PRIVATE (self);
+	return priv->is_native;
 }
 
 gboolean
 fu_thunderbolt_firmware_get_has_pd (FuThunderboltFirmware *self)
 {
+	FuThunderboltFirmwarePrivate *priv;
 	g_return_val_if_fail (FU_IS_THUNDERBOLT_FIRMWARE (self), FALSE);
-	return self->has_pd;
+	priv = GET_PRIVATE (self);
+	return priv->has_pd;
 }
 
 guint16
 fu_thunderbolt_firmware_get_device_id (FuThunderboltFirmware *self)
 {
-	g_return_val_if_fail (FU_IS_THUNDERBOLT_FIRMWARE (self), 0);
-	return self->device_id;
+	FuThunderboltFirmwarePrivate *priv;
+	g_return_val_if_fail (FU_IS_THUNDERBOLT_FIRMWARE (self), FALSE);
+	priv = GET_PRIVATE (self);
+	return priv->device_id;
 }
 
 guint16
 fu_thunderbolt_firmware_get_vendor_id (FuThunderboltFirmware *self)
 {
-	g_return_val_if_fail (FU_IS_THUNDERBOLT_FIRMWARE (self), 0);
-	return self->vendor_id;
+	FuThunderboltFirmwarePrivate *priv;
+	g_return_val_if_fail (FU_IS_THUNDERBOLT_FIRMWARE (self), FALSE);
+	priv = GET_PRIVATE (self);
+	return priv->vendor_id;
 }
 
 guint16
 fu_thunderbolt_firmware_get_model_id (FuThunderboltFirmware *self)
 {
-	g_return_val_if_fail (FU_IS_THUNDERBOLT_FIRMWARE (self), 0);
-	return self->model_id;
+	FuThunderboltFirmwarePrivate *priv;
+	g_return_val_if_fail (FU_IS_THUNDERBOLT_FIRMWARE (self), FALSE);
+	priv = GET_PRIVATE (self);
+	return priv->model_id;
 }
 
 guint8
 fu_thunderbolt_firmware_get_flash_size (FuThunderboltFirmware *self)
 {
-	g_return_val_if_fail (FU_IS_THUNDERBOLT_FIRMWARE (self), 0);
-	return self->flash_size;
+	FuThunderboltFirmwarePrivate *priv;
+	g_return_val_if_fail (FU_IS_THUNDERBOLT_FIRMWARE (self), FALSE);
+	priv = GET_PRIVATE (self);
+	return priv->flash_size;
 }
 
 static const gchar *
@@ -129,27 +127,23 @@ static void
 fu_thunderbolt_firmware_to_string (FuFirmware *firmware, guint idt, GString *str)
 {
 	FuThunderboltFirmware *self = FU_THUNDERBOLT_FIRMWARE (firmware);
+	FuThunderboltFirmwarePrivate *priv = GET_PRIVATE (self);
+
 	fu_common_string_append_kv (str, idt, "Family",
-				    fu_thunderbolt_firmware_family_to_string (self->family));
-	fu_common_string_append_kb (str, idt, "IsHost", self->is_host);
-	fu_common_string_append_kb (str, idt, "IsNative", self->is_native);
-	fu_common_string_append_kx (str, idt, "DeviceId", self->device_id);
-	fu_common_string_append_kx (str, idt, "VendorId", self->vendor_id);
-	fu_common_string_append_kx (str, idt, "ModelId", self->model_id);
-	fu_common_string_append_kx (str, idt, "FlashSize", self->flash_size);
-	fu_common_string_append_kx (str, idt, "Generation", self->gen);
-	fu_common_string_append_kx (str, idt, "Ports", self->ports);
-	fu_common_string_append_kb (str, idt, "HasPd", self->has_pd);
+				    fu_thunderbolt_firmware_family_to_string (priv->family));
+	fu_common_string_append_kb (str, idt, "IsHost", priv->is_host);
+	fu_common_string_append_kb (str, idt, "IsNative", priv->is_native);
+	fu_common_string_append_kx (str, idt, "DeviceId", priv->device_id);
+	fu_common_string_append_kx (str, idt, "VendorId", priv->vendor_id);
+	fu_common_string_append_kx (str, idt, "ModelId", priv->model_id);
+	fu_common_string_append_kx (str, idt, "FlashSize", priv->flash_size);
+	fu_common_string_append_kx (str, idt, "Generation", priv->gen);
+	fu_common_string_append_kx (str, idt, "Ports", priv->ports);
+	fu_common_string_append_kb (str, idt, "HasPd", priv->has_pd);
 	for (guint i = 0; i < _SECTION_LAST; i++) {
 		g_autofree gchar *title = g_strdup_printf ("Section%u", i);
-		fu_common_string_append_kx (str, idt, title, self->sections[i]);
+		fu_common_string_append_kx (str, idt, title, priv->sections[i]);
 	}
-}
-
-static inline gboolean
-fu_thunderbolt_firmware_valid_farb_pointer (guint32 pointer)
-{
-	return pointer != 0 && pointer != 0xFFFFFF;
 }
 
 static inline gboolean
@@ -158,7 +152,7 @@ fu_thunderbolt_firmware_valid_pd_pointer (guint32 pointer)
 	return pointer != 0 && pointer != 0xFFFFFFFF;
 }
 
-static gboolean
+gboolean
 fu_thunderbolt_firmware_read_location (FuThunderboltFirmware *self,
 				       FuThunderboltSection section,
 				       guint32 offset,
@@ -168,7 +162,8 @@ fu_thunderbolt_firmware_read_location (FuThunderboltFirmware *self,
 {
 	const guint8 *srcbuf;
 	gsize srcbufsz = 0;
-	guint32 location_start = self->sections[section] + offset;
+	FuThunderboltFirmwarePrivate *priv = GET_PRIVATE (self);
+	guint32 location_start = priv->sections[section] + offset;
 	g_autoptr(GBytes) fw = NULL;
 
 	/* get blob */
@@ -184,51 +179,6 @@ fu_thunderbolt_firmware_read_location (FuThunderboltFirmware *self,
 		return FALSE;
 	}
 	return TRUE;
-}
-
-static gboolean
-fu_thunderbolt_firmware_read_farb_pointer_impl (FuThunderboltFirmware *self,
-						FuThunderboltSection section,
-						guint32 offset,
-						guint32 *value,
-						GError **error)
-{
-	guint32 tmp = 0;
-	if (!fu_thunderbolt_firmware_read_location (self, section, offset,
-						    (guint8 *) &tmp, 3, /* 24 bits */
-						    error)) {
-		g_prefix_error (error, "failed to read farb pointer: ");
-		return FALSE;
-	}
-	*value = GUINT32_FROM_LE (tmp);
-	return TRUE;
-}
-
-/* returns invalid FARB pointer on error */
-static guint32
-fu_thunderbolt_firmware_read_farb_pointer (FuThunderboltFirmware *self, GError **error)
-{
-	guint32 value;
-	if (!fu_thunderbolt_firmware_read_farb_pointer_impl (self,
-							     _SECTION_DIGITAL,
-							     0x0, &value, error))
-		return 0;
-	if (fu_thunderbolt_firmware_valid_farb_pointer (value))
-		return value;
-
-	if (!fu_thunderbolt_firmware_read_farb_pointer_impl (self,
-							     _SECTION_DIGITAL,
-							     0x1000, &value, error))
-		return 0;
-	if (!fu_thunderbolt_firmware_valid_farb_pointer (value)) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "Invalid FW image file format");
-		return 0;
-	}
-
-	return value;
 }
 
 static gboolean
@@ -310,15 +260,16 @@ static gboolean
 fu_thunderbolt_firmware_read_sections (FuThunderboltFirmware *self, GError **error)
 {
 	guint32 offset;
+	FuThunderboltFirmwarePrivate *priv = GET_PRIVATE (self);
 
-	if (self->gen >= 3 || self->gen == 0) {
+	if (priv->gen >= 3 || priv->gen == 0) {
 		if (!fu_thunderbolt_firmware_read_uint32 (self,
 							  _SECTION_DIGITAL,
 							  0x10e,
 							  &offset,
 							  error))
 			return FALSE;
-		self->sections[_SECTION_DROM] = offset + self->sections[_SECTION_DIGITAL];
+		priv->sections[_SECTION_DROM] = offset + priv->sections[_SECTION_DIGITAL];
 
 		if (!fu_thunderbolt_firmware_read_uint32 (self,
 							  _SECTION_DIGITAL,
@@ -326,10 +277,10 @@ fu_thunderbolt_firmware_read_sections (FuThunderboltFirmware *self, GError **err
 							  &offset,
 							  error))
 			return FALSE;
-		self->sections[_SECTION_ARC_PARAMS] = offset + self->sections[_SECTION_DIGITAL];
+		priv->sections[_SECTION_ARC_PARAMS] = offset + priv->sections[_SECTION_DIGITAL];
 	}
 
-	if (self->is_host && self->gen > 2) {
+	if (priv->is_host && priv->gen > 2) {
 		/*
 		 * To find the DRAM section, we have to jump from section to
 		 * section in a chain of sections.
@@ -381,7 +332,7 @@ fu_thunderbolt_firmware_read_sections (FuThunderboltFirmware *self, GError **err
 				offset += ucode_offset;
 			}
 		}
-		self->sections[_SECTION_DRAM_UCODE] = offset + self->sections[_SECTION_DIGITAL];
+		priv->sections[_SECTION_DRAM_UCODE] = offset + priv->sections[_SECTION_DIGITAL];
 	}
 
 	return TRUE;
@@ -390,11 +341,19 @@ fu_thunderbolt_firmware_read_sections (FuThunderboltFirmware *self, GError **err
 static gboolean
 fu_thunderbolt_firmware_missing_needed_drom (FuThunderboltFirmware *self)
 {
-	if (self->sections[_SECTION_DROM] != 0)
+	FuThunderboltFirmwarePrivate *priv = GET_PRIVATE (self);
+	if (priv->sections[_SECTION_DROM] != 0)
 		return FALSE;
-	if (self->is_host && self->gen < 3)
+	if (priv->is_host && priv->gen < 3)
 		return FALSE;
 	return TRUE;
+}
+
+void
+fu_thunderbolt_firmware_set_digital (FuThunderboltFirmware *self, guint32 offset)
+{
+	FuThunderboltFirmwarePrivate *priv = GET_PRIVATE (self);
+	priv->sections[_SECTION_DIGITAL] = offset;
 }
 
 static gboolean
@@ -406,6 +365,9 @@ fu_thunderbolt_firmware_parse (FuFirmware *firmware,
 			       GError **error)
 {
 	FuThunderboltFirmware *self = FU_THUNDERBOLT_FIRMWARE (firmware);
+	FuThunderboltFirmwarePrivate *priv = GET_PRIVATE (self);
+	FuThunderboltFirmwareClass *klass_firmware = FU_THUNDERBOLT_FIRMWARE_GET_CLASS (firmware);
+
 	guint8 tmp = 0;
 	static const FuThunderboltHwInfo hw_info_arr[] = {
 		{ 0x156D, 2, _FAMILY_FR, 2 }, /* FR 4C */
@@ -428,6 +390,12 @@ fu_thunderbolt_firmware_parse (FuFirmware *firmware,
 	/* add this straight away so we can read it without a self */
 	fu_firmware_add_image (firmware, img);
 
+	/* subclassed */
+	if (klass_firmware->parse != NULL) {
+		if (!klass_firmware->parse (firmware, fw, addr_start, addr_end, flags, error))
+			return FALSE;
+	}
+
 	/* is native */
 	if (!fu_thunderbolt_firmware_read_uint8 (self,
 						 _SECTION_DIGITAL,
@@ -436,11 +404,7 @@ fu_thunderbolt_firmware_parse (FuFirmware *firmware,
 		g_prefix_error (error, "failed to read native: ");
 		return FALSE;
 	}
-	self->is_native = tmp & 0x20;
-
-	self->sections[_SECTION_DIGITAL] = fu_thunderbolt_firmware_read_farb_pointer (self, error);
-	if (self->sections[_SECTION_DIGITAL] == 0)
-		return FALSE;
+	priv->is_native = tmp & 0x20;
 
 	/* we're only reading the first chunk */
 	if (g_bytes_get_size (fw) == 0x80)
@@ -453,13 +417,13 @@ fu_thunderbolt_firmware_parse (FuFirmware *firmware,
 		g_prefix_error (error, "failed to read is-host: ");
 		return FALSE;
 	}
-	self->is_host = tmp & (1 << 1);
+	priv->is_host = tmp & (1 << 1);
 
 	/* device ID */
 	if (!fu_thunderbolt_firmware_read_uint16 (self,
 						  _SECTION_DIGITAL,
 						  0x5,
-						  &self->device_id,
+						  &priv->device_id,
 						  error)) {
 		g_prefix_error (error, "failed to read device-id: ");
 		return FALSE;
@@ -467,14 +431,14 @@ fu_thunderbolt_firmware_parse (FuFirmware *firmware,
 
 	/* this is best-effort */
 	for (guint i = 0; hw_info_arr[i].id != 0; i++) {
-		if (hw_info_arr[i].id == self->device_id) {
-			self->family = hw_info_arr[i].family;
-			self->gen = hw_info_arr[i].gen;
-			self->ports = hw_info_arr[i].ports;
+		if (hw_info_arr[i].id == priv->device_id) {
+			priv->family = hw_info_arr[i].family;
+			priv->gen = hw_info_arr[i].gen;
+			priv->ports = hw_info_arr[i].ports;
 			break;
 		}
 	}
-	if (self->ports == 0 && self->is_host) {
+	if (priv->ports == 0 && priv->is_host) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
@@ -494,11 +458,11 @@ fu_thunderbolt_firmware_parse (FuFirmware *firmware,
 	}
 
 	/* vendor:model */
-	if (self->sections[_SECTION_DROM] != 0) {
+	if (priv->sections[_SECTION_DROM] != 0) {
 		if (!fu_thunderbolt_firmware_read_uint16 (self,
 							  _SECTION_DROM,
 							  0x10,
-							  &self->vendor_id,
+							  &priv->vendor_id,
 							  error)) {
 			g_prefix_error (error, "failed to read vendor-id: ");
 			return FALSE;
@@ -506,7 +470,7 @@ fu_thunderbolt_firmware_parse (FuFirmware *firmware,
 		if (!fu_thunderbolt_firmware_read_uint16 (self,
 							  _SECTION_DROM,
 							  0x12,
-							  &self->model_id,
+							  &priv->model_id,
 							  error)) {
 			g_prefix_error (error, "failed to read model-id: ");
 			return FALSE;
@@ -514,7 +478,7 @@ fu_thunderbolt_firmware_parse (FuFirmware *firmware,
 	}
 
 	/* has PD */
-	if (self->sections[_SECTION_ARC_PARAMS] != 0) {
+	if (priv->sections[_SECTION_ARC_PARAMS] != 0) {
 		guint32 pd_pointer = 0x0;
 		if (!fu_thunderbolt_firmware_read_uint32 (self,
 							  _SECTION_ARC_PARAMS,
@@ -524,11 +488,11 @@ fu_thunderbolt_firmware_parse (FuFirmware *firmware,
 			g_prefix_error (error, "failed to read pd-pointer: ");
 			return FALSE;
 		}
-		self->has_pd = fu_thunderbolt_firmware_valid_pd_pointer (pd_pointer);
+		priv->has_pd = fu_thunderbolt_firmware_valid_pd_pointer (pd_pointer);
 	}
 
-	if (self->is_host) {
-		switch (self->family) {
+	if (priv->is_host) {
+		switch (priv->family) {
 		case _FAMILY_AR:
 		case _FAMILY_AR_C:
 		case _FAMILY_TR:
@@ -541,7 +505,7 @@ fu_thunderbolt_firmware_parse (FuFirmware *firmware,
 				g_prefix_error (error, "failed to read flash size: ");
 				return FALSE;
 			}
-			self->flash_size = tmp & 0x07;
+			priv->flash_size = tmp & 0x07;
 			break;
 		default:
 			break;

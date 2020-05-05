@@ -11,6 +11,7 @@ fu_plugin_thunderbolt = shared_module('fu_plugin_thunderbolt',
     'fu-plugin-thunderbolt.c',
     'fu-thunderbolt-device.c',
     'fu-thunderbolt-firmware.c',
+    'fu-thunderbolt-firmware-update.c',
   ],
   include_directories : [
     root_incdir,
@@ -43,6 +44,7 @@ if get_option('tests') and umockdev.found() and gio.version().version_compare('>
       'fu-plugin-thunderbolt.c',
       'fu-thunderbolt-device.c',
       'fu-thunderbolt-firmware.c',
+      'fu-thunderbolt-firmware-update.c',
     ],
     include_directories : [
       root_incdir,
