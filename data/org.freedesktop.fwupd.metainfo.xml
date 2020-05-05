@@ -30,6 +30,9 @@
   </content_rating>
   <provides>
     <binary>fwupdmgr</binary>
+    <binary>fwupdtool</binary>
+    <binary>fwupdtpmevlog</binary>
+    <binary>fwupdagent</binary>
   </provides>
   <releases>
     <release version="1.4.1" date="2020-04-27">
@@ -100,6 +103,32 @@
           <li>Parse the CSR firmware as a DFU file</li>
           <li>Set the protocol when updating logitech HID++ devices</li>
           <li>When TPM PCR0 measurements fail, query if secure boot is available and enabled</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.9" date="2020-03-04">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Added completion script for fish shell</li>
+          <li>Inihbit all power management actions using logind when updating</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Always check for PLAIN when doing vercmp() operations</li>
+          <li>Always return AppStream markup for remote agreements</li>
+          <li>Apply UEFI capsule update even with single valid capsule</li>
+          <li>Check the device protocol before de-duping devices</li>
+          <li>Copy the version and format from donor device in get-details</li>
+          <li>Correctly append the release to devices in `fwupdtool get-details`</li>
+          <li>Decrease minimum battery requirement to 10%</li>
+          <li>Discard the reason upgrades aren't available</li>
+          <li>Do not fail loading in /etc/machine-id is not available</li>
+          <li>Fix a critical warning when installing some firmware</li>
+          <li>For the `get-details` command make sure to always show devices</li>
+          <li>Set the MSP430 version format to pair</li>
+          <li>Switch off the ATA verbose logging by default</li>
+          <li>Use unknown for version format by default on get-details</li>
         </ul>
       </description>
     </release>
