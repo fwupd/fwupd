@@ -125,3 +125,4 @@ There are several automated fuzzing tests in fwupd. These take some time to run:
     ninja fuzz-synaptics-rmi
     ninja fuzz-firmware
     ninja fuzz-smbios
+    ninja fuzz-efidbx

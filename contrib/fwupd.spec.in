@@ -117,6 +117,10 @@ Requires: libsoup%{?_isa} >= %{libsoup_version}
 Requires: bubblewrap
 Requires: shared-mime-info
 
+%if 0%{?have_uefi}
+Requires: dbxtool
+%endif
+
 %if 0%{?rhel} > 7 || 0%{?fedora} > 28
 Recommends: python3
 %endif
@@ -163,6 +167,7 @@ Data files for installed tests.
     --werror \
 %endif
     -Dgtkdoc=true \
+    -Defi_dbxdir=%{_datadir}/dbxtool \
 %if 0%{?enable_tests}
     -Dtests=true \
 %else
@@ -380,6 +385,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_libdir}/fwupd-plugins-3/libfu_plugin_tpm.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_tpm_eventlog.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_uefi.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_uefi_dbx.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_uefi_recovery.so
 %endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_logind.so

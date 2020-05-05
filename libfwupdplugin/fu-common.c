@@ -1096,6 +1096,20 @@ fu_common_get_path (FuPathKind path_kind)
 #else
 		return NULL;
 #endif
+	/* /usr/share/fwupd/dbx */
+	case FU_PATH_KIND_EFIDBXDIR:
+		tmp = g_getenv ("FWUPD_EFIDBXDIR");
+		if (tmp != NULL)
+			return g_strdup (tmp);
+#ifdef FWUPD_EFI_DBXDIR
+		tmp = g_getenv ("SNAP");
+		if (tmp != NULL)
+			return g_build_filename (tmp, FWUPD_EFI_DBXDIR, NULL);
+		return g_strdup (FWUPD_EFI_DBXDIR);
+#else
+		basedir = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR_PKG);
+		return g_build_filename (basedir, "dbx", NULL);
+#endif
 	/* /etc/fwupd */
 	case FU_PATH_KIND_SYSCONFDIR_PKG:
 		tmp = g_getenv ("CONFIGURATION_DIRECTORY");

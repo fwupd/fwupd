@@ -57,6 +57,7 @@ typedef guint FuEndianType;
  * @FU_PATH_KIND_POLKIT_ACTIONS:	The directory for policy kit actions (IE /usr/share/polkit-1/actions/)
  * @FU_PATH_KIND_OFFLINE_TRIGGER:	The file for the offline trigger (IE /system-update)
  * @FU_PATH_KIND_SYSFSDIR_SECURITY:	The sysfs security location (IE /sys/kernel/security)
+ * @FU_PATH_KIND_EFIDBXDIR:		The location of the EFI dbx files
  *
  * Path types to use when dynamically determining a path at runtime
  **/
@@ -76,6 +77,7 @@ typedef enum {
 	FU_PATH_KIND_POLKIT_ACTIONS,
 	FU_PATH_KIND_OFFLINE_TRIGGER,
 	FU_PATH_KIND_SYSFSDIR_SECURITY,
+	FU_PATH_KIND_EFIDBXDIR,
 	/*< private >*/
 	FU_PATH_KIND_LAST
 } FuPathKind;
