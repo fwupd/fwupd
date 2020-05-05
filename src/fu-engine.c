@@ -136,6 +136,14 @@ fu_engine_emit_device_changed (FuEngine *self, FuDevice *device)
 	g_signal_emit (self, signals[SIGNAL_DEVICE_CHANGED], 0, device);
 }
 
+static gint
+fu_engine_gtypes_sort_cb (gconstpointer a, gconstpointer b)
+{
+	const gchar *stra = *((const gchar **) a);
+	const gchar *strb = *((const gchar **) b);
+	return g_strcmp0 (stra, strb);
+}
+
 GPtrArray *
 fu_engine_get_firmware_gtype_ids (FuEngine *self)
 {
@@ -145,6 +153,7 @@ fu_engine_get_firmware_gtype_ids (FuEngine *self)
 		const gchar *id = l->data;
 		g_ptr_array_add (firmware_gtypes, g_strdup (id));
 	}
+	g_ptr_array_sort (firmware_gtypes, fu_engine_gtypes_sort_cb);
 	return firmware_gtypes;
 }
 
