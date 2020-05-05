@@ -43,6 +43,7 @@
  * * `use-protocol-zero`:	Fix up the protocol number
  * * `legacy-protocol`:		Use a legacy protocol version
  * * `detach-for-attach`:	Requires a DFU_REQUEST_DETACH to attach
+ * * `absent-sector-size`:	In absense of sector size, assume byte
  *
  * Default value: `none`
  *
