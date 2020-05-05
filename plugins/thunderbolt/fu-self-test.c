@@ -25,6 +25,7 @@
 
 #include "fu-plugin-private.h"
 #include "fu-thunderbolt-firmware.h"
+#include "fu-thunderbolt-firmware-update.h"
 
 static gchar *
 udev_mock_add_domain (UMockdevTestbed *bed, int id)
@@ -343,7 +344,7 @@ write_controller_fw (const gchar *nvm)
 	g_autoptr(GError) error = NULL;
 	gssize n;
 
-	fw_path = g_build_filename (TESTDATADIR, "thunderbolt/minimal-fw.bin", NULL);
+	fw_path = g_build_filename (TESTDATADIR, "thunderbolt/minimal-fw-controller.bin", NULL);
 	fw_file = g_file_new_for_path (fw_path);
 	g_assert_nonnull (fw_file);
 
@@ -1024,7 +1025,7 @@ test_tree (ThunderboltTest *tt, gconstpointer user_data)
 }
 
 static gboolean
-_compare_images (FuThunderboltFirmware *firmware, FuThunderboltFirmware *firmware_old, GError **error)
+_compare_images (FuThunderboltFirmware *firmware_old, FuThunderboltFirmware *firmware, GError **error)
 {
 	if (fu_thunderbolt_firmware_is_host (firmware) !=
 	    fu_thunderbolt_firmware_is_host (firmware_old)) {
@@ -1066,12 +1067,12 @@ _compare_images (FuThunderboltFirmware *firmware, FuThunderboltFirmware *firmwar
 				fu_thunderbolt_firmware_get_model_id (firmware_old));
 		return FALSE;
 	}
-	if (fu_thunderbolt_firmware_get_has_pd (firmware) !=
-		fu_thunderbolt_firmware_get_has_pd (firmware_old)) {
+	if (fu_thunderbolt_firmware_get_has_pd (firmware_old) &&
+	    !fu_thunderbolt_firmware_get_has_pd (firmware)) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
-				     "incorrect PD section");
+				     "new firmware is missing PD");
 		return FALSE;
 	}
 	if (fu_thunderbolt_firmware_get_flash_size (firmware) !=
@@ -1099,7 +1100,7 @@ test_image_validation (ThunderboltTest *tt, gconstpointer user_data)
 	g_autoptr(GBytes)      ctl_data = NULL;
 	g_autoptr(GBytes)      bad_data = NULL;
 	g_autoptr(GError)      error = NULL;
-	g_autoptr(FuThunderboltFirmware) firmware_fwi = fu_thunderbolt_firmware_new ();
+	g_autoptr(FuThunderboltFirmwareUpdate) firmware_fwi = fu_thunderbolt_firmware_update_new ();
 	g_autoptr(FuThunderboltFirmware) firmware_ctl = fu_thunderbolt_firmware_new ();
 	g_autoptr(FuThunderboltFirmware) firmware_bad = fu_thunderbolt_firmware_new ();
 
@@ -1113,12 +1114,10 @@ test_image_validation (ThunderboltTest *tt, gconstpointer user_data)
 	ctl_data = g_mapped_file_get_bytes (ctl_file);
 	g_assert_nonnull (ctl_data);
 
-	/* parse; should fail due to can't read host controller offset */
+	/* parse controller image */
 	ret = fu_firmware_parse (FU_FIRMWARE (firmware_ctl), ctl_data, FWUPD_INSTALL_FLAG_NONE, &error);
-	g_assert_false (ret);
-	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_READ);
-	g_debug ("expected image validation error [ctl]: %s", error->message);
-	g_clear_error (&error);
+	g_assert_true (ret);
+	g_assert_no_error (error);
 
 	/* valid firmware update image */
 	fwi_path = g_build_filename (TESTDATADIR, "thunderbolt/minimal-fw.bin", NULL);
@@ -1151,9 +1150,9 @@ test_image_validation (ThunderboltTest *tt, gconstpointer user_data)
 	g_clear_error (&error);
 
 	/* now for some testing ... this should work */
-	ret = _compare_images (firmware_fwi, firmware_fwi, &error);
-	g_assert_true (ret);
+	ret = _compare_images (firmware_ctl, FU_THUNDERBOLT_FIRMWARE (firmware_fwi), &error);
 	g_assert_no_error (error);
+	g_assert_true (ret);
 }
 
 static void

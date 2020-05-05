@@ -19,6 +19,7 @@
 #include "fu-device-metadata.h"
 #include "fu-thunderbolt-device.h"
 #include "fu-thunderbolt-firmware.h"
+#include "fu-thunderbolt-firmware-update.h"
 
 struct _FuThunderboltDevice {
 	FuUdevDevice		 parent_instance;
@@ -473,7 +474,7 @@ fu_thunderbolt_device_prepare_firmware (FuDevice *device,
 					GError **error)
 {
 	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE (device);
-	g_autoptr(FuThunderboltFirmware) firmware = fu_thunderbolt_firmware_new ();
+	g_autoptr(FuThunderboltFirmwareUpdate) firmware = fu_thunderbolt_firmware_update_new ();
 	g_autoptr(FuThunderboltFirmware) firmware_old = fu_thunderbolt_firmware_new ();
 	g_autoptr(GBytes) controller_fw = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -490,56 +491,57 @@ fu_thunderbolt_device_prepare_firmware (FuDevice *device,
 	controller_fw = g_file_load_bytes (nvmem, NULL, NULL, error);
 	if (!fu_firmware_parse (FU_FIRMWARE (firmware_old), controller_fw, flags, error))
 		return NULL;
-	if (fu_thunderbolt_firmware_is_host (firmware) !=
+	if (fu_thunderbolt_firmware_is_host (FU_THUNDERBOLT_FIRMWARE (firmware)) !=
 	    fu_thunderbolt_firmware_is_host (firmware_old)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
 			     "incorrect firmware mode, got %s, expected %s",
-			     fu_thunderbolt_firmware_is_host (firmware) ? "host" : "device",
+			     fu_thunderbolt_firmware_is_host (FU_THUNDERBOLT_FIRMWARE (firmware)) ? "host" : "device",
 			     fu_thunderbolt_firmware_is_host (firmware_old) ? "host" : "device");
 		return NULL;
 	}
-	if (fu_thunderbolt_firmware_get_vendor_id (firmware) !=
+	if (fu_thunderbolt_firmware_get_vendor_id (FU_THUNDERBOLT_FIRMWARE (firmware)) !=
 	    fu_thunderbolt_firmware_get_vendor_id (firmware_old)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
 			     "incorrect device vendor, got 0x%04x, expected 0x%04x",
-			     fu_thunderbolt_firmware_get_vendor_id (firmware),
+			     fu_thunderbolt_firmware_get_vendor_id (FU_THUNDERBOLT_FIRMWARE (firmware)),
 			     fu_thunderbolt_firmware_get_vendor_id (firmware_old));
 		return NULL;
 	}
-	if (fu_thunderbolt_firmware_get_device_id (firmware) !=
+	if (fu_thunderbolt_firmware_get_device_id (FU_THUNDERBOLT_FIRMWARE (firmware)) !=
 	    fu_thunderbolt_firmware_get_device_id (firmware_old)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
 			     "incorrect device type, got 0x%04x, expected 0x%04x",
-			     fu_thunderbolt_firmware_get_device_id (firmware),
+			     fu_thunderbolt_firmware_get_device_id (FU_THUNDERBOLT_FIRMWARE (firmware)),
 			     fu_thunderbolt_firmware_get_device_id (firmware_old));
 		return NULL;
 	}
 	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
-		if (fu_thunderbolt_firmware_get_model_id (firmware) !=
+		if (fu_thunderbolt_firmware_get_model_id (FU_THUNDERBOLT_FIRMWARE (firmware)) !=
 		    fu_thunderbolt_firmware_get_model_id (firmware_old)) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
 				     "incorrect device model, got 0x%04x, expected 0x%04x",
-				     fu_thunderbolt_firmware_get_model_id (firmware),
+				     fu_thunderbolt_firmware_get_model_id (FU_THUNDERBOLT_FIRMWARE (firmware)),
 				     fu_thunderbolt_firmware_get_model_id (firmware_old));
 			return NULL;
 		}
-		if (fu_thunderbolt_firmware_get_has_pd (firmware) !=
-		    fu_thunderbolt_firmware_get_has_pd (firmware_old)) {
+		/* old firmware has PD but new doesn't (we don't care about other way around) */
+		if (fu_thunderbolt_firmware_get_has_pd (firmware_old) &&
+		    !fu_thunderbolt_firmware_get_has_pd (FU_THUNDERBOLT_FIRMWARE (firmware))) {
 			g_set_error_literal (error,
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_INVALID_FILE,
 					     "incorrect PD section");
 			return NULL;
 		}
-		if (fu_thunderbolt_firmware_get_flash_size (firmware) !=
+		if (fu_thunderbolt_firmware_get_flash_size (FU_THUNDERBOLT_FIRMWARE (firmware)) !=
 		    fu_thunderbolt_firmware_get_flash_size (firmware_old)) {
 			g_set_error_literal (error,
 					     FWUPD_ERROR,
