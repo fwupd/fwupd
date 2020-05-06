@@ -1026,6 +1026,12 @@ fu_common_get_path (FuPathKind path_kind)
 		if (tmp != NULL)
 			return g_build_filename (tmp, FWUPD_LOCALSTATEDIR, NULL);
 		return g_build_filename (FWUPD_LOCALSTATEDIR, NULL);
+	/* /proc */
+	case FU_PATH_KIND_PROCFS:
+		tmp = g_getenv ("FWUPD_PROCFS");
+		if (tmp != NULL)
+			return g_strdup (tmp);
+		return g_strdup ("/proc");
 	/* /sys/firmware */
 	case FU_PATH_KIND_SYSFSDIR_FW:
 		tmp = g_getenv ("FWUPD_SYSFSFWDIR");
