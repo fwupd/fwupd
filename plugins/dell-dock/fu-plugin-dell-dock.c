@@ -185,46 +185,44 @@ fu_plugin_composite_cleanup (FuPlugin *plugin,
 			     GError **error)
 {
 	FuDevice *parent = fu_plugin_dell_dock_get_ec (devices);
-	gboolean remaining_replug = FALSE;
-
-	if (parent == NULL)
-		return TRUE;
-
-	for (guint i = 0; i < devices->len; i++) {
-		FuDevice *dev = g_ptr_array_index (devices, i);
-		/* if thunderbolt is part of transaction our family is leaving us */
-		if (g_strcmp0 (fu_device_get_plugin (dev), "thunderbolt") == 0) {
-			if (fu_device_get_parent (dev) != parent)
-				continue;
-			fu_dell_dock_will_replug (parent);
-			/* set all other devices to replug */
-			remaining_replug = TRUE;
-			continue;
-		}
-		/* different device */
-		if (fu_device_get_parent (dev) != parent)
-			continue;
-		if (remaining_replug)
-			fu_dell_dock_will_replug (dev);
-	}
-
-	return TRUE;
-}
-
-gboolean
-fu_plugin_composite_cleanup (FuPlugin *plugin,
-			     GPtrArray *devices,
-			     GError **error)
-{
-	FuDevice *parent = fu_plugin_dell_dock_get_ec (devices);
+	FuDevice *dev = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
+	gboolean needs_activation = FALSE;
 
 	if (parent == NULL)
 		return TRUE;
+
+	/* if thunderbolt is in the transaction it needs to be activated separately */
+	for (guint i = 0; i < devices->len; i++) {
+		dev = g_ptr_array_index (devices, i);
+		if (g_strcmp0 (fu_device_get_plugin (dev), "thunderbolt") == 0 &&
+		    fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
+			/* the kernel and/or thunderbolt plugin have been configured to let HW finish the update */
+			if (fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
+				fu_dell_dock_ec_tbt_passive (parent);
+			/* run the update immediately - no kernel support */
+			} else {
+				needs_activation = TRUE;
+				break;
+			}
+		}
+	}
 
 	locker = fu_device_locker_new (parent, error);
 	if (locker == NULL)
 		return FALSE;
 
-	return fu_dell_dock_ec_reboot_dock (parent, error);
+	if (!fu_dell_dock_ec_reboot_dock (parent, error))
+		return FALSE;
+
+	/* close this first so we don't have an error from the thunderbolt activation */
+	if (!fu_device_locker_close (locker, error))
+		return FALSE;
+
+	if (needs_activation && dev != NULL) {
+		if (!fu_device_activate (dev, error))
+			return FALSE;
+	}
+
+	return TRUE;
 }
