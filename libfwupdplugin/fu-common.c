@@ -1678,6 +1678,49 @@ fu_common_fnmatch (const gchar *pattern, const gchar *str)
 #endif
 }
 
+static gint
+fu_common_filename_glob_sort_cb (gconstpointer a, gconstpointer b)
+{
+	return g_strcmp0 (*(const gchar **)a, *(const gchar **)b);
+}
+
+/**
+ * fu_common_filename_glob:
+ * @directory: a directory path
+ * @pattern: a glob pattern, e.g. `*foo*`
+ * @error: A #GError or %NULL
+ *
+ * Returns all the filenames that match a specific glob pattern.
+ * Any results are sorted. No matching files will set @error.
+ *
+ * Return value:  (element-type utf8) (transfer container): matching files, or %NULL
+ *
+ * Since: 1.5.0
+ **/
+GPtrArray *
+fu_common_filename_glob (const gchar *directory, const gchar *pattern, GError **error)
+{
+	const gchar *basename;
+	g_autoptr(GDir) dir = g_dir_open (directory, 0, error);
+	g_autoptr(GPtrArray) files = g_ptr_array_new_with_free_func (g_free);
+	if (dir == NULL)
+		return NULL;
+	while ((basename = g_dir_read_name (dir)) != NULL) {
+		if (!fu_common_fnmatch (pattern, basename))
+			continue;
+		g_ptr_array_add (files, g_build_filename (directory, basename, NULL));
+	}
+	if (files->len == 0) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_NOT_FOUND,
+				     "no files matched pattern");
+		return NULL;
+	}
+	g_ptr_array_sort (files, fu_common_filename_glob_sort_cb);
+	return g_steal_pointer (&files);
+}
+
 /**
  * fu_common_strnsplit:
  * @str: a string to split
