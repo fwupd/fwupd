@@ -12,3 +12,5 @@
 G_DECLARE_FINAL_TYPE (FuCpuDevice, fu_cpu_device, FU, CPU_DEVICE, FuDevice)
 
 FuCpuDevice		*fu_cpu_device_new		(const gchar	*section);
+gboolean		 fu_cpu_device_has_shstk	(FuCpuDevice	*self);
+gboolean		 fu_cpu_device_has_ibt		(FuCpuDevice	*self);
