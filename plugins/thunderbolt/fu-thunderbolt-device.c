@@ -28,6 +28,7 @@ struct _FuThunderboltDevice {
 	gboolean		 is_native;
 	guint16			 gen;
 	gchar			*devpath;
+	const gchar		*auth_method;
 };
 
 #define TBT_NVM_RETRY_TIMEOUT				200	/* ms */
@@ -178,6 +179,7 @@ fu_thunderbolt_device_to_string (FuDevice *device, guint idt, GString *str)
 	fu_common_string_append_kb (str, idt, "Safe Mode", self->safe_mode);
 	fu_common_string_append_kb (str, idt, "Native mode", self->is_native);
 	fu_common_string_append_ku (str, idt, "Generation", self->gen);
+	fu_common_string_append_kv (str, idt, "AuthAttribute", self->auth_method);
 }
 
 static gboolean
@@ -321,52 +323,39 @@ fu_thunderbolt_device_setup (FuDevice *device, GError **error)
 			fu_device_add_instance_id (device, domain_id);
 	}
 
+	/* determine if we can update on unplug */
+	if (fu_udev_device_get_sysfs_attr (FU_UDEV_DEVICE (device),
+					     "nvm_authenticate_on_disconnect",
+					     NULL) != NULL) {
+		self->auth_method = "nvm_authenticate_on_disconnect";
+		/* flushes image */
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
+		/* forces the device to write to authenticate on disconnect attribute */
+		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_SKIPS_RESTART);
+	} else {
+		self->auth_method = "nvm_authenticate";
+	}
+
 	/* success */
 	return TRUE;
 }
 
 static gboolean
-fu_thunderbolt_device_trigger_update (FuDevice *device, GError **error)
+fu_thunderbolt_device_authenticate (FuDevice *device, GError **error)
 {
 	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE (device);
-	ssize_t n;
-	int fd;
-	int r;
-	g_autofree gchar *auth_path = NULL;
+	FuUdevDevice *udev = FU_UDEV_DEVICE (device);
 
-	auth_path = g_build_filename (self->devpath, "nvm_authenticate", NULL);
+	return fu_udev_device_write_sysfs (udev, self->auth_method, "1", error);
+}
 
-	fd = open (auth_path, O_WRONLY | O_CLOEXEC);
-	if (fd < 0) {
-		g_set_error (error, G_IO_ERROR,
-			     g_io_error_from_errno (errno),
-			     "could not open 'nvm_authenticate': %s",
-			     g_strerror (errno));
-		return FALSE;
-	}
+static gboolean
+fu_thunderbolt_device_flush_update (FuDevice *device, GError **error)
+{
+	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE (device);
+	FuUdevDevice *udev = FU_UDEV_DEVICE (device);
 
-	do {
-		n = write (fd, "1", 1);
-		if (n < 1 && errno != EINTR) {
-			g_set_error (error, G_IO_ERROR,
-				     g_io_error_from_errno (errno),
-				     "could not write to 'nvm_authenticate': %s",
-				     g_strerror (errno));
-			(void) close (fd);
-			return FALSE;
-		}
-	} while (n < 1);
-
-	r = close (fd);
-	if (r < 0 && errno != EINTR) {
-		g_set_error (error, G_IO_ERROR,
-			     g_io_error_from_errno (errno),
-			     "could not close 'nvm_authenticate': %s",
-			     g_strerror (errno));
-		return FALSE;
-	}
-
-	return TRUE;
+	return fu_udev_device_write_sysfs (udev, self->auth_method, "2", error);
 }
 
 static gboolean
@@ -577,20 +566,32 @@ fu_thunderbolt_device_write_firmware (FuDevice *device,
 		return FALSE;
 	}
 
+	/* flush the image if supported by kernel and/or device */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
+		if (!fu_thunderbolt_device_flush_update (device, error))
+			return FALSE;
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+	}
+
+	/* using an active delayed activation flow later (either shutdown or another plugin) */
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_SKIPS_RESTART)) {
 		g_debug ("Skipping Thunderbolt reset per quirk request");
 		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 		return TRUE;
 	}
 
-	if (!fu_thunderbolt_device_trigger_update (FU_DEVICE (self), error)) {
+	/* authenticate (possibly on unplug if device supports it) */
+	if (!fu_thunderbolt_device_authenticate (FU_DEVICE (self), error)) {
 		g_prefix_error (error, "could not start thunderbolt device upgrade: ");
 		return FALSE;
 	}
 
-	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	fu_device_set_remove_delay (device, FU_PLUGIN_THUNDERBOLT_UPDATE_TIMEOUT);
-	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	/* whether to wait for a device replug or not */
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
+		fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+		fu_device_set_remove_delay (device, FU_PLUGIN_THUNDERBOLT_UPDATE_TIMEOUT);
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	}
 
 	return TRUE;
 }
@@ -619,7 +620,7 @@ fu_thunderbolt_device_class_init (FuThunderboltDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuUdevDeviceClass *klass_udev_device = FU_UDEV_DEVICE_CLASS (klass);
 	object_class->finalize = fu_thunderbolt_device_finalize;
-	klass_device->activate = fu_thunderbolt_device_trigger_update;
+	klass_device->activate = fu_thunderbolt_device_authenticate;
 	klass_device->to_string = fu_thunderbolt_device_to_string;
 	klass_device->setup = fu_thunderbolt_device_setup;
 	klass_device->prepare_firmware = fu_thunderbolt_device_prepare_firmware;
