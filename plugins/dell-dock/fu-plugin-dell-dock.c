@@ -165,38 +165,6 @@ fu_plugin_dell_dock_get_ec (GPtrArray *devices)
 }
 
 gboolean
-fu_plugin_composite_prepare (FuPlugin *plugin,
-			     GPtrArray *devices,
-			     GError **error)
-{
-	FuDevice *parent = fu_plugin_dell_dock_get_ec (devices);
-	gboolean remaining_replug = FALSE;
-
-	if (parent == NULL)
-		return TRUE;
-
-	for (guint i = 0; i < devices->len; i++) {
-		FuDevice *dev = g_ptr_array_index (devices, i);
-		/* if thunderbolt is part of transaction our family is leaving us */
-		if (g_strcmp0 (fu_device_get_plugin (dev), "thunderbolt") == 0) {
-			if (fu_device_get_parent (dev) != parent)
-				continue;
-			fu_dell_dock_will_replug (parent);
-			/* set all other devices to replug */
-			remaining_replug = TRUE;
-			continue;
-		}
-		/* different device */
-		if (fu_device_get_parent (dev) != parent)
-			continue;
-		if (remaining_replug)
-			fu_dell_dock_will_replug (dev);
-	}
-
-	return TRUE;
-}
-
-gboolean
 fu_plugin_composite_cleanup (FuPlugin *plugin,
 			     GPtrArray *devices,
 			     GError **error)
@@ -211,5 +179,23 @@ fu_plugin_composite_cleanup (FuPlugin *plugin,
 	if (locker == NULL)
 		return FALSE;
 
-	return fu_dell_dock_ec_reboot_dock (parent, error);
+	if (!fu_dell_dock_ec_reboot_dock (parent, error))
+		return FALSE;
+
+	/* close this first so we don't have an error from the thunderbolt activation */
+	if (!fu_device_locker_close (locker, error))
+		return FALSE;
+
+	/* if thunderbolt is in the transaction it needs to be activated separately */
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *dev = g_ptr_array_index (devices, i);
+		if (g_strcmp0 (fu_device_get_plugin (dev), "thunderbolt") == 0 &&
+		    fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
+			if (!fu_device_activate (dev, error))
+				return FALSE;
+			break;
+		}
+	}
+
+	return TRUE;
 }
