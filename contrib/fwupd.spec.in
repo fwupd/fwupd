@@ -347,6 +347,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_fresco_pd.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_jabra.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_linux_swap.so
 %if 0%{?have_modem_manager}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_modem_manager.so
 %endif
@@ -366,7 +367,6 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %if 0%{?have_dell}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_synaptics_mst.so
 %endif
-%{_libdir}/fwupd-plugins-3/libfu_plugin_swap.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_synaptics_cxaudio.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_synaptics_prometheus.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_synaptics_rmi.so

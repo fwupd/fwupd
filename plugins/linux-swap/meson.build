@@ -1,10 +1,10 @@
-cargs = ['-DG_LOG_DOMAIN="FuPluginSwap"']
+cargs = ['-DG_LOG_DOMAIN="FuPluginLinuxSwap"']
 
-shared_module('fu_plugin_swap',
+shared_module('fu_plugin_linux_swap',
   fu_hash,
   sources : [
-    'fu-plugin-swap.c',
-    'fu-swap.c',
+    'fu-plugin-linux-swap.c',
+    'fu-linux-swap.c',
   ],
   include_directories : [
     root_incdir,
@@ -25,11 +25,11 @@ shared_module('fu_plugin_swap',
 
 if get_option('tests')
   e = executable(
-    'swap-self-test',
+    'linux-swap-self-test',
     fu_hash,
     sources : [
       'fu-self-test.c',
-      'fu-swap.c',
+      'fu-linux-swap.c',
     ],
     include_directories : [
       root_incdir,
@@ -44,5 +44,5 @@ if get_option('tests')
       fwupdplugin,
     ],
   )
-  test('swap-self-test', e)
+  test('linux-swap-self-test', e)
 endif
