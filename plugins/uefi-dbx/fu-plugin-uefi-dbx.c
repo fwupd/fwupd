@@ -48,9 +48,11 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	if (data->fn == NULL) {
 		g_autofree gchar *dbxdir = NULL;
 		dbxdir = fu_common_get_path (FU_PATH_KIND_EFIDBXDIR);
-		g_prefix_error (error,
-				"file can be downloaded from %s and decompressed into %s: ",
-				FU_UEFI_DBX_DATA_URL, dbxdir);
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "file can be downloaded from %s and decompressed into %s: ",
+			     FU_UEFI_DBX_DATA_URL, dbxdir);
 		return FALSE;
 	}
 
