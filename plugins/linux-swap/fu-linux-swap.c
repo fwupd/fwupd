@@ -9,20 +9,20 @@
 #include <string.h>
 
 #include "fu-common.h"
-#include "fu-swap.h"
+#include "fu-linux-swap.h"
 
-struct _FuSwap {
+struct _FuLinuxSwap {
 	GObject		 parent_instance;
 	gboolean	 encrypted;
 	gboolean	 enabled;
 };
 
-G_DEFINE_TYPE (FuSwap, fu_swap, G_TYPE_OBJECT)
+G_DEFINE_TYPE (FuLinuxSwap, fu_linux_swap, G_TYPE_OBJECT)
 
-FuSwap *
-fu_swap_new (const gchar *buf, gsize bufsz, GError **error)
+FuLinuxSwap *
+fu_linux_swap_new (const gchar *buf, gsize bufsz, GError **error)
 {
-	FuSwap *self = g_object_new (FU_TYPE_SWAP, NULL);
+	FuLinuxSwap *self = g_object_new (FU_TYPE_LINUX_SWAP, NULL);
 	g_auto(GStrv) lines = NULL;
 
 	if (bufsz == 0)
@@ -42,25 +42,25 @@ fu_swap_new (const gchar *buf, gsize bufsz, GError **error)
 }
 
 gboolean
-fu_swap_get_encrypted (FuSwap *self)
+fu_linux_swap_get_encrypted (FuLinuxSwap *self)
 {
-	g_return_val_if_fail (FU_IS_SWAP (self), FALSE);
+	g_return_val_if_fail (FU_IS_LINUX_SWAP (self), FALSE);
 	return self->encrypted;
 }
 
 gboolean
-fu_swap_get_enabled (FuSwap *self)
+fu_linux_swap_get_enabled (FuLinuxSwap *self)
 {
-	g_return_val_if_fail (FU_IS_SWAP (self), FALSE);
+	g_return_val_if_fail (FU_IS_LINUX_SWAP (self), FALSE);
 	return self->enabled;
 }
 
 static void
-fu_swap_class_init (FuSwapClass *klass)
+fu_linux_swap_class_init (FuLinuxSwapClass *klass)
 {
 }
 
 static void
-fu_swap_init (FuSwap *self)
+fu_linux_swap_init (FuLinuxSwap *self)
 {
 }

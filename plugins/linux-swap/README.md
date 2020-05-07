@@ -1,5 +1,5 @@
-Swap Support
-============
+Linux Swap Support
+==================
 
 Introduction
 ------------
