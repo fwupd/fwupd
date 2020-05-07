@@ -63,6 +63,7 @@ warning_flags = [
   '-Wcast-align',
   '-Wclobbered',
   '-Wdeclaration-after-statement',
+  '-Wdiscarded-qualifiers',
   '-Wduplicated-branches',
   '-Wduplicated-cond',
   '-Wempty-body',
@@ -87,7 +88,6 @@ warning_flags = [
   '-Wno-address-of-packed-member',  # incompatible with g_autoptr()
   '-Wno-unknown-pragmas',
   '-Wno-deprecated-declarations',
-  '-Wno-discarded-qualifiers',
   '-Wno-missing-field-initializers',
   '-Wno-strict-aliasing',
   '-Wno-suggest-attribute=format',

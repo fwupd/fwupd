@@ -22,7 +22,7 @@ G_DEFINE_TYPE (FuEp963xDevice, fu_ep963x_device, FU_TYPE_HID_DEVICE)
 static gboolean
 fu_ep963x_device_write (FuEp963xDevice *self,
 			guint8 ctrl_id, guint8 cmd,
-			guint8 *buf, gsize bufsz,
+			const guint8 *buf, gsize bufsz,
 			GError **error)
 {
 	guint8 bufhw[FU_EP963_FEATURE_ID1_SIZE] = {
@@ -47,8 +47,9 @@ fu_ep963x_device_write (FuEp963xDevice *self,
 }
 
 static gboolean
-fu_ep963x_device_write_icp (FuEp963xDevice *self,
-			    guint8 cmd, guint8 *buf, gsize bufsz,
+fu_ep963x_device_write_icp (FuEp963xDevice *self, guint8 cmd,
+			    const guint8 *buf, gsize bufsz,
+			    guint8 *bufout, gsize bufoutsz,
 			    GError **error)
 {
 	/* wait for hardware */
@@ -69,10 +70,10 @@ fu_ep963x_device_write_icp (FuEp963xDevice *self,
 		}
 		if (bufhw[2] == FU_EP963_USB_STATE_READY) {
 			/* optional data */
-			if (buf != NULL) {
-				if (!fu_memcpy_safe (buf, bufsz, 0x0,
+			if (bufout != NULL) {
+				if (!fu_memcpy_safe (bufout, bufoutsz, 0x0,
 						     bufhw, sizeof(bufhw), 0x02,
-						     bufsz, error))
+						     bufoutsz, error))
 					return FALSE;
 			}
 			return TRUE;
@@ -102,7 +103,8 @@ fu_ep963x_device_detach (FuDevice *device, GError **error)
 	}
 
 	if (!fu_ep963x_device_write_icp (self, FU_EP963_ICP_ENTER,
-					 buf, sizeof(buf),
+					 buf, sizeof(buf),	/* in */
+					 NULL, 0x0,		/* out */
 					 &error_local)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -154,7 +156,8 @@ fu_ep963x_device_setup (FuDevice *device, GError **error)
 
 	/* get version */
 	if (!fu_ep963x_device_write_icp (self, FU_EP963_UF_CMD_VERSION,
-					 buf, sizeof(buf),
+					 NULL, 0,		/* in */
+					 buf, sizeof(buf),	/* out */
 					 error)) {
 		return FALSE;
 	}
