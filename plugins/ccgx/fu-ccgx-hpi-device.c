@@ -442,14 +442,14 @@ fu_ccgx_hpi_device_reg_write_cb (FuDevice *device, gpointer user_data, GError **
 static gboolean
 fu_ccgx_hpi_device_reg_write (FuCcgxHpiDevice *self,
 			      guint16 addr,
-			      guint8 *buf,
+			      const guint8 *buf,
 			      gsize bufsz,
 			      GError **error)
 {
 	FuCcgxHpiDeviceRetryHelper helper = {
 		.addr = addr,
 		.mode = CY_I2C_MODE_WRITE,
-		.buf = buf,
+		.buf = (guint8 *) buf,
 		.bufsz = bufsz,
 	};
 	return fu_device_retry (FU_DEVICE (self),
@@ -812,7 +812,7 @@ fu_ccgx_hpi_leave_flash_mode (FuCcgxHpiDevice *self, GError **error)
 static gboolean
 fu_ccgx_hpi_write_flash (FuCcgxHpiDevice *self,
 			 guint16 addr,
-			 guint8 *buf,
+			 const guint8 *buf,
 			 guint16 bufsz,
 			 GError **error)
 {
