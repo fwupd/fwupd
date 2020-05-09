@@ -1691,6 +1691,7 @@ fu_plugin_usb_device_added (FuPlugin *self, FuUsbDevice *device, GError **error)
 	if (locker == NULL)
 		return FALSE;
 	fu_plugin_device_add (self, dev);
+	fu_plugin_runner_device_added (self, dev);
 	return TRUE;
 }
 
@@ -1742,6 +1743,7 @@ fu_plugin_udev_device_added (FuPlugin *self, FuUdevDevice *device, GError **erro
 	if (locker == NULL)
 		return FALSE;
 	fu_plugin_device_add (self, FU_DEVICE (dev));
+	fu_plugin_runner_device_added (self, dev);
 	return TRUE;
 }
 
@@ -1908,6 +1910,35 @@ fu_plugin_runner_udev_device_changed (FuPlugin *self, FuUdevDevice *device, GErr
 		return FALSE;
 	}
 	return TRUE;
+}
+
+/**
+ * fu_plugin_runner_device_added:
+ * @self: a #FuPlugin
+ * @device: a #FuDevice
+ *
+ * Call the device_added routine for the plugin
+ *
+ * Since: 1.5.0
+ **/
+void
+fu_plugin_runner_device_added (FuPlugin *self, FuDevice *device)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	FuPluginDeviceRegisterFunc func = NULL;
+
+	/* not enabled */
+	if (!priv->enabled)
+		return;
+	if (priv->module == NULL)
+		return;
+
+	/* optional */
+	g_module_symbol (priv->module, "fu_plugin_device_added", (gpointer *) &func);
+	if (func == NULL)
+		return;
+	g_debug ("performing fu_plugin_device_added() on %s", priv->name);
+	func (self, device);
 }
 
 /**
