@@ -19,6 +19,8 @@
 #include <shlwapi.h>
 #endif
 
+#include <cpuid.h>
+
 #include <archive_entry.h>
 #include <archive.h>
 #include <errno.h>
@@ -2025,4 +2027,32 @@ fu_common_kernel_locked_down (void)
 #else
 	return FALSE;
 #endif
+}
+
+/**
+ * fu_common_is_cpu_intel:
+ *
+ * Uses CPUID to discover the CPU vendor and check if it is Intel.
+ *
+ * Return value: %TRUE if the vendor was Intel.
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fu_common_is_cpu_intel (void)
+{
+	guint eax = 0;
+	guint ebx = 0;
+	guint ecx = 0;
+	guint edx = 0;
+	guint level = 0;
+
+	/* get vendor */
+	__get_cpuid(level, &eax, &ebx, &ecx, &edx);
+	if (ebx == signature_INTEL_ebx &&
+	    edx == signature_INTEL_edx &&
+	    ecx == signature_INTEL_ecx) {
+		return TRUE;
+	}
+	return FALSE;
 }
