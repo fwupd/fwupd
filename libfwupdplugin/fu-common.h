@@ -224,3 +224,4 @@ gchar		**fu_common_strnsplit		(const gchar	*str,
 						 const gchar	*delimiter,
 						 gint		 max_tokens);
 gboolean	 fu_common_kernel_locked_down	(void);
+gboolean	 fu_common_is_cpu_intel		(void);
