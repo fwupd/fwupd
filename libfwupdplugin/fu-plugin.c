@@ -1580,6 +1580,26 @@ fu_plugin_runner_update_reload (FuPlugin *self, FuDevice *device, GError **error
 }
 
 /**
+ * fu_plugin_runner_add_security_attrs:
+ * @self: a #FuPlugin
+ * @attrs: (element-type FwupdSecurityAttr): a #GPtrArray of attributes
+ * @error: a #GError or NULL
+ *
+ * Runs the composite_prepare routine for the plugin
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fu_plugin_runner_add_security_attrs (FuPlugin *self, GPtrArray *attrs, GError **error)
+{
+	return fu_plugin_runner_device_array_generic (self, attrs,
+						      "fu_plugin_add_security_attrs",
+						      error);
+}
+
+/**
  * fu_plugin_add_udev_subsystem:
  * @self: a #FuPlugin
  * @subsystem: a subsystem name, e.g. `pciport`

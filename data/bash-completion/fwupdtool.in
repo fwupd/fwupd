@@ -20,6 +20,7 @@ _fwupdtool_cmd_list=(
 	'install-blob'
 	'monitor'
 	'reinstall'
+	'security'
 	'self-sign'
 	'smbios-dump'
 	'attach'

@@ -26,6 +26,7 @@
 #include "fu-history.h"
 #include "fu-plugin-private.h"
 #include "fu-progressbar.h"
+#include "fu-security-attrs.h"
 #include "fu-util-common.h"
 #include "fwupd-common-private.h"
 
@@ -2364,6 +2365,37 @@ fu_util_modify_config (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_util_security (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GPtrArray) attrs = NULL;
+	g_autofree gchar *str = NULL;
+
+	/* not ready yet */
+	if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "The HSI specification is not yet complete. "
+				     "To ignore this warning, use --force");
+		return FALSE;
+	}
+
+	/* TRANSLATORS: this is a string like 'HSI:2-U' */
+	g_print ("%s \033[1m%s\033[0m\n", _("Host Security ID:"),
+		 fwupd_client_get_host_security_id (priv->client));
+
+	/* print the "why" */
+	attrs = fwupd_client_get_host_security_attrs (priv->client,
+						      priv->cancellable,
+						      error);
+	if (attrs == NULL)
+		return FALSE;
+	str = fu_util_security_attrs_to_string (attrs);
+	g_print ("%s\n", str);
+	return TRUE;
+}
+
 static void
 fu_util_ignore_cb (const gchar *log_domain, GLogLevelFlags log_level,
 		   const gchar *message, gpointer user_data)
@@ -2678,7 +2710,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Reinstall current firmware on the device."),
 		     fu_util_reinstall);
-
+	fu_util_cmd_array_add (cmd_array,
+		     "security",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Gets the host security attributes."),
+		     fu_util_security);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();

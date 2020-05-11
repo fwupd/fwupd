@@ -16,6 +16,7 @@
 #include "fu-common.h"
 #include "fu-util-common.h"
 #include "fu-device.h"
+#include "fu-security-attrs.h"
 
 #ifdef HAVE_SYSTEMD
 #include "fu-systemd.h"
@@ -1545,5 +1546,73 @@ fu_util_remote_to_string (FwupdRemote *remote, guint idt)
 					    fwupd_remote_get_automatic_reports (remote) ? "true" : "false");
 	}
 
+	return g_string_free (str, FALSE);
+}
+
+static void
+fu_security_attr_append_str (FwupdSecurityAttr *attr, GString *str)
+{
+	if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
+		g_string_append_printf (str, "\033[32m✔\033[0m  ");
+	} else {
+		g_string_append_printf (str, "\033[31m✘\033[0m  ");
+	}
+	g_string_append_printf (str, "%s", fwupd_security_attr_get_name (attr));
+	if (fwupd_security_attr_get_result (attr) != NULL) {
+		g_string_append_printf (str, ": %s",
+					fwupd_security_attr_get_result (attr));
+	} else {
+		g_string_append_printf (str, ": %s",
+					fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)
+					? "OK" : "Failed");
+	}
+	if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED))
+		g_string_append (str, " (obsoleted)");
+	g_string_append_printf (str, "\n");
+}
+
+gchar *
+fu_util_security_attrs_to_string (GPtrArray *attrs)
+{
+	FwupdSecurityAttrFlags flags = FWUPD_SECURITY_ATTR_FLAG_NONE;
+	const FwupdSecurityAttrFlags hpi_suffixes[] = {
+		FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES,
+		FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ATTESTATION,
+		FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE,
+		FWUPD_SECURITY_ATTR_FLAG_NONE,
+	};
+	GString *str = g_string_new (NULL);
+
+	for (guint j = 1; j <= FWUPD_SECURITY_ATTR_LEVEL_LAST; j++) {
+		gboolean has_header = FALSE;
+		for (guint i = 0; i < attrs->len; i++) {
+			FwupdSecurityAttr *attr = g_ptr_array_index (attrs, i);
+			if (fwupd_security_attr_get_level (attr) != j)
+				continue;
+			if (!has_header) {
+				g_string_append_printf (str, "\n\033[1mHSI-%u\033[0m\n", j);
+				has_header = TRUE;
+			}
+			fu_security_attr_append_str (attr, str);
+		}
+	}
+	for (guint i = 0; i < attrs->len; i++) {
+		FwupdSecurityAttr *attr = g_ptr_array_index (attrs, i);
+		flags |= fwupd_security_attr_get_flags (attr);
+	}
+	for (guint j = 0; hpi_suffixes[j] != FWUPD_SECURITY_ATTR_FLAG_NONE; j++) {
+		if (flags & hpi_suffixes[j]) {
+			g_string_append_printf (str, "\n\033[1m%s -%s\033[0m\n",
+						/* TRANSLATORS:  this is the HSI suffix */
+						_("Runtime Suffix"),
+						fwupd_security_attr_flag_to_suffix (hpi_suffixes[j]));
+			for (guint i = 0; i < attrs->len; i++) {
+				FwupdSecurityAttr *attr = g_ptr_array_index (attrs, i);
+				if (!fwupd_security_attr_has_flag (attr, hpi_suffixes[j]))
+					continue;
+				fu_security_attr_append_str (attr, str);
+			}
+		}
+	}
 	return g_string_free (str, FALSE);
 }

@@ -49,6 +49,7 @@
 #include "fu-plugin-private.h"
 #include "fu-quirks.h"
 #include "fu-remote-list.h"
+#include "fu-security-attrs.h"
 #include "fu-smbios-private.h"
 #include "fu-udev-device-private.h"
 #include "fu-usb-device-private.h"
@@ -99,6 +100,8 @@ struct _FuEngine
 	gchar			*host_machine_id;
 	JcatContext		*jcat_context;
 	gboolean		 loaded;
+	gchar			*host_security_id;
+	gboolean		 host_security_id_valid;
 };
 
 enum {
@@ -133,6 +136,7 @@ fu_engine_emit_changed (FuEngine *self)
 static void
 fu_engine_emit_device_changed (FuEngine *self, FuDevice *device)
 {
+	self->host_security_id_valid = FALSE;
 	g_signal_emit (self, signals[SIGNAL_DEVICE_CHANGED], 0, device);
 }
 
@@ -5026,6 +5030,56 @@ fu_engine_get_host_machine_id (FuEngine *self)
 	return self->host_machine_id;
 }
 
+GPtrArray *
+fu_engine_get_host_security_attrs (FuEngine *self, GError **error)
+{
+	GPtrArray *plugins = fu_plugin_list_get_all (self->plugin_list);
+	g_autoptr(GPtrArray) attrs = NULL;
+
+	attrs = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	for (guint j = 0; j < plugins->len; j++) {
+		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_plugin_runner_add_security_attrs (plugin_tmp,
+							  attrs,
+							  &error_local)) {
+			FwupdSecurityAttr *attr;
+			g_autofree gchar *appstream_id = NULL;
+			g_autofree gchar *msg = NULL;
+			appstream_id = g_strdup_printf ("org.fwupd.plugin.%s",
+							fu_plugin_get_name (plugin_tmp));
+			msg = g_strdup_printf ("Failed to add HSI attribute: %s",
+					       error_local->message);
+			attr = fwupd_security_attr_new (appstream_id);
+			fwupd_security_attr_set_name (attr, "fwupd");
+			fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
+			fwupd_security_attr_set_result (attr, msg);
+			g_ptr_array_add (attrs, attr);
+			continue;
+		}
+	}
+
+	/* set the obsoletes flag for each attr */
+	fu_security_attrs_depsolve (attrs);
+	return g_steal_pointer (&attrs);
+}
+
+const gchar *
+fu_engine_get_host_security_id (FuEngine *self)
+{
+	g_return_val_if_fail (FU_IS_ENGINE (self), NULL);
+
+	/* rebuild */
+	if (!self->host_security_id_valid) {
+		g_autoptr(GPtrArray) attrs = fu_engine_get_host_security_attrs (self, NULL);
+		g_free (self->host_security_id);
+		self->host_security_id = fu_security_attrs_calculate_hsi (attrs);
+		self->host_security_id_valid = TRUE;
+	}
+
+	return self->host_security_id;
+}
+
 gboolean
 fu_engine_load_plugins (FuEngine *self, GError **error)
 {
@@ -5745,6 +5799,7 @@ fu_engine_finalize (GObject *obj)
 		g_source_remove (self->coldplug_id);
 
 	g_free (self->host_machine_id);
+	g_free (self->host_security_id);
 	g_object_unref (self->idle);
 	g_object_unref (self->config);
 	g_object_unref (self->remote_list);

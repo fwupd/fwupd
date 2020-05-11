@@ -45,6 +45,17 @@
     </property>
 
     <!--***********************************************************-->
+    <property name='HostSecurityId' type='s' access='read'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            The Host Security ID, for instance <doc:tt>HSI:2UA</doc:tt>
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </property>
+
+    <!--***********************************************************-->
     <property name='Tainted' type='b' access='read'>
       <doc:doc>
         <doc:description>
@@ -237,6 +248,24 @@
         <doc:doc>
           <doc:summary>
             <doc:para>An array of devices, with any properties set on each.</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
+    <method name='GetHostSecurityAttrs'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Gets a list of all the Host Security ID attributes.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='aa{sv}' name='attrs' direction='out'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>An array of HSI attributes, with any properties set on each.</doc:para>
           </doc:summary>
         </doc:doc>
       </arg>

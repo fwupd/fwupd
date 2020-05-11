@@ -95,6 +95,9 @@ FwupdDevice	*fwupd_client_get_results		(FwupdClient	*client,
 							 const gchar	*device_id,
 							 GCancellable	*cancellable,
 							 GError		**error);
+GPtrArray	*fwupd_client_get_host_security_attrs	(FwupdClient	*client,
+							 GCancellable	*cancellable,
+							 GError		**error);
 FwupdDevice	*fwupd_client_get_device_by_id		(FwupdClient	*client,
 							 const gchar	*device_id,
 							 GCancellable	*cancellable,
@@ -134,6 +137,7 @@ guint		 fwupd_client_get_percentage		(FwupdClient	*client);
 const gchar	*fwupd_client_get_daemon_version	(FwupdClient	*client);
 const gchar	*fwupd_client_get_host_product		(FwupdClient	*client);
 const gchar	*fwupd_client_get_host_machine_id	(FwupdClient	*client);
+const gchar	*fwupd_client_get_host_security_id	(FwupdClient	*client);
 
 GPtrArray	*fwupd_client_get_remotes		(FwupdClient	*client,
 							 GCancellable	*cancellable,
