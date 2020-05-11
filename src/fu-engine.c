@@ -5051,6 +5051,74 @@ fu_engine_add_security_attrs_tainted (FuEngine *self, GPtrArray *attrs)
 	g_ptr_array_add (attrs, attr);
 }
 
+static void
+fu_engine_add_security_attrs_supported (FuEngine *self, GPtrArray *attrs)
+{
+	FwupdRelease *rel_current = NULL;
+	FwupdRelease *rel_newest = NULL;
+	FwupdSecurityAttr *attr_a;
+	FwupdSecurityAttr *attr_u;
+	guint64 now = (guint64) g_get_real_time () / G_USEC_PER_SEC;
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(GPtrArray) releases = NULL;
+
+	/* find out if there is firmware less than 12 months old */
+	attr_u = fwupd_security_attr_new ("org.fwupd.Hsi.Updates");
+	fwupd_security_attr_add_flag (attr_u, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES);
+	fwupd_security_attr_set_name (attr_u, "Firmware Updates");
+	g_ptr_array_add (attrs, attr_u);
+
+	/* get device */
+	device = fu_device_list_get_by_guid (self->device_list,
+					     /* main-system-firmware */
+					     "230c8b18-8d9b-53ec-838b-6cfc0383493a",
+					     NULL);
+	if (device == NULL) {
+		fwupd_security_attr_set_result (attr_u, "No system device");
+	} else {
+		releases = fu_engine_get_releases_for_device (self, device, NULL);
+		if (releases == NULL) {
+			fwupd_security_attr_set_result (attr_u, "No releases");
+		} else {
+			/* check the age */
+			g_autofree gchar *str = NULL;
+			for (guint i = 0; i < releases->len; i++) {
+				FwupdRelease *rel_tmp = g_ptr_array_index (releases, i);
+				if (rel_newest == NULL ||
+				    fwupd_release_get_created (rel_tmp) > fwupd_release_get_created (rel_newest))
+					rel_newest = rel_tmp;
+			}
+			str = g_strdup_printf ("Newest release is %" G_GUINT64_FORMAT " months old",
+					       (now - fwupd_release_get_created (rel_newest)) / (60 * 60 * 24 * 30));
+			fwupd_security_attr_set_result (attr_u, str);
+			if (now - fwupd_release_get_created (rel_newest) < 60 * 60 * 24 * 30 * 12)
+				fwupd_security_attr_add_flag (attr_u, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+		}
+	}
+
+	/* do we have attestation checksums */
+	attr_a = fwupd_security_attr_new ("org.fwupd.Hsi.Attestation");
+	fwupd_security_attr_set_name (attr_a, "Firmware Attestation");
+	fwupd_security_attr_add_flag (attr_a, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ATTESTATION);
+	g_ptr_array_add (attrs, attr_a);
+	if (releases != NULL) {
+		for (guint i = 0; i < releases->len; i++) {
+			FwupdRelease *rel_tmp = g_ptr_array_index (releases, i);
+			if (fu_common_vercmp_full (fu_device_get_version (device),
+						   fwupd_release_get_version (rel_tmp),
+						   fu_device_get_version_format (device)) == 0) {
+				rel_current = rel_tmp;
+				break;
+			}
+		}
+	}
+	if (rel_current == NULL) {
+		fwupd_security_attr_set_result (attr_a, "No PCR0s");
+	} else if (fwupd_release_get_checksums(rel_current)->len > 0) {
+		fwupd_security_attr_add_flag (attr_a, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	}
+}
+
 GPtrArray *
 fu_engine_get_host_security_attrs (FuEngine *self, GError **error)
 {
@@ -5060,6 +5128,7 @@ fu_engine_get_host_security_attrs (FuEngine *self, GError **error)
 	/* built in */
 	attrs = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	fu_engine_add_security_attrs_tainted (self, attrs);
+	fu_engine_add_security_attrs_supported (self, attrs);
 
 	/* call into plugins */
 	for (guint j = 0; j < plugins->len; j++) {
