@@ -4672,6 +4672,13 @@ fu_engine_plugin_rules_changed_cb (FuPlugin *plugin, gpointer user_data)
 }
 
 static void
+fu_engine_plugin_security_changed_cb (FuPlugin *plugin, gpointer user_data)
+{
+	FuEngine *self = FU_ENGINE (user_data);
+	fu_engine_emit_changed (self);
+}
+
+static void
 fu_engine_plugin_device_removed_cb (FuPlugin *plugin,
 				    FuDevice *device,
 				    gpointer user_data)
@@ -5168,6 +5175,9 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 				  self);
 		g_signal_connect (plugin, "rules-changed",
 				  G_CALLBACK (fu_engine_plugin_rules_changed_cb),
+				  self);
+		g_signal_connect (plugin, "security-changed",
+				  G_CALLBACK (fu_engine_plugin_security_changed_cb),
 				  self);
 
 		/* add */

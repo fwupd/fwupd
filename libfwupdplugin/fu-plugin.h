@@ -49,8 +49,9 @@ struct _FuPluginClass
 	gboolean	 (* add_firmware_gtype)		(FuPlugin	*self,
 							 const gchar	*id,
 							 GType		 gtype);
+	void		 (* security_changed)		(FuPlugin	*self);
 	/*< private >*/
-	gpointer	padding[21];
+	gpointer	padding[20];
 };
 
 /**
@@ -108,6 +109,7 @@ void		 fu_plugin_device_remove		(FuPlugin	*self,
 void		 fu_plugin_device_register		(FuPlugin	*self,
 							 FuDevice	*device);
 void		 fu_plugin_request_recoldplug		(FuPlugin	*self);
+void		 fu_plugin_security_changed		(FuPlugin	*self);
 void		 fu_plugin_set_coldplug_delay		(FuPlugin	*self,
 							 guint		 duration);
 void		 fu_plugin_set_device_gtype		(FuPlugin	*self,
