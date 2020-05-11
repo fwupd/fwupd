@@ -446,3 +446,32 @@ LIBFWUPD_1.4.1 {
     fwupd_device_id_is_valid;
   local: *;
 } LIBFWUPD_1.4.0;
+
+LIBFWUPD_1.5.0 {
+  global:
+    fwupd_security_attr_add_flag;
+    fwupd_security_attr_add_obsolete;
+    fwupd_security_attr_array_from_variant;
+    fwupd_security_attr_flag_to_string;
+    fwupd_security_attr_flag_to_suffix;
+    fwupd_security_attr_from_variant;
+    fwupd_security_attr_get_appstream_id;
+    fwupd_security_attr_get_flags;
+    fwupd_security_attr_get_level;
+    fwupd_security_attr_get_name;
+    fwupd_security_attr_get_obsoletes;
+    fwupd_security_attr_get_result;
+    fwupd_security_attr_get_type;
+    fwupd_security_attr_has_flag;
+    fwupd_security_attr_has_obsolete;
+    fwupd_security_attr_new;
+    fwupd_security_attr_set_appstream_id;
+    fwupd_security_attr_set_flags;
+    fwupd_security_attr_set_level;
+    fwupd_security_attr_set_name;
+    fwupd_security_attr_set_result;
+    fwupd_security_attr_to_json;
+    fwupd_security_attr_to_string;
+    fwupd_security_attr_to_variant;
+  local: *;
+} LIBFWUPD_1.4.1;
