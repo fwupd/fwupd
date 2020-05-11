@@ -65,6 +65,7 @@ enum {
 	SIGNAL_SET_COLDPLUG_DELAY,
 	SIGNAL_CHECK_SUPPORTED,
 	SIGNAL_ADD_FIRMWARE_GTYPE,
+	SIGNAL_SECURITY_CHANGED,
 	SIGNAL_LAST
 };
 
@@ -553,6 +554,21 @@ fu_plugin_request_recoldplug (FuPlugin *self)
 {
 	g_return_if_fail (FU_IS_PLUGIN (self));
 	g_signal_emit (self, signals[SIGNAL_RECOLDPLUG], 0);
+}
+
+/**
+ * fu_plugin_security_changed:
+ * @self: A #FuPlugin
+ *
+ * Informs the daemon that the HSI state may have changed.
+ *
+ * Since: 1.5.0
+ **/
+void
+fu_plugin_security_changed (FuPlugin *self)
+{
+	g_return_if_fail (FU_IS_PLUGIN (self));
+	g_signal_emit (self, signals[SIGNAL_SECURITY_CHANGED], 0);
 }
 
 /**
@@ -2677,6 +2693,12 @@ fu_plugin_class_init (FuPluginClass *klass)
 		g_signal_new ("recoldplug",
 			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
 			      G_STRUCT_OFFSET (FuPluginClass, recoldplug),
+			      NULL, NULL, g_cclosure_marshal_VOID__VOID,
+			      G_TYPE_NONE, 0);
+	signals[SIGNAL_SECURITY_CHANGED] =
+		g_signal_new ("security-changed",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (FuPluginClass, security_changed),
 			      NULL, NULL, g_cclosure_marshal_VOID__VOID,
 			      G_TYPE_NONE, 0);
 	signals[SIGNAL_SET_COLDPLUG_DELAY] =

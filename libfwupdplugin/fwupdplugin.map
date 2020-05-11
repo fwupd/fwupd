@@ -587,6 +587,7 @@ LIBFWUPDPLUGIN_1.5.0 {
     fu_common_is_cpu_intel;
     fu_plugin_runner_add_security_attrs;
     fu_plugin_runner_device_added;
+    fu_plugin_security_changed;
     fu_udev_device_get_parent_name;
     fu_udev_device_get_sysfs_attr;
   local: *;
