@@ -27,6 +27,7 @@ struct FuUtilPrivate {
 	GMainLoop		*loop;
 	GOptionContext		*context;
 	FwupdClient		*client;
+	FwupdInstallFlags	 flags;
 };
 
 static gboolean
@@ -235,6 +236,7 @@ int
 main (int argc, char *argv[])
 {
 	gboolean ret;
+	gboolean force = FALSE;
 	gboolean verbose = FALSE;
 	g_autoptr(FuUtilPrivate) priv = g_new0 (FuUtilPrivate, 1);
 	g_autoptr(GError) error = NULL;
@@ -244,6 +246,9 @@ main (int argc, char *argv[])
 		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
 			/* TRANSLATORS: command line option */
 			_("Show extra debugging information"), NULL },
+		{ "force", '\0', 0, G_OPTION_ARG_NONE, &force,
+			/* TRANSLATORS: command line option */
+			_("Override warnings and force the action"), NULL },
 		{ NULL}
 	};
 
@@ -259,6 +264,10 @@ main (int argc, char *argv[])
 	/* create helper object */
 	priv->loop = g_main_loop_new (NULL, FALSE);
 	priv->client = fwupd_client_new ();
+
+	/* set flags */
+	if (force)
+		priv->flags |= FWUPD_INSTALL_FLAG_FORCE;
 
 	/* add commands */
 	fu_util_cmd_array_add (cmd_array,
