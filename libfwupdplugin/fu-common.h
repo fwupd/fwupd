@@ -58,6 +58,7 @@ typedef guint FuEndianType;
  * @FU_PATH_KIND_OFFLINE_TRIGGER:	The file for the offline trigger (IE /system-update)
  * @FU_PATH_KIND_SYSFSDIR_SECURITY:	The sysfs security location (IE /sys/kernel/security)
  * @FU_PATH_KIND_EFIDBXDIR:		The location of the EFI dbx files
+ * @FU_PATH_KIND_ACPI_TABLES:		The location of the ACPI tables
  *
  * Path types to use when dynamically determining a path at runtime
  **/
@@ -78,6 +79,7 @@ typedef enum {
 	FU_PATH_KIND_OFFLINE_TRIGGER,
 	FU_PATH_KIND_SYSFSDIR_SECURITY,
 	FU_PATH_KIND_EFIDBXDIR,
+	FU_PATH_KIND_ACPI_TABLES,
 	/*< private >*/
 	FU_PATH_KIND_LAST
 } FuPathKind;
