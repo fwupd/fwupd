@@ -1058,6 +1058,12 @@ fu_common_get_path (FuPathKind path_kind)
 		if (tmp != NULL)
 			return g_strdup (tmp);
 		return g_strdup ("/sys/kernel/security");
+	/* /sys/firmware/acpi/tables */
+	case FU_PATH_KIND_ACPI_TABLES:
+		tmp = g_getenv ("FWUPD_ACPITABLESDIR");
+		if (tmp != NULL)
+			return g_strdup (tmp);
+		return g_strdup ("/sys/firmware/acpi/tables");
 	/* /etc */
 	case FU_PATH_KIND_SYSCONFDIR:
 		tmp = g_getenv ("FWUPD_SYSCONFDIR");
