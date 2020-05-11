@@ -5037,13 +5037,31 @@ fu_engine_get_host_machine_id (FuEngine *self)
 	return self->host_machine_id;
 }
 
+static void
+fu_engine_add_security_attrs_tainted (FuEngine *self, GPtrArray *attrs)
+{
+	FwupdSecurityAttr *attr = fwupd_security_attr_new ("org.fwupd.Hsi.Plugins");
+	fwupd_security_attr_set_name (attr, "fwupd plugins");
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
+	if (self->tainted) {
+		fwupd_security_attr_set_result (attr, "Tainted");
+	} else {
+		fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	}
+	g_ptr_array_add (attrs, attr);
+}
+
 GPtrArray *
 fu_engine_get_host_security_attrs (FuEngine *self, GError **error)
 {
 	GPtrArray *plugins = fu_plugin_list_get_all (self->plugin_list);
 	g_autoptr(GPtrArray) attrs = NULL;
 
+	/* built in */
 	attrs = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	fu_engine_add_security_attrs_tainted (self, attrs);
+
+	/* call into plugins */
 	for (guint j = 0; j < plugins->len; j++) {
 		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
 		g_autoptr(GError) error_local = NULL;
