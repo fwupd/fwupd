@@ -22,6 +22,7 @@ _fwupdmgr_cmd_list=(
 	'reinstall'
 	'refresh'
 	'report-history'
+	'security'
 	'set-approved-firmware'
 	'unlock'
 	'update'

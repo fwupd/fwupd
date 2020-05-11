@@ -21,6 +21,7 @@
 #include "fu-util-common.h"
 #include "fwupd-device-private.h"
 #include "fwupd-enums-private.h"
+#include "fwupd-security-attr-private.h"
 
 struct FuUtilPrivate {
 	GCancellable		*cancellable;
@@ -114,6 +115,37 @@ fu_util_add_updates_json (FuUtilPrivate *priv, JsonBuilder *builder, GError **er
 }
 
 static gboolean
+fu_util_add_security_attributes_json (FuUtilPrivate *priv, JsonBuilder *builder, GError **error)
+{
+	g_autoptr(GPtrArray) attrs = NULL;
+
+	/* not ready yet */
+	if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "The HSI specification is not yet complete. "
+				     "To ignore this warning, use --force");
+		return FALSE;
+	}
+
+	/* get attrs from daemon */
+	attrs = fwupd_client_get_host_security_attrs (priv->client, NULL, error);
+	if (attrs == NULL)
+		return FALSE;
+	json_builder_set_member_name (builder, "HostSecurityAttributes");
+	json_builder_begin_array (builder);
+	for (guint i = 0; i < attrs->len; i++) {
+		FwupdSecurityAttr *attr = g_ptr_array_index (attrs, i);
+		json_builder_begin_object (builder);
+		fwupd_security_attr_to_json (attr, builder);
+		json_builder_end_object (builder);
+	}
+	json_builder_end_array (builder);
+	return TRUE;
+}
+
+static gboolean
 fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autofree gchar *data = NULL;
@@ -177,6 +209,49 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 	builder = json_builder_new ();
 	json_builder_begin_object (builder);
 	if (!fu_util_add_updates_json (priv, builder, error))
+		return FALSE;
+	json_builder_end_object (builder);
+
+	/* export as a string */
+	json_root = json_builder_get_root (builder);
+	json_generator = json_generator_new ();
+	json_generator_set_pretty (json_generator, TRUE);
+	json_generator_set_root (json_generator, json_root);
+	data = json_generator_to_data (json_generator, NULL);
+	if (data == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "Failed to convert to JSON string");
+		return FALSE;
+	}
+
+	/* just print */
+	g_print ("%s\n", data);
+	return TRUE;
+}
+
+static gboolean
+fu_util_security (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autofree gchar *data = NULL;
+	g_autoptr(JsonBuilder) builder = NULL;
+	g_autoptr(JsonGenerator) json_generator = NULL;
+	g_autoptr(JsonNode) json_root = NULL;
+
+	/* check args */
+	if (g_strv_length (values) != 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments");
+		return FALSE;
+	}
+
+	/* create header */
+	builder = json_builder_new ();
+	json_builder_begin_object (builder);
+	if (!fu_util_add_security_attributes_json (priv, builder, error))
 		return FALSE;
 	json_builder_end_object (builder);
 
@@ -280,6 +355,11 @@ main (int argc, char *argv[])
 			       /* TRANSLATORS: command description */
 			       _("Gets the list of updates for connected hardware"),
 			       fu_util_get_updates);
+	fu_util_cmd_array_add (cmd_array,
+			       "security", NULL,
+			       /* TRANSLATORS: command description */
+			       _("Gets the host security attributes"),
+			       fu_util_security);
 
 	/* sort by command name */
 	fu_util_cmd_array_sort (cmd_array);

@@ -49,6 +49,7 @@ gboolean	 fu_engine_load_plugins			(FuEngine	*self,
 gboolean	 fu_engine_get_tainted			(FuEngine	*self);
 const gchar	*fu_engine_get_host_product		(FuEngine *self);
 const gchar	*fu_engine_get_host_machine_id		(FuEngine *self);
+const gchar	*fu_engine_get_host_security_id		(FuEngine	*self);
 FwupdStatus	 fu_engine_get_status			(FuEngine	*self);
 XbSilo		*fu_engine_get_silo_from_blob		(FuEngine	*self,
 							 GBytes		*blob_cab,
@@ -81,6 +82,8 @@ GPtrArray	*fu_engine_get_upgrades			(FuEngine	*self,
 							 GError		**error);
 FwupdDevice	*fu_engine_get_results			(FuEngine	*self,
 							 const gchar	*device_id,
+							 GError		**error);
+GPtrArray	*fu_engine_get_host_security_attrs	(FuEngine	*self,
 							 GError		**error);
 gboolean	 fu_engine_clear_results		(FuEngine	*self,
 							 const gchar	*device_id,

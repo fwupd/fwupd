@@ -25,6 +25,7 @@
 #include "fu-plugin-list.h"
 #include "fu-progressbar.h"
 #include "fu-hash.h"
+#include "fu-security-attrs.h"
 #include "fu-smbios-private.h"
 
 typedef struct {
@@ -149,6 +150,75 @@ fu_engine_generate_md_func (gconstpointer user_data)
 	g_assert_cmpstr (tmp, !=, NULL);
 	tmp = xb_node_query_text (component, "releases/release/checksum[@target='content']", NULL);
 	g_assert_cmpstr (tmp, ==, NULL);
+}
+
+static void
+fu_plugin_hsi_func (gconstpointer user_data)
+{
+	FwupdSecurityAttr *attr;
+	g_autofree gchar *hsi1 = NULL;
+	g_autofree gchar *hsi2 = NULL;
+	g_autofree gchar *hsi3 = NULL;
+	g_autofree gchar *hsi4 = NULL;
+	g_autofree gchar *hsi5 = NULL;
+	g_autofree gchar *hsi6 = NULL;
+	g_autofree gchar *hsi7 = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(GPtrArray) attrs = NULL;
+
+	/* no attrs */
+	attrs = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	hsi1 = fu_security_attrs_calculate_hsi (attrs);
+	g_assert_cmpstr (hsi1, ==, "HSI:0");
+
+	/* just success from HSI:1 */
+	attr = fwupd_security_attr_new ("org.fwupd.Hsi.BIOSWE");
+	fwupd_security_attr_set_level (attr, 1);
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	g_ptr_array_add (attrs, attr);
+	hsi2 = fu_security_attrs_calculate_hsi (attrs);
+	g_assert_cmpstr (hsi2, ==, "HSI:1");
+
+	/* add failed from HSI:2, so still HSI:1 */
+	attr = fwupd_security_attr_new ("org.fwupd.Hsi.PRX");
+	fwupd_security_attr_set_level (attr, 2);
+	g_ptr_array_add (attrs, attr);
+	hsi3 = fu_security_attrs_calculate_hsi (attrs);
+	g_assert_cmpstr (hsi3, ==, "HSI:1");
+
+	/* add attr from HSI:3, obsoleting the failure */
+	attr = fwupd_security_attr_new ("org.fwupd.Hsi.BIOSGuard");
+	fwupd_security_attr_set_level (attr, 3);
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_add_obsolete (attr, "org.fwupd.Hsi.PRX");
+	g_ptr_array_add (attrs, attr);
+	fu_security_attrs_depsolve (attrs);
+	hsi4 = fu_security_attrs_calculate_hsi (attrs);
+	g_assert_cmpstr (hsi4, ==, "HSI:3");
+
+	/* add taint that was fine */
+	attr = fwupd_security_attr_new ("org.fwupd.Hsi.PluginsTainted");
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
+	g_ptr_array_add (attrs, attr);
+	hsi5 = fu_security_attrs_calculate_hsi (attrs);
+	g_assert_cmpstr (hsi5, ==, "HSI:3");
+
+	/* add updates and attestation */
+	attr = fwupd_security_attr_new ("org.fwupd.Hsi.LVFS");
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES);
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ATTESTATION);
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	g_ptr_array_add (attrs, attr);
+	hsi6 = fu_security_attrs_calculate_hsi (attrs);
+	g_assert_cmpstr (hsi6, ==, "HSI:3+UA");
+
+	/* add issue that was uncool */
+	attr = fwupd_security_attr_new ("org.fwupd.Hsi.Swap");
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
+	g_ptr_array_add (attrs, attr);
+	hsi7 = fu_security_attrs_calculate_hsi (attrs);
+	g_assert_cmpstr (hsi7, ==, "HSI:3+UA!");
 }
 
 static void
@@ -2980,6 +3050,8 @@ main (int argc, char **argv)
 		g_test_add_data_func ("/fwupd/progressbar", self,
 				      fu_progressbar_func);
 	}
+	g_test_add_data_func ("/fwupd/plugin{hsi}", self,
+			      fu_plugin_hsi_func);
 	g_test_add_data_func ("/fwupd/plugin{build-hash}", self,
 			      fu_plugin_hash_func);
 	g_test_add_data_func ("/fwupd/plugin{module}", self,

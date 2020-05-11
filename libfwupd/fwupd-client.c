@@ -23,6 +23,7 @@
 #include "fwupd-enums.h"
 #include "fwupd-error.h"
 #include "fwupd-device-private.h"
+#include "fwupd-security-attr-private.h"
 #include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
 
@@ -45,6 +46,7 @@ typedef struct {
 	gchar				*daemon_version;
 	gchar				*host_product;
 	gchar				*host_machine_id;
+	gchar				*host_security_id;
 	GDBusConnection			*conn;
 	GDBusProxy			*proxy;
 } FwupdClientPrivate;
@@ -66,6 +68,7 @@ enum {
 	PROP_TAINTED,
 	PROP_HOST_PRODUCT,
 	PROP_HOST_MACHINE_ID,
+	PROP_HOST_SECURITY_ID,
 	PROP_INTERACTIVE,
 	PROP_LAST
 };
@@ -126,6 +129,15 @@ fwupd_client_set_host_machine_id (FwupdClient *client, const gchar *host_machine
 	g_free (priv->host_machine_id);
 	priv->host_machine_id = g_strdup (host_machine_id);
 	g_object_notify (G_OBJECT (client), "host-machine-id");
+}
+
+static void
+fwupd_client_set_host_security_id (FwupdClient *client, const gchar *host_security_id)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_free (priv->host_security_id);
+	priv->host_security_id = g_strdup (host_security_id);
+	g_object_notify (G_OBJECT (client), "host-security-id");
 }
 
 static void
@@ -200,6 +212,12 @@ fwupd_client_properties_changed_cb (GDBusProxy *proxy,
 		val = g_dbus_proxy_get_cached_property (proxy, "HostMachineId");
 		if (val != NULL)
 			fwupd_client_set_host_machine_id (client, g_variant_get_string (val, NULL));
+	}
+	if (g_variant_dict_contains (dict, "HostSecurityId")) {
+		g_autoptr(GVariant) val = NULL;
+		val = g_dbus_proxy_get_cached_property (proxy, "HostSecurityId");
+		if (val != NULL)
+			fwupd_client_set_host_security_id (client, g_variant_get_string (val, NULL));
 	}
 }
 
@@ -304,6 +322,9 @@ fwupd_client_connect (FwupdClient *client, GCancellable *cancellable, GError **e
 	val = g_dbus_proxy_get_cached_property (priv->proxy, "HostMachineId");
 	if (val != NULL)
 		fwupd_client_set_host_machine_id (client, g_variant_get_string (val, NULL));
+	val = g_dbus_proxy_get_cached_property (priv->proxy, "HostSecurityId");
+	if (val != NULL)
+		fwupd_client_set_host_security_id (client, g_variant_get_string (val, NULL));
 
 	return TRUE;
 }
@@ -339,6 +360,48 @@ fwupd_client_fixup_dbus_error (GError *error)
 		error->code = FWUPD_ERROR_INTERNAL;
 	}
 	g_dbus_error_strip_remote_error (error);
+}
+
+/**
+ * fwupd_client_get_host_security_attrs:
+ * @client: A #FwupdClient
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Gets all the host security attributes from the daemon.
+ *
+ * Returns: (element-type FwupdSecurityAttr) (transfer container): attributes
+ *
+ * Since: 1.5.0
+ **/
+GPtrArray *
+fwupd_client_get_host_security_attrs (FwupdClient *client, GCancellable *cancellable, GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_autoptr(GVariant) val = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* connect */
+	if (!fwupd_client_connect (client, cancellable, error))
+		return NULL;
+
+	/* call into daemon */
+	val = g_dbus_proxy_call_sync (priv->proxy,
+				      "GetHostSecurityAttrs",
+				      NULL,
+				      G_DBUS_CALL_FLAGS_NONE,
+				      -1,
+				      cancellable,
+				      error);
+	if (val == NULL) {
+		if (error != NULL)
+			fwupd_client_fixup_dbus_error (*error);
+		return NULL;
+	}
+	return fwupd_security_attr_array_from_variant (val);
 }
 
 /**
@@ -1315,6 +1378,24 @@ fwupd_client_get_host_machine_id (FwupdClient *client)
 }
 
 /**
+ * fwupd_client_get_host_security_id:
+ * @client: A #FwupdClient
+ *
+ * Gets the string that represents the host machine ID
+ *
+ * Returns: a string, or %NULL for unknown.
+ *
+ * Since: 1.5.0
+ **/
+const gchar *
+fwupd_client_get_host_security_id (FwupdClient *client)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	return priv->host_security_id;
+}
+
+/**
  * fwupd_client_get_status:
  * @client: A #FwupdClient
  *
@@ -1869,6 +1950,9 @@ fwupd_client_get_property (GObject *object, guint prop_id,
 	case PROP_HOST_MACHINE_ID:
 		g_value_set_string (value, priv->host_machine_id);
 		break;
+	case PROP_HOST_SECURITY_ID:
+		g_value_set_string (value, priv->host_security_id);
+		break;
 	case PROP_INTERACTIVE:
 		g_value_set_boolean (value, priv->interactive);
 		break;
@@ -2069,6 +2153,17 @@ fwupd_client_class_init (FwupdClientClass *klass)
 	pspec = g_param_spec_string ("host-machine-id", NULL, NULL,
 				     NULL, G_PARAM_READABLE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_HOST_MACHINE_ID, pspec);
+
+	/**
+	 * FwupdClient:host-security-id:
+	 *
+	 * The host machine-id string
+	 *
+	 * Since: 1.5.0
+	 */
+	pspec = g_param_spec_string ("host-security-id", NULL, NULL,
+				     NULL, G_PARAM_READABLE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_HOST_SECURITY_ID, pspec);
 }
 
 static void
@@ -2085,6 +2180,7 @@ fwupd_client_finalize (GObject *object)
 	g_free (priv->daemon_version);
 	g_free (priv->host_product);
 	g_free (priv->host_machine_id);
+	g_free (priv->host_security_id);
 	if (priv->conn != NULL)
 		g_object_unref (priv->conn);
 	if (priv->proxy != NULL)

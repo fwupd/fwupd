@@ -131,6 +131,7 @@ fwupdtool = executable(
     'fu-plugin-list.c',
     'fu-progressbar.c',
     'fu-remote-list.c',
+    'fu-security-attrs.c',
     'fu-util-common.c',
     systemd_src
   ],
@@ -229,6 +230,7 @@ executable(
     'fu-main.c',
     'fu-plugin-list.c',
     'fu-remote-list.c',
+    'fu-security-attrs.c',
     systemd_src
   ],
   include_directories : [
@@ -285,6 +287,7 @@ if get_option('tests')
       'fu-plugin-list.c',
       'fu-progressbar.c',
       'fu-remote-list.c',
+      'fu-security-attrs.c',
       'fu-self-test.c',
       systemd_src
     ],

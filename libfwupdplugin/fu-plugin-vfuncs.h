@@ -359,3 +359,16 @@ gboolean	 fu_plugin_device_created		(FuPlugin	*plugin,
  **/
 void		 fu_plugin_device_registered		(FuPlugin	*plugin,
 							 FuDevice	*dev);
+/**
+ * fu_plugin_add_security_attrs
+ * @plugin: A #FuPlugin
+ * @attrs: A #GPtrArray of #FwupdSecurityAttr
+ * @error: A #GError or NULL
+ *
+ * Function that asks plugins to add Host Security Attributes.
+ *
+ * Since: 1.5.0
+ **/
+gboolean	 fu_plugin_add_security_attrs		(FuPlugin	*plugin,
+							 GPtrArray	*attrs,
+							 GError		**error);
