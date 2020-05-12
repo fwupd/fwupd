@@ -14,6 +14,7 @@
 
 #include "fu-device-private.h"
 #include "fu-plugin-private.h"
+#include "fu-security-attrs-private.h"
 #include "fu-smbios-private.h"
 
 static GMainLoop *_test_loop = NULL;
@@ -1742,6 +1743,80 @@ fu_device_retry_hardware_func (void)
 	g_assert_cmpint (helper.cnt_failed, ==, 2);
 }
 
+static void
+fu_security_attrs_hsi_func (void)
+{
+	g_autofree gchar *hsi1 = NULL;
+	g_autofree gchar *hsi2 = NULL;
+	g_autofree gchar *hsi3 = NULL;
+	g_autofree gchar *hsi4 = NULL;
+	g_autofree gchar *hsi5 = NULL;
+	g_autofree gchar *hsi6 = NULL;
+	g_autofree gchar *hsi7 = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = NULL;
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	/* no attrs */
+	attrs = fu_security_attrs_new ();
+	hsi1 = fu_security_attrs_calculate_hsi (attrs);
+	g_assert_cmpstr (hsi1, ==, "HSI:0");
+
+	/* just success from HSI:1 */
+	attr = fwupd_security_attr_new ("org.fwupd.Hsi.BIOSWE");
+	fwupd_security_attr_set_level (attr, 1);
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attrs_append (attrs, attr);
+	hsi2 = fu_security_attrs_calculate_hsi (attrs);
+	g_assert_cmpstr (hsi2, ==, "HSI:1");
+	g_clear_object (&attr);
+
+	/* add failed from HSI:2, so still HSI:1 */
+	attr = fwupd_security_attr_new ("org.fwupd.Hsi.PRX");
+	fwupd_security_attr_set_level (attr, 2);
+	fu_security_attrs_append (attrs, attr);
+	hsi3 = fu_security_attrs_calculate_hsi (attrs);
+	g_assert_cmpstr (hsi3, ==, "HSI:1");
+	g_clear_object (&attr);
+
+	/* add attr from HSI:3, obsoleting the failure */
+	attr = fwupd_security_attr_new ("org.fwupd.Hsi.BIOSGuard");
+	fwupd_security_attr_set_level (attr, 3);
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_add_obsolete (attr, "org.fwupd.Hsi.PRX");
+	fu_security_attrs_append (attrs, attr);
+	fu_security_attrs_depsolve (attrs);
+	hsi4 = fu_security_attrs_calculate_hsi (attrs);
+	g_assert_cmpstr (hsi4, ==, "HSI:3");
+	g_clear_object (&attr);
+
+	/* add taint that was fine */
+	attr = fwupd_security_attr_new ("org.fwupd.Hsi.PluginsTainted");
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
+	fu_security_attrs_append (attrs, attr);
+	hsi5 = fu_security_attrs_calculate_hsi (attrs);
+	g_assert_cmpstr (hsi5, ==, "HSI:3");
+	g_clear_object (&attr);
+
+	/* add updates and attestation */
+	attr = fwupd_security_attr_new ("org.fwupd.Hsi.LVFS");
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES);
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ATTESTATION);
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fu_security_attrs_append (attrs, attr);
+	hsi6 = fu_security_attrs_calculate_hsi (attrs);
+	g_assert_cmpstr (hsi6, ==, "HSI:3+UA");
+	g_clear_object (&attr);
+
+	/* add issue that was uncool */
+	attr = fwupd_security_attr_new ("org.fwupd.Hsi.Swap");
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
+	fu_security_attrs_append (attrs, attr);
+	hsi7 = fu_security_attrs_calculate_hsi (attrs);
+	g_assert_cmpstr (hsi7, ==, "HSI:3+UA!");
+	g_clear_object (&attr);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -1757,6 +1832,7 @@ main (int argc, char **argv)
 	g_setenv ("FWUPD_OFFLINE_TRIGGER", "/tmp/fwupd-self-test/system-update", TRUE);
 	g_setenv ("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 
+	g_test_add_func ("/fwupd/security-attrs{hsi}", fu_security_attrs_hsi_func);
 	g_test_add_func ("/fwupd/plugin{delay}", fu_plugin_delay_func);
 	g_test_add_func ("/fwupd/plugin{quirks}", fu_plugin_quirks_func);
 	g_test_add_func ("/fwupd/plugin{quirks-performance}", fu_plugin_quirks_performance_func);

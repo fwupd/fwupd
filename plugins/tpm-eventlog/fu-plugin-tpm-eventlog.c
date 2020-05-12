@@ -125,19 +125,22 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 				     "please see https://github.com/fwupd/fwupd/wiki/TPM-PCR0-differs-from-reconstruction");
 }
 
-gboolean
-fu_plugin_add_security_attrs (FuPlugin *plugin, GPtrArray *attrs, GError **error)
+void
+fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	FwupdSecurityAttr *attr = fwupd_security_attr_new ("org.trustedcomputinggroup.TpmEventLog");
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	attr = fwupd_security_attr_new ("org.trustedcomputinggroup.TpmEventLog");
 	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT);
 	fwupd_security_attr_set_name (attr, "TPM Reconstruction");
-	if (data->reconstructed) {
+	if (!fu_plugin_get_enabled (plugin)) {
+		fwupd_security_attr_set_result (attr, "No binary bios measurements available");
+	} else if (data->reconstructed) {
 		fwupd_security_attr_set_result (attr, "Matched PCR0 reading");
 		fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 	} else {
 		fwupd_security_attr_set_result (attr, "Did not match PCR0 reading");
 	}
-	g_ptr_array_add (attrs, attr);
-	return TRUE;
+	fu_security_attrs_append (attrs, attr);
 }

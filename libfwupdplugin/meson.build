@@ -17,6 +17,7 @@ fwupdplugin_src = [
   'fu-io-channel.c',
   'fu-plugin.c',
   'fu-quirks.c',
+  'fu-security-attrs.c',
   'fu-smbios.c',
   'fu-srec-firmware.c',
   'fu-efivar.c',
@@ -45,6 +46,7 @@ fwupdplugin_headers = [
   'fu-io-channel.h',
   'fu-plugin.h',
   'fu-quirks.h',
+  'fu-security-attrs.h',
   'fu-smbios.h',
   'fu-srec-firmware.h',
   'fu-efivar.h',
@@ -73,6 +75,7 @@ fwupdplugin_headers_private = [
   fu_hash,
   'fu-device-private.h',
   'fu-plugin-private.h',
+  'fu-security-attrs-private.h',
   'fu-smbios-private.h',
   'fu-usb-device-private.h',
 ]

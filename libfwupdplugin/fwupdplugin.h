@@ -32,6 +32,7 @@
 #include <libfwupdplugin/fu-plugin.h>
 #include <libfwupdplugin/fu-plugin-vfuncs.h>
 #include <libfwupdplugin/fu-quirks.h>
+#include <libfwupdplugin/fu-security-attrs.h>
 #include <libfwupdplugin/fu-smbios.h>
 #include <libfwupdplugin/fu-srec-firmware.h>
 #include <libfwupdplugin/fu-efivar.h>

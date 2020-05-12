@@ -16,6 +16,7 @@
 #include "fu-common.h"
 #include "fu-install-task.h"
 #include "fu-plugin.h"
+#include "fu-security-attrs.h"
 
 #define FU_TYPE_ENGINE (fu_engine_get_type ())
 G_DECLARE_FINAL_TYPE (FuEngine, fu_engine, FU, ENGINE, GObject)
@@ -83,7 +84,7 @@ GPtrArray	*fu_engine_get_upgrades			(FuEngine	*self,
 FwupdDevice	*fu_engine_get_results			(FuEngine	*self,
 							 const gchar	*device_id,
 							 GError		**error);
-GPtrArray	*fu_engine_get_host_security_attrs	(FuEngine	*self,
+FuSecurityAttrs	*fu_engine_get_host_security_attrs	(FuEngine	*self,
 							 GError		**error);
 gboolean	 fu_engine_clear_results		(FuEngine	*self,
 							 const gchar	*device_id,

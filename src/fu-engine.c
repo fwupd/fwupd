@@ -49,7 +49,7 @@
 #include "fu-plugin-private.h"
 #include "fu-quirks.h"
 #include "fu-remote-list.h"
-#include "fu-security-attrs.h"
+#include "fu-security-attrs-private.h"
 #include "fu-smbios-private.h"
 #include "fu-udev-device-private.h"
 #include "fu-usb-device-private.h"
@@ -5038,7 +5038,7 @@ fu_engine_get_host_machine_id (FuEngine *self)
 }
 
 static void
-fu_engine_add_security_attrs_tainted (FuEngine *self, GPtrArray *attrs)
+fu_engine_add_security_attrs_tainted (FuEngine *self, FuSecurityAttrs *attrs)
 {
 	FwupdSecurityAttr *attr = fwupd_security_attr_new ("org.fwupd.Hsi.Plugins");
 	fwupd_security_attr_set_name (attr, "fwupd plugins");
@@ -5048,11 +5048,11 @@ fu_engine_add_security_attrs_tainted (FuEngine *self, GPtrArray *attrs)
 	} else {
 		fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 	}
-	g_ptr_array_add (attrs, attr);
+	fu_security_attrs_append (attrs, attr);
 }
 
 static void
-fu_engine_add_security_attrs_supported (FuEngine *self, GPtrArray *attrs)
+fu_engine_add_security_attrs_supported (FuEngine *self, FuSecurityAttrs *attrs)
 {
 	FwupdRelease *rel_current = NULL;
 	FwupdRelease *rel_newest = NULL;
@@ -5066,7 +5066,7 @@ fu_engine_add_security_attrs_supported (FuEngine *self, GPtrArray *attrs)
 	attr_u = fwupd_security_attr_new ("org.fwupd.Hsi.Updates");
 	fwupd_security_attr_add_flag (attr_u, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES);
 	fwupd_security_attr_set_name (attr_u, "Firmware Updates");
-	g_ptr_array_add (attrs, attr_u);
+	fu_security_attrs_append (attrs, attr_u);
 
 	/* get device */
 	device = fu_device_list_get_by_guid (self->device_list,
@@ -5100,7 +5100,7 @@ fu_engine_add_security_attrs_supported (FuEngine *self, GPtrArray *attrs)
 	attr_a = fwupd_security_attr_new ("org.fwupd.Hsi.Attestation");
 	fwupd_security_attr_set_name (attr_a, "Firmware Attestation");
 	fwupd_security_attr_add_flag (attr_a, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ATTESTATION);
-	g_ptr_array_add (attrs, attr_a);
+	fu_security_attrs_append (attrs, attr_a);
 	if (releases != NULL) {
 		for (guint i = 0; i < releases->len; i++) {
 			FwupdRelease *rel_tmp = g_ptr_array_index (releases, i);
@@ -5119,38 +5119,20 @@ fu_engine_add_security_attrs_supported (FuEngine *self, GPtrArray *attrs)
 	}
 }
 
-GPtrArray *
+FuSecurityAttrs *
 fu_engine_get_host_security_attrs (FuEngine *self, GError **error)
 {
 	GPtrArray *plugins = fu_plugin_list_get_all (self->plugin_list);
-	g_autoptr(GPtrArray) attrs = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new ();
 
 	/* built in */
-	attrs = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	fu_engine_add_security_attrs_tainted (self, attrs);
 	fu_engine_add_security_attrs_supported (self, attrs);
 
 	/* call into plugins */
 	for (guint j = 0; j < plugins->len; j++) {
 		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
-		g_autoptr(GError) error_local = NULL;
-		if (!fu_plugin_runner_add_security_attrs (plugin_tmp,
-							  attrs,
-							  &error_local)) {
-			FwupdSecurityAttr *attr;
-			g_autofree gchar *appstream_id = NULL;
-			g_autofree gchar *msg = NULL;
-			appstream_id = g_strdup_printf ("org.fwupd.plugin.%s",
-							fu_plugin_get_name (plugin_tmp));
-			msg = g_strdup_printf ("Failed to add HSI attribute: %s",
-					       error_local->message);
-			attr = fwupd_security_attr_new (appstream_id);
-			fwupd_security_attr_set_name (attr, "fwupd");
-			fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
-			fwupd_security_attr_set_result (attr, msg);
-			g_ptr_array_add (attrs, attr);
-			continue;
-		}
+		fu_plugin_runner_add_security_attrs (plugin_tmp, attrs);
 	}
 
 	/* set the obsoletes flag for each attr */
@@ -5165,10 +5147,13 @@ fu_engine_get_host_security_id (FuEngine *self)
 
 	/* rebuild */
 	if (!self->host_security_id_valid) {
-		g_autoptr(GPtrArray) attrs = fu_engine_get_host_security_attrs (self, NULL);
+		g_autoptr(FuSecurityAttrs) attrs = NULL;
 		g_free (self->host_security_id);
-		self->host_security_id = fu_security_attrs_calculate_hsi (attrs);
+		self->host_security_id = NULL;
 		self->host_security_id_valid = TRUE;
+		attrs = fu_engine_get_host_security_attrs (self, NULL);
+		if (attrs != NULL)
+			self->host_security_id = fu_security_attrs_calculate_hsi (attrs);
 	}
 
 	return self->host_security_id;

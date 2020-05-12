@@ -424,6 +424,7 @@ if build_standalone
   plugin_deps += soup
   plugin_deps += libarchive
   plugin_deps += gudev
+  plugin_deps += libjsonglib
 endif
 
 root_incdir = include_directories('.')
