@@ -29,7 +29,7 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	/* create attr */
 	attr = fwupd_security_attr_new ("org.uefi.ACPI.Facp");
 	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL);
-	fwupd_security_attr_set_name (attr, "Suspend2Idle");
+	fwupd_security_attr_set_name (attr, "Suspend To Idle");
 	fu_security_attrs_append (attrs, attr);
 
 	/* load FACP table */
