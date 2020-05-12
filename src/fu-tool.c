@@ -26,6 +26,7 @@
 #include "fu-history.h"
 #include "fu-plugin-private.h"
 #include "fu-progressbar.h"
+#include "fu-security-attrs-private.h"
 #include "fu-smbios-private.h"
 #include "fu-util-common.h"
 #include "fu-debug.h"
@@ -1940,7 +1941,8 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_security (FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	g_autoptr(GPtrArray) attrs = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = NULL;
+	g_autoptr(GPtrArray) items = NULL;
 	g_autofree gchar *str = NULL;
 
 	/* not ready yet */
@@ -1964,7 +1966,8 @@ fu_util_security (FuUtilPrivate *priv, gchar **values, GError **error)
 	attrs = fu_engine_get_host_security_attrs (priv->engine, error);
 	if (attrs == NULL)
 		return FALSE;
-	str = fu_util_security_attrs_to_string (attrs);
+	items = fu_security_attrs_get_all (attrs);
+	str = fu_util_security_attrs_to_string (items);
 	g_print ("%s\n", str);
 	return TRUE;
 }

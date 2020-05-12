@@ -8,6 +8,7 @@
 
 #include "fu-quirks.h"
 #include "fu-plugin.h"
+#include "fu-security-attrs.h"
 #include "fu-smbios.h"
 
 FuPlugin	*fu_plugin_new				(void);
@@ -116,9 +117,8 @@ gboolean	 fu_plugin_runner_clear_results		(FuPlugin	*self,
 gboolean	 fu_plugin_runner_get_results		(FuPlugin	*self,
 							 FuDevice	*device,
 							 GError		**error);
-gboolean	 fu_plugin_runner_add_security_attrs	(FuPlugin	*self,
-							 GPtrArray	*attrs,
-							 GError		**error);
+void		 fu_plugin_runner_add_security_attrs	(FuPlugin	*self,
+							 FuSecurityAttrs*attrs);
 gint		 fu_plugin_name_compare			(FuPlugin	*plugin1,
 							 FuPlugin	*plugin2);
 gint		 fu_plugin_order_compare		(FuPlugin	*plugin1,

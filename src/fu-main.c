@@ -30,6 +30,7 @@
 #include "fu-device-private.h"
 #include "fu-engine.h"
 #include "fu-install-task.h"
+#include "fu-security-attrs-private.h"
 
 #ifndef HAVE_POLKIT_0_114
 #pragma clang diagnostic push
@@ -250,22 +251,6 @@ fu_main_device_array_to_variant (FuMainPrivate *priv, const gchar *sender,
 		FuDevice *device = g_ptr_array_index (devices, i);
 		GVariant *tmp = fwupd_device_to_variant_full (FWUPD_DEVICE (device),
 							      flags);
-		g_variant_builder_add_value (&builder, tmp);
-	}
-	return g_variant_new ("(aa{sv})", &builder);
-}
-
-static GVariant *
-fu_main_security_attr_array_to_variant (FuMainPrivate *priv, GPtrArray *attrs)
-{
-	GVariantBuilder builder;
-
-	g_return_val_if_fail (attrs->len > 0, NULL);
-	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
-
-	for (guint i = 0; i < attrs->len; i++) {
-		FwupdSecurityAttr *security_attr = g_ptr_array_index (attrs, i);
-		GVariant *tmp = fwupd_security_attr_to_variant (security_attr);
 		g_variant_builder_add_value (&builder, tmp);
 	}
 	return g_variant_new ("(aa{sv})", &builder);
@@ -1005,14 +990,14 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		return;
 	}
 	if (g_strcmp0 (method_name, "GetHostSecurityAttrs") == 0) {
-		g_autoptr(GPtrArray) attrs = NULL;
+		g_autoptr(FuSecurityAttrs) attrs = NULL;
 		g_debug ("Called %s()", method_name);
 		attrs = fu_engine_get_host_security_attrs (priv->engine, &error);
 		if (attrs == NULL) {
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
 		}
-		val = fu_main_security_attr_array_to_variant (priv, attrs);
+		val = fu_security_attrs_to_variant (attrs);
 		g_dbus_method_invocation_return_value (invocation, val);
 		return;
 	}

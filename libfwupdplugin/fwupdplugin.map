@@ -588,6 +588,13 @@ LIBFWUPDPLUGIN_1.5.0 {
     fu_plugin_runner_add_security_attrs;
     fu_plugin_runner_device_added;
     fu_plugin_security_changed;
+    fu_security_attrs_append;
+    fu_security_attrs_calculate_hsi;
+    fu_security_attrs_depsolve;
+    fu_security_attrs_get_all;
+    fu_security_attrs_get_type;
+    fu_security_attrs_new;
+    fu_security_attrs_to_variant;
     fu_udev_device_get_parent_name;
     fu_udev_device_get_sysfs_attr;
   local: *;

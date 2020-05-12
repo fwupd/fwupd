@@ -8,6 +8,7 @@
 
 #include "fu-plugin.h"
 #include "fu-device.h"
+#include "fu-security-attrs.h"
 
 /**
  * SECTION:fu-plugin-vfuncs
@@ -362,13 +363,11 @@ void		 fu_plugin_device_registered		(FuPlugin	*plugin,
 /**
  * fu_plugin_add_security_attrs
  * @plugin: A #FuPlugin
- * @attrs: A #GPtrArray of #FwupdSecurityAttr
- * @error: A #GError or NULL
+ * @attrs: A #FuSecurityAttrs
  *
  * Function that asks plugins to add Host Security Attributes.
  *
  * Since: 1.5.0
  **/
-gboolean	 fu_plugin_add_security_attrs		(FuPlugin	*plugin,
-							 GPtrArray	*attrs,
-							 GError		**error);
+void		 fu_plugin_add_security_attrs		(FuPlugin	*plugin,
+							 FuSecurityAttrs *attrs);
