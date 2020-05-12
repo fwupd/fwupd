@@ -1216,16 +1216,25 @@ fu_plugin_runner_flagged_device_generic (FuPlugin *self, FwupdInstallFlags flags
 
 }
 
+typedef enum {
+	FU_PLUGIN_RUNNER_FLAG_NONE		= 0,
+	FU_PLUGIN_RUNNER_FLAG_EVEN_DISABLED	= 1 << 0,
+	FU_PLUGIN_RUNNER_FLAG_LAST,
+} FuPluginRunnerFlags;
+
 static gboolean
-fu_plugin_runner_device_array_generic (FuPlugin *self, GPtrArray *devices,
-				       const gchar *symbol_name, GError **error)
+fu_plugin_runner_device_array_generic (FuPlugin *self,
+				       GPtrArray *devices,
+				       const gchar *symbol_name,
+				       FuPluginRunnerFlags flags,
+				       GError **error)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginDeviceArrayFunc func = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* not enabled */
-	if (!priv->enabled)
+	if ((flags & FU_PLUGIN_RUNNER_FLAG_EVEN_DISABLED) == 0 && !priv->enabled)
 		return TRUE;
 
 	/* no object loaded */
@@ -1462,6 +1471,7 @@ fu_plugin_runner_composite_prepare (FuPlugin *self, GPtrArray *devices, GError *
 {
 	return fu_plugin_runner_device_array_generic (self, devices,
 						      "fu_plugin_composite_prepare",
+						      FU_PLUGIN_RUNNER_FLAG_NONE,
 						      error);
 }
 
@@ -1482,6 +1492,7 @@ fu_plugin_runner_composite_cleanup (FuPlugin *self, GPtrArray *devices, GError *
 {
 	return fu_plugin_runner_device_array_generic (self, devices,
 						      "fu_plugin_composite_cleanup",
+						      FU_PLUGIN_RUNNER_FLAG_NONE,
 						      error);
 }
 
@@ -1612,6 +1623,7 @@ fu_plugin_runner_add_security_attrs (FuPlugin *self, GPtrArray *attrs, GError **
 {
 	return fu_plugin_runner_device_array_generic (self, attrs,
 						      "fu_plugin_add_security_attrs",
+						      FU_PLUGIN_RUNNER_FLAG_EVEN_DISABLED,
 						      error);
 }
 
