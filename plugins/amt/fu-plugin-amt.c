@@ -17,6 +17,11 @@
 #include "fu-plugin-vfuncs.h"
 #include "fu-hash.h"
 
+struct FuPluginData {
+	gboolean			 has_mei;
+	gboolean			 provisioned;
+};
+
 typedef struct {
 	uuid_le guid;
 	guint buf_size;
@@ -444,8 +449,9 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(mei_context, mei_context_free)
 #pragma clang diagnostic pop
 
 static FuDevice *
-fu_plugin_amt_create_device (GError **error)
+fu_plugin_amt_create_device (FuPlugin *plugin, GError **error)
 {
+	FuPluginData *data = fu_plugin_get_data (plugin);
 	guint8 state;
 	struct amt_code_versions ver;
 	fwupd_guid_t uu;
@@ -491,15 +497,19 @@ fu_plugin_amt_create_device (GError **error)
 	switch (state) {
 	case 0:
 		fu_device_set_name (dev, "Intel AMT [unprovisioned]");
+		data->provisioned = FALSE;
 		break;
 	case 1:
 		fu_device_set_name (dev, "Intel AMT [being provisioned]");
+		data->provisioned = TRUE;
 		break;
 	case 2:
 		fu_device_set_name (dev, "Intel AMT [provisioned]");
+		data->provisioned = TRUE;
 		break;
 	default:
 		fu_device_set_name (dev, "Intel AMT [unknown]");
+		data->provisioned = FALSE;
 		break;
 	}
 	fu_device_set_summary (dev, "Hardware and firmware technology for remote "
@@ -536,6 +546,7 @@ fu_plugin_amt_create_device (GError **error)
 		fu_device_set_version (dev, version_fw->str);
 	if (version_bl->len > 0)
 		fu_device_set_version_bootloader (dev, version_bl->str);
+	data->has_mei = TRUE;
 
 	return g_steal_pointer (&dev);
 }
@@ -544,15 +555,37 @@ void
 fu_plugin_init (FuPlugin *plugin)
 {
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
+	fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 }
 
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
 	g_autoptr(FuDevice) dev = NULL;
-	dev = fu_plugin_amt_create_device (error);
+	dev = fu_plugin_amt_create_device (plugin, error);
 	if (dev == NULL)
 		return FALSE;
 	fu_plugin_device_add (plugin, dev);
 	return TRUE;
+}
+
+void
+fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	if (!fu_common_is_cpu_intel () || !data->has_mei)
+		return;
+
+	attr = fwupd_security_attr_new ("com.intel.AMT");
+	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_SYSTEM_PROTECTION);
+	fwupd_security_attr_set_name (attr, "Intel AMT");
+	fu_security_attrs_append (attrs, attr);
+	if (data->provisioned) {
+		fwupd_security_attr_set_result (attr, "Provisioned");
+		return;
+	}
+
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
