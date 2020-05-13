@@ -1582,6 +1582,7 @@ fu_util_security_attrs_to_string (GPtrArray *attrs)
 		FWUPD_SECURITY_ATTR_FLAG_NONE,
 	};
 	GString *str = g_string_new (NULL);
+	gboolean runtime_help = FALSE;
 
 	for (guint j = 1; j <= FWUPD_SECURITY_ATTR_LEVEL_LAST; j++) {
 		gboolean has_header = FALSE;
@@ -1610,9 +1611,20 @@ fu_util_security_attrs_to_string (GPtrArray *attrs)
 				FwupdSecurityAttr *attr = g_ptr_array_index (attrs, i);
 				if (!fwupd_security_attr_has_flag (attr, hpi_suffixes[j]))
 					continue;
+				if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE) &&
+				    !fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
+					runtime_help = TRUE;
 				fu_security_attr_append_str (attr, str);
 			}
 		}
 	}
+
+	if (runtime_help) {
+		g_string_append_printf (str, "\n%s %s",
+					/* TRANSLATORS: this is instructions on how to improve the HSI suffix */
+					_("Your system has runtime issues. Visit this URL for more information: "),
+					"https://github.com/fwupd/fwupd/wiki/Host-security-ID-runtime-issues");
+	}
+
 	return g_string_free (str, FALSE);
 }
