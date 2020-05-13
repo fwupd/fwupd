@@ -1582,6 +1582,7 @@ fu_util_security_attrs_to_string (GPtrArray *attrs)
 		FWUPD_SECURITY_ATTR_FLAG_NONE,
 	};
 	GString *str = g_string_new (NULL);
+	gboolean low_help = FALSE;
 	gboolean runtime_help = FALSE;
 
 	for (guint j = 1; j <= FWUPD_SECURITY_ATTR_LEVEL_LAST; j++) {
@@ -1595,6 +1596,10 @@ fu_util_security_attrs_to_string (GPtrArray *attrs)
 				has_header = TRUE;
 			}
 			fu_security_attr_append_str (attr, str);
+			/* make sure they have at least HSI-1 */
+			if (j < FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT &&
+			    !fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
+				low_help = TRUE;
 		}
 	}
 	for (guint i = 0; i < attrs->len; i++) {
@@ -1619,6 +1624,12 @@ fu_util_security_attrs_to_string (GPtrArray *attrs)
 		}
 	}
 
+	if (low_help) {
+		g_string_append_printf (str, "\n%s %s",
+					/* TRANSLATORS: this is instructions on how to improve the HSI security level */
+					_("Your system has a low HSI security level. Visit this URL for more information: "),
+					"https://github.com/fwupd/fwupd/wiki/Low-host-security-level");
+	}
 	if (runtime_help) {
 		g_string_append_printf (str, "\n%s %s",
 					/* TRANSLATORS: this is instructions on how to improve the HSI suffix */
