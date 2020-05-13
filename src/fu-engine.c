@@ -5045,6 +5045,8 @@ fu_engine_add_security_attrs_tainted (FuEngine *self, FuSecurityAttrs *attrs)
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
 	if (self->tainted) {
 		fwupd_security_attr_set_result (attr, "Tainted");
+	} else if (self->plugin_filter->len > 0) {
+		fwupd_security_attr_set_result (attr, "Disabled plugins");
 	} else {
 		fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 	}
