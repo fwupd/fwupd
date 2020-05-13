@@ -5040,7 +5040,7 @@ fu_engine_get_host_machine_id (FuEngine *self)
 static void
 fu_engine_add_security_attrs_tainted (FuEngine *self, FuSecurityAttrs *attrs)
 {
-	FwupdSecurityAttr *attr = fwupd_security_attr_new ("org.fwupd.Hsi.Plugins");
+	g_autoptr(FwupdSecurityAttr) attr = fwupd_security_attr_new ("org.fwupd.Hsi.Plugins");
 	fwupd_security_attr_set_name (attr, "fwupd plugins");
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
 	if (self->tainted) {
@@ -5056,8 +5056,8 @@ fu_engine_add_security_attrs_supported (FuEngine *self, FuSecurityAttrs *attrs)
 {
 	FwupdRelease *rel_current = NULL;
 	FwupdRelease *rel_newest = NULL;
-	FwupdSecurityAttr *attr_a;
-	FwupdSecurityAttr *attr_u;
+	g_autoptr(FwupdSecurityAttr) attr_a = NULL;
+	g_autoptr(FwupdSecurityAttr) attr_u = NULL;
 	guint64 now = (guint64) g_get_real_time () / G_USEC_PER_SEC;
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(GPtrArray) releases = NULL;
