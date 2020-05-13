@@ -5040,12 +5040,22 @@ fu_engine_get_host_machine_id (FuEngine *self)
 static void
 fu_engine_add_security_attrs_tainted (FuEngine *self, FuSecurityAttrs *attrs)
 {
+	gboolean disabled_plugins = FALSE;
+	GPtrArray *blacklist = fu_config_get_blacklist_plugins (self->config);
 	g_autoptr(FwupdSecurityAttr) attr = fwupd_security_attr_new ("org.fwupd.Hsi.Plugins");
 	fwupd_security_attr_set_name (attr, "fwupd plugins");
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
+	for (guint i = 0; i < blacklist->len; i++) {
+		const gchar *name_tmp = g_ptr_array_index (blacklist, i);
+		if (g_strcmp0 (name_tmp, "test") != 0 &&
+		    g_strcmp0 (name_tmp, "invalid") != 0) {
+			disabled_plugins = TRUE;
+			break;
+		}
+	}
 	if (self->tainted) {
 		fwupd_security_attr_set_result (attr, "Tainted");
-	} else if (self->plugin_filter->len > 0) {
+	} else if (self->plugin_filter->len > 0 || disabled_plugins) {
 		fwupd_security_attr_set_result (attr, "Disabled plugins");
 	} else {
 		fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
