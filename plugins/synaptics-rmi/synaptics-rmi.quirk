@@ -1,3 +1,7 @@
 [DeviceInstanceId=HIDRAW\VEN_06CB]
 Plugin = synaptics_rmi
 Vendor = Synaptics
+
+# Dell K12A kbd-dock
+[DeviceInstanceId=HIDRAW\VEN_06CB&DEV_2819]
+Flags = only-supported
