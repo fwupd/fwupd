@@ -66,7 +66,7 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 		g_autofree gchar *dbxdir = NULL;
 		g_autofree gchar *result = NULL;
 		dbxdir = fu_common_get_path (FU_PATH_KIND_EFIDBXDIR);
-		result = g_strdup_printf ("DBX can be downloaded from %s and decompressed into %s: ",
+		result = g_strdup_printf ("DBX can be downloaded from %s and decompressed into %s",
 					  FU_UEFI_DBX_DATA_URL, dbxdir);
 		fwupd_security_attr_set_result (attr, result);
 		return;
