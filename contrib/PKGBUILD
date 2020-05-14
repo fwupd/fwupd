@@ -25,7 +25,7 @@ pkgver() {
 build() {
     cd ${pkgname}
     if [ -n "$CI" ]; then
-        export CI="--werror --wrap-mode=default"
+        export CI="--wrap-mode=default"
     fi
     arch-meson -D b_lto=false $CI ../build
 
