@@ -1,0 +1,181 @@
+# ISA bridge i.e. 00:1F.0
+# -> drivers/mfd/lpc_ich.c
+
+# Sunrise Point LPC/eSPI
+[DeviceInstanceId=PCI\VEN_8086&DEV_9D4E]
+Plugin = pci_bcr
+
+# Tiger Lake
+[DeviceInstanceId=PCI\VEN_8086&DEV_A0A4]
+Plugin = pci_bcr
+
+# Sunrise Point-H LPC
+[DeviceInstanceId=PCI\VEN_8086&DEV_A140]
+Plugin = pci_bcr
+
+# Sunrise Point-H LPC
+[DeviceInstanceId=PCI\VEN_8086&DEV_A141]
+Plugin = pci_bcr
+
+# Sunrise Point-H LPC
+[DeviceInstanceId=PCI\VEN_8086&DEV_A142]
+Plugin = pci_bcr
+
+# H110 LPC/eSPI
+[DeviceInstanceId=PCI\VEN_8086&DEV_A143]
+Plugin = pci_bcr
+
+# H170 LPC/eSPI
+[DeviceInstanceId=PCI\VEN_8086&DEV_A144]
+Plugin = pci_bcr
+
+# Z170 LPC/eSPI
+[DeviceInstanceId=PCI\VEN_8086&DEV_A145]
+Plugin = pci_bcr
+
+# Q170 LPC/eSPI
+[DeviceInstanceId=PCI\VEN_8086&DEV_A146]
+Plugin = pci_bcr
+
+# Q150 LPC/eSPI
+[DeviceInstanceId=PCI\VEN_8086&DEV_A147]
+Plugin = pci_bcr
+
+# B150 LPC/eSPI
+[DeviceInstanceId=PCI\VEN_8086&DEV_A148]
+Plugin = pci_bcr
+
+# C236 LPC/eSPI
+[DeviceInstanceId=PCI\VEN_8086&DEV_A149]
+Plugin = pci_bcr
+
+# C232 LPC/eSPI
+[DeviceInstanceId=PCI\VEN_8086&DEV_A14A]
+Plugin = pci_bcr
+
+# Sunrise Point-H LPC
+[DeviceInstanceId=PCI\VEN_8086&DEV_A14B]
+Plugin = pci_bcr
+
+# Sunrise Point-H LPC
+[DeviceInstanceId=PCI\VEN_8086&DEV_A14C]
+Plugin = pci_bcr
+
+# QM170 LPC/eSPI
+[DeviceInstanceId=PCI\VEN_8086&DEV_A14D]
+Plugin = pci_bcr
+
+# HM170 LPC/eSPI
+[DeviceInstanceId=PCI\VEN_8086&DEV_A14E]
+Plugin = pci_bcr
+
+# Sunrise Point-H LPC
+[DeviceInstanceId=PCI\VEN_8086&DEV_A14F]
+Plugin = pci_bcr
+
+# CM236 LPC/eSPI
+[DeviceInstanceId=PCI\VEN_8086&DEV_A150]
+Plugin = pci_bcr
+
+# Sunrise Point-H LPC
+[DeviceInstanceId=PCI\VEN_8086&DEV_A151]
+Plugin = pci_bcr
+
+# HM175 LPC/eSPI
+[DeviceInstanceId=PCI\VEN_8086&DEV_A152]
+Plugin = pci_bcr
+
+# QM175 LPC/eSPI
+[DeviceInstanceId=PCI\VEN_8086&DEV_A153]
+Plugin = pci_bcr
+
+# CM238 LPC/eSPI
+[DeviceInstanceId=PCI\VEN_8086&DEV_A154]
+Plugin = pci_bcr
+
+# Sunrise Point-H LPC
+[DeviceInstanceId=PCI\VEN_8086&DEV_A155]
+Plugin = pci_bcr
+
+# C621 LPC/eSPI
+[DeviceInstanceId=PCI\VEN_8086&DEV_A1C1]
+Plugin = pci_bcr
+
+# C622 LPC/eSPI
+[DeviceInstanceId=PCI\VEN_8086&DEV_A1C2]
+Plugin = pci_bcr
+
+# C624 LPC/eSPI
+[DeviceInstanceId=PCI\VEN_8086&DEV_A1C3]
+Plugin = pci_bcr
+
+# C625 LPC/eSPI
+[DeviceInstanceId=PCI\VEN_8086&DEV_A1C4]
+Plugin = pci_bcr
+
+# C626 LPC/eSPI
+[DeviceInstanceId=PCI\VEN_8086&DEV_A1C5]
+Plugin = pci_bcr
+
+# C627 LPC/eSPI
+[DeviceInstanceId=PCI\VEN_8086&DEV_A1C6]
+Plugin = pci_bcr
+
+# C628 LPC/eSPI
+[DeviceInstanceId=PCI\VEN_8086&DEV_A1C7]
+Plugin = pci_bcr
+
+# H370 LPC/eSPI
+[DeviceInstanceId=PCI\VEN_8086&DEV_A304]
+Plugin = pci_bcr
+
+# Z390 LPC/eSPI
+[DeviceInstanceId=PCI\VEN_8086&DEV_A305]
+Plugin = pci_bcr
+
+# Q370 LPC/eSPI
+[DeviceInstanceId=PCI\VEN_8086&DEV_A306]
+Plugin = pci_bcr
+
+# QM370 LPC/eSPI
+[DeviceInstanceId=PCI\VEN_8086&DEV_A30C]
+Plugin = pci_bcr
+
+# PCI devices, i.e. 00:1F.5
+#  -> drivers/mtd/spi-nor/controllers/intel-spi-pci.c
+
+# Comet Lake SPI
+[DeviceInstanceId=PCI\VEN_8086&DEV_02A4]
+Plugin = pci_bcr
+
+# Comet Lake H
+[DeviceInstanceId=PCI\VEN_8086&DEV_06A4]
+Plugin = pci_bcr
+
+# Ice Lake-LP SPI
+[DeviceInstanceId=PCI\VEN_8086&DEV_34A4]
+Plugin = pci_bcr
+
+# Elkhart Lake
+[DeviceInstanceId=PCI\VEN_8086&DEV_4B24]
+Plugin = pci_bcr
+
+# Jasper Lake
+[DeviceInstanceId=PCI\VEN_8086&DEV_4DA4]
+Plugin = pci_bcr
+
+# Cannon Point-LP SPI
+[DeviceInstanceId=PCI\VEN_8086&DEV_9DA4]
+Plugin = pci_bcr
+
+# C620 SPI
+[DeviceInstanceId=PCI\VEN_8086&DEV_A1A4]
+Plugin = pci_bcr
+
+# Cannon Lake PCH SPI
+[DeviceInstanceId=PCI\VEN_8086&DEV_A324]
+Plugin = pci_bcr
+
+# Comet Lake V
+[DeviceInstanceId=PCI\VEN_8086&DEV_A3A4]
+Plugin = pci_bcr
