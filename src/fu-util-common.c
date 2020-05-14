@@ -1552,7 +1552,9 @@ fu_util_remote_to_string (FwupdRemote *remote, guint idt)
 static void
 fu_security_attr_append_str (FwupdSecurityAttr *attr, GString *str)
 {
-	if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
+	if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED)) {
+		g_string_append_printf (str, "\033[37m✦\033[0m  ");
+	} else if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
 		g_string_append_printf (str, "\033[32m✔\033[0m  ");
 	} else {
 		g_string_append_printf (str, "\033[31m✘\033[0m  ");
