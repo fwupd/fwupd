@@ -184,6 +184,43 @@ fu_security_attrs_calculate_hsi (FuSecurityAttrs *self)
 	return g_string_free (str, FALSE);
 }
 
+static gchar *
+fu_security_attrs_get_sort_key (FwupdSecurityAttr *attr)
+{
+	GString *str = g_string_new (NULL);
+
+	/* level */
+	g_string_append_printf (str, "%u", fwupd_security_attr_get_level (attr));
+
+	/* success -> fail -> obsoletes */
+	if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
+		g_string_append (str, "0");
+	} else if (!fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS) &&
+		   !fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED)) {
+		g_string_append (str, "1");
+	} else {
+		g_string_append (str, "9");
+	}
+
+	/* prefer name, but fallback to appstream-id for tests */
+	if (fwupd_security_attr_get_name (attr) != NULL) {
+		g_string_append (str, fwupd_security_attr_get_name (attr));
+	} else {
+		g_string_append (str, fwupd_security_attr_get_appstream_id (attr));
+	}
+	return g_string_free (str, FALSE);
+}
+
+static gint
+fu_security_attrs_sort_cb (gconstpointer item1, gconstpointer item2)
+{
+	FwupdSecurityAttr *attr1 = *((FwupdSecurityAttr **) item1);
+	FwupdSecurityAttr *attr2 = *((FwupdSecurityAttr **) item2);
+	g_autofree gchar *sort1 = fu_security_attrs_get_sort_key (attr1);
+	g_autofree gchar *sort2 = fu_security_attrs_get_sort_key (attr2);
+	return g_strcmp0 (sort1, sort2);
+}
+
 /**
  * fu_security_attrs_depsolve:
  * @self: A #FuSecurityAttrs
@@ -192,7 +229,7 @@ fu_security_attrs_calculate_hsi (FuSecurityAttrs *self)
  * defined as obsoleted by other attributes.
  *
  * It is only required to call this function once, and should be done when all
- * attributes have been added.
+ * attributes have been added. This will also sort the attrs.
  *
  * Since: 1.5.0
  **/
@@ -227,6 +264,9 @@ fu_security_attrs_depsolve (FuSecurityAttrs *self)
 			}
 		}
 	}
+
+	/* sort */
+	g_ptr_array_sort (self->attrs, fu_security_attrs_sort_cb);
 }
 
 /**
