@@ -14,6 +14,10 @@ VendorId = ATA:0x1BB1
 Vendor = Seagate
 VendorId = ATA:0x1BB1
 
+[DeviceInstanceId=OUI\000cca]
+Vendor = Western Digital
+VendorId = ATA:0x101C
+
 [DeviceInstanceId=OUI\0014ee]
 Vendor = Western Digital
 VendorId = ATA:0x101C
