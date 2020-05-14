@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
+#define G_LOG_DOMAIN				"FuSecurityAttrs"
+
 #include "config.h"
 
 #include <glib/gi18n.h>
