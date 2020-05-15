@@ -12,6 +12,7 @@
 
 struct FuPluginData {
 	gboolean		 has_cet;
+	gboolean		 has_tme;
 };
 
 void
@@ -40,8 +41,8 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		dev = fu_cpu_device_new (lines[i]);
 		if (!fu_device_setup (FU_DEVICE (dev), error))
 			return FALSE;
-		if (fu_cpu_device_has_shstk (dev) &&
-		    fu_cpu_device_has_ibt (dev))
+		if (fu_cpu_device_has_flag (dev, FU_CPU_DEVICE_FLAG_SHSTK) &&
+		    fu_cpu_device_has_flag (dev, FU_CPU_DEVICE_FLAG_IBT))
 			data->has_cet = TRUE;
 		fu_plugin_device_add (plugin, FU_DEVICE (dev));
 	}
@@ -49,20 +50,16 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-void
-fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
+static void
+fu_plugin_add_security_attrs_intel_cet (FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
-	/* only Intel */
-	if (!fu_common_is_cpu_intel ())
-		return;
-
 	/* create attr */
 	attr = fwupd_security_attr_new ("com.intel.CET");
 	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL);
-	fwupd_security_attr_set_name (attr, "Intel CET");
+	fwupd_security_attr_set_name (attr, "Intel control enforcement technology (CET)");
 	fu_security_attrs_append (attrs, attr);
 
 	/* check for CET */
@@ -70,6 +67,42 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 		fwupd_security_attr_set_result (attr, "Unavailable");
 		return;
 	}
+
+	/* success */
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-	fwupd_security_attr_set_result (attr, "SHSTK+IBT");
+	fwupd_security_attr_set_result (attr, "Available");
+}
+
+static void
+fu_plugin_add_security_attrs_intel_tme (FuPlugin *plugin, FuSecurityAttrs *attrs)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	/* create attr */
+	attr = fwupd_security_attr_new ("com.intel.TME");
+	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_SYSTEM_PROTECTION);
+	fwupd_security_attr_set_name (attr, "Intel total memory encryption (TME)");
+	fu_security_attrs_append (attrs, attr);
+
+	/* check for TME */
+	if (!data->has_tme) {
+		fwupd_security_attr_set_result (attr, "Unavailable");
+		return;
+	}
+
+	/* success */
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_set_result (attr, "Available");
+}
+
+void
+fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
+{
+	/* only Intel */
+	if (!fu_common_is_cpu_intel ())
+		return;
+
+	fu_plugin_add_security_attrs_intel_cet (plugin, attrs);
+	fu_plugin_add_security_attrs_intel_tme (plugin, attrs);
 }
