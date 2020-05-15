@@ -578,7 +578,9 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	if (!fu_common_is_cpu_intel () || !data->has_mei)
 		return;
 
+	/* create attr */
 	attr = fwupd_security_attr_new ("com.intel.AMT");
+	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
 	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_SYSTEM_PROTECTION);
 	fwupd_security_attr_set_name (attr, "Intel AMT");
 	fu_security_attrs_append (attrs, attr);

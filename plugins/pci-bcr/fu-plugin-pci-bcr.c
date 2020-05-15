@@ -38,6 +38,7 @@ fu_plugin_add_security_attr_bioswe (FuPlugin *plugin, FuSecurityAttrs *attrs)
 
 	/* create attr */
 	attr = fwupd_security_attr_new ("com.intel.BIOSWE");
+	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
 	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
 	fwupd_security_attr_set_name (attr, "SPI");
 	fwupd_security_attr_add_obsolete (attr, "org.kernel.BIOSWE");
@@ -63,6 +64,7 @@ fu_plugin_add_security_attr_ble (FuPlugin *plugin, FuSecurityAttrs *attrs)
 
 	/* create attr */
 	attr = fwupd_security_attr_new ("com.intel.BLE");
+	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
 	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
 	fwupd_security_attr_set_name (attr, "SPI");
 	fwupd_security_attr_add_obsolete (attr, "org.kernel.BLE");
@@ -88,6 +90,7 @@ fu_plugin_add_security_attr_smm_bwp (FuPlugin *plugin, FuSecurityAttrs *attrs)
 
 	/* create attr */
 	attr = fwupd_security_attr_new ("com.intel.SMM_BWP");
+	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
 	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
 	fwupd_security_attr_set_name (attr, "BIOS region of SPI");
 	fwupd_security_attr_add_obsolete (attr, "org.kernel.SMM_BWP");
@@ -162,6 +165,7 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	if (!priv->has_device) {
 		g_autoptr(FwupdSecurityAttr) attr = NULL;
 		attr = fwupd_security_attr_new ("org.fwupd.plugin.pci-bcr");
+		fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
 		fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
 		fwupd_security_attr_set_name (attr, "SPI");
 		fwupd_security_attr_set_result (attr, "No PCI devices with BCR");

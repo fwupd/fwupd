@@ -5043,6 +5043,7 @@ fu_engine_add_security_attrs_tainted (FuEngine *self, FuSecurityAttrs *attrs)
 	gboolean disabled_plugins = FALSE;
 	GPtrArray *blacklist = fu_config_get_blacklist_plugins (self->config);
 	g_autoptr(FwupdSecurityAttr) attr = fwupd_security_attr_new ("org.fwupd.Hsi.Plugins");
+	fwupd_security_attr_set_plugin (attr, "core");
 	fwupd_security_attr_set_name (attr, "fwupd plugins");
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
 	for (guint i = 0; i < blacklist->len; i++) {
@@ -5076,6 +5077,7 @@ fu_engine_add_security_attrs_supported (FuEngine *self, FuSecurityAttrs *attrs)
 
 	/* find out if there is firmware less than 12 months old */
 	attr_u = fwupd_security_attr_new ("org.fwupd.Hsi.Updates");
+	fwupd_security_attr_set_plugin (attr_u, "core");
 	fwupd_security_attr_add_flag (attr_u, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES);
 	fwupd_security_attr_set_name (attr_u, "Firmware Updates");
 	fu_security_attrs_append (attrs, attr_u);
@@ -5110,6 +5112,7 @@ fu_engine_add_security_attrs_supported (FuEngine *self, FuSecurityAttrs *attrs)
 
 	/* do we have attestation checksums */
 	attr_a = fwupd_security_attr_new ("org.fwupd.Hsi.Attestation");
+	fwupd_security_attr_set_plugin (attr_a, "core");
 	fwupd_security_attr_set_name (attr_a, "Firmware Attestation");
 	fwupd_security_attr_add_flag (attr_a, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ATTESTATION);
 	fu_security_attrs_append (attrs, attr_a);

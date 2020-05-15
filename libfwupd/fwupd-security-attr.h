@@ -83,6 +83,9 @@ void		 fwupd_security_attr_set_level		(FwupdSecurityAttr	*self,
 const gchar	*fwupd_security_attr_get_name		(FwupdSecurityAttr	*self);
 void		 fwupd_security_attr_set_name		(FwupdSecurityAttr	*self,
 							 const gchar		*name);
+const gchar	*fwupd_security_attr_get_plugin		(FwupdSecurityAttr	*self);
+void		 fwupd_security_attr_set_plugin		(FwupdSecurityAttr	*self,
+							 const gchar		*plugin);
 const gchar	*fwupd_security_attr_get_result		(FwupdSecurityAttr	*self);
 void		 fwupd_security_attr_set_result		(FwupdSecurityAttr	*self,
 							 const gchar		*result);

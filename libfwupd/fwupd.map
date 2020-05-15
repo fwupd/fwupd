@@ -462,6 +462,7 @@ LIBFWUPD_1.5.0 {
     fwupd_security_attr_get_level;
     fwupd_security_attr_get_name;
     fwupd_security_attr_get_obsoletes;
+    fwupd_security_attr_get_plugin;
     fwupd_security_attr_get_result;
     fwupd_security_attr_get_type;
     fwupd_security_attr_has_flag;
@@ -471,6 +472,7 @@ LIBFWUPD_1.5.0 {
     fwupd_security_attr_set_flags;
     fwupd_security_attr_set_level;
     fwupd_security_attr_set_name;
+    fwupd_security_attr_set_plugin;
     fwupd_security_attr_set_result;
     fwupd_security_attr_to_json;
     fwupd_security_attr_to_string;
