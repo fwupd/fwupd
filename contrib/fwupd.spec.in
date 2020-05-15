@@ -356,7 +356,6 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_libdir}/fwupd-plugins-3/libfu_plugin_jabra.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_linux_lockdown.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_linux_sleep.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_linux_spi_lpc.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_linux_swap.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_linux_tainted.so
 %if 0%{?have_modem_manager}

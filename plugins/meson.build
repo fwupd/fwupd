@@ -11,7 +11,6 @@ subdir('fresco-pd')
 subdir('jabra')
 subdir('linux-lockdown')
 subdir('linux-sleep')
-subdir('linux-spi-lpc')
 subdir('linux-swap')
 subdir('linux-tainted')
 subdir('steelseries')
@@ -27,6 +26,10 @@ subdir('test')
 subdir('upower')
 subdir('wacom-usb')
 subdir('vli')
+
+if get_option('plugin_linux_spi_lpc')
+subdir('linux-spi-lpc')
+endif
 
 if get_option('gudev')
 subdir('ata')
