@@ -31,6 +31,7 @@ fu_plugin_add_security_attr_bioswe (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	attr = fwupd_security_attr_new ("org.kernel.BIOSWE");
 	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
 	fwupd_security_attr_set_name (attr, "SPI");
+	fwupd_security_attr_add_obsolete (attr, "org.fwupd.plugin.pci-bcr");
 	fu_security_attrs_append (attrs, attr);
 
 	/* load file */
@@ -63,6 +64,7 @@ fu_plugin_add_security_attr_ble (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	attr = fwupd_security_attr_new ("org.kernel.BLE");
 	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
 	fwupd_security_attr_set_name (attr, "SPI");
+	fwupd_security_attr_add_obsolete (attr, "org.fwupd.plugin.pci-bcr");
 	fu_security_attrs_append (attrs, attr);
 
 	/* load file */
@@ -95,6 +97,7 @@ fu_plugin_add_security_attr_smm_bwp (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	attr = fwupd_security_attr_new ("org.kernel.SMM_BWP");
 	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
 	fwupd_security_attr_set_name (attr, "BIOS region of SPI");
+	fwupd_security_attr_add_obsolete (attr, "org.fwupd.plugin.pci-bcr");
 	fu_security_attrs_append (attrs, attr);
 
 	/* load file */
@@ -124,7 +127,7 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	/* maybe the kernel module does not exist */
 	if (!g_file_test (FU_PLUGIN_LINUX_SPI_LPC_SYSFS_DIR, G_FILE_TEST_IS_DIR)) {
 		g_autoptr(FwupdSecurityAttr) attr = NULL;
-		attr = fwupd_security_attr_new ("org.kernel.BIOSWE");
+		attr = fwupd_security_attr_new ("org.fwupd.plugin.linux-spi-lpc");
 		fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
 		fwupd_security_attr_set_name (attr, "SPI");
 		fwupd_security_attr_set_result (attr, "Kernel support not present");
