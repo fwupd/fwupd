@@ -1,7 +1,3 @@
-[DeviceInstanceId=USB\VID_17EF&PID_3070]
-Plugin = vli
-GType = FuVliPdDevice
-
 # Generic
 [DeviceInstanceId=USB\VID_0800&PID_0800]
 Plugin = vli
