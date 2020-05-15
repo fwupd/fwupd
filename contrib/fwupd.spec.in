@@ -368,6 +368,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_optionrom.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_pci_bcr.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_pci_mei.so
 %if 0%{?have_redfish}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_redfish.so
 %endif

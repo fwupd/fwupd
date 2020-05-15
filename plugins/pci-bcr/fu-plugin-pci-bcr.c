@@ -6,10 +6,6 @@
 
 #include "config.h"
 
-#include <unistd.h>
-#include <fcntl.h>
-#include <glib/gstdio.h>
-
 #include "fu-plugin-vfuncs.h"
 #include "fu-hash.h"
 
@@ -112,45 +108,28 @@ fu_plugin_add_security_attr_smm_bwp (FuPlugin *plugin, FuSecurityAttrs *attrs)
 gboolean
 fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **error)
 {
-#ifndef _WIN32
 	FuPluginData *priv = fu_plugin_get_data (plugin);
-	gint fd;
-	g_autofree gchar *fn = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* interesting device? */
 	if (g_strcmp0 (fu_udev_device_get_subsystem (device), "pci") != 0)
 		return TRUE;
 
-	/* open config */
-	fn = g_build_filename (fu_udev_device_get_sysfs_path (device), "config", NULL);
-	fd = g_open (fn, O_RDONLY);
-	if (fd < 0) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_FAILED,
-			     "could not open %s", fn);
+	/* open the config */
+	fu_udev_device_set_flags (device, FU_UDEV_DEVICE_FLAG_USE_CONFIG);
+	if (!fu_udev_device_set_physical_id (device, "pci", error))
 		return FALSE;
-	}
+	locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
+		return FALSE;
 
 	/* grab BIOS Control Register */
-	if (pread (fd, &priv->bcr, 0x01, BCR) != 1) {
-		g_close (fd, NULL);
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_FAILED,
-			     "could not read BCR from %s",
-			     fn);
+	if (!fu_udev_device_pread (device, BCR, &priv->bcr, error)) {
+		g_prefix_error (error, "could not read MEI");
 		return FALSE;
 	}
 	priv->has_device = TRUE;
-	return g_close (fd, error);
-#else
-	g_set_error_literal (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "pci reads not currently supported on Windows");
-	return FALSE;
-#endif
+	return TRUE;
 }
 
 void
