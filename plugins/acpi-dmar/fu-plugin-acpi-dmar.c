@@ -32,6 +32,7 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 
 	/* create attr */
 	attr = fwupd_security_attr_new ("org.uefi.ACPI.Dmar");
+	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
 	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL);
 	fwupd_security_attr_set_name (attr, "Pre-boot kernel DMA protection");
 	fu_security_attrs_append (attrs, attr);

@@ -73,6 +73,7 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 
 	/* create attr */
 	attr = fwupd_security_attr_new ("org.kernel.Swap");
+	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
 	fwupd_security_attr_set_name (attr, "Linux Swap");
 	fu_security_attrs_append (attrs, attr);

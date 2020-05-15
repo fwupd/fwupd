@@ -1763,6 +1763,7 @@ fu_security_attrs_hsi_func (void)
 
 	/* just success from HSI:1 */
 	attr = fwupd_security_attr_new ("org.fwupd.Hsi.BIOSWE");
+	fwupd_security_attr_set_plugin (attr, "test");
 	fwupd_security_attr_set_level (attr, 1);
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 	fu_security_attrs_append (attrs, attr);
@@ -1772,6 +1773,7 @@ fu_security_attrs_hsi_func (void)
 
 	/* add failed from HSI:2, so still HSI:1 */
 	attr = fwupd_security_attr_new ("org.fwupd.Hsi.PRX");
+	fwupd_security_attr_set_plugin (attr, "test");
 	fwupd_security_attr_set_level (attr, 2);
 	fu_security_attrs_append (attrs, attr);
 	hsi3 = fu_security_attrs_calculate_hsi (attrs);
@@ -1780,6 +1782,7 @@ fu_security_attrs_hsi_func (void)
 
 	/* add attr from HSI:3, obsoleting the failure */
 	attr = fwupd_security_attr_new ("org.fwupd.Hsi.BIOSGuard");
+	fwupd_security_attr_set_plugin (attr, "test");
 	fwupd_security_attr_set_level (attr, 3);
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 	fwupd_security_attr_add_obsolete (attr, "org.fwupd.Hsi.PRX");
@@ -1791,6 +1794,7 @@ fu_security_attrs_hsi_func (void)
 
 	/* add taint that was fine */
 	attr = fwupd_security_attr_new ("org.fwupd.Hsi.PluginsTainted");
+	fwupd_security_attr_set_plugin (attr, "test");
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
 	fu_security_attrs_append (attrs, attr);
@@ -1800,6 +1804,7 @@ fu_security_attrs_hsi_func (void)
 
 	/* add updates and attestation */
 	attr = fwupd_security_attr_new ("org.fwupd.Hsi.LVFS");
+	fwupd_security_attr_set_plugin (attr, "test");
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES);
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ATTESTATION);
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
@@ -1810,6 +1815,7 @@ fu_security_attrs_hsi_func (void)
 
 	/* add issue that was uncool */
 	attr = fwupd_security_attr_new ("org.fwupd.Hsi.Swap");
+	fwupd_security_attr_set_plugin (attr, "test");
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
 	fu_security_attrs_append (attrs, attr);
 	hsi7 = fu_security_attrs_calculate_hsi (attrs);

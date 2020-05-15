@@ -54,6 +54,12 @@ fu_security_attrs_append (FuSecurityAttrs *self, FwupdSecurityAttr *attr)
 {
 	g_return_if_fail (FU_IS_SECURITY_ATTRS (self));
 	g_return_if_fail (FWUPD_IS_SECURITY_ATTR (attr));
+
+	/* sanity check */
+	if (fwupd_security_attr_get_plugin (attr) == NULL) {
+		g_warning ("%s has no plugin set",
+			   fwupd_security_attr_get_appstream_id (attr));
+	}
 	g_ptr_array_add (self->attrs, g_object_ref (attr));
 }
 

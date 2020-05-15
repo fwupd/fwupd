@@ -24,6 +24,7 @@ typedef struct {
 	gchar				*appstream_id;
 	GPtrArray			*obsoletes;
 	gchar				*name;
+	gchar				*plugin;
 	gchar				*result;
 	FwupdSecurityAttrLevel		 level;
 	FwupdSecurityAttrFlags		 flags;
@@ -220,6 +221,24 @@ fwupd_security_attr_set_name (FwupdSecurityAttr *self, const gchar *name)
 }
 
 /**
+ * fwupd_security_attr_set_plugin:
+ * @self: A #FwupdSecurityAttr
+ * @plugin: the plugin name
+ *
+ * Sets the plugin that created the attribute.
+ *
+ * Since: 1.5.0
+ **/
+void
+fwupd_security_attr_set_plugin (FwupdSecurityAttr *self, const gchar *plugin)
+{
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_SECURITY_ATTR (self));
+	g_free (priv->plugin);
+	priv->plugin = g_strdup (plugin);
+}
+
+/**
  * fwupd_security_attr_set_result:
  * @self: A #FwupdSecurityAttr
  * @result: the attribute one line result
@@ -253,6 +272,24 @@ fwupd_security_attr_get_name (FwupdSecurityAttr *self)
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FWUPD_IS_SECURITY_ATTR (self), NULL);
 	return priv->name;
+}
+
+/**
+ * fwupd_security_attr_get_plugin:
+ * @self: A #FwupdSecurityAttr
+ *
+ * Gets the plugin that created the attribute.
+ *
+ * Returns: the plugin name, or %NULL if unset
+ *
+ * Since: 1.5.0
+ **/
+const gchar *
+fwupd_security_attr_get_plugin (FwupdSecurityAttr *self)
+{
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_SECURITY_ATTR (self), NULL);
+	return priv->plugin;
 }
 
 /**
@@ -523,6 +560,7 @@ fwupd_security_attr_to_json (FwupdSecurityAttr *self, JsonBuilder *builder)
 	fwupd_security_attr_json_add_string (builder, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
 	fwupd_security_attr_json_add_int (builder, FWUPD_RESULT_KEY_HSI_LEVEL, priv->level);
 	fwupd_security_attr_json_add_string (builder, FWUPD_RESULT_KEY_NAME, priv->name);
+	fwupd_security_attr_json_add_string (builder, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
 	fwupd_security_attr_json_add_string (builder, FWUPD_RESULT_KEY_HSI_RESULT, priv->result);
 	if (priv->flags != FWUPD_SECURITY_ATTR_FLAG_NONE) {
 		json_builder_set_member_name (builder, FWUPD_RESULT_KEY_FLAGS);
@@ -563,6 +601,7 @@ fwupd_security_attr_to_string (FwupdSecurityAttr *self)
 	if (priv->flags != FWUPD_SECURITY_ATTR_FLAG_NONE)
 		fwupd_pad_kv_tfl (str, FWUPD_RESULT_KEY_FLAGS, priv->flags);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_NAME, priv->name);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_HSI_RESULT, priv->result);
 	for (guint i = 0; i < priv->obsoletes->len; i++) {
 		const gchar *appstream_id = g_ptr_array_index (priv->obsoletes, i);
@@ -594,6 +633,7 @@ fwupd_security_attr_finalize (GObject *object)
 
 	g_free (priv->appstream_id);
 	g_free (priv->name);
+	g_free (priv->plugin);
 	g_free (priv->result);
 	g_ptr_array_unref (priv->obsoletes);
 
