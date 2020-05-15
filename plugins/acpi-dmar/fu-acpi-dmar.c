@@ -18,7 +18,7 @@ struct _FuAcpiDmar {
 
 G_DEFINE_TYPE (FuAcpiDmar, fu_acpi_dmar, G_TYPE_OBJECT)
 
-#define DMAR_DMA_CTRL_PLATFORM_OPT_IN_FLAG	2
+#define DMAR_DMA_CTRL_PLATFORM_OPT_IN_FLAG	0x4
 
 FuAcpiDmar *
 fu_acpi_dmar_new (GBytes *blob, GError **error)
