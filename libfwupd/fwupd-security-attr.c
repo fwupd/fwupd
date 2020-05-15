@@ -205,7 +205,7 @@ fwupd_security_attr_get_result (FwupdSecurityAttr *self)
 /**
  * fwupd_security_attr_set_name:
  * @self: A #FwupdSecurityAttr
- * @result: the attribute one line result
+ * @name: the attribute name
  *
  * Sets the attribute name.
  *
