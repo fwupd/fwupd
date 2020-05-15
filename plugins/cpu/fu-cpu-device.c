@@ -10,30 +10,27 @@
 
 struct _FuCpuDevice {
 	FuDevice		 parent_instance;
-	gboolean		 has_shstk;
-	gboolean		 has_ibt;
+	FuCpuDeviceFlag		 flags;
 };
 
 G_DEFINE_TYPE (FuCpuDevice, fu_cpu_device, FU_TYPE_DEVICE)
 
 gboolean
-fu_cpu_device_has_shstk (FuCpuDevice *self)
+fu_cpu_device_has_flag (FuCpuDevice *self, FuCpuDeviceFlag flag)
 {
-	return self->has_shstk;
-}
-
-gboolean
-fu_cpu_device_has_ibt (FuCpuDevice *self)
-{
-	return self->has_ibt;
+	return (self->flags & flag) > 0;
 }
 
 static void
 fu_cpu_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuCpuDevice *self = FU_CPU_DEVICE (device);
-	fu_common_string_append_kb (str, idt, "HasSHSTK", self->has_shstk);
-	fu_common_string_append_kb (str, idt, "HasIBT", self->has_ibt);
+	fu_common_string_append_kb (str, idt, "HasSHSTK",
+				    fu_cpu_device_has_flag (self, FU_CPU_DEVICE_FLAG_SHSTK));
+	fu_common_string_append_kb (str, idt, "HasIBT",
+				    fu_cpu_device_has_flag (self, FU_CPU_DEVICE_FLAG_IBT));
+	fu_common_string_append_kb (str, idt, "HasTME",
+				    fu_cpu_device_has_flag (self, FU_CPU_DEVICE_FLAG_TME));
 }
 
 static void
@@ -42,9 +39,11 @@ fu_cpu_device_parse_flags (FuCpuDevice *self, const gchar *data)
 	g_auto(GStrv) flags = g_strsplit (data, " ", -1);
 	for (guint i = 0; flags[i] != NULL; i++) {
 		if (g_strcmp0 (flags[i], "shstk") == 0)
-			self->has_shstk = TRUE;
+			self->flags |= FU_CPU_DEVICE_FLAG_SHSTK;
 		if (g_strcmp0 (flags[i], "ibt") == 0)
-			self->has_ibt = TRUE;
+			self->flags |= FU_CPU_DEVICE_FLAG_IBT;
+		if (g_strcmp0 (flags[i], "tme") == 0)
+			self->flags |= FU_CPU_DEVICE_FLAG_TME;
 	}
 }
 
