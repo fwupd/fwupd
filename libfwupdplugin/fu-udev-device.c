@@ -777,6 +777,15 @@ fu_udev_device_set_flags (FuUdevDevice *self, FuUdevDeviceFlags flags)
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_UDEV_DEVICE (self));
 	priv->flags = flags;
+
+#ifdef HAVE_GUDEV
+	/* overwrite */
+	if (flags & FU_UDEV_DEVICE_FLAG_USE_CONFIG) {
+		g_free (priv->device_file);
+		priv->device_file = g_build_filename (g_udev_device_get_sysfs_path (priv->udev_device),
+						      "config", NULL);
+	}
+#endif
 }
 
 static gboolean
