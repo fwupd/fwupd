@@ -44,6 +44,8 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		if (fu_cpu_device_has_flag (dev, FU_CPU_DEVICE_FLAG_SHSTK) &&
 		    fu_cpu_device_has_flag (dev, FU_CPU_DEVICE_FLAG_IBT))
 			data->has_cet = TRUE;
+		if (fu_cpu_device_has_flag (dev, FU_CPU_DEVICE_FLAG_TME))
+			data->has_tme = TRUE;
 		fu_plugin_device_add (plugin, FU_DEVICE (dev));
 	}
 
