@@ -340,10 +340,6 @@ main (int argc, char *argv[])
 	priv->loop = g_main_loop_new (NULL, FALSE);
 	priv->client = fwupd_client_new ();
 
-	/* set flags */
-	if (force)
-		priv->flags |= FWUPD_INSTALL_FLAG_FORCE;
-
 	/* add commands */
 	fu_util_cmd_array_add (cmd_array,
 			       "get-devices", NULL,
@@ -397,6 +393,10 @@ main (int argc, char *argv[])
 		g_log_set_handler (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
 				   fu_util_ignore_cb, NULL);
 	}
+
+	/* set flags */
+	if (force)
+		priv->flags |= FWUPD_INSTALL_FLAG_FORCE;
 
 	/* run the specified command */
 	ret = fu_util_cmd_array_run (cmd_array, priv, argv[1], (gchar**) &argv[2], &error);
