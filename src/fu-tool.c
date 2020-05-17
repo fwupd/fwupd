@@ -1963,9 +1963,7 @@ fu_util_security (FuUtilPrivate *priv, gchar **values, GError **error)
 		 fu_engine_get_host_security_id (priv->engine));
 
 	/* print the "why" */
-	attrs = fu_engine_get_host_security_attrs (priv->engine, error);
-	if (attrs == NULL)
-		return FALSE;
+	attrs = fu_engine_get_host_security_attrs (priv->engine);
 	items = fu_security_attrs_get_all (attrs);
 	str = fu_util_security_attrs_to_string (items);
 	g_print ("%s\n", str);

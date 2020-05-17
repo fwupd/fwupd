@@ -992,11 +992,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 	if (g_strcmp0 (method_name, "GetHostSecurityAttrs") == 0) {
 		g_autoptr(FuSecurityAttrs) attrs = NULL;
 		g_debug ("Called %s()", method_name);
-		attrs = fu_engine_get_host_security_attrs (priv->engine, &error);
-		if (attrs == NULL) {
-			g_dbus_method_invocation_return_gerror (invocation, error);
-			return;
-		}
+		attrs = fu_engine_get_host_security_attrs (priv->engine);
 		val = fu_security_attrs_to_variant (attrs);
 		g_dbus_method_invocation_return_value (invocation, val);
 		return;
