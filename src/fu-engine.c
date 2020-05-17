@@ -3585,6 +3585,28 @@ fu_engine_get_devices_by_guid (FuEngine *self, const gchar *guid, GError **error
 	return g_steal_pointer (&devices);
 }
 
+static void
+fu_engine_get_history_set_hsi_attrs (FuEngine *self, FuDevice *device)
+{
+	g_autofree gchar *host_security_id = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = NULL;
+	g_autoptr(GPtrArray) vals = NULL;
+
+	/* add attributes */
+	attrs = fu_engine_get_host_security_attrs (self);
+	vals = fu_security_attrs_get_all (attrs);
+	for (guint i = 0; i < vals->len; i++) {
+		FwupdSecurityAttr *attr = g_ptr_array_index (vals, i);
+		fu_device_set_metadata (device,
+					fwupd_security_attr_get_appstream_id (attr),
+					fwupd_security_attr_get_result_with_fallback (attr));
+	}
+
+	/* computed value */
+	host_security_id = fu_security_attrs_calculate_hsi (attrs);
+	fu_device_set_metadata (device, "HSI", host_security_id);
+}
+
 /**
  * fu_engine_get_history:
  * @self: A #FuEngine
@@ -3611,6 +3633,13 @@ fu_engine_get_history (FuEngine *self, GError **error)
 				     FWUPD_ERROR_NOTHING_TO_DO,
 				     "No history");
 		return NULL;
+	}
+
+	/* if this is the system firmware device, add the HSI attrs */
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *dev = g_ptr_array_index (devices, i);
+		if (fu_device_has_instance_id (dev, "main-system-firmware"))
+			fu_engine_get_history_set_hsi_attrs (self, dev);
 	}
 
 	/* try to set the remote ID for each device */
