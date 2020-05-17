@@ -1566,7 +1566,8 @@ fu_security_attr_append_str (FwupdSecurityAttr *attr, GString *str)
 	} else {
 		g_string_append_printf (str, ": %s",
 					fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)
-					? "OK" : "Failed");
+					/* TRANSLATOR: HSI test result */
+					? _("OK") : _("Failed"));
 	}
 	if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED))
 		g_string_append (str, " (obsoleted)");
