@@ -84,8 +84,7 @@ GPtrArray	*fu_engine_get_upgrades			(FuEngine	*self,
 FwupdDevice	*fu_engine_get_results			(FuEngine	*self,
 							 const gchar	*device_id,
 							 GError		**error);
-FuSecurityAttrs	*fu_engine_get_host_security_attrs	(FuEngine	*self,
-							 GError		**error);
+FuSecurityAttrs	*fu_engine_get_host_security_attrs	(FuEngine	*self);
 gboolean	 fu_engine_clear_results		(FuEngine	*self,
 							 const gchar	*device_id,
 							 GError		**error);

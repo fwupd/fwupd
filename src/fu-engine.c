@@ -5135,7 +5135,7 @@ fu_engine_add_security_attrs_supported (FuEngine *self, FuSecurityAttrs *attrs)
 }
 
 FuSecurityAttrs *
-fu_engine_get_host_security_attrs (FuEngine *self, GError **error)
+fu_engine_get_host_security_attrs (FuEngine *self)
 {
 	GPtrArray *plugins = fu_plugin_list_get_all (self->plugin_list);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new ();
@@ -5166,9 +5166,8 @@ fu_engine_get_host_security_id (FuEngine *self)
 		g_free (self->host_security_id);
 		self->host_security_id = NULL;
 		self->host_security_id_valid = TRUE;
-		attrs = fu_engine_get_host_security_attrs (self, NULL);
-		if (attrs != NULL)
-			self->host_security_id = fu_security_attrs_calculate_hsi (attrs);
+		attrs = fu_engine_get_host_security_attrs (self);
+		self->host_security_id = fu_security_attrs_calculate_hsi (attrs);
 	}
 
 	return self->host_security_id;
