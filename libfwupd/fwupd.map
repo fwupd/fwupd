@@ -464,6 +464,7 @@ LIBFWUPD_1.5.0 {
     fwupd_security_attr_get_obsoletes;
     fwupd_security_attr_get_plugin;
     fwupd_security_attr_get_result;
+    fwupd_security_attr_get_result_with_fallback;
     fwupd_security_attr_get_type;
     fwupd_security_attr_has_flag;
     fwupd_security_attr_has_obsolete;

@@ -87,6 +87,7 @@ const gchar	*fwupd_security_attr_get_plugin		(FwupdSecurityAttr	*self);
 void		 fwupd_security_attr_set_plugin		(FwupdSecurityAttr	*self,
 							 const gchar		*plugin);
 const gchar	*fwupd_security_attr_get_result		(FwupdSecurityAttr	*self);
+const gchar	*fwupd_security_attr_get_result_with_fallback(FwupdSecurityAttr	*self);
 void		 fwupd_security_attr_set_result		(FwupdSecurityAttr	*self,
 							 const gchar		*result);
 GPtrArray	*fwupd_security_attr_get_obsoletes	(FwupdSecurityAttr	*self);

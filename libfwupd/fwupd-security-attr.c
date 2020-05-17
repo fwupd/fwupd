@@ -188,7 +188,7 @@ fwupd_security_attr_set_appstream_id (FwupdSecurityAttr *self, const gchar *apps
  * fwupd_security_attr_get_result:
  * @self: A #FwupdSecurityAttr
  *
- * Gets the attribute result.
+ * Gets the optional attribute result.
  *
  * Returns: the attribute result, or %NULL if unset
  *
@@ -200,6 +200,29 @@ fwupd_security_attr_get_result (FwupdSecurityAttr *self)
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FWUPD_IS_SECURITY_ATTR (self), NULL);
 	return priv->result;
+}
+
+/**
+ * fwupd_security_attr_get_result_with_fallback:
+ * @self: A #FwupdSecurityAttr
+ *
+ * Gets the attribute result, falling back to "OK" or "Failed" in the event of
+ * a failure.
+ *
+ * Returns: the attribute result
+ *
+ * Since: 1.5.0
+ **/
+const gchar *
+fwupd_security_attr_get_result_with_fallback (FwupdSecurityAttr *self)
+{
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_SECURITY_ATTR (self), NULL);
+	if (priv->result != NULL)
+		return priv->result;
+	if (fwupd_security_attr_has_flag (self, FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
+		return "OK";
+	return "Failed";
 }
 
 /**
