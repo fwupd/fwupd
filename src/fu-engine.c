@@ -3604,7 +3604,7 @@ fu_engine_get_history_set_hsi_attrs (FuEngine *self, FuDevice *device)
 	}
 
 	/* computed value */
-	host_security_id = fu_security_attrs_calculate_hsi (attrs);
+	host_security_id = fu_security_attrs_calculate_hsi (attrs, FU_SECURITY_ATTRS_FLAG_ADD_VERSION);
 	fu_device_set_metadata (device, "HSI", host_security_id);
 }
 
@@ -5224,7 +5224,8 @@ fu_engine_get_host_security_id (FuEngine *self)
 		self->host_security_id = NULL;
 		self->host_security_id_valid = TRUE;
 		attrs = fu_engine_get_host_security_attrs (self);
-		self->host_security_id = fu_security_attrs_calculate_hsi (attrs);
+		self->host_security_id = fu_security_attrs_calculate_hsi (attrs,
+									  FU_SECURITY_ATTRS_FLAG_ADD_VERSION);
 	}
 
 	return self->host_security_id;
