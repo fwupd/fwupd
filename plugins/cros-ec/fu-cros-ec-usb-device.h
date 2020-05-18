@@ -9,7 +9,7 @@
 #include "fu-plugin.h"
 
 #define FU_TYPE_CROS_EC_USB_DEVICE (fu_cros_ec_usb_device_get_type ())
-G_DECLARE_DERIVABLE_TYPE (FuCrosEcUsbDevice, fu_cros_ec_usb_device, FU, CROS_EC_USB_DEVICE, FuUsbDevice)
+G_DECLARE_FINAL_TYPE (FuCrosEcUsbDevice, fu_cros_ec_usb_device, FU, CROS_EC_USB_DEVICE, FuUsbDevice)
 
 struct _FuCrosEcUsbDeviceClass
 {
