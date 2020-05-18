@@ -110,6 +110,7 @@ fu_security_attrs_get_all (FuSecurityAttrs *self)
 /**
  * fu_security_attrs_calculate_hsi:
  * @self: A #FuSecurityAttrs
+ * @flags: Flags to use while calcuating the HSI
  *
  * Calculates the HSI string from the appended attribues.
  *
@@ -118,10 +119,11 @@ fu_security_attrs_get_all (FuSecurityAttrs *self)
  * Since: 1.5.0
  **/
 gchar *
-fu_security_attrs_calculate_hsi (FuSecurityAttrs *self)
+fu_security_attrs_calculate_hsi (FuSecurityAttrs	*self,
+				 FuSecurityAttrsFlags    flags)
 {
 	guint hsi_number = 0;
-	FwupdSecurityAttrFlags flags = FWUPD_SECURITY_ATTR_FLAG_NONE;
+	FwupdSecurityAttrFlags attr_flags = FWUPD_SECURITY_ATTR_FLAG_NONE;
 	GString *str = g_string_new ("HSI:");
 	const FwupdSecurityAttrFlags hpi_suffixes[] = {
 		FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES,
@@ -174,19 +176,27 @@ fu_security_attrs_calculate_hsi (FuSecurityAttrs *self)
 			if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
 				continue;
 		}
-		flags |= fwupd_security_attr_get_flags (attr);
+		attr_flags |= fwupd_security_attr_get_flags (attr);
 	}
 
 	g_string_append_printf (str, "%u", hsi_number);
-	if (flags & (FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES |
-		     FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ATTESTATION |
-		     FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE)) {
+	if (attr_flags & (FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES |
+			  FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ATTESTATION |
+			  FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE)) {
 		g_string_append (str, "+");
 		for (guint j = 0; hpi_suffixes[j] != FWUPD_SECURITY_ATTR_FLAG_NONE; j++) {
-			if (flags & hpi_suffixes[j])
+			if (attr_flags & hpi_suffixes[j])
 				g_string_append (str, fwupd_security_attr_flag_to_suffix (hpi_suffixes[j]));
 		}
 	}
+
+	if (flags & FU_SECURITY_ATTRS_FLAG_ADD_VERSION) {
+		g_string_append_printf (str, " (v%d.%d.%d)",
+					FWUPD_MAJOR_VERSION,
+					FWUPD_MINOR_VERSION,
+					FWUPD_MICRO_VERSION);
+	}
+
 	return g_string_free (str, FALSE);
 }
 
