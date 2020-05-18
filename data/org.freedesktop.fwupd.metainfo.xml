@@ -32,6 +32,21 @@
     <binary>fwupdmgr</binary>
   </provides>
   <releases>
+    <release version="1.4.2" date="2020-05-18">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add several more ATA OUI quirks</li>
+          <li>Avoid communicating with DFU devices when bitManifestationTolerant is off</li>
+          <li>Correct the display of final calculated PCRs</li>
+          <li>Delay activation for Dell Thunderbolt updates</li>
+          <li>Do not use synaptics-rmi on the Dell K12A</li>
+          <li>Fix switching wacom-raw to bootloader mode</li>
+          <li>Switch the default of EnumerateAllDevices to false</li>
+          <li>Use GPIOB to reset the VL817 found in two Lenovo products</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.4.1" date="2020-04-27">
       <description>
         <p>This release adds the following features:</p>
