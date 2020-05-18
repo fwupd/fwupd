@@ -70,9 +70,8 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	g_autoptr(GError) error_local = NULL;
 
 	/* create attr */
-	attr = fwupd_security_attr_new ("org.kernel.CheckLockdown");
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_KERNEL_LOCKDOWN);
 	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
-	fwupd_security_attr_set_name (attr, "Linux Kernel Lockdown");
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
 	fu_security_attrs_append (attrs, attr);
 
@@ -80,16 +79,16 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	if (!g_file_load_contents (data->file, NULL, &buf, &bufsz, NULL, &error_local)) {
 		g_autofree gchar *fn = g_file_get_path (data->file);
 		g_warning ("could not open %s: %s", fn, error_local->message);
-		fwupd_security_attr_set_result (attr, "Not supported");
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
 	if (g_strstr_len (buf, bufsz, "[integrity]") == NULL &&
 	    g_strstr_len (buf, bufsz, "[confidentiality]") == NULL) {
-		fwupd_security_attr_set_result (attr, "Not locked down");
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 		return;
 	}
 
 	/* success */
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-	fwupd_security_attr_set_result (attr, "Locked down");
+	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 }

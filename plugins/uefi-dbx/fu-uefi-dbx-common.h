@@ -8,6 +8,4 @@
 
 #include <gio/gio.h>
 
-#define FU_UEFI_DBX_DATA_URL	"https://uefi.org/revocationlistfile"
-
 gchar		*fu_uefi_dbx_get_dbxupdate	(GError		**error);

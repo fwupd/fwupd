@@ -71,6 +71,68 @@ typedef enum {
 	FWUPD_SECURITY_ATTR_LEVEL_LAST			= 6	/* perhaps increased in the future */
 } FwupdSecurityAttrLevel;
 
+/**
+ * FwupdSecurityAttrResult:
+ * @FWUPD_SECURITY_ATTR_RESULT_UNKNOWN:			Not known
+ * @FWUPD_SECURITY_ATTR_RESULT_ENABLED:			Enabled
+ * @FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED:		Not enabled
+ * @FWUPD_SECURITY_ATTR_RESULT_VALID:			Valid
+ * @FWUPD_SECURITY_ATTR_RESULT_NOT_VALID:		Not valid
+ * @FWUPD_SECURITY_ATTR_RESULT_LOCKED:			Locked
+ * @FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED:		Not locked
+ * @FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED:		Encrypted
+ * @FWUPD_SECURITY_ATTR_RESULT_NOT_ENCRYPTED:		Not encrypted
+ * @FWUPD_SECURITY_ATTR_RESULT_TAINTED:			Tainted
+ * @FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED:		Not tainted
+ * @FWUPD_SECURITY_ATTR_RESULT_FOUND:			Found
+ * @FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND:		NOt found
+ * @FWUPD_SECURITY_ATTR_RESULT_SUPPORTED:		Supported
+ * @FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED:		Not supported
+ *
+ * The HSI result.
+ **/
+typedef enum {
+	FWUPD_SECURITY_ATTR_RESULT_UNKNOWN,			/* Since: 1.5.0 */
+	FWUPD_SECURITY_ATTR_RESULT_ENABLED,			/* Since: 1.5.0 */
+	FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,			/* Since: 1.5.0 */
+	FWUPD_SECURITY_ATTR_RESULT_VALID,			/* Since: 1.5.0 */
+	FWUPD_SECURITY_ATTR_RESULT_NOT_VALID,			/* Since: 1.5.0 */
+	FWUPD_SECURITY_ATTR_RESULT_LOCKED,			/* Since: 1.5.0 */
+	FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED,			/* Since: 1.5.0 */
+	FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED,			/* Since: 1.5.0 */
+	FWUPD_SECURITY_ATTR_RESULT_NOT_ENCRYPTED,		/* Since: 1.5.0 */
+	FWUPD_SECURITY_ATTR_RESULT_TAINTED,			/* Since: 1.5.0 */
+	FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED,			/* Since: 1.5.0 */
+	FWUPD_SECURITY_ATTR_RESULT_FOUND,			/* Since: 1.5.0 */
+	FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND,			/* Since: 1.5.0 */
+	FWUPD_SECURITY_ATTR_RESULT_SUPPORTED,			/* Since: 1.5.0 */
+	FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED,		/* Since: 1.5.0 */
+	/*< private >*/
+	FWUPD_SECURITY_ATTR_RESULT_LAST
+} FwupdSecurityAttrResult;
+
+#define FWUPD_SECURITY_ATTR_ID_ACPI_DMAR		"org.fwupd.hsi.AcpiDmar"		/* Since: 1.5.0 */
+#define FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM		"org.fwupd.hsi.EncryptedRam"		/* Since: 1.5.0 */
+#define FWUPD_SECURITY_ATTR_ID_FWUPD_ATTESTATION	"org.fwupd.hsi.FwupdAttestation"	/* Since: 1.5.0 */
+#define FWUPD_SECURITY_ATTR_ID_FWUPD_PLUGINS		"org.fwupd.hsi.FwupdPlugins"		/* Since: 1.5.0 */
+#define FWUPD_SECURITY_ATTR_ID_FWUPD_UPDATES		"org.fwupd.hsi.FwupdUpdates"		/* Since: 1.5.0 */
+#define FWUPD_SECURITY_ATTR_ID_INTEL_AMT		"org.fwupd.hsi.IntelAmt"		/* Since: 1.5.0 */
+#define FWUPD_SECURITY_ATTR_ID_INTEL_CET		"org.fwupd.hsi.IntelCet"		/* Since: 1.5.0 */
+#define FWUPD_SECURITY_ATTR_ID_IOMMU			"org.fwupd.hsi.Iommu"			/* Since: 1.5.0 */
+#define FWUPD_SECURITY_ATTR_ID_KERNEL_LOCKDOWN		"org.fwupd.hsi.KernelLockdown"		/* Since: 1.5.0 */
+#define FWUPD_SECURITY_ATTR_ID_KERNEL_SWAP		"org.fwupd.hsi.KernelSwap"		/* Since: 1.5.0 */
+#define FWUPD_SECURITY_ATTR_ID_KERNEL_TAINTED		"org.fwupd.hsi.KernelTainted"		/* Since: 1.5.0 */
+#define FWUPD_SECURITY_ATTR_ID_MEI_MANUFACTURING_MODE	"org.fwupd.hsi.MeiManufacturingMode"	/* Since: 1.5.0 */
+#define FWUPD_SECURITY_ATTR_ID_SPI_BIOSWE		"org.fwupd.hsi.SpiBioswe"		/* Since: 1.5.0 */
+#define FWUPD_SECURITY_ATTR_ID_SPI_BLE			"org.fwupd.hsi.SpiBle"			/* Since: 1.5.0 */
+#define FWUPD_SECURITY_ATTR_ID_SPI_SMM_BWP		"org.fwupd.hsi.SpiSmmBwp"		/* Since: 1.5.0 */
+#define FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_IDLE		"org.fwupd.hsi.SuspendToIdle"		/* Since: 1.5.0 */
+#define FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_RAM		"org.fwupd.hsi.SuspendToRam"		/* Since: 1.5.0 */
+#define FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0	"org.fwupd.hsi.TpmReconstructionPcr0"	/* Since: 1.5.0 */
+#define FWUPD_SECURITY_ATTR_ID_TPM_VERSION_20		"org.fwupd.hsi.TpmVersion20"		/* Since: 1.5.0 */
+#define FWUPD_SECURITY_ATTR_ID_UEFI_DBX			"org.fwupd.hsi.UefiDbx"			/* Since: 1.5.0 */
+#define FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT		"org.fwupd.hsi.UefiSecureBoot"		/* Since: 1.5.0 */
+
 FwupdSecurityAttr *fwupd_security_attr_new		(const gchar		*appstream_id);
 gchar		*fwupd_security_attr_to_string		(FwupdSecurityAttr	*self);
 
@@ -80,15 +142,18 @@ void		 fwupd_security_attr_set_appstream_id	(FwupdSecurityAttr	*self,
 FwupdSecurityAttrLevel fwupd_security_attr_get_level	(FwupdSecurityAttr	*self);
 void		 fwupd_security_attr_set_level		(FwupdSecurityAttr	*self,
 							 FwupdSecurityAttrLevel	 level);
+FwupdSecurityAttrResult fwupd_security_attr_get_result	(FwupdSecurityAttr	*self);
+void		 fwupd_security_attr_set_result		(FwupdSecurityAttr	*self,
+							 FwupdSecurityAttrResult result);
 const gchar	*fwupd_security_attr_get_name		(FwupdSecurityAttr	*self);
 void		 fwupd_security_attr_set_name		(FwupdSecurityAttr	*self,
 							 const gchar		*name);
 const gchar	*fwupd_security_attr_get_plugin		(FwupdSecurityAttr	*self);
 void		 fwupd_security_attr_set_plugin		(FwupdSecurityAttr	*self,
 							 const gchar		*plugin);
-const gchar	*fwupd_security_attr_get_result		(FwupdSecurityAttr	*self);
-void		 fwupd_security_attr_set_result		(FwupdSecurityAttr	*self,
-							 const gchar		*result);
+const gchar	*fwupd_security_attr_get_url		(FwupdSecurityAttr	*self);
+void		 fwupd_security_attr_set_url		(FwupdSecurityAttr	*self,
+							 const gchar		*url);
 GPtrArray	*fwupd_security_attr_get_obsoletes	(FwupdSecurityAttr	*self);
 void		 fwupd_security_attr_add_obsolete	(FwupdSecurityAttr	*self,
 							 const gchar		*appstream_id);
@@ -103,6 +168,7 @@ gboolean	 fwupd_security_attr_has_flag		(FwupdSecurityAttr	*self,
 							 FwupdSecurityAttrFlags flag);
 const gchar	*fwupd_security_attr_flag_to_string	(FwupdSecurityAttrFlags flag);
 const gchar	*fwupd_security_attr_flag_to_suffix	(FwupdSecurityAttrFlags flag);
+const gchar	*fwupd_security_attr_result_to_string	(FwupdSecurityAttrResult result);
 
 FwupdSecurityAttr *fwupd_security_attr_from_variant	(GVariant		*value);
 GPtrArray	*fwupd_security_attr_array_from_variant	(GVariant		*value);

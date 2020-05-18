@@ -56,27 +56,22 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	g_autoptr(GError) error_local = NULL;
 
 	/* create attr */
-	attr = fwupd_security_attr_new ("org.uefi.SecureBoot.dbx");
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_UEFI_DBX);
 	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
 	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
-	fwupd_security_attr_set_name (attr, "UEFI dbx");
 	fu_security_attrs_append (attrs, attr);
 
 	/* no binary blob */
 	if (!fu_plugin_get_enabled (plugin)) {
-		g_autofree gchar *dbxdir = NULL;
-		g_autofree gchar *result = NULL;
-		dbxdir = fu_common_get_path (FU_PATH_KIND_EFIDBXDIR);
-		result = g_strdup_printf ("DBX can be downloaded from %s and decompressed into %s",
-					  FU_UEFI_DBX_DATA_URL, dbxdir);
-		fwupd_security_attr_set_result (attr, result);
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
+		fwupd_security_attr_set_url (attr, "https://github.com/fwupd/fwupd/wiki/Missingdbx");
 		return;
 	}
 
 	/* get update dbx */
 	if (!g_file_get_contents (data->fn, (gchar **) &buf_update, &bufsz, &error_local)) {
 		g_warning ("failed to load %s: %s", data->fn, error_local->message);
-		fwupd_security_attr_set_result (attr, "Failed to load update DBX");
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
 	dbx_update = fu_uefi_dbx_file_new (buf_update, bufsz,
@@ -84,7 +79,7 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 					   &error_local);
 	if (dbx_update == NULL) {
 		g_warning ("failed to parse %s: %s", data->fn, error_local->message);
-		fwupd_security_attr_set_result (attr, "Failed to parse update DBX");
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
 
@@ -92,7 +87,7 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	if (!fu_efivar_get_data ("d719b2cb-3d3a-4596-a3bc-dad00e67656f", "dbx",
 				 &buf_system, &bufsz, NULL, &error_local)) {
 		g_warning ("failed to load EFI dbx: %s", error_local->message);
-		fwupd_security_attr_set_result (attr, "Failed to load EFI DBX");
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
 	dbx_system = fu_uefi_dbx_file_new (buf_system, bufsz,
@@ -100,7 +95,7 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 					   &error_local);
 	if (dbx_system == NULL) {
 		g_warning ("failed to parse EFI dbx: %s", error_local->message);
-		fwupd_security_attr_set_result (attr, "Failed to parse EFI DBX");
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
 
@@ -116,11 +111,11 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 
 	/* add security attribute */
 	if (missing_cnt > 0) {
-		g_autofree gchar *summary = g_strdup_printf ("%u hashes missing", missing_cnt);
-		fwupd_security_attr_set_result (attr, summary);
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
 		return;
 	}
 
 	/* success */
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_FOUND);
 }

@@ -24,7 +24,7 @@ G_BEGIN_DECLS
 #define FWUPD_RESULT_KEY_FLASHES_LEFT		"FlashesLeft"	/* u */
 #define FWUPD_RESULT_KEY_URGENCY		"Urgency"	/* u */
 #define FWUPD_RESULT_KEY_HSI_LEVEL		"HsiLevel"	/* u */
-#define FWUPD_RESULT_KEY_HSI_RESULT		"HsiResult"	/* s */
+#define FWUPD_RESULT_KEY_HSI_RESULT		"HsiResult"	/* u */
 #define FWUPD_RESULT_KEY_INSTALL_DURATION	"InstallDuration"	/* u */
 #define FWUPD_RESULT_KEY_GUID			"Guid"		/* as */
 #define FWUPD_RESULT_KEY_INSTANCE_IDS		"InstanceIds"	/* as */

@@ -262,11 +262,24 @@ fu_security_attrs_depsolve (FuSecurityAttrs *self)
 		for (guint j = 0; j < obsoletes->len; j++) {
 			const gchar *obsolete = g_ptr_array_index (obsoletes, j);
 			FwupdSecurityAttr *attr_tmp = g_hash_table_lookup (attrs_by_id, obsolete);
+
+			/* by AppStream ID */
 			if (attr_tmp != NULL) {
 				g_debug ("security attr %s obsoleted by %s", obsolete,
-					 fwupd_security_attr_get_appstream_id (attr));
+					 fwupd_security_attr_get_appstream_id (attr_tmp));
 				fwupd_security_attr_add_flag (attr_tmp,
 							      FWUPD_SECURITY_ATTR_FLAG_OBSOLETED);
+			}
+
+			/* by plugin name */
+			for (guint k = 0; k < self->attrs->len; k++) {
+				attr_tmp = g_ptr_array_index (self->attrs, k);
+				if (g_strcmp0 (obsolete, fwupd_security_attr_get_plugin (attr_tmp)) == 0) {
+					g_debug ("security attr %s obsoleted by %s", obsolete,
+						 fwupd_security_attr_get_appstream_id (attr_tmp));
+					fwupd_security_attr_add_flag (attr_tmp,
+								      FWUPD_SECURITY_ATTR_FLAG_OBSOLETED);
+				}
 			}
 		}
 	}

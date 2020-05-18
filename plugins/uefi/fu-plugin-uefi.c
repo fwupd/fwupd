@@ -97,21 +97,20 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* create attr */
-	attr = fwupd_security_attr_new ("com.uefi.SecureBoot");
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT);
 	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
 	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
-	fwupd_security_attr_set_name (attr, "UEFI Secure Boot");
 	fu_security_attrs_append (attrs, attr);
 
 	/* SB disabled */
 	if (!fu_efivar_secure_boot_enabled ()) {
-		fwupd_security_attr_set_result (attr, "Disabled");
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 		return;
 	}
 
 	/* success */
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-	fwupd_security_attr_set_result (attr, "Enabled");
+	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 }
 
 static GBytes *

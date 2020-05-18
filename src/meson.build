@@ -17,6 +17,7 @@ fwupdmgr = executable(
     'fu-util.c',
     'fu-history.c',
     'fu-progressbar.c',
+    'fu-security-attr.c',
     'fu-util-common.c',
     systemd_src
   ],
@@ -49,6 +50,7 @@ fwupdagent = executable(
   'fwupdagent',
   sources : [
     'fu-agent.c',
+    'fu-security-attr.c',
     'fu-util-common.c',
     systemd_src,
   ],
@@ -80,6 +82,7 @@ fwupdoffline = executable(
   sources : [
     'fu-history.c',
     'fu-offline.c',
+    'fu-security-attr.c',
     'fu-util-common.c',
     systemd_src
   ],
@@ -132,6 +135,7 @@ fwupdtool = executable(
     'fu-plugin-list.c',
     'fu-progressbar.c',
     'fu-remote-list.c',
+    'fu-security-attr.c',
     'fu-util-common.c',
     systemd_src
   ],
@@ -230,6 +234,7 @@ executable(
     'fu-main.c',
     'fu-plugin-list.c',
     'fu-remote-list.c',
+    'fu-security-attr.c',
     systemd_src
   ],
   include_directories : [
@@ -286,6 +291,7 @@ if get_option('tests')
       'fu-plugin-list.c',
       'fu-progressbar.c',
       'fu-remote-list.c',
+      'fu-security-attr.c',
       'fu-self-test.c',
       systemd_src
     ],

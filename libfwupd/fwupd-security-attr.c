@@ -25,8 +25,9 @@ typedef struct {
 	GPtrArray			*obsoletes;
 	gchar				*name;
 	gchar				*plugin;
-	gchar				*result;
+	gchar				*url;
 	FwupdSecurityAttrLevel		 level;
+	FwupdSecurityAttrResult		 result;
 	FwupdSecurityAttrFlags		 flags;
 } FwupdSecurityAttrPrivate;
 
@@ -58,6 +59,50 @@ fwupd_security_attr_flag_to_string (FwupdSecurityAttrFlags flag)
 		return "runtime-attestation";
 	if (flag == FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE)
 		return "runtime-issue";
+	return NULL;
+}
+
+/**
+ * fwupd_security_attr_result_to_string:
+ * @result: A #FwupdSecurityAttrResult, e.g. %FWUPD_SECURITY_ATTR_RESULT_ENABLED
+ *
+ * Returns the printable string for the result enum.
+ *
+ * Returns: string, or %NULL
+ *
+ * Since: 1.5.0
+ **/
+const gchar *
+fwupd_security_attr_result_to_string (FwupdSecurityAttrResult result)
+{
+	if (result == FWUPD_SECURITY_ATTR_RESULT_VALID)
+		return "valid";
+	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_VALID)
+		return "not-valid";
+	if (result == FWUPD_SECURITY_ATTR_RESULT_ENABLED)
+		return "enabled";
+	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED)
+		return "not-enabled";
+	if (result == FWUPD_SECURITY_ATTR_RESULT_LOCKED)
+		return "locked";
+	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED)
+		return "not-locked";
+	if (result == FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED)
+		return "encrypted";
+	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_ENCRYPTED)
+		return "not-encrypted";
+	if (result == FWUPD_SECURITY_ATTR_RESULT_TAINTED)
+		return "tainted";
+	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED)
+		return "not-tainted";
+	if (result == FWUPD_SECURITY_ATTR_RESULT_FOUND)
+		return "found";
+	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND)
+		return "not-found";
+	if (result == FWUPD_SECURITY_ATTR_RESULT_SUPPORTED)
+		return "supported";
+	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED)
+		return "not-supported";
 	return NULL;
 }
 
@@ -105,7 +150,7 @@ fwupd_security_attr_get_obsoletes (FwupdSecurityAttr *self)
 /**
  * fwupd_security_attr_add_obsolete:
  * @self: A #FwupdSecurityAttr
- * @appstream_id: the appstream_id
+ * @appstream_id: the appstream_id or plugin name
  *
  * Adds an attribute appstream_id to obsolete. The obsoleted attribute will not
  * contribute to the calculated HSI value or be visible in command line tools.
@@ -180,26 +225,31 @@ fwupd_security_attr_set_appstream_id (FwupdSecurityAttr *self, const gchar *apps
 {
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FWUPD_IS_SECURITY_ATTR (self));
+
+	/* sanity check */
+	if (!g_str_has_prefix (appstream_id, "org.fwupd.hsi."))
+		g_critical ("HSI attributes need to have a 'org.fwupd.hsi.' prefix");
+
 	g_free (priv->appstream_id);
 	priv->appstream_id = g_strdup (appstream_id);
 }
 
 /**
- * fwupd_security_attr_get_result:
+ * fwupd_security_attr_get_url:
  * @self: A #FwupdSecurityAttr
  *
- * Gets the attribute result.
+ * Gets the attribute URL.
  *
  * Returns: the attribute result, or %NULL if unset
  *
  * Since: 1.5.0
  **/
 const gchar *
-fwupd_security_attr_get_result (FwupdSecurityAttr *self)
+fwupd_security_attr_get_url (FwupdSecurityAttr *self)
 {
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FWUPD_IS_SECURITY_ATTR (self), NULL);
-	return priv->result;
+	return priv->url;
 }
 
 /**
@@ -239,21 +289,21 @@ fwupd_security_attr_set_plugin (FwupdSecurityAttr *self, const gchar *plugin)
 }
 
 /**
- * fwupd_security_attr_set_result:
+ * fwupd_security_attr_set_url:
  * @self: A #FwupdSecurityAttr
- * @result: the attribute one line result
+ * @url: the attribute URL
  *
  * Sets the attribute result.
  *
  * Since: 1.5.0
  **/
 void
-fwupd_security_attr_set_result (FwupdSecurityAttr *self, const gchar *result)
+fwupd_security_attr_set_url (FwupdSecurityAttr *self, const gchar *url)
 {
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FWUPD_IS_SECURITY_ATTR (self));
-	g_free (priv->result);
-	priv->result = g_strdup (result);
+	g_free (priv->url);
+	priv->url = g_strdup (url);
 }
 
 /**
@@ -400,6 +450,42 @@ fwupd_security_attr_set_level (FwupdSecurityAttr *self, FwupdSecurityAttrLevel l
 }
 
 /**
+ * fwupd_security_attr_set_result:
+ * @self: A #FwupdSecurityAttr
+ * @result: A #FwupdSecurityAttrResult, e.g. %FWUPD_SECURITY_ATTR_LEVEL_LOCKED
+ *
+ * Sets the optional HSI result. This is required because some attributes may
+ * be a "success" when something is `locked` or may be "failed" if `found`.
+ *
+ * Since: 1.5.0
+ **/
+void
+fwupd_security_attr_set_result (FwupdSecurityAttr *self, FwupdSecurityAttrResult result)
+{
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_SECURITY_ATTR (self));
+	priv->result = result;
+}
+
+/**
+ * fwupd_security_attr_get_result:
+ * @self: A #FwupdSecurityAttr
+ *
+ * Gets the optional HSI result.
+ *
+ * Returns: the #FwupdSecurityAttrResult, e.g %FWUPD_SECURITY_ATTR_LEVEL_LOCKED
+ *
+ * Since: 1.5.0
+ **/
+FwupdSecurityAttrResult
+fwupd_security_attr_get_result (FwupdSecurityAttr *self)
+{
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_SECURITY_ATTR (self), 0);
+	return priv->result;
+}
+
+/**
  * fwupd_security_attr_to_variant:
  * @self: A #FwupdSecurityAttr
  *
@@ -428,10 +514,10 @@ fwupd_security_attr_to_variant (FwupdSecurityAttr *self)
 				       FWUPD_RESULT_KEY_NAME,
 				       g_variant_new_string (priv->name));
 	}
-	if (priv->result != NULL) {
+	if (priv->url != NULL) {
 		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_HSI_RESULT,
-				       g_variant_new_string (priv->result));
+				       FWUPD_RESULT_KEY_URI,
+				       g_variant_new_string (priv->url));
 	}
 	if (priv->obsoletes->len > 0) {
 		g_autofree const gchar **strv = g_new0 (const gchar *, priv->obsoletes->len + 1);
@@ -451,6 +537,11 @@ fwupd_security_attr_to_variant (FwupdSecurityAttr *self)
 				       FWUPD_RESULT_KEY_HSI_LEVEL,
 				       g_variant_new_uint32 (priv->level));
 	}
+	if (priv->result > 0) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_HSI_RESULT,
+				       g_variant_new_uint32 (priv->result));
+	}
 	return g_variant_new ("a{sv}", &builder);
 }
 
@@ -465,8 +556,8 @@ fwupd_security_attr_from_key_value (FwupdSecurityAttr *self, const gchar *key, G
 		fwupd_security_attr_set_name (self, g_variant_get_string (value, NULL));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_HSI_RESULT) == 0) {
-		fwupd_security_attr_set_result (self, g_variant_get_string (value, NULL));
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_URI) == 0) {
+		fwupd_security_attr_set_url (self, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_FLAGS) == 0) {
@@ -475,6 +566,10 @@ fwupd_security_attr_from_key_value (FwupdSecurityAttr *self, const gchar *key, G
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_HSI_LEVEL) == 0) {
 		fwupd_security_attr_set_level (self, g_variant_get_uint32 (value));
+		return;
+	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_HSI_RESULT) == 0) {
+		fwupd_security_attr_set_result (self, g_variant_get_uint32 (value));
 		return;
 	}
 }
@@ -559,9 +654,11 @@ fwupd_security_attr_to_json (FwupdSecurityAttr *self, JsonBuilder *builder)
 
 	fwupd_security_attr_json_add_string (builder, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
 	fwupd_security_attr_json_add_int (builder, FWUPD_RESULT_KEY_HSI_LEVEL, priv->level);
+	fwupd_security_attr_json_add_string (builder, FWUPD_RESULT_KEY_HSI_RESULT,
+					     fwupd_security_attr_result_to_string (priv->result));
 	fwupd_security_attr_json_add_string (builder, FWUPD_RESULT_KEY_NAME, priv->name);
 	fwupd_security_attr_json_add_string (builder, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
-	fwupd_security_attr_json_add_string (builder, FWUPD_RESULT_KEY_HSI_RESULT, priv->result);
+	fwupd_security_attr_json_add_string (builder, FWUPD_RESULT_KEY_URI, priv->url);
 	if (priv->flags != FWUPD_SECURITY_ATTR_FLAG_NONE) {
 		json_builder_set_member_name (builder, FWUPD_RESULT_KEY_FLAGS);
 		json_builder_begin_array (builder);
@@ -598,11 +695,13 @@ fwupd_security_attr_to_string (FwupdSecurityAttr *self)
 	str = g_string_new ("");
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
 	fwupd_pad_kv_int (str, FWUPD_RESULT_KEY_HSI_LEVEL, priv->level);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_HSI_RESULT,
+			  fwupd_security_attr_result_to_string (priv->result));
 	if (priv->flags != FWUPD_SECURITY_ATTR_FLAG_NONE)
 		fwupd_pad_kv_tfl (str, FWUPD_RESULT_KEY_FLAGS, priv->flags);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_NAME, priv->name);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_HSI_RESULT, priv->result);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_URI, priv->url);
 	for (guint i = 0; i < priv->obsoletes->len; i++) {
 		const gchar *appstream_id = g_ptr_array_index (priv->obsoletes, i);
 		fwupd_pad_kv_str (str, "Obsolete", appstream_id);
@@ -634,7 +733,7 @@ fwupd_security_attr_finalize (GObject *object)
 	g_free (priv->appstream_id);
 	g_free (priv->name);
 	g_free (priv->plugin);
-	g_free (priv->result);
+	g_free (priv->url);
 	g_ptr_array_unref (priv->obsoletes);
 
 	G_OBJECT_CLASS (fwupd_security_attr_parent_class)->finalize (object);

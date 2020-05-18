@@ -72,40 +72,40 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	g_autoptr(GError) error_local = NULL;
 
 	/* create attr */
-	attr = fwupd_security_attr_new ("org.kernel.Swap");
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_KERNEL_SWAP);
 	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
-	fwupd_security_attr_set_name (attr, "Linux Swap");
 	fu_security_attrs_append (attrs, attr);
 
 	/* load list of swaps */
 	if (!g_file_load_contents (data->file, NULL, &buf, &bufsz, NULL, &error_local)) {
 		g_autofree gchar *fn = g_file_get_path (data->file);
 		g_warning ("could not open %s: %s", fn, error_local->message);
-		fwupd_security_attr_set_result (attr, "Could not open file");
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
 	swap = fu_linux_swap_new (buf, bufsz, &error_local);
 	if (swap == NULL) {
 		g_autofree gchar *fn = g_file_get_path (data->file);
 		g_warning ("could not parse %s: %s", fn, error_local->message);
-		fwupd_security_attr_set_result (attr, "Could not parse file");
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
 
 	/* none configured */
 	if (!fu_linux_swap_get_enabled (swap)) {
 		fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 		return;
 	}
 
 	/* add security attribute */
 	if (!fu_linux_swap_get_encrypted (swap)) {
-		fwupd_security_attr_set_result (attr, "Not encrypted");
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENCRYPTED);
 		return;
 	}
 
 	/* success */
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-	fwupd_security_attr_set_result (attr, "Encrypted");
+	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED);
 }

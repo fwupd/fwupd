@@ -16,6 +16,7 @@
 #include "fu-common.h"
 #include "fu-util-common.h"
 #include "fu-device.h"
+#include "fu-security-attr.h"
 #include "fu-security-attrs.h"
 
 #ifdef HAVE_SYSTEMD
@@ -1553,20 +1554,25 @@ static void
 fu_security_attr_append_str (FwupdSecurityAttr *attr, GString *str)
 {
 	if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED)) {
-		g_string_append_printf (str, "\033[37m✦\033[0m  ");
+		g_string_append (str, "✦  ");
 	} else if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
-		g_string_append_printf (str, "\033[32m✔\033[0m  ");
+		g_string_append (str, "✔ ");
 	} else {
-		g_string_append_printf (str, "\033[31m✘\033[0m  ");
+		g_string_append (str, "✘ ");
 	}
-	g_string_append_printf (str, "%s", fwupd_security_attr_get_name (attr));
-	if (fwupd_security_attr_get_result (attr) != NULL) {
-		g_string_append_printf (str, ": %s",
-					fwupd_security_attr_get_result (attr));
+	g_string_append_printf (str, "%s:", fu_security_attr_get_name (attr));
+	for (guint i = fu_common_strwidth (fu_security_attr_get_name (attr)); i < 30; i++)
+		g_string_append (str, " ");
+	if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED)) {
+		g_string_append_printf (str, "\033[37m\033[1m%s\033[0m", fu_security_attr_get_result (attr));
+	} else if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
+		g_string_append_printf (str, "\033[32m\033[1m%s\033[0m", fu_security_attr_get_result (attr));
 	} else {
+		g_string_append_printf (str, "\033[31m\033[1m%s\033[0m", fu_security_attr_get_result (attr));
+	}
+	if (fwupd_security_attr_get_url (attr) != NULL) {
 		g_string_append_printf (str, ": %s",
-					fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)
-					? "OK" : "Failed");
+					fwupd_security_attr_get_url (attr));
 	}
 	if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED))
 		g_string_append (str, " (obsoleted)");

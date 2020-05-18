@@ -34,23 +34,27 @@ fu_plugin_add_security_attr_bioswe (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* create attr */
-	attr = fwupd_security_attr_new ("com.intel.BIOSWE");
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_SPI_BIOSWE);
 	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
 	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
-	fwupd_security_attr_set_name (attr, "SPI");
-	fwupd_security_attr_add_obsolete (attr, "org.kernel.BIOSWE");
-	fwupd_security_attr_add_obsolete (attr, "org.fwupd.plugin.linux-spi-lpc");
+	fwupd_security_attr_add_obsolete (attr, "linux_spi_lpc");
 	fu_security_attrs_append (attrs, attr);
+
+	/* no device */
+	if (!priv->has_device) {
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
+		return;
+	}
 
 	/* load file */
 	if ((priv->bcr & BCR_WPD) == 1) {
-		fwupd_security_attr_set_result (attr, "Write enabled");
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 		return;
 	}
 
 	/* success */
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-	fwupd_security_attr_set_result (attr, "Write disabled");
+	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 }
 
 static void
@@ -60,23 +64,27 @@ fu_plugin_add_security_attr_ble (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* create attr */
-	attr = fwupd_security_attr_new ("com.intel.BLE");
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_SPI_BLE);
 	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
 	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
-	fwupd_security_attr_set_name (attr, "SPI");
-	fwupd_security_attr_add_obsolete (attr, "org.kernel.BLE");
-	fwupd_security_attr_add_obsolete (attr, "org.fwupd.plugin.linux-spi-lpc");
+	fwupd_security_attr_add_obsolete (attr, "linux_spi_lpc");
 	fu_security_attrs_append (attrs, attr);
+
+	/* no device */
+	if (!priv->has_device) {
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
+		return;
+	}
 
 	/* load file */
 	if ((priv->bcr & BCR_BLE) == 0) {
-		fwupd_security_attr_set_result (attr, "Lock disabled");
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 		return;
 	}
 
 	/* success */
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-	fwupd_security_attr_set_result (attr, "Lock enabled");
+	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 }
 
 static void
@@ -86,23 +94,27 @@ fu_plugin_add_security_attr_smm_bwp (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* create attr */
-	attr = fwupd_security_attr_new ("com.intel.SMM_BWP");
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_SPI_SMM_BWP);
 	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
 	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
-	fwupd_security_attr_set_name (attr, "BIOS region of SPI");
-	fwupd_security_attr_add_obsolete (attr, "org.kernel.SMM_BWP");
-	fwupd_security_attr_add_obsolete (attr, "org.fwupd.plugin.linux-spi-lpc");
+	fwupd_security_attr_add_obsolete (attr, "linux_spi_lpc");
 	fu_security_attrs_append (attrs, attr);
+
+	/* no device */
+	if (!priv->has_device) {
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
+		return;
+	}
 
 	/* load file */
 	if ((priv->bcr & BCR_SMM_BWP) == 0) {
-		fwupd_security_attr_set_result (attr, "Writable by OS");
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
 		return;
 	}
 
 	/* success */
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-	fwupd_security_attr_set_result (attr, "Writable only through BIOS");
+	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
 }
 
 gboolean
@@ -125,7 +137,7 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 
 	/* grab BIOS Control Register */
 	if (!fu_udev_device_pread (device, BCR, &priv->bcr, error)) {
-		g_prefix_error (error, "could not read MEI");
+		g_prefix_error (error, "could not read BCR");
 		return FALSE;
 	}
 	priv->has_device = TRUE;
@@ -135,23 +147,9 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 void
 fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
-	FuPluginData *priv = fu_plugin_get_data (plugin);
-
 	/* only Intel */
 	if (!fu_common_is_cpu_intel ())
 		return;
-
-	/* only Intel */
-	if (!priv->has_device) {
-		g_autoptr(FwupdSecurityAttr) attr = NULL;
-		attr = fwupd_security_attr_new ("org.fwupd.plugin.pci-bcr");
-		fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
-		fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
-		fwupd_security_attr_set_name (attr, "SPI");
-		fwupd_security_attr_set_result (attr, "No PCI devices with BCR");
-		fu_security_attrs_append (attrs, attr);
-		return;
-	}
 
 	/* add attrs */
 	fu_plugin_add_security_attr_bioswe (plugin, attrs);
