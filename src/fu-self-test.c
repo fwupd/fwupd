@@ -25,6 +25,7 @@
 #include "fu-plugin-list.h"
 #include "fu-progressbar.h"
 #include "fu-hash.h"
+#include "fu-security-attr.h"
 #include "fu-security-attrs.h"
 #include "fu-smbios-private.h"
 
@@ -2806,6 +2807,15 @@ fu_plugin_composite_func (gconstpointer user_data)
 	}
 }
 
+static void
+fu_security_attr_func (gconstpointer user_data)
+{
+	g_autoptr(FwupdSecurityAttr) attr = fwupd_security_attr_new (NULL);
+	for (guint i = 0; i < FWUPD_SECURITY_ATTR_RESULT_LAST; i++) {
+		fwupd_security_attr_set_result (attr, i);
+		g_assert_cmpstr (fu_security_attr_get_result (attr), !=, NULL);
+	}
+}
 
 static void
 fu_memcpy_func (gconstpointer user_data)
@@ -2987,6 +2997,8 @@ main (int argc, char **argv)
 			      fu_plugin_module_func);
 	g_test_add_data_func ("/fwupd/memcpy", self,
 			      fu_memcpy_func);
+	g_test_add_data_func ("/fwupd/security-attr", self,
+			      fu_security_attr_func);
 	g_test_add_data_func ("/fwupd/device-list", self,
 			      fu_device_list_func);
 	g_test_add_data_func ("/fwupd/device-list{delay}", self,

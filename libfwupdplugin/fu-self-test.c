@@ -1762,9 +1762,9 @@ fu_security_attrs_hsi_func (void)
 	g_assert_cmpstr (hsi1, ==, "HSI:0");
 
 	/* just success from HSI:1 */
-	attr = fwupd_security_attr_new ("org.fwupd.Hsi.BIOSWE");
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_SPI_BIOSWE);
 	fwupd_security_attr_set_plugin (attr, "test");
-	fwupd_security_attr_set_level (attr, 1);
+	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 	fu_security_attrs_append (attrs, attr);
 	hsi2 = fu_security_attrs_calculate_hsi (attrs);
@@ -1772,20 +1772,20 @@ fu_security_attrs_hsi_func (void)
 	g_clear_object (&attr);
 
 	/* add failed from HSI:2, so still HSI:1 */
-	attr = fwupd_security_attr_new ("org.fwupd.Hsi.PRX");
+	attr = fwupd_security_attr_new ("org.fwupd.hsi.PRX");
 	fwupd_security_attr_set_plugin (attr, "test");
-	fwupd_security_attr_set_level (attr, 2);
+	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT);
 	fu_security_attrs_append (attrs, attr);
 	hsi3 = fu_security_attrs_calculate_hsi (attrs);
 	g_assert_cmpstr (hsi3, ==, "HSI:1");
 	g_clear_object (&attr);
 
 	/* add attr from HSI:3, obsoleting the failure */
-	attr = fwupd_security_attr_new ("org.fwupd.Hsi.BIOSGuard");
+	attr = fwupd_security_attr_new ("org.fwupd.hsi.BIOSGuard");
 	fwupd_security_attr_set_plugin (attr, "test");
-	fwupd_security_attr_set_level (attr, 3);
+	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL);
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-	fwupd_security_attr_add_obsolete (attr, "org.fwupd.Hsi.PRX");
+	fwupd_security_attr_add_obsolete (attr, "org.fwupd.hsi.PRX");
 	fu_security_attrs_append (attrs, attr);
 	fu_security_attrs_depsolve (attrs);
 	hsi4 = fu_security_attrs_calculate_hsi (attrs);
@@ -1793,7 +1793,7 @@ fu_security_attrs_hsi_func (void)
 	g_clear_object (&attr);
 
 	/* add taint that was fine */
-	attr = fwupd_security_attr_new ("org.fwupd.Hsi.PluginsTainted");
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_FWUPD_PLUGINS);
 	fwupd_security_attr_set_plugin (attr, "test");
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
@@ -1803,7 +1803,7 @@ fu_security_attrs_hsi_func (void)
 	g_clear_object (&attr);
 
 	/* add updates and attestation */
-	attr = fwupd_security_attr_new ("org.fwupd.Hsi.LVFS");
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_FWUPD_UPDATES);
 	fwupd_security_attr_set_plugin (attr, "test");
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES);
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ATTESTATION);
@@ -1814,7 +1814,7 @@ fu_security_attrs_hsi_func (void)
 	g_clear_object (&attr);
 
 	/* add issue that was uncool */
-	attr = fwupd_security_attr_new ("org.fwupd.Hsi.Swap");
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_KERNEL_SWAP);
 	fwupd_security_attr_set_plugin (attr, "test");
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
 	fu_security_attrs_append (attrs, attr);

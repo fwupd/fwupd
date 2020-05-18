@@ -31,10 +31,9 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 		return;
 
 	/* create attr */
-	attr = fwupd_security_attr_new ("org.uefi.ACPI.Dmar");
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_ACPI_DMAR);
 	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
 	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL);
-	fwupd_security_attr_set_name (attr, "Pre-boot kernel DMA protection");
 	fu_security_attrs_append (attrs, attr);
 
 	/* load DMAR table */
@@ -43,20 +42,21 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	blob = fu_common_get_contents_bytes (fn, &error_local);
 	if (blob == NULL) {
 		g_warning ("failed to load %s: %s", fn, error_local->message);
-		fwupd_security_attr_set_result (attr, "Could not load DMAR");
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
 	dmar = fu_acpi_dmar_new (blob, &error_local);
 	if (dmar == NULL) {
 		g_warning ("failed to parse %s: %s", fn, error_local->message);
-		fwupd_security_attr_set_result (attr, "Could not parse DMAR");
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
 	if (!fu_acpi_dmar_get_opt_in (dmar)) {
-		fwupd_security_attr_set_result (attr, "Unavailable");
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 		return;
 	}
 
 	/* success */
+	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }

@@ -41,17 +41,17 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* create attr */
-	attr = fwupd_security_attr_new ("org.kernel.IOMMU");
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_IOMMU);
 	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT);
-	fwupd_security_attr_set_name (attr, "IOMMU");
 	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
 	fu_security_attrs_append (attrs, attr);
 
 	if (!data->has_iommu) {
-		fwupd_security_attr_set_result (attr, "Not found");
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
 		return;
 	}
 
 	/* success */
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 }

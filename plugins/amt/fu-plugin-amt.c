@@ -579,15 +579,16 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 		return;
 
 	/* create attr */
-	attr = fwupd_security_attr_new ("com.intel.AMT");
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_INTEL_AMT);
 	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
 	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_SYSTEM_PROTECTION);
-	fwupd_security_attr_set_name (attr, "Intel AMT");
 	fu_security_attrs_append (attrs, attr);
 	if (data->provisioned) {
-		fwupd_security_attr_set_result (attr, "Provisioned");
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 		return;
 	}
 
+	/* success */
+	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }

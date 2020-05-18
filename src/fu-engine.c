@@ -49,6 +49,7 @@
 #include "fu-plugin-private.h"
 #include "fu-quirks.h"
 #include "fu-remote-list.h"
+#include "fu-security-attr.h"
 #include "fu-security-attrs-private.h"
 #include "fu-smbios-private.h"
 #include "fu-udev-device-private.h"
@@ -3585,16 +3586,6 @@ fu_engine_get_devices_by_guid (FuEngine *self, const gchar *guid, GError **error
 	return g_steal_pointer (&devices);
 }
 
-static const gchar *
-fu_engine_get_security_attr_result_string (FwupdSecurityAttr *attr)
-{
-	if (fwupd_security_attr_get_result (attr) != NULL)
-		return fwupd_security_attr_get_result (attr);
-	if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
-		return "True";
-	return "False";
-}
-
 static void
 fu_engine_get_history_set_hsi_attrs (FuEngine *self, FuDevice *device)
 {
@@ -3607,9 +3598,9 @@ fu_engine_get_history_set_hsi_attrs (FuEngine *self, FuDevice *device)
 	vals = fu_security_attrs_get_all (attrs);
 	for (guint i = 0; i < vals->len; i++) {
 		FwupdSecurityAttr *attr = g_ptr_array_index (vals, i);
-		fu_device_set_metadata (device,
-					fwupd_security_attr_get_appstream_id (attr),
-					fu_engine_get_security_attr_result_string (attr));
+		const gchar *tmp;
+		tmp = fwupd_security_attr_result_to_string (fwupd_security_attr_get_result (attr));
+		fu_device_set_metadata (device, fwupd_security_attr_get_appstream_id (attr), tmp);
 	}
 
 	/* computed value */
@@ -5081,10 +5072,10 @@ fu_engine_add_security_attrs_tainted (FuEngine *self, FuSecurityAttrs *attrs)
 {
 	gboolean disabled_plugins = FALSE;
 	GPtrArray *blacklist = fu_config_get_blacklist_plugins (self->config);
-	g_autoptr(FwupdSecurityAttr) attr = fwupd_security_attr_new ("org.fwupd.Hsi.Plugins");
+	g_autoptr(FwupdSecurityAttr) attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_FWUPD_PLUGINS);
 	fwupd_security_attr_set_plugin (attr, "core");
-	fwupd_security_attr_set_name (attr, "fwupd plugins");
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
+	fu_security_attrs_append (attrs, attr);
 	for (guint i = 0; i < blacklist->len; i++) {
 		const gchar *name_tmp = g_ptr_array_index (blacklist, i);
 		if (g_strcmp0 (name_tmp, "test") != 0 &&
@@ -5094,13 +5085,17 @@ fu_engine_add_security_attrs_tainted (FuEngine *self, FuSecurityAttrs *attrs)
 		}
 	}
 	if (self->tainted) {
-		fwupd_security_attr_set_result (attr, "Tainted");
-	} else if (self->plugin_filter->len > 0 || disabled_plugins) {
-		fwupd_security_attr_set_result (attr, "Disabled plugins");
-	} else {
-		fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_TAINTED);
+		return;
 	}
-	fu_security_attrs_append (attrs, attr);
+	if (self->plugin_filter->len > 0 || disabled_plugins) {
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		return;
+	}
+
+	/* success */
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED);
 }
 
 static void
@@ -5115,10 +5110,9 @@ fu_engine_add_security_attrs_supported (FuEngine *self, FuSecurityAttrs *attrs)
 	g_autoptr(GPtrArray) releases = NULL;
 
 	/* find out if there is firmware less than 12 months old */
-	attr_u = fwupd_security_attr_new ("org.fwupd.Hsi.Updates");
+	attr_u = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_FWUPD_UPDATES);
 	fwupd_security_attr_set_plugin (attr_u, "core");
 	fwupd_security_attr_add_flag (attr_u, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES);
-	fwupd_security_attr_set_name (attr_u, "Firmware Updates");
 	fu_security_attrs_append (attrs, attr_u);
 
 	/* get device */
@@ -5127,32 +5121,32 @@ fu_engine_add_security_attrs_supported (FuEngine *self, FuSecurityAttrs *attrs)
 					     "230c8b18-8d9b-53ec-838b-6cfc0383493a",
 					     NULL);
 	if (device == NULL) {
-		fwupd_security_attr_set_result (attr_u, "No system device");
+		fwupd_security_attr_set_result (attr_u, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
 	} else {
 		releases = fu_engine_get_releases_for_device (self, device, NULL);
 		if (releases == NULL) {
-			fwupd_security_attr_set_result (attr_u, "No releases");
+			fwupd_security_attr_set_result (attr_u, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
 		} else {
 			/* check the age */
-			g_autofree gchar *str = NULL;
 			for (guint i = 0; i < releases->len; i++) {
 				FwupdRelease *rel_tmp = g_ptr_array_index (releases, i);
 				if (rel_newest == NULL ||
 				    fwupd_release_get_created (rel_tmp) > fwupd_release_get_created (rel_newest))
 					rel_newest = rel_tmp;
 			}
-			str = g_strdup_printf ("Newest release is %" G_GUINT64_FORMAT " months old",
-					       (now - fwupd_release_get_created (rel_newest)) / (60 * 60 * 24 * 30));
-			fwupd_security_attr_set_result (attr_u, str);
-			if (now - fwupd_release_get_created (rel_newest) < 60 * 60 * 24 * 30 * 12)
+			g_debug ("newest release is %" G_GUINT64_FORMAT " months old",
+				 (now - fwupd_release_get_created (rel_newest)) / (60 * 60 * 24 * 30));
+			fwupd_security_attr_set_result (attr_u, FWUPD_SECURITY_ATTR_RESULT_SUPPORTED);
+			if (now - fwupd_release_get_created (rel_newest) < 60 * 60 * 24 * 30 * 12) {
 				fwupd_security_attr_add_flag (attr_u, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+				fwupd_security_attr_set_result (attr_a, FWUPD_SECURITY_ATTR_RESULT_SUPPORTED);
+			}
 		}
 	}
 
 	/* do we have attestation checksums */
-	attr_a = fwupd_security_attr_new ("org.fwupd.Hsi.Attestation");
+	attr_a = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_FWUPD_ATTESTATION);
 	fwupd_security_attr_set_plugin (attr_a, "core");
-	fwupd_security_attr_set_name (attr_a, "Firmware Attestation");
 	fwupd_security_attr_add_flag (attr_a, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ATTESTATION);
 	fu_security_attrs_append (attrs, attr_a);
 	if (releases != NULL) {
@@ -5167,9 +5161,10 @@ fu_engine_add_security_attrs_supported (FuEngine *self, FuSecurityAttrs *attrs)
 		}
 	}
 	if (rel_current == NULL) {
-		fwupd_security_attr_set_result (attr_a, "No PCR0s");
+		fwupd_security_attr_set_result (attr_a, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
 	} else if (fwupd_release_get_checksums(rel_current)->len > 0) {
 		fwupd_security_attr_add_flag (attr_a, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+		fwupd_security_attr_set_result (attr_a, FWUPD_SECURITY_ATTR_RESULT_SUPPORTED);
 	}
 }
 
@@ -5178,6 +5173,7 @@ fu_engine_get_host_security_attrs (FuEngine *self)
 {
 	GPtrArray *plugins = fu_plugin_list_get_all (self->plugin_list);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new ();
+	g_autoptr(GPtrArray) items = NULL;
 
 	/* built in */
 	fu_engine_add_security_attrs_tainted (self, attrs);
@@ -5189,8 +5185,24 @@ fu_engine_get_host_security_attrs (FuEngine *self)
 		fu_plugin_runner_add_security_attrs (plugin_tmp, attrs);
 	}
 
+	/* set the fallback names for clients without native translations */
+	items = fu_security_attrs_get_all (attrs);
+	for (guint i = 0; i < items->len; i++) {
+		FwupdSecurityAttr *attr = g_ptr_array_index (items, i);
+		if (fwupd_security_attr_get_name (attr) == NULL) {
+			const gchar *name_tmp = fu_security_attr_get_name (attr);
+			if (name_tmp == NULL) {
+				g_warning ("failed to get fallback for %s",
+					   fwupd_security_attr_get_appstream_id (attr));
+				continue;
+			}
+			fwupd_security_attr_set_name (attr, name_tmp);
+		}
+	}
+
 	/* set the obsoletes flag for each attr */
 	fu_security_attrs_depsolve (attrs);
+
 	return g_steal_pointer (&attrs);
 }
 
