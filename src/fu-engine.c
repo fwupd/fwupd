@@ -5109,17 +5109,21 @@ fu_engine_add_security_attrs_supported (FuEngine *self, FuSecurityAttrs *attrs)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(GPtrArray) releases = NULL;
 
-	/* find out if there is firmware less than 12 months old */
 	attr_u = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_FWUPD_UPDATES);
 	fwupd_security_attr_set_plugin (attr_u, "core");
 	fwupd_security_attr_add_flag (attr_u, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES);
 	fu_security_attrs_append (attrs, attr_u);
-
+	attr_a = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_FWUPD_ATTESTATION);
+	fwupd_security_attr_set_plugin (attr_a, "core");
+	fwupd_security_attr_add_flag (attr_a, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ATTESTATION);
+	fu_security_attrs_append (attrs, attr_a);
 	/* get device */
 	device = fu_device_list_get_by_guid (self->device_list,
 					     /* main-system-firmware */
 					     "230c8b18-8d9b-53ec-838b-6cfc0383493a",
 					     NULL);
+
+	/* find out if there is firmware less than 12 months old */
 	if (device == NULL) {
 		fwupd_security_attr_set_result (attr_u, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
 	} else {
@@ -5145,10 +5149,6 @@ fu_engine_add_security_attrs_supported (FuEngine *self, FuSecurityAttrs *attrs)
 	}
 
 	/* do we have attestation checksums */
-	attr_a = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_FWUPD_ATTESTATION);
-	fwupd_security_attr_set_plugin (attr_a, "core");
-	fwupd_security_attr_add_flag (attr_a, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ATTESTATION);
-	fu_security_attrs_append (attrs, attr_a);
 	if (releases != NULL) {
 		for (guint i = 0; i < releases->len; i++) {
 			FwupdRelease *rel_tmp = g_ptr_array_index (releases, i);
