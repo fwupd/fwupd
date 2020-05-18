@@ -322,6 +322,19 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 						FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
 	}
 
+	/* add device class */
+	tmp = g_udev_device_get_sysfs_attr (priv->udev_device, "class");
+	if (tmp != NULL && g_str_has_prefix (tmp, "0x")) {
+		g_autofree gchar *class_id = g_utf8_strup (tmp + 2, -1);
+		g_autofree gchar *devid = NULL;
+		devid = g_strdup_printf ("%s\\VEN_%04X&CLASS_%s",
+					 subsystem,
+					 priv->vendor,
+					 class_id);
+		fu_device_add_instance_id_full (device, devid,
+						FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
+	}
+
 	/* add subsystem to match in plugins */
 	if (subsystem != NULL) {
 		fu_device_add_instance_id_full (device, subsystem,
