@@ -1554,7 +1554,7 @@ static void
 fu_security_attr_append_str (FwupdSecurityAttr *attr, GString *str)
 {
 	if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED)) {
-		g_string_append (str, "✦  ");
+		g_string_append (str, "✦ ");
 	} else if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
 		g_string_append (str, "✔ ");
 	} else {
