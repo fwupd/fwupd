@@ -5162,9 +5162,15 @@ fu_engine_add_security_attrs_supported (FuEngine *self, FuSecurityAttrs *attrs)
 	}
 	if (rel_current == NULL) {
 		fwupd_security_attr_set_result (attr_a, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
-	} else if (fwupd_release_get_checksums(rel_current)->len > 0) {
-		fwupd_security_attr_add_flag (attr_a, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-		fwupd_security_attr_set_result (attr_a, FWUPD_SECURITY_ATTR_RESULT_SUPPORTED);
+	} else {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_engine_verify (self, fu_device_get_id (device), &error_local)) {
+			fwupd_security_attr_set_result (attr_a, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+			g_debug ("Failed to find attestation checksums: %s", error_local->message);
+		} else {
+			fwupd_security_attr_add_flag (attr_a, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+			fwupd_security_attr_set_result (attr_a, FWUPD_SECURITY_ATTR_RESULT_SUPPORTED);
+		}
 	}
 }
 
