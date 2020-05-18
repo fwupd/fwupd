@@ -66,17 +66,15 @@ fu_plugin_add_security_attr_ble (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error_local = NULL;
 
+	/* maybe the kernel module does not exist */
+	if (!g_file_test (FU_PLUGIN_LINUX_SPI_LPC_SYSFS_DIR, G_FILE_TEST_IS_DIR))
+		return;
+
 	/* create attr */
 	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_SPI_BLE);
 	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
 	fwupd_security_attr_add_obsolete (attr, "pci_bcr");
 	fu_security_attrs_append (attrs, attr);
-
-	/* maybe the kernel module does not exist */
-	if (!g_file_test (FU_PLUGIN_LINUX_SPI_LPC_SYSFS_DIR, G_FILE_TEST_IS_DIR)) {
-		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
-		return;
-	}
 
 	/* load file */
 	fn = g_build_filename (FU_PLUGIN_LINUX_SPI_LPC_SYSFS_DIR, "ble", NULL);
@@ -104,17 +102,15 @@ fu_plugin_add_security_attr_smm_bwp (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error_local = NULL;
 
+	/* maybe the kernel module does not exist */
+	if (!g_file_test (FU_PLUGIN_LINUX_SPI_LPC_SYSFS_DIR, G_FILE_TEST_IS_DIR))
+		return;
+
 	/* create attr */
 	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_SPI_SMM_BWP);
 	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
 	fwupd_security_attr_add_obsolete (attr, "pci_bcr");
 	fu_security_attrs_append (attrs, attr);
-
-	/* maybe the kernel module does not exist */
-	if (!g_file_test (FU_PLUGIN_LINUX_SPI_LPC_SYSFS_DIR, G_FILE_TEST_IS_DIR)) {
-		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
-		return;
-	}
 
 	/* load file */
 	fn = g_build_filename (FU_PLUGIN_LINUX_SPI_LPC_SYSFS_DIR, "smm_bwp", NULL);
