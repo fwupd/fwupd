@@ -1633,15 +1633,15 @@ fu_util_security_attrs_to_string (GPtrArray *attrs)
 	}
 
 	if (low_help) {
-		g_string_append_printf (str, "\n%s %s",
+		g_string_append_printf (str, "\n%s\n » %s\n",
 					/* TRANSLATORS: this is instructions on how to improve the HSI security level */
-					_("Your system has a low HSI security level. Visit this URL for more information: "),
+					_("This system has a low HSI security level."),
 					"https://github.com/fwupd/fwupd/wiki/Low-host-security-level");
 	}
 	if (runtime_help) {
-		g_string_append_printf (str, "\n%s %s",
+		g_string_append_printf (str, "\n%s\n » %s\n",
 					/* TRANSLATORS: this is instructions on how to improve the HSI suffix */
-					_("Your system has runtime issues. Visit this URL for more information: "),
+					_("This system has HSI runtime issues."),
 					"https://github.com/fwupd/fwupd/wiki/Host-security-ID-runtime-issues");
 	}
 
