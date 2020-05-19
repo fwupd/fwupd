@@ -335,6 +335,17 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 						FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
 	}
 
+	/* add the driver */
+	tmp = g_udev_device_get_driver (priv->udev_device);
+	if (tmp != NULL) {
+		g_autofree gchar *devid = NULL;
+		devid = g_strdup_printf ("%s\\DRIVER_%s",
+					 subsystem,
+					 tmp);
+		fu_device_add_instance_id_full (device, devid,
+						FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
+	}
+
 	/* add subsystem to match in plugins */
 	if (subsystem != NULL) {
 		fu_device_add_instance_id_full (device, subsystem,
