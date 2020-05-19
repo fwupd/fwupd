@@ -112,7 +112,7 @@ fu_security_attr_get_result (FwupdSecurityAttr *attr)
 	}
 	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_VALID) {
 		/* TRANSLATORS: Suffix: the HSI result */
-		return _("Not Valid");
+		return _("Invalid");
 	}
 	if (result == FWUPD_SECURITY_ATTR_RESULT_ENABLED) {
 		/* TRANSLATORS: Suffix: the HSI result */
