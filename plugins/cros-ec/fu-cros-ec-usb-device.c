@@ -9,9 +9,15 @@
 #include <string.h>
 
 #include "fu-cros-ec-usb-device.h"
+#include "fu-cros-ec-common.h"
 
 #define USB_SUBCLASS_GOOGLE_UPDATE	0x53
 #define USB_PROTOCOL_GOOGLE_UPDATE	0xff
+
+#define SETUP_RETRY_CNT			5
+#define FLUSH_TIMEOUT_MS		10
+#define BULK_SEND_TIMEOUT_MS		2000
+#define BULK_RECV_TIMEOUT_MS		5000
 
 struct _FuCrosEcUsbDevice {
 	FuUsbDevice		parent_instance;
@@ -19,9 +25,17 @@ struct _FuCrosEcUsbDevice {
 	guint8			ep_num;		/* bEndpointAddress */
 	guint16			chunk_len; 	/* wMaxPacketSize */
 
+	struct			first_response_pdu targ;
+	guint16			protocol_version;
+	guint16			header_type;
 };
 
 G_DEFINE_TYPE (FuCrosEcUsbDevice, fu_cros_ec_usb_device, FU_TYPE_USB_DEVICE)
+
+typedef union _START_RESP {
+	struct first_response_pdu rpdu;
+	guint32 legacy_resp;
+} START_RESP;
 
 static gboolean
 fu_cros_ec_usb_device_find_interface (FuUsbDevice *device,
@@ -105,8 +119,168 @@ fu_cros_ec_usb_device_probe (FuUsbDevice *device, GError **error)
 }
 
 static gboolean
+fu_cros_ec_usb_device_do_xfer (FuCrosEcUsbDevice * self, guint8 *outbuf,
+			       gsize outlen, guint8 *inbuf, gsize inlen,
+			       gboolean allow_less, gsize *rxed_count,
+			       GError **error)
+{
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
+	gsize actual = 0;
+
+	/* send data out */
+	if (outbuf != NULL && outlen > 0) {
+		if (!g_usb_device_bulk_transfer (usb_device, self->ep_num,
+						 outbuf, outlen,
+						 &actual, BULK_SEND_TIMEOUT_MS,
+						 NULL, error)) {
+			return FALSE;
+		}
+		if (actual != outlen) {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_PARTIAL_INPUT,
+				     "only sent %" G_GSIZE_FORMAT "/%"
+				     G_GSIZE_FORMAT " bytes",
+				     actual, outlen);
+			return FALSE;
+		}
+	}
+
+	/* read reply back */
+	if (inbuf != NULL && inlen > 0) {
+		actual = 0;
+		if (!g_usb_device_bulk_transfer (usb_device,
+						 self->ep_num | 0x80,
+						 inbuf, inlen,
+						 &actual, BULK_RECV_TIMEOUT_MS,
+						 NULL, error)) {
+			return FALSE;
+		}
+		if (actual != inlen && !allow_less) {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_PARTIAL_INPUT,
+				     "only received %" G_GSIZE_FORMAT "/%"
+				     G_GSIZE_FORMAT " bytes",
+				     actual, outlen);
+			return FALSE;
+		}
+	}
+
+	if (rxed_count != NULL)
+		*rxed_count = actual;
+
+	return TRUE;
+}
+
+static gboolean
+fu_cros_ec_usb_device_flush (FuDevice *device, gpointer user_data,
+			     GError **error)
+{
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
+	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE (device);
+	gsize actual = 0;
+	g_autofree guint8 *inbuf = g_malloc0 (self->chunk_len);
+
+	if (g_usb_device_bulk_transfer (usb_device, self->ep_num | 0x80, inbuf,
+					self->chunk_len, &actual,
+					FLUSH_TIMEOUT_MS, NULL, NULL)) {
+		g_debug ("flushing %" G_GSIZE_FORMAT " bytes", actual);
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_FAILED,
+			     "flushing %" G_GSIZE_FORMAT " bytes", actual);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_cros_ec_usb_device_start_request (FuDevice *device, gpointer user_data,
+				     GError **error)
+{
+	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE (device);
+	guint8 *start_resp = (guint8 *) user_data;
+	struct update_frame_header ufh;
+	gsize rxed_size = 0;
+
+	memset(&ufh, 0, sizeof (ufh));
+	ufh.block_size = GUINT32_TO_BE (sizeof(ufh));
+	if (!fu_cros_ec_usb_device_do_xfer (self, (guint8 *)&ufh, sizeof(ufh),
+					    start_resp,
+					    sizeof(START_RESP), TRUE,
+					    &rxed_size, error))
+		return FALSE;
+
+	/* we got something, so check for errors in response */
+	if (rxed_size < 8) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_PARTIAL_INPUT,
+			     "unexpected response size %" G_GSIZE_FORMAT,
+			     rxed_size);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_cros_ec_usb_device_setup (FuDevice *device, GError **error)
 {
+	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE (device);
+	guint32 error_code;
+	START_RESP start_resp;
+
+	/* flush all data from endpoint to recover in case of error */
+	if (!fu_device_retry (device, fu_cros_ec_usb_device_flush,
+			      SETUP_RETRY_CNT, NULL, error)) {
+		g_prefix_error (error, "failed to flush device to idle state: ");
+		return FALSE;
+	}
+
+	/* send start request */
+	if (!fu_device_retry (device, fu_cros_ec_usb_device_start_request,
+			      SETUP_RETRY_CNT, &start_resp, error)) {
+		g_prefix_error (error, "failed to send start request: ");
+		return FALSE;
+	}
+
+	self->protocol_version = GUINT16_FROM_BE (start_resp.rpdu.protocol_version);
+
+	if (self->protocol_version < 5 || self->protocol_version > 6) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_SUPPORTED,
+			     "unsupported protocol version %d",
+			     self->protocol_version);
+		return FALSE;
+	}
+	self->header_type = GUINT16_FROM_BE (start_resp.rpdu.header_type);
+
+	error_code = GUINT32_FROM_BE (start_resp.rpdu.return_value);
+	if (error_code != 0) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_FAILED,
+			     "target reporting error %u", error_code);
+		return FALSE;
+	}
+
+	memcpy (self->targ.common.version, start_resp.rpdu.common.version,
+		sizeof(start_resp.rpdu.common.version));
+	self->targ.common.maximum_pdu_size =
+		GUINT32_FROM_BE (start_resp.rpdu.common.maximum_pdu_size);
+	self->targ.common.flash_protection =
+		GUINT32_FROM_BE (start_resp.rpdu.common.flash_protection);
+	self->targ.common.min_rollback = GINT32_FROM_BE (start_resp.rpdu.common.min_rollback);
+	self->targ.common.key_version = GUINT32_FROM_BE (start_resp.rpdu.common.key_version);
+
+	fu_device_set_version (FU_DEVICE (device), self->targ.common.version);
+
 	/* success */
 	return TRUE;
 }
@@ -131,7 +305,7 @@ fu_cros_ec_usb_device_close (FuUsbDevice *device, GError **error)
 static void
 fu_cros_ec_usb_device_init (FuCrosEcUsbDevice *device)
 {
-	fu_device_set_version_format (FU_DEVICE (device), FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version_format (FU_DEVICE (device), FWUPD_VERSION_FORMAT_PLAIN);
 }
 
 static void
