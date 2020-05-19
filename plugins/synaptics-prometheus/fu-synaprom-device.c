@@ -142,6 +142,14 @@ fu_synaprom_device_set_version (FuSynapromDevice *self,
 {
 	g_autofree gchar *str = NULL;
 
+	/* We decide to skip 10.02.xxxxxx firmware, so we force the minor version from 0x02 
+	** to 0x01 to make the devices with 0x02 minor version firmware allow to be updated
+	** back to minor version 0x01. */
+	if (vmajor == 0x0a && vminor == 0x02) {
+		g_debug ("quirking vminor from %02x to 01", vminor);
+		vminor = 0x01;
+	}
+
 	/* set display version */
 	str = g_strdup_printf ("%02u.%02u.%u", vmajor, vminor, buildnum);
 	fu_device_set_version (FU_DEVICE (self), str);
