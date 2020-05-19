@@ -411,7 +411,6 @@ fu_efivar_set_data (const gchar *guid, const gchar *name, const guint8 *data,
 
 /**
  * fu_efivar_secure_boot_enabled:
- * @error: #GError
  *
  * Determines if secure boot was enabled
  *
