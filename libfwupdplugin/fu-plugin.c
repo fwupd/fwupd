@@ -1600,9 +1600,9 @@ fu_plugin_runner_update_reload (FuPlugin *self, FuDevice *device, GError **error
 /**
  * fu_plugin_runner_add_security_attrs:
  * @self: a #FuPlugin
- * @attrs: (element-type FwupdSecurityAttr): a #GPtrArray of attributes
+ * @attrs: a #FuSecurityAttrs
  *
- * Runs the add_security_attrs routine for the plugin
+ * Runs the `add_security_attrs()` routine for the plugin
  *
  * Since: 1.5.0
  **/
