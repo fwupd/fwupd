@@ -561,7 +561,16 @@ fu_engine_modify_remote (FuEngine *self,
 			 const gchar *value,
 			 GError **error)
 {
-	const gchar *keys[] = { "Enabled", "MetadataURI", "FirmwareBaseURI", "ReportURI", "AutomaticReports", NULL };
+	const gchar *keys[] = {
+		"AutomaticReports",
+		"AutomaticSecurityReports",
+		"Enabled",
+		"FirmwareBaseURI",
+		"MetadataURI",
+		"ReportURI",
+		"SecurityReportURI",
+		NULL,
+	};
 
 	/* check keys are valid */
 	if (!g_strv_contains (keys, key)) {

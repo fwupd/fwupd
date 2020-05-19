@@ -32,6 +32,7 @@ typedef struct {
 	gchar			*id;
 	gchar			*firmware_base_uri;
 	gchar			*report_uri;
+	gchar			*security_report_uri;
 	gchar			*metadata_uri;
 	gchar			*metadata_uri_sig;
 	gchar			*username;
@@ -50,6 +51,7 @@ typedef struct {
 	gchar			**order_before;
 	gchar			*remotes_dir;
 	gboolean		 automatic_reports;
+	gboolean		 automatic_security_reports;
 } FwupdRemotePrivate;
 
 enum {
@@ -58,6 +60,7 @@ enum {
 	PROP_ENABLED,
 	PROP_APPROVAL_REQUIRED,
 	PROP_AUTOMATIC_REPORTS,
+	PROP_AUTOMATIC_SECURITY_REPORTS,
 	PROP_LAST
 };
 
@@ -252,6 +255,13 @@ fwupd_remote_set_report_uri (FwupdRemote *self, const gchar *report_uri)
 	priv->report_uri = g_strdup (report_uri);
 }
 
+static void
+fwupd_remote_set_security_report_uri (FwupdRemote *self, const gchar *security_report_uri)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	priv->security_report_uri = g_strdup (security_report_uri);
+}
+
 /**
  * fwupd_remote_kind_from_string:
  * @kind: a string, e.g. `download`
@@ -343,6 +353,7 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 	g_autofree gchar *order_after = NULL;
 	g_autofree gchar *order_before = NULL;
 	g_autofree gchar *report_uri = NULL;
+	g_autofree gchar *security_report_uri = NULL;
 	g_autoptr(GKeyFile) kf = NULL;
 
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), FALSE);
@@ -415,8 +426,14 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 	if (report_uri != NULL && report_uri[0] != '\0')
 		fwupd_remote_set_report_uri (self, report_uri);
 
+	/* security reporting is optional */
+	security_report_uri = g_key_file_get_string (kf, group, "SecurityReportURI", NULL);
+	if (security_report_uri != NULL && security_report_uri[0] != '\0')
+		fwupd_remote_set_security_report_uri (self, security_report_uri);
+
 	/* automatic report uploading */
 	priv->automatic_reports = g_key_file_get_boolean (kf, group, "AutomaticReports", NULL);
+	priv->automatic_security_reports = g_key_file_get_boolean (kf, group, "AutomaticSecurityReports", NULL);
 
 	/* DOWNLOAD-type remotes */
 	if (priv->kind == FWUPD_REMOTE_KIND_DOWNLOAD) {
@@ -880,6 +897,24 @@ fwupd_remote_get_report_uri (FwupdRemote *self)
 }
 
 /**
+ * fwupd_remote_get_security_report_uri:
+ * @self: A #FwupdRemote
+ *
+ * Gets the URI for the security report.
+ *
+ * Returns: (transfer none): a URI, or %NULL for invalid.
+ *
+ * Since: 1.5.0
+ **/
+const gchar *
+fwupd_remote_get_security_report_uri (FwupdRemote *self)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
+	return priv->security_report_uri;
+}
+
+/**
  * fwupd_remote_get_metadata_uri:
  * @self: A #FwupdRemote
  *
@@ -1036,6 +1071,24 @@ fwupd_remote_get_automatic_reports (FwupdRemote *self)
 }
 
 /**
+ * fwupd_remote_get_automatic_security_reports:
+ * @self: A #FwupdRemote
+ *
+ * Gets if security reports should be automatically uploaded to this remote
+ *
+ * Returns: a #TRUE if the remote should have reports uploaded automatically
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fwupd_remote_get_automatic_security_reports (FwupdRemote *self)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), FALSE);
+	return priv->automatic_security_reports;
+}
+
+/**
  * fwupd_remote_get_approval_required:
  * @self: A #FwupdRemote
  *
@@ -1099,6 +1152,8 @@ fwupd_remote_set_from_variant_iter (FwupdRemote *self, GVariantIter *iter)
 			fwupd_remote_set_filename_source (self, g_variant_get_string (value, NULL));
 		if (g_strcmp0 (key, "ReportUri") == 0)
 			fwupd_remote_set_report_uri (self, g_variant_get_string (value, NULL));
+		if (g_strcmp0 (key, "SecurityReportUri") == 0)
+			fwupd_remote_set_security_report_uri (self, g_variant_get_string (value, NULL));
 	}
 	while (g_variant_iter_loop (iter3, "{sv}", &key, &value)) {
 		if (g_strcmp0 (key, "Username") == 0) {
@@ -1123,6 +1178,8 @@ fwupd_remote_set_from_variant_iter (FwupdRemote *self, GVariantIter *iter)
 			fwupd_remote_set_firmware_base_uri (self, g_variant_get_string (value, NULL));
 		} else if (g_strcmp0 (key, "AutomaticReports") == 0) {
 			priv->automatic_reports = g_variant_get_boolean (value);
+		} else if (g_strcmp0 (key, "AutomaticSecurityReports") == 0) {
+			priv->automatic_security_reports = g_variant_get_boolean (value);
 		}
 	}
 }
@@ -1179,6 +1236,10 @@ fwupd_remote_to_variant (FwupdRemote *self)
 		g_variant_builder_add (&builder, "{sv}", "ReportUri",
 				       g_variant_new_string (priv->report_uri));
 	}
+	if (priv->security_report_uri != NULL) {
+		g_variant_builder_add (&builder, "{sv}", "SecurityReportUri",
+				       g_variant_new_string (priv->security_report_uri));
+	}
 	if (priv->firmware_base_uri != NULL) {
 		g_variant_builder_add (&builder, "{sv}", "FirmwareBaseUri",
 				       g_variant_new_string (priv->firmware_base_uri));
@@ -1217,6 +1278,8 @@ fwupd_remote_to_variant (FwupdRemote *self)
 			       g_variant_new_boolean (priv->approval_required));
 	g_variant_builder_add (&builder, "{sv}", "AutomaticReports",
 			       g_variant_new_boolean (priv->automatic_reports));
+	g_variant_builder_add (&builder, "{sv}", "AutomaticSecurityReports",
+			       g_variant_new_boolean (priv->automatic_security_reports));
 	return g_variant_new ("a{sv}", &builder);
 }
 
@@ -1239,6 +1302,9 @@ fwupd_remote_get_property (GObject *obj, guint prop_id,
 		break;
 	case PROP_AUTOMATIC_REPORTS:
 		g_value_set_boolean (value, priv->automatic_reports);
+		break;
+	case PROP_AUTOMATIC_SECURITY_REPORTS:
+		g_value_set_boolean (value, priv->automatic_security_reports);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
@@ -1265,6 +1331,9 @@ fwupd_remote_set_property (GObject *obj, guint prop_id,
 		break;
 	case PROP_AUTOMATIC_REPORTS:
 		priv->automatic_reports = g_value_get_boolean (value);
+		break;
+	case PROP_AUTOMATIC_SECURITY_REPORTS:
+		priv->automatic_security_reports = g_value_get_boolean (value);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
@@ -1326,6 +1395,17 @@ fwupd_remote_class_init (FwupdRemoteClass *klass)
 				      FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_AUTOMATIC_REPORTS, pspec);
 
+	/**
+	* FwupdRemote:automatic-security-reports:
+	*
+	* The behavior for auto-uploading security reports.
+	*
+	* Since: 1.5.0
+	*/
+	pspec = g_param_spec_boolean ("automatic-security-reports", NULL, NULL,
+				      FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_AUTOMATIC_SECURITY_REPORTS, pspec);
+
 }
 
 static void
@@ -1344,6 +1424,7 @@ fwupd_remote_finalize (GObject *obj)
 	g_free (priv->metadata_uri_sig);
 	g_free (priv->firmware_base_uri);
 	g_free (priv->report_uri);
+	g_free (priv->security_report_uri);
 	g_free (priv->username);
 	g_free (priv->password);
 	g_free (priv->title);

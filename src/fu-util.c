@@ -2365,6 +2365,207 @@ fu_util_modify_config (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+static FwupdRemote *
+fu_util_get_remote_with_security_report_uri (FuUtilPrivate *priv, GError **error)
+{
+	g_autoptr(GPtrArray) remotes = NULL;
+
+	/* get all remotes */
+	remotes = fwupd_client_get_remotes (priv->client, NULL, error);
+	if (remotes == NULL)
+		return NULL;
+
+	for (guint i = 0; i < remotes->len; i++) {
+		FwupdRemote *remote = g_ptr_array_index (remotes, i);
+		if (!fwupd_remote_get_enabled (remote))
+			continue;
+		if (fwupd_remote_get_security_report_uri (remote) != NULL)
+			return g_object_ref (remote);
+	}
+
+	/* failed */
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "No remotes specified SecurityReportURI");
+	return FALSE;
+}
+
+static gboolean
+fu_util_upload_security (FuUtilPrivate *priv, GPtrArray *attrs, GError **error)
+{
+	guint status_code;
+	GHashTableIter iter;
+	const gchar *key;
+	const gchar *value;
+	g_autofree gchar *data = NULL;
+	g_autofree gchar *sig = NULL;
+	g_autoptr(FwupdRemote) remote = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GHashTable) metadata = NULL;
+	g_autoptr(JsonBuilder) builder = NULL;
+	g_autoptr(JsonGenerator) json_generator = NULL;
+	g_autoptr(JsonNode) json_root = NULL;
+	g_autoptr(SoupMessage) msg = NULL;
+	g_autoptr(SoupMultipart) mp = NULL;
+
+	/* can we find a remote with a security attr */
+	remote = fu_util_get_remote_with_security_report_uri (priv, &error_local);
+	if (remote == NULL) {
+		g_debug ("failed to find suitable remote: %s", error_local->message);
+		return TRUE;
+	}
+	if (!priv->assume_yes &&
+	    !fwupd_remote_get_automatic_security_reports (remote)) {
+		g_autofree gchar *tmp = NULL;
+		/* TRANSLATORS: ask the user to share, %s is something like:
+		 * "Linux Vendor Firmware Service" */
+		tmp = g_strdup_printf ("Upload these anonymous results to the %s to help other users?",
+				       fwupd_remote_get_title (remote));
+
+		g_print ("\n%s [y|N]: ", tmp);
+		if (!fu_util_prompt_for_boolean (FALSE)) {
+			g_print ("%s [Y|n]: ",
+				 /* TRANSLATORS: stop nagging the user */
+				 _("Ask again next time?"));
+			if (!fu_util_prompt_for_boolean (TRUE)) {
+				if (!fwupd_client_modify_remote (priv->client,
+								 fwupd_remote_get_id (remote),
+								 "SecurityReportURI", "",
+								 NULL, error))
+					return FALSE;
+			}
+			return TRUE;
+		}
+	}
+
+	/* set up networking */
+	if (priv->soup_session == NULL) {
+		priv->soup_session = fu_util_setup_networking (error);
+		if (priv->soup_session == NULL)
+			return FALSE;
+	}
+
+	/* get metadata */
+	metadata = fwupd_client_get_report_metadata (priv->client,
+						     priv->cancellable,
+						     error);
+	if (metadata == NULL)
+		return FALSE;
+
+	/* create header */
+	builder = json_builder_new ();
+	json_builder_begin_object (builder);
+	json_builder_set_member_name (builder, "ReportVersion");
+	json_builder_add_int_value (builder, 2);
+	json_builder_set_member_name (builder, "MachineId");
+	json_builder_add_string_value (builder, fwupd_client_get_host_machine_id (priv->client));
+
+	/* this is system metadata not stored in the database */
+	json_builder_set_member_name (builder, "Metadata");
+	json_builder_begin_object (builder);
+
+	g_hash_table_iter_init (&iter, metadata);
+	while (g_hash_table_iter_next (&iter, (gpointer *) &key, (gpointer *) &value)) {
+		json_builder_set_member_name (builder, key);
+		json_builder_add_string_value (builder, value);
+	}
+	json_builder_set_member_name (builder, "HostSecurityId");
+	json_builder_add_string_value (builder, fwupd_client_get_host_security_id (priv->client));
+	json_builder_end_object (builder);
+
+	/* attrs */
+	json_builder_set_member_name (builder, "SecurityAttributes");
+	json_builder_begin_array (builder);
+	for (guint i = 0; i < attrs->len; i++) {
+		FwupdSecurityAttr *attr = g_ptr_array_index (attrs, i);
+		json_builder_begin_object (builder);
+		fwupd_security_attr_to_json (attr, builder);
+		json_builder_end_object (builder);
+	}
+	json_builder_end_array (builder);
+	json_builder_end_object (builder);
+
+	/* export as a string */
+	json_root = json_builder_get_root (builder);
+	json_generator = json_generator_new ();
+	json_generator_set_pretty (json_generator, TRUE);
+	json_generator_set_root (json_generator, json_root);
+	data = json_generator_to_data (json_generator, NULL);
+	if (data == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "Failed to convert to JSON string");
+		return FALSE;
+	}
+
+	/* self sign data */
+	if (priv->sign) {
+		sig = fwupd_client_self_sign (priv->client, data,
+					      FWUPD_SELF_SIGN_FLAG_ADD_TIMESTAMP,
+					      priv->cancellable, error);
+		if (sig == NULL)
+			return FALSE;
+	}
+
+	/* ask for permission */
+	if (!priv->assume_yes &&
+	    !fwupd_remote_get_automatic_security_reports (remote)) {
+		fu_util_print_data (_("Target"), fwupd_remote_get_security_report_uri (remote));
+		fu_util_print_data (_("Payload"), data);
+		if (sig != NULL)
+			fu_util_print_data (_("Signature"), sig);
+		g_print ("%s [Y|n]: ", _("Proceed with upload?"));
+		if (!fu_util_prompt_for_boolean (TRUE)) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_PERMISSION_DENIED,
+					     "User declined action");
+			return FALSE;
+		}
+	}
+
+	/* POST request */
+	mp = soup_multipart_new (SOUP_FORM_MIME_TYPE_MULTIPART);
+	soup_multipart_append_form_string (mp, "payload", data);
+	if (sig != NULL)
+		soup_multipart_append_form_string (mp, "signature", sig);
+	msg = soup_form_request_new_from_multipart (fwupd_remote_get_security_report_uri (remote), mp);
+	status_code = soup_session_send_message (priv->soup_session, msg);
+	g_debug ("server returned: %s", msg->response_body->data);
+
+	/* fall back to HTTP status codes in case the server is offline */
+	if (!SOUP_STATUS_IS_SUCCESSFUL (status_code)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Failed to upload to %s: %s",
+			     fwupd_remote_get_security_report_uri (remote),
+			     soup_status_get_phrase (status_code));
+		return FALSE;
+	}
+
+	/* TRANSLATORS: success, so say thank you to the user */
+	g_print ("%s\n", "Host Security ID attributes uploaded successfully, thanks!");
+
+	/* as this worked, ask if the user want to do this every time */
+	if (!fwupd_remote_get_automatic_security_reports (remote)) {
+		g_print ("%s [y|N]: ",
+			 /* TRANSLATORS: can we JFDI? */
+			 _("Automatically upload every time?"));
+		if (fu_util_prompt_for_boolean (FALSE)) {
+			if (!fwupd_client_modify_remote (priv->client,
+							 fwupd_remote_get_id (remote),
+							 "AutomaticSecurityReports", "true",
+							 NULL, error))
+				return FALSE;
+		}
+	}
+
+	return TRUE;
+}
+
 static gboolean
 fu_util_security (FuUtilPrivate *priv, gchar **values, GError **error)
 {
@@ -2393,7 +2594,13 @@ fu_util_security (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	str = fu_util_security_attrs_to_string (attrs);
 	g_print ("%s\n", str);
-	return TRUE;
+
+	/* opted-out */
+	if (priv->no_unreported_check)
+		return TRUE;
+
+	/* upload, with confirmation */
+	return fu_util_upload_security (priv, attrs, error);
 }
 
 static void
