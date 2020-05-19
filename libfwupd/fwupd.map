@@ -452,6 +452,8 @@ LIBFWUPD_1.5.0 {
     fwupd_client_get_host_security_attrs;
     fwupd_client_get_host_security_id;
     fwupd_client_get_report_metadata;
+    fwupd_remote_get_automatic_security_reports;
+    fwupd_remote_get_security_report_uri;
     fwupd_security_attr_add_flag;
     fwupd_security_attr_add_obsolete;
     fwupd_security_attr_array_from_variant;
