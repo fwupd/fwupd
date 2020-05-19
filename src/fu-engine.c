@@ -5061,6 +5061,33 @@ fu_engine_get_host_product (FuEngine *self)
 }
 
 const gchar *
+fu_engine_get_host_family (FuEngine *self)
+{
+	const gchar *result = NULL;
+	g_return_val_if_fail (FU_IS_ENGINE (self), NULL);
+	result = fu_hwids_get_value (self->hwids, FU_HWIDS_KEY_FAMILY);
+	return result != NULL ? result : "Unknown";
+}
+
+const gchar *
+fu_engine_get_host_sku (FuEngine *self)
+{
+	const gchar *result = NULL;
+	g_return_val_if_fail (FU_IS_ENGINE (self), NULL);
+	result = fu_hwids_get_value (self->hwids, FU_HWIDS_KEY_PRODUCT_SKU);
+	return result != NULL ? result : "Unknown";
+}
+
+const gchar *
+fu_engine_get_host_vendor (FuEngine *self)
+{
+	const gchar *result = NULL;
+	g_return_val_if_fail (FU_IS_ENGINE (self), NULL);
+	result = fu_hwids_get_value (self->hwids, FU_HWIDS_KEY_MANUFACTURER);
+	return result != NULL ? result : "Unknown";
+}
+
+const gchar *
 fu_engine_get_host_machine_id (FuEngine *self)
 {
 	g_return_val_if_fail (FU_IS_ENGINE (self), NULL);
