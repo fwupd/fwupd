@@ -1371,6 +1371,60 @@ fu_engine_get_report_metadata_os_release (GHashTable *hash, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_engine_get_report_metadata_kernel_cmdline (GHashTable *hash, GError **error)
+{
+	gsize bufsz = 0;
+	g_autofree gchar *buf = NULL;
+	const gchar *ignore[] = {
+		"",
+		"BOOT_IMAGE",
+		"console",
+		"cryptdevice",
+		"initrd",
+		"LANG",
+		"loglevel",
+		"ostree",
+		"quiet",
+		"rd.luks.uuid",
+		"rd.lvm.lv",
+		"resume",
+		"rhgb",
+		"ro",
+		"root",
+		"rootflags",
+		"rw",
+		"showopts",
+		"splash",
+		"swap",
+		"vt.handoff",
+		"zfs",
+		NULL, /* last entry */
+	};
+
+	/* get a PII-safe kernel command line */
+	if (!g_file_get_contents ("/proc/cmdline", &buf, &bufsz, error))
+		return FALSE;
+	if (bufsz > 0) {
+		g_auto(GStrv) tokens = fu_common_strnsplit (buf, bufsz - 1, " ", -1);
+		g_autoptr(GString) cmdline_safe = g_string_new (NULL);
+		for (guint i = 0; tokens[i] != NULL; i++) {
+			g_auto(GStrv) kv = g_strsplit (tokens[i], "=", 2);
+			if (g_strv_contains (ignore, kv[0]))
+				continue;
+			if (cmdline_safe->len > 0)
+				g_string_append (cmdline_safe, " ");
+			g_string_append (cmdline_safe, tokens[i]);
+		}
+		if (cmdline_safe->len > 0) {
+			g_hash_table_insert (hash,
+					     g_strdup ("KernelCmdline"),
+					     g_strdup (cmdline_safe->str));
+		}
+	}
+	return TRUE;
+}
+
 GHashTable *
 fu_engine_get_report_metadata (FuEngine *self, GError **error)
 {
@@ -1400,6 +1454,8 @@ fu_engine_get_report_metadata (FuEngine *self, GError **error)
 				     g_strdup (version));
 	}
 	if (!fu_engine_get_report_metadata_os_release (hash, error))
+		return NULL;
+	if (!fu_engine_get_report_metadata_kernel_cmdline (hash, error))
 		return NULL;
 
 	/* DMI data */
