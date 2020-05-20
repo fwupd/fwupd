@@ -1374,6 +1374,7 @@ fu_engine_get_report_metadata_os_release (GHashTable *hash, GError **error)
 GHashTable *
 fu_engine_get_report_metadata (FuEngine *self, GError **error)
 {
+	const gchar *tmp;
 	gchar *btime;
 #ifdef HAVE_UTSNAME_H
 	struct utsname name_tmp;
@@ -1400,6 +1401,20 @@ fu_engine_get_report_metadata (FuEngine *self, GError **error)
 	}
 	if (!fu_engine_get_report_metadata_os_release (hash, error))
 		return NULL;
+
+	/* DMI data */
+	tmp = fu_hwids_get_value (self->hwids, FU_HWIDS_KEY_PRODUCT_NAME);
+	if (tmp != NULL)
+		g_hash_table_insert (hash, g_strdup ("HostProduct"), g_strdup (tmp));
+	tmp = fu_hwids_get_value (self->hwids, FU_HWIDS_KEY_FAMILY);
+	if (tmp != NULL)
+		g_hash_table_insert (hash, g_strdup ("HostFamily"), g_strdup (tmp));
+	tmp = fu_hwids_get_value (self->hwids, FU_HWIDS_KEY_PRODUCT_SKU);
+	if (tmp != NULL)
+		g_hash_table_insert (hash, g_strdup ("HostSku"), g_strdup (tmp));
+	tmp = fu_hwids_get_value (self->hwids, FU_HWIDS_KEY_MANUFACTURER);
+	if (tmp != NULL)
+		g_hash_table_insert (hash, g_strdup ("HostVendor"), g_strdup (tmp));
 
 	/* kernel version is often important for debugging failures */
 #ifdef HAVE_UTSNAME_H
