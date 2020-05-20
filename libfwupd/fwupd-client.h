@@ -136,9 +136,6 @@ gboolean	 fwupd_client_get_daemon_interactive	(FwupdClient	*client);
 guint		 fwupd_client_get_percentage		(FwupdClient	*client);
 const gchar	*fwupd_client_get_daemon_version	(FwupdClient	*client);
 const gchar	*fwupd_client_get_host_product		(FwupdClient	*client);
-const gchar	*fwupd_client_get_host_family		(FwupdClient	*client);
-const gchar	*fwupd_client_get_host_sku		(FwupdClient	*client);
-const gchar	*fwupd_client_get_host_vendor		(FwupdClient	*client);
 const gchar	*fwupd_client_get_host_machine_id	(FwupdClient	*client);
 const gchar	*fwupd_client_get_host_security_id	(FwupdClient	*client);
 

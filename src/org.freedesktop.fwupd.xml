@@ -34,39 +34,6 @@
     </property>
 
     <!--***********************************************************-->
-    <property name='HostFamily' type='s' access='read'>
-      <doc:doc>
-        <doc:description>
-          <doc:para>
-            The product family string for the host.
-          </doc:para>
-        </doc:description>
-      </doc:doc>
-    </property>
-
-    <!--***********************************************************-->
-    <property name='HostSku' type='s' access='read'>
-      <doc:doc>
-        <doc:description>
-          <doc:para>
-            The product SKU string for the host.
-          </doc:para>
-        </doc:description>
-      </doc:doc>
-    </property>
-
-    <!--***********************************************************-->
-    <property name='HostVendor' type='s' access='read'>
-      <doc:doc>
-        <doc:description>
-          <doc:para>
-            The product vendor string for the host.
-          </doc:para>
-        </doc:description>
-      </doc:doc>
-    </property>
-
-    <!--***********************************************************-->
     <property name='HostMachineId' type='s' access='read'>
       <doc:doc>
         <doc:description>
