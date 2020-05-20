@@ -4,6 +4,12 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
+#pragma once
+
+#include <glib.h>
+
+#include "fu-plugin.h"
+
 #define UPDATE_PROTOCOL_VERSION 6
 
 /*
@@ -123,3 +129,14 @@ enum first_response_pdu_header_type {
 	UPDATE_HEADER_TYPE_CR50 = 0, /* Must be 0 for backwards compatibility */
 	UPDATE_HEADER_TYPE_COMMON = 1,
 };
+
+struct cros_ec_version {
+	gchar	 boardname[32];
+	gchar	 triplet[32];
+	gchar	 sha1[32];
+	gboolean dirty;
+};
+
+gboolean	fu_cros_ec_parse_version	(const gchar 		*version_raw,
+						 struct cros_ec_version *version,
+						 GError **error);
