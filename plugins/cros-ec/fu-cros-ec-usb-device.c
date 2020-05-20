@@ -289,6 +289,7 @@ fu_cros_ec_usb_device_setup (FuDevice *device, GError **error)
 	}
 
 	fu_device_set_version (FU_DEVICE (device), self->version.triplet);
+	fu_device_add_instance_id (FU_DEVICE (device), self->version.boardname);
 
 	/* success */
 	return TRUE;
@@ -318,11 +319,19 @@ fu_cros_ec_usb_device_init (FuCrosEcUsbDevice *device)
 }
 
 static void
+fu_cros_ec_usb_device_to_string (FuDevice *device, guint idt, GString *str)
+{
+	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE (device);
+	fu_common_string_append_kv (str, idt, "GitHash", self->version.sha1);
+}
+
+static void
 fu_cros_ec_usb_device_class_init (FuCrosEcUsbDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	klass_device->setup = fu_cros_ec_usb_device_setup;
+	klass_device->to_string = fu_cros_ec_usb_device_to_string;
 	klass_usb_device->open = fu_cros_ec_usb_device_open;
 	klass_usb_device->probe = fu_cros_ec_usb_device_probe;
 	klass_usb_device->close = fu_cros_ec_usb_device_close;
