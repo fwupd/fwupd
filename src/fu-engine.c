@@ -1378,12 +1378,14 @@ fu_engine_get_report_metadata_kernel_cmdline (GHashTable *hash, GError **error)
 	g_autofree gchar *buf = NULL;
 	const gchar *ignore[] = {
 		"",
+		"auto",
 		"BOOT_IMAGE",
 		"console",
 		"cryptdevice",
 		"initrd",
 		"LANG",
 		"loglevel",
+		"noplymouth",
 		"ostree",
 		"quiet",
 		"rd.luks.uuid",
@@ -1397,6 +1399,7 @@ fu_engine_get_report_metadata_kernel_cmdline (GHashTable *hash, GError **error)
 		"showopts",
 		"splash",
 		"swap",
+		"verbose",
 		"vt.handoff",
 		"zfs",
 		NULL, /* last entry */
