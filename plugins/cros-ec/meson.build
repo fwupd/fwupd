@@ -9,6 +9,7 @@ shared_module('fu_plugin_cros_ec',
   sources : [
     'fu-plugin-cros-ec.c',
     'fu-cros-ec-usb-device.c',
+    'fu-cros-ec-common.c',
   ],
   include_directories : [
     root_incdir,
@@ -18,6 +19,7 @@ shared_module('fu_plugin_cros_ec',
   install : true,
   install_dir: plugin_dir,
   link_with : [
+    fwupd,
     fwupdplugin,
   ],
   c_args : cargs,

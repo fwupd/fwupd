@@ -20,14 +20,15 @@
 #define BULK_RECV_TIMEOUT_MS		5000
 
 struct _FuCrosEcUsbDevice {
-	FuUsbDevice		parent_instance;
-	guint8			iface_idx; 	/* bInterfaceNumber */
-	guint8			ep_num;		/* bEndpointAddress */
-	guint16			chunk_len; 	/* wMaxPacketSize */
+	FuUsbDevice			parent_instance;
+	guint8				iface_idx; 	/* bInterfaceNumber */
+	guint8				ep_num;		/* bEndpointAddress */
+	guint16				chunk_len; 	/* wMaxPacketSize */
 
-	struct			first_response_pdu targ;
-	guint16			protocol_version;
-	guint16			header_type;
+	struct first_response_pdu	targ;
+	guint16				protocol_version;
+	guint16				header_type;
+	struct cros_ec_version		version;
 };
 
 G_DEFINE_TYPE (FuCrosEcUsbDevice, fu_cros_ec_usb_device, FU_TYPE_USB_DEVICE)
@@ -279,7 +280,15 @@ fu_cros_ec_usb_device_setup (FuDevice *device, GError **error)
 	self->targ.common.min_rollback = GINT32_FROM_BE (start_resp.rpdu.common.min_rollback);
 	self->targ.common.key_version = GUINT32_FROM_BE (start_resp.rpdu.common.key_version);
 
-	fu_device_set_version (FU_DEVICE (device), self->targ.common.version);
+	if (!fu_cros_ec_parse_version (self->targ.common.version,
+				       &self->version, error)) {
+		g_prefix_error (error,
+				"failed parsing device's version: %32s: ",
+				self->targ.common.version);
+		return FALSE;
+	}
+
+	fu_device_set_version (FU_DEVICE (device), self->version.triplet);
 
 	/* success */
 	return TRUE;
@@ -305,7 +314,7 @@ fu_cros_ec_usb_device_close (FuUsbDevice *device, GError **error)
 static void
 fu_cros_ec_usb_device_init (FuCrosEcUsbDevice *device)
 {
-	fu_device_set_version_format (FU_DEVICE (device), FWUPD_VERSION_FORMAT_PLAIN);
+	fu_device_set_version_format (FU_DEVICE (device), FWUPD_VERSION_FORMAT_TRIPLET);
 }
 
 static void
