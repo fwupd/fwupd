@@ -858,6 +858,31 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 						       g_variant_new_tuple (&val, 1));
 		return;
 	}
+	if (g_strcmp0 (method_name, "GetReportMetadata") == 0) {
+		GHashTableIter iter;
+		GVariantBuilder builder;
+		const gchar *key;
+		const gchar *value;
+		g_autoptr(GHashTable) metadata = NULL;
+
+		metadata = fu_engine_get_report_metadata (priv->engine, &error);
+		if (metadata == NULL) {
+			g_dbus_method_invocation_return_gerror (invocation, error);
+			return;
+		}
+		g_variant_builder_init (&builder, G_VARIANT_TYPE ("a{ss}"));
+		g_hash_table_iter_init (&iter, metadata);
+		while (g_hash_table_iter_next (&iter,
+					       (gpointer *) &key,
+					       (gpointer *) &value)) {
+			g_variant_builder_add_value (&builder,
+						     g_variant_new ("{ss}", key, value));
+		}
+		val = g_variant_builder_end (&builder);
+		g_dbus_method_invocation_return_value (invocation,
+						       g_variant_new_tuple (&val, 1));
+		return;
+	}
 	if (g_strcmp0 (method_name, "SetApprovedFirmware") == 0) {
 		g_autofree gchar *checksums_str = NULL;
 		g_auto(GStrv) checksums = NULL;

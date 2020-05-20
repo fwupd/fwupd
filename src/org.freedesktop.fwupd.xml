@@ -272,6 +272,24 @@
     </method>
 
     <!--***********************************************************-->
+    <method name='GetReportMetadata'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Gets metadata to include with the firmware and security reports.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='a{ss}' name='attrs' direction='out'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>An array of string key values.</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
     <method name='Install'>
       <doc:doc>
         <doc:description>

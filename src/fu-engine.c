@@ -1342,14 +1342,43 @@ fu_engine_get_boot_time (void)
 	return NULL;
 }
 
-static GHashTable *
-fu_engine_get_report_metadata (FuEngine *self)
+static gboolean
+fu_engine_get_report_metadata_os_release (GHashTable *hash, GError **error)
 {
-	GHashTable *hash;
+	g_autoptr(GHashTable) os_release = NULL;
+	struct {
+		const gchar *key;
+		const gchar *val;
+	} distro_kv[] = {
+		{ "ID",			"DistroId" },
+		{ "VERSION_ID",		"DistroVersion" },
+		{ "VARIANT_ID",		"DistroVariant" },
+		{ NULL, NULL }
+	};
+
+	/* get all required os-release keys */
+	os_release = fwupd_get_os_release (error);
+	if (os_release == NULL)
+		return FALSE;
+	for (guint i = 0; distro_kv[i].key != NULL; i++) {
+		const gchar *tmp = g_hash_table_lookup (os_release, distro_kv[i].key);
+		if (tmp != NULL) {
+			g_hash_table_insert (hash,
+					     g_strdup (distro_kv[i].val),
+					     g_strdup (tmp));
+		}
+	}
+	return TRUE;
+}
+
+GHashTable *
+fu_engine_get_report_metadata (FuEngine *self, GError **error)
+{
 	gchar *btime;
 #ifdef HAVE_UTSNAME_H
 	struct utsname name_tmp;
 #endif
+	g_autoptr(GHashTable) hash = NULL;
 	g_autoptr(GList) compile_keys = g_hash_table_get_keys (self->compile_versions);
 	g_autoptr(GList) runtime_keys = g_hash_table_get_keys (self->runtime_versions);
 
@@ -1369,6 +1398,8 @@ fu_engine_get_report_metadata (FuEngine *self)
 				     g_strdup_printf ("RuntimeVersion(%s)", id),
 				     g_strdup (version));
 	}
+	if (!fu_engine_get_report_metadata_os_release (hash, error))
+		return NULL;
 
 	/* kernel version is often important for debugging failures */
 #ifdef HAVE_UTSNAME_H
@@ -1385,7 +1416,7 @@ fu_engine_get_report_metadata (FuEngine *self)
 	if (btime != NULL)
 		g_hash_table_insert (hash, g_strdup ("BootTime"), btime);
 
-	return hash;
+	return g_steal_pointer (&hash);
 }
 
 /**
@@ -1530,18 +1561,13 @@ static FwupdRelease *
 fu_engine_create_release_metadata (FuEngine *self, FuPlugin *plugin, GError **error)
 {
 	GPtrArray *metadata_sources;
-	const gchar *tmp;
 	g_autoptr(FwupdRelease) release = fwupd_release_new ();
 	g_autoptr(GHashTable) metadata_hash = NULL;
-	g_autoptr(GHashTable) os_release = NULL;
-
-	/* add release data from os-release */
-	os_release = fwupd_get_os_release (error);
-	if (os_release == NULL)
-		return NULL;
 
 	/* build the version metadata */
-	metadata_hash = fu_engine_get_report_metadata (self);
+	metadata_hash = fu_engine_get_report_metadata (self, error);
+	if (metadata_hash == NULL)
+		return NULL;
 	fwupd_release_add_metadata (release, metadata_hash);
 	fwupd_release_add_metadata (release, fu_plugin_get_report_metadata (plugin));
 
@@ -1564,17 +1590,6 @@ fu_engine_create_release_metadata (FuEngine *self, FuPlugin *plugin, GError **er
 		fwupd_release_add_metadata (release,
 					    fu_plugin_get_report_metadata (plugin_tmp));
 	}
-
-	/* add details from os-release as metadata */
-	tmp = g_hash_table_lookup (os_release, "ID");
-	if (tmp != NULL)
-		fwupd_release_add_metadata_item (release, "DistroId", tmp);
-	tmp = g_hash_table_lookup (os_release, "VERSION_ID");
-	if (tmp != NULL)
-		fwupd_release_add_metadata_item (release, "DistroVersion", tmp);
-	tmp = g_hash_table_lookup (os_release, "VARIANT_ID");
-	if (tmp != NULL)
-		fwupd_release_add_metadata_item (release, "DistroVariant", tmp);
 	return g_steal_pointer (&release);
 }
 
