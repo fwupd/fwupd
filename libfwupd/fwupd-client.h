@@ -130,6 +130,9 @@ gboolean	 fwupd_client_modify_device		(FwupdClient	*client,
 							 const gchar	*value,
 							 GCancellable	*cancellable,
 							 GError		**error);
+GHashTable	*fwupd_client_get_report_metadata	(FwupdClient	*client,
+							 GCancellable	*cancellable,
+							 GError		**error);
 FwupdStatus	 fwupd_client_get_status		(FwupdClient	*client);
 gboolean	 fwupd_client_get_tainted		(FwupdClient	*client);
 gboolean	 fwupd_client_get_daemon_interactive	(FwupdClient	*client);

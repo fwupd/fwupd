@@ -404,6 +404,71 @@ fwupd_client_get_host_security_attrs (FwupdClient *client, GCancellable *cancell
 	return fwupd_security_attr_array_from_variant (val);
 }
 
+static GHashTable *
+fwupd_report_metadata_hash_from_variant (GVariant *value)
+{
+	GHashTable *hash;
+	gsize sz;
+	g_autoptr(GVariant) untuple = NULL;
+
+	hash = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+	untuple = g_variant_get_child_value (value, 0);
+	sz = g_variant_n_children (untuple);
+	for (guint i = 0; i < sz; i++) {
+		g_autoptr(GVariant) data = NULL;
+		const gchar *key = NULL;
+		const gchar *val = NULL;
+		data = g_variant_get_child_value (untuple, i);
+		g_variant_get (data, "{&s&s}", &key, &val);
+		g_hash_table_insert (hash, g_strdup (key), g_strdup (val));
+	}
+	return hash;
+}
+
+/**
+ * fwupd_client_get_report_metadata:
+ * @client: A #FwupdClient
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Gets all the report metadata from the daemon.
+ *
+ * Returns: (transfer container): attributes
+ *
+ * Since: 1.5.0
+ **/
+GHashTable *
+fwupd_client_get_report_metadata (FwupdClient *client,
+				  GCancellable *cancellable,
+				  GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_autoptr(GVariant) val = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* connect */
+	if (!fwupd_client_connect (client, cancellable, error))
+		return NULL;
+
+	/* call into daemon */
+	val = g_dbus_proxy_call_sync (priv->proxy,
+				      "GetReportMetadata",
+				      NULL,
+				      G_DBUS_CALL_FLAGS_NONE,
+				      -1,
+				      cancellable,
+				      error);
+	if (val == NULL) {
+		if (error != NULL)
+			fwupd_client_fixup_dbus_error (*error);
+		return NULL;
+	}
+	return fwupd_report_metadata_hash_from_variant (val);
+}
+
 /**
  * fwupd_client_get_devices:
  * @client: A #FwupdClient
