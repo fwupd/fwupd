@@ -45,9 +45,6 @@ typedef struct {
 	guint				 percentage;
 	gchar				*daemon_version;
 	gchar				*host_product;
-	gchar				*host_family;
-	gchar				*host_sku;
-	gchar				*host_vendor;
 	gchar				*host_machine_id;
 	gchar				*host_security_id;
 	GDBusConnection			*conn;
@@ -70,9 +67,6 @@ enum {
 	PROP_DAEMON_VERSION,
 	PROP_TAINTED,
 	PROP_HOST_PRODUCT,
-	PROP_HOST_FAMILY,
-	PROP_HOST_SKU,
-	PROP_HOST_VENDOR,
 	PROP_HOST_MACHINE_ID,
 	PROP_HOST_SECURITY_ID,
 	PROP_INTERACTIVE,
@@ -126,33 +120,6 @@ fwupd_client_set_host_product (FwupdClient *client, const gchar *host_product)
 	g_free (priv->host_product);
 	priv->host_product = g_strdup (host_product);
 	g_object_notify (G_OBJECT (client), "host-product");
-}
-
-static void
-fwupd_client_set_host_family (FwupdClient *client, const gchar *host_family)
-{
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
-	g_free (priv->host_family);
-	priv->host_family = g_strdup (host_family);
-	g_object_notify (G_OBJECT (client), "host-family");
-}
-
-static void
-fwupd_client_set_host_sku (FwupdClient *client, const gchar *host_sku)
-{
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
-	g_free (priv->host_sku);
-	priv->host_sku = g_strdup (host_sku);
-	g_object_notify (G_OBJECT (client), "host-sku");
-}
-
-static void
-fwupd_client_set_host_vendor (FwupdClient *client, const gchar *host_vendor)
-{
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
-	g_free (priv->host_vendor);
-	priv->host_vendor = g_strdup (host_vendor);
-	g_object_notify (G_OBJECT (client), "host-vendor");
 }
 
 static void
@@ -239,24 +206,6 @@ fwupd_client_properties_changed_cb (GDBusProxy *proxy,
 		val = g_dbus_proxy_get_cached_property (proxy, "HostProduct");
 		if (val != NULL)
 			fwupd_client_set_host_product (client, g_variant_get_string (val, NULL));
-	}
-	if (g_variant_dict_contains (dict, "HostFamily")) {
-		g_autoptr(GVariant) val = NULL;
-		val = g_dbus_proxy_get_cached_property (proxy, "HostFamily");
-		if (val != NULL)
-			fwupd_client_set_host_family (client, g_variant_get_string (val, NULL));
-	}
-	if (g_variant_dict_contains (dict, "HostSku")) {
-		g_autoptr(GVariant) val = NULL;
-		val = g_dbus_proxy_get_cached_property (proxy, "HostSku");
-		if (val != NULL)
-			fwupd_client_set_host_sku (client, g_variant_get_string (val, NULL));
-	}
-	if (g_variant_dict_contains (dict, "HostVendor")) {
-		g_autoptr(GVariant) val = NULL;
-		val = g_dbus_proxy_get_cached_property (proxy, "HostVendor");
-		if (val != NULL)
-			fwupd_client_set_host_vendor (client, g_variant_get_string (val, NULL));
 	}
 	if (g_variant_dict_contains (dict, "HostMachineId")) {
 		g_autoptr(GVariant) val = NULL;
@@ -370,15 +319,6 @@ fwupd_client_connect (FwupdClient *client, GCancellable *cancellable, GError **e
 	val = g_dbus_proxy_get_cached_property (priv->proxy, "HostProduct");
 	if (val != NULL)
 		fwupd_client_set_host_product (client, g_variant_get_string (val, NULL));
-	val = g_dbus_proxy_get_cached_property (priv->proxy, "HostFamily");
-	if (val != NULL)
-		fwupd_client_set_host_family (client, g_variant_get_string (val, NULL));
-	val = g_dbus_proxy_get_cached_property (priv->proxy, "HostSku");
-	if (val != NULL)
-		fwupd_client_set_host_sku (client, g_variant_get_string (val, NULL));
-	val = g_dbus_proxy_get_cached_property (priv->proxy, "HostVendor");
-	if (val != NULL)
-		fwupd_client_set_host_vendor (client, g_variant_get_string (val, NULL));
 	val = g_dbus_proxy_get_cached_property (priv->proxy, "HostMachineId");
 	if (val != NULL)
 		fwupd_client_set_host_machine_id (client, g_variant_get_string (val, NULL));
@@ -1420,60 +1360,6 @@ fwupd_client_get_host_product (FwupdClient *client)
 }
 
 /**
- * fwupd_client_get_host_family:
- * @client: A #FwupdClient
- *
- * Gets the string that represents the host running fwupd
- *
- * Returns: a string, or %NULL for unknown.
- *
- * Since: 1.5.0
- **/
-const gchar *
-fwupd_client_get_host_family (FwupdClient *client)
-{
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
-	return priv->host_family;
-}
-
-/**
- * fwupd_client_get_host_sku:
- * @client: A #FwupdClient
- *
- * Gets the string that represents the host running fwupd
- *
- * Returns: a string, or %NULL for unknown.
- *
- * Since: 1.5.0
- **/
-const gchar *
-fwupd_client_get_host_sku (FwupdClient *client)
-{
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
-	return priv->host_sku;
-}
-
-/**
- * fwupd_client_get_host_vendor:
- * @client: A #FwupdClient
- *
- * Gets the string that represents the host running fwupd
- *
- * Returns: a string, or %NULL for unknown.
- *
- * Since: 1.5.0
- **/
-const gchar *
-fwupd_client_get_host_vendor (FwupdClient *client)
-{
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
-	return priv->host_vendor;
-}
-
-/**
  * fwupd_client_get_host_machine_id:
  * @client: A #FwupdClient
  *
@@ -2061,15 +1947,6 @@ fwupd_client_get_property (GObject *object, guint prop_id,
 	case PROP_HOST_PRODUCT:
 		g_value_set_string (value, priv->host_product);
 		break;
-	case PROP_HOST_FAMILY:
-		g_value_set_string (value, priv->host_family);
-		break;
-	case PROP_HOST_SKU:
-		g_value_set_string (value, priv->host_sku);
-		break;
-	case PROP_HOST_VENDOR:
-		g_value_set_string (value, priv->host_vendor);
-		break;
 	case PROP_HOST_MACHINE_ID:
 		g_value_set_string (value, priv->host_machine_id);
 		break;
@@ -2267,39 +2144,6 @@ fwupd_client_class_init (FwupdClientClass *klass)
 	g_object_class_install_property (object_class, PROP_HOST_PRODUCT, pspec);
 
 	/**
-	 * FwupdClient:host-family:
-	 *
-	 * The host family string, e.g. "ThinkPad P50"
-	 *
-	 * Since: 1.5.0
-	 */
-	pspec = g_param_spec_string ("host-family", NULL, NULL,
-				     NULL, G_PARAM_READABLE | G_PARAM_STATIC_NAME);
-	g_object_class_install_property (object_class, PROP_HOST_FAMILY, pspec);
-
-	/**
-	 * FwupdClient:host-sku:
-	 *
-	 * The host SKU string, e.g. "ABC12345"
-	 *
-	 * Since: 1.5.0
-	 */
-	pspec = g_param_spec_string ("host-sku", NULL, NULL,
-				     NULL, G_PARAM_READABLE | G_PARAM_STATIC_NAME);
-	g_object_class_install_property (object_class, PROP_HOST_SKU, pspec);
-
-	/**
-	 * FwupdClient:host-vendor:
-	 *
-	 * The host vendor string, e.g. "Lenovo"
-	 *
-	 * Since: 1.5.0
-	 */
-	pspec = g_param_spec_string ("host-vendor", NULL, NULL,
-				     NULL, G_PARAM_READABLE | G_PARAM_STATIC_NAME);
-	g_object_class_install_property (object_class, PROP_HOST_VENDOR, pspec);
-
-	/**
 	 * FwupdClient:host-machine-id:
 	 *
 	 * The host machine-id string
@@ -2335,9 +2179,6 @@ fwupd_client_finalize (GObject *object)
 
 	g_free (priv->daemon_version);
 	g_free (priv->host_product);
-	g_free (priv->host_family);
-	g_free (priv->host_sku);
-	g_free (priv->host_vendor);
 	g_free (priv->host_machine_id);
 	g_free (priv->host_security_id);
 	if (priv->conn != NULL)
