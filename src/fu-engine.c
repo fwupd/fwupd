@@ -1408,6 +1408,9 @@ fu_engine_get_report_metadata (FuEngine *self, GError **error)
 		g_hash_table_insert (hash,
 				     g_strdup ("CpuArchitecture"),
 				     g_strdup (name_tmp.machine));
+		g_hash_table_insert (hash,
+				     g_strdup ("KernelVersion"),
+				     g_strdup (name_tmp.release));
 	}
 #endif
 
