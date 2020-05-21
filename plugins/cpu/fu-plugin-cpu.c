@@ -12,6 +12,7 @@
 
 struct FuPluginData {
 	gboolean		 has_cet;
+	gboolean		 has_smap;
 	gboolean		 has_tme;
 };
 
@@ -46,6 +47,8 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 			data->has_cet = TRUE;
 		if (fu_cpu_device_has_flag (dev, FU_CPU_DEVICE_FLAG_TME))
 			data->has_tme = TRUE;
+		if (fu_cpu_device_has_flag (dev, FU_CPU_DEVICE_FLAG_SMAP))
+			data->has_smap = TRUE;
 		fu_plugin_device_add (plugin, FU_DEVICE (dev));
 	}
 
@@ -98,6 +101,29 @@ fu_plugin_add_security_attrs_intel_tme (FuPlugin *plugin, FuSecurityAttrs *attrs
 	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 }
 
+static void
+fu_plugin_add_security_attrs_intel_smap (FuPlugin *plugin, FuSecurityAttrs *attrs)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	/* create attr */
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_INTEL_SMAP);
+	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
+	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_SYSTEM_PROTECTION);
+	fu_security_attrs_append (attrs, attr);
+
+	/* check for SMEP and SMAP */
+	if (!data->has_smap) {
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		return;
+	}
+
+	/* success */
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+}
+
 void
 fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
@@ -107,4 +133,5 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 
 	fu_plugin_add_security_attrs_intel_cet (plugin, attrs);
 	fu_plugin_add_security_attrs_intel_tme (plugin, attrs);
+	fu_plugin_add_security_attrs_intel_smap (plugin, attrs);
 }
