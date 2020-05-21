@@ -85,6 +85,10 @@ fu_security_attr_get_name (FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: MEI = Intel Management Engine */
 		return _("MEI manufacturing mode");
 	}
+	if (g_strcmp0 (appstream_id, FWUPD_SECURITY_ATTR_ID_MEI_OVERRIDE_STRAP) == 0) {
+		/* TRANSLATORS: Title: MEI = Intel Management Engine */
+		return _("MEI override strap");
+	}
 	if (g_strcmp0 (appstream_id, FWUPD_SECURITY_ATTR_ID_FWUPD_UPDATES) == 0) {
 		/* TRANSLATORS: Title: if firmware updates are available */
 		return _("Firmware updates");

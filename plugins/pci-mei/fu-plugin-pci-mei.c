@@ -11,7 +11,7 @@
 
 struct FuPluginData {
 	gboolean		 has_device;
-	guint8			 mei_cfg;
+	guint32			 mei_cfg;
 };
 
 #define PCI_CFG_HFS_1		0x40
@@ -28,6 +28,7 @@ gboolean
 fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data (plugin);
+	guint8 buf[4] = { 0x0 };
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* interesting device? */
@@ -43,25 +44,20 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 		return FALSE;
 
 	/* grab MEI config Register */
-	if (!fu_udev_device_pread (device, PCI_CFG_HFS_1, &priv->mei_cfg, error)) {
-		g_prefix_error (error, "could not read MEI");
+	if (!fu_udev_device_pread_full (device, PCI_CFG_HFS_1, buf, sizeof(buf), error)) {
+		g_prefix_error (error, "could not read MEI: ");
 		return FALSE;
 	}
+	priv->mei_cfg = fu_common_read_uint32 (buf, G_LITTLE_ENDIAN);
 	priv->has_device = TRUE;
 	return TRUE;
 }
 
-void
-fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
+static void
+fu_plugin_add_security_attrs_manufacturing_mode (FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuPluginData *priv = fu_plugin_get_data (plugin);
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
-
-	/* only Intel */
-	if (!fu_common_is_cpu_intel ())
-		return;
-	if (!priv->has_device)
-		return;
 
 	/* create attr */
 	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_MEI_MANUFACTURING_MODE);
@@ -69,8 +65,8 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
 	fu_security_attrs_append (attrs, attr);
 
-	/* load file */
-	if ((priv->mei_cfg & (1 << 4)) != 0) {
+	/* Manufacturing Mode */
+	if (((priv->mei_cfg >> 4) & 0x1) != 0) {
 		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
 		return;
 	}
@@ -78,4 +74,42 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	/* success */
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
+}
+
+static void
+fu_plugin_add_security_attrs_override_strap (FuPlugin *plugin, FuSecurityAttrs *attrs)
+{
+	FuPluginData *priv = fu_plugin_get_data (plugin);
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	/* create attr */
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_MEI_OVERRIDE_STRAP);
+	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
+	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
+	fu_security_attrs_append (attrs, attr);
+
+	/* Flash Descriptor Security Override Strap */
+	if (((priv->mei_cfg >> 16) & 0x7) != 0) {
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
+		return;
+	}
+
+	/* success */
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
+}
+
+void
+fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
+{
+	FuPluginData *priv = fu_plugin_get_data (plugin);
+
+	/* only Intel */
+	if (!fu_common_is_cpu_intel ())
+		return;
+	if (!priv->has_device)
+		return;
+
+	fu_plugin_add_security_attrs_manufacturing_mode (plugin, attrs);
+	fu_plugin_add_security_attrs_override_strap (plugin, attrs);
 }
