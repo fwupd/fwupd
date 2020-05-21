@@ -31,6 +31,8 @@ fu_cpu_device_to_string (FuDevice *device, guint idt, GString *str)
 				    fu_cpu_device_has_flag (self, FU_CPU_DEVICE_FLAG_IBT));
 	fu_common_string_append_kb (str, idt, "HasTME",
 				    fu_cpu_device_has_flag (self, FU_CPU_DEVICE_FLAG_TME));
+	fu_common_string_append_kb (str, idt, "HasSMAP",
+				    fu_cpu_device_has_flag (self, FU_CPU_DEVICE_FLAG_SMAP));
 }
 
 static void
@@ -44,6 +46,8 @@ fu_cpu_device_parse_flags (FuCpuDevice *self, const gchar *data)
 			self->flags |= FU_CPU_DEVICE_FLAG_IBT;
 		if (g_strcmp0 (flags[i], "tme") == 0)
 			self->flags |= FU_CPU_DEVICE_FLAG_TME;
+		if (g_strcmp0 (flags[i], "smap") == 0)
+			self->flags |= FU_CPU_DEVICE_FLAG_SMAP;
 	}
 }
 

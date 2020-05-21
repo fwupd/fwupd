@@ -37,6 +37,10 @@ fu_security_attr_get_name (FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: CET = Control-flow Enforcement Technology */
 		return _("Intel CET");
 	}
+	if (g_strcmp0 (appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_SMAP) == 0) {
+		/* TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention */
+		return _("Intel SMAP");
+	}
 	if (g_strcmp0 (appstream_id, FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM) == 0) {
 		/* TRANSLATORS: Title: Memory contents are encrypted, e.g. Intel TME */
 		return _("Encrypted RAM");

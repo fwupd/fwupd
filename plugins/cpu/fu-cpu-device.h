@@ -16,6 +16,7 @@ typedef enum {
 	FU_CPU_DEVICE_FLAG_SHSTK	= 1 << 0,
 	FU_CPU_DEVICE_FLAG_IBT		= 1 << 1,
 	FU_CPU_DEVICE_FLAG_TME		= 1 << 2,
+	FU_CPU_DEVICE_FLAG_SMAP		= 1 << 3,
 } FuCpuDeviceFlag;
 
 FuCpuDevice		*fu_cpu_device_new		(const gchar	*section);
