@@ -42,6 +42,10 @@ VendorId = ATA:0x14A4
 Vendor = Samsung
 VendorId = ATA:0x144D
 
+[DeviceInstanceId=OUI\0026b7]
+Vendor = Kingston
+VendorId = ATA:0x2646
+
 [DeviceInstanceId=OUI\00a075]
 Vendor = Micron
 VendorId = ATA:0x1344
