@@ -258,6 +258,9 @@ endif
 if cc.has_header('fnmatch.h')
   conf.set('HAVE_FNMATCH_H', '1')
 endif
+if cc.has_header('cpuid.h')
+  conf.set('HAVE_CPUID_H', '1')
+endif
 if cc.has_function('getuid')
   conf.set('HAVE_GETUID', '1')
 endif

@@ -19,7 +19,9 @@
 #include <shlwapi.h>
 #endif
 
+#ifdef HAVE_CPUID_H
 #include <cpuid.h>
+#endif
 
 #include <archive_entry.h>
 #include <archive.h>
@@ -2047,6 +2049,7 @@ fu_common_kernel_locked_down (void)
 gboolean
 fu_common_is_cpu_intel (void)
 {
+#ifdef HAVE_CPUID_H
 	guint eax = 0;
 	guint ebx = 0;
 	guint ecx = 0;
@@ -2060,5 +2063,6 @@ fu_common_is_cpu_intel (void)
 	    ecx == signature_INTEL_ecx) {
 		return TRUE;
 	}
+#endif
 	return FALSE;
 }
