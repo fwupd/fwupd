@@ -265,6 +265,10 @@ if cc.has_header('fnmatch.h')
 endif
 if cc.has_header('cpuid.h') and (host_cpu == 'x86' or host_cpu == 'x86_64')
   conf.set('HAVE_CPUID_H', '1')
+else
+  if get_option('plugin_msr')
+    error('cpuid.h is required for -Dplugin_msr=true')
+  endif
 endif
 if cc.has_function('getuid')
   conf.set('HAVE_GETUID', '1')

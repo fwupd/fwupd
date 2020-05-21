@@ -12,3 +12,4 @@ fwupd: library-not-linked-against-libc usr/lib/*/fwupd-plugins-3/libfu_plugin_mo
 fwupd: library-not-linked-against-libc usr/lib/*/fwupd-plugins-3/libfu_plugin_pci_bcr.so
 fwupd: library-not-linked-against-libc usr/lib/*/fwupd-plugins-3/libfu_plugin_pci_mei.so
 fwupd: library-not-linked-against-libc usr/lib/*/fwupd-plugins-3/libfu_plugin_iommu.so
+fwupd: library-not-linked-against-libc usr/lib/*/fwupd-plugins-3/libfu_plugin_msr.so

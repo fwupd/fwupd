@@ -5,3 +5,5 @@ systemctl stop fwupd-activate
 systemctl disable fwupd-activate
 rm /etc/systemd/system/fwupd-activate.service -f
 systemctl daemon-reload
+#msr module
+rm /etc/modules-load.d/fwupd-msr.conf -f

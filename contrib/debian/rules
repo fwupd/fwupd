@@ -43,9 +43,9 @@ override_dh_auto_configure:
 		export DELL="-Dplugin_dell=false"; \
 	fi; \
 	if pkg-config --exists efivar; then \
-		export UEFI="-Dplugin_uefi=true -Dplugin_redfish=true -Dplugin_nvme=true $$DBX"; \
+		export UEFI="-Dplugin_uefi=true -Dplugin_redfish=true -Dplugin_nvme=true -Dplugin_msr=true $$DBX"; \
 	else \
-		export UEFI="-Dplugin_uefi=false -Dplugin_redfish=false -Dplugin_nvme=false"; \
+		export UEFI="-Dplugin_uefi=false -Dplugin_redfish=false -Dplugin_nvme=false -Dplugin_msr=false"; \
 	fi; \
 	dh_auto_configure -- $$UEFI $$DELL $$FLASHROM $$CI -Dplugin_dummy=true -Dgtkdoc=true
 

@@ -27,6 +27,10 @@
 %global have_flashrom 1
 %endif
 
+%ifarch i686 x86_64
+%global have_msr 1
+%endif
+
 # redfish is only available on this arch
 %ifarch x86_64
 %global have_redfish 1
@@ -186,6 +190,11 @@ Data files for installed tests.
 %else
     -Dplugin_flashrom=false \
 %endif
+%if 0%{?have_msr}
+    -Dplugin_msr=true \
+%else
+    -Dplugin_msr=false \
+%endif
     -Dplugin_thunderbolt=true \
 %if 0%{?have_redfish}
     -Dplugin_redfish=true \
@@ -288,6 +297,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %config(noreplace)%{_sysconfdir}/fwupd/remotes.d/vendor-directory.conf
 %config(noreplace)%{_sysconfdir}/pki/fwupd
 %{_sysconfdir}/pki/fwupd-metadata
+%{_sysconfdir}/modules-load.d/fwupd-msr.conf
 %{_datadir}/dbus-1/system.d/org.freedesktop.fwupd.conf
 %{_datadir}/bash-completion/completions/fwupdmgr
 %{_datadir}/bash-completion/completions/fwupdtool
@@ -367,6 +377,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %if 0%{?have_modem_manager}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_modem_manager.so
 %endif
+%{_libdir}/fwupd-plugins-3/libfu_plugin_msr.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_nitrokey.so
 %if 0%{?have_uefi}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_nvme.so
