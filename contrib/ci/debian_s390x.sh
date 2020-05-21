@@ -20,6 +20,7 @@ meson .. \
 	-Dplugin_uefi=false \
 	-Dplugin_dell=false \
 	-Dplugin_modem_manager=false \
+	-Dplugin_msr=false \
 	-Dplugin_redfish=false \
 	-Dintrospection=false \
 	-Dgtkdoc=false \

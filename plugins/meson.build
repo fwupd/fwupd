@@ -31,6 +31,10 @@ subdir('upower')
 subdir('wacom-usb')
 subdir('vli')
 
+if get_option('plugin_msr')
+subdir('msr')
+endif
+
 if get_option('plugin_linux_spi_lpc')
 subdir('linux-spi-lpc')
 endif
