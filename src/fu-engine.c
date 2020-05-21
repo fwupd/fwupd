@@ -1399,6 +1399,7 @@ fu_engine_get_report_metadata_kernel_cmdline (GHashTable *hash, GError **error)
 		"quiet",
 		"rd.luks.uuid",
 		"rd.lvm.lv",
+		"rd.md.uuid",
 		"resume",
 		"rhgb",
 		"ro",
