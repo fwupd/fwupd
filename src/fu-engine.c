@@ -3502,6 +3502,20 @@ fu_engine_get_result_from_component (FuEngine *self, XbNode *component, GError *
 	return g_steal_pointer (&dev);
 }
 
+static gint
+fu_engine_get_details_sort_cb (gconstpointer a, gconstpointer b)
+{
+	FuDevice *device1 = *((FuDevice **) a);
+	FuDevice *device2 = *((FuDevice **) b);
+	if (!fu_device_has_flag (device1, FWUPD_DEVICE_FLAG_UPDATABLE) &&
+	    fu_device_has_flag (device2, FWUPD_DEVICE_FLAG_UPDATABLE))
+		return 1;
+	if (fu_device_has_flag (device1, FWUPD_DEVICE_FLAG_UPDATABLE) &&
+	    !fu_device_has_flag (device2, FWUPD_DEVICE_FLAG_UPDATABLE))
+		return -1;
+	return 0;
+}
+
 /**
  * fu_engine_get_details:
  * @self: A #FuEngine
@@ -3574,8 +3588,34 @@ fu_engine_get_details (FuEngine *self, gint fd, GError **error)
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED);
 		}
 		fu_engine_md_refresh_device_from_component (self, dev, component);
+
+		/* if this matched a device on the system, ensure all the
+		 * requirements passed before setting UPDATABLE */
+		if (fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE)) {
+			g_autoptr(FuInstallTask) task = fu_install_task_new (dev, component);
+			g_autoptr(GError) error_req = NULL;
+			if (!fu_engine_check_requirements (self, task,
+							   FWUPD_INSTALL_FLAG_OFFLINE |
+							   FWUPD_INSTALL_FLAG_ALLOW_REINSTALL |
+							   FWUPD_INSTALL_FLAG_ALLOW_OLDER,
+							   &error_req)) {
+				g_debug ("%s failed requirement checks: %s",
+					 fu_device_get_id (dev),
+					 error_req->message);
+				fu_device_remove_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
+			} else {
+				g_debug ("%s passed requirement checks",
+					 fu_device_get_id (dev));
+			}
+		}
+
 		g_ptr_array_add (details, dev);
 	}
+
+	/* order multiple devices so that the one that passes the requirement
+	 * is listed first */
+	g_ptr_array_sort (details, fu_engine_get_details_sort_cb);
+
 	return g_steal_pointer (&details);
 }
 
