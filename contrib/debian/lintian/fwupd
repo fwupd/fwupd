@@ -11,4 +11,5 @@ fwupd: portable-executable-missing-security-features usr/libexec/fwupd/efi/*.efi
 fwupd: library-not-linked-against-libc usr/lib/*/fwupd-plugins-3/libfu_plugin_modem_manager.so
 fwupd: library-not-linked-against-libc usr/lib/*/fwupd-plugins-3/libfu_plugin_pci_bcr.so
 fwupd: library-not-linked-against-libc usr/lib/*/fwupd-plugins-3/libfu_plugin_pci_mei.so
+fwupd: library-not-linked-against-libc usr/lib/*/fwupd-plugins-3/libfu_plugin_pci_pch.so
 fwupd: library-not-linked-against-libc usr/lib/*/fwupd-plugins-3/libfu_plugin_iommu.so

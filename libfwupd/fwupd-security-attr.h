@@ -135,6 +135,8 @@ typedef enum {
 #define FWUPD_SECURITY_ATTR_ID_TPM_VERSION_20		"org.fwupd.hsi.TpmVersion20"		/* Since: 1.5.0 */
 #define FWUPD_SECURITY_ATTR_ID_UEFI_DBX			"org.fwupd.hsi.UefiDbx"			/* Since: 1.5.0 */
 #define FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT		"org.fwupd.hsi.UefiSecureBoot"		/* Since: 1.5.0 */
+#define FWUPD_SECURITY_ATTR_ID_INTEL_DCI_ENABLED	"org.fwupd.hsi.IntelDciEnabled"		/* Since: 1.5.0 */
+#define FWUPD_SECURITY_ATTR_ID_INTEL_DCI_LOCKED		"org.fwupd.hsi.IntelDciLocked"		/* Since: 1.5.0 */
 
 FwupdSecurityAttr *fwupd_security_attr_new		(const gchar		*appstream_id);
 gchar		*fwupd_security_attr_to_string		(FwupdSecurityAttr	*self);

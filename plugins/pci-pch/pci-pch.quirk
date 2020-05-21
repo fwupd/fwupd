@@ -1,0 +1,2 @@
+[DeviceInstanceId=PCI\DRIVER_i801_smbus]
+Plugin = pci_pch
