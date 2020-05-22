@@ -2792,10 +2792,12 @@ fu_plugin_finalize (GObject *object)
 	g_free (priv->data);
 	/* Must happen as the last step to avoid prematurely
 	 * freeing memory held by the plugin */
-#ifndef RUNNING_ON_VALGRIND
+#ifdef RUNNING_ON_VALGRIND
+	if (priv->module != NULL && RUNNING_ON_VALGRIND == 0)
+#else
 	if (priv->module != NULL)
-		g_module_close (priv->module);
 #endif
+		g_module_close (priv->module);
 
 	G_OBJECT_CLASS (fu_plugin_parent_class)->finalize (object);
 }
