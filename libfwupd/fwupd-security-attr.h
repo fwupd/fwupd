@@ -116,7 +116,6 @@ typedef enum {
 #define FWUPD_SECURITY_ATTR_ID_FWUPD_ATTESTATION	"org.fwupd.hsi.FwupdAttestation"	/* Since: 1.5.0 */
 #define FWUPD_SECURITY_ATTR_ID_FWUPD_PLUGINS		"org.fwupd.hsi.FwupdPlugins"		/* Since: 1.5.0 */
 #define FWUPD_SECURITY_ATTR_ID_FWUPD_UPDATES		"org.fwupd.hsi.FwupdUpdates"		/* Since: 1.5.0 */
-#define FWUPD_SECURITY_ATTR_ID_INTEL_AMT		"org.fwupd.hsi.IntelAmt"		/* Since: 1.5.0 */
 #define FWUPD_SECURITY_ATTR_ID_INTEL_CET		"org.fwupd.hsi.IntelCet"		/* Since: 1.5.0 */
 #define FWUPD_SECURITY_ATTR_ID_INTEL_SMAP		"org.fwupd.hsi.IntelSmap"		/* Since: 1.5.0 */
 #define FWUPD_SECURITY_ATTR_ID_IOMMU			"org.fwupd.hsi.Iommu"			/* Since: 1.5.0 */
