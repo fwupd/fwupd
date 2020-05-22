@@ -29,10 +29,6 @@ fu_security_attr_get_name (FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack  */
 		return _("Pre-boot DMA protection");
 	}
-	if (g_strcmp0 (appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_AMT) == 0) {
-		/* TRANSLATORS: Title: AMT = Active Management Technology */
-		return _("Intel AMT");
-	}
 	if (g_strcmp0 (appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_CET) == 0) {
 		/* TRANSLATORS: Title: CET = Control-flow Enforcement Technology */
 		return _("Intel CET");
