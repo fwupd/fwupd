@@ -355,6 +355,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_libdir}/fwupd-plugins-3/libfu_plugin_fresco_pd.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_iommu.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_jabra.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_journald.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_linux_lockdown.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_linux_sleep.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_linux_swap.so

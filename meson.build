@@ -379,6 +379,7 @@ if build_standalone and get_option('systemd')
     systemdsystempresetdir = systemd.get_pkgconfig_variable('systemdsystempresetdir', define_variable: ['rootprefix', systemd_root_prefix])
     systemd_shutdown_dir = systemd.get_pkgconfig_variable('systemdshutdowndir', define_variable: ['rootprefix', systemd_root_prefix])
   endif
+  libsystemd = dependency('libsystemd')
 endif
 
 if build_standalone and get_option('elogind')
