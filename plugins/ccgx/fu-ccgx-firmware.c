@@ -164,6 +164,13 @@ fu_ccgx_firmware_parse_md_block (FuCcgxFirmware *self, FuFirmwareImage *img, GEr
 	/* read metadata from correct ofsset */
 	rcd = g_ptr_array_index (self->records, self->records->len - 1);
 	buf = g_bytes_get_data (rcd->data, &bufsz);
+	if (bufsz == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "invalid buffer size");
+		return FALSE;
+	}
 	switch (bufsz) {
 	case 0x80:
 		md_offset = 0x40;
