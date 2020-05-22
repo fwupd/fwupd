@@ -1,6 +1,6 @@
 %global glib2_version 2.45.8
 %global libxmlb_version 0.1.3
-%global libgusb_version 0.2.11
+%global libgusb_version 0.3.3
 %global libsoup_version 2.51.92
 %global libjcat_version 0.1.0
 %global systemd_version 231
