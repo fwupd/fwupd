@@ -322,7 +322,26 @@ static void
 fu_cros_ec_usb_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE (device);
+	g_autofree gchar *min_rollback = NULL;
+
 	fu_common_string_append_kv (str, idt, "GitHash", self->version.sha1);
+	fu_common_string_append_kb (str, idt, "Dirty",
+				    self->version.dirty);
+	fu_common_string_append_ku (str, idt, "ProtocolVersion",
+				    self->protocol_version);
+	fu_common_string_append_ku (str, idt, "HeaderType",
+				    self->header_type);
+	fu_common_string_append_ku (str, idt, "MaxPDUSize",
+				    self->targ.common.maximum_pdu_size);
+	fu_common_string_append_kx (str, idt, "FlashProtectionStatus",
+				    self->targ.common.flash_protection);
+	fu_common_string_append_kv (str, idt, "RawVersion",
+				    self->targ.common.version);
+	fu_common_string_append_ku (str, idt, "KeyVersion",
+				    self->targ.common.key_version);
+	min_rollback = g_strdup_printf ("%" G_GINT32_FORMAT,
+					self->targ.common.min_rollback);
+	fu_common_string_append_kv (str, idt, "MinRollback", min_rollback);
 }
 
 static void
