@@ -495,24 +495,6 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
-  <dependency type="build" id="libgpgme11-dev">
-    <distro id="centos">
-      <package>gpgme-devel</package>
-    </distro>
-    <distro id="fedora">
-      <package>gpgme-devel</package>
-    </distro>
-    <distro id="debian">
-      <control />
-      <package variant="x86_64" />
-      <package variant="s390x">libgpgme-dev:s390x</package>
-      <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <control />
-      <package variant="x86_64" />
-    </distro>
-  </dependency>
   <dependency type="build" id="gnome-desktop-testing">
     <distro id="fedora">
       <package />
