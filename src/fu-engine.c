@@ -4980,9 +4980,12 @@ fu_engine_is_plugin_name_whitelisted (FuEngine *self, const gchar *name)
 void
 fu_engine_add_plugin_filter (FuEngine *self, const gchar *plugin_glob)
 {
+	GString *str;
 	g_return_if_fail (FU_IS_ENGINE (self));
 	g_return_if_fail (plugin_glob != NULL);
-	g_ptr_array_add (self->plugin_filter, g_strdup (plugin_glob));
+	str = g_string_new (plugin_glob);
+	fu_common_string_replace (str, "-", "_");
+	g_ptr_array_add (self->plugin_filter, g_string_free (str, FALSE));
 }
 
 static gboolean
