@@ -165,6 +165,25 @@ fu_plugin_dell_dock_get_ec (GPtrArray *devices)
 }
 
 gboolean
+fu_plugin_composite_prepare (FuPlugin *plugin, GPtrArray *devices,
+			     GError **error)
+{
+	FuDevice *parent = fu_plugin_dell_dock_get_ec (devices);
+	const gchar *sku;
+	if (parent == NULL)
+		return TRUE;
+	sku = fu_dell_dock_ec_get_module_type (parent);
+	if (sku == NULL) {
+		g_set_error_literal (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
+				     "unable to detect SKU");
+		return FALSE;
+	}
+	fu_plugin_add_report_metadata (plugin, "DellDockSKU", sku);
+
+	return TRUE;
+}
+
+gboolean
 fu_plugin_composite_cleanup (FuPlugin *plugin,
 			     GPtrArray *devices,
 			     GError **error)

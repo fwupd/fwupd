@@ -26,6 +26,7 @@ G_DECLARE_FINAL_TYPE (FuDellDockEc, fu_dell_dock_ec, FU, DELL_DOCK_EC, FuDevice)
 
 FuDellDockEc 	*fu_dell_dock_ec_new			(FuDevice *proxy);
 
+const gchar	*fu_dell_dock_ec_get_module_type	(FuDevice *device);
 gboolean	 fu_dell_dock_ec_needs_tbt		(FuDevice *device);
 gboolean	 fu_dell_dock_ec_tbt_passive		(FuDevice *device);
 gboolean	 fu_dell_dock_ec_modify_lock		(FuDevice *self,
