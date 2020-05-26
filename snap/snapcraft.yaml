@@ -199,7 +199,6 @@ parts:
       - libgusb-dev
       - libgcab-dev
       - libglib2.0-dev
-      - libgpgme11-dev
       - libjson-glib-dev
       - libpango1.0-dev
       - libpci-dev
@@ -222,7 +221,6 @@ parts:
       - libgusb2
       - libusb-1.0-0
       - libgudev-1.0-0
-      - libgpgme11
       - libjson-glib-1.0-0
       - libpolkit-gobject-1-0
       - libsmbios-c2
