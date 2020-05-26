@@ -243,6 +243,8 @@ if build_standalone and get_option('plugin_altos')
   libelf = dependency('libelf')
 endif
 
+host_cpu = host_machine.cpu_family()
+
 if cc.has_header('sys/utsname.h')
   conf.set('HAVE_UTSNAME_H', '1')
 endif
@@ -258,7 +260,7 @@ endif
 if cc.has_header('fnmatch.h')
   conf.set('HAVE_FNMATCH_H', '1')
 endif
-if cc.has_header('cpuid.h')
+if cc.has_header('cpuid.h') and (host_cpu == 'x86' or host_cpu == 'x86_64')
   conf.set('HAVE_CPUID_H', '1')
 endif
 if cc.has_function('getuid')
@@ -305,17 +307,16 @@ if build_standalone and get_option('plugin_uefi')
     conf.set_quoted ('FWUPD_EFI_DBXDIR', efi_dbxdir)
   endif
 
-  efi_arch = host_machine.cpu_family()
-  if efi_arch == 'x86'
+  if host_cpu == 'x86'
           EFI_MACHINE_TYPE_NAME = 'ia32'
           gnu_efi_arch = 'ia32'
-  elif efi_arch == 'x86_64'
+  elif host_cpu == 'x86_64'
           EFI_MACHINE_TYPE_NAME = 'x64'
           gnu_efi_arch = 'x86_64'
-  elif efi_arch == 'arm'
+  elif host_cpu == 'arm'
           EFI_MACHINE_TYPE_NAME = 'arm'
           gnu_efi_arch = 'arm'
-  elif efi_arch == 'aarch64'
+  elif host_cpu == 'aarch64'
           EFI_MACHINE_TYPE_NAME = 'aa64'
           gnu_efi_arch = 'aarch64'
   else

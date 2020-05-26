@@ -90,13 +90,13 @@ compile_args = ['-Og',
 if get_option('werror')
     compile_args += '-Werror'
 endif
-if efi_arch == 'x86_64'
+if host_cpu == 'x86_64'
   compile_args += ['-mno-red-zone',
                    '-mno-sse',
                    '-mno-mmx',
                    '-DEFI_FUNCTION_WRAPPER',
                    '-DGNU_EFI_USE_MS_ABI']
-elif efi_arch == 'ia32'
+elif host_cpu == 'x86'
   compile_args += ['-mno-sse',
                    '-mno-mmx',
                    '-mno-red-zone',
@@ -113,7 +113,7 @@ efi_ldflags = ['-T',
                '-L', efi_ldsdir,
                '-L', efi_libdir,
                join_paths(efi_ldsdir, arch_crt)]
-if efi_arch == 'aarch64' or efi_arch == 'arm'
+if host_cpu == 'aarch64' or host_cpu == 'arm'
   # Aarch64 and ARM32 don't have an EFI capable objcopy. Use 'binary'
   # instead, and add required symbols manually.
   efi_ldflags += ['--defsym=EFI_SUBSYSTEM=0xa']
