@@ -996,6 +996,7 @@ fu_synaptics_mst_device_rescan (FuDevice *device, GError **error)
 	const gchar *guid_template;
 	const gchar *name_parent;
 	const gchar *name_family;
+	const gchar *plugin;
 	guint8 buf_ver[16];
 
 	/* read vendor ID */
@@ -1084,6 +1085,16 @@ fu_synaptics_mst_device_rescan (FuDevice *device, GError **error)
 		name = g_strdup_printf ("VMM%04x", self->chip_id);
 	}
 	fu_device_set_name (FU_DEVICE (self), name);
+
+	plugin = fu_quirks_lookup_by_id (quirks, group, FU_QUIRKS_PLUGIN);
+	if (plugin != NULL && g_strcmp0 (plugin, "synaptics_mst") != 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "%s is only supported by %s",
+			     name, plugin);
+		return FALSE;
+	}
 
 	/* this is a host system, use system ID */
 	guid_template = fu_quirks_lookup_by_id (quirks, group, "DeviceKind");
