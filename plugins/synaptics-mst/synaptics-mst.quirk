@@ -39,9 +39,6 @@ DeviceKind = wld15
 Name = Dell Rugged Platform
 DeviceKind = system
 
-[SynapticsMSTBoardID=259]
-Name = Dell dock
-
 # ThinkPad Workstation Dock
 [DeviceInstanceId=MST-tesla-vmm2322-513]
 ParentGuid = USB\VID_17EF&PID_305A
