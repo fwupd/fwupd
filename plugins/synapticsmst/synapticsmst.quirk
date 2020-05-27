@@ -35,10 +35,6 @@ DeviceKind = wld15
 Name = Dell Rugged Platform
 DeviceKind = system
 
-[SynapticsMSTBoardID=259]
-Name = Dell dock
-DeviceKind = panamera
-
 [SynapticsMSTBoardID=513]
 Name = ThinkPad Workstation Dock
 DeviceKind = panamera
