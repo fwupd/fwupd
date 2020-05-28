@@ -3587,7 +3587,8 @@ fu_engine_get_details (FuEngine *self, gint fd, GError **error)
 			fwupd_release_set_remote_id (rel, remote_id);
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED);
 		}
-		fu_engine_md_refresh_device_from_component (self, dev, component);
+		if (fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_MD_SET_VERFMT))
+			fu_engine_md_refresh_device_verfmt (self, dev, component);
 
 		/* if this matched a device on the system, ensure all the
 		 * requirements passed before setting UPDATABLE */
