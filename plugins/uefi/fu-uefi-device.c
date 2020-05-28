@@ -35,6 +35,7 @@ struct _FuUefiDevice {
 	guint64			 fmp_hardware_instance;
 	gboolean		 missing_header;
 	gboolean		 automounted_esp;
+	gboolean		 requires_header;
 };
 
 G_DEFINE_TYPE (FuUefiDevice, fu_uefi_device, FU_TYPE_DEVICE)
@@ -320,9 +321,8 @@ fu_uefi_device_fixup_firmware (FuDevice *device, GBytes *fw, GError **error)
 	if (efi_guid_cmp (&esrt_guid, &payload_guid) == 0) {
 		g_debug ("ESRT matches payload GUID");
 		return g_bytes_new_from_bytes (fw, 0, fw_length);
-	/* FMP payload */
-	} else if (fu_uefi_device_get_kind (self) == FU_UEFI_DEVICE_KIND_FMP) {
-		g_debug ("performing FMP update");
+	/* Type that doesn't require a header */
+	} else if (!self->requires_header) {
 		return g_bytes_new_from_bytes (fw, 0, fw_length);
 	/* Missing, add a header */
 	} else {
@@ -711,6 +711,13 @@ fu_uefi_device_probe (FuDevice *device, GError **error)
 		if (!fu_uefi_device_add_system_checksum (device, &error_local))
 			g_warning ("Failed to get PCR0s: %s", error_local->message);
 	}
+
+	/* whether to create a missing header */
+	if (self->kind == FU_UEFI_DEVICE_KIND_FMP ||
+	    self->kind == FU_UEFI_DEVICE_KIND_DELL_TPM_FIRMWARE)
+		self->requires_header = FALSE;
+	else
+		self->requires_header = TRUE;
 
 	/* Windows seems to be case insensitive, but for convenience we'll
 	 * match the upper case values typically specified in the .inf file */
