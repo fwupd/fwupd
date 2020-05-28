@@ -301,6 +301,13 @@ fu_keyring_gpg_verify_data (FuKeyring *keyring,
 				     "no result record from libgpgme");
 		return NULL;
 	}
+	if (result->signatures == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "no signatures from libgpgme");
+		return NULL;
+	}
 
 	/* look at each signature */
 	for (s = result->signatures; s != NULL ; s = s->next ) {
