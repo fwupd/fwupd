@@ -83,9 +83,19 @@ gboolean	 fu_udev_device_pwrite			(FuUdevDevice	*self,
 							 goffset	 port,
 							 guint8		 data,
 							 GError		**error);
+gboolean	 fu_udev_device_pwrite_full		(FuUdevDevice	*self,
+							 goffset	 port,
+							 const guint8	*buf,
+							 gsize		 bufsz,
+							 GError		**error);
 gboolean	 fu_udev_device_pread			(FuUdevDevice	*self,
 							 goffset	 port,
 							 guint8		*data,
+							 GError		**error);
+gboolean	 fu_udev_device_pread_full		(FuUdevDevice	*self,
+							 goffset	 port,
+							 guint8		*buf,
+							 gsize		 bufsz,
 							 GError		**error);
 const gchar	*fu_udev_device_get_sysfs_attr		 (FuUdevDevice	*self,
 							  const gchar	*attr,

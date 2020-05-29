@@ -935,20 +935,69 @@ fu_udev_device_ioctl (FuUdevDevice *self,
 }
 
 /**
- * fu_udev_device_pwrite:
+ * fu_udev_device_pread_full:
  * @self: A #FuUdevDevice
  * @port: offset address
- * @data: value
+ * @buf: (in): data
+ * @bufsz: size of @buf
  * @error: A #GError, or %NULL
  *
- * Write to a file descriptor at a given offset.
+ * Read a buffer from a file descriptor at a given offset.
  *
  * Returns: %TRUE for success
  *
- * Since: 1.3.3
+ * Since: 1.5.0
  **/
 gboolean
-fu_udev_device_pwrite (FuUdevDevice *self, goffset port, guint8 data, GError **error)
+fu_udev_device_pread_full (FuUdevDevice *self, goffset port,
+			   guint8 *buf, gsize bufsz,
+			   GError **error)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+
+	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), FALSE);
+	g_return_val_if_fail (port != 0x0, FALSE);
+	g_return_val_if_fail (buf != NULL, FALSE);
+	g_return_val_if_fail (priv->fd > 0, FALSE);
+
+#ifdef HAVE_PWRITE
+	if (pread (priv->fd, buf, bufsz, port) != (gssize) bufsz) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_FAILED,
+			     "failed to read from port 0x%04x: %s",
+			     (guint) port,
+			     strerror (errno));
+		return FALSE;
+	}
+	return TRUE;
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "Not supported as pread() is unavailable");
+	return FALSE;
+#endif
+}
+
+/**
+ * fu_udev_device_pwrite_full:
+ * @self: A #FuUdevDevice
+ * @port: offset address
+ * @buf: (out): data
+ * @bufsz: size of @data
+ * @error: A #GError, or %NULL
+ *
+ * Write a buffer to a file descriptor at a given offset.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fu_udev_device_pwrite_full (FuUdevDevice *self, goffset port,
+			    const guint8 *buf, gsize bufsz,
+			    GError **error)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 
@@ -957,7 +1006,7 @@ fu_udev_device_pwrite (FuUdevDevice *self, goffset port, guint8 data, GError **e
 	g_return_val_if_fail (priv->fd > 0, FALSE);
 
 #ifdef HAVE_PWRITE
-	if (pwrite (priv->fd, &data, 1, port) != 1) {
+	if (pwrite (priv->fd, buf, bufsz, port) != (gssize) bufsz) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
@@ -974,6 +1023,25 @@ fu_udev_device_pwrite (FuUdevDevice *self, goffset port, guint8 data, GError **e
 			     "Not supported as pwrite() is unavailable");
 	return FALSE;
 #endif
+}
+
+/**
+ * fu_udev_device_pwrite:
+ * @self: A #FuUdevDevice
+ * @port: offset address
+ * @data: value
+ * @error: A #GError, or %NULL
+ *
+ * Write to a file descriptor at a given offset.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.3.3
+ **/
+gboolean
+fu_udev_device_pwrite (FuUdevDevice *self, goffset port, guint8 data, GError **error)
+{
+	return fu_udev_device_pwrite_full (self, port, &data, 0x01, error);
 }
 
 /**
@@ -1069,31 +1137,7 @@ fu_udev_device_get_sysfs_attr (FuUdevDevice *self, const gchar *attr,
 gboolean
 fu_udev_device_pread (FuUdevDevice *self, goffset port, guint8 *data, GError **error)
 {
-	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
-
-	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), FALSE);
-	g_return_val_if_fail (port != 0x0, FALSE);
-	g_return_val_if_fail (data != NULL, FALSE);
-	g_return_val_if_fail (priv->fd > 0, FALSE);
-
-#ifdef HAVE_PWRITE
-	if (pread (priv->fd, data, 1, port) != 1) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_FAILED,
-			     "failed to read from port %04x: %s",
-			     (guint) port,
-			     strerror (errno));
-		return FALSE;
-	}
-	return TRUE;
-#else
-	g_set_error_literal (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Not supported as pread() is unavailable");
-	return FALSE;
-#endif
+	return fu_udev_device_pread_full (self, port, data, 0x1, error);
 }
 
 static void
