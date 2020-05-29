@@ -597,5 +597,7 @@ LIBFWUPDPLUGIN_1.5.0 {
     fu_security_attrs_to_variant;
     fu_udev_device_get_parent_name;
     fu_udev_device_get_sysfs_attr;
+    fu_udev_device_pread_full;
+    fu_udev_device_pwrite_full;
   local: *;
 } LIBFWUPDPLUGIN_1.4.1;
