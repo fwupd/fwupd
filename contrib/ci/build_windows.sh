@@ -39,6 +39,10 @@ meson .. \
     -Dlibjcat:man=false \
     -Dlibjcat:gpg=false \
     -Dlibjcat:introspection=false \
+    -Dgusb:tests=false \
+    -Dgusb:docs=false \
+    -Dgusb:introspection=false \
+    -Dgusb:vapi=false \
     -Dgudev=false $@
 meson introspect . --projectinfo | jq -r .version > $DESTDIR/VERSION
 ninja -v
