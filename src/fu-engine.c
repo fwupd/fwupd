@@ -3175,8 +3175,14 @@ fu_engine_validate_result_timestamp (JcatResult *jcat_result,
 	g_return_val_if_fail (JCAT_IS_RESULT (jcat_result), FALSE);
 	g_return_val_if_fail (JCAT_IS_RESULT (jcat_result_old), FALSE);
 
-	if (jcat_result_get_timestamp (jcat_result) > 0 &&
-	    jcat_result_get_timestamp (jcat_result_old) > 0) {
+	if (jcat_result_get_timestamp (jcat_result) == 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "no signing timestamp");
+		return FALSE;
+	}
+	if (jcat_result_get_timestamp (jcat_result_old) > 0) {
 		delta = jcat_result_get_timestamp (jcat_result) -
 			jcat_result_get_timestamp (jcat_result_old);
 	}
