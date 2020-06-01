@@ -124,6 +124,7 @@ typedef enum {
 #define FWUPD_SECURITY_ATTR_ID_KERNEL_TAINTED		"org.fwupd.hsi.KernelTainted"		/* Since: 1.5.0 */
 #define FWUPD_SECURITY_ATTR_ID_MEI_MANUFACTURING_MODE	"org.fwupd.hsi.MeiManufacturingMode"	/* Since: 1.5.0 */
 #define FWUPD_SECURITY_ATTR_ID_MEI_OVERRIDE_STRAP	"org.fwupd.hsi.MeiOverrideStrap"	/* Since: 1.5.0 */
+#define FWUPD_SECURITY_ATTR_ID_MEI_VERSION		"org.fwupd.hsi.MeiVersion"		/* Since: 1.5.0 */
 #define FWUPD_SECURITY_ATTR_ID_SPI_BIOSWE		"org.fwupd.hsi.SpiBioswe"		/* Since: 1.5.0 */
 #define FWUPD_SECURITY_ATTR_ID_SPI_BLE			"org.fwupd.hsi.SpiBle"			/* Since: 1.5.0 */
 #define FWUPD_SECURITY_ATTR_ID_SPI_SMM_BWP		"org.fwupd.hsi.SpiSmmBwp"		/* Since: 1.5.0 */
