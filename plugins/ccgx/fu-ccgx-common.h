@@ -18,7 +18,7 @@ typedef struct __attribute__((packed)) {
 	guint8	reserved1[2];		/* reserved */
 	guint32	fw_size;		/* firmware size */
 	guint8	reserved2[9];		/* reserved */
-	guint16	metadata_valid;		/* meta data valid "CY" */
+	guint16	metadata_valid;		/* metadata valid "CY" */
 	guint8	reserved3[4];		/* reserved */
 	guint32	boot_seq;		/* boot sequence number */
 } CCGxMetaData;
@@ -38,6 +38,7 @@ typedef enum {
 	FW_IMAGE_TYPE_DUAL_SYMMETRIC,		/* A/B runtime */
 	FW_IMAGE_TYPE_DUAL_ASYMMETRIC,		/* A=bootloader (fixed), B=runtime */
 	FW_IMAGE_TYPE_DUAL_ASYMMETRIC_VARIABLE,	/* A=bootloader (variable), B=runtime */
+	FW_IMAGE_TYPE_DMC_COMPOSITE,		/* composite firmware image for dmc */
 } FWImageType;
 
 gchar		*fu_ccgx_version_to_string		(guint32	 val);
