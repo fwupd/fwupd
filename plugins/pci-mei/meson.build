@@ -8,6 +8,7 @@ shared_module('fu_plugin_pci_mei',
   fu_hash,
   sources : [
     'fu-plugin-pci-mei.c',
+    'fu-mei-common.c',
   ],
   include_directories : [
     root_incdir,
