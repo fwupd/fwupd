@@ -10,11 +10,13 @@ Supported devices:
 
  * Lenovo Gen2 Dock
  * Lenovo Hybrid Dock
+ * HP USB-C Dock G5
+ * HP USB-C/A Universal Dock G2
 
 Device Flash
 ============
 
-There are three kinds of flash layout. Single image firmware is not currently
+There are four kinds of flash layout. Single image firmware is not currently
 supported in this plugin.
 
 Symmetric Firmware
@@ -49,10 +51,31 @@ Case 2: FW1 is running (recovery case)
 The `CY_PD_JUMP_TO_ALT_FW_CMD_SIG` command is allowed only in asymmetric FW, but
 `CY_PD_DEVICE_RESET_CMD_SIG` is allowed in both asymmetric FW and symmetric FW.
 
+DMC(Dock Management Controller) Composite Firmware
+---------------------------------------------------
+
+In composite firmware topology, a single firmware image contains metadata and
+firmware images of multiple devices including DMC itself in a dock system.
+
+
 Firmware Format
----------------
+===============
+
+There are two kinds of firmware format.
+
+Cyacd firmware format
+---------------------
+
 The daemon will decompress the cabinet archive and extract several firmware
 blobs in cyacd file format. See https://community.cypress.com/docs/DOC-10562
+for more details.
+
+DMC composite firmware format
+------------------------------
+
+The daemon will decompress the cabinet archive and extract several firmware
+blobs in a combined image file format. See 4.4.1 Single Composite
+(Combined) Dock Image at https://www.cypress.com/file/387471/download
 for more details.
 
 This plugin supports the following protocol ID:
@@ -65,9 +88,11 @@ GUID Generation
 These devices use the standard USB DeviceInstanceId values, e.g.
 
  * `USB\VID_17EF&PID_A38F`
+ * `USB\VID_03F0&PID_046B`
 
-They additionally add other instance IDs which corresponds to the silicon ID,
-application ID and device mode, e.g.
+For cyacd firmware device,
+ They additionally add other instance IDs which corresponds to the silicon ID,
+ application ID and device mode, e.g.
 
  * `USB\VID_17EF&PID_A38F&SID_1234`
  * `USB\VID_17EF&PID_A38F&SID_1234&APP_5678`
