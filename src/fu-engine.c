@@ -572,6 +572,7 @@ fu_engine_modify_remote (FuEngine *self,
 			 GError **error)
 {
 	const gchar *keys[] = {
+		"ApprovalRequired",
 		"AutomaticReports",
 		"AutomaticSecurityReports",
 		"Enabled",
