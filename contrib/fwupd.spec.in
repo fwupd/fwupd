@@ -347,6 +347,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %dir %{_libdir}/fwupd-plugins-3
 %{_libdir}/fwupd-plugins-3/libfu_plugin_acpi_dmar.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_acpi_facp.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_acpi_wpbt.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_altos.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_amt.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_ata.so

@@ -112,6 +112,7 @@ typedef enum {
 } FwupdSecurityAttrResult;
 
 #define FWUPD_SECURITY_ATTR_ID_ACPI_DMAR		"org.fwupd.hsi.AcpiDmar"		/* Since: 1.5.0 */
+#define FWUPD_SECURITY_ATTR_ID_ACPI_WPBT		"org.fwupd.hsi.AcpiWpbt"		/* Since: 1.5.0 */
 #define FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM		"org.fwupd.hsi.EncryptedRam"		/* Since: 1.5.0 */
 #define FWUPD_SECURITY_ATTR_ID_FWUPD_ATTESTATION	"org.fwupd.hsi.FwupdAttestation"	/* Since: 1.5.0 */
 #define FWUPD_SECURITY_ATTR_ID_FWUPD_PLUGINS		"org.fwupd.hsi.FwupdPlugins"		/* Since: 1.5.0 */
