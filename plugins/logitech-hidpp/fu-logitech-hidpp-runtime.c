@@ -230,10 +230,10 @@ fu_logitech_hidpp_runtime_setup_internal (FuDevice *device, GError **error)
 		    (self->version_bl_major == 0x03 && config[8] >= 0x02)) {
 			self->signed_firmware = TRUE;
 			fu_device_set_protocol (device, "com.logitech.unifyingsigned");
-		} else {
-			fu_device_set_protocol (device, "com.logitech.unifying");
 		}
 	}
+	if (!self->signed_firmware)
+		fu_device_set_protocol (device, "com.logitech.unifying");
 
 	/* enable HID++ notifications */
 	if (!fu_logitech_hidpp_runtime_enable_notifications (self, error)) {
