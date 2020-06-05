@@ -65,3 +65,4 @@ gboolean	 fu_quirks_lookup_by_id_iter		(FuQuirks	*self,
 #define	FU_QUIRKS_PROTOCOL			"Protocol"
 #define	FU_QUIRKS_UPDATE_MESSAGE		"UpdateMessage"
 #define	FU_QUIRKS_PRIORITY			"Priority"
+#define	FU_QUIRKS_REMOVE_DELAY			"RemoveDelay"
