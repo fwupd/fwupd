@@ -330,27 +330,65 @@ fu_vli_usbhub_device_spi_write_data (FuVliDevice *self,
 #define VL817_ADDR_GPIO_GET_INPUT_DATA		0xF6A2	/* 0=low, 1=high */
 
 static gboolean
-fu_vli_usbhub_device_attach_vl817_gpiob (FuDevice *device, GError **error)
+fu_vli_usbhub_device_attach_full (FuDevice *device, FuDevice *proxy, GError **error)
 {
-	FuVliUsbhubDevice *self = FU_VLI_USBHUB_DEVICE (device);
-	guint8 tmp = 0x0;
+	g_autoptr(GError) error_local = NULL;
 
-	/* set GPIOB output enable */
-	if (!fu_vli_usbhub_device_read_reg (self, VL817_ADDR_GPIO_OUTPUT_ENABLE,
-					    &tmp, error))
-		return FALSE;
-	if (!fu_vli_usbhub_device_write_reg (self, VL817_ADDR_GPIO_OUTPUT_ENABLE,
-					     tmp | (1 << 1), error))
-		return FALSE;
-
-	/* toggle GPIOB to trigger reset */
-	if (!fu_vli_usbhub_device_read_reg (self, VL817_ADDR_GPIO_SET_OUTPUT_DATA,
-					    &tmp, error))
-		return FALSE;
-	if (!fu_vli_usbhub_device_write_reg (self, VL817_ADDR_GPIO_SET_OUTPUT_DATA,
-					     tmp ^ (1 << 1), error))
-		return FALSE;
+	/* update UI */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+
+	/* some hardware has to toggle a GPIO to reset the entire PCB */
+	if (fu_vli_device_get_kind (FU_VLI_DEVICE (proxy)) == FU_VLI_DEVICE_KIND_VL817 &&
+	    fu_device_has_custom_flag (proxy, "attach-with-gpiob")) {
+		guint8 tmp = 0x0;
+
+		/* set GPIOB output enable */
+		g_debug ("using GPIO reset for %s", fu_device_get_id (device));
+		if (!fu_vli_usbhub_device_read_reg (FU_VLI_USBHUB_DEVICE (proxy),
+						    VL817_ADDR_GPIO_OUTPUT_ENABLE,
+						    &tmp, error))
+			return FALSE;
+		if (!fu_vli_usbhub_device_write_reg (FU_VLI_USBHUB_DEVICE (proxy),
+						    VL817_ADDR_GPIO_OUTPUT_ENABLE,
+						     tmp | (1 << 1), error))
+			return FALSE;
+
+		/* toggle GPIOB to trigger reset */
+		if (!fu_vli_usbhub_device_read_reg (FU_VLI_USBHUB_DEVICE (proxy),
+						    VL817_ADDR_GPIO_SET_OUTPUT_DATA,
+						    &tmp, error))
+			return FALSE;
+		if (!fu_vli_usbhub_device_write_reg (FU_VLI_USBHUB_DEVICE (proxy),
+						     VL817_ADDR_GPIO_SET_OUTPUT_DATA,
+						     tmp ^ (1 << 1), error))
+			return FALSE;
+	} else {
+		/* replug, and ignore the device going away */
+		if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (proxy)),
+						    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+						    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+						    G_USB_DEVICE_RECIPIENT_DEVICE,
+						    0xf6, 0x0040, 0x0002,
+						    NULL, 0x0, NULL,
+						    FU_VLI_DEVICE_TIMEOUT,
+						    NULL, &error_local)) {
+			if (g_error_matches (error_local,
+					     G_USB_DEVICE_ERROR,
+					     G_USB_DEVICE_ERROR_NO_DEVICE) ||
+			    g_error_matches (error_local,
+					     G_USB_DEVICE_ERROR,
+					     G_USB_DEVICE_ERROR_FAILED)) {
+				g_debug ("ignoring %s", error_local->message);
+			} else {
+				g_propagate_prefixed_error (error,
+							    g_steal_pointer (&error_local),
+							    "failed to restart device: ");
+				return FALSE;
+			}
+		}
+	}
+
+	/* success */
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
@@ -358,41 +396,20 @@ fu_vli_usbhub_device_attach_vl817_gpiob (FuDevice *device, GError **error)
 static gboolean
 fu_vli_usbhub_device_attach (FuDevice *device, GError **error)
 {
-	g_autoptr(GError) error_local = NULL;
+	FuDevice *proxy = fu_device_get_proxy (device);
 
-	/* the proxy might be using a GPIO instead */
-	if (fu_device_get_proxy (device) != NULL) {
-		FuDevice *proxy = fu_device_get_proxy (device);
+	/* if we do this in another plugin, perhaps move to the engine? */
+	if (proxy != NULL) {
+		g_autoptr(FuDeviceLocker) locker = NULL;
 		g_debug ("using proxy device %s", fu_device_get_id (proxy));
-		return fu_device_attach (proxy, error);
+		locker = fu_device_locker_new (proxy, error);
+		if (locker == NULL)
+			return FALSE;
+		return fu_vli_usbhub_device_attach_full (device, proxy, error);
 	}
 
-	/* replug, and ignore the device going away */
-	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (device)),
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					    G_USB_DEVICE_RECIPIENT_DEVICE,
-					    0xf6, 0x0040, 0x0002,
-					    NULL, 0x0, NULL,
-					    FU_VLI_DEVICE_TIMEOUT,
-					    NULL, &error_local)) {
-		if (g_error_matches (error_local,
-				     G_USB_DEVICE_ERROR,
-				     G_USB_DEVICE_ERROR_NO_DEVICE) ||
-		    g_error_matches (error_local,
-				     G_USB_DEVICE_ERROR,
-				     G_USB_DEVICE_ERROR_FAILED)) {
-			g_debug ("ignoring %s", error_local->message);
-		} else {
-			g_propagate_prefixed_error (error,
-						    g_steal_pointer (&error_local),
-						    "failed to restart device: ");
-			return FALSE;
-		}
-	}
-	return TRUE;
+	/* normal case */
+	return fu_vli_usbhub_device_attach_full (device, device, error);
 }
 
 /* disable hub sleep states -- not really required by 815~ hubs */
@@ -1044,24 +1061,11 @@ fu_vli_usbhub_device_write_firmware (FuDevice *device,
 }
 
 static void
-fu_vli_usbhub_device_kind_changed_cb (FuVliDevice *device, GParamSpec *pspec, gpointer user_data)
-{
-	FuDeviceClass *klass_device = FU_DEVICE_GET_CLASS (device);
-	if (fu_vli_device_get_kind (device) == FU_VLI_DEVICE_KIND_VL817 &&
-	    fu_device_has_custom_flag (FU_DEVICE (device), "attach-with-gpiob"))
-		klass_device->attach = fu_vli_usbhub_device_attach_vl817_gpiob;
-}
-
-static void
 fu_vli_usbhub_device_init (FuVliUsbhubDevice *self)
 {
 	fu_device_add_icon (FU_DEVICE (self), "audio-card");
 	fu_device_set_protocol (FU_DEVICE (self), "com.vli.usbhub");
 	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
-
-	/* connect up attach or detach vfuncs when kind is known */
-	g_signal_connect (self, "notify::kind",
-			  G_CALLBACK (fu_vli_usbhub_device_kind_changed_cb), NULL);
 }
 
 static void
