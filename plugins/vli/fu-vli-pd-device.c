@@ -437,7 +437,7 @@ fu_vli_pd_device_write_firmware (FuDevice *device,
 }
 
 static gboolean
-fu_vli_pd_device_detach_vl103 (FuDevice *device, GError **error)
+fu_vli_pd_device_detach (FuDevice *device, GError **error)
 {
 	FuVliPdDevice *self = FU_VLI_PD_DEVICE (device);
 	g_autoptr(GError) error_local = NULL;
@@ -453,45 +453,30 @@ fu_vli_pd_device_detach_vl103 (FuDevice *device, GError **error)
 		return FALSE;
 
 	/* VL103 set ROM sig does not work, so use alternate function */
-	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (device)),
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					    G_USB_DEVICE_RECIPIENT_DEVICE,
-					    0xc0, 0x0000, 0x0000,
-					    NULL, 0x0, NULL,
-					    FU_VLI_DEVICE_TIMEOUT,
-					    NULL, &error_local)) {
-		if (g_error_matches (error_local,
-				     G_USB_DEVICE_ERROR,
-				     G_USB_DEVICE_ERROR_FAILED)) {
-			g_debug ("ignoring %s", error_local->message);
-		} else {
-			g_propagate_prefixed_error (error,
-						    g_steal_pointer (&error_local),
-						    "failed to restart device: ");
-			return FALSE;
+	if (fu_vli_device_get_kind (FU_VLI_DEVICE (device)) == FU_VLI_DEVICE_KIND_VL103) {
+		fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+		if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (device)),
+						    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+						    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+						    G_USB_DEVICE_RECIPIENT_DEVICE,
+						    0xc0, 0x0000, 0x0000,
+						    NULL, 0x0, NULL,
+						    FU_VLI_DEVICE_TIMEOUT,
+						    NULL, &error_local)) {
+			if (g_error_matches (error_local,
+					     G_USB_DEVICE_ERROR,
+					     G_USB_DEVICE_ERROR_FAILED)) {
+				g_debug ("ignoring %s", error_local->message);
+			} else {
+				g_propagate_prefixed_error (error,
+							    g_steal_pointer (&error_local),
+							    "failed to restart device: ");
+				return FALSE;
+			}
 		}
-	}
-	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	return TRUE;
-}
-
-static gboolean
-fu_vli_pd_device_detach (FuDevice *device, GError **error)
-{
-	FuVliPdDevice *self = FU_VLI_PD_DEVICE (device);
-	g_autoptr(GError) error_local = NULL;
-
-	/* sanity check */
-	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		g_debug ("already in bootloader mode, skipping");
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 		return TRUE;
 	}
-
-	/* write GPIOs */
-	if (!fu_vli_pd_device_write_gpios (self, error))
-		return FALSE;
 
 	/* patch APP5 FW bug (2AF2 -> 2AE2) on VL100-App5 and VL102 */
 	if (fu_vli_device_get_kind (FU_VLI_DEVICE (device)) == FU_VLI_DEVICE_KIND_VL100 ||
@@ -551,7 +536,23 @@ fu_vli_pd_device_detach (FuDevice *device, GError **error)
 static gboolean
 fu_vli_pd_device_attach (FuDevice *device, GError **error)
 {
+	FuVliPdDevice *self = FU_VLI_PD_DEVICE (device);
 	g_autoptr(GError) error_local = NULL;
+
+	/* Work around a silicon bug: Once the CC-resistor is removed, the
+	 * CC-host thinks the device is un-plugged and turn off VBUS (power).
+	 * When VL103 is powered-off, VL103 puts a resistor at CC-pin.
+	 * The CC-host will think the device is re-plugged and provides VBUS
+	 * again. Then, VL103 will be powered on and runs new FW. */
+	if (fu_vli_device_get_kind (FU_VLI_DEVICE (device)) == FU_VLI_DEVICE_KIND_VL103) {
+		if (!fu_vli_pd_device_write_reg (self, 0x1201, 0xf6, error))
+			return FALSE;
+		if (!fu_vli_pd_device_write_reg (self, 0x1001, 0xf6, error))
+			return FALSE;
+		fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+		return TRUE;
+	}
 
 	/* sanity check */
 	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
@@ -593,38 +594,12 @@ fu_vli_pd_device_attach (FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static gboolean
-fu_vli_pd_device_attach_vl103 (FuDevice *device, GError **error)
-{
-	FuVliPdDevice *self = FU_VLI_PD_DEVICE (device);
-
-	/* Work around a silicon bug: Once the CC-resistor is removed, the
-	 * CC-host thinks the device is un-plugged and turn off VBUS (power).
-	 * When VL103 is powered-off, VL103 puts a resistor at CC-pin.
-	 * The CC-host will think the device is re-plugged and provides VBUS
-	 * again. Then, VL103 will be powered on and runs new FW. */
-	if (!fu_vli_pd_device_write_reg (self, 0x1201, 0xf6, error))
-		return FALSE;
-	if (!fu_vli_pd_device_write_reg (self, 0x1001, 0xf6, error))
-		return FALSE;
-	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	return TRUE;
-}
-
 static void
 fu_vli_pd_device_kind_changed_cb (FuVliDevice *device, GParamSpec *pspec, gpointer user_data)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_GET_CLASS (device);
 	if (fu_vli_device_get_kind (device) == FU_VLI_DEVICE_KIND_VL103) {
-		klass_device->attach = fu_vli_pd_device_attach_vl103;
-		klass_device->detach = fu_vli_pd_device_detach_vl103;
-
 		/* wait for USB-C timeout */
 		fu_device_set_remove_delay (FU_DEVICE (device), 10000);
-	} else {
-		klass_device->attach = fu_vli_pd_device_attach;
-		klass_device->detach = fu_vli_pd_device_detach;
 	}
 }
 
@@ -653,6 +628,8 @@ fu_vli_pd_device_class_init (FuVliPdDeviceClass *klass)
 	klass_device->read_firmware = fu_vli_pd_device_read_firmware;
 	klass_device->write_firmware = fu_vli_pd_device_write_firmware;
 	klass_device->prepare_firmware = fu_vli_pd_device_prepare_firmware;
+	klass_device->attach = fu_vli_pd_device_attach;
+	klass_device->detach = fu_vli_pd_device_detach;
 	klass_vli_device->setup = fu_vli_pd_device_setup;
 	klass_vli_device->spi_chip_erase = fu_vli_pd_device_spi_chip_erase;
 	klass_vli_device->spi_sector_erase = fu_vli_pd_device_spi_sector_erase;
