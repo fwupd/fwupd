@@ -50,7 +50,7 @@ Summary = Dock Management Controller Device
 ParentGuid = USB\VID_03F0&PID_0363
 Name = HP USB-C Dock G5
 ImageKind = dmc-composite
-InstallDuration = 40
+InstallDuration = 190
 RemoveDelay = 150000
 
 # HP Adicora Dock D Type
@@ -61,5 +61,5 @@ Summary = Dock Management Controller Device
 ParentGuid = USB\VID_03F0&PID_096B
 Name = HP USB-C/A Universal Dock G2
 ImageKind = dmc-composite
-InstallDuration = 25
+InstallDuration = 110
 RemoveDelay = 85000
