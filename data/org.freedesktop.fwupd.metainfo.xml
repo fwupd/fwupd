@@ -35,6 +35,27 @@
     <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.3.10" date="2020-06-09">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Actually reload the DFU device after upgrade has completed</li>
+          <li>Capture the dock SKU in report metadata</li>
+          <li>Correctly set the Logitech device protocol</li>
+          <li>Do not use shim for non-secure boot configurations</li>
+          <li>Ensure that the DeviceID is set for child devices</li>
+          <li>Fix an error when detaching MSP430</li>
+          <li>Fix the DeviceID set by GetDetails</li>
+          <li>Force the prometheus minor version from 0x02 to 0x01 to fix updates</li>
+          <li>Parse the CSR firmware as a DFU file</li>
+          <li>Prevent dell-dock updates to occur via synaptics-mst plugin</li>
+          <li>Rather than hardcoding thunderbolt to PCI slot numbers, use domain in GUID</li>
+          <li>Remove a dock device from the whitelist that is never going to be updated</li>
+          <li>Validate that gpgme_op_verify_result() returned at least one signature</li>
+          <li>Wait for the cxaudio device to reboot after writing firmware</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.3.9" date="2020-03-04">
       <description>
         <p>This release adds the following features:</p>

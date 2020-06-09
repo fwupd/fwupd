@@ -16,14 +16,16 @@ makedepends=('meson' 'valgrind' 'gobject-introspection' 'gtk-doc' 'python-pillow
 pkgver() {
     cd ${pkgname}
 
-    VERSION=$(./contrib/get-version.py | sed 's/-/.r/;s/-/./')
+    VERSION=$(git describe | sed 's/-/.r/;s/-/./')
+    [ -z $VERSION ] && VERSION=$(head meson.build | grep ' version :' | cut -d \' -f2)
+
     echo $VERSION
 }
 
 build() {
     cd ${pkgname}
     if [ -n "$CI" ]; then
-        export CI="--werror --wrap-mode=default"
+        export CI="--wrap-mode=default"
     fi
     arch-meson -D b_lto=false $CI ../build
 

@@ -2368,16 +2368,15 @@ fu_util_private_free (FuUtilPrivate *priv)
 static gboolean
 fu_util_check_daemon_version (FuUtilPrivate *priv, GError **error)
 {
-	g_autofree gchar *client = fu_util_get_client_version ();
 	const gchar *daemon = fwupd_client_get_daemon_version (priv->client);
 
-	if (g_strcmp0 (daemon, client) != 0) {
+	if (g_strcmp0 (daemon, SOURCE_VERSION) != 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     /* TRANSLATORS: error message */
 			     _("Unsupported daemon version %s, client version is %s"),
-			     daemon, client);
+			     daemon, SOURCE_VERSION);
 		return FALSE;
 	}
 
@@ -2543,7 +2542,7 @@ main (int argc, char *argv[])
 		     fu_util_get_updates);
 	fu_util_cmd_array_add (cmd_array,
 		     "update,upgrade",
-		     NULL,
+		     "[DEVICE-ID]",
 		     /* TRANSLATORS: command description */
 		     _("Updates all firmware to latest versions available"),
 		     fu_util_update);

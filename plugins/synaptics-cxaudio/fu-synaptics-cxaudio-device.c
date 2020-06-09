@@ -459,7 +459,7 @@ fu_synaptics_cxaudio_device_setup (FuDevice *device, GError **error)
 	FuSynapticsCxaudioDevice *self = FU_SYNAPTICS_CXAUDIO_DEVICE (device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	FuSynapticsCxaudioEepromCustomInfo cinfo = { 0x0 };
-	guint32 addr;
+	guint32 addr = FU_SYNAPTICS_CXAUDIO_EEPROM_CPX_PATCH_VERSION_ADDRESS;
 	guint8 chip_id_offset = 0x0;
 	guint8 sigbuf[2] = { 0x0 };
 	guint8 verbuf_fw[4] = { 0x0 };
@@ -611,8 +611,8 @@ fu_synaptics_cxaudio_device_setup (FuDevice *device, GError **error)
 		if (!fu_synaptics_cxaudio_device_ensure_patch_level (self, error))
 			return FALSE;
 	}
-	addr = self->patch_level == 0 ? FU_SYNAPTICS_CXAUDIO_EEPROM_CPX_PATCH_VERSION_ADDRESS :
-					FU_SYNAPTICS_CXAUDIO_EEPROM_CPX_PATCH2_VERSION_ADDRESS;
+	if (self->patch_level == 2)
+		addr = FU_SYNAPTICS_CXAUDIO_EEPROM_CPX_PATCH2_VERSION_ADDRESS;
 	if (!fu_synaptics_cxaudio_device_operation (self,
 						    FU_SYNAPTICS_CXAUDIO_OPERATION_READ,
 						    FU_SYNAPTICS_CXAUDIO_MEM_KIND_EEPROM,
@@ -807,6 +807,7 @@ fu_synaptics_cxaudio_device_write_firmware (FuDevice *device,
 	/* if supported, self reset */
 	if (self->sw_reset_supported) {
 		fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 		return fu_synaptics_cxaudio_device_reset (self, error);
 	}
 

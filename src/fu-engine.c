@@ -2703,9 +2703,10 @@ fu_engine_create_metadata (FuEngine *self, XbBuilder *builder,
 		g_autoptr(XbBuilderSource) source = NULL;
 		g_autoptr(GError) error_local = NULL;
 		const gchar *fn = g_ptr_array_index (files, i);
+		g_autofree gchar *fn_lowercase = g_ascii_strdown (fn, -1);
 
 		/* check is cab file */
-		if (!g_str_has_suffix (fn, ".cab")) {
+		if (!g_str_has_suffix (fn_lowercase, ".cab")) {
 			g_debug ("ignoring: %s", fn);
 			continue;
 		}

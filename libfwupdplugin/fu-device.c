@@ -547,6 +547,9 @@ fu_device_add_child (FuDevice *self, FuDevice *child)
 		}
 	}
 
+	/* ensure the ID is converted */
+	fu_device_ensure_id (child, NULL);
+
 	/* ensure the parent is also set on the child */
 	fu_device_set_parent (child, self);
 
@@ -1325,6 +1328,22 @@ fu_device_set_name (FuDevice *self, const gchar *value)
 	fwupd_device_set_name (FWUPD_DEVICE (self), new->str);
 }
 
+static gboolean
+fu_device_id_is_valid (const gchar *device_id)
+{
+	if (device_id == NULL)
+		return FALSE;
+	if (strlen (device_id) != 40)
+		return FALSE;
+	for (guint i = 0; device_id[i] != '\0'; i++) {
+		gchar tmp = device_id[i];
+		/* isalnum isn't case specific */
+		if ((tmp < 'a' || tmp > 'f') && (tmp < '0' || tmp > '9'))
+			return FALSE;
+	}
+	return TRUE;
+}
+
 /**
  * fu_device_set_id:
  * @self: A #FuDevice
@@ -1334,9 +1353,9 @@ fu_device_set_name (FuDevice *self, const gchar *value)
  * device, so that any similar device plugged into a different slot will
  * have a different @id string.
  *
- * The @id will be converted to a SHA1 hash before the device is added to the
- * daemon, and plugins should not assume that the ID that is set here is the
- * same as what is returned by fu_device_get_id().
+ * The @id will be converted to a SHA1 hash if required before the device is
+ * added to the daemon, and plugins should not assume that the ID that is set
+ * here is the same as what is returned by fu_device_get_id().
  *
  * Since: 0.7.1
  **/
@@ -1349,8 +1368,13 @@ fu_device_set_id (FuDevice *self, const gchar *id)
 	g_return_if_fail (FU_IS_DEVICE (self));
 	g_return_if_fail (id != NULL);
 
-	id_hash = g_compute_checksum_for_string (G_CHECKSUM_SHA1, id, -1);
-	g_debug ("using %s for %s", id_hash, id);
+	/* allow sane device-id to be set directly */
+	if (fu_device_id_is_valid (id)) {
+		id_hash = g_strdup (id);
+	} else {
+		id_hash = g_compute_checksum_for_string (G_CHECKSUM_SHA1, id, -1);
+		g_debug ("using %s for %s", id_hash, id);
+	}
 	fwupd_device_set_id (FWUPD_DEVICE (self), id_hash);
 
 	/* ensure the parent ID is set */
@@ -1848,6 +1872,10 @@ fu_device_add_string (FuDevice *self, guint idt, GString *str)
 		g_autofree gchar *sz = g_strdup_printf ("%" G_GUINT64_FORMAT, priv->size_max);
 		fu_common_string_append_kv (str, idt + 1, "FirmwareSizeMax", sz);
 	}
+	if (priv->order > 0)
+		fu_common_string_append_ku (str, idt + 1, "Order", priv->order);
+	if (priv->priority > 0)
+		fu_common_string_append_ku (str, idt + 1, "Priority", priv->priority);
 	keys = g_hash_table_get_keys (priv->metadata);
 	for (GList *l = keys; l != NULL; l = l->next) {
 		const gchar *key = l->data;

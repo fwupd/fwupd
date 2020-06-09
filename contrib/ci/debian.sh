@@ -11,7 +11,8 @@ fi
 #prepare
 export DEBFULLNAME="CI Builder"
 export DEBEMAIL="ci@travis-ci.org"
-VERSION=`./contrib/get-version.py | sed 's/-/+r/;s/-/+/'`
+VERSION=`git describe | sed 's/-/+r/;s/-/+/'`
+[ -z $VERSION ] && VERSION=`head meson.build | grep ' version :' | cut -d \' -f2`
 rm -rf build/
 mkdir -p build
 shopt -s extglob
@@ -38,10 +39,12 @@ lintian ../*changes \
 	--no-tag-display-limit \
 	--suppress-tags bad-distribution-in-changes-file \
 	--suppress-tags source-contains-unsafe-symlink \
-	--suppress-tags changelog-should-mention-nmu \
 	--suppress-tags debian-watch-file-in-native-package \
 	--suppress-tags source-nmu-has-incorrect-version-number \
 	--suppress-tags no-symbols-control-file \
+	--suppress-tags gzip-file-is-not-multi-arch-same-safe \
+	--suppress-tags missing-dependency-on-libc \
+	--suppress-tags arch-dependent-file-not-in-arch-specific-directory \
 	--allow-root
 
 #if invoked outside of CI

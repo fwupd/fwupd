@@ -181,6 +181,22 @@ fu_dell_dock_ec_get_symbiote (FuDevice *device)
 	return self->symbiote;
 }
 
+const gchar *
+fu_dell_dock_ec_get_module_type (FuDevice *device)
+{
+	FuDellDockEc *self = FU_DELL_DOCK_EC (device);
+	switch (self->data->module_type) {
+	case MODULE_TYPE_SINGLE:
+		return "WD19";
+	case MODULE_TYPE_DUAL:
+		return "WD19DC";
+	case MODULE_TYPE_TBT:
+		return "WD19TB";
+	default:
+		return NULL;
+	}
+}
+
 gboolean
 fu_dell_dock_ec_needs_tbt (FuDevice *device)
 {

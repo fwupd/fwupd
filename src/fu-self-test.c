@@ -2708,6 +2708,7 @@ static void
 fu_keyring_pkcs7_self_signed_func (gconstpointer user_data)
 {
 #ifdef ENABLE_PKCS7
+	static const gchar payload_str[] = "Hello, world!";
 	gboolean ret;
 	g_autoptr(FuKeyring) kr = NULL;
 	g_autoptr(FuKeyringResult) kr_result = NULL;
@@ -2726,8 +2727,7 @@ fu_keyring_pkcs7_self_signed_func (gconstpointer user_data)
 	ret = fu_keyring_setup (kr, &error);
 	g_assert_no_error (error);
 	g_assert_true (ret);
-	payload = fu_common_get_contents_bytes ("/etc/machine-id", &error);
-	g_assert_no_error (error);
+	payload = g_bytes_new_static (payload_str, sizeof (payload_str));
 	g_assert_nonnull (payload);
 	signature = fu_keyring_sign_data (kr, payload, FU_KEYRING_SIGN_FLAG_ADD_TIMESTAMP, &error);
 	g_assert_no_error (error);

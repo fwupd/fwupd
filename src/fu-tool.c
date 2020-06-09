@@ -673,7 +673,7 @@ fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
 			return FALSE;
 		}
 	}
-	priv->flags = FWUPD_INSTALL_FLAG_NO_HISTORY;
+	priv->flags |= FWUPD_INSTALL_FLAG_NO_HISTORY;
 	if (!fu_engine_install_blob (priv->engine, device, blob_fw, priv->flags, error))
 		return FALSE;
 	if (priv->cleanup_blob) {
@@ -1911,7 +1911,7 @@ main (int argc, char *argv[])
 		     fu_util_monitor);
 	fu_util_cmd_array_add (cmd_array,
 		     "update,upgrade",
-		     NULL,
+		     "[DEVICE-ID]",
 		     /* TRANSLATORS: command description */
 		     _("Update all devices that match local metadata"),
 		     fu_util_update);

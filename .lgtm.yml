@@ -9,15 +9,14 @@ extraction:
       - libarchive-tools
       - libcogl-pango-dev
       - python3-pil
+      - python3-pip
+      - python3-setuptools
+      - python3-wheel
       - python3-cairo
       - libssl-dev
     after_prepare:
-    - "wget -O libxmlb.zip https://github.com/hughsie/libxmlb/archive/0.1.13.zip"
-    - "mkdir -p subprojects/libxmlb"
-    - "bsdtar --strip-components=1 -xvf libxmlb.zip -C subprojects/libxmlb"
-    - "wget https://download.flashrom.org/releases/flashrom-v1.2.tar.bz2"
-    - "mkdir -p subprojects/flashrom"
-    - "bsdtar --strip-components=1 -xvf flashrom-v1.2.tar.bz2 -C subprojects/flashrom"
+    - python3 -m pip install --user "meson >= 0.52.0"
+    - export PATH="$HOME/.local/bin:$PATH"
     - "cd $LGTM_WORKSPACE"
     - "mkdir installdir"
     - "wget https://github.com/tpm2-software/tpm2-tss/releases/download/2.3.0/tpm2-tss-2.3.0.tar.gz"

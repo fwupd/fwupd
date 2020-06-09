@@ -266,31 +266,11 @@ fu_util_get_user_cache_path (const gchar *fn)
 }
 
 gchar *
-fu_util_get_client_version (void)
-{
-	GString *string = g_string_new ("");
-
-	g_string_append_printf (string,
-				"%i.%i.%i",
-				FWUPD_MAJOR_VERSION,
-				FWUPD_MINOR_VERSION,
-				FWUPD_MICRO_VERSION);
-#ifdef FWUPD_DIRTY_VERSION
-	g_string_append_printf (string,
-				"-%i-%s",
-				FWUPD_DIRTY_VERSION,
-				FWUPD_COMMIT_VERSION);
-#endif
-	return g_string_free (string, FALSE);
-}
-
-gchar *
 fu_util_get_versions (void)
 {
 	GString *string = g_string_new ("");
-	g_autofree gchar *client_version = fu_util_get_client_version ();
 
-	g_string_append_printf (string, "client version:\t%s\n", client_version);
+	g_string_append_printf (string, "client version:\t%s\n", SOURCE_VERSION);
 	g_string_append_printf (string,
 				"compile-time dependency versions\n");
 	g_string_append_printf (string,
