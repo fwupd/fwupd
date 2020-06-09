@@ -1,3 +1,30 @@
+fwupd (1.3.10-1) unstable; urgency=medium
+
+  * New upstream stable release:
+    - Actually reload the DFU device after upgrade has completed
+    - Capture the dock SKU in report metadata
+    - Correctly set the Logitech device protocol
+    - Do not use shim for non-secure boot configurations
+    - Ensure that the DeviceID is set for child devices
+    - Fix an error when detaching MSP430
+    - Fix the DeviceID set by GetDetails
+    - Force the prometheus minor version from 0x02 to 0x01 to fix updates
+    - Parse the CSR firmware as a DFU file
+    - Prevent dell-dock updates to occur via synaptics-mst plugin
+    - Rather than hardcoding thunderbolt to PCI slot numbers, use domain in GUID
+    - Remove a dock device from the whitelist that is never going to be updated
+    - Validate that gpgme_op_verify_result() returned at least one signature
+    - Wait for the cxaudio device to reboot after writing firmware
+  * Drop following patches, now incorporated upstream:
+    - Thunderbolt: create correct GUID for dual controller devices
+    - CSR: Fix parsing
+    - Motd: Fix refresh target to be network.target
+    - Logitech: Fix error in logs on unsigned devices and set protocol for
+      signed devices properly.
+    - Fix a FTBFS on empty /etc/machine-id in some buildd environments.
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Tue, 09 Jun 2020 09:44:53 -0500
+
 fwupd (1.3.9-4) unstable; urgency=medium
 
   * Backport a handful of patches from 1_3_X branch:

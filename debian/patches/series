@@ -1,10 +1,1 @@
-0001-fix-fwupd.shutdown.in-according-to-the-movement-of-f.patch
 0001-ci-build-Debian-using-libflashrom.patch
-0001-uefi-Don-t-use-shim-for-non-secure-boot-configuratio.patch
-0001-Revert-thunderbolt-Create-a-unique-GUID-including-Th.patch
-0001-thunderbolt-Rather-than-hardcoding-to-PCI-slot-numbe.patch
-0001-csr-Parse-the-firmware-as-a-DFU-file.patch
-0001-data-motd-fwupd-refresh-Only-order-after-network.tar.patch
-0001-logitech-Correctly-set-the-protocol.patch
-0001-logitech_hidpp-set-the-bootloader-protocol.patch
-0001-trivial-fix-self-tests-for-empty-etc-machine-id-LP-1.patch
