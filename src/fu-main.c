@@ -1493,7 +1493,7 @@ fu_main_on_name_lost_cb (GDBusConnection *connection,
 			 gpointer user_data)
 {
 	FuMainPrivate *priv = (FuMainPrivate *) user_data;
-	g_debug ("FuMain: lost name: %s", name);
+	g_warning ("another service has claimed the dbus name %s", name);
 	g_main_loop_quit (priv->loop);
 }
 
