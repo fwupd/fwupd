@@ -338,7 +338,7 @@ fu_vli_usbhub_device_attach_full (FuDevice *device, FuDevice *proxy, GError **er
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
 
 	/* some hardware has to toggle a GPIO to reset the entire PCB */
-	if (fu_vli_device_get_kind (FU_VLI_DEVICE (proxy)) == FU_VLI_DEVICE_KIND_VL817 &&
+	if (fu_vli_device_get_kind (FU_VLI_DEVICE (device)) == FU_VLI_DEVICE_KIND_VL817 &&
 	    fu_device_has_custom_flag (proxy, "attach-with-gpiob")) {
 		guint8 tmp = 0x0;
 
@@ -362,29 +362,29 @@ fu_vli_usbhub_device_attach_full (FuDevice *device, FuDevice *proxy, GError **er
 						     VL817_ADDR_GPIO_SET_OUTPUT_DATA,
 						     tmp ^ (1 << 1), error))
 			return FALSE;
-	} else {
-		/* replug, and ignore the device going away */
-		if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (proxy)),
-						    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-						    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-						    G_USB_DEVICE_RECIPIENT_DEVICE,
-						    0xf6, 0x0040, 0x0002,
-						    NULL, 0x0, NULL,
-						    FU_VLI_DEVICE_TIMEOUT,
-						    NULL, &error_local)) {
-			if (g_error_matches (error_local,
-					     G_USB_DEVICE_ERROR,
-					     G_USB_DEVICE_ERROR_NO_DEVICE) ||
-			    g_error_matches (error_local,
-					     G_USB_DEVICE_ERROR,
-					     G_USB_DEVICE_ERROR_FAILED)) {
-				g_debug ("ignoring %s", error_local->message);
-			} else {
-				g_propagate_prefixed_error (error,
-							    g_steal_pointer (&error_local),
-							    "failed to restart device: ");
-				return FALSE;
-			}
+	} 
+
+	/* replug, and ignore the device going away */
+	if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (device)),
+				G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+				G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+				G_USB_DEVICE_RECIPIENT_DEVICE,
+				0xf6, 0x0040, 0x0002,
+				NULL, 0x0, NULL,
+				FU_VLI_DEVICE_TIMEOUT,
+				NULL, &error_local)) {
+		if (g_error_matches (error_local,
+					G_USB_DEVICE_ERROR,
+					G_USB_DEVICE_ERROR_NO_DEVICE) ||
+				g_error_matches (error_local,
+					G_USB_DEVICE_ERROR,
+					G_USB_DEVICE_ERROR_FAILED)) {
+			g_debug ("ignoring %s", error_local->message);
+		} else {
+			g_propagate_prefixed_error (error,
+					g_steal_pointer (&error_local),
+					"failed to restart device: ");
+			return FALSE;
 		}
 	}
 
