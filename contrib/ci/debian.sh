@@ -39,7 +39,6 @@ lintian ../*changes \
 	--no-tag-display-limit \
 	--suppress-tags bad-distribution-in-changes-file \
 	--suppress-tags source-contains-unsafe-symlink \
-	--suppress-tags changelog-should-mention-nmu \
 	--suppress-tags debian-watch-file-in-native-package \
 	--suppress-tags source-nmu-has-incorrect-version-number \
 	--suppress-tags no-symbols-control-file \
