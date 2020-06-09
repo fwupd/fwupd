@@ -32,6 +32,22 @@
     <binary>fwupdmgr</binary>
   </provides>
   <releases>
+    <release version="1.4.3" date="2020-06-09">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add support for HP DMC dock devices</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Always enforce the metadata signature has a valid timestamp</li>
+          <li>Capture the dock SKU in metadata</li>
+          <li>Check the device requirements when returning from GetDetails</li>
+          <li>Force the prometheus minor version from 0x02 to 0x01</li>
+          <li>Prevent Dell dock updates to occur via synaptics-mst plugin</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.4.2" date="2020-05-18">
       <description>
         <p>This release fixes the following bugs:</p>
