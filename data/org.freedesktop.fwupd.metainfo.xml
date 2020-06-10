@@ -32,6 +32,14 @@
     <binary>fwupdmgr</binary>
   </provides>
   <releases>
+    <release version="1.4.4" date="2020-06-10">
+      <description>
+        <p>This release fixes the following regression:</p>
+        <ul>
+          <li>Fix refreshing when checking for downgraded metadata</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.4.3" date="2020-06-09">
       <description>
         <p>This release adds the following features:</p>
