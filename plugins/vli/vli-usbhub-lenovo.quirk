@@ -174,6 +174,9 @@ Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2
 ParentGuid = USB\VID_17EF&PID_3094
+[DeviceInstanceId=USB\VID_17EF&PID_721C&APP_26]
+ProxyGuid = USB\VID_17EF&PID_3094
+FirmwareSize = 0x8000
 
 # Lenovo Travel Hub 1in3
 [DeviceInstanceId=USB\VID_17EF&PID_7228]
