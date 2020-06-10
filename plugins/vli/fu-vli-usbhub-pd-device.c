@@ -44,6 +44,7 @@ fu_vli_usbhub_pd_device_probe (FuDevice *device, GError **error)
 
 	guint32 fwver;
 	g_autofree gchar *fwver_str = NULL;
+	g_autofree gchar *instance_id0 = NULL;
 	g_autofree gchar *instance_id1 = NULL;
 	g_autofree gchar *instance_id2 = NULL;
 	g_autofree gchar *instance_id3 = NULL;
@@ -64,6 +65,11 @@ fu_vli_usbhub_pd_device_probe (FuDevice *device, GError **error)
 	fu_device_set_version_raw (device, fwver);
 	fwver_str = fu_common_version_from_uint32 (fwver, FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_version (device, fwver_str);
+	instance_id0 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&APP_%02X",
+					GUINT16_FROM_LE (self->hdr.vid),
+					GUINT16_FROM_LE (self->hdr.pid),
+					fwver & 0xff);
+	fu_device_add_instance_id (device, instance_id0);
 	instance_id1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&DEV_%s",
 					GUINT16_FROM_LE (self->hdr.vid),
 					GUINT16_FROM_LE (self->hdr.pid),
