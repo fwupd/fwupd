@@ -606,6 +606,7 @@ fu_vli_usbhub_device_pd_setup (FuVliUsbhubDevice *self, GError **error)
 
 	/* add child */
 	dev = fu_vli_usbhub_pd_device_new (&hdr);
+	fu_device_set_quirks (dev, fu_device_get_quirks (FU_DEVICE (self)));
 	if (!fu_device_probe (dev, &error_local)) {
 		g_warning ("cannot create PD device: %s", error_local->message);
 		return TRUE;
