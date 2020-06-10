@@ -59,6 +59,9 @@
 #include "fu-ihex-firmware.h"
 #include "fu-srec-firmware.h"
 
+/* only needed until we hard depend on jcat 0.1.3 */
+#include <libjcat/jcat-version.h>
+
 #ifdef HAVE_SYSTEMD
 #include "fu-systemd.h"
 #endif
@@ -3122,10 +3125,40 @@ fu_engine_sort_jcat_results_timestamp_cb (gconstpointer a, gconstpointer b)
 	JcatResult *ra = *((JcatResult **) a);
 	JcatResult *rb = *((JcatResult **) b);
 	if (jcat_result_get_timestamp (ra) < jcat_result_get_timestamp (rb))
-		return -1;
-	if (jcat_result_get_timestamp (ra) > jcat_result_get_timestamp (rb))
 		return 1;
+	if (jcat_result_get_timestamp (ra) > jcat_result_get_timestamp (rb))
+		return -1;
 	return 0;
+}
+
+static JcatResult *
+fu_engine_get_newest_signature_jcat_result (GPtrArray *results, GError **error)
+{
+	/* sort by timestamp, newest first */
+	g_ptr_array_sort (results, fu_engine_sort_jcat_results_timestamp_cb);
+
+	/* get the first signature, ignoring the checksums */
+	for (guint i = 0; i < results->len; i++) {
+		JcatResult *result = g_ptr_array_index (results, i);
+#if LIBJCAT_CHECK_VERSION(0, 1, 3)
+		if (jcat_result_get_method (result) == JCAT_BLOB_METHOD_SIGNATURE)
+			return g_object_ref (result);
+#else
+		guint verify_kind = 0;
+		g_autoptr(JcatEngine) engine = NULL;
+		g_object_get (result, "engine", &engine, NULL);
+		g_object_get (engine, "verify-kind", &verify_kind, NULL);
+		if (verify_kind == 2) /* SIGNATURE */
+			return g_object_ref (result);
+#endif
+	}
+
+	/* should never happen due to %JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE */
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "no signature method in results");
+	return NULL;
 }
 
 static JcatResult *
@@ -3159,10 +3192,9 @@ fu_engine_get_system_jcat_result (FuEngine *self, FwupdRemote *remote, GError **
 					    error);
 	if (results == NULL)
 		return NULL;
-	g_ptr_array_sort (results, fu_engine_sort_jcat_results_timestamp_cb);
 
-	/* return the newest one */
-	return g_object_ref (g_ptr_array_index (results, 0));
+	/* return the newest signature */
+	return fu_engine_get_newest_signature_jcat_result (results, error);
 }
 
 static gboolean
@@ -3274,9 +3306,10 @@ fu_engine_update_metadata_bytes (FuEngine *self, const gchar *remote_id,
 		if (results == NULL)
 			return FALSE;
 
-		/* return the newest one */
-		g_ptr_array_sort (results, fu_engine_sort_jcat_results_timestamp_cb);
-		jcat_result = g_ptr_array_index (results, 0);
+		/* return the newest signature */
+		jcat_result = fu_engine_get_newest_signature_jcat_result (results, error);
+		if (jcat_result == NULL)
+			return FALSE;
 
 		/* verify the metadata was signed later than the existing
 		 * metadata for this remote to mitigate a rollback attack */
