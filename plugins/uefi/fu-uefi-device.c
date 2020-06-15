@@ -515,9 +515,9 @@ fu_uefi_device_prepare (FuDevice *device,
 	/* sanity checks */
 	if (!fu_uefi_device_is_esp_mounted (device, error))
 		return FALSE;
-	if (!fu_uefi_device_check_esp_free (device, error))
-		return FALSE;
 	if (!fu_uefi_device_cleanup_esp (device, error))
+		return FALSE;
+	if (!fu_uefi_device_check_esp_free (device, error))
 		return FALSE;
 
 	return TRUE;
