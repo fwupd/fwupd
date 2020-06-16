@@ -78,3 +78,9 @@ gchar		*fu_util_release_to_string	(FwupdRelease	*rel,
 gchar		*fu_util_remote_to_string	(FwupdRemote *remote,
 						 guint		 idt);
 gchar		*fu_util_security_attrs_to_string (GPtrArray	*attrs);
+gboolean	 fu_util_send_report		(SoupSession	*soup_session,
+						 const gchar	*report_uri,
+						 const gchar	*data,
+						 const gchar	*sig,
+						 gchar		**uri,
+						 GError		**error);
