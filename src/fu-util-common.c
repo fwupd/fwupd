@@ -12,6 +12,7 @@
 #include <glib/gi18n.h>
 #include <gusb.h>
 #include <xmlb.h>
+#include <json-glib/json-glib.h>
 
 #include "fu-common.h"
 #include "fu-util-common.h"
@@ -1549,4 +1550,114 @@ fu_util_remote_to_string (FwupdRemote *remote, guint idt)
 	}
 
 	return g_string_free (str, FALSE);
+}
+
+gboolean
+fu_util_send_report (SoupSession *soup_session,
+		     const gchar *report_uri,
+		     const gchar *data,
+		     const gchar *sig,
+		     gchar **uri, /* (nullable) (out) */
+		     GError **error)
+{
+	const gchar *server_msg = NULL;
+	guint status_code;
+	JsonNode *json_root;
+	JsonObject *json_object;
+	g_autoptr(JsonParser) json_parser = NULL;
+	g_autoptr(SoupMessage) msg = NULL;
+
+	/* POST request */
+	if (sig != NULL) {
+		g_autoptr(SoupMultipart) mp = NULL;
+		mp = soup_multipart_new (SOUP_FORM_MIME_TYPE_MULTIPART);
+		soup_multipart_append_form_string (mp, "payload", data);
+		soup_multipart_append_form_string (mp, "signature", sig);
+		msg = soup_form_request_new_from_multipart (report_uri, mp);
+	} else {
+		msg = soup_message_new (SOUP_METHOD_POST, report_uri);
+		soup_message_set_request (msg, "application/json; charset=utf-8",
+					  SOUP_MEMORY_COPY, data, strlen (data));
+	}
+	status_code = soup_session_send_message (soup_session, msg);
+	g_debug ("server returned: %s", msg->response_body->data);
+
+	/* server returned nothing, and probably exploded in a ball of flames */
+	if (msg->response_body->length == 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Failed to upload to %s: %s",
+			     report_uri, soup_status_get_phrase (status_code));
+		return FALSE;
+	}
+
+	/* parse JSON reply */
+	json_parser = json_parser_new ();
+	if (!json_parser_load_from_data (json_parser,
+					 msg->response_body->data,
+					 msg->response_body->length,
+					 error)) {
+		g_autofree gchar *str = g_strndup (msg->response_body->data,
+						   msg->response_body->length);
+		g_prefix_error (error, "Failed to parse JSON response from '%s': ", str);
+		return FALSE;
+	}
+	json_root = json_parser_get_root (json_parser);
+	if (json_root == NULL) {
+		g_autofree gchar *str = g_strndup (msg->response_body->data,
+						   msg->response_body->length);
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_PERMISSION_DENIED,
+			     "JSON response was malformed: '%s'", str);
+		return FALSE;
+	}
+	json_object = json_node_get_object (json_root);
+	if (json_object == NULL) {
+		g_autofree gchar *str = g_strndup (msg->response_body->data,
+						   msg->response_body->length);
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_PERMISSION_DENIED,
+			     "JSON response object was malformed: '%s'", str);
+		return FALSE;
+	}
+
+	/* get any optional server message */
+	if (json_object_has_member (json_object, "msg"))
+		server_msg = json_object_get_string_member (json_object, "msg");
+
+	/* server reported failed */
+	if (!json_object_get_boolean_member (json_object, "success")) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_PERMISSION_DENIED,
+			     "Server rejected report: %s",
+			     server_msg != NULL ? server_msg : "unspecified");
+		return FALSE;
+	}
+
+	/* server wanted us to see the message */
+	if (server_msg != NULL) {
+		g_debug ("server message: %s", server_msg);
+		if (g_strstr_len (server_msg, -1, "known issue") != NULL &&
+		    json_object_has_member (json_object, "uri")) {
+			if (uri != NULL)
+				*uri = g_strdup (json_object_get_string_member (json_object, "uri"));
+		}
+	}
+
+	/* fall back to HTTP status codes in case the server is offline */
+	if (!SOUP_STATUS_IS_SUCCESSFUL (status_code)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Failed to upload to %s: %s",
+			     report_uri, soup_status_get_phrase (status_code));
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
 }

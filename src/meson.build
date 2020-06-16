@@ -92,6 +92,7 @@ fwupdoffline = executable(
     giounix,
     gudev,
     gusb,
+    libjsonglib,
     libxmlb,
     soup,
     sqlite,
