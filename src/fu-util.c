@@ -911,21 +911,17 @@ fu_util_report_history (FuUtilPrivate *priv, gchar **values, GError **error)
 		GPtrArray *devices_tmp = g_hash_table_lookup (report_map, id);
 		if (!fu_util_report_history_for_remote (priv, id, devices_tmp, error))
 			return FALSE;
-	}
 
-	/* mark each device as reported */
-	for (guint i = 0; i < devices->len; i++) {
-		FwupdDevice *dev = g_ptr_array_index (devices, i);
-		if (fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_REPORTED))
-			continue;
-		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
-			continue;
-		g_debug ("setting flag on %s", fwupd_device_get_id (dev));
-		if (!fwupd_client_modify_device (priv->client,
-						 fwupd_device_get_id (dev),
-						 "Flags", "reported",
-						 NULL, error))
-			return FALSE;
+		/* mark each device as reported */
+		for (guint i = 0; i < devices_tmp->len; i++) {
+			FwupdDevice *dev = g_ptr_array_index (devices_tmp, i);
+			g_debug ("setting flag on %s", fwupd_device_get_id (dev));
+			if (!fwupd_client_modify_device (priv->client,
+							 fwupd_device_get_id (dev),
+							 "Flags", "reported",
+							 NULL, error))
+				return FALSE;
+		}
 	}
 
 	/* TRANSLATORS: success message -- where the user has uploaded
