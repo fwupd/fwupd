@@ -770,6 +770,17 @@ fu_device_add_child (FuDevice *self, FuDevice *child)
 	}
 	g_ptr_array_add (priv->children, g_object_ref (child));
 
+	/* ensure the parent has the MAX() of the childrens removal delay  */
+	for (guint i = 0; i < priv->children->len; i++) {
+		FuDevice *child_tmp = g_ptr_array_index (priv->children, i);
+		guint remove_delay = fu_device_get_remove_delay (child_tmp);
+		if (remove_delay > priv->remove_delay) {
+			g_debug ("setting remove delay to %u as child is greater than %u",
+				 remove_delay, priv->remove_delay);
+			priv->remove_delay = remove_delay;
+		}
+	}
+
 	/* copy from main device if unset */
 	if (fu_device_get_physical_id (child) == NULL &&
 	    fu_device_get_physical_id (self) != NULL)
