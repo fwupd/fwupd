@@ -250,11 +250,9 @@ fu_vli_usbhub_i2c_device_write_firmware (FuDevice *device,
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
 	fu_device_set_progress (device, 0);
 
-	/* this is unusual, but the MSP device reboot takes down the entire hub
-	 * for ~60 seconds and we don't want the parent device removing us */
+	/* as soon as the parent comes back we can query the child */
 	root = fu_device_get_root (device);
-	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	fu_device_set_remove_delay (root, 120000);
+	fu_device_add_flag (root, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	/* success */
 	return TRUE;
@@ -279,6 +277,9 @@ fu_vli_usbhub_i2c_device_init (FuVliUsbhubI2cDevice *self)
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_logical_id (FU_DEVICE (self), "I2C");
 	fu_device_set_summary (FU_DEVICE (self), "I²C Dock Management Device");
+
+	/* the MSP device reboot takes down the entire hub for ~60 seconds */
+	fu_device_set_remove_delay (FU_DEVICE (self), 120 * 1000);
 }
 
 static void
