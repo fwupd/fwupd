@@ -518,6 +518,62 @@ fu_history_modify_device (FuHistory *self, FuDevice *device, GError **error)
 }
 
 /**
+ * fu_history_set_device_metadata:
+ * @self: A #FuHistory
+ * @device_id: A DeviceID string
+ * @metadata: A #GHashTable of string:string
+ * @error: A #GError or NULL
+ *
+ * Modify a device in the history database
+ *
+ * Returns: @TRUE if successful, @FALSE for failure
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fu_history_set_device_metadata (FuHistory *self,
+				const gchar *device_id,
+				GHashTable *metadata,
+				GError **error)
+{
+	gint rc;
+	g_autofree gchar *metadata_str = NULL;
+	g_autoptr(GRWLockWriterLocker) locker = NULL;
+	g_autoptr(sqlite3_stmt) stmt = NULL;
+
+	g_return_val_if_fail (FU_IS_HISTORY (self), FALSE);
+	g_return_val_if_fail (device_id != NULL, FALSE);
+
+	/* lazy load */
+	if (!fu_history_load (self, error))
+		return FALSE;
+
+	/* overwrite entry if it exists */
+	locker = g_rw_lock_writer_locker_new (&self->db_mutex);
+	g_return_val_if_fail (locker != NULL, FALSE);
+	g_debug ("modifying %s", device_id);
+	rc = sqlite3_prepare_v2 (self->db,
+				 "UPDATE history SET "
+				 "metadata = ?1 "
+				 "WHERE device_id = ?2;",
+				 -1, &stmt, NULL);
+	if (rc != SQLITE_OK) {
+		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
+			     "failed to prepare SQL to update history: %s",
+			     sqlite3_errmsg (self->db));
+		return FALSE;
+	}
+
+
+	/* metadata is stored as a simple string */
+	metadata_str = _convert_hash_to_string (metadata);
+	sqlite3_bind_text (stmt, 1, metadata_str, -1, SQLITE_STATIC);
+	sqlite3_bind_text (stmt, 2, device_id, -1, SQLITE_STATIC);
+
+	return fu_history_stmt_exec (self, stmt, NULL, error);
+}
+
+/**
  * fu_history_add_device:
  * @self: A #FuHistory
  * @device: A #FuDevice
