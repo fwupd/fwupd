@@ -64,8 +64,12 @@ struct _FuDeviceClass
 	gboolean		 (*cleanup)		(FuDevice	*self,
 							 FwupdInstallFlags flags,
 							 GError		**error);
+	void			 (*report_metadata_pre)	(FuDevice	*self,
+							 GHashTable	*metadata);
+	void			 (*report_metadata_post)(FuDevice	*self,
+							 GHashTable	*metadata);
 	/*< private >*/
-	gpointer	padding[16];
+	gpointer	padding[14];
 };
 
 /**
@@ -317,3 +321,5 @@ gboolean	 fu_device_retry			(FuDevice	*self,
 							 guint		 count,
 							 gpointer	 user_data,
 							 GError		**error);
+GHashTable	*fu_device_report_metadata_pre		(FuDevice	*self);
+GHashTable	*fu_device_report_metadata_post		(FuDevice	*self);

@@ -1681,10 +1681,14 @@ fu_engine_install_tasks (FuEngine *self,
 }
 
 static FwupdRelease *
-fu_engine_create_release_metadata (FuEngine *self, FuPlugin *plugin, GError **error)
+fu_engine_create_release_metadata (FuEngine *self,
+				   FuDevice *device,
+				   FuPlugin *plugin,
+				   GError **error)
 {
 	GPtrArray *metadata_sources;
 	g_autoptr(FwupdRelease) release = fwupd_release_new ();
+	g_autoptr(GHashTable) metadata_device = NULL;
 	g_autoptr(GHashTable) metadata_hash = NULL;
 
 	/* build the version metadata */
@@ -1693,6 +1697,9 @@ fu_engine_create_release_metadata (FuEngine *self, FuPlugin *plugin, GError **er
 		return NULL;
 	fwupd_release_add_metadata (release, metadata_hash);
 	fwupd_release_add_metadata (release, fu_plugin_get_report_metadata (plugin));
+	metadata_device = fu_device_report_metadata_pre (device);
+	if (metadata_device != NULL)
+		fwupd_release_add_metadata (release, metadata_device);
 
 	/* allow other plugins to contribute metadata too */
 	metadata_sources = fu_plugin_get_rules (plugin, FU_PLUGIN_RULE_METADATA_SOURCE);
@@ -1939,7 +1946,7 @@ fu_engine_install_release (FuEngine *self,
 	/* add device to database */
 	if ((flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0) {
 		g_autoptr(FwupdRelease) release_tmp = NULL;
-		release_tmp = fu_engine_create_release_metadata (self, plugin, error);
+		release_tmp = fu_engine_create_release_metadata (self, device, plugin, error);
 		if (release_tmp == NULL)
 			return FALSE;
 		tmp = xb_node_query_text (component,
@@ -2174,7 +2181,7 @@ fu_engine_install (FuEngine *self,
 			if (!fu_plugin_runner_update_prepare (plugin, flags, device, error))
 				return FALSE;
 		}
-		release_tmp = fu_engine_create_release_metadata (self, plugin, error);
+		release_tmp = fu_engine_create_release_metadata (self, device, plugin, error);
 		if (release_tmp == NULL)
 			return FALSE;
 		fwupd_release_set_version (release_tmp, version_rel);
@@ -5693,6 +5700,7 @@ fu_engine_update_history_device (FuEngine *self, FuDevice *dev_history, GError *
 	FwupdRelease *rel_history;
 	g_autofree gchar *btime = NULL;
 	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(GHashTable) metadata_device = NULL;
 
 	/* is in the device list */
 	dev = fu_device_list_get_by_id (self->device_list,
@@ -5719,6 +5727,19 @@ fu_engine_update_history_device (FuEngine *self, FuDevice *dev_history, GError *
 		       btime) == 0) {
 		g_debug ("service restarted, but no reboot has taken place");
 		return TRUE;
+	}
+
+	/* save any additional report metadata */
+	metadata_device = fu_device_report_metadata_post (dev);
+	if (metadata_device != NULL && g_hash_table_size (metadata_device) > 0) {
+		fwupd_release_add_metadata (rel_history, metadata_device);
+		if (!fu_history_set_device_metadata (self->history,
+						     fu_device_get_id (dev_history),
+						     fwupd_release_get_metadata (rel_history),
+						     error)) {
+			g_prefix_error (error, "failed to set metadata: ");
+			return FALSE;
+		}
 	}
 
 	/* the system is running with the new firmware version */
