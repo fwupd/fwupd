@@ -10,6 +10,7 @@ shared_module('fu_plugin_cros_ec',
     'fu-plugin-cros-ec.c',
     'fu-cros-ec-usb-device.c',
     'fu-cros-ec-common.c',
+    'fu-cros-ec-firmware.c',
   ],
   include_directories : [
     root_incdir,
