@@ -2973,6 +2973,62 @@ fu_device_probe_invalidate (FuDevice *self)
 }
 
 /**
+ * fu_device_report_metadata_pre:
+ * @self: A #FuDevice
+ *
+ * Collects metadata that would be useful for debugging a failed update report.
+ *
+ * Returns: (transfer full) (nullable): A #GHashTable, or %NULL if there is no data
+ *
+ * Since: 1.5.0
+ **/
+GHashTable *
+fu_device_report_metadata_pre (FuDevice *self)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+	g_autoptr(GHashTable) metadata = NULL;
+
+	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
+
+	/* not implemented */
+	if (klass->report_metadata_pre == NULL)
+		return NULL;
+
+	/* metadata for all devices */
+	metadata = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+	klass->report_metadata_pre (self, metadata);
+	return g_steal_pointer (&metadata);
+}
+
+/**
+ * fu_device_report_metadata_post:
+ * @self: A #FuDevice
+ *
+ * Collects metadata that would be useful for debugging a failed update report.
+ *
+ * Returns: (transfer full) (nullable): A #GHashTable, or %NULL if there is no data
+ *
+ * Since: 1.5.0
+ **/
+GHashTable *
+fu_device_report_metadata_post (FuDevice *self)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+	g_autoptr(GHashTable) metadata = NULL;
+
+	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
+
+	/* not implemented */
+	if (klass->report_metadata_post == NULL)
+		return NULL;
+
+	/* metadata for all devices */
+	metadata = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+	klass->report_metadata_post (self, metadata);
+	return g_steal_pointer (&metadata);
+}
+
+/**
  * fu_device_incorporate:
  * @self: A #FuDevice
  * @donor: Another #FuDevice

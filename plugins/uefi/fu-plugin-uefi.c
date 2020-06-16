@@ -405,18 +405,7 @@ fu_plugin_update (FuPlugin *plugin,
 			 error_splash->message);
 	}
 
-	if (!fu_device_write_firmware (device, blob_fw, flags, error))
-		return FALSE;
-
-	/* record if we had an invalid header during update */
-	str = fu_uefi_missing_capsule_header (device) ? "True" : "False";
-	fu_plugin_add_report_metadata (plugin, "MissingCapsuleHeader", str);
-
-	/* where the ESP was mounted during installation */
-	str = fu_device_get_metadata (device, "EspPath");
-	fu_plugin_add_report_metadata (plugin, "ESPMountPoint", str);
-
-	return TRUE;
+	return fu_device_write_firmware (device, blob_fw, flags, error);
 }
 
 static gboolean

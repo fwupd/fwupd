@@ -632,6 +632,15 @@ fu_vli_device_set_quirk_kv (FuDevice *device,
 }
 
 static void
+fu_vli_device_report_metadata_pre (FuDevice *device, GHashTable *metadata)
+{
+	FuVliDevice *self = FU_VLI_DEVICE (device);
+	g_hash_table_insert (metadata,
+			     g_strdup ("GType"),
+			     g_strdup (G_OBJECT_TYPE_NAME (self)));
+}
+
+static void
 fu_vli_device_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
 	FuVliDevice *self = FU_VLI_DEVICE (object);
@@ -697,4 +706,5 @@ fu_vli_device_class_init (FuVliDeviceClass *klass)
 	klass_device->to_string = fu_vli_device_to_string;
 	klass_device->set_quirk_kv = fu_vli_device_set_quirk_kv;
 	klass_device->setup = fu_vli_device_setup;
+	klass_device->report_metadata_pre = fu_vli_device_report_metadata_pre;
 }
