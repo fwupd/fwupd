@@ -826,7 +826,6 @@ fu_util_report_history_for_remote (FuUtilPrivate *priv,
 static gboolean
 fu_util_report_history (FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	g_autoptr(GHashTable) remote_id_uri_map = NULL;
 	g_autoptr(GHashTable) report_map = NULL;
 	g_autoptr(GList) ids = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -840,25 +839,6 @@ fu_util_report_history (FuUtilPrivate *priv, gchar **values, GError **error)
 			return FALSE;
 	}
 
-	/* create a map of RemoteID to RemoteURI */
-	remotes = fwupd_client_get_remotes (priv->client, NULL, error);
-	if (remotes == NULL)
-		return FALSE;
-	remote_id_uri_map = g_hash_table_new (g_str_hash, g_str_equal);
-	for (guint i = 0; i < remotes->len; i++) {
-		FwupdRemote *remote = g_ptr_array_index (remotes, i);
-		if (fwupd_remote_get_id (remote) == NULL)
-			continue;
-		if (fwupd_remote_get_report_uri (remote) == NULL)
-			continue;
-		g_debug ("adding %s for %s",
-			 fwupd_remote_get_report_uri (remote),
-			 fwupd_remote_get_id (remote));
-		g_hash_table_insert (remote_id_uri_map,
-				     (gpointer) fwupd_remote_get_id (remote),
-				     (gpointer) fwupd_remote_get_report_uri (remote));
-	}
-
 	/* get all devices from the history database, then filter them,
 	 * adding to a hash map of report-ids */
 	devices = fwupd_client_get_history (priv->client, NULL, error);
@@ -870,8 +850,8 @@ fu_util_report_history (FuUtilPrivate *priv, gchar **values, GError **error)
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
 		FwupdRelease *rel = fwupd_device_get_release_default (dev);
 		const gchar *remote_id;
-		const gchar *remote_uri;
 		GPtrArray *devices_tmp;
+		g_autoptr(FwupdRemote) remote = NULL;
 
 		/* filter, if not forcing */
 		if (!fu_util_filter_device (priv, dev))
@@ -897,9 +877,12 @@ fu_util_report_history (FuUtilPrivate *priv, gchar **values, GError **error)
 			g_debug ("%s has no RemoteID", fwupd_device_get_id (dev));
 			continue;
 		}
-		remote_uri = g_hash_table_lookup (remote_id_uri_map, remote_id);
-		if (remote_uri == NULL) {
-			g_debug ("%s has no RemoteURI", remote_id);
+		remote = fwupd_client_get_remote_by_id (priv->client, remote_id,
+							NULL, error);
+		if (remote == NULL)
+			return FALSE;
+		if (fwupd_remote_get_report_uri (remote) == NULL) {
+			g_debug ("%s has no RemoteURI", fwupd_remote_get_report_uri (remote));
 			continue;
 		}
 
