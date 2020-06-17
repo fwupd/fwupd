@@ -226,6 +226,7 @@ fu_plugin_add_security_attrs_csme_version (FuPlugin *plugin, FuSecurityAttrs *at
 	}
 
 	/* success */
+	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
