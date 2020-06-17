@@ -1351,6 +1351,7 @@ static gboolean
 fu_util_check_oldest_remote (FuUtilPrivate *priv, guint64 *age_oldest, GError **error)
 {
 	g_autoptr(GPtrArray) remotes = NULL;
+	gboolean checked = FALSE;
 
 	/* get the age of the oldest enabled remotes */
 	remotes = fwupd_client_get_remotes (priv->client, NULL, error);
@@ -1362,8 +1363,17 @@ fu_util_check_oldest_remote (FuUtilPrivate *priv, guint64 *age_oldest, GError **
 			continue;
 		if (fwupd_remote_get_kind (remote) != FWUPD_REMOTE_KIND_DOWNLOAD)
 			continue;
+		checked = TRUE;
 		if (fwupd_remote_get_age (remote) > *age_oldest)
 			*age_oldest = fwupd_remote_get_age (remote);
+	}
+	if (!checked) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     /* TRANSLATORS: error message for a user who ran fwupdmgr refresh recently but no remotes */
+				     "No remotes enabled.");
+		return FALSE;
 	}
 	return TRUE;
 }
