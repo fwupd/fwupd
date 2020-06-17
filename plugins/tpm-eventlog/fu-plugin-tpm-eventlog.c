@@ -115,19 +115,25 @@ fu_plugin_device_registered_uefi (FuPlugin *plugin, FuDevice *device)
 
 	for (guint i = 0; i < checksums->len; i++) {
 		const gchar *checksum = g_ptr_array_index (checksums, i);
+		data->reconstructed = FALSE;
 		for (guint j = 0; j < data->pcr0s->len; j++) {
 			const gchar *checksum_tmp = g_ptr_array_index (data->pcr0s, j);
+			/* skip unless same algorithm */
+			if (strlen (checksum) != strlen (checksum_tmp))
+				continue;
 			if (g_strcmp0 (checksum, checksum_tmp) == 0) {
 				data->reconstructed = TRUE;
-				return;
+				break;
 			}
 		}
+		/* check at least one reconstruction for this algorithm */
+		if (!data->reconstructed) {
+			fu_device_set_update_message (device,
+						     "TPM PCR0 differs from reconstruction, "
+						     "please see https://github.com/fwupd/fwupd/wiki/TPM-PCR0-differs-from-reconstruction");
+			return;
+		}
 	}
-
-	/* urgh, this is unexpected */
-	fu_device_set_update_message (device,
-				     "TPM PCR0 differs from reconstruction, "
-				     "please see https://github.com/fwupd/fwupd/wiki/TPM-PCR0-differs-from-reconstruction");
 }
 
 void
