@@ -537,7 +537,7 @@ fwupd_security_attr_to_variant (FwupdSecurityAttr *self)
 				       FWUPD_RESULT_KEY_HSI_LEVEL,
 				       g_variant_new_uint32 (priv->level));
 	}
-	if (priv->result > 0) {
+	if (priv->result != FWUPD_SECURITY_ATTR_RESULT_UNKNOWN) {
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_HSI_RESULT,
 				       g_variant_new_uint32 (priv->result));
