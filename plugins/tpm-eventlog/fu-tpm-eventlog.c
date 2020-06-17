@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include <fwupd.h>
+#include "fwupd-common-private.h"
 #include <glib/gi18n.h>
 #include <locale.h>
 #include <stdio.h>
@@ -70,10 +71,12 @@ fu_tmp_eventlog_process (const gchar *fn, gint pcr, GError **error)
 		for (guint j = 0; j < pcrs->len; j++) {
 			const gchar *csum = g_ptr_array_index (pcrs, j);
 			g_autofree gchar *title = NULL;
+			g_autofree gchar *pretty = NULL;
 			if (pcr >= 0 && i != (guint) pcr)
 				continue;
-			title = g_strdup_printf ("%x", i);
-			fu_common_string_append_kv (str, 1, title, csum);
+			title = g_strdup_printf ("PCR %x", i);
+			pretty = fwupd_checksum_format_for_display (csum);
+			fu_common_string_append_kv (str, 1, title, pretty);
 		}
 	}
 
