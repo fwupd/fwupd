@@ -173,12 +173,8 @@ fu_plugin_composite_prepare (FuPlugin *plugin, GPtrArray *devices,
 	if (parent == NULL)
 		return TRUE;
 	sku = fu_dell_dock_ec_get_module_type (parent);
-	if (sku == NULL) {
-		g_set_error_literal (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
-				     "unable to detect SKU");
-		return FALSE;
-	}
-	fu_plugin_add_report_metadata (plugin, "DellDockSKU", sku);
+	if (sku != NULL)
+		fu_plugin_add_report_metadata (plugin, "DellDockSKU", sku);
 
 	return TRUE;
 }
