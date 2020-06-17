@@ -110,6 +110,7 @@ fu_tpm_eventlog_parser_parse_blob_v2 (const guint8 *buf, gsize bufsz,
 		for (guint i = 0; i < digestcnt; i++) {
 			guint16 alg_type = 0;
 			guint32 alg_size = 0;
+			g_autofree guint8 *digest = NULL;
 
 			/* get checksum type */
 			if (!fu_common_read_uint16_safe	(buf, bufsz, idx,
@@ -127,22 +128,19 @@ fu_tpm_eventlog_parser_parse_blob_v2 (const guint8 *buf, gsize bufsz,
 
 			/* build checksum */
 			idx += sizeof(alg_type);
-			if (alg_type == TPM2_ALG_SHA1 ||
-			    flags & FU_TPM_EVENTLOG_PARSER_FLAG_ALL_ALGS) {
-				g_autofree guint8 *digest = g_malloc0 (alg_size);
 
-				/* copy hash */
-				if (!fu_memcpy_safe (digest, alg_size, 0x0,	/* dst */
-						     buf, bufsz, idx,		/* src */
-						     alg_size, error))
-					return NULL;
+			/* copy hash */
+			digest = g_malloc0 (alg_size);
+			if (!fu_memcpy_safe (digest, alg_size, 0x0,	/* dst */
+					     buf, bufsz, idx,		/* src */
+					     alg_size, error))
+				return NULL;
 
-				/* save this for analysis */
-				if (alg_type == TPM2_ALG_SHA1)
-					checksum_sha1 = g_bytes_new_take (g_steal_pointer (&digest), alg_size);
-				else if (alg_type == TPM2_ALG_SHA256)
-					checksum_sha256 = g_bytes_new_take (g_steal_pointer (&digest), alg_size);
-			}
+			/* save this for analysis */
+			if (alg_type == TPM2_ALG_SHA1)
+				checksum_sha1 = g_bytes_new_take (g_steal_pointer (&digest), alg_size);
+			else if (alg_type == TPM2_ALG_SHA256)
+				checksum_sha256 = g_bytes_new_take (g_steal_pointer (&digest), alg_size);
 
 			/* next block */
 			idx += alg_size;

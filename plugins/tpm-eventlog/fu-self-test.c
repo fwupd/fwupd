@@ -75,9 +75,11 @@ fu_test_tpm_eventlog_parse_v2_func (void)
 	pcr0s = fu_tpm_eventlog_device_get_checksums (dev, 0, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (pcr0s);
-	g_assert_cmpint (pcr0s->len, ==, 1);
+	g_assert_cmpint (pcr0s->len, ==, 2);
 	tmp = g_ptr_array_index (pcr0s, 0);
 	g_assert_cmpstr (tmp, ==, "ebead4b31c7c49e193c440cd6ee90bc1b61a3ca6");
+	tmp = g_ptr_array_index (pcr0s, 1);
+	g_assert_cmpstr (tmp, ==, "6d9fed68092cfb91c9552bcb7879e75e1df36efd407af67690dc3389a5722fab");
 }
 
 int
