@@ -523,9 +523,9 @@ fu_dell_dock_ec_get_dock_data (FuDevice *device,
 			fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 		} else {
 			fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
-			fu_device_set_update_error (device, "An update is pending "
+			fu_device_set_update_error (device, "A pending update will be completed "
 							    "next time the dock is "
-							    "unplugged");
+							    "unplugged from your computer");
 		}
 	} else {
 		g_warning ("This utility does not support this board, disabling updates for %s",
