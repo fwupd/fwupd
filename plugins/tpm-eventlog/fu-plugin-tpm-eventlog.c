@@ -15,7 +15,8 @@
 struct FuPluginData {
 	GPtrArray		*pcr0s;
 	gboolean		 secure_boot_problem;
-	gboolean		 has_device;
+	gboolean		 has_tpm_device;
+	gboolean		 has_uefi_device;
 	gboolean		 reconstructed;
 };
 
@@ -92,7 +93,7 @@ static void
 fu_plugin_device_registered_tpm (FuPlugin *plugin, FuDevice *device)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	data->has_device = TRUE;
+	data->has_tpm_device = TRUE;
 }
 
 static void
@@ -105,6 +106,7 @@ fu_plugin_device_registered_uefi (FuPlugin *plugin, FuDevice *device)
 	checksums = fu_device_get_checksums (device);
 	if (checksums->len == 0)
 		return;
+	data->has_uefi_device = TRUE;
 
 	if (data->secure_boot_problem) {
 		fu_device_set_update_message (device,
@@ -159,7 +161,7 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* no TPM device */
-	if (!data->has_device)
+	if (!data->has_tpm_device)
 		return;
 
 	/* create attr */
@@ -169,7 +171,7 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	fu_security_attrs_append (attrs, attr);
 
 	/* check reconstructed to PCR0 */
-	if (!fu_plugin_get_enabled (plugin)) {
+	if (!fu_plugin_get_enabled (plugin) || !data->has_uefi_device) {
 		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
 		return;
 	}
