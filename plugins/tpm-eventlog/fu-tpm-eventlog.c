@@ -42,7 +42,6 @@ fu_tmp_eventlog_process (const gchar *fn, gint pcr, GError **error)
 	if (!g_file_get_contents (fn, (gchar **) &buf, &bufsz, error))
 		return FALSE;
 	items = fu_tpm_eventlog_parser_new (buf, bufsz,
-					    FU_TPM_EVENTLOG_PARSER_FLAG_ALL_ALGS |
 					    FU_TPM_EVENTLOG_PARSER_FLAG_ALL_PCRS,
 					    error);
 	if (items == NULL)
