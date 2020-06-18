@@ -40,19 +40,19 @@ typedef enum {
 	CY_GET_SIGNATURE_CMD = 0xBD,	/* get the signature of the firmware
 					 * It is suppose to be 'CYUS' for normal firmware
 					 * and 'CYBL' for Bootloader */
-	CY_UART_GET_CONFIG_CMD = 0xC0,	/* retreive the 16 byte UART configuration information
+	CY_UART_GET_CONFIG_CMD = 0xC0,	/* retrieve the 16 byte UART configuration information
 					 *  MS bit of value indicates the SCB index
 					 * length = 16, data_in = 16 byte configuration */
 	CY_UART_SET_CONFIG_CMD,		/* update the 16 byte UART configuration information
 					 * MS bit of value indicates the SCB index.
 					 * length = 16, data_out = 16 byte configuration information */
-	CY_SPI_GET_CONFIG_CMD,		/* retreive the 16 byte SPI configuration information
+	CY_SPI_GET_CONFIG_CMD,		/* retrieve the 16 byte SPI configuration information
 					 * MS bit of value indicates the SCB index
 					 * length = 16, data_in = 16 byte configuration */
 	CY_SPI_SET_CONFIG_CMD,		/* update the 16 byte SPI configuration	information
 					 * MS bit of value indicates the SCB index
 					 * length = 16, data_out = 16 byte configuration information */
-	CY_I2C_GET_CONFIG_CMD,		/* retreive the 16 byte I2C configuration information
+	CY_I2C_GET_CONFIG_CMD,		/* retrieve the 16 byte I2C configuration information
 					 * MS bit of value indicates the SCB index
 					 * length = 16, data_in = 16 byte configuration */
 	CY_I2C_SET_CONFIG_CMD =	0xC5,	/* update the 16 byte I2C configuration information
@@ -66,7 +66,7 @@ typedef enum {
 					 * value = bit0 - start, bit1 - stop, bit2 - Nak last byte,
 					 * bit3 - start on idle, bits[14:8] - slave address, bit15 - scbIndex,
 					 * length = 0. The data is provided over the bulk endpoints */
-	CY_I2C_GET_STATUS_CMD,		/* retreive the I2C bus status.
+	CY_I2C_GET_STATUS_CMD,		/* retrieve the I2C bus status.
 					 * value = bit0 - 0: TX 1: RX, bit15 - scbIndex, length = 3,
 					 * data_in = byte0: bit0 - flag, bit1 -	bus_state, bit2 - SDA state,
 					 * bit3 - TX underflow, bit4 - arbitration error, bit5 - NAK

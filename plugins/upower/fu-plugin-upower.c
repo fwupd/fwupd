@@ -158,7 +158,7 @@ fu_plugin_update_prepare (FuPlugin *plugin,
 		return FALSE;
 	}
 
-	/* deteremine if battery high enough */
+	/* determine if battery high enough */
 	if (!fu_plugin_upower_check_percentage_level (plugin) &&
 	   (flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 		FuPluginData *data = fu_plugin_get_data (plugin);

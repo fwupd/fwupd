@@ -24,7 +24,7 @@ struct _FuCcgxFirmware {
 
 G_DEFINE_TYPE (FuCcgxFirmware, fu_ccgx_firmware, FU_TYPE_FIRMWARE)
 
-/* offset stored appication version for CCGx */
+/* offset stored application version for CCGx */
 #define CCGX_APP_VERSION_OFFSET		228  /* 128+64+32+4 */
 
 GPtrArray *
