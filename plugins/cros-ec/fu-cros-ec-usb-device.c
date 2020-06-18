@@ -271,8 +271,12 @@ fu_cros_ec_usb_device_setup (FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	memcpy (self->targ.common.version, start_resp.rpdu.common.version,
-		sizeof(start_resp.rpdu.common.version));
+	if (!fu_memcpy_safe ((guint8 *) self->targ.common.version,
+			     FU_CROS_EC_STRLEN, 0x0,
+			     (const guint8 *) start_resp.rpdu.common.version,
+			     sizeof(start_resp.rpdu.common.version), 0x0,
+			     sizeof(start_resp.rpdu.common.version), error))
+		return FALSE;
 	self->targ.common.maximum_pdu_size =
 		GUINT32_FROM_BE (start_resp.rpdu.common.maximum_pdu_size);
 	self->targ.common.flash_protection =
