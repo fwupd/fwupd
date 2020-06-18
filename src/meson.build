@@ -166,22 +166,24 @@ fwupdtool = executable(
   install_dir : bindir
 )
 
-if build_daemon and get_option('man')
+if get_option('man')
   help2man = find_program('help2man')
-  custom_target('fwupdmgr-man',
-    input : fwupdmgr,
-    output : 'fwupdmgr.1',
-    command : [
-      help2man, '@INPUT@',
-      '--no-info',
-      '--output', '@OUTPUT@',
-      '--name', 'Firmware update manager client utility',
-      '--manual', 'User Commands',
-      '--version-string', fwupd_version,
-    ],
-    install : true,
-    install_dir : join_paths(mandir, 'man1'),
-  )
+  if build_daemon
+    custom_target('fwupdmgr-man',
+      input : fwupdmgr,
+      output : 'fwupdmgr.1',
+      command : [
+        help2man, '@INPUT@',
+        '--no-info',
+        '--output', '@OUTPUT@',
+        '--name', 'Firmware update manager client utility',
+        '--manual', 'User Commands',
+        '--version-string', fwupd_version,
+      ],
+      install : true,
+      install_dir : join_paths(mandir, 'man1'),
+    )
+  endif
   if get_option('agent')
     custom_target('fwupdagent-man',
       input : fwupdagent,
@@ -198,22 +200,22 @@ if build_daemon and get_option('man')
       install_dir : join_paths(mandir, 'man1'),
     )
   endif
-endif
-if get_option('man')
-  custom_target('fwupdtool-man',
-    input : fwupdtool,
-    output : 'fwupdtool.1',
-    command : [
-      help2man, '@INPUT@',
-      '--no-info',
-      '--output', '@OUTPUT@',
-      '--name', 'Standalone firmware update utility',
-      '--manual', 'User Commands',
-      '--version-string', fwupd_version,
-    ],
-    install : true,
-    install_dir : join_paths(mandir, 'man1'),
-  )
+  if build_standalone
+    custom_target('fwupdtool-man',
+      input : fwupdtool,
+      output : 'fwupdtool.1',
+      command : [
+        help2man, '@INPUT@',
+        '--no-info',
+        '--output', '@OUTPUT@',
+        '--name', 'Standalone firmware update utility',
+        '--manual', 'User Commands',
+        '--version-string', fwupd_version,
+      ],
+      install : true,
+      install_dir : join_paths(mandir, 'man1'),
+    )
+  endif
 endif
 
 if build_daemon
