@@ -100,9 +100,13 @@ typedef struct __attribute__ ((packed)) {
 } FuDellDockEcQueryEntry;
 
 typedef enum {
-	MODULE_TYPE_SINGLE = 1,
-	MODULE_TYPE_DUAL,
-	MODULE_TYPE_TBT,
+	MODULE_TYPE_45_TBT = 1,
+	MODULE_TYPE_45,
+	MODULE_TYPE_130_TBT,
+	MODULE_TYPE_130_DP,
+	MODULE_TYPE_130_UNIVERSAL,
+	MODULE_TYPE_240_TRIN,
+	MODULE_TYPE_210_DUAL,
 } FuDellDockDockModule;
 
 typedef struct __attribute__ ((packed)) {
@@ -186,14 +190,22 @@ fu_dell_dock_ec_get_module_type (FuDevice *device)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC (device);
 	switch (self->data->module_type) {
-	case MODULE_TYPE_SINGLE:
-		return "WD19";
-	case MODULE_TYPE_DUAL:
-		return "WD19DC";
-	case MODULE_TYPE_TBT:
-		return "WD19TB";
+	case MODULE_TYPE_45_TBT:
+		return "45 (TBT)";
+	case MODULE_TYPE_45:
+		return "45";
+	case MODULE_TYPE_130_TBT:
+		return "130 (TBT)";
+	case MODULE_TYPE_130_DP:
+		return "130 (DP)";
+	case MODULE_TYPE_130_UNIVERSAL:
+		return "130 (Universal)";
+	case MODULE_TYPE_240_TRIN:
+		return "240 (Trinity)";
+	case MODULE_TYPE_210_DUAL:
+		return "210 (Dual)";
 	default:
-		return NULL;
+		return "unknown";
 	}
 }
 
@@ -204,7 +216,8 @@ fu_dell_dock_ec_needs_tbt (FuDevice *device)
 	gboolean port0_tbt_mode = self->data->port0_dock_status & TBT_MODE_MASK;
 
 	/* check for TBT module type */
-	if (self->data->module_type != MODULE_TYPE_TBT)
+	if (self->data->module_type != MODULE_TYPE_130_TBT &&
+	    self->data->module_type != MODULE_TYPE_45_TBT)
 		return FALSE;
 	g_debug ("found thunderbolt dock, port mode: %d", port0_tbt_mode);
 
@@ -404,7 +417,8 @@ fu_dell_dock_ec_get_dock_info (FuDevice *device,
 			    device_entry[i].version.version_8[3]);
 			g_debug ("\tParsed version %s", self->mst_version);
 		} else if (map->device_type == FU_DELL_DOCK_DEVICETYPE_TBT &&
-			   self->data->module_type == MODULE_TYPE_TBT) {
+			   (self->data->module_type == MODULE_TYPE_130_TBT ||
+			    self->data->module_type == MODULE_TYPE_45_TBT)) {
 			/* guard against invalid Thunderbolt version read from EC */
 			if (!fu_dell_dock_test_valid_byte (device_entry[i].version.version_8, 2)) {
 				g_warning ("[EC bug] EC read invalid Thunderbolt version %08x",
@@ -437,7 +451,8 @@ fu_dell_dock_ec_get_dock_info (FuDevice *device,
 	}
 
 	/* Thunderbolt SKU takes a little longer */
-	if (self->data->module_type == MODULE_TYPE_TBT) {
+	if (self->data->module_type == MODULE_TYPE_130_TBT ||
+	    self->data->module_type == MODULE_TYPE_45_TBT) {
 		guint64 tmp = fu_device_get_install_duration (device);
 		fu_device_set_install_duration (device, tmp + 20);
 	}
@@ -534,9 +549,9 @@ fu_dell_dock_ec_get_dock_data (FuDevice *device,
 			fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 		} else {
 			fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
-			fu_device_set_update_error (device, "An update is pending "
+			fu_device_set_update_error (device, "A pending update will be completed "
 							    "next time the dock is "
-							    "unplugged");
+							    "unplugged from your computer");
 		}
 	} else {
 		g_warning ("This utility does not support this board, disabling updates for %s",

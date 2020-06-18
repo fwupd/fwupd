@@ -141,7 +141,7 @@ fu_tpm_eventlog_parser_parse_blob_v2 (const guint8 *buf, gsize bufsz,
 				if (alg_type == TPM2_ALG_SHA1)
 					checksum_sha1 = g_bytes_new_take (g_steal_pointer (&digest), alg_size);
 				else if (alg_type == TPM2_ALG_SHA256)
-					checksum_sha1 = g_bytes_new_take (g_steal_pointer (&digest), alg_size);
+					checksum_sha256 = g_bytes_new_take (g_steal_pointer (&digest), alg_size);
 			}
 
 			/* next block */
