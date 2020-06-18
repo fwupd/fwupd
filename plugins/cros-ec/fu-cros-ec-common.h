@@ -11,6 +11,7 @@
 #include "fu-plugin.h"
 
 #define UPDATE_PROTOCOL_VERSION 6
+#define FU_CROS_EC_STRLEN	32
 
 /*
  * This is the format of the update PDU header.
@@ -114,7 +115,7 @@ struct first_response_pdu {
 			guint32 offset;
 
 			/* Version string of the other region */
-			gchar version[32];
+			gchar version[FU_CROS_EC_STRLEN];
 
 			/* Minimum rollback version that RO will accept */
 			gint32 min_rollback;
@@ -131,9 +132,9 @@ enum first_response_pdu_header_type {
 };
 
 struct cros_ec_version {
-	gchar	 boardname[32];
-	gchar	 triplet[32];
-	gchar	 sha1[32];
+	gchar	 boardname[FU_CROS_EC_STRLEN];
+	gchar	 triplet[FU_CROS_EC_STRLEN];
+	gchar	 sha1[FU_CROS_EC_STRLEN];
 	gboolean dirty;
 };
 
