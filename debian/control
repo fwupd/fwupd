@@ -27,7 +27,6 @@ Build-Depends:
 	libefiboot-dev [amd64 arm64 armhf i386],
 	libefivar-dev [amd64 arm64 armhf i386],
 	libelf-dev,
-	libflashrom-dev,
 	libfreetype6-dev,
 	libgcab-dev,
 	libgirepository1.0-dev,
