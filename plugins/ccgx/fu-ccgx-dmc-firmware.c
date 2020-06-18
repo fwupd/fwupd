@@ -228,7 +228,7 @@ fu_ccgx_dmc_firmware_parse_image (FuFirmware *firmware,
 							 &seg_info_offset, error))
 			return FALSE;
 
-		/* add image record to image record arrary */
+		/* add image record to image record array */
 		g_ptr_array_add (self->image_records, g_steal_pointer (&img_rcd));
 
 		/* increment image offset */

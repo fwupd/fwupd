@@ -211,7 +211,7 @@ typedef struct __attribute__((packed)) {
 	/* component ID of the device */
 	guint8		component_id;
 	/* image mode of the device - single image/ dual symmetric/ dual
-	 * assymetric image > */
+	 * asymmetric image > */
 	guint8		image_mode;
 	/* current running image */
 	guint8		current_image;

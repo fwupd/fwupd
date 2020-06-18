@@ -874,7 +874,7 @@ dfu_device_refresh (DfuDevice *device, GError **error)
 	/* Device that cannot communicate via the USB after the
 	 * Manifestation phase indicated this limitation to the
 	 * host by clearing bmAttributes bit bitManifestationTolerant.
-	 * so we assume the operation was succesful */
+	 * so we assume the operation was successful */
 	if (priv->state == DFU_STATE_DFU_MANIFEST &&
 	    !(priv->attributes & DFU_DEVICE_ATTRIBUTE_MANIFEST_TOL))
 		return TRUE;
