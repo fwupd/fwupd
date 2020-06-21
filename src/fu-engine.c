@@ -863,14 +863,23 @@ fu_engine_verify (FuEngine *self, const gchar *device_id, GError **error)
 		for (guint i = 0; i < guids->len; i++) {
 			const gchar *guid = g_ptr_array_index (guids, i);
 			g_autofree gchar *xpath2 = NULL;
+			g_autoptr(GError) error_local = NULL;
 			g_autoptr(GPtrArray) releases = NULL;
 			xpath2 = g_strdup_printf ("components/component/"
 						  "provides/firmware[@type='flashed'][text()='%s']/"
 						  "../../releases/release",
 						  guid);
-			releases = xb_silo_query (self->silo, xpath2, 0, error);
-			if (releases == NULL)
+			releases = xb_silo_query (self->silo, xpath2, 0, &error_local);
+			if (releases == NULL) {
+				if (g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) ||
+				    g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
+					g_debug ("could not find %s: %s",
+						 guid, error_local->message);
+					continue;
+				}
+				g_propagate_error (error, g_steal_pointer (&error_local));
 				return FALSE;
+			}
 			for (guint j = 0; j < releases->len; j++) {
 				XbNode *rel = g_ptr_array_index (releases, j);
 				const gchar *rel_ver = xb_node_get_attr (rel, "version");
