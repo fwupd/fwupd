@@ -1,5 +1,6 @@
 subdir('acpi-dmar')
 subdir('acpi-facp')
+subdir('bios')
 subdir('ccgx')
 subdir('cros-ec')
 subdir('cpu')

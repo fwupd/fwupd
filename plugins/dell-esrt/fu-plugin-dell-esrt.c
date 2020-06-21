@@ -87,7 +87,7 @@ void
 fu_plugin_init (FuPlugin *plugin)
 {
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
-	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_BETTER_THAN, "uefi");
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_BETTER_THAN, "bios");
 }
 
 gboolean
@@ -172,6 +172,8 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_LOCKED);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_set_update_error (dev, "Firmware updates disabled; run 'fwupdmgr unlock' to enable");
+	if (!fu_device_setup (dev, error))
+		return FALSE;
 	fu_plugin_device_add (plugin, dev);
 	return TRUE;
 }

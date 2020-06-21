@@ -725,43 +725,6 @@ fu_plugin_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static gboolean
-fu_plugin_uefi_create_dummy (FuPlugin *plugin, const gchar *reason, GError **error)
-{
-	const gchar *key;
-	g_autoptr(FuDevice) dev = fu_device_new ();
-
-	fu_device_set_version_format (dev, FWUPD_VERSION_FORMAT_PLAIN);
-	key = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER);
-	if (key != NULL)
-		fu_device_set_vendor (dev, key);
-	key = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VENDOR);
-	if (key != NULL) {
-		g_autofree gchar *vendor_id = g_strdup_printf ("DMI:%s", key);
-		fu_device_set_vendor_id (FU_DEVICE (dev), vendor_id);
-	}
-	key = fu_plugin_uefi_get_name_for_type (plugin, FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE);
-	fu_device_set_name (dev, key);
-	key = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VERSION);
-	if (key != NULL)
-		fu_device_set_version (dev, key);
-	fu_device_set_update_error (dev, reason);
-
-	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
-	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
-	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
-	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_MD_SET_VERFMT);
-
-	fu_device_add_icon (dev, "computer");
-	fu_device_set_id (dev, "UEFI-dummy");
-	fu_device_add_instance_id (dev, "main-system-firmware");
-	if (!fu_device_setup (dev, error))
-		return FALSE;
-	fu_plugin_device_add (plugin, dev);
-
-	return TRUE;
-}
-
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
@@ -776,21 +739,15 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	g_autoptr(GPtrArray) entries = NULL;
 
 	/* are the EFI dirs set up so we can update each device */
-	if (!fu_efivar_supported (&error_local)) {
-		const gchar *reason = "Firmware can not be updated in legacy mode, switch to UEFI mode";
-		g_warning ("%s", error_local->message);
-		return fu_plugin_uefi_create_dummy (plugin, reason, error);
-	}
+	if (!fu_efivar_supported (error))
+		return FALSE;
 
 	/* get the directory of ESRT entries */
 	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
 	esrt_path = g_build_filename (sysfsfwdir, "efi", "esrt", NULL);
-	entries = fu_uefi_get_esrt_entry_paths (esrt_path, &error_local);
-	if (entries == NULL) {
-		const gchar *reason = "UEFI Capsule updates not available or enabled";
-		g_warning ("%s", error_local->message);
-		return fu_plugin_uefi_create_dummy (plugin, reason, error);
-	}
+	entries = fu_uefi_get_esrt_entry_paths (esrt_path, error);
+	if (entries == NULL)
+		return FALSE;
 
 	/* make sure that efivarfs is rw */
 	if (!fu_plugin_uefi_ensure_efivarfs_rw (&error_efivarfs))
