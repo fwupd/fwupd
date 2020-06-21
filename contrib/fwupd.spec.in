@@ -333,6 +333,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_libdir}/fwupd-plugins-3/libfu_plugin_altos.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_amt.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_ata.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_bios.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_ccgx.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_colorhug.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_coreboot.so
