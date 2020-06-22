@@ -1650,6 +1650,8 @@ void
 fu_plugin_add_udev_subsystem (FuPlugin *self, const gchar *subsystem)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
+	if (priv->udev_subsystems == NULL)
+		priv->udev_subsystems = g_ptr_array_new_with_free_func (g_free);
 	for (guint i = 0; i < priv->udev_subsystems->len; i++) {
 		const gchar *subsystem_tmp = g_ptr_array_index (priv->udev_subsystems, i);
 		if (g_strcmp0 (subsystem_tmp, subsystem) == 0)
@@ -2758,7 +2760,6 @@ fu_plugin_init (FuPlugin *self)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	priv->enabled = TRUE;
-	priv->udev_subsystems = g_ptr_array_new_with_free_func (g_free);
 	g_rw_lock_init (&priv->devices_mutex);
 	for (guint i = 0; i < FU_PLUGIN_RULE_LAST; i++)
 		priv->rules[i] = g_ptr_array_new_with_free_func (g_free);
