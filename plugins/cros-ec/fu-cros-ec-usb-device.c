@@ -8,6 +8,7 @@
 
 #include <string.h>
 
+#include "fu-chunk.h"
 #include "fu-cros-ec-usb-device.h"
 #include "fu-cros-ec-common.h"
 #include "fu-cros-ec-firmware.h"
@@ -16,9 +17,12 @@
 #define USB_PROTOCOL_GOOGLE_UPDATE	0xff
 
 #define SETUP_RETRY_CNT			5
+#define MAX_BLOCK_XFER_RETRIES		10
 #define FLUSH_TIMEOUT_MS		10
 #define BULK_SEND_TIMEOUT_MS		2000
 #define BULK_RECV_TIMEOUT_MS		5000
+
+#define UPDATE_DONE			0xB007AB1E
 
 struct _FuCrosEcUsbDevice {
 	FuUsbDevice			parent_instance;
@@ -39,6 +43,13 @@ typedef union _START_RESP {
 	struct first_response_pdu rpdu;
 	guint32 legacy_resp;
 } START_RESP;
+
+typedef struct {
+	struct update_frame_header ufh;
+	GBytes *image_bytes;
+	gsize offset;
+	gsize payload_size;
+} FuCrosEcUsbBlockInfo;
 
 static gboolean
 fu_cros_ec_usb_device_find_interface (FuUsbDevice *device,
@@ -303,6 +314,229 @@ fu_cros_ec_usb_device_setup (FuDevice *device, GError **error)
 }
 
 static gboolean
+fu_cros_ec_usb_device_transfer_block (FuDevice *device, gpointer user_data,
+				      GError **error)
+{
+	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE (device);
+	FuCrosEcUsbBlockInfo *block_info = (FuCrosEcUsbBlockInfo *) user_data;
+	gsize image_size = 0;
+	gsize transfer_size = 0;
+	guint32 reply = 0;
+	g_autoptr(GBytes) block_bytes = NULL;
+	g_autoptr(GPtrArray) chunks = NULL;
+
+	g_return_val_if_fail (block_info != NULL, FALSE);
+
+	image_size = g_bytes_get_size (block_info->image_bytes);
+	if (block_info->offset + block_info->payload_size > image_size) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "offset %" G_GSIZE_FORMAT "plus payload_size %"
+			     G_GSIZE_FORMAT " exceeds image size %"
+			     G_GSIZE_FORMAT,
+			     block_info->offset, block_info->payload_size,
+			     image_size);
+		return FALSE;
+	}
+
+	block_bytes = g_bytes_new_from_bytes (block_info->image_bytes,
+					      block_info->offset,
+					      block_info->payload_size);
+	chunks = fu_chunk_array_new_from_bytes (block_bytes,
+						0x00,
+						0x00,
+						self->chunk_len);
+
+	/* first send the header */
+	if (!fu_cros_ec_usb_device_do_xfer (self, (guint8 *)&block_info->ufh,
+					    sizeof(struct update_frame_header),
+					    NULL,
+					    0, FALSE,
+					    NULL, error))
+		return FALSE;
+
+	/* send the block, chunk by chunk */
+	for (guint i = 0; i < chunks->len; i++) {
+		FuChunk *chk = g_ptr_array_index (chunks, i);
+
+		if (!fu_cros_ec_usb_device_do_xfer (self,
+						    (guint8 *)chk->data,
+						    chk->data_sz,
+						    NULL,
+						    0, FALSE,
+						    NULL, error)) {
+			return FALSE;
+		}
+	}
+
+	/* get the reply */
+	if (!fu_cros_ec_usb_device_do_xfer (self, NULL, 0,
+					    (guint8 *)&reply, sizeof (reply),
+					    TRUE, &transfer_size, error))
+		return FALSE;
+	if (transfer_size == 0) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_FAILED,
+				     "zero bytes received for block reply");
+		return FALSE;
+	}
+	if (reply != 0) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_FAILED,
+			     "error: status 0x%#x", reply);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_cros_ec_usb_device_transfer_section (FuDevice *device,
+					FuFirmware *firmware,
+					FuCrosEcFirmwareSection *section,
+					GError **error)
+{
+	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE (device);
+	const guint8 * data_ptr = NULL;
+	guint32 section_addr = 0;
+	gsize data_len = 0;
+	gsize offset = 0;
+	g_autoptr(GBytes) img_bytes = NULL;
+
+	g_return_val_if_fail (section != NULL, FALSE);
+
+	section_addr = section->offset;
+	img_bytes = fu_firmware_get_image_by_idx_bytes (firmware,
+							section->image_idx,
+							error);
+	if (img_bytes == NULL) {
+		g_prefix_error (error, "failed to find section image: ");
+		return FALSE;
+	}
+
+	data_ptr = (const guint8 *)g_bytes_get_data (img_bytes, &data_len);
+	if (data_ptr == NULL || data_len != section->size) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "image and section sizes do not match: image = %"
+			     G_GSIZE_FORMAT " bytes vs section size = %"
+			     G_GSIZE_FORMAT " bytes",
+			     data_len, section->size);
+		return FALSE;
+	}
+
+	/* smart update: trim trailing bytes */
+	while (data_len != 0 && (data_ptr[data_len - 1] == 0xff))
+		data_len--;
+	g_debug ("trimmed %" G_GSIZE_FORMAT " trailing bytes",
+		 section->size - data_len);
+
+	g_debug ("sending 0x%zx bytes to %#x", data_len, section_addr);
+	while (data_len > 0) {
+		gsize payload_size;
+		guint32 block_base;
+		FuCrosEcUsbBlockInfo block_info;
+
+		/* prepare the header to prepend to the block */
+		block_info.image_bytes = img_bytes;
+		payload_size = MIN (data_len,
+				    self->targ.common.maximum_pdu_size);
+		block_base = GUINT32_TO_BE (section_addr);
+		block_info.ufh.block_size = GUINT32_TO_BE (payload_size +
+							   sizeof (struct update_frame_header));
+		block_info.ufh.cmd.block_base = block_base;
+		block_info.ufh.cmd.block_digest = 0;
+		block_info.offset = offset;
+		block_info.payload_size = payload_size;
+
+		if (!fu_device_retry (device,
+				      fu_cros_ec_usb_device_transfer_block,
+				      MAX_BLOCK_XFER_RETRIES, &block_info,
+				      error)) {
+			g_prefix_error (error,
+					"failed to transfer block, %"
+					G_GSIZE_FORMAT " to go: ", data_len);
+			return FALSE;
+		}
+		data_len -= payload_size;
+		offset += payload_size;
+		section_addr += payload_size;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static void
+fu_cros_ec_usb_device_send_done (FuDevice *device)
+{
+	guint32 out = GUINT32_TO_BE (UPDATE_DONE);
+	g_autoptr(GError) error_local = NULL;
+
+	/* send stop request, ignoring reply */
+	if (!fu_cros_ec_usb_device_do_xfer (FU_CROS_EC_USB_DEVICE (device),
+					    (guint8 *)&out, sizeof (out),
+					    (guint8 *)&out, 1,
+					    FALSE, NULL, &error_local)) {
+		g_debug ("error on transfer of done: %s",
+			 error_local->message);
+	}
+}
+
+static gboolean
+fu_cros_ec_usb_device_write_firmware (FuDevice *device,
+				      FuFirmware *firmware,
+				      FwupdInstallFlags flags,
+				      GError **error)
+{
+	GPtrArray *sections;
+	FuCrosEcFirmware *cros_ec_firmware = FU_CROS_EC_FIRMWARE (firmware);
+	gint num_txed_sections = 0;
+
+	sections = fu_cros_ec_firmware_get_sections (cros_ec_firmware);
+	if (sections == NULL) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "invalid sections");
+		return FALSE;
+	}
+
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
+	for (guint i = 0; i < sections->len; i++) {
+		FuCrosEcFirmwareSection *section = g_ptr_array_index (sections, i);
+
+		if (section->ustatus == FU_CROS_EC_FW_NEEDED) {
+			if (!fu_cros_ec_usb_device_transfer_section (device,
+								     firmware,
+								     section,
+								     error)) {
+				return FALSE;
+			}
+			num_txed_sections++;
+		}
+	}
+	/* send done */
+	fu_cros_ec_usb_device_send_done (device);
+
+	if (num_txed_sections == 0) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "no sections transferred");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_cros_ec_usb_device_close (FuUsbDevice *device, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
@@ -386,6 +620,7 @@ fu_cros_ec_usb_device_class_init (FuCrosEcUsbDeviceClass *klass)
 	klass_device->prepare_firmware = fu_cros_ec_usb_device_prepare_firmware;
 	klass_device->setup = fu_cros_ec_usb_device_setup;
 	klass_device->to_string = fu_cros_ec_usb_device_to_string;
+	klass_device->write_firmware = fu_cros_ec_usb_device_write_firmware;
 	klass_usb_device->open = fu_cros_ec_usb_device_open;
 	klass_usb_device->probe = fu_cros_ec_usb_device_probe;
 	klass_usb_device->close = fu_cros_ec_usb_device_close;
