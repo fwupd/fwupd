@@ -10,6 +10,7 @@
 
 #include "fu-cros-ec-usb-device.h"
 #include "fu-cros-ec-common.h"
+#include "fu-cros-ec-firmware.h"
 
 #define USB_SUBCLASS_GOOGLE_UPDATE	0x53
 #define USB_PROTOCOL_GOOGLE_UPDATE	0xff
@@ -316,6 +317,20 @@ fu_cros_ec_usb_device_close (FuUsbDevice *device, GError **error)
 	return TRUE;
 }
 
+static FuFirmware *
+fu_cros_ec_usb_device_prepare_firmware (FuDevice *device,
+					GBytes *fw,
+					FwupdInstallFlags flags,
+					GError **error)
+{
+	g_autoptr(FuFirmware) firmware = fu_cros_ec_firmware_new ();
+
+	fu_device_set_status (device, FWUPD_STATUS_DECOMPRESSING);
+	if (!fu_firmware_parse (firmware, fw, flags, error))
+		return NULL;
+	return g_steal_pointer (&firmware);
+}
+
 static void
 fu_cros_ec_usb_device_init (FuCrosEcUsbDevice *device)
 {
@@ -353,6 +368,7 @@ fu_cros_ec_usb_device_class_init (FuCrosEcUsbDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
+	klass_device->prepare_firmware = fu_cros_ec_usb_device_prepare_firmware;
 	klass_device->setup = fu_cros_ec_usb_device_setup;
 	klass_device->to_string = fu_cros_ec_usb_device_to_string;
 	klass_usb_device->open = fu_cros_ec_usb_device_open;
