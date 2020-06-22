@@ -56,9 +56,6 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		g_propagate_error (error, g_steal_pointer (&error_local));
 		return FALSE;
 	}
-
-	if (!g_file_get_contents (fn, (gchar **) &buf, &bufsz, error))
-		return FALSE;
 	if (bufsz == 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
