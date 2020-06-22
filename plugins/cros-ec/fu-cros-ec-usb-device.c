@@ -581,6 +581,7 @@ fu_cros_ec_usb_device_prepare_firmware (FuDevice *device,
 static void
 fu_cros_ec_usb_device_init (FuCrosEcUsbDevice *device)
 {
+	fu_device_set_protocol (FU_DEVICE (device), "com.google.usb.crosec");
 	fu_device_set_version_format (FU_DEVICE (device), FWUPD_VERSION_FORMAT_TRIPLET);
 }
 
