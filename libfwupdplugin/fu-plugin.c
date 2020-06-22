@@ -2510,6 +2510,8 @@ void
 fu_plugin_add_rule (FuPlugin *self, FuPluginRule rule, const gchar *name)
 {
 	FuPluginPrivate *priv = fu_plugin_get_instance_private (self);
+	if (priv->rules[rule] == NULL)
+		priv->rules[rule] = g_ptr_array_new_with_free_func (g_free);
 	g_ptr_array_add (priv->rules[rule], g_strdup (name));
 	g_signal_emit (self, signals[SIGNAL_RULES_CHANGED], 0);
 }
@@ -2521,7 +2523,7 @@ fu_plugin_add_rule (FuPlugin *self, FuPluginRule rule, const gchar *name)
  *
  * Gets the plugin IDs that should be run after this plugin.
  *
- * Returns: (element-type utf8) (transfer none): the list of plugin names, e.g. ['appstream']
+ * Returns: (element-type utf8) (transfer none) (nullable): the list of plugin names, e.g. ['appstream']
  *
  * Since: 1.0.0
  **/
@@ -2549,6 +2551,8 @@ gboolean
 fu_plugin_has_rule (FuPlugin *self, FuPluginRule rule, const gchar *name)
 {
 	FuPluginPrivate *priv = fu_plugin_get_instance_private (self);
+	if (priv->rules[rule] == NULL)
+		return FALSE;
 	for (guint i = 0; i < priv->rules[rule]->len; i++) {
 		const gchar *tmp = g_ptr_array_index (priv->rules[rule], i);
 		if (g_strcmp0 (tmp, name) == 0)
@@ -2761,8 +2765,6 @@ fu_plugin_init (FuPlugin *self)
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	priv->enabled = TRUE;
 	g_rw_lock_init (&priv->devices_mutex);
-	for (guint i = 0; i < FU_PLUGIN_RULE_LAST; i++)
-		priv->rules[i] = g_ptr_array_new_with_free_func (g_free);
 }
 
 static void
@@ -2781,9 +2783,10 @@ fu_plugin_finalize (GObject *object)
 		}
 	}
 
-	for (guint i = 0; i < FU_PLUGIN_RULE_LAST; i++)
-		g_ptr_array_unref (priv->rules[i]);
-
+	for (guint i = 0; i < FU_PLUGIN_RULE_LAST; i++) {
+		if (priv->rules[i] != NULL)
+			g_ptr_array_unref (priv->rules[i]);
+	}
 	if (priv->usb_ctx != NULL)
 		g_object_unref (priv->usb_ctx);
 	if (priv->hwids != NULL)

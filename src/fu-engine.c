@@ -1714,23 +1714,25 @@ fu_engine_create_release_metadata (FuEngine *self,
 
 	/* allow other plugins to contribute metadata too */
 	metadata_sources = fu_plugin_get_rules (plugin, FU_PLUGIN_RULE_METADATA_SOURCE);
-	for (guint i = 0; i < metadata_sources->len; i++) {
-		FuPlugin *plugin_tmp;
-		const gchar *plugin_name = g_ptr_array_index (metadata_sources, i);
-		g_autoptr(GError) error_local = NULL;
+	if (metadata_sources != NULL) {
+		for (guint i = 0; i < metadata_sources->len; i++) {
+			FuPlugin *plugin_tmp;
+			const gchar *plugin_name = g_ptr_array_index (metadata_sources, i);
+			g_autoptr(GError) error_local = NULL;
 
-		plugin_tmp = fu_plugin_list_find_by_name (self->plugin_list,
-							  plugin_name,
-							  &error_local);
-		if (plugin_tmp == NULL) {
-			g_warning ("could not add metadata for %s: %s",
-				   plugin_name,
-				   error_local->message);
-			continue;
-		}
-		if (fu_plugin_get_report_metadata (plugin_tmp) != NULL) {
-			fwupd_release_add_metadata (release,
-						    fu_plugin_get_report_metadata (plugin_tmp));
+			plugin_tmp = fu_plugin_list_find_by_name (self->plugin_list,
+								  plugin_name,
+								  &error_local);
+			if (plugin_tmp == NULL) {
+				g_warning ("could not add metadata for %s: %s",
+					   plugin_name,
+					   error_local->message);
+				continue;
+			}
+			if (fu_plugin_get_report_metadata (plugin_tmp) != NULL) {
+				fwupd_release_add_metadata (release,
+							    fu_plugin_get_report_metadata (plugin_tmp));
+			}
 		}
 	}
 	return g_steal_pointer (&release);
@@ -4940,6 +4942,8 @@ fu_engine_plugin_rules_changed_cb (FuPlugin *plugin, gpointer user_data)
 {
 	FuEngine *self = FU_ENGINE (user_data);
 	GPtrArray *rules = fu_plugin_get_rules (plugin, FU_PLUGIN_RULE_INHIBITS_IDLE);
+	if (rules == NULL)
+		return;
 	for (guint j = 0; j < rules->len; j++) {
 		const gchar *tmp = g_ptr_array_index (rules, j);
 		fu_idle_inhibit (self->idle, tmp);

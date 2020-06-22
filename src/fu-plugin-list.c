@@ -145,6 +145,8 @@ fu_plugin_list_depsolve (FuPluginList *self, GError **error)
 		for (guint i = 0; i < self->plugins->len; i++) {
 			FuPlugin *plugin = g_ptr_array_index (self->plugins, i);
 			deps = fu_plugin_get_rules (plugin, FU_PLUGIN_RULE_RUN_AFTER);
+			if (deps == NULL)
+				continue;
 			for (guint j = 0; j < deps->len && !changes; j++) {
 				const gchar *plugin_name = g_ptr_array_index (deps, j);
 				dep = fu_plugin_list_find_by_name (self, plugin_name, NULL);
@@ -173,6 +175,8 @@ fu_plugin_list_depsolve (FuPluginList *self, GError **error)
 		for (guint i = 0; i < self->plugins->len; i++) {
 			FuPlugin *plugin = g_ptr_array_index (self->plugins, i);
 			deps = fu_plugin_get_rules (plugin, FU_PLUGIN_RULE_RUN_BEFORE);
+			if (deps == NULL)
+				continue;
 			for (guint j = 0; j < deps->len && !changes; j++) {
 				const gchar *plugin_name = g_ptr_array_index (deps, j);
 				dep = fu_plugin_list_find_by_name (self, plugin_name, NULL);
@@ -203,6 +207,8 @@ fu_plugin_list_depsolve (FuPluginList *self, GError **error)
 		for (guint i = 0; i < self->plugins->len; i++) {
 			FuPlugin *plugin = g_ptr_array_index (self->plugins, i);
 			deps = fu_plugin_get_rules (plugin, FU_PLUGIN_RULE_BETTER_THAN);
+			if (deps == NULL)
+				continue;
 			for (guint j = 0; j < deps->len && !changes; j++) {
 				const gchar *plugin_name = g_ptr_array_index (deps, j);
 				dep = fu_plugin_list_find_by_name (self, plugin_name, NULL);
@@ -245,6 +251,8 @@ fu_plugin_list_depsolve (FuPluginList *self, GError **error)
 		if (!fu_plugin_get_enabled (plugin))
 			continue;
 		deps = fu_plugin_get_rules (plugin, FU_PLUGIN_RULE_CONFLICTS);
+		if (deps == NULL)
+			continue;
 		for (guint j = 0; j < deps->len && !changes; j++) {
 			const gchar *plugin_name = g_ptr_array_index (deps, j);
 			dep = fu_plugin_list_find_by_name (self, plugin_name, NULL);
