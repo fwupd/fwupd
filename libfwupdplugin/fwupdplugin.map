@@ -587,5 +587,6 @@ LIBFWUPDPLUGIN_1.4.5 {
     fu_udev_device_get_sysfs_attr;
     fu_udev_device_pread_full;
     fu_udev_device_pwrite_full;
+    fu_udev_device_write_sysfs;
   local: *;
 } LIBFWUPDPLUGIN_1.4.1;

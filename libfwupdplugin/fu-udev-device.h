@@ -99,3 +99,8 @@ const gchar	*fu_udev_device_get_sysfs_attr		 (FuUdevDevice	*self,
 							  const gchar	*attr,
 							  GError	**error);
 gchar		*fu_udev_device_get_parent_name		(FuUdevDevice	*self);
+
+gboolean	 fu_udev_device_write_sysfs		(FuUdevDevice	*self,
+							 const gchar	*attribute,
+							 const gchar	*val,
+							 GError		**error);
