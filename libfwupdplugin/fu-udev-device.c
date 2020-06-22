@@ -156,6 +156,34 @@ fu_udev_device_to_string (FuDevice *device, guint idt, GString *str)
 #endif
 }
 
+static void
+fu_udev_device_set_subsystem (FuUdevDevice *self, const gchar *subsystem)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+
+	/* not changed */
+	if (g_strcmp0 (priv->subsystem, subsystem) == 0)
+		return;
+
+	g_free (priv->subsystem);
+	priv->subsystem = g_strdup (subsystem);
+	g_object_notify (G_OBJECT (self), "subsystem");
+}
+
+static void
+fu_udev_device_set_device_file (FuUdevDevice *self, const gchar *device_file)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+
+	/* not changed */
+	if (g_strcmp0 (priv->device_file, device_file) == 0)
+		return;
+
+	g_free (priv->device_file);
+	priv->device_file = g_strdup (device_file);
+	g_object_notify (G_OBJECT (self), "device-file");
+}
+
 static gboolean
 fu_udev_device_probe (FuDevice *device, GError **error)
 {
@@ -361,8 +389,8 @@ fu_udev_device_set_dev (FuUdevDevice *self, GUdevDevice *udev_device)
 	if (priv->udev_device == NULL)
 		return;
 #ifdef HAVE_GUDEV
-	priv->subsystem = g_strdup (g_udev_device_get_subsystem (priv->udev_device));
-	priv->device_file = g_strdup (g_udev_device_get_device_file (priv->udev_device));
+	fu_udev_device_set_subsystem (self, g_udev_device_get_subsystem (priv->udev_device));
+	fu_udev_device_set_device_file (self, g_udev_device_get_device_file (priv->udev_device));
 
 	/* try to get one line summary */
 	summary = g_udev_device_get_sysfs_attr (priv->udev_device, "description");
@@ -419,8 +447,8 @@ fu_udev_device_incorporate (FuDevice *self, FuDevice *donor)
 
 	fu_udev_device_set_dev (uself, fu_udev_device_get_dev (udonor));
 	if (priv->device_file == NULL) {
-		priv->subsystem = g_strdup (fu_udev_device_get_subsystem (udonor));
-		priv->device_file = g_strdup (fu_udev_device_get_device_file (udonor));
+		fu_udev_device_set_subsystem (uself, fu_udev_device_get_subsystem (udonor));
+		fu_udev_device_set_device_file (uself, fu_udev_device_get_device_file (udonor));
 	}
 }
 
@@ -1013,16 +1041,15 @@ fu_udev_device_set_property (GObject *object, guint prop_id,
 			     const GValue *value, GParamSpec *pspec)
 {
 	FuUdevDevice *self = FU_UDEV_DEVICE (object);
-	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 	switch (prop_id) {
 	case PROP_UDEV_DEVICE:
 		fu_udev_device_set_dev (self, g_value_get_object (value));
 		break;
 	case PROP_SUBSYSTEM:
-		priv->subsystem = g_value_dup_string (value);
+		fu_udev_device_set_subsystem (self, g_value_get_string (value));
 		break;
 	case PROP_DEVICE_FILE:
-		priv->device_file = g_value_dup_string (value);
+		fu_udev_device_set_device_file (self, g_value_get_string (value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
