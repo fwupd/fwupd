@@ -400,6 +400,7 @@ fu_common_cab_build_silo (GBytes *blob, guint64 size_max, GError **error)
 	g_autofree gchar *tmp_path = NULL;
 	g_autoptr(GFile) tmp_file = NULL;
 #endif
+	g_autoptr(XbQuery) query = NULL;
 	g_autoptr(XbSilo) silo = NULL;
 	g_autoptr(XbBuilder) builder = xb_builder_new ();
 	g_autoptr(XbBuilderFixup) fixup = NULL;
@@ -512,11 +513,23 @@ fu_common_cab_build_silo (GBytes *blob, guint64 size_max, GError **error)
 		return NULL;
 	}
 
+	/* prepare query */
+	query = xb_query_new_full (silo,
+				   "releases/release",
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+				   XB_QUERY_FLAG_FORCE_NODE_CACHE,
+#else
+				   XB_QUERY_FLAG_NONE,
+#endif
+				   error);
+	if (query == NULL)
+		return FALSE;
+
 	/* process each listed release */
 	for (guint i = 0; i < components->len; i++) {
 		XbNode *component = g_ptr_array_index (components, i);
 		g_autoptr(GPtrArray) releases = NULL;
-		releases = xb_node_query (component, "releases/release", 0, &error_local);
+		releases = xb_node_query_full (component, query, &error_local);
 		if (releases == NULL) {
 			g_set_error (error,
 				     FWUPD_ERROR,
