@@ -52,7 +52,7 @@ typedef struct {
 	GType			 device_gtype;
 	GHashTable		*devices;	/* platform_id:GObject */
 	GRWLock			 devices_mutex;
-	GHashTable		*report_metadata;	/* key:value */
+	GHashTable		*report_metadata;	/* (nullable): key:value */
 	FuPluginData		*data;
 } FuPluginPrivate;
 
@@ -2563,6 +2563,12 @@ void
 fu_plugin_add_report_metadata (FuPlugin *self, const gchar *key, const gchar *value)
 {
 	FuPluginPrivate *priv = fu_plugin_get_instance_private (self);
+	if (priv->report_metadata == NULL) {
+		priv->report_metadata = g_hash_table_new_full (g_str_hash,
+							       g_str_equal,
+							       g_free,
+							       g_free);
+	}
 	g_hash_table_insert (priv->report_metadata, g_strdup (key), g_strdup (value));
 }
 
@@ -2572,7 +2578,7 @@ fu_plugin_add_report_metadata (FuPlugin *self, const gchar *key, const gchar *va
  *
  * Returns the list of additional metadata to be added when filing a report.
  *
- * Returns: (transfer none): the map of report metadata
+ * Returns: (transfer none) (nullable): the map of report metadata
  *
  * Since: 1.0.4
  **/
@@ -2746,7 +2752,6 @@ fu_plugin_init (FuPlugin *self)
 	priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
 					       g_free, (GDestroyNotify) g_object_unref);
 	g_rw_lock_init (&priv->devices_mutex);
-	priv->report_metadata = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	for (guint i = 0; i < FU_PLUGIN_RULE_LAST; i++)
 		priv->rules[i] = g_ptr_array_new_with_free_func (g_free);
 }
@@ -2784,8 +2789,9 @@ fu_plugin_finalize (GObject *object)
 		g_hash_table_unref (priv->runtime_versions);
 	if (priv->compile_versions != NULL)
 		g_hash_table_unref (priv->compile_versions);
+	if (priv->report_metadata != NULL)
+		g_hash_table_unref (priv->report_metadata);
 	g_hash_table_unref (priv->devices);
-	g_hash_table_unref (priv->report_metadata);
 	g_rw_lock_clear (&priv->devices_mutex);
 	g_free (priv->build_hash);
 	g_free (priv->name);

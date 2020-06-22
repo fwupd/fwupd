@@ -1706,7 +1706,8 @@ fu_engine_create_release_metadata (FuEngine *self,
 	if (metadata_hash == NULL)
 		return NULL;
 	fwupd_release_add_metadata (release, metadata_hash);
-	fwupd_release_add_metadata (release, fu_plugin_get_report_metadata (plugin));
+	if (fu_plugin_get_report_metadata (plugin) != NULL)
+		fwupd_release_add_metadata (release, fu_plugin_get_report_metadata (plugin));
 	metadata_device = fu_device_report_metadata_pre (device);
 	if (metadata_device != NULL)
 		fwupd_release_add_metadata (release, metadata_device);
@@ -1727,8 +1728,10 @@ fu_engine_create_release_metadata (FuEngine *self,
 				   error_local->message);
 			continue;
 		}
-		fwupd_release_add_metadata (release,
-					    fu_plugin_get_report_metadata (plugin_tmp));
+		if (fu_plugin_get_report_metadata (plugin_tmp) != NULL) {
+			fwupd_release_add_metadata (release,
+						    fu_plugin_get_report_metadata (plugin_tmp));
+		}
 	}
 	return g_steal_pointer (&release);
 }
