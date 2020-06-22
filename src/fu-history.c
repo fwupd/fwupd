@@ -1082,9 +1082,10 @@ fu_history_finalize (GObject *object)
 {
 	FuHistory *self = FU_HISTORY (object);
 
+	g_rw_lock_clear (&self->db_mutex);
+
 	if (self->db != NULL)
 		sqlite3_close (self->db);
-	g_rw_lock_clear (&self->db_mutex);
 
 	G_OBJECT_CLASS (fu_history_parent_class)->finalize (object);
 }
