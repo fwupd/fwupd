@@ -100,7 +100,7 @@ struct _FuEngine
 	FuQuirks		*quirks;
 	GHashTable		*runtime_versions;
 	GHashTable		*compile_versions;
-	GHashTable		*approved_firmware;
+	GHashTable		*approved_firmware;	/* (nullable) */
 	GHashTable		*firmware_gtypes;
 	gchar			*host_machine_id;
 	JcatContext		*jcat_context;
@@ -3977,6 +3977,8 @@ static gboolean
 fu_engine_check_release_is_approved (FuEngine *self, FwupdRelease *rel)
 {
 	GPtrArray *csums = fwupd_release_get_checksums (rel);
+	if (self->approved_firmware == NULL)
+		return FALSE;
 	for (guint i = 0; i < csums->len; i++) {
 		const gchar *csum = g_ptr_array_index (csums, i);
 		g_debug ("checking %s against approved list", csum);
@@ -4312,10 +4314,12 @@ GPtrArray *
 fu_engine_get_approved_firmware (FuEngine *self)
 {
 	GPtrArray *checksums = g_ptr_array_new_with_free_func (g_free);
-	g_autoptr(GList) keys = g_hash_table_get_keys (self->approved_firmware);
-	for (GList *l = keys; l != NULL; l = l->next) {
-		const gchar *csum = l->data;
-		g_ptr_array_add (checksums, g_strdup (csum));
+	if (self->approved_firmware != NULL) {
+		g_autoptr(GList) keys = g_hash_table_get_keys (self->approved_firmware);
+		for (GList *l = keys; l != NULL; l = l->next) {
+			const gchar *csum = l->data;
+			g_ptr_array_add (checksums, g_strdup (csum));
+		}
 	}
 	return checksums;
 }
@@ -4323,6 +4327,12 @@ fu_engine_get_approved_firmware (FuEngine *self)
 void
 fu_engine_add_approved_firmware (FuEngine *self, const gchar *checksum)
 {
+	if (self->approved_firmware == NULL) {
+		self->approved_firmware = g_hash_table_new_full (g_str_hash,
+								 g_str_equal,
+								 g_free,
+								 NULL);
+	}
 	g_hash_table_add (self->approved_firmware, g_strdup (checksum));
 }
 
@@ -6137,7 +6147,6 @@ fu_engine_init (FuEngine *self)
 #endif
 	self->runtime_versions = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	self->compile_versions = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
-	self->approved_firmware = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
 	self->firmware_gtypes = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
 
 	g_signal_connect (self->config, "changed",
@@ -6205,6 +6214,8 @@ fu_engine_finalize (GObject *obj)
 #endif
 	if (self->coldplug_id != 0)
 		g_source_remove (self->coldplug_id);
+	if (self->approved_firmware != NULL)
+		g_hash_table_unref (self->approved_firmware);
 
 	g_free (self->host_machine_id);
 	g_free (self->host_security_id);
@@ -6224,7 +6235,6 @@ fu_engine_finalize (GObject *obj)
 #endif
 	g_hash_table_unref (self->runtime_versions);
 	g_hash_table_unref (self->compile_versions);
-	g_hash_table_unref (self->approved_firmware);
 	g_hash_table_unref (self->firmware_gtypes);
 	g_object_unref (self->plugin_list);
 
