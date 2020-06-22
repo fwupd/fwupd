@@ -1168,6 +1168,79 @@ fu_udev_device_pread (FuUdevDevice *self, goffset port, guint8 *data, GError **e
 	return fu_udev_device_pread_full (self, port, data, 0x1, error);
 }
 
+
+/**
+ * fu_udev_device_write_sysfs:
+ * @self: A #FuUdevDevice
+ * @attribute: sysfs attribute name
+ * @val: data to write into the attribute
+ * @error: A #GError, or %NULL
+ *
+ * Writes data into a sysfs attribute
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fu_udev_device_write_sysfs (FuUdevDevice *self, const gchar *attribute,
+			    const gchar *val, GError **error)
+{
+#ifndef _WIN32
+	ssize_t n;
+	int r;
+	int fd;
+	g_autofree gchar *path = NULL;
+
+	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), FALSE);
+	g_return_val_if_fail (attribute != NULL, FALSE);
+	g_return_val_if_fail (val != NULL, FALSE);
+
+	path = g_build_filename (fu_udev_device_get_sysfs_path (self),
+				 attribute, NULL);
+	fd = open (path, O_WRONLY | O_CLOEXEC);
+	if (fd < 0) {
+		g_set_error (error, G_IO_ERROR,
+			     g_io_error_from_errno (errno),
+			     "could not open %s: %s",
+			     path,
+			     g_strerror (errno));
+		return FALSE;
+	}
+
+	do {
+		n = write (fd, val, strlen (val));
+		if (n < 1 && errno != EINTR) {
+			g_set_error (error, G_IO_ERROR,
+				     g_io_error_from_errno (errno),
+				     "could not write to %s: %s",
+				     path,
+				     g_strerror (errno));
+			(void) close (fd);
+			return FALSE;
+		}
+	} while (n < 1);
+
+	r = close (fd);
+	if (r < 0 && errno != EINTR) {
+		g_set_error (error, G_IO_ERROR,
+			     g_io_error_from_errno (errno),
+			     "could not close %s: %s",
+			     path,
+			     g_strerror (errno));
+		return FALSE;
+	}
+
+	return TRUE;
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "sysfs attributes not supported on Windows");
+	return FALSE;
+#endif
+}
+
 static void
 fu_udev_device_get_property (GObject *object, guint prop_id,
 			    GValue *value, GParamSpec *pspec)
