@@ -19,6 +19,10 @@ Firmware Format
 The daemon will decompress the cabinet archive and extract a firmware blob in
 the Google fmap [3] file format.
 
+This plugin supports the following protocol ID:
+
+ * com.google.usb.crosec
+
 GUID Generation
 ---------------
 
