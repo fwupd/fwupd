@@ -2136,6 +2136,9 @@ fu_engine_install (FuEngine *self,
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(XbNode) rel_newest = NULL;
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+	g_autoptr(XbQuery) query = NULL;
+#endif
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
 	g_return_val_if_fail (XB_IS_NODE (component), FALSE);
@@ -2169,7 +2172,17 @@ fu_engine_install (FuEngine *self,
 	}
 
 	/* get the newest version */
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+	query = xb_query_new_full (xb_node_get_silo (component),
+				   "releases/release",
+				   XB_QUERY_FLAG_FORCE_NODE_CACHE,
+				   error);
+	if (query == NULL)
+		return FALSE;
+	rel_newest = xb_node_query_first_full (component, query, &error_local);
+#else
 	rel_newest = xb_node_query_first (component, "releases/release", &error_local);
+#endif
 	if (rel_newest == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -2207,7 +2220,11 @@ fu_engine_install (FuEngine *self,
 	/* install each intermediate release, or install only the newest version */
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES)) {
 		g_autoptr(GPtrArray) rels = NULL;
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+		rels = xb_node_query_full (component, query, &error_local);
+#else
 		rels = xb_node_query (component, "releases/release", 0, &error_local);
+#endif
 		if (rels == NULL) {
 			g_set_error (error,
 				     FWUPD_ERROR,
