@@ -947,11 +947,12 @@ fu_device_list_finalize (GObject *obj)
 {
 	FuDeviceList *self = FU_DEVICE_LIST (obj);
 
+	g_rw_lock_clear (&self->devices_mutex);
+
 	if (self->replug_id != 0)
 		g_source_remove (self->replug_id);
 	g_ptr_array_unref (self->devices);
 	g_main_loop_unref (self->replug_loop);
-	g_rw_lock_clear (&self->devices_mutex);
 
 	G_OBJECT_CLASS (fu_device_list_parent_class)->finalize (obj);
 }

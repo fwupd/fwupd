@@ -2774,6 +2774,8 @@ fu_plugin_finalize (GObject *object)
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginInitFunc func = NULL;
 
+	g_rw_lock_clear (&priv->devices_mutex);
+
 	/* optional */
 	if (priv->module != NULL) {
 		g_module_symbol (priv->module, "fu_plugin_destroy", (gpointer *) &func);
@@ -2805,7 +2807,6 @@ fu_plugin_finalize (GObject *object)
 		g_hash_table_unref (priv->report_metadata);
 	if (priv->devices != NULL)
 		g_hash_table_unref (priv->devices);
-	g_rw_lock_clear (&priv->devices_mutex);
 	g_free (priv->build_hash);
 	g_free (priv->name);
 	g_free (priv->data);

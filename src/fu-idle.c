@@ -222,8 +222,8 @@ fu_idle_finalize (GObject *obj)
 	FuIdle *self = FU_IDLE (obj);
 
 	fu_idle_stop (self);
-	g_ptr_array_unref (self->items);
 	g_rw_lock_clear (&self->items_mutex);
+	g_ptr_array_unref (self->items);
 
 	G_OBJECT_CLASS (fu_idle_parent_class)->finalize (obj);
 }

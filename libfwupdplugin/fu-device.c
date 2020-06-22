@@ -3230,6 +3230,9 @@ fu_device_finalize (GObject *object)
 	FuDevice *self = FU_DEVICE (object);
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 
+	g_rw_lock_clear (&priv->metadata_mutex);
+	g_rw_lock_clear (&priv->parent_guids_mutex);
+
 	if (priv->alternate != NULL)
 		g_object_unref (priv->alternate);
 	if (priv->parent != NULL)
@@ -3242,8 +3245,6 @@ fu_device_finalize (GObject *object)
 		g_source_remove (priv->poll_id);
 	if (priv->metadata != NULL)
 		g_hash_table_unref (priv->metadata);
-	g_rw_lock_clear (&priv->metadata_mutex);
-	g_rw_lock_clear (&priv->parent_guids_mutex);
 	g_ptr_array_unref (priv->children);
 	g_ptr_array_unref (priv->parent_guids);
 	g_ptr_array_unref (priv->possible_plugins);
