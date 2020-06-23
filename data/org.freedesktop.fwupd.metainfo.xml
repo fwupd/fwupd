@@ -32,6 +32,24 @@
     <binary>fwupdmgr</binary>
   </provides>
   <releases>
+    <release version="1.2.13" date="2020-06-23">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Check version was updated by checking version</li>
+          <li>Correctly import PKCS-7 remote metadata</li>
+          <li>Decrease minimum battery requirement to 10%</li>
+          <li>Disable the battery percentage checks if UPower is unavailable</li>
+          <li>Do not do semver conversion in fu_common_vercmp()</li>
+          <li>Fix the DeviceID set by GetDetails</li>
+          <li>Force the synaptics-prometheus minor version from 0x02 to 0x01</li>
+          <li>Prevent Dell updates to occur via synaptics-mst</li>
+          <li>Read all releases and convert versions when comparing</li>
+          <li>Use the correct timeout for unifying IO channel writes</li>
+          <li>Validate that gpgme_op_verify_result() returned at least one signature</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.2.12" date="2019-12-31">
       <description>
         <p>This release adds the following features:</p>
