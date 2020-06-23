@@ -754,10 +754,8 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	const gchar *str;
-	g_autofree gchar *bootloader = NULL;
 	g_autofree gchar *esrt_path = NULL;
 	g_autofree gchar *sysfsfwdir = NULL;
-	g_autoptr(GError) error_bootloader = NULL;
 	g_autoptr(GError) error_efivarfs = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) entries = NULL;
@@ -783,14 +781,6 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	if (!fu_plugin_uefi_ensure_efivarfs_rw (&error_efivarfs))
 		g_warning ("%s", error_efivarfs->message);
 
-	/* if secure boot is enabled ensure we have a signed fwupd.efi */
-	bootloader = fu_uefi_get_built_app_path (&error_bootloader);
-	if (bootloader == NULL) {
-		if (fu_efivar_secure_boot_enabled ())
-			g_prefix_error (&error_bootloader, "missing signed bootloader for secure boot: ");
-		g_warning ("%s", error_bootloader->message);
-	}
-
 	/* add each device */
 	for (guint i = 0; i < entries->len; i++) {
 		const gchar *path = g_ptr_array_index (entries, i);
@@ -803,9 +793,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		fu_device_set_quirks (FU_DEVICE (dev), fu_plugin_get_quirks (plugin));
 		if (!fu_plugin_uefi_coldplug_device (plugin, dev, error))
 			return FALSE;
-		if (error_bootloader != NULL) {
-			fu_device_set_update_error (FU_DEVICE (dev), error_bootloader->message);
-		} else if (error_efivarfs != NULL) {
+		if (error_efivarfs != NULL) {
 			fu_device_set_update_error (FU_DEVICE (dev), error_efivarfs->message);
 		} else {
 			fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_UPDATABLE);
@@ -817,10 +805,6 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 
 		fu_plugin_device_add (plugin, FU_DEVICE (dev));
 	}
-
-	/* no devices are updatable */
-	if (error_bootloader != NULL)
-		return TRUE;
 
 	/* for debugging problems later */
 	fu_plugin_uefi_test_secure_boot (plugin);
