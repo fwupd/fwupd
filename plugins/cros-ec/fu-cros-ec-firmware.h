@@ -38,4 +38,7 @@ typedef struct {
 	guint32				key_version;
 } FuCrosEcFirmwareSection;
 
+gboolean			 fu_cros_ec_firmware_pick_sections	(FuCrosEcFirmware *self,
+									 guint32 writeable_offset,
+									 GError **error);
 FuFirmware			*fu_cros_ec_firmware_new		(void);
