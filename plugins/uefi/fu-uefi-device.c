@@ -469,6 +469,19 @@ fu_uefi_device_check_esp_free (FuDevice *device, GError **error)
 }
 
 static gboolean
+fu_uefi_check_asset (FuDevice *device, GError **error)
+{
+	g_autofree gchar *source_app = fu_uefi_get_built_app_path (error);
+	if (source_app == NULL) {
+		if (fu_efivar_secure_boot_enabled ())
+			g_prefix_error (error, "missing signed bootloader for secure boot: ");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
 fu_uefi_device_cleanup_esp (FuDevice *device, GError **error)
 {
 	const gchar *esp_path = fu_device_get_metadata (device, "EspPath");
@@ -541,6 +554,8 @@ fu_uefi_device_prepare (FuDevice *device,
 	if (!fu_uefi_device_cleanup_esp (device, error))
 		return FALSE;
 	if (!fu_uefi_device_check_esp_free (device, error))
+		return FALSE;
+	if (!fu_uefi_check_asset (device, error))
 		return FALSE;
 
 	return TRUE;
