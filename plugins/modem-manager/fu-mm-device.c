@@ -251,7 +251,7 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 		if (!g_file_get_contents (path, &value, NULL, &error_local)) {
 			g_warning ("failed to set vendor ID: %s", error_local->message);
 		} else {
-			g_autofree gchar *vendor_id = g_strdup_printf ("USB:0x%s", value);
+			g_autofree gchar *vendor_id = g_strdup_printf ("USB:0x%s", g_strchomp (value));
 			fu_device_set_vendor_id (device, vendor_id);
 		}
 	}
