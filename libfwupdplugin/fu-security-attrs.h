@@ -16,3 +16,4 @@ G_DECLARE_FINAL_TYPE (FuSecurityAttrs, fu_security_attrs, FU, SECURITY_ATTRS, GO
 
 void		 fu_security_attrs_append		(FuSecurityAttrs	*self,
 							 FwupdSecurityAttr	*attr);
+void		 fu_security_attrs_remove_all		(FuSecurityAttrs	*self);

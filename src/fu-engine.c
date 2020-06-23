@@ -69,6 +69,7 @@
 #endif
 
 static void fu_engine_finalize	 (GObject *obj);
+static void fu_engine_ensure_security_attrs	(FuEngine *self);
 
 struct _FuEngine
 {
@@ -107,7 +108,7 @@ struct _FuEngine
 	JcatContext		*jcat_context;
 	gboolean		 loaded;
 	gchar			*host_security_id;
-	gboolean		 host_security_id_valid;
+	FuSecurityAttrs		*host_security_attrs;
 };
 
 enum {
@@ -142,7 +143,8 @@ fu_engine_emit_changed (FuEngine *self)
 static void
 fu_engine_emit_device_changed (FuEngine *self, FuDevice *device)
 {
-	self->host_security_id_valid = FALSE;
+	/* invalidate host security attributes */
+	g_clear_pointer (&self->host_security_id, g_free);
 	g_signal_emit (self, signals[SIGNAL_DEVICE_CHANGED], 0, device);
 }
 
@@ -3318,6 +3320,9 @@ fu_engine_remote_list_changed_cb (FuRemoteList *remote_list, FuEngine *self)
 	/* set device properties from the metadata */
 	fu_engine_md_refresh_devices (self);
 
+	/* invalidate host security attributes */
+	g_clear_pointer (&self->host_security_id, g_free);
+
 	/* make the UI update */
 	fu_engine_emit_changed (self);
 }
@@ -3546,7 +3551,14 @@ fu_engine_update_metadata_bytes (FuEngine *self, const gchar *remote_id,
 	}
 	if (!fu_engine_load_metadata_store (self, FU_ENGINE_LOAD_FLAG_NONE, error))
 		return FALSE;
+
+	/* refresh SUPPORTED flag on devices */
 	fu_engine_md_refresh_devices (self);
+
+	/* invalidate host security attributes */
+	g_clear_pointer (&self->host_security_id, g_free);
+
+	/* make the UI update */
 	fu_engine_emit_changed (self);
 	return TRUE;
 }
@@ -3991,13 +4003,13 @@ fu_engine_get_devices_by_guid (FuEngine *self, const gchar *guid, GError **error
 static void
 fu_engine_get_history_set_hsi_attrs (FuEngine *self, FuDevice *device)
 {
-	g_autofree gchar *host_security_id = NULL;
-	g_autoptr(FuSecurityAttrs) attrs = NULL;
 	g_autoptr(GPtrArray) vals = NULL;
 
+	/* ensure up to date */
+	fu_engine_ensure_security_attrs (self);
+
 	/* add attributes */
-	attrs = fu_engine_get_host_security_attrs (self);
-	vals = fu_security_attrs_get_all (attrs);
+	vals = fu_security_attrs_get_all (self->host_security_attrs);
 	for (guint i = 0; i < vals->len; i++) {
 		FwupdSecurityAttr *attr = g_ptr_array_index (vals, i);
 		const gchar *tmp;
@@ -4006,8 +4018,7 @@ fu_engine_get_history_set_hsi_attrs (FuEngine *self, FuDevice *device)
 	}
 
 	/* computed value */
-	host_security_id = fu_security_attrs_calculate_hsi (attrs, FU_SECURITY_ATTRS_FLAG_ADD_VERSION);
-	fu_device_set_metadata (device, "HSI", host_security_id);
+	fu_device_set_metadata (device, "HSI", self->host_security_id);
 }
 
 /**
@@ -5142,6 +5153,11 @@ static void
 fu_engine_plugin_security_changed_cb (FuPlugin *plugin, gpointer user_data)
 {
 	FuEngine *self = FU_ENGINE (user_data);
+
+	/* invalidate host security attributes */
+	g_clear_pointer (&self->host_security_id, g_free);
+
+	/* make UI refresh */
 	fu_engine_emit_changed (self);
 }
 
@@ -5508,14 +5524,15 @@ fu_engine_get_host_machine_id (FuEngine *self)
 }
 
 static void
-fu_engine_add_security_attrs_tainted (FuEngine *self, FuSecurityAttrs *attrs)
+fu_engine_ensure_security_attrs_tainted (FuEngine *self)
 {
 	gboolean disabled_plugins = FALSE;
 	GPtrArray *disabled = fu_config_get_disabled_plugins (self->config);
 	g_autoptr(FwupdSecurityAttr) attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_FWUPD_PLUGINS);
 	fwupd_security_attr_set_plugin (attr, "core");
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
-	fu_security_attrs_append (attrs, attr);
+
+	fu_security_attrs_append (self->host_security_attrs, attr);
 	for (guint i = 0; i < disabled->len; i++) {
 		const gchar *name_tmp = g_ptr_array_index (disabled, i);
 		if (g_strcmp0 (name_tmp, "test") != 0 &&
@@ -5539,7 +5556,7 @@ fu_engine_add_security_attrs_tainted (FuEngine *self, FuSecurityAttrs *attrs)
 }
 
 static void
-fu_engine_add_security_attrs_supported (FuEngine *self, FuSecurityAttrs *attrs)
+fu_engine_ensure_security_attrs_supported (FuEngine *self)
 {
 	FwupdRelease *rel_current = NULL;
 	FwupdRelease *rel_newest = NULL;
@@ -5552,11 +5569,11 @@ fu_engine_add_security_attrs_supported (FuEngine *self, FuSecurityAttrs *attrs)
 	attr_u = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_FWUPD_UPDATES);
 	fwupd_security_attr_set_plugin (attr_u, "core");
 	fwupd_security_attr_add_flag (attr_u, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES);
-	fu_security_attrs_append (attrs, attr_u);
+	fu_security_attrs_append (self->host_security_attrs, attr_u);
 	attr_a = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_FWUPD_ATTESTATION);
 	fwupd_security_attr_set_plugin (attr_a, "core");
 	fwupd_security_attr_add_flag (attr_a, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ATTESTATION);
-	fu_security_attrs_append (attrs, attr_a);
+	fu_security_attrs_append (self->host_security_attrs, attr_a);
 	/* get device */
 	device = fu_device_list_get_by_guid (self->device_list,
 					     /* main-system-firmware */
@@ -5616,25 +5633,31 @@ fu_engine_add_security_attrs_supported (FuEngine *self, FuSecurityAttrs *attrs)
 	}
 }
 
-FuSecurityAttrs *
-fu_engine_get_host_security_attrs (FuEngine *self)
+static void
+fu_engine_ensure_security_attrs (FuEngine *self)
 {
 	GPtrArray *plugins = fu_plugin_list_get_all (self->plugin_list);
-	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new ();
 	g_autoptr(GPtrArray) items = NULL;
 
+	/* already valid */
+	if (self->host_security_id != NULL)
+		return;
+
+	/* clear old values */
+	fu_security_attrs_remove_all (self->host_security_attrs);
+
 	/* built in */
-	fu_engine_add_security_attrs_tainted (self, attrs);
-	fu_engine_add_security_attrs_supported (self, attrs);
+	fu_engine_ensure_security_attrs_tainted (self);
+	fu_engine_ensure_security_attrs_supported (self);
 
 	/* call into plugins */
 	for (guint j = 0; j < plugins->len; j++) {
 		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
-		fu_plugin_runner_add_security_attrs (plugin_tmp, attrs);
+		fu_plugin_runner_add_security_attrs (plugin_tmp, self->host_security_attrs);
 	}
 
 	/* set the fallback names for clients without native translations */
-	items = fu_security_attrs_get_all (attrs);
+	items = fu_security_attrs_get_all (self->host_security_attrs);
 	for (guint i = 0; i < items->len; i++) {
 		FwupdSecurityAttr *attr = g_ptr_array_index (items, i);
 		if (fwupd_security_attr_get_name (attr) == NULL) {
@@ -5649,28 +5672,28 @@ fu_engine_get_host_security_attrs (FuEngine *self)
 	}
 
 	/* set the obsoletes flag for each attr */
-	fu_security_attrs_depsolve (attrs);
+	fu_security_attrs_depsolve (self->host_security_attrs);
 
-	return g_steal_pointer (&attrs);
+	/* distil into one simple string */
+	g_free (self->host_security_id);
+	self->host_security_id = fu_security_attrs_calculate_hsi (self->host_security_attrs,
+								  FU_SECURITY_ATTRS_FLAG_ADD_VERSION);
 }
 
 const gchar *
 fu_engine_get_host_security_id (FuEngine *self)
 {
 	g_return_val_if_fail (FU_IS_ENGINE (self), NULL);
-
-	/* rebuild */
-	if (!self->host_security_id_valid) {
-		g_autoptr(FuSecurityAttrs) attrs = NULL;
-		g_free (self->host_security_id);
-		self->host_security_id = NULL;
-		self->host_security_id_valid = TRUE;
-		attrs = fu_engine_get_host_security_attrs (self);
-		self->host_security_id = fu_security_attrs_calculate_hsi (attrs,
-									  FU_SECURITY_ATTRS_FLAG_ADD_VERSION);
-	}
-
+	fu_engine_ensure_security_attrs (self);
 	return self->host_security_id;
+}
+
+FuSecurityAttrs *
+fu_engine_get_host_security_attrs (FuEngine *self)
+{
+	g_return_val_if_fail (FU_IS_ENGINE (self), NULL);
+	fu_engine_ensure_security_attrs (self);
+	return g_object_ref (self->host_security_attrs);
 }
 
 gboolean
@@ -6337,6 +6360,7 @@ fu_engine_init (FuEngine *self)
 	self->history = fu_history_new ();
 	self->plugin_list = fu_plugin_list_new ();
 	self->plugin_filter = g_ptr_array_new_with_free_func (g_free);
+	self->host_security_attrs = fu_security_attrs_new ();
 	self->udev_subsystems = g_ptr_array_new_with_free_func (g_free);
 #ifdef HAVE_GUDEV
 	self->udev_changed_ids = g_hash_table_new_full (g_str_hash, g_str_equal,
@@ -6416,6 +6440,7 @@ fu_engine_finalize (GObject *obj)
 
 	g_free (self->host_machine_id);
 	g_free (self->host_security_id);
+	g_object_unref (self->host_security_attrs);
 	g_object_unref (self->idle);
 	g_object_unref (self->config);
 	g_object_unref (self->remote_list);

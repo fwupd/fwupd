@@ -108,6 +108,21 @@ fu_security_attrs_get_all (FuSecurityAttrs *self)
 }
 
 /**
+ * fu_security_attrs_remove_all:
+ * @self: A #FuSecurityAttrs
+ *
+ * Removes all the attributes in the object.
+ *
+ * Since: 1.5.0
+ **/
+void
+fu_security_attrs_remove_all (FuSecurityAttrs *self)
+{
+	g_return_if_fail (FU_IS_SECURITY_ATTRS (self));
+	return g_ptr_array_set_size (self->attrs, 0);
+}
+
+/**
  * fu_security_attrs_calculate_hsi:
  * @self: A #FuSecurityAttrs
  * @flags: Flags to use while calcuating the HSI

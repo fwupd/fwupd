@@ -609,6 +609,7 @@ LIBFWUPDPLUGIN_1.5.0 {
     fu_security_attrs_get_all;
     fu_security_attrs_get_type;
     fu_security_attrs_new;
+    fu_security_attrs_remove_all;
     fu_security_attrs_to_variant;
   local: *;
 } LIBFWUPDPLUGIN_1.4.5;
