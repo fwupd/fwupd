@@ -86,10 +86,11 @@ parts:
   modemmanager:
     plugin: autotools
     source: https://gitlab.freedesktop.org/mobile-broadband/ModemManager.git
-    source-tag: 1.10.0
+    source-tag: 1.14.0
     # build without these; system daemon needs them
     build-packages:
       - xsltproc
+      - autoconf-archive
     configflags:
       - --without-mbim
       - --without-qmi
@@ -108,7 +109,7 @@ parts:
   libmbim:
     plugin: autotools
     source: https://gitlab.freedesktop.org/mobile-broadband/libmbim.git
-    source-tag: 1.18.0
+    source-tag: 1.24.0
     after: [modemmanager]
     # build without these; system daemon needs them
     configflags:
@@ -128,7 +129,7 @@ parts:
   libqmi:
     plugin: autotools
     source: https://gitlab.freedesktop.org/mobile-broadband/libqmi.git
-    source-tag: 1.23.1
+    source-tag: 1.26.0
     after: [modemmanager, libmbim]
     # build without these; system daemon needs them
     configflags:
