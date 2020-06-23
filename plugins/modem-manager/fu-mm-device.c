@@ -191,7 +191,7 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 			}
 		}
 		/* only set if fastboot wasn't already set */
-		if (fu_device_get_protocol (device) != NULL)
+		if (fu_device_get_protocol (device) == NULL)
 			fu_device_set_protocol (device, "com.qualcomm.qmi_pdc");
 	}
 	mm_modem_port_info_array_free (ports, n_ports);
