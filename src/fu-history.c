@@ -360,6 +360,9 @@ fu_history_open (FuHistory *self, const gchar *filename, GError **error)
 			     filename, sqlite3_errmsg (self->db));
 		return FALSE;
 	}
+
+	/* turn off the lookaside cache */
+	sqlite3_db_config (self->db, SQLITE_DBCONFIG_LOOKASIDE, NULL, 0, 0);
 	return TRUE;
 }
 
