@@ -785,6 +785,115 @@ fu_engine_get_component_by_guids (FuEngine *self, FuDevice *device)
 	return NULL;
 }
 
+static XbNode *
+fu_engine_verify_from_local_metadata (FuEngine *self,
+				      FuDevice *device,
+				      GError **error)
+{
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *localstatedir = NULL;
+	g_autofree gchar *xpath = NULL;
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(XbBuilder) builder = xb_builder_new ();
+	g_autoptr(XbBuilderSource) source = xb_builder_source_new ();
+	g_autoptr(XbNode) release = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+
+	localstatedir = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	fn = g_strdup_printf ("%s/verify/%s.xml",
+			      localstatedir,
+			      fu_device_get_id (device));
+	file = g_file_new_for_path (fn);
+	if (!g_file_query_exists (file, NULL)) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_FOUND,
+			     "failed to find %s", fn);
+		return NULL;
+	}
+
+	if (!xb_builder_source_load_file (source, file,
+					  XB_BUILDER_SOURCE_FLAG_NONE,
+					  NULL, error))
+		return NULL;
+	xb_builder_import_source (builder, source);
+	silo = xb_builder_compile (builder,
+				   XB_BUILDER_COMPILE_FLAG_NONE,
+				   NULL, error);
+	if (silo == NULL)
+		return NULL;
+	xpath = g_strdup_printf ("component/releases/release[@version='%s']",
+				 fu_device_get_version (device));
+	release = xb_silo_query_first (silo, xpath, error);
+	if (release == NULL)
+		return NULL;
+
+	/* silo has to have same lifecyle as node */
+	g_object_set_data_full (G_OBJECT (release), "XbSilo",
+				g_steal_pointer (&silo),
+				(GDestroyNotify) g_object_unref);
+	return g_steal_pointer (&release);
+}
+
+static XbNode *
+fu_engine_verify_from_system_metadata (FuEngine *self,
+				       FuDevice *device,
+				       GError **error)
+{
+	FwupdVersionFormat fmt = fu_device_get_version_format (device);
+	GPtrArray *guids = fu_device_get_guids (device);
+	g_autoptr(XbQuery) query = NULL;
+
+	/* prepare query with bound GUID parameter */
+	query = xb_query_new_full (self->silo,
+				   "components/component/"
+				   "provides/firmware[@type='flashed'][text()=?]/"
+				   "../../releases/release",
+				   XB_QUERY_FLAG_OPTIMIZE |
+				   XB_QUERY_FLAG_USE_INDEXES,
+				   error);
+	if (query == NULL)
+		return NULL;
+
+	/* use prepared query for each GUID */
+	for (guint i = 0; i < guids->len; i++) {
+		const gchar *guid = g_ptr_array_index (guids, i);
+		g_autoptr(GError) error_local = NULL;
+		g_autoptr(GPtrArray) releases = NULL;
+
+		/* bind GUID and then query */
+		if (!xb_query_bind_str (query, 0, guid, error)) {
+			g_prefix_error (error, "failed to bind string: ");
+			return NULL;
+		}
+		releases = xb_silo_query_full (self->silo, query, &error_local);
+		if (releases == NULL) {
+			if (g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) ||
+			    g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
+				g_debug ("could not find %s: %s",
+					 guid, error_local->message);
+				continue;
+			}
+			g_propagate_error (error, g_steal_pointer (&error_local));
+			return NULL;
+		}
+		for (guint j = 0; j < releases->len; j++) {
+			XbNode *rel = g_ptr_array_index (releases, j);
+			const gchar *rel_ver = xb_node_get_attr (rel, "version");
+			g_autofree gchar *tmp_ver = fu_common_version_parse_from_format (rel_ver, fmt);
+			if (fu_common_vercmp_full (tmp_ver, fu_device_get_version (device), fmt) == 0)
+				return g_object_ref (rel);
+		}
+	}
+
+	/* not found */
+	g_set_error_literal (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_FOUND,
+			     "failed to find release");
+	return NULL;
+}
+
 /**
  * fu_engine_verify:
  * @self: A #FuEngine
@@ -800,15 +909,11 @@ fu_engine_verify (FuEngine *self, const gchar *device_id, GError **error)
 {
 	FuPlugin *plugin;
 	GPtrArray *checksums;
-	const gchar *version;
-	g_autofree gchar *fn = NULL;
-	g_autofree gchar *localstatedir = NULL;
 	g_autoptr(FuDevice) device = NULL;
-	g_autoptr(GFile) file = NULL;
+	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GString) xpath_csum = g_string_new (NULL);
 	g_autoptr(XbNode) csum = NULL;
 	g_autoptr(XbNode) release = NULL;
-	g_autoptr(XbSilo) silo = xb_silo_new ();
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
 	g_return_val_if_fail (device_id != NULL, FALSE);
@@ -833,71 +938,34 @@ fu_engine_verify (FuEngine *self, const gchar *device_id, GError **error)
 			return FALSE;
 	}
 
-	/* find component in metadata */
-	version = fu_device_get_version (device);
-	localstatedir = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR_PKG);
-	fn = g_strdup_printf ("%s/verify/%s.xml", localstatedir, device_id);
-	file = g_file_new_for_path (fn);
-	if (g_file_query_exists (file, NULL)) {
-		g_autofree gchar *xpath = NULL;
-		g_autoptr(XbBuilder) builder = xb_builder_new ();
-		g_autoptr(XbBuilderSource) source = xb_builder_source_new ();
-		if (!xb_builder_source_load_file (source, file,
-						  XB_BUILDER_SOURCE_FLAG_NONE,
-						  NULL, error))
+	/* find component in local metadata */
+	release = fu_engine_verify_from_local_metadata (self, device, &error_local);
+	if (release == NULL) {
+		if (!g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) &&
+		    !g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
+			g_propagate_error (error, g_steal_pointer (&error_local));
 			return FALSE;
-		xb_builder_import_source (builder, source);
-		silo = xb_builder_compile (builder,
-					   XB_BUILDER_COMPILE_FLAG_NONE,
-					   NULL, error);
-		if (silo == NULL)
-			return FALSE;
-		xpath = g_strdup_printf ("component/releases/release[@version='%s']", version);
-		release = xb_silo_query_first (silo, xpath, NULL);
+		}
 	}
 
 	/* try again with the system metadata */
 	if (release == NULL) {
-		GPtrArray *guids = fu_device_get_guids (device);
-		FwupdVersionFormat fmt = fu_device_get_version_format (device);
-		for (guint i = 0; i < guids->len; i++) {
-			const gchar *guid = g_ptr_array_index (guids, i);
-			g_autofree gchar *xpath2 = NULL;
-			g_autoptr(GError) error_local = NULL;
-			g_autoptr(GPtrArray) releases = NULL;
-			xpath2 = g_strdup_printf ("components/component/"
-						  "provides/firmware[@type='flashed'][text()='%s']/"
-						  "../../releases/release",
-						  guid);
-			releases = xb_silo_query (self->silo, xpath2, 0, &error_local);
-			if (releases == NULL) {
-				if (g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) ||
-				    g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
-					g_debug ("could not find %s: %s",
-						 guid, error_local->message);
-					continue;
-				}
-				g_propagate_error (error, g_steal_pointer (&error_local));
+		g_autoptr(GError) error_system = NULL;
+		release = fu_engine_verify_from_system_metadata (self, device, &error_system);
+		if (release == NULL) {
+			if (!g_error_matches (error_system, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) &&
+			    !g_error_matches (error_system, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
+				g_propagate_error (error, g_steal_pointer (&error_system));
 				return FALSE;
 			}
-			for (guint j = 0; j < releases->len; j++) {
-				XbNode *rel = g_ptr_array_index (releases, j);
-				const gchar *rel_ver = xb_node_get_attr (rel, "version");
-				g_autofree gchar *tmp_ver = fu_common_version_parse_from_format (rel_ver, fmt);
-				if (fu_common_vercmp_full (tmp_ver, version, fmt) == 0) {
-					release = g_object_ref (rel);
-					break;
-				}
-			}
-			if (release != NULL)
-				break;
 		}
 	}
 	if (release == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_FOUND,
-			     "No release found for version %s", version);
+			     "No release found for version %s",
+			     fu_device_get_version (device));
 		return FALSE;
 	}
 
@@ -907,7 +975,8 @@ fu_engine_verify (FuEngine *self, const gchar *device_id, GError **error)
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_FOUND,
-			     "No device checksums for %s", version);
+			     "No device checksums for %s",
+			     fu_device_get_version (device));
 		return FALSE;
 	}
 
@@ -938,7 +1007,7 @@ fu_engine_verify (FuEngine *self, const gchar *device_id, GError **error)
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_FOUND,
 				     "No stored checksums for %s",
-				     version);
+				     fu_device_get_version (device));
 			return FALSE;
 		}
 		for (guint i = 0; i < csums->len; i++) {
@@ -955,7 +1024,7 @@ fu_engine_verify (FuEngine *self, const gchar *device_id, GError **error)
 			     FWUPD_ERROR_NOT_FOUND,
 			     "For %s %s expected %s, got %s",
 			     fu_device_get_name (device),
-			     version,
+			     fu_device_get_version (device),
 			     checksums_metadata->str,
 			     checksums_device->str);
 		return FALSE;
