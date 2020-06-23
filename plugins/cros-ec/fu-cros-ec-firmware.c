@@ -20,6 +20,37 @@ struct _FuCrosEcFirmware {
 
 G_DEFINE_TYPE (FuCrosEcFirmware, fu_cros_ec_firmware, FU_TYPE_FMAP_FIRMWARE)
 
+gboolean
+fu_cros_ec_firmware_pick_sections (FuCrosEcFirmware *self,
+				   guint32 writeable_offset,
+				   GError **error)
+{
+	gboolean found = FALSE;
+
+	for (gsize i = 0; i < self->sections->len; i++) {
+		FuCrosEcFirmwareSection *section = g_ptr_array_index (self->sections, i);
+		guint32 offset = section->offset;
+
+		if (offset != writeable_offset)
+			continue;
+
+		section->ustatus = FU_CROS_EC_FW_NEEDED;
+		found = TRUE;
+	}
+
+	if (!found) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "no writeable section found with offset: 0x%x",
+			     writeable_offset);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static gboolean
 fu_cros_ec_firmware_parse (FuFirmware *firmware,
 			   GBytes *fw,

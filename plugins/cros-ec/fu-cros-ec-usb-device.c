@@ -27,6 +27,7 @@ struct _FuCrosEcUsbDevice {
 	guint16				chunk_len; 	/* wMaxPacketSize */
 
 	struct first_response_pdu	targ;
+	guint32				writeable_offset;
 	guint16				protocol_version;
 	guint16				header_type;
 	struct cros_ec_version		version;
@@ -272,6 +273,7 @@ fu_cros_ec_usb_device_setup (FuDevice *device, GError **error)
 		return FALSE;
 	}
 
+	self->writeable_offset = GUINT32_FROM_BE (start_resp.rpdu.common.offset);
 	if (!fu_memcpy_safe ((guint8 *) self->targ.common.version,
 			     FU_CROS_EC_STRLEN, 0x0,
 			     (const guint8 *) start_resp.rpdu.common.version,
@@ -323,11 +325,22 @@ fu_cros_ec_usb_device_prepare_firmware (FuDevice *device,
 					FwupdInstallFlags flags,
 					GError **error)
 {
+	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE (device);
+	FuCrosEcFirmware *cros_ec_firmware = NULL;
 	g_autoptr(FuFirmware) firmware = fu_cros_ec_firmware_new ();
 
 	fu_device_set_status (device, FWUPD_STATUS_DECOMPRESSING);
 	if (!fu_firmware_parse (firmware, fw, flags, error))
 		return NULL;
+	cros_ec_firmware = FU_CROS_EC_FIRMWARE (firmware);
+
+	/* pick sections */
+	if (!fu_cros_ec_firmware_pick_sections (cros_ec_firmware,
+						self->writeable_offset,
+						error)) {
+		g_prefix_error (error, "failed to pick sections: ");
+		return NULL;
+	}
 	return g_steal_pointer (&firmware);
 }
 
@@ -361,6 +374,8 @@ fu_cros_ec_usb_device_to_string (FuDevice *device, guint idt, GString *str)
 	min_rollback = g_strdup_printf ("%" G_GINT32_FORMAT,
 					self->targ.common.min_rollback);
 	fu_common_string_append_kv (str, idt, "MinRollback", min_rollback);
+	fu_common_string_append_kx (str, idt, "WriteableOffset",
+				    self->writeable_offset);
 }
 
 static void
