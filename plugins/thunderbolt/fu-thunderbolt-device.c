@@ -316,7 +316,6 @@ fu_thunderbolt_device_setup (FuDevice *device, GError **error)
 			fu_device_add_flag (device, FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 		} else {
 			device_id = g_strdup ("TBT-fixed");
-			fu_device_set_update_error (device, "Missing non-active nvmem");
 		}
 		fu_device_add_instance_id (device, device_id);
 		if (domain_id != NULL)
