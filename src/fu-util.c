@@ -2413,6 +2413,15 @@ fu_util_check_daemon_version (FuUtilPrivate *priv, GError **error)
 {
 	const gchar *daemon = fwupd_client_get_daemon_version (priv->client);
 
+	if (daemon == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     /* TRANSLATORS: error message */
+				     _("Unable to connect to service"));
+		return FALSE;
+	}
+
 	if (g_strcmp0 (daemon, SOURCE_VERSION) != 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
