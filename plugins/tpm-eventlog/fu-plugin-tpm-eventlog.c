@@ -10,11 +10,9 @@
 #include "fu-plugin-vfuncs.h"
 
 #include "fu-tpm-eventlog-device.h"
-#include "fu-efivar.h"
 
 struct FuPluginData {
 	GPtrArray		*pcr0s;
-	gboolean		 secure_boot_problem;
 	gboolean		 has_tpm_device;
 	gboolean		 has_uefi_device;
 	gboolean		 reconstructed;
@@ -48,14 +46,8 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	g_autoptr(FuTpmEventlogDevice) dev = NULL;
 	g_autoptr(GError) error_local = NULL;
 
-	if (!g_file_get_contents (fn, (gchar **) &buf, &bufsz, &error_local)) {
-		if (fu_efivar_supported (NULL) && !fu_efivar_secure_boot_enabled ()) {
-			data->secure_boot_problem = TRUE;
-			return TRUE;
-		}
-		g_propagate_error (error, g_steal_pointer (&error_local));
+	if (!g_file_get_contents (fn, (gchar **) &buf, &bufsz, error))
 		return FALSE;
-	}
 	if (bufsz == 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -104,13 +96,6 @@ fu_plugin_device_registered_uefi (FuPlugin *plugin, FuDevice *device)
 	if (checksums->len == 0)
 		return;
 	data->has_uefi_device = TRUE;
-
-	if (data->secure_boot_problem) {
-		fu_device_set_update_message (device,
-					      "Platform firmware measurement unavailable. Secure boot is disabled in BIOS setup, "
-					      "enabling it may fix this issue");
-		return;
-	}
 
 	for (guint i = 0; i < checksums->len; i++) {
 		const gchar *checksum = g_ptr_array_index (checksums, i);
