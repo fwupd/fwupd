@@ -120,10 +120,6 @@ Requires: shared-mime-info
 Requires: dbxtool
 %endif
 
-%if 0%{?rhel} > 7 || 0%{?fedora} > 28
-Recommends: python3
-%endif
-
 Obsoletes: fwupd-sign < 0.1.6
 Obsoletes: libebitdo < 0.7.5-3
 Obsoletes: libdfu < 1.0.0
@@ -155,6 +151,15 @@ BuildArch: noarch
 
 %description tests
 Data files for installed tests.
+
+%package utils
+Summary: Utility scripts for %{name}
+Requires: %{name}%{?_isa} = %{version}-%{release}
+Requires: python3
+
+%description utils
+These utilities can be used by end users to install some vendor firmware files
+and also provide some helper scripts which might be useful to OEMs or ODMs.
 
 %prep
 %autosetup -p1
@@ -308,10 +313,6 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %endif
 %{_datadir}/metainfo/org.freedesktop.fwupd.metainfo.xml
 %{_datadir}/icons/hicolor/scalable/apps/org.freedesktop.fwupd.svg
-%{_datadir}/fwupd/firmware_packager.py
-%{_datadir}/fwupd/simple_client.py
-%{_datadir}/fwupd/add_capsule_header.py
-%{_datadir}/fwupd/install_dell_bios_exe.py
 %{_unitdir}/fwupd-offline-update.service
 %{_unitdir}/fwupd.service
 %{_unitdir}/fwupd-refresh.service
@@ -426,6 +427,12 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_datadir}/installed-tests/fwupd/*.sh
 %dir %{_sysconfdir}/fwupd/remotes.d
 %config(noreplace)%{_sysconfdir}/fwupd/remotes.d/fwupd-tests.conf
+
+%files utils
+%{_datadir}/fwupd/firmware_packager.py
+%{_datadir}/fwupd/simple_client.py
+%{_datadir}/fwupd/add_capsule_header.py
+%{_datadir}/fwupd/install_dell_bios_exe.py
 
 %changelog
 * #LONGDATE# Richard Hughes <richard@hughsie.com> #VERSION#-0.#BUILD##ALPHATAG#
