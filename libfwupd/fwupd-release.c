@@ -56,6 +56,7 @@ typedef struct {
 	FwupdReleaseFlags		 flags;
 	FwupdReleaseUrgency		 urgency;
 	gchar				*update_message;
+	gchar				*update_image;
 } FwupdReleasePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FwupdRelease, fwupd_release, G_TYPE_OBJECT)
@@ -207,6 +208,42 @@ fwupd_release_set_update_message (FwupdRelease *release, const gchar *update_mes
 	g_return_if_fail (FWUPD_IS_RELEASE (release));
 	g_free (priv->update_message);
 	priv->update_message = g_strdup (update_message);
+}
+
+/**
+ * fwupd_release_get_update_image:
+ * @release: A #FwupdRelease
+ *
+ * Gets the update image.
+ *
+ * Returns: the update image URL, or %NULL if unset
+ *
+ * Since: 1.4.5
+ **/
+const gchar *
+fwupd_release_get_update_image (FwupdRelease *release)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_val_if_fail (FWUPD_IS_RELEASE (release), NULL);
+	return priv->update_image;
+}
+
+/**
+ * fwupd_release_set_update_image:
+ * @release: A #FwupdRelease
+ * @update_image: the update image URL
+ *
+ * Sets the update image.
+ *
+ * Since: 1.4.5
+ **/
+void
+fwupd_release_set_update_image (FwupdRelease *release, const gchar *update_image)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_if_fail (FWUPD_IS_RELEASE (release));
+	g_free (priv->update_image);
+	priv->update_image = g_strdup (update_image);
 }
 
 /**
@@ -1545,6 +1582,10 @@ fwupd_release_from_key_value (FwupdRelease *release, const gchar *key, GVariant 
 		fwupd_release_set_update_message (release, g_variant_get_string (value, NULL));
 		return;
 	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_IMAGE) == 0) {
+		fwupd_release_set_update_image (release, g_variant_get_string (value, NULL));
+		return;
+	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_METADATA) == 0) {
 		g_hash_table_unref (priv->metadata);
 		priv->metadata = _variant_to_hash_kv (value);
@@ -1715,6 +1756,7 @@ fwupd_release_to_json (FwupdRelease *release, JsonBuilder *builder)
 	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_DETACH_CAPTION, priv->detach_caption);
 	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_DETACH_IMAGE, priv->detach_image);
 	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->update_message);
+	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->update_image);
 
 	/* metadata */
 	keys = g_hash_table_get_keys (priv->metadata);
@@ -1783,6 +1825,8 @@ fwupd_release_to_string (FwupdRelease *release)
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DETACH_IMAGE, priv->detach_image);
 	if (priv->update_message != NULL)
 		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->update_message);
+	if (priv->update_message != NULL)
+		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->update_image);
 	/* metadata */
 	keys = g_hash_table_get_keys (priv->metadata);
 	for (GList *l = keys; l != NULL; l = l->next) {
@@ -1835,6 +1879,7 @@ fwupd_release_finalize (GObject *object)
 	g_free (priv->version);
 	g_free (priv->remote_id);
 	g_free (priv->update_message);
+	g_free (priv->update_image);
 	g_ptr_array_unref (priv->categories);
 	g_ptr_array_unref (priv->issues);
 	g_ptr_array_unref (priv->checksums);

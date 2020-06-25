@@ -454,6 +454,9 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 	tmp = xb_node_query_text (component, "custom/value[@key='LVFS::UpdateMessage']", NULL);
 	if (tmp != NULL)
 		fwupd_release_set_update_message (rel, tmp);
+	tmp = xb_node_query_text (component, "custom/value[@key='LVFS::UpdateImage']", NULL);
+	if (tmp != NULL)
+		fwupd_release_set_update_image (rel, tmp);
 	return TRUE;
 }
 
@@ -4125,6 +4128,7 @@ fu_engine_add_releases_for_device_component (FuEngine *self,
 		XbNode *release = g_ptr_array_index (releases_tmp, i);
 		const gchar *remote_id;
 		const gchar *update_message;
+		const gchar *update_image;
 		gint vercmp;
 		GPtrArray *checksums;
 		g_autoptr(FwupdRelease) rel = fwupd_release_new ();
@@ -4185,7 +4189,12 @@ fu_engine_add_releases_for_device_component (FuEngine *self,
 		update_message = fwupd_release_get_update_message (rel);
 		if (fwupd_device_get_update_message (FWUPD_DEVICE (device)) == NULL &&
 		    update_message != NULL) {
-			    fwupd_device_set_update_message (FWUPD_DEVICE (device), update_message);
+			fwupd_device_set_update_message (FWUPD_DEVICE (device), update_message);
+		}
+		update_image = fwupd_release_get_update_image (rel);
+		if (fwupd_device_get_update_image (FWUPD_DEVICE (device)) == NULL &&
+		    update_image != NULL) {
+			fwupd_device_set_update_image (FWUPD_DEVICE (device), update_image);
 		}
 		/* success */
 		g_ptr_array_add (releases, g_steal_pointer (&rel));

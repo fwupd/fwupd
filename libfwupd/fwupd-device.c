@@ -59,6 +59,7 @@ typedef struct {
 	FwupdUpdateState		 update_state;
 	gchar				*update_error;
 	gchar				*update_message;
+	gchar				*update_image;
 	FwupdStatus			 status;
 	GPtrArray			*releases;
 	FwupdDevice			*parent;
@@ -1201,6 +1202,8 @@ fwupd_device_incorporate (FwupdDevice *self, FwupdDevice *donor)
 		fwupd_device_set_update_error (self, priv_donor->update_error);
 	if (priv->update_message == NULL)
 		fwupd_device_set_update_message (self, priv_donor->update_message);
+	if (priv->update_image == NULL)
+		fwupd_device_set_update_image (self, priv_donor->update_image);
 	if (priv->version == NULL)
 		fwupd_device_set_version (self, priv_donor->version);
 	if (priv->version_lowest == NULL)
@@ -1394,6 +1397,11 @@ fwupd_device_to_variant_full (FwupdDevice *device, FwupdDeviceFlags flags)
 				       FWUPD_RESULT_KEY_UPDATE_MESSAGE,
 				       g_variant_new_string (priv->update_message));
 	}
+	if (priv->update_image != NULL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_UPDATE_IMAGE,
+				       g_variant_new_string (priv->update_image));
+	}
 	if (priv->update_state != FWUPD_UPDATE_STATE_UNKNOWN) {
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_UPDATE_STATE,
@@ -1576,6 +1584,10 @@ fwupd_device_from_key_value (FwupdDevice *device, const gchar *key, GVariant *va
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_MESSAGE) == 0) {
 		fwupd_device_set_update_message (device, g_variant_get_string (value, NULL));
+		return;
+	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_IMAGE) == 0) {
+		fwupd_device_set_update_image (device, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_STATE) == 0) {
@@ -1800,6 +1812,42 @@ fwupd_device_set_update_message (FwupdDevice *device, const gchar *update_messag
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
 	g_free (priv->update_message);
 	priv->update_message = g_strdup (update_message);
+}
+
+/**
+ * fwupd_device_get_update_image:
+ * @device: A #FwupdDevice
+ *
+ * Gets the update image.
+ *
+ * Returns: the update image URL, or %NULL if unset
+ *
+ * Since: 1.4.5
+ **/
+const gchar *
+fwupd_device_get_update_image (FwupdDevice *device)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	return priv->update_image;
+}
+
+/**
+ * fwupd_device_set_update_image:
+ * @device: A #FwupdDevice
+ * @update_image: the update image URL
+ *
+ * Sets the update image.
+ *
+ * Since: 1.4.5
+ **/
+void
+fwupd_device_set_update_image (FwupdDevice *device, const gchar *update_image)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	g_free (priv->update_image);
+	priv->update_image = g_strdup (update_image);
 }
 
 /**
@@ -2042,6 +2090,7 @@ fwupd_device_to_json (FwupdDevice *device, JsonBuilder *builder)
 	fwupd_device_json_add_int (builder, FWUPD_RESULT_KEY_STATUS, priv->status);
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_UPDATE_ERROR, priv->update_error);
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->update_message);
+	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->update_image);
 	if (priv->releases->len > 0) {
 		json_builder_set_member_name (builder, "Releases");
 		json_builder_begin_array (builder);
@@ -2169,6 +2218,7 @@ fwupd_device_to_string (FwupdDevice *device)
 	fwupd_pad_kv_ups (str, FWUPD_RESULT_KEY_UPDATE_STATE, priv->update_state);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_ERROR, priv->update_error);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->update_message);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->update_image);
 	for (guint i = 0; i < priv->releases->len; i++) {
 		FwupdRelease *release = g_ptr_array_index (priv->releases, i);
 		g_autofree gchar *tmp = fwupd_release_to_string (release);
@@ -2300,6 +2350,7 @@ fwupd_device_finalize (GObject *object)
 	g_free (priv->protocol);
 	g_free (priv->update_error);
 	g_free (priv->update_message);
+	g_free (priv->update_image);
 	g_free (priv->version);
 	g_free (priv->version_lowest);
 	g_free (priv->version_bootloader);

@@ -447,6 +447,15 @@ LIBFWUPD_1.4.1 {
   local: *;
 } LIBFWUPD_1.4.0;
 
+LIBFWUPD_1.4.5 {
+  global:
+    fwupd_device_get_update_image;
+    fwupd_device_set_update_image;
+    fwupd_release_get_update_image;
+    fwupd_release_set_update_image;
+  local: *;
+} LIBFWUPD_1.4.1;
+
 LIBFWUPD_1.5.0 {
   global:
     fwupd_client_get_host_security_attrs;
@@ -484,4 +493,4 @@ LIBFWUPD_1.5.0 {
     fwupd_security_attr_to_string;
     fwupd_security_attr_to_variant;
   local: *;
-} LIBFWUPD_1.4.1;
+} LIBFWUPD_1.4.5;
