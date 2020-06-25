@@ -6,6 +6,10 @@
 %global systemd_version 231
 %global json_glib_version 1.1.1
 
+# although we ship a few tiny python files these are utilities that 99.99%
+# of users do not need -- use this to avoid dragging python onto CoreOS
+%global __requires_exclude ^%{python3}$
+
 %define alphatag                #ALPHATAG#
 
 %global enable_ci 0
