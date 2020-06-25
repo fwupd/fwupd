@@ -47,6 +47,7 @@ G_BEGIN_DECLS
 #define FWUPD_RESULT_KEY_SUMMARY		"Summary"	/* s */
 #define FWUPD_RESULT_KEY_TRUST_FLAGS		"TrustFlags"	/* t */
 #define FWUPD_RESULT_KEY_UPDATE_MESSAGE		"UpdateMessage"	/* s */
+#define FWUPD_RESULT_KEY_UPDATE_IMAGE		"UpdateImage"	/* s */
 #define FWUPD_RESULT_KEY_UPDATE_ERROR		"UpdateError"	/* s */
 #define FWUPD_RESULT_KEY_UPDATE_STATE		"UpdateState"	/* u */
 #define FWUPD_RESULT_KEY_URI			"Uri"		/* s */

@@ -135,6 +135,9 @@ void		 fwupd_device_set_update_error		(FwupdDevice	*device,
 const gchar	*fwupd_device_get_update_message	(FwupdDevice	*device);
 void		 fwupd_device_set_update_message	(FwupdDevice	*device,
 							 const gchar	*update_message);
+const gchar	*fwupd_device_get_update_image		(FwupdDevice	*device);
+void		 fwupd_device_set_update_image		(FwupdDevice	*device,
+							 const gchar	*update_image);
 FwupdStatus	 fwupd_device_get_status		(FwupdDevice	*self);
 void		 fwupd_device_set_status		(FwupdDevice	*self,
 							 FwupdStatus	 status);

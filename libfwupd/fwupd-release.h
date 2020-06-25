@@ -134,6 +134,9 @@ void		 fwupd_release_set_install_duration	(FwupdRelease	*release,
 const gchar	*fwupd_release_get_update_message	(FwupdRelease	*release);
 void		 fwupd_release_set_update_message	(FwupdRelease	*release,
 							 const gchar	*update_message);
+const gchar	*fwupd_release_get_update_image		(FwupdRelease	*release);
+void		 fwupd_release_set_update_image		(FwupdRelease	*release,
+							 const gchar	*update_image);
 
 FwupdRelease	*fwupd_release_from_variant		(GVariant	*value);
 GPtrArray	*fwupd_release_array_from_variant	(GVariant	*value);

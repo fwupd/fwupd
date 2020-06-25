@@ -1009,6 +1009,10 @@ fu_device_set_quirk_kv (FuDevice *self,
 		fu_device_set_update_message (self, value);
 		return TRUE;
 	}
+	if (g_strcmp0 (key, FU_QUIRKS_UPDATE_IMAGE) == 0) {
+		fu_device_set_update_image (self, value);
+		return TRUE;
+	}
 	if (g_strcmp0 (key, FU_QUIRKS_ICON) == 0) {
 		fu_device_add_icon (self, value);
 		return TRUE;
@@ -3164,6 +3168,9 @@ fu_device_incorporate_from_component (FuDevice *self, XbNode *component)
 	tmp = xb_node_query_text (component, "custom/value[@key='LVFS::UpdateMessage']", NULL);
 	if (tmp != NULL)
 		fwupd_device_set_update_message (FWUPD_DEVICE (self), tmp);
+	tmp = xb_node_query_text (component, "custom/value[@key='LVFS::UpdateImage']", NULL);
+	if (tmp != NULL)
+		fwupd_device_set_update_image (FWUPD_DEVICE (self), tmp);
 }
 
 static void
