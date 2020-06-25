@@ -446,3 +446,12 @@ LIBFWUPD_1.4.1 {
     fwupd_device_id_is_valid;
   local: *;
 } LIBFWUPD_1.4.0;
+
+LIBFWUPD_1.4.5 {
+  global:
+    fwupd_device_get_update_image;
+    fwupd_device_set_update_image;
+    fwupd_release_get_update_image;
+    fwupd_release_set_update_image;
+  local: *;
+} LIBFWUPD_1.4.1;
