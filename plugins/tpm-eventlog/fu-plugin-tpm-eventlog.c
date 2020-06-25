@@ -101,9 +101,8 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 		return;
 
 	if (data->secure_boot_problem) {
-		fu_device_set_update_message (device,
-					      "Platform firmware measurement unavailable. Secure boot is disabled in BIOS setup, "
-					      "enabling it may fix this issue");
+		g_warning ("Platform firmware measurement unavailable. Secure boot is disabled in "
+			   "BIOS setup, enabling it may fix this issue");
 		return;
 	}
 
@@ -119,7 +118,6 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 	}
 
 	/* urgh, this is unexpected */
-	fu_device_set_update_message (device,
-				     "TPM PCR0 differs from reconstruction, "
-				     "please see https://github.com/fwupd/fwupd/wiki/TPM-PCR0-differs-from-reconstruction");
+	g_warning ("TPM PCR0 differs from reconstruction, "
+		   "please see https://github.com/fwupd/fwupd/wiki/TPM-PCR0-differs-from-reconstruction");
 }
