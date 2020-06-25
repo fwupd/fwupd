@@ -1204,16 +1204,19 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 		/* TRANSLATORS: hardware state, e.g. "pending" */
 		fu_common_string_append_kv (str, idt + 1, _("Update State"),
 					    fwupd_update_state_to_string (state));
+
+		if (state == FWUPD_UPDATE_STATE_SUCCESS) {
+			tmp = fwupd_device_get_update_message (dev);
+			if (tmp != NULL) {
+				/* TRANSLATORS: helpful messages from last update */
+				fu_common_string_append_kv (str, idt + 1, _("Update Message"), tmp);
+			}
+		}
 	}
 	tmp = fwupd_device_get_update_error (dev);
 	if (tmp != NULL) {
 		/* TRANSLATORS: error message from last update attempt */
 		fu_common_string_append_kv (str, idt + 1, _("Update Error"), tmp);
-	}
-	tmp = fwupd_device_get_update_message (dev);
-	if (tmp != NULL) {
-		/* TRANSLATORS: helpful messages from last update */
-		fu_common_string_append_kv (str, idt + 1, _("Update Message"), tmp);
 	}
 
 	/* modified date: for history devices */
