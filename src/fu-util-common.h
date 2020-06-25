@@ -31,7 +31,8 @@ gboolean	 fu_util_prompt_for_boolean	(gboolean	 def);
 
 void		 fu_util_print_tree		(GNode *n,	gpointer data);
 gboolean	 fu_util_is_interesting_device	(FwupdDevice	*dev);
-gchar		*fu_util_get_user_cache_path	(const gchar	*fn);
+gchar		*fu_util_get_user_cache_path	(const gchar	*fn,
+						 GError		**error);
 SoupSession	*fu_util_setup_networking	(GError		**error);
 gchar		*fu_util_get_versions		(void);
 

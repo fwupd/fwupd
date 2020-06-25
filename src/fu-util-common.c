@@ -248,7 +248,7 @@ fu_util_is_interesting_device (FwupdDevice *dev)
 }
 
 gchar *
-fu_util_get_user_cache_path (const gchar *fn)
+fu_util_get_user_cache_path (const gchar *fn, GError **error)
 {
 	const gchar *root = g_get_user_cache_dir ();
 	g_autofree gchar *basename = g_path_get_basename (fn);
@@ -257,6 +257,15 @@ fu_util_get_user_cache_path (const gchar *fn)
 	/* if run from a systemd unit, use the cache directory set there */
 	if (g_getenv ("CACHE_DIRECTORY") != NULL)
 		root = g_getenv ("CACHE_DIRECTORY");
+
+	/* does exist */
+	if (root == NULL) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_NOT_FOUND,
+				     "user cache location not found");
+		return NULL;
+	}
 
 	/* return the legacy path if it exists rather than renaming it to
 	 * prevent problems when using old and new versions of fwupd */

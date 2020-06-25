@@ -573,7 +573,9 @@ fu_util_download_if_required (FuUtilPrivate *priv, const gchar *perhapsfn, GErro
 		return g_strdup (perhapsfn);
 
 	/* download the firmware to a cachedir */
-	filename = fu_util_get_user_cache_path (perhapsfn);
+	filename = fu_util_get_user_cache_path (perhapsfn, error);
+	if (filename == NULL)
+		return NULL;
 	if (!fu_common_mkdir_parent (filename, error))
 		return NULL;
 	if (!fu_util_download_file (priv, uri, filename, NULL, error))
@@ -1188,7 +1190,9 @@ fu_util_download_metadata_for_remote (FuUtilPrivate *priv,
 	/* download the signature */
 	basename_asc = g_path_get_basename (fwupd_remote_get_filename_cache_sig (remote));
 	basename_id_asc = g_strdup_printf ("%s-%s", fwupd_remote_get_id (remote), basename_asc);
-	filename_asc = fu_util_get_user_cache_path (basename_id_asc);
+	filename_asc = fu_util_get_user_cache_path (basename_id_asc, error);
+	if (filename_asc == NULL)
+		return FALSE;
 	if (!fu_common_mkdir_parent (filename_asc, error))
 		return FALSE;
 	uri_sig = soup_uri_new (fwupd_remote_get_metadata_uri_sig (remote));
@@ -1202,7 +1206,9 @@ fu_util_download_metadata_for_remote (FuUtilPrivate *priv,
 	/* download the metadata */
 	basename = g_path_get_basename (fwupd_remote_get_filename_cache (remote));
 	basename_id = g_strdup_printf ("%s-%s", fwupd_remote_get_id (remote), basename);
-	filename = fu_util_get_user_cache_path (basename_id);
+	filename = fu_util_get_user_cache_path (basename_id, error);
+	if (filename == NULL)
+		return FALSE;
 	uri = soup_uri_new (fwupd_remote_get_metadata_uri (remote));
 	if (!fu_util_download_file (priv, uri, filename, NULL, error))
 		return FALSE;
@@ -1733,7 +1739,9 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 	g_print ("Downloading %s for %s...\n",
 		 fwupd_release_get_version (rel),
 		 fwupd_device_get_name (dev));
-	fn = fu_util_get_user_cache_path (uri_str);
+	fn = fu_util_get_user_cache_path (uri_str, error);
+	if (fn == NULL)
+		return FALSE;
 	if (!fu_common_mkdir_parent (fn, error))
 		return FALSE;
 	checksums = fwupd_release_get_checksums (rel);

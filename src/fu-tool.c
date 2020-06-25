@@ -840,7 +840,9 @@ fu_util_download_if_required (FuUtilPrivate *priv, const gchar *perhapsfn, GErro
 		return g_strdup (perhapsfn);
 
 	/* download the firmware to a cachedir */
-	filename = fu_util_get_user_cache_path (perhapsfn);
+	filename = fu_util_get_user_cache_path (perhapsfn, error);
+	if (filename == NULL)
+		return NULL;
 	if (!fu_common_mkdir_parent (filename, error))
 		return NULL;
 	if (!fu_util_download_out_of_process (perhapsfn, filename, error))
@@ -1852,7 +1854,9 @@ fu_util_refresh_remote (FuUtilPrivate *priv, FwupdRemote *remote, GError **error
 	g_autoptr(GBytes) bytes_sig = NULL;
 
 	/* payload */
-	fn_raw = fu_util_get_user_cache_path (fwupd_remote_get_metadata_uri (remote));
+	fn_raw = fu_util_get_user_cache_path (fwupd_remote_get_metadata_uri (remote), error);
+	if (fn_raw == NULL)
+		return FALSE;
 	if (!fu_common_mkdir_parent (fn_raw, error))
 		return FALSE;
 	if (!fu_util_download_out_of_process (fwupd_remote_get_metadata_uri (remote),
@@ -1863,7 +1867,9 @@ fu_util_refresh_remote (FuUtilPrivate *priv, FwupdRemote *remote, GError **error
 		return FALSE;
 
 	/* signature */
-	fn_sig = fu_util_get_user_cache_path (fwupd_remote_get_metadata_uri_sig (remote));
+	fn_sig = fu_util_get_user_cache_path (fwupd_remote_get_metadata_uri_sig (remote), error);
+	if (fn_sig == NULL)
+		return FALSE;
 	if (!fu_util_download_out_of_process (fwupd_remote_get_metadata_uri_sig (remote),
 					      fn_sig, error))
 		return FALSE;
