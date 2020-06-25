@@ -126,12 +126,8 @@ fu_plugin_device_registered_uefi (FuPlugin *plugin, FuDevice *device)
 			}
 		}
 		/* check at least one reconstruction for this algorithm */
-		if (!data->reconstructed) {
-			fu_device_set_update_message (device,
-						     "TPM PCR0 differs from reconstruction, "
-						     "please see https://github.com/fwupd/fwupd/wiki/TPM-PCR0-differs-from-reconstruction");
+		if (!data->reconstructed)
 			return;
-		}
 	}
 }
 
