@@ -1565,6 +1565,21 @@ fwupd_pad_kv_str (GString *str, const gchar *key, const gchar *value)
 }
 
 static void
+fwupd_pad_kv_unx (GString *str, const gchar *key, guint64 value)
+{
+	g_autoptr(GDateTime) date = NULL;
+	g_autofree gchar *tmp = NULL;
+
+	/* ignore */
+	if (value == 0)
+		return;
+
+	date = g_date_time_new_from_unix_utc ((gint64) value);
+	tmp = g_date_time_format (date, "%F");
+	fwupd_pad_kv_str (str, key, tmp);
+}
+
+static void
 fwupd_pad_kv_siz (GString *str, const gchar *key, guint64 value)
 {
 	g_autofree gchar *tmp = NULL;
@@ -1752,7 +1767,7 @@ fwupd_release_to_string (FwupdRelease *release)
 	}
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_LICENSE, priv->license);
 	fwupd_pad_kv_siz (str, FWUPD_RESULT_KEY_SIZE, priv->size);
-	fwupd_pad_kv_siz (str, FWUPD_RESULT_KEY_CREATED, priv->created);
+	fwupd_pad_kv_unx (str, FWUPD_RESULT_KEY_CREATED, priv->created);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_URI, priv->uri);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_HOMEPAGE, priv->homepage);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DETAILS_URL, priv->details_url);
