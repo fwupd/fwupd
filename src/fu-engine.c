@@ -3588,6 +3588,9 @@ fu_engine_get_result_from_component (FuEngine *self, XbNode *component, GError *
 	g_autoptr(GPtrArray) provides = NULL;
 	g_autoptr(XbNode) description = NULL;
 	g_autoptr(XbNode) release = NULL;
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+	g_autoptr(XbQuery) query = NULL;
+#endif
 
 	dev = fu_device_new ();
 	provides = xb_node_query (component,
@@ -3639,9 +3642,19 @@ fu_engine_get_result_from_component (FuEngine *self, XbNode *component, GError *
 		return NULL;
 
 	/* verify trust */
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+	query = xb_query_new_full (xb_node_get_silo (component),
+				   "releases/release",
+				   XB_QUERY_FLAG_FORCE_NODE_CACHE,
+				   error);
+	if (query == NULL)
+		return NULL;
+	release = xb_node_query_first_full (component, query, &error_local);
+#else
 	release = xb_node_query_first (component,
 				       "releases/release",
 				       &error_local);
+#endif
 	if (release == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
