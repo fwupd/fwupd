@@ -1846,26 +1846,41 @@ fu_util_get_history (FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_refresh_remote (FuUtilPrivate *priv, FwupdRemote *remote, GError **error)
 {
+	const gchar *metadata_uri = NULL;
 	g_autofree gchar *fn_raw = NULL;
 	g_autofree gchar *fn_sig = NULL;
 	g_autoptr(GBytes) bytes_raw = NULL;
 	g_autoptr(GBytes) bytes_sig = NULL;
 
 	/* payload */
-	fn_raw = fu_util_get_user_cache_path (fwupd_remote_get_metadata_uri (remote));
+	metadata_uri = fwupd_remote_get_metadata_uri (remote);
+	if (metadata_uri == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "no metadata URI available");
+		return FALSE;
+	}
+	fn_raw = fu_util_get_user_cache_path (metadata_uri);
 	if (!fu_common_mkdir_parent (fn_raw, error))
 		return FALSE;
-	if (!fu_util_download_out_of_process (fwupd_remote_get_metadata_uri (remote),
-					      fn_raw, error))
+	if (!fu_util_download_out_of_process (metadata_uri, fn_raw, error))
 		return FALSE;
 	bytes_raw = fu_common_get_contents_bytes (fn_raw, error);
 	if (bytes_raw == NULL)
 		return FALSE;
 
 	/* signature */
-	fn_sig = fu_util_get_user_cache_path (fwupd_remote_get_metadata_uri_sig (remote));
-	if (!fu_util_download_out_of_process (fwupd_remote_get_metadata_uri_sig (remote),
-					      fn_sig, error))
+	metadata_uri = fwupd_remote_get_metadata_uri_sig (remote);
+	if (metadata_uri == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "no metadata signature URI available");
+		return FALSE;
+	}
+	fn_sig = fu_util_get_user_cache_path (metadata_uri);
+	if (!fu_util_download_out_of_process (metadata_uri, fn_sig, error))
 		return FALSE;
 	bytes_sig = fu_common_get_contents_bytes (fn_sig, error);
 	if (bytes_sig == NULL)
