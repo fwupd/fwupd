@@ -399,6 +399,54 @@ fwupd_trust_flag_from_string (const gchar *trust_flag)
 }
 
 /**
+ * fwupd_feature_flag_to_string:
+ * @feature_flag: A #FwupdFeatureFlags, e.g. %FWUPD_FEATURE_FLAG_DETACH_ACTION
+ *
+ * Converts a #FwupdFeatureFlags to a string.
+ *
+ * Return value: identifier string
+ *
+ * Since: 1.4.5
+ **/
+const gchar *
+fwupd_feature_flag_to_string (FwupdFeatureFlags feature_flag)
+{
+	if (feature_flag == FWUPD_FEATURE_FLAG_NONE)
+		return "none";
+	if (feature_flag == FWUPD_FEATURE_FLAG_CAN_REPORT)
+		return "can-report";
+	if (feature_flag == FWUPD_FEATURE_FLAG_DETACH_ACTION)
+		return "detach-action";
+	if (feature_flag == FWUPD_FEATURE_FLAG_UPDATE_ACTION)
+		return "update-action";
+	return NULL;
+}
+
+/**
+ * fwupd_feature_flag_from_string:
+ * @feature_flag: A string, e.g. `detach-action`
+ *
+ * Converts a string to a #FwupdFeatureFlags.
+ *
+ * Return value: enumerated value
+ *
+ * Since: 1.4.5
+ **/
+FwupdFeatureFlags
+fwupd_feature_flag_from_string (const gchar *feature_flag)
+{
+	if (g_strcmp0 (feature_flag, "none") == 0)
+		return FWUPD_FEATURE_FLAG_NONE;
+	if (g_strcmp0 (feature_flag, "can-report") == 0)
+		return FWUPD_FEATURE_FLAG_CAN_REPORT;
+	if (g_strcmp0 (feature_flag, "detach-action") == 0)
+		return FWUPD_FEATURE_FLAG_DETACH_ACTION;
+	if (g_strcmp0 (feature_flag, "update-action") == 0)
+		return FWUPD_FEATURE_FLAG_UPDATE_ACTION;
+	return FWUPD_FEATURE_FLAG_LAST;
+}
+
+/**
  * fwupd_keyring_kind_from_string:
  * @keyring_kind: a string, e.g. `gpg`
  *

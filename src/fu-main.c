@@ -46,6 +46,7 @@ typedef struct {
 	GDBusProxy		*proxy_uid;
 	GMainLoop		*loop;
 	GFileMonitor		*argv0_monitor;
+	GHashTable		*sender_features;	/* sender:FwupdFeatureFlags */
 #if GLIB_CHECK_VERSION(2,63,3)
 	GMemoryMonitor		*memory_monitor;
 #endif
@@ -206,16 +207,23 @@ fu_main_engine_percentage_changed_cb (FuEngine *engine,
 				       g_variant_new_uint32 (percentage));
 }
 
-static gboolean
-fu_main_get_device_flags_for_sender (FuMainPrivate *priv, const char *sender,
-				     FwupdDeviceFlags *flags, GError **error)
+static FuEngineRequest *
+fu_main_create_request (FuMainPrivate *priv, const gchar *sender, GError **error)
 {
-	uid_t calling_uid;
+	FwupdFeatureFlags *feature_flags;
+	FwupdDeviceFlags device_flags = FWUPD_DEVICE_FLAG_NONE;
+	uid_t calling_uid = 0;
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
 	g_autoptr(GVariant) value = NULL;
 
-	g_return_val_if_fail (sender != NULL, FALSE);
-	g_return_val_if_fail (flags != NULL, FALSE);
+	g_return_val_if_fail (sender != NULL, NULL);
 
+	/* did the client set the list of supported feature */
+	feature_flags = g_hash_table_lookup (priv->sender_features, sender);
+	if (feature_flags != NULL)
+		fu_engine_request_set_feature_flags (request, *feature_flags);
+
+	/* are we root and therefore trusted? */
 	value = g_dbus_proxy_call_sync (priv->proxy_uid,
 					"GetConnectionUnixUser",
 					g_variant_new ("(s)", sender),
@@ -229,28 +237,26 @@ fu_main_get_device_flags_for_sender (FuMainPrivate *priv, const char *sender,
 	}
 	g_variant_get (value, "(u)", &calling_uid);
 	if (calling_uid == 0)
-		*flags |= FWUPD_DEVICE_FLAG_TRUSTED;
+		device_flags |= FWUPD_DEVICE_FLAG_TRUSTED;
+	fu_engine_request_set_device_flags (request, device_flags);
 
-	return TRUE;
+	/* success */
+	return g_steal_pointer (&request);
 }
 
 static GVariant *
-fu_main_device_array_to_variant (FuMainPrivate *priv, const gchar *sender,
+fu_main_device_array_to_variant (FuMainPrivate *priv, FuEngineRequest *request,
 				 GPtrArray *devices, GError **error)
 {
 	GVariantBuilder builder;
-	FwupdDeviceFlags flags = FWUPD_DEVICE_FLAG_NONE;
 
 	g_return_val_if_fail (devices->len > 0, NULL);
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
 
-	if (!fu_main_get_device_flags_for_sender (priv, sender, &flags, error))
-		return NULL;
-
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index (devices, i);
 		GVariant *tmp = fwupd_device_to_variant_full (FWUPD_DEVICE (device),
-							      flags);
+							      fu_engine_request_get_device_flags (request));
 		g_variant_builder_add_value (&builder, tmp);
 	}
 	return g_variant_new ("(aa{sv})", &builder);
@@ -300,6 +306,7 @@ fu_main_result_array_to_variant (GPtrArray *results)
 
 typedef struct {
 	GDBusMethodInvocation	*invocation;
+	FuEngineRequest		*request;
 	PolkitSubject		*subject;
 	GPtrArray		*install_tasks;
 	GPtrArray		*action_ids;
@@ -323,6 +330,8 @@ fu_main_auth_helper_free (FuMainAuthHelper *helper)
 		g_object_unref (helper->subject);
 	if (helper->silo != NULL)
 		g_object_unref (helper->silo);
+	if (helper->request != NULL)
+		g_object_unref (helper->request);
 	if (helper->install_tasks != NULL)
 		g_ptr_array_unref (helper->install_tasks);
 	if (helper->action_ids != NULL)
@@ -602,6 +611,7 @@ fu_main_authorize_install_queue (FuMainAuthHelper *helper_ref)
 	/* all authenticated, so install all the things */
 	priv->update_in_progress = TRUE;
 	ret = fu_engine_install_tasks (helper->priv->engine,
+				       helper->request,
 				       helper->install_tasks,
 				       helper->blob_cab,
 				       helper->flags,
@@ -731,6 +741,7 @@ fu_main_install_with_helper (FuMainAuthHelper *helper_ref, GError **error)
 			/* is this component valid for the device */
 			task = fu_install_task_new (device, component);
 			if (!fu_engine_check_requirements (priv->engine,
+							   helper->request,
 							   task,
 							   helper->flags | FWUPD_INSTALL_FLAG_FORCE,
 							   &error_local)) {
@@ -745,6 +756,7 @@ fu_main_install_with_helper (FuMainAuthHelper *helper_ref, GError **error)
 			/* make a second pass using possibly updated version format now */
 			fu_engine_md_refresh_device_from_component (priv->engine, device, component);
 			if (!fu_engine_check_requirements (priv->engine,
+							   helper->request,
 							   task,
 							   helper->flags,
 							   &error_local)) {
@@ -806,7 +818,15 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 {
 	FuMainPrivate *priv = (FuMainPrivate *) user_data;
 	GVariant *val = NULL;
+	g_autoptr(FuEngineRequest) request = NULL;
 	g_autoptr(GError) error = NULL;
+
+	/* build request */
+	request = fu_main_create_request (priv, sender, &error);
+	if (request == NULL) {
+		g_dbus_method_invocation_return_gerror (invocation, error);
+		return;
+	}
 
 	/* activity */
 	fu_engine_idle_reset (priv->engine);
@@ -819,7 +839,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
 		}
-		val = fu_main_device_array_to_variant (priv, sender, devices, &error);
+		val = fu_main_device_array_to_variant (priv, request, devices, &error);
 		if (val == NULL) {
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
@@ -836,7 +856,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
 		}
-		releases = fu_engine_get_releases (priv->engine, device_id, &error);
+		releases = fu_engine_get_releases (priv->engine, request, device_id, &error);
 		if (releases == NULL) {
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
@@ -897,6 +917,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		fu_main_set_status (priv, FWUPD_STATUS_WAITING_FOR_AUTH);
 		helper = g_new0 (FuMainAuthHelper, 1);
 		helper->priv = priv;
+		helper->request = g_steal_pointer (&request);
 		helper->invocation = g_object_ref (invocation);
 		helper->checksums = g_ptr_array_new_with_free_func (g_free);
 		for (guint i = 0; checksums[i] != NULL; i++)
@@ -939,6 +960,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		fu_main_set_status (priv, FWUPD_STATUS_WAITING_FOR_AUTH);
 		helper->priv = priv;
 		helper->value = g_steal_pointer (&value);
+		helper->request = g_steal_pointer (&request);
 		helper->invocation = g_object_ref (invocation);
 		subject = polkit_system_bus_name_new (sender);
 		polkit_authority_check_authorization (priv->authority, subject,
@@ -959,7 +981,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
 		}
-		releases = fu_engine_get_downgrades (priv->engine, device_id, &error);
+		releases = fu_engine_get_downgrades (priv->engine, request, device_id, &error);
 		if (releases == NULL) {
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
@@ -977,7 +999,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
 		}
-		releases = fu_engine_get_upgrades (priv->engine, device_id, &error);
+		releases = fu_engine_get_upgrades (priv->engine, request, device_id, &error);
 		if (releases == NULL) {
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
@@ -1006,7 +1028,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
 		}
-		val = fu_main_device_array_to_variant (priv, sender, devices, &error);
+		val = fu_main_device_array_to_variant (priv, request, devices, &error);
 		if (val == NULL) {
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
@@ -1125,6 +1147,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		fu_main_set_status (priv, FWUPD_STATUS_WAITING_FOR_AUTH);
 		helper = g_new0 (FuMainAuthHelper, 1);
 		helper->priv = priv;
+		helper->request = g_steal_pointer (&request);
 		helper->invocation = g_object_ref (invocation);
 		helper->device_id = g_strdup (device_id);
 		subject = polkit_system_bus_name_new (sender);
@@ -1153,6 +1176,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		fu_main_set_status (priv, FWUPD_STATUS_WAITING_FOR_AUTH);
 		helper = g_new0 (FuMainAuthHelper, 1);
 		helper->priv = priv;
+		helper->request = g_steal_pointer (&request);
 		helper->invocation = g_object_ref (invocation);
 		helper->device_id = g_strdup (device_id);
 		subject = polkit_system_bus_name_new (sender);
@@ -1179,6 +1203,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		helper->priv = priv;
 		helper->key = g_steal_pointer (&key);
 		helper->value = g_steal_pointer (&value);
+		helper->request = g_steal_pointer (&request);
 		helper->invocation = g_object_ref (invocation);
 		subject = polkit_system_bus_name_new (sender);
 		polkit_authority_check_authorization (priv->authority, subject,
@@ -1203,6 +1228,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 
 		/* create helper object */
 		helper = g_new0 (FuMainAuthHelper, 1);
+		helper->request = g_steal_pointer (&request);
 		helper->invocation = g_object_ref (invocation);
 		helper->remote_id = g_strdup (remote_id);
 		helper->key = g_strdup (key);
@@ -1236,6 +1262,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 
 		/* create helper object */
 		helper = g_new0 (FuMainAuthHelper, 1);
+		helper->request = g_steal_pointer (&request);
 		helper->invocation = g_object_ref (invocation);
 		helper->device_id = g_strdup (device_id);
 		helper->priv = priv;
@@ -1267,6 +1294,18 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		g_dbus_method_invocation_return_value (invocation, NULL);
 		return;
 	}
+	if (g_strcmp0 (method_name, "SetFeatureFlags") == 0) {
+		guint64 feature_flags = 0;
+		g_variant_get (parameters, "(t)", &feature_flags);
+		g_debug ("Called %s(%" G_GUINT64_FORMAT ")", method_name, feature_flags);
+
+		/* old flags for the same sender will be automatically destroyed */
+		g_hash_table_insert (priv->sender_features,
+				     g_strdup (sender),
+				     g_memdup (&feature_flags, sizeof(feature_flags)));
+		g_dbus_method_invocation_return_value (invocation, NULL);
+		return;
+	}
 	if (g_strcmp0 (method_name, "Install") == 0) {
 		GVariant *prop_value;
 		const gchar *device_id = NULL;
@@ -1289,6 +1328,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 
 		/* create helper object */
 		helper = g_new0 (FuMainAuthHelper, 1);
+		helper->request = g_steal_pointer (&request);
 		helper->invocation = g_object_ref (invocation);
 		helper->device_id = g_strdup (device_id);
 		helper->priv = priv;
@@ -1381,7 +1421,7 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		}
 
 		/* get details about the file (will close the fd when done) */
-		results = fu_engine_get_details (priv->engine, fd, &error);
+		results = fu_engine_get_details (priv->engine, request, fd, &error);
 		if (results == NULL) {
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
@@ -1559,6 +1599,7 @@ fu_main_load_introspection (const gchar *filename, GError **error)
 static void
 fu_main_private_free (FuMainPrivate *priv)
 {
+	g_hash_table_unref (priv->sender_features);
 	if (priv->loop != NULL)
 		g_main_loop_unref (priv->loop);
 	if (priv->owner_id > 0)
@@ -1626,6 +1667,7 @@ main (int argc, char *argv[])
 
 	/* create new objects */
 	priv = g_new0 (FuMainPrivate, 1);
+	priv->sender_features = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	priv->loop = g_main_loop_new (NULL, FALSE);
 
 	/* load engine */

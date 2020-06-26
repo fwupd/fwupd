@@ -2595,6 +2595,7 @@ main (int argc, char *argv[])
 	gboolean force = FALSE;
 	gboolean allow_older = FALSE;
 	gboolean allow_reinstall = FALSE;
+	gboolean is_interactive = TRUE;
 	gboolean no_history = FALSE;
 	gboolean offline = FALSE;
 	gboolean ret;
@@ -2877,6 +2878,7 @@ main (int argc, char *argv[])
 
 	/* non-TTY consoles cannot answer questions */
 	if (isatty (fileno (stdout)) == 0) {
+		is_interactive = FALSE;
 		priv->no_unreported_check = TRUE;
 		priv->no_metadata_check = TRUE;
 		priv->no_reboot_check = TRUE;
@@ -2971,6 +2973,19 @@ main (int argc, char *argv[])
 	if (!fu_util_check_polkit_actions (&error)) {
 		g_printerr ("%s\n", error->message);
 		return EXIT_FAILURE;
+	}
+
+	/* send our implemented feature set */
+	if (is_interactive) {
+		if (!fwupd_client_set_feature_flags (priv->client,
+						     FWUPD_FEATURE_FLAG_CAN_REPORT |
+						     FWUPD_FEATURE_FLAG_UPDATE_ACTION |
+						     FWUPD_FEATURE_FLAG_DETACH_ACTION,
+						     priv->cancellable, &error)) {
+			g_printerr ("Failed to set front-end features: %s\n",
+				    error->message);
+			return EXIT_FAILURE;
+		}
 	}
 
 	/* run the specified command */

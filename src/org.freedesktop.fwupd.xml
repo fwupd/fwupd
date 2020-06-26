@@ -490,6 +490,26 @@
     </method>
 
     <!--***********************************************************-->
+    <method name='SetFeatureFlags'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Sets the features the client supports. This allows firmware to depend on
+            specific front-end features, for instance showing the user an image on
+            how to detach the hardware.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='t' name='feature_flags' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>The features the front end supports</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
     <method name='ClearResults'>
       <doc:doc>
         <doc:description>

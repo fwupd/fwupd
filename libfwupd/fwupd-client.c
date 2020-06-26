@@ -1761,6 +1761,56 @@ fwupd_client_set_approved_firmware (FwupdClient *client,
 }
 
 /**
+ * fwupd_client_set_feature_flags:
+ * @client: A #FwupdClient
+ * @feature_flags: #FwupdFeatureFlags, e.g. %FWUPD_FEATURE_FLAG_UPDATE_TEXT
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Sets the features the client supports. This allows firmware to depend on
+ * specific front-end features, for instance showing the user an image on
+ * how to detach the hardware.
+ *
+ * Clients can call this none or multiple times.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.4.5
+ **/
+gboolean
+fwupd_client_set_feature_flags (FwupdClient *client,
+				FwupdFeatureFlags feature_flags,
+				GCancellable *cancellable,
+				GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_autoptr(GVariant) val = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* connect */
+	if (!fwupd_client_connect (client, cancellable, error))
+		return FALSE;
+
+	/* call into daemon */
+	val = g_dbus_proxy_call_sync (priv->proxy,
+				      "SetFeatureFlags",
+				      g_variant_new ("(t)", (guint64) feature_flags),
+				      G_DBUS_CALL_FLAGS_NONE,
+				      -1,
+				      cancellable,
+				      error);
+	if (val == NULL) {
+		if (error != NULL)
+			fwupd_client_fixup_dbus_error (*error);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/**
  * fwupd_client_self_sign:
  * @client: A #FwupdClient
  * @value: A string to sign, typically a JSON blob

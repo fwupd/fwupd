@@ -14,6 +14,7 @@
 #include "fwupd-enums.h"
 
 #include "fu-common.h"
+#include "fu-engine-request.h"
 #include "fu-install-task.h"
 #include "fu-plugin.h"
 #include "fu-security-attrs.h"
@@ -73,12 +74,15 @@ FwupdRemote 	*fu_engine_get_remote_by_id		(FuEngine	*self,
 GPtrArray	*fu_engine_get_remotes			(FuEngine	*self,
 							 GError		**error);
 GPtrArray	*fu_engine_get_releases			(FuEngine	*self,
+							 FuEngineRequest *request,
 							 const gchar	*device_id,
 							 GError		**error);
 GPtrArray	*fu_engine_get_downgrades		(FuEngine	*self,
+							 FuEngineRequest *request,
 							 const gchar	*device_id,
 							 GError		**error);
 GPtrArray	*fu_engine_get_upgrades			(FuEngine	*self,
+							 FuEngineRequest *request,
 							 const gchar	*device_id,
 							 GError		**error);
 FwupdDevice	*fu_engine_get_results			(FuEngine	*self,
@@ -140,11 +144,13 @@ gboolean	 fu_engine_install_blob			(FuEngine	*self,
 							 FwupdInstallFlags flags,
 							 GError		**error);
 gboolean	 fu_engine_install_tasks		(FuEngine	*self,
+							 FuEngineRequest *request,
 							 GPtrArray	*install_tasks,
 							 GBytes		*blob_cab,
 							 FwupdInstallFlags flags,
 							 GError		**error);
 GPtrArray	*fu_engine_get_details			(FuEngine	*self,
+							 FuEngineRequest *request,
 							 gint		 fd,
 							 GError		**error);
 gboolean	 fu_engine_activate			(FuEngine	*self,
@@ -168,8 +174,9 @@ void		 fu_engine_md_refresh_device_from_component (FuEngine	*self,
 							 FuDevice	*device,
 							 XbNode		*component);
 GPtrArray	*fu_engine_get_releases_for_device 	(FuEngine	*self,
-							FuDevice	*device,
-							GError		**error);
+							 FuEngineRequest *request,
+							 FuDevice	*device,
+							 GError		**error);
 
 /* for the self tests */
 void		 fu_engine_add_device			(FuEngine	*self,
@@ -180,6 +187,7 @@ void		 fu_engine_add_runtime_version		(FuEngine	*self,
 							 const gchar	*component_id,
 							 const gchar	*version);
 gboolean	 fu_engine_check_requirements		(FuEngine	*self,
+							 FuEngineRequest *request,
 							 FuInstallTask	*task,
 							 FwupdInstallFlags flags,
 							 GError		**error);
