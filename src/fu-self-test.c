@@ -191,6 +191,7 @@ fu_engine_requirements_missing_func (gconstpointer user_data)
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo = NULL;
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
 	const gchar *xml =
@@ -213,11 +214,117 @@ fu_engine_requirements_missing_func (gconstpointer user_data)
 
 	/* check this fails */
 	task = fu_install_task_new (NULL, component);
-	ret = fu_engine_check_requirements (engine, task,
+	ret = fu_engine_check_requirements (engine, request, task,
 					    FWUPD_INSTALL_FLAG_NONE,
 					    &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert (!ret);
+}
+
+static void
+fu_engine_requirements_client_fail_func (gconstpointer user_data)
+{
+	gboolean ret;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
+	g_autoptr(FuInstallTask) task = NULL;
+	g_autoptr(GError) error = NULL;
+	const gchar *xml =
+		"<component>"
+		"  <requires>"
+		"    <client>detach-action</client>"
+		"  </requires>"
+		"</component>";
+
+	/* make the component require one thing */
+	silo = xb_silo_new_from_xml (xml, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (silo);
+	component = xb_silo_query_first (silo, "component", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (component);
+
+	/* check this fails */
+	task = fu_install_task_new (NULL, component);
+	ret = fu_engine_check_requirements (engine, request, task,
+					    FWUPD_INSTALL_FLAG_NONE,
+					    &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert (!ret);
+}
+
+static void
+fu_engine_requirements_client_invalid_func (gconstpointer user_data)
+{
+	gboolean ret;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
+	g_autoptr(FuInstallTask) task = NULL;
+	g_autoptr(GError) error = NULL;
+	const gchar *xml =
+		"<component>"
+		"  <requires>"
+		"    <client>hello-dave</client>"
+		"  </requires>"
+		"</component>";
+
+	/* make the component require one thing */
+	silo = xb_silo_new_from_xml (xml, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (silo);
+	component = xb_silo_query_first (silo, "component", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (component);
+
+	/* check this fails */
+	task = fu_install_task_new (NULL, component);
+	ret = fu_engine_check_requirements (engine, request, task,
+					    FWUPD_INSTALL_FLAG_NONE,
+					    &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert (!ret);
+}
+
+static void
+fu_engine_requirements_client_pass_func (gconstpointer user_data)
+{
+	gboolean ret;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
+	g_autoptr(FuInstallTask) task = NULL;
+	g_autoptr(GError) error = NULL;
+	const gchar *xml =
+		"<component>"
+		"  <requires>"
+		"    <client>detach-action</client>"
+		"  </requires>"
+		"</component>";
+
+	/* set up a dummy version */
+	fu_engine_request_set_feature_flags (request,
+					     FWUPD_FEATURE_FLAG_DETACH_ACTION);
+
+	/* make the component require one thing */
+	silo = xb_silo_new_from_xml (xml, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (silo);
+	component = xb_silo_query_first (silo, "component", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (component);
+
+	/* check this passes */
+	task = fu_install_task_new (NULL, component);
+	ret = fu_engine_check_requirements (engine, request, task,
+					    FWUPD_INSTALL_FLAG_NONE,
+					    &error);
+	g_assert_no_error (error);
+	g_assert (ret);
 }
 
 static void
@@ -226,6 +333,7 @@ fu_engine_requirements_version_require_func (gconstpointer user_data)
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
@@ -260,7 +368,7 @@ fu_engine_requirements_version_require_func (gconstpointer user_data)
 
 	/* check this fails */
 	task = fu_install_task_new (device, component);
-	ret = fu_engine_check_requirements (engine, task,
+	ret = fu_engine_check_requirements (engine, request, task,
 					    FWUPD_INSTALL_FLAG_NONE,
 					    &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
@@ -275,6 +383,7 @@ fu_engine_requirements_unsupported_func (gconstpointer user_data)
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo = NULL;
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
 	const gchar *xml =
@@ -297,7 +406,7 @@ fu_engine_requirements_unsupported_func (gconstpointer user_data)
 
 	/* check this fails */
 	task = fu_install_task_new (NULL, component);
-	ret = fu_engine_check_requirements (engine, task,
+	ret = fu_engine_check_requirements (engine, request, task,
 					    FWUPD_INSTALL_FLAG_NONE,
 					    &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
@@ -311,6 +420,7 @@ fu_engine_requirements_child_func (gconstpointer user_data)
 	g_autoptr(FuDevice) device = fu_device_new ();
 	g_autoptr(FuDevice) child = fu_device_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
@@ -351,7 +461,7 @@ fu_engine_requirements_child_func (gconstpointer user_data)
 
 	/* check this passes */
 	task = fu_install_task_new (device, component);
-	ret = fu_engine_check_requirements (engine, task,
+	ret = fu_engine_check_requirements (engine, request, task,
 					    FWUPD_INSTALL_FLAG_NONE,
 					    &error);
 	g_assert_no_error (error);
@@ -365,6 +475,7 @@ fu_engine_requirements_child_fail_func (gconstpointer user_data)
 	g_autoptr(FuDevice) device = fu_device_new ();
 	g_autoptr(FuDevice) child = fu_device_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
@@ -405,7 +516,7 @@ fu_engine_requirements_child_fail_func (gconstpointer user_data)
 
 	/* check this passes */
 	task = fu_install_task_new (device, component);
-	ret = fu_engine_check_requirements (engine, task,
+	ret = fu_engine_check_requirements (engine, request, task,
 					    FWUPD_INSTALL_FLAG_NONE,
 					    &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
@@ -420,6 +531,7 @@ fu_engine_requirements_func (gconstpointer user_data)
 	gboolean ret;
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuInstallTask) task = NULL;
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo = NULL;
@@ -444,7 +556,7 @@ fu_engine_requirements_func (gconstpointer user_data)
 
 	/* check this passes */
 	task = fu_install_task_new (NULL, component);
-	ret = fu_engine_check_requirements (engine, task,
+	ret = fu_engine_check_requirements (engine, request, task,
 					    FWUPD_INSTALL_FLAG_NONE,
 					    &error);
 	g_assert_no_error (error);
@@ -457,6 +569,7 @@ fu_engine_requirements_device_func (gconstpointer user_data)
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
@@ -500,7 +613,7 @@ fu_engine_requirements_device_func (gconstpointer user_data)
 
 	/* check this passes */
 	task = fu_install_task_new (device, component);
-	ret = fu_engine_check_requirements (engine, task,
+	ret = fu_engine_check_requirements (engine, request, task,
 					    FWUPD_INSTALL_FLAG_NONE,
 					    &error);
 	g_assert_no_error (error);
@@ -513,6 +626,7 @@ fu_engine_requirements_device_plain_func (gconstpointer user_data)
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
@@ -546,7 +660,7 @@ fu_engine_requirements_device_plain_func (gconstpointer user_data)
 
 	/* check this passes */
 	task = fu_install_task_new (device, component);
-	ret = fu_engine_check_requirements (engine, task,
+	ret = fu_engine_check_requirements (engine, request, task,
 					    FWUPD_INSTALL_FLAG_NONE,
 					    &error);
 	g_assert_no_error (error);
@@ -559,6 +673,7 @@ fu_engine_requirements_version_format_func (gconstpointer user_data)
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
@@ -594,7 +709,7 @@ fu_engine_requirements_version_format_func (gconstpointer user_data)
 
 	/* check this fails */
 	task = fu_install_task_new (device, component);
-	ret = fu_engine_check_requirements (engine, task,
+	ret = fu_engine_check_requirements (engine, request, task,
 					    FWUPD_INSTALL_FLAG_NONE,
 					    &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
@@ -610,6 +725,7 @@ fu_engine_requirements_other_device_func (gconstpointer user_data)
 	g_autoptr(FuDevice) device1 = fu_device_new ();
 	g_autoptr(FuDevice) device2 = fu_device_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
@@ -660,7 +776,7 @@ fu_engine_requirements_other_device_func (gconstpointer user_data)
 
 	/* check this passes */
 	task = fu_install_task_new (device1, component);
-	ret = fu_engine_check_requirements (engine, task,
+	ret = fu_engine_check_requirements (engine, request, task,
 					    FWUPD_INSTALL_FLAG_NONE,
 					    &error);
 	g_assert_no_error (error);
@@ -673,6 +789,7 @@ fu_engine_requirements_protocol_check_func (gconstpointer user_data)
 	g_autoptr(FuDevice) device1 = fu_device_new ();
 	g_autoptr(FuDevice) device2 = fu_device_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(FuInstallTask) task1 = NULL;
 	g_autoptr(FuInstallTask) task2 = NULL;
@@ -737,7 +854,7 @@ fu_engine_requirements_protocol_check_func (gconstpointer user_data)
 
 	/* check this fails */
 	task1 = fu_install_task_new (device1, component);
-	ret = fu_engine_check_requirements (engine, task1,
+	ret = fu_engine_check_requirements (engine, request, task1,
 					    FWUPD_INSTALL_FLAG_NONE,
 					    &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
@@ -745,7 +862,7 @@ fu_engine_requirements_protocol_check_func (gconstpointer user_data)
 
 	/* check this passes */
 	task2 = fu_install_task_new (device2, component);
-	ret = fu_engine_check_requirements (engine, task2,
+	ret = fu_engine_check_requirements (engine, request, task2,
 					    FWUPD_INSTALL_FLAG_NONE,
 					    &error);
 
@@ -760,6 +877,7 @@ fu_engine_requirements_parent_device_func (gconstpointer user_data)
 	g_autoptr(FuDevice) device1 = fu_device_new ();
 	g_autoptr(FuDevice) device2 = fu_device_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
@@ -813,7 +931,7 @@ fu_engine_requirements_parent_device_func (gconstpointer user_data)
 
 	/* check this passes */
 	task = fu_install_task_new (device2, component);
-	ret = fu_engine_check_requirements (engine, task,
+	ret = fu_engine_check_requirements (engine, request, task,
 					    FWUPD_INSTALL_FLAG_NONE,
 					    &error);
 	g_assert_no_error (error);
@@ -1087,6 +1205,7 @@ fu_engine_require_hwid_func (gconstpointer user_data)
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuDevice) device = fu_device_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error = NULL;
@@ -1134,7 +1253,7 @@ fu_engine_require_hwid_func (gconstpointer user_data)
 
 	/* check requirements */
 	task = fu_install_task_new (device, component);
-	ret = fu_engine_check_requirements (engine, task,
+	ret = fu_engine_check_requirements (engine, request, task,
 					    FWUPD_INSTALL_FLAG_NONE,
 					    &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
@@ -1151,6 +1270,7 @@ fu_engine_downgrade_func (gconstpointer user_data)
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) devices_pre = NULL;
@@ -1269,13 +1389,19 @@ fu_engine_downgrade_func (gconstpointer user_data)
 	g_assert (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REGISTERED));
 
 	/* get the releases for one device */
-	releases = fu_engine_get_releases (engine, fu_device_get_id (device), &error);
+	releases = fu_engine_get_releases (engine,
+					   request,
+					   fu_device_get_id (device),
+					   &error);
 	g_assert_no_error (error);
 	g_assert (releases != NULL);
 	g_assert_cmpint (releases->len, ==, 4);
 
 	/* no upgrades, as no firmware is approved */
-	releases_up = fu_engine_get_upgrades (engine, fu_device_get_id (device), &error);
+	releases_up = fu_engine_get_upgrades (engine,
+					      request,
+					      fu_device_get_id (device),
+					      &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO);
 	g_assert_null (releases_up);
 	g_clear_error (&error);
@@ -1285,7 +1411,10 @@ fu_engine_downgrade_func (gconstpointer user_data)
 	fu_engine_add_approved_firmware (engine, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
 
 	/* upgrades */
-	releases_up = fu_engine_get_upgrades (engine, fu_device_get_id (device), &error);
+	releases_up = fu_engine_get_upgrades (engine,
+					      request,
+					      fu_device_get_id (device),
+					      &error);
 	g_assert_no_error (error);
 	g_assert (releases_up != NULL);
 	g_assert_cmpint (releases_up->len, ==, 2);
@@ -1297,7 +1426,10 @@ fu_engine_downgrade_func (gconstpointer user_data)
 	g_assert_cmpstr (fwupd_release_get_version (rel), ==, "1.2.4");
 
 	/* downgrades */
-	releases_dg = fu_engine_get_downgrades (engine, fu_device_get_id (device), &error);
+	releases_dg = fu_engine_get_downgrades (engine,
+						request,
+						fu_device_get_id (device),
+						&error);
 	g_assert_no_error (error);
 	g_assert (releases_dg != NULL);
 	g_assert_cmpint (releases_dg->len, ==, 1);
@@ -1312,6 +1444,7 @@ fu_engine_install_duration_func (gconstpointer user_data)
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) releases = NULL;
@@ -1365,7 +1498,10 @@ fu_engine_install_duration_func (gconstpointer user_data)
 	g_assert (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_SUPPORTED));
 
 	/* check the release install duration */
-	releases = fu_engine_get_releases (engine, fu_device_get_id (device), &error);
+	releases = fu_engine_get_releases (engine,
+					   request,
+					   fu_device_get_id (device),
+					   &error);
 	g_assert_no_error (error);
 	g_assert (releases != NULL);
 	g_assert_cmpint (releases->len, ==, 1);
@@ -2654,6 +2790,7 @@ fu_plugin_composite_func (gconstpointer user_data)
 	GError *error = NULL;
 	gboolean ret;
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -2760,6 +2897,7 @@ fu_plugin_composite_func (gconstpointer user_data)
 			/* is this component valid for the device */
 			task = fu_install_task_new (device, component);
 			if (!fu_engine_check_requirements (engine,
+							   request,
 							   task,
 							   0,
 							   &error_local)) {
@@ -2777,6 +2915,7 @@ fu_plugin_composite_func (gconstpointer user_data)
 
 	/* install the cab */
 	ret = fu_engine_install_tasks (engine,
+				       request,
 				       install_tasks,
 				       blob,
 				       FWUPD_DEVICE_FLAG_NONE,
@@ -3035,6 +3174,12 @@ main (int argc, char **argv)
 			      fu_engine_requirements_func);
 	g_test_add_data_func ("/fwupd/engine{requirements-missing}", self,
 			      fu_engine_requirements_missing_func);
+	g_test_add_data_func ("/fwupd/engine{requirements-client-fail}", self,
+			      fu_engine_requirements_client_fail_func);
+	g_test_add_data_func ("/fwupd/engine{requirements-client-invalid}", self,
+			      fu_engine_requirements_client_invalid_func);
+	g_test_add_data_func ("/fwupd/engine{requirements-client-pass}", self,
+			      fu_engine_requirements_client_pass_func);
 	g_test_add_data_func ("/fwupd/engine{requirements-version-require}", self,
 			      fu_engine_requirements_version_require_func);
 	g_test_add_data_func ("/fwupd/engine{requirements-parent-device}", self,

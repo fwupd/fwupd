@@ -449,8 +449,11 @@ LIBFWUPD_1.4.1 {
 
 LIBFWUPD_1.4.5 {
   global:
+    fwupd_client_set_feature_flags;
     fwupd_device_get_update_image;
     fwupd_device_set_update_image;
+    fwupd_feature_flag_from_string;
+    fwupd_feature_flag_to_string;
     fwupd_release_get_update_image;
     fwupd_release_set_update_image;
   local: *;
