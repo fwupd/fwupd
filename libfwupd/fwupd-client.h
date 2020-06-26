@@ -155,5 +155,9 @@ gchar		*fwupd_client_self_sign			(FwupdClient	*client,
 							 FwupdSelfSignFlags flags,
 							 GCancellable	*cancellable,
 							 GError		**error);
+gboolean	 fwupd_client_set_feature_flags		(FwupdClient	*client,
+							 FwupdFeatureFlags feature_flags,
+							 GCancellable	*cancellable,
+							 GError		**error);
 
 G_END_DECLS

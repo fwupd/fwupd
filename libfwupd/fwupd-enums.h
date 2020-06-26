@@ -65,6 +65,24 @@ typedef enum {
 } FwupdTrustFlags;
 
 /**
+ * FwupdFeatureFlags:
+ * @FWUPD_FEATURE_FLAG_NONE:			No trust
+ * @FWUPD_FEATURE_FLAG_CAN_REPORT:		Can upload a report of the update back to the server
+ * @FWUPD_FEATURE_FLAG_DETACH_ACTION:		Can perform detach action, typically showing text
+ * @FWUPD_FEATURE_FLAG_UPDATE_ACTION:		Can perform update action, typically showing text
+ *
+ * The flags to the feature capabilities of the front-end client.
+ **/
+typedef enum {
+	FWUPD_FEATURE_FLAG_NONE			= 0,		/* Since: 1.4.5 */
+	FWUPD_FEATURE_FLAG_CAN_REPORT		= 1 << 0,	/* Since: 1.4.5 */
+	FWUPD_FEATURE_FLAG_DETACH_ACTION	= 1 << 1,	/* Since: 1.4.5 */
+	FWUPD_FEATURE_FLAG_UPDATE_ACTION	= 1 << 2,	/* Since: 1.4.5 */
+	/*< private >*/
+	FWUPD_FEATURE_FLAG_LAST
+} FwupdFeatureFlags;
+
+/**
  * FwupdDeviceFlags:
  * @FWUPD_DEVICE_FLAG_NONE:			No flags set
  * @FWUPD_DEVICE_FLAG_INTERNAL:			Device cannot be removed easily
@@ -323,6 +341,8 @@ const gchar	*fwupd_update_state_to_string		(FwupdUpdateState update_state);
 FwupdUpdateState fwupd_update_state_from_string		(const gchar	*update_state);
 const gchar	*fwupd_trust_flag_to_string		(FwupdTrustFlags trust_flag);
 FwupdTrustFlags	 fwupd_trust_flag_from_string		(const gchar	*trust_flag);
+const gchar	*fwupd_feature_flag_to_string		(FwupdFeatureFlags feature_flag);
+FwupdFeatureFlags fwupd_feature_flag_from_string	(const gchar	*feature_flag);
 FwupdKeyringKind fwupd_keyring_kind_from_string		(const gchar	*keyring_kind);
 const gchar	*fwupd_keyring_kind_to_string		(FwupdKeyringKind keyring_kind);
 FwupdVersionFormat fwupd_version_format_from_string	(const gchar	*str);

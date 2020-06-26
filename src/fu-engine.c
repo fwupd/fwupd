@@ -38,6 +38,7 @@
 #include "fu-device-private.h"
 #include "fu-engine.h"
 #include "fu-engine-helper.h"
+#include "fu-engine-request.h"
 #include "fu-hwids.h"
 #include "fu-idle.h"
 #include "fu-keyring-utils.h"
@@ -1254,7 +1255,51 @@ fu_engine_check_requirement_hardware (FuEngine *self, XbNode *req, GError **erro
 }
 
 static gboolean
-fu_engine_check_requirement (FuEngine *self, XbNode *req, FuDevice *device, GError **error)
+fu_engine_check_requirement_client (FuEngine *self,
+				    FuEngineRequest *request,
+				    XbNode *req,
+				    GError **error)
+{
+	FwupdFeatureFlags flags;
+	g_auto(GStrv) feature_split = NULL;
+
+	/* split and treat as AND */
+	feature_split = g_strsplit (xb_node_get_text (req), "|", -1);
+	flags = fu_engine_request_get_feature_flags (request);
+	for (guint i = 0; feature_split[i] != NULL; i++) {
+		FwupdFeatureFlags flag = fwupd_feature_flag_from_string (feature_split[i]);
+
+		/* not recognised */
+		if (flag == FWUPD_FEATURE_FLAG_LAST) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "client requirement %s unknown",
+				     feature_split[i]);
+			return FALSE;
+		}
+
+		/* not supported */
+		if ((flags & flag) == 0) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "client requirement %s not supported",
+				     feature_split[i]);
+			return FALSE;
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_engine_check_requirement (FuEngine *self,
+			     FuEngineRequest *request,
+			     XbNode *req,
+			     FuDevice *device,
+			     GError **error)
 {
 	/* ensure component requirement */
 	if (g_strcmp0 (xb_node_get_element (req), "id") == 0)
@@ -1271,6 +1316,10 @@ fu_engine_check_requirement (FuEngine *self, XbNode *req, FuDevice *device, GErr
 	if (g_strcmp0 (xb_node_get_element (req), "hardware") == 0)
 		return fu_engine_check_requirement_hardware (self, req, error);
 
+	/* ensure client requirement */
+	if (g_strcmp0 (xb_node_get_element (req), "client") == 0)
+		return fu_engine_check_requirement_client (self, request, req, error);
+
 	/* not supported */
 	g_set_error (error,
 		     FWUPD_ERROR,
@@ -1281,8 +1330,11 @@ fu_engine_check_requirement (FuEngine *self, XbNode *req, FuDevice *device, GErr
 }
 
 gboolean
-fu_engine_check_requirements (FuEngine *self, FuInstallTask *task,
-			      FwupdInstallFlags flags, GError **error)
+fu_engine_check_requirements (FuEngine *self,
+			      FuEngineRequest *request,
+			      FuInstallTask *task,
+			      FwupdInstallFlags flags,
+			      GError **error)
 {
 	FuDevice *device = fu_install_task_get_device (task);
 	g_autoptr(GError) error_local = NULL;
@@ -1307,7 +1359,7 @@ fu_engine_check_requirements (FuEngine *self, FuInstallTask *task,
 	}
 	for (guint i = 0; i < reqs->len; i++) {
 		XbNode *req = g_ptr_array_index (reqs, i);
-		if (!fu_engine_check_requirement (self, req, device, error))
+		if (!fu_engine_check_requirement (self, request, req, device, error))
 			return FALSE;
 	}
 	return TRUE;
@@ -1429,6 +1481,7 @@ fu_engine_composite_cleanup (FuEngine *self, GPtrArray *devices, GError **error)
 /**
  * fu_engine_install_tasks:
  * @self: A #FuEngine
+ * @request: A #FuEngineRequest
  * @install_tasks: (element-type FuInstallTask): A #FuDevice
  * @blob_cab: The #GBytes of the .cab file
  * @flags: The #FwupdInstallFlags, e.g. %FWUPD_DEVICE_FLAG_UPDATABLE
@@ -1444,6 +1497,7 @@ fu_engine_composite_cleanup (FuEngine *self, GPtrArray *devices, GError **error)
  **/
 gboolean
 fu_engine_install_tasks (FuEngine *self,
+			 FuEngineRequest *request,
 			 GPtrArray *install_tasks,
 			 GBytes *blob_cab,
 			 FwupdInstallFlags flags,
@@ -2683,9 +2737,14 @@ fu_engine_ensure_device_supported (FuEngine *self, FuDevice *device)
 	gboolean is_supported = FALSE;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) releases = NULL;
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
+
+	/* all flags set */
+	fu_engine_request_set_feature_flags (request, ~0);
 
 	/* get all releases that pass the requirements */
 	releases = fu_engine_get_releases_for_device (self,
+						      request,
 						      device,
 						      &error);
 	if (releases == NULL) {
@@ -3324,7 +3383,10 @@ fu_engine_get_silo_from_blob (FuEngine *self, GBytes *blob_cab, GError **error)
 }
 
 static FuDevice *
-fu_engine_get_result_from_component (FuEngine *self, XbNode *component, GError **error)
+fu_engine_get_result_from_component (FuEngine *self,
+				     FuEngineRequest *request,
+				     XbNode *component,
+				     GError **error)
 {
 	FwupdReleaseFlags release_flags = FWUPD_RELEASE_FLAG_NONE;
 	g_autoptr(FuInstallTask) task = NULL;
@@ -3379,7 +3441,7 @@ fu_engine_get_result_from_component (FuEngine *self, XbNode *component, GError *
 
 	/* check we can install it */
 	task = fu_install_task_new (NULL, component);
-	if (!fu_engine_check_requirements (self, task,
+	if (!fu_engine_check_requirements (self, request, task,
 					   FWUPD_INSTALL_FLAG_NONE,
 					   error))
 		return NULL;
@@ -3445,6 +3507,7 @@ fu_engine_get_details_sort_cb (gconstpointer a, gconstpointer b)
 /**
  * fu_engine_get_details:
  * @self: A #FuEngine
+ * @request: A #FuEngineRequest
  * @fd: A file descriptor
  * @error: A #GError, or %NULL
  *
@@ -3455,7 +3518,7 @@ fu_engine_get_details_sort_cb (gconstpointer a, gconstpointer b)
  * Returns: (transfer container) (element-type FuDevice): results
  **/
 GPtrArray *
-fu_engine_get_details (FuEngine *self, gint fd, GError **error)
+fu_engine_get_details (FuEngine *self, FuEngineRequest *request, gint fd, GError **error)
 {
 	const gchar *remote_id;
 	g_autofree gchar *csum = NULL;
@@ -3505,7 +3568,7 @@ fu_engine_get_details (FuEngine *self, gint fd, GError **error)
 	for (guint i = 0; i < components->len; i++) {
 		XbNode *component = g_ptr_array_index (components, i);
 		FuDevice *dev;
-		dev = fu_engine_get_result_from_component (self, component, error);
+		dev = fu_engine_get_result_from_component (self, request, component, error);
 		if (dev == NULL)
 			return NULL;
 		if (remote_id != NULL) {
@@ -3520,7 +3583,7 @@ fu_engine_get_details (FuEngine *self, gint fd, GError **error)
 		if (fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE)) {
 			g_autoptr(FuInstallTask) task = fu_install_task_new (dev, component);
 			g_autoptr(GError) error_req = NULL;
-			if (!fu_engine_check_requirements (self, task,
+			if (!fu_engine_check_requirements (self, request, task,
 							   FWUPD_INSTALL_FLAG_OFFLINE |
 							   FWUPD_INSTALL_FLAG_ALLOW_REINSTALL |
 							   FWUPD_INSTALL_FLAG_ALLOW_OLDER,
@@ -3795,6 +3858,7 @@ fu_engine_check_release_is_approved (FuEngine *self, FwupdRelease *rel)
 
 static gboolean
 fu_engine_add_releases_for_device_component (FuEngine *self,
+					     FuEngineRequest *request,
 					     FuDevice *device,
 					     XbNode *component,
 					     GPtrArray *releases,
@@ -3805,7 +3869,7 @@ fu_engine_add_releases_for_device_component (FuEngine *self,
 	g_autoptr(FuInstallTask) task = fu_install_task_new (device, component);
 	g_autoptr(GPtrArray) releases_tmp = NULL;
 
-	if (!fu_engine_check_requirements (self, task,
+	if (!fu_engine_check_requirements (self, request, task,
 					   FWUPD_INSTALL_FLAG_OFFLINE |
 					   FWUPD_INSTALL_FLAG_ALLOW_REINSTALL |
 					   FWUPD_INSTALL_FLAG_ALLOW_OLDER,
@@ -3903,7 +3967,10 @@ fu_engine_add_releases_for_device_component (FuEngine *self,
 }
 
 GPtrArray *
-fu_engine_get_releases_for_device (FuEngine *self, FuDevice *device, GError **error)
+fu_engine_get_releases_for_device (FuEngine *self,
+				   FuEngineRequest *request,
+				   FuDevice *device,
+				   GError **error)
 {
 	GPtrArray *device_guids;
 	GPtrArray *releases;
@@ -3961,6 +4028,7 @@ fu_engine_get_releases_for_device (FuEngine *self, FuDevice *device, GError **er
 		XbNode *component = XB_NODE (g_ptr_array_index (components, i));
 		g_autoptr(GError) error_tmp = NULL;
 		if (!fu_engine_add_releases_for_device_component (self,
+								  request,
 								  device,
 								  component,
 								  releases,
@@ -3994,6 +4062,7 @@ fu_engine_get_releases_for_device (FuEngine *self, FuDevice *device, GError **er
 /**
  * fu_engine_get_releases:
  * @self: A #FuEngine
+ * @request: A #FuEngineRequest
  * @device_id: A device ID
  * @error: A #GError, or %NULL
  *
@@ -4002,7 +4071,10 @@ fu_engine_get_releases_for_device (FuEngine *self, FuDevice *device, GError **er
  * Returns: (transfer container) (element-type FwupdDevice): results
  **/
 GPtrArray *
-fu_engine_get_releases (FuEngine *self, const gchar *device_id, GError **error)
+fu_engine_get_releases (FuEngine *self,
+			FuEngineRequest *request,
+			const gchar *device_id,
+			GError **error)
 {
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(GPtrArray) releases = NULL;
@@ -4017,7 +4089,7 @@ fu_engine_get_releases (FuEngine *self, const gchar *device_id, GError **error)
 		return NULL;
 
 	/* get all the releases for the device */
-	releases = fu_engine_get_releases_for_device (self, device, error);
+	releases = fu_engine_get_releases_for_device (self, request, device, error);
 	if (releases == NULL)
 		return NULL;
 	if (releases->len == 0) {
@@ -4034,6 +4106,7 @@ fu_engine_get_releases (FuEngine *self, const gchar *device_id, GError **error)
 /**
  * fu_engine_get_downgrades:
  * @self: A #FuEngine
+ * @request: A #FuEngineRequest
  * @device_id: A device ID
  * @error: A #GError, or %NULL
  *
@@ -4042,7 +4115,10 @@ fu_engine_get_releases (FuEngine *self, const gchar *device_id, GError **error)
  * Returns: (transfer container) (element-type FwupdDevice): results
  **/
 GPtrArray *
-fu_engine_get_downgrades (FuEngine *self, const gchar *device_id, GError **error)
+fu_engine_get_downgrades (FuEngine *self,
+			  FuEngineRequest *request,
+			  const gchar *device_id,
+			  GError **error)
 {
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(GPtrArray) releases = NULL;
@@ -4059,7 +4135,7 @@ fu_engine_get_downgrades (FuEngine *self, const gchar *device_id, GError **error
 		return NULL;
 
 	/* get all the releases for the device */
-	releases_tmp = fu_engine_get_releases_for_device (self, device, error);
+	releases_tmp = fu_engine_get_releases_for_device (self, request, device, error);
 	if (releases_tmp == NULL)
 		return NULL;
 	releases = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
@@ -4171,6 +4247,7 @@ fu_engine_self_sign (FuEngine *self,
 /**
  * fu_engine_get_upgrades:
  * @self: A #FuEngine
+ * @request: A #FuEngineRequest
  * @device_id: A device ID
  * @error: A #GError, or %NULL
  *
@@ -4179,7 +4256,10 @@ fu_engine_self_sign (FuEngine *self,
  * Returns: (transfer container) (element-type FwupdDevice): results
  **/
 GPtrArray *
-fu_engine_get_upgrades (FuEngine *self, const gchar *device_id, GError **error)
+fu_engine_get_upgrades (FuEngine *self,
+			FuEngineRequest *request,
+			const gchar *device_id,
+			GError **error)
 {
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(GPtrArray) releases = NULL;
@@ -4205,7 +4285,7 @@ fu_engine_get_upgrades (FuEngine *self, const gchar *device_id, GError **error)
 	}
 
 	/* get all the releases for the device */
-	releases_tmp = fu_engine_get_releases_for_device (self, device, error);
+	releases_tmp = fu_engine_get_releases_for_device (self, request, device, error);
 	if (releases_tmp == NULL)
 		return NULL;
 	releases = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
