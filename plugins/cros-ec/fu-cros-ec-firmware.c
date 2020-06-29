@@ -82,7 +82,7 @@ fu_cros_ec_firmware_parse (FuFirmware *firmware,
 			return FALSE;
 		}
 		if (!fu_memcpy_safe ((guint8 *) section->version,
-				     FMAP_STRLEN, 0x0,
+				     FU_FMAP_FIRMWARE_STRLEN, 0x0,
 				     g_bytes_get_data (fwid_bytes, NULL),
 				     g_bytes_get_size (fwid_bytes), 0x0,
 				     g_bytes_get_size (fwid_bytes), error))

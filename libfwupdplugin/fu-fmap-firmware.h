@@ -8,7 +8,7 @@
 
 #include "fu-firmware.h"
 
-#define FMAP_STRLEN		32	/* maximum length for strings, */
+#define FU_FMAP_FIRMWARE_STRLEN	32	/* maximum length for strings, */
 					/* including null-terminator */
 
 #define FU_TYPE_FMAP_FIRMWARE (fu_fmap_firmware_get_type ())
@@ -31,7 +31,7 @@ struct _FuFmapFirmwareClass
 typedef struct  __attribute__((packed)) {
 	guint32	offset;                /* offset relative to base */
 	guint32	size;                  /* size in bytes */
-	guint8	name[FMAP_STRLEN];     /* descriptive name */
+	guint8	name[FU_FMAP_FIRMWARE_STRLEN];     /* descriptive name */
 	guint16	flags;                 /* flags for this area */
 } FuFmapArea;
 
@@ -41,7 +41,7 @@ typedef struct __attribute__((packed)) {
 	guint8		ver_minor;		/* minor version */
 	guint64		base;			/* address of the firmware binary */
 	guint32		size;			/* size of firmware binary in bytes */
-	guint8		name[FMAP_STRLEN];	/* name of this firmware binary */
+	guint8		name[FU_FMAP_FIRMWARE_STRLEN];	/* name of this firmware binary */
 	guint16		nareas;			/* number of areas described by
 						   areas[] below */
 	FuFmapArea	areas[];

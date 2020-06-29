@@ -33,7 +33,7 @@ typedef struct {
 	guint32				offset;
 	gsize				size;
 	FuCrosEcFirmwareUpgradeStatus	ustatus;
-	gchar				version[FMAP_STRLEN];
+	gchar				version[FU_FMAP_FIRMWARE_STRLEN];
 	gint32				rollback;
 	guint32				key_version;
 } FuCrosEcFirmwareSection;
