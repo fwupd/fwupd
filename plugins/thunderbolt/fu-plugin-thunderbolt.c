@@ -528,15 +528,17 @@ fu_plugin_thunderbolt_validate_firmware (GUdevDevice  *udevice,
 }
 
 static gboolean
-fu_thunderbolt_trigger_update (FuDevice *dev, GError **error)
+fu_plugin_thunderbolt_trigger_update (GUdevDevice  *udevice,
+				      GError      **error)
 {
+
 	const gchar *devpath;
 	ssize_t n;
 	int fd;
 	int r;
 	g_autofree gchar *auth_path = NULL;
 
-	devpath = fu_device_get_metadata (dev, "sysfs-path");
+	devpath = g_udev_device_get_sysfs_path (udevice);
 	auth_path = g_build_filename (devpath, "nvm_authenticate", NULL);
 
 	fd = open (auth_path, O_WRONLY | O_CLOEXEC);
@@ -754,15 +756,7 @@ fu_plugin_update (FuPlugin *plugin,
 		return FALSE;
 	}
 
-	if (fu_device_has_custom_flag (dev, "skip-restart")) {
-		FuDeviceClass *klass_device = FU_DEVICE_GET_CLASS (dev);
-		klass_device->activate = fu_thunderbolt_trigger_update;
-		g_debug ("Skipping Thunderbolt reset per quirk request");
-		fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
-		return TRUE;
-	}
-
-	if (!fu_thunderbolt_trigger_update (dev, error)) {
+	if (!fu_plugin_thunderbolt_trigger_update (udevice, error)) {
 		g_prefix_error (error, "could not start thunderbolt device upgrade: ");
 		return FALSE;
 	}
