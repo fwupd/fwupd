@@ -17,11 +17,11 @@
 #include "fu-plugin-vfuncs.h"
 #include "fu-hash.h"
 
-/* Whitelisted smbios class/select commands */
+/* allowed smbios class/select commands */
 #define CLASS_ADMIN_PROP	10
 #define SELECT_ADMIN_PROP	3
 
-/* whitelisted tokens */
+/* allowed tokens */
 #define CAPSULE_EN_TOKEN	0x0461
 #define CAPSULE_DIS_TOKEN	0x0462
 

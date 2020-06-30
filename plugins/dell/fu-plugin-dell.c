@@ -93,7 +93,7 @@ struct da_structure {
 /**
  * Devices that should allow modeswitching
  */
-static guint16 tpm_switch_whitelist[] = {0x06F2, 0x06F3, 0x06DD, 0x06DE, 0x06DF,
+static guint16 tpm_switch_allowlist[] = {0x06F2, 0x06F3, 0x06DD, 0x06DE, 0x06DF,
 					 0x06DB, 0x06DC, 0x06BB, 0x06C6, 0x06BA,
 					 0x06B9, 0x05CA, 0x06C7, 0x06B7, 0x06E0,
 					 0x06E5, 0x06D9, 0x06DA, 0x06E4, 0x0704,
@@ -106,7 +106,7 @@ static guint16 tpm_switch_whitelist[] = {0x06F2, 0x06F3, 0x06DD, 0x06DE, 0x06DF,
 /**
   * Dell device types to run
   */
-static guint8 enclosure_whitelist [] = { 0x03, /* desktop */
+static guint8 enclosure_allowlist [] = { 0x03, /* desktop */
 					 0x04, /* low profile desktop */
 					 0x06, /* mini tower */
 					 0x07, /* tower */
@@ -180,8 +180,8 @@ fu_dell_supported (FuPlugin *plugin)
 	value = g_bytes_get_data (enclosure, &len);
 	if (len == 0)
 		return FALSE;
-	for (guint i = 0; i < G_N_ELEMENTS (enclosure_whitelist); i++) {
-		if (enclosure_whitelist[i] == value[0])
+	for (guint i = 0; i < G_N_ELEMENTS (enclosure_allowlist); i++) {
+		if (enclosure_allowlist[i] == value[0])
 			return TRUE;
 	}
 
@@ -693,8 +693,8 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	else if (system_id == 0)
 		return FALSE;
 
-	for (guint i = 0; i < G_N_ELEMENTS (tpm_switch_whitelist); i++) {
-		if (tpm_switch_whitelist[i] == system_id) {
+	for (guint i = 0; i < G_N_ELEMENTS (tpm_switch_allowlist); i++) {
+		if (tpm_switch_allowlist[i] == system_id) {
 			can_switch_modes = TRUE;
 		}
 	}
