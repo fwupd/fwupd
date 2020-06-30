@@ -66,8 +66,7 @@ fu_debug_handler_cb (const gchar *log_domain,
 		     gpointer user_data)
 {
 	FuDebug *self = (FuDebug *) user_data;
-	g_autofree gchar *tmp = NULL;
-	g_autoptr(GDateTime) dt = g_date_time_new_now_utc ();
+	g_autofree gchar *timestamp = NULL;
 	g_autoptr(GString) domain = NULL;
 
 	/* should ignore */
@@ -76,11 +75,12 @@ fu_debug_handler_cb (const gchar *log_domain,
 
 	/* time header */
 	if (!self->no_timestamp) {
-		tmp = g_strdup_printf ("%02i:%02i:%02i:%04i",
-				       g_date_time_get_hour (dt),
-				       g_date_time_get_minute (dt),
-				       g_date_time_get_second (dt),
-				       g_date_time_get_microsecond (dt) / 1000);
+		g_autoptr(GDateTime) dt = g_date_time_new_now_utc ();
+		timestamp = g_strdup_printf ("%02i:%02i:%02i:%04i",
+					     g_date_time_get_hour (dt),
+					     g_date_time_get_minute (dt),
+					     g_date_time_get_second (dt),
+					     g_date_time_get_microsecond (dt) / 1000);
 	}
 
 	/* pad out domain */
@@ -96,8 +96,8 @@ fu_debug_handler_cb (const gchar *log_domain,
 	/* to file */
 	if (!self->console) {
 		g_autofree gchar *ascii_message = g_str_to_ascii (message, NULL);
-		if (tmp != NULL)
-			g_printerr ("%s ", tmp);
+		if (timestamp != NULL)
+			g_printerr ("%s ", timestamp);
 		if (domain != NULL)
 			g_printerr ("%s ", domain->str);
 		g_printerr ("%s\n", ascii_message);
@@ -110,16 +110,16 @@ fu_debug_handler_cb (const gchar *log_domain,
 	case G_LOG_LEVEL_CRITICAL:
 	case G_LOG_LEVEL_WARNING:
 		/* critical in red */
-		if (tmp != NULL)
-			g_printerr ("%c[%dm%s ", 0x1B, 32, tmp);
+		if (timestamp != NULL)
+			g_printerr ("%c[%dm%s ", 0x1B, 32, timestamp);
 		if (domain != NULL)
 			g_printerr ("%s ", domain->str);
 		g_printerr ("%c[%dm%s\n%c[%dm", 0x1B, 31, message, 0x1B, 0);
 		break;
 	default:
 		/* debug in blue */
-		if (tmp != NULL)
-			g_printerr ("%c[%dm%s ", 0x1B, 32, tmp);
+		if (timestamp != NULL)
+			g_printerr ("%c[%dm%s ", 0x1B, 32, timestamp);
 		if (domain != NULL)
 			g_printerr ("%s ", domain->str);
 		g_printerr ("%c[%dm%s\n%c[%dm", 0x1B, 34, message, 0x1B, 0);
