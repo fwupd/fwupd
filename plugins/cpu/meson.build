@@ -22,3 +22,32 @@ shared_module('fu_plugin_cpu',
     plugin_deps,
   ],
 )
+
+if cc.has_argument('-fcf-protection')
+  libfwupdcethelper = static_library('fwupdcethelper',
+    sources : [
+      'fu-cpu-helper-cet-common.c',
+    ],
+    include_directories : [
+      root_incdir,
+    ],
+    c_args : ['-fcf-protection=none'],
+    install : false,
+  )
+
+  executable(
+    'fwupd-detect-cet',
+    sources : [
+      'fu-cpu-helper-cet.c',
+    ],
+    include_directories : [
+      root_incdir,
+    ],
+    link_with : [
+      libfwupdcethelper,
+    ],
+    c_args : ['-fcf-protection=full'],
+    install : true,
+    install_dir : join_paths(libexecdir, 'fwupd')
+  )
+endif

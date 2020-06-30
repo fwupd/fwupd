@@ -53,9 +53,15 @@ fu_security_attr_get_name (FwupdSecurityAttr *attr)
 		 * OTP = one time programmable */
 		return g_strdup (_("Intel BootGuard OTP fuse"));
 	}
-	if (g_strcmp0 (appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_CET) == 0) {
-		/* TRANSLATORS: Title: CET = Control-flow Enforcement Technology */
-		return g_strdup (_("Intel CET"));
+	if (g_strcmp0 (appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_CET_ENABLED) == 0) {
+		/* TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
+		 * enabled means supported by the processor */
+		return g_strdup (_("Intel CET Enabled"));
+	}
+	if (g_strcmp0 (appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_CET_ACTIVE) == 0) {
+		/* TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
+		 * active means being used by the OS */
+		return g_strdup (_("Intel CET Active"));
 	}
 	if (g_strcmp0 (appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_SMAP) == 0) {
 		/* TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention */
