@@ -132,6 +132,7 @@ fu_cros_ec_firmware_parse (FuFirmware *firmware,
 		section->offset = fu_firmware_image_get_addr (img);
 		section->size = g_bytes_get_size (payload_bytes);
 		fu_firmware_image_set_version (img, section->version);
+		section->image_idx = fu_firmware_image_get_idx (img);
 
 		if (rw) {
 			if (!fu_cros_ec_parse_version (section->version,
