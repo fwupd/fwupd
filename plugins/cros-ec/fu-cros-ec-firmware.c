@@ -13,9 +13,9 @@
 #define MAXSECTIONS	2
 
 struct _FuCrosEcFirmware {
-	FuFmapFirmware			parent_instance;
-	struct cros_ec_version		version;
-	FuCrosEcFirmwareSection		sections[MAXSECTIONS];
+	FuFmapFirmware			 parent_instance;
+	struct cros_ec_version		 version;
+	GPtrArray			*sections;
 };
 
 G_DEFINE_TYPE (FuCrosEcFirmware, fu_cros_ec_firmware, FU_TYPE_FMAP_FIRMWARE)
@@ -31,12 +31,9 @@ fu_cros_ec_firmware_parse (FuFirmware *firmware,
 	FuCrosEcFirmware *self = FU_CROS_EC_FIRMWARE (firmware);
 	FuFirmware *fmap_firmware = FU_FIRMWARE (firmware);
 
-	self->sections[0].name = "RO";
-	self->sections[1].name = "RW";
-
-	for (gsize i = 0; i < G_N_ELEMENTS (self->sections); i++) {
+	for (gsize i = 0; i < self->sections->len; i++) {
 		gboolean rw = FALSE;
-		FuCrosEcFirmwareSection *section = &self->sections[i];
+		FuCrosEcFirmwareSection *section = g_ptr_array_index (self->sections, i);
 		const gchar *fmap_name;
 		const gchar *fmap_fwid_name;
 		g_autoptr(FuFirmwareImage) img = NULL;
@@ -120,13 +117,32 @@ fu_cros_ec_firmware_parse (FuFirmware *firmware,
 static void
 fu_cros_ec_firmware_init (FuCrosEcFirmware *self)
 {
+	FuCrosEcFirmwareSection *section;
+
+	self->sections = g_ptr_array_new_with_free_func (g_free);
+	section = g_new0 (FuCrosEcFirmwareSection, 1);
+	section->name = "RO";
+	g_ptr_array_add (self->sections, section);
+	section = g_new0 (FuCrosEcFirmwareSection, 1);
+	section->name = "RW";
+	g_ptr_array_add (self->sections, section);
+}
+
+static void
+fu_cros_ec_firmware_finalize (GObject *object)
+{
+	FuCrosEcFirmware *self = FU_CROS_EC_FIRMWARE (object);
+	g_ptr_array_free (self->sections, TRUE);
+	G_OBJECT_CLASS (fu_cros_ec_firmware_parent_class)->finalize (object);
 }
 
 static void
 fu_cros_ec_firmware_class_init (FuCrosEcFirmwareClass *klass)
 {
+	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuFmapFirmwareClass *klass_firmware = FU_FMAP_FIRMWARE_CLASS (klass);
 	klass_firmware->parse = fu_cros_ec_firmware_parse;
+	object_class->finalize = fu_cros_ec_firmware_finalize;
 }
 
 FuFirmware *
