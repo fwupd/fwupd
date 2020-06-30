@@ -2047,9 +2047,9 @@ main (int argc, char *argv[])
 		{ "show-all-devices", '\0', 0, G_OPTION_ARG_NONE, &priv->show_all_devices,
 			/* TRANSLATORS: command line option */
 			_("Show devices that are not updatable"), NULL },
-		{ "plugin-whitelist", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &plugin_glob,
+		{ "plugin-enable", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &plugin_glob,
 			/* TRANSLATORS: command line option */
-			_("Manually whitelist specific plugins"), NULL },
+			_("Manually enable specific plugins"), NULL },
 		{ "prepare", '\0', 0, G_OPTION_ARG_NONE, &priv->prepare_blob,
 			/* TRANSLATORS: command line option */
 			_("Run the plugin composite prepare routine when using install-blob"), NULL },
@@ -2355,7 +2355,7 @@ main (int argc, char *argv[])
 		return EXIT_SUCCESS;
 	}
 
-	/* any plugin whitelist specified */
+	/* any plugin allowlist specified */
 	for (guint i = 0; plugin_glob != NULL && plugin_glob[i] != NULL; i++)
 		fu_engine_add_plugin_filter (priv->engine, plugin_glob[i]);
 

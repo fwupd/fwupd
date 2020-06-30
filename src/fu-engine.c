@@ -524,8 +524,8 @@ fu_engine_modify_config (FuEngine *self, const gchar *key, const gchar *value, G
 {
 	const gchar *keys[] = {
 		"ArchiveSizeMax",
-		"BlacklistDevices",
-		"BlacklistPlugins",
+		"DisabledDevices",
+		"DisabledPlugins",
 		"IdleTimeout",
 		"VerboseDomains",
 		"UpdateMotd",
@@ -4238,7 +4238,7 @@ fu_engine_add_releases_for_device_component (FuEngine *self,
 			fwupd_release_add_flag (rel, FWUPD_RELEASE_FLAG_BLOCKED_VERSION);
 		}
 
-		/* check if remote is whitelisting firmware */
+		/* check if remote is filtering firmware */
 		remote_id = fwupd_release_get_remote_id (rel);
 		if (remote_id != NULL) {
 			FwupdRemote *remote = fu_engine_get_remote_by_id (self, remote_id, NULL);
@@ -4994,7 +4994,7 @@ fu_engine_device_inherit_history (FuEngine *self, FuDevice *device)
 void
 fu_engine_add_device (FuEngine *self, FuDevice *device)
 {
-	GPtrArray *blacklisted_devices;
+	GPtrArray *disabled_devices;
 	GPtrArray *device_guids;
 	g_autoptr(XbNode) component = NULL;
 
@@ -5007,14 +5007,14 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 		return;
 	}
 
-	/* is this GUID blacklisted */
-	blacklisted_devices = fu_config_get_blacklist_devices (self->config);
-	for (guint i = 0; i < blacklisted_devices->len; i++) {
-		const gchar *blacklisted_guid = g_ptr_array_index (blacklisted_devices, i);
+	/* is this GUID disabled */
+	disabled_devices = fu_config_get_disabled_devices (self->config);
+	for (guint i = 0; i < disabled_devices->len; i++) {
+		const gchar *disabled_guid = g_ptr_array_index (disabled_devices, i);
 		for (guint j = 0; j < device_guids->len; j++) {
 			const gchar *device_guid = g_ptr_array_index (device_guids, j);
-			if (g_strcmp0 (blacklisted_guid, device_guid) == 0) {
-				g_debug ("%s [%s] is blacklisted [%s], ignoring from %s",
+			if (g_strcmp0 (disabled_guid, device_guid) == 0) {
+				g_debug ("%s [%s] is disabled [%s], ignoring from %s",
 					 fu_device_get_name (device),
 					 fu_device_get_id (device),
 					 device_guid,
@@ -5434,11 +5434,11 @@ fu_engine_add_plugin (FuEngine *self, FuPlugin *plugin)
 }
 
 static gboolean
-fu_engine_is_plugin_name_blacklisted (FuEngine *self, const gchar *name)
+fu_engine_is_plugin_name_disabled (FuEngine *self, const gchar *name)
 {
-	GPtrArray *blacklist = fu_config_get_blacklist_plugins (self->config);
-	for (guint i = 0; i < blacklist->len; i++) {
-		const gchar *name_tmp = g_ptr_array_index (blacklist, i);
+	GPtrArray *disabled = fu_config_get_disabled_plugins (self->config);
+	for (guint i = 0; i < disabled->len; i++) {
+		const gchar *name_tmp = g_ptr_array_index (disabled, i);
 		if (g_strcmp0 (name_tmp, name) == 0)
 			return TRUE;
 	}
@@ -5446,7 +5446,7 @@ fu_engine_is_plugin_name_blacklisted (FuEngine *self, const gchar *name)
 }
 
 static gboolean
-fu_engine_is_plugin_name_whitelisted (FuEngine *self, const gchar *name)
+fu_engine_is_plugin_name_enabled (FuEngine *self, const gchar *name)
 {
 	if (self->plugin_filter->len == 0)
 		return TRUE;
@@ -5511,13 +5511,13 @@ static void
 fu_engine_add_security_attrs_tainted (FuEngine *self, FuSecurityAttrs *attrs)
 {
 	gboolean disabled_plugins = FALSE;
-	GPtrArray *blacklist = fu_config_get_blacklist_plugins (self->config);
+	GPtrArray *disabled = fu_config_get_disabled_plugins (self->config);
 	g_autoptr(FwupdSecurityAttr) attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_FWUPD_PLUGINS);
 	fwupd_security_attr_set_plugin (attr, "core");
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
 	fu_security_attrs_append (attrs, attr);
-	for (guint i = 0; i < blacklist->len; i++) {
-		const gchar *name_tmp = g_ptr_array_index (blacklist, i);
+	for (guint i = 0; i < disabled->len; i++) {
+		const gchar *name_tmp = g_ptr_array_index (disabled, i);
 		if (g_strcmp0 (name_tmp, "test") != 0 &&
 		    g_strcmp0 (name_tmp, "invalid") != 0) {
 			disabled_plugins = TRUE;
@@ -5696,16 +5696,16 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 		if (!g_str_has_suffix (fn, suffix))
 			continue;
 
-		/* is blacklisted */
+		/* is disabled */
 		name = fu_plugin_guess_name_from_fn (fn);
 		if (name == NULL)
 			continue;
-		if (fu_engine_is_plugin_name_blacklisted (self, name)) {
-			g_debug ("plugin %s is blacklisted", name);
+		if (fu_engine_is_plugin_name_disabled (self, name)) {
+			g_debug ("plugin %s is disabled", name);
 			continue;
 		}
-		if (!fu_engine_is_plugin_name_whitelisted (self, name)) {
-			g_debug ("plugin %s is not whitelisted", name);
+		if (!fu_engine_is_plugin_name_enabled (self, name)) {
+			g_debug ("plugin %s is not enabled", name);
 			continue;
 		}
 

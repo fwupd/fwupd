@@ -1,5 +1,5 @@
 #!/bin/sh
 set -e
-sed "s,^BlacklistPlugins=.*,BlacklistPlugins=," -i /etc/fwupd/daemon.conf
+sed "s,^DisabledPlugins=.*,DisabledPlugins=," -i /etc/fwupd/daemon.conf
 sed "s,^VerboseDomains=.*,VerboseDomains=*,"  -i /etc/fwupd/daemon.conf
 gnome-desktop-testing-runner fwupd

@@ -27,8 +27,8 @@ struct _FuConfig
 {
 	GObject			 parent_instance;
 	GFileMonitor		*monitor;
-	GPtrArray		*blacklist_devices;	/* (element-type utf-8) */
-	GPtrArray		*blacklist_plugins;	/* (element-type utf-8) */
+	GPtrArray		*disabled_devices;	/* (element-type utf-8) */
+	GPtrArray		*disabled_plugins;	/* (element-type utf-8) */
 	GPtrArray		*approved_firmware;	/* (element-type utf-8) */
 	guint64			 archive_size_max;
 	guint			 idle_timeout;
@@ -64,30 +64,30 @@ fu_config_reload (FuConfig *self, GError **error)
 					G_KEY_FILE_NONE, error))
 		return FALSE;
 
-	/* get blacklisted devices */
-	g_ptr_array_set_size (self->blacklist_devices, 0);
+	/* get disabled devices */
+	g_ptr_array_set_size (self->disabled_devices, 0);
 	devices = g_key_file_get_string_list (keyfile,
 					      "fwupd",
-					      "BlacklistDevices",
+					      "DisabledDevices",
 					      NULL, /* length */
 					      NULL);
 	if (devices != NULL) {
 		for (guint i = 0; devices[i] != NULL; i++) {
-			g_ptr_array_add (self->blacklist_devices,
+			g_ptr_array_add (self->disabled_devices,
 					 g_strdup (devices[i]));
 		}
 	}
 
-	/* get blacklisted plugins */
-	g_ptr_array_set_size (self->blacklist_plugins, 0);
+	/* get disabled plugins */
+	g_ptr_array_set_size (self->disabled_plugins, 0);
 	plugins = g_key_file_get_string_list (keyfile,
 					      "fwupd",
-					      "BlacklistPlugins",
+					      "DisabledPlugins",
 					      NULL, /* length */
 					      NULL);
 	if (plugins != NULL) {
 		for (guint i = 0; plugins[i] != NULL; i++) {
-			g_ptr_array_add (self->blacklist_plugins,
+			g_ptr_array_add (self->disabled_plugins,
 					 g_strdup (plugins[i]));
 		}
 	}
@@ -221,10 +221,10 @@ fu_config_get_idle_timeout (FuConfig *self)
 }
 
 GPtrArray *
-fu_config_get_blacklist_devices (FuConfig *self)
+fu_config_get_disabled_devices (FuConfig *self)
 {
 	g_return_val_if_fail (FU_IS_CONFIG (self), NULL);
-	return self->blacklist_devices;
+	return self->disabled_devices;
 }
 
 guint64
@@ -235,10 +235,10 @@ fu_config_get_archive_size_max (FuConfig *self)
 }
 
 GPtrArray *
-fu_config_get_blacklist_plugins (FuConfig *self)
+fu_config_get_disabled_plugins (FuConfig *self)
 {
 	g_return_val_if_fail (FU_IS_CONFIG (self), NULL);
-	return self->blacklist_plugins;
+	return self->disabled_plugins;
 }
 
 GPtrArray *
@@ -279,8 +279,8 @@ static void
 fu_config_init (FuConfig *self)
 {
 	self->archive_size_max = 512 * 0x100000;
-	self->blacklist_devices = g_ptr_array_new_with_free_func (g_free);
-	self->blacklist_plugins = g_ptr_array_new_with_free_func (g_free);
+	self->disabled_devices = g_ptr_array_new_with_free_func (g_free);
+	self->disabled_plugins = g_ptr_array_new_with_free_func (g_free);
 	self->approved_firmware = g_ptr_array_new_with_free_func (g_free);
 }
 
@@ -291,8 +291,8 @@ fu_config_finalize (GObject *obj)
 
 	if (self->monitor != NULL)
 		g_object_unref (self->monitor);
-	g_ptr_array_unref (self->blacklist_devices);
-	g_ptr_array_unref (self->blacklist_plugins);
+	g_ptr_array_unref (self->disabled_devices);
+	g_ptr_array_unref (self->disabled_plugins);
 	g_ptr_array_unref (self->approved_firmware);
 	g_free (self->config_file);
 

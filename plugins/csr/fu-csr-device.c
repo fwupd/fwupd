@@ -397,7 +397,7 @@ fu_csr_device_probe (FuUsbDevice *device, GError **error)
 {
 	FuCsrDevice *self = FU_CSR_DEVICE (device);
 
-	/* devices have to be whitelisted */
+	/* proxy the quirk delay */
 	if (fu_device_has_custom_flag (FU_DEVICE (device),
 				       FU_CSR_DEVICE_FLAG_REQUIRE_DELAY))
 		self->quirks = FU_CSR_DEVICE_QUIRK_REQUIRE_DELAY;

@@ -9,7 +9,7 @@ By default this test suite is disabled.
 Enabling
 =======
 To enable the test suite:
-1. Modify `/etc/fwupd/daemon.conf` to remove the `test` plugin from `BlacklistPlugins`
+1. Modify `/etc/fwupd/daemon.conf` to remove the `test` plugin from `DisabledPlugins`
    ```
    # sed "s,^Enabled=false,Enabled=true," -i /etc/fwupd/remotes.d/fwupd-tests.conf
    ```

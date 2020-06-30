@@ -802,7 +802,7 @@ fwupd_client_proxy_call_cb (GObject *source, GAsyncResult *res, gpointer user_da
 /**
  * fwupd_client_modify_config
  * @client: A #FwupdClient
- * @key: key, e.g. `BlacklistPlugins`
+ * @key: key, e.g. `DisabledPlugins`
  * @value: value, e.g. `*`
  * @cancellable: the #GCancellable, or %NULL
  * @error: the #GError, or %NULL
