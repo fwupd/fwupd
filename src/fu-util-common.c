@@ -1531,8 +1531,10 @@ fu_security_attr_append_str (FwupdSecurityAttr *attr, GString *str)
 		g_string_append_printf (str, ": %s",
 					fwupd_security_attr_get_url (attr));
 	}
-	if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED))
-		g_string_append (str, " (obsoleted)");
+	if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED)) {
+		/* TRANSLATORS: this is shown as a suffix for obsoleted tests */
+		g_string_append_printf (str, " %s", _("(obsoleted)"));
+	}
 	g_string_append_printf (str, "\n");
 }
 
