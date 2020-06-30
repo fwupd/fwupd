@@ -581,6 +581,16 @@ LIBFWUPDPLUGIN_1.4.1 {
   local: *;
 } LIBFWUPDPLUGIN_1.4.0;
 
+LIBFWUPDPLUGIN_1.4.5 {
+  global:
+    fu_udev_device_get_parent_name;
+    fu_udev_device_get_sysfs_attr;
+    fu_udev_device_pread_full;
+    fu_udev_device_pwrite_full;
+    fu_udev_device_write_sysfs;
+  local: *;
+} LIBFWUPDPLUGIN_1.4.1;
+
 LIBFWUPDPLUGIN_1.5.0 {
   global:
     fu_common_filename_glob;
@@ -599,10 +609,5 @@ LIBFWUPDPLUGIN_1.5.0 {
     fu_security_attrs_get_type;
     fu_security_attrs_new;
     fu_security_attrs_to_variant;
-    fu_udev_device_get_parent_name;
-    fu_udev_device_get_sysfs_attr;
-    fu_udev_device_pread_full;
-    fu_udev_device_pwrite_full;
-    fu_udev_device_write_sysfs;
   local: *;
-} LIBFWUPDPLUGIN_1.4.1;
+} LIBFWUPDPLUGIN_1.4.5;

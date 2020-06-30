@@ -974,7 +974,7 @@ fu_udev_device_ioctl (FuUdevDevice *self,
  *
  * Returns: %TRUE for success
  *
- * Since: 1.5.0
+ * Since: 1.4.5
  **/
 gboolean
 fu_udev_device_pread_full (FuUdevDevice *self, goffset port,
@@ -1020,7 +1020,7 @@ fu_udev_device_pread_full (FuUdevDevice *self, goffset port,
  *
  * Returns: %TRUE for success
  *
- * Since: 1.5.0
+ * Since: 1.4.5
  **/
 gboolean
 fu_udev_device_pwrite_full (FuUdevDevice *self, goffset port,
@@ -1080,7 +1080,7 @@ fu_udev_device_pwrite (FuUdevDevice *self, goffset port, guint8 data, GError **e
  *
  * Returns: string or NULL if unset or invalid
  *
- * Since: 1.5.0
+ * Since: 1.4.5
  **/
 gchar *
 fu_udev_device_get_parent_name (FuUdevDevice *self)
@@ -1108,7 +1108,7 @@ fu_udev_device_get_parent_name (FuUdevDevice *self)
  *
  * Returns: string or NULL
  *
- * Since: 1.5.0
+ * Since: 1.4.5
  **/
 const gchar *
 fu_udev_device_get_sysfs_attr (FuUdevDevice *self, const gchar *attr,
@@ -1180,7 +1180,7 @@ fu_udev_device_pread (FuUdevDevice *self, goffset port, guint8 *data, GError **e
  *
  * Returns: %TRUE for success
  *
- * Since: 1.5.0
+ * Since: 1.4.5
  **/
 gboolean
 fu_udev_device_write_sysfs (FuUdevDevice *self, const gchar *attribute,
