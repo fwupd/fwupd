@@ -125,6 +125,7 @@ test_link_args = [
   '-Wl,-z,relro',
   '-Wl,-z,defs',
   '-Wl,-z,now',
+  '-Wl,-z,ibt,-z,shstk',
 ]
 foreach arg: test_link_args
   if cc.has_link_argument(arg)
@@ -275,6 +276,9 @@ if cc.has_function('getuid')
 endif
 if cc.has_function('realpath')
   conf.set('HAVE_REALPATH', '1')
+endif
+if cc.has_function('sigaction')
+  conf.set('HAVE_SIGACTION', '1')
 endif
 if cc.has_header_symbol('locale.h', 'LC_MESSAGES')
   conf.set('HAVE_LC_MESSAGES', '1')
