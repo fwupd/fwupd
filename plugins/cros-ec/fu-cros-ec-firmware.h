@@ -41,4 +41,5 @@ typedef struct {
 gboolean			 fu_cros_ec_firmware_pick_sections	(FuCrosEcFirmware *self,
 									 guint32 writeable_offset,
 									 GError **error);
+GPtrArray			*fu_cros_ec_firmware_get_sections	(FuCrosEcFirmware *self);
 FuFirmware			*fu_cros_ec_firmware_new		(void);
