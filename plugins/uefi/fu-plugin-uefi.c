@@ -628,6 +628,10 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 		return FALSE;
 	}
 
+	/* are the EFI dirs set up so we can update each device */
+	if (!fu_efivar_supported (error))
+		return FALSE;
+
 	/* test for invalid ESP in coldplug, and set the update-error rather
 	 * than showing no output if the plugin had self-disabled here */
 	return TRUE;
@@ -735,10 +739,6 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	g_autoptr(GError) error_efivarfs = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) entries = NULL;
-
-	/* are the EFI dirs set up so we can update each device */
-	if (!fu_efivar_supported (error))
-		return FALSE;
 
 	/* get the directory of ESRT entries */
 	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
