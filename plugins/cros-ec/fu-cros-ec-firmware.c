@@ -51,6 +51,12 @@ fu_cros_ec_firmware_pick_sections (FuCrosEcFirmware *self,
 	return TRUE;
 }
 
+GPtrArray *
+fu_cros_ec_firmware_get_sections (FuCrosEcFirmware *self)
+{
+	return self->sections;
+}
+
 static gboolean
 fu_cros_ec_firmware_parse (FuFirmware *firmware,
 			   GBytes *fw,
