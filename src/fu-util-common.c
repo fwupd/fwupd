@@ -1556,6 +1556,7 @@ fu_util_remote_to_string (FwupdRemote *remote, guint idt)
 static void
 fu_security_attr_append_str (FwupdSecurityAttr *attr, GString *str)
 {
+	g_autofree gchar *name = fu_security_attr_get_name (attr);
 	if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED)) {
 		g_string_append (str, "✦ ");
 	} else if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
@@ -1563,8 +1564,8 @@ fu_security_attr_append_str (FwupdSecurityAttr *attr, GString *str)
 	} else {
 		g_string_append (str, "✘ ");
 	}
-	g_string_append_printf (str, "%s:", fu_security_attr_get_name (attr));
-	for (guint i = fu_common_strwidth (fu_security_attr_get_name (attr)); i < 30; i++)
+	g_string_append_printf (str, "%s:", name);
+	for (guint i = fu_common_strwidth (name); i < 30; i++)
 		g_string_append (str, " ");
 	if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED)) {
 		g_string_append_printf (str, "\033[37m\033[1m%s\033[0m", fu_security_attr_get_result (attr));
