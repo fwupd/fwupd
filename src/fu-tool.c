@@ -320,6 +320,8 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GNode) root = g_node_new (NULL);
 	g_autofree gchar *title = NULL;
+	gboolean no_updates_header = FALSE;
+	gboolean latest_header = FALSE;
 
 	/* load engine */
 	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
@@ -331,6 +333,7 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 	if (devices == NULL)
 		return FALSE;
 	fwupd_device_array_ensure_parents (devices);
+	g_ptr_array_sort (devices, fu_util_sort_devices_by_flags_cb);
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
 		g_autoptr(GPtrArray) rels = NULL;
@@ -341,11 +344,12 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE))
 			continue;
 		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED)) {
-			/* TRANSLATORS: message letting the user know no device upgrade available due to missing on LVFS
-			* %1 is the device name */
-			g_autofree gchar *tmp = g_strdup_printf (_("• %s has no available firmware updates"),
-								 fwupd_device_get_name (dev));
-			g_printerr ("%s\n", tmp);
+			if (!no_updates_header) {
+				/* TRANSLATORS: message letting the user know no device upgrade available due to missing on LVFS */
+				g_printerr ("%s\n", _("Devices with no available firmware updates: "));
+				no_updates_header = TRUE;
+			}
+			g_printerr (" • %s\n", fwupd_device_get_name (dev));
 			continue;
 		}
 		if (!fu_util_filter_device (priv, dev))
@@ -357,11 +361,12 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 					       fwupd_device_get_id (dev),
 					       &error_local);
 		if (rels == NULL) {
-			/* TRANSLATORS: message letting the user know no device upgrade available
-			* %1 is the device name */
-			g_autofree gchar *tmp = g_strdup_printf (_("• %s has the latest available firmware version"),
-								 fwupd_device_get_name (dev));
-			g_printerr ("%s\n", tmp);
+			if (!latest_header) {
+				/* TRANSLATORS: message letting the user know no device upgrade available */
+				g_printerr ("%s\n", _("Devices with the latest available firmware version:"));
+				latest_header = TRUE;
+			}
+			g_printerr (" • %s\n", fwupd_device_get_name (dev));
 			/* discard the actual reason from user, but leave for debugging */
 			g_debug ("%s", error_local->message);
 			continue;
@@ -1045,11 +1050,14 @@ static gboolean
 fu_util_update_all (FuUtilPrivate *priv, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
+	gboolean no_updates_header = FALSE;
+	gboolean latest_header = FALSE;
 
 	devices = fu_engine_get_devices (priv->engine, error);
 	if (devices == NULL)
 		return FALSE;
 	fwupd_device_array_ensure_parents (devices);
+	g_ptr_array_sort (devices, fu_util_sort_devices_by_flags_cb);
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
 		FwupdRelease *rel;
@@ -1063,11 +1071,12 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE))
 			continue;
 		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED)) {
-			/* TRANSLATORS: message letting the user know no device upgrade available due to missing on LVFS
-			* %1 is the device name */
-			g_autofree gchar *tmp = g_strdup_printf (_("• %s has no available firmware updates"),
-								 fwupd_device_get_name (dev));
-			g_printerr ("%s\n", tmp);
+			if (!no_updates_header) {
+				/* TRANSLATORS: message letting the user know no device upgrade available due to missing on LVFS */
+				g_printerr ("%s\n", _("Devices with no available firmware updates: "));
+				no_updates_header = TRUE;
+			}
+			g_printerr (" • %s\n", fwupd_device_get_name (dev));
 			continue;
 		}
 		if (!fu_util_filter_device (priv, dev))
@@ -1079,11 +1088,12 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 					       device_id,
 					       &error_local);
 		if (rels == NULL) {
-			/* TRANSLATORS: message letting the user know no device upgrade available
-			* %1 is the device name */
-			g_autofree gchar *tmp = g_strdup_printf (_("• %s has the latest available firmware version"),
-								 fwupd_device_get_name (dev));
-			g_printerr ("%s\n", tmp);
+			if (!latest_header) {
+				/* TRANSLATORS: message letting the user know no device upgrade available */
+				g_printerr ("%s\n", _("Devices with the latest available firmware version:"));
+				latest_header = TRUE;
+			}
+			g_printerr (" • %s\n", fwupd_device_get_name (dev));
 			/* discard the actual reason from user, but leave for debugging */
 			g_debug ("%s", error_local->message);
 			continue;

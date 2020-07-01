@@ -84,3 +84,5 @@ gboolean	 fu_util_send_report		(SoupSession	*soup_session,
 						 const gchar	*sig,
 						 gchar		**uri,
 						 GError		**error);
+gint		 fu_util_sort_devices_by_flags_cb	(gconstpointer	 a,
+						 gconstpointer	 b);
