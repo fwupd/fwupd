@@ -5638,7 +5638,7 @@ fu_engine_get_host_security_attrs (FuEngine *self)
 	for (guint i = 0; i < items->len; i++) {
 		FwupdSecurityAttr *attr = g_ptr_array_index (items, i);
 		if (fwupd_security_attr_get_name (attr) == NULL) {
-			const gchar *name_tmp = fu_security_attr_get_name (attr);
+			g_autofree gchar *name_tmp = fu_security_attr_get_name (attr);
 			if (name_tmp == NULL) {
 				g_warning ("failed to get fallback for %s",
 					   fwupd_security_attr_get_appstream_id (attr));
