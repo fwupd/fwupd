@@ -647,7 +647,6 @@ void
 fwupd_security_attr_to_json (FwupdSecurityAttr *self, JsonBuilder *builder)
 {
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GList) keys = NULL;
 
 	g_return_if_fail (FWUPD_IS_SECURITY_ATTR (self));
 	g_return_if_fail (builder != NULL);
@@ -688,7 +687,6 @@ fwupd_security_attr_to_string (FwupdSecurityAttr *self)
 {
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE (self);
 	GString *str;
-	g_autoptr(GList) keys = NULL;
 
 	g_return_val_if_fail (FWUPD_IS_SECURITY_ATTR (self), NULL);
 
