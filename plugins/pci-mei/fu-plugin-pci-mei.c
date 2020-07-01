@@ -14,6 +14,7 @@
 struct FuPluginData {
 	gboolean		 has_device;
 	guint32			 mei_cfg;
+	FuMeiFamily		 family;
 	FuMeiVersion		 vers;
 	FuMeiIssue		 issue;
 };
@@ -53,7 +54,6 @@ static gboolean
 fu_mei_parse_fwvers (FuPlugin *plugin, const gchar *fwvers, GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data (plugin);
-	FuMeiFamily family;
 	g_auto(GStrv) lines = NULL;
 	g_auto(GStrv) sections = NULL;
 	g_auto(GStrv) split = NULL;
@@ -97,16 +97,16 @@ fu_mei_parse_fwvers (FuPlugin *plugin, const gchar *fwvers, GError **error)
 
 	/* check the AMT version for issues using the data from:
 	 * https://downloadcenter.intel.com/download/28632 */
-	family = fu_mei_detect_family (plugin);
-	if (family == FU_MEI_FAMILY_CSME)
+	priv->family = fu_mei_detect_family (plugin);
+	if (priv->family == FU_MEI_FAMILY_CSME)
 		priv->issue = fu_mei_common_is_csme_vulnerable (&priv->vers);
-	else if (family == FU_MEI_FAMILY_TXE)
+	else if (priv->family == FU_MEI_FAMILY_TXE)
 		priv->issue = fu_mei_common_is_txe_vulnerable (&priv->vers);
-	else if (family == FU_MEI_FAMILY_SPS)
+	else if (priv->family == FU_MEI_FAMILY_SPS)
 		priv->issue = fu_mei_common_is_sps_vulnerable (&priv->vers);
 	if (g_getenv ("FWUPD_MEI_VERBOSE") != NULL) {
 		g_debug ("%s version parsed as %u.%u.%u",
-			 fu_mei_common_family_to_string (family),
+			 fu_mei_common_family_to_string (priv->family),
 			 priv->vers.major, priv->vers.minor, priv->vers.hotfix);
 	}
 	return TRUE;
