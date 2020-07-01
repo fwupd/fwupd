@@ -1776,3 +1776,23 @@ fu_util_send_report (SoupSession *soup_session,
 	/* success */
 	return TRUE;
 }
+
+gint
+fu_util_sort_devices_by_flags_cb (gconstpointer a, gconstpointer b)
+{
+	FuDevice *dev_a = *((FuDevice **) a);
+	FuDevice *dev_b = *((FuDevice **) b);
+
+	if ((!fu_device_has_flag (dev_a, FWUPD_DEVICE_FLAG_UPDATABLE) &&
+	     fu_device_has_flag (dev_b, FWUPD_DEVICE_FLAG_UPDATABLE)) ||
+	    (!fu_device_has_flag (dev_a, FWUPD_DEVICE_FLAG_SUPPORTED) &&
+	     fu_device_has_flag (dev_b, FWUPD_DEVICE_FLAG_SUPPORTED)))
+		return -1;
+	if ((fu_device_has_flag (dev_a, FWUPD_DEVICE_FLAG_UPDATABLE) &&
+	    !fu_device_has_flag (dev_b, FWUPD_DEVICE_FLAG_UPDATABLE)) ||
+	    (fu_device_has_flag (dev_a, FWUPD_DEVICE_FLAG_SUPPORTED) &&
+	    !fu_device_has_flag (dev_b, FWUPD_DEVICE_FLAG_SUPPORTED)))
+		return 1;
+
+	return 0;
+}
