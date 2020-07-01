@@ -1274,33 +1274,6 @@ fwupd_release_set_install_duration (FwupdRelease *release, guint32 duration)
 	priv->install_duration = duration;
 }
 
-static GVariant *
-_hash_kv_to_variant (GHashTable *hash)
-{
-	GVariantBuilder builder;
-	g_autoptr(GList) keys = g_hash_table_get_keys (hash);
-	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
-	for (GList *l = keys; l != NULL; l = l->next) {
-		const gchar *key = l->data;
-		const gchar *value = g_hash_table_lookup (hash, key);
-		g_variant_builder_add (&builder, "{ss}", key, value);
-	}
-	return g_variant_builder_end (&builder);
-}
-
-static GHashTable *
-_variant_to_hash_kv (GVariant *dict)
-{
-	GHashTable *hash = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
-	GVariantIter iter;
-	const gchar *key;
-	const gchar *value;
-	g_variant_iter_init (&iter, dict);
-	while (g_variant_iter_loop (&iter, "{ss}", &key, &value))
-		g_hash_table_insert (hash, g_strdup (key), g_strdup (value));
-	return hash;
-}
-
 /**
  * fwupd_release_to_variant:
  * @release: A #FwupdRelease
@@ -1457,7 +1430,7 @@ fwupd_release_to_variant (FwupdRelease *release)
 	if (g_hash_table_size (priv->metadata) > 0) {
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_METADATA,
-				       _hash_kv_to_variant (priv->metadata));
+				       fwupd_hash_kv_to_variant (priv->metadata));
 	}
 	if (priv->install_duration > 0) {
 		g_variant_builder_add (&builder, "{sv}",
@@ -1588,7 +1561,7 @@ fwupd_release_from_key_value (FwupdRelease *release, const gchar *key, GVariant 
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_METADATA) == 0) {
 		g_hash_table_unref (priv->metadata);
-		priv->metadata = _variant_to_hash_kv (value);
+		priv->metadata = fwupd_variant_to_hash_kv (value);
 		return;
 	}
 }

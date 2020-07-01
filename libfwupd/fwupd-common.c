@@ -894,3 +894,36 @@ fwupd_guid_hash_string (const gchar *str)
 	return fwupd_guid_hash_data ((const guint8 *) str, strlen (str),
 				     FWUPD_GUID_FLAG_NONE);
 }
+
+/**
+ * fwupd_hash_kv_to_variant: (skip):
+ **/
+GVariant *
+fwupd_hash_kv_to_variant (GHashTable *hash)
+{
+	GVariantBuilder builder;
+	g_autoptr(GList) keys = g_hash_table_get_keys (hash);
+	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
+	for (GList *l = keys; l != NULL; l = l->next) {
+		const gchar *key = l->data;
+		const gchar *value = g_hash_table_lookup (hash, key);
+		g_variant_builder_add (&builder, "{ss}", key, value);
+	}
+	return g_variant_builder_end (&builder);
+}
+
+/**
+ * fwupd_variant_to_hash_kv: (skip):
+ **/
+GHashTable *
+fwupd_variant_to_hash_kv (GVariant *dict)
+{
+	GHashTable *hash = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+	GVariantIter iter;
+	const gchar *key;
+	const gchar *value;
+	g_variant_iter_init (&iter, dict);
+	while (g_variant_iter_loop (&iter, "{ss}", &key, &value))
+		g_hash_table_insert (hash, g_strdup (key), g_strdup (value));
+	return hash;
+}
