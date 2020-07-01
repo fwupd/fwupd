@@ -1,4 +1,4 @@
-# Lenovo Gen2 Dock
+# Lenovo ThinkPad USB-C Dock Gen2
 [DeviceInstanceId=USB\VID_17EF&PID_A38F]
 Plugin = ccgx
 GType = FuCcgxHidDevice
@@ -23,7 +23,7 @@ Flags = is-bootloader
 Summary = CCGx Power Delivery Device
 CounterpartGuid = USB\VID_04B4&PID_521A&SID_1F00&APP_6D64&MODE_FW1
 
-# Lenovo Hybrid Dock
+# Lenovo ThinkPad USB-C Dock Hybrid
 [DeviceInstanceId=USB\VID_17EF&PID_A354]
 Plugin = ccgx
 GType = FuCcgxHidDevice
@@ -51,7 +51,7 @@ Summary = CCGx Power Delivery Device (Symmetric FW1)
 [DeviceInstanceId=USB\VID_04B4&PID_5218&SID_1F00&APP_6432&MODE_FW2]
 Summary = CCGx Power Delivery Device (Symmetric FW2)
 
-# HP Adicora Dock A Type
+# HP USB-C Dock G5
 [DeviceInstanceId=USB\VID_03F0&PID_046B]
 Plugin = ccgx
 GType = FuCcgxDmcDevice
@@ -59,10 +59,10 @@ Summary = Dock Management Controller Device
 ParentGuid = USB\VID_03F0&PID_0363
 Name = HP USB-C Dock G5
 ImageKind = dmc-composite
-InstallDuration = 190
-RemoveDelay = 150000
+InstallDuration = 233
+RemoveDelay = 203000
 
-# HP Adicora Dock D Type
+# HP USB-C/A Universal Dock G2
 [DeviceInstanceId=USB\VID_03F0&PID_0A6B]
 Plugin = ccgx
 GType = FuCcgxDmcDevice
@@ -70,5 +70,5 @@ Summary = Dock Management Controller Device
 ParentGuid = USB\VID_03F0&PID_096B
 Name = HP USB-C/A Universal Dock G2
 ImageKind = dmc-composite
-InstallDuration = 110
-RemoveDelay = 85000
+InstallDuration = 125
+RemoveDelay = 107000
