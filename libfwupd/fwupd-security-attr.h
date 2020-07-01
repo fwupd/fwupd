@@ -161,6 +161,11 @@ void		 fwupd_security_attr_add_obsolete	(FwupdSecurityAttr	*self,
 							 const gchar		*appstream_id);
 gboolean	 fwupd_security_attr_has_obsolete	(FwupdSecurityAttr	*self,
 							 const gchar		*appstream_id);
+const gchar	*fwupd_security_attr_get_metadata	(FwupdSecurityAttr	*self,
+							 const gchar		*key);
+void		 fwupd_security_attr_add_metadata	(FwupdSecurityAttr	*self,
+							 const gchar		*key,
+							 const gchar		*value);
 FwupdSecurityAttrFlags fwupd_security_attr_get_flags	(FwupdSecurityAttr	*self);
 void		 fwupd_security_attr_set_flags		(FwupdSecurityAttr	*self,
 							 FwupdSecurityAttrFlags flags);

@@ -23,6 +23,7 @@ static void fwupd_security_attr_finalize	 (GObject *object);
 typedef struct {
 	gchar				*appstream_id;
 	GPtrArray			*obsoletes;
+	GHashTable			*metadata;	/* (nullable) */
 	gchar				*name;
 	gchar				*plugin;
 	gchar				*url;
@@ -542,12 +543,70 @@ fwupd_security_attr_to_variant (FwupdSecurityAttr *self)
 				       FWUPD_RESULT_KEY_HSI_RESULT,
 				       g_variant_new_uint32 (priv->result));
 	}
+	if (priv->metadata != NULL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_METADATA,
+				       fwupd_hash_kv_to_variant (priv->metadata));
+	}
 	return g_variant_new ("a{sv}", &builder);
+}
+
+/**
+ * fwupd_security_attr_get_metadata:
+ * @self: A #FwupdSecurityAttr
+ * @key: metadata key
+ *
+ * Gets private metadata from the attribute which may be used in the name.
+ *
+ * Returns: (nullable): the metadata value, or %NULL if unfound
+ *
+ * Since: 1.5.0
+ **/
+const gchar *
+fwupd_security_attr_get_metadata (FwupdSecurityAttr *self, const gchar *key)
+{
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE (self);
+
+	g_return_val_if_fail (FWUPD_IS_SECURITY_ATTR (self), NULL);
+	g_return_val_if_fail (key != NULL, NULL);
+
+	if (priv->metadata == NULL)
+		return NULL;
+	return g_hash_table_lookup (priv->metadata, key);
+}
+
+/**
+ * fwupd_security_attr_add_metadata:
+ * @self: A #FwupdSecurityAttr
+ * @key: metadata key
+ * @value: (nullable): metadata value
+ *
+ * Adds metadata to the attribute which may be used in the name.
+ *
+ * Since: 1.5.0
+ **/
+void
+fwupd_security_attr_add_metadata (FwupdSecurityAttr *self,
+				  const gchar *key,
+				  const gchar *value)
+{
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE (self);
+
+	g_return_if_fail (FWUPD_IS_SECURITY_ATTR (self));
+	g_return_if_fail (key != NULL);
+
+	if (priv->metadata == NULL) {
+		priv->metadata = g_hash_table_new_full (g_str_hash, g_str_equal,
+							g_free, g_free);
+	}
+	g_hash_table_insert (priv->metadata, g_strdup (key), g_strdup (value));
 }
 
 static void
 fwupd_security_attr_from_key_value (FwupdSecurityAttr *self, const gchar *key, GVariant *value)
 {
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE (self);
+
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_APPSTREAM_ID) == 0) {
 		fwupd_security_attr_set_appstream_id (self, g_variant_get_string (value, NULL));
 		return;
@@ -570,6 +629,12 @@ fwupd_security_attr_from_key_value (FwupdSecurityAttr *self, const gchar *key, G
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_HSI_RESULT) == 0) {
 		fwupd_security_attr_set_result (self, g_variant_get_uint32 (value));
+		return;
+	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_METADATA) == 0) {
+		if (priv->metadata != NULL)
+			g_hash_table_unref (priv->metadata);
+		priv->metadata = fwupd_variant_to_hash_kv (value);
 		return;
 	}
 }
@@ -670,6 +735,14 @@ fwupd_security_attr_to_json (FwupdSecurityAttr *self, JsonBuilder *builder)
 		}
 		json_builder_end_array (builder);
 	}
+	if (priv->metadata != NULL) {
+		g_autoptr(GList) keys = g_hash_table_get_keys (priv->metadata);
+		for (GList *l = keys; l != NULL; l = l->next) {
+			const gchar *key = l->data;
+			const gchar *value = g_hash_table_lookup (priv->metadata, key);
+			fwupd_security_attr_json_add_string (builder, key, value);
+		}
+	}
 }
 
 /**
@@ -704,6 +777,14 @@ fwupd_security_attr_to_string (FwupdSecurityAttr *self)
 		const gchar *appstream_id = g_ptr_array_index (priv->obsoletes, i);
 		fwupd_pad_kv_str (str, "Obsolete", appstream_id);
 	}
+	if (priv->metadata != NULL) {
+		g_autoptr(GList) keys = g_hash_table_get_keys (priv->metadata);
+		for (GList *l = keys; l != NULL; l = l->next) {
+			const gchar *key = l->data;
+			const gchar *value = g_hash_table_lookup (priv->metadata, key);
+			fwupd_pad_kv_str (str, key, value);
+		}
+	}
 
 	return g_string_free (str, FALSE);
 }
@@ -728,6 +809,8 @@ fwupd_security_attr_finalize (GObject *object)
 	FwupdSecurityAttr *self = FWUPD_SECURITY_ATTR (object);
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE (self);
 
+	if (priv->metadata != NULL)
+		g_hash_table_unref (priv->metadata);
 	g_free (priv->appstream_id);
 	g_free (priv->name);
 	g_free (priv->plugin);

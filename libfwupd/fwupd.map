@@ -467,6 +467,7 @@ LIBFWUPD_1.5.0 {
     fwupd_remote_get_automatic_security_reports;
     fwupd_remote_get_security_report_uri;
     fwupd_security_attr_add_flag;
+    fwupd_security_attr_add_metadata;
     fwupd_security_attr_add_obsolete;
     fwupd_security_attr_array_from_variant;
     fwupd_security_attr_flag_to_string;
@@ -475,6 +476,7 @@ LIBFWUPD_1.5.0 {
     fwupd_security_attr_get_appstream_id;
     fwupd_security_attr_get_flags;
     fwupd_security_attr_get_level;
+    fwupd_security_attr_get_metadata;
     fwupd_security_attr_get_name;
     fwupd_security_attr_get_obsoletes;
     fwupd_security_attr_get_plugin;
