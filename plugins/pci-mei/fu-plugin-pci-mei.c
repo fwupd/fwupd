@@ -161,6 +161,7 @@ fu_plugin_add_security_attrs_manufacturing_mode (FuPlugin *plugin, FuSecurityAtt
 	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_MEI_MANUFACTURING_MODE);
 	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
 	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
+	fwupd_security_attr_add_metadata (attr, "kind", fu_mei_common_family_to_string (priv->family));
 	fu_security_attrs_append (attrs, attr);
 
 	/* Manufacturing Mode */
@@ -184,6 +185,7 @@ fu_plugin_add_security_attrs_override_strap (FuPlugin *plugin, FuSecurityAttrs *
 	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_MEI_OVERRIDE_STRAP);
 	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
 	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
+	fwupd_security_attr_add_metadata (attr, "kind", fu_mei_common_family_to_string (priv->family));
 	fu_security_attrs_append (attrs, attr);
 
 	/* Flash Descriptor Security Override Strap */
@@ -201,15 +203,18 @@ static void
 fu_plugin_add_security_attrs_csme_version (FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuPluginData *priv = fu_plugin_get_data (plugin);
+	g_autofree gchar *version = NULL;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
+	/* format version as string */
+	version = g_strdup_printf ("%u:%u.%u.%u.%u",
+				   priv->vers.platform,
+				   priv->vers.major,
+				   priv->vers.minor,
+				   priv->vers.hotfix,
+				   priv->vers.buildno);
 	if (priv->issue == FU_MEI_ISSUE_UNKNOWN) {
-		g_warning ("ME family not supported for %u:%u.%u.%u.%u",
-			   priv->vers.platform,
-			   priv->vers.major,
-			   priv->vers.minor,
-			   priv->vers.hotfix,
-			   priv->vers.buildno);
+		g_warning ("ME family not supported for %s", version);
 		return;
 	}
 
@@ -217,6 +222,8 @@ fu_plugin_add_security_attrs_csme_version (FuPlugin *plugin, FuSecurityAttrs *at
 	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_MEI_VERSION);
 	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
 	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
+	fwupd_security_attr_add_metadata (attr, "kind", fu_mei_common_family_to_string (priv->family));
+	fwupd_security_attr_add_metadata (attr, "version", version);
 	fu_security_attrs_append (attrs, attr);
 
 	/* Flash Descriptor Security Override Strap */
