@@ -25,7 +25,7 @@
 #define CY_I2C_ENABLE_PRECISE_TIMING	1
 #define CY_I2C_EVENT_NOTIFICATION_LEN	3
 
-#define PD_I2C_SLAVE_ADDRESS		0x08
+#define PD_I2C_TARGET_ADDRESS		0x08
 
 /* timeout (ms)	for  USB I2C communication */
 #define FU_CCGX_HPI_WAIT_TIMEOUT	5000
@@ -60,11 +60,11 @@ typedef enum {
 					 * length = 16, data_out = 16 byte configuration information */
 	CY_I2C_WRITE_CMD,		/* perform I2C write operation
 					 * value = bit0 - start, bit1 - stop, bit3 - start on idle,
-					 * bits[14:8] - slave address, bit15 - scbIndex. length = 0 the
+					 * bits[14:8] - target address, bit15 - scbIndex. length = 0 the
 					 * data	is provided over the bulk endpoints */
 	CY_I2C_READ_CMD,		/* rerform I2C read operation.
 					 * value = bit0 - start, bit1 - stop, bit2 - Nak last byte,
-					 * bit3 - start on idle, bits[14:8] - slave address, bit15 - scbIndex,
+					 * bit3 - start on idle, bits[14:8] - target address, bit15 - scbIndex,
 					 * length = 0. The data is provided over the bulk endpoints */
 	CY_I2C_GET_STATUS_CMD,		/* retrieve the I2C bus status.
 					 * value = bit0 - 0: TX 1: RX, bit15 - scbIndex, length = 3,
@@ -107,10 +107,10 @@ typedef enum {
 
 typedef struct __attribute__((packed)) {
 	guint32	 frequency;		/* frequency of operation. Only valid values are 100KHz and 400KHz */
-	guint8	 slave_address;		/* slave address to be used when in slave mode */
+	guint8	 target_address;	/* target address to be used when in target mode */
 	guint8	 is_msb_first;		/* whether to transmit most significant bit first */
-	guint8	 is_master;		/* whether to block is to be configured as a master*/
-	guint8	 s_ignore;		/* ignore general call in slave mode */
+	guint8	 is_initiator;		/* whether to block is to be configured as a initiator */
+	guint8	 s_ignore;		/* ignore general call in target mode */
 	guint8	 is_clock_stretch;	/* whether to stretch clock in case of no FIFO availability */
 	guint8	 is_loop_back;		/* whether to loop back	TX data to RX. Valid only for debug purposes */
 	guint8	 reserved[6];

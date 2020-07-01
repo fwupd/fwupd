@@ -23,7 +23,7 @@
 #include "fu-device.h"
 
 typedef struct __attribute__ ((packed)) {
-	guint8 i2cslaveaddr;
+	guint8 i2ctargetaddr;
 	guint8 regaddrlen;
 	guint8 i2cspeed;
 } FuHIDI2CParameters;

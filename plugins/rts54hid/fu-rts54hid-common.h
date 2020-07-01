@@ -15,7 +15,7 @@
 #define FU_RTS54HID_CMD_BUFFER_OFFSET_DATA		0x40
 
 typedef struct __attribute__ ((packed)) {
-	guint8 slave_addr;
+	guint8 target_addr;
 	guint8 data_sz;
 	guint8 speed;
 } FuRts54HidI2cParameters;
