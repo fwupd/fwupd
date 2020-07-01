@@ -77,10 +77,10 @@ ch_strerror (ChError error_enum)
 		return "Self test failed: ADC Vss";
 	if (error_enum == CH_ERROR_SELF_TEST_ADC_VREF)
 		return "Self test failed: ADC Vref";
-	if (error_enum == CH_ERROR_I2C_SLAVE_ADDRESS)
-		return "I2C set slave address failed";
-	if (error_enum == CH_ERROR_I2C_SLAVE_CONFIG)
-		return "I2C set slave config failed";
+	if (error_enum == CH_ERROR_I2C_TARGET_ADDRESS)
+		return "I2C set target address failed";
+	if (error_enum == CH_ERROR_I2C_TARGET_CONFIG)
+		return "I2C set target config failed";
 	if (error_enum == CH_ERROR_SELF_TEST_EEPROM)
 		return "Self test failed: EEPROM";
 	return NULL;
