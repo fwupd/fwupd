@@ -33,9 +33,13 @@ class LdVersionScript:
 
     def _add_node(self, node):
         identifier = node.attrib[XMLNS_C + 'identifier']
-        if 'version' not in node.attrib:
+        introspectable = int(node.get('introspectable', 1))
+        version = node.get('version', None)
+        if introspectable and not version:
             print('No version for', identifier)
             sys.exit(1)
+        if not version:
+            return None
         version = node.attrib['version']
         if version not in self.releases:
             self.releases[version] = []
