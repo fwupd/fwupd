@@ -37,6 +37,13 @@ used for systems with multiple host controllers to disambiguiate between control
 
 * `TBT-$(vid)$(pid)-native-controller$(num)`
 
+For retimers the only GUID created is as follows:
+* `TBT-$(vid)$(pid)-retimer$index`
+
+The retimer index is oriented around the physical connection within
+the machine.  It is important as multiple controllers may otherwise
+identify identically.
+
 Vendor ID Security
 ------------------
 

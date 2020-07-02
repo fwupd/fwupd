@@ -21,9 +21,15 @@
 #include "fu-thunderbolt-firmware.h"
 #include "fu-thunderbolt-firmware-update.h"
 
+typedef enum {
+	FU_THUNDERBOLT_DEVICE_TYPE_DEVICE_CONTROLLER,
+	FU_THUNDERBOLT_DEVICE_TYPE_HOST_CONTROLLER,
+	FU_THUNDERBOLT_DEVICE_TYPE_RETIMER
+} FuThunderboltDeviceType;
+
 struct _FuThunderboltDevice {
 	FuUdevDevice		 parent_instance;
-	gboolean		 host;
+	FuThunderboltDeviceType	 device_type;
 	gboolean		 safe_mode;
 	gboolean		 is_native;
 	guint16			 gen;
@@ -160,7 +166,7 @@ static void
 fu_thunderbolt_device_check_safe_mode (FuThunderboltDevice *self)
 {
 	/* failed to read, for host check for safe mode */
-	if (!self->host || self->gen >= 4)
+	if (self->device_type != FU_THUNDERBOLT_DEVICE_TYPE_DEVICE_CONTROLLER)
 		return;
 	g_warning ("%s is in safe mode --  VID/DID will "
 		   "need to be set by another plugin",
@@ -171,11 +177,31 @@ fu_thunderbolt_device_check_safe_mode (FuThunderboltDevice *self)
 	fu_device_set_metadata_boolean (FU_DEVICE (self), FU_DEVICE_METADATA_TBT_IS_SAFE_MODE, TRUE);
 }
 
+static const gchar*
+fu_thunderbolt_device_type_to_string (FuThunderboltDevice *self)
+{
+	if (self->device_type == FU_THUNDERBOLT_DEVICE_TYPE_HOST_CONTROLLER) {
+		if (self->gen >= 4)
+			return "USB4 host controller";
+		else
+			return "Thunderbolt host controller";
+	}
+	if (self->device_type == FU_THUNDERBOLT_DEVICE_TYPE_DEVICE_CONTROLLER) {
+		if (self->gen >= 4)
+			return "USB4 device controller";
+		else
+			return "Thunderbolt device controller";
+	}
+	if (self->device_type == FU_THUNDERBOLT_DEVICE_TYPE_RETIMER)
+		return "USB4 Retimer";
+	return "Unknown";
+}
+
 static void
 fu_thunderbolt_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE (device);
-	fu_common_string_append_kb (str, idt, "Host Controller", self->host);
+	fu_common_string_append_kv (str, idt, "Device Type", fu_thunderbolt_device_type_to_string (self));
 	fu_common_string_append_kb (str, idt, "Safe Mode", self->safe_mode);
 	fu_common_string_append_kb (str, idt, "Native mode", self->is_native);
 	fu_common_string_append_ku (str, idt, "Generation", self->gen);
@@ -185,16 +211,25 @@ fu_thunderbolt_device_to_string (FuDevice *device, guint idt, GString *str)
 static gboolean
 fu_thunderbolt_device_probe (FuUdevDevice *device, GError **error)
 {
-	const gchar *tmp = fu_udev_device_get_sysfs_attr (device, "unique_id", NULL);
-	/* most likely the domain itself, ignore */
-	if (tmp == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "thunderbolt domain not used");
+	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE (device);
+	const gchar *tmp = fu_udev_device_get_devtype (device);
+
+	/* device */
+	if (g_strcmp0 (tmp, "thunderbolt_device") == 0) {
+		tmp = fu_udev_device_get_sysfs_attr (device, "unique_id", NULL);
+		if (tmp != NULL)
+			fu_device_set_physical_id (FU_DEVICE (device), tmp);
+	/* retimer */
+	} else if (g_strcmp0 (tmp, "thunderbolt_retimer") == 0) {
+		self->device_type = FU_THUNDERBOLT_DEVICE_TYPE_RETIMER;
+	/* domain or unsupported */
+	} else {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "%s not used", tmp);
 		return FALSE;
 	}
-	fu_device_set_physical_id (FU_DEVICE (device), tmp);
 
 	return TRUE;
 }
@@ -231,7 +266,7 @@ fu_thunderbolt_device_get_attr_uint16 (FuThunderboltDevice *self,
 }
 
 static gboolean
-fu_thunderbolt_device_setup (FuDevice *device, GError **error)
+fu_thunderbolt_device_setup_controller (FuDevice *device, GError **error)
 {
 	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE (device);
 	const gchar *tmp = NULL;
@@ -239,9 +274,6 @@ fu_thunderbolt_device_setup (FuDevice *device, GError **error)
 	guint16 vid;
 	g_autoptr(GError) error_gen = NULL;
 	g_autofree gchar *parent_name = fu_udev_device_get_parent_name (FU_UDEV_DEVICE (self));
-
-	self->devpath = g_strdup (fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (device)));
-	fu_device_set_metadata (device, "sysfs-path", self->devpath);
 
 	/* these may be missing on ICL or later */
 	vid = fu_udev_device_get_vendor (FU_UDEV_DEVICE (self));
@@ -263,7 +295,7 @@ fu_thunderbolt_device_setup (FuDevice *device, GError **error)
 
 	/* determine if host controller or not */
 	if (parent_name != NULL && g_str_has_prefix (parent_name, "domain")) {
-		self->host = TRUE;
+		self->device_type = FU_THUNDERBOLT_DEVICE_TYPE_HOST_CONTROLLER;
 		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_INTERNAL);
 		fu_device_set_summary (device, "Unmatched performance for high-speed I/O");
 	} else {
@@ -271,12 +303,8 @@ fu_thunderbolt_device_setup (FuDevice *device, GError **error)
 	}
 
 	/* set the controller name */
-	if (tmp == NULL) {
-		if (self->gen == 4)
-			tmp = "USB4 Controller";
-		else
-			tmp = "Thunderbolt Controller";
-	}
+	if (tmp == NULL)
+		tmp = fu_thunderbolt_device_type_to_string (self);
 	fu_device_set_name (device, tmp);
 
 	/* set vendor string */
@@ -285,8 +313,7 @@ fu_thunderbolt_device_setup (FuDevice *device, GError **error)
 		return FALSE;
 	fu_device_set_vendor (device, tmp);
 
-	/* try to read the version */
-	if (!fu_thunderbolt_device_get_version (self))
+	if (fu_device_get_version (device) == NULL)
 		fu_thunderbolt_device_check_safe_mode (self);
 
 	if (self->safe_mode) {
@@ -299,7 +326,8 @@ fu_thunderbolt_device_setup (FuDevice *device, GError **error)
 			g_autofree gchar *domain = g_path_get_basename (self->devpath);
 			/* USB4 controllers don't have a concept of legacy vs native
 			 * so don't try to read a native attribute from their NVM */
-			if (self->host && self->gen < 4) {
+			if (self->device_type == FU_THUNDERBOLT_DEVICE_TYPE_HOST_CONTROLLER
+			    && self->gen < 4) {
 				domain_id = g_strdup_printf ("TBT-%04x%04x%s-controller%s",
 							     (guint) vid,
 							     (guint) did,
@@ -331,12 +359,82 @@ fu_thunderbolt_device_setup (FuDevice *device, GError **error)
 		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 		/* forces the device to write to authenticate on disconnect attribute */
 		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_SKIPS_RESTART);
-	} else {
-		self->auth_method = "nvm_authenticate";
 	}
 
-	/* success */
 	return TRUE;
+}
+
+static gboolean
+fu_thunderbolt_device_setup_retimer (FuDevice *device, GError **error)
+{
+	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE (device);
+	guint16 did;
+	guint16 vid;
+	g_autofree gchar *idx = g_path_get_basename (self->devpath);
+	g_autofree gchar *instance = NULL;
+
+	fu_device_set_physical_id (device, idx);
+	/* as defined in PCIe 4.0 spec */
+	fu_device_set_summary (device, "A physical layer protocol-aware, software-transparent extension device "
+				        "that forms two separate electrical link segments");
+	fu_device_set_name (device, fu_thunderbolt_device_type_to_string (self));
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_DUAL_IMAGE);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_INTERNAL);
+	vid = fu_udev_device_get_vendor (FU_UDEV_DEVICE (self));
+	if (vid == 0x0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "missing vendor id");
+		return FALSE;
+	}
+
+	did = fu_udev_device_get_model (FU_UDEV_DEVICE (self));
+	if (did == 0x0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "missing device id");
+		return FALSE;
+
+	}
+
+	instance = g_strdup_printf ("TBT-%04x%04x-retimer%s",
+				    (guint) vid,
+				    (guint) did,
+				    idx);
+	fu_device_add_instance_id (device, instance);
+
+	/* hardcoded for now:
+	 * 1. unsure if ID_VENDOR_FROM_DATABASE works in this instance
+	 * 2. we don't recognize anyone else yet
+	 */
+	if (fu_device_get_vendor (device) == NULL)
+		fu_device_set_vendor (device, "Intel");
+
+	return TRUE;
+}
+
+static gboolean
+fu_thunderbolt_device_setup (FuDevice *device, GError **error)
+{
+	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE (device);
+
+	self->devpath = g_strdup (fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (device)));
+	fu_device_set_metadata (device, "sysfs-path", self->devpath);
+
+	/* try to read the version */
+	if (!fu_thunderbolt_device_get_version (self))
+		g_debug ("failed to read version");
+
+	/* default behavior */
+	self->auth_method = "nvm_authenticate";
+
+	/* configure differences between retimer and controller */
+	if (self->device_type == FU_THUNDERBOLT_DEVICE_TYPE_RETIMER)
+		return fu_thunderbolt_device_setup_retimer (device, error);
+	return fu_thunderbolt_device_setup_controller (device, error);
 }
 
 static gboolean
