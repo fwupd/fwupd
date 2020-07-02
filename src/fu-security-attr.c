@@ -29,6 +29,10 @@ fu_security_attr_get_name (FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack  */
 		return g_strdup (_("Pre-boot DMA protection"));
 	}
+	if (g_strcmp0 (appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD) == 0) {
+		/* TRANSLATORS: Title: BootGuard is a trademark from Intel */
+		return g_strdup (_("Intel BootGuard"));
+	}
 	if (g_strcmp0 (appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_CET) == 0) {
 		/* TRANSLATORS: Title: CET = Control-flow Enforcement Technology */
 		return g_strdup (_("Intel CET"));
