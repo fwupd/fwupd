@@ -186,6 +186,10 @@ typedef union {
 #define ME_HFS_MODE_UNKNOWN_6	6
 #define ME_HFS_MODE_MAYBE_SPS	7
 
+#define ME_HFS_ENFORCEMENT_POLICY_NOTHING	0b00
+#define ME_HFS_ENFORCEMENT_POLICY_SHUTDOWN_TO	0b01
+#define ME_HFS_ENFORCEMENT_POLICY_SHUTDOWN_NOW	0b11
+
 const gchar	*fu_mei_common_family_to_string		(FuMeiFamily	 family);
 FuMeiIssue	 fu_mei_common_is_csme_vulnerable	(FuMeiVersion	*vers);
 FuMeiIssue	 fu_mei_common_is_txe_vulnerable	(FuMeiVersion	*vers);

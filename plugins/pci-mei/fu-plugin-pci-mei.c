@@ -259,6 +259,53 @@ fu_plugin_add_security_attrs_override_strap (FuPlugin *plugin, FuSecurityAttrs *
 }
 
 static void
+fu_plugin_add_security_attrs_bootguard (FuPlugin *plugin, FuSecurityAttrs *attrs)
+{
+	FuPluginData *priv = fu_plugin_get_data (plugin);
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	/* create attr */
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD);
+	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
+	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT);
+	fu_security_attrs_append (attrs, attr);
+
+	/* disabled at runtime? */
+	if (priv->hfsts6.fields.boot_guard_disable) {
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		return;
+	}
+
+	/* measured boot is not sufficient, verified is required */
+	if (!priv->hfsts6.fields.verified_boot) {
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		return;
+	}
+
+	/* ACM protection required */
+	if (!priv->hfsts6.fields.force_boot_guard_acm) {
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		return;
+	}
+
+	/* policy must be to immediatly shutdown */
+	if (priv->hfsts6.fields.error_enforce_policy != ME_HFS_ENFORCEMENT_POLICY_SHUTDOWN_NOW) {
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		return;
+	}
+
+	/* ensure vendor set the FPF OTP fuse */
+	if (!priv->hfsts6.fields.fpf_soc_lock) {
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		return;
+	}
+
+	/* success */
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
+}
+
+static void
 fu_plugin_add_security_attrs_mei_version (FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuPluginData *priv = fu_plugin_get_data (plugin);
@@ -309,5 +356,6 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 
 	fu_plugin_add_security_attrs_manufacturing_mode (plugin, attrs);
 	fu_plugin_add_security_attrs_override_strap (plugin, attrs);
+	fu_plugin_add_security_attrs_bootguard (plugin, attrs);
 	fu_plugin_add_security_attrs_mei_version (plugin, attrs);
 }
