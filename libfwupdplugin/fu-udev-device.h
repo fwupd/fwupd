@@ -106,3 +106,4 @@ gboolean	 fu_udev_device_write_sysfs		(FuUdevDevice	*self,
 							 const gchar	*attribute,
 							 const gchar	*val,
 							 GError		**error);
+const gchar	*fu_udev_device_get_devtype		(FuUdevDevice	*self);
