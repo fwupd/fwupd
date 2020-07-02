@@ -13,13 +13,41 @@
 
 struct FuPluginData {
 	gboolean		 has_device;
-	guint32			 mei_cfg;
+	FuMeiHfsts1		 hfsts1;
+	FuMeiHfsts2		 hfsts2;
+	FuMeiHfsts3		 hfsts3;
+	FuMeiHfsts4		 hfsts4;
+	FuMeiHfsts5		 hfsts5;
+	FuMeiHfsts6		 hfsts6;
 	FuMeiFamily		 family;
 	FuMeiVersion		 vers;
 	FuMeiIssue		 issue;
 };
 
 #define PCI_CFG_HFS_1		0x40
+#define PCI_CFG_HFS_2		0x48
+#define PCI_CFG_HFS_3		0x60
+#define PCI_CFG_HFS_4		0x64
+#define PCI_CFG_HFS_5		0x68
+#define PCI_CFG_HFS_6		0x6c
+
+static void
+fu_mei_hfsts_to_string (FuPlugin *plugin, guint idt, GString *str)
+{
+	FuPluginData *priv = fu_plugin_get_data (plugin);
+	fu_common_string_append_kv (str, idt, "HFSTS1", NULL);
+	fu_mei_hfsts1_to_string (priv->hfsts1, idt + 1, str);
+	fu_common_string_append_kv (str, idt, "HFSTS2", NULL);
+	fu_mei_hfsts2_to_string (priv->hfsts2, idt + 1, str);
+	fu_common_string_append_kv (str, idt, "HFSTS3", NULL);
+	fu_mei_hfsts3_to_string (priv->hfsts3, idt + 1, str);
+	fu_common_string_append_kv (str, idt, "HFSTS4", NULL);
+	fu_mei_hfsts4_to_string (priv->hfsts4, idt + 1, str);
+	fu_common_string_append_kv (str, idt, "HFSTS5", NULL);
+	fu_mei_hfsts5_to_string (priv->hfsts5, idt + 1, str);
+	fu_common_string_append_kv (str, idt, "HFSTS6", NULL);
+	fu_mei_hfsts6_to_string (priv->hfsts6, idt + 1, str);
+}
 
 void
 fu_plugin_init (FuPlugin *plugin)
@@ -33,11 +61,10 @@ static FuMeiFamily
 fu_mei_detect_family (FuPlugin *plugin)
 {
 	FuPluginData *priv = fu_plugin_get_data (plugin);
-	guint8 operating_mode = (priv->mei_cfg >> 16) & 0xF;
 	guint8 ver = priv->vers.major;
 
 	if (ver == 1 || ver == 2) {
-		if (operating_mode == 0xF)
+		if (priv->hfsts1.fields.operation_mode == 0xf)
 			return FU_MEI_FAMILY_SPS;
 		return FU_MEI_FAMILY_TXE;
 	}
@@ -132,13 +159,45 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 	if (locker == NULL)
 		return FALSE;
 
-	/* grab MEI config Register */
+	/* grab MEI config registers */
 	if (!fu_udev_device_pread_full (device, PCI_CFG_HFS_1, buf, sizeof(buf), error)) {
-		g_prefix_error (error, "could not read MEI: ");
+		g_prefix_error (error, "could not read HFS1: ");
 		return FALSE;
 	}
-	priv->mei_cfg = fu_common_read_uint32 (buf, G_LITTLE_ENDIAN);
+	priv->hfsts1.data = fu_common_read_uint32 (buf, G_LITTLE_ENDIAN);
+	if (!fu_udev_device_pread_full (device, PCI_CFG_HFS_2, buf, sizeof(buf), error)) {
+		g_prefix_error (error, "could not read HFS2: ");
+		return FALSE;
+	}
+	priv->hfsts2.data = fu_common_read_uint32 (buf, G_LITTLE_ENDIAN);
+	if (!fu_udev_device_pread_full (device, PCI_CFG_HFS_3, buf, sizeof(buf), error)) {
+		g_prefix_error (error, "could not read HFS3: ");
+		return FALSE;
+	}
+	priv->hfsts3.data = fu_common_read_uint32 (buf, G_LITTLE_ENDIAN);
+	if (!fu_udev_device_pread_full (device, PCI_CFG_HFS_4, buf, sizeof(buf), error)) {
+		g_prefix_error (error, "could not read HFS4: ");
+		return FALSE;
+	}
+	priv->hfsts4.data = fu_common_read_uint32 (buf, G_LITTLE_ENDIAN);
+	if (!fu_udev_device_pread_full (device, PCI_CFG_HFS_5, buf, sizeof(buf), error)) {
+		g_prefix_error (error, "could not read HFS5: ");
+		return FALSE;
+	}
+	priv->hfsts5.data = fu_common_read_uint32 (buf, G_LITTLE_ENDIAN);
+	if (!fu_udev_device_pread_full (device, PCI_CFG_HFS_6, buf, sizeof(buf), error)) {
+		g_prefix_error (error, "could not read HFS6: ");
+		return FALSE;
+	}
+	priv->hfsts6.data = fu_common_read_uint32 (buf, G_LITTLE_ENDIAN);
 	priv->has_device = TRUE;
+
+	/* dump to console */
+	if (g_getenv ("FWUPD_PCI_MEI_VERBOSE") != NULL) {
+		g_autoptr(GString) str = g_string_new (NULL);
+		fu_mei_hfsts_to_string (plugin, 0, str);
+		g_debug ("\n%s", str->str);
+	}
 
 	/* check firmware version */
 	fwvers = fu_udev_device_get_sysfs_attr (device, "mei/mei0/fw_ver", NULL);
@@ -165,7 +224,7 @@ fu_plugin_add_security_attrs_manufacturing_mode (FuPlugin *plugin, FuSecurityAtt
 	fu_security_attrs_append (attrs, attr);
 
 	/* Manufacturing Mode */
-	if (((priv->mei_cfg >> 4) & 0x1) != 0) {
+	if (priv->hfsts1.fields.mfg_mode) {
 		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
 		return;
 	}
@@ -189,7 +248,7 @@ fu_plugin_add_security_attrs_override_strap (FuPlugin *plugin, FuSecurityAttrs *
 	fu_security_attrs_append (attrs, attr);
 
 	/* Flash Descriptor Security Override Strap */
-	if (((priv->mei_cfg >> 16) & 0x7) != 0) {
+	if (priv->hfsts1.fields.operation_mode == ME_HFS_MODE_OVER_JMPR) {
 		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED);
 		return;
 	}
@@ -200,7 +259,7 @@ fu_plugin_add_security_attrs_override_strap (FuPlugin *plugin, FuSecurityAttrs *
 }
 
 static void
-fu_plugin_add_security_attrs_csme_version (FuPlugin *plugin, FuSecurityAttrs *attrs)
+fu_plugin_add_security_attrs_mei_version (FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuPluginData *priv = fu_plugin_get_data (plugin);
 	g_autofree gchar *version = NULL;
@@ -250,5 +309,5 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 
 	fu_plugin_add_security_attrs_manufacturing_mode (plugin, attrs);
 	fu_plugin_add_security_attrs_override_strap (plugin, attrs);
-	fu_plugin_add_security_attrs_csme_version (plugin, attrs);
+	fu_plugin_add_security_attrs_mei_version (plugin, attrs);
 }
