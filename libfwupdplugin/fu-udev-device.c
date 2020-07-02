@@ -1208,6 +1208,28 @@ fu_udev_device_write_sysfs (FuUdevDevice *self, const gchar *attribute,
 #endif
 }
 
+/**
+ * fu_udev_device_get_devtype
+ * @self: A #FuUdevDevice
+ *
+ * Returns the Udev device type
+ *
+ * Returns: device type specified in the uevent
+ *
+ * Since: 1.4.5
+ **/
+const gchar *
+fu_udev_device_get_devtype (FuUdevDevice *self)
+{
+#ifdef HAVE_GUDEV
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+
+	return g_udev_device_get_devtype (priv->udev_device);
+#else
+	return NULL;
+#endif
+}
+
 static void
 fu_udev_device_get_property (GObject *object, guint prop_id,
 			    GValue *value, GParamSpec *pspec)
