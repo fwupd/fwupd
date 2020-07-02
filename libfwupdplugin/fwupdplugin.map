@@ -583,6 +583,7 @@ LIBFWUPDPLUGIN_1.4.1 {
 
 LIBFWUPDPLUGIN_1.4.5 {
   global:
+    fu_udev_device_get_devtype;
     fu_udev_device_get_parent_name;
     fu_udev_device_get_sysfs_attr;
     fu_udev_device_pread_full;
