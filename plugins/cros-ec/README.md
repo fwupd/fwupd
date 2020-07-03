@@ -16,10 +16,8 @@ Information about the USB update protocol is available at [2].
 
 Firmware Format
 ---------------
-
-The plugin at the moment does not support a firmware payload, but will
-support the Google firmware format used in Chrome OS firmware
-known as `flashmap`[3].
+The daemon will decompress the cabinet archive and extract a firmware blob in
+the Google fmap [3] file format.
 
 GUID Generation
 ---------------
