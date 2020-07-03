@@ -53,7 +53,8 @@ fu_uefi_dbx_file_parse_sig_item (FuUefiDbxFile *self,
 	sig_datastr = g_string_new (NULL);
 	for (gsize j = 0; j < sig_datasz; j++)
 		g_string_append_printf (sig_datastr, "%02x", sig_data[j]);
-	g_debug ("Owner: %s, Data: %s", sig_owner, sig_datastr->str);
+	if (g_getenv ("FWUPD_UEFI_DBX_VERBOSE") != NULL)
+		g_debug ("Owner: %s, Data: %s", sig_owner, sig_datastr->str);
 	g_ptr_array_add (self->checksums, g_string_free (sig_datastr, FALSE));
 	return TRUE;
 }
