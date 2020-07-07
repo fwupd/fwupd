@@ -57,7 +57,6 @@ struct FuUtilPrivate {
 	GCancellable		*cancellable;
 	GMainLoop		*loop;
 	GOptionContext		*context;
-	SoupSession		*soup_session;
 	FwupdInstallFlags	 flags;
 	FwupdClient		*client;
 	FuProgressbar		*progressbar;
@@ -80,7 +79,7 @@ struct FuUtilPrivate {
 
 static gboolean	fu_util_report_history (FuUtilPrivate *priv, gchar **values, GError **error);
 static gboolean	fu_util_download_file	(FuUtilPrivate	*priv,
-					 SoupURI	*uri,
+					 const gchar	*uri_str,
 					 const gchar	*fn,
 					 const gchar	*checksum_expected,
 					 GError		**error);
@@ -576,7 +575,7 @@ fu_util_download_if_required (FuUtilPrivate *priv, const gchar *perhapsfn, GErro
 	filename = fu_util_get_user_cache_path (perhapsfn);
 	if (!fu_common_mkdir_parent (filename, error))
 		return NULL;
-	if (!fu_util_download_file (priv, uri, filename, NULL, error))
+	if (!fu_util_download_file (priv, perhapsfn, filename, NULL, error))
 		return NULL;
 	return g_steal_pointer (&filename);
 }
@@ -719,7 +718,7 @@ fu_util_report_history_for_remote (FuUtilPrivate *priv,
 	}
 
 	/* POST request and parse reply */
-	if (!fu_util_send_report (priv->soup_session,
+	if (!fu_util_send_report (priv->client,
 				  fwupd_remote_get_report_uri (remote),
 				  data, sig, &uri, error))
 		return FALSE;
@@ -744,13 +743,6 @@ fu_util_report_history (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) remotes = NULL;
 	g_autoptr(GString) str = g_string_new (NULL);
-
-	/* set up networking */
-	if (priv->soup_session == NULL) {
-		priv->soup_session = fu_util_setup_networking (error);
-		if (priv->soup_session == NULL)
-			return FALSE;
-	}
 
 	/* get all devices from the history database, then filter them,
 	 * adding to a hash map of report-ids */
@@ -1027,48 +1019,17 @@ fu_util_file_exists_with_checksum (const gchar *fn,
 	return g_strcmp0 (checksum_expected, checksum_actual) == 0;
 }
 
-static void
-fu_util_download_chunk_cb (SoupMessage *msg, SoupBuffer *chunk, gpointer user_data)
-{
-	guint percentage;
-	goffset header_size;
-	goffset body_length;
-	FuUtilPrivate *priv = (FuUtilPrivate *) user_data;
-
-	/* if it's returning "Found" or an error, ignore the percentage */
-	if (msg->status_code != SOUP_STATUS_OK) {
-		g_debug ("ignoring status code %u (%s)",
-			 msg->status_code, msg->reason_phrase);
-		return;
-	}
-
-	/* get data */
-	body_length = msg->response_body->length;
-	header_size = soup_message_headers_get_content_length (msg->response_headers);
-
-	/* size is not known */
-	if (header_size < body_length)
-		return;
-
-	/* calculate percentage */
-	percentage = (guint) ((100 * body_length) / header_size);
-	g_debug ("progress: %u%%", percentage);
-	fu_progressbar_update (priv->progressbar, FWUPD_STATUS_DOWNLOADING, percentage);
-}
-
 static gboolean
 fu_util_download_file (FuUtilPrivate *priv,
-		       SoupURI *uri,
+		       const gchar *uri_str,
 		       const gchar *fn,
 		       const gchar *checksum_expected,
 		       GError **error)
 {
 	GChecksumType checksum_type;
-	guint status_code;
+	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autofree gchar *checksum_actual = NULL;
-	g_autofree gchar *uri_str = NULL;
-	g_autoptr(SoupMessage) msg = NULL;
 
 	/* check if the file already exists with the right checksum */
 	checksum_type = fwupd_checksum_guess_kind (checksum_expected);
@@ -1077,75 +1038,33 @@ fu_util_download_file (FuUtilPrivate *priv,
 		return TRUE;
 	}
 
-	/* set up networking */
-	if (priv->soup_session == NULL) {
-		priv->soup_session = fu_util_setup_networking (error);
-		if (priv->soup_session == NULL)
-			return FALSE;
-	}
-
 	/* download data */
-	uri_str = soup_uri_to_string (uri, FALSE);
-	g_debug ("downloading %s to %s", uri_str, fn);
-	msg = soup_message_new_from_uri (SOUP_METHOD_GET, uri);
-	if (msg == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "Failed to parse URI %s", uri_str);
-		return FALSE;
-	}
 	if (g_str_has_suffix (uri_str, ".jcat") ||
 	    g_str_has_suffix (uri_str, ".asc") ||
 	    g_str_has_suffix (uri_str, ".p7b") ||
 	    g_str_has_suffix (uri_str, ".p7c")) {
 		/* TRANSLATORS: downloading new signing file */
-		g_print ("%s %s\n", _("Fetching signature"), uri_str);
+		g_print ("%s %s", _("Fetching signature"), uri_str);
 	} else if (g_str_has_suffix (uri_str, ".gz")) {
 		/* TRANSLATORS: downloading new metadata file */
-		g_print ("%s %s\n", _("Fetching metadata"), uri_str);
+		g_print ("%s %s", _("Fetching metadata"), uri_str);
 	} else if (g_str_has_suffix (uri_str, ".cab")) {
 		/* TRANSLATORS: downloading new firmware file */
-		g_print ("%s %s\n", _("Fetching firmware"), uri_str);
+		g_print ("%s %s", _("Fetching firmware"), uri_str);
 	} else {
 		/* TRANSLATORS: downloading unknown file */
-		g_print ("%s %s\n", _("Fetching file"), uri_str);
+		g_print ("%s %s", _("Fetching file"), uri_str);
 	}
-	g_signal_connect (msg, "got-chunk",
-			  G_CALLBACK (fu_util_download_chunk_cb), priv);
-	status_code = soup_session_send_message (priv->soup_session, msg);
 	g_print ("\n");
-	if (status_code == 429) {
-		g_autofree gchar *str = g_strndup (msg->response_body->data,
-						   msg->response_body->length);
-		if (g_strcmp0 (str, "Too Many Requests") == 0) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     /* TRANSLATORS: the server is rate-limiting downloads */
-				     "%s", _("Failed to download due to server limit"));
-			return FALSE;
-		}
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "Failed to download due to server limit: %s", str);
+	blob = fwupd_client_download_bytes (priv->client, uri_str,
+					    FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
+					    priv->cancellable, error);
+	if (blob == NULL)
 		return FALSE;
-	}
-	if (status_code != SOUP_STATUS_OK) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "Failed to download %s: %s",
-			     uri_str, soup_status_get_phrase (status_code));
-		return FALSE;
-	}
 
 	/* verify checksum */
 	if (checksum_expected != NULL) {
-		checksum_actual = g_compute_checksum_for_data (checksum_type,
-							       (guchar *) msg->response_body->data,
-							       (gsize) msg->response_body->length);
+		checksum_actual = g_compute_checksum_for_bytes (checksum_type, blob);
 		if (g_strcmp0 (checksum_expected, checksum_actual) != 0) {
 			g_set_error (error,
 				     FWUPD_ERROR,
@@ -1157,18 +1076,7 @@ fu_util_download_file (FuUtilPrivate *priv,
 	}
 
 	/* save file */
-	if (!g_file_set_contents (fn,
-				  msg->response_body->data,
-				  msg->response_body->length,
-				  &error_local)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_WRITE,
-			     "Failed to save file: %s",
-			     error_local->message);
-		return FALSE;
-	}
-	return TRUE;
+	return fu_common_set_contents_bytes (fn, blob, error);
 }
 
 static gboolean
@@ -1182,8 +1090,6 @@ fu_util_download_metadata_for_remote (FuUtilPrivate *priv,
 	g_autofree gchar *basename = NULL;
 	g_autofree gchar *filename = NULL;
 	g_autofree gchar *filename_asc = NULL;
-	g_autoptr(SoupURI) uri = NULL;
-	g_autoptr(SoupURI) uri_sig = NULL;
 
 	/* download the signature */
 	basename_asc = g_path_get_basename (fwupd_remote_get_filename_cache_sig (remote));
@@ -1191,8 +1097,7 @@ fu_util_download_metadata_for_remote (FuUtilPrivate *priv,
 	filename_asc = fu_util_get_user_cache_path (basename_id_asc);
 	if (!fu_common_mkdir_parent (filename_asc, error))
 		return FALSE;
-	uri_sig = soup_uri_new (fwupd_remote_get_metadata_uri_sig (remote));
-	if (!fu_util_download_file (priv, uri_sig, filename_asc, NULL, error))
+	if (!fu_util_download_file (priv, fwupd_remote_get_metadata_uri_sig (remote), filename_asc, NULL, error))
 		return FALSE;
 
 	/* find the download URI of the metadata from the JCat file */
@@ -1203,8 +1108,7 @@ fu_util_download_metadata_for_remote (FuUtilPrivate *priv,
 	basename = g_path_get_basename (fwupd_remote_get_filename_cache (remote));
 	basename_id = g_strdup_printf ("%s-%s", fwupd_remote_get_id (remote), basename);
 	filename = fu_util_get_user_cache_path (basename_id);
-	uri = soup_uri_new (fwupd_remote_get_metadata_uri (remote));
-	if (!fu_util_download_file (priv, uri, filename, NULL, error))
+	if (!fu_util_download_file (priv, fwupd_remote_get_metadata_uri (remote), filename, NULL, error))
 		return FALSE;
 
 	/* send all this to fwupd */
@@ -1690,7 +1594,6 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 	const gchar *uri_tmp;
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *uri_str = NULL;
-	g_autoptr(SoupURI) uri = NULL;
 
 	if (!priv->no_safety_check && !priv->assume_yes) {
 		if (!fu_util_prompt_warning (dev,
@@ -1742,8 +1645,7 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 	if (!fu_common_mkdir_parent (fn, error))
 		return FALSE;
 	checksums = fwupd_release_get_checksums (rel);
-	uri = soup_uri_new (uri_str);
-	if (!fu_util_download_file (priv, uri, fn,
+	if (!fu_util_download_file (priv, uri_str, fn,
 				    fwupd_checksum_get_best (checksums),
 				    error))
 		return FALSE;
@@ -2306,20 +2208,18 @@ fu_util_get_remote_with_security_report_uri (FuUtilPrivate *priv, GError **error
 static gboolean
 fu_util_upload_security (FuUtilPrivate *priv, GPtrArray *attrs, GError **error)
 {
-	guint status_code;
 	GHashTableIter iter;
 	const gchar *key;
 	const gchar *value;
 	g_autofree gchar *data = NULL;
 	g_autofree gchar *sig = NULL;
 	g_autoptr(FwupdRemote) remote = NULL;
+	g_autoptr(GBytes) upload_response = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GHashTable) metadata = NULL;
 	g_autoptr(JsonBuilder) builder = NULL;
 	g_autoptr(JsonGenerator) json_generator = NULL;
 	g_autoptr(JsonNode) json_root = NULL;
-	g_autoptr(SoupMessage) msg = NULL;
-	g_autoptr(SoupMultipart) mp = NULL;
 
 	/* can we find a remote with a security attr */
 	remote = fu_util_get_remote_with_security_report_uri (priv, &error_local);
@@ -2349,13 +2249,6 @@ fu_util_upload_security (FuUtilPrivate *priv, GPtrArray *attrs, GError **error)
 			}
 			return TRUE;
 		}
-	}
-
-	/* set up networking */
-	if (priv->soup_session == NULL) {
-		priv->soup_session = fu_util_setup_networking (error);
-		if (priv->soup_session == NULL)
-			return FALSE;
 	}
 
 	/* get metadata */
@@ -2439,24 +2332,13 @@ fu_util_upload_security (FuUtilPrivate *priv, GPtrArray *attrs, GError **error)
 	}
 
 	/* POST request */
-	mp = soup_multipart_new (SOUP_FORM_MIME_TYPE_MULTIPART);
-	soup_multipart_append_form_string (mp, "payload", data);
-	if (sig != NULL)
-		soup_multipart_append_form_string (mp, "signature", sig);
-	msg = soup_form_request_new_from_multipart (fwupd_remote_get_security_report_uri (remote), mp);
-	status_code = soup_session_send_message (priv->soup_session, msg);
-	g_debug ("server returned: %s", msg->response_body->data);
-
-	/* fall back to HTTP status codes in case the server is offline */
-	if (!SOUP_STATUS_IS_SUCCESSFUL (status_code)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "Failed to upload to %s: %s",
-			     fwupd_remote_get_security_report_uri (remote),
-			     soup_status_get_phrase (status_code));
+	upload_response = fwupd_client_upload_bytes (priv->client,
+						     fwupd_remote_get_security_report_uri (remote),
+						     data, sig,
+						     FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART,
+						     priv->cancellable, error);
+	if (upload_response == NULL)
 		return FALSE;
-	}
 
 	/* TRANSLATORS: success, so say thank you to the user */
 	g_print ("%s\n", "Host Security ID attributes uploaded successfully, thanks!");
@@ -2539,8 +2421,6 @@ fu_util_private_free (FuUtilPrivate *priv)
 		g_object_unref (priv->client);
 	if (priv->current_device != NULL)
 		g_object_unref (priv->current_device);
-	if (priv->soup_session != NULL)
-		g_object_unref (priv->soup_session);
 	g_free (priv->current_message);
 	g_main_loop_unref (priv->loop);
 	g_object_unref (priv->cancellable);
@@ -2961,6 +2841,9 @@ main (int argc, char *argv[])
 		g_printerr ("WARNING: The daemon has loaded 3rd party code and "
 			    "is no longer supported by the upstream developers!\n");
 	}
+
+	/* we know the runtime daemon version now */
+	fwupd_client_set_user_agent_for_package (priv->client, "fwupdmgr", PACKAGE_VERSION);
 
 	/* check that we have at least this version daemon running */
 	if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
