@@ -150,6 +150,29 @@ fwupd_client_set_daemon_version (FwupdClient *client, const gchar *daemon_versio
 }
 
 static void
+fwupd_client_set_status (FwupdClient *client, FwupdStatus status)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	if (priv->status == status)
+		return;
+	priv->status = status;
+	g_debug ("Emitting ::status-changed() [%s]",
+		 fwupd_status_to_string (priv->status));
+	g_signal_emit (client, signals[SIGNAL_STATUS_CHANGED], 0, priv->status);
+	g_object_notify (G_OBJECT (client), "status");
+}
+
+static void
+fwupd_client_set_percentage (FwupdClient *client, guint percentage)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	if (priv->percentage == percentage)
+		return;
+	priv->percentage = percentage;
+	g_object_notify (G_OBJECT (client), "percentage");
+}
+
+static void
 fwupd_client_properties_changed_cb (GDBusProxy *proxy,
 				    GVariant *changed_properties,
 				    GStrv invalidated_properties,
@@ -163,13 +186,8 @@ fwupd_client_properties_changed_cb (GDBusProxy *proxy,
 	if (g_variant_dict_contains (dict, "Status")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property (proxy, "Status");
-		if (val != NULL) {
-			priv->status = g_variant_get_uint32 (val);
-			g_debug ("Emitting ::status-changed() [%s]",
-				 fwupd_status_to_string (priv->status));
-			g_signal_emit (client, signals[SIGNAL_STATUS_CHANGED], 0, priv->status);
-			g_object_notify (G_OBJECT (client), "status");
-		}
+		if (val != NULL)
+			fwupd_client_set_status (client, g_variant_get_uint32 (val));
 	}
 	if (g_variant_dict_contains (dict, "Tainted")) {
 		g_autoptr(GVariant) val = NULL;
@@ -190,10 +208,8 @@ fwupd_client_properties_changed_cb (GDBusProxy *proxy,
 	if (g_variant_dict_contains (dict, "Percentage")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property (proxy, "Percentage");
-		if (val != NULL) {
-			priv->percentage = g_variant_get_uint32 (val);
-			g_object_notify (G_OBJECT (client), "percentage");
-		}
+		if (val != NULL)
+			fwupd_client_set_percentage (client, g_variant_get_uint32 (val));
 	}
 	if (g_variant_dict_contains (dict, "DaemonVersion")) {
 		g_autoptr(GVariant) val = NULL;
