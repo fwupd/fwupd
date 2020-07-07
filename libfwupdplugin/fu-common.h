@@ -52,6 +52,7 @@ typedef guint FuEndianType;
  * @FU_PATH_KIND_SYSCONFDIR_PKG:	The package configuration location (IE /etc/fwupd)
  * @FU_PATH_KIND_SYSFSDIR_FW:		The sysfs firmware location (IE /sys/firmware)
  * @FU_PATH_KIND_SYSFSDIR_DRIVERS:	The platform sysfs directory (IE /sys/bus/platform/drivers)
+ * @FU_PATH_KIND_I2C_DEVICES:		The i2c devices directory (IE /sys/bus/i2c/devices)
  * @FU_PATH_KIND_SYSFSDIR_TPM:		The TPM sysfs directory (IE /sys/class/tpm)
  * @FU_PATH_KIND_PROCFS:		The procfs location (IE /proc)
  * @FU_PATH_KIND_POLKIT_ACTIONS:	The directory for policy kit actions (IE /usr/share/polkit-1/actions/)
@@ -71,6 +72,7 @@ typedef enum {
 	FU_PATH_KIND_PLUGINDIR_PKG,
 	FU_PATH_KIND_SYSCONFDIR,
 	FU_PATH_KIND_SYSCONFDIR_PKG,
+	FU_PATH_KIND_I2C_DEVICES,
 	FU_PATH_KIND_SYSFSDIR_FW,
 	FU_PATH_KIND_SYSFSDIR_DRIVERS,
 	FU_PATH_KIND_SYSFSDIR_TPM,

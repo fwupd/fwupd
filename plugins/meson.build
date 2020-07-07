@@ -126,6 +126,10 @@ if get_option('plugin_flashrom')
 subdir('flashrom')
 endif
 
+if get_option('plugin_flashrom_i2c')
+subdir('flashrom-i2c')
+endif
+
 if get_option('plugin_coreboot')
 subdir('coreboot')
 endif

@@ -1,0 +1,5 @@
+[HwId=1AF80175]
+Programmer=lspcon_i2c_spi
+Device=PS175
+Protocol=com.parade.ps175
+VendorName=Parade

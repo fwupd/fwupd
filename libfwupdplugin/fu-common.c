@@ -1054,6 +1054,12 @@ fu_common_get_path (FuPathKind path_kind)
 		if (tmp != NULL)
 			return g_strdup (tmp);
 		return g_strdup ("/sys/bus/platform/drivers");
+	/* /sys/bus/i2c/devices */
+	case FU_PATH_KIND_I2C_DEVICES:
+		tmp = g_getenv ("FWUPD_I2CDEVICEDIR");
+		if (tmp != NULL)
+			return g_strdup (tmp);
+		return g_strdup ("/sys/bus/i2c/devices");
 	/* /sys/kernel/security */
 	case FU_PATH_KIND_SYSFSDIR_SECURITY:
 		tmp = g_getenv ("FWUPD_SYSFSSECURITYDIR");
