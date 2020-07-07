@@ -70,5 +70,5 @@ Summary = Dock Management Controller Device
 ParentGuid = USB\VID_03F0&PID_096B
 Name = HP USB-C/A Universal Dock G2
 ImageKind = dmc-composite
-InstallDuration = 125
-RemoveDelay = 107000
+InstallDuration = 180
+RemoveDelay = 162000
