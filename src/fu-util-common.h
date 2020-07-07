@@ -32,7 +32,6 @@ gboolean	 fu_util_prompt_for_boolean	(gboolean	 def);
 void		 fu_util_print_tree		(GNode *n,	gpointer data);
 gboolean	 fu_util_is_interesting_device	(FwupdDevice	*dev);
 gchar		*fu_util_get_user_cache_path	(const gchar	*fn);
-SoupSession	*fu_util_setup_networking	(GError		**error);
 gchar		*fu_util_get_versions		(void);
 
 void		 fu_util_warning_box		(const gchar	*str,
@@ -78,7 +77,7 @@ gchar		*fu_util_release_to_string	(FwupdRelease	*rel,
 gchar		*fu_util_remote_to_string	(FwupdRemote *remote,
 						 guint		 idt);
 gchar		*fu_util_security_attrs_to_string (GPtrArray	*attrs);
-gboolean	 fu_util_send_report		(SoupSession	*soup_session,
+gboolean	 fu_util_send_report		(FwupdClient	*client,
 						 const gchar	*report_uri,
 						 const gchar	*data,
 						 const gchar	*sig,

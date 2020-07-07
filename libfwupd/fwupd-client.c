@@ -8,6 +8,7 @@
 
 #include <glib-object.h>
 #include <gio/gio.h>
+#include <libsoup/soup.h>
 #ifdef HAVE_GIO_UNIX
 #include <gio/gunixfdlist.h>
 #endif
@@ -18,7 +19,7 @@
 #include <sys/types.h>
 
 #include "fwupd-client.h"
-#include "fwupd-common.h"
+#include "fwupd-common-private.h"
 #include "fwupd-deprecated.h"
 #include "fwupd-enums.h"
 #include "fwupd-error.h"
@@ -49,6 +50,8 @@ typedef struct {
 	gchar				*host_security_id;
 	GDBusConnection			*conn;
 	GDBusProxy			*proxy;
+	SoupSession			*soup_session;
+	gchar				*user_agent;
 } FwupdClientPrivate;
 
 enum {
@@ -66,6 +69,7 @@ enum {
 	PROP_PERCENTAGE,
 	PROP_DAEMON_VERSION,
 	PROP_TAINTED,
+	PROP_SOUP_SESSION,
 	PROP_HOST_PRODUCT,
 	PROP_HOST_MACHINE_ID,
 	PROP_HOST_SECURITY_ID,
@@ -272,6 +276,75 @@ fwupd_client_signal_cb (GDBusProxy *proxy,
 		return;
 	}
 	g_debug ("Unknown signal name '%s' from %s", signal_name, sender_name);
+}
+
+static gboolean
+fwupd_client_ensure_networking (FwupdClient *client, GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	const gchar *http_proxy;
+	g_autoptr(SoupSession) session = NULL;
+
+	/* already exists */
+	if (priv->soup_session != NULL)
+		return TRUE;
+
+	/* check the user agent is sane */
+	if (priv->user_agent == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "user agent unset");
+		return FALSE;
+	}
+	if (g_strstr_len (priv->user_agent, -1, "fwupd/") == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "user agent unsuitable; fwupd version required");
+		return FALSE;
+	}
+
+	/* create the soup session */
+	session = soup_session_new_with_options (SOUP_SESSION_USER_AGENT, priv->user_agent,
+						 SOUP_SESSION_TIMEOUT, 60,
+						 NULL);
+	if (session == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "failed to setup networking");
+		return FALSE;
+	}
+
+	/* relax the SSL checks for broken corporate proxies */
+	if (g_getenv ("DISABLE_SSL_STRICT") != NULL)
+		g_object_set (session, SOUP_SESSION_SSL_STRICT, FALSE, NULL);
+
+	/* set the proxy */
+	http_proxy = g_getenv ("https_proxy");
+	if (http_proxy == NULL)
+		http_proxy = g_getenv ("HTTPS_PROXY");
+	if (http_proxy == NULL)
+		http_proxy = g_getenv ("http_proxy");
+	if (http_proxy == NULL)
+		http_proxy = g_getenv ("HTTP_PROXY");
+	if (http_proxy != NULL && strlen (http_proxy) > 0) {
+		g_autoptr(SoupURI) proxy_uri = soup_uri_new (http_proxy);
+		if (proxy_uri == NULL) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "invalid proxy URI: %s", http_proxy);
+			return FALSE;
+		}
+		g_object_set (session, SOUP_SESSION_PROXY_URI, proxy_uri, NULL);
+	}
+
+	/* this disables the double-compression of the firmware.xml.gz file */
+	soup_session_remove_feature_by_type (session, SOUP_TYPE_CONTENT_DECODER);
+	priv->soup_session = g_steal_pointer (&session);
+	return TRUE;
 }
 
 /**
@@ -2055,6 +2128,265 @@ fwupd_client_get_remote_by_id (FwupdClient *client,
 	return g_object_ref (remote);
 }
 
+/**
+ * fwupd_client_set_user_agent:
+ * @client: A #FwupdClient
+ * @user_agent: the user agent ID, e.g. `gnome-software/3.34.1`
+ *
+ * Manually sets the user agent that is used for downloading. The user agent
+ * should contain the runtime version of fwupd somewhere in the provided string.
+ *
+ * Since: 1.4.5
+ **/
+void
+fwupd_client_set_user_agent (FwupdClient *client, const gchar *user_agent)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_return_if_fail (FWUPD_IS_CLIENT (client));
+	g_return_if_fail (user_agent != NULL);
+	g_free (priv->user_agent);
+	priv->user_agent = g_strdup (user_agent);
+}
+
+/**
+ * fwupd_client_set_user_agent_for_package:
+ * @client: A #FwupdClient
+ * @package_name: client program name, e.g. "gnome-software"
+ * @package_version: client program version, e.g. "3.28.1"
+ *
+ * Builds a user-agent to use for the download.
+ *
+ * Supplying harmless details to the server means it knows more about each
+ * client. This allows the web service to respond in a different way, for
+ * instance sending a different metadata file for old versions of fwupd, or
+ * returning an error for Solaris machines.
+ *
+ * Before freaking out about theoretical privacy implications, much more data
+ * than this is sent to each and every website you visit.
+ *
+ * Since: 1.4.5
+ **/
+void
+fwupd_client_set_user_agent_for_package (FwupdClient *client,
+					 const gchar *package_name,
+					 const gchar *package_version)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	GString *str = g_string_new (NULL);
+	g_autofree gchar *system = NULL;
+
+	g_return_if_fail (FWUPD_IS_CLIENT (client));
+	g_return_if_fail (package_name != NULL);
+	g_return_if_fail (package_version != NULL);
+
+	/* application name and version */
+	g_string_append_printf (str, "%s/%s", package_name, package_version);
+
+	/* system information */
+	system = fwupd_build_user_agent_system ();
+	if (system != NULL)
+		g_string_append_printf (str, " (%s)", system);
+
+	/* platform, which in our case is just fwupd */
+	if (g_strcmp0 (package_name, "fwupd") != 0)
+		g_string_append_printf (str, " fwupd/%s", priv->daemon_version);
+
+	/* success */
+	g_free (priv->user_agent);
+	priv->user_agent = g_string_free (str, FALSE);
+}
+
+
+static void
+fwupd_client_download_chunk_cb (SoupMessage *msg, SoupBuffer *chunk, gpointer user_data)
+{
+	guint percentage;
+	goffset header_size;
+	goffset body_length;
+	FwupdClient *client = FWUPD_CLIENT (user_data);
+
+	/* if it's returning "Found" or an error, ignore the percentage */
+	if (msg->status_code != SOUP_STATUS_OK) {
+		g_debug ("ignoring status code %u (%s)",
+			 msg->status_code, msg->reason_phrase);
+		return;
+	}
+
+	/* get data */
+	body_length = msg->response_body->length;
+	header_size = soup_message_headers_get_content_length (msg->response_headers);
+	if (header_size < body_length)
+		return;
+
+	/* calculate percentage */
+	percentage = (guint) ((100 * body_length) / header_size);
+	g_debug ("progress: %u%%", percentage);
+	fwupd_client_set_status (client, FWUPD_STATUS_DOWNLOADING);
+	fwupd_client_set_percentage (client, percentage);
+}
+
+/**
+ * fwupd_client_download_bytes:
+ * @client: A #FwupdClient
+ * @url: the remote URL
+ * @flags: #FwupdClientDownloadFlags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_NONE
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Downloads data from a remote server. The fwupd_client_set_user_agent() function
+ * should be called before this method is used.
+ *
+ * Returns: (transfer full): downloaded data, or %NULL for error
+ *
+ * Since: 1.4.5
+ **/
+GBytes *
+fwupd_client_download_bytes (FwupdClient *client,
+			     const gchar *url,
+			     FwupdClientDownloadFlags flags,
+			     GCancellable *cancellable,
+			     GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	guint status_code;
+	g_autoptr(SoupMessage) msg = NULL;
+	g_autoptr(SoupURI) uri = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (url != NULL, NULL);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* ensure networking set up */
+	if (!fwupd_client_ensure_networking (client, error))
+		return NULL;
+
+	/* download data */
+	g_debug ("downloading %s", url);
+	uri = soup_uri_new (url);
+	msg = soup_message_new_from_uri (SOUP_METHOD_GET, uri);
+	if (msg == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Failed to parse URI %s", url);
+		return NULL;
+	}
+	g_signal_connect (msg, "got-chunk",
+			  G_CALLBACK (fwupd_client_download_chunk_cb),
+			  client);
+	status_code = soup_session_send_message (priv->soup_session, msg);
+	fwupd_client_set_status (client, FWUPD_STATUS_IDLE);
+	if (status_code == 429) {
+		g_autofree gchar *str = g_strndup (msg->response_body->data,
+						   msg->response_body->length);
+		if (g_strcmp0 (str, "Too Many Requests") == 0) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "Failed to download due to server limit");
+			return NULL;
+		}
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Failed to download due to server limit: %s", str);
+		return NULL;
+	}
+	if (status_code != SOUP_STATUS_OK) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Failed to download %s: %s",
+			     url, soup_status_get_phrase (status_code));
+		return NULL;
+	}
+
+	/* success */
+	return g_bytes_new (msg->response_body->data, msg->response_body->length);
+}
+
+/**
+ * fwupd_client_upload_bytes:
+ * @client: A #FwupdClient
+ * @url: the remote URL
+ * @payload: payload string
+ * @signature: (nullable): signature string
+ * @flags: #FwupdClientDownloadFlags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_NONE
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Uploads data to a remote server. The fwupd_client_set_user_agent() function
+ * should be called before this method is used.
+ *
+ * Returns: (transfer full): downloaded data, or %NULL for error
+ *
+ * Since: 1.4.5
+ **/
+GBytes *
+fwupd_client_upload_bytes (FwupdClient *client,
+			   const gchar *url,
+			   const gchar *payload,
+			   const gchar *signature,
+			   FwupdClientUploadFlags flags,
+			   GCancellable *cancellable,
+			   GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	guint status_code;
+	g_autoptr(SoupMessage) msg = NULL;
+	g_autoptr(SoupURI) uri = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (url != NULL, NULL);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* ensure networking set up */
+	if (!fwupd_client_ensure_networking (client, error))
+		return NULL;
+
+	/* build message */
+	if ((flags | FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART) > 0 ||
+	    signature != NULL) {
+		g_autoptr(SoupMultipart) mp = NULL;
+		mp = soup_multipart_new (SOUP_FORM_MIME_TYPE_MULTIPART);
+		soup_multipart_append_form_string (mp, "payload", payload);
+		if (signature != NULL)
+			soup_multipart_append_form_string (mp, "signature", signature);
+		msg = soup_form_request_new_from_multipart (url, mp);
+	} else {
+		msg = soup_message_new (SOUP_METHOD_POST, url);
+		soup_message_set_request (msg, "application/json; charset=utf-8",
+					  SOUP_MEMORY_COPY, payload, strlen (payload));
+	}
+
+	/* POST request */
+	if (msg == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Failed to parse URI %s", url);
+		return NULL;
+	}
+	g_debug ("uploading to %s", url);
+	status_code = soup_session_send_message (priv->soup_session, msg);
+	g_debug ("server returned: %s", msg->response_body->data);
+
+	/* fall back to HTTP status codes in case the server is offline */
+	if (!SOUP_STATUS_IS_SUCCESSFUL (status_code)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Failed to upllooad to %s: %s",
+			     url, soup_status_get_phrase (status_code));
+		return NULL;
+	}
+
+	/* success */
+	return g_bytes_new (msg->response_body->data, msg->response_body->length);
+}
+
 static void
 fwupd_client_get_property (GObject *object, guint prop_id,
 			   GValue *value, GParamSpec *pspec)
@@ -2068,6 +2400,9 @@ fwupd_client_get_property (GObject *object, guint prop_id,
 		break;
 	case PROP_TAINTED:
 		g_value_set_boolean (value, priv->tainted);
+		break;
+	case PROP_SOUP_SESSION:
+		g_value_set_object (value, priv->soup_session);
 		break;
 	case PROP_PERCENTAGE:
 		g_value_set_uint (value, priv->percentage);
@@ -2106,6 +2441,9 @@ fwupd_client_set_property (GObject *object, guint prop_id,
 		break;
 	case PROP_PERCENTAGE:
 		priv->percentage = g_value_get_uint (value);
+		break;
+	case PROP_SOUP_SESSION:
+		g_set_object (&priv->soup_session, g_value_get_object (value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2264,6 +2602,17 @@ fwupd_client_class_init (FwupdClientClass *klass)
 	g_object_class_install_property (object_class, PROP_DAEMON_VERSION, pspec);
 
 	/**
+	 * FwupdClient:soup-session:
+	 *
+	 * The libsoup session.
+	 *
+	 * Since: 1.4.5
+	 */
+	pspec = g_param_spec_object ("soup-session", NULL, NULL, SOUP_TYPE_SESSION,
+				     G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_SOUP_SESSION, pspec);
+
+	/**
 	 * FwupdClient:host-product:
 	 *
 	 * The host product string
@@ -2308,6 +2657,7 @@ fwupd_client_finalize (GObject *object)
 	FwupdClient *client = FWUPD_CLIENT (object);
 	FwupdClientPrivate *priv = GET_PRIVATE (client);
 
+	g_free (priv->user_agent);
 	g_free (priv->daemon_version);
 	g_free (priv->host_product);
 	g_free (priv->host_machine_id);
@@ -2316,6 +2666,8 @@ fwupd_client_finalize (GObject *object)
 		g_object_unref (priv->conn);
 	if (priv->proxy != NULL)
 		g_object_unref (priv->proxy);
+	if (priv->soup_session != NULL)
+		g_object_unref (priv->soup_session);
 
 	G_OBJECT_CLASS (fwupd_client_parent_class)->finalize (object);
 }

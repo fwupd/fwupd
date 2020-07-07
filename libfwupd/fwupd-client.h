@@ -40,6 +40,32 @@ struct _FwupdClientClass
 	void (*_fwupd_reserved7)	(void);
 };
 
+/**
+ * FwupdClientDownloadFlags:
+ * @FWUPD_CLIENT_DOWNLOAD_FLAG_NONE:		No flags set
+ *
+ * The options to use for downloading.
+ **/
+typedef enum {
+	FWUPD_CLIENT_DOWNLOAD_FLAG_NONE			= 0,		/* Since: 1.4.5 */
+	/*< private >*/
+	FWUPD_CLIENT_DOWNLOAD_FLAG_LAST
+} FwupdClientDownloadFlags;
+
+/**
+ * FwupdClientUploadFlags:
+ * @FWUPD_CLIENT_UPLOAD_FLAG_NONE:		No flags set
+ * @FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART:	Always use multipart/form-data
+ *
+ * The options to use for uploading.
+ **/
+typedef enum {
+	FWUPD_CLIENT_UPLOAD_FLAG_NONE			= 0,		/* Since: 1.4.5 */
+	FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART	= 1 << 0,	/* Since: 1.4.5 */
+	/*< private >*/
+	FWUPD_CLIENT_UPLOAD_FLAG_LAST
+} FwupdClientUploadFlags;
+
 FwupdClient	*fwupd_client_new			(void);
 gboolean	 fwupd_client_connect			(FwupdClient	*client,
 							 GCancellable	*cancellable,
@@ -164,6 +190,23 @@ gchar		*fwupd_client_self_sign			(FwupdClient	*client,
 							 GError		**error);
 gboolean	 fwupd_client_set_feature_flags		(FwupdClient	*client,
 							 FwupdFeatureFlags feature_flags,
+							 GCancellable	*cancellable,
+							 GError		**error);
+void		 fwupd_client_set_user_agent		(FwupdClient	*client,
+							 const gchar	*user_agent);
+void		 fwupd_client_set_user_agent_for_package(FwupdClient	*client,
+							 const gchar	*package_name,
+							 const gchar	*package_version);
+GBytes		*fwupd_client_download_bytes		(FwupdClient	*client,
+							 const gchar	*url,
+							 FwupdClientDownloadFlags flags,
+							 GCancellable	*cancellable,
+							 GError		**error);
+GBytes		*fwupd_client_upload_bytes		(FwupdClient	*client,
+							 const gchar	*url,
+							 const gchar	*payload,
+							 const gchar	*signature,
+							 FwupdClientUploadFlags flags,
 							 GCancellable	*cancellable,
 							 GError		**error);
 
