@@ -1240,6 +1240,9 @@ fu_common_strwidth (const gchar *text)
 {
 	const gchar *p = text;
 	gsize width = 0;
+
+	g_return_val_if_fail (text != NULL, 0);
+
 	while (*p) {
 		gunichar c = g_utf8_get_char (p);
 		if (g_unichar_iswide (c))

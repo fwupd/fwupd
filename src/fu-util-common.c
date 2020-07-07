@@ -1557,6 +1557,8 @@ static void
 fu_security_attr_append_str (FwupdSecurityAttr *attr, GString *str)
 {
 	g_autofree gchar *name = fu_security_attr_get_name (attr);
+	if (name == NULL)
+		name = g_strdup (fwupd_security_attr_get_appstream_id (attr));
 	if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED)) {
 		g_string_append (str, "✦ ");
 	} else if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
