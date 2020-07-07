@@ -230,7 +230,10 @@ fwupd_build_user_agent_os_release (void)
 	return g_strjoinv (" ", (gchar **) ids_os->pdata);
 }
 
-static gchar *
+/**
+ * fwupd_build_user_agent_system: (skip):
+ **/
+gchar *
 fwupd_build_user_agent_system (void)
 {
 #ifdef HAVE_UTSNAME_H
@@ -287,6 +290,10 @@ fwupd_build_user_agent_system (void)
  *
  * Before freaking out about theoretical privacy implications, much more data
  * than this is sent to each and every website you visit.
+ *
+ * Rather that using this function you should use fwupd_client_set_user_agent_for_package()
+ * which uses the *runtime* version of the daemon rather than the *build-time*
+ * version.
  *
  * Returns: a string, e.g. `foo/0.1 (Linux i386 4.14.5; en; Fedora 27) fwupd/1.0.3`
  *

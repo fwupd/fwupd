@@ -584,55 +584,6 @@ fu_util_cmd_array_to_string (GPtrArray *array)
 	return g_string_free (string, FALSE);
 }
 
-SoupSession *
-fu_util_setup_networking (GError **error)
-{
-	const gchar *http_proxy;
-	g_autofree gchar *user_agent = NULL;
-	g_autoptr(SoupSession) session = NULL;
-
-	/* create the soup session */
-	user_agent = fwupd_build_user_agent (PACKAGE_NAME, PACKAGE_VERSION);
-	session = soup_session_new_with_options (SOUP_SESSION_USER_AGENT, user_agent,
-						 SOUP_SESSION_TIMEOUT, 60,
-						 NULL);
-	if (session == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "failed to setup networking");
-		return NULL;
-	}
-
-	/* relax the SSL checks for broken corporate proxies */
-	if (g_getenv ("DISABLE_SSL_STRICT") != NULL)
-		g_object_set (session, SOUP_SESSION_SSL_STRICT, FALSE, NULL);
-
-	/* set the proxy */
-	http_proxy = g_getenv ("https_proxy");
-	if (http_proxy == NULL)
-		http_proxy = g_getenv ("HTTPS_PROXY");
-	if (http_proxy == NULL)
-		http_proxy = g_getenv ("http_proxy");
-	if (http_proxy == NULL)
-		http_proxy = g_getenv ("HTTP_PROXY");
-	if (http_proxy != NULL && strlen (http_proxy) > 0) {
-		g_autoptr(SoupURI) proxy_uri = soup_uri_new (http_proxy);
-		if (proxy_uri == NULL) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "invalid proxy URI: %s", http_proxy);
-			return NULL;
-		}
-		g_object_set (session, SOUP_SESSION_PROXY_URI, proxy_uri, NULL);
-	}
-
-	/* this disables the double-compression of the firmware.xml.gz file */
-	soup_session_remove_feature_by_type (session, SOUP_TYPE_CONTENT_DECODER);
-	return g_steal_pointer (&session);
-}
-
 gchar *
 fu_util_release_get_name (FwupdRelease *release)
 {
@@ -1553,7 +1504,7 @@ fu_util_remote_to_string (FwupdRemote *remote, guint idt)
 }
 
 gboolean
-fu_util_send_report (SoupSession *soup_session,
+fu_util_send_report (FwupdClient *client,
 		     const gchar *report_uri,
 		     const gchar *data,
 		     const gchar *sig,
@@ -1561,52 +1512,39 @@ fu_util_send_report (SoupSession *soup_session,
 		     GError **error)
 {
 	const gchar *server_msg = NULL;
-	guint status_code;
 	JsonNode *json_root;
 	JsonObject *json_object;
+	g_autofree gchar *str = NULL;
+	g_autoptr(GBytes) upload_response = NULL;
 	g_autoptr(JsonParser) json_parser = NULL;
-	g_autoptr(SoupMessage) msg = NULL;
 
 	/* POST request */
-	if (sig != NULL) {
-		g_autoptr(SoupMultipart) mp = NULL;
-		mp = soup_multipart_new (SOUP_FORM_MIME_TYPE_MULTIPART);
-		soup_multipart_append_form_string (mp, "payload", data);
-		soup_multipart_append_form_string (mp, "signature", sig);
-		msg = soup_form_request_new_from_multipart (report_uri, mp);
-	} else {
-		msg = soup_message_new (SOUP_METHOD_POST, report_uri);
-		soup_message_set_request (msg, "application/json; charset=utf-8",
-					  SOUP_MEMORY_COPY, data, strlen (data));
-	}
-	status_code = soup_session_send_message (soup_session, msg);
-	g_debug ("server returned: %s", msg->response_body->data);
+	upload_response = fwupd_client_upload_bytes (client, report_uri, data, sig,
+						     FWUPD_CLIENT_UPLOAD_FLAG_NONE,
+						     NULL, error);
+	if (upload_response == NULL)
+		return FALSE;
 
 	/* server returned nothing, and probably exploded in a ball of flames */
-	if (msg->response_body->length == 0) {
+	if (g_bytes_get_size (upload_response) == 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
-			     "Failed to upload to %s: %s",
-			     report_uri, soup_status_get_phrase (status_code));
+			     "Failed to upload to %s",
+			     report_uri);
 		return FALSE;
 	}
 
 	/* parse JSON reply */
 	json_parser = json_parser_new ();
-	if (!json_parser_load_from_data (json_parser,
-					 msg->response_body->data,
-					 msg->response_body->length,
-					 error)) {
-		g_autofree gchar *str = g_strndup (msg->response_body->data,
-						   msg->response_body->length);
+	str = g_strndup (g_bytes_get_data (upload_response, NULL),
+			 g_bytes_get_size (upload_response));
+	if (!json_parser_load_from_data (json_parser, str, -1, error)) {
 		g_prefix_error (error, "Failed to parse JSON response from '%s': ", str);
 		return FALSE;
 	}
 	json_root = json_parser_get_root (json_parser);
 	if (json_root == NULL) {
-		g_autofree gchar *str = g_strndup (msg->response_body->data,
-						   msg->response_body->length);
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_PERMISSION_DENIED,
@@ -1615,8 +1553,6 @@ fu_util_send_report (SoupSession *soup_session,
 	}
 	json_object = json_node_get_object (json_root);
 	if (json_object == NULL) {
-		g_autofree gchar *str = g_strndup (msg->response_body->data,
-						   msg->response_body->length);
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_PERMISSION_DENIED,
@@ -1646,16 +1582,6 @@ fu_util_send_report (SoupSession *soup_session,
 			if (uri != NULL)
 				*uri = g_strdup (json_object_get_string_member (json_object, "uri"));
 		}
-	}
-
-	/* fall back to HTTP status codes in case the server is offline */
-	if (!SOUP_STATUS_IS_SUCCESSFUL (status_code)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "Failed to upload to %s: %s",
-			     report_uri, soup_status_get_phrase (status_code));
-		return FALSE;
 	}
 
 	/* success */
