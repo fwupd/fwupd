@@ -15,7 +15,7 @@ msgstr ""
 "Language: zh_TW\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#. more than a minute
+#. TRANSLATORS: more than a minute remaining
 #, c-format
 msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"

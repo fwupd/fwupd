@@ -17,7 +17,7 @@ msgstr ""
 "Language: hr\n"
 "Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
 
-#. more than a minute
+#. TRANSLATORS: more than a minute remaining
 #, c-format
 msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"
