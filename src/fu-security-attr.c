@@ -98,10 +98,13 @@ fu_security_attr_get_name (FwupdSecurityAttr *attr)
 		const gchar *kind = fwupd_security_attr_get_metadata (attr, "kind");
 		if (kind != NULL) {
 			/* TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT */
-			return g_strdup_printf (_("%s override strap"), kind);
+			return g_strdup_printf (_("%s override"), kind);
 		}
-		/* TRANSLATORS: Title: MEI = Intel Management Engine */
-		return g_strdup (_("MEI override strap"));
+		/* TRANSLATORS: Title: MEI = Intel Management Engine, and the
+		 * "override" is the physical PIN that can be driven to
+		 * logic high -- luckily it is probably not accessible to
+		 * end users on consumer boards */
+		return g_strdup (_("MEI override"));
 	}
 	if (g_strcmp0 (appstream_id, FWUPD_SECURITY_ATTR_ID_MEI_VERSION) == 0) {
 		/* TRANSLATORS: Title: MEI = Intel Management Engine */

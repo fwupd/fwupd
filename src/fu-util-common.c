@@ -1612,7 +1612,7 @@ fu_util_security_attrs_to_string (GPtrArray *attrs)
 	if (pcr0_help) {
 		g_string_append_printf (str, "\n%s\n » %s\n",
 					/* TRANSLATORS: this is more background on a security measurement problem */
-					_("The TPM PCR0 differes from reconstruction."),
+					_("The TPM PCR0 differs from reconstruction."),
 					"https://github.com/fwupd/fwupd/wiki/TPM-PCR0-differs-from-reconstruction");
 
 	}
