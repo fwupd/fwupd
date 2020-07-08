@@ -182,3 +182,17 @@ gboolean fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	g_dir_close (dir);
 	return TRUE;
 }
+
+gboolean fu_plugin_update (FuPlugin *plugin,
+			   FuDevice *dev,
+			   GBytes *blob_fw,
+			   FwupdInstallFlags flags,
+			   GError **error)
+{
+	FuDevice *parent = fu_device_get_parent (dev);
+	g_autoptr (FuDeviceLocker) locker = NULL;
+	locker = fu_device_locker_new (parent != NULL ? parent : dev, error);
+	if (locker == NULL)
+		return FALSE;
+	return fu_device_write_firmware (dev, blob_fw, flags, error);
+}
