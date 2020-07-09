@@ -11,6 +11,12 @@
 #include "fwupd-error.h"
 #include "fwupd-release.h"
 
+#ifdef HAVE_GIO_UNIX
+#include <fcntl.h>
+#include <errno.h>
+#include <sys/mman.h>
+#endif
+
 #include <locale.h>
 #include <string.h>
 #ifdef HAVE_UTSNAME_H
@@ -934,3 +940,57 @@ fwupd_variant_to_hash_kv (GVariant *dict)
 		g_hash_table_insert (hash, g_strdup (key), g_strdup (value));
 	return hash;
 }
+
+#ifdef HAVE_GIO_UNIX
+/**
+ * fwupd_unix_input_stream_from_bytes: (skip):
+ **/
+GUnixInputStream *
+fwupd_unix_input_stream_from_bytes (GBytes *bytes, GError **error)
+{
+	gint fd;
+	gssize rc;
+
+	fd = memfd_create ("fwupd", MFD_CLOEXEC);
+	if (fd < 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "failed to create memfd");
+		return NULL;
+	}
+	rc = write (fd, g_bytes_get_data (bytes, NULL), g_bytes_get_size (bytes));
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "failed to write %" G_GSSIZE_FORMAT, rc);
+		return NULL;
+	}
+	if (lseek (fd, 0, SEEK_SET) < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "failed to seek: %s", g_strerror (errno));
+		return NULL;
+	}
+	return G_UNIX_INPUT_STREAM (g_unix_input_stream_new (fd, TRUE));
+}
+
+/**
+ * fwupd_unix_input_stream_from_fn: (skip):
+ **/
+GUnixInputStream *
+fwupd_unix_input_stream_from_fn (const gchar *fn, GError **error)
+{
+	gint fd = open (fn, O_RDONLY);
+	if (fd < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "failed to open %s", fn);
+		return NULL;
+	}
+	return G_UNIX_INPUT_STREAM (g_unix_input_stream_new (fd, TRUE));
+}
+#endif

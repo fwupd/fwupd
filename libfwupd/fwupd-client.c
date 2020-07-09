@@ -10,13 +10,10 @@
 #include <gio/gio.h>
 #include <libsoup/soup.h>
 #ifdef HAVE_GIO_UNIX
-#include <sys/mman.h>
 #include <gio/gunixfdlist.h>
-#include <gio/gunixinputstream.h>
 #endif
 
 #include <fcntl.h>
-#include <errno.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -1510,51 +1507,6 @@ fwupd_client_update_metadata_fds (FwupdClient *client,
 	return TRUE;
 }
 
-static GUnixInputStream *
-fwupd_client_input_stream_from_fn (const gchar *fn, GError **error)
-{
-	gint fd = open (fn, O_RDONLY);
-	if (fd < 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "failed to open %s", fn);
-		return NULL;
-	}
-	return G_UNIX_INPUT_STREAM (g_unix_input_stream_new (fd, TRUE));
-}
-
-static GUnixInputStream *
-fwupd_client_input_stream_from_bytes (GBytes *bytes, GError **error)
-{
-	gint fd;
-	gssize rc;
-
-	fd = memfd_create ("fwupd", MFD_CLOEXEC);
-	if (fd < 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "failed to create memfd");
-		return NULL;
-	}
-	rc = write (fd, g_bytes_get_data (bytes, NULL), g_bytes_get_size (bytes));
-	if (rc < 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "failed to write %" G_GSSIZE_FORMAT, rc);
-		return NULL;
-	}
-	if (lseek (fd, 0, SEEK_SET) < 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "failed to seek: %s", g_strerror (errno));
-		return NULL;
-	}
-	return G_UNIX_INPUT_STREAM (g_unix_input_stream_new (fd, TRUE));
-}
 #endif
 
 /**
@@ -1601,10 +1553,10 @@ fwupd_client_update_metadata (FwupdClient *client,
 		return FALSE;
 
 	/* open files */
-	istr = fwupd_client_input_stream_from_fn (metadata_fn, error);
+	istr = fwupd_unix_input_stream_from_fn (metadata_fn, error);
 	if (istr == NULL)
 		return FALSE;
-	istr_sig = fwupd_client_input_stream_from_fn (signature_fn, error);
+	istr_sig = fwupd_unix_input_stream_from_fn (signature_fn, error);
 	if (istr_sig == NULL)
 		return FALSE;
 	return fwupd_client_update_metadata_fds (client, remote_id,
@@ -1659,10 +1611,10 @@ fwupd_client_update_metadata_bytes (FwupdClient *client,
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* convert bytes to a readable fd */
-	istr = fwupd_client_input_stream_from_bytes (metadata, error);
+	istr = fwupd_unix_input_stream_from_bytes (metadata, error);
 	if (istr == NULL)
 		return FALSE;
-	istr_sig = fwupd_client_input_stream_from_bytes (signature, error);
+	istr_sig = fwupd_unix_input_stream_from_bytes (signature, error);
 	if (istr_sig == NULL)
 		return FALSE;
 	return fwupd_client_update_metadata_fds (client, remote_id,
