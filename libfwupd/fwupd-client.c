@@ -11,6 +11,7 @@
 #include <libsoup/soup.h>
 #ifdef HAVE_GIO_UNIX
 #include <gio/gunixfdlist.h>
+#include <gio/gunixinputstream.h>
 #endif
 
 #include <fcntl.h>
@@ -1458,6 +1459,71 @@ fwupd_client_get_daemon_interactive (FwupdClient *client)
 	return priv->interactive;
 }
 
+#ifdef HAVE_GIO_UNIX
+static gboolean
+fwupd_client_update_metadata_fds (FwupdClient *client,
+				  const gchar *remote_id,
+				  GUnixInputStream *metadata,
+				  GUnixInputStream *signature,
+				  GCancellable *cancellable,
+				  GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	GVariant *body;
+	g_autoptr(FwupdClientHelper) helper = NULL;
+	g_autoptr(GDBusMessage) request = NULL;
+	g_autoptr(GUnixFDList) fd_list = NULL;
+
+	/* set out of band file descriptor */
+	fd_list = g_unix_fd_list_new ();
+	g_unix_fd_list_append (fd_list, g_unix_input_stream_get_fd (metadata), NULL);
+	g_unix_fd_list_append (fd_list, g_unix_input_stream_get_fd (signature), NULL);
+	request = g_dbus_message_new_method_call (FWUPD_DBUS_SERVICE,
+						  FWUPD_DBUS_PATH,
+						  FWUPD_DBUS_INTERFACE,
+						  "UpdateMetadata");
+	g_dbus_message_set_unix_fd_list (request, fd_list);
+
+	/* call into daemon */
+	body = g_variant_new ("(shh)",
+			      remote_id,
+			      g_unix_input_stream_get_fd (metadata),
+			      g_unix_input_stream_get_fd (signature));
+	g_dbus_message_set_body (request, body);
+	helper = fwupd_client_helper_new ();
+	g_dbus_connection_send_message_with_reply (priv->conn,
+						   request,
+						   G_DBUS_SEND_MESSAGE_FLAGS_NONE,
+						   -1,
+						   NULL,
+						   cancellable,
+						   fwupd_client_send_message_cb,
+						   helper);
+	g_main_loop_run (helper->loop);
+	if (!helper->ret) {
+		g_propagate_error (error, helper->error);
+		helper->error = NULL;
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static GUnixInputStream *
+fwupd_client_input_stream_from_fn (const gchar *fn, GError **error)
+{
+	gint fd = open (fn, O_RDONLY);
+	if (fd < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "failed to open %s", fn);
+		return NULL;
+	}
+	return G_UNIX_INPUT_STREAM (g_unix_input_stream_new (fd, TRUE));
+}
+
+#endif
+
 /**
  * fwupd_client_update_metadata:
  * @client: A #FwupdClient
@@ -1487,13 +1553,8 @@ fwupd_client_update_metadata (FwupdClient *client,
 			      GError **error)
 {
 #ifdef HAVE_GIO_UNIX
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
-	GVariant *body;
-	gint fd;
-	gint fd_sig;
-	g_autoptr(FwupdClientHelper) helper = NULL;
-	g_autoptr(GDBusMessage) request = NULL;
-	g_autoptr(GUnixFDList) fd_list = NULL;
+	GUnixInputStream *istr;
+	GUnixInputStream *istr_sig;
 
 	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
 	g_return_val_if_fail (remote_id != NULL, FALSE);
@@ -1506,60 +1567,16 @@ fwupd_client_update_metadata (FwupdClient *client,
 	if (!fwupd_client_connect (client, cancellable, error))
 		return FALSE;
 
-	/* open file */
-	fd = open (metadata_fn, O_RDONLY);
-	if (fd < 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "failed to open %s",
-			     metadata_fn);
+	/* open files */
+	istr = fwupd_client_input_stream_from_fn (metadata_fn, error);
+	if (istr == NULL)
 		return FALSE;
-	}
-	fd_sig = open (signature_fn, O_RDONLY);
-	if (fd_sig < 0) {
-		close (fd);
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "failed to open %s",
-			     signature_fn);
+	istr_sig = fwupd_client_input_stream_from_fn (signature_fn, error);
+	if (istr_sig == NULL)
 		return FALSE;
-	}
-
-	/* set out of band file descriptor */
-	fd_list = g_unix_fd_list_new ();
-	g_unix_fd_list_append (fd_list, fd, NULL);
-	g_unix_fd_list_append (fd_list, fd_sig, NULL);
-	request = g_dbus_message_new_method_call (FWUPD_DBUS_SERVICE,
-						  FWUPD_DBUS_PATH,
-						  FWUPD_DBUS_INTERFACE,
-						  "UpdateMetadata");
-	g_dbus_message_set_unix_fd_list (request, fd_list);
-
-	/* g_unix_fd_list_append did a dup() already */
-	close (fd);
-	close (fd_sig);
-
-	/* call into daemon */
-	body = g_variant_new ("(shh)", remote_id, fd, fd_sig);
-	g_dbus_message_set_body (request, body);
-	helper = fwupd_client_helper_new ();
-	g_dbus_connection_send_message_with_reply (priv->conn,
-						   request,
-						   G_DBUS_SEND_MESSAGE_FLAGS_NONE,
-						   -1,
-						   NULL,
-						   cancellable,
-						   fwupd_client_send_message_cb,
-						   helper);
-	g_main_loop_run (helper->loop);
-	if (!helper->ret) {
-		g_propagate_error (error, helper->error);
-		helper->error = NULL;
-		return FALSE;
-	}
-	return TRUE;
+	return fwupd_client_update_metadata_fds (client, remote_id,
+						 istr, istr_sig,
+						 cancellable, error);
 #else
 	g_set_error_literal (error,
 			     FWUPD_ERROR,
