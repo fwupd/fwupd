@@ -1824,6 +1824,60 @@ fwupd_client_update_metadata_bytes (FwupdClient *client,
 }
 
 /**
+ * fwupd_client_refresh_remote:
+ * @client: A #FwupdClient
+ * @remote: A #FwupdRemote
+ * @cancellable: A #GCancellable, or %NULL
+ * @error: A #GError, or %NULL
+ *
+ * Refreshes a remote by downloading new metadata.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.4.5
+ **/
+gboolean
+fwupd_client_refresh_remote (FwupdClient *client,
+			     FwupdRemote *remote,
+			     GCancellable *cancellable,
+			     GError **error)
+{
+	g_autoptr(GBytes) metadata = NULL;
+	g_autoptr(GBytes) signature = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (FWUPD_IS_REMOTE (remote), FALSE);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* download the signature */
+	signature = fwupd_client_download_bytes (client,
+						 fwupd_remote_get_metadata_uri_sig (remote),
+						 FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
+						 cancellable, error);
+	if (signature == NULL)
+		return FALSE;
+
+	/* find the download URI of the metadata from the JCat file */
+	if (!fwupd_remote_load_signature_bytes (remote, signature, error))
+		return FALSE;
+
+	/* download the metadata */
+	metadata = fwupd_client_download_bytes (client,
+						fwupd_remote_get_metadata_uri (remote),
+						FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
+						cancellable, error);
+	if (metadata == NULL)
+		return FALSE;
+
+	/* send all this to fwupd */
+	return fwupd_client_update_metadata_bytes (client,
+						   fwupd_remote_get_id (remote),
+						   metadata, signature,
+						   cancellable, error);
+}
+
+/**
  * fwupd_client_get_remotes:
  * @client: A #FwupdClient
  * @cancellable: the #GCancellable, or %NULL
