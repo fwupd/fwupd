@@ -1079,46 +1079,6 @@ fu_util_download_file (FuUtilPrivate *priv,
 }
 
 static gboolean
-fu_util_download_metadata_for_remote (FuUtilPrivate *priv,
-				      FwupdRemote *remote,
-				      GError **error)
-{
-	g_autofree gchar *basename_asc = NULL;
-	g_autofree gchar *basename_id_asc = NULL;
-	g_autofree gchar *basename_id = NULL;
-	g_autofree gchar *basename = NULL;
-	g_autofree gchar *filename = NULL;
-	g_autofree gchar *filename_asc = NULL;
-
-	/* download the signature */
-	basename_asc = g_path_get_basename (fwupd_remote_get_filename_cache_sig (remote));
-	basename_id_asc = g_strdup_printf ("%s-%s", fwupd_remote_get_id (remote), basename_asc);
-	filename_asc = fu_util_get_user_cache_path (basename_id_asc);
-	if (!fu_common_mkdir_parent (filename_asc, error))
-		return FALSE;
-	if (!fu_util_download_file (priv, fwupd_remote_get_metadata_uri_sig (remote), filename_asc, NULL, error))
-		return FALSE;
-
-	/* find the download URI of the metadata from the JCat file */
-	if (!fwupd_remote_load_signature (remote, filename_asc, error))
-		return FALSE;
-
-	/* download the metadata */
-	basename = g_path_get_basename (fwupd_remote_get_filename_cache (remote));
-	basename_id = g_strdup_printf ("%s-%s", fwupd_remote_get_id (remote), basename);
-	filename = fu_util_get_user_cache_path (basename_id);
-	if (!fu_util_download_file (priv, fwupd_remote_get_metadata_uri (remote), filename, NULL, error))
-		return FALSE;
-
-	/* send all this to fwupd */
-	return fwupd_client_update_metadata (priv->client,
-					     fwupd_remote_get_id (remote),
-					     filename,
-					     filename_asc,
-					     NULL, error);
-}
-
-static gboolean
 fu_util_download_metadata_enable_lvfs (FuUtilPrivate *priv, GError **error)
 {
 	g_autoptr(FwupdRemote) remote = NULL;
@@ -1140,7 +1100,8 @@ fu_util_download_metadata_enable_lvfs (FuUtilPrivate *priv, GError **error)
 		return FALSE;
 
 	/* refresh the newly-enabled remote */
-	return fu_util_download_metadata_for_remote (priv, remote, error);
+	return fwupd_client_refresh_remote (priv->client, remote,
+					    priv->cancellable, error);
 }
 
 static gboolean
@@ -1213,7 +1174,9 @@ fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 		if (fwupd_remote_get_kind (remote) != FWUPD_REMOTE_KIND_DOWNLOAD)
 			continue;
 		download_remote_enabled = TRUE;
-		if (!fu_util_download_metadata_for_remote (priv, remote, error))
+		g_print ("%s %s\n", _("Updating"), fwupd_remote_get_id (remote));
+		if (!fwupd_client_refresh_remote (priv->client, remote,
+						  priv->cancellable, error))
 			return FALSE;
 	}
 
