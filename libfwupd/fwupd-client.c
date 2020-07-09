@@ -1119,6 +1119,135 @@ fwupd_client_send_message_cb (GObject *source_object, GAsyncResult *res, gpointe
 }
 #endif
 
+#ifdef HAVE_GIO_UNIX
+static gboolean
+fwupd_client_install_fd (FwupdClient *client,
+			 const gchar *device_id,
+			 GUnixInputStream *istr,
+			 const gchar *filename_hint,
+			 FwupdInstallFlags install_flags,
+			 GCancellable *cancellable,
+			 GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	GVariant *body;
+	GVariantBuilder builder;
+	gint retval;
+	g_autoptr(FwupdClientHelper) helper = NULL;
+	g_autoptr(GDBusMessage) request = NULL;
+	g_autoptr(GUnixFDList) fd_list = NULL;
+
+	/* set options */
+	g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
+	g_variant_builder_add (&builder, "{sv}",
+			       "reason", g_variant_new_string ("user-action"));
+	if (filename_hint != NULL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       "filename", g_variant_new_string (filename_hint));
+	}
+	if (install_flags & FWUPD_INSTALL_FLAG_OFFLINE) {
+		g_variant_builder_add (&builder, "{sv}",
+				       "offline", g_variant_new_boolean (TRUE));
+	}
+	if (install_flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) {
+		g_variant_builder_add (&builder, "{sv}",
+				       "allow-older", g_variant_new_boolean (TRUE));
+	}
+	if (install_flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       "allow-reinstall", g_variant_new_boolean (TRUE));
+	}
+	if (install_flags & FWUPD_INSTALL_FLAG_FORCE) {
+		g_variant_builder_add (&builder, "{sv}",
+				       "force", g_variant_new_boolean (TRUE));
+	}
+	if (install_flags & FWUPD_INSTALL_FLAG_NO_HISTORY) {
+		g_variant_builder_add (&builder, "{sv}",
+				       "no-history", g_variant_new_boolean (TRUE));
+	}
+
+	/* set out of band file descriptor */
+	fd_list = g_unix_fd_list_new ();
+	retval = g_unix_fd_list_append (fd_list, g_unix_input_stream_get_fd (istr), NULL);
+	g_assert (retval != -1);
+	request = g_dbus_message_new_method_call (FWUPD_DBUS_SERVICE,
+						  FWUPD_DBUS_PATH,
+						  FWUPD_DBUS_INTERFACE,
+						  "Install");
+	g_dbus_message_set_unix_fd_list (request, fd_list);
+
+	/* call into daemon */
+	helper = fwupd_client_helper_new ();
+	body = g_variant_new ("(sha{sv})", device_id, g_unix_input_stream_get_fd (istr), &builder);
+	g_dbus_message_set_body (request, body);
+	g_dbus_connection_send_message_with_reply (priv->conn,
+						   request,
+						   G_DBUS_SEND_MESSAGE_FLAGS_NONE,
+						   G_MAXINT,
+						   NULL,
+						   cancellable,
+						   fwupd_client_send_message_cb,
+						   helper);
+	g_main_loop_run (helper->loop);
+	if (!helper->ret) {
+		g_propagate_error (error, helper->error);
+		helper->error = NULL;
+		return FALSE;
+	}
+	return TRUE;
+}
+#endif
+
+/**
+ * fwupd_client_install_bytes:
+ * @client: A #FwupdClient
+ * @device_id: the device ID
+ * @bytes: #GBytes
+ * @install_flags: the #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_REINSTALL
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Install firmware onto a specific device.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.4.5
+ **/
+gboolean
+fwupd_client_install_bytes (FwupdClient *client,
+			    const gchar *device_id,
+			    GBytes *bytes,
+			    FwupdInstallFlags install_flags,
+			    GCancellable *cancellable,
+			    GError **error)
+{
+#ifdef HAVE_GIO_UNIX
+	g_autoptr(GUnixInputStream) istr = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (device_id != NULL, FALSE);
+	g_return_val_if_fail (bytes != NULL, FALSE);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* connect */
+	if (!fwupd_client_connect (client, cancellable, error))
+		return FALSE;
+
+	istr = fwupd_unix_input_stream_from_bytes (bytes, error);
+	if (istr == NULL)
+		return FALSE;
+	return fwupd_client_install_fd (client, device_id, istr, NULL,
+					install_flags, cancellable, error);
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "Not supported as <glib-unix.h> is unavailable");
+	return FALSE;
+#endif
+}
+
 /**
  * fwupd_client_install:
  * @client: A #FwupdClient
@@ -1143,14 +1272,7 @@ fwupd_client_install (FwupdClient *client,
 		      GError **error)
 {
 #ifdef HAVE_GIO_UNIX
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
-	GVariant *body;
-	GVariantBuilder builder;
-	gint retval;
-	gint fd;
-	g_autoptr(FwupdClientHelper) helper = NULL;
-	g_autoptr(GDBusMessage) request = NULL;
-	g_autoptr(GUnixFDList) fd_list = NULL;
+	g_autoptr(GUnixInputStream) istr = NULL;
 
 	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
 	g_return_val_if_fail (device_id != NULL, FALSE);
@@ -1162,76 +1284,11 @@ fwupd_client_install (FwupdClient *client,
 	if (!fwupd_client_connect (client, cancellable, error))
 		return FALSE;
 
-	/* set options */
-	g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
-	g_variant_builder_add (&builder, "{sv}",
-			       "reason", g_variant_new_string ("user-action"));
-	g_variant_builder_add (&builder, "{sv}",
-			       "filename", g_variant_new_string (filename));
-	if (install_flags & FWUPD_INSTALL_FLAG_OFFLINE) {
-		g_variant_builder_add (&builder, "{sv}",
-				       "offline", g_variant_new_boolean (TRUE));
-	}
-	if (install_flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) {
-		g_variant_builder_add (&builder, "{sv}",
-				       "allow-older", g_variant_new_boolean (TRUE));
-	}
-	if (install_flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       "allow-reinstall", g_variant_new_boolean (TRUE));
-	}
-	if (install_flags & FWUPD_INSTALL_FLAG_FORCE) {
-		g_variant_builder_add (&builder, "{sv}",
-				       "force", g_variant_new_boolean (TRUE));
-	}
-	if (install_flags & FWUPD_INSTALL_FLAG_NO_HISTORY) {
-		g_variant_builder_add (&builder, "{sv}",
-				       "no-history", g_variant_new_boolean (TRUE));
-	}
-
-	/* open file */
-	fd = open (filename, O_RDONLY);
-	if (fd < 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "failed to open %s",
-			     filename);
+	istr = fwupd_unix_input_stream_from_fn (filename, error);
+	if (istr == NULL)
 		return FALSE;
-	}
-
-	/* set out of band file descriptor */
-	fd_list = g_unix_fd_list_new ();
-	retval = g_unix_fd_list_append (fd_list, fd, NULL);
-	g_assert (retval != -1);
-	request = g_dbus_message_new_method_call (FWUPD_DBUS_SERVICE,
-						  FWUPD_DBUS_PATH,
-						  FWUPD_DBUS_INTERFACE,
-						  "Install");
-	g_dbus_message_set_unix_fd_list (request, fd_list);
-
-	/* g_unix_fd_list_append did a dup() already */
-	close (fd);
-
-	/* call into daemon */
-	helper = fwupd_client_helper_new ();
-	body = g_variant_new ("(sha{sv})", device_id, fd, &builder);
-	g_dbus_message_set_body (request, body);
-	g_dbus_connection_send_message_with_reply (priv->conn,
-						   request,
-						   G_DBUS_SEND_MESSAGE_FLAGS_NONE,
-						   G_MAXINT,
-						   NULL,
-						   cancellable,
-						   fwupd_client_send_message_cb,
-						   helper);
-	g_main_loop_run (helper->loop);
-	if (!helper->ret) {
-		g_propagate_error (error, helper->error);
-		helper->error = NULL;
-		return FALSE;
-	}
-	return TRUE;
+	return fwupd_client_install_fd (client, device_id, istr, filename,
+					install_flags, cancellable, error);
 #else
 	g_set_error_literal (error,
 			     FWUPD_ERROR,
