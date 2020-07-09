@@ -453,6 +453,7 @@ LIBFWUPD_1.4.5 {
     fwupd_client_set_feature_flags;
     fwupd_client_set_user_agent;
     fwupd_client_set_user_agent_for_package;
+    fwupd_client_update_metadata_bytes;
     fwupd_client_upload_bytes;
     fwupd_device_get_update_image;
     fwupd_device_set_update_image;

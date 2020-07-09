@@ -146,6 +146,9 @@ add_project_arguments('-DFWUPD_DISABLE_DEPRECATED', language : 'c')
 add_project_arguments('-D_BSD_SOURCE', language : 'c')
 add_project_arguments('-D_XOPEN_SOURCE=700', language : 'c')
 
+# needed for memfd_create()
+add_project_arguments('-D_GNU_SOURCE', language : 'c')
+
 # sanity check
 if get_option('build') == 'all'
   build_standalone = true
