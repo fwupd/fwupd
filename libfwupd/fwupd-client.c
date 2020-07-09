@@ -1299,6 +1299,101 @@ fwupd_client_install (FwupdClient *client,
 }
 
 /**
+ * fwupd_client_install_release:
+ * @client: A #FwupdClient
+ * @device: A #FwupdDevice
+ * @release: A #FwupdRelease
+ * @install_flags: the #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_REINSTALL
+ * @cancellable: A #GCancellable, or %NULL
+ * @error: A #GError, or %NULL
+ *
+ * Installs a new release on a device, downloading the firmware if required.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.4.5
+ **/
+gboolean
+fwupd_client_install_release (FwupdClient *client,
+			      FwupdDevice *device,
+			      FwupdRelease *release,
+			      FwupdInstallFlags install_flags,
+			      GCancellable *cancellable,
+			      GError **error)
+{
+	GChecksumType checksum_type;
+	const gchar *checksum_expected;
+	const gchar *remote_id;
+	const gchar *uri_tmp;
+	g_autofree gchar *checksum_actual = NULL;
+	g_autofree gchar *uri_str = NULL;
+	g_autoptr(GBytes) blob = NULL;
+
+	/* work out what remote-specific URI fields this should use */
+	uri_tmp = fwupd_release_get_uri (release);
+	remote_id = fwupd_release_get_remote_id (release);
+	if (remote_id != NULL) {
+		g_autoptr(FwupdRemote) remote = NULL;
+		g_autofree gchar *fn = NULL;
+
+		/* if a remote-id was specified, the remote has to exist */
+		remote = fwupd_client_get_remote_by_id (client, remote_id, cancellable, error);
+		if (remote == NULL)
+			return FALSE;
+
+		/* local and directory remotes have the firmware already */
+		if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_LOCAL) {
+			const gchar *fn_cache = fwupd_remote_get_filename_cache (remote);
+			g_autofree gchar *path = g_path_get_dirname (fn_cache);
+
+			fn = g_build_filename (path, uri_tmp, NULL);
+		} else if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_DIRECTORY) {
+			fn = g_strdup (uri_tmp + 7);
+		}
+
+		/* install with flags chosen by the user */
+		if (fn != NULL) {
+			return fwupd_client_install (client, fwupd_device_get_id (device),
+						     fn, install_flags, cancellable, error);
+		}
+
+		/* remote file */
+		uri_str = fwupd_remote_build_firmware_uri (remote, uri_tmp, error);
+		if (uri_str == NULL)
+			return FALSE;
+	} else {
+		uri_str = g_strdup (uri_tmp);
+	}
+
+	/* download file */
+	blob = fwupd_client_download_bytes (client, uri_str,
+					    FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
+					    cancellable, error);
+	if (blob == NULL)
+		return FALSE;
+
+	/* verify checksum */
+	checksum_expected = fwupd_checksum_get_best (fwupd_release_get_checksums (release));
+	checksum_type = fwupd_checksum_guess_kind (checksum_expected);
+	checksum_actual = g_compute_checksum_for_bytes (checksum_type, blob);
+	if (g_strcmp0 (checksum_expected, checksum_actual) != 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Checksum invalid, expected %s got %s",
+			     checksum_expected, checksum_actual);
+		return FALSE;
+	}
+
+	/* if the device specifies ONLY_OFFLINE automatically set this flag */
+	if (fwupd_device_has_flag (device, FWUPD_DEVICE_FLAG_ONLY_OFFLINE))
+		install_flags |= FWUPD_INSTALL_FLAG_OFFLINE;
+	return fwupd_client_install_bytes (client,
+					   fwupd_device_get_id (device), blob,
+					   install_flags, NULL, error);
+}
+
+/**
  * fwupd_client_get_details:
  * @client: A #FwupdClient
  * @filename: the firmware filename, e.g. `firmware.cab`

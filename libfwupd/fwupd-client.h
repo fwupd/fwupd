@@ -141,6 +141,12 @@ gboolean	 fwupd_client_install_bytes		(FwupdClient	*client,
 							 FwupdInstallFlags install_flags,
 							 GCancellable	*cancellable,
 							 GError		**error);
+gboolean	 fwupd_client_install_release		(FwupdClient	*client,
+							 FwupdDevice	*device,
+							 FwupdRelease	*release,
+							 FwupdInstallFlags install_flags,
+							 GCancellable	*cancellable,
+							 GError		**error);
 gboolean	 fwupd_client_update_metadata		(FwupdClient	*client,
 							 const gchar	*remote_id,
 							 const gchar	*metadata_fn,
