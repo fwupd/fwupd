@@ -932,38 +932,15 @@ fwupd_remote_get_metadata_uri (FwupdRemote *self)
 	return priv->metadata_uri;
 }
 
-/**
- * fwupd_remote_load_signature:
- * @self: A #FwupdRemote
- * @filename: A filename
- * @error: the #GError, or %NULL
- *
- * Parses the signature, updating the metadata URI as appropriate.
- *
- * Returns: %TRUE for success
- *
- * Since: 1.4.0
- **/
-gboolean
-fwupd_remote_load_signature (FwupdRemote *self, const gchar *filename, GError **error)
+static gboolean
+fwupd_remote_load_signature_jcat (FwupdRemote *self, JcatFile *jcat_file, GError **error)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	const gchar *id;
 	g_autofree gchar *basename = NULL;
 	g_autofree gchar *baseuri = NULL;
 	g_autofree gchar *metadata_uri = NULL;
-	g_autoptr(GFile) gfile = NULL;
-	g_autoptr(JcatFile) jcat_file = jcat_file_new ();
 	g_autoptr(JcatItem) jcat_item = NULL;
-
-	g_return_val_if_fail (FWUPD_IS_REMOTE (self), FALSE);
-	g_return_val_if_fail (filename != NULL, FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-	/* load JCat file */
-	gfile = g_file_new_for_path (filename);
-	if (!jcat_file_import_file (jcat_file, gfile, JCAT_IMPORT_FLAG_NONE, NULL, error))
-		return FALSE;
 
 	/* this seems pointless to get the item by ID then just read the ID,
 	 * but _get_item_by_id() uses the AliasIds as a fallback */
@@ -996,6 +973,63 @@ fwupd_remote_load_signature (FwupdRemote *self, const gchar *filename, GError **
 
 	/* success */
 	return TRUE;
+}
+
+/**
+ * fwupd_remote_load_signature_bytes:
+ * @self: A #FwupdRemote
+ * @bytes: A #GBytes
+ * @error: the #GError, or %NULL
+ *
+ * Parses the signature, updating the metadata URI as appropriate.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.4.5
+ **/
+gboolean
+fwupd_remote_load_signature_bytes (FwupdRemote *self, GBytes *bytes, GError **error)
+{
+	g_autoptr(GInputStream) istr = NULL;
+	g_autoptr(JcatFile) jcat_file = jcat_file_new ();
+
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), FALSE);
+	g_return_val_if_fail (bytes != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	istr = g_memory_input_stream_new_from_bytes (bytes);
+	if (!jcat_file_import_stream (jcat_file, istr, JCAT_IMPORT_FLAG_NONE, NULL, error))
+		return FALSE;
+	return fwupd_remote_load_signature_jcat (self, jcat_file, error);
+}
+
+/**
+ * fwupd_remote_load_signature:
+ * @self: A #FwupdRemote
+ * @filename: A filename
+ * @error: the #GError, or %NULL
+ *
+ * Parses the signature, updating the metadata URI as appropriate.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.4.0
+ **/
+gboolean
+fwupd_remote_load_signature (FwupdRemote *self, const gchar *filename, GError **error)
+{
+	g_autoptr(GFile) gfile = NULL;
+	g_autoptr(JcatFile) jcat_file = jcat_file_new ();
+
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), FALSE);
+	g_return_val_if_fail (filename != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* load JCat file */
+	gfile = g_file_new_for_path (filename);
+	if (!jcat_file_import_file (jcat_file, gfile, JCAT_IMPORT_FLAG_NONE, NULL, error))
+		return FALSE;
+	return fwupd_remote_load_signature_jcat (self, jcat_file, error);
 }
 
 /**
