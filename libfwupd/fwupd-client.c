@@ -10,11 +10,13 @@
 #include <gio/gio.h>
 #include <libsoup/soup.h>
 #ifdef HAVE_GIO_UNIX
+#include <sys/mman.h>
 #include <gio/gunixfdlist.h>
 #include <gio/gunixinputstream.h>
 #endif
 
 #include <fcntl.h>
+#include <errno.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -1668,6 +1670,37 @@ fwupd_client_input_stream_from_fn (const gchar *fn, GError **error)
 	return G_UNIX_INPUT_STREAM (g_unix_input_stream_new (fd, TRUE));
 }
 
+static GUnixInputStream *
+fwupd_client_input_stream_from_bytes (GBytes *bytes, GError **error)
+{
+	gint fd;
+	gssize rc;
+
+	fd = memfd_create ("fwupd", MFD_CLOEXEC);
+	if (fd < 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "failed to create memfd");
+		return NULL;
+	}
+	rc = write (fd, g_bytes_get_data (bytes, NULL), g_bytes_get_size (bytes));
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "failed to write %" G_GSSIZE_FORMAT, rc);
+		return NULL;
+	}
+	if (lseek (fd, 0, SEEK_SET) < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "failed to seek: %s", g_strerror (errno));
+		return NULL;
+	}
+	return G_UNIX_INPUT_STREAM (g_unix_input_stream_new (fd, TRUE));
+}
 #endif
 
 /**
@@ -1718,6 +1751,64 @@ fwupd_client_update_metadata (FwupdClient *client,
 	if (istr == NULL)
 		return FALSE;
 	istr_sig = fwupd_client_input_stream_from_fn (signature_fn, error);
+	if (istr_sig == NULL)
+		return FALSE;
+	return fwupd_client_update_metadata_fds (client, remote_id,
+						 istr, istr_sig,
+						 cancellable, error);
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "Not supported as <glib-unix.h> is unavailable");
+	return FALSE;
+#endif
+}
+
+/**
+ * fwupd_client_update_metadata_bytes:
+ * @client: A #FwupdClient
+ * @remote_id: remote ID, e.g. `lvfs-testing`
+ * @metadata: XML metadata data
+ * @signature: signature data
+ * @cancellable: #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Updates the metadata. This allows a session process to download the metadata
+ * and metadata signing file to be passed into the daemon to be checked and
+ * parsed.
+ *
+ * The @remote_id allows the firmware to be tagged so that the remote can be
+ * matched when the firmware is downloaded.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.4.5
+ **/
+gboolean
+fwupd_client_update_metadata_bytes (FwupdClient *client,
+				    const gchar *remote_id,
+				    GBytes *metadata,
+				    GBytes *signature,
+				    GCancellable *cancellable,
+				    GError **error)
+{
+#ifdef HAVE_GIO_UNIX
+	GUnixInputStream *istr;
+	GUnixInputStream *istr_sig;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (remote_id != NULL, FALSE);
+	g_return_val_if_fail (metadata != NULL, FALSE);
+	g_return_val_if_fail (signature != NULL, FALSE);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* convert bytes to a readable fd */
+	istr = fwupd_client_input_stream_from_bytes (metadata, error);
+	if (istr == NULL)
+		return FALSE;
+	istr_sig = fwupd_client_input_stream_from_bytes (signature, error);
 	if (istr_sig == NULL)
 		return FALSE;
 	return fwupd_client_update_metadata_fds (client, remote_id,

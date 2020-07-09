@@ -144,6 +144,12 @@ gboolean	 fwupd_client_update_metadata		(FwupdClient	*client,
 							 const gchar	*signature_fn,
 							 GCancellable	*cancellable,
 							 GError		**error);
+gboolean	 fwupd_client_update_metadata_bytes	(FwupdClient	*client,
+							 const gchar	*remote_id,
+							 GBytes		*metadata,
+							 GBytes		*signature,
+							 GCancellable	*cancellable,
+							 GError		**error);
 gboolean	 fwupd_client_modify_remote		(FwupdClient	*client,
 							 const gchar	*remote_id,
 							 const gchar	*key,
