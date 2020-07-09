@@ -460,6 +460,7 @@ LIBFWUPD_1.4.5 {
     fwupd_feature_flag_to_string;
     fwupd_release_get_update_image;
     fwupd_release_set_update_image;
+    fwupd_remote_load_signature_bytes;
   local: *;
 } LIBFWUPD_1.4.1;
 
