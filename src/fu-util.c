@@ -78,11 +78,6 @@ struct FuUtilPrivate {
 };
 
 static gboolean	fu_util_report_history (FuUtilPrivate *priv, gchar **values, GError **error);
-static gboolean	fu_util_download_file	(FuUtilPrivate	*priv,
-					 const gchar	*uri_str,
-					 const gchar	*fn,
-					 const gchar	*checksum_expected,
-					 GError		**error);
 
 static void
 fu_util_client_notify_cb (GObject *object,
@@ -562,6 +557,7 @@ static gchar *
 fu_util_download_if_required (FuUtilPrivate *priv, const gchar *perhapsfn, GError **error)
 {
 	g_autofree gchar *filename = NULL;
+	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(SoupURI) uri = NULL;
 
 	/* a local file */
@@ -575,7 +571,14 @@ fu_util_download_if_required (FuUtilPrivate *priv, const gchar *perhapsfn, GErro
 	filename = fu_util_get_user_cache_path (perhapsfn);
 	if (!fu_common_mkdir_parent (filename, error))
 		return NULL;
-	if (!fu_util_download_file (priv, perhapsfn, filename, NULL, error))
+	blob = fwupd_client_download_bytes (priv->client, perhapsfn,
+					    FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
+					    priv->cancellable, error);
+	if (blob == NULL)
+		return NULL;
+
+	/* save file to cache */
+	if (!fu_common_set_contents_bytes (filename, blob, error))
 		return NULL;
 	return g_steal_pointer (&filename);
 }
@@ -1001,82 +1004,6 @@ fu_util_verify_update (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_print ("%s\n", _("Successfully updated device checksums"));
 
 	return TRUE;
-}
-
-static gboolean
-fu_util_file_exists_with_checksum (const gchar *fn,
-				   const gchar *checksum_expected,
-				   GChecksumType checksum_type)
-{
-	gsize len = 0;
-	g_autofree gchar *checksum_actual = NULL;
-	g_autofree gchar *data = NULL;
-
-	if (!g_file_get_contents (fn, &data, &len, NULL))
-		return FALSE;
-	checksum_actual = g_compute_checksum_for_data (checksum_type,
-						       (guchar *) data, len);
-	return g_strcmp0 (checksum_expected, checksum_actual) == 0;
-}
-
-static gboolean
-fu_util_download_file (FuUtilPrivate *priv,
-		       const gchar *uri_str,
-		       const gchar *fn,
-		       const gchar *checksum_expected,
-		       GError **error)
-{
-	GChecksumType checksum_type;
-	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(GError) error_local = NULL;
-	g_autofree gchar *checksum_actual = NULL;
-
-	/* check if the file already exists with the right checksum */
-	checksum_type = fwupd_checksum_guess_kind (checksum_expected);
-	if (fu_util_file_exists_with_checksum (fn, checksum_expected, checksum_type)) {
-		g_debug ("skpping download as file already exists");
-		return TRUE;
-	}
-
-	/* download data */
-	if (g_str_has_suffix (uri_str, ".jcat") ||
-	    g_str_has_suffix (uri_str, ".asc") ||
-	    g_str_has_suffix (uri_str, ".p7b") ||
-	    g_str_has_suffix (uri_str, ".p7c")) {
-		/* TRANSLATORS: downloading new signing file */
-		g_print ("%s %s", _("Fetching signature"), uri_str);
-	} else if (g_str_has_suffix (uri_str, ".gz")) {
-		/* TRANSLATORS: downloading new metadata file */
-		g_print ("%s %s", _("Fetching metadata"), uri_str);
-	} else if (g_str_has_suffix (uri_str, ".cab")) {
-		/* TRANSLATORS: downloading new firmware file */
-		g_print ("%s %s", _("Fetching firmware"), uri_str);
-	} else {
-		/* TRANSLATORS: downloading unknown file */
-		g_print ("%s %s", _("Fetching file"), uri_str);
-	}
-	g_print ("\n");
-	blob = fwupd_client_download_bytes (priv->client, uri_str,
-					    FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
-					    priv->cancellable, error);
-	if (blob == NULL)
-		return FALSE;
-
-	/* verify checksum */
-	if (checksum_expected != NULL) {
-		checksum_actual = g_compute_checksum_for_bytes (checksum_type, blob);
-		if (g_strcmp0 (checksum_expected, checksum_actual) != 0) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "Checksum invalid, expected %s got %s",
-				     checksum_expected, checksum_actual);
-			return FALSE;
-		}
-	}
-
-	/* save file */
-	return fu_common_set_contents_bytes (fn, blob, error);
 }
 
 static gboolean
@@ -1552,72 +1479,14 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 				    FwupdRelease *rel,
 				    GError **error)
 {
-	GPtrArray *checksums;
-	const gchar *remote_id;
-	const gchar *uri_tmp;
-	g_autofree gchar *fn = NULL;
-	g_autofree gchar *uri_str = NULL;
-
 	if (!priv->no_safety_check && !priv->assume_yes) {
 		if (!fu_util_prompt_warning (dev,
 					     fu_util_get_tree_title (priv),
 					     error))
 			return FALSE;
 	}
-
-	/* work out what remote-specific URI fields this should use */
-	uri_tmp = fwupd_release_get_uri (rel);
-	remote_id = fwupd_release_get_remote_id (rel);
-	if (remote_id != NULL) {
-		g_autoptr(FwupdRemote) remote = NULL;
-		remote = fwupd_client_get_remote_by_id (priv->client,
-							remote_id,
-							NULL,
-							error);
-		if (remote == NULL)
-			return FALSE;
-
-		/* local and directory remotes have the firmware already */
-		if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_LOCAL) {
-			const gchar *fn_cache = fwupd_remote_get_filename_cache (remote);
-			g_autofree gchar *path = g_path_get_dirname (fn_cache);
-
-			fn = g_build_filename (path, uri_tmp, NULL);
-		} else if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_DIRECTORY) {
-			fn = g_strdup (uri_tmp + 7);
-		}
-		/* install with flags chosen by the user */
-		if (fn != NULL) {
-			return fwupd_client_install (priv->client,
-						     fwupd_device_get_id (dev),
-						     fn, priv->flags, NULL, error);
-		}
-
-		uri_str = fwupd_remote_build_firmware_uri (remote, uri_tmp, error);
-		if (uri_str == NULL)
-			return FALSE;
-	} else {
-		uri_str = g_strdup (uri_tmp);
-	}
-
-	/* download file */
-	g_print ("Downloading %s for %s...\n",
-		 fwupd_release_get_version (rel),
-		 fwupd_device_get_name (dev));
-	fn = fu_util_get_user_cache_path (uri_str);
-	if (!fu_common_mkdir_parent (fn, error))
-		return FALSE;
-	checksums = fwupd_release_get_checksums (rel);
-	if (!fu_util_download_file (priv, uri_str, fn,
-				    fwupd_checksum_get_best (checksums),
-				    error))
-		return FALSE;
-	/* if the device specifies ONLY_OFFLINE automatically set this flag */
-	if (fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_ONLY_OFFLINE))
-		priv->flags |= FWUPD_INSTALL_FLAG_OFFLINE;
-	return fwupd_client_install (priv->client,
-				     fwupd_device_get_id (dev), fn,
-				     priv->flags, NULL, error);
+	return fwupd_client_install_release (priv->client, dev, rel, priv->flags,
+					     priv->cancellable, error);
 }
 
 static gboolean
