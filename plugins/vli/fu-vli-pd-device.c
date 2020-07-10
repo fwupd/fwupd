@@ -393,6 +393,65 @@ fu_vli_pd_device_write_gpios (FuVliPdDevice *self, GError **error)
 }
 
 static gboolean
+fu_vli_pd_device_write_dual_firmware (FuVliPdDevice *self, GBytes *fw, GError **error)
+{
+	const guint8 *buf = NULL;
+	const guint8 *sbuf = NULL;
+	gsize bufsz = 0;
+	gsize sbufsz = 0;
+	guint16 crc_actual;
+	guint16 crc_file = 0x0;
+	guint32 sec_addr = 0x28000;
+	g_autoptr(GBytes) spi_fw = NULL;
+
+	/* check spi fw1 crc16 */
+	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_VERIFY);
+	spi_fw = fu_vli_device_spi_read (FU_VLI_DEVICE (self),
+					 fu_vli_device_get_offset (FU_VLI_DEVICE (self)),
+					 fu_device_get_firmware_size_max (FU_DEVICE (self)),
+					 error);
+	if (spi_fw == NULL)
+		return FALSE;
+	sbuf = g_bytes_get_data (spi_fw, &sbufsz);
+	if (sbufsz != 0x8000)
+		sec_addr = 0x30000;
+	if (!fu_common_read_uint16_safe	(sbuf, sbufsz, sbufsz - 2, &crc_file,
+					 G_LITTLE_ENDIAN, error)) {
+		g_prefix_error (error, "failed to read file CRC: ");
+		return FALSE;
+	}
+	crc_actual = fu_vli_common_crc16 (sbuf, sbufsz - 2);
+	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_WRITE);
+
+	/* update fw2 first if fw1 correct */
+	buf = g_bytes_get_data (fw, &bufsz);
+	if (crc_actual == crc_file) {
+		if (!fu_vli_device_spi_write (FU_VLI_DEVICE (self),
+					      sec_addr,
+					      buf, bufsz, error))
+			return FALSE;
+		if (!fu_vli_device_spi_write (FU_VLI_DEVICE (self),
+					      fu_vli_device_get_offset (FU_VLI_DEVICE (self)),
+					      buf, bufsz, error))
+			return FALSE;
+
+	/* else update fw1 first */
+	} else {
+		if (!fu_vli_device_spi_write (FU_VLI_DEVICE (self),
+					      fu_vli_device_get_offset (FU_VLI_DEVICE (self)),
+					      buf, bufsz, error))
+			return FALSE;
+		if (!fu_vli_device_spi_write (FU_VLI_DEVICE (self),
+					      sec_addr,
+					      buf, bufsz, error))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_vli_pd_device_write_firmware (FuDevice *device,
 				 FuFirmware *firmware,
 				 FwupdInstallFlags flags,
@@ -418,6 +477,11 @@ fu_vli_pd_device_write_firmware (FuDevice *device,
 		return FALSE;
 	if (!fu_vli_pd_device_write_reg (self, 0x0003, tmp | 0x44, error))
 		return FALSE;
+
+	/* dual image on VL103 */
+	if (fu_vli_device_get_kind (FU_VLI_DEVICE (device)) == FU_VLI_DEVICE_KIND_VL103 &&
+	    fu_device_has_flag (device, FWUPD_DEVICE_FLAG_DUAL_IMAGE))
+		return fu_vli_pd_device_write_dual_firmware (self, fw, error);
 
 	/* erase */
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_ERASE);
