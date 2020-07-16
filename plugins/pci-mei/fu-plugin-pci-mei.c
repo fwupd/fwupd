@@ -278,24 +278,28 @@ fu_plugin_add_security_attrs_bootguard (FuPlugin *plugin, FuSecurityAttrs *attrs
 
 	/* measured boot is not sufficient, verified is required */
 	if (!priv->hfsts6.fields.verified_boot) {
+		g_debug ("Verified boot invalid");
 		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
 
 	/* ACM protection required */
 	if (!priv->hfsts6.fields.force_boot_guard_acm) {
+		g_debug ("ACM protection not required");
 		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
 
 	/* policy must be to immediatly shutdown */
 	if (priv->hfsts6.fields.error_enforce_policy != ME_HFS_ENFORCEMENT_POLICY_SHUTDOWN_NOW) {
+		g_debug ("Policy is not immediately shutdown");
 		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
 
 	/* ensure vendor set the FPF OTP fuse */
 	if (!priv->hfsts6.fields.fpf_soc_lock) {
+		g_debug ("FPF OTP fuse not set");
 		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
