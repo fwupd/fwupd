@@ -2,3 +2,13 @@
 [DeviceInstanceId=USB\VID_18D1&PID_501A]
 Plugin = cros_ec
 Summary = Servo Micro (aka "uServo") Debug Board
+
+# Quiche
+[DeviceInstanceId=USB\VID_18D1&PID_5048]
+Plugin = cros_ec
+Summary = Quiche Reference Board
+
+# Gingerbread
+[DeviceInstanceId=USB\VID_18D1&PID_5049]
+Plugin = cros_ec
+Summary = Gingerbread Reference Board
