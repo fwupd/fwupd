@@ -2057,7 +2057,7 @@ main (int argc, char *argv[])
 		{ "show-all-devices", '\0', 0, G_OPTION_ARG_NONE, &priv->show_all_devices,
 			/* TRANSLATORS: command line option */
 			_("Show devices that are not updatable"), NULL },
-		{ "plugin-enable", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &plugin_glob,
+		{ "plugins", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &plugin_glob,
 			/* TRANSLATORS: command line option */
 			_("Manually enable specific plugins"), NULL },
 		{ "prepare", '\0', 0, G_OPTION_ARG_NONE, &priv->prepare_blob,
