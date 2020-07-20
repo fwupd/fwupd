@@ -29,9 +29,29 @@ fu_security_attr_get_name (FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack  */
 		return g_strdup (_("Pre-boot DMA protection"));
 	}
-	if (g_strcmp0 (appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD) == 0) {
+	if (g_strcmp0 (appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ENABLED) == 0) {
 		/* TRANSLATORS: Title: BootGuard is a trademark from Intel */
 		return g_strdup (_("Intel BootGuard"));
+	}
+	if (g_strcmp0 (appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED) == 0) {
+		/* TRANSLATORS: Title: BootGuard is a trademark from Intel,
+		 * verified boot refers to the way the boot process is verified */
+		return g_strdup (_("Intel BootGuard verified boot"));
+	}
+	if (g_strcmp0 (appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ACM) == 0) {
+		/* TRANSLATORS: Title: BootGuard is a trademark from Intel,
+		 * ACM means to verify the integrity of Initial Boot Block */
+		return g_strdup (_("Intel BootGuard ACM protected"));
+	}
+	if (g_strcmp0 (appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_POLICY) == 0) {
+		/* TRANSLATORS: Title: BootGuard is a trademark from Intel,
+		 * error policy is what to do on failure */
+		return g_strdup (_("Intel BootGuard error policy"));
+	}
+	if (g_strcmp0 (appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_OTP) == 0) {
+		/* TRANSLATORS: Title: BootGuard is a trademark from Intel,
+		 * OTP = one time programmable */
+		return g_strdup (_("Intel BootGuard OTP fuse"));
 	}
 	if (g_strcmp0 (appstream_id, FWUPD_SECURITY_ATTR_ID_INTEL_CET) == 0) {
 		/* TRANSLATORS: Title: CET = Control-flow Enforcement Technology */

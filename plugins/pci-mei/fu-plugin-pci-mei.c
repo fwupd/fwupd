@@ -259,13 +259,13 @@ fu_plugin_add_security_attrs_override_strap (FuPlugin *plugin, FuSecurityAttrs *
 }
 
 static void
-fu_plugin_add_security_attrs_bootguard (FuPlugin *plugin, FuSecurityAttrs *attrs)
+fu_plugin_add_security_attrs_bootguard_enabled (FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuPluginData *priv = fu_plugin_get_data (plugin);
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* create attr */
-	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD);
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ENABLED);
 	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
 	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT);
 	fu_security_attrs_append (attrs, attr);
@@ -276,11 +276,53 @@ fu_plugin_add_security_attrs_bootguard (FuPlugin *plugin, FuSecurityAttrs *attrs
 		return;
 	}
 
+	/* success */
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+}
+
+static void
+fu_plugin_add_security_attrs_bootguard_verified (FuPlugin *plugin, FuSecurityAttrs *attrs)
+{
+	FuPluginData *priv = fu_plugin_get_data (plugin);
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	/* disabled */
+	if (priv->hfsts6.fields.boot_guard_disable)
+		return;
+
+	/* create attr */
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED);
+	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
+	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT);
+	fu_security_attrs_append (attrs, attr);
+
 	/* measured boot is not sufficient, verified is required */
 	if (!priv->hfsts6.fields.verified_boot) {
 		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
+
+	/* success */
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
+}
+
+static void
+fu_plugin_add_security_attrs_bootguard_acm (FuPlugin *plugin, FuSecurityAttrs *attrs)
+{
+	FuPluginData *priv = fu_plugin_get_data (plugin);
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	/* disabled */
+	if (priv->hfsts6.fields.boot_guard_disable)
+		return;
+
+	/* create attr */
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ACM);
+	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
+	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT);
+	fu_security_attrs_append (attrs, attr);
 
 	/* ACM protection required */
 	if (!priv->hfsts6.fields.force_boot_guard_acm) {
@@ -288,11 +330,53 @@ fu_plugin_add_security_attrs_bootguard (FuPlugin *plugin, FuSecurityAttrs *attrs
 		return;
 	}
 
+	/* success */
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
+}
+
+static void
+fu_plugin_add_security_attrs_bootguard_policy (FuPlugin *plugin, FuSecurityAttrs *attrs)
+{
+	FuPluginData *priv = fu_plugin_get_data (plugin);
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	/* disabled */
+	if (priv->hfsts6.fields.boot_guard_disable)
+		return;
+
+	/* create attr */
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_POLICY);
+	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
+	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL);
+	fu_security_attrs_append (attrs, attr);
+
 	/* policy must be to immediatly shutdown */
 	if (priv->hfsts6.fields.error_enforce_policy != ME_HFS_ENFORCEMENT_POLICY_SHUTDOWN_NOW) {
 		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
+
+	/* success */
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
+}
+
+static void
+fu_plugin_add_security_attrs_bootguard_otp (FuPlugin *plugin, FuSecurityAttrs *attrs)
+{
+	FuPluginData *priv = fu_plugin_get_data (plugin);
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	/* disabled */
+	if (priv->hfsts6.fields.boot_guard_disable)
+		return;
+
+	/* create attr */
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_OTP);
+	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
+	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT);
+	fu_security_attrs_append (attrs, attr);
 
 	/* ensure vendor set the FPF OTP fuse */
 	if (!priv->hfsts6.fields.fpf_soc_lock) {
@@ -302,7 +386,17 @@ fu_plugin_add_security_attrs_bootguard (FuPlugin *plugin, FuSecurityAttrs *attrs
 
 	/* success */
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
+	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
+}
+
+static void
+fu_plugin_add_security_attrs_bootguard (FuPlugin *plugin, FuSecurityAttrs *attrs)
+{
+	fu_plugin_add_security_attrs_bootguard_enabled (plugin, attrs);
+	fu_plugin_add_security_attrs_bootguard_verified (plugin, attrs);
+	fu_plugin_add_security_attrs_bootguard_acm (plugin, attrs);
+	fu_plugin_add_security_attrs_bootguard_policy (plugin, attrs);
+	fu_plugin_add_security_attrs_bootguard_otp (plugin, attrs);
 }
 
 static void
