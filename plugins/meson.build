@@ -41,6 +41,7 @@ endif
 
 if get_option('gudev')
 subdir('ata')
+subdir('elantp')
 subdir('logitech-hidpp')
 subdir('optionrom')
 subdir('superio')
