@@ -94,6 +94,8 @@ fu_vli_common_device_kind_to_string (FuVliDeviceKind device_kind)
 		return "MSP430";
 	if (device_kind == FU_VLI_DEVICE_KIND_PS186)
 		return "PS186";
+	if (device_kind == FU_VLI_DEVICE_KIND_RTD21XX)
+		return "RTD21XX";
 	return NULL;
 }
 
@@ -150,6 +152,8 @@ fu_vli_common_device_kind_from_string (const gchar *device_kind)
 		return FU_VLI_DEVICE_KIND_MSP430;
 	if (g_strcmp0 (device_kind, "PS186") == 0)
 		return FU_VLI_DEVICE_KIND_PS186;
+	if (g_strcmp0 (device_kind, "RTD21XX") == 0)
+		return FU_VLI_DEVICE_KIND_RTD21XX;
 	return FU_VLI_DEVICE_KIND_UNKNOWN;
 }
 

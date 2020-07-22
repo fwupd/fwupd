@@ -16,6 +16,7 @@
 #include "fu-vli-usbhub-device.h"
 #include "fu-vli-usbhub-firmware.h"
 #include "fu-vli-usbhub-msp430-device.h"
+#include "fu-vli-usbhub-rtd21xx-device.h"
 #include "fu-vli-usbhub-pd-device.h"
 
 struct _FuVliUsbhubDevice
@@ -564,6 +565,31 @@ fu_vli_usbhub_device_msp430_setup (FuVliUsbhubDevice *self, GError **error)
 }
 
 static gboolean
+fu_vli_usbhub_device_rtd21xx_setup (FuVliUsbhubDevice *self, GError **error)
+{
+	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	/* add child */
+	dev = fu_vli_usbhub_rtd21xx_device_new (self);
+	if (!fu_device_probe (dev, error))
+		return FALSE;
+	if (!fu_device_setup (dev, &error_local)) {
+		if (g_error_matches (error_local,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND)) {
+			g_debug ("%s", error_local->message);
+		} else {
+			g_warning ("cannot create I²C device: %s",
+				   error_local->message);
+		}
+		return TRUE;
+	}
+	fu_device_add_child (FU_DEVICE (self), dev);
+	return TRUE;
+}
+
+static gboolean
 fu_vli_usbhub_device_setup (FuVliDevice *device, GError **error)
 {
 	FuVliUsbhubDevice *self = FU_VLI_USBHUB_DEVICE (device);
@@ -645,6 +671,10 @@ fu_vli_usbhub_device_setup (FuVliDevice *device, GError **error)
 	if (fu_usb_device_get_spec (FU_USB_DEVICE (self)) >= 0x0300 &&
 	    fu_device_has_custom_flag (FU_DEVICE (self), "has-msp430")) {
 		if (!fu_vli_usbhub_device_msp430_setup (self, error))
+			return FALSE;
+	}
+	if (fu_device_has_custom_flag (FU_DEVICE (self), "has-rtd21xx")) {
+		if (!fu_vli_usbhub_device_rtd21xx_setup (self, error))
 			return FALSE;
 	}
 
