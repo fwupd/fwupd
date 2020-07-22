@@ -1333,8 +1333,8 @@ fu_util_perhaps_refresh_remotes (FuUtilPrivate *priv, GError **error)
 		return TRUE;
 	}
 
-	if (!fu_util_check_oldest_remote (priv, &age_oldest, error))
-		return FALSE;
+	if (!fu_util_check_oldest_remote (priv, &age_oldest, NULL))
+		return TRUE;
 
 	/* metadata is new enough */
 	if (age_oldest < 60 * 60 * 24 * age_limit_days)
