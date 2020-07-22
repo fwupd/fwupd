@@ -36,6 +36,7 @@ typedef enum {
 	FU_VLI_DEVICE_KIND_VL820Q8		= 0xb820,
 	FU_VLI_DEVICE_KIND_MSP430		= 0xf430, /* guessed */
 	FU_VLI_DEVICE_KIND_PS186		= 0xf186, /* guessed */
+	FU_VLI_DEVICE_KIND_RTD21XX		= 0xff00, /* guessed */
 } FuVliDeviceKind;
 
 const gchar	*fu_vli_common_device_kind_to_string	(FuVliDeviceKind	 device_kind);

@@ -24,6 +24,7 @@ shared_module('fu_plugin_vli',
     'fu-vli-usbhub-i2c-common.c',
     'fu-vli-usbhub-msp430-device.c',
     'fu-vli-usbhub-pd-device.c',
+    'fu-vli-usbhub-rtd21xx-device.c',
   ],
   include_directories : [
     root_incdir,
