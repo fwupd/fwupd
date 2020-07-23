@@ -450,6 +450,7 @@ LIBFWUPD_1.4.1 {
 LIBFWUPD_1.4.5 {
   global:
     fwupd_client_download_bytes;
+    fwupd_client_ensure_networking;
     fwupd_client_install_bytes;
     fwupd_client_install_release;
     fwupd_client_refresh_remote;

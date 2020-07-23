@@ -260,7 +260,20 @@ fwupd_client_signal_cb (GDBusProxy *proxy,
 	g_debug ("Unknown signal name '%s' from %s", signal_name, sender_name);
 }
 
-static gboolean
+/**
+ * fwupd_client_ensure_networking:
+ * @client: A #FwupdClient
+ * @error: the #GError, or %NULL
+ *
+ * Sets up the client networking support ready for use. Most other download and
+ * upload methods call this automatically, and do you only need to call this if
+ * the session is being used outside the #FwupdClient.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.4.5
+ **/
+gboolean
 fwupd_client_ensure_networking (FwupdClient *client, GError **error)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (client);
