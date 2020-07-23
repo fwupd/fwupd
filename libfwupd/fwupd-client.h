@@ -231,5 +231,7 @@ GBytes		*fwupd_client_upload_bytes		(FwupdClient	*client,
 							 FwupdClientUploadFlags flags,
 							 GCancellable	*cancellable,
 							 GError		**error);
+gboolean	 fwupd_client_ensure_networking		(FwupdClient	*client,
+							 GError		**error);
 
 G_END_DECLS
