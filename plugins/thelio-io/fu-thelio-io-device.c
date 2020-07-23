@@ -22,6 +22,7 @@ fu_thelio_io_device_probe (FuDevice *device, GError **error)
 	const gchar *devpath;
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *buf = NULL;
+	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GUdevDevice) udev_device = NULL;
 
 	/* this is the atmel bootloader */
@@ -40,11 +41,19 @@ fu_thelio_io_device_probe (FuDevice *device, GError **error)
 		return FALSE;
 	}
 
+	/* pre-1.0.0 firmware versions do not implement this */
 	fn = g_build_filename (devpath, "revision", NULL);
-	if (!g_file_get_contents(fn, &buf, NULL, error))
-		return FALSE;
-
-	fu_device_set_version (device, (const gchar *) buf);
+	if (!g_file_get_contents (fn, &buf, NULL, &error_local)) {
+		if (g_error_matches (error_local, G_FILE_ERROR, G_FILE_ERROR_FAILED)) {
+			g_debug ("FW revision unimplemented: %s", error_local->message);
+			fu_device_set_version (device, "0.0.0");
+		} else {
+			g_propagate_error (error, g_steal_pointer (&error_local));
+			return FALSE;
+		}
+	} else {
+		fu_device_set_version (device, (const gchar *) buf);
+	}
 
 	return TRUE;
 }
