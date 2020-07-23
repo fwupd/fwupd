@@ -859,6 +859,10 @@ fu_udev_device_open (FuDevice *device, GError **error)
 		} else {
 			flags = O_RDONLY;
 		}
+#ifdef O_NONBLOCK
+		if (priv->flags & FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK)
+			flags |= O_NONBLOCK;
+#endif
 		priv->fd = g_open (priv->device_file, flags, 0);
 		if (priv->fd < 0) {
 			g_set_error (error,
