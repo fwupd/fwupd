@@ -1,4 +1,4 @@
-fwupd (1.3.11-2) UNRELEASED; urgency=medium
+fwupd (1.3.11-2) unstable; urgency=medium
 
   * Stop generating debian/control automatically at build time
   * Add build-dep on libflashrom-dev
