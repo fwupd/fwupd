@@ -29,10 +29,9 @@ else
 endif
 
 %:
-	[ -f debian/control ] || debian/rules regenerate_control
 	dh $@ --with gir
 
-override_dh_auto_clean: regenerate_control
+override_dh_auto_clean:
 	rm -fr obj-*
 	rm -fr debian/build
 ifeq (ubuntu,$(SB_STYLE))
