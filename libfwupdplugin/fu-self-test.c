@@ -1807,6 +1807,7 @@ fu_security_attrs_hsi_func (void)
 	fwupd_security_attr_set_plugin (attr, "test");
 	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_set_url (attr, "http://test");
 	fu_security_attrs_append (attrs, attr);
 	hsi2 = fu_security_attrs_calculate_hsi (attrs, FU_SECURITY_ATTRS_FLAG_NONE);
 	g_assert_cmpstr (hsi2, ==, "HSI:1");
@@ -1816,6 +1817,7 @@ fu_security_attrs_hsi_func (void)
 	attr = fwupd_security_attr_new ("org.fwupd.hsi.PRX");
 	fwupd_security_attr_set_plugin (attr, "test");
 	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT);
+	fwupd_security_attr_set_url (attr, "http://test");
 	fu_security_attrs_append (attrs, attr);
 	hsi3 = fu_security_attrs_calculate_hsi (attrs, FU_SECURITY_ATTRS_FLAG_NONE);
 	g_assert_cmpstr (hsi3, ==, "HSI:1");
@@ -1827,6 +1829,7 @@ fu_security_attrs_hsi_func (void)
 	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL);
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 	fwupd_security_attr_add_obsolete (attr, "org.fwupd.hsi.PRX");
+	fwupd_security_attr_set_url (attr, "http://test");
 	fu_security_attrs_append (attrs, attr);
 	fu_security_attrs_depsolve (attrs);
 	hsi4 = fu_security_attrs_calculate_hsi (attrs, FU_SECURITY_ATTRS_FLAG_NONE);
@@ -1838,6 +1841,7 @@ fu_security_attrs_hsi_func (void)
 	fwupd_security_attr_set_plugin (attr, "test");
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
+	fwupd_security_attr_set_url (attr, "http://test");
 	fu_security_attrs_append (attrs, attr);
 	hsi5 = fu_security_attrs_calculate_hsi (attrs, FU_SECURITY_ATTRS_FLAG_NONE);
 	g_assert_cmpstr (hsi5, ==, "HSI:3");
@@ -1849,6 +1853,7 @@ fu_security_attrs_hsi_func (void)
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES);
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ATTESTATION);
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_set_url (attr, "http://test");
 	fu_security_attrs_append (attrs, attr);
 	hsi6 = fu_security_attrs_calculate_hsi (attrs, FU_SECURITY_ATTRS_FLAG_NONE);
 	g_assert_cmpstr (hsi6, ==, "HSI:3+UA");
@@ -1858,6 +1863,7 @@ fu_security_attrs_hsi_func (void)
 	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_KERNEL_SWAP);
 	fwupd_security_attr_set_plugin (attr, "test");
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
+	fwupd_security_attr_set_url (attr, "http://test");
 	fu_security_attrs_append (attrs, attr);
 	hsi7 = fu_security_attrs_calculate_hsi (attrs, FU_SECURITY_ATTRS_FLAG_NONE);
 	g_assert_cmpstr (hsi7, ==, "HSI:3+UA!");
@@ -1867,6 +1873,7 @@ fu_security_attrs_hsi_func (void)
 	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_KERNEL_SWAP);
 	fwupd_security_attr_set_plugin (attr, "test");
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
+	fwupd_security_attr_set_url (attr, "http://test");
 	fu_security_attrs_append (attrs, attr);
 	hsi8 = fu_security_attrs_calculate_hsi (attrs, FU_SECURITY_ATTRS_FLAG_ADD_VERSION);
 	expected_hsi8 = g_strdup_printf ("HSI:3+UA! (v%d.%d.%d)",

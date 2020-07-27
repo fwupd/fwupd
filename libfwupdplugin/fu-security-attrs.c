@@ -17,6 +17,9 @@ struct _FuSecurityAttrs {
 	GPtrArray		*attrs;
 };
 
+/* probaly sane to *not* make this part of the ABI */
+#define FWUPD_SECURITY_ATTR_ID_DOC_URL		"https://fwupd.github.io/hsi.html"
+
 G_DEFINE_TYPE (FuSecurityAttrs, fu_security_attrs, G_TYPE_OBJECT)
 
 static void
@@ -59,6 +62,21 @@ fu_security_attrs_append (FuSecurityAttrs *self, FwupdSecurityAttr *attr)
 	if (fwupd_security_attr_get_plugin (attr) == NULL) {
 		g_warning ("%s has no plugin set",
 			   fwupd_security_attr_get_appstream_id (attr));
+	}
+
+	/* sanity check, and correctly prefix the URLs with the current mirror */
+	if (fwupd_security_attr_get_url (attr) == NULL) {
+		g_autofree gchar *url = NULL;
+		url = g_strdup_printf ("%s%s",
+				       FWUPD_SECURITY_ATTR_ID_DOC_URL,
+				       fwupd_security_attr_get_appstream_id (attr));
+		fwupd_security_attr_set_url (attr, url);
+	} else if (g_str_has_prefix (fwupd_security_attr_get_url (attr), "#")) {
+		g_autofree gchar *url = NULL;
+		url = g_strdup_printf ("%s%s",
+				       FWUPD_SECURITY_ATTR_ID_DOC_URL,
+				       fwupd_security_attr_get_url (attr));
+		fwupd_security_attr_set_url (attr, url);
 	}
 	g_ptr_array_add (self->attrs, g_object_ref (attr));
 }

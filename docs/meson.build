@@ -9,6 +9,7 @@ gnome.gtkdoc(
   ],
   content_files : [
     'tutorial.xml',
+    'hsi.xml',
   ],
   main_xml : 'fwupd-docs.xml',
   install : true
