@@ -113,9 +113,9 @@ typedef enum {
 
 #define FWUPD_SECURITY_ATTR_ID_ACPI_DMAR		"org.fwupd.hsi.AcpiDmar"		/* Since: 1.5.0 */
 #define FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM		"org.fwupd.hsi.EncryptedRam"		/* Since: 1.5.0 */
-#define FWUPD_SECURITY_ATTR_ID_FWUPD_ATTESTATION	"org.fwupd.hsi.FwupdAttestation"	/* Since: 1.5.0 */
-#define FWUPD_SECURITY_ATTR_ID_FWUPD_PLUGINS		"org.fwupd.hsi.FwupdPlugins"		/* Since: 1.5.0 */
-#define FWUPD_SECURITY_ATTR_ID_FWUPD_UPDATES		"org.fwupd.hsi.FwupdUpdates"		/* Since: 1.5.0 */
+#define FWUPD_SECURITY_ATTR_ID_FWUPD_ATTESTATION	"org.fwupd.hsi.Fwupd.Attestation"	/* Since: 1.5.0 */
+#define FWUPD_SECURITY_ATTR_ID_FWUPD_PLUGINS		"org.fwupd.hsi.Fwupd.Plugins"		/* Since: 1.5.0 */
+#define FWUPD_SECURITY_ATTR_ID_FWUPD_UPDATES		"org.fwupd.hsi.Fwupd.Updates"		/* Since: 1.5.0 */
 #define FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ENABLED	"org.fwupd.hsi.IntelBootguard.Enabled"	/* Since: 1.5.0 */
 #define FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED	"org.fwupd.hsi.IntelBootguard.Verified"	/* Since: 1.5.0 */
 #define FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ACM	"org.fwupd.hsi.IntelBootguard.Acm"	/* Since: 1.5.0 */
