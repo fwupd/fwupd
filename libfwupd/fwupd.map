@@ -469,6 +469,13 @@ LIBFWUPD_1.4.5 {
   local: *;
 } LIBFWUPD_1.4.1;
 
+LIBFWUPD_1.4.6 {
+  global:
+    fwupd_client_get_blocked_firmware;
+    fwupd_client_set_blocked_firmware;
+  local: *;
+} LIBFWUPD_1.4.5;
+
 LIBFWUPD_1.5.0 {
   global:
     fwupd_client_get_host_security_attrs;
@@ -508,4 +515,4 @@ LIBFWUPD_1.5.0 {
     fwupd_security_attr_to_string;
     fwupd_security_attr_to_variant;
   local: *;
-} LIBFWUPD_1.4.5;
+} LIBFWUPD_1.4.6;

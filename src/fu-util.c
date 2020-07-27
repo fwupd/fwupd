@@ -2311,6 +2311,162 @@ fu_util_check_polkit_actions (GError **error)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtilPrivate, fu_util_private_free)
 #pragma clang diagnostic pop
 
+static gchar *
+fu_util_get_history_checksum (FuUtilPrivate *priv, GError **error)
+{
+	const gchar *csum;
+	g_autoptr(FwupdDevice) device = NULL;
+	g_autoptr(FwupdRelease) release = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+
+	devices = fwupd_client_get_history (priv->client, NULL, error);
+	if (devices == NULL)
+		return NULL;
+	device = fu_util_prompt_for_device (priv, devices, error);
+	if (device == NULL)
+		return NULL;
+	release = fu_util_prompt_for_release (priv, fwupd_device_get_releases (device), error);
+	if (release == NULL)
+		return NULL;
+	csum = fwupd_checksum_get_best (fwupd_release_get_checksums (release));
+	if (csum == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "No suitable checksums");
+		return NULL;
+	}
+	return g_strdup (csum);
+}
+
+static gboolean
+fu_util_block_firmware (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	guint idx = 0;
+	g_autofree gchar *csum = NULL;
+	g_auto(GStrv) csums_new = NULL;
+	g_auto(GStrv) csums = NULL;
+
+	/* get existing checksums */
+	csums = fwupd_client_get_blocked_firmware (priv->client, priv->cancellable, error);
+	if (csums == NULL)
+		return FALSE;
+
+	/* get new value */
+	if (g_strv_length (values) == 0) {
+		csum = fu_util_get_history_checksum (priv, error);
+		if (csum == NULL)
+			return FALSE;
+	} else {
+		csum = g_strdup (values[0]);
+	}
+
+	/* ensure it's not already there */
+	if (g_strv_contains ((const gchar * const *) csums, csum)) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     /* TRANSLATORS: user selected something not possible */
+				     _("Firmware is already blocked"));
+		return FALSE;
+	}
+
+	/* TRANSLATORS: we will not offer this firmware to the user */
+	g_print ("%s %s\n", _("Blocking firmware:"), csum);
+
+	/* remove it from the new list */
+	csums_new = g_new0 (gchar *, g_strv_length (csums) + 2);
+	for (guint i = 0; csums[i] != NULL; i++) {
+		if (g_strcmp0 (csums[i], csum) != 0)
+			csums_new[idx++] = g_strdup (csums[i]);
+	}
+	csums_new[idx] = g_strdup (csum);
+	return fwupd_client_set_blocked_firmware (priv->client, csums_new,
+						  priv->cancellable, error);
+}
+
+static gboolean
+fu_util_unblock_firmware (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	guint idx = 0;
+	g_auto(GStrv) csums = NULL;
+	g_auto(GStrv) csums_new = NULL;
+	g_autofree gchar *csum = NULL;
+
+	/* get existing checksums */
+	csums = fwupd_client_get_blocked_firmware (priv->client, priv->cancellable, error);
+	if (csums == NULL)
+		return FALSE;
+
+	/* empty list */
+	if (g_strv_length (csums) == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     /* TRANSLATORS: nothing to show */
+				     _("There are no blocked firmware files"));
+		return FALSE;
+	}
+
+	/* get new value */
+	if (g_strv_length (values) == 0) {
+		csum = fu_util_get_history_checksum (priv, error);
+		if (csum == NULL)
+			return FALSE;
+	} else {
+		csum = g_strdup (values[0]);
+	}
+
+	/* ensure it's there */
+	if (!g_strv_contains ((const gchar * const *) csums, csum)) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     /* TRANSLATORS: user selected something not possible */
+				     _("Firmware is not already blocked"));
+		return FALSE;
+	}
+
+	/* TRANSLATORS: we will not offer this firmware to the user */
+	g_print ("%s %s\n", _("Unblocking firmware:"), csum);
+
+	/* remove it from the new list */
+	csums_new = g_new0 (gchar *, g_strv_length (csums));
+	for (guint i = 0; csums[i] != NULL; i++) {
+		if (g_strcmp0 (csums[i], csum) != 0)
+			csums_new[idx++] = g_strdup (csums[i]);
+	}
+	return fwupd_client_set_blocked_firmware (priv->client, csums_new,
+						  priv->cancellable, error);
+}
+
+static gboolean
+fu_util_get_blocked_firmware (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_auto(GStrv) csums = NULL;
+
+	/* get checksums */
+	csums = fwupd_client_get_blocked_firmware (priv->client, priv->cancellable, error);
+	if (csums == NULL)
+		return FALSE;
+
+	/* empty list */
+	if (g_strv_length (csums) == 0) {
+		/* TRANSLATORS: nothing to show */
+		g_print ("%s\n", _("There are no blocked firmware files"));
+		return TRUE;
+	}
+
+	/* TRANSLATORS: there follows a list of hashes */
+	g_print ("%s\n", _("Blocked firmware files:"));
+	for (guint i = 0; csums[i] != NULL; i++) {
+		g_print ("%u.\t%s\n", i + 1, csums[i]);
+	}
+
+	/* success */
+	return TRUE;
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -2557,6 +2713,24 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Gets the host security attributes."),
 		     fu_util_security);
+	fu_util_cmd_array_add (cmd_array,
+		     "block-firmware",
+		     "[CHECKSUM]",
+		     /* TRANSLATORS: command description */
+		     _("Blocks a specific firmware from being installed."),
+		     fu_util_block_firmware);
+	fu_util_cmd_array_add (cmd_array,
+		     "unblock-firmware",
+		     "[CHECKSUM]",
+		     /* TRANSLATORS: command description */
+		     _("Blocks a specific firmware from being installed."),
+		     fu_util_unblock_firmware);
+	fu_util_cmd_array_add (cmd_array,
+		     "get-blocked-firmware",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Gets the list of blocked firmware."),
+		     fu_util_get_blocked_firmware);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();

@@ -1,5 +1,6 @@
 _fwupdmgr_cmd_list=(
 	'activate'
+	'block-firmware'
 	'clear-history'
 	'clear-offline'
 	'clear-results'
@@ -7,6 +8,7 @@ _fwupdmgr_cmd_list=(
 	'downgrade'
 	'enable-remote'
 	'get-approved-firmware'
+	'get-blocked-firmware'
 	'get-details'
 	'get-devices'
 	'get-history'
@@ -25,6 +27,7 @@ _fwupdmgr_cmd_list=(
 	'security'
 	'set-approved-firmware'
 	'unlock'
+	'unblock-firmware'
 	'update'
 	'upgrade'
 	'verify'

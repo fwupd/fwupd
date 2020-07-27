@@ -20,7 +20,7 @@
 #include "fu-history.h"
 #include "fu-mutex.h"
 
-#define FU_HISTORY_CURRENT_SCHEMA_VERSION	5
+#define FU_HISTORY_CURRENT_SCHEMA_VERSION	6
 
 static void fu_history_finalize			 (GObject *object);
 
@@ -181,6 +181,8 @@ fu_history_create_database (FuHistory *self, GError **error)
 			 "protocol TEXT DEFAULT NULL);"
 			 "CREATE TABLE IF NOT EXISTS approved_firmware ("
 			 "checksum TEXT);"
+			 "CREATE TABLE IF NOT EXISTS blocked_firmware ("
+			 "checksum TEXT);"
 			 "COMMIT;", NULL, NULL, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
@@ -269,6 +271,22 @@ fu_history_migrate_database_v4 (FuHistory *self, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_history_migrate_database_v5 (FuHistory *self, GError **error)
+{
+	gint rc;
+	rc = sqlite3_exec (self->db,
+			   "CREATE TABLE IF NOT EXISTS blocked_firmware (checksum TEXT);",
+			   NULL, NULL, NULL);
+	if (rc != SQLITE_OK) {
+		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
+			     "Failed to create table: %s",
+			     sqlite3_errmsg (self->db));
+		return FALSE;
+	}
+	return TRUE;
+}
+
 /* returns 0 if database is not initialised */
 static guint
 fu_history_get_schema_version (FuHistory *self)
@@ -315,15 +333,25 @@ fu_history_create_or_migrate (FuHistory *self, guint schema_ver, GError **error)
 			return FALSE;
 		if (!fu_history_migrate_database_v4 (self, error))
 			return FALSE;
+		if (!fu_history_migrate_database_v5 (self, error))
+			return FALSE;
 	} else if (schema_ver == 3) {
 		g_debug ("migrating v%u database by altering", schema_ver);
 		if (!fu_history_migrate_database_v3 (self, error))
 			return FALSE;
 		if (!fu_history_migrate_database_v4 (self, error))
 			return FALSE;
+		if (!fu_history_migrate_database_v5 (self, error))
+			return FALSE;
 	} else if (schema_ver == 4) {
 		g_debug ("migrating v%u database by altering", schema_ver);
 		if (!fu_history_migrate_database_v4 (self, error))
+			return FALSE;
+		if (!fu_history_migrate_database_v5 (self, error))
+			return FALSE;
+	} else if (schema_ver == 5) {
+		g_debug ("migrating v%u database by altering", schema_ver);
+		if (!fu_history_migrate_database_v5 (self, error))
 			return FALSE;
 	} else {
 		/* this is probably okay, but return an error if we ever delete
@@ -1056,6 +1084,139 @@ fu_history_add_approved_firmware (FuHistory *self,
 	g_return_val_if_fail (locker != NULL, FALSE);
 	rc = sqlite3_prepare_v2 (self->db,
 				 "INSERT INTO approved_firmware (checksum) "
+				 "VALUES (?1)", -1, &stmt, NULL);
+	if (rc != SQLITE_OK) {
+		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
+			     "Failed to prepare SQL to insert checksum: %s",
+			     sqlite3_errmsg (self->db));
+		return FALSE;
+	}
+	sqlite3_bind_text (stmt, 1, checksum, -1, SQLITE_STATIC);
+	return fu_history_stmt_exec (self, stmt, NULL, error);
+}
+/**
+ * fu_history_get_blocked_firmware:
+ * @self: A #FuHistory
+ * @error: A #GError or NULL
+ *
+ * Returns blocked firmware records.
+ *
+ * Returns: (transfer full) (element-type gchar *): records
+ *
+ * Since: 1.4.6
+ **/
+GPtrArray *
+fu_history_get_blocked_firmware (FuHistory *self, GError **error)
+{
+	gint rc;
+	g_autoptr(GRWLockReaderLocker) locker = NULL;
+	g_autoptr(GPtrArray) array = NULL;
+	g_autoptr(sqlite3_stmt) stmt = NULL;
+
+	g_return_val_if_fail (FU_IS_HISTORY (self), NULL);
+
+	/* lazy load */
+	if (self->db == NULL) {
+		if (!fu_history_load (self, error))
+			return NULL;
+	}
+
+	/* get all the blocked firmware */
+	locker = g_rw_lock_reader_locker_new (&self->db_mutex);
+	g_return_val_if_fail (locker != NULL, NULL);
+	rc = sqlite3_prepare_v2 (self->db,
+				 "SELECT checksum FROM blocked_firmware;",
+				 -1, &stmt, NULL);
+	if (rc != SQLITE_OK) {
+		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
+			     "Failed to prepare SQL to get checksum: %s",
+			     sqlite3_errmsg (self->db));
+		return NULL;
+	}
+	array = g_ptr_array_new_with_free_func (g_free);
+	while ((rc = sqlite3_step (stmt)) == SQLITE_ROW) {
+		const gchar *tmp = (const gchar *) sqlite3_column_text (stmt, 0);
+		g_ptr_array_add (array, g_strdup (tmp));
+	}
+	if (rc != SQLITE_DONE) {
+		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_WRITE,
+			     "failed to execute prepared statement: %s",
+			     sqlite3_errmsg (self->db));
+		return NULL;
+	}
+	return g_steal_pointer (&array);
+}
+
+/**
+ * fu_history_clear_blocked_firmware:
+ * @self: A #FuHistory
+ * @error: A #GError or NULL
+ *
+ * Clear all blocked firmware records
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 1.4.6
+ **/
+gboolean
+fu_history_clear_blocked_firmware (FuHistory *self, GError **error)
+{
+	gint rc;
+	g_autoptr(sqlite3_stmt) stmt = NULL;
+	g_autoptr(GRWLockWriterLocker) locker = NULL;
+
+	g_return_val_if_fail (FU_IS_HISTORY (self), FALSE);
+
+	/* lazy load */
+	if (!fu_history_load (self, error))
+		return FALSE;
+
+	/* remove entries */
+	locker = g_rw_lock_writer_locker_new (&self->db_mutex);
+	g_return_val_if_fail (locker != NULL, FALSE);
+	rc = sqlite3_prepare_v2 (self->db,
+				 "DELETE FROM blocked_firmware;",
+				 -1, &stmt, NULL);
+	if (rc != SQLITE_OK) {
+		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
+			     "Failed to prepare SQL to delete blocked firmware: %s",
+			     sqlite3_errmsg (self->db));
+		return FALSE;
+	}
+	return fu_history_stmt_exec (self, stmt, NULL, error);
+}
+
+/**
+ * fu_history_add_blocked_firmware:
+ * @self: A #FuHistory
+ * @checksum: a string
+ * @error: A #GError or NULL
+ *
+ * Add an blocked firmware record to the database
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 1.4.6
+ **/
+gboolean
+fu_history_add_blocked_firmware (FuHistory *self, const gchar *checksum, GError **error)
+{
+	gint rc;
+	g_autoptr(sqlite3_stmt) stmt = NULL;
+	g_autoptr(GRWLockWriterLocker) locker = NULL;
+
+	g_return_val_if_fail (FU_IS_HISTORY (self), FALSE);
+	g_return_val_if_fail (checksum != NULL, FALSE);
+
+	/* lazy load */
+	if (!fu_history_load (self, error))
+		return FALSE;
+
+	/* add */
+	locker = g_rw_lock_writer_locker_new (&self->db_mutex);
+	g_return_val_if_fail (locker != NULL, FALSE);
+	rc = sqlite3_prepare_v2 (self->db,
+				 "INSERT INTO blocked_firmware (checksum) "
 				 "VALUES (?1)", -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL,
