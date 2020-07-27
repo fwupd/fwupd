@@ -43,3 +43,10 @@ gboolean	 fu_history_add_approved_firmware	(FuHistory	*self,
 							 GError		**error);
 GPtrArray	*fu_history_get_approved_firmware	(FuHistory	*self,
 							 GError		**error);
+gboolean	 fu_history_clear_blocked_firmware	(FuHistory	*self,
+							 GError		**error);
+gboolean	 fu_history_add_blocked_firmware	(FuHistory	*self,
+							 const gchar	*checksum,
+							 GError		**error);
+GPtrArray	*fu_history_get_blocked_firmware	(FuHistory	*self,
+							 GError		**error);

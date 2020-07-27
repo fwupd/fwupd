@@ -99,6 +99,7 @@ struct _FuEngine
 	GHashTable		*runtime_versions;
 	GHashTable		*compile_versions;
 	GHashTable		*approved_firmware;
+	GHashTable		*blocked_firmware;	/* (nullable) */
 	GHashTable		*firmware_gtypes;
 	gchar			*host_machine_id;
 	JcatContext		*jcat_context;
@@ -520,6 +521,7 @@ fu_engine_modify_config (FuEngine *self, const gchar *key, const gchar *value, G
 		"ArchiveSizeMax",
 		"BlacklistDevices",
 		"BlacklistPlugins",
+		"BlockedFirmware",
 		"IdleTimeout",
 		"VerboseDomains",
 		"UpdateMotd",
@@ -3913,6 +3915,21 @@ fu_engine_check_release_is_approved (FuEngine *self, FwupdRelease *rel)
 }
 
 static gboolean
+fu_engine_check_release_is_blocked (FuEngine *self, FwupdRelease *rel)
+{
+	GPtrArray *csums = fwupd_release_get_checksums (rel);
+	if (self->blocked_firmware == NULL)
+		return FALSE;
+	for (guint i = 0; i < csums->len; i++) {
+		const gchar *csum = g_ptr_array_index (csums, i);
+		g_debug ("checking %s against blocked list", csum);
+		if (g_hash_table_lookup (self->blocked_firmware, csum) != NULL)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+static gboolean
 fu_engine_add_releases_for_device_component (FuEngine *self,
 					     FuEngineRequest *request,
 					     FuDevice *device,
@@ -3991,6 +4008,10 @@ fu_engine_add_releases_for_device_component (FuEngine *self,
 					   fmt) < 0) {
 			fwupd_release_add_flag (rel, FWUPD_RELEASE_FLAG_BLOCKED_VERSION);
 		}
+
+		/* manually blocked */
+		if (fu_engine_check_release_is_blocked (self, rel))
+			fwupd_release_add_flag (rel, FWUPD_RELEASE_FLAG_BLOCKED_APPROVAL);
 
 		/* check if remote is whitelisting firmware */
 		remote_id = fwupd_release_get_remote_id (rel);
@@ -4269,6 +4290,56 @@ void
 fu_engine_add_approved_firmware (FuEngine *self, const gchar *checksum)
 {
 	g_hash_table_add (self->approved_firmware, g_strdup (checksum));
+}
+
+GPtrArray *
+fu_engine_get_blocked_firmware (FuEngine *self)
+{
+	GPtrArray *checksums = g_ptr_array_new_with_free_func (g_free);
+	if (self->blocked_firmware != NULL) {
+		g_autoptr(GList) keys = g_hash_table_get_keys (self->blocked_firmware);
+		for (GList *l = keys; l != NULL; l = l->next) {
+			const gchar *csum = l->data;
+			g_ptr_array_add (checksums, g_strdup (csum));
+		}
+	}
+	return checksums;
+}
+
+void
+fu_engine_add_blocked_firmware (FuEngine *self, const gchar *checksum)
+{
+	if (self->blocked_firmware == NULL) {
+		self->blocked_firmware = g_hash_table_new_full (g_str_hash,
+								g_str_equal,
+								g_free,
+								NULL);
+	}
+	g_hash_table_add (self->blocked_firmware, g_strdup (checksum));
+}
+
+gboolean
+fu_engine_set_blocked_firmware (FuEngine *self, GPtrArray *checksums, GError **error)
+{
+	/* update in-memory hash */
+	if (self->blocked_firmware != NULL) {
+		g_hash_table_unref (self->blocked_firmware);
+		self->blocked_firmware = NULL;
+	}
+	for (guint i = 0; i < checksums->len; i++) {
+		const gchar *csum = g_ptr_array_index (checksums, i);
+		fu_engine_add_blocked_firmware (self, csum);
+	}
+
+	/* save database */
+	if (!fu_history_clear_blocked_firmware (self->history, error))
+		return FALSE;
+	for (guint i = 0; i < checksums->len; i++) {
+		const gchar *csum = g_ptr_array_index (checksums, i);
+		if (!fu_history_add_blocked_firmware (self->history, csum, error))
+			return FALSE;
+	}
+	return TRUE;
 }
 
 gchar *
@@ -5641,7 +5712,8 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 {
 	FuRemoteListLoadFlags remote_list_flags = FU_REMOTE_LIST_LOAD_FLAG_NONE;
 	FuQuirksLoadFlags quirks_flags = FU_QUIRKS_LOAD_FLAG_NONE;
-	g_autoptr(GPtrArray) checksums = NULL;
+	g_autoptr(GPtrArray) checksums_approved = NULL;
+	g_autoptr(GPtrArray) checksums_blocked = NULL;
 #ifndef _WIN32
 	g_autoptr(GError) error_local = NULL;
 #endif
@@ -5677,20 +5749,32 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	/* create client certificate */
 	fu_engine_ensure_client_certificate (self);
 
-	/* get hardcoded approved firmware */
-	checksums = fu_config_get_approved_firmware (self->config);
-	for (guint i = 0; i < checksums->len; i++) {
-		const gchar *csum = g_ptr_array_index (checksums, i);
+	/* get hardcoded approved and blocked firmware */
+	checksums_approved = fu_config_get_approved_firmware (self->config);
+	for (guint i = 0; i < checksums_approved->len; i++) {
+		const gchar *csum = g_ptr_array_index (checksums_approved, i);
 		fu_engine_add_approved_firmware (self, csum);
+	}
+	checksums_blocked = fu_config_get_blocked_firmware (self->config);
+	for (guint i = 0; i < checksums_blocked->len; i++) {
+		const gchar *csum = g_ptr_array_index (checksums_blocked, i);
+		fu_engine_add_blocked_firmware (self, csum);
 	}
 
 	/* get extra firmware saved to the database */
-	checksums = fu_history_get_approved_firmware (self->history, error);
-	if (checksums == NULL)
+	checksums_approved = fu_history_get_approved_firmware (self->history, error);
+	if (checksums_approved == NULL)
 		return FALSE;
-	for (guint i = 0; i < checksums->len; i++) {
-		const gchar *csum = g_ptr_array_index (checksums, i);
+	for (guint i = 0; i < checksums_approved->len; i++) {
+		const gchar *csum = g_ptr_array_index (checksums_approved, i);
 		fu_engine_add_approved_firmware (self, csum);
+	}
+	checksums_blocked = fu_history_get_blocked_firmware (self->history, error);
+	if (checksums_blocked == NULL)
+		return FALSE;
+	for (guint i = 0; i < checksums_blocked->len; i++) {
+		const gchar *csum = g_ptr_array_index (checksums_blocked, i);
+		fu_engine_add_blocked_firmware (self, csum);
 	}
 
 	/* set up idle exit */
@@ -5961,6 +6045,8 @@ fu_engine_finalize (GObject *obj)
 #endif
 	if (self->coldplug_id != 0)
 		g_source_remove (self->coldplug_id);
+	if (self->blocked_firmware != NULL)
+		g_hash_table_unref (self->blocked_firmware);
 
 	g_free (self->host_machine_id);
 	g_object_unref (self->idle);
