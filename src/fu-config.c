@@ -30,6 +30,7 @@ struct _FuConfig
 	GPtrArray		*disabled_devices;	/* (element-type utf-8) */
 	GPtrArray		*disabled_plugins;	/* (element-type utf-8) */
 	GPtrArray		*approved_firmware;	/* (element-type utf-8) */
+	GPtrArray		*blocked_firmware;	/* (element-type utf-8) */
 	guint64			 archive_size_max;
 	guint			 idle_timeout;
 	gchar			*config_file;
@@ -52,6 +53,7 @@ fu_config_reload (FuConfig *self, GError **error)
 	guint64 archive_size_max;
 	guint idle_timeout;
 	g_auto(GStrv) approved_firmware = NULL;
+	g_auto(GStrv) blocked_firmware = NULL;
 	g_auto(GStrv) devices = NULL;
 	g_auto(GStrv) plugins = NULL;
 	g_autofree gchar *domains = NULL;
@@ -103,6 +105,20 @@ fu_config_reload (FuConfig *self, GError **error)
 		for (guint i = 0; approved_firmware[i] != NULL; i++) {
 			g_ptr_array_add (self->approved_firmware,
 					 g_strdup (approved_firmware[i]));
+		}
+	}
+
+	/* get blocked firmware */
+	g_ptr_array_set_size (self->blocked_firmware, 0);
+	blocked_firmware = g_key_file_get_string_list (keyfile,
+						       "fwupd",
+						       "BlockedFirmware",
+						       NULL, /* length */
+						       NULL);
+	if (blocked_firmware != NULL) {
+		for (guint i = 0; blocked_firmware[i] != NULL; i++) {
+			g_ptr_array_add (self->blocked_firmware,
+					 g_strdup (blocked_firmware[i]));
 		}
 	}
 
@@ -227,6 +243,13 @@ fu_config_get_disabled_devices (FuConfig *self)
 	return self->disabled_devices;
 }
 
+GPtrArray *
+fu_config_get_blocked_firmware (FuConfig *self)
+{
+	g_return_val_if_fail (FU_IS_CONFIG (self), NULL);
+	return self->blocked_firmware;
+}
+
 guint64
 fu_config_get_archive_size_max (FuConfig *self)
 {
@@ -282,6 +305,7 @@ fu_config_init (FuConfig *self)
 	self->disabled_devices = g_ptr_array_new_with_free_func (g_free);
 	self->disabled_plugins = g_ptr_array_new_with_free_func (g_free);
 	self->approved_firmware = g_ptr_array_new_with_free_func (g_free);
+	self->blocked_firmware = g_ptr_array_new_with_free_func (g_free);
 }
 
 static void
@@ -294,6 +318,7 @@ fu_config_finalize (GObject *obj)
 	g_ptr_array_unref (self->disabled_devices);
 	g_ptr_array_unref (self->disabled_plugins);
 	g_ptr_array_unref (self->approved_firmware);
+	g_ptr_array_unref (self->blocked_firmware);
 	g_free (self->config_file);
 
 	G_OBJECT_CLASS (fu_config_parent_class)->finalize (obj);
