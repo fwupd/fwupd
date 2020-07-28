@@ -23,6 +23,21 @@
 #define BULK_RECV_TIMEOUT_MS		5000
 
 #define UPDATE_DONE			0xB007AB1E
+#define UPDATE_EXTRA_CMD		0xB007AB1F
+
+enum update_extra_command {
+        UPDATE_EXTRA_CMD_IMMEDIATE_RESET = 0,
+        UPDATE_EXTRA_CMD_JUMP_TO_RW = 1,
+        UPDATE_EXTRA_CMD_STAY_IN_RO = 2,
+        UPDATE_EXTRA_CMD_UNLOCK_RW = 3,
+        UPDATE_EXTRA_CMD_UNLOCK_ROLLBACK = 4,
+        UPDATE_EXTRA_CMD_INJECT_ENTROPY = 5,
+        UPDATE_EXTRA_CMD_PAIR_CHALLENGE = 6,
+        UPDATE_EXTRA_CMD_TOUCHPAD_INFO = 7,
+        UPDATE_EXTRA_CMD_TOUCHPAD_DEBUG = 8,
+        UPDATE_EXTRA_CMD_CONSOLE_READ_INIT = 9,
+        UPDATE_EXTRA_CMD_CONSOLE_READ_NEXT = 10,
+};
 
 struct _FuCrosEcUsbDevice {
 	FuUsbDevice			parent_instance;
@@ -209,6 +224,44 @@ fu_cros_ec_usb_device_flush (FuDevice *device, gpointer user_data,
 
 	/* success */
 	return TRUE;
+}
+
+/*
+ * Channel TPM extension/vendor command over USB. The payload of the USB frame
+ * in this case consists of the 2 byte subcommand code concatenated with the
+ * command body. The caller needs to indicate if a response is expected, and
+ * if it is - of what maximum size.
+ */
+static gboolean
+fu_cros_ec_usb_ext_cmd (FuDevice *device, guint16 subcommand,
+			gpointer cmd_body, gsize body_size,
+			gpointer resp, gsize *resp_size,
+			gboolean allow_less, GError **error)
+{
+	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE (device);
+	guint16 *frame_ptr;
+	gsize usb_msg_size = sizeof (struct update_frame_header) +
+			     sizeof (subcommand) + body_size;
+	g_autofree struct update_frame_header *ufh = g_malloc0 (usb_msg_size);
+
+	ufh->block_size = GUINT32_TO_BE (usb_msg_size);
+	ufh->cmd.block_digest = 0;
+	ufh->cmd.block_base = GUINT32_TO_BE (UPDATE_EXTRA_CMD);
+	frame_ptr = (guint16 *)(ufh + 1);
+	*frame_ptr = GUINT16_TO_BE (subcommand);
+
+	if (body_size != 0) {
+		gsize offset =  sizeof (struct update_frame_header) + sizeof (subcommand);
+		if (!fu_memcpy_safe ((guint8 *) ufh, usb_msg_size, offset,
+				     (const guint8 *) cmd_body, body_size,
+				     0x0, body_size, error))
+			return FALSE;
+	}
+
+	return fu_cros_ec_usb_device_do_xfer (self, (guint8 *)ufh, usb_msg_size,
+					      (guint8 *)resp,
+					      resp_size != NULL ? *resp_size : 0,
+					      TRUE, NULL, error);
 }
 
 static gboolean
@@ -489,6 +542,73 @@ fu_cros_ec_usb_device_send_done (FuDevice *device)
 }
 
 static gboolean
+fu_cros_ec_usb_device_send_subcommand (FuDevice *device, guint16 subcommand,
+				       gpointer cmd_body, gsize body_size,
+				       gpointer resp, gsize *resp_size,
+				       gboolean allow_less, GError **error)
+{
+	fu_cros_ec_usb_device_send_done (device);
+
+	if (!fu_cros_ec_usb_ext_cmd (device, subcommand,
+				     cmd_body, body_size,
+				     resp, resp_size, FALSE, error)) {
+		g_prefix_error (error,
+				"failed to send subcommand %" G_GUINT16_FORMAT ": ",
+				subcommand);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_cros_ec_usb_device_reset_to_ro (FuDevice *device, GError **error)
+{
+	guint8 response;
+	guint16 subcommand = UPDATE_EXTRA_CMD_STAY_IN_RO;
+	guint8 command_body[2]; /* Max command body size. */
+	gsize command_body_size = 0;
+	gsize response_size = 1;
+
+	/* send subcommand to remain in RO */
+	if (!fu_cros_ec_usb_device_send_subcommand (device, subcommand, command_body,
+				     command_body_size, &response,
+				     &response_size, FALSE, error))
+		return FALSE;
+
+	response_size = 1;
+	subcommand = UPDATE_EXTRA_CMD_IMMEDIATE_RESET;
+	if (!fu_cros_ec_usb_device_send_subcommand  (device, subcommand, command_body,
+				     command_body_size, &response,
+				     &response_size, FALSE, error)) {
+		/* failure here is ok */
+		g_clear_error (error);
+		return TRUE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_cros_ec_usb_device_jump_to_rw (FuDevice *device)
+{
+	guint8 response;
+	guint16 subcommand = UPDATE_EXTRA_CMD_JUMP_TO_RW;
+	guint8 command_body[2]; /* Max command body size. */
+	gsize command_body_size = 0;
+	gsize response_size = 1;
+
+	fu_cros_ec_usb_device_send_subcommand  (device, subcommand, command_body,
+						command_body_size, &response,
+						&response_size, FALSE, NULL);
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_cros_ec_usb_device_write_firmware (FuDevice *device,
 				      FuFirmware *firmware,
 				      FwupdInstallFlags flags,
@@ -578,6 +698,33 @@ fu_cros_ec_usb_device_prepare_firmware (FuDevice *device,
 	return g_steal_pointer (&firmware);
 }
 
+static gboolean
+fu_cros_ec_usb_device_attach (FuDevice *self, GError **error)
+{
+	fu_device_set_remove_delay (self, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_cros_ec_usb_device_jump_to_rw (self);
+
+	fu_device_set_status (self, FWUPD_STATUS_DEVICE_RESTART);
+	fu_device_add_flag (self, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_cros_ec_usb_device_detach (FuDevice *self, GError **error)
+{
+	fu_device_set_remove_delay (self, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	if (!fu_cros_ec_usb_device_reset_to_ro (self, error))
+		return FALSE;
+
+	fu_device_set_status (self, FWUPD_STATUS_DEVICE_RESTART);
+	fu_device_add_flag (self, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+
+	/* success */
+	return TRUE;
+}
+
 static void
 fu_cros_ec_usb_device_init (FuCrosEcUsbDevice *device)
 {
@@ -619,6 +766,8 @@ fu_cros_ec_usb_device_class_init (FuCrosEcUsbDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
+	klass_device->attach = fu_cros_ec_usb_device_attach;
+	klass_device->detach = fu_cros_ec_usb_device_detach;
 	klass_device->prepare_firmware = fu_cros_ec_usb_device_prepare_firmware;
 	klass_device->setup = fu_cros_ec_usb_device_setup;
 	klass_device->to_string = fu_cros_ec_usb_device_to_string;
