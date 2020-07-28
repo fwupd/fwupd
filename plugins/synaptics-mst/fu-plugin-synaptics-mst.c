@@ -21,7 +21,7 @@ struct FuPluginData {
 	guint			 drm_changed_id;
 };
 
-/* see https://github.com/hughsie/fwupd/issues/1121 for more details */
+/* see https://github.com/fwupd/fwupd/issues/1121 for more details */
 static gboolean
 fu_synaptics_mst_check_amdgpu_safe (GError **error)
 {
