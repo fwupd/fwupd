@@ -3,15 +3,17 @@ Cypress support
 
 Introduction
 ------------
+
 This plugin can flash firmware on Cypress CCGx USB-C controller family of
-devices used in dock solutions.
+devices used in docks.
 
-Supported devices:
+Supported Protocols
+-------------------
 
- * Lenovo Gen2 Dock
- * Lenovo Hybrid Dock
- * HP USB-C Dock G5
- * HP USB-C/A Universal Dock G2
+This plugin supports the following protocol IDs:
+
+ * com.cypress.ccgx
+ * com.cypress.ccgx.dmc
 
 Device Flash
 ============
@@ -52,11 +54,10 @@ The `CY_PD_JUMP_TO_ALT_FW_CMD_SIG` command is allowed only in asymmetric FW, but
 `CY_PD_DEVICE_RESET_CMD_SIG` is allowed in both asymmetric FW and symmetric FW.
 
 DMC(Dock Management Controller) Composite Firmware
----------------------------------------------------
+--------------------------------------------------
 
 In composite firmware topology, a single firmware image contains metadata and
 firmware images of multiple devices including DMC itself in a dock system.
-
 
 Firmware Format
 ===============
@@ -71,34 +72,28 @@ blobs in cyacd file format. See https://community.cypress.com/docs/DOC-10562
 for more details.
 
 DMC composite firmware format
-------------------------------
+-----------------------------
 
 The daemon will decompress the cabinet archive and extract several firmware
 blobs in a combined image file format. See 4.4.1 Single Composite
 (Combined) Dock Image at https://www.cypress.com/file/387471/download
 for more details.
 
-This plugin supports the following protocol ID:
-
- * com.cypress.ccgx
-
 GUID Generation
 ---------------
 
 These devices use the standard USB DeviceInstanceId values, e.g.
 
- * `USB\VID_17EF&PID_A38F`
- * `USB\VID_03F0&PID_046B`
+ * `USB\VID_1234&PID_5678`
 
-For cyacd firmware device,
- They additionally add other instance IDs which corresponds to the silicon ID,
- application ID and device mode, e.g.
+Devices also have additional instance IDs which corresponds to the silicon ID,
+application ID and device mode, e.g.
 
- * `USB\VID_17EF&PID_A38F&SID_1234`
- * `USB\VID_17EF&PID_A38F&SID_1234&APP_5678`
- * `USB\VID_17EF&PID_A38F&SID_1234&APP_5678&MODE_FW2`
+ * `USB\VID_1234&PID_5678&SID_9ABC`
+ * `USB\VID_1234&PID_5678&SID_9ABC&APP_DEF1`
+ * `USB\VID_1234&PID_5678&SID_9ABC&APP_DEF1&MODE_FW2`
 
 Vendor ID Security
 ------------------
 
-The vendor ID is set from the USB vendor, for example set to `USB:0x17EF`
+The vendor ID is set from the USB vendor, for example set to `USB:0x04B4`
