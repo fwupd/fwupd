@@ -38,7 +38,7 @@ _fwupdtool_opts=(
 	'--allow-older'
 	'--force'
 	'--show-all-devices'
-	'--plugin-enable'
+	'--plugins'
 	'--prepare'
 	'--cleanup'
 	'--filter'
@@ -82,7 +82,7 @@ _fwupdtool()
 	command=${COMP_WORDS[1]}
 
 	case $prev in
-	--plugin-enable)
+	--plugins)
 		_show_plugins
 		return 0
 		;;
