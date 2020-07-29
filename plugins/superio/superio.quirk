@@ -6,6 +6,11 @@ SuperioChipsets=IT8587
 [HwId=f00d8c4e-dce2-51c3-89d6-6cbc5fc5cdbb]
 SuperioChipsets=IT8587
 
+# Star LabTop Mk IV
+[HwID=6ed215ec-75d5-54e9-9c60-7708b325b904]
+SuperioChipsets=IT8987
+InstallDuration=20
+
 # Star LabTop Mk3
 [HwId=3dc52d2c-9e9b-5ba5-b10d-9ba1eb11dacc]
 SuperioChipsets=IT8987
