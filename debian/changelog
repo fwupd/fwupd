@@ -1,6 +1,7 @@
 fwupd (1.4.5-1) UNRELEASED; urgency=medium
 
   * New upstream version (1.4.5)
+  * Drop flashrom patch, now upstream
 
  -- Mario Limonciello <mario.limonciello@dell.com>  Thu, 30 Jul 2020 08:33:22 -0500
 
