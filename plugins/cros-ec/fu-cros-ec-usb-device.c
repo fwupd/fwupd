@@ -49,7 +49,10 @@ struct _FuCrosEcUsbDevice {
 	guint32				writeable_offset;
 	guint16				protocol_version;
 	guint16				header_type;
-	struct cros_ec_version		version;
+	struct cros_ec_version		version;	/* version of other region */
+	struct cros_ec_version		active_version; /* version of active region */
+	gchar 				configuration[FU_CROS_EC_STRLEN];
+	gboolean			in_bootloader;
 };
 
 G_DEFINE_TYPE (FuCrosEcUsbDevice, fu_cros_ec_usb_device, FU_TYPE_USB_DEVICE)
@@ -65,6 +68,41 @@ typedef struct {
 	gsize offset;
 	gsize payload_size;
 } FuCrosEcUsbBlockInfo;
+
+static gboolean
+fu_cros_ec_usb_device_get_configuration (FuCrosEcUsbDevice *self,
+					 GError **error)
+{
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
+	guint8 index;
+	g_autofree gchar *configuration = NULL;
+
+#if G_USB_CHECK_VERSION(0,3,5)
+	index = g_usb_device_get_configuration_index (usb_device);
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "this version of GUsb is not supported");
+	return FALSE;
+#endif
+	configuration = g_usb_device_get_string_descriptor (usb_device,
+							    index,
+							    error);
+	if (configuration == NULL)
+		return FALSE;
+
+	if (g_strlcpy (self->configuration, configuration, FU_CROS_EC_STRLEN) == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "empty iConfiguration");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
 
 static gboolean
 fu_cros_ec_usb_device_find_interface (FuUsbDevice *device,
@@ -301,6 +339,7 @@ fu_cros_ec_usb_device_setup (FuDevice *device, GError **error)
 	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE (device);
 	guint32 error_code;
 	START_RESP start_resp;
+	g_auto(GStrv) config_split = NULL;
 
 	/* flush all data from endpoint to recover in case of error */
 	if (!fu_device_retry (device, fu_cros_ec_usb_device_flush,
@@ -351,6 +390,32 @@ fu_cros_ec_usb_device_setup (FuDevice *device, GError **error)
 	self->targ.common.min_rollback = GINT32_FROM_BE (start_resp.rpdu.common.min_rollback);
 	self->targ.common.key_version = GUINT32_FROM_BE (start_resp.rpdu.common.key_version);
 
+	/* get active version string and running region from iConfiguration */
+	if (!fu_cros_ec_usb_device_get_configuration (self, error))
+		return FALSE;
+	config_split = g_strsplit (self->configuration, ":", 2);
+	if (g_strv_length (config_split) < 2) {
+		/* no prefix found so fall back to offset */
+		self->in_bootloader = self->writeable_offset != 0x0;
+		if (!fu_cros_ec_parse_version (self->configuration,
+					       &self->active_version, error)) {
+			g_prefix_error (error,
+					"failed parsing device's version: %32s: ",
+					self->configuration);
+			return FALSE;
+		}
+	} else {
+		self->in_bootloader = g_strcmp0 ("RO", config_split[0]) == 0;
+		if (!fu_cros_ec_parse_version (config_split[1],
+					       &self->active_version, error)) {
+			g_prefix_error (error,
+					"failed parsing device's version: %32s: ",
+					config_split[1]);
+			return FALSE;
+		}
+	}
+
+	/* get the other region's version string from targ */
 	if (!fu_cros_ec_parse_version (self->targ.common.version,
 				       &self->version, error)) {
 		g_prefix_error (error,
@@ -359,7 +424,17 @@ fu_cros_ec_usb_device_setup (FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	fu_device_set_version (FU_DEVICE (device), self->version.triplet);
+	if (self->in_bootloader) {
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+		fu_device_set_version (FU_DEVICE (device), self->version.triplet);
+		fu_device_set_version_bootloader (FU_DEVICE (device),
+						  self->active_version.triplet);
+	} else {
+		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+		fu_device_set_version (FU_DEVICE (device), self->active_version.triplet);
+		fu_device_set_version_bootloader (FU_DEVICE (device),
+						  self->version.triplet);
+	}
 	fu_device_add_instance_id (FU_DEVICE (device), self->version.boardname);
 
 	/* success */
