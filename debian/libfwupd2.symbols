@@ -36,6 +36,9 @@ libfwupd.so.2 libfwupd2 #MINVER#
  LIBFWUPD_1.3.4@LIBFWUPD_1.3.4 1.3.4
  LIBFWUPD_1.3.6@LIBFWUPD_1.3.6 1.3.6
  LIBFWUPD_1.3.7@LIBFWUPD_1.3.7 1.3.7
+ LIBFWUPD_1.4.0@LIBFWUPD_1.4.0 1.4.0
+ LIBFWUPD_1.4.1@LIBFWUPD_1.4.1 1.4.1
+ LIBFWUPD_1.4.5@LIBFWUPD_1.4.5 1.4.5
  fwupd_build_history_report_json@LIBFWUPD_1.0.4 1.0.4
  fwupd_build_machine_id@LIBFWUPD_1.0.4 1.0.4
  fwupd_build_user_agent@LIBFWUPD_1.0.3 1.0.3
@@ -46,12 +49,15 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_client_activate@LIBFWUPD_1.2.6 1.2.6
  fwupd_client_clear_results@LIBFWUPD_0.7.0 1.0.0
  fwupd_client_connect@LIBFWUPD_0.7.1 1.0.0
+ fwupd_client_download_bytes@LIBFWUPD_1.4.5 1.4.5
+ fwupd_client_ensure_networking@LIBFWUPD_1.4.5 1.4.5
  fwupd_client_get_approved_firmware@LIBFWUPD_1.2.6 1.2.6
  fwupd_client_get_daemon_interactive@LIBFWUPD_1.3.4 1.3.4
  fwupd_client_get_daemon_version@LIBFWUPD_0.9.6 1.0.0
  fwupd_client_get_details@LIBFWUPD_1.0.0 1.0.0
  fwupd_client_get_device_by_id@LIBFWUPD_0.9.3 1.0.0
  fwupd_client_get_devices@LIBFWUPD_0.9.2 1.0.0
+ fwupd_client_get_devices_by_guid@LIBFWUPD_1.4.1 1.4.1
  fwupd_client_get_downgrades@LIBFWUPD_0.9.8 1.0.0
  fwupd_client_get_history@LIBFWUPD_1.0.4 1.0.4
  fwupd_client_get_host_machine_id@LIBFWUPD_1.3.2 1.3.2
@@ -66,14 +72,22 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_client_get_type@LIBFWUPD_0.7.0 1.0.0
  fwupd_client_get_upgrades@LIBFWUPD_0.9.8 1.0.0
  fwupd_client_install@LIBFWUPD_0.7.0 1.0.0
+ fwupd_client_install_bytes@LIBFWUPD_1.4.5 1.4.5
+ fwupd_client_install_release@LIBFWUPD_1.4.5 1.4.5
  fwupd_client_modify_config@LIBFWUPD_1.2.8 1.2.8
  fwupd_client_modify_device@LIBFWUPD_1.0.4 1.0.4
  fwupd_client_modify_remote@LIBFWUPD_0.9.8 1.0.0
  fwupd_client_new@LIBFWUPD_0.7.0 1.0.0
+ fwupd_client_refresh_remote@LIBFWUPD_1.4.5 1.4.5
  fwupd_client_self_sign@LIBFWUPD_1.2.6 1.2.6
  fwupd_client_set_approved_firmware@LIBFWUPD_1.2.6 1.2.6
+ fwupd_client_set_feature_flags@LIBFWUPD_1.4.5 1.4.5
+ fwupd_client_set_user_agent@LIBFWUPD_1.4.5 1.4.5
+ fwupd_client_set_user_agent_for_package@LIBFWUPD_1.4.5 1.4.5
  fwupd_client_unlock@LIBFWUPD_0.7.0 1.0.0
  fwupd_client_update_metadata@LIBFWUPD_1.0.0 1.0.0
+ fwupd_client_update_metadata_bytes@LIBFWUPD_1.4.5 1.4.5
+ fwupd_client_upload_bytes@LIBFWUPD_1.4.5 1.4.5
  fwupd_client_verify@LIBFWUPD_0.7.0 1.0.0
  fwupd_client_verify_update@LIBFWUPD_0.8.0 1.0.0
  fwupd_device_add_checksum@LIBFWUPD_0.9.3 1.0.0
@@ -109,21 +123,26 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_device_get_release_default@LIBFWUPD_0.9.8 1.0.0
  fwupd_device_get_releases@LIBFWUPD_0.9.8 1.0.0
  fwupd_device_get_serial@LIBFWUPD_1.1.2 1.1.2
+ fwupd_device_get_status@LIBFWUPD_1.4.0 1.4.0
  fwupd_device_get_summary@LIBFWUPD_0.9.3 1.0.0
  fwupd_device_get_type@LIBFWUPD_0.9.3 1.0.0
  fwupd_device_get_update_error@LIBFWUPD_0.9.8 1.0.0
+ fwupd_device_get_update_image@LIBFWUPD_1.4.5 1.4.5
  fwupd_device_get_update_message@LIBFWUPD_1.2.4 1.2.4
  fwupd_device_get_update_state@LIBFWUPD_0.9.8 1.0.0
  fwupd_device_get_vendor@LIBFWUPD_0.9.3 1.0.0
  fwupd_device_get_vendor_id@LIBFWUPD_0.9.4 1.0.0
  fwupd_device_get_version@LIBFWUPD_0.9.3 1.0.0
  fwupd_device_get_version_bootloader@LIBFWUPD_0.9.3 1.0.0
+ fwupd_device_get_version_bootloader_raw@LIBFWUPD_1.4.0 1.4.0
  fwupd_device_get_version_format@LIBFWUPD_1.2.9 1.2.9
  fwupd_device_get_version_lowest@LIBFWUPD_0.9.3 1.0.0
+ fwupd_device_get_version_lowest_raw@LIBFWUPD_1.4.0 1.4.0
  fwupd_device_get_version_raw@LIBFWUPD_1.3.6 1.3.6
  fwupd_device_has_flag@LIBFWUPD_0.9.3 1.0.0
  fwupd_device_has_guid@LIBFWUPD_0.9.3 1.0.0
  fwupd_device_has_instance_id@LIBFWUPD_1.2.5 1.2.5
+ fwupd_device_id_is_valid@LIBFWUPD_1.4.1 1.4.1
  fwupd_device_incorporate@LIBFWUPD_1.1.0 1.1.0
  fwupd_device_new@LIBFWUPD_0.9.3 1.0.0
  fwupd_device_remove_flag@LIBFWUPD_0.9.3 1.0.0
@@ -140,16 +159,20 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_device_set_plugin@LIBFWUPD_1.0.0 1.0.0
  fwupd_device_set_protocol@LIBFWUPD_1.3.6 1.3.6
  fwupd_device_set_serial@LIBFWUPD_1.1.2 1.1.2
+ fwupd_device_set_status@LIBFWUPD_1.4.0 1.4.0
  fwupd_device_set_summary@LIBFWUPD_0.9.3 1.0.0
  fwupd_device_set_update_error@LIBFWUPD_0.9.8 1.0.0
+ fwupd_device_set_update_image@LIBFWUPD_1.4.5 1.4.5
  fwupd_device_set_update_message@LIBFWUPD_1.2.4 1.2.4
  fwupd_device_set_update_state@LIBFWUPD_0.9.8 1.0.0
  fwupd_device_set_vendor@LIBFWUPD_0.9.3 1.0.0
  fwupd_device_set_vendor_id@LIBFWUPD_0.9.4 1.0.0
  fwupd_device_set_version@LIBFWUPD_0.9.3 1.0.0
  fwupd_device_set_version_bootloader@LIBFWUPD_0.9.3 1.0.0
+ fwupd_device_set_version_bootloader_raw@LIBFWUPD_1.4.0 1.4.0
  fwupd_device_set_version_format@LIBFWUPD_1.2.9 1.2.9
  fwupd_device_set_version_lowest@LIBFWUPD_0.9.3 1.0.0
+ fwupd_device_set_version_lowest_raw@LIBFWUPD_1.4.0 1.4.0
  fwupd_device_set_version_raw@LIBFWUPD_1.3.6 1.3.6
  fwupd_device_to_json@LIBFWUPD_1.2.6 1.2.6
  fwupd_device_to_string@LIBFWUPD_0.9.3 1.0.0
@@ -158,6 +181,8 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_error_from_string@LIBFWUPD_0.7.0 1.0.0
  fwupd_error_quark@LIBFWUPD_0.1.1 1.0.0
  fwupd_error_to_string@LIBFWUPD_0.7.0 1.0.0
+ fwupd_feature_flag_from_string@LIBFWUPD_1.4.5 1.4.5
+ fwupd_feature_flag_to_string@LIBFWUPD_1.4.5 1.4.5
  fwupd_get_os_release@LIBFWUPD_1.0.7 1.0.7
  fwupd_guid_from_string@LIBFWUPD_1.2.5 1.2.5
  fwupd_guid_hash_data@LIBFWUPD_1.2.5 1.2.5
@@ -179,6 +204,7 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_release_get_appstream_id@LIBFWUPD_0.9.3 1.0.0
  fwupd_release_get_categories@LIBFWUPD_1.2.7 1.2.7
  fwupd_release_get_checksums@LIBFWUPD_0.9.3 1.0.0
+ fwupd_release_get_created@LIBFWUPD_1.4.0 1.4.0
  fwupd_release_get_description@LIBFWUPD_0.9.3 1.0.0
  fwupd_release_get_detach_caption@LIBFWUPD_1.3.3 1.3.3
  fwupd_release_get_detach_image@LIBFWUPD_1.3.3 1.3.3
@@ -200,7 +226,9 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_release_get_summary@LIBFWUPD_0.9.3 1.0.0
  fwupd_release_get_trust_flags@LIBFWUPD_0.9.8 1.0.0
  fwupd_release_get_type@LIBFWUPD_0.9.3 1.0.0
+ fwupd_release_get_update_image@LIBFWUPD_1.4.5 1.4.5
  fwupd_release_get_update_message@LIBFWUPD_1.2.4 1.2.4
+ fwupd_release_get_urgency@LIBFWUPD_1.4.0 1.4.0
  fwupd_release_get_uri@LIBFWUPD_0.9.3 1.0.0
  fwupd_release_get_vendor@LIBFWUPD_0.9.3 1.0.0
  fwupd_release_get_version@LIBFWUPD_0.9.3 1.0.0
@@ -210,6 +238,7 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_release_new@LIBFWUPD_0.9.3 1.0.0
  fwupd_release_remove_flag@LIBFWUPD_1.2.6 1.2.6
  fwupd_release_set_appstream_id@LIBFWUPD_0.9.3 1.0.0
+ fwupd_release_set_created@LIBFWUPD_1.4.0 1.4.0
  fwupd_release_set_description@LIBFWUPD_0.9.3 1.0.0
  fwupd_release_set_detach_caption@LIBFWUPD_1.3.3 1.3.3
  fwupd_release_set_detach_image@LIBFWUPD_1.3.3 1.3.3
@@ -227,13 +256,17 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_release_set_source_url@LIBFWUPD_1.2.4 1.2.4
  fwupd_release_set_summary@LIBFWUPD_0.9.3 1.0.0
  fwupd_release_set_trust_flags@LIBFWUPD_0.9.8 1.0.0
+ fwupd_release_set_update_image@LIBFWUPD_1.4.5 1.4.5
  fwupd_release_set_update_message@LIBFWUPD_1.2.4 1.2.4
+ fwupd_release_set_urgency@LIBFWUPD_1.4.0 1.4.0
  fwupd_release_set_uri@LIBFWUPD_0.9.3 1.0.0
  fwupd_release_set_vendor@LIBFWUPD_0.9.3 1.0.0
  fwupd_release_set_version@LIBFWUPD_0.9.3 1.0.0
  fwupd_release_to_json@LIBFWUPD_1.2.6 1.2.6
  fwupd_release_to_string@LIBFWUPD_0.9.3 1.0.0
  fwupd_release_to_variant@LIBFWUPD_1.0.0 1.0.0
+ fwupd_release_urgency_from_string@LIBFWUPD_1.4.0 1.4.0
+ fwupd_release_urgency_to_string@LIBFWUPD_1.4.0 1.4.0
  fwupd_remote_array_from_variant@LIBFWUPD_1.2.10 1.2.10
  fwupd_remote_build_firmware_uri@LIBFWUPD_0.9.7 1.0.0
  fwupd_remote_from_variant@LIBFWUPD_1.0.0 1.0.0
@@ -264,6 +297,8 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_remote_kind_from_string@LIBFWUPD_0.9.6 1.0.0
  fwupd_remote_kind_to_string@LIBFWUPD_0.9.6 1.0.0
  fwupd_remote_load_from_filename@LIBFWUPD_0.9.3 1.0.0
+ fwupd_remote_load_signature@LIBFWUPD_1.4.0 1.4.0
+ fwupd_remote_load_signature_bytes@LIBFWUPD_1.4.5 1.4.5
  fwupd_remote_new@LIBFWUPD_0.9.3 1.0.0
  fwupd_remote_set_agreement@LIBFWUPD_1.0.7 1.0.7
  fwupd_remote_set_mtime@LIBFWUPD_0.9.5 1.0.0
