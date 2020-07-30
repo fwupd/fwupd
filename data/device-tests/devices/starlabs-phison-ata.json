@@ -1,0 +1,12 @@
+{
+  "name": "Star Labs Phison ATA",
+  "guids": [
+    "a8e0709c-5214-53df-bd41-5faf36394126"
+  ],
+  "releases": [
+    {
+      "version": "SBFM61.3",
+      "file": "af3c38880938de1d86b3ab72f193c975df51868e-SBFM.cab"
+    }
+  ]
+}

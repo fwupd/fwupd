@@ -130,8 +130,7 @@ fu_wac_module_refresh (FuWacModule *self, GError **error)
 
 	/* get from hardware */
 	if (!fu_wac_device_get_feature_report (parent_device, buf, sizeof(buf),
-					       FU_WAC_DEVICE_FEATURE_FLAG_ALLOW_TRUNC |
-					       FU_WAC_DEVICE_FEATURE_FLAG_NO_DEBUG,
+					       FU_HID_DEVICE_FLAG_ALLOW_TRUNC,
 					       error)) {
 		g_prefix_error (error, "failed to refresh status: ");
 		return FALSE;
@@ -152,9 +151,11 @@ fu_wac_module_refresh (FuWacModule *self, GError **error)
 	if (priv->command != buf[2] || priv->status != buf[3]) {
 		priv->command = buf[2];
 		priv->status = buf[3];
-		g_debug ("command: %s, status: %s",
-			 fu_wac_module_command_to_string (priv->command),
-			 fu_wac_module_status_to_string (priv->status));
+		if (g_getenv ("FWUPD_WACOM_VERBOSE") != NULL) {
+			g_debug ("command: %s, status: %s",
+				 fu_wac_module_command_to_string (priv->command),
+				 fu_wac_module_status_to_string (priv->status));
+		}
 	}
 
 	/* success */
@@ -177,22 +178,20 @@ fu_wac_module_set_feature (FuWacModule *self,
 			 [2] = command,
 			 [3 ... FU_WAC_PACKET_LEN - 1] = 0xff };
 
+	/* sanity check */
+	g_return_val_if_fail (FU_IS_WAC_MODULE (self), FALSE);
+	g_return_val_if_fail (FU_IS_WAC_DEVICE (parent_device), FALSE);
+
 	/* verify the size of the blob */
 	if (blob != NULL) {
 		data = g_bytes_get_data (blob, &len);
-		if (len > 509) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "Submodule SetFeature blob larger than "
-				     "buffer %" G_GSIZE_FORMAT, len);
+		if (!fu_memcpy_safe (buf, sizeof(buf), 0x03,	/* dst */
+				     data, len, 0x0,		/* src */
+				     len, error)) {
+			g_prefix_error (error, "Submodule blob larger than buffer: ");
 			return FALSE;
 		}
 	}
-
-	/* build packet */
-	if (len > 0)
-		memcpy (&buf[3], data, len);
 
 	/* tell the daemon the current status */
 	switch (command) {
@@ -211,7 +210,7 @@ fu_wac_module_set_feature (FuWacModule *self,
 
 	/* send to hardware */
 	if (!fu_wac_device_set_feature_report (parent_device, buf, len + 3,
-					       FU_WAC_DEVICE_FEATURE_FLAG_ALLOW_TRUNC,
+					       FU_HID_DEVICE_FLAG_ALLOW_TRUNC,
 					       error)) {
 		g_prefix_error (error, "failed to set module feature: ");
 		return FALSE;
@@ -255,6 +254,16 @@ fu_wac_module_set_feature (FuWacModule *self,
 	return TRUE;
 }
 
+static gboolean
+fu_wac_module_cleanup (FuDevice *device, FwupdInstallFlags flags, GError **error)
+{
+	FuDevice *parent = fu_device_get_parent (device);
+	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new (parent, error);
+	if (locker == NULL)
+		return FALSE;
+	return fu_device_cleanup (parent, flags, error);
+}
+
 static void
 fu_wac_module_get_property (GObject *object, guint prop_id,
 			    GValue *value, GParamSpec *pspec)
@@ -296,6 +305,9 @@ fu_wac_module_set_property (GObject *object, guint prop_id,
 static void
 fu_wac_module_init (FuWacModule *self)
 {
+	fu_device_set_protocol (FU_DEVICE (self), "com.wacom.usb");
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 }
 
 static void
@@ -362,4 +374,5 @@ fu_wac_module_class_init (FuWacModuleClass *klass)
 	object_class->constructed = fu_wac_module_constructed;
 	object_class->finalize = fu_wac_module_finalize;
 	klass_device->to_string = fu_wac_module_to_string;
+	klass_device->cleanup = fu_wac_module_cleanup;
 }

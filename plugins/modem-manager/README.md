@@ -32,6 +32,8 @@ as defined e.g. in the 'flashfile.xml' file. Every file included in the CAB that
 is not listed in the associated 'flashfile.xml' will be totally ignored during
 the fastboot upgrade procedure.
 
+Update Protocol: com.google.fastboot
+
 Update method: qmi-pdc
 ----------------------
 
@@ -45,3 +47,4 @@ operation will always be run before the QMI operation, so that e.g. the full
 partition where the MCFG files are stored can be wiped out before installing
 the new ones.
 
+Update protocol: com.qualcomm.qmi_pdc

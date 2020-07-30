@@ -4,20 +4,7 @@ if build_daemon
   )
 endif
 
-keyring_deps = []
-keyring_src = []
 systemd_src = []
-
-if get_option('gpg')
-  keyring_src += 'fu-keyring-gpg.c'
-  keyring_deps += gpgme
-  keyring_deps += gpgerror
-endif
-
-if get_option('pkcs7')
-  keyring_src += 'fu-keyring-pkcs7.c'
-  keyring_deps += gnutls
-endif
 
 if get_option('systemd')
   systemd_src += 'fu-systemd.c'
@@ -105,6 +92,7 @@ fwupdoffline = executable(
     giounix,
     gudev,
     gusb,
+    libjsonglib,
     libxmlb,
     soup,
     sqlite,
@@ -132,17 +120,15 @@ fwupdtool = executable(
   export_dynamic : true,
   sources : [
     'fu-tool.c',
-    keyring_src,
     'fu-config.c',
     'fu-debug.c',
     'fu-device-list.c',
     'fu-engine.c',
     'fu-engine-helper.c',
+    'fu-engine-request.c',
     'fu-history.c',
     'fu-idle.c',
     'fu-install-task.c',
-    'fu-keyring.c',
-    'fu-keyring-result.c',
     'fu-keyring-utils.c',
     'fu-plugin-list.c',
     'fu-progressbar.c',
@@ -156,7 +142,7 @@ fwupdtool = executable(
     fwupdplugin_incdir,
   ],
   dependencies : [
-    keyring_deps,
+    libjcat,
     libxmlb,
     libgcab,
     giounix,
@@ -233,17 +219,15 @@ executable(
   resources_src,
   fu_hash,
   sources : [
-    keyring_src,
     'fu-config.c',
     'fu-debug.c',
     'fu-device-list.c',
     'fu-engine.c',
     'fu-engine-helper.c',
+    'fu-engine-request.c',
     'fu-history.c',
     'fu-idle.c',
     'fu-install-task.c',
-    'fu-keyring.c',
-    'fu-keyring-result.c',
     'fu-keyring-utils.c',
     'fu-main.c',
     'fu-plugin-list.c',
@@ -256,7 +240,7 @@ executable(
     fwupdplugin_incdir,
   ],
   dependencies : [
-    keyring_deps,
+    libjcat,
     libxmlb,
     libgcab,
     giounix,
@@ -272,7 +256,7 @@ executable(
   ],
   link_with : [
     fwupd,
-    fwupdplugin
+    fwupdplugin,
   ],
   c_args : [
     '-DFU_OFFLINE_DESTDIR=""',
@@ -293,16 +277,14 @@ if get_option('tests')
     test_deps,
     fu_hash,
     sources : [
-      keyring_src,
       'fu-config.c',
       'fu-device-list.c',
       'fu-engine.c',
       'fu-engine-helper.c',
+      'fu-engine-request.c',
       'fu-history.c',
       'fu-idle.c',
       'fu-install-task.c',
-      'fu-keyring.c',
-      'fu-keyring-result.c',
       'fu-keyring-utils.c',
       'fu-plugin-list.c',
       'fu-progressbar.c',
@@ -316,7 +298,7 @@ if get_option('tests')
       fwupdplugin_incdir,
     ],
     dependencies : [
-      keyring_deps,
+      libjcat,
       libxmlb,
       libgcab,
       giounix,

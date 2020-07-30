@@ -69,7 +69,6 @@ gboolean	 fu_uefi_get_bitmap_size	(const guint8	*buf,
 gboolean	 fu_uefi_get_framebuffer_size	(guint32	*width,
 						 guint32	*height,
 						 GError		**error);
-gboolean	 fu_uefi_secure_boot_enabled	(void);
 gchar		*fu_uefi_guess_esp_path		(GError		**error);
 gboolean	 fu_uefi_check_esp_path		(const gchar	*path,
 						 GError		**error);

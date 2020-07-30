@@ -12,7 +12,10 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+
+#ifdef HAVE_TSS2
 #include <tss2/tss2_esys.h>
+#endif
 
 #include "fwupd-common.h"
 #include "fu-plugin-dell.h"
@@ -231,26 +234,6 @@ fu_plugin_dell_inject_fake_data (FuPlugin *plugin,
 	data->can_switch_modes = TRUE;
 }
 
-static FwupdVersionFormat
-fu_plugin_dell_get_version_format (FuPlugin *plugin)
-{
-	const gchar *content;
-	const gchar *quirk;
-	g_autofree gchar *group = NULL;
-
-	content = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER);
-	if (content == NULL)
-		return FWUPD_VERSION_FORMAT_TRIPLET;
-
-	/* any quirks match */
-	group = g_strdup_printf ("SmbiosManufacturer=%s", content);
-	quirk = fu_plugin_lookup_quirk_by_id (plugin, group,
-					      FU_QUIRKS_UEFI_VERSION_FORMAT);
-	if (quirk == NULL)
-		return FWUPD_VERSION_FORMAT_TRIPLET;
-	return fwupd_version_format_from_string (quirk);
-}
-
 static gboolean
 fu_plugin_dell_capsule_supported (FuPlugin *plugin)
 {
@@ -297,8 +280,9 @@ fu_plugin_dock_node (FuPlugin *plugin, const gchar *platform,
 	fu_device_add_icon (dev, "computer");
 	fu_device_add_guid (dev, component_guid);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
+	fu_device_set_version_format (dev, version_format);
 	if (version != NULL) {
-		fu_device_set_version (dev, version, version_format);
+		fu_device_set_version (dev, version);
 		if (fu_plugin_dell_capsule_supported (plugin)) {
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
@@ -318,7 +302,7 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 			    GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	FwupdVersionFormat version_format;
+	FwupdVersionFormat version_format = FWUPD_VERSION_FORMAT_DELL_BIOS;
 	guint16 pid;
 	guint16 vid;
 	const gchar *query_str;
@@ -371,7 +355,6 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 	g_debug ("Dock cable type: %" G_GUINT32_FORMAT, dock_info->cable_type);
 	g_debug ("Dock location: %d", dock_info->location);
 	g_debug ("Dock component count: %d", dock_info->component_count);
-	version_format = fu_plugin_dell_get_version_format (plugin);
 
 	for (guint i = 0; i < dock_info->component_count; i++) {
 		g_autofree gchar *fw_str = NULL;
@@ -530,6 +513,7 @@ fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 	return TRUE;
 }
 
+#ifdef HAVE_TSS2
 static void Esys_Finalize_autoptr_cleanup (ESYS_CONTEXT *esys_context)
 {
 	Esys_Finalize (&esys_context);
@@ -571,10 +555,12 @@ fu_plugin_dell_get_tpm_capability (ESYS_CONTEXT *ctx, guint32 query)
 
 	return fu_common_strstrip (result);
 }
+#endif
 
 static gboolean
 fu_plugin_dell_add_tpm_model (FuDevice *dev, GError **error)
 {
+#ifdef HAVE_TSS2
 	TSS2_RC rc;
 	const gchar *base = "DELL-TPM";
 	g_autoptr(ESYS_CONTEXT) ctx = NULL;
@@ -637,7 +623,7 @@ fu_plugin_dell_add_tpm_model (FuDevice *dev, GError **error)
 	fu_device_add_instance_id (dev, v1_v2);
 	fu_device_add_instance_id (dev, v1_v2_v3);
 	fu_device_add_instance_id (dev, v1_v2_v3_v4);
-
+#endif
 	return TRUE;
 }
 
@@ -738,7 +724,8 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	fu_device_set_vendor_id (dev, "PCI:0x1028");
 	fu_device_set_name (dev, pretty_tpm_name);
 	fu_device_set_summary (dev, "Platform TPM device");
-	fu_device_set_version (dev, version_str, FWUPD_VERSION_FORMAT_QUAD);
+	fu_device_set_version_format (dev, FWUPD_VERSION_FORMAT_QUAD);
+	fu_device_set_version (dev, version_str);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_icon (dev, "computer");

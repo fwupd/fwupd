@@ -9,29 +9,11 @@ The package is now in unstable in the 1.2-4 package.
  contrib/ci/dependencies.xml     | 14 ++++++++++++++
  2 files changed, 18 insertions(+), 14 deletions(-)
 
-diff --git a/contrib/ci/Dockerfile-debian.in b/contrib/ci/Dockerfile-debian.in
-index d4c07989..b82e11ab 100644
---- a/contrib/ci/Dockerfile-debian.in
-+++ b/contrib/ci/Dockerfile-debian.in
-@@ -9,11 +9,11 @@ Package: *\n\
- Pin: release a=unstable\n\
- Pin-Priority: 800\n\
- \n\
--Package: lintian\n\
-+Package: libflashrom-dev\n\
- Pin: release a=unstable\n\
- Pin-Priority: 901\n\
- \n\
--Package: tpm-udev\n\
-+Package: libflashrom1\n\
- Pin: release a=unstable\n\
- Pin-Priority: 901\n'\
-  > /etc/apt/preferences
-diff --git a/contrib/ci/dependencies.xml b/contrib/ci/dependencies.xml
-index 407bc1c0..559530d6 100644
---- a/contrib/ci/dependencies.xml
-+++ b/contrib/ci/dependencies.xml
-@@ -328,6 +328,20 @@
+Index: fwupd/contrib/ci/dependencies.xml
+===================================================================
+--- fwupd.orig/contrib/ci/dependencies.xml
++++ fwupd/contrib/ci/dependencies.xml
+@@ -341,6 +341,20 @@
        <package variant="x86_64" />
      </distro>
    </dependency>
@@ -52,6 +34,3 @@ index 407bc1c0..559530d6 100644
    <dependency type="build" id="gcab">
      <distro id="centos">
        <package />
--- 
-2.25.0
-

@@ -42,12 +42,14 @@ const gchar	*fwupd_checksum_get_by_kind		(GPtrArray	*checksums,
 							 GChecksumType	 kind);
 GChecksumType	 fwupd_checksum_guess_kind		(const gchar	*checksum);
 gchar		*fwupd_build_user_agent			(const gchar	*package_name,
-							 const gchar	*package_version);
+							 const gchar	*package_version)
+G_DEPRECATED_FOR(fwupd_client_set_user_agent_for_package);
 gchar		*fwupd_build_machine_id			(const gchar 	*salt,
 							 GError		**error);
 GHashTable	*fwupd_get_os_release			(GError		**error);
 gchar		*fwupd_build_history_report_json	(GPtrArray	*devices,
 							 GError		**error);
+gboolean	 fwupd_device_id_is_valid		(const gchar	*device_id);
 #ifndef __GI_SCANNER__
 gchar		*fwupd_guid_to_string			(const fwupd_guid_t *guid,
 							 FwupdGuidFlags	 flags);

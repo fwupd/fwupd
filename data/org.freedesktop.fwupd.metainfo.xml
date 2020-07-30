@@ -30,65 +30,141 @@
   </content_rating>
   <provides>
     <binary>fwupdmgr</binary>
-    <binary>fwupdtool</binary>
-    <binary>fwupdtpmevlog</binary>
-    <binary>fwupdagent</binary>
   </provides>
   <releases>
-    <release version="1.3.11" date="2020-06-18">
+    <release version="1.4.5" date="2020-07-30">
       <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add dual-image feature for VL103 backup firmware</li>
+          <li>Add more CCGX hybrid dock support</li>
+          <li>Add support for a delayed activation flow for Thunderbolt</li>
+          <li>Allow firmware to require specific features from front-end clients</li>
+          <li>Modernize the thunderbolt plugin for future hardware</li>
+          <li>Support LVFS::UpdateImage in GUI clients</li>
+        </ul>
         <p>This release fixes the following bugs:</p>
         <ul>
-          <li>Add more module types for the Dell dock</li>
-          <li>Fix the TPM PCR0 calculation</li>
+          <li>Be more defensive when remotes are missing required keys</li>
+          <li>Check all AppStream components when verifying</li>
           <li>Check for free space after cleaning up ESP</li>
+          <li>Fix TPM PCR0 calculation</li>
+          <li>Only show UpdateMessage when state is success</li>
+          <li>Read the modem vendor ID correctly</li>
+          <li>Set the runtime version to 0.0.0 for pre-1.0.0 Thelio Io firmware</li>
+          <li>Support compiling libqmi-glib 1.26.0 and later</li>
+          <li>Use the GPIOB reset for the MiniDock VL103</li>
+          <li>Wait for the root device to be replugged when updating the MSP430</li>
         </ul>
       </description>
     </release>
-    <release version="1.3.10" date="2020-06-09">
+    <release version="1.4.4" date="2020-06-10">
+      <description>
+        <p>This release fixes the following regression:</p>
+        <ul>
+          <li>Fix refreshing when checking for downgraded metadata</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.3" date="2020-06-09">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add support for HP DMC dock devices</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Always enforce the metadata signature has a valid timestamp</li>
+          <li>Capture the dock SKU in metadata</li>
+          <li>Check the device requirements when returning from GetDetails</li>
+          <li>Force the prometheus minor version from 0x02 to 0x01</li>
+          <li>Prevent Dell dock updates to occur via synaptics-mst plugin</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.2" date="2020-05-18">
       <description>
         <p>This release fixes the following bugs:</p>
         <ul>
-          <li>Actually reload the DFU device after upgrade has completed</li>
-          <li>Capture the dock SKU in report metadata</li>
-          <li>Correctly set the Logitech device protocol</li>
-          <li>Do not use shim for non-secure boot configurations</li>
-          <li>Ensure that the DeviceID is set for child devices</li>
-          <li>Fix an error when detaching MSP430</li>
-          <li>Fix the DeviceID set by GetDetails</li>
-          <li>Force the prometheus minor version from 0x02 to 0x01 to fix updates</li>
-          <li>Parse the CSR firmware as a DFU file</li>
-          <li>Prevent dell-dock updates to occur via synaptics-mst plugin</li>
-          <li>Rather than hardcoding thunderbolt to PCI slot numbers, use domain in GUID</li>
-          <li>Remove a dock device from the whitelist that is never going to be updated</li>
-          <li>Validate that gpgme_op_verify_result() returned at least one signature</li>
+          <li>Add several more ATA OUI quirks</li>
+          <li>Avoid communicating with DFU devices when bitManifestationTolerant is off</li>
+          <li>Correct the display of final calculated PCRs</li>
+          <li>Delay activation for Dell Thunderbolt updates</li>
+          <li>Do not use synaptics-rmi on the Dell K12A</li>
+          <li>Fix switching wacom-raw to bootloader mode</li>
+          <li>Switch the default of EnumerateAllDevices to false</li>
+          <li>Use GPIOB to reset the VL817 found in two Lenovo products</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.4.1" date="2020-04-27">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Allow adding a device 'proxy' device that can do actions on it</li>
+          <li>Allow specifying the device on the command line by GUID</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add a device quirk that forces an explicit device-id match</li>
+          <li>Allow a device to set the logical or physical ID during ->setup()</li>
+          <li>Correctly format firmware version of Dynabook X30 and X40</li>
+          <li>Do not show safe mode errors for USB4 host controllers</li>
+          <li>Do not show the USB 2 VLI recovery devices for USB 3 hubs</li>
+          <li>Fix the correct DeviceID set by GetDetails</li>
+          <li>Make the EP963X plugin actually work on real hardware</li>
+          <li>Make the tss2-esys dep conditional for RHEL 8</li>
+          <li>Only update the FW2 partition of the ThinkPad USB-C Dock Gen2</li>
+          <li>Prefer to update the child device first if the order is unspecified</li>
+          <li>Refresh device name and format before setting supported flag</li>
+          <li>Reset the progressbar time estimate if the percentage is invalid</li>
+          <li>Set the CCGX device name and summary from quirk files</li>
           <li>Wait for the cxaudio device to reboot after writing firmware</li>
         </ul>
       </description>
     </release>
-    <release version="1.3.9" date="2020-03-04">
+    <release version="1.4.0" date="2020-04-14">
       <description>
         <p>This release adds the following features:</p>
         <ul>
-          <li>Added completion script for fish shell</li>
-          <li>Inihbit all power management actions using logind when updating</li>
+          <li>Add 'firmware-convert' subcommand to fwupdtool</li>
+          <li>Add fu_device_retry() API</li>
+          <li>Add FuHidDevice abstraction</li>
+          <li>Add plugin for CPU microcode</li>
+          <li>Add plugin for Cypress CCGX hardware</li>
+          <li>Add plugin for EP963x hardware</li>
+          <li>Add 'reinstall' command to fu-tool</li>
+          <li>Allow server metadata to set the device name and version format</li>
+          <li>Export the device state as part of the D-Bus interface</li>
+          <li>Export the release creation time and urgency</li>
+          <li>Introduce a new VersionFormat of 'hex'</li>
+          <li>Use Jcat files in firmware archives and for metadata</li>
         </ul>
         <p>This release fixes the following bugs:</p>
         <ul>
-          <li>Always check for PLAIN when doing vercmp() operations</li>
-          <li>Always return AppStream markup for remote agreements</li>
-          <li>Apply UEFI capsule update even with single valid capsule</li>
-          <li>Check the device protocol before de-duping devices</li>
-          <li>Copy the version and format from donor device in get-details</li>
-          <li>Correctly append the release to devices in `fwupdtool get-details`</li>
-          <li>Decrease minimum battery requirement to 10%</li>
-          <li>Discard the reason upgrades aren't available</li>
-          <li>Do not fail loading in /etc/machine-id is not available</li>
-          <li>Fix a critical warning when installing some firmware</li>
-          <li>For the `get-details` command make sure to always show devices</li>
-          <li>Set the MSP430 version format to pair</li>
-          <li>Switch off the ATA verbose logging by default</li>
-          <li>Use unknown for version format by default on get-details</li>
+          <li>Actually reload the DFU device after upgrade has completed</li>
+          <li>Add a lot of missing metadata about wacom-usb devices</li>
+          <li>Add a way to set the device timeout from a quirk</li>
+          <li>Add STM32F745 DfuSe version quirk</li>
+          <li>Allow waiting for the parent device when replugging</li>
+          <li>Always check for 'PLAIN' when doing vercmp() operations</li>
+          <li>Apply version format to releases and devices at same time</li>
+          <li>Check the firmware requirements before adding 'SUPPORTED'</li>
+          <li>Correctly attach VL103 after a firmware update</li>
+          <li>Do not allow devices that have no vendor ID to be 'UPDATABLE'</li>
+          <li>Do not conditionalize attach() and detach() on 'IS_BOOTLOADER'</li>
+          <li>Do not use shim for non-secure boot configurations</li>
+          <li>Fix a crash when removing device parents</li>
+          <li>Fix a difficult-to-trigger daemon hang when replugging devices</li>
+          <li>Fix a runtime error when detaching MSP430</li>
+          <li>Fix CounterpartGuid when there is more than one supported device</li>
+          <li>Fix reporting Synaptics cxaudio version number</li>
+          <li>Load the signature to get the aliased CDN-safe version of the metadata</li>
+          <li>Never add USB hub devices that are not upgradable</li>
+          <li>Only auto-add counterpart GUIDs when required</li>
+          <li>Parse the CSR firmware as a DFU file</li>
+          <li>Set the protocol when updating logitech HID++ devices</li>
+          <li>When TPM PCR0 measurements fail, query if secure boot is available and enabled</li>
         </ul>
       </description>
     </release>

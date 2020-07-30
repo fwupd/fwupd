@@ -145,7 +145,8 @@ fu_device_version_format_func (void)
 {
 	g_autoptr(FuDevice) device = fu_device_new ();
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_ENSURE_SEMVER);
-	fu_device_set_version (device, "Ver1.2.3 RELEASE", FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version (device, "Ver1.2.3 RELEASE");
 	g_assert_cmpstr (fu_device_get_version (device), ==, "1.2.3");
 }
 
@@ -642,7 +643,6 @@ fu_common_endian_func (void)
 static GBytes *
 _build_cab (GCabCompression compression, ...)
 {
-#ifdef HAVE_GCAB_1_0
 	gboolean ret;
 	va_list args;
 	g_autoptr(GCabCabinet) cabinet = NULL;
@@ -694,9 +694,6 @@ _build_cab (GCabCompression compression, ...)
 	g_assert_no_error (error);
 	g_assert (ret);
 	return g_memory_output_stream_steal_as_bytes (G_MEMORY_OUTPUT_STREAM (op));
-#else
-	return NULL;
-#endif
 }
 
 static void
@@ -710,6 +707,9 @@ fu_common_store_cab_func (void)
 	g_autoptr(XbNode) rel = NULL;
 	g_autoptr(XbNode) req = NULL;
 	g_autoptr(XbSilo) silo = NULL;
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+	g_autoptr(XbQuery) query = NULL;
+#endif
 
 	/* create silo */
 	blob = _build_cab (GCAB_COMPRESSION_NONE,
@@ -734,10 +734,6 @@ fu_common_store_cab_func (void)
 			   "firmware.dfu", "world",
 			   "firmware.dfu.asc", "signature",
 			   NULL);
-	if (blob == NULL) {
-		g_test_skip ("libgcab too old");
-		return;
-	}
 	silo = fu_common_cab_build_silo (blob, 10240, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (silo);
@@ -746,16 +742,24 @@ fu_common_store_cab_func (void)
 	component = xb_silo_query_first (silo, "components/component/id[text()='com.acme.example.firmware']/..", &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (component);
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+	query = xb_query_new_full (xb_node_get_silo (component),
+				   "releases/release",
+				   XB_QUERY_FLAG_FORCE_NODE_CACHE,
+				   &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (query);
+	rel = xb_node_query_first_full (component, query, &error);
+#else
 	rel = xb_node_query_first (component, "releases/release", &error);
+#endif
 	g_assert_no_error (error);
 	g_assert_nonnull (rel);
 	g_assert_cmpstr (xb_node_get_attr (rel, "version"), ==, "1.2.3");
 	csum = xb_node_query_first (rel, "checksum[@target='content']", &error);
 	g_assert_nonnull (csum);
 	g_assert_cmpstr (xb_node_get_text (csum), ==, "7c211433f02071597741e6ff5a8ea34789abbf43");
-	blob_tmp = xb_node_get_data (rel, "fwupd::ReleaseBlob(firmware.dfu)");
-	g_assert_nonnull (blob_tmp);
-	blob_tmp = xb_node_get_data (rel, "fwupd::ReleaseBlob(firmware.dfu.asc)");
+	blob_tmp = xb_node_get_data (rel, "fwupd::FirmwareBlob");
 	g_assert_nonnull (blob_tmp);
 	req = xb_node_query_first (component, "requires/id", &error);
 	g_assert_no_error (error);
@@ -772,6 +776,9 @@ fu_common_store_cab_unsigned_func (void)
 	g_autoptr(XbNode) csum = NULL;
 	g_autoptr(XbNode) rel = NULL;
 	g_autoptr(XbSilo) silo = NULL;
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+	g_autoptr(XbQuery) query = NULL;
+#endif
 
 	/* create silo */
 	blob = _build_cab (GCAB_COMPRESSION_NONE,
@@ -784,10 +791,6 @@ fu_common_store_cab_unsigned_func (void)
 	"</component>",
 			   "firmware.bin", "world",
 			   NULL);
-	if (blob == NULL) {
-		g_test_skip ("libgcab too old");
-		return;
-	}
 	silo = fu_common_cab_build_silo (blob, 10240, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (silo);
@@ -796,16 +799,24 @@ fu_common_store_cab_unsigned_func (void)
 	component = xb_silo_query_first (silo, "components/component/id[text()='com.acme.example.firmware']/..", &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (component);
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+	query = xb_query_new_full (xb_node_get_silo (component),
+				   "releases/release",
+				   XB_QUERY_FLAG_FORCE_NODE_CACHE,
+				   &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (query);
+	rel = xb_node_query_first_full (component, query, &error);
+#else
 	rel = xb_node_query_first (component, "releases/release", &error);
+#endif
 	g_assert_no_error (error);
 	g_assert_nonnull (rel);
 	g_assert_cmpstr (xb_node_get_attr (rel, "version"), ==, "1.2.3");
 	csum = xb_node_query_first (rel, "checksum[@target='content']", &error);
 	g_assert_null (csum);
-	blob_tmp = xb_node_get_data (rel, "fwupd::ReleaseBlob(firmware.bin)");
+	blob_tmp = xb_node_get_data (rel, "fwupd::FirmwareBlob");
 	g_assert_nonnull (blob_tmp);
-	blob_tmp = xb_node_get_data (rel, "fwupd::ReleaseBlob(firmware.bin.asc)");
-	g_assert_null (blob_tmp);
 }
 
 static void
@@ -817,6 +828,9 @@ fu_common_store_cab_folder_func (void)
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbNode) rel = NULL;
 	g_autoptr(XbSilo) silo = NULL;
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+	g_autoptr(XbQuery) query = NULL;
+#endif
 
 	/* create silo */
 	blob = _build_cab (GCAB_COMPRESSION_NONE,
@@ -829,10 +843,6 @@ fu_common_store_cab_folder_func (void)
 	"</component>",
 			   "lvfs\\firmware.bin", "world",
 			   NULL);
-	if (blob == NULL) {
-		g_test_skip ("libgcab too old");
-		return;
-	}
 	silo = fu_common_cab_build_silo (blob, 10240, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (silo);
@@ -841,11 +851,21 @@ fu_common_store_cab_folder_func (void)
 	component = xb_silo_query_first (silo, "components/component/id[text()='com.acme.example.firmware']/..", &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (component);
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+	query = xb_query_new_full (xb_node_get_silo (component),
+				   "releases/release",
+				   XB_QUERY_FLAG_FORCE_NODE_CACHE,
+				   &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (query);
+	rel = xb_node_query_first_full (component, query, &error);
+#else
 	rel = xb_node_query_first (component, "releases/release", &error);
+#endif
 	g_assert_no_error (error);
 	g_assert_nonnull (rel);
 	g_assert_cmpstr (xb_node_get_attr (rel, "version"), ==, "1.2.3");
-	blob_tmp = xb_node_get_data (rel, "fwupd::ReleaseBlob(firmware.bin)");
+	blob_tmp = xb_node_get_data (rel, "fwupd::FirmwareBlob");
 	g_assert_nonnull (blob_tmp);
 }
 
@@ -860,10 +880,6 @@ fu_common_store_cab_error_no_metadata_func (void)
 			   "foo.txt", "hello",
 			   "bar.txt", "world",
 			   NULL);
-	if (blob == NULL) {
-		g_test_skip ("libgcab too old");
-		return;
-	}
 	silo = fu_common_cab_build_silo (blob, 10240, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_null (silo);
@@ -889,10 +905,6 @@ fu_common_store_cab_error_wrong_size_func (void)
 	"</component>",
 			   "firmware.bin", "world",
 			   NULL);
-	if (blob == NULL) {
-		g_test_skip ("libgcab too old");
-		return;
-	}
 	silo = fu_common_cab_build_silo (blob, 10240, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_null (silo);
@@ -917,10 +929,6 @@ fu_common_store_cab_error_missing_file_func (void)
 	"</component>",
 			   "firmware.bin", "world",
 			   NULL);
-	if (blob == NULL) {
-		g_test_skip ("libgcab too old");
-		return;
-	}
 	silo = fu_common_cab_build_silo (blob, 10240, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_null (silo);
@@ -943,10 +951,6 @@ fu_common_store_cab_error_size_func (void)
 	"</component>",
 			   "firmware.bin", "world",
 			   NULL);
-	if (blob == NULL) {
-		g_test_skip ("libgcab too old");
-		return;
-	}
 	silo = fu_common_cab_build_silo (blob, 123, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_null (silo);
@@ -971,10 +975,6 @@ fu_common_store_cab_error_wrong_checksum_func (void)
 	"</component>",
 			   "firmware.bin", "world",
 			   NULL);
-	if (blob == NULL) {
-		g_test_skip ("libgcab too old");
-		return;
-	}
 	silo = fu_common_cab_build_silo (blob, 10240, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
 	g_assert_null (silo);
@@ -1010,6 +1010,62 @@ fu_device_poll_func (void)
 	fu_test_loop_run_with_timeout (100);
 	fu_test_loop_quit ();
 	g_assert_cmpint (fu_device_get_metadata_integer (device, "cnt"), ==, cnt);
+}
+
+static void
+fu_device_flags_func (void)
+{
+	g_autoptr(FuDevice) device = fu_device_new ();
+
+	g_assert_cmpint (fu_device_get_flags (device), ==, FWUPD_DEVICE_FLAG_NONE);
+
+	/* remove IS_BOOTLOADER if is a BOOTLOADER */
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
+	g_assert_cmpint (fu_device_get_flags (device), ==, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
+	fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
+
+	/* check implication */
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
+	g_assert_cmpint (fu_device_get_flags (device), ==, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE |
+							   FWUPD_DEVICE_FLAG_CAN_VERIFY);
+	fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_CAN_VERIFY |
+				       FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
+
+	/* negation */
+	fu_device_set_custom_flags (device, "is-bootloader,updatable");
+	g_assert_cmpint (fu_device_get_flags (device), ==, FWUPD_DEVICE_FLAG_IS_BOOTLOADER |
+							   FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_set_custom_flags (device, "~is-bootloader");
+	g_assert_cmpint (fu_device_get_flags (device), ==, FWUPD_DEVICE_FLAG_UPDATABLE);
+}
+
+static void
+fu_device_parent_func (void)
+{
+	g_autoptr(FuDevice) child = fu_device_new ();
+	g_autoptr(FuDevice) child_root = NULL;
+	g_autoptr(FuDevice) grandparent = fu_device_new ();
+	g_autoptr(FuDevice) grandparent_root = NULL;
+	g_autoptr(FuDevice) parent = fu_device_new ();
+	g_autoptr(FuDevice) parent_root = NULL;
+
+	/* set up three layer family */
+	fu_device_add_child (grandparent, parent);
+	fu_device_add_child (parent, child);
+
+	/* check parents */
+	g_assert (fu_device_get_parent (child) == parent);
+	g_assert (fu_device_get_parent (parent) == grandparent);
+	g_assert (fu_device_get_parent (grandparent) == NULL);
+
+	/* check root */
+	child_root = fu_device_get_root (child);
+	g_assert (child_root == grandparent);
+	parent_root = fu_device_get_root (parent);
+	g_assert (parent_root == grandparent);
+	grandparent_root = fu_device_get_root (child);
+	g_assert (grandparent_root == grandparent);
 }
 
 static void
@@ -1140,6 +1196,7 @@ fu_common_version_func (void)
 		{ 0x226a4b00,	"137.2706.768",		FWUPD_VERSION_FORMAT_SURFACE_LEGACY },
 		{ 0x6001988,	"6.25.136",		FWUPD_VERSION_FORMAT_SURFACE },
 		{ 0x00ff0001,	"255.0.1",		FWUPD_VERSION_FORMAT_DELL_BIOS },
+		{ 0xc8,		"0x000000c8",		FWUPD_VERSION_FORMAT_HEX },
 		{ 0,		NULL }
 	};
 	struct {
@@ -1153,6 +1210,7 @@ fu_common_version_func (void)
 		{ 0xff,		"0.255",		FWUPD_VERSION_FORMAT_PAIR },
 		{ 0xffffffffffffffff, "4294967295.4294967295", FWUPD_VERSION_FORMAT_PAIR },
 		{ 0x0,		"0",			FWUPD_VERSION_FORMAT_NUMBER },
+		{ 0x11000000c8,		"0x00000011000000c8",	FWUPD_VERSION_FORMAT_HEX },
 		{ 0,		NULL }
 	};
 	struct {
@@ -1575,6 +1633,154 @@ fu_firmware_func (void)
 				  "  Address:               0x400\n");
 }
 
+static void
+fu_efivar_func (void)
+{
+	gboolean ret;
+	gsize sz = 0;
+	guint32 attr = 0;
+	g_autofree guint8 *data = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* check supported */
+	ret = fu_efivar_supported (&error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+
+	/* check existing keys */
+	g_assert_false (fu_efivar_exists (FU_EFIVAR_GUID_EFI_GLOBAL, "NotGoingToExist"));
+	g_assert_true (fu_efivar_exists (FU_EFIVAR_GUID_EFI_GLOBAL, "SecureBoot"));
+
+	/* write and read a key */
+	ret = fu_efivar_set_data (FU_EFIVAR_GUID_EFI_GLOBAL, "Test",
+				     (guint8 *) "1", 1,
+				     FU_EFIVAR_ATTR_NON_VOLATILE |
+				     FU_EFIVAR_ATTR_RUNTIME_ACCESS,
+				     &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	ret = fu_efivar_get_data (FU_EFIVAR_GUID_EFI_GLOBAL, "Test",
+				     &data, &sz, &attr, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	g_assert_cmpint (sz, ==, 1);
+	g_assert_cmpint (attr, ==, FU_EFIVAR_ATTR_NON_VOLATILE |
+				   FU_EFIVAR_ATTR_RUNTIME_ACCESS);
+	g_assert_cmpint (data[0], ==, '1');
+
+	/* delete single key */
+	ret = fu_efivar_delete (FU_EFIVAR_GUID_EFI_GLOBAL, "Test", &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	g_assert_false (fu_efivar_exists (FU_EFIVAR_GUID_EFI_GLOBAL, "Test"));
+
+	/* delete multiple keys */
+	ret = fu_efivar_set_data (FU_EFIVAR_GUID_EFI_GLOBAL, "Test1", (guint8 *)"1", 1, 0, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	ret = fu_efivar_set_data (FU_EFIVAR_GUID_EFI_GLOBAL, "Test2", (guint8 *)"1", 1, 0, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	ret = fu_efivar_delete_with_glob (FU_EFIVAR_GUID_EFI_GLOBAL, "Test*", &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	g_assert_false (fu_efivar_exists (FU_EFIVAR_GUID_EFI_GLOBAL, "Test1"));
+	g_assert_false (fu_efivar_exists (FU_EFIVAR_GUID_EFI_GLOBAL, "Test2"));
+
+	/* read a key that doesn't exist */
+	ret = fu_efivar_get_data (FU_EFIVAR_GUID_EFI_GLOBAL, "NotGoingToExist", NULL, NULL, NULL, &error);
+	g_assert_error (error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND);
+	g_assert_false (ret);
+}
+
+typedef struct {
+	guint cnt_success;
+	guint cnt_failed;
+} FuDeviceRetryHelper;
+
+static gboolean
+fu_device_retry_success (FuDevice *device, gpointer user_data, GError **error)
+{
+	FuDeviceRetryHelper *helper = (FuDeviceRetryHelper *) user_data;
+	helper->cnt_success++;
+	return TRUE;
+}
+
+static gboolean
+fu_device_retry_failed (FuDevice *device, gpointer user_data, GError **error)
+{
+	FuDeviceRetryHelper *helper = (FuDeviceRetryHelper *) user_data;
+	helper->cnt_failed++;
+	g_set_error_literal (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "failed");
+	return FALSE;
+}
+
+static gboolean
+fu_device_retry_success_3rd_try (FuDevice *device, gpointer user_data, GError **error)
+{
+	FuDeviceRetryHelper *helper = (FuDeviceRetryHelper *) user_data;
+	if (helper->cnt_failed == 2) {
+		helper->cnt_success++;
+		return TRUE;
+	}
+	helper->cnt_failed++;
+	g_set_error_literal (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "failed");
+	return FALSE;
+}
+
+static void
+fu_device_retry_success_func (void)
+{
+	gboolean ret;
+	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(GError) error = NULL;
+	FuDeviceRetryHelper helper = {
+		.cnt_success = 0,
+		.cnt_failed = 0,
+	};
+	fu_device_retry_add_recovery (device, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, fu_device_retry_failed);
+	ret = fu_device_retry (device, fu_device_retry_success, 3, &helper, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	g_assert_cmpint (helper.cnt_success, ==, 1);
+	g_assert_cmpint (helper.cnt_failed, ==, 0);
+}
+
+static void
+fu_device_retry_failed_func (void)
+{
+	gboolean ret;
+	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(GError) error = NULL;
+	FuDeviceRetryHelper helper = {
+		.cnt_success = 0,
+		.cnt_failed = 0,
+	};
+	fu_device_retry_add_recovery (device, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, fu_device_retry_success);
+	ret = fu_device_retry (device, fu_device_retry_failed, 3, &helper, &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
+	g_assert_true (!ret);
+	g_assert_cmpint (helper.cnt_success, ==, 2); /* do not reset for the last failure */
+	g_assert_cmpint (helper.cnt_failed, ==, 3);
+}
+
+static void
+fu_device_retry_hardware_func (void)
+{
+	gboolean ret;
+	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(GError) error = NULL;
+	FuDeviceRetryHelper helper = {
+		.cnt_success = 0,
+		.cnt_failed = 0,
+	};
+	ret = fu_device_retry (device, fu_device_retry_success_3rd_try, 3, &helper, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	g_assert_cmpint (helper.cnt_success, ==, 1);
+	g_assert_cmpint (helper.cnt_failed, ==, 2);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -1613,6 +1819,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/common{spawn-timeout)", fu_common_spawn_timeout_func);
 	g_test_add_func ("/fwupd/common{firmware-builder}", fu_common_firmware_builder_func);
 	g_test_add_func ("/fwupd/common{kernel-lockdown}", fu_common_kernel_lockdown_func);
+	g_test_add_func ("/fwupd/efivar", fu_efivar_func);
 	g_test_add_func ("/fwupd/hwids", fu_hwids_func);
 	g_test_add_func ("/fwupd/smbios", fu_smbios_func);
 	g_test_add_func ("/fwupd/smbios3", fu_smbios3_func);
@@ -1625,6 +1832,8 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/firmware{dfu}", fu_firmware_dfu_func);
 	g_test_add_func ("/fwupd/archive{invalid}", fu_archive_invalid_func);
 	g_test_add_func ("/fwupd/archive{cab}", fu_archive_cab_func);
+	g_test_add_func ("/fwupd/device{flags}", fu_device_flags_func);
+	g_test_add_func ("/fwupd/device{parent}", fu_device_parent_func);
 	g_test_add_func ("/fwupd/device{incorporate}", fu_device_incorporate_func);
 	if (g_test_slow ())
 		g_test_add_func ("/fwupd/device{poll}", fu_device_poll_func);
@@ -1633,5 +1842,8 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/device{metadata}", fu_device_metadata_func);
 	g_test_add_func ("/fwupd/device{open-refcount}", fu_device_open_refcount_func);
 	g_test_add_func ("/fwupd/device{version-format}", fu_device_version_format_func);
+	g_test_add_func ("/fwupd/device{retry-success}", fu_device_retry_success_func);
+	g_test_add_func ("/fwupd/device{retry-failed}", fu_device_retry_failed_func);
+	g_test_add_func ("/fwupd/device{retry-hardware}", fu_device_retry_hardware_func);
 	return g_test_run ();
 }

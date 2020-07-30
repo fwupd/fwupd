@@ -32,13 +32,13 @@ typedef enum {
 
 struct _FuCsrDevice
 {
-	FuUsbDevice		 parent_instance;
+	FuHidDevice		 parent_instance;
 	FuCsrDeviceQuirks	 quirks;
 	DfuState		 dfu_state;
 	guint32			 dnload_timeout;
 };
 
-G_DEFINE_TYPE (FuCsrDevice, fu_csr_device, FU_TYPE_USB_DEVICE)
+G_DEFINE_TYPE (FuCsrDevice, fu_csr_device, FU_TYPE_HID_DEVICE)
 
 #define FU_CSR_REPORT_ID_COMMAND		0x01
 #define FU_CSR_REPORT_ID_STATUS			0x02
@@ -69,73 +69,37 @@ fu_csr_device_to_string (FuDevice *device, guint idt, GString *str)
 static gboolean
 fu_csr_device_attach (FuDevice *device, GError **error)
 {
-	FuCsrDevice *self = FU_CSR_DEVICE (device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
-	gsize sz = 0;
 	guint8 buf[] = { FU_CSR_REPORT_ID_CONTROL, FU_CSR_CONTROL_RESET };
-
-	if (g_getenv ("FWUPD_CSR_VERBOSE") != NULL)
-		fu_common_dump_raw (G_LOG_DOMAIN, "Reset", buf, sz);
-	if (!g_usb_device_control_transfer (usb_device,
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					    G_USB_DEVICE_RECIPIENT_INTERFACE,
-					    FU_HID_REPORT_SET,				/* bRequest */
-					    FU_HID_FEATURE | FU_CSR_REPORT_ID_CONTROL,	/* wValue */
-					    0x0000,					/* wIndex */
-					    buf, sizeof(buf), &sz,
-					    FU_CSR_DEVICE_TIMEOUT, /* timeout */
-					    NULL, error)) {
-		g_prefix_error (error, "Failed to ClearStatus: ");
+	if (!fu_hid_device_set_report (FU_HID_DEVICE (device),
+				       FU_CSR_REPORT_ID_CONTROL,
+				       buf, sizeof(buf),
+				       FU_CSR_DEVICE_TIMEOUT,
+				       FU_HID_DEVICE_FLAG_IS_FEATURE,
+				       error)) {
+		g_prefix_error (error, "failed to attach: ");
 		return FALSE;
 	}
-
-	/* check packet */
-	if (sz != FU_CSR_CONTROL_HEADER_SIZE) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "Reset packet was %" G_GSIZE_FORMAT " expected %i",
-			     sz, FU_CSR_CONTROL_HEADER_SIZE);
-		return FALSE;
-	}
-
 	return TRUE;
 }
 
 static gboolean
 fu_csr_device_get_status (FuCsrDevice *self, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
-	gsize sz = 0;
 	guint8 buf[64] = {0};
 
 	/* hit hardware */
-	if (!g_usb_device_control_transfer (usb_device,
-					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					    G_USB_DEVICE_RECIPIENT_INTERFACE,
-					    FU_HID_REPORT_GET,				/* bRequest */
-					    FU_HID_FEATURE | FU_CSR_REPORT_ID_STATUS,	/* wValue */
-					    0x0000,					/* wIndex */
-					    buf, sizeof(buf), &sz,
-					    FU_CSR_DEVICE_TIMEOUT,
-					    NULL, error)) {
-		g_prefix_error (error, "Failed to GetStatus: ");
+	if (!fu_hid_device_get_report (FU_HID_DEVICE (self),
+				       FU_CSR_REPORT_ID_STATUS,
+				       buf, sizeof(buf),
+				       FU_CSR_DEVICE_TIMEOUT,
+				       FU_HID_DEVICE_FLAG_ALLOW_TRUNC |
+				       FU_HID_DEVICE_FLAG_IS_FEATURE,
+				       error)) {
+		g_prefix_error (error, "failed to GetStatus: ");
 		return FALSE;
 	}
-	if (g_getenv ("FWUPD_CSR_VERBOSE") != NULL)
-		fu_common_dump_raw (G_LOG_DOMAIN, "GetStatus", buf, sz);
 
 	/* check packet */
-	if (sz != FU_CSR_STATUS_HEADER_SIZE) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "GetStatus packet was %" G_GSIZE_FORMAT " expected %i",
-			     sz, FU_CSR_STATUS_HEADER_SIZE);
-		return FALSE;
-	}
 	if (buf[0] != FU_CSR_REPORT_ID_STATUS) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -157,8 +121,6 @@ fu_csr_device_get_status (FuCsrDevice *self, GError **error)
 static gboolean
 fu_csr_device_clear_status (FuCsrDevice *self, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
-	gsize sz = 0;
 	guint8 buf[] = { FU_CSR_REPORT_ID_CONTROL,
 			 FU_CSR_CONTROL_CLEAR_STATUS };
 
@@ -169,29 +131,13 @@ fu_csr_device_clear_status (FuCsrDevice *self, GError **error)
 		return TRUE;
 
 	/* hit hardware */
-	if (g_getenv ("FWUPD_CSR_VERBOSE") != NULL)
-		fu_common_dump_raw (G_LOG_DOMAIN, "ClearStatus", buf, sz);
-	if (!g_usb_device_control_transfer (usb_device,
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					    G_USB_DEVICE_RECIPIENT_INTERFACE,
-					    FU_HID_REPORT_SET,				/* bRequest */
-					    FU_HID_FEATURE | FU_CSR_REPORT_ID_CONTROL,	/* wValue */
-					    0x0000,					/* wIndex */
-					    buf, sizeof(buf), &sz,
-					    FU_CSR_DEVICE_TIMEOUT,
-					    NULL, error)) {
-		g_prefix_error (error, "Failed to ClearStatus: ");
-		return FALSE;
-	}
-
-	/* check packet */
-	if (sz != FU_CSR_CONTROL_HEADER_SIZE) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "ClearStatus packet was %" G_GSIZE_FORMAT " expected %i",
-			     sz, FU_CSR_CONTROL_HEADER_SIZE);
+	if (!fu_hid_device_set_report (FU_HID_DEVICE (self),
+				       FU_CSR_REPORT_ID_CONTROL,
+				       buf, sizeof(buf),
+				       FU_CSR_DEVICE_TIMEOUT,
+				       FU_HID_DEVICE_FLAG_IS_FEATURE,
+				       error)) {
+		g_prefix_error (error, "failed to ClearStatus: ");
 		return FALSE;
 	}
 
@@ -202,35 +148,18 @@ fu_csr_device_clear_status (FuCsrDevice *self, GError **error)
 static GBytes *
 fu_csr_device_upload_chunk (FuCsrDevice *self, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
-	gsize sz = 0;
 	guint16 data_sz;
 	guint8 buf[64] = {0};
 
 	/* hit hardware */
-	if (!g_usb_device_control_transfer (usb_device,
-					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					    G_USB_DEVICE_RECIPIENT_INTERFACE,
-					    FU_HID_REPORT_GET,				/* bRequest */
-					    FU_HID_FEATURE | FU_CSR_REPORT_ID_COMMAND,	/* wValue */
-					    0x0000,					/* wIndex */
-					    buf, sizeof(buf), &sz,
-					    FU_CSR_DEVICE_TIMEOUT,
-					    NULL, error)) {
-		g_prefix_error (error, "Failed to ReadFirmware: ");
-		return NULL;
-	}
-	if (g_getenv ("FWUPD_CSR_VERBOSE") != NULL)
-		fu_common_dump_raw (G_LOG_DOMAIN, "ReadFirmware", buf, sz);
-
-	/* too small to parse */
-	if (sz < FU_CSR_COMMAND_HEADER_SIZE) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "ReadFirmware packet too small, got %" G_GSIZE_FORMAT,
-			     sz);
+	if (!fu_hid_device_get_report (FU_HID_DEVICE (self),
+				       FU_CSR_REPORT_ID_COMMAND,
+				       buf, sizeof(buf),
+				       FU_CSR_DEVICE_TIMEOUT,
+				       FU_HID_DEVICE_FLAG_ALLOW_TRUNC |
+				       FU_HID_DEVICE_FLAG_IS_FEATURE,
+				       error)) {
+		g_prefix_error (error, "failed to ReadFirmware: ");
 		return NULL;
 	}
 
@@ -245,7 +174,7 @@ fu_csr_device_upload_chunk (FuCsrDevice *self, GError **error)
 
 	/* check the length */
 	data_sz = fu_common_read_uint16 (&buf[1], G_LITTLE_ENDIAN);
-	if (data_sz + FU_CSR_COMMAND_HEADER_SIZE != (guint16) sz) {
+	if (data_sz + FU_CSR_COMMAND_HEADER_SIZE != (guint16) sizeof(buf)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
@@ -256,7 +185,7 @@ fu_csr_device_upload_chunk (FuCsrDevice *self, GError **error)
 
 	/* return as bytes */
 	return g_bytes_new (buf + FU_CSR_COMMAND_HEADER_SIZE,
-			    sz - FU_CSR_COMMAND_HEADER_SIZE);
+			    sizeof(buf) - FU_CSR_COMMAND_HEADER_SIZE);
 }
 
 static FuFirmware *
@@ -331,10 +260,8 @@ fu_csr_device_upload (FuDevice *device, GError **error)
 static gboolean
 fu_csr_device_download_chunk (FuCsrDevice *self, guint16 idx, GBytes *chunk, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
 	const guint8 *chunk_data;
 	gsize chunk_sz = 0;
-	gsize write_sz = 0;
 	guint8 buf[FU_CSR_PACKET_DATA_SIZE] = {0};
 
 	/* too large? */
@@ -359,32 +286,13 @@ fu_csr_device_download_chunk (FuCsrDevice *self, guint16 idx, GBytes *chunk, GEr
 		return FALSE;
 
 	/* hit hardware */
-	if (g_getenv ("FWUPD_CSR_VERBOSE") != NULL)
-		fu_common_dump_raw (G_LOG_DOMAIN, "Upgrade", buf, sizeof(buf));
-	if (!g_usb_device_control_transfer (usb_device,
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					    G_USB_DEVICE_RECIPIENT_INTERFACE,
-					    FU_HID_REPORT_SET,				/* bRequest */
-					    FU_HID_FEATURE | FU_CSR_REPORT_ID_COMMAND,	/* wValue */
-					    0x0000,					/* wIndex */
-					    buf,
-					    sizeof(buf),
-					    &write_sz,
-					    FU_CSR_DEVICE_TIMEOUT,
-					    NULL, error)) {
-		g_prefix_error (error, "Failed to Upgrade: ");
-		return FALSE;
-	}
-
-	/* check packet */
-	if (write_sz != sizeof(buf)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "Not all packet written for upgrade got "
-			     "%" G_GSIZE_FORMAT " expected %" G_GSIZE_FORMAT,
-			     write_sz, sizeof(buf));
+	if (!fu_hid_device_set_report (FU_HID_DEVICE (self),
+				       FU_CSR_REPORT_ID_COMMAND,
+				       buf, sizeof(buf),
+				       FU_CSR_DEVICE_TIMEOUT,
+				       FU_HID_DEVICE_FLAG_IS_FEATURE,
+				       error)) {
+		g_prefix_error (error, "failed to Upgrade: ");
 		return FALSE;
 	}
 
@@ -502,46 +410,12 @@ fu_csr_device_probe (FuUsbDevice *device, GError **error)
 }
 
 static gboolean
-fu_csr_device_open (FuUsbDevice *device, GError **error)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
-
-	/* open device and clear status */
-	if (!g_usb_device_claim_interface (usb_device, 0x00, /* HID */
-					   G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					   error)) {
-		g_prefix_error (error, "failed to claim HID interface: ");
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
 fu_csr_device_setup (FuDevice *device, GError **error)
 {
 	FuCsrDevice *self = FU_CSR_DEVICE (device);
 
 	if (!fu_csr_device_clear_status (self, error))
 		return FALSE;
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
-fu_csr_device_close (FuUsbDevice *device, GError **error)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
-
-	/* we're done here */
-	if (!g_usb_device_release_interface (usb_device, 0x00, /* HID */
-					     G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					     error)) {
-		g_prefix_error (error, "failed to release interface: ");
-		return FALSE;
-	}
 
 	/* success */
 	return TRUE;
@@ -564,7 +438,5 @@ fu_csr_device_class_init (FuCsrDeviceClass *klass)
 	klass_device->prepare_firmware = fu_csr_device_prepare_firmware;
 	klass_device->attach = fu_csr_device_attach;
 	klass_device->setup = fu_csr_device_setup;
-	klass_usb_device->open = fu_csr_device_open;
-	klass_usb_device->close = fu_csr_device_close;
 	klass_usb_device->probe = fu_csr_device_probe;
 }

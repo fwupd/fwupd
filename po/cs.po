@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Ascii Wolf <mail@asciiwolf.com>, 2017,2019
+# Ascii Wolf <mail@asciiwolf.com>, 2017,2019-2020
 # Ascii Wolf <mail@asciiwolf.com>, 2017
 # Marek Černocký <marek@manet.cz>, 2016,2018
 msgid ""
@@ -46,6 +46,10 @@ msgstr "Alias pro %s"
 #. TRANSLATORS: command line option
 msgid "Allow downgrading firmware versions"
 msgstr "Povolit přechod na nižší verze firmwaru"
+
+#. TRANSLATORS: command line option
+msgid "Allow reinstalling existing firmware versions"
+msgstr "Povolit reinstalaci stávající verze firmwaru"
 
 #. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
@@ -136,10 +140,6 @@ msgstr "Smazat výsledky z poslední aktualizace"
 msgid "Command not found"
 msgstr "Příkaz nebyl nalezen"
 
-#. TRANSLATORS: command description
-msgid "Convert firmware to DFU format"
-msgstr "Převést firmware do formátu DFU"
-
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
 msgstr "Nástroj pro práci s DFU"
@@ -229,10 +229,6 @@ msgstr "Stahuje se…"
 #. TRANSLATORS: command description
 msgid "Dump SMBIOS data from a file"
 msgstr "Vypsat data SMBIOS ze souboru"
-
-#. TRANSLATORS: command description
-msgid "Dump details about a firmware file"
-msgstr "Vypsat podrobnosti o souboru s firmwarem"
 
 #. TRANSLATORS: ESP is EFI System Partition
 msgid "ESP specified was not valid"
@@ -517,6 +513,10 @@ msgstr "Čte se…"
 msgid "Refresh metadata from remote server"
 msgstr "Aktualizovat metadata ze vzdáleného serveru"
 
+#. TRANSLATORS: command description
+msgid "Reinstall firmware on a device"
+msgstr "Přeinstalovat firmware na zařízení"
+
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
 #. * e.g. "1.2.3"
@@ -565,21 +565,9 @@ msgstr "Pokud je to možné, naplánovat instalaci na příští restart"
 msgid "Scheduling…"
 msgstr "Plánuje se…"
 
-#. TRANSLATORS: command description
-msgid "Set product ID on firmware file"
-msgstr "Nastavit ID produktu v souboru s firmwarem"
-
-#. TRANSLATORS: command description
-msgid "Set release version on firmware file"
-msgstr "Nastavit verzi vydání v souboru s firmwarem"
-
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
 msgstr "Během aktualizace nastavit příznak ladění"
-
-#. TRANSLATORS: command description
-msgid "Set vendor ID on firmware file"
-msgstr "Nastavit ID výrobce v souboru s firmwarem"
 
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
@@ -645,6 +633,7 @@ msgstr "Nástroj pro práci s firmwarem UEFI"
 
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
+#. TRANSLATORS: unknown release urgency
 msgid "Unknown"
 msgstr "Neznámý"
 

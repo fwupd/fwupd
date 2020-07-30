@@ -105,7 +105,7 @@ fu_synaprom_config_setup (FuDevice *device, GError **error)
 
 	/* no downgrades are allowed */
 	version = g_strdup_printf ("%04u", GUINT16_FROM_LE(cfg.version));
-	fu_device_set_version (FU_DEVICE (self), version, FWUPD_VERSION_FORMAT_PLAIN);
+	fu_device_set_version (FU_DEVICE (self), version);
 	fu_device_set_version_lowest (FU_DEVICE (self), version);
 	return TRUE;
 }
@@ -200,6 +200,7 @@ fu_synaprom_config_init (FuSynapromConfig *self)
 {
 	fu_device_set_protocol (FU_DEVICE (self), "com.synaptics.prometheus.config");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_logical_id (FU_DEVICE (self), "cfg");
 	fu_device_set_name (FU_DEVICE (self), "Prometheus IOTA Config");
 }
@@ -249,12 +250,6 @@ fu_synaprom_config_detach (FuDevice *device, GError **error)
 }
 
 static void
-fu_synaprom_config_flags_notify_cb (FuDevice *parent, GParamSpec *pspec, FuDevice *device)
-{
-	fu_device_incorporate_flag (device, parent, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
-}
-
-static void
 fu_synaprom_config_class_init (FuSynapromConfigClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
@@ -277,11 +272,5 @@ fu_synaprom_config_new (FuSynapromDevice *device)
 	self = g_object_new (FU_TYPE_SYNAPROM_CONFIG,
 			     "parent", device,
 			     NULL);
-
-	/* mirror the bootloader flag on the parent to the child */
-	if (fu_device_has_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
-		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
-	g_signal_connect (device, "notify::flags",
-			  G_CALLBACK (fu_synaprom_config_flags_notify_cb), self);
 	return FU_SYNAPROM_CONFIG (self);
 }

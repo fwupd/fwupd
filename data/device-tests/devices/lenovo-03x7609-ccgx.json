@@ -1,0 +1,18 @@
+{
+  "name": "Lenovo USB-C Dock Gen2 (CCGX)",
+  "guids": [
+    "f6b5141d-eeb0-5ff1-b8de-ee4f02b222b7",
+    "31d41b9b-361a-50ad-8bea-8dad3339fa04"
+  ],
+  "repeat": 2,
+  "releases": [
+    {
+      "version": "0.0.33",
+      "file": "5ff0959f491e13f378bebf4185bf88e4f0a62a52a66b6afa87859c9b2fbec8f3-Lenovo-USBC-Gen2_Dock.cab"
+    },
+    {
+      "version": "0.0.34",
+      "file": "6775b0212704aed00af143089bdf3b50da5ca4d171256c8686c8b4b8a4a316f9-Lenovo-USBC-Gen2_Dock.cab"
+    }
+  ]
+}

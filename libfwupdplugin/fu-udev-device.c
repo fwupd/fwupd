@@ -156,6 +156,34 @@ fu_udev_device_to_string (FuDevice *device, guint idt, GString *str)
 #endif
 }
 
+static void
+fu_udev_device_set_subsystem (FuUdevDevice *self, const gchar *subsystem)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+
+	/* not changed */
+	if (g_strcmp0 (priv->subsystem, subsystem) == 0)
+		return;
+
+	g_free (priv->subsystem);
+	priv->subsystem = g_strdup (subsystem);
+	g_object_notify (G_OBJECT (self), "subsystem");
+}
+
+static void
+fu_udev_device_set_device_file (FuUdevDevice *self, const gchar *device_file)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+
+	/* not changed */
+	if (g_strcmp0 (priv->device_file, device_file) == 0)
+		return;
+
+	g_free (priv->device_file);
+	priv->device_file = g_strdup (device_file);
+	g_object_notify (G_OBJECT (self), "device-file");
+}
+
 static gboolean
 fu_udev_device_probe (FuDevice *device, GError **error)
 {
@@ -243,10 +271,12 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	}
 
 	/* set the version if the revision has been set */
-	if (fu_device_get_version (device) == NULL) {
+	if (fu_device_get_version (device) == NULL &&
+	    fu_device_get_version_format (device) == FWUPD_VERSION_FORMAT_UNKNOWN) {
 		if (priv->revision != 0x00) {
 			g_autofree gchar *version = g_strdup_printf ("%02x", priv->revision);
-			fu_device_set_version (device, version, FWUPD_VERSION_FORMAT_PLAIN);
+			fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_PLAIN);
+			fu_device_set_version (device, version);
 		}
 	}
 
@@ -284,10 +314,11 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	}
 
 	/* set revision */
-	if (fu_device_get_version (device) == NULL) {
+	if (fu_device_get_version (device) == NULL &&
+	    fu_device_get_version_format (device) == FWUPD_VERSION_FORMAT_UNKNOWN) {
 		tmp = g_udev_device_get_property (priv->udev_device, "ID_REVISION");
 		if (tmp != NULL)
-			fu_device_set_version (device, tmp, FWUPD_VERSION_FORMAT_UNKNOWN);
+			fu_device_set_version (device, tmp);
 	}
 
 	/* set vendor ID */
@@ -358,8 +389,8 @@ fu_udev_device_set_dev (FuUdevDevice *self, GUdevDevice *udev_device)
 	if (priv->udev_device == NULL)
 		return;
 #ifdef HAVE_GUDEV
-	priv->subsystem = g_strdup (g_udev_device_get_subsystem (priv->udev_device));
-	priv->device_file = g_strdup (g_udev_device_get_device_file (priv->udev_device));
+	fu_udev_device_set_subsystem (self, g_udev_device_get_subsystem (priv->udev_device));
+	fu_udev_device_set_device_file (self, g_udev_device_get_device_file (priv->udev_device));
 
 	/* try to get one line summary */
 	summary = g_udev_device_get_sysfs_attr (priv->udev_device, "description");
@@ -416,8 +447,8 @@ fu_udev_device_incorporate (FuDevice *self, FuDevice *donor)
 
 	fu_udev_device_set_dev (uself, fu_udev_device_get_dev (udonor));
 	if (priv->device_file == NULL) {
-		priv->subsystem = g_strdup (fu_udev_device_get_subsystem (udonor));
-		priv->device_file = g_strdup (fu_udev_device_get_device_file (udonor));
+		fu_udev_device_set_subsystem (uself, fu_udev_device_get_subsystem (udonor));
+		fu_udev_device_set_device_file (uself, fu_udev_device_get_device_file (udonor));
 	}
 }
 
@@ -645,6 +676,7 @@ fu_udev_device_set_physical_id (FuUdevDevice *self, const gchar *subsystems, GEr
 		physical_id = g_strdup_printf ("PCI_SLOT_NAME=%s", tmp);
 	} else if (g_strcmp0 (subsystem, "usb") == 0 ||
 		   g_strcmp0 (subsystem, "mmc") == 0 ||
+		   g_strcmp0 (subsystem, "i2c") == 0 ||
 		   g_strcmp0 (subsystem, "scsi") == 0) {
 		tmp = g_udev_device_get_property (udev_device, "DEVPATH");
 		if (tmp == NULL) {
@@ -899,20 +931,69 @@ fu_udev_device_ioctl (FuUdevDevice *self,
 }
 
 /**
- * fu_udev_device_pwrite:
+ * fu_udev_device_pread_full:
  * @self: A #FuUdevDevice
  * @port: offset address
- * @data: value
+ * @buf: (in): data
+ * @bufsz: size of @buf
  * @error: A #GError, or %NULL
  *
- * Write to a file descriptor at a given offset.
+ * Read a buffer from a file descriptor at a given offset.
  *
  * Returns: %TRUE for success
  *
- * Since: 1.3.3
+ * Since: 1.4.5
  **/
 gboolean
-fu_udev_device_pwrite (FuUdevDevice *self, goffset port, guint8 data, GError **error)
+fu_udev_device_pread_full (FuUdevDevice *self, goffset port,
+			   guint8 *buf, gsize bufsz,
+			   GError **error)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+
+	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), FALSE);
+	g_return_val_if_fail (port != 0x0, FALSE);
+	g_return_val_if_fail (buf != NULL, FALSE);
+	g_return_val_if_fail (priv->fd > 0, FALSE);
+
+#ifdef HAVE_PWRITE
+	if (pread (priv->fd, buf, bufsz, port) != (gssize) bufsz) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_FAILED,
+			     "failed to read from port 0x%04x: %s",
+			     (guint) port,
+			     strerror (errno));
+		return FALSE;
+	}
+	return TRUE;
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "Not supported as pread() is unavailable");
+	return FALSE;
+#endif
+}
+
+/**
+ * fu_udev_device_pwrite_full:
+ * @self: A #FuUdevDevice
+ * @port: offset address
+ * @buf: (out): data
+ * @bufsz: size of @data
+ * @error: A #GError, or %NULL
+ *
+ * Write a buffer to a file descriptor at a given offset.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.4.5
+ **/
+gboolean
+fu_udev_device_pwrite_full (FuUdevDevice *self, goffset port,
+			    const guint8 *buf, gsize bufsz,
+			    GError **error)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 
@@ -921,7 +1002,7 @@ fu_udev_device_pwrite (FuUdevDevice *self, goffset port, guint8 data, GError **e
 	g_return_val_if_fail (priv->fd > 0, FALSE);
 
 #ifdef HAVE_PWRITE
-	if (pwrite (priv->fd, &data, 1, port) != 1) {
+	if (pwrite (priv->fd, buf, bufsz, port) != (gssize) bufsz) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
@@ -941,6 +1022,102 @@ fu_udev_device_pwrite (FuUdevDevice *self, goffset port, guint8 data, GError **e
 }
 
 /**
+ * fu_udev_device_pwrite:
+ * @self: A #FuUdevDevice
+ * @port: offset address
+ * @data: value
+ * @error: A #GError, or %NULL
+ *
+ * Write to a file descriptor at a given offset.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.3.3
+ **/
+gboolean
+fu_udev_device_pwrite (FuUdevDevice *self, goffset port, guint8 data, GError **error)
+{
+	return fu_udev_device_pwrite_full (self, port, &data, 0x01, error);
+}
+
+/**
+ * fu_udev_device_get_parent_name
+ * @self: A #FuUdevDevice
+ *
+ * Returns the name of the direct ancestor of this device
+ *
+ * Returns: string or NULL if unset or invalid
+ *
+ * Since: 1.4.5
+ **/
+gchar *
+fu_udev_device_get_parent_name (FuUdevDevice *self)
+{
+#ifdef HAVE_GUDEV
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GUdevDevice) parent = NULL;
+
+	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), NULL);
+
+	parent = g_udev_device_get_parent (priv->udev_device);
+	return parent == NULL ? NULL : g_strdup (g_udev_device_get_name (parent));
+#else
+	return NULL;
+#endif
+}
+
+/**
+ * fu_udev_device_get_sysfs_attr:
+ * @self: A #FuUdevDevice
+ * @attr: name of attribute to get
+ * @error: A #GError, or %NULL
+ *
+ * Reads an arbitrary sysfs attribute 'attr' associated with UDEV device
+ *
+ * Returns: string or NULL
+ *
+ * Since: 1.4.5
+ **/
+const gchar *
+fu_udev_device_get_sysfs_attr (FuUdevDevice *self, const gchar *attr,
+			       GError **error)
+{
+#ifdef HAVE_GUDEV
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	const gchar *result;
+
+	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), FALSE);
+	g_return_val_if_fail (attr != NULL, FALSE);
+
+	/* nothing to do */
+	if (priv->udev_device == NULL) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_NOT_FOUND,
+				     "not yet initialized");
+		return NULL;
+	}
+	result = g_udev_device_get_sysfs_attr (priv->udev_device, attr);
+	if (result == NULL) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_FOUND,
+			     "attribute %s returned no data",
+			     attr);
+		return FALSE;
+	}
+
+	return result;
+#endif
+	g_set_error_literal (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_FAILED,
+			     "not supported");
+	return NULL;
+
+}
+
+/**
  * fu_udev_device_pread:
  * @self: A #FuUdevDevice
  * @port: offset address
@@ -956,30 +1133,101 @@ fu_udev_device_pwrite (FuUdevDevice *self, goffset port, guint8 data, GError **e
 gboolean
 fu_udev_device_pread (FuUdevDevice *self, goffset port, guint8 *data, GError **error)
 {
-	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	return fu_udev_device_pread_full (self, port, data, 0x1, error);
+}
+
+
+/**
+ * fu_udev_device_write_sysfs:
+ * @self: A #FuUdevDevice
+ * @attribute: sysfs attribute name
+ * @val: data to write into the attribute
+ * @error: A #GError, or %NULL
+ *
+ * Writes data into a sysfs attribute
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.4.5
+ **/
+gboolean
+fu_udev_device_write_sysfs (FuUdevDevice *self, const gchar *attribute,
+			    const gchar *val, GError **error)
+{
+#ifndef _WIN32
+	ssize_t n;
+	int r;
+	int fd;
+	g_autofree gchar *path = NULL;
 
 	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), FALSE);
-	g_return_val_if_fail (port != 0x0, FALSE);
-	g_return_val_if_fail (data != NULL, FALSE);
-	g_return_val_if_fail (priv->fd > 0, FALSE);
+	g_return_val_if_fail (attribute != NULL, FALSE);
+	g_return_val_if_fail (val != NULL, FALSE);
 
-#ifdef HAVE_PWRITE
-	if (pread (priv->fd, data, 1, port) != 1) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_FAILED,
-			     "failed to read from port %04x: %s",
-			     (guint) port,
-			     strerror (errno));
+	path = g_build_filename (fu_udev_device_get_sysfs_path (self),
+				 attribute, NULL);
+	fd = open (path, O_WRONLY | O_CLOEXEC);
+	if (fd < 0) {
+		g_set_error (error, G_IO_ERROR,
+			     g_io_error_from_errno (errno),
+			     "could not open %s: %s",
+			     path,
+			     g_strerror (errno));
 		return FALSE;
 	}
+
+	do {
+		n = write (fd, val, strlen (val));
+		if (n < 1 && errno != EINTR) {
+			g_set_error (error, G_IO_ERROR,
+				     g_io_error_from_errno (errno),
+				     "could not write to %s: %s",
+				     path,
+				     g_strerror (errno));
+			(void) close (fd);
+			return FALSE;
+		}
+	} while (n < 1);
+
+	r = close (fd);
+	if (r < 0 && errno != EINTR) {
+		g_set_error (error, G_IO_ERROR,
+			     g_io_error_from_errno (errno),
+			     "could not close %s: %s",
+			     path,
+			     g_strerror (errno));
+		return FALSE;
+	}
+
 	return TRUE;
 #else
 	g_set_error_literal (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Not supported as pread() is unavailable");
+			     "sysfs attributes not supported on Windows");
 	return FALSE;
+#endif
+}
+
+/**
+ * fu_udev_device_get_devtype
+ * @self: A #FuUdevDevice
+ *
+ * Returns the Udev device type
+ *
+ * Returns: device type specified in the uevent
+ *
+ * Since: 1.4.5
+ **/
+const gchar *
+fu_udev_device_get_devtype (FuUdevDevice *self)
+{
+#ifdef HAVE_GUDEV
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+
+	return g_udev_device_get_devtype (priv->udev_device);
+#else
+	return NULL;
 #endif
 }
 
@@ -1010,16 +1258,15 @@ fu_udev_device_set_property (GObject *object, guint prop_id,
 			     const GValue *value, GParamSpec *pspec)
 {
 	FuUdevDevice *self = FU_UDEV_DEVICE (object);
-	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 	switch (prop_id) {
 	case PROP_UDEV_DEVICE:
 		fu_udev_device_set_dev (self, g_value_get_object (value));
 		break;
 	case PROP_SUBSYSTEM:
-		priv->subsystem = g_value_dup_string (value);
+		fu_udev_device_set_subsystem (self, g_value_get_string (value));
 		break;
 	case PROP_DEVICE_FILE:
-		priv->device_file = g_value_dup_string (value);
+		fu_udev_device_set_device_file (self, g_value_get_string (value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

@@ -23,6 +23,12 @@ msgid_plural "%.0f minutes remaining"
 msgstr[0] "Manca %.0f minut"
 msgstr[1] "Manquen %.0f minuts"
 
+#. TRANSLATORS: the CPU microcode is firmware loaded onto the CPU
+#. * at system bootup
+#, c-format
+msgid "%s CPU Microcode Update"
+msgstr "%s Actualitza el microprogramari de la CPU"
+
 #. TRANSLATORS: ME stands for Management Engine, where
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
@@ -318,8 +324,16 @@ msgid "Continue with update?"
 msgstr "Continuo amb l'actualització?"
 
 #. TRANSLATORS: command description
-msgid "Convert firmware to DFU format"
-msgstr "Converteix el microprogramari al format DFU"
+msgid "Convert a firmware file"
+msgstr "Converteix un fitxer de microprogramari"
+
+#. TRANSLATORS: when the update was built
+msgid "Created"
+msgstr "Creat"
+
+#. TRANSLATORS: the release urgency
+msgid "Critical"
+msgstr "Crítica"
 
 #. TRANSLATORS: Device supports some form of checksum verification
 msgid "Cryptographic hash verification is available"
@@ -489,10 +503,6 @@ msgstr "S'està descarregant..."
 #. TRANSLATORS: command description
 msgid "Dump SMBIOS data from a file"
 msgstr "Bolca les dades al SMBIOS des d'un fitxer"
-
-#. TRANSLATORS: command description
-msgid "Dump details about a firmware file"
-msgstr "Bolca els detalls sobre un fitxer de microprogramari"
 
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Duration"
@@ -702,6 +712,10 @@ msgstr "Obté els resultats de l'última actualització"
 msgid "Hardware is waiting to be replugged"
 msgstr "El maquinari està esperant a ser endollat"
 
+#. TRANSLATORS: the release urgency
+msgid "High"
+msgstr "Alta"
+
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
 msgstr "Està ociós..."
@@ -805,9 +819,17 @@ msgstr "Llista els tipus de microprogramari disponibles"
 msgid "Loading…"
 msgstr "S'està carregant..."
 
+#. TRANSLATORS: the release urgency
+msgid "Low"
+msgstr "Baixa"
+
 #. TRANSLATORS: command line option
 msgid "Manually whitelist specific plugins"
 msgstr "Connectors especíificats manualment a la llista blanca"
+
+#. TRANSLATORS: the release urgency
+msgid "Medium"
+msgstr "Mitjana"
 
 #. TRANSLATORS: remote URI
 msgid "Metadata Signature"
@@ -991,6 +1013,10 @@ msgstr "Refresca les metadades des del servidor remot"
 msgid "Reinstall current firmware on the device."
 msgstr "Torna a instal·lar el microprogramari actual al dispositiu."
 
+#. TRANSLATORS: command description
+msgid "Reinstall firmware on a device"
+msgstr "Torna a instal·lar el microprogramari a un dispositiu"
+
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
 #. * e.g. "1.2.3"
@@ -1078,21 +1104,9 @@ msgstr "Dispositiu seleccionat"
 msgid "Serial Number"
 msgstr "Número de sèrie"
 
-#. TRANSLATORS: command description
-msgid "Set product ID on firmware file"
-msgstr "Estableix l'ID del producte al fitxer del microprogramari"
-
-#. TRANSLATORS: command description
-msgid "Set release version on firmware file"
-msgstr "Estableix la versió de llançament al fitxer del microprogramari"
-
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
 msgstr "Estableix l'indicador de depuració durant l'actualització"
-
-#. TRANSLATORS: command description
-msgid "Set vendor ID on firmware file"
-msgstr "Estableix l'ID del proveïdor al fitxer del microprogramari"
 
 msgid "Sets the list of approved firmware"
 msgstr "Estableix la llista de microprogramari aprovat"
@@ -1186,11 +1200,6 @@ msgstr "S'han activat correctament tots els dispositius"
 msgid "Successfully disabled remote"
 msgstr "El remot s'ha inhabilitat correctament"
 
-#. TRANSLATORS: success message where we made the firmware on the
-#. * device older than it was before
-msgid "Successfully downgraded device"
-msgstr "El dispositiu s'ha desactualitzat correctament"
-
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata: "
@@ -1273,6 +1282,7 @@ msgstr "Utilitat per al microprogramari UEFI"
 
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
+#. TRANSLATORS: unknown release urgency
 msgid "Unknown"
 msgstr "Desconegut"
 
@@ -1384,6 +1394,10 @@ msgstr[1] "Envia els informes aquesta vegada i torna a carregar-los després de 
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
 msgstr "L'enviament dels informes de microprogramari ajudarà als proveïdors de maquinari a identificar amb rapidesa les actualitzacions fallides i satisfactòries sobre els dispositius reals."
 
+#. TRANSLATORS: how important the release is
+msgid "Urgency"
+msgstr "Urgència"
+
 #. TRANSLATORS: command line option
 msgid "Use quirk flags when installing firmware"
 msgstr "Usa les etiquetes peculiars en instal·lar el microprogramari"
@@ -1439,3 +1453,20 @@ msgstr "S'està escrivint..."
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
 msgstr "És possible que el vostre distribuïdor no hagi verificat cap de les actualitzacions del microprogramari per a la compatibilitat amb el vostre sistema o els dispositius connectats."
+
+#. TRANSLATORS: program name
+msgid "fwupd TPM event log utility"
+msgstr "Utilitat per al registre d’esdeveniments TPM del fwupd"
+
+#. TRANSLATORS: message letting the user know no device upgrade available due
+#. to missing on LVFS
+#. * %1 is the device name
+#, c-format
+msgid "• %s has no available firmware updates"
+msgstr "• %s no té disponible cap actualització de microprogramari"
+
+#. TRANSLATORS: message letting the user know no device upgrade available
+#. * %1 is the device name
+#, c-format
+msgid "• %s has the latest available firmware version"
+msgstr "• %s té disponible la darrera versió del microprogramari"

@@ -1,6 +1,9 @@
+subdir('ccgx')
+subdir('cpu')
 subdir('dfu')
 subdir('colorhug')
 subdir('ebitdo')
+subdir('ep963x')
 subdir('fastboot')
 subdir('fresco-pd')
 subdir('jabra')
@@ -61,7 +64,6 @@ endif
 
 if get_option('plugin_thunderbolt') and get_option('gudev')
 subdir('thunderbolt')
-subdir('thunderbolt-power')
 endif
 
 if get_option('plugin_redfish')

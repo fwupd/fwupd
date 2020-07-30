@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version : '1.3.11',
+  version : '1.4.5',
   license : 'LGPL-2.1+',
   meson_version : '>=0.47.0',
   default_options : ['warning_level=2', 'c_std=c99'],
@@ -63,6 +63,7 @@ warning_flags = [
   '-Wcast-align',
   '-Wclobbered',
   '-Wdeclaration-after-statement',
+  '-Wdiscarded-qualifiers',
   '-Wduplicated-branches',
   '-Wduplicated-cond',
   '-Wempty-body',
@@ -75,6 +76,7 @@ warning_flags = [
   '-Wincompatible-pointer-types-discards-qualifiers',
   '-Winit-self',
   '-Wlogical-op',
+  '-Wmaybe-uninitialized',
   '-Wmissing-declarations',
   '-Wmissing-format-attribute',
   '-Wmissing-include-dirs',
@@ -86,7 +88,6 @@ warning_flags = [
   '-Wno-address-of-packed-member',  # incompatible with g_autoptr()
   '-Wno-unknown-pragmas',
   '-Wno-deprecated-declarations',
-  '-Wno-discarded-qualifiers',
   '-Wno-missing-field-initializers',
   '-Wno-strict-aliasing',
   '-Wno-suggest-attribute=format',
@@ -145,6 +146,9 @@ add_project_arguments('-DFWUPD_DISABLE_DEPRECATED', language : 'c')
 add_project_arguments('-D_BSD_SOURCE', language : 'c')
 add_project_arguments('-D_XOPEN_SOURCE=700', language : 'c')
 
+# needed for memfd_create()
+add_project_arguments('-D_GNU_SOURCE', language : 'c')
+
 # sanity check
 if get_option('build') == 'all'
   build_standalone = true
@@ -197,6 +201,7 @@ gusb = dependency('gusb', version : '>= 0.2.9', fallback : ['gusb', 'gusb_dep'])
 sqlite = dependency('sqlite3')
 libarchive = dependency('libarchive')
 endif
+libjcat = dependency('jcat', version : '>= 0.1.0', fallback : ['libjcat', 'libjcat_dep'])
 libjsonglib = dependency('json-glib-1.0', version : '>= 1.1.1')
 valgrind = dependency('valgrind', required: false)
 soup = dependency('libsoup-2.4', version : '>= 2.51.92')
@@ -212,29 +217,15 @@ if build_daemon
     udevdir = udev.get_pkgconfig_variable('udevdir')
   endif
 endif
-if get_option('pkcs7')
-  gnutls = dependency('gnutls', version : '>= 3.4.4.1')
-  if gnutls.version().version_compare('>= 3.6.0')
-    conf.set('HAVE_GNUTLS_3_6_0', '1')
-  endif
-  conf.set('ENABLE_PKCS7', '1')
-endif
-if get_option('gpg')
-  gpgme = cc.find_library('gpgme')
-  gpgerror = cc.find_library('gpg-error')
-  conf.set('ENABLE_GPG', '1')
-endif
 libm = cc.find_library('m', required: false)
-libgcab = dependency('libgcab-1.0', fallback : ['gcab', 'gcab_dep'])
-if libgcab.version().version_compare('>= 0.8')
-  conf.set('HAVE_GCAB_0_8', '1')
-endif
-if libgcab.version().version_compare('>= 1.0')
-  conf.set('HAVE_GCAB_1_0', '1')
-endif
+libgcab = dependency('libgcab-1.0', version : '>= 1.0', fallback : ['gcab', 'gcab_dep'])
 gcab = find_program('gcab', required : true)
 bashcomp = dependency('bash-completion', required: false)
 python3 = find_program('python3')
+tpm2tss = dependency('tss2-esys', version : '>= 2.0', required: false)
+if tpm2tss.found()
+  conf.set('HAVE_TSS2', '1')
+endif
 
 platform_deps = []
 if get_option('default_library') != 'static'
@@ -283,8 +274,8 @@ if cc.has_function('pwrite', args : '-D_XOPEN_SOURCE')
   conf.set('HAVE_PWRITE', '1')
 endif
 
-if build_standalone and get_option('plugin_tpm')
-  tpm2tss = dependency('tss2-esys', version : '>= 2.0')
+if build_standalone and get_option('plugin_tpm') and not tpm2tss.found()
+  error('tss2-esys is required for -Dplugin_tpm=true')
 endif
 
 if build_standalone and get_option('plugin_uefi')
@@ -296,7 +287,6 @@ if build_standalone and get_option('plugin_uefi')
   efiboot = dependency('efiboot')
   objcopy = find_program ('objcopy')
   readelf = find_program ('readelf')
-  tpm2tss = dependency('tss2-esys', version : '>= 2.0')
   genpeimg = find_program ('genpeimg', required: false)
 
   efi_app_location = join_paths(libexecdir, 'fwupd', 'efi')
@@ -365,11 +355,16 @@ if build_standalone and get_option('systemd')
   systemd = dependency('systemd', version : '>= 211')
   conf.set('HAVE_SYSTEMD' , '1')
   conf.set('HAVE_LOGIND' , '1')
-  systemdunitdir = get_option('systemdunitdir')
-  if systemdunitdir == '' and get_option('systemd')
+  systemd_root_prefix = get_option('systemd_root_prefix')
+  if systemd_root_prefix == ''
     systemdunitdir = systemd.get_pkgconfig_variable('systemdsystemunitdir')
+    systemdsystempresetdir = systemd.get_pkgconfig_variable('systemdsystempresetdir')
+    systemd_shutdown_dir = systemd.get_pkgconfig_variable('systemdshutdowndir')
+  else
+    systemdunitdir = systemd.get_pkgconfig_variable('systemdsystemunitdir', define_variable: ['rootprefix', systemd_root_prefix])
+    systemdsystempresetdir = systemd.get_pkgconfig_variable('systemdsystempresetdir', define_variable: ['rootprefix', systemd_root_prefix])
+    systemd_shutdown_dir = systemd.get_pkgconfig_variable('systemdshutdowndir', define_variable: ['rootprefix', systemd_root_prefix])
   endif
-  systemdsystempresetdir = systemd.get_pkgconfig_variable('systemdsystempresetdir')
 endif
 
 if build_standalone and get_option('elogind')

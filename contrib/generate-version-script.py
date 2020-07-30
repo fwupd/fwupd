@@ -13,6 +13,7 @@ from pkg_resources import parse_version
 XMLNS = '{http://www.gtk.org/introspection/core/1.0}'
 XMLNS_C = '{http://www.gtk.org/introspection/c/1.0}'
 
+
 def usage(return_code):
     """ print usage and exit with the supplied return code """
     if return_code == 0:
@@ -21,6 +22,7 @@ def usage(return_code):
         out = sys.stderr
     out.write("usage: %s <NAME> <INPUT> <OUTPUT>\n" % sys.argv[0])
     sys.exit(return_code)
+
 
 class LdVersionScript:
     """ Rasterize some text """
@@ -31,9 +33,13 @@ class LdVersionScript:
 
     def _add_node(self, node):
         identifier = node.attrib[XMLNS_C + 'identifier']
-        if 'version' not in node.attrib:
+        introspectable = int(node.get('introspectable', 1))
+        version = node.get('version', None)
+        if introspectable and not version:
             print('No version for', identifier)
             sys.exit(1)
+        if not version:
+            return None
         version = node.attrib['version']
         if version not in self.releases:
             self.releases[version] = []
@@ -58,14 +64,18 @@ class LdVersionScript:
         for node in cls.findall(XMLNS + 'method'):
             version_tmp = self._add_node(node)
             if version_tmp:
-                if not version_lowest or parse_version(version_tmp) < parse_version(version_lowest):
+                if not version_lowest or parse_version(version_tmp) < parse_version(
+                    version_lowest
+                ):
                     version_lowest = version_tmp
 
         # add the constructor
         for node in cls.findall(XMLNS + 'constructor'):
             version_tmp = self._add_node(node)
             if version_tmp:
-                if not version_lowest or parse_version(version_tmp) < parse_version(version_lowest):
+                if not version_lowest or parse_version(version_tmp) < parse_version(
+                    version_lowest
+                ):
                     version_lowest = version_tmp
 
         # finally add the get_type symbol
@@ -106,6 +116,7 @@ class LdVersionScript:
                 verout += '};\n'
             oldversion = version
         return verout
+
 
 if __name__ == '__main__':
     if {'-?', '--help', '--usage'}.intersection(set(sys.argv)):

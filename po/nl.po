@@ -69,10 +69,6 @@ msgstr "Wist de resultaten van de laatste update"
 msgid "Command not found"
 msgstr "De opdracht kon niet worden gevonden"
 
-#. TRANSLATORS: command description
-msgid "Convert firmware to DFU format"
-msgstr "Firmware converteren naar DFU-formaat"
-
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
 msgstr "DFU-hulpmiddel"
@@ -107,10 +103,6 @@ msgstr "Afgerond!"
 #, c-format
 msgid "Downgrading %s from %s to %s... "
 msgstr "Bezig met downgraden van %s van %s naar %s..."
-
-#. TRANSLATORS: command description
-msgid "Dump details about a firmware file"
-msgstr "Details over een firmware-bestand wegschrijven"
 
 #. TRANSLATORS: exit after we've started up, used for user profiling
 msgid "Exit after a small delay"
@@ -230,18 +222,6 @@ msgstr "De installatie inplannen voor de volgende herstart, indien mogelijk"
 msgid "Scheduling…"
 msgstr "Bezig met inplannen..."
 
-#. TRANSLATORS: command description
-msgid "Set product ID on firmware file"
-msgstr "Product-ID instellen op het firmware-bestand"
-
-#. TRANSLATORS: command description
-msgid "Set release version on firmware file"
-msgstr "Uitgave-versie instellen op het firmware-bestand"
-
-#. TRANSLATORS: command description
-msgid "Set vendor ID on firmware file"
-msgstr "Leveranciers-ID instellen op het firmware-bestand"
-
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
 msgstr "Foutopsporingsopties weergeven"
@@ -252,6 +232,7 @@ msgstr "Extra foutopsporingsinformatie weergeven"
 
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
+#. TRANSLATORS: unknown release urgency
 msgid "Unknown"
 msgstr "Onbekend"
 

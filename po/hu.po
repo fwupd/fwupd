@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Balázs Meskó <meskobalazs@gmail.com>, 2017-2019
+# Balázs Meskó <mesko.balazs@fsf.hu>, 2017-2019
 # Balázs Úr, 2015-2018
 # Gabor Kelemen <kelemeng at ubuntu dot com>, 2016
 # kelemeng <kelemeng@ubuntu.com>, 2016
@@ -313,10 +313,6 @@ msgstr "A parancs nem található"
 msgid "Continue with update?"
 msgstr "Folytatja a frissítést?"
 
-#. TRANSLATORS: command description
-msgid "Convert firmware to DFU format"
-msgstr "Firmware átalakítása DFU formátumra"
-
 #. TRANSLATORS: Device supports some form of checksum verification
 msgid "Cryptographic hash verification is available"
 msgstr "Kriptográfiai hash ellenőrzés érhető el"
@@ -477,10 +473,6 @@ msgstr "Letöltés…"
 #. TRANSLATORS: command description
 msgid "Dump SMBIOS data from a file"
 msgstr "SMBIOS adatok kiírása egy fájlból"
-
-#. TRANSLATORS: command description
-msgid "Dump details about a firmware file"
-msgstr "Részletek kiírása egy firmware fájlról"
 
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Duration"
@@ -1049,21 +1041,9 @@ msgstr "Kiválasztott eszköz"
 msgid "Serial Number"
 msgstr "Sorozatszám"
 
-#. TRANSLATORS: command description
-msgid "Set product ID on firmware file"
-msgstr "Termékazonosító beállítása a firmware fájlon"
-
-#. TRANSLATORS: command description
-msgid "Set release version on firmware file"
-msgstr "Kiadási verzió beállítása a firmware fájlon"
-
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
 msgstr "A hibakeresési jelző beállítása frissítéskor"
-
-#. TRANSLATORS: command description
-msgid "Set vendor ID on firmware file"
-msgstr "Gyártóazonosító beállítása a firmware fájlon"
 
 msgid "Sets the list of approved firmware"
 msgstr "Beállítja a jóváhagyott firmwarek listáját"
@@ -1157,11 +1137,6 @@ msgstr "Az összes eszköz sikeresen aktiválva"
 msgid "Successfully disabled remote"
 msgstr "Távoli tároló sikeresen letiltva"
 
-#. TRANSLATORS: success message where we made the firmware on the
-#. * device older than it was before
-msgid "Successfully downgraded device"
-msgstr "Eszköz sikeresen visszaállítva"
-
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata: "
@@ -1244,6 +1219,7 @@ msgstr "UEFI firmware segédprogram"
 
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
+#. TRANSLATORS: unknown release urgency
 msgid "Unknown"
 msgstr "Ismeretlen"
 

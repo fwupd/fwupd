@@ -3,7 +3,8 @@ set -e
 #prep
 export LC_ALL=C.UTF-8
 export DESTDIR=`pwd`/dist
-build=`pwd`/build-win32
+root=`pwd`
+build=$root/build-win32
 rm -rf $DESTDIR $build
 
 #build
@@ -14,7 +15,6 @@ meson .. \
     --libexecdir=$target \
     --bindir=$target \
     -Dbuild=standalone \
-    -Dgpg=false \
     -Dplugin_coreboot=false \
     -Dplugin_flashrom=false \
     -Dplugin_uefi=false \
@@ -37,15 +37,21 @@ meson .. \
     -Dgcab:tests=false \
     -Dlibxmlb:introspection=false \
     -Dlibxmlb:gtkdoc=false \
+    -Dlibjcat:man=false \
+    -Dlibjcat:gpg=false \
+    -Dlibjcat:introspection=false \
     -Dgudev=false $@
-meson introspect . --projectinfo | jq -r .version > $DESTDIR/VERSION
+VERSION=$(meson introspect . --projectinfo | jq -r .version)
 ninja -v
-
-#prepare archive to run on Windows
 ninja -v install
-cd $DESTDIR
+
+#generate news release
+cd $root
+contrib/ci/generate_news.py $VERSION > $DESTDIR/news.txt
+echo $VERSION > $DESTDIR/VERSION
 
 # create a setup binary
+cd $DESTDIR
 mkdir -p $DESTDIR/setup
 makensis -NOCD $build/contrib/setup-win32.nsi
 

@@ -152,7 +152,7 @@ fu_synaprom_device_set_version (FuSynapromDevice *self,
 
 	/* set display version */
 	str = g_strdup_printf ("%02u.%02u.%u", vmajor, vminor, buildnum);
-	fu_device_set_version (FU_DEVICE (self), str, FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version (FU_DEVICE (self), str);
 
 	/* we need this for checking the firmware compatibility later */
 	self->vmajor = vmajor;
@@ -362,6 +362,12 @@ fu_synaprom_device_attach (FuDevice *device, GError **error)
 	gsize actual_len = 0;
 	guint8 data[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
+	/* sanity check */
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug ("already in runtime mode, skipping");
+		return TRUE;
+	}
+
 	ret = g_usb_device_control_transfer (usb_device,
 					     G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					     G_USB_DEVICE_REQUEST_TYPE_VENDOR,
@@ -397,6 +403,12 @@ fu_synaprom_device_detach (FuDevice *device, GError **error)
 	gsize actual_len = 0;
 	guint8 data[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00 };
 
+	/* sanity check */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug ("already in bootloader mode, skipping");
+		return TRUE;
+	}
+
 	ret = g_usb_device_control_transfer (usb_device,
 					     G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					     G_USB_DEVICE_REQUEST_TYPE_VENDOR,
@@ -429,6 +441,7 @@ fu_synaprom_device_init (FuSynapromDevice *self)
 {
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_CAN_VERIFY);
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_protocol (FU_DEVICE (self), "com.synaptics.prometheus");
 	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_name (FU_DEVICE (self), "Prometheus");

@@ -10,9 +10,9 @@ endif
 
 if get_option('tests')
   subdir('tests')
-endif
-if build_daemon
-  subdir('installed-tests')
+  if build_daemon
+    subdir('installed-tests')
+  endif
 endif
 
 if build_standalone
@@ -92,7 +92,7 @@ if get_option('systemd') and build_daemon
     output : 'fwupd.shutdown',
     configuration : con2,
     install: true,
-    install_dir: systemd.get_pkgconfig_variable('systemdshutdowndir'),
+    install_dir: systemd_shutdown_dir,
   )
 endif
 

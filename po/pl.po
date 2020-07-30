@@ -24,6 +24,12 @@ msgstr[1] "Pozostały %.0f minuty"
 msgstr[2] "Pozostało %.0f minut"
 msgstr[3] "Pozostało %.0f minut"
 
+#. TRANSLATORS: the CPU microcode is firmware loaded onto the CPU
+#. * at system bootup
+#, c-format
+msgid "%s CPU Microcode Update"
+msgstr "Aktualizacja mikrokodu procesora %s"
+
 #. TRANSLATORS: ME stands for Management Engine, where
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
@@ -333,8 +339,16 @@ msgid "Continue with update?"
 msgstr "Kontynuować aktualizację?"
 
 #. TRANSLATORS: command description
-msgid "Convert firmware to DFU format"
-msgstr "Konwertuje oprogramowanie sprzętowe do formatu DFU"
+msgid "Convert a firmware file"
+msgstr "Konwertuje plik oprogramowania sprzętowego"
+
+#. TRANSLATORS: when the update was built
+msgid "Created"
+msgstr "Utworzono"
+
+#. TRANSLATORS: the release urgency
+msgid "Critical"
+msgstr "Krytyczna"
 
 #. TRANSLATORS: Device supports some form of checksum verification
 msgid "Cryptographic hash verification is available"
@@ -508,10 +522,6 @@ msgstr "Pobieranie…"
 #. TRANSLATORS: command description
 msgid "Dump SMBIOS data from a file"
 msgstr "Zrzuca dane SMBIOS z pliku"
-
-#. TRANSLATORS: command description
-msgid "Dump details about a firmware file"
-msgstr "Zrzuca informacje o pliku oprogramowania sprzętowego"
 
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Duration"
@@ -725,6 +735,10 @@ msgstr "Uzyskuje wyniki z ostatniej aktualizacji"
 msgid "Hardware is waiting to be replugged"
 msgstr "Sprzęt czeka na ponowne podłączenie"
 
+#. TRANSLATORS: the release urgency
+msgid "High"
+msgstr "Wysoka"
+
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
 msgstr "Bezczynne…"
@@ -830,9 +844,17 @@ msgstr "Wyświetla listę dostępnych typów oprogramowania sprzętowego"
 msgid "Loading…"
 msgstr "Wczytywanie…"
 
+#. TRANSLATORS: the release urgency
+msgid "Low"
+msgstr "Niska"
+
 #. TRANSLATORS: command line option
 msgid "Manually whitelist specific plugins"
 msgstr "Ręcznie wstawia podane wtyczki na białą listę"
+
+#. TRANSLATORS: the release urgency
+msgid "Medium"
+msgstr "Średnia"
 
 #. TRANSLATORS: remote URI
 msgid "Metadata Signature"
@@ -1016,6 +1038,10 @@ msgstr "Odświeża metadane ze zdalnego serwera"
 msgid "Reinstall current firmware on the device."
 msgstr "Ponownie instaluje obecne oprogramowanie sprzętowe na urządzeniu."
 
+#. TRANSLATORS: command description
+msgid "Reinstall firmware on a device"
+msgstr "Ponownie instaluje oprogramowanie sprzętowe na urządzeniu"
+
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
 #. * e.g. "1.2.3"
@@ -1103,21 +1129,9 @@ msgstr "Wybrane urządzenie"
 msgid "Serial Number"
 msgstr "Numer seryjny"
 
-#. TRANSLATORS: command description
-msgid "Set product ID on firmware file"
-msgstr "Ustawia identyfikator produktu pliku oprogramowania sprzętowego"
-
-#. TRANSLATORS: command description
-msgid "Set release version on firmware file"
-msgstr "Ustawia wersję wydania pliku oprogramowania sprzętowego"
-
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
 msgstr "Ustawia flagę debugowania podczas aktualizacji"
-
-#. TRANSLATORS: command description
-msgid "Set vendor ID on firmware file"
-msgstr "Ustawia identyfikator dostawcy pliku oprogramowania sprzętowego"
 
 msgid "Sets the list of approved firmware"
 msgstr "Ustawienie listy zatwierdzonego oprogramowania sprzętowego"
@@ -1211,11 +1225,6 @@ msgstr "Pomyślnie aktywowano wszystkie urządzenia"
 msgid "Successfully disabled remote"
 msgstr "Pomyślnie wyłączono repozytorium"
 
-#. TRANSLATORS: success message where we made the firmware on the
-#. * device older than it was before
-msgid "Successfully downgraded device"
-msgstr "Pomyślnie zainstalowano poprzednią wersję na urządzeniu"
-
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata: "
@@ -1300,6 +1309,7 @@ msgstr "Narzędzie oprogramowania sprzętowego UEFI"
 
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
+#. TRANSLATORS: unknown release urgency
 msgid "Unknown"
 msgstr "Nieznane"
 
@@ -1415,6 +1425,10 @@ msgstr[3] "Wysłanie zgłoszeń tym razem i automatyczne wysyłanie zgłoszeń 
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
 msgstr "Wysyłanie zgłoszeń o oprogramowaniu sprzętowym pomaga dostawcom sprzętu szybko identyfikować nieudane i udane aktualizacje na prawdziwych urządzeniach."
 
+#. TRANSLATORS: how important the release is
+msgid "Urgency"
+msgstr "Pilność"
+
 #. TRANSLATORS: command line option
 msgid "Use quirk flags when installing firmware"
 msgstr "Używa flag poprawek podczas instalowania oprogramowania sprzętowego"
@@ -1470,3 +1484,20 @@ msgstr "Zapisywanie…"
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
 msgstr "Używana dystrybucja mogła nie sprawdzić zgodności aktualizacji oprogramowania sprzętowego z komputerem i podłączonymi urządzeniami."
+
+#. TRANSLATORS: program name
+msgid "fwupd TPM event log utility"
+msgstr "Narzędzie dziennika zdarzeń TPM usługi fwupd"
+
+#. TRANSLATORS: message letting the user know no device upgrade available due
+#. to missing on LVFS
+#. * %1 is the device name
+#, c-format
+msgid "• %s has no available firmware updates"
+msgstr "• Urządzenie %s nie ma dostępnych aktualizacji oprogramowania sprzętowego"
+
+#. TRANSLATORS: message letting the user know no device upgrade available
+#. * %1 is the device name
+#, c-format
+msgid "• %s has the latest available firmware version"
+msgstr "• Urządzenie %s ma najnowszą dostępną wersję oprogramowania sprzętowego"

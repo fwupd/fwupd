@@ -33,6 +33,12 @@ fu_synaptics_rmi_v5_device_detach (FuDevice *device, GError **error)
 	FuSynapticsRmiFlash *flash = fu_synaptics_rmi_device_get_flash (self);
 	g_autoptr(GByteArray) enable_req = g_byte_array_new ();
 
+	/* sanity check */
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug ("already in runtime mode, skipping");
+		return TRUE;
+	}
+
 	/* disable interrupts */
 	if (!fu_synaptics_rmi_device_disable_irqs (self, error))
 		return FALSE;

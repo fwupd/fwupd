@@ -13,14 +13,12 @@
 #include "fu-rts54hid-device.h"
 
 struct _FuRts54HidDevice {
-	FuUsbDevice			 parent_instance;
+	FuHidDevice			 parent_instance;
 	gboolean			 fw_auth;
 	gboolean			 dual_bank;
 };
 
-G_DEFINE_TYPE (FuRts54HidDevice, fu_rts54hid_device, FU_TYPE_USB_DEVICE)
-
-#define FU_RTS54HID_DEVICE_TIMEOUT			1000 /* ms */
+G_DEFINE_TYPE (FuRts54HidDevice, fu_rts54hid_device, FU_TYPE_HID_DEVICE)
 
 static void
 fu_rts54hid_device_to_string (FuDevice *device, guint idt, GString *str)
@@ -28,62 +26,6 @@ fu_rts54hid_device_to_string (FuDevice *device, guint idt, GString *str)
 	FuRts54HidDevice *self = FU_RTS54HID_DEVICE (device);
 	fu_common_string_append_kb (str, idt, "FwAuth", self->fw_auth);
 	fu_common_string_append_kb (str, idt, "DualBank", self->dual_bank);
-}
-
-gboolean
-fu_rts54hid_device_set_report (FuRts54HidDevice *self,
-			    guint8 *buf, gsize buf_sz,
-			    GError **error)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
-	gsize actual_len = 0;
-	if (!g_usb_device_control_transfer (usb_device,
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					    G_USB_DEVICE_RECIPIENT_INTERFACE,
-					    FU_HID_REPORT_SET,
-					    0x0200, 0x0000,
-					    buf, buf_sz,
-					    &actual_len,
-					    FU_RTS54HID_DEVICE_TIMEOUT * 2,
-					    NULL, error)) {
-		g_prefix_error (error, "failed to SetReport: ");
-		return FALSE;
-	}
-	if (actual_len != buf_sz) {
-		g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
-			     "only wrote %" G_GSIZE_FORMAT "bytes", actual_len);
-		return FALSE;
-	}
-	return TRUE;
-}
-
-gboolean
-fu_rts54hid_device_get_report (FuRts54HidDevice *self,
-			    guint8 *buf, gsize buf_sz,
-			    GError **error)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
-	gsize actual_len = 0;
-	if (!g_usb_device_control_transfer (usb_device,
-					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					    G_USB_DEVICE_RECIPIENT_INTERFACE,
-					    FU_HID_REPORT_GET,
-					    0x0100, 0x0000,
-					    buf, buf_sz,
-					    &actual_len, /* actual length */
-					    FU_RTS54HID_DEVICE_TIMEOUT,
-					    NULL, error)) {
-		g_prefix_error (error, "failed to GetReport: ");
-		return FALSE;
-	}
-	if (actual_len != buf_sz) {
-		g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
-			     "only read %" G_GSIZE_FORMAT "bytes", actual_len);
-		return FALSE;
-	}
-	return TRUE;
 }
 
 static gboolean
@@ -101,7 +43,10 @@ fu_rts54hid_device_set_clock_mode (FuRts54HidDevice *self, gboolean enable, GErr
 	};
 	guint8 buf[FU_RTS54FU_HID_REPORT_LENGTH] = { 0 };
 	memcpy (buf, &cmd_buffer, sizeof(cmd_buffer));
-	if (!fu_rts54hid_device_set_report (self, buf, sizeof(buf), error)) {
+	if (!fu_hid_device_set_report (FU_HID_DEVICE (self), 0x0, buf, sizeof(buf),
+				       FU_RTS54HID_DEVICE_TIMEOUT * 2,
+				       FU_HID_DEVICE_FLAG_NONE,
+				       error)) {
 		g_prefix_error (error, "failed to set clock-mode=%i: ", enable);
 		return FALSE;
 	}
@@ -120,7 +65,10 @@ fu_rts54hid_device_reset_to_flash (FuRts54HidDevice *self, GError **error)
 	};
 	guint8 buf[FU_RTS54FU_HID_REPORT_LENGTH] = { 0 };
 	memcpy (buf, &cmd_buffer, sizeof(cmd_buffer));
-	if (!fu_rts54hid_device_set_report (self, buf, sizeof(buf), error)) {
+	if (!fu_hid_device_set_report (FU_HID_DEVICE (self), 0x0, buf, sizeof(buf),
+				       FU_RTS54HID_DEVICE_TIMEOUT * 2,
+				       FU_HID_DEVICE_FLAG_NONE,
+				       error)) {
 		g_prefix_error (error, "failed to soft reset: ");
 		return FALSE;
 	}
@@ -152,7 +100,10 @@ fu_rts54hid_device_write_flash (FuRts54HidDevice *self,
 			     data, data_sz, 0x0,					/* src */
 			     data_sz, error))
 		return FALSE;
-	if (!fu_rts54hid_device_set_report (self, buf, sizeof(buf), error)) {
+	if (!fu_hid_device_set_report (FU_HID_DEVICE (self), 0x0, buf, sizeof(buf),
+				       FU_RTS54HID_DEVICE_TIMEOUT * 2,
+				       FU_HID_DEVICE_FLAG_NONE,
+				       error)) {
 		g_prefix_error (error, "failed to write flash @%08x: ", (guint) addr);
 		return FALSE;
 	}
@@ -176,10 +127,16 @@ fu_rts54hid_device_verify_update_fw (FuRts54HidDevice *self, GError **error)
 
 	/* set then get */
 	memcpy (buf, &cmd_buffer, sizeof(cmd_buffer));
-	if (!fu_rts54hid_device_set_report (self, buf, sizeof(buf), error))
+	if (!fu_hid_device_set_report (FU_HID_DEVICE (self), 0x0, buf, sizeof(buf),
+				       FU_RTS54HID_DEVICE_TIMEOUT * 2,
+				       FU_HID_DEVICE_FLAG_NONE,
+				       error))
 		return FALSE;
 	g_usleep (4 * G_USEC_PER_SEC);
-	if (!fu_rts54hid_device_get_report (self, buf, sizeof(buf), error))
+	if (!fu_hid_device_get_report (FU_HID_DEVICE (self), 0x0, buf, sizeof(buf),
+				       FU_RTS54HID_DEVICE_TIMEOUT,
+				       FU_HID_DEVICE_FLAG_NONE,
+				       error))
 		return FALSE;
 
 	/* check device status */
@@ -210,7 +167,10 @@ fu_rts54hid_device_erase_spare_bank (FuRts54HidDevice *self, GError **error)
 	};
 	guint8 buf[FU_RTS54FU_HID_REPORT_LENGTH] = { 0 };
 	memcpy (buf, &cmd_buffer, sizeof(cmd_buffer));
-	if (!fu_rts54hid_device_set_report (self, buf, sizeof(buf), error)) {
+	if (!fu_hid_device_set_report (FU_HID_DEVICE (self), 0x0, buf, sizeof(buf),
+				       FU_RTS54HID_DEVICE_TIMEOUT * 2,
+				       FU_HID_DEVICE_FLAG_NONE,
+				       error)) {
 		g_prefix_error (error, "failed to erase spare bank: ");
 		return FALSE;
 	}
@@ -235,9 +195,15 @@ fu_rts54hid_device_ensure_status (FuRts54HidDevice *self, GError **error)
 
 	/* set then get */
 	memcpy (buf, &cmd_buffer, sizeof(cmd_buffer));
-	if (!fu_rts54hid_device_set_report (self, buf, sizeof(buf), error))
+	if (!fu_hid_device_set_report (FU_HID_DEVICE (self), 0x0, buf, sizeof(buf),
+				       FU_RTS54HID_DEVICE_TIMEOUT * 2,
+				       FU_HID_DEVICE_FLAG_NONE,
+				       error))
 		return FALSE;
-	if (!fu_rts54hid_device_get_report (self, buf, sizeof(buf), error))
+	if (!fu_hid_device_get_report (FU_HID_DEVICE (self), 0x0, buf, sizeof(buf),
+				       FU_RTS54HID_DEVICE_TIMEOUT,
+				       FU_HID_DEVICE_FLAG_NONE,
+				       error))
 		return FALSE;
 
 	/* check the hardware capabilities */
@@ -246,26 +212,7 @@ fu_rts54hid_device_ensure_status (FuRts54HidDevice *self, GError **error)
 
 	/* hub version is more accurate than bcdVersion */
 	version = g_strdup_printf ("%x.%x", buf[0x40 + 10], buf[0x40 + 11]);
-	fu_device_set_version (FU_DEVICE (self), version, FWUPD_VERSION_FORMAT_PAIR);
-	return TRUE;
-}
-
-static gboolean
-fu_rts54hid_device_open (FuUsbDevice *device, GError **error)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
-
-	/* disconnect, set config, reattach kernel driver */
-	if (!g_usb_device_set_configuration (usb_device, 0x00, error))
-		return FALSE;
-	if (!g_usb_device_claim_interface (usb_device, 0x00, /* HID */
-					   G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					   error)) {
-		g_prefix_error (error, "failed to claim interface: ");
-		return FALSE;
-	}
-
-	/* success */
+	fu_device_set_version (FU_DEVICE (self), version);
 	return TRUE;
 }
 
@@ -294,25 +241,12 @@ fu_rts54hid_device_setup (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_rts54hid_device_close (FuUsbDevice *device, GError **error)
+fu_rts54hid_device_close (FuHidDevice *device, GError **error)
 {
 	FuRts54HidDevice *self = FU_RTS54HID_DEVICE (device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
 
 	/* set MCU to normal clock rate */
-	if (!fu_rts54hid_device_set_clock_mode (self, FALSE, error))
-		return FALSE;
-
-	/* we're done here */
-	if (!g_usb_device_release_interface (usb_device, 0x00, /* HID */
-					     G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					     error)) {
-		g_prefix_error (error, "failed to release interface: ");
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
+	return fu_rts54hid_device_set_clock_mode (self, FALSE, error);
 }
 
 static gboolean
@@ -378,16 +312,16 @@ static void
 fu_rts54hid_device_init (FuRts54HidDevice *self)
 {
 	fu_device_set_protocol (FU_DEVICE (self), "com.realtek.rts54");
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PAIR);
 }
 
 static void
 fu_rts54hid_device_class_init (FuRts54HidDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
+	FuHidDeviceClass *klass_hid_device = FU_HID_DEVICE_CLASS (klass);
 	klass_device->write_firmware = fu_rts54hid_device_write_firmware;
 	klass_device->to_string = fu_rts54hid_device_to_string;
 	klass_device->setup = fu_rts54hid_device_setup;
-	klass_usb_device->open = fu_rts54hid_device_open;
-	klass_usb_device->close = fu_rts54hid_device_close;
+	klass_hid_device->close = fu_rts54hid_device_close;
 }

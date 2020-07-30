@@ -183,6 +183,20 @@ fwupd_device_flag_to_string (FwupdDeviceFlags device_flag)
 		return "version-check-required";
 	if (device_flag == FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES)
 		return "install-all-releases";
+	if (device_flag == FWUPD_DEVICE_FLAG_MD_SET_NAME)
+		return "md-set-name";
+	if (device_flag == FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY)
+		return "md-set-name-category";
+	if (device_flag == FWUPD_DEVICE_FLAG_MD_SET_VERFMT)
+		return "md-set-verfmt";
+	if (device_flag == FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS)
+		return "add-counterpart-guids";
+	if (device_flag == FWUPD_DEVICE_FLAG_NO_GUID_MATCHING)
+		return "no-guid-matching";
+	if (device_flag == FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN)
+		return "updatable-hidden";
+	if (device_flag == FWUPD_DEVICE_FLAG_SKIPS_RESTART)
+		return "skips-restart";
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -267,6 +281,20 @@ fwupd_device_flag_from_string (const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_VERSION_CHECK_REQUIRED;
 	if (g_strcmp0 (device_flag, "install-all-releases") == 0)
 		return FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES;
+	if (g_strcmp0 (device_flag, "md-set-name") == 0)
+		return FWUPD_DEVICE_FLAG_MD_SET_NAME;
+	if (g_strcmp0 (device_flag, "md-set-name-category") == 0)
+		return FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY;
+	if (g_strcmp0 (device_flag, "md-set-verfmt") == 0)
+		return FWUPD_DEVICE_FLAG_MD_SET_VERFMT;
+	if (g_strcmp0 (device_flag, "add-counterpart-guids") == 0)
+		return FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS;
+	if (g_strcmp0 (device_flag, "no-guid-matching") == 0)
+		return FWUPD_DEVICE_FLAG_NO_GUID_MATCHING;
+	if (g_strcmp0 (device_flag, "updatable-hidden") == 0)
+		return FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN;
+	if (g_strcmp0 (device_flag, "skips-restart") == 0)
+		return FWUPD_DEVICE_FLAG_SKIPS_RESTART;
 	return FWUPD_DEVICE_FLAG_UNKNOWN;
 }
 
@@ -371,6 +399,54 @@ fwupd_trust_flag_from_string (const gchar *trust_flag)
 }
 
 /**
+ * fwupd_feature_flag_to_string:
+ * @feature_flag: A #FwupdFeatureFlags, e.g. %FWUPD_FEATURE_FLAG_DETACH_ACTION
+ *
+ * Converts a #FwupdFeatureFlags to a string.
+ *
+ * Return value: identifier string
+ *
+ * Since: 1.4.5
+ **/
+const gchar *
+fwupd_feature_flag_to_string (FwupdFeatureFlags feature_flag)
+{
+	if (feature_flag == FWUPD_FEATURE_FLAG_NONE)
+		return "none";
+	if (feature_flag == FWUPD_FEATURE_FLAG_CAN_REPORT)
+		return "can-report";
+	if (feature_flag == FWUPD_FEATURE_FLAG_DETACH_ACTION)
+		return "detach-action";
+	if (feature_flag == FWUPD_FEATURE_FLAG_UPDATE_ACTION)
+		return "update-action";
+	return NULL;
+}
+
+/**
+ * fwupd_feature_flag_from_string:
+ * @feature_flag: A string, e.g. `detach-action`
+ *
+ * Converts a string to a #FwupdFeatureFlags.
+ *
+ * Return value: enumerated value
+ *
+ * Since: 1.4.5
+ **/
+FwupdFeatureFlags
+fwupd_feature_flag_from_string (const gchar *feature_flag)
+{
+	if (g_strcmp0 (feature_flag, "none") == 0)
+		return FWUPD_FEATURE_FLAG_NONE;
+	if (g_strcmp0 (feature_flag, "can-report") == 0)
+		return FWUPD_FEATURE_FLAG_CAN_REPORT;
+	if (g_strcmp0 (feature_flag, "detach-action") == 0)
+		return FWUPD_FEATURE_FLAG_DETACH_ACTION;
+	if (g_strcmp0 (feature_flag, "update-action") == 0)
+		return FWUPD_FEATURE_FLAG_UPDATE_ACTION;
+	return FWUPD_FEATURE_FLAG_LAST;
+}
+
+/**
  * fwupd_keyring_kind_from_string:
  * @keyring_kind: a string, e.g. `gpg`
  *
@@ -389,6 +465,8 @@ fwupd_keyring_kind_from_string (const gchar *keyring_kind)
 		return FWUPD_KEYRING_KIND_GPG;
 	if (g_strcmp0 (keyring_kind, "pkcs7") == 0)
 		return FWUPD_KEYRING_KIND_PKCS7;
+	if (g_strcmp0 (keyring_kind, "jcat") == 0)
+		return FWUPD_KEYRING_KIND_JCAT;
 	return FWUPD_KEYRING_KIND_UNKNOWN;
 }
 
@@ -411,6 +489,8 @@ fwupd_keyring_kind_to_string (FwupdKeyringKind keyring_kind)
 		return "gpg";
 	if (keyring_kind == FWUPD_KEYRING_KIND_PKCS7)
 		return "pkcs7";
+	if (keyring_kind == FWUPD_KEYRING_KIND_JCAT)
+		return "jcat";
 	return NULL;
 }
 
@@ -473,6 +553,54 @@ fwupd_release_flag_from_string (const gchar *release_flag)
 }
 
 /**
+ * fwupd_release_urgency_to_string:
+ * @release_urgency: A #FwupdReleaseUrgency, e.g. %FWUPD_RELEASE_URGENCY_HIGH
+ *
+ * Converts an enumerated value to a string.
+ *
+ * Return value: identifier string
+ *
+ * Since: 1.4.0
+ **/
+const gchar *
+fwupd_release_urgency_to_string (FwupdReleaseUrgency release_urgency)
+{
+	if (release_urgency == FWUPD_RELEASE_URGENCY_LOW)
+		return "low";
+	if (release_urgency == FWUPD_RELEASE_URGENCY_MEDIUM)
+		return "medium";
+	if (release_urgency == FWUPD_RELEASE_URGENCY_HIGH)
+		return "high";
+	if (release_urgency == FWUPD_RELEASE_URGENCY_CRITICAL)
+		return "critical";
+	return NULL;
+}
+
+/**
+ * fwupd_release_urgency_from_string:
+ * @release_urgency: A string, e.g. `trusted-payload`
+ *
+ * Converts a string to an enumerated value.
+ *
+ * Return value: enumerated value
+ *
+ * Since: 1.4.0
+ **/
+FwupdReleaseUrgency
+fwupd_release_urgency_from_string (const gchar *release_urgency)
+{
+	if (g_strcmp0 (release_urgency, "low") == 0)
+		return FWUPD_RELEASE_URGENCY_LOW;
+	if (g_strcmp0 (release_urgency, "medium") == 0)
+		return FWUPD_RELEASE_URGENCY_MEDIUM;
+	if (g_strcmp0 (release_urgency, "high") == 0)
+		return FWUPD_RELEASE_URGENCY_HIGH;
+	if (g_strcmp0 (release_urgency, "critical") == 0)
+		return FWUPD_RELEASE_URGENCY_CRITICAL;
+	return FWUPD_RELEASE_URGENCY_UNKNOWN;
+}
+
+/**
  * fwupd_version_format_from_string:
  * @str: A string, e.g. `quad`
  *
@@ -507,6 +635,8 @@ fwupd_version_format_from_string (const gchar *str)
 		return FWUPD_VERSION_FORMAT_SURFACE;
 	if (g_strcmp0 (str, "dell-bios") == 0)
 		return FWUPD_VERSION_FORMAT_DELL_BIOS;
+	if (g_strcmp0 (str, "hex") == 0)
+		return FWUPD_VERSION_FORMAT_HEX;
 	return FWUPD_VERSION_FORMAT_UNKNOWN;
 }
 
@@ -545,5 +675,7 @@ fwupd_version_format_to_string (FwupdVersionFormat kind)
 		return "surface";
 	if (kind == FWUPD_VERSION_FORMAT_DELL_BIOS)
 		return "dell-bios";
+	if (kind == FWUPD_VERSION_FORMAT_HEX)
+		return "hex";
 	return NULL;
 }

@@ -69,10 +69,6 @@ msgstr "Vymaže výsledky z poslednej aktualizácie"
 msgid "Command not found"
 msgstr "Príkaz nenájdený"
 
-#. TRANSLATORS: command description
-msgid "Convert firmware to DFU format"
-msgstr "Skonvertuje firmvér do formátu DFU"
-
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
 msgstr "Nástroj pre DFU"
@@ -107,10 +103,6 @@ msgstr "Hotovo!"
 #, c-format
 msgid "Downgrading %s from %s to %s... "
 msgstr "Vracia sa %s z verzie %s na verziu %s... "
-
-#. TRANSLATORS: command description
-msgid "Dump details about a firmware file"
-msgstr "Zahodí podrobnosti o súbore s firmvérom"
 
 #. TRANSLATORS: exit after we've started up, used for user profiling
 msgid "Exit after a small delay"
@@ -201,18 +193,6 @@ msgstr "Preinštalováva sa %s verziou %s... "
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Removed"
 msgstr "Odstránené"
-
-#. TRANSLATORS: command description
-msgid "Set product ID on firmware file"
-msgstr "Nastaví ID produktu pre súbor s firmvérom"
-
-#. TRANSLATORS: command description
-msgid "Set release version on firmware file"
-msgstr "Nastaví verziu vydania pre súbor s firmvérom"
-
-#. TRANSLATORS: command description
-msgid "Set vendor ID on firmware file"
-msgstr "Nastaví ID výrobcu pre súbor s firmvérom"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"

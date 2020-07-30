@@ -10,9 +10,11 @@
 #include "fu-plugin-vfuncs.h"
 
 #include "fu-tpm-eventlog-device.h"
+#include "fu-efivar.h"
 
 struct FuPluginData {
 	GPtrArray		*pcr0s;
+	gboolean		 secure_boot_problem;
 };
 
 void
@@ -40,9 +42,16 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	g_autofree gchar *str = NULL;
 	g_autofree guint8 *buf = NULL;
 	g_autoptr(FuTpmEventlogDevice) dev = NULL;
+	g_autoptr(GError) error_local = NULL;
 
-	if (!g_file_get_contents (fn, (gchar **) &buf, &bufsz, error))
+	if (!g_file_get_contents (fn, (gchar **) &buf, &bufsz, &error_local)) {
+		if (fu_efivar_supported (NULL) && !fu_efivar_secure_boot_enabled ()) {
+			data->secure_boot_problem = TRUE;
+			return TRUE;
+		}
+		g_propagate_error (error, g_steal_pointer (&error_local));
 		return FALSE;
+	}
 	if (bufsz == 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -87,6 +96,13 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 	checksums = fu_device_get_checksums (device);
 	if (checksums->len == 0)
 		return;
+
+	if (data->secure_boot_problem) {
+		g_warning ("Platform firmware measurement unavailable. Secure boot is disabled in "
+			   "BIOS setup, enabling it may fix this issue");
+		return;
+	}
+
 	for (guint i = 0; i < checksums->len; i++) {
 		const gchar *checksum = g_ptr_array_index (checksums, i);
 		for (guint j = 0; j < data->pcr0s->len; j++) {
@@ -99,7 +115,6 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 	}
 
 	/* urgh, this is unexpected */
-	fu_device_set_update_error (device,
-				    "TPM PCR0 differs from reconstruction, "
-				    "please see https://github.com/fwupd/fwupd/wiki/TPM-PCR0-differs-from-reconstruction");
+	g_warning ("TPM PCR0 differs from reconstruction, "
+		   "please see https://github.com/fwupd/fwupd/wiki/TPM-PCR0-differs-from-reconstruction");
 }

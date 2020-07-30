@@ -19,7 +19,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include "fu-usb-device.h"
+#include "fu-hid-device.h"
 #include "fwupd-error.h"
 
 #include "fu-dell-dock-hid.h"
@@ -77,43 +77,34 @@ typedef struct __attribute__ ((packed)) {
 } FuTbtCmdBuffer;
 
 static gboolean
+fu_dell_dock_hid_set_report_cb (FuDevice *self, gpointer user_data, GError **error)
+{
+	guint8 *outbuffer = (guint8 *) user_data;
+	return fu_hid_device_set_report (FU_HID_DEVICE (self), 0x0,
+					 outbuffer, 192,
+					 HIDI2C_TRANSACTION_TIMEOUT,
+					 FU_HID_DEVICE_FLAG_NONE,
+					 error);
+}
+
+static gboolean
 fu_dell_dock_hid_set_report (FuDevice *self,
 			     guint8 *outbuffer,
 			     GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
-	gboolean ret;
-	gsize actual_len = 0;
-	for (gint i = 1; i <= HID_MAX_RETRIES; i++) {
-		g_autoptr(GError) error_local = NULL;
-		ret = g_usb_device_control_transfer (
-		    usb_device, G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-		    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-		    G_USB_DEVICE_RECIPIENT_INTERFACE, FU_HID_REPORT_SET, 0x0200,
-		    0x0000, outbuffer, 192, &actual_len,
-		    HIDI2C_TRANSACTION_TIMEOUT, NULL, &error_local);
-		if (ret)
-			break;
-		if (i == HID_MAX_RETRIES ||
-		    g_error_matches (error_local,
-				     G_USB_DEVICE_ERROR,
-				     G_USB_DEVICE_ERROR_NO_DEVICE)) {
-			g_propagate_error (error, g_steal_pointer (&error_local));
-			return FALSE;
-		} else {
-			g_debug ("attempt %d/%d: set control transfer failed: %s",
-				 i, HID_MAX_RETRIES,
-				 error_local->message);
-			g_usleep (G_USEC_PER_SEC);
-		}
-	}
-	if (actual_len != 192) {
-		g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
-			     "only wrote %" G_GSIZE_FORMAT "bytes", actual_len);
-		return FALSE;
-	}
+	return fu_device_retry (self, fu_dell_dock_hid_set_report_cb,
+				HID_MAX_RETRIES, outbuffer, error);
+}
 
-	return TRUE;
+static gboolean
+fu_dell_dock_hid_get_report_cb (FuDevice *self, gpointer user_data, GError **error)
+{
+	guint8 *inbuffer = (guint8 *) user_data;
+	return fu_hid_device_get_report (FU_HID_DEVICE (self), 0x0,
+					 inbuffer, 192,
+					 HIDI2C_TRANSACTION_TIMEOUT,
+					 FU_HID_DEVICE_FLAG_NONE,
+					 error);
 }
 
 static gboolean
@@ -121,38 +112,8 @@ fu_dell_dock_hid_get_report (FuDevice *self,
 			     guint8 *inbuffer,
 			     GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
-	gboolean ret;
-	gsize actual_len = 0;
-	for (gint i = 1; i <= HID_MAX_RETRIES; i++) {
-		g_autoptr(GError) error_local = NULL;
-		ret = g_usb_device_control_transfer (
-		    usb_device, G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-		    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-		    G_USB_DEVICE_RECIPIENT_INTERFACE, FU_HID_REPORT_GET, 0x0100,
-		    0x0000, inbuffer, 192, &actual_len,
-		    HIDI2C_TRANSACTION_TIMEOUT, NULL, &error_local);
-		if (ret)
-			break;
-		if (i == HID_MAX_RETRIES ||
-		    g_error_matches (error_local,
-				     G_USB_DEVICE_ERROR,
-				     G_USB_DEVICE_ERROR_NO_DEVICE)) {
-			g_propagate_error (error, g_steal_pointer (&error_local));
-			return FALSE;
-		} else {
-			g_debug ("attempt %d/%d: get control transfer failed: %s",
-				 i, HID_MAX_RETRIES,
-				 error_local->message);
-		}
-	}
-	if (actual_len != 192) {
-		g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
-			     "only read %" G_GSIZE_FORMAT "bytes", actual_len);
-		return FALSE;
-	}
-
-	return TRUE;
+	return fu_device_retry (self, fu_dell_dock_hid_get_report_cb,
+				HID_MAX_RETRIES, inbuffer, error);
 }
 
 gboolean
@@ -185,7 +146,8 @@ fu_dell_dock_hid_get_hub_version (FuDevice *self,
 	version = g_strdup_printf ("%02x.%02x",
 				   cmd_buffer.data[10],
 				   cmd_buffer.data[11]);
-	fu_device_set_version (self, version, FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_set_version_format (self, FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_set_version (self, version);
 	return TRUE;
 }
 

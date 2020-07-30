@@ -60,9 +60,15 @@ void		 fwupd_device_set_version		(FwupdDevice	*device,
 const gchar	*fwupd_device_get_version_lowest	(FwupdDevice	*device);
 void		 fwupd_device_set_version_lowest	(FwupdDevice	*device,
 							 const gchar	*version_lowest);
+guint64		 fwupd_device_get_version_lowest_raw	(FwupdDevice	*device);
+void		 fwupd_device_set_version_lowest_raw	(FwupdDevice	*device,
+							 guint64	version_lowest_raw);
 const gchar	*fwupd_device_get_version_bootloader	(FwupdDevice	*device);
 void		 fwupd_device_set_version_bootloader	(FwupdDevice	*device,
 							 const gchar	*version_bootloader);
+guint64		 fwupd_device_get_version_bootloader_raw (FwupdDevice	*device);
+void		 fwupd_device_set_version_bootloader_raw (FwupdDevice	*device,
+							 guint64	version_bootloader_raw);
 guint64		 fwupd_device_get_version_raw		(FwupdDevice	*device);
 void		 fwupd_device_set_version_raw		(FwupdDevice	*device,
 							 guint64	version_raw);
@@ -129,6 +135,12 @@ void		 fwupd_device_set_update_error		(FwupdDevice	*device,
 const gchar	*fwupd_device_get_update_message	(FwupdDevice	*device);
 void		 fwupd_device_set_update_message	(FwupdDevice	*device,
 							 const gchar	*update_message);
+const gchar	*fwupd_device_get_update_image		(FwupdDevice	*device);
+void		 fwupd_device_set_update_image		(FwupdDevice	*device,
+							 const gchar	*update_image);
+FwupdStatus	 fwupd_device_get_status		(FwupdDevice	*self);
+void		 fwupd_device_set_status		(FwupdDevice	*self,
+							 FwupdStatus	 status);
 void		 fwupd_device_add_release		(FwupdDevice	*device,
 							 FwupdRelease	*release);
 GPtrArray	*fwupd_device_get_releases		(FwupdDevice	*device);

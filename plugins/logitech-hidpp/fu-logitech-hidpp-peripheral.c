@@ -163,7 +163,8 @@ fu_logitech_hidpp_peripheral_ping (FuLogitechHidPpPeripheral *self, GError **err
 	fu_logitech_hidpp_peripheral_refresh_updatable (self);
 
 	/* if the HID++ ID is unset, grab it from the reply */
-	if (self->hidpp_id == HIDPP_DEVICE_ID_UNSET) {
+	if (self->hidpp_id == HIDPP_DEVICE_ID_UNSET &&
+	    msg->device_id != HIDPP_DEVICE_ID_UNSET) {
 		self->hidpp_id = msg->device_id;
 		g_debug ("HID++ ID is %02x", self->hidpp_id);
 	}
@@ -343,8 +344,7 @@ fu_logitech_hidpp_peripheral_fetch_firmware_info (FuLogitechHidPpPeripheral *sel
 					     build);
 		g_debug ("firmware entity 0x%02x version is %s", i, version);
 		if (msg->data[0] == 0) {
-			fu_device_set_version (FU_DEVICE (self), version,
-					       FWUPD_VERSION_FORMAT_PLAIN);
+			fu_device_set_version (FU_DEVICE (self), version);
 			self->cached_fw_entity = i;
 		} else if (msg->data[0] == 1) {
 			fu_device_set_version_bootloader (FU_DEVICE (self), version);
@@ -505,6 +505,15 @@ fu_logitech_hidpp_peripheral_setup (FuDevice *device, GError **error)
 	if (!fu_logitech_hidpp_peripheral_ping (self, error))
 		return FALSE;
 
+	/* did not get ID */
+	if (self->hidpp_id == HIDPP_DEVICE_ID_UNSET) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "no HID++ ID");
+		return FALSE;
+	}
+
 	/* add known root for HID++2.0 */
 	g_ptr_array_set_size (self->feature_index, 0);
 	if (self->hidpp_version >= 2.f) {
@@ -596,9 +605,7 @@ fu_logitech_hidpp_peripheral_setup (FuDevice *device, GError **error)
 		fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 		if (fu_device_get_version (device) == NULL) {
 			g_debug ("repairing device in bootloader mode");
-			fu_device_set_version (FU_DEVICE (device),
-					       "MPK00.00_B0000",
-					       FWUPD_VERSION_FORMAT_PLAIN);
+			fu_device_set_version (FU_DEVICE (device), "MPK00.00_B0000");
 		}
 	}
 
@@ -616,6 +623,12 @@ fu_logitech_hidpp_peripheral_detach (FuDevice *device, GError **error)
 	FuLogitechHidPpPeripheral *self = FU_UNIFYING_PERIPHERAL (device);
 	guint8 idx;
 	g_autoptr(FuLogitechHidPpHidppMsg) msg = fu_logitech_hidpp_msg_new ();
+
+	/* sanity check */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug ("already in bootloader mode, skipping");
+		return TRUE;
+	}
 
 	/* this requires user action */
 	idx = fu_logitech_hidpp_peripheral_feature_get_idx (self, HIDPP_FEATURE_DFU_CONTROL);
@@ -954,6 +967,12 @@ fu_logitech_hidpp_peripheral_attach (FuDevice *device, GError **error)
 	guint8 idx;
 	g_autoptr(FuLogitechHidPpHidppMsg) msg = fu_logitech_hidpp_msg_new ();
 
+	/* sanity check */
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug ("already in runtime mode, skipping");
+		return TRUE;
+	}
+
 	/* if we're in bootloader mode, we should be able to get this feature */
 	idx = fu_logitech_hidpp_peripheral_feature_get_idx (self, HIDPP_FEATURE_DFU);
 	if (idx == 0x00) {
@@ -1022,6 +1041,7 @@ fu_logitech_hidpp_peripheral_init (FuLogitechHidPpPeripheral *self)
 	fu_device_add_parent_guid (FU_DEVICE (self), "HIDRAW\\VEN_046D&DEV_C52B");
 	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_protocol (FU_DEVICE (self), "com.logitech.unifying");
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PLAIN);
 
 	/* there are a lot of unifying peripherals, but not all respond
 	 * well to opening -- so limit to ones with issued updates */

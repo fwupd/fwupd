@@ -45,6 +45,7 @@ fwupd = shared_library(
   dependencies : [
     giounix,
     soup,
+    libjcat,
     libjsonglib,
   ],
   c_args : [
@@ -167,7 +168,7 @@ if get_option('tests')
       '-DFU_LOCAL_REMOTE_DIR="' + localremotetestdir + '"',
     ],
   )
-  test('fwupd-self-test', e)
+  test('fwupd-self-test', e, timeout: 60)
 endif
 
 fwupd_incdir = include_directories('.')

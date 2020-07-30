@@ -317,10 +317,6 @@ msgstr "Kommandoen blev ikke fundet"
 msgid "Continue with update?"
 msgstr "Fortsæt opdateringen?"
 
-#. TRANSLATORS: command description
-msgid "Convert firmware to DFU format"
-msgstr "Konverter firmware til DFU-format"
-
 #. TRANSLATORS: Device supports some form of checksum verification
 msgid "Cryptographic hash verification is available"
 msgstr "Bekræftelse af kryptografisk hash er tilgængelig"
@@ -489,10 +485,6 @@ msgstr "Downloader …"
 #. TRANSLATORS: command description
 msgid "Dump SMBIOS data from a file"
 msgstr "Dump SMBIOS-data fra en fil"
-
-#. TRANSLATORS: command description
-msgid "Dump details about a firmware file"
-msgstr "Dump detaljer om en firmwarefil"
 
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Duration"
@@ -1078,21 +1070,9 @@ msgstr "Valgte enhed"
 msgid "Serial Number"
 msgstr "Serienummer"
 
-#. TRANSLATORS: command description
-msgid "Set product ID on firmware file"
-msgstr "Indstil producent-id på firmwarefil"
-
-#. TRANSLATORS: command description
-msgid "Set release version on firmware file"
-msgstr "Indstil udgivelsesversion på firmwarefil"
-
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
 msgstr "Indstil fejlsøgningsflaget under opdatering"
-
-#. TRANSLATORS: command description
-msgid "Set vendor ID on firmware file"
-msgstr "Indstil producent-id på firmwarefil"
 
 msgid "Sets the list of approved firmware"
 msgstr "Indstiller listen over godkendt firmware"
@@ -1186,11 +1166,6 @@ msgstr "Det lykkedes at aktivere alle enheder"
 msgid "Successfully disabled remote"
 msgstr "Det lykkedes at deaktivere fjern"
 
-#. TRANSLATORS: success message where we made the firmware on the
-#. * device older than it was before
-msgid "Successfully downgraded device"
-msgstr "Det lykkedes at nedgradere enhed"
-
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata: "
@@ -1273,6 +1248,7 @@ msgstr "UEFI-firmwareredskab"
 
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
+#. TRANSLATORS: unknown release urgency
 msgid "Unknown"
 msgstr "Ukendt"
 
@@ -1439,3 +1415,20 @@ msgstr "Skriver …"
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
 msgstr "Din distributør har måske ikke verificeret kompatibiliteten af firmwareopdateringerne med dit system eller tilsluttede enheder."
+
+#. TRANSLATORS: program name
+msgid "fwupd TPM event log utility"
+msgstr "fwupd TPM-hændelseslogredskab"
+
+#. TRANSLATORS: message letting the user know no device upgrade available due
+#. to missing on LVFS
+#. * %1 is the device name
+#, c-format
+msgid "• %s has no available firmware updates"
+msgstr "• %s har ingen tilgængelige firmwareopdateringer"
+
+#. TRANSLATORS: message letting the user know no device upgrade available
+#. * %1 is the device name
+#, c-format
+msgid "• %s has the latest available firmware version"
+msgstr "• %s har den seneste tilgængelige firmwareversion"

@@ -21,7 +21,7 @@ struct FuPluginData {
 	guint			 drm_changed_id;
 };
 
-/* see https://github.com/hughsie/fwupd/issues/1121 for more details */
+/* see https://github.com/fwupd/fwupd/issues/1121 for more details */
 static gboolean
 fu_synaptics_mst_check_amdgpu_safe (GError **error)
 {
@@ -155,7 +155,7 @@ fu_plugin_update (FuPlugin *plugin,
 		return FALSE;
 	if (!fu_device_write_firmware (device, blob_fw, flags, error))
 		return FALSE;
-	if (!fu_device_has_custom_flag (device, "skip-restart"))
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_SKIPS_RESTART))
 		fu_plugin_device_remove (plugin, device);
 	return TRUE;
 }

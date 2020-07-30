@@ -10,6 +10,7 @@ import sys
 import argparse
 import xml.etree.ElementTree as etree
 
+
 def parse_dependencies(OS, SUBOS, requested_type):
     deps = []
     dep = ''
@@ -39,24 +40,24 @@ def parse_dependencies(OS, SUBOS, requested_type):
                     deps.append(dep)
     return deps
 
+
 if __name__ == '__main__':
 
     try:
         import distro
+
         target = distro.linux_distribution()[0]
     except ModuleNotFoundError:
         target = None
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-o", "--os",
-                        default=target,
-                        choices=["fedora",
-                                 "centos",
-                                 "flatpak",
-                                 "debian",
-                                 "ubuntu",
-                                 "arch"],
-                        help="dependencies for OS")
+    parser.add_argument(
+        "-o",
+        "--os",
+        default=target,
+        choices=["fedora", "centos", "flatpak", "debian", "ubuntu", "arch"],
+        help="dependencies for OS",
+    )
     args = parser.parse_args()
 
     target = os.getenv('OS', args.os)

@@ -12,6 +12,7 @@
 #include <glib/gi18n.h>
 #include <gusb.h>
 #include <xmlb.h>
+#include <json-glib/json-glib.h>
 
 #include "fu-common.h"
 #include "fu-util-common.h"
@@ -583,55 +584,6 @@ fu_util_cmd_array_to_string (GPtrArray *array)
 	return g_string_free (string, FALSE);
 }
 
-SoupSession *
-fu_util_setup_networking (GError **error)
-{
-	const gchar *http_proxy;
-	g_autofree gchar *user_agent = NULL;
-	g_autoptr(SoupSession) session = NULL;
-
-	/* create the soup session */
-	user_agent = fwupd_build_user_agent (PACKAGE_NAME, PACKAGE_VERSION);
-	session = soup_session_new_with_options (SOUP_SESSION_USER_AGENT, user_agent,
-						 SOUP_SESSION_TIMEOUT, 60,
-						 NULL);
-	if (session == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "failed to setup networking");
-		return NULL;
-	}
-
-	/* relax the SSL checks for broken corporate proxies */
-	if (g_getenv ("DISABLE_SSL_STRICT") != NULL)
-		g_object_set (session, SOUP_SESSION_SSL_STRICT, FALSE, NULL);
-
-	/* set the proxy */
-	http_proxy = g_getenv ("https_proxy");
-	if (http_proxy == NULL)
-		http_proxy = g_getenv ("HTTPS_PROXY");
-	if (http_proxy == NULL)
-		http_proxy = g_getenv ("http_proxy");
-	if (http_proxy == NULL)
-		http_proxy = g_getenv ("HTTP_PROXY");
-	if (http_proxy != NULL && strlen (http_proxy) > 0) {
-		g_autoptr(SoupURI) proxy_uri = soup_uri_new (http_proxy);
-		if (proxy_uri == NULL) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "invalid proxy URI: %s", http_proxy);
-			return NULL;
-		}
-		g_object_set (session, SOUP_SESSION_PROXY_URI, proxy_uri, NULL);
-	}
-
-	/* this disables the double-compression of the firmware.xml.gz file */
-	soup_session_remove_feature_by_type (session, SOUP_TYPE_CONTENT_DECODER);
-	return g_steal_pointer (&session);
-}
-
 gchar *
 fu_util_release_get_name (FwupdRelease *release)
 {
@@ -681,6 +633,11 @@ fu_util_release_get_name (FwupdRelease *release)
 			 * has other high speed Thunderbolt devices plugged into it;
 			 * the first %s is the system name, e.g. 'ThinkPad P50` */
 			return g_strdup_printf (_("%s Thunderbolt Controller Update"), name);
+		}
+		if (g_strcmp0 (cat, "X-CpuMicrocode") == 0) {
+			/* TRANSLATORS: the CPU microcode is firmware loaded onto the CPU
+			 * at system bootup */
+			return g_strdup_printf (_("%s CPU Microcode Update"), name);
 		}
 	}
 
@@ -957,7 +914,8 @@ fu_util_device_flag_to_string (guint64 device_flag)
 		/* TRANSLATORS: Device cannot be removed easily*/
 		return _("Internal device");
 	}
-	if (device_flag == FWUPD_DEVICE_FLAG_UPDATABLE) {
+	if (device_flag == FWUPD_DEVICE_FLAG_UPDATABLE ||
+	    device_flag == FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN) {
 		/* TRANSLATORS: Device is updatable in this or any other mode */
 		return _("Updatable");
 	}
@@ -1073,6 +1031,22 @@ fu_util_device_flag_to_string (guint64 device_flag)
 		/* TRANSLATORS: a version check is required for all firmware */
 		return _("Device is required to install all provided releases");
 	}
+	if (device_flag == FWUPD_DEVICE_FLAG_MD_SET_NAME) {
+		/* skip */
+		return NULL;
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY) {
+		/* skip */
+		return NULL;
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_MD_SET_VERFMT) {
+		/* skip */
+		return NULL;
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_SKIPS_RESTART) {
+		/* skip */
+		return NULL;
+	}
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN) {
 		return NULL;
 	}
@@ -1186,16 +1160,19 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 		/* TRANSLATORS: hardware state, e.g. "pending" */
 		fu_common_string_append_kv (str, idt + 1, _("Update State"),
 					    fwupd_update_state_to_string (state));
+
+		if (state == FWUPD_UPDATE_STATE_SUCCESS) {
+			tmp = fwupd_device_get_update_message (dev);
+			if (tmp != NULL) {
+				/* TRANSLATORS: helpful messages from last update */
+				fu_common_string_append_kv (str, idt + 1, _("Update Message"), tmp);
+			}
+		}
 	}
 	tmp = fwupd_device_get_update_error (dev);
 	if (tmp != NULL) {
 		/* TRANSLATORS: error message from last update attempt */
 		fu_common_string_append_kv (str, idt + 1, _("Update Error"), tmp);
-	}
-	tmp = fwupd_device_get_update_message (dev);
-	if (tmp != NULL) {
-		/* TRANSLATORS: helpful messages from last update */
-		fu_common_string_append_kv (str, idt + 1, _("Update Message"), tmp);
 	}
 
 	/* modified date: for history devices */
@@ -1274,6 +1251,29 @@ fu_util_license_to_string (const gchar *license)
 	return license;
 }
 
+static const gchar *
+fu_util_release_urgency_to_string (FwupdReleaseUrgency release_urgency)
+{
+	if (release_urgency == FWUPD_RELEASE_URGENCY_LOW) {
+		/* TRANSLATORS: the release urgency */
+		return _("Low");
+	}
+	if (release_urgency == FWUPD_RELEASE_URGENCY_MEDIUM) {
+		/* TRANSLATORS: the release urgency */
+		return _("Medium");
+	}
+	if (release_urgency == FWUPD_RELEASE_URGENCY_HIGH) {
+		/* TRANSLATORS: the release urgency */
+		return _("High");
+	}
+	if (release_urgency == FWUPD_RELEASE_URGENCY_CRITICAL) {
+		/* TRANSLATORS: the release urgency */
+		return _("Critical");
+	}
+	/* TRANSLATORS: unknown release urgency */
+	return _("Unknown");
+}
+
 gchar *
 fu_util_release_to_string (FwupdRelease *rel, guint idt)
 {
@@ -1313,6 +1313,19 @@ fu_util_release_to_string (FwupdRelease *rel, guint idt)
 		tmp = g_format_size (fwupd_release_get_size (rel));
 		/* TRANSLATORS: file size of the download */
 		fu_common_string_append_kv (str, idt + 1, _("Size"), tmp);
+	}
+	if (fwupd_release_get_created (rel) != 0) {
+		gint64 value = (gint64) fwupd_release_get_created (rel);
+		g_autoptr(GDateTime) date = g_date_time_new_from_unix_utc (value);
+		g_autofree gchar *tmp = g_date_time_format (date, "%F");
+		/* TRANSLATORS: when the update was built */
+		fu_common_string_append_kv (str, idt + 1, _("Created"), tmp);
+	}
+	if (fwupd_release_get_urgency (rel) != FWUPD_RELEASE_URGENCY_UNKNOWN) {
+		FwupdReleaseUrgency tmp = fwupd_release_get_urgency (rel);
+		/* TRANSLATORS: how important the release is */
+		fu_common_string_append_kv (str, idt + 1, _("Urgency"),
+					    fu_util_release_urgency_to_string (tmp));
 	}
 	if (fwupd_release_get_details_url (rel) != NULL) {
 		/* TRANSLATORS: more details about the update link */
@@ -1488,4 +1501,89 @@ fu_util_remote_to_string (FwupdRemote *remote, guint idt)
 	}
 
 	return g_string_free (str, FALSE);
+}
+
+gboolean
+fu_util_send_report (FwupdClient *client,
+		     const gchar *report_uri,
+		     const gchar *data,
+		     const gchar *sig,
+		     gchar **uri, /* (nullable) (out) */
+		     GError **error)
+{
+	const gchar *server_msg = NULL;
+	JsonNode *json_root;
+	JsonObject *json_object;
+	g_autofree gchar *str = NULL;
+	g_autoptr(GBytes) upload_response = NULL;
+	g_autoptr(JsonParser) json_parser = NULL;
+
+	/* POST request */
+	upload_response = fwupd_client_upload_bytes (client, report_uri, data, sig,
+						     FWUPD_CLIENT_UPLOAD_FLAG_NONE,
+						     NULL, error);
+	if (upload_response == NULL)
+		return FALSE;
+
+	/* server returned nothing, and probably exploded in a ball of flames */
+	if (g_bytes_get_size (upload_response) == 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Failed to upload to %s",
+			     report_uri);
+		return FALSE;
+	}
+
+	/* parse JSON reply */
+	json_parser = json_parser_new ();
+	str = g_strndup (g_bytes_get_data (upload_response, NULL),
+			 g_bytes_get_size (upload_response));
+	if (!json_parser_load_from_data (json_parser, str, -1, error)) {
+		g_prefix_error (error, "Failed to parse JSON response from '%s': ", str);
+		return FALSE;
+	}
+	json_root = json_parser_get_root (json_parser);
+	if (json_root == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_PERMISSION_DENIED,
+			     "JSON response was malformed: '%s'", str);
+		return FALSE;
+	}
+	json_object = json_node_get_object (json_root);
+	if (json_object == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_PERMISSION_DENIED,
+			     "JSON response object was malformed: '%s'", str);
+		return FALSE;
+	}
+
+	/* get any optional server message */
+	if (json_object_has_member (json_object, "msg"))
+		server_msg = json_object_get_string_member (json_object, "msg");
+
+	/* server reported failed */
+	if (!json_object_get_boolean_member (json_object, "success")) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_PERMISSION_DENIED,
+			     "Server rejected report: %s",
+			     server_msg != NULL ? server_msg : "unspecified");
+		return FALSE;
+	}
+
+	/* server wanted us to see the message */
+	if (server_msg != NULL) {
+		g_debug ("server message: %s", server_msg);
+		if (g_strstr_len (server_msg, -1, "known issue") != NULL &&
+		    json_object_has_member (json_object, "uri")) {
+			if (uri != NULL)
+				*uri = g_strdup (json_object_get_string_member (json_object, "uri"));
+		}
+	}
+
+	/* success */
+	return TRUE;
 }

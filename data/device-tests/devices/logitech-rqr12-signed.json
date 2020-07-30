@@ -1,0 +1,14 @@
+{
+  "name": "Logitech Unifying Receiver (RQR12 SIGNED)",
+  "guids": [
+    "9d131a0c-a606-580f-8eda-80587250b8d6",
+    "d637baf7-3ab5-502a-8169-2545302e44e2"
+  ],
+  "protocol": "com.logitech.unifyingsigned",
+  "releases": [
+    {
+      "version": "RQR12.11_B0032",
+      "file": "2443cef8b1dae48751d3c60dab22210733e57036-Logitech-Unifying-RQR12.11_B0032.cab"
+    }
+  ]
+}

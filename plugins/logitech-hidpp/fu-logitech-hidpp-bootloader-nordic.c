@@ -70,11 +70,9 @@ fu_logitech_hidpp_bootloader_nordic_setup (FuLogitechHidPpBootloader *self, GErr
 	if (version_fw == NULL) {
 		g_warning ("failed to get firmware version: %s",
 			   error_local->message);
-		fu_device_set_version (FU_DEVICE (self), "RQR12.00_B0000",
-				       FWUPD_VERSION_FORMAT_PLAIN);
+		fu_device_set_version (FU_DEVICE (self), "RQR12.00_B0000");
 	} else {
-		fu_device_set_version (FU_DEVICE (self), version_fw,
-				       FWUPD_VERSION_FORMAT_PLAIN);
+		fu_device_set_version (FU_DEVICE (self), version_fw);
 	}
 
 	return TRUE;

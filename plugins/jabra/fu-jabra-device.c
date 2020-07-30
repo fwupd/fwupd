@@ -142,6 +142,7 @@ static void
 fu_jabra_device_init (FuJabraDevice *self)
 {
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS);
 	fu_device_set_remove_delay (FU_DEVICE (self), 20000); /* 10+10s! */
 }
 

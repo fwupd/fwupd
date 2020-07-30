@@ -1,0 +1,16 @@
+{
+  "name": "Jabra Speak 410",
+  "guids": [
+    "1764c519-4723-5514-baf9-3b42970de487"
+  ],
+  "releases": [
+    {
+      "version": "1.8",
+      "file": "eab97d7e745e372e435dbd76404c3929730ac082-Jabra-SPEAK_410-1.8.cab"
+    },
+    {
+      "version": "1.11",
+      "file": "50a03efc5df333a948e159854ea40e1a3786c34c-Jabra-SPEAK_410-1.11.cab"
+    }
+  ]
+}

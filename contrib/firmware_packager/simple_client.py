@@ -5,11 +5,14 @@ import sys
 import os
 import gi
 from gi.repository import GLib
-gi.require_version('Fwupd', '2.0')
-from gi.repository import Fwupd #pylint: disable=wrong-import-position
 
-class Progress():
+gi.require_version('Fwupd', '2.0')
+from gi.repository import Fwupd  # pylint: disable=wrong-import-position
+
+
+class Progress:
     """Class to track the signal changes of progress events"""
+
     def __init__(self):
         self.device = None
         self.status = None
@@ -31,33 +34,41 @@ class Progress():
             self.percent = percent
             status_str = "["
             for i in range(0, 50):
-                if i < percent/2:
+                if i < percent / 2:
                     status_str += '*'
                 else:
                     status_str += ' '
-            status_str += "] %d%% %s" %(percent, status)
+            status_str += "] %d%% %s" % (percent, status)
             self.erase = len(status_str)
             sys.stdout.write(status_str)
             sys.stdout.flush()
             if 'idle' in status:
                 sys.stdout.write("\n")
 
+
 def parse_args():
     """Parse arguments for this client"""
     import argparse
+
     parser = argparse.ArgumentParser(description="Interact with fwupd daemon")
-    parser.add_argument("--allow-older", action="store_true",
-                        help="Install older payloads(default False)")
-    parser.add_argument("--allow-reinstall", action="store_true",
-                        help="Reinstall payloads(default False)")
-    parser.add_argument("command", choices=["get-devices",
-                                            "get-details",
-                                            "install"], help="What to do")
+    parser.add_argument(
+        "--allow-older",
+        action="store_true",
+        help="Install older payloads(default False)",
+    )
+    parser.add_argument(
+        "--allow-reinstall",
+        action="store_true",
+        help="Reinstall payloads(default False)",
+    )
+    parser.add_argument(
+        "command", choices=["get-devices", "get-details", "install"], help="What to do"
+    )
     parser.add_argument('cab', nargs='?', help='CAB file')
-    parser.add_argument('deviceid', nargs='?',
-                        help='DeviceID to operate on(optional)')
+    parser.add_argument('deviceid', nargs='?', help='DeviceID to operate on(optional)')
     args = parser.parse_args()
     return args
+
 
 def get_devices(client):
     """Use fwupd client to fetch devices"""
@@ -65,20 +76,25 @@ def get_devices(client):
     for item in devices:
         print(item.to_string())
 
+
 def get_details(client, cab):
     """Use fwupd client to fetch details for a CAB file"""
     devices = client.get_details(cab, None)
     for device in devices:
         print(device.to_string())
 
-def status_changed(client, spec, progress): #pylint: disable=unused-argument
-    """Signal emitted by fwupd daemon indicating status changed"""
-    progress.status_changed(client.get_percentage(),
-                            Fwupd.status_to_string(client.get_status()))
 
-def device_changed(client, device, progress): #pylint: disable=unused-argument
+def status_changed(client, spec, progress):  # pylint: disable=unused-argument
+    """Signal emitted by fwupd daemon indicating status changed"""
+    progress.status_changed(
+        client.get_percentage(), Fwupd.status_to_string(client.get_status())
+    )
+
+
+def device_changed(client, device, progress):  # pylint: disable=unused-argument
     """Signal emitted by fwupd daemon indicating active device changed"""
     progress.device_changed(device.get_name())
+
 
 def install(client, cab, target, older, reinstall):
     """Use fwupd client to install CAB file to applicable devices"""
@@ -97,11 +113,12 @@ def install(client, cab, target, older, reinstall):
     parent.connect('notify::status', status_changed, progress)
     try:
         client.install(target, cab, flags, None)
-    except GLib.Error as glib_err: #pylint: disable=catching-non-exception
+    except GLib.Error as glib_err:  # pylint: disable=catching-non-exception
         progress.status_changed(0, 'idle')
         print("%s" % glib_err)
         sys.exit(1)
     print("\n")
+
 
 def check_exists(cab):
     """Check that CAB file exists"""
@@ -111,6 +128,7 @@ def check_exists(cab):
     if not os.path.isfile(cab):
         print("%s doesn't exist or isn't a file" % cab)
         sys.exit(1)
+
 
 if __name__ == '__main__':
     ARGS = parse_args()

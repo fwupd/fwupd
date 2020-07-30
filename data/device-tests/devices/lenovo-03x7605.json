@@ -1,0 +1,16 @@
+{
+  "name": "Lenovo USB-C to HDMI (no power) [VL103]",
+  "guids": [
+    "d0909dd3-d140-5da8-85fd-4aa5b2dcee5d"
+  ],
+  "releases": [
+    {
+      "version": "153.84.6.1",
+      "file": "61b393d8e27503746bae9a16dccf54929b9f1a0d1b5106334933a7313596c00c-Lenovo-USB-C_to_HDMI.cab"
+    },
+    {
+      "version": "153.84.7.1",
+      "file": "8be7eea7db239766cf92adf2145138c9929fd953d6d36e39d60c9dd6425638de-Lenovo-USB-C_to_HDMI.cab"
+    }
+  ]
+}

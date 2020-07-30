@@ -17,6 +17,7 @@
 #include "fu-quirks.h"
 #include "fu-hwids.h"
 #include "fu-usb-device.h"
+//#include "fu-hid-device.h"
 #ifdef HAVE_GUDEV
 #include "fu-udev-device.h"
 #endif
@@ -150,6 +151,8 @@ void		 fu_plugin_add_report_metadata		(FuPlugin	*self,
 							 const gchar	*key,
 							 const gchar	*value);
 gchar		*fu_plugin_get_config_value		(FuPlugin	*self,
+							 const gchar	*key);
+gboolean	 fu_plugin_get_config_value_boolean	(FuPlugin	*self,
 							 const gchar	*key);
 void		 fu_plugin_add_runtime_version		(FuPlugin	*self,
 							 const gchar	*component_id,

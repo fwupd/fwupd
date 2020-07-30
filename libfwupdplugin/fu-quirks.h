@@ -44,8 +44,6 @@ gboolean	 fu_quirks_lookup_by_id_iter		(FuQuirks	*self,
 							 gpointer	 user_data);
 
 #define	FU_QUIRKS_PLUGIN			"Plugin"
-#define	FU_QUIRKS_UEFI_VERSION_FORMAT		"UefiVersionFormat"
-#define	FU_QUIRKS_DAEMON_VERSION_FORMAT		"ComponentIDs"
 #define	FU_QUIRKS_FLAGS				"Flags"
 #define	FU_QUIRKS_SUMMARY			"Summary"
 #define	FU_QUIRKS_ICON				"Icon"
@@ -53,6 +51,7 @@ gboolean	 fu_quirks_lookup_by_id_iter		(FuQuirks	*self,
 #define	FU_QUIRKS_GUID				"Guid"
 #define	FU_QUIRKS_COUNTERPART_GUID		"CounterpartGuid"
 #define	FU_QUIRKS_PARENT_GUID			"ParentGuid"
+#define	FU_QUIRKS_PROXY_GUID			"ProxyGuid"
 #define	FU_QUIRKS_CHILDREN			"Children"
 #define	FU_QUIRKS_VERSION			"Version"
 #define	FU_QUIRKS_VENDOR			"Vendor"
@@ -64,3 +63,7 @@ gboolean	 fu_quirks_lookup_by_id_iter		(FuQuirks	*self,
 #define	FU_QUIRKS_VERSION_FORMAT		"VersionFormat"
 #define	FU_QUIRKS_GTYPE				"GType"
 #define	FU_QUIRKS_PROTOCOL			"Protocol"
+#define	FU_QUIRKS_UPDATE_MESSAGE		"UpdateMessage"
+#define	FU_QUIRKS_UPDATE_IMAGE			"UpdateImage"
+#define	FU_QUIRKS_PRIORITY			"Priority"
+#define	FU_QUIRKS_REMOVE_DELAY			"RemoveDelay"

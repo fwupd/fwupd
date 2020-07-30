@@ -43,6 +43,7 @@
  * * `use-protocol-zero`:	Fix up the protocol number
  * * `legacy-protocol`:		Use a legacy protocol version
  * * `detach-for-attach`:	Requires a DFU_REQUEST_DETACH to attach
+ * * `absent-sector-size`:	In absence of sector size, assume byte
  *
  * Default value: `none`
  *
@@ -116,7 +117,7 @@ dfu_device_to_string (FuDevice *device, guint idt, GString *str)
 	if (priv->chip_id != NULL)
 		fu_common_string_append_kv (str, idt, "ChipId", priv->chip_id);
 	fu_common_string_append_kx (str, idt, "Version", priv->version);
-	fu_common_string_append_kx (str, idt, "Force_version", priv->force_version);
+	fu_common_string_append_kx (str, idt, "ForceVersion", priv->force_version);
 	fu_common_string_append_kx (str, idt, "RuntimePid", priv->runtime_pid);
 	fu_common_string_append_kx (str, idt, "RuntimeVid", priv->runtime_vid);
 	fu_common_string_append_kx (str, idt, "RuntimeRelease", priv->runtime_release);
@@ -869,6 +870,14 @@ dfu_device_refresh (DfuDevice *device, GError **error)
 	/* ensure interface is claimed */
 	if (!dfu_device_ensure_interface (device, error))
 		return FALSE;
+
+	/* Device that cannot communicate via the USB after the
+	 * Manifestation phase indicated this limitation to the
+	 * host by clearing bmAttributes bit bitManifestationTolerant.
+	 * so we assume the operation was successful */
+	if (priv->state == DFU_STATE_DFU_MANIFEST &&
+	    !(priv->attributes & DFU_DEVICE_ATTRIBUTE_MANIFEST_TOL))
+		return TRUE;
 
 	if (!g_usb_device_control_transfer (usb_device,
 					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
@@ -1837,5 +1846,6 @@ dfu_device_init (DfuDevice *device)
 	priv->transfer_size = 64;
 	fu_device_add_icon (FU_DEVICE (device), "drive-harddisk-usb");
 	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS);
 	fu_device_set_remove_delay (FU_DEVICE (device), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 }

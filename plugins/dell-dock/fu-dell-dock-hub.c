@@ -21,13 +21,13 @@
 #include "fu-dell-dock-common.h"
 
 struct _FuDellDockHub {
-	FuUsbDevice			 parent_instance;
+	FuHidDevice			 parent_instance;
 	guint8				 unlock_target;
 	guint64				 blob_major_offset;
 	guint64				 blob_minor_offset;
 };
 
-G_DEFINE_TYPE (FuDellDockHub, fu_dell_dock_hub, FU_TYPE_USB_DEVICE)
+G_DEFINE_TYPE (FuDellDockHub, fu_dell_dock_hub, FU_TYPE_HID_DEVICE)
 
 static gboolean
 fu_dell_dock_hub_probe (FuDevice *device, GError **error)
@@ -113,7 +113,8 @@ fu_dell_dock_hub_write_fw (FuDevice *device,
 
 	/* dock will reboot to re-read; this is to appease the daemon */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	fu_device_set_version (device, dynamic_version, FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_set_version (device, dynamic_version);
 	return TRUE;
 }
 
@@ -154,37 +155,6 @@ fu_dell_dock_hub_set_quirk_kv (FuDevice *device,
 	return FALSE;
 }
 
-static gboolean
-fu_dell_dock_hub_open (FuUsbDevice *fu_usb_device, GError **error)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev (fu_usb_device);
-
-	/* open device and clear status */
-	if (!g_usb_device_claim_interface (
-		usb_device, 0, /* HID */
-		G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER, error)) {
-		g_prefix_error (error, "failed to claim HID interface: ");
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-static gboolean
-fu_dell_dock_hub_close (FuUsbDevice *fu_usb_device, GError **error)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev (fu_usb_device);
-
-	if (!g_usb_device_release_interface (
-		usb_device, 0, /* HID */
-		G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER, error)) {
-		g_prefix_error (error, "failed to release interface: ");
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
 static void
 fu_dell_dock_hub_finalize (GObject *object)
 {
@@ -194,6 +164,7 @@ fu_dell_dock_hub_finalize (GObject *object)
 static void
 fu_dell_dock_hub_init (FuDellDockHub *self)
 {
+	fu_device_retry_set_delay (FU_DEVICE (self), 1000);
 }
 
 static void
@@ -201,10 +172,7 @@ fu_dell_dock_hub_class_init (FuDellDockHubClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	object_class->finalize = fu_dell_dock_hub_finalize;
-	klass_usb_device->open = fu_dell_dock_hub_open;
-	klass_usb_device->close = fu_dell_dock_hub_close;
 	klass_device->setup = fu_dell_dock_hid_get_hub_version;
 	klass_device->probe = fu_dell_dock_hub_probe;
 	klass_device->write_firmware = fu_dell_dock_hub_write_fw;

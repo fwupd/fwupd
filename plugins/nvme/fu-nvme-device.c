@@ -184,43 +184,6 @@ fu_nvme_device_parse_cns_maybe_dell (FuNvmeDevice *self, const guint8 *buf)
 }
 
 static gboolean
-fu_nvme_device_set_version (FuNvmeDevice *self, const gchar *version, GError **error)
-{
-	FwupdVersionFormat fmt = fu_device_get_version_format (FU_DEVICE (self));
-
-	/* unset */
-	if (fmt == FWUPD_VERSION_FORMAT_UNKNOWN || fmt == FWUPD_VERSION_FORMAT_PLAIN) {
-		fu_device_set_version (FU_DEVICE (self), version, FWUPD_VERSION_FORMAT_PLAIN);
-		return TRUE;
-	}
-
-	/* AA.BB.CC.DD */
-	if (fmt == FWUPD_VERSION_FORMAT_QUAD) {
-		guint64 tmp = g_ascii_strtoull (version, NULL, 16);
-		g_autofree gchar *version_new = NULL;
-		if (tmp == 0 || tmp > G_MAXUINT32) {
-			g_set_error (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "%s is not valid 32 bit number",
-				     version);
-			return FALSE;
-		}
-		version_new = fu_common_version_from_uint32 (tmp, FWUPD_VERSION_FORMAT_QUAD);
-		fu_device_set_version (FU_DEVICE (self), version_new, fmt);
-		return TRUE;
-	}
-
-	/* invalid, or not supported */
-	g_set_error (error,
-		     G_IO_ERROR,
-		     G_IO_ERROR_INVALID_DATA,
-		     "version format %s not handled",
-		     fwupd_version_format_to_string (fmt));
-	return FALSE;
-}
-
-static gboolean
 fu_nvme_device_parse_cns (FuNvmeDevice *self, const guint8 *buf, gsize sz, GError **error)
 {
 	guint8 fawr;
@@ -251,10 +214,8 @@ fu_nvme_device_parse_cns (FuNvmeDevice *self, const guint8 *buf, gsize sz, GErro
 	if (mn != NULL)
 		fu_device_set_name (FU_DEVICE (self), mn);
 	sr = fu_nvme_device_get_string_safe (buf, 64, 71);
-	if (sr != NULL) {
-		if (!fu_nvme_device_set_version (self, sr, error))
-			return FALSE;
-	}
+	if (sr != NULL)
+		fu_device_set_version (FU_DEVICE (self), sr);
 
 	/* firmware update granularity (FWUG) */
 	fwug = buf[319];
@@ -429,6 +390,7 @@ fu_nvme_device_init (FuNvmeDevice *self)
 {
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_summary (FU_DEVICE (self), "NVM Express Solid State Drive");
 	fu_device_add_icon (FU_DEVICE (self), "drive-harddisk");
 	fu_device_set_protocol (FU_DEVICE (self), "org.nvmexpress");

@@ -66,13 +66,17 @@ fu_wacom_device_check_mpu (FuWacomDevice *self, GError **error)
 
 	/* W9013 */
 	if (rsp.resp == 0x2e) {
-		fu_device_add_instance_id (FU_DEVICE (self), "WacomEMR_W9013");
+		fu_device_add_instance_id_full (FU_DEVICE (self),
+						"WacomEMR_W9013",
+						FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
 		return TRUE;
 	}
 
 	/* W9021 */
 	if (rsp.resp == 0x45) {
-		fu_device_add_instance_id (FU_DEVICE (self), "WacomEMR_W9021");
+		fu_device_add_instance_id_full (FU_DEVICE (self),
+						"WacomEMR_W9021",
+						FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
 		return TRUE;
 	}
 
@@ -102,6 +106,10 @@ fu_wacom_device_detach (FuDevice *device, GError **error)
 		FU_WACOM_RAW_FW_REPORT_ID,
 		FU_WACOM_RAW_FW_CMD_DETACH,
 	};
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug ("already in bootloader mode, skipping");
+		return TRUE;
+	}
 	if (!fu_wacom_device_set_feature (self, buf, sizeof(buf), error)) {
 		g_prefix_error (error, "failed to switch to bootloader mode: ");
 		return FALSE;
@@ -121,6 +129,10 @@ fu_wacom_device_attach (FuDevice *device, GError **error)
 		.echo = FU_WACOM_RAW_ECHO_DEFAULT,
 		0x00
 	};
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug ("already in runtime mode, skipping");
+		return TRUE;
+	}
 	if (!fu_wacom_device_set_feature (self, (const guint8 *) &req, sizeof(req), error)) {
 		g_prefix_error (error, "failed to switch to runtime mode: ");
 		return FALSE;
@@ -342,6 +354,7 @@ fu_wacom_device_init (FuWacomDevice *self)
 	fu_device_set_protocol (FU_DEVICE (self), "com.wacom.raw");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PAIR);
 }
 
 static void

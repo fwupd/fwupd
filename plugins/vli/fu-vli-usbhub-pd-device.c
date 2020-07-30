@@ -14,7 +14,6 @@
 
 #include "fu-vli-usbhub-common.h"
 #include "fu-vli-usbhub-device.h"
-#include "fu-vli-usbhub-pd-common.h"
 #include "fu-vli-usbhub-pd-device.h"
 
 struct _FuVliUsbhubPdDevice
@@ -45,7 +44,10 @@ fu_vli_usbhub_pd_device_probe (FuDevice *device, GError **error)
 
 	guint32 fwver;
 	g_autofree gchar *fwver_str = NULL;
+	g_autofree gchar *instance_id0 = NULL;
 	g_autofree gchar *instance_id1 = NULL;
+	g_autofree gchar *instance_id2 = NULL;
+	g_autofree gchar *instance_id3 = NULL;
 
 	/* get version */
 	fwver = GUINT32_FROM_BE (self->hdr.fwver);
@@ -60,14 +62,29 @@ fu_vli_usbhub_pd_device_probe (FuDevice *device, GError **error)
 	fu_device_set_name (device, fu_vli_common_device_kind_to_string (self->device_kind));
 
 	/* use header to populate device info */
-	fwver_str = fu_common_version_from_uint32 (fwver, FWUPD_VERSION_FORMAT_QUAD);
-	fu_device_set_version (device, fwver_str, FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_version_raw (device, fwver);
+	fwver_str = fu_common_version_from_uint32 (fwver, FWUPD_VERSION_FORMAT_QUAD);
+	fu_device_set_version (device, fwver_str);
+	instance_id0 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&APP_%02X",
+					GUINT16_FROM_LE (self->hdr.vid),
+					GUINT16_FROM_LE (self->hdr.pid),
+					fwver & 0xff);
+	fu_device_add_instance_id (device, instance_id0);
 	instance_id1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&DEV_%s",
 					GUINT16_FROM_LE (self->hdr.vid),
 					GUINT16_FROM_LE (self->hdr.pid),
 					fu_vli_common_device_kind_to_string (self->device_kind));
 	fu_device_add_instance_id (device, instance_id1);
+
+	/* add standard GUIDs in order of priority */
+	instance_id2 = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
+					GUINT16_FROM_LE (self->hdr.vid),
+					GUINT16_FROM_LE (self->hdr.pid));
+	fu_device_add_instance_id (device, instance_id2);
+	instance_id3 = g_strdup_printf ("USB\\VID_%04X",
+					GUINT16_FROM_LE (self->hdr.vid));
+	fu_device_add_instance_id_full (device, instance_id3,
+					FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
 
 	/* these have a backup section */
 	if (fu_vli_common_device_kind_get_offset (self->device_kind) == VLI_USBHUB_FLASHMAP_ADDR_PD)
@@ -86,10 +103,6 @@ fu_vli_usbhub_pd_device_prepare_firmware (FuDevice *device,
 	FuVliUsbhubPdDevice *self = FU_VLI_USBHUB_PD_DEVICE (device);
 	FuVliDeviceKind device_kind;
 	g_autoptr(FuFirmware) firmware = fu_vli_pd_firmware_new ();
-
-	/* add the two offset locations the header can be found */
-	fu_vli_pd_firmware_add_offset (FU_VLI_PD_FIRMWARE (firmware), VLI_USBHUB_PD_FLASHMAP_ADDR_LEGACY);
-	fu_vli_pd_firmware_add_offset (FU_VLI_PD_FIRMWARE (firmware), VLI_USBHUB_PD_FLASHMAP_ADDR);
 
 	/* check size */
 	if (g_bytes_get_size (fw) < fu_device_get_firmware_size_min (device)) {
@@ -197,6 +210,17 @@ fu_vli_usbhub_pd_device_write_firmware (FuDevice *device,
 	return TRUE;
 }
 
+/* reboot the parent FuVliUsbhubDevice if we update the FuVliUsbhubPdDevice */
+static gboolean
+fu_vli_usbhub_pd_device_attach (FuDevice *device, GError **error)
+{
+	FuDevice *parent = fu_device_get_parent (device);
+	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new (parent, error);
+	if (locker == NULL)
+		return FALSE;
+	return fu_device_attach (parent, error);
+}
+
 static void
 fu_vli_usbhub_pd_device_init (FuVliUsbhubPdDevice *self)
 {
@@ -204,6 +228,7 @@ fu_vli_usbhub_pd_device_init (FuVliUsbhubPdDevice *self)
 	fu_device_set_protocol (FU_DEVICE (self), "com.vli.usbhub");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_install_duration (FU_DEVICE (self), 15); /* seconds */
 	fu_device_set_logical_id (FU_DEVICE (self), "PD");
 	fu_device_set_summary (FU_DEVICE (self), "USB-C Power Delivery Device");
@@ -215,6 +240,7 @@ fu_vli_usbhub_pd_device_class_init (FuVliUsbhubPdDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	klass_device->to_string = fu_vli_usbhub_pd_device_to_string;
 	klass_device->probe = fu_vli_usbhub_pd_device_probe;
+	klass_device->attach = fu_vli_usbhub_pd_device_attach;
 	klass_device->read_firmware = fu_vli_usbhub_pd_device_read_firmware;
 	klass_device->write_firmware = fu_vli_usbhub_pd_device_write_firmware;
 	klass_device->prepare_firmware = fu_vli_usbhub_pd_device_prepare_firmware;

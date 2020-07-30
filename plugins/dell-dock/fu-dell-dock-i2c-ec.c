@@ -140,7 +140,6 @@ struct _FuDellDockEc {
 	gchar 				*ec_version;
 	gchar 				*mst_version;
 	gchar 				*tbt_version;
-	FuDevice 			*symbiote;
 	guint8				 unlock_target;
 	guint8				 board_min;
 	gchar				*ec_minimum_version;
@@ -175,14 +174,6 @@ fu_dell_dock_ec_set_board (FuDevice *device)
 	summary = fu_device_get_metadata (device, board_type_str);
 	if (summary != NULL)
 		fu_device_set_summary (device, summary);
-}
-
-FuDevice *
-fu_dell_dock_ec_get_symbiote (FuDevice *device)
-{
-	FuDellDockEc *self = FU_DELL_DOCK_EC (device);
-
-	return self->symbiote;
 }
 
 const gchar *
@@ -268,13 +259,12 @@ fu_dell_dock_ec_read (FuDevice *device, guint32 cmd, gsize length,
 	guint8 result_length = length + 1;
 	g_autoptr(GBytes) bytes_local = NULL;
 	const guint8 *result;
-	FuDellDockEc *self = FU_DELL_DOCK_EC (device);
 
 	g_return_val_if_fail (device != NULL, FALSE);
-	g_return_val_if_fail (self->symbiote != NULL, FALSE);
+	g_return_val_if_fail (fu_device_get_proxy (device) != NULL, FALSE);
 	g_return_val_if_fail (bytes != NULL, FALSE);
 
-	if (!fu_dell_dock_hid_i2c_read (self->symbiote, cmd, result_length,
+	if (!fu_dell_dock_hid_i2c_read (fu_device_get_proxy (device), cmd, result_length,
 					&bytes_local, &ec_base_settings, error)) {
 		g_prefix_error (error, "read over HID-I2C failed: ");
 		return FALSE;
@@ -295,13 +285,11 @@ fu_dell_dock_ec_read (FuDevice *device, guint32 cmd, gsize length,
 static gboolean
 fu_dell_dock_ec_write (FuDevice *device, gsize length, guint8 *data, GError **error)
 {
-	FuDellDockEc *self = FU_DELL_DOCK_EC (device);
-
 	g_return_val_if_fail (device != NULL, FALSE);
-	g_return_val_if_fail (self->symbiote != NULL, FALSE);
+	g_return_val_if_fail (fu_device_get_proxy (device) != NULL, FALSE);
 	g_return_val_if_fail (length > 1, FALSE);
 
-	if (!fu_dell_dock_hid_i2c_write (self->symbiote, data, length,
+	if (!fu_dell_dock_hid_i2c_write (fu_device_get_proxy (device), data, length,
 					 &ec_base_settings, error)) {
 		g_prefix_error (error, "write over HID-I2C failed: ");
 		return FALSE;
@@ -401,7 +389,8 @@ fu_dell_dock_ec_get_dock_info (FuDevice *device,
 			    device_entry[i].version.version_8[2],
 			    device_entry[i].version.version_8[3]);
 			g_debug ("\tParsed version %s", self->ec_version);
-			fu_device_set_version (FU_DEVICE (self), self->ec_version, FWUPD_VERSION_FORMAT_QUAD);
+			fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_QUAD);
+			fu_device_set_version (FU_DEVICE (self), self->ec_version);
 
 		} else if (map->device_type == FU_DELL_DOCK_DEVICETYPE_MST) {
 			self->raw_versions->mst_version = device_entry[i].version.version_32;
@@ -471,11 +460,11 @@ fu_dell_dock_ec_get_dock_info (FuDevice *device,
 
 
 	/* Determine if the passive flow should be used when flashing */
-	hub_version = fu_device_get_version (self->symbiote);
+	hub_version = fu_device_get_version (fu_device_get_proxy (device));
 	if (fu_common_vercmp_full (hub_version, "1.42", FWUPD_VERSION_FORMAT_PAIR) >= 0) {
 		g_debug ("using passive flow");
 		self->passive_flow = PASSIVE_REBOOT_MASK;
-		fu_device_set_custom_flags (device, "skip-restart");
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_SKIPS_RESTART);
 	} else {
 		g_debug ("not using passive flow (EC: %s Hub2: %s)",
 			 self->ec_version, hub_version);
@@ -795,11 +784,11 @@ fu_dell_dock_ec_write_fw (FuDevice *device,
 	if (!fu_dell_dock_ec_modify_lock (device, self->unlock_target, TRUE, error))
 		return FALSE;
 
-	if (!fu_dell_dock_hid_raise_mcu_clock (self->symbiote, TRUE, error))
+	if (!fu_dell_dock_hid_raise_mcu_clock (fu_device_get_proxy (device), TRUE, error))
 		return FALSE;
 
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_ERASE);
-	if (!fu_dell_dock_hid_erase_bank (self->symbiote, 0xff, error))
+	if (!fu_dell_dock_hid_erase_bank (fu_device_get_proxy (device), 0xff, error))
 		return FALSE;
 
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
@@ -808,7 +797,7 @@ fu_dell_dock_ec_write_fw (FuDevice *device,
 		if (fw_size - nwritten < write_size)
 			write_size = fw_size - nwritten;
 
-		if (!fu_dell_dock_hid_write_flash (self->symbiote, address, data,
+		if (!fu_dell_dock_hid_write_flash (fu_device_get_proxy (device), address, data,
 						   write_size, error)) {
 			g_prefix_error (error, "write over HID failed: ");
 			return FALSE;
@@ -819,17 +808,18 @@ fu_dell_dock_ec_write_fw (FuDevice *device,
 		address += write_size;
 	} while (nwritten < fw_size);
 
-	if (!fu_dell_dock_hid_raise_mcu_clock (self->symbiote, FALSE, error))
+	if (!fu_dell_dock_hid_raise_mcu_clock (fu_device_get_proxy (device), FALSE, error))
 		return FALSE;
 
 	/* dock will reboot to re-read; this is to appease the daemon */
-	fu_device_set_version (device, dynamic_version, FWUPD_VERSION_FORMAT_QUAD);
+	fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_QUAD);
+	fu_device_set_version (device, dynamic_version);
 
 	/* activate passive behavior */
 	if (self->passive_flow)
 		self->passive_flow |= PASSIVE_RESET_MASK;
 
-	if (fu_device_has_custom_flag (device, "skip-restart")) {
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_SKIPS_RESTART)) {
 		g_debug ("Skipping EC reset per quirk request");
 		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 		return TRUE;
@@ -846,7 +836,7 @@ fu_dell_dock_ec_write_fw (FuDevice *device,
 	while (status != FW_UPDATE_COMPLETE) {
 		g_autoptr(GError) error_local = NULL;
 
-		if (!fu_dell_dock_hid_get_ec_status (self->symbiote, &progress1,
+		if (!fu_dell_dock_hid_get_ec_status (fu_device_get_proxy (device), &progress1,
 						     &progress0, error)) {
 			g_prefix_error (error, "Failed to read scratch: ");
 			return FALSE;
@@ -986,9 +976,7 @@ fu_dell_dock_ec_setup (FuDevice *device, GError **error)
 static gboolean
 fu_dell_dock_ec_open (FuDevice *device, GError **error)
 {
-	FuDellDockEc *self = FU_DELL_DOCK_EC (device);
-
-	if (!fu_device_open (self->symbiote, error))
+	if (!fu_device_open (fu_device_get_proxy (device), error))
 		return FALSE;
 
 	return fu_dell_dock_is_valid_dock (device, error);
@@ -997,16 +985,13 @@ fu_dell_dock_ec_open (FuDevice *device, GError **error)
 static gboolean
 fu_dell_dock_ec_close (FuDevice *device, GError **error)
 {
-	FuDellDockEc *self = FU_DELL_DOCK_EC (device);
-
-	return fu_device_close (self->symbiote, error);
+	return fu_device_close (fu_device_get_proxy (device), error);
 }
 
 static void
 fu_dell_dock_ec_finalize (GObject *object)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC (object);
-	g_object_unref (self->symbiote);
 	g_free (self->ec_version);
 	g_free (self->mst_version);
 	g_free (self->tbt_version);
@@ -1041,14 +1026,14 @@ fu_dell_dock_ec_class_init (FuDellDockEcClass *klass)
 }
 
 FuDellDockEc *
-fu_dell_dock_ec_new (FuDevice *symbiote)
+fu_dell_dock_ec_new (FuDevice *proxy)
 {
 	FuDellDockEc *self = NULL;
 
 	self = g_object_new (FU_TYPE_DELL_DOCK_EC, NULL);
-	self->symbiote = g_object_ref (symbiote);
+	fu_device_set_proxy (FU_DEVICE (self), proxy);
 	fu_device_set_physical_id (FU_DEVICE (self),
-				   fu_device_get_physical_id (self->symbiote));
+				   fu_device_get_physical_id (proxy));
 	fu_device_set_logical_id (FU_DEVICE (self), "ec");
 
 	return self;

@@ -325,6 +325,19 @@ gboolean	 fu_plugin_device_removed		(FuPlugin	*plugin,
 							 FuDevice	*device,
 							 GError		**error);
 /**
+ * fu_plugin_device_created
+ * @plugin: A #FuPlugin
+ * @device: A #FuDevice
+ * @error: A #GError or %NULL
+ *
+ * Function run when the subclassed device has been created.
+ *
+ * Since: 1.4.0
+ **/
+gboolean	 fu_plugin_device_created		(FuPlugin	*plugin,
+							 FuDevice	*dev,
+							 GError		**error);
+/**
  * fu_plugin_device_registered
  * @plugin: A #FuPlugin
  * @device: A #FuDevice

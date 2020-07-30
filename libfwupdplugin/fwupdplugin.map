@@ -537,3 +537,57 @@ LIBFWUPDPLUGIN_1.3.9 {
     fu_common_vercmp_full;
   local: *;
 } LIBFWUPDPLUGIN_1.3.8;
+
+LIBFWUPDPLUGIN_1.4.0 {
+  global:
+    fu_cabinet_get_silo;
+    fu_cabinet_get_type;
+    fu_cabinet_new;
+    fu_cabinet_parse;
+    fu_cabinet_set_jcat_context;
+    fu_cabinet_set_size_max;
+    fu_device_get_root;
+    fu_device_locker_close;
+    fu_device_retry;
+    fu_device_retry_add_recovery;
+    fu_device_retry_set_delay;
+    fu_device_set_version_bootloader;
+    fu_device_set_version_format;
+    fu_device_set_version_lowest;
+    fu_efivar_delete;
+    fu_efivar_delete_with_glob;
+    fu_efivar_exists;
+    fu_efivar_get_data;
+    fu_efivar_secure_boot_enabled;
+    fu_efivar_set_data;
+    fu_efivar_supported;
+    fu_hid_device_get_interface;
+    fu_hid_device_get_report;
+    fu_hid_device_get_type;
+    fu_hid_device_new;
+    fu_hid_device_set_interface;
+    fu_hid_device_set_report;
+    fu_plugin_get_config_value_boolean;
+    fu_plugin_runner_device_created;
+  local: *;
+} LIBFWUPDPLUGIN_1.3.9;
+
+LIBFWUPDPLUGIN_1.4.1 {
+  global:
+    fu_device_get_proxy;
+    fu_device_get_proxy_guid;
+    fu_device_set_proxy;
+    fu_device_set_proxy_guid;
+  local: *;
+} LIBFWUPDPLUGIN_1.4.0;
+
+LIBFWUPDPLUGIN_1.4.5 {
+  global:
+    fu_udev_device_get_devtype;
+    fu_udev_device_get_parent_name;
+    fu_udev_device_get_sysfs_attr;
+    fu_udev_device_pread_full;
+    fu_udev_device_pwrite_full;
+    fu_udev_device_write_sysfs;
+  local: *;
+} LIBFWUPDPLUGIN_1.4.1;

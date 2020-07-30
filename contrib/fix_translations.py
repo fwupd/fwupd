@@ -5,17 +5,21 @@ import sys
 import os
 import subprocess
 
+
 def _do_msgattrib(fn):
-    argv = ['msgattrib',
-            '--no-location',
-            '--translated',
-            '--no-wrap',
-            '--sort-output',
-            fn,
-            '--output-file=' + fn]
+    argv = [
+        'msgattrib',
+        '--no-location',
+        '--translated',
+        '--no-wrap',
+        '--sort-output',
+        fn,
+        '--output-file=' + fn,
+    ]
     ret = subprocess.run(argv)
     if ret.returncode != 0:
         return
+
 
 def _do_nukeheader(fn):
     clean_lines = []
@@ -32,9 +36,11 @@ def _do_nukeheader(fn):
     with open(fn, 'w') as f:
         f.writelines(clean_lines)
 
+
 def _process_file(fn):
     _do_msgattrib(fn)
     _do_nukeheader(fn)
+
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:

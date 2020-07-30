@@ -15,8 +15,7 @@
 #include "fu-vli-usbhub-common.h"
 #include "fu-vli-usbhub-device.h"
 #include "fu-vli-usbhub-firmware.h"
-#include "fu-vli-usbhub-i2c-device.h"
-#include "fu-vli-usbhub-pd-common.h"
+#include "fu-vli-usbhub-msp430-device.h"
 #include "fu-vli-usbhub-pd-device.h"
 
 struct _FuVliUsbhubDevice
@@ -39,86 +38,11 @@ fu_vli_usbhub_device_to_string (FuVliDevice *device, guint idt, GString *str)
 	if (self->update_protocol >= 0x2) {
 		fu_common_string_append_kv (str, idt, "H1Hdr@0x0", NULL);
 		fu_vli_usbhub_header_to_string (&self->hd1_hdr, idt + 1, str);
-		fu_common_string_append_kv (str, idt, "H2Hdr@0x1000", NULL);
-		fu_vli_usbhub_header_to_string (&self->hd2_hdr, idt + 1, str);
+		if (self->hd2_hdr.dev_id != 0xffff) {
+			fu_common_string_append_kv (str, idt, "H2Hdr@0x1000", NULL);
+			fu_vli_usbhub_header_to_string (&self->hd2_hdr, idt + 1, str);
+		}
 	}
-}
-
-gboolean
-fu_vli_usbhub_device_i2c_read (FuVliUsbhubDevice *self,
-			       guint8 cmd, guint8 *buf, gsize bufsz,
-			       GError **error)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
-	guint16 value = ((guint16) FU_VLI_USBHUB_I2C_ADDR_WRITE << 8) | cmd;
-	guint16 index = (guint16) FU_VLI_USBHUB_I2C_ADDR_READ << 8;
-	if (!g_usb_device_control_transfer (usb_device,
-					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					    G_USB_DEVICE_RECIPIENT_DEVICE,
-					    FU_VLI_USBHUB_I2C_R_VDR, value, index,
-					    buf, bufsz, NULL,
-					    FU_VLI_DEVICE_TIMEOUT,
-					    NULL, error)) {
-		g_prefix_error (error, "failed to read I2C: ");
-		return FALSE;
-	}
-	if (g_getenv ("FWUPD_VLI_USBHUB_VERBOSE") != NULL)
-		fu_common_dump_raw (G_LOG_DOMAIN, "I2cReadData", buf, 0x1);
-	return TRUE;
-}
-
-gboolean
-fu_vli_usbhub_device_i2c_read_status (FuVliUsbhubDevice *self,
-				      FuVliUsbhubI2cStatus *status,
-				      GError **error)
-{
-	guint8 buf[1] = { 0xff };
-	if (!fu_vli_usbhub_device_i2c_read (self,
-					    FU_VLI_USBHUB_I2C_CMD_READ_STATUS,
-					    buf, sizeof(buf),
-					    error))
-		return FALSE;
-	if (status != NULL)
-		*status = buf[0];
-	return TRUE;
-}
-
-gboolean
-fu_vli_usbhub_device_i2c_write_data (FuVliUsbhubDevice *self,
-				     guint8 skip_s,
-				     guint8 skip_p,
-				     const guint8 *buf,
-				     gsize bufsz,
-				     GError **error)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
-	guint16 value = (((guint16) skip_s) << 8) | skip_p;
-	if (g_getenv ("FWUPD_VLI_USBHUB_VERBOSE") != NULL)
-		fu_common_dump_raw (G_LOG_DOMAIN, "I2cWriteData", buf, bufsz);
-	if (!g_usb_device_control_transfer (usb_device,
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					    G_USB_DEVICE_RECIPIENT_DEVICE,
-					    FU_VLI_USBHUB_I2C_W_VDR, value, 0x0,
-					    (guint8 *) buf, bufsz, NULL,
-					    FU_VLI_DEVICE_TIMEOUT,
-					    NULL, error)) {
-		g_prefix_error (error, "failed to write I2C @0x%x: ", value);
-		return FALSE;
-	}
-	return TRUE;
-}
-
-gboolean
-fu_vli_usbhub_device_i2c_write (FuVliUsbhubDevice *self, guint8 cmd,
-				const guint8 *buf, gsize bufsz, GError **error)
-{
-	guint8 buf2[10] = { FU_VLI_USBHUB_I2C_ADDR_WRITE, cmd, 0x0 };
-	if (!fu_memcpy_safe (buf2, sizeof(buf2), 0x2,
-			     buf, bufsz, 0x0, bufsz, error))
-		return FALSE;
-	return fu_vli_usbhub_device_i2c_write_data (self, 0x0, 0x0, buf2, bufsz + 2, error);
 }
 
 static gboolean
@@ -324,17 +248,91 @@ fu_vli_usbhub_device_spi_write_data (FuVliDevice *self,
 	return TRUE;
 }
 
+#define VL817_ADDR_GPIO_OUTPUT_ENABLE		0xF6A0	/* 0=input, 1=output */
+#define VL817_ADDR_GPIO_SET_OUTPUT_DATA		0xF6A1	/* 0=low, 1=high */
+#define VL817_ADDR_GPIO_GET_INPUT_DATA		0xF6A2	/* 0=low, 1=high */
+
 static gboolean
-fu_vli_usbhub_device_reset (FuVliDevice *device, GError **error)
+fu_vli_usbhub_device_attach_full (FuDevice *device, FuDevice *proxy, GError **error)
 {
-	return g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (device)),
-					      G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					      G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					      G_USB_DEVICE_RECIPIENT_DEVICE,
-					      0xf6, 0x0040, 0x0002,
-					      NULL, 0x0, NULL,
-					      FU_VLI_DEVICE_TIMEOUT,
-					      NULL, error);
+	g_autoptr(GError) error_local = NULL;
+
+	/* update UI */
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+
+	/* some hardware has to toggle a GPIO to reset the entire PCB */
+	if (fu_vli_device_get_kind (FU_VLI_DEVICE (proxy)) == FU_VLI_DEVICE_KIND_VL817 &&
+	    fu_device_has_custom_flag (proxy, "attach-with-gpiob")) {
+		guint8 tmp = 0x0;
+
+		/* set GPIOB output enable */
+		g_debug ("using GPIO reset for %s", fu_device_get_id (device));
+		if (!fu_vli_usbhub_device_read_reg (FU_VLI_USBHUB_DEVICE (proxy),
+						    VL817_ADDR_GPIO_OUTPUT_ENABLE,
+						    &tmp, error))
+			return FALSE;
+		if (!fu_vli_usbhub_device_write_reg (FU_VLI_USBHUB_DEVICE (proxy),
+						    VL817_ADDR_GPIO_OUTPUT_ENABLE,
+						     tmp | (1 << 1), error))
+			return FALSE;
+
+		/* toggle GPIOB to trigger reset */
+		if (!fu_vli_usbhub_device_read_reg (FU_VLI_USBHUB_DEVICE (proxy),
+						    VL817_ADDR_GPIO_SET_OUTPUT_DATA,
+						    &tmp, error))
+			return FALSE;
+		if (!fu_vli_usbhub_device_write_reg (FU_VLI_USBHUB_DEVICE (proxy),
+						     VL817_ADDR_GPIO_SET_OUTPUT_DATA,
+						     tmp ^ (1 << 1), error))
+			return FALSE;
+	} else {
+		/* replug, and ignore the device going away */
+		if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (proxy)),
+						    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+						    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+						    G_USB_DEVICE_RECIPIENT_DEVICE,
+						    0xf6, 0x0040, 0x0002,
+						    NULL, 0x0, NULL,
+						    FU_VLI_DEVICE_TIMEOUT,
+						    NULL, &error_local)) {
+			if (g_error_matches (error_local,
+					     G_USB_DEVICE_ERROR,
+					     G_USB_DEVICE_ERROR_NO_DEVICE) ||
+			    g_error_matches (error_local,
+					     G_USB_DEVICE_ERROR,
+					     G_USB_DEVICE_ERROR_FAILED)) {
+				g_debug ("ignoring %s", error_local->message);
+			} else {
+				g_propagate_prefixed_error (error,
+							    g_steal_pointer (&error_local),
+							    "failed to restart device: ");
+				return FALSE;
+			}
+		}
+	}
+
+	/* success */
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	return TRUE;
+}
+
+static gboolean
+fu_vli_usbhub_device_attach (FuDevice *device, GError **error)
+{
+	FuDevice *proxy = fu_device_get_proxy (device);
+
+	/* if we do this in another plugin, perhaps move to the engine? */
+	if (proxy != NULL) {
+		g_autoptr(FuDeviceLocker) locker = NULL;
+		g_debug ("using proxy device %s", fu_device_get_id (proxy));
+		locker = fu_device_locker_new (proxy, error);
+		if (locker == NULL)
+			return FALSE;
+		return fu_vli_usbhub_device_attach_full (device, proxy, error);
+	}
+
+	/* normal case */
+	return fu_vli_usbhub_device_attach_full (device, device, error);
 }
 
 /* disable hub sleep states -- not really required by 815~ hubs */
@@ -483,6 +481,9 @@ fu_vli_usbhub_device_probe (FuDevice *device, GError **error)
 	/* quirks now applied... */
 	if (usbver > 0x0300 || fu_device_has_custom_flag (device, "usb3")) {
 		fu_device_set_summary (device, "USB 3.x Hub");
+		/* prefer to show the USB 3 device and only fall back to the
+		 * USB 2 version as a recovery */
+		fu_device_set_priority (device, 1);
 	} else if (usbver > 0x0200 || fu_device_has_custom_flag (device, "usb2")) {
 		fu_device_set_summary (device, "USB 2.x Hub");
 	} else {
@@ -528,6 +529,7 @@ fu_vli_usbhub_device_pd_setup (FuVliUsbhubDevice *self, GError **error)
 
 	/* add child */
 	dev = fu_vli_usbhub_pd_device_new (&hdr);
+	fu_device_set_quirks (dev, fu_device_get_quirks (FU_DEVICE (self)));
 	if (!fu_device_probe (dev, &error_local)) {
 		g_warning ("cannot create PD device: %s", error_local->message);
 		return TRUE;
@@ -537,13 +539,13 @@ fu_vli_usbhub_device_pd_setup (FuVliUsbhubDevice *self, GError **error)
 }
 
 static gboolean
-fu_vli_usbhub_device_i2c_setup (FuVliUsbhubDevice *self, GError **error)
+fu_vli_usbhub_device_msp430_setup (FuVliUsbhubDevice *self, GError **error)
 {
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* add child */
-	dev = fu_vli_usbhub_i2c_device_new (self);
+	dev = fu_vli_usbhub_msp430_device_new (self);
 	if (!fu_device_probe (dev, error))
 		return FALSE;
 	if (!fu_device_setup (dev, &error_local)) {
@@ -615,9 +617,12 @@ fu_vli_usbhub_device_setup (FuVliDevice *device, GError **error)
 		fu_device_set_install_duration (FU_DEVICE (self), 15); /* seconds */
 		break;
 	default:
-		g_warning ("unknown update protocol, device_id=0x%x",
-			   GUINT16_FROM_BE(self->hd1_hdr.dev_id));
-		break;
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_SUPPORTED,
+			     "hardware is not supported, dev_id=0x%x",
+			     GUINT16_FROM_BE(self->hd1_hdr.dev_id));
+		return FALSE;
 	}
 
 	/* read HD2 (update) header */
@@ -637,8 +642,9 @@ fu_vli_usbhub_device_setup (FuVliDevice *device, GError **error)
 	}
 
 	/* detect the I²C child */
-	if (fu_device_has_custom_flag (FU_DEVICE (self), "has-shared-spi-i2c")) {
-		if (!fu_vli_usbhub_device_i2c_setup (self, error))
+	if (fu_usb_device_get_spec (FU_USB_DEVICE (self)) >= 0x0300 &&
+	    fu_device_has_custom_flag (FU_DEVICE (self), "has-msp430")) {
+		if (!fu_vli_usbhub_device_msp430_setup (self, error))
 			return FALSE;
 	}
 
@@ -995,9 +1001,9 @@ fu_vli_usbhub_device_class_init (FuVliUsbhubDeviceClass *klass)
 	klass_device->read_firmware = fu_vli_usbhub_device_read_firmware;
 	klass_device->write_firmware = fu_vli_usbhub_device_write_firmware;
 	klass_device->prepare_firmware = fu_vli_usbhub_device_prepare_firmware;
+	klass_device->attach = fu_vli_usbhub_device_attach;
 	klass_vli_device->to_string = fu_vli_usbhub_device_to_string;
 	klass_vli_device->setup = fu_vli_usbhub_device_setup;
-	klass_vli_device->reset = fu_vli_usbhub_device_reset;
 	klass_vli_device->spi_chip_erase = fu_vli_usbhub_device_spi_chip_erase;
 	klass_vli_device->spi_sector_erase = fu_vli_usbhub_device_spi_sector_erase;
 	klass_vli_device->spi_read_data = fu_vli_usbhub_device_spi_read_data;

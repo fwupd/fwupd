@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2018 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2020 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -36,8 +36,10 @@ typedef struct {
 	gchar				*equivalent_id;
 	gchar				*physical_id;
 	gchar				*logical_id;
+	gchar				*proxy_guid;
 	FuDevice			*alternate;
 	FuDevice			*parent;	/* noref */
+	FuDevice			*proxy;		/* noref */
 	FuQuirks			*quirks;
 	GHashTable			*metadata;
 	GRWLock				 metadata_mutex;
@@ -45,28 +47,36 @@ typedef struct {
 	GRWLock				 parent_guids_mutex;
 	GPtrArray			*children;
 	guint				 remove_delay;	/* ms */
-	FwupdStatus			 status;
 	guint				 progress;
 	guint				 order;
 	guint				 priority;
 	guint				 poll_id;
 	gboolean			 done_probe;
 	gboolean			 done_setup;
+	gboolean			 device_id_valid;
 	guint64				 size_min;
 	guint64				 size_max;
 	gint				 open_refcount;	/* atomic */
 	GType				 specialized_gtype;
 	GPtrArray			*possible_plugins;
+	GPtrArray			*retry_recs;	/* of FuDeviceRetryRecovery */
+	guint				 retry_delay;
 } FuDevicePrivate;
+
+typedef struct {
+	GQuark				 domain;
+	gint				 code;
+	FuDeviceRetryFunc		 recovery_func;
+} FuDeviceRetryRecovery;
 
 enum {
 	PROP_0,
-	PROP_STATUS,
 	PROP_PROGRESS,
 	PROP_PHYSICAL_ID,
 	PROP_LOGICAL_ID,
 	PROP_QUIRKS,
 	PROP_PARENT,
+	PROP_PROXY,
 	PROP_LAST
 };
 
@@ -80,9 +90,6 @@ fu_device_get_property (GObject *object, guint prop_id,
 	FuDevice *self = FU_DEVICE (object);
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	switch (prop_id) {
-	case PROP_STATUS:
-		g_value_set_uint (value, priv->status);
-		break;
 	case PROP_PROGRESS:
 		g_value_set_uint (value, priv->progress);
 		break;
@@ -98,6 +105,9 @@ fu_device_get_property (GObject *object, guint prop_id,
 	case PROP_PARENT:
 		g_value_set_object (value, priv->parent);
 		break;
+	case PROP_PROXY:
+		g_value_set_object (value, priv->proxy);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
@@ -110,9 +120,6 @@ fu_device_set_property (GObject *object, guint prop_id,
 {
 	FuDevice *self = FU_DEVICE (object);
 	switch (prop_id) {
-	case PROP_STATUS:
-		fu_device_set_status (self, g_value_get_uint (value));
-		break;
 	case PROP_PROGRESS:
 		fu_device_set_progress (self, g_value_get_uint (value));
 		break;
@@ -127,6 +134,9 @@ fu_device_set_property (GObject *object, guint prop_id,
 		break;
 	case PROP_PARENT:
 		fu_device_set_parent (self, g_value_get_object (value));
+		break;
+	case PROP_PROXY:
+		fu_device_set_proxy (self, g_value_get_object (value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -166,6 +176,148 @@ fu_device_add_possible_plugin (FuDevice *self, const gchar *plugin)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_ptr_array_add (priv->possible_plugins, g_strdup (plugin));
+}
+
+/**
+ * fu_device_retry_add_recovery:
+ * @self: A #FuDevice
+ * @domain: A #GQuark, or %0 for all domains
+ * @code: A #GError code
+ * @func: (scope async) (nullable): A function to recover the device
+ *
+ * Sets the optional function to be called when fu_device_retry() fails, which
+ * is possibly a device reset.
+ *
+ * If @func is %NULL then recovery is not possible and an error is returned
+ * straight away.
+ *
+ * Since: 1.4.0
+ **/
+void
+fu_device_retry_add_recovery (FuDevice *self,
+			      GQuark domain,
+			      gint code,
+			      FuDeviceRetryFunc func)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	FuDeviceRetryRecovery *rec;
+
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_return_if_fail (domain != 0);
+
+	rec = g_new (FuDeviceRetryRecovery, 1);
+	rec->domain = domain;
+	rec->code = code;
+	rec->recovery_func = func;
+	g_ptr_array_add (priv->retry_recs, rec);
+}
+
+/**
+ * fu_device_retry_set_delay:
+ * @self: A #FuDevice
+ * @delay: delay in ms
+ *
+ * Sets the recovery delay between failed retries.
+ *
+ * Since: 1.4.0
+ **/
+void
+fu_device_retry_set_delay (FuDevice *self, guint delay)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_DEVICE (self));
+	priv->retry_delay = delay;
+}
+
+/**
+ * fu_device_retry:
+ * @self: A #FuDevice
+ * @func: (scope async): A function to execute
+ * @count: The number of tries to try the function
+ * @user_data: (nullable): a helper to pass to @user_data
+ * @error: A #GError
+ *
+ * Calls a specific function a number of times, optionally handling the error
+ * with a reset action.
+ *
+ * If fu_device_retry_add_recovery() has not been used then all errors are
+ * considered non-fatal until the last try.
+ *
+ * If the reset function returns %FALSE, then the function returns straight away
+ * without processing any pending retries.
+ *
+ * Since: 1.4.0
+ **/
+gboolean
+fu_device_retry (FuDevice *self,
+		 FuDeviceRetryFunc func,
+		 guint count,
+		 gpointer user_data,
+		 GError **error)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+
+	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
+	g_return_val_if_fail (func != NULL, FALSE);
+	g_return_val_if_fail (count >= 1, FALSE);
+	g_return_val_if_fail (error != NULL, FALSE);
+
+	for (guint i = 0; ; i++) {
+		g_autoptr(GError) error_local =	NULL;
+
+		/* delay */
+		if (i > 0 && priv->retry_delay > 0)
+			g_usleep (priv->retry_delay * 1000);
+
+		/* run function, if success return success */
+		if (func (self, user_data, &error_local))
+			break;
+
+		/* sanity check */
+		if (error_local == NULL) {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_FAILED,
+				     "exec failed but no error set!");
+			return FALSE;
+		}
+
+		/* too many retries */
+		if (i >= count - 1) {
+			g_propagate_prefixed_error (error,
+						    g_steal_pointer (&error_local),
+						    "failed after %u retries: ",
+						    count);
+			return FALSE;
+		}
+
+		/* show recoverable error on the console */
+		if (priv->retry_recs->len == 0) {
+			g_debug ("failed on try %u of %u: %s",
+				 i + 1, count, error_local->message);
+			continue;
+		}
+
+		/* find the condition that matches */
+		for (guint j = 0; j < priv->retry_recs->len; j++) {
+			FuDeviceRetryRecovery *rec = g_ptr_array_index (priv->retry_recs, j);
+			if (g_error_matches (error_local, rec->domain, rec->code)) {
+				if (rec->recovery_func != NULL) {
+					if (!rec->recovery_func (self, user_data, error))
+						return FALSE;
+				} else {
+					g_set_error (error,
+						     G_IO_ERROR,
+						     G_IO_ERROR_FAILED,
+						     "device recovery not possible");
+					return FALSE;
+				}
+			}
+		}
+	}
+
+	/* success */
+	return TRUE;
 }
 
 /**
@@ -457,6 +609,31 @@ fu_device_get_parent (FuDevice *self)
 }
 
 /**
+ * fu_device_get_root:
+ * @self: A #FuDevice
+ *
+ * Gets the root parent device. A parent device is logically "above" the current
+ * device and this may be reflected in client tools.
+ *
+ * If there is no parent device defined, then @self is returned.
+ *
+ * Returns: (transfer full): a #FuDevice
+ *
+ * Since: 1.4.0
+ **/
+FuDevice *
+fu_device_get_root (FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
+	while (priv->parent != NULL) {
+		self = priv->parent;
+		priv = GET_PRIVATE (self);
+	}
+	return g_object_ref (self);
+}
+
+/**
  * fu_device_set_parent:
  * @self: A #FuDevice
  * @parent: A #FuDevice
@@ -476,6 +653,20 @@ fu_device_set_parent (FuDevice *self, FuDevice *parent)
 
 	g_return_if_fail (FU_IS_DEVICE (self));
 
+	/* if unspecified, always child before parent */
+	if (parent != NULL &&
+	    fu_device_get_order (parent) == fu_device_get_order (self)) {
+		g_debug ("auto-setting %s order", fu_device_get_id (parent));
+		fu_device_set_order (parent, fu_device_get_order (self) + 1);
+	}
+
+	/* if the parent has quirks, make the child inherit it */
+	if (parent != NULL) {
+		if (fu_device_get_quirks (self) == NULL &&
+		    fu_device_get_quirks (parent) != NULL)
+			fu_device_set_quirks (self, fu_device_get_quirks (parent));
+	}
+
 	if (priv->parent != NULL)
 		g_object_remove_weak_pointer (G_OBJECT (priv->parent), (gpointer *) &priv->parent);
 	if (parent != NULL)
@@ -485,6 +676,54 @@ fu_device_set_parent (FuDevice *self, FuDevice *parent)
 	/* this is what goes over D-Bus */
 	fwupd_device_set_parent_id (FWUPD_DEVICE (self),
 				    parent != NULL ? fu_device_get_id (parent) : NULL);
+}
+
+/**
+ * fu_device_set_proxy:
+ * @self: A #FuDevice
+ * @proxy: A #FuDevice
+ *
+ * Sets any proxy device. A proxy device can be used to perform an action on
+ * behalf of another device, for instance attach()ing it after a successful
+ * update.
+ *
+ * Since: 1.4.1
+ **/
+void
+fu_device_set_proxy (FuDevice *self, FuDevice *proxy)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+
+	g_return_if_fail (FU_IS_DEVICE (self));
+
+	if (priv->proxy != NULL)
+		g_object_remove_weak_pointer (G_OBJECT (priv->proxy), (gpointer *) &priv->proxy);
+	if (proxy != NULL)
+		g_object_add_weak_pointer (G_OBJECT (proxy), (gpointer *) &priv->proxy);
+	priv->proxy = proxy;
+}
+
+/**
+ * fu_device_get_proxy:
+ * @self: A #FuDevice
+ *
+ * Gets any proxy device. A proxy device can be used to perform an action on
+ * behalf of another device, for instance attach()ing it after a successful
+ * update.
+ *
+ * The proxy object is not refcounted and if destroyed this function will then
+ * return %NULL.
+ *
+ * Returns: (transfer none): a #FuDevice or %NULL
+ *
+ * Since: 1.4.1
+ **/
+FuDevice *
+fu_device_get_proxy (FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
+	return priv->proxy;
 }
 
 /**
@@ -752,7 +991,15 @@ fu_device_set_quirk_kv (FuDevice *self,
 		return TRUE;
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_VERSION) == 0) {
-		fu_device_set_version (self, value, fu_device_get_version_format (self));
+		fu_device_set_version (self, value);
+		return TRUE;
+	}
+	if (g_strcmp0 (key, FU_QUIRKS_UPDATE_MESSAGE) == 0) {
+		fu_device_set_update_message (self, value);
+		return TRUE;
+	}
+	if (g_strcmp0 (key, FU_QUIRKS_UPDATE_IMAGE) == 0) {
+		fu_device_set_update_image (self, value);
 		return TRUE;
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_ICON) == 0) {
@@ -771,6 +1018,10 @@ fu_device_set_quirk_kv (FuDevice *self,
 		fu_device_add_parent_guid (self, value);
 		return TRUE;
 	}
+	if (g_strcmp0 (key, FU_QUIRKS_PROXY_GUID) == 0) {
+		fu_device_set_proxy_guid (self, value);
+		return TRUE;
+	}
 	if (g_strcmp0 (key, FU_QUIRKS_FIRMWARE_SIZE_MIN) == 0) {
 		fu_device_set_firmware_size_min (self, fu_common_strtoull (value));
 		return TRUE;
@@ -785,6 +1036,14 @@ fu_device_set_quirk_kv (FuDevice *self,
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_INSTALL_DURATION) == 0) {
 		fu_device_set_install_duration (self, fu_common_strtoull (value));
+		return TRUE;
+	}
+	if (g_strcmp0 (key, FU_QUIRKS_PRIORITY) == 0) {
+		fu_device_set_priority (self, fu_common_strtoull (value));
+		return TRUE;
+	}
+	if (g_strcmp0 (key, FU_QUIRKS_REMOVE_DELAY) == 0) {
+		fu_device_set_remove_delay (self, fu_common_strtoull (value));
 		return TRUE;
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_VERSION_FORMAT) == 0) {
@@ -1328,22 +1587,6 @@ fu_device_set_name (FuDevice *self, const gchar *value)
 	fwupd_device_set_name (FWUPD_DEVICE (self), new->str);
 }
 
-static gboolean
-fu_device_id_is_valid (const gchar *device_id)
-{
-	if (device_id == NULL)
-		return FALSE;
-	if (strlen (device_id) != 40)
-		return FALSE;
-	for (guint i = 0; device_id[i] != '\0'; i++) {
-		gchar tmp = device_id[i];
-		/* isalnum isn't case specific */
-		if ((tmp < 'a' || tmp > 'f') && (tmp < '0' || tmp > '9'))
-			return FALSE;
-	}
-	return TRUE;
-}
-
 /**
  * fu_device_set_id:
  * @self: A #FuDevice
@@ -1369,13 +1612,14 @@ fu_device_set_id (FuDevice *self, const gchar *id)
 	g_return_if_fail (id != NULL);
 
 	/* allow sane device-id to be set directly */
-	if (fu_device_id_is_valid (id)) {
+	if (fwupd_device_id_is_valid (id)) {
 		id_hash = g_strdup (id);
 	} else {
 		id_hash = g_compute_checksum_for_string (G_CHECKSUM_SHA1, id, -1);
 		g_debug ("using %s for %s", id_hash, id);
 	}
 	fwupd_device_set_id (FWUPD_DEVICE (self), id_hash);
+	priv->device_id_valid = TRUE;
 
 	/* ensure the parent ID is set */
 	for (guint i = 0; i < priv->children->len; i++) {
@@ -1385,17 +1629,40 @@ fu_device_set_id (FuDevice *self, const gchar *id)
 }
 
 /**
+ * fu_device_set_version_format:
+ * @self: A #FwupdDevice
+ * @fmt: the #FwupdVersionFormat, e.g. %FWUPD_VERSION_FORMAT_PLAIN
+ *
+ * Sets the version format.
+ *
+ * Since: 1.4.0
+ **/
+void
+fu_device_set_version_format (FuDevice *self, FwupdVersionFormat fmt)
+{
+	/* same */
+	if (fu_device_get_version_format (self) == fmt)
+		return;
+	if (fu_device_get_version_format (self) != FWUPD_VERSION_FORMAT_UNKNOWN) {
+		g_debug ("changing verfmt for %s: %s->%s",
+			 fu_device_get_id (self),
+			 fwupd_version_format_to_string (fu_device_get_version_format (self)),
+			 fwupd_version_format_to_string (fmt));
+	}
+	fwupd_device_set_version_format (FWUPD_DEVICE (self), fmt);
+}
+
+/**
  * fu_device_set_version:
  * @self: A #FuDevice
  * @version: (allow-none): a string, e.g. `1.2.3`
- * @fmt: a #FwupdVersionFormat, e.g. %FWUPD_VERSION_FORMAT_TRIPLET
  *
  * Sets the device version, sanitizing the string if required.
  *
  * Since: 1.2.9
  **/
 void
-fu_device_set_version (FuDevice *self, const gchar *version, FwupdVersionFormat fmt)
+fu_device_set_version (FuDevice *self, const gchar *version)
 {
 	g_autofree gchar *version_safe = NULL;
 	g_autoptr(GError) error = NULL;
@@ -1412,11 +1679,103 @@ fu_device_set_version (FuDevice *self, const gchar *version, FwupdVersionFormat 
 	}
 
 	/* print a console warning for an invalid version, if semver */
-	if (!fu_common_version_verify_format (version_safe, fmt, &error))
+	if (!fu_common_version_verify_format (version_safe, fu_device_get_version_format (self), &error))
 		g_warning ("%s", error->message);
 
-	fu_device_set_version_format (self, fmt);
-	fwupd_device_set_version (FWUPD_DEVICE (self), version_safe);
+	/* if different */
+	if (g_strcmp0 (fu_device_get_version (self), version_safe) != 0) {
+		if (fu_device_get_version (self) != NULL) {
+			g_debug ("changing version for %s: %s->%s",
+				 fu_device_get_id (self),
+				 fu_device_get_version (self),
+				 version_safe);
+		}
+		fwupd_device_set_version (FWUPD_DEVICE (self), version_safe);
+	}
+}
+
+/**
+ * fu_device_set_version_lowest:
+ * @self: A #FuDevice
+ * @version: (allow-none): a string, e.g. `1.2.3`
+ *
+ * Sets the device lowest version, sanitizing the string if required.
+ *
+ * Since: 1.4.0
+ **/
+void
+fu_device_set_version_lowest (FuDevice *self, const gchar *version)
+{
+	g_autofree gchar *version_safe = NULL;
+	g_autoptr(GError) error = NULL;
+
+	g_return_if_fail (FU_IS_DEVICE (self));
+
+	/* sanitize if required */
+	if (fu_device_has_flag (self, FWUPD_DEVICE_FLAG_ENSURE_SEMVER)) {
+		version_safe = fu_common_version_ensure_semver (version);
+		if (g_strcmp0 (version, version_safe) != 0)
+			g_debug ("converted '%s' to '%s'", version, version_safe);
+	} else {
+		version_safe = g_strdup (version);
+	}
+
+	/* print a console warning for an invalid version, if semver */
+	if (!fu_common_version_verify_format (version_safe, fu_device_get_version_format (self), &error))
+		g_warning ("%s", error->message);
+
+	/* if different */
+	if (g_strcmp0 (fu_device_get_version_lowest (self), version_safe) != 0) {
+		if (fu_device_get_version_lowest (self) != NULL) {
+			g_debug ("changing version lowest for %s: %s->%s",
+				 fu_device_get_id (self),
+				 fu_device_get_version_lowest (self),
+				 version_safe);
+		}
+		fwupd_device_set_version_lowest (FWUPD_DEVICE (self), version_safe);
+	}
+}
+
+/**
+ * fu_device_set_version_bootloader:
+ * @self: A #FuDevice
+ * @version: (allow-none): a string, e.g. `1.2.3`
+ *
+ * Sets the device bootloader version, sanitizing the string if required.
+ *
+ * Since: 1.4.0
+ **/
+void
+fu_device_set_version_bootloader (FuDevice *self, const gchar *version)
+{
+	g_autofree gchar *version_safe = NULL;
+	g_autoptr(GError) error = NULL;
+
+	g_return_if_fail (FU_IS_DEVICE (self));
+
+	/* sanitize if required */
+	if (fu_device_has_flag (self, FWUPD_DEVICE_FLAG_ENSURE_SEMVER)) {
+		version_safe = fu_common_version_ensure_semver (version);
+		if (g_strcmp0 (version, version_safe) != 0)
+			g_debug ("converted '%s' to '%s'", version, version_safe);
+	} else {
+		version_safe = g_strdup (version);
+	}
+
+	/* print a console warning for an invalid version, if semver */
+	if (!fu_common_version_verify_format (version_safe, fu_device_get_version_format (self), &error))
+		g_warning ("%s", error->message);
+
+	/* if different */
+	if (g_strcmp0 (fu_device_get_version_bootloader (self), version_safe) != 0) {
+		if (fu_device_get_version_bootloader (self) != NULL) {
+			g_debug ("changing version for %s: %s->%s",
+				 fu_device_get_id (self),
+				 fu_device_get_version_bootloader (self),
+				 version_safe);
+		}
+		fwupd_device_set_version_bootloader (FWUPD_DEVICE (self), version_safe);
+	}
 }
 
 /**
@@ -1441,7 +1800,7 @@ fu_device_ensure_id (FuDevice *self, GError **error)
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* already set */
-	if (fu_device_get_id (self) != NULL)
+	if (priv->device_id_valid)
 		return TRUE;
 
 	/* nothing we can do! */
@@ -1499,6 +1858,45 @@ fu_device_set_logical_id (FuDevice *self, const gchar *logical_id)
 	g_return_if_fail (FU_IS_DEVICE (self));
 	g_free (priv->logical_id);
 	priv->logical_id = g_strdup (logical_id);
+	priv->device_id_valid = FALSE;
+	g_object_notify (G_OBJECT (self), "logical-id");
+}
+
+/**
+ * fu_device_get_proxy_guid:
+ * @self: A #FuDevice
+ *
+ * Gets the proxy GUID device, which which is set to let the engine match up the
+ * proxy between plugins.
+ *
+ * Returns: a string value, or %NULL if never set.
+ *
+ * Since: 1.4.1
+ **/
+const gchar *
+fu_device_get_proxy_guid (FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
+	return priv->proxy_guid;
+}
+
+/**
+ * fu_device_set_proxy_guid:
+ * @self: A #FuDevice
+ * @proxy_guid: a string, e.g. `USB\VID_413C&PID_B06E&hub`
+ *
+ * Sets the GUID of the proxy device. The proxy device may update @self.
+ *
+ * Since: 1.4.1
+ **/
+void
+fu_device_set_proxy_guid (FuDevice *self, const gchar *proxy_guid)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_free (priv->proxy_guid);
+	priv->proxy_guid = g_strdup (proxy_guid);
 }
 
 /**
@@ -1558,6 +1956,8 @@ fu_device_set_physical_id (FuDevice *self, const gchar *physical_id)
 	g_return_if_fail (physical_id != NULL);
 	g_free (priv->physical_id);
 	priv->physical_id = g_strdup (physical_id);
+	priv->device_id_valid = FALSE;
+	g_object_notify (G_OBJECT (self), "physical-id");
 }
 
 /**
@@ -1590,10 +1990,20 @@ fu_device_get_physical_id (FuDevice *self)
  *
  * Since: 0.1.0
  **/
-
 void
 fu_device_add_flag (FuDevice *self, FwupdDeviceFlags flag)
 {
+	/* none is not used as an "exported" flag */
+	if (flag == FWUPD_DEVICE_FLAG_NONE)
+		return;
+
+	/* being both a bootloader and requiring a bootloader is invalid */
+	if (flag & FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER)
+		fu_device_remove_flag (self, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	if (flag & FWUPD_DEVICE_FLAG_IS_BOOTLOADER)
+		fu_device_remove_flag (self, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
+
+	/* one implies the other */
 	if (flag & FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE)
 		flag |= FWUPD_DEVICE_FLAG_CAN_VERIFY;
 	if (flag & FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES)
@@ -1606,24 +2016,20 @@ fu_device_set_custom_flag (FuDevice *self, const gchar *hint)
 {
 	FwupdDeviceFlags flag;
 
+	/* is this a negated device flag */
+	if (g_str_has_prefix (hint, "~")) {
+		flag = fwupd_device_flag_from_string (hint + 1);
+		if (flag != FWUPD_DEVICE_FLAG_UNKNOWN)
+			fu_device_remove_flag (self, flag);
+		return;
+	}
+
 	/* is this a known device flag */
 	flag = fwupd_device_flag_from_string (hint);
-	if (flag == FWUPD_DEVICE_FLAG_UNKNOWN)
-		return;
-
-	/* being both a bootloader and requiring a bootloader is invalid */
-	if (flag == FWUPD_DEVICE_FLAG_NONE ||
-	    flag == FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER) {
-		fu_device_remove_flag (self, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
-	}
-	if (flag == FWUPD_DEVICE_FLAG_NONE ||
-	    flag == FWUPD_DEVICE_FLAG_IS_BOOTLOADER) {
-		fu_device_remove_flag (self, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
-	}
-
-	/* none is not used as an "exported" flag */
-	if (flag != FWUPD_DEVICE_FLAG_NONE)
+	if (flag != FWUPD_DEVICE_FLAG_UNKNOWN) {
 		fu_device_add_flag (self, flag);
+		return;
+	}
 }
 
 /**
@@ -1755,9 +2161,8 @@ fu_device_set_remove_delay (FuDevice *self, guint remove_delay)
 FwupdStatus
 fu_device_get_status (FuDevice *self)
 {
-	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_DEVICE (self), 0);
-	return priv->status;
+	return fwupd_device_get_status (FWUPD_DEVICE (self));
 }
 
 /**
@@ -1772,12 +2177,8 @@ fu_device_get_status (FuDevice *self)
 void
 fu_device_set_status (FuDevice *self, FwupdStatus status)
 {
-	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_DEVICE (self));
-	if (priv->status == status)
-		return;
-	priv->status = status;
-	g_object_notify (G_OBJECT (self), "status");
+	fwupd_device_set_status (FWUPD_DEVICE (self), status);
 }
 
 /**
@@ -1864,6 +2265,10 @@ fu_device_add_string (FuDevice *self, guint idt, GString *str)
 		fu_common_string_append_kv (str, idt + 1, "PhysicalId", priv->physical_id);
 	if (priv->logical_id != NULL)
 		fu_common_string_append_kv (str, idt + 1, "LogicalId", priv->logical_id);
+	if (priv->proxy != NULL)
+		fu_common_string_append_kv (str, idt + 1, "ProxyId", fu_device_get_id (priv->proxy));
+	if (priv->proxy_guid != NULL)
+		fu_common_string_append_kv (str, idt + 1, "ProxyGuid", priv->proxy_guid);
 	if (priv->size_min > 0) {
 		g_autofree gchar *sz = g_strdup_printf ("%" G_GUINT64_FORMAT, priv->size_min);
 		fu_common_string_append_kv (str, idt + 1, "FirmwareSizeMin", sz);
@@ -1997,6 +2402,7 @@ fu_device_write_firmware (FuDevice *self,
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
 	g_autoptr(FuFirmware) firmware = NULL;
+	g_autofree gchar *str = NULL;
 
 	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
@@ -2014,6 +2420,8 @@ fu_device_write_firmware (FuDevice *self,
 	firmware = fu_device_prepare_firmware (self, fw, flags, error);
 	if (firmware == NULL)
 		return FALSE;
+	str = fu_firmware_to_string (firmware);
+	g_debug ("installing onto %s:\n%s", fu_device_get_id (self), str);
 
 	/* call vfunc */
 	return klass->write_firmware (self, firmware, flags, error);
@@ -2314,6 +2722,10 @@ fu_device_open (FuDevice *self, GError **error)
 	if (!fu_device_setup (self, error))
 		return FALSE;
 
+	/* ensure the device ID is still valid */
+	if (!fu_device_ensure_id (self, error))
+		return FALSE;
+
 	/* success */
 	return TRUE;
 }
@@ -2595,6 +3007,10 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 		fu_device_set_physical_id (self, priv_donor->physical_id);
 	if (priv->logical_id == NULL && priv_donor->logical_id != NULL)
 		fu_device_set_logical_id (self, priv_donor->logical_id);
+	if (priv->proxy == NULL && priv_donor->proxy != NULL)
+		fu_device_set_proxy (self, priv_donor->proxy);
+	if (priv->proxy_guid == NULL && priv_donor->proxy_guid != NULL)
+		fu_device_set_proxy_guid (self, priv_donor->proxy_guid);
 	if (priv->quirks == NULL)
 		fu_device_set_quirks (self, fu_device_get_quirks (donor));
 	g_rw_lock_reader_lock (&priv_donor->parent_guids_mutex);
@@ -2614,6 +3030,10 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 
 	/* now the base class, where all the interesting bits are */
 	fwupd_device_incorporate (FWUPD_DEVICE (self), FWUPD_DEVICE (donor));
+
+	/* set by the superclass */
+	if (fu_device_get_id (self) != NULL)
+		priv->device_id_valid = TRUE;
 
 	/* optional subclass */
 	if (klass->incorporate != NULL)
@@ -2667,6 +3087,9 @@ fu_device_incorporate_from_component (FuDevice *self, XbNode *component)
 	tmp = xb_node_query_text (component, "custom/value[@key='LVFS::UpdateMessage']", NULL);
 	if (tmp != NULL)
 		fwupd_device_set_update_message (FWUPD_DEVICE (self), tmp);
+	tmp = xb_node_query_text (component, "custom/value[@key='LVFS::UpdateImage']", NULL);
+	if (tmp != NULL)
+		fwupd_device_set_update_image (FWUPD_DEVICE (self), tmp);
 }
 
 static void
@@ -2677,14 +3100,6 @@ fu_device_class_init (FuDeviceClass *klass)
 	object_class->finalize = fu_device_finalize;
 	object_class->get_property = fu_device_get_property;
 	object_class->set_property = fu_device_set_property;
-
-	pspec = g_param_spec_uint ("status", NULL, NULL,
-				   FWUPD_STATUS_UNKNOWN,
-				   FWUPD_STATUS_LAST,
-				   FWUPD_STATUS_UNKNOWN,
-				   G_PARAM_READWRITE |
-				   G_PARAM_STATIC_NAME);
-	g_object_class_install_property (object_class, PROP_STATUS, pspec);
 
 	pspec = g_param_spec_string ("physical-id", NULL, NULL, NULL,
 				     G_PARAM_READWRITE |
@@ -2714,16 +3129,23 @@ fu_device_class_init (FuDeviceClass *klass)
 				     G_PARAM_CONSTRUCT |
 				     G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_PARENT, pspec);
+
+	pspec = g_param_spec_object ("proxy", NULL, NULL,
+				     FU_TYPE_DEVICE,
+				     G_PARAM_READWRITE |
+				     G_PARAM_CONSTRUCT |
+				     G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_PROXY, pspec);
 }
 
 static void
 fu_device_init (FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
-	priv->status = FWUPD_STATUS_IDLE;
 	priv->children = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	priv->parent_guids = g_ptr_array_new_with_free_func (g_free);
 	priv->possible_plugins = g_ptr_array_new_with_free_func (g_free);
+	priv->retry_recs = g_ptr_array_new_with_free_func (g_free);
 	g_rw_lock_init (&priv->parent_guids_mutex);
 	priv->metadata = g_hash_table_new_full (g_str_hash, g_str_equal,
 						g_free, g_free);
@@ -2740,6 +3162,8 @@ fu_device_finalize (GObject *object)
 		g_object_unref (priv->alternate);
 	if (priv->parent != NULL)
 		g_object_remove_weak_pointer (G_OBJECT (priv->parent), (gpointer *) &priv->parent);
+	if (priv->proxy != NULL)
+		g_object_remove_weak_pointer (G_OBJECT (priv->proxy), (gpointer *) &priv->proxy);
 	if (priv->quirks != NULL)
 		g_object_unref (priv->quirks);
 	if (priv->poll_id != 0)
@@ -2750,10 +3174,12 @@ fu_device_finalize (GObject *object)
 	g_ptr_array_unref (priv->children);
 	g_ptr_array_unref (priv->parent_guids);
 	g_ptr_array_unref (priv->possible_plugins);
+	g_ptr_array_unref (priv->retry_recs);
 	g_free (priv->alternate_id);
 	g_free (priv->equivalent_id);
 	g_free (priv->physical_id);
 	g_free (priv->logical_id);
+	g_free (priv->proxy_guid);
 
 	G_OBJECT_CLASS (fu_device_parent_class)->finalize (object);
 }

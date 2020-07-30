@@ -20,7 +20,7 @@
 #include "fu-uefi-devpath.h"
 #include "fu-uefi-bootmgr.h"
 #include "fu-uefi-pcrs.h"
-#include "fu-uefi-vars.h"
+#include "fu-efivar.h"
 #include "fu-uefi-udisks.h"
 
 struct _FuUefiDevice {
@@ -192,7 +192,7 @@ fu_uefi_device_load_update_info (FuUefiDevice *self, GError **error)
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* get the existing status */
-	if (!fu_uefi_vars_get_data (FU_UEFI_VARS_GUID_FWUPDATE, varname,
+	if (!fu_efivar_get_data (FU_EFIVAR_GUID_FWUPDATE, varname,
 				    &data, &datasz, NULL, error))
 		return NULL;
 	if (!fu_uefi_update_info_parse (info, data, datasz, error))
@@ -212,7 +212,7 @@ fu_uefi_device_clear_status (FuUefiDevice *self, GError **error)
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* get the existing status */
-	if (!fu_uefi_vars_get_data (FU_UEFI_VARS_GUID_FWUPDATE, varname,
+	if (!fu_efivar_get_data (FU_EFIVAR_GUID_FWUPDATE, varname,
 				    &data, &datasz, NULL, error))
 		return FALSE;
 	if (datasz < sizeof(efi_update_info_t)) {
@@ -227,11 +227,11 @@ fu_uefi_device_clear_status (FuUefiDevice *self, GError **error)
 	memcpy (&info, data, sizeof(info));
 	info.status = FU_UEFI_DEVICE_STATUS_SUCCESS;
 	memcpy (data, &info, sizeof(info));
-	return fu_uefi_vars_set_data (FU_UEFI_VARS_GUID_FWUPDATE, varname,
+	return fu_efivar_set_data (FU_EFIVAR_GUID_FWUPDATE, varname,
 				      data, datasz,
-				      FU_UEFI_VARS_ATTR_NON_VOLATILE |
-				      FU_UEFI_VARS_ATTR_BOOTSERVICE_ACCESS |
-				      FU_UEFI_VARS_ATTR_RUNTIME_ACCESS,
+				      FU_EFIVAR_ATTR_NON_VOLATILE |
+				      FU_EFIVAR_ATTR_BOOTSERVICE_ACCESS |
+				      FU_EFIVAR_ATTR_RUNTIME_ACCESS,
 				      error);
 }
 
@@ -389,11 +389,11 @@ fu_uefi_device_write_update_info (FuUefiDevice *self,
 	data = g_malloc0 (datasz);
 	memcpy (data, &info, sizeof(info));
 	memcpy (data + sizeof(info), dp_buf, dp_bufsz);
-	if (!fu_uefi_vars_set_data (FU_UEFI_VARS_GUID_FWUPDATE, varname,
+	if (!fu_efivar_set_data (FU_EFIVAR_GUID_FWUPDATE, varname,
 				    data, datasz,
-				    FU_UEFI_VARS_ATTR_NON_VOLATILE |
-				    FU_UEFI_VARS_ATTR_BOOTSERVICE_ACCESS |
-				    FU_UEFI_VARS_ATTR_RUNTIME_ACCESS,
+				    FU_EFIVAR_ATTR_NON_VOLATILE |
+				    FU_EFIVAR_ATTR_BOOTSERVICE_ACCESS |
+				    FU_EFIVAR_ATTR_RUNTIME_ACCESS,
 				    error)) {
 		fu_uefi_print_efivar_errors ();
 		return FALSE;
@@ -446,6 +446,19 @@ fu_uefi_device_check_esp_free (FuDevice *device, GError **error)
 }
 
 static gboolean
+fu_uefi_check_asset (FuDevice *device, GError **error)
+{
+	g_autofree gchar *source_app = fu_uefi_get_built_app_path (error);
+	if (source_app == NULL) {
+		if (fu_efivar_secure_boot_enabled ())
+			g_prefix_error (error, "missing signed bootloader for secure boot: ");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
 fu_uefi_device_cleanup_esp (FuDevice *device, GError **error)
 {
 	const gchar *esp_path = fu_device_get_metadata (device, "EspPath");
@@ -453,7 +466,7 @@ fu_uefi_device_cleanup_esp (FuDevice *device, GError **error)
 	g_autoptr(GPtrArray) files = NULL;
 
 	/* in case we call capsule install twice before reboot */
-	if (fu_uefi_vars_exists (FU_UEFI_VARS_GUID_EFI_GLOBAL, "BootNext"))
+	if (fu_efivar_exists (FU_EFIVAR_GUID_EFI_GLOBAL, "BootNext"))
 		return TRUE;
 
 	/* delete any files matching the glob in the ESP */
@@ -472,7 +485,7 @@ fu_uefi_device_cleanup_esp (FuDevice *device, GError **error)
 	}
 
 	/* delete any old variables */
-	if (!fu_uefi_vars_delete_with_glob (FU_UEFI_VARS_GUID_FWUPDATE, "fwupd*-*", error))
+	if (!fu_efivar_delete_with_glob (FU_EFIVAR_GUID_FWUPDATE, "fwupd*-*", error))
 		return FALSE;
 
 	return TRUE;
@@ -518,6 +531,8 @@ fu_uefi_device_prepare (FuDevice *device,
 	if (!fu_uefi_device_cleanup_esp (device, error))
 		return FALSE;
 	if (!fu_uefi_device_check_esp_free (device, error))
+		return FALSE;
+	if (!fu_uefi_check_asset (device, error))
 		return FALSE;
 
 	return TRUE;
@@ -681,11 +696,13 @@ fu_uefi_device_probe (FuDevice *device, GError **error)
 	/* set versions */
 	version_format = fu_device_get_version_format (device);
 	version = fu_common_version_from_uint32 (self->fw_version, version_format);
-	fu_device_set_version (device, version, version_format);
+	fu_device_set_version_format (device, version_format);
 	fu_device_set_version_raw (device, self->fw_version);
+	fu_device_set_version (device, version);
 	if (self->fw_version_lowest != 0) {
 		version_lowest = fu_common_version_from_uint32 (self->fw_version_lowest,
 							        version_format);
+		fu_device_set_version_lowest_raw (device, self->fw_version_lowest);
 		fu_device_set_version_lowest (device, version_lowest);
 	}
 
@@ -693,6 +710,7 @@ fu_uefi_device_probe (FuDevice *device, GError **error)
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_REQUIRE_AC);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_MD_SET_VERFMT);
 
 	/* add icons */
 	if (self->kind == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE) {
@@ -731,6 +749,7 @@ static void
 fu_uefi_device_init (FuUefiDevice *self)
 {
 	fu_device_set_protocol (FU_DEVICE (self), "org.uefi.capsule");
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_NUMBER);
 }
 
 static void

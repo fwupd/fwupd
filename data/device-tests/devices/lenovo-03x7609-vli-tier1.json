@@ -1,0 +1,12 @@
+{
+  "name": "Lenovo USB-C Dock Gen2 (VLI Tier 1)",
+  "guids": [
+    "c6381f16-fe6d-5c45-a4ad-b619af4f0f0e"
+  ],
+  "releases": [
+    {
+      "version": "13.24",
+      "file": "ae0ef92b8179f5279e4481b4a352effe21b1dd0d91ff8226de998709aa97f622-Lenovo-Gen2_Dock.cab"
+    }
+  ]
+}

@@ -2,15 +2,19 @@
 %global libxmlb_version 0.1.3
 %global libgusb_version 0.2.11
 %global libsoup_version 2.51.92
+%global libjcat_version 0.1.0
 %global systemd_version 231
 %global json_glib_version 1.1.1
+
+# although we ship a few tiny python files these are utilities that 99.99%
+# of users do not need -- use this to avoid dragging python onto CoreOS
+%global __requires_exclude ^%{python3}$
 
 %define alphatag                #ALPHATAG#
 
 %global enable_ci 0
 %global enable_tests 1
 %global enable_dummy 1
-%global enable_flashrom 1
 %global __meson_wrap_mode default
 
 # fwupd.efi is only available on these arches
@@ -48,9 +52,9 @@ BuildRequires: libgcab1-devel
 BuildRequires: libgudev1-devel
 BuildRequires: libgusb-devel >= %{libgusb_version}
 BuildRequires: libsoup-devel >= %{libsoup_version}
+BuildRequires: libjcat-devel >= %{libjcat_version}
 BuildRequires: polkit-devel >= 0.103
 BuildRequires: sqlite-devel
-BuildRequires: gpgme-devel
 BuildRequires: systemd >= %{systemd_version}
 BuildRequires: libarchive-devel
 BuildRequires: gobject-introspection-devel
@@ -69,6 +73,7 @@ BuildRequires: json-glib-devel >= %{json_glib_version}
 BuildRequires: vala
 BuildRequires: bash-completion
 BuildRequires: git-core
+BuildRequires: flashrom-devel >= 1.2-2
 
 %if 0%{?have_modem_manager}
 BuildRequires: ModemManager-glib-devel >= 1.10.0
@@ -164,11 +169,7 @@ Data files for installed tests.
 %else
     -Dplugin_dummy=false \
 %endif
-%if 0%{?enable_flashrom}
     -Dplugin_flashrom=true \
-%else
-    -Dplugin_flashrom=false \
-%endif
     -Dplugin_thunderbolt=true \
 %if 0%{?have_redfish}
     -Dplugin_redfish=true \
@@ -222,14 +223,6 @@ Data files for installed tests.
 
 mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 
-%if 0%{?enable_flashrom}
-# delete most files from the subproject
-rm ${RPM_BUILD_ROOT}%{_includedir}/libflashrom.h
-rm ${RPM_BUILD_ROOT}%{_libdir}/libflashrom.so
-rm ${RPM_BUILD_ROOT}%{_libdir}/pkgconfig/flashrom.pc
-rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
-%endif
-
 %find_lang %{name}
 
 %post
@@ -245,6 +238,7 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %files -f %{name}.lang
 %doc README.md AUTHORS
 %license COPYING
+%config(noreplace)%{_sysconfdir}/fwupd/ata.conf
 %config(noreplace)%{_sysconfdir}/fwupd/daemon.conf
 %config(noreplace)%{_sysconfdir}/fwupd/upower.conf
 %if 0%{?have_uefi}
@@ -325,9 +319,11 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %{_libdir}/fwupd-plugins-3/libfu_plugin_altos.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_amt.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_ata.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_ccgx.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_colorhug.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_coreboot.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_csr.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_cpu.so
 %if 0%{?have_dell}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_dell.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_dell_esrt.so
@@ -336,10 +332,9 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %{_libdir}/fwupd-plugins-3/libfu_plugin_dfu.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_ebitdo.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_emmc.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_ep963x.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_fastboot.so
-%if 0%{?enable_flashrom}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_flashrom.so
-%endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_fresco_pd.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_jabra.so
 %if 0%{?have_modem_manager}
@@ -370,7 +365,6 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_thelio_io.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_thunderbolt.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_thunderbolt_power.so
 %if 0%{?have_uefi}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_tpm.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_tpm_eventlog.so
@@ -386,11 +380,6 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %ghost %{_localstatedir}/lib/fwupd/gnupg
 %if 0%{?have_uefi}
 %{_datadir}/locale/*/LC_IMAGES/fwupd*
-%endif
-
-%if 0%{?enable_flashrom}
-# eww, but just until the Fedora package ships these...
-%{_libdir}/libflashrom.so.1*
 %endif
 
 %files devel
@@ -409,7 +398,6 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %{_datadir}/installed-tests/fwupd/*.test
 %{_datadir}/installed-tests/fwupd/*.cab
 %{_datadir}/installed-tests/fwupd/*.sh
-%{_datadir}/installed-tests/fwupd/*.py*
 %dir %{_sysconfdir}/fwupd/remotes.d
 %config(noreplace)%{_sysconfdir}/fwupd/remotes.d/fwupd-tests.conf
 

@@ -12,23 +12,42 @@ import sys
 import shutil
 import tempfile
 import zipfile
+
 TAG = b'#\x00'
+
 
 def parse_args():
     import argparse
+
     parser = argparse.ArgumentParser(description="Self extracting firmware updater")
     parser.add_argument("--directory", help="Directory to extract to")
-    parser.add_argument("--cleanup", action='store_true', help="Remove tools when done with installation")
-    parser.add_argument("--verbose", action='store_true', help="Run the tool in verbose mode")
-    parser.add_argument("--allow-reinstall", action='store_true', help="Allow re-installing existing firmware versions")
-    parser.add_argument("--allow-older", action='store_true', help="Allow downgrading firmware versions")
-    parser.add_argument("command", choices=["install", "extract"], help="Command to run")
+    parser.add_argument(
+        "--cleanup",
+        action='store_true',
+        help="Remove tools when done with installation",
+    )
+    parser.add_argument(
+        "--verbose", action='store_true', help="Run the tool in verbose mode"
+    )
+    parser.add_argument(
+        "--allow-reinstall",
+        action='store_true',
+        help="Allow re-installing existing firmware versions",
+    )
+    parser.add_argument(
+        "--allow-older", action='store_true', help="Allow downgrading firmware versions"
+    )
+    parser.add_argument(
+        "command", choices=["install", "extract"], help="Command to run"
+    )
     args = parser.parse_args()
     return args
 
-def error (msg):
+
+def error(msg):
     print(msg)
     sys.exit(1)
+
 
 def bytes_slicer(length, source):
     start = 0
@@ -38,68 +57,71 @@ def bytes_slicer(length, source):
         start = stop
         stop += length
 
+
 def get_zip():
-    script = os.path.realpath (__file__)
+    script = os.path.realpath(__file__)
     bytes_out = io.BytesIO()
     with open(script, 'rb') as source:
         for line in source:
             if not line.startswith(TAG):
                 continue
-            bytes_out.write(b64decode(line[len(TAG):-1]))
+            bytes_out.write(b64decode(line[len(TAG) : -1]))
     return bytes_out
 
-def unzip (destination):
-    zipf = get_zip ()
-    source = zipfile.ZipFile (zipf, 'r')
+
+def unzip(destination):
+    zipf = get_zip()
+    source = zipfile.ZipFile(zipf, 'r')
     for item in source.namelist():
         # extract handles the sanitization
-        source.extract (item, destination)
+        source.extract(item, destination)
 
-def copy_cabs (source, target):
-    if not os.path.exists (target):
-        os.makedirs (target)
+
+def copy_cabs(source, target):
+    if not os.path.exists(target):
+        os.makedirs(target)
     cabs = []
-    for root, dirs, files in os.walk (source):
+    for root, dirs, files in os.walk(source):
         for f in files:
-            if (f.endswith ('.cab')):
+            if f.endswith('.cab'):
                 origf = os.path.join(root, f)
-                shutil.copy (origf, target)
-                cabs.append (os.path.join (target, f))
+                shutil.copy(origf, target)
+                cabs.append(os.path.join(target, f))
     return cabs
 
 
-def install_snap (directory, verbose, allow_reinstall, allow_older, uninstall):
+def install_snap(directory, verbose, allow_reinstall, allow_older, uninstall):
     app = 'fwupd'
     common = '/root/snap/%s/common' % app
 
-    #check if snap is installed
+    # check if snap is installed
     with open(os.devnull, 'w') as devnull:
-        subprocess.run (['snap'], check=True, stdout=devnull, stderr=devnull)
+        subprocess.run(['snap'], check=True, stdout=devnull, stderr=devnull)
 
-    #check existing installed
+    # check existing installed
     cmd = ['snap', 'list', app]
     with open(os.devnull, 'w') as devnull:
         if verbose:
             print(cmd)
-        ret = subprocess.run (cmd, stdout=devnull, stderr=devnull)
+        ret = subprocess.run(cmd, stdout=devnull, stderr=devnull)
         if ret.returncode == 0:
             cmd = ['snap', 'remove', app]
             if verbose:
                 print(cmd)
-            subprocess.run (cmd, check=True)
+            subprocess.run(cmd, check=True)
 
     # install the snap
-    cmd = ['snap', 'ack', os.path.join (directory, 'fwupd.assert')]
+    cmd = ['snap', 'ack', os.path.join(directory, 'fwupd.assert')]
     if verbose:
         print(cmd)
-    subprocess.run (cmd, check=True)
-    cmd = ['snap', 'install', '--classic', os.path.join (directory, 'fwupd.snap')]
+    subprocess.run(cmd, check=True)
+    cmd = ['snap', 'install', '--classic', os.path.join(directory, 'fwupd.snap')]
     if verbose:
         print(cmd)
-    subprocess.run (cmd, check=True)
+    subprocess.run(cmd, check=True)
 
     # copy the CAB files
-    cabs = copy_cabs (directory, common)
+    cabs = copy_cabs(directory, common)
 
     # run the snap
     for cab in cabs:
@@ -111,76 +133,77 @@ def install_snap (directory, verbose, allow_reinstall, allow_older, uninstall):
         if verbose:
             cmd += ["--verbose"]
             print(cmd)
-        subprocess.run (cmd)
+        subprocess.run(cmd)
 
-    #remove copied cabs
+    # remove copied cabs
     for f in cabs:
         os.remove(f)
 
-    #cleanup
+    # cleanup
     if uninstall:
         cmd = ['snap', 'remove', app]
         if verbose:
             print(cmd)
-        subprocess.run (cmd)
+        subprocess.run(cmd)
 
-def install_flatpak (directory, verbose, allow_reinstall, allow_older, uninstall):
+
+def install_flatpak(directory, verbose, allow_reinstall, allow_older, uninstall):
     app = 'org.freedesktop.fwupd'
-    common = '%s/.var/app/%s' % (os.getenv ('HOME'), app)
+    common = '%s/.var/app/%s' % (os.getenv('HOME'), app)
 
     with open(os.devnull, 'w') as devnull:
         if not verbose:
             output = devnull
         else:
             output = None
-        #look for dependencies
+        # look for dependencies
         dep = 'org.gnome.Platform/x86_64/3.30'
         repo = 'flathub'
         repo_url = 'https://flathub.org/repo/flathub.flatpakrepo'
         cmd = ['flatpak', 'info', dep]
         if verbose:
             print(cmd)
-        ret = subprocess.run (cmd, stdout=output, stderr=output)
-        #not installed
+        ret = subprocess.run(cmd, stdout=output, stderr=output)
+        # not installed
         if ret.returncode != 0:
-            #look for remotes
+            # look for remotes
             cmd = ['flatpak', 'remote-info', repo, dep]
             if verbose:
                 print(cmd)
-            ret = subprocess.run (cmd, stdout=output, stderr=output)
-            #not enabled, enable it
+            ret = subprocess.run(cmd, stdout=output, stderr=output)
+            # not enabled, enable it
             if ret.returncode != 0:
                 cmd = ['flatpak', 'remote-add', repo, repo_url]
                 if verbose:
                     print(cmd)
-                ret = subprocess.run (cmd, stderr=output)
+                ret = subprocess.run(cmd, stderr=output)
             # install dep
             cmd = ['flatpak', 'install', repo, dep]
             if verbose:
                 print(cmd)
-            ret = subprocess.run (cmd)
+            ret = subprocess.run(cmd)
 
-        #check existing installed
+        # check existing installed
         cmd = ['flatpak', 'info', app]
         if verbose:
             print(cmd)
-        ret = subprocess.run (cmd, stdout=output, stderr=output)
+        ret = subprocess.run(cmd, stdout=output, stderr=output)
         if ret.returncode == 0:
             cmd = ['flatpak', 'remove', app]
             if verbose:
                 print(cmd)
-            subprocess.run (cmd, check=True)
+            subprocess.run(cmd, check=True)
 
-    #install the flatpak
-    cmd = ['flatpak', 'install', os.path.join (directory, 'fwupd.flatpak')]
+    # install the flatpak
+    cmd = ['flatpak', 'install', os.path.join(directory, 'fwupd.flatpak')]
     if verbose:
         print(cmd)
-    subprocess.run (cmd, check=True)
+    subprocess.run(cmd, check=True)
 
     # copy the CAB files
-    cabs = copy_cabs (directory, common)
+    cabs = copy_cabs(directory, common)
 
-    #run command
+    # run command
     for cab in cabs:
         cmd = ['flatpak', 'run', app, 'install', cab]
         if allow_reinstall:
@@ -190,18 +213,19 @@ def install_flatpak (directory, verbose, allow_reinstall, allow_older, uninstall
         if verbose:
             cmd += ["--verbose"]
             print(cmd)
-        subprocess.run (cmd)
+        subprocess.run(cmd)
 
-    #remove copied cabs
+    # remove copied cabs
     for f in cabs:
         os.remove(f)
 
-    #cleanup
+    # cleanup
     if uninstall:
         cmd = ['flatpak', 'remove', app]
         if verbose:
             print(cmd)
-        subprocess.run (cmd)
+        subprocess.run(cmd)
+
 
 # Check which package to use
 # - return False to use packaged version
@@ -218,14 +242,20 @@ def use_included_version(minimum_version):
         return True
     if minimum_version:
         if minimum_version > version:
-            print("fwupd %s is already installed but this package requires %s" %
-                  (version.version, minimum_version))
+            print(
+                "fwupd %s is already installed but this package requires %s"
+                % (version.version, minimum_version)
+            )
         else:
-            print("Using existing fwupd version %s already installed on system." % version.version)
+            print(
+                "Using existing fwupd version %s already installed on system."
+                % version.version
+            )
             return False
     else:
         print("fwupd %s is installed and must be removed" % version.version)
     return remove_packaged_version(pkg, cache)
+
 
 def remove_packaged_version(pkg, cache):
     res = False
@@ -244,13 +274,14 @@ def remove_packaged_version(pkg, cache):
         raise Exception("Need to remove packaged version")
     return True
 
+
 def install_builtin(directory, verbose, allow_reinstall, allow_older):
     cabs = []
-    for root, dirs, files in os.walk (directory):
+    for root, dirs, files in os.walk(directory):
         for f in files:
             if f.endswith('.cab'):
                 cabs.append(os.path.join(root, f))
-    #run command
+    # run command
     for cab in cabs:
         cmd = ['fwupdmgr', 'install', cab]
         if allow_reinstall:
@@ -262,11 +293,12 @@ def install_builtin(directory, verbose, allow_reinstall, allow_older):
             print(cmd)
         subprocess.run(cmd)
 
-def run_installation (directory, verbose, allow_reinstall, allow_older, uninstall):
+
+def run_installation(directory, verbose, allow_reinstall, allow_older, uninstall):
     try_snap = False
     try_flatpak = False
 
-    #determine if a minimum version was specified
+    # determine if a minimum version was specified
     minimum_path = os.path.join(directory, "minimum")
     minimum = None
     if os.path.exists(minimum_path):
@@ -278,44 +310,60 @@ def run_installation (directory, verbose, allow_reinstall, allow_older, uninstal
         return
 
     # determine what self extracting binary has
-    if os.path.exists (os.path.join (directory, 'fwupd.snap')) and \
-        os.path.exists (os.path.join (directory, 'fwupd.assert')):
+    if os.path.exists(os.path.join(directory, 'fwupd.snap')) and os.path.exists(
+        os.path.join(directory, 'fwupd.assert')
+    ):
         try_snap = True
-    if os.path.exists (os.path.join (directory, 'fwupd.flatpak')):
+    if os.path.exists(os.path.join(directory, 'fwupd.flatpak')):
         try_flatpak = True
 
     if try_snap:
         try:
-            install_snap (directory, verbose, allow_reinstall, allow_older, uninstall)
+            install_snap(directory, verbose, allow_reinstall, allow_older, uninstall)
             return True
         except Exception as _:
             if verbose:
-                print ("Snap installation failed")
+                print("Snap installation failed")
             if not try_flatpak:
-                error ("Snap installation failed")
+                error("Snap installation failed")
     if try_flatpak:
-        install_flatpak (directory, verbose, allow_reinstall, allow_older, uninstall)
+        install_flatpak(directory, verbose, allow_reinstall, allow_older, uninstall)
+
 
 if __name__ == '__main__':
     args = parse_args()
     if 'extract' in args.command:
         if args.allow_reinstall:
-            error ("allow-reinstall argument doesn't make sense with command %s" % args.command)
+            error(
+                "allow-reinstall argument doesn't make sense with command %s"
+                % args.command
+            )
         if args.allow_older:
-            error ("allow-older argument doesn't make sense with command %s" % args.command)
+            error(
+                "allow-older argument doesn't make sense with command %s" % args.command
+            )
         if args.cleanup:
-            error ("Cleanup argument doesn't make sense with command %s" % args.command)
+            error("Cleanup argument doesn't make sense with command %s" % args.command)
         if args.directory is None:
-            error ("No directory specified")
-        if not os.path.exists (args.directory):
-            print ("Creating %s" % args.directory)
-            os.makedirs (args.directory)
-        unzip (args.directory)
+            error("No directory specified")
+        if not os.path.exists(args.directory):
+            print("Creating %s" % args.directory)
+            os.makedirs(args.directory)
+        unzip(args.directory)
     else:
         if args.directory:
-            error ("Directory argument %s doesn't make sense with command %s" % (args.directory, args.command))
+            error(
+                "Directory argument %s doesn't make sense with command %s"
+                % (args.directory, args.command)
+            )
         if os.getuid() != 0:
-            error ("This tool must be run as root")
-        with tempfile.TemporaryDirectory (prefix='fwupd') as target:
-            unzip (target)
-            run_installation (target, args.verbose, args.allow_reinstall, args.allow_older, args.cleanup)
+            error("This tool must be run as root")
+        with tempfile.TemporaryDirectory(prefix='fwupd') as target:
+            unzip(target)
+            run_installation(
+                target,
+                args.verbose,
+                args.allow_reinstall,
+                args.allow_older,
+                args.cleanup,
+            )

@@ -11,6 +11,7 @@ import tempfile
 import shutil
 from generate_dependencies import parse_dependencies
 
+
 def get_container_cmd():
     '''return docker or podman as container manager'''
 
@@ -19,8 +20,9 @@ def get_container_cmd():
     if shutil.which('podman'):
         return 'podman'
 
+
 directory = os.path.dirname(sys.argv[0])
-TARGET=os.getenv('OS')
+TARGET = os.getenv('OS')
 
 if TARGET is None:
     print("Missing OS environment variable")
@@ -58,19 +60,23 @@ with open(out.name, 'w') as wfd:
                 wfd.write("RUN yum -y install \\\n")
             elif OS == "debian" or OS == "ubuntu":
                 wfd.write("RUN apt update -qq && \\\n")
-                wfd.write("\tDEBIAN_FRONTEND=noninteractive apt install -yq --no-install-recommends\\\n")
+                wfd.write(
+                    "\tDEBIAN_FRONTEND=noninteractive apt install -yq --no-install-recommends\\\n"
+                )
             elif OS == "arch":
                 wfd.write("RUN pacman -Syu --noconfirm --needed\\\n")
             for i in range(0, len(deps)):
-                if i < len(deps)-1:
+                if i < len(deps) - 1:
                     wfd.write("\t%s \\\n" % deps[i])
                 else:
                     wfd.write("\t%s \n" % deps[i])
         elif line == "%%%ARCH_SPECIFIC_COMMAND%%%\n":
             if OS == "debian" and SUBOS == "s390x":
-                #add sources
-                wfd.write('RUN cat /etc/apt/sources.list | sed "s/deb/deb-src/" >> /etc/apt/sources.list\n')
-                #add new architecture
+                # add sources
+                wfd.write(
+                    'RUN cat /etc/apt/sources.list | sed "s/deb/deb-src/" >> /etc/apt/sources.list\n'
+                )
+                # add new architecture
                 wfd.write('RUN dpkg --add-architecture %s\n' % SUBOS)
         elif line == "%%%OS%%%\n":
             wfd.write("ENV OS %s\n" % TARGET)
@@ -83,5 +89,5 @@ with open(out.name, 'w') as wfd:
         args += ['--build-arg=http_proxy=%s' % os.environ['http_proxy']]
     if 'https_proxy' in os.environ:
         args += ['--build-arg=https_proxy=%s' % os.environ['https_proxy']]
-    args += [ "-f", "./%s" % os.path.basename(out.name), "."]
+    args += ["-f", "./%s" % os.path.basename(out.name), "."]
     subprocess.check_call(args)

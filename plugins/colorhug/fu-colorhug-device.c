@@ -173,6 +173,12 @@ fu_colorhug_device_detach (FuDevice *device, GError **error)
 	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
 	g_autoptr(GError) error_local = NULL;
 
+	/* sanity check */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug ("already in bootloader mode, skipping");
+		return TRUE;
+	}
+
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
 	if (!fu_colorhug_device_msg (self, CH_CMD_RESET,
 				     NULL, 0, /* in */
@@ -194,6 +200,12 @@ fu_colorhug_device_attach (FuDevice *device, GError **error)
 {
 	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
 	g_autoptr(GError) error_local = NULL;
+
+	/* sanity check */
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug ("already in runtime mode, skipping");
+		return TRUE;
+	}
 
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
 	if (!fu_colorhug_device_msg (self, CH_CMD_BOOT_FLASH,
@@ -326,7 +338,7 @@ fu_colorhug_device_setup (FuDevice *device, GError **error)
 		version = fu_colorhug_device_get_version (self, &error_local);
 		if (version != NULL) {
 			g_debug ("obtained fwver using API '%s'", version);
-			fu_device_set_version (device, version, FWUPD_VERSION_FORMAT_TRIPLET);
+			fu_device_set_version (device, version);
 		} else {
 			g_warning ("failed to get firmware version: %s",
 				   error_local->message);
@@ -456,8 +468,10 @@ fu_colorhug_device_init (FuColorhugDevice *self)
 	/* this is the application code */
 	self->start_addr = CH_EEPROM_ADDR_RUNCODE;
 	fu_device_set_protocol (FU_DEVICE (self), "com.hughski.colorhug");
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_remove_delay (FU_DEVICE (self),
 				    FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS);
 }
 
 static void

@@ -214,7 +214,7 @@ fu_logitech_hidpp_runtime_setup_internal (FuDevice *device, GError **error)
 						 config[3],
 						 (guint16) config[4] << 8 |
 						 config[5]);
-	fu_device_set_version (device, version_fw, FWUPD_VERSION_FORMAT_PLAIN);
+	fu_device_set_version (device, version_fw);
 
 	/* get bootloader version */
 	if (self->version_bl_major > 0) {
@@ -323,6 +323,7 @@ static void
 fu_logitech_hidpp_runtime_init (FuLogitechHidPpRuntime *self)
 {
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_add_icon (FU_DEVICE (self), "preferences-desktop-keyboard");
 	fu_device_set_name (FU_DEVICE (self), "Unifying Receiver");
 	fu_device_set_summary (FU_DEVICE (self), "A miniaturised USB wireless receiver");

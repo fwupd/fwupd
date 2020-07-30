@@ -24,6 +24,12 @@ G_DEFINE_TYPE_WITH_PRIVATE (FuVliDevice, fu_vli_device, FU_TYPE_USB_DEVICE)
 
 #define GET_PRIVATE(o) (fu_vli_device_get_instance_private (o))
 
+enum {
+	PROP_0,
+	PROP_KIND,
+	PROP_LAST
+};
+
 static const gchar *
 fu_vli_device_spi_req_to_string (FuVliDeviceSpiReq req)
 {
@@ -70,19 +76,6 @@ fu_vli_device_get_spi_cmd (FuVliDevice *self,
 	}
 	if (cmd != NULL)
 		*cmd = priv->spi_cmds[req];
-	return TRUE;
-}
-
-gboolean
-fu_vli_device_reset (FuVliDevice *self, GError **error)
-{
-	FuVliDeviceClass *klass = FU_VLI_DEVICE_GET_CLASS (self);
-	if (klass->reset != NULL) {
-		if (!klass->reset (self, error)) {
-			g_prefix_error (error, "failed to reset device: ");
-			return FALSE;
-		}
-	}
 	return TRUE;
 }
 
@@ -441,7 +434,11 @@ fu_vli_device_set_kind (FuVliDevice *self, FuVliDeviceKind device_kind)
 	FuVliDevicePrivate *priv = GET_PRIVATE (self);
 	guint32 sz;
 
-	priv->kind = device_kind;
+	/* set and notify if different */
+	if (priv->kind != device_kind) {
+		priv->kind = device_kind;
+		g_object_notify (G_OBJECT (self), "kind");
+	}
 
 	/* set maximum firmware size */
 	sz = fu_vli_common_device_kind_get_size (device_kind);
@@ -546,7 +543,8 @@ fu_vli_device_setup (FuDevice *device, GError **error)
 
 			/* load the SPI parameters from quirks */
 			spi_id = g_strdup_printf ("VLI_USBHUB\\SPI_%s", flash_id);
-			fu_device_add_instance_id (FU_DEVICE (self), spi_id);
+			fu_device_add_instance_id_full (FU_DEVICE (self), spi_id,
+							FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
 
 			/* add extra instance IDs to include the SPI variant */
 			devid2 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&SPI_%s&REV_%04X",
@@ -581,32 +579,6 @@ fu_vli_device_setup (FuDevice *device, GError **error)
 	}
 
 	/* success */
-	return TRUE;
-}
-
-static gboolean
-fu_vli_device_attach (FuDevice *device, GError **error)
-{
-	g_autoptr(GError) error_local = NULL;
-
-	/* replug, and ignore the device going away */
-	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	if (!fu_vli_device_reset (FU_VLI_DEVICE (device), &error_local)) {
-		if (g_error_matches (error_local,
-				     G_USB_DEVICE_ERROR,
-				     G_USB_DEVICE_ERROR_NO_DEVICE) ||
-		    g_error_matches (error_local,
-				     G_USB_DEVICE_ERROR,
-				     G_USB_DEVICE_ERROR_FAILED)) {
-			g_debug ("ignoring %s", error_local->message);
-		} else {
-			g_propagate_prefixed_error (error,
-						    g_steal_pointer (&error_local),
-						    "failed to restart device: ");
-			return FALSE;
-		}
-	}
 	return TRUE;
 }
 
@@ -660,6 +632,35 @@ fu_vli_device_set_quirk_kv (FuDevice *device,
 }
 
 static void
+fu_vli_device_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+{
+	FuVliDevice *self = FU_VLI_DEVICE (object);
+	FuVliDevicePrivate *priv = GET_PRIVATE (self);
+	switch (prop_id) {
+	case PROP_KIND:
+		g_value_set_uint (value, priv->kind);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+		break;
+	}
+}
+
+static void
+fu_vli_device_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+{
+	FuVliDevice *self = FU_VLI_DEVICE (object);
+	switch (prop_id) {
+	case PROP_KIND:
+		fu_vli_device_set_kind (self, g_value_get_uint (value));
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+		break;
+	}
+}
+
+static void
 fu_vli_device_init (FuVliDevice *self)
 {
 	FuVliDevicePrivate *priv = GET_PRIVATE (self);
@@ -673,14 +674,27 @@ fu_vli_device_init (FuVliDevice *self)
 	priv->spi_cmds[FU_VLI_DEVICE_SPI_REQ_READ_ID]		= 0x9f;
 	priv->spi_cmd_read_id_sz = 2;
 	priv->spi_auto_detect = TRUE;
+	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS);
+	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_NO_GUID_MATCHING);
 }
 
 static void
 fu_vli_device_class_init (FuVliDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
+	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+	GParamSpec *pspec;
+
+	/* properties */
+	object_class->get_property = fu_vli_device_get_property;
+	object_class->set_property = fu_vli_device_set_property;
+	pspec = g_param_spec_uint ("kind", NULL, NULL,
+				   0, G_MAXUINT, 0,
+				   G_PARAM_READWRITE |
+				   G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_KIND, pspec);
+
 	klass_device->to_string = fu_vli_device_to_string;
 	klass_device->set_quirk_kv = fu_vli_device_set_quirk_kv;
 	klass_device->setup = fu_vli_device_setup;
-	klass_device->attach = fu_vli_device_attach;
 }

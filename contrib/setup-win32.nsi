@@ -60,11 +60,13 @@ Section "fwupd"
 
   # fwupd
   File "dfu-tool.exe"
+  File "jcat-tool.exe"
   File "fwupdtool.exe"
   File "libfwupd-2.dll"
   File "libfwupdplugin-1.dll"
   File "libgcab-1.0-0.dll"
   File "libxmlb-1.dll"
+  File "libjcat-1.dll"
   SetOutPath "$INSTDIR\fwupd-plugins-3"
   File /r "fwupd-plugins-3/libfu_plugin_*.dll"
   SetOutPath "$INSTDIR\etc\fwupd"

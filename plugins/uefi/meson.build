@@ -8,8 +8,7 @@ if efi_os_dir != ''
 endif
 
 install_data(['uefi.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
+  install_dir: join_paths(datadir, 'fwupd', 'quirks.d'))
 
 shared_module('fu_plugin_uefi',
   fu_hash,
@@ -24,7 +23,6 @@ shared_module('fu_plugin_uefi',
     'fu-uefi-pcrs.c',
     'fu-uefi-update-info.c',
     'fu-uefi-udisks.c',
-    'fu-uefi-vars.c',
   ],
   include_directories : [
     root_incdir,
@@ -61,7 +59,6 @@ fwupdate = executable(
     'fu-uefi-pcrs.c',
     'fu-uefi-update-info.c',
     'fu-uefi-udisks.c',
-    'fu-uefi-vars.c',
   ],
   include_directories : [
     root_incdir,
@@ -122,7 +119,6 @@ if get_option('tests')
       'fu-uefi-devpath.c',
       'fu-uefi-pcrs.c',
       'fu-uefi-update-info.c',
-      'fu-uefi-vars.c',
       'fu-uefi-udisks.c',
       'fu-ucs2.c',
     ],

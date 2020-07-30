@@ -26,6 +26,12 @@ msgid_plural "%.0f minutes remaining"
 msgstr[0] "%.0f minuto restante"
 msgstr[1] "%.0f minutos restantes"
 
+#. TRANSLATORS: the CPU microcode is firmware loaded onto the CPU
+#. * at system bootup
+#, c-format
+msgid "%s CPU Microcode Update"
+msgstr "Atualização de microcódigo de CPU %s"
+
 #. TRANSLATORS: ME stands for Management Engine, where
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
@@ -321,8 +327,16 @@ msgid "Continue with update?"
 msgstr "Continuar com a atualização?"
 
 #. TRANSLATORS: command description
-msgid "Convert firmware to DFU format"
-msgstr "Converte um firmware para formato DFU"
+msgid "Convert a firmware file"
+msgstr "Converte um arquivo de firmware"
+
+#. TRANSLATORS: when the update was built
+msgid "Created"
+msgstr "Criada"
+
+#. TRANSLATORS: the release urgency
+msgid "Critical"
+msgstr "Crítica"
 
 #. TRANSLATORS: Device supports some form of checksum verification
 msgid "Cryptographic hash verification is available"
@@ -492,10 +506,6 @@ msgstr "Baixando…"
 #. TRANSLATORS: command description
 msgid "Dump SMBIOS data from a file"
 msgstr "Despeja dados SMBIOS a partir de um arquivo"
-
-#. TRANSLATORS: command description
-msgid "Dump details about a firmware file"
-msgstr "Despeja os detalhes sobre um arquivo firmware"
 
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Duration"
@@ -705,6 +715,10 @@ msgstr "Obtém os resultados da última atualização"
 msgid "Hardware is waiting to be replugged"
 msgstr "O hardware está aguardando para ser reconectado"
 
+#. TRANSLATORS: the release urgency
+msgid "High"
+msgstr "Alta"
+
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
 msgstr "Ocioso…"
@@ -808,9 +822,17 @@ msgstr "Lista os tipos de firmware disponível"
 msgid "Loading…"
 msgstr "Carregando…"
 
+#. TRANSLATORS: the release urgency
+msgid "Low"
+msgstr "Baixa"
+
 #. TRANSLATORS: command line option
 msgid "Manually whitelist specific plugins"
 msgstr "Insere manualmente na lista branca plugins específicos"
+
+#. TRANSLATORS: the release urgency
+msgid "Medium"
+msgstr "Média"
 
 #. TRANSLATORS: remote URI
 msgid "Metadata Signature"
@@ -994,6 +1016,10 @@ msgstr "Renova metadados do servidor remoto"
 msgid "Reinstall current firmware on the device."
 msgstr "Reinstala o atual firmware no dispositivo."
 
+#. TRANSLATORS: command description
+msgid "Reinstall firmware on a device"
+msgstr "Reinstala firmware em um dispositivo"
+
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
 #. * e.g. "1.2.3"
@@ -1081,21 +1107,9 @@ msgstr "Dispositivo selecionado"
 msgid "Serial Number"
 msgstr "Número de série"
 
-#. TRANSLATORS: command description
-msgid "Set product ID on firmware file"
-msgstr "Define o ID de produto no arquivo de firmware"
-
-#. TRANSLATORS: command description
-msgid "Set release version on firmware file"
-msgstr "Define a versão de lançamento no arquivo de firmware"
-
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
 msgstr "Define a opção de depuração durante atualização"
-
-#. TRANSLATORS: command description
-msgid "Set vendor ID on firmware file"
-msgstr "Define o ID de fornecedor no arquivo de firmware"
 
 msgid "Sets the list of approved firmware"
 msgstr "Define a lista de firmwares aprovados"
@@ -1189,11 +1203,6 @@ msgstr "Todos os dispositivos ativados com sucesso"
 msgid "Successfully disabled remote"
 msgstr "Remoto desabilitado com sucesso"
 
-#. TRANSLATORS: success message where we made the firmware on the
-#. * device older than it was before
-msgid "Successfully downgraded device"
-msgstr "Downgrade do dispositivo feito com sucesso"
-
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata: "
@@ -1276,6 +1285,7 @@ msgstr "Utilitário de Firmware UEFI"
 
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
+#. TRANSLATORS: unknown release urgency
 msgid "Unknown"
 msgstr "Desconhecido"
 
@@ -1387,6 +1397,10 @@ msgstr[1] "Enviar relatórios neste momento e enviar relatórios automaticamente
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
 msgstr "O envio de relatórios de firmware ajuda os fornecedores de hardware a identificar rapidamente atualizações com falha e êxito em dispositivos reais."
 
+#. TRANSLATORS: how important the release is
+msgid "Urgency"
+msgstr "Urgência"
+
 #. TRANSLATORS: command line option
 msgid "Use quirk flags when installing firmware"
 msgstr "Usa opções de peculiaridades ao instalar firmware"
@@ -1442,3 +1456,20 @@ msgstr "Escrevendo…"
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
 msgstr "Seu distribuidor pode não ter verificado qualquer das atualizações de firmware para compatibilidade com seu sistema ou dispositivos conectados."
+
+#. TRANSLATORS: program name
+msgid "fwupd TPM event log utility"
+msgstr "Utilitário de registro de eventos TPM do fwupd"
+
+#. TRANSLATORS: message letting the user know no device upgrade available due
+#. to missing on LVFS
+#. * %1 is the device name
+#, c-format
+msgid "• %s has no available firmware updates"
+msgstr "• %s possui nenhuma atualização de firmware disponível"
+
+#. TRANSLATORS: message letting the user know no device upgrade available
+#. * %1 is the device name
+#, c-format
+msgid "• %s has the latest available firmware version"
+msgstr "• %s possui a última versão do firmware disponível"

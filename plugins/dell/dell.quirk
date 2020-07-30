@@ -32,9 +32,3 @@ ParentGuid = e7ca1f36-bf73-4574-afe6-a4ccacabf479
 [Guid=MST-tb18-vmm3330-274]
 Plugin = synaptics_mst
 ParentGuid = e7ca1f36-bf73-4574-afe6-a4ccacabf479
-
-[SmbiosManufacturer=Dell Inc.]
-UefiVersionFormat = dell-bios
-
-[SmbiosManufacturer=Alienware]
-UefiVersionFormat = dell-bios

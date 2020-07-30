@@ -259,11 +259,13 @@ dfu_target_dfuse_func (void)
 {
 	gboolean ret;
 	gchar *tmp;
+	g_autoptr(DfuDevice) device = dfu_device_new (NULL);
 	g_autoptr(DfuTarget) target = NULL;
 	g_autoptr(GError) error = NULL;
 
 	/* NULL */
 	target = g_object_new (DFU_TYPE_TARGET, NULL);
+	dfu_target_set_device (target, device);
 	ret = dfu_target_parse_sectors (target, NULL, &error);
 	g_assert_no_error (error);
 	g_assert (ret);

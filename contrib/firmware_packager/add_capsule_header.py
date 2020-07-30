@@ -13,6 +13,7 @@ CAPSULE_FLAGS_PERSIST_ACROSS_RESET = 0x00010000
 CAPSULE_FLAGS_POPULATE_SYSTEM_TABLE = 0x00020000
 CAPSULE_FLAGS_INITIATE_RESET = 0x00040000
 
+
 def add_header(infile, outfile, gd, fl=None):
     # parse GUID from command line
     try:
@@ -21,6 +22,7 @@ def add_header(infile, outfile, gd, fl=None):
         print(e)
         return 1
     import struct
+
     try:
         with open(infile, 'rb') as f:
             bin_data = f.read()
@@ -45,7 +47,11 @@ def add_header(infile, outfile, gd, fl=None):
             bin_data = bin_data[hdrsz_old:]
 
     # set header flags
-    flags = CAPSULE_FLAGS_PERSIST_ACROSS_RESET | CAPSULE_FLAGS_INITIATE_RESET | CAPSULE_FLAGS_POPULATE_SYSTEM_TABLE
+    flags = (
+        CAPSULE_FLAGS_PERSIST_ACROSS_RESET
+        | CAPSULE_FLAGS_INITIATE_RESET
+        | CAPSULE_FLAGS_POPULATE_SYSTEM_TABLE
+    )
     if fl:
         flags = int(fl, 16)
 
@@ -63,6 +69,7 @@ def add_header(infile, outfile, gd, fl=None):
     print('Flags:     0x%04x' % flags)
     print('PayloadSz: 0x%04x' % imgsz)
     return 0
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Add capsule header on firmware')

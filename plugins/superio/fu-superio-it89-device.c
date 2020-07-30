@@ -111,7 +111,7 @@ fu_superio_it89_device_setup (FuSuperioDevice *self, GError **error)
 		return FALSE;
 	}
 	version = g_strdup_printf ("%02u.%02u", version_tmp[0], version_tmp[1]);
-	fu_device_set_version (FU_DEVICE (self), version, FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_set_version (FU_DEVICE (self), version);
 
 	/* get size from the EC */
 	if (!fu_superio_it89_device_ec_size (self, error))
@@ -670,6 +670,7 @@ fu_superio_it89_device_init (FuSuperioIt89Device *self)
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_ONLY_OFFLINE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PAIR);
 }
 
 static void

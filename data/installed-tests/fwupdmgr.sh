@@ -81,10 +81,5 @@ echo "Refreshing from the LVFS (requires network access)..."
 fwupdmgr refresh
 rc=$?; if [[ $rc != 0 ]]; then error $rc; fi
 
-# ---
-echo "Flashing actual devices (requires specific hardware)"
-${dirname}/hardware.py
-rc=$?; if [[ $rc != 0 ]]; then error $rc; fi
-
 # success!
 exit 0

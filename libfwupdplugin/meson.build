@@ -1,5 +1,6 @@
 fwupdplugin_src = [
   'fu-archive.c',
+  'fu-cabinet.c',
   'fu-chunk.c',
   'fu-common.c',
   'fu-common-cab.c',
@@ -18,12 +19,15 @@ fwupdplugin_src = [
   'fu-quirks.c',
   'fu-smbios.c',
   'fu-srec-firmware.c',
+  'fu-efivar.c',
   'fu-udev-device.c',
   'fu-usb-device.c',
+  'fu-hid-device.c',
 ]
 
 fwupdplugin_headers = [
   'fu-archive.h',
+  'fu-cabinet.h',
   'fu-chunk.h',
   'fu-common.h',
   'fu-common-cab.h',
@@ -43,8 +47,10 @@ fwupdplugin_headers = [
   'fu-quirks.h',
   'fu-smbios.h',
   'fu-srec-firmware.h',
+  'fu-efivar.h',
   'fu-udev-device.h',
   'fu-usb-device.h',
+  'fu-hid-device.h',
 ]
 install_headers(
   'fwupdplugin.h',
@@ -73,6 +79,7 @@ fwupdplugin_headers_private = [
 
 introspection_deps = [
   libxmlb,
+  libjcat,
   giounix,
   gusb,
 ]
@@ -89,6 +96,7 @@ library_deps = [
   libjsonglib,
   libgcab,
   valgrind,
+  libjcat,
   platform_deps,
 ]
 
@@ -130,6 +138,7 @@ fwupdplugin_pkgg.generate(
                'libgcab-1.0',
                'libsoup-2.4',
                'xmlb',
+               'jcat',
   ],
   subdirs : 'fwupd-1',
   version : meson.project_version(),
@@ -212,9 +221,6 @@ if get_option('tests')
     noreqs_test_firmware,
     fu_hash,
   ]
-  if get_option('pkcs7')
-    test_deps += colorhug_pkcs7_signature
-  endif
   testdatadir_src = join_paths(meson.source_root(), 'data', 'tests')
   testdatadir_dst = join_paths(meson.build_root(), 'data', 'tests')
   pluginbuilddir = join_paths(meson.build_root(), 'plugins', 'test')

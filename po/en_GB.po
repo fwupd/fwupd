@@ -311,10 +311,6 @@ msgstr "Command not found"
 msgid "Continue with update?"
 msgstr "Continue with update?"
 
-#. TRANSLATORS: command description
-msgid "Convert firmware to DFU format"
-msgstr "Convert firmware to DFU format"
-
 #. TRANSLATORS: Device supports some form of checksum verification
 msgid "Cryptographic hash verification is available"
 msgstr "Cryptographic hash verification is available"
@@ -475,10 +471,6 @@ msgstr "Downloading…"
 #. TRANSLATORS: command description
 msgid "Dump SMBIOS data from a file"
 msgstr "Dump SMBIOS data from a file"
-
-#. TRANSLATORS: command description
-msgid "Dump details about a firmware file"
-msgstr "Dump details about a firmware file"
 
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Duration"
@@ -1061,21 +1053,9 @@ msgstr "Selected device"
 msgid "Serial Number"
 msgstr "Serial Number"
 
-#. TRANSLATORS: command description
-msgid "Set product ID on firmware file"
-msgstr "Set product ID on firmware file"
-
-#. TRANSLATORS: command description
-msgid "Set release version on firmware file"
-msgstr "Set release version on firmware file"
-
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
 msgstr "Set the debugging flag during update"
-
-#. TRANSLATORS: command description
-msgid "Set vendor ID on firmware file"
-msgstr "Set vendor ID on firmware file"
 
 msgid "Sets the list of approved firmware"
 msgstr "Sets the list of approved firmware"
@@ -1169,11 +1149,6 @@ msgstr "Successfully activated all devices"
 msgid "Successfully disabled remote"
 msgstr "Successfully disabled remote"
 
-#. TRANSLATORS: success message where we made the firmware on the
-#. * device older than it was before
-msgid "Successfully downgraded device"
-msgstr "Successfully downgraded device"
-
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata: "
@@ -1256,6 +1231,7 @@ msgstr "UEFI Firmware Utility"
 
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
+#. TRANSLATORS: unknown release urgency
 msgid "Unknown"
 msgstr "Unknown"
 

@@ -1,0 +1,17 @@
+{
+  "name": "Hughski ColorHug Plus",
+  "guids": [
+    "dfbaaded-754b-5214-a5f2-46aa3331e8ce",
+    "f5b42624-ff57-5073-ba09-b7c9c04241be"
+  ],
+  "releases": [
+    {
+      "version": "0.1",
+      "file": "77b315dcaa7edc1d5fbb77016b94d8a0c0133838-fakedevice01_dfu.cab"
+    },
+    {
+      "version": "0.2",
+      "file": "8bc3afd07a0af3baaab8b19893791dd3972e8305-fakedevice02_dfu.cab"
+    }
+  ]
+}

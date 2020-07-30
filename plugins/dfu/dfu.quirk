@@ -12,11 +12,6 @@ CounterpartGuid = USB\VID_0BDA&PID_5800
 [DeviceInstanceId=USB\VID_0BDA&PID_5800]
 Flags = detach-for-attach
 
-# on PC platforms the DW1820A firmware is loaded at runtime and can't
-# be stored on the device itself as the flash chip is unpopulated
-[DeviceInstanceId=USB\VID_0A5C&PID_6412]
-Flags = only-supported
-
 # Openmoko Freerunner / GTA02
 [DeviceInstanceId=USB\VID_1D50&PID_5119]
 Plugin = dfu
@@ -61,6 +56,8 @@ Flags = force-dfu-mode
 [DeviceInstanceId=USB\VID_273F&PID_1003]
 Flags = attach-upload-download
 [DeviceInstanceId=USB\VID_273F&PID_100A]
+Flags = attach-upload-download
+[DeviceInstanceId=USB\VID_273F&PID_1008]
 Flags = attach-upload-download
 
 # HydraBus
@@ -328,6 +325,7 @@ DfuAltName = @Flash/0x0/1*32Kg
 
 # STM32F745 dfuse bootloader
 [DeviceInstanceId=USB\VID_0483&PID_DF11]
+Flags = absent-sector-size
 Plugin = dfu
 DfuForceVersion = 011a
 DfuForceTimeout = 5000

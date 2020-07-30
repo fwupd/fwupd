@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2005-2019 Synaptics Incorporated
- * Copyright (C) 2019 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2019-2020 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -18,7 +18,7 @@
 
 struct _FuSynapticsCxaudioDevice
 {
-	FuUsbDevice		 parent_instance;
+	FuHidDevice		 parent_instance;
 	guint32			 chip_id_base;
 	guint32			 chip_id;
 	gboolean		 serial_number_set;
@@ -32,7 +32,7 @@ struct _FuSynapticsCxaudioDevice
 	guint8			 patch_level;
 };
 
-G_DEFINE_TYPE (FuSynapticsCxaudioDevice, fu_synaptics_cxaudio_device, FU_TYPE_USB_DEVICE)
+G_DEFINE_TYPE (FuSynapticsCxaudioDevice, fu_synaptics_cxaudio_device, FU_TYPE_HID_DEVICE)
 
 static void
 fu_synaptics_cxaudio_device_to_string (FuDevice *device, guint idt, GString *str)
@@ -49,37 +49,13 @@ fu_synaptics_cxaudio_device_to_string (FuDevice *device, guint idt, GString *str
 }
 
 static gboolean
-fu_synaptics_cxaudio_device_open (FuUsbDevice *device, GError **error)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
-
-	/* get firmware version */
-	if (!g_usb_device_claim_interface (usb_device, FU_SYNAPTICS_CXAUDIO_HID_INTERFACE,
-					   G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					   error)) {
-		g_prefix_error (error, "failed to claim interface: ");
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
 fu_synaptics_cxaudio_device_output_report (FuSynapticsCxaudioDevice *self,
 					   guint8 *buf,
 					   guint16 bufsz,
 					   GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
-	guint16 report_number = buf[0];
-	gsize actual_length = 0;
-
-	g_return_val_if_fail (buf != NULL, FALSE);
-	g_return_val_if_fail (bufsz != 0, FALSE);
-
 	/* weird */
-	if (report_number == 0x0) {
+	if (buf[0] == 0x0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -88,30 +64,11 @@ fu_synaptics_cxaudio_device_output_report (FuSynapticsCxaudioDevice *self,
 	}
 
 	/* to device */
-	if (g_getenv ("FWUPD_SYNAPTICS_CXAUDIO_VERBOSE") != NULL)
-		fu_common_dump_raw (G_LOG_DOMAIN, "HID::WRITE", buf, bufsz);
-	if (!g_usb_device_control_transfer (usb_device,
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					    G_USB_DEVICE_RECIPIENT_INTERFACE,
-					    FU_HID_REPORT_SET,
-					    (FU_HID_REPORT_TYPE_OUTPUT << 8) | report_number,
-					    FU_SYNAPTICS_CXAUDIO_HID_INTERFACE,
-					    buf, bufsz, &actual_length,
-					    FU_SYNAPTICS_CXAUDIO_USB_TIMEOUT, NULL, error)) {
-		return FALSE;
-	}
-	if (bufsz != actual_length) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "wrote 0x%x bytes of 0x%x",
-			     (guint) actual_length, bufsz);
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
+	return fu_hid_device_set_report (FU_HID_DEVICE (self), buf[0],
+					 buf, bufsz,
+					 FU_SYNAPTICS_CXAUDIO_USB_TIMEOUT,
+					 FU_HID_DEVICE_FLAG_NONE,
+					 error);
 }
 
 static gboolean
@@ -121,37 +78,11 @@ fu_synaptics_cxaudio_device_input_report (FuSynapticsCxaudioDevice *self,
 					  guint16 bufsz,
 					  GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
-	gsize actual_length = 0;
-
-	g_return_val_if_fail (buf != NULL, FALSE);
-	g_return_val_if_fail (bufsz != 0, FALSE);
-
-	/* from device */
-	if (!g_usb_device_control_transfer (usb_device,
-					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					    G_USB_DEVICE_RECIPIENT_INTERFACE,
-					    FU_HID_REPORT_GET,
-					    (FU_HID_REPORT_TYPE_INPUT << 8) | ReportID,
-					    FU_SYNAPTICS_CXAUDIO_HID_INTERFACE,
-					    buf, bufsz, &actual_length,
-					    FU_SYNAPTICS_CXAUDIO_USB_TIMEOUT, NULL, error)) {
-		return FALSE;
-	}
-	if (g_getenv ("FWUPD_SYNAPTICS_CXAUDIO_VERBOSE") != NULL)
-		fu_common_dump_raw (G_LOG_DOMAIN, "HID::READ", buf, bufsz);
-	if (bufsz != actual_length) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "read 0x%x bytes of expected 0x%x",
-			     (guint) actual_length, bufsz);
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
+	return fu_hid_device_get_report (FU_HID_DEVICE (self), ReportID,
+					 buf, bufsz,
+					 FU_SYNAPTICS_CXAUDIO_USB_TIMEOUT,
+					 FU_HID_DEVICE_FLAG_NONE,
+					 error);
 }
 
 typedef enum {
@@ -380,39 +311,6 @@ fu_synaptics_cxaudio_device_eeprom_read_string (FuSynapticsCxaudioDevice *self,
 }
 
 static gboolean
-fu_synaptics_cxaudio_device_reset (FuSynapticsCxaudioDevice *self, GError **error)
-{
-	guint8 tmp = 1 << 6;
-	g_autoptr(GError) error_local = NULL;
-
-	/* is disabled on EVK board using jumper */
-	if (!self->sw_reset_supported) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "software reset is not supported");
-		return FALSE;
-	}
-
-	/* this fails on success */
-	if (!fu_synaptics_cxaudio_device_operation (self,
-						    FU_SYNAPTICS_CXAUDIO_OPERATION_WRITE,
-						    FU_SYNAPTICS_CXAUDIO_MEM_KIND_CPX_RAM,
-						    FU_SYNAPTICS_CXAUDIO_REG_RESET_ADDR, &tmp, sizeof(tmp),
-						    FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_NONE,
-						    error)) {
-		if (g_error_matches (error_local,
-				     G_USB_DEVICE_ERROR,
-				     G_USB_DEVICE_ERROR_FAILED)) {
-			return TRUE;
-		}
-		g_propagate_error (error, g_steal_pointer (&error_local));
-		return FALSE;
-	}
-	return TRUE;
-}
-
-static gboolean
 fu_synaptics_cxaudio_device_ensure_patch_level (FuSynapticsCxaudioDevice *self, GError **error)
 {
 	guint8 tmp = 0x0;
@@ -624,7 +522,7 @@ fu_synaptics_cxaudio_device_setup (FuDevice *device, GError **error)
 	}
 	version_patch = g_strdup_printf ("%02X-%02X-%02X",
 					 verbuf_patch[0], verbuf_patch[1], verbuf_patch[2]);
-	fu_device_set_version (device, version_patch, FWUPD_VERSION_FORMAT_PLAIN);
+	fu_device_set_version (device, version_patch);
 
 	/* find out if patch supports additional capabilities (optional) */
 	cap_str = g_usb_device_get_string_descriptor (usb_device,
@@ -637,23 +535,6 @@ fu_synaptics_cxaudio_device_setup (FuDevice *device, GError **error)
 			if (g_strcmp0 (split[i], "RESET") == 0)
 				self->sw_reset_supported = TRUE;
 		}
-	}
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
-fu_synaptics_cxaudio_device_close (FuUsbDevice *device, GError **error)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
-
-	/* we're done here */
-	if (!g_usb_device_release_interface (usb_device, FU_SYNAPTICS_CXAUDIO_HID_INTERFACE,
-					     G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					     error)) {
-		g_prefix_error (error, "failed to release interface: ");
-		return FALSE;
 	}
 
 	/* success */
@@ -804,14 +685,41 @@ fu_synaptics_cxaudio_device_write_firmware (FuDevice *device,
 							     7, error))
 		return FALSE;
 
-	/* if supported, self reset */
-	if (self->sw_reset_supported) {
-		fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-		return fu_synaptics_cxaudio_device_reset (self, error);
-	}
-
 	/* success */
+	return TRUE;
+}
+
+
+static gboolean
+fu_synaptics_cxaudio_device_attach (FuDevice *device, GError **error)
+{
+	FuSynapticsCxaudioDevice *self = FU_SYNAPTICS_CXAUDIO_DEVICE (device);
+	guint8 tmp = 1 << 6;
+	g_autoptr(GError) error_local = NULL;
+
+	/* is disabled on EVK board using jumper */
+	if (!self->sw_reset_supported)
+		return TRUE;
+
+	/* wait for re-enumeration */
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+
+	/* this fails on success */
+	if (!fu_synaptics_cxaudio_device_operation (self,
+						    FU_SYNAPTICS_CXAUDIO_OPERATION_WRITE,
+						    FU_SYNAPTICS_CXAUDIO_MEM_KIND_CPX_RAM,
+						    FU_SYNAPTICS_CXAUDIO_REG_RESET_ADDR, &tmp, sizeof(tmp),
+						    FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_NONE,
+						    error)) {
+		if (g_error_matches (error_local,
+				     G_USB_DEVICE_ERROR,
+				     G_USB_DEVICE_ERROR_FAILED)) {
+			return TRUE;
+		}
+		g_propagate_error (error, g_steal_pointer (&error_local));
+		return FALSE;
+	}
 	return TRUE;
 }
 
@@ -851,6 +759,7 @@ fu_synaptics_cxaudio_device_init (FuSynapticsCxaudioDevice *self)
 	self->sw_reset_supported = TRUE;
 	fu_device_add_icon (FU_DEVICE (self), "audio-card");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_install_duration (FU_DEVICE (self), 3); /* seconds */
 	fu_device_set_protocol (FU_DEVICE (self), "com.synaptics.cxaudio");
 	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
@@ -860,12 +769,10 @@ static void
 fu_synaptics_cxaudio_device_class_init (FuSynapticsCxaudioDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	klass_device->to_string = fu_synaptics_cxaudio_device_to_string;
 	klass_device->set_quirk_kv = fu_synaptics_cxaudio_device_set_quirk_kv;
 	klass_device->setup = fu_synaptics_cxaudio_device_setup;
 	klass_device->write_firmware = fu_synaptics_cxaudio_device_write_firmware;
+	klass_device->attach = fu_synaptics_cxaudio_device_attach;
 	klass_device->prepare_firmware = fu_synaptics_cxaudio_device_prepare_firmware;
-	klass_usb_device->open = fu_synaptics_cxaudio_device_open;
-	klass_usb_device->close = fu_synaptics_cxaudio_device_close;
 }

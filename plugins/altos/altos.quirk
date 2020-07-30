@@ -1,7 +1,7 @@
 # ChaosKey
 [DeviceInstanceId=USB\VID_1D50&PID_60C6]
 Plugin = altos
-Flags = none
+Flags = ~is-bootloader
 Name = Altos ChaosKey
 CounterpartGuid = USB\VID_FFFE&PID_000A
 

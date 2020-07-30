@@ -11,7 +11,7 @@ ParentGuid = USB\VID_17EF&PID_308F
 # ThinkPad USB-C Dock Gen2 Audio
 [DeviceInstanceId=USB\VID_17EF&PID_A396]
 Guid = SYNAPTICS_CXAUDIO\CX2198X
-ParentGuid = USB\VID_17EF&PID_1039
+ParentGuid = USB\VID_17EF&PID_A391
 
 # Google Pixel USB-C headphones
 [DeviceInstanceId=USB\VID_18D1&PID_5033]

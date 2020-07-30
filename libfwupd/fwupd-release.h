@@ -105,6 +105,9 @@ void		 fwupd_release_set_source_url		(FwupdRelease	*release,
 guint64		 fwupd_release_get_size			(FwupdRelease	*release);
 void		 fwupd_release_set_size			(FwupdRelease	*release,
 							 guint64	 size);
+guint64		 fwupd_release_get_created		(FwupdRelease	*release);
+void		 fwupd_release_set_created		(FwupdRelease	*release,
+							 guint64	 created);
 const gchar	*fwupd_release_get_license		(FwupdRelease	*release);
 void		 fwupd_release_set_license		(FwupdRelease	*release,
 							 const gchar	*license);
@@ -122,12 +125,18 @@ void		 fwupd_release_remove_flag		(FwupdRelease	*release,
 							 FwupdReleaseFlags flag);
 gboolean	 fwupd_release_has_flag			(FwupdRelease	*release,
 							 FwupdReleaseFlags flag);
+FwupdReleaseUrgency fwupd_release_get_urgency		(FwupdRelease	*release);
+void		 fwupd_release_set_urgency		(FwupdRelease	*release,
+							 FwupdReleaseUrgency urgency);
 guint32		 fwupd_release_get_install_duration	(FwupdRelease	*release);
 void		 fwupd_release_set_install_duration	(FwupdRelease	*release,
 							 guint32	 duration);
 const gchar	*fwupd_release_get_update_message	(FwupdRelease	*release);
 void		 fwupd_release_set_update_message	(FwupdRelease	*release,
 							 const gchar	*update_message);
+const gchar	*fwupd_release_get_update_image		(FwupdRelease	*release);
+void		 fwupd_release_set_update_image		(FwupdRelease	*release,
+							 const gchar	*update_image);
 
 FwupdRelease	*fwupd_release_from_variant		(GVariant	*value);
 GPtrArray	*fwupd_release_array_from_variant	(GVariant	*value);

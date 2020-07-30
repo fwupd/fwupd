@@ -6,7 +6,9 @@
 
 #include "config.h"
 
+#ifdef HAVE_TSS2
 #include <tss2/tss2_esys.h>
+#endif
 
 #include "fu-common.h"
 #include "fu-uefi-pcrs.h"
@@ -24,11 +26,13 @@ struct _FuUefiPcrs {
 
 G_DEFINE_TYPE (FuUefiPcrs, fu_uefi_pcrs, G_TYPE_OBJECT)
 
+#ifdef HAVE_TSS2
 static void Esys_Finalize_autoptr_cleanup (ESYS_CONTEXT *esys_context)
 {
 	Esys_Finalize (&esys_context);
 }
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (ESYS_CONTEXT, Esys_Finalize_autoptr_cleanup)
+#endif
 
 static gboolean
 _g_string_isxdigit (GString *str)
@@ -104,6 +108,7 @@ fu_uefi_pcrs_setup_tpm12 (FuUefiPcrs *self, const gchar *fn_pcrs, GError **error
 static gboolean
 fu_uefi_pcrs_setup_tpm20 (FuUefiPcrs *self, GError **error)
 {
+#ifdef HAVE_TSS2
 	TSS2_RC rc;
 	g_autoptr(ESYS_CONTEXT) ctx = NULL;
 	g_autofree TPMS_CAPABILITY_DATA *capability_data = NULL;
@@ -173,6 +178,7 @@ fu_uefi_pcrs_setup_tpm20 (FuUefiPcrs *self, GError **error)
 			g_debug ("added PCR-%02u=%s", item->idx, item->checksum);
 		}
 	}
+#endif
 
 	/* success */
 	return TRUE;

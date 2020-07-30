@@ -1,6 +1,7 @@
+installed_test_datadir = join_paths(datadir, 'installed-tests', 'fwupd')
+
 con2 = configuration_data()
-con2.set('installedtestsdir',
-         join_paths(datadir, 'installed-tests', 'fwupd'))
+con2.set('installedtestsdir', installed_test_datadir)
 con2.set('bindir', bindir)
 
 configure_file(
@@ -8,15 +9,14 @@ configure_file(
   output : 'fwupdmgr.test',
   configuration : con2,
   install: true,
-  install_dir: join_paths('share', 'installed-tests', 'fwupd'),
+  install_dir: installed_test_datadir,
 )
 
 install_data([
     'fwupdmgr.sh',
     'fwupd-tests.xml',
-    'hardware.py',
   ],
-  install_dir : 'share/installed-tests/fwupd',
+  install_dir : installed_test_datadir,
 )
 
 custom_target('installed-cab123',
@@ -30,7 +30,7 @@ custom_target('installed-cab123',
     gcab, '--create', '--nopath', '@OUTPUT@', '@INPUT@',
   ],
   install: true,
-  install_dir: join_paths('share', 'installed-tests', 'fwupd'),
+  install_dir: installed_test_datadir,
 )
 custom_target('installed-cab124',
   input : [
@@ -43,7 +43,7 @@ custom_target('installed-cab124',
     gcab, '--create', '--nopath', '@OUTPUT@', '@INPUT@',
   ],
   install: true,
-  install_dir: join_paths('share', 'installed-tests', 'fwupd'),
+  install_dir: installed_test_datadir,
 )
 
 # replace @installedtestsdir@

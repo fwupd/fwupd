@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include "fu-usb-device.h"
+#include "fu-hid-device.h"
 
 #define FU_TYPE_UNIFYING_BOOTLOADER (fu_logitech_hidpp_bootloader_get_type ())
-G_DECLARE_DERIVABLE_TYPE (FuLogitechHidPpBootloader, fu_logitech_hidpp_bootloader, FU, UNIFYING_BOOTLOADER, FuUsbDevice)
+G_DECLARE_DERIVABLE_TYPE (FuLogitechHidPpBootloader, fu_logitech_hidpp_bootloader, FU, UNIFYING_BOOTLOADER, FuHidDevice)
 
 struct _FuLogitechHidPpBootloaderClass
 {
-	FuUsbDeviceClass	parent_class;
+	FuHidDeviceClass	parent_class;
 	gboolean		 (*setup)		(FuLogitechHidPpBootloader	*self,
 							 GError			**error);
 };

@@ -28,6 +28,18 @@ jobs:
           paths:
             - "dist/docs"
 
+  build-chromeos-x86_64:
+    machine:
+      image: circleci/classic:latest
+    steps:
+      - checkout
+      - run:
+          name: "Build container"
+          command: OS=debian-x86_64 ./contrib/ci/generate_docker.py
+      - run:
+          name: "Run build script"
+          command: docker run --privileged -e CI=true -t -v `pwd`/dist:/build/dist fwupd-debian-x86_64 ./contrib/ci/trust.sh
+
   build-windows:
     docker:
       - image: fedora:31
@@ -62,6 +74,7 @@ jobs:
           paths:
             - "dist/setup/*.exe"
             - "dist/VERSION"
+            - "dist/news.txt"
       - store_artifacts:
           path: dist/setup
 
@@ -79,6 +92,12 @@ jobs:
       - run:
           name: "Build Snap"
           command: snapcraft
+      - run:
+          command: |
+            mkdir -p /tmp/snaps
+            cp *.snap /tmp/snaps
+      - store_artifacts:
+          path: /tmp/snaps
       - persist_to_workspace:
           root: .
           paths:
@@ -147,7 +166,8 @@ jobs:
           command: |
             go get github.com/tcnksm/ghr
             VERSION=$(cat dist/VERSION)
-            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${VERSION} ./dist/setup/
+            BODY=$(cat dist/news.txt)
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -b ${BODY} ${VERSION} ./dist/setup/
 workflows:
   version: 2
   main:
@@ -156,6 +176,7 @@ workflows:
       - build-ubuntu-x86_64
       - build-snap
       - check-abi
+      - build-chromeos-x86_64
       - publish-edge:
           requires:
             - build-snap
@@ -184,7 +205,23 @@ workflows:
               ignore: /.*/
             tags:
               only: /^\d+\.\d+\.\d+$/
+      - publish-docs:
+          requires:
+            - build-ubuntu-x86_64
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^\d+\.\d+\.\d+$/
       - build-snap:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^\d+\.\d+\.\d+$/
+      - publish-stable:
+          requires:
+            - build-snap
           filters:
             branches:
               ignore: /.*/

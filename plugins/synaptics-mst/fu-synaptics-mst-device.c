@@ -73,6 +73,7 @@ fu_synaptics_mst_device_init (FuSynapticsMstDevice *self)
 	fu_device_set_vendor_id (FU_DEVICE (self), "DRM_DP_AUX_DEV:0x06CB");
 	fu_device_set_summary (FU_DEVICE (self), "Multi-Stream Transport Device");
 	fu_device_add_icon (FU_DEVICE (self), "video-display");
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_udev_device_set_flags (FU_UDEV_DEVICE (self),
 				  FU_UDEV_DEVICE_FLAG_OPEN_READ |
 				  FU_UDEV_DEVICE_FLAG_OPEN_WRITE |
@@ -814,7 +815,7 @@ fu_synaptics_mst_device_write_firmware (FuDevice *device,
 
 	/* enable remote control and disable on exit */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
-	if (!fu_device_has_custom_flag (device, "skip-restart")) {
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_SKIPS_RESTART)) {
 		locker = fu_device_locker_new_full (self,
 						(FuDeviceLockerFunc) fu_synaptics_mst_device_enable_rc,
 						(FuDeviceLockerFunc) fu_synaptics_mst_device_restart,
@@ -962,7 +963,10 @@ fu_synaptics_mst_device_scan_cascade (FuSynapticsMstDevice *self, guint8 layer, 
 		}
 
 		/* check recursively for more devices */
-		g_clear_object (&locker);
+		if (!fu_device_locker_close (locker, &error_local)) {
+			g_debug ("failed to close parent: %s", error_local->message);
+			continue;
+		}
 		self->mode = FU_SYNAPTICS_MST_MODE_REMOTE;
 		self->layer = layer + 1;
 		self->rad = rad;
@@ -1040,7 +1044,7 @@ fu_synaptics_mst_device_rescan (FuDevice *device, GError **error)
 		return FALSE;
 
 	version = g_strdup_printf ("%1d.%02d.%02d", buf_ver[0], buf_ver[1], buf_ver[2]);
-	fu_device_set_version (FU_DEVICE (self), version, FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version (FU_DEVICE (self), version);
 
 	/* read board ID */
 	if (!fu_synaptics_mst_device_read_board_id (self, connection, buf_ver, error))
@@ -1070,7 +1074,10 @@ fu_synaptics_mst_device_rescan (FuDevice *device, GError **error)
 	}
 
 	/* recursively look for cascade devices */
-	g_clear_object (&locker);
+	if (!fu_device_locker_close (locker, error)) {
+		g_prefix_error (error, "failed to close parent: ");
+		return FALSE;
+	}
 	if (!fu_synaptics_mst_device_scan_cascade (self, 0, error))
 		return FALSE;
 
@@ -1130,15 +1137,21 @@ fu_synaptics_mst_device_rescan (FuDevice *device, GError **error)
 	switch (self->family) {
 	case FU_SYNAPTICS_MST_FAMILY_TESLA:
 		fu_device_set_firmware_size_max (device, 0x10000);
-		fu_device_add_instance_id (device, "MST-tesla");
+		fu_device_add_instance_id_full (device,
+						"MST-tesla",
+						FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
 		break;
 	case FU_SYNAPTICS_MST_FAMILY_LEAF:
 		fu_device_set_firmware_size_max (device, 0x10000);
-		fu_device_add_instance_id (device, "MST-leaf");
+		fu_device_add_instance_id_full (device,
+						"MST-leaf",
+						FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
 		break;
 	case FU_SYNAPTICS_MST_FAMILY_PANAMERA:
 		fu_device_set_firmware_size_max (device, 0x80000);
-		fu_device_add_instance_id (device, "MST-panamera");
+		fu_device_add_instance_id_full (device,
+						"MST-panamera",
+						FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
 		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 		break;
 	default:

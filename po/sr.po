@@ -111,10 +111,6 @@ msgstr "Чисти резултате последњег ажурирања"
 msgid "Command not found"
 msgstr "Наредба није пронађена"
 
-#. TRANSLATORS: command description
-msgid "Convert firmware to DFU format"
-msgstr "Претвори фирмвер у ДФУ формат"
-
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
 msgstr "ДФУ алатка"
@@ -185,10 +181,6 @@ msgstr "Преузимам…"
 #. TRANSLATORS: command description
 msgid "Dump SMBIOS data from a file"
 msgstr "Ишчитај SMBIOS податке из датотеке"
-
-#. TRANSLATORS: command description
-msgid "Dump details about a firmware file"
-msgstr "Истовари детаље о датотеци са фирмвером"
 
 #. TRANSLATORS: if the remote is enabled
 msgid "Enabled"
@@ -426,18 +418,6 @@ msgid "Scheduling…"
 msgstr "Заказујем…"
 
 #. TRANSLATORS: command description
-msgid "Set product ID on firmware file"
-msgstr "Подеси ИБ производа на датотеци са фирмвером"
-
-#. TRANSLATORS: command description
-msgid "Set release version on firmware file"
-msgstr "Подеси издање објаве на датотеци са фирмвером"
-
-#. TRANSLATORS: command description
-msgid "Set vendor ID on firmware file"
-msgstr "Подеси ИБ продавца на датотеци са фирмвером"
-
-#. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
 msgstr "Подели историјат фирмвера са програмерима"
 
@@ -474,6 +454,7 @@ msgstr "Врста"
 
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
+#. TRANSLATORS: unknown release urgency
 msgid "Unknown"
 msgstr "Непознато"
 

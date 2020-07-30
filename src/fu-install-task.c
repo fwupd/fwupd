@@ -276,7 +276,8 @@ fu_install_task_check_requirements (FuInstallTask *self,
 	}
 
 	/* no update abilities */
-	if (!fu_device_has_flag (self->device, FWUPD_DEVICE_FLAG_UPDATABLE)) {
+	if (!fu_device_has_flag (self->device, FWUPD_DEVICE_FLAG_UPDATABLE) &&
+	    !fu_device_has_flag (self->device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
@@ -334,12 +335,14 @@ fu_install_task_check_requirements (FuInstallTask *self,
 	}
 
 	/* check the version formats match if set in the release */
-	verfmts = xb_node_query (self->component,
-				 "custom/value[@key='LVFS::VersionFormat']",
-				 0, NULL);
-	if (verfmts != NULL) {
-		if (!fu_install_task_check_verfmt (self, verfmts, flags, error))
-			return FALSE;
+	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+		verfmts = xb_node_query (self->component,
+					"custom/value[@key='LVFS::VersionFormat']",
+					0, NULL);
+		if (verfmts != NULL) {
+			if (!fu_install_task_check_verfmt (self, verfmts, flags, error))
+				return FALSE;
+		}
 	}
 
 	/* compare to the lowest supported version, if it exists */
@@ -436,7 +439,8 @@ fu_install_task_finalize (GObject *object)
 {
 	FuInstallTask *self = FU_INSTALL_TASK (object);
 
-	g_object_unref (self->component);
+	if (self->component != NULL)
+		g_object_unref (self->component);
 	if (self->device != NULL)
 		g_object_unref (self->device);
 
@@ -485,7 +489,8 @@ fu_install_task_new (FuDevice *device, XbNode *component)
 {
 	FuInstallTask *self;
 	self = g_object_new (FU_TYPE_TASK, NULL);
-	self->component = g_object_ref (component);
+	if (component != NULL)
+		self->component = g_object_ref (component);
 	if (device != NULL)
 		self->device = g_object_ref (device);
 	return FU_INSTALL_TASK (self);

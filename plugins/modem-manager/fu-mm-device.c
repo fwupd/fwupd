@@ -180,6 +180,7 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 				break;
 			}
 		}
+		fu_device_set_protocol (device, "com.google.fastboot");
 	}
 	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_QMI_PDC) {
 		for (guint i = 0; i < n_ports; i++) {
@@ -189,6 +190,9 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 				break;
 			}
 		}
+		/* only set if fastboot wasn't already set */
+		if (fu_device_get_protocol (device) == NULL)
+			fu_device_set_protocol (device, "com.qualcomm.qmi_pdc");
 	}
 	mm_modem_port_info_array_free (ports, n_ports);
 
@@ -236,9 +240,21 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 		fu_device_set_vendor (device, mm_modem_get_manufacturer (modem));
 	if (mm_modem_get_model (modem) != NULL)
 		fu_device_set_name (device, mm_modem_get_model (modem));
-	fu_device_set_version (device, version, FWUPD_VERSION_FORMAT_PLAIN);
+	fu_device_set_version (device, version);
 	for (guint i = 0; device_ids[i] != NULL; i++)
 		fu_device_add_instance_id (device, device_ids[i]);
+	if (fu_device_get_vendor_id (device) == NULL) {
+		g_autofree gchar *path = g_build_filename (device_sysfs_path, "idVendor", NULL);
+		g_autofree gchar *value = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		if (!g_file_get_contents (path, &value, NULL, &error_local)) {
+			g_warning ("failed to set vendor ID: %s", error_local->message);
+		} else {
+			g_autofree gchar *vendor_id = g_strdup_printf ("USB:0x%s", g_strchomp (value));
+			fu_device_set_vendor_id (device, vendor_id);
+		}
+	}
 
 	/* convert the instance IDs to GUIDs */
 	fu_device_convert_instance_ids (device);
@@ -710,6 +726,7 @@ fu_mm_device_init (FuMmDevice *self)
 {
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION);
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_summary (FU_DEVICE (self), "Mobile broadband device");
 	fu_device_add_icon (FU_DEVICE (self), "network-modem");
 }
@@ -804,7 +821,7 @@ fu_mm_device_udev_new (MMManager *manager,
 	fu_device_set_physical_id (FU_DEVICE (self), info->physical_id);
 	fu_device_set_vendor (FU_DEVICE (self), info->vendor);
 	fu_device_set_name (FU_DEVICE (self), info->name);
-	fu_device_set_version (FU_DEVICE (self), info->version, FWUPD_VERSION_FORMAT_PLAIN);
+	fu_device_set_version (FU_DEVICE (self), info->version);
 	self->update_methods = info->update_methods;
 	self->detach_fastboot_at = g_strdup (info->detach_fastboot_at);
 	self->port_at_ifnum = info->port_at_ifnum;

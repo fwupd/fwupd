@@ -270,10 +270,6 @@ msgstr "Очистить результаты c последнего обнов�
 msgid "Command not found"
 msgstr "Команда не найдена"
 
-#. TRANSLATORS: command description
-msgid "Convert firmware to DFU format"
-msgstr "Преобразовать прошивку в формат DFU"
-
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
 msgstr "Средство работы с DFU"
@@ -372,10 +368,6 @@ msgstr "Получение..."
 #. TRANSLATORS: command description
 msgid "Dump SMBIOS data from a file"
 msgstr "Записать данные SMBIOS из файла"
-
-#. TRANSLATORS: command description
-msgid "Dump details about a firmware file"
-msgstr "Создать дамп подробных данных о файле прошивки"
 
 #. TRANSLATORS: ESP is EFI System Partition
 msgid "ESP specified was not valid"
@@ -801,21 +793,9 @@ msgstr "Запланировать установку на следующую п
 msgid "Scheduling…"
 msgstr "Планировка…"
 
-#. TRANSLATORS: command description
-msgid "Set product ID on firmware file"
-msgstr "Установить идентификатор продукта для файла прошивки"
-
-#. TRANSLATORS: command description
-msgid "Set release version on firmware file"
-msgstr "Установить версию выпуска для файла прошивки"
-
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
 msgstr "Установить флаг отладки во время обновления"
-
-#. TRANSLATORS: command description
-msgid "Set vendor ID on firmware file"
-msgstr "Установить идентификатор производителя для файла прошивки"
 
 msgid "Sets the list of approved firmware"
 msgstr "Установить список одобренных прошивок"
@@ -929,6 +909,7 @@ msgstr "Средство для прошивки UEFI"
 
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
+#. TRANSLATORS: unknown release urgency
 msgid "Unknown"
 msgstr "Неизвестно"
 

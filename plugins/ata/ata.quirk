@@ -1,3 +1,68 @@
 # match all devices with this udev subsystem
 [DeviceInstanceId=BLOCK]
 Plugin = ata
+
+[DeviceInstanceId=OUI\000039]
+Vendor = Toshiba
+VendorId = ATA:0x1179
+
+[DeviceInstanceId=OUI\0000f0]
+Vendor = Samsung
+VendorId = ATA:0x144D
+
+[DeviceInstanceId=OUI\0004cf]
+Vendor = Seagate
+VendorId = ATA:0x1BB1
+
+[DeviceInstanceId=OUI\000c50]
+Vendor = Seagate
+VendorId = ATA:0x1BB1
+
+[DeviceInstanceId=OUI\000cca]
+Vendor = Western Digital
+VendorId = ATA:0x101C
+
+[DeviceInstanceId=OUI\0014ee]
+Vendor = Western Digital
+VendorId = ATA:0x101C
+
+[DeviceInstanceId=OUI\001517]
+Vendor = Intel
+VendorId = ATA:0x8086
+
+[DeviceInstanceId=OUI\001b44]
+Vendor = Western Digital
+VendorId = ATA:0x101C
+
+[DeviceInstanceId=OUI\002303]
+Vendor = LITE-ON
+VendorId = ATA:0x14A4
+
+[DeviceInstanceId=OUI\002538]
+Vendor = Samsung
+VendorId = ATA:0x144D
+
+[DeviceInstanceId=OUI\0026b7]
+Vendor = Kingston
+VendorId = ATA:0x2646
+
+[DeviceInstanceId=OUI\00a075]
+Vendor = Micron
+VendorId = ATA:0x1344
+
+[DeviceInstanceId=OUI\550380]
+Vendor = Kingston
+VendorId = ATA:0x2646
+
+[DeviceInstanceId=OUI\5cd2e4]
+Vendor = Intel
+VendorId = ATA:0x8086
+
+[DeviceInstanceId=OUI\707c18]
+Vendor = ADATA
+VendorId = ATA:0x1CC1
+
+[DeviceInstanceId=OUI\001b44]
+Vendor = SanDisk
+VendorId = ATA:0x15B7
+

@@ -11,6 +11,12 @@
 #include "fwupd-error.h"
 #include "fwupd-release.h"
 
+#ifdef HAVE_GIO_UNIX
+#include <fcntl.h>
+#include <errno.h>
+#include <sys/mman.h>
+#endif
+
 #include <locale.h>
 #include <string.h>
 #ifdef HAVE_UTSNAME_H
@@ -230,7 +236,10 @@ fwupd_build_user_agent_os_release (void)
 	return g_strjoinv (" ", (gchar **) ids_os->pdata);
 }
 
-static gchar *
+/**
+ * fwupd_build_user_agent_system: (skip):
+ **/
+gchar *
 fwupd_build_user_agent_system (void)
 {
 #ifdef HAVE_UTSNAME_H
@@ -287,6 +296,10 @@ fwupd_build_user_agent_system (void)
  *
  * Before freaking out about theoretical privacy implications, much more data
  * than this is sent to each and every website you visit.
+ *
+ * Rather that using this function you should use fwupd_client_set_user_agent_for_package()
+ * which uses the *runtime* version of the daemon rather than the *build-time*
+ * version.
  *
  * Returns: a string, e.g. `foo/0.1 (Linux i386 4.14.5; en; Fedora 27) fwupd/1.0.3`
  *
@@ -818,6 +831,34 @@ fwupd_guid_hash_data (const guint8 *data, gsize datasz, FwupdGuidFlags flags)
 }
 
 /**
+ * fwupd_device_id_is_valid:
+ * @device_id: string to check, e.g. `d3fae86d95e5d56626129d00e332c4b8dac95442`
+ *
+ * Checks the string is a valid non-partial device ID. It is important to note
+ * that the wildcard ID of `*` is not considered a valid ID in this function and
+ * the client must check for this manually if this should be allowed.
+ *
+ * Returns: %TRUE if @guid was a fwupd device ID, %FALSE otherwise
+ *
+ * Since: 1.4.1
+ **/
+gboolean
+fwupd_device_id_is_valid (const gchar *device_id)
+{
+	if (device_id == NULL)
+		return FALSE;
+	if (strlen (device_id) != 40)
+		return FALSE;
+	for (guint i = 0; device_id[i] != '\0'; i++) {
+		gchar tmp = device_id[i];
+		/* isalnum isn't case specific */
+		if ((tmp < 'a' || tmp > 'f') && (tmp < '0' || tmp > '9'))
+			return FALSE;
+	}
+	return TRUE;
+}
+
+/**
  * fwupd_guid_is_valid:
  * @guid: string to check, e.g. `00112233-4455-6677-8899-aabbccddeeff`
  *
@@ -866,3 +907,90 @@ fwupd_guid_hash_string (const gchar *str)
 	return fwupd_guid_hash_data ((const guint8 *) str, strlen (str),
 				     FWUPD_GUID_FLAG_NONE);
 }
+
+/**
+ * fwupd_hash_kv_to_variant: (skip):
+ **/
+GVariant *
+fwupd_hash_kv_to_variant (GHashTable *hash)
+{
+	GVariantBuilder builder;
+	g_autoptr(GList) keys = g_hash_table_get_keys (hash);
+	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
+	for (GList *l = keys; l != NULL; l = l->next) {
+		const gchar *key = l->data;
+		const gchar *value = g_hash_table_lookup (hash, key);
+		g_variant_builder_add (&builder, "{ss}", key, value);
+	}
+	return g_variant_builder_end (&builder);
+}
+
+/**
+ * fwupd_variant_to_hash_kv: (skip):
+ **/
+GHashTable *
+fwupd_variant_to_hash_kv (GVariant *dict)
+{
+	GHashTable *hash = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+	GVariantIter iter;
+	const gchar *key;
+	const gchar *value;
+	g_variant_iter_init (&iter, dict);
+	while (g_variant_iter_loop (&iter, "{ss}", &key, &value))
+		g_hash_table_insert (hash, g_strdup (key), g_strdup (value));
+	return hash;
+}
+
+#ifdef HAVE_GIO_UNIX
+/**
+ * fwupd_unix_input_stream_from_bytes: (skip):
+ **/
+GUnixInputStream *
+fwupd_unix_input_stream_from_bytes (GBytes *bytes, GError **error)
+{
+	gint fd;
+	gssize rc;
+
+	fd = memfd_create ("fwupd", MFD_CLOEXEC);
+	if (fd < 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "failed to create memfd");
+		return NULL;
+	}
+	rc = write (fd, g_bytes_get_data (bytes, NULL), g_bytes_get_size (bytes));
+	if (rc < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "failed to write %" G_GSSIZE_FORMAT, rc);
+		return NULL;
+	}
+	if (lseek (fd, 0, SEEK_SET) < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "failed to seek: %s", g_strerror (errno));
+		return NULL;
+	}
+	return G_UNIX_INPUT_STREAM (g_unix_input_stream_new (fd, TRUE));
+}
+
+/**
+ * fwupd_unix_input_stream_from_fn: (skip):
+ **/
+GUnixInputStream *
+fwupd_unix_input_stream_from_fn (const gchar *fn, GError **error)
+{
+	gint fd = open (fn, O_RDONLY);
+	if (fd < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "failed to open %s", fn);
+		return NULL;
+	}
+	return G_UNIX_INPUT_STREAM (g_unix_input_stream_new (fd, TRUE));
+}
+#endif

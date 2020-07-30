@@ -42,7 +42,6 @@ const FuHIDI2CParameters tbt_base_settings = {
 
 struct _FuDellDockTbt {
 	FuDevice			 parent_instance;
-	FuDevice 			*symbiote;
 	guint8				 unlock_target;
 	guint64				 blob_major_offset;
 	guint64				 blob_minor_offset;
@@ -102,7 +101,7 @@ fu_dell_dock_tbt_write_fw (FuDevice *device,
 	image_size -= start_offset;
 
 	g_debug ("waking Thunderbolt controller");
-	if (!fu_dell_dock_hid_tbt_wake (self->symbiote, &tbt_base_settings, error))
+	if (!fu_dell_dock_hid_tbt_wake (fu_device_get_proxy (device), &tbt_base_settings, error))
 		return FALSE;
 	g_usleep (2000000);
 
@@ -111,7 +110,7 @@ fu_dell_dock_tbt_write_fw (FuDevice *device,
 		guint8 write_size = (image_size - i) > HIDI2C_MAX_WRITE ?
 				    HIDI2C_MAX_WRITE : (image_size - i);
 
-		if (!fu_dell_dock_hid_tbt_write (self->symbiote,
+		if (!fu_dell_dock_hid_tbt_write (fu_device_get_proxy (device),
 						 i,
 						 buffer,
 						 write_size,
@@ -128,7 +127,7 @@ fu_dell_dock_tbt_write_fw (FuDevice *device,
 
 	if (fu_dell_dock_ec_tbt_passive (fu_device_get_parent (device))) {
 		g_debug ("using passive flow for Thunderbolt");
-	} else if (!fu_dell_dock_hid_tbt_authenticate (self->symbiote,
+	} else if (!fu_dell_dock_hid_tbt_authenticate (fu_device_get_proxy (device),
 						       &tbt_base_settings,
 						       error)) {
 		g_prefix_error (error, "failed to authenticate: ");
@@ -137,7 +136,8 @@ fu_dell_dock_tbt_write_fw (FuDevice *device,
 
 	/* dock will reboot to re-read; this is to appease the daemon */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	fu_device_set_version (device, dynamic_version, FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_set_version (device, dynamic_version);
 
 	return TRUE;
 }
@@ -195,8 +195,10 @@ fu_dell_dock_tbt_setup (FuDevice *device, GError **error)
 	/* set version from EC if we know it */
 	parent = fu_device_get_parent (device);
 	version = fu_dell_dock_ec_get_tbt_version (parent);
-	if (version != NULL)
-		fu_device_set_version (device, version, FWUPD_VERSION_FORMAT_PAIR);
+	if (version != NULL) {
+		fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_PAIR);
+		fu_device_set_version (device, version);
+	}
 
 	/* minimum version of NVM that supports this feature */
 	if (version == NULL ||
@@ -206,7 +208,7 @@ fu_dell_dock_tbt_setup (FuDevice *device, GError **error)
 		return TRUE;
 	}
 	/* minimum Hub2 version that supports this feature */
-	hub_version = fu_device_get_version (self->symbiote);
+	hub_version = fu_device_get_version (fu_device_get_proxy (device));
 	if (fu_common_vercmp_full (hub_version,
 				   self->hub_minimum_version,
 				   FWUPD_VERSION_FORMAT_PAIR) < 0) {
@@ -237,20 +239,10 @@ static gboolean
 fu_dell_dock_tbt_open (FuDevice *device, GError **error)
 {
 	FuDellDockTbt *self = FU_DELL_DOCK_TBT (device);
-	FuDevice *parent;
 
 	g_return_val_if_fail (self->unlock_target != 0, FALSE);
 
-	parent = fu_device_get_parent (device);
-	if (parent == NULL) {
-		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no parent");
-		return FALSE;
-	}
-
-	if (self->symbiote == NULL)
-		self->symbiote = g_object_ref (fu_dell_dock_ec_get_symbiote (parent));
-
-	if (!fu_device_open (self->symbiote, error))
+	if (!fu_device_open (fu_device_get_proxy (device), error))
 		return FALSE;
 
 	/* adjust to access controller */
@@ -269,14 +261,13 @@ fu_dell_dock_tbt_close (FuDevice *device, GError **error)
 	if (!fu_dell_dock_set_power (device, self->unlock_target, FALSE, error))
 		return FALSE;
 
-	return fu_device_close (self->symbiote, error);
+	return fu_device_close (fu_device_get_proxy (device), error);
 }
 
 static void
 fu_dell_dock_tbt_finalize (GObject *object)
 {
 	FuDellDockTbt *self = FU_DELL_DOCK_TBT (object);
-	g_object_unref (self->symbiote);
 	g_free (self->hub_minimum_version);
 
 	G_OBJECT_CLASS (fu_dell_dock_tbt_parent_class)->finalize (object);
@@ -303,9 +294,9 @@ fu_dell_dock_tbt_class_init (FuDellDockTbtClass *klass)
 }
 
 FuDellDockTbt *
-fu_dell_dock_tbt_new (void)
+fu_dell_dock_tbt_new (FuDevice *proxy)
 {
-	FuDellDockTbt *device = NULL;
-	device = g_object_new (FU_TYPE_DELL_DOCK_TBT, NULL);
-	return device;
+	FuDellDockTbt *self = g_object_new (FU_TYPE_DELL_DOCK_TBT, NULL);
+	fu_device_set_proxy (FU_DEVICE (self), proxy);
+	return self;
 }

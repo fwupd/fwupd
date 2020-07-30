@@ -1,0 +1,12 @@
+{
+  "name": "Dell WD19TB Dock (EC)",
+  "guids": [
+    "cd357cf1-40b2-5d87-b8df-bb2dd82774aa"
+  ],
+  "releases": [
+    {
+      "version": "01.00.00.04",
+      "file": "WD19FirmwareUpdateLinux_01.00.15.cab"
+    }
+  ]
+}

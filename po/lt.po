@@ -199,10 +199,6 @@ msgstr "Išvalo rezultatus iš paskutinio atnaujinimo"
 msgid "Command not found"
 msgstr "Komanda nerasta"
 
-#. TRANSLATORS: command description
-msgid "Convert firmware to DFU format"
-msgstr "Konvertuoti programinę aparatinė įrangą į ĮPAĮA formatą"
-
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
 msgstr "ĮPAĮA paslaugų programa"
@@ -301,10 +297,6 @@ msgstr "Atsisiunčiama…"
 #. TRANSLATORS: command description
 msgid "Dump SMBIOS data from a file"
 msgstr "Iškloti SMBIOS duomenis iš failo"
-
-#. TRANSLATORS: command description
-msgid "Dump details about a firmware file"
-msgstr "Iškloti išsamesnę informaciją apie programinės aparatinės įrangos failą"
 
 #. TRANSLATORS: ESP is EFI System Partition
 msgid "ESP specified was not valid"
@@ -698,21 +690,9 @@ msgstr "Kai įmanoma, suplanuoti įdiegimą kitam paleidimui iš naujo"
 msgid "Scheduling…"
 msgstr "Suplanuojama…"
 
-#. TRANSLATORS: command description
-msgid "Set product ID on firmware file"
-msgstr "Nustatyti programinės aparatinės įrangos faile produkto ID"
-
-#. TRANSLATORS: command description
-msgid "Set release version on firmware file"
-msgstr "Nustatyti programinės aparatinės įrangos faile laidos versiją"
-
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
 msgstr "Atnaujinimo metu nustatyti derinimo vėliavėlę"
-
-#. TRANSLATORS: command description
-msgid "Set vendor ID on firmware file"
-msgstr "Nustatyti programinės aparatinės įrangos faile tiekėjo ID"
 
 msgid "Sets the list of approved firmware"
 msgstr "Nustato patvirtintą programinės aparatinės įrangos sąrašą"
@@ -811,6 +791,7 @@ msgstr "UEFI programinės aparatinės įrangos paslaugų programa"
 
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
+#. TRANSLATORS: unknown release urgency
 msgid "Unknown"
 msgstr "Nežinoma"
 

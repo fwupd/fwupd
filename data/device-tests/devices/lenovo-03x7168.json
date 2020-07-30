@@ -1,0 +1,16 @@
+{
+  "name": "Lenovo USB-C to HDMI (with power) [VL100]",
+  "guids": [
+    "eca16353-163f-570b-9e0a-8329045fdcff"
+  ],
+  "releases": [
+    {
+      "version": "130.4.22.1",
+      "file": "9ef0bb237baf8043f3ff16db5a8dd23bfd63fc24ea0eca2a6af3285792aa283b-Lenovo-USB-C_to_HDMI.cab"
+    },
+    {
+      "version": "130.4.23.1",
+      "file": "5b06a36aa0f2b99fc33f43a26a553d95c2d8ac46a7f5a2e45a840570456fe29b-Lenovo-USB-C_to_HDMI.cab"
+    }
+  ]
+}

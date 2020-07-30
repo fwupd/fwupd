@@ -53,12 +53,6 @@ Vendor ID Security
 
 The vendor ID is set from the USB vendor, in this instance set to `USB:0x413C`
 
-Custom flag use:
-----------------
-This plugin uses the following plugin-specific custom flags:
-
-* `skip-restart`: Don't run the reset or reboot procedure of the component
-
 Quirk use
 ---------
 This plugin uses the following plugin-specific quirks:

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2018 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2020 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -69,6 +69,20 @@ struct _FuDeviceClass
 };
 
 /**
+ * FuDeviceInstanceFlags:
+ * @FU_DEVICE_INSTANCE_FLAG_NONE:		No flags set
+ * @FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS:	Only use instance ID for quirk matching
+ *
+ * The flags to use when interacting with a device instance
+ **/
+typedef enum {
+	FU_DEVICE_INSTANCE_FLAG_NONE		= 0,
+	FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS	= 1 << 0,
+	/*< private >*/
+	FU_DEVICE_INSTANCE_FLAG_LAST
+} FuDeviceInstanceFlags;
+
+/**
  * FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE:
  *
  * The default removal delay for device re-enumeration taking into account a
@@ -86,6 +100,10 @@ struct _FuDeviceClass
  */
 #define FU_DEVICE_REMOVE_DELAY_USER_REPLUG		40000
 
+typedef gboolean (*FuDeviceRetryFunc)			(FuDevice	*device,
+							 gpointer	 user_data,
+							 GError		**error);
+
 FuDevice	*fu_device_new				(void);
 
 /* helpful casting macros */
@@ -102,14 +120,15 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_set_plugin(d,v)		fwupd_device_set_plugin(FWUPD_DEVICE(d),v)
 #define fu_device_set_serial(d,v)		fwupd_device_set_serial(FWUPD_DEVICE(d),v)
 #define fu_device_set_summary(d,v)		fwupd_device_set_summary(FWUPD_DEVICE(d),v)
+#define fu_device_set_update_message(d,v)	fwupd_device_set_update_message(FWUPD_DEVICE(d),v)
+#define fu_device_set_update_image(d,v)		fwupd_device_set_update_image(FWUPD_DEVICE(d),v)
 #define fu_device_set_update_error(d,v)		fwupd_device_set_update_error(FWUPD_DEVICE(d),v)
 #define fu_device_set_update_state(d,v)		fwupd_device_set_update_state(FWUPD_DEVICE(d),v)
 #define fu_device_set_vendor(d,v)		fwupd_device_set_vendor(FWUPD_DEVICE(d),v)
 #define fu_device_set_vendor_id(d,v)		fwupd_device_set_vendor_id(FWUPD_DEVICE(d),v)
-#define fu_device_set_version_lowest(d,v)	fwupd_device_set_version_lowest(FWUPD_DEVICE(d),v)
-#define fu_device_set_version_bootloader(d,v)	fwupd_device_set_version_bootloader(FWUPD_DEVICE(d),v)
-#define fu_device_set_version_format(d,v)	fwupd_device_set_version_format(FWUPD_DEVICE(d),v)
 #define fu_device_set_version_raw(d,v)		fwupd_device_set_version_raw(FWUPD_DEVICE(d),v)
+#define fu_device_set_version_lowest_raw(d,v)	fwupd_device_set_version_lowest_raw(FWUPD_DEVICE(d),v)
+#define fu_device_set_version_bootloader_raw(d,v)	fwupd_device_set_version_bootloader_raw(FWUPD_DEVICE(d),v)
 #define fu_device_set_flashes_left(d,v)		fwupd_device_set_flashes_left(FWUPD_DEVICE(d),v)
 #define fu_device_set_install_duration(d,v)	fwupd_device_set_install_duration(FWUPD_DEVICE(d),v)
 #define fu_device_get_checksums(d)		fwupd_device_get_checksums(FWUPD_DEVICE(d))
@@ -133,6 +152,8 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_get_version_bootloader(d)	fwupd_device_get_version_bootloader(FWUPD_DEVICE(d))
 #define fu_device_get_version_format(d)		fwupd_device_get_version_format(FWUPD_DEVICE(d))
 #define fu_device_get_version_raw(d)		fwupd_device_get_version_raw(FWUPD_DEVICE(d))
+#define fu_device_get_version_lowest_raw(d)	fwupd_device_get_version_lowest_raw(FWUPD_DEVICE(d))
+#define fu_device_get_version_bootloader_raw(d)	fwupd_device_get_version_bootloader_raw(FWUPD_DEVICE(d))
 #define fu_device_get_vendor_id(d)		fwupd_device_get_vendor_id(FWUPD_DEVICE(d))
 #define fu_device_get_flashes_left(d)		fwupd_device_get_flashes_left(FWUPD_DEVICE(d))
 #define fu_device_get_install_duration(d)	fwupd_device_get_install_duration(FWUPD_DEVICE(d))
@@ -151,7 +172,11 @@ gboolean	 fu_device_has_guid			(FuDevice	*self,
 							 const gchar	*guid);
 void		 fu_device_add_instance_id		(FuDevice	*self,
 							 const gchar	*instance_id);
+void		 fu_device_add_instance_id_full		(FuDevice	*self,
+							 const gchar	*instance_id,
+							 FuDeviceInstanceFlags flags);
 FuDevice	*fu_device_get_alternate		(FuDevice	*self);
+FuDevice	*fu_device_get_root			(FuDevice	*self);
 FuDevice	*fu_device_get_parent			(FuDevice	*self);
 GPtrArray	*fu_device_get_children			(FuDevice	*self);
 void		 fu_device_add_child			(FuDevice	*self,
@@ -160,6 +185,9 @@ void		 fu_device_add_parent_guid		(FuDevice	*self,
 							 const gchar	*guid);
 void		 fu_device_add_counterpart_guid		(FuDevice	*self,
 							 const gchar	*guid);
+FuDevice	*fu_device_get_proxy			(FuDevice	*self);
+void		 fu_device_set_proxy			(FuDevice	*self,
+							 FuDevice	*proxy);
 const gchar	*fu_device_get_metadata			(FuDevice	*self,
 							 const gchar	*key);
 gboolean	 fu_device_get_metadata_boolean		(FuDevice	*self,
@@ -179,18 +207,29 @@ void		 fu_device_set_metadata_integer		(FuDevice	*self,
 							 guint		 value);
 void		 fu_device_set_id			(FuDevice	*self,
 							 const gchar	*id);
-void		 fu_device_set_version			(FuDevice	*self,
-							 const gchar	*version,
+void		 fu_device_set_version_format		(FuDevice	*self,
 							 FwupdVersionFormat fmt);
+void		 fu_device_set_version			(FuDevice	*self,
+							 const gchar	*version);
+void		 fu_device_set_version_lowest		(FuDevice	*self,
+							 const gchar	*version);
+void		 fu_device_set_version_bootloader	(FuDevice	*self,
+							 const gchar	*version);
 const gchar	*fu_device_get_physical_id		(FuDevice	*self);
 void		 fu_device_set_physical_id		(FuDevice	*self,
 							 const gchar	*physical_id);
 const gchar	*fu_device_get_logical_id		(FuDevice	*self);
 void		 fu_device_set_logical_id		(FuDevice	*self,
 							 const gchar	*logical_id);
+const gchar	*fu_device_get_proxy_guid		(FuDevice	*self);
+void		 fu_device_set_proxy_guid		(FuDevice	*self,
+							 const gchar	*proxy_guid);
 const gchar	*fu_device_get_protocol			(FuDevice	*self);
 void		 fu_device_set_protocol			(FuDevice	*self,
 							 const gchar	*protocol);
+guint		 fu_device_get_priority			(FuDevice	*self);
+void		 fu_device_set_priority			(FuDevice	*self,
+							 guint		 priority);
 void		 fu_device_add_flag			(FuDevice	*self,
 							 FwupdDeviceFlags flag);
 const gchar	*fu_device_get_custom_flags		(FuDevice	*self);
@@ -268,3 +307,14 @@ gboolean	 fu_device_poll				(FuDevice	*self,
 							 GError		**error);
 void		 fu_device_set_poll_interval		(FuDevice	*self,
 							 guint		 interval);
+void		 fu_device_retry_set_delay		(FuDevice	*self,
+							 guint		 delay);
+void		 fu_device_retry_add_recovery		(FuDevice	*self,
+							 GQuark		 domain,
+							 gint		 code,
+							 FuDeviceRetryFunc func);
+gboolean	 fu_device_retry			(FuDevice	*self,
+							 FuDeviceRetryFunc func,
+							 guint		 count,
+							 gpointer	 user_data,
+							 GError		**error);

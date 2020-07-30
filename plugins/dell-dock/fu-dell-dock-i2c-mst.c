@@ -103,7 +103,6 @@ FuHIDI2CParameters mst_base_settings = {
 
 struct _FuDellDockMst {
 	FuDevice			 parent_instance;
-	FuDevice 			*symbiote;
 	guint8				 unlock_target;
 	guint64				 blob_major_offset;
 	guint64				 blob_minor_offset;
@@ -146,7 +145,7 @@ fu_dell_dock_mst_get_bank_attribs (MSTBank bank,
 }
 
 static gboolean
-fu_dell_dock_mst_rc_command (FuDevice *symbiote,
+fu_dell_dock_mst_rc_command (FuDevice *proxy,
 			     guint8 cmd,
 			     guint32 length,
 			     guint32 offset,
@@ -154,23 +153,23 @@ fu_dell_dock_mst_rc_command (FuDevice *symbiote,
 			     GError **error);
 
 static gboolean
-fu_dell_dock_mst_read_register (FuDevice *symbiote,
+fu_dell_dock_mst_read_register (FuDevice *proxy,
 				guint32 address,
 				gsize length,
 				GBytes **bytes,
 				GError **error)
 {
-	g_return_val_if_fail (symbiote != NULL, FALSE);
+	g_return_val_if_fail (proxy != NULL, FALSE);
 	g_return_val_if_fail (bytes != NULL, FALSE);
 	g_return_val_if_fail (length <= 32, FALSE);
 
 	/* write the offset we're querying */
-	if (!fu_dell_dock_hid_i2c_write (symbiote, (guint8 *) &address, 4,
+	if (!fu_dell_dock_hid_i2c_write (proxy, (guint8 *) &address, 4,
 					 &mst_base_settings, error))
 		return FALSE;
 
 	/* read data for the result */
-	if (!fu_dell_dock_hid_i2c_read (symbiote, 0, length, bytes,
+	if (!fu_dell_dock_hid_i2c_read (proxy, 0, length, bytes,
 					&mst_base_settings, error))
 		return FALSE;
 
@@ -178,7 +177,7 @@ fu_dell_dock_mst_read_register (FuDevice *symbiote,
 }
 
 static gboolean
-fu_dell_dock_mst_write_register (FuDevice *symbiote,
+fu_dell_dock_mst_write_register (FuDevice *proxy,
 				 guint32 address,
 				 guint8 *data,
 				 gsize length,
@@ -186,19 +185,19 @@ fu_dell_dock_mst_write_register (FuDevice *symbiote,
 {
 	g_autofree guint8 *buffer = g_malloc0 (length + 4);
 
-	g_return_val_if_fail (symbiote != NULL, FALSE);
+	g_return_val_if_fail (proxy != NULL, FALSE);
 	g_return_val_if_fail (data != NULL, FALSE);
 
 	memcpy (buffer, &address, 4);
 	memcpy (buffer + 4, data, length);
 
 	/* write the offset we're querying */
-	return fu_dell_dock_hid_i2c_write (symbiote, buffer, length + 4,
+	return fu_dell_dock_hid_i2c_write (proxy, buffer, length + 4,
 					   &mst_base_settings, error);
 }
 
 static gboolean
-fu_dell_dock_mst_query_active_bank (FuDevice *symbiote,
+fu_dell_dock_mst_query_active_bank (FuDevice *proxy,
 				    MSTBank *active,
 				    GError **error)
 {
@@ -206,7 +205,7 @@ fu_dell_dock_mst_query_active_bank (FuDevice *symbiote,
 	const guint32 *data = NULL;
 	gsize length = 4;
 
-	if (!fu_dell_dock_mst_read_register (symbiote, MST_CORE_MCU_BOOTLOADER_STS,
+	if (!fu_dell_dock_mst_read_register (proxy, MST_CORE_MCU_BOOTLOADER_STS,
 					     length, &bytes, error)) {
 		g_prefix_error (error, "Failed to query active bank: ");
 		return FALSE;
@@ -223,10 +222,10 @@ fu_dell_dock_mst_query_active_bank (FuDevice *symbiote,
 }
 
 static gboolean
-fu_dell_dock_mst_disable_remote_control (FuDevice *symbiote, GError **error)
+fu_dell_dock_mst_disable_remote_control (FuDevice *proxy, GError **error)
 {
 	g_debug ("MST: Disabling remote control");
-	return fu_dell_dock_mst_rc_command (symbiote,
+	return fu_dell_dock_mst_rc_command (proxy,
 					    MST_CMD_DISABLE_REMOTE_CONTROL,
 					    0, 0,
 					    NULL,
@@ -234,13 +233,13 @@ fu_dell_dock_mst_disable_remote_control (FuDevice *symbiote, GError **error)
 }
 
 static gboolean
-fu_dell_dock_mst_enable_remote_control (FuDevice *symbiote, GError **error)
+fu_dell_dock_mst_enable_remote_control (FuDevice *proxy, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
 	const gchar *data = "PRIUS";
 
 	g_debug ("MST: Enabling remote control");
-	if (!fu_dell_dock_mst_rc_command (symbiote,
+	if (!fu_dell_dock_mst_rc_command (proxy,
 					  MST_CMD_ENABLE_REMOTE_CONTROL,
 					  5, 0,
 					  (guint8 *) data,
@@ -248,22 +247,22 @@ fu_dell_dock_mst_enable_remote_control (FuDevice *symbiote, GError **error)
 		g_debug ("Failed to enable remote control: %s",
 			 error_local->message);
 		/* try to disable / re-enable */
-		if (!fu_dell_dock_mst_disable_remote_control (symbiote, error))
+		if (!fu_dell_dock_mst_disable_remote_control (proxy, error))
 			return FALSE;
-		return fu_dell_dock_mst_enable_remote_control (symbiote, error);
+		return fu_dell_dock_mst_enable_remote_control (proxy, error);
 	}
 	return TRUE;
 }
 
 static gboolean
-fu_dell_dock_trigger_rc_command (FuDevice *symbiote, GError **error)
+fu_dell_dock_trigger_rc_command (FuDevice *proxy, GError **error)
 {
 	const guint8 *result = NULL;
 	guint32 tmp;
 
 	/* Trigger the write */
 	tmp = MST_TRIGGER_WRITE;
-	if (!fu_dell_dock_mst_write_register (symbiote,
+	if (!fu_dell_dock_mst_write_register (proxy,
 					      MST_RC_TRIGGER_ADDR,
 					      (guint8 *) &tmp, sizeof(guint32),
 					      error)) {
@@ -274,7 +273,7 @@ fu_dell_dock_trigger_rc_command (FuDevice *symbiote, GError **error)
 	tmp = 0xffff;
 	for (guint i = 0; i < 1000; i++) {
 		g_autoptr(GBytes) bytes = NULL;
-		if (!fu_dell_dock_mst_read_register (symbiote,
+		if (!fu_dell_dock_mst_read_register (proxy,
 						     MST_RC_COMMAND_ADDR,
 						     sizeof(guint32), &bytes,
 						     error)) {
@@ -293,7 +292,7 @@ fu_dell_dock_trigger_rc_command (FuDevice *symbiote, GError **error)
 	switch (tmp) {
 	/* need to enable remote control */
 	case 4:
-		return fu_dell_dock_mst_enable_remote_control (symbiote, error);
+		return fu_dell_dock_mst_enable_remote_control (proxy, error);
 	/* error scenarios */
 	case 3:
 		g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_FAILED,
@@ -320,7 +319,7 @@ fu_dell_dock_trigger_rc_command (FuDevice *symbiote, GError **error)
 }
 
 static gboolean
-fu_dell_dock_mst_rc_command (FuDevice *symbiote,
+fu_dell_dock_mst_rc_command (FuDevice *proxy,
 			     guint8 cmd,
 			     guint32 length,
 			     guint32 offset,
@@ -332,7 +331,7 @@ fu_dell_dock_mst_rc_command (FuDevice *symbiote,
 	g_autofree guint8 *buffer = g_malloc0 (buffer_len);
 	guint32 tmp;
 
-	g_return_val_if_fail (symbiote != NULL, FALSE);
+	g_return_val_if_fail (proxy != NULL, FALSE);
 
 	/* command */
 	tmp = (cmd | 0x80) << 16;
@@ -346,15 +345,15 @@ fu_dell_dock_mst_rc_command (FuDevice *symbiote,
 		memcpy (buffer + 16, data, length);
 
 	/* write the combined register stream */
-	if (!fu_dell_dock_mst_write_register (symbiote, MST_RC_COMMAND_ADDR,
+	if (!fu_dell_dock_mst_write_register (proxy, MST_RC_COMMAND_ADDR,
 					      buffer, buffer_len, error))
 		return FALSE;
 
-	return fu_dell_dock_trigger_rc_command (symbiote, error);
+	return fu_dell_dock_trigger_rc_command (proxy, error);
 }
 
 static gboolean
-fu_dell_dock_mst_read_chipid (FuDevice *symbiote,
+fu_dell_dock_mst_read_chipid (FuDevice *proxy,
 			      guint16 *chip_id,
 			      GError **error)
 {
@@ -365,13 +364,13 @@ fu_dell_dock_mst_read_chipid (FuDevice *symbiote,
 	g_return_val_if_fail (chip_id != NULL, FALSE);
 
 	/* run an RC command to get data from memory */
-	if (!fu_dell_dock_mst_rc_command (symbiote,
+	if (!fu_dell_dock_mst_rc_command (proxy,
 					  MST_CMD_READ_MEMORY,
 					  length, MST_CHIPID_OFFSET,
 					  NULL,
 					  error))
 		return FALSE;
-	if (!fu_dell_dock_mst_read_register (symbiote,
+	if (!fu_dell_dock_mst_read_register (proxy,
 					     MST_RC_DATA_ADDR,
 					     length,
 					     &bytes,
@@ -392,13 +391,13 @@ fu_dell_dock_mst_check_offset (guint8 byte, guint8 offset)
 }
 
 static gboolean
-fu_d19_mst_check_fw (FuDevice *symbiote, GError **error)
+fu_d19_mst_check_fw (FuDevice *proxy, GError **error)
 {
 	g_autoptr(GBytes) bytes = NULL;
 	const guint8 *data;
 	gsize length = 4;
 
-	if (!fu_dell_dock_mst_read_register (symbiote,
+	if (!fu_dell_dock_mst_read_register (proxy,
 					     MST_CORE_MCU_BOOTLOADER_STS,
 					     length, &bytes,
 					     error))
@@ -426,7 +425,7 @@ fu_d19_mst_check_fw (FuDevice *symbiote, GError **error)
 }
 
 static gboolean
-fu_dell_dock_mst_checksum_bank (FuDevice *symbiote,
+fu_dell_dock_mst_checksum_bank (FuDevice *proxy,
 				GBytes *blob_fw,
 				MSTBank bank,
 				gboolean *checksum,
@@ -461,7 +460,7 @@ fu_dell_dock_mst_checksum_bank (FuDevice *symbiote,
 	g_debug ("MST: Payload checksum: 0x%x", payload_sum);
 
 	/* checksum the bank */
-	if (!fu_dell_dock_mst_rc_command (symbiote,
+	if (!fu_dell_dock_mst_rc_command (proxy,
 					  MST_CMD_CHECKSUM,
 					  attribs->length, attribs->start,
 					  NULL,
@@ -470,7 +469,7 @@ fu_dell_dock_mst_checksum_bank (FuDevice *symbiote,
 		return FALSE;
 	}
 	/* read result from data register */
-	if (!fu_dell_dock_mst_read_register (symbiote,
+	if (!fu_dell_dock_mst_read_register (proxy,
 					     MST_RC_DATA_ADDR,
 					     4, &csum_bytes, error))
 		return FALSE;
@@ -485,7 +484,7 @@ fu_dell_dock_mst_checksum_bank (FuDevice *symbiote,
 }
 
 static gboolean
-fu_dell_dock_mst_erase_bank (FuDevice *symbiote, MSTBank bank, GError **error)
+fu_dell_dock_mst_erase_bank (FuDevice *proxy, MSTBank bank, GError **error)
 {
 	const MSTBankAttributes *attribs = NULL;
 	guint32 sector;
@@ -497,7 +496,7 @@ fu_dell_dock_mst_erase_bank (FuDevice *symbiote, MSTBank bank, GError **error)
 	     i += 0x10000) {
 		sector = FLASH_SECTOR_ERASE_64K | (i / 0x10000);
 		g_debug ("MST: Erasing sector 0x%x", sector);
-		if (!fu_dell_dock_mst_rc_command (symbiote,
+		if (!fu_dell_dock_mst_rc_command (proxy,
 						  MST_CMD_ERASE_FLASH,
 						  4, 0,
 						  (guint8 *) &sector,
@@ -519,7 +518,6 @@ fu_dell_dock_write_flash_bank (FuDevice *device,
 			       MSTBank bank,
 			       GError **error)
 {
-	FuDellDockMst *self = FU_DELL_DOCK_MST (device);
 	const MSTBankAttributes *attribs = NULL;
 	gsize write_size = 32;
 	guint end;
@@ -533,7 +531,7 @@ fu_dell_dock_write_flash_bank (FuDevice *device,
 
 	g_debug ("MST: Writing payload to bank %u", bank);
 	for (guint i = attribs->start; i < end; i += write_size) {
-		if (!fu_dell_dock_mst_rc_command (self->symbiote,
+		if (!fu_dell_dock_mst_rc_command (fu_device_get_proxy (device),
 						  MST_CMD_WRITE_FLASH,
 						  write_size, i,
 						  data + i,
@@ -553,7 +551,7 @@ fu_dell_dock_write_flash_bank (FuDevice *device,
 }
 
 static gboolean
-fu_dell_dock_mst_stop_esm (FuDevice *symbiote, GError **error)
+fu_dell_dock_mst_stop_esm (FuDevice *proxy, GError **error)
 {
 	g_autoptr(GBytes) quad_bytes = NULL;
 	g_autoptr(GBytes) hdcp_bytes = NULL;
@@ -563,7 +561,7 @@ fu_dell_dock_mst_stop_esm (FuDevice *symbiote, GError **error)
 	guint8 data_out[sizeof(guint32)];
 
 	/* disable ESM first */
-	if (!fu_dell_dock_mst_rc_command (symbiote,
+	if (!fu_dell_dock_mst_rc_command (proxy,
 					  MST_CMD_WRITE_MEMORY,
 					  length, MST_RC_TRIGGER_ADDR,
 					  (guint8 *) &payload,
@@ -574,14 +572,14 @@ fu_dell_dock_mst_stop_esm (FuDevice *symbiote, GError **error)
 	g_usleep(200);
 
 	/* disable QUAD mode */
-	if (!fu_dell_dock_mst_rc_command (symbiote,
+	if (!fu_dell_dock_mst_rc_command (proxy,
 					  MST_CMD_READ_MEMORY,
 					  length, MST_REG_QUAD_DISABLE,
 					  NULL,
 					  error))
 		return FALSE;
 
-	if (!fu_dell_dock_mst_read_register (symbiote,
+	if (!fu_dell_dock_mst_read_register (proxy,
 					     MST_RC_DATA_ADDR,
 					     length, &quad_bytes,
 					     error))
@@ -590,21 +588,21 @@ fu_dell_dock_mst_stop_esm (FuDevice *symbiote, GError **error)
 	data = g_bytes_get_data (quad_bytes, &length);
 	memcpy (data_out, data, length);
 	data_out[0] = 0x00;
-	if (!fu_dell_dock_mst_rc_command (symbiote,
+	if (!fu_dell_dock_mst_rc_command (proxy,
 					  MST_CMD_WRITE_MEMORY,
 					  length, MST_REG_QUAD_DISABLE,
 					  data_out, error))
 		return FALSE;
 
 	/* disable HDCP2.2 */
-	if (!fu_dell_dock_mst_rc_command (symbiote,
+	if (!fu_dell_dock_mst_rc_command (proxy,
 					  MST_CMD_READ_MEMORY,
 					  length, MST_REG_HDCP22_DISABLE,
 					  NULL,
 					  error))
 		return FALSE;
 
-	if (!fu_dell_dock_mst_read_register (symbiote,
+	if (!fu_dell_dock_mst_read_register (proxy,
 					     MST_RC_DATA_ADDR,
 					     length,
 					     &hdcp_bytes,
@@ -614,7 +612,7 @@ fu_dell_dock_mst_stop_esm (FuDevice *symbiote, GError **error)
 	data = g_bytes_get_data (hdcp_bytes, &length);
 	memcpy (data_out, data, length);
 	data_out[0] = data[0] & (1 << 2);
-	if (!fu_dell_dock_mst_rc_command (symbiote,
+	if (!fu_dell_dock_mst_rc_command (proxy,
 					  MST_CMD_WRITE_MEMORY,
 					  length, MST_REG_HDCP22_DISABLE,
 					  data_out,
@@ -625,7 +623,7 @@ fu_dell_dock_mst_stop_esm (FuDevice *symbiote, GError **error)
 }
 
 static gboolean
-fu_dell_dock_mst_invalidate_bank (FuDevice *symbiote, MSTBank bank_in_use,
+fu_dell_dock_mst_invalidate_bank (FuDevice *proxy, MSTBank bank_in_use,
 				  GError **error)
 {
 	const MSTBankAttributes *attribs;
@@ -643,7 +641,7 @@ fu_dell_dock_mst_invalidate_bank (FuDevice *symbiote, MSTBank bank_in_use,
 	crc_offset = attribs->start + EEPROM_TAG_OFFSET + 12;
 
 	/* Read CRC byte to flip */
-	if (!fu_dell_dock_mst_rc_command (symbiote,
+	if (!fu_dell_dock_mst_rc_command (proxy,
 					  MST_CMD_READ_FLASH,
 					  4, crc_offset,
 					  NULL,
@@ -652,7 +650,7 @@ fu_dell_dock_mst_invalidate_bank (FuDevice *symbiote, MSTBank bank_in_use,
 		g_prefix_error (error, "failed to read tag from flash: ");
 		return FALSE;
 	}
-	if (!fu_dell_dock_mst_read_register (symbiote,
+	if (!fu_dell_dock_mst_read_register (proxy,
 					     MST_RC_DATA_ADDR,
 					     1,
 					     &bytes,
@@ -671,7 +669,7 @@ fu_dell_dock_mst_invalidate_bank (FuDevice *symbiote, MSTBank bank_in_use,
 			g_debug ("Erasing 4k from sector 0x%x invalidate bank %u",
 				 sector, bank_in_use);
 			/* offset for last 4k of bank# */
-			if (!fu_dell_dock_mst_rc_command (symbiote,
+			if (!fu_dell_dock_mst_rc_command (proxy,
 							  MST_CMD_ERASE_FLASH,
 							  4, 0,
 							  (guint8 *) &sector,
@@ -687,7 +685,7 @@ fu_dell_dock_mst_invalidate_bank (FuDevice *symbiote, MSTBank bank_in_use,
 			guint32 write = 0x00;
 			g_debug ("Writing 0x00 byte to 0x%x to invalidate bank %u",
 				 crc_offset, bank_in_use);
-			if (!fu_dell_dock_mst_rc_command (symbiote,
+			if (!fu_dell_dock_mst_rc_command (proxy,
 							  MST_CMD_WRITE_FLASH,
 							  4, crc_offset,
 							  (guint8*) &write,
@@ -698,7 +696,7 @@ fu_dell_dock_mst_invalidate_bank (FuDevice *symbiote, MSTBank bank_in_use,
 			}
 		}
 		/* re-read for comparison */
-		if (!fu_dell_dock_mst_rc_command (symbiote,
+		if (!fu_dell_dock_mst_rc_command (proxy,
 						  MST_CMD_READ_FLASH,
 						  4, crc_offset,
 						  NULL,
@@ -707,7 +705,7 @@ fu_dell_dock_mst_invalidate_bank (FuDevice *symbiote, MSTBank bank_in_use,
 			g_prefix_error (error, "failed to read tag from flash: ");
 			return FALSE;
 		}
-		if (!fu_dell_dock_mst_read_register (symbiote,
+		if (!fu_dell_dock_mst_read_register (proxy,
 						     MST_RC_DATA_ADDR,
 						     4, &bytes_new,
 						     error)) {
@@ -752,7 +750,7 @@ fu_dell_dock_mst_write_fw (FuDevice *device,
 
 	g_return_val_if_fail (device != NULL, FALSE);
 	g_return_val_if_fail (FU_IS_FIRMWARE (firmware), FALSE);
-	g_return_val_if_fail (self->symbiote != NULL, FALSE);
+	g_return_val_if_fail (fu_device_get_proxy (device) != NULL, FALSE);
 
 	/* get default image */
 	fw = fu_firmware_get_image_default_bytes (firmware, error);
@@ -767,18 +765,18 @@ fu_dell_dock_mst_write_fw (FuDevice *device,
 	g_debug ("writing MST firmware version %s", dynamic_version);
 
 	/* determine the flash order */
-	if (!fu_dell_dock_mst_query_active_bank (self->symbiote, &bank_in_use, error))
+	if (!fu_dell_dock_mst_query_active_bank (fu_device_get_proxy (device), &bank_in_use, error))
 		return FALSE;
 
 	if (bank_in_use == Bank0)
 		order[1] = Bank1;
 
 	/* enable remote control */
-	if (!fu_dell_dock_mst_enable_remote_control (self->symbiote, error))
+	if (!fu_dell_dock_mst_enable_remote_control (fu_device_get_proxy (device), error))
 		return FALSE;
 
 	/* Read Synaptics MST chip ID */
-	if (!fu_dell_dock_mst_read_chipid (self->symbiote, &chip_id,
+	if (!fu_dell_dock_mst_read_chipid (fu_device_get_proxy (device), &chip_id,
 					error))
 		return FALSE;
 	if (chip_id != EXPECTED_CHIPID) {
@@ -788,13 +786,13 @@ fu_dell_dock_mst_write_fw (FuDevice *device,
 	}
 
 	/* ESM needs special handling during flash process*/
-	if (!fu_dell_dock_mst_stop_esm (self->symbiote, error))
+	if (!fu_dell_dock_mst_stop_esm (fu_device_get_proxy (device), error))
 		return FALSE;
 
 	/* Write each bank in order */
 	for (guint phase = 0; phase < 2; phase++) {
 		g_debug ("MST: Checking bank %u", order[phase]);
-		if (!fu_dell_dock_mst_checksum_bank (self->symbiote,
+		if (!fu_dell_dock_mst_checksum_bank (fu_device_get_proxy (device),
 						     fw,
 						     order[phase],
 						     &checksum, error))
@@ -807,7 +805,7 @@ fu_dell_dock_mst_write_fw (FuDevice *device,
 		for (guint i = 0; i < retries; i++) {
 			fu_device_set_progress_full (device, 0, 100);
 			fu_device_set_status (device, FWUPD_STATUS_DEVICE_ERASE);
-			if (!fu_dell_dock_mst_erase_bank (self->symbiote,
+			if (!fu_dell_dock_mst_erase_bank (fu_device_get_proxy (device),
 							  order[phase],
 							  error))
 				return FALSE;
@@ -815,7 +813,7 @@ fu_dell_dock_mst_write_fw (FuDevice *device,
 			if (!fu_dell_dock_write_flash_bank (device, fw,
 						       order[phase], error))
 				return FALSE;
-			if (!fu_dell_dock_mst_checksum_bank (self->symbiote,
+			if (!fu_dell_dock_mst_checksum_bank (fu_device_get_proxy (device),
 							     fw,
 							     order[phase],
 							     &checksum,
@@ -839,17 +837,18 @@ fu_dell_dock_mst_write_fw (FuDevice *device,
 		}
 	}
 	/* invalidate the previous bank */
-	if (!fu_dell_dock_mst_invalidate_bank (self->symbiote, bank_in_use, error)) {
+	if (!fu_dell_dock_mst_invalidate_bank (fu_device_get_proxy (device), bank_in_use, error)) {
 		g_prefix_error (error, "failed to invalidate bank %u: ", bank_in_use);
 		return FALSE;
 	}
 
 	/* dock will reboot to re-read; this is to appease the daemon */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	fu_device_set_version (device, dynamic_version, FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version (device, dynamic_version);
 
 	/* disable remote control now */
-	return fu_dell_dock_mst_disable_remote_control (self->symbiote, error);
+	return fu_dell_dock_mst_disable_remote_control (fu_device_get_proxy (device), error);
 }
 
 static gboolean
@@ -901,19 +900,20 @@ fu_dell_dock_mst_set_quirk_kv (FuDevice *device,
 static gboolean
 fu_dell_dock_mst_setup (FuDevice *device, GError **error)
 {
-	FuDellDockMst *self = FU_DELL_DOCK_MST (device);
 	FuDevice *parent;
 	const gchar *version;
 
 	/* sanity check that we can talk to MST */
-	if (!fu_d19_mst_check_fw (self->symbiote, error))
+	if (!fu_d19_mst_check_fw (fu_device_get_proxy (device), error))
 		return FALSE;
 
 	/* set version from EC if we know it */
 	parent = fu_device_get_parent (device);
 	version = fu_dell_dock_ec_get_mst_version (parent);
-	if (version != NULL)
-		fu_device_set_version (device, version, FWUPD_VERSION_FORMAT_TRIPLET);
+	if (version != NULL) {
+		fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_TRIPLET);
+		fu_device_set_version (device, version);
+	}
 
 	fu_dell_dock_clone_updatable (device);
 
@@ -937,10 +937,10 @@ fu_dell_dock_mst_open (FuDevice *device, GError **error)
 	g_return_val_if_fail (self->unlock_target != 0, FALSE);
 	g_return_val_if_fail (parent != NULL, FALSE);
 
-	if (self->symbiote == NULL)
-		self->symbiote = g_object_ref (fu_dell_dock_ec_get_symbiote (parent));
+	if (fu_device_get_proxy (device) == NULL)
+		fu_device_set_proxy (device, fu_device_get_proxy (parent));
 
-	if (!fu_device_open (self->symbiote, error))
+	if (!fu_device_open (fu_device_get_proxy (device), error))
 		return FALSE;
 
 	/* open up access to controller bus */
@@ -959,15 +959,7 @@ fu_dell_dock_mst_close (FuDevice *device, GError **error)
 	if (!fu_dell_dock_set_power (device, self->unlock_target, FALSE, error))
 		return FALSE;
 
-	return fu_device_close (self->symbiote, error);
-}
-
-static void
-fu_dell_dock_mst_finalize (GObject *object)
-{
-	FuDellDockMst *self = FU_DELL_DOCK_MST (object);
-	g_object_unref (self->symbiote);
-	G_OBJECT_CLASS (fu_dell_dock_mst_parent_class)->finalize (object);
+	return fu_device_close (fu_device_get_proxy (device), error);
 }
 
 static void
@@ -979,9 +971,7 @@ fu_dell_dock_mst_init (FuDellDockMst *self)
 static void
 fu_dell_dock_mst_class_init (FuDellDockMstClass *klass)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	object_class->finalize = fu_dell_dock_mst_finalize;
 	klass_device->probe = fu_dell_dock_mst_probe;
 	klass_device->open = fu_dell_dock_mst_open;
 	klass_device->close = fu_dell_dock_mst_close;

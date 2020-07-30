@@ -432,6 +432,38 @@ fu_plugin_update_reload (FuPlugin *plugin, FuDevice *device, GError **error)
         </para>
       </section>
 
+      <section>
+        <title>Using existing code to develop a plugin</title>
+        <para>
+          It is not usually possible to <em>share</em> a plugin codebase with
+          firmware update programs designed for other operating systems.
+          Matching the same rationale as the Linux kernel, trying to use one
+          code base between projects with a compatibility shim layer in-between
+          is real headache to maintain.
+        </para>
+        <para>
+          The general consensus is that trying to use a abstraction layer for
+          hardware is a very bad idea as you're not able to take advantage of the
+          platform specific helpers -- for instance quirk files and the custom
+          GType device creation.
+          The time the <em>vendor</em> saves by creating a shim layer and
+          importing existing source code into fwupd will be overtaken 100x by
+          <em>upstream</em> maintenance costs longer term, which isn't fair.
+        </para>
+        <para>
+          In a similar way, using C++ rather than GObject C means expanding the
+          test matrix to include clang in C++ mode and GNU g++ too.
+          It's also doubled the runtime requirements to now include both the C
+          standard library as well as the C++ standard library and increases the
+          dependency surface.
+        </para>
+        <para>
+          Most rewritten fwupd plugins at up to x10 smaller than the standalone
+          code as they can take advantage of helpers provided by fwupd rather
+          than re-implementing error handling, device quirking and data chunking.
+        </para>
+      </section>
+
     </partintro>
   </reference>
 

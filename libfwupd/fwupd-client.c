@@ -8,6 +8,7 @@
 
 #include <glib-object.h>
 #include <gio/gio.h>
+#include <libsoup/soup.h>
 #ifdef HAVE_GIO_UNIX
 #include <gio/gunixfdlist.h>
 #endif
@@ -18,7 +19,7 @@
 #include <sys/types.h>
 
 #include "fwupd-client.h"
-#include "fwupd-common.h"
+#include "fwupd-common-private.h"
 #include "fwupd-deprecated.h"
 #include "fwupd-enums.h"
 #include "fwupd-error.h"
@@ -47,6 +48,8 @@ typedef struct {
 	gchar				*host_machine_id;
 	GDBusConnection			*conn;
 	GDBusProxy			*proxy;
+	SoupSession			*soup_session;
+	gchar				*user_agent;
 } FwupdClientPrivate;
 
 enum {
@@ -64,6 +67,7 @@ enum {
 	PROP_PERCENTAGE,
 	PROP_DAEMON_VERSION,
 	PROP_TAINTED,
+	PROP_SOUP_SESSION,
 	PROP_HOST_PRODUCT,
 	PROP_HOST_MACHINE_ID,
 	PROP_INTERACTIVE,
@@ -138,6 +142,29 @@ fwupd_client_set_daemon_version (FwupdClient *client, const gchar *daemon_versio
 }
 
 static void
+fwupd_client_set_status (FwupdClient *client, FwupdStatus status)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	if (priv->status == status)
+		return;
+	priv->status = status;
+	g_debug ("Emitting ::status-changed() [%s]",
+		 fwupd_status_to_string (priv->status));
+	g_signal_emit (client, signals[SIGNAL_STATUS_CHANGED], 0, priv->status);
+	g_object_notify (G_OBJECT (client), "status");
+}
+
+static void
+fwupd_client_set_percentage (FwupdClient *client, guint percentage)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	if (priv->percentage == percentage)
+		return;
+	priv->percentage = percentage;
+	g_object_notify (G_OBJECT (client), "percentage");
+}
+
+static void
 fwupd_client_properties_changed_cb (GDBusProxy *proxy,
 				    GVariant *changed_properties,
 				    GStrv invalidated_properties,
@@ -151,13 +178,8 @@ fwupd_client_properties_changed_cb (GDBusProxy *proxy,
 	if (g_variant_dict_contains (dict, "Status")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property (proxy, "Status");
-		if (val != NULL) {
-			priv->status = g_variant_get_uint32 (val);
-			g_debug ("Emitting ::status-changed() [%s]",
-				 fwupd_status_to_string (priv->status));
-			g_signal_emit (client, signals[SIGNAL_STATUS_CHANGED], 0, priv->status);
-			g_object_notify (G_OBJECT (client), "status");
-		}
+		if (val != NULL)
+			fwupd_client_set_status (client, g_variant_get_uint32 (val));
 	}
 	if (g_variant_dict_contains (dict, "Tainted")) {
 		g_autoptr(GVariant) val = NULL;
@@ -178,10 +200,8 @@ fwupd_client_properties_changed_cb (GDBusProxy *proxy,
 	if (g_variant_dict_contains (dict, "Percentage")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property (proxy, "Percentage");
-		if (val != NULL) {
-			priv->percentage = g_variant_get_uint32 (val);
-			g_object_notify (G_OBJECT (client), "percentage");
-		}
+		if (val != NULL)
+			fwupd_client_set_percentage (client, g_variant_get_uint32 (val));
 	}
 	if (g_variant_dict_contains (dict, "DaemonVersion")) {
 		g_autoptr(GVariant) val = NULL;
@@ -238,6 +258,88 @@ fwupd_client_signal_cb (GDBusProxy *proxy,
 		return;
 	}
 	g_debug ("Unknown signal name '%s' from %s", signal_name, sender_name);
+}
+
+/**
+ * fwupd_client_ensure_networking:
+ * @client: A #FwupdClient
+ * @error: the #GError, or %NULL
+ *
+ * Sets up the client networking support ready for use. Most other download and
+ * upload methods call this automatically, and do you only need to call this if
+ * the session is being used outside the #FwupdClient.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.4.5
+ **/
+gboolean
+fwupd_client_ensure_networking (FwupdClient *client, GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	const gchar *http_proxy;
+	g_autoptr(SoupSession) session = NULL;
+
+	/* already exists */
+	if (priv->soup_session != NULL)
+		return TRUE;
+
+	/* check the user agent is sane */
+	if (priv->user_agent == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "user agent unset");
+		return FALSE;
+	}
+	if (g_strstr_len (priv->user_agent, -1, "fwupd/") == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "user agent unsuitable; fwupd version required");
+		return FALSE;
+	}
+
+	/* create the soup session */
+	session = soup_session_new_with_options (SOUP_SESSION_USER_AGENT, priv->user_agent,
+						 SOUP_SESSION_TIMEOUT, 60,
+						 NULL);
+	if (session == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "failed to setup networking");
+		return FALSE;
+	}
+
+	/* relax the SSL checks for broken corporate proxies */
+	if (g_getenv ("DISABLE_SSL_STRICT") != NULL)
+		g_object_set (session, SOUP_SESSION_SSL_STRICT, FALSE, NULL);
+
+	/* set the proxy */
+	http_proxy = g_getenv ("https_proxy");
+	if (http_proxy == NULL)
+		http_proxy = g_getenv ("HTTPS_PROXY");
+	if (http_proxy == NULL)
+		http_proxy = g_getenv ("http_proxy");
+	if (http_proxy == NULL)
+		http_proxy = g_getenv ("HTTP_PROXY");
+	if (http_proxy != NULL && strlen (http_proxy) > 0) {
+		g_autoptr(SoupURI) proxy_uri = soup_uri_new (http_proxy);
+		if (proxy_uri == NULL) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "invalid proxy URI: %s", http_proxy);
+			return FALSE;
+		}
+		g_object_set (session, SOUP_SESSION_PROXY_URI, proxy_uri, NULL);
+	}
+
+	/* this disables the double-compression of the firmware.xml.gz file */
+	soup_session_remove_feature_by_type (session, SOUP_TYPE_CONTENT_DECODER);
+	priv->soup_session = g_steal_pointer (&session);
+	return TRUE;
 }
 
 /**
@@ -467,6 +569,60 @@ fwupd_client_get_device_by_id (FwupdClient *client,
 		     FWUPD_ERROR_NOT_FOUND,
 		     "failed to find %s", device_id);
 	return NULL;
+}
+
+/**
+ * fwupd_client_get_devices_by_guid:
+ * @client: A #FwupdClient
+ * @guid: the GUID, e.g. `e22c4520-43dc-5bb3-8245-5787fead9b63`
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Gets any devices that provide a specific GUID. An error is returned if no
+ * devices contains this GUID.
+ *
+ * Returns: (element-type FwupdDevice) (transfer container): devices or %NULL
+ *
+ * Since: 1.4.1
+ **/
+GPtrArray *
+fwupd_client_get_devices_by_guid (FwupdClient *client,
+				  const gchar *guid,
+				  GCancellable *cancellable,
+				  GError **error)
+{
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GPtrArray) devices_tmp = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (guid != NULL, NULL);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* get all the devices */
+	devices_tmp = fwupd_client_get_devices (client, cancellable, error);
+	if (devices_tmp == NULL)
+		return NULL;
+
+	/* find the devices by GUID (client side) */
+	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	for (guint i = 0; i < devices_tmp->len; i++) {
+		FwupdDevice *dev_tmp = g_ptr_array_index (devices_tmp, i);
+		if (fwupd_device_has_guid (dev_tmp, guid))
+			g_ptr_array_add (devices, g_object_ref (dev_tmp));
+	}
+
+	/* nothing */
+	if (devices->len == 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
+			     "failed to find any device providing %s", guid);
+		return NULL;
+	}
+
+	/* success */
+	return g_steal_pointer (&devices);
 }
 
 /**
@@ -976,6 +1132,135 @@ fwupd_client_send_message_cb (GObject *source_object, GAsyncResult *res, gpointe
 }
 #endif
 
+#ifdef HAVE_GIO_UNIX
+static gboolean
+fwupd_client_install_fd (FwupdClient *client,
+			 const gchar *device_id,
+			 GUnixInputStream *istr,
+			 const gchar *filename_hint,
+			 FwupdInstallFlags install_flags,
+			 GCancellable *cancellable,
+			 GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	GVariant *body;
+	GVariantBuilder builder;
+	gint retval;
+	g_autoptr(FwupdClientHelper) helper = NULL;
+	g_autoptr(GDBusMessage) request = NULL;
+	g_autoptr(GUnixFDList) fd_list = NULL;
+
+	/* set options */
+	g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
+	g_variant_builder_add (&builder, "{sv}",
+			       "reason", g_variant_new_string ("user-action"));
+	if (filename_hint != NULL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       "filename", g_variant_new_string (filename_hint));
+	}
+	if (install_flags & FWUPD_INSTALL_FLAG_OFFLINE) {
+		g_variant_builder_add (&builder, "{sv}",
+				       "offline", g_variant_new_boolean (TRUE));
+	}
+	if (install_flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) {
+		g_variant_builder_add (&builder, "{sv}",
+				       "allow-older", g_variant_new_boolean (TRUE));
+	}
+	if (install_flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       "allow-reinstall", g_variant_new_boolean (TRUE));
+	}
+	if (install_flags & FWUPD_INSTALL_FLAG_FORCE) {
+		g_variant_builder_add (&builder, "{sv}",
+				       "force", g_variant_new_boolean (TRUE));
+	}
+	if (install_flags & FWUPD_INSTALL_FLAG_NO_HISTORY) {
+		g_variant_builder_add (&builder, "{sv}",
+				       "no-history", g_variant_new_boolean (TRUE));
+	}
+
+	/* set out of band file descriptor */
+	fd_list = g_unix_fd_list_new ();
+	retval = g_unix_fd_list_append (fd_list, g_unix_input_stream_get_fd (istr), NULL);
+	g_assert (retval != -1);
+	request = g_dbus_message_new_method_call (FWUPD_DBUS_SERVICE,
+						  FWUPD_DBUS_PATH,
+						  FWUPD_DBUS_INTERFACE,
+						  "Install");
+	g_dbus_message_set_unix_fd_list (request, fd_list);
+
+	/* call into daemon */
+	helper = fwupd_client_helper_new ();
+	body = g_variant_new ("(sha{sv})", device_id, g_unix_input_stream_get_fd (istr), &builder);
+	g_dbus_message_set_body (request, body);
+	g_dbus_connection_send_message_with_reply (priv->conn,
+						   request,
+						   G_DBUS_SEND_MESSAGE_FLAGS_NONE,
+						   G_MAXINT,
+						   NULL,
+						   cancellable,
+						   fwupd_client_send_message_cb,
+						   helper);
+	g_main_loop_run (helper->loop);
+	if (!helper->ret) {
+		g_propagate_error (error, helper->error);
+		helper->error = NULL;
+		return FALSE;
+	}
+	return TRUE;
+}
+#endif
+
+/**
+ * fwupd_client_install_bytes:
+ * @client: A #FwupdClient
+ * @device_id: the device ID
+ * @bytes: #GBytes
+ * @install_flags: the #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_REINSTALL
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Install firmware onto a specific device.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.4.5
+ **/
+gboolean
+fwupd_client_install_bytes (FwupdClient *client,
+			    const gchar *device_id,
+			    GBytes *bytes,
+			    FwupdInstallFlags install_flags,
+			    GCancellable *cancellable,
+			    GError **error)
+{
+#ifdef HAVE_GIO_UNIX
+	g_autoptr(GUnixInputStream) istr = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (device_id != NULL, FALSE);
+	g_return_val_if_fail (bytes != NULL, FALSE);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* connect */
+	if (!fwupd_client_connect (client, cancellable, error))
+		return FALSE;
+
+	istr = fwupd_unix_input_stream_from_bytes (bytes, error);
+	if (istr == NULL)
+		return FALSE;
+	return fwupd_client_install_fd (client, device_id, istr, NULL,
+					install_flags, cancellable, error);
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "Not supported as <glib-unix.h> is unavailable");
+	return FALSE;
+#endif
+}
+
 /**
  * fwupd_client_install:
  * @client: A #FwupdClient
@@ -1000,14 +1285,7 @@ fwupd_client_install (FwupdClient *client,
 		      GError **error)
 {
 #ifdef HAVE_GIO_UNIX
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
-	GVariant *body;
-	GVariantBuilder builder;
-	gint retval;
-	gint fd;
-	g_autoptr(FwupdClientHelper) helper = NULL;
-	g_autoptr(GDBusMessage) request = NULL;
-	g_autoptr(GUnixFDList) fd_list = NULL;
+	g_autoptr(GUnixInputStream) istr = NULL;
 
 	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
 	g_return_val_if_fail (device_id != NULL, FALSE);
@@ -1019,76 +1297,11 @@ fwupd_client_install (FwupdClient *client,
 	if (!fwupd_client_connect (client, cancellable, error))
 		return FALSE;
 
-	/* set options */
-	g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
-	g_variant_builder_add (&builder, "{sv}",
-			       "reason", g_variant_new_string ("user-action"));
-	g_variant_builder_add (&builder, "{sv}",
-			       "filename", g_variant_new_string (filename));
-	if (install_flags & FWUPD_INSTALL_FLAG_OFFLINE) {
-		g_variant_builder_add (&builder, "{sv}",
-				       "offline", g_variant_new_boolean (TRUE));
-	}
-	if (install_flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) {
-		g_variant_builder_add (&builder, "{sv}",
-				       "allow-older", g_variant_new_boolean (TRUE));
-	}
-	if (install_flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       "allow-reinstall", g_variant_new_boolean (TRUE));
-	}
-	if (install_flags & FWUPD_INSTALL_FLAG_FORCE) {
-		g_variant_builder_add (&builder, "{sv}",
-				       "force", g_variant_new_boolean (TRUE));
-	}
-	if (install_flags & FWUPD_INSTALL_FLAG_NO_HISTORY) {
-		g_variant_builder_add (&builder, "{sv}",
-				       "no-history", g_variant_new_boolean (TRUE));
-	}
-
-	/* open file */
-	fd = open (filename, O_RDONLY);
-	if (fd < 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "failed to open %s",
-			     filename);
+	istr = fwupd_unix_input_stream_from_fn (filename, error);
+	if (istr == NULL)
 		return FALSE;
-	}
-
-	/* set out of band file descriptor */
-	fd_list = g_unix_fd_list_new ();
-	retval = g_unix_fd_list_append (fd_list, fd, NULL);
-	g_assert (retval != -1);
-	request = g_dbus_message_new_method_call (FWUPD_DBUS_SERVICE,
-						  FWUPD_DBUS_PATH,
-						  FWUPD_DBUS_INTERFACE,
-						  "Install");
-	g_dbus_message_set_unix_fd_list (request, fd_list);
-
-	/* g_unix_fd_list_append did a dup() already */
-	close (fd);
-
-	/* call into daemon */
-	helper = fwupd_client_helper_new ();
-	body = g_variant_new ("(sha{sv})", device_id, fd, &builder);
-	g_dbus_message_set_body (request, body);
-	g_dbus_connection_send_message_with_reply (priv->conn,
-						   request,
-						   G_DBUS_SEND_MESSAGE_FLAGS_NONE,
-						   G_MAXINT,
-						   NULL,
-						   cancellable,
-						   fwupd_client_send_message_cb,
-						   helper);
-	g_main_loop_run (helper->loop);
-	if (!helper->ret) {
-		g_propagate_error (error, helper->error);
-		helper->error = NULL;
-		return FALSE;
-	}
-	return TRUE;
+	return fwupd_client_install_fd (client, device_id, istr, filename,
+					install_flags, cancellable, error);
 #else
 	g_set_error_literal (error,
 			     FWUPD_ERROR,
@@ -1096,6 +1309,101 @@ fwupd_client_install (FwupdClient *client,
 			     "Not supported as <glib-unix.h> is unavailable");
 	return FALSE;
 #endif
+}
+
+/**
+ * fwupd_client_install_release:
+ * @client: A #FwupdClient
+ * @device: A #FwupdDevice
+ * @release: A #FwupdRelease
+ * @install_flags: the #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_REINSTALL
+ * @cancellable: A #GCancellable, or %NULL
+ * @error: A #GError, or %NULL
+ *
+ * Installs a new release on a device, downloading the firmware if required.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.4.5
+ **/
+gboolean
+fwupd_client_install_release (FwupdClient *client,
+			      FwupdDevice *device,
+			      FwupdRelease *release,
+			      FwupdInstallFlags install_flags,
+			      GCancellable *cancellable,
+			      GError **error)
+{
+	GChecksumType checksum_type;
+	const gchar *checksum_expected;
+	const gchar *remote_id;
+	const gchar *uri_tmp;
+	g_autofree gchar *checksum_actual = NULL;
+	g_autofree gchar *uri_str = NULL;
+	g_autoptr(GBytes) blob = NULL;
+
+	/* work out what remote-specific URI fields this should use */
+	uri_tmp = fwupd_release_get_uri (release);
+	remote_id = fwupd_release_get_remote_id (release);
+	if (remote_id != NULL) {
+		g_autoptr(FwupdRemote) remote = NULL;
+		g_autofree gchar *fn = NULL;
+
+		/* if a remote-id was specified, the remote has to exist */
+		remote = fwupd_client_get_remote_by_id (client, remote_id, cancellable, error);
+		if (remote == NULL)
+			return FALSE;
+
+		/* local and directory remotes have the firmware already */
+		if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_LOCAL) {
+			const gchar *fn_cache = fwupd_remote_get_filename_cache (remote);
+			g_autofree gchar *path = g_path_get_dirname (fn_cache);
+
+			fn = g_build_filename (path, uri_tmp, NULL);
+		} else if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_DIRECTORY) {
+			fn = g_strdup (uri_tmp + 7);
+		}
+
+		/* install with flags chosen by the user */
+		if (fn != NULL) {
+			return fwupd_client_install (client, fwupd_device_get_id (device),
+						     fn, install_flags, cancellable, error);
+		}
+
+		/* remote file */
+		uri_str = fwupd_remote_build_firmware_uri (remote, uri_tmp, error);
+		if (uri_str == NULL)
+			return FALSE;
+	} else {
+		uri_str = g_strdup (uri_tmp);
+	}
+
+	/* download file */
+	blob = fwupd_client_download_bytes (client, uri_str,
+					    FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
+					    cancellable, error);
+	if (blob == NULL)
+		return FALSE;
+
+	/* verify checksum */
+	checksum_expected = fwupd_checksum_get_best (fwupd_release_get_checksums (release));
+	checksum_type = fwupd_checksum_guess_kind (checksum_expected);
+	checksum_actual = g_compute_checksum_for_bytes (checksum_type, blob);
+	if (g_strcmp0 (checksum_expected, checksum_actual) != 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Checksum invalid, expected %s got %s",
+			     checksum_expected, checksum_actual);
+		return FALSE;
+	}
+
+	/* if the device specifies ONLY_OFFLINE automatically set this flag */
+	if (fwupd_device_has_flag (device, FWUPD_DEVICE_FLAG_ONLY_OFFLINE))
+		install_flags |= FWUPD_INSTALL_FLAG_OFFLINE;
+	return fwupd_client_install_bytes (client,
+					   fwupd_device_get_id (device), blob,
+					   install_flags, NULL, error);
 }
 
 /**
@@ -1315,6 +1623,57 @@ fwupd_client_get_daemon_interactive (FwupdClient *client)
 	return priv->interactive;
 }
 
+#ifdef HAVE_GIO_UNIX
+static gboolean
+fwupd_client_update_metadata_fds (FwupdClient *client,
+				  const gchar *remote_id,
+				  GUnixInputStream *metadata,
+				  GUnixInputStream *signature,
+				  GCancellable *cancellable,
+				  GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	GVariant *body;
+	g_autoptr(FwupdClientHelper) helper = NULL;
+	g_autoptr(GDBusMessage) request = NULL;
+	g_autoptr(GUnixFDList) fd_list = NULL;
+
+	/* set out of band file descriptor */
+	fd_list = g_unix_fd_list_new ();
+	g_unix_fd_list_append (fd_list, g_unix_input_stream_get_fd (metadata), NULL);
+	g_unix_fd_list_append (fd_list, g_unix_input_stream_get_fd (signature), NULL);
+	request = g_dbus_message_new_method_call (FWUPD_DBUS_SERVICE,
+						  FWUPD_DBUS_PATH,
+						  FWUPD_DBUS_INTERFACE,
+						  "UpdateMetadata");
+	g_dbus_message_set_unix_fd_list (request, fd_list);
+
+	/* call into daemon */
+	body = g_variant_new ("(shh)",
+			      remote_id,
+			      g_unix_input_stream_get_fd (metadata),
+			      g_unix_input_stream_get_fd (signature));
+	g_dbus_message_set_body (request, body);
+	helper = fwupd_client_helper_new ();
+	g_dbus_connection_send_message_with_reply (priv->conn,
+						   request,
+						   G_DBUS_SEND_MESSAGE_FLAGS_NONE,
+						   -1,
+						   NULL,
+						   cancellable,
+						   fwupd_client_send_message_cb,
+						   helper);
+	g_main_loop_run (helper->loop);
+	if (!helper->ret) {
+		g_propagate_error (error, helper->error);
+		helper->error = NULL;
+		return FALSE;
+	}
+	return TRUE;
+}
+
+#endif
+
 /**
  * fwupd_client_update_metadata:
  * @client: A #FwupdClient
@@ -1344,13 +1703,8 @@ fwupd_client_update_metadata (FwupdClient *client,
 			      GError **error)
 {
 #ifdef HAVE_GIO_UNIX
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
-	GVariant *body;
-	gint fd;
-	gint fd_sig;
-	g_autoptr(FwupdClientHelper) helper = NULL;
-	g_autoptr(GDBusMessage) request = NULL;
-	g_autoptr(GUnixFDList) fd_list = NULL;
+	GUnixInputStream *istr;
+	GUnixInputStream *istr_sig;
 
 	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
 	g_return_val_if_fail (remote_id != NULL, FALSE);
@@ -1363,60 +1717,16 @@ fwupd_client_update_metadata (FwupdClient *client,
 	if (!fwupd_client_connect (client, cancellable, error))
 		return FALSE;
 
-	/* open file */
-	fd = open (metadata_fn, O_RDONLY);
-	if (fd < 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "failed to open %s",
-			     metadata_fn);
+	/* open files */
+	istr = fwupd_unix_input_stream_from_fn (metadata_fn, error);
+	if (istr == NULL)
 		return FALSE;
-	}
-	fd_sig = open (signature_fn, O_RDONLY);
-	if (fd_sig < 0) {
-		close (fd);
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "failed to open %s",
-			     signature_fn);
+	istr_sig = fwupd_unix_input_stream_from_fn (signature_fn, error);
+	if (istr_sig == NULL)
 		return FALSE;
-	}
-
-	/* set out of band file descriptor */
-	fd_list = g_unix_fd_list_new ();
-	g_unix_fd_list_append (fd_list, fd, NULL);
-	g_unix_fd_list_append (fd_list, fd_sig, NULL);
-	request = g_dbus_message_new_method_call (FWUPD_DBUS_SERVICE,
-						  FWUPD_DBUS_PATH,
-						  FWUPD_DBUS_INTERFACE,
-						  "UpdateMetadata");
-	g_dbus_message_set_unix_fd_list (request, fd_list);
-
-	/* g_unix_fd_list_append did a dup() already */
-	close (fd);
-	close (fd_sig);
-
-	/* call into daemon */
-	body = g_variant_new ("(shh)", remote_id, fd, fd_sig);
-	g_dbus_message_set_body (request, body);
-	helper = fwupd_client_helper_new ();
-	g_dbus_connection_send_message_with_reply (priv->conn,
-						   request,
-						   G_DBUS_SEND_MESSAGE_FLAGS_NONE,
-						   -1,
-						   NULL,
-						   cancellable,
-						   fwupd_client_send_message_cb,
-						   helper);
-	g_main_loop_run (helper->loop);
-	if (!helper->ret) {
-		g_propagate_error (error, helper->error);
-		helper->error = NULL;
-		return FALSE;
-	}
-	return TRUE;
+	return fwupd_client_update_metadata_fds (client, remote_id,
+						 istr, istr_sig,
+						 cancellable, error);
 #else
 	g_set_error_literal (error,
 			     FWUPD_ERROR,
@@ -1424,6 +1734,118 @@ fwupd_client_update_metadata (FwupdClient *client,
 			     "Not supported as <glib-unix.h> is unavailable");
 	return FALSE;
 #endif
+}
+
+/**
+ * fwupd_client_update_metadata_bytes:
+ * @client: A #FwupdClient
+ * @remote_id: remote ID, e.g. `lvfs-testing`
+ * @metadata: XML metadata data
+ * @signature: signature data
+ * @cancellable: #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Updates the metadata. This allows a session process to download the metadata
+ * and metadata signing file to be passed into the daemon to be checked and
+ * parsed.
+ *
+ * The @remote_id allows the firmware to be tagged so that the remote can be
+ * matched when the firmware is downloaded.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.4.5
+ **/
+gboolean
+fwupd_client_update_metadata_bytes (FwupdClient *client,
+				    const gchar *remote_id,
+				    GBytes *metadata,
+				    GBytes *signature,
+				    GCancellable *cancellable,
+				    GError **error)
+{
+#ifdef HAVE_GIO_UNIX
+	GUnixInputStream *istr;
+	GUnixInputStream *istr_sig;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (remote_id != NULL, FALSE);
+	g_return_val_if_fail (metadata != NULL, FALSE);
+	g_return_val_if_fail (signature != NULL, FALSE);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* convert bytes to a readable fd */
+	istr = fwupd_unix_input_stream_from_bytes (metadata, error);
+	if (istr == NULL)
+		return FALSE;
+	istr_sig = fwupd_unix_input_stream_from_bytes (signature, error);
+	if (istr_sig == NULL)
+		return FALSE;
+	return fwupd_client_update_metadata_fds (client, remote_id,
+						 istr, istr_sig,
+						 cancellable, error);
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "Not supported as <glib-unix.h> is unavailable");
+	return FALSE;
+#endif
+}
+
+/**
+ * fwupd_client_refresh_remote:
+ * @client: A #FwupdClient
+ * @remote: A #FwupdRemote
+ * @cancellable: A #GCancellable, or %NULL
+ * @error: A #GError, or %NULL
+ *
+ * Refreshes a remote by downloading new metadata.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.4.5
+ **/
+gboolean
+fwupd_client_refresh_remote (FwupdClient *client,
+			     FwupdRemote *remote,
+			     GCancellable *cancellable,
+			     GError **error)
+{
+	g_autoptr(GBytes) metadata = NULL;
+	g_autoptr(GBytes) signature = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (FWUPD_IS_REMOTE (remote), FALSE);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* download the signature */
+	signature = fwupd_client_download_bytes (client,
+						 fwupd_remote_get_metadata_uri_sig (remote),
+						 FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
+						 cancellable, error);
+	if (signature == NULL)
+		return FALSE;
+
+	/* find the download URI of the metadata from the JCat file */
+	if (!fwupd_remote_load_signature_bytes (remote, signature, error))
+		return FALSE;
+
+	/* download the metadata */
+	metadata = fwupd_client_download_bytes (client,
+						fwupd_remote_get_metadata_uri (remote),
+						FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
+						cancellable, error);
+	if (metadata == NULL)
+		return FALSE;
+
+	/* send all this to fwupd */
+	return fwupd_client_update_metadata_bytes (client,
+						   fwupd_remote_get_id (remote),
+						   metadata, signature,
+						   cancellable, error);
 }
 
 /**
@@ -1548,6 +1970,56 @@ fwupd_client_set_approved_firmware (FwupdClient *client,
 	val = g_dbus_proxy_call_sync (priv->proxy,
 				      "SetApprovedFirmware",
 				      g_variant_new ("(^as)", checksums),
+				      G_DBUS_CALL_FLAGS_NONE,
+				      -1,
+				      cancellable,
+				      error);
+	if (val == NULL) {
+		if (error != NULL)
+			fwupd_client_fixup_dbus_error (*error);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/**
+ * fwupd_client_set_feature_flags:
+ * @client: A #FwupdClient
+ * @feature_flags: #FwupdFeatureFlags, e.g. %FWUPD_FEATURE_FLAG_UPDATE_TEXT
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Sets the features the client supports. This allows firmware to depend on
+ * specific front-end features, for instance showing the user an image on
+ * how to detach the hardware.
+ *
+ * Clients can call this none or multiple times.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.4.5
+ **/
+gboolean
+fwupd_client_set_feature_flags (FwupdClient *client,
+				FwupdFeatureFlags feature_flags,
+				GCancellable *cancellable,
+				GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_autoptr(GVariant) val = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* connect */
+	if (!fwupd_client_connect (client, cancellable, error))
+		return FALSE;
+
+	/* call into daemon */
+	val = g_dbus_proxy_call_sync (priv->proxy,
+				      "SetFeatureFlags",
+				      g_variant_new ("(t)", (guint64) feature_flags),
 				      G_DBUS_CALL_FLAGS_NONE,
 				      -1,
 				      cancellable,
@@ -1789,6 +2261,265 @@ fwupd_client_get_remote_by_id (FwupdClient *client,
 	return g_object_ref (remote);
 }
 
+/**
+ * fwupd_client_set_user_agent:
+ * @client: A #FwupdClient
+ * @user_agent: the user agent ID, e.g. `gnome-software/3.34.1`
+ *
+ * Manually sets the user agent that is used for downloading. The user agent
+ * should contain the runtime version of fwupd somewhere in the provided string.
+ *
+ * Since: 1.4.5
+ **/
+void
+fwupd_client_set_user_agent (FwupdClient *client, const gchar *user_agent)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	g_return_if_fail (FWUPD_IS_CLIENT (client));
+	g_return_if_fail (user_agent != NULL);
+	g_free (priv->user_agent);
+	priv->user_agent = g_strdup (user_agent);
+}
+
+/**
+ * fwupd_client_set_user_agent_for_package:
+ * @client: A #FwupdClient
+ * @package_name: client program name, e.g. "gnome-software"
+ * @package_version: client program version, e.g. "3.28.1"
+ *
+ * Builds a user-agent to use for the download.
+ *
+ * Supplying harmless details to the server means it knows more about each
+ * client. This allows the web service to respond in a different way, for
+ * instance sending a different metadata file for old versions of fwupd, or
+ * returning an error for Solaris machines.
+ *
+ * Before freaking out about theoretical privacy implications, much more data
+ * than this is sent to each and every website you visit.
+ *
+ * Since: 1.4.5
+ **/
+void
+fwupd_client_set_user_agent_for_package (FwupdClient *client,
+					 const gchar *package_name,
+					 const gchar *package_version)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	GString *str = g_string_new (NULL);
+	g_autofree gchar *system = NULL;
+
+	g_return_if_fail (FWUPD_IS_CLIENT (client));
+	g_return_if_fail (package_name != NULL);
+	g_return_if_fail (package_version != NULL);
+
+	/* application name and version */
+	g_string_append_printf (str, "%s/%s", package_name, package_version);
+
+	/* system information */
+	system = fwupd_build_user_agent_system ();
+	if (system != NULL)
+		g_string_append_printf (str, " (%s)", system);
+
+	/* platform, which in our case is just fwupd */
+	if (g_strcmp0 (package_name, "fwupd") != 0)
+		g_string_append_printf (str, " fwupd/%s", priv->daemon_version);
+
+	/* success */
+	g_free (priv->user_agent);
+	priv->user_agent = g_string_free (str, FALSE);
+}
+
+
+static void
+fwupd_client_download_chunk_cb (SoupMessage *msg, SoupBuffer *chunk, gpointer user_data)
+{
+	guint percentage;
+	goffset header_size;
+	goffset body_length;
+	FwupdClient *client = FWUPD_CLIENT (user_data);
+
+	/* if it's returning "Found" or an error, ignore the percentage */
+	if (msg->status_code != SOUP_STATUS_OK) {
+		g_debug ("ignoring status code %u (%s)",
+			 msg->status_code, msg->reason_phrase);
+		return;
+	}
+
+	/* get data */
+	body_length = msg->response_body->length;
+	header_size = soup_message_headers_get_content_length (msg->response_headers);
+	if (header_size < body_length)
+		return;
+
+	/* calculate percentage */
+	percentage = (guint) ((100 * body_length) / header_size);
+	g_debug ("progress: %u%%", percentage);
+	fwupd_client_set_status (client, FWUPD_STATUS_DOWNLOADING);
+	fwupd_client_set_percentage (client, percentage);
+}
+
+/**
+ * fwupd_client_download_bytes:
+ * @client: A #FwupdClient
+ * @url: the remote URL
+ * @flags: #FwupdClientDownloadFlags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_NONE
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Downloads data from a remote server. The fwupd_client_set_user_agent() function
+ * should be called before this method is used.
+ *
+ * Returns: (transfer full): downloaded data, or %NULL for error
+ *
+ * Since: 1.4.5
+ **/
+GBytes *
+fwupd_client_download_bytes (FwupdClient *client,
+			     const gchar *url,
+			     FwupdClientDownloadFlags flags,
+			     GCancellable *cancellable,
+			     GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	guint status_code;
+	g_autoptr(SoupMessage) msg = NULL;
+	g_autoptr(SoupURI) uri = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (url != NULL, NULL);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* ensure networking set up */
+	if (!fwupd_client_ensure_networking (client, error))
+		return NULL;
+
+	/* download data */
+	g_debug ("downloading %s", url);
+	uri = soup_uri_new (url);
+	msg = soup_message_new_from_uri (SOUP_METHOD_GET, uri);
+	if (msg == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Failed to parse URI %s", url);
+		return NULL;
+	}
+	g_signal_connect (msg, "got-chunk",
+			  G_CALLBACK (fwupd_client_download_chunk_cb),
+			  client);
+	status_code = soup_session_send_message (priv->soup_session, msg);
+	fwupd_client_set_status (client, FWUPD_STATUS_IDLE);
+	if (status_code == 429) {
+		g_autofree gchar *str = g_strndup (msg->response_body->data,
+						   msg->response_body->length);
+		if (g_strcmp0 (str, "Too Many Requests") == 0) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "Failed to download due to server limit");
+			return NULL;
+		}
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Failed to download due to server limit: %s", str);
+		return NULL;
+	}
+	if (status_code != SOUP_STATUS_OK) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Failed to download %s: %s",
+			     url, soup_status_get_phrase (status_code));
+		return NULL;
+	}
+
+	/* success */
+	return g_bytes_new (msg->response_body->data, msg->response_body->length);
+}
+
+/**
+ * fwupd_client_upload_bytes:
+ * @client: A #FwupdClient
+ * @url: the remote URL
+ * @payload: payload string
+ * @signature: (nullable): signature string
+ * @flags: #FwupdClientDownloadFlags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_NONE
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Uploads data to a remote server. The fwupd_client_set_user_agent() function
+ * should be called before this method is used.
+ *
+ * Returns: (transfer full): downloaded data, or %NULL for error
+ *
+ * Since: 1.4.5
+ **/
+GBytes *
+fwupd_client_upload_bytes (FwupdClient *client,
+			   const gchar *url,
+			   const gchar *payload,
+			   const gchar *signature,
+			   FwupdClientUploadFlags flags,
+			   GCancellable *cancellable,
+			   GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	guint status_code;
+	g_autoptr(SoupMessage) msg = NULL;
+	g_autoptr(SoupURI) uri = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (url != NULL, NULL);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* ensure networking set up */
+	if (!fwupd_client_ensure_networking (client, error))
+		return NULL;
+
+	/* build message */
+	if ((flags | FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART) > 0 ||
+	    signature != NULL) {
+		g_autoptr(SoupMultipart) mp = NULL;
+		mp = soup_multipart_new (SOUP_FORM_MIME_TYPE_MULTIPART);
+		soup_multipart_append_form_string (mp, "payload", payload);
+		if (signature != NULL)
+			soup_multipart_append_form_string (mp, "signature", signature);
+		msg = soup_form_request_new_from_multipart (url, mp);
+	} else {
+		msg = soup_message_new (SOUP_METHOD_POST, url);
+		soup_message_set_request (msg, "application/json; charset=utf-8",
+					  SOUP_MEMORY_COPY, payload, strlen (payload));
+	}
+
+	/* POST request */
+	if (msg == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Failed to parse URI %s", url);
+		return NULL;
+	}
+	g_debug ("uploading to %s", url);
+	status_code = soup_session_send_message (priv->soup_session, msg);
+	g_debug ("server returned: %s", msg->response_body->data);
+
+	/* fall back to HTTP status codes in case the server is offline */
+	if (!SOUP_STATUS_IS_SUCCESSFUL (status_code)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Failed to upllooad to %s: %s",
+			     url, soup_status_get_phrase (status_code));
+		return NULL;
+	}
+
+	/* success */
+	return g_bytes_new (msg->response_body->data, msg->response_body->length);
+}
+
 static void
 fwupd_client_get_property (GObject *object, guint prop_id,
 			   GValue *value, GParamSpec *pspec)
@@ -1802,6 +2533,9 @@ fwupd_client_get_property (GObject *object, guint prop_id,
 		break;
 	case PROP_TAINTED:
 		g_value_set_boolean (value, priv->tainted);
+		break;
+	case PROP_SOUP_SESSION:
+		g_value_set_object (value, priv->soup_session);
 		break;
 	case PROP_PERCENTAGE:
 		g_value_set_uint (value, priv->percentage);
@@ -1837,6 +2571,9 @@ fwupd_client_set_property (GObject *object, guint prop_id,
 		break;
 	case PROP_PERCENTAGE:
 		priv->percentage = g_value_get_uint (value);
+		break;
+	case PROP_SOUP_SESSION:
+		g_set_object (&priv->soup_session, g_value_get_object (value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1995,6 +2732,17 @@ fwupd_client_class_init (FwupdClientClass *klass)
 	g_object_class_install_property (object_class, PROP_DAEMON_VERSION, pspec);
 
 	/**
+	 * FwupdClient:soup-session:
+	 *
+	 * The libsoup session.
+	 *
+	 * Since: 1.4.5
+	 */
+	pspec = g_param_spec_object ("soup-session", NULL, NULL, SOUP_TYPE_SESSION,
+				     G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_SOUP_SESSION, pspec);
+
+	/**
 	 * FwupdClient:host-product:
 	 *
 	 * The host product string
@@ -2028,6 +2776,7 @@ fwupd_client_finalize (GObject *object)
 	FwupdClient *client = FWUPD_CLIENT (object);
 	FwupdClientPrivate *priv = GET_PRIVATE (client);
 
+	g_free (priv->user_agent);
 	g_free (priv->daemon_version);
 	g_free (priv->host_product);
 	g_free (priv->host_machine_id);
@@ -2035,6 +2784,8 @@ fwupd_client_finalize (GObject *object)
 		g_object_unref (priv->conn);
 	if (priv->proxy != NULL)
 		g_object_unref (priv->proxy);
+	if (priv->soup_session != NULL)
+		g_object_unref (priv->soup_session);
 
 	G_OBJECT_CLASS (fwupd_client_parent_class)->finalize (object);
 }

@@ -111,8 +111,12 @@ fu_progressbar_estimate_ready (FuProgressbar *self, guint percentage)
 	gdouble old;
 	gdouble elapsed;
 
-	if (percentage == 0 || percentage == 100)
+	/* now invalid */
+	if (percentage == 0 || percentage == 100) {
+		g_timer_start (self->time_elapsed);
+		self->last_estimate = 0;
 		return FALSE;
+	}
 
 	old = self->last_estimate;
 	elapsed = g_timer_elapsed (self->time_elapsed, NULL);

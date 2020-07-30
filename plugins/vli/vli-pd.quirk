@@ -1,7 +1,3 @@
-[DeviceInstanceId=USB\VID_17EF&PID_3070]
-Plugin = vli
-GType = FuVliPdDevice
-
 # Generic
 [DeviceInstanceId=USB\VID_0800&PID_0800]
 Plugin = vli
@@ -22,6 +18,7 @@ DeviceKind = VL102
 [DeviceInstanceId=USB\VID_2109&PID_0103]
 Plugin = vli
 GType = FuVliPdDevice
+Flags = dual-image
 DeviceKind = VL103
 [DeviceInstanceId=USB\VID_2109&PID_0104]
 Plugin = vli
@@ -56,6 +53,7 @@ GType = FuVliPdDevice
 [DeviceInstanceId=USB\VID_17EF&PID_7212]
 Plugin = vli
 GType = FuVliPdDevice
+Flag = dual-image
 
 # Lenovo
 [DeviceInstanceId=USB\VID_17EF&PID_7215]

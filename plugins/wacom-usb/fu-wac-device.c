@@ -35,7 +35,7 @@ typedef enum {
 
 struct _FuWacDevice
 {
-	FuUsbDevice		 parent_instance;
+	FuHidDevice		 parent_instance;
 	GPtrArray		*flash_descriptors;
 	GArray			*checksums;
 	guint32			 status_word;
@@ -48,7 +48,7 @@ struct _FuWacDevice
 	guint16			 configuration;
 };
 
-G_DEFINE_TYPE (FuWacDevice, fu_wac_device, FU_TYPE_USB_DEVICE)
+G_DEFINE_TYPE (FuWacDevice, fu_wac_device, FU_TYPE_HID_DEVICE)
 
 static GString *
 fu_wac_device_status_to_string (guint32 status_word)
@@ -135,42 +135,20 @@ fu_wac_device_to_string (FuDevice *device, guint idt, GString *str)
 gboolean
 fu_wac_device_get_feature_report (FuWacDevice *self,
 				  guint8 *buf, gsize bufsz,
-				  FuWacDeviceFeatureFlags flags,
+				  FuHidDeviceFlags flags,
 				  GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
-	gsize sz = 0;
 	guint8 cmd = buf[0];
 
 	/* hit hardware */
-	if ((flags & FU_WAC_DEVICE_FEATURE_FLAG_NO_DEBUG) == 0)
-		fu_wac_buffer_dump ("GET", cmd, buf, bufsz);
-	if (!g_usb_device_control_transfer (usb_device,
-					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					    G_USB_DEVICE_RECIPIENT_INTERFACE,
-					    FU_HID_REPORT_GET,		/* bRequest */
-					    FU_HID_FEATURE | cmd,		/* wValue */
-					    0x0000,			/* wIndex */
-					    buf, bufsz, &sz,
-					    FU_WAC_DEVICE_TIMEOUT,
-					    NULL, error)) {
-		g_prefix_error (error, "Failed to get feature report: ");
+	if (!fu_hid_device_get_report (FU_HID_DEVICE (self), cmd,
+				       buf, bufsz,
+				       FU_WAC_DEVICE_TIMEOUT,
+				       flags | FU_HID_DEVICE_FLAG_IS_FEATURE,
+				       error))
 		return FALSE;
-	}
-	if ((flags & FU_WAC_DEVICE_FEATURE_FLAG_NO_DEBUG) == 0)
-		fu_wac_buffer_dump ("GE2", cmd, buf, sz);
 
 	/* check packet */
-	if ((flags & FU_WAC_DEVICE_FEATURE_FLAG_ALLOW_TRUNC) == 0 && sz != bufsz) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "packet get bytes %" G_GSIZE_FORMAT
-			     " expected %" G_GSIZE_FORMAT,
-			     sz, bufsz);
-		return FALSE;
-	}
 	if (buf[0] != cmd) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -185,42 +163,17 @@ fu_wac_device_get_feature_report (FuWacDevice *self,
 gboolean
 fu_wac_device_set_feature_report (FuWacDevice *self,
 				  guint8 *buf, gsize bufsz,
-				  FuWacDeviceFeatureFlags flags,
+				  FuHidDeviceFlags flags,
 				  GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
-	gsize sz = 0;
-	guint8 cmd = buf[0];
-
 	/* hit hardware */
-	fu_wac_buffer_dump ("SET", cmd, buf, bufsz);
 	if (g_getenv ("FWUPD_WAC_EMULATE") != NULL)
 		return TRUE;
-	if (!g_usb_device_control_transfer (usb_device,
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					    G_USB_DEVICE_RECIPIENT_INTERFACE,
-					    FU_HID_REPORT_SET,		/* bRequest */
-					    FU_HID_FEATURE | cmd,		/* wValue */
-					    0x0000,			/* wIndex */
-					    buf, bufsz, &sz,
-					    FU_WAC_DEVICE_TIMEOUT,
-					    NULL, error)) {
-		g_prefix_error (error, "Failed to set feature report: ");
-		return FALSE;
-	}
-
-	/* check packet */
-	if ((flags & FU_WAC_DEVICE_FEATURE_FLAG_ALLOW_TRUNC) == 0 && sz != bufsz) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "packet sent bytes %" G_GSIZE_FORMAT
-			     " expected %" G_GSIZE_FORMAT,
-			     sz, bufsz);
-		return FALSE;
-	}
-	return TRUE;
+	return fu_hid_device_set_report (FU_HID_DEVICE (self), buf[0],
+					 buf, bufsz,
+					 FU_WAC_DEVICE_TIMEOUT,
+					 flags | FU_HID_DEVICE_FLAG_IS_FEATURE,
+					 error);
 }
 
 static gboolean
@@ -238,7 +191,7 @@ fu_wac_device_ensure_flash_descriptors (FuWacDevice *self, GError **error)
 	memset (buf, 0xff, sz);
 	buf[0] = FU_WAC_REPORT_ID_GET_FLASH_DESCRIPTOR;
 	if (!fu_wac_device_get_feature_report (self, buf, sz,
-					       FU_WAC_DEVICE_FEATURE_FLAG_NONE,
+					       FU_HID_DEVICE_FLAG_NONE,
 					       error))
 		return FALSE;
 
@@ -265,7 +218,7 @@ fu_wac_device_ensure_status (FuWacDevice *self, GError **error)
 	/* hit hardware */
 	buf[0] = FU_WAC_REPORT_ID_GET_STATUS;
 	if (!fu_wac_device_get_feature_report (self, buf, sizeof(buf),
-					       FU_WAC_DEVICE_FEATURE_FLAG_NONE,
+					       FU_HID_DEVICE_FLAG_NONE,
 					       error))
 		return FALSE;
 
@@ -287,7 +240,7 @@ fu_wac_device_ensure_checksums (FuWacDevice *self, GError **error)
 	memset (buf, 0xff, sz);
 	buf[0] = FU_WAC_REPORT_ID_GET_CHECKSUMS;
 	if (!fu_wac_device_get_feature_report (self, buf, sz,
-					       FU_WAC_DEVICE_FEATURE_FLAG_NONE,
+					       FU_HID_DEVICE_FLAG_NONE,
 					       error))
 		return FALSE;
 
@@ -316,7 +269,7 @@ fu_wac_device_ensure_firmware_index (FuWacDevice *self, GError **error)
 
 	/* hit hardware */
 	if (!fu_wac_device_get_feature_report (self, buf, sizeof(buf),
-					       FU_WAC_DEVICE_FEATURE_FLAG_NONE,
+					       FU_HID_DEVICE_FLAG_NONE,
 					       error))
 		return FALSE;
 
@@ -333,7 +286,7 @@ fu_wac_device_ensure_parameters (FuWacDevice *self, GError **error)
 
 	/* hit hardware */
 	if (!fu_wac_device_get_feature_report (self, buf, sizeof(buf),
-					       FU_WAC_DEVICE_FEATURE_FLAG_NONE,
+					       FU_HID_DEVICE_FLAG_NONE,
 					       error))
 		return FALSE;
 
@@ -383,7 +336,7 @@ fu_wac_device_write_block (FuWacDevice *self,
 
 	/* hit hardware */
 	return fu_wac_device_set_feature_report (self, buf, bufsz,
-						 FU_WAC_DEVICE_FEATURE_FLAG_NONE,
+						 FU_HID_DEVICE_FLAG_NONE,
 						 error);
 }
 
@@ -398,11 +351,11 @@ fu_wac_device_erase_block (FuWacDevice *self, guint32 addr, GError **error)
 
 	/* hit hardware */
 	return fu_wac_device_set_feature_report (self, buf, sizeof(buf),
-						 FU_WAC_DEVICE_FEATURE_FLAG_NONE,
+						 FU_HID_DEVICE_FLAG_NONE,
 						 error);
 }
 
-gboolean
+static gboolean
 fu_wac_device_update_reset (FuWacDevice *self, GError **error)
 {
 	guint8 buf[] = { [0] = FU_WAC_REPORT_ID_UPDATE_RESET,
@@ -410,7 +363,7 @@ fu_wac_device_update_reset (FuWacDevice *self, GError **error)
 
 	/* hit hardware */
 	return fu_wac_device_set_feature_report (self, buf, sizeof(buf),
-						 FU_WAC_DEVICE_FEATURE_FLAG_NONE,
+						 FU_HID_DEVICE_FLAG_NONE,
 						 error);
 }
 
@@ -429,7 +382,7 @@ fu_wac_device_set_checksum_of_block (FuWacDevice *self,
 
 	/* hit hardware */
 	return fu_wac_device_set_feature_report (self, buf, sizeof(buf),
-						 FU_WAC_DEVICE_FEATURE_FLAG_NONE,
+						 FU_HID_DEVICE_FLAG_NONE,
 						 error);
 }
 
@@ -446,7 +399,7 @@ fu_wac_device_calculate_checksum_of_block (FuWacDevice *self,
 
 	/* hit hardware */
 	return fu_wac_device_set_feature_report (self, buf, sizeof(buf),
-						 FU_WAC_DEVICE_FEATURE_FLAG_NONE,
+						 FU_HID_DEVICE_FLAG_NONE,
 						 error);
 }
 
@@ -458,7 +411,7 @@ fu_wac_device_write_checksum_table (FuWacDevice *self, GError **error)
 
 	/* hit hardware */
 	return fu_wac_device_set_feature_report (self, buf, sizeof(buf),
-						 FU_WAC_DEVICE_FEATURE_FLAG_NONE,
+						 FU_HID_DEVICE_FLAG_NONE,
 						 error);
 }
 
@@ -471,7 +424,7 @@ fu_wac_device_switch_to_flash_loader (FuWacDevice *self, GError **error)
 
 	/* hit hardware */
 	return fu_wac_device_set_feature_report (self, buf, sizeof(buf),
-						 FU_WAC_DEVICE_FEATURE_FLAG_NONE,
+						 FU_HID_DEVICE_FLAG_NONE,
 						 error);
 }
 
@@ -676,7 +629,7 @@ fu_wac_device_add_modules_bluetooth (FuWacDevice *self, GError **error)
 
 	buf[0] = FU_WAC_REPORT_ID_GET_FIRMWARE_VERSION_BLUETOOTH;
 	if (!fu_wac_device_get_feature_report (self, buf, sizeof(buf),
-					       FU_WAC_DEVICE_FEATURE_FLAG_NONE,
+					       FU_HID_DEVICE_FLAG_NONE,
 					       error)) {
 		g_prefix_error (error, "Failed to get GetFirmwareVersionBluetooth: ");
 		return FALSE;
@@ -689,7 +642,7 @@ fu_wac_device_add_modules_bluetooth (FuWacDevice *self, GError **error)
 	module = fu_wac_module_bluetooth_new (usb_device);
 	fu_device_add_child (FU_DEVICE (self), FU_DEVICE (module));
 	fu_device_set_name (FU_DEVICE (module), name);
-	fu_device_set_version (FU_DEVICE (module), version, FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_set_version (FU_DEVICE (module), version);
 	return TRUE;
 }
 
@@ -714,7 +667,7 @@ fu_wac_device_add_modules (FuWacDevice *self, GError **error)
 			 [1 ... 31] = 0xff };
 
 	if (!fu_wac_device_get_feature_report (self, buf, sizeof(buf),
-					       FU_WAC_DEVICE_FEATURE_FLAG_NONE,
+					       FU_HID_DEVICE_FLAG_NONE,
 					       error)) {
 		g_prefix_error (error, "Failed to get DeviceFirmwareDescriptor: ");
 		return FALSE;
@@ -759,7 +712,7 @@ fu_wac_device_add_modules (FuWacDevice *self, GError **error)
 						fu_device_get_name (FU_DEVICE (self)));
 			fu_device_add_child (FU_DEVICE (self), FU_DEVICE (module));
 			fu_device_set_name (FU_DEVICE (module), name);
-			fu_device_set_version (FU_DEVICE (module), version, FWUPD_VERSION_FORMAT_PAIR);
+			fu_device_set_version (FU_DEVICE (module), version);
 			break;
 		case FU_WAC_MODULE_FW_TYPE_BLUETOOTH:
 			module = fu_wac_module_bluetooth_new (usb_device);
@@ -767,33 +720,16 @@ fu_wac_device_add_modules (FuWacDevice *self, GError **error)
 						fu_device_get_name (FU_DEVICE (self)));
 			fu_device_add_child (FU_DEVICE (self), FU_DEVICE (module));
 			fu_device_set_name (FU_DEVICE (module), name);
-			fu_device_set_version (FU_DEVICE (module), version, FWUPD_VERSION_FORMAT_PAIR);
+			fu_device_set_version (FU_DEVICE (module), version);
 			break;
 		case FU_WAC_MODULE_FW_TYPE_MAIN:
-			fu_device_set_version (FU_DEVICE (self), version, FWUPD_VERSION_FORMAT_PAIR);
+			fu_device_set_version (FU_DEVICE (self), version);
 			break;
 		default:
 			g_warning ("unknown submodule type 0x%0x", fw_type);
 			break;
 		}
 	}
-	return TRUE;
-}
-
-static gboolean
-fu_wac_device_open (FuUsbDevice *device, GError **error)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
-
-	/* open device */
-	if (!g_usb_device_claim_interface (usb_device, 0x00, /* HID */
-					   G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					   error)) {
-		g_prefix_error (error, "failed to claim HID interface: ");
-		return FALSE;
-	}
-
-	/* success */
 	return TRUE;
 }
 
@@ -843,6 +779,14 @@ fu_wac_device_close (FuUsbDevice *device, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_wac_device_cleanup (FuDevice *device, FwupdInstallFlags flags, GError **error)
+{
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	return fu_wac_device_update_reset (FU_WAC_DEVICE (device), error);
+}
+
 static void
 fu_wac_device_init (FuWacDevice *self)
 {
@@ -853,7 +797,9 @@ fu_wac_device_init (FuWacDevice *self)
 	fu_device_set_protocol (FU_DEVICE (self), "com.wacom.usb");
 	fu_device_add_icon (FU_DEVICE (self), "input-tablet");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_install_duration (FU_DEVICE (self), 10);
+	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 }
 
 static void
@@ -878,6 +824,6 @@ fu_wac_device_class_init (FuWacDeviceClass *klass)
 	klass_device->write_firmware = fu_wac_device_write_firmware;
 	klass_device->to_string = fu_wac_device_to_string;
 	klass_device->setup = fu_wac_device_setup;
-	klass_usb_device->open = fu_wac_device_open;
+	klass_device->cleanup = fu_wac_device_cleanup;
 	klass_usb_device->close = fu_wac_device_close;
 }

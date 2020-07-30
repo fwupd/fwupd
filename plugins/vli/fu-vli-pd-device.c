@@ -36,6 +36,10 @@ fu_vli_pd_device_read_regs (FuVliPdDevice *self, guint16 addr,
 		g_prefix_error (error, "failed to write register @0x%x: ", addr);
 		return FALSE;
 	}
+	if (g_getenv ("FWUPD_VLI_USBHUB_VERBOSE") != NULL) {
+		g_autofree gchar *title = g_strdup_printf ("ReadRegs@0x%x", addr);
+		fu_common_dump_raw (G_LOG_DOMAIN, title, buf, bufsz);
+	}
 	return TRUE;
 }
 
@@ -48,6 +52,10 @@ fu_vli_pd_device_read_reg (FuVliPdDevice *self, guint16 addr, guint8 *value, GEr
 static gboolean
 fu_vli_pd_device_write_reg (FuVliPdDevice *self, guint16 addr, guint8 value, GError **error)
 {
+	if (g_getenv ("FWUPD_VLI_USBHUB_VERBOSE") != NULL) {
+		g_autofree gchar *title = g_strdup_printf ("WriteReg@0x%x", addr);
+		fu_common_dump_raw (G_LOG_DOMAIN, title, &value, sizeof(value));
+	}
 	if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (self)),
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
@@ -217,32 +225,6 @@ fu_vli_pd_device_spi_write_data (FuVliDevice *self,
 }
 
 static gboolean
-fu_vli_pd_device_reset (FuVliDevice *device, GError **error)
-{
-	return g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (device)),
-					      G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					      G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					      G_USB_DEVICE_RECIPIENT_DEVICE,
-					      0xb0, 0x0000, 0x0000,
-					      NULL, 0x0, NULL,
-					      FU_VLI_DEVICE_TIMEOUT,
-					      NULL, error);
-}
-
-static gboolean
-fu_vli_pd_device_reset_vl103 (FuVliDevice *device, GError **error)
-{
-	return g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (device)),
-					      G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					      G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					      G_USB_DEVICE_RECIPIENT_DEVICE,
-					      0xc0, 0x0000, 0x0000,
-					      NULL, 0x0, NULL,
-					      FU_VLI_DEVICE_TIMEOUT,
-					      NULL, error);
-}
-
-static gboolean
 fu_vli_pd_device_parade_setup (FuVliPdDevice *self, GError **error)
 {
 	g_autoptr(FuDevice) dev = NULL;
@@ -277,7 +259,6 @@ fu_vli_pd_device_setup (FuVliDevice *device, GError **error)
 	guint8 verbuf[4] = { 0x0 };
 	guint8 tmp = 0;
 	g_autofree gchar *version_str = NULL;
-	FuVliDeviceClass *klass = FU_VLI_DEVICE_GET_CLASS (device);
 
 	/* get version */
 	if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (self)),
@@ -293,7 +274,7 @@ fu_vli_pd_device_setup (FuVliDevice *device, GError **error)
 	version_raw = fu_common_read_uint32 (verbuf, G_BIG_ENDIAN);
 	fu_device_set_version_raw (FU_DEVICE (self), version_raw);
 	version_str = fu_common_version_from_uint32 (version_raw, FWUPD_VERSION_FORMAT_QUAD);
-	fu_device_set_version (FU_DEVICE (self), version_str, FWUPD_VERSION_FORMAT_QUAD);
+	fu_device_set_version (FU_DEVICE (self), version_str);
 
 	/* get device kind if not already in ROM mode */
 	if (fu_vli_device_get_kind (device) == FU_VLI_DEVICE_KIND_UNKNOWN) {
@@ -322,10 +303,6 @@ fu_vli_pd_device_setup (FuVliDevice *device, GError **error)
 			return FALSE;
 		}
 	}
-
-	/* handle this in a different way */
-	if (fu_vli_device_get_kind (device) == FU_VLI_DEVICE_KIND_VL103)
-		klass->reset = fu_vli_pd_device_reset_vl103;
 
 	/* get bootloader mode */
 	if (!fu_vli_pd_device_read_reg (self, 0x00F7, &tmp, error))
@@ -403,13 +380,74 @@ fu_vli_pd_device_read_firmware (FuDevice *device, GError **error)
 static gboolean
 fu_vli_pd_device_write_gpios (FuVliPdDevice *self, GError **error)
 {
-	/* write GPIO 4&5, 7 then 3 */
+	/* disable UART-Rx mode */
 	if (!fu_vli_pd_device_write_reg (self, 0x0015, 0x7F, error))
 		return FALSE;
+	/* disable 'Watch Mode', chip is not in debug mode */
 	if (!fu_vli_pd_device_write_reg (self, 0x0019, 0x00, error))
 		return FALSE;
+	/* GPIO3 output enable, switch/CMOS/Boost control pin */
 	if (!fu_vli_pd_device_write_reg (self, 0x001C, 0x02, error))
 		return FALSE;
+	return TRUE;
+}
+
+static gboolean
+fu_vli_pd_device_write_dual_firmware (FuVliPdDevice *self, GBytes *fw, GError **error)
+{
+	const guint8 *buf = NULL;
+	const guint8 *sbuf = NULL;
+	gsize bufsz = 0;
+	gsize sbufsz = 0;
+	guint16 crc_actual;
+	guint16 crc_file = 0x0;
+	guint32 sec_addr = 0x28000;
+	g_autoptr(GBytes) spi_fw = NULL;
+
+	/* check spi fw1 crc16 */
+	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_VERIFY);
+	spi_fw = fu_vli_device_spi_read (FU_VLI_DEVICE (self),
+					 fu_vli_device_get_offset (FU_VLI_DEVICE (self)),
+					 fu_device_get_firmware_size_max (FU_DEVICE (self)),
+					 error);
+	if (spi_fw == NULL)
+		return FALSE;
+	sbuf = g_bytes_get_data (spi_fw, &sbufsz);
+	if (sbufsz != 0x8000)
+		sec_addr = 0x30000;
+	if (!fu_common_read_uint16_safe	(sbuf, sbufsz, sbufsz - 2, &crc_file,
+					 G_LITTLE_ENDIAN, error)) {
+		g_prefix_error (error, "failed to read file CRC: ");
+		return FALSE;
+	}
+	crc_actual = fu_vli_common_crc16 (sbuf, sbufsz - 2);
+	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_WRITE);
+
+	/* update fw2 first if fw1 correct */
+	buf = g_bytes_get_data (fw, &bufsz);
+	if (crc_actual == crc_file) {
+		if (!fu_vli_device_spi_write (FU_VLI_DEVICE (self),
+					      sec_addr,
+					      buf, bufsz, error))
+			return FALSE;
+		if (!fu_vli_device_spi_write (FU_VLI_DEVICE (self),
+					      fu_vli_device_get_offset (FU_VLI_DEVICE (self)),
+					      buf, bufsz, error))
+			return FALSE;
+
+	/* else update fw1 first */
+	} else {
+		if (!fu_vli_device_spi_write (FU_VLI_DEVICE (self),
+					      fu_vli_device_get_offset (FU_VLI_DEVICE (self)),
+					      buf, bufsz, error))
+			return FALSE;
+		if (!fu_vli_device_spi_write (FU_VLI_DEVICE (self),
+					      sec_addr,
+					      buf, bufsz, error))
+			return FALSE;
+	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -440,6 +478,11 @@ fu_vli_pd_device_write_firmware (FuDevice *device,
 	if (!fu_vli_pd_device_write_reg (self, 0x0003, tmp | 0x44, error))
 		return FALSE;
 
+	/* dual image on VL103 */
+	if (fu_vli_device_get_kind (FU_VLI_DEVICE (device)) == FU_VLI_DEVICE_KIND_VL103 &&
+	    fu_device_has_flag (device, FWUPD_DEVICE_FLAG_DUAL_IMAGE))
+		return fu_vli_pd_device_write_dual_firmware (self, fw, error);
+
 	/* erase */
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_ERASE);
 	if (!fu_vli_device_spi_erase_all (FU_VLI_DEVICE (self), error))
@@ -461,40 +504,84 @@ static gboolean
 fu_vli_pd_device_detach (FuDevice *device, GError **error)
 {
 	FuVliPdDevice *self = FU_VLI_PD_DEVICE (device);
-	guint8 tmp = 0;
 	g_autoptr(GError) error_local = NULL;
+
+	/* sanity check */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug ("already in bootloader mode, skipping");
+		return TRUE;
+	}
 
 	/* write GPIOs */
 	if (!fu_vli_pd_device_write_gpios (self, error))
 		return FALSE;
 
-	/* patch APP5 FW bug (2AF2 -> 2AE2) */
-	if (!fu_vli_pd_device_read_reg (self, 0x0018, &tmp, error))
-		return FALSE;
-	if (tmp != 0x80) {
-		if (!fu_vli_pd_device_write_reg (self, 0x2AE2, 0x1E, error))
-			return FALSE;
-		if (!fu_vli_pd_device_write_reg (self, 0x2AE3, 0xC3, error))
-			return FALSE;
-		if (!fu_vli_pd_device_write_reg (self, 0x2AE4, 0x5A, error))
-			return FALSE;
-		if (!fu_vli_pd_device_write_reg (self, 0x2AE5, 0x87, error))
-			return FALSE;
-		/* set ROM sig */
+	/* VL103 set ROM sig does not work, so use alternate function */
+	if (fu_vli_device_get_kind (FU_VLI_DEVICE (device)) == FU_VLI_DEVICE_KIND_VL103) {
+		fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
 		if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (device)),
 						    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 						    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
 						    G_USB_DEVICE_RECIPIENT_DEVICE,
-						    0xa0, 0x0000, 0x0000,
+						    0xc0, 0x0000, 0x0000,
 						    NULL, 0x0, NULL,
 						    FU_VLI_DEVICE_TIMEOUT,
-						    NULL, error))
-			return FALSE;
+						    NULL, &error_local)) {
+			if (g_error_matches (error_local,
+					     G_USB_DEVICE_ERROR,
+					     G_USB_DEVICE_ERROR_FAILED)) {
+				g_debug ("ignoring %s", error_local->message);
+			} else {
+				g_propagate_prefixed_error (error,
+							    g_steal_pointer (&error_local),
+							    "failed to restart device: ");
+				return FALSE;
+			}
+		}
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+		return TRUE;
 	}
+
+	/* patch APP5 FW bug (2AF2 -> 2AE2) on VL100-App5 and VL102 */
+	if (fu_vli_device_get_kind (FU_VLI_DEVICE (device)) == FU_VLI_DEVICE_KIND_VL100 ||
+	    fu_vli_device_get_kind (FU_VLI_DEVICE (device)) == FU_VLI_DEVICE_KIND_VL102) {
+		guint8 tmp = 0;
+		if (!fu_vli_pd_device_read_reg (self, 0x0018, &tmp, error))
+			return FALSE;
+		if (tmp != 0x80) {
+			if (!fu_vli_pd_device_write_reg (self, 0x2AE2, 0x1E, error))
+				return FALSE;
+			if (!fu_vli_pd_device_write_reg (self, 0x2AE3, 0xC3, error))
+				return FALSE;
+			if (!fu_vli_pd_device_write_reg (self, 0x2AE4, 0x5A, error))
+				return FALSE;
+			if (!fu_vli_pd_device_write_reg (self, 0x2AE5, 0x87, error))
+				return FALSE;
+		}
+	}
+
+	/* set ROM sig */
+	if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (device)),
+					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    0xa0,
+					    0x0000, 0x0000,
+					    NULL, 0x0, NULL,
+					    FU_VLI_DEVICE_TIMEOUT,
+					    NULL, error))
+		return FALSE;
 
 	/* reset from SPI_Code into ROM_Code */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	if (!fu_vli_device_reset (FU_VLI_DEVICE (device), &error_local)) {
+	if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (device)),
+					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    0xb0, 0x0000, 0x0000,
+					    NULL, 0x0, NULL,
+					    FU_VLI_DEVICE_TIMEOUT,
+					    NULL, &error_local)) {
 		if (g_error_matches (error_local,
 				     G_USB_DEVICE_ERROR,
 				     G_USB_DEVICE_ERROR_FAILED)) {
@@ -510,6 +597,76 @@ fu_vli_pd_device_detach (FuDevice *device, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_vli_pd_device_attach (FuDevice *device, GError **error)
+{
+	FuVliPdDevice *self = FU_VLI_PD_DEVICE (device);
+	g_autoptr(GError) error_local = NULL;
+
+	/* Work around a silicon bug: Once the CC-resistor is removed, the
+	 * CC-host thinks the device is un-plugged and turn off VBUS (power).
+	 * When VL103 is powered-off, VL103 puts a resistor at CC-pin.
+	 * The CC-host will think the device is re-plugged and provides VBUS
+	 * again. Then, VL103 will be powered on and runs new FW. */
+	if (fu_vli_device_get_kind (FU_VLI_DEVICE (device)) == FU_VLI_DEVICE_KIND_VL103) {
+		if (!fu_vli_pd_device_write_reg (self, 0x1201, 0xf6, error))
+			return FALSE;
+		if (!fu_vli_pd_device_write_reg (self, 0x1001, 0xf6, error))
+			return FALSE;
+		fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+		return TRUE;
+	}
+
+	/* sanity check */
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug ("already in runtime mode, skipping");
+		return TRUE;
+	}
+
+	/* chip reset command works only for non-VL103 */
+	if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (device)),
+					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    0xb0,
+					    0x0000, 0x0000,
+					    NULL, 0x0, NULL,
+					    FU_VLI_DEVICE_TIMEOUT,
+					    NULL, &error_local)) {
+		if (g_error_matches (error_local,
+				     G_USB_DEVICE_ERROR,
+				     G_USB_DEVICE_ERROR_NO_DEVICE) ||
+		    g_error_matches (error_local,
+				     G_USB_DEVICE_ERROR,
+				     G_USB_DEVICE_ERROR_TIMED_OUT) ||
+		    g_error_matches (error_local,
+				     G_USB_DEVICE_ERROR,
+				     G_USB_DEVICE_ERROR_FAILED)) {
+			g_debug ("ignoring %s", error_local->message);
+		} else {
+			g_propagate_prefixed_error (error,
+						    g_steal_pointer (&error_local),
+						    "failed to restart device: ");
+			return FALSE;
+		}
+	}
+
+	/* replug */
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	return TRUE;
+}
+
+static void
+fu_vli_pd_device_kind_changed_cb (FuVliDevice *device, GParamSpec *pspec, gpointer user_data)
+{
+	if (fu_vli_device_get_kind (device) == FU_VLI_DEVICE_KIND_VL103) {
+		/* wait for USB-C timeout */
+		fu_device_set_remove_delay (FU_DEVICE (device), 10000);
+	}
+}
+
 static void
 fu_vli_pd_device_init (FuVliPdDevice *self)
 {
@@ -519,7 +676,12 @@ fu_vli_pd_device_init (FuVliPdDevice *self)
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_vli_device_set_spi_auto_detect (FU_VLI_DEVICE (self), FALSE);
+
+	/* connect up attach or detach vfuncs when kind is known */
+	g_signal_connect (self, "notify::kind",
+			  G_CALLBACK (fu_vli_pd_device_kind_changed_cb), NULL);
 }
 
 static void
@@ -530,9 +692,9 @@ fu_vli_pd_device_class_init (FuVliPdDeviceClass *klass)
 	klass_device->read_firmware = fu_vli_pd_device_read_firmware;
 	klass_device->write_firmware = fu_vli_pd_device_write_firmware;
 	klass_device->prepare_firmware = fu_vli_pd_device_prepare_firmware;
+	klass_device->attach = fu_vli_pd_device_attach;
 	klass_device->detach = fu_vli_pd_device_detach;
 	klass_vli_device->setup = fu_vli_pd_device_setup;
-	klass_vli_device->reset = fu_vli_pd_device_reset;
 	klass_vli_device->spi_chip_erase = fu_vli_pd_device_spi_chip_erase;
 	klass_vli_device->spi_sector_erase = fu_vli_pd_device_spi_sector_erase;
 	klass_vli_device->spi_read_data = fu_vli_pd_device_spi_read_data;

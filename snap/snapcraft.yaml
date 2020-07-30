@@ -29,6 +29,8 @@ apps:
       share/bash-completion/completions/fwupdmgr
   fwupdtpmevlog:
     command: fwupdtpmevlog.wrapper
+  fwupdagent:
+    command: fwupdagent.wrapper
 
 parts:
   tpm2-tss:
@@ -43,9 +45,34 @@ parts:
      - -lib/pkgconfig
     build-packages:
      - libssl-dev
+  nettle:
+    plugin: autotools
+    source: https://ftp.gnu.org/gnu/nettle/nettle-3.5.tar.gz
+    build-packages:
+     - libgmp-dev
+    prime:
+     - -include
+     - -bin
+     - -share/man
+     - -lib/pkgconfig
+  gnutls:
+    plugin: autotools
+    source: https://www.gnupg.org/ftp/gcrypt/gnutls/v3.6/gnutls-3.6.12.tar.xz
+    build-packages:
+      - libtasn1-6-dev
+      - libunistring-dev
+      - libidn2-dev
+      - libunbound-dev
+      - libp11-kit-dev
+    prime:
+     - -include
+     - -bin
+     - -share/man
+     - -lib/pkgconfig
+    after: [nettle]
   meson:
     plugin: python
-    source: https://github.com/mesonbuild/meson/releases/download/0.51.2/meson-0.51.2.tar.gz
+    source: https://github.com/mesonbuild/meson/releases/download/0.54.0/meson-0.54.0.tar.gz
     build-packages:
       - ninja-build
       - python3-distutils-extra
@@ -59,10 +86,11 @@ parts:
   modemmanager:
     plugin: autotools
     source: https://gitlab.freedesktop.org/mobile-broadband/ModemManager.git
-    source-tag: 1.10.0
+    source-tag: 1.14.0
     # build without these; system daemon needs them
     build-packages:
       - xsltproc
+      - autoconf-archive
     configflags:
       - --without-mbim
       - --without-qmi
@@ -81,7 +109,7 @@ parts:
   libmbim:
     plugin: autotools
     source: https://gitlab.freedesktop.org/mobile-broadband/libmbim.git
-    source-tag: 1.18.0
+    source-tag: 1.24.0
     after: [modemmanager]
     # build without these; system daemon needs them
     configflags:
@@ -101,7 +129,7 @@ parts:
   libqmi:
     plugin: autotools
     source: https://gitlab.freedesktop.org/mobile-broadband/libqmi.git
-    source-tag: 1.23.1
+    source-tag: 1.26.0
     after: [modemmanager, libmbim]
     # build without these; system daemon needs them
     configflags:
@@ -148,7 +176,11 @@ parts:
                        -Dplugin_modem_manager=true,
                        -Dudevdir=$SNAPCRAFT_STAGE/lib/udev,
                        "-Dlibxmlb:gtkdoc=false",
-                       "-Dlibxmlb:introspection=false"]
+                       "-Dlibxmlb:introspection=false",
+                       "-Dlibjcat:man=false",
+                       "-Dlibjcat:gtkdoc=false",
+                       "-Dlibjcat:introspection=false",
+                       "-Dlibjcat:tests=false"]
     source: .
     source-type: git
     override-build: |
@@ -157,7 +189,6 @@ parts:
     build-packages:
       - bash-completion
       - gcab
-      - gnutls-dev
       - gnu-efi
       - libarchive-dev
       - libcairo-dev
@@ -234,7 +265,9 @@ parts:
       - -usr/share/gir-1.0
       - -usr/share/upstart
       - -usr/lib/*/pkgconfig
-    after: [meson, build-introspection, modemmanager, libmbim, libqmi, tpm2-tss]
+      # we don't want system gnutls leaking in
+      - -usr/lib/*/libgnutls*
+    after: [meson, build-introspection, modemmanager, libmbim, libqmi, tpm2-tss, gnutls]
   fix-bash-completion:
     plugin: make
     source: contrib/snap/fix-bash-completion
@@ -269,3 +302,4 @@ parts:
     - fwupd.wrapper
     - fwupdmgr.wrapper
     - fwupdtpmevlog.wrapper
+    - fwupdagent.wrapper

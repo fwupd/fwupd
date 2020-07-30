@@ -1,0 +1,16 @@
+{
+  "name": "Logitech Unifying Receiver (RQR24 SIGNED)",
+  "guids": [
+    "cc4cbfa9-bf9d-540b-b92b-172ce31013c1",
+    "87fd7145-3913-50c8-bfcb-86f85006d7d1",
+    "111c9951-f819-5c48-93ef-205a8f8b96c1",
+    "40410bd7-57eb-5c82-9eac-abf893861221"
+  ],
+  "protocol": "com.logitech.unifyingsigned",
+  "releases": [
+    {
+      "version": "RQR24.11_B0036",
+      "file": "b30e729cc544c711a6ad947cef9ce6614b394a7b-Logitech-Unifying-RQR24.11_B0036.cab"
+    }
+  ]
+}

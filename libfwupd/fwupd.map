@@ -421,3 +421,50 @@ LIBFWUPD_1.3.7 {
     fwupd_device_get_children;
   local: *;
 } LIBFWUPD_1.3.6;
+
+LIBFWUPD_1.4.0 {
+  global:
+    fwupd_device_get_status;
+    fwupd_device_get_version_bootloader_raw;
+    fwupd_device_get_version_lowest_raw;
+    fwupd_device_set_status;
+    fwupd_device_set_version_bootloader_raw;
+    fwupd_device_set_version_lowest_raw;
+    fwupd_release_get_created;
+    fwupd_release_get_urgency;
+    fwupd_release_set_created;
+    fwupd_release_set_urgency;
+    fwupd_release_urgency_from_string;
+    fwupd_release_urgency_to_string;
+    fwupd_remote_load_signature;
+  local: *;
+} LIBFWUPD_1.3.7;
+
+LIBFWUPD_1.4.1 {
+  global:
+    fwupd_client_get_devices_by_guid;
+    fwupd_device_id_is_valid;
+  local: *;
+} LIBFWUPD_1.4.0;
+
+LIBFWUPD_1.4.5 {
+  global:
+    fwupd_client_download_bytes;
+    fwupd_client_ensure_networking;
+    fwupd_client_install_bytes;
+    fwupd_client_install_release;
+    fwupd_client_refresh_remote;
+    fwupd_client_set_feature_flags;
+    fwupd_client_set_user_agent;
+    fwupd_client_set_user_agent_for_package;
+    fwupd_client_update_metadata_bytes;
+    fwupd_client_upload_bytes;
+    fwupd_device_get_update_image;
+    fwupd_device_set_update_image;
+    fwupd_feature_flag_from_string;
+    fwupd_feature_flag_to_string;
+    fwupd_release_get_update_image;
+    fwupd_release_set_update_image;
+    fwupd_remote_load_signature_bytes;
+  local: *;
+} LIBFWUPD_1.4.1;

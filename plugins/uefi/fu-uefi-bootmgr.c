@@ -16,6 +16,7 @@
 #include "fu-ucs2.h"
 #include "fu-uefi-bootmgr.h"
 #include "fu-uefi-common.h"
+#include "fu-efivar.h"
 
 /* XXX PJFIX: this should be in efiboot-loadopt.h in efivar */
 #define LOAD_OPTION_ACTIVE      0x00000001
@@ -305,7 +306,7 @@ fu_uefi_bootmgr_bootnext (const gchar *esp_path,
 		return FALSE;
 
 	/* test if we should use shim */
-	secure_boot = fu_uefi_secure_boot_enabled ();
+	secure_boot = fu_efivar_secure_boot_enabled ();
 	if (secure_boot) {
 		/* test to make sure shim is there if we need it */
 		shim_app = fu_uefi_get_esp_app_path (esp_path, "shim", error);

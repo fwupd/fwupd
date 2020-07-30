@@ -22,6 +22,7 @@ G_BEGIN_DECLS
 #define FWUPD_RESULT_KEY_ISSUES			"Issues"	/* as */
 #define FWUPD_RESULT_KEY_FLAGS			"Flags"		/* t */
 #define FWUPD_RESULT_KEY_FLASHES_LEFT		"FlashesLeft"	/* u */
+#define FWUPD_RESULT_KEY_URGENCY		"Urgency"	/* u */
 #define FWUPD_RESULT_KEY_INSTALL_DURATION	"InstallDuration"	/* u */
 #define FWUPD_RESULT_KEY_GUID			"Guid"		/* as */
 #define FWUPD_RESULT_KEY_INSTANCE_IDS		"InstanceIds"	/* as */
@@ -40,9 +41,11 @@ G_BEGIN_DECLS
 #define FWUPD_RESULT_KEY_REMOTE_ID		"RemoteId"	/* s */
 #define FWUPD_RESULT_KEY_SERIAL			"Serial"	/* s */
 #define FWUPD_RESULT_KEY_SIZE			"Size"		/* t */
+#define FWUPD_RESULT_KEY_STATUS			"Status"	/* u */
 #define FWUPD_RESULT_KEY_SUMMARY		"Summary"	/* s */
 #define FWUPD_RESULT_KEY_TRUST_FLAGS		"TrustFlags"	/* t */
 #define FWUPD_RESULT_KEY_UPDATE_MESSAGE		"UpdateMessage"	/* s */
+#define FWUPD_RESULT_KEY_UPDATE_IMAGE		"UpdateImage"	/* s */
 #define FWUPD_RESULT_KEY_UPDATE_ERROR		"UpdateError"	/* s */
 #define FWUPD_RESULT_KEY_UPDATE_STATE		"UpdateState"	/* u */
 #define FWUPD_RESULT_KEY_URI			"Uri"		/* s */
@@ -50,9 +53,11 @@ G_BEGIN_DECLS
 #define FWUPD_RESULT_KEY_VENDOR			"Vendor"	/* s */
 #define FWUPD_RESULT_KEY_VENDOR			"Vendor"	/* s */
 #define FWUPD_RESULT_KEY_VERSION_BOOTLOADER	"VersionBootloader"	/* s */
+#define FWUPD_RESULT_KEY_VERSION_BOOTLOADER_RAW	"VersionBootloaderRaw"	/* t */
 #define FWUPD_RESULT_KEY_VERSION_FORMAT		"VersionFormat"	/* u */
 #define FWUPD_RESULT_KEY_VERSION_RAW		"VersionRaw"	/* t */
 #define FWUPD_RESULT_KEY_VERSION_LOWEST		"VersionLowest"	/* s */
+#define FWUPD_RESULT_KEY_VERSION_LOWEST_RAW	"VersionLowestRaw"	/* t */
 #define FWUPD_RESULT_KEY_VERSION		"Version"	/* s */
 
 G_END_DECLS

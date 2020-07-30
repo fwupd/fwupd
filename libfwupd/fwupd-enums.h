@@ -65,6 +65,24 @@ typedef enum {
 } FwupdTrustFlags;
 
 /**
+ * FwupdFeatureFlags:
+ * @FWUPD_FEATURE_FLAG_NONE:			No trust
+ * @FWUPD_FEATURE_FLAG_CAN_REPORT:		Can upload a report of the update back to the server
+ * @FWUPD_FEATURE_FLAG_DETACH_ACTION:		Can perform detach action, typically showing text
+ * @FWUPD_FEATURE_FLAG_UPDATE_ACTION:		Can perform update action, typically showing text
+ *
+ * The flags to the feature capabilities of the front-end client.
+ **/
+typedef enum {
+	FWUPD_FEATURE_FLAG_NONE			= 0,		/* Since: 1.4.5 */
+	FWUPD_FEATURE_FLAG_CAN_REPORT		= 1 << 0,	/* Since: 1.4.5 */
+	FWUPD_FEATURE_FLAG_DETACH_ACTION	= 1 << 1,	/* Since: 1.4.5 */
+	FWUPD_FEATURE_FLAG_UPDATE_ACTION	= 1 << 2,	/* Since: 1.4.5 */
+	/*< private >*/
+	FWUPD_FEATURE_FLAG_LAST
+} FwupdFeatureFlags;
+
+/**
  * FwupdDeviceFlags:
  * @FWUPD_DEVICE_FLAG_NONE:			No flags set
  * @FWUPD_DEVICE_FLAG_INTERNAL:			Device cannot be removed easily
@@ -99,6 +117,13 @@ typedef enum {
  * @FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE:	Device remains usable while fwupd flashes or schedules the update
  * @FWUPD_DEVICE_FLAG_VERSION_CHECK_REQUIRED:	All firmware updates for this device require a firmware version check
  * @FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES:	Install each intermediate release rather than jumping direct to newest
+ * @FWUPD_DEVICE_FLAG_MD_SET_NAME:		Set the device name from the metadata <name> if available
+ * @FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY:	Set the device name from the metadata <category> if available
+ * @FWUPD_DEVICE_FLAG_MD_SET_VERFMT:		Set the device version format from the metadata if available
+ * @FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS:	Add counterpart GUIDs from an alternate mode like bootloader
+ * @FWUPD_DEVICE_FLAG_NO_GUID_MATCHING:		Force an explicit ID match when adding devices to the device list
+ * @FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN:		Device is updatable but should not be called by the client
+ * @FWUPD_DEVICE_FLAG_SKIPS_RESTART:		Device relies upon activation or power cycle to load firmware
  *
  * The device flags.
  **/
@@ -135,6 +160,13 @@ typedef enum {
 #define FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE	(1u << 29)	/* Since: 1.3.3 */
 #define FWUPD_DEVICE_FLAG_VERSION_CHECK_REQUIRED (1u << 30)	/* Since: 1.3.7 */
 #define FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES	(1u << 31)	/* Since: 1.3.7 */
+#define FWUPD_DEVICE_FLAG_MD_SET_NAME		(1llu << 32)	/* Since: 1.4.0 */
+#define FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY	(1llu << 33)	/* Since: 1.4.0 */
+#define FWUPD_DEVICE_FLAG_MD_SET_VERFMT		(1llu << 34)	/* Since: 1.4.0 */
+#define FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS	(1llu << 35)	/* Since: 1.4.0 */
+#define FWUPD_DEVICE_FLAG_NO_GUID_MATCHING	(1llu << 36)	/* Since: 1.4.1 */
+#define FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN	(1llu << 37)	/* Since: 1.4.1 */
+#define FWUPD_DEVICE_FLAG_SKIPS_RESTART		(1llu << 38)	/* Since: 1.4.5 */
 #define FWUPD_DEVICE_FLAG_UNKNOWN		G_MAXUINT64	/* Since: 0.7.3 */
 typedef guint64 FwupdDeviceFlags;
 
@@ -159,6 +191,26 @@ typedef guint64 FwupdDeviceFlags;
 #define FWUPD_RELEASE_FLAG_BLOCKED_APPROVAL	(1u << 5)	/* Since: 1.2.6 */
 #define FWUPD_RELEASE_FLAG_UNKNOWN		G_MAXUINT64	/* Since: 1.2.6 */
 typedef guint64 FwupdReleaseFlags;
+
+/**
+ * FwupdReleaseUrgency:
+ * @FWUPD_RELEASE_URGENCY_UNKNOWN:		Unknown
+ * @FWUPD_RELEASE_URGENCY_LOW:			Low
+ * @FWUPD_RELEASE_URGENCY_MEDIUM:		Medium
+ * @FWUPD_RELEASE_URGENCY_HIGH:			High
+ * @FWUPD_RELEASE_URGENCY_CRITICAL:		Critical, e.g. a security fix
+ *
+ * The release urgency.
+ **/
+typedef enum {
+	FWUPD_RELEASE_URGENCY_UNKNOWN,				/* Since: 1.4.0 */
+	FWUPD_RELEASE_URGENCY_LOW,				/* Since: 1.4.0 */
+	FWUPD_RELEASE_URGENCY_MEDIUM,				/* Since: 1.4.0 */
+	FWUPD_RELEASE_URGENCY_HIGH,				/* Since: 1.4.0 */
+	FWUPD_RELEASE_URGENCY_CRITICAL,				/* Since: 1.4.0 */
+	/*< private >*/
+	FWUPD_RELEASE_URGENCY_LAST
+} FwupdReleaseUrgency;
 
 /**
  * FwupdInstallFlags:
@@ -226,6 +278,7 @@ typedef enum {
  * @FWUPD_KEYRING_KIND_NONE:			No verification
  * @FWUPD_KEYRING_KIND_GPG:			Verification using GPG
  * @FWUPD_KEYRING_KIND_PKCS7:			Verification using PKCS7
+ * @FWUPD_KEYRING_KIND_JCAT:			Verification using Jcat
  *
  * The update state.
  **/
@@ -234,6 +287,7 @@ typedef enum {
 	FWUPD_KEYRING_KIND_NONE,			/* Since: 0.9.7 */
 	FWUPD_KEYRING_KIND_GPG,				/* Since: 0.9.7 */
 	FWUPD_KEYRING_KIND_PKCS7,			/* Since: 0.9.7 */
+	FWUPD_KEYRING_KIND_JCAT,			/* Since: 1.4.0 */
 	/*< private >*/
 	FWUPD_KEYRING_KIND_LAST
 } FwupdKeyringKind;
@@ -252,6 +306,7 @@ typedef enum {
  * @FWUPD_VERSION_FORMAT_SURFACE_LEGACY:	Legacy Microsoft Surface 10b.12b.10b
  * @FWUPD_VERSION_FORMAT_SURFACE:		Microsoft Surface 8b.16b.8b
  * @FWUPD_VERSION_FORMAT_DELL_BIOS:		Dell BIOS BB.CC.DD style
+ * @FWUPD_VERSION_FORMAT_HEX:			Hexadecimal 0xAABCCDD style
  *
  * The flags used when parsing version numbers.
  *
@@ -271,6 +326,7 @@ typedef enum {
 	FWUPD_VERSION_FORMAT_SURFACE_LEGACY,		/* Since: 1.3.4 */
 	FWUPD_VERSION_FORMAT_SURFACE,			/* Since: 1.3.4 */
 	FWUPD_VERSION_FORMAT_DELL_BIOS,			/* Since: 1.3.6 */
+	FWUPD_VERSION_FORMAT_HEX,		/* Since: 1.4.0 */
 	/*< private >*/
 	FWUPD_VERSION_FORMAT_LAST
 } FwupdVersionFormat;
@@ -281,10 +337,14 @@ const gchar	*fwupd_device_flag_to_string		(FwupdDeviceFlags device_flag);
 FwupdDeviceFlags fwupd_device_flag_from_string		(const gchar	*device_flag);
 const gchar	*fwupd_release_flag_to_string		(FwupdReleaseFlags release_flag);
 FwupdReleaseFlags fwupd_release_flag_from_string	(const gchar	*release_flag);
+const gchar	*fwupd_release_urgency_to_string	(FwupdReleaseUrgency release_urgency);
+FwupdReleaseUrgency fwupd_release_urgency_from_string	(const gchar	*release_urgency);
 const gchar	*fwupd_update_state_to_string		(FwupdUpdateState update_state);
 FwupdUpdateState fwupd_update_state_from_string		(const gchar	*update_state);
 const gchar	*fwupd_trust_flag_to_string		(FwupdTrustFlags trust_flag);
 FwupdTrustFlags	 fwupd_trust_flag_from_string		(const gchar	*trust_flag);
+const gchar	*fwupd_feature_flag_to_string		(FwupdFeatureFlags feature_flag);
+FwupdFeatureFlags fwupd_feature_flag_from_string	(const gchar	*feature_flag);
 FwupdKeyringKind fwupd_keyring_kind_from_string		(const gchar	*keyring_kind);
 const gchar	*fwupd_keyring_kind_to_string		(FwupdKeyringKind keyring_kind);
 FwupdVersionFormat fwupd_version_format_from_string	(const gchar	*str);

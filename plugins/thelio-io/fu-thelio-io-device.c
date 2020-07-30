@@ -22,9 +22,11 @@ fu_thelio_io_device_probe (FuDevice *device, GError **error)
 	const gchar *devpath;
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *buf = NULL;
+	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GUdevDevice) udev_device = NULL;
 
-	fu_device_add_instance_id (device, "USB\\VID_03EB&PID_2FF4");
+	/* this is the atmel bootloader */
+	fu_device_add_counterpart_guid (device, "USB\\VID_03EB&PID_2FF4");
 
 	/* convert GUsbDevice to GUdevDevice */
 	udev_device = fu_usb_device_find_udev_device (FU_USB_DEVICE (device), error);
@@ -39,11 +41,19 @@ fu_thelio_io_device_probe (FuDevice *device, GError **error)
 		return FALSE;
 	}
 
+	/* pre-1.0.0 firmware versions do not implement this */
 	fn = g_build_filename (devpath, "revision", NULL);
-	if (!g_file_get_contents(fn, &buf, NULL, error))
-		return FALSE;
-
-	fu_device_set_version (device, (const gchar *) buf, FWUPD_VERSION_FORMAT_TRIPLET);
+	if (!g_file_get_contents (fn, &buf, NULL, &error_local)) {
+		if (g_error_matches (error_local, G_FILE_ERROR, G_FILE_ERROR_FAILED)) {
+			g_debug ("FW revision unimplemented: %s", error_local->message);
+			fu_device_set_version (device, "0.0.0");
+		} else {
+			g_propagate_error (error, g_steal_pointer (&error_local));
+			return FALSE;
+		}
+	} else {
+		fu_device_set_version (device, (const gchar *) buf);
+	}
 
 	return TRUE;
 }
@@ -87,6 +97,7 @@ fu_thelio_io_device_init (FuThelioIoDevice *self)
 {
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_TRIPLET);
 }
 
 static void
