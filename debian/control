@@ -2,7 +2,6 @@ Source: fwupd
 Priority: optional
 Maintainer: Debian EFI <debian-efi@lists.debian.org>
 Uploaders: Steve McIntyre <93sam@debian.org>,
-           Daniel Jared Dominguez <jared.dominguez@dell.com>,
            Matthias Klumpp <mak@debian.org>,
            Mario Limonciello <mario.limonciello@dell.com>
 Build-Depends:
@@ -27,14 +26,14 @@ Build-Depends:
 	libefiboot-dev [amd64 arm64 armhf i386],
 	libefivar-dev [amd64 arm64 armhf i386],
 	libelf-dev,
-	libflashrom-dev,
+	libflashrom-dev [!ia64],
 	libfreetype6-dev,
 	libgcab-dev,
 	libgirepository1.0-dev,
 	libglib2.0-dev (>= 2.45.8),
-	libgpgme11-dev,
 	libgudev-1.0-dev,
 	libgusb-dev (>= 0.2.9),
+	libjcat-dev,
 	libjson-glib-dev (>= 1.1.1),
 	libmm-glib-dev,
 	libpolkit-gobject-1-dev,
