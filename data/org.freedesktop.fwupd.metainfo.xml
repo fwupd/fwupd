@@ -32,6 +32,32 @@
     <binary>fwupdmgr</binary>
   </provides>
   <releases>
+    <release version="1.4.5" date="2020-07-30">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add dual-image feature for VL103 backup firmware</li>
+          <li>Add more CCGX hybrid dock support</li>
+          <li>Add support for a delayed activation flow for Thunderbolt</li>
+          <li>Allow firmware to require specific features from front-end clients</li>
+          <li>Modernize the thunderbolt plugin for future hardware</li>
+          <li>Support LVFS::UpdateImage in GUI clients</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Be more defensive when remotes are missing required keys</li>
+          <li>Check all AppStream components when verifying</li>
+          <li>Check for free space after cleaning up ESP</li>
+          <li>Fix TPM PCR0 calculation</li>
+          <li>Only show UpdateMessage when state is success</li>
+          <li>Read the modem vendor ID correctly</li>
+          <li>Set the runtime version to 0.0.0 for pre-1.0.0 Thelio Io firmware</li>
+          <li>Support compiling libqmi-glib 1.26.0 and later</li>
+          <li>Use the GPIOB reset for the MiniDock VL103</li>
+          <li>Wait for the root device to be replugged when updating the MSP430</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.4.4" date="2020-06-10">
       <description>
         <p>This release fixes the following regression:</p>
