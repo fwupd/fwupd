@@ -715,6 +715,14 @@ fu_cros_ec_usb_device_write_firmware (FuDevice *device,
 				return FALSE;
 			}
 			num_txed_sections++;
+
+			if (self->in_bootloader) {
+				fu_device_set_version (FU_DEVICE (device),
+						       section->version.triplet);
+			} else {
+				fu_device_set_version_bootloader (FU_DEVICE (device),
+								  section->version.triplet);
+			}
 		}
 	}
 	/* send done */
