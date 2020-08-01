@@ -115,7 +115,7 @@ fu_cros_ec_firmware_parse (FuFirmware *firmware,
 					fmap_fwid_name);
 			return FALSE;
 		}
-		if (!fu_memcpy_safe ((guint8 *) section->version,
+		if (!fu_memcpy_safe ((guint8 *) section->raw_version,
 				     FU_FMAP_FIRMWARE_STRLEN, 0x0,
 				     g_bytes_get_data (fwid_bytes, NULL),
 				     g_bytes_get_size (fwid_bytes), 0x0,
@@ -131,16 +131,25 @@ fu_cros_ec_firmware_parse (FuFirmware *firmware,
 		}
 		section->offset = fu_firmware_image_get_addr (img);
 		section->size = g_bytes_get_size (payload_bytes);
-		fu_firmware_image_set_version (img, section->version);
+		fu_firmware_image_set_version (img, section->raw_version);
 		section->image_idx = fu_firmware_image_get_idx (img);
 
+		if (!fu_cros_ec_parse_version (section->raw_version,
+					       &section->version,
+					       error)) {
+			g_prefix_error (error,
+					"failed parsing firmware's version: %32s: ",
+					section->raw_version);
+			return FALSE;
+		}
+
 		if (rw) {
-			if (!fu_cros_ec_parse_version (section->version,
+			if (!fu_cros_ec_parse_version (section->raw_version,
 						       &self->version,
 						       error)) {
 				g_prefix_error (error,
 						"failed parsing firmware's version: %32s: ",
-						section->version);
+						section->raw_version);
 				return FALSE;
 			}
 			fu_firmware_set_version (firmware,

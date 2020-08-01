@@ -8,6 +8,7 @@
 
 #include "fu-firmware.h"
 #include "fu-fmap-firmware.h"
+#include "fu-cros-ec-common.h"
 
 #define FU_TYPE_CROS_EC_FIRMWARE (fu_cros_ec_firmware_get_type ())
 G_DECLARE_FINAL_TYPE (FuCrosEcFirmware, fu_cros_ec_firmware, FU, CROS_EC_FIRMWARE, FuFmapFirmware)
@@ -33,7 +34,8 @@ typedef struct {
 	guint32				offset;
 	gsize				size;
 	FuCrosEcFirmwareUpgradeStatus	ustatus;
-	gchar				version[FU_FMAP_FIRMWARE_STRLEN];
+	gchar				raw_version[FU_FMAP_FIRMWARE_STRLEN];
+	struct cros_ec_version		version;
 	gint32				rollback;
 	guint32				key_version;
 	guint64				image_idx;
