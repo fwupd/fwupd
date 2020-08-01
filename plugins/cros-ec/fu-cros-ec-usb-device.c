@@ -689,6 +689,7 @@ fu_cros_ec_usb_device_write_firmware (FuDevice *device,
 				      FwupdInstallFlags flags,
 				      GError **error)
 {
+	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE (device);
 	GPtrArray *sections;
 	FuCrosEcFirmware *cros_ec_firmware = FU_CROS_EC_FIRMWARE (firmware);
 	gint num_txed_sections = 0;
@@ -727,6 +728,16 @@ fu_cros_ec_usb_device_write_firmware (FuDevice *device,
 		return FALSE;
 	}
 
+	if (self->in_bootloader)
+		fu_device_set_custom_flags (device, "rw-written");
+	else if (fu_device_has_custom_flag (device, "rw-written"))
+		fu_device_set_custom_flags (device, "ro-written,rw-written");
+	else
+		fu_device_set_custom_flags (device, "ro-written");
+
+	if (fu_device_has_custom_flag (device, "rw-written") &&
+	    !fu_device_has_custom_flag (device, "ro-written"))
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED);
 	/* success */
 	return TRUE;
 }
@@ -774,13 +785,20 @@ fu_cros_ec_usb_device_prepare_firmware (FuDevice *device,
 }
 
 static gboolean
-fu_cros_ec_usb_device_attach (FuDevice *self, GError **error)
+fu_cros_ec_usb_device_attach (FuDevice *device, GError **error)
 {
-	fu_device_set_remove_delay (self, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
-	fu_cros_ec_usb_device_jump_to_rw (self);
+	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE (device);
 
-	fu_device_set_status (self, FWUPD_STATUS_DEVICE_RESTART);
-	fu_device_add_flag (self, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	if (!self->in_bootloader) {
+		/* already in rw, so skip jump to rw */
+		return TRUE;
+	}
+
+	fu_device_set_remove_delay (device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_cros_ec_usb_device_jump_to_rw (device);
+
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	/* success */
 	return TRUE;
@@ -789,6 +807,10 @@ fu_cros_ec_usb_device_attach (FuDevice *self, GError **error)
 static gboolean
 fu_cros_ec_usb_device_detach (FuDevice *self, GError **error)
 {
+	if (fu_device_has_custom_flag (self, "rw-written") &&
+	    !fu_device_has_custom_flag (self, "ro-written"))
+		return TRUE;
+
 	fu_device_set_remove_delay (self, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	if (!fu_cros_ec_usb_device_reset_to_ro (self, error))
 		return FALSE;
