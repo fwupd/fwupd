@@ -2262,6 +2262,10 @@ fu_engine_update_prepare (FuEngine *self,
 	device = fu_engine_get_device_by_id (self, device_id, error);
 	if (device == NULL)
 		return FALSE;
+
+	/* don't rely on a plugin clearing this */
+	fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED);
+
 	str = fu_device_to_string (device);
 	g_debug ("performing prepare on %s", str);
 	if (!fu_engine_device_prepare (self, device, flags, error))
@@ -2567,6 +2571,8 @@ fu_engine_install_blob (FuEngine *self,
 	 * must return TRUE rather than an error */
 	device_id = g_strdup (fu_device_get_id (device));
 	do {
+		g_autoptr(FuDevice) device_tmp = NULL;
+
 		/* check for a loop */
 		if (++retries > 5) {
 			g_set_error_literal (error,
@@ -2575,9 +2581,6 @@ fu_engine_install_blob (FuEngine *self,
 					     "aborting device write loop, limit 5");
 			return FALSE;
 		}
-
-		/* don't rely on a plugin clearing this */
-		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED);
 
 		/* signal to all the plugins the update is about to happen */
 		if (!fu_engine_update_prepare (self, flags, device_id, error))
@@ -2595,7 +2598,14 @@ fu_engine_install_blob (FuEngine *self,
 		if (!fu_engine_update_attach (self, device_id, error))
 			return FALSE;
 
-	} while (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED));
+		/* the device and plugin both may have changed */
+		device_tmp = fu_engine_get_device_by_id (self, device_id, error);
+		if (device_tmp == NULL)
+			return FALSE;
+		if (!fu_device_has_flag (device_tmp, FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED))
+			break;
+
+	} while (TRUE);
 
 	/* get the new version number */
 	if (!fu_engine_update_reload (self, device_id, error))
