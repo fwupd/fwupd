@@ -56,9 +56,6 @@ class LdVersionScript:
 
         # choose the lowest version method for the _get_type symbol
         version_lowest = None
-        if '{http://www.gtk.org/introspection/glib/1.0}get-type' not in cls.attrib:
-            return
-        type_name = cls.attrib['{http://www.gtk.org/introspection/glib/1.0}get-type']
 
         # add all class methods
         for node in cls.findall(XMLNS + 'method'):
@@ -77,6 +74,10 @@ class LdVersionScript:
                     version_lowest
                 ):
                     version_lowest = version_tmp
+
+        if '{http://www.gtk.org/introspection/glib/1.0}get-type' not in cls.attrib:
+            return
+        type_name = cls.attrib['{http://www.gtk.org/introspection/glib/1.0}get-type']
 
         # finally add the get_type symbol
         if version_lowest:

@@ -277,6 +277,7 @@ LIBFWUPDPLUGIN_1.1.2 {
     fu_chunk_array_new;
     fu_chunk_array_new_from_bytes;
     fu_chunk_new;
+    fu_chunk_to_string;
     fu_common_find_program_in_path;
     fu_common_strstrip;
     fu_common_strtoull;
