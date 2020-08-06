@@ -243,7 +243,10 @@ Data files for installed tests.
 %global efiarch aa64
 %endif
 %global fwup_efi_fn $RPM_BUILD_ROOT%{_libexecdir}/fwupd/efi/fwupd%{efiarch}.efi
-%pesign -s -i %{fwup_efi_fn} -o %{fwup_efi_fn}.signed
+%pesign -s -i %{fwup_efi_fn} -o %{fwup_efi_fn}.tmp
+%define __pesign_client_cert fwupd-signer
+%pesign -s -i %{fwup_efi_fn}.tmp -o %{fwup_efi_fn}.signed
+rm -vf %{fwup_efi_fn}.tmp
 %endif
 
 mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
