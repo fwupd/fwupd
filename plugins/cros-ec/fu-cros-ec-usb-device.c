@@ -668,9 +668,19 @@ fu_cros_ec_usb_device_jump_to_rw (FuDevice *device)
 	gsize command_body_size = 0;
 	gsize response_size = 1;
 
-	fu_cros_ec_usb_device_send_subcommand  (device, subcommand, command_body,
-						command_body_size, &response,
-						&response_size, FALSE, NULL);
+	if (!fu_cros_ec_usb_device_send_subcommand (device, subcommand, command_body,
+						    command_body_size, &response,
+						    &response_size, FALSE, NULL)) {
+		/* bail out early here if subcommand failed, which is normal */
+		return TRUE;
+	}
+
+	/* Jump to rw may not work, so if we've reached here, initiate a
+	 * full reset using immediate reset */
+	subcommand = UPDATE_EXTRA_CMD_IMMEDIATE_RESET;
+	fu_cros_ec_usb_device_send_subcommand (device, subcommand, command_body,
+					       command_body_size, &response,
+					       &response_size, FALSE, NULL);
 
 	/* success */
 	return TRUE;
