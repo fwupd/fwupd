@@ -13,7 +13,7 @@
 #include "fu-cpu-helper-cet-common.h"
 
 #ifdef HAVE_SIGACTION
-static void
+static __attribute__((noreturn))void
 segfault_sigaction (int signal, siginfo_t *si, void *arg)
 {
 	/* CET did exactly as it should to protect the system */
