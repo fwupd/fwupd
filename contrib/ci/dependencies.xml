@@ -71,12 +71,12 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
-  <dependency type="build" id="clang-6.0">
+  <dependency type="build" id="clang">
     <distro id="ubuntu">
       <package variant="x86_64" />
     </distro>
   </dependency>
-  <dependency type="build" id="clang-tools-6.0">
+  <dependency type="build" id="clang-tools">
     <distro id="ubuntu">
       <package variant="x86_64" />
     </distro>
