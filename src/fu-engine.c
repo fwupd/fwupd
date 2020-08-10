@@ -3241,8 +3241,6 @@ fu_engine_update_metadata_bytes (FuEngine *self, const gchar *remote_id,
 {
 	FwupdKeyringKind keyring_kind;
 	FwupdRemote *remote;
-	g_autofree gchar *pki_dir = NULL;
-	g_autofree gchar *sysconfdir = NULL;
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
 	g_return_val_if_fail (remote_id != NULL, FALSE);

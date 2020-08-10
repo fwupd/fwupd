@@ -1004,7 +1004,6 @@ test_tree (ThunderboltTest *tt, gconstpointer user_data)
 	const MockTree *found;
 	gboolean ret;
 	g_autoptr(MockTree) tree = NULL;
-	g_autoptr(GError) error = NULL;
 
 	tree = mock_tree_init (&root_one);
 	g_assert_nonnull (tree);

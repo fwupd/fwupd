@@ -403,7 +403,6 @@ fu_plugin_uefi_load_config (FuPlugin *plugin, FuDevice *device, GError **error)
 	gboolean disable_shim;
 	guint64 sz_reqd = FU_UEFI_COMMON_REQUIRED_ESP_FREE_SPACE;
 	g_autofree gchar *require_esp_free_space = NULL;
-	g_autofree gchar *require_shim_for_sb = NULL;
 	g_autofree gchar *esp_path = NULL;
 
 	/* parse free space needed for ESP */
