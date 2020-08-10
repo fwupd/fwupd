@@ -563,7 +563,6 @@ fu_thunderbolt_device_prepare_firmware (FuDevice *device,
 	g_autoptr(FuThunderboltFirmwareUpdate) firmware = fu_thunderbolt_firmware_update_new ();
 	g_autoptr(FuThunderboltFirmware) firmware_old = fu_thunderbolt_firmware_new ();
 	g_autoptr(GBytes) controller_fw = NULL;
-	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GFile) nvmem = NULL;
 
 	/* parse */

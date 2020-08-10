@@ -317,7 +317,6 @@ fu_ccgx_hpi_device_i2c_write (FuCcgxHpiDevice *self,
 			      GError **error)
 {
 	guint8 target_address;
-	g_autoptr(GError) error_local = NULL;
 
 	if (!fu_ccgx_hpi_device_check_i2c_status (self, CY_I2C_MODE_WRITE, error)) {
 		g_prefix_error (error, "i2c get status error: ");
