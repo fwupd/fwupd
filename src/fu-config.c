@@ -112,7 +112,7 @@ fu_config_reload (FuConfig *self, GError **error)
 						  "ArchiveSizeMax",
 						  NULL);
 	if (archive_size_max > 0)
-		self->archive_size_max = archive_size_max *= 0x100000;
+		self->archive_size_max = archive_size_max * 0x100000;
 
 	/* get idle timeout */
 	idle_timeout = g_key_file_get_uint64 (keyfile,
