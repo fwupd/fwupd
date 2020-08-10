@@ -175,6 +175,7 @@ fu_plugin_hash_func (gconstpointer user_data)
 				     "libfu_plugin_invalid." G_MODULE_SUFFIX,
 				     NULL);
 	ret = fu_plugin_open (plugin, pluginfn, &error);
+	g_assert_true (ret);
 	g_assert_no_error (error);
 
 	/* make sure it tainted now */
@@ -858,6 +859,7 @@ fu_engine_requirements_protocol_check_func (gconstpointer user_data)
 					    FWUPD_INSTALL_FLAG_NONE,
 					    &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_false (ret);
 	g_clear_error (&error);
 
 	/* check this passes */
