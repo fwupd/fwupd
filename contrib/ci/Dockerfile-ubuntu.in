@@ -1,4 +1,4 @@
-FROM ubuntu:devel
+FROM ubuntu:focal
 %%%OS%%%
 ENV CC clang-6.0
 RUN echo fubar > /etc/machine-id
