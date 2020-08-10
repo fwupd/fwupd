@@ -198,6 +198,7 @@ fu_history_migrate_database_v1 (FuHistory *self, GError **error)
 {
 	gint rc;
 
+	g_debug ("migrating v1 database by recreating table");
 	/* rename the table to something out the way */
 	rc = sqlite3_exec (self->db,
 			   "ALTER TABLE history RENAME TO history_old;",
@@ -316,44 +317,38 @@ fu_history_create_or_migrate (FuHistory *self, guint schema_ver, GError **error)
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
 
-	/* create initial up-to-date database or migrate */
-	if (schema_ver == 0) {
+	if (schema_ver == 0)
 		g_debug ("building initial database");
+	else if (schema_ver > 1)
+		g_debug ("migrating v%u database by altering", schema_ver);
+
+	switch (schema_ver) {
+	/* create initial up-to-date database or migrate */
+	case 0:
 		if (!fu_history_create_database (self, error))
 			return FALSE;
-	} else if (schema_ver == 1) {
-		g_debug ("migrating v%u database by recreating table", schema_ver);
+		break;
+	case 1:
 		if (!fu_history_migrate_database_v1 (self, error))
 			return FALSE;
-	} else if (schema_ver == 2) {
-		g_debug ("migrating v%u database by altering", schema_ver);
+		break;
+	case 2:
 		if (!fu_history_migrate_database_v2 (self, error))
 			return FALSE;
+	/* fall through */
+	case 3:
 		if (!fu_history_migrate_database_v3 (self, error))
 			return FALSE;
+	/* fall through */
+	case 4:
 		if (!fu_history_migrate_database_v4 (self, error))
 			return FALSE;
+	/* fall through */
+	case 5:
 		if (!fu_history_migrate_database_v5 (self, error))
 			return FALSE;
-	} else if (schema_ver == 3) {
-		g_debug ("migrating v%u database by altering", schema_ver);
-		if (!fu_history_migrate_database_v3 (self, error))
-			return FALSE;
-		if (!fu_history_migrate_database_v4 (self, error))
-			return FALSE;
-		if (!fu_history_migrate_database_v5 (self, error))
-			return FALSE;
-	} else if (schema_ver == 4) {
-		g_debug ("migrating v%u database by altering", schema_ver);
-		if (!fu_history_migrate_database_v4 (self, error))
-			return FALSE;
-		if (!fu_history_migrate_database_v5 (self, error))
-			return FALSE;
-	} else if (schema_ver == 5) {
-		g_debug ("migrating v%u database by altering", schema_ver);
-		if (!fu_history_migrate_database_v5 (self, error))
-			return FALSE;
-	} else {
+		break;
+	default:
 		/* this is probably okay, but return an error if we ever delete
 		 * or rename columns */
 		g_warning ("schema version %u is unknown", schema_ver);
