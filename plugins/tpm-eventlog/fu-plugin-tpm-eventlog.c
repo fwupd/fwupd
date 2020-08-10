@@ -44,7 +44,6 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	g_autofree gchar *str = NULL;
 	g_autofree guint8 *buf = NULL;
 	g_autoptr(FuTpmEventlogDevice) dev = NULL;
-	g_autoptr(GError) error_local = NULL;
 
 	if (!g_file_get_contents (fn, (gchar **) &buf, &bufsz, error))
 		return FALSE;
