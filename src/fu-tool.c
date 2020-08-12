@@ -1006,6 +1006,7 @@ fu_util_install_release (FuUtilPrivate *priv, FwupdRelease *rel, GError **error)
 	const gchar *remote_id;
 	const gchar *uri_tmp;
 	g_auto(GStrv) argv = NULL;
+	g_autoptr(SoupURI) uri = NULL;
 
 	uri_tmp = fwupd_release_get_uri (rel);
 	if (uri_tmp == NULL) {
@@ -1032,8 +1033,9 @@ fu_util_install_release (FuUtilPrivate *priv, FwupdRelease *rel, GError **error)
 		return FALSE;
 
 	argv = g_new0 (gchar *, 2);
-	/* local remotes have the firmware already */
-	if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_LOCAL) {
+	/* local remotes may have the firmware already */
+	uri = soup_uri_new (uri_tmp);
+	if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_LOCAL && uri == NULL) {
 		const gchar *fn_cache = fwupd_remote_get_filename_cache (remote);
 		g_autofree gchar *path = g_path_get_dirname (fn_cache);
 		argv[0] = g_build_filename (path, uri_tmp, NULL);
