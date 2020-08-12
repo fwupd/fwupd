@@ -46,8 +46,8 @@ fu_device_locker_finalize (GObject *obj)
 		if (!self->close_func (self->device, &error))
 			g_warning ("failed to close device: %s", error->message);
 	}
-
-	g_object_unref (self->device);
+	if (self->device != NULL)
+		g_object_unref (self->device);
 	G_OBJECT_CLASS (fu_device_locker_parent_class)->finalize (obj);
 }
 
