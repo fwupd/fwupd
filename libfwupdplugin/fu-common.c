@@ -1971,6 +1971,40 @@ fu_common_kernel_locked_down (void)
 #endif
 }
 
+/**
+ * fu_common_is_live_media:
+ *
+ * Checks if the user is running from a live media using various heuristics.
+ *
+ * Returns: %TRUE if live
+ *
+ * Since: 1.4.6
+ **/
+gboolean
+fu_common_is_live_media (void)
+{
+	gsize bufsz = 0;
+	g_autofree gchar *buf = NULL;
+	g_auto(GStrv) tokens = NULL;
+	const gchar *args[] = {
+		"rd.live.image",
+		"boot=live",
+		NULL, /* last entry */
+	};
+	if (g_file_test ("/cdrom/.disk/info", G_FILE_TEST_EXISTS))
+		return TRUE;
+	if (!g_file_get_contents ("/proc/cmdline", &buf, &bufsz, NULL))
+		return FALSE;
+	if (bufsz == 0)
+		return FALSE;
+	tokens = fu_common_strnsplit (buf, bufsz - 1, " ", -1);
+	for (guint i = 0; args[i] != NULL; i++) {
+		if (g_strv_contains ((const gchar * const *) tokens, args[i]))
+			return TRUE;
+	}
+	return FALSE;
+}
+
 static GPtrArray *
 fu_common_get_block_devices (GDBusConnection *connection, GError **error)
 {
