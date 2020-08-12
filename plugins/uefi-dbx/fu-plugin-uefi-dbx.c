@@ -84,7 +84,7 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	}
 
 	/* get system dbx */
-	if (!fu_efivar_get_data ("d719b2cb-3d3a-4596-a3bc-dad00e67656f", "dbx",
+	if (!fu_efivar_get_data (FU_EFIVAR_GUID_SECURITY_DATABASE, "dbx",
 				 &buf_system, &bufsz, NULL, &error_local)) {
 		g_warning ("failed to load EFI dbx: %s", error_local->message);
 		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
