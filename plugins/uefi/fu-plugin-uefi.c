@@ -29,6 +29,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUnixMountEntry, g_unix_mount_free)
 
 struct FuPluginData {
 	FuUefiBgrt		*bgrt;
+	FuVolume		*esp;
 };
 
 void
@@ -200,7 +201,6 @@ fu_plugin_uefi_write_splash_data (FuPlugin *plugin,
 				  GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	const gchar *esp_path = fu_device_get_metadata (device, "EspPath");
 	guint32 screen_x, screen_y;
 	gsize buf_size = g_bytes_get_size (blob);
 	gssize size;
@@ -213,6 +213,7 @@ fu_plugin_uefi_write_splash_data (FuPlugin *plugin,
 		.header_size = sizeof(efi_capsule_header_t),
 		.capsule_image_size = 0
 	};
+	g_autofree gchar *esp_path = NULL;
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *directory = NULL;
 	g_autofree gchar *basename = NULL;
@@ -229,6 +230,7 @@ fu_plugin_uefi_write_splash_data (FuPlugin *plugin,
 	}
 
 	/* save to a predicatable filename */
+	esp_path = fu_volume_get_mount_point (data->esp);
 	directory = fu_uefi_get_esp_path_for_os (esp_path);
 	basename = g_strdup_printf ("fwupd-%s.cap", FU_EFIVAR_GUID_UX_CAPSULE);
 	fn = g_build_filename (directory, "fw", basename, NULL);
@@ -408,13 +410,12 @@ fu_plugin_update (FuPlugin *plugin,
 	return fu_device_write_firmware (device, blob_fw, flags, error);
 }
 
-static gboolean
-fu_plugin_uefi_load_config (FuPlugin *plugin, FuDevice *device, GError **error)
+static void
+fu_plugin_uefi_load_config (FuPlugin *plugin, FuDevice *device)
 {
 	gboolean disable_shim;
 	guint64 sz_reqd = FU_UEFI_COMMON_REQUIRED_ESP_FREE_SPACE;
 	g_autofree gchar *require_esp_free_space = NULL;
-	g_autofree gchar *esp_path = NULL;
 
 	/* parse free space needed for ESP */
 	require_esp_free_space = fu_plugin_get_config_value (plugin, "RequireESPFreeSpace");
@@ -427,36 +428,17 @@ fu_plugin_uefi_load_config (FuPlugin *plugin, FuDevice *device, GError **error)
 	fu_device_set_metadata_boolean (device,
 					"RequireShimForSecureBoot",
 					!disable_shim);
-
-	/* load ESP from file */
-	esp_path = fu_plugin_get_config_value (plugin, "OverrideESPMountPoint");
-	if (esp_path != NULL) {
-		g_autoptr(GError) error_local = NULL;
-		if (!fu_uefi_check_esp_path (esp_path, &error_local)) {
-			g_set_error (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_FILENAME,
-				     "invalid OverrideESPMountPoint=%s specified in config: %s",
-				     esp_path, error_local->message);
-			return FALSE;
-		}
-		fu_device_set_metadata (device, "EspPath", esp_path);
-	}
-
-	/* success */
-	return TRUE;
 }
 
 static void
 fu_plugin_uefi_register_proxy_device (FuPlugin *plugin, FuDevice *device)
 {
+	FuPluginData *data = fu_plugin_get_data (plugin);
 	g_autoptr(FuUefiDevice) dev = fu_uefi_device_new_from_dev (device);
-	g_autoptr(GError) error_local = NULL;
 
 	/* load all configuration variables */
-	if (!fu_plugin_uefi_load_config (plugin, FU_DEVICE (dev), &error_local))
-		g_warning ("%s", error_local->message);
-
+	fu_plugin_uefi_load_config (plugin, FU_DEVICE (dev));
+	fu_uefi_device_set_esp (dev, data->esp);
 	fu_plugin_device_add (plugin, FU_DEVICE (dev));
 }
 
@@ -607,6 +589,8 @@ fu_plugin_uefi_smbios_enabled (FuPlugin *plugin, GError **error)
 gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	g_autofree gchar *esp_path = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* some platforms have broken SMBIOS data */
@@ -630,6 +614,23 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	/* are the EFI dirs set up so we can update each device */
 	if (!fu_efivar_supported (error))
 		return FALSE;
+
+	/* override the default ESP path */
+	esp_path = fu_plugin_get_config_value (plugin, "OverrideESPMountPoint");
+	if (esp_path != NULL) {
+		data->esp = fu_common_get_esp_for_path (esp_path, error);
+		if (data->esp == NULL) {
+			g_prefix_error (error, "invalid OverrideESPMountPoint=%s "
+					"specified in config: ", esp_path);
+			return FALSE;
+		}
+	} else {
+		data->esp = fu_common_get_esp_default (error);
+		if (data->esp == NULL) {
+			g_prefix_error (error, "cannot find default ESP: ");
+			return FALSE;
+		}
+	}
 
 	/* test for invalid ESP in coldplug, and set the update-error rather
 	 * than showing no output if the plugin had self-disabled here */
@@ -760,6 +761,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 			continue;
 		}
 		fu_device_set_quirks (FU_DEVICE (dev), fu_plugin_get_quirks (plugin));
+		fu_uefi_device_set_esp (FU_UEFI_DEVICE (dev), data->esp);
 		if (!fu_plugin_uefi_coldplug_device (plugin, dev, error))
 			return FALSE;
 		if (error_efivarfs != NULL) {
@@ -769,9 +771,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 			fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 		}
 		/* load all configuration variables */
-		if (!fu_plugin_uefi_load_config (plugin, FU_DEVICE (dev), error))
-			return FALSE;
-
+		fu_plugin_uefi_load_config (plugin, FU_DEVICE (dev));
 		fu_plugin_device_add (plugin, FU_DEVICE (dev));
 	}
 
