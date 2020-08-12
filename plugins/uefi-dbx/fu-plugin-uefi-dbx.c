@@ -10,7 +10,7 @@
 #include "fu-efivar.h"
 #include "fu-hash.h"
 #include "fu-uefi-dbx-common.h"
-#include "fu-uefi-dbx-file.h"
+#include "fu-efi-signature-parser.h"
 
 struct FuPluginData {
 	gchar			*fn;
@@ -45,13 +45,13 @@ void
 fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	GPtrArray *checksums;
+	GPtrArray *items;
 	gsize bufsz = 0;
 	guint missing_cnt = 0;
 	g_autofree guint8 *buf_system = NULL;
 	g_autofree guint8 *buf_update = NULL;
-	g_autoptr(FuUefiDbxFile) dbx_system = NULL;
-	g_autoptr(FuUefiDbxFile) dbx_update = NULL;
+	g_autoptr(FuEfiSignatureList) dbx_system = NULL;
+	g_autoptr(FuEfiSignatureList) dbx_update = NULL;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error_local = NULL;
 
@@ -74,9 +74,9 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
-	dbx_update = fu_uefi_dbx_file_new (buf_update, bufsz,
-					   FU_UEFI_DBX_FILE_PARSE_FLAGS_IGNORE_HEADER,
-					   &error_local);
+	dbx_update = fu_efi_signature_parser_one (buf_update, bufsz,
+						  FU_EFI_SIGNATURE_PARSER_FLAGS_IGNORE_HEADER,
+						  &error_local);
 	if (dbx_update == NULL) {
 		g_warning ("failed to parse %s: %s", data->fn, error_local->message);
 		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
@@ -90,9 +90,9 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
-	dbx_system = fu_uefi_dbx_file_new (buf_system, bufsz,
-					   FU_UEFI_DBX_FILE_PARSE_FLAGS_NONE,
-					   &error_local);
+	dbx_system = fu_efi_signature_parser_one (buf_system, bufsz,
+						  FU_EFI_SIGNATURE_PARSER_FLAGS_NONE,
+						  &error_local);
 	if (dbx_system == NULL) {
 		g_warning ("failed to parse EFI dbx: %s", error_local->message);
 		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
@@ -100,11 +100,12 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	}
 
 	/* look for each checksum in the update in the system version */
-	checksums = fu_uefi_dbx_file_get_checksums (dbx_update);
-	for (guint i = 0; i < checksums->len; i++) {
-		const gchar *checksum = g_ptr_array_index (checksums, i);
-		if (!fu_uefi_dbx_file_has_checksum (dbx_system, checksum)) {
-			g_debug ("%s missing from the system DBX", checksum);
+	items = fu_efi_signature_list_get_all (dbx_update);
+	for (guint i = 0; i < items->len; i++) {
+		FuEfiSignature *item = g_ptr_array_index (items, i);
+		if (!fu_efi_signature_list_has_checksum (dbx_system, fu_efi_signature_get_checksum (item))) {
+			g_debug ("%s missing from the system DBX",
+				 fu_efi_signature_get_checksum (item));
 			missing_cnt += 1;
 		}
 	}

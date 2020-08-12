@@ -5,7 +5,9 @@ shared_module('fu_plugin_uefi_dbx',
   sources : [
     'fu-plugin-uefi-dbx.c',
     'fu-uefi-dbx-common.c',
-    'fu-uefi-dbx-file.c',
+    'fu-efi-signature.c',
+    'fu-efi-signature-list.c',
+    'fu-efi-signature-parser.c',
   ],
   include_directories : [
     root_incdir,
@@ -31,7 +33,9 @@ if get_option('tests')
     sources : [
       'fu-self-test.c',
       'fu-uefi-dbx-common.c',
-      'fu-uefi-dbx-file.c',
+      'fu-efi-signature.c',
+      'fu-efi-signature-list.c',
+      'fu-efi-signature-parser.c',
     ],
     include_directories : [
       root_incdir,
@@ -53,7 +57,9 @@ uefi_dbx_fuzzer = executable(
   'uefi-dbx-fuzzer',
   sources : [
     'fu-fuzzer.c',
-    'fu-uefi-dbx-file.c',
+    'fu-efi-signature.c',
+    'fu-efi-signature-list.c',
+    'fu-efi-signature-parser.c',
   ],
   include_directories : [
     root_incdir,
@@ -67,6 +73,30 @@ uefi_dbx_fuzzer = executable(
     fwupd,
     fwupdplugin,
   ],
+)
+
+dbxtool = executable(
+  'dbxtool',
+  sources : [
+    'fu-dbxtool.c',
+    'fu-uefi-dbx-common.c',
+    'fu-efi-signature.c',
+    'fu-efi-signature-list.c',
+    'fu-efi-signature-parser.c',
+  ],
+  include_directories : [
+    root_incdir,
+    fwupd_incdir,
+    fwupdplugin_incdir,
+  ],
+  dependencies : [
+    plugin_deps,
+  ],
+  link_with : [
+    fwupd,
+    fwupdplugin,
+  ],
+  c_args : cargs,
 )
 
 run_target('fuzz-efidbx',
