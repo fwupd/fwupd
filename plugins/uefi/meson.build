@@ -22,7 +22,6 @@ shared_module('fu_plugin_uefi',
     'fu-uefi-devpath.c',
     'fu-uefi-pcrs.c',
     'fu-uefi-update-info.c',
-    'fu-uefi-udisks.c',
   ],
   include_directories : [
     root_incdir,
@@ -58,7 +57,6 @@ fwupdate = executable(
     'fu-uefi-devpath.c',
     'fu-uefi-pcrs.c',
     'fu-uefi-update-info.c',
-    'fu-uefi-udisks.c',
   ],
   include_directories : [
     root_incdir,
@@ -119,7 +117,6 @@ if get_option('tests')
       'fu-uefi-devpath.c',
       'fu-uefi-pcrs.c',
       'fu-uefi-update-info.c',
-      'fu-uefi-udisks.c',
       'fu-ucs2.c',
     ],
     include_directories : [
