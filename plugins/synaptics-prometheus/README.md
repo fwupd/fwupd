@@ -24,6 +24,8 @@ These devices use the standard USB DeviceInstanceId values, e.g.
 
  * `USB\VID_06CB&PID_00A9&REV_0001`
  * `USB\VID_06CB&PID_00A9`
+ * `USB\VID_06CB&PID_00A9-cfg`
+ * `USB\VID_06CB&PID_00A9&CFG1_3483&CFG2_500`
 
 Vendor ID Security
 ------------------
