@@ -67,6 +67,7 @@ fu_synaprom_config_setup (FuDevice *device, GError **error)
 	g_autofree gchar *version = NULL;
 	g_autoptr(GByteArray) reply = NULL;
 	g_autoptr(GByteArray) request = NULL;
+	g_autofree gchar *devid = NULL;
 
 	/* get IOTA */
 	cmd.itype = GUINT16_TO_LE((guint16)FU_SYNAPROM_IOTA_ITYPE_CONFIG_VERSION);
@@ -103,6 +104,13 @@ fu_synaprom_config_setup (FuDevice *device, GError **error)
 		 self->configid1, self->configid2,
 		 GUINT16_FROM_LE(cfg.version));
 
+	/* append the configid to the generated GUID */
+	devid = g_strdup_printf ("USB\\VID_%04X&PID_%04X&CFG1_%u&CFG2_%u",
+				 fu_usb_device_get_vid (FU_USB_DEVICE (parent)),
+				 fu_usb_device_get_pid (FU_USB_DEVICE (parent)),
+				 self->configid1, self->configid2);
+	fu_device_add_instance_id (FU_DEVICE (self), devid);
+
 	/* no downgrades are allowed */
 	version = g_strdup_printf ("%04u", GUINT16_FROM_LE(cfg.version));
 	fu_device_set_version (FU_DEVICE (self), version);
@@ -122,6 +130,7 @@ fu_synaprom_config_prepare_firmware (FuDevice *device,
 	g_autoptr(FuFirmware) firmware = fu_synaprom_firmware_new ();
 	guint32 product;
 	guint32 id1;
+	guint32 id2;
 
 	/* parse the firmware */
 	fu_device_set_status (device, FWUPD_STATUS_DECOMPRESSING);
@@ -157,18 +166,19 @@ fu_synaprom_config_prepare_firmware (FuDevice *device,
 		}
 	}
 	id1 = GUINT32_FROM_LE(hdr.id1);
-	if (id1 != self->configid1) {
+	id2 = GUINT32_FROM_LE(hdr.id2);
+	if (id1 != self->configid1 || id2 != self->configid2) {
 		if (flags & FWUPD_INSTALL_FLAG_FORCE) {
 			g_warning ("CFG version not compatible, "
-				   "got %u expected %u",
-				   id1, self->configid1);
+				   "got %u:%u expected %u:%u",
+				   id1, id2, self->configid1, self->configid2);
 		} else {
 			g_set_error (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_NOT_SUPPORTED,
 				     "CFG version not compatible, "
-				     "got %u expected %u",
-				     id1, self->configid1);
+				     "got %u:%u expected %u:%u",
+				     id1, id2, self->configid1, self->configid2);
 			return NULL;
 		}
 	}
