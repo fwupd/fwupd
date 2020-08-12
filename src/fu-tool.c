@@ -1977,6 +1977,89 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+
+static FuVolume *
+fu_util_prompt_for_volume (GError **error)
+{
+	FuVolume *volume;
+	guint idx;
+	g_autoptr(GPtrArray) volumes = NULL;
+
+	/* exactly one */
+	volumes = fu_common_get_volumes_by_kind (FU_VOLUME_KIND_ESP, error);
+	if (volumes->len == 1) {
+		volume = g_ptr_array_index (volumes, 0);
+		/* TRANSLATORS: Volume has been chosen by the the user */
+		g_print ("%s: %s\n", _("Selected volume"), fu_volume_get_id (volume));
+		return g_object_ref (volume);
+	}
+
+	/* TRANSLATORS: get interactive prompt */
+	g_print ("%s\n", _("Choose a volume:"));
+	/* TRANSLATORS: this is to abort the interactive prompt */
+	g_print ("0.\t%s\n", _("Cancel"));
+	for (guint i = 0; i < volumes->len; i++) {
+		volume = g_ptr_array_index (volumes, i);
+		g_print ("%u.\t%s\n", i + 1, fu_volume_get_id (volume));
+	}
+	idx = fu_util_prompt_for_number (volumes->len);
+	if (idx == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "Request canceled");
+		return NULL;
+	}
+	volume = g_ptr_array_index (volumes, idx - 1);
+	return g_object_ref (volume);
+
+}
+
+static gboolean
+fu_util_esp_mount (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(FuVolume) volume = NULL;
+	volume = fu_util_prompt_for_volume (error);
+	if (volume == NULL)
+		return FALSE;
+	return fu_volume_mount (volume, error);
+}
+
+static gboolean
+fu_util_esp_unmount (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(FuVolume) volume = NULL;
+	volume = fu_util_prompt_for_volume (error);
+	if (volume == NULL)
+		return FALSE;
+	return fu_volume_unmount (volume, error);
+}
+
+static gboolean
+fu_util_esp_list (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autofree gchar *mount_point = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(FuVolume) volume = NULL;
+	g_autoptr(GPtrArray) files = NULL;
+
+	volume = fu_util_prompt_for_volume (error);
+	if (volume == NULL)
+		return FALSE;
+	locker = fu_volume_locker (volume, error);
+	if (locker == NULL)
+		return FALSE;
+	mount_point = fu_volume_get_mount_point (volume);
+	files = fu_common_get_files_recursive (mount_point, error);
+	if (files == NULL)
+		return FALSE;
+	for (guint i = 0; i < files->len; i++) {
+		const gchar *fn = g_ptr_array_index (files, i);
+		g_print ("%s\n", fn);
+	}
+	return TRUE;
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -2217,6 +2300,24 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Refresh metadata from remote server"),
 		     fu_util_refresh);
+	fu_util_cmd_array_add (cmd_array,
+		     "esp-mount",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Mounts the ESP."),
+		     fu_util_esp_mount);
+	fu_util_cmd_array_add (cmd_array,
+		     "esp-unmount",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Unmounts the ESP."),
+		     fu_util_esp_unmount);
+	fu_util_cmd_array_add (cmd_array,
+		     "esp-list",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Lists files on the ESP."),
+		     fu_util_esp_list);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();
