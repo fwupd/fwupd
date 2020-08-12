@@ -8,15 +8,15 @@
 
 #include <stdlib.h>
 
-#include "fu-uefi-dbx-file.h"
+#include "fu-efi-signature-parser.h"
 
 int
 main (int argc, char *argv[])
 {
 	gsize bufsz = 0;
 	g_autofree guint8 *buf = NULL;
-	g_autoptr(FuUefiDbxFile) uefi_dbx_file = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) siglists = NULL;
 
 	if (argc < 2) {
 		g_printerr ("Not enough arguments, expected 'foo.bin'\n");
@@ -26,13 +26,16 @@ main (int argc, char *argv[])
 		g_printerr ("Failed to load %s: %s\n", argv[1], error->message);
 		return EXIT_FAILURE;
 	}
-	uefi_dbx_file = fu_uefi_dbx_file_new (buf, bufsz,
-					      FU_UEFI_DBX_FILE_PARSE_FLAGS_IGNORE_HEADER,
-					      &error);
-	if (uefi_dbx_file == NULL) {
+	siglists = fu_efi_signature_parser_all (buf, bufsz,
+						FU_EFI_SIGNATURE_PARSER_FLAGS_IGNORE_HEADER,
+						&error);
+	if (siglists == NULL) {
 		g_printerr ("Failed to parse %s: %s\n", argv[1], error->message);
 		return EXIT_FAILURE;
 	}
-	g_print ("%u checksums\n", fu_uefi_dbx_file_get_checksums(uefi_dbx_file)->len);
+	for (guint i = 0; i < siglists->len; i++) {
+		FuEfiSignatureList *siglist = g_ptr_array_index (siglists, i);
+		g_print ("%u checksums\n", fu_efi_signature_list_get_all(siglist)->len);
+	}
 	return EXIT_SUCCESS;
 }

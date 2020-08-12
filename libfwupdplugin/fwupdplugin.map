@@ -598,6 +598,7 @@ LIBFWUPDPLUGIN_1.4.6 {
     fu_common_get_esp_default;
     fu_common_get_esp_for_path;
     fu_common_get_volumes_by_kind;
+    fu_common_is_live_media;
     fu_volume_check_free_space;
     fu_volume_get_id;
     fu_volume_get_mount_point;

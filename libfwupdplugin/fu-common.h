@@ -229,6 +229,7 @@ gchar		**fu_common_strnsplit		(const gchar	*str,
 						 gint		 max_tokens);
 gboolean	 fu_common_kernel_locked_down	(void);
 gboolean	 fu_common_is_cpu_intel		(void);
+gboolean	 fu_common_is_live_media	(void);
 GPtrArray	*fu_common_get_volumes_by_kind	(const gchar	*kind,
 						 GError		**error);
 FuVolume	*fu_common_get_esp_for_path	(const gchar	*esp_path,
