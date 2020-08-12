@@ -1469,9 +1469,11 @@ fwupd_client_install_release (FwupdClient *client,
 	g_autofree gchar *checksum_actual = NULL;
 	g_autofree gchar *uri_str = NULL;
 	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(SoupURI) uri = NULL;
 
 	/* work out what remote-specific URI fields this should use */
 	uri_tmp = fwupd_release_get_uri (release);
+	uri = soup_uri_new (uri_tmp);
 	remote_id = fwupd_release_get_remote_id (release);
 	if (remote_id != NULL) {
 		g_autoptr(FwupdRemote) remote = NULL;
@@ -1482,8 +1484,8 @@ fwupd_client_install_release (FwupdClient *client,
 		if (remote == NULL)
 			return FALSE;
 
-		/* local and directory remotes have the firmware already */
-		if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_LOCAL) {
+		/* local and directory remotes may have the firmware already */
+		if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_LOCAL && uri == NULL) {
 			const gchar *fn_cache = fwupd_remote_get_filename_cache (remote);
 			g_autofree gchar *path = g_path_get_dirname (fn_cache);
 
