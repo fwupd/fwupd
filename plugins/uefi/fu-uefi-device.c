@@ -21,10 +21,11 @@
 #include "fu-uefi-bootmgr.h"
 #include "fu-uefi-pcrs.h"
 #include "fu-efivar.h"
-#include "fu-uefi-udisks.h"
 
 struct _FuUefiDevice {
 	FuDevice		 parent_instance;
+	FuVolume		*esp;
+	FuDeviceLocker		*esp_locker;
 	gchar			*fw_class;
 	FuUefiDeviceKind	 kind;
 	guint32			 capsule_flags;
@@ -39,6 +40,14 @@ struct _FuUefiDevice {
 };
 
 G_DEFINE_TYPE (FuUefiDevice, fu_uefi_device, FU_TYPE_DEVICE)
+
+void
+fu_uefi_device_set_esp (FuUefiDevice *self, FuVolume *esp)
+{
+	g_return_if_fail (FU_IS_UEFI_DEVICE (self));
+	g_return_if_fail (FU_IS_VOLUME (esp));
+	g_set_object (&self->esp, esp);
+}
 
 const gchar *
 fu_uefi_device_kind_to_string (FuUefiDeviceKind kind)
@@ -108,8 +117,10 @@ fu_uefi_device_to_string (FuDevice *device, guint idt, GString *str)
 	fu_common_string_append_kv (str, idt, "LastAttemptStatus",
 				    fu_uefi_device_status_to_string (self->last_attempt_status));
 	fu_common_string_append_kx (str, idt, "LastAttemptVersion", self->last_attempt_version);
-	fu_common_string_append_kv (str, idt, "EspPath",
-				    fu_device_get_metadata (device, "EspPath"));
+	if (self->esp != NULL) {
+		fu_common_string_append_kv (str, idt, "EspId",
+					    fu_volume_get_id (self->esp));
+	}
 	fu_common_string_append_ku (str, idt, "RequireESPFreeSpace",
 				    fu_device_get_metadata_integer (device, "RequireESPFreeSpace"));
 	fu_common_string_append_kb (str, idt, "RequireShimForSecureBoot",
@@ -402,47 +413,15 @@ fu_uefi_device_write_update_info (FuUefiDevice *self,
 }
 
 static gboolean
-fu_uefi_device_is_esp_mounted (FuDevice *device, GError **error)
-{
-	const gchar *esp_path = fu_device_get_metadata (device, "EspPath");
-	g_autofree gchar *contents = NULL;
-	g_auto(GStrv) lines = NULL;
-	gsize length;
-
-	if (esp_path == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "EFI System partition is not defined");
-		return FALSE;
-	}
-
-	if (!g_file_get_contents ("/proc/mounts", &contents, &length, error))
-		return FALSE;
-	lines = g_strsplit (contents, "\n", 0);
-
-	for (guint i = 0; lines[i] != NULL; i++) {
-		if (lines[i] != NULL && g_strrstr (lines[i], esp_path))
-			return TRUE;
-	}
-	g_set_error (error,
-		     FWUPD_ERROR,
-		     FWUPD_ERROR_NOT_SUPPORTED,
-		     "EFI System partition %s is not mounted",
-		     esp_path);
-	return FALSE;
-}
-
-static gboolean
 fu_uefi_device_check_esp_free (FuDevice *device, GError **error)
 {
-	const gchar *esp_path = fu_device_get_metadata (device, "EspPath");
+	FuUefiDevice *self = FU_UEFI_DEVICE (device);
 	guint64 sz_reqd = fu_device_get_metadata_integer (device, "RequireESPFreeSpace");
 	if (sz_reqd == G_MAXUINT) {
 		g_debug ("maximum size is not configured");
 		return TRUE;
 	}
-	return 	fu_uefi_check_esp_free_space (esp_path, sz_reqd, error);
+	return fu_volume_check_free_space (self->esp, sz_reqd, error);
 }
 
 static gboolean
@@ -461,7 +440,8 @@ fu_uefi_check_asset (FuDevice *device, GError **error)
 static gboolean
 fu_uefi_device_cleanup_esp (FuDevice *device, GError **error)
 {
-	const gchar *esp_path = fu_device_get_metadata (device, "EspPath");
+	FuUefiDevice *self = FU_UEFI_DEVICE (device);
+	g_autofree gchar *esp_path = fu_volume_get_mount_point (self->esp);
 	g_autofree gchar *pattern = NULL;
 	g_autoptr(GPtrArray) files = NULL;
 
@@ -496,38 +476,14 @@ fu_uefi_device_prepare (FuDevice *device,
 			FwupdInstallFlags flags,
 			GError **error)
 {
-	/* not set in conf, figure it out */
-	if (fu_device_get_metadata (device, "EspPath") == NULL) {
-		g_autofree gchar *guessed = NULL;
-		g_autofree gchar *detected_esp = NULL;
-		guessed = fu_uefi_guess_esp_path (error);
-		if (guessed == NULL)
-			return FALSE;
+	FuUefiDevice *self = FU_UEFI_DEVICE (device);
 
-		/* udisks objpath */
-		if (fu_uefi_udisks_objpath (guessed)) {
-			FuUefiDevice *self = FU_UEFI_DEVICE (device);
-			detected_esp = fu_uefi_udisks_objpath_is_mounted (guessed);
-			if (detected_esp != NULL) {
-				g_debug ("ESP already mounted @ %s", detected_esp);
-			/* not mounted */
-			} else {
-				g_debug ("Mounting ESP @ %s", guessed);
-				detected_esp = fu_uefi_udisks_objpath_mount (guessed, error);
-				if (detected_esp == NULL)
-					return FALSE;
-				self->automounted_esp = TRUE;
-			}
-		/* already mounted */
-		} else {
-			detected_esp = g_steal_pointer (&guessed);
-		}
-		fu_device_set_metadata (device, "EspPath", detected_esp);
-	}
+	/* mount if required */
+	self->esp_locker = fu_volume_locker (self->esp, error);
+	if (self->esp_locker == NULL)
+		return FALSE;
 
 	/* sanity checks */
-	if (!fu_uefi_device_is_esp_mounted (device, error))
-		return FALSE;
 	if (!fu_uefi_device_cleanup_esp (device, error))
 		return FALSE;
 	if (!fu_uefi_device_check_esp_free (device, error))
@@ -544,18 +500,11 @@ fu_uefi_device_cleanup (FuDevice *device,
 			GError **error)
 {
 	FuUefiDevice *self = FU_UEFI_DEVICE (device);
-	if (self->automounted_esp) {
-		g_autofree gchar *guessed = NULL;
-		guessed = fu_uefi_guess_esp_path (error);
-		if (guessed == NULL)
-			return FALSE;
-		g_debug ("Unmounting ESP @ %s", guessed);
-		if (!fu_uefi_udisks_objpath_umount (guessed, error))
-			return FALSE;
-		self->automounted_esp = FALSE;
-		/* we will detect again if necessary */
-		fu_device_remove_metadata (device, "EspPath");
-	}
+
+	/* unmount ESP if we opened it */
+	if (!fu_device_locker_close (self->esp_locker, error))
+		return FALSE;
+	g_clear_object (&self->esp_locker);
 
 	return TRUE;
 }
@@ -569,8 +518,8 @@ fu_uefi_device_write_firmware (FuDevice *device,
 	FuUefiDevice *self = FU_UEFI_DEVICE (device);
 	FuUefiBootmgrFlags flags = FU_UEFI_BOOTMGR_FLAG_NONE;
 	const gchar *bootmgr_desc = "Linux Firmware Updater";
-	const gchar *esp_path = fu_device_get_metadata (device, "EspPath");
 	efi_guid_t guid;
+	g_autofree gchar *esp_path = fu_volume_get_mount_point (self->esp);
 	g_autoptr(GBytes) fixed_fw = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autofree gchar *basename = NULL;
@@ -758,6 +707,8 @@ fu_uefi_device_finalize (GObject *object)
 	FuUefiDevice *self = FU_UEFI_DEVICE (object);
 
 	g_free (self->fw_class);
+	if (self->esp_locker != NULL)
+		g_object_unref (self->esp_locker);
 
 	G_OBJECT_CLASS (fu_uefi_device_parent_class)->finalize (object);
 }

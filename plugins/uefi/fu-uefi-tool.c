@@ -66,6 +66,7 @@ main (int argc, char *argv[])
 	g_autoptr(FuUtilPrivate) priv = g_new0 (FuUtilPrivate, 1);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(FuVolume) esp = NULL;
 	const GOptionEntry options[] = {
 		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
 			/* TRANSLATORS: command line option */
@@ -159,10 +160,17 @@ main (int argc, char *argv[])
 
 	/* override the default ESP path */
 	if (esp_path != NULL) {
-		if (!fu_uefi_check_esp_path (esp_path, &error)) {
+		esp = fu_common_get_esp_for_path (esp_path, &error);
+		if (esp == NULL) {
 			/* TRANSLATORS: ESP is EFI System Partition */
 			g_print ("%s: %s\n", _("ESP specified was not valid"),
 				 error->message);
+			return EXIT_FAILURE;
+		}
+	} else {
+		esp = fu_common_get_esp_default (&error);
+		if (esp == NULL) {
+			g_printerr ("failed: %s\n", error->message);
 			return EXIT_FAILURE;
 		}
 	}
@@ -213,8 +221,7 @@ main (int argc, char *argv[])
 					   path, error_parse->message);
 				continue;
 			}
-			if (esp_path != NULL)
-				fu_device_set_metadata (FU_DEVICE (dev), "EspPath", esp_path);
+			fu_uefi_device_set_esp (dev, esp);
 			g_ptr_array_add (devices, g_object_ref (dev));
 		}
 	}

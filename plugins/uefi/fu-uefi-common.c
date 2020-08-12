@@ -8,22 +8,13 @@
 #include "config.h"
 
 #include <efivar.h>
-#include <gio/gunixmounts.h>
 
 #include "fu-common.h"
 #include "fu-uefi-common.h"
 #include "fu-efivar.h"
-#include "fu-uefi-udisks.h"
 
 #include "fwupd-common.h"
 #include "fwupd-error.h"
-
-#ifndef HAVE_GIO_2_55_0
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUnixMountEntry, g_unix_mount_free)
-#pragma clang diagnostic pop
-#endif
 
 static const gchar *
 fu_uefi_bootmgr_get_suffix (GError **error)
@@ -271,154 +262,6 @@ fu_uefi_read_file_as_uint64 (const gchar *path, const gchar *attr_name)
 	if (!g_file_get_contents (fn, &data, NULL, NULL))
 		return 0x0;
 	return fu_common_strtoull (data);
-}
-
-gboolean
-fu_uefi_check_esp_free_space (const gchar *path, guint64 required, GError **error)
-{
-	guint64 fs_free;
-	g_autoptr(GFile) file = NULL;
-	g_autoptr(GFileInfo) info = NULL;
-
-	/* skip the checks for unmounted disks */
-	if (fu_uefi_udisks_objpath (path))
-		return TRUE;
-
-	file = g_file_new_for_path (path);
-	info = g_file_query_filesystem_info (file,
-					     G_FILE_ATTRIBUTE_FILESYSTEM_FREE,
-					     NULL, error);
-	if (info == NULL)
-		return FALSE;
-	fs_free = g_file_info_get_attribute_uint64 (info, G_FILE_ATTRIBUTE_FILESYSTEM_FREE);
-	if (fs_free < required) {
-		g_autofree gchar *str_free = g_format_size (fs_free);
-		g_autofree gchar *str_reqd = g_format_size (required);
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "%s does not have sufficient space, required %s, got %s",
-			     path, str_reqd, str_free);
-		return FALSE;
-	}
-	return TRUE;
-}
-
-gboolean
-fu_uefi_check_esp_path (const gchar *path, GError **error)
-{
-	const gchar *fs_types[] = { "vfat", "ntfs", "exfat", "autofs", NULL };
-	g_autoptr(GUnixMountEntry) mount = g_unix_mount_at (path, NULL);
-	if (mount == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_FOUND,
-			     "%s was not mounted", path);
-		return FALSE;
-	}
-
-	/* /boot is a special case because systemd sandboxing marks
-	 * it read-only, but we need to write to /boot/EFI
-	 */
-	if (g_strcmp0 (path, "/boot") == 0) {
-		if (!g_file_test ("/boot/EFI", G_FILE_TEST_IS_DIR)) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "%s/EFI does not exist", path);
-			return FALSE;
-		}
-	/* /efi is a special case because systemd sandboxing marks
-	 * it read-only, but we need to write to /efi/EFI
-	 */
-	} else if (g_strcmp0 (path, "/efi") == 0) {
-		if (!g_file_test ("/efi/EFI", G_FILE_TEST_IS_DIR)) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "%s/EFI does not exist", path);
-			return FALSE;
-		}
-	} else if (g_unix_mount_is_readonly (mount)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "%s is read only", path);
-		return FALSE;
-	}
-	if (!g_strv_contains (fs_types, g_unix_mount_get_fs_type (mount))) {
-		g_autofree gchar *supported = g_strjoinv ("|", (gchar **) fs_types);
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "%s has an invalid type, expected %s",
-			     path, supported);
-		return FALSE;
-	}
-	return TRUE;
-}
-
-static gchar *
-fu_uefi_probe_udisks_esp (GError **error)
-{
-	g_autoptr(GPtrArray) devices = NULL;
-	g_autofree gchar *found_esp = NULL;
-
-	devices = fu_uefi_udisks_get_block_devices (error);
-	if (devices == NULL)
-		return NULL;
-	for (guint i = 0; i < devices->len; i++) {
-		const gchar *obj = g_ptr_array_index (devices, i);
-		gboolean esp = fu_uefi_udisks_objpath_is_esp (obj);
-		g_debug ("block device %s, is_esp: %d", obj, esp);
-		if (!esp)
-			continue;
-		if (found_esp != NULL) {
-			g_set_error_literal (error,
-					     G_IO_ERROR,
-					     G_IO_ERROR_INVALID_FILENAME,
-					     "Multiple EFI system partitions found, "
-					     "See https://github.com/fwupd/fwupd/wiki/Determining-EFI-system-partition-location");
-			return NULL;
-		}
-		found_esp = g_strdup (obj);
-	}
-	if (found_esp == NULL) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_FILENAME,
-				     "Unable to determine EFI system partition location, "
-				     "See https://github.com/fwupd/fwupd/wiki/Determining-EFI-system-partition-location");
-		return NULL;
-	}
-
-	g_debug ("Udisks detected objpath %s", found_esp);
-	return g_steal_pointer (&found_esp);
-}
-
-gchar *
-fu_uefi_guess_esp_path (GError **error)
-{
-	const gchar *paths[] = {"/boot/efi", "/boot", "/efi", NULL};
-	const gchar *path_tmp;
-
-	/* for the test suite use local directory for ESP */
-	path_tmp = g_getenv ("FWUPD_UEFI_ESP_PATH");
-	if (path_tmp != NULL)
-		return g_strdup (path_tmp);
-
-	/* try to use known paths */
-	for (guint i = 0; paths[i] != NULL; i++) {
-		g_autoptr(GError) error_local = NULL;
-		if (!fu_uefi_check_esp_path (paths[i], &error_local)) {
-			g_debug ("ignoring ESP path: %s", error_local->message);
-			continue;
-		}
-		return g_strdup (paths[i]);
-	}
-
-	/* probe using udisks2 */
-	return fu_uefi_probe_udisks_esp (error);
 }
 
 void
