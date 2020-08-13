@@ -25,7 +25,7 @@ fu_efi_signature_kind_to_string (FuEfiSignatureKind kind)
 	if (kind == FU_EFI_SIGNATURE_KIND_SHA256)
 		return "sha256";
 	if (kind == FU_EFI_SIGNATURE_KIND_X509)
-		return "x509";
+		return "x509_cert";
 	return "unknown";
 }
 
@@ -37,6 +37,13 @@ fu_efi_signature_new (FuEfiSignatureKind kind, const gchar *owner, GBytes *data)
 	self->owner = g_strdup (owner);
 	self->data = g_bytes_ref (data);
 	return g_steal_pointer (&self);
+}
+
+FuEfiSignatureKind
+fu_efi_signature_get_kind (FuEfiSignature *self)
+{
+	g_return_val_if_fail (FU_IS_EFI_SIGNATURE (self), 0);
+	return self->kind;
 }
 
 const gchar *

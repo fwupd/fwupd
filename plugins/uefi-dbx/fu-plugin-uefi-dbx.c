@@ -10,6 +10,7 @@
 #include "fu-efivar.h"
 #include "fu-hash.h"
 #include "fu-uefi-dbx-common.h"
+#include "fu-efi-signature-common.h"
 #include "fu-efi-signature-parser.h"
 
 struct FuPluginData {
@@ -45,13 +46,11 @@ void
 fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	GPtrArray *items;
 	gsize bufsz = 0;
-	guint missing_cnt = 0;
 	g_autofree guint8 *buf_system = NULL;
 	g_autofree guint8 *buf_update = NULL;
-	g_autoptr(FuEfiSignatureList) dbx_system = NULL;
-	g_autoptr(FuEfiSignatureList) dbx_update = NULL;
+	g_autoptr(GPtrArray) dbx_system = NULL;
+	g_autoptr(GPtrArray) dbx_update = NULL;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error_local = NULL;
 
@@ -74,7 +73,7 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
-	dbx_update = fu_efi_signature_parser_one (buf_update, bufsz,
+	dbx_update = fu_efi_signature_parser_new (buf_update, bufsz,
 						  FU_EFI_SIGNATURE_PARSER_FLAGS_IGNORE_HEADER,
 						  &error_local);
 	if (dbx_update == NULL) {
@@ -90,7 +89,7 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
-	dbx_system = fu_efi_signature_parser_one (buf_system, bufsz,
+	dbx_system = fu_efi_signature_parser_new (buf_system, bufsz,
 						  FU_EFI_SIGNATURE_PARSER_FLAGS_NONE,
 						  &error_local);
 	if (dbx_system == NULL) {
@@ -100,18 +99,7 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	}
 
 	/* look for each checksum in the update in the system version */
-	items = fu_efi_signature_list_get_all (dbx_update);
-	for (guint i = 0; i < items->len; i++) {
-		FuEfiSignature *item = g_ptr_array_index (items, i);
-		if (!fu_efi_signature_list_has_checksum (dbx_system, fu_efi_signature_get_checksum (item))) {
-			g_debug ("%s missing from the system DBX",
-				 fu_efi_signature_get_checksum (item));
-			missing_cnt += 1;
-		}
-	}
-
-	/* add security attribute */
-	if (missing_cnt > 0) {
+	if (!fu_efi_signature_list_array_inclusive (dbx_system, dbx_update)) {
 		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
 		return;
 	}

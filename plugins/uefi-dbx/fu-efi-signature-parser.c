@@ -128,7 +128,7 @@ fu_efi_signature_list_parse_list (GPtrArray *siglists,
 }
 
 GPtrArray *
-fu_efi_signature_parser_all (const guint8 *buf, gsize bufsz,
+fu_efi_signature_parser_new (const guint8 *buf, gsize bufsz,
 			     FuEfiSignatureParserFlags flags,
 			     GError **error)
 {
@@ -156,31 +156,4 @@ fu_efi_signature_parser_all (const guint8 *buf, gsize bufsz,
 
 	/* success */
 	return g_steal_pointer (&siglists);
-}
-
-FuEfiSignatureList *
-fu_efi_signature_parser_one (const guint8 *buf, gsize bufsz,
-			     FuEfiSignatureParserFlags flags,
-			     GError **error)
-{
-	g_autoptr(GPtrArray) siglists = NULL;
-
-	siglists = fu_efi_signature_parser_all (buf, bufsz, flags, error);
-	if (siglists == NULL)
-		return FALSE;
-	if (siglists->len == 0) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_FAILED,
-			     "no EFI_SIGNATURE_LIST items");
-		return FALSE;
-	}
-	if (siglists->len > 1) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_FAILED,
-			     "more than one EFI_SIGNATURE_LIST items");
-		return FALSE;
-	}
-	return g_object_ref (g_ptr_array_index (siglists, 0));
 }

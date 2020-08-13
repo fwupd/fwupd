@@ -16,6 +16,7 @@
 #include "fu-common.h"
 #include "fu-efivar.h"
 #include "fu-uefi-dbx-common.h"
+#include "fu-efi-signature-common.h"
 #include "fu-efi-signature-parser.h"
 
 /* custom return code */
@@ -35,7 +36,7 @@ fu_dbxtool_convert_guid (const gchar *guid)
 	return guid;
 }
 
-static FuEfiSignatureList *
+static GPtrArray *
 fu_dbxtool_get_siglist_system (GError **error)
 {
 	gsize bufsz = 0;
@@ -43,19 +44,19 @@ fu_dbxtool_get_siglist_system (GError **error)
 	if (!fu_efivar_get_data (FU_EFIVAR_GUID_SECURITY_DATABASE, "dbx",
 				 &buf, &bufsz, NULL, error))
 		return FALSE;
-	return fu_efi_signature_parser_one (buf, bufsz,
+	return fu_efi_signature_parser_new (buf, bufsz,
 					    FU_EFI_SIGNATURE_PARSER_FLAGS_NONE,
 					    error);
 }
 
-static FuEfiSignatureList *
+static GPtrArray *
 fu_dbxtool_get_siglist_local (const gchar *filename, GError **error)
 {
 	gsize bufsz = 0;
 	g_autofree guint8 *buf = NULL;
 	if (!g_file_get_contents (filename, (gchar **) &buf, &bufsz, error))
 		return FALSE;
-	return fu_efi_signature_parser_one (buf, bufsz,
+	return fu_efi_signature_parser_new (buf, bufsz,
 					    FU_EFI_SIGNATURE_PARSER_FLAGS_IGNORE_HEADER,
 					    error);
 }
@@ -122,8 +123,8 @@ main (int argc, char *argv[])
 
 	/* list contents, either of the existing system, or an update */
 	if (action_list) {
-		GPtrArray *sigs;
-		g_autoptr(FuEfiSignatureList) dbx = NULL;
+		guint cnt = 1;
+		g_autoptr(GPtrArray) dbx = NULL;
 		if (dbxfile != NULL) {
 			dbx = fu_dbxtool_get_siglist_local (dbxfile, &error);
 			if (dbx == NULL) {
@@ -139,13 +140,17 @@ main (int argc, char *argv[])
 				return EXIT_FAILURE;
 			}
 		}
-		sigs = fu_efi_signature_list_get_all (dbx);
-		for (guint i = 0; i < sigs->len; i++) {
-			FuEfiSignature *sig = g_ptr_array_index (sigs, i);
-			g_print ("%4u: {%s} {%s} %s\n", i + 1,
-				 fu_dbxtool_convert_guid (fu_efi_signature_get_owner (sig)),
-				 fu_efi_signature_kind_to_string (fu_efi_signature_list_get_kind (dbx)),
-				 fu_efi_signature_get_checksum (sig));
+		for (guint j = 0; j < dbx->len; j++) {
+			FuEfiSignatureList *siglist = g_ptr_array_index (dbx, j);
+			GPtrArray *sigs = fu_efi_signature_list_get_all (siglist);
+			for (guint i = 0; i < sigs->len; i++) {
+				FuEfiSignature *sig = g_ptr_array_index (sigs, i);
+				g_print ("%4u: {%s} {%s} %s\n",
+					 cnt++,
+					 fu_dbxtool_convert_guid (fu_efi_signature_get_owner (sig)),
+					 fu_efi_signature_kind_to_string (fu_efi_signature_get_kind (sig)),
+					 fu_efi_signature_get_checksum (sig));
+			}
 		}
 		return EXIT_SUCCESS;
 	}
@@ -162,8 +167,8 @@ main (int argc, char *argv[])
 	if (action_apply) {
 		gsize bufsz = 0;
 		g_autofree guint8 *buf = NULL;
-		g_autoptr(FuEfiSignatureList) dbx_system = NULL;
-		g_autoptr(FuEfiSignatureList) dbx_update = NULL;
+		g_autoptr(GPtrArray) dbx_system = NULL;
+		g_autoptr(GPtrArray) dbx_update = NULL;
 
 		if (dbxfile == NULL) {
 			/* TRANSLATORS: user did not include a filename parameter */
@@ -187,7 +192,7 @@ main (int argc, char *argv[])
 			g_printerr ("%s: %s\n", _("Failed to load local dbx"), error->message);
 			return EXIT_FAILURE;
 		}
-		dbx_update = fu_efi_signature_parser_one (buf, bufsz,
+		dbx_update = fu_efi_signature_parser_new (buf, bufsz,
 							  FU_EFI_SIGNATURE_PARSER_FLAGS_IGNORE_HEADER,
 							  &error);
 		if (dbx_update == NULL) {
@@ -195,11 +200,16 @@ main (int argc, char *argv[])
 			g_printerr ("%s: %s\n", _("Failed to parse local dbx"), error->message);
 			return EXIT_FAILURE;
 		}
+		if (dbx_update->len != 1) {
+			/* TRANSLATORS: could not parse file */
+			g_printerr ("%s: %s\n", _("Failed to extract local dbx "), error->message);
+			return EXIT_FAILURE;
+		}
 
 		/* check this is a newer dbx update */
-		if (!force && fu_efi_signature_list_are_inclusive (dbx_system, dbx_update)) {
+		if (!force && fu_efi_signature_list_array_inclusive (dbx_system, dbx_update)) {
 			/* TRANSLATORS: same or newer update already applied */
-			g_printerr ("%s\n", _("Cannot apply update as this dbx update has already been applied."));
+			g_printerr ("%s\n", _("Cannot apply as dbx update has already been applied."));
 			return EXIT_FAILURE;
 		}
 

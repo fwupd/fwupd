@@ -26,7 +26,7 @@ main (int argc, char *argv[])
 		g_printerr ("Failed to load %s: %s\n", argv[1], error->message);
 		return EXIT_FAILURE;
 	}
-	siglists = fu_efi_signature_parser_all (buf, bufsz,
+	siglists = fu_efi_signature_parser_new (buf, bufsz,
 						FU_EFI_SIGNATURE_PARSER_FLAGS_IGNORE_HEADER,
 						&error);
 	if (siglists == NULL) {

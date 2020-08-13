@@ -57,18 +57,6 @@ fu_efi_signature_list_has_checksum (FuEfiSignatureList *self, const gchar *check
 	return FALSE;
 }
 
-gboolean
-fu_efi_signature_list_are_inclusive (FuEfiSignatureList *self, FuEfiSignatureList *other)
-{
-	g_return_val_if_fail (FU_IS_EFI_SIGNATURE_LIST (self), FALSE);
-	for (guint i = 0; i < other->items->len; i++) {
-		FuEfiSignature *sig = g_ptr_array_index (other->items, i);
-		if (!fu_efi_signature_list_has_checksum (self, fu_efi_signature_get_checksum (sig)))
-			return FALSE;
-	}
-	return TRUE;
-}
-
 static void
 fu_efi_signature_list_finalize (GObject *obj)
 {

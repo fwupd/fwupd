@@ -23,6 +23,7 @@ const gchar	*fu_efi_signature_kind_to_string	(FuEfiSignatureKind kind);
 FuEfiSignature	*fu_efi_signature_new			(FuEfiSignatureKind kind,
 							 const gchar	*owner,
 							 GBytes		*data);
+FuEfiSignatureKind fu_efi_signature_get_kind		(FuEfiSignature	*self);
 GBytes		*fu_efi_signature_get_data		(FuEfiSignature	*self);
 const gchar	*fu_efi_signature_get_checksum		(FuEfiSignature	*self);
 const gchar 	*fu_efi_signature_get_owner		(FuEfiSignature	*self);
