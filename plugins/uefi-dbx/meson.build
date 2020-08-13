@@ -1,5 +1,32 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiDbx"']
 
+shared_module('fu_plugin_uefi_dbx',
+  fu_hash,
+  sources : [
+    'fu-plugin-uefi-dbx.c',
+    'fu-uefi-dbx-device.c',
+    'fu-efi-signature.c',
+    'fu-efi-signature-common.c',
+    'fu-efi-signature-list.c',
+    'fu-efi-signature-parser.c',
+  ],
+  include_directories : [
+    root_incdir,
+    fwupd_incdir,
+    fwupdplugin_incdir,
+  ],
+  install : true,
+  install_dir: plugin_dir,
+  link_with : [
+    fwupd,
+    fwupdplugin,
+  ],
+  c_args : cargs,
+  dependencies : [
+    plugin_deps,
+  ],
+)
+
 uefi_dbx_fuzzer = executable(
   'uefi-dbx-fuzzer',
   sources : [
