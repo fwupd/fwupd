@@ -349,6 +349,7 @@ fu_efivar_set_data (const gchar *guid, const gchar *name, const guint8 *data,
 {
 #ifndef _WIN32
 	int fd;
+	int open_wflags;
 	gboolean was_immutable;
 	g_autofree gchar *fn = fu_efivar_get_filename (guid, name);
 	g_autofree guint8 *buf = g_malloc0 (sizeof(guint32) + sz);
@@ -374,8 +375,11 @@ fu_efivar_set_data (const gchar *guid, const gchar *name, const guint8 *data,
 		return FALSE;
 	}
 
-	/* open file for writing */
-	fd = open (fn, O_WRONLY);
+	/* open file for writing, optionally append */
+	open_wflags = O_WRONLY;
+	if (attr & FU_EFIVAR_ATTR_APPEND_WRITE)
+		open_wflags |= O_APPEND;
+	fd = open (fn, open_wflags);
 	if (fd < 0) {
 		g_set_error (error,
 			     G_IO_ERROR,
