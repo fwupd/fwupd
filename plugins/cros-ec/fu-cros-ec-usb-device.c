@@ -712,6 +712,26 @@ fu_cros_ec_usb_device_write_firmware (FuDevice *device,
 		}
 		/* clear custom flags */
 		fu_device_set_custom_flags (device, "");
+
+		/* flush all data from endpoint to recover in case of error */
+		if (!fu_device_retry (device, fu_cros_ec_usb_device_flush,
+				      SETUP_RETRY_CNT, NULL, error)) {
+			g_prefix_error (error, "failed to flush device to idle state: ");
+			return FALSE;
+		}
+	}
+
+	if (fu_device_has_custom_flag (device, "rw-written") && self->in_bootloader) {
+		/*
+		 * we had previously written to the rw region but somehow
+		 * ended back up here while still in bootloader; this is
+		 * a transitory state due to the fact that we have to boot
+		 * through RO to get to RW. Set another write required to
+		 * allow the RO region to auto-jump to RW
+		 */
+		fu_device_set_custom_flags (device, "special,rw-written");
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED);
+		return TRUE;
 	}
 
 	sections = fu_cros_ec_firmware_get_sections (cros_ec_firmware);
@@ -815,6 +835,13 @@ static gboolean
 fu_cros_ec_usb_device_attach (FuDevice *device, GError **error)
 {
 	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE (device);
+
+	if (self->in_bootloader && fu_device_has_custom_flag (device, "special")) {
+		fu_device_set_remove_delay (device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+		fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+		return TRUE;
+	}
 
 	if (!self->in_bootloader) {
 		/* already in rw, so skip jump to rw */
