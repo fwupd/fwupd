@@ -28,14 +28,6 @@ fu_util_ignore_cb (const gchar *log_domain, GLogLevelFlags log_level,
 {
 }
 
-static const gchar *
-fu_dbxtool_convert_guid (const gchar *guid)
-{
-	if (g_strcmp0 (guid, "77fa9abd-0359-4d32-bd60-28f4e78f784b") == 0)
-		return "microsoft";
-	return guid;
-}
-
 static GPtrArray *
 fu_dbxtool_get_siglist_system (GError **error)
 {
@@ -66,6 +58,7 @@ main (int argc, char *argv[])
 {
 	gboolean action_apply = FALSE;
 	gboolean action_list = FALSE;
+	gboolean action_version = FALSE;
 	gboolean force = FALSE;
 	gboolean verbose = FALSE;
 	g_autofree gchar *dbxfile = NULL;
@@ -76,6 +69,9 @@ main (int argc, char *argv[])
 		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
 			/* TRANSLATORS: command line option */
 			_("Show extra debugging information"), NULL },
+		{ "version", '\0', 0, G_OPTION_ARG_NONE, &action_version,
+			/* TRANSLATORS: command line option */
+			_("Show the calculated version of the dbx"), NULL },
 		{ "list", 'l', 0, G_OPTION_ARG_NONE, &action_list,
 			/* TRANSLATORS: command line option */
 			_("List entries in dbx"), NULL },
@@ -122,7 +118,7 @@ main (int argc, char *argv[])
 	}
 
 	/* list contents, either of the existing system, or an update */
-	if (action_list) {
+	if (action_list || action_version) {
 		guint cnt = 1;
 		g_autoptr(GPtrArray) dbx = NULL;
 		if (dbxfile != NULL) {
@@ -140,6 +136,11 @@ main (int argc, char *argv[])
 				return EXIT_FAILURE;
 			}
 		}
+		if (action_version) {
+			/* TRANSLATORS: the detected version number of the dbx */
+			g_print ("%s: %u\n", _("Version"), fu_efi_signature_list_array_version (dbx));
+			return EXIT_SUCCESS;
+		}
 		for (guint j = 0; j < dbx->len; j++) {
 			FuEfiSignatureList *siglist = g_ptr_array_index (dbx, j);
 			GPtrArray *sigs = fu_efi_signature_list_get_all (siglist);
@@ -147,7 +148,7 @@ main (int argc, char *argv[])
 				FuEfiSignature *sig = g_ptr_array_index (sigs, i);
 				g_print ("%4u: {%s} {%s} %s\n",
 					 cnt++,
-					 fu_dbxtool_convert_guid (fu_efi_signature_get_owner (sig)),
+					 fu_efi_signature_guid_to_string (fu_efi_signature_get_owner (sig)),
 					 fu_efi_signature_kind_to_string (fu_efi_signature_get_kind (sig)),
 					 fu_efi_signature_get_checksum (sig));
 			}

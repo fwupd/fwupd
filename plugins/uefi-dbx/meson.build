@@ -5,6 +5,7 @@ shared_module('fu_plugin_uefi_dbx',
   sources : [
     'fu-plugin-uefi-dbx.c',
     'fu-uefi-dbx-common.c',
+    'fu-uefi-dbx-device.c',
     'fu-efi-signature.c',
     'fu-efi-signature-common.c',
     'fu-efi-signature-list.c',
