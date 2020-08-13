@@ -19,5 +19,3 @@ void		 fu_efi_signature_list_add		(FuEfiSignatureList	*self,
 GPtrArray	*fu_efi_signature_list_get_all		(FuEfiSignatureList	*self);
 gboolean	 fu_efi_signature_list_has_checksum	(FuEfiSignatureList	*self,
 							 const gchar		*checksum);
-gboolean	 fu_efi_signature_list_are_inclusive	(FuEfiSignatureList	*self,
-							 FuEfiSignatureList	*other);

@@ -13,11 +13,7 @@ typedef enum {
 	FU_EFI_SIGNATURE_PARSER_FLAGS_IGNORE_HEADER	= 1 << 0,
 } FuEfiSignatureParserFlags;
 
-GPtrArray	*fu_efi_signature_parser_all	(const guint8	*buf,
-						 gsize		 bufsz,
-						 FuEfiSignatureParserFlags flags,
-						 GError		**error);
-FuEfiSignatureList* fu_efi_signature_parser_one	(const guint8	*buf,
+GPtrArray	*fu_efi_signature_parser_new	(const guint8	*buf,
 						 gsize		 bufsz,
 						 FuEfiSignatureParserFlags flags,
 						 GError		**error);

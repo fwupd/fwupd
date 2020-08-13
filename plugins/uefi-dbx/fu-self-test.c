@@ -33,7 +33,7 @@ fu_efi_signature_list_parse_func (void)
 	g_assert_true (ret);
 
 	/* parse the update */
-	siglists = fu_efi_signature_parser_all (buf, bufsz,
+	siglists = fu_efi_signature_parser_new (buf, bufsz,
 						FU_EFI_SIGNATURE_PARSER_FLAGS_IGNORE_HEADER,
 						&error);
 	g_assert_no_error (error);
