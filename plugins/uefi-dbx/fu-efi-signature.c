@@ -29,6 +29,18 @@ fu_efi_signature_kind_to_string (FuEfiSignatureKind kind)
 	return "unknown";
 }
 
+const gchar *
+fu_efi_signature_guid_to_string (const gchar *guid)
+{
+	if (g_strcmp0 (guid, FU_EFI_SIGNATURE_GUID_ZERO) == 0)
+		return "zero";
+	if (g_strcmp0 (guid, FU_EFI_SIGNATURE_GUID_MICROSOFT) == 0)
+		return "microsoft";
+	if (g_strcmp0 (guid, FU_EFI_SIGNATURE_GUID_OVMF) == 0)
+		return "ovmf";
+	return guid;
+}
+
 FuEfiSignature *
 fu_efi_signature_new (FuEfiSignatureKind kind, const gchar *owner, GBytes *data)
 {

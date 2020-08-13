@@ -18,7 +18,12 @@ typedef enum {
 	FU_EFI_SIGNATURE_KIND_LAST
 } FuEfiSignatureKind;
 
+#define FU_EFI_SIGNATURE_GUID_ZERO		"00000000-0000-0000-0000-000000000000"
+#define FU_EFI_SIGNATURE_GUID_MICROSOFT		"77fa9abd-0359-4d32-bd60-28f4e78f784b"
+#define FU_EFI_SIGNATURE_GUID_OVMF		"a0baa8a3-041d-48a8-bc87-c36d121b5e3d"
+
 const gchar	*fu_efi_signature_kind_to_string	(FuEfiSignatureKind kind);
+const gchar	*fu_efi_signature_guid_to_string	(const gchar	*guid);
 
 FuEfiSignature	*fu_efi_signature_new			(FuEfiSignatureKind kind,
 							 const gchar	*owner,
