@@ -54,6 +54,10 @@ VendorId = ATA:0x2646
 Vendor = Micron
 VendorId = ATA:0x1344
 
+[DeviceInstanceId=OUI\030302]
+Vendor = SK hynix
+VendorId = ATA:0x1C5C
+
 [DeviceInstanceId=OUI\550380]
 Vendor = Kingston
 VendorId = ATA:0x2646
