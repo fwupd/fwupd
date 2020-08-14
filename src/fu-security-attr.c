@@ -97,7 +97,12 @@ fu_security_attr_get_name (FwupdSecurityAttr *attr)
 	}
 	if (g_strcmp0 (appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_DBX) == 0) {
 		/* TRANSLATORS: Title: dbx is the database with revoked hashes */
-		return g_strdup (_("UEFI dbx"));
+		return g_strdup (_("UEFI dbx update"));
+	}
+	if (g_strcmp0 (appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_DBX_ESP) == 0) {
+		/* TRANSLATORS: Title: ESP is the name of the EFI System Partition
+		 * and dbx is the database with revoked hashes */
+		return g_strdup (_("UEFI dbx in ESP"));
 	}
 	if (g_strcmp0 (appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT) == 0) {
 		/* TRANSLATORS: Title: SB is a way of locking down UEFI */

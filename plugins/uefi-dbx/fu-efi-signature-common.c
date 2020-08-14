@@ -9,7 +9,7 @@
 #include "fu-efi-signature-common.h"
 #include "fu-efi-signature-list.h"
 
-static gboolean
+gboolean
 fu_efi_signature_list_array_has_checksum (GPtrArray *siglists, const gchar *checksum)
 {
 	for (guint i = 0; i < siglists->len; i++) {

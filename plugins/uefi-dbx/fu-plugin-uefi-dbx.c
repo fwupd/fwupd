@@ -32,6 +32,37 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
+static void
+fu_plugin_add_security_attrs_runtime (FuPlugin *plugin, GPtrArray *dbx, FuSecurityAttrs *attrs)
+{
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	/* create attr */
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_UEFI_DBX_ESP);
+	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
+	fu_security_attrs_append (attrs, attr);
+
+	/* no binary blob */
+	if (!fu_plugin_get_enabled (plugin)) {
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
+		fwupd_security_attr_set_url (attr, "https://github.com/fwupd/fwupd/wiki/Missingdbx");
+		return;
+	}
+
+	/* verify all files */
+	if (!fu_uefi_dbx_signature_list_validate (dbx, &error_local)) {
+		g_warning ("failed to check ESP: %s", error_local->message);
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_FOUND);
+		return;
+	}
+
+	/* success */
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
+}
+
 void
 fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
@@ -94,6 +125,9 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
+
+	/* verify there are no files in the ESP that match this dbx */
+	fu_plugin_add_security_attrs_runtime (plugin, dbx_update, attrs);
 
 	/* look for each checksum in the update in the system version */
 	if (!fu_efi_signature_list_array_inclusive (dbx_system, dbx_update)) {

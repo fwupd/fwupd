@@ -221,6 +221,18 @@ main (int argc, char *argv[])
 			return EXIT_FAILURE;
 		}
 
+		/* validate this is safe to apply */
+		if (!force) {
+			/* TRANSLATORS: ESP refers to the EFI System Partition */
+			g_print ("%s\n", _("Validating ESP contents…"));
+			if (!fu_uefi_dbx_signature_list_validate (dbx_update, &error)) {
+				/* TRANSLATORS: something with a blocked hash exists
+				 * in the users ESP -- which would be bad! */
+				g_printerr ("%s: %s\n", _("Failed to validate ESP contents"), error->message);
+				return EXIT_FAILURE;
+			}
+		}
+
 		/* TRANSLATORS: actually sending the update to the hardware */
 		g_print ("%s\n", _("Applying update…"));
 		if (!fu_efivar_set_data (FU_EFIVAR_GUID_SECURITY_DATABASE,

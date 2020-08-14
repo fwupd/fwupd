@@ -139,6 +139,7 @@ typedef enum {
 #define FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0	"org.fwupd.hsi.Tpm.ReconstructionPcr0"	/* Since: 1.5.0 */
 #define FWUPD_SECURITY_ATTR_ID_TPM_VERSION_20		"org.fwupd.hsi.Tpm.Version20"		/* Since: 1.5.0 */
 #define FWUPD_SECURITY_ATTR_ID_UEFI_DBX			"org.fwupd.hsi.Uefi.Dbx"		/* Since: 1.5.0 */
+#define FWUPD_SECURITY_ATTR_ID_UEFI_DBX_ESP		"org.fwupd.hsi.Uefi.Dbx.Esp"		/* Since: 1.5.0 */
 #define FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT		"org.fwupd.hsi.Uefi.SecureBoot"		/* Since: 1.5.0 */
 #define FWUPD_SECURITY_ATTR_ID_INTEL_DCI_ENABLED	"org.fwupd.hsi.IntelDci.Enabled"	/* Since: 1.5.0 */
 #define FWUPD_SECURITY_ATTR_ID_INTEL_DCI_LOCKED		"org.fwupd.hsi.IntelDci.Locked"		/* Since: 1.5.0 */
