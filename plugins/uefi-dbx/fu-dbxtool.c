@@ -15,6 +15,7 @@
 
 #include "fu-common.h"
 #include "fu-efivar.h"
+#include "fu-uefi-dbx-common.h"
 #include "fu-efi-signature-common.h"
 #include "fu-efi-signature-parser.h"
 
@@ -218,6 +219,18 @@ main (int argc, char *argv[])
 			/* TRANSLATORS: the user is using a LiveCD or LiveUSB install disk */
 			g_printerr ("%s\n", _("Cannot apply updates on live media"));
 			return EXIT_FAILURE;
+		}
+
+		/* validate this is safe to apply */
+		if (!force) {
+			/* TRANSLATORS: ESP refers to the EFI System Partition */
+			g_print ("%s\n", _("Validating ESP contents…"));
+			if (!fu_uefi_dbx_signature_list_validate (dbx_update, &error)) {
+				/* TRANSLATORS: something with a blocked hash exists
+				 * in the users ESP -- which would be bad! */
+				g_printerr ("%s: %s\n", _("Failed to validate ESP contents"), error->message);
+				return EXIT_FAILURE;
+			}
 		}
 
 		/* TRANSLATORS: actually sending the update to the hardware */

@@ -10,6 +10,7 @@
 
 #include "fu-efi-signature-common.h"
 #include "fu-efi-signature-parser.h"
+#include "fu-uefi-dbx-common.h"
 #include "fu-uefi-dbx-device.h"
 
 struct _FuUefiDbxDevice {
@@ -75,6 +76,40 @@ fu_uefi_dbx_device_set_version_number (FuDevice *device, GError **error)
 	return TRUE;
 }
 
+static FuFirmware *
+fu_uefi_dbx_prepare_firmware (FuDevice *device,
+			      GBytes *fw,
+			      FwupdInstallFlags flags,
+			      GError **error)
+{
+	const guint8 *buf;
+	gsize bufsz = 0;
+	g_autoptr(GPtrArray) siglists = NULL;
+
+	/* parse dbx */
+	fu_device_set_status (device, FWUPD_STATUS_DECOMPRESSING);
+	buf = g_bytes_get_data (fw, &bufsz);
+	siglists = fu_efi_signature_parser_new (buf, bufsz,
+						FU_EFI_SIGNATURE_PARSER_FLAGS_IGNORE_HEADER,
+						error);
+	if (siglists == NULL)
+		return NULL;
+
+	/* validate this is safe to apply */
+	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+		fu_device_set_status (device, FWUPD_STATUS_DEVICE_VERIFY);
+		if (!fu_uefi_dbx_signature_list_validate (siglists, error)) {
+			g_prefix_error (error,
+					"Blocked executable in the ESP, "
+					"ensure grub and shim are up to date: ");
+			return NULL;
+		}
+	}
+
+	/* default blob */
+	return fu_firmware_new_from_bytes (fw);
+}
+
 static gboolean
 fu_uefi_dbx_device_probe (FuDevice *device, GError **error)
 {
@@ -137,6 +172,7 @@ fu_uefi_dbx_device_class_init (FuUefiDbxDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	klass_device->probe = fu_uefi_dbx_device_probe;
 	klass_device->write_firmware = fu_uefi_dbx_device_write_firmware;
+	klass_device->prepare_firmware = fu_uefi_dbx_prepare_firmware;
 }
 
 FuUefiDbxDevice *
