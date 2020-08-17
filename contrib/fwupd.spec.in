@@ -137,6 +137,9 @@ Obsoletes: libebitdo < 0.7.5-3
 Obsoletes: libdfu < 1.0.0
 Obsoletes: fwupd-labels < 1.1.0-1
 
+Obsoletes: dbxtool < 9
+Provides: dbxtool
+
 %if 0%{?rhel} > 7
 Obsoletes: fwupdate < 11-4
 Obsoletes: fwupdate-efi < 11-4
@@ -289,6 +292,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_bindir}/fwupdtpmevlog
 %endif
 %{_bindir}/dfu-tool
+%{_bindir}/dbxtool
 %{_bindir}/fwupdmgr
 %{_bindir}/fwupdtool
 %{_bindir}/fwupdagent
@@ -323,6 +327,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_datadir}/man/man1/fwupdtool.1.gz
 %{_datadir}/man/man1/fwupdagent.1.gz
 %{_datadir}/man/man1/dfu-tool.1.gz
+%{_datadir}/man/man1/dbxtool.1.gz
 %{_datadir}/man/man1/fwupdmgr.1.gz
 %if 0%{?have_uefi}
 %{_datadir}/man/man1/fwupdate.1.gz

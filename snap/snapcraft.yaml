@@ -16,6 +16,8 @@ architectures:
 apps:
   dfu-tool:
     command: dfu-tool.wrapper
+  dbxtool:
+    command: dbxtool.wrapper
   fwupdtool:
     command: fwupdtool.wrapper
     completer:
@@ -299,6 +301,7 @@ parts:
     source: contrib/snap
     stage:
     - dfu-tool.wrapper
+    - dbxtool.wrapper
     - fwupd-command
     - fwupdtool.wrapper
     - fwupd.wrapper
