@@ -35,29 +35,29 @@ fu_acpi_dmar_new (GBytes *blob, GError **error)
 	if (!fu_memcpy_safe ((guint8 *) signature, sizeof(signature), 0x0,	/* dst */
 			     buf, bufsz, 0x00,					/* src */
 			     sizeof(signature) - 1, error))
-		return FALSE;
+		return NULL;
 	if (strcmp (signature, "DMAR") != 0) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_NOT_SUPPORTED,
 			     "Not a DMAR table, got %s",
 			     signature);
-		return FALSE;
+		return NULL;
 	}
 	if (!fu_memcpy_safe ((guint8 *) oem_table_id, sizeof(oem_table_id), 0x0,/* dst */
 			     buf, bufsz, 0x10,					/* src */
 			     sizeof(oem_table_id) - 1, error))
-		return FALSE;
+		return NULL;
 	g_debug ("OemTableId: %s", oem_table_id);
 	if (!fu_memcpy_safe ((guint8 *) creator_id, sizeof(creator_id), 0x0,	/* dst */
 			     buf, bufsz, 0x1c,					/* src */
 			     sizeof(creator_id) - 1, error))
-		return FALSE;
+		return NULL;
 	g_debug ("CreatorId: %s", creator_id);
 	if (!fu_memcpy_safe (&flags, sizeof(flags), 0x0,			/* dst */
 			     buf, bufsz, 0x25,					/* src */
 			     sizeof(flags), error))
-		return FALSE;
+		return NULL;
 	g_debug ("Flags: 0x%02x", flags);
 	self->opt_in = (flags & DMAR_DMA_CTRL_PLATFORM_OPT_IN_FLAG) > 0;
 	return self;
