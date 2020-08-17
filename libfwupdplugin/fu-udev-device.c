@@ -1123,8 +1123,8 @@ fu_udev_device_get_sysfs_attr (FuUdevDevice *self, const gchar *attr,
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 	const gchar *result;
 
-	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), FALSE);
-	g_return_val_if_fail (attr != NULL, FALSE);
+	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), NULL);
+	g_return_val_if_fail (attr != NULL, NULL);
 
 	/* nothing to do */
 	if (priv->udev_device == NULL) {
@@ -1141,7 +1141,7 @@ fu_udev_device_get_sysfs_attr (FuUdevDevice *self, const gchar *attr,
 			     G_IO_ERROR_NOT_FOUND,
 			     "attribute %s returned no data",
 			     attr);
-		return FALSE;
+		return NULL;
 	}
 
 	return result;
