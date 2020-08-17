@@ -35,7 +35,7 @@ fu_dbxtool_get_siglist_system (GError **error)
 	g_autofree guint8 *buf = NULL;
 	if (!fu_efivar_get_data (FU_EFIVAR_GUID_SECURITY_DATABASE, "dbx",
 				 &buf, &bufsz, NULL, error))
-		return FALSE;
+		return NULL;
 	return fu_efi_signature_parser_new (buf, bufsz,
 					    FU_EFI_SIGNATURE_PARSER_FLAGS_NONE,
 					    error);
@@ -47,7 +47,7 @@ fu_dbxtool_get_siglist_local (const gchar *filename, GError **error)
 	gsize bufsz = 0;
 	g_autofree guint8 *buf = NULL;
 	if (!g_file_get_contents (filename, (gchar **) &buf, &bufsz, error))
-		return FALSE;
+		return NULL;
 	return fu_efi_signature_parser_new (buf, bufsz,
 					    FU_EFI_SIGNATURE_PARSER_FLAGS_IGNORE_HEADER,
 					    error);
