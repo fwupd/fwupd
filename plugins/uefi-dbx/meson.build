@@ -6,6 +6,7 @@ shared_module('fu_plugin_uefi_dbx',
     'fu-plugin-uefi-dbx.c',
     'fu-uefi-dbx-common.c',
     'fu-uefi-dbx-device.c',
+    'fu-efi-image.c',
     'fu-efi-signature.c',
     'fu-efi-signature-common.c',
     'fu-efi-signature-list.c',
@@ -29,12 +30,15 @@ shared_module('fu_plugin_uefi_dbx',
 )
 
 if get_option('tests')
+  testdatadir = join_paths(meson.current_source_dir(), 'tests')
+  cargs += '-DTESTDATADIR="' + testdatadir + '"'
   e = executable(
     'uefi-dbx-self-test',
     fu_hash,
     sources : [
       'fu-self-test.c',
       'fu-uefi-dbx-common.c',
+      'fu-efi-image.c',
       'fu-efi-signature.c',
       'fu-efi-signature-common.c',
       'fu-efi-signature-list.c',
@@ -52,6 +56,7 @@ if get_option('tests')
       fwupd,
       fwupdplugin,
     ],
+    c_args : cargs,
   )
   test('uefi-dbx-self-test', e)
 endif
@@ -60,10 +65,12 @@ uefi_dbx_fuzzer = executable(
   'uefi-dbx-fuzzer',
   sources : [
     'fu-fuzzer.c',
+    'fu-efi-image.c',
     'fu-efi-signature.c',
     'fu-efi-signature-common.c',
     'fu-efi-signature-list.c',
     'fu-efi-signature-parser.c',
+    'fu-uefi-dbx-common.c',
   ],
   include_directories : [
     root_incdir,
@@ -84,6 +91,7 @@ dbxtool = executable(
   sources : [
     'fu-dbxtool.c',
     'fu-uefi-dbx-common.c',
+    'fu-efi-image.c',
     'fu-efi-signature.c',
     'fu-efi-signature-common.c',
     'fu-efi-signature-list.c',
