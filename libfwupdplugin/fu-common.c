@@ -2069,7 +2069,7 @@ fu_common_get_volumes_by_kind (const gchar *kind, GError **error)
 	}
 	devices = fu_common_get_block_devices (connection, error);
 	if (devices == NULL)
-		return FALSE;
+		return NULL;
 	volumes = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	for (guint i = 0; i < devices->len; i++) {
 		const gchar *obj = g_ptr_array_index (devices, i);
@@ -2087,7 +2087,7 @@ fu_common_get_volumes_by_kind (const gchar *kind, GError **error)
 						    NULL, error);
 		if (proxy_part == NULL) {
 			g_prefix_error (error, "failed to initialize d-bus proxy %s: ", obj);
-			return FALSE;
+			return NULL;
 		}
 		val = g_dbus_proxy_get_cached_property (proxy_part, "Type");
 		if (val == NULL)
@@ -2105,7 +2105,7 @@ fu_common_get_volumes_by_kind (const gchar *kind, GError **error)
 						    NULL, error);
 		if (proxy_file == NULL) {
 			g_prefix_error (error, "failed to initialize d-bus proxy %s: ", obj);
-			return FALSE;
+			return NULL;
 		}
 		g_ptr_array_add (volumes, fu_volume_new_from_proxy (proxy_file));
 	}
@@ -2144,7 +2144,7 @@ fu_common_get_esp_default (GError **error)
 
 	volumes = fu_common_get_volumes_by_kind (FU_VOLUME_KIND_ESP, error);
 	if (volumes == NULL)
-		return FALSE;
+		return NULL;
 	for (guint i = 0; i < volumes->len; i++) {
 		FuVolume *vol = g_ptr_array_index (volumes, i);
 		g_ptr_array_add (fu_volume_is_mounted (vol) ? volumes_mtab : volumes_fstab, vol);
@@ -2183,7 +2183,7 @@ fu_common_get_esp_for_path (const gchar *esp_path, GError **error)
 
 	volumes = fu_common_get_volumes_by_kind (FU_VOLUME_KIND_ESP, error);
 	if (volumes == NULL)
-		return FALSE;
+		return NULL;
 	for (guint i = 0; i < volumes->len; i++) {
 		FuVolume *vol = g_ptr_array_index (volumes, i);
 		g_autofree gchar *vol_basename = g_path_get_basename (fu_volume_get_id (vol));
