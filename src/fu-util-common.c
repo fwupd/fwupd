@@ -597,6 +597,11 @@ fu_util_release_get_name (FwupdRelease *release)
 			 * the first %s is the device name, e.g. 'Unifying Receiver` */
 			return g_strdup_printf (_("%s Device Update"), name);
 		}
+		if (g_strcmp0 (cat, "X-Configuration") == 0) {
+			/* TRANSLATORS: a specific part of hardware,
+			 * the first %s is the device name, e.g. 'Secure Boot` */
+			return g_strdup_printf (_("%s Configuration Update"), name);
+		}
 		if (g_strcmp0 (cat, "X-System") == 0) {
 			/* TRANSLATORS: the entire system, e.g. all internal devices,
 			 * the first %s is the device name, e.g. 'ThinkPad P50` */
