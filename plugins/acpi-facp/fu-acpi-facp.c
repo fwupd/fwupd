@@ -30,7 +30,7 @@ fu_acpi_facp_new (GBytes *blob, GError **error)
 
 	/* parse table */
 	if (!fu_common_read_uint32_safe	(buf, bufsz, 0x70, &flags, G_LITTLE_ENDIAN, error))
-		return FALSE;
+		return NULL;
 	g_debug ("Flags: 0x%04x", flags);
 	self->get_s2i = (flags & LOW_POWER_S0_IDLE_CAPABLE) > 0;
 	return self;
