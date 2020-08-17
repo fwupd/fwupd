@@ -233,7 +233,7 @@ fu_main_create_request (FuMainPrivate *priv, const gchar *sender, GError **error
 					error);
 	if (value == NULL) {
 		g_prefix_error (error, "failed to read user id of caller: ");
-		return FALSE;
+		return NULL;
 	}
 	g_variant_get (value, "(u)", &calling_uid);
 	if (calling_uid == 0)
