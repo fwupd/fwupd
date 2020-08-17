@@ -2034,7 +2034,7 @@ fu_util_get_remote_with_security_report_uri (FuUtilPrivate *priv, GError **error
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "No remotes specified SecurityReportURI");
-	return FALSE;
+	return NULL;
 }
 
 static gboolean
