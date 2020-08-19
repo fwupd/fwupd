@@ -177,7 +177,6 @@ Data files for installed tests.
     --werror \
 %endif
     -Dgtkdoc=true \
-    -Defi_dbxdir=%{_datadir}/dbxtool \
 %if 0%{?enable_tests}
     -Dtests=true \
 %else
