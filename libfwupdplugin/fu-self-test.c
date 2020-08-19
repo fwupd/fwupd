@@ -750,7 +750,7 @@ fu_common_store_cab_func (void)
 				   &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (query);
-	rel = xb_node_query_first_full (component, query, &error);
+	rel = xb_node_query_first_full (component, query, NULL, &error);
 #else
 	rel = xb_node_query_first (component, "releases/release", &error);
 #endif
@@ -807,7 +807,7 @@ fu_common_store_cab_unsigned_func (void)
 				   &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (query);
-	rel = xb_node_query_first_full (component, query, &error);
+	rel = xb_node_query_first_full (component, query, NULL, &error);
 #else
 	rel = xb_node_query_first (component, "releases/release", &error);
 #endif
@@ -859,7 +859,7 @@ fu_common_store_cab_folder_func (void)
 				   &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (query);
-	rel = xb_node_query_first_full (component, query, &error);
+	rel = xb_node_query_first_full (component, query, NULL, &error);
 #else
 	rel = xb_node_query_first (component, "releases/release", &error);
 #endif

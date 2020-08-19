@@ -259,6 +259,9 @@ fu_quirks_lookup_by_id (FuQuirks *self, const gchar *group, const gchar *key)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) n = NULL;
 	g_autoptr(XbQuery) query = NULL;
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+	g_auto(XbValueBindings) bindings = XB_VALUE_BINDINGS_INIT ();
+#endif
 
 	g_return_val_if_fail (FU_IS_QUIRKS (self), NULL);
 	g_return_val_if_fail (group != NULL, NULL);
@@ -284,6 +287,12 @@ fu_quirks_lookup_by_id (FuQuirks *self, const gchar *group, const gchar *key)
 		g_warning ("failed to build query: %s", error->message);
 		return NULL;
 	}
+
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+	xb_value_bindings_bind_str (&bindings, 0, group_key, NULL);
+	xb_value_bindings_bind_str (&bindings, 1, key, NULL);
+	n = xb_silo_query_first_full (self->silo, query, &bindings, &error);
+#else
 	if (!xb_query_bind_str (query, 0, group_key, &error)) {
 		g_warning ("failed to bind 0: %s", error->message);
 		return NULL;
@@ -293,6 +302,8 @@ fu_quirks_lookup_by_id (FuQuirks *self, const gchar *group, const gchar *key)
 		return NULL;
 	}
 	n = xb_silo_query_first_full (self->silo, query, &error);
+#endif
+
 	if (n == NULL) {
 		if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND))
 			return NULL;
@@ -325,6 +336,9 @@ fu_quirks_lookup_by_id_iter (FuQuirks *self, const gchar *group,
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) results = NULL;
 	g_autoptr(XbQuery) query = NULL;
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+	g_auto(XbValueBindings) bindings = XB_VALUE_BINDINGS_INIT ();
+#endif
 
 	g_return_val_if_fail (FU_IS_QUIRKS (self), FALSE);
 	g_return_val_if_fail (group != NULL, FALSE);
@@ -350,11 +364,18 @@ fu_quirks_lookup_by_id_iter (FuQuirks *self, const gchar *group,
 		g_warning ("failed to build query: %s", error->message);
 		return FALSE;
 	}
+
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+	xb_value_bindings_bind_str (&bindings, 0, group_key, NULL);
+	results = xb_silo_query_full (self->silo, query, &bindings, &error);
+#else
 	if (!xb_query_bind_str (query, 0, group_key, &error)) {
 		g_warning ("failed to bind 0: %s", error->message);
 		return FALSE;
 	}
 	results = xb_silo_query_full (self->silo, query, &error);
+#endif
+
 	if (results == NULL) {
 		if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND))
 			return FALSE;

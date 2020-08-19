@@ -869,13 +869,21 @@ fu_engine_verify_from_system_metadata (FuEngine *self,
 		const gchar *guid = g_ptr_array_index (guids, i);
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(GPtrArray) releases = NULL;
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+		g_auto(XbValueBindings) bindings = XB_VALUE_BINDINGS_INIT ();
+#endif
 
 		/* bind GUID and then query */
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+		xb_value_bindings_bind_str (&bindings, 0, guid, NULL);
+		releases = xb_silo_query_full (self->silo, query, &bindings, &error_local);
+#else
 		if (!xb_query_bind_str (query, 0, guid, error)) {
 			g_prefix_error (error, "failed to bind string: ");
 			return NULL;
 		}
 		releases = xb_silo_query_full (self->silo, query, &error_local);
+#endif
 		if (releases == NULL) {
 			if (g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) ||
 			    g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
@@ -2310,7 +2318,7 @@ fu_engine_install (FuEngine *self,
 				   error);
 	if (query == NULL)
 		return FALSE;
-	rel_newest = xb_node_query_first_full (component, query, &error_local);
+	rel_newest = xb_node_query_first_full (component, query, NULL, &error_local);
 #else
 	rel_newest = xb_node_query_first (component, "releases/release", &error_local);
 #endif
@@ -2352,7 +2360,7 @@ fu_engine_install (FuEngine *self,
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES)) {
 		g_autoptr(GPtrArray) rels = NULL;
 #if LIBXMLB_CHECK_VERSION(0,2,0)
-		rels = xb_node_query_full (component, query, &error_local);
+		rels = xb_node_query_full (component, query, NULL, &error_local);
 #else
 		rels = xb_node_query (component, "releases/release", 0, &error_local);
 #endif
@@ -3737,7 +3745,7 @@ fu_engine_get_result_from_component (FuEngine *self,
 				   error);
 	if (query == NULL)
 		return NULL;
-	release = xb_node_query_first_full (component, query, &error_local);
+	release = xb_node_query_first_full (component, query, NULL, &error_local);
 #else
 	release = xb_node_query_first (component,
 				       "releases/release",

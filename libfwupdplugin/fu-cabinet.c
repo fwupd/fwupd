@@ -700,7 +700,11 @@ fu_cabinet_parse (FuCabinet *self,
 	for (guint i = 0; i < components->len; i++) {
 		XbNode *component = g_ptr_array_index (components, i);
 		g_autoptr(GPtrArray) releases = NULL;
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+		releases = xb_node_query_full (component, query, NULL, &error_local);
+#else
 		releases = xb_node_query_full (component, query, &error_local);
+#endif
 		if (releases == NULL) {
 			g_set_error (error,
 				     FWUPD_ERROR,
