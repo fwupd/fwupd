@@ -873,13 +873,21 @@ fu_engine_verify_from_system_metadata (FuEngine *self,
 		const gchar *guid = g_ptr_array_index (guids, i);
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(GPtrArray) releases = NULL;
+#if LIBXMLB_CHECK_VERSION(0,3,0)
+		g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT ();
+#endif
 
 		/* bind GUID and then query */
+#if LIBXMLB_CHECK_VERSION(0,3,0)
+		xb_value_bindings_bind_str (xb_query_context_get_bindings (&context), 0, guid, NULL);
+		releases = xb_silo_query_with_context (self->silo, query, &context, &error_local);
+#else
 		if (!xb_query_bind_str (query, 0, guid, error)) {
 			g_prefix_error (error, "failed to bind string: ");
 			return NULL;
 		}
 		releases = xb_silo_query_full (self->silo, query, &error_local);
+#endif
 		if (releases == NULL) {
 			if (g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) ||
 			    g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
