@@ -343,40 +343,6 @@
       </note>
     </refsect3>
 
-    <refsect3 id="org.fwupd.hsi.Uefi.Dbx">
-      <title>UEFI Secure Boot Revocation database (dbx)</title>
-      <para>
-        The UEFI Secure boot Revocation database is a list of banned hashes that
-        must not be allowed to execute when Secure Boot is turned on.
-        Vulnerabilities like the Kaspersky signed bootloader remove all
-        protections of SecureBoot and this is why an up-to-date dbx is
-        considered such an important part of firmware security.
-      </para>
-      <para>
-        The dbx list is updated infrequently and is normally part of the system
-        firmware updates issued by system manufacturers or operating system vendors.
-      </para>
-      <itemizedlist>
-        <listitem>
-          <para>
-            For HSI-1 this should be provided <emphasis>v1.5.0</emphasis>
-          </para>
-        </listitem>
-      </itemizedlist>
-      <note>
-        <para>
-          See also:
-          <itemizedlist>
-            <listitem>
-              <ulink url="https://docs.microsoft.com/en-us/windows-hardware/manufacture/desktop/windows-secure-boot-key-creation-and-management-guidance">
-                Microsoft Windows Secure Boot Guidance
-              </ulink>
-            </listitem>
-          </itemizedlist>
-        </para>
-      </note>
-    </refsect3>
-
     <refsect3 id="org.fwupd.hsi.Tpm.Version20">
       <title>TPM 2.0 Present</title>
       <para>

@@ -304,19 +304,6 @@ if build_standalone and get_option('plugin_uefi')
   efi_app_location = join_paths(libexecdir, 'fwupd', 'efi')
   conf.set_quoted ('EFI_APP_LOCATION', efi_app_location)
 
-  efi_dbxdir = get_option('efi_dbxdir')
-  if efi_dbxdir == ''
-    foreach dir : ['/usr/share/secureboot/updates/dbx', '/usr/share/dbxtool']
-      if run_command('[', '-d', dir, ']').returncode() == 0
-        efi_dbxdir = dir
-      endif
-    endforeach
-  endif
-  if efi_dbxdir != ''
-    message('efi-dbxdir: "@0@"'.format(efi_dbxdir))
-    conf.set_quoted ('FWUPD_EFI_DBXDIR', efi_dbxdir)
-  endif
-
   if host_cpu == 'x86'
           EFI_MACHINE_TYPE_NAME = 'ia32'
           gnu_efi_arch = 'ia32'

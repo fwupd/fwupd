@@ -20,7 +20,6 @@ ifeq (yes,$(shell dpkg-vendor --derives-from Ubuntu && echo yes))
 	SB_STYLE := ubuntu
 	tar_name := fwupd_$(deb_version)_$(DEB_HOST_ARCH).tar.gz
 	export FLASHROM=-Dplugin_flashrom=false
-	export DBX=-Defi_dbxdir=/usr/share/secureboot/updates/dbx
 else
 	TMPLDIR  := debian/fwupd-$(DEB_HOST_ARCH)-signed-template/usr/share/code-signing/fwupd-$(DEB_HOST_ARCH)-signed-template
 	export FLASHROM=-Dplugin_flashrom=true
@@ -43,7 +42,7 @@ override_dh_auto_configure:
 		export DELL="-Dplugin_dell=false"; \
 	fi; \
 	if pkg-config --exists efivar; then \
-		export UEFI="-Dplugin_uefi=true -Dplugin_redfish=true -Dplugin_nvme=true -Dplugin_msr=true $$DBX"; \
+		export UEFI="-Dplugin_uefi=true -Dplugin_redfish=true -Dplugin_nvme=true -Dplugin_msr=true"; \
 	else \
 		export UEFI="-Dplugin_uefi=false -Dplugin_redfish=false -Dplugin_nvme=false -Dplugin_msr=false"; \
 	fi; \

@@ -95,10 +95,6 @@ fu_security_attr_get_name (FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: a better sleep state */
 		return g_strdup (_("Suspend-to-idle"));
 	}
-	if (g_strcmp0 (appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_DBX) == 0) {
-		/* TRANSLATORS: Title: dbx is the database with revoked hashes */
-		return g_strdup (_("UEFI dbx"));
-	}
 	if (g_strcmp0 (appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT) == 0) {
 		/* TRANSLATORS: Title: SB is a way of locking down UEFI */
 		return g_strdup (_("UEFI secure boot"));

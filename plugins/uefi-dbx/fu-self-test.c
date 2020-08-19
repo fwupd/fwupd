@@ -43,40 +43,6 @@ fu_efi_image_func (void)
 	g_assert_cmpstr (csum, ==, "e99707d4378140c01eb3f867240d5cc9e237b126d3db0c3b4bbcd3da1720ddff");
 }
 
-static void
-fu_efi_signature_list_parse_func (void)
-{
-	FuEfiSignatureList *siglist;
-	gboolean ret;
-	gsize bufsz = 0;
-	g_autofree gchar *fn = NULL;
-	g_autofree guint8 *buf = NULL;
-	g_autoptr(GPtrArray) siglists = NULL;
-	g_autoptr(GError) error = NULL;
-
-	/* load file */
-	fn = fu_uefi_dbx_get_dbxupdate (NULL);
-	if (fn == NULL) {
-		g_test_skip ("no dbx file, use -Defi_dbxdir=");
-		return;
-	}
-	ret = g_file_get_contents (fn, (gchar **) &buf, &bufsz, &error);
-	g_assert_no_error (error);
-	g_assert_true (ret);
-
-	/* parse the update */
-	siglists = fu_efi_signature_parser_new (buf, bufsz,
-						FU_EFI_SIGNATURE_PARSER_FLAGS_IGNORE_HEADER,
-						&error);
-	g_assert_no_error (error);
-	g_assert_nonnull (siglists);
-	g_assert_cmpint (siglists->len, ==, 1);
-	siglist = g_ptr_array_index (siglists, 0);
-	g_assert_cmpint (fu_efi_signature_list_get_all(siglist)->len, ==, 77);
-	g_assert_true (fu_efi_signature_list_has_checksum (siglist, "72e0bd1867cf5d9d56ab158adf3bddbc82bf32a8d8aa1d8c5e2f6df29428d6d8"));
-	g_assert_false (fu_efi_signature_list_has_checksum (siglist, "dave"));
-}
-
 int
 main (int argc, char **argv)
 {
@@ -88,6 +54,5 @@ main (int argc, char **argv)
 
 	/* tests go here */
 	g_test_add_func ("/uefi-dbx/image", fu_efi_image_func);
-	g_test_add_func ("/uefi-dbx/file-parse", fu_efi_signature_list_parse_func);
 	return g_test_run ();
 }
