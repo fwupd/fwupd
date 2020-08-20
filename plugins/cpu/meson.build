@@ -1,5 +1,9 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginCpu"']
 
+install_data(['cpu.quirk'],
+  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
+)
+
 shared_module('fu_plugin_cpu',
   fu_hash,
   sources : [

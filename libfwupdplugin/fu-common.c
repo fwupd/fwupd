@@ -2034,6 +2034,55 @@ fu_common_kernel_locked_down (void)
 }
 
 /**
+ * fu_common_cpuid:
+ * @leaf: The CPUID level, now called the 'leaf' by Intel
+ * @eax: (out) (nullable): EAX register
+ * @ebx: (out) (nullable): EBX register
+ * @ecx: (out) (nullable): ECX register
+ * @edx: (out) (nullable): EDX register
+ * @error: A #GError or NULL
+ *
+ * Calls CPUID and returns the registers for the given leaf.
+ *
+ * Return value: %TRUE if the registers are set.
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fu_common_cpuid (guint32 leaf,
+		 guint32 *eax,
+		 guint32 *ebx,
+		 guint32 *ecx,
+		 guint32 *edx,
+		 GError **error)
+{
+#ifdef HAVE_CPUID_H
+	guint eax_tmp = 0;
+	guint ebx_tmp = 0;
+	guint ecx_tmp = 0;
+	guint edx_tmp = 0;
+
+	/* get vendor */
+	__get_cpuid(leaf, &eax_tmp, &ebx_tmp, &ecx_tmp, &edx_tmp);
+	if (eax != NULL)
+		*eax = eax_tmp;
+	if (ebx != NULL)
+		*ebx = ebx_tmp;
+	if (ecx != NULL)
+		*ecx = ecx_tmp;
+	if (edx != NULL)
+		*edx = edx_tmp;
+	return TRUE;
+#else
+	g_set_error_literal (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_SUPPORTED,
+			     "no <cpuid.h> support");
+	return FALSE;
+#endif
+}
+
+/**
  * fu_common_is_cpu_intel:
  *
  * Uses CPUID to discover the CPU vendor and check if it is Intel.
@@ -2045,15 +2094,13 @@ fu_common_kernel_locked_down (void)
 gboolean
 fu_common_is_cpu_intel (void)
 {
-#ifdef HAVE_CPUID_H
-	guint eax = 0;
 	guint ebx = 0;
 	guint ecx = 0;
 	guint edx = 0;
-	guint level = 0;
 
-	/* get vendor */
-	__get_cpuid(level, &eax, &ebx, &ecx, &edx);
+	if (!fu_common_cpuid (0x0, NULL, &ebx, &ecx, &edx, NULL))
+		return FALSE;
+#ifdef HAVE_CPUID_H
 	if (ebx == signature_INTEL_ebx &&
 	    edx == signature_INTEL_edx &&
 	    ecx == signature_INTEL_ecx) {
