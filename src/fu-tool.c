@@ -1991,7 +1991,7 @@ fu_util_prompt_for_volume (GError **error)
 	volumes = fu_common_get_volumes_by_kind (FU_VOLUME_KIND_ESP, error);
 	if (volumes->len == 1) {
 		volume = g_ptr_array_index (volumes, 0);
-		/* TRANSLATORS: Volume has been chosen by the the user */
+		/* TRANSLATORS: Volume has been chosen by the user */
 		g_print ("%s: %s\n", _("Selected volume"), fu_volume_get_id (volume));
 		return g_object_ref (volume);
 	}
