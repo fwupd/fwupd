@@ -703,12 +703,13 @@ fu_cros_ec_usb_device_write_firmware (FuDevice *device,
 		guint16 subcommand = UPDATE_EXTRA_CMD_STAY_IN_RO;
 		guint8 command_body[2]; /* Max command body size. */
 		gsize command_body_size = 0;
+		START_RESP start_resp;
 
 		if (!fu_cros_ec_usb_device_send_subcommand  (device, subcommand, command_body,
 							     command_body_size, &response,
 							     &response_size, FALSE, error)) {
-			/* failure here is ok */
-			g_clear_error (error);
+			g_prefix_error (error, "failed to send stay-in-ro subcommand: ");
+			return FALSE;
 		}
 		/* clear custom flags */
 		fu_device_set_custom_flags (device, "");
@@ -717,6 +718,13 @@ fu_cros_ec_usb_device_write_firmware (FuDevice *device,
 		if (!fu_device_retry (device, fu_cros_ec_usb_device_flush,
 				      SETUP_RETRY_CNT, NULL, error)) {
 			g_prefix_error (error, "failed to flush device to idle state: ");
+			return FALSE;
+		}
+
+		/* send start request */
+		if (!fu_device_retry (device, fu_cros_ec_usb_device_start_request,
+				      SETUP_RETRY_CNT, &start_resp, error)) {
+			g_prefix_error (error, "failed to send start request: ");
 			return FALSE;
 		}
 	}
