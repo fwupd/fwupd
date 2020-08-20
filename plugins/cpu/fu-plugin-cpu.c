@@ -40,6 +40,9 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		if (strlen (lines[i]) == 0)
 			continue;
 		dev = fu_cpu_device_new (lines[i]);
+		fu_device_set_quirks (FU_DEVICE (dev), fu_plugin_get_quirks (plugin));
+		if (!fu_device_probe (FU_DEVICE (dev), error))
+			return FALSE;
 		if (!fu_device_setup (FU_DEVICE (dev), error))
 			return FALSE;
 		if (fu_cpu_device_has_flag (dev, FU_CPU_DEVICE_FLAG_SHSTK) &&

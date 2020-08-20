@@ -226,6 +226,12 @@ gchar		**fu_common_strnsplit		(const gchar	*str,
 						 const gchar	*delimiter,
 						 gint		 max_tokens);
 gboolean	 fu_common_kernel_locked_down	(void);
+gboolean	 fu_common_cpuid		(guint32	 leaf,
+						 guint32	*eax,
+						 guint32	*ebx,
+						 guint32	*ecx,
+						 guint32	*edx,
+						 GError		**error);
 gboolean	 fu_common_is_cpu_intel		(void);
 gboolean	 fu_common_is_live_media	(void);
 GPtrArray	*fu_common_get_volumes_by_kind	(const gchar	*kind,

@@ -11,10 +11,10 @@
 
 struct FuPluginData {
 	gboolean		 has_device;
+	guint8			 bcr_addr;
 	guint8			 bcr;
 };
 
-#define BCR			0xdc
 #define BCR_WPD			(1 << 0)
 #define BCR_BLE			(1 << 1)
 #define BCR_SMM_BWP		(1 << 5)
@@ -22,9 +22,26 @@ struct FuPluginData {
 void
 fu_plugin_init (FuPlugin *plugin)
 {
-	fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
+	FuPluginData *priv = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 	fu_plugin_add_udev_subsystem (plugin, "pci");
+
+	/* this is true except for some Atoms */
+	priv->bcr_addr = 0xdc;
+}
+
+void
+fu_plugin_device_registered (FuPlugin *plugin, FuDevice *dev)
+{
+	FuPluginData *priv = fu_plugin_get_data (plugin);
+	if (g_strcmp0 (fu_device_get_plugin (dev), "cpu") == 0) {
+		guint tmp = fu_device_get_metadata_integer (dev, "BcrAddr");
+		if (tmp != G_MAXUINT && priv->bcr_addr != tmp) {
+			g_debug ("overriding BCR addr from 0x%02x to 0x%02x",
+				 priv->bcr_addr, tmp);
+			priv->bcr_addr = tmp;
+		}
+	}
 }
 
 static void
@@ -132,7 +149,7 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 		return FALSE;
 
 	/* grab BIOS Control Register */
-	if (!fu_udev_device_pread (device, BCR, &priv->bcr, error)) {
+	if (!fu_udev_device_pread (device, priv->bcr_addr, &priv->bcr, error)) {
 		g_prefix_error (error, "could not read BCR");
 		return FALSE;
 	}

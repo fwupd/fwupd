@@ -94,11 +94,60 @@ fu_cpu_device_init (FuCpuDevice *self)
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_HEX);
 }
 
+static gboolean
+fu_cpu_device_probe (FuDevice *device, GError **error)
+{
+	guint32 eax = 0;
+	g_autofree gchar *devid1 = NULL;
+	g_autofree gchar *devid2 = NULL;
+	g_autofree gchar *devid3 = NULL;
+
+	/* add GUIDs */
+	if (!fu_common_cpuid (0x1, &eax, NULL, NULL, NULL, error))
+		return FALSE;
+	devid1 = g_strdup_printf ("CPUID\\PRO_%01X&FAM_%01X",
+				  (eax >> 12) & 0x3,
+				  (eax >> 8) & 0xf);
+	fu_device_add_instance_id (device, devid1);
+	devid2 = g_strdup_printf ("CPUID\\PRO_%01X&FAM_%01X&MOD_%01X",
+				  (eax >> 12) & 0x3,
+				  (eax >> 8) & 0xf,
+				  (eax >> 4) & 0xf);
+	fu_device_add_instance_id (device, devid2);
+	devid3 = g_strdup_printf ("CPUID\\PRO_%01X&FAM_%01X&MOD_%01X&STP_%01X",
+				  (eax >> 12) & 0x3,
+				  (eax >> 8) & 0xf,
+				  (eax >> 4) & 0xf,
+				  eax & 0xf);
+	fu_device_add_instance_id (device, devid3);
+	return TRUE;
+}
+
+static gboolean
+fu_cpu_device_set_quirk_kv (FuDevice *device,
+			    const gchar *key,
+			    const gchar *value,
+			    GError **error)
+{
+	if (g_strcmp0 (key, "BcrAddr") == 0) {
+		guint64 tmp = fu_common_strtoull (value);
+		fu_device_set_metadata_integer (device, "BcrAddr", tmp);
+		return TRUE;
+	}
+	g_set_error_literal (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_SUPPORTED,
+			     "no supported");
+	return FALSE;
+}
+
 static void
 fu_cpu_device_class_init (FuCpuDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	klass_device->to_string = fu_cpu_device_to_string;
+	klass_device->probe = fu_cpu_device_probe;
+	klass_device->set_quirk_kv = fu_cpu_device_set_quirk_kv;
 }
 
 FuCpuDevice *
