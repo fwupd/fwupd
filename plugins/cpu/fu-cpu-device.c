@@ -94,62 +94,13 @@ fu_cpu_device_convert_vendor (const gchar *vendor)
 }
 
 static void
-fu_cpu_device_parse_flags (FuCpuDevice *self, const gchar *data)
-{
-	g_auto(GStrv) flags = g_strsplit (data, " ", -1);
-	for (guint i = 0; flags[i] != NULL; i++) {
-		if (g_strcmp0 (flags[i], "shstk") == 0)
-			self->flags |= FU_CPU_DEVICE_FLAG_SHSTK;
-		if (g_strcmp0 (flags[i], "ibt") == 0)
-			self->flags |= FU_CPU_DEVICE_FLAG_IBT;
-		if (g_strcmp0 (flags[i], "tme") == 0)
-			self->flags |= FU_CPU_DEVICE_FLAG_TME;
-		if (g_strcmp0 (flags[i], "smap") == 0)
-			self->flags |= FU_CPU_DEVICE_FLAG_SMAP;
-	}
-}
-
-static void
-fu_cpu_device_parse_section (FuDevice *dev, const gchar *data)
-{
-	g_auto(GStrv) lines = NULL;
-	FuCpuDevice *self = FU_CPU_DEVICE (dev);
-
-	lines = g_strsplit (data, "\n", 0);
-	for (guint i = 0; lines[i] != NULL; i++) {
-		if (g_str_has_prefix (lines[i], "vendor_id")) {
-			g_auto(GStrv) fields = g_strsplit (lines[i], ":", -1);
-			if (fields[1] != NULL)
-				fu_device_set_vendor (dev, fu_cpu_device_convert_vendor (fields[1] + 1));
-		} else if (g_str_has_prefix (lines[i], "model name")) {
-			g_auto(GStrv) fields = g_strsplit (lines[i], ":", -1);
-			if (fields[1] != NULL)
-				fu_device_set_name (dev, g_strchug (fields[1]));
-		} else if (g_str_has_prefix (lines[i], "microcode")) {
-			g_auto(GStrv) fields = g_strsplit (lines[i], ":", -1);
-			if (fields[1] != NULL)
-				fu_device_set_version (dev, g_strchug (fields[1]));
-		} else if (g_str_has_prefix (lines[i], "physical id")) {
-			g_auto(GStrv) fields = g_strsplit (lines[i], ":", -1);
-			if (fields[1] != NULL) {
-				g_autofree gchar *tmp = g_strdup_printf ("cpu:%s", g_strchug (fields[1]));
-				fu_device_set_physical_id (dev, tmp);
-			}
-		} else if (g_str_has_prefix (lines[i], "flags")) {
-			g_auto(GStrv) fields = g_strsplit (lines[i], ":", -1);
-			if (fields[1] != NULL)
-				fu_cpu_device_parse_flags (self, fields[1]);
-		}
-	}
-}
-
-static void
 fu_cpu_device_init (FuCpuDevice *self)
 {
 	fu_device_add_guid (FU_DEVICE (self), "cpu");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_icon (FU_DEVICE (self), "computer");
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_HEX);
+	fu_device_set_physical_id (FU_DEVICE (self), "cpu:0");
 }
 
 static gboolean
@@ -201,8 +152,92 @@ fu_cpu_device_add_instance_ids (FuDevice *device, GError **error)
 }
 
 static gboolean
+fu_cpu_device_probe_manufacturer_id (FuDevice *device, GError **error)
+{
+	guint32 ebx = 0;
+	guint32 ecx = 0;
+	guint32 edx = 0;
+	gchar str[13] = { '\0' };
+	if (!fu_common_cpuid (0x0, NULL, &ebx, &ecx, &edx, error))
+		return FALSE;
+	if (!fu_memcpy_safe ((guint8 *) str, sizeof(str), 0x0, /* dst */
+			     (const guint8 *) &ebx, sizeof(ebx), 0x0, /* src */
+			     sizeof(guint32), error))
+		return FALSE;
+	if (!fu_memcpy_safe ((guint8 *) str, sizeof(str), 0x4, /* dst */
+			     (const guint8 *) &edx, sizeof(edx), 0x0, /* src */
+			     sizeof(guint32), error))
+		return FALSE;
+	if (!fu_memcpy_safe ((guint8 *) str, sizeof(str), 0x8, /* dst */
+			     (const guint8 *) &ecx, sizeof(ecx), 0x0, /* src */
+			     sizeof(guint32), error))
+		return FALSE;
+	fu_device_set_vendor (device, fu_cpu_device_convert_vendor (str));
+	return TRUE;
+}
+
+static gboolean
+fu_cpu_device_probe_model (FuDevice *device, GError **error)
+{
+	guint32 eax = 0;
+	guint32 ebx = 0;
+	guint32 ecx = 0;
+	guint32 edx = 0;
+	gchar str[49] = { '\0' };
+
+	for (guint32 i = 0; i < 3; i++) {
+		if (!fu_common_cpuid (0x80000002 + i, &eax, &ebx, &ecx, &edx, error))
+			return FALSE;
+		if (!fu_memcpy_safe ((guint8 *) str, sizeof(str), (16 * i) + 0x0, /* dst */
+				     (const guint8 *) &eax, sizeof(eax), 0x0, /* src */
+				     sizeof(guint32), error))
+			return FALSE;
+		if (!fu_memcpy_safe ((guint8 *) str, sizeof(str), (16 * i) + 0x4, /* dst */
+				     (const guint8 *) &ebx, sizeof(ebx), 0x0, /* src */
+				     sizeof(guint32), error))
+			return FALSE;
+		if (!fu_memcpy_safe ((guint8 *) str, sizeof(str), (16 * i) + 0x8, /* dst */
+				     (const guint8 *) &ecx, sizeof(ecx), 0x0, /* src */
+				     sizeof(guint32), error))
+			return FALSE;
+		if (!fu_memcpy_safe ((guint8 *) str, sizeof(str), (16 * i) + 0xc, /* dst */
+				     (const guint8 *) &edx, sizeof(edx), 0x0, /* src */
+				     sizeof(guint32), error))
+			return FALSE;
+	}
+	fu_device_set_name (device, str);
+	return TRUE;
+}
+
+static gboolean
+fu_cpu_device_probe_extended_features (FuDevice *device, GError **error)
+{
+	FuCpuDevice *self = FU_CPU_DEVICE (device);
+	guint32 ebx = 0;
+	guint32 ecx = 0;
+
+	if (!fu_common_cpuid (0x7, NULL, &ebx, &ecx, NULL, error))
+		return FALSE;
+	if ((ebx >> 20) & 0x1)
+		self->flags |= FU_CPU_DEVICE_FLAG_SMAP;
+	if ((ecx >> 7) & 0x1)
+		self->flags |= FU_CPU_DEVICE_FLAG_SHSTK;
+	if ((ecx >> 13) & 0x1)
+		self->flags |= FU_CPU_DEVICE_FLAG_TME;
+	if ((ecx >> 20) & 0x1)
+		self->flags |= FU_CPU_DEVICE_FLAG_IBT;
+	return TRUE;
+}
+
+static gboolean
 fu_cpu_device_probe (FuDevice *device, GError **error)
 {
+	if (!fu_cpu_device_probe_manufacturer_id (device, error))
+		return FALSE;
+	if (!fu_cpu_device_probe_model (device, error))
+		return FALSE;
+	if (!fu_cpu_device_probe_extended_features (device, error))
+		return FALSE;
 	if (!fu_cpu_device_add_instance_ids (device, error))
 		return FALSE;
 	return TRUE;
@@ -236,10 +271,9 @@ fu_cpu_device_class_init (FuCpuDeviceClass *klass)
 }
 
 FuCpuDevice *
-fu_cpu_device_new (const gchar *section)
+fu_cpu_device_new (void)
 {
 	FuCpuDevice *device = NULL;
 	device = g_object_new (FU_TYPE_CPU_DEVICE, NULL);
-	fu_cpu_device_parse_section (FU_DEVICE (device), section);
 	return device;
 }

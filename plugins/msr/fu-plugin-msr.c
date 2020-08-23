@@ -27,6 +27,7 @@ struct FuPluginData {
 };
 
 #define PCI_MSR_IA32_DEBUG_INTERFACE		0xc80
+#define PCI_MSR_IA32_BIOS_SIGN_ID		0x8b
 
 void
 fu_plugin_init (FuPlugin *plugin)
@@ -52,6 +53,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 gboolean
 fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **error)
 {
+	FuDevice *device_cpu = fu_plugin_cache_lookup (plugin, "cpu");
 	FuPluginData *priv = fu_plugin_get_data (plugin);
 	guint8 buf[8] = { 0x0 };
 	g_autoptr(FuDeviceLocker) locker = NULL;
@@ -88,7 +90,41 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 			 priv->ia32_debug.fields.locked,
 			 priv->ia32_debug.fields.debug_occurred);
 	}
+
+	/* get microcode version */
+	if (device_cpu != NULL) {
+		guint32 ver_raw;
+		if (!fu_udev_device_pread_full (device, PCI_MSR_IA32_BIOS_SIGN_ID,
+						buf, sizeof(buf), error)) {
+			g_prefix_error (error, "could not read IA32_BIOS_SIGN_ID: ");
+			return FALSE;
+		}
+		fu_common_dump_raw (G_LOG_DOMAIN, "IA32_BIOS_SIGN_ID", buf, sizeof(buf));
+		if (!fu_common_read_uint32_safe (buf, sizeof(buf), 0x4,
+						 &ver_raw, G_LITTLE_ENDIAN,
+						 error))
+			return FALSE;
+		if (ver_raw != 0) {
+			FwupdVersionFormat verfmt = fu_device_get_version_format (device_cpu);
+			g_autofree gchar *ver_str = NULL;
+			ver_str = fu_common_version_from_uint32 (ver_raw, verfmt);
+			g_debug ("setting microcode version to %s", ver_str);
+			fu_device_set_version (device_cpu, ver_str);
+			fu_device_set_version_raw (device_cpu, ver_raw);
+		}
+	}
+
+	/* success */
 	return TRUE;
+}
+
+void
+fu_plugin_device_registered (FuPlugin *plugin, FuDevice *dev)
+{
+	if (g_strcmp0 (fu_device_get_plugin (dev), "cpu") == 0) {
+		fu_plugin_cache_add (plugin, "cpu", dev);
+		return;
+	}
 }
 
 static void
