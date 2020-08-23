@@ -36,38 +36,6 @@ fu_plugin_init (FuPlugin *plugin)
 	fu_plugin_add_udev_subsystem (plugin, "msr");
 }
 
-static gboolean
-fu_plugin_msr_cpuid (guint leaf,
-		     guint *eax, guint *ebx,
-		     guint *ecx, guint *edx,
-		     GError **error)
-{
-	guint eax_tmp = 0;
-	guint ebx_tmp = 0;
-	guint ecx_tmp = 0;
-	guint edx_tmp = 0;
-
-	/* sdbg is supported: https://en.wikipedia.org/wiki/CPUID */
-	if (__get_cpuid (leaf, &eax_tmp, &ebx_tmp, &ecx_tmp, &edx_tmp) == 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_FOUND,
-			     "CPUID leaf 0x%x is not supported on this CPU", leaf);
-		return FALSE;
-	}
-
-	/* success */
-	if (eax != NULL)
-		*eax = eax_tmp;
-	if (ebx != NULL)
-		*ebx = ebx_tmp;
-	if (ecx != NULL)
-		*ecx = ecx_tmp;
-	if (edx != NULL)
-		*edx = edx_tmp;
-	return TRUE;
-}
-
 gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
@@ -75,9 +43,8 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	guint ecx = 0;
 
 	/* sdbg is supported: https://en.wikipedia.org/wiki/CPUID */
-	if (!fu_plugin_msr_cpuid (0x01, NULL, NULL, &ecx, NULL, error))
+	if (!fu_common_cpuid (0x01, NULL, NULL, &ecx, NULL, error))
 		return FALSE;
-
 	priv->ia32_debug_supported = ((ecx >> 11) & 0x1) > 0;
 	return TRUE;
 }
