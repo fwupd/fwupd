@@ -153,31 +153,58 @@ fu_cpu_device_init (FuCpuDevice *self)
 }
 
 static gboolean
-fu_cpu_device_probe (FuDevice *device, GError **error)
+fu_cpu_device_add_instance_ids (FuDevice *device, GError **error)
 {
 	guint32 eax = 0;
+	guint32 family_id;
+	guint32 family_id_ext;
+	guint32 model_id;
+	guint32 model_id_ext;
+	guint32 processor_id;
+	guint32 stepping_id;
 	g_autofree gchar *devid1 = NULL;
 	g_autofree gchar *devid2 = NULL;
 	g_autofree gchar *devid3 = NULL;
 
-	/* add GUIDs */
+	/* decode according to https://en.wikipedia.org/wiki/CPUID */
 	if (!fu_common_cpuid (0x1, &eax, NULL, NULL, NULL, error))
 		return FALSE;
-	devid1 = g_strdup_printf ("CPUID\\PRO_%01X&FAM_%01X",
-				  (eax >> 12) & 0x3,
-				  (eax >> 8) & 0xf);
+	processor_id = (eax >> 12) & 0x3;
+	model_id = (eax >> 4) & 0xf;
+	family_id = (eax >> 8) & 0xf;
+	model_id_ext = (eax >> 16) & 0xf;
+	family_id_ext = (eax >> 20) & 0xff;
+	stepping_id = eax & 0xf;
+
+	/* use extended IDs where required */
+	if (family_id == 6 || family_id == 15)
+		model_id |= model_id_ext << 4;
+	if (family_id == 15)
+		family_id += family_id_ext;
+
+	devid1 = g_strdup_printf ("CPUID\\PRO_%01X&FAM_%02X",
+				  processor_id,
+				  family_id);
 	fu_device_add_instance_id (device, devid1);
-	devid2 = g_strdup_printf ("CPUID\\PRO_%01X&FAM_%01X&MOD_%01X",
-				  (eax >> 12) & 0x3,
-				  (eax >> 8) & 0xf,
-				  (eax >> 4) & 0xf);
+	devid2 = g_strdup_printf ("CPUID\\PRO_%01X&FAM_%02X&MOD_%02X",
+				  processor_id,
+				  family_id,
+				  model_id);
 	fu_device_add_instance_id (device, devid2);
-	devid3 = g_strdup_printf ("CPUID\\PRO_%01X&FAM_%01X&MOD_%01X&STP_%01X",
-				  (eax >> 12) & 0x3,
-				  (eax >> 8) & 0xf,
-				  (eax >> 4) & 0xf,
-				  eax & 0xf);
+	devid3 = g_strdup_printf ("CPUID\\PRO_%01X&FAM_%02X&MOD_%02X&STP_%01X",
+				  processor_id,
+				  family_id,
+				  model_id,
+				  stepping_id);
 	fu_device_add_instance_id (device, devid3);
+	return TRUE;
+}
+
+static gboolean
+fu_cpu_device_probe (FuDevice *device, GError **error)
+{
+	if (!fu_cpu_device_add_instance_ids (device, error))
+		return FALSE;
 	return TRUE;
 }
 
