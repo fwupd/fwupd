@@ -2063,7 +2063,7 @@ fu_common_cpuid (guint32 leaf,
 	guint edx_tmp = 0;
 
 	/* get vendor */
-	__get_cpuid(leaf, &eax_tmp, &ebx_tmp, &ecx_tmp, &edx_tmp);
+	__get_cpuid_count (leaf, 0x0, &eax_tmp, &ebx_tmp, &ecx_tmp, &edx_tmp);
 	if (eax != NULL)
 		*eax = eax_tmp;
 	if (ebx != NULL)
