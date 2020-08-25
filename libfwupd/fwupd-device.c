@@ -1098,7 +1098,6 @@ fwupd_device_get_created (FwupdDevice *device)
 	return priv->created;
 }
 
-
 /**
  * fwupd_device_set_created:
  * @device: A #FwupdDevice

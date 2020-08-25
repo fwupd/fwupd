@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <glib.h>
+#include <gio/gio.h>
 
 #ifdef HAVE_GIO_UNIX
 #include <gio/gunixinputstream.h>
@@ -20,6 +20,14 @@ gchar		*fwupd_checksum_format_for_display	(const gchar	*checksum);
 GVariant	*fwupd_hash_kv_to_variant		(GHashTable	*hash);
 GHashTable	*fwupd_variant_to_hash_kv		(GVariant	*dict);
 gchar		*fwupd_build_user_agent_system		(void);
+
+void		 fwupd_input_stream_read_bytes_async	(GInputStream	*stream,
+							 GCancellable	*cancellable,
+							 GAsyncReadyCallback callback,
+							 gpointer	 callback_data);
+GBytes		*fwupd_input_stream_read_bytes_finish	(GInputStream	*stream,
+							 GAsyncResult	*res,
+							 GError		**error);
 
 #ifdef HAVE_GIO_UNIX
 GUnixInputStream *fwupd_unix_input_stream_from_bytes	(GBytes		*bytes,

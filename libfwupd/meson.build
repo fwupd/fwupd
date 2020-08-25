@@ -15,6 +15,7 @@ install_headers(
 
 install_headers([
     'fwupd-client.h',
+    'fwupd-client-sync.h',
     'fwupd-common.h',
     'fwupd-deprecated.h',
     'fwupd-device.h',
@@ -34,6 +35,7 @@ fwupd = shared_library(
   'fwupd',
   sources : [
     'fwupd-client.c',
+    'fwupd-client-sync.c',
     'fwupd-common.c',
     'fwupd-device.c',
     'fwupd-enums.c',
@@ -76,6 +78,8 @@ if get_option('introspection')
     sources : [
       'fwupd-client.c',
       'fwupd-client.h',
+      'fwupd-client-sync.c',
+      'fwupd-client-sync.h',
       'fwupd-common.c',
       'fwupd-common.h',
       'fwupd-common-private.h',
