@@ -67,178 +67,178 @@ typedef enum {
 } FwupdClientUploadFlags;
 
 FwupdClient	*fwupd_client_new			(void);
-gboolean	 fwupd_client_connect			(FwupdClient	*client,
+gboolean	 fwupd_client_connect			(FwupdClient	*self,
 							 GCancellable	*cancellable,
 							 GError		**error);
-GPtrArray	*fwupd_client_get_devices		(FwupdClient	*client,
+GPtrArray	*fwupd_client_get_devices		(FwupdClient	*self,
 							 GCancellable	*cancellable,
 							 GError		**error);
-GPtrArray	*fwupd_client_get_history		(FwupdClient	*client,
+GPtrArray	*fwupd_client_get_history		(FwupdClient	*self,
 							 GCancellable	*cancellable,
 							 GError		**error);
-GPtrArray	*fwupd_client_get_releases		(FwupdClient	*client,
+GPtrArray	*fwupd_client_get_releases		(FwupdClient	*self,
 							 const gchar	*device_id,
 							 GCancellable	*cancellable,
 							 GError		**error);
-GPtrArray	*fwupd_client_get_downgrades		(FwupdClient	*client,
+GPtrArray	*fwupd_client_get_downgrades		(FwupdClient	*self,
 							 const gchar	*device_id,
 							 GCancellable	*cancellable,
 							 GError		**error);
-GPtrArray	*fwupd_client_get_upgrades		(FwupdClient	*client,
+GPtrArray	*fwupd_client_get_upgrades		(FwupdClient	*self,
 							 const gchar	*device_id,
 							 GCancellable	*cancellable,
 							 GError		**error);
-GPtrArray	*fwupd_client_get_details		(FwupdClient	*client,
+GPtrArray	*fwupd_client_get_details		(FwupdClient	*self,
 							 const gchar	*filename,
 							 GCancellable	*cancellable,
 							 GError		**error);
-gboolean	 fwupd_client_verify			(FwupdClient	*client,
+gboolean	 fwupd_client_verify			(FwupdClient	*self,
 							 const gchar	*device_id,
 							 GCancellable	*cancellable,
 							 GError		**error);
-gboolean	 fwupd_client_verify_update		(FwupdClient	*client,
+gboolean	 fwupd_client_verify_update		(FwupdClient	*self,
 							 const gchar	*device_id,
 							 GCancellable	*cancellable,
 							 GError		**error);
-gboolean	 fwupd_client_unlock			(FwupdClient	*client,
+gboolean	 fwupd_client_unlock			(FwupdClient	*self,
 							 const gchar	*device_id,
 							 GCancellable	*cancellable,
 							 GError		**error);
-gboolean	 fwupd_client_modify_config		(FwupdClient	*client,
+gboolean	 fwupd_client_modify_config		(FwupdClient	*self,
 							 const gchar	*key,
 							 const gchar	*value,
 							 GCancellable	*cancellable,
 							 GError		**error);
-gboolean	 fwupd_client_activate			(FwupdClient	*client,
+gboolean	 fwupd_client_activate			(FwupdClient	*self,
 							 GCancellable	*cancellable,
 							 const gchar	*device_id,
 							 GError		**error);
-gboolean	 fwupd_client_clear_results		(FwupdClient	*client,
+gboolean	 fwupd_client_clear_results		(FwupdClient	*self,
 							 const gchar	*device_id,
 							 GCancellable	*cancellable,
 							 GError		**error);
-FwupdDevice	*fwupd_client_get_results		(FwupdClient	*client,
+FwupdDevice	*fwupd_client_get_results		(FwupdClient	*self,
 							 const gchar	*device_id,
 							 GCancellable	*cancellable,
 							 GError		**error);
-GPtrArray	*fwupd_client_get_host_security_attrs	(FwupdClient	*client,
+GPtrArray	*fwupd_client_get_host_security_attrs	(FwupdClient	*self,
 							 GCancellable	*cancellable,
 							 GError		**error);
-FwupdDevice	*fwupd_client_get_device_by_id		(FwupdClient	*client,
+FwupdDevice	*fwupd_client_get_device_by_id		(FwupdClient	*self,
 							 const gchar	*device_id,
 							 GCancellable	*cancellable,
 							 GError		**error);
-GPtrArray	*fwupd_client_get_devices_by_guid	(FwupdClient	*client,
+GPtrArray	*fwupd_client_get_devices_by_guid	(FwupdClient	*self,
 							 const gchar	*guid,
 							 GCancellable	*cancellable,
 							 GError		**error);
-gboolean	 fwupd_client_install			(FwupdClient	*client,
+gboolean	 fwupd_client_install			(FwupdClient	*self,
 							 const gchar	*device_id,
 							 const gchar	*filename,
 							 FwupdInstallFlags install_flags,
 							 GCancellable	*cancellable,
 							 GError		**error);
-gboolean	 fwupd_client_install_bytes		(FwupdClient	*client,
+gboolean	 fwupd_client_install_bytes		(FwupdClient	*self,
 							 const gchar	*device_id,
 							 GBytes		*bytes,
 							 FwupdInstallFlags install_flags,
 							 GCancellable	*cancellable,
 							 GError		**error);
-gboolean	 fwupd_client_install_release		(FwupdClient	*client,
+gboolean	 fwupd_client_install_release		(FwupdClient	*self,
 							 FwupdDevice	*device,
 							 FwupdRelease	*release,
 							 FwupdInstallFlags install_flags,
 							 GCancellable	*cancellable,
 							 GError		**error);
-gboolean	 fwupd_client_update_metadata		(FwupdClient	*client,
+gboolean	 fwupd_client_update_metadata		(FwupdClient	*self,
 							 const gchar	*remote_id,
 							 const gchar	*metadata_fn,
 							 const gchar	*signature_fn,
 							 GCancellable	*cancellable,
 							 GError		**error);
-gboolean	 fwupd_client_update_metadata_bytes	(FwupdClient	*client,
+gboolean	 fwupd_client_update_metadata_bytes	(FwupdClient	*self,
 							 const gchar	*remote_id,
 							 GBytes		*metadata,
 							 GBytes		*signature,
 							 GCancellable	*cancellable,
 							 GError		**error);
-gboolean	 fwupd_client_refresh_remote		(FwupdClient	*client,
+gboolean	 fwupd_client_refresh_remote		(FwupdClient	*self,
 							 FwupdRemote	*remote,
 							 GCancellable	*cancellable,
 							 GError		**error);
-gboolean	 fwupd_client_modify_remote		(FwupdClient	*client,
+gboolean	 fwupd_client_modify_remote		(FwupdClient	*self,
 							 const gchar	*remote_id,
 							 const gchar	*key,
 							 const gchar	*value,
 							 GCancellable	*cancellable,
 							 GError		**error);
-gboolean	 fwupd_client_modify_device		(FwupdClient	*client,
+gboolean	 fwupd_client_modify_device		(FwupdClient	*self,
 							 const gchar	*device_id,
 							 const gchar	*key,
 							 const gchar	*value,
 							 GCancellable	*cancellable,
 							 GError		**error);
-GHashTable	*fwupd_client_get_report_metadata	(FwupdClient	*client,
+GHashTable	*fwupd_client_get_report_metadata	(FwupdClient	*self,
 							 GCancellable	*cancellable,
 							 GError		**error);
-FwupdStatus	 fwupd_client_get_status		(FwupdClient	*client);
-gboolean	 fwupd_client_get_tainted		(FwupdClient	*client);
-gboolean	 fwupd_client_get_daemon_interactive	(FwupdClient	*client);
-guint		 fwupd_client_get_percentage		(FwupdClient	*client);
-const gchar	*fwupd_client_get_daemon_version	(FwupdClient	*client);
-const gchar	*fwupd_client_get_host_product		(FwupdClient	*client);
-const gchar	*fwupd_client_get_host_machine_id	(FwupdClient	*client);
-const gchar	*fwupd_client_get_host_security_id	(FwupdClient	*client);
+FwupdStatus	 fwupd_client_get_status		(FwupdClient	*self);
+gboolean	 fwupd_client_get_tainted		(FwupdClient	*self);
+gboolean	 fwupd_client_get_daemon_interactive	(FwupdClient	*self);
+guint		 fwupd_client_get_percentage		(FwupdClient	*self);
+const gchar	*fwupd_client_get_daemon_version	(FwupdClient	*self);
+const gchar	*fwupd_client_get_host_product		(FwupdClient	*self);
+const gchar	*fwupd_client_get_host_machine_id	(FwupdClient	*self);
+const gchar	*fwupd_client_get_host_security_id	(FwupdClient	*self);
 
-GPtrArray	*fwupd_client_get_remotes		(FwupdClient	*client,
+GPtrArray	*fwupd_client_get_remotes		(FwupdClient	*self,
 							 GCancellable	*cancellable,
 							 GError		**error);
-FwupdRemote	*fwupd_client_get_remote_by_id		(FwupdClient	*client,
+FwupdRemote	*fwupd_client_get_remote_by_id		(FwupdClient	*self,
 							 const gchar	*remote_id,
 							 GCancellable	*cancellable,
 							 GError		**error);
 
-gchar		**fwupd_client_get_approved_firmware	(FwupdClient	*client,
+gchar		**fwupd_client_get_approved_firmware	(FwupdClient	*self,
 							 GCancellable	*cancellable,
 							 GError		**error);
-gboolean	 fwupd_client_set_approved_firmware	(FwupdClient	*client,
+gboolean	 fwupd_client_set_approved_firmware	(FwupdClient	*self,
 							 gchar		**checksums,
 							 GCancellable	*cancellable,
 							 GError		**error);
-gchar		**fwupd_client_get_blocked_firmware	(FwupdClient	*client,
+gchar		**fwupd_client_get_blocked_firmware	(FwupdClient	*self,
 							 GCancellable	*cancellable,
 							 GError		**error);
-gboolean	 fwupd_client_set_blocked_firmware	(FwupdClient	*client,
+gboolean	 fwupd_client_set_blocked_firmware	(FwupdClient	*self,
 							 gchar		**checksums,
 							 GCancellable	*cancellable,
 							 GError		**error);
-gchar		*fwupd_client_self_sign			(FwupdClient	*client,
+gchar		*fwupd_client_self_sign			(FwupdClient	*self,
 							 const gchar	*value,
 							 FwupdSelfSignFlags flags,
 							 GCancellable	*cancellable,
 							 GError		**error);
-gboolean	 fwupd_client_set_feature_flags		(FwupdClient	*client,
+gboolean	 fwupd_client_set_feature_flags		(FwupdClient	*self,
 							 FwupdFeatureFlags feature_flags,
 							 GCancellable	*cancellable,
 							 GError		**error);
-void		 fwupd_client_set_user_agent		(FwupdClient	*client,
+void		 fwupd_client_set_user_agent		(FwupdClient	*self,
 							 const gchar	*user_agent);
-void		 fwupd_client_set_user_agent_for_package(FwupdClient	*client,
+void		 fwupd_client_set_user_agent_for_package(FwupdClient	*self,
 							 const gchar	*package_name,
 							 const gchar	*package_version);
-GBytes		*fwupd_client_download_bytes		(FwupdClient	*client,
+GBytes		*fwupd_client_download_bytes		(FwupdClient	*self,
 							 const gchar	*url,
 							 FwupdClientDownloadFlags flags,
 							 GCancellable	*cancellable,
 							 GError		**error);
-GBytes		*fwupd_client_upload_bytes		(FwupdClient	*client,
+GBytes		*fwupd_client_upload_bytes		(FwupdClient	*self,
 							 const gchar	*url,
 							 const gchar	*payload,
 							 const gchar	*signature,
 							 FwupdClientUploadFlags flags,
 							 GCancellable	*cancellable,
 							 GError		**error);
-gboolean	 fwupd_client_ensure_networking		(FwupdClient	*client,
+gboolean	 fwupd_client_ensure_networking		(FwupdClient	*self,
 							 GError		**error);
 
 G_END_DECLS

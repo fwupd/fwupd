@@ -118,71 +118,71 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FwupdClientHelper, fwupd_client_helper_free)
 #pragma clang diagnostic pop
 
 static void
-fwupd_client_set_host_product (FwupdClient *client, const gchar *host_product)
+fwupd_client_set_host_product (FwupdClient *self, const gchar *host_product)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_free (priv->host_product);
 	priv->host_product = g_strdup (host_product);
-	g_object_notify (G_OBJECT (client), "host-product");
+	g_object_notify (G_OBJECT (self), "host-product");
 }
 
 static void
-fwupd_client_set_host_machine_id (FwupdClient *client, const gchar *host_machine_id)
+fwupd_client_set_host_machine_id (FwupdClient *self, const gchar *host_machine_id)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_free (priv->host_machine_id);
 	priv->host_machine_id = g_strdup (host_machine_id);
-	g_object_notify (G_OBJECT (client), "host-machine-id");
+	g_object_notify (G_OBJECT (self), "host-machine-id");
 }
 
 static void
-fwupd_client_set_host_security_id (FwupdClient *client, const gchar *host_security_id)
+fwupd_client_set_host_security_id (FwupdClient *self, const gchar *host_security_id)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_free (priv->host_security_id);
 	priv->host_security_id = g_strdup (host_security_id);
-	g_object_notify (G_OBJECT (client), "host-security-id");
+	g_object_notify (G_OBJECT (self), "host-security-id");
 }
 
 static void
-fwupd_client_set_daemon_version (FwupdClient *client, const gchar *daemon_version)
+fwupd_client_set_daemon_version (FwupdClient *self, const gchar *daemon_version)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_free (priv->daemon_version);
 	priv->daemon_version = g_strdup (daemon_version);
-	g_object_notify (G_OBJECT (client), "daemon-version");
+	g_object_notify (G_OBJECT (self), "daemon-version");
 }
 
 static void
-fwupd_client_set_status (FwupdClient *client, FwupdStatus status)
+fwupd_client_set_status (FwupdClient *self, FwupdStatus status)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	if (priv->status == status)
 		return;
 	priv->status = status;
 	g_debug ("Emitting ::status-changed() [%s]",
 		 fwupd_status_to_string (priv->status));
-	g_signal_emit (client, signals[SIGNAL_STATUS_CHANGED], 0, priv->status);
-	g_object_notify (G_OBJECT (client), "status");
+	g_signal_emit (self, signals[SIGNAL_STATUS_CHANGED], 0, priv->status);
+	g_object_notify (G_OBJECT (self), "status");
 }
 
 static void
-fwupd_client_set_percentage (FwupdClient *client, guint percentage)
+fwupd_client_set_percentage (FwupdClient *self, guint percentage)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	if (priv->percentage == percentage)
 		return;
 	priv->percentage = percentage;
-	g_object_notify (G_OBJECT (client), "percentage");
+	g_object_notify (G_OBJECT (self), "percentage");
 }
 
 static void
 fwupd_client_properties_changed_cb (GDBusProxy *proxy,
 				    GVariant *changed_properties,
 				    GStrv invalidated_properties,
-				    FwupdClient *client)
+				    FwupdClient *self)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_autoptr(GVariantDict) dict = NULL;
 
 	/* print to the console */
@@ -191,14 +191,14 @@ fwupd_client_properties_changed_cb (GDBusProxy *proxy,
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property (proxy, "Status");
 		if (val != NULL)
-			fwupd_client_set_status (client, g_variant_get_uint32 (val));
+			fwupd_client_set_status (self, g_variant_get_uint32 (val));
 	}
 	if (g_variant_dict_contains (dict, "Tainted")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property (proxy, "Tainted");
 		if (val != NULL) {
 			priv->tainted = g_variant_get_boolean (val);
-			g_object_notify (G_OBJECT (client), "tainted");
+			g_object_notify (G_OBJECT (self), "tainted");
 		}
 	}
 	if (g_variant_dict_contains (dict, "Interactive")) {
@@ -206,38 +206,38 @@ fwupd_client_properties_changed_cb (GDBusProxy *proxy,
 		val = g_dbus_proxy_get_cached_property (proxy, "Interactive");
 		if (val != NULL) {
 			priv->interactive = g_variant_get_boolean (val);
-			g_object_notify (G_OBJECT (client), "interactive");
+			g_object_notify (G_OBJECT (self), "interactive");
 		}
 	}
 	if (g_variant_dict_contains (dict, "Percentage")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property (proxy, "Percentage");
 		if (val != NULL)
-			fwupd_client_set_percentage (client, g_variant_get_uint32 (val));
+			fwupd_client_set_percentage (self, g_variant_get_uint32 (val));
 	}
 	if (g_variant_dict_contains (dict, "DaemonVersion")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property (proxy, "DaemonVersion");
 		if (val != NULL)
-			fwupd_client_set_daemon_version (client, g_variant_get_string (val, NULL));
+			fwupd_client_set_daemon_version (self, g_variant_get_string (val, NULL));
 	}
 	if (g_variant_dict_contains (dict, "HostProduct")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property (proxy, "HostProduct");
 		if (val != NULL)
-			fwupd_client_set_host_product (client, g_variant_get_string (val, NULL));
+			fwupd_client_set_host_product (self, g_variant_get_string (val, NULL));
 	}
 	if (g_variant_dict_contains (dict, "HostMachineId")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property (proxy, "HostMachineId");
 		if (val != NULL)
-			fwupd_client_set_host_machine_id (client, g_variant_get_string (val, NULL));
+			fwupd_client_set_host_machine_id (self, g_variant_get_string (val, NULL));
 	}
 	if (g_variant_dict_contains (dict, "HostSecurityId")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property (proxy, "HostSecurityId");
 		if (val != NULL)
-			fwupd_client_set_host_security_id (client, g_variant_get_string (val, NULL));
+			fwupd_client_set_host_security_id (self, g_variant_get_string (val, NULL));
 	}
 }
 
@@ -246,31 +246,31 @@ fwupd_client_signal_cb (GDBusProxy *proxy,
 			const gchar *sender_name,
 			const gchar *signal_name,
 			GVariant *parameters,
-			FwupdClient *client)
+			FwupdClient *self)
 {
 	g_autoptr(FwupdDevice) dev = NULL;
 	if (g_strcmp0 (signal_name, "Changed") == 0) {
 		g_debug ("Emitting ::changed()");
-		g_signal_emit (client, signals[SIGNAL_CHANGED], 0);
+		g_signal_emit (self, signals[SIGNAL_CHANGED], 0);
 		return;
 	}
 	if (g_strcmp0 (signal_name, "DeviceAdded") == 0) {
 		dev = fwupd_device_from_variant (parameters);
 		g_debug ("Emitting ::device-added(%s)",
 			 fwupd_device_get_id (dev));
-		g_signal_emit (client, signals[SIGNAL_DEVICE_ADDED], 0, dev);
+		g_signal_emit (self, signals[SIGNAL_DEVICE_ADDED], 0, dev);
 		return;
 	}
 	if (g_strcmp0 (signal_name, "DeviceRemoved") == 0) {
 		dev = fwupd_device_from_variant (parameters);
-		g_signal_emit (client, signals[SIGNAL_DEVICE_REMOVED], 0, dev);
+		g_signal_emit (self, signals[SIGNAL_DEVICE_REMOVED], 0, dev);
 		g_debug ("Emitting ::device-removed(%s)",
 			 fwupd_device_get_id (dev));
 		return;
 	}
 	if (g_strcmp0 (signal_name, "DeviceChanged") == 0) {
 		dev = fwupd_device_from_variant (parameters);
-		g_signal_emit (client, signals[SIGNAL_DEVICE_CHANGED], 0, dev);
+		g_signal_emit (self, signals[SIGNAL_DEVICE_CHANGED], 0, dev);
 		g_debug ("Emitting ::device-changed(%s)",
 			 fwupd_device_get_id (dev));
 		return;
@@ -280,7 +280,7 @@ fwupd_client_signal_cb (GDBusProxy *proxy,
 
 /**
  * fwupd_client_ensure_networking:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @error: the #GError, or %NULL
  *
  * Sets up the client networking support ready for use. Most other download and
@@ -292,9 +292,9 @@ fwupd_client_signal_cb (GDBusProxy *proxy,
  * Since: 1.4.5
  **/
 gboolean
-fwupd_client_ensure_networking (FwupdClient *client, GError **error)
+fwupd_client_ensure_networking (FwupdClient *self, GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	const gchar *http_proxy;
 	g_autoptr(SoupSession) session = NULL;
 
@@ -362,7 +362,7 @@ fwupd_client_ensure_networking (FwupdClient *client, GError **error)
 
 /**
  * fwupd_client_connect:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @cancellable: the #GCancellable, or %NULL
  * @error: the #GError, or %NULL
  *
@@ -375,13 +375,13 @@ fwupd_client_ensure_networking (FwupdClient *client, GError **error)
  * Since: 0.7.1
  **/
 gboolean
-fwupd_client_connect (FwupdClient *client, GCancellable *cancellable, GError **error)
+fwupd_client_connect (FwupdClient *self, GCancellable *cancellable, GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_autoptr(GVariant) val = NULL;
 	g_autoptr(GVariant) val2 = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
@@ -406,12 +406,12 @@ fwupd_client_connect (FwupdClient *client, GCancellable *cancellable, GError **e
 	if (priv->proxy == NULL)
 		return FALSE;
 	g_signal_connect (priv->proxy, "g-properties-changed",
-			  G_CALLBACK (fwupd_client_properties_changed_cb), client);
+			  G_CALLBACK (fwupd_client_properties_changed_cb), self);
 	g_signal_connect (priv->proxy, "g-signal",
-			  G_CALLBACK (fwupd_client_signal_cb), client);
+			  G_CALLBACK (fwupd_client_signal_cb), self);
 	val = g_dbus_proxy_get_cached_property (priv->proxy, "DaemonVersion");
 	if (val != NULL)
-		fwupd_client_set_daemon_version (client, g_variant_get_string (val, NULL));
+		fwupd_client_set_daemon_version (self, g_variant_get_string (val, NULL));
 	val2 = g_dbus_proxy_get_cached_property (priv->proxy, "Tainted");
 	if (val2 != NULL)
 		priv->tainted = g_variant_get_boolean (val2);
@@ -420,13 +420,13 @@ fwupd_client_connect (FwupdClient *client, GCancellable *cancellable, GError **e
 		priv->interactive = g_variant_get_boolean (val2);
 	val = g_dbus_proxy_get_cached_property (priv->proxy, "HostProduct");
 	if (val != NULL)
-		fwupd_client_set_host_product (client, g_variant_get_string (val, NULL));
+		fwupd_client_set_host_product (self, g_variant_get_string (val, NULL));
 	val = g_dbus_proxy_get_cached_property (priv->proxy, "HostMachineId");
 	if (val != NULL)
-		fwupd_client_set_host_machine_id (client, g_variant_get_string (val, NULL));
+		fwupd_client_set_host_machine_id (self, g_variant_get_string (val, NULL));
 	val = g_dbus_proxy_get_cached_property (priv->proxy, "HostSecurityId");
 	if (val != NULL)
-		fwupd_client_set_host_security_id (client, g_variant_get_string (val, NULL));
+		fwupd_client_set_host_security_id (self, g_variant_get_string (val, NULL));
 
 	return TRUE;
 }
@@ -466,7 +466,7 @@ fwupd_client_fixup_dbus_error (GError *error)
 
 /**
  * fwupd_client_get_host_security_attrs:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @cancellable: the #GCancellable, or %NULL
  * @error: the #GError, or %NULL
  *
@@ -477,17 +477,17 @@ fwupd_client_fixup_dbus_error (GError *error)
  * Since: 1.5.0
  **/
 GPtrArray *
-fwupd_client_get_host_security_attrs (FwupdClient *client, GCancellable *cancellable, GError **error)
+fwupd_client_get_host_security_attrs (FwupdClient *self, GCancellable *cancellable, GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_autoptr(GVariant) val = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* connect */
-	if (!fwupd_client_connect (client, cancellable, error))
+	if (!fwupd_client_connect (self, cancellable, error))
 		return NULL;
 
 	/* call into daemon */
@@ -529,7 +529,7 @@ fwupd_report_metadata_hash_from_variant (GVariant *value)
 
 /**
  * fwupd_client_get_report_metadata:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @cancellable: the #GCancellable, or %NULL
  * @error: the #GError, or %NULL
  *
@@ -540,19 +540,19 @@ fwupd_report_metadata_hash_from_variant (GVariant *value)
  * Since: 1.5.0
  **/
 GHashTable *
-fwupd_client_get_report_metadata (FwupdClient *client,
+fwupd_client_get_report_metadata (FwupdClient *self,
 				  GCancellable *cancellable,
 				  GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_autoptr(GVariant) val = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* connect */
-	if (!fwupd_client_connect (client, cancellable, error))
+	if (!fwupd_client_connect (self, cancellable, error))
 		return NULL;
 
 	/* call into daemon */
@@ -573,7 +573,7 @@ fwupd_client_get_report_metadata (FwupdClient *client,
 
 /**
  * fwupd_client_get_devices:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @cancellable: the #GCancellable, or %NULL
  * @error: the #GError, or %NULL
  *
@@ -584,17 +584,17 @@ fwupd_client_get_report_metadata (FwupdClient *client,
  * Since: 0.9.2
  **/
 GPtrArray *
-fwupd_client_get_devices (FwupdClient *client, GCancellable *cancellable, GError **error)
+fwupd_client_get_devices (FwupdClient *self, GCancellable *cancellable, GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_autoptr(GVariant) val = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* connect */
-	if (!fwupd_client_connect (client, cancellable, error))
+	if (!fwupd_client_connect (self, cancellable, error))
 		return NULL;
 
 	/* call into daemon */
@@ -615,7 +615,7 @@ fwupd_client_get_devices (FwupdClient *client, GCancellable *cancellable, GError
 
 /**
  * fwupd_client_get_history:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @cancellable: the #GCancellable, or %NULL
  * @error: the #GError, or %NULL
  *
@@ -626,17 +626,17 @@ fwupd_client_get_devices (FwupdClient *client, GCancellable *cancellable, GError
  * Since: 1.0.4
  **/
 GPtrArray *
-fwupd_client_get_history (FwupdClient *client, GCancellable *cancellable, GError **error)
+fwupd_client_get_history (FwupdClient *self, GCancellable *cancellable, GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_autoptr(GVariant) val = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* connect */
-	if (!fwupd_client_connect (client, cancellable, error))
+	if (!fwupd_client_connect (self, cancellable, error))
 		return NULL;
 
 	/* call into daemon */
@@ -657,7 +657,7 @@ fwupd_client_get_history (FwupdClient *client, GCancellable *cancellable, GError
 
 /**
  * fwupd_client_get_device_by_id:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @device_id: the device ID, e.g. `usb:00:01:03:03`
  * @cancellable: the #GCancellable, or %NULL
  * @error: the #GError, or %NULL
@@ -669,20 +669,20 @@ fwupd_client_get_history (FwupdClient *client, GCancellable *cancellable, GError
  * Since: 0.9.3
  **/
 FwupdDevice *
-fwupd_client_get_device_by_id (FwupdClient *client,
+fwupd_client_get_device_by_id (FwupdClient *self,
 			       const gchar *device_id,
 			       GCancellable *cancellable,
 			       GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
 	g_return_val_if_fail (device_id != NULL, NULL);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* get all the devices */
-	devices = fwupd_client_get_devices (client, cancellable, error);
+	devices = fwupd_client_get_devices (self, cancellable, error);
 	if (devices == NULL)
 		return NULL;
 
@@ -701,7 +701,7 @@ fwupd_client_get_device_by_id (FwupdClient *client,
 
 /**
  * fwupd_client_get_devices_by_guid:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @guid: the GUID, e.g. `e22c4520-43dc-5bb3-8245-5787fead9b63`
  * @cancellable: the #GCancellable, or %NULL
  * @error: the #GError, or %NULL
@@ -714,7 +714,7 @@ fwupd_client_get_device_by_id (FwupdClient *client,
  * Since: 1.4.1
  **/
 GPtrArray *
-fwupd_client_get_devices_by_guid (FwupdClient *client,
+fwupd_client_get_devices_by_guid (FwupdClient *self,
 				  const gchar *guid,
 				  GCancellable *cancellable,
 				  GError **error)
@@ -722,13 +722,13 @@ fwupd_client_get_devices_by_guid (FwupdClient *client,
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) devices_tmp = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
 	g_return_val_if_fail (guid != NULL, NULL);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* get all the devices */
-	devices_tmp = fwupd_client_get_devices (client, cancellable, error);
+	devices_tmp = fwupd_client_get_devices (self, cancellable, error);
 	if (devices_tmp == NULL)
 		return NULL;
 
@@ -755,7 +755,7 @@ fwupd_client_get_devices_by_guid (FwupdClient *client,
 
 /**
  * fwupd_client_get_releases:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @device_id: the device ID
  * @cancellable: the #GCancellable, or %NULL
  * @error: the #GError, or %NULL
@@ -767,19 +767,19 @@ fwupd_client_get_devices_by_guid (FwupdClient *client,
  * Since: 0.9.3
  **/
 GPtrArray *
-fwupd_client_get_releases (FwupdClient *client, const gchar *device_id,
+fwupd_client_get_releases (FwupdClient *self, const gchar *device_id,
 			   GCancellable *cancellable, GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_autoptr(GVariant) val = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
 	g_return_val_if_fail (device_id != NULL, NULL);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* connect */
-	if (!fwupd_client_connect (client, cancellable, error))
+	if (!fwupd_client_connect (self, cancellable, error))
 		return NULL;
 
 	/* call into daemon */
@@ -800,7 +800,7 @@ fwupd_client_get_releases (FwupdClient *client, const gchar *device_id,
 
 /**
  * fwupd_client_get_downgrades:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @device_id: the device ID
  * @cancellable: the #GCancellable, or %NULL
  * @error: the #GError, or %NULL
@@ -812,19 +812,19 @@ fwupd_client_get_releases (FwupdClient *client, const gchar *device_id,
  * Since: 0.9.8
  **/
 GPtrArray *
-fwupd_client_get_downgrades (FwupdClient *client, const gchar *device_id,
+fwupd_client_get_downgrades (FwupdClient *self, const gchar *device_id,
 			     GCancellable *cancellable, GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_autoptr(GVariant) val = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
 	g_return_val_if_fail (device_id != NULL, NULL);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* connect */
-	if (!fwupd_client_connect (client, cancellable, error))
+	if (!fwupd_client_connect (self, cancellable, error))
 		return NULL;
 
 	/* call into daemon */
@@ -845,7 +845,7 @@ fwupd_client_get_downgrades (FwupdClient *client, const gchar *device_id,
 
 /**
  * fwupd_client_get_upgrades:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @device_id: the device ID
  * @cancellable: the #GCancellable, or %NULL
  * @error: the #GError, or %NULL
@@ -857,19 +857,19 @@ fwupd_client_get_downgrades (FwupdClient *client, const gchar *device_id,
  * Since: 0.9.8
  **/
 GPtrArray *
-fwupd_client_get_upgrades (FwupdClient *client, const gchar *device_id,
+fwupd_client_get_upgrades (FwupdClient *self, const gchar *device_id,
 			   GCancellable *cancellable, GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_autoptr(GVariant) val = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
 	g_return_val_if_fail (device_id != NULL, NULL);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* connect */
-	if (!fwupd_client_connect (client, cancellable, error))
+	if (!fwupd_client_connect (self, cancellable, error))
 		return NULL;
 
 	/* call into daemon */
@@ -903,7 +903,7 @@ fwupd_client_proxy_call_cb (GObject *source, GAsyncResult *res, gpointer user_da
 
 /**
  * fwupd_client_modify_config
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @key: key, e.g. `DisabledPlugins`
  * @value: value, e.g. `*`
  * @cancellable: the #GCancellable, or %NULL
@@ -917,18 +917,18 @@ fwupd_client_proxy_call_cb (GObject *source, GAsyncResult *res, gpointer user_da
  * Since: 1.2.8
  **/
 gboolean
-fwupd_client_modify_config (FwupdClient *client, const gchar *key, const gchar *value,
+fwupd_client_modify_config (FwupdClient *self, const gchar *key, const gchar *value,
 			    GCancellable *cancellable, GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_autoptr(FwupdClientHelper) helper = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* connect */
-	if (!fwupd_client_connect (client, cancellable, error))
+	if (!fwupd_client_connect (self, cancellable, error))
 		return FALSE;
 
 	/* call into daemon */
@@ -952,7 +952,7 @@ fwupd_client_modify_config (FwupdClient *client, const gchar *key, const gchar *
 
 /**
  * fwupd_client_activate:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @cancellable: the #GCancellable, or %NULL
  * @device_id: a device
  * @error: the #GError, or %NULL
@@ -965,19 +965,19 @@ fwupd_client_modify_config (FwupdClient *client, const gchar *key, const gchar *
  * Since: 1.2.6
  **/
 gboolean
-fwupd_client_activate (FwupdClient *client, GCancellable *cancellable,
+fwupd_client_activate (FwupdClient *self, GCancellable *cancellable,
 		       const gchar *device_id, GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_autoptr(FwupdClientHelper) helper = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
 	g_return_val_if_fail (device_id != NULL, FALSE);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* connect */
-	if (!fwupd_client_connect (client, cancellable, error))
+	if (!fwupd_client_connect (self, cancellable, error))
 		return FALSE;
 
 	/* call into daemon */
@@ -1001,7 +1001,7 @@ fwupd_client_activate (FwupdClient *client, GCancellable *cancellable,
 
 /**
  * fwupd_client_verify:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @device_id: the device ID
  * @cancellable: the #GCancellable, or %NULL
  * @error: the #GError, or %NULL
@@ -1013,19 +1013,19 @@ fwupd_client_activate (FwupdClient *client, GCancellable *cancellable,
  * Since: 0.7.0
  **/
 gboolean
-fwupd_client_verify (FwupdClient *client, const gchar *device_id,
+fwupd_client_verify (FwupdClient *self, const gchar *device_id,
 		     GCancellable *cancellable, GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_autoptr(FwupdClientHelper) helper = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
 	g_return_val_if_fail (device_id != NULL, FALSE);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* connect */
-	if (!fwupd_client_connect (client, cancellable, error))
+	if (!fwupd_client_connect (self, cancellable, error))
 		return FALSE;
 
 	/* call into daemon */
@@ -1049,7 +1049,7 @@ fwupd_client_verify (FwupdClient *client, const gchar *device_id,
 
 /**
  * fwupd_client_verify_update:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @device_id: the device ID
  * @cancellable: the #GCancellable, or %NULL
  * @error: the #GError, or %NULL
@@ -1061,19 +1061,19 @@ fwupd_client_verify (FwupdClient *client, const gchar *device_id,
  * Since: 0.8.0
  **/
 gboolean
-fwupd_client_verify_update (FwupdClient *client, const gchar *device_id,
+fwupd_client_verify_update (FwupdClient *self, const gchar *device_id,
 		     GCancellable *cancellable, GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_autoptr(FwupdClientHelper) helper = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
 	g_return_val_if_fail (device_id != NULL, FALSE);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* connect */
-	if (!fwupd_client_connect (client, cancellable, error))
+	if (!fwupd_client_connect (self, cancellable, error))
 		return FALSE;
 
 	/* call into daemon */
@@ -1097,7 +1097,7 @@ fwupd_client_verify_update (FwupdClient *client, const gchar *device_id,
 
 /**
  * fwupd_client_unlock:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @device_id: the device ID
  * @cancellable: the #GCancellable, or %NULL
  * @error: the #GError, or %NULL
@@ -1109,19 +1109,19 @@ fwupd_client_verify_update (FwupdClient *client, const gchar *device_id,
  * Since: 0.7.0
  **/
 gboolean
-fwupd_client_unlock (FwupdClient *client, const gchar *device_id,
+fwupd_client_unlock (FwupdClient *self, const gchar *device_id,
 		     GCancellable *cancellable, GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_autoptr(FwupdClientHelper) helper = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
 	g_return_val_if_fail (device_id != NULL, FALSE);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* connect */
-	if (!fwupd_client_connect (client, cancellable, error))
+	if (!fwupd_client_connect (self, cancellable, error))
 		return FALSE;
 
 	/* call into daemon */
@@ -1145,7 +1145,7 @@ fwupd_client_unlock (FwupdClient *client, const gchar *device_id,
 
 /**
  * fwupd_client_clear_results:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @device_id: the device ID
  * @cancellable: the #GCancellable, or %NULL
  * @error: the #GError, or %NULL
@@ -1157,19 +1157,19 @@ fwupd_client_unlock (FwupdClient *client, const gchar *device_id,
  * Since: 0.7.0
  **/
 gboolean
-fwupd_client_clear_results (FwupdClient *client, const gchar *device_id,
+fwupd_client_clear_results (FwupdClient *self, const gchar *device_id,
 			    GCancellable *cancellable, GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_autoptr(FwupdClientHelper) helper = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
 	g_return_val_if_fail (device_id != NULL, FALSE);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* connect */
-	if (!fwupd_client_connect (client, cancellable, error))
+	if (!fwupd_client_connect (self, cancellable, error))
 		return FALSE;
 
 	/* call into daemon */
@@ -1193,7 +1193,7 @@ fwupd_client_clear_results (FwupdClient *client, const gchar *device_id,
 
 /**
  * fwupd_client_get_results:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @device_id: the device ID
  * @cancellable: the #GCancellable, or %NULL
  * @error: the #GError, or %NULL
@@ -1205,19 +1205,19 @@ fwupd_client_clear_results (FwupdClient *client, const gchar *device_id,
  * Since: 0.7.0
  **/
 FwupdDevice *
-fwupd_client_get_results (FwupdClient *client, const gchar *device_id,
+fwupd_client_get_results (FwupdClient *self, const gchar *device_id,
 			  GCancellable *cancellable, GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_autoptr(FwupdClientHelper) helper = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
 	g_return_val_if_fail (device_id != NULL, NULL);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* connect */
-	if (!fwupd_client_connect (client, cancellable, error))
+	if (!fwupd_client_connect (self, cancellable, error))
 		return NULL;
 
 	/* call into daemon */
@@ -1262,7 +1262,7 @@ fwupd_client_send_message_cb (GObject *source_object, GAsyncResult *res, gpointe
 
 #ifdef HAVE_GIO_UNIX
 static gboolean
-fwupd_client_install_fd (FwupdClient *client,
+fwupd_client_install_fd (FwupdClient *self,
 			 const gchar *device_id,
 			 GUnixInputStream *istr,
 			 const gchar *filename_hint,
@@ -1270,7 +1270,7 @@ fwupd_client_install_fd (FwupdClient *client,
 			 GCancellable *cancellable,
 			 GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	GVariant *body;
 	GVariantBuilder builder;
 	gint retval;
@@ -1341,7 +1341,7 @@ fwupd_client_install_fd (FwupdClient *client,
 
 /**
  * fwupd_client_install_bytes:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @device_id: the device ID
  * @bytes: #GBytes
  * @install_flags: the #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_REINSTALL
@@ -1355,7 +1355,7 @@ fwupd_client_install_fd (FwupdClient *client,
  * Since: 1.4.5
  **/
 gboolean
-fwupd_client_install_bytes (FwupdClient *client,
+fwupd_client_install_bytes (FwupdClient *self,
 			    const gchar *device_id,
 			    GBytes *bytes,
 			    FwupdInstallFlags install_flags,
@@ -1365,20 +1365,20 @@ fwupd_client_install_bytes (FwupdClient *client,
 #ifdef HAVE_GIO_UNIX
 	g_autoptr(GUnixInputStream) istr = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
 	g_return_val_if_fail (device_id != NULL, FALSE);
 	g_return_val_if_fail (bytes != NULL, FALSE);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* connect */
-	if (!fwupd_client_connect (client, cancellable, error))
+	if (!fwupd_client_connect (self, cancellable, error))
 		return FALSE;
 
 	istr = fwupd_unix_input_stream_from_bytes (bytes, error);
 	if (istr == NULL)
 		return FALSE;
-	return fwupd_client_install_fd (client, device_id, istr, NULL,
+	return fwupd_client_install_fd (self, device_id, istr, NULL,
 					install_flags, cancellable, error);
 #else
 	g_set_error_literal (error,
@@ -1391,7 +1391,7 @@ fwupd_client_install_bytes (FwupdClient *client,
 
 /**
  * fwupd_client_install:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @device_id: the device ID
  * @filename: the filename to install
  * @install_flags: the #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_REINSTALL
@@ -1405,7 +1405,7 @@ fwupd_client_install_bytes (FwupdClient *client,
  * Since: 0.7.0
  **/
 gboolean
-fwupd_client_install (FwupdClient *client,
+fwupd_client_install (FwupdClient *self,
 		      const gchar *device_id,
 		      const gchar *filename,
 		      FwupdInstallFlags install_flags,
@@ -1415,20 +1415,20 @@ fwupd_client_install (FwupdClient *client,
 #ifdef HAVE_GIO_UNIX
 	g_autoptr(GUnixInputStream) istr = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
 	g_return_val_if_fail (device_id != NULL, FALSE);
 	g_return_val_if_fail (filename != NULL, FALSE);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* connect */
-	if (!fwupd_client_connect (client, cancellable, error))
+	if (!fwupd_client_connect (self, cancellable, error))
 		return FALSE;
 
 	istr = fwupd_unix_input_stream_from_fn (filename, error);
 	if (istr == NULL)
 		return FALSE;
-	return fwupd_client_install_fd (client, device_id, istr, filename,
+	return fwupd_client_install_fd (self, device_id, istr, filename,
 					install_flags, cancellable, error);
 #else
 	g_set_error_literal (error,
@@ -1441,7 +1441,7 @@ fwupd_client_install (FwupdClient *client,
 
 /**
  * fwupd_client_install_release:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @device: A #FwupdDevice
  * @release: A #FwupdRelease
  * @install_flags: the #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_REINSTALL
@@ -1455,7 +1455,7 @@ fwupd_client_install (FwupdClient *client,
  * Since: 1.4.5
  **/
 gboolean
-fwupd_client_install_release (FwupdClient *client,
+fwupd_client_install_release (FwupdClient *self,
 			      FwupdDevice *device,
 			      FwupdRelease *release,
 			      FwupdInstallFlags install_flags,
@@ -1480,7 +1480,7 @@ fwupd_client_install_release (FwupdClient *client,
 		g_autofree gchar *fn = NULL;
 
 		/* if a remote-id was specified, the remote has to exist */
-		remote = fwupd_client_get_remote_by_id (client, remote_id, cancellable, error);
+		remote = fwupd_client_get_remote_by_id (self, remote_id, cancellable, error);
 		if (remote == NULL)
 			return FALSE;
 
@@ -1496,7 +1496,7 @@ fwupd_client_install_release (FwupdClient *client,
 
 		/* install with flags chosen by the user */
 		if (fn != NULL) {
-			return fwupd_client_install (client, fwupd_device_get_id (device),
+			return fwupd_client_install (self, fwupd_device_get_id (device),
 						     fn, install_flags, cancellable, error);
 		}
 
@@ -1509,7 +1509,7 @@ fwupd_client_install_release (FwupdClient *client,
 	}
 
 	/* download file */
-	blob = fwupd_client_download_bytes (client, uri_str,
+	blob = fwupd_client_download_bytes (self, uri_str,
 					    FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
 					    cancellable, error);
 	if (blob == NULL)
@@ -1531,14 +1531,14 @@ fwupd_client_install_release (FwupdClient *client,
 	/* if the device specifies ONLY_OFFLINE automatically set this flag */
 	if (fwupd_device_has_flag (device, FWUPD_DEVICE_FLAG_ONLY_OFFLINE))
 		install_flags |= FWUPD_INSTALL_FLAG_OFFLINE;
-	return fwupd_client_install_bytes (client,
+	return fwupd_client_install_bytes (self,
 					   fwupd_device_get_id (device), blob,
 					   install_flags, NULL, error);
 }
 
 /**
  * fwupd_client_get_details:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @filename: the firmware filename, e.g. `firmware.cab`
  * @cancellable: the #GCancellable, or %NULL
  * @error: the #GError, or %NULL
@@ -1550,11 +1550,11 @@ fwupd_client_install_release (FwupdClient *client,
  * Since: 1.0.0
  **/
 GPtrArray *
-fwupd_client_get_details (FwupdClient *client, const gchar *filename,
+fwupd_client_get_details (FwupdClient *self, const gchar *filename,
 			  GCancellable *cancellable, GError **error)
 {
 #ifdef HAVE_GIO_UNIX
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	GVariant *body;
 	gint fd;
 	gint retval;
@@ -1562,13 +1562,13 @@ fwupd_client_get_details (FwupdClient *client, const gchar *filename,
 	g_autoptr(GDBusMessage) request = NULL;
 	g_autoptr(GUnixFDList) fd_list = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
 	g_return_val_if_fail (filename != NULL, NULL);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* connect */
-	if (!fwupd_client_connect (client, cancellable, error))
+	if (!fwupd_client_connect (self, cancellable, error))
 		return NULL;
 
 	/* open file */
@@ -1628,7 +1628,7 @@ fwupd_client_get_details (FwupdClient *client, const gchar *filename,
 
 /**
  * fwupd_client_get_percentage:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  *
  * Gets the last returned percentage value.
  *
@@ -1637,16 +1637,16 @@ fwupd_client_get_details (FwupdClient *client, const gchar *filename,
  * Since: 0.7.3
  **/
 guint
-fwupd_client_get_percentage (FwupdClient *client)
+fwupd_client_get_percentage (FwupdClient *self)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), 0);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), 0);
 	return priv->percentage;
 }
 
 /**
  * fwupd_client_get_daemon_version:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  *
  * Gets the daemon version number.
  *
@@ -1655,16 +1655,16 @@ fwupd_client_get_percentage (FwupdClient *client)
  * Since: 0.9.6
  **/
 const gchar *
-fwupd_client_get_daemon_version (FwupdClient *client)
+fwupd_client_get_daemon_version (FwupdClient *self)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
 	return priv->daemon_version;
 }
 
 /**
  * fwupd_client_get_host_product:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  *
  * Gets the string that represents the host running fwupd
  *
@@ -1673,16 +1673,16 @@ fwupd_client_get_daemon_version (FwupdClient *client)
  * Since: 1.3.1
  **/
 const gchar *
-fwupd_client_get_host_product (FwupdClient *client)
+fwupd_client_get_host_product (FwupdClient *self)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
 	return priv->host_product;
 }
 
 /**
  * fwupd_client_get_host_machine_id:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  *
  * Gets the string that represents the host machine ID
  *
@@ -1691,16 +1691,16 @@ fwupd_client_get_host_product (FwupdClient *client)
  * Since: 1.3.2
  **/
 const gchar *
-fwupd_client_get_host_machine_id (FwupdClient *client)
+fwupd_client_get_host_machine_id (FwupdClient *self)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
 	return priv->host_machine_id;
 }
 
 /**
  * fwupd_client_get_host_security_id:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  *
  * Gets the string that represents the host machine ID
  *
@@ -1709,16 +1709,16 @@ fwupd_client_get_host_machine_id (FwupdClient *client)
  * Since: 1.5.0
  **/
 const gchar *
-fwupd_client_get_host_security_id (FwupdClient *client)
+fwupd_client_get_host_security_id (FwupdClient *self)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
 	return priv->host_security_id;
 }
 
 /**
  * fwupd_client_get_status:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  *
  * Gets the last returned status value.
  *
@@ -1727,16 +1727,16 @@ fwupd_client_get_host_security_id (FwupdClient *client)
  * Since: 0.7.3
  **/
 FwupdStatus
-fwupd_client_get_status (FwupdClient *client)
+fwupd_client_get_status (FwupdClient *self)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FWUPD_STATUS_UNKNOWN);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FWUPD_STATUS_UNKNOWN);
 	return priv->status;
 }
 
 /**
  * fwupd_client_get_tainted:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  *
  * Gets if the daemon has been tainted by 3rd party code.
  *
@@ -1745,17 +1745,17 @@ fwupd_client_get_status (FwupdClient *client)
  * Since: 1.2.4
  **/
 gboolean
-fwupd_client_get_tainted (FwupdClient *client)
+fwupd_client_get_tainted (FwupdClient *self)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
 	return priv->tainted;
 }
 
 
 /**
  * fwupd_client_get_daemon_interactive:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  *
  * Gets if the daemon is running in an interactive terminal.
  *
@@ -1764,23 +1764,23 @@ fwupd_client_get_tainted (FwupdClient *client)
  * Since: 1.3.4
  **/
 gboolean
-fwupd_client_get_daemon_interactive (FwupdClient *client)
+fwupd_client_get_daemon_interactive (FwupdClient *self)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
 	return priv->interactive;
 }
 
 #ifdef HAVE_GIO_UNIX
 static gboolean
-fwupd_client_update_metadata_fds (FwupdClient *client,
+fwupd_client_update_metadata_fds (FwupdClient *self,
 				  const gchar *remote_id,
 				  GUnixInputStream *metadata,
 				  GUnixInputStream *signature,
 				  GCancellable *cancellable,
 				  GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	GVariant *body;
 	g_autoptr(FwupdClientHelper) helper = NULL;
 	g_autoptr(GDBusMessage) request = NULL;
@@ -1824,7 +1824,7 @@ fwupd_client_update_metadata_fds (FwupdClient *client,
 
 /**
  * fwupd_client_update_metadata:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @remote_id: the remote ID, e.g. `lvfs-testing`
  * @metadata_fn: the XML metadata filename
  * @signature_fn: the GPG signature file
@@ -1843,7 +1843,7 @@ fwupd_client_update_metadata_fds (FwupdClient *client,
  * Since: 1.0.0
  **/
 gboolean
-fwupd_client_update_metadata (FwupdClient *client,
+fwupd_client_update_metadata (FwupdClient *self,
 			      const gchar *remote_id,
 			      const gchar *metadata_fn,
 			      const gchar *signature_fn,
@@ -1854,7 +1854,7 @@ fwupd_client_update_metadata (FwupdClient *client,
 	GUnixInputStream *istr;
 	GUnixInputStream *istr_sig;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
 	g_return_val_if_fail (remote_id != NULL, FALSE);
 	g_return_val_if_fail (metadata_fn != NULL, FALSE);
 	g_return_val_if_fail (signature_fn != NULL, FALSE);
@@ -1862,7 +1862,7 @@ fwupd_client_update_metadata (FwupdClient *client,
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* connect */
-	if (!fwupd_client_connect (client, cancellable, error))
+	if (!fwupd_client_connect (self, cancellable, error))
 		return FALSE;
 
 	/* open files */
@@ -1872,7 +1872,7 @@ fwupd_client_update_metadata (FwupdClient *client,
 	istr_sig = fwupd_unix_input_stream_from_fn (signature_fn, error);
 	if (istr_sig == NULL)
 		return FALSE;
-	return fwupd_client_update_metadata_fds (client, remote_id,
+	return fwupd_client_update_metadata_fds (self, remote_id,
 						 istr, istr_sig,
 						 cancellable, error);
 #else
@@ -1886,7 +1886,7 @@ fwupd_client_update_metadata (FwupdClient *client,
 
 /**
  * fwupd_client_update_metadata_bytes:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @remote_id: remote ID, e.g. `lvfs-testing`
  * @metadata: XML metadata data
  * @signature: signature data
@@ -1905,7 +1905,7 @@ fwupd_client_update_metadata (FwupdClient *client,
  * Since: 1.4.5
  **/
 gboolean
-fwupd_client_update_metadata_bytes (FwupdClient *client,
+fwupd_client_update_metadata_bytes (FwupdClient *self,
 				    const gchar *remote_id,
 				    GBytes *metadata,
 				    GBytes *signature,
@@ -1916,7 +1916,7 @@ fwupd_client_update_metadata_bytes (FwupdClient *client,
 	GUnixInputStream *istr;
 	GUnixInputStream *istr_sig;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
 	g_return_val_if_fail (remote_id != NULL, FALSE);
 	g_return_val_if_fail (metadata != NULL, FALSE);
 	g_return_val_if_fail (signature != NULL, FALSE);
@@ -1930,7 +1930,7 @@ fwupd_client_update_metadata_bytes (FwupdClient *client,
 	istr_sig = fwupd_unix_input_stream_from_bytes (signature, error);
 	if (istr_sig == NULL)
 		return FALSE;
-	return fwupd_client_update_metadata_fds (client, remote_id,
+	return fwupd_client_update_metadata_fds (self, remote_id,
 						 istr, istr_sig,
 						 cancellable, error);
 #else
@@ -1944,7 +1944,7 @@ fwupd_client_update_metadata_bytes (FwupdClient *client,
 
 /**
  * fwupd_client_refresh_remote:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @remote: A #FwupdRemote
  * @cancellable: A #GCancellable, or %NULL
  * @error: A #GError, or %NULL
@@ -1956,7 +1956,7 @@ fwupd_client_update_metadata_bytes (FwupdClient *client,
  * Since: 1.4.5
  **/
 gboolean
-fwupd_client_refresh_remote (FwupdClient *client,
+fwupd_client_refresh_remote (FwupdClient *self,
 			     FwupdRemote *remote,
 			     GCancellable *cancellable,
 			     GError **error)
@@ -1964,13 +1964,13 @@ fwupd_client_refresh_remote (FwupdClient *client,
 	g_autoptr(GBytes) metadata = NULL;
 	g_autoptr(GBytes) signature = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
 	g_return_val_if_fail (FWUPD_IS_REMOTE (remote), FALSE);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* download the signature */
-	signature = fwupd_client_download_bytes (client,
+	signature = fwupd_client_download_bytes (self,
 						 fwupd_remote_get_metadata_uri_sig (remote),
 						 FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
 						 cancellable, error);
@@ -1982,7 +1982,7 @@ fwupd_client_refresh_remote (FwupdClient *client,
 		return FALSE;
 
 	/* download the metadata */
-	metadata = fwupd_client_download_bytes (client,
+	metadata = fwupd_client_download_bytes (self,
 						fwupd_remote_get_metadata_uri (remote),
 						FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
 						cancellable, error);
@@ -1990,7 +1990,7 @@ fwupd_client_refresh_remote (FwupdClient *client,
 		return FALSE;
 
 	/* send all this to fwupd */
-	return fwupd_client_update_metadata_bytes (client,
+	return fwupd_client_update_metadata_bytes (self,
 						   fwupd_remote_get_id (remote),
 						   metadata, signature,
 						   cancellable, error);
@@ -1998,7 +1998,7 @@ fwupd_client_refresh_remote (FwupdClient *client,
 
 /**
  * fwupd_client_get_remotes:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @cancellable: the #GCancellable, or %NULL
  * @error: the #GError, or %NULL
  *
@@ -2009,17 +2009,17 @@ fwupd_client_refresh_remote (FwupdClient *client,
  * Since: 0.9.3
  **/
 GPtrArray *
-fwupd_client_get_remotes (FwupdClient *client, GCancellable *cancellable, GError **error)
+fwupd_client_get_remotes (FwupdClient *self, GCancellable *cancellable, GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_autoptr(GVariant) val = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* connect */
-	if (!fwupd_client_connect (client, cancellable, error))
+	if (!fwupd_client_connect (self, cancellable, error))
 		return NULL;
 
 	/* call into daemon */
@@ -2040,7 +2040,7 @@ fwupd_client_get_remotes (FwupdClient *client, GCancellable *cancellable, GError
 
 /**
  * fwupd_client_get_approved_firmware:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @cancellable: the #GCancellable, or %NULL
  * @error: the #GError, or %NULL
  *
@@ -2051,20 +2051,20 @@ fwupd_client_get_remotes (FwupdClient *client, GCancellable *cancellable, GError
  * Since: 1.2.6
  **/
 gchar **
-fwupd_client_get_approved_firmware (FwupdClient *client,
+fwupd_client_get_approved_firmware (FwupdClient *self,
 				    GCancellable *cancellable,
 				    GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_autoptr(GVariant) val = NULL;
 	gchar **retval = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* connect */
-	if (!fwupd_client_connect (client, cancellable, error))
+	if (!fwupd_client_connect (self, cancellable, error))
 		return NULL;
 
 	/* call into daemon */
@@ -2086,7 +2086,7 @@ fwupd_client_get_approved_firmware (FwupdClient *client,
 
 /**
  * fwupd_client_set_approved_firmware:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @checksums: Array of checksums
  * @cancellable: the #GCancellable, or %NULL
  * @error: the #GError, or %NULL
@@ -2098,20 +2098,20 @@ fwupd_client_get_approved_firmware (FwupdClient *client,
  * Since: 1.2.6
  **/
 gboolean
-fwupd_client_set_approved_firmware (FwupdClient *client,
+fwupd_client_set_approved_firmware (FwupdClient *self,
 				    gchar **checksums,
 				    GCancellable *cancellable,
 				    GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_autoptr(GVariant) val = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* connect */
-	if (!fwupd_client_connect (client, cancellable, error))
+	if (!fwupd_client_connect (self, cancellable, error))
 		return FALSE;
 
 	/* call into daemon */
@@ -2132,7 +2132,7 @@ fwupd_client_set_approved_firmware (FwupdClient *client,
 
 /**
  * fwupd_client_get_blocked_firmware:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @cancellable: the #GCancellable, or %NULL
  * @error: the #GError, or %NULL
  *
@@ -2143,20 +2143,20 @@ fwupd_client_set_approved_firmware (FwupdClient *client,
  * Since: 1.4.6
  **/
 gchar **
-fwupd_client_get_blocked_firmware (FwupdClient *client,
+fwupd_client_get_blocked_firmware (FwupdClient *self,
 				    GCancellable *cancellable,
 				    GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_autoptr(GVariant) val = NULL;
 	gchar **retval = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* connect */
-	if (!fwupd_client_connect (client, cancellable, error))
+	if (!fwupd_client_connect (self, cancellable, error))
 		return NULL;
 
 	/* call into daemon */
@@ -2178,7 +2178,7 @@ fwupd_client_get_blocked_firmware (FwupdClient *client,
 
 /**
  * fwupd_client_set_blocked_firmware:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @checksums: Array of checksums
  * @cancellable: the #GCancellable, or %NULL
  * @error: the #GError, or %NULL
@@ -2190,20 +2190,20 @@ fwupd_client_get_blocked_firmware (FwupdClient *client,
  * Since: 1.4.6
  **/
 gboolean
-fwupd_client_set_blocked_firmware (FwupdClient *client,
+fwupd_client_set_blocked_firmware (FwupdClient *self,
 				    gchar **checksums,
 				    GCancellable *cancellable,
 				    GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_autoptr(GVariant) val = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* connect */
-	if (!fwupd_client_connect (client, cancellable, error))
+	if (!fwupd_client_connect (self, cancellable, error))
 		return FALSE;
 
 	/* call into daemon */
@@ -2224,7 +2224,7 @@ fwupd_client_set_blocked_firmware (FwupdClient *client,
 
 /**
  * fwupd_client_set_feature_flags:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @feature_flags: #FwupdFeatureFlags, e.g. %FWUPD_FEATURE_FLAG_UPDATE_TEXT
  * @cancellable: the #GCancellable, or %NULL
  * @error: the #GError, or %NULL
@@ -2240,20 +2240,20 @@ fwupd_client_set_blocked_firmware (FwupdClient *client,
  * Since: 1.4.5
  **/
 gboolean
-fwupd_client_set_feature_flags (FwupdClient *client,
+fwupd_client_set_feature_flags (FwupdClient *self,
 				FwupdFeatureFlags feature_flags,
 				GCancellable *cancellable,
 				GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_autoptr(GVariant) val = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* connect */
-	if (!fwupd_client_connect (client, cancellable, error))
+	if (!fwupd_client_connect (self, cancellable, error))
 		return FALSE;
 
 	/* call into daemon */
@@ -2274,7 +2274,7 @@ fwupd_client_set_feature_flags (FwupdClient *client,
 
 /**
  * fwupd_client_self_sign:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @value: A string to sign, typically a JSON blob
  * @flags: #FwupdSelfSignFlags, e.g. %FWUPD_SELF_SIGN_FLAG_ADD_TIMESTAMP
  * @cancellable: the #GCancellable, or %NULL
@@ -2287,23 +2287,23 @@ fwupd_client_set_feature_flags (FwupdClient *client,
  * Since: 1.2.6
  **/
 gchar *
-fwupd_client_self_sign (FwupdClient *client,
+fwupd_client_self_sign (FwupdClient *self,
 			const gchar *value,
 			FwupdSelfSignFlags flags,
 			GCancellable *cancellable,
 			GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	GVariantBuilder builder;
 	g_autoptr(GVariant) val = NULL;
 	gchar *retval = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* connect */
-	if (!fwupd_client_connect (client, cancellable, error))
+	if (!fwupd_client_connect (self, cancellable, error))
 		return NULL;
 
 	/* set options */
@@ -2336,7 +2336,7 @@ fwupd_client_self_sign (FwupdClient *client,
 
 /**
  * fwupd_client_modify_remote:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @remote_id: the remote ID, e.g. `lvfs-testing`
  * @key: the key, e.g. `Enabled`
  * @value: the key, e.g. `true`
@@ -2352,17 +2352,17 @@ fwupd_client_self_sign (FwupdClient *client,
  * Since: 0.9.8
  **/
 gboolean
-fwupd_client_modify_remote (FwupdClient *client,
+fwupd_client_modify_remote (FwupdClient *self,
 			    const gchar *remote_id,
 			    const gchar *key,
 			    const gchar *value,
 			    GCancellable *cancellable,
 			    GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_autoptr(GVariant) val = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
 	g_return_val_if_fail (remote_id != NULL, FALSE);
 	g_return_val_if_fail (key != NULL, FALSE);
 	g_return_val_if_fail (value != NULL, FALSE);
@@ -2370,7 +2370,7 @@ fwupd_client_modify_remote (FwupdClient *client,
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* connect */
-	if (!fwupd_client_connect (client, cancellable, error))
+	if (!fwupd_client_connect (self, cancellable, error))
 		return FALSE;
 
 	/* call into daemon */
@@ -2391,7 +2391,7 @@ fwupd_client_modify_remote (FwupdClient *client,
 
 /**
  * fwupd_client_modify_device:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @device_id: the device ID
  * @key: the key, e.g. `Flags`
  * @value: the key, e.g. `reported`
@@ -2408,17 +2408,17 @@ fwupd_client_modify_remote (FwupdClient *client,
  * Since: 1.0.4
  **/
 gboolean
-fwupd_client_modify_device (FwupdClient *client,
+fwupd_client_modify_device (FwupdClient *self,
 			    const gchar *remote_id,
 			    const gchar *key,
 			    const gchar *value,
 			    GCancellable *cancellable,
 			    GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_autoptr(GVariant) val = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), FALSE);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
 	g_return_val_if_fail (remote_id != NULL, FALSE);
 	g_return_val_if_fail (key != NULL, FALSE);
 	g_return_val_if_fail (value != NULL, FALSE);
@@ -2426,7 +2426,7 @@ fwupd_client_modify_device (FwupdClient *client,
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* connect */
-	if (!fwupd_client_connect (client, cancellable, error))
+	if (!fwupd_client_connect (self, cancellable, error))
 		return FALSE;
 
 	/* call into daemon */
@@ -2458,7 +2458,7 @@ fwupd_client_get_remote_by_id_noref (GPtrArray *remotes, const gchar *remote_id)
 
 /**
  * fwupd_client_get_remote_by_id:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @remote_id: the remote ID, e.g. `lvfs-testing`
  * @cancellable: the #GCancellable, or %NULL
  * @error: the #GError, or %NULL
@@ -2470,7 +2470,7 @@ fwupd_client_get_remote_by_id_noref (GPtrArray *remotes, const gchar *remote_id)
  * Since: 0.9.3
  **/
 FwupdRemote *
-fwupd_client_get_remote_by_id (FwupdClient *client,
+fwupd_client_get_remote_by_id (FwupdClient *self,
 			       const gchar *remote_id,
 			       GCancellable *cancellable,
 			       GError **error)
@@ -2478,13 +2478,13 @@ fwupd_client_get_remote_by_id (FwupdClient *client,
 	FwupdRemote *remote;
 	g_autoptr(GPtrArray) remotes = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
 	g_return_val_if_fail (remote_id != NULL, NULL);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* find remote in list */
-	remotes = fwupd_client_get_remotes (client, cancellable, error);
+	remotes = fwupd_client_get_remotes (self, cancellable, error);
 	if (remotes == NULL)
 		return NULL;
 	remote = fwupd_client_get_remote_by_id_noref (remotes, remote_id);
@@ -2503,7 +2503,7 @@ fwupd_client_get_remote_by_id (FwupdClient *client,
 
 /**
  * fwupd_client_set_user_agent:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @user_agent: the user agent ID, e.g. `gnome-software/3.34.1`
  *
  * Manually sets the user agent that is used for downloading. The user agent
@@ -2512,10 +2512,10 @@ fwupd_client_get_remote_by_id (FwupdClient *client,
  * Since: 1.4.5
  **/
 void
-fwupd_client_set_user_agent (FwupdClient *client, const gchar *user_agent)
+fwupd_client_set_user_agent (FwupdClient *self, const gchar *user_agent)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
-	g_return_if_fail (FWUPD_IS_CLIENT (client));
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
 	g_return_if_fail (user_agent != NULL);
 	g_free (priv->user_agent);
 	priv->user_agent = g_strdup (user_agent);
@@ -2523,7 +2523,7 @@ fwupd_client_set_user_agent (FwupdClient *client, const gchar *user_agent)
 
 /**
  * fwupd_client_set_user_agent_for_package:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @package_name: client program name, e.g. "gnome-software"
  * @package_version: client program version, e.g. "3.28.1"
  *
@@ -2540,15 +2540,15 @@ fwupd_client_set_user_agent (FwupdClient *client, const gchar *user_agent)
  * Since: 1.4.5
  **/
 void
-fwupd_client_set_user_agent_for_package (FwupdClient *client,
+fwupd_client_set_user_agent_for_package (FwupdClient *self,
 					 const gchar *package_name,
 					 const gchar *package_version)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	GString *str = g_string_new (NULL);
 	g_autofree gchar *system = NULL;
 
-	g_return_if_fail (FWUPD_IS_CLIENT (client));
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
 	g_return_if_fail (package_name != NULL);
 	g_return_if_fail (package_version != NULL);
 
@@ -2576,7 +2576,7 @@ fwupd_client_download_chunk_cb (SoupMessage *msg, SoupBuffer *chunk, gpointer us
 	guint percentage;
 	goffset header_size;
 	goffset body_length;
-	FwupdClient *client = FWUPD_CLIENT (user_data);
+	FwupdClient *self = FWUPD_CLIENT (user_data);
 
 	/* if it's returning "Found" or an error, ignore the percentage */
 	if (msg->status_code != SOUP_STATUS_OK) {
@@ -2594,13 +2594,13 @@ fwupd_client_download_chunk_cb (SoupMessage *msg, SoupBuffer *chunk, gpointer us
 	/* calculate percentage */
 	percentage = (guint) ((100 * body_length) / header_size);
 	g_debug ("progress: %u%%", percentage);
-	fwupd_client_set_status (client, FWUPD_STATUS_DOWNLOADING);
-	fwupd_client_set_percentage (client, percentage);
+	fwupd_client_set_status (self, FWUPD_STATUS_DOWNLOADING);
+	fwupd_client_set_percentage (self, percentage);
 }
 
 /**
  * fwupd_client_download_bytes:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @url: the remote URL
  * @flags: #FwupdClientDownloadFlags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_NONE
  * @cancellable: the #GCancellable, or %NULL
@@ -2614,24 +2614,24 @@ fwupd_client_download_chunk_cb (SoupMessage *msg, SoupBuffer *chunk, gpointer us
  * Since: 1.4.5
  **/
 GBytes *
-fwupd_client_download_bytes (FwupdClient *client,
+fwupd_client_download_bytes (FwupdClient *self,
 			     const gchar *url,
 			     FwupdClientDownloadFlags flags,
 			     GCancellable *cancellable,
 			     GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	guint status_code;
 	g_autoptr(SoupMessage) msg = NULL;
 	g_autoptr(SoupURI) uri = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
 	g_return_val_if_fail (url != NULL, NULL);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* ensure networking set up */
-	if (!fwupd_client_ensure_networking (client, error))
+	if (!fwupd_client_ensure_networking (self, error))
 		return NULL;
 
 	/* download data */
@@ -2647,9 +2647,9 @@ fwupd_client_download_bytes (FwupdClient *client,
 	}
 	g_signal_connect (msg, "got-chunk",
 			  G_CALLBACK (fwupd_client_download_chunk_cb),
-			  client);
+			  self);
 	status_code = soup_session_send_message (priv->soup_session, msg);
-	fwupd_client_set_status (client, FWUPD_STATUS_IDLE);
+	fwupd_client_set_status (self, FWUPD_STATUS_IDLE);
 	if (status_code == 429) {
 		g_autofree gchar *str = g_strndup (msg->response_body->data,
 						   msg->response_body->length);
@@ -2681,7 +2681,7 @@ fwupd_client_download_bytes (FwupdClient *client,
 
 /**
  * fwupd_client_upload_bytes:
- * @client: A #FwupdClient
+ * @self: A #FwupdClient
  * @url: the remote URL
  * @payload: payload string
  * @signature: (nullable): signature string
@@ -2697,7 +2697,7 @@ fwupd_client_download_bytes (FwupdClient *client,
  * Since: 1.4.5
  **/
 GBytes *
-fwupd_client_upload_bytes (FwupdClient *client,
+fwupd_client_upload_bytes (FwupdClient *self,
 			   const gchar *url,
 			   const gchar *payload,
 			   const gchar *signature,
@@ -2705,18 +2705,18 @@ fwupd_client_upload_bytes (FwupdClient *client,
 			   GCancellable *cancellable,
 			   GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	guint status_code;
 	g_autoptr(SoupMessage) msg = NULL;
 	g_autoptr(SoupURI) uri = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (client), NULL);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
 	g_return_val_if_fail (url != NULL, NULL);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* ensure networking set up */
-	if (!fwupd_client_ensure_networking (client, error))
+	if (!fwupd_client_ensure_networking (self, error))
 		return NULL;
 
 	/* build message */
@@ -2764,8 +2764,8 @@ static void
 fwupd_client_get_property (GObject *object, guint prop_id,
 			   GValue *value, GParamSpec *pspec)
 {
-	FwupdClient *client = FWUPD_CLIENT (object);
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClient *self = FWUPD_CLIENT (object);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 
 	switch (prop_id) {
 	case PROP_STATUS:
@@ -2805,8 +2805,8 @@ static void
 fwupd_client_set_property (GObject *object, guint prop_id,
 			   const GValue *value, GParamSpec *pspec)
 {
-	FwupdClient *client = FWUPD_CLIENT (object);
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClient *self = FWUPD_CLIENT (object);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 
 	switch (prop_id) {
 	case PROP_STATUS:
@@ -2835,7 +2835,7 @@ fwupd_client_class_init (FwupdClientClass *klass)
 
 	/**
 	 * FwupdClient::changed:
-	 * @client: the #FwupdClient instance that emitted the signal
+	 * @self: the #FwupdClient instance that emitted the signal
 	 *
 	 * The ::changed signal is emitted when the daemon internal has
 	 * changed, for instance when a device has been added or removed.
@@ -2851,7 +2851,7 @@ fwupd_client_class_init (FwupdClientClass *klass)
 
 	/**
 	 * FwupdClient::state-changed:
-	 * @client: the #FwupdClient instance that emitted the signal
+	 * @self: the #FwupdClient instance that emitted the signal
 	 * @status: the #FwupdStatus
 	 *
 	 * The ::state-changed signal is emitted when the daemon status has
@@ -2868,7 +2868,7 @@ fwupd_client_class_init (FwupdClientClass *klass)
 
 	/**
 	 * FwupdClient::device-added:
-	 * @client: the #FwupdClient instance that emitted the signal
+	 * @self: the #FwupdClient instance that emitted the signal
 	 * @result: the #FwupdDevice
 	 *
 	 * The ::device-added signal is emitted when a device has been
@@ -2885,7 +2885,7 @@ fwupd_client_class_init (FwupdClientClass *klass)
 
 	/**
 	 * FwupdClient::device-removed:
-	 * @client: the #FwupdClient instance that emitted the signal
+	 * @self: the #FwupdClient instance that emitted the signal
 	 * @result: the #FwupdDevice
 	 *
 	 * The ::device-removed signal is emitted when a device has been
@@ -2902,7 +2902,7 @@ fwupd_client_class_init (FwupdClientClass *klass)
 
 	/**
 	 * FwupdClient::device-changed:
-	 * @client: the #FwupdClient instance that emitted the signal
+	 * @self: the #FwupdClient instance that emitted the signal
 	 * @result: the #FwupdDevice
 	 *
 	 * The ::device-changed signal is emitted when a device has been
@@ -3020,15 +3020,15 @@ fwupd_client_class_init (FwupdClientClass *klass)
 }
 
 static void
-fwupd_client_init (FwupdClient *client)
+fwupd_client_init (FwupdClient *self)
 {
 }
 
 static void
 fwupd_client_finalize (GObject *object)
 {
-	FwupdClient *client = FWUPD_CLIENT (object);
-	FwupdClientPrivate *priv = GET_PRIVATE (client);
+	FwupdClient *self = FWUPD_CLIENT (object);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 
 	g_free (priv->user_agent);
 	g_free (priv->daemon_version);
@@ -3057,7 +3057,7 @@ fwupd_client_finalize (GObject *object)
 FwupdClient *
 fwupd_client_new (void)
 {
-	FwupdClient *client;
-	client = g_object_new (FWUPD_TYPE_CLIENT, NULL);
-	return FWUPD_CLIENT (client);
+	FwupdClient *self;
+	self = g_object_new (FWUPD_TYPE_CLIENT, NULL);
+	return FWUPD_CLIENT (self);
 }
