@@ -26,6 +26,7 @@
       </para>
     </partintro>
     <xi:include href="xml/fwupd-client.xml"/>
+    <xi:include href="xml/fwupd-client-sync.xml"/>
     <xi:include href="xml/fwupd-device.xml"/>
     <xi:include href="xml/fwupd-release.xml"/>
     <xi:include href="xml/fwupd-remote.xml"/>

@@ -12,6 +12,7 @@
 #endif
 
 #include "fwupd-client.h"
+#include "fwupd-client-sync.h"
 #include "fwupd-common.h"
 #include "fwupd-enums.h"
 #include "fwupd-error.h"

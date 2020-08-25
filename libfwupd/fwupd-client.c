@@ -18,7 +18,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include "fwupd-client.h"
+#include "fwupd-client-private.h"
+#include "fwupd-client-sync.h"
 #include "fwupd-common-private.h"
 #include "fwupd-deprecated.h"
 #include "fwupd-enums.h"
@@ -81,41 +82,6 @@ static guint signals [SIGNAL_LAST] = { 0 };
 
 G_DEFINE_TYPE_WITH_PRIVATE (FwupdClient, fwupd_client, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fwupd_client_get_instance_private (o))
-
-typedef struct {
-	gboolean	 ret;
-	GError		*error;
-	GMainLoop	*loop;
-	GVariant	*val;
-	GDBusMessage	*message;
-} FwupdClientHelper;
-
-static void
-fwupd_client_helper_free (FwupdClientHelper *helper)
-{
-	if (helper->message != NULL)
-		g_object_unref (helper->message);
-	if (helper->val != NULL)
-		g_variant_unref (helper->val);
-	if (helper->error != NULL)
-		g_error_free (helper->error);
-	g_main_loop_unref (helper->loop);
-	g_free (helper);
-}
-
-static FwupdClientHelper *
-fwupd_client_helper_new (void)
-{
-	FwupdClientHelper *helper;
-	helper = g_new0 (FwupdClientHelper, 1);
-	helper->loop = g_main_loop_new (NULL, FALSE);
-	return helper;
-}
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(FwupdClientHelper, fwupd_client_helper_free)
-#pragma clang diagnostic pop
 
 static void
 fwupd_client_set_host_product (FwupdClient *self, const gchar *host_product)
@@ -360,51 +326,23 @@ fwupd_client_ensure_networking (FwupdClient *self, GError **error)
 	return TRUE;
 }
 
-/**
- * fwupd_client_connect:
- * @self: A #FwupdClient
- * @cancellable: the #GCancellable, or %NULL
- * @error: the #GError, or %NULL
- *
- * Sets up the client ready for use. Most other methods call this
- * for you, and do you only need to call this if you are just watching
- * the client.
- *
- * Returns: %TRUE for success
- *
- * Since: 0.7.1
- **/
-gboolean
-fwupd_client_connect (FwupdClient *self, GCancellable *cancellable, GError **error)
+static void
+fwupd_client_connect_get_proxy_cb (GObject *source,
+				   GAsyncResult *res,
+				   gpointer user_data)
 {
+	g_autoptr(GTask) task = G_TASK (user_data);
+	FwupdClient *self = g_task_get_source_object (task);
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GError) error = NULL;
 	g_autoptr(GVariant) val = NULL;
 	g_autoptr(GVariant) val2 = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-	/* nothing to do */
-	if (priv->proxy != NULL)
-		return TRUE;
-
-	/* connect to the daemon */
-	priv->conn = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
-	if (priv->conn == NULL) {
-		g_prefix_error (error, "Failed to connect to system D-Bus: ");
-		return FALSE;
+	priv->proxy = g_dbus_proxy_new_finish (res, &error);
+	if (priv->proxy == NULL) {
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
 	}
-	priv->proxy = g_dbus_proxy_new_sync (priv->conn,
-					     G_DBUS_PROXY_FLAGS_NONE,
-					     NULL,
-					     FWUPD_DBUS_SERVICE,
-					     FWUPD_DBUS_PATH,
-					     FWUPD_DBUS_INTERFACE,
-					     NULL,
-					     error);
-	if (priv->proxy == NULL)
-		return FALSE;
 	g_signal_connect (priv->proxy, "g-properties-changed",
 			  G_CALLBACK (fwupd_client_properties_changed_cb), self);
 	g_signal_connect (priv->proxy, "g-signal",
@@ -428,7 +366,93 @@ fwupd_client_connect (FwupdClient *self, GCancellable *cancellable, GError **err
 	if (val != NULL)
 		fwupd_client_set_host_security_id (self, g_variant_get_string (val, NULL));
 
-	return TRUE;
+	/* success */
+	g_task_return_boolean (task, TRUE);
+}
+
+static void
+fwupd_client_connect_get_bus_cb (GObject *source,
+				 GAsyncResult *res,
+				 gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK (user_data);
+	FwupdClient *self = g_task_get_source_object (task);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GError) error = NULL;
+
+	priv->conn = g_bus_get_finish (res, &error);
+	if (priv->conn == NULL) {
+		g_prefix_error (&error, "Failed to connect to system D-Bus: ");
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+	g_dbus_proxy_new (priv->conn,
+			  G_DBUS_PROXY_FLAGS_NONE,
+			  NULL,
+			  FWUPD_DBUS_SERVICE,
+			  FWUPD_DBUS_PATH,
+			  FWUPD_DBUS_INTERFACE,
+			  g_task_get_cancellable (task),
+			  fwupd_client_connect_get_proxy_cb,
+			  g_object_ref (task));
+}
+
+/**
+ * fwupd_client_connect_async:
+ * @self: A #FwupdClient
+ * @cancellable: the #GCancellable, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
+ *
+ * Sets up the client ready for use. This is probably the first method you call
+ * when wanting to use libfwupd in an asynchronous manner.
+ *
+ * Other methods such as fwupd_client_get_devices_async() should only be called
+ * after fwupd_client_connect_finish() has been called without an error.
+ *
+ * Since: 1.5.0
+ **/
+void
+fwupd_client_connect_async (FwupdClient *self, GCancellable *cancellable,
+			    GAsyncReadyCallback callback, gpointer callback_data)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GTask) task = g_task_new (self, cancellable, callback, callback_data);
+
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+
+	/* nothing to do */
+	if (priv->proxy != NULL) {
+		g_task_return_boolean (task, TRUE);
+		return;
+	}
+
+	g_bus_get (G_BUS_TYPE_SYSTEM, cancellable,
+		   fwupd_client_connect_get_bus_cb,
+		   g_steal_pointer (&task));
+
+}
+
+/**
+ * fwupd_client_connect_finish:
+ * @self: A #FwupdClient
+ * @res: the #GAsyncResult
+ * @error: the #GError, or %NULL
+ *
+ * Gets the result of fwupd_client_connect_async().
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fwupd_client_connect_finish (FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
+	g_return_val_if_fail (g_task_is_valid (res, self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	return g_task_propagate_boolean (G_TASK(res), error);
 }
 
 static void
@@ -464,46 +488,84 @@ fwupd_client_fixup_dbus_error (GError *error)
 	g_dbus_error_strip_remote_error (error);
 }
 
+static void
+fwupd_client_get_host_security_attrs_cb (GObject *source,
+					 GAsyncResult *res,
+					 gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK (user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	val = g_dbus_proxy_call_finish (G_DBUS_PROXY (source), res, &error);
+	if (val == NULL) {
+		fwupd_client_fixup_dbus_error (error);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* success */
+	g_task_return_pointer (task,
+			       fwupd_security_attr_array_from_variant (val),
+			       (GDestroyNotify) g_ptr_array_unref);
+}
+
 /**
- * fwupd_client_get_host_security_attrs:
+ * fwupd_client_get_host_security_attrs_async:
  * @self: A #FwupdClient
  * @cancellable: the #GCancellable, or %NULL
- * @error: the #GError, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
  *
  * Gets all the host security attributes from the daemon.
+ *
+ * You must have called fwupd_client_connect_async() on @self before using
+ * this method.
+ *
+ * Since: 1.5.0
+ **/
+void
+fwupd_client_get_host_security_attrs_async (FwupdClient *self,
+					    GCancellable *cancellable,
+					    GAsyncReadyCallback callback,
+					    gpointer callback_data)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GTask) task = NULL;
+
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
+
+	/* call into daemon */
+	task = g_task_new (self, cancellable, callback, callback_data);
+	g_dbus_proxy_call (priv->proxy, "GetHostSecurityAttrs",
+			   NULL,
+			   G_DBUS_CALL_FLAGS_NONE,
+			   -1, cancellable,
+			   fwupd_client_get_host_security_attrs_cb,
+			   g_steal_pointer (&task));
+}
+
+/**
+ * fwupd_client_get_host_security_attrs_finish:
+ * @self: A #FwupdClient
+ * @res: the #GAsyncResult
+ * @error: the #GError, or %NULL
+ *
+ * Gets the result of fwupd_client_get_host_security_attrs_async().
  *
  * Returns: (element-type FwupdSecurityAttr) (transfer container): attributes
  *
  * Since: 1.5.0
  **/
 GPtrArray *
-fwupd_client_get_host_security_attrs (FwupdClient *self, GCancellable *cancellable, GError **error)
+fwupd_client_get_host_security_attrs_finish (FwupdClient *self, GAsyncResult *res, GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GVariant) val = NULL;
-
 	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
+	g_return_val_if_fail (g_task_is_valid (res, self), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
-
-	/* connect */
-	if (!fwupd_client_connect (self, cancellable, error))
-		return NULL;
-
-	/* call into daemon */
-	val = g_dbus_proxy_call_sync (priv->proxy,
-				      "GetHostSecurityAttrs",
-				      NULL,
-				      G_DBUS_CALL_FLAGS_NONE,
-				      -1,
-				      cancellable,
-				      error);
-	if (val == NULL) {
-		if (error != NULL)
-			fwupd_client_fixup_dbus_error (*error);
-		return NULL;
-	}
-	return fwupd_security_attr_array_from_variant (val);
+	return g_task_propagate_pointer (G_TASK(res), error);
 }
 
 static GHashTable *
@@ -527,210 +589,350 @@ fwupd_report_metadata_hash_from_variant (GVariant *value)
 	return hash;
 }
 
+static void
+fwupd_client_get_report_metadata_cb (GObject *source,
+				     GAsyncResult *res,
+				     gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK (user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	val = g_dbus_proxy_call_finish (G_DBUS_PROXY (source), res, &error);
+	if (val == NULL) {
+		fwupd_client_fixup_dbus_error (error);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* success */
+	g_task_return_pointer (task,
+			       fwupd_report_metadata_hash_from_variant (val),
+			       (GDestroyNotify) g_hash_table_unref);
+}
+
 /**
- * fwupd_client_get_report_metadata:
+ * fwupd_client_get_report_metadata_async:
  * @self: A #FwupdClient
  * @cancellable: the #GCancellable, or %NULL
- * @error: the #GError, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
  *
  * Gets all the report metadata from the daemon.
+ *
+ * You must have called fwupd_client_connect_async() on @self before using
+ * this method.
+ *
+ * Since: 1.5.0
+ **/
+void
+fwupd_client_get_report_metadata_async (FwupdClient *self,
+					GCancellable *cancellable,
+					GAsyncReadyCallback callback,
+					gpointer callback_data)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GTask) task = NULL;
+
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
+
+	/* call into daemon */
+	task = g_task_new (self, cancellable, callback, callback_data);
+	g_dbus_proxy_call (priv->proxy, "GetReportMetadata",
+			   NULL,
+			   G_DBUS_CALL_FLAGS_NONE,
+			   -1, cancellable,
+			   fwupd_client_get_report_metadata_cb,
+			   g_steal_pointer (&task));
+}
+
+/**
+ * fwupd_client_get_report_metadata_finish:
+ * @self: A #FwupdClient
+ * @res: the #GAsyncResult
+ * @error: the #GError, or %NULL
+ *
+ * Gets the result of fwupd_client_get_report_metadata_async().
  *
  * Returns: (transfer container): attributes
  *
  * Since: 1.5.0
  **/
 GHashTable *
-fwupd_client_get_report_metadata (FwupdClient *self,
-				  GCancellable *cancellable,
-				  GError **error)
+fwupd_client_get_report_metadata_finish (FwupdClient *self, GAsyncResult *res, GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
+	g_return_val_if_fail (g_task_is_valid (res, self), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+	return g_task_propagate_pointer (G_TASK(res), error);
+}
+
+static void
+fwupd_client_get_devices_cb (GObject *source,
+			     GAsyncResult *res,
+			     gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK (user_data);
+	g_autoptr(GError) error = NULL;
 	g_autoptr(GVariant) val = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
-
-	/* connect */
-	if (!fwupd_client_connect (self, cancellable, error))
-		return NULL;
-
-	/* call into daemon */
-	val = g_dbus_proxy_call_sync (priv->proxy,
-				      "GetReportMetadata",
-				      NULL,
-				      G_DBUS_CALL_FLAGS_NONE,
-				      -1,
-				      cancellable,
-				      error);
+	val = g_dbus_proxy_call_finish (G_DBUS_PROXY (source), res, &error);
 	if (val == NULL) {
-		if (error != NULL)
-			fwupd_client_fixup_dbus_error (*error);
-		return NULL;
+		fwupd_client_fixup_dbus_error (error);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
 	}
-	return fwupd_report_metadata_hash_from_variant (val);
+
+	/* success */
+	g_task_return_pointer (task,
+			       fwupd_device_array_from_variant (val),
+			       (GDestroyNotify) g_ptr_array_unref);
 }
 
 /**
- * fwupd_client_get_devices:
+ * fwupd_client_get_devices_async:
  * @self: A #FwupdClient
  * @cancellable: the #GCancellable, or %NULL
- * @error: the #GError, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
  *
  * Gets all the devices registered with the daemon.
  *
- * Returns: (element-type FwupdDevice) (transfer container): results
+ * You must have called fwupd_client_connect_async() on @self before using
+ * this method.
  *
- * Since: 0.9.2
+ * Since: 1.5.0
  **/
-GPtrArray *
-fwupd_client_get_devices (FwupdClient *self, GCancellable *cancellable, GError **error)
+void
+fwupd_client_get_devices_async (FwupdClient *self, GCancellable *cancellable,
+				GAsyncReadyCallback callback, gpointer callback_data)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GVariant) val = NULL;
+	g_autoptr(GTask) task = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
-
-	/* connect */
-	if (!fwupd_client_connect (self, cancellable, error))
-		return NULL;
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
 
 	/* call into daemon */
-	val = g_dbus_proxy_call_sync (priv->proxy,
-				      "GetDevices",
-				      NULL,
-				      G_DBUS_CALL_FLAGS_NONE,
-				      -1,
-				      cancellable,
-				      error);
-	if (val == NULL) {
-		if (error != NULL)
-			fwupd_client_fixup_dbus_error (*error);
-		return NULL;
-	}
-	return fwupd_device_array_from_variant (val);
+	task = g_task_new (self, cancellable, callback, callback_data);
+	g_dbus_proxy_call (priv->proxy, "GetDevices",
+			   NULL, G_DBUS_CALL_FLAGS_NONE,
+			   -1, cancellable,
+			   fwupd_client_get_devices_cb,
+			   g_steal_pointer (&task));
 }
 
 /**
- * fwupd_client_get_history:
+ * fwupd_client_get_devices_finish:
+ * @self: A #FwupdClient
+ * @res: the #GAsyncResult
+ * @error: the #GError, or %NULL
+ *
+ * Gets the result of fwupd_client_get_devices_async().
+ *
+ * Returns: (element-type FwupdDevice) (transfer container): results
+ *
+ * Since: 1.5.0
+ **/
+GPtrArray *
+fwupd_client_get_devices_finish (FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
+	g_return_val_if_fail (g_task_is_valid (res, self), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+	return g_task_propagate_pointer (G_TASK(res), error);
+}
+
+static void
+fwupd_client_get_history_cb (GObject *source,
+			     GAsyncResult *res,
+			     gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK (user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	val = g_dbus_proxy_call_finish (G_DBUS_PROXY (source), res, &error);
+	if (val == NULL) {
+		fwupd_client_fixup_dbus_error (error);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* success */
+	g_task_return_pointer (task,
+			       fwupd_device_array_from_variant (val),
+			       (GDestroyNotify) g_ptr_array_unref);
+}
+
+/**
+ * fwupd_client_get_history_async:
  * @self: A #FwupdClient
  * @cancellable: the #GCancellable, or %NULL
- * @error: the #GError, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
  *
  * Gets all the history.
  *
- * Returns: (element-type FwupdDevice) (transfer container): results
+ * You must have called fwupd_client_connect_async() on @self before using
+ * this method.
  *
- * Since: 1.0.4
+ * Since: 1.5.0
  **/
-GPtrArray *
-fwupd_client_get_history (FwupdClient *self, GCancellable *cancellable, GError **error)
+void
+fwupd_client_get_history_async (FwupdClient *self, GCancellable *cancellable,
+				GAsyncReadyCallback callback, gpointer callback_data)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GVariant) val = NULL;
+	g_autoptr(GTask) task = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
-
-	/* connect */
-	if (!fwupd_client_connect (self, cancellable, error))
-		return NULL;
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
 
 	/* call into daemon */
-	val = g_dbus_proxy_call_sync (priv->proxy,
-				      "GetHistory",
-				      NULL,
-				      G_DBUS_CALL_FLAGS_NONE,
-				      -1,
-				      cancellable,
-				      error);
-	if (val == NULL) {
-		if (error != NULL)
-			fwupd_client_fixup_dbus_error (*error);
-		return NULL;
-	}
-	return fwupd_device_array_from_variant (val);
+	task = g_task_new (self, cancellable, callback, callback_data);
+	g_dbus_proxy_call (priv->proxy, "GetHistory",
+			   NULL, G_DBUS_CALL_FLAGS_NONE,
+			   -1, cancellable,
+			   fwupd_client_get_history_cb,
+			   g_steal_pointer (&task));
 }
 
 /**
- * fwupd_client_get_device_by_id:
+ * fwupd_client_get_history_finish:
  * @self: A #FwupdClient
- * @device_id: the device ID, e.g. `usb:00:01:03:03`
- * @cancellable: the #GCancellable, or %NULL
+ * @res: the #GAsyncResult
  * @error: the #GError, or %NULL
  *
- * Gets a device by it's device ID.
+ * Gets the result of fwupd_client_get_history_async().
  *
- * Returns: (transfer full): a #FwupdDevice or %NULL
+ * Returns: (element-type FwupdDevice) (transfer container): results
  *
- * Since: 0.9.3
+ * Since: 1.5.0
  **/
-FwupdDevice *
-fwupd_client_get_device_by_id (FwupdClient *self,
-			       const gchar *device_id,
-			       GCancellable *cancellable,
-			       GError **error)
+GPtrArray *
+fwupd_client_get_history_finish (FwupdClient *self, GAsyncResult *res, GError **error)
 {
-	g_autoptr(GPtrArray) devices = NULL;
-
 	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
-	g_return_val_if_fail (device_id != NULL, NULL);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
+	g_return_val_if_fail (g_task_is_valid (res, self), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+	return g_task_propagate_pointer (G_TASK(res), error);
+}
 
-	/* get all the devices */
-	devices = fwupd_client_get_devices (self, cancellable, error);
-	if (devices == NULL)
-		return NULL;
+static void
+fwupd_client_get_device_by_id_cb (GObject *source,
+				  GAsyncResult *res,
+				  gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK (user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(FwupdDevice) device = NULL;
+	const gchar *device_id = g_task_get_task_data (task);
+
+	devices = fwupd_client_get_devices_finish (FWUPD_CLIENT (source), res, &error);
+	if (devices == NULL) {
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
 
 	/* find the device by ID (client side) */
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
-		if (g_strcmp0 (fwupd_device_get_id (dev), device_id) == 0)
-			return g_object_ref (dev);
+		if (g_strcmp0 (fwupd_device_get_id (dev), device_id) == 0) {
+			g_task_return_pointer (task,
+					       g_object_ref (dev),
+					       (GDestroyNotify) g_object_unref);
+			return;
+		}
 	}
-	g_set_error (error,
-		     FWUPD_ERROR,
-		     FWUPD_ERROR_NOT_FOUND,
-		     "failed to find %s", device_id);
-	return NULL;
+
+	/* failed */
+	g_task_return_new_error (task,
+				 FWUPD_ERROR,
+				 FWUPD_ERROR_NOT_FOUND,
+				 "failed to find %s", device_id);
 }
 
 /**
- * fwupd_client_get_devices_by_guid:
+ * fwupd_client_get_device_by_id_async:
  * @self: A #FwupdClient
- * @guid: the GUID, e.g. `e22c4520-43dc-5bb3-8245-5787fead9b63`
+ * @device_id: the device ID
  * @cancellable: the #GCancellable, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
+ *
+ * Gets a device by it's device ID.
+ *
+ * You must have called fwupd_client_connect_async() on @self before using
+ * this method.
+ *
+ * Since: 1.5.0
+ **/
+void
+fwupd_client_get_device_by_id_async (FwupdClient *self, const gchar *device_id,
+				     GCancellable *cancellable,
+				     GAsyncReadyCallback callback,
+				     gpointer callback_data)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GTask) task = NULL;
+
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (device_id != NULL);
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
+
+	/* call into daemon */
+	task = g_task_new (self, cancellable, callback, callback_data);
+	g_task_set_task_data (task, g_strdup (device_id), g_free);
+	fwupd_client_get_devices_async (self, cancellable,
+				        fwupd_client_get_device_by_id_cb,
+				        g_steal_pointer (&task));
+}
+
+/**
+ * fwupd_client_get_device_by_id_finish:
+ * @self: A #FwupdClient
+ * @res: the #GAsyncResult
  * @error: the #GError, or %NULL
  *
- * Gets any devices that provide a specific GUID. An error is returned if no
- * devices contains this GUID.
+ * Gets the result of fwupd_client_get_device_by_id_async().
  *
- * Returns: (element-type FwupdDevice) (transfer container): devices or %NULL
+ * Returns: (transfer full): a #FwupdDevice, or %NULL for failure
  *
- * Since: 1.4.1
+ * Since: 1.5.0
  **/
-GPtrArray *
-fwupd_client_get_devices_by_guid (FwupdClient *self,
-				  const gchar *guid,
-				  GCancellable *cancellable,
-				  GError **error)
+FwupdDevice *
+fwupd_client_get_device_by_id_finish (FwupdClient *self, GAsyncResult *res, GError **error)
 {
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
+	g_return_val_if_fail (g_task_is_valid (res, self), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+	return g_task_propagate_pointer (G_TASK(res), error);
+}
+
+static void
+fwupd_client_get_devices_by_guid_cb (GObject *source,
+				     GAsyncResult *res,
+				     gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK (user_data);
+	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) devices_tmp = NULL;
-
-	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
-	g_return_val_if_fail (guid != NULL, NULL);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+	const gchar *guid = g_task_get_task_data (task);
 
 	/* get all the devices */
-	devices_tmp = fwupd_client_get_devices (self, cancellable, error);
-	if (devices_tmp == NULL)
-		return NULL;
+	devices_tmp = fwupd_client_get_devices_finish (FWUPD_CLIENT (source), res, &error);
+	if (devices_tmp == NULL) {
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
 
 	/* find the devices by GUID (client side) */
 	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
@@ -742,541 +944,920 @@ fwupd_client_get_devices_by_guid (FwupdClient *self,
 
 	/* nothing */
 	if (devices->len == 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_FOUND,
-			     "failed to find any device providing %s", guid);
-		return NULL;
+		g_task_return_new_error (task,
+					 FWUPD_ERROR,
+					 FWUPD_ERROR_NOT_FOUND,
+					 "failed to find any device providing %s", guid);
+		return;
 	}
 
 	/* success */
-	return g_steal_pointer (&devices);
+	g_task_return_pointer (task,
+			       g_steal_pointer (&devices),
+			       (GDestroyNotify) g_ptr_array_unref);
 }
 
 /**
- * fwupd_client_get_releases:
+ * fwupd_client_get_devices_by_guid_async:
  * @self: A #FwupdClient
- * @device_id: the device ID
+ * @guid: the GUID, e.g. `e22c4520-43dc-5bb3-8245-5787fead9b63`
  * @cancellable: the #GCancellable, or %NULL
- * @error: the #GError, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
  *
- * Gets all the releases for a specific device
+ * Gets any devices that provide a specific GUID. An error is returned if no
+ * devices contains this GUID.
  *
- * Returns: (element-type FwupdRelease) (transfer container): results
+ * You must have called fwupd_client_connect_async() on @self before using
+ * this method.
  *
- * Since: 0.9.3
+ * Since: 1.5.0
  **/
-GPtrArray *
-fwupd_client_get_releases (FwupdClient *self, const gchar *device_id,
-			   GCancellable *cancellable, GError **error)
+void
+fwupd_client_get_devices_by_guid_async (FwupdClient *self, const gchar *guid,
+					GCancellable *cancellable,
+					GAsyncReadyCallback callback,
+					gpointer callback_data)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GVariant) val = NULL;
+	g_autoptr(GTask) task = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
-	g_return_val_if_fail (device_id != NULL, NULL);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
-
-	/* connect */
-	if (!fwupd_client_connect (self, cancellable, error))
-		return NULL;
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (guid != NULL);
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
 
 	/* call into daemon */
-	val = g_dbus_proxy_call_sync (priv->proxy,
-				      "GetReleases",
-				      g_variant_new ("(s)", device_id),
-				      G_DBUS_CALL_FLAGS_NONE,
-				      -1,
-				      cancellable,
-				      error);
-	if (val == NULL) {
-		if (error != NULL)
-			fwupd_client_fixup_dbus_error (*error);
-		return NULL;
-	}
-	return fwupd_release_array_from_variant (val);
+	task = g_task_new (self, cancellable, callback, callback_data);
+	g_task_set_task_data (task, g_strdup (guid), g_free);
+	fwupd_client_get_devices_async (self, cancellable,
+					fwupd_client_get_devices_by_guid_cb,
+					g_steal_pointer (&task));
 }
 
 /**
- * fwupd_client_get_downgrades:
+ * fwupd_client_get_devices_by_guid_finish:
  * @self: A #FwupdClient
- * @device_id: the device ID
- * @cancellable: the #GCancellable, or %NULL
+ * @res: the #GAsyncResult
  * @error: the #GError, or %NULL
  *
- * Gets all the downgrades for a specific device.
+ * Gets the result of fwupd_client_get_devices_by_guid_async().
  *
  * Returns: (element-type FwupdRelease) (transfer container): results
  *
- * Since: 0.9.8
+ * Since: 1.5.0
  **/
 GPtrArray *
-fwupd_client_get_downgrades (FwupdClient *self, const gchar *device_id,
-			     GCancellable *cancellable, GError **error)
+fwupd_client_get_devices_by_guid_finish (FwupdClient *self, GAsyncResult *res, GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GVariant) val = NULL;
-
 	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
-	g_return_val_if_fail (device_id != NULL, NULL);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
+	g_return_val_if_fail (g_task_is_valid (res, self), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
-
-	/* connect */
-	if (!fwupd_client_connect (self, cancellable, error))
-		return NULL;
-
-	/* call into daemon */
-	val = g_dbus_proxy_call_sync (priv->proxy,
-				      "GetDowngrades",
-				      g_variant_new ("(s)", device_id),
-				      G_DBUS_CALL_FLAGS_NONE,
-				      -1,
-				      cancellable,
-				      error);
-	if (val == NULL) {
-		if (error != NULL)
-			fwupd_client_fixup_dbus_error (*error);
-		return NULL;
-	}
-	return fwupd_release_array_from_variant (val);
-}
-
-/**
- * fwupd_client_get_upgrades:
- * @self: A #FwupdClient
- * @device_id: the device ID
- * @cancellable: the #GCancellable, or %NULL
- * @error: the #GError, or %NULL
- *
- * Gets all the upgrades for a specific device.
- *
- * Returns: (element-type FwupdRelease) (transfer container): results
- *
- * Since: 0.9.8
- **/
-GPtrArray *
-fwupd_client_get_upgrades (FwupdClient *self, const gchar *device_id,
-			   GCancellable *cancellable, GError **error)
-{
-	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GVariant) val = NULL;
-
-	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
-	g_return_val_if_fail (device_id != NULL, NULL);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
-
-	/* connect */
-	if (!fwupd_client_connect (self, cancellable, error))
-		return NULL;
-
-	/* call into daemon */
-	val = g_dbus_proxy_call_sync (priv->proxy,
-				      "GetUpgrades",
-				      g_variant_new ("(s)", device_id),
-				      G_DBUS_CALL_FLAGS_NONE,
-				      -1,
-				      cancellable,
-				      error);
-	if (val == NULL) {
-		if (error != NULL)
-			fwupd_client_fixup_dbus_error (*error);
-		return NULL;
-	}
-	return fwupd_release_array_from_variant (val);
+	return g_task_propagate_pointer (G_TASK(res), error);
 }
 
 static void
-fwupd_client_proxy_call_cb (GObject *source, GAsyncResult *res, gpointer user_data)
+fwupd_client_get_releases_cb (GObject *source,
+			      GAsyncResult *res,
+			      gpointer user_data)
 {
-	FwupdClientHelper *helper = (FwupdClientHelper *) user_data;
-	helper->val = g_dbus_proxy_call_finish (G_DBUS_PROXY (source),
-						res, &helper->error);
-	if (helper->val != NULL)
-		helper->ret = TRUE;
-	if (helper->error != NULL)
-		fwupd_client_fixup_dbus_error (helper->error);
-	g_main_loop_quit (helper->loop);
+	g_autoptr(GTask) task = G_TASK (user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	val = g_dbus_proxy_call_finish (G_DBUS_PROXY (source), res, &error);
+	if (val == NULL) {
+		fwupd_client_fixup_dbus_error (error);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* success */
+	g_task_return_pointer (task,
+			       fwupd_release_array_from_variant (val),
+			       (GDestroyNotify) g_ptr_array_unref);
 }
 
 /**
- * fwupd_client_modify_config
+ * fwupd_client_get_releases_async:
+ * @self: A #FwupdClient
+ * @device_id: the device ID
+ * @cancellable: the #GCancellable, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
+ *
+ * Gets all the releases for a specific device
+ *
+ * You must have called fwupd_client_connect_async() on @self before using
+ * this method.
+ *
+ * Since: 1.5.0
+ **/
+void
+fwupd_client_get_releases_async (FwupdClient *self, const gchar *device_id,
+				 GCancellable *cancellable,
+				 GAsyncReadyCallback callback,
+				 gpointer callback_data)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GTask) task = NULL;
+
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (device_id != NULL);
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
+
+	/* call into daemon */
+	task = g_task_new (self, cancellable, callback, callback_data);
+	g_dbus_proxy_call (priv->proxy, "GetReleases",
+			   g_variant_new ("(s)", device_id),
+			   G_DBUS_CALL_FLAGS_NONE,
+			   -1, cancellable,
+			   fwupd_client_get_releases_cb,
+			   g_steal_pointer (&task));
+}
+
+/**
+ * fwupd_client_get_releases_finish:
+ * @self: A #FwupdClient
+ * @res: the #GAsyncResult
+ * @error: the #GError, or %NULL
+ *
+ * Gets the result of fwupd_client_get_releases_async().
+ *
+ * Returns: (element-type FwupdRelease) (transfer container): results
+ *
+ * Since: 1.5.0
+ **/
+GPtrArray *
+fwupd_client_get_releases_finish (FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
+	g_return_val_if_fail (g_task_is_valid (res, self), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+	return g_task_propagate_pointer (G_TASK(res), error);
+}
+
+static void
+fwupd_client_get_downgrades_cb (GObject *source,
+			        GAsyncResult *res,
+			        gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK (user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	val = g_dbus_proxy_call_finish (G_DBUS_PROXY (source), res, &error);
+	if (val == NULL) {
+		fwupd_client_fixup_dbus_error (error);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* success */
+	g_task_return_pointer (task,
+			       fwupd_release_array_from_variant (val),
+			       (GDestroyNotify) g_ptr_array_unref);
+}
+
+/**
+ * fwupd_client_get_downgrades_async:
+ * @self: A #FwupdClient
+ * @device_id: the device ID
+ * @cancellable: the #GCancellable, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
+ *
+ * Gets all the downgrades for a specific device.
+ *
+ * You must have called fwupd_client_connect_async() on @self before using
+ * this method.
+ *
+ * Since: 1.5.0
+ **/
+void
+fwupd_client_get_downgrades_async (FwupdClient *self, const gchar *device_id,
+				   GCancellable *cancellable,
+				   GAsyncReadyCallback callback,
+				   gpointer callback_data)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GTask) task = NULL;
+
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (device_id != NULL);
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
+
+	/* call into daemon */
+	task = g_task_new (self, cancellable, callback, callback_data);
+	g_dbus_proxy_call (priv->proxy, "GetDowngrades",
+			   g_variant_new ("(s)", device_id),
+			   G_DBUS_CALL_FLAGS_NONE,
+			   -1, cancellable,
+			   fwupd_client_get_downgrades_cb,
+			   g_steal_pointer (&task));
+}
+
+/**
+ * fwupd_client_get_downgrades_finish:
+ * @self: A #FwupdClient
+ * @res: the #GAsyncResult
+ * @error: the #GError, or %NULL
+ *
+ * Gets the result of fwupd_client_get_downgrades_async().
+ *
+ * Returns: (element-type FwupdRelease) (transfer container): results
+ *
+ * Since: 1.5.0
+ **/
+GPtrArray *
+fwupd_client_get_downgrades_finish (FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
+	g_return_val_if_fail (g_task_is_valid (res, self), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+	return g_task_propagate_pointer (G_TASK(res), error);
+}
+
+static void
+fwupd_client_get_upgrades_cb (GObject *source,
+			      GAsyncResult *res,
+			      gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK (user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	val = g_dbus_proxy_call_finish (G_DBUS_PROXY (source), res, &error);
+	if (val == NULL) {
+		fwupd_client_fixup_dbus_error (error);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* success */
+	g_task_return_pointer (task,
+			       fwupd_release_array_from_variant (val),
+			       (GDestroyNotify) g_ptr_array_unref);
+}
+
+/**
+ * fwupd_client_get_upgrades_async:
+ * @self: A #FwupdClient
+ * @device_id: the device ID
+ * @cancellable: the #GCancellable, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
+ *
+ * Gets all the upgrades for a specific device.
+ *
+ * You must have called fwupd_client_connect_async() on @self before using
+ * this method.
+ *
+ * Since: 1.5.0
+ **/
+void
+fwupd_client_get_upgrades_async (FwupdClient *self, const gchar *device_id,
+				 GCancellable *cancellable,
+				 GAsyncReadyCallback callback,
+				 gpointer callback_data)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GTask) task = NULL;
+
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (device_id != NULL);
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
+
+	/* call into daemon */
+	task = g_task_new (self, cancellable, callback, callback_data);
+	g_dbus_proxy_call (priv->proxy, "GetUpgrades",
+			   g_variant_new ("(s)", device_id),
+			   G_DBUS_CALL_FLAGS_NONE,
+			   -1, cancellable,
+			   fwupd_client_get_upgrades_cb,
+			   g_steal_pointer (&task));
+}
+
+/**
+ * fwupd_client_get_upgrades_finish:
+ * @self: A #FwupdClient
+ * @res: the #GAsyncResult
+ * @error: the #GError, or %NULL
+ *
+ * Gets the result of fwupd_client_get_upgrades_async().
+ *
+ * Returns: (element-type FwupdRelease) (transfer container): results
+ *
+ * Since: 1.5.0
+ **/
+GPtrArray *
+fwupd_client_get_upgrades_finish (FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
+	g_return_val_if_fail (g_task_is_valid (res, self), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+	return g_task_propagate_pointer (G_TASK(res), error);
+}
+
+static void
+fwupd_client_modify_config_cb (GObject *source,
+			       GAsyncResult *res,
+			       gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK (user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	val = g_dbus_proxy_call_finish (G_DBUS_PROXY (source), res, &error);
+	if (val == NULL) {
+		fwupd_client_fixup_dbus_error (error);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* success */
+	g_task_return_boolean (task, TRUE);
+}
+
+/**
+ * fwupd_client_modify_config_async:
  * @self: A #FwupdClient
  * @key: key, e.g. `DisabledPlugins`
  * @value: value, e.g. `*`
  * @cancellable: the #GCancellable, or %NULL
- * @error: the #GError, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
  *
  * Modifies a daemon config option.
  * The daemon will only respond to this request with proper permissions
  *
- * Returns: %TRUE for success
- *
- * Since: 1.2.8
+ * Since: 1.5.0
  **/
-gboolean
-fwupd_client_modify_config (FwupdClient *self, const gchar *key, const gchar *value,
-			    GCancellable *cancellable, GError **error)
+void
+fwupd_client_modify_config_async (FwupdClient *self,
+				  const gchar *key,
+				  const gchar *value,
+				  GCancellable *cancellable,
+				  GAsyncReadyCallback callback,
+				  gpointer callback_data)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	g_autoptr(FwupdClientHelper) helper = NULL;
+	g_autoptr(GTask) task = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-	/* connect */
-	if (!fwupd_client_connect (self, cancellable, error))
-		return FALSE;
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (key != NULL);
+	g_return_if_fail (value != NULL);
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
 
 	/* call into daemon */
-	helper = fwupd_client_helper_new ();
-	g_dbus_proxy_call (priv->proxy,
-			   "ModifyConfig",
+	task = g_task_new (self, cancellable, callback, callback_data);
+	g_dbus_proxy_call (priv->proxy, "ModifyConfig",
 			   g_variant_new ("(ss)", key, value),
-			   G_DBUS_CALL_FLAGS_NONE,
-			   -1,
+			   G_DBUS_CALL_FLAGS_NONE, -1,
 			   cancellable,
-			   fwupd_client_proxy_call_cb,
-			   helper);
-	g_main_loop_run (helper->loop);
-	if (!helper->ret) {
-		g_propagate_error (error, helper->error);
-		helper->error = NULL;
-		return FALSE;
-	}
-	return TRUE;
+			   fwupd_client_modify_config_cb,
+			   g_steal_pointer (&task));
 }
 
 /**
- * fwupd_client_activate:
+ * fwupd_client_modify_config_finish:
  * @self: A #FwupdClient
- * @cancellable: the #GCancellable, or %NULL
- * @device_id: a device
+ * @res: the #GAsyncResult
  * @error: the #GError, or %NULL
+ *
+ * Gets the result of fwupd_client_modify_config_async().
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fwupd_client_modify_config_finish (FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
+	g_return_val_if_fail (g_task_is_valid (res, self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	return g_task_propagate_boolean (G_TASK(res), error);
+}
+
+static void
+fwupd_client_activate_cb (GObject *source,
+			  GAsyncResult *res,
+			  gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK (user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	val = g_dbus_proxy_call_finish (G_DBUS_PROXY (source), res, &error);
+	if (val == NULL) {
+		fwupd_client_fixup_dbus_error (error);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* success */
+	g_task_return_boolean (task, TRUE);
+}
+
+/**
+ * fwupd_client_activate_async:
+ * @self: A #FwupdClient
+ * @device_id: a device
+ * @cancellable: the #GCancellable, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
  *
  * Activates up a device, which normally means the device switches to a new
  * firmware version. This should only be called when data loss cannot occur.
  *
- * Returns: %TRUE for success
- *
- * Since: 1.2.6
+ * Since: 1.5.0
  **/
-gboolean
-fwupd_client_activate (FwupdClient *self, GCancellable *cancellable,
-		       const gchar *device_id, GError **error)
+void
+fwupd_client_activate_async (FwupdClient *self,
+			     const gchar *device_id,
+			     GCancellable *cancellable,
+			     GAsyncReadyCallback callback,
+			     gpointer callback_data)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	g_autoptr(FwupdClientHelper) helper = NULL;
+	g_autoptr(GTask) task = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
-	g_return_val_if_fail (device_id != NULL, FALSE);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-	/* connect */
-	if (!fwupd_client_connect (self, cancellable, error))
-		return FALSE;
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (device_id != NULL);
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
 
 	/* call into daemon */
-	helper = fwupd_client_helper_new ();
-	g_dbus_proxy_call (priv->proxy,
-			   "Activate",
+	task = g_task_new (self, cancellable, callback, callback_data);
+	g_dbus_proxy_call (priv->proxy, "Activate",
 			   g_variant_new ("(s)", device_id),
-			   G_DBUS_CALL_FLAGS_NONE,
-			   -1,
+			   G_DBUS_CALL_FLAGS_NONE, -1,
 			   cancellable,
-			   fwupd_client_proxy_call_cb,
-			   helper);
-	g_main_loop_run (helper->loop);
-	if (!helper->ret) {
-		g_propagate_error (error, helper->error);
-		helper->error = NULL;
-		return FALSE;
-	}
-	return TRUE;
+			   fwupd_client_activate_cb,
+			   g_steal_pointer (&task));
 }
 
 /**
- * fwupd_client_verify:
+ * fwupd_client_activate_finish:
+ * @self: A #FwupdClient
+ * @res: the #GAsyncResult
+ * @error: the #GError, or %NULL
+ *
+ * Gets the result of fwupd_client_activate_async().
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fwupd_client_activate_finish (FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
+	g_return_val_if_fail (g_task_is_valid (res, self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	return g_task_propagate_boolean (G_TASK(res), error);
+}
+
+static void
+fwupd_client_verify_cb (GObject *source,
+			GAsyncResult *res,
+			gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK (user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	val = g_dbus_proxy_call_finish (G_DBUS_PROXY (source), res, &error);
+	if (val == NULL) {
+		fwupd_client_fixup_dbus_error (error);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* success */
+	g_task_return_boolean (task, TRUE);
+}
+
+/**
+ * fwupd_client_verify_async:
  * @self: A #FwupdClient
  * @device_id: the device ID
  * @cancellable: the #GCancellable, or %NULL
- * @error: the #GError, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
  *
  * Verify a specific device.
  *
- * Returns: %TRUE for verification success
- *
- * Since: 0.7.0
+ * Since: 1.5.0
  **/
-gboolean
-fwupd_client_verify (FwupdClient *self, const gchar *device_id,
-		     GCancellable *cancellable, GError **error)
+void
+fwupd_client_verify_async (FwupdClient *self,
+			   const gchar *device_id,
+			   GCancellable *cancellable,
+			   GAsyncReadyCallback callback,
+			   gpointer callback_data)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	g_autoptr(FwupdClientHelper) helper = NULL;
+	g_autoptr(GTask) task = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
-	g_return_val_if_fail (device_id != NULL, FALSE);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-	/* connect */
-	if (!fwupd_client_connect (self, cancellable, error))
-		return FALSE;
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (device_id != NULL);
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
 
 	/* call into daemon */
-	helper = fwupd_client_helper_new ();
-	g_dbus_proxy_call (priv->proxy,
-			   "Verify",
+	task = g_task_new (self, cancellable, callback, callback_data);
+	g_dbus_proxy_call (priv->proxy, "Verify",
 			   g_variant_new ("(s)", device_id),
-			   G_DBUS_CALL_FLAGS_NONE,
-			   -1,
+			   G_DBUS_CALL_FLAGS_NONE, -1,
 			   cancellable,
-			   fwupd_client_proxy_call_cb,
-			   helper);
-	g_main_loop_run (helper->loop);
-	if (!helper->ret) {
-		g_propagate_error (error, helper->error);
-		helper->error = NULL;
-		return FALSE;
-	}
-	return TRUE;
+			   fwupd_client_verify_cb,
+			   g_steal_pointer (&task));
 }
 
 /**
- * fwupd_client_verify_update:
+ * fwupd_client_verify_finish:
+ * @self: A #FwupdClient
+ * @res: the #GAsyncResult
+ * @error: the #GError, or %NULL
+ *
+ * Gets the result of fwupd_client_verify_async().
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fwupd_client_verify_finish (FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
+	g_return_val_if_fail (g_task_is_valid (res, self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	return g_task_propagate_boolean (G_TASK(res), error);
+}
+
+static void
+fwupd_client_verify_update_cb (GObject *source,
+			       GAsyncResult *res,
+			       gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK (user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	val = g_dbus_proxy_call_finish (G_DBUS_PROXY (source), res, &error);
+	if (val == NULL) {
+		fwupd_client_fixup_dbus_error (error);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* success */
+	g_task_return_boolean (task, TRUE);
+}
+
+/**
+ * fwupd_client_verify_update_async:
  * @self: A #FwupdClient
  * @device_id: the device ID
  * @cancellable: the #GCancellable, or %NULL
- * @error: the #GError, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
  *
  * Update the verification record for a specific device.
  *
- * Returns: %TRUE for verification success
- *
- * Since: 0.8.0
+ * Since: 1.5.0
  **/
-gboolean
-fwupd_client_verify_update (FwupdClient *self, const gchar *device_id,
-		     GCancellable *cancellable, GError **error)
+void
+fwupd_client_verify_update_async (FwupdClient *self,
+				  const gchar *device_id,
+				  GCancellable *cancellable,
+				  GAsyncReadyCallback callback,
+				  gpointer callback_data)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	g_autoptr(FwupdClientHelper) helper = NULL;
+	g_autoptr(GTask) task = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
-	g_return_val_if_fail (device_id != NULL, FALSE);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-	/* connect */
-	if (!fwupd_client_connect (self, cancellable, error))
-		return FALSE;
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (device_id != NULL);
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
 
 	/* call into daemon */
-	helper = fwupd_client_helper_new ();
-	g_dbus_proxy_call (priv->proxy,
-			   "VerifyUpdate",
+	task = g_task_new (self, cancellable, callback, callback_data);
+	g_dbus_proxy_call (priv->proxy, "VerifyUpdate",
 			   g_variant_new ("(s)", device_id),
-			   G_DBUS_CALL_FLAGS_NONE,
-			   -1,
+			   G_DBUS_CALL_FLAGS_NONE, -1,
 			   cancellable,
-			   fwupd_client_proxy_call_cb,
-			   helper);
-	g_main_loop_run (helper->loop);
-	if (!helper->ret) {
-		g_propagate_error (error, helper->error);
-		helper->error = NULL;
-		return FALSE;
-	}
-	return TRUE;
+			   fwupd_client_verify_update_cb,
+			   g_steal_pointer (&task));
 }
 
 /**
- * fwupd_client_unlock:
+ * fwupd_client_verify_update_finish:
+ * @self: A #FwupdClient
+ * @res: the #GAsyncResult
+ * @error: the #GError, or %NULL
+ *
+ * Gets the result of fwupd_client_verify_update_async().
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fwupd_client_verify_update_finish (FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
+	g_return_val_if_fail (g_task_is_valid (res, self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	return g_task_propagate_boolean (G_TASK(res), error);
+}
+
+static void
+fwupd_client_unlock_cb (GObject *source,
+			GAsyncResult *res,
+			gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK (user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	val = g_dbus_proxy_call_finish (G_DBUS_PROXY (source), res, &error);
+	if (val == NULL) {
+		fwupd_client_fixup_dbus_error (error);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* success */
+	g_task_return_boolean (task, TRUE);
+}
+
+/**
+ * fwupd_client_unlock_async:
  * @self: A #FwupdClient
  * @device_id: the device ID
  * @cancellable: the #GCancellable, or %NULL
- * @error: the #GError, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
  *
  * Unlocks a specific device so firmware can be read or wrote.
  *
- * Returns: %TRUE for success
- *
- * Since: 0.7.0
+ * Since: 1.5.0
  **/
-gboolean
-fwupd_client_unlock (FwupdClient *self, const gchar *device_id,
-		     GCancellable *cancellable, GError **error)
+void
+fwupd_client_unlock_async (FwupdClient *self,
+			   const gchar *device_id,
+			   GCancellable *cancellable,
+			   GAsyncReadyCallback callback,
+			   gpointer callback_data)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	g_autoptr(FwupdClientHelper) helper = NULL;
+	g_autoptr(GTask) task = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
-	g_return_val_if_fail (device_id != NULL, FALSE);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-	/* connect */
-	if (!fwupd_client_connect (self, cancellable, error))
-		return FALSE;
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (device_id != NULL);
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
 
 	/* call into daemon */
-	helper = fwupd_client_helper_new ();
-	g_dbus_proxy_call (priv->proxy,
-			   "Unlock",
+	task = g_task_new (self, cancellable, callback, callback_data);
+	g_dbus_proxy_call (priv->proxy, "Unlock",
 			   g_variant_new ("(s)", device_id),
-			   G_DBUS_CALL_FLAGS_NONE,
-			   -1,
+			   G_DBUS_CALL_FLAGS_NONE, -1,
 			   cancellable,
-			   fwupd_client_proxy_call_cb,
-			   helper);
-	g_main_loop_run (helper->loop);
-	if (!helper->ret) {
-		g_propagate_error (error, helper->error);
-		helper->error = NULL;
-		return FALSE;
-	}
-	return TRUE;
+			   fwupd_client_unlock_cb,
+			   g_steal_pointer (&task));
 }
 
 /**
- * fwupd_client_clear_results:
+ * fwupd_client_unlock_finish:
  * @self: A #FwupdClient
- * @device_id: the device ID
- * @cancellable: the #GCancellable, or %NULL
+ * @res: the #GAsyncResult
  * @error: the #GError, or %NULL
+ *
+ * Gets the result of fwupd_client_unlock_async().
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fwupd_client_unlock_finish (FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
+	g_return_val_if_fail (g_task_is_valid (res, self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	return g_task_propagate_boolean (G_TASK(res), error);
+}
+
+static void
+fwupd_client_clear_results_cb (GObject *source,
+			  GAsyncResult *res,
+			  gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK (user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	val = g_dbus_proxy_call_finish (G_DBUS_PROXY (source), res, &error);
+	if (val == NULL) {
+		fwupd_client_fixup_dbus_error (error);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* success */
+	g_task_return_boolean (task, TRUE);
+}
+
+/**
+ * fwupd_client_clear_results_async:
+ * @self: A #FwupdClient
+ * @device_id: a device
+ * @cancellable: the #GCancellable, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
  *
  * Clears the results for a specific device.
  *
- * Returns: %TRUE for success
- *
- * Since: 0.7.0
+ * Since: 1.5.0
  **/
-gboolean
-fwupd_client_clear_results (FwupdClient *self, const gchar *device_id,
-			    GCancellable *cancellable, GError **error)
+void
+fwupd_client_clear_results_async (FwupdClient *self,
+				  const gchar *device_id,
+				  GCancellable *cancellable,
+				  GAsyncReadyCallback callback,
+				  gpointer callback_data)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	g_autoptr(FwupdClientHelper) helper = NULL;
+	g_autoptr(GTask) task = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
-	g_return_val_if_fail (device_id != NULL, FALSE);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-	/* connect */
-	if (!fwupd_client_connect (self, cancellable, error))
-		return FALSE;
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (device_id != NULL);
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
 
 	/* call into daemon */
-	helper = fwupd_client_helper_new ();
-	g_dbus_proxy_call (priv->proxy,
-			   "ClearResults",
+	task = g_task_new (self, cancellable, callback, callback_data);
+	g_dbus_proxy_call (priv->proxy, "ClearResults",
 			   g_variant_new ("(s)", device_id),
-			   G_DBUS_CALL_FLAGS_NONE,
-			   -1,
+			   G_DBUS_CALL_FLAGS_NONE, -1,
 			   cancellable,
-			   fwupd_client_proxy_call_cb,
-			   helper);
-	g_main_loop_run (helper->loop);
-	if (!helper->ret) {
-		g_propagate_error (error, helper->error);
-		helper->error = NULL;
-		return FALSE;
-	}
-	return TRUE;
+			   fwupd_client_clear_results_cb,
+			   g_steal_pointer (&task));
 }
 
 /**
- * fwupd_client_get_results:
+ * fwupd_client_clear_results_finish:
+ * @self: A #FwupdClient
+ * @res: the #GAsyncResult
+ * @error: the #GError, or %NULL
+ *
+ * Gets the result of fwupd_client_clear_results_async().
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fwupd_client_clear_results_finish (FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
+	g_return_val_if_fail (g_task_is_valid (res, self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	return g_task_propagate_boolean (G_TASK(res), error);
+}
+
+static void
+fwupd_client_get_results_cb (GObject *source,
+			      GAsyncResult *res,
+			      gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK (user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	val = g_dbus_proxy_call_finish (G_DBUS_PROXY (source), res, &error);
+	if (val == NULL) {
+		fwupd_client_fixup_dbus_error (error);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* success */
+	g_task_return_pointer (task,
+			       fwupd_device_from_variant (val),
+			       (GDestroyNotify) g_ptr_array_unref);
+}
+
+/**
+ * fwupd_client_get_results_async:
  * @self: A #FwupdClient
  * @device_id: the device ID
  * @cancellable: the #GCancellable, or %NULL
- * @error: the #GError, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
  *
  * Gets the results of a previous firmware update for a specific device.
  *
- * Returns: (transfer full): a #FwupdDevice, or %NULL for failure
+ * You must have called fwupd_client_connect_async() on @self before using
+ * this method.
  *
- * Since: 0.7.0
+ * Since: 1.5.0
  **/
-FwupdDevice *
-fwupd_client_get_results (FwupdClient *self, const gchar *device_id,
-			  GCancellable *cancellable, GError **error)
+void
+fwupd_client_get_results_async (FwupdClient *self, const gchar *device_id,
+				 GCancellable *cancellable,
+				 GAsyncReadyCallback callback,
+				 gpointer callback_data)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	g_autoptr(FwupdClientHelper) helper = NULL;
+	g_autoptr(GTask) task = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
-	g_return_val_if_fail (device_id != NULL, NULL);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
-
-	/* connect */
-	if (!fwupd_client_connect (self, cancellable, error))
-		return NULL;
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (device_id != NULL);
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
 
 	/* call into daemon */
-	helper = fwupd_client_helper_new ();
-	g_dbus_proxy_call (priv->proxy,
-			   "GetResults",
+	task = g_task_new (self, cancellable, callback, callback_data);
+	g_dbus_proxy_call (priv->proxy, "GetResults",
 			   g_variant_new ("(s)", device_id),
 			   G_DBUS_CALL_FLAGS_NONE,
-			   -1,
-			   cancellable,
-			   fwupd_client_proxy_call_cb,
-			   helper);
-	g_main_loop_run (helper->loop);
-	if (!helper->ret) {
-		g_propagate_error (error, helper->error);
-		helper->error = NULL;
-		return NULL;
-	}
-	return fwupd_device_from_variant (helper->val);
+			   -1, cancellable,
+			   fwupd_client_get_results_cb,
+			   g_steal_pointer (&task));
 }
 
-#ifdef HAVE_GIO_UNIX
-static void
-fwupd_client_send_message_cb (GObject *source_object, GAsyncResult *res, gpointer user_data)
+/**
+ * fwupd_client_get_results_finish:
+ * @self: A #FwupdClient
+ * @res: the #GAsyncResult
+ * @error: the #GError, or %NULL
+ *
+ * Gets the result of fwupd_client_get_results_async().
+ *
+ * Returns: (transfer full): a #FwupdDevice, or %NULL for failure
+ *
+ * Since: 1.5.0
+ **/
+FwupdDevice *
+fwupd_client_get_results_finish (FwupdClient *self, GAsyncResult *res, GError **error)
 {
-	FwupdClientHelper *helper = (FwupdClientHelper *) user_data;
-	GDBusConnection *con = G_DBUS_CONNECTION (source_object);
-	helper->message = g_dbus_connection_send_message_with_reply_finish (con, res,
-									    &helper->error);
-	if (helper->message &&
-	    !g_dbus_message_to_gerror (helper->message, &helper->error)) {
-		helper->ret = TRUE;
-		helper->val = g_dbus_message_get_body (helper->message);
-		if (helper->val != NULL)
-			g_variant_ref (helper->val);
-	}
-	if (helper->error != NULL)
-		fwupd_client_fixup_dbus_error (helper->error);
-	g_main_loop_quit (helper->loop);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
+	g_return_val_if_fail (g_task_is_valid (res, self), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+	return g_task_propagate_pointer (G_TASK(res), error);
 }
-#endif
 
 #ifdef HAVE_GIO_UNIX
-static gboolean
-fwupd_client_install_fd (FwupdClient *self,
-			 const gchar *device_id,
-			 GUnixInputStream *istr,
-			 const gchar *filename_hint,
-			 FwupdInstallFlags install_flags,
-			 GCancellable *cancellable,
-			 GError **error)
+
+static void
+fwupd_client_install_stream_cb (GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(GDBusMessage) msg = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GTask) task = G_TASK (user_data);
+
+	msg = g_dbus_connection_send_message_with_reply_finish (G_DBUS_CONNECTION (source),
+								res, &error);
+	if (msg == NULL) {
+		fwupd_client_fixup_dbus_error (error);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+	if (g_dbus_message_to_gerror (msg, &error)) {
+		fwupd_client_fixup_dbus_error (error);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* success */
+	g_task_return_boolean (task, TRUE);
+}
+
+void
+fwupd_client_install_stream_async (FwupdClient *self,
+				   const gchar *device_id,
+				   GUnixInputStream *istr,
+				   const gchar *filename_hint,
+				   FwupdInstallFlags install_flags,
+				   GCancellable *cancellable,
+				   GAsyncReadyCallback callback,
+				   gpointer callback_data)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	GVariant *body;
 	GVariantBuilder builder;
-	gint retval;
-	g_autoptr(FwupdClientHelper) helper = NULL;
 	g_autoptr(GDBusMessage) request = NULL;
 	g_autoptr(GUnixFDList) fd_list = NULL;
+	g_autoptr(GTask) task = g_task_new (self, cancellable, callback, callback_data);
 
 	/* set options */
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
@@ -1309,8 +1890,7 @@ fwupd_client_install_fd (FwupdClient *self,
 
 	/* set out of band file descriptor */
 	fd_list = g_unix_fd_list_new ();
-	retval = g_unix_fd_list_append (fd_list, g_unix_input_stream_get_fd (istr), NULL);
-	g_assert (retval != -1);
+	g_unix_fd_list_append (fd_list, g_unix_input_stream_get_fd (istr), NULL);
 	request = g_dbus_message_new_method_call (FWUPD_DBUS_SERVICE,
 						  FWUPD_DBUS_PATH,
 						  FWUPD_DBUS_INTERFACE,
@@ -1318,312 +1898,525 @@ fwupd_client_install_fd (FwupdClient *self,
 	g_dbus_message_set_unix_fd_list (request, fd_list);
 
 	/* call into daemon */
-	helper = fwupd_client_helper_new ();
-	body = g_variant_new ("(sha{sv})", device_id, g_unix_input_stream_get_fd (istr), &builder);
-	g_dbus_message_set_body (request, body);
+	g_dbus_message_set_body (request, g_variant_new ("(sha{sv})",
+							 device_id,
+							 g_unix_input_stream_get_fd (istr),
+							 &builder));
 	g_dbus_connection_send_message_with_reply (priv->conn,
 						   request,
 						   G_DBUS_SEND_MESSAGE_FLAGS_NONE,
 						   G_MAXINT,
 						   NULL,
 						   cancellable,
-						   fwupd_client_send_message_cb,
-						   helper);
-	g_main_loop_run (helper->loop);
-	if (!helper->ret) {
-		g_propagate_error (error, helper->error);
-		helper->error = NULL;
-		return FALSE;
-	}
-	return TRUE;
+						   fwupd_client_install_stream_cb,
+						   g_steal_pointer (&task));
 }
 #endif
 
 /**
- * fwupd_client_install_bytes:
+ * fwupd_client_install_bytes_async:
  * @self: A #FwupdClient
  * @device_id: the device ID
  * @bytes: #GBytes
  * @install_flags: the #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_REINSTALL
  * @cancellable: the #GCancellable, or %NULL
- * @error: the #GError, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
  *
  * Install firmware onto a specific device.
  *
- * Returns: %TRUE for success
- *
- * Since: 1.4.5
+ * Since: 1.5.0
  **/
-gboolean
-fwupd_client_install_bytes (FwupdClient *self,
-			    const gchar *device_id,
-			    GBytes *bytes,
-			    FwupdInstallFlags install_flags,
-			    GCancellable *cancellable,
-			    GError **error)
+void
+fwupd_client_install_bytes_async (FwupdClient *self,
+				  const gchar *device_id,
+				  GBytes *bytes,
+				  FwupdInstallFlags install_flags,
+				  GCancellable *cancellable,
+				  GAsyncReadyCallback callback,
+				  gpointer callback_data)
 {
 #ifdef HAVE_GIO_UNIX
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GError) error = NULL;
 	g_autoptr(GUnixInputStream) istr = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
-	g_return_val_if_fail (device_id != NULL, FALSE);
-	g_return_val_if_fail (bytes != NULL, FALSE);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
 
-	/* connect */
-	if (!fwupd_client_connect (self, cancellable, error))
-		return FALSE;
+	/* move to a thread if this ever takes more than a few ms */
+	istr = fwupd_unix_input_stream_from_bytes (bytes, &error);
+	if (istr == NULL) {
+		g_autoptr(GTask) task = g_task_new (self, cancellable, callback, callback_data);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
 
-	istr = fwupd_unix_input_stream_from_bytes (bytes, error);
-	if (istr == NULL)
-		return FALSE;
-	return fwupd_client_install_fd (self, device_id, istr, NULL,
-					install_flags, cancellable, error);
+	/* call into daemon */
+	fwupd_client_install_stream_async (self, device_id, istr, NULL,
+					   install_flags, cancellable,
+					   callback, callback_data);
 #else
-	g_set_error_literal (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Not supported as <glib-unix.h> is unavailable");
-	return FALSE;
+	g_autoptr(GTask) task = g_task_new (self, cancellable, callback, callback_data);
+	g_task_return_new_error (task,
+				 FWUPD_ERROR,
+				 FWUPD_ERROR_NOT_SUPPORTED,
+				 "Not supported as <glib-unix.h> is unavailable");
 #endif
 }
 
 /**
- * fwupd_client_install:
+ * fwupd_client_install_bytes_finish:
+ * @self: A #FwupdClient
+ * @res: the #GAsyncResult
+ * @error: the #GError, or %NULL
+ *
+ * Gets the result of fwupd_client_install_bytes_async().
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fwupd_client_install_bytes_finish (FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
+	g_return_val_if_fail (g_task_is_valid (res, self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	return g_task_propagate_boolean (G_TASK(res), error);
+}
+
+/**
+ * fwupd_client_install_async:
  * @self: A #FwupdClient
  * @device_id: the device ID
  * @filename: the filename to install
  * @install_flags: the #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_REINSTALL
  * @cancellable: the #GCancellable, or %NULL
- * @error: the #GError, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
  *
- * Install a file onto a specific device.
+ * Install firmware onto a specific device.
  *
- * Returns: %TRUE for success
- *
- * Since: 0.7.0
+ * Since: 1.5.0
  **/
-gboolean
-fwupd_client_install (FwupdClient *self,
-		      const gchar *device_id,
-		      const gchar *filename,
-		      FwupdInstallFlags install_flags,
-		      GCancellable *cancellable,
-		      GError **error)
+void
+fwupd_client_install_async (FwupdClient *self,
+			   const gchar *device_id,
+			   const gchar *filename,
+			   FwupdInstallFlags install_flags,
+			   GCancellable *cancellable,
+			   GAsyncReadyCallback callback,
+			   gpointer callback_data)
 {
 #ifdef HAVE_GIO_UNIX
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GError) error = NULL;
 	g_autoptr(GUnixInputStream) istr = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
-	g_return_val_if_fail (device_id != NULL, FALSE);
-	g_return_val_if_fail (filename != NULL, FALSE);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (device_id != NULL);
+	g_return_if_fail (filename != NULL);
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
 
-	/* connect */
-	if (!fwupd_client_connect (self, cancellable, error))
-		return FALSE;
+	/* move to a thread if this ever takes more than a few ms */
+	istr = fwupd_unix_input_stream_from_fn (filename, &error);
+	if (istr == NULL) {
+		g_autoptr(GTask) task = g_task_new (self, cancellable, callback, callback_data);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
 
-	istr = fwupd_unix_input_stream_from_fn (filename, error);
-	if (istr == NULL)
-		return FALSE;
-	return fwupd_client_install_fd (self, device_id, istr, filename,
-					install_flags, cancellable, error);
+	/* call into daemon */
+	fwupd_client_install_stream_async (self, device_id, istr, NULL,
+					   install_flags, cancellable,
+					   callback, callback_data);
 #else
-	g_set_error_literal (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Not supported as <glib-unix.h> is unavailable");
-	return FALSE;
+	g_autoptr(GTask) task = g_task_new (self, cancellable, callback, callback_data);
+	g_task_return_new_error (task,
+				 FWUPD_ERROR,
+				 FWUPD_ERROR_NOT_SUPPORTED,
+				 "Not supported as <glib-unix.h> is unavailable");
 #endif
 }
 
 /**
- * fwupd_client_install_release:
+ * fwupd_client_install_finish:
+ * @self: A #FwupdClient
+ * @res: the #GAsyncResult
+ * @error: the #GError, or %NULL
+ *
+ * Gets the result of fwupd_client_install_async().
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fwupd_client_install_finish (FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
+	g_return_val_if_fail (g_task_is_valid (res, self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	return g_task_propagate_boolean (G_TASK(res), error);
+}
+
+typedef struct {
+	FwupdDevice		*device;
+	FwupdRelease		*release;
+	FwupdInstallFlags	 install_flags;
+} FwupdClientInstallReleaseData;
+
+static void
+fwupd_client_install_release_data_free (FwupdClientInstallReleaseData *data)
+{
+	g_object_unref (data->device);
+	g_object_unref (data->release);
+	g_free (data);
+}
+
+static void
+fwupd_client_install_release_cb (GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GTask) task = G_TASK (user_data);
+
+	if (!fwupd_client_install_release_finish (FWUPD_CLIENT (source), res, &error)) {
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* success */
+	g_task_return_boolean (task, TRUE);
+}
+
+static void
+fwupd_client_install_release_bytes_cb (GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GTask) task = G_TASK (user_data);
+
+	if (!fwupd_client_install_bytes_finish (FWUPD_CLIENT (source), res, &error)) {
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* success */
+	g_task_return_boolean (task, TRUE);
+}
+
+static void
+fwupd_client_install_release_download_cb (GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GTask) task = G_TASK (user_data);
+	FwupdClientInstallReleaseData *data = g_task_get_task_data (task);
+	GChecksumType checksum_type;
+	GCancellable *cancellable = g_task_get_cancellable (task);
+	const gchar *checksum_expected;
+	g_autofree gchar *checksum_actual = NULL;
+
+	blob = fwupd_client_download_bytes_finish (FWUPD_CLIENT (source), res, &error);
+	if (blob == NULL) {
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* verify checksum */
+	checksum_expected = fwupd_checksum_get_best (fwupd_release_get_checksums (data->release));
+	checksum_type = fwupd_checksum_guess_kind (checksum_expected);
+	checksum_actual = g_compute_checksum_for_bytes (checksum_type, blob);
+	if (g_strcmp0 (checksum_expected, checksum_actual) != 0) {
+		g_task_return_new_error (task,
+					 FWUPD_ERROR,
+					 FWUPD_ERROR_INVALID_FILE,
+					 "checksum invalid, expected %s got %s",
+					 checksum_expected, checksum_actual);
+		return;
+	}
+
+	/* if the device specifies ONLY_OFFLINE automatically set this flag */
+	if (fwupd_device_has_flag (data->device, FWUPD_DEVICE_FLAG_ONLY_OFFLINE))
+		data->install_flags |= FWUPD_INSTALL_FLAG_OFFLINE;
+	fwupd_client_install_bytes_async (FWUPD_CLIENT (source),
+					  fwupd_device_get_id (data->device), blob,
+					  data->install_flags, cancellable,
+					  fwupd_client_install_release_bytes_cb,
+					  g_steal_pointer (&task));
+}
+
+static void
+fwupd_client_install_release_remote_cb (GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autofree gchar *fn = NULL;
+	g_autofree gchar *uri_str = NULL;
+	g_autoptr(FwupdRemote) remote = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GTask) task = G_TASK (user_data);
+	g_autoptr(SoupURI) uri = NULL;
+	FwupdClientInstallReleaseData *data = g_task_get_task_data (task);
+	GCancellable *cancellable = g_task_get_cancellable (task);
+
+	/* if a remote-id was specified, the remote has to exist */
+	remote = fwupd_client_get_remote_by_id_finish (FWUPD_CLIENT (source), res, &error);
+	if (remote == NULL) {
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* local and directory remotes may have the firmware already */
+	uri = soup_uri_new (fwupd_release_get_uri (data->release));
+	if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_LOCAL && uri == NULL) {
+		const gchar *fn_cache = fwupd_remote_get_filename_cache (remote);
+		g_autofree gchar *path = g_path_get_dirname (fn_cache);
+		fn = g_build_filename (path, fwupd_release_get_uri (data->release), NULL);
+	} else if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_DIRECTORY) {
+		fn = g_strdup (fwupd_release_get_uri (data->release) + 7);
+	}
+
+	/* install with flags chosen by the user */
+	if (fn != NULL) {
+		fwupd_client_install_async (FWUPD_CLIENT (source),
+					    fwupd_device_get_id (data->device),
+					    fn, data->install_flags,
+					    cancellable,
+					    fwupd_client_install_release_cb,
+					    g_steal_pointer (&task));
+		return;
+	}
+
+	/* remote file */
+	uri_str = fwupd_remote_build_firmware_uri (remote,
+						   fwupd_release_get_uri (data->release),
+						   &error);
+	if (uri_str == NULL) {
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* download file */
+	fwupd_client_download_bytes_async (FWUPD_CLIENT (source), uri_str,
+					   FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
+					   cancellable,
+					   fwupd_client_install_release_download_cb,
+					   g_steal_pointer (&task));
+}
+
+/**
+ * fwupd_client_install_release_async:
  * @self: A #FwupdClient
  * @device: A #FwupdDevice
  * @release: A #FwupdRelease
  * @install_flags: the #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_REINSTALL
- * @cancellable: A #GCancellable, or %NULL
- * @error: A #GError, or %NULL
+ * @cancellable: the #GCancellable, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
  *
  * Installs a new release on a device, downloading the firmware if required.
  *
- * Returns: %TRUE for success
- *
- * Since: 1.4.5
+ * Since: 1.5.0
  **/
-gboolean
-fwupd_client_install_release (FwupdClient *self,
-			      FwupdDevice *device,
-			      FwupdRelease *release,
-			      FwupdInstallFlags install_flags,
-			      GCancellable *cancellable,
-			      GError **error)
+void
+fwupd_client_install_release_async (FwupdClient *self,
+				    FwupdDevice *device,
+				    FwupdRelease *release,
+				    FwupdInstallFlags install_flags,
+				    GCancellable *cancellable,
+				    GAsyncReadyCallback callback,
+				    gpointer callback_data)
 {
-	GChecksumType checksum_type;
-	const gchar *checksum_expected;
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GTask) task = NULL;
+	FwupdClientInstallReleaseData *data;
 	const gchar *remote_id;
-	const gchar *uri_tmp;
-	g_autofree gchar *checksum_actual = NULL;
-	g_autofree gchar *uri_str = NULL;
-	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(SoupURI) uri = NULL;
+
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	g_return_if_fail (FWUPD_IS_RELEASE (release));
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
+
+	/* call into daemon */
+	task = g_task_new (self, cancellable, callback, callback_data);
+	data = g_new0 (FwupdClientInstallReleaseData, 1);
+	data->device = g_object_ref (device);
+	data->release = g_object_ref (release);
+	data->install_flags = install_flags;
+	g_task_set_task_data (task, data, (GDestroyNotify) fwupd_client_install_release_data_free);
 
 	/* work out what remote-specific URI fields this should use */
-	uri_tmp = fwupd_release_get_uri (release);
-	uri = soup_uri_new (uri_tmp);
 	remote_id = fwupd_release_get_remote_id (release);
-	if (remote_id != NULL) {
-		g_autoptr(FwupdRemote) remote = NULL;
-		g_autofree gchar *fn = NULL;
-
-		/* if a remote-id was specified, the remote has to exist */
-		remote = fwupd_client_get_remote_by_id (self, remote_id, cancellable, error);
-		if (remote == NULL)
-			return FALSE;
-
-		/* local and directory remotes may have the firmware already */
-		if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_LOCAL && uri == NULL) {
-			const gchar *fn_cache = fwupd_remote_get_filename_cache (remote);
-			g_autofree gchar *path = g_path_get_dirname (fn_cache);
-
-			fn = g_build_filename (path, uri_tmp, NULL);
-		} else if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_DIRECTORY) {
-			fn = g_strdup (uri_tmp + 7);
-		}
-
-		/* install with flags chosen by the user */
-		if (fn != NULL) {
-			return fwupd_client_install (self, fwupd_device_get_id (device),
-						     fn, install_flags, cancellable, error);
-		}
-
-		/* remote file */
-		uri_str = fwupd_remote_build_firmware_uri (remote, uri_tmp, error);
-		if (uri_str == NULL)
-			return FALSE;
-	} else {
-		uri_str = g_strdup (uri_tmp);
+	if (remote_id == NULL) {
+		fwupd_client_download_bytes_async (self,
+						   fwupd_release_get_uri (release),
+						   FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
+						   cancellable,
+						   fwupd_client_install_release_download_cb,
+						   g_steal_pointer (&task));
+		return;
 	}
 
-	/* download file */
-	blob = fwupd_client_download_bytes (self, uri_str,
-					    FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
-					    cancellable, error);
-	if (blob == NULL)
-		return FALSE;
-
-	/* verify checksum */
-	checksum_expected = fwupd_checksum_get_best (fwupd_release_get_checksums (release));
-	checksum_type = fwupd_checksum_guess_kind (checksum_expected);
-	checksum_actual = g_compute_checksum_for_bytes (checksum_type, blob);
-	if (g_strcmp0 (checksum_expected, checksum_actual) != 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "Checksum invalid, expected %s got %s",
-			     checksum_expected, checksum_actual);
-		return FALSE;
-	}
-
-	/* if the device specifies ONLY_OFFLINE automatically set this flag */
-	if (fwupd_device_has_flag (device, FWUPD_DEVICE_FLAG_ONLY_OFFLINE))
-		install_flags |= FWUPD_INSTALL_FLAG_OFFLINE;
-	return fwupd_client_install_bytes (self,
-					   fwupd_device_get_id (device), blob,
-					   install_flags, NULL, error);
+	/* if a remote-id was specified, the remote has to exist */
+	fwupd_client_get_remote_by_id_async (self, remote_id, cancellable,
+					     fwupd_client_install_release_remote_cb,
+					     g_steal_pointer (&task));
 }
 
 /**
- * fwupd_client_get_details:
+ * fwupd_client_install_release_finish:
  * @self: A #FwupdClient
- * @filename: the firmware filename, e.g. `firmware.cab`
- * @cancellable: the #GCancellable, or %NULL
+ * @res: the #GAsyncResult
  * @error: the #GError, or %NULL
  *
- * Gets details about a specific firmware file.
+ * Gets the result of fwupd_client_install_release_async().
  *
- * Returns: (transfer container) (element-type FwupdDevice): an array of results
+ * Returns: %TRUE for success
  *
- * Since: 1.0.0
+ * Since: 1.5.0
  **/
-GPtrArray *
-fwupd_client_get_details (FwupdClient *self, const gchar *filename,
-			  GCancellable *cancellable, GError **error)
+gboolean
+fwupd_client_install_release_finish (FwupdClient *self, GAsyncResult *res, GError **error)
 {
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
+	g_return_val_if_fail (g_task_is_valid (res, self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	return g_task_propagate_boolean (G_TASK(res), error);
+}
+
 #ifdef HAVE_GIO_UNIX
+
+static void
+fwupd_client_get_details_stream_cb (GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(GDBusMessage) msg = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GTask) task = G_TASK (user_data);
+
+	msg = g_dbus_connection_send_message_with_reply_finish (G_DBUS_CONNECTION (source),
+								res, &error);
+	if (msg == NULL) {
+		fwupd_client_fixup_dbus_error (error);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+	if (g_dbus_message_to_gerror (msg, &error)) {
+		fwupd_client_fixup_dbus_error (error);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* success */
+	g_task_return_pointer (task,
+			       fwupd_device_array_from_variant (g_dbus_message_get_body (msg)),
+			       (GDestroyNotify) g_ptr_array_unref);
+}
+
+void
+fwupd_client_get_details_stream_async (FwupdClient *self,
+				       GUnixInputStream *istr,
+				       GCancellable *cancellable,
+				       GAsyncReadyCallback callback,
+				       gpointer callback_data)
+{
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	GVariant *body;
-	gint fd;
-	gint retval;
-	g_autoptr(FwupdClientHelper) helper = NULL;
+	gint fd = g_unix_input_stream_get_fd (istr);
 	g_autoptr(GDBusMessage) request = NULL;
 	g_autoptr(GUnixFDList) fd_list = NULL;
-
-	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
-	g_return_val_if_fail (filename != NULL, NULL);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
-
-	/* connect */
-	if (!fwupd_client_connect (self, cancellable, error))
-		return NULL;
-
-	/* open file */
-	fd = open (filename, O_RDONLY);
-	if (fd < 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "failed to open %s",
-			     filename);
-		return NULL;
-	}
+	g_autoptr(GTask) task = g_task_new (self, cancellable, callback, callback_data);
 
 	/* set out of band file descriptor */
 	fd_list = g_unix_fd_list_new ();
-	retval = g_unix_fd_list_append (fd_list, fd, NULL);
-	g_assert (retval != -1);
+	g_unix_fd_list_append (fd_list, fd, NULL);
 	request = g_dbus_message_new_method_call (FWUPD_DBUS_SERVICE,
 						  FWUPD_DBUS_PATH,
 						  FWUPD_DBUS_INTERFACE,
 						  "GetDetails");
 	g_dbus_message_set_unix_fd_list (request, fd_list);
 
-	/* g_unix_fd_list_append did a dup() already */
-	close (fd);
-
 	/* call into daemon */
-	helper = fwupd_client_helper_new ();
-	body = g_variant_new ("(h)", fd);
-	g_dbus_message_set_body (request, body);
-
+	g_dbus_message_set_body (request, g_variant_new ("(h)", fd));
 	g_dbus_connection_send_message_with_reply (priv->conn,
 						   request,
 						   G_DBUS_SEND_MESSAGE_FLAGS_NONE,
-						   -1,
+						   G_MAXINT,
 						   NULL,
 						   cancellable,
-						   fwupd_client_send_message_cb,
-						   helper);
-	g_main_loop_run (helper->loop);
-	if (!helper->ret) {
-		g_propagate_error (error, helper->error);
-		helper->error = NULL;
-		return NULL;
+						   fwupd_client_get_details_stream_cb,
+						   g_steal_pointer (&task));
+}
+#endif
+
+/**
+ * fwupd_client_get_details_bytes_async:
+ * @self: A #FwupdClient
+ * @bytes: a #GBytes for the firmware, e.g. `firmware.cab`
+ * @cancellable: the #GCancellable, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
+ *
+ * Gets details about a specific firmware file.
+ *
+ * Since: 1.5.0
+ **/
+void
+fwupd_client_get_details_bytes_async (FwupdClient *self,
+				      GBytes *bytes,
+				      GCancellable *cancellable,
+				      GAsyncReadyCallback callback,
+				      gpointer callback_data)
+{
+#ifdef HAVE_GIO_UNIX
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GUnixInputStream) istr = NULL;
+
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
+
+	/* move to a thread if this ever takes more than a few ms */
+	istr = fwupd_unix_input_stream_from_bytes (bytes, &error);
+	if (istr == NULL) {
+		g_autoptr(GTask) task = g_task_new (self, cancellable, callback, callback_data);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
 	}
 
-	/* return results */
-	return fwupd_device_array_from_variant (helper->val);
+	/* call into daemon */
+	fwupd_client_get_details_stream_async (self, istr, cancellable,
+					       callback, callback_data);
 #else
-	g_set_error_literal (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Not supported as <glib-unix.h> is unavailable");
-	return NULL;
+	g_autoptr(GTask) task = g_task_new (self, cancellable, callback, callback_data);
+	g_task_return_new_error (task,
+				 FWUPD_ERROR,
+				 FWUPD_ERROR_NOT_SUPPORTED,
+				 "Not supported as <glib-unix.h> is unavailable");
 #endif
+}
+
+/**
+ * fwupd_client_get_details_bytes_finish:
+ * @self: A #FwupdClient
+ * @res: the #GAsyncResult
+ * @error: the #GError, or %NULL
+ *
+ * Gets the result of fwupd_client_get_details_bytes_async().
+ *
+ * Returns: (transfer container) (element-type FwupdDevice): an array of results
+ *
+ * Since: 1.5.0
+ **/
+GPtrArray *
+fwupd_client_get_details_bytes_finish (FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
+	g_return_val_if_fail (g_task_is_valid (res, self), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+	return g_task_propagate_pointer (G_TASK(res), error);
 }
 
 /**
@@ -1752,7 +2545,6 @@ fwupd_client_get_tainted (FwupdClient *self)
 	return priv->tainted;
 }
 
-
 /**
  * fwupd_client_get_daemon_interactive:
  * @self: A #FwupdClient
@@ -1772,24 +2564,49 @@ fwupd_client_get_daemon_interactive (FwupdClient *self)
 }
 
 #ifdef HAVE_GIO_UNIX
-static gboolean
-fwupd_client_update_metadata_fds (FwupdClient *self,
-				  const gchar *remote_id,
-				  GUnixInputStream *metadata,
-				  GUnixInputStream *signature,
-				  GCancellable *cancellable,
-				  GError **error)
+
+static void
+fwupd_client_update_metadata_stream_cb (GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(GDBusMessage) msg = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GTask) task = G_TASK (user_data);
+
+	msg = g_dbus_connection_send_message_with_reply_finish (G_DBUS_CONNECTION (source),
+								res, &error);
+	if (msg == NULL) {
+		fwupd_client_fixup_dbus_error (error);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+	if (g_dbus_message_to_gerror (msg, &error)) {
+		fwupd_client_fixup_dbus_error (error);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* success */
+	g_task_return_boolean (task, TRUE);
+}
+
+void
+fwupd_client_update_metadata_stream_async (FwupdClient *self,
+					   const gchar *remote_id,
+					   GUnixInputStream *istr,
+					   GUnixInputStream *istr_sig,
+					   GCancellable *cancellable,
+					   GAsyncReadyCallback callback,
+					   gpointer callback_data)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	GVariant *body;
-	g_autoptr(FwupdClientHelper) helper = NULL;
 	g_autoptr(GDBusMessage) request = NULL;
 	g_autoptr(GUnixFDList) fd_list = NULL;
+	g_autoptr(GTask) task = g_task_new (self, cancellable, callback, callback_data);
 
 	/* set out of band file descriptor */
 	fd_list = g_unix_fd_list_new ();
-	g_unix_fd_list_append (fd_list, g_unix_input_stream_get_fd (metadata), NULL);
-	g_unix_fd_list_append (fd_list, g_unix_input_stream_get_fd (signature), NULL);
+	g_unix_fd_list_append (fd_list, g_unix_input_stream_get_fd (istr), NULL);
+	g_unix_fd_list_append (fd_list, g_unix_input_stream_get_fd (istr_sig), NULL);
 	request = g_dbus_message_new_method_call (FWUPD_DBUS_SERVICE,
 						  FWUPD_DBUS_PATH,
 						  FWUPD_DBUS_INTERFACE,
@@ -1797,101 +2614,30 @@ fwupd_client_update_metadata_fds (FwupdClient *self,
 	g_dbus_message_set_unix_fd_list (request, fd_list);
 
 	/* call into daemon */
-	body = g_variant_new ("(shh)",
-			      remote_id,
-			      g_unix_input_stream_get_fd (metadata),
-			      g_unix_input_stream_get_fd (signature));
-	g_dbus_message_set_body (request, body);
-	helper = fwupd_client_helper_new ();
+	g_dbus_message_set_body (request, g_variant_new ("(shh)",
+							 remote_id,
+							 g_unix_input_stream_get_fd (istr),
+							 g_unix_input_stream_get_fd (istr_sig)));
 	g_dbus_connection_send_message_with_reply (priv->conn,
 						   request,
 						   G_DBUS_SEND_MESSAGE_FLAGS_NONE,
-						   -1,
+						   G_MAXINT,
 						   NULL,
 						   cancellable,
-						   fwupd_client_send_message_cb,
-						   helper);
-	g_main_loop_run (helper->loop);
-	if (!helper->ret) {
-		g_propagate_error (error, helper->error);
-		helper->error = NULL;
-		return FALSE;
-	}
-	return TRUE;
+						   fwupd_client_update_metadata_stream_cb,
+						   g_steal_pointer (&task));
 }
-
 #endif
 
 /**
- * fwupd_client_update_metadata:
- * @self: A #FwupdClient
- * @remote_id: the remote ID, e.g. `lvfs-testing`
- * @metadata_fn: the XML metadata filename
- * @signature_fn: the GPG signature file
- * @cancellable: the #GCancellable, or %NULL
- * @error: the #GError, or %NULL
- *
- * Updates the metadata. This allows a session process to download the metadata
- * and metadata signing file to be passed into the daemon to be checked and
- * parsed.
- *
- * The @remote_id allows the firmware to be tagged so that the remote can be
- * matched when the firmware is downloaded.
- *
- * Returns: %TRUE for success
- *
- * Since: 1.0.0
- **/
-gboolean
-fwupd_client_update_metadata (FwupdClient *self,
-			      const gchar *remote_id,
-			      const gchar *metadata_fn,
-			      const gchar *signature_fn,
-			      GCancellable *cancellable,
-			      GError **error)
-{
-#ifdef HAVE_GIO_UNIX
-	GUnixInputStream *istr;
-	GUnixInputStream *istr_sig;
-
-	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
-	g_return_val_if_fail (remote_id != NULL, FALSE);
-	g_return_val_if_fail (metadata_fn != NULL, FALSE);
-	g_return_val_if_fail (signature_fn != NULL, FALSE);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-	/* connect */
-	if (!fwupd_client_connect (self, cancellable, error))
-		return FALSE;
-
-	/* open files */
-	istr = fwupd_unix_input_stream_from_fn (metadata_fn, error);
-	if (istr == NULL)
-		return FALSE;
-	istr_sig = fwupd_unix_input_stream_from_fn (signature_fn, error);
-	if (istr_sig == NULL)
-		return FALSE;
-	return fwupd_client_update_metadata_fds (self, remote_id,
-						 istr, istr_sig,
-						 cancellable, error);
-#else
-	g_set_error_literal (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Not supported as <glib-unix.h> is unavailable");
-	return FALSE;
-#endif
-}
-
-/**
- * fwupd_client_update_metadata_bytes:
+ * fwupd_client_update_metadata_bytes_async:
  * @self: A #FwupdClient
  * @remote_id: remote ID, e.g. `lvfs-testing`
  * @metadata: XML metadata data
  * @signature: signature data
  * @cancellable: #GCancellable, or %NULL
- * @error: the #GError, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
  *
  * Updates the metadata. This allows a session process to download the metadata
  * and metadata signing file to be passed into the daemon to be checked and
@@ -1900,411 +2646,784 @@ fwupd_client_update_metadata (FwupdClient *self,
  * The @remote_id allows the firmware to be tagged so that the remote can be
  * matched when the firmware is downloaded.
  *
- * Returns: %TRUE for success
- *
- * Since: 1.4.5
+ * Since: 1.5.0
  **/
-gboolean
-fwupd_client_update_metadata_bytes (FwupdClient *self,
-				    const gchar *remote_id,
-				    GBytes *metadata,
-				    GBytes *signature,
-				    GCancellable *cancellable,
-				    GError **error)
+void
+fwupd_client_update_metadata_bytes_async (FwupdClient *self,
+					  const gchar *remote_id,
+					  GBytes *metadata,
+					  GBytes *signature,
+					  GCancellable *cancellable,
+					  GAsyncReadyCallback callback,
+					  gpointer callback_data)
 {
 #ifdef HAVE_GIO_UNIX
-	GUnixInputStream *istr;
-	GUnixInputStream *istr_sig;
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GUnixInputStream) istr = NULL;
+	g_autoptr(GUnixInputStream) istr_sig = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
-	g_return_val_if_fail (remote_id != NULL, FALSE);
-	g_return_val_if_fail (metadata != NULL, FALSE);
-	g_return_val_if_fail (signature != NULL, FALSE);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (remote_id != NULL);
+	g_return_if_fail (metadata != NULL);
+	g_return_if_fail (signature != NULL);
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
 
-	/* convert bytes to a readable fd */
-	istr = fwupd_unix_input_stream_from_bytes (metadata, error);
-	if (istr == NULL)
-		return FALSE;
-	istr_sig = fwupd_unix_input_stream_from_bytes (signature, error);
-	if (istr_sig == NULL)
-		return FALSE;
-	return fwupd_client_update_metadata_fds (self, remote_id,
-						 istr, istr_sig,
-						 cancellable, error);
+	/* move to a thread if this ever takes more than a few ms */
+	istr = fwupd_unix_input_stream_from_bytes (metadata, &error);
+	if (istr == NULL) {
+		g_autoptr(GTask) task = g_task_new (self, cancellable, callback, callback_data);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+	istr_sig = fwupd_unix_input_stream_from_bytes (signature, &error);
+	if (istr_sig == NULL) {
+		g_autoptr(GTask) task = g_task_new (self, cancellable, callback, callback_data);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* call into daemon */
+	fwupd_client_update_metadata_stream_async (self, remote_id, istr, istr_sig,
+						   cancellable,
+						   callback, callback_data);
 #else
-	g_set_error_literal (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Not supported as <glib-unix.h> is unavailable");
-	return FALSE;
+	g_autoptr(GTask) task = g_task_new (self, cancellable, callback, callback_data);
+	g_task_return_new_error (task,
+				 FWUPD_ERROR,
+				 FWUPD_ERROR_NOT_SUPPORTED,
+				 "Not supported as <glib-unix.h> is unavailable");
 #endif
 }
 
 /**
- * fwupd_client_refresh_remote:
+ * fwupd_client_update_metadata_bytes_finish:
+ * @self: A #FwupdClient
+ * @res: the #GAsyncResult
+ * @error: the #GError, or %NULL
+ *
+ * Gets the result of fwupd_client_update_metadata_bytes_async().
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fwupd_client_update_metadata_bytes_finish (FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
+	g_return_val_if_fail (g_task_is_valid (res, self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	return g_task_propagate_boolean (G_TASK(res), error);
+}
+
+typedef struct {
+	FwupdRemote	*remote;
+	GBytes		*signature;
+	GBytes		*metadata;
+} FwupdClientRefreshRemoteData;
+
+static void
+fwupd_client_refresh_remote_data_free (FwupdClientRefreshRemoteData *data)
+{
+	if (data->signature != NULL)
+		g_bytes_unref (data->signature);
+	if (data->metadata != NULL)
+		g_bytes_unref (data->metadata);
+	g_object_unref (data->remote);
+	g_free (data);
+}
+
+static void
+fwupd_client_refresh_remote_update_cb (GObject *source,
+				       GAsyncResult *res,
+				       gpointer user_data)
+{
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GTask) task = G_TASK (user_data);
+
+	/* save metadata */
+	if (!fwupd_client_update_metadata_bytes_finish (FWUPD_CLIENT (source), res, &error)) {
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* success */
+	g_task_return_boolean (task, TRUE);
+}
+
+static void
+fwupd_client_refresh_remote_metadata_cb (GObject *source,
+					 GAsyncResult *res,
+					 gpointer user_data)
+{
+	g_autoptr(GBytes) bytes = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GTask) task = G_TASK (user_data);
+	FwupdClientRefreshRemoteData *data = g_task_get_task_data (task);
+	FwupdClient *self = g_task_get_source_object (task);
+	GCancellable *cancellable = g_task_get_cancellable (task);
+
+	/* save metadata */
+	bytes = fwupd_client_download_bytes_finish (FWUPD_CLIENT (source), res, &error);
+	if (bytes == NULL) {
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+	data->metadata = g_steal_pointer (&bytes);
+
+	/* send all this to fwupd */
+	fwupd_client_update_metadata_bytes_async (self,
+						  fwupd_remote_get_id (data->remote),
+						  data->metadata,
+						  data->signature,
+						  cancellable,
+						  fwupd_client_refresh_remote_update_cb,
+						  g_steal_pointer (&task));
+}
+
+static void
+fwupd_client_refresh_remote_signature_cb (GObject *source,
+					  GAsyncResult *res,
+					  gpointer user_data)
+{
+	g_autoptr(GBytes) bytes = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GTask) task = G_TASK (user_data);
+	FwupdClientRefreshRemoteData *data = g_task_get_task_data (task);
+	FwupdClient *self = g_task_get_source_object (task);
+	GCancellable *cancellable = g_task_get_cancellable (task);
+
+	/* save signature */
+	bytes = fwupd_client_download_bytes_finish (FWUPD_CLIENT (source), res, &error);
+	if (bytes == NULL) {
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+	data->signature = g_steal_pointer (&bytes);
+
+	/* download metadata */
+	fwupd_client_download_bytes_async (self,
+					   fwupd_remote_get_metadata_uri (data->remote),
+					   FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
+					   cancellable,
+					   fwupd_client_refresh_remote_metadata_cb,
+					   g_steal_pointer (&task));
+}
+
+/**
+ * fwupd_client_refresh_remote_async:
  * @self: A #FwupdClient
  * @remote: A #FwupdRemote
- * @cancellable: A #GCancellable, or %NULL
- * @error: A #GError, or %NULL
+ * @cancellable: the #GCancellable, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
  *
  * Refreshes a remote by downloading new metadata.
  *
- * Returns: %TRUE for success
- *
- * Since: 1.4.5
+ * Since: 1.5.0
  **/
-gboolean
-fwupd_client_refresh_remote (FwupdClient *self,
-			     FwupdRemote *remote,
-			     GCancellable *cancellable,
-			     GError **error)
+void
+fwupd_client_refresh_remote_async (FwupdClient *self,
+				   FwupdRemote *remote,
+				   GCancellable *cancellable,
+				   GAsyncReadyCallback callback,
+				   gpointer callback_data)
 {
-	g_autoptr(GBytes) metadata = NULL;
-	g_autoptr(GBytes) signature = NULL;
+	FwupdClientRefreshRemoteData *data;
+	g_autoptr(GTask) task = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
-	g_return_val_if_fail (FWUPD_IS_REMOTE (remote), FALSE);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (FWUPD_IS_REMOTE (remote));
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
 
-	/* download the signature */
-	signature = fwupd_client_download_bytes (self,
-						 fwupd_remote_get_metadata_uri_sig (remote),
-						 FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
-						 cancellable, error);
-	if (signature == NULL)
-		return FALSE;
+	task = g_task_new (self, cancellable, callback, callback_data);
+	data = g_new0 (FwupdClientRefreshRemoteData, 1);
+	data->remote = g_object_ref (remote);
+	g_task_set_task_data (task,
+			      g_steal_pointer (&data),
+			      (GDestroyNotify) fwupd_client_refresh_remote_data_free);
 
-	/* find the download URI of the metadata from the JCat file */
-	if (!fwupd_remote_load_signature_bytes (remote, signature, error))
-		return FALSE;
+	/* download signature */
+	fwupd_client_download_bytes_async (self,
+					   fwupd_remote_get_metadata_uri_sig (remote),
+					   FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
+					   cancellable,
+					   fwupd_client_refresh_remote_signature_cb,
+					   g_steal_pointer (&task));
 
-	/* download the metadata */
-	metadata = fwupd_client_download_bytes (self,
-						fwupd_remote_get_metadata_uri (remote),
-						FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
-						cancellable, error);
-	if (metadata == NULL)
-		return FALSE;
-
-	/* send all this to fwupd */
-	return fwupd_client_update_metadata_bytes (self,
-						   fwupd_remote_get_id (remote),
-						   metadata, signature,
-						   cancellable, error);
 }
 
 /**
- * fwupd_client_get_remotes:
+ * fwupd_client_refresh_remote_finish:
+ * @self: A #FwupdClient
+ * @res: the #GAsyncResult
+ * @error: the #GError, or %NULL
+ *
+ * Gets the result of fwupd_client_refresh_remote_async().
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fwupd_client_refresh_remote_finish (FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
+	g_return_val_if_fail (g_task_is_valid (res, self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	return g_task_propagate_boolean (G_TASK(res), error);
+}
+
+static void
+fwupd_client_get_remotes_cb (GObject *source,
+			     GAsyncResult *res,
+			     gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK (user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	val = g_dbus_proxy_call_finish (G_DBUS_PROXY (source), res, &error);
+	if (val == NULL) {
+		fwupd_client_fixup_dbus_error (error);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* success */
+	g_task_return_pointer (task,
+			       fwupd_remote_array_from_variant (val),
+			       (GDestroyNotify) g_ptr_array_unref);
+}
+
+/**
+ * fwupd_client_get_remotes_async:
  * @self: A #FwupdClient
  * @cancellable: the #GCancellable, or %NULL
- * @error: the #GError, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
  *
  * Gets the list of remotes that have been configured for the system.
  *
- * Returns: (element-type FwupdRemote) (transfer container): list of remotes, or %NULL
+ * You must have called fwupd_client_connect_async() on @self before using
+ * this method.
  *
- * Since: 0.9.3
+ * Since: 1.5.0
  **/
-GPtrArray *
-fwupd_client_get_remotes (FwupdClient *self, GCancellable *cancellable, GError **error)
+void
+fwupd_client_get_remotes_async (FwupdClient *self, GCancellable *cancellable,
+				GAsyncReadyCallback callback, gpointer callback_data)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GVariant) val = NULL;
+	g_autoptr(GTask) task = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
-
-	/* connect */
-	if (!fwupd_client_connect (self, cancellable, error))
-		return NULL;
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
 
 	/* call into daemon */
-	val = g_dbus_proxy_call_sync (priv->proxy,
-				      "GetRemotes",
-				      NULL,
-				      G_DBUS_CALL_FLAGS_NONE,
-				      -1,
-				      cancellable,
-				      error);
-	if (val == NULL) {
-		if (error != NULL)
-			fwupd_client_fixup_dbus_error (*error);
-		return NULL;
-	}
-	return fwupd_remote_array_from_variant (val);
+	task = g_task_new (self, cancellable, callback, callback_data);
+	g_dbus_proxy_call (priv->proxy, "GetRemotes",
+			   NULL, G_DBUS_CALL_FLAGS_NONE,
+			   -1, cancellable,
+			   fwupd_client_get_remotes_cb,
+			   g_steal_pointer (&task));
 }
 
 /**
- * fwupd_client_get_approved_firmware:
+ * fwupd_client_get_remotes_finish:
+ * @self: A #FwupdClient
+ * @res: the #GAsyncResult
+ * @error: the #GError, or %NULL
+ *
+ * Gets the result of fwupd_client_get_remotes_async().
+ *
+ * Returns: (element-type FwupdRemote) (transfer container): results
+ *
+ * Since: 1.5.0
+ **/
+GPtrArray *
+fwupd_client_get_remotes_finish (FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
+	g_return_val_if_fail (g_task_is_valid (res, self), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+	return g_task_propagate_pointer (G_TASK(res), error);
+}
+
+static void
+fwupd_client_get_approved_firmware_cb (GObject *source,
+				       GAsyncResult *res,
+				       gpointer user_data)
+{
+	g_auto(GStrv) strv = NULL;
+	g_autoptr(GTask) task = G_TASK (user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) array = g_ptr_array_new_with_free_func (g_free);
+	g_autoptr(GVariant) val = NULL;
+
+	val = g_dbus_proxy_call_finish (G_DBUS_PROXY (source), res, &error);
+	if (val == NULL) {
+		fwupd_client_fixup_dbus_error (error);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	g_variant_get (val, "(^as)", &strv);
+	for (guint i = 0; strv[i] != NULL; i++)
+		g_ptr_array_add (array, g_strdup (strv[i]));
+
+	/* success */
+	g_task_return_pointer (task,
+			       g_steal_pointer (&array),
+			       (GDestroyNotify) g_ptr_array_unref);
+}
+
+/**
+ * fwupd_client_get_approved_firmware_async:
  * @self: A #FwupdClient
  * @cancellable: the #GCancellable, or %NULL
- * @error: the #GError, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
  *
  * Gets the list of approved firmware.
  *
- * Returns: (transfer full): list of remotes, or %NULL
+ * You must have called fwupd_client_connect_async() on @self before using
+ * this method.
  *
- * Since: 1.2.6
+ * Since: 1.5.0
  **/
-gchar **
-fwupd_client_get_approved_firmware (FwupdClient *self,
-				    GCancellable *cancellable,
-				    GError **error)
+void
+fwupd_client_get_approved_firmware_async (FwupdClient *self,
+					  GCancellable *cancellable,
+					  GAsyncReadyCallback callback,
+					  gpointer callback_data)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GVariant) val = NULL;
-	gchar **retval = NULL;
+	g_autoptr(GTask) task = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
-
-	/* connect */
-	if (!fwupd_client_connect (self, cancellable, error))
-		return NULL;
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
 
 	/* call into daemon */
-	val = g_dbus_proxy_call_sync (priv->proxy,
-				      "GetApprovedFirmware",
-				      NULL,
-				      G_DBUS_CALL_FLAGS_NONE,
-				      -1,
-				      cancellable,
-				      error);
-	if (val == NULL) {
-		if (error != NULL)
-			fwupd_client_fixup_dbus_error (*error);
-		return NULL;
-	}
-	g_variant_get (val, "(^as)", &retval);
-	return retval;
+	task = g_task_new (self, cancellable, callback, callback_data);
+	g_dbus_proxy_call (priv->proxy, "GetApprovedFirmware",
+			   NULL,
+			   G_DBUS_CALL_FLAGS_NONE,
+			   -1, cancellable,
+			   fwupd_client_get_approved_firmware_cb,
+			   g_steal_pointer (&task));
 }
 
 /**
- * fwupd_client_set_approved_firmware:
+ * fwupd_client_get_approved_firmware_finish:
  * @self: A #FwupdClient
- * @checksums: Array of checksums
- * @cancellable: the #GCancellable, or %NULL
+ * @res: the #GAsyncResult
  * @error: the #GError, or %NULL
+ *
+ * Gets the result of fwupd_client_get_approved_firmware_async().
+ *
+ * Returns: (element-type utf8) (transfer container): checksums, or %NULL for error
+ *
+ * Since: 1.5.0
+ **/
+GPtrArray *
+fwupd_client_get_approved_firmware_finish (FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
+	g_return_val_if_fail (g_task_is_valid (res, self), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+	return g_task_propagate_pointer (G_TASK(res), error);
+}
+
+static void
+fwupd_client_set_approved_firmware_cb (GObject *source,
+				       GAsyncResult *res,
+				       gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK (user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	val = g_dbus_proxy_call_finish (G_DBUS_PROXY (source), res, &error);
+	if (val == NULL) {
+		fwupd_client_fixup_dbus_error (error);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* success */
+	g_task_return_boolean (task, TRUE);
+}
+
+/**
+ * fwupd_client_set_approved_firmware_async:
+ * @self: A #FwupdClient
+ * @checksums: (element-type utf8): firmware checksums
+ * @cancellable: the #GCancellable, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
  *
  * Sets the list of approved firmware.
  *
- * Returns: %TRUE for success
- *
- * Since: 1.2.6
+ * Since: 1.5.0
  **/
-gboolean
-fwupd_client_set_approved_firmware (FwupdClient *self,
-				    gchar **checksums,
-				    GCancellable *cancellable,
-				    GError **error)
+void
+fwupd_client_set_approved_firmware_async (FwupdClient *self,
+					  GPtrArray *checksums,
+					  GCancellable *cancellable,
+					  GAsyncReadyCallback callback,
+					  gpointer callback_data)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GVariant) val = NULL;
+	g_autoptr(GTask) task = NULL;
+	g_auto(GStrv) strv = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-	/* connect */
-	if (!fwupd_client_connect (self, cancellable, error))
-		return FALSE;
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
 
 	/* call into daemon */
-	val = g_dbus_proxy_call_sync (priv->proxy,
-				      "SetApprovedFirmware",
-				      g_variant_new ("(^as)", checksums),
-				      G_DBUS_CALL_FLAGS_NONE,
-				      -1,
-				      cancellable,
-				      error);
-	if (val == NULL) {
-		if (error != NULL)
-			fwupd_client_fixup_dbus_error (*error);
-		return FALSE;
+	task = g_task_new (self, cancellable, callback, callback_data);
+	strv = g_new0 (gchar *, checksums->len + 1);
+	for (guint i = 0; i < checksums->len; i++) {
+		const gchar *tmp = g_ptr_array_index (checksums, i);
+		strv[i] = g_strdup (tmp);
 	}
-	return TRUE;
+	g_dbus_proxy_call (priv->proxy, "SetApprovedFirmware",
+			   g_variant_new ("(^as)", strv),
+			   G_DBUS_CALL_FLAGS_NONE, -1,
+			   cancellable,
+			   fwupd_client_set_approved_firmware_cb,
+			   g_steal_pointer (&task));
 }
 
 /**
- * fwupd_client_get_blocked_firmware:
+ * fwupd_client_set_approved_firmware_finish:
+ * @self: A #FwupdClient
+ * @res: the #GAsyncResult
+ * @error: the #GError, or %NULL
+ *
+ * Gets the result of fwupd_client_set_approved_firmware_async().
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fwupd_client_set_approved_firmware_finish (FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
+	g_return_val_if_fail (g_task_is_valid (res, self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	return g_task_propagate_boolean (G_TASK(res), error);
+}
+
+static void
+fwupd_client_get_blocked_firmware_cb (GObject *source,
+				      GAsyncResult *res,
+				      gpointer user_data)
+{
+	g_auto(GStrv) strv = NULL;
+	g_autoptr(GTask) task = G_TASK (user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) array = g_ptr_array_new_with_free_func (g_free);
+	g_autoptr(GVariant) val = NULL;
+
+	val = g_dbus_proxy_call_finish (G_DBUS_PROXY (source), res, &error);
+	if (val == NULL) {
+		fwupd_client_fixup_dbus_error (error);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	g_variant_get (val, "(^as)", &strv);
+	for (guint i = 0; strv[i] != NULL; i++)
+		g_ptr_array_add (array, g_strdup (strv[i]));
+
+	/* success */
+	g_task_return_pointer (task,
+			       g_steal_pointer (&array),
+			       (GDestroyNotify) g_ptr_array_unref);
+}
+
+/**
+ * fwupd_client_get_blocked_firmware_async:
  * @self: A #FwupdClient
  * @cancellable: the #GCancellable, or %NULL
- * @error: the #GError, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
  *
  * Gets the list of blocked firmware.
  *
- * Returns: (transfer full): list of checksums, or %NULL
+ * You must have called fwupd_client_connect_async() on @self before using
+ * this method.
  *
- * Since: 1.4.6
+ * Since: 1.5.0
  **/
-gchar **
-fwupd_client_get_blocked_firmware (FwupdClient *self,
-				    GCancellable *cancellable,
-				    GError **error)
+void
+fwupd_client_get_blocked_firmware_async (FwupdClient *self,
+					  GCancellable *cancellable,
+					  GAsyncReadyCallback callback,
+					  gpointer callback_data)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GVariant) val = NULL;
-	gchar **retval = NULL;
+	g_autoptr(GTask) task = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
-
-	/* connect */
-	if (!fwupd_client_connect (self, cancellable, error))
-		return NULL;
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
 
 	/* call into daemon */
-	val = g_dbus_proxy_call_sync (priv->proxy,
-				      "GetBlockedFirmware",
-				      NULL,
-				      G_DBUS_CALL_FLAGS_NONE,
-				      -1,
-				      cancellable,
-				      error);
-	if (val == NULL) {
-		if (error != NULL)
-			fwupd_client_fixup_dbus_error (*error);
-		return NULL;
-	}
-	g_variant_get (val, "(^as)", &retval);
-	return retval;
+	task = g_task_new (self, cancellable, callback, callback_data);
+	g_dbus_proxy_call (priv->proxy, "GetBlockedFirmware",
+			   NULL,
+			   G_DBUS_CALL_FLAGS_NONE,
+			   -1, cancellable,
+			   fwupd_client_get_blocked_firmware_cb,
+			   g_steal_pointer (&task));
 }
 
 /**
- * fwupd_client_set_blocked_firmware:
+ * fwupd_client_get_blocked_firmware_finish:
  * @self: A #FwupdClient
- * @checksums: Array of checksums
- * @cancellable: the #GCancellable, or %NULL
+ * @res: the #GAsyncResult
  * @error: the #GError, or %NULL
+ *
+ * Gets the result of fwupd_client_get_blocked_firmware_async().
+ *
+ * Returns: (element-type utf8) (transfer container): checksums, or %NULL for error
+ *
+ * Since: 1.5.0
+ **/
+GPtrArray *
+fwupd_client_get_blocked_firmware_finish (FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
+	g_return_val_if_fail (g_task_is_valid (res, self), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+	return g_task_propagate_pointer (G_TASK(res), error);
+}
+
+static void
+fwupd_client_set_blocked_firmware_cb (GObject *source,
+				      GAsyncResult *res,
+				      gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK (user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	val = g_dbus_proxy_call_finish (G_DBUS_PROXY (source), res, &error);
+	if (val == NULL) {
+		fwupd_client_fixup_dbus_error (error);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* success */
+	g_task_return_boolean (task, TRUE);
+}
+
+/**
+ * fwupd_client_set_blocked_firmware_async:
+ * @self: A #FwupdClient
+ * @checksums: (element-type utf8): firmware checksums
+ * @cancellable: the #GCancellable, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
  *
  * Sets the list of blocked firmware.
  *
- * Returns: %TRUE for success
- *
- * Since: 1.4.6
+ * Since: 1.5.0
  **/
-gboolean
-fwupd_client_set_blocked_firmware (FwupdClient *self,
-				    gchar **checksums,
-				    GCancellable *cancellable,
-				    GError **error)
+void
+fwupd_client_set_blocked_firmware_async (FwupdClient *self,
+					 GPtrArray *checksums,
+					 GCancellable *cancellable,
+					 GAsyncReadyCallback callback,
+					 gpointer callback_data)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GVariant) val = NULL;
+	g_autoptr(GTask) task = NULL;
+	g_auto(GStrv) strv = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-	/* connect */
-	if (!fwupd_client_connect (self, cancellable, error))
-		return FALSE;
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
 
 	/* call into daemon */
-	val = g_dbus_proxy_call_sync (priv->proxy,
-				      "SetBlockedFirmware",
-				      g_variant_new ("(^as)", checksums),
-				      G_DBUS_CALL_FLAGS_NONE,
-				      -1,
-				      cancellable,
-				      error);
-	if (val == NULL) {
-		if (error != NULL)
-			fwupd_client_fixup_dbus_error (*error);
-		return FALSE;
+	task = g_task_new (self, cancellable, callback, callback_data);
+	strv = g_new0 (gchar *, checksums->len + 1);
+	for (guint i = 0; i < checksums->len; i++) {
+		const gchar *tmp = g_ptr_array_index (checksums, i);
+		strv[i] = g_strdup (tmp);
 	}
-	return TRUE;
+	g_dbus_proxy_call (priv->proxy, "SetBlockedFirmware",
+			   g_variant_new ("(^as)", strv),
+			   G_DBUS_CALL_FLAGS_NONE, -1,
+			   cancellable,
+			   fwupd_client_set_blocked_firmware_cb,
+			   g_steal_pointer (&task));
 }
 
 /**
- * fwupd_client_set_feature_flags:
+ * fwupd_client_set_blocked_firmware_finish:
+ * @self: A #FwupdClient
+ * @res: the #GAsyncResult
+ * @error: the #GError, or %NULL
+ *
+ * Gets the result of fwupd_client_set_blocked_firmware_async().
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fwupd_client_set_blocked_firmware_finish (FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
+	g_return_val_if_fail (g_task_is_valid (res, self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	return g_task_propagate_boolean (G_TASK(res), error);
+}
+
+static void
+fwupd_client_set_feature_flags_cb (GObject *source,
+				   GAsyncResult *res,
+				   gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK (user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	val = g_dbus_proxy_call_finish (G_DBUS_PROXY (source), res, &error);
+	if (val == NULL) {
+		fwupd_client_fixup_dbus_error (error);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* success */
+	g_task_return_boolean (task, TRUE);
+}
+
+/**
+ * fwupd_client_set_feature_flags_async:
  * @self: A #FwupdClient
  * @feature_flags: #FwupdFeatureFlags, e.g. %FWUPD_FEATURE_FLAG_UPDATE_TEXT
  * @cancellable: the #GCancellable, or %NULL
- * @error: the #GError, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
  *
  * Sets the features the client supports. This allows firmware to depend on
  * specific front-end features, for instance showing the user an image on
  * how to detach the hardware.
  *
- * Clients can call this none or multiple times.
- *
- * Returns: %TRUE for success
- *
- * Since: 1.4.5
+ * Since: 1.5.0
  **/
-gboolean
-fwupd_client_set_feature_flags (FwupdClient *self,
-				FwupdFeatureFlags feature_flags,
-				GCancellable *cancellable,
-				GError **error)
+void
+fwupd_client_set_feature_flags_async (FwupdClient *self,
+				      FwupdFeatureFlags feature_flags,
+				      GCancellable *cancellable,
+				      GAsyncReadyCallback callback,
+				      gpointer callback_data)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GVariant) val = NULL;
+	g_autoptr(GTask) task = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-	/* connect */
-	if (!fwupd_client_connect (self, cancellable, error))
-		return FALSE;
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
 
 	/* call into daemon */
-	val = g_dbus_proxy_call_sync (priv->proxy,
-				      "SetFeatureFlags",
-				      g_variant_new ("(t)", (guint64) feature_flags),
-				      G_DBUS_CALL_FLAGS_NONE,
-				      -1,
-				      cancellable,
-				      error);
-	if (val == NULL) {
-		if (error != NULL)
-			fwupd_client_fixup_dbus_error (*error);
-		return FALSE;
-	}
-	return TRUE;
+	task = g_task_new (self, cancellable, callback, callback_data);
+	g_dbus_proxy_call (priv->proxy, "SetFeatureFlags",
+			   g_variant_new ("(t)", (guint64) feature_flags),
+			   G_DBUS_CALL_FLAGS_NONE, -1,
+			   cancellable,
+			   fwupd_client_set_feature_flags_cb,
+			   g_steal_pointer (&task));
 }
 
 /**
- * fwupd_client_self_sign:
+ * fwupd_client_set_feature_flags_finish:
+ * @self: A #FwupdClient
+ * @res: the #GAsyncResult
+ * @error: the #GError, or %NULL
+ *
+ * Gets the result of fwupd_client_set_feature_flags_async().
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fwupd_client_set_feature_flags_finish (FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
+	g_return_val_if_fail (g_task_is_valid (res, self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	return g_task_propagate_boolean (G_TASK(res), error);
+}
+
+static void
+fwupd_client_self_sign_cb (GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	gchar *str = NULL;
+	g_autoptr(GTask) task = G_TASK (user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	val = g_dbus_proxy_call_finish (G_DBUS_PROXY (source), res, &error);
+	if (val == NULL) {
+		fwupd_client_fixup_dbus_error (error);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* success */
+	g_variant_get (val, "(s)", &str);
+	g_task_return_pointer (task,
+			       g_steal_pointer (&str),
+			       (GDestroyNotify) g_free);
+}
+
+/**
+ * fwupd_client_self_sign_async:
  * @self: A #FwupdClient
  * @value: A string to sign, typically a JSON blob
  * @flags: #FwupdSelfSignFlags, e.g. %FWUPD_SELF_SIGN_FLAG_ADD_TIMESTAMP
  * @cancellable: the #GCancellable, or %NULL
- * @error: the #GError, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
  *
  * Signs the data using the client self-signed certificate.
  *
- * Returns: %TRUE for success
+ * You must have called fwupd_client_connect_async() on @self before using
+ * this method.
  *
- * Since: 1.2.6
+ * Since: 1.5.0
  **/
-gchar *
-fwupd_client_self_sign (FwupdClient *self,
-			const gchar *value,
-			FwupdSelfSignFlags flags,
-			GCancellable *cancellable,
-			GError **error)
+void
+fwupd_client_self_sign_async (FwupdClient *self,
+			      const gchar *value,
+			      FwupdSelfSignFlags flags,
+			      GCancellable *cancellable,
+			      GAsyncReadyCallback callback,
+			      gpointer callback_data)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	GVariantBuilder builder;
-	g_autoptr(GVariant) val = NULL;
-	gchar *retval = NULL;
+	g_autoptr(GTask) task = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
-
-	/* connect */
-	if (!fwupd_client_connect (self, cancellable, error))
-		return NULL;
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (value != NULL);
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
 
 	/* set options */
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
@@ -2318,131 +3437,204 @@ fwupd_client_self_sign (FwupdClient *self,
 	}
 
 	/* call into daemon */
-	val = g_dbus_proxy_call_sync (priv->proxy,
-				      "SelfSign",
-				      g_variant_new ("(sa{sv})", value, &builder),
-				      G_DBUS_CALL_FLAGS_NONE,
-				      -1,
-				      cancellable,
-				      error);
-	if (val == NULL) {
-		if (error != NULL)
-			fwupd_client_fixup_dbus_error (*error);
-		return NULL;
-	}
-	g_variant_get (val, "(s)", &retval);
-	return retval;
+	task = g_task_new (self, cancellable, callback, callback_data);
+	g_dbus_proxy_call (priv->proxy,
+			   "SelfSign",
+			   g_variant_new ("(sa{sv})", value, &builder),
+			   G_DBUS_CALL_FLAGS_NONE,
+			   -1, cancellable,
+			   fwupd_client_self_sign_cb,
+			   g_steal_pointer (&task));
 }
 
 /**
- * fwupd_client_modify_remote:
+ * fwupd_client_self_sign_finish:
+ * @self: A #FwupdClient
+ * @res: the #GAsyncResult
+ * @error: the #GError, or %NULL
+ *
+ * Gets the result of fwupd_client_self_sign_async().
+ *
+ * Returns: a signature, or %NULL for failure
+ *
+ * Since: 1.5.0
+ **/
+gchar *
+fwupd_client_self_sign_finish (FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
+	g_return_val_if_fail (g_task_is_valid (res, self), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+	return g_task_propagate_pointer (G_TASK(res), error);
+}
+
+static void
+fwupd_client_modify_remote_cb (GObject *source,
+			       GAsyncResult *res,
+			       gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK (user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	val = g_dbus_proxy_call_finish (G_DBUS_PROXY (source), res, &error);
+	if (val == NULL) {
+		fwupd_client_fixup_dbus_error (error);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* success */
+	g_task_return_boolean (task, TRUE);
+}
+
+/**
+ * fwupd_client_modify_remote_async:
  * @self: A #FwupdClient
  * @remote_id: the remote ID, e.g. `lvfs-testing`
  * @key: the key, e.g. `Enabled`
  * @value: the key, e.g. `true`
  * @cancellable: the #GCancellable, or %NULL
- * @error: the #GError, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
  *
  * Modifies a system remote in a specific way.
  *
- * NOTE: User authentication may be required to complete this action.
- *
- * Returns: %TRUE for success
- *
- * Since: 0.9.8
+ * Since: 1.5.0
  **/
-gboolean
-fwupd_client_modify_remote (FwupdClient *self,
-			    const gchar *remote_id,
-			    const gchar *key,
-			    const gchar *value,
-			    GCancellable *cancellable,
-			    GError **error)
+void
+fwupd_client_modify_remote_async (FwupdClient *self,
+				  const gchar *remote_id,
+				  const gchar *key,
+				  const gchar *value,
+				  GCancellable *cancellable,
+				  GAsyncReadyCallback callback,
+				  gpointer callback_data)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GVariant) val = NULL;
+	g_autoptr(GTask) task = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
-	g_return_val_if_fail (remote_id != NULL, FALSE);
-	g_return_val_if_fail (key != NULL, FALSE);
-	g_return_val_if_fail (value != NULL, FALSE);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-	/* connect */
-	if (!fwupd_client_connect (self, cancellable, error))
-		return FALSE;
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (remote_id != NULL);
+	g_return_if_fail (key != NULL);
+	g_return_if_fail (value != NULL);
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
 
 	/* call into daemon */
-	val = g_dbus_proxy_call_sync (priv->proxy,
-				      "ModifyRemote",
-				      g_variant_new ("(sss)", remote_id, key, value),
-				      G_DBUS_CALL_FLAGS_NONE,
-				      -1,
-				      cancellable,
-				      error);
-	if (val == NULL) {
-		if (error != NULL)
-			fwupd_client_fixup_dbus_error (*error);
-		return FALSE;
-	}
-	return TRUE;
+	task = g_task_new (self, cancellable, callback, callback_data);
+	g_dbus_proxy_call (priv->proxy, "ModifyRemote",
+			   g_variant_new ("(sss)", remote_id, key, value),
+			   G_DBUS_CALL_FLAGS_NONE, -1,
+			   cancellable,
+			   fwupd_client_modify_remote_cb,
+			   g_steal_pointer (&task));
 }
 
 /**
- * fwupd_client_modify_device:
+ * fwupd_client_modify_remote_finish:
+ * @self: A #FwupdClient
+ * @res: the #GAsyncResult
+ * @error: the #GError, or %NULL
+ *
+ * Gets the result of fwupd_client_modify_remote_async().
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fwupd_client_modify_remote_finish (FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
+	g_return_val_if_fail (g_task_is_valid (res, self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	return g_task_propagate_boolean (G_TASK(res), error);
+}
+
+static void
+fwupd_client_modify_device_cb (GObject *source,
+			       GAsyncResult *res,
+			       gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK (user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	val = g_dbus_proxy_call_finish (G_DBUS_PROXY (source), res, &error);
+	if (val == NULL) {
+		fwupd_client_fixup_dbus_error (error);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* success */
+	g_task_return_boolean (task, TRUE);
+}
+
+/**
+ * fwupd_client_modify_device_async:
  * @self: A #FwupdClient
  * @device_id: the device ID
  * @key: the key, e.g. `Flags`
  * @value: the key, e.g. `reported`
  * @cancellable: the #GCancellable, or %NULL
- * @error: the #GError, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
  *
  * Modifies a device in a specific way. Not all properties on the #FwupdDevice
  * are settable by the client, and some may have other restrictions on @value.
  *
- * NOTE: User authentication may be required to complete this action.
+ * Since: 1.5.0
+ **/
+void
+fwupd_client_modify_device_async (FwupdClient *self,
+				  const gchar *device_id,
+				  const gchar *key,
+				  const gchar *value,
+				  GCancellable *cancellable,
+				  GAsyncReadyCallback callback,
+				  gpointer callback_data)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GTask) task = NULL;
+
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (device_id != NULL);
+	g_return_if_fail (key != NULL);
+	g_return_if_fail (value != NULL);
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
+
+	/* call into daemon */
+	task = g_task_new (self, cancellable, callback, callback_data);
+	g_dbus_proxy_call (priv->proxy, "ModifyDevice",
+			   g_variant_new ("(sss)", device_id, key, value),
+			   G_DBUS_CALL_FLAGS_NONE, -1,
+			   cancellable,
+			   fwupd_client_modify_device_cb,
+			   g_steal_pointer (&task));
+}
+
+/**
+ * fwupd_client_modify_device_finish:
+ * @self: A #FwupdClient
+ * @res: the #GAsyncResult
+ * @error: the #GError, or %NULL
+ *
+ * Gets the result of fwupd_client_modify_device_async().
  *
  * Returns: %TRUE for success
  *
- * Since: 1.0.4
+ * Since: 1.5.0
  **/
 gboolean
-fwupd_client_modify_device (FwupdClient *self,
-			    const gchar *remote_id,
-			    const gchar *key,
-			    const gchar *value,
-			    GCancellable *cancellable,
-			    GError **error)
+fwupd_client_modify_device_finish (FwupdClient *self, GAsyncResult *res, GError **error)
 {
-	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GVariant) val = NULL;
-
 	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
-	g_return_val_if_fail (remote_id != NULL, FALSE);
-	g_return_val_if_fail (key != NULL, FALSE);
-	g_return_val_if_fail (value != NULL, FALSE);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
+	g_return_val_if_fail (g_task_is_valid (res, self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-	/* connect */
-	if (!fwupd_client_connect (self, cancellable, error))
-		return FALSE;
-
-	/* call into daemon */
-	val = g_dbus_proxy_call_sync (priv->proxy,
-				      "ModifyDevice",
-				      g_variant_new ("(sss)", remote_id, key, value),
-				      G_DBUS_CALL_FLAGS_NONE,
-				      -1,
-				      cancellable,
-				      error);
-	if (val == NULL) {
-		if (error != NULL)
-			fwupd_client_fixup_dbus_error (*error);
-		return FALSE;
-	}
-	return TRUE;
+	return g_task_propagate_boolean (G_TASK(res), error);
 }
 
 static FwupdRemote *
@@ -2456,49 +3648,93 @@ fwupd_client_get_remote_by_id_noref (GPtrArray *remotes, const gchar *remote_id)
 	return NULL;
 }
 
-/**
- * fwupd_client_get_remote_by_id:
- * @self: A #FwupdClient
- * @remote_id: the remote ID, e.g. `lvfs-testing`
- * @cancellable: the #GCancellable, or %NULL
- * @error: the #GError, or %NULL
- *
- * Gets a specific remote that has been configured for the system.
- *
- * Returns: (transfer full): a #FwupdRemote, or %NULL if not found
- *
- * Since: 0.9.3
- **/
-FwupdRemote *
-fwupd_client_get_remote_by_id (FwupdClient *self,
-			       const gchar *remote_id,
-			       GCancellable *cancellable,
-			       GError **error)
+static void
+fwupd_client_get_remote_by_id_cb (GObject *source,
+				  GAsyncResult *res,
+				  gpointer user_data)
 {
-	FwupdRemote *remote;
+	FwupdRemote *remote_tmp;
+	g_autoptr(GTask) task = G_TASK (user_data);
+	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) remotes = NULL;
+	const gchar *remote_id = g_task_get_task_data (task);
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
-	g_return_val_if_fail (remote_id != NULL, NULL);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+	remotes = fwupd_client_get_remotes_finish (FWUPD_CLIENT (source), res, &error);
+	if (remotes == NULL) {
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
 
-	/* find remote in list */
-	remotes = fwupd_client_get_remotes (self, cancellable, error);
-	if (remotes == NULL)
-		return NULL;
-	remote = fwupd_client_get_remote_by_id_noref (remotes, remote_id);
-	if (remote == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_FOUND,
-			     "No remote '%s' found in search paths",
-			     remote_id);
-		return NULL;
+	remote_tmp = fwupd_client_get_remote_by_id_noref (remotes, remote_id);
+	if (remote_tmp == NULL) {
+		g_task_return_new_error (task,
+					 FWUPD_ERROR,
+					 FWUPD_ERROR_NOT_FOUND,
+					 "no remote '%s' found in search paths",
+					 remote_id);
+		return;
 	}
 
 	/* success */
-	return g_object_ref (remote);
+	g_task_return_pointer (task,
+			       g_object_ref (remote_tmp),
+			       (GDestroyNotify) g_object_unref);
+}
+
+/**
+ * fwupd_client_get_remote_by_id_async:
+ * @self: A #FwupdClient
+ * @remote_id: the remote ID, e.g. `lvfs-testing`
+ * @cancellable: the #GCancellable, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
+ *
+ * Gets a specific remote that has been configured for the system.
+ *
+ * Since: 1.5.0
+ **/
+void
+fwupd_client_get_remote_by_id_async (FwupdClient *self,
+				     const gchar *remote_id,
+				     GCancellable *cancellable,
+				     GAsyncReadyCallback callback,
+				     gpointer callback_data)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GTask) task = NULL;
+
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (remote_id != NULL);
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
+
+	/* call into daemon */
+	task = g_task_new (self, cancellable, callback, callback_data);
+	g_task_set_task_data (task, g_strdup (remote_id), g_free);
+	fwupd_client_get_remotes_async (self, cancellable,
+					fwupd_client_get_remote_by_id_cb,
+					g_steal_pointer (&task));
+}
+
+/**
+ * fwupd_client_get_remote_by_id_finish:
+ * @self: A #FwupdClient
+ * @res: the #GAsyncResult
+ * @error: the #GError, or %NULL
+ *
+ * Gets the result of fwupd_client_get_remote_by_id_async().
+ *
+ * Returns: (transfer full): a #FwupdRemote, or %NULL if not found
+ *
+ * Since: 1.5.0
+ **/
+FwupdRemote *
+fwupd_client_get_remote_by_id_finish (FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
+	g_return_val_if_fail (g_task_is_valid (res, self), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+	return g_task_propagate_pointer (G_TASK(res), error);
 }
 
 /**
@@ -2569,7 +3805,6 @@ fwupd_client_set_user_agent_for_package (FwupdClient *self,
 	priv->user_agent = g_string_free (str, FALSE);
 }
 
-
 static void
 fwupd_client_download_chunk_cb (SoupMessage *msg, SoupBuffer *chunk, gpointer user_data)
 {
@@ -2598,126 +3833,246 @@ fwupd_client_download_chunk_cb (SoupMessage *msg, SoupBuffer *chunk, gpointer us
 	fwupd_client_set_percentage (self, percentage);
 }
 
+static void
+fwupd_client_read_bytes_cb (GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(GBytes) bytes = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GTask) task = G_TASK (user_data);
+
+	bytes = fwupd_input_stream_read_bytes_finish (G_INPUT_STREAM (source), res, &error);
+	if (bytes == NULL) {
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* success */
+	g_task_return_pointer (task,
+			       g_steal_pointer (&bytes),
+			       (GDestroyNotify) g_bytes_unref);
+}
+
+static void
+fwupd_client_download_bytes_cb (GObject *source,
+				GAsyncResult *res,
+				gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK (user_data);
+	FwupdClient *self = g_task_get_source_object (task);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	GCancellable *cancellable = g_task_get_cancellable (task);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GInputStream) istr = NULL;
+	guint status_code = 0;
+	SoupMessage *msg = g_task_get_task_data (task);
+
+	/* get the result */
+	istr = soup_session_send_finish (priv->soup_session, res, &error);
+	if (istr == NULL) {
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* check the input stream before reading the data */
+	g_object_get (msg, "status-code", &status_code, NULL);
+	g_debug ("status-code was %u", status_code);
+	if (status_code == 429) {
+		g_task_return_new_error (task,
+					 FWUPD_ERROR,
+					 FWUPD_ERROR_INVALID_FILE,
+					 "Failed to download due to server limit");
+		return;
+	}
+	if (status_code != SOUP_STATUS_OK) {
+		g_task_return_new_error (task,
+					 FWUPD_ERROR,
+					 FWUPD_ERROR_INVALID_FILE,
+					 "Failed to download: %s",
+					 soup_status_get_phrase (status_code));
+		return;
+	}
+
+	/* read the input stream into a GBytes, async */
+	fwupd_input_stream_read_bytes_async (istr, cancellable,
+					     fwupd_client_read_bytes_cb,
+					     g_steal_pointer (&task));
+}
+
 /**
- * fwupd_client_download_bytes:
+ * fwupd_client_download_bytes_async:
  * @self: A #FwupdClient
  * @url: the remote URL
  * @flags: #FwupdClientDownloadFlags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_NONE
  * @cancellable: the #GCancellable, or %NULL
- * @error: the #GError, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
  *
  * Downloads data from a remote server. The fwupd_client_set_user_agent() function
  * should be called before this method is used.
  *
- * Returns: (transfer full): downloaded data, or %NULL for error
+ * You must have called fwupd_client_connect_async() on @self before using
+ * this method.
  *
- * Since: 1.4.5
+ * Since: 1.5.0
  **/
-GBytes *
-fwupd_client_download_bytes (FwupdClient *self,
-			     const gchar *url,
-			     FwupdClientDownloadFlags flags,
-			     GCancellable *cancellable,
-			     GError **error)
+void
+fwupd_client_download_bytes_async (FwupdClient *self,
+				   const gchar *url,
+				   FwupdClientDownloadFlags flags,
+				   GCancellable *cancellable,
+				   GAsyncReadyCallback callback,
+				   gpointer callback_data)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	guint status_code;
+	g_autoptr(GTask) task = NULL;
 	g_autoptr(SoupMessage) msg = NULL;
 	g_autoptr(SoupURI) uri = NULL;
+	g_autoptr(GError) error = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
-	g_return_val_if_fail (url != NULL, NULL);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (url != NULL);
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
 
 	/* ensure networking set up */
-	if (!fwupd_client_ensure_networking (self, error))
-		return NULL;
+	task = g_task_new (self, cancellable, callback, callback_data);
+	if (!fwupd_client_ensure_networking (self, &error)) {
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
 
 	/* download data */
 	g_debug ("downloading %s", url);
 	uri = soup_uri_new (url);
 	msg = soup_message_new_from_uri (SOUP_METHOD_GET, uri);
 	if (msg == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "Failed to parse URI %s", url);
-		return NULL;
+		g_task_return_new_error (task,
+					 FWUPD_ERROR,
+					 FWUPD_ERROR_INVALID_FILE,
+					 "Failed to parse URI %s", url);
+		return;
 	}
 	g_signal_connect (msg, "got-chunk",
 			  G_CALLBACK (fwupd_client_download_chunk_cb),
 			  self);
-	status_code = soup_session_send_message (priv->soup_session, msg);
+	g_task_set_task_data (task, g_object_ref (msg), (GDestroyNotify) g_object_unref);
 	fwupd_client_set_status (self, FWUPD_STATUS_IDLE);
-	if (status_code == 429) {
-		g_autofree gchar *str = g_strndup (msg->response_body->data,
-						   msg->response_body->length);
-		if (g_strcmp0 (str, "Too Many Requests") == 0) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "Failed to download due to server limit");
-			return NULL;
-		}
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "Failed to download due to server limit: %s", str);
-		return NULL;
-	}
-	if (status_code != SOUP_STATUS_OK) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "Failed to download %s: %s",
-			     url, soup_status_get_phrase (status_code));
-		return NULL;
-	}
-
-	/* success */
-	return g_bytes_new (msg->response_body->data, msg->response_body->length);
+	soup_session_send_async (priv->soup_session, msg,
+				 cancellable,
+				 fwupd_client_download_bytes_cb,
+				 g_steal_pointer (&task));
 }
 
 /**
- * fwupd_client_upload_bytes:
+ * fwupd_client_download_bytes_finish:
+ * @self: A #FwupdClient
+ * @res: the #GAsyncResult
+ * @error: the #GError, or %NULL
+ *
+ * Gets the result of fwupd_client_download_bytes_async().
+ *
+ * Returns: (transfer full): downloaded data, or %NULL for error
+ *
+ * Since: 1.5.0
+ **/
+GBytes *
+fwupd_client_download_bytes_finish (FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
+	g_return_val_if_fail (g_task_is_valid (res, self), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+	return g_task_propagate_pointer (G_TASK(res), error);
+}
+
+static void
+fwupd_client_upload_bytes_cb (GObject *source,
+			      GAsyncResult *res,
+			      gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK (user_data);
+	FwupdClient *self = g_task_get_source_object (task);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	GCancellable *cancellable = g_task_get_cancellable (task);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GInputStream) istr = NULL;
+	guint status_code;
+	SoupMessage *msg = g_task_get_task_data (task);
+
+	/* get the result */
+	istr = soup_session_send_finish (priv->soup_session, res, &error);
+	if (istr == NULL) {
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* check the input stream before reading the data */
+	g_object_get (msg, "status-code", &status_code, NULL);
+	g_debug ("status-code was %u", status_code);
+	if (!SOUP_STATUS_IS_SUCCESSFUL (status_code)) {
+		g_task_return_new_error (task,
+					 FWUPD_ERROR,
+					 FWUPD_ERROR_INVALID_FILE,
+					 "Failed to download: %s",
+					 soup_status_get_phrase (status_code));
+		return;
+	}
+
+	/* read the input stream into a GBytes, async */
+	fwupd_input_stream_read_bytes_async (istr, cancellable,
+					     fwupd_client_read_bytes_cb,
+					     g_steal_pointer (&task));
+}
+
+/**
+ * fwupd_client_upload_bytes_async:
  * @self: A #FwupdClient
  * @url: the remote URL
  * @payload: payload string
  * @signature: (nullable): signature string
  * @flags: #FwupdClientDownloadFlags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_NONE
  * @cancellable: the #GCancellable, or %NULL
- * @error: the #GError, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
  *
  * Uploads data to a remote server. The fwupd_client_set_user_agent() function
  * should be called before this method is used.
  *
- * Returns: (transfer full): downloaded data, or %NULL for error
+ * You must have called fwupd_client_connect_async() on @self before using
+ * this method.
  *
- * Since: 1.4.5
+ * Since: 1.5.0
  **/
-GBytes *
-fwupd_client_upload_bytes (FwupdClient *self,
-			   const gchar *url,
-			   const gchar *payload,
-			   const gchar *signature,
-			   FwupdClientUploadFlags flags,
-			   GCancellable *cancellable,
-			   GError **error)
+void
+fwupd_client_upload_bytes_async (FwupdClient *self,
+				 const gchar *url,
+				 const gchar *payload,
+				 const gchar *signature,
+				 FwupdClientUploadFlags flags,
+				 GCancellable *cancellable,
+				 GAsyncReadyCallback callback,
+				 gpointer callback_data)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	guint status_code;
+	g_autoptr(GTask) task = NULL;
 	g_autoptr(SoupMessage) msg = NULL;
 	g_autoptr(SoupURI) uri = NULL;
+	g_autoptr(GError) error = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
-	g_return_val_if_fail (url != NULL, NULL);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (url != NULL);
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
 
 	/* ensure networking set up */
-	if (!fwupd_client_ensure_networking (self, error))
-		return NULL;
+	task = g_task_new (self, cancellable, callback, callback_data);
+	if (!fwupd_client_ensure_networking (self, &error)) {
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* download data */
+	g_debug ("downloading %s", url);
+	uri = soup_uri_new (url);
 
 	/* build message */
 	if ((flags & FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART) > 0 ||
@@ -2736,28 +4091,43 @@ fwupd_client_upload_bytes (FwupdClient *self,
 
 	/* POST request */
 	if (msg == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "Failed to parse URI %s", url);
-		return NULL;
+		g_task_return_new_error (task,
+					 FWUPD_ERROR,
+					 FWUPD_ERROR_INVALID_FILE,
+					 "Failed to parse URI %s", url);
+		return;
 	}
+	g_signal_connect (msg, "got-chunk",
+			  G_CALLBACK (fwupd_client_download_chunk_cb),
+			  self);
+	g_task_set_task_data (task, g_object_ref (msg), (GDestroyNotify) g_object_unref);
+	fwupd_client_set_status (self, FWUPD_STATUS_IDLE);
 	g_debug ("uploading to %s", url);
-	status_code = soup_session_send_message (priv->soup_session, msg);
-	g_debug ("server returned: %s", msg->response_body->data);
+	soup_session_send_async (priv->soup_session, msg,
+				 cancellable,
+				 fwupd_client_upload_bytes_cb,
+				 g_steal_pointer (&task));
+}
 
-	/* fall back to HTTP status codes in case the server is offline */
-	if (!SOUP_STATUS_IS_SUCCESSFUL (status_code)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "Failed to upllooad to %s: %s",
-			     url, soup_status_get_phrase (status_code));
-		return NULL;
-	}
-
-	/* success */
-	return g_bytes_new (msg->response_body->data, msg->response_body->length);
+/**
+ * fwupd_client_upload_bytes_finish:
+ * @self: A #FwupdClient
+ * @res: the #GAsyncResult
+ * @error: the #GError, or %NULL
+ *
+ * Gets the result of fwupd_client_upload_bytes_async().
+ *
+ * Returns: (transfer full): response data, or %NULL for error
+ *
+ * Since: 1.5.0
+ **/
+GBytes *
+fwupd_client_upload_bytes_finish (FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
+	g_return_val_if_fail (g_task_is_valid (res, self), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+	return g_task_propagate_pointer (G_TASK(res), error);
 }
 
 static void
