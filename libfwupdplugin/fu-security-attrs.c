@@ -67,7 +67,7 @@ fu_security_attrs_append (FuSecurityAttrs *self, FwupdSecurityAttr *attr)
 	/* sanity check, and correctly prefix the URLs with the current mirror */
 	if (fwupd_security_attr_get_url (attr) == NULL) {
 		g_autofree gchar *url = NULL;
-		url = g_strdup_printf ("%s%s",
+		url = g_strdup_printf ("%s#%s",
 				       FWUPD_SECURITY_ATTR_ID_DOC_URL,
 				       fwupd_security_attr_get_appstream_id (attr));
 		fwupd_security_attr_set_url (attr, url);
