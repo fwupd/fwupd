@@ -56,7 +56,9 @@ override_dh_install:
 	if [ -d debian/tmp/usr/libexec/fwupd/efi/ ]; then \
 		dh_install -pfwupd usr/libexec/fwupd/efi ;\
 	fi
-	dh_missing -a --fail-missing
+	if [ -z "$$CI" ]; then \
+		dh_missing -a --fail-missing; \
+	fi
 
 	#this is placed in fwupd-tests
 	rm -f debian/fwupd/usr/lib/*/fwupd-plugins-3/libfu_plugin_test.so
