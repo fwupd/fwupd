@@ -1,14 +1,12 @@
-FROM fedora:31
+FROM fedora:32
 %%%OS%%%
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 RUN echo fubar > /etc/machine-id
 RUN dnf -y update
-RUN dnf -y install https://kojipkgs.fedoraproject.org//packages/pesign/113/12.fc31/x86_64/pesign-113-12.fc31.x86_64.rpm
 RUN echo fubar > /etc/machine-id
 %%%INSTALL_DEPENDENCIES_COMMAND%%%
-RUN dnf -y update glib2 glib2-devel --releasever=32
 RUN mkdir /build
 WORKDIR /build
 COPY . .
