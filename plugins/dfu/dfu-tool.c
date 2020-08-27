@@ -47,7 +47,8 @@ dfu_tool_private_free (DfuToolPrivate *priv)
 	if (priv == NULL)
 		return;
 	g_free (priv->device_vid_pid);
-	g_object_unref (priv->cancellable);
+	if (priv->cancellable != NULL)
+		g_object_unref (priv->cancellable);
 	g_object_unref (priv->quirks);
 	if (priv->cmd_array != NULL)
 		g_ptr_array_unref (priv->cmd_array);
