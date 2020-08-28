@@ -1,7 +1,6 @@
-installed_test_datadir = join_paths(datadir, 'installed-tests', 'fwupd')
-
 con2 = configuration_data()
 con2.set('installedtestsdir', installed_test_datadir)
+con2.set('installedtestsbindir', installed_test_bindir)
 con2.set('bindir', bindir)
 
 configure_file(
@@ -12,11 +11,25 @@ configure_file(
   install_dir: installed_test_datadir,
 )
 
+configure_file(
+  input : 'fwupd.test.in',
+  output : 'fwupd.test',
+  configuration : con2,
+  install: true,
+  install_dir: installed_test_datadir,
+)
+
 install_data([
     'fwupdmgr.sh',
     'fwupd-tests.xml',
   ],
   install_dir : installed_test_datadir,
+)
+
+install_data([
+    'fwupd.sh',
+  ],
+  install_dir : installed_test_bindir,
 )
 
 custom_target('installed-cab123',

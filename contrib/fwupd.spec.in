@@ -162,7 +162,6 @@ Files for development with %{name}.
 
 %package tests
 Summary: Data files for installed tests
-BuildArch: noarch
 
 %description tests
 Data files for installed tests.
@@ -229,6 +228,9 @@ Data files for installed tests.
 %meson_build
 
 %if 0%{?enable_tests}
+%if 0%{?enable_ci}
+    ./contrib/ci/get_test_firmware.sh
+%endif
 %check
 %meson_test
 %endif
@@ -453,6 +455,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_datadir}/installed-tests/fwupd/*.test
 %{_datadir}/installed-tests/fwupd/*.cab
 %{_datadir}/installed-tests/fwupd/*.sh
+%{_libexecdir}/installed-tests/fwupd/*
 %dir %{_sysconfdir}/fwupd/remotes.d
 %config(noreplace)%{_sysconfdir}/fwupd/remotes.d/fwupd-tests.conf
 

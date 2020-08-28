@@ -111,8 +111,9 @@ if get_option('man')
 endif
 
 if get_option('tests')
-  testdatadir = join_paths(meson.current_source_dir(), 'tests')
-  cargs += '-DTESTDATADIR="' + testdatadir + '"'
+  testdatadirs = environment()
+  testdatadirs.set('G_TEST_SRCDIR', meson.current_source_dir())
+  testdatadirs.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'dfu-self-test',
     fu_hash,
@@ -136,9 +137,10 @@ if get_option('tests')
       fwupd,
       fwupdplugin,
     ],
-    c_args : cargs
+    install : true,
+    install_dir : installed_test_bindir,
   )
-  test('dfu-self-test', e)
+  test('dfu-self-test', e, env : testdatadirs)  # added to installed-tests
 endif
 
 plugindfu_incdir = include_directories('.')

@@ -53,7 +53,9 @@ if get_option('tests')
       fwupd,
       fwupdplugin,
     ],
-    c_args : cargs
+    c_args : cargs,
+    install : true,
+    install_dir : installed_test_bindir,
   )
-  test('redfish-self-test', e)
+  test('redfish-self-test', e)  # added to installed-tests
 endif

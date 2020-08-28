@@ -53,15 +53,17 @@ static void
 fu_plugin_synaptics_mst_none_func (void)
 {
 	gboolean ret;
+	const gchar *ci = g_getenv ("CI_NETWORK");
 	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	g_autofree gchar *pluginfn = NULL;
+	g_autofree gchar *filename = NULL;
 
 	g_signal_connect (plugin, "device-added",
 			  G_CALLBACK (_plugin_device_added_cb),
 			  &devices);
-	pluginfn = g_build_filename (PLUGINBUILDDIR,
+	pluginfn = g_test_build_filename (G_TEST_BUILT,
 				     "libfu_plugin_synaptics_mst." G_MODULE_SUFFIX,
 				     NULL);
 	ret = fu_plugin_open (plugin, pluginfn, &error);
@@ -75,7 +77,12 @@ fu_plugin_synaptics_mst_none_func (void)
 	g_assert_no_error (error);
 	g_assert (ret);
 
-	_test_add_fake_devices_from_dir (plugin, SOURCEDIR "/tests/no_devices");
+	filename = g_test_build_filename (G_TEST_DIST, "tests", "no_devices", NULL);
+	if (!g_file_test (filename, G_FILE_TEST_EXISTS) && ci == NULL) {
+		g_test_skip ("Missing no_devices");
+		return;
+	}
+	_test_add_fake_devices_from_dir (plugin, filename);
 	g_assert_cmpint (devices->len, ==, 0);
 }
 
@@ -84,15 +91,17 @@ static void
 fu_plugin_synaptics_mst_tb16_func (void)
 {
 	gboolean ret;
+	const gchar *ci = g_getenv ("CI_NETWORK");
 	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	g_autofree gchar *pluginfn = NULL;
+	g_autofree gchar *filename = NULL;
 
 	g_signal_connect (plugin, "device-added",
 			  G_CALLBACK (_plugin_device_added_cb),
 			  &devices);
-	pluginfn = g_build_filename (PLUGINBUILDDIR,
+	pluginfn = g_test_build_filename (G_TEST_BUILT,
 				     "libfu_plugin_synaptics_mst." G_MODULE_SUFFIX,
 				     NULL);
 	ret = fu_plugin_open (plugin, pluginfn, &error);
@@ -106,7 +115,12 @@ fu_plugin_synaptics_mst_tb16_func (void)
 	g_assert_no_error (error);
 	g_assert (ret);
 
-	_test_add_fake_devices_from_dir (plugin, SOURCEDIR "/tests/tb16_dock");
+	filename = g_test_build_filename (G_TEST_DIST, "tests", "tb16_dock", NULL);
+	if (!g_file_test (filename, G_FILE_TEST_EXISTS) && ci == NULL) {
+		g_test_skip ("Missing tb16_dock");
+		return;
+	}
+	_test_add_fake_devices_from_dir (plugin, filename);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index (devices, i);
 		g_autofree gchar *tmp = fu_device_to_string (device);

@@ -14,6 +14,7 @@
 static void
 fu_test_tpm_eventlog_parse_v1_func (void)
 {
+	const gchar *ci = g_getenv ("CI_NETWORK");
 	const gchar *tmp;
 	gboolean ret;
 	gsize bufsz = 0;
@@ -24,7 +25,11 @@ fu_test_tpm_eventlog_parse_v1_func (void)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) pcr0s = NULL;
 
-	fn = g_build_filename (TESTDATADIR, "binary_bios_measurements-v1", NULL);
+	fn = g_test_build_filename (G_TEST_DIST, "tests", "binary_bios_measurements-v1", NULL);
+	if (!g_file_test (fn, G_FILE_TEST_EXISTS) && ci == NULL) {
+		g_test_skip ("Missing binary_bios_measurements-v1");
+		return;
+	}
 	ret = g_file_get_contents (fn, (gchar **) &buf, &bufsz, &error);
 	g_assert_no_error (error);
 	g_assert_true (ret);
@@ -48,6 +53,7 @@ fu_test_tpm_eventlog_parse_v1_func (void)
 static void
 fu_test_tpm_eventlog_parse_v2_func (void)
 {
+	const gchar *ci = g_getenv ("CI_NETWORK");
 	const gchar *tmp;
 	gboolean ret;
 	gsize bufsz = 0;
@@ -58,7 +64,11 @@ fu_test_tpm_eventlog_parse_v2_func (void)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) pcr0s = NULL;
 
-	fn = g_build_filename (TESTDATADIR, "binary_bios_measurements-v2", NULL);
+	fn = g_test_build_filename (G_TEST_DIST, "tests", "binary_bios_measurements-v2", NULL);
+	if (!g_file_test (fn, G_FILE_TEST_EXISTS) && ci == NULL) {
+		g_test_skip ("Missing binary_bios_measurements-v2");
+		return;
+	}
 	ret = g_file_get_contents (fn, (gchar **) &buf, &bufsz, &error);
 	g_assert_no_error (error);
 	g_assert_true (ret);

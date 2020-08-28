@@ -15,12 +15,17 @@
 static void
 fu_acpi_dmar_opt_in_func (void)
 {
+	const gchar *ci = g_getenv ("CI_NETWORK");
 	g_autoptr(FuAcpiDmar) dmar = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autofree gchar *fn = NULL;
 
-	fn = g_build_filename (TESTDATADIR, "DMAR", NULL);
+	fn = g_test_build_filename (G_TEST_DIST, "tests", "DMAR", NULL);
+	if (!g_file_test (fn, G_FILE_TEST_EXISTS) && ci == NULL) {
+		g_test_skip ("Missing DMAR");
+		return;
+	}
 	blob = fu_common_get_contents_bytes (fn, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (blob);
@@ -33,12 +38,17 @@ fu_acpi_dmar_opt_in_func (void)
 static void
 fu_acpi_dmar_opt_out_func (void)
 {
+	const gchar *ci = g_getenv ("CI_NETWORK");
 	g_autoptr(FuAcpiDmar) dmar = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autofree gchar *fn = NULL;
 
-	fn = g_build_filename (TESTDATADIR, "DMAR-OPTOUT", NULL);
+	fn = g_test_build_filename (G_TEST_DIST, "tests", "DMAR-OPTOUT", NULL);
+	if (!g_file_test (fn, G_FILE_TEST_EXISTS) && ci == NULL) {
+		g_test_skip ("Missing DMAR-OPTOUT");
+		return;
+	}
 	blob = fu_common_get_contents_bytes (fn, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (blob);

@@ -2,6 +2,13 @@
 set -e
 set -x
 
+#clone test firmware
+if [ "$CI_NETWORK" = "true" ]; then
+	./contrib/ci/get_test_firmware.sh
+	export G_TEST_SRCDIR=`pwd`/fwupd-test-firmware/installed-tests
+fi
+
+#build
 rm -rf build
 mkdir -p build
 cd build

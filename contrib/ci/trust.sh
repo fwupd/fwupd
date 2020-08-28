@@ -2,6 +2,12 @@
 set -e
 set -x
 
+#clone test firmware
+if [ "$CI_NETWORK" = "true" ]; then
+	./contrib/ci/get_test_firmware.sh
+	export G_TEST_SRCDIR=`pwd`/fwupd-test-firmware/installed-tests
+fi
+
 # Builds using GPG and PKCS7 turned off to make
 # sure no assumptions of a trust backend
 rm -rf build

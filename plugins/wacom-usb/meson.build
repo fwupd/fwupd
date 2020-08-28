@@ -33,8 +33,9 @@ shared_module('fu_plugin_wacom_usb',
 )
 
 if get_option('tests')
-  testdatadir = join_paths(meson.current_source_dir(), 'tests')
-  cargs += '-DTESTDATADIR="' + testdatadir + '"'
+  testdatadirs = environment()
+  testdatadirs.set('G_TEST_SRCDIR', meson.current_source_dir())
+  testdatadirs.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'wacom-usb-self-test',
     fu_hash,
@@ -59,7 +60,9 @@ if get_option('tests')
       fwupd,
       fwupdplugin,
     ],
-    c_args : cargs
+    c_args : cargs,
+    install : true,
+    install_dir : installed_test_bindir,
   )
-  test('wacom-usb-self-test', e)
+  test('wacom-usb-self-test', e, env : testdatadirs)  # added to installed-tests
 endif

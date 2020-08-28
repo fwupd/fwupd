@@ -16,12 +16,18 @@ fu_nvme_cns_func (void)
 {
 	gboolean ret;
 	gsize sz;
+	const gchar *ci = g_getenv ("CI_NETWORK");
 	g_autofree gchar *data = NULL;
 	g_autofree gchar *path = NULL;
 	g_autoptr(FuNvmeDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
 
-	path = g_build_filename (TESTDATADIR, "TOSHIBA_THNSN5512GPU7.bin", NULL);
+	path = g_test_build_filename (G_TEST_DIST, "tests", "TOSHIBA_THNSN5512GPU7.bin", NULL);
+
+	if (!g_file_test (path, G_FILE_TEST_EXISTS) && ci == NULL) {
+		g_test_skip ("Missing TOSHIBA_THNSN5512GPU7.bin");
+		return;
+	}
 	ret = g_file_get_contents (path, &data, &sz, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -43,7 +49,7 @@ fu_nvme_cns_all_func (void)
 	g_autoptr(GDir) dir = NULL;
 
 	/* may or may not exist */
-	path = g_build_filename (TESTDATADIR, "blobs", NULL);
+	path = g_test_build_filename (G_TEST_DIST, "tests", "blobs", NULL);
 	if (!g_file_test (path, G_FILE_TEST_EXISTS))
 		return;
 	dir = g_dir_open (path, 0, NULL);
