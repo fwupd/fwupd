@@ -40,6 +40,12 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(PolkitSubject, g_object_unref)
 #pragma clang diagnostic pop
 #endif
 
+typedef enum {
+	FU_MAIN_MACHINE_KIND_PHYSICAL,
+	FU_MAIN_MACHINE_KIND_VIRTUAL,
+	FU_MAIN_MACHINE_KIND_CONTAINER,
+} FuMainMachineKind;
+
 typedef struct {
 	GDBusConnection		*connection;
 	GDBusNodeInfo		*introspection_daemon;
@@ -55,6 +61,7 @@ typedef struct {
 	FuEngine		*engine;
 	gboolean		 update_in_progress;
 	gboolean		 pending_sigterm;
+	FuMainMachineKind	 machine_kind;
 } FuMainPrivate;
 
 static gboolean
@@ -1105,6 +1112,13 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 	if (g_strcmp0 (method_name, "GetHostSecurityAttrs") == 0) {
 		g_autoptr(FuSecurityAttrs) attrs = NULL;
 		g_debug ("Called %s()", method_name);
+		if (priv->machine_kind != FU_MAIN_MACHINE_KIND_PHYSICAL) {
+			g_dbus_method_invocation_return_error_literal (invocation,
+								       FWUPD_ERROR,
+								       FWUPD_ERROR_NOT_SUPPORTED,
+								       "HSI unavailable for hypervisor");
+			return;
+		}
 		attrs = fu_engine_get_host_security_attrs (priv->engine);
 		val = fu_security_attrs_to_variant (attrs);
 		g_dbus_method_invocation_return_value (invocation, val);
@@ -1662,6 +1676,30 @@ fu_main_load_introspection (const gchar *filename, GError **error)
 	return g_dbus_node_info_new_for_xml (g_bytes_get_data (data, NULL), error);
 }
 
+static gboolean
+fu_main_is_hypervisor (void)
+{
+	g_autofree gchar *buf = NULL;
+	gsize bufsz = 0;
+	if (!g_file_get_contents ("/proc/cpuinfo", &buf, &bufsz, NULL))
+		return FALSE;
+	return g_strstr_len (buf, (gssize) bufsz, "hypervisor") != NULL;
+}
+
+static gboolean
+fu_main_is_container (void)
+{
+	g_autofree gchar *buf = NULL;
+	gsize bufsz = 0;
+	if (!g_file_get_contents ("/proc/1/cgroup", &buf, &bufsz, NULL))
+		return FALSE;
+	if (g_strstr_len (buf, (gssize) bufsz, "docker") != NULL)
+		return TRUE;
+	if (g_strstr_len (buf, (gssize) bufsz, "lxc") != NULL)
+		return TRUE;
+	return FALSE;
+}
+
 static void
 fu_main_private_free (FuMainPrivate *priv)
 {
@@ -1793,6 +1831,13 @@ main (int argc, char *argv[])
 	if (priv->authority == NULL) {
 		g_printerr ("Failed to load authority: %s\n", error->message);
 		return EXIT_FAILURE;
+	}
+
+	/* are we a VM? */
+	if (fu_main_is_hypervisor ()) {
+		priv->machine_kind = FU_MAIN_MACHINE_KIND_VIRTUAL;
+	} else if (fu_main_is_container ()) {
+		priv->machine_kind = FU_MAIN_MACHINE_KIND_CONTAINER;
 	}
 
 	/* own the object */
