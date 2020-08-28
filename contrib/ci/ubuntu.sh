@@ -9,6 +9,7 @@ if [ "$CI_NETWORK" = "true" ]; then
 fi
 
 #evaluate using Ubuntu's buildflags
+#evaluate using Debian/Ubuntu's buildflags
 eval "$(dpkg-buildflags --export=sh)"
 #filter out -Bsymbolic-functions
 export LDFLAGS=$(dpkg-buildflags --get LDFLAGS | sed "s/-Wl,-Bsymbolic-functions\s//")
