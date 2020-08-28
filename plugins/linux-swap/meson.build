@@ -43,6 +43,8 @@ if get_option('tests')
       fwupd,
       fwupdplugin,
     ],
+    install : true,
+    install_dir : installed_test_bindir,
   )
-  test('linux-swap-self-test', e)
+  test('linux-swap-self-test', e)  # added to installed-tests
 endif

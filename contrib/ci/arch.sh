@@ -3,6 +3,12 @@ set -e
 set -x
 shopt -s extglob
 
+#clone test firmware
+if [ "$CI_NETWORK" = "true" ]; then
+	./contrib/ci/get_test_firmware.sh
+	export G_TEST_SRCDIR=`pwd`/fwupd-test-firmware/installed-tests
+fi
+
 # prepare the build tree
 rm -rf build
 mkdir build && pushd build

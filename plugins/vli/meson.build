@@ -44,8 +44,6 @@ shared_module('fu_plugin_vli',
 )
 
 if get_option('tests')
-  testdatadir = join_paths(meson.current_source_dir(), 'data')
-  cargs += '-DTESTDATADIR="' + testdatadir + '"'
   e = executable(
     'vli-self-test',
     fu_hash,
@@ -65,7 +63,9 @@ if get_option('tests')
       fwupd,
       fwupdplugin,
     ],
-    c_args : cargs
+    c_args : cargs,
+    install : true,
+    install_dir : installed_test_bindir,
   )
-  test('vli-self-test', e)
+  test('vli-self-test', e)  # added to installed-tests
 endif

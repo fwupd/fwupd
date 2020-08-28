@@ -2,6 +2,7 @@ FROM archlinux/base
 %%%OS%%%
 ENV LANG en_US.UTF-8
 ENV LC_ALL en_US.UTF-8
+ENV CI_NETWORK true
 RUN echo fubar > /etc/machine-id
 RUN rm /usr/share/libalpm/hooks/package-cleanup.hook
 RUN echo fubar > /etc/machine-id

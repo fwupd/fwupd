@@ -2,4 +2,6 @@
 set -e
 sed "s,^DisabledPlugins=.*,DisabledPlugins=," -i /etc/fwupd/daemon.conf
 sed "s,^VerboseDomains=.*,VerboseDomains=*,"  -i /etc/fwupd/daemon.conf
-gnome-desktop-testing-runner fwupd
+git clone https://github.com/fwupd/fwupd-test-firmware
+export G_TEST_SRCDIR=`pwd`/fwupd-test-firmware/installed-tests
+CI_NETWORK=true gnome-desktop-testing-runner fwupd
