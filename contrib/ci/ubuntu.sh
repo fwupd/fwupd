@@ -18,4 +18,6 @@ mkdir -p dist/docs
 cp build/docs/* dist/docs -R
 
 #run static analysis (these mostly won't be critical)
-ninja -C build scan-build -v
+if [ "$CC" = "clang" ]; then
+	ninja -C build scan-build -v
+fi
