@@ -27,6 +27,7 @@ sed s/quilt/native/ debian/source/format -i
 if [ -x /usr/lib/fwupd/fwupd ]; then
 	export DEB_BUILD_OPTIONS=nocheck
 fi
+
 #build the package
 EDITOR=/bin/true dch --create --package fwupd -v $VERSION "CI Build"
 debuild --no-lintian --preserve-envvar CI --preserve-envvar CC
