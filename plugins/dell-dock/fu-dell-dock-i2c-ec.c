@@ -301,8 +301,9 @@ fu_dell_dock_ec_write (FuDevice *device, gsize length, guint8 *data, GError **er
 static gboolean
 fu_dell_dock_is_valid_dock (FuDevice *device, GError **error)
 {
-	g_autoptr(GBytes) data = NULL;
 	const guint8 *result = NULL;
+	gsize sz = 0;
+	g_autoptr(GBytes) data = NULL;
 
 	g_return_val_if_fail (device != NULL, FALSE);
 
@@ -310,14 +311,25 @@ fu_dell_dock_is_valid_dock (FuDevice *device, GError **error)
 		g_prefix_error (error, "Failed to query dock type: ");
 		return FALSE;
 	}
-	result = g_bytes_get_data (data, NULL);
-
-	if (result == NULL || *result != EXPECTED_DOCK_TYPE) {
-		g_set_error_literal (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND,
+	result = g_bytes_get_data (data, &sz);
+	if (sz != 1) {
+		g_set_error_literal (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
 				     "No valid dock was found");
 		return FALSE;
 	}
-	return TRUE;
+
+	/* this will trigger setting up all the quirks */
+	if (result[0] == EXPECTED_DOCK_TYPE) {
+		fu_device_add_instance_id (device, DELL_DOCK_EC_INSTANCE_ID);
+		return TRUE;
+	}
+
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_SUPPORTED,
+		     "Invalid dock type: %x",
+		     *result);
+	return FALSE;
 }
 
 static gboolean
@@ -920,15 +932,6 @@ fu_dell_dock_ec_set_quirk_kv (FuDevice *device,
 }
 
 static gboolean
-fu_dell_dock_ec_probe (FuDevice *device, GError **error)
-{
-	/* this will trigger setting up all the quirks */
-	fu_device_add_instance_id (device, DELL_DOCK_EC_INSTANCE_ID);
-
-	return TRUE;
-}
-
-static gboolean
 fu_dell_dock_ec_query (FuDevice *device, GError **error)
 {
 	if (!fu_dell_dock_ec_get_dock_data (device, error))
@@ -976,10 +979,13 @@ fu_dell_dock_ec_setup (FuDevice *device, GError **error)
 static gboolean
 fu_dell_dock_ec_open (FuDevice *device, GError **error)
 {
+	FuDellDockEc *self = FU_DELL_DOCK_EC (device);
+
 	if (!fu_device_open (fu_device_get_proxy (device), error))
 		return FALSE;
-
-	return fu_dell_dock_is_valid_dock (device, error);
+	if (!self->data->dock_type)
+		return fu_dell_dock_is_valid_dock (device, error);
+	return TRUE;
 }
 
 static gboolean
@@ -1017,7 +1023,6 @@ fu_dell_dock_ec_class_init (FuDellDockEcClass *klass)
 	object_class->finalize = fu_dell_dock_ec_finalize;
 	klass_device->activate = fu_dell_dock_ec_activate;
 	klass_device->to_string = fu_dell_dock_ec_to_string;
-	klass_device->probe = fu_dell_dock_ec_probe;
 	klass_device->setup = fu_dell_dock_ec_setup;
 	klass_device->open = fu_dell_dock_ec_open;
 	klass_device->close = fu_dell_dock_ec_close;
