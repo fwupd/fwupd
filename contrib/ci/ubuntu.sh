@@ -8,7 +8,7 @@ eval "$(dpkg-buildflags --export=sh)"
 export LDFLAGS=$(dpkg-buildflags --get LDFLAGS | sed "s/-Wl,-Bsymbolic-functions\s//")
 
 rm -rf build
-meson build -Dman=false -Dgtkdoc=true
+meson build -Dman=false -Dgtkdoc=true -Dgusb:tests=false
 #build with clang
 ninja -C build test -v
 
