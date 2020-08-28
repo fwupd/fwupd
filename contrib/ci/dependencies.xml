@@ -766,7 +766,7 @@
     </distro>
     <distro id="debian">
       <control>
-        <version>(>= 0.3.3)</version>
+        <version>(>= 0.3.5)</version>
       </control>
       <package variant="x86_64" />
       <package variant="s390x">libgusb-dev:s390x</package>
