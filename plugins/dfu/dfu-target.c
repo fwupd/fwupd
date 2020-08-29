@@ -1106,7 +1106,7 @@ dfu_target_download_element_dfu (DfuTarget *target,
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
 	GBytes *bytes;
-	guint16 nr_chunks;
+	guint32 nr_chunks;
 	guint16 transfer_size = dfu_device_get_transfer_size (priv->device);
 
 	/* round up as we have to transfer incomplete blocks */
@@ -1121,7 +1121,7 @@ dfu_target_download_element_dfu (DfuTarget *target,
 		return FALSE;
 	}
 	dfu_target_set_action (target, FWUPD_STATUS_DEVICE_WRITE);
-	for (guint16 i = 0; i < nr_chunks + 1; i++) {
+	for (guint32 i = 0; i < nr_chunks + 1; i++) {
 		gsize length;
 		guint32 offset;
 		g_autoptr(GBytes) bytes_tmp = NULL;
