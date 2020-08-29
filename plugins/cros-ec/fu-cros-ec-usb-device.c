@@ -264,6 +264,20 @@ fu_cros_ec_usb_device_flush (FuDevice *device, gpointer user_data,
 	return TRUE;
 }
 
+static gboolean
+fu_cros_ec_usb_device_recovery (FuDevice *device, GError **error)
+{
+	/* flush all data from endpoint to recover in case of error */
+	if (!fu_device_retry (device, fu_cros_ec_usb_device_flush,
+			      SETUP_RETRY_CNT, NULL, error)) {
+		g_prefix_error (error, "failed to flush device to idle state: ");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 /*
  * Channel TPM extension/vendor command over USB. The payload of the USB frame
  * in this case consists of the 2 byte subcommand code concatenated with the
@@ -341,12 +355,8 @@ fu_cros_ec_usb_device_setup (FuDevice *device, GError **error)
 	START_RESP start_resp;
 	g_auto(GStrv) config_split = NULL;
 
-	/* flush all data from endpoint to recover in case of error */
-	if (!fu_device_retry (device, fu_cros_ec_usb_device_flush,
-			      SETUP_RETRY_CNT, NULL, error)) {
-		g_prefix_error (error, "failed to flush device to idle state: ");
+	if (!fu_cros_ec_usb_device_recovery (device, error))
 		return FALSE;
-	}
 
 	/* send start request */
 	if (!fu_device_retry (device, fu_cros_ec_usb_device_start_request,
@@ -481,8 +491,14 @@ fu_cros_ec_usb_device_transfer_block (FuDevice *device, gpointer user_data,
 					    sizeof(struct update_frame_header),
 					    NULL,
 					    0, FALSE,
-					    NULL, error))
+					    NULL, error)) {
+		/* flush all data from endpoint to recover in case of error */
+		if (!fu_cros_ec_usb_device_recovery (device, NULL)) {
+			g_debug ("failed to flush to idle");
+		}
+		g_prefix_error (error, "failed at sending header: ");
 		return FALSE;
+	}
 
 	/* send the block, chunk by chunk */
 	for (guint i = 0; i < chunks->len; i++) {
@@ -494,6 +510,12 @@ fu_cros_ec_usb_device_transfer_block (FuDevice *device, gpointer user_data,
 						    NULL,
 						    0, FALSE,
 						    NULL, error)) {
+			g_prefix_error (error, "failed at sending chunk: ");
+
+			/* flush all data from endpoint to recover in case of error */
+			if (!fu_cros_ec_usb_device_recovery (device, NULL)) {
+				g_debug ("failed to flush to idle");
+			}
 			return FALSE;
 		}
 	}
@@ -501,8 +523,14 @@ fu_cros_ec_usb_device_transfer_block (FuDevice *device, gpointer user_data,
 	/* get the reply */
 	if (!fu_cros_ec_usb_device_do_xfer (self, NULL, 0,
 					    (guint8 *)&reply, sizeof (reply),
-					    TRUE, &transfer_size, error))
+					    TRUE, &transfer_size, error)) {
+		g_prefix_error (error, "failed at reply: ");
+		/* flush all data from endpoint to recover in case of error */
+		if (!fu_cros_ec_usb_device_recovery (device, NULL)) {
+			g_debug ("failed to flush to idle");
+		}
 		return FALSE;
+	}
 	if (transfer_size == 0) {
 		g_set_error_literal (error,
 				     G_IO_ERROR,
@@ -715,8 +743,7 @@ fu_cros_ec_usb_device_write_firmware (FuDevice *device,
 		fu_device_set_custom_flags (device, "");
 
 		/* flush all data from endpoint to recover in case of error */
-		if (!fu_device_retry (device, fu_cros_ec_usb_device_flush,
-				      SETUP_RETRY_CNT, NULL, error)) {
+		if (!fu_cros_ec_usb_device_recovery (device, error)) {
 			g_prefix_error (error, "failed to flush device to idle state: ");
 			return FALSE;
 		}
