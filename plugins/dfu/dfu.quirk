@@ -334,38 +334,48 @@ DfuForceTimeout = 5000
 [DeviceInstanceId=USB\VID_095D&PID_9217]
 Plugin = dfu
 Flags = manifest-poll
+RemoveDelay = 40000
 [DeviceInstanceId=USB\VID_095D&PID_9218]
 Plugin = dfu
 Flags = manifest-poll
+RemoveDelay = 40000
 
 # Poly Eagle Eye Cube
 [DeviceInstanceId=USB\VID_095D&PID_9212]
 Plugin = dfu
 Flags = manifest-poll
+RemoveDelay = 30000
 [DeviceInstanceId=USB\VID_095D&PID_9213]
 Plugin = dfu
 Flags = manifest-poll
+RemoveDelay = 30000
 
 # Poly P30
 [DeviceInstanceId=USB\VID_095D&PID_9290]
 Plugin = dfu
 Flags = manifest-poll
+RemoveDelay = 40000
 [DeviceInstanceId=USB\VID_095D&PID_9291]
 Plugin = dfu
 Flags = manifest-poll
+RemoveDelay = 40000
 
 # Poly ULCC
 [DeviceInstanceId=USB\VID_095D&PID_9160]
 Plugin = dfu
 Flags = manifest-poll
+RemoveDelay = 50000
 [DeviceInstanceId=USB\VID_095D&PID_927B]
 Plugin = dfu
 Flags = manifest-poll
+RemoveDelay = 50000
 
 # Poly Eagle Eye Mini
 [DeviceInstanceId=USB\VID_095D&PID_3001]
 Plugin = dfu
 Flags = manifest-poll
+RemoveDelay = 9000
 [DeviceInstanceId=USB\VID_095D&PID_3002]
 Plugin = dfu
 Flags = manifest-poll
+RemoveDelay = 9000
