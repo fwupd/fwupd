@@ -329,3 +329,43 @@ Flags = absent-sector-size
 Plugin = dfu
 DfuForceVersion = 011a
 DfuForceTimeout = 5000
+
+# Poly Studio
+[DeviceInstanceId=USB\VID_095D&PID_9217]
+Plugin = dfu
+Flags = manifest-poll
+[DeviceInstanceId=USB\VID_095D&PID_9218]
+Plugin = dfu
+Flags = manifest-poll
+
+# Poly Eagle Eye Cube
+[DeviceInstanceId=USB\VID_095D&PID_9212]
+Plugin = dfu
+Flags = manifest-poll
+[DeviceInstanceId=USB\VID_095D&PID_9213]
+Plugin = dfu
+Flags = manifest-poll
+
+# Poly P30
+[DeviceInstanceId=USB\VID_095D&PID_9290]
+Plugin = dfu
+Flags = manifest-poll
+[DeviceInstanceId=USB\VID_095D&PID_9291]
+Plugin = dfu
+Flags = manifest-poll
+
+# Poly ULCC
+[DeviceInstanceId=USB\VID_095D&PID_9160]
+Plugin = dfu
+Flags = manifest-poll
+[DeviceInstanceId=USB\VID_095D&PID_927B]
+Plugin = dfu
+Flags = manifest-poll
+
+# Poly Eagle Eye Mini
+[DeviceInstanceId=USB\VID_095D&PID_3001]
+Plugin = dfu
+Flags = manifest-poll
+[DeviceInstanceId=USB\VID_095D&PID_3002]
+Plugin = dfu
+Flags = manifest-poll
