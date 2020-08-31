@@ -44,6 +44,7 @@
  * * `legacy-protocol`:		Use a legacy protocol version
  * * `detach-for-attach`:	Requires a DFU_REQUEST_DETACH to attach
  * * `absent-sector-size`:	In absence of sector size, assume byte
+ * * `manifest-poll`:		Requires polling via GetStatus in dfuManifest state
  *
  * Default value: `none`
  *

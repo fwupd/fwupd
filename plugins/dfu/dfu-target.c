@@ -30,6 +30,8 @@
 
 #include "fwupd-error.h"
 
+#define DFU_TARGET_MANIFEST_MAX_POLLING_TRIES	200
+
 static void dfu_target_finalize			 (GObject *object);
 
 typedef struct {
@@ -470,6 +472,50 @@ dfu_target_status_to_error_msg (DfuStatus status)
 	if (status == DFU_STATUS_ERR_STALLDPKT)
 		return "Device stalled an unexpected request";
 	return NULL;
+}
+
+static gboolean
+dfu_target_manifest_wait (DfuTarget *target, GError **error)
+{
+	DfuTargetPrivate *priv = GET_PRIVATE (target);
+	DfuStatus status;
+	guint polling_count = 0;
+
+	/* get the status */
+	if (!dfu_device_refresh (priv->device, error))
+		return FALSE;
+
+	/* wait for DFU_STATE_DFU_MANIFEST to not be set */
+	while (dfu_device_get_state (priv->device) == DFU_STATE_DFU_MANIFEST_SYNC ||
+	       dfu_device_get_state (priv->device) == DFU_STATE_DFU_MANIFEST) {
+		g_debug ("waiting for DFU_STATE_DFU_MANIFEST to clear");
+
+		if (polling_count++ > DFU_TARGET_MANIFEST_MAX_POLLING_TRIES) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "reach to max polling tries");
+			return FALSE;
+		}
+
+		g_usleep ((dfu_device_get_download_timeout (priv->device) + 1000) * 1000);
+		if (!dfu_device_refresh (priv->device, error))
+			return FALSE;
+	}
+
+	/* in an error state */
+	if (dfu_device_get_state (priv->device) == DFU_STATE_DFU_ERROR) {
+		status = dfu_device_get_status (priv->device);
+		/* use a proper error description */
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     dfu_target_status_to_error_msg (status));
+
+		return FALSE;
+	}
+
+	return TRUE;
 }
 
 gboolean
@@ -1284,6 +1330,12 @@ dfu_target_download (DfuTarget *target, DfuImage *image,
 		if (!ret)
 			return FALSE;
 	}
+
+	if (fu_device_has_custom_flag (FU_DEVICE (dfu_target_get_device (target)),
+				       "manifest-poll") &&
+	    dfu_device_has_attribute (priv->device, DFU_DEVICE_ATTRIBUTE_MANIFEST_TOL))
+		if (!dfu_target_manifest_wait (target, error))
+			return FALSE;
 
 	/* success */
 	return TRUE;
