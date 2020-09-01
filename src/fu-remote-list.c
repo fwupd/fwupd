@@ -476,10 +476,17 @@ fu_remote_list_class_init (FuRemoteListClass *klass)
 }
 
 static void
+fu_remote_list_monitor_unref (GFileMonitor *monitor)
+{
+	g_file_monitor_cancel (monitor);
+	g_object_unref (monitor);
+}
+
+static void
 fu_remote_list_init (FuRemoteList *self)
 {
 	self->array = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	self->monitors = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	self->monitors = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_remote_list_monitor_unref);
 }
 
 static void

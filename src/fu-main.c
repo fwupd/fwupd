@@ -1640,8 +1640,10 @@ fu_main_private_free (FuMainPrivate *priv)
 		g_object_unref (priv->connection);
 	if (priv->authority != NULL)
 		g_object_unref (priv->authority);
-	if (priv->argv0_monitor != NULL)
+	if (priv->argv0_monitor != NULL) {
+		g_file_monitor_cancel (priv->argv0_monitor);
 		g_object_unref (priv->argv0_monitor);
+	}
 	if (priv->introspection_daemon != NULL)
 		g_dbus_node_info_unref (priv->introspection_daemon);
 #if GLIB_CHECK_VERSION(2,63,3)
