@@ -313,8 +313,10 @@ fu_config_finalize (GObject *obj)
 {
 	FuConfig *self = FU_CONFIG (obj);
 
-	if (self->monitor != NULL)
+	if (self->monitor != NULL) {
+		g_file_monitor_cancel (self->monitor);
 		g_object_unref (self->monitor);
+	}
 	g_ptr_array_unref (self->disabled_devices);
 	g_ptr_array_unref (self->disabled_plugins);
 	g_ptr_array_unref (self->approved_firmware);
