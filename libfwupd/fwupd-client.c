@@ -2574,7 +2574,7 @@ fwupd_client_upload_bytes (FwupdClient *client,
 		return NULL;
 
 	/* build message */
-	if ((flags | FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART) > 0 ||
+	if ((flags & FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART) > 0 ||
 	    signature != NULL) {
 		g_autoptr(SoupMultipart) mp = NULL;
 		mp = soup_multipart_new (SOUP_FORM_MIME_TYPE_MULTIPART);
