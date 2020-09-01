@@ -672,6 +672,8 @@ update_context_free (UpdateContext *ctx)
 	if (ctx == NULL)
 		return;
 
+	g_file_monitor_cancel (ctx->monitor);
+
 	g_object_unref (ctx->bed);
 	g_object_unref (ctx->plugin);
 	g_object_unref (ctx->monitor);

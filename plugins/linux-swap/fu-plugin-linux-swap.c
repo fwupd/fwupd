@@ -28,8 +28,10 @@ fu_plugin_destroy (FuPlugin *plugin)
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	if (data->file != NULL)
 		g_object_unref (data->file);
-	if (data->monitor != NULL)
+	if (data->monitor != NULL) {
+		g_file_monitor_cancel (data->monitor);
 		g_object_unref (data->monitor);
+	}
 }
 
 static void
