@@ -483,6 +483,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_libdir}/pkgconfig/fwupd.pc
 %{_libdir}/pkgconfig/fwupdplugin.pc
 
+%if 0%{?enable_tests}
 %files tests
 %dir %{_datadir}/installed-tests/fwupd
 %{_datadir}/installed-tests/fwupd/fwupd-tests.xml
@@ -492,6 +493,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_libexecdir}/installed-tests/fwupd/*
 %dir %{_sysconfdir}/fwupd/remotes.d
 %config(noreplace)%{_sysconfdir}/fwupd/remotes.d/fwupd-tests.conf
+%endif
 
 %changelog
 * #LONGDATE# Richard Hughes <richard@hughsie.com> #VERSION#-0.#BUILD##ALPHATAG#
