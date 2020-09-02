@@ -6,19 +6,66 @@ GType = FuElantpHidDevice
 Plugin = elantp
 GType = FuElantpHidDevice
 
+[DeviceInstanceId=ELANTP\ICTYPE_00]
+ElantpIcPageCount = 0x200
+ElantpIapPassword = 0x1EA5
+
+[DeviceInstanceId=ELANTP\ICTYPE_03]
+ElantpIcPageCount = 0x300
+ElantpIapPassword = 0x1EA5
+
+[DeviceInstanceId=ELANTP\ICTYPE_06]
+ElantpIcPageCount = 0x200
+ElantpIapPassword = 0x1EA5
+
+[DeviceInstanceId=ELANTP\ICTYPE_07]
+ElantpIcPageCount = 0x300
+ElantpIapPassword = 0x1EA5
+
+[DeviceInstanceId=ELANTP\ICTYPE_08]
+ElantpIcPageCount = 0x200
+ElantpIapPassword = 0x1EA5
+
 [DeviceInstanceId=ELANTP\ICTYPE_0A]
-ElantpIcPageCount = 768
+ElantpIcPageCount = 0x300
 ElantpIapPassword = 0xE15A
 
+[DeviceInstanceId=ELANTP\ICTYPE_0B]
+ElantpIcPageCount = 0x300
+ElantpIapPassword = 0x1EA5
+
+[DeviceInstanceId=ELANTP\ICTYPE_0C]
+ElantpIcPageCount = 0x300
+ElantpIapPassword = 0x1EA5
+
+[DeviceInstanceId=ELANTP\ICTYPE_0E]
+ElantpIcPageCount = 0x280
+ElantpIapPassword = 0x1EA5
+
 [DeviceInstanceId=ELANTP\ICTYPE_09]
-ElantpIcPageCount = 768
+ElantpIcPageCount = 0x300
 ElantpIapPassword = 0x1EA5
 
 [DeviceInstanceId=ELANTP\ICTYPE_0D]
-ElantpIcPageCount = 896
+ElantpIcPageCount = 0x380
 ElantpIapPassword = 0x1EA5
 
 [DeviceInstanceId=ELANTP\ICTYPE_10]
-ElantpIcPageCount = 1024
+ElantpIcPageCount = 0x400
 ElantpIapPassword = 0x1EA5
-Flags = iap-version-2
+
+[DeviceInstanceId=ELANTP\ICTYPE_11]
+ElantpIcPageCount = 0x500
+ElantpIapPassword = 0x1EA5
+
+[DeviceInstanceId=ELANTP\ICTYPE_13]
+ElantpIcPageCount = 0x800
+ElantpIapPassword = 0x1EA5
+
+[DeviceInstanceId=ELANTP\ICTYPE_14]
+ElantpIcPageCount = 0x400
+ElantpIapPassword = 0x1EA5
+
+[DeviceInstanceId=ELANTP\ICTYPE_15]
+ElantpIcPageCount = 0x400
+ElantpIapPassword = 0x1EA5

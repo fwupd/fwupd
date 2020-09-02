@@ -18,15 +18,19 @@
 struct _FuElantpHidDevice {
 	FuUdevDevice		 parent_instance;
 	guint16			 ic_page_count;
+	guint16			 iap_type;
 	guint16			 iap_ctrl;
 	guint16			 iap_password;
 	guint16			 module_id;
+	guint16			 fw_page_size;
+	guint8			 pattern;
 };
 
 #define ELANTP_DELAY_COMPLETE		1200	/* ms */
 #define ELANTP_DELAY_RESET		30	/* ms */
 #define ELANTP_DELAY_UNLOCK		100	/* ms */
 #define ELANTP_DELAY_WRITE_BLOCK	35	/* ms */
+#define ELANTP_DELAY_WRITE_BLOCK_512	50	/* ms */
 
 G_DEFINE_TYPE (FuElantpHidDevice, fu_elantp_hid_device, FU_TYPE_UDEV_DEVICE)
 
@@ -35,8 +39,11 @@ fu_elantp_hid_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuElantpHidDevice *self = FU_ELANTP_HID_DEVICE (device);
 	fu_common_string_append_kx (str, idt, "ModuleId", self->module_id);
+	fu_common_string_append_kx (str, idt, "Pattern", self->pattern);
+	fu_common_string_append_kx (str, idt, "FwPageSize", self->fw_page_size);
 	fu_common_string_append_kx (str, idt, "IcPageCount", self->ic_page_count);
-	fu_common_string_append_kx (str, idt, "EapCtrl", self->iap_ctrl);
+	fu_common_string_append_kx (str, idt, "IapType", self->iap_type);
+	fu_common_string_append_kx (str, idt, "IapCtrl", self->iap_ctrl);
 }
 
 static gboolean
@@ -63,7 +70,10 @@ fu_elantp_hid_device_send_cmd (FuElantpHidDevice *self,
 			       GError **error)
 {
 	g_autofree guint8 *buf = NULL;
+	gsize bufsz = rxsz + 3;
 
+	if (g_getenv ("FWUPD_ELANTP_VERBOSE") != NULL)
+		fu_common_dump_raw (G_LOG_DOMAIN, "SetReport", tx, txsz);
 	if (!fu_udev_device_ioctl (FU_UDEV_DEVICE (self),
 				   HIDIOCSFEATURE(txsz), tx,
 				   NULL, error))
@@ -72,12 +82,14 @@ fu_elantp_hid_device_send_cmd (FuElantpHidDevice *self,
 		return TRUE;
 
 	/* GetFeature */
-	buf = g_malloc0 (rxsz + 1);
+	buf = g_malloc0 (bufsz);
 	buf[0] = tx[0]; /* report number */
 	if (!fu_udev_device_ioctl (FU_UDEV_DEVICE (self),
-				   HIDIOCGFEATURE(rxsz + 3), buf,
+				   HIDIOCGFEATURE(bufsz), buf,
 				   NULL, error))
 		return FALSE;
+	if (g_getenv ("FWUPD_ELANTP_VERBOSE") != NULL)
+		fu_common_dump_raw (G_LOG_DOMAIN, "GetReport", buf, bufsz);
 
 	/* success */
 	memcpy (rx, buf + 0x3, rxsz);
@@ -90,8 +102,6 @@ fu_elantp_hid_device_read_cmd (FuElantpHidDevice *self, guint16 reg,
 {
 	guint8 buf[5] = { 0x0d, 0x05, 0x03 };
 	fu_common_write_uint16 (buf + 0x3, reg, G_LITTLE_ENDIAN);
-	if (g_getenv ("FWUPD_ELANTP_VERBOSE") != NULL)
-		fu_common_dump_raw (G_LOG_DOMAIN, "ReadCmd", buf, sizeof(buf));
 	return fu_elantp_hid_device_send_cmd (self, buf, sizeof(buf), rx, rxsz, error);
 }
 
@@ -103,9 +113,6 @@ fu_elantp_hid_device_write_cmd (FuElantpHidDevice *self,
 	guint8 buf[5] = { 0x0d };
 	fu_common_write_uint16 (buf + 0x1, reg, G_LITTLE_ENDIAN);
 	fu_common_write_uint16 (buf + 0x3, cmd, G_LITTLE_ENDIAN);
-	if (g_getenv ("FWUPD_ELANTP_VERBOSE") != NULL)
-		fu_common_dump_raw (G_LOG_DOMAIN, "WriteCmd", buf, sizeof(buf));
-
 	return fu_elantp_hid_device_send_cmd (self, buf, sizeof(buf), NULL, 0, error);
 }
 
@@ -133,8 +140,8 @@ fu_elantp_hid_device_setup (FuDevice *device, GError **error)
 {
 	FuElantpHidDevice *self = FU_ELANTP_HID_DEVICE (device);
 	FuUdevDevice *udev_device = FU_UDEV_DEVICE (device);
-	gboolean is_new_pattern;
 	guint16 fwver;
+	guint16 iap_ver;
 	guint16 tmp;
 	guint8 buf[2] = { 0x0 };
 	guint8 ic_type;
@@ -142,6 +149,16 @@ fu_elantp_hid_device_setup (FuDevice *device, GError **error)
 	g_autofree gchar *instance_id_ic_type = NULL;
 	g_autofree gchar *version_bl = NULL;
 	g_autofree gchar *version = NULL;
+
+	/* get pattern */
+	if (!fu_elantp_hid_device_read_cmd (self,
+					    ETP_CMD_I2C_GET_HID_ID,
+					    buf, sizeof(buf), error)) {
+		g_prefix_error (error, "failed to read HID ID: ");
+		return FALSE;
+	}
+	tmp = fu_common_read_uint16 (buf, G_LITTLE_ENDIAN);
+	self->pattern = tmp != 0xffff ? (tmp & 0xff00) >> 8 : 0;
 
 	/* get current firmware version */
 	if (!fu_elantp_hid_device_read_cmd (self,
@@ -154,16 +171,19 @@ fu_elantp_hid_device_setup (FuDevice *device, GError **error)
 	version = fu_common_version_from_uint16 (fwver, FWUPD_VERSION_FORMAT_HEX);
 	fu_device_set_version (device, version);
 
-	/* get EAP firmware version */
-	is_new_pattern = fu_device_has_custom_flag (FU_DEVICE (self), "iap-version-2");
+	/* get IAP firmware version */
 	if (!fu_elantp_hid_device_read_cmd (self,
-					    is_new_pattern ? ETP_CMD_I2C_IAP_VERSION_2 : ETP_CMD_I2C_IAP_VERSION,
+					    self->pattern == 0 ? ETP_CMD_I2C_IAP_VERSION : ETP_CMD_I2C_IAP_VERSION_2,
 					    buf, sizeof(buf), error)) {
 		g_prefix_error (error, "failed to read bootloader version: ");
 		return FALSE;
 	}
-	fwver = fu_common_read_uint16 (buf, G_LITTLE_ENDIAN);
-	version_bl = fu_common_version_from_uint16 (fwver, FWUPD_VERSION_FORMAT_HEX);
+	if (self->pattern >= 1) {
+		iap_ver = buf[1];
+	} else {
+		iap_ver = fu_common_read_uint16 (buf, G_LITTLE_ENDIAN);
+	}
+	version_bl = fu_common_version_from_uint16 (iap_ver, FWUPD_VERSION_FORMAT_HEX);
 	fu_device_set_version_bootloader (device, version_bl);
 
 	/* get module ID */
@@ -200,6 +220,37 @@ fu_elantp_hid_device_setup (FuDevice *device, GError **error)
 	instance_id_ic_type = g_strdup_printf ("ELANTP\\ICTYPE_%02X", ic_type);
 	fu_device_add_instance_id (device, instance_id_ic_type);
 
+	/* set the page size */
+	self->fw_page_size = 64;
+	if (ic_type >= 0x10) {
+		if (iap_ver >= 1) {
+			/* set the IAP type, presumably some kind of ABI */
+			if (!fu_elantp_hid_device_write_cmd (self,
+							     ETP_CMD_I2C_IAP_TYPE,
+							     ETP_I2C_IAP_TYPE_REG,
+							     error))
+				return FALSE;
+			if (!fu_elantp_hid_device_read_cmd (self, ETP_CMD_I2C_IAP_TYPE,
+							    buf, sizeof(buf), error)) {
+				g_prefix_error (error, "failed to read IAP type: ");
+				return FALSE;
+			}
+			self->iap_type = fu_common_read_uint16 (buf, G_LITTLE_ENDIAN);
+			if (self->iap_type != ETP_I2C_IAP_TYPE_REG) {
+				g_set_error_literal (error,
+						     FWUPD_ERROR,
+						     FWUPD_ERROR_NOT_SUPPORTED,
+						     "failed to set IAP type");
+				return FALSE;
+			}
+			if (iap_ver >= 2 && (ic_type == 0x14 || ic_type==0x15)) {
+				self->fw_page_size = 512;
+			} else {
+				self->fw_page_size = 128;
+			}
+		}
+	}
+
 	/* no quirk entry */
 	if (self->ic_page_count == 0x0) {
 		g_set_error (error,
@@ -209,7 +260,7 @@ fu_elantp_hid_device_setup (FuDevice *device, GError **error)
 			     ic_type);
 		return FALSE;
 	}
-	fu_device_set_firmware_size (device, self->ic_page_count * FW_PAGE_SIZE);
+	fu_device_set_firmware_size (device, (guint64) self->ic_page_count * (guint64) self->fw_page_size);
 
 	/* is in bootloader mode */
 	if (!fu_elantp_hid_device_ensure_iap_ctrl (self, error))
@@ -293,20 +344,24 @@ fu_elantp_hid_device_write_firmware (FuDevice *device,
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 	buf = g_bytes_get_data (fw, &bufsz);
 	iap_addr = fu_elantp_firmware_get_iap_addr (firmware_elantp);
-	chunks = fu_chunk_array_new (buf + iap_addr, bufsz - iap_addr, 0x0, 0x0, FW_PAGE_SIZE);
+	chunks = fu_chunk_array_new (buf + iap_addr, bufsz - iap_addr, 0x0, 0x0, self->fw_page_size);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
 		guint16 csum_tmp = fu_elantp_calc_checksum (chk->data, chk->data_sz);
-		guint8 blk[FW_PAGE_SIZE + 3];
+		gsize blksz = self->fw_page_size + 3;
+		g_autofree guint8 *blk = g_malloc0 (blksz);
 
 		/* write block */
 		blk[0] = 0x0B; /* report ID */
 		memcpy (blk + 1, chk->data, chk->data_sz);
 		fu_common_write_uint16 (blk + chk->data_sz + 1, csum_tmp, G_LITTLE_ENDIAN);
 
-		if (!fu_elantp_hid_device_send_cmd (self, blk, sizeof (blk), NULL, 0, error))
+		if (!fu_elantp_hid_device_send_cmd (self, blk, blksz, NULL, 0, error))
 			return FALSE;
-		g_usleep (ELANTP_DELAY_WRITE_BLOCK * 1000);
+		g_usleep (self->fw_page_size == 512 ?
+				ELANTP_DELAY_WRITE_BLOCK_512 * 1000 :
+				ELANTP_DELAY_WRITE_BLOCK * 1000);
+
 		if (!fu_elantp_hid_device_ensure_iap_ctrl (self, error))
 			return FALSE;
 		if (self->iap_ctrl & (ETP_FW_IAP_PAGE_ERR | ETP_FW_IAP_INTF_ERR)) {
