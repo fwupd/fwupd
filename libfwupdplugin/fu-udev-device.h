@@ -29,7 +29,10 @@ struct _FuUdevDeviceClass
 							 GError		**error);
 	gboolean	 (*close)			(FuUdevDevice	*device,
 							 GError		**error);
-	gpointer	__reserved[29];
+	void		 (*to_string)			(FuUdevDevice	*self,
+							 guint		 indent,
+							 GString	*str);
+	gpointer	__reserved[28];
 };
 
 /**

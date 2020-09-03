@@ -24,7 +24,7 @@ struct _FuNvmeDevice {
 G_DEFINE_TYPE (FuNvmeDevice, fu_nvme_device, FU_TYPE_UDEV_DEVICE)
 
 static void
-fu_nvme_device_to_string (FuDevice *device, guint idt, GString *str)
+fu_nvme_device_to_string (FuUdevDevice *device, guint idt, GString *str)
 {
 	FuNvmeDevice *self = FU_NVME_DEVICE (device);
 	fu_common_string_append_ku (str, idt, "PciDepth", self->pci_depth);
@@ -412,7 +412,7 @@ fu_nvme_device_class_init (FuNvmeDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuUdevDeviceClass *klass_udev_device = FU_UDEV_DEVICE_CLASS (klass);
 	object_class->finalize = fu_nvme_device_finalize;
-	klass_device->to_string = fu_nvme_device_to_string;
+	klass_udev_device->to_string = fu_nvme_device_to_string;
 	klass_device->set_quirk_kv = fu_nvme_device_set_quirk_kv;
 	klass_device->setup = fu_nvme_device_setup;
 	klass_device->write_firmware = fu_nvme_device_write_firmware;

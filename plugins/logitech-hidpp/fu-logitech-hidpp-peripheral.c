@@ -258,7 +258,7 @@ fu_logitech_hidpp_map_to_string (FuLogitechHidPpHidppMap *map, guint idt, GStrin
 }
 
 static void
-fu_logitech_hidpp_peripheral_to_string (FuDevice *device, guint idt, GString *str)
+fu_logitech_hidpp_peripheral_to_string (FuUdevDevice *device, guint idt, GString *str)
 {
 	FuLogitechHidPpPeripheral *self = FU_UNIFYING_PERIPHERAL (device);
 	fu_common_string_append_ku (str, idt, "HidppVersion", self->hidpp_version);
@@ -1029,7 +1029,7 @@ fu_logitech_hidpp_peripheral_class_init (FuLogitechHidPpPeripheralClass *klass)
 	klass_device->attach = fu_logitech_hidpp_peripheral_attach;
 	klass_device->detach = fu_logitech_hidpp_peripheral_detach;
 	klass_device->poll = fu_logitech_hidpp_peripheral_poll;
-	klass_device->to_string = fu_logitech_hidpp_peripheral_to_string;
+	klass_device_udev->to_string = fu_logitech_hidpp_peripheral_to_string;
 	klass_device_udev->probe = fu_logitech_hidpp_peripheral_probe;
 }
 

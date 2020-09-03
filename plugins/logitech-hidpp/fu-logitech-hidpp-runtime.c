@@ -23,7 +23,7 @@ struct _FuLogitechHidPpRuntime
 G_DEFINE_TYPE (FuLogitechHidPpRuntime, fu_logitech_hidpp_runtime, FU_TYPE_UDEV_DEVICE)
 
 static void
-fu_logitech_hidpp_runtime_to_string (FuDevice *device, guint idt, GString *str)
+fu_logitech_hidpp_runtime_to_string (FuUdevDevice *device, guint idt, GString *str)
 {
 	FuLogitechHidPpRuntime *self = FU_UNIFYING_RUNTIME (device);
 	fu_common_string_append_kb (str, idt, "SignedFirmware", self->signed_firmware);
@@ -316,7 +316,7 @@ fu_logitech_hidpp_runtime_class_init (FuLogitechHidPpRuntimeClass *klass)
 	klass_device->close = fu_logitech_hidpp_runtime_close;
 	klass_device->detach = fu_logitech_hidpp_runtime_detach;
 	klass_device->poll = fu_logitech_hidpp_runtime_poll;
-	klass_device->to_string = fu_logitech_hidpp_runtime_to_string;
+	klass_device_udev->to_string = fu_logitech_hidpp_runtime_to_string;
 }
 
 static void

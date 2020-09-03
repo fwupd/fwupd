@@ -71,7 +71,7 @@ struct _FuEmmcDevice {
 G_DEFINE_TYPE (FuEmmcDevice, fu_emmc_device, FU_TYPE_UDEV_DEVICE)
 
 static void
-fu_emmc_device_to_string (FuDevice *device, guint idt, GString *str)
+fu_emmc_device_to_string (FuUdevDevice *device, guint idt, GString *str)
 {
 	FuEmmcDevice *self = FU_EMMC_DEVICE (device);
 	fu_common_string_append_ku (str, idt, "SectorSize", self->sect_size);
@@ -500,7 +500,7 @@ fu_emmc_device_class_init (FuEmmcDeviceClass *klass)
 	FuUdevDeviceClass *klass_udev_device = FU_UDEV_DEVICE_CLASS (klass);
 	object_class->finalize = fu_emmc_device_finalize;
 	klass_device->setup = fu_emmc_device_setup;
-	klass_device->to_string = fu_emmc_device_to_string;
+	klass_udev_device->to_string = fu_emmc_device_to_string;
 	klass_device->prepare_firmware = fu_emmc_device_prepare_firmware;
 	klass_udev_device->probe = fu_emmc_device_probe;
 	klass_device->write_firmware = fu_emmc_device_write_firmware;

@@ -121,7 +121,7 @@ fu_synaptics_rmi_flash_to_string (FuSynapticsRmiFlash *flash, guint idt, GString
 }
 
 static void
-fu_synaptics_rmi_device_to_string (FuDevice *device, guint idt, GString *str)
+fu_synaptics_rmi_device_to_string (FuUdevDevice *device, guint idt, GString *str)
 {
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE (device);
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
@@ -1026,7 +1026,7 @@ fu_synaptics_rmi_device_class_init (FuSynapticsRmiDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuUdevDeviceClass *klass_device_udev = FU_UDEV_DEVICE_CLASS (klass);
 	object_class->finalize = fu_synaptics_rmi_device_finalize;
-	klass_device->to_string = fu_synaptics_rmi_device_to_string;
+	klass_device_udev->to_string = fu_synaptics_rmi_device_to_string;
 	klass_device->prepare_firmware = fu_synaptics_rmi_device_prepare_firmware;
 	klass_device->attach = fu_synaptics_rmi_device_attach;
 	klass_device->setup = fu_synaptics_rmi_device_setup;
