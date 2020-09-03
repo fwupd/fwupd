@@ -198,7 +198,7 @@ fu_thunderbolt_device_type_to_string (FuThunderboltDevice *self)
 }
 
 static void
-fu_thunderbolt_device_to_string (FuDevice *device, guint idt, GString *str)
+fu_thunderbolt_device_to_string (FuUdevDevice *device, guint idt, GString *str)
 {
 	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE (device);
 	fu_common_string_append_kv (str, idt, "Device Type", fu_thunderbolt_device_type_to_string (self));
@@ -717,7 +717,7 @@ fu_thunderbolt_device_class_init (FuThunderboltDeviceClass *klass)
 	FuUdevDeviceClass *klass_udev_device = FU_UDEV_DEVICE_CLASS (klass);
 	object_class->finalize = fu_thunderbolt_device_finalize;
 	klass_device->activate = fu_thunderbolt_device_authenticate;
-	klass_device->to_string = fu_thunderbolt_device_to_string;
+	klass_udev_device->to_string = fu_thunderbolt_device_to_string;
 	klass_device->setup = fu_thunderbolt_device_setup;
 	klass_device->prepare_firmware = fu_thunderbolt_device_prepare_firmware;
 	klass_device->write_firmware = fu_thunderbolt_device_write_firmware;
