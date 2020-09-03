@@ -184,6 +184,24 @@ fu_udev_device_set_device_file (FuUdevDevice *self, const gchar *device_file)
 	g_object_notify (G_OBJECT (self), "device-file");
 }
 
+static const gchar *
+fu_udev_device_get_vendor_fallback (GUdevDevice *udev_device)
+{
+#ifdef HAVE_GUDEV
+	const gchar *tmp;
+	tmp = g_udev_device_get_property (udev_device, "FWUPD_VENDOR");
+	if (tmp != NULL)
+		return tmp;
+	tmp = g_udev_device_get_property (udev_device, "ID_VENDOR_FROM_DATABASE");
+	if (tmp != NULL)
+		return tmp;
+	tmp = g_udev_device_get_property (udev_device, "ID_VENDOR");
+	if (tmp != NULL)
+		return tmp;
+#endif
+	return NULL;
+}
+
 static gboolean
 fu_udev_device_probe (FuDevice *device, GError **error)
 {
@@ -256,11 +274,9 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 		g_autoptr(GUdevDevice) device_tmp = g_object_ref (udev_parent);
 		for (guint i = 0; i < 0xff; i++) {
 			g_autoptr(GUdevDevice) parent = NULL;
-			const gchar *id_vendor;
-			id_vendor = g_udev_device_get_property (device_tmp,
-								"ID_VENDOR_FROM_DATABASE");
-			if (id_vendor != NULL) {
-				fu_device_set_vendor (device, id_vendor);
+			tmp = fu_udev_device_get_vendor_fallback (device_tmp);
+			if (tmp != NULL) {
+				fu_device_set_vendor (device, tmp);
 				break;
 			}
 			parent = g_udev_device_get_parent (device_tmp);
@@ -295,11 +311,7 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 
 	/* set vendor */
 	if (fu_device_get_vendor (device) == NULL) {
-		tmp = g_udev_device_get_property (priv->udev_device, "FWUPD_VENDOR");
-		if (tmp == NULL)
-			tmp = g_udev_device_get_property (priv->udev_device, "ID_VENDOR_FROM_DATABASE");
-		if (tmp == NULL)
-			tmp = g_udev_device_get_property (priv->udev_device, "ID_VENDOR");
+		tmp = fu_udev_device_get_vendor_fallback (priv->udev_device);
 		if (tmp != NULL)
 			fu_device_set_vendor (device, tmp);
 	}
