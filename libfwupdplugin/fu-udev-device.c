@@ -268,24 +268,6 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 		}
 	}
 
-	/* try harder to find a vendor name the user will recognise */
-	if (priv->flags & FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT &&
-	    udev_parent != NULL && fu_device_get_vendor (device) == NULL) {
-		g_autoptr(GUdevDevice) device_tmp = g_object_ref (udev_parent);
-		for (guint i = 0; i < 0xff; i++) {
-			g_autoptr(GUdevDevice) parent = NULL;
-			tmp = fu_udev_device_get_vendor_fallback (device_tmp);
-			if (tmp != NULL) {
-				fu_device_set_vendor (device, tmp);
-				break;
-			}
-			parent = g_udev_device_get_parent (device_tmp);
-			if (parent == NULL)
-				break;
-			g_set_object (&device_tmp, parent);
-		}
-	}
-
 	/* set the version if the revision has been set */
 	if (fu_device_get_version (device) == NULL &&
 	    fu_device_get_version_format (device) == FWUPD_VERSION_FORMAT_UNKNOWN) {
@@ -314,6 +296,24 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 		tmp = fu_udev_device_get_vendor_fallback (priv->udev_device);
 		if (tmp != NULL)
 			fu_device_set_vendor (device, tmp);
+	}
+
+	/* try harder to find a vendor name the user will recognise */
+	if (priv->flags & FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT &&
+	    udev_parent != NULL && fu_device_get_vendor (device) == NULL) {
+		g_autoptr(GUdevDevice) device_tmp = g_object_ref (udev_parent);
+		for (guint i = 0; i < 0xff; i++) {
+			g_autoptr(GUdevDevice) parent = NULL;
+			tmp = fu_udev_device_get_vendor_fallback (device_tmp);
+			if (tmp != NULL) {
+				fu_device_set_vendor (device, tmp);
+				break;
+			}
+			parent = g_udev_device_get_parent (device_tmp);
+			if (parent == NULL)
+				break;
+			g_set_object (&device_tmp, parent);
+		}
 	}
 
 	/* set serial */
