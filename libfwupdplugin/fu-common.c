@@ -1242,7 +1242,7 @@ fu_common_strwidth (const gchar *text)
 void
 fu_common_string_append_kv (GString *str, guint idt, const gchar *key, const gchar *value)
 {
-	const guint align = 25;
+	const guint align = 24;
 	gsize keysz;
 
 	g_return_if_fail (idt * 2 < align);
