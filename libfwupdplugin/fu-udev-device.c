@@ -120,6 +120,8 @@ static void
 fu_udev_device_to_string_raw (GUdevDevice *udev_device, guint idt, GString *str)
 {
 	const gchar * const *keys;
+	if (udev_device == NULL)
+		return;
 	keys = g_udev_device_get_property_keys (udev_device);
 	for (guint i = 0; keys[i] != NULL; i++) {
 		fu_common_string_append_kv (str, idt, keys[i],
@@ -136,24 +138,28 @@ fu_udev_device_to_string_raw (GUdevDevice *udev_device, guint idt, GString *str)
 static void
 fu_udev_device_to_string (FuDevice *device, guint idt, GString *str)
 {
-#ifdef HAVE_GUDEV
 	FuUdevDevice *self = FU_UDEV_DEVICE (device);
+	FuUdevDeviceClass *klass = FU_UDEV_DEVICE_GET_CLASS (self);
+#ifdef HAVE_GUDEV
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GUdevDevice) udev_parent = NULL;
-
-	if (priv->udev_device == NULL)
-		return;
-
-	if (g_getenv ("FU_UDEV_DEVICE_DEBUG") == NULL)
-		return;
-
-	fu_udev_device_to_string_raw (priv->udev_device, idt, str);
-	udev_parent = g_udev_device_get_parent (priv->udev_device);
-	if (udev_parent != NULL) {
-		fu_common_string_append_kv (str, idt, "Parent", NULL);
-		fu_udev_device_to_string_raw (udev_parent, idt + 1, str);
+	if (priv->udev_device != NULL) {
+		fu_common_string_append_kv (str, idt, "SysfsPath",
+					    g_udev_device_get_sysfs_path (priv->udev_device));
+	}
+	if (g_getenv ("FU_UDEV_DEVICE_DEBUG") != NULL) {
+		g_autoptr(GUdevDevice) udev_parent = NULL;
+		fu_udev_device_to_string_raw (priv->udev_device, idt, str);
+		udev_parent = g_udev_device_get_parent (priv->udev_device);
+		if (udev_parent != NULL) {
+			fu_common_string_append_kv (str, idt, "Parent", NULL);
+			fu_udev_device_to_string_raw (udev_parent, idt + 1, str);
+		}
 	}
 #endif
+
+	/* subclassed */
+	if (klass->to_string != NULL)
+		klass->to_string (self, idt, str);
 }
 
 static void
