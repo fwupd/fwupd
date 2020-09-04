@@ -136,6 +136,15 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 	FuPluginData *priv = fu_plugin_get_data (plugin);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
+	/* not supported */
+	if (priv->bcr_addr == 0x0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "BCR not supported on this platform");
+		return FALSE;
+	}
+
 	/* interesting device? */
 	if (g_strcmp0 (fu_udev_device_get_subsystem (device), "pci") != 0)
 		return TRUE;
