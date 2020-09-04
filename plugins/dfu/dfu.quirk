@@ -333,12 +333,12 @@ DfuForceTimeout = 5000
 # Poly Studio
 [DeviceInstanceId=USB\VID_095D&PID_9217]
 Plugin = dfu
-Flags = manifest-poll
-RemoveDelay = 40000
+Flags = manifest-poll,no-bus-reset-attach
+RemoveDelay = 60000
 [DeviceInstanceId=USB\VID_095D&PID_9218]
 Plugin = dfu
-Flags = manifest-poll
-RemoveDelay = 40000
+Flags = manifest-poll,no-bus-reset-attach
+RemoveDelay = 60000
 
 # Poly Eagle Eye Cube
 [DeviceInstanceId=USB\VID_095D&PID_9212]
@@ -354,21 +354,21 @@ RemoveDelay = 30000
 [DeviceInstanceId=USB\VID_095D&PID_9290]
 Plugin = dfu
 Flags = manifest-poll
-RemoveDelay = 40000
+RemoveDelay = 60000
 [DeviceInstanceId=USB\VID_095D&PID_9291]
 Plugin = dfu
 Flags = manifest-poll
-RemoveDelay = 40000
+RemoveDelay = 60000
 
 # Poly ULCC
 [DeviceInstanceId=USB\VID_095D&PID_9160]
 Plugin = dfu
-Flags = manifest-poll
-RemoveDelay = 50000
+Flags = manifest-poll,no-bus-reset-attach
+RemoveDelay = 60000
 [DeviceInstanceId=USB\VID_095D&PID_927B]
 Plugin = dfu
-Flags = manifest-poll
-RemoveDelay = 50000
+Flags = manifest-poll,no-bus-reset-attach
+RemoveDelay = 60000
 
 # Poly Eagle Eye Mini
 [DeviceInstanceId=USB\VID_095D&PID_3001]
