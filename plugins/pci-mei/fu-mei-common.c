@@ -271,20 +271,30 @@ fu_mei_hfsts2_to_string (FuMeiHfsts2 hfsts2, guint idt, GString *str)
 void
 fu_mei_hfsts3_to_string (FuMeiHfsts3 hfsts3, guint idt, GString *str)
 {
-	fu_common_string_append_kx (str, idt, "Reserved0",
-				    hfsts3.fields.reserved_0);
+	fu_common_string_append_kx (str, idt, "Chunk0",
+				    hfsts3.fields.chunk0);
+	fu_common_string_append_kx (str, idt, "Chunk1",
+				    hfsts3.fields.chunk1);
+	fu_common_string_append_kx (str, idt, "Chunk2",
+				    hfsts3.fields.chunk2);
+	fu_common_string_append_kx (str, idt, "Chunk3",
+				    hfsts3.fields.chunk3);
 	fu_common_string_append_kx (str, idt, "FwSku",
 				    hfsts3.fields.fw_sku);
 	fu_common_string_append_kb (str, idt, "EncryptKeyCheck",
 				    hfsts3.fields.encrypt_key_check);
 	fu_common_string_append_kb (str, idt, "PchConfigChange",
 				    hfsts3.fields.pch_config_change);
-	fu_common_string_append_kx (str, idt, "Reserved9",
-				    hfsts3.fields.reserved_9);
+	fu_common_string_append_kb (str, idt, "IbbVerificationResult",
+				    hfsts3.fields.ibb_verification_result);
+	fu_common_string_append_kb (str, idt, "IbbVerificationDone",
+				    hfsts3.fields.ibb_verification_done);
 	fu_common_string_append_kx (str, idt, "Reserved11",
 				    hfsts3.fields.reserved_11);
-	fu_common_string_append_kx (str, idt, "Reserved14",
-				    hfsts3.fields.reserved_14);
+	fu_common_string_append_kx (str, idt, "ActualIbbSize",
+				    hfsts3.fields.actual_ibb_size * 1024);
+	fu_common_string_append_ku (str, idt, "NumberOfChunks",
+				    hfsts3.fields.number_of_chunks);
 	fu_common_string_append_kb (str, idt, "EncryptKeyOverride",
 				    hfsts3.fields.encrypt_key_override);
 	fu_common_string_append_kb (str, idt, "PowerDownMitigation",
