@@ -83,13 +83,18 @@ typedef union {
 typedef union {
 	guint32 data;
 	struct {
-		guint32 reserved_0		: 4;
+		guint32 chunk0			: 1;
+		guint32 chunk1			: 1;
+		guint32 chunk2			: 1;
+		guint32 chunk3			: 1;
 		guint32 fw_sku			: 3;
 		guint32 encrypt_key_check	: 1;
 		guint32 pch_config_change	: 1;
-		guint32 reserved_9		: 2;
+		guint32 ibb_verification_result	: 1;
+		guint32 ibb_verification_done	: 1;
 		guint32 reserved_11		: 3;
-		guint32 reserved_14		: 16;
+		guint32 actual_ibb_size		: 14;
+		guint32 number_of_chunks	: 2;
 		guint32 encrypt_key_override	: 1;
 		guint32 power_down_mitigation	: 1;
 	} __attribute__((packed)) fields;
