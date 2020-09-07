@@ -264,6 +264,10 @@ fu_plugin_add_security_attrs_bootguard_enabled (FuPlugin *plugin, FuSecurityAttr
 	FuPluginData *priv = fu_plugin_get_data (plugin);
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
+	/* not supported */
+	if (priv->family == FU_MEI_FAMILY_TXE)
+		return;
+
 	/* create attr */
 	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ENABLED);
 	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
@@ -287,6 +291,10 @@ fu_plugin_add_security_attrs_bootguard_verified (FuPlugin *plugin, FuSecurityAtt
 {
 	FuPluginData *priv = fu_plugin_get_data (plugin);
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	/* not supported */
+	if (priv->family == FU_MEI_FAMILY_TXE)
+		return;
 
 	/* disabled */
 	if (priv->hfsts6.fields.boot_guard_disable)
@@ -316,6 +324,10 @@ fu_plugin_add_security_attrs_bootguard_acm (FuPlugin *plugin, FuSecurityAttrs *a
 	FuPluginData *priv = fu_plugin_get_data (plugin);
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
+	/* not supported */
+	if (priv->family == FU_MEI_FAMILY_TXE)
+		return;
+
 	/* disabled */
 	if (priv->hfsts6.fields.boot_guard_disable)
 		return;
@@ -342,6 +354,10 @@ fu_plugin_add_security_attrs_bootguard_policy (FuPlugin *plugin, FuSecurityAttrs
 {
 	FuPluginData *priv = fu_plugin_get_data (plugin);
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	/* not supported */
+	if (priv->family == FU_MEI_FAMILY_TXE)
+		return;
 
 	/* disabled */
 	if (priv->hfsts6.fields.boot_guard_disable)
@@ -370,6 +386,10 @@ fu_plugin_add_security_attrs_bootguard_otp (FuPlugin *plugin, FuSecurityAttrs *a
 {
 	FuPluginData *priv = fu_plugin_get_data (plugin);
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	/* not supported */
+	if (priv->family == FU_MEI_FAMILY_TXE)
+		return;
 
 	/* disabled */
 	if (priv->hfsts6.fields.boot_guard_disable)
