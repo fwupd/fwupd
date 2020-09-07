@@ -21,6 +21,7 @@ subdir('dell-dock')
 subdir('nitrokey')
 subdir('pci-bcr')
 subdir('pci-mei')
+subdir('platform-integrity')
 subdir('rts54hid')
 subdir('rts54hub')
 subdir('solokey')
@@ -33,10 +34,6 @@ subdir('vli')
 
 if get_option('plugin_msr')
 subdir('msr')
-endif
-
-if get_option('plugin_linux_spi_lpc')
-subdir('linux-spi-lpc')
 endif
 
 if get_option('gudev')

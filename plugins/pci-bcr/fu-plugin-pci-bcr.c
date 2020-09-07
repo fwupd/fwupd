@@ -54,7 +54,6 @@ fu_plugin_add_security_attr_bioswe (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_SPI_BIOSWE);
 	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
 	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
-	fwupd_security_attr_add_obsolete (attr, "linux_spi_lpc");
 	fu_security_attrs_append (attrs, attr);
 
 	/* no device */
@@ -88,7 +87,6 @@ fu_plugin_add_security_attr_ble (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_SPI_BLE);
 	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
 	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
-	fwupd_security_attr_add_obsolete (attr, "linux_spi_lpc");
 	fu_security_attrs_append (attrs, attr);
 
 	/* load file */
@@ -116,7 +114,6 @@ fu_plugin_add_security_attr_smm_bwp (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_SPI_SMM_BWP);
 	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
 	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
-	fwupd_security_attr_add_obsolete (attr, "linux_spi_lpc");
 	fu_security_attrs_append (attrs, attr);
 
 	/* load file */

@@ -1,5 +1,5 @@
-Linux SPI LPC
-=============
+Platform Integrity
+==================
 
 Introduction
 ------------

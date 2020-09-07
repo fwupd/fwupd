@@ -308,6 +308,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_sysconfdir}/pki/fwupd-metadata
 %if 0%{?have_msr}
 %{_sysconfdir}/modules-load.d/fwupd-msr.conf
+%{_sysconfdir}/modules-load.d/fwupd-platform-integrity.conf
 %endif
 %{_datadir}/dbus-1/system.d/org.freedesktop.fwupd.conf
 %{_datadir}/bash-completion/completions/fwupdmgr
@@ -402,6 +403,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_libdir}/fwupd-plugins-3/libfu_plugin_optionrom.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_pci_bcr.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_pci_mei.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_platform_integrity.so
 %if 0%{?have_redfish}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_redfish.so
 %endif
