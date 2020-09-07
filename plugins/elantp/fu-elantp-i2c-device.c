@@ -4,19 +4,18 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#include "config.h"
+#include <linux/i2c-dev.h>
 
-#include <linux/hidraw.h>
-#include <linux/input.h>
+#include "config.h"
 
 #include "fu-elantp-common.h"
 #include "fu-elantp-firmware.h"
-#include "fu-elantp-hid-device.h"
-
+#include "fu-elantp-i2c-device.h"
 #include "fu-chunk.h"
 
-struct _FuElantpHidDevice {
+struct _FuElantpI2cDevice {
 	FuUdevDevice		 parent_instance;
+	guint16			 i2c_addr;
 	guint16			 ic_page_count;
 	guint16			 iap_type;
 	guint16			 iap_ctrl;
@@ -26,12 +25,13 @@ struct _FuElantpHidDevice {
 	guint8			 pattern;
 };
 
-G_DEFINE_TYPE (FuElantpHidDevice, fu_elantp_hid_device, FU_TYPE_UDEV_DEVICE)
+G_DEFINE_TYPE (FuElantpI2cDevice, fu_elantp_i2c_device, FU_TYPE_UDEV_DEVICE)
 
 static void
-fu_elantp_hid_device_to_string (FuDevice *device, guint idt, GString *str)
+fu_elantp_i2c_device_to_string (FuDevice *device, guint idt, GString *str)
 {
-	FuElantpHidDevice *self = FU_ELANTP_HID_DEVICE (device);
+	FuElantpI2cDevice *self = FU_ELANTP_I2C_DEVICE (device);
+	fu_common_string_append_kx (str, idt, "I2cAddr", self->i2c_addr);
 	fu_common_string_append_kx (str, idt, "ModuleId", self->module_id);
 	fu_common_string_append_kx (str, idt, "Pattern", self->pattern);
 	fu_common_string_append_kx (str, idt, "FwPageSize", self->fw_page_size);
@@ -41,80 +41,72 @@ fu_elantp_hid_device_to_string (FuDevice *device, guint idt, GString *str)
 }
 
 static gboolean
-fu_elantp_hid_device_probe (FuUdevDevice *device, GError **error)
+fu_elantp_i2c_device_probe (FuUdevDevice *device, GError **error)
 {
 	/* check is valid */
-	if (g_strcmp0 (fu_udev_device_get_subsystem (device), "hidraw") != 0) {
+	if (g_strcmp0 (fu_udev_device_get_subsystem (device), "i2c-dev") != 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "is not correct subsystem=%s, expected hidraw",
+			     "is not correct subsystem=%s, expected i2c-dev",
 			     fu_udev_device_get_subsystem (device));
+		return FALSE;
+	}
+	if (fu_udev_device_get_device_file (device) == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "no device file");
 		return FALSE;
 	}
 
 	/* set the physical ID */
-	return fu_udev_device_set_physical_id (device, "hid", error);
+	return fu_udev_device_set_physical_id (device, "i2c", error);
 }
 
 static gboolean
-fu_elantp_hid_device_send_cmd (FuElantpHidDevice *self,
-			       guint8 *tx, gsize txsz,
-			       guint8 *rx, gsize rxsz,
+fu_elantp_i2c_device_send_cmd (FuElantpI2cDevice *self,
+			       guint8 *tx, gssize txsz,
+			       guint8 *rx, gssize rxsz,
 			       GError **error)
 {
-	g_autofree guint8 *buf = NULL;
-	gsize bufsz = rxsz + 3;
-
 	if (g_getenv ("FWUPD_ELANTP_VERBOSE") != NULL)
-		fu_common_dump_raw (G_LOG_DOMAIN, "SetReport", tx, txsz);
-	if (!fu_udev_device_ioctl (FU_UDEV_DEVICE (self),
-				   HIDIOCSFEATURE(txsz), tx,
-				   NULL, error))
+		fu_common_dump_raw (G_LOG_DOMAIN, "Write", tx, txsz);
+	if (!fu_udev_device_pwrite_full (FU_UDEV_DEVICE (self), 0, tx, txsz, error))
 		return FALSE;
 	if (rxsz == 0)
 		return TRUE;
-
-	/* GetFeature */
-	buf = g_malloc0 (bufsz);
-	buf[0] = tx[0]; /* report number */
-	if (!fu_udev_device_ioctl (FU_UDEV_DEVICE (self),
-				   HIDIOCGFEATURE(bufsz), buf,
-				   NULL, error))
+	if (!fu_udev_device_pread_full (FU_UDEV_DEVICE (self), 0, rx, rxsz, error))
 		return FALSE;
 	if (g_getenv ("FWUPD_ELANTP_VERBOSE") != NULL)
-		fu_common_dump_raw (G_LOG_DOMAIN, "GetReport", buf, bufsz);
-
-	/* success */
-	memcpy (rx, buf + 0x3, rxsz);
+		fu_common_dump_raw (G_LOG_DOMAIN, "Read", rx, rxsz);
 	return TRUE;
 }
 
 static gboolean
-fu_elantp_hid_device_read_cmd (FuElantpHidDevice *self, guint16 reg,
-			       guint8 *rx, gsize rxsz, GError **error)
+fu_elantp_i2c_device_write_cmd (FuElantpI2cDevice *self, guint16 reg, guint16 cmd, GError **error)
 {
-	guint8 buf[5] = { 0x0d, 0x05, 0x03 };
-	fu_common_write_uint16 (buf + 0x3, reg, G_LITTLE_ENDIAN);
-	return fu_elantp_hid_device_send_cmd (self, buf, sizeof(buf), rx, rxsz, error);
-}
-
-static gint
-fu_elantp_hid_device_write_cmd (FuElantpHidDevice *self,
-				guint16 reg, guint16 cmd,
-				GError **error)
-{
-	guint8 buf[5] = { 0x0d };
-	fu_common_write_uint16 (buf + 0x1, reg, G_LITTLE_ENDIAN);
-	fu_common_write_uint16 (buf + 0x3, cmd, G_LITTLE_ENDIAN);
-	return fu_elantp_hid_device_send_cmd (self, buf, sizeof(buf), NULL, 0, error);
+	guint8 buf[4];
+	fu_common_write_uint16 (buf + 0x0, reg, G_LITTLE_ENDIAN);
+	fu_common_write_uint16 (buf + 0x2, cmd, G_LITTLE_ENDIAN);
+	return fu_elantp_i2c_device_send_cmd (self, buf, sizeof(buf), NULL, 0, error);
 }
 
 static gboolean
-fu_elantp_hid_device_ensure_iap_ctrl (FuElantpHidDevice *self, GError **error)
+fu_elantp_i2c_device_read_cmd (FuElantpI2cDevice *self, guint16 reg,
+			       guint8 *rx, gsize rxsz, GError **error)
+{
+	guint8 buf[2];
+	fu_common_write_uint16 (buf + 0x0, reg, G_LITTLE_ENDIAN);
+	return fu_elantp_i2c_device_send_cmd (self, buf, sizeof(buf),
+					      rx, rxsz, error);
+}
+
+static gboolean
+fu_elantp_i2c_device_ensure_iap_ctrl (FuElantpI2cDevice *self, GError **error)
 {
 	guint8 buf[2] = { 0x0 };
-	if (!fu_elantp_hid_device_read_cmd (self, ETP_CMD_I2C_IAP_CTRL, buf, sizeof(buf), error)) {
+	if (!fu_elantp_i2c_device_read_cmd (self, ETP_CMD_I2C_IAP_CTRL, buf, sizeof(buf), error)) {
 		g_prefix_error (error, "failed to read IAPControl: ");
 		return FALSE;
 	}
@@ -130,32 +122,57 @@ fu_elantp_hid_device_ensure_iap_ctrl (FuElantpHidDevice *self, GError **error)
 }
 
 static gboolean
-fu_elantp_hid_device_setup (FuDevice *device, GError **error)
+fu_elantp_i2c_device_setup (FuDevice *device, GError **error)
 {
-	FuElantpHidDevice *self = FU_ELANTP_HID_DEVICE (device);
-	FuUdevDevice *udev_device = FU_UDEV_DEVICE (device);
+	FuElantpI2cDevice *self = FU_ELANTP_I2C_DEVICE (device);
 	guint16 fwver;
 	guint16 iap_ver;
 	guint16 tmp;
-	guint8 buf[2] = { 0x0 };
+	guint32 pid;
+	guint32 vid;
+	guint8 buf[30] = { 0x0 };
 	guint8 ic_type;
 	g_autofree gchar *instance_id1 = NULL;
 	g_autofree gchar *instance_id_ic_type = NULL;
 	g_autofree gchar *version_bl = NULL;
 	g_autofree gchar *version = NULL;
 
+	/* read the I2C descriptor */
+	if (!fu_elantp_i2c_device_read_cmd (self, ETP_CMD_GET_HID_DESCRIPTOR,
+					    buf, sizeof(buf), error)) {
+		g_prefix_error (error, "failed to get HID descriptor: ");
+		return FALSE;
+	}
+	vid = fu_common_read_uint16 (buf + 20, G_LITTLE_ENDIAN);
+	pid = fu_common_read_uint16 (buf + 22, G_LITTLE_ENDIAN);
+
+	/* set the vendor ID */
+	if (vid != 0x0000) {
+		g_autofree gchar *vendor_id = NULL;
+		vendor_id = g_strdup_printf ("HIDRAW:0x%04X", vid);
+		fu_device_set_vendor_id (device, vendor_id);
+	}
+
+	/* add GUIDs in order of priority */
+	if (vid != 0x0 && pid != 0x0) {
+		g_autofree gchar *devid = NULL;
+		devid = g_strdup_printf ("HIDRAW\\VID_%04X&PID_%04X",
+					 vid, pid);
+		fu_device_add_instance_id (device, devid);
+	}
+
 	/* get pattern */
-	if (!fu_elantp_hid_device_read_cmd (self,
+	if (!fu_elantp_i2c_device_read_cmd (self,
 					    ETP_CMD_I2C_GET_HID_ID,
 					    buf, sizeof(buf), error)) {
-		g_prefix_error (error, "failed to read HID ID: ");
+		g_prefix_error (error, "failed to read I2C ID: ");
 		return FALSE;
 	}
 	tmp = fu_common_read_uint16 (buf, G_LITTLE_ENDIAN);
 	self->pattern = tmp != 0xffff ? (tmp & 0xff00) >> 8 : 0;
 
 	/* get current firmware version */
-	if (!fu_elantp_hid_device_read_cmd (self,
+	if (!fu_elantp_i2c_device_read_cmd (self,
 					    ETP_CMD_I2C_FW_VERSION,
 					    buf, sizeof(buf), error)) {
 		g_prefix_error (error, "failed to read fw version: ");
@@ -166,7 +183,7 @@ fu_elantp_hid_device_setup (FuDevice *device, GError **error)
 	fu_device_set_version (device, version);
 
 	/* get IAP firmware version */
-	if (!fu_elantp_hid_device_read_cmd (self,
+	if (!fu_elantp_i2c_device_read_cmd (self,
 					    self->pattern == 0 ? ETP_CMD_I2C_IAP_VERSION : ETP_CMD_I2C_IAP_VERSION_2,
 					    buf, sizeof(buf), error)) {
 		g_prefix_error (error, "failed to read bootloader version: ");
@@ -181,7 +198,7 @@ fu_elantp_hid_device_setup (FuDevice *device, GError **error)
 	fu_device_set_version_bootloader (device, version_bl);
 
 	/* get module ID */
-	if (!fu_elantp_hid_device_read_cmd (self,
+	if (!fu_elantp_i2c_device_read_cmd (self,
 					    ETP_CMD_GET_MODULE_ID,
 					    buf, sizeof(buf), error)) {
 		g_prefix_error (error, "failed to read module ID: ");
@@ -191,19 +208,17 @@ fu_elantp_hid_device_setup (FuDevice *device, GError **error)
 
 	/* define the extra instance IDs */
 	instance_id1 = g_strdup_printf ("HIDRAW\\VEN_%04X&DEV_%04X&MOD_%04X",
-					fu_udev_device_get_vendor (udev_device),
-					fu_udev_device_get_model (udev_device),
-					self->module_id);
+					vid, pid, self->module_id);
 	fu_device_add_instance_id (device, instance_id1);
 
 	/* get OSM version */
-	if (!fu_elantp_hid_device_read_cmd (self, ETP_CMD_I2C_OSM_VERSION, buf, sizeof(buf), error)) {
+	if (!fu_elantp_i2c_device_read_cmd (self, ETP_CMD_I2C_OSM_VERSION, buf, sizeof(buf), error)) {
 		g_prefix_error (error, "failed to read OSM version: ");
 		return FALSE;
 	}
 	tmp = fu_common_read_uint16 (buf, G_LITTLE_ENDIAN);
 	if (tmp == ETP_CMD_I2C_OSM_VERSION || tmp == 0xFFFF) {
-		if (!fu_elantp_hid_device_read_cmd (self, ETP_CMD_I2C_IAP_ICBODY, buf, sizeof(buf), error)) {
+		if (!fu_elantp_i2c_device_read_cmd (self, ETP_CMD_I2C_IAP_ICBODY, buf, sizeof(buf), error)) {
 			g_prefix_error (error, "failed to read IC body: ");
 			return FALSE;
 		}
@@ -219,12 +234,12 @@ fu_elantp_hid_device_setup (FuDevice *device, GError **error)
 	if (ic_type >= 0x10) {
 		if (iap_ver >= 1) {
 			/* set the IAP type, presumably some kind of ABI */
-			if (!fu_elantp_hid_device_write_cmd (self,
+			if (!fu_elantp_i2c_device_write_cmd (self,
 							     ETP_CMD_I2C_IAP_TYPE,
 							     ETP_I2C_IAP_TYPE_REG,
 							     error))
 				return FALSE;
-			if (!fu_elantp_hid_device_read_cmd (self, ETP_CMD_I2C_IAP_TYPE,
+			if (!fu_elantp_i2c_device_read_cmd (self, ETP_CMD_I2C_IAP_TYPE,
 							    buf, sizeof(buf), error)) {
 				g_prefix_error (error, "failed to read IAP type: ");
 				return FALSE;
@@ -257,20 +272,43 @@ fu_elantp_hid_device_setup (FuDevice *device, GError **error)
 	fu_device_set_firmware_size (device, (guint64) self->ic_page_count * (guint64) self->fw_page_size);
 
 	/* is in bootloader mode */
-	if (!fu_elantp_hid_device_ensure_iap_ctrl (self, error))
+	if (!fu_elantp_i2c_device_ensure_iap_ctrl (self, error))
 		return FALSE;
 
 	/* success */
 	return TRUE;
 }
 
+static gboolean
+fu_elantp_i2c_device_open (FuUdevDevice *device, GError **error)
+{
+	FuElantpI2cDevice *self = FU_ELANTP_I2C_DEVICE (device);
+	gint addr = self->i2c_addr;
+	guint8 tx_buf[] = { 0x02, 0x01 };
+
+	/* set target address */
+	if (!fu_udev_device_ioctl (device, I2C_SLAVE,
+				   GINT_TO_POINTER (addr), NULL, NULL)) {
+		if (!fu_udev_device_ioctl (device, I2C_SLAVE_FORCE,
+					   GINT_TO_POINTER (addr), NULL, error)) {
+			g_prefix_error (error,
+					"failed to set target address to 0x%x: ",
+					self->i2c_addr);
+			return FALSE;
+		}
+	}
+
+	/* read i2c device */
+	return fu_udev_device_pwrite_full (device, 0x0, tx_buf, sizeof(tx_buf), error);
+}
+
 static FuFirmware *
-fu_elantp_hid_device_prepare_firmware (FuDevice *device,
+fu_elantp_i2c_device_prepare_firmware (FuDevice *device,
 				       GBytes *fw,
 				       FwupdInstallFlags flags,
 				       GError **error)
 {
-	FuElantpHidDevice *self = FU_ELANTP_HID_DEVICE (device);
+	FuElantpI2cDevice *self = FU_ELANTP_I2C_DEVICE (device);
 	guint16 module_id;
 	g_autoptr(FuFirmware) firmware = fu_elantp_firmware_new ();
 
@@ -292,12 +330,12 @@ fu_elantp_hid_device_prepare_firmware (FuDevice *device,
 }
 
 static gboolean
-fu_elantp_hid_device_write_firmware (FuDevice *device,
+fu_elantp_i2c_device_write_firmware (FuDevice *device,
 				     FuFirmware *firmware,
 				     FwupdInstallFlags flags,
 				     GError **error)
 {
-	FuElantpHidDevice *self = FU_ELANTP_HID_DEVICE (device);
+	FuElantpI2cDevice *self = FU_ELANTP_I2C_DEVICE (device);
 	FuElantpFirmware *firmware_elantp = FU_ELANTP_FIRMWARE (firmware);
 	gsize bufsz = 0;
 	guint16 checksum = 0;
@@ -329,13 +367,13 @@ fu_elantp_hid_device_write_firmware (FuDevice *device,
 		memcpy (blk + 1, chk->data, chk->data_sz);
 		fu_common_write_uint16 (blk + chk->data_sz + 1, csum_tmp, G_LITTLE_ENDIAN);
 
-		if (!fu_elantp_hid_device_send_cmd (self, blk, blksz, NULL, 0, error))
+		if (!fu_elantp_i2c_device_send_cmd (self, blk, blksz, NULL, 0, error))
 			return FALSE;
 		g_usleep (self->fw_page_size == 512 ?
 				ELANTP_DELAY_WRITE_BLOCK_512 * 1000 :
 				ELANTP_DELAY_WRITE_BLOCK * 1000);
 
-		if (!fu_elantp_hid_device_ensure_iap_ctrl (self, error))
+		if (!fu_elantp_i2c_device_ensure_iap_ctrl (self, error))
 			return FALSE;
 		if (self->iap_ctrl & (ETP_FW_IAP_PAGE_ERR | ETP_FW_IAP_INTF_ERR)) {
 			g_set_error (error,
@@ -353,7 +391,7 @@ fu_elantp_hid_device_write_firmware (FuDevice *device,
 
 	/* verify the written checksum */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_VERIFY);
-	if (!fu_elantp_hid_device_read_cmd (self, ETP_CMD_I2C_IAP_CHECKSUM,
+	if (!fu_elantp_i2c_device_read_cmd (self, ETP_CMD_I2C_IAP_CHECKSUM,
 					    csum_buf, sizeof(csum_buf), error))
 		return FALSE;
 	checksum_device = fu_common_read_uint16 (csum_buf, G_LITTLE_ENDIAN);
@@ -374,9 +412,9 @@ fu_elantp_hid_device_write_firmware (FuDevice *device,
 }
 
 static gboolean
-fu_elantp_hid_device_detach (FuDevice *device, GError **error)
+fu_elantp_i2c_device_detach (FuDevice *device, GError **error)
 {
-	FuElantpHidDevice *self = FU_ELANTP_HID_DEVICE (device);
+	FuElantpI2cDevice *self = FU_ELANTP_I2C_DEVICE (device);
 
 	/* sanity check */
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
@@ -386,19 +424,19 @@ fu_elantp_hid_device_detach (FuDevice *device, GError **error)
 
 	g_debug ("in bootloader mode, reset IC");
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	if (!fu_elantp_hid_device_write_cmd (self,
+	if (!fu_elantp_i2c_device_write_cmd (self,
 					     ETP_CMD_I2C_IAP_RESET,
 					     ETP_I2C_IAP_RESET,
 					     error))
 		return FALSE;
 	g_usleep (ELANTP_DELAY_RESET * 1000);
-	if (!fu_elantp_hid_device_write_cmd (self,
+	if (!fu_elantp_i2c_device_write_cmd (self,
 					     ETP_CMD_I2C_IAP,
 					     self->iap_password,
 					     error))
 		return FALSE;
 	g_usleep (ELANTP_DELAY_UNLOCK * 1000);
-	if (!fu_elantp_hid_device_ensure_iap_ctrl (self, error))
+	if (!fu_elantp_i2c_device_ensure_iap_ctrl (self, error))
 		return FALSE;
 	if ((self->iap_ctrl & ETP_FW_IAP_CHECK_PW) == 0) {
 		g_set_error_literal (error,
@@ -413,9 +451,9 @@ fu_elantp_hid_device_detach (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_elantp_hid_device_attach (FuDevice *device, GError **error)
+fu_elantp_i2c_device_attach (FuDevice *device, GError **error)
 {
-	FuElantpHidDevice *self = FU_ELANTP_HID_DEVICE (device);
+	FuElantpI2cDevice *self = FU_ELANTP_I2C_DEVICE (device);
 
 	/* sanity check */
 	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
@@ -425,18 +463,18 @@ fu_elantp_hid_device_attach (FuDevice *device, GError **error)
 
 	/* reset back to runtime */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	if (!fu_elantp_hid_device_write_cmd (self, ETP_CMD_I2C_IAP_RESET, ETP_I2C_IAP_RESET, error))
+	if (!fu_elantp_i2c_device_write_cmd (self, ETP_CMD_I2C_IAP_RESET, ETP_I2C_IAP_RESET, error))
 		return FALSE;
 	g_usleep (ELANTP_DELAY_RESET * 1000);
-	if (!fu_elantp_hid_device_write_cmd (self, ETP_CMD_I2C_IAP_RESET, ETP_I2C_ENABLE_REPORT, error)) {
+	if (!fu_elantp_i2c_device_write_cmd (self, ETP_CMD_I2C_IAP_RESET, ETP_I2C_ENABLE_REPORT, error)) {
 		g_prefix_error (error, "cannot enable TP report: ");
 		return FALSE;
 	}
-	if (!fu_elantp_hid_device_write_cmd (self, 0x0306, 0x003, error)) {
+	if (!fu_elantp_i2c_device_write_cmd (self, 0x0306, 0x003, error)) {
 		g_prefix_error (error, "cannot switch to TP PTP mode: ");
 		return FALSE;
 	}
-	if (!fu_elantp_hid_device_ensure_iap_ctrl (self, error))
+	if (!fu_elantp_i2c_device_ensure_iap_ctrl (self, error))
 		return FALSE;
 
 	/* success */
@@ -444,12 +482,12 @@ fu_elantp_hid_device_attach (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_elantp_hid_device_set_quirk_kv (FuDevice *device,
+fu_elantp_i2c_device_set_quirk_kv (FuDevice *device,
 				   const gchar *key,
 				   const gchar *value,
 				   GError **error)
 {
-	FuElantpHidDevice *self = FU_ELANTP_HID_DEVICE (device);
+	FuElantpI2cDevice *self = FU_ELANTP_I2C_DEVICE (device);
 	if (g_strcmp0 (key, "ElantpIcPageCount") == 0) {
 		guint64 tmp = fu_common_strtoull (value);
 		if (tmp > 0xffff) {
@@ -476,6 +514,19 @@ fu_elantp_hid_device_set_quirk_kv (FuDevice *device,
 		self->iap_password = (guint16) tmp;
 		return TRUE;
 	}
+	if (g_strcmp0 (key, "ElantpI2cTargetAddress") == 0) {
+		guint64 tmp = fu_common_strtoull (value);
+		if (tmp > 0xffff) {
+			g_set_error_literal (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_NOT_SUPPORTED,
+					     "ElantpI2cTargetAddress only supports "
+					     "values <= 0xffff");
+			return FALSE;
+		}
+		self->i2c_addr = (guint16) tmp;
+		return TRUE;
+	}
 	g_set_error_literal (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_NOT_SUPPORTED,
@@ -484,40 +535,39 @@ fu_elantp_hid_device_set_quirk_kv (FuDevice *device,
 }
 
 static void
-fu_elantp_hid_device_init (FuElantpHidDevice *self)
+fu_elantp_i2c_device_init (FuElantpI2cDevice *self)
 {
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_set_summary (FU_DEVICE (self), "Elan Touchpad");
+	fu_device_set_summary (FU_DEVICE (self), "Elan Touchpad (I²C Recovery)");
 	fu_device_add_icon (FU_DEVICE (self), "input-touchpad");
 	fu_device_set_protocol (FU_DEVICE (self), "tw.com.emc.elantp");
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_HEX);
-	fu_device_set_priority (FU_DEVICE (self), 1); /* better than i2c */
 	fu_udev_device_set_flags (FU_UDEV_DEVICE (self),
 				  FU_UDEV_DEVICE_FLAG_OPEN_READ |
-				  FU_UDEV_DEVICE_FLAG_OPEN_WRITE |
-				  FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK);
+				  FU_UDEV_DEVICE_FLAG_OPEN_WRITE);
 }
 
 static void
-fu_elantp_hid_device_finalize (GObject *object)
+fu_elantp_i2c_device_finalize (GObject *object)
 {
-	G_OBJECT_CLASS (fu_elantp_hid_device_parent_class)->finalize (object);
+	G_OBJECT_CLASS (fu_elantp_i2c_device_parent_class)->finalize (object);
 }
 
 static void
-fu_elantp_hid_device_class_init (FuElantpHidDeviceClass *klass)
+fu_elantp_i2c_device_class_init (FuElantpI2cDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuUdevDeviceClass *klass_udev_device = FU_UDEV_DEVICE_CLASS (klass);
-	object_class->finalize = fu_elantp_hid_device_finalize;
-	klass_device->to_string = fu_elantp_hid_device_to_string;
-	klass_device->attach = fu_elantp_hid_device_attach;
-	klass_device->detach = fu_elantp_hid_device_detach;
-	klass_device->set_quirk_kv = fu_elantp_hid_device_set_quirk_kv;
-	klass_device->setup = fu_elantp_hid_device_setup;
-	klass_device->write_firmware = fu_elantp_hid_device_write_firmware;
-	klass_device->prepare_firmware = fu_elantp_hid_device_prepare_firmware;
-	klass_udev_device->probe = fu_elantp_hid_device_probe;
+	object_class->finalize = fu_elantp_i2c_device_finalize;
+	klass_device->to_string = fu_elantp_i2c_device_to_string;
+	klass_device->attach = fu_elantp_i2c_device_attach;
+	klass_device->detach = fu_elantp_i2c_device_detach;
+	klass_device->set_quirk_kv = fu_elantp_i2c_device_set_quirk_kv;
+	klass_device->setup = fu_elantp_i2c_device_setup;
+	klass_device->write_firmware = fu_elantp_i2c_device_write_firmware;
+	klass_device->prepare_firmware = fu_elantp_i2c_device_prepare_firmware;
+	klass_udev_device->probe = fu_elantp_i2c_device_probe;
+	klass_udev_device->open = fu_elantp_i2c_device_open;
 }

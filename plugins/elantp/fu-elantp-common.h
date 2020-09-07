@@ -8,6 +8,7 @@
 
 #include <glib.h>
 
+#define ETP_CMD_GET_HID_DESCRIPTOR	0x0001
 #define ETP_CMD_GET_HARDWARE_ID		0x0100
 #define ETP_CMD_GET_MODULE_ID		0x0101
 #define ETP_CMD_I2C_FW_CHECKSUM		0x030F
@@ -37,6 +38,13 @@
 #define ETP_FW_IAP_PAGE_ERR		(1 << 5)
 #define ETP_FW_IAP_CHECK_PW		(1 << 7)
 #define ETP_FW_IAP_LAST_FIT		(1 << 9)
+
+
+#define ELANTP_DELAY_COMPLETE		1200	/* ms */
+#define ELANTP_DELAY_RESET		30	/* ms */
+#define ELANTP_DELAY_UNLOCK		100	/* ms */
+#define ELANTP_DELAY_WRITE_BLOCK	35	/* ms */
+#define ELANTP_DELAY_WRITE_BLOCK_512	50	/* ms */
 
 guint16		 fu_elantp_calc_checksum	(const guint8	*data,
 						 gsize		 length);

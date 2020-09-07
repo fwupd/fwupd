@@ -13,6 +13,7 @@ shared_module('fu_plugin_elantp',
     'fu-elantp-common.c',
     'fu-elantp-firmware.c',
     'fu-elantp-hid-device.c',
+    'fu-elantp-i2c-device.c',
   ],
   include_directories : [
     root_incdir,
