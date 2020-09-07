@@ -32,6 +32,33 @@
     <binary>fwupdmgr</binary>
   </provides>
   <releases>
+    <release version="1.4.6" date="2020-09-07">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add a re-implementation of the rhboot dbxtool</li>
+          <li>Add commands to fwupdtool for interacting with the ESP</li>
+          <li>Add support for the LabTop Mk IV</li>
+          <li>Add support for the Realtek RTD21XX I²C protocol</li>
+          <li>Add X-Configuration category to use for dbx updates</li>
+          <li>Allow blocking specific firmware releases by checksum</li>
+          <li>Allow plugins to set remove delay only on the child</li>
+          <li>Allow updating the dbx, validating it is safe to apply</li>
+          <li>Support download of large DFU firmware</li>
+          <li>Support polling the status from device in dfuManifest state</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add missing Synaptics Prometheus GUIDs for ConfigId</li>
+          <li>Allow DFU device to attach to runtime without a bus reset</li>
+          <li>Be more careful doing multiple writes to the same device</li>
+          <li>Cancel the file monitor before disposal to avoid a potential deadlock</li>
+          <li>Correctly label the vebdor for more NVMe devices</li>
+          <li>Specify a remove delay for Poly USB Cameras</li>
+          <li>Use newer libxmlb features to properly display more AppStream markup</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.4.5" date="2020-07-30">
       <description>
         <p>This release adds the following features:</p>
