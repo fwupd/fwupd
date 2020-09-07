@@ -5,7 +5,7 @@ Introduction
 ------------
 
 This plugin allows updating Touchpad devices from Elan. Devices are enumerated
-using HID.
+using HID and raw I²C nodes. The I²C mode is used for firmware recovery.
 
 Firmware Format
 ---------------

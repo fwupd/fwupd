@@ -6,6 +6,12 @@ GType = FuElantpHidDevice
 Plugin = elantp
 GType = FuElantpHidDevice
 
+# recovery device
+[DeviceInstanceId=I2C\NAME_Synopsys-DesignWare-I2C-adapter]
+Plugin = elantp
+GType = FuElantpI2cDevice
+ElantpI2cTargetAddress = 0x15
+
 [DeviceInstanceId=ELANTP\ICTYPE_00]
 ElantpIcPageCount = 0x200
 ElantpIapPassword = 0x1EA5
