@@ -57,9 +57,9 @@ endif
 # depends on dfu
 subdir('csr')
 
-if get_option('plugin_tpm')
+if get_option('tpm')
 if not get_option('gudev')
-  error('gudev is required for plugin_tpm')
+  error('gudev is required for tpm')
 endif
 subdir('tpm')
 subdir('tpm-eventlog')
