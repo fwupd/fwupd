@@ -50,6 +50,11 @@ fu_uefi_pcrs_2_0_func (void)
 	const gchar *tpm_server_running = g_getenv ("TPM_SERVER_RUNNING");
 	g_setenv ("FWUPD_FORCE_TPM2", "1", TRUE);
 
+#ifndef HAVE_TSS2
+	g_test_skip ("Compiled without TPM2.0 support");
+	return;
+#endif
+
 #ifdef HAVE_GETUID
 	if (tpm_server_running == NULL &&
 	    (getuid () != 0 || geteuid () != 0)) {
