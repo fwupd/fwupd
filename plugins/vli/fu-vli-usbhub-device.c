@@ -693,26 +693,6 @@ fu_vli_usbhub_device_prepare_firmware (FuDevice *device,
 	guint16 device_id;
 	g_autoptr(FuFirmware) firmware = fu_vli_usbhub_firmware_new ();
 
-	/* check size */
-	if (g_bytes_get_size (fw) < fu_device_get_firmware_size_min (device)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "firmware too small, got 0x%x, expected >= 0x%x",
-			     (guint) g_bytes_get_size (fw),
-			     (guint) fu_device_get_firmware_size_min (device));
-		return NULL;
-	}
-	if (g_bytes_get_size (fw) > fu_device_get_firmware_size_max (device)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "firmware too large, got 0x%x, expected <= 0x%x",
-			     (guint) g_bytes_get_size (fw),
-			     (guint) fu_device_get_firmware_size_max (device));
-		return NULL;
-	}
-
 	/* check is compatible with firmware */
 	fu_device_set_status (device, FWUPD_STATUS_DECOMPRESSING);
 	if (!fu_firmware_parse (firmware, fw, flags, error))
