@@ -133,7 +133,6 @@ fu_synaprom_config_prepare_firmware (FuDevice *device,
 	guint32 id2;
 
 	/* parse the firmware */
-	fu_device_set_status (device, FWUPD_STATUS_DECOMPRESSING);
 	if (!fu_firmware_parse (firmware, fw, flags, error))
 		return NULL;
 

@@ -281,7 +281,6 @@ fu_elantp_hid_device_prepare_firmware (FuDevice *device,
 	g_autoptr(FuFirmware) firmware = fu_elantp_firmware_new ();
 
 	/* check is compatible with hardware */
-	fu_device_set_status (device, FWUPD_STATUS_DECOMPRESSING);
 	if (!fu_firmware_parse (firmware, fw, flags, error))
 		return NULL;
 	module_id = fu_elantp_firmware_get_module_id (FU_ELANTP_FIRMWARE (firmware));

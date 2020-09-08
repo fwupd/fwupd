@@ -344,7 +344,6 @@ fu_vli_pd_device_prepare_firmware (FuDevice *device,
 	}
 
 	/* check is compatible with firmware */
-	fu_device_set_status (device, FWUPD_STATUS_DECOMPRESSING);
 	if (!fu_firmware_parse (firmware, fw, flags, error))
 		return NULL;
 	device_kind = fu_vli_pd_firmware_get_kind (FU_VLI_PD_FIRMWARE (firmware));

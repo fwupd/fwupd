@@ -694,7 +694,6 @@ fu_vli_usbhub_device_prepare_firmware (FuDevice *device,
 	g_autoptr(FuFirmware) firmware = fu_vli_usbhub_firmware_new ();
 
 	/* check is compatible with firmware */
-	fu_device_set_status (device, FWUPD_STATUS_DECOMPRESSING);
 	if (!fu_firmware_parse (firmware, fw, flags, error))
 		return NULL;
 	device_kind = fu_vli_usbhub_firmware_get_device_kind (FU_VLI_USBHUB_FIRMWARE (firmware));
