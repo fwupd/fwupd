@@ -9,7 +9,7 @@ meson build \
 	-Dman=false \
 	-Ddaemon=false \
 	-Dgusb:tests=false \
-	-Dplugin_tpm=false \
+	-Dtpm=false \
 	-Dplugin_modem_manager=false \
 	-Dplugin_flashrom=false \
 	-Dplugin_uefi=false \
