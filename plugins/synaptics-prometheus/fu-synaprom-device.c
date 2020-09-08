@@ -252,7 +252,6 @@ fu_synaprom_device_prepare_fw (FuDevice *device,
 	g_autoptr(FuFirmware) firmware = fu_synaprom_firmware_new ();
 
 	/* parse the firmware */
-	fu_device_set_status (device, FWUPD_STATUS_DECOMPRESSING);
 	if (!fu_firmware_parse (firmware, fw, flags, error))
 		return NULL;
 

@@ -777,7 +777,6 @@ fu_cros_ec_usb_device_prepare_firmware (FuDevice *device,
 	FuCrosEcFirmware *cros_ec_firmware = NULL;
 	g_autoptr(FuFirmware) firmware = fu_cros_ec_firmware_new ();
 
-	fu_device_set_status (device, FWUPD_STATUS_DECOMPRESSING);
 	if (!fu_firmware_parse (firmware, fw, flags, error))
 		return NULL;
 	cros_ec_firmware = FU_CROS_EC_FIRMWARE (firmware);

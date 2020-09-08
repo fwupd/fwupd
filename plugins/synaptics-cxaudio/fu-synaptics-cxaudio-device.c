@@ -550,8 +550,6 @@ fu_synaptics_cxaudio_device_prepare_firmware (FuDevice *device,
 	FuSynapticsCxaudioDevice *self = FU_SYNAPTICS_CXAUDIO_DEVICE (device);
 	guint32 chip_id_base;
 	g_autoptr(FuFirmware) firmware = fu_synaptics_cxaudio_firmware_new ();
-
-	fu_device_set_status (device, FWUPD_STATUS_DECOMPRESSING);
 	if (!fu_firmware_parse (firmware, fw, flags, error))
 		return NULL;
 	chip_id_base = fu_synaptics_cxaudio_firmware_get_devtype (FU_SYNAPTICS_CXAUDIO_FIRMWARE (firmware));

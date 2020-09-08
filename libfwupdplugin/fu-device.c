@@ -2487,6 +2487,7 @@ fu_device_prepare_firmware (FuDevice *self,
 
 	/* optionally subclassed */
 	if (klass->prepare_firmware != NULL) {
+		fu_device_set_status (self, FWUPD_STATUS_DECOMPRESSING);
 		firmware = klass->prepare_firmware (self, fw, flags, error);
 		if (firmware == NULL)
 			return NULL;

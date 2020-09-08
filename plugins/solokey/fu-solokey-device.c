@@ -407,7 +407,6 @@ fu_solokey_device_prepare_firmware (FuDevice *device,
 				    GError **error)
 {
 	g_autoptr(FuFirmware) firmware = fu_solokey_firmware_new ();
-	fu_device_set_status (device, FWUPD_STATUS_DECOMPRESSING);
 	if (!fu_firmware_parse (firmware, fw, flags, error))
 		return NULL;
 	return g_steal_pointer (&firmware);
