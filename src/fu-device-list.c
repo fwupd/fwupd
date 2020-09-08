@@ -735,26 +735,32 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 		       fu_device_get_protocol (device)) == 0) {
 		if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NO_GUID_MATCHING)) {
 			if (fu_device_get_priority (device) < fu_device_get_priority (item->device)) {
-				g_debug ("ignoring device %s [%s] as better device %s [%s] already exists",
+				g_debug ("ignoring device %s [%s:%s] as better device %s [%s:%s] already exists",
 					 fu_device_get_id (device),
 					 fu_device_get_plugin (device),
+					 g_type_name (fu_device_get_specialized_gtype (device)),
 					 fu_device_get_id (item->device),
-					 fu_device_get_plugin (item->device));
+					 fu_device_get_plugin (item->device),
+					 g_type_name (fu_device_get_specialized_gtype (item->device)));
 				return;
 			}
 			if (fu_device_get_priority (device) == fu_device_get_priority (item->device)) {
-				g_warning ("ignoring device %s [%s] existing device %s [%s] already exists",
+				g_warning ("ignoring device %s [%s:%s] existing device %s [%s:%s] already exists",
 					   fu_device_get_id (device),
 					   fu_device_get_plugin (device),
+					   g_type_name (fu_device_get_specialized_gtype (device)),
 					   fu_device_get_id (item->device),
-					   fu_device_get_plugin (item->device));
+					   fu_device_get_plugin (item->device),
+					   g_type_name (fu_device_get_specialized_gtype (item->device)));
 				return;
 			}
-			g_debug ("removing device %s [%s] as better device %s [%s] added",
+			g_debug ("removing device %s [%s:%s] as better device %s [%s:%s] added",
 				 fu_device_get_id (item->device),
 				 fu_device_get_plugin (item->device),
+				 g_type_name (fu_device_get_specialized_gtype (item->device)),
 				 fu_device_get_id (device),
-				 fu_device_get_plugin (device));
+				 fu_device_get_plugin (device),
+				 g_type_name (fu_device_get_specialized_gtype (device)));
 			fu_device_list_remove (self, item->device);
 		} else {
 			g_debug ("not adding matching %s for device add, use "
