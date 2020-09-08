@@ -203,17 +203,6 @@ fu_fresco_pd_device_prepare_firmware (FuDevice *device,
 	guint8 customer_id;
 	g_autoptr(FuFirmware) firmware = fu_fresco_pd_firmware_new ();
 
-	/* check size */
-	if (g_bytes_get_size (fw) < fu_device_get_firmware_size_min (device)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "firmware too small, got 0x%x, expected >= 0x%x",
-			     (guint) g_bytes_get_size (fw),
-			     (guint) fu_device_get_firmware_size_min (device));
-		return NULL;
-	}
-
 	/* check firmware is suitable */
 	fu_device_set_status (device, FWUPD_STATUS_DECOMPRESSING);
 	if (!fu_firmware_parse (firmware, fw, flags, error))
