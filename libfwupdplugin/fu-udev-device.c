@@ -1007,7 +1007,6 @@ fu_udev_device_pread_full (FuUdevDevice *self, goffset port,
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 
 	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), FALSE);
-	g_return_val_if_fail (port != 0x0, FALSE);
 	g_return_val_if_fail (buf != NULL, FALSE);
 	g_return_val_if_fail (priv->fd > 0, FALSE);
 
@@ -1053,7 +1052,6 @@ fu_udev_device_pwrite_full (FuUdevDevice *self, goffset port,
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 
 	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), FALSE);
-	g_return_val_if_fail (port != 0x0, FALSE);
 	g_return_val_if_fail (priv->fd > 0, FALSE);
 
 #ifdef HAVE_PWRITE
