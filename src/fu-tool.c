@@ -1892,10 +1892,11 @@ fu_util_refresh_remote (FuUtilPrivate *priv, FwupdRemote *remote, GError **error
 	/* payload */
 	metadata_uri = fwupd_remote_get_metadata_uri (remote);
 	if (metadata_uri == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOTHING_TO_DO,
-				     "no metadata URI available");
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOTHING_TO_DO,
+			     "no metadata URI available for %s",
+			     fwupd_remote_get_id (remote));
 		return FALSE;
 	}
 	fn_raw = fu_util_get_user_cache_path (metadata_uri);
@@ -1910,10 +1911,11 @@ fu_util_refresh_remote (FuUtilPrivate *priv, FwupdRemote *remote, GError **error
 	/* signature */
 	metadata_uri = fwupd_remote_get_metadata_uri_sig (remote);
 	if (metadata_uri == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOTHING_TO_DO,
-				     "no metadata signature URI available");
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOTHING_TO_DO,
+			     "no metadata signature URI available for %s",
+			     fwupd_remote_get_id (remote));
 		return FALSE;
 	}
 	fn_sig = fu_util_get_user_cache_path (metadata_uri);
