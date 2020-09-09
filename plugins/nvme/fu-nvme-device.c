@@ -208,8 +208,10 @@ fu_nvme_device_parse_cns (FuNvmeDevice *self, const guint8 *buf, gsize sz, GErro
 	/* get sanitiezed string from CNS -- see the following doc for offsets:
 	 * NVM-Express-1_3c-2018.05.24-Ratified.pdf */
 	sn = fu_nvme_device_get_string_safe (buf, 4, 23);
-	if (sn != NULL)
+	if (sn != NULL) {
 		fu_device_set_serial (FU_DEVICE (self), sn);
+		fu_device_set_logical_id (FU_DEVICE (self), sn);
+	}
 	mn = fu_nvme_device_get_string_safe (buf, 24, 63);
 	if (mn != NULL)
 		fu_device_set_name (FU_DEVICE (self), mn);
