@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version : '1.4.5',
+  version : '1.4.6',
   license : 'LGPL-2.1+',
   meson_version : '>=0.47.0',
   default_options : ['warning_level=2', 'c_std=c99'],
@@ -92,7 +92,6 @@ warning_flags = [
   '-Wno-strict-aliasing',
   '-Wno-suggest-attribute=format',
   '-Wno-unused-parameter',
-  '-Wnull-dereference',
   '-Wold-style-definition',
   '-Woverride-init',
   '-Wpointer-arith',
@@ -363,7 +362,7 @@ if build_standalone and get_option('systemd')
   else
     systemdunitdir = systemd.get_pkgconfig_variable('systemdsystemunitdir', define_variable: ['rootprefix', systemd_root_prefix])
     systemdsystempresetdir = systemd.get_pkgconfig_variable('systemdsystempresetdir', define_variable: ['rootprefix', systemd_root_prefix])
-    systemd_shutdown_dir = systemd.get_pkgconfig_variable('systemdshutdowndir', define_variable: ['rootprefix', systemd_root_prefix])
+    systemd_shutdown_dir = systemd.get_pkgconfig_variable('systemdshutdowndir', define_variable: [systemd.version().version_compare('>= 246') ? 'root_prefix' : 'rootprefix', systemd_root_prefix])
   endif
 endif
 

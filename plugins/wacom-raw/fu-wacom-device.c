@@ -26,7 +26,7 @@ G_DEFINE_TYPE_WITH_PRIVATE (FuWacomDevice, fu_wacom_device, FU_TYPE_UDEV_DEVICE)
 #define GET_PRIVATE(o) (fu_wacom_device_get_instance_private (o))
 
 static void
-fu_wacom_device_to_string (FuDevice *device, guint idt, GString *str)
+fu_wacom_device_to_string (FuUdevDevice *device, guint idt, GString *str)
 {
 	FuWacomDevice *self = FU_WACOM_DEVICE (device);
 	FuWacomDevicePrivate *priv = GET_PRIVATE (self);
@@ -362,7 +362,7 @@ fu_wacom_device_class_init (FuWacomDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuUdevDeviceClass *klass_device_udev = FU_UDEV_DEVICE_CLASS (klass);
-	klass_device->to_string = fu_wacom_device_to_string;
+	klass_device_udev->to_string = fu_wacom_device_to_string;
 	klass_device->prepare_firmware = fu_wacom_device_prepare_firmware;
 	klass_device->write_firmware = fu_wacom_device_write_firmware;
 	klass_device->attach = fu_wacom_device_attach;

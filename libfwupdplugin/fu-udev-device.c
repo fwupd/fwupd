@@ -120,6 +120,8 @@ static void
 fu_udev_device_to_string_raw (GUdevDevice *udev_device, guint idt, GString *str)
 {
 	const gchar * const *keys;
+	if (udev_device == NULL)
+		return;
 	keys = g_udev_device_get_property_keys (udev_device);
 	for (guint i = 0; keys[i] != NULL; i++) {
 		fu_common_string_append_kv (str, idt, keys[i],
@@ -136,24 +138,28 @@ fu_udev_device_to_string_raw (GUdevDevice *udev_device, guint idt, GString *str)
 static void
 fu_udev_device_to_string (FuDevice *device, guint idt, GString *str)
 {
-#ifdef HAVE_GUDEV
 	FuUdevDevice *self = FU_UDEV_DEVICE (device);
+	FuUdevDeviceClass *klass = FU_UDEV_DEVICE_GET_CLASS (self);
+#ifdef HAVE_GUDEV
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GUdevDevice) udev_parent = NULL;
-
-	if (priv->udev_device == NULL)
-		return;
-
-	if (g_getenv ("FU_UDEV_DEVICE_DEBUG") == NULL)
-		return;
-
-	fu_udev_device_to_string_raw (priv->udev_device, idt, str);
-	udev_parent = g_udev_device_get_parent (priv->udev_device);
-	if (udev_parent != NULL) {
-		fu_common_string_append_kv (str, idt, "Parent", NULL);
-		fu_udev_device_to_string_raw (udev_parent, idt + 1, str);
+	if (priv->udev_device != NULL) {
+		fu_common_string_append_kv (str, idt, "SysfsPath",
+					    g_udev_device_get_sysfs_path (priv->udev_device));
+	}
+	if (g_getenv ("FU_UDEV_DEVICE_DEBUG") != NULL) {
+		g_autoptr(GUdevDevice) udev_parent = NULL;
+		fu_udev_device_to_string_raw (priv->udev_device, idt, str);
+		udev_parent = g_udev_device_get_parent (priv->udev_device);
+		if (udev_parent != NULL) {
+			fu_common_string_append_kv (str, idt, "Parent", NULL);
+			fu_udev_device_to_string_raw (udev_parent, idt + 1, str);
+		}
 	}
 #endif
+
+	/* subclassed */
+	if (klass->to_string != NULL)
+		klass->to_string (self, idt, str);
 }
 
 static void
@@ -182,6 +188,24 @@ fu_udev_device_set_device_file (FuUdevDevice *self, const gchar *device_file)
 	g_free (priv->device_file);
 	priv->device_file = g_strdup (device_file);
 	g_object_notify (G_OBJECT (self), "device-file");
+}
+
+static const gchar *
+fu_udev_device_get_vendor_fallback (GUdevDevice *udev_device)
+{
+#ifdef HAVE_GUDEV
+	const gchar *tmp;
+	tmp = g_udev_device_get_property (udev_device, "FWUPD_VENDOR");
+	if (tmp != NULL)
+		return tmp;
+	tmp = g_udev_device_get_property (udev_device, "ID_VENDOR_FROM_DATABASE");
+	if (tmp != NULL)
+		return tmp;
+	tmp = g_udev_device_get_property (udev_device, "ID_VENDOR");
+	if (tmp != NULL)
+		return tmp;
+#endif
+	return NULL;
 }
 
 static gboolean
@@ -250,26 +274,6 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 		}
 	}
 
-	/* try harder to find a vendor name the user will recognise */
-	if (priv->flags & FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT &&
-	    udev_parent != NULL && fu_device_get_vendor (device) == NULL) {
-		g_autoptr(GUdevDevice) device_tmp = g_object_ref (udev_parent);
-		for (guint i = 0; i < 0xff; i++) {
-			g_autoptr(GUdevDevice) parent = NULL;
-			const gchar *id_vendor;
-			id_vendor = g_udev_device_get_property (device_tmp,
-								"ID_VENDOR_FROM_DATABASE");
-			if (id_vendor != NULL) {
-				fu_device_set_vendor (device, id_vendor);
-				break;
-			}
-			parent = g_udev_device_get_parent (device_tmp);
-			if (parent == NULL)
-				break;
-			g_set_object (&device_tmp, parent);
-		}
-	}
-
 	/* set the version if the revision has been set */
 	if (fu_device_get_version (device) == NULL &&
 	    fu_device_get_version_format (device) == FWUPD_VERSION_FORMAT_UNKNOWN) {
@@ -295,13 +299,27 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 
 	/* set vendor */
 	if (fu_device_get_vendor (device) == NULL) {
-		tmp = g_udev_device_get_property (priv->udev_device, "FWUPD_VENDOR");
-		if (tmp == NULL)
-			tmp = g_udev_device_get_property (priv->udev_device, "ID_VENDOR_FROM_DATABASE");
-		if (tmp == NULL)
-			tmp = g_udev_device_get_property (priv->udev_device, "ID_VENDOR");
+		tmp = fu_udev_device_get_vendor_fallback (priv->udev_device);
 		if (tmp != NULL)
 			fu_device_set_vendor (device, tmp);
+	}
+
+	/* try harder to find a vendor name the user will recognise */
+	if (priv->flags & FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT &&
+	    udev_parent != NULL && fu_device_get_vendor (device) == NULL) {
+		g_autoptr(GUdevDevice) device_tmp = g_object_ref (udev_parent);
+		for (guint i = 0; i < 0xff; i++) {
+			g_autoptr(GUdevDevice) parent = NULL;
+			tmp = fu_udev_device_get_vendor_fallback (device_tmp);
+			if (tmp != NULL) {
+				fu_device_set_vendor (device, tmp);
+				break;
+			}
+			parent = g_udev_device_get_parent (device_tmp);
+			if (parent == NULL)
+				break;
+			g_set_object (&device_tmp, parent);
+		}
 	}
 
 	/* set serial */
@@ -1086,8 +1104,8 @@ fu_udev_device_get_sysfs_attr (FuUdevDevice *self, const gchar *attr,
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 	const gchar *result;
 
-	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), FALSE);
-	g_return_val_if_fail (attr != NULL, FALSE);
+	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), NULL);
+	g_return_val_if_fail (attr != NULL, NULL);
 
 	/* nothing to do */
 	if (priv->udev_device == NULL) {
@@ -1104,17 +1122,17 @@ fu_udev_device_get_sysfs_attr (FuUdevDevice *self, const gchar *attr,
 			     G_IO_ERROR_NOT_FOUND,
 			     "attribute %s returned no data",
 			     attr);
-		return FALSE;
+		return NULL;
 	}
 
 	return result;
-#endif
+#else
 	g_set_error_literal (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
 			     "not supported");
 	return NULL;
-
+#endif
 }
 
 /**

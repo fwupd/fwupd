@@ -1798,7 +1798,7 @@ fwupd_release_to_string (FwupdRelease *release)
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DETACH_IMAGE, priv->detach_image);
 	if (priv->update_message != NULL)
 		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->update_message);
-	if (priv->update_message != NULL)
+	if (priv->update_image != NULL)
 		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->update_image);
 	/* metadata */
 	keys = g_hash_table_get_keys (priv->metadata);

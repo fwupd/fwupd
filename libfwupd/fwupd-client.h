@@ -198,6 +198,13 @@ gboolean	 fwupd_client_set_approved_firmware	(FwupdClient	*client,
 							 gchar		**checksums,
 							 GCancellable	*cancellable,
 							 GError		**error);
+gchar		**fwupd_client_get_blocked_firmware	(FwupdClient	*client,
+							 GCancellable	*cancellable,
+							 GError		**error);
+gboolean	 fwupd_client_set_blocked_firmware	(FwupdClient	*client,
+							 gchar		**checksums,
+							 GCancellable	*cancellable,
+							 GError		**error);
 gchar		*fwupd_client_self_sign			(FwupdClient	*client,
 							 const gchar	*value,
 							 FwupdSelfSignFlags flags,

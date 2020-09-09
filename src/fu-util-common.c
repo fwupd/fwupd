@@ -597,6 +597,11 @@ fu_util_release_get_name (FwupdRelease *release)
 			 * the first %s is the device name, e.g. 'Unifying Receiver` */
 			return g_strdup_printf (_("%s Device Update"), name);
 		}
+		if (g_strcmp0 (cat, "X-Configuration") == 0) {
+			/* TRANSLATORS: a specific part of hardware,
+			 * the first %s is the device name, e.g. 'Secure Boot` */
+			return g_strdup_printf (_("%s Configuration Update"), name);
+		}
 		if (g_strcmp0 (cat, "X-System") == 0) {
 			/* TRANSLATORS: the entire system, e.g. all internal devices,
 			 * the first %s is the device name, e.g. 'ThinkPad P50` */
@@ -805,51 +810,86 @@ fu_util_parse_filter_flags (const gchar *filter, FwupdDeviceFlags *include,
 	return TRUE;
 }
 
+typedef struct {
+	guint		 cnt;
+	GString		*str;
+} FuUtilConvertHelper;
+
+static gboolean
+fu_util_convert_description_head_cb (XbNode *n, gpointer user_data)
+{
+	FuUtilConvertHelper *helper = (FuUtilConvertHelper *) user_data;
+	helper->cnt++;
+
+	/* start */
+	if (g_strcmp0 (xb_node_get_element (n), "em") == 0) {
+		g_string_append (helper->str, "\033[3m");
+	} else if (g_strcmp0 (xb_node_get_element (n), "strong") == 0) {
+		g_string_append (helper->str, "\033[1m");
+	} else if (g_strcmp0 (xb_node_get_element (n), "code") == 0) {
+		g_string_append (helper->str, "`");
+	} else if (g_strcmp0 (xb_node_get_element (n), "li") == 0) {
+		g_string_append (helper->str, "• ");
+	} else if (g_strcmp0 (xb_node_get_element (n), "p") == 0 ||
+		   g_strcmp0 (xb_node_get_element (n), "ul") == 0 ||
+		   g_strcmp0 (xb_node_get_element (n), "ol") == 0) {
+		g_string_append (helper->str, "\n");
+	}
+
+	/* text */
+	if (xb_node_get_text (n) != NULL)
+		g_string_append (helper->str, xb_node_get_text (n));
+
+	return FALSE;
+}
+
+static gboolean
+fu_util_convert_description_tail_cb (XbNode *n, gpointer user_data)
+{
+	FuUtilConvertHelper *helper = (FuUtilConvertHelper *) user_data;
+	helper->cnt++;
+
+	/* end */
+	if (g_strcmp0 (xb_node_get_element (n), "em") == 0 ||
+	    g_strcmp0 (xb_node_get_element (n), "strong") == 0) {
+		g_string_append (helper->str, "\033[0m");
+	} else if (g_strcmp0 (xb_node_get_element (n), "code") == 0) {
+		g_string_append (helper->str, "`");
+	} else if (g_strcmp0 (xb_node_get_element (n), "li") == 0) {
+		g_string_append (helper->str, "\n");
+	} else if (g_strcmp0 (xb_node_get_element (n), "p") == 0) {
+		g_string_append (helper->str, "\n");
+	}
+
+	/* tail */
+	if (xb_node_get_tail (n) != NULL)
+		g_string_append (helper->str, xb_node_get_tail (n));
+
+	return FALSE;
+}
+
 gchar *
 fu_util_convert_description (const gchar *xml, GError **error)
 {
 	g_autoptr(GString) str = g_string_new (NULL);
 	g_autoptr(XbNode) n = NULL;
 	g_autoptr(XbSilo) silo = NULL;
+	FuUtilConvertHelper helper = {
+		.cnt = 0,
+		.str = str,
+	};
 
 	/* parse XML */
 	silo = xb_silo_new_from_xml (xml, error);
 	if (silo == NULL)
 		return NULL;
 
+	/* convert to something we can show on the console */
 	n = xb_silo_get_root (silo);
-	while (n != NULL) {
-		g_autoptr(XbNode) n2 = NULL;
-
-		/* support <p>, <ul>, <ol> and <li>, ignore all else */
-		if (g_strcmp0 (xb_node_get_element (n), "p") == 0) {
-			g_string_append_printf (str, "%s\n\n", xb_node_get_text (n));
-		} else if (g_strcmp0 (xb_node_get_element (n), "ul") == 0) {
-			g_autoptr(GPtrArray) children = xb_node_get_children (n);
-			for (guint i = 0; i < children->len; i++) {
-				XbNode *nc = g_ptr_array_index (children, i);
-				if (g_strcmp0 (xb_node_get_element (nc), "li") == 0) {
-					g_string_append_printf (str, " • %s\n",
-								xb_node_get_text (nc));
-				}
-			}
-			g_string_append (str, "\n");
-		} else if (g_strcmp0 (xb_node_get_element (n), "ol") == 0) {
-			g_autoptr(GPtrArray) children = xb_node_get_children (n);
-			for (guint i = 0; i < children->len; i++) {
-				XbNode *nc = g_ptr_array_index (children, i);
-				if (g_strcmp0 (xb_node_get_element (nc), "li") == 0) {
-					g_string_append_printf (str, " %u. %s\n",
-								i + 1,
-								xb_node_get_text (nc));
-				}
-			}
-			g_string_append (str, "\n");
-		}
-
-		n2 = xb_node_get_next (n);
-		g_set_object (&n, n2);
-	}
+	xb_node_transmogrify (n,
+			      fu_util_convert_description_head_cb,
+			      fu_util_convert_description_tail_cb,
+			      &helper);
 
 	/* success */
 	return fu_common_strstrip (str->str);

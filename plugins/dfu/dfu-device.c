@@ -44,6 +44,8 @@
  * * `legacy-protocol`:		Use a legacy protocol version
  * * `detach-for-attach`:	Requires a DFU_REQUEST_DETACH to attach
  * * `absent-sector-size`:	In absence of sector size, assume byte
+ * * `manifest-poll`:		Requires polling via GetStatus in dfuManifest state
+ * * `no-bus-reset-attach`:	Do not require a bus reset to attach to normal
  *
  * Default value: `none`
  *
@@ -1364,7 +1366,10 @@ dfu_device_attach (FuDevice *device, GError **error)
 		return FALSE;
 
 	/* normal DFU mode just needs a bus reset */
-	if (!dfu_target_attach (target, error))
+	if (fu_device_has_custom_flag (device, "no-bus-reset-attach") &&
+	    dfu_device_has_attribute (self, DFU_DEVICE_ATTRIBUTE_WILL_DETACH))
+		g_debug ("Bus reset is not required. Device will reboot to normal");
+	else if (!dfu_target_attach (target, error))
 		return FALSE;
 
 	/* success */

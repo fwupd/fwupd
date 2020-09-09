@@ -277,6 +277,7 @@ LIBFWUPDPLUGIN_1.1.2 {
     fu_chunk_array_new;
     fu_chunk_array_new_from_bytes;
     fu_chunk_new;
+    fu_chunk_to_string;
     fu_common_find_program_in_path;
     fu_common_strstrip;
     fu_common_strtoull;
@@ -591,3 +592,20 @@ LIBFWUPDPLUGIN_1.4.5 {
     fu_udev_device_write_sysfs;
   local: *;
 } LIBFWUPDPLUGIN_1.4.1;
+
+LIBFWUPDPLUGIN_1.4.6 {
+  global:
+    fu_common_get_esp_default;
+    fu_common_get_esp_for_path;
+    fu_common_get_volumes_by_kind;
+    fu_common_is_live_media;
+    fu_volume_check_free_space;
+    fu_volume_get_id;
+    fu_volume_get_mount_point;
+    fu_volume_get_type;
+    fu_volume_is_mounted;
+    fu_volume_locker;
+    fu_volume_mount;
+    fu_volume_unmount;
+  local: *;
+} LIBFWUPDPLUGIN_1.4.5;

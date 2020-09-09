@@ -29,6 +29,13 @@
 #include "fwupd-error.h"
 
 #include "fu-common.h"
+#include "fu-volume-private.h"
+
+#define UDISKS_DBUS_SERVICE		"org.freedesktop.UDisks2"
+#define UDISKS_DBUS_PATH		"/org/freedesktop/UDisks2/Manager"
+#define UDISKS_DBUS_MANAGER_INTERFACE	"org.freedesktop.UDisks2.Manager"
+#define UDISKS_DBUS_PART_INTERFACE 	"org.freedesktop.UDisks2.Partition"
+#define UDISKS_DBUS_FILE_INTERFACE	"org.freedesktop.UDisks2.Filesystem"
 
 /**
  * SECTION:fu-common
@@ -1235,7 +1242,7 @@ fu_common_strwidth (const gchar *text)
 void
 fu_common_string_append_kv (GString *str, guint idt, const gchar *key, const gchar *value)
 {
-	const guint align = 25;
+	const guint align = 24;
 	gsize keysz;
 
 	g_return_if_fail (idt * 2 < align);
@@ -1962,4 +1969,231 @@ fu_common_kernel_locked_down (void)
 #else
 	return FALSE;
 #endif
+}
+
+/**
+ * fu_common_is_live_media:
+ *
+ * Checks if the user is running from a live media using various heuristics.
+ *
+ * Returns: %TRUE if live
+ *
+ * Since: 1.4.6
+ **/
+gboolean
+fu_common_is_live_media (void)
+{
+	gsize bufsz = 0;
+	g_autofree gchar *buf = NULL;
+	g_auto(GStrv) tokens = NULL;
+	const gchar *args[] = {
+		"rd.live.image",
+		"boot=live",
+		NULL, /* last entry */
+	};
+	if (g_file_test ("/cdrom/.disk/info", G_FILE_TEST_EXISTS))
+		return TRUE;
+	if (!g_file_get_contents ("/proc/cmdline", &buf, &bufsz, NULL))
+		return FALSE;
+	if (bufsz == 0)
+		return FALSE;
+	tokens = fu_common_strnsplit (buf, bufsz - 1, " ", -1);
+	for (guint i = 0; args[i] != NULL; i++) {
+		if (g_strv_contains ((const gchar * const *) tokens, args[i]))
+			return TRUE;
+	}
+	return FALSE;
+}
+
+static GPtrArray *
+fu_common_get_block_devices (GDBusConnection *connection, GError **error)
+{
+	GVariantBuilder builder;
+	GVariant *input;
+	const gchar *obj;
+	g_autoptr(GVariant) output = NULL;
+	g_autoptr(GDBusProxy) proxy = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GVariantIter) iter = NULL;
+
+	proxy = g_dbus_proxy_new_sync (connection,
+				       G_DBUS_PROXY_FLAGS_NONE, NULL,
+				       UDISKS_DBUS_SERVICE,
+				       UDISKS_DBUS_PATH,
+				       UDISKS_DBUS_MANAGER_INTERFACE,
+				       NULL, error);
+	if (proxy == NULL) {
+		g_prefix_error (error, "failed to find %s: ", UDISKS_DBUS_SERVICE);
+		return NULL;
+	}
+	g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
+	input = g_variant_new ("(a{sv})", &builder);
+	output =  g_dbus_proxy_call_sync (proxy,
+					  "GetBlockDevices", g_variant_ref (input),
+					  G_DBUS_CALL_FLAGS_NONE,
+					  -1, NULL, error);
+	if (output == NULL)
+		return NULL;
+	devices = g_ptr_array_new_with_free_func (g_free);
+	g_variant_get (output, "(ao)", &iter);
+	while (g_variant_iter_next (iter, "o", &obj))
+		g_ptr_array_add (devices, g_strdup (obj));
+
+	return g_steal_pointer (&devices);
+}
+
+/**
+ * fu_common_get_volumes_by_kind:
+ * @kind: A volume kind, typically a GUID
+ * @error: A #GError or NULL
+ *
+ * Call into the plugin's get results routine
+ *
+ * Finds all volumes of a specific type
+ *
+ * Returns: (transfer container) (element-type FuVolume): a #GPtrArray, or %NULL if the kind was not found
+ *
+ * Since: 1.4.6
+ **/
+GPtrArray *
+fu_common_get_volumes_by_kind (const gchar *kind, GError **error)
+{
+	g_autoptr(GDBusConnection) connection = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GPtrArray) volumes = NULL;
+
+	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
+	if (connection == NULL) {
+		g_prefix_error (error, "failed to get system bus: ");
+		return NULL;
+	}
+	devices = fu_common_get_block_devices (connection, error);
+	if (devices == NULL)
+		return NULL;
+	volumes = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	for (guint i = 0; i < devices->len; i++) {
+		const gchar *obj = g_ptr_array_index (devices, i);
+		const gchar *type_str;
+		g_autoptr(GDBusProxy) proxy_part = NULL;
+		g_autoptr(GDBusProxy) proxy_file = NULL;
+		g_autoptr(GError) error_local = NULL;
+		g_autoptr(GVariant) val = NULL;
+
+		proxy_part = g_dbus_proxy_new_sync (connection,
+						    G_DBUS_PROXY_FLAGS_NONE, NULL,
+						    UDISKS_DBUS_SERVICE,
+						    obj,
+						    UDISKS_DBUS_PART_INTERFACE,
+						    NULL, error);
+		if (proxy_part == NULL) {
+			g_prefix_error (error, "failed to initialize d-bus proxy %s: ", obj);
+			return NULL;
+		}
+		val = g_dbus_proxy_get_cached_property (proxy_part, "Type");
+		if (val == NULL)
+			continue;
+
+		g_variant_get (val, "s", &type_str);
+		g_debug ("device %s, type: %s", obj, type_str);
+		if (g_strcmp0 (type_str, kind) != 0)
+			continue;
+		proxy_file = g_dbus_proxy_new_sync (connection,
+						    G_DBUS_PROXY_FLAGS_NONE, NULL,
+						    UDISKS_DBUS_SERVICE,
+						    obj,
+						    UDISKS_DBUS_FILE_INTERFACE,
+						    NULL, error);
+		if (proxy_file == NULL) {
+			g_prefix_error (error, "failed to initialize d-bus proxy %s: ", obj);
+			return NULL;
+		}
+		g_ptr_array_add (volumes, fu_volume_new_from_proxy (proxy_file));
+	}
+	if (volumes->len == 0) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_FOUND,
+			     "no volumes of type %s", kind);
+		return NULL;
+	}
+	return g_steal_pointer (&volumes);
+}
+
+/**
+ * fu_common_get_esp_default:
+ * @error: A #GError or NULL
+ *
+ * Gets the platform default ESP
+ *
+ * Returns: (transfer full): a #FuVolume, or %NULL if the ESP was not found
+ *
+ * Since: 1.4.6
+ **/
+FuVolume *
+fu_common_get_esp_default (GError **error)
+{
+	const gchar *path_tmp;
+	g_autoptr(GPtrArray) volumes_fstab = g_ptr_array_new ();
+	g_autoptr(GPtrArray) volumes_mtab = g_ptr_array_new ();
+	g_autoptr(GPtrArray) volumes = NULL;
+
+	/* for the test suite use local directory for ESP */
+	path_tmp = g_getenv ("FWUPD_UEFI_ESP_PATH");
+	if (path_tmp != NULL)
+		return fu_volume_new_from_mount_path (path_tmp);
+
+	volumes = fu_common_get_volumes_by_kind (FU_VOLUME_KIND_ESP, error);
+	if (volumes == NULL)
+		return NULL;
+	for (guint i = 0; i < volumes->len; i++) {
+		FuVolume *vol = g_ptr_array_index (volumes, i);
+		g_ptr_array_add (fu_volume_is_mounted (vol) ? volumes_mtab : volumes_fstab, vol);
+	}
+	if (volumes_mtab->len == 1) {
+		FuVolume *vol = g_ptr_array_index (volumes_mtab, 0);
+		return g_object_ref (vol);
+	}
+	if (volumes_mtab->len == 0 && volumes_fstab->len == 1) {
+		FuVolume *vol = g_ptr_array_index (volumes_fstab, 0);
+		return g_object_ref (vol);
+	}
+	g_set_error (error,
+		     G_IO_ERROR,
+		     G_IO_ERROR_INVALID_FILENAME,
+		     "More than one available ESP");
+	return NULL;
+}
+
+/**
+ * fu_common_get_esp_for_path:
+ * @esp_path: A path to the ESP
+ * @error: A #GError or NULL
+ *
+ * Gets the platform ESP using a UNIX or UDisks path
+ *
+ * Returns: (transfer full): a #FuVolume, or %NULL if the ESP was not found
+ *
+ * Since: 1.4.6
+ **/
+FuVolume *
+fu_common_get_esp_for_path (const gchar *esp_path, GError **error)
+{
+	g_autofree gchar *basename = g_path_get_basename (esp_path);
+	g_autoptr(GPtrArray) volumes = NULL;
+
+	volumes = fu_common_get_volumes_by_kind (FU_VOLUME_KIND_ESP, error);
+	if (volumes == NULL)
+		return NULL;
+	for (guint i = 0; i < volumes->len; i++) {
+		FuVolume *vol = g_ptr_array_index (volumes, i);
+		g_autofree gchar *vol_basename = g_path_get_basename (fu_volume_get_id (vol));
+		if (g_strcmp0 (basename, vol_basename) == 0)
+			return g_object_ref (vol);
+	}
+	g_set_error (error,
+		     G_IO_ERROR,
+		     G_IO_ERROR_INVALID_FILENAME,
+		     "No ESP with path %s",
+		     esp_path);
+	return NULL;
 }

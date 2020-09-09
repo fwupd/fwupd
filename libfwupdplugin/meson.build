@@ -9,6 +9,7 @@ fwupdplugin_src = [
   'fu-device-locker.c',
   'fu-device.c',
   'fu-dfu-firmware.c',
+  'fu-volume.c',
   'fu-firmware.c',
   'fu-firmware-common.c',
   'fu-firmware-image.c',
@@ -37,6 +38,7 @@ fwupdplugin_headers = [
   'fu-device-metadata.h',
   'fu-device-locker.h',
   'fu-dfu-firmware.h',
+  'fu-volume.h',
   'fu-firmware.h',
   'fu-firmware-common.h',
   'fu-firmware-image.h',
@@ -149,6 +151,11 @@ fwupdplugin_pkgg.generate(
 
 if get_option('introspection')
   gir_dep = declare_dependency(sources: fwupd_gir)
+  if gusb.type_name() == 'internal'
+    libgusb_girtarget = subproject('gusb').get_variable('libgusb_girtarget')[0]
+  else
+    libgusb_girtarget = 'GUsb-1.0'
+  endif
   fwupdplugin_gir = gnome.generate_gir(fwupd,
     sources : [
       fwupdplugin_src,
@@ -173,7 +180,7 @@ if get_option('introspection')
     includes : [
       'Gio-2.0',
       'GObject-2.0',
-      'GUsb-1.0',
+      libgusb_girtarget,
       fwupd_gir[0],
     ],
     install : true

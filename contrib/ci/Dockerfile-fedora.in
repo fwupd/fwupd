@@ -1,4 +1,4 @@
-FROM fedora:31
+FROM fedora:32
 %%%OS%%%
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
@@ -7,7 +7,6 @@ RUN echo fubar > /etc/machine-id
 RUN dnf -y update
 RUN echo fubar > /etc/machine-id
 %%%INSTALL_DEPENDENCIES_COMMAND%%%
-RUN dnf -y update glib2 glib2-devel --releasever=32
 RUN mkdir /build
 WORKDIR /build
 COPY . .

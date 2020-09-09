@@ -672,6 +672,8 @@ update_context_free (UpdateContext *ctx)
 	if (ctx == NULL)
 		return;
 
+	g_file_monitor_cancel (ctx->monitor);
+
 	g_object_unref (ctx->bed);
 	g_object_unref (ctx->plugin);
 	g_object_unref (ctx->monitor);
@@ -888,6 +890,7 @@ fu_thunderbolt_gudev_uevent_cb (GUdevClient *gudev_client,
 	if (g_strcmp0 (action, "change") == 0) {
 		const gchar *uuid = g_udev_device_get_sysfs_attr (udev_device, "unique_id");
 		MockTree *target = (MockTree *) mock_tree_find_uuid (tt->tree, uuid);
+		g_assert_nonnull (target);
 		fu_plugin_runner_udev_device_changed (tt->plugin, FU_UDEV_DEVICE (target->fu_device),
 						      &error_local);
 		return;
@@ -1004,7 +1007,6 @@ test_tree (ThunderboltTest *tt, gconstpointer user_data)
 	const MockTree *found;
 	gboolean ret;
 	g_autoptr(MockTree) tree = NULL;
-	g_autoptr(GError) error = NULL;
 
 	tree = mock_tree_init (&root_one);
 	g_assert_nonnull (tree);

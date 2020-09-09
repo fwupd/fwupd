@@ -172,7 +172,7 @@ fu_thunderbolt_device_check_safe_mode (FuThunderboltDevice *self)
 }
 
 static void
-fu_thunderbolt_device_to_string (FuDevice *device, guint idt, GString *str)
+fu_thunderbolt_device_to_string (FuUdevDevice *device, guint idt, GString *str)
 {
 	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE (device);
 	fu_common_string_append_kb (str, idt, "Host Controller", self->host);
@@ -465,7 +465,6 @@ fu_thunderbolt_device_prepare_firmware (FuDevice *device,
 	g_autoptr(FuThunderboltFirmwareUpdate) firmware = fu_thunderbolt_firmware_update_new ();
 	g_autoptr(FuThunderboltFirmware) firmware_old = fu_thunderbolt_firmware_new ();
 	g_autoptr(GBytes) controller_fw = NULL;
-	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GFile) nvmem = NULL;
 
 	/* parse */
@@ -620,7 +619,7 @@ fu_thunderbolt_device_class_init (FuThunderboltDeviceClass *klass)
 	FuUdevDeviceClass *klass_udev_device = FU_UDEV_DEVICE_CLASS (klass);
 	object_class->finalize = fu_thunderbolt_device_finalize;
 	klass_device->activate = fu_thunderbolt_device_authenticate;
-	klass_device->to_string = fu_thunderbolt_device_to_string;
+	klass_udev_device->to_string = fu_thunderbolt_device_to_string;
 	klass_device->setup = fu_thunderbolt_device_setup;
 	klass_device->prepare_firmware = fu_thunderbolt_device_prepare_firmware;
 	klass_device->write_firmware = fu_thunderbolt_device_write_firmware;

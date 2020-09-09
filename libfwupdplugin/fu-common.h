@@ -8,6 +8,8 @@
 
 #include <gio/gio.h>
 
+#include "fu-volume.h"
+
 /**
  * FuAppFlags:
  * @FU_APP_FLAGS_NONE:			No flags set
@@ -217,3 +219,9 @@ gchar		**fu_common_strnsplit		(const gchar	*str,
 						 const gchar	*delimiter,
 						 gint		 max_tokens);
 gboolean	 fu_common_kernel_locked_down	(void);
+gboolean	 fu_common_is_live_media	(void);
+GPtrArray	*fu_common_get_volumes_by_kind	(const gchar	*kind,
+						 GError		**error);
+FuVolume	*fu_common_get_esp_for_path	(const gchar	*esp_path,
+						 GError		**error);
+FuVolume	*fu_common_get_esp_default	(GError		**error);

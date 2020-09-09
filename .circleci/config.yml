@@ -167,7 +167,7 @@ jobs:
             go get github.com/tcnksm/ghr
             VERSION=$(cat dist/VERSION)
             BODY=$(cat dist/news.txt)
-            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -b ${BODY} ${VERSION} ./dist/setup/
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -b "${BODY}" ${VERSION} ./dist/setup/
 workflows:
   version: 2
   main:

@@ -30,6 +30,8 @@
 
 #include "fwupd-error.h"
 
+#define DFU_TARGET_MANIFEST_MAX_POLLING_TRIES	200
+
 static void dfu_target_finalize			 (GObject *object);
 
 typedef struct {
@@ -470,6 +472,46 @@ dfu_target_status_to_error_msg (DfuStatus status)
 	if (status == DFU_STATUS_ERR_STALLDPKT)
 		return "Device stalled an unexpected request";
 	return NULL;
+}
+
+static gboolean
+dfu_target_manifest_wait (DfuTarget *target, GError **error)
+{
+	DfuTargetPrivate *priv = GET_PRIVATE (target);
+	guint polling_count = 0;
+
+	/* get the status */
+	if (!dfu_device_refresh (priv->device, error))
+		return FALSE;
+
+	/* wait for DFU_STATE_DFU_MANIFEST to not be set */
+	while (dfu_device_get_state (priv->device) == DFU_STATE_DFU_MANIFEST_SYNC ||
+	       dfu_device_get_state (priv->device) == DFU_STATE_DFU_MANIFEST) {
+		g_debug ("waiting for DFU_STATE_DFU_MANIFEST to clear");
+
+		if (polling_count++ > DFU_TARGET_MANIFEST_MAX_POLLING_TRIES) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "reach to max polling tries");
+			return FALSE;
+		}
+
+		g_usleep ((dfu_device_get_download_timeout (priv->device) + 1000) * 1000);
+		if (!dfu_device_refresh (priv->device, error))
+			return FALSE;
+	}
+
+	/* in an error state */
+	if (dfu_device_get_state (priv->device) == DFU_STATE_DFU_ERROR) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     dfu_target_status_to_error_msg (dfu_device_get_status (priv->device)));
+		return FALSE;
+	}
+
+	return TRUE;
 }
 
 gboolean
@@ -1106,7 +1148,7 @@ dfu_target_download_element_dfu (DfuTarget *target,
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
 	GBytes *bytes;
-	guint16 nr_chunks;
+	guint32 nr_chunks;
 	guint16 transfer_size = dfu_device_get_transfer_size (priv->device);
 
 	/* round up as we have to transfer incomplete blocks */
@@ -1121,7 +1163,7 @@ dfu_target_download_element_dfu (DfuTarget *target,
 		return FALSE;
 	}
 	dfu_target_set_action (target, FWUPD_STATUS_DEVICE_WRITE);
-	for (guint16 i = 0; i < nr_chunks + 1; i++) {
+	for (guint32 i = 0; i < nr_chunks + 1; i++) {
 		gsize length;
 		guint32 offset;
 		g_autoptr(GBytes) bytes_tmp = NULL;
@@ -1284,6 +1326,11 @@ dfu_target_download (DfuTarget *target, DfuImage *image,
 		if (!ret)
 			return FALSE;
 	}
+
+	if (fu_device_has_custom_flag (FU_DEVICE (dfu_target_get_device (target)), "manifest-poll") &&
+	    dfu_device_has_attribute (priv->device, DFU_DEVICE_ATTRIBUTE_MANIFEST_TOL))
+		if (!dfu_target_manifest_wait (target, error))
+			return FALSE;
 
 	/* success */
 	return TRUE;

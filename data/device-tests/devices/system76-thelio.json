@@ -1,0 +1,21 @@
+{
+  "name": "System76 Thelio Io",
+  "guids": [
+    "fdac0b40-51c6-591b-a049-e9cfc05e9271"
+  ],
+  "protocol": "org.usb.dfu",
+  "releases": [
+    {
+      "version": "0.0.0",
+      "file": "ed423e586cdd35d41f0dd708ea8e5b5b97c54d48eef7e23a02d9a088b231b3fd-thelio-io_0.0.0.cab"
+    },
+    {
+      "version": "1.0.0",
+      "file": "1be9bcfa7b5f0db2bca927505f82d8829be5882ca295e33af492d0e1fdacc162-thelio-io_1.0.0.cab"
+    },
+    {
+      "version": "1.0.2",
+      "file": "63d4a480162b729fc57ff7c92c1e2254540f43d6-thelio-io_1.0.2.cab"
+    }
+  ]
+}

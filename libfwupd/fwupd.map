@@ -468,3 +468,10 @@ LIBFWUPD_1.4.5 {
     fwupd_remote_load_signature_bytes;
   local: *;
 } LIBFWUPD_1.4.1;
+
+LIBFWUPD_1.4.6 {
+  global:
+    fwupd_client_get_blocked_firmware;
+    fwupd_client_set_blocked_firmware;
+  local: *;
+} LIBFWUPD_1.4.5;

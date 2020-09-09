@@ -81,7 +81,7 @@ fu_synaptics_mst_device_init (FuSynapticsMstDevice *self)
 }
 
 static void
-fu_synaptics_mst_device_to_string (FuDevice *device, guint idt, GString *str)
+fu_synaptics_mst_device_to_string (FuUdevDevice *device, guint idt, GString *str)
 {
 	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE (device);
 	if (self->mode != FU_SYNAPTICS_MST_MODE_UNKNOWN) {
@@ -1177,7 +1177,7 @@ fu_synaptics_mst_device_class_init (FuSynapticsMstDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuUdevDeviceClass *klass_udev_device = FU_UDEV_DEVICE_CLASS (klass);
 	object_class->finalize = fu_synaptics_mst_device_finalize;
-	klass_device->to_string = fu_synaptics_mst_device_to_string;
+	klass_udev_device->to_string = fu_synaptics_mst_device_to_string;
 	klass_device->rescan = fu_synaptics_mst_device_rescan;
 	klass_device->write_firmware = fu_synaptics_mst_device_write_firmware;
 	klass_device->prepare_firmware = fu_synaptics_mst_device_prepare_firmware;

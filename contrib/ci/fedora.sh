@@ -10,6 +10,7 @@ meson .. \
     -Dgtkdoc=true \
     -Dman=true \
     -Dtests=true \
+    -Dgusb:tests=false \
     -Dplugin_dummy=true \
     -Dplugin_flashrom=true \
     -Dplugin_modem_manager=false \

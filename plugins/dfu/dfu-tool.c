@@ -47,7 +47,8 @@ dfu_tool_private_free (DfuToolPrivate *priv)
 	if (priv == NULL)
 		return;
 	g_free (priv->device_vid_pid);
-	g_object_unref (priv->cancellable);
+	if (priv->cancellable != NULL)
+		g_object_unref (priv->cancellable);
 	g_object_unref (priv->quirks);
 	if (priv->cmd_array != NULL)
 		g_ptr_array_unref (priv->cmd_array);
@@ -277,7 +278,7 @@ dfu_device_wait_for_replug (DfuToolPrivate *priv, DfuDevice *device, guint timeo
 	/* watch the device disappear and re-appear */
 	usb_device2 = g_usb_context_wait_for_replug (usb_context,
 						     usb_device,
-						     FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE,
+						     timeout,
 						     error);
 	if (usb_device2 == NULL)
 		return FALSE;
@@ -917,10 +918,9 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 		if (!fu_device_detach (FU_DEVICE (device), error))
 			return FALSE;
 		if (!dfu_device_wait_for_replug (priv, device,
-						 FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE,
-						 error)) {
+						 fu_device_get_remove_delay (FU_DEVICE (device)),
+						 error))
 			return FALSE;
-		}
 	}
 
 	/* allow wildcards */
@@ -940,7 +940,7 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	if (dfu_device_has_attribute (device, DFU_DEVICE_ATTRIBUTE_MANIFEST_TOL)) {
-		if (!dfu_device_wait_for_replug (priv, device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE, error))
+		if (!dfu_device_wait_for_replug (priv, device, fu_device_get_remove_delay (FU_DEVICE (device)), error))
 			return FALSE;
 	}
 

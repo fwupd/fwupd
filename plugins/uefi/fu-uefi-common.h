@@ -69,12 +69,6 @@ gboolean	 fu_uefi_get_bitmap_size	(const guint8	*buf,
 gboolean	 fu_uefi_get_framebuffer_size	(guint32	*width,
 						 guint32	*height,
 						 GError		**error);
-gchar		*fu_uefi_guess_esp_path		(GError		**error);
-gboolean	 fu_uefi_check_esp_path		(const gchar	*path,
-						 GError		**error);
-gboolean	 fu_uefi_check_esp_free_space	(const gchar	*path,
-						 guint64	 required,
-						 GError		**error);
 gchar		*fu_uefi_get_esp_path_for_os	(const gchar	*esp_path);
 GPtrArray	*fu_uefi_get_esrt_entry_paths	(const gchar	*esrt_path,
 						 GError		**error);

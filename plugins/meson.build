@@ -82,6 +82,7 @@ endif
 if get_option('plugin_uefi')
 subdir('uefi')
 subdir('uefi-recovery')
+subdir('uefi-dbx')
 endif
 
 if get_option('plugin_flashrom')
