@@ -39,6 +39,7 @@ libfwupd.so.2 libfwupd2 #MINVER#
  LIBFWUPD_1.4.0@LIBFWUPD_1.4.0 1.4.0
  LIBFWUPD_1.4.1@LIBFWUPD_1.4.1 1.4.1
  LIBFWUPD_1.4.5@LIBFWUPD_1.4.5 1.4.5
+ LIBFWUPD_1.4.6@LIBFWUPD_1.4.6 1.4.6
  fwupd_build_history_report_json@LIBFWUPD_1.0.4 1.0.4
  fwupd_build_machine_id@LIBFWUPD_1.0.4 1.0.4
  fwupd_build_user_agent@LIBFWUPD_1.0.3 1.0.3
@@ -52,6 +53,7 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_client_download_bytes@LIBFWUPD_1.4.5 1.4.5
  fwupd_client_ensure_networking@LIBFWUPD_1.4.5 1.4.5
  fwupd_client_get_approved_firmware@LIBFWUPD_1.2.6 1.2.6
+ fwupd_client_get_blocked_firmware@LIBFWUPD_1.4.6 1.4.6
  fwupd_client_get_daemon_interactive@LIBFWUPD_1.3.4 1.3.4
  fwupd_client_get_daemon_version@LIBFWUPD_0.9.6 1.0.0
  fwupd_client_get_details@LIBFWUPD_1.0.0 1.0.0
@@ -81,6 +83,7 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_client_refresh_remote@LIBFWUPD_1.4.5 1.4.5
  fwupd_client_self_sign@LIBFWUPD_1.2.6 1.2.6
  fwupd_client_set_approved_firmware@LIBFWUPD_1.2.6 1.2.6
+ fwupd_client_set_blocked_firmware@LIBFWUPD_1.4.6 1.4.6
  fwupd_client_set_feature_flags@LIBFWUPD_1.4.5 1.4.5
  fwupd_client_set_user_agent@LIBFWUPD_1.4.5 1.4.5
  fwupd_client_set_user_agent_for_package@LIBFWUPD_1.4.5 1.4.5

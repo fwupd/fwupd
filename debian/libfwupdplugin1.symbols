@@ -41,6 +41,7 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  LIBFWUPDPLUGIN_1.4.0@LIBFWUPDPLUGIN_1.4.0 1.4.0
  LIBFWUPDPLUGIN_1.4.1@LIBFWUPDPLUGIN_1.4.1 1.4.1
  LIBFWUPDPLUGIN_1.4.5@LIBFWUPDPLUGIN_1.4.5 1.4.5
+ LIBFWUPDPLUGIN_1.4.6@LIBFWUPDPLUGIN_1.4.6 1.4.6
  fu_archive_get_type@LIBFWUPDPLUGIN_1.2.2 1.2.2
  fu_archive_iterate@LIBFWUPDPLUGIN_1.3.4 1.3.4
  fu_archive_lookup_by_fn@LIBFWUPDPLUGIN_1.2.2 1.2.2
@@ -58,6 +59,7 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  fu_chunk_array_new_from_bytes@LIBFWUPDPLUGIN_1.1.2 1.1.2
  fu_chunk_array_to_string@LIBFWUPDPLUGIN_1.0.1 1.0.1
  fu_chunk_new@LIBFWUPDPLUGIN_1.1.2 1.1.2
+ fu_chunk_to_string@LIBFWUPDPLUGIN_1.1.2 1.4.6
  fu_common_bytes_align@LIBFWUPDPLUGIN_1.2.4 1.2.4
  fu_common_bytes_compare@LIBFWUPDPLUGIN_1.2.6 1.2.6
  fu_common_bytes_compare_raw@LIBFWUPDPLUGIN_1.3.2 1.3.2
@@ -74,9 +76,13 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  fu_common_fnmatch@LIBFWUPDPLUGIN_1.3.5 1.3.5
  fu_common_get_contents_bytes@LIBFWUPDPLUGIN_0.9.7 0.9.7
  fu_common_get_contents_fd@LIBFWUPDPLUGIN_0.9.5 0.9.5
+ fu_common_get_esp_default@LIBFWUPDPLUGIN_1.4.6 1.4.6
+ fu_common_get_esp_for_path@LIBFWUPDPLUGIN_1.4.6 1.4.6
  fu_common_get_files_recursive@LIBFWUPDPLUGIN_1.0.6 1.0.6
  fu_common_get_path@LIBFWUPDPLUGIN_1.0.8 1.0.8
+ fu_common_get_volumes_by_kind@LIBFWUPDPLUGIN_1.4.6 1.4.6
  fu_common_guid_is_plausible@LIBFWUPDPLUGIN_1.2.5 1.2.5
+ fu_common_is_live_media@LIBFWUPDPLUGIN_1.4.6 1.4.6
  fu_common_kernel_locked_down@LIBFWUPDPLUGIN_1.3.8 1.3.8
  fu_common_mkdir_parent@LIBFWUPDPLUGIN_0.9.7 0.9.7
  fu_common_read_uint16@LIBFWUPDPLUGIN_1.0.3 1.0.3
@@ -428,3 +434,11 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  fu_usb_device_is_open@LIBFWUPDPLUGIN_1.0.3 1.0.3
  fu_usb_device_new@LIBFWUPDPLUGIN_1.0.2 1.0.2
  fu_usb_device_set_dev@LIBFWUPDPLUGIN_1.0.2 1.0.2
+ fu_volume_check_free_space@LIBFWUPDPLUGIN_1.4.6 1.4.6
+ fu_volume_get_id@LIBFWUPDPLUGIN_1.4.6 1.4.6
+ fu_volume_get_mount_point@LIBFWUPDPLUGIN_1.4.6 1.4.6
+ fu_volume_get_type@LIBFWUPDPLUGIN_1.4.6 1.4.6
+ fu_volume_is_mounted@LIBFWUPDPLUGIN_1.4.6 1.4.6
+ fu_volume_locker@LIBFWUPDPLUGIN_1.4.6 1.4.6
+ fu_volume_mount@LIBFWUPDPLUGIN_1.4.6 1.4.6
+ fu_volume_unmount@LIBFWUPDPLUGIN_1.4.6 1.4.6

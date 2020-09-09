@@ -1,3 +1,9 @@
+fwupd (1.4.6-1) UNRELEASED; urgency=medium
+
+  * New upstream version (1.4.6)
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Wed, 09 Sep 2020 09:26:06 -0500
+
 fwupd (1.4.5-1) unstable; urgency=medium
 
   * New upstream version (1.4.5)
