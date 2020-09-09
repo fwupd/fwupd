@@ -81,7 +81,7 @@ fu_volume_get_id (FuVolume *self)
 gchar *
 fu_volume_get_mount_point (FuVolume *self)
 {
-	const gchar **mountpoints = NULL;
+	g_autofree const gchar **mountpoints = NULL;
 	g_autoptr(GVariant) val = NULL;
 	g_autoptr(GError) error_local = NULL;
 

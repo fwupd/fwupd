@@ -822,7 +822,9 @@ fu_util_download_out_of_process (const gchar *uri, const gchar *fn, GError **err
 				   { NULL } };
 	for (guint i = 0; argv[i][0] != NULL; i++) {
 		g_autoptr(GError) error_local = NULL;
-		if (!fu_common_find_program_in_path (argv[i][0], &error_local)) {
+		g_autofree gchar *fn_tmp = NULL;
+		fn_tmp = fu_common_find_program_in_path (argv[i][0], &error_local);
+		if (fn_tmp == NULL) {
 			g_debug ("%s", error_local->message);
 			continue;
 		}
