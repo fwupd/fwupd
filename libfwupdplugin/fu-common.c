@@ -2009,7 +2009,6 @@ static GPtrArray *
 fu_common_get_block_devices (GDBusConnection *connection, GError **error)
 {
 	GVariantBuilder builder;
-	GVariant *input;
 	const gchar *obj;
 	g_autoptr(GVariant) output = NULL;
 	g_autoptr(GDBusProxy) proxy = NULL;
@@ -2027,16 +2026,16 @@ fu_common_get_block_devices (GDBusConnection *connection, GError **error)
 		return NULL;
 	}
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
-	input = g_variant_new ("(a{sv})", &builder);
 	output =  g_dbus_proxy_call_sync (proxy,
-					  "GetBlockDevices", g_variant_ref (input),
+					  "GetBlockDevices",
+					  g_variant_new ("(a{sv})", &builder),
 					  G_DBUS_CALL_FLAGS_NONE,
 					  -1, NULL, error);
 	if (output == NULL)
 		return NULL;
 	devices = g_ptr_array_new_with_free_func (g_free);
 	g_variant_get (output, "(ao)", &iter);
-	while (g_variant_iter_next (iter, "o", &obj))
+	while (g_variant_iter_next (iter, "&o", &obj))
 		g_ptr_array_add (devices, g_strdup (obj));
 
 	return g_steal_pointer (&devices);
@@ -2093,7 +2092,7 @@ fu_common_get_volumes_by_kind (const gchar *kind, GError **error)
 		if (val == NULL)
 			continue;
 
-		g_variant_get (val, "s", &type_str);
+		g_variant_get (val, "&s", &type_str);
 		g_debug ("device %s, type: %s", obj, type_str);
 		if (g_strcmp0 (type_str, kind) != 0)
 			continue;

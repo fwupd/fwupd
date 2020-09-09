@@ -706,6 +706,8 @@ fu_uefi_device_finalize (GObject *object)
 	FuUefiDevice *self = FU_UEFI_DEVICE (object);
 
 	g_free (self->fw_class);
+	if (self->esp != NULL)
+		g_object_unref (self->esp);
 	if (self->esp_locker != NULL)
 		g_object_unref (self->esp_locker);
 

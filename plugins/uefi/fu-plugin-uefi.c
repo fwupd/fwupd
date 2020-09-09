@@ -47,6 +47,8 @@ void
 fu_plugin_destroy (FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
+	if (data->esp != NULL)
+		g_object_unref (data->esp);
 	g_object_unref (data->bgrt);
 }
 

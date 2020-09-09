@@ -3270,12 +3270,12 @@ fu_engine_update_metadata_bytes (FuEngine *self, const gchar *remote_id,
 	/* verify file */
 	keyring_kind = fwupd_remote_get_keyring_kind (remote);
 	if (keyring_kind != FWUPD_KEYRING_KIND_NONE) {
-		JcatResult *jcat_result;
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(GInputStream) istream = NULL;
 		g_autoptr(GPtrArray) results = NULL;
 		g_autoptr(JcatFile) jcat_file = jcat_file_new ();
 		g_autoptr(JcatItem) jcat_item = NULL;
+		g_autoptr(JcatResult) jcat_result = NULL;
 		g_autoptr(JcatResult) jcat_result_old = NULL;
 
 		/* load Jcat file */
