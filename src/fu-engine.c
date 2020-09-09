@@ -4094,6 +4094,19 @@ fu_engine_get_history (FuEngine *self, GError **error)
 	return g_steal_pointer (&devices);
 }
 
+#if !GLIB_CHECK_VERSION(2,62,0)
+static GPtrArray *
+g_ptr_array_copy (GPtrArray *array, GCopyFunc func, gpointer user_data)
+{
+	GPtrArray *new = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	for (guint i = 0; i < array->len; i++) {
+		GObject *obj = g_ptr_array_index (array, i);
+		g_ptr_array_add (new, g_object_ref (obj));
+	}
+	return new;
+}
+#endif
+
 /**
  * fu_engine_get_remotes:
  * @self: A #FuEngine
@@ -4119,7 +4132,9 @@ fu_engine_get_remotes (FuEngine *self, GError **error)
 			     "No remotes configured");
 		return NULL;
 	}
-	return g_ptr_array_ref (remotes);
+
+	/* deep copy so the remote list can be kept up to date */
+	return g_ptr_array_copy (remotes, (GCopyFunc) g_object_ref, NULL);
 }
 
 /**
