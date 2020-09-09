@@ -222,6 +222,9 @@ fu_thunderbolt_device_probe (FuUdevDevice *device, GError **error)
 	/* retimer */
 	} else if (g_strcmp0 (tmp, "thunderbolt_retimer") == 0) {
 		self->device_type = FU_THUNDERBOLT_DEVICE_TYPE_RETIMER;
+		tmp = g_path_get_basename (fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (device)));
+		if (tmp != NULL)
+			fu_device_set_physical_id (FU_DEVICE (device), tmp);
 	/* domain or unsupported */
 	} else {
 		g_set_error (error,
