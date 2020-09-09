@@ -6,6 +6,10 @@ GType = FuElantpHidDevice
 Plugin = elantp
 GType = FuElantpHidDevice
 
+# Acer Aspire V3-372T
+[HwId=513cde3d-d939-59bd-a634-5c1645ebb93b]
+Flags = elantp-recovery
+
 # recovery device
 [DeviceInstanceId=I2C\NAME_Synopsys-DesignWare-I2C-adapter]
 Plugin = elantp
