@@ -1989,6 +1989,8 @@ fu_util_prompt_for_volume (GError **error)
 
 	/* exactly one */
 	volumes = fu_common_get_volumes_by_kind (FU_VOLUME_KIND_ESP, error);
+	if (volumes == NULL)
+		return NULL;
 	if (volumes->len == 1) {
 		volume = g_ptr_array_index (volumes, 0);
 		/* TRANSLATORS: Volume has been chosen by the user */
