@@ -2263,8 +2263,9 @@ fu_device_set_progress_full (FuDevice *self, gsize progress_done, gsize progress
 }
 
 static void
-fu_device_add_string (FuDevice *self, guint idt, GString *str)
+fu_device_add_string (FwupdDevice *device, guint idt, GString *str)
 {
+	FuDevice *self = FU_DEVICE (device);
 	GPtrArray *children;
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
 	FuDevicePrivate *priv = GET_PRIVATE (self);
@@ -2275,10 +2276,6 @@ fu_device_add_string (FuDevice *self, guint idt, GString *str)
 
 	/* subclassed type */
 	fu_common_string_append_kv (str, idt, G_OBJECT_TYPE_NAME (self), NULL);
-
-	tmp = fwupd_device_to_string (FWUPD_DEVICE (self));
-	if (tmp != NULL && tmp[0] != '\0')
-		g_string_append (str, tmp);
 	if (priv->alternate_id != NULL)
 		fu_common_string_append_kv (str, idt + 1, "AlternateId", priv->alternate_id);
 	if (priv->equivalent_id != NULL)
@@ -2321,7 +2318,7 @@ fu_device_add_string (FuDevice *self, guint idt, GString *str)
 	if (children != NULL) {
 		for (guint i = 0; i < children->len; i++) {
 			FuDevice *child = g_ptr_array_index (children, i);
-			fu_device_add_string (child, idt + 1, str);
+			fu_device_add_string (FWUPD_DEVICE (child), idt + 1, str);
 		}
 	}
 }
@@ -2340,9 +2337,7 @@ fu_device_add_string (FuDevice *self, guint idt, GString *str)
 gchar *
 fu_device_to_string (FuDevice *self)
 {
-	GString *str = g_string_new (NULL);
-	fu_device_add_string (self, 0, str);
-	return g_string_free (str, FALSE);
+	return fwupd_device_to_string (FWUPD_DEVICE (self));
 }
 
 /**
@@ -3179,9 +3174,13 @@ fu_device_class_init (FuDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	GParamSpec *pspec;
+	FwupdDeviceClass *device_class = FWUPD_DEVICE_CLASS (klass);
+
 	object_class->finalize = fu_device_finalize;
 	object_class->get_property = fu_device_get_property;
 	object_class->set_property = fu_device_set_property;
+
+	device_class->add_string = fu_device_add_string;
 
 	pspec = g_param_spec_string ("physical-id", NULL, NULL, NULL,
 				     G_PARAM_READWRITE |

@@ -2127,6 +2127,7 @@ fwupd_device_verstr_raw (guint64 value_raw)
 gchar *
 fwupd_device_to_string (FwupdDevice *device)
 {
+	FwupdDeviceClass *klass = FWUPD_DEVICE_GET_CLASS (device);
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	GString *str;
 
@@ -2221,6 +2222,10 @@ fwupd_device_to_string (FwupdDevice *device)
 		g_string_append_printf (str, "  \n  [%s]\n%s",
 					FWUPD_RESULT_KEY_RELEASE, tmp);
 	}
+
+	/* subclassed */
+	if (klass->add_string != NULL)
+		klass->add_string (device, 1, str);
 
 	return g_string_free (str, FALSE);
 }

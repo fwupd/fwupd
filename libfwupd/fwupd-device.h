@@ -19,8 +19,10 @@ G_DECLARE_DERIVABLE_TYPE (FwupdDevice, fwupd_device, FWUPD, DEVICE, GObject)
 struct _FwupdDeviceClass
 {
 	GObjectClass			 parent_class;
+	void		 (*add_string)	(FwupdDevice	*self,
+					 guint		 indent,
+					 GString	*str);
 	/*< private >*/
-	void (*_fwupd_reserved1)	(void);
 	void (*_fwupd_reserved2)	(void);
 	void (*_fwupd_reserved3)	(void);
 	void (*_fwupd_reserved4)	(void);
