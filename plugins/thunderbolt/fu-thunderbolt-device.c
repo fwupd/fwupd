@@ -444,7 +444,6 @@ fu_thunderbolt_device_setup (FuDevice *device, GError **error)
 	g_autoptr(GError) error_version = NULL;
 
 	self->devpath = g_strdup (fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (device)));
-	fu_device_set_metadata (device, "sysfs-path", self->devpath);
 
 	/* try to read the version */
 	if (!fu_thunderbolt_device_get_version (self, &error_version)) {
