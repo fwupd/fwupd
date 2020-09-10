@@ -1,0 +1,27 @@
+From 18034dadc35cde6d4ff3abf7c14bb5e9e84cc32d Mon Sep 17 00:00:00 2001
+From: Jochen Sprickerhof <git@jochen.sprickerhof.de>
+Date: Thu, 10 Sep 2020 23:57:02 +0200
+Subject: [PATCH] Check returned volumes before accessing them
+
+Without udisks2 installed the list of volumes is empty and fwupdtool
+esp-list segfaults.
+---
+ src/fu-tool.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/fu-tool.c b/src/fu-tool.c
+index 92d69892..4235a1e5 100644
+--- a/src/fu-tool.c
++++ b/src/fu-tool.c
+@@ -1989,6 +1989,8 @@ fu_util_prompt_for_volume (GError **error)
+ 
+ 	/* exactly one */
+ 	volumes = fu_common_get_volumes_by_kind (FU_VOLUME_KIND_ESP, error);
++	if (volumes == NULL)
++		return NULL;
+ 	if (volumes->len == 1) {
+ 		volume = g_ptr_array_index (volumes, 0);
+ 		/* TRANSLATORS: Volume has been chosen by the user */
+-- 
+2.25.1
+
