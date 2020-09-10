@@ -2132,11 +2132,8 @@ fwupd_device_to_string (FwupdDevice *device)
 
 	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
 
-	str = g_string_new ("");
-	if (priv->name != NULL)
-		g_string_append_printf (str, "%s\n", priv->name);
-	else
-		str = g_string_append (str, "Unknown Device\n");
+	str = g_string_new (NULL);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_NAME, priv->name);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_ID, priv->id);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_PARENT_DEVICE_ID, priv->parent_id);
 	if (priv->status != FWUPD_STATUS_UNKNOWN) {
