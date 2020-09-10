@@ -50,6 +50,7 @@ Depends: ${misc:Depends},
 Recommends: python3,
 	    bolt,
 	    secureboot-db,
+	    udisks2,
 	    fwupd-signed
 Provides: fwupdate
 Conflicts: fwupdate-amd64-signed,
