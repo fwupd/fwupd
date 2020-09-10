@@ -2291,6 +2291,16 @@ fu_plugin_runner_update (FuPlugin *self,
 		return TRUE;
 	}
 
+	/* simulation */
+	if (flags & FWUPD_INSTALL_FLAG_SIMULATE) {
+		g_debug ("simulating, skipping write");
+		for (guint i = 0; i < 100; i++) {
+			fu_device_set_progress (device, i);
+			g_usleep (10 * 1000);
+		}
+		return TRUE;
+	}
+
 	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_update", (gpointer *) &update_func);
 	if (update_func == NULL) {

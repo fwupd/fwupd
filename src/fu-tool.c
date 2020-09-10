@@ -2115,6 +2115,7 @@ main (int argc, char *argv[])
 	gboolean allow_reinstall = FALSE;
 	gboolean force = FALSE;
 	gboolean ret;
+	gboolean simulate = FALSE;
 	gboolean version = FALSE;
 	gboolean interactive = isatty (fileno (stdout)) != 0;
 	g_auto(GStrv) plugin_glob = NULL;
@@ -2133,6 +2134,9 @@ main (int argc, char *argv[])
 		{ "allow-older", '\0', 0, G_OPTION_ARG_NONE, &allow_older,
 			/* TRANSLATORS: command line option */
 			_("Allow downgrading firmware versions"), NULL },
+		{ "simulate", '\0', 0, G_OPTION_ARG_NONE, &simulate,
+			/* TRANSLATORS: command line option */
+			_("Simulate installation of the new firmware"), NULL },
 		{ "force", '\0', 0, G_OPTION_ARG_NONE, &force,
 			/* TRANSLATORS: command line option */
 			_("Override plugin warning"), NULL },
@@ -2448,6 +2452,10 @@ main (int argc, char *argv[])
 		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
 	if (force)
 		priv->flags |= FWUPD_INSTALL_FLAG_FORCE;
+	if (simulate) {
+		priv->flags |= FWUPD_INSTALL_FLAG_SIMULATE;
+		priv->flags |= FWUPD_INSTALL_FLAG_NO_HISTORY;
+	}
 
 	/* load engine */
 	priv->engine = fu_engine_new (FU_APP_FLAGS_NO_IDLE_SOURCES);
