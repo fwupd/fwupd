@@ -126,13 +126,21 @@ fu_thunderbolt_device_can_update (FuThunderboltDevice *self)
 }
 
 static gboolean
-fu_thunderbolt_device_get_version (FuThunderboltDevice *self)
+fu_thunderbolt_device_get_version (FuThunderboltDevice *self, GError **error)
 {
 	g_auto(GStrv) split = NULL;
 	g_autofree gchar *version_raw = NULL;
 	g_autofree gchar *version = NULL;
 	/* read directly from file to prevent udev caching */
 	g_autofree gchar *safe_path = g_build_path ("/", self->devpath, "nvm_version", NULL);
+
+	if (!g_file_test (safe_path, G_FILE_TEST_EXISTS)) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "missing nvm_version attribute");
+		return FALSE;
+	}
 
 	for (guint i = 0; i < 50; i++) {
 		g_autoptr(GError) error_local = NULL;
@@ -147,11 +155,21 @@ fu_thunderbolt_device_get_version (FuThunderboltDevice *self)
 			break;
 	}
 
-	if (version_raw == NULL)
+	if (version_raw == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "failed to read NVM");
 		return FALSE;
+	}
 	split = g_strsplit (version_raw, ".", -1);
-	if (g_strv_length (split) != 2)
+	if (g_strv_length (split) != 2) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "invalid nvm_version format: %s", version_raw);
 		return FALSE;
+	}
 
 	version = g_strdup_printf ("%02x.%02x",
 				   (guint) g_ascii_strtoull (split[0], NULL, 16),
@@ -423,13 +441,19 @@ static gboolean
 fu_thunderbolt_device_setup (FuDevice *device, GError **error)
 {
 	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE (device);
+	g_autoptr(GError) error_version = NULL;
 
 	self->devpath = g_strdup (fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (device)));
 	fu_device_set_metadata (device, "sysfs-path", self->devpath);
 
 	/* try to read the version */
-	if (!fu_thunderbolt_device_get_version (self))
-		g_debug ("failed to read version");
+	if (!fu_thunderbolt_device_get_version (self, &error_version)) {
+		if (g_error_matches (error_version, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			g_propagate_error (error, g_steal_pointer (&error_version));
+			return FALSE;
+		}
+		g_debug ("%s", error_version->message);
+	}
 
 	/* default behavior */
 	self->auth_method = "nvm_authenticate";
@@ -496,7 +520,7 @@ fu_thunderbolt_device_rescan (FuDevice *device, GError **error)
 {
 	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE (device);
 	/* refresh the version */
-	return fu_thunderbolt_device_get_version (self);
+	return fu_thunderbolt_device_get_version (self, error);
 }
 
 static gboolean
