@@ -1,3 +1,11 @@
+fwupd (1.4.6-2) unstable; urgency=medium
+
+  * Add udisks2 to recommends
+  * Backport a patch to fix a crash when udisks2 is missing (Closes: #970054)
+  * Disable flashrom for ia64
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Thu, 10 Sep 2020 19:41:01 -0500
+
 fwupd (1.4.6-1) unstable; urgency=medium
 
   * New upstream version (1.4.6)
