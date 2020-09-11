@@ -2398,7 +2398,19 @@ fu_engine_get_plugins (FuEngine *self)
 	return fu_plugin_list_get_all (self->plugin_list);
 }
 
-static FuDevice *
+/**
+ * fu_engine_get_device_by_id:
+ * @self: A #FuEngine
+ * @device_id: A string
+ * @error: A #GError or NULL
+ *
+ * Returns the device from the engine or NULL if not found
+ *
+ * Returns: (transfer full): a #FuDevice
+ *
+ * Since: 1.5.0
+ **/
+FuDevice *
 fu_engine_get_device_by_id (FuEngine *self, const gchar *device_id, GError **error)
 {
 	g_autoptr(FuDevice) device1 = NULL;
