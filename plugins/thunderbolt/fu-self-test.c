@@ -26,6 +26,7 @@
 #include "fu-plugin-private.h"
 #include "fu-thunderbolt-firmware.h"
 #include "fu-thunderbolt-firmware-update.h"
+#include "fu-udev-device-private.h"
 
 static gchar *
 udev_mock_add_domain (UMockdevTestbed *bed, int id)
@@ -891,8 +892,7 @@ fu_thunderbolt_gudev_uevent_cb (GUdevClient *gudev_client,
 		const gchar *uuid = g_udev_device_get_sysfs_attr (udev_device, "unique_id");
 		MockTree *target = (MockTree *) mock_tree_find_uuid (tt->tree, uuid);
 		g_assert_nonnull (target);
-		fu_plugin_runner_udev_device_changed (tt->plugin, FU_UDEV_DEVICE (target->fu_device),
-						      &error_local);
+		fu_udev_device_emit_changed (FU_UDEV_DEVICE (target->fu_device));
 		return;
 	}
 }

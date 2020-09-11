@@ -76,8 +76,11 @@ static guint signals[SIGNAL_LAST] = { 0 };
 void
 fu_udev_device_emit_changed (FuUdevDevice *self)
 {
+	g_autoptr(GError) error = NULL;
 	g_return_if_fail (FU_IS_UDEV_DEVICE (self));
 	g_debug ("FuUdevDevice emit changed");
+	if (!fu_device_rescan (FU_DEVICE (self), &error))
+		g_debug ("%s", error->message);
 	g_signal_emit (self, signals[SIGNAL_CHANGED], 0);
 }
 

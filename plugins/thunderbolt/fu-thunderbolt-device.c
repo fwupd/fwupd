@@ -20,6 +20,7 @@
 #include "fu-thunderbolt-device.h"
 #include "fu-thunderbolt-firmware.h"
 #include "fu-thunderbolt-firmware-update.h"
+#include "fu-udev-device-private.h"
 
 typedef enum {
 	FU_THUNDERBOLT_DEVICE_TYPE_DEVICE_CONTROLLER,
