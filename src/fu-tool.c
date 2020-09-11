@@ -1330,20 +1330,57 @@ fu_util_attach (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_activate (FuUtilPrivate *priv, gchar **values, GError **error)
+fu_util_check_activation_needed (FuUtilPrivate *priv, GError **error)
 {
 	gboolean has_pending = FALSE;
 	g_autoptr(FuHistory) history = fu_history_new ();
+	g_autoptr(GPtrArray) devices = fu_history_get_devices (history, error);
+	if (devices == NULL)
+		return FALSE;
+
+	/* only start up the plugins needed */
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *dev = g_ptr_array_index (devices, i);
+		if (fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
+			fu_engine_add_plugin_filter (priv->engine,
+						     fu_device_get_plugin (dev));
+			has_pending = TRUE;
+		}
+	}
+
+	if (!has_pending) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "No devices to activate");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
+fu_util_activate (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	gboolean has_pending = FALSE;
 	g_autoptr(GPtrArray) devices = NULL;
 
 	/* check the history database before starting the daemon */
+	if (!fu_util_check_activation_needed (priv, error))
+		return FALSE;
+
+	/* load engine */
+	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_READONLY_FS, error))
+		return FALSE;
+
+	/* parse arguments */
 	if (g_strv_length (values) == 0) {
-		devices = fu_history_get_devices (history, error);
+		devices = fu_engine_get_devices (priv->engine, error);
 		if (devices == NULL)
 			return FALSE;
 	} else if (g_strv_length (values) == 1) {
 		FuDevice *device;
-		device = fu_history_get_device_by_id (history, values[0], error);
+		device = fu_engine_get_device_by_id (priv->engine, values[0], error);
 		if (device == NULL)
 			return FALSE;
 		devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
@@ -1356,36 +1393,28 @@ fu_util_activate (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 
-	/* nothing to do */
-	for (guint i = 0; i < devices->len; i++) {
-		FuDevice *dev = g_ptr_array_index (devices, i);
-		if (fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
-			fu_engine_add_plugin_filter (priv->engine,
-						     fu_device_get_plugin (dev));
-			has_pending = TRUE;
-		}
-	}
-
-	if (!has_pending) {
-    		g_printerr ("No firmware to activate\n");
-    		return TRUE;
-	}
-
-	/* load engine */
-	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_READONLY_FS, error))
-		return FALSE;
-
 	/* activate anything with _NEEDS_ACTIVATION */
+	/* order by device priority */
+	g_ptr_array_sort (devices, fu_util_device_order_sort_cb);
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index (devices, i);
 		if (!fu_util_filter_device (priv, FWUPD_DEVICE (device)))
 			continue;
 		if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION))
 			continue;
+		has_pending = TRUE;
 		/* TRANSLATORS: shown when shutting down to switch to the new version */
 		g_print ("%s %s…\n", _("Activating firmware update"), fu_device_get_name (device));
 		if (!fu_engine_activate (priv->engine, fu_device_get_id (device), error))
 			return FALSE;
+	}
+
+	if (!has_pending) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "No devices to activate");
+		return FALSE;
 	}
 
 	return TRUE;
