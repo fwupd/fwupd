@@ -392,10 +392,8 @@ fu_thunderbolt_device_setup_retimer (FuDevice *device, GError **error)
 	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE (device);
 	guint16 did;
 	guint16 vid;
-	g_autofree gchar *idx = g_path_get_basename (self->devpath);
 	g_autofree gchar *instance = NULL;
 
-	fu_device_set_physical_id (device, idx);
 	/* as defined in PCIe 4.0 spec */
 	fu_device_set_summary (device, "A physical layer protocol-aware, software-transparent extension device "
 				        "that forms two separate electrical link segments");
@@ -425,7 +423,7 @@ fu_thunderbolt_device_setup_retimer (FuDevice *device, GError **error)
 	instance = g_strdup_printf ("TBT-%04x%04x-retimer%s",
 				    (guint) vid,
 				    (guint) did,
-				    idx);
+				    fu_device_get_physical_id (device));
 	fu_device_add_instance_id (device, instance);
 
 	/* hardcoded for now:
