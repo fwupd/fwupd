@@ -503,6 +503,14 @@ fu_thunderbolt_device_setup (FuDevice *device, GError **error)
 }
 
 static gboolean
+fu_thunderbolt_device_activate (FuDevice *device, GError **error)
+{
+	FuUdevDevice *udev = FU_UDEV_DEVICE (device);
+
+	return fu_udev_device_write_sysfs (udev, "nvm_authenticate", "1", error);
+}
+
+static gboolean
 fu_thunderbolt_device_authenticate (FuDevice *device, GError **error)
 {
 	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE (device);
@@ -786,7 +794,7 @@ fu_thunderbolt_device_class_init (FuThunderboltDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuUdevDeviceClass *klass_udev_device = FU_UDEV_DEVICE_CLASS (klass);
 	object_class->finalize = fu_thunderbolt_device_finalize;
-	klass_device->activate = fu_thunderbolt_device_authenticate;
+	klass_device->activate = fu_thunderbolt_device_activate;
 	klass_udev_device->to_string = fu_thunderbolt_device_to_string;
 	klass_device->setup = fu_thunderbolt_device_setup;
 	klass_device->prepare_firmware = fu_thunderbolt_device_prepare_firmware;
