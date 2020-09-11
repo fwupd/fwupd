@@ -1754,18 +1754,6 @@ fu_plugin_usb_device_added (FuPlugin *self, FuUsbDevice *device, GError **error)
 }
 
 static gboolean
-fu_plugin_udev_device_changed (FuPlugin *self, FuUdevDevice *device, GError **error)
-{
-	g_autoptr(FuDeviceLocker) locker = NULL;
-
-	/* open */
-	locker = fu_device_locker_new (FU_DEVICE (device), error);
-	if (locker == NULL)
-		return FALSE;
-	return fu_device_rescan (FU_DEVICE (device), error);
-}
-
-static gboolean
 fu_plugin_udev_device_added (FuPlugin *self, FuUdevDevice *device, GError **error)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
@@ -1944,14 +1932,8 @@ fu_plugin_runner_udev_device_changed (FuPlugin *self, FuUdevDevice *device, GErr
 
 	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_udev_device_changed", (gpointer *) &func);
-	if (func == NULL) {
-		if (priv->device_gtype != G_TYPE_INVALID ||
-		    fu_device_get_specialized_gtype (FU_DEVICE (device)) != G_TYPE_INVALID) {
-			if (!fu_plugin_udev_device_changed (self, device, error))
-				return FALSE;
-		}
+	if (func == NULL)
 		return TRUE;
-	}
 	g_debug ("performing udev_device_changed() on %s", priv->name);
 	if (!func (self, device, &error_local)) {
 		if (error_local == NULL) {
