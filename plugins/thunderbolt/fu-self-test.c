@@ -396,7 +396,7 @@ mock_tree_attach_device (gpointer user_data)
 						  "device", dev->id,
 						  "vendor", "042",
 						  "vendor_name", "GNOME.org",
-						  "authorized", "0",
+						  "authorized", "1",
 						  "nvm_authenticate", authenticate,
 						  "nvm_version", tree->nvm_version,
 						  "unique_id", tree->uuid,
