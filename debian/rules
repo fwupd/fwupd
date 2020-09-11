@@ -19,13 +19,15 @@ regenerate_control:
 
 SB_STYLE := debian
 deb_version := $(shell dpkg-parsechangelog --show-field Version)
+export FLASHROM=-Dplugin_flashrom=false
 ifeq (yes,$(shell dpkg-vendor --derives-from Ubuntu && echo yes))
 	SB_STYLE := ubuntu
 	tar_name := fwupd_$(deb_version)_$(DEB_HOST_ARCH).tar.gz
-	export FLASHROM=-Dplugin_flashrom=false
 else
 	TMPLDIR  := debian/fwupd-$(DEB_HOST_ARCH)-signed-template/usr/share/code-signing/fwupd-$(DEB_HOST_ARCH)-signed-template
-	export FLASHROM=-Dplugin_flashrom=true
+	ifneq "$(DEB_HOST_ARCH)" "ia64"
+		export FLASHROM=-Dplugin_flashrom=true
+	endif
 endif
 
 %:
