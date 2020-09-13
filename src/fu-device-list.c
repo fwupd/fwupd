@@ -81,6 +81,60 @@ fu_device_list_emit_device_changed (FuDeviceList *self, FuDevice *device)
 	g_signal_emit (self, signals[SIGNAL_CHANGED], 0, device);
 }
 
+/* we cannot use fu_device_get_children() as this will not find "parent-only"
+ * logical relationships added using fu_device_add_parent_guid() */
+static GPtrArray *
+fu_device_list_get_children (FuDeviceList *self, FuDevice *device)
+{
+	GPtrArray *devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	g_rw_lock_reader_lock (&self->devices_mutex);
+	for (guint i = 0; i < self->devices->len; i++) {
+		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
+		if (device == fu_device_get_parent (item->device))
+			g_ptr_array_add (devices, g_object_ref (item->device));
+	}
+	g_rw_lock_reader_unlock (&self->devices_mutex);
+	return devices;
+}
+
+static void
+fu_device_list_depsolve_order_full (FuDeviceList *self, FuDevice *device, guint depth)
+{
+	g_autoptr(GPtrArray) children = NULL;
+
+	/* ourself */
+	fu_device_set_order (device, depth);
+
+	/* optional children */
+	children = fu_device_list_get_children (self, device);
+	for (guint i = 0; i < children->len; i++) {
+		FuDevice *child = g_ptr_array_index (children, i);
+		if (fu_device_has_flag (child, FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST)) {
+			fu_device_list_depsolve_order_full (self, child, depth + 1);
+		} else {
+			fu_device_list_depsolve_order_full (self, child, depth - 1);
+		}
+	}
+}
+
+/**
+ * fu_device_list_depsolve_order:
+ * @self: A #FuDeviceList
+ * @device: A #FuDevice
+ *
+ * Sets the device order using the logical parent->child relationships -- by default
+ * the child is updated first, unless the device has set flag
+ * %FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST.
+ *
+ * Since: 1.5.0
+ **/
+void
+fu_device_list_depsolve_order (FuDeviceList *self, FuDevice *device)
+{
+	g_autoptr(FuDevice) root = fu_device_get_root (device);
+	fu_device_list_depsolve_order_full (self, root, 0);
+}
+
 /**
  * fu_device_list_get_all:
  * @self: A #FuDeviceList
