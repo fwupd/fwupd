@@ -48,7 +48,7 @@ typedef struct {
 	GPtrArray			*children;
 	guint				 remove_delay;	/* ms */
 	guint				 progress;
-	guint				 order;
+	gint				 order;
 	guint				 priority;
 	guint				 poll_id;
 	gboolean			 done_probe;
@@ -405,7 +405,7 @@ fu_device_set_poll_interval (FuDevice *self, guint interval)
  *
  * Since: 1.0.8
  **/
-guint
+gint
 fu_device_get_order (FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
@@ -424,7 +424,7 @@ fu_device_get_order (FuDevice *self)
  * Since: 1.0.8
  **/
 void
-fu_device_set_order (FuDevice *self, guint order)
+fu_device_set_order (FuDevice *self, gint order)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_DEVICE (self));
@@ -2299,7 +2299,7 @@ fu_device_add_string (FuDevice *self, guint idt, GString *str)
 		g_autofree gchar *sz = g_strdup_printf ("%" G_GUINT64_FORMAT, priv->size_max);
 		fu_common_string_append_kv (str, idt + 1, "FirmwareSizeMax", sz);
 	}
-	if (priv->order > 0)
+	if (priv->order != G_MAXINT)
 		fu_common_string_append_ku (str, idt + 1, "Order", priv->order);
 	if (priv->priority > 0)
 		fu_common_string_append_ku (str, idt + 1, "Priority", priv->priority);
@@ -3224,6 +3224,7 @@ static void
 fu_device_init (FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
+	priv->order = G_MAXINT;
 	priv->children = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	priv->parent_guids = g_ptr_array_new_with_free_func (g_free);
 	priv->possible_plugins = g_ptr_array_new_with_free_func (g_free);
