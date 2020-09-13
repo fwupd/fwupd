@@ -5208,6 +5208,9 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 	/* create new device */
 	fu_device_list_add (self->device_list, device);
 
+	/* fix order */
+	fu_device_list_depsolve_order (self->device_list, device);
+
 	/* fixup the name and format as needed from cached metadata */
 	if (component != NULL)
 		fu_engine_md_refresh_device_from_component (self, device, component);

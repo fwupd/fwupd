@@ -653,13 +653,6 @@ fu_device_set_parent (FuDevice *self, FuDevice *parent)
 
 	g_return_if_fail (FU_IS_DEVICE (self));
 
-	/* if unspecified, always child before parent */
-	if (parent != NULL &&
-	    fu_device_get_order (parent) == fu_device_get_order (self)) {
-		g_debug ("auto-setting %s order", fu_device_get_id (parent));
-		fu_device_set_order (parent, fu_device_get_order (self) + 1);
-	}
-
 	/* if the parent has quirks, make the child inherit it */
 	if (parent != NULL) {
 		if (fu_device_get_quirks (self) == NULL &&
@@ -802,15 +795,6 @@ fu_device_add_child (FuDevice *self, FuDevice *child)
 
 	/* ensure the parent is also set on the child */
 	fu_device_set_parent (child, self);
-
-	/* order devices so they are updated in the correct sequence */
-	if (fu_device_has_flag (child, FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST)) {
-		if (priv->order >= fu_device_get_order (child))
-			fu_device_set_order (child, priv->order + 1);
-	} else {
-		if (priv->order <= fu_device_get_order (child))
-			priv->order = fu_device_get_order (child) + 1;
-	}
 }
 
 /**

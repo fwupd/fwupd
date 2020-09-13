@@ -1076,15 +1076,18 @@ fu_engine_device_parent_func (gconstpointer user_data)
 	/* add two together */
 	fu_engine_add_device (engine, device2);
 
+	/* this is normally done by fu_plugin_device_add() */
+	fu_engine_add_device (engine, device3);
+
 	/* verify both children were adopted */
 	g_assert (fu_device_get_parent (device3) == device2);
 	g_assert (fu_device_get_parent (device1) == device2);
 	g_assert_cmpstr (fu_device_get_vendor (device3), ==, "oem");
 
 	/* verify order */
-	g_assert_cmpint (fu_device_get_order (device1), ==, 0);
-	g_assert_cmpint (fu_device_get_order (device2), ==, 1);
-	g_assert_cmpint (fu_device_get_order (device3), ==, 0);
+	g_assert_cmpint (fu_device_get_order (device1), ==, -1);
+	g_assert_cmpint (fu_device_get_order (device2), ==, 0);
+	g_assert_cmpint (fu_device_get_order (device3), ==, -1);
 }
 
 static void
