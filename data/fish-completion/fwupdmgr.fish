@@ -26,7 +26,7 @@ complete -c fwupdmgr -l no-metadata-check -d 'Do not check for old metadata'
 complete -c fwupdmgr -l no-reboot-check -d 'Do not check for reboot after update'
 complete -c fwupdmgr -l no-safety-check -d 'Do not perform device safety checks'
 complete -c fwupdmgr -l no-history -d 'Do not write to the history database'
-complete -c fwupdmgr -l show-all-devices -d 'Show devices that are not updatable'
+complete -c fwupdmgr -l show-all -d 'Show all results'
 complete -c fwupdmgr -l disable-ssl-strict -d 'Ignore SSL strict checks when downloading files'
 complete -c fwupdmgr -l filter -d 'Filter with a set of device flags'
 

@@ -40,7 +40,7 @@ _fwupdtool_opts=(
 	'--allow-reinstall'
 	'--allow-older'
 	'--force'
-	'--show-all-devices'
+	'--show-all'
 	'--plugins'
 	'--prepare'
 	'--cleanup'

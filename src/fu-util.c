@@ -66,7 +66,7 @@ struct FuUtilPrivate {
 	gboolean		 no_safety_check;
 	gboolean		 assume_yes;
 	gboolean		 sign;
-	gboolean		 show_all_devices;
+	gboolean		 show_all;
 	gboolean		 disable_ssl_strict;
 	/* only valid in update and downgrade */
 	FuUtilOperation		 current_operation;
@@ -506,7 +506,7 @@ fu_util_build_device_tree (FuUtilPrivate *priv, GNode *root, GPtrArray *devs, Fw
 		FwupdDevice *dev_tmp = g_ptr_array_index (devs, i);
 		if (!fu_util_filter_device (priv, dev_tmp))
 			continue;
-		if (!priv->show_all_devices &&
+		if (!priv->show_all &&
 		    !fu_util_is_interesting_device (dev_tmp))
 			continue;
 		if (fwupd_device_get_parent (dev_tmp) == dev) {
@@ -656,7 +656,7 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* implied, important for get-details on a device not in your system */
-	priv->show_all_devices = TRUE;
+	priv->show_all = TRUE;
 
 	array = fwupd_client_get_details (priv->client, values[0], NULL, error);
 	if (array == NULL)
@@ -2195,6 +2195,7 @@ fu_util_upload_security (FuUtilPrivate *priv, GPtrArray *attrs, GError **error)
 static gboolean
 fu_util_security (FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	FuSecurityAttrToStringFlags flags = FU_SECURITY_ATTR_TO_STRING_FLAG_NONE;
 	g_autoptr(GPtrArray) attrs = NULL;
 	g_autofree gchar *str = NULL;
 
@@ -2218,7 +2219,13 @@ fu_util_security (FuUtilPrivate *priv, gchar **values, GError **error)
 						      error);
 	if (attrs == NULL)
 		return FALSE;
-	str = fu_util_security_attrs_to_string (attrs);
+
+	/* show or hide different elements */
+	if (priv->show_all) {
+		flags |= FU_SECURITY_ATTR_TO_STRING_FLAG_SHOW_OBSOLETES;
+		flags |= FU_SECURITY_ATTR_TO_STRING_FLAG_SHOW_URLS;
+	}
+	str = fu_util_security_attrs_to_string (attrs, flags);
 	g_print ("%s\n", str);
 
 	/* opted-out */
@@ -2524,7 +2531,10 @@ main (int argc, char *argv[])
 		{ "no-history", '\0', 0, G_OPTION_ARG_NONE, &no_history,
 			/* TRANSLATORS: command line option */
 			_("Do not write to the history database"), NULL },
-		{ "show-all-devices", '\0', 0, G_OPTION_ARG_NONE, &priv->show_all_devices,
+		{ "show-all", '\0', 0, G_OPTION_ARG_NONE, &priv->show_all,
+			/* TRANSLATORS: command line option */
+			_("Show all results"), NULL },
+		{ "show-all-devices", '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &priv->show_all,
 			/* TRANSLATORS: command line option */
 			_("Show devices that are not updatable"), NULL },
 		{ "disable-ssl-strict", '\0', 0, G_OPTION_ARG_NONE, &priv->disable_ssl_strict,
