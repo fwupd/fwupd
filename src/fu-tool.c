@@ -2160,6 +2160,9 @@ main (int argc, char *argv[])
 		{ "plugins", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &plugin_glob,
 			/* TRANSLATORS: command line option */
 			_("Manually enable specific plugins"), NULL },
+		{ "plugin-whitelist", '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING_ARRAY, &plugin_glob,
+			/* TRANSLATORS: command line option */
+			_("Manually enable specific plugins"), NULL },
 		{ "prepare", '\0', 0, G_OPTION_ARG_NONE, &priv->prepare_blob,
 			/* TRANSLATORS: command line option */
 			_("Run the plugin composite prepare routine when using install-blob"), NULL },
