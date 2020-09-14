@@ -24,6 +24,14 @@ typedef struct {
 	FuUtilCmdFunc	 callback;
 } FuUtilCmd;
 
+typedef enum {
+	FU_SECURITY_ATTR_TO_STRING_FLAG_NONE			= 0,
+	FU_SECURITY_ATTR_TO_STRING_FLAG_SHOW_OBSOLETES		= 1 << 0,
+	FU_SECURITY_ATTR_TO_STRING_FLAG_SHOW_URLS		= 1 << 1,
+	/*< private >*/
+	FU_SECURITY_ATTR_TO_STRING_FLAG_LAST
+} FuSecurityAttrToStringFlags;
+
 void		 fu_util_print_data		(const gchar	*title,
 						 const gchar	*msg);
 guint		 fu_util_prompt_for_number	(guint		 maxnum);
@@ -76,7 +84,8 @@ gchar		*fu_util_release_to_string	(FwupdRelease	*rel,
 						 guint		 idt);
 gchar		*fu_util_remote_to_string	(FwupdRemote *remote,
 						 guint		 idt);
-gchar		*fu_util_security_attrs_to_string (GPtrArray	*attrs);
+gchar		*fu_util_security_attrs_to_string (GPtrArray	*attrs,
+						FuSecurityAttrToStringFlags flags);
 gboolean	 fu_util_send_report		(FwupdClient	*client,
 						 const gchar	*report_uri,
 						 const gchar	*data,

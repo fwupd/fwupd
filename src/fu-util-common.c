@@ -1545,9 +1545,16 @@ fu_util_remote_to_string (FwupdRemote *remote, guint idt)
 }
 
 static void
-fu_security_attr_append_str (FwupdSecurityAttr *attr, GString *str)
+fu_security_attr_append_str (FwupdSecurityAttr *attr, GString *str, FuSecurityAttrToStringFlags flags)
 {
-	g_autofree gchar *name = fu_security_attr_get_name (attr);
+	g_autofree gchar *name = NULL;
+
+	/* hide obsoletes by default */
+	if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED) &&
+	    (flags & FU_SECURITY_ATTR_TO_STRING_FLAG_SHOW_OBSOLETES) == 0)
+		return;
+
+	name = fu_security_attr_get_name (attr);
 	if (name == NULL)
 		name = g_strdup (fwupd_security_attr_get_appstream_id (attr));
 	if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED)) {
@@ -1567,7 +1574,8 @@ fu_security_attr_append_str (FwupdSecurityAttr *attr, GString *str)
 	} else {
 		g_string_append_printf (str, "\033[31m\033[1m%s\033[0m", fu_security_attr_get_result (attr));
 	}
-	if (fwupd_security_attr_get_url (attr) != NULL) {
+	if ((flags & FU_SECURITY_ATTR_TO_STRING_FLAG_SHOW_URLS) > 0 &&
+	    fwupd_security_attr_get_url (attr) != NULL) {
 		g_string_append_printf (str, ": %s",
 					fwupd_security_attr_get_url (attr));
 	}
@@ -1579,7 +1587,7 @@ fu_security_attr_append_str (FwupdSecurityAttr *attr, GString *str)
 }
 
 gchar *
-fu_util_security_attrs_to_string (GPtrArray *attrs)
+fu_util_security_attrs_to_string (GPtrArray *attrs, FuSecurityAttrToStringFlags strflags)
 {
 	FwupdSecurityAttrFlags flags = FWUPD_SECURITY_ATTR_FLAG_NONE;
 	const FwupdSecurityAttrFlags hpi_suffixes[] = {
@@ -1603,7 +1611,7 @@ fu_util_security_attrs_to_string (GPtrArray *attrs)
 				g_string_append_printf (str, "\n\033[1mHSI-%u\033[0m\n", j);
 				has_header = TRUE;
 			}
-			fu_security_attr_append_str (attr, str);
+			fu_security_attr_append_str (attr, str, strflags);
 			/* make sure they have at least HSI-1 */
 			if (j < FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT &&
 			    !fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
@@ -1633,7 +1641,7 @@ fu_util_security_attrs_to_string (GPtrArray *attrs)
 				if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE) &&
 				    !fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
 					runtime_help = TRUE;
-				fu_security_attr_append_str (attr, str);
+				fu_security_attr_append_str (attr, str, strflags);
 			}
 		}
 	}

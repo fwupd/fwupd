@@ -47,7 +47,7 @@ _fwupdmgr_opts=(
 	'--no-metadata-check'
 	'--no-reboot-check'
 	'--no-safety-check'
-	'--show-all-devices'
+	'--show-all'
 	'--sign'
 	'--filter'
 	'--disable-ssl-strict'

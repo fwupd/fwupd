@@ -61,7 +61,7 @@ struct FuUtilPrivate {
 	gboolean		 cleanup_blob;
 	gboolean		 enable_json_state;
 	FwupdInstallFlags	 flags;
-	gboolean		 show_all_devices;
+	gboolean		 show_all;
 	gboolean		 disable_ssl_strict;
 	/* only valid in update and downgrade */
 	FuUtilOperation		 current_operation;
@@ -411,7 +411,7 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* implied, important for get-details on a device not in your system */
-	priv->show_all_devices = TRUE;
+	priv->show_all = TRUE;
 
 	/* open file */
 	fd = open (values[0], O_RDONLY);
@@ -473,7 +473,7 @@ fu_util_build_device_tree (FuUtilPrivate *priv, GNode *root, GPtrArray *devs, Fu
 		FuDevice *dev_tmp = g_ptr_array_index (devs, i);
 		if (!fu_util_filter_device (priv, FWUPD_DEVICE (dev_tmp)))
 			continue;
-		if (!priv->show_all_devices &&
+		if (!priv->show_all &&
 		    !fu_util_is_interesting_device (FWUPD_DEVICE (dev_tmp)))
 			continue;
 		if (fu_device_get_parent (dev_tmp) == dev) {
@@ -1997,6 +1997,7 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_security (FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	FuSecurityAttrToStringFlags flags = FU_SECURITY_ATTR_TO_STRING_FLAG_NONE;
 	g_autoptr(FuSecurityAttrs) attrs = NULL;
 	g_autoptr(GPtrArray) items = NULL;
 	g_autofree gchar *str = NULL;
@@ -2018,10 +2019,16 @@ fu_util_security (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_print ("%s \033[1m%s\033[0m\n", _("Host Security ID:"),
 		 fu_engine_get_host_security_id (priv->engine));
 
+	/* show or hide different elements */
+	if (priv->show_all) {
+		flags |= FU_SECURITY_ATTR_TO_STRING_FLAG_SHOW_OBSOLETES;
+		flags |= FU_SECURITY_ATTR_TO_STRING_FLAG_SHOW_URLS;
+	}
+
 	/* print the "why" */
 	attrs = fu_engine_get_host_security_attrs (priv->engine);
 	items = fu_security_attrs_get_all (attrs);
-	str = fu_util_security_attrs_to_string (items);
+	str = fu_util_security_attrs_to_string (items, flags);
 	g_print ("%s\n", str);
 	return TRUE;
 }
@@ -2144,7 +2151,10 @@ main (int argc, char *argv[])
 		{ "no-safety-check", '\0', 0, G_OPTION_ARG_NONE, &priv->no_safety_check,
 			/* TRANSLATORS: command line option */
 			_("Do not perform device safety checks"), NULL },
-		{ "show-all-devices", '\0', 0, G_OPTION_ARG_NONE, &priv->show_all_devices,
+		{ "show-all", '\0', 0, G_OPTION_ARG_NONE, &priv->show_all,
+			/* TRANSLATORS: command line option */
+			_("Show all results"), NULL },
+		{ "show-all-devices", '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &priv->show_all,
 			/* TRANSLATORS: command line option */
 			_("Show devices that are not updatable"), NULL },
 		{ "plugins", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &plugin_glob,
