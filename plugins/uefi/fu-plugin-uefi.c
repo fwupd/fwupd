@@ -98,15 +98,22 @@ void
 fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(GError) error = NULL;
 
 	/* create attr */
 	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT);
 	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
-	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
 	fu_security_attrs_append (attrs, attr);
 
-	/* SB disabled */
-	if (!fu_efivar_secure_boot_enabled ()) {
+	/* SB not available or disabled */
+	if (!fu_efivar_secure_boot_enabled_full (&error)) {
+		if (g_error_matches (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED)) {
+			fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
+			return;
+		}
+		fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
 		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 		return;
 	}

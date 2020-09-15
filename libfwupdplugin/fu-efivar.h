@@ -43,4 +43,5 @@ gboolean	 fu_efivar_delete		(const gchar	*guid,
 gboolean	 fu_efivar_delete_with_glob	(const gchar	*guid,
 						 const gchar	*name_glob,
 						 GError		**error);
-gboolean	 fu_efivar_secure_boot_enabled (void);
+gboolean	 fu_efivar_secure_boot_enabled	(void);
+gboolean	 fu_efivar_secure_boot_enabled_full(GError	**error);

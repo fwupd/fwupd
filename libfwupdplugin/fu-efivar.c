@@ -408,6 +408,41 @@ fu_efivar_set_data (const gchar *guid, const gchar *name, const guint8 *data,
 }
 
 /**
+ * fu_efivar_secure_boot_enabled_full:
+ * @error: A #GError
+ *
+ * Determines if secure boot was enabled
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fu_efivar_secure_boot_enabled_full (GError **error)
+{
+	gsize data_size = 0;
+	g_autofree guint8 *data = NULL;
+
+	if (!fu_efivar_get_data (FU_EFIVAR_GUID_EFI_GLOBAL, "SecureBoot",
+				 &data, &data_size, NULL, NULL)) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "SecureBoot is not available");
+		return FALSE;
+	}
+	if (data_size >= 1 && data[0] & 1)
+		return TRUE;
+
+	/* available, but not enabled */
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
+			     "SecureBoot is not enabled");
+	return FALSE;
+}
+
+/**
  * fu_efivar_secure_boot_enabled:
  *
  * Determines if secure boot was enabled
@@ -419,13 +454,5 @@ fu_efivar_set_data (const gchar *guid, const gchar *name, const guint8 *data,
 gboolean
 fu_efivar_secure_boot_enabled (void)
 {
-	gsize data_size = 0;
-	g_autofree guint8 *data = NULL;
-
-	if (!fu_efivar_get_data (FU_EFIVAR_GUID_EFI_GLOBAL, "SecureBoot",
-				    &data, &data_size, NULL, NULL))
-		return FALSE;
-	if (data_size >= 1 && data[0] & 1)
-		return TRUE;
-	return FALSE;
+	return fu_efivar_secure_boot_enabled_full (NULL);
 }

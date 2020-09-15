@@ -128,6 +128,12 @@
         connected, additional software to be installed, or disabling any existing
         security layers to measure.
       </para>
+      <para>
+        The HSI specification is primarily designed for laptop and desktop
+        hardware, although some tests <emphasis>may</emphasis> still make sense
+        on server or embedded hardware.
+        It is not expected that non-consumer hardware will publish an HSI number.
+      </para>
     </refsect1>
 
     <refsect2 id="runtime-behaviour">
@@ -161,7 +167,8 @@
       <para>
         This security level corresponds to the most basic of security protections
         considered essential by security professionals.
-        Any failures at this level would have critical security impact.
+        Any failures at this level would have critical security impact and could
+        likely be used to compromise the system firmware without physical access.
       </para>
     </refsect2>
 
@@ -258,6 +265,38 @@
         Where the requirement is architecture or processor specific it has been noted.
       </para>
     </refsect2>
+
+    <refsect3 id="org.fwupd.hsi.Uefi.SecureBoot">
+      <title>UEFI SecureBoot</title>
+      <para>
+        UEFI Secure boot is a verification mechanism for ensuring that code
+        launched by firmware is trusted.
+      </para>
+      <para>
+        Secure Boot requires that each binary loaded at boot is validated
+        against trusted certifictes.
+      </para>
+      <itemizedlist>
+        <listitem>
+          <para>
+            For HSI-1 SecureBoot must be available for use on UEFI systems.
+            <emphasis>v1.5.0</emphasis>
+          </para>
+        </listitem>
+      </itemizedlist>
+      <note>
+        <para>
+          See also:
+          <itemizedlist>
+            <listitem>
+              <ulink url="https://wiki.ubuntu.com/UEFI/SecureBoot">
+                UEFI Wiki Entry
+              </ulink>
+            </listitem>
+          </itemizedlist>
+        </para>
+      </note>
+    </refsect3>
 
     <refsect3 id="org.fwupd.hsi.Spi.Bioswe">
       <title>BIOS Write Enable (BWE)</title>
