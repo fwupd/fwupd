@@ -257,6 +257,15 @@ endif
 if cc.has_header('sys/errno.h')
   conf.set('HAVE_ERRNO_H', '1')
 endif
+if cc.has_header('sys/socket.h')
+  conf.set('HAVE_SOCKET_H', '1')
+endif
+if cc.has_header('linux/ethtool.h')
+  conf.set('HAVE_ETHTOOL_H', '1')
+endif
+if cc.has_header('sys/mman.h')
+  conf.set('HAVE_MMAN_H', '1')
+endif
 if cc.has_header('poll.h')
   conf.set('HAVE_POLL_H', '1')
 endif
