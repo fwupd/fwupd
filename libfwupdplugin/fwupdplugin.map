@@ -630,5 +630,7 @@ LIBFWUPDPLUGIN_1.5.0 {
     fu_security_attrs_new;
     fu_security_attrs_remove_all;
     fu_security_attrs_to_variant;
+    fu_udev_device_get_subsystem_model;
+    fu_udev_device_get_subsystem_vendor;
   local: *;
 } LIBFWUPDPLUGIN_1.4.6;

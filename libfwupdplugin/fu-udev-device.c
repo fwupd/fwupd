@@ -39,6 +39,8 @@ typedef struct
 	GUdevDevice		*udev_device;
 	guint32			 vendor;
 	guint32			 model;
+	guint32			 subsystem_vendor;
+	guint32			 subsystem_model;
 	guint8			 revision;
 	gchar			*subsystem;
 	gchar			*device_file;
@@ -249,6 +251,8 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	priv->vendor = fu_udev_device_get_sysfs_attr_as_uint32 (priv->udev_device, "vendor");
 	priv->model = fu_udev_device_get_sysfs_attr_as_uint32 (priv->udev_device, "device");
 	priv->revision = fu_udev_device_get_sysfs_attr_as_uint8 (priv->udev_device, "revision");
+	priv->subsystem_vendor = fu_udev_device_get_sysfs_attr_as_uint32 (priv->udev_device, "subsystem_vendor");
+	priv->subsystem_model = fu_udev_device_get_sysfs_attr_as_uint32 (priv->udev_device, "subsystem_device");
 
 #ifdef HAVE_GUDEV
 	/* fallback to the parent */
@@ -368,6 +372,22 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	}
 
 	/* add GUIDs in order of priority */
+	if (priv->vendor != 0x0000 && priv->model != 0x0000 &&
+	    priv->subsystem_vendor != 0x0000 && priv->subsystem_model != 0x0000) {
+		g_autofree gchar *devid1 = NULL;
+		g_autofree gchar *devid2 = NULL;
+		devid1 = g_strdup_printf ("%s\\VEN_%04X&DEV_%04X&SUBSYS_%04X%04X&REV_%02X",
+					  subsystem,
+					  priv->vendor, priv->model,
+					  priv->subsystem_vendor, priv->subsystem_model,
+					  priv->revision);
+		fu_device_add_instance_id (device, devid1);
+		devid2 = g_strdup_printf ("%s\\VEN_%04X&DEV_%04X&SUBSYS_%04X%04X",
+					  subsystem,
+					  priv->vendor, priv->model,
+					  priv->subsystem_vendor, priv->subsystem_model);
+		fu_device_add_instance_id (device, devid2);
+	}
 	if (priv->vendor != 0x0000 && priv->model != 0x0000) {
 		g_autofree gchar *devid = NULL;
 		devid = g_strdup_printf ("%s\\VEN_%04X&DEV_%04X&REV_%02X",
@@ -630,6 +650,42 @@ fu_udev_device_get_model (FuUdevDevice *self)
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), 0x0000);
 	return priv->model;
+}
+
+/**
+ * fu_udev_device_get_subsystem_vendor:
+ * @self: A #FuUdevDevice
+ *
+ * Gets the device subsystem vendor code.
+ *
+ * Returns: a vendor code, or 0 if unset or invalid
+ *
+ * Since: 1.5.0
+ **/
+guint32
+fu_udev_device_get_subsystem_vendor (FuUdevDevice *self)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), 0x0000);
+	return priv->subsystem_vendor;
+}
+
+/**
+ * fu_udev_device_get_subsystem_model:
+ * @self: A #FuUdevDevice
+ *
+ * Gets the device subsystem model code.
+ *
+ * Returns: a vendor code, or 0 if unset or invalid
+ *
+ * Since: 1.5.0
+ **/
+guint32
+fu_udev_device_get_subsystem_model (FuUdevDevice *self)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), 0x0000);
+	return priv->subsystem_model;
 }
 
 /**
