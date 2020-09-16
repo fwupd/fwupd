@@ -578,7 +578,7 @@ fwupd_release_urgency_to_string (FwupdReleaseUrgency release_urgency)
 
 /**
  * fwupd_release_urgency_from_string:
- * @release_urgency: A string, e.g. `trusted-payload`
+ * @release_urgency: A string, e.g. `low`
  *
  * Converts a string to an enumerated value.
  *

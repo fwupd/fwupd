@@ -364,7 +364,7 @@ fwupd_security_attr_get_flags (FwupdSecurityAttr *self)
 /**
  * fwupd_security_attr_set_flags:
  * @self: A #FwupdSecurityAttr
- * @flags: the self flags, e.g. %FWUPD_SECURITY_ATTR_FLAG_TRUSTED_PAYLOAD
+ * @flags: the self flags, e.g. %FWUPD_SECURITY_ATTR_FLAG_OBSOLETED
  *
  * Sets the self flags.
  *
