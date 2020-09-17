@@ -617,6 +617,10 @@ LIBFWUPDPLUGIN_1.5.0 {
     fu_common_is_cpu_intel;
     fu_device_report_metadata_post;
     fu_device_report_metadata_pre;
+    fu_firmware_add_flag;
+    fu_firmware_flag_from_string;
+    fu_firmware_flag_to_string;
+    fu_firmware_has_flag;
     fu_fmap_firmware_get_type;
     fu_fmap_firmware_new;
     fu_plugin_runner_add_security_attrs;
