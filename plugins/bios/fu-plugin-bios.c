@@ -73,15 +73,17 @@ gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
 	g_autofree gchar *sysfsfwdir = NULL;
-	g_autoptr(GError) error_local = NULL;
 	g_autofree gchar *esrt_path = NULL;
 
 	/* are the EFI dirs set up so we can update each device */
+#if defined(__x86_64__) || defined(__i386__)
+	g_autoptr(GError) error_local = NULL;
 	if (!fu_efivar_supported (&error_local)) {
 		const gchar *reason = "Firmware can not be updated in legacy BIOS mode, switch to UEFI mode";
 		g_warning ("%s", error_local->message);
 		return fu_plugin_bios_create_dummy (plugin, reason, error);
 	}
+#endif
 
 	/* get the directory of ESRT entries */
 	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
