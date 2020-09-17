@@ -21,12 +21,92 @@
  */
 
 typedef struct {
+	FuFirmwareFlags			 flags;
 	GPtrArray			*images;	/* FuFirmwareImage */
 	gchar				*version;
 } FuFirmwarePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuFirmware, fu_firmware, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fu_firmware_get_instance_private (o))
+
+/**
+ * fu_firmware_flag_to_string:
+ * @flag: A #FuFirmwareFlags, e.g. %FU_FIRMWARE_FLAG_DEDUPE_ID
+ *
+ * Converts a #FuFirmwareFlags to a string.
+ *
+ * Return value: identifier string
+ *
+ * Since: 1.5.0
+ **/
+const gchar *
+fu_firmware_flag_to_string (FuFirmwareFlags flag)
+{
+	if (flag == FU_FIRMWARE_FLAG_NONE)
+		return "none";
+	if (flag == FU_FIRMWARE_FLAG_DEDUPE_ID)
+		return "dedupe-id";
+	if (flag == FU_FIRMWARE_FLAG_DEDUPE_IDX)
+		return "dedupe-idx";
+	return NULL;
+}
+
+/**
+ * fu_firmware_flag_from_string:
+ * @flag: A string, e.g. `dedupe-id`
+ *
+ * Converts a string to a #FuFirmwareFlags.
+ *
+ * Return value: enumerated value
+ *
+ * Since: 1.5.0
+ **/
+FuFirmwareFlags
+fu_firmware_flag_from_string (const gchar *flag)
+{
+	if (g_strcmp0 (flag, "dedupe-id") == 0)
+		return FU_FIRMWARE_FLAG_DEDUPE_ID;
+	if (g_strcmp0 (flag, "dedupe-idx") == 0)
+		return FU_FIRMWARE_FLAG_DEDUPE_IDX;
+	return FU_FIRMWARE_FLAG_NONE;
+}
+
+/**
+ * fu_firmware_add_flag:
+ * @firmware: A #FuFirmware
+ * @flag: the #FuFirmwareFlags
+ *
+ * Adds a specific firmware flag to the firmware.
+ *
+ * Since: 1.5.0
+ **/
+void
+fu_firmware_add_flag (FuFirmware *firmware, FuFirmwareFlags flag)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE (firmware);
+	g_return_if_fail (FU_IS_FIRMWARE (firmware));
+	priv->flags |= flag;
+}
+
+
+/**
+ * fu_firmware_has_flag:
+ * @firmware: A #FuFirmware
+ * @flag: the #FuFirmwareFlags
+ *
+ * Finds if the firmware has a specific firmware flag.
+ *
+ * Returns: %TRUE if the flag is set
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fu_firmware_has_flag (FuFirmware *firmware, FuFirmwareFlags flag)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE (firmware);
+	g_return_val_if_fail (FU_IS_FIRMWARE (firmware), FALSE);
+	return (priv->flags & flag) > 0;
+}
 
 /**
  * fu_firmware_get_version:
@@ -245,7 +325,8 @@ fu_firmware_write_file (FuFirmware *self, GFile *file, GError **error)
  *
  * Adds an image to the firmware.
  *
- * If an image with the same ID is already present it is replaced.
+ * If %FU_FIRMWARE_FLAG_DEDUPE_ID is set, an image with the same ID is already
+ * present it is replaced.
  *
  * Since: 1.3.1
  **/
@@ -255,6 +336,26 @@ fu_firmware_add_image (FuFirmware *self, FuFirmwareImage *img)
 	FuFirmwarePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_FIRMWARE (self));
 	g_return_if_fail (FU_IS_FIRMWARE_IMAGE (img));
+
+	/* dedupe */
+	for (guint i = 0; i < priv->images->len; i++) {
+		FuFirmwareImage *img_tmp = g_ptr_array_index (priv->images, i);
+		if (priv->flags & FU_FIRMWARE_FLAG_DEDUPE_ID) {
+			if (g_strcmp0 (fu_firmware_image_get_id (img_tmp),
+				       fu_firmware_image_get_id (img)) == 0) {
+				g_ptr_array_remove_index (priv->images, i);
+				break;
+			}
+		}
+		if (priv->flags & FU_FIRMWARE_FLAG_DEDUPE_IDX) {
+			if (fu_firmware_image_get_idx (img_tmp) ==
+			    fu_firmware_image_get_idx (img)) {
+				g_ptr_array_remove_index (priv->images, i);
+				break;
+			}
+		}
+	}
+
 	g_ptr_array_add (priv->images, g_object_ref (img));
 }
 
@@ -464,6 +565,18 @@ fu_firmware_to_string (FuFirmware *self)
 
 	/* subclassed type */
 	fu_common_string_append_kv (str, 0, G_OBJECT_TYPE_NAME (self), NULL);
+	if (priv->flags != FU_FIRMWARE_FLAG_NONE) {
+		g_autoptr(GString) tmp = g_string_new ("");
+		for (guint i = 0; i < 64; i++) {
+			if ((priv->flags & ((guint64) 1 << i)) == 0)
+				continue;
+			g_string_append_printf (tmp, "%s|",
+						fu_firmware_flag_to_string ((guint64) 1 << i));
+		}
+		if (tmp->len > 0)
+			g_string_truncate (tmp, tmp->len - 1);
+		fu_common_string_append_kv (str, 0, "Flags", tmp->str);
+	}
 	if (priv->version != NULL)
 		fu_common_string_append_kv (str, 0, "Version", priv->version);
 

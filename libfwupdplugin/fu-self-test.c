@@ -1635,6 +1635,51 @@ fu_firmware_func (void)
 }
 
 static void
+fu_firmware_dedupe_func (void)
+{
+	g_autoptr(FuFirmware) firmware = fu_firmware_new ();
+	g_autoptr(FuFirmwareImage) img1 = fu_firmware_image_new (NULL);
+	g_autoptr(FuFirmwareImage) img1_old = fu_firmware_image_new (NULL);
+	g_autoptr(FuFirmwareImage) img2 = fu_firmware_image_new (NULL);
+	g_autoptr(FuFirmwareImage) img2_old = fu_firmware_image_new (NULL);
+	g_autoptr(FuFirmwareImage) img_id = NULL;
+	g_autoptr(FuFirmwareImage) img_idx = NULL;
+	g_autoptr(GError) error = NULL;
+
+	fu_firmware_add_flag (firmware, FU_FIRMWARE_FLAG_DEDUPE_ID);
+	fu_firmware_add_flag (firmware, FU_FIRMWARE_FLAG_DEDUPE_IDX);
+
+	fu_firmware_image_set_idx (img1_old, 13);
+	fu_firmware_image_set_id (img1_old, "DAVE");
+	fu_firmware_add_image (firmware, img1_old);
+
+	fu_firmware_image_set_idx (img1, 13);
+	fu_firmware_image_set_id (img1, "primary");
+	fu_firmware_add_image (firmware, img1);
+
+
+	fu_firmware_image_set_idx (img2_old, 123456);
+	fu_firmware_image_set_id (img2_old, "secondary");
+	fu_firmware_add_image (firmware, img2_old);
+
+	fu_firmware_image_set_idx (img2, 23);
+	fu_firmware_image_set_id (img2, "secondary");
+	fu_firmware_add_image (firmware, img2);
+
+	img_id = fu_firmware_get_image_by_id (firmware, "primary", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (img_id);
+	g_assert_cmpint (fu_firmware_image_get_idx (img_id), ==, 13);
+	g_assert_cmpstr (fu_firmware_image_get_id (img_id), ==, "primary");
+
+	img_idx = fu_firmware_get_image_by_idx (firmware, 23, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (img_idx);
+	g_assert_cmpint (fu_firmware_image_get_idx (img_idx), ==, 23);
+	g_assert_cmpstr (fu_firmware_image_get_id (img_idx), ==, "secondary");
+}
+
+static void
 fu_efivar_func (void)
 {
 	gboolean ret;
@@ -1928,6 +1973,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/smbios", fu_smbios_func);
 	g_test_add_func ("/fwupd/smbios3", fu_smbios3_func);
 	g_test_add_func ("/fwupd/firmware", fu_firmware_func);
+	g_test_add_func ("/fwupd/firmware{dedupe}", fu_firmware_dedupe_func);
 	g_test_add_func ("/fwupd/firmware{ihex}", fu_firmware_ihex_func);
 	g_test_add_func ("/fwupd/firmware{ihex-offset}", fu_firmware_ihex_offset_func);
 	g_test_add_func ("/fwupd/firmware{ihex-signed}", fu_firmware_ihex_signed_func);

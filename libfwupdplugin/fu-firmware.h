@@ -36,12 +36,32 @@ struct _FuFirmwareClass
 	gpointer		 padding[28];
 };
 
+/**
+ * FuFirmwareFlags:
+ * @FU_FIRMWARE_FLAG_NONE:			No flags set
+ * @FU_FIRMWARE_FLAG_DEDUPE_ID:			Dedupe imges by ID
+ * @FU_FIRMWARE_FLAG_DEDUPE_IDX:		Dedupe imges by IDX
+ *
+ * The firmware flags.
+ **/
+#define FU_FIRMWARE_FLAG_NONE			(0u)		/* Since: 1.5.0 */
+#define FU_FIRMWARE_FLAG_DEDUPE_ID		(1u << 0)	/* Since: 1.5.0 */
+#define FU_FIRMWARE_FLAG_DEDUPE_IDX		(1u << 1)	/* Since: 1.5.0 */
+typedef guint64 FuFirmwareFlags;
+
+const gchar	*fu_firmware_flag_to_string		(FuFirmwareFlags flag);
+FuFirmwareFlags	 fu_firmware_flag_from_string		(const gchar	*flag);
+
 FuFirmware	*fu_firmware_new			(void);
 FuFirmware	*fu_firmware_new_from_bytes		(GBytes		*fw);
 gchar		*fu_firmware_to_string			(FuFirmware	*self);
 const gchar	*fu_firmware_get_version		(FuFirmware	*self);
 void		 fu_firmware_set_version		(FuFirmware	*self,
 							 const gchar	*version);
+void		 fu_firmware_add_flag			(FuFirmware	*firmware,
+							 FuFirmwareFlags flag);
+gboolean	 fu_firmware_has_flag			(FuFirmware	*firmware,
+							 FuFirmwareFlags flag);
 
 gboolean	 fu_firmware_tokenize			(FuFirmware	*self,
 							 GBytes		*fw,
