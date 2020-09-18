@@ -28,6 +28,7 @@
 #include <libfwupdplugin/fu-firmware-image.h>
 #include <libfwupdplugin/fu-hwids.h>
 #include <libfwupdplugin/fu-ihex-firmware.h>
+#include <libfwupdplugin/fu-toc-firmware.h>
 #include <libfwupdplugin/fu-io-channel.h>
 #include <libfwupdplugin/fu-plugin.h>
 #include <libfwupdplugin/fu-plugin-vfuncs.h>

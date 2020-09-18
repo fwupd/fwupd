@@ -11,3 +11,4 @@
 void		 fu_firmware_image_add_string	(FuFirmwareImage	*self,
 						 guint			 idt,
 						 GString		*str);
+GBytes		*fu_firmware_image_get_bytes	(FuFirmwareImage	*self);

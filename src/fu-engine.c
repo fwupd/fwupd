@@ -60,6 +60,7 @@
 #include "fu-fmap-firmware.h"
 #include "fu-ihex-firmware.h"
 #include "fu-srec-firmware.h"
+#include "fu-toc-firmware.h"
 
 /* only needed until we hard depend on jcat 0.1.3 */
 #include <libjcat/jcat-version.h>
@@ -6313,6 +6314,7 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	fu_engine_add_firmware_gtype (self, "fmap", FU_TYPE_FMAP_FIRMWARE);
 	fu_engine_add_firmware_gtype (self, "ihex", FU_TYPE_IHEX_FIRMWARE);
 	fu_engine_add_firmware_gtype (self, "srec", FU_TYPE_SREC_FIRMWARE);
+	fu_engine_add_firmware_gtype (self, "toc", FU_TYPE_TOC_FIRMWARE);
 
 	/* set shared USB context */
 	self->usb_ctx = g_usb_context_new (error);

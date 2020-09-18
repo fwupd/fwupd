@@ -225,6 +225,15 @@ fu_firmware_image_set_bytes (FuFirmwareImage *self, GBytes *bytes)
 	priv->bytes = g_bytes_ref (bytes);
 }
 
+/* private */
+GBytes *
+fu_firmware_image_get_bytes (FuFirmwareImage *self)
+{
+	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_FIRMWARE_IMAGE (self), NULL);
+	return priv->bytes;
+}
+
 /**
  * fu_firmware_image_write:
  * @self: a #FuPlugin

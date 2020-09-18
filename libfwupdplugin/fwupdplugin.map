@@ -636,6 +636,8 @@ LIBFWUPDPLUGIN_1.5.0 {
     fu_security_attrs_new;
     fu_security_attrs_remove_all;
     fu_security_attrs_to_variant;
+    fu_toc_firmware_get_type;
+    fu_toc_firmware_new;
     fu_udev_device_get_subsystem_model;
     fu_udev_device_get_subsystem_vendor;
   local: *;
