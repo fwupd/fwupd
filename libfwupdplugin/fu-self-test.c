@@ -1594,6 +1594,7 @@ fu_firmware_func (void)
 	fu_firmware_image_set_addr (img1, 0x200);
 	fu_firmware_image_set_idx (img1, 13);
 	fu_firmware_image_set_id (img1, "primary");
+	fu_firmware_image_set_filename (img1, "BIOS.bin");
 	fu_firmware_add_image (firmware, img1);
 	fu_firmware_image_set_addr (img2, 0x400);
 	fu_firmware_image_set_idx (img2, 23);
@@ -1628,6 +1629,7 @@ fu_firmware_func (void)
 				  "  ID:                   primary\n"
 				  "  Index:                0xd\n"
 				  "  Address:              0x200\n"
+				  "  Filename:             BIOS.bin\n"
 				  "  FuFirmwareImage:\n"
 				  "  ID:                   secondary\n"
 				  "  Index:                0x17\n"
