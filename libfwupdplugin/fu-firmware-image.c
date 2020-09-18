@@ -24,6 +24,7 @@ typedef struct {
 	guint64			 addr;
 	guint64			 idx;
 	gchar			*version;
+	gchar			*filename;
 } FuFirmwareImagePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuFirmwareImage, fu_firmware_image, G_TYPE_OBJECT)
@@ -63,6 +64,42 @@ fu_firmware_image_set_version (FuFirmwareImage *self, const gchar *version)
 	g_return_if_fail (FU_IS_FIRMWARE_IMAGE (self));
 	g_free (priv->version);
 	priv->version = g_strdup (version);
+}
+
+/**
+ * fu_firmware_image_get_filename:
+ * @self: A #FuFirmwareImage
+ *
+ * Gets an optional filename that represents the image source or destination.
+ *
+ * Returns: a string, or %NULL
+ *
+ * Since: 1.5.0
+ **/
+const gchar *
+fu_firmware_image_get_filename (FuFirmwareImage *self)
+{
+	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_FIRMWARE_IMAGE (self), NULL);
+	return priv->filename;
+}
+
+/**
+ * fu_firmware_image_set_filename:
+ * @self: A #FuFirmwareImage
+ * @filename: (nullable): A string filename, or %NULL
+ *
+ * Sets an optional filename that represents the image source or destination.
+ *
+ * Since: 1.5.0
+ **/
+void
+fu_firmware_image_set_filename (FuFirmwareImage *self, const gchar *filename)
+{
+	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_FIRMWARE_IMAGE (self));
+	g_free (priv->filename);
+	priv->filename = g_strdup (filename);
 }
 
 /**
@@ -299,6 +336,8 @@ fu_firmware_image_add_string (FuFirmwareImage *self, guint idt, GString *str)
 		fu_common_string_append_kx (str, idt, "Address", priv->addr);
 	if (priv->version != NULL)
 		fu_common_string_append_kv (str, idt, "Version", priv->version);
+	if (priv->filename != NULL)
+		fu_common_string_append_kv (str, idt, "Filename", priv->filename);
 	if (priv->bytes != NULL) {
 		fu_common_string_append_kx (str, idt, "Data",
 					    g_bytes_get_size (priv->bytes));
@@ -339,6 +378,7 @@ fu_firmware_image_finalize (GObject *object)
 	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
 	g_free (priv->id);
 	g_free (priv->version);
+	g_free (priv->filename);
 	if (priv->bytes != NULL)
 		g_bytes_unref (priv->bytes);
 	G_OBJECT_CLASS (fu_firmware_image_parent_class)->finalize (object);

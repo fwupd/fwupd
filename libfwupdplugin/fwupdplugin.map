@@ -621,6 +621,8 @@ LIBFWUPDPLUGIN_1.5.0 {
     fu_firmware_flag_from_string;
     fu_firmware_flag_to_string;
     fu_firmware_has_flag;
+    fu_firmware_image_get_filename;
+    fu_firmware_image_set_filename;
     fu_fmap_firmware_get_type;
     fu_fmap_firmware_new;
     fu_plugin_runner_add_security_attrs;
