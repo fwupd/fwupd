@@ -200,9 +200,6 @@ fu_udev_device_get_vendor_fallback (GUdevDevice *udev_device)
 {
 #ifdef HAVE_GUDEV
 	const gchar *tmp;
-	tmp = g_udev_device_get_property (udev_device, "FWUPD_VENDOR");
-	if (tmp != NULL)
-		return tmp;
 	tmp = g_udev_device_get_property (udev_device, "ID_VENDOR_FROM_DATABASE");
 	if (tmp != NULL)
 		return tmp;
@@ -310,9 +307,7 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 
 	/* set model */
 	if (fu_device_get_name (device) == NULL) {
-		tmp = g_udev_device_get_property (priv->udev_device, "FWUPD_MODEL");
-		if (tmp == NULL)
-			tmp = g_udev_device_get_property (priv->udev_device, "ID_MODEL_FROM_DATABASE");
+		tmp = g_udev_device_get_property (priv->udev_device, "ID_MODEL_FROM_DATABASE");
 		if (tmp == NULL)
 			tmp = g_udev_device_get_property (priv->udev_device, "ID_MODEL");
 		if (tmp == NULL)
