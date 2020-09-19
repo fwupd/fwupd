@@ -18,15 +18,15 @@ G_DEFINE_TYPE (FuOptionromDevice, fu_optionrom_device, FU_TYPE_UDEV_DEVICE)
 static gboolean
 fu_optionrom_device_probe (FuUdevDevice *device, GError **error)
 {
-	GUdevDevice *udev_device = fu_udev_device_get_dev (device);
-	const gchar *guid = NULL;
+	g_autofree gchar *fn = NULL;
 
-	guid = g_udev_device_get_property (udev_device, "FWUPD_GUID");
-	if (guid == NULL) {
+	/* does the device even have ROM? */
+	fn = g_build_filename (fu_udev_device_get_sysfs_path (device), "rom", NULL);
+	if (!g_file_test (fn, G_FILE_TEST_EXISTS)) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "no FWUPD_GUID property");
+				     "Unable to read firmware from device");
 		return FALSE;
 	}
 
