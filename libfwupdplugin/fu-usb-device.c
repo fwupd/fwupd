@@ -570,6 +570,40 @@ fu_usb_device_incorporate (FuDevice *self, FuDevice *donor)
 			       fu_usb_device_get_dev (FU_USB_DEVICE (donor)));
 }
 
+static gboolean
+fu_udev_device_bind_driver (FuDevice *device,
+			    const gchar *subsystem,
+			    const gchar *driver,
+			    GError **error)
+{
+	FuUsbDevice *self = FU_USB_DEVICE (device);
+	g_autoptr(GUdevDevice) dev = NULL;
+	g_autoptr(FuUdevDevice) udev_device = NULL;
+
+	/* use udev for this */
+	dev = fu_usb_device_find_udev_device (self, error);
+	if (dev == NULL)
+		return FALSE;
+	udev_device = fu_udev_device_new (dev);
+	return fu_device_bind_driver (FU_DEVICE (udev_device),
+				      subsystem, driver, error);
+}
+
+static gboolean
+fu_udev_device_unbind_driver (FuDevice *device, GError **error)
+{
+	FuUsbDevice *self = FU_USB_DEVICE (device);
+	g_autoptr(GUdevDevice) dev = NULL;
+	g_autoptr(FuUdevDevice) udev_device = NULL;
+
+	/* use udev for this */
+	dev = fu_usb_device_find_udev_device (self, error);
+	if (dev == NULL)
+		return FALSE;
+	udev_device = fu_udev_device_new (dev);
+	return fu_device_unbind_driver (FU_DEVICE (udev_device), error);
+}
+
 /**
  * fu_usb_device_new:
  * @usb_device: A #GUsbDevice
@@ -602,6 +636,8 @@ fu_usb_device_class_init (FuUsbDeviceClass *klass)
 	device_class->close = fu_usb_device_close;
 	device_class->probe = fu_usb_device_probe;
 	device_class->incorporate = fu_usb_device_incorporate;
+	device_class->bind_driver = fu_udev_device_bind_driver;
+	device_class->unbind_driver = fu_udev_device_unbind_driver;
 
 	pspec = g_param_spec_object ("usb-device", NULL, NULL,
 				     G_USB_TYPE_DEVICE,

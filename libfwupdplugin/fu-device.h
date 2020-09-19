@@ -68,8 +68,14 @@ struct _FuDeviceClass
 							 GHashTable	*metadata);
 	void			 (*report_metadata_post)(FuDevice	*self,
 							 GHashTable	*metadata);
+	gboolean		 (*bind_driver)		(FuDevice	*self,
+							 const gchar	*subsystem,
+							 const gchar	*driver,
+							 GError		**error);
+	gboolean		 (*unbind_driver)	(FuDevice	*self,
+							 GError		**error);
 	/*< private >*/
-	gpointer	padding[14];
+	gpointer	padding[12];
 };
 
 /**
@@ -322,6 +328,12 @@ gboolean	 fu_device_retry			(FuDevice	*self,
 							 FuDeviceRetryFunc func,
 							 guint		 count,
 							 gpointer	 user_data,
+							 GError		**error);
+gboolean	 fu_device_bind_driver			(FuDevice	*self,
+							 const gchar	*subsystem,
+							 const gchar	*driver,
+							 GError		**error);
+gboolean	 fu_device_unbind_driver		(FuDevice	*self,
 							 GError		**error);
 GHashTable	*fu_device_report_metadata_pre		(FuDevice	*self);
 GHashTable	*fu_device_report_metadata_post		(FuDevice	*self);

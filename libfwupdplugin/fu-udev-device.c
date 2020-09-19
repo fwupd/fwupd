@@ -518,6 +518,120 @@ fu_udev_device_get_slot_depth (FuUdevDevice *self, const gchar *subsystem)
 	return 0;
 }
 
+#ifndef _WIN32
+static gchar *
+fu_udev_device_get_bind_id (FuUdevDevice *self)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	if (g_strcmp0 (fu_udev_device_get_subsystem (self), "pci") == 0)
+		return g_strdup (g_udev_device_get_property (priv->udev_device, "PCI_SLOT_NAME"));
+	if (g_strcmp0 (fu_udev_device_get_subsystem (self), "hid") == 0)
+		return g_strdup (g_udev_device_get_property (priv->udev_device, "HID_PHYS"));
+	if (g_strcmp0 (fu_udev_device_get_subsystem (self), "usb") == 0)
+		return g_path_get_basename (g_udev_device_get_sysfs_path (priv->udev_device));
+	return NULL;
+}
+#endif
+
+static gboolean
+fu_udev_device_unbind_driver (FuDevice *device, GError **error)
+{
+#ifndef _WIN32
+	FuUdevDevice *self = FU_UDEV_DEVICE (device);
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	g_autofree gchar *bind_id = NULL;
+	g_autofree gchar *fn = NULL;
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(GOutputStream) stream = NULL;
+
+	/* is already unbound */
+	fn = g_build_filename (g_udev_device_get_sysfs_path (priv->udev_device),
+			       "driver", "unbind", NULL);
+	if (!g_file_test (fn, G_FILE_TEST_EXISTS))
+		return TRUE;
+
+	/* write bus ID to file */
+	bind_id = fu_udev_device_get_bind_id (self);
+	if (bind_id == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "bind-id not set for subsystem %s",
+			     priv->subsystem);
+		return FALSE;
+	}
+	file = g_file_new_for_path (fn);
+	stream = G_OUTPUT_STREAM (g_file_replace (file, NULL, FALSE,
+				  G_FILE_CREATE_NONE, NULL, error));
+	if (stream == NULL)
+		return FALSE;
+	return g_output_stream_write_all (stream, bind_id, strlen (bind_id),
+					  NULL, NULL, error);
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "driver unbinding not supported on Windows");
+	return FALSE;
+#endif
+}
+
+static gboolean
+fu_udev_device_bind_driver (FuDevice *device,
+			    const gchar *subsystem,
+			    const gchar *driver,
+			    GError **error)
+{
+#ifndef _WIN32
+	FuUdevDevice *self = FU_UDEV_DEVICE (device);
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	g_autofree gchar *bind_id = NULL;
+	g_autofree gchar *driver_safe = g_strdup (driver);
+	g_autofree gchar *fn = NULL;
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(GOutputStream) stream = NULL;
+
+	/* copy the logic from modprobe */
+	g_strdelimit (driver_safe, "-", '_');
+
+	/* driver exists */
+	fn = g_strdup_printf ("/sys/module/%s/drivers/%s:%s/bind",
+			      driver_safe, subsystem, driver_safe);
+	if (!g_file_test (fn, G_FILE_TEST_EXISTS)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "cannot bind with %s:%s",
+			     subsystem, driver);
+		return FALSE;
+	}
+
+	/* write bus ID to file */
+	bind_id = fu_udev_device_get_bind_id (self);
+	if (bind_id == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "bind-id not set for subsystem %s",
+			     priv->subsystem);
+		return FALSE;
+	}
+	file = g_file_new_for_path (fn);
+	stream = G_OUTPUT_STREAM (g_file_replace (file, NULL, FALSE,
+				  G_FILE_CREATE_NONE, NULL, error));
+	if (stream == NULL)
+		return FALSE;
+	return g_output_stream_write_all (stream, bind_id, strlen (bind_id),
+					  NULL, NULL, error);
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "driver binding not supported on Windows");
+	return FALSE;
+#endif
+}
+
 static void
 fu_udev_device_incorporate (FuDevice *self, FuDevice *donor)
 {
@@ -1443,6 +1557,8 @@ fu_udev_device_class_init (FuUdevDeviceClass *klass)
 	device_class->open = fu_udev_device_open;
 	device_class->close = fu_udev_device_close;
 	device_class->to_string = fu_udev_device_to_string;
+	device_class->bind_driver = fu_udev_device_bind_driver;
+	device_class->unbind_driver = fu_udev_device_unbind_driver;
 
 	signals[SIGNAL_CHANGED] =
 		g_signal_new ("changed",

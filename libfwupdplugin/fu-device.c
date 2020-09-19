@@ -3042,6 +3042,82 @@ fu_device_report_metadata_post (FuDevice *self)
 }
 
 /**
+ * fu_device_bind_driver:
+ * @self: A #FuDevice
+ * @subsystem: A subsystem string, e.g. `pci`
+ * @driver: A kernel module name, e.g. `tg3`
+ * @error: A #GError, or %NULL
+ *
+ * Binds a driver to the device, which normally means the kernel driver takes
+ * control of the hardware.
+ *
+ * Returns: %TRUE if driver was bound.
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fu_device_bind_driver (FuDevice *self,
+		       const gchar *subsystem,
+		       const gchar *driver,
+		       GError **error)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+
+	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
+	g_return_val_if_fail (subsystem != NULL, FALSE);
+	g_return_val_if_fail (driver != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* not implemented */
+	if (klass->bind_driver == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "not supported");
+		return FALSE;
+	}
+
+	/* subclass */
+	return klass->bind_driver (self, subsystem, driver, error);
+}
+
+/**
+ * fu_device_unbind_driver:
+ * @self: A #FuDevice
+ * @error: A #GError, or %NULL
+ *
+ * Unbinds the driver from the device, which normally means the kernel releases
+ * the hardware so it can be used from userspace.
+ *
+ * If there is no driver bound then this function will return with success
+ * without actually doing anything.
+ *
+ * Returns: %TRUE if driver was unbound.
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fu_device_unbind_driver (FuDevice *self, GError **error)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+
+	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* not implemented */
+	if (klass->unbind_driver == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "not supported");
+		return FALSE;
+	}
+
+	/* subclass */
+	return klass->unbind_driver (self, error);
+}
+
+/**
  * fu_device_incorporate:
  * @self: A #FuDevice
  * @donor: Another #FuDevice

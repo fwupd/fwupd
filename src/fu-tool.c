@@ -1302,6 +1302,66 @@ fu_util_detach (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_unbind_driver (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	/* load engine */
+	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+		return FALSE;
+
+	/* get device */
+	if (g_strv_length (values) == 1) {
+		device = fu_util_get_device (priv, values[0], error);
+	} else {
+		device = fu_util_prompt_for_device (priv, NULL, error);
+	}
+	if (device == NULL)
+		return FALSE;
+
+	/* run vfunc */
+	locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
+		return FALSE;
+	return fu_device_unbind_driver (device, error);
+}
+
+static gboolean
+fu_util_bind_driver (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	/* load engine */
+	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+		return FALSE;
+
+	/* get device */
+	if (g_strv_length (values) == 3) {
+		device = fu_util_get_device (priv, values[2], error);
+		if (device == NULL)
+			return FALSE;
+	} else if (g_strv_length (values) == 2) {
+		device = fu_util_prompt_for_device (priv, NULL, error);
+		if (device == NULL)
+			return FALSE;
+	} else {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments");
+		return FALSE;
+	}
+
+	/* run vfunc */
+	locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
+		return FALSE;
+	return fu_device_bind_driver (device, values[0], values[1], error);
+}
+
+static gboolean
 fu_util_attach (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FuDevice) device = NULL;
@@ -2376,6 +2436,18 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Detach to bootloader mode"),
 		     fu_util_detach);
+	fu_util_cmd_array_add (cmd_array,
+		     "unbind-driver",
+		     "[DEVICE-ID|GUID]",
+		     /* TRANSLATORS: command description */
+		     _("Unbind current driver"),
+		     fu_util_unbind_driver);
+	fu_util_cmd_array_add (cmd_array,
+		     "bind-driver",
+		     "subsystem driver [DEVICE-ID|GUID]",
+		     /* TRANSLATORS: command description */
+		     _("Bind new kernel driver"),
+		     fu_util_bind_driver);
 	fu_util_cmd_array_add (cmd_array,
 		     "activate",
 		     "[DEVICE-ID|GUID]",

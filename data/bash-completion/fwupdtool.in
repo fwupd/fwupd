@@ -32,6 +32,8 @@ _fwupdtool_cmd_list=(
 	'refresh'
 	'verify-update'
 	'watch'
+	'unbind-driver'
+	'bind-driver'
 )
 
 _fwupdtool_opts=(
