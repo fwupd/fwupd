@@ -88,7 +88,7 @@ typedef enum {
  * @FWUPD_DEVICE_FLAG_INTERNAL:			Device cannot be removed easily
  * @FWUPD_DEVICE_FLAG_UPDATABLE:		Device is updatable in this or any other mode
  * @FWUPD_DEVICE_FLAG_ONLY_OFFLINE:		Update can only be done from offline mode
- * @FWUPD_DEVICE_FLAG_REQUIRE_AC:		Requires AC power
+ * @FWUPD_DEVICE_FLAG_REQUIRE_AC:		System requires external power source
  * @FWUPD_DEVICE_FLAG_LOCKED:			Is locked and can be unlocked
  * @FWUPD_DEVICE_FLAG_SUPPORTED:		Is found in current metadata
  * @FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER:		Requires a bootloader mode to be manually enabled by the user
