@@ -967,7 +967,7 @@ fu_util_device_flag_to_string (guint64 device_flag)
 	}
 	if (device_flag == FWUPD_DEVICE_FLAG_REQUIRE_AC) {
 		/* TRANSLATORS: Must be plugged in to an outlet */
-		return _("Requires AC power");
+		return _("System requires external power source");
 	}
 	if (device_flag == FWUPD_DEVICE_FLAG_LOCKED) {
 		/* TRANSLATORS: Is locked and can be unlocked */
