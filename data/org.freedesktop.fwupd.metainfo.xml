@@ -450,7 +450,7 @@
           <li>Do not fail to start the daemon if tpm2_pcrlist hangs</li>
           <li>Do not fail when scheduling more than one update to be run offline</li>
           <li>Do not let failing to find DBus prevent fwuptool from starting</li>
-          <li>Do not schedule an update on battery power if it requires AC power</li>
+          <li>Do not schedule an update on battery power if it requires an external power source</li>
           <li>Include all device checksums in the LVFS report</li>
           <li>Rename the shimx64.efi binary for known broken firmware</li>
           <li>Upload the UPDATE_INFO entry for the UEFI UX capsule</li>
