@@ -4,8 +4,5 @@
 # SPDX-License-Identifier: LGPL-2.1+
 #
 
-# PCI cards with ROM
-SUBSYSTEM=="pci", TEST=="/sys$devpath/rom", ENV{FWUPD_GUID}="$attr{vendor}:$attr{device}"
-
 # NVMe hardware
 SUBSYSTEM=="nvme", ENV{ID_VENDOR_FROM_DATABASE}=="", IMPORT{builtin}="hwdb --subsystem=pci"
