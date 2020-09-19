@@ -615,8 +615,10 @@ LIBFWUPDPLUGIN_1.5.0 {
     fu_common_cpuid;
     fu_common_filename_glob;
     fu_common_is_cpu_intel;
+    fu_device_bind_driver;
     fu_device_report_metadata_post;
     fu_device_report_metadata_pre;
+    fu_device_unbind_driver;
     fu_firmware_add_flag;
     fu_firmware_build;
     fu_firmware_flag_from_string;
