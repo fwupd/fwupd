@@ -49,6 +49,10 @@ void		 fu_firmware_image_set_idx	(FuFirmwareImage	*self,
 						 guint64		 idx);
 void		 fu_firmware_image_set_bytes	(FuFirmwareImage	*self,
 						 GBytes			*bytes);
+gboolean	 fu_firmware_image_parse	(FuFirmwareImage	*self,
+						 GBytes			*fw,
+						 FwupdInstallFlags	 flags,
+						 GError			**error);
 GBytes		*fu_firmware_image_write	(FuFirmwareImage	*self,
 						 GError			**error);
 GBytes		*fu_firmware_image_write_chunk	(FuFirmwareImage	*self,

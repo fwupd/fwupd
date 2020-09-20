@@ -189,6 +189,40 @@ fu_firmware_image_set_bytes (FuFirmwareImage *self, GBytes *bytes)
 }
 
 /**
+ * fu_firmware_image_parse:
+ * @self: A #FuFirmwareImage
+ * @fw: A #GBytes
+ * @flags: some #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_FORCE
+ * @error: A #GError, or %NULL
+ *
+ * Parses a firmware image, typically checking image CRCs and/or headers.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fu_firmware_image_parse (FuFirmwareImage *self,
+			 GBytes *fw,
+			 FwupdInstallFlags flags,
+			 GError **error)
+{
+	FuFirmwareImageClass *klass = FU_FIRMWARE_IMAGE_GET_CLASS (self);
+
+	g_return_val_if_fail (FU_IS_FIRMWARE_IMAGE (self), FALSE);
+	g_return_val_if_fail (fw != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* subclassed */
+	if (klass->parse != NULL)
+		return klass->parse (self, fw, flags, error);
+
+	/* just add entire blob */
+	fu_firmware_image_set_bytes (self, fw);
+	return TRUE;
+}
+
+/**
  * fu_firmware_image_write:
  * @self: a #FuPlugin
  * @error: A #GError, or %NULL
