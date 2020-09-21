@@ -327,6 +327,7 @@ main (int argc, char *argv[])
 			g_printerr ("failed: %s\n", error_local->message);
 			return EXIT_FAILURE;
 		}
+		fu_uefi_device_set_esp (dev, esp);
 		if (flags != NULL)
 			fu_device_set_custom_flags (FU_DEVICE (dev), flags);
 		if (!fu_device_prepare (FU_DEVICE (dev),
