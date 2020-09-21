@@ -1540,6 +1540,75 @@ fu_firmware_srec_tokenization_func (void)
 }
 
 static void
+fu_firmware_build_func (void)
+{
+	gboolean ret;
+	g_autofree gchar *str = NULL;
+	g_autoptr(FuFirmware) firmware = fu_firmware_new ();
+	g_autoptr(FuFirmwareImage) img = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GBytes) blob2 = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(XbBuilder) builder = xb_builder_new ();
+	g_autoptr(XbBuilderSource) source = xb_builder_source_new ();
+	g_autoptr(XbNode) n = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+	const gchar *buf =
+		"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+		"<firmware>\n"
+		"  <version>1.2.3</version>\n"
+		"  <image>\n"
+		"    <version>4.5.6</version>\n"
+		"    <id>header</id>\n"
+		"    <idx>456</idx>\n"
+		"    <addr>0x456</addr>\n"
+		"    <data>aGVsbG8=</data>\n"
+		"  </image>\n"
+		"  <image>\n"
+		"    <version>7.8.9</version>\n"
+		"    <id>header</id>\n"
+		"    <idx>789</idx>\n"
+		"    <addr>0x789</addr>\n"
+		"  </image>\n"
+		"</firmware>\n";
+	blob = g_bytes_new_static (buf, strlen (buf));
+	g_assert_no_error (error);
+	g_assert_nonnull (blob);
+
+	/* parse XML */
+	ret = xb_builder_source_load_bytes (source, blob, XB_BUILDER_SOURCE_FLAG_NONE, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	xb_builder_import_source (builder, source);
+	silo = xb_builder_compile (builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (silo);
+	n = xb_silo_query_first (silo, "firmware", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (n);
+
+	/* build object */
+	ret = fu_firmware_build (firmware, n, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	g_assert_cmpstr (fu_firmware_get_version (firmware), ==, "1.2.3");
+
+	/* verify image */
+	img = fu_firmware_get_image_by_id (firmware, "header", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (img);
+	g_assert_cmpstr (fu_firmware_image_get_version (img), ==, "4.5.6");
+	g_assert_cmpint (fu_firmware_image_get_idx (img), ==, 456);
+	g_assert_cmpint (fu_firmware_image_get_addr (img), ==, 0x456);
+	blob2 = fu_firmware_image_write (img, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (blob2);
+	g_assert_cmpint (g_bytes_get_size (blob2), ==, 5);
+	str = g_strndup (g_bytes_get_data (blob2, NULL), g_bytes_get_size (blob2));
+	g_assert_cmpstr (str, ==, "hello");
+}
+
+static void
 fu_firmware_dfu_func (void)
 {
 	gboolean ret;
@@ -1976,6 +2045,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/smbios3", fu_smbios3_func);
 	g_test_add_func ("/fwupd/firmware", fu_firmware_func);
 	g_test_add_func ("/fwupd/firmware{dedupe}", fu_firmware_dedupe_func);
+	g_test_add_func ("/fwupd/firmware{build}", fu_firmware_build_func);
 	g_test_add_func ("/fwupd/firmware{ihex}", fu_firmware_ihex_func);
 	g_test_add_func ("/fwupd/firmware{ihex-offset}", fu_firmware_ihex_offset_func);
 	g_test_add_func ("/fwupd/firmware{ihex-signed}", fu_firmware_ihex_signed_func);

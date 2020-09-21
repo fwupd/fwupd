@@ -260,6 +260,63 @@ fu_firmware_image_parse (FuFirmwareImage *self,
 }
 
 /**
+ * fu_firmware_image_build:
+ * @self: A #FuFirmwareImage
+ * @n: A #XbNode
+ * @error: A #GError, or %NULL
+ *
+ * Builds a firmware image from an XML manifest.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fu_firmware_image_build (FuFirmwareImage *self, XbNode *n, GError **error)
+{
+	guint64 tmpval;
+	const gchar *tmp;
+
+	g_return_val_if_fail (FU_IS_FIRMWARE_IMAGE (self), FALSE);
+	g_return_val_if_fail (XB_IS_NODE (n), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	tmp = xb_node_query_text (n, "version", NULL);
+	if (tmp != NULL)
+		fu_firmware_image_set_version (self, tmp);
+	tmp = xb_node_query_text (n, "id", NULL);
+	if (tmp != NULL)
+		fu_firmware_image_set_id (self, tmp);
+	tmpval = xb_node_query_text_as_uint (n, "idx", NULL);
+	if (tmpval != G_MAXUINT64)
+		fu_firmware_image_set_idx (self, tmpval);
+	tmpval = xb_node_query_text_as_uint (n, "addr", NULL);
+	if (tmpval != G_MAXUINT64)
+		fu_firmware_image_set_addr (self, tmpval);
+	tmp = xb_node_query_text (n, "filename", NULL);
+	if (tmp != NULL) {
+		g_autoptr(GBytes) blob = NULL;
+		blob = fu_common_get_contents_bytes (tmp, error);
+		if (blob == NULL)
+			return FALSE;
+		fu_firmware_image_set_bytes (self, blob);
+		fu_firmware_image_set_filename (self, tmp);
+	}
+	tmp = xb_node_query_text (n, "data", NULL);
+	if (tmp != NULL) {
+		gsize bufsz = 0;
+		g_autofree guchar *buf = NULL;
+		g_autoptr(GBytes) blob = NULL;
+		buf = g_base64_decode (tmp, &bufsz);
+		blob = g_bytes_new (buf, bufsz);
+		fu_firmware_image_set_bytes (self, blob);
+	}
+
+	/* success */
+	return TRUE;
+}
+
+/**
  * fu_firmware_image_write:
  * @self: a #FuPlugin
  * @error: A #GError, or %NULL
