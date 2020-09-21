@@ -8,6 +8,7 @@
 
 #include <glib-object.h>
 #include <fwupd.h>
+#include <xmlb.h>
 
 #define FU_TYPE_FIRMWARE_IMAGE (fu_firmware_image_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuFirmwareImage, fu_firmware_image, FU, FIRMWARE_IMAGE, GObject)
@@ -55,6 +56,9 @@ void		 fu_firmware_image_set_bytes	(FuFirmwareImage	*self,
 gboolean	 fu_firmware_image_parse	(FuFirmwareImage	*self,
 						 GBytes			*fw,
 						 FwupdInstallFlags	 flags,
+						 GError			**error);
+gboolean	 fu_firmware_image_build	(FuFirmwareImage	*self,
+						 XbNode			*n,
 						 GError			**error);
 GBytes		*fu_firmware_image_write	(FuFirmwareImage	*self,
 						 GError			**error);

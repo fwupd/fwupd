@@ -240,6 +240,56 @@ fu_firmware_parse (FuFirmware *self, GBytes *fw, FwupdInstallFlags flags, GError
 }
 
 /**
+ * fu_firmware_build:
+ * @self: A #FuFirmware
+ * @n: A #XbNode
+ * @error: A #GError, or %NULL
+ *
+ * Builds a firmware from an XML manifest.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fu_firmware_build (FuFirmware *self, XbNode *n, GError **error)
+{
+	FuFirmwareClass *klass = FU_FIRMWARE_GET_CLASS (self);
+	const gchar *tmp;
+	g_autoptr(GPtrArray) xb_images = NULL;
+
+	g_return_val_if_fail (FU_IS_FIRMWARE (self), FALSE);
+	g_return_val_if_fail (XB_IS_NODE (n), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* set attributes */
+	tmp = xb_node_query_text (n, "version", NULL);
+	if (tmp != NULL)
+		fu_firmware_set_version (self, tmp);
+
+	/* parse images */
+	xb_images = xb_node_query (n, "image", 0, NULL);
+	if (xb_images != NULL) {
+		for (guint i = 0; i < xb_images->len; i++) {
+			XbNode *xb_image = g_ptr_array_index (xb_images, i);
+			g_autoptr(FuFirmwareImage) img = fu_firmware_image_new (NULL);
+			if (!fu_firmware_image_build (img, xb_image, error))
+				return FALSE;
+			fu_firmware_add_image (self, img);
+		}
+	}
+
+	/* subclassed */
+	if (klass->build != NULL) {
+		if (!klass->build (self, n, error))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+/**
  * fu_firmware_parse_file:
  * @self: A #FuFirmware
  * @file: A #GFile

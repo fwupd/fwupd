@@ -345,6 +345,7 @@ if get_option('tests')
       fwupdplugin_incdir,
     ],
     dependencies : [
+      libxmlb,
       gio,
     ],
     link_with : [

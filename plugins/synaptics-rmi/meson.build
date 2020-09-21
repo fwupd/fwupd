@@ -48,6 +48,7 @@ if get_option('tests')
     ],
     dependencies : [
       gio,
+      libxmlb,
     ],
     link_with : [
       fwupd,

@@ -32,8 +32,11 @@ struct _FuFirmwareClass
 							 GBytes		*fw,
 							 FwupdInstallFlags flags,
 							 GError		**error);
+	gboolean		 (*build)		(FuFirmware	*self,
+							 XbNode		*n,
+							 GError		**error);
 	/*< private >*/
-	gpointer		 padding[28];
+	gpointer		 padding[27];
 };
 
 /**
@@ -66,6 +69,9 @@ gboolean	 fu_firmware_has_flag			(FuFirmware	*firmware,
 gboolean	 fu_firmware_tokenize			(FuFirmware	*self,
 							 GBytes		*fw,
 							 FwupdInstallFlags flags,
+							 GError		**error);
+gboolean	 fu_firmware_build			(FuFirmware	*self,
+							 XbNode		*n,
 							 GError		**error);
 gboolean	 fu_firmware_parse			(FuFirmware	*self,
 							 GBytes		*fw,

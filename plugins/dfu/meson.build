@@ -24,6 +24,7 @@ dfu = static_library(
   dependencies : [
     giounix,
     libm,
+    libxmlb,
     gusb,
     gudev,
   ],
