@@ -1834,6 +1834,11 @@ fu_util_firmware_extract (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_autofree gchar *fn = NULL;
 		g_autoptr(GBytes) blob_img = NULL;
 
+		/* get raw image without generated header, footer or crc */
+		blob_img = fu_firmware_image_get_bytes (img);
+		if (blob_img == NULL || g_bytes_get_size (blob_img) == 0)
+			continue;
+
 		/* use suitable filename */
 		if (fu_firmware_image_get_filename (img) != NULL) {
 			fn = g_strdup (fu_firmware_image_get_filename (img));
@@ -1846,9 +1851,6 @@ fu_util_firmware_extract (FuUtilPrivate *priv, gchar **values, GError **error)
 		}
 		/* TRANSLATORS: decompressing images from a container firmware */
 		g_print ("%s : %s\n", _("Writing file:"), fn);
-		blob_img = fu_firmware_image_write (img, error);
-		if (blob_img == NULL)
-			return FALSE;
 		if (!fu_common_set_contents_bytes (fn, blob_img, error))
 			return FALSE;
 	}

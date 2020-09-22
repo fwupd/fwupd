@@ -262,6 +262,29 @@ fu_firmware_image_set_bytes (FuFirmwareImage *self, GBytes *bytes)
 }
 
 /**
+ * fu_firmware_image_get_bytes:
+ * @self: a #FuPlugin
+ *
+ * Gets the data set using fu_firmware_image_set_bytes().
+ *
+ * This should only really be used by objects subclassing #FuFirmwareImage as
+ * images are normally exported to a file using fu_firmware_image_write().
+ *
+ * Returns: (transfer full): a #GBytes of the data, or %NULL if the bytes is not set
+ *
+ * Since: 1.5.0
+ **/
+GBytes *
+fu_firmware_image_get_bytes (FuFirmwareImage *self)
+{
+	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_FIRMWARE_IMAGE (self), FALSE);
+	if (priv->bytes == NULL)
+		return NULL;
+	return g_bytes_ref (priv->bytes);
+}
+
+/**
  * fu_firmware_image_parse:
  * @self: A #FuFirmwareImage
  * @fw: A #GBytes

@@ -54,6 +54,7 @@ void		 fu_firmware_image_set_offset	(FuFirmwareImage	*self,
 guint64		 fu_firmware_image_get_idx	(FuFirmwareImage	*self);
 void		 fu_firmware_image_set_idx	(FuFirmwareImage	*self,
 						 guint64		 idx);
+GBytes		*fu_firmware_image_get_bytes	(FuFirmwareImage	*self);
 void		 fu_firmware_image_set_bytes	(FuFirmwareImage	*self,
 						 GBytes			*bytes);
 gboolean	 fu_firmware_image_parse	(FuFirmwareImage	*self,
