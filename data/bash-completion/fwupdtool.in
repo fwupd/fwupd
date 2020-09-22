@@ -4,6 +4,7 @@ _fwupdtool_cmd_list=(
 	'esp-list'
 	'esp-mount'
 	'esp-unmount'
+	'firmware-build'
 	'firmware-convert'
 	'firmware-extract'
 	'firmware-parse'

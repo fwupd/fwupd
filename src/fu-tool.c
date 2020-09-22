@@ -1699,15 +1699,11 @@ fu_util_get_firmware_types (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gchar *
-fu_util_prompt_for_firmware_type (FuUtilPrivate *priv, gboolean add_builder, GError **error)
+fu_util_prompt_for_firmware_type (FuUtilPrivate *priv, GError **error)
 {
 	g_autoptr(GPtrArray) firmware_types = NULL;
 	guint idx;
 	firmware_types = fu_engine_get_firmware_gtype_ids (priv->engine);
-
-	/* add fake entry */
-	if (add_builder)
-		g_ptr_array_add (firmware_types, g_strdup ("builder"));
 
 	/* TRANSLATORS: get interactive prompt */
 	g_print ("%s\n", _("Choose a firmware type:"));
@@ -1761,7 +1757,7 @@ fu_util_firmware_parse (FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* find the GType to use */
 	if (firmware_type == NULL)
-		firmware_type = fu_util_prompt_for_firmware_type (priv, TRUE, error);
+		firmware_type = fu_util_prompt_for_firmware_type (priv, error);
 	if (firmware_type == NULL)
 		return FALSE;
 	gtype = fu_engine_get_firmware_gtype_by_id (priv->engine, firmware_type);
@@ -1812,7 +1808,7 @@ fu_util_firmware_extract (FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* find the GType to use */
 	if (firmware_type == NULL)
-		firmware_type = fu_util_prompt_for_firmware_type (priv, TRUE, error);
+		firmware_type = fu_util_prompt_for_firmware_type (priv, error);
 	if (firmware_type == NULL)
 		return FALSE;
 	gtype = fu_engine_get_firmware_gtype_by_id (priv->engine, firmware_type);
@@ -1859,27 +1855,50 @@ fu_util_firmware_extract (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
-static FuFirmware *
-fu_util_firmware_builder_new (FuUtilPrivate *priv, GBytes *fw, GError **error)
+static gboolean
+fu_util_firmware_build (FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	GType gtype = FU_TYPE_FIRMWARE;
 	const gchar *tmp;
+	g_autofree gchar *str = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(FuFirmware) firmware_dst = NULL;
+	g_autoptr(GBytes) blob_dst = NULL;
+	g_autoptr(GBytes) blob_src = NULL;
 	g_autoptr(XbBuilder) builder = xb_builder_new ();
 	g_autoptr(XbBuilderSource) source = xb_builder_source_new ();
 	g_autoptr(XbNode) n = NULL;
 	g_autoptr(XbSilo) silo = NULL;
 
+	/* check args */
+	if (g_strv_length (values) != 2) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments: filename required");
+		return FALSE;
+	}
+
+	/* load file */
+	blob_src = fu_common_get_contents_bytes (values[0], error);
+	if (blob_src == NULL)
+		return FALSE;
+
+	/* load engine */
+	if (!fu_engine_load (priv->engine, FU_ENGINE_LOAD_FLAG_NO_ENUMERATE, error))
+		return FALSE;
+
 	/* parse XML */
-	if (!xb_builder_source_load_bytes (source, fw,
+	if (!xb_builder_source_load_bytes (source, blob_src,
 					   XB_BUILDER_SOURCE_FLAG_NONE,
 					   error)) {
 		g_prefix_error (error, "could not parse XML: ");
-		return NULL;
+		return FALSE;
 	}
 	xb_builder_import_source (builder, source);
 	silo = xb_builder_compile (builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, error);
 	if (silo == NULL)
-		return NULL;
+		return FALSE;
 
 	/* create FuFirmware of specific GType */
 	n = xb_silo_query_first (silo, "firmware", error);
@@ -1887,23 +1906,46 @@ fu_util_firmware_builder_new (FuUtilPrivate *priv, GBytes *fw, GError **error)
 		return FALSE;
 	tmp = xb_node_get_attr (n, "gtype");
 	if (tmp != NULL) {
-		GType gtype = fu_engine_get_firmware_gtype_by_id (priv->engine, tmp);
+		gtype = g_type_from_name (tmp);
+		if (gtype == G_TYPE_INVALID) {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_NOT_FOUND,
+				     "GType %s not registered", tmp);
+			return FALSE;
+		}
+	}
+	tmp = xb_node_get_attr (n, "id");
+	if (tmp != NULL) {
+		gtype = fu_engine_get_firmware_gtype_by_id (priv->engine, tmp);
 		if (gtype == G_TYPE_INVALID) {
 			g_set_error (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_NOT_FOUND,
 				     "GType %s not supported", tmp);
-			return NULL;
+			return FALSE;
 		}
-		firmware = g_object_new (gtype, NULL);
-	} else {
-		firmware = fu_firmware_new ();
 	}
+	firmware = g_object_new (gtype, NULL);
 	if (!fu_firmware_build (firmware, n, error))
-		return NULL;
+		return FALSE;
+
+	/* write new file */
+	blob_dst = fu_firmware_write (firmware, error);
+	if (blob_dst == NULL)
+		return FALSE;
+	if (!fu_common_set_contents_bytes (values[1], blob_dst, error))
+		return FALSE;
+
+	/* show what we wrote */
+	firmware_dst = g_object_new (gtype, NULL);
+	if (!fu_firmware_parse (firmware_dst, blob_dst, priv->flags, error))
+		return FALSE;
+	str = fu_firmware_to_string (firmware_dst);
+	g_print ("%s", str);
 
 	/* success */
-	return g_steal_pointer (&firmware);
+	return TRUE;
 }
 
 static gboolean
@@ -1946,30 +1988,24 @@ fu_util_firmware_convert (FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* find the GType to use */
 	if (firmware_type_src == NULL)
-		firmware_type_src = fu_util_prompt_for_firmware_type (priv, TRUE, error);
+		firmware_type_src = fu_util_prompt_for_firmware_type (priv, error);
 	if (firmware_type_src == NULL)
 		return FALSE;
 	if (firmware_type_dst == NULL)
-		firmware_type_dst = fu_util_prompt_for_firmware_type (priv, FALSE, error);
+		firmware_type_dst = fu_util_prompt_for_firmware_type (priv, error);
 	if (firmware_type_dst == NULL)
 		return FALSE;
-	if (g_strcmp0 (firmware_type_src, "builder") == 0) {
-		firmware_src = fu_util_firmware_builder_new (priv, blob_src, error);
-		if (firmware_src == NULL)
-			return FALSE;
-	} else {
-		gtype_src = fu_engine_get_firmware_gtype_by_id (priv->engine, firmware_type_src);
-		if (gtype_src == G_TYPE_INVALID) {
-			g_set_error (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_NOT_FOUND,
-				     "GType %s not supported", firmware_type_src);
-			return FALSE;
-		}
-		firmware_src = g_object_new (gtype_src, NULL);
-		if (!fu_firmware_parse (firmware_src, blob_src, priv->flags, error))
-			return FALSE;
+	gtype_src = fu_engine_get_firmware_gtype_by_id (priv->engine, firmware_type_src);
+	if (gtype_src == G_TYPE_INVALID) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_FOUND,
+			     "GType %s not supported", firmware_type_src);
+		return FALSE;
 	}
+	firmware_src = g_object_new (gtype_src, NULL);
+	if (!fu_firmware_parse (firmware_src, blob_src, priv->flags, error))
+		return FALSE;
 	gtype_dst = fu_engine_get_firmware_gtype_by_id (priv->engine, firmware_type_dst);
 	if (gtype_dst == G_TYPE_INVALID) {
 		g_set_error (error,
@@ -2576,6 +2612,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Convert a firmware file"),
 		     fu_util_firmware_convert);
+	fu_util_cmd_array_add (cmd_array,
+		     "firmware-build",
+		     "BUILDER-XML FILENAME-DST",
+		     /* TRANSLATORS: command description */
+		     _("Build a firmware file"),
+		     fu_util_firmware_build);
 	fu_util_cmd_array_add (cmd_array,
 		     "firmware-parse",
 		     "FILENAME [FIRMWARE-TYPE]",
