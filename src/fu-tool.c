@@ -1780,6 +1780,83 @@ fu_util_firmware_parse (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_util_firmware_extract (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	GType gtype;
+	g_autofree gchar *firmware_type = NULL;
+	g_autofree gchar *str = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GPtrArray) images = NULL;
+
+	/* check args */
+	if (g_strv_length (values) == 0 || g_strv_length (values) > 2) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments: filename required");
+		return FALSE;
+	}
+	if (g_strv_length (values) == 2)
+		firmware_type = g_strdup (values[1]);
+
+	/* load file */
+	blob = fu_common_get_contents_bytes (values[0], error);
+	if (blob == NULL)
+		return FALSE;
+
+	/* load engine */
+	if (!fu_engine_load (priv->engine, FU_ENGINE_LOAD_FLAG_NO_ENUMERATE, error))
+		return FALSE;
+
+	/* find the GType to use */
+	if (firmware_type == NULL)
+		firmware_type = fu_util_prompt_for_firmware_type (priv, TRUE, error);
+	if (firmware_type == NULL)
+		return FALSE;
+	gtype = fu_engine_get_firmware_gtype_by_id (priv->engine, firmware_type);
+	if (gtype == G_TYPE_INVALID) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_FOUND,
+			     "GType %s not supported", firmware_type);
+		return FALSE;
+	}
+	firmware = g_object_new (gtype, NULL);
+	if (!fu_firmware_parse (firmware, blob, priv->flags, error))
+		return FALSE;
+	str = fu_firmware_to_string (firmware);
+	g_print ("%s", str);
+	images = fu_firmware_get_images (firmware);
+	for (guint i = 0; i < images->len; i++) {
+		FuFirmwareImage *img = g_ptr_array_index (images, i);
+		g_autofree gchar *fn = NULL;
+		g_autoptr(GBytes) blob_img = NULL;
+
+		/* use suitable filename */
+		if (fu_firmware_image_get_filename (img) != NULL) {
+			fn = g_strdup (fu_firmware_image_get_filename (img));
+		} else if (fu_firmware_image_get_id (img) != NULL) {
+			fn = g_strdup_printf ("id-%s.fw", fu_firmware_image_get_id (img));
+		} else if (fu_firmware_image_get_idx (img) != 0x0) {
+			fn = g_strdup_printf ("idx-0x%x.fw", (guint) fu_firmware_image_get_idx (img));
+		} else {
+			fn = g_strdup_printf ("img-0x%x.fw", i);
+		}
+		/* TRANSLATORS: decompressing images from a container firmware */
+		g_print ("%s : %s\n", _("Writing file:"), fn);
+		blob_img = fu_firmware_image_write (img, error);
+		if (blob_img == NULL)
+			return FALSE;
+		if (!fu_common_set_contents_bytes (fn, blob_img, error))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static FuFirmware *
 fu_util_firmware_builder_new (FuUtilPrivate *priv, GBytes *fw, GError **error)
 {
@@ -2503,6 +2580,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Parse and show details about a firmware file"),
 		     fu_util_firmware_parse);
+	fu_util_cmd_array_add (cmd_array,
+		     "firmware-extract",
+		     "FILENAME [FIRMWARE-TYPE]",
+		     /* TRANSLATORS: command description */
+		     _("Extract a firmware blob to images"),
+		     fu_util_firmware_extract);
 	fu_util_cmd_array_add (cmd_array,
 		     "get-firmware-types",
 		     NULL,
