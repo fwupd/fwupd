@@ -272,7 +272,21 @@ fu_firmware_build (FuFirmware *self, XbNode *n, GError **error)
 	if (xb_images != NULL) {
 		for (guint i = 0; i < xb_images->len; i++) {
 			XbNode *xb_image = g_ptr_array_index (xb_images, i);
-			g_autoptr(FuFirmwareImage) img = fu_firmware_image_new (NULL);
+			g_autoptr(FuFirmwareImage) img = NULL;
+			tmp = xb_node_get_attr (xb_image, "gtype");
+			if (tmp != NULL) {
+				GType gtype = g_type_from_name (tmp);
+				if (gtype == G_TYPE_INVALID) {
+					g_set_error (error,
+						     G_IO_ERROR,
+						     G_IO_ERROR_NOT_FOUND,
+						     "GType %s not registered", tmp);
+					return FALSE;
+				}
+				img = g_object_new (gtype, NULL);
+			} else {
+				img = fu_firmware_image_new (NULL);
+			}
 			if (!fu_firmware_image_build (img, xb_image, error))
 				return FALSE;
 			fu_firmware_add_image (self, img);
