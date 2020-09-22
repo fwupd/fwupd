@@ -22,6 +22,7 @@ typedef struct {
 	gchar			*id;
 	GBytes			*bytes;
 	guint64			 addr;
+	guint64			 offset;
 	guint64			 idx;
 	gchar			*version;
 	gchar			*filename;
@@ -172,6 +173,41 @@ fu_firmware_image_get_addr (FuFirmwareImage *self)
 }
 
 /**
+ * fu_firmware_image_set_offset:
+ * @self: a #FuPlugin
+ * @offset: integer
+ *
+ * Sets the base offset of the image.
+ *
+ * Since: 1.5.0
+ **/
+void
+fu_firmware_image_set_offset (FuFirmwareImage *self, guint64 offset)
+{
+	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_FIRMWARE_IMAGE (self));
+	priv->offset = offset;
+}
+
+/**
+ * fu_firmware_image_get_offset:
+ * @self: a #FuPlugin
+ *
+ * Gets the base offset of the image.
+ *
+ * Returns: integer
+ *
+ * Since: 1.5.0
+ **/
+guint64
+fu_firmware_image_get_offset (FuFirmwareImage *self)
+{
+	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_FIRMWARE_IMAGE (self), G_MAXUINT64);
+	return priv->offset;
+}
+
+/**
  * fu_firmware_image_set_idx:
  * @self: a #FuPlugin
  * @idx: integer
@@ -293,6 +329,9 @@ fu_firmware_image_build (FuFirmwareImage *self, XbNode *n, GError **error)
 	tmpval = xb_node_query_text_as_uint (n, "addr", NULL);
 	if (tmpval != G_MAXUINT64)
 		fu_firmware_image_set_addr (self, tmpval);
+	tmpval = xb_node_query_text_as_uint (n, "offset", NULL);
+	if (tmpval != G_MAXUINT64)
+		fu_firmware_image_set_offset (self, tmpval);
 	tmp = xb_node_query_text (n, "filename", NULL);
 	if (tmp != NULL) {
 		g_autoptr(GBytes) blob = NULL;
@@ -425,6 +464,8 @@ fu_firmware_image_add_string (FuFirmwareImage *self, guint idt, GString *str)
 		fu_common_string_append_kx (str, idt, "Index", priv->idx);
 	if (priv->addr != 0x0)
 		fu_common_string_append_kx (str, idt, "Address", priv->addr);
+	if (priv->offset != 0x0)
+		fu_common_string_append_kx (str, idt, "Offset", priv->offset);
 	if (priv->version != NULL)
 		fu_common_string_append_kv (str, idt, "Version", priv->version);
 	if (priv->filename != NULL)

@@ -48,6 +48,9 @@ void		 fu_firmware_image_set_id	(FuFirmwareImage	*self,
 guint64		 fu_firmware_image_get_addr	(FuFirmwareImage	*self);
 void		 fu_firmware_image_set_addr	(FuFirmwareImage	*self,
 						 guint64		 addr);
+guint64		 fu_firmware_image_get_offset	(FuFirmwareImage	*self);
+void		 fu_firmware_image_set_offset	(FuFirmwareImage	*self,
+						 guint64		 offset);
 guint64		 fu_firmware_image_get_idx	(FuFirmwareImage	*self);
 void		 fu_firmware_image_set_idx	(FuFirmwareImage	*self,
 						 guint64		 idx);
