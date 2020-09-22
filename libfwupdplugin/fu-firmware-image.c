@@ -336,6 +336,7 @@ fu_firmware_image_build (FuFirmwareImage *self, XbNode *n, GError **error)
 	FuFirmwareImageClass *klass = FU_FIRMWARE_IMAGE_GET_CLASS (self);
 	guint64 tmpval;
 	const gchar *tmp;
+	g_autoptr(XbNode) data = NULL;
 
 	g_return_val_if_fail (FU_IS_FIRMWARE_IMAGE (self), FALSE);
 	g_return_val_if_fail (XB_IS_NODE (n), FALSE);
@@ -365,13 +366,17 @@ fu_firmware_image_build (FuFirmwareImage *self, XbNode *n, GError **error)
 		fu_firmware_image_set_bytes (self, blob);
 		fu_firmware_image_set_filename (self, tmp);
 	}
-	tmp = xb_node_query_text (n, "data", NULL);
-	if (tmp != NULL) {
+	data = xb_node_query_first (n, "data", NULL);
+	if (data != NULL && xb_node_get_text (data) != NULL) {
 		gsize bufsz = 0;
 		g_autofree guchar *buf = NULL;
 		g_autoptr(GBytes) blob = NULL;
-		buf = g_base64_decode (tmp, &bufsz);
+		buf = g_base64_decode (xb_node_get_text (data), &bufsz);
 		blob = g_bytes_new (buf, bufsz);
+		fu_firmware_image_set_bytes (self, blob);
+	} else if (data != NULL) {
+		g_autoptr(GBytes) blob = NULL;
+		blob = g_bytes_new (NULL, 0);
 		fu_firmware_image_set_bytes (self, blob);
 	}
 
