@@ -333,6 +333,7 @@ fu_firmware_image_parse (FuFirmwareImage *self,
 gboolean
 fu_firmware_image_build (FuFirmwareImage *self, XbNode *n, GError **error)
 {
+	FuFirmwareImageClass *klass = FU_FIRMWARE_IMAGE_GET_CLASS (self);
 	guint64 tmpval;
 	const gchar *tmp;
 
@@ -372,6 +373,12 @@ fu_firmware_image_build (FuFirmwareImage *self, XbNode *n, GError **error)
 		buf = g_base64_decode (tmp, &bufsz);
 		blob = g_bytes_new (buf, bufsz);
 		fu_firmware_image_set_bytes (self, blob);
+	}
+
+	/* subclassed */
+	if (klass->build != NULL) {
+		if (!klass->build (self, n, error))
+			return FALSE;
 	}
 
 	/* success */

@@ -25,8 +25,11 @@ struct _FuFirmwareImageClass
 						 GString		*str);
 	GBytes			*(*write)	(FuFirmwareImage	*self,
 						 GError			**error);
+	gboolean		 (*build)	(FuFirmwareImage	*self,
+						 XbNode			*n,
+						 GError			**error);
 	/*< private >*/
-	gpointer		 padding[28];
+	gpointer		 padding[27];
 };
 
 #define FU_FIRMWARE_IMAGE_ID_PAYLOAD		"payload"
