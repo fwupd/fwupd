@@ -195,10 +195,10 @@ fu_udev_device_set_device_file (FuUdevDevice *self, const gchar *device_file)
 	g_object_notify (G_OBJECT (self), "device-file");
 }
 
+#ifdef HAVE_GUDEV
 static const gchar *
 fu_udev_device_get_vendor_fallback (GUdevDevice *udev_device)
 {
-#ifdef HAVE_GUDEV
 	const gchar *tmp;
 	tmp = g_udev_device_get_property (udev_device, "ID_VENDOR_FROM_DATABASE");
 	if (tmp != NULL)
@@ -206,9 +206,9 @@ fu_udev_device_get_vendor_fallback (GUdevDevice *udev_device)
 	tmp = g_udev_device_get_property (udev_device, "ID_VENDOR");
 	if (tmp != NULL)
 		return tmp;
-#endif
 	return NULL;
 }
+#endif
 
 #ifdef HAVE_GUDEV
 static gboolean
