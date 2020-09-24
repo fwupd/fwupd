@@ -221,7 +221,7 @@ typedef enum {
  * @FWUPD_INSTALL_FLAG_FORCE:			Force the update even if not a good idea
  * @FWUPD_INSTALL_FLAG_NO_HISTORY:		Do not write to the history database
  *
- * Flags to set when performing the firwmare update or install.
+ * Flags to set when performing the firmware update or install.
  **/
 typedef enum {
 	FWUPD_INSTALL_FLAG_NONE			= 0,		/* Since: 0.7.0 */
@@ -240,7 +240,7 @@ typedef enum {
  * @FWUPD_SELF_SIGN_FLAG_ADD_TIMESTAMP:		Add the timestamp to the detached signature
  * @FWUPD_SELF_SIGN_FLAG_ADD_CERT:		Add the certificate to the detached signature
  *
- * Flags to set when performing the firwmare update or install.
+ * Flags to set when performing the firmware update or install.
  **/
 typedef enum {
 	FWUPD_SELF_SIGN_FLAG_NONE		= 0,		/* Since: 1.2.6 */

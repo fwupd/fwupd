@@ -214,7 +214,7 @@ fu_emmc_device_probe (FuUdevDevice *device, GError **error)
 	if (flag == 0)
 		fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_INTERNAL);
 
-	/* firwmare version */
+	/* firmware version */
 	tmp = g_udev_device_get_sysfs_attr (udev_parent, "fwrev");
 	if (tmp != NULL) {
 		fu_device_set_version_format (FU_DEVICE (device), FWUPD_VERSION_FORMAT_NUMBER);

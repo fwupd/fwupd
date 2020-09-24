@@ -121,7 +121,7 @@ main (int argc, char *argv[])
 	g_option_context_add_main_entries (context, options, NULL);
 	g_option_context_set_description (context,
 		"This tool will read and parse the TPM event log "
-		"from the system firwmare.");
+		"from the system firmware.");
 	if (!g_option_context_parse (context, &argc, &argv, &error)) {
 		/* TRANSLATORS: the user didn't read the man page */
 		g_print ("%s: %s\n", _("Failed to parse arguments"),
