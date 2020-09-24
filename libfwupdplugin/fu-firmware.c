@@ -462,6 +462,95 @@ fu_firmware_add_image (FuFirmware *self, FuFirmwareImage *img)
 }
 
 /**
+ * fu_firmware_remove_image:
+ * @self: a #FuPlugin
+ * @img: A #FuFirmwareImage
+ * @error: A #GError, or %NULL
+ *
+ * Remove an image from the firmware.
+ *
+ * Returns: %TRUE if the image was removed
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fu_firmware_remove_image (FuFirmware *self, FuFirmwareImage *img, GError **error)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE (self);
+
+	g_return_val_if_fail (FU_IS_FIRMWARE (self), FALSE);
+	g_return_val_if_fail (FU_IS_FIRMWARE_IMAGE (img), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	if (g_ptr_array_remove (priv->images, img))
+		return TRUE;
+
+	/* did not exist */
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_FOUND,
+		     "image %s not found in firmware",
+		     fu_firmware_image_get_id (img));
+	return FALSE;
+}
+
+/**
+ * fu_firmware_remove_image_by_idx:
+ * @self: a #FuPlugin
+ * @idx: index
+ * @error: A #GError, or %NULL
+ *
+ * Removes the first image from the firmware matching the index.
+ *
+ * Returns: %TRUE if an image was removed
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fu_firmware_remove_image_by_idx (FuFirmware *self, guint64 idx, GError **error)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE (self);
+	g_autoptr(FuFirmwareImage) img = NULL;
+
+	g_return_val_if_fail (FU_IS_FIRMWARE (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	img = fu_firmware_get_image_by_idx (self, idx, error);
+	if (img == NULL)
+		return FALSE;
+	g_ptr_array_remove (priv->images, img);
+	return TRUE;
+}
+
+/**
+ * fu_firmware_remove_image_by_id:
+ * @self: a #FuPlugin
+ * @id: (nullable): image ID, e.g. "config"
+ * @error: A #GError, or %NULL
+ *
+ * Removes the first image from the firmware matching the ID.
+ *
+ * Returns: %TRUE if an image was removed
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fu_firmware_remove_image_by_id (FuFirmware *self, const gchar *id, GError **error)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE (self);
+	g_autoptr(FuFirmwareImage) img = NULL;
+
+	g_return_val_if_fail (FU_IS_FIRMWARE (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	img = fu_firmware_get_image_by_id (self, id, error);
+	if (img == NULL)
+		return FALSE;
+	g_ptr_array_remove (priv->images, img);
+	return TRUE;
+}
+
+/**
  * fu_firmware_get_images:
  * @self: a #FuFirmware
  *

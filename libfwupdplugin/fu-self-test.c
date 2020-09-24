@@ -1652,12 +1652,14 @@ fu_firmware_dfu_func (void)
 static void
 fu_firmware_func (void)
 {
+	gboolean ret;
 	g_autoptr(FuFirmware) firmware = fu_firmware_new ();
 	g_autoptr(FuFirmwareImage) img1 = fu_firmware_image_new (NULL);
 	g_autoptr(FuFirmwareImage) img2 = fu_firmware_image_new (NULL);
 	g_autoptr(FuFirmwareImage) img_id = NULL;
 	g_autoptr(FuFirmwareImage) img_idx = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) images = NULL;
 	g_autofree gchar *str = NULL;
 
 	fu_firmware_image_set_addr (img1, 0x200);
@@ -1703,6 +1705,19 @@ fu_firmware_func (void)
 				  "  ID:                   secondary\n"
 				  "  Index:                0x17\n"
 				  "  Address:              0x400\n");
+
+	ret = fu_firmware_remove_image_by_idx (firmware, 0xd, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	ret = fu_firmware_remove_image_by_id (firmware, "secondary", &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	images = fu_firmware_get_images (firmware);
+	g_assert_nonnull (images);
+	g_assert_cmpint (images->len, ==, 0);
+	ret = fu_firmware_remove_image_by_id (firmware, "NOTGOINGTOEXIST", &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_false (ret);
 }
 
 static void
