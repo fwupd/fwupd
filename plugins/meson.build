@@ -31,6 +31,7 @@ subdir('test')
 subdir('upower')
 subdir('wacom-usb')
 subdir('vli')
+subdir('goodix-fp')
 
 if get_option('plugin_msr')
 subdir('msr')

@@ -1,0 +1,9 @@
+# Goodix Fingerprint sensor
+[DeviceInstanceId=USB\VID_27C6&PID_60A2]
+Plugin = goodixfp
+Guid = 1542f422-f06b-5c0c-8211-30c102a65f01
+Flags = self-recovery
+Summary = An open source goodix Fingerprint sensor
+Icon = colorimeter-colorhug
+FirmwareSizeMin = 0x20000
+InstallDuration = 10
