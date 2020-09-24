@@ -437,6 +437,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_libdir}/fwupd-plugins-3/libfu_plugin_vli.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_wacom_raw.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_wacom_usb.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_goodixmoc.so
 %ghost %{_localstatedir}/lib/fwupd/gnupg
 %if 0%{?have_uefi}
 %{_datadir}/locale/*/LC_IMAGES/fwupd*
