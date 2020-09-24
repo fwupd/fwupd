@@ -74,8 +74,10 @@ struct _FuDeviceClass
 							 GError		**error);
 	gboolean		 (*unbind_driver)	(FuDevice	*self,
 							 GError		**error);
+	GBytes			*(*dump_firmware)	(FuDevice	*self,
+							 GError		**error);
 	/*< private >*/
-	gpointer	padding[12];
+	gpointer	padding[11];
 };
 
 /**
@@ -283,6 +285,8 @@ FuFirmware	*fu_device_prepare_firmware		(FuDevice	*self,
 							 FwupdInstallFlags flags,
 							 GError		**error);
 FuFirmware	*fu_device_read_firmware		(FuDevice	*self,
+							 GError		**error);
+GBytes		*fu_device_dump_firmware		(FuDevice	*self,
 							 GError		**error);
 gboolean	 fu_device_attach			(FuDevice	*self,
 							 GError		**error);

@@ -381,13 +381,12 @@ fu_altos_device_write_firmware (FuDevice *device,
 	return TRUE;
 }
 
-static FuFirmware *
-fu_altos_device_read_firmware (FuDevice *device, GError **error)
+static GBytes *
+fu_altos_device_dump_firmware (FuDevice *device, GError **error)
 {
 	FuAltosDevice *self = FU_ALTOS_DEVICE (device);
 	guint flash_len;
 	g_autoptr(FuDeviceLocker) locker  = NULL;
-	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GString) buf = g_string_new (NULL);
 
 	/* check kind */
@@ -441,8 +440,7 @@ fu_altos_device_read_firmware (FuDevice *device, GError **error)
 	}
 
 	/* success */
-	fw = g_bytes_new (buf->str, buf->len);
-	return fu_firmware_new_from_bytes (fw);
+	return g_bytes_new (buf->str, buf->len);
 }
 
 static gboolean
@@ -577,6 +575,6 @@ fu_altos_device_class_init (FuAltosDeviceClass *klass)
 	klass_device->probe = fu_altos_device_probe;
 	klass_device->prepare_firmware = fu_altos_device_prepare_firmware;
 	klass_device->write_firmware = fu_altos_device_write_firmware;
-	klass_device->read_firmware = fu_altos_device_read_firmware;
+	klass_device->dump_firmware = fu_altos_device_dump_firmware;
 	object_class->finalize = fu_altos_device_finalize;
 }

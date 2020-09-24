@@ -116,7 +116,7 @@ gboolean	 fu_engine_verify			(FuEngine	*self,
 gboolean	 fu_engine_verify_update		(FuEngine	*self,
 							 const gchar	*device_id,
 							 GError		**error);
-GBytes		*fu_engine_firmware_read		(FuEngine	*self,
+GBytes		*fu_engine_firmware_dump		(FuEngine	*self,
 							 FuDevice	*device,
 							 FwupdInstallFlags flags,
 							 GError		**error);

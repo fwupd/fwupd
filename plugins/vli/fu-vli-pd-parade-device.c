@@ -579,8 +579,8 @@ fu_vli_pd_parade_device_write_firmware (FuDevice *device,
 	return TRUE;
 }
 
-static FuFirmware *
-fu_vli_pd_parade_device_read_firmware (FuDevice *device, GError **error)
+static GBytes *
+fu_vli_pd_parade_device_dump_firmware (FuDevice *device, GError **error)
 {
 	FuVliPdDevice *parent = FU_VLI_PD_DEVICE (fu_device_get_parent (device));
 	FuVliPdParadeDevice *self = FU_VLI_PD_PARADE_DEVICE (device);
@@ -610,7 +610,7 @@ fu_vli_pd_parade_device_read_firmware (FuDevice *device, GError **error)
 							 error))
 			return NULL;
 	}
-	return fu_firmware_new_from_bytes (fw);
+	return g_steal_pointer (&fw);
 }
 
 static gboolean
@@ -657,7 +657,7 @@ fu_vli_pd_parade_device_class_init (FuVliPdParadeDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	klass_device->to_string = fu_vli_pd_parade_device_to_string;
 	klass_device->probe = fu_vli_pd_parade_device_probe;
-	klass_device->read_firmware = fu_vli_pd_parade_device_read_firmware;
+	klass_device->dump_firmware = fu_vli_pd_parade_device_dump_firmware;
 	klass_device->write_firmware = fu_vli_pd_parade_device_write_firmware;
 }
 
