@@ -370,7 +370,7 @@ fu_plugin_add_security_attrs_bootguard_policy (FuPlugin *plugin, FuSecurityAttrs
 	fwupd_security_attr_set_url (attr, "#org.fwupd.hsi.Kernel.IntelBootguard");
 	fu_security_attrs_append (attrs, attr);
 
-	/* policy must be to immediatly shutdown */
+	/* policy must be to immediately shutdown */
 	if (priv->hfsts6.fields.error_enforce_policy != ME_HFS_ENFORCEMENT_POLICY_SHUTDOWN_NOW) {
 		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;

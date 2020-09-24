@@ -837,7 +837,7 @@ fu_engine_verify_from_local_metadata (FuEngine *self,
 	if (release == NULL)
 		return NULL;
 
-	/* silo has to have same lifecyle as node */
+	/* silo has to have same lifecycle as node */
 	g_object_set_data_full (G_OBJECT (release), "XbSilo",
 				g_steal_pointer (&silo),
 				(GDestroyNotify) g_object_unref);
