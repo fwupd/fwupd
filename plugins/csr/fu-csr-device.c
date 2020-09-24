@@ -188,12 +188,11 @@ fu_csr_device_upload_chunk (FuCsrDevice *self, GError **error)
 			    sizeof(buf) - FU_CSR_COMMAND_HEADER_SIZE);
 }
 
-static FuFirmware *
+static GBytes *
 fu_csr_device_upload (FuDevice *device, GError **error)
 {
 	FuCsrDevice *self = FU_CSR_DEVICE (device);
 	g_autoptr(GPtrArray) chunks = NULL;
-	g_autoptr(GBytes) fw = NULL;
 	guint32 total_sz = 0;
 	gsize done_sz = 0;
 
@@ -253,8 +252,7 @@ fu_csr_device_upload (FuDevice *device, GError **error)
 	}
 
 	/* notify UI */
-	fw = dfu_utils_bytes_join_array (chunks);
-	return fu_firmware_new_from_bytes (fw);
+	return dfu_utils_bytes_join_array (chunks);
 }
 
 static gboolean
@@ -434,7 +432,7 @@ fu_csr_device_class_init (FuCsrDeviceClass *klass)
 	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	klass_device->to_string = fu_csr_device_to_string;
 	klass_device->write_firmware = fu_csr_device_download;
-	klass_device->read_firmware = fu_csr_device_upload;
+	klass_device->dump_firmware = fu_csr_device_upload;
 	klass_device->prepare_firmware = fu_csr_device_prepare_firmware;
 	klass_device->attach = fu_csr_device_attach;
 	klass_device->setup = fu_csr_device_setup;

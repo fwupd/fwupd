@@ -1679,12 +1679,11 @@ dfu_device_error_fixup (DfuDevice *device, GError **error)
 	}
 }
 
-static FuFirmware *
-dfu_device_read_firmware (FuDevice *device, GError **error)
+static GBytes *
+dfu_device_dump_firmware (FuDevice *device, GError **error)
 {
 	DfuDevice *self = DFU_DEVICE (device);
 	g_autoptr(DfuFirmware) dfu_firmware = NULL;
-	g_autoptr(GBytes) fw = NULL;
 
 	/* get data from hardware */
 	g_debug ("uploading from device->host");
@@ -1697,8 +1696,7 @@ dfu_device_read_firmware (FuDevice *device, GError **error)
 		return NULL;
 
 	/* get the checksum */
-	fw = dfu_firmware_write_data (dfu_firmware, error);
-	return fu_firmware_new_from_bytes (fw);
+	return dfu_firmware_write_data (dfu_firmware, error);
 }
 
 static gboolean
@@ -1825,7 +1823,7 @@ dfu_device_class_init (DfuDeviceClass *klass)
 	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	klass_device->set_quirk_kv = dfu_device_set_quirk_kv;
 	klass_device->to_string = dfu_device_to_string;
-	klass_device->read_firmware = dfu_device_read_firmware;
+	klass_device->dump_firmware = dfu_device_dump_firmware;
 	klass_device->write_firmware = dfu_device_write_firmware;
 	klass_device->attach = dfu_device_attach;
 	klass_device->detach = dfu_device_detach;

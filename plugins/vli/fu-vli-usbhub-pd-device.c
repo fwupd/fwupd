@@ -123,13 +123,12 @@ fu_vli_usbhub_pd_device_prepare_firmware (FuDevice *device,
 	return g_steal_pointer (&firmware);
 }
 
-static FuFirmware *
-fu_vli_usbhub_pd_device_read_firmware (FuDevice *device, GError **error)
+static GBytes *
+fu_vli_usbhub_pd_device_dump_firmware (FuDevice *device, GError **error)
 {
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE (fu_device_get_parent (device));
 	FuVliUsbhubPdDevice *self = FU_VLI_USBHUB_PD_DEVICE (device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(GBytes) fw = NULL;
 
 	/* open device */
 	locker = fu_device_locker_new (parent, error);
@@ -137,14 +136,11 @@ fu_vli_usbhub_pd_device_read_firmware (FuDevice *device, GError **error)
 		return NULL;
 
 	/* read */
-	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_DEVICE_VERIFY);
-	fw = fu_vli_device_spi_read (FU_VLI_DEVICE (parent),
-				     fu_vli_common_device_kind_get_offset (self->device_kind),
-				     fu_device_get_firmware_size_max (device),
-				     error);
-	if (fw == NULL)
-		return NULL;
-	return fu_firmware_new_from_bytes (fw);
+	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_DEVICE_READ);
+	return fu_vli_device_spi_read (FU_VLI_DEVICE (parent),
+				       fu_vli_common_device_kind_get_offset (self->device_kind),
+				       fu_device_get_firmware_size_max (device),
+				       error);
 }
 
 static gboolean
@@ -221,7 +217,7 @@ fu_vli_usbhub_pd_device_class_init (FuVliUsbhubPdDeviceClass *klass)
 	klass_device->to_string = fu_vli_usbhub_pd_device_to_string;
 	klass_device->probe = fu_vli_usbhub_pd_device_probe;
 	klass_device->attach = fu_vli_usbhub_pd_device_attach;
-	klass_device->read_firmware = fu_vli_usbhub_pd_device_read_firmware;
+	klass_device->dump_firmware = fu_vli_usbhub_pd_device_dump_firmware;
 	klass_device->write_firmware = fu_vli_usbhub_pd_device_write_firmware;
 	klass_device->prepare_firmware = fu_vli_usbhub_pd_device_prepare_firmware;
 }
