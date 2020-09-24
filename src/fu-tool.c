@@ -751,7 +751,7 @@ fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_firmware_read (FuUtilPrivate *priv, gchar **values, GError **error)
+fu_util_firmware_dump (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(GBytes) blob_empty = g_bytes_new (NULL, 0);
@@ -800,7 +800,7 @@ fu_util_firmware_read (FuUtilPrivate *priv, gchar **values, GError **error)
 			  G_CALLBACK (fu_util_update_device_changed_cb), priv);
 
 	/* dump firmware */
-	blob_fw = fu_engine_firmware_read (priv->engine, device, priv->flags, error);
+	blob_fw = fu_engine_firmware_dump (priv->engine, device, priv->flags, error);
 	if (blob_fw == NULL)
 		return FALSE;
 	return fu_common_set_contents_bytes (values[0], blob_fw, error);
@@ -2601,11 +2601,11 @@ main (int argc, char *argv[])
 		     _("Update the stored metadata with current contents"),
 		     fu_util_verify_update);
 	fu_util_cmd_array_add (cmd_array,
-		     "firmware-read",
+		     "firmware-dump",
 		     "FILENAME [DEVICE-ID|GUID]",
 		     /* TRANSLATORS: command description */
 		     _("Read a firmware blob from a device"),
-		     fu_util_firmware_read);
+		     fu_util_firmware_dump);
 	fu_util_cmd_array_add (cmd_array,
 		     "firmware-convert",
 		     "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]",

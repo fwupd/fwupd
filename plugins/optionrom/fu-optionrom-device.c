@@ -37,15 +37,12 @@ fu_optionrom_device_probe (FuUdevDevice *device, GError **error)
 	return TRUE;
 }
 
-static FuFirmware *
-fu_optionrom_device_read_firmware (FuDevice *device, GError **error)
+static GBytes *
+fu_optionrom_device_dump_firmware (FuDevice *device, GError **error)
 {
 	FuUdevDevice *udev_device = FU_UDEV_DEVICE (device);
-	g_autofree gchar *guid = NULL;
-	g_autofree gchar *rom_fn = NULL;
-	g_autoptr(FuRom) rom = NULL;
-	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GFile) file = NULL;
+	g_autofree gchar *rom_fn = NULL;
 
 	/* open the file */
 	rom_fn = g_build_filename (fu_udev_device_get_sysfs_path (udev_device), "rom", NULL);
@@ -57,8 +54,23 @@ fu_optionrom_device_read_firmware (FuDevice *device, GError **error)
 		return NULL;
 	}
 	file = g_file_new_for_path (rom_fn);
+	return fu_rom_dump_firmware (file, NULL, error);
+}
+
+static FuFirmware *
+fu_optionrom_device_read_firmware (FuDevice *device, GError **error)
+{
+	g_autofree gchar *guid = NULL;
+	g_autoptr(FuRom) rom = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GBytes) fw = NULL;
+
+	/* open the file */
+	blob = fu_optionrom_device_dump_firmware (device, error);
+	if (blob == NULL)
+		return NULL;
 	rom = fu_rom_new ();
-	if (!fu_rom_load_file (rom, file, FU_ROM_LOAD_FLAG_BLANK_PPID, NULL, error))
+	if (!fu_rom_load_data (rom, blob, FU_ROM_LOAD_FLAG_BLANK_PPID, NULL, error))
 		return NULL;
 
 	/* update version */
@@ -110,5 +122,6 @@ fu_optionrom_device_class_init (FuOptionromDeviceClass *klass)
 	FuUdevDeviceClass *klass_udev_device = FU_UDEV_DEVICE_CLASS (klass);
 	object_class->finalize = fu_optionrom_device_finalize;
 	klass_device->read_firmware = fu_optionrom_device_read_firmware;
+	klass_device->dump_firmware = fu_optionrom_device_dump_firmware;
 	klass_udev_device->probe = fu_optionrom_device_probe;
 }

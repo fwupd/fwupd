@@ -2753,13 +2753,13 @@ fu_engine_update (FuEngine *self,
 }
 
 GBytes *
-fu_engine_firmware_read (FuEngine *self,
+fu_engine_firmware_dump (FuEngine *self,
 			 FuDevice *device,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(GBytes) fw = NULL;
 
 	/* open, detach, read, attach, serialize */
 	locker = fu_device_locker_new (device, error);
@@ -2769,8 +2769,8 @@ fu_engine_firmware_read (FuEngine *self,
 	}
 	if (!fu_device_detach (device, error))
 		return NULL;
-	firmware = fu_device_read_firmware (device, error);
-	if (firmware == NULL) {
+	fw = fu_device_dump_firmware (device, error);
+	if (fw == NULL) {
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_device_attach (device, &error_local)) {
 			g_warning ("failed to attach after read image failure: %s",
@@ -2780,7 +2780,7 @@ fu_engine_firmware_read (FuEngine *self,
 	}
 	if (!fu_device_attach (device, error))
 		return NULL;
-	return fu_firmware_write (firmware, error);
+	return g_steal_pointer (&fw);
 }
 
 gboolean

@@ -2515,6 +2515,11 @@ fu_device_prepare_firmware (FuDevice *self,
  * @error: A #GError
  *
  * Reads firmware from the device by calling a plugin-specific vfunc.
+ * The device subclass should try to ensure the firmware does not contain any
+ * serial numbers or user-configuration values and can be used to calculate the
+ * device checksum.
+ *
+ * The return value can be converted to a blob of memory using fu_firmware_write().
  *
  * Returns: (transfer full): A #FuFirmware, or %NULL for error
  *
@@ -2524,14 +2529,13 @@ FuFirmware *
 fu_device_read_firmware (FuDevice *self, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+	g_autoptr(GBytes) fw = NULL;
 
 	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
-
-	/* no plugin-specific method or device doesn't support */
-	if (!fu_device_has_flag (self, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE) ||
-	    klass->read_firmware == NULL) {
+	/* device does not support reading for verification CRCs */
+	if (!fu_device_has_flag (self, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE)) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -2540,7 +2544,49 @@ fu_device_read_firmware (FuDevice *self, GError **error)
 	}
 
 	/* call vfunc */
-	return klass->read_firmware (self, error);
+	if (klass->read_firmware != NULL)
+		return klass->read_firmware (self, error);
+
+	/* use the default FuFirmware when only ->dump_firmware is provided */
+	fw = fu_device_dump_firmware (self, error);
+	if (fw == NULL)
+		return NULL;
+	return fu_firmware_new_from_bytes (fw);
+}
+
+/**
+ * fu_device_dump_firmware:
+ * @self: A #FuDevice
+ * @error: A #GError
+ *
+ * Reads the raw firmware image from the device by calling a plugin-specific
+ * vfunc. This raw firmware image may contain serial numbers or device-specific
+ * configuration but should be a byte-for-byte match compared to using an
+ * external SPI programmer.
+ *
+ * Returns: (transfer full): A #GBytes, or %NULL for error
+ *
+ * Since: 1.5.0
+ **/
+GBytes *
+fu_device_dump_firmware (FuDevice *self, GError **error)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+
+	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* use the default FuFirmware when only ->dump_firmware is provided */
+	if (klass->dump_firmware == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "not supported");
+		return NULL;
+	}
+
+	/* proxy */
+	return klass->dump_firmware (self, error);
 }
 
 /**
