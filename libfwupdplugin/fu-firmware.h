@@ -95,6 +95,15 @@ gboolean	 fu_firmware_write_file			(FuFirmware	*self,
 
 void		 fu_firmware_add_image			(FuFirmware	*self,
 							 FuFirmwareImage *img);
+gboolean	 fu_firmware_remove_image		(FuFirmware	*self,
+							 FuFirmwareImage *img,
+							 GError		**error);
+gboolean	 fu_firmware_remove_image_by_idx	(FuFirmware	*self,
+							 guint64	 idx,
+							 GError		**error);
+gboolean	 fu_firmware_remove_image_by_id		(FuFirmware	*self,
+							 const gchar	*id,
+							 GError		**error);
 GPtrArray	*fu_firmware_get_images			(FuFirmware	*self);
 FuFirmwareImage *fu_firmware_get_image_by_id		(FuFirmware	*self,
 							 const gchar	*id,
