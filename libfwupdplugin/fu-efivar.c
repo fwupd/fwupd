@@ -69,13 +69,13 @@ fu_efivar_supported (GError **error)
 #endif
 }
 
+#ifndef _WIN32
 static gboolean
 fu_efivar_set_immutable_fd (int fd,
 			     gboolean value,
 			     gboolean *value_old,
 			     GError **error)
 {
-#ifndef _WIN32
 	guint flags;
 	gboolean is_immutable;
 	int rc;
@@ -124,14 +124,8 @@ fu_efivar_set_immutable_fd (int fd,
 		return FALSE;
 	}
 	return TRUE;
-#else
-	g_set_error_literal (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "efivarfs not currently supported on Windows");
-	return FALSE;
-#endif
 }
+#endif
 
 static gboolean
 fu_efivar_set_immutable (const gchar *fn,
