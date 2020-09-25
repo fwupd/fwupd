@@ -94,7 +94,7 @@ reflect (guint32 data, guint8 n_bits)
 }
 
 static void
-crc32_update(guint32 *ctx, const guint8 *message, guint32 n_bytes)
+crc32_update (guint32 *ctx, const guint8 *message, guint32 n_bytes)
 {
 	guint8 data = 0;
 	/*
@@ -108,21 +108,21 @@ crc32_update(guint32 *ctx, const guint8 *message, guint32 n_bytes)
 }
 
 static void
-crc32_final(guint32 *ctx, guint32 *md)
+crc32_final (guint32 *ctx, guint32 *md)
 {
 	*ctx = (REFLECT_REMAINDER(*ctx) ^ 0xFFFFFFFF);
 	*md = *ctx;
 }
 
 guint8
-fu_goodixfp_crc32(guint8 *psrc, guint32 len, guint32 *presult)
+fu_goodixfp_crc32 (guint8 *psrc, guint32 len, guint32 *presult)
 {
 	guint32 crc32 = 0xFFFFFFFF;
 
 	if (!psrc)
 		return 0;
-	crc32_update(&crc32, psrc, len);
-	crc32_final(&crc32, presult);
+	crc32_update (&crc32, psrc, len);
+	crc32_final (&crc32, presult);
 
 	return 1;
 }
@@ -138,13 +138,13 @@ fu_goodixfp_build_header (GxfpPkgHeader *pheader,
 {
 	g_assert(pheader);
 
-	memset(pheader, 0, sizeof(*pheader));
+	memset (pheader, 0, sizeof(*pheader));
 	pheader->cmd0 = (cmd0);
 	pheader->cmd1 = (cmd1);
 	pheader->pkg_flag = pkg_flag;
 	pheader->reserved = dummy_seq++;
 	pheader->len = len + GX_SIZE_CRC32;
-	pheader->crc8 = fu_goodixfp_crc8((guint8 *)pheader, 6);
+	pheader->crc8 = fu_goodixfp_crc8 ((guint8 *)pheader, 6);
 	pheader->rev_crc8 = ~pheader->crc8;
 }
 
@@ -158,7 +158,7 @@ fu_goodixfp_parse_header (guint8 *buf,
 	if (bufsz < sizeof(*pheader))
 		return FALSE;
 
-	memcpy(pheader, buf, sizeof(*pheader));
+	memcpy (pheader, buf, sizeof(*pheader));
 
 	pheader->len = GUINT16_FROM_LE(*(buf + 4));
 	pheader->len -= GX_SIZE_CRC32;
@@ -169,9 +169,9 @@ fu_goodixfp_parse_header (guint8 *buf,
 gboolean
 fu_goodixfp_parse_body (guint8 cmd, guint8 *buf, guint32 bufsz, GxfpCmdResp *presp)
 {
-	g_assert(buf != NULL);
-	g_assert(presp != NULL);
-	g_assert(bufsz >= 1);
+	g_assert (buf != NULL);
+	g_assert (presp != NULL);
+	g_assert (bufsz >= 1);
 
 	presp->result = buf[0];
 	switch (cmd)
@@ -180,7 +180,7 @@ fu_goodixfp_parse_body (guint8 cmd, guint8 *buf, guint32 bufsz, GxfpCmdResp *pre
 		presp->ack_msg.cmd = buf[1];
 		break;
 	case GX_CMD_VERSION:
-		memcpy(&presp->version_info, buf + 1, sizeof(GxfpVersiomInfo));
+		memcpy (&presp->version_info, buf + 1, sizeof(GxfpVersiomInfo));
 		break;
 	default:
 		break;
