@@ -552,6 +552,10 @@ LIBFWUPD_1.5.0 {
     fwupd_client_verify_finish;
     fwupd_client_verify_update_async;
     fwupd_client_verify_update_finish;
+    fwupd_device_get_branch;
+    fwupd_device_set_branch;
+    fwupd_release_get_branch;
+    fwupd_release_set_branch;
     fwupd_remote_get_automatic_security_reports;
     fwupd_remote_get_security_report_uri;
     fwupd_security_attr_add_flag;

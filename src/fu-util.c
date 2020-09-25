@@ -1872,6 +1872,167 @@ fu_util_reinstall (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_switch_branch_warning (FuUtilPrivate *priv,
+			       FwupdDevice *dev,
+			       FwupdRelease *rel,
+			       GError **error)
+{
+	const gchar *desc_markup = NULL;
+	g_autofree gchar *desc_plain = NULL;
+	g_autoptr(GString) desc_full = g_string_new (NULL);
+
+	/* warn the user if the vendor is different */
+	if (g_strcmp0 (fwupd_device_get_vendor (dev), fwupd_release_get_vendor (rel)) != 0) {
+		/* TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name */
+		g_string_append_printf (desc_full, _("The firmware from %s is not "
+						     "supplied by %s, the hardware vendor."),
+					fwupd_release_get_vendor (rel),
+					fwupd_device_get_vendor (dev));
+		g_string_append (desc_full, "\n\n");
+		/* TRANSLATORS: %1 is the device vendor name */
+		g_string_append_printf (desc_full, _("Your hardware may be damaged using this firmware, "
+						     "and installing this release may void any warranty "
+						     "with %s."),
+					fwupd_device_get_vendor (dev));
+		g_string_append (desc_full, "\n\n");
+	}
+
+	/* from the <description> in the AppStream data */
+	desc_markup = fwupd_release_get_description (rel);
+	if (desc_markup == NULL)
+		return TRUE;
+	desc_plain = fu_util_convert_description (desc_markup, error);
+	if (desc_plain == NULL)
+		return FALSE;
+	g_string_append (desc_full, desc_plain);
+
+	/* show and ask user to confirm */
+	fu_util_warning_box (desc_full->str, 80);
+	if (!priv->assume_yes) {
+		/* ask for permission */
+		g_print ("\n%s [y|N]: ",
+			 /* TRANSLATORS: should the branch be changed */
+			 _("Do you understand the consequences of changing the firmware branch?"));
+		if (!fu_util_prompt_for_boolean (FALSE)) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOTHING_TO_DO,
+					     "Declined branch switch");
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_util_switch_branch (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	const gchar *remote_id;
+	const gchar *branch;
+	g_autoptr(FwupdRelease) rel = NULL;
+	g_autoptr(GPtrArray) rels = NULL;
+	g_autoptr(GPtrArray) branches = g_ptr_array_new_with_free_func (g_free);
+	g_autoptr(FwupdDevice) dev = NULL;
+
+	/* find the device and check it has multiple branches */
+	priv->filter_include |= FWUPD_DEVICE_FLAG_SUPPORTED;
+	dev = fu_util_get_device_or_prompt (priv, values, error);
+	if (dev == NULL)
+		return FALSE;
+	if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES)) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "Multiple branches not available");
+		return FALSE;
+	}
+
+	/* get all releases, including the alternate branch versions */
+	rels = fwupd_client_get_releases (priv->client, fwupd_device_get_id (dev),
+					  NULL, error);
+	if (rels == NULL)
+		return FALSE;
+
+	/* branch name is optional */
+	if (g_strv_length (values) > 1) {
+		branch = values[1];
+		if (g_strcmp0 (branch, fu_device_get_branch (dev)) == 0) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "Device %s is already on branch %s",
+				     fu_device_get_name (dev),
+				     branch);
+			return FALSE;
+		}
+	} else {
+		guint idx;
+
+		/* TRANSLATORS: get interactive prompt, where branch is the
+		 * supplier of the firmware, e.g. "non-free" or "free" */
+		g_print ("%s\n", _("Choose a branch:"));
+		/* TRANSLATORS: this is to abort the interactive prompt */
+		g_print ("0.\t%s\n", _("Cancel"));
+		for (guint i = 0; i < branches->len; i++) {
+			const gchar *branch_tmp = g_ptr_array_index (branches, i);
+			g_print ("%u.\t%s\n", i + 1, branch_tmp);
+		}
+		idx = fu_util_prompt_for_number (branches->len);
+		if (idx == 0) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOTHING_TO_DO,
+					     "Request canceled");
+			return FALSE;
+		}
+		branch = g_ptr_array_index (branches, idx - 1);
+	}
+
+	/* the releases are ordered by version */
+	for (guint j = 0; j < rels->len; j++) {
+		FwupdRelease *rel_tmp = g_ptr_array_index (rels, j);
+		if (g_strcmp0 (fwupd_release_get_branch (rel_tmp), branch) == 0) {
+			rel = g_object_ref (rel_tmp);
+			break;
+		}
+	}
+	if (rel == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "No releases for branch %s",
+			     branch);
+		return FALSE;
+	}
+
+	/* we're switching branch */
+	if (!fu_util_switch_branch_warning (priv, dev, rel, error))
+		return FALSE;
+
+	/* update the console if composite devices are also updated */
+	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
+	g_signal_connect (priv->client, "device-changed",
+			  G_CALLBACK (fu_util_update_device_changed_cb), priv);
+	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
+	if (!fu_util_update_device_with_release (priv, dev, rel, error))
+		return FALSE;
+	fu_util_display_current_message (priv);
+
+	/* send report if we're supposed to */
+	remote_id = fwupd_release_get_remote_id (rel);
+	if (!fu_util_maybe_send_reports (priv, remote_id, error))
+		return FALSE;
+
+	/* we don't want to ask anything */
+	if (priv->no_reboot_check) {
+		g_debug ("skipping reboot check");
+		return TRUE;
+	}
+
+	return fu_util_prompt_complete (priv->completion_flags, TRUE, error);
+}
+
+static gboolean
 fu_util_activate (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
@@ -2739,6 +2900,12 @@ main (int argc, char *argv[])
 		     _("Reinstall current firmware on the device."),
 		     fu_util_reinstall);
 	fu_util_cmd_array_add (cmd_array,
+		     "switch-branch",
+		     "[DEVICE-ID|GUID] [BRANCH]",
+		     /* TRANSLATORS: command description */
+		     _("Switch the firmware branch on the device."),
+		     fu_util_switch_branch);
+	fu_util_cmd_array_add (cmd_array,
 		     "security",
 		     NULL,
 		     /* TRANSLATORS: command description */
@@ -2917,6 +3084,7 @@ main (int argc, char *argv[])
 	if (is_interactive) {
 		if (!fwupd_client_set_feature_flags (priv->client,
 						     FWUPD_FEATURE_FLAG_CAN_REPORT |
+						     FWUPD_FEATURE_FLAG_SWITCH_BRANCH |
 						     FWUPD_FEATURE_FLAG_UPDATE_ACTION |
 						     FWUPD_FEATURE_FLAG_DETACH_ACTION,
 						     priv->cancellable, &error)) {

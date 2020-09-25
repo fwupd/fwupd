@@ -197,6 +197,8 @@ fwupd_device_flag_to_string (FwupdDeviceFlags device_flag)
 		return "updatable-hidden";
 	if (device_flag == FWUPD_DEVICE_FLAG_SKIPS_RESTART)
 		return "skips-restart";
+	if (device_flag == FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES)
+		return "has-multiple-branches";
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -295,6 +297,8 @@ fwupd_device_flag_from_string (const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN;
 	if (g_strcmp0 (device_flag, "skips-restart") == 0)
 		return FWUPD_DEVICE_FLAG_SKIPS_RESTART;
+	if (g_strcmp0 (device_flag, "has-multiple-branches") == 0)
+		return FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES;
 	return FWUPD_DEVICE_FLAG_UNKNOWN;
 }
 
@@ -419,6 +423,8 @@ fwupd_feature_flag_to_string (FwupdFeatureFlags feature_flag)
 		return "detach-action";
 	if (feature_flag == FWUPD_FEATURE_FLAG_UPDATE_ACTION)
 		return "update-action";
+	if (feature_flag == FWUPD_FEATURE_FLAG_SWITCH_BRANCH)
+		return "switch-branch";
 	return NULL;
 }
 
@@ -443,6 +449,8 @@ fwupd_feature_flag_from_string (const gchar *feature_flag)
 		return FWUPD_FEATURE_FLAG_DETACH_ACTION;
 	if (g_strcmp0 (feature_flag, "update-action") == 0)
 		return FWUPD_FEATURE_FLAG_UPDATE_ACTION;
+	if (g_strcmp0 (feature_flag, "switch-branch") == 0)
+		return FWUPD_FEATURE_FLAG_SWITCH_BRANCH;
 	return FWUPD_FEATURE_FLAG_LAST;
 }
 
@@ -521,6 +529,8 @@ fwupd_release_flag_to_string (FwupdReleaseFlags release_flag)
 		return "blocked-version";
 	if (release_flag == FWUPD_RELEASE_FLAG_BLOCKED_APPROVAL)
 		return "blocked-approval";
+	if (release_flag == FWUPD_RELEASE_FLAG_IS_ALTERNATE_BRANCH)
+		return "is-alternate-branch";
 	return NULL;
 }
 
@@ -549,6 +559,8 @@ fwupd_release_flag_from_string (const gchar *release_flag)
 		return FWUPD_RELEASE_FLAG_BLOCKED_VERSION;
 	if (g_strcmp0 (release_flag, "blocked-approval") == 0)
 		return FWUPD_RELEASE_FLAG_BLOCKED_APPROVAL;
+	if (g_strcmp0 (release_flag, "is-alternate-branch") == 0)
+		return FWUPD_RELEASE_FLAG_IS_ALTERNATE_BRANCH;
 	return FWUPD_RELEASE_FLAG_NONE;
 }
 
