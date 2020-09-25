@@ -7,6 +7,7 @@
 
 #include "config.h"
 
+#include "fu-common.h"
 #include "fu-firmware.h"
 
 #include "fu-vli-pd-device.h"
@@ -415,7 +416,7 @@ fu_vli_pd_device_write_dual_firmware (FuVliPdDevice *self, GBytes *fw, GError **
 		g_prefix_error (error, "failed to read file CRC: ");
 		return FALSE;
 	}
-	crc_actual = fu_vli_common_crc16 (sbuf, sbufsz - 2);
+	crc_actual = fu_common_crc16 (sbuf, sbufsz - 2);
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_WRITE);
 
 	/* update fw2 first if fw1 correct */

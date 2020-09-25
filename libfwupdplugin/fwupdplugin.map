@@ -613,6 +613,9 @@ LIBFWUPDPLUGIN_1.4.6 {
 LIBFWUPDPLUGIN_1.5.0 {
   global:
     fu_common_cpuid;
+    fu_common_crc16;
+    fu_common_crc32;
+    fu_common_crc32_full;
     fu_common_filename_glob;
     fu_common_is_cpu_intel;
     fu_device_bind_driver;
