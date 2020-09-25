@@ -260,6 +260,8 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 		priv->vendor = fu_udev_device_get_sysfs_attr_as_uint32 (udev_parent, "vendor");
 		priv->model = fu_udev_device_get_sysfs_attr_as_uint32 (udev_parent, "device");
 		priv->revision = fu_udev_device_get_sysfs_attr_as_uint8 (udev_parent, "revision");
+		priv->subsystem_vendor = fu_udev_device_get_sysfs_attr_as_uint32 (udev_parent, "subsystem_vendor");
+		priv->subsystem_model = fu_udev_device_get_sysfs_attr_as_uint32 (udev_parent, "subsystem_device");
 	}
 
 	/* hidraw helpfully encodes the information in a different place */
