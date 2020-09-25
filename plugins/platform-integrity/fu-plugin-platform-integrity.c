@@ -105,7 +105,7 @@ fu_plugin_add_security_attr_ble (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	fu_security_attrs_append (attrs, attr);
 
 	/* load file */
-	fn = g_build_filename (priv->sysfs_path, "ble", NULL);
+	fn = g_build_filename (priv->sysfs_path, "biosle", NULL);
 	if (!g_file_get_contents (fn, &buf, &bufsz, &error_local)) {
 		g_warning ("could not open %s: %s", fn, error_local->message);
 		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
@@ -139,7 +139,7 @@ fu_plugin_add_security_attr_smm_bwp (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	fu_security_attrs_append (attrs, attr);
 
 	/* load file */
-	fn = g_build_filename (priv->sysfs_path, "smm_bwp", NULL);
+	fn = g_build_filename (priv->sysfs_path, "smm_bioswp", NULL);
 	if (!g_file_get_contents (fn, &buf, &bufsz, &error_local)) {
 		g_warning ("could not open %s: %s", fn, error_local->message);
 		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
