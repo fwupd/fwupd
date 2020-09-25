@@ -23,8 +23,7 @@
 /* Type covert */
 #define MAKE_CMD_EX(cmd0, cmd1) ((guint16)(((cmd0) << 8) | (cmd1)))
 
-typedef struct
-{
+typedef struct {
 	guint8 format[2];
 	guint8 fwtype[8];
 	guint8 fwversion[8];
@@ -38,24 +37,20 @@ typedef struct
 	guint8 reserved[62];
 } GxfpVersiomInfo;
 
-typedef struct
-{
+typedef struct {
 	guint8   cmd;
 	gboolean configured;
 } GxfpAckMsg;
 
-typedef struct
-{
+typedef struct {
 	guint8 result;
-	union
-	{
+	union {
 		GxfpAckMsg	ack_msg;
 		GxfpVersiomInfo version_info;
 	};
 } GxfpCmdResp;
 
-typedef struct
-{
+typedef struct {
 	guint8  cmd0;
 	guint8  cmd1;
 	guint8  pkg_flag;

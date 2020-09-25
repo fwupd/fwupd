@@ -104,14 +104,13 @@ goodixfp_device_cmd_recv (GUsbDevice *usbdevice,
 	gsize actual_len = 0;
 	gsize offset = 0;
 
-	g_assert(presponse != NULL);
+	g_assert (presponse != NULL);
 
 	/*
 	* package format
 	* | zlp | ack | zlp | data |
 	*/
-	while (1)
-	{
+	while (1) {
 		g_autoptr(GByteArray) reply = g_byte_array_new();
 		g_byte_array_set_size (reply, GX_FLASH_TRANSFER_BLOCK_SIZE);
 		ret = g_usb_device_bulk_transfer (usbdevice,
@@ -178,17 +177,11 @@ fu_goodixfp_device_cmd_xfer (FuGoodixFpDevice *device,
 			     gboolean data_reply,
 			     GError **error)
 {
-	gboolean ret = FALSE;
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE(device));
 
-	ret = goodixfp_device_cmd_send (usb_device, cmd0, cmd1, pkg_eop, request, error);
-	if (!ret)
+	if (!goodixfp_device_cmd_send (usb_device, cmd0, cmd1, pkg_eop, request, error))
 		return FALSE;
-
-	ret = goodixfp_device_cmd_recv (usb_device, presponse, data_reply, error);
-	if (!ret)
-		return FALSE;
-	return TRUE;
+	return goodixfp_device_cmd_recv (usb_device, presponse, data_reply, error);
 }
 
 static gchar *
@@ -235,7 +228,6 @@ fu_goodixfp_device_attach (FuDevice *device, GError **error)
 	GxfpCmdResp reponse = {0,};
 
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-
 	/* reset device */
 	if (!fu_goodixfp_device_cmd_xfer (self, GX_CMD_RESET, 0x03,
 					  0,
@@ -260,7 +252,6 @@ fu_goodixfp_device_open (FuUsbDevice *device, GError **error)
 					   G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
 					   error))
 		return FALSE;
-
 	/* success */
 	return TRUE;
 }
@@ -270,12 +261,9 @@ fu_goodixfp_device_setup (FuDevice *device, GError **error)
 {
 	FuGoodixFpDevice *self = FU_GOODIXFP_DEVICE(device);
 	g_autofree gchar *version = NULL;
-	g_autoptr(GError) error_local = NULL;
-
-	version = fu_goodixfp_device_get_version (self, &error_local);
+	version = fu_goodixfp_device_get_version (self, error);
 	if (!version) {
-		g_warning ("failed to get firmware version: %s",
-			  error_local->message);
+		g_prefix_error (error, "failed to get firmware version: ");
 		return FALSE;
 	}
 	g_debug ("obtained fwver using API '%s'", version);
@@ -301,7 +289,6 @@ fu_goodixfp_device_write_firmware (FuDevice *device,
 	fw = fu_firmware_get_image_default_bytes (firmware, error);
 	if (fw == NULL)
 		return FALSE;
-
 	/* build packets */
 	chunks = fu_chunk_array_new_from_bytes (fw,
 					        0x00,
@@ -318,12 +305,11 @@ fu_goodixfp_device_write_firmware (FuDevice *device,
 		return FALSE;
 	}
 	/* write each block */
-	for (guint i = 0; i < chunks->len; i++)
-	{
+	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
 		g_autoptr(GByteArray) request = g_byte_array_new ();
 		g_byte_array_append (request, chk->data, chk->data_sz);
-		if (i == (chunks->len - 1)) {
+		if (i == chunks->len - 1) {
 			/* the last chunk */
 			wait_data_reply = TRUE;
 			pkg_eop = 0;
@@ -341,7 +327,6 @@ fu_goodixfp_device_write_firmware (FuDevice *device,
 				     error_local->message);
 			return FALSE;
 		}
-
 		/* update progress */
 		fu_device_set_progress_full (device, (gsize)i, (gsize)chunks->len);
 	}
@@ -354,7 +339,8 @@ fu_goodixfp_device_init (FuGoodixFpDevice *self)
 {
 
 	fu_device_add_flag (FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_flag (FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY);
+	fu_device_add_flag (FU_DEVICE(self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
+	fu_device_add_flag (FU_DEVICE(self), FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION);
 	fu_device_set_version_format (FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_remove_delay (FU_DEVICE(self), 3000);
 	fu_device_set_protocol (FU_DEVICE (self), "com.goodix.goodixfp");

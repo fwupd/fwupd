@@ -23,11 +23,9 @@ fu_goodixfp_crc8 (guint8 *buf, guint32 bufsz)
 	const guint8 *data = buf;
 	guint32 crc = 0;
 
-	for (gint j = bufsz; j; j--, data++)
-	{
+	for (gint j = bufsz; j; j--, data++) {
 		crc ^= (*data << 8);
-		for (gint i = 8; i; i--)
-		{
+		for (gint i = 8; i; i--) {
 			if (crc & 0x8000)
 				crc ^= (0x1070 << 3);
 			crc <<= 1;
@@ -80,8 +78,7 @@ reflect (guint32 data, guint8 n_bits)
 	/*
 	* Reflect the data about the center bit.
 	*/
-	for (guint8 bit = 0; bit < n_bits; ++bit)
-	{
+	for (guint8 bit = 0; bit < n_bits; ++bit) {
 		/*
 		* If the LSB bit is set, set the reflection of it.
 		*/
@@ -100,8 +97,7 @@ crc32_update (guint32 *ctx, const guint8 *message, guint32 n_bytes)
 	/*
 	* Divide the message by the polynomial, a byte at a time.
 	*/
-	for (guint32 byte = 0; byte < n_bytes; ++byte)
-	{
+	for (guint32 byte = 0; byte < n_bytes; ++byte) {
 		data = REFLECT_DATA(message[byte]) ^ (*ctx >> (WIDTH - 8));
 		*ctx = s_crc_table[data] ^ (*ctx << 8);
 	}
@@ -136,7 +132,7 @@ fu_goodixfp_build_header (GxfpPkgHeader *pheader,
 			  guint8 cmd1,
 		  	  guint8 pkg_flag)
 {
-	g_assert(pheader);
+	g_assert (pheader);
 
 	memset (pheader, 0, sizeof(*pheader));
 	pheader->cmd0 = (cmd0);
