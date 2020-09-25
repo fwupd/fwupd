@@ -239,3 +239,12 @@ GPtrArray	*fu_common_get_volumes_by_kind	(const gchar	*kind,
 FuVolume	*fu_common_get_esp_for_path	(const gchar	*esp_path,
 						 GError		**error);
 FuVolume	*fu_common_get_esp_default	(GError		**error);
+
+guint16		 fu_common_crc16		(const guint8	*buf,
+						 gsize		 bufsz);
+guint32		 fu_common_crc32		(const guint8	*buf,
+						 gsize		 bufsz);
+guint32		 fu_common_crc32_full		(const guint8	*buf,
+						 gsize		 bufsz,
+						 guint32	 crc,
+						 guint32	 polynomial);
