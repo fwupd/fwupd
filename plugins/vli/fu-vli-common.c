@@ -9,21 +9,6 @@
 
 #include "fu-vli-common.h"
 
-guint8
-fu_vli_common_crc8 (const guint8 *buf, gsize bufsz)
-{
-	guint32 crc = 0;
-	for (gsize j = bufsz; j > 0; j--) {
-		crc ^= (*(buf++) << 8);
-		for (guint32 i = 8; i; i--) {
-			if (crc & 0x8000)
-				crc ^= (0x1070 << 3);
-			crc <<= 1;
-		}
-	}
-	return (guint8) (crc >> 8);
-}
-
 const gchar *
 fu_vli_common_device_kind_to_string (FuVliDeviceKind device_kind)
 {
