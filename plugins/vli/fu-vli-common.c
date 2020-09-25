@@ -24,23 +24,6 @@ fu_vli_common_crc8 (const guint8 *buf, gsize bufsz)
 	return (guint8) (crc >> 8);
 }
 
-guint16
-fu_vli_common_crc16 (const guint8 *buf, gsize bufsz)
-{
-	guint16 crc = 0xffff;
-	for (gsize len = bufsz; len > 0; len--) {
-		crc = (guint16) (crc ^ (*buf++));
-		for (guint8 i = 0; i < 8; i++) {
-			if (crc & 0x1) {
-				crc = (crc >> 1) ^ 0xa001;
-			} else {
-				crc >>= 1;
-			}
-		}
-	}
-	return ~crc;
-}
-
 const gchar *
 fu_vli_common_device_kind_to_string (FuVliDeviceKind device_kind)
 {

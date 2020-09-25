@@ -46,5 +46,3 @@ guint32		 fu_vli_common_device_kind_get_offset	(FuVliDeviceKind	 device_kind);
 
 guint8		 fu_vli_common_crc8			(const guint8		*buf,
 							 gsize			 bufsz);
-guint16		 fu_vli_common_crc16			(const guint8		*buf,
-							 gsize			 bufsz);

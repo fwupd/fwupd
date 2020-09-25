@@ -108,6 +108,14 @@ fu_archive_cab_func (void)
 }
 
 static void
+fu_common_crc_func (void)
+{
+	guint8 buf[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09 };
+	g_assert_cmpint (fu_common_crc16 (buf, sizeof(buf)), ==, 0x4DF1);
+	g_assert_cmpint (fu_common_crc32 (buf, sizeof(buf)), ==, 0x40EFAB9E);
+}
+
+static void
 fu_common_string_append_kv_func (void)
 {
 	g_autoptr(GString) str = g_string_new (NULL);
@@ -2036,6 +2044,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/plugin{quirks-performance}", fu_plugin_quirks_performance_func);
 	g_test_add_func ("/fwupd/plugin{quirks-device}", fu_plugin_quirks_device_func);
 	g_test_add_func ("/fwupd/chunk", fu_chunk_func);
+	g_test_add_func ("/fwupd/common{crc}", fu_common_crc_func);
 	g_test_add_func ("/fwupd/common{string-append-kv}", fu_common_string_append_kv_func);
 	g_test_add_func ("/fwupd/common{version-guess-format}", fu_common_version_guess_format_func);
 	g_test_add_func ("/fwupd/common{version}", fu_common_version_func);
