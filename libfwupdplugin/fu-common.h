@@ -240,6 +240,8 @@ FuVolume	*fu_common_get_esp_for_path	(const gchar	*esp_path,
 						 GError		**error);
 FuVolume	*fu_common_get_esp_default	(GError		**error);
 
+guint8		 fu_common_crc8			(const guint8	*buf,
+						 gsize		 bufsz);
 guint16		 fu_common_crc16		(const guint8	*buf,
 						 gsize		 bufsz);
 guint32		 fu_common_crc32		(const guint8	*buf,

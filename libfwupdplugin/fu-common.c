@@ -2337,6 +2337,32 @@ fu_common_get_esp_for_path (const gchar *esp_path, GError **error)
 }
 
 /**
+ * fu_common_crc8:
+ * @buf: memory buffer
+ * @bufsz: sizeof buf
+ *
+ * Returns the cyclic redundancy check value for the given memory buffer.
+ *
+ * Returns: CRC value
+ *
+ * Since: 1.5.0
+ **/
+guint8
+fu_common_crc8 (const guint8 *buf, gsize bufsz)
+{
+	guint32 crc = 0;
+	for (gsize j = bufsz; j > 0; j--) {
+		crc ^= (*(buf++) << 8);
+		for (guint32 i = 8; i; i--) {
+			if (crc & 0x8000)
+				crc ^= (0x1070 << 3);
+			crc <<= 1;
+		}
+	}
+	return ~((guint8) (crc >> 8));
+}
+
+/**
  * fu_common_crc16:
  * @buf: memory buffer
  * @bufsz: sizeof buf
