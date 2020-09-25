@@ -66,6 +66,7 @@ guint32		 fu_udev_device_get_model		(FuUdevDevice	*self);
 guint32		 fu_udev_device_get_subsystem_vendor	(FuUdevDevice	*self);
 guint32		 fu_udev_device_get_subsystem_model	(FuUdevDevice	*self);
 guint8		 fu_udev_device_get_revision		(FuUdevDevice	*self);
+guint64		 fu_udev_device_get_number		(FuUdevDevice	*self);
 guint		 fu_udev_device_get_slot_depth		(FuUdevDevice	*self,
 							 const gchar	*subsystem);
 gboolean	 fu_udev_device_set_physical_id		(FuUdevDevice	*self,
