@@ -1073,6 +1073,10 @@ fu_util_device_flag_to_string (guint64 device_flag)
 		/* TRANSLATORS: a version check is required for all firmware */
 		return _("Device is required to install all provided releases");
 	}
+	if (device_flag == FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES) {
+		/* TRANSLATORS: there is more than one supplier of the firmware */
+		return _("Device supports switching to a different branch of firmware");
+	}
 	if (device_flag == FWUPD_DEVICE_FLAG_MD_SET_NAME) {
 		/* skip */
 		return NULL;
@@ -1336,6 +1340,11 @@ fu_util_release_to_string (FwupdRelease *rel, guint idt)
 		/* TRANSLATORS: the server the file is coming from */
 		fu_common_string_append_kv (str, idt + 1, _("Remote ID"),
 					    fwupd_release_get_remote_id (rel));
+	}
+	if (fwupd_release_get_branch (rel) != NULL) {
+		/* TRANSLATORS: the stream of firmware, e.g. nonfree or open-source */
+		fu_common_string_append_kv (str, idt + 1, _("Branch"),
+					    fwupd_release_get_branch (rel));
 	}
 	if (fwupd_release_get_summary (rel) != NULL) {
 		/* TRANSLATORS: one line summary of device */

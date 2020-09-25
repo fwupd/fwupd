@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2020 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -39,6 +39,7 @@ typedef struct {
 	gchar				*name;
 	gchar				*serial;
 	gchar				*summary;
+	gchar				*branch;
 	gchar				*description;
 	gchar				*vendor;
 	gchar				*vendor_id;
@@ -170,6 +171,42 @@ fwupd_device_set_summary (FwupdDevice *device, const gchar *summary)
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
 	g_free (priv->summary);
 	priv->summary = g_strdup (summary);
+}
+
+/**
+ * fwupd_device_get_branch:
+ * @device: A #FwupdDevice
+ *
+ * Gets the current device branch.
+ *
+ * Returns: the device branch, or %NULL if unset
+ *
+ * Since: 1.5.0
+ **/
+const gchar *
+fwupd_device_get_branch (FwupdDevice *device)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	return priv->branch;
+}
+
+/**
+ * fwupd_device_set_branch:
+ * @device: A #FwupdDevice
+ * @branch: the device one line branch
+ *
+ * Sets the current device branch.
+ *
+ * Since: 1.5.0
+ **/
+void
+fwupd_device_set_branch (FwupdDevice *device, const gchar *branch)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	g_free (priv->branch);
+	priv->branch = g_strdup (branch);
 }
 
 /**
@@ -1189,6 +1226,8 @@ fwupd_device_incorporate (FwupdDevice *self, FwupdDevice *donor)
 		fwupd_device_set_serial (self, priv_donor->serial);
 	if (priv->summary == NULL)
 		fwupd_device_set_summary (self, priv_donor->summary);
+	if (priv->branch == NULL)
+		fwupd_device_set_branch (self, priv_donor->branch);
 	if (priv->vendor == NULL)
 		fwupd_device_set_vendor (self, priv_donor->vendor);
 	if (priv->vendor_id == NULL)
@@ -1323,6 +1362,11 @@ fwupd_device_to_variant_full (FwupdDevice *device, FwupdDeviceFlags flags)
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_SUMMARY,
 				       g_variant_new_string (priv->summary));
+	}
+	if (priv->branch != NULL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_BRANCH,
+				       g_variant_new_string (priv->branch));
 	}
 	if (priv->checksums->len > 0) {
 		g_autoptr(GString) str = g_string_new ("");
@@ -1534,6 +1578,10 @@ fwupd_device_from_key_value (FwupdDevice *device, const gchar *key, GVariant *va
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_SUMMARY) == 0) {
 		fwupd_device_set_summary (device, g_variant_get_string (value, NULL));
+		return;
+	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_BRANCH) == 0) {
+		fwupd_device_set_branch (device, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DESCRIPTION) == 0) {
@@ -2036,6 +2084,7 @@ fwupd_device_to_json (FwupdDevice *device, JsonBuilder *builder)
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_SERIAL, priv->serial);
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
+	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_BRANCH, priv->branch);
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_PROTOCOL, priv->protocol);
 	if (priv->flags != FWUPD_DEVICE_FLAG_NONE) {
@@ -2172,6 +2221,7 @@ fwupd_device_to_string (FwupdDevice *device)
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_SERIAL, priv->serial);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_BRANCH, priv->branch);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_PROTOCOL, priv->protocol);
 	fwupd_pad_kv_dfl (str, FWUPD_RESULT_KEY_FLAGS, priv->flags);
@@ -2343,6 +2393,7 @@ fwupd_device_finalize (GObject *object)
 	g_free (priv->name);
 	g_free (priv->serial);
 	g_free (priv->summary);
+	g_free (priv->branch);
 	g_free (priv->vendor);
 	g_free (priv->vendor_id);
 	g_free (priv->plugin);

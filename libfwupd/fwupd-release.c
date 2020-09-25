@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2018 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2020 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -46,6 +46,7 @@ typedef struct {
 	gchar				*name;
 	gchar				*name_variant_suffix;
 	gchar				*summary;
+	gchar				*branch;
 	gchar				*uri;
 	gchar				*vendor;
 	gchar				*version;
@@ -935,6 +936,42 @@ fwupd_release_set_summary (FwupdRelease *release, const gchar *summary)
 }
 
 /**
+ * fwupd_release_get_branch:
+ * @release: A #FwupdRelease
+ *
+ * Gets the update branch.
+ *
+ * Returns: the alternate branch, or %NULL if unset
+ *
+ * Since: 1.5.0
+ **/
+const gchar *
+fwupd_release_get_branch (FwupdRelease *release)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_val_if_fail (FWUPD_IS_RELEASE (release), NULL);
+	return priv->branch;
+}
+
+/**
+ * fwupd_release_set_branch:
+ * @release: A #FwupdRelease
+ * @branch: the update one line branch
+ *
+ * Sets the alternate branch.
+ *
+ * Since: 1.5.0
+ **/
+void
+fwupd_release_set_branch (FwupdRelease *release, const gchar *branch)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_if_fail (FWUPD_IS_RELEASE (release));
+	g_free (priv->branch);
+	priv->branch = g_strdup (branch);
+}
+
+/**
  * fwupd_release_get_vendor:
  * @release: A #FwupdRelease
  *
@@ -1354,6 +1391,11 @@ fwupd_release_to_variant (FwupdRelease *release)
 				       FWUPD_RESULT_KEY_SUMMARY,
 				       g_variant_new_string (priv->summary));
 	}
+	if (priv->branch != NULL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_BRANCH,
+				       g_variant_new_string (priv->branch));
+	}
 	if (priv->description != NULL) {
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_DESCRIPTION,
@@ -1490,6 +1532,10 @@ fwupd_release_from_key_value (FwupdRelease *release, const gchar *key, GVariant 
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_SUMMARY) == 0) {
 		fwupd_release_set_summary (release, g_variant_get_string (value, NULL));
+		return;
+	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_BRANCH) == 0) {
+		fwupd_release_set_branch (release, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DESCRIPTION) == 0) {
@@ -1675,6 +1721,7 @@ fwupd_release_to_json (FwupdRelease *release, JsonBuilder *builder)
 	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_REMOTE_ID, priv->remote_id);
 	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
 	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
+	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_BRANCH, priv->branch);
 	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_VERSION, priv->version);
 	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_FILENAME, priv->filename);
 	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_PROTOCOL, priv->protocol);
@@ -1764,6 +1811,7 @@ fwupd_release_to_string (FwupdRelease *release)
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_REMOTE_ID, priv->remote_id);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_BRANCH, priv->branch);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_VERSION, priv->version);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_FILENAME, priv->filename);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_PROTOCOL, priv->protocol);
@@ -1844,6 +1892,7 @@ fwupd_release_finalize (GObject *object)
 	g_free (priv->name);
 	g_free (priv->name_variant_suffix);
 	g_free (priv->summary);
+	g_free (priv->branch);
 	g_free (priv->uri);
 	g_free (priv->homepage);
 	g_free (priv->details_url);

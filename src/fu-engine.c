@@ -356,6 +356,9 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 	tmp = xb_node_query_text (component, "summary", NULL);
 	if (tmp != NULL)
 		fwupd_release_set_summary (rel, tmp);
+	tmp = xb_node_query_text (component, "branch", NULL);
+	if (tmp != NULL)
+		fwupd_release_set_branch (rel, tmp);
 	tmp = xb_node_query_text (component, "developer_name", NULL);
 	if (tmp != NULL)
 		fwupd_release_set_vendor (rel, tmp);
@@ -4164,6 +4167,14 @@ fu_engine_sort_releases_cb (gconstpointer a, gconstpointer b, gpointer user_data
 	FuDevice *device = FU_DEVICE (user_data);
 	FwupdRelease *rel_a = FWUPD_RELEASE (*((FwupdRelease **) a));
 	FwupdRelease *rel_b = FWUPD_RELEASE (*((FwupdRelease **) b));
+	gint rc;
+
+	/* first by branch */
+	rc = g_strcmp0 (fwupd_release_get_branch (rel_b), fwupd_release_get_branch (rel_a));
+	if (rc != 0)
+		return rc;
+
+	/* then by version */
 	return fu_common_vercmp_full (fwupd_release_get_version (rel_b),
 				      fwupd_release_get_version (rel_a),
 				      fu_device_get_version_format (device));
@@ -4206,6 +4217,7 @@ fu_engine_add_releases_for_device_component (FuEngine *self,
 					     GPtrArray *releases,
 					     GError **error)
 {
+	FwupdFeatureFlags feature_flags;
 	FwupdVersionFormat fmt = fu_device_get_version_format (device);
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(FuInstallTask) task = fu_install_task_new (device, component);
@@ -4228,6 +4240,7 @@ fu_engine_add_releases_for_device_component (FuEngine *self,
 		g_propagate_error (error, g_steal_pointer (&error_local));
 		return FALSE;
 	}
+	feature_flags = fu_engine_request_get_feature_flags (request);
 	for (guint i = 0; i < releases_tmp->len; i++) {
 		XbNode *release = g_ptr_array_index (releases_tmp, i);
 		const gchar *remote_id;
@@ -4260,6 +4273,18 @@ fu_engine_add_releases_for_device_component (FuEngine *self,
 		checksums = fwupd_release_get_checksums (rel);
 		if (checksums->len == 0)
 			continue;
+
+		/* different branch */
+		if (g_strcmp0 (fwupd_release_get_branch (rel),
+			       fu_device_get_branch (device)) != 0) {
+			if ((feature_flags & FWUPD_FEATURE_FLAG_SWITCH_BRANCH) == 0) {
+				g_debug ("client does not understand branches, skipping %s:%s",
+					 fwupd_release_get_branch (rel),
+					 fwupd_release_get_version (rel));
+				continue;
+			}
+			fwupd_release_add_flag (rel, FWUPD_RELEASE_FLAG_IS_ALTERNATE_BRANCH);
+		}
 
 		/* test for upgrade or downgrade */
 		vercmp = fu_common_vercmp_full (fwupd_release_get_version (rel),
@@ -4323,6 +4348,7 @@ fu_engine_get_releases_for_device (FuEngine *self,
 	const gchar *version;
 	g_autoptr(GError) error_all = NULL;
 	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GPtrArray) branches = NULL;
 	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(GString) xpath = g_string_new (NULL);
 
@@ -4388,6 +4414,21 @@ fu_engine_get_releases_for_device (FuEngine *self,
 			g_prefix_error (&error_all, "%s, ", error_tmp->message);
 		}
 	}
+
+	/* are there multiple branches available */
+	branches = g_ptr_array_new_with_free_func (g_free);
+	for (guint i = 0; i < releases->len; i++) {
+		FwupdRelease *rel_tmp = FWUPD_RELEASE (g_ptr_array_index (releases, i));
+		const gchar *branch_tmp = fwupd_release_get_branch (rel_tmp);
+		if (branch_tmp == NULL)
+			branch_tmp = "default";
+		if (g_ptr_array_find_with_equal_func (branches, branch_tmp,
+						      g_str_equal, NULL))
+			continue;
+		g_ptr_array_add (branches, g_strdup (branch_tmp));
+	}
+	if (branches->len > 0)
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES);
 
 	/* return the compound error */
 	if (releases->len == 0) {
@@ -4518,6 +4559,16 @@ fu_engine_get_downgrades (FuEngine *self,
 				 fu_device_get_version_lowest (device));
 			continue;
 		}
+
+		/* different branch */
+		if (fwupd_release_has_flag (rel_tmp, FWUPD_RELEASE_FLAG_IS_ALTERNATE_BRANCH)) {
+			g_debug ("ignoring release %s as branch %s, and device is %s",
+				 fwupd_release_get_version (rel_tmp),
+				 fwupd_release_get_branch (rel_tmp),
+				 fu_device_get_branch (device));
+			continue;
+		}
+
 		g_ptr_array_add (releases, g_object_ref (rel_tmp));
 	}
 	if (error_str->len > 2)
@@ -4724,6 +4775,15 @@ fu_engine_get_upgrades (FuEngine *self,
 			g_debug ("ignoring %s as not approved as required by %s",
 				 fwupd_release_get_version (rel_tmp),
 				 fwupd_release_get_remote_id (rel_tmp));
+			continue;
+		}
+
+		/* different branch */
+		if (fwupd_release_has_flag (rel_tmp, FWUPD_RELEASE_FLAG_IS_ALTERNATE_BRANCH)) {
+			g_debug ("ignoring release %s as branch %s, and device is %s",
+				 fwupd_release_get_version (rel_tmp),
+				 fwupd_release_get_branch (rel_tmp),
+				 fu_device_get_branch (device));
 			continue;
 		}
 

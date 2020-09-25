@@ -973,6 +973,10 @@ fu_device_set_quirk_kv (FuDevice *self,
 		fu_device_set_summary (self, value);
 		return TRUE;
 	}
+	if (g_strcmp0 (key, FU_QUIRKS_BRANCH) == 0) {
+		fu_device_set_branch (self, value);
+		return TRUE;
+	}
 	if (g_strcmp0 (key, FU_QUIRKS_VENDOR) == 0) {
 		fu_device_set_vendor (self, value);
 		return TRUE;

@@ -53,6 +53,7 @@ complete -c fwupdmgr -n '__fish_use_subcommand' -x -a refresh -d 'Refresh metada
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a reinstall -d 'Reinstall current firmware on the device.'
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a report-history -d 'Share firmware history with the developers'
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a set-approved-firmware -d 'Sets the list of approved firmware.'
+complete -c fwupdmgr -n '__fish_use_subcommand' -x -a switch-branch -d 'Switch the firmware branch on the device.'
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a unlock -d 'Unlocks the device for firmware access'
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a update -d 'Updates all firmware to latest versions available'
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a verify -d 'Checks cryptographic hash matches firmware'
