@@ -1,0 +1,36 @@
+# Goodix Fingerprint sensor
+[DeviceInstanceId=USB\VID_27C6&PID_60A2]
+Plugin = goodixfp
+Summary = An open source goodix Fingerprint sensor
+FirmwareSizeMin = 0x20000
+InstallDuration = 10
+
+[DeviceInstanceId=USB\VID_27C6&PID_6384]
+Plugin = goodixfp
+Summary = An open source goodix Fingerprint sensor
+FirmwareSizeMin = 0x20000
+InstallDuration = 10
+
+[DeviceInstanceId=USB\VID_27C6&PID_639C]
+Plugin = goodixfp
+Summary = An open source goodix Fingerprint sensor
+FirmwareSizeMin = 0x20000
+InstallDuration = 10
+
+[DeviceInstanceId=USB\VID_27C6&PID_63AC]
+Plugin = goodixfp
+Summary = An open source goodix Fingerprint sensor
+FirmwareSizeMin = 0x20000
+InstallDuration = 10
+
+[DeviceInstanceId=USB\VID_27C6&PID_6594]
+Plugin = goodixfp
+Summary = An open source goodix Fingerprint sensor
+FirmwareSizeMin = 0x20000
+InstallDuration = 10
+
+[DeviceInstanceId=USB\VID_27C6&PID_6496]
+Plugin = goodixfp
+Summary = An open source goodix Fingerprint sensor
+FirmwareSizeMin = 0x20000
+InstallDuration = 10
