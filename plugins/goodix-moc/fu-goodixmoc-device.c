@@ -349,6 +349,12 @@ fu_goodixmoc_device_write_firmware (FuDevice	     *device,
 			return FALSE;
 		}
 
+		/* check update status */
+		if (wait_data_reply && reponse.result != 0) {
+			g_prefix_error (error, "failed to verify firmware: ");
+			return FALSE;
+		}
+
 		/* update progress */
 		fu_device_set_progress_full (device, (gsize)i, (gsize)chunks->len);
 	}
@@ -371,6 +377,7 @@ fu_goodixmoc_device_init (FuGoodixMocDevice *self)
 	fu_device_set_vendor (FU_DEVICE(self), "Goodix");
 	fu_device_set_install_duration (FU_DEVICE(self), 10);
 	fu_device_set_firmware_size_min (FU_DEVICE(self), 0x20000);
+	fu_device_set_firmware_size_max (FU_DEVICE(self), 0x30000);
 }
 
 static void
