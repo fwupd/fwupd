@@ -341,8 +341,11 @@ fu_cabinet_set_container_checksum_cb (XbBuilderFixup *builder_fixup,
 
 	/* verify it is correct */
 	if (g_strcmp0 (xb_builder_node_get_text (csum), self->container_checksum) != 0) {
-		g_debug ("invalid container checksum %s, fixing up to %s",
-			 xb_builder_node_get_text (csum), self->container_checksum);
+		if (xb_builder_node_get_text (csum) != NULL) {
+			g_warning ("invalid container checksum %s, fixing up to %s",
+				   xb_builder_node_get_text (csum),
+				   self->container_checksum);
+		}
 		xb_builder_node_set_text (csum, self->container_checksum, -1);
 	}
 	return TRUE;
@@ -504,7 +507,6 @@ fu_cabinet_build_silo (FuCabinet *self, GBytes *data, GError **error)
 	/* adds each metainfo file to the silo */
 	for (guint i = 0; i < folders->len; i++) {
 		GCabFolder *cabfolder = GCAB_FOLDER (g_ptr_array_index (folders, i));
-		g_debug ("processing folder: %u/%u", i + 1, folders->len);
 		if (!fu_cabinet_build_silo_folder (self, cabfolder, error))
 			return FALSE;
 	}

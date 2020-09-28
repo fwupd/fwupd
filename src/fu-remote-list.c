@@ -183,7 +183,7 @@ fu_remote_list_add_for_path (FuRemoteList *self, const gchar *path, GError **err
 		fwupd_remote_set_remotes_dir (remote, remotesdir);
 
 		/* load from keyfile */
-		g_debug ("loading remotes from %s", filename);
+		g_debug ("loading remote from %s", filename);
 		if (!fwupd_remote_load_from_filename (remote, filename,
 						      NULL, error)) {
 			g_prefix_error (error, "failed to load %s: ", filename);

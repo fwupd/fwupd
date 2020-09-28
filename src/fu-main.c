@@ -776,10 +776,14 @@ fu_main_install_with_helper (FuMainAuthHelper *helper_ref, GError **error)
 							   task,
 							   helper->flags | FWUPD_INSTALL_FLAG_FORCE,
 							   &error_local)) {
-				g_debug ("first pass requirement on %s:%s failed: %s",
-					 fu_device_get_id (device),
-					 xb_node_query_text (component, "id", NULL),
-					 error_local->message);
+				if (!g_error_matches (error_local,
+						      FWUPD_ERROR,
+						      FWUPD_ERROR_NOT_FOUND)) {
+					g_debug ("first pass requirement on %s:%s failed: %s",
+						 fu_device_get_id (device),
+						 xb_node_query_text (component, "id", NULL),
+						 error_local->message);
+				}
 				g_ptr_array_add (errors, g_steal_pointer (&error_local));
 				continue;
 			}
@@ -1604,7 +1608,7 @@ fu_main_on_name_acquired_cb (GDBusConnection *connection,
 			     const gchar *name,
 			     gpointer user_data)
 {
-	g_debug ("FuMain: acquired name: %s", name);
+	g_debug ("acquired name: %s", name);
 }
 
 static void
@@ -1857,10 +1861,8 @@ main (int argc, char *argv[])
 	else if (timed_exit)
 		g_timeout_add_seconds (5, fu_main_timed_exit_cb, priv->loop);
 
-	g_debug ("Started with locale %s", g_getenv ("LANG"));
-
 	/* wait */
-	g_message ("Daemon ready for requests");
+	g_message ("Daemon ready for requests (locale %s)", g_getenv ("LANG"));
 	g_main_loop_run (priv->loop);
 
 	/* success */
