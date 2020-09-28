@@ -402,7 +402,6 @@ fu_plugin_update (FuPlugin *plugin,
 	g_assert (str != NULL);
 
 	/* perform the update */
-	g_debug ("Performing UEFI capsule update");
 	fu_device_set_status (device, FWUPD_STATUS_SCHEDULING);
 	if (!fu_plugin_uefi_update_splash (plugin, device, &error_splash)) {
 		g_debug ("failed to upload UEFI UX capsule text: %s",

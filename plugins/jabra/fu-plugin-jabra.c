@@ -37,7 +37,7 @@ fu_plugin_update_cleanup (FuPlugin *plugin,
 	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;
-	g_debug ("performing extra reset into firmware mode");
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
 	usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	if (!g_usb_device_reset (usb_device, &error_local)) {
 		g_set_error (error,
@@ -50,7 +50,6 @@ fu_plugin_update_cleanup (FuPlugin *plugin,
 	}
 
 	/* wait for device to re-appear */
-	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }

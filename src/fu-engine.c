@@ -1331,7 +1331,7 @@ fu_engine_check_requirement_id (FuEngine *self, XbNode *req, GError **error)
 		return FALSE;
 	}
 
-	g_debug ("requirement %s %s %s on %s passed",
+	g_debug ("requirement %s %s %s -> %s passed",
 		 xb_node_get_attr (req, "version"),
 		 xb_node_get_attr (req, "compare"),
 		 version, xb_node_get_text (req));
@@ -1757,7 +1757,7 @@ fu_engine_install_tasks (FuEngine *self,
 	g_autoptr(GPtrArray) devices_new = NULL;
 
 	/* do not allow auto-shutdown during this time */
-	locker = fu_idle_locker_new (self->idle, "performing update");
+	locker = fu_idle_locker_new (self->idle, "update");
 	g_assert (locker != NULL);
 
 	/* notify the plugins about the composite action */
@@ -2506,7 +2506,7 @@ fu_engine_update_prepare (FuEngine *self,
 	fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED);
 
 	str = fu_device_to_string (device);
-	g_debug ("performing prepare on %s", str);
+	g_debug ("prepare -> %s", str);
 	if (!fu_engine_device_prepare (self, device, flags, error))
 		return FALSE;
 	for (guint j = 0; j < plugins->len; j++) {
@@ -2540,7 +2540,7 @@ fu_engine_update_cleanup (FuEngine *self,
 	if (device == NULL)
 		return FALSE;
 	str = fu_device_to_string (device);
-	g_debug ("performing cleanup on %s", str);
+	g_debug ("cleanup -> %s", str);
 	if (!fu_engine_device_cleanup (self, device, flags, error))
 		return FALSE;
 	for (guint j = 0; j < plugins->len; j++) {
@@ -2571,7 +2571,7 @@ fu_engine_update_detach (FuEngine *self, const gchar *device_id, GError **error)
 	if (device == NULL)
 		return FALSE;
 	str = fu_device_to_string (device);
-	g_debug ("performing detach on %s", str);
+	g_debug ("detach -> %s", str);
 	plugin = fu_plugin_list_find_by_name (self->plugin_list,
 					      fu_device_get_plugin (device),
 					      error);
@@ -2596,7 +2596,7 @@ fu_engine_update_attach (FuEngine *self, const gchar *device_id, GError **error)
 		return FALSE;
 	}
 	str = fu_device_to_string (device);
-	g_debug ("performing attach on %s", str);
+	g_debug ("attach -> %s", str);
 	plugin = fu_plugin_list_find_by_name (self->plugin_list,
 					      fu_device_get_plugin (device),
 					      error);
@@ -2624,7 +2624,7 @@ fu_engine_activate (FuEngine *self, const gchar *device_id, GError **error)
 	if (device == NULL)
 		return FALSE;
 	str = fu_device_to_string (device);
-	g_debug ("performing activate on %s", str);
+	g_debug ("activate -> %s", str);
 	plugin = fu_plugin_list_find_by_name (self->plugin_list,
 					      fu_device_get_plugin (device),
 					      error);
@@ -2655,7 +2655,7 @@ fu_engine_update_reload (FuEngine *self, const gchar *device_id, GError **error)
 		return FALSE;
 	}
 	str = fu_device_to_string (device);
-	g_debug ("performing reload on %s", str);
+	g_debug ("reload -> %s", str);
 	plugin = fu_plugin_list_find_by_name (self->plugin_list,
 					      fu_device_get_plugin (device),
 					      error);
@@ -2698,7 +2698,7 @@ fu_engine_update (FuEngine *self,
 	}
 	device_pending = fu_history_get_device_by_id (self->history, device_id, NULL);
 	str = fu_device_to_string (device);
-	g_debug ("performing update on %s", str);
+	g_debug ("update -> %s", str);
 	plugin = fu_plugin_list_find_by_name (self->plugin_list,
 					      fu_device_get_plugin (device),
 					      error);
@@ -5314,7 +5314,7 @@ static gboolean
 fu_engine_recoldplug_delay_cb (gpointer user_data)
 {
 	FuEngine *self = (FuEngine *) user_data;
-	g_debug ("performing a recoldplug");
+	g_debug ("recoldplugging");
 	fu_engine_plugins_coldplug (self, TRUE);
 	self->coldplug_id = 0;
 	return FALSE;
