@@ -98,7 +98,7 @@ _fwupdmgr()
 	esac
 
 	case $command in
-	activate|clear-results|downgrade|get-releases|get-results|unlock|verify|verify-update)
+	activate|clear-results|downgrade|get-releases|get-results|unlock|verify|verify-update|get-updates)
 		if [[ "$prev" = "$command" ]]; then
 			_show_device_ids
 		else

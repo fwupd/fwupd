@@ -328,10 +328,26 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	title = fu_util_get_tree_title (priv);
 
-	/* get devices from daemon */
-	devices = fu_engine_get_devices (priv->engine, error);
-	if (devices == NULL)
+	/* parse arguments */
+	if (g_strv_length (values) == 0) {
+		devices = fu_engine_get_devices (priv->engine, error);
+		if (devices == NULL)
+			return FALSE;
+	} else if (g_strv_length (values) == 1) {
+		FuDevice *device;
+		device = fu_engine_get_device_by_id (priv->engine, values[0], error);
+		if (device == NULL)
+			return FALSE;
+		devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+		g_ptr_array_add (devices, device);
+	} else {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments");
 		return FALSE;
+	}
+
 	fwupd_device_array_ensure_parents (devices);
 	g_ptr_array_sort (devices, fu_util_sort_devices_by_flags_cb);
 	for (guint i = 0; i < devices->len; i++) {
@@ -2499,7 +2515,7 @@ main (int argc, char *argv[])
 		     fu_util_get_history);
 	fu_util_cmd_array_add (cmd_array,
 		     "get-updates,get-upgrades",
-		     NULL,
+		     "[DEVICE-ID|GUID]",
 		     /* TRANSLATORS: command description */
 		     _("Gets the list of updates for connected hardware"),
 		     fu_util_get_updates);
