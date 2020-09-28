@@ -33,6 +33,7 @@
       <allow_inactive>no</allow_inactive>
       <allow_active>auth_admin_keep</allow_active>
     </defaults>
+    <annotate key="org.freedesktop.policykit.imply">org.freedesktop.fwupd.update-internal-trusted</annotate>
   </action>
 
   <action id="org.freedesktop.fwupd.downgrade-internal">
@@ -66,6 +67,7 @@
       <allow_inactive>no</allow_inactive>
       <allow_active>auth_admin_keep</allow_active>
     </defaults>
+    <annotate key="org.freedesktop.policykit.imply">org.freedesktop.fwupd.update-hotplug-trusted</annotate>
   </action>
 
   <action id="org.freedesktop.fwupd.downgrade-hotplug">
