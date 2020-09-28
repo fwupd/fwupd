@@ -229,7 +229,7 @@ fu_quirks_check_silo (FuQuirks *self, GError **error)
 	cachedirpkg = fu_common_get_path (FU_PATH_KIND_CACHEDIR_PKG);
 	xmlbfn = g_build_filename (cachedirpkg, "quirks.xmlb", NULL);
 	file = g_file_new_for_path (xmlbfn);
-	if (g_getenv ("XMLB_VERBOSE") != NULL) {
+	if (g_getenv ("FWUPD_XMLB_VERBOSE") != NULL) {
 		xb_builder_set_profile_flags (builder,
 					      XB_SILO_PROFILE_FLAG_XPATH |
 					      XB_SILO_PROFILE_FLAG_DEBUG);
