@@ -536,7 +536,6 @@ fu_plugin_uefi_test_secure_boot (FuPlugin *plugin)
 	const gchar *result_str = "Disabled";
 	if (fu_efivar_secure_boot_enabled ())
 		result_str = "Enabled";
-	g_debug ("SecureBoot is: %s", result_str);
 	fu_plugin_add_report_metadata (plugin, "SecureBoot", result_str);
 }
 
