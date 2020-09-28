@@ -163,7 +163,8 @@ fu_common_mkdir_parent (const gchar *filename, GError **error)
 	g_autofree gchar *parent = NULL;
 
 	parent = g_path_get_dirname (filename);
-	g_debug ("creating path %s", parent);
+	if (!g_file_test (parent, G_FILE_TEST_IS_DIR))
+		g_debug ("creating path %s", parent);
 	if (g_mkdir_with_parents (parent, 0755) == -1) {
 		g_set_error (error,
 			     FWUPD_ERROR,
