@@ -3222,7 +3222,7 @@ fu_engine_load_metadata_store (FuEngine *self, FuEngineLoadFlags flags, GError *
 	g_clear_object (&self->silo);
 
 	/* verbose profiling */
-	if (g_getenv ("FWUPD_VERBOSE") != NULL) {
+	if (g_getenv ("FWUPD_XMLB_VERBOSE") != NULL) {
 		xb_builder_set_profile_flags (builder,
 					      XB_SILO_PROFILE_FLAG_XPATH |
 					      XB_SILO_PROFILE_FLAG_DEBUG);

@@ -485,7 +485,7 @@ fu_cabinet_build_silo (FuCabinet *self, GBytes *data, GError **error)
 	g_autoptr(XbBuilderFixup) fixup2 = NULL;
 
 	/* verbose profiling */
-	if (g_getenv ("FWUPD_VERBOSE") != NULL) {
+	if (g_getenv ("FWUPD_XMLB_VERBOSE") != NULL) {
 		xb_builder_set_profile_flags (self->builder,
 					      XB_SILO_PROFILE_FLAG_XPATH |
 					      XB_SILO_PROFILE_FLAG_DEBUG);
