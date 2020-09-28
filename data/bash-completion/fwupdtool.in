@@ -109,7 +109,7 @@ _fwupdtool()
 			_show_modifiers
 		fi
 		;;
-	attach|detach|activate|verify-update|reinstall)
+	attach|detach|activate|verify-update|reinstall|get-updates)
 		if [[ "$prev" = "$command" ]]; then
 			_show_device_ids
 		#modifiers
