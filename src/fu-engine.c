@@ -5353,8 +5353,7 @@ fu_engine_udev_device_add (FuEngine *self, GUdevDevice *udev_device)
 		plugin = fu_plugin_list_find_by_name (self->plugin_list,
 						      plugin_name, &error);
 		if (plugin == NULL) {
-			g_debug ("failed to find specified plugin %s: %s",
-				 plugin_name, error->message);
+			g_debug ("%s", error->message);
 			continue;
 		}
 		if (!fu_plugin_runner_udev_device_added (plugin, device, &error)) {
@@ -5996,8 +5995,7 @@ fu_engine_usb_device_added_cb (GUsbContext *ctx,
 		plugin = fu_plugin_list_find_by_name (self->plugin_list,
 						      plugin_name, &error);
 		if (plugin == NULL) {
-			g_debug ("failed to find specified plugin %s: %s",
-				 plugin_name, error->message);
+			g_debug ("%s", error->message);
 			continue;
 		}
 		if (!fu_plugin_runner_usb_device_added (plugin, device, &error)) {
