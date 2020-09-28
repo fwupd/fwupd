@@ -852,7 +852,6 @@ fu_history_get_device_by_id (FuHistory *self, const gchar *device_id, GError **e
 	/* get all the devices */
 	locker = g_rw_lock_reader_locker_new (&self->db_mutex);
 	g_return_val_if_fail (locker != NULL, NULL);
-	g_debug ("get device");
 	rc = sqlite3_prepare_v2 (self->db,
 				 "SELECT device_id, "
 					"checksum, "
