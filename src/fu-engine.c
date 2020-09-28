@@ -5494,8 +5494,9 @@ fu_engine_enumerate_udev (FuEngine *self)
 		const gchar *subsystem = g_ptr_array_index (self->udev_subsystems, i);
 		GList *devices = g_udev_client_query_by_subsystem (self->gudev_client,
 								   subsystem);
-		g_debug ("%u devices with subsystem %s",
-			 g_list_length (devices), subsystem);
+		if (g_list_length (devices) > 0)
+			g_debug ("%u devices with subsystem %s",
+				 g_list_length (devices), subsystem);
 		for (GList *l = devices; l != NULL; l = l->next) {
 			GUdevDevice *udev_device = l->data;
 			fu_engine_udev_device_add (self, udev_device);
