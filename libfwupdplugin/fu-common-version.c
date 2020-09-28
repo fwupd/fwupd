@@ -444,10 +444,8 @@ fu_common_version_verify_format (const gchar *version,
 		return TRUE;
 
 	/* nothing we can check for */
-	if (fmt == FWUPD_VERSION_FORMAT_UNKNOWN) {
-		g_debug ("not checking %s as no version format set", version);
+	if (fmt == FWUPD_VERSION_FORMAT_UNKNOWN)
 		return TRUE;
-	}
 
 	/* check the base format */
 	fmt_guess = fu_common_version_guess_format (version);
