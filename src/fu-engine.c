@@ -4215,7 +4215,6 @@ fu_engine_check_release_is_blocked (FuEngine *self, FwupdRelease *rel)
 		return FALSE;
 	for (guint i = 0; i < csums->len; i++) {
 		const gchar *csum = g_ptr_array_index (csums, i);
-		g_debug ("checking %s against blocked list", csum);
 		if (g_hash_table_lookup (self->blocked_firmware, csum) != NULL)
 			return TRUE;
 	}
@@ -5856,7 +5855,6 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 		g_signal_connect (plugin, "add-firmware-gtype",
 				  G_CALLBACK (fu_engine_plugin_add_firmware_gtype_cb),
 				  self);
-		g_debug ("adding plugin %s", filename);
 
 		/* if loaded from fu_engine_load() open the plugin */
 		if (self->usb_ctx != NULL) {
