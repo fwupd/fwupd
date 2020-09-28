@@ -212,8 +212,6 @@ fu_thunderbolt_device_get_version (FuThunderboltDevice *self, GError **error)
 				   (guint) g_ascii_strtoull (split[0], NULL, 16),
 				   (guint) g_ascii_strtoull (split[1], NULL, 16));
 	fu_device_set_version (FU_DEVICE (self), version);
-	g_debug ("setting version to %s", version);
-	g_debug ("path is %s", self->devpath);
 	return TRUE;
 }
 
