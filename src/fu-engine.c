@@ -4724,7 +4724,7 @@ fu_engine_get_upgrades (FuEngine *self,
 		    !fwupd_release_has_flag (rel_tmp, FWUPD_RELEASE_FLAG_IS_DOWNGRADE)) {
 			g_string_append_printf (error_str, "%s=same, ",
 						fwupd_release_get_version (rel_tmp));
-			g_debug ("ignoring %s as the same as %s",
+			g_debug ("ignoring %s == %s",
 				 fwupd_release_get_version (rel_tmp),
 				 fu_device_get_version (device));
 			continue;
@@ -4734,7 +4734,7 @@ fu_engine_get_upgrades (FuEngine *self,
 		if (fwupd_release_has_flag (rel_tmp, FWUPD_RELEASE_FLAG_IS_DOWNGRADE)) {
 			g_string_append_printf (error_str, "%s=older, ",
 						fwupd_release_get_version (rel_tmp));
-			g_debug ("ignoring %s as older than %s",
+			g_debug ("ignoring %s < %s",
 				 fwupd_release_get_version (rel_tmp),
 				 fu_device_get_version (device));
 			continue;
