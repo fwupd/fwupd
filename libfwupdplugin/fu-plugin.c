@@ -1052,6 +1052,32 @@ fu_plugin_device_write_firmware (FuPlugin *self, FuDevice *device,
 	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;
+
+	/* back the old firmware up to /var/lib/fwupd */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_BACKUP_BEFORE_INSTALL)) {
+		g_autoptr(GBytes) fw_old = NULL;
+		g_autofree gchar *path = NULL;
+		g_autofree gchar *fn = NULL;
+		g_autofree gchar *localstatedir = NULL;
+
+		fw_old = fu_device_dump_firmware (device, error);
+		if (fw_old == NULL) {
+			g_prefix_error (error, "failed to backup old firmware: ");
+			return FALSE;
+		}
+		localstatedir = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR_PKG);
+		fn = g_strdup_printf ("%s.bin", fu_device_get_version (device));
+		path = g_build_filename (localstatedir,
+					 "backup",
+					 fu_device_get_id (device),
+					 fu_device_get_serial (device) != NULL ?
+						fu_device_get_serial (device) :
+						"default",
+					 fn, NULL);
+		if (!fu_common_set_contents_bytes (path, fw_old, error))
+			return FALSE;
+	}
+
 	return fu_device_write_firmware (device, fw, flags, error);
 }
 
