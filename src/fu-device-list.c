@@ -567,6 +567,15 @@ fu_device_list_item_set_device (FuDeviceItem *item, FuDevice *device)
 	g_set_object (&item->device, device);
 }
 
+static gboolean
+fu_device_list_replug_loop_quit_cb (gpointer user_data)
+{
+	FuDeviceList *self = FU_DEVICE_LIST (user_data);
+	g_debug ("quitting replug loop");
+	g_main_loop_quit (self->replug_loop);
+	return G_SOURCE_REMOVE;
+}
+
 static void
 fu_device_list_replace (FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 {
@@ -644,9 +653,9 @@ fu_device_list_replace (FuDeviceList *self, FuDeviceItem *item, FuDevice *device
 	/* we were waiting for this... */
 	if (fu_device_has_flag (item->device_old, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG) &&
 	    g_main_loop_is_running (self->replug_loop)) {
-		g_debug ("quitting replug loop");
+		g_debug ("schedule quit replug loop in idle");
 		fu_device_remove_flag (item->device_old, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-		g_main_loop_quit (self->replug_loop);
+		g_idle_add (fu_device_list_replug_loop_quit_cb, self);
 	}
 }
 
