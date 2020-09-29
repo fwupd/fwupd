@@ -19,6 +19,7 @@ fwupdmgr = executable(
     'fu-progressbar.c',
     'fu-security-attr.c',
     'fu-util-common.c',
+    'fu-polkit-agent.c',
     systemd_src
   ],
   include_directories : [
