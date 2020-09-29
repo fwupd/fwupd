@@ -1383,10 +1383,7 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		if (devices == NULL)
 			return FALSE;
 	} else if (g_strv_length (values) == 1) {
-		FwupdDevice *device = fwupd_client_get_device_by_id (priv->client,
-								     values[0],
-								     NULL,
-								     error);
+		FwupdDevice *device = fu_util_get_device_by_id (priv, values[0], error);
 		if (device == NULL)
 			return FALSE;
 		devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
@@ -1891,10 +1888,7 @@ fu_util_activate (FuUtilPrivate *priv, gchar **values, GError **error)
 			}
 		}
 	} else if (g_strv_length (values) == 1) {
-		FwupdDevice *device = fwupd_client_get_device_by_id (priv->client,
-								     values[0],
-								     NULL,
-								     error);
+		FwupdDevice *device = fu_util_get_device_by_id (priv, values[0], error);
 		if (device == NULL)
 			return FALSE;
 		devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
