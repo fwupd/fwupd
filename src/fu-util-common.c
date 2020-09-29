@@ -1077,6 +1077,10 @@ fu_util_device_flag_to_string (guint64 device_flag)
 		/* TRANSLATORS: there is more than one supplier of the firmware */
 		return _("Device supports switching to a different branch of firmware");
 	}
+	if (device_flag == FWUPD_DEVICE_FLAG_BACKUP_BEFORE_INSTALL) {
+		/* TRANSLATORS: save the old firmware to disk before installing the new one */
+		return _("Device will backup firmware before installing");
+	}
 	if (device_flag == FWUPD_DEVICE_FLAG_MD_SET_NAME) {
 		/* skip */
 		return NULL;

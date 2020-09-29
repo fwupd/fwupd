@@ -127,6 +127,7 @@ typedef enum {
  * @FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN:		Device is updatable but should not be called by the client
  * @FWUPD_DEVICE_FLAG_SKIPS_RESTART:		Device relies upon activation or power cycle to load firmware
  * @FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES:	Device supports switching to a different stream of firmware
+ * @FWUPD_DEVICE_FLAG_BACKUP_BEFORE_INSTALL:	Device firmware should be saved before installing firmware
  *
  * The device flags.
  **/
@@ -171,6 +172,7 @@ typedef enum {
 #define FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN	(1llu << 37)	/* Since: 1.4.1 */
 #define FWUPD_DEVICE_FLAG_SKIPS_RESTART		(1llu << 38)	/* Since: 1.5.0 */
 #define FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES	(1llu << 39)	/* Since: 1.5.0 */
+#define FWUPD_DEVICE_FLAG_BACKUP_BEFORE_INSTALL	(1llu << 40)	/* Since: 1.5.0 */
 #define FWUPD_DEVICE_FLAG_UNKNOWN		G_MAXUINT64	/* Since: 0.7.3 */
 typedef guint64 FwupdDeviceFlags;
 
