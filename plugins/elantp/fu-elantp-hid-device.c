@@ -140,6 +140,7 @@ fu_elantp_hid_device_setup (FuDevice *device, GError **error)
 	guint8 buf[2] = { 0x0 };
 	guint8 ic_type;
 	g_autofree gchar *instance_id1 = NULL;
+	g_autofree gchar *instance_id2 = NULL;
 	g_autofree gchar *instance_id_ic_type = NULL;
 	g_autofree gchar *version_bl = NULL;
 	g_autofree gchar *version = NULL;
@@ -162,6 +163,8 @@ fu_elantp_hid_device_setup (FuDevice *device, GError **error)
 		return FALSE;
 	}
 	fwver = fu_common_read_uint16 (buf, G_LITTLE_ENDIAN);
+	if (fwver == 0xFFFF || fwver == ETP_CMD_I2C_FW_VERSION)
+		fwver = 0;
 	version = fu_common_version_from_uint16 (fwver, FWUPD_VERSION_FORMAT_HEX);
 	fu_device_set_version (device, version);
 
@@ -214,36 +217,10 @@ fu_elantp_hid_device_setup (FuDevice *device, GError **error)
 	instance_id_ic_type = g_strdup_printf ("ELANTP\\ICTYPE_%02X", ic_type);
 	fu_device_add_instance_id (device, instance_id_ic_type);
 
-	/* set the page size */
-	self->fw_page_size = 64;
-	if (ic_type >= 0x10) {
-		if (iap_ver >= 1) {
-			/* set the IAP type, presumably some kind of ABI */
-			if (!fu_elantp_hid_device_write_cmd (self,
-							     ETP_CMD_I2C_IAP_TYPE,
-							     ETP_I2C_IAP_TYPE_REG,
-							     error))
-				return FALSE;
-			if (!fu_elantp_hid_device_read_cmd (self, ETP_CMD_I2C_IAP_TYPE,
-							    buf, sizeof(buf), error)) {
-				g_prefix_error (error, "failed to read IAP type: ");
-				return FALSE;
-			}
-			self->iap_type = fu_common_read_uint16 (buf, G_LITTLE_ENDIAN);
-			if (self->iap_type != ETP_I2C_IAP_TYPE_REG) {
-				g_set_error_literal (error,
-						     FWUPD_ERROR,
-						     FWUPD_ERROR_NOT_SUPPORTED,
-						     "failed to set IAP type");
-				return FALSE;
-			}
-			if (iap_ver >= 2 && (ic_type == 0x14 || ic_type==0x15)) {
-				self->fw_page_size = 512;
-			} else {
-				self->fw_page_size = 128;
-			}
-		}
-	}
+	/* define the extra instance IDs (ic_type + module_id) */
+	instance_id2 = g_strdup_printf ("ELANTP\\ICTYPE_%02X&MOD_%04X",
+					ic_type, self->module_id);
+	fu_device_add_instance_id (device, instance_id2);
 
 	/* no quirk entry */
 	if (self->ic_page_count == 0x0) {
@@ -254,7 +231,9 @@ fu_elantp_hid_device_setup (FuDevice *device, GError **error)
 			     ic_type);
 		return FALSE;
 	}
-	fu_device_set_firmware_size (device, (guint64) self->ic_page_count * (guint64) self->fw_page_size);
+	
+	/* The ic_page_count is based on 64 bytes/page. */
+	fu_device_set_firmware_size (device, (guint64) self->ic_page_count * (guint64) 64);
 
 	/* is in bootloader mode */
 	if (!fu_elantp_hid_device_ensure_iap_ctrl (self, error))
@@ -377,21 +356,81 @@ static gboolean
 fu_elantp_hid_device_detach (FuDevice *device, GError **error)
 {
 	FuElantpHidDevice *self = FU_ELANTP_HID_DEVICE (device);
-
+	guint16 iap_ver;
+	guint16 ic_type;
+	guint8 buf[2] = { 0x0 };
+	guint16 tmp;
+	
 	/* sanity check */
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		g_debug ("already in bootloader mode, skipping");
-		return TRUE;
-	}
-
-	g_debug ("in bootloader mode, reset IC");
-	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	if (!fu_elantp_hid_device_write_cmd (self,
+		g_debug ("in bootloader mode, reset IC");
+		fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+		if (!fu_elantp_hid_device_write_cmd (self,
 					     ETP_CMD_I2C_IAP_RESET,
 					     ETP_I2C_IAP_RESET,
 					     error))
+			return FALSE;
+		g_usleep (ELANTP_DELAY_RESET * 1000);
+	}
+	
+	/* get OSM version */
+	if (!fu_elantp_hid_device_read_cmd (self, ETP_CMD_I2C_OSM_VERSION, buf, sizeof(buf), error)) {
+		g_prefix_error (error, "failed to read OSM version: ");
 		return FALSE;
-	g_usleep (ELANTP_DELAY_RESET * 1000);
+	}
+	tmp = fu_common_read_uint16 (buf, G_LITTLE_ENDIAN);
+	if (tmp == ETP_CMD_I2C_OSM_VERSION || tmp == 0xFFFF) {
+		if (!fu_elantp_hid_device_read_cmd (self, ETP_CMD_I2C_IAP_ICBODY, buf, sizeof(buf), error)) {
+			g_prefix_error (error, "failed to read IC body: ");
+			return FALSE;
+		}
+		ic_type = fu_common_read_uint16 (buf, G_LITTLE_ENDIAN) & 0xFF;
+	} else {
+		ic_type = (tmp >> 8) & 0xFF;
+	}
+
+	/* get IAP firmware version */
+	if (!fu_elantp_hid_device_read_cmd (self,
+					    self->pattern == 0 ? ETP_CMD_I2C_IAP_VERSION : ETP_CMD_I2C_IAP_VERSION_2,
+					    buf, sizeof(buf), error)) {
+		g_prefix_error (error, "failed to read bootloader version: ");
+		return FALSE;
+	}
+	if (self->pattern >= 1) {
+		iap_ver = buf[1];
+	} else {
+		iap_ver = fu_common_read_uint16 (buf, G_LITTLE_ENDIAN);
+	}
+	if (ic_type >= 0x10) {
+		if (iap_ver >= 1) {
+			/* set the IAP type, presumably some kind of ABI */
+			if (iap_ver >= 2 && (ic_type == 0x14 || ic_type==0x15)) {
+				self->fw_page_size = 512;
+			} else {
+				self->fw_page_size = 128;
+			}
+			
+			if (!fu_elantp_hid_device_write_cmd (self,
+							     ETP_CMD_I2C_IAP_TYPE,
+							     self->fw_page_size,
+							     error))
+				return FALSE;
+			if (!fu_elantp_hid_device_read_cmd (self, ETP_CMD_I2C_IAP_TYPE,
+							    buf, sizeof(buf), error)) {
+				g_prefix_error (error, "failed to read IAP type: ");
+				return FALSE;
+			}
+			self->iap_type = fu_common_read_uint16 (buf, G_LITTLE_ENDIAN);
+			if (self->iap_type != self->fw_page_size) {
+				g_set_error_literal (error,
+						     FWUPD_ERROR,
+						     FWUPD_ERROR_NOT_SUPPORTED,
+						     "failed to set IAP type");
+				return FALSE;
+			}
+
+		}
+	}
 	if (!fu_elantp_hid_device_write_cmd (self,
 					     ETP_CMD_I2C_IAP,
 					     self->iap_password,

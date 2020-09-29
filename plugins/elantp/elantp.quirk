@@ -6,6 +6,14 @@ GType = FuElantpHidDevice
 Plugin = elantp
 GType = FuElantpHidDevice
 
+[DeviceInstanceId=HIDRAW\VEN_04F3&DEV_314F]
+Plugin = elantp
+GType = FuElantpHidDevice
+
+# Lenovo X1 Nano Gen1
+[HwId=4c20262a-aee0-5d6e-ba72-6d29b23fe350]
+Flags = elantp-recovery
+
 # Acer Aspire V3-372T
 [HwId=513cde3d-d939-59bd-a634-5c1645ebb93b]
 Flags = elantp-recovery

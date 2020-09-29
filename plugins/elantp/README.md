@@ -31,6 +31,10 @@ Additionally another instance ID is added which corresponds to the module ID:
 These devices also use custom GUID values for the IC configuration, e.g.
 
  * `ELANTP\ICTYPE_09`
+ 
+ Additionally another instance ID is added which corresponds to the IC type & module ID:
+
+ * `ELANTP\ICTYPE_09&MOD_1234`
 
 Vendor ID Security
 ------------------
