@@ -314,6 +314,97 @@ fu_util_get_tree_title (FuUtilPrivate *priv)
 	return g_strdup (fu_engine_get_host_product (priv->engine));
 }
 
+static FuDevice *
+fu_util_prompt_for_device (FuUtilPrivate *priv, GPtrArray *devices_opt, GError **error)
+{
+	FuDevice *dev;
+	guint idx;
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GPtrArray) devices_filtered = NULL;
+
+	/* get devices from daemon */
+	if (devices_opt != NULL) {
+		devices = g_ptr_array_ref (devices_opt);
+	} else {
+		devices = fu_engine_get_devices (priv->engine, error);
+		if (devices == NULL)
+			return NULL;
+	}
+	fwupd_device_array_ensure_parents (devices);
+
+	/* filter results */
+	devices_filtered = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	for (guint i = 0; i < devices->len; i++) {
+		dev = g_ptr_array_index (devices, i);
+		if (!fu_util_filter_device (priv, FWUPD_DEVICE (dev)))
+			continue;
+		g_ptr_array_add (devices_filtered, g_object_ref (dev));
+	}
+
+	/* nothing */
+	if (devices_filtered->len == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "No supported devices");
+		return NULL;
+	}
+
+	/* exactly one */
+	if (devices_filtered->len == 1) {
+		dev = g_ptr_array_index (devices_filtered, 0);
+		/* TRANSLATORS: Device has been chosen by the daemon for the user */
+		g_print ("%s: %s\n", _("Selected device"), fu_device_get_name (dev));
+		return g_object_ref (dev);
+	}
+
+	/* TRANSLATORS: get interactive prompt */
+	g_print ("%s\n", _("Choose a device:"));
+	/* TRANSLATORS: this is to abort the interactive prompt */
+	g_print ("0.\t%s\n", _("Cancel"));
+	for (guint i = 0; i < devices_filtered->len; i++) {
+		dev = g_ptr_array_index (devices_filtered, i);
+		g_print ("%u.\t%s (%s)\n",
+			 i + 1,
+			 fu_device_get_id (dev),
+			 fu_device_get_name (dev));
+	}
+	idx = fu_util_prompt_for_number (devices_filtered->len);
+	if (idx == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "Request canceled");
+		return NULL;
+	}
+	dev = g_ptr_array_index (devices_filtered, idx - 1);
+	return g_object_ref (dev);
+}
+
+static FuDevice *
+fu_util_get_device (FuUtilPrivate *priv, const gchar *id, GError **error)
+{
+	if (fwupd_guid_is_valid (id)) {
+		g_autoptr(GPtrArray) devices = NULL;
+		devices = fu_engine_get_devices_by_guid (priv->engine, id, error);
+		if (devices == NULL)
+			return NULL;
+		return fu_util_prompt_for_device (priv, devices, error);
+	}
+
+	/* did this look like a GUID? */
+	for (guint i = 0; id[i] != '\0'; i++) {
+		if (id[i] == '-') {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_ARGS,
+					     "Invalid arguments");
+			return NULL;
+		}
+	}
+	return fu_engine_get_device (priv->engine, id, error);
+}
+
 static gboolean
 fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 {
@@ -335,7 +426,7 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 			return FALSE;
 	} else if (g_strv_length (values) == 1) {
 		FuDevice *device;
-		device = fu_engine_get_device_by_id (priv->engine, values[0], error);
+		device = fu_util_get_device (priv, values[0], error);
 		if (device == NULL)
 			return FALSE;
 		devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
@@ -530,73 +621,6 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 	return fu_util_save_current_state (priv, error);
 }
 
-static FuDevice *
-fu_util_prompt_for_device (FuUtilPrivate *priv, GPtrArray *devices_opt, GError **error)
-{
-	FuDevice *dev;
-	guint idx;
-	g_autoptr(GPtrArray) devices = NULL;
-	g_autoptr(GPtrArray) devices_filtered = NULL;
-
-	/* get devices from daemon */
-	if (devices_opt != NULL) {
-		devices = g_ptr_array_ref (devices_opt);
-	} else {
-		devices = fu_engine_get_devices (priv->engine, error);
-		if (devices == NULL)
-			return NULL;
-	}
-	fwupd_device_array_ensure_parents (devices);
-
-	/* filter results */
-	devices_filtered = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	for (guint i = 0; i < devices->len; i++) {
-		dev = g_ptr_array_index (devices, i);
-		if (!fu_util_filter_device (priv, FWUPD_DEVICE (dev)))
-			continue;
-		g_ptr_array_add (devices_filtered, g_object_ref (dev));
-	}
-
-	/* nothing */
-	if (devices_filtered->len == 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOTHING_TO_DO,
-				     "No supported devices");
-		return NULL;
-	}
-
-	/* exactly one */
-	if (devices_filtered->len == 1) {
-		dev = g_ptr_array_index (devices_filtered, 0);
-		/* TRANSLATORS: Device has been chosen by the daemon for the user */
-		g_print ("%s: %s\n", _("Selected device"), fu_device_get_name (dev));
-		return g_object_ref (dev);
-	}
-
-	/* TRANSLATORS: get interactive prompt */
-	g_print ("%s\n", _("Choose a device:"));
-	/* TRANSLATORS: this is to abort the interactive prompt */
-	g_print ("0.\t%s\n", _("Cancel"));
-	for (guint i = 0; i < devices_filtered->len; i++) {
-		dev = g_ptr_array_index (devices_filtered, i);
-		g_print ("%u.\t%s (%s)\n",
-			 i + 1,
-			 fu_device_get_id (dev),
-			 fu_device_get_name (dev));
-	}
-	idx = fu_util_prompt_for_number (devices_filtered->len);
-	if (idx == 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOTHING_TO_DO,
-				     "Request canceled");
-		return NULL;
-	}
-	dev = g_ptr_array_index (devices_filtered, idx - 1);
-	return g_object_ref (dev);
-}
-
 static void
 fu_util_update_device_changed_cb (FwupdClient *client,
 				  FwupdDevice *device,
@@ -659,30 +683,6 @@ fu_util_display_current_message (FuUtilPrivate *priv)
 		return;
 	g_print ("%s\n", priv->current_message);
 	g_clear_pointer (&priv->current_message, g_free);
-}
-
-static FuDevice *
-fu_util_get_device (FuUtilPrivate *priv, const gchar *id, GError **error)
-{
-	if (fwupd_guid_is_valid (id)) {
-		g_autoptr(GPtrArray) devices = NULL;
-		devices = fu_engine_get_devices_by_guid (priv->engine, id, error);
-		if (devices == NULL)
-			return NULL;
-		return fu_util_prompt_for_device (priv, devices, error);
-	}
-
-	/* did this look like a GUID? */
-	for (guint i = 0; id[i] != '\0'; i++) {
-		if (id[i] == '-') {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INVALID_ARGS,
-					     "Invalid arguments");
-			return NULL;
-		}
-	}
-	return fu_engine_get_device (priv->engine, id, error);
 }
 
 static gboolean
@@ -1456,7 +1456,7 @@ fu_util_activate (FuUtilPrivate *priv, gchar **values, GError **error)
 			return FALSE;
 	} else if (g_strv_length (values) == 1) {
 		FuDevice *device;
-		device = fu_engine_get_device_by_id (priv->engine, values[0], error);
+		device = fu_util_get_device (priv, values[0], error);
 		if (device == NULL)
 			return FALSE;
 		devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);

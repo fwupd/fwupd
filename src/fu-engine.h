@@ -58,9 +58,6 @@ XbSilo		*fu_engine_get_silo_from_blob		(FuEngine	*self,
 							 GError		**error);
 guint64		 fu_engine_get_archive_size_max		(FuEngine	*self);
 GPtrArray	*fu_engine_get_plugins			(FuEngine	*self);
-FuDevice	*fu_engine_get_device_by_id		(FuEngine	*self,
-							 const gchar	*device_id,
-							 GError		**error);
 GPtrArray	*fu_engine_get_devices			(FuEngine	*self,
 							 GError		**error);
 FuDevice	*fu_engine_get_device			(FuEngine	*self,
