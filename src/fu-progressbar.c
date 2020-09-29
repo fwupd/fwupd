@@ -162,6 +162,8 @@ fu_progressbar_refresh (FuProgressbar *self, FwupdStatus status, guint percentag
 		percentage = 100;
 		status = self->status;
 		is_idle_newline = TRUE;
+	} else if (status == FWUPD_STATUS_WAITING_FOR_AUTH) {
+		is_idle_newline = TRUE;
 	}
 	title = fu_progressbar_status_to_string (status);
 	g_string_append (str, title);
@@ -243,7 +245,8 @@ fu_progressbar_spin_cb (gpointer user_data)
 	FuProgressbar *self = FU_PROGRESSBAR (user_data);
 
 	/* ignore */
-	if (self->status == FWUPD_STATUS_IDLE)
+	if (self->status == FWUPD_STATUS_IDLE ||
+	    self->status == FWUPD_STATUS_WAITING_FOR_AUTH)
 		return G_SOURCE_CONTINUE;
 
 	/* move the spinner index up to down */
@@ -310,6 +313,7 @@ fu_progressbar_update (FuProgressbar *self, FwupdStatus status, guint percentage
 	 * execute the callback just do the refresh now manually */
 	if (percentage == 0 &&
 	    status != FWUPD_STATUS_IDLE &&
+	    status != FWUPD_STATUS_WAITING_FOR_AUTH &&
 	    self->status != FWUPD_STATUS_UNKNOWN) {
 		if ((g_get_monotonic_time () - self->last_animated) / 1000 > 40) {
 			fu_progressbar_spin_inc (self);

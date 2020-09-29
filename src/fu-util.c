@@ -25,6 +25,7 @@
 
 #include "fu-history.h"
 #include "fu-plugin-private.h"
+#include "fu-polkit-agent.h"
 #include "fu-progressbar.h"
 #include "fu-security-attrs.h"
 #include "fu-util-common.h"
@@ -2507,6 +2508,7 @@ main (int argc, char *argv[])
 	gboolean version = FALSE;
 	g_autoptr(FuUtilPrivate) priv = g_new0 (FuUtilPrivate, 1);
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GError) error_polkit = NULL;
 	g_autoptr(GPtrArray) cmd_array = fu_util_cmd_array_new ();
 	g_autofree gchar *cmd_descriptions = NULL;
 	g_autofree gchar *filter = NULL;
@@ -2845,6 +2847,14 @@ main (int argc, char *argv[])
 	if (no_history)
 		priv->flags |= FWUPD_INSTALL_FLAG_NO_HISTORY;
 
+	/* start polkit tty agent to listen for password requests */
+	if (is_interactive) {
+		if (!fu_polkit_agent_open (&error_polkit)) {
+			g_printerr ("Failed to open polkit agent: %s\n",
+				    error_polkit->message);
+		}
+	}
+
 	/* connect to the daemon */
 	priv->client = fwupd_client_new ();
 	g_signal_connect (priv->client, "notify::percentage",
@@ -2929,6 +2939,10 @@ main (int argc, char *argv[])
 		}
 		return EXIT_FAILURE;
 	}
+
+
+	/* stop listening for polkit questions */
+	fu_polkit_agent_close ();
 
 	/* success */
 	return EXIT_SUCCESS;
