@@ -485,13 +485,20 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 			g_node_append_data (child, g_object_ref (rel));
 		}
 	}
-	if (g_node_n_nodes (root, G_TRAVERSE_ALL) > 1)
-		fu_util_print_tree (root, title);
 	/* save the device state for other applications to see */
 	if (!fu_util_save_current_state (priv, error))
 		return FALSE;
 
-	/* success */
+	/* updates */
+	if (g_node_n_nodes (root, G_TRAVERSE_ALL) <= 1) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "No updates available for remaining devices");
+		return FALSE;
+	}
+
+	fu_util_print_tree (root, title);
 	return TRUE;
 }
 
