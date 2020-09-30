@@ -276,6 +276,31 @@ fu_smbios3_func (void)
 }
 
 static void
+fu_smbios_dt_func (void)
+{
+	const gchar *str;
+	gboolean ret;
+	g_autofree gchar *path = NULL;
+	g_autoptr(FuSmbios) smbios = NULL;
+	g_autoptr(GError) error = NULL;
+
+	path = g_build_filename (TESTDATADIR_SRC, "devicetree", "base", NULL);
+	smbios = fu_smbios_new ();
+	ret = fu_smbios_setup_from_path (smbios, path, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	if (g_getenv ("VERBOSE") != NULL) {
+		g_autofree gchar *dump = fu_smbios_to_string (smbios);
+		g_debug ("%s", dump);
+	}
+
+	/* get vendor */
+	str = fu_smbios_get_string (smbios, FU_SMBIOS_STRUCTURE_TYPE_SYSTEM, 0x04, &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (str, ==, "Hughski Limited");
+}
+
+static void
 fu_hwids_func (void)
 {
 	g_autoptr(FuHwids) hwids = NULL;
@@ -2068,6 +2093,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/hwids", fu_hwids_func);
 	g_test_add_func ("/fwupd/smbios", fu_smbios_func);
 	g_test_add_func ("/fwupd/smbios3", fu_smbios3_func);
+	g_test_add_func ("/fwupd/smbios{dt}", fu_smbios_dt_func);
 	g_test_add_func ("/fwupd/firmware", fu_firmware_func);
 	g_test_add_func ("/fwupd/firmware{dedupe}", fu_firmware_dedupe_func);
 	g_test_add_func ("/fwupd/firmware{build}", fu_firmware_build_func);
