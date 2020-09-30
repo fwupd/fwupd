@@ -1442,9 +1442,6 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		}
 	}
 
-	if (g_node_n_nodes (root, G_TRAVERSE_ALL) > 1)
-		fu_util_print_tree (root, title);
-
 	/* nag? */
 	if (!fu_util_perhaps_show_unreported (priv, error))
 		return FALSE;
@@ -1452,11 +1449,21 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 	/* no devices supported by LVFS or all are filtered */
 	if (!supported) {
 		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOTHING_TO_DO,
-				     "No updatable devices");
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOTHING_TO_DO,
+			     "No updatable devices");
 		return FALSE;
 	}
+	/* no updates available */
+	if (g_node_n_nodes (root, G_TRAVERSE_ALL) <= 1) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "No updates available for remaining devices");
+		return FALSE;
+	}
+
+	fu_util_print_tree (root, title);
 
 	/* success */
 	return TRUE;
