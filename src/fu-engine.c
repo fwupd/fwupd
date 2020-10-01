@@ -137,7 +137,8 @@ fu_engine_emit_changed (FuEngine *self)
 	    fu_config_get_update_motd (self->config)) {
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_engine_update_motd (self, &error_local))
-			g_debug ("%s", error_local->message);
+			g_debug ("failed to update MOTD: %s",
+				 error_local->message);
 	}
 }
 
@@ -2996,7 +2997,8 @@ fu_engine_create_metadata (FuEngine *self, XbBuilder *builder,
 		/* build source for file */
 		source = fu_engine_create_metadata_builder_source (self, fn, &error_local);
 		if (source == NULL) {
-			g_warning ("%s", error_local->message);
+			g_warning ("failed to create builder source: %s",
+				   error_local->message);
 			continue;
 		}
 
@@ -5328,7 +5330,9 @@ fu_engine_plugin_device_removed_cb (FuPlugin *plugin,
 					       fu_device_get_id (device),
 					       &error);
 	if (device_tmp == NULL) {
-		g_debug ("%s", error->message);
+		g_debug ("failed to find device %s: %s",
+			 fu_device_get_id (device),
+			 error->message);
 		return;
 	}
 
@@ -5337,7 +5341,9 @@ fu_engine_plugin_device_removed_cb (FuPlugin *plugin,
 						  fu_device_get_plugin (device),
 						  &error);
 	if (plugin_old == NULL) {
-		g_debug ("%s", error->message);
+		g_debug ("failed to find plugin %s: %s",
+			 fu_device_get_plugin (device),
+			 error->message);
 		return;
 	}
 
@@ -5397,7 +5403,7 @@ fu_engine_udev_device_add (FuEngine *self, GUdevDevice *udev_device)
 		plugin = fu_plugin_list_find_by_name (self->plugin_list,
 						      plugin_name, &error);
 		if (plugin == NULL) {
-			g_debug ("%s", error->message);
+			g_debug ("failed to add udev device: %s", error->message);
 			continue;
 		}
 		if (!fu_plugin_runner_udev_device_added (plugin, device, &error)) {
@@ -5903,7 +5909,7 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 		/* if loaded from fu_engine_load() open the plugin */
 		if (self->usb_ctx != NULL) {
 			if (!fu_plugin_open (plugin, filename, &error_local)) {
-				g_warning ("%s", error_local->message);
+				g_warning ("cannot load: %s", error_local->message);
 				continue;
 			}
 		}
@@ -6039,7 +6045,7 @@ fu_engine_usb_device_added_cb (GUsbContext *ctx,
 		plugin = fu_plugin_list_find_by_name (self->plugin_list,
 						      plugin_name, &error);
 		if (plugin == NULL) {
-			g_debug ("%s", error->message);
+			g_debug ("failed to add usb device: %s", error->message);
 			continue;
 		}
 		if (!fu_plugin_runner_usb_device_added (plugin, device, &error)) {
@@ -6198,8 +6204,10 @@ fu_engine_update_history_database (FuEngine *self, GError **error)
 			continue;
 
 		/* try to save the new update-state, but ignoring any error */
-		if (!fu_engine_update_history_device (self, dev, &error_local))
-			g_warning ("%s", error_local->message);
+		if (!fu_engine_update_history_device (self, dev, &error_local)) {
+			g_warning ("failed to update history database: %s",
+				   error_local->message);
+		}
 	}
 	return TRUE;
 }
@@ -6283,7 +6291,7 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	/* cache machine ID so we can use it from a sandboxed app */
 	self->host_machine_id = fwupd_build_machine_id ("fwupd", &error_local);
 	if (self->host_machine_id == NULL)
-		g_debug ("%s", error_local->message);
+		g_debug ("failed to build machine-id: %s", error_local->message);
 #endif
 	/* read config file */
 	if (!fu_config_load (self->config, error)) {
