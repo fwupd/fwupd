@@ -3075,8 +3075,10 @@ fu_engine_md_refresh_device_name (FuEngine *self, FuDevice *device, XbNode *comp
 
 	/* copy 1:1 */
 	name = xb_node_query_text (component, "name", NULL);
-	if (name != NULL)
+	if (name != NULL) {
 		fu_device_set_name (device, name);
+		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_MD_SET_NAME);
+	}
 }
 
 static const gchar *
@@ -3119,8 +3121,10 @@ fu_engine_md_refresh_device_name_category (FuEngine *self, FuDevice *device, XbN
 		if (name != NULL)
 			break;
 	}
-	if (name != NULL)
+	if (name != NULL) {
 		fu_device_set_name (device, name);
+		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY);
+	}
 }
 
 static void
@@ -3176,6 +3180,9 @@ fu_engine_md_refresh_device_verfmt (FuEngine *self, FuDevice *device, XbNode *co
 			fu_device_set_version_bootloader (device, version);
 		}
 	}
+
+	/* do not try to do this again */
+	fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_MD_SET_VERFMT);
 }
 
 void
