@@ -4436,7 +4436,7 @@ fu_engine_get_releases_for_device (FuEngine *self,
 			continue;
 		g_ptr_array_add (branches, g_strdup (branch_tmp));
 	}
-	if (branches->len > 0)
+	if (branches->len > 1)
 		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES);
 
 	/* return the compound error */
