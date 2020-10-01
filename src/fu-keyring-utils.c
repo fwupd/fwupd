@@ -30,10 +30,8 @@ fu_keyring_get_release_flags (XbNode *release,
 	GBytes *blob;
 
 	blob = g_object_get_data (G_OBJECT (release), "fwupd::ReleaseFlags");
-	if (blob == NULL) {
-		g_debug ("no fwupd::ReleaseFlags set by loader");
+	if (blob == NULL)
 		return TRUE;
-	}
 	if (g_bytes_get_size (blob) != sizeof(FwupdReleaseFlags)) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
