@@ -265,9 +265,3 @@ Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2
 ParentGuid = USB\VID_2109&PID_2822
-
-# Lenovo Powered Hub
-[DeviceInstanceId=USB\VID_17EF&PID_721C]
-Plugin = vli
-GType = FuVliUsbhubDevice
-Flags = usb2
