@@ -539,7 +539,6 @@ fu_vli_device_setup (FuDevice *device, GError **error)
 			g_autofree gchar *devid1 = NULL;
 			g_autofree gchar *devid2 = NULL;
 			g_autofree gchar *flash_id = fu_vli_device_get_flash_id_str (self);
-			g_debug ("using flash part %s", flash_id);
 
 			/* load the SPI parameters from quirks */
 			spi_id = g_strdup_printf ("VLI_USBHUB\\SPI_%s", flash_id);
