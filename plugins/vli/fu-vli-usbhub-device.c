@@ -419,14 +419,16 @@ fu_vli_usbhub_device_guess_kind (FuVliUsbhubDevice *self, GError **error)
 		g_prefix_error (error, "Read_820Q7Q8 failed: ");
 		return FALSE;
 	}
-	g_debug ("chipver = 0x%02x", chipver);
-	g_debug ("chipver2 = 0x%02x", chipver2);
-	g_debug ("b811P812 = 0x%02x", b811P812);
-	g_debug ("chipid1 = 0x%02x", chipid1);
-	g_debug ("chipid2 = 0x%02x", chipid2);
-	g_debug ("chipid12 = 0x%02x", chipid12);
-	g_debug ("chipid22 = 0x%02x", chipid22);
-	g_debug ("b820Q7Q8 = 0x%02x", b820Q7Q8);
+	if (g_getenv ("FWUPD_VLI_USBHUB_VERBOSE") != NULL) {
+		g_debug ("chipver = 0x%02x", chipver);
+		g_debug ("chipver2 = 0x%02x", chipver2);
+		g_debug ("b811P812 = 0x%02x", b811P812);
+		g_debug ("chipid1 = 0x%02x", chipid1);
+		g_debug ("chipid2 = 0x%02x", chipid2);
+		g_debug ("chipid12 = 0x%02x", chipid12);
+		g_debug ("chipid22 = 0x%02x", chipid22);
+		g_debug ("b820Q7Q8 = 0x%02x", b820Q7Q8);
+	}
 
 	if (chipid2 == 0x35 && chipid1 == 0x07) {
 		fu_vli_device_set_kind (FU_VLI_DEVICE (self), FU_VLI_DEVICE_KIND_VL210);
