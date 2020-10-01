@@ -71,7 +71,6 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 
 	/* add optional report metadata */
 	str = fu_tpm_eventlog_device_report_metadata (dev);
-	g_debug ("using TPM event log report data of:\n%s", str);
 	fu_plugin_add_report_metadata (plugin, "TpmEventLog", str);
 	fu_plugin_device_add (plugin, FU_DEVICE (dev));
 	return TRUE;
