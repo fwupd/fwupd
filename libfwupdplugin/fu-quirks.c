@@ -149,10 +149,8 @@ fu_quirks_add_quirks_for_path (FuQuirks *self, XbBuilder *builder,
 
 	/* add valid files to the array */
 	path_hw = g_build_filename (path, "quirks.d", NULL);
-	if (!g_file_test (path_hw, G_FILE_TEST_EXISTS)) {
-		g_debug ("no %s, skipping", path_hw);
+	if (!g_file_test (path_hw, G_FILE_TEST_EXISTS))
 		return TRUE;
-	}
 	dir = g_dir_open (path_hw, 0, error);
 	if (dir == NULL)
 		return FALSE;
