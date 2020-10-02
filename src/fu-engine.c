@@ -2764,24 +2764,36 @@ fu_engine_firmware_dump (FuEngine *self,
 	g_autoptr(GBytes) fw = NULL;
 
 	/* open, detach, read, attach, serialize */
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_CAN_DUMP_RUNTIME)) {
+		g_autoptr(FuDeviceLocker) locker2 = NULL;
+		locker2 = fu_device_locker_new (device, error);
+		if (locker2 == NULL) {
+			g_prefix_error (error, "failed to open device for detach: ");
+			return NULL;
+		}
+		if (!fu_device_detach (device, error))
+			return NULL;
+	}
 	locker = fu_device_locker_new (device, error);
 	if (locker == NULL) {
 		g_prefix_error (error, "failed to open device for firmware read: ");
 		return NULL;
 	}
-	if (!fu_device_detach (device, error))
-		return NULL;
 	fw = fu_device_dump_firmware (device, error);
 	if (fw == NULL) {
-		g_autoptr(GError) error_local = NULL;
-		if (!fu_device_attach (device, &error_local)) {
-			g_warning ("failed to attach after read image failure: %s",
-				   error_local->message);
+		if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_CAN_DUMP_RUNTIME)) {
+			g_autoptr(GError) error_local = NULL;
+			if (!fu_device_attach (device, &error_local)) {
+				g_warning ("failed to attach after read image failure: %s",
+					   error_local->message);
+			}
+			return NULL;
 		}
-		return NULL;
 	}
-	if (!fu_device_attach (device, error))
-		return NULL;
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_CAN_DUMP_RUNTIME)) {
+		if (!fu_device_attach (device, error))
+			return NULL;
+	}
 	return g_steal_pointer (&fw);
 }
 

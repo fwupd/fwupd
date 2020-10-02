@@ -684,6 +684,7 @@ fu_vli_device_init (FuVliDevice *self)
 	priv->spi_auto_detect = TRUE;
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_NO_GUID_MATCHING);
+	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_CAN_DUMP_RUNTIME);
 }
 
 static void

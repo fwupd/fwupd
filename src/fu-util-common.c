@@ -1081,6 +1081,10 @@ fu_util_device_flag_to_string (guint64 device_flag)
 		/* TRANSLATORS: save the old firmware to disk before installing the new one */
 		return _("Device will backup firmware before installing");
 	}
+	if (device_flag == FWUPD_DEVICE_FLAG_CAN_DUMP_RUNTIME) {
+		/* TRANSLATORS: the device can dump firmware from the normal runtime mode */
+		return _("Device can dump firmware in runtime mode");
+	}
 	if (device_flag == FWUPD_DEVICE_FLAG_MD_SET_NAME) {
 		/* skip */
 		return NULL;
