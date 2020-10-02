@@ -155,7 +155,7 @@ fwup_populate_update_table(FWUP_UPDATE_TABLE **updates, UINTN *n_updates_out)
 			continue;
 		}
 
-		fwup_info(L"Found update %s", variable_name);
+		fwup_debug(L"Found update %s", variable_name);
 		_cleanup_update_table FWUP_UPDATE_TABLE *update = fwup_malloc0(sizeof(FWUP_UPDATE_TABLE));
 		if (update == NULL)
 			return EFI_OUT_OF_RESOURCES;
@@ -574,7 +574,7 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *systab)
 	if (cbd_data == NULL)
 		return EFI_OUT_OF_RESOURCES;
 	for (i = 0; i < n_updates; i++) {
-		fwup_info(L"Adding new capsule");
+		fwup_debug(L"Adding new capsule");
 		rc = fwup_add_update_capsule(updates[i], &capsules[j], &cbd_data[j], image);
 		if (EFI_ERROR(rc)) {
 			/* ignore a failing capsule */
