@@ -169,7 +169,6 @@ fwupd_get_os_release (GError **error)
 
 	/* find the correct file */
 	for (guint i = 0; paths[i] != NULL; i++) {
-		g_debug ("looking for os-release at %s", paths[i]);
 		if (g_file_test (paths[i], G_FILE_TEST_EXISTS)) {
 			filename = paths[i];
 			break;
