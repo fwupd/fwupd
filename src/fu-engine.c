@@ -3249,16 +3249,11 @@ fu_engine_load_metadata_store (FuEngine *self, FuEngineLoadFlags flags, GError *
 		g_autoptr(XbBuilderSource) source = xb_builder_source_new ();
 
 		FwupdRemote *remote = g_ptr_array_index (remotes, i);
-		if (!fwupd_remote_get_enabled (remote)) {
-			g_debug ("remote %s not enabled, so skipping",
-				 fwupd_remote_get_id (remote));
+		if (!fwupd_remote_get_enabled (remote))
 			continue;
-		}
 		path = fwupd_remote_get_filename_cache (remote);
-		if (!g_file_test (path, G_FILE_TEST_EXISTS)) {
-			g_debug ("no %s, so skipping", path);
+		if (!g_file_test (path, G_FILE_TEST_EXISTS))
 			continue;
-		}
 
 		/* generate all metadata on demand */
 		if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_DIRECTORY) {
