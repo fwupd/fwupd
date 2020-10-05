@@ -278,7 +278,7 @@ GBytes *
 fu_firmware_image_get_bytes (FuFirmwareImage *self)
 {
 	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FU_IS_FIRMWARE_IMAGE (self), FALSE);
+	g_return_val_if_fail (FU_IS_FIRMWARE_IMAGE (self), NULL);
 	if (priv->bytes == NULL)
 		return NULL;
 	return g_bytes_ref (priv->bytes);
