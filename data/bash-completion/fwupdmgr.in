@@ -41,6 +41,7 @@ _fwupdmgr_opts=(
 	'--offline'
 	'--allow-reinstall'
 	'--allow-older'
+	'--allow-branch-switch'
 	'--force'
 	'--assume-yes'
 	'--no-history'
