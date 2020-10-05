@@ -5854,6 +5854,9 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 	g_autoptr(GDir) dir = NULL;
 	g_autofree gchar *plugin_path = NULL;
 	g_autofree gchar *suffix = g_strdup_printf (".%s", G_MODULE_SUFFIX);
+	g_autoptr(GPtrArray) plugins_disabled = g_ptr_array_new_with_free_func (g_free);
+	g_autoptr(GPtrArray) plugins_not_enabled = g_ptr_array_new_with_free_func (g_free);
+	g_autoptr(GPtrArray) plugins_self_disabled = g_ptr_array_new_with_free_func (g_free);
 
 	/* search */
 	plugin_path = fu_common_get_path (FU_PATH_KIND_PLUGINDIR_PKG);
@@ -5875,11 +5878,11 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 		if (name == NULL)
 			continue;
 		if (fu_engine_is_plugin_name_disabled (self, name)) {
-			g_debug ("plugin %s is disabled", name);
+			g_ptr_array_add (plugins_disabled, g_steal_pointer (&name));
 			continue;
 		}
 		if (!fu_engine_is_plugin_name_enabled (self, name)) {
-			g_debug ("plugin %s is not enabled", name);
+			g_ptr_array_add (plugins_not_enabled, g_steal_pointer (&name));
 			continue;
 		}
 
@@ -5908,8 +5911,7 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 
 		/* self disabled */
 		if (!fu_plugin_get_enabled (plugin)) {
-			g_debug ("%s self disabled",
-				 fu_plugin_get_name (plugin));
+			g_ptr_array_add (plugins_self_disabled, g_steal_pointer (&name));
 			continue;
 		}
 
@@ -5941,6 +5943,26 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 
 		/* add */
 		fu_engine_add_plugin (self, plugin);
+	}
+
+	/* show list */
+	if (plugins_disabled->len > 0) {
+		g_autofree gchar *str = NULL;
+		g_ptr_array_add (plugins_disabled, NULL);
+		str = g_strjoinv (", ", (gchar **) plugins_disabled->pdata);
+		g_debug ("plugins disabled: %s", str);
+	}
+	if (plugins_not_enabled->len > 0) {
+		g_autofree gchar *str = NULL;
+		g_ptr_array_add (plugins_not_enabled, NULL);
+		str = g_strjoinv (", ", (gchar **) plugins_not_enabled->pdata);
+		g_debug ("plugins not-enabled: %s", str);
+	}
+	if (plugins_self_disabled->len > 0) {
+		g_autofree gchar *str = NULL;
+		g_ptr_array_add (plugins_self_disabled, NULL);
+		str = g_strjoinv (", ", (gchar **) plugins_self_disabled->pdata);
+		g_debug ("plugins self-disabled: %s", str);
 	}
 
 	/* depsolve into the correct order */
