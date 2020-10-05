@@ -702,7 +702,7 @@ fu_rom_dump_firmware (GFile *file, GCancellable *cancellable, GError **error)
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_AUTH_FAILED,
 				     error_local->message);
-		return FALSE;
+		return NULL;
 	}
 
 	/* we have to enable the read for devices */
@@ -712,10 +712,10 @@ fu_rom_dump_firmware (GFile *file, GCancellable *cancellable, GError **error)
 		output_stream = g_file_replace (file, NULL, FALSE, G_FILE_CREATE_NONE,
 						cancellable, error);
 		if (output_stream == NULL)
-			return FALSE;
+			return NULL;
 		if (g_output_stream_write (G_OUTPUT_STREAM (output_stream), "1", 1,
 					   cancellable, error) < 0)
-			return FALSE;
+			return NULL;
 	}
 
 	/* ensure we got enough data to fill the buffer */
@@ -727,7 +727,7 @@ fu_rom_dump_firmware (GFile *file, GCancellable *cancellable, GError **error)
 			break;
 		g_debug ("ROM returned 0x%04x bytes", (guint) sz);
 		if (sz < 0)
-			return FALSE;
+			return NULL;
 		g_byte_array_append (buf, tmp, sz);
 
 		/* check the firmware isn't serving us small chunks */
@@ -736,7 +736,7 @@ fu_rom_dump_firmware (GFile *file, GCancellable *cancellable, GError **error)
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_INVALID_FILE,
 					     "firmware not fulfilling requests");
-			return FALSE;
+			return NULL;
 		}
 	}
 	if (buf->len < 512) {
@@ -744,7 +744,7 @@ fu_rom_dump_firmware (GFile *file, GCancellable *cancellable, GError **error)
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
 			     "firmware too small: %u bytes", buf->len);
-		return FALSE;
+		return NULL;
 	}
 	return g_byte_array_free_to_bytes (g_steal_pointer (&buf));
 }
