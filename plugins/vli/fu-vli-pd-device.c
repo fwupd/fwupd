@@ -367,6 +367,15 @@ static GBytes *
 fu_vli_pd_device_dump_firmware (FuDevice *device, GError **error)
 {
 	FuVliPdDevice *self = FU_VLI_PD_DEVICE (device);
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	/* require detach -> attach */
+	locker = fu_device_locker_new_full (device,
+					    (FuDeviceLockerFunc) fu_device_detach,
+					    (FuDeviceLockerFunc) fu_device_attach,
+					    error);
+	if (locker == NULL)
+		return NULL;
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_READ);
 	return fu_vli_device_spi_read (FU_VLI_DEVICE (self), 0x0,
 				       fu_device_get_firmware_size_max (device),
