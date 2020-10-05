@@ -5395,12 +5395,9 @@ fu_engine_udev_device_add (FuEngine *self, GUdevDevice *udev_device)
 		const gchar *plugin_name = g_ptr_array_index (possible_plugins, i);
 		g_autoptr(GError) error = NULL;
 
-		plugin = fu_plugin_list_find_by_name (self->plugin_list,
-						      plugin_name, &error);
-		if (plugin == NULL) {
-			g_debug ("failed to add udev device: %s", error->message);
+		plugin = fu_plugin_list_find_by_name (self->plugin_list, plugin_name, NULL);
+		if (plugin == NULL)
 			continue;
-		}
 		if (!fu_plugin_runner_udev_device_added (plugin, device, &error)) {
 			if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 				if (g_getenv ("FWUPD_PROBE_VERBOSE") != NULL) {
@@ -6037,12 +6034,9 @@ fu_engine_usb_device_added_cb (GUsbContext *ctx,
 		const gchar *plugin_name = g_ptr_array_index (possible_plugins, i);
 		g_autoptr(GError) error = NULL;
 
-		plugin = fu_plugin_list_find_by_name (self->plugin_list,
-						      plugin_name, &error);
-		if (plugin == NULL) {
-			g_debug ("failed to add usb device: %s", error->message);
+		plugin = fu_plugin_list_find_by_name (self->plugin_list, plugin_name, NULL);
+		if (plugin == NULL)
 			continue;
-		}
 		if (!fu_plugin_runner_usb_device_added (plugin, device, &error)) {
 			if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 				if (g_getenv ("FWUPD_PROBE_VERBOSE") != NULL) {
