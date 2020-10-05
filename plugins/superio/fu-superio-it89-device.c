@@ -422,6 +422,15 @@ fu_superio_it89_device_dump_firmware (FuDevice *device, GError **error)
 {
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
 	guint64 fwsize = fu_device_get_firmware_size_min (device);
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	/* require detach -> attach */
+	locker = fu_device_locker_new_full (device,
+					    (FuDeviceLockerFunc) fu_device_detach,
+					    (FuDeviceLockerFunc) fu_device_attach,
+					    error);
+	if (locker == NULL)
+		return NULL;
 
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_READ);
 	return fu_superio_it89_device_read_addr (self, 0x0, fwsize,

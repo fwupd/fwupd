@@ -2761,28 +2761,14 @@ fu_engine_firmware_dump (FuEngine *self,
 			 GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(GBytes) fw = NULL;
 
-	/* open, detach, read, attach, serialize */
+	/* open, read, close */
 	locker = fu_device_locker_new (device, error);
 	if (locker == NULL) {
 		g_prefix_error (error, "failed to open device for firmware read: ");
 		return NULL;
 	}
-	if (!fu_device_detach (device, error))
-		return NULL;
-	fw = fu_device_dump_firmware (device, error);
-	if (fw == NULL) {
-		g_autoptr(GError) error_local = NULL;
-		if (!fu_device_attach (device, &error_local)) {
-			g_warning ("failed to attach after read image failure: %s",
-				   error_local->message);
-		}
-		return NULL;
-	}
-	if (!fu_device_attach (device, error))
-		return NULL;
-	return g_steal_pointer (&fw);
+	return fu_device_dump_firmware (device, error);
 }
 
 gboolean
