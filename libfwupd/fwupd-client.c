@@ -1879,6 +1879,10 @@ fwupd_client_install_stream_async (FwupdClient *self,
 		g_variant_builder_add (&builder, "{sv}",
 				       "allow-reinstall", g_variant_new_boolean (TRUE));
 	}
+	if (install_flags & FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH) {
+		g_variant_builder_add (&builder, "{sv}",
+				       "allow-branch-switch", g_variant_new_boolean (TRUE));
+	}
 	if (install_flags & FWUPD_INSTALL_FLAG_FORCE) {
 		g_variant_builder_add (&builder, "{sv}",
 				       "force", g_variant_new_boolean (TRUE));

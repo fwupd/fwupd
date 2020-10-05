@@ -228,6 +228,7 @@ typedef enum {
  * @FWUPD_INSTALL_FLAG_ALLOW_OLDER:		Allow downgrading firmware
  * @FWUPD_INSTALL_FLAG_FORCE:			Force the update even if not a good idea
  * @FWUPD_INSTALL_FLAG_NO_HISTORY:		Do not write to the history database
+ * @FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH:	Allow firmware branch switching
  *
  * Flags to set when performing the firmware update or install.
  **/
@@ -238,6 +239,7 @@ typedef enum {
 	FWUPD_INSTALL_FLAG_ALLOW_OLDER		= 1 << 2,	/* Since: 0.7.0 */
 	FWUPD_INSTALL_FLAG_FORCE		= 1 << 3,	/* Since: 0.7.1 */
 	FWUPD_INSTALL_FLAG_NO_HISTORY		= 1 << 4,	/* Since: 1.0.8 */
+	FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH	= 1 << 5,	/* Since: 1.5.0 */
 	/*< private >*/
 	FWUPD_INSTALL_FLAG_LAST
 } FwupdInstallFlags;
