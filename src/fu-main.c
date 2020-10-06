@@ -1433,8 +1433,13 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			    g_variant_get_boolean (prop_value) == TRUE)
 				helper->flags |= FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH;
 			if (g_strcmp0 (prop_key, "force") == 0 &&
-			    g_variant_get_boolean (prop_value) == TRUE)
+			    g_variant_get_boolean (prop_value) == TRUE) {
 				helper->flags |= FWUPD_INSTALL_FLAG_FORCE;
+				helper->flags |= FWUPD_INSTALL_FLAG_IGNORE_POWER;
+			}
+			if (g_strcmp0 (prop_key, "ignore-power") == 0 &&
+			    g_variant_get_boolean (prop_value) == TRUE)
+				helper->flags |= FWUPD_INSTALL_FLAG_IGNORE_POWER;
 			if (g_strcmp0 (prop_key, "no-history") == 0 &&
 			    g_variant_get_boolean (prop_value) == TRUE)
 				helper->flags |= FWUPD_INSTALL_FLAG_NO_HISTORY;

@@ -349,7 +349,7 @@ fu_synaptics_rmi_firmware_parse (FuFirmware *firmware,
 	/* verify checksum */
 	self->checksum = fu_common_read_uint32 (data + RMI_IMG_CHECKSUM_OFFSET, G_LITTLE_ENDIAN);
 	checksum_calculated = fu_synaptics_rmi_generate_checksum (data + 4, sz - 4);
-	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
 		if (self->checksum != checksum_calculated) {
 			g_set_error (error,
 				     FWUPD_ERROR,

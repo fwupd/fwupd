@@ -195,7 +195,7 @@ fu_ihex_firmware_parse (FuFirmware *firmware,
 		}
 
 		/* verify checksum */
-		if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+		if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
 			guint8 checksum = 0;
 			for (guint i = 1; i < line_end + 2; i += 2) {
 				guint8 data_tmp = fu_firmware_strparse_uint8 (line + i);

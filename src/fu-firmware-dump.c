@@ -45,7 +45,10 @@ main (int argc, char **argv)
 		g_printerr ("firmware invalid type, expected .srec or .hex\n");
 		return 2;
 	}
-	if (!fu_firmware_parse (firmware, blob, FWUPD_INSTALL_FLAG_FORCE, &error)) {
+	if (!fu_firmware_parse (firmware, blob,
+				FWUPD_INSTALL_FLAG_IGNORE_VID_PID |
+				FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM,
+				&error)) {
 		g_printerr ("failed to parse file: %s\n", error->message);
 		return 3;
 	}

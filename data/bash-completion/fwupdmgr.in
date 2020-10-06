@@ -53,6 +53,7 @@ _fwupdmgr_opts=(
 	'--sign'
 	'--filter'
 	'--disable-ssl-strict'
+	'--ignore-power'
 )
 
 _show_filters()

@@ -149,7 +149,7 @@ fu_plugin_update_prepare (FuPlugin *plugin,
 
 	/* determine if operating on AC or battery */
 	if (fu_plugin_upower_check_on_battery (plugin) &&
-	    (flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+	    (flags & FWUPD_INSTALL_FLAG_IGNORE_POWER) == 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_AC_POWER_REQUIRED,
@@ -160,7 +160,7 @@ fu_plugin_update_prepare (FuPlugin *plugin,
 
 	/* determine if battery high enough */
 	if (!fu_plugin_upower_check_percentage_level (plugin) &&
-	   (flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+	   (flags & FWUPD_INSTALL_FLAG_IGNORE_POWER) == 0) {
 		FuPluginData *data = fu_plugin_get_data (plugin);
 		g_set_error (error,
 			     FWUPD_ERROR,

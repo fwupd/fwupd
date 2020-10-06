@@ -269,7 +269,7 @@ fu_synaprom_device_prepare_fw (FuDevice *device,
 	memcpy (&hdr, g_bytes_get_data (blob, NULL), sizeof(hdr));
 	product = GUINT32_FROM_LE(hdr.product);
 	if (product != FU_SYNAPROM_PRODUCT_PROMETHEUS) {
-		if (flags & FWUPD_INSTALL_FLAG_FORCE) {
+		if (flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) {
 			g_warning ("MFW metadata not compatible, "
 				   "got 0x%02x expected 0x%02x",
 				   product, (guint) FU_SYNAPROM_PRODUCT_PROMETHEUS);

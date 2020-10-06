@@ -235,7 +235,7 @@ fu_dfu_firmware_parse (FuFirmware *firmware,
 			     sizeof(FuDfuFirmwareFooter), error))
 		return FALSE;
 	crc = GUINT32_FROM_LE(ftr.crc);
-	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
 		crc_new = ~fu_common_crc32 (data, len - 4);
 		if (crc != crc_new) {
 			g_set_error (error,
