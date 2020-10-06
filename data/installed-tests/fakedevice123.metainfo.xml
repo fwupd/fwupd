@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Copyright 2017 Richard Hughes <richard@hughsie.com> -->
 <component type="firmware">
-  <id>fakedevice.firmware</id>
-  <name>FakeDevice Firmware</name>
+  <id>org.fwupd.fakedevice.firmware</id>
+  <name>FakeDevice</name>
   <summary>Firmware for the ACME Corp Integrated Webcam</summary>
   <description>
     <p>
