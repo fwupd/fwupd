@@ -142,7 +142,7 @@ fu_srec_firmware_tokenize (FuFirmware *firmware, GBytes *fw,
 		}
 
 		/* checksum check */
-		if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+		if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
 			guint8 rec_csum = 0;
 			guint8 rec_csum_expected;
 			for (guint8 i = 0; i < rec_count; i++)

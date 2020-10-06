@@ -1726,7 +1726,7 @@ dfu_device_write_firmware (FuDevice *device,
 	if (!dfu_device_refresh_and_clear (self, error))
 		return FALSE;
 
-	if (flags & FWUPD_INSTALL_FLAG_FORCE) {
+	if (flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) {
 		transfer_flags |= DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID;
 		transfer_flags |= DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID;
 	}

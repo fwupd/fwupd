@@ -229,6 +229,9 @@ typedef enum {
  * @FWUPD_INSTALL_FLAG_FORCE:			Force the update even if not a good idea
  * @FWUPD_INSTALL_FLAG_NO_HISTORY:		Do not write to the history database
  * @FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH:	Allow firmware branch switching
+ * @FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM:		Ignore firmware CRCs and checksums
+ * @FWUPD_INSTALL_FLAG_IGNORE_VID_PID:		Ignore firmware vendor and project checks
+ * @FWUPD_INSTALL_FLAG_IGNORE_POWER:		Ignore requirement of external power source
  *
  * Flags to set when performing the firmware update or install.
  **/
@@ -240,6 +243,9 @@ typedef enum {
 	FWUPD_INSTALL_FLAG_FORCE		= 1 << 3,	/* Since: 0.7.1 */
 	FWUPD_INSTALL_FLAG_NO_HISTORY		= 1 << 4,	/* Since: 1.0.8 */
 	FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH	= 1 << 5,	/* Since: 1.5.0 */
+	FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM	= 1 << 6,	/* Since: 1.5.0 */
+	FWUPD_INSTALL_FLAG_IGNORE_VID_PID	= 1 << 7,	/* Since: 1.5.0 */
+	FWUPD_INSTALL_FLAG_IGNORE_POWER		= 1 << 8,	/* Since: 1.5.0 */
 	/*< private >*/
 	FWUPD_INSTALL_FLAG_LAST
 } FwupdInstallFlags;

@@ -19,7 +19,7 @@ fu_dump_parse (const gchar *filename, GError **error)
 	if (!g_file_get_contents (filename, &data, &len, error))
 		return FALSE;
 	blob = g_bytes_new_take (data, len);
-	if (!fu_firmware_parse (firmware, blob, FWUPD_INSTALL_FLAG_FORCE, error))
+	if (!fu_firmware_parse (firmware, blob, FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM, error))
 		return FALSE;
 	str = fu_firmware_to_string (firmware);
 	g_print ("%s", str);

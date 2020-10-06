@@ -684,7 +684,7 @@ fu_thunderbolt_device_prepare_firmware (FuDevice *device,
 			     fu_thunderbolt_firmware_get_device_id (firmware_old));
 		return NULL;
 	}
-	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) == 0) {
 		if (fu_thunderbolt_firmware_get_model_id (FU_THUNDERBOLT_FIRMWARE (firmware)) !=
 		    fu_thunderbolt_firmware_get_model_id (firmware_old)) {
 			g_set_error (error,

@@ -130,7 +130,7 @@ fu_vli_pd_firmware_parse (FuFirmware *firmware,
 	}
 
 	/* check CRC */
-	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint16 crc_actual;
 		guint16 crc_file = 0x0;
 		if (!fu_common_read_uint16_safe	(buf, bufsz, bufsz - 2, &crc_file,

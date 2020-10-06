@@ -51,6 +51,9 @@ _fwupdtool_opts=(
 	'--filter'
 	'--disable-ssl-strict'
 	'--no-safety-check'
+	'--ignore-checksum'
+	'--ignore-vid-pid'
+	'--ignore-power'
 )
 
 _show_filters()

@@ -2397,11 +2397,15 @@ fu_util_esp_list (FuUtilPrivate *priv, gchar **values, GError **error)
 int
 main (int argc, char *argv[])
 {
+	gboolean allow_branch_switch = FALSE;
 	gboolean allow_older = FALSE;
 	gboolean allow_reinstall = FALSE;
 	gboolean force = FALSE;
 	gboolean ret;
 	gboolean version = FALSE;
+	gboolean ignore_checksum = FALSE;
+	gboolean ignore_power = FALSE;
+	gboolean ignore_vid_pid = FALSE;
 	gboolean interactive = isatty (fileno (stdout)) != 0;
 	g_auto(GStrv) plugin_glob = NULL;
 	g_autoptr(FuUtilPrivate) priv = g_new0 (FuUtilPrivate, 1);
@@ -2419,9 +2423,21 @@ main (int argc, char *argv[])
 		{ "allow-older", '\0', 0, G_OPTION_ARG_NONE, &allow_older,
 			/* TRANSLATORS: command line option */
 			_("Allow downgrading firmware versions"), NULL },
+		{ "allow-branch-switch", '\0', 0, G_OPTION_ARG_NONE, &allow_branch_switch,
+			/* TRANSLATORS: command line option */
+			_("Allow switching firmware branch"), NULL },
 		{ "force", '\0', 0, G_OPTION_ARG_NONE, &force,
 			/* TRANSLATORS: command line option */
-			_("Override plugin warning"), NULL },
+			_("Force the action by relaxing some runtime checks"), NULL },
+		{ "ignore-checksum", '\0', 0, G_OPTION_ARG_NONE, &ignore_checksum,
+			/* TRANSLATORS: command line option */
+			_("Ignore firmware checksum failures"), NULL },
+		{ "ignore-vid-pid", '\0', 0, G_OPTION_ARG_NONE, &ignore_vid_pid,
+			/* TRANSLATORS: command line option */
+			_("Ignore firmware hardware mismatch failures"), NULL },
+		{ "ignore-power", '\0', 0, G_OPTION_ARG_NONE, &ignore_power,
+			/* TRANSLATORS: command line option */
+			_("Ignore requirement of external power source"), NULL },
 		{ "no-reboot-check", '\0', 0, G_OPTION_ARG_NONE, &priv->no_reboot_check,
 			/* TRANSLATORS: command line option */
 			_("Do not check for reboot after update"), NULL },
@@ -2762,8 +2778,18 @@ main (int argc, char *argv[])
 		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
 	if (allow_older)
 		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
-	if (force)
+	if (allow_branch_switch)
+		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH;
+	if (force) {
 		priv->flags |= FWUPD_INSTALL_FLAG_FORCE;
+		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_POWER;
+	}
+	if (ignore_checksum)
+		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM;
+	if (ignore_vid_pid)
+		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_VID_PID;
+	if (ignore_power)
+		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_POWER;
 
 	/* load engine */
 	priv->engine = fu_engine_new (FU_APP_FLAGS_NO_IDLE_SOURCES);

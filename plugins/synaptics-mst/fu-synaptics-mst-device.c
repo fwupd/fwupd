@@ -776,7 +776,7 @@ fu_synaptics_mst_device_prepare_firmware (FuDevice *device,
 	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE (device);
 
 	/* check firmware and board ID match */
-	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
+	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) == 0 &&
 	    !fu_device_has_custom_flag (device, "ignore-board-id")) {
 		const guint8 *buf;
 		gsize len;
