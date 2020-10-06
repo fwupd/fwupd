@@ -38,7 +38,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	fu_device_set_name (device, "Integrated_Webcam(TM)");
 	fu_device_add_icon (device, "preferences-desktop-keyboard");
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_CAN_VERIFY);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_set_protocol (device, "com.acme.test");
 	fu_device_set_summary (device, "A fake webcam");
 	fu_device_set_vendor (device, "ACME Corp.");
