@@ -148,6 +148,9 @@ Provides: fwupdate-efi
 %if 0%{?have_modem_manager}
 Recommends: %{name}-plugin-modem-manager
 %endif
+%if 0%{?have_flashrom}
+Recommends: %{name}-plugin-flashrom
+%endif
 
 %description
 fwupd is a daemon to allow session software to update device firmware.
@@ -174,6 +177,15 @@ Summary: fwupd plugin using ModemManger
 %description plugin-modem-manager
 This provides the optional package which is only required on hardware that
 might have mobile broadband hardware. It is probably not required on servers.
+%endif
+
+%if 0%{?have_flashrom}
+%package plugin-flashrom
+Summary: fwupd plugin using flashrom
+
+%description plugin-flashrom
+This provides the optional package which is only required on hardware that
+can be flashed using flashrom. It is probably not required on servers.
 %endif
 
 %prep
@@ -394,9 +406,6 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_libdir}/fwupd-plugins-3/libfu_plugin_emmc.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_ep963x.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_fastboot.so
-%if 0%{?have_flashrom}
-%{_libdir}/fwupd-plugins-3/libfu_plugin_flashrom.so
-%endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_fresco_pd.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_iommu.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_jabra.so
@@ -457,6 +466,10 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %if 0%{?have_modem_manager}
 %files plugin-modem-manager
 %{_libdir}/fwupd-plugins-3/libfu_plugin_modem_manager.so
+%endif
+%if 0%{?have_flashrom}
+%files plugin-flashrom
+%{_libdir}/fwupd-plugins-3/libfu_plugin_flashrom.so
 %endif
 
 %files devel
