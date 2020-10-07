@@ -721,7 +721,6 @@ static void
 fu_uefi_device_init (FuUefiDevice *self)
 {
 	fu_device_set_protocol (FU_DEVICE (self), "org.uefi.capsule");
-	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_NUMBER);
 }
 
 static void
@@ -764,6 +763,9 @@ fu_uefi_device_new_from_entry (const gchar *entry_path, GError **error)
 
 	/* create object */
 	self = g_object_new (FU_TYPE_UEFI_DEVICE, NULL);
+
+	/* assume a uint64_t unless told otherwise by a quirk entry or metadata */
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_NUMBER);
 
 	/* read values from sysfs */
 	fw_class_fn = g_build_filename (entry_path, "fw_class", NULL);
@@ -824,5 +826,6 @@ fu_uefi_device_new_from_guid (const gchar *guid)
 	FuUefiDevice *self;
 	self = g_object_new (FU_TYPE_UEFI_DEVICE, NULL);
 	self->fw_class = g_strdup (guid);
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_NUMBER);
 	return self;
 }
