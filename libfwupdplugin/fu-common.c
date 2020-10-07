@@ -2325,7 +2325,7 @@ fu_common_get_esp_for_path (const gchar *esp_path, GError **error)
 		return NULL;
 	for (guint i = 0; i < volumes->len; i++) {
 		FuVolume *vol = g_ptr_array_index (volumes, i);
-		g_autofree gchar *vol_basename = g_path_get_basename (fu_volume_get_id (vol));
+		g_autofree gchar *vol_basename = g_path_get_basename (fu_volume_get_mount_point (vol));
 		if (g_strcmp0 (basename, vol_basename) == 0)
 			return g_object_ref (vol);
 	}
