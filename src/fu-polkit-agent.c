@@ -7,6 +7,8 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
+#include "config.h"
+
 #include <stdio.h>
 #include <sys/types.h>
 #ifdef __linux__
