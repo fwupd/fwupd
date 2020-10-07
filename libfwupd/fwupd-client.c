@@ -2802,6 +2802,10 @@ fwupd_client_refresh_remote_signature_cb (GObject *source,
 		return;
 	}
 	data->signature = g_steal_pointer (&bytes);
+	if (!fwupd_remote_load_signature_bytes (data->remote, data->signature, &error)) {
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
 
 	/* download metadata */
 	fwupd_client_download_bytes_async (self,
