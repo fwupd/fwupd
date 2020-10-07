@@ -69,7 +69,9 @@
   </reference>
 
   <xi:include href="tutorial.xml"/>
+<!--
   <xi:include href="hsi.xml"/>
+-->
 
   <index id="api-index-full">
     <title>API Index</title>
