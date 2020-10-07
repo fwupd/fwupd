@@ -443,10 +443,18 @@ fu_plugin_uefi_register_proxy_device (FuPlugin *plugin, FuDevice *device)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	g_autoptr(FuUefiDevice) dev = fu_uefi_device_new_from_dev (device);
+	g_autoptr(GError) error_local = NULL;
 
 	/* load all configuration variables */
 	fu_plugin_uefi_load_config (plugin, FU_DEVICE (dev));
-	fu_uefi_device_set_esp (dev, data->esp);
+	if (data->esp == NULL)
+		data->esp = fu_common_get_esp_default (&error_local);
+	if (data->esp == NULL) {
+		fu_device_set_update_error (FU_DEVICE (dev), error_local->message);
+		fu_device_remove_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_UPDATABLE);
+	} else {
+		fu_uefi_device_set_esp (dev, data->esp);
+	}
 	fu_plugin_device_add (plugin, FU_DEVICE (dev));
 }
 
@@ -631,12 +639,6 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 					"specified in config: ", esp_path);
 			return FALSE;
 		}
-	} else {
-		data->esp = fu_common_get_esp_default (error);
-		if (data->esp == NULL) {
-			g_prefix_error (error, "cannot find default ESP: ");
-			return FALSE;
-		}
 	}
 
 	/* test for invalid ESP in coldplug, and set the update-error rather
@@ -743,6 +745,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	const gchar *str;
 	g_autofree gchar *esrt_path = NULL;
 	g_autofree gchar *sysfsfwdir = NULL;
+	g_autoptr(GError) error_udisks2 = NULL;
 	g_autoptr(GError) error_efivarfs = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) entries = NULL;
@@ -758,6 +761,12 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	if (!fu_plugin_uefi_ensure_efivarfs_rw (&error_efivarfs))
 		g_warning ("%s", error_efivarfs->message);
 
+	if (data->esp == NULL) {
+		data->esp = fu_common_get_esp_default (&error_udisks2);
+		if (data->esp == NULL)
+			g_warning ("cannot find default ESP: %s", error_udisks2->message);
+	}
+
 	/* add each device */
 	for (guint i = 0; i < entries->len; i++) {
 		const gchar *path = g_ptr_array_index (entries, i);
@@ -768,11 +777,14 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 			continue;
 		}
 		fu_device_set_quirks (FU_DEVICE (dev), fu_plugin_get_quirks (plugin));
-		fu_uefi_device_set_esp (FU_UEFI_DEVICE (dev), data->esp);
+		if (data->esp != NULL)
+			fu_uefi_device_set_esp (FU_UEFI_DEVICE (dev), data->esp);
 		if (!fu_plugin_uefi_coldplug_device (plugin, dev, error))
 			return FALSE;
 		if (error_efivarfs != NULL) {
 			fu_device_set_update_error (FU_DEVICE (dev), error_efivarfs->message);
+		} else if (error_udisks2 != NULL) {
+			fu_device_set_update_error (FU_DEVICE (dev), error_udisks2->message);
 		} else {
 			fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_UPDATABLE);
 			fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
