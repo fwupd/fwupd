@@ -286,9 +286,6 @@ fu_plugin_dock_node (FuPlugin *plugin, const gchar *platform,
 		if (fu_plugin_dell_capsule_supported (plugin)) {
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
-		} else {
-			fu_device_set_update_error (dev,
-						    "UEFI capsule updates turned off in BIOS setup");
 		}
 	}
 
@@ -734,9 +731,6 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 		if (fu_plugin_dell_capsule_supported (plugin)) {
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
-		} else {
-			fu_device_set_update_error (dev,
-						    "UEFI capsule updates turned off in BIOS setup");
 		}
 		fu_device_set_flashes_left (dev, out->flashes_left);
 	} else {
@@ -892,10 +886,14 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	 */
 	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
 	esrtdir = g_build_filename (sysfsfwdir, "efi", "esrt", NULL);
-	if (g_file_test (esrtdir, G_FILE_TEST_EXISTS)) {
+	if (g_file_test (esrtdir, G_FILE_TEST_EXISTS))
 		data->capsule_supported = TRUE;
-	} else {
-		g_debug ("UEFI capsule firmware updating not supported");
+
+	/* capsules not supported */
+	if (!fu_plugin_dell_capsule_supported (plugin)) {
+		fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_USER_WARNING);
+		fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE);
+		fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED);
 	}
 
 	return TRUE;

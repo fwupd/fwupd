@@ -4899,7 +4899,12 @@ fu_engine_plugins_setup (FuEngine *self)
 		g_autoptr(GError) error = NULL;
 		FuPlugin *plugin = g_ptr_array_index (plugins, i);
 		if (!fu_plugin_runner_startup (plugin, &error)) {
-			fu_plugin_set_enabled (plugin, FALSE);
+			fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_DISABLED);
+			if (g_error_matches (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED)) {
+				fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_NO_HARDWARE);
+			}
 			g_message ("disabling plugin because: %s", error->message);
 		}
 	}
@@ -4938,7 +4943,7 @@ fu_engine_plugins_coldplug (FuEngine *self, gboolean is_recoldplug)
 				g_message ("failed recoldplug: %s", error->message);
 		} else {
 			if (!fu_plugin_runner_coldplug (plugin, &error)) {
-				fu_plugin_set_enabled (plugin, FALSE);
+				fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_DISABLED);
 				g_message ("disabling plugin because: %s",
 					   error->message);
 			}
@@ -4956,7 +4961,7 @@ fu_engine_plugins_coldplug (FuEngine *self, gboolean is_recoldplug)
 	/* print what we do have */
 	for (guint i = 0; i < plugins->len; i++) {
 		FuPlugin *plugin = g_ptr_array_index (plugins, i);
-		if (!fu_plugin_get_enabled (plugin))
+		if (fu_plugin_has_flag (plugin, FWUPD_PLUGIN_FLAG_DISABLED))
 			continue;
 		g_string_append_printf (str, "%s, ", fu_plugin_get_name (plugin));
 	}
@@ -5843,8 +5848,7 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 	g_autofree gchar *plugin_path = NULL;
 	g_autofree gchar *suffix = g_strdup_printf (".%s", G_MODULE_SUFFIX);
 	g_autoptr(GPtrArray) plugins_disabled = g_ptr_array_new_with_free_func (g_free);
-	g_autoptr(GPtrArray) plugins_not_enabled = g_ptr_array_new_with_free_func (g_free);
-	g_autoptr(GPtrArray) plugins_self_disabled = g_ptr_array_new_with_free_func (g_free);
+	g_autoptr(GPtrArray) plugins_disabled_rt = g_ptr_array_new_with_free_func (g_free);
 
 	/* search */
 	plugin_path = fu_common_get_path (FU_PATH_KIND_PLUGINDIR_PKG);
@@ -5865,12 +5869,9 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 		name = fu_plugin_guess_name_from_fn (fn);
 		if (name == NULL)
 			continue;
-		if (fu_engine_is_plugin_name_disabled (self, name)) {
+		if (fu_engine_is_plugin_name_disabled (self, name) ||
+		    !fu_engine_is_plugin_name_enabled (self, name)) {
 			g_ptr_array_add (plugins_disabled, g_steal_pointer (&name));
-			continue;
-		}
-		if (!fu_engine_is_plugin_name_enabled (self, name)) {
-			g_ptr_array_add (plugins_not_enabled, g_steal_pointer (&name));
 			continue;
 		}
 
@@ -5897,9 +5898,9 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 			}
 		}
 
-		/* self disabled */
-		if (!fu_plugin_get_enabled (plugin)) {
-			g_ptr_array_add (plugins_self_disabled, g_steal_pointer (&name));
+		/* runtime disabled */
+		if (fu_plugin_has_flag (plugin, FWUPD_PLUGIN_FLAG_DISABLED)) {
+			g_ptr_array_add (plugins_disabled_rt, g_steal_pointer (&name));
 			continue;
 		}
 
@@ -5940,17 +5941,11 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 		str = g_strjoinv (", ", (gchar **) plugins_disabled->pdata);
 		g_debug ("plugins disabled: %s", str);
 	}
-	if (plugins_not_enabled->len > 0) {
+	if (plugins_disabled_rt->len > 0) {
 		g_autofree gchar *str = NULL;
-		g_ptr_array_add (plugins_not_enabled, NULL);
-		str = g_strjoinv (", ", (gchar **) plugins_not_enabled->pdata);
-		g_debug ("plugins not-enabled: %s", str);
-	}
-	if (plugins_self_disabled->len > 0) {
-		g_autofree gchar *str = NULL;
-		g_ptr_array_add (plugins_self_disabled, NULL);
-		str = g_strjoinv (", ", (gchar **) plugins_self_disabled->pdata);
-		g_debug ("plugins self-disabled: %s", str);
+		g_ptr_array_add (plugins_disabled_rt, NULL);
+		str = g_strjoinv (", ", (gchar **) plugins_disabled_rt->pdata);
+		g_debug ("plugins runtime-disabled: %s", str);
 	}
 
 	/* depsolve into the correct order */

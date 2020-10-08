@@ -221,6 +221,34 @@ typedef enum {
 } FwupdReleaseUrgency;
 
 /**
+ * FwupdPluginFlags:
+ * @FWUPD_PLUGIN_FLAG_NONE:			No flags set
+ * @FWUPD_PLUGIN_FLAG_DISABLED:			Disabled
+ * @FWUPD_PLUGIN_FLAG_USER_WARNING:		Show the user a warning
+ * @FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE:		Clear the UPDATABLE flag from devices
+ * @FWUPD_PLUGIN_FLAG_NO_HARDWARE:		No hardware is found
+ * @FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED:	UEFI UpdateCapsule are unsupported
+ * @FWUPD_PLUGIN_FLAG_UNLOCK_REQUIRED:		Hardware unlock is required
+ * @FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED:	The efivar filesystem is not found
+ * @FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND:		The EFI ESP not found
+ * @FWUPD_PLUGIN_FLAG_LEGACY_BIOS:		System running in legacy CSM mode
+ *
+ * The plugin flags.
+ **/
+#define FWUPD_PLUGIN_FLAG_NONE			(0u)		/* Since: 1.5.0 */
+#define FWUPD_PLUGIN_FLAG_DISABLED		(1u << 0)	/* Since: 1.5.0 */
+#define FWUPD_PLUGIN_FLAG_USER_WARNING		(1u << 1)	/* Since: 1.5.0 */
+#define FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE	(1u << 2)	/* Since: 1.5.0 */
+#define FWUPD_PLUGIN_FLAG_NO_HARDWARE		(1u << 3)	/* Since: 1.5.0 */
+#define FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED	(1u << 4)	/* Since: 1.5.0 */
+#define FWUPD_PLUGIN_FLAG_UNLOCK_REQUIRED	(1u << 5)	/* Since: 1.5.0 */
+#define FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED	(1u << 6)	/* Since: 1.5.0 */
+#define FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND		(1u << 7)	/* Since: 1.5.0 */
+#define FWUPD_PLUGIN_FLAG_LEGACY_BIOS		(1u << 8)	/* Since: 1.5.0 */
+#define FWUPD_PLUGIN_FLAG_UNKNOWN		G_MAXUINT64	/* Since: 1.5.0 */
+typedef guint64 FwupdPluginFlags;
+
+/**
  * FwupdInstallFlags:
  * @FWUPD_INSTALL_FLAG_NONE:			No flags set
  * @FWUPD_INSTALL_FLAG_OFFLINE:			Schedule this for next boot
@@ -351,6 +379,8 @@ const gchar	*fwupd_status_to_string			(FwupdStatus	 status);
 FwupdStatus	 fwupd_status_from_string		(const gchar	*status);
 const gchar	*fwupd_device_flag_to_string		(FwupdDeviceFlags device_flag);
 FwupdDeviceFlags fwupd_device_flag_from_string		(const gchar	*device_flag);
+const gchar	*fwupd_plugin_flag_to_string		(FwupdPluginFlags plugin_flag);
+FwupdPluginFlags fwupd_plugin_flag_from_string		(const gchar	*plugin_flag);
 const gchar	*fwupd_release_flag_to_string		(FwupdReleaseFlags release_flag);
 FwupdReleaseFlags fwupd_release_flag_from_string	(const gchar	*release_flag);
 const gchar	*fwupd_release_urgency_to_string	(FwupdReleaseUrgency release_urgency);

@@ -118,6 +118,24 @@
     </method>
 
     <!--***********************************************************-->
+    <method name='GetPlugins'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Gets a list of all the plugins being used by the daemon.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='aa{sv}' name='plugins' direction='out'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>An array of plugins, with any properties set on each.</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
     <method name='GetReleases'>
       <doc:doc>
         <doc:description>

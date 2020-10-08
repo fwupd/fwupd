@@ -554,6 +554,31 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_util_get_plugins (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GPtrArray) plugins = NULL;
+
+	/* get results from daemon */
+	plugins = fwupd_client_get_plugins (priv->client, NULL, error);
+	if (plugins == NULL)
+		return FALSE;
+
+	/* print */
+	for (guint i = 0; i < plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index (plugins, i);
+		g_autofree gchar *str = fu_util_plugin_to_string (FWUPD_PLUGIN (plugin), 0);
+		g_print ("%s\n", str);
+	}
+	if (plugins->len == 0) {
+		/* TRANSLATORS: nothing found */
+		g_print ("%s\n", _("No plugins found"));
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static gchar *
 fu_util_download_if_required (FuUtilPrivate *priv, const gchar *perhapsfn, GError **error)
 {
@@ -2657,6 +2682,44 @@ fu_util_get_blocked_firmware (FuUtilPrivate *priv, gchar **values, GError **erro
 	return TRUE;
 }
 
+static void
+fu_util_show_plugin_warnings (FuUtilPrivate *priv)
+{
+	FwupdPluginFlags flags = FWUPD_PLUGIN_FLAG_NONE;
+	g_autoptr(GPtrArray) plugins = NULL;
+
+	/* get plugins from daemon, ignoring if the daemon is too old */
+	plugins = fwupd_client_get_plugins (priv->client, NULL, NULL);
+	if (plugins == NULL)
+		return;
+
+	/* get a superset so we do not show the same message more than once */
+	for (guint i = 0; i < plugins->len; i++) {
+		FwupdPlugin *plugin = g_ptr_array_index (plugins, i);
+		if (!fwupd_plugin_has_flag (plugin, FWUPD_PLUGIN_FLAG_USER_WARNING))
+			continue;
+		flags |= fwupd_plugin_get_flags (plugin);
+	}
+
+	/* never show these, they're way too generic */
+	flags &= ~FWUPD_PLUGIN_FLAG_DISABLED;
+	flags &= ~FWUPD_PLUGIN_FLAG_NO_HARDWARE;
+
+	/* print */
+	for (guint i = 0; i < 64; i++) {
+		const gchar *tmp;
+		g_autofree gchar *fmt = NULL;
+		if ((flags & ((guint64) 1 << i)) == 0)
+			continue;
+		tmp = fu_util_plugin_flag_to_string ((guint64) 1 << i);
+		if (tmp == NULL)
+			continue;
+		/* TRANSLATORS: this is a prefix on the console */
+		fmt = fu_util_term_format (_("WARNING:"), FU_UTIL_TERM_COLOR_RED);
+		g_printerr ("%s %s\n", fmt, tmp);
+	}
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -2939,6 +3002,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Gets the list of blocked firmware."),
 		     fu_util_get_blocked_firmware);
+	fu_util_cmd_array_add (cmd_array,
+		     "get-plugins",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Get all enabled plugins registered with the system"),
+		     fu_util_get_plugins);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();
@@ -2973,10 +3042,13 @@ main (int argc, char *argv[])
 
 	/* allow disabling SSL strict mode for broken corporate proxies */
 	if (priv->disable_ssl_strict) {
+		g_autofree gchar *fmt = NULL;
+		/* TRANSLATORS: this is a prefix on the console */
+		fmt = fu_util_term_format (_("WARNING:"), FU_UTIL_TERM_COLOR_RED);
 		/* TRANSLATORS: try to help */
-		g_printerr ("%s\n", _("WARNING: Ignoring SSL strict checks, "
-				      "to do this automatically in the future "
-				      "export DISABLE_SSL_STRICT in your environment"));
+		g_printerr ("%s %s\n", fmt, _("Ignoring SSL strict checks, "
+					      "to do this automatically in the future "
+					      "export DISABLE_SSL_STRICT in your environment"));
 		g_setenv ("DISABLE_SSL_STRICT", "1", TRUE);
 	}
 
@@ -3066,9 +3138,18 @@ main (int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 	if (fwupd_client_get_tainted (priv->client)) {
-		g_printerr ("WARNING: The daemon has loaded 3rd party code and "
-			    "is no longer supported by the upstream developers!\n");
+		g_autofree gchar *fmt = NULL;
+		/* TRANSLATORS: this is a prefix on the console */
+		fmt = fu_util_term_format (_("WARNING:"), FU_UTIL_TERM_COLOR_RED);
+		g_printerr ("%s %s\n",
+			    fmt,
+			    /* TRANSLATORS: the user is SOL for support... */
+			    _("The daemon has loaded 3rd party code and "
+			      "is no longer supported by the upstream developers!"));
 	}
+
+	/* show user-visible warnings from the plugins */
+	fu_util_show_plugin_warnings (priv);
 
 	/* we know the runtime daemon version now */
 	fwupd_client_set_user_agent_for_package (priv->client, "fwupdmgr", PACKAGE_VERSION);

@@ -2395,7 +2395,7 @@ fu_plugin_list_depsolve_func (gconstpointer user_data)
 	plugin = g_ptr_array_index (plugins, 0);
 	g_assert_cmpstr (fu_plugin_get_name (plugin), ==, "plugin2");
 	g_assert_cmpint (fu_plugin_get_order (plugin), ==, 0);
-	g_assert (fu_plugin_get_enabled (plugin));
+	g_assert_false (fu_plugin_has_flag (plugin, FWUPD_PLUGIN_FLAG_DISABLED));
 
 	/* add another rule, then re-depsolve */
 	fu_plugin_add_rule (plugin1, FU_PLUGIN_RULE_CONFLICTS, "plugin2");
@@ -2405,11 +2405,11 @@ fu_plugin_list_depsolve_func (gconstpointer user_data)
 	plugin = fu_plugin_list_find_by_name (plugin_list, "plugin1", &error);
 	g_assert_no_error (error);
 	g_assert (plugin != NULL);
-	g_assert (fu_plugin_get_enabled (plugin));
+	g_assert_false (fu_plugin_has_flag (plugin, FWUPD_PLUGIN_FLAG_DISABLED));
 	plugin = fu_plugin_list_find_by_name (plugin_list, "plugin2", &error);
 	g_assert_no_error (error);
 	g_assert (plugin != NULL);
-	g_assert (!fu_plugin_get_enabled (plugin));
+	g_assert_true (fu_plugin_has_flag (plugin, FWUPD_PLUGIN_FLAG_DISABLED));
 }
 
 static void

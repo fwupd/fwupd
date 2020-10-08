@@ -147,7 +147,7 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	fu_security_attrs_append (attrs, attr);
 
 	/* check reconstructed to PCR0 */
-	if (!fu_plugin_get_enabled (plugin) || !data->has_uefi_device) {
+	if (fu_plugin_has_flag (plugin, FWUPD_PLUGIN_FLAG_DISABLED) || !data->has_uefi_device) {
 		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
 		return;
 	}

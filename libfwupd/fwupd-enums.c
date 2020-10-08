@@ -307,6 +307,80 @@ fwupd_device_flag_from_string (const gchar *device_flag)
 }
 
 /**
+ * fwupd_plugin_flag_to_string:
+ * @plugin_flag: A #FwupdPluginFlags, e.g. %FWUPD_DEVICE_FLAG_REQUIRE_AC
+ *
+ * Converts a #FwupdDeviceFlags to a string.
+ *
+ * Return value: identifier string
+ *
+ * Since: 1.5.0
+ **/
+const gchar *
+fwupd_plugin_flag_to_string (FwupdPluginFlags plugin_flag)
+{
+	if (plugin_flag == FWUPD_DEVICE_FLAG_NONE)
+		return "none";
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_DISABLED)
+		return "disabled";
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_USER_WARNING)
+		return "user-warning";
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE)
+		return "clear-updatable";
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_NO_HARDWARE)
+		return "no-hardware";
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED)
+		return "capsules-unsupported";
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_UNLOCK_REQUIRED)
+		return "unlock-required";
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED)
+		return "efivar-not-mounted";
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND)
+		return "esp-not-found";
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_LEGACY_BIOS)
+		return "legacy-bios";
+	if (plugin_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
+		return "unknown";
+	return NULL;
+}
+
+/**
+ * fwupd_plugin_flag_from_string:
+ * @plugin_flag: A string, e.g. `require-ac`
+ *
+ * Converts a string to a #FwupdPluginFlags.
+ *
+ * Return value: enumerated value
+ *
+ * Since: 1.5.0
+ **/
+FwupdPluginFlags
+fwupd_plugin_flag_from_string (const gchar *plugin_flag)
+{
+	if (g_strcmp0 (plugin_flag, "none") == 0)
+		return FWUPD_DEVICE_FLAG_NONE;
+	if (g_strcmp0 (plugin_flag, "disabled") == 0)
+		return FWUPD_PLUGIN_FLAG_DISABLED;
+	if (g_strcmp0 (plugin_flag, "user-warning") == 0)
+		return FWUPD_PLUGIN_FLAG_USER_WARNING;
+	if (g_strcmp0 (plugin_flag, "clear-updatable") == 0)
+		return FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE;
+	if (g_strcmp0 (plugin_flag, "no-hardware") == 0)
+		return FWUPD_PLUGIN_FLAG_NO_HARDWARE;
+	if (g_strcmp0 (plugin_flag, "capsules-unsupported") == 0)
+		return FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED;
+	if (g_strcmp0 (plugin_flag, "unlock-required") == 0)
+		return FWUPD_PLUGIN_FLAG_UNLOCK_REQUIRED;
+	if (g_strcmp0 (plugin_flag, "efivar-not-mounted") == 0)
+		return FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED;
+	if (g_strcmp0 (plugin_flag, "esp-not-found") == 0)
+		return FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND;
+	if (g_strcmp0 (plugin_flag, "legacy-bios") == 0)
+		return FWUPD_PLUGIN_FLAG_LEGACY_BIOS;
+	return FWUPD_DEVICE_FLAG_UNKNOWN;
+}
+
+/**
  * fwupd_update_state_to_string:
  * @update_state: A #FwupdUpdateState, e.g. %FWUPD_UPDATE_STATE_PENDING
  *
