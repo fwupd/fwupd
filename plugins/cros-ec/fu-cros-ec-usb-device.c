@@ -21,6 +21,7 @@
 #define FLUSH_TIMEOUT_MS		10
 #define BULK_SEND_TIMEOUT_MS		2000
 #define BULK_RECV_TIMEOUT_MS		5000
+#define CROS_EC_REMOVE_DELAY_RE_ENUMERATE              20000
 
 #define UPDATE_DONE			0xB007AB1E
 #define UPDATE_EXTRA_CMD		0xB007AB1F
@@ -879,13 +880,13 @@ fu_cros_ec_usb_device_attach (FuDevice *device, GError **error)
 	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE (device);
 
 	if (self->in_bootloader && fu_device_has_custom_flag (device, "special")) {
-		fu_device_set_remove_delay (device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+		fu_device_set_remove_delay (device, CROS_EC_REMOVE_DELAY_RE_ENUMERATE);
 		fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
 		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 		return TRUE;
 	}
 
-	fu_device_set_remove_delay (device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_set_remove_delay (device, CROS_EC_REMOVE_DELAY_RE_ENUMERATE);
 	if (fu_device_has_custom_flag (device, "ro-written") &&
 	    !fu_device_has_custom_flag (device, "rw-written")) {
 		if (!fu_cros_ec_usb_device_reset_to_ro (device, error)) {
@@ -917,7 +918,7 @@ fu_cros_ec_usb_device_detach (FuDevice *device, GError **error)
 	} else if (self->targ.common.flash_protection != 0x0) {
 		/* in RW, and RO region is write protected, so jump to RO */
 		fu_device_set_custom_flags (device, "ro-written");
-		fu_device_set_remove_delay (device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+		fu_device_set_remove_delay (device, CROS_EC_REMOVE_DELAY_RE_ENUMERATE);
 		if (!fu_cros_ec_usb_device_reset_to_ro (device, error))
 			return FALSE;
 
