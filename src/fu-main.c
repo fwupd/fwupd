@@ -20,6 +20,7 @@
 #include <jcat.h>
 
 #include "fwupd-device-private.h"
+#include "fwupd-plugin-private.h"
 #include "fwupd-security-attr-private.h"
 #include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
@@ -264,6 +265,22 @@ fu_main_device_array_to_variant (FuMainPrivate *priv, FuEngineRequest *request,
 		FuDevice *device = g_ptr_array_index (devices, i);
 		GVariant *tmp = fwupd_device_to_variant_full (FWUPD_DEVICE (device),
 							      fu_engine_request_get_device_flags (request));
+		g_variant_builder_add_value (&builder, tmp);
+	}
+	return g_variant_new ("(aa{sv})", &builder);
+}
+
+static GVariant *
+fu_main_plugin_array_to_variant (GPtrArray *plugins)
+{
+	GVariantBuilder builder;
+
+	g_return_val_if_fail (plugins->len > 0, NULL);
+	g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
+
+	for (guint i = 0; i < plugins->len; i++) {
+		FuDevice *plugin = g_ptr_array_index (plugins, i);
+		GVariant *tmp = fwupd_plugin_to_variant (FWUPD_PLUGIN (plugin));
 		g_variant_builder_add_value (&builder, tmp);
 	}
 	return g_variant_new ("(aa{sv})", &builder);
@@ -879,6 +896,12 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 			g_dbus_method_invocation_return_gerror (invocation, error);
 			return;
 		}
+		g_dbus_method_invocation_return_value (invocation, val);
+		return;
+	}
+	if (g_strcmp0 (method_name, "GetPlugins") == 0) {
+		g_debug ("Called %s()", method_name);
+		val = fu_main_plugin_array_to_variant (fu_engine_get_plugins (priv->engine));
 		g_dbus_method_invocation_return_value (invocation, val);
 		return;
 	}

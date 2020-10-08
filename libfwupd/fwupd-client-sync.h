@@ -14,6 +14,9 @@ gboolean	 fwupd_client_connect			(FwupdClient	*self,
 GPtrArray	*fwupd_client_get_devices		(FwupdClient	*self,
 							 GCancellable	*cancellable,
 							 GError		**error);
+GPtrArray	*fwupd_client_get_plugins		(FwupdClient	*self,
+							 GCancellable	*cancellable,
+							 GError		**error);
 GPtrArray	*fwupd_client_get_history		(FwupdClient	*self,
 							 GCancellable	*cancellable,
 							 GError		**error);

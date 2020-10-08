@@ -120,6 +120,40 @@ fu_util_save_current_state (FuUtilPrivate *priv, GError **error)
 	return g_file_set_contents (filename, state, -1, error);
 }
 
+static void
+fu_util_show_plugin_warnings (FuUtilPrivate *priv)
+{
+	FwupdPluginFlags flags = FWUPD_PLUGIN_FLAG_NONE;
+	GPtrArray *plugins;
+
+	/* get a superset so we do not show the same message more than once */
+	plugins = fu_engine_get_plugins (priv->engine);
+	for (guint i = 0; i < plugins->len; i++) {
+		FwupdPlugin *plugin = g_ptr_array_index (plugins, i);
+		if (!fwupd_plugin_has_flag (plugin, FWUPD_PLUGIN_FLAG_USER_WARNING))
+			continue;
+		flags |= fwupd_plugin_get_flags (plugin);
+	}
+
+	/* never show these, they're way too generic */
+	flags &= ~FWUPD_PLUGIN_FLAG_DISABLED;
+	flags &= ~FWUPD_PLUGIN_FLAG_NO_HARDWARE;
+
+	/* print */
+	for (guint i = 0; i < 64; i++) {
+		const gchar *tmp;
+		g_autofree gchar *fmt = NULL;
+		if ((flags & ((guint64) 1 << i)) == 0)
+			continue;
+		tmp = fu_util_plugin_flag_to_string ((guint64) 1 << i);
+		if (tmp == NULL)
+			continue;
+		/* TRANSLATORS: this is a prefix on the console */
+		fmt = fu_util_term_format (_("WARNING:"), FU_UTIL_TERM_COLOR_RED);
+		g_printerr ("%s %s\n", fmt, tmp);
+	}
+}
+
 static gboolean
 fu_util_start_engine (FuUtilPrivate *priv, FuEngineLoadFlags flags, GError **error)
 {
@@ -132,9 +166,15 @@ fu_util_start_engine (FuUtilPrivate *priv, FuEngineLoadFlags flags, GError **err
 	if (!fu_engine_load (priv->engine, flags, error))
 		return FALSE;
 	if (fu_engine_get_tainted (priv->engine)) {
-		g_printerr ("WARNING: This tool has loaded 3rd party code and "
-			    "is no longer supported by the upstream developers!\n");
+		g_autofree gchar *fmt = NULL;
+
+		/* TRANSLATORS: this is a prefix on the console */
+		fmt = fu_util_term_format (_("WARNING:"), FU_UTIL_TERM_COLOR_RED);
+		g_printerr ("%s This tool has loaded 3rd party code and "
+			    "is no longer supported by the upstream developers!\n",
+			    fmt);
 	}
+	fu_util_show_plugin_warnings (priv);
 	return TRUE;
 }
 
@@ -269,10 +309,9 @@ static gboolean
 fu_util_get_plugins (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	GPtrArray *plugins;
-	guint cnt = 0;
 
 	/* load engine */
-	if (!fu_engine_load_plugins (priv->engine, error))
+	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
 		return FALSE;
 
 	/* print */
@@ -280,15 +319,12 @@ fu_util_get_plugins (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_ptr_array_sort (plugins, (GCompareFunc) fu_util_plugin_name_sort_cb);
 	for (guint i = 0; i < plugins->len; i++) {
 		FuPlugin *plugin = g_ptr_array_index (plugins, i);
-		if (!fu_plugin_get_enabled (plugin))
-			continue;
-		g_print ("%s\n", fu_plugin_get_name (plugin));
-		cnt++;
+		g_autofree gchar *str = fu_util_plugin_to_string (FWUPD_PLUGIN (plugin), 0);
+		g_print ("%s\n", str);
 	}
-	if (cnt == 0) {
+	if (plugins->len == 0) {
 		/* TRANSLATORS: nothing found */
 		g_print ("%s\n", _("No plugins found"));
-		return TRUE;
 	}
 
 	return TRUE;
@@ -2761,10 +2797,13 @@ main (int argc, char *argv[])
 
 	/* allow disabling SSL strict mode for broken corporate proxies */
 	if (priv->disable_ssl_strict) {
+		g_autofree gchar *fmt = NULL;
+		/* TRANSLATORS: this is a prefix on the console */
+		fmt = fu_util_term_format (_("WARNING:"), FU_UTIL_TERM_COLOR_RED);
 		/* TRANSLATORS: try to help */
-		g_printerr ("%s\n", _("WARNING: Ignoring SSL strict checks, "
-				      "to do this automatically in the future "
-				      "export DISABLE_SSL_STRICT in your environment"));
+		g_printerr ("%s %s\n", fmt, _("Ignoring SSL strict checks, "
+					      "to do this automatically in the future "
+					      "export DISABLE_SSL_STRICT in your environment"));
 		g_setenv ("DISABLE_SSL_STRICT", "1", TRUE);
 	}
 

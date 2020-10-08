@@ -12,6 +12,7 @@
 #include <glib/gi18n.h>
 #include <gusb.h>
 #include <xmlb.h>
+#include <fwupd.h>
 
 #include "fu-common.h"
 #include "fu-device-private.h"
@@ -33,6 +34,12 @@ fu_util_get_systemd_unit (void)
 	if (g_getenv ("SNAP") != NULL)
 		return SYSTEMD_SNAP_FWUPD_UNIT;
 	return SYSTEMD_FWUPD_UNIT;
+}
+
+gchar *
+fu_util_term_format (const gchar *text, FuUtilTermColor fg_color)
+{
+	return g_strdup_printf ("\033[%um\033[1m%s\033[0m", fg_color, text);
 }
 
 #ifdef HAVE_SYSTEMD
@@ -1280,6 +1287,117 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 			g_autofree gchar *bullet = NULL;
 			bullet = g_strdup_printf ("• %s", tmp2);
 			fu_common_string_append_kv (str, idt + 1, "", bullet);
+		}
+	}
+
+	return g_string_free (str, FALSE);
+}
+
+const gchar *
+fu_util_plugin_flag_to_string (FwupdPluginFlags plugin_flag)
+{
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_UNKNOWN)
+		return NULL;
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE)
+		return NULL;
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_USER_WARNING)
+		return NULL;
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_NONE) {
+		/* TRANSLATORS: Plugin is active and in use */
+		return _("Enabled");
+	}
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_DISABLED) {
+		/* TRANSLATORS: Plugin is inactive and not used */
+		return _("Disabled");
+	}
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_NO_HARDWARE) {
+		/* TRANSLATORS: not required for this system */
+		return _("Required hardware was not found");
+	}
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_LEGACY_BIOS) {
+		/* TRANSLATORS: system is not booted in UEFI mode */
+		return _("Firmware can not be updated in legacy BIOS mode");
+	}
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED) {
+		/* TRANSLATORS: capsule updates are an optional BIOS feature */
+		return _("UEFI capsule updates not available or enabled");
+	}
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_UNLOCK_REQUIRED) {
+		/* TRANSLATORS: user needs to run a command */
+		return _("Firmware updates disabled; run 'fwupdmgr unlock' to enable");
+	}
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED) {
+		/* TRANSLATORS: the user is using Gentoo/Arch and has screwed something up */
+		return _("Required efivarfs filesystem was not found");
+	}
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND) {
+		/* TRANSLATORS: partition refers to something on disk, again, hey Arch users */
+		return _("UEFI ESP partition not detected or configured");
+	}
+
+	/* fall back for unknown types */
+	return fwupd_plugin_flag_to_string (plugin_flag);
+}
+
+static gchar *
+fu_util_plugin_flag_to_cli_text (FwupdPluginFlags plugin_flag)
+{
+	switch (plugin_flag) {
+	case FWUPD_PLUGIN_FLAG_UNKNOWN:
+	case FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE:
+	case FWUPD_PLUGIN_FLAG_USER_WARNING:
+		return NULL;
+	case FWUPD_PLUGIN_FLAG_NONE:
+		return fu_util_term_format (fu_util_plugin_flag_to_string (plugin_flag),
+					    FU_UTIL_CLI_COLOR_GREEN);
+	case FWUPD_PLUGIN_FLAG_DISABLED:
+	case FWUPD_PLUGIN_FLAG_NO_HARDWARE:
+		return fu_util_term_format (fu_util_plugin_flag_to_string (plugin_flag),
+					    FU_UTIL_CLI_COLOR_BLACK);
+	case FWUPD_PLUGIN_FLAG_LEGACY_BIOS:
+	case FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED:
+	case FWUPD_PLUGIN_FLAG_UNLOCK_REQUIRED:
+	case FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED:
+	case FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND:
+		return fu_util_term_format (fu_util_plugin_flag_to_string (plugin_flag),
+					    FU_UTIL_TERM_COLOR_RED);
+	default:
+		break;
+	}
+
+	/* fall back for unknown types */
+	return g_strdup (fwupd_plugin_flag_to_string (plugin_flag));
+}
+
+gchar *
+fu_util_plugin_to_string (FwupdPlugin *plugin, guint idt)
+{
+	GString *str = g_string_new (NULL);
+	const gchar *hdr;
+	guint64 flags = fwupd_plugin_get_flags (plugin);
+
+	fu_common_string_append_kv (str, idt, fwupd_plugin_get_name (plugin), NULL);
+
+	/* TRANSLATORS: description of plugin state, e.g. disabled */
+	hdr = _("Flags");
+	if (flags == 0x0) {
+		const gchar *tmp = fu_util_plugin_flag_to_cli_text (flags);
+		g_autofree gchar *li = g_strdup_printf ("• %s", tmp);
+		fu_common_string_append_kv (str, idt + 1, hdr, li);
+	} else {
+		for (guint i = 0; i < 64; i++) {
+			g_autofree gchar *li = NULL;
+			g_autofree gchar *tmp = NULL;
+			if ((flags & ((guint64) 1 << i)) == 0)
+				continue;
+			tmp = fu_util_plugin_flag_to_cli_text ((guint64) 1 << i);
+			if (tmp == NULL)
+				continue;
+			li = g_strdup_printf ("• %s", tmp);
+			fu_common_string_append_kv (str, idt + 1, hdr, li);
+
+			/* clear header */
+			hdr = "";
 		}
 	}
 

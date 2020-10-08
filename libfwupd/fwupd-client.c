@@ -25,6 +25,7 @@
 #include "fwupd-enums.h"
 #include "fwupd-error.h"
 #include "fwupd-device-private.h"
+#include "fwupd-plugin-private.h"
 #include "fwupd-security-attr-private.h"
 #include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
@@ -739,6 +740,83 @@ fwupd_client_get_devices_async (FwupdClient *self, GCancellable *cancellable,
  **/
 GPtrArray *
 fwupd_client_get_devices_finish (FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
+	g_return_val_if_fail (g_task_is_valid (res, self), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+	return g_task_propagate_pointer (G_TASK(res), error);
+}
+
+static void
+fwupd_client_get_plugins_cb (GObject *source,
+			     GAsyncResult *res,
+			     gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK (user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	val = g_dbus_proxy_call_finish (G_DBUS_PROXY (source), res, &error);
+	if (val == NULL) {
+		fwupd_client_fixup_dbus_error (error);
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* success */
+	g_task_return_pointer (task,
+			       fwupd_plugin_array_from_variant (val),
+			       (GDestroyNotify) g_ptr_array_unref);
+}
+
+/**
+ * fwupd_client_get_plugins_async:
+ * @self: A #FwupdClient
+ * @cancellable: the #GCancellable, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
+ *
+ * Gets all the plugins being used by the daemon.
+ *
+ * You must have called fwupd_client_connect_async() on @self before using
+ * this method.
+ *
+ * Since: 1.5.0
+ **/
+void
+fwupd_client_get_plugins_async (FwupdClient *self, GCancellable *cancellable,
+				GAsyncReadyCallback callback, gpointer callback_data)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GTask) task = NULL;
+
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
+
+	/* call into daemon */
+	task = g_task_new (self, cancellable, callback, callback_data);
+	g_dbus_proxy_call (priv->proxy, "GetPlugins",
+			   NULL, G_DBUS_CALL_FLAGS_NONE,
+			   -1, cancellable,
+			   fwupd_client_get_plugins_cb,
+			   g_steal_pointer (&task));
+}
+
+/**
+ * fwupd_client_get_plugins_finish:
+ * @self: A #FwupdClient
+ * @res: the #GAsyncResult
+ * @error: the #GError, or %NULL
+ *
+ * Gets the result of fwupd_client_get_plugins_async().
+ *
+ * Returns: (element-type FwupdDevice) (transfer container): results
+ *
+ * Since: 1.5.0
+ **/
+GPtrArray *
+fwupd_client_get_plugins_finish (FwupdClient *self, GAsyncResult *res, GError **error)
 {
 	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
 	g_return_val_if_fail (g_task_is_valid (res, self), NULL);

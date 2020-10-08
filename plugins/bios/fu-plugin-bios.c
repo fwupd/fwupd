@@ -16,7 +16,6 @@ fu_plugin_init (FuPlugin *plugin)
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 }
 
-
 gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
@@ -34,41 +33,6 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-
-static gboolean
-fu_plugin_bios_create_dummy (FuPlugin *plugin, const gchar *reason, GError **error)
-{
-	const gchar *key;
-	g_autoptr(FuDevice) dev = fu_device_new ();
-
-	fu_device_set_version_format (dev, FWUPD_VERSION_FORMAT_PLAIN);
-	key = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER);
-	if (key != NULL)
-		fu_device_set_vendor (dev, key);
-	key = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VENDOR);
-	if (key != NULL) {
-		g_autofree gchar *vendor_id = g_strdup_printf ("DMI:%s", key);
-		fu_device_set_vendor_id (FU_DEVICE (dev), vendor_id);
-	}
-	key = "System Firmware";
-	fu_device_set_name (dev, key);
-	key = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VERSION);
-	if (key != NULL)
-		fu_device_set_version (dev, key);
-	fu_device_set_update_error (dev, reason);
-
-	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
-
-	fu_device_add_icon (dev, "computer");
-	fu_device_set_id (dev, "BIOS-dummy");
-	fu_device_add_instance_id (dev, "main-system-firmware");
-	if (!fu_device_setup (dev, error))
-		return FALSE;
-	fu_plugin_device_add (plugin, dev);
-
-	return TRUE;
-}
-
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
@@ -79,9 +43,9 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 #if defined(__x86_64__) || defined(__i386__)
 	g_autoptr(GError) error_local = NULL;
 	if (!fu_efivar_supported (&error_local)) {
-		const gchar *reason = "Firmware can not be updated in legacy BIOS mode, switch to UEFI mode";
-		g_warning ("%s", error_local->message);
-		return fu_plugin_bios_create_dummy (plugin, reason, error);
+		fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_LEGACY_BIOS);
+		fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_USER_WARNING);
+		return TRUE;
 	}
 #endif
 
@@ -89,12 +53,12 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
 	esrt_path = g_build_filename (sysfsfwdir, "efi", "esrt", NULL);
 	if (!g_file_test (esrt_path, G_FILE_TEST_IS_DIR)) {
-		const gchar *reason = "UEFI Capsule updates not available or enabled";
-		return fu_plugin_bios_create_dummy (plugin, reason, error);
+		fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED);
+		fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_USER_WARNING);
+		return TRUE;
 	}
 
 	/* we appear to have UEFI capsule updates */
-	fu_plugin_set_enabled (plugin, FALSE);
-
+	fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_DISABLED);
 	return TRUE;
 }

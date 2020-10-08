@@ -11,6 +11,7 @@
 
 #include "fwupd-enums.h"
 #include "fwupd-device.h"
+#include "fwupd-plugin.h"
 #include "fwupd-remote.h"
 
 G_BEGIN_DECLS
@@ -79,6 +80,13 @@ void		 fwupd_client_get_devices_async		(FwupdClient	*self,
 							 GAsyncReadyCallback callback,
 							 gpointer	 callback_data);
 GPtrArray	*fwupd_client_get_devices_finish	(FwupdClient	*self,
+							 GAsyncResult	*res,
+							 GError		**error);
+void		 fwupd_client_get_plugins_async		(FwupdClient	*self,
+							 GCancellable	*cancellable,
+							 GAsyncReadyCallback callback,
+							 gpointer	 callback_data);
+GPtrArray	*fwupd_client_get_plugins_finish	(FwupdClient	*self,
 							 GAsyncResult	*res,
 							 GError		**error);
 void		 fwupd_client_get_history_async		(FwupdClient	*self,

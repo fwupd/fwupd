@@ -17,6 +17,7 @@
 #include <libfwupd/fwupd-client-sync.h>
 #include <libfwupd/fwupd-common.h>
 #include <libfwupd/fwupd-device.h>
+#include <libfwupd/fwupd-plugin.h>
 #include <libfwupd/fwupd-enums.h>
 #include <libfwupd/fwupd-error.h>
 #include <libfwupd/fwupd-security-attr.h>

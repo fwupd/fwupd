@@ -758,13 +758,21 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		return FALSE;
 
 	/* make sure that efivarfs is rw */
-	if (!fu_plugin_uefi_ensure_efivarfs_rw (&error_efivarfs))
+	if (!fu_plugin_uefi_ensure_efivarfs_rw (&error_efivarfs)) {
+		fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED);
+		fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE);
+		fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_USER_WARNING);
 		g_warning ("%s", error_efivarfs->message);
+	}
 
 	if (data->esp == NULL) {
 		data->esp = fu_common_get_esp_default (&error_udisks2);
-		if (data->esp == NULL)
+		if (data->esp == NULL) {
+			fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND);
+			fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE);
+			fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_USER_WARNING);
 			g_warning ("cannot find default ESP: %s", error_udisks2->message);
+		}
 	}
 
 	/* add each device */
@@ -781,14 +789,9 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 			fu_uefi_device_set_esp (FU_UEFI_DEVICE (dev), data->esp);
 		if (!fu_plugin_uefi_coldplug_device (plugin, dev, error))
 			return FALSE;
-		if (error_efivarfs != NULL) {
-			fu_device_set_update_error (FU_DEVICE (dev), error_efivarfs->message);
-		} else if (error_udisks2 != NULL) {
-			fu_device_set_update_error (FU_DEVICE (dev), error_udisks2->message);
-		} else {
-			fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_UPDATABLE);
-			fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
-		}
+		fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_UPDATABLE);
+		fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
+
 		/* load all configuration variables */
 		fu_plugin_uefi_load_config (plugin, FU_DEVICE (dev));
 		fu_plugin_device_add (plugin, FU_DEVICE (dev));

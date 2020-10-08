@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <glib.h>
+
 G_BEGIN_DECLS
 
 #define FWUPD_RESULT_KEY_APPSTREAM_ID		"AppstreamId"	/* s */
