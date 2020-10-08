@@ -7,6 +7,8 @@
 #include <config.h>
 #include <glib/gi18n.h>
 
+#include "fwupd-security-attr-private.h"
+
 #include "fu-security-attr.h"
 
 gchar *
