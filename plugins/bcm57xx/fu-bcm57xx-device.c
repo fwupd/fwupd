@@ -53,12 +53,12 @@ fu_bcm57xx_device_probe (FuUdevDevice *device, GError **error)
 	g_autofree gchar *fn = NULL;
 	g_autoptr(GPtrArray) ifaces = NULL;
 
-	/* only enumerate number 1 */
-	if (fu_udev_device_get_number (device) != 1) {
+	/* only enumerate number 0 */
+	if (fu_udev_device_get_number (device) != 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "only device 1 supported on multi-device card");
+				     "only device 0 supported on multi-device card");
 		return FALSE;
 	}
 
