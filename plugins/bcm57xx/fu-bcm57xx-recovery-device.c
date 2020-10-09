@@ -36,7 +36,7 @@
 #define REG_NVM_WRITE				0x7008
 
 /* offsets into BAR[2] */
-#define REG_APE_MODE				0x10000
+#define REG_APE_MODE				0x0
 
 typedef struct {
 	guint8	*buf;
@@ -418,21 +418,6 @@ fu_bcm57xx_recovery_device_activate (FuDevice *device, GError **error)
 {
 	BcmRegAPEMode mode = { 0 };
 	FuBcm57xxRecoveryDevice *self = FU_BCM57XX_RECOVERY_DEVICE (device);
-	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(FuDeviceLocker) locker2 = NULL;
-
-	locker = fu_device_locker_new_full (self,
-					    (FuDeviceLockerFunc) fu_bcm57xx_recovery_device_nvram_acquire_lock,
-					    (FuDeviceLockerFunc) fu_bcm57xx_recovery_device_nvram_release_lock,
-					    error);
-	if (locker == NULL)
-		return FALSE;
-	locker2 = fu_device_locker_new_full (self,
-					     (FuDeviceLockerFunc) fu_bcm57xx_recovery_device_nvram_enable,
-					     (FuDeviceLockerFunc) fu_bcm57xx_recovery_device_nvram_disable,
-					     error);
-	if (locker2 == NULL)
-		return FALSE;
 
 	/* halt */
 	mode.bits.Halt = 1;
