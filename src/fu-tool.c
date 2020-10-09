@@ -2736,7 +2736,8 @@ main (int argc, char *argv[])
 		/* set our implemented feature set */
 		fu_engine_request_set_feature_flags (priv->request,
 						     FWUPD_FEATURE_FLAG_DETACH_ACTION |
-						     FWUPD_FEATURE_FLAG_UPDATE_ACTION);
+						     FWUPD_FEATURE_FLAG_UPDATE_ACTION |
+						     FWUPD_FEATURE_FLAG_SWITCH_BRANCH);
 	}
 
 	/* get a list of the commands */
