@@ -1,6 +1,6 @@
 #!/bin/sh
 output=$2
-objcopy_cmd=$(command -v objcopy)
+objcopy_cmd=$(command -v @EFI_OBJCOPY@)
 genpeimg_cmd=$(command -v genpeimg)
 
 "$objcopy_cmd"  -j .text \
