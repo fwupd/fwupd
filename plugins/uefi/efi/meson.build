@@ -1,5 +1,6 @@
 efi_cc = get_option('efi-cc')
 efi_ld = get_option('efi-ld')
+efi_objcopy = get_option('efi-objcopy')
 efi_ldsdir = get_option('efi-ldsdir')
 efi_incdir = get_option('efi-includedir')
 
@@ -153,7 +154,13 @@ so = custom_target('fwup.so',
                              efi_ldflags + ['@INPUT@'] +
                              ['-lefi', '-lgnuefi', libgcc_file_name])
 
-build_tool = join_paths(meson.source_root(), 'plugins', 'uefi', 'efi', 'generate_binary.sh')
+configure_file(
+  input : 'generate_binary.sh.in',
+  output : 'generate_binary.sh',
+  configuration : conf
+)
+
+build_tool = join_paths(meson.current_build_dir(), 'generate_binary.sh')
 app = custom_target(efi_name,
                     input : so,
                     output : efi_name,
@@ -164,7 +171,7 @@ app = custom_target(efi_name,
 dbg = custom_target('efi_debug',
                     input : so,
                     output : efi_name + '.debug',
-                    command : [objcopy,
+                    command : [efi_objcopy,
                                '-j', '.text',
                                '-j', '.sdata',
                                '-j', '.data',
