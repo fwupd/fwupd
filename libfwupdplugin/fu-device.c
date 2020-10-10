@@ -2250,6 +2250,32 @@ fu_device_set_progress_full (FuDevice *self, gsize progress_done, gsize progress
 	fu_device_set_progress (self, (guint) percentage);
 }
 
+/**
+ * fu_device_sleep_with_progress:
+ * @self: A #FuDevice
+ * @delay_secs: the delay in seconds
+ *
+ * Sleeps, setting the device progress from 0..100% as time continues.
+ * The value is gven in whole seconds as it does not make sense to show the
+ * progressbar advancing so quickly for durations of less than one second.
+ *
+ * Since: 1.5.0
+ **/
+void
+fu_device_sleep_with_progress (FuDevice *self, guint delay_secs)
+{
+	gulong delay_us_pc = (delay_secs * G_USEC_PER_SEC) / 100;
+
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_return_if_fail (delay_secs > 0);
+
+	fu_device_set_progress (self, 0);
+	for (guint i = 0; i < 100; i++) {
+		g_usleep (delay_us_pc);
+		fu_device_set_progress (self, i + 1);
+	}
+}
+
 static void
 fu_device_add_string (FuDevice *self, guint idt, GString *str)
 {

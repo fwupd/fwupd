@@ -1270,7 +1270,7 @@ dfu_device_probe (FuUsbDevice *device, GError **error)
 	/* hardware rom Jabra literally reboots if you try to retry a failed
 	 * write -- there's no way to avoid blocking the daemon like this... */
 	if (fu_device_has_custom_flag (FU_DEVICE (device), "attach-extra-reset"))
-		g_usleep (10 * G_USEC_PER_SEC);
+		fu_device_sleep_with_progress (FU_DEVICE (self), 10); /* seconds */
 
 	/* success */
 	return TRUE;

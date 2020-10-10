@@ -318,8 +318,7 @@ fu_bcm57xx_device_activate (FuDevice *device, GError **error)
 
 	/* wait for the device to restart before calling reload() */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_BUSY);
-	fu_device_set_progress (device, 0);
-	g_usleep (G_USEC_PER_SEC * 5);
+	fu_device_sleep_with_progress (device, 5); /* seconds */
 	return TRUE;
 }
 

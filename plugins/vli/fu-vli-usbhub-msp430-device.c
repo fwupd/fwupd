@@ -149,8 +149,7 @@ fu_vli_usbhub_msp430_device_detach (FuDevice *device, GError **error)
 
 	/* avoid power instability by waiting T1 */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	fu_device_set_progress (device, 0);
-	g_usleep (G_USEC_PER_SEC);
+	fu_device_sleep_with_progress (device, 1); /* seconds */
 
 	/* check the device came back */
 	if (!fu_vli_usbhub_device_i2c_read_status (parent, &status, error)) {
