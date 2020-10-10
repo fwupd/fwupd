@@ -132,7 +132,7 @@ fu_rts54hid_device_verify_update_fw (FuRts54HidDevice *self, GError **error)
 				       FU_HID_DEVICE_FLAG_NONE,
 				       error))
 		return FALSE;
-	g_usleep (4 * G_USEC_PER_SEC);
+	fu_device_sleep_with_progress (FU_DEVICE (self), 4); /* seconds */
 	if (!fu_hid_device_get_report (FU_HID_DEVICE (self), 0x0, buf, sizeof(buf),
 				       FU_RTS54HID_DEVICE_TIMEOUT,
 				       FU_HID_DEVICE_FLAG_NONE,

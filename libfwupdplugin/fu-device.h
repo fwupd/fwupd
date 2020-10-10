@@ -273,6 +273,8 @@ void		 fu_device_set_progress			(FuDevice	*self,
 void		 fu_device_set_progress_full		(FuDevice	*self,
 							 gsize		 progress_done,
 							 gsize		 progress_total);
+void		 fu_device_sleep_with_progress		(FuDevice	*self,
+							 guint		 delay_secs);
 void		 fu_device_set_quirks			(FuDevice	*self,
 							 FuQuirks	*quirks);
 FuQuirks	*fu_device_get_quirks			(FuDevice	*self);

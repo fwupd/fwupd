@@ -370,7 +370,7 @@ fu_vli_device_spi_erase_all (FuVliDevice *self, GError **error)
 		return FALSE;
 	if (!fu_vli_device_spi_chip_erase (self, error))
 		return FALSE;
-	g_usleep (4 * G_USEC_PER_SEC);
+	fu_device_sleep_with_progress (FU_DEVICE (self), 4); /* seconds */
 
 	/* verify chip was erased */
 	for (guint addr = 0; addr < 0x10000; addr += 0x1000) {

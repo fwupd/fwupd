@@ -164,7 +164,7 @@ fu_wacom_aes_device_erase_all (FuWacomAesDevice *self, GError **error)
 		g_prefix_error (error, "failed to send eraseall command: ");
 		return FALSE;
 	}
-	g_usleep (2 * G_USEC_PER_SEC);
+	fu_device_sleep_with_progress (FU_DEVICE (self), 2); /* seconds */
 	return TRUE;
 }
 
