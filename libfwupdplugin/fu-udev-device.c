@@ -11,7 +11,7 @@
 #include <fcntl.h>
 #include <string.h>
 #ifdef HAVE_ERRNO_H
-#include <sys/errno.h>
+#include <errno.h>
 #endif
 #ifdef HAVE_IOCTL_H
 #include <sys/ioctl.h>

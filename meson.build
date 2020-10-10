@@ -254,7 +254,7 @@ endif
 if cc.has_header('sys/ioctl.h')
   conf.set('HAVE_IOCTL_H', '1')
 endif
-if cc.has_header('sys/errno.h')
+if cc.has_header('errno.h')
   conf.set('HAVE_ERRNO_H', '1')
 endif
 if cc.has_header('sys/socket.h')
