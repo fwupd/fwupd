@@ -334,8 +334,8 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_sysconfdir}/pki/fwupd-metadata
 %if 0%{?have_msr}
 %{_sysconfdir}/modules-load.d/fwupd-msr.conf
-%{_sysconfdir}/modules-load.d/fwupd-platform-integrity.conf
 %endif
+%{_sysconfdir}/modules-load.d/fwupd-platform-integrity.conf
 %{_datadir}/dbus-1/system.d/org.freedesktop.fwupd.conf
 %{_datadir}/bash-completion/completions/fwupdmgr
 %{_datadir}/bash-completion/completions/fwupdtool
