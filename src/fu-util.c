@@ -2506,6 +2506,7 @@ fu_util_check_daemon_version (FuUtilPrivate *priv, GError **error)
 static gboolean
 fu_util_check_polkit_actions (GError **error)
 {
+#ifdef HAVE_POLKIT
 	g_autofree gchar *directory = fu_common_get_path (FU_PATH_KIND_POLKIT_ACTIONS);
 	g_autofree gchar *filename = g_build_filename (directory,
 						       "org.freedesktop.fwupd.policy",
@@ -2517,6 +2518,7 @@ fu_util_check_polkit_actions (GError **error)
 				     "PolicyKit files are missing, see https://github.com/fwupd/fwupd/wiki/PolicyKit-files-are-missing");
 		return FALSE;
 	}
+#endif
 
 	return TRUE;
 }
@@ -3102,6 +3104,7 @@ main (int argc, char *argv[])
 	if (ignore_power)
 		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_POWER;
 
+#ifdef HAVE_POLKIT
 	/* start polkit tty agent to listen for password requests */
 	if (is_interactive) {
 		if (!fu_polkit_agent_open (&error_polkit)) {
@@ -3109,6 +3112,7 @@ main (int argc, char *argv[])
 				    error_polkit->message);
 		}
 	}
+#endif
 
 	/* connect to the daemon */
 	priv->client = fwupd_client_new ();
@@ -3206,8 +3210,10 @@ main (int argc, char *argv[])
 	}
 
 
+#ifdef HAVE_POLKIT
 	/* stop listening for polkit questions */
 	fu_polkit_agent_close ();
+#endif
 
 	/* success */
 	return EXIT_SUCCESS;

@@ -15,6 +15,7 @@ meson .. \
     --libexecdir=$target \
     --bindir=$target \
     -Dbuild=standalone \
+    -Dpolkit=false \
     -Dplugin_coreboot=false \
     -Dplugin_flashrom=false \
     -Dplugin_uefi=false \
