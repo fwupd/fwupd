@@ -4,10 +4,16 @@ if build_daemon
   )
 endif
 
+client_src = []
 systemd_src = []
+daemon_dep = []
 
 if get_option('systemd')
   systemd_src += 'fu-systemd.c'
+endif
+if get_option('polkit')
+  client_src += 'fu-polkit-agent.c'
+  daemon_dep += polkit
 endif
 
 if build_daemon
@@ -19,7 +25,7 @@ fwupdmgr = executable(
     'fu-progressbar.c',
     'fu-security-attr.c',
     'fu-util-common.c',
-    'fu-polkit-agent.c',
+    client_src,
     systemd_src
   ],
   include_directories : [
@@ -255,12 +261,12 @@ executable(
     gmodule,
     gudev,
     gusb,
-    polkit,
     soup,
     sqlite,
     valgrind,
     libarchive,
     libjsonglib,
+    daemon_dep
   ],
   link_with : [
     fwupd,

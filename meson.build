@@ -210,11 +210,16 @@ libjsonglib = dependency('json-glib-1.0', version : '>= 1.1.1')
 valgrind = dependency('valgrind', required: false)
 soup = dependency('libsoup-2.4', version : '>= 2.51.92')
 if build_daemon
-  polkit = dependency('polkit-gobject-1', version : '>= 0.103')
-  if polkit.version().version_compare('>= 0.114')
-    conf.set('HAVE_POLKIT_0_114', '1')
-  endif
+  if get_option('polkit')
+    polkit = dependency('polkit-gobject-1', version : '>= 0.103')
+    conf.set('HAVE_POLKIT', '1')
+    if polkit.version().version_compare('>= 0.114')
+      conf.set('HAVE_POLKIT_0_114', '1')
+    endif
   conf.set_quoted ('POLKIT_ACTIONDIR', polkit.get_pkgconfig_variable('actiondir'))
+  else
+    warning('Polkit is disabled, the daemon will allow ALL client actions')
+  endif
   udevdir = get_option('udevdir')
   if udevdir == ''
     udev = dependency('udev')
@@ -454,7 +459,7 @@ if get_option('gtkdoc')
   subdir('docs')
 endif
 subdir('libfwupd')
-if build_daemon
+if build_daemon and get_option('polkit')
   subdir('policy')
 endif
 if build_standalone

@@ -13,7 +13,8 @@ fi
 rm -rf build
 meson build \
 	-Dman=false \
-	-Ddaemon=false \
+	-Ddaemon=true \
+	-Dpolkit=false \
 	-Dgusb:tests=false \
 	-Dtpm=false \
 	-Dplugin_modem_manager=false \
