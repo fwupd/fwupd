@@ -482,6 +482,13 @@ fu_common_vercmp_full (const gchar *version_a,
 {
 	if (fmt == FWUPD_VERSION_FORMAT_PLAIN)
 		return g_strcmp0 (version_a, version_b);
+	if (fmt == FWUPD_VERSION_FORMAT_HEX) {
+		g_autofree gchar *hex_a = NULL;
+		g_autofree gchar *hex_b = NULL;
+		hex_a = fu_common_version_parse_from_format (version_a, fmt);
+		hex_b = fu_common_version_parse_from_format (version_b, fmt);
+		return fu_common_vercmp (hex_a, hex_b);
+	}
 	return fu_common_vercmp (version_a, version_b);
 }
 
