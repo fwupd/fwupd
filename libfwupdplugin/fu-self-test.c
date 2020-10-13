@@ -1314,6 +1314,7 @@ fu_common_vercmp_func (void)
 	/* same */
 	g_assert_cmpint (fu_common_vercmp ("1.2.3", "1.2.3"), ==, 0);
 	g_assert_cmpint (fu_common_vercmp ("001.002.003", "001.002.003"), ==, 0);
+	g_assert_cmpint (fu_common_vercmp_full ("0x00000002", "0x2", FWUPD_VERSION_FORMAT_HEX), ==, 0);
 
 	/* upgrade and downgrade */
 	g_assert_cmpint (fu_common_vercmp ("1.2.3", "1.2.4"), <, 0);
