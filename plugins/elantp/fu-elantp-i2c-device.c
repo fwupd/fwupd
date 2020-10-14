@@ -609,6 +609,7 @@ fu_elantp_i2c_device_class_init (FuElantpI2cDeviceClass *klass)
 	klass_device->detach = fu_elantp_i2c_device_detach;
 	klass_device->set_quirk_kv = fu_elantp_i2c_device_set_quirk_kv;
 	klass_device->setup = fu_elantp_i2c_device_setup;
+	klass_device->reload = fu_elantp_i2c_device_setup;
 	klass_device->write_firmware = fu_elantp_i2c_device_write_firmware;
 	klass_device->prepare_firmware = fu_elantp_i2c_device_prepare_firmware;
 	klass_udev_device->probe = fu_elantp_i2c_device_probe;
