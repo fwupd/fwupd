@@ -342,7 +342,11 @@ fu_elantp_i2c_device_write_firmware (FuDevice *device,
 		/* write block */
 		blk[0] = ETP_I2C_IAP_REG_L; 
 		blk[1] = ETP_I2C_IAP_REG_H; 
-		memcpy (blk + 2, chk->data, chk->data_sz);
+		if (!fu_memcpy_safe (blk, blksz, 0x2,			/* dst */
+				     chk->data, chk->data_sz, 0x0,	/* src */
+				     chk->data_sz, error))
+			return FALSE;
+
 		fu_common_write_uint16 (blk + chk->data_sz + 2, csum_tmp, G_LITTLE_ENDIAN);
 
 		if (!fu_elantp_i2c_device_send_cmd (self, blk, blksz, NULL, 0, error))

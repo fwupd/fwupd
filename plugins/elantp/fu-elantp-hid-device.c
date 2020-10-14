@@ -86,8 +86,9 @@ fu_elantp_hid_device_send_cmd (FuElantpHidDevice *self,
 		fu_common_dump_raw (G_LOG_DOMAIN, "GetReport", buf, bufsz);
 
 	/* success */
-	memcpy (rx, buf + 0x3, rxsz);
-	return TRUE;
+	return fu_memcpy_safe (rx, rxsz, 0x0,		/* dst */
+			       buf, bufsz, 0x3,		/* src */
+			       rxsz, error);
 }
 
 static gboolean
@@ -305,7 +306,10 @@ fu_elantp_hid_device_write_firmware (FuDevice *device,
 
 		/* write block */
 		blk[0] = 0x0B; /* report ID */
-		memcpy (blk + 1, chk->data, chk->data_sz);
+		if (!fu_memcpy_safe (blk, blksz, 0x1,			/* dst */
+				     chk->data, chk->data_sz, 0x0,	/* src */
+				     chk->data_sz, error))
+			return FALSE;
 		fu_common_write_uint16 (blk + chk->data_sz + 1, csum_tmp, G_LITTLE_ENDIAN);
 
 		if (!fu_elantp_hid_device_send_cmd (self, blk, blksz, NULL, 0, error))
