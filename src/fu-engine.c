@@ -2170,20 +2170,6 @@ fu_engine_install_release (FuEngine *self,
 		str = g_strdup_printf ("device version not updated on success, %s != %s",
 				       version_rel, fu_device_get_version (device));
 		fu_device_set_update_error (device, str);
-		if ((flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0 &&
-		    !fu_history_modify_device (self->history, device, error))
-			return FALSE;
-		/* success */
-		return TRUE;
-	}
-
-	/* ensure the new version matched what we expected */
-	if (version_rel != NULL &&
-	    g_strcmp0 (fu_device_get_version (device), version_rel) != 0) {
-		g_warning ("new device version '%s' was is not '%s', fixing up",
-			   fu_device_get_version (device), version_rel);
-		fu_device_set_version_format (device, fu_device_get_version_format (device));
-		fu_device_set_version (device, version_rel);
 	}
 
 	/* success */
