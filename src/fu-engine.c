@@ -4338,6 +4338,7 @@ fu_engine_get_releases_for_device (FuEngine *self,
 	GPtrArray *device_guids;
 	GPtrArray *releases;
 	const gchar *version;
+	gboolean has_multiple_branches = FALSE;
 	g_autoptr(GError) error_all = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) branches = NULL;
@@ -4414,12 +4415,14 @@ fu_engine_get_releases_for_device (FuEngine *self,
 		const gchar *branch_tmp = fwupd_release_get_branch (rel_tmp);
 		if (branch_tmp == NULL)
 			branch_tmp = "default";
+		else if (g_strcmp0 (branch_tmp, "default") != 0)
+			has_multiple_branches = TRUE;
 		if (g_ptr_array_find_with_equal_func (branches, branch_tmp,
 						      g_str_equal, NULL))
 			continue;
 		g_ptr_array_add (branches, g_strdup (branch_tmp));
 	}
-	if (branches->len > 1)
+	if (has_multiple_branches)
 		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES);
 
 	/* return the compound error */
