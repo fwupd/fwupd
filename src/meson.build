@@ -11,7 +11,7 @@ daemon_dep = []
 if get_option('systemd')
   systemd_src += 'fu-systemd.c'
 endif
-if get_option('polkit')
+if build_daemon and get_option('polkit')
   client_src += 'fu-polkit-agent.c'
   daemon_dep += polkit
 endif
