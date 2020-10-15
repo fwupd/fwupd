@@ -4329,6 +4329,14 @@ fu_engine_add_releases_for_device_component (FuEngine *self,
 	return TRUE;
 }
 
+static const gchar *
+fu_engine_get_branch_fallback (const gchar *nullable_branch)
+{
+	if (nullable_branch == NULL)
+		return "default";
+	return nullable_branch;
+}
+
 GPtrArray *
 fu_engine_get_releases_for_device (FuEngine *self,
 				   FuEngineRequest *request,
@@ -4409,11 +4417,11 @@ fu_engine_get_releases_for_device (FuEngine *self,
 
 	/* are there multiple branches available */
 	branches = g_ptr_array_new_with_free_func (g_free);
+	g_ptr_array_add (branches,
+			 g_strdup (fu_engine_get_branch_fallback (fu_device_get_branch (device))));
 	for (guint i = 0; i < releases->len; i++) {
 		FwupdRelease *rel_tmp = FWUPD_RELEASE (g_ptr_array_index (releases, i));
-		const gchar *branch_tmp = fwupd_release_get_branch (rel_tmp);
-		if (branch_tmp == NULL)
-			branch_tmp = "default";
+		const gchar *branch_tmp = fu_engine_get_branch_fallback (fwupd_release_get_branch (rel_tmp));
 		if (g_ptr_array_find_with_equal_func (branches, branch_tmp,
 						      g_str_equal, NULL))
 			continue;
