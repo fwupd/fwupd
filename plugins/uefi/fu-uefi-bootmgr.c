@@ -92,6 +92,7 @@ fu_uefi_bootmgr_add_to_boot_order (guint16 boot_entry, GError **error)
 static gboolean
 fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_size, GError **error)
 {
+	const gchar *desc;
 	efi_guid_t *guid = NULL;
 	efi_load_option *loadopt = NULL;
 	gchar *name = NULL;
@@ -103,7 +104,6 @@ fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_si
 	g_autofree guint8 *set_entries = g_malloc0 (G_MAXUINT16);
 
 	while ((rc = efi_get_next_variable_name (&guid, &name)) > 0) {
-		const gchar *desc;
 		gint scanned = 0;
 		guint16 entry = 0;
 		g_autofree guint8 *var_data_tmp = NULL;
@@ -128,20 +128,20 @@ fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_si
 
 		rc = efi_get_variable (*guid, name, &var_data_tmp, &var_data_size, &attr);
 		if (rc < 0) {
-			g_debug ("efi_get_variable(%s) failed", name);
+			g_debug ("efi_get_variable(%s) failed: %s", name, strerror(rc));
 			continue;
 		}
 
 		loadopt = (efi_load_option *)var_data_tmp;
 		if (!efi_loadopt_is_valid(loadopt, var_data_size)) {
-			g_debug ("load option was invalid");
+			g_debug ("%s -> load option was invalid", name);
 			continue;
 		}
 
 		desc = (const gchar *) efi_loadopt_desc (loadopt, var_data_size);
 		if (g_strcmp0 (desc, "Linux Firmware Updater") != 0 &&
 		    g_strcmp0 (desc, "Linux-Firmware-Updater") != 0) {
-			g_debug ("description does not match");
+			g_debug ("%s -> '%s' : does not match", name, desc);
 			continue;
 		}
 
@@ -160,10 +160,10 @@ fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_si
 
 	/* already exists */
 	if (var_data != NULL) {
-
 		/* is different than before */
 		if (var_data_size != (gsize) opt_size ||
 		    memcmp (var_data, opt, opt_size) != 0) {
+			g_debug ("%s -> '%s' : updating existing boot entry", name, desc);
 			efi_loadopt_attr_set (loadopt, LOAD_OPTION_ACTIVE);
 			rc = efi_set_variable (*guid, name, opt, opt_size, attr, 0644);
 			if (rc < 0) {
@@ -173,6 +173,8 @@ fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_si
 						     "could not set boot variable active");
 				return FALSE;
 			}
+		} else {
+			g_debug ("%s -> %s : re-using existing boot entry", name, desc);
 		}
 	/* create a new one */
 	} else {
@@ -192,6 +194,7 @@ fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_si
 			return FALSE;
 		}
 		boot_next_name = g_strdup_printf ("Boot%04X", (guint) boot_next);
+		g_debug ("%s -> creating new entry", boot_next_name);
 		rc = efi_set_variable (efi_guid_global, boot_next_name, opt, opt_size,
 				       EFI_VARIABLE_NON_VOLATILE |
 				       EFI_VARIABLE_BOOTSERVICE_ACCESS |
