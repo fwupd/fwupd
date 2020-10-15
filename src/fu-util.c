@@ -1982,18 +1982,21 @@ fu_util_switch_branch (FuUtilPrivate *priv, gchar **values, GError **error)
 	if (rels == NULL)
 		return FALSE;
 
+	/* get all the unique branches */
+	for (guint i = 0; i < rels->len; i++) {
+		FwupdRelease *rel_tmp = g_ptr_array_index (rels, i);
+		const gchar *branch_tmp = fu_util_release_get_branch (rel_tmp);
+		if (g_ptr_array_find_with_equal_func (branches, branch_tmp,
+						      g_str_equal, NULL))
+			continue;
+		g_ptr_array_add (branches, g_strdup (branch_tmp));
+	}
+
 	/* branch name is optional */
 	if (g_strv_length (values) > 1) {
 		branch = values[1];
-		if (g_strcmp0 (branch, fu_device_get_branch (dev)) == 0) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "Device %s is already on branch %s",
-				     fu_device_get_name (dev),
-				     branch);
-			return FALSE;
-		}
+	} else if (branches->len == 1) {
+		branch = g_ptr_array_index (branches, 0);
 	} else {
 		guint idx;
 
@@ -2015,6 +2018,17 @@ fu_util_switch_branch (FuUtilPrivate *priv, gchar **values, GError **error)
 			return FALSE;
 		}
 		branch = g_ptr_array_index (branches, idx - 1);
+	}
+
+	/* sanity check */
+	if (g_strcmp0 (branch, fu_device_get_branch (dev)) == 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "Device %s is already on branch %s",
+			     fu_device_get_name (dev),
+			     branch);
+		return FALSE;
 	}
 
 	/* the releases are ordered by version */

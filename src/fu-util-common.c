@@ -593,6 +593,17 @@ fu_util_cmd_array_to_string (GPtrArray *array)
 	return g_string_free (string, FALSE);
 }
 
+const gchar *
+fu_util_release_get_branch (FwupdRelease *release)
+{
+	const gchar *tmp = fwupd_release_get_branch (release);
+	if (tmp == NULL) {
+		/* TRANSLATORS: this is the default branch name when unset */
+		return _("default");
+	}
+	return tmp;
+}
+
 gchar *
 fu_util_release_get_name (FwupdRelease *release)
 {
