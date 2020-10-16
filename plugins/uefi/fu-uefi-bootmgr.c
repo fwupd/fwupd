@@ -93,23 +93,26 @@ static gboolean
 fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_size, GError **error)
 {
 	const gchar *desc;
-	efi_guid_t *guid = NULL;
+	const gchar *name;
 	efi_load_option *loadopt = NULL;
-	gchar *name = NULL;
 	gint rc;
 	gsize var_data_size = 0;
 	guint32 attr;
 	guint16 boot_next = G_MAXUINT16;
 	g_autofree guint8 *var_data = NULL;
 	g_autofree guint8 *set_entries = g_malloc0 (G_MAXUINT16);
+	g_autoptr(GPtrArray) names = NULL;
 
-	while ((rc = efi_get_next_variable_name (&guid, &name)) > 0) {
+	names = fu_efivar_get_names (FU_EFIVAR_GUID_EFI_GLOBAL, error);
+	if (names == NULL)
+		return FALSE;
+	for (guint i = 0; i < names->len; i++) {
 		gint scanned = 0;
 		guint16 entry = 0;
 		g_autofree guint8 *var_data_tmp = NULL;
+		g_autoptr(GError) error_local = NULL;
 
-		if (efi_guid_cmp (guid, &efi_guid_global) != 0)
-			continue;
+		name = g_ptr_array_index (names, i);
 		rc = sscanf (name, "Boot%hX%n", &entry, &scanned);
 		if (rc < 0) {
 			g_set_error (error,
@@ -126,9 +129,11 @@ fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_si
 		/* mark this as used */
 		set_entries[entry] = 1;
 
-		rc = efi_get_variable (*guid, name, &var_data_tmp, &var_data_size, &attr);
-		if (rc < 0) {
-			g_debug ("efi_get_variable(%s) failed: %s", name, strerror(rc));
+		if (!fu_efivar_get_data (FU_EFIVAR_GUID_EFI_GLOBAL, name,
+					 &var_data_tmp, &var_data_size,
+					 &attr, &error_local)) {
+			g_debug ("failed to get data for name %s: %s",
+				 name, error_local->message);
 			continue;
 		}
 
@@ -150,13 +155,6 @@ fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_si
 		efi_error_clear ();
 		break;
 	}
-	if (rc < 0) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_FAILED,
-				     "failed to find boot variable");
-		return FALSE;
-	}
 
 	/* already exists */
 	if (var_data != NULL) {
@@ -165,12 +163,10 @@ fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_si
 		    memcmp (var_data, opt, opt_size) != 0) {
 			g_debug ("%s -> '%s' : updating existing boot entry", name, desc);
 			efi_loadopt_attr_set (loadopt, LOAD_OPTION_ACTIVE);
-			rc = efi_set_variable (*guid, name, opt, opt_size, attr, 0644);
-			if (rc < 0) {
-				g_set_error_literal (error,
-						     G_IO_ERROR,
-						     G_IO_ERROR_FAILED,
-						     "could not set boot variable active");
+			if (!fu_efivar_set_data (FU_EFIVAR_GUID_EFI_GLOBAL,
+						 name, opt, opt_size, attr, error)) {
+				g_prefix_error (error,
+						"could not set boot variable active: ");
 				return FALSE;
 			}
 		} else {
@@ -195,17 +191,15 @@ fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_si
 		}
 		boot_next_name = g_strdup_printf ("Boot%04X", (guint) boot_next);
 		g_debug ("%s -> creating new entry", boot_next_name);
-		rc = efi_set_variable (efi_guid_global, boot_next_name, opt, opt_size,
-				       EFI_VARIABLE_NON_VOLATILE |
-				       EFI_VARIABLE_BOOTSERVICE_ACCESS |
-				       EFI_VARIABLE_RUNTIME_ACCESS,
-				       0644);
-		if (rc < 0) {
-			g_set_error (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_FAILED,
-				     "could not set boot variable %s: %d",
-				     boot_next_name, rc);
+		if (!fu_efivar_set_data (FU_EFIVAR_GUID_EFI_GLOBAL,
+					 boot_next_name, opt, opt_size,
+					 FU_EFIVAR_ATTR_NON_VOLATILE |
+					 FU_EFIVAR_ATTR_BOOTSERVICE_ACCESS |
+					 FU_EFIVAR_ATTR_RUNTIME_ACCESS,
+					 error)) {
+			g_prefix_error (error,
+					"could not set boot variable %s: ",
+					boot_next_name);
 			return FALSE;
 		}
 	}
@@ -215,17 +209,15 @@ fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_si
 		return FALSE;
 
 	/* set the boot next */
-	rc = efi_set_variable (efi_guid_global, "BootNext", (guint8 *)&boot_next, 2,
-			       EFI_VARIABLE_NON_VOLATILE |
-			       EFI_VARIABLE_BOOTSERVICE_ACCESS |
-			       EFI_VARIABLE_RUNTIME_ACCESS,
-			       0644);
-	if (rc < 0) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_FAILED,
-			     "could not set BootNext(%" G_GUINT16_FORMAT ")",
-			     boot_next);
+	if (!fu_efivar_set_data (FU_EFIVAR_GUID_EFI_GLOBAL,
+				 "BootNext", (guint8 *)&boot_next, 2,
+				 FU_EFIVAR_ATTR_NON_VOLATILE |
+				 FU_EFIVAR_ATTR_BOOTSERVICE_ACCESS |
+				 FU_EFIVAR_ATTR_RUNTIME_ACCESS,
+				 error)) {
+		g_prefix_error (error,
+				"could not set BootNext(%" G_GUINT16_FORMAT "): ",
+				boot_next);
 		return FALSE;
 	}
 	return TRUE;

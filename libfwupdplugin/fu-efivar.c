@@ -323,6 +323,53 @@ fu_efivar_get_data (const gchar *guid, const gchar *name, guint8 **data,
 }
 
 /**
+ * fu_efivar_get_names:
+ * @guid: Globally unique identifier
+ * @error: A #GError
+ *
+ * Gets the list of names where the GUID matches. An error is set if there are
+ * no names matching the GUID.
+ *
+ * Returns: (transfer container) (element-type utf8): array of names
+ *
+ * Since: 1.4.7
+ **/
+GPtrArray *
+fu_efivar_get_names (const gchar *guid, GError **error)
+{
+	const gchar *name_guid;
+	g_autofree gchar *path = fu_efivar_get_path ();
+	g_autoptr(GDir) dir = NULL;
+	g_autoptr(GPtrArray) names = g_ptr_array_new_with_free_func (g_free);
+
+	/* find names with matching GUID */
+	dir = g_dir_open (path, 0, error);
+	if (dir == NULL)
+		return NULL;
+	while ((name_guid = g_dir_read_name (dir)) != NULL) {
+		gsize name_guidsz = strlen (name_guid);
+		if (name_guidsz < 38)
+			continue;
+		if (g_strcmp0 (name_guid + name_guidsz - 36, guid) == 0) {
+			g_ptr_array_add (names,
+					 g_strndup (name_guid, name_guidsz - 37));
+		}
+	}
+
+	/* nothing found */
+	if (names->len == 0) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_FOUND,
+			     "no names for GUID %s", guid);
+		return NULL;
+	}
+
+	/* success */
+	return g_steal_pointer (&names);
+}
+
+/**
  * fu_efivar_set_data:
  * @guid: Globally unique identifier
  * @name: Variable name
