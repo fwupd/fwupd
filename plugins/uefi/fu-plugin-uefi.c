@@ -39,7 +39,6 @@ fu_plugin_init (FuPlugin *plugin)
 	data->bgrt = fu_uefi_bgrt_new ();
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "upower");
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "tpm_eventlog");
-	fu_plugin_add_compile_version (plugin, "com.redhat.efivar", EFIVAR_LIBRARY_VERSION);
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 }
 
@@ -218,7 +217,7 @@ fu_plugin_uefi_write_splash_data (FuPlugin *plugin,
 	efi_ux_capsule_header_t header = { 0 };
 	efi_capsule_header_t capsule_header = {
 		.flags = EFI_CAPSULE_HEADER_FLAGS_PERSIST_ACROSS_RESET,
-		.guid = efi_guid_ux_capsule,
+		.guid = { 0x0 },
 		.header_size = sizeof(efi_capsule_header_t),
 		.capsule_image_size = 0
 	};
@@ -251,6 +250,11 @@ fu_plugin_uefi_write_splash_data (FuPlugin *plugin,
 	if (ostream == NULL)
 		return FALSE;
 
+	if (!fwupd_guid_from_string (FU_EFIVAR_GUID_UX_CAPSULE,
+				     &capsule_header.guid,
+				     FWUPD_GUID_FLAG_MIXED_ENDIAN,
+				     error))
+		return FALSE;
 	capsule_header.capsule_image_size =
 		g_bytes_get_size (blob) +
 		sizeof(efi_capsule_header_t) +
@@ -285,13 +289,10 @@ fu_plugin_uefi_write_splash_data (FuPlugin *plugin,
 		return FALSE;
 
 	/* write display capsule location as UPDATE_INFO */
-	if (!fu_uefi_device_write_update_info (FU_UEFI_DEVICE (device), fn,
-					       "fwupd-ux-capsule",
-					       &efi_guid_ux_capsule, error))
-		return FALSE;
-
-	/* success */
-	return TRUE;
+	return fu_uefi_device_write_update_info (FU_UEFI_DEVICE (device), fn,
+						 "fwupd-ux-capsule",
+						 FU_EFIVAR_GUID_UX_CAPSULE,
+						 error);
 }
 
 static gboolean

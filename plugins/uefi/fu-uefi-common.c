@@ -263,21 +263,3 @@ fu_uefi_read_file_as_uint64 (const gchar *path, const gchar *attr_name)
 		return 0x0;
 	return fu_common_strtoull (data);
 }
-
-void
-fu_uefi_print_efivar_errors (void)
-{
-	for (gint i = 0; ; i++) {
-		gchar *filename = NULL;
-		gchar *function = NULL;
-		gchar *message = NULL;
-		gint line = 0;
-		gint err = 0;
-		if (efi_error_get (i, &filename, &function, &line,
-				   &message, &err) <= 0)
-			break;
-		g_debug ("{efivar error #%d} %s:%d %s(): %s: %s\t",
-			 i, filename, line, function,
-			 message, strerror (err));
-	}
-}

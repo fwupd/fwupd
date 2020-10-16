@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include <efivar/efiboot.h>
-#include <efivar/efivar.h>
 #include <gio/gio.h>
 #include <stdio.h>
 
@@ -25,46 +24,22 @@ static gboolean
 fu_uefi_bootmgr_add_to_boot_order (guint16 boot_entry, GError **error)
 {
 	gsize boot_order_size = 0;
-	gint rc;
 	guint i = 0;
-	guint32 attr = EFI_VARIABLE_NON_VOLATILE |
-			EFI_VARIABLE_BOOTSERVICE_ACCESS |
-			EFI_VARIABLE_RUNTIME_ACCESS;
+	guint32 attr = 0;
 	g_autofree guint16 *boot_order = NULL;
 	g_autofree guint16 *new_boot_order = NULL;
 
-	/* get size of the BootOrder */
-	rc = efi_get_variable_size (efi_guid_global, "BootOrder", &boot_order_size);
-	if (rc == ENOENT) {
-		boot_order_size = 0;
-		efi_error_clear ();
-	} else if (rc < 0) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_FAILED,
-			     "efi_get_variable_size() failed");
-		return rc;
-	}
-
 	/* get the current boot order */
-	if (boot_order_size != 0) {
-		rc = efi_get_variable (efi_guid_global, "BootOrder",
-				       (guint8 **)&boot_order, &boot_order_size,
-				       &attr);
-		if (rc < 0) {
-			g_set_error_literal (error,
-					     G_IO_ERROR,
-					     G_IO_ERROR_FAILED,
-					     "efi_get_variable(BootOrder) failed");
-			return FALSE;
-		}
+	if (!fu_efivar_get_data (FU_EFIVAR_GUID_EFI_GLOBAL, "BootOrder",
+				 (guint8 **) &boot_order, &boot_order_size,
+				 &attr, error))
+		return FALSE;
 
-		/* already set next */
-		for (i = 0; i < boot_order_size / sizeof (guint16); i++) {
-			guint16 val = boot_order[i];
-			if (val == boot_entry)
-				return TRUE;
-		}
+	/* already set next */
+	for (i = 0; i < boot_order_size / sizeof (guint16); i++) {
+		guint16 val = boot_order[i];
+		if (val == boot_entry)
+			return TRUE;
 	}
 
 	/* add the new boot index to the end of the list */
@@ -72,21 +47,16 @@ fu_uefi_bootmgr_add_to_boot_order (guint16 boot_entry, GError **error)
 	if (boot_order_size != 0)
 		memcpy (new_boot_order, boot_order, boot_order_size);
 
+	attr |= FU_EFIVAR_ATTR_NON_VOLATILE |
+		FU_EFIVAR_ATTR_BOOTSERVICE_ACCESS |
+		FU_EFIVAR_ATTR_RUNTIME_ACCESS;
+
 	i = boot_order_size / sizeof (guint16);
 	new_boot_order[i] = boot_entry;
 	boot_order_size += sizeof (guint16);
-	rc = efi_set_variable(efi_guid_global, "BootOrder",
-			      (guint8 *)new_boot_order, boot_order_size,
-			      attr, 0644);
-	if (rc < 0) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_FAILED,
-				     "efi_set_variable(BootOrder) failed");
-		return FALSE;
-	}
-
-	return TRUE;
+	return fu_efivar_set_data (FU_EFIVAR_GUID_EFI_GLOBAL, "BootOrder",
+				   (guint8 *)new_boot_order, boot_order_size,
+				   attr, error);
 }
 
 static gboolean
@@ -152,7 +122,6 @@ fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_si
 
 		var_data = g_steal_pointer (&var_data_tmp);
 		boot_next = entry;
-		efi_error_clear ();
 		break;
 	}
 
@@ -408,9 +377,5 @@ fu_uefi_bootmgr_bootnext (const gchar *esp_path,
 			     "loadopt size was unreasonable.");
 		return FALSE;
 	}
-	if (!fu_uefi_setup_bootnext_with_dp (dp_buf, opt, opt_size, error))
-		return FALSE;
-	efi_error_clear();
-
-	return TRUE;
+	return fu_uefi_setup_bootnext_with_dp (dp_buf, opt, opt_size, error);
 }

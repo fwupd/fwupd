@@ -288,12 +288,12 @@ main (int argc, char *argv[])
 		const guint8 data = 1;
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_efivar_set_data (FU_EFIVAR_GUID_FWUPDATE,
-					    "FWUPDATE_VERBOSE",
-					    &data, sizeof(data),
-					    EFI_VARIABLE_NON_VOLATILE |
-					    EFI_VARIABLE_BOOTSERVICE_ACCESS |
-					    EFI_VARIABLE_RUNTIME_ACCESS,
-					    &error_local)) {
+					 "FWUPDATE_VERBOSE",
+					 &data, sizeof(data),
+					 FU_EFIVAR_ATTR_NON_VOLATILE |
+					 FU_EFIVAR_ATTR_BOOTSERVICE_ACCESS |
+					 FU_EFIVAR_ATTR_RUNTIME_ACCESS,
+					 &error_local)) {
 			g_printerr ("failed: %s\n", error_local->message);
 			return EXIT_FAILURE;
 		}
