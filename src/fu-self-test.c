@@ -1975,14 +1975,15 @@ fu_device_list_delay_func (gconstpointer user_data)
 	fu_device_list_add (device_list, device1);
 	g_assert_cmpint (added_cnt, ==, 1);
 	g_assert_cmpint (removed_cnt, ==, 0);
-	g_assert_cmpint (changed_cnt, ==, 0);
+	g_assert_cmpint (changed_cnt, ==, 1);
 
 	/* add a device with the same ID */
 	fu_device_set_id (device2, "device1");
 	fu_device_list_add (device_list, device2);
+	fu_device_set_remove_delay (device2, 100);
 	g_assert_cmpint (added_cnt, ==, 1);
 	g_assert_cmpint (removed_cnt, ==, 0);
-	g_assert_cmpint (changed_cnt, ==, 0);
+	g_assert_cmpint (changed_cnt, ==, 2);
 
 	/* spin a bit */
 	fu_test_loop_run_with_timeout (10);
