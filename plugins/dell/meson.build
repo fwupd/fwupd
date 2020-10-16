@@ -26,7 +26,6 @@ shared_module('fu_plugin_dell',
   ],
   dependencies : [
     plugin_deps,
-    efivar,
     libsmbios_c,
     tpm2tss,
   ],
@@ -51,7 +50,6 @@ if get_option('tests')
     ],
     dependencies : [
       plugin_deps,
-      efivar,
       sqlite,
       libsmbios_c,
       valgrind,

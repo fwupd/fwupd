@@ -23,13 +23,6 @@ struct dock_count_out {
 	guint32 reserved;
 };
 
-/* This is used for host flash GUIDs */
-typedef union _ADDR_UNION{
-	uint8_t *buf;
-	efi_guid_t *guid;
-} ADDR_UNION;
-#pragma pack()
-
 static void
 _dell_smi_obj_free (FuDellSmiObj *obj)
 {
@@ -226,39 +219,6 @@ fu_dell_toggle_dock_mode (FuDellSmiObj *smi_obj, guint32 new_mode,
 			     G_IO_ERROR_INVALID_DATA,
 			     "Failed to set dock flash mode: %u",
 			     smi_obj->output[1]);
-		return FALSE;
-	}
-	return TRUE;
-}
-
-gboolean
-fu_dell_toggle_host_mode (FuDellSmiObj *smi_obj, const efi_guid_t guid, int mode)
-{
-	gint ret;
-	ADDR_UNION buf;
-
-	dell_smi_obj_set_class (smi_obj->smi, DACI_FLASH_INTERFACE_CLASS);
-	dell_smi_obj_set_select (smi_obj->smi, DACI_FLASH_INTERFACE_SELECT);
-	dell_smi_obj_set_arg (smi_obj->smi, cbARG1, DACI_FLASH_ARG_FLASH_MODE);
-	dell_smi_obj_set_arg (smi_obj->smi, cbARG4, mode);
-	/* needs to be padded with an empty GUID */
-	buf.buf = dell_smi_obj_make_buffer_frombios_withoutheader(smi_obj->smi,
-								  cbARG2,
-								  sizeof(efi_guid_t) * 2);
-	if (!buf.buf) {
-		g_debug ("Failed to initialize SMI buffer");
-		return FALSE;
-	}
-	*buf.guid = guid;
-	ret = dell_smi_obj_execute(smi_obj->smi);
-	if (ret != SMI_SUCCESS){
-		g_debug ("failed to execute SMI: %d", ret);
-		return FALSE;
-	}
-
-	ret = dell_smi_obj_get_res(smi_obj->smi, cbRES1);
-	if (ret != SMI_SUCCESS) {
-		g_debug ("SMI execution returned error: %d", ret);
 		return FALSE;
 	}
 	return TRUE;
