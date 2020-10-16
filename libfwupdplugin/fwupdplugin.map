@@ -610,6 +610,12 @@ LIBFWUPDPLUGIN_1.4.6 {
   local: *;
 } LIBFWUPDPLUGIN_1.4.5;
 
+LIBFWUPDPLUGIN_1.4.7 {
+  global:
+    fu_efivar_get_names;
+  local: *;
+} LIBFWUPDPLUGIN_1.4.6;
+
 LIBFWUPDPLUGIN_1.5.0 {
   global:
     fu_common_cpuid;
@@ -658,4 +664,4 @@ LIBFWUPDPLUGIN_1.5.0 {
     fu_udev_device_get_subsystem_model;
     fu_udev_device_get_subsystem_vendor;
   local: *;
-} LIBFWUPDPLUGIN_1.4.6;
+} LIBFWUPDPLUGIN_1.4.7;

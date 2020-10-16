@@ -1808,6 +1808,7 @@ fu_efivar_func (void)
 	guint32 attr = 0;
 	g_autofree guint8 *data = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) names = NULL;
 
 	/* check supported */
 	ret = fu_efivar_supported (&error);
@@ -1817,6 +1818,12 @@ fu_efivar_func (void)
 	/* check existing keys */
 	g_assert_false (fu_efivar_exists (FU_EFIVAR_GUID_EFI_GLOBAL, "NotGoingToExist"));
 	g_assert_true (fu_efivar_exists (FU_EFIVAR_GUID_EFI_GLOBAL, "SecureBoot"));
+
+	/* list a few keys */
+	names = fu_efivar_get_names (FU_EFIVAR_GUID_EFI_GLOBAL, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (names);
+	g_assert_cmpint (names->len, ==, 2);
 
 	/* write and read a key */
 	ret = fu_efivar_set_data (FU_EFIVAR_GUID_EFI_GLOBAL, "Test",
