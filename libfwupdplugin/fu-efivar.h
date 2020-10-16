@@ -31,10 +31,19 @@ gboolean	 fu_efivar_get_data		(const gchar	*guid,
 						 gsize		*data_sz,
 						 guint32	*attr,
 						 GError		**error);
+GBytes		*fu_efivar_get_data_bytes	(const gchar	*guid,
+						 const gchar	*name,
+						 guint32	*attr,
+						 GError		**error);
 gboolean	 fu_efivar_set_data		(const gchar	*guid,
 						 const gchar	*name,
 						 const guint8	*data,
 						 gsize		 sz,
+						 guint32	 attr,
+						 GError		**error);
+gboolean	 fu_efivar_set_data_bytes	(const gchar	*guid,
+						 const gchar	*name,
+						 GBytes		*bytes,
 						 guint32	 attr,
 						 GError		**error);
 gboolean	 fu_efivar_delete		(const gchar	*guid,

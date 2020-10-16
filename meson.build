@@ -243,10 +243,6 @@ if valgrind.found()
   conf.set('HAVE_VALGRIND', '1')
 endif
 
-if build_standalone and get_option('plugin_redfish')
-  efivar = dependency('efivar')
-endif
-
 if build_standalone and get_option('plugin_altos')
   libelf = dependency('libelf')
 endif
