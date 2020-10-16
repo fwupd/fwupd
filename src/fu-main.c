@@ -743,6 +743,7 @@ fu_main_authorize_install_queue (FuMainAuthHelper *helper_ref)
 						      fu_main_authorize_install_cb,
 						      g_steal_pointer (&helper));
 #else
+		g_ptr_array_remove_index (helper->action_ids, 0);
 		fu_main_authorize_install_cb (NULL, NULL, g_steal_pointer (&helper));
 #endif /* HAVE_POLKIT */
 		return;
