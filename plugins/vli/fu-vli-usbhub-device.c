@@ -498,43 +498,22 @@ fu_vli_usbhub_device_probe (FuDevice *device, GError **error)
 static gboolean
 fu_vli_usbhub_device_pd_setup (FuVliUsbhubDevice *self, GError **error)
 {
-	FuVliPdHdr hdr = { 0x0 };
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(GError) error_local = NULL;
 
-	/* legacy location */
-	if (!fu_vli_device_spi_read_block (FU_VLI_DEVICE (self),
-					   VLI_USBHUB_FLASHMAP_ADDR_PD_LEGACY +
-					   VLI_USBHUB_PD_FLASHMAP_ADDR_LEGACY,
-					   (guint8 *) &hdr, sizeof(hdr), error)) {
-		g_prefix_error (error, "failed to read legacy PD header");
-		return FALSE;
-	}
-
-	/* new location */
-	if (GUINT16_FROM_LE (hdr.vid) != 0x2109) {
-		g_debug ("PD VID was 0x%04x trying new location",
-			 GUINT16_FROM_LE (hdr.vid));
-		if (!fu_vli_device_spi_read_block (FU_VLI_DEVICE (self),
-						   VLI_USBHUB_FLASHMAP_ADDR_PD +
-						   VLI_USBHUB_PD_FLASHMAP_ADDR,
-						   (guint8 *) &hdr, sizeof(hdr), error)) {
-			g_prefix_error (error, "failed to read PD header");
-			return FALSE;
-		}
-	}
-
-	/* just empty space */
-	if (hdr.fwver == G_MAXUINT32) {
-		g_debug ("no PD device header found");
-		return TRUE;
-	}
-
 	/* add child */
-	dev = fu_vli_usbhub_pd_device_new (&hdr);
-	fu_device_set_quirks (dev, fu_device_get_quirks (FU_DEVICE (self)));
-	if (!fu_device_probe (dev, &error_local)) {
-		g_warning ("cannot create PD device: %s", error_local->message);
+	dev = fu_vli_usbhub_pd_device_new (self);
+	if (!fu_device_probe (dev, error))
+		return FALSE;
+	if (!fu_device_setup (dev, &error_local)) {
+		if (g_error_matches (error_local,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND)) {
+			g_debug ("%s", error_local->message);
+		} else {
+			g_warning ("cannot create PD device: %s",
+				   error_local->message);
+		}
 		return TRUE;
 	}
 	fu_device_add_child (FU_DEVICE (self), dev);
