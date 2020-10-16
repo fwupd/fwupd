@@ -456,3 +456,30 @@ fu_efivar_secure_boot_enabled (void)
 {
 	return fu_efivar_secure_boot_enabled_full (NULL);
 }
+
+/**
+ * fu_efivar_bootnext_unset:
+ * @error: A #GError
+ *
+ * Determines if BootNext is currently not set
+ *
+ * Returns: %TRUE on unset bootnext
+ *
+ * Since: 1.4.7
+ **/
+gboolean
+fu_efivar_bootnext_unset (GError **error)
+{
+	gsize data_size = 0;
+	g_autofree guint8 *data = NULL;
+
+	if (fu_efivar_get_data (FU_EFIVAR_GUID_EFI_GLOBAL, "BootNext",
+				 &data, &data_size, NULL, NULL)) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "Bootnext is already configured");
+		return FALSE;
+	}
+	return TRUE;
+}

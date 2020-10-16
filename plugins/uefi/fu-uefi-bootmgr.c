@@ -290,6 +290,7 @@ fu_uefi_bootmgr_bootnext (const gchar *esp_path,
 	gssize opt_size = 0;
 	gssize sz, dp_size = 0;
 	guint32 attributes = LOAD_OPTION_ACTIVE;
+	g_autoptr(GError) error_bootnext = NULL;
 	g_autofree guint16 *loader_str = NULL;
 	g_autofree gchar *label = NULL;
 	g_autofree gchar *shim_app = NULL;
@@ -302,6 +303,11 @@ fu_uefi_bootmgr_bootnext (const gchar *esp_path,
 	/* skip for self tests */
 	if (g_getenv ("FWUPD_UEFI_TEST") != NULL)
 		return TRUE;
+
+	if (!fu_efivar_bootnext_unset(&error_bootnext)) {
+		g_debug ("%s", error_bootnext->message);
+		return TRUE;
+	}
 
 	/* if secure boot was turned on this might need to be installed separately */
 	source_app = fu_uefi_get_built_app_path (error);
