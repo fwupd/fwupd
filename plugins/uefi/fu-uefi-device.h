@@ -59,5 +59,5 @@ FuUefiUpdateInfo *fu_uefi_device_load_update_info	(FuUefiDevice	*self,
 gboolean	 fu_uefi_device_write_update_info	(FuUefiDevice	*self,
 							 const gchar	*filename,
 							 const gchar	*varname,
-							 const efi_guid_t *guid,
+							 const gchar	*guid,
 							 GError		**error);

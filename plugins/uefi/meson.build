@@ -37,7 +37,6 @@ shared_module('fu_plugin_uefi',
   c_args : cargs,
   dependencies : [
     plugin_deps,
-    efivar,
     efiboot,
     tpm2tss,
   ],
@@ -68,7 +67,6 @@ fwupdate = executable(
     giounix,
     gusb,
     gudev,
-    efivar,
     efiboot,
     tpm2tss,
   ],
@@ -126,7 +124,6 @@ if get_option('tests')
     ],
     dependencies : [
       plugin_deps,
-      efivar,
       efiboot,
       tpm2tss,
     ],
