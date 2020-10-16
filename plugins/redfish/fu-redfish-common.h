@@ -7,7 +7,6 @@
 #pragma once
 
 #include <gio/gio.h>
-#include <efivar.h>
 
 /* SMBIOS */
 #define REDFISH_SMBIOS_TABLE_TYPE			0x42
@@ -29,7 +28,7 @@
 #define REDFISH_IP_ADDRESS_FORMAT_V6			0x02
 
 /* EFI */
-#define REDFISH_EFI_INFORMATION_GUID			EFI_GUID(0x16faa37e,0x4b6a,0x4891,0x9028,0x24,0x2d,0xe6,0x5a,0x3b,0x70)
+#define REDFISH_EFI_INFORMATION_GUID			"16faa37e-4b6a-4891-9028-242de65a3b70"
 
 #define REDFISH_EFI_INFORMATION_INDICATIONS		"RedfishIndications"
 #define REDFISH_EFI_INFORMATION_FW_CREDENTIALS		"RedfishFWCredentials"
@@ -39,8 +38,5 @@
 #define REDFISH_EFI_INDICATIONS_OS_CREDENTIALS		0x00000002
 
 /* shared */
-GBytes		*fu_redfish_common_get_evivar_raw	(efi_guid_t	 guid,
-							 const gchar	*name,
-							 GError		**error);
 gchar		*fu_redfish_common_buffer_to_ipv4	(const guint8	*buffer);
 gchar		*fu_redfish_common_buffer_to_ipv6	(const guint8	*buffer);

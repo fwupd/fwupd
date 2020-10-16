@@ -323,6 +323,32 @@ fu_efivar_get_data (const gchar *guid, const gchar *name, guint8 **data,
 }
 
 /**
+ * fu_efivar_get_data_bytes:
+ * @guid: Globally unique identifier
+ * @name: Variable name
+ * @attr: (nullable): Attributes
+ * @error: A #GError
+ *
+ * Gets the data from a UEFI variable in NVRAM
+ *
+ * Returns: (transfer full): a #GBytes, or %NULL
+ *
+ * Since: 1.5.0
+ **/
+GBytes *
+fu_efivar_get_data_bytes (const gchar *guid,
+			  const gchar *name,
+			  guint32 *attr,
+			  GError **error)
+{
+	guint8 *data = NULL;
+	gsize datasz = 0;
+	if (!fu_efivar_get_data (guid, name, &data, &datasz, attr, error))
+		return NULL;
+	return g_bytes_new_take (data, datasz);
+}
+
+/**
  * fu_efivar_get_names:
  * @guid: Globally unique identifier
  * @error: A #GError
@@ -452,6 +478,29 @@ fu_efivar_set_data (const gchar *guid, const gchar *name, const guint8 *data,
 			     "efivarfs not currently supported on Windows");
 	return FALSE;
 #endif
+}
+
+/**
+ * fu_efivar_set_data_bytes:
+ * @guid: Globally unique identifier
+ * @name: Variable name
+ * @bytes: a #GBytes
+ * @attr: Attributes
+ * @error: A #GError
+ *
+ * Sets the data to a UEFI variable in NVRAM
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fu_efivar_set_data_bytes (const gchar *guid, const gchar *name, GBytes *bytes,
+			  guint32 attr, GError **error)
+{
+	gsize bufsz = 0;
+	const guint8 *buf = g_bytes_get_data (bytes, &bufsz);
+	return fu_efivar_set_data (guid, name, buf, bufsz, attr, error);
 }
 
 /**

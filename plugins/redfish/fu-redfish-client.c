@@ -14,6 +14,7 @@
 #include "fwupd-enums.h"
 
 #include "fu-device.h"
+#include "fu-efivar.h"
 
 #include "fu-redfish-client.h"
 #include "fu-redfish-common.h"
@@ -361,9 +362,9 @@ fu_redfish_client_set_uefi_credentials (FuRedfishClient *self, GError **error)
 	g_autoptr(GBytes) userpass = NULL;
 
 	/* get the uint32 specifying if there are EFI variables set */
-	indications = fu_redfish_common_get_evivar_raw (REDFISH_EFI_INFORMATION_GUID,
-						     REDFISH_EFI_INFORMATION_INDICATIONS,
-						     error);
+	indications = fu_efivar_get_data_bytes (REDFISH_EFI_INFORMATION_GUID,
+						REDFISH_EFI_INFORMATION_INDICATIONS,
+						NULL, error);
 	if (indications == NULL)
 		return FALSE;
 	if (g_bytes_get_size (indications) != 4) {
@@ -385,9 +386,9 @@ fu_redfish_client_set_uefi_credentials (FuRedfishClient *self, GError **error)
 	}
 
 	/* read the correct EFI var for runtime */
-	userpass = fu_redfish_common_get_evivar_raw (REDFISH_EFI_INFORMATION_GUID,
-						  REDFISH_EFI_INFORMATION_OS_CREDENTIALS,
-						  error);
+	userpass = fu_efivar_get_data_bytes (REDFISH_EFI_INFORMATION_GUID,
+					     REDFISH_EFI_INFORMATION_OS_CREDENTIALS,
+					     NULL, error);
 	if (userpass == NULL)
 		return FALSE;
 
