@@ -9,7 +9,6 @@
 #include "fu-device.h"
 #include <smbios_c/smi.h>
 #include <smbios_c/obj/smi.h>
-#include <efivar.h>
 
 typedef struct {
 	struct dell_smi_obj	*smi;
@@ -94,9 +93,6 @@ fu_dell_get_dock_type (guint8 type);
 gboolean
 fu_dell_toggle_dock_mode (FuDellSmiObj *smi_obj, guint32 new_mode,
 			  guint32 dock_location, GError **error);
-
-gboolean
-fu_dell_toggle_host_mode (FuDellSmiObj *smi_obj, const efi_guid_t guid, int mode);
 
 /* SMI return values used */
 #define SMI_SUCCESS			0

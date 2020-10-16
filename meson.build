@@ -348,7 +348,6 @@ endif
 
 if build_standalone and get_option('plugin_dell')
   libsmbios_c = dependency('libsmbios_c', version : '>= 2.4.0')
-  efivar = dependency('efivar')
   conf.set('HAVE_DELL', '1')
   if not get_option('plugin_uefi')
     error('plugin_dell also needs plugin_uefi to work')
