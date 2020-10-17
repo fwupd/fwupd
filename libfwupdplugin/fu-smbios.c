@@ -503,6 +503,53 @@ fu_smbios_get_data (FuSmbios *self, guint8 type, GError **error)
 }
 
 /**
+ * fu_smbios_get_integer:
+ * @self: A #FuSmbios
+ * @type: A structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS
+ * @offset: A structure offset
+ * @error: A #GError or %NULL
+ *
+ * Reads an integer value from the SMBIOS string table of a specific structure.
+ *
+ * The @type and @offset can be referenced from the DMTF SMBIOS specification:
+ * https://www.dmtf.org/sites/default/files/standards/documents/DSP0134_3.1.1.pdf
+ *
+ * Returns: an integer, or %G_MAXUINT if invalid or not found
+ *
+ * Since: 1.5.0
+ **/
+guint
+fu_smbios_get_integer (FuSmbios *self, guint8 type, guint8 offset, GError **error)
+{
+	FuSmbiosItem *item;
+
+	g_return_val_if_fail (FU_IS_SMBIOS (self), 0);
+
+	/* get item */
+	item = fu_smbios_get_item_for_type (self, type);
+	if (item == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "no structure with type %02x", type);
+		return G_MAXUINT;
+	}
+
+	/* check offset valid */
+	if (offset >= item->buf->len) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "offset bigger than size %u",
+			     item->buf->len);
+		return G_MAXUINT;
+	}
+
+	/* success */
+	return item->buf->data[offset];
+}
+
+/**
  * fu_smbios_get_string:
  * @self: A #FuSmbios
  * @type: A structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS

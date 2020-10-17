@@ -280,21 +280,10 @@ fu_hwids_convert_padded_integer_cb (FuSmbios *smbios,
 				    guint8 type, guint8 offset,
 				    GError **error)
 {
-	g_autoptr(GBytes) data = NULL;
-	const guint8 *data_raw;
-	gsize data_sz = 0;
-	data = fu_smbios_get_data (smbios, type, error);
-	if (data == NULL)
+	guint tmp = fu_smbios_get_integer (smbios, type, offset, error);
+	if (tmp == G_MAXUINT)
 		return NULL;
-	data_raw = g_bytes_get_data (data, &data_sz);
-	if (offset >= data_sz) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "offset bigger than data");
-		return NULL;
-	}
-	return g_strdup_printf ("%02x", data_raw[offset]);
+	return g_strdup_printf ("%02x", tmp);
 }
 
 static gchar *
@@ -302,21 +291,10 @@ fu_hwids_convert_integer_cb (FuSmbios *smbios,
 			     guint8 type, guint8 offset,
 			     GError **error)
 {
-	g_autoptr(GBytes) data = NULL;
-	const guint8 *data_raw;
-	gsize data_sz = 0;
-	data = fu_smbios_get_data (smbios, type, error);
-	if (data == NULL)
+	guint tmp = fu_smbios_get_integer (smbios, type, offset, error);
+	if (tmp == G_MAXUINT)
 		return NULL;
-	data_raw = g_bytes_get_data (data, &data_sz);
-	if (offset >= data_sz) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "offset bigger than data");
-		return NULL;
-	}
-	return g_strdup_printf ("%x", data_raw[offset]);
+	return g_strdup_printf ("%x", tmp);
 }
 
 /**

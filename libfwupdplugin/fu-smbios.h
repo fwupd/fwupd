@@ -26,6 +26,10 @@ const gchar	*fu_smbios_get_string		(FuSmbios	*self,
 						 guint8		 type,
 						 guint8		 offset,
 						 GError		**error);
+guint		 fu_smbios_get_integer		(FuSmbios	*self,
+						 guint8		 type,
+						 guint8		 offset,
+						 GError		**error);
 GBytes		*fu_smbios_get_data		(FuSmbios	*self,
 						 guint8		 type,
 						 GError		**error);
