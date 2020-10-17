@@ -5771,6 +5771,52 @@ fu_engine_ensure_security_attrs_supported (FuEngine *self)
 	}
 }
 
+static gchar *
+fu_engine_attrs_calculate_hsi_for_chassis (FuEngine *self)
+{
+	guint val;
+	g_autoptr(GError) error = NULL;
+
+	/* get chassis type from SMBIOS data */
+	val = fu_smbios_get_integer (self->smbios,
+				     FU_SMBIOS_STRUCTURE_TYPE_CHASSIS,
+				     0x05, &error);
+	if (val == G_MAXUINT) {
+		g_warning ("failed to get chassis type: %s", error->message);
+		return g_strdup ("HSI-INVALID:chassis");
+	}
+
+	/* verify HSI makes sense for this chassis type */
+	switch (val) {
+	case FU_SMBIOS_CHASSIS_KIND_DESKTOP:
+	case FU_SMBIOS_CHASSIS_KIND_LOW_PROFILE_DESKTOP:
+	case FU_SMBIOS_CHASSIS_KIND_MINI_TOWER:
+	case FU_SMBIOS_CHASSIS_KIND_TOWER:
+	case FU_SMBIOS_CHASSIS_KIND_PORTABLE:
+	case FU_SMBIOS_CHASSIS_KIND_LAPTOP:
+	case FU_SMBIOS_CHASSIS_KIND_NOTEBOOK:
+	case FU_SMBIOS_CHASSIS_KIND_ALL_IN_ONE:
+	case FU_SMBIOS_CHASSIS_KIND_SUB_NOTEBOOK:
+	case FU_SMBIOS_CHASSIS_KIND_LUNCH_BOX:
+	case FU_SMBIOS_CHASSIS_KIND_MAIN_SERVER:
+	case FU_SMBIOS_CHASSIS_KIND_TABLET:
+	case FU_SMBIOS_CHASSIS_KIND_CONVERTIBLE:
+	case FU_SMBIOS_CHASSIS_KIND_DETACHABLE:
+	case FU_SMBIOS_CHASSIS_KIND_IOT_GATEWAY:
+	case FU_SMBIOS_CHASSIS_KIND_EMBEDDED_PC:
+	case FU_SMBIOS_CHASSIS_KIND_MINI_PC:
+	case FU_SMBIOS_CHASSIS_KIND_STICK_PC:
+		return fu_security_attrs_calculate_hsi (self->host_security_attrs,
+							FU_SECURITY_ATTRS_FLAG_ADD_VERSION);
+	default:
+		break;
+	}
+
+	/* failed */
+	return g_strdup_printf ("HSI-INVALID:chassis[0x%02x]", val);
+}
+
+
 static void
 fu_engine_ensure_security_attrs (FuEngine *self)
 {
@@ -5814,8 +5860,7 @@ fu_engine_ensure_security_attrs (FuEngine *self)
 
 	/* distil into one simple string */
 	g_free (self->host_security_id);
-	self->host_security_id = fu_security_attrs_calculate_hsi (self->host_security_attrs,
-								  FU_SECURITY_ATTRS_FLAG_ADD_VERSION);
+	self->host_security_id = fu_engine_attrs_calculate_hsi_for_chassis (self);
 }
 
 const gchar *
