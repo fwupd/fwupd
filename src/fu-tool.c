@@ -2729,25 +2729,25 @@ main (int argc, char *argv[])
 		     "security",
 		     NULL,
 		     /* TRANSLATORS: command description */
-		     _("Gets the host security attributes."),
+		     _("Gets the host security attributes"),
 		     fu_util_security);
 	fu_util_cmd_array_add (cmd_array,
 		     "esp-mount",
 		     NULL,
 		     /* TRANSLATORS: command description */
-		     _("Mounts the ESP."),
+		     _("Mounts the ESP"),
 		     fu_util_esp_mount);
 	fu_util_cmd_array_add (cmd_array,
 		     "esp-unmount",
 		     NULL,
 		     /* TRANSLATORS: command description */
-		     _("Unmounts the ESP."),
+		     _("Unmounts the ESP"),
 		     fu_util_esp_unmount);
 	fu_util_cmd_array_add (cmd_array,
 		     "esp-list",
 		     NULL,
 		     /* TRANSLATORS: command description */
-		     _("Lists files on the ESP."),
+		     _("Lists files on the ESP"),
 		     fu_util_esp_list);
 
 	/* do stuff on ctrl+c */

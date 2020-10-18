@@ -2968,55 +2968,55 @@ main (int argc, char *argv[])
 		     "get-approved-firmware",
 		     NULL,
 		     /* TRANSLATORS: firmware approved by the admin */
-		     _("Gets the list of approved firmware."),
+		     _("Gets the list of approved firmware"),
 		     fu_util_get_approved_firmware);
 	fu_util_cmd_array_add (cmd_array,
 		     "set-approved-firmware",
 		     "CHECKSUM1[,CHECKSUM2][,CHECKSUM3]",
 		     /* TRANSLATORS: firmware approved by the admin */
-		     _("Sets the list of approved firmware."),
+		     _("Sets the list of approved firmware"),
 		     fu_util_set_approved_firmware);
 	fu_util_cmd_array_add (cmd_array,
 		     "modify-config",
 		     "KEY,VALUE",
 		     /* TRANSLATORS: sets something in daemon.conf */
-		     _("Modifies a daemon configuration value."),
+		     _("Modifies a daemon configuration value"),
 		     fu_util_modify_config);
 	fu_util_cmd_array_add (cmd_array,
 		     "reinstall",
 		     "[DEVICE-ID|GUID]",
 		     /* TRANSLATORS: command description */
-		     _("Reinstall current firmware on the device."),
+		     _("Reinstall current firmware on the device"),
 		     fu_util_reinstall);
 	fu_util_cmd_array_add (cmd_array,
 		     "switch-branch",
 		     "[DEVICE-ID|GUID] [BRANCH]",
 		     /* TRANSLATORS: command description */
-		     _("Switch the firmware branch on the device."),
+		     _("Switch the firmware branch on the device"),
 		     fu_util_switch_branch);
 	fu_util_cmd_array_add (cmd_array,
 		     "security",
 		     NULL,
 		     /* TRANSLATORS: command description */
-		     _("Gets the host security attributes."),
+		     _("Gets the host security attributes"),
 		     fu_util_security);
 	fu_util_cmd_array_add (cmd_array,
 		     "block-firmware",
 		     "[CHECKSUM]",
 		     /* TRANSLATORS: command description */
-		     _("Blocks a specific firmware from being installed."),
+		     _("Blocks a specific firmware from being installed"),
 		     fu_util_block_firmware);
 	fu_util_cmd_array_add (cmd_array,
 		     "unblock-firmware",
 		     "[CHECKSUM]",
 		     /* TRANSLATORS: command description */
-		     _("Blocks a specific firmware from being installed."),
+		     _("Blocks a specific firmware from being installed"),
 		     fu_util_unblock_firmware);
 	fu_util_cmd_array_add (cmd_array,
 		     "get-blocked-firmware",
 		     NULL,
 		     /* TRANSLATORS: command description */
-		     _("Gets the list of blocked firmware."),
+		     _("Gets the list of blocked firmware"),
 		     fu_util_get_blocked_firmware);
 	fu_util_cmd_array_add (cmd_array,
 		     "get-plugins",
