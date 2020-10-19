@@ -244,28 +244,8 @@ fu_vli_usbhub_msp430_device_write_firmware (FuDevice *device,
 		FuVliUsbhubDeviceRequest req = { 0x0 };
 		const gchar *line = rcd->buf->str;
 
-		/* check there's enough data for the smallest possible record */
-		if (rcd->buf->len < 11) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "line %u is incomplete, length %u",
-				     rcd->ln, (guint) rcd->buf->len);
-			return FALSE;
-		}
-
-		/* check starting token */
-		if (line[0] != ':') {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "invalid starting token on line %u: %s",
-				     rcd->ln, line);
-			return FALSE;
-		}
-
 		/* length, 16-bit address, type */
-		req.len = fu_firmware_strparse_uint8 (line + 1);
+		req.len = rcd->byte_cnt;
 		if (req.len >= sizeof(req.buf) - 7) {
 			g_set_error (error,
 				     FWUPD_ERROR,
