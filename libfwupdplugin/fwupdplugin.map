@@ -618,6 +618,7 @@ LIBFWUPDPLUGIN_1.4.7 {
 
 LIBFWUPDPLUGIN_1.5.0 {
   global:
+    fu_byte_array_set_size;
     fu_common_cpuid;
     fu_common_crc16;
     fu_common_crc32;

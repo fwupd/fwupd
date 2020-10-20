@@ -182,6 +182,8 @@ gboolean	 fu_common_read_uint32_safe	(const guint8	*buf,
 						 FuEndianType	 endian,
 						 GError		**error);
 
+void		 fu_byte_array_set_size		(GByteArray	*array,
+						 guint		 length);
 void		 fu_byte_array_append_uint8	(GByteArray	*array,
 						 guint8		 data);
 void		 fu_byte_array_append_uint16	(GByteArray	*array,
