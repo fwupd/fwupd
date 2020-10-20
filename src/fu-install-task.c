@@ -260,9 +260,10 @@ fu_install_task_check_requirements (FuInstallTask *self,
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Device %s doesn't support %s",
+			     "Device %s does not support %s, only %s",
 			     fu_device_get_name (self->device),
-			     protocol);
+			     protocol,
+			     fu_device_get_protocol (self->device));
 		return FALSE;
 	}
 
