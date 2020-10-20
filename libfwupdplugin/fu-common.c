@@ -2001,6 +2001,24 @@ fu_byte_array_append_uint32 (GByteArray *array, guint32 data, FuEndianType endia
 }
 
 /**
+ * fu_byte_array_set_size:
+ * @array: a #GByteArray
+ * @length:  the new size of the GByteArray
+ *
+ * Sets the size of the GByteArray, expanding it with NULs if necessary.
+ *
+ * Since: 1.5.0
+ **/
+void
+fu_byte_array_set_size (GByteArray *array, guint length)
+{
+	guint oldlength = array->len;
+	g_byte_array_set_size (array, length);
+	if (length > oldlength)
+		memset (array->data + oldlength, 0x0, length - oldlength);
+}
+
+/**
  * fu_common_kernel_locked_down:
  *
  * Determines if kernel lockdown in effect

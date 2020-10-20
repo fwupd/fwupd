@@ -102,7 +102,7 @@ goodixmoc_device_cmd_recv (GUsbDevice  *usbdevice,
 	*/
 	while (1) {
 		g_autoptr(GByteArray) reply = g_byte_array_new ();
-		g_byte_array_set_size (reply, GX_FLASH_TRANSFER_BLOCK_SIZE);
+		fu_byte_array_set_size (reply, GX_FLASH_TRANSFER_BLOCK_SIZE);
 		if (!g_usb_device_bulk_transfer (usbdevice,
 						 GX_USB_BULK_EP_IN,
 						 reply->data,
