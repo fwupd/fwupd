@@ -606,11 +606,6 @@ fu_main_authorize_activate_cb (GObject *source, GAsyncResult *res, gpointer user
 		g_dbus_method_invocation_return_gerror (helper->invocation, error);
 		return;
 	}
-#else
-	if (!fu_main_authorization_is_trusted (helper->request, &error)) {
-		g_dbus_method_invocation_return_gerror (helper->invocation, error);
-		return;
-	}
 #endif /* HAVE_POLKIT */
 
 	/* authenticated */
@@ -708,11 +703,6 @@ fu_main_authorize_install_cb (GObject *source, GAsyncResult *res, gpointer user_
 	auth = polkit_authority_check_authorization_finish (POLKIT_AUTHORITY (source),
 							    res, &error);
 	if (!fu_main_authorization_is_valid (auth, &error)) {
-		g_dbus_method_invocation_return_gerror (helper->invocation, error);
-		return;
-	}
-#else
-	if (!fu_main_authorization_is_trusted (helper->request, &error)) {
 		g_dbus_method_invocation_return_gerror (helper->invocation, error);
 		return;
 	}
