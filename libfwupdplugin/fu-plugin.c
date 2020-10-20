@@ -431,6 +431,8 @@ fu_plugin_open (FuPlugin *self, const gchar *filename, GError **error)
 			     G_IO_ERROR_FAILED,
 			     "failed to open plugin %s: %s",
 			     filename, g_module_error ());
+		fu_plugin_add_flag (self, FWUPD_PLUGIN_FLAG_FAILED_OPEN);
+		fu_plugin_add_flag (self, FWUPD_PLUGIN_FLAG_USER_WARNING);
 		return FALSE;
 	}
 
