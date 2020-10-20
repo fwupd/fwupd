@@ -1460,19 +1460,28 @@ fu_engine_check_requirements (FuEngine *self,
 	/* do engine checks */
 	reqs = xb_node_query (fu_install_task_get_component (task),
 			      "requires/*", 0, &error_local);
-	if (reqs == NULL) {
-		if (g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND))
-			return TRUE;
-		if (g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT))
-			return TRUE;
-		g_propagate_error (error, g_steal_pointer (&error_local));
-		return FALSE;
-	}
-	for (guint i = 0; i < reqs->len; i++) {
-		XbNode *req = g_ptr_array_index (reqs, i);
-		if (!fu_engine_check_requirement (self, request, req, device, error))
+	if (reqs != NULL) {
+		for (guint i = 0; i < reqs->len; i++) {
+			XbNode *req = g_ptr_array_index (reqs, i);
+			if (!fu_engine_check_requirement (self, request, req, device, error))
+				return FALSE;
+		}
+	} else if (!g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) &&
+		   !g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
+			g_propagate_error (error, g_steal_pointer (&error_local));
 			return FALSE;
 	}
+
+#ifndef HAVE_POLKIT
+	if ((fu_install_task_get_trust_flags (task) & FWUPD_TRUST_FLAG_PAYLOAD) == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "archive signature missing or not trusted");
+		return FALSE;
+	}
+#endif
+
 	return TRUE;
 }
 
