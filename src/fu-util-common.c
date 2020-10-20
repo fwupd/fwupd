@@ -1345,6 +1345,10 @@ fu_util_plugin_flag_to_string (FwupdPluginFlags plugin_flag)
 		/* TRANSLATORS: partition refers to something on disk, again, hey Arch users */
 		return _("UEFI ESP partition not detected or configured");
 	}
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_FAILED_OPEN) {
+		/* TRANSLATORS: Failed to open plugin, hey Arch users */
+		return _("Plugin dependencies missing");
+	}
 
 	/* fall back for unknown types */
 	return fwupd_plugin_flag_to_string (plugin_flag);

@@ -232,6 +232,7 @@ typedef enum {
  * @FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED:	The efivar filesystem is not found
  * @FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND:		The EFI ESP not found
  * @FWUPD_PLUGIN_FLAG_LEGACY_BIOS:		System running in legacy CSM mode
+ * @FWUPD_PLUGIN_FLAG_FAILED_OPEN:		Failed to open plugin (missing dependency)
  *
  * The plugin flags.
  **/
@@ -245,6 +246,7 @@ typedef enum {
 #define FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED	(1u << 6)	/* Since: 1.5.0 */
 #define FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND		(1u << 7)	/* Since: 1.5.0 */
 #define FWUPD_PLUGIN_FLAG_LEGACY_BIOS		(1u << 8)	/* Since: 1.5.0 */
+#define FWUPD_PLUGIN_FLAG_FAILED_OPEN		(1u << 9)	/* Since: 1.5.0 */
 #define FWUPD_PLUGIN_FLAG_UNKNOWN		G_MAXUINT64	/* Since: 1.5.0 */
 typedef guint64 FwupdPluginFlags;
 

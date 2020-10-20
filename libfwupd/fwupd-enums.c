@@ -339,6 +339,8 @@ fwupd_plugin_flag_to_string (FwupdPluginFlags plugin_flag)
 		return "esp-not-found";
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_LEGACY_BIOS)
 		return "legacy-bios";
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_FAILED_OPEN)
+		return "failed-open";
 	if (plugin_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -377,6 +379,8 @@ fwupd_plugin_flag_from_string (const gchar *plugin_flag)
 		return FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND;
 	if (g_strcmp0 (plugin_flag, "legacy-bios") == 0)
 		return FWUPD_PLUGIN_FLAG_LEGACY_BIOS;
+	if (g_strcmp0 (plugin_flag, "failed-open") == 0)
+		return FWUPD_PLUGIN_FLAG_FAILED_OPEN;
 	return FWUPD_DEVICE_FLAG_UNKNOWN;
 }
 

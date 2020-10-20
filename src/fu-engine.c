@@ -5933,6 +5933,7 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 		if (self->usb_ctx != NULL) {
 			if (!fu_plugin_open (plugin, filename, &error_local)) {
 				g_warning ("cannot load: %s", error_local->message);
+				fu_engine_add_plugin (self, plugin);
 				continue;
 			}
 		}
