@@ -1939,3 +1939,57 @@ fu_util_device_order_sort_cb (gconstpointer a, gconstpointer b)
 	FuDevice *device_b = *((FuDevice **) b);
 	return fu_util_device_order_compare (device_a, device_b);
 }
+
+
+gboolean
+fu_util_switch_branch_warning (FwupdDevice *dev,
+			       FwupdRelease *rel,
+			       gboolean assume_yes,
+			       GError **error)
+{
+	const gchar *desc_markup = NULL;
+	g_autofree gchar *desc_plain = NULL;
+	g_autoptr(GString) desc_full = g_string_new (NULL);
+
+	/* warn the user if the vendor is different */
+	if (g_strcmp0 (fwupd_device_get_vendor (dev), fwupd_release_get_vendor (rel)) != 0) {
+		/* TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name */
+		g_string_append_printf (desc_full, _("The firmware from %s is not "
+						     "supplied by %s, the hardware vendor."),
+					fwupd_release_get_vendor (rel),
+					fwupd_device_get_vendor (dev));
+		g_string_append (desc_full, "\n\n");
+		/* TRANSLATORS: %1 is the device vendor name */
+		g_string_append_printf (desc_full, _("Your hardware may be damaged using this firmware, "
+						     "and installing this release may void any warranty "
+						     "with %s."),
+					fwupd_device_get_vendor (dev));
+		g_string_append (desc_full, "\n\n");
+	}
+
+	/* from the <description> in the AppStream data */
+	desc_markup = fwupd_release_get_description (rel);
+	if (desc_markup == NULL)
+		return TRUE;
+	desc_plain = fu_util_convert_description (desc_markup, error);
+	if (desc_plain == NULL)
+		return FALSE;
+	g_string_append (desc_full, desc_plain);
+
+	/* show and ask user to confirm */
+	fu_util_warning_box (desc_full->str, 80);
+	if (!assume_yes) {
+		/* ask for permission */
+		g_print ("\n%s [y|N]: ",
+			 /* TRANSLATORS: should the branch be changed */
+			 _("Do you understand the consequences of changing the firmware branch?"));
+		if (!fu_util_prompt_for_boolean (FALSE)) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOTHING_TO_DO,
+					     "Declined branch switch");
+			return FALSE;
+		}
+	}
+	return TRUE;
+}

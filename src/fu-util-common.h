@@ -113,3 +113,8 @@ gint		 fu_util_sort_devices_by_flags_cb	(gconstpointer	 a,
 						 gconstpointer	 b);
 gint		 fu_util_device_order_sort_cb	(gconstpointer a,
 						 gconstpointer b);
+
+gboolean	 fu_util_switch_branch_warning	(FwupdDevice	*dev,
+						 FwupdRelease	*rel,
+						 gboolean	 assume_yes,
+						 GError		**error);
