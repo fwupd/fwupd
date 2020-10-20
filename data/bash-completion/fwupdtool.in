@@ -26,6 +26,7 @@ _fwupdtool_cmd_list=(
 	'monitor'
 	'reinstall'
 	'security'
+	'switch-branch'
 	'self-sign'
 	'smbios-dump'
 	'attach'

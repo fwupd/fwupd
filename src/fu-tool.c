@@ -2439,6 +2439,133 @@ fu_util_esp_list (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+
+static gboolean
+fu_util_switch_branch (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	const gchar *branch;
+	g_autoptr(FwupdRelease) rel = NULL;
+	g_autoptr(GPtrArray) rels = NULL;
+	g_autoptr(GPtrArray) branches = g_ptr_array_new_with_free_func (g_free);
+	g_autoptr(FuDevice) dev = NULL;
+
+	/* load engine */
+	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+		return FALSE;
+
+	/* find the device and check it has multiple branches */
+	priv->filter_include |= FWUPD_DEVICE_FLAG_SUPPORTED;
+	if (g_strv_length (values) == 1)
+		dev = fu_util_get_device (priv, values[1], error);
+	else
+		dev = fu_util_prompt_for_device (priv, NULL, error);
+	if (dev == NULL)
+		return FALSE;
+	if (!fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES)) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "Multiple branches not available");
+		return FALSE;
+	}
+
+	/* get all releases, including the alternate branch versions */
+	rels = fu_engine_get_releases (priv->engine,
+				       priv->request,
+				       fu_device_get_id (dev),
+				       error);
+	if (rels == NULL)
+		return FALSE;
+
+	/* get all the unique branches */
+	for (guint i = 0; i < rels->len; i++) {
+		FwupdRelease *rel_tmp = g_ptr_array_index (rels, i);
+		const gchar *branch_tmp = fu_util_release_get_branch (rel_tmp);
+		if (g_ptr_array_find_with_equal_func (branches, branch_tmp,
+						      g_str_equal, NULL))
+			continue;
+		g_ptr_array_add (branches, g_strdup (branch_tmp));
+	}
+
+	/* branch name is optional */
+	if (g_strv_length (values) > 1) {
+		branch = values[1];
+	} else if (branches->len == 1) {
+		branch = g_ptr_array_index (branches, 0);
+	} else {
+		guint idx;
+
+		/* TRANSLATORS: get interactive prompt, where branch is the
+		 * supplier of the firmware, e.g. "non-free" or "free" */
+		g_print ("%s\n", _("Choose a branch:"));
+		/* TRANSLATORS: this is to abort the interactive prompt */
+		g_print ("0.\t%s\n", _("Cancel"));
+		for (guint i = 0; i < branches->len; i++) {
+			const gchar *branch_tmp = g_ptr_array_index (branches, i);
+			g_print ("%u.\t%s\n", i + 1, branch_tmp);
+		}
+		idx = fu_util_prompt_for_number (branches->len);
+		if (idx == 0) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOTHING_TO_DO,
+					     "Request canceled");
+			return FALSE;
+		}
+		branch = g_ptr_array_index (branches, idx - 1);
+	}
+
+	/* sanity check */
+	if (g_strcmp0 (branch, fu_device_get_branch (dev)) == 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "Device %s is already on branch %s",
+			     fu_device_get_name (dev),
+			     branch);
+		return FALSE;
+	}
+
+	/* the releases are ordered by version */
+	for (guint j = 0; j < rels->len; j++) {
+		FwupdRelease *rel_tmp = g_ptr_array_index (rels, j);
+		if (g_strcmp0 (fwupd_release_get_branch (rel_tmp), branch) == 0) {
+			rel = g_object_ref (rel_tmp);
+			break;
+		}
+	}
+	if (rel == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "No releases for branch %s",
+			     branch);
+		return FALSE;
+	}
+
+	/* we're switching branch */
+	if (!fu_util_switch_branch_warning (FWUPD_DEVICE (dev), rel, FALSE, error))
+		return FALSE;
+
+	/* update the console if composite devices are also updated */
+	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
+	g_signal_connect (priv->engine, "device-changed",
+			  G_CALLBACK (fu_util_update_device_changed_cb), priv);
+	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
+	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH;
+	if (!fu_util_install_release (priv, rel, error))
+		return FALSE;
+	fu_util_display_current_message (priv);
+
+	/* we don't want to ask anything */
+	if (priv->no_reboot_check) {
+		g_debug ("skipping reboot check");
+		return TRUE;
+	}
+
+	return fu_util_prompt_complete (priv->completion_flags, TRUE, error);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -2749,6 +2876,12 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Lists files on the ESP"),
 		     fu_util_esp_list);
+	fu_util_cmd_array_add (cmd_array,
+		     "switch-branch",
+		     "[DEVICE-ID|GUID] [BRANCH]",
+		     /* TRANSLATORS: command description */
+		     _("Switch the firmware branch on the device"),
+		     fu_util_switch_branch);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();
@@ -2772,6 +2905,7 @@ main (int argc, char *argv[])
 		/* set our implemented feature set */
 		fu_engine_request_set_feature_flags (priv->request,
 						     FWUPD_FEATURE_FLAG_DETACH_ACTION |
+						     FWUPD_FEATURE_FLAG_SWITCH_BRANCH |
 						     FWUPD_FEATURE_FLAG_UPDATE_ACTION);
 	}
 
