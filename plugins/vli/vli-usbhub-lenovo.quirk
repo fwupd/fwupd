@@ -146,6 +146,7 @@ CounterpartGuid = USB\VID_17EF&PID_7224
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2
+ParentGuid = USB\VID_17EF&PID_7216
 
 # Lenovo Travel hub Gen2
 [DeviceInstanceId=USB\VID_17EF&PID_721D]
@@ -157,6 +158,7 @@ CounterpartGuid = USB\VID_17EF&PID_7225
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2
+ParentGuid = USB\VID_17EF&PID_721D
 
 # Lenovo USB-C Mini dock
 [DeviceInstanceId=USB\VID_17EF&PID_3094]
@@ -195,6 +197,7 @@ CounterpartGuid = USB\VID_17EF
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2
+ParentGuid = USB\VID_17EF&PID_7228
 
 # Lenovo USB-C 7-in-1 Hub
 [DeviceInstanceId=USB\VID_17EF&PID_722A]
@@ -206,6 +209,7 @@ CounterpartGuid = USB\VID_17EF&PID_7229
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2
+ParentGuid = USB\VID_17EF&PID_722A
 
 # Lenovo USB-C to 4 USB-A Hub
 [DeviceInstanceId=USB\VID_17EF&PID_1039]
@@ -217,6 +221,7 @@ CounterpartGuid = USB\VID_17EF&PID_103A
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2
+ParentGuid = USB\VID_17EF&PID_1039
 
 # Lenovo Gen2 dock
 [DeviceInstanceId=USB\VID_17EF&PID_A391]
