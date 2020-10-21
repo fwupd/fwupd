@@ -1,12 +1,4 @@
-[DeviceInstanceId=HIDRAW\VEN_04F3&DEV_3010]
-Plugin = elantp
-GType = FuElantpHidDevice
-
-[DeviceInstanceId=HIDRAW\VEN_04F3&DEV_30C5]
-Plugin = elantp
-GType = FuElantpHidDevice
-
-[DeviceInstanceId=HIDRAW\VEN_04F3&DEV_314F]
+[DeviceInstanceId=HIDRAW\VEN_04F3]
 Plugin = elantp
 GType = FuElantpHidDevice
 
