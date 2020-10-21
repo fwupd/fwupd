@@ -134,6 +134,7 @@ fu_elantp_i2c_device_setup (FuDevice *device, GError **error)
 	guint8 ic_type;
 	g_autofree gchar *instance_id1 = NULL;
 	g_autofree gchar *instance_id2 = NULL;
+	g_autofree gchar *instance_id3 = NULL;
 	g_autofree gchar *instance_id_ic_type = NULL;
 	g_autofree gchar *version_bl = NULL;
 	g_autofree gchar *version = NULL;
@@ -213,6 +214,9 @@ fu_elantp_i2c_device_setup (FuDevice *device, GError **error)
 	instance_id1 = g_strdup_printf ("HIDRAW\\VEN_%04X&DEV_%04X&MOD_%04X",
 					vid, pid, self->module_id);
 	fu_device_add_instance_id (device, instance_id1);
+	instance_id3 = g_strdup_printf ("HIDRAW\\VEN_%04X&DEV_%XXXX",
+					vid, (pid >> 12) & 0xF);
+	fu_device_add_instance_id (device, instance_id3);
 
 	/* get OSM version */
 	if (!fu_elantp_i2c_device_read_cmd (self, ETP_CMD_I2C_OSM_VERSION, buf, sizeof(buf), error)) {

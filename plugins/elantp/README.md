@@ -24,6 +24,10 @@ These device uses the standard DeviceInstanceId values, e.g.
 
  * `HIDRAW\VEN_04F3&DEV_3010`
 
+Another ID is added which corresponds to the first nibble of the device ID:
+
+ * `HIDRAW\VEN_04F3&DEV_3XXX`
+
 Additionally another instance ID is added which corresponds to the module ID:
 
  * `HIDRAW\VEN_04F3&DEV_3010&MOD_1234`
