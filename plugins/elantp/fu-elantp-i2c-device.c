@@ -231,7 +231,7 @@ fu_elantp_i2c_device_setup (FuDevice *device, GError **error)
 	}
 	instance_id_ic_type = g_strdup_printf ("ELANTP\\ICTYPE_%02X", ic_type);
 	fu_device_add_instance_id (device, instance_id_ic_type);
-	
+
 	/* define the extra instance IDs (ic_type + module_id) */
 	instance_id2 = g_strdup_printf ("ELANTP\\ICTYPE_%02X&MOD_%04X",
 					ic_type, self->module_id);
@@ -340,8 +340,8 @@ fu_elantp_i2c_device_write_firmware (FuDevice *device,
 		g_autofree guint8 *blk = g_malloc0 (blksz);
 
 		/* write block */
-		blk[0] = ETP_I2C_IAP_REG_L; 
-		blk[1] = ETP_I2C_IAP_REG_H; 
+		blk[0] = ETP_I2C_IAP_REG_L;
+		blk[1] = ETP_I2C_IAP_REG_H;
 		if (!fu_memcpy_safe (blk, blksz, 0x2,			/* dst */
 				     chk->data, chk->data_sz, 0x0,	/* src */
 				     chk->data_sz, error))
@@ -428,7 +428,7 @@ fu_elantp_i2c_device_detach (FuDevice *device, GError **error)
 	} else {
 		ic_type = (tmp >> 8) & 0xFF;
 	}
-	
+
 	/* get IAP firmware version */
 	if (!fu_elantp_i2c_device_read_cmd (self,
 					    self->pattern == 0 ? ETP_CMD_I2C_IAP_VERSION : ETP_CMD_I2C_IAP_VERSION_2,
@@ -470,7 +470,6 @@ fu_elantp_i2c_device_detach (FuDevice *device, GError **error)
 						     "failed to set IAP type");
 				return FALSE;
 			}
-			
 		}
 	}
 	if (!fu_elantp_i2c_device_write_cmd (self,
