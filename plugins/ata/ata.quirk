@@ -10,6 +10,10 @@ VendorId = ATA:0x1179
 Vendor = Samsung
 VendorId = ATA:0x144D
 
+[DeviceInstanceId=OUI\000120]
+Vendor = Corsair
+VendorId = ATA:0x1987
+
 [DeviceInstanceId=OUI\0004cf]
 Vendor = Seagate
 VendorId = ATA:0x1BB1
