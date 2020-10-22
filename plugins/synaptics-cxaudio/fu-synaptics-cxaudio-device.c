@@ -67,7 +67,7 @@ fu_synaptics_cxaudio_device_output_report (FuSynapticsCxaudioDevice *self,
 	return fu_hid_device_set_report (FU_HID_DEVICE (self), buf[0],
 					 buf, bufsz,
 					 FU_SYNAPTICS_CXAUDIO_USB_TIMEOUT,
-					 FU_HID_DEVICE_FLAG_NONE,
+					 FU_HID_DEVICE_FLAG_RETRY_FAILURE,
 					 error);
 }
 
@@ -760,6 +760,7 @@ fu_synaptics_cxaudio_device_init (FuSynapticsCxaudioDevice *self)
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_install_duration (FU_DEVICE (self), 3); /* seconds */
 	fu_device_set_protocol (FU_DEVICE (self), "com.synaptics.cxaudio");
+	fu_device_retry_set_delay (FU_DEVICE (self), 100); /* ms */
 	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 }
 
