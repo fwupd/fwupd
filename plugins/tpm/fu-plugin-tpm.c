@@ -29,9 +29,12 @@ void
 fu_plugin_device_added (FuPlugin *plugin, FuDevice *dev)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
+	const gchar *family = fu_tpm_device_get_family (FU_TPM_DEVICE (dev));
+
 	data->has_tpm = TRUE;
-	if (g_strcmp0 (fu_tpm_device_get_family (FU_TPM_DEVICE (dev)), "2.0") == 0)
+	if (g_strcmp0 (family, "2.0") == 0)
 		data->has_tpm_v20 = TRUE;
+	fu_plugin_add_report_metadata (plugin, "TpmFamily", family);
 }
 
 void

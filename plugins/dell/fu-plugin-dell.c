@@ -605,6 +605,7 @@ fu_plugin_dell_add_tpm_model (FuDevice *dev, GError **error)
 		                     "failed to read TPM vendor string");
 		return FALSE;
 	}
+	fu_device_set_metadata (dev, "TpmFamily", family);
 
 	/* these are not guaranteed by spec and may be NULL */
 	vendor2 = fu_plugin_dell_get_tpm_capability (ctx, TPM2_PT_VENDOR_STRING_2);
@@ -744,6 +745,8 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	if (!fu_device_setup (dev, error))
 		return FALSE;
 	fu_plugin_device_register (plugin, dev);
+	fu_plugin_add_report_metadata (plugin, "TpmFamily",
+				       fu_device_get_metadata (dev, "TpmFamily"));
 
 	/* build alternate device node */
 	if (can_switch_modes) {
