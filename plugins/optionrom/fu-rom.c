@@ -689,7 +689,7 @@ fu_rom_dump_firmware (GFile *file, GCancellable *cancellable, GError **error)
 {
 	guint number_reads = 0;
 	g_autofree gchar *fn = NULL;
-	g_autoptr(GByteArray) buf = NULL;
+	g_autoptr(GByteArray) buf = g_byte_array_new ();
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GInputStream) stream = NULL;
 

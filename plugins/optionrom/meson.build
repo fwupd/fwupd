@@ -28,7 +28,7 @@ shared_module('fu_plugin_optionrom',
   ],
 )
 
-executable(
+optionrom_tool = executable(
   'fu-rom-tool',
   fu_hash,
   sources : [
@@ -79,4 +79,5 @@ if get_option('tests')
     install_dir : installed_test_bindir,
   )
   test('optionrom-self-test', e, env : testdatadirs)  # added to installed-tests
+  subdir('fuzzing')
 endif
