@@ -611,8 +611,8 @@ fu_bcm57xx_recovery_device_setup (FuDevice *device, GError **error)
 static gboolean
 fu_bcm57xx_recovery_device_open (FuDevice *device, GError **error)
 {
-	FuBcm57xxRecoveryDevice *self = FU_BCM57XX_RECOVERY_DEVICE (device);
 #ifdef HAVE_MMAN_H
+	FuBcm57xxRecoveryDevice *self = FU_BCM57XX_RECOVERY_DEVICE (device);
 	FuUdevDevice *udev_device = FU_UDEV_DEVICE (device);
 	const gchar *sysfs_path = fu_udev_device_get_sysfs_path (udev_device);
 #endif

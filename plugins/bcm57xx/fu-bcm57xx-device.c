@@ -7,6 +7,10 @@
 
 #include "config.h"
 
+#ifdef HAVE_ERRNO_H
+#include <errno.h>
+#endif
+#include <glib/gstdio.h>
 #ifdef HAVE_ETHTOOL_H
 #include <linux/ethtool.h>
 #include <linux/sockios.h>
@@ -564,6 +568,18 @@ fu_bcm57xx_device_open (FuDevice *device, GError **error)
 #ifdef HAVE_SOCKET_H
 	FuBcm57xxDevice *self = FU_BCM57XX_DEVICE (device);
 	self->ethtool_fd = socket (AF_INET, SOCK_DGRAM, 0);
+	if (self->ethtool_fd < 0) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_SUPPORTED,
+			     "failed to open socket: %s",
+#ifdef HAVE_ERRNO_H
+			     strerror (errno));
+#else
+			     "unspecified error");
+#endif
+		return FALSE;
+	}
 	return TRUE;
 #else
 	g_set_error_literal (error,
@@ -578,8 +594,7 @@ static gboolean
 fu_bcm57xx_device_close (FuDevice *device, GError **error)
 {
 	FuBcm57xxDevice *self = FU_BCM57XX_DEVICE (device);
-	close (self->ethtool_fd);
-	return TRUE;
+	return g_close (self->ethtool_fd, error);
 }
 
 static void
