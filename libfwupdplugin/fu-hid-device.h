@@ -28,6 +28,7 @@ struct _FuHidDeviceClass
  * @FU_HID_DEVICE_FLAG_NONE:			No flags set
  * @FU_HID_DEVICE_FLAG_ALLOW_TRUNC:		Allow truncated reads and writes
  * @FU_HID_DEVICE_FLAG_IS_FEATURE:		Use %FU_HID_REPORT_TYPE_FEATURE for wValue
+ * @FU_HID_DEVICE_FLAG_RETRY_FAILURE:		Retry up to 10 times on failure
  *
  * Flags used when calling fu_hid_device_get_report() and fu_hid_device_set_report().
  **/
@@ -35,6 +36,7 @@ typedef enum {
 	FU_HID_DEVICE_FLAG_NONE			= 0,
 	FU_HID_DEVICE_FLAG_ALLOW_TRUNC		= 1 << 0,
 	FU_HID_DEVICE_FLAG_IS_FEATURE		= 1 << 1,
+	FU_HID_DEVICE_FLAG_RETRY_FAILURE	= 1 << 2,
 	FU_HID_DEVICE_FLAG_LAST
 } FuHidDeviceFlags;
 
