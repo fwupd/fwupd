@@ -17,6 +17,8 @@
 #define FU_HID_REPORT_TYPE_OUTPUT			0x02
 #define FU_HID_REPORT_TYPE_FEATURE			0x03
 
+#define FU_HID_DEVICE_RETRIES				10
+
 /**
  * SECTION:fu-hid-device
  * @short_description: a HID device
@@ -190,6 +192,63 @@ fu_hid_device_get_interface (FuHidDevice *self)
 	return priv->interface;
 }
 
+typedef struct {
+	guint8		 value;
+	guint8		*buf;
+	gsize		 bufsz;
+	guint		 timeout;
+	FuHidDeviceFlags flags;
+} FuHidDeviceRetryHelper;
+
+static gboolean
+fu_hid_device_set_report_internal (FuHidDevice *self,
+				   FuHidDeviceRetryHelper *helper,
+				   GError **error)
+{
+	FuHidDevicePrivate *priv = GET_PRIVATE (self);
+	GUsbDevice *usb_device;
+	gsize actual_len = 0;
+	guint16 wvalue = (FU_HID_REPORT_TYPE_OUTPUT << 8) | helper->value;
+
+	/* special case */
+	if (helper->flags & FU_HID_DEVICE_FLAG_IS_FEATURE)
+		wvalue = (FU_HID_REPORT_TYPE_FEATURE << 8) | helper->value;
+
+	if (g_getenv ("FU_HID_DEVICE_VERBOSE") != NULL) {
+		fu_common_dump_raw (G_LOG_DOMAIN, "HID::SetReport",
+				    helper->buf, helper->bufsz);
+	}
+	usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
+	if (!g_usb_device_control_transfer (usb_device,
+					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
+					    G_USB_DEVICE_RECIPIENT_INTERFACE,
+					    FU_HID_REPORT_SET,
+					    wvalue, priv->interface,
+					    helper->buf, helper->bufsz,
+					    &actual_len,
+					    helper->timeout,
+					    NULL, error)) {
+		g_prefix_error (error, "failed to SetReport: ");
+		return FALSE;
+	}
+	if ((helper->flags & FU_HID_DEVICE_FLAG_ALLOW_TRUNC) == 0 && actual_len != helper->bufsz) {
+		g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
+			     "wrote %" G_GSIZE_FORMAT ", requested %" G_GSIZE_FORMAT " bytes",
+			     actual_len, helper->bufsz);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_hid_device_set_report_internal_cb (FuDevice *device, gpointer user_data, GError **error)
+{
+	FuHidDevice *self = FU_HID_DEVICE (device);
+	FuHidDeviceRetryHelper *helper = (FuHidDeviceRetryHelper *) user_data;
+	return fu_hid_device_set_report_internal (self, helper, error);
+}
+
 /**
  * fu_hid_device_set_report:
  * @self: A #FuHidDevice
@@ -215,42 +274,81 @@ fu_hid_device_set_report (FuHidDevice *self,
 			  FuHidDeviceFlags flags,
 			  GError **error)
 {
-	FuHidDevicePrivate *priv = GET_PRIVATE (self);
-	GUsbDevice *usb_device;
-	gsize actual_len = 0;
-	guint16 wvalue = (FU_HID_REPORT_TYPE_OUTPUT << 8) | value;
-
-	/* special case */
-	if (flags & FU_HID_DEVICE_FLAG_IS_FEATURE)
-		wvalue = (FU_HID_REPORT_TYPE_FEATURE << 8) | value;
+	FuHidDeviceRetryHelper helper;
 
 	g_return_val_if_fail (FU_HID_DEVICE (self), FALSE);
 	g_return_val_if_fail (buf != NULL, FALSE);
 	g_return_val_if_fail (bufsz != 0, FALSE);
 
-	if (g_getenv ("FU_HID_DEVICE_VERBOSE") != NULL)
-		fu_common_dump_raw (G_LOG_DOMAIN, "HID::SetReport", buf, bufsz);
+	/* create helper */
+	helper.value = value;
+	helper.buf = buf;
+	helper.bufsz = bufsz;
+	helper.timeout = timeout;
+	helper.flags = flags;
+
+	/* special case */
+	if (flags & FU_HID_DEVICE_FLAG_RETRY_FAILURE) {
+		return fu_device_retry (FU_DEVICE (self),
+					fu_hid_device_set_report_internal_cb,
+					FU_HID_DEVICE_RETRIES,
+					&helper,
+					error);
+	}
+
+	/* just one */
+	return fu_hid_device_set_report_internal (self, &helper, error);
+}
+
+static gboolean
+fu_hid_device_get_report_internal (FuHidDevice *self,
+				   FuHidDeviceRetryHelper *helper,
+				   GError **error)
+{
+	FuHidDevicePrivate *priv = GET_PRIVATE (self);
+	GUsbDevice *usb_device;
+	gsize actual_len = 0;
+	guint16 wvalue = (FU_HID_REPORT_TYPE_INPUT << 8) | helper->value;
+
+	/* special case */
+	if (helper->flags & FU_HID_DEVICE_FLAG_IS_FEATURE)
+		wvalue = (FU_HID_REPORT_TYPE_FEATURE << 8) | helper->value;
+
+	if (g_getenv ("FU_HID_DEVICE_VERBOSE") != NULL) {
+		fu_common_dump_raw (G_LOG_DOMAIN, "HID::GetReport",
+				    helper->buf, actual_len);
+	}
 	usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
 	if (!g_usb_device_control_transfer (usb_device,
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
 					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
 					    G_USB_DEVICE_RECIPIENT_INTERFACE,
-					    FU_HID_REPORT_SET,
+					    FU_HID_REPORT_GET,
 					    wvalue, priv->interface,
-					    buf, bufsz,
-					    &actual_len,
-					    timeout,
+					    helper->buf, helper->bufsz,
+					    &actual_len, /* actual length */
+					    helper->timeout,
 					    NULL, error)) {
-		g_prefix_error (error, "failed to SetReport: ");
+		g_prefix_error (error, "failed to GetReport: ");
 		return FALSE;
 	}
-	if ((flags & FU_HID_DEVICE_FLAG_ALLOW_TRUNC) == 0 && actual_len != bufsz) {
+	if (g_getenv ("FU_HID_DEVICE_VERBOSE") != NULL)
+		fu_common_dump_raw (G_LOG_DOMAIN, "HID::GetReport", helper->buf, actual_len);
+	if ((helper->flags & FU_HID_DEVICE_FLAG_ALLOW_TRUNC) == 0 && actual_len != helper->bufsz) {
 		g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
-			     "wrote %" G_GSIZE_FORMAT ", requested %" G_GSIZE_FORMAT " bytes",
-			     actual_len, bufsz);
+			     "read %" G_GSIZE_FORMAT ", requested %" G_GSIZE_FORMAT " bytes",
+			     actual_len, helper->bufsz);
 		return FALSE;
 	}
 	return TRUE;
+}
+
+static gboolean
+fu_hid_device_get_report_internal_cb (FuDevice *device, gpointer user_data, GError **error)
+{
+	FuHidDevice *self = FU_HID_DEVICE (device);
+	FuHidDeviceRetryHelper *helper = (FuHidDeviceRetryHelper *) user_data;
+	return fu_hid_device_get_report_internal (self, helper, error);
 }
 
 /**
@@ -278,44 +376,30 @@ fu_hid_device_get_report (FuHidDevice *self,
 			  FuHidDeviceFlags flags,
 			  GError **error)
 {
-	FuHidDevicePrivate *priv = GET_PRIVATE (self);
-	GUsbDevice *usb_device;
-	gsize actual_len = 0;
-	guint16 wvalue = (FU_HID_REPORT_TYPE_INPUT << 8) | value;
+	FuHidDeviceRetryHelper helper;
 
 	g_return_val_if_fail (FU_HID_DEVICE (self), FALSE);
 	g_return_val_if_fail (buf != NULL, FALSE);
 	g_return_val_if_fail (bufsz != 0, FALSE);
 
-	/* special case */
-	if (flags & FU_HID_DEVICE_FLAG_IS_FEATURE)
-		wvalue = (FU_HID_REPORT_TYPE_FEATURE << 8) | value;
+	/* create helper */
+	helper.value = value;
+	helper.buf = buf;
+	helper.bufsz = bufsz;
+	helper.timeout = timeout;
+	helper.flags = flags;
 
-	if (g_getenv ("FU_HID_DEVICE_VERBOSE") != NULL)
-		fu_common_dump_raw (G_LOG_DOMAIN, "HID::GetReport", buf, actual_len);
-	usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
-	if (!g_usb_device_control_transfer (usb_device,
-					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					    G_USB_DEVICE_REQUEST_TYPE_CLASS,
-					    G_USB_DEVICE_RECIPIENT_INTERFACE,
-					    FU_HID_REPORT_GET,
-					    wvalue, priv->interface,
-					    buf, bufsz,
-					    &actual_len, /* actual length */
-					    timeout,
-					    NULL, error)) {
-		g_prefix_error (error, "failed to GetReport: ");
-		return FALSE;
+	/* special case */
+	if (flags & FU_HID_DEVICE_FLAG_RETRY_FAILURE) {
+		return fu_device_retry (FU_DEVICE (self),
+					fu_hid_device_get_report_internal_cb,
+					FU_HID_DEVICE_RETRIES,
+					&helper,
+					error);
 	}
-	if (g_getenv ("FU_HID_DEVICE_VERBOSE") != NULL)
-		fu_common_dump_raw (G_LOG_DOMAIN, "HID::GetReport", buf, actual_len);
-	if ((flags & FU_HID_DEVICE_FLAG_ALLOW_TRUNC) == 0 && actual_len != bufsz) {
-		g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
-			     "read %" G_GSIZE_FORMAT ", requested %" G_GSIZE_FORMAT " bytes",
-			     actual_len, bufsz);
-		return FALSE;
-	}
-	return TRUE;
+
+	/* just one */
+	return fu_hid_device_get_report_internal (self, &helper, error);
 }
 
 static void
