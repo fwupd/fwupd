@@ -35,6 +35,58 @@
     <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.5.0" date="2020-10-26">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add a compatible re-implementation of the rhboot dbxtool</li>
+          <li>Add async versions of the library for GUI tools</li>
+          <li>Add commands for interacting with the ESP to fwupdtool</li>
+          <li>Add firmware-extract subcommand to fwupdtool</li>
+          <li>Add FwupdPlugin so we can convey enumerated system errors to the end user</li>
+          <li>Add plugin for Goodix fingerprint sensors</li>
+          <li>Add plugin that can update the BCM5719 network adapter</li>
+          <li>Add plugin to update Elan Touchpads using HID</li>
+          <li>Add support for a delayed activation flow for Thunderbolt</li>
+          <li>Add support for ChromeOS Quiche and Gingerbread</li>
+          <li>Add support for the Host Security ID</li>
+          <li>Add support for ThunderBolt retimers</li>
+          <li>Add switch-branch command to fwupdtool and fwupdmgr</li>
+          <li>Allow blocking specific firmware releases by checksum</li>
+          <li>Allow contructing a firmware with multiple images</li>
+          <li>Allow firmware to require specific features from front-end clients</li>
+          <li>Allow updating the dbx using the LVFS, validating it is safe to apply</li>
+          <li>Include the HSI results and attributes in the uploaded report</li>
+          <li>Support loading DMI data from DT systems</li>
+          <li>Support LVFS::UpdateImage for GUI clients</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Allow compiling the daemon without polkit support</li>
+          <li>Always look at all TPM eventlog supported algorithms</li>
+          <li>Change all instances of master/slave to initiator/target</li>
+          <li>Correctly order devices when using logical parents</li>
+          <li>Do not dedupe NVMe or VLI PD devices</li>
+          <li>Do not expose the VLI shared-SPI devices on the USB2 recovery device</li>
+          <li>Do not fix up the version on post-update mismatch</li>
+          <li>Download the metadata first when using 'fwupdtool refresh'</li>
+          <li>Drop efivar dependency</li>
+          <li>Drop support for ThunderBolt force power due to hardware issues</li>
+          <li>Fix setting BootNext correctly when multiple updates are scheduled</li>
+          <li>Fix the topology of the audio device on the Lenovo TR dock</li>
+          <li>Make return code different for get-updates with no updates</li>
+          <li>Make specific authorizations also imply others</li>
+          <li>Make TPM support more optional</li>
+          <li>Parse the HEX version before comparing for equality</li>
+          <li>Prevent dell-dock updates to occur via synaptics-mst plugin</li>
+          <li>Record the UEFI failure in more cases</li>
+          <li>Show an error when a plugin is missing dependencies</li>
+          <li>Use libxmlb bound parameters to speed up the device verification</li>
+          <li>Use pkttyagent to request user passwords if running without GUI</li>
+          <li>Use the JCat file to select the metadata file</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.4.1" date="2020-04-27">
       <description>
         <p>This release adds the following features:</p>
