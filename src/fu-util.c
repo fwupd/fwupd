@@ -1911,17 +1911,10 @@ fu_util_switch_branch (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(FwupdDevice) dev = NULL;
 
 	/* find the device and check it has multiple branches */
-	priv->filter_include |= FWUPD_DEVICE_FLAG_SUPPORTED;
+	priv->filter_include |= FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES;
 	dev = fu_util_get_device_or_prompt (priv, values, error);
 	if (dev == NULL)
 		return FALSE;
-	if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES)) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "Multiple branches not available");
-		return FALSE;
-	}
 
 	/* get all releases, including the alternate branch versions */
 	rels = fwupd_client_get_releases (priv->client, fwupd_device_get_id (dev),

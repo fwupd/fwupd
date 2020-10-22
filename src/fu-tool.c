@@ -2454,7 +2454,7 @@ fu_util_switch_branch (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* find the device and check it has multiple branches */
-	priv->filter_include |= FWUPD_DEVICE_FLAG_SUPPORTED;
+	priv->filter_include |= FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES;
 	if (g_strv_length (values) == 1)
 		dev = fu_util_get_device (priv, values[1], error);
 	else
