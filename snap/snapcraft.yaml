@@ -213,6 +213,7 @@ parts:
       - libsmbios-dev
       - libsoup2.4-dev
       - libsqlite3-dev
+      - libsystemd-dev
       - locales
       - pkg-config
       - systemd
