@@ -426,7 +426,7 @@ fu_elantp_hid_device_detach (FuDevice *device, GError **error)
 			
 			if (!fu_elantp_hid_device_write_cmd (self,
 							     ETP_CMD_I2C_IAP_TYPE,
-							     self->fw_page_size,
+							     self->fw_page_size / 2,
 							     error))
 				return FALSE;
 			if (!fu_elantp_hid_device_read_cmd (self, ETP_CMD_I2C_IAP_TYPE,
@@ -435,7 +435,7 @@ fu_elantp_hid_device_detach (FuDevice *device, GError **error)
 				return FALSE;
 			}
 			self->iap_type = fu_common_read_uint16 (buf, G_LITTLE_ENDIAN);
-			if (self->iap_type != self->fw_page_size) {
+			if (self->iap_type != self->fw_page_size / 2) {
 				g_set_error_literal (error,
 						     FWUPD_ERROR,
 						     FWUPD_ERROR_NOT_SUPPORTED,

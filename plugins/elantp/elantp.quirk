@@ -2,6 +2,10 @@
 Plugin = elantp
 GType = FuElantpHidDevice
 
+# ThinkPad X1 Carbon Gen 9
+[HwId=6c87726f-b545-549e-840a-189422ea21d0]
+Flags = elantp-recovery
+
 # Lenovo X1 Nano Gen1
 [HwId=4c20262a-aee0-5d6e-ba72-6d29b23fe350]
 Flags = elantp-recovery
