@@ -266,6 +266,7 @@ executable(
     valgrind,
     libarchive,
     libjsonglib,
+    libsystemd,
     daemon_dep
   ],
   link_with : [

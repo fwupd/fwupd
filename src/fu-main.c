@@ -17,6 +17,9 @@
 #ifdef HAVE_POLKIT
 #include <polkit/polkit.h>
 #endif
+#ifdef HAVE_SYSTEMD
+#include <systemd/sd-daemon.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <jcat.h>
@@ -2028,6 +2031,11 @@ main (int argc, char *argv[])
 	/* wait */
 	g_message ("Daemon ready for requests (locale %s)", g_getenv ("LANG"));
 	g_main_loop_run (priv->loop);
+
+#ifdef HAVE_SYSTEMD
+	/* notify the service manager */
+	sd_notify (0, "STOPPING=1");
+#endif
 
 	/* success */
 	return EXIT_SUCCESS;
