@@ -3721,7 +3721,7 @@ fu_engine_get_result_from_component (FuEngine *self,
 	}
 
 	/* check we can install it */
-	task = fu_install_task_new (NULL, component);
+	task = fu_install_task_new (dev, component);
 	if (!fu_engine_check_requirements (self, request, task,
 					   FWUPD_INSTALL_FLAG_NONE,
 					   error))
