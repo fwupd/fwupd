@@ -1441,6 +1441,21 @@ fu_engine_check_requirement (FuEngine *self,
 }
 
 gboolean
+fu_engine_check_trust (FuInstallTask *task, GError **error)
+{
+#ifndef HAVE_POLKIT
+	if ((fu_install_task_get_trust_flags (task) & FWUPD_TRUST_FLAG_PAYLOAD) == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "archive signature missing or not trusted");
+		return FALSE;
+	}
+#endif
+	return TRUE;
+}
+
+gboolean
 fu_engine_check_requirements (FuEngine *self,
 			      FuEngineRequest *request,
 			      FuInstallTask *task,
@@ -1471,16 +1486,6 @@ fu_engine_check_requirements (FuEngine *self,
 			g_propagate_error (error, g_steal_pointer (&error_local));
 			return FALSE;
 	}
-
-#ifndef HAVE_POLKIT
-	if ((fu_install_task_get_trust_flags (task) & FWUPD_TRUST_FLAG_PAYLOAD) == 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "archive signature missing or not trusted");
-		return FALSE;
-	}
-#endif
 
 	return TRUE;
 }
