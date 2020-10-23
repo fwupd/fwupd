@@ -902,6 +902,10 @@ fu_main_install_with_helper (FuMainAuthHelper *helper_ref, GError **error)
 				g_ptr_array_add (errors, g_steal_pointer (&error_local));
 				continue;
 			}
+			if (!fu_engine_check_trust (task, &error_local)) {
+				g_ptr_array_add (errors, g_steal_pointer (&error_local));
+				continue;
+			}
 
 			/* if component should have an update message from CAB */
 			fu_device_incorporate_from_component (device, component);
