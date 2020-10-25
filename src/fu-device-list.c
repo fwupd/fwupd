@@ -678,7 +678,7 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 
 	/* is the device waiting to be replugged? */
 	item = fu_device_list_find_by_id (self, fu_device_get_id (device), NULL);
-	if (item != NULL) {
+	if (item != NULL && item->remove_id != 0) {
 		g_debug ("found existing device %s, reusing item",
 			 fu_device_get_id (item->device));
 		fu_device_list_replace (self, item, device);
