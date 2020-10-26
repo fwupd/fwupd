@@ -67,3 +67,7 @@ Command:    `W $addr\n` where `$addr` is a memory address `0x8001000->0x8008000`
 Command:    `v\n`
 The device will reboot into application mode. This is typically performed after
 flashing firmware completes successfully.
+
+External interface access
+-------------------------
+This plugin requires read/write access to `/dev/bus/usb`.

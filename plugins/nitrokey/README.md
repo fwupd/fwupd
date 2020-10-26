@@ -25,3 +25,7 @@ Vendor ID Security
 
 The vendor ID is set from the USB vendor, in this instance set to `USB:0x20A0`
 in runtime mode and `USB:0x03EB` in bootloader mode.
+
+External interface access
+-------------------------
+This plugin requires read/write access to `/dev/bus/usb`.

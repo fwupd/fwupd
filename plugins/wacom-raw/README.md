@@ -36,3 +36,7 @@ Vendor ID Security
 ------------------
 
 The vendor ID is set from the udev vendor, in this instance set to `HIDRAW:0x056A`
+
+External interface access
+-------------------------
+This plugin requires ioctl `HIDIOCSFEATURE` access.

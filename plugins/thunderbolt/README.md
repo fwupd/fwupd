@@ -92,3 +92,7 @@ DROM and exposed in the relevant sysfs attributes.
 
 If the controller is in native enumeration mode, the string "-native" is added
 at the end so the format is "TBT-vvvvdddd-native".
+
+External interface access
+-------------------------
+This plugin requires read/write access to `/sys/bus/thunderbolt`.

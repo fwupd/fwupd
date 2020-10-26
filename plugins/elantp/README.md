@@ -31,7 +31,7 @@ Additionally another instance ID is added which corresponds to the module ID:
 These devices also use custom GUID values for the IC configuration, e.g.
 
  * `ELANTP\ICTYPE_09`
- 
+
  Additionally another instance ID is added which corresponds to the IC type & module ID:
 
  * `ELANTP\ICTYPE_09&MOD_1234`
@@ -50,3 +50,7 @@ This plugin uses the following plugin-specific quirks:
 |------------------------|-------------------------------------------|-----------------------|
 | `ElantpIcPageCount`    | The IC page count                         | 1.4.6                 |
 | `ElantpIapPassword`    | The IAP password                          | 1.4.6                 |
+
+External interface access
+-------------------------
+This plugin requires ioctl access to `HIDIOCSFEATURE` and `HIDIOCGFEATURE`.

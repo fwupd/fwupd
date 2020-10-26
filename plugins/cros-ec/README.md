@@ -38,6 +38,10 @@ values depending on the model and device mode. The list of USB VIDs used is:
 
  * `USB:0x18D1`
 
+External interface access
+-------------------------
+This plugin requires read/write access to `/dev/bus/usb`.
+
 [1] https://chromium.googlesource.com/chromiumos/platform/ec/+/master/extra/usb_updater/usb_updater2.c
 [2] https://chromium.googlesource.com/chromiumos/platform/ec/+/master/docs/usb_updater.md
 [3] https://www.chromium.org/chromium-os/firmware-porting-guide/fmap

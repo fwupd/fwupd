@@ -58,3 +58,11 @@ Since version 1.1.0 fwupd will autodetect the ESP when it is mounted on
 used by modifying *OverrideESPMountPoint* in `/etc/fwupd/uefi.conf`.
 
 Setting an invalid directory will disable the fwupd plugin.
+
+External interface access
+-------------------------
+This plugin requires:
+* read/write access to the EFI system partition.
+* read access to `/sys/firmware/efi/esrt/`
+* read access to `/sys/firmware/efi/fw_platform_size`
+* read/write access to `/sys/firmware/efi/efivars`

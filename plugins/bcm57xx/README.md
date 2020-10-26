@@ -26,3 +26,7 @@ Vendor ID Security
 ------------------
 
 The vendor ID is set from the PCI vendor, in this instance set to `PCI:0x14E4`
+
+External interface access
+-------------------------
+This plugin requires the `SIOCETHTOOL` ioctl interface.

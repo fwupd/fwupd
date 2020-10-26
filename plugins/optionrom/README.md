@@ -24,3 +24,7 @@ Vendor ID Security
 ------------------
 
 The device is not upgradable and thus requires no vendor ID set.
+
+External interface access
+-------------------------
+This plugin requires read access to the rom file of PCI devices (`/sys/class/pci_bus/*/device/rom`)

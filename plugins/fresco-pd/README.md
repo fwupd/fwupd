@@ -33,3 +33,7 @@ Vendor ID Security
 ------------------
 
 The vendor ID is set from the USB vendor, in this instance set to `USB:0x1D5C`
+
+External interface access
+-------------------------
+This plugin requires read/write access to `/dev/bus/usb`.

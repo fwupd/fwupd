@@ -39,3 +39,9 @@ Vendor ID Security
 ------------------
 
 The vendor ID is hardcoded to `UEFI:Microsoft` for all devices.
+
+
+External interface access
+-------------------------
+This plugin requires:
+* read/write access to `/sys/firmware/efi/efivars`

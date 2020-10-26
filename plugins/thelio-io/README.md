@@ -20,3 +20,7 @@ Vendor ID Security
 ------------------
 
 The vendor ID is set from the USB vendor, in this instance set to `USB:0x1209`
+
+External interface access
+-------------------------
+This plugin requires read/write access to `/dev/bus/usb`.

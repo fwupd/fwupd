@@ -12,3 +12,7 @@ always be disabled and locked on production hardware as it allows the
 attacker to disable other firmware protection methods.
 
 The result will be stored in a security attribute for HSI.
+
+External interface access
+-------------------------
+This plugin requires read access to `/sys/class/msr`.

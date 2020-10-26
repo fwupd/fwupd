@@ -48,3 +48,7 @@ partition where the MCFG files are stored can be wiped out before installing
 the new ones.
 
 Update protocol: com.qualcomm.qmi_pdc
+
+External interface access
+-------------------------
+This plugin requires read/write access to `/dev/bus/usb`.

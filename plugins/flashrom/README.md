@@ -28,3 +28,8 @@ Vendor ID Security
 ------------------
 
 The vendor ID is set from the BIOS vendor, for example `DMI:Google`
+
+External interface access
+---
+This plugin requires access to all interfaces that `libflashrom` has been compiled for.
+This typically is `/sys/bus/spi` but there may be other interfaces as well.
