@@ -690,12 +690,12 @@ fu_main_authorize_modify_remote_cb (GObject *source, GAsyncResult *res, gpointer
 
 static void fu_main_authorize_install_queue (FuMainAuthHelper *helper);
 
+#ifdef HAVE_POLKIT
 static void
 fu_main_authorize_install_cb (GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *) user_data;
 	g_autoptr(GError) error = NULL;
-#ifdef HAVE_POLKIT
 	g_autoptr(PolkitAuthorizationResult) auth = NULL;
 
 	/* get result */
@@ -706,11 +706,11 @@ fu_main_authorize_install_cb (GObject *source, GAsyncResult *res, gpointer user_
 		g_dbus_method_invocation_return_gerror (helper->invocation, error);
 		return;
 	}
-#endif /* HAVE_POLKIT */
 
 	/* do the next authentication action ID */
 	fu_main_authorize_install_queue (g_steal_pointer (&helper));
 }
+#endif /* HAVE_POLKIT */
 
 static void
 fu_main_authorize_install_queue (FuMainAuthHelper *helper_ref)
@@ -720,9 +720,9 @@ fu_main_authorize_install_queue (FuMainAuthHelper *helper_ref)
 	g_autoptr(GError) error = NULL;
 	gboolean ret;
 
+#ifdef HAVE_POLKIT
 	/* still more things to to authenticate */
 	if (helper->action_ids->len > 0) {
-#ifdef HAVE_POLKIT
 		g_autofree gchar *action_id = g_strdup (g_ptr_array_index (helper->action_ids, 0));
 		g_autoptr(PolkitSubject) subject = g_object_ref (helper->subject);
 		g_ptr_array_remove_index (helper->action_ids, 0);
@@ -732,12 +732,9 @@ fu_main_authorize_install_queue (FuMainAuthHelper *helper_ref)
 						      NULL,
 						      fu_main_authorize_install_cb,
 						      g_steal_pointer (&helper));
-#else
-		g_ptr_array_remove_index (helper->action_ids, 0);
-		fu_main_authorize_install_cb (NULL, NULL, g_steal_pointer (&helper));
-#endif /* HAVE_POLKIT */
 		return;
 	}
+#endif /* HAVE_POLKIT */
 
 	/* all authenticated, so install all the things */
 	priv->update_in_progress = TRUE;
