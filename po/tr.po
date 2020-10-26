@@ -5,7 +5,7 @@
 # Translators:
 # Emin Tufan <etcetin@gmail.com>, 2020
 # Muhammet Kara <muhammetk@gmail.com>, 2016
-# Sabri Ünal <libreajans@gmail.com>, 2019
+# Sabri Ünal <libreajans@gmail.com>, 2019-2020
 # Sabri Ünal <yakushabb@gmail.com>, 2020
 # Serdar Sağlam <teknomobil@msn.com>, 2020
 msgid ""
@@ -284,6 +284,10 @@ msgstr "Komut bulunamadı"
 msgid "Continue with update?"
 msgstr "Güncellemeye devam edilsin mi?"
 
+#. TRANSLATORS: the release urgency
+msgid "Critical"
+msgstr "Kritik"
+
 #. TRANSLATORS: version number of current firmware
 msgid "Current version"
 msgstr "Var olan sürüm"
@@ -367,6 +371,7 @@ msgstr "Cihaz güvenlik kontrolleri yapma"
 msgid "Do not write to the history database"
 msgstr "Geçmişi veritabanına yazma"
 
+#. TRANSLATORS: success
 #. success
 msgid "Done!"
 msgstr "Tamamlandı!"
@@ -407,6 +412,8 @@ msgstr "Desteklenen sistemlerde ürün yazılımı güncelleme desteğini etkinl
 msgid "Enable this remote?"
 msgstr "Bu uzaktan kumanda etkinleştirilsin mi?"
 
+#. TRANSLATORS: Suffix: the HSI result
+#. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
 msgid "Enabled"
 msgstr "Etkinleştirildi"
@@ -433,10 +440,6 @@ msgstr "Küçük bir gecikme sonrası çık"
 #. TRANSLATORS: we could not talk to the fwupd daemon
 msgid "Failed to connect to daemon"
 msgstr "Artalan sürecine bağlanamadı"
-
-#. TRANSLATORS: the server is rate-limiting downloads
-msgid "Failed to download due to server limit"
-msgstr "Sunucu sınırı nedeniyle indirilemedi"
 
 #. TRANSLATORS: we could not get the devices to update offline
 msgid "Failed to get pending devices"
@@ -465,22 +468,6 @@ msgstr "Yeniden başlatılamadı"
 #. TRANSLATORS: we could not talk to plymouth
 msgid "Failed to set splash mode"
 msgstr "Sıçrama kipi ayarlanamadı"
-
-#. TRANSLATORS: downloading unknown file
-msgid "Fetching file"
-msgstr "Dosya alınıyor"
-
-#. TRANSLATORS: downloading new firmware file
-msgid "Fetching firmware"
-msgstr "Ürün yazılımı alınıyor"
-
-#. TRANSLATORS: downloading new metadata file
-msgid "Fetching metadata"
-msgstr "Üstveri alınıyor"
-
-#. TRANSLATORS: downloading new signing file
-msgid "Fetching signature"
-msgstr "İmza alınıyor"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
@@ -516,12 +503,17 @@ msgstr "Ürün yazılımı güncellemeleri bu makinede desteklenmiyor."
 msgid "Firmware updates are supported on this machine."
 msgstr "Ürün yazılımı güncellemeleri bu makinede destekleniyor."
 
+#. TRANSLATORS: description of plugin state, e.g. disabled
 #. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "Bayraklar"
 
 msgid "Force the action ignoring all warnings"
 msgstr "Eylemi tüm uyarıları görmezden gelmeye zorla"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Found"
+msgstr "Bulundu"
 
 #. TRANSLATORS: global ID common to all similar hardware
 msgid "GUID"
@@ -545,10 +537,6 @@ msgstr "Etkinleştirilmiş tüm eklentileri sisteme kaydettir"
 msgid "Gets details about a firmware file"
 msgstr "Ürün yazılımı dosyasıyla ilgili ayrıntıları al"
 
-#. TRANSLATORS: firmware approved by the admin
-msgid "Gets the list of approved firmware."
-msgstr "Onaylı ürün yazılımı listesini getirir."
-
 #. TRANSLATORS: command description
 msgid "Gets the list of updates for connected hardware"
 msgstr "Bağlı donanım için güncelleme listesini al"
@@ -564,6 +552,10 @@ msgstr "Son güncellemeden sonuçları alır"
 #. TRANSLATORS: The hardware is waiting to be replugged
 msgid "Hardware is waiting to be replugged"
 msgstr "Donanım yeniden takılmayı bekliyor"
+
+#. TRANSLATORS: the release urgency
+msgid "High"
+msgstr "Yüksek"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -648,9 +640,13 @@ msgstr "Kullanılabilir ürün yazılımı türlerini listele"
 msgid "Loading…"
 msgstr "Yükleniyor…"
 
-#. TRANSLATORS: command line option
-msgid "Manually whitelist specific plugins"
-msgstr "El ile beyaz listeye özel eklentiler"
+#. TRANSLATORS: the release urgency
+msgid "Low"
+msgstr "Düşük"
+
+#. TRANSLATORS: the release urgency
+msgid "Medium"
+msgstr "Orta"
 
 #. TRANSLATORS: remote URI
 msgid "Metadata Signature"
@@ -673,10 +669,6 @@ msgstr "Asgari Sürüm"
 msgid "Mismatched daemon and client, use %s instead"
 msgstr "Artalan süreci ile istemci uyuşmadı, bunun yerine %s kullanın"
 
-#. TRANSLATORS: sets something in daemon.conf
-msgid "Modifies a daemon configuration value."
-msgstr "Artalan süreci yapılandırma değerini değiştir."
-
 msgid "Modify a configured remote"
 msgstr "Uzak yapılandırmayı değiştir"
 
@@ -691,6 +683,7 @@ msgstr "Olaylar için artalan sürecini gözetle"
 msgid "New version"
 msgstr "Yeni sürüm"
 
+#. TRANSLATORS: user did not tell the tool what to do
 msgid "No action specified!"
 msgstr "Eylem belirtilmedi!"
 
@@ -722,13 +715,13 @@ msgstr "Uzaktan kumanda bulunamadı"
 msgid "No updates were applied"
 msgstr "Güncelleme uygulanmadı"
 
+#. TRANSLATORS: Suffix: the HSI result
+msgid "OK"
+msgstr "Tamam"
+
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Yalnızca tek PCR değerini göster"
-
-#. TRANSLATORS: command line option
-msgid "Override plugin warning"
-msgstr "Eklenti uyarısını geçersiz yap"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
@@ -818,10 +811,6 @@ msgstr "Rapor URI"
 msgid "Reported to remote server"
 msgstr "Uzak sunucuya bildirildi"
 
-#. TRANSLATORS: Must be plugged in to an outlet
-msgid "Requires AC power"
-msgstr "AC güç gerekli"
-
 #. TRANSLATORS: metadata is downloaded from the Internet
 msgid "Requires internet connection"
 msgstr "İnternet bağlantısı gerektirir"
@@ -858,12 +847,9 @@ msgstr "Seri Numarası"
 msgid "Set the debugging flag during update"
 msgstr "Güncelleme sırasında hata ayıklama bayrağını ayarla"
 
+#. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
 msgstr "Onaylı ürün yazılımı listesini ayarlar"
-
-#. TRANSLATORS: firmware approved by the admin
-msgid "Sets the list of approved firmware."
-msgstr "Onaylı ürün yazılımı listesini ayarlar."
 
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
@@ -1073,17 +1059,13 @@ msgstr "Tüm ürün yazılımlarını mevcut en son sürümlere güncelle"
 msgid "Updating %s…"
 msgstr "Güncelleniyor %s…"
 
-#. TRANSLATORS: the server sent the user a small message
-msgid "Upload message:"
-msgstr "İleti yükle:"
-
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "Rapor şimdi karşıya yüklensin mi?"
 
 #. TRANSLATORS: command line option
 msgid "Use quirk flags when installing firmware"
-msgstr "ürün yazılımı kurulurken quirk bayraklarını kullan"
+msgstr "Ürün yazılımı kurulurken quirk bayraklarını kullan"
 
 #. TRANSLATORS: User has been notified
 msgid "User has been notified"
@@ -1104,6 +1086,10 @@ msgstr "Üretici"
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
 msgstr "Doğrulanıyor…"
+
+#. TRANSLATORS: the detected version number of the dbx
+msgid "Version"
+msgstr "Sürüm"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
@@ -1136,16 +1122,3 @@ msgstr "Hizmet sağlayıcınız, sisteminizle veya bağlı aygıtlarla uyumluluk
 #. TRANSLATORS: program name
 msgid "fwupd TPM event log utility"
 msgstr "fwupd TPM olay günlüğü yardımcı aracı"
-
-#. TRANSLATORS: message letting the user know no device upgrade available due
-#. to missing on LVFS
-#. * %1 is the device name
-#, c-format
-msgid "• %s has no available firmware updates"
-msgstr "• %s için mevcut ürün yazılımı güncellemesi yok"
-
-#. TRANSLATORS: message letting the user know no device upgrade available
-#. * %1 is the device name
-#, c-format
-msgid "• %s has the latest available firmware version"
-msgstr "• %s en son ürün yazılımı sürümüne sahip"

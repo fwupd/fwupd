@@ -49,6 +49,7 @@
           <li>Add plugin to update Elan Touchpads using HID</li>
           <li>Add support for a delayed activation flow for Thunderbolt</li>
           <li>Add support for ChromeOS Quiche and Gingerbread</li>
+          <li>Add support for Hyper hardware</li>
           <li>Add support for the Host Security ID</li>
           <li>Add support for ThunderBolt retimers</li>
           <li>Add switch-branch command to fwupdtool and fwupdmgr</li>
@@ -80,6 +81,7 @@
           <li>Parse the HEX version before comparing for equality</li>
           <li>Prevent dell-dock updates to occur via synaptics-mst plugin</li>
           <li>Record the UEFI failure in more cases</li>
+          <li>Retry the HID SetReport to fix flashing the TB3 dock</li>
           <li>Show an error when a plugin is missing dependencies</li>
           <li>Use libxmlb bound parameters to speed up the device verification</li>
           <li>Use pkttyagent to request user passwords if running without GUI</li>

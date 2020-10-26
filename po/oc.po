@@ -50,6 +50,7 @@ msgstr "Opcions de desbugatge"
 msgid "Description"
 msgstr "Descripcion"
 
+#. TRANSLATORS: success
 #. success
 msgid "Done!"
 msgstr "Acabat !"
@@ -77,6 +78,10 @@ msgstr "Fracàs de l'analisi dels paramètres"
 msgid "Firmware Update D-Bus Service"
 msgstr "Servici D-Bus de mesa a jorn dels micrologicials"
 
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Found"
+msgstr "Trobat"
+
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
 msgstr "Obténer la lista dels periferics que supòrtan las mesas a jorn de micrologicial"
@@ -92,6 +97,10 @@ msgstr "Installar un fichièr de micrologicial sus aqueste material"
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Cap de material amb de capacitats de mesa a jorn del micrologicial es pas estat detectat"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "OK"
+msgstr "D'acòrdi"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
@@ -118,3 +127,7 @@ msgstr "Mòstra d'informacions de desbugatge complementàrias"
 #, c-format
 msgid "Updating %s from %s to %s... "
 msgstr "Mesa a jorn de %s de %s en %s "
+
+#. TRANSLATORS: the detected version number of the dbx
+msgid "Version"
+msgstr "Version"

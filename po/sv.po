@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Anders Jonsson <transifex@norsjovallen.se>, 2017,2019
+# Anders Jonsson <transifex@norsjovallen.se>, 2017,2019-2020
 # Andreas Henriksson <andreas@fatal.se>, 2017
 # Josef Andersson <josef.andersson@fripost.org>, 2015,2017-2018
 # Josef Andersson <l10nl18nsweja@gmail.com>, 2015,2017
@@ -27,24 +27,30 @@ msgid_plural "%.0f minutes remaining"
 msgstr[0] "%.0fminut kvarstår"
 msgstr[1] "%.0f minuter kvarstår"
 
+#. TRANSLATORS: the CPU microcode is firmware loaded onto the CPU
+#. * at system bootup
+#, c-format
+msgid "%s CPU Microcode Update"
+msgstr "%s CPU-mikrokodsuppdatering"
+
 #. TRANSLATORS: ME stands for Management Engine, where
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s Consumer ME Update"
-msgstr "%s ME-uppdatering för konsument"
+msgstr "%s Consumer ME-uppdatering"
 
 #. TRANSLATORS: the controller is a device that has other devices
 #. * plugged into it, for example ThunderBolt, FireWire or USB,
 #. * the first %s is the device name, e.g. 'Intel ThunderBolt`
 #, c-format
 msgid "%s Controller Update"
-msgstr "%s Kontrolleruppdatering"
+msgstr "%s-styrenhetsuppdatering"
 
 #. TRANSLATORS: ME stands for Management Engine (with Intel AMT),
 #. * where the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s Corporate ME Update"
-msgstr "%s ME-uppdatering för företag"
+msgstr "%s Corporate ME-uppdatering"
 
 #. TRANSLATORS: a specific part of hardware,
 #. * the first %s is the device name, e.g. 'Unifying Receiver`
@@ -56,7 +62,7 @@ msgstr "%s Enhetsuppdatering"
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s Embedded Controller Update"
-msgstr "%s Uppdatering av inbäddadkontroller"
+msgstr "%s inbäddad styrenhetsuppdatering"
 
 #. TRANSLATORS: ME stands for Management Engine, the Intel AMT thing,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
@@ -75,7 +81,7 @@ msgstr "%s Systemuppdatering"
 #. * the first %s is the system name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s Thunderbolt Controller Update"
-msgstr "Thunderbolt-kontrolleruppdatering för %s"
+msgstr "%s Thunderbolt-styrenhetsuppdatering"
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else
@@ -462,6 +468,7 @@ msgstr[1] "Skicka inte rapporter, och fråga aldrig om att skicka rapporter vid 
 msgid "Do not write to the history database"
 msgstr "Skriv inte till historikdatabasen"
 
+#. TRANSLATORS: success
 #. success
 msgid "Done!"
 msgstr "Klar!"
@@ -506,6 +513,8 @@ msgstr "Aktivera stöd för uppdatering av fast programvara på system som stöd
 msgid "Enable this remote?"
 msgstr "Aktivera denna fjärr?"
 
+#. TRANSLATORS: Suffix: the HSI result
+#. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
 msgid "Enabled"
 msgstr "Aktiverad"
@@ -544,10 +553,6 @@ msgstr "Avsluta efter att motorn har lästs in"
 msgid "Failed to connect to daemon"
 msgstr "Misslyckades med att ansluta till demon"
 
-#. TRANSLATORS: the server is rate-limiting downloads
-msgid "Failed to download due to server limit"
-msgstr "Misslyckades med hämtning på grund av servergräns"
-
 #. TRANSLATORS: we could not get the devices to update offline
 msgid "Failed to get pending devices"
 msgstr "Misslyckades med att hämta väntande enheter"
@@ -579,22 +584,6 @@ msgstr "Misslyckades med att starta om"
 #. TRANSLATORS: we could not talk to plymouth
 msgid "Failed to set splash mode"
 msgstr "Misslyckades med att sätta uppstartsläge"
-
-#. TRANSLATORS: downloading unknown file
-msgid "Fetching file"
-msgstr "Hämtar fil"
-
-#. TRANSLATORS: downloading new firmware file
-msgid "Fetching firmware"
-msgstr "Hämtar fast programvara"
-
-#. TRANSLATORS: downloading new metadata file
-msgid "Fetching metadata"
-msgstr "Hämtar metainformation"
-
-#. TRANSLATORS: downloading new signing file
-msgid "Fetching signature"
-msgstr "Hämtar signatur"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
@@ -641,12 +630,17 @@ msgstr "Uppdateringar av fast programvara stöds inte på denna maskin."
 msgid "Firmware updates are supported on this machine."
 msgstr "Uppdateringar av fast programvara stöds på denna maskin."
 
+#. TRANSLATORS: description of plugin state, e.g. disabled
 #. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "Flaggor"
 
 msgid "Force the action ignoring all warnings"
 msgstr "Tvinga åtgärden, ignorera alla varningar"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Found"
+msgstr "Hittad"
 
 #. TRANSLATORS: global ID common to all similar hardware
 msgid "GUID"
@@ -677,10 +671,6 @@ msgstr "Hämtar detaljer om en fast programvarufil"
 #. TRANSLATORS: command description
 msgid "Gets the configured remotes"
 msgstr "Ger de konfigurerade fjärrkällorna"
-
-#. TRANSLATORS: firmware approved by the admin
-msgid "Gets the list of approved firmware."
-msgstr "Hämtar listan över godkänd fast programvara."
 
 #. TRANSLATORS: command description
 msgid "Gets the list of updates for connected hardware"
@@ -801,10 +791,6 @@ msgstr "Lista tillgänliga fastprogramvutyper"
 msgid "Loading…"
 msgstr "Läser in…"
 
-#. TRANSLATORS: command line option
-msgid "Manually whitelist specific plugins"
-msgstr "Vitlista manuellt specifika insticksmoduler"
-
 #. TRANSLATORS: remote URI
 msgid "Metadata Signature"
 msgstr "Metadatasignatur"
@@ -825,10 +811,6 @@ msgstr "Minimiversion"
 #, c-format
 msgid "Mismatched daemon and client, use %s instead"
 msgstr "Demon och klient stämmer inte, använd %s istället"
-
-#. TRANSLATORS: sets something in daemon.conf
-msgid "Modifies a daemon configuration value."
-msgstr "Modifierar ett konfigurationsvärde för en demon."
 
 #. TRANSLATORS: command description
 msgid "Modifies a given remote"
@@ -856,6 +838,7 @@ msgstr "Kräver en nedstängning efter installation"
 msgid "New version"
 msgstr "Ny version"
 
+#. TRANSLATORS: user did not tell the tool what to do
 msgid "No action specified!"
 msgstr "Ingen åtgärd angiven!"
 
@@ -893,13 +876,13 @@ msgstr "Inga fjärrarkiv tillgängliga"
 msgid "No updates were applied"
 msgstr "Inga uppdateringar applicerades"
 
+#. TRANSLATORS: Suffix: the HSI result
+msgid "OK"
+msgstr "OK"
+
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Visa endast enkelt PCR-värde"
-
-#. TRANSLATORS: command line option
-msgid "Override plugin warning"
-msgstr "Åsidosätt insticksmodulvarning"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
@@ -983,10 +966,6 @@ msgstr "Startar om…"
 msgid "Refresh metadata from remote server"
 msgstr "Uppdatera metadata från fjärrserver"
 
-#. TRANSLATORS: command description
-msgid "Reinstall current firmware on the device."
-msgstr "Återinstallera aktuell fastprogrmvara på enheten."
-
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
 #. * e.g. "1.2.3"
@@ -1014,10 +993,6 @@ msgstr "Rapport-uri"
 #. TRANSLATORS: Has been reported to a metadata server
 msgid "Reported to remote server"
 msgstr "Rapporterade till fjärrserver"
-
-#. TRANSLATORS: Must be plugged in to an outlet
-msgid "Requires AC power"
-msgstr "Kräver AC-ström"
 
 #. TRANSLATORS: Requires a bootloader mode to be manually enabled by the user
 msgid "Requires a bootloader"
@@ -1078,12 +1053,9 @@ msgstr "Serienummer"
 msgid "Set the debugging flag during update"
 msgstr "Ställ in felsökningsflaggan under uppdatering"
 
+#. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
 msgstr "Sätter listan av godkända fasta programvaror"
-
-#. TRANSLATORS: firmware approved by the admin
-msgid "Sets the list of approved firmware."
-msgstr "Sätter listan över godkänd fast programvara."
 
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
@@ -1342,10 +1314,6 @@ msgstr "Uppdaterar %s…"
 msgid "Upgrade available for %s from %s to %s"
 msgstr "Uppgradering tillgänglig för %s från %s till %s"
 
-#. TRANSLATORS: the server sent the user a small message
-msgid "Upload message:"
-msgstr "Uppladdningsmeddelande:"
-
 msgid "Upload report just this one time, but prompt again for future updates"
 msgid_plural "Upload reports just this one time, but prompt again for future updates"
 msgstr[0] "Skicka rapport endast denna gång, men fråga igen vid framtida uppdateringar"
@@ -1388,9 +1356,9 @@ msgstr "Tillverkare"
 msgid "Verifying…"
 msgstr "Verifierar…"
 
-#. TRANSLATORS: try to help
-msgid "WARNING: Ignoring SSL strict checks, to do this automatically in the future export DISABLE_SSL_STRICT in your environment"
-msgstr "VARNING: Ignorerar strikta SSL-kontroller, för att göra detta automatiskt i framtiden, expotera DISABLE_SSL_STRICT i din miljö"
+#. TRANSLATORS: the detected version number of the dbx
+msgid "Version"
+msgstr "Version"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

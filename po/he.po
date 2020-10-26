@@ -41,6 +41,7 @@ msgstr "אפשרויות ניפוי שגיאות"
 msgid "Description"
 msgstr "תיאור"
 
+#. TRANSLATORS: success
 #. success
 msgid "Done!"
 msgstr "הסתיים!"
@@ -88,6 +89,10 @@ msgstr "מתקין קובץ קושחה בחומרה זו"
 msgid "No hardware detected with firmware update capability"
 msgstr "לא אותרה חומרה בעלת יכולת עדכון קושחה"
 
+#. TRANSLATORS: Suffix: the HSI result
+msgid "OK"
+msgstr "אישור"
+
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
 #. * e.g. "1.2.3"
@@ -109,3 +114,7 @@ msgstr "הצג מידע ניפוי שגיאות מורחב"
 #, c-format
 msgid "Updating %s from %s to %s... "
 msgstr "מעדכן %s מ־%s ל־%s..."
+
+#. TRANSLATORS: the detected version number of the dbx
+msgid "Version"
+msgstr "גרסא"

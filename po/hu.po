@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Balázs Meskó <mesko.balazs@fsf.hu>, 2017-2019
+# Balázs Meskó <meskobalazs@mailbox.org>, 2017-2019
 # Balázs Úr, 2015-2018
 # Gabor Kelemen <kelemeng at ubuntu dot com>, 2016
 # kelemeng <kelemeng@ubuntu.com>, 2016
@@ -446,6 +446,7 @@ msgstr[1] "Ne töltsön fel jelentéseket, és sose kérdezzen rá a jövőben"
 msgid "Do not write to the history database"
 msgstr "Ne írjon az előzmények adatbázisába"
 
+#. TRANSLATORS: success
 #. success
 msgid "Done!"
 msgstr "Kész!"
@@ -490,6 +491,8 @@ msgstr "Firmware frissítési támogatás engedélyezése a támogatott rendszer
 msgid "Enable this remote?"
 msgstr "Engedélyezi ezt a távoli tárolót?"
 
+#. TRANSLATORS: Suffix: the HSI result
+#. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
 msgid "Enabled"
 msgstr "Engedélyezve"
@@ -528,10 +531,6 @@ msgstr "Kilépés a motor betöltődése után"
 msgid "Failed to connect to daemon"
 msgstr "A démonhoz kapcsolódás sikertelen"
 
-#. TRANSLATORS: the server is rate-limiting downloads
-msgid "Failed to download due to server limit"
-msgstr "A letöltés kiszolgálókorlát miatt meghiúsult"
-
 #. TRANSLATORS: we could not get the devices to update offline
 msgid "Failed to get pending devices"
 msgstr "A függőben lévő eszközök lekérése sikertelen"
@@ -559,22 +558,6 @@ msgstr "Újraindítás sikertelen"
 #. TRANSLATORS: we could not talk to plymouth
 msgid "Failed to set splash mode"
 msgstr "Az indítóképernyő módjának beállítása sikertelen"
-
-#. TRANSLATORS: downloading unknown file
-msgid "Fetching file"
-msgstr "Fájl lekérése"
-
-#. TRANSLATORS: downloading new firmware file
-msgid "Fetching firmware"
-msgstr "Firmware lekérése"
-
-#. TRANSLATORS: downloading new metadata file
-msgid "Fetching metadata"
-msgstr "Metaadatok lekérése"
-
-#. TRANSLATORS: downloading new signing file
-msgid "Fetching signature"
-msgstr "Aláírás lekérése"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
@@ -621,12 +604,17 @@ msgstr "A firmware frissítések nem támogatottak ezen a gépen."
 msgid "Firmware updates are supported on this machine."
 msgstr "A firmware frissítések támogatottak ezen a gépen."
 
+#. TRANSLATORS: description of plugin state, e.g. disabled
 #. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "Jelzők"
 
 msgid "Force the action ignoring all warnings"
 msgstr "A művelet erőltetése, az összes figyelmeztetés mellőzése"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Found"
+msgstr "Megtalálva"
 
 #. TRANSLATORS: global ID common to all similar hardware
 msgid "GUID"
@@ -657,10 +645,6 @@ msgstr "Részleteket kér le egy firmware fájlról"
 #. TRANSLATORS: command description
 msgid "Gets the configured remotes"
 msgstr "Lekéri a beállított távoli tárolókat"
-
-#. TRANSLATORS: firmware approved by the admin
-msgid "Gets the list of approved firmware."
-msgstr "Lekéri a jóváhagyott firmwarek listáját."
 
 #. TRANSLATORS: command description
 msgid "Gets the list of updates for connected hardware"
@@ -781,10 +765,6 @@ msgstr "Az elérhető firmware típusok listázása"
 msgid "Loading…"
 msgstr "Betöltés…"
 
-#. TRANSLATORS: command line option
-msgid "Manually whitelist specific plugins"
-msgstr "Egyes bővítmények kézi fehérlistára tétele"
-
 #. TRANSLATORS: remote URI
 msgid "Metadata Signature"
 msgstr "Metaadatok aláírása"
@@ -805,10 +785,6 @@ msgstr "Legkisebb verzió"
 #, c-format
 msgid "Mismatched daemon and client, use %s instead"
 msgstr "Eltérő démon és kliens, inkább ezt használja: %s"
-
-#. TRANSLATORS: sets something in daemon.conf
-msgid "Modifies a daemon configuration value."
-msgstr "Módosítja a démon egy konfigurációs értékét."
 
 #. TRANSLATORS: command description
 msgid "Modifies a given remote"
@@ -836,6 +812,7 @@ msgstr "A telepítés után kikapcsolást igényel"
 msgid "New version"
 msgstr "Új verzi"
 
+#. TRANSLATORS: user did not tell the tool what to do
 msgid "No action specified!"
 msgstr "Nincs művelet megadva!"
 
@@ -867,9 +844,9 @@ msgstr "Nincsenek elérhető távoli tárolók"
 msgid "No updates were applied"
 msgstr "Nem lett frissítés alkalmazva"
 
-#. TRANSLATORS: command line option
-msgid "Override plugin warning"
-msgstr "Bővítmény figyelmeztetés felülbírálása"
+#. TRANSLATORS: Suffix: the HSI result
+msgid "OK"
+msgstr "OK"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
@@ -953,10 +930,6 @@ msgstr "Újraindítás…"
 msgid "Refresh metadata from remote server"
 msgstr "Metaadatok frissítése a távoli kiszolgálóról"
 
-#. TRANSLATORS: command description
-msgid "Reinstall current firmware on the device."
-msgstr "Újratelepíti a jelenlegi firmware-t az eszközön."
-
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
 #. * e.g. "1.2.3"
@@ -984,10 +957,6 @@ msgstr "Jelentési URI"
 #. TRANSLATORS: Has been reported to a metadata server
 msgid "Reported to remote server"
 msgstr "Jelentve a távoli kiszolgálónak"
-
-#. TRANSLATORS: Must be plugged in to an outlet
-msgid "Requires AC power"
-msgstr "Hálózati áramforrás szükséges"
 
 #. TRANSLATORS: Requires a bootloader mode to be manually enabled by the user
 msgid "Requires a bootloader"
@@ -1045,12 +1014,9 @@ msgstr "Sorozatszám"
 msgid "Set the debugging flag during update"
 msgstr "A hibakeresési jelző beállítása frissítéskor"
 
+#. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
 msgstr "Beállítja a jóváhagyott firmwarek listáját"
-
-#. TRANSLATORS: firmware approved by the admin
-msgid "Sets the list of approved firmware."
-msgstr "Beállítja a jóváhagyott firmwarek listáját."
 
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
@@ -1309,10 +1275,6 @@ msgstr "%s frissítése…"
 msgid "Upgrade available for %s from %s to %s"
 msgstr "%s frissítés érhető el, erről: %s, erre: %s"
 
-#. TRANSLATORS: the server sent the user a small message
-msgid "Upload message:"
-msgstr "Feltöltési üzenet:"
-
 msgid "Upload report just this one time, but prompt again for future updates"
 msgid_plural "Upload reports just this one time, but prompt again for future updates"
 msgstr[0] "Most töltse fel a jelentést, de kérdezzen rá a jövőben"
@@ -1355,9 +1317,9 @@ msgstr "Gyártó"
 msgid "Verifying…"
 msgstr "Ellenőrzés…"
 
-#. TRANSLATORS: try to help
-msgid "WARNING: Ignoring SSL strict checks, to do this automatically in the future export DISABLE_SSL_STRICT in your environment"
-msgstr "FIGYELMEZTETÉS: A szigorú SSL ellenőrzések mellőzése, ahhoz hogy ezt automatikusan megtegye a jövőben, exportálja a DISABLE_SSL_STRICT változót a környezetében"
+#. TRANSLATORS: the detected version number of the dbx
+msgid "Version"
+msgstr "Verzió"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

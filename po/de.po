@@ -17,7 +17,7 @@ msgstr ""
 "Language: de\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#. TRANSLATORS: more than a minute remaining
+#. more than a minute
 #, c-format
 msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"
@@ -177,6 +177,7 @@ msgstr "Nicht auf nicht erfassten Verlauf prüfen"
 msgid "Do not write to the history database"
 msgstr "Nicht in die Verlaufsdatenbank schreiben"
 
+#. TRANSLATORS: success
 #. success
 msgid "Done!"
 msgstr "Fertig."
@@ -213,6 +214,8 @@ msgstr "Das angegebene ESP war nicht gültig"
 msgid "Enable firmware update support on supported systems"
 msgstr "Firmware-Aktualisierungsunterstützung auf unterstützten Systemen aktivieren"
 
+#. TRANSLATORS: Suffix: the HSI result
+#. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
 msgid "Enabled"
 msgstr "Aktiviert"
@@ -242,22 +245,6 @@ msgstr "Nach dem Laden der Engine beenden"
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
 msgstr "Verarbeitung der Argumente schlug fehl"
-
-#. TRANSLATORS: downloading unknown file
-msgid "Fetching file"
-msgstr "Datei wird abgerufen"
-
-#. TRANSLATORS: downloading new firmware file
-msgid "Fetching firmware"
-msgstr "Firmware wird abgerufen"
-
-#. TRANSLATORS: downloading new metadata file
-msgid "Fetching metadata"
-msgstr "Metadaten werden abgerufen"
-
-#. TRANSLATORS: downloading new signing file
-msgid "Fetching signature"
-msgstr "Signatur wird abgerufen"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
@@ -298,6 +285,10 @@ msgstr "Firmware-Aktualisierungen werden auf diesem System unterstützt."
 
 msgid "Force the action ignoring all warnings"
 msgstr "Aktion erzwingen, bei der alle Warnungen ignoriert werden"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Found"
+msgstr "Gefunden"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -392,6 +383,7 @@ msgstr "Metadaten können über den Linux Vendor Firmware Service bezogen werden
 msgid "Monitor the daemon for events"
 msgstr "Hintergrundprogramm auf Ereignisse überwachen"
 
+#. TRANSLATORS: user did not tell the tool what to do
 msgid "No action specified!"
 msgstr "Keine Aktion angegeben!"
 
@@ -403,9 +395,9 @@ msgstr "Es wurde keine Hardware erkannt, deren Firmware aktualisiert werden kann
 msgid "No plugins found"
 msgstr "Keine Plugins gefunden"
 
-#. TRANSLATORS: command line option
-msgid "Override plugin warning"
-msgstr "Plugin-Warnung überschreiben"
+#. TRANSLATORS: Suffix: the HSI result
+msgid "OK"
+msgstr "Ok"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
@@ -601,10 +593,6 @@ msgstr "Aktualisieren von %s von %s nach %s …"
 msgid "Updating %s…"
 msgstr "%s wird aktualisiert …"
 
-#. TRANSLATORS: the server sent the user a small message
-msgid "Upload message:"
-msgstr "Nachricht beim Hochladen:"
-
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "Bericht jetzt hochladen?"
@@ -620,6 +608,10 @@ msgstr "Benutzername"
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
 msgstr "Überprüfung …"
+
+#. TRANSLATORS: the detected version number of the dbx
+msgid "Version"
+msgstr "Version"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

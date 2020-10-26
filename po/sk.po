@@ -93,6 +93,7 @@ msgstr "Zmenené zariadenie:"
 msgid "Device removed:"
 msgstr "Odstránené zariadenie:"
 
+#. TRANSLATORS: success
 #. success
 msgid "Done!"
 msgstr "Hotovo!"
@@ -127,6 +128,10 @@ msgstr "Démon aktualizácie firmvéru"
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
 msgstr "Nástroj pre firmvéry"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Found"
+msgstr "Nájdené"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -170,6 +175,10 @@ msgstr "Sleduje démona kvôli udalostiam"
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Nezistil sa žiadny hardvér s možnosťou aktualizácie firmvéru"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "OK"
+msgstr "OK"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from device into a file"
@@ -219,6 +228,10 @@ msgstr "Aktualizuje všetok firmvér na najnovšiu dostupnú verziu"
 #, c-format
 msgid "Updating %s from %s to %s... "
 msgstr "Aktualizuje sa %s z verzie %s na verziu %s... "
+
+#. TRANSLATORS: the detected version number of the dbx
+msgid "Version"
+msgstr "Verzia"
 
 #. TRANSLATORS: command description
 msgid "Watch DFU devices being hotplugged"

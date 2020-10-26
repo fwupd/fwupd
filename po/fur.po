@@ -252,6 +252,7 @@ msgid_plural "Do not upload reports, and never ask to upload reports for future 
 msgstr[0] "No sta inviâ il rapuart e no sta domandâ plui di inviâ i rapuarts pai inzornaments futûrs"
 msgstr[1] "No sta inviâ i rapuarts e no sta domandâ plui di inviâ i rapuarts pai inzornaments futûrs"
 
+#. TRANSLATORS: success
 #. success
 msgid "Done!"
 msgstr "Fat!"
@@ -292,6 +293,8 @@ msgstr "Abilite il supuart dal inzornament dal firmware sui sistemis supuartâts
 msgid "Enable this remote?"
 msgstr "Abilitâ chest rimot?"
 
+#. TRANSLATORS: Suffix: the HSI result
+#. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
 msgid "Enabled"
 msgstr "Abilitât"
@@ -393,6 +396,10 @@ msgstr "Su cheste machine a son supuartâts i inzornaments firmware."
 
 msgid "Force the action ignoring all warnings"
 msgstr "Sfuarce la azion ignorant ducj i avertiments"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Found"
+msgstr "Cjatât"
 
 #. TRANSLATORS: command description
 msgid "Get all devices and possible releases"
@@ -497,6 +504,7 @@ msgstr "Modifiche la configurazion dal demoni"
 msgid "Monitor the daemon for events"
 msgstr "Monitore il demoni pai events"
 
+#. TRANSLATORS: user did not tell the tool what to do
 msgid "No action specified!"
 msgstr "Nissune azion specificade!"
 
@@ -530,13 +538,13 @@ msgstr "Nissun rimot disponibil"
 msgid "No updates were applied"
 msgstr "Nol è stât aplicât nissun inzornament"
 
+#. TRANSLATORS: Suffix: the HSI result
+msgid "OK"
+msgstr "Va ben"
+
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Mostre dome il valôr PCR"
-
-#. TRANSLATORS: command line option
-msgid "Override plugin warning"
-msgstr "Ignore i avertiments dal plugin"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
@@ -664,6 +672,7 @@ msgstr "Dispositîf selezionât"
 msgid "Set the debugging flag during update"
 msgstr "Stabilìs la opzion di debug dilunc l'inzornament"
 
+#. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
 msgstr "Al stabilìs la liste dai firmware aprovâts"
 
@@ -858,10 +867,6 @@ msgstr "Daûr a inzornâ %s…"
 msgid "Upgrade available for %s from %s to %s"
 msgstr "Inzornament disponibil par %s di %s a %s"
 
-#. TRANSLATORS: the server sent the user a small message
-msgid "Upload message:"
-msgstr "Messaç dal inviament:"
-
 msgid "Upload report just this one time, but prompt again for future updates"
 msgid_plural "Upload reports just this one time, but prompt again for future updates"
 msgstr[0] "Invie il rapuart dome cheste volte, ma torne domande pai inzornaments futûrs"
@@ -887,6 +892,10 @@ msgstr "Non utent"
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
 msgstr "Daûr a verificâ…"
+
+#. TRANSLATORS: the detected version number of the dbx
+msgid "Version"
+msgstr "Version"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
