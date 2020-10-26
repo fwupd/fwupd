@@ -238,7 +238,7 @@
         </listitem>
         <listitem id="org.fwupd.hsi.Kernel.Lockdown">
           <para>
-            The kernel is not not <ulink url="https://mjg59.dreamwidth.org/50577.html">
+            The kernel is not <ulink url="https://mjg59.dreamwidth.org/50577.html">
             locked down</ulink>. <emphasis>v1.5.0</emphasis>
           </para>
         </listitem>
