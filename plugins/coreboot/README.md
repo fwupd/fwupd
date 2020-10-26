@@ -57,3 +57,7 @@ Vendor ID Security
 ------------------
 
 The vendor ID is set from the BIOS vendor, in this instance `DMI:coreboot`
+
+External interface access
+-------------------------
+This plugin does not currently use any external access.

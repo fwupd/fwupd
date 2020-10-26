@@ -44,3 +44,7 @@ values depending on the model and device mode. The list of USB VIDs used is:
  * `USB:0x1235`
  * `USB:0x2002`
  * `USB:0x8000`
+
+External interface access
+-------------------------
+This plugin requires read/write access to `/dev/bus/usb`.

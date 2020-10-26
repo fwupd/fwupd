@@ -68,3 +68,7 @@ This plugin uses the following plugin-specific quirks:
 | `DellDockVersionLowest`      | The minimum component version required to safely operate the plugin     | 1.1.3                 |
 | `DellDockBoard*`             | The board description of a board revision                               | 1.1.3                 |
 | `DellDockInstallDurationI2C` | The duration of time required to install a payload via I2C.             | 1.1.3                 |
+
+External interface access
+-------------------------
+This plugin requires read/write access to `/dev/bus/usb`.

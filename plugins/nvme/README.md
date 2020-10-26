@@ -54,3 +54,7 @@ Vendor ID Security
 ------------------
 
 The vendor ID is set from the udev vendor, for example set to `NVME:0x1179`
+
+External interface access
+-------------------------
+This plugin requires ioctl `NVME_IOCTL_ADMIN_CMD` access.

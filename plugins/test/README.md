@@ -16,3 +16,7 @@ Vendor ID Security
 ------------------
 
 The fake device is only for local testing and thus requires no vendor ID set.
+
+External interface access
+-------------------------
+This plugin requires no extra access.

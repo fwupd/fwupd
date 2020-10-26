@@ -27,3 +27,7 @@ Vendor ID Security
 ------------------
 
 The vendor ID is set from the baseboard vendor, for example `DMI:Star Labs`
+
+External interface access
+-------------------------
+This plugin requires access to raw system memory via `inb`/`outb`.

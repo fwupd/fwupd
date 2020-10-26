@@ -21,3 +21,7 @@ Vendor ID Security
 ------------------
 
 The device is not upgradable and thus requires no vendor ID set.
+
+External interface access
+-------------------------
+This plugin requires read/write access to `/dev/bus/usb`.

@@ -31,3 +31,7 @@ a proprietary (but docucumented) file format.
 This plugin supports the following protocol ID:
 
  * com.synaptics.rmi
+
+External interface access
+-------------------------
+This plugin requires ioctl access to `HIDIOCSFEATURE` and `HIDIOCGFEATURE`.

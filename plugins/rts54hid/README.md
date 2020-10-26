@@ -47,3 +47,7 @@ This plugin uses the following plugin-specific quirks:
 | `Rts54TargetAddr`      | The target address of a child module.       | 1.1.3                 |
 | `Rts54I2cSpeed`        | The I2C speed to operate at (0, 1, 2).      | 1.1.3                 |
 | `Rts54RegisterAddrLen` | The I2C register address length of commands | 1.1.3                 |
+
+External interface access
+-------------------------
+This plugin requires read/write access to `/dev/bus/usb`.

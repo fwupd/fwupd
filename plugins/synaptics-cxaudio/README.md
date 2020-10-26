@@ -47,3 +47,7 @@ This plugin uses the following plugin-specific quirks:
 | `IsSoftwareResetSupported` | If the chip supports self-reset  | 1.3.2                 |
 | `EepromPatchValidAddr`     | Address of patch location #1     | 1.3.2                 |
 | `EepromPatch2ValidAddr`    | Address of patch location #2     | 1.3.2                 |
+
+External interface access
+-------------------------
+This plugin requires read/write access to `/dev/bus/usb`.

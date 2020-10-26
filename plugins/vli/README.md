@@ -80,3 +80,7 @@ the other flash chip parameters. For example:
     [Guid=VLI_USBHUB\\SPI_37303840]
     SpiCmdChipErase = 0xc7
     SpiCmdSectorErase = 0x20
+
+External interface access
+-------------------------
+This plugin requires read/write access to `/dev/bus/usb`.
