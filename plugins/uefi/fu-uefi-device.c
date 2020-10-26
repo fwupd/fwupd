@@ -571,6 +571,10 @@ fu_uefi_device_write_firmware (FuDevice *device,
 	if (!fu_common_set_contents_bytes (fn, fixed_fw, error))
 		return FALSE;
 
+	/* delete the logs to save space; use fwupdate to debug the EFI binary */
+	fu_efivar_delete (FU_EFIVAR_GUID_FWUPDATE, "FWUPDATE_VERBOSE", NULL);
+	fu_efivar_delete (FU_EFIVAR_GUID_FWUPDATE, "FWUPDATE_DEBUG_LOG", NULL);
+
 	/* set the blob header shared with fwupd.efi */
 	if (!fu_uefi_device_write_update_info (self, fn, varname, self->fw_class, error))
 		return FALSE;
