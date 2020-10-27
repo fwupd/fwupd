@@ -2134,7 +2134,8 @@ fwupd_device_to_json (FwupdDevice *device, JsonBuilder *builder)
 	fwupd_device_json_add_int (builder, FWUPD_RESULT_KEY_INSTALL_DURATION, priv->install_duration);
 	fwupd_device_json_add_int (builder, FWUPD_RESULT_KEY_CREATED, priv->created);
 	fwupd_device_json_add_int (builder, FWUPD_RESULT_KEY_MODIFIED, priv->modified);
-	fwupd_device_json_add_int (builder, FWUPD_RESULT_KEY_UPDATE_STATE, priv->update_state);
+	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_UPDATE_STATE,
+				      fwupd_update_state_to_string (priv->update_state));
 	fwupd_device_json_add_int (builder, FWUPD_RESULT_KEY_STATUS, priv->status);
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_UPDATE_ERROR, priv->update_error);
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->update_message);
