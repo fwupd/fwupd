@@ -1066,6 +1066,19 @@ fu_device_poll_func (void)
 }
 
 static void
+fu_device_func (void)
+{
+	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(GPtrArray) possible_plugins = NULL;
+
+	/* only add one plugin name of the same type */
+	fu_device_add_possible_plugin (device, "test");
+	fu_device_add_possible_plugin (device, "test");
+	possible_plugins = fu_device_get_possible_plugins (device);
+	g_assert_cmpint (possible_plugins->len, ==, 1);
+}
+
+static void
 fu_device_flags_func (void)
 {
 	g_autoptr(FuDevice) device = fu_device_new ();
@@ -2138,6 +2151,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/firmware{dfu}", fu_firmware_dfu_func);
 	g_test_add_func ("/fwupd/archive{invalid}", fu_archive_invalid_func);
 	g_test_add_func ("/fwupd/archive{cab}", fu_archive_cab_func);
+	g_test_add_func ("/fwupd/device", fu_device_func);
 	g_test_add_func ("/fwupd/device{flags}", fu_device_flags_func);
 	g_test_add_func ("/fwupd/device{parent}", fu_device_parent_func);
 	g_test_add_func ("/fwupd/device{incorporate}", fu_device_incorporate_func);

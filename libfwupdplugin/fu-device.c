@@ -169,12 +169,22 @@ fu_device_get_possible_plugins (FuDevice *self)
  * Adds a plugin name to the list of plugins that *might* be able to handle this
  * device. This is tyically called from a quirk handler.
  *
- * Since: 1.3.3
+ * Duplicate plugin names are ignored.
+ *
+ * Since: 1.5.1
  **/
-static void
+void
 fu_device_add_possible_plugin (FuDevice *self, const gchar *plugin)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
+
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_return_if_fail (plugin != NULL);
+
+	/* add if it does not already exist */
+	if (g_ptr_array_find_with_equal_func (priv->possible_plugins, plugin,
+					      g_str_equal, NULL))
+		return;
 	g_ptr_array_add (priv->possible_plugins, g_strdup (plugin));
 }
 
