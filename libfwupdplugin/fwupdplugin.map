@@ -669,3 +669,9 @@ LIBFWUPDPLUGIN_1.5.0 {
     fu_udev_device_get_subsystem_vendor;
   local: *;
 } LIBFWUPDPLUGIN_1.4.7;
+
+LIBFWUPDPLUGIN_1.5.1 {
+  global:
+    fu_efivar_space_used;
+  local: *;
+} LIBFWUPDPLUGIN_1.5.0;

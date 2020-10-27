@@ -24,6 +24,7 @@
 #define FU_EFIVAR_ATTR_APPEND_WRITE			(1 << 6)
 
 gboolean	 fu_efivar_supported		(GError		**error);
+guint64		 fu_efivar_space_used		(GError		**error);
 gboolean	 fu_efivar_exists		(const gchar	*guid,
 						 const gchar	*name);
 gboolean	 fu_efivar_get_data		(const gchar	*guid,

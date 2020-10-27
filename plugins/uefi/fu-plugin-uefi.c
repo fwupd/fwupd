@@ -608,7 +608,9 @@ gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
+	guint64 nvram_total;
 	g_autofree gchar *esp_path = NULL;
+	g_autofree gchar *nvram_total_str = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* some platforms have broken SMBIOS data */
@@ -632,6 +634,11 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	/* are the EFI dirs set up so we can update each device */
 	if (!fu_efivar_supported (error))
 		return FALSE;
+	nvram_total = fu_efivar_space_used (error);
+	if (nvram_total == G_MAXUINT64)
+		return FALSE;
+	nvram_total_str = g_format_size_full (nvram_total, G_FORMAT_SIZE_LONG_FORMAT);
+	fu_plugin_add_report_metadata (plugin, "EfivarNvramUsed", nvram_total_str);
 
 	/* override the default ESP path */
 	esp_path = fu_plugin_get_config_value (plugin, "OverrideESPMountPoint");

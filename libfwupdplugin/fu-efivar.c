@@ -396,6 +396,51 @@ fu_efivar_get_names (const gchar *guid, GError **error)
 }
 
 /**
+ * fu_efivar_space_used:
+ * @error: A #GError
+ *
+ * Gets the total size used by all EFI variables. This may be less than the size reported by the
+ * kernel as some (hopefully small) variables are hidden from userspace.
+ *
+ * Returns: total allocated size of all visible variables, or %G_MAXUINT64 on error
+ *
+ * Since: 1.5.1
+ **/
+guint64
+fu_efivar_space_used (GError **error)
+{
+	const gchar *fn;
+	guint64 total = 0;
+	g_autoptr(GDir) dir = NULL;
+	g_autofree gchar *path = fu_efivar_get_path ();
+
+	/* stat each file */
+	dir = g_dir_open (path, 0, error);
+	if (dir == NULL)
+		return G_MAXUINT64;
+	while ((fn = g_dir_read_name (dir)) != NULL) {
+		guint64 sz;
+		g_autofree gchar *pathfn = g_build_filename (path, fn, NULL);
+		g_autoptr(GFile) file = g_file_new_for_path (pathfn);
+		g_autoptr(GFileInfo) info = NULL;
+
+		info = g_file_query_info (file,
+					  G_FILE_ATTRIBUTE_STANDARD_ALLOCATED_SIZE ","
+					  G_FILE_ATTRIBUTE_STANDARD_SIZE,
+					  G_FILE_QUERY_INFO_NONE,
+					  NULL, error);
+		if (info == NULL)
+			return G_MAXUINT64;
+		sz = g_file_info_get_attribute_uint64 (info, G_FILE_ATTRIBUTE_STANDARD_ALLOCATED_SIZE);
+		if (sz == 0)
+			sz = g_file_info_get_attribute_uint64 (info, G_FILE_ATTRIBUTE_STANDARD_SIZE);
+		total += sz;
+	}
+
+	/* success */
+	return total;
+}
+/**
  * fu_efivar_set_data:
  * @guid: Globally unique identifier
  * @name: Variable name
