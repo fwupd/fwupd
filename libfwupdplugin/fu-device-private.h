@@ -28,3 +28,5 @@ void		 fu_device_incorporate_from_component	(FuDevice	*device,
 void		 fu_device_convert_instance_ids		(FuDevice	*self);
 gchar		*fu_device_get_guids_as_str		(FuDevice	*self);
 GPtrArray	*fu_device_get_possible_plugins		(FuDevice	*self);
+void		 fu_device_add_possible_plugin		(FuDevice	*self,
+							 const gchar	*plugin);

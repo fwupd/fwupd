@@ -672,6 +672,7 @@ LIBFWUPDPLUGIN_1.5.0 {
 
 LIBFWUPDPLUGIN_1.5.1 {
   global:
+    fu_device_add_possible_plugin;
     fu_efivar_space_used;
   local: *;
 } LIBFWUPDPLUGIN_1.5.0;
