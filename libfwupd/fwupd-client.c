@@ -3919,7 +3919,6 @@ fwupd_client_download_chunk_cb (SoupMessage *msg, SoupBuffer *chunk, gpointer us
 	/* calculate percentage */
 	percentage = (guint) ((100 * body_length) / header_size);
 	g_debug ("progress: %u%%", percentage);
-	fwupd_client_set_status (self, FWUPD_STATUS_DOWNLOADING);
 	fwupd_client_set_percentage (self, percentage);
 }
 
@@ -3957,6 +3956,7 @@ fwupd_client_download_bytes_cb (GObject *source,
 	SoupMessage *msg = g_task_get_task_data (task);
 
 	/* get the result */
+	fwupd_client_set_status (self, FWUPD_STATUS_IDLE);
 	istr = soup_session_send_finish (priv->soup_session, res, &error);
 	if (istr == NULL) {
 		g_task_return_error (task, g_steal_pointer (&error));
@@ -4046,7 +4046,7 @@ fwupd_client_download_bytes_async (FwupdClient *self,
 			  G_CALLBACK (fwupd_client_download_chunk_cb),
 			  self);
 	g_task_set_task_data (task, g_object_ref (msg), (GDestroyNotify) g_object_unref);
-	fwupd_client_set_status (self, FWUPD_STATUS_IDLE);
+	fwupd_client_set_status (self, FWUPD_STATUS_DOWNLOADING);
 	soup_session_send_async (priv->soup_session, msg,
 				 cancellable,
 				 fwupd_client_download_bytes_cb,
