@@ -1,0 +1,12 @@
+{
+  "name": "NetXtreme BCM5719",
+  "guids": [
+    "ec5b8a9e-973b-58cc-935b-8322fabaebe9"
+  ],
+  "releases": [
+    {
+      "version": "0.4.44",
+      "file": "dfbb6529d3f7051497cc7e736848b5b6e276ff93b39bc765948663606dc87c25-bcm5719-0.4.44.cab"
+    }
+  ]
+}
