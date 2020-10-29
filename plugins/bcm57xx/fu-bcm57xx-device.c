@@ -75,6 +75,10 @@ fu_bcm57xx_device_probe (FuUdevDevice *device, GError **error)
 
 	/* only if has an interface */
 	fn = g_build_filename (fu_udev_device_get_sysfs_path (device), "net", NULL);
+	if (!g_file_test (fn, G_FILE_TEST_EXISTS)) {
+		g_debug ("waiting for net devices to appear");
+		g_usleep (50 * 1000);
+	}
 	ifaces = fu_common_filename_glob (fn, "en*", NULL);
 	if (ifaces == NULL || ifaces->len == 0) {
 		fu_device_add_child (FU_DEVICE (self), FU_DEVICE (self->recovery));
