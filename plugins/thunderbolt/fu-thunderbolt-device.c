@@ -137,7 +137,7 @@ fu_thunderbolt_device_check_authorized (FuThunderboltDevice *self, GError **erro
 			     g_strerror (errno));
 		return FALSE;
 	}
-	if (status == 1)
+	if (status == 1 || status == 2)
 		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	else
 		update_error = "Not authorized";
