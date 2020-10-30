@@ -2278,7 +2278,10 @@ fu_common_get_volumes_by_kind (const gchar *kind, GError **error)
 					g_dbus_proxy_get_object_path (proxy_blk));
 			return NULL;
 		}
-		g_ptr_array_add (volumes, fu_volume_new_from_proxy (proxy_fs));
+		g_ptr_array_add (volumes,
+				 g_object_new (FU_TYPE_VOLUME,
+					       "proxy-filesystem", proxy_fs,
+					       NULL));
 	}
 	if (volumes->len == 0) {
 		g_set_error (error,
