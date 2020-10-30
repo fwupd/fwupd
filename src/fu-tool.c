@@ -141,16 +141,27 @@ fu_util_show_plugin_warnings (FuUtilPrivate *priv)
 
 	/* print */
 	for (guint i = 0; i < 64; i++) {
+		FwupdPluginFlags flag = (guint64) 1 << i;
 		const gchar *tmp;
 		g_autofree gchar *fmt = NULL;
-		if ((flags & ((guint64) 1 << i)) == 0)
+		g_autofree gchar *url= NULL;
+		g_autoptr(GString) str = g_string_new (NULL);
+		if ((flags & flag) == 0)
 			continue;
 		tmp = fu_util_plugin_flag_to_string ((guint64) 1 << i);
 		if (tmp == NULL)
 			continue;
 		/* TRANSLATORS: this is a prefix on the console */
 		fmt = fu_util_term_format (_("WARNING:"), FU_UTIL_TERM_COLOR_RED);
-		g_printerr ("%s %s\n", fmt, tmp);
+		g_string_append_printf (str, "%s %s\n", fmt, tmp);
+
+		url = g_strdup_printf ("https://github.com/fwupd/fwupd/wiki/PluginFlag:%s",
+				       fwupd_plugin_flag_to_string (flag));
+		g_string_append (str, "  ");
+		/* TRANSLATORS: %s is a link to a website */
+		g_string_append_printf (str, _("See %s for more information."), url);
+		g_string_append (str, "\n");
+		g_printerr ("%s", str->str);
 	}
 }
 
