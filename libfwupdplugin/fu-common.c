@@ -2196,8 +2196,14 @@ fu_common_get_block_devices (GError **error)
 					  g_variant_new ("(a{sv})", &builder),
 					  G_DBUS_CALL_FLAGS_NONE,
 					  -1, NULL, error);
-	if (output == NULL)
+	if (output == NULL) {
+		if (error != NULL)
+			g_dbus_error_strip_remote_error (*error);
+		g_prefix_error (error, "failed to call %s.%s(): ",
+				UDISKS_DBUS_SERVICE,
+				"GetBlockDevices");
 		return NULL;
+	}
 	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	g_variant_get (output, "(ao)", &iter);
 	while (g_variant_iter_next (iter, "&o", &obj)) {
@@ -2292,6 +2298,90 @@ fu_common_get_volumes_by_kind (const gchar *kind, GError **error)
 		return NULL;
 	}
 	return g_steal_pointer (&volumes);
+}
+
+/**
+ * fu_common_get_volume_by_device:
+ * @device: A device string, typcically starting with `/dev/`
+ * @error: A #GError or NULL
+ *
+ * Finds the first volume from the specified device.
+ *
+ * Returns: (transfer full): a #GPtrArray, or %NULL if the kind was not found
+ *
+ * Since: 1.5.1
+ **/
+FuVolume *
+fu_common_get_volume_by_device (const gchar *device, GError **error)
+{
+	g_autoptr(GPtrArray) devices = NULL;
+
+	/* find matching block device */
+	devices = fu_common_get_block_devices (error);
+	if (devices == NULL)
+		return NULL;
+	for (guint i = 0; i < devices->len; i++) {
+		GDBusProxy *proxy_blk = g_ptr_array_index (devices, i);
+		g_autoptr(GVariant) val = NULL;
+		val = g_dbus_proxy_get_cached_property (proxy_blk, "Device");
+		if (val == NULL)
+			continue;
+		if (g_strcmp0 (g_variant_get_bytestring (val), device) == 0) {
+			return g_object_new (FU_TYPE_VOLUME,
+					     "proxy-block", proxy_blk,
+					     NULL);
+		}
+	}
+
+	/* failed */
+	g_set_error (error,
+		     G_IO_ERROR,
+		     G_IO_ERROR_NOT_FOUND,
+		     "no volumes for device %s",
+		     device);
+	return NULL;
+}
+
+/**
+ * fu_common_get_volume_by_devnum:
+ * @devicenum: A device number
+ * @error: A #GError or NULL
+ *
+ * Finds the first volume from the specified device.
+ *
+ * Returns: (transfer full): a #GPtrArray, or %NULL if the kind was not found
+ *
+ * Since: 1.5.1
+ **/
+FuVolume *
+fu_common_get_volume_by_devnum (guint32 devnum, GError **error)
+{
+	g_autoptr(GPtrArray) devices = NULL;
+
+	/* find matching block device */
+	devices = fu_common_get_block_devices (error);
+	if (devices == NULL)
+		return NULL;
+	for (guint i = 0; i < devices->len; i++) {
+		GDBusProxy *proxy_blk = g_ptr_array_index (devices, i);
+		g_autoptr(GVariant) val = NULL;
+		val = g_dbus_proxy_get_cached_property (proxy_blk, "DeviceNumber");
+		if (val == NULL)
+			continue;
+		if (devnum == g_variant_get_uint64 (val)) {
+			return g_object_new (FU_TYPE_VOLUME,
+					     "proxy-block", proxy_blk,
+					     NULL);
+		}
+	}
+
+	/* failed */
+	g_set_error (error,
+		     G_IO_ERROR,
+		     G_IO_ERROR_NOT_FOUND,
+		     "no volumes for devnum %u",
+		     devnum);
+	return NULL;
 }
 
 /**

@@ -672,6 +672,8 @@ LIBFWUPDPLUGIN_1.5.0 {
 
 LIBFWUPDPLUGIN_1.5.1 {
   global:
+    fu_common_get_volume_by_device;
+    fu_common_get_volume_by_devnum;
     fu_device_add_possible_plugin;
     fu_efivar_space_used;
     fu_volume_is_encrypted;
