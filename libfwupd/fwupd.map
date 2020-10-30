@@ -610,3 +610,9 @@ LIBFWUPD_1.5.0 {
     fwupd_security_attr_to_variant;
   local: *;
 } LIBFWUPD_1.4.6;
+
+LIBFWUPD_1.5.1 {
+  global:
+    fwupd_device_add_child;
+  local: *;
+} LIBFWUPD_1.5.0;
