@@ -63,7 +63,7 @@ typedef struct {
 	gchar				*update_image;
 	FwupdStatus			 status;
 	GPtrArray			*releases;
-	FwupdDevice			*parent;
+	FwupdDevice			*parent;	/* noref */
 } FwupdDevicePrivate;
 
 enum {
@@ -72,6 +72,7 @@ enum {
 	PROP_FLAGS,
 	PROP_PROTOCOL,
 	PROP_STATUS,
+	PROP_PARENT,
 	PROP_LAST
 };
 
@@ -348,10 +349,40 @@ void
 fwupd_device_set_parent (FwupdDevice *device, FwupdDevice *parent)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	FwupdDevicePrivate *priv_parent = GET_PRIVATE (parent);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
-	g_set_object (&priv->parent, parent);
-	g_ptr_array_add (priv_parent->children, g_object_ref (device));
+
+	if (priv->parent != NULL)
+		g_object_remove_weak_pointer (G_OBJECT (priv->parent), (gpointer *) &priv->parent);
+	if (parent != NULL)
+		g_object_add_weak_pointer (G_OBJECT (parent), (gpointer *) &priv->parent);
+	priv->parent = parent;
+
+	/* this is what goes over D-Bus */
+	fwupd_device_set_parent_id (device, parent != NULL ? fwupd_device_get_id (parent) : NULL);
+}
+
+/**
+ * fwupd_device_add_child:
+ * @self: A #FwupdDevice
+ * @child: Another #FwupdDevice
+ *
+ * Adds a child device. An child device is logically linked to the primary
+ * device in some way.
+ *
+ * Since: 1.5.1
+ **/
+void
+fwupd_device_add_child (FwupdDevice *device, FwupdDevice *child)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+
+	/* add if the child does not already exist */
+	for (guint i = 0; i < priv->children->len; i++) {
+		FwupdDevice *devtmp = g_ptr_array_index (priv->children, i);
+		if (devtmp == child)
+			return;
+	}
+	g_ptr_array_add (priv->children, g_object_ref (child));
 }
 
 /**
@@ -2297,6 +2328,9 @@ fwupd_device_get_property (GObject *object, guint prop_id,
 	case PROP_STATUS:
 		g_value_set_uint (value, priv->status);
 		break;
+	case PROP_PARENT:
+		g_value_set_object (value, priv->parent);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
@@ -2320,6 +2354,9 @@ fwupd_device_set_property (GObject *object, guint prop_id,
 		break;
 	case PROP_STATUS:
 		fwupd_device_set_status (self, g_value_get_uint (value));
+		break;
+	case PROP_PARENT:
+		fwupd_device_set_parent (self, g_value_get_object (value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2365,6 +2402,13 @@ fwupd_device_class_init (FwupdDeviceClass *klass)
 				   G_PARAM_READWRITE |
 				   G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_STATUS, pspec);
+
+	pspec = g_param_spec_object ("parent", NULL, NULL,
+				     FWUPD_TYPE_DEVICE,
+				     G_PARAM_READWRITE |
+				     G_PARAM_CONSTRUCT |
+				     G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_PARENT, pspec);
 }
 
 static void
@@ -2386,7 +2430,7 @@ fwupd_device_finalize (GObject *object)
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 
 	if (priv->parent != NULL)
-		g_object_unref (priv->parent);
+		g_object_remove_weak_pointer (G_OBJECT (priv->parent), (gpointer *) &priv->parent);
 	g_free (priv->description);
 	g_free (priv->id);
 	g_free (priv->parent_id);
@@ -2489,8 +2533,10 @@ fwupd_device_array_ensure_parents (GPtrArray *devices)
 		if (parent_id != NULL) {
 			FwupdDevice *dev_tmp;
 			dev_tmp = g_hash_table_lookup (devices_by_id, parent_id);
-			if (dev_tmp != NULL)
+			if (dev_tmp != NULL) {
+				fwupd_device_add_child (dev_tmp, dev);
 				fwupd_device_set_parent (dev, dev_tmp);
+			}
 		}
 	}
 }

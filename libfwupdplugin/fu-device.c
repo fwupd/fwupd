@@ -38,14 +38,12 @@ typedef struct {
 	gchar				*logical_id;
 	gchar				*proxy_guid;
 	FuDevice			*alternate;
-	FuDevice			*parent;	/* noref */
 	FuDevice			*proxy;		/* noref */
 	FuQuirks			*quirks;
 	GHashTable			*metadata;	/* (nullable) */
 	GRWLock				 metadata_mutex;
 	GPtrArray			*parent_guids;
 	GRWLock				 parent_guids_mutex;
-	GPtrArray			*children;
 	guint				 remove_delay;	/* ms */
 	guint				 progress;
 	gint				 order;
@@ -75,7 +73,6 @@ enum {
 	PROP_PHYSICAL_ID,
 	PROP_LOGICAL_ID,
 	PROP_QUIRKS,
-	PROP_PARENT,
 	PROP_PROXY,
 	PROP_LAST
 };
@@ -101,9 +98,6 @@ fu_device_get_property (GObject *object, guint prop_id,
 		break;
 	case PROP_QUIRKS:
 		g_value_set_object (value, priv->quirks);
-		break;
-	case PROP_PARENT:
-		g_value_set_object (value, priv->parent);
 		break;
 	case PROP_PROXY:
 		g_value_set_object (value, priv->proxy);
@@ -131,9 +125,6 @@ fu_device_set_property (GObject *object, guint prop_id,
 		break;
 	case PROP_QUIRKS:
 		fu_device_set_quirks (self, g_value_get_object (value));
-		break;
-	case PROP_PARENT:
-		fu_device_set_parent (self, g_value_get_object (value));
 		break;
 	case PROP_PROXY:
 		fu_device_set_proxy (self, g_value_get_object (value));
@@ -613,9 +604,8 @@ fu_device_set_alternate (FuDevice *self, FuDevice *alternate)
 FuDevice *
 fu_device_get_parent (FuDevice *self)
 {
-	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
-	return priv->parent;
+	return FU_DEVICE (fwupd_device_get_parent (FWUPD_DEVICE (self)));
 }
 
 /**
@@ -634,12 +624,13 @@ fu_device_get_parent (FuDevice *self)
 FuDevice *
 fu_device_get_root (FuDevice *self)
 {
-	FuDevicePrivate *priv = GET_PRIVATE (self);
+	FuDevice *parent;
 	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
-	while (priv->parent != NULL) {
-		self = priv->parent;
-		priv = GET_PRIVATE (self);
-	}
+	do {
+		parent = fu_device_get_parent (self);
+		if (parent != NULL)
+			self = parent;
+	} while (parent != NULL);
 	return g_object_ref (self);
 }
 
@@ -659,8 +650,6 @@ fu_device_get_root (FuDevice *self)
 void
 fu_device_set_parent (FuDevice *self, FuDevice *parent)
 {
-	FuDevicePrivate *priv = GET_PRIVATE (self);
-
 	g_return_if_fail (FU_IS_DEVICE (self));
 
 	/* if the parent has quirks, make the child inherit it */
@@ -670,15 +659,7 @@ fu_device_set_parent (FuDevice *self, FuDevice *parent)
 			fu_device_set_quirks (self, fu_device_get_quirks (parent));
 	}
 
-	if (priv->parent != NULL)
-		g_object_remove_weak_pointer (G_OBJECT (priv->parent), (gpointer *) &priv->parent);
-	if (parent != NULL)
-		g_object_add_weak_pointer (G_OBJECT (parent), (gpointer *) &priv->parent);
-	priv->parent = parent;
-
-	/* this is what goes over D-Bus */
-	fwupd_device_set_parent_id (FWUPD_DEVICE (self),
-				    parent != NULL ? fu_device_get_id (parent) : NULL);
+	fwupd_device_set_parent (FWUPD_DEVICE (self), FWUPD_DEVICE (parent));
 }
 
 /**
@@ -743,9 +724,8 @@ fu_device_get_proxy (FuDevice *self)
 GPtrArray *
 fu_device_get_children (FuDevice *self)
 {
-	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
-	return priv->children;
+	return fwupd_device_get_children (FWUPD_DEVICE (self));
 }
 
 /**
@@ -762,20 +742,18 @@ void
 fu_device_add_child (FuDevice *self, FuDevice *child)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
+	GPtrArray *children;
+
 	g_return_if_fail (FU_IS_DEVICE (self));
 	g_return_if_fail (FU_IS_DEVICE (child));
 
 	/* add if the child does not already exist */
-	for (guint i = 0; i < priv->children->len; i++) {
-		FuDevice *devtmp = g_ptr_array_index (priv->children, i);
-		if (devtmp == child)
-			return;
-	}
-	g_ptr_array_add (priv->children, g_object_ref (child));
+	fwupd_device_add_child (FWUPD_DEVICE (self), FWUPD_DEVICE (child));
 
 	/* ensure the parent has the MAX() of the childrens removal delay  */
-	for (guint i = 0; i < priv->children->len; i++) {
-		FuDevice *child_tmp = g_ptr_array_index (priv->children, i);
+	children = fu_device_get_children (self);
+	for (guint i = 0; i < children->len; i++) {
+		FuDevice *child_tmp = g_ptr_array_index (children, i);
 		guint remove_delay = fu_device_get_remove_delay (child_tmp);
 		if (remove_delay > priv->remove_delay) {
 			g_debug ("setting remove delay to %u as child is greater than %u",
@@ -1627,6 +1605,7 @@ void
 fu_device_set_id (FuDevice *self, const gchar *id)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
+	GPtrArray *children;
 	g_autofree gchar *id_hash = NULL;
 
 	g_return_if_fail (FU_IS_DEVICE (self));
@@ -1643,8 +1622,9 @@ fu_device_set_id (FuDevice *self, const gchar *id)
 	priv->device_id_valid = TRUE;
 
 	/* ensure the parent ID is set */
-	for (guint i = 0; i < priv->children->len; i++) {
-		FuDevice *devtmp = g_ptr_array_index (priv->children, i);
+	children = fu_device_get_children (self);
+	for (guint i = 0; i < children->len; i++) {
+		FuDevice *devtmp = g_ptr_array_index (children, i);
 		fwupd_device_set_parent_id (FWUPD_DEVICE (devtmp), id_hash);
 	}
 }
@@ -2342,11 +2322,9 @@ fu_device_add_string (FuDevice *self, guint idt, GString *str)
 
 	/* print children also */
 	children = fu_device_get_children (self);
-	if (children != NULL) {
-		for (guint i = 0; i < children->len; i++) {
-			FuDevice *child = g_ptr_array_index (children, i);
-			fu_device_add_string (child, idt + 1, str);
-		}
+	for (guint i = 0; i < children->len; i++) {
+		FuDevice *child = g_ptr_array_index (children, i);
+		fu_device_add_string (child, idt + 1, str);
 	}
 }
 
@@ -2962,7 +2940,7 @@ fu_device_rescan (FuDevice *self, GError **error)
 void
 fu_device_convert_instance_ids (FuDevice *self)
 {
-	FuDevicePrivate *priv = GET_PRIVATE (self);
+	GPtrArray *children;
 	GPtrArray *instance_ids = fwupd_device_get_instance_ids (FWUPD_DEVICE (self));
 
 	/* OEM specific hardware */
@@ -2975,8 +2953,9 @@ fu_device_convert_instance_ids (FuDevice *self)
 	}
 
 	/* convert all children too */
-	for (guint i = 0; i < priv->children->len; i++) {
-		FuDevice *devtmp = g_ptr_array_index (priv->children, i);
+	children = fu_device_get_children (self);
+	for (guint i = 0; i < children->len; i++) {
+		FuDevice *devtmp = g_ptr_array_index (children, i);
 		fu_device_convert_instance_ids (devtmp);
 	}
 }
@@ -3351,13 +3330,6 @@ fu_device_class_init (FuDeviceClass *klass)
 				     G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_QUIRKS, pspec);
 
-	pspec = g_param_spec_object ("parent", NULL, NULL,
-				     FU_TYPE_DEVICE,
-				     G_PARAM_READWRITE |
-				     G_PARAM_CONSTRUCT |
-				     G_PARAM_STATIC_NAME);
-	g_object_class_install_property (object_class, PROP_PARENT, pspec);
-
 	pspec = g_param_spec_object ("proxy", NULL, NULL,
 				     FU_TYPE_DEVICE,
 				     G_PARAM_READWRITE |
@@ -3371,7 +3343,6 @@ fu_device_init (FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	priv->order = G_MAXINT;
-	priv->children = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	priv->parent_guids = g_ptr_array_new_with_free_func (g_free);
 	priv->possible_plugins = g_ptr_array_new_with_free_func (g_free);
 	priv->retry_recs = g_ptr_array_new_with_free_func (g_free);
@@ -3390,8 +3361,6 @@ fu_device_finalize (GObject *object)
 
 	if (priv->alternate != NULL)
 		g_object_unref (priv->alternate);
-	if (priv->parent != NULL)
-		g_object_remove_weak_pointer (G_OBJECT (priv->parent), (gpointer *) &priv->parent);
 	if (priv->proxy != NULL)
 		g_object_remove_weak_pointer (G_OBJECT (priv->proxy), (gpointer *) &priv->proxy);
 	if (priv->quirks != NULL)
@@ -3400,7 +3369,6 @@ fu_device_finalize (GObject *object)
 		g_source_remove (priv->poll_id);
 	if (priv->metadata != NULL)
 		g_hash_table_unref (priv->metadata);
-	g_ptr_array_unref (priv->children);
 	g_ptr_array_unref (priv->parent_guids);
 	g_ptr_array_unref (priv->possible_plugins);
 	g_ptr_array_unref (priv->retry_recs);
