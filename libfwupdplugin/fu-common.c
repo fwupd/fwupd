@@ -2280,6 +2280,7 @@ fu_common_get_volumes_by_kind (const gchar *kind, GError **error)
 		}
 		g_ptr_array_add (volumes,
 				 g_object_new (FU_TYPE_VOLUME,
+					       "proxy-block", proxy_blk,
 					       "proxy-filesystem", proxy_fs,
 					       NULL));
 	}
