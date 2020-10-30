@@ -257,11 +257,19 @@ main (int argc, char *argv[])
 
 			/* load any existing update info */
 			info = fu_uefi_device_load_update_info (dev, &error_local);
+			g_print ("Information for the update status entry %u:\n", i);
 			if (info == NULL) {
-				g_printerr ("failed: %s\n", error_local->message);
+				if (g_error_matches (error_local,
+						     G_IO_ERROR,
+						     G_IO_ERROR_NOT_FOUND)) {
+					g_print ("  Firmware GUID: {%s}\n",
+						 fu_uefi_device_get_guid (dev));
+					g_print ("  Update Status: No update info found\n\n");
+				} else {
+					g_printerr ("Failed: %s\n\n", error_local->message);
+				}
 				continue;
 			}
-			g_print ("Information for the update status entry %u:\n", i);
 			g_print ("  Information Version: %" G_GUINT32_FORMAT "\n",
 				 fu_uefi_update_info_get_version (info));
 			g_print ("  Firmware GUID: {%s}\n",
