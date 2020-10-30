@@ -32,8 +32,16 @@ fu_linux_swap_plain_func (void)
 	g_autoptr(GError) error = NULL;
 
 	swap = fu_linux_swap_new ("Filename\t\t\t\tType\t\tSize\tUsed\tPriority\n"
-			    "/dev/nvme0n1p4  partition\t5962748\t0\t-2\n",
+			    "/dev/nvme0n1p4                          partition\t5962748\t0\t-2\n",
 			    0, &error);
+	if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND)) {
+		g_test_skip (error->message);
+		return;
+	}
+	if (g_error_matches (error, G_DBUS_ERROR, G_DBUS_ERROR_SERVICE_UNKNOWN)) {
+		g_test_skip (error->message);
+		return;
+	}
 	g_assert_no_error (error);
 	g_assert_nonnull (swap);
 	g_assert_true (fu_linux_swap_get_enabled (swap));
@@ -47,8 +55,13 @@ fu_linux_swap_encrypted_func (void)
 	g_autoptr(GError) error = NULL;
 
 	swap = fu_linux_swap_new ("Filename\t\t\t\tType\t\tSize\tUsed\tPriority\n"
-			    "/dev/dm-1  partition\t5962748\t0\t-2\n",
+			    "/dev/dm-1                               partition\t5962748\t0\t-2\n",
 			    0, &error);
+	if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) ||
+	    g_error_matches (error, G_DBUS_ERROR, G_DBUS_ERROR_SERVICE_UNKNOWN)) {
+		g_test_skip (error->message);
+		return;
+	}
 	g_assert_no_error (error);
 	g_assert_nonnull (swap);
 	g_assert_true (fu_linux_swap_get_enabled (swap));

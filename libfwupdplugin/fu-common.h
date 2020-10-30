@@ -238,6 +238,10 @@ gboolean	 fu_common_is_cpu_intel		(void);
 gboolean	 fu_common_is_live_media	(void);
 GPtrArray	*fu_common_get_volumes_by_kind	(const gchar	*kind,
 						 GError		**error);
+FuVolume	*fu_common_get_volume_by_device (const gchar	*device,
+						 GError		**error);
+FuVolume	*fu_common_get_volume_by_devnum	(guint32	 devnum,
+						 GError		**error);
 FuVolume	*fu_common_get_esp_for_path	(const gchar	*esp_path,
 						 GError		**error);
 FuVolume	*fu_common_get_esp_default	(GError		**error);
