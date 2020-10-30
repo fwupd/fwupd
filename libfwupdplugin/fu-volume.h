@@ -22,6 +22,7 @@ gboolean	 fu_volume_check_free_space	(FuVolume	*self,
 						 guint64	 required,
 						 GError		**error);
 gboolean	 fu_volume_is_mounted		(FuVolume	*self);
+gboolean	 fu_volume_is_encrypted		(FuVolume	*self);
 gchar		*fu_volume_get_mount_point	(FuVolume	*self);
 gboolean	 fu_volume_mount		(FuVolume	*self,
 						 GError		**error);

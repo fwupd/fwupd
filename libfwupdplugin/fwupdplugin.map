@@ -674,5 +674,6 @@ LIBFWUPDPLUGIN_1.5.1 {
   global:
     fu_device_add_possible_plugin;
     fu_efivar_space_used;
+    fu_volume_is_encrypted;
   local: *;
 } LIBFWUPDPLUGIN_1.5.0;
