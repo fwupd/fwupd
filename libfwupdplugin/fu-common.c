@@ -2204,9 +2204,7 @@ fu_common_get_block_devices (GDBusConnection *connection, GError **error)
  * @kind: A volume kind, typically a GUID
  * @error: A #GError or NULL
  *
- * Call into the plugin's get results routine
- *
- * Finds all volumes of a specific type
+ * Finds all volumes of a specific partition type
  *
  * Returns: (transfer container) (element-type FuVolume): a #GPtrArray, or %NULL if the kind was not found
  *
