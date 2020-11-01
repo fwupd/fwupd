@@ -2950,7 +2950,7 @@ main (int argc, char *argv[])
 		     "unblock-firmware",
 		     "[CHECKSUM]",
 		     /* TRANSLATORS: command description */
-		     _("Blocks a specific firmware from being installed"),
+		     _("Unblocks a specific firmware from being installed"),
 		     fu_util_unblock_firmware);
 	fu_util_cmd_array_add (cmd_array,
 		     "get-blocked-firmware",
