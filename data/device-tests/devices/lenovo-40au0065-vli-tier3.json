@@ -1,0 +1,16 @@
+{
+  "name": "Lenovo USB-C Mini Dock [VL103]",
+  "guids": [
+    "3ae6610b-5c33-5714-96e3-05735eb9b2a5"
+  ],
+  "releases": [
+    {
+      "version": "138.4.24.38",
+      "file": "c782946a9cf743abc37edefe35dec1b8b2d2a88b29f7058091b0a7ae3fa38e49-Lenovo-Mini_Dock_New.cab"
+    },
+    {
+      "version": "138.4.23.38",
+      "file": "39da9917934ce162baefa3a67adfccd338bfd054933d6c40c0c887ab0d48e83f-Lenovo-Mini_Dock_Old.cab"
+    }
+  ]
+}
