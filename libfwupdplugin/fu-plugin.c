@@ -452,7 +452,7 @@ fu_plugin_open (FuPlugin *self, const gchar *filename, GError **error)
 	return TRUE;
 }
 
-/* order of usefullness to the user */
+/* order of usefulness to the user */
 static const gchar *
 fu_plugin_build_device_update_error (FuPlugin *self)
 {
@@ -1020,7 +1020,7 @@ fu_plugin_set_smbios (FuPlugin *self, FuSmbios *smbios)
  *
  * Set the minimum time that should be waited in-between the call to
  * fu_plugin_coldplug_prepare() and fu_plugin_coldplug(). This is usually going
- * to be the minimum hardware initialisation time from a datasheet.
+ * to be the minimum hardware initialization time from a datasheet.
  *
  * It is better to use this function rather than using a sleep() in the plugin
  * itself as then only one delay is done in the daemon rather than waiting for

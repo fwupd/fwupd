@@ -91,7 +91,7 @@ fu_bcm57xx_veritem_new (const guint8 *buf, gsize bufsz)
 		{ NULL, NULL, 0 }
 	};
 
-	/* dont assume this is NUL terminated */
+	/* do not assume this is NUL terminated */
 	tmp = g_strndup ((const gchar *) buf, bufsz);
 	if (tmp == NULL || tmp[0] == '\0')
 		return NULL;

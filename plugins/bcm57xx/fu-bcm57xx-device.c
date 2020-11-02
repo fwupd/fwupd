@@ -426,7 +426,7 @@ fu_bcm57xx_device_prepare_firmware (FuDevice *device,
 	}
 	if (g_getenv ("FWUPD_BCM57XX_VERBOSE") != NULL) {
 		g_autofree gchar *str = fu_firmware_to_string (firmware);
-		g_debug ("existing device firware: %s", str);
+		g_debug ("existing device firmware: %s", str);
 	}
 
 	/* merge in all the provided images into the existing firmware */
@@ -451,7 +451,7 @@ fu_bcm57xx_device_prepare_firmware (FuDevice *device,
 	}
 	if (g_getenv ("FWUPD_BCM57XX_VERBOSE") != NULL) {
 		g_autofree gchar *str = fu_firmware_to_string (firmware);
-		g_debug ("proposed device firware: %s", str);
+		g_debug ("proposed device firmware: %s", str);
 	}
 
 	/* success */

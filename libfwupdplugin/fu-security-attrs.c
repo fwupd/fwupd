@@ -17,7 +17,7 @@ struct _FuSecurityAttrs {
 	GPtrArray		*attrs;
 };
 
-/* probaly sane to *not* make this part of the ABI */
+/* probably sane to *not* make this part of the ABI */
 #define FWUPD_SECURITY_ATTR_ID_DOC_URL		"https://fwupd.github.io/hsi.html"
 
 G_DEFINE_TYPE (FuSecurityAttrs, fu_security_attrs, G_TYPE_OBJECT)
@@ -145,7 +145,7 @@ fu_security_attrs_remove_all (FuSecurityAttrs *self)
  * @self: A #FuSecurityAttrs
  * @flags: Flags to use while calcuating the HSI
  *
- * Calculates the HSI string from the appended attribues.
+ * Calculates the HSI string from the appended attributes.
  *
  * Returns: (transfer full): a string or %NULL
  *

@@ -66,8 +66,8 @@ class Rasterizer:
 
             font_desc = "Sans %fpx" % (height / 32,)
             fd = Pango.FontDescription(font_desc)
-            fo = cairo.FontOptions()
-            fo.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
+            font_option = cairo.FontOptions()
+            font_option.set_antialias(cairo.ANTIALIAS_SUBPIXEL)
             l = Pango.Language.from_string(language)
 
             img = cairo.ImageSurface(cairo.FORMAT_RGB24, 1, 1)
@@ -77,7 +77,7 @@ class Rasterizer:
             pctx.set_font_description(fd)
             pctx.set_language(l)
             fs = pctx.load_fontset(fd, l)
-            PangoCairo.context_set_font_options(pctx, fo)
+            PangoCairo.context_set_font_options(pctx, font_option)
 
             attrs = Pango.AttrList()
             length = len(bytes(string, "utf8"))
@@ -112,7 +112,7 @@ class Rasterizer:
             cctx = cairo.Context(img)
             layout = PangoCairo.create_layout(cctx)
             pctx = layout.get_context()
-            PangoCairo.context_set_font_options(pctx, fo)
+            PangoCairo.context_set_font_options(pctx, font_option)
 
             cctx.set_source_rgb(1, 1, 1)
             cctx.move_to(x, y)

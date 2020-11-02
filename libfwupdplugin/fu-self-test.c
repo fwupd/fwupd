@@ -221,14 +221,14 @@ fu_device_metadata_func (void)
 	g_assert_false (fu_device_get_metadata_boolean (device, "unknown"));
 
 	/* integer */
-	fu_device_set_metadata_integer (device, "dum", 12345);
-	g_assert_cmpstr (fu_device_get_metadata (device, "dum"), ==, "12345");
-	g_assert_cmpint (fu_device_get_metadata_integer (device, "dum"), ==, 12345);
+	fu_device_set_metadata_integer (device, "bam", 12345);
+	g_assert_cmpstr (fu_device_get_metadata (device, "bam"), ==, "12345");
+	g_assert_cmpint (fu_device_get_metadata_integer (device, "bam"), ==, 12345);
 	g_assert_cmpint (fu_device_get_metadata_integer (device, "unknown"), ==, G_MAXUINT);
 
 	/* broken integer */
-	fu_device_set_metadata (device, "dum", "123junk");
-	g_assert_cmpint (fu_device_get_metadata_integer (device, "dum"), ==, G_MAXUINT);
+	fu_device_set_metadata (device, "bam", "123junk");
+	g_assert_cmpint (fu_device_get_metadata_integer (device, "bam"), ==, G_MAXUINT);
 	fu_device_set_metadata (device, "huge", "4294967296"); /* not 32 bit */
 	g_assert_cmpint (fu_device_get_metadata_integer (device, "huge"), ==, G_MAXUINT);
 }

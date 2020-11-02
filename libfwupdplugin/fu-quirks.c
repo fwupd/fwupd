@@ -25,7 +25,7 @@
  * SECTION:fu-quirks
  * @short_description: device quirks
  *
- * Quirks can be used to modify device behaviour.
+ * Quirks can be used to modify device behavior.
  * When fwupd is installed in long-term support distros it's very hard to
  * backport new versions as new hardware is released.
  *

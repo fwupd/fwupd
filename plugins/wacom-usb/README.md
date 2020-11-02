@@ -9,7 +9,7 @@ inspire everyone make the world a more creative place.
 
 From 2016 Wacom has been using a HID-based proprietary flashing algorithm which
 has been documented by support team at Wacom and provided under NDA under the
-understanding it would be used to build a plugin under a LGPLv2+ licence.
+understanding it would be used to build a plugin under a LGPLv2+ license.
 
 Wacom devices are actually composite devices, with the main ARM CPU being
 programmed using a more complicated erase, write, verify algorithm based

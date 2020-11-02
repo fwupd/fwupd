@@ -54,7 +54,7 @@
           <li>Add support for ThunderBolt retimers</li>
           <li>Add switch-branch command to fwupdtool and fwupdmgr</li>
           <li>Allow blocking specific firmware releases by checksum</li>
-          <li>Allow contructing a firmware with multiple images</li>
+          <li>Allow constructing a firmware with multiple images</li>
           <li>Allow firmware to require specific features from front-end clients</li>
           <li>Allow updating the dbx using the LVFS, validating it is safe to apply</li>
           <li>Include the HSI results and attributes in the uploaded report</li>

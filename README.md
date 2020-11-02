@@ -78,7 +78,7 @@ Enterprise use
 The flow of updates can be controlled in the enterprise using the
 "approved updates" feature. This allows the domain administrator to filter
 the possible updates from a central server (e.g. the LVFS, or a mirror)
-to only firmware that have been tested specifically in your organisation.
+to only firmware that have been tested specifically in your organization.
 
 The list of approved updates can be enabled by adding `ApprovalRequired=true`
 to the remote configuration file, e.g. `lvfs.conf`. Once enabled, the
@@ -103,7 +103,7 @@ Other frontends
  After the firmware has been downloaded a popup will be displayed in GNOME
  Software to perform the update.
 
-2. [KDE Discover](https://userbase.kde.org/Discover) is the software centre,
+2. [KDE Discover](https://userbase.kde.org/Discover) is the software center,
  generally bundled with KDE Plasma. With the release of
  [KDE Plasma 5.14](https://www.kde.org/announcements/plasma-5.14.0.php),
  a new fwupd backend has been implemented in KDE Discover for firmware updates.

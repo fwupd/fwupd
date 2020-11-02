@@ -668,7 +668,7 @@ fu_bcm57xx_recovery_device_open (FuDevice *device, GError **error)
 			g_set_error (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_NOT_SUPPORTED,
-				     "cound not mmap %s: %s",
+				     "could not mmap %s: %s",
 				     fn, strerror(errno));
 			return FALSE;
 		}

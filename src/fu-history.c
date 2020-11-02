@@ -288,7 +288,7 @@ fu_history_migrate_database_v5 (FuHistory *self, GError **error)
 	return TRUE;
 }
 
-/* returns 0 if database is not initialised */
+/* returns 0 if database is not initialized */
 static guint
 fu_history_get_schema_version (FuHistory *self)
 {
