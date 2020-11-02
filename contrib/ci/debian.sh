@@ -2,6 +2,9 @@
 set -e
 set -x
 
+# remove when tpm2-tss is fixed
+mkdir -p /usr/include/tss
+
 #although it's debian, we don't build packages
 if [ "$OS" = "debian-s390x" ]; then
 	./contrib/ci/debian_s390x.sh
