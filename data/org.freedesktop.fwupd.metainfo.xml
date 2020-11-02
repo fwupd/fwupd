@@ -35,6 +35,26 @@
     <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.5.1" date="2020-11-02">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Include the amount of NVRAM size in use in the LVFS failure report</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Delete unused EFI variables when deploying firmware</li>
+          <li>Fix probe warning for the Logitech Unifying device</li>
+          <li>Make bcm57xx hotplug more reliable</li>
+          <li>Recognize authorized thunderbolt value of 2</li>
+          <li>Remove the duplicate parent-child data in FwupdDevice and FuDevice</li>
+          <li>Show a less scary fwupdate output for devices without info</li>
+          <li>Show a link to discover more information about a specific plugin failure</li>
+          <li>Use a different Device ID for the OptionROM devices</li>
+          <li>Use UDisks to find out if swap devices are encrypted</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.5.0" date="2020-10-26">
       <description>
         <p>This release adds the following features:</p>

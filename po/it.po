@@ -320,6 +320,10 @@ msgstr "Rapporti automatici"
 msgid "Automatically upload every time?"
 msgstr "Caricare automaticamente ogni volta?"
 
+#. TRANSLATORS: command description
+msgid "Bind new kernel driver"
+msgstr "Vincola in nuovo driver kernel"
+
 #. TRANSLATORS: there follows a list of hashes
 msgid "Blocked firmware files:"
 msgstr "File di firmware bloccati:"
@@ -502,9 +506,17 @@ msgstr "Dispositivo rimosso:"
 msgid "Device stages updates"
 msgstr "Il dispositivo applica gli aggiornamenti a fasi"
 
+#. TRANSLATORS: there is more than one supplier of the firmware
+msgid "Device supports switching to a different branch of firmware"
+msgstr "Il dispositivo supporta il passaggio a un ramo diverso del firmware"
+
 #. TRANSLATORS: Device update needs to be separately activated
 msgid "Device update needs activation"
 msgstr "L'aggiornamento del dispositivo richiede l'attivazione"
+
+#. TRANSLATORS: save the old firmware to disk before installing the new one
+msgid "Device will backup firmware before installing"
+msgstr "Il dispositivo eseguirà un backup del firmware prima dell'installazione"
 
 #. TRANSLATORS: Device will not return after update completes
 msgid "Device will not re-appear after update completes"
@@ -580,6 +592,10 @@ msgstr[1] "Non caricare i rapporti e non chiedere nuovamente con i prossimi aggi
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
 msgstr "Non scrive la cronologia"
+
+#. TRANSLATORS: should the branch be changed
+msgid "Do you understand the consequences of changing the firmware branch?"
+msgstr "Le conseguenze del cambio di ramo del firmware sono state comprese?"
 
 #. TRANSLATORS: success
 #. success
@@ -780,6 +796,10 @@ msgstr "Strumento gestione firmware"
 msgid "Firmware attestation"
 msgstr "Convalida firmware"
 
+#. TRANSLATORS: system is not booted in UEFI mode
+msgid "Firmware can not be updated in legacy BIOS mode"
+msgstr "Impossibile aggiornare il firmware in modalità BIOS legacy"
+
 #. TRANSLATORS: user selected something not possible
 msgid "Firmware is already blocked"
 msgstr "Il firmware è già bloccato"
@@ -805,10 +825,18 @@ msgstr "Gli aggiornamenti firmware non sono supportati su questo dispositivo."
 msgid "Firmware updates are supported on this machine."
 msgstr "Gli aggiornamenti firmware sono supportati su questo dispositivo."
 
+#. TRANSLATORS: user needs to run a command
+msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
+msgstr "Aggiornamenti firmware disabilitati; eseguire «fwupdmgr unlock» per abilitarli"
+
 #. TRANSLATORS: description of plugin state, e.g. disabled
 #. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "Flag"
+
+#. TRANSLATORS: command line option
+msgid "Force the action by relaxing some runtime checks"
+msgstr "Forza l'azione riducendo alcuni controlli runtime"
 
 msgid "Force the action ignoring all warnings"
 msgstr "Forza l'azione ignorando gli avvisi"
@@ -900,9 +928,21 @@ msgstr "Ignora controlli SSL nello scaricare i file"
 msgid "Ignore firmware checksum failures"
 msgstr "Ignora i checksum del firmware non riusciti"
 
+#. TRANSLATORS: command line option
+msgid "Ignore firmware hardware mismatch failures"
+msgstr "Ignora corrispondenze errate firmware hardware"
+
+#. TRANSLATORS: command line option
+msgid "Ignore requirement of external power source"
+msgstr "Ignora richiesta di sorgente elettrica esterna"
+
 #. TRANSLATORS: Ignore validation safety checks when flashing this device
 msgid "Ignore validation safety checks"
 msgstr "Ignora i controlli di sicurezza di validazione"
+
+#. TRANSLATORS: try to help
+msgid "Ignoring SSL strict checks, to do this automatically in the future export DISABLE_SSL_STRICT in your environment"
+msgstr "Controlli SSL ignorati, per fare ciò automaticamente in futuro, esportare DISABLE_SSL_STRICT nel proprio ambiente"
 
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Install Duration"
@@ -1335,6 +1375,14 @@ msgstr "URI del rapporto"
 msgid "Reported to remote server"
 msgstr "Segnalato al server remoto"
 
+#. TRANSLATORS: the user is using Gentoo/Arch and has screwed something up
+msgid "Required efivarfs filesystem was not found"
+msgstr "Il file system richiesto efivarfs non è stato trovato"
+
+#. TRANSLATORS: not required for this system
+msgid "Required hardware was not found"
+msgstr "L'hardware richiesto non è stato trovato"
+
 #. TRANSLATORS: Requires a bootloader mode to be manually enabled by the user
 msgid "Requires a bootloader"
 msgstr "Richiede un bootloader"
@@ -1576,6 +1624,14 @@ msgstr "Suspend-to-idle"
 msgid "Suspend-to-ram"
 msgstr "Suspend-to-ram"
 
+#. TRANSLATORS: command description
+msgid "Switch the firmware branch on the device"
+msgstr "Cambia il ramo del firmware sul dispositivo"
+
+#. TRANSLATORS: Must be plugged in to an outlet
+msgid "System requires external power source"
+msgstr "Il sistema richiede una sorgente elettrica esterna"
+
 #. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
 msgid "TPM PCR0 reconstruction"
 msgstr "Ricostruzione PCR0 TPM"
@@ -1598,6 +1654,15 @@ msgstr "LVFS è un servizio gratuito che opera come entità legale indipendente 
 #. TRANSLATORS: this is more background on a security measurement problem
 msgid "The TPM PCR0 differs from reconstruction."
 msgstr "TPM PCR0 è diverso dalla ricostruzione."
+
+#. TRANSLATORS: the user is SOL for support...
+msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
+msgstr "Il demone ha caricato codice di terze parti e non è più supportato dagli sviluppatori."
+
+#. TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name
+#, c-format
+msgid "The firmware from %s is not supplied by %s, the hardware vendor."
+msgstr "Il firmware su %s non è fornito da %s, il fornitore dell'hardware."
 
 #. TRANSLATORS: nothing to show
 msgid "There are no blocked firmware files"
@@ -1635,9 +1700,17 @@ msgstr "Questo strumento può essere usato solamente dall'utente root"
 msgid "Type"
 msgstr "Tipo"
 
+#. TRANSLATORS: partition refers to something on disk, again, hey Arch users
+msgid "UEFI ESP partition not detected or configured"
+msgstr "Partizione ESP UEFI non rilavata o non configurata"
+
 #. TRANSLATORS: program name
 msgid "UEFI Firmware Utility"
 msgstr "Strumento firmware UEFI"
+
+#. TRANSLATORS: capsule updates are an optional BIOS feature
+msgid "UEFI capsule updates not available or enabled"
+msgstr "Aggiornamenti capsula UEFI non disponibili o non abilitati"
 
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
@@ -1651,9 +1724,17 @@ msgstr "Avvio sicuro UEFI"
 msgid "Unable to connect to service"
 msgstr "Impossibile collegarsi al servizio"
 
+#. TRANSLATORS: command description
+msgid "Unbind current driver"
+msgstr "Svincola il driver attuale"
+
 #. TRANSLATORS: we will now offer this firmware to the user
 msgid "Unblocking firmware:"
 msgstr "Sblocco del firmware:"
+
+#. TRANSLATORS: command description
+msgid "Unblocks a specific firmware from being installed"
+msgstr "Sblocca un firmware specifico dal non essere installato"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Unencrypted"
@@ -1867,6 +1948,11 @@ msgstr "Scrittura…"
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
 msgstr "La propria distribuzione potrebbe non aver verificato la compatibilità degli aggiornamenti firmware col proprio sistema o col dispositivo collegato."
+
+#. TRANSLATORS: %1 is the device vendor name
+#, c-format
+msgid "Your hardware may be damaged using this firmware, and installing this release may void any warranty with %s."
+msgstr "Utilizzando questo firmware, l'hardware potrebbe danneggiarsi; inoltre, l'installazione di questa versione potrebbe annullare la garanzia con %s."
 
 #. TRANSLATORS: this is the default branch name when unset
 msgid "default"

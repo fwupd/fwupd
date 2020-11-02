@@ -332,9 +332,17 @@ msgstr "Estetyt laiteohjelmiston tiedostot:"
 msgid "Blocking firmware:"
 msgstr "Laiteohjelmiston estäminen:"
 
+#. TRANSLATORS: command description
+msgid "Blocks a specific firmware from being installed"
+msgstr "Estää tietyn laiteohjelmiston asentamisen"
+
 #. TRANSLATORS: firmware version of bootloader
 msgid "Bootloader Version"
 msgstr "Käynnistyslataimen versio"
+
+#. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
+msgid "Branch"
+msgstr "Haara"
 
 #. TRANSLATORS: command description
 msgid "Build a firmware file"
@@ -498,9 +506,17 @@ msgstr "Laite poistettu:"
 msgid "Device stages updates"
 msgstr "Laitevyöhykkeen päivitykset"
 
+#. TRANSLATORS: there is more than one supplier of the firmware
+msgid "Device supports switching to a different branch of firmware"
+msgstr "Laite tukee vaihtamista toiseen laiteohjelmiston haaraan"
+
 #. TRANSLATORS: Device update needs to be separately activated
 msgid "Device update needs activation"
 msgstr "Laitteen päivitys tarvitsee aktivointia"
+
+#. TRANSLATORS: save the old firmware to disk before installing the new one
+msgid "Device will backup firmware before installing"
+msgstr "Laite varmuuskopioi laiteohjelmiston ennen asennusta"
 
 #. TRANSLATORS: Device will not return after update completes
 msgid "Device will not re-appear after update completes"
@@ -576,6 +592,10 @@ msgstr[1] "Älä lähetä raportteja äläkä koskaan pyydä lähettämään rap
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
 msgstr "Älä kirjoita historiatietokantaan"
+
+#. TRANSLATORS: should the branch be changed
+msgid "Do you understand the consequences of changing the firmware branch?"
+msgstr "Ymmärrätkö laiteohjelmiston haaran vaihtamisen seuraukset?"
 
 #. TRANSLATORS: success
 #. success
@@ -665,6 +685,10 @@ msgstr "Poistu pienen viiveen jälkeen"
 #. TRANSLATORS: exit straight away, used for automatic profiling
 msgid "Exit after the engine has loaded"
 msgstr "Poistu kun moottori on ladattu"
+
+#. TRANSLATORS: command description
+msgid "Extract a firmware blob to images"
+msgstr "Laiteohjelmiston blob purkaminen kuvaksi "
 
 #. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
@@ -772,6 +796,10 @@ msgstr "Firmware-työkalu"
 msgid "Firmware attestation"
 msgstr "Firmware-aitoustodistus"
 
+#. TRANSLATORS: system is not booted in UEFI mode
+msgid "Firmware can not be updated in legacy BIOS mode"
+msgstr "Laiteohjelmistoa ei voi päivittää legacy BIOS-tilassa"
+
 #. TRANSLATORS: user selected something not possible
 msgid "Firmware is already blocked"
 msgstr "Laiteohjelmisto on jo estetty"
@@ -796,6 +824,10 @@ msgstr "Ohjelmistopäivitys 'firmware' ei tue tätä laitetta"
 
 msgid "Firmware updates are supported on this machine."
 msgstr "Ohjelmistopäivitys 'firmware' tukee tätä laitetta"
+
+#. TRANSLATORS: user needs to run a command
+msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
+msgstr "Laiteohjelmiston päivitykset poistettu käytöstä; suorita 'fwupdmgr unlock' ottaaksesi käyttöön"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
 #. TRANSLATORS: release properties
@@ -846,6 +878,14 @@ msgstr "Määrittää konfiguroidut etäyhteydet"
 #. TRANSLATORS: command description
 msgid "Gets the host security attributes"
 msgstr "Hanki tietoturvan määritteet"
+
+#. TRANSLATORS: firmware approved by the admin
+msgid "Gets the list of approved firmware"
+msgstr "Hae hyväksytty laiteohjelmiston luettelo"
+
+#. TRANSLATORS: command description
+msgid "Gets the list of blocked firmware"
+msgstr "Hakee estettyjen laiteohjelmistojen luettelon"
 
 #. TRANSLATORS: command description
 msgid "Gets the list of updates for connected hardware"
@@ -899,6 +939,10 @@ msgstr "Ohita ulkoisen virtalähteen vaatimus"
 #. TRANSLATORS: Ignore validation safety checks when flashing this device
 msgid "Ignore validation safety checks"
 msgstr "Ohita turvatarkastukset"
+
+#. TRANSLATORS: try to help
+msgid "Ignoring SSL strict checks, to do this automatically in the future export DISABLE_SSL_STRICT in your environment"
+msgstr "Ohitetaan tiukat SSL-tarkistukset, jos haluat tehdä tämän tulevaisuudessa automaattisesti tee DISABLE_SSL_STRICT ympäristöösi"
 
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Install Duration"
@@ -1109,6 +1153,10 @@ msgstr "Vähimmäisversio"
 msgid "Mismatched daemon and client, use %s instead"
 msgstr "Virheellinen taustaprosessi ja asiakas, käytä sen sijaan %s"
 
+#. TRANSLATORS: sets something in daemon.conf
+msgid "Modifies a daemon configuration value"
+msgstr "Muuta taustaprosessin määritysarvoja"
+
 #. TRANSLATORS: command description
 msgid "Modifies a given remote"
 msgstr "Muuta  annettua etäyhteyttä"
@@ -1229,6 +1277,10 @@ msgstr "Prosenttiosuus valmis"
 msgid "Please enter a number from 0 to %u: "
 msgstr "Anna numero 0 -%u"
 
+#. TRANSLATORS: Failed to open plugin, hey Arch users
+msgid "Plugin dependencies missing"
+msgstr "Laajennuksen riippuvuudet puuttuvat"
+
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
 msgstr "Pre-boot DMA-suojaus"
@@ -1288,6 +1340,10 @@ msgid "Refresh metadata from remote server"
 msgstr "Päivitä etäpalvelimen metatiedot"
 
 #. TRANSLATORS: command description
+msgid "Reinstall current firmware on the device"
+msgstr "Asenna nykyinen laiteohjelmisto laitteeseen"
+
+#. TRANSLATORS: command description
 msgid "Reinstall firmware on a device"
 msgstr "Asenna laiteohjelmisto 'firmware' uudelleen laitteelle"
 
@@ -1318,6 +1374,14 @@ msgstr "Ilmoita URI"
 #. TRANSLATORS: Has been reported to a metadata server
 msgid "Reported to remote server"
 msgstr "Raportoitu etäpalvelimelle"
+
+#. TRANSLATORS: the user is using Gentoo/Arch and has screwed something up
+msgid "Required efivarfs filesystem was not found"
+msgstr "Vaadittua efivarfs-tiedostojärjestelmää ei löytynyt"
+
+#. TRANSLATORS: not required for this system
+msgid "Required hardware was not found"
+msgstr "Vaadittavaa laitteistoa ei löytynyt"
 
 #. TRANSLATORS: Requires a bootloader mode to be manually enabled by the user
 msgid "Requires a bootloader"
@@ -1560,6 +1624,14 @@ msgstr "Keskeytä-tyhjäkäynnille"
 msgid "Suspend-to-ram"
 msgstr "Keskeytä-muistiin"
 
+#. TRANSLATORS: command description
+msgid "Switch the firmware branch on the device"
+msgstr "Vaihda laitteen laiteohjelmiston haaraa"
+
+#. TRANSLATORS: Must be plugged in to an outlet
+msgid "System requires external power source"
+msgstr "Järjestelmä vaatii ulkoisen virtalähteen"
+
 #. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
 msgid "TPM PCR0 reconstruction"
 msgstr "TPM PCR0 -jälleenrakennus"
@@ -1582,6 +1654,15 @@ msgstr "LVFS on ilmainen palvelu, joka toimii itsenäisenä oikeushenkilönä ei
 #. TRANSLATORS: this is more background on a security measurement problem
 msgid "The TPM PCR0 differs from reconstruction."
 msgstr "TPM PCR0 eroaa rakennettavasta."
+
+#. TRANSLATORS: the user is SOL for support...
+msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
+msgstr "Palvelu on ladannut 3-osapuolen koodin, eikä kehittäjät enää jatkossa tue sitä!"
+
+#. TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name
+#, c-format
+msgid "The firmware from %s is not supplied by %s, the hardware vendor."
+msgstr "Laitteistotoimittaja %s ei toimita ohjelmistoa kohteesta %s."
 
 #. TRANSLATORS: nothing to show
 msgid "There are no blocked firmware files"
@@ -1619,9 +1700,17 @@ msgstr "Tätä työkalua voi käyttää vain root-käyttäjä"
 msgid "Type"
 msgstr "Tyyppi"
 
+#. TRANSLATORS: partition refers to something on disk, again, hey Arch users
+msgid "UEFI ESP partition not detected or configured"
+msgstr "UEFI ESP-osiota ei havaittu tai määritetty"
+
 #. TRANSLATORS: program name
 msgid "UEFI Firmware Utility"
 msgstr "UEFI firmware -apuohjelma"
+
+#. TRANSLATORS: capsule updates are an optional BIOS feature
+msgid "UEFI capsule updates not available or enabled"
+msgstr "UEFI-päivitykset eivät ole saatavilla tai käytössä"
 
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
@@ -1855,6 +1944,15 @@ msgstr "Kirjoitetaan…"
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
 msgstr "Jakelijasi ei ehkä ole tarkistanut mitään laiteohjelmistopäivityksiä, jotka ovat yhteensopivia järjestelmän tai liitettyjen laitteiden kanssa."
+
+#. TRANSLATORS: %1 is the device vendor name
+#, c-format
+msgid "Your hardware may be damaged using this firmware, and installing this release may void any warranty with %s."
+msgstr "Laitteistosi saattaa vaurioitua tämän laiteohjelmiston avulla ja asentaminen voi mitätöidä %stakuun."
+
+#. TRANSLATORS: this is the default branch name when unset
+msgid "default"
+msgstr "oletus"
 
 #. TRANSLATORS: program name
 msgid "fwupd TPM event log utility"

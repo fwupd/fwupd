@@ -1759,6 +1759,10 @@ msgstr "Відв'язати поточний драйвер"
 msgid "Unblocking firmware:"
 msgstr "Розблокуємо мікропрограму:"
 
+#. TRANSLATORS: command description
+msgid "Unblocks a specific firmware from being installed"
+msgstr "Розблоковує встановлення певної мікропрограми"
+
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Unencrypted"
 msgstr "Розшифровано"

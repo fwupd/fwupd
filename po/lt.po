@@ -4,6 +4,7 @@
 #
 # Translators:
 # Moo, 2019
+# Moo, 2020
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -525,6 +526,9 @@ msgstr "Modifikuoja nurodytą nuotolinę saugyklą"
 
 msgid "Modify a configured remote"
 msgstr "Modifikuoti sukonfigūruotą nuotolinę saugyklą"
+
+msgid "Modify daemon configuration"
+msgstr "Modifikuoti tarnybos konfigūraciją"
 
 #. TRANSLATORS: command description
 msgid "Monitor the daemon for events"

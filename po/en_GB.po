@@ -1732,6 +1732,10 @@ msgstr "Unbind current driver"
 msgid "Unblocking firmware:"
 msgstr "Unblocking firmware:"
 
+#. TRANSLATORS: command description
+msgid "Unblocks a specific firmware from being installed"
+msgstr "Unblocks a specific firmware from being installed"
+
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Unencrypted"
 msgstr "Unencrypted"
