@@ -1145,8 +1145,8 @@ fu_engine_check_requirement_not_child (FuEngine *self, XbNode *req,
 }
 
 static gboolean
-fu_engine_check_requirement_firmware (FuEngine *self, XbNode *req,
-				      FuDevice *device, GError **error)
+fu_engine_check_requirement_firmware (FuEngine *self, XbNode *req, FuDevice *device,
+				      FwupdInstallFlags flags, GError **error)
 {
 	guint64 depth;
 	g_autoptr(FuDevice) device_actual = g_object_ref (device);
@@ -1220,7 +1220,8 @@ fu_engine_check_requirement_firmware (FuEngine *self, XbNode *req,
 	}
 
 	/* vendor ID */
-	if (g_strcmp0 (xb_node_get_text (req), "vendor-id") == 0 &&
+	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) == 0 &&
+	    g_strcmp0 (xb_node_get_text (req), "vendor-id") == 0 &&
 	    fu_device_get_vendor_id (device_actual) != NULL) {
 		const gchar *version = fu_device_get_vendor_id (device_actual);
 		if (!fu_engine_require_vercmp (req, version,
@@ -1410,6 +1411,7 @@ fu_engine_check_requirement (FuEngine *self,
 			     FuEngineRequest *request,
 			     XbNode *req,
 			     FuDevice *device,
+			     FwupdInstallFlags flags,
 			     GError **error)
 {
 	/* ensure component requirement */
@@ -1420,7 +1422,8 @@ fu_engine_check_requirement (FuEngine *self,
 	if (g_strcmp0 (xb_node_get_element (req), "firmware") == 0) {
 		if (device == NULL)
 			return TRUE;
-		return fu_engine_check_requirement_firmware (self, req, device, error);
+		return fu_engine_check_requirement_firmware (self, req, device,
+							     flags, error);
 	}
 
 	/* ensure hardware requirement */
@@ -1478,7 +1481,9 @@ fu_engine_check_requirements (FuEngine *self,
 	if (reqs != NULL) {
 		for (guint i = 0; i < reqs->len; i++) {
 			XbNode *req = g_ptr_array_index (reqs, i);
-			if (!fu_engine_check_requirement (self, request, req, device, error))
+			if (!fu_engine_check_requirement (self, request,
+							  req, device,
+							  flags, error))
 				return FALSE;
 		}
 	} else if (!g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) &&
@@ -3728,7 +3733,7 @@ fu_engine_get_result_from_component (FuEngine *self,
 	/* check we can install it */
 	task = fu_install_task_new (NULL, component);
 	if (!fu_engine_check_requirements (self, request, task,
-					   FWUPD_INSTALL_FLAG_NONE,
+					   FWUPD_INSTALL_FLAG_IGNORE_VID_PID,
 					   error))
 		return NULL;
 
@@ -3882,6 +3887,7 @@ fu_engine_get_details (FuEngine *self, FuEngineRequest *request, gint fd, GError
 			g_autoptr(GError) error_req = NULL;
 			if (!fu_engine_check_requirements (self, request, task,
 							   FWUPD_INSTALL_FLAG_OFFLINE |
+							   FWUPD_INSTALL_FLAG_IGNORE_VID_PID |
 							   FWUPD_INSTALL_FLAG_ALLOW_REINSTALL |
 							   FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH |
 							   FWUPD_INSTALL_FLAG_ALLOW_OLDER,
@@ -4216,6 +4222,7 @@ fu_engine_add_releases_for_device_component (FuEngine *self,
 
 	if (!fu_engine_check_requirements (self, request, task,
 					   FWUPD_INSTALL_FLAG_OFFLINE |
+					   FWUPD_INSTALL_FLAG_IGNORE_VID_PID |
 					   FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH |
 					   FWUPD_INSTALL_FLAG_ALLOW_REINSTALL |
 					   FWUPD_INSTALL_FLAG_ALLOW_OLDER,
