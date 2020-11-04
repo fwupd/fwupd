@@ -350,16 +350,16 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_datadir}/polkit-1/actions/org.freedesktop.fwupd.policy
 %{_datadir}/polkit-1/rules.d/org.freedesktop.fwupd.rules
 %{_datadir}/dbus-1/system-services/org.freedesktop.fwupd.service
-%{_datadir}/man/man1/fwupdtool.1.gz
-%{_datadir}/man/man1/fwupdagent.1.gz
-%{_datadir}/man/man1/dfu-tool.1.gz
+%{_mandir}/man1/fwupdtool.1*
+%{_mandir}/man1/fwupdagent.1*
+%{_mandir}/man1/dfu-tool.1*
 %if 0%{?have_uefi}
-%{_datadir}/man/man1/dbxtool.1.gz
+%{_mandir}/man1/dbxtool.*
 %endif
-%{_datadir}/man/man1/fwupdmgr.1.gz
+%{_mandir}/man1/fwupdmgr.1*
 %if 0%{?have_uefi}
-%{_datadir}/man/man1/fwupdate.1.gz
-%{_datadir}/man/man1/fwupdtpmevlog.1.gz
+%{_mandir}/man1/fwupdate.1*
+%{_mandir}/man1/fwupdtpmevlog.1*
 %endif
 %{_datadir}/metainfo/org.freedesktop.fwupd.metainfo.xml
 %{_datadir}/icons/hicolor/scalable/apps/org.freedesktop.fwupd.svg
