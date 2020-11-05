@@ -560,7 +560,7 @@ fu_uefi_device_write_firmware (FuDevice *device,
 		return FALSE;
 
 	/* save the blob to the ESP */
-	directory = fu_uefi_get_esp_path_for_os (esp_path);
+	directory = fu_uefi_get_esp_path_for_os (device, esp_path);
 	basename = g_strdup_printf ("fwupd-%s.cap", self->fw_class);
 	fn = g_build_filename (directory, "fw", basename, NULL);
 	if (!fu_common_mkdir_parent (fn, error))
@@ -588,7 +588,7 @@ fu_uefi_device_write_firmware (FuDevice *device,
 	/* some legacy devices use the old name to deduplicate boot entries */
 	if (fu_device_has_custom_flag (device, "use-legacy-bootmgr-desc"))
 		bootmgr_desc = "Linux-Firmware-Updater";
-	if (!fu_uefi_bootmgr_bootnext (esp_path, bootmgr_desc, flags, error))
+	if (!fu_uefi_bootmgr_bootnext (device, esp_path, bootmgr_desc, flags, error))
 		return FALSE;
 
 	/* success! */

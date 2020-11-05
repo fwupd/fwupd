@@ -61,13 +61,16 @@ fu_uefi_bootmgr_get_suffix (GError **error)
 }
 
 gchar *
-fu_uefi_get_esp_app_path (const gchar *esp_path, const gchar *cmd, GError **error)
+fu_uefi_get_esp_app_path (FuDevice *device,
+			   const gchar *esp_path,
+			   const gchar *cmd,
+			   GError **error)
 {
 	const gchar *suffix = fu_uefi_bootmgr_get_suffix (error);
 	g_autofree gchar *base = NULL;
 	if (suffix == NULL)
 		return NULL;
-	base = fu_uefi_get_esp_path_for_os (esp_path);
+	base = fu_uefi_get_esp_path_for_os (device, esp_path);
 	return g_strdup_printf ("%s/%s%s.efi", base, cmd, suffix);
 }
 
@@ -219,11 +222,11 @@ fu_uefi_get_esrt_entry_paths (const gchar *esrt_path, GError **error)
 }
 
 gchar *
-fu_uefi_get_esp_path_for_os (const gchar *base)
+fu_uefi_get_esp_path_for_os (FuDevice *device, const gchar *base)
 {
 #ifndef EFI_OS_DIR
 	const gchar *os_release_id = NULL;
-	const gchar *id_like_id;
+	const gchar *id_like_id = NULL;
 	g_autofree gchar *esp_path = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GHashTable) os_release = fwupd_get_os_release (&error_local);
@@ -247,6 +250,12 @@ fu_uefi_get_esp_path_for_os (const gchar *base)
 			g_debug ("Using ID_LIKE key from os-release");
 			return g_steal_pointer (&id_like_path);
 		}
+	} 
+	/* try to fallback to use UEFI removable path if ID_LIKE path doesn't exist */
+	if (fu_device_get_metadata_boolean (device, "FallbacktoRemovablePath")) {
+		esp_path = g_build_filename (base, "EFI", "boot", NULL);
+		if (!g_file_test (esp_path, G_FILE_TEST_IS_DIR))
+			g_debug ("failed to fallback due to missing %s", esp_path);
 	}
 	return g_steal_pointer (&esp_path);
 #else
