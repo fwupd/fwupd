@@ -239,10 +239,11 @@ fu_uefi_copy_asset (const gchar *source, const gchar *target, GError **error)
 }
 
 gboolean
-fu_uefi_bootmgr_bootnext (const gchar *esp_path,
-			  const gchar *description,
-			  FuUefiBootmgrFlags flags,
-			  GError **error)
+fu_uefi_bootmgr_bootnext (FuDevice *device,
+			   const gchar *esp_path,
+			   const gchar *description,
+			   FuUefiBootmgrFlags flags,
+			   GError **error)
 {
 	const gchar *filepath;
 	gboolean use_fwup_path = TRUE;
@@ -273,14 +274,23 @@ fu_uefi_bootmgr_bootnext (const gchar *esp_path,
 	secure_boot = fu_efivar_secure_boot_enabled ();
 	if (secure_boot) {
 		/* test to make sure shim is there if we need it */
-		shim_app = fu_uefi_get_esp_app_path (esp_path, "shim", error);
+		shim_app = fu_uefi_get_esp_app_path (device, esp_path, "shim", error);
 		if (shim_app == NULL)
 			return FALSE;
+
+		/* try to fallback to use UEFI removable path if the shim path doesn't exist */
+		if (!g_file_test (shim_app, G_FILE_TEST_EXISTS)) {
+			if (fu_device_get_metadata_boolean (device, "FallbacktoRemovablePath")) {
+				shim_app = fu_uefi_get_esp_app_path (device, esp_path, "boot", error);
+				if (shim_app == NULL)
+					return FALSE;
+			}
+		}
 
 		if (g_file_test (shim_app, G_FILE_TEST_EXISTS)) {
 			/* use a custom copy of shim for firmware updates */
 			if (flags & FU_UEFI_BOOTMGR_FLAG_USE_SHIM_UNIQUE) {
-				shim_cpy = fu_uefi_get_esp_app_path (esp_path, "shimfwupd", error);
+				shim_cpy = fu_uefi_get_esp_app_path (device, esp_path, "shimfwupd", error);
 				if (shim_cpy == NULL)
 					return FALSE;
 				if (!fu_uefi_cmp_asset (shim_app, shim_cpy)) {
@@ -302,7 +312,7 @@ fu_uefi_bootmgr_bootnext (const gchar *esp_path,
 	}
 
 	/* test if correct asset in place */
-	target_app = fu_uefi_get_esp_app_path (esp_path, "fwupd", error);
+	target_app = fu_uefi_get_esp_app_path (device, esp_path, "fwupd", error);
 	if (target_app == NULL)
 		return FALSE;
 	if (!fu_uefi_cmp_asset (source_app, target_app)) {

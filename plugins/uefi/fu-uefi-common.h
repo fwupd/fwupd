@@ -11,6 +11,8 @@
 
 #include "fwupd-common.h"
 
+#include "fu-device.h"
+
 #define EFI_CAPSULE_HEADER_FLAGS_PERSIST_ACROSS_RESET	0x00010000
 #define EFI_CAPSULE_HEADER_FLAGS_POPULATE_SYSTEM_TABLE	0x00020000
 #define EFI_CAPSULE_HEADER_FLAGS_INITIATE_RESET		0x00040000
@@ -58,7 +60,8 @@ typedef struct __attribute__((__packed__)) {
 /* the biggest size SPI part currently seen */
 #define FU_UEFI_COMMON_REQUIRED_ESP_FREE_SPACE		(32 * 1024 * 1024)
 
-gchar		*fu_uefi_get_esp_app_path	(const gchar	*esp_path,
+gchar		*fu_uefi_get_esp_app_path	(FuDevice       *device,
+						 const gchar	*esp_path,
 						 const gchar	*cmd,
 						 GError		**error);
 gchar		*fu_uefi_get_built_app_path	(GError		**error);
@@ -70,7 +73,8 @@ gboolean	 fu_uefi_get_bitmap_size	(const guint8	*buf,
 gboolean	 fu_uefi_get_framebuffer_size	(guint32	*width,
 						 guint32	*height,
 						 GError		**error);
-gchar		*fu_uefi_get_esp_path_for_os	(const gchar	*esp_path);
+gchar		*fu_uefi_get_esp_path_for_os	(FuDevice 	*device,
+						 const gchar	*esp_path);
 GPtrArray	*fu_uefi_get_esrt_entry_paths	(const gchar	*esrt_path,
 						 GError		**error);
 guint64		 fu_uefi_read_file_as_uint64	(const gchar	*path,
