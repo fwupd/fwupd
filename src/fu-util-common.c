@@ -1738,8 +1738,6 @@ fu_util_security_attrs_to_string (GPtrArray *attrs, FuSecurityAttrToStringFlags 
 {
 	FwupdSecurityAttrFlags flags = FWUPD_SECURITY_ATTR_FLAG_NONE;
 	const FwupdSecurityAttrFlags hpi_suffixes[] = {
-		FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES,
-		FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ATTESTATION,
 		FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE,
 		FWUPD_SECURITY_ATTR_FLAG_NONE,
 	};

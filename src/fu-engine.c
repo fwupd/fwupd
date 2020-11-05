@@ -5714,84 +5714,6 @@ fu_engine_ensure_security_attrs_tainted (FuEngine *self)
 	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED);
 }
 
-static void
-fu_engine_ensure_security_attrs_supported (FuEngine *self)
-{
-	FwupdRelease *rel_current = NULL;
-	FwupdRelease *rel_newest = NULL;
-	g_autoptr(FwupdSecurityAttr) attr_a = NULL;
-	g_autoptr(FwupdSecurityAttr) attr_u = NULL;
-	guint64 now = (guint64) g_get_real_time () / G_USEC_PER_SEC;
-	g_autoptr(FuDevice) device = NULL;
-	g_autoptr(GPtrArray) releases = NULL;
-
-	attr_u = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_FWUPD_UPDATES);
-	fwupd_security_attr_set_plugin (attr_u, "core");
-	fwupd_security_attr_add_flag (attr_u, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES);
-	fu_security_attrs_append (self->host_security_attrs, attr_u);
-	attr_a = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_FWUPD_ATTESTATION);
-	fwupd_security_attr_set_plugin (attr_a, "core");
-	fwupd_security_attr_add_flag (attr_a, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ATTESTATION);
-	fu_security_attrs_append (self->host_security_attrs, attr_a);
-	/* get device */
-	device = fu_device_list_get_by_guid (self->device_list,
-					     /* main-system-firmware */
-					     "230c8b18-8d9b-53ec-838b-6cfc0383493a",
-					     NULL);
-
-	/* find out if there is firmware less than 12 months old */
-	if (device == NULL) {
-		fwupd_security_attr_set_result (attr_u, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
-	} else {
-		g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
-		fu_engine_request_set_feature_flags (request, ~0);
-		releases = fu_engine_get_releases_for_device (self, request, device, NULL);
-		if (releases == NULL) {
-			fwupd_security_attr_set_result (attr_u, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
-		} else {
-			/* check the age */
-			for (guint i = 0; i < releases->len; i++) {
-				FwupdRelease *rel_tmp = g_ptr_array_index (releases, i);
-				if (rel_newest == NULL ||
-				    fwupd_release_get_created (rel_tmp) > fwupd_release_get_created (rel_newest))
-					rel_newest = rel_tmp;
-			}
-			g_debug ("newest release is %" G_GUINT64_FORMAT " months old",
-				 (now - fwupd_release_get_created (rel_newest)) / (60 * 60 * 24 * 30));
-			fwupd_security_attr_set_result (attr_u, FWUPD_SECURITY_ATTR_RESULT_SUPPORTED);
-			if (now - fwupd_release_get_created (rel_newest) < 60 * 60 * 24 * 30 * 12) {
-				fwupd_security_attr_add_flag (attr_u, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-				fwupd_security_attr_set_result (attr_a, FWUPD_SECURITY_ATTR_RESULT_SUPPORTED);
-			}
-		}
-	}
-
-	/* do we have attestation checksums */
-	if (releases != NULL) {
-		for (guint i = 0; i < releases->len; i++) {
-			FwupdRelease *rel_tmp = g_ptr_array_index (releases, i);
-			if (fu_common_vercmp_full (fu_device_get_version (device),
-						   fwupd_release_get_version (rel_tmp),
-						   fu_device_get_version_format (device)) == 0) {
-				rel_current = rel_tmp;
-				break;
-			}
-		}
-	}
-	if (rel_current == NULL) {
-		fwupd_security_attr_set_result (attr_a, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
-	} else {
-		g_autoptr(GError) error_local = NULL;
-		if (!fu_engine_verify (self, fu_device_get_id (device), &error_local)) {
-			fwupd_security_attr_set_result (attr_a, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
-			g_debug ("Failed to find attestation checksums: %s", error_local->message);
-		} else {
-			fwupd_security_attr_add_flag (attr_a, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-			fwupd_security_attr_set_result (attr_a, FWUPD_SECURITY_ATTR_RESULT_SUPPORTED);
-		}
-	}
-}
-
 static gchar *
 fu_engine_attrs_calculate_hsi_for_chassis (FuEngine *self)
 {
@@ -5853,7 +5775,6 @@ fu_engine_ensure_security_attrs (FuEngine *self)
 
 	/* built in */
 	fu_engine_ensure_security_attrs_tainted (self);
-	fu_engine_ensure_security_attrs_supported (self);
 
 	/* call into plugins */
 	for (guint j = 0; j < plugins->len; j++) {
