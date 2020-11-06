@@ -83,6 +83,7 @@ fu_hid_device_open (FuUsbDevice *device, GError **error)
 	FuHidDevice *self = FU_HID_DEVICE (device);
 	FuHidDeviceClass *klass = FU_HID_DEVICE_GET_CLASS (device);
 	FuHidDevicePrivate *priv = GET_PRIVATE (self);
+	GUsbDeviceClaimInterfaceFlags flags = 0;
 	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
 
 	/* auto-detect */
@@ -110,9 +111,9 @@ fu_hid_device_open (FuUsbDevice *device, GError **error)
 	}
 
 	/* claim */
-	if (!g_usb_device_claim_interface (usb_device, priv->interface,
-					   G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					   error)) {
+	if ((priv->flags & FU_HID_DEVICE_FLAG_NO_KERNEL_UNBIND) == 0)
+		flags |= G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER;
+	if (!g_usb_device_claim_interface (usb_device, priv->interface, flags, error)) {
 		g_prefix_error (error, "failed to claim HID interface: ");
 		return FALSE;
 	}
@@ -133,6 +134,7 @@ fu_hid_device_close (FuUsbDevice *device, GError **error)
 	FuHidDevice *self = FU_HID_DEVICE (device);
 	FuHidDeviceClass *klass = FU_HID_DEVICE_GET_CLASS (device);
 	FuHidDevicePrivate *priv = GET_PRIVATE (self);
+	GUsbDeviceClaimInterfaceFlags flags = 0;
 	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
 
 	/* subclassed */
@@ -142,9 +144,9 @@ fu_hid_device_close (FuUsbDevice *device, GError **error)
 	}
 
 	/* release */
-	if (!g_usb_device_release_interface (usb_device, priv->interface,
-					     G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					     error)) {
+	if ((priv->flags & FU_HID_DEVICE_FLAG_NO_KERNEL_REBIND) == 0)
+		flags |= G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER;
+	if (!g_usb_device_release_interface (usb_device, priv->interface, flags, error)) {
 		g_prefix_error (error, "failed to release HID interface: ");
 		return FALSE;
 	}
