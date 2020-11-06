@@ -3074,6 +3074,23 @@ fu_engine_md_refresh_device_name (FuEngine *self, FuDevice *device, XbNode *comp
 	}
 }
 
+static void
+fu_engine_md_refresh_device_icon (FuEngine *self, FuDevice *device, XbNode *component)
+{
+	const gchar *icon = NULL;
+
+	/* require data */
+	if (component == NULL)
+		return;
+
+	/* copy 1:1 */
+	icon = xb_node_query_text (component, "icon", NULL);
+	if (icon != NULL) {
+		fu_device_add_icon (device, icon);
+		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_MD_SET_ICON);
+	}
+}
+
 static const gchar *
 fu_common_device_category_to_name (const gchar *cat)
 {
@@ -3186,6 +3203,8 @@ fu_engine_md_refresh_device_from_component (FuEngine *self, FuDevice *device, Xb
 		fu_engine_md_refresh_device_name (self, device, component);
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY))
 		fu_engine_md_refresh_device_name_category (self, device, component);
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_MD_SET_ICON))
+		fu_engine_md_refresh_device_icon (self, device, component);
 
 	/* fix the version */
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_MD_SET_VERFMT))
