@@ -679,3 +679,9 @@ LIBFWUPDPLUGIN_1.5.1 {
     fu_volume_is_encrypted;
   local: *;
 } LIBFWUPDPLUGIN_1.5.0;
+
+LIBFWUPDPLUGIN_1.5.2 {
+  global:
+    fu_hid_device_add_flag;
+  local: *;
+} LIBFWUPDPLUGIN_1.5.1;

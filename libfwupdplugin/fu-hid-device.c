@@ -33,6 +33,7 @@ typedef struct
 	FuUsbDevice		*usb_device;
 	guint8			 interface;
 	gboolean		 interface_autodetect;
+	FuHidDeviceFlags	 flags;
 } FuHidDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuHidDevice, fu_hid_device, FU_TYPE_USB_DEVICE)
@@ -192,6 +193,23 @@ fu_hid_device_get_interface (FuHidDevice *self)
 	return priv->interface;
 }
 
+/**
+ * fu_hid_device_add_flag:
+ * @self: A #FuHidDevice
+ * @flag: #FuHidDeviceFlags, e.g. %FU_HID_DEVICE_FLAG_RETRY_FAILURE
+ *
+ * Adds a flag to be used for all set and get report messages.
+ *
+ * Since: 1.5.2
+ **/
+void
+fu_hid_device_add_flag (FuHidDevice *self, FuHidDeviceFlags flag)
+{
+	FuHidDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_HID_DEVICE (self));
+	priv->flags |= flag;
+}
+
 typedef struct {
 	guint8		 value;
 	guint8		*buf;
@@ -275,6 +293,7 @@ fu_hid_device_set_report (FuHidDevice *self,
 			  GError **error)
 {
 	FuHidDeviceRetryHelper helper;
+	FuHidDevicePrivate *priv = GET_PRIVATE (self);
 
 	g_return_val_if_fail (FU_HID_DEVICE (self), FALSE);
 	g_return_val_if_fail (buf != NULL, FALSE);
@@ -285,7 +304,7 @@ fu_hid_device_set_report (FuHidDevice *self,
 	helper.buf = buf;
 	helper.bufsz = bufsz;
 	helper.timeout = timeout;
-	helper.flags = flags;
+	helper.flags = priv->flags | flags;
 
 	/* special case */
 	if (flags & FU_HID_DEVICE_FLAG_RETRY_FAILURE) {
@@ -377,6 +396,7 @@ fu_hid_device_get_report (FuHidDevice *self,
 			  GError **error)
 {
 	FuHidDeviceRetryHelper helper;
+	FuHidDevicePrivate *priv = GET_PRIVATE (self);
 
 	g_return_val_if_fail (FU_HID_DEVICE (self), FALSE);
 	g_return_val_if_fail (buf != NULL, FALSE);
@@ -387,7 +407,7 @@ fu_hid_device_get_report (FuHidDevice *self,
 	helper.buf = buf;
 	helper.bufsz = bufsz;
 	helper.timeout = timeout;
-	helper.flags = flags;
+	helper.flags = priv->flags | flags;
 
 	/* special case */
 	if (flags & FU_HID_DEVICE_FLAG_RETRY_FAILURE) {
