@@ -136,6 +136,7 @@ fu_hid_device_close (FuUsbDevice *device, GError **error)
 	FuHidDevicePrivate *priv = GET_PRIVATE (self);
 	GUsbDeviceClaimInterfaceFlags flags = 0;
 	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
+	g_autoptr(GError) error_local = NULL;
 
 	/* subclassed */
 	if (klass->close != NULL) {
@@ -146,8 +147,19 @@ fu_hid_device_close (FuUsbDevice *device, GError **error)
 	/* release */
 	if ((priv->flags & FU_HID_DEVICE_FLAG_NO_KERNEL_REBIND) == 0)
 		flags |= G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER;
-	if (!g_usb_device_release_interface (usb_device, priv->interface, flags, error)) {
-		g_prefix_error (error, "failed to release HID interface: ");
+	if (!g_usb_device_release_interface (usb_device, priv->interface, flags, &error_local)) {
+		if (g_error_matches (error_local,
+				     G_USB_DEVICE_ERROR,
+				     G_USB_DEVICE_ERROR_NO_DEVICE) ||
+		    g_error_matches (error_local,
+				     G_USB_DEVICE_ERROR,
+				     G_USB_DEVICE_ERROR_INTERNAL)) {
+			g_debug ("ignoring: %s", error_local->message);
+			return TRUE;
+		}
+		g_propagate_prefixed_error (error,
+					    g_steal_pointer (&error_local),
+					    "failed to release HID interface: ");
 		return FALSE;
 	}
 
