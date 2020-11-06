@@ -2344,7 +2344,7 @@ fu_common_get_volume_by_device (const gchar *device, GError **error)
 
 /**
  * fu_common_get_volume_by_devnum:
- * @devicenum: A device number
+ * @devnum: A device number
  * @error: A #GError or NULL
  *
  * Finds the first volume from the specified device.

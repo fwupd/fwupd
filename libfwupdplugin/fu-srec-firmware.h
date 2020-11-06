@@ -25,6 +25,9 @@ typedef enum {
 	FU_FIRMWARE_SREC_RECORD_KIND_LAST
 } FuFirmareSrecRecordKind;
 
+/**
+ * FuSrecFirmwareRecord: (skip):
+ **/
 typedef struct {
 	guint			 ln;
 	FuFirmareSrecRecordKind	 kind;
