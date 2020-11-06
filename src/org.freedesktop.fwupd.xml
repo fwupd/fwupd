@@ -49,7 +49,7 @@
       <doc:doc>
         <doc:description>
           <doc:para>
-            The Host Security ID, for instance <doc:tt>HSI:2UA</doc:tt>
+            The Host Security ID, for instance <doc:tt>HSI:2</doc:tt>
           </doc:para>
         </doc:description>
       </doc:doc>
