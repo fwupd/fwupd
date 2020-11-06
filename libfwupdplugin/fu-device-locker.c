@@ -80,12 +80,23 @@ fu_device_locker_init (FuDeviceLocker *self)
 gboolean
 fu_device_locker_close (FuDeviceLocker *self, GError **error)
 {
+	g_autoptr(GError) error_local = NULL;
 	g_return_val_if_fail (FU_IS_DEVICE_LOCKER (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 	if (!self->device_open)
 		return TRUE;
-	if (!self->close_func (self->device, error))
-		return FALSE;
+	if (!self->close_func (self->device, &error_local)) {
+		if (G_USB_IS_DEVICE (self->device) &&
+		    g_error_matches (error_local,
+				     G_USB_DEVICE_ERROR,
+				     G_USB_DEVICE_ERROR_NO_DEVICE)) {
+			g_debug ("ignoring: %s", error_local->message);
+			return TRUE;
+		} else {
+			g_propagate_error (error, g_steal_pointer (&error_local));
+			return FALSE;
+		}
+	}
 	self->device_open = FALSE;
 	return TRUE;
 }
