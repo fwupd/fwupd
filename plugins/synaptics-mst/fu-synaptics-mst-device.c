@@ -235,7 +235,7 @@ fu_synaptics_mst_device_set_flash_sector_erase (FuSynapticsMstDevice *self,
 							 UPDC_FLASH_ERASE,
 							 2, 0, (guint8 *)&us_data,
 							 error)) {
-		g_prefix_error (error, "can't sector erase flash at offset %x",
+		g_prefix_error (error, "can't sector erase flash at offset %x: ",
 				offset);
 		return FALSE;
 	}

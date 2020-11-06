@@ -153,7 +153,7 @@ fu_vli_usbhub_msp430_device_detach (FuDevice *device, GError **error)
 
 	/* check the device came back */
 	if (!fu_vli_usbhub_device_i2c_read_status (parent, &status, error)) {
-		g_prefix_error (error, "device did not come back after detach");
+		g_prefix_error (error, "device did not come back after detach: ");
 		return FALSE;
 	}
 	return fu_vli_usbhub_i2c_check_status (status, error);

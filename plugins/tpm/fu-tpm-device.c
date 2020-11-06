@@ -180,21 +180,21 @@ fu_tpm_device_setup (FuDevice *device, GError **error)
 	/* lookup guaranteed details from TPM */
 	self->family = fu_tpm_device_get_string (ctx, TPM2_PT_FAMILY_INDICATOR, error);
 	if (self->family == NULL) {
-		g_prefix_error (error, "failed to read TPM family");
+		g_prefix_error (error, "failed to read TPM family: ");
 		return FALSE;
 	}
 	manufacturer = fu_tpm_device_get_string (ctx, TPM2_PT_MANUFACTURER, error);
 	if (manufacturer == NULL) {
-		g_prefix_error (error, "failed to read TPM manufacturer");
+		g_prefix_error (error, "failed to read TPM manufacturer: ");
 		return FALSE;
 	}
 	model1 = fu_tpm_device_get_string (ctx, TPM2_PT_VENDOR_STRING_1, error);
 	if (model1 == NULL) {
-		g_prefix_error (error, "failed to read TPM vendor string");
+		g_prefix_error (error, "failed to read TPM vendor string: ");
 		return FALSE;
 	}
 	if (!fu_tpm_device_get_uint32 (ctx, TPM2_PT_VENDOR_TPM_TYPE, &tpm_type, error)) {
-		g_prefix_error (error, "failed to read TPM type");
+		g_prefix_error (error, "failed to read TPM type: ");
 		return FALSE;
 	}
 

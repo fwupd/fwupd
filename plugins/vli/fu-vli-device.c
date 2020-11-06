@@ -218,11 +218,11 @@ fu_vli_device_spi_erase_sector (FuVliDevice *self, guint32 addr, GError **error)
 		return FALSE;
 	}
 	if (!fu_vli_device_spi_sector_erase (self, addr, error)) {
-		g_prefix_error (error, "->spi_sector_erase failed");
+		g_prefix_error (error, "->spi_sector_erase failed: ");
 		return FALSE;
 	}
 	if (!fu_vli_device_spi_wait_finish (self, error)) {
-		g_prefix_error (error, "->spi_wait_finish failed");
+		g_prefix_error (error, "->spi_wait_finish failed: ");
 		return FALSE;
 	}
 

@@ -313,7 +313,7 @@ fu_synaptics_rmi_device_set_rma_page (FuSynapticsRmiDevice *self, guint8 page, G
 
 	fu_byte_array_append_uint8 (req, page);
 	if (!fu_synaptics_rmi_device_write (self, RMI_DEVICE_PAGE_SELECT_REGISTER, req, error)) {
-		g_prefix_error (error, "failed to set RMA page 0x%x", page);
+		g_prefix_error (error, "failed to set RMA page 0x%x: ", page);
 		return FALSE;
 	}
 	return TRUE;
