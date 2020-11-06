@@ -675,6 +675,7 @@ fu_uefi_device_probe (FuDevice *device, GError **error)
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_MD_SET_VERFMT);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_MD_SET_ICON);
 
 	/* add icons */
 	if (self->kind == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE) {

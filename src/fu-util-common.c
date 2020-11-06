@@ -1111,6 +1111,10 @@ fu_util_device_flag_to_string (guint64 device_flag)
 		/* skip */
 		return NULL;
 	}
+	if (device_flag == FWUPD_DEVICE_FLAG_MD_SET_ICON) {
+		/* skip */
+		return NULL;
+	}
 	if (device_flag == FWUPD_DEVICE_FLAG_SKIPS_RESTART) {
 		/* skip */
 		return NULL;

@@ -128,6 +128,7 @@ typedef enum {
  * @FWUPD_DEVICE_FLAG_SKIPS_RESTART:		Device relies upon activation or power cycle to load firmware
  * @FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES:	Device supports switching to a different stream of firmware
  * @FWUPD_DEVICE_FLAG_BACKUP_BEFORE_INSTALL:	Device firmware should be saved before installing firmware
+ * @FWUPD_DEVICE_FLAG_MD_SET_ICON:		Set the device icon from the metadata if available
  *
  * The device flags.
  **/
@@ -173,6 +174,7 @@ typedef enum {
 #define FWUPD_DEVICE_FLAG_SKIPS_RESTART		(1llu << 38)	/* Since: 1.5.0 */
 #define FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES	(1llu << 39)	/* Since: 1.5.0 */
 #define FWUPD_DEVICE_FLAG_BACKUP_BEFORE_INSTALL	(1llu << 40)	/* Since: 1.5.0 */
+#define FWUPD_DEVICE_FLAG_MD_SET_ICON		(1llu << 41)	/* Since: 1.5.2 */
 #define FWUPD_DEVICE_FLAG_UNKNOWN		G_MAXUINT64	/* Since: 0.7.3 */
 typedef guint64 FwupdDeviceFlags;
 
