@@ -71,6 +71,15 @@ typedef struct {
 G_DEFINE_TYPE (FuSmbios, fu_smbios, G_TYPE_OBJECT)
 
 static void
+fu_smbios_convert_dt_value (FuSmbios *self, guint8 type, guint8 offset, guint8 value)
+{
+	FuSmbiosItem *item = g_ptr_array_index (self->items, type);
+	for (guint i = item->buf->len; i < (guint) offset + 1; i++)
+		fu_byte_array_append_uint8 (item->buf, 0x0);
+	item->buf->data[offset] = value;
+}
+
+static void
 fu_smbios_convert_dt_string (FuSmbios *self, guint8 type, guint8 offset,
 			     const gchar *path, const gchar *subpath)
 {
@@ -85,14 +94,14 @@ fu_smbios_convert_dt_string (FuSmbios *self, guint8 type, guint8 offset,
 
 	/* add to strtab */
 	g_ptr_array_add (item->strings, g_strndup (buf, bufsz));
-	for (guint i = item->buf->len; i < (guint) offset + 1; i++)
-		fu_byte_array_append_uint8 (item->buf, 0x0);
-	item->buf->data[offset] = item->strings->len;
+	fu_smbios_convert_dt_value (self, type, offset, item->strings->len);
 }
 
 static gboolean
 fu_smbios_setup_from_path_dt (FuSmbios *self, const gchar *path, GError **error)
 {
+	g_autofree gchar *fn_battery = NULL;
+
 	/* add all four faked structures */
 	for (guint i = 0; i < FU_SMBIOS_STRUCTURE_TYPE_LAST; i++) {
 		FuSmbiosItem *item = g_new0 (FuSmbiosItem, 1);
@@ -100,6 +109,14 @@ fu_smbios_setup_from_path_dt (FuSmbios *self, const gchar *path, GError **error)
 		item->buf = g_byte_array_new ();
 		item->strings = g_ptr_array_new_with_free_func (g_free);
 		g_ptr_array_add (self->items, item);
+	}
+
+	/* if it has a battery it is portable (probably a laptop) */
+	fn_battery = g_build_filename (path, "battery", NULL);
+	if (g_file_test (fn_battery, G_FILE_TEST_EXISTS)) {
+		fu_smbios_convert_dt_value (self,
+					    FU_SMBIOS_STRUCTURE_TYPE_CHASSIS, 0x05,
+					    FU_SMBIOS_CHASSIS_KIND_PORTABLE);
 	}
 
 	/* DMI:Manufacturer */
