@@ -332,13 +332,15 @@ fu_colorhug_device_setup (FuDevice *device, GError **error)
 {
 	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
 
-	if (fu_device_get_version (FU_DEVICE (device)) == NULL) {
+	/* using the USB descriptor and old firmware */
+	if (fu_device_get_version_format (device) == FWUPD_VERSION_FORMAT_BCD) {
 		g_autofree gchar *version = NULL;
 		g_autoptr(GError) error_local = NULL;
 		version = fu_colorhug_device_get_version (self, &error_local);
 		if (version != NULL) {
 			g_debug ("obtained fwver using API '%s'", version);
 			fu_device_set_version (device, version);
+			fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_TRIPLET);
 		} else {
 			g_warning ("failed to get firmware version: %s",
 				   error_local->message);
