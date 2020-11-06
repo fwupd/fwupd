@@ -233,7 +233,10 @@ fu_hid_device_set_report_internal (FuHidDevice *self,
 		wvalue = (FU_HID_REPORT_TYPE_FEATURE << 8) | helper->value;
 
 	if (g_getenv ("FU_HID_DEVICE_VERBOSE") != NULL) {
-		fu_common_dump_raw (G_LOG_DOMAIN, "HID::SetReport",
+		g_autofree gchar *title = NULL;
+		title = g_strdup_printf ("HID::SetReport [wValue=0x%04x ,wIndex=%u]",
+					 wvalue, priv->interface);
+		fu_common_dump_raw (G_LOG_DOMAIN, title,
 				    helper->buf, helper->bufsz);
 	}
 	usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
@@ -334,7 +337,10 @@ fu_hid_device_get_report_internal (FuHidDevice *self,
 		wvalue = (FU_HID_REPORT_TYPE_FEATURE << 8) | helper->value;
 
 	if (g_getenv ("FU_HID_DEVICE_VERBOSE") != NULL) {
-		fu_common_dump_raw (G_LOG_DOMAIN, "HID::GetReport",
+		g_autofree gchar *title = NULL;
+		title = g_strdup_printf ("HID::GetReport [wValue=0x%04x, wIndex=%u]",
+					 wvalue, priv->interface);
+		fu_common_dump_raw (G_LOG_DOMAIN, title,
 				    helper->buf, actual_len);
 	}
 	usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
@@ -351,8 +357,12 @@ fu_hid_device_get_report_internal (FuHidDevice *self,
 		g_prefix_error (error, "failed to GetReport: ");
 		return FALSE;
 	}
-	if (g_getenv ("FU_HID_DEVICE_VERBOSE") != NULL)
-		fu_common_dump_raw (G_LOG_DOMAIN, "HID::GetReport", helper->buf, actual_len);
+	if (g_getenv ("FU_HID_DEVICE_VERBOSE") != NULL) {
+		g_autofree gchar *title = NULL;
+		title = g_strdup_printf ("HID::GetReport [wValue=0x%04x, wIndex=%u]",
+					 wvalue, priv->interface);
+		fu_common_dump_raw (G_LOG_DOMAIN, title, helper->buf, actual_len);
+	}
 	if ((helper->flags & FU_HID_DEVICE_FLAG_ALLOW_TRUNC) == 0 && actual_len != helper->bufsz) {
 		g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
 			     "read %" G_GSIZE_FORMAT ", requested %" G_GSIZE_FORMAT " bytes",
