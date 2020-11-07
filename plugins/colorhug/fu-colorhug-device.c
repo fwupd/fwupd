@@ -470,7 +470,6 @@ fu_colorhug_device_init (FuColorhugDevice *self)
 	/* this is the application code */
 	self->start_addr = CH_EEPROM_ADDR_RUNCODE;
 	fu_device_set_protocol (FU_DEVICE (self), "com.hughski.colorhug");
-	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_remove_delay (FU_DEVICE (self),
 				    FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS);
