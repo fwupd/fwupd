@@ -1273,10 +1273,8 @@ fwupd_device_incorporate (FwupdDevice *self, FwupdDevice *donor)
 		fwupd_device_set_update_message (self, priv_donor->update_message);
 	if (priv->update_image == NULL)
 		fwupd_device_set_update_image (self, priv_donor->update_image);
-	if (priv->version == NULL) {
+	if (priv->version == NULL)
 		fwupd_device_set_version (self, priv_donor->version);
-		fwupd_device_set_version_format (self, priv_donor->version_format);
-	}
 	if (priv->version_lowest == NULL)
 		fwupd_device_set_version_lowest (self, priv_donor->version_lowest);
 	if (priv->version_bootloader == NULL)
