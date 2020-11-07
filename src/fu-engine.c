@@ -1620,7 +1620,10 @@ fu_engine_get_report_metadata_kernel_cmdline (GHashTable *hash, GError **error)
 		g_auto(GStrv) tokens = fu_common_strnsplit (buf, bufsz - 1, " ", -1);
 		g_autoptr(GString) cmdline_safe = g_string_new (NULL);
 		for (guint i = 0; tokens[i] != NULL; i++) {
-			g_auto(GStrv) kv = g_strsplit (tokens[i], "=", 2);
+			g_auto(GStrv) kv = NULL;
+			if (strlen (tokens[i]) == 0)
+				continue;
+			kv = g_strsplit (tokens[i], "=", 2);
 			if (g_strv_contains (ignore, kv[0]))
 				continue;
 			if (cmdline_safe->len > 0)
