@@ -65,6 +65,7 @@ BuildRequires: libjcat-devel >= %{libjcat_version}
 BuildRequires: polkit-devel >= 0.103
 BuildRequires: sqlite-devel
 BuildRequires: systemd >= %{systemd_version}
+BuildRequires: systemd-devel
 BuildRequires: libarchive-devel
 BuildRequires: gobject-introspection-devel
 BuildRequires: gcab
