@@ -1,0 +1,16 @@
+{
+  "name": "Hyper USB-C Hub [VL817+VL103]",
+  "guids": [
+    "0a120f99-b0f4-52af-9af9-e13155634370"
+  ],
+  "releases": [
+    {
+      "version": "154.36.7.55",
+      "file": "42421a49bef459931c17b4d42d80e961ee72197aa38acf6f3fc28a255c9c2652-Hyper-USB-C_Hub_New.cab"
+    },
+    {
+      "version": "138.36.7.55",
+      "file": "06f707d52b6a9b020c41a3d92fb22aead7559295bbfb90e8a562f43b9d2666f9-Hyper-USB-C_Hub_Old.cab"
+    }
+  ]
+}

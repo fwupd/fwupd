@@ -1,0 +1,16 @@
+{
+  "name": "Lenovo Travel Hub Gen2 [VL817]",
+  "guids": [
+    "3fc55e47-f57a-55bd-9f41-ac60280bd689"
+  ],
+  "releases": [
+    {
+      "version": "4.64",
+      "file": "a1c4d77e21d2733519d09bb2cce558b76052483ca5e976f7e49898e8a0ab6c86-Lenovo-Travel_Hub_Gen2_New.cab"
+    },
+    {
+      "version": "4.44",
+      "file": "4c1cc0c3f855a2435f8e3b5dafe26f05148c151e9164e8c3c7c41507f9155e0f-Lenovo-Travel_Hub_Gen2_Old.cab"
+    }
+  ]
+}
