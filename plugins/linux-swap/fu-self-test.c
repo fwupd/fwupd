@@ -44,8 +44,6 @@ fu_linux_swap_plain_func (void)
 	}
 	g_assert_no_error (error);
 	g_assert_nonnull (swap);
-	g_assert_true (fu_linux_swap_get_enabled (swap));
-	g_assert_false (fu_linux_swap_get_encrypted (swap));
 }
 
 static void
@@ -64,8 +62,6 @@ fu_linux_swap_encrypted_func (void)
 	}
 	g_assert_no_error (error);
 	g_assert_nonnull (swap);
-	g_assert_true (fu_linux_swap_get_enabled (swap));
-	g_assert_true (fu_linux_swap_get_encrypted (swap));
 }
 
 int
