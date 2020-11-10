@@ -859,7 +859,10 @@ fu_synaptics_mst_device_write_firmware (FuDevice *device,
 			return FALSE;
 		}
 	}
+
+	/* wait for flash clear to settle */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+	fu_device_sleep_with_progress (device, 2);
 	return TRUE;
 }
 
