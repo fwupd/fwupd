@@ -186,6 +186,7 @@ fu_util_start_engine (FuUtilPrivate *priv, FuEngineLoadFlags flags, GError **err
 			    fmt);
 	}
 	fu_util_show_plugin_warnings (priv);
+	fu_util_show_unsupported_warn ();
 	return TRUE;
 }
 

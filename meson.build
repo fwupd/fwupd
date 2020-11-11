@@ -402,6 +402,10 @@ if build_standalone and get_option('consolekit')
   conf.set('HAVE_CONSOLEKIT' , '1')
 endif
 
+if get_option('supported_build')
+    conf.set('SUPPORTED_BUILD', '1')
+endif
+
 gnome = import('gnome')
 i18n = import('i18n')
 

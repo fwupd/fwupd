@@ -27,7 +27,7 @@ build() {
     if [ -n "$CI" ]; then
         export CI="--wrap-mode=default"
     fi
-    arch-meson -D b_lto=false $CI ../build
+    arch-meson -D b_lto=false $CI ../build -Dsupported_build=true
 
     ninja -v -C ../build
 }
