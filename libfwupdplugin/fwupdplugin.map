@@ -683,5 +683,7 @@ LIBFWUPDPLUGIN_1.5.1 {
 LIBFWUPDPLUGIN_1.5.2 {
   global:
     fu_hid_device_add_flag;
+    fu_volume_get_id_type;
+    fu_volume_is_internal;
   local: *;
 } LIBFWUPDPLUGIN_1.5.1;

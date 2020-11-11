@@ -308,6 +308,53 @@ fu_volume_mount (FuVolume *self, GError **error)
 }
 
 /**
+ * fu_volume_is_internal:
+ * @self: a @FuVolume
+ *
+ * Guesses if the drive is internal to the system
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.5.2
+ **/
+gboolean
+fu_volume_is_internal (FuVolume *self)
+{
+	g_autoptr(GVariant) val_system = NULL;
+	g_return_val_if_fail (FU_IS_VOLUME (self), FALSE);
+
+	val_system = g_dbus_proxy_get_cached_property (self->proxy_blk, "HintSystem");
+	if (val_system == NULL)
+		return FALSE;
+
+	return g_variant_get_boolean (val_system);
+}
+
+/**
+ * fu_volume_get_id_type:
+ * @self: a @FuVolume
+ *
+ * Return the IdType of the volume
+ *
+ * Returns: string for type or NULL
+ *
+ * Since: 1.5.2
+ **/
+gchar *
+fu_volume_get_id_type (FuVolume *self)
+{
+	g_autoptr(GVariant) val = NULL;
+	g_return_val_if_fail (FU_IS_VOLUME (self), NULL);
+
+	val = g_dbus_proxy_get_cached_property (self->proxy_blk, "IdType");
+	if (val == NULL)
+		return NULL;
+
+	return g_strdup (g_variant_get_string (val, NULL));
+}
+
+
+/**
  * fu_volume_unmount:
  * @self: a @FuVolume
  * @error: A #GError, or %NULL

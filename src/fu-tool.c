@@ -2373,13 +2373,32 @@ fu_util_prompt_for_volume (GError **error)
 	FuVolume *volume;
 	guint idx;
 	g_autoptr(GPtrArray) volumes = NULL;
+	g_autoptr(GPtrArray) volumes_vfat = g_ptr_array_new ();
+	g_autoptr(GError) error_local = NULL;
 
 	/* exactly one */
-	volumes = fu_common_get_volumes_by_kind (FU_VOLUME_KIND_ESP, error);
-	if (volumes == NULL)
-		return NULL;
-	if (volumes->len == 1) {
-		volume = g_ptr_array_index (volumes, 0);
+	volumes = fu_common_get_volumes_by_kind (FU_VOLUME_KIND_ESP, &error_local);
+	if (volumes == NULL) {
+		g_debug ("%s, falling back to %s", error_local->message, FU_VOLUME_KIND_BDP);
+		volumes = fu_common_get_volumes_by_kind (FU_VOLUME_KIND_BDP, error);
+		if (volumes == NULL) {
+			g_prefix_error (error, "%s: ", error_local->message);
+			return NULL;
+		}
+	}
+	/* only add internal vfat partitions */
+	for (guint i = 0; i < volumes->len; i++) {
+		FuVolume *vol = g_ptr_array_index (volumes, i);
+		g_autofree gchar *type = fu_volume_get_id_type (vol);
+		if (type == NULL)
+			continue;
+		if (!fu_volume_is_internal (vol))
+			continue;
+		if (g_strcmp0 (type, "vfat") == 0)
+			g_ptr_array_add (volumes_vfat, vol);
+	}
+	if (volumes_vfat->len == 1) {
+		volume = g_ptr_array_index (volumes_vfat, 0);
 		/* TRANSLATORS: Volume has been chosen by the user */
 		g_print ("%s: %s\n", _("Selected volume"), fu_volume_get_id (volume));
 		return g_object_ref (volume);
@@ -2389,11 +2408,11 @@ fu_util_prompt_for_volume (GError **error)
 	g_print ("%s\n", _("Choose a volume:"));
 	/* TRANSLATORS: this is to abort the interactive prompt */
 	g_print ("0.\t%s\n", _("Cancel"));
-	for (guint i = 0; i < volumes->len; i++) {
-		volume = g_ptr_array_index (volumes, i);
+	for (guint i = 0; i < volumes_vfat->len; i++) {
+		volume = g_ptr_array_index (volumes_vfat, i);
 		g_print ("%u.\t%s\n", i + 1, fu_volume_get_id (volume));
 	}
-	idx = fu_util_prompt_for_number (volumes->len);
+	idx = fu_util_prompt_for_number (volumes_vfat->len);
 	if (idx == 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -2401,7 +2420,7 @@ fu_util_prompt_for_volume (GError **error)
 				     "Request canceled");
 		return NULL;
 	}
-	volume = g_ptr_array_index (volumes, idx - 1);
+	volume = g_ptr_array_index (volumes_vfat, idx - 1);
 	return g_object_ref (volume);
 
 }
