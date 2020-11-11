@@ -159,6 +159,13 @@ Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2
 ParentGuid = USB\VID_17EF&PID_721D
+[DeviceInstanceId=USB\VID_17EF&PID_721C]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = has-rtd21xx
+ParentGuid = USB\VID_17EF&PID_721D
+[DeviceInstanceId=USB\VID_17EF&PID_721C&I2C_REALTEK]
+Name = RTD2181S
 
 # Lenovo USB-C Mini dock
 [DeviceInstanceId=USB\VID_17EF&PID_3094]
