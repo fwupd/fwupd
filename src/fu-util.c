@@ -3120,6 +3120,9 @@ main (int argc, char *argv[])
 	/* show user-visible warnings from the plugins */
 	fu_util_show_plugin_warnings (priv);
 
+	/* show any unsupported warnings */
+	fu_util_show_unsupported_warn ();
+
 	/* we know the runtime daemon version now */
 	fwupd_client_set_user_agent_for_package (priv->client, "fwupdmgr", PACKAGE_VERSION);
 

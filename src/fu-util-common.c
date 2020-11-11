@@ -1995,3 +1995,15 @@ fu_util_switch_branch_warning (FwupdDevice *dev,
 	}
 	return TRUE;
 }
+
+void
+fu_util_show_unsupported_warn (void)
+{
+#ifndef SUPPORTED_BUILD
+	g_autofree gchar *fmt = NULL;
+	/* TRANSLATORS: this is a prefix on the console */
+	fmt = fu_util_term_format (_("WARNING:"), FU_UTIL_CLI_COLOR_YELLOW);
+	/* TRANSLATORS: unsupported build of the package */
+	g_printerr ("%s %s\n", fmt, _("This package has not been validated, it may not work properly."));
+#endif
+}

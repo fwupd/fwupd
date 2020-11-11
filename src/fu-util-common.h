@@ -118,3 +118,4 @@ gboolean	 fu_util_switch_branch_warning	(FwupdDevice	*dev,
 						 FwupdRelease	*rel,
 						 gboolean	 assume_yes,
 						 GError		**error);
+void		 fu_util_show_unsupported_warn	(void);

@@ -246,7 +246,8 @@ can be flashed using flashrom. It is probably not required on servers.
 %else
     -Dplugin_modem_manager=false \
 %endif
-    -Dman=true
+    -Dman=true \
+    -Dsupported_build=true
 
 %meson_build
 
