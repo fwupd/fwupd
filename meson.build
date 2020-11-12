@@ -131,7 +131,7 @@ foreach arg: test_link_args
     global_link_args += arg
   endif
 endforeach
-add_global_link_arguments(
+add_project_link_arguments(
   global_link_args,
   language: 'c'
 )
