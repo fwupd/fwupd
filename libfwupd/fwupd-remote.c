@@ -6,7 +6,7 @@
 
 #include "config.h"
 
-#include <libsoup/soup.h>
+#include <curl/curl.h>
 #include <jcat.h>
 
 #include "fwupd-deprecated.h"
@@ -66,6 +66,10 @@ enum {
 
 G_DEFINE_TYPE_WITH_PRIVATE (FwupdRemote, fwupd_remote, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fwupd_remote_get_instance_private (o))
+
+typedef gchar curlptr;
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(curlptr, curl_free)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(CURLU, curl_url_cleanup)
 
 static void
 fwupd_remote_set_username (FwupdRemote *self, const gchar *username)
@@ -150,11 +154,11 @@ fwupd_remote_set_filename_source (FwupdRemote *self, const gchar *filename_sourc
 	priv->filename_source = g_strdup (filename_source);
 }
 
-static SoupURI *
+static CURLU *
 fwupd_remote_build_uri (FwupdRemote *self, const gchar *url, GError **error)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
-	SoupURI *uri;
+	g_autoptr(CURLU) uri = curl_url ();
 
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
 	g_return_val_if_fail (url != NULL, NULL);
@@ -162,48 +166,43 @@ fwupd_remote_build_uri (FwupdRemote *self, const gchar *url, GError **error)
 
 	/* create URI, substituting if required */
 	if (priv->firmware_base_uri != NULL) {
-		g_autoptr(SoupURI) uri_tmp = NULL;
 		g_autofree gchar *basename = NULL;
-		g_autofree gchar *url2 = NULL;
-		uri_tmp = soup_uri_new (url);
-		if (uri_tmp == NULL) {
+		g_autofree gchar *path_new = NULL;
+		g_autoptr(curlptr) path = NULL;
+		g_autoptr(CURLU) uri_tmp = curl_url ();
+		if (curl_url_set (uri_tmp, CURLUPART_URL, url, 0) != CURLUE_OK) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
-				     "Failed to parse URI '%s'", url);
+				     "Failed to parse url '%s'", url);
 			return NULL;
 		}
-		basename = g_path_get_basename (soup_uri_get_path (uri_tmp));
-		url2 = g_build_filename (priv->firmware_base_uri, basename, NULL);
-		uri = soup_uri_new (url2);
-		if (uri == NULL) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "Failed to parse URI '%s'", url2);
-			return NULL;
-		}
+		curl_url_get (uri_tmp, CURLUPART_PATH, &path, 0);
+		basename = g_path_get_basename (path);
+		path_new = g_build_filename (priv->firmware_base_uri, basename, NULL);
+		curl_url_set (uri, CURLUPART_URL, path_new, 0);
 
 	/* use the base URI of the metadata to build the full path */
 	} else if (g_strstr_len (url, -1, "/") == NULL) {
 		g_autofree gchar *basename = NULL;
-		g_autofree gchar *path = NULL;
-		uri = soup_uri_new (priv->metadata_uri);
-		if (uri == NULL) {
+		g_autofree gchar *path_new = NULL;
+		g_autoptr(curlptr) path = NULL;
+		if (curl_url_set (uri, CURLUPART_URL, priv->metadata_uri, 0) != CURLUE_OK) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
-				     "Failed to parse metadata URI '%s'", url);
+				     "Failed to parse url '%s'",
+				     priv->metadata_uri);
 			return NULL;
 		}
-		basename = g_path_get_dirname (soup_uri_get_path (uri));
-		path = g_build_filename (basename, url, NULL);
-		soup_uri_set_path (uri, path);
+		curl_url_get (uri, CURLUPART_PATH, &path, 0);
+		basename = g_path_get_dirname (path);
+		path_new = g_build_filename (basename, url, NULL);
+		curl_url_set (uri, CURLUPART_URL, path_new, 0);
 
 	/* a normal URI */
 	} else {
-		uri = soup_uri_new (url);
-		if (uri == NULL) {
+		if (curl_url_set (uri, CURLUPART_URL, url, 0) != CURLUE_OK) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
@@ -214,10 +213,10 @@ fwupd_remote_build_uri (FwupdRemote *self, const gchar *url, GError **error)
 
 	/* set the username and password */
 	if (priv->username != NULL)
-		soup_uri_set_user (uri, priv->username);
+		curl_url_set (uri, CURLUPART_USER, priv->username, 0);
 	if (priv->password != NULL)
-		soup_uri_set_password (uri, priv->password);
-	return uri;
+		curl_url_set (uri, CURLUPART_PASSWORD, priv->password, 0);
+	return g_steal_pointer (&uri);
 }
 
 /* note, this has to be set before username and password */
@@ -225,12 +224,6 @@ static void
 fwupd_remote_set_metadata_uri (FwupdRemote *self, const gchar *metadata_uri)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
-	g_autoptr(SoupURI) uri = NULL;
-
-	/* build the URI */
-	uri = soup_uri_new (metadata_uri);
-	if (uri == NULL)
-		return;
 
 	/* save this so we can export the object as a GVariant */
 	priv->metadata_uri = g_strdup (metadata_uri);
@@ -872,10 +865,12 @@ fwupd_remote_get_checksum (FwupdRemote *self)
 gchar *
 fwupd_remote_build_firmware_uri (FwupdRemote *self, const gchar *url, GError **error)
 {
-	g_autoptr(SoupURI) uri = fwupd_remote_build_uri (self, url, error);
+	g_autoptr(curlptr) tmp = NULL;
+	g_autoptr(CURLU) uri = fwupd_remote_build_uri (self, url, error);
 	if (uri == NULL)
 		return NULL;
-	return soup_uri_to_string (uri, FALSE);
+	curl_url_get (uri, CURLUPART_URL, &tmp, 0);
+	return g_strdup (tmp);
 }
 
 /**

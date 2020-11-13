@@ -208,7 +208,7 @@ endif
 libjcat = dependency('jcat', version : '>= 0.1.0', fallback : ['libjcat', 'libjcat_dep'])
 libjsonglib = dependency('json-glib-1.0', version : '>= 1.1.1')
 valgrind = dependency('valgrind', required: false)
-soup = dependency('libsoup-2.4', version : '>= 2.51.92')
+libcurl = dependency('libcurl', version : '>= 7.62.0')
 if build_daemon
   if get_option('polkit')
     polkit = dependency('polkit-gobject-1', version : '>= 0.103')
@@ -448,7 +448,6 @@ if build_standalone
   plugin_deps += giounix
   plugin_deps += gmodule
   plugin_deps += gusb
-  plugin_deps += soup
   plugin_deps += libarchive
   plugin_deps += gudev
   plugin_deps += libjsonglib

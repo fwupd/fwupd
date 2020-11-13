@@ -21,6 +21,7 @@ shared_module('fu_plugin_redfish',
   c_args : cargs,
   dependencies : [
     plugin_deps,
+    libcurl,
     libjsonglib,
   ],
 )
@@ -45,6 +46,7 @@ if get_option('tests')
     ],
     dependencies : [
       plugin_deps,
+      libcurl,
       libjsonglib,
     ],
     link_with : [

@@ -13,6 +13,7 @@
 #include <gusb.h>
 #include <xmlb.h>
 #include <fwupd.h>
+#include <curl/curl.h>
 
 #include "fu-common.h"
 #include "fu-device-private.h"
@@ -2006,4 +2007,13 @@ fu_util_show_unsupported_warn (void)
 	/* TRANSLATORS: unsupported build of the package */
 	g_printerr ("%s %s\n", fmt, _("This package has not been validated, it may not work properly."));
 #endif
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(CURLU, curl_url_cleanup)
+
+gboolean
+fu_util_is_url (const gchar *perhaps_url)
+{
+	g_autoptr(CURLU) h = curl_url ();
+	return curl_url_set (h, CURLUPART_URL, perhaps_url, 0) == CURLUE_OK;
 }
