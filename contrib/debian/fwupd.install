@@ -8,9 +8,7 @@ usr/share/icons/*
 usr/share/polkit-1/*
 usr/share/locale
 usr/share/metainfo/*
-usr/libexec/fwupd/fwupd
-usr/libexec/fwupd/fwupd-detect-cet
-usr/libexec/fwupd/fwupdoffline
+usr/libexec/fwupd/*
 usr/share/man/man1/*
 lib/systemd/system/*
 lib/systemd/system-preset/*
