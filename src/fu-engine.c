@@ -1220,11 +1220,10 @@ fu_engine_check_requirement_firmware (FuEngine *self, XbNode *req, FuDevice *dev
 	}
 
 	/* vendor ID */
-	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) == 0 &&
-	    g_strcmp0 (xb_node_get_text (req), "vendor-id") == 0 &&
+	if (g_strcmp0 (xb_node_get_text (req), "vendor-id") == 0 &&
 	    fu_device_get_vendor_id (device_actual) != NULL) {
-		const gchar *version = fu_device_get_vendor_id (device_actual);
-		if (!fu_engine_require_vercmp (req, version,
+		if ((flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) == 0 &&
+		    !fu_engine_require_vercmp (req, fu_device_get_vendor_id (device_actual),
 					       fu_device_get_version_format (device_actual),
 					       &error_local)) {
 			g_set_error (error,
