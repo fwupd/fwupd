@@ -1,0 +1,13 @@
+[binaries]
+c = 'powerpc64le-linux-gnu-gcc'
+cpp = 'powerpc64le-linux-gnu-cpp'
+ar = 'powerpc64le-linux-gnu-ar'
+strip = 'powerpc64le-linux-gnu-strip'
+pkgconfig = 'powerpc64le-linux-gnu-pkg-config'
+exe_wrapper = 'qemu-powerpc64le'
+
+[host_machine]
+system = 'linux'
+cpu_family = 'powerpc64le'
+cpu = 'powerpc64le'
+endian = 'big'

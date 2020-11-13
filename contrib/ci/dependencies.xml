@@ -49,6 +49,7 @@
   <dependency type="build" id="binutils-multiarch">
     <distro id="debian">
       <package variant="s390x" />
+      <package variant="ppc64el" />
     </distro>
   </dependency>
   <dependency type="build" id="ca-certificates">
@@ -76,6 +77,11 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency type="build" id="gcc-powerpc64le-linux-gnu">
+    <distro id="debian">
+      <package variant="ppc64el" />
+    </distro>
+  </dependency>
   <dependency type="build" id="gcc-multilib-s390x-linux-gnu">
     <distro id="debian">
       <package variant="s390x" />
@@ -92,6 +98,7 @@
       <control />
       <package variant="x86_64" />
       <package variant="s390x">libcairo-dev:s390x</package>
+      <package variant="ppc64el">libcairo-dev:ppc64el</package>
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -110,6 +117,7 @@
       <control />
       <package variant="x86_64" />
       <package variant="s390x">libcairo-gobject2:s390x</package>
+      <package variant="ppc64el">libcairo-gobject2:ppc64el</package>
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -133,6 +141,7 @@
       </control>
       <package variant="x86_64" />
       <package variant="s390x">libjson-glib-dev:s390x</package>
+      <package variant="ppc64el">libjson-glib-dev:ppc64el</package>
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -259,6 +268,7 @@
   <dependency type="build" id="intltool">
     <distro id="debian">
       <package variant="s390x" />
+      <package variant="ppc64el" />
     </distro>
   </dependency>
   <dependency type="build" id="libelf-dev">
@@ -272,6 +282,7 @@
       <control />
       <package variant="x86_64" />
       <package variant="s390x">libelf-dev:s390x</package>
+      <package variant="ppc64el">libelf-dev:ppc64el</package>
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -299,6 +310,7 @@
       <control />
       <package variant="x86_64" />
       <package variant="s390x">libfreetype6-dev:s390x</package>
+      <package variant="ppc64el">libfreetype6-dev:ppc64el</package>
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -352,6 +364,7 @@
       <control />
       <package variant="x86_64" />
       <package variant="s390x" />
+      <package variant="ppc64el" />
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -372,6 +385,7 @@
       </control>
       <package variant="x86_64" />
       <package variant="s390x" />
+      <package variant="ppc64el" />
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -433,6 +447,7 @@
     <distro id="debian">
       <package variant="x86_64" />
       <package variant="s390x" />
+      <package variant="ppc64el" />
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -461,6 +476,7 @@
       </control>
       <package variant="x86_64" />
       <package variant="s390x">libglib2.0-dev:s390x</package>
+      <package variant="ppc64el">libglib2.0-dev:ppc64el</package>
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -518,6 +534,7 @@
       <control />
       <package variant="x86_64" />
       <package variant="s390x">libgnutls28-dev:s390x</package>
+      <package variant="ppc64el">libgnutls28-dev:ppc64el</package>
       <package variant="i386">libgnutls28-dev</package>
     </distro>
     <distro id="ubuntu">
@@ -536,6 +553,7 @@
       <control />
       <package variant="x86_64" />
       <package variant="s390x" />
+      <package variant="ppc64el" />
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -577,6 +595,7 @@
       <control />
       <package variant="x86_64" />
       <package variant="s390x" />
+      <package variant="ppc64el" />
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -610,6 +629,7 @@
       </control>
       <package variant="x86_64" />
       <package variant="s390x">libxmlb-dev:s390x</package>
+      <package variant="ppc64el">libxmlb-dev:ppc64el</package>
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -627,6 +647,7 @@
       <control />
       <package variant="x86_64" />
       <package variant="s390x" />
+      <package variant="ppc64el" />
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -645,6 +666,7 @@
       <control />
       <package variant="x86_64" />
       <package variant="s390x">libarchive-dev:s390x</package>
+      <package variant="ppc64el">libarchive-dev:ppc64el</package>
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -717,6 +739,7 @@
       <control />
       <package variant="x86_64" />
       <package variant="s390x">libgcab-dev:s390x</package>
+      <package variant="ppc64el">libgcab-dev:ppc64el</package>
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -729,6 +752,7 @@
       <control />
       <package variant="x86_64" />
       <package variant="s390x" />
+      <package variant="ppc64el" />
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -747,6 +771,7 @@
       <control />
       <package variant="x86_64" />
       <package variant="s390x">libgudev-1.0-dev:s390x</package>
+      <package variant="ppc64el">libgudev-1.0-dev:ppc64el</package>
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -770,6 +795,7 @@
       </control>
       <package variant="x86_64" />
       <package variant="s390x">libgusb-dev:s390x</package>
+      <package variant="ppc64el">libgusb-dev:ppc64el</package>
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -782,12 +808,14 @@
   <dependency type="build" id="libicu-dev">
     <distro id="debian">
       <package variant="s390x">libicu-dev:s390x</package>
+      <package variant="ppc64el">libicu-dev:ppc64el</package>
       <package variant="i386" />
     </distro>
   </dependency>
   <dependency type="build" id="libidn2-0-dev">
     <distro id="debian">
       <package variant="s390x">libidn2-0-dev:s390x</package>
+      <package variant="ppc64el">libidn2-0-dev:ppc64el</package>
       <package variant="i386" />
     </distro>
   </dependency>
@@ -831,6 +859,7 @@
       <control />
       <package variant="x86_64" />
       <package variant="s390x">libsoup2.4-dev:s390x</package>
+      <package variant="ppc64el">libsoup2.4-dev:ppc64el</package>
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -868,6 +897,11 @@
       <package variant="s390x" />
     </distro>
   </dependency>
+  <dependency type="build" id="libxml2-dev:ppc64el">
+    <distro id="debian">
+      <package variant="ppc64el" />
+    </distro>
+  </dependency>
   <dependency type="build" id="lintian">
     <distro id="debian">
       <package variant="x86_64" />
@@ -882,6 +916,7 @@
       <control />
       <package variant="x86_64" />
       <package variant="s390x" />
+      <package variant="ppc64el" />
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -903,6 +938,7 @@
       <control />
       <package variant="x86_64" />
       <package variant="s390x" />
+      <package variant="ppc64el" />
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -978,6 +1014,7 @@
       </control>
       <package variant="x86_64" />
       <package variant="s390x" />
+      <package variant="ppc64el" />
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -1001,6 +1038,7 @@
       <control />
       <package variant="x86_64" />
       <package variant="s390x">libmm-glib-dev:s390x</package>
+      <package variant="ppc64el">libmm-glib-dev:ppc64el</package>
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -1022,6 +1060,7 @@
       <control />
       <package variant="x86_64" />
       <package variant="s390x">libqmi-glib-dev:s390x</package>
+      <package variant="ppc64el">libqmi-glib-dev:ppc64el</package>
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -1040,6 +1079,7 @@
       <control />
       <package variant="x86_64" />
       <package variant="s390x">libpolkit-gobject-1-dev:s390x</package>
+      <package variant="ppc64el">libpolkit-gobject-1-dev:ppc64el</package>
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -1071,6 +1111,7 @@
       <control />
       <package variant="x86_64" />
       <package variant="s390x" />
+      <package variant="ppc64el" />
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -1097,6 +1138,7 @@
       <control />
       <package variant="x86_64" />
       <package variant="s390x" />
+      <package variant="ppc64el" />
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -1121,6 +1163,7 @@
   <dependency type="build" id="python3-requests">
     <distro id="debian">
       <package variant="s390x">qemu-user</package>
+      <package variant="ppc64el">qemu-user</package>
     </distro>
   </dependency>
   <dependency type="build" id="rpm-build">
@@ -1150,6 +1193,7 @@
       <control />
       <package variant="x86_64" />
       <package variant="s390x">libsqlite3-dev:s390x</package>
+      <package variant="ppc64el">libsqlite3-dev:ppc64el</package>
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -1170,6 +1214,7 @@
       </control>
       <package variant="x86_64" />
       <package variant="s390x" />
+      <package variant="ppc64el" />
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -1190,6 +1235,7 @@
       <control />
       <package variant="x86_64" />
       <package variant="s390x">libsystemd-dev:s390x</package>
+      <package variant="ppc64el">libsystemd-dev:ppc64el</package>
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -1211,6 +1257,7 @@
       <control />
       <package variant="x86_64" />
       <package variant="s390x" />
+      <package variant="ppc64el" />
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -1232,6 +1279,7 @@
       <control />
       <package variant="x86_64" />
       <package variant="s390x" />
+      <package variant="ppc64el" />
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -1273,6 +1321,7 @@
       <control />
       <package variant="x86_64" />
       <package variant="s390x" />
+      <package variant="ppc64el" />
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -1369,6 +1418,7 @@
       <control />
       <package variant="x86_64" />
       <package variant="s390x">libtss2-dev:s390x</package>
+      <package variant="ppc64el">libtss2-dev:ppc64el</package>
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
