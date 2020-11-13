@@ -3,6 +3,8 @@
 #find them. for more information see:
 #https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=872458
 usr/share/installed-tests/*
+usr/libexec/installed-tests/fwupd/fwupd.sh
+usr/libexec/installed-tests/fwupd/*-self-test
 usr/lib/*/fwupd-plugins-3/libfu_plugin_test.so
 usr/lib/*/fwupd-plugins-3/libfu_plugin_invalid.so
 debian/lintian/fwupd-tests usr/share/lintian/overrides

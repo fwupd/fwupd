@@ -1,10 +1,12 @@
 /*
- * Copyright (C) 2016-2018 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2016-2020 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #pragma once
+
+#include <glib.h>
 
 G_BEGIN_DECLS
 
@@ -23,6 +25,8 @@ G_BEGIN_DECLS
 #define FWUPD_RESULT_KEY_FLAGS			"Flags"		/* t */
 #define FWUPD_RESULT_KEY_FLASHES_LEFT		"FlashesLeft"	/* u */
 #define FWUPD_RESULT_KEY_URGENCY		"Urgency"	/* u */
+#define FWUPD_RESULT_KEY_HSI_LEVEL		"HsiLevel"	/* u */
+#define FWUPD_RESULT_KEY_HSI_RESULT		"HsiResult"	/* u */
 #define FWUPD_RESULT_KEY_INSTALL_DURATION	"InstallDuration"	/* u */
 #define FWUPD_RESULT_KEY_GUID			"Guid"		/* as */
 #define FWUPD_RESULT_KEY_INSTANCE_IDS		"InstanceIds"	/* as */
@@ -43,6 +47,7 @@ G_BEGIN_DECLS
 #define FWUPD_RESULT_KEY_SIZE			"Size"		/* t */
 #define FWUPD_RESULT_KEY_STATUS			"Status"	/* u */
 #define FWUPD_RESULT_KEY_SUMMARY		"Summary"	/* s */
+#define FWUPD_RESULT_KEY_BRANCH			"Branch"	/* s */
 #define FWUPD_RESULT_KEY_TRUST_FLAGS		"TrustFlags"	/* t */
 #define FWUPD_RESULT_KEY_UPDATE_MESSAGE		"UpdateMessage"	/* s */
 #define FWUPD_RESULT_KEY_UPDATE_IMAGE		"UpdateImage"	/* s */

@@ -3,7 +3,9 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
+# Corentin Noël <tintou@noel.tf>, 2020
 # Franck <franck.routier@gmail.com>, 2015
+# Julien Humbert <julroy67@gmail.com>, 2020
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -15,19 +17,135 @@ msgstr ""
 "Language: fr\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
+#. more than a minute
+#, c-format
+msgid "%.0f minute remaining"
+msgid_plural "%.0f minutes remaining"
+msgstr[0] "%.0f minute restante"
+msgstr[1] "%.0f minutes restantes"
+
+#. TRANSLATORS: Title: %1 is ME kind, e.g. CSME/TXT, %2 is a version number
+#, c-format
+msgid "%s v%s"
+msgstr "%s v%s"
+
+#. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
+#, c-format
+msgid "%s version"
+msgstr "Version %s"
+
+#. TRANSLATORS: duration in days!
+#, c-format
+msgid "%u day"
+msgid_plural "%u days"
+msgstr[0] "%u jour"
+msgstr[1] "%u jours"
+
+#. TRANSLATORS: duration in minutes
+#, c-format
+msgid "%u hour"
+msgid_plural "%u hours"
+msgstr[0] "%u heure"
+msgstr[1] "%u heures"
+
+#. TRANSLATORS: duration in minutes
+#, c-format
+msgid "%u minute"
+msgid_plural "%u minutes"
+msgstr[0] "%u minute"
+msgstr[1] "%u minutes"
+
+#. TRANSLATORS: duration in seconds
+#, c-format
+msgid "%u second"
+msgid_plural "%u seconds"
+msgstr[0] "%u seconde"
+msgstr[1] "%u secondes"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Added"
+msgstr "Ajouté"
+
+#. TRANSLATORS: the age of the metadata
+msgid "Age"
+msgstr "Âge"
+
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
 msgid "Alias to %s"
 msgstr "Alias de %s"
 
+#. TRANSLATORS: waiting for user to authenticate
+msgid "Authenticating…"
+msgstr "Authentification…"
+
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on this machine"
 msgstr "Une authentification est nécessaire pour mettre à jour le micrologiciel sur cette machine"
+
+#. TRANSLATORS: this is to abort the interactive prompt
+msgid "Cancel"
+msgstr "Annuler"
+
+#. TRANSLATORS: this is when a device ctrl+c's a watch
+msgid "Cancelled"
+msgstr "Annulé"
+
+#. TRANSLATORS: this is when a device is hotplugged
+#. TRANSLATORS: this is when the daemon state changes
+msgid "Changed"
+msgstr "Modifié"
+
+#. TRANSLATORS: remote checksum
+msgid "Checksum"
+msgstr "Somme de contrôle"
+
+#. TRANSLATORS: error message
+msgid "Command not found"
+msgstr "Commande non trouvée"
+
+#. TRANSLATORS: the release urgency
+msgid "Critical"
+msgstr "Critique"
+
+#. TRANSLATORS: version number of current firmware
+msgid "Current version"
+msgstr "Version actuelle"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Debugging Options"
 msgstr "Options de débogage"
 
+#. TRANSLATORS: decompressing the firmware file
+msgid "Decompressing…"
+msgstr "Décompression…"
+
+#. TRANSLATORS: multiline description of device
+msgid "Description"
+msgstr "Description"
+
+#. TRANSLATORS: more details about the update link
+msgid "Details"
+msgstr "Détails"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device added:"
+msgstr "Périphérique ajouté :"
+
+#. TRANSLATORS: this is when a device has been updated
+msgid "Device changed:"
+msgstr "Périphérique modifié :"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device removed:"
+msgstr "Périphérique retiré :"
+
+#. TRANSLATORS: Suffix: the HSI result
+#. TRANSLATORS: Plugin is inactive and not used
+msgid "Disabled"
+msgstr "Désactivé"
+
+#. TRANSLATORS: success
 #. success
 msgid "Done!"
 msgstr "Terminé !"
@@ -39,6 +157,24 @@ msgstr "Terminé !"
 msgid "Downgrading %s from %s to %s... "
 msgstr "Rétrogradation de %s de %s en %s"
 
+#. TRANSLATORS: downloading from a remote server
+msgid "Downloading…"
+msgstr "Téléchargement…"
+
+#. TRANSLATORS: length of time the update takes to apply
+msgid "Duration"
+msgstr "Durée"
+
+#. TRANSLATORS: Suffix: the HSI result
+#. TRANSLATORS: Plugin is active and in use
+#. TRANSLATORS: if the remote is enabled
+msgid "Enabled"
+msgstr "Activé"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Encrypted"
+msgstr "Chiffré"
+
 #. TRANSLATORS: exit after we've started up, used for user profiling
 msgid "Exit after a small delay"
 msgstr "Quitter après un bref délai"
@@ -47,13 +183,30 @@ msgstr "Quitter après un bref délai"
 msgid "Exit after the engine has loaded"
 msgstr "Quitter après le chargement du moteur"
 
+#. TRANSLATORS: Suffix: the fallback HSI result
+msgid "Failed"
+msgstr "Échec"
+
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
 msgstr "Echec de l'analyse des paramètres"
 
+#. TRANSLATORS: filename of the local file
+msgid "Filename"
+msgstr "Nom de fichier"
+
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
 msgstr "Service D-Bus de mise à jour des micrologiciels"
+
+#. TRANSLATORS: description of plugin state, e.g. disabled
+#. TRANSLATORS: release properties
+msgid "Flags"
+msgstr "Drapeaux"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Found"
+msgstr "Trouvé"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -63,13 +216,126 @@ msgstr "Obtenir la liste des périphériques supportant les mises à jour de mic
 msgid "Gets details about a firmware file"
 msgstr "Obtenir les détails d'un fichier de micrologiciel"
 
+#. TRANSLATORS: the release urgency
+msgid "High"
+msgstr "Haute"
+
+#. TRANSLATORS: Title:
+#. https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
+msgid "IOMMU"
+msgstr "IOMMU"
+
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Installer un fichier de micrologiciel sur ce matériel"
 
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Installing on %s…"
+msgstr "Installation sur %s…"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel
+msgid "Intel BootGuard"
+msgstr "Intel BootGuard"
+
+#. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
+msgid "Intel SMAP"
+msgstr "Intel SMAP"
+
+#. TRANSLATORS: Device cannot be removed easily
+msgid "Internal device"
+msgstr "Périphérique interne"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Invalid"
+msgstr "Invalide"
+
+#. TRANSLATORS: time remaining for completing firmware flash
+msgid "Less than one minute remaining"
+msgstr "Moins d’une minute restante"
+
+#. TRANSLATORS: e.g. GPLv2+, Proprietary etc
+msgid "License"
+msgstr "Licence"
+
+#. TRANSLATORS: Title: if it's tainted or not
+msgid "Linux kernel"
+msgstr "Noyau Linux"
+
+#. TRANSLATORS: parsing the firmware information
+msgid "Loading…"
+msgstr "Chargement…"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Locked"
+msgstr "Verrouillé"
+
+#. TRANSLATORS: the release urgency
+msgid "Low"
+msgstr "Faible"
+
+msgid "MEI version"
+msgstr "Version MEI"
+
+#. TRANSLATORS: the release urgency
+msgid "Medium"
+msgstr "Moyenne"
+
+#. TRANSLATORS: smallest version number installable on device
+msgid "Minimum Version"
+msgstr "Version minimum"
+
+#. TRANSLATORS: version number of new firmware
+msgid "New version"
+msgstr "Nouvelle version"
+
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "Aucun matériel ayant des capacités de mise à jour du micrologiciel n'a été détecté"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Not found"
+msgstr "Non trouvé"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Not supported"
+msgstr "Non pris en charge"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "OK"
+msgstr "OK"
+
+#. TRANSLATORS: remote filename base
+msgid "Password"
+msgstr "Mot de passe"
+
+#. TRANSLATORS: version number of previous firmware
+msgid "Previous version"
+msgstr "Version précédente"
+
+msgid "Print the version number"
+msgstr "Afficher le numéro de version"
+
+#. TRANSLATORS: the numeric priority
+msgid "Priority"
+msgstr "Priorité"
+
+#. TRANSLATORS: a non-free software license
+msgid "Proprietary"
+msgstr "Propriétaire"
+
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Reading from %s…"
+msgstr "Lecture depuis %s…"
+
+#. TRANSLATORS: reading from the flash chips
+msgid "Reading…"
+msgstr "Lecture…"
+
+#. TRANSLATORS: console message when not using plymouth
+msgid "Rebooting…"
+msgstr "Redémarrage…"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
@@ -77,6 +343,14 @@ msgstr "Aucun matériel ayant des capacités de mise à jour du micrologiciel n'
 #, c-format
 msgid "Reinstalling %s with %s... "
 msgstr "Réinstallation de %s en %s"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Removed"
+msgstr "Retiré"
+
+#. TRANSLATORS: restarting the device to pick up new F/W
+msgid "Restarting device…"
+msgstr "Redémarrage du périphérique…"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
@@ -86,9 +360,72 @@ msgstr "Montrer les options de débogage"
 msgid "Show extra debugging information"
 msgstr "Montre des informations de débogage complémentaires"
 
+#. TRANSLATORS: file size of the download
+msgid "Size"
+msgstr "Taille"
+
+#. TRANSLATORS: source (as in code) link
+msgid "Source"
+msgstr "Source"
+
+#. TRANSLATORS: one line summary of device
+msgid "Summary"
+msgstr "Résumé"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Supported"
+msgstr "Pris en charge"
+
+#. TRANSLATORS: Title: TPM = Trusted Platform Module
+msgid "TPM v2.0"
+msgstr "TPM v2.0"
+
+#. TRANSLATORS: remote type, e.g. remote or local
+msgid "Type"
+msgstr "Type"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Unencrypted"
+msgstr "Déchiffré"
+
+#. TRANSLATORS: current daemon status is unknown
+#. TRANSLATORS: we don't know the license of the update
+#. TRANSLATORS: unknown release urgency
+msgid "Unknown"
+msgstr "Inconnu"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Unlocked"
+msgstr "Déverrouillé"
+
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
 #. * version numbers e.g. "1.2.3"
 #, c-format
 msgid "Updating %s from %s to %s... "
 msgstr "Mise à jour de %s de %s en %s"
+
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Updating %s…"
+msgstr "Mise à jour de %s…"
+
+#. TRANSLATORS: remote filename base
+msgid "Username"
+msgstr "Nom d’utilisateur"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Valid"
+msgstr "Valide"
+
+#. TRANSLATORS: one line variant of release (e.g. 'Prerelease' or 'China')
+msgid "Variant"
+msgstr "Variante"
+
+#. TRANSLATORS: verifying we wrote the firmware correctly
+msgid "Verifying…"
+msgstr "Vérification…"
+
+#. TRANSLATORS: writing to the flash chips
+msgid "Writing…"
+msgstr "Écriture…"

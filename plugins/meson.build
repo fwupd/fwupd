@@ -1,4 +1,9 @@
+subdir('acpi-dmar')
+subdir('acpi-facp')
+subdir('bcm57xx')
+subdir('bios')
 subdir('ccgx')
+subdir('cros-ec')
 subdir('cpu')
 subdir('dfu')
 subdir('colorhug')
@@ -6,10 +11,18 @@ subdir('ebitdo')
 subdir('ep963x')
 subdir('fastboot')
 subdir('fresco-pd')
+subdir('iommu')
 subdir('jabra')
+subdir('linux-lockdown')
+subdir('linux-sleep')
+subdir('linux-swap')
+subdir('linux-tainted')
 subdir('steelseries')
 subdir('dell-dock')
 subdir('nitrokey')
+subdir('pci-bcr')
+subdir('pci-mei')
+subdir('platform-integrity')
 subdir('rts54hid')
 subdir('rts54hub')
 subdir('solokey')
@@ -19,9 +32,15 @@ subdir('test')
 subdir('upower')
 subdir('wacom-usb')
 subdir('vli')
+subdir('goodix-moc')
+
+if get_option('plugin_msr')
+subdir('msr')
+endif
 
 if get_option('gudev')
 subdir('ata')
+subdir('elantp')
 subdir('logitech-hidpp')
 subdir('optionrom')
 subdir('superio')
@@ -37,16 +56,25 @@ endif
 # depends on dfu
 subdir('csr')
 
-if get_option('plugin_tpm') and get_option('gudev')
+if get_option('tpm')
+if not get_option('gudev')
+  error('gudev is required for tpm')
+endif
 subdir('tpm')
 subdir('tpm-eventlog')
 endif
 
-if get_option('plugin_emmc') and get_option('gudev')
+if get_option('plugin_emmc')
+if not get_option('gudev')
+  error('gudev is required for plugin_emmc')
+endif
 subdir('emmc')
 endif
 
-if get_option('plugin_nvme') and get_option('gudev')
+if get_option('plugin_nvme')
+if not get_option('gudev')
+  error('gudev is required for plugin_nvme')
+endif
 subdir('nvme')
 endif
 
@@ -54,7 +82,10 @@ if get_option('plugin_modem_manager')
 subdir('modem-manager')
 endif
 
-if get_option('plugin_altos') and get_option('gudev')
+if get_option('plugin_altos')
+if not get_option('gudev')
+  error('gudev is required for plugin_altos')
+endif
 subdir('altos')
 endif
 
@@ -62,7 +93,10 @@ if get_option('plugin_amt')
 subdir('amt')
 endif
 
-if get_option('plugin_thunderbolt') and get_option('gudev')
+if get_option('plugin_thunderbolt')
+if not get_option('gudev')
+  error('gudev is required for plugin_thunderbolt')
+endif
 subdir('thunderbolt')
 endif
 
@@ -75,7 +109,10 @@ subdir('dell')
 subdir('dell-esrt')
 endif
 
-if get_option('plugin_synaptics') and get_option('gudev')
+if get_option('plugin_synaptics')
+if not get_option('gudev')
+  error('gudev is required for plugin_synaptics_mst')
+endif
 subdir('synaptics-mst')
 endif
 

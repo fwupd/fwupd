@@ -16,12 +16,17 @@ fu_ata_id_func (void)
 {
 	gboolean ret;
 	gsize sz;
+	const gchar *ci = g_getenv ("CI_NETWORK");
 	g_autofree gchar *data = NULL;
 	g_autofree gchar *path = NULL;
 	g_autoptr(FuAtaDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
 
-	path = g_build_filename (TESTDATADIR, "StarDrive-SBFM61.2.bin", NULL);
+	path = g_test_build_filename (G_TEST_DIST, "tests", "StarDrive-SBFM61.2.bin", NULL);
+	if (!g_file_test (path, G_FILE_TEST_EXISTS) && ci == NULL) {
+		g_test_skip ("Missing StarDrive-SBFM61.2.bin");
+		return;
+	}
 	ret = g_file_get_contents (path, &data, &sz, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -40,13 +45,18 @@ fu_ata_oui_func (void)
 {
 	gboolean ret;
 	gsize sz;
+	const gchar *ci = g_getenv ("CI_NETWORK");
 	g_autofree gchar *data = NULL;
 	g_autofree gchar *path = NULL;
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuAtaDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
 
-	path = g_build_filename (TESTDATADIR, "Samsung SSD 860 EVO 500GB.bin", NULL);
+	path = g_test_build_filename (G_TEST_DIST, "tests", "Samsung SSD 860 EVO 500GB.bin", NULL);
+	if (!g_file_test (path, G_FILE_TEST_EXISTS) && ci == NULL) {
+		g_test_skip ("Missing Samsung SSD 860 EVO 500GB.bin");
+		return;
+	}
 	ret = g_file_get_contents (path, &data, &sz, &error);
 	g_assert_no_error (error);
 	g_assert (ret);

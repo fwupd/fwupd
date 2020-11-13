@@ -96,7 +96,7 @@ const MSTBankAttributes esm_attributes = {
 };
 
 FuHIDI2CParameters mst_base_settings = {
-    .i2cslaveaddr = I2C_MST_ADDRESS,
+    .i2ctargetaddr = I2C_MST_ADDRESS,
     .regaddrlen = 0,
     .i2cspeed = I2C_SPEED_400K,
 };

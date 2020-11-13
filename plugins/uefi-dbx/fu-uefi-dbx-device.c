@@ -87,7 +87,6 @@ fu_uefi_dbx_prepare_firmware (FuDevice *device,
 	g_autoptr(GPtrArray) siglists = NULL;
 
 	/* parse dbx */
-	fu_device_set_status (device, FWUPD_STATUS_DECOMPRESSING);
 	buf = g_bytes_get_data (fw, &bufsz);
 	siglists = fu_efi_signature_parser_new (buf, bufsz,
 						FU_EFI_SIGNATURE_PARSER_FLAGS_IGNORE_HEADER,

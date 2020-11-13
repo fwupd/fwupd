@@ -123,6 +123,7 @@ msgstr "Toestelle wat suksesvol bygewerk is:"
 msgid "Devices that were not updated correctly:"
 msgstr "Toestelle wat nie korrek bygewerk is nie:"
 
+#. TRANSLATORS: success
 #. success
 msgid "Done!"
 msgstr "Klaar!"
@@ -143,6 +144,8 @@ msgstr "Gradeer tans %s af…"
 msgid "Downloading…"
 msgstr "Laai tans af…"
 
+#. TRANSLATORS: Suffix: the HSI result
+#. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
 msgid "Enabled"
 msgstr "Geaktiveer"
@@ -151,22 +154,6 @@ msgstr "Geaktiveer"
 msgid "Erasing…"
 msgstr "Vee tans uit…"
 
-#. TRANSLATORS: the server is rate-limiting downloads
-msgid "Failed to download due to server limit"
-msgstr "Kon nie aflaai nie a.g.v. bedienerlimiet"
-
-#. TRANSLATORS: downloading unknown file
-msgid "Fetching file"
-msgstr "Kry tans lêer"
-
-#. TRANSLATORS: downloading new metadata file
-msgid "Fetching metadata"
-msgstr "Kry tans metadata"
-
-#. TRANSLATORS: downloading new signing file
-msgid "Fetching signature"
-msgstr "Kry tans handtekening"
-
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
 msgstr "Lêernaam"
@@ -174,6 +161,10 @@ msgstr "Lêernaam"
 #. TRANSLATORS: filename of the local file
 msgid "Filename Signature"
 msgstr "Lêernaamhandtekening"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Found"
+msgstr "Gevind"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -198,6 +189,10 @@ msgstr "Laai tans…"
 #. TRANSLATORS: remote URI
 msgid "Metadata URI"
 msgstr "Metadata-URI"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "OK"
+msgstr "Goed"
 
 #. TRANSLATORS: remote filename base
 msgid "Password"
@@ -285,10 +280,6 @@ msgstr "Werk tans %s by vanaf %s na %s… "
 msgid "Updating %s…"
 msgstr "Werk tans %s by…"
 
-#. TRANSLATORS: the server sent the user a small message
-msgid "Upload message:"
-msgstr "Oplaaiboodskap:"
-
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "Laai verslag nou op?"
@@ -300,6 +291,10 @@ msgstr "Gebruikernaam"
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
 msgstr "Verifieer tans…"
+
+#. TRANSLATORS: the detected version number of the dbx
+msgid "Version"
+msgstr "Weergawe"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

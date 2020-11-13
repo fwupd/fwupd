@@ -55,9 +55,11 @@ typedef guint FuEndianType;
  * @FU_PATH_KIND_SYSFSDIR_FW:		The sysfs firmware location (IE /sys/firmware)
  * @FU_PATH_KIND_SYSFSDIR_DRIVERS:	The platform sysfs directory (IE /sys/bus/platform/drivers)
  * @FU_PATH_KIND_SYSFSDIR_TPM:		The TPM sysfs directory (IE /sys/class/tpm)
+ * @FU_PATH_KIND_PROCFS:		The procfs location (IE /proc)
  * @FU_PATH_KIND_POLKIT_ACTIONS:	The directory for policy kit actions (IE /usr/share/polkit-1/actions/)
  * @FU_PATH_KIND_OFFLINE_TRIGGER:	The file for the offline trigger (IE /system-update)
  * @FU_PATH_KIND_SYSFSDIR_SECURITY:	The sysfs security location (IE /sys/kernel/security)
+ * @FU_PATH_KIND_ACPI_TABLES:		The location of the ACPI tables
  *
  * Path types to use when dynamically determining a path at runtime
  **/
@@ -73,9 +75,11 @@ typedef enum {
 	FU_PATH_KIND_SYSFSDIR_FW,
 	FU_PATH_KIND_SYSFSDIR_DRIVERS,
 	FU_PATH_KIND_SYSFSDIR_TPM,
+	FU_PATH_KIND_PROCFS,
 	FU_PATH_KIND_POLKIT_ACTIONS,
 	FU_PATH_KIND_OFFLINE_TRIGGER,
 	FU_PATH_KIND_SYSFSDIR_SECURITY,
+	FU_PATH_KIND_ACPI_TABLES,
 	/*< private >*/
 	FU_PATH_KIND_LAST
 } FuPathKind;
@@ -92,6 +96,9 @@ gboolean	 fu_common_spawn_sync		(const gchar * const *argv,
 
 gchar		*fu_common_get_path		(FuPathKind	 path_kind);
 gchar		*fu_common_realpath		(const gchar	*filename,
+						 GError		**error);
+GPtrArray	*fu_common_filename_glob	(const gchar	*directory,
+						 const gchar	*pattern,
 						 GError		**error);
 gboolean	 fu_common_fnmatch		(const gchar	*pattern,
 						 const gchar	*str);
@@ -175,6 +182,8 @@ gboolean	 fu_common_read_uint32_safe	(const guint8	*buf,
 						 FuEndianType	 endian,
 						 GError		**error);
 
+void		 fu_byte_array_set_size		(GByteArray	*array,
+						 guint		 length);
 void		 fu_byte_array_append_uint8	(GByteArray	*array,
 						 guint8		 data);
 void		 fu_byte_array_append_uint16	(GByteArray	*array,
@@ -219,9 +228,31 @@ gchar		**fu_common_strnsplit		(const gchar	*str,
 						 const gchar	*delimiter,
 						 gint		 max_tokens);
 gboolean	 fu_common_kernel_locked_down	(void);
+gboolean	 fu_common_cpuid		(guint32	 leaf,
+						 guint32	*eax,
+						 guint32	*ebx,
+						 guint32	*ecx,
+						 guint32	*edx,
+						 GError		**error);
+gboolean	 fu_common_is_cpu_intel		(void);
 gboolean	 fu_common_is_live_media	(void);
 GPtrArray	*fu_common_get_volumes_by_kind	(const gchar	*kind,
+						 GError		**error);
+FuVolume	*fu_common_get_volume_by_device (const gchar	*device,
+						 GError		**error);
+FuVolume	*fu_common_get_volume_by_devnum	(guint32	 devnum,
 						 GError		**error);
 FuVolume	*fu_common_get_esp_for_path	(const gchar	*esp_path,
 						 GError		**error);
 FuVolume	*fu_common_get_esp_default	(GError		**error);
+
+guint8		 fu_common_crc8			(const guint8	*buf,
+						 gsize		 bufsz);
+guint16		 fu_common_crc16		(const guint8	*buf,
+						 gsize		 bufsz);
+guint32		 fu_common_crc32		(const guint8	*buf,
+						 gsize		 bufsz);
+guint32		 fu_common_crc32_full		(const guint8	*buf,
+						 gsize		 bufsz,
+						 guint32	 crc,
+						 guint32	 polynomial);

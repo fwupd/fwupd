@@ -65,7 +65,7 @@ typedef struct __attribute__ ((packed)) {
 typedef struct __attribute__ ((packed)) {
 	guint8 cmd;
 	guint8 ext;
-	guint8 i2cslaveaddr;
+	guint8 i2ctargetaddr;
 	guint8 i2cspeed;
 	union {
 		guint32 startaddress;
@@ -129,7 +129,7 @@ fu_dell_dock_hid_get_hub_version (FuDevice *self,
 	    .cmd_data2 = 0,
 	    .cmd_data3 = 0,
 	    .bufferlen = GUINT16_TO_LE (12),
-	    .parameters = {.i2cslaveaddr = 0, .regaddrlen = 0, .i2cspeed = 0},
+	    .parameters = {.i2ctargetaddr = 0, .regaddrlen = 0, .i2cspeed = 0},
 	    .extended_cmdarea[0 ... 52] = 0,
 	};
 
@@ -164,7 +164,7 @@ fu_dell_dock_hid_raise_mcu_clock (FuDevice *self,
 	    .cmd_data2 = 0,
 	    .cmd_data3 = 0,
 	    .bufferlen = 0,
-	    .parameters = {.i2cslaveaddr = 0, .regaddrlen = 0, .i2cspeed = 0},
+	    .parameters = {.i2ctargetaddr = 0, .regaddrlen = 0, .i2cspeed = 0},
 	    .extended_cmdarea[0 ... 52] = 0,
 	};
 
@@ -193,7 +193,7 @@ fu_dell_dock_hid_get_ec_status (FuDevice *self,
 	    .cmd_data2 = 0,
 	    .cmd_data3 = 0,
 	    .bufferlen = GUINT16_TO_LE (27),
-	    .parameters = {.i2cslaveaddr = 0, .regaddrlen = 0, .i2cspeed = 0},
+	    .parameters = {.i2ctargetaddr = 0, .regaddrlen = 0, .i2cspeed = 0},
 	    .extended_cmdarea[0 ... 52] = 0,
 	};
 
@@ -224,7 +224,7 @@ fu_dell_dock_hid_erase_bank (FuDevice *self, guint8 idx, GError **error)
 	    .cmd_data2 = 0,
 	    .cmd_data3 = 0,
 	    .bufferlen = 0,
-	    .parameters = {.i2cslaveaddr = 0, .regaddrlen = 0, .i2cspeed = 0},
+	    .parameters = {.i2ctargetaddr = 0, .regaddrlen = 0, .i2cspeed = 0},
 	    .extended_cmdarea[0 ... 52] = 0,
 	};
 
@@ -249,7 +249,7 @@ fu_dell_dock_hid_write_flash (FuDevice *self,
 	    .ext = HUB_EXT_WRITEFLASH,
 	    .dwregaddr = GUINT32_TO_LE (dwAddr),
 	    .bufferlen = GUINT16_TO_LE (write_size),
-	    .parameters = {.i2cslaveaddr = 0, .regaddrlen = 0, .i2cspeed = 0},
+	    .parameters = {.i2ctargetaddr = 0, .regaddrlen = 0, .i2cspeed = 0},
 	    .extended_cmdarea[0 ... 52] = 0,
 	};
 
@@ -280,7 +280,7 @@ fu_dell_dock_hid_verify_update (FuDevice *self,
 	    .cmd_data2 = 0,
 	    .cmd_data3 = 0,
 	    .bufferlen = GUINT16_TO_LE (1),
-	    .parameters = {.i2cslaveaddr = 0, .regaddrlen = 0, .i2cspeed = 0},
+	    .parameters = {.i2ctargetaddr = 0, .regaddrlen = 0, .i2cspeed = 0},
 	    .extended_cmdarea[0 ... 52] = 0,
 	};
 
@@ -310,7 +310,7 @@ fu_dell_dock_hid_i2c_write (FuDevice *self,
 	    .ext = HUB_EXT_I2C_WRITE,
 	    .dwregaddr = 0,
 	    .bufferlen = GUINT16_TO_LE (write_size),
-	    .parameters = {.i2cslaveaddr = parameters->i2cslaveaddr,
+	    .parameters = {.i2ctargetaddr = parameters->i2ctargetaddr,
 			   .regaddrlen = 0,
 			   .i2cspeed = parameters->i2cspeed | 0x80},
 	    .extended_cmdarea[0 ... 52] = 0,
@@ -336,7 +336,7 @@ fu_dell_dock_hid_i2c_read (FuDevice *self,
 	    .ext = HUB_EXT_I2C_READ,
 	    .dwregaddr = GUINT32_TO_LE (cmd),
 	    .bufferlen = GUINT16_TO_LE (read_size),
-	    .parameters = {.i2cslaveaddr = parameters->i2cslaveaddr,
+	    .parameters = {.i2ctargetaddr = parameters->i2ctargetaddr,
 			   .regaddrlen = parameters->regaddrlen,
 			   .i2cspeed = parameters->i2cspeed | 0x80},
 	    .extended_cmdarea[0 ... 52] = 0,
@@ -365,7 +365,7 @@ fu_dell_dock_hid_tbt_wake (FuDevice *self,
 	FuTbtCmdBuffer cmd_buffer = {
 	    .cmd = HUB_CMD_READ_DATA, /* special write command that reads status result */
 	    .ext = HUB_EXT_WRITE_TBT_FLASH,
-	    .i2cslaveaddr = parameters->i2cslaveaddr,
+	    .i2ctargetaddr = parameters->i2ctargetaddr,
 	    .i2cspeed = parameters->i2cspeed, /* unlike other commands doesn't need | 0x80 */
 	    .tbt_command = TBT_COMMAND_WAKEUP,
 	    .bufferlen = 0,
@@ -408,7 +408,7 @@ fu_dell_dock_hid_tbt_write (FuDevice *self,
 	FuTbtCmdBuffer cmd_buffer = {
 	    .cmd = HUB_CMD_READ_DATA, /* It's a special write command that reads status result */
 	    .ext = HUB_EXT_WRITE_TBT_FLASH,
-	    .i2cslaveaddr = parameters->i2cslaveaddr,
+	    .i2ctargetaddr = parameters->i2ctargetaddr,
 	    .i2cspeed = parameters->i2cspeed, /* unlike other commands doesn't need | 0x80 */
 	    .startaddress = GUINT32_TO_LE (start_addr),
 	    .bufferlen = write_size,
@@ -454,7 +454,7 @@ fu_dell_dock_hid_tbt_authenticate (FuDevice *self,
 	FuTbtCmdBuffer cmd_buffer = {
 	    .cmd = HUB_CMD_READ_DATA, /* It's a special write command that reads status result */
 	    .ext = HUB_EXT_WRITE_TBT_FLASH,
-	    .i2cslaveaddr = parameters->i2cslaveaddr,
+	    .i2ctargetaddr = parameters->i2ctargetaddr,
 	    .i2cspeed = parameters->i2cspeed, /* unlike other commands doesn't need | 0x80 */
 	    .tbt_command = GUINT32_TO_LE (TBT_COMMAND_AUTHENTICATE),
 	    .bufferlen = 0,

@@ -14,6 +14,7 @@
 
 #include "fu-device-private.h"
 #include "fu-plugin-private.h"
+#include "fu-security-attrs-private.h"
 #include "fu-smbios-private.h"
 
 static GMainLoop *_test_loop = NULL;
@@ -107,6 +108,33 @@ fu_archive_cab_func (void)
 }
 
 static void
+fu_common_byte_array_func (void)
+{
+	g_autoptr(GByteArray) array = g_byte_array_new ();
+
+	fu_byte_array_append_uint8 (array, (guint8) 'h');
+	fu_byte_array_append_uint8 (array, (guint8) 'e');
+	fu_byte_array_append_uint8 (array, (guint8) 'l');
+	fu_byte_array_append_uint8 (array, (guint8) 'l');
+	fu_byte_array_append_uint8 (array, (guint8) 'o');
+	g_assert_cmpint (array->len, ==, 5);
+	g_assert_cmpint (memcmp (array->data, "hello", array->len), ==, 0);
+
+	fu_byte_array_set_size (array, 10);
+	g_assert_cmpint (array->len, ==, 10);
+	g_assert_cmpint (memcmp (array->data, "hello\0\0\0\0\0", array->len), ==, 0);
+}
+
+static void
+fu_common_crc_func (void)
+{
+	guint8 buf[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09 };
+	g_assert_cmpint (fu_common_crc8 (buf, sizeof(buf)), ==, 0x7A);
+	g_assert_cmpint (fu_common_crc16 (buf, sizeof(buf)), ==, 0x4DF1);
+	g_assert_cmpint (fu_common_crc32 (buf, sizeof(buf)), ==, 0x40EFAB9E);
+}
+
+static void
 fu_common_string_append_kv_func (void)
 {
 	g_autoptr(GString) str = g_string_new (NULL);
@@ -193,14 +221,14 @@ fu_device_metadata_func (void)
 	g_assert_false (fu_device_get_metadata_boolean (device, "unknown"));
 
 	/* integer */
-	fu_device_set_metadata_integer (device, "dum", 12345);
-	g_assert_cmpstr (fu_device_get_metadata (device, "dum"), ==, "12345");
-	g_assert_cmpint (fu_device_get_metadata_integer (device, "dum"), ==, 12345);
+	fu_device_set_metadata_integer (device, "bam", 12345);
+	g_assert_cmpstr (fu_device_get_metadata (device, "bam"), ==, "12345");
+	g_assert_cmpint (fu_device_get_metadata_integer (device, "bam"), ==, 12345);
 	g_assert_cmpint (fu_device_get_metadata_integer (device, "unknown"), ==, G_MAXUINT);
 
 	/* broken integer */
-	fu_device_set_metadata (device, "dum", "123junk");
-	g_assert_cmpint (fu_device_get_metadata_integer (device, "dum"), ==, G_MAXUINT);
+	fu_device_set_metadata (device, "bam", "123junk");
+	g_assert_cmpint (fu_device_get_metadata_integer (device, "bam"), ==, G_MAXUINT);
 	fu_device_set_metadata (device, "huge", "4294967296"); /* not 32 bit */
 	g_assert_cmpint (fu_device_get_metadata_integer (device, "huge"), ==, G_MAXUINT);
 }
@@ -263,6 +291,31 @@ fu_smbios3_func (void)
 	str = fu_smbios_get_string (smbios, FU_SMBIOS_STRUCTURE_TYPE_BIOS, 0x04, &error);
 	g_assert_no_error (error);
 	g_assert_cmpstr (str, ==, "Dell Inc.");
+}
+
+static void
+fu_smbios_dt_func (void)
+{
+	const gchar *str;
+	gboolean ret;
+	g_autofree gchar *path = NULL;
+	g_autoptr(FuSmbios) smbios = NULL;
+	g_autoptr(GError) error = NULL;
+
+	path = g_build_filename (TESTDATADIR_SRC, "devicetree", "base", NULL);
+	smbios = fu_smbios_new ();
+	ret = fu_smbios_setup_from_path (smbios, path, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	if (g_getenv ("VERBOSE") != NULL) {
+		g_autofree gchar *dump = fu_smbios_to_string (smbios);
+		g_debug ("%s", dump);
+	}
+
+	/* get vendor */
+	str = fu_smbios_get_string (smbios, FU_SMBIOS_STRUCTURE_TYPE_SYSTEM, 0x04, &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (str, ==, "Hughski Limited");
 }
 
 static void
@@ -1013,6 +1066,19 @@ fu_device_poll_func (void)
 }
 
 static void
+fu_device_func (void)
+{
+	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(GPtrArray) possible_plugins = NULL;
+
+	/* only add one plugin name of the same type */
+	fu_device_add_possible_plugin (device, "test");
+	fu_device_add_possible_plugin (device, "test");
+	possible_plugins = fu_device_get_possible_plugins (device);
+	g_assert_cmpint (possible_plugins->len, ==, 1);
+}
+
+static void
 fu_device_flags_func (void)
 {
 	g_autoptr(FuDevice) device = fu_device_new ();
@@ -1279,6 +1345,7 @@ fu_common_vercmp_func (void)
 	/* same */
 	g_assert_cmpint (fu_common_vercmp ("1.2.3", "1.2.3"), ==, 0);
 	g_assert_cmpint (fu_common_vercmp ("001.002.003", "001.002.003"), ==, 0);
+	g_assert_cmpint (fu_common_vercmp_full ("0x00000002", "0x2", FWUPD_VERSION_FORMAT_HEX), ==, 0);
 
 	/* upgrade and downgrade */
 	g_assert_cmpint (fu_common_vercmp ("1.2.3", "1.2.4"), <, 0);
@@ -1539,6 +1606,75 @@ fu_firmware_srec_tokenization_func (void)
 }
 
 static void
+fu_firmware_build_func (void)
+{
+	gboolean ret;
+	g_autofree gchar *str = NULL;
+	g_autoptr(FuFirmware) firmware = fu_firmware_new ();
+	g_autoptr(FuFirmwareImage) img = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GBytes) blob2 = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(XbBuilder) builder = xb_builder_new ();
+	g_autoptr(XbBuilderSource) source = xb_builder_source_new ();
+	g_autoptr(XbNode) n = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+	const gchar *buf =
+		"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+		"<firmware>\n"
+		"  <version>1.2.3</version>\n"
+		"  <image>\n"
+		"    <version>4.5.6</version>\n"
+		"    <id>header</id>\n"
+		"    <idx>456</idx>\n"
+		"    <addr>0x456</addr>\n"
+		"    <data>aGVsbG8=</data>\n"
+		"  </image>\n"
+		"  <image>\n"
+		"    <version>7.8.9</version>\n"
+		"    <id>header</id>\n"
+		"    <idx>789</idx>\n"
+		"    <addr>0x789</addr>\n"
+		"  </image>\n"
+		"</firmware>\n";
+	blob = g_bytes_new_static (buf, strlen (buf));
+	g_assert_no_error (error);
+	g_assert_nonnull (blob);
+
+	/* parse XML */
+	ret = xb_builder_source_load_bytes (source, blob, XB_BUILDER_SOURCE_FLAG_NONE, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	xb_builder_import_source (builder, source);
+	silo = xb_builder_compile (builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (silo);
+	n = xb_silo_query_first (silo, "firmware", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (n);
+
+	/* build object */
+	ret = fu_firmware_build (firmware, n, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	g_assert_cmpstr (fu_firmware_get_version (firmware), ==, "1.2.3");
+
+	/* verify image */
+	img = fu_firmware_get_image_by_id (firmware, "header", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (img);
+	g_assert_cmpstr (fu_firmware_image_get_version (img), ==, "4.5.6");
+	g_assert_cmpint (fu_firmware_image_get_idx (img), ==, 456);
+	g_assert_cmpint (fu_firmware_image_get_addr (img), ==, 0x456);
+	blob2 = fu_firmware_image_write (img, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (blob2);
+	g_assert_cmpint (g_bytes_get_size (blob2), ==, 5);
+	str = g_strndup (g_bytes_get_data (blob2, NULL), g_bytes_get_size (blob2));
+	g_assert_cmpstr (str, ==, "hello");
+}
+
+static void
 fu_firmware_dfu_func (void)
 {
 	gboolean ret;
@@ -1582,17 +1718,20 @@ fu_firmware_dfu_func (void)
 static void
 fu_firmware_func (void)
 {
+	gboolean ret;
 	g_autoptr(FuFirmware) firmware = fu_firmware_new ();
 	g_autoptr(FuFirmwareImage) img1 = fu_firmware_image_new (NULL);
 	g_autoptr(FuFirmwareImage) img2 = fu_firmware_image_new (NULL);
 	g_autoptr(FuFirmwareImage) img_id = NULL;
 	g_autoptr(FuFirmwareImage) img_idx = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) images = NULL;
 	g_autofree gchar *str = NULL;
 
 	fu_firmware_image_set_addr (img1, 0x200);
 	fu_firmware_image_set_idx (img1, 13);
 	fu_firmware_image_set_id (img1, "primary");
+	fu_firmware_image_set_filename (img1, "BIOS.bin");
 	fu_firmware_add_image (firmware, img1);
 	fu_firmware_image_set_addr (img2, 0x400);
 	fu_firmware_image_set_idx (img2, 23);
@@ -1627,10 +1766,69 @@ fu_firmware_func (void)
 				  "  ID:                   primary\n"
 				  "  Index:                0xd\n"
 				  "  Address:              0x200\n"
+				  "  Filename:             BIOS.bin\n"
 				  "  FuFirmwareImage:\n"
 				  "  ID:                   secondary\n"
 				  "  Index:                0x17\n"
 				  "  Address:              0x400\n");
+
+	ret = fu_firmware_remove_image_by_idx (firmware, 0xd, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	ret = fu_firmware_remove_image_by_id (firmware, "secondary", &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	images = fu_firmware_get_images (firmware);
+	g_assert_nonnull (images);
+	g_assert_cmpint (images->len, ==, 0);
+	ret = fu_firmware_remove_image_by_id (firmware, "NOTGOINGTOEXIST", &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_false (ret);
+}
+
+static void
+fu_firmware_dedupe_func (void)
+{
+	g_autoptr(FuFirmware) firmware = fu_firmware_new ();
+	g_autoptr(FuFirmwareImage) img1 = fu_firmware_image_new (NULL);
+	g_autoptr(FuFirmwareImage) img1_old = fu_firmware_image_new (NULL);
+	g_autoptr(FuFirmwareImage) img2 = fu_firmware_image_new (NULL);
+	g_autoptr(FuFirmwareImage) img2_old = fu_firmware_image_new (NULL);
+	g_autoptr(FuFirmwareImage) img_id = NULL;
+	g_autoptr(FuFirmwareImage) img_idx = NULL;
+	g_autoptr(GError) error = NULL;
+
+	fu_firmware_add_flag (firmware, FU_FIRMWARE_FLAG_DEDUPE_ID);
+	fu_firmware_add_flag (firmware, FU_FIRMWARE_FLAG_DEDUPE_IDX);
+
+	fu_firmware_image_set_idx (img1_old, 13);
+	fu_firmware_image_set_id (img1_old, "DAVE");
+	fu_firmware_add_image (firmware, img1_old);
+
+	fu_firmware_image_set_idx (img1, 13);
+	fu_firmware_image_set_id (img1, "primary");
+	fu_firmware_add_image (firmware, img1);
+
+
+	fu_firmware_image_set_idx (img2_old, 123456);
+	fu_firmware_image_set_id (img2_old, "secondary");
+	fu_firmware_add_image (firmware, img2_old);
+
+	fu_firmware_image_set_idx (img2, 23);
+	fu_firmware_image_set_id (img2, "secondary");
+	fu_firmware_add_image (firmware, img2);
+
+	img_id = fu_firmware_get_image_by_id (firmware, "primary", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (img_id);
+	g_assert_cmpint (fu_firmware_image_get_idx (img_id), ==, 13);
+	g_assert_cmpstr (fu_firmware_image_get_id (img_id), ==, "primary");
+
+	img_idx = fu_firmware_get_image_by_idx (firmware, 23, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (img_idx);
+	g_assert_cmpint (fu_firmware_image_get_idx (img_idx), ==, 23);
+	g_assert_cmpstr (fu_firmware_image_get_id (img_idx), ==, "secondary");
 }
 
 static void
@@ -1639,17 +1837,30 @@ fu_efivar_func (void)
 	gboolean ret;
 	gsize sz = 0;
 	guint32 attr = 0;
+	guint64 total;
 	g_autofree guint8 *data = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) names = NULL;
 
 	/* check supported */
 	ret = fu_efivar_supported (&error);
 	g_assert_no_error (error);
 	g_assert_true (ret);
 
+	/* check we can get the space used */
+	total = fu_efivar_space_used (&error);
+	g_assert_no_error (error);
+	g_assert_cmpint (total, ==, 0x2000);
+
 	/* check existing keys */
 	g_assert_false (fu_efivar_exists (FU_EFIVAR_GUID_EFI_GLOBAL, "NotGoingToExist"));
 	g_assert_true (fu_efivar_exists (FU_EFIVAR_GUID_EFI_GLOBAL, "SecureBoot"));
+
+	/* list a few keys */
+	names = fu_efivar_get_names (FU_EFIVAR_GUID_EFI_GLOBAL, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (names);
+	g_assert_cmpint (names->len, ==, 2);
 
 	/* write and read a key */
 	ret = fu_efivar_set_data (FU_EFIVAR_GUID_EFI_GLOBAL, "Test",
@@ -1781,6 +1992,108 @@ fu_device_retry_hardware_func (void)
 	g_assert_cmpint (helper.cnt_failed, ==, 2);
 }
 
+static void
+fu_security_attrs_hsi_func (void)
+{
+	g_autofree gchar *hsi1 = NULL;
+	g_autofree gchar *hsi2 = NULL;
+	g_autofree gchar *hsi3 = NULL;
+	g_autofree gchar *hsi4 = NULL;
+	g_autofree gchar *hsi5 = NULL;
+	g_autofree gchar *hsi6 = NULL;
+	g_autofree gchar *hsi7 = NULL;
+	g_autofree gchar *hsi8 = NULL;
+	g_autofree gchar *expected_hsi8 = NULL;
+	g_autoptr(FuSecurityAttrs) attrs = NULL;
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	/* no attrs */
+	attrs = fu_security_attrs_new ();
+	hsi1 = fu_security_attrs_calculate_hsi (attrs, FU_SECURITY_ATTRS_FLAG_NONE);
+	g_assert_cmpstr (hsi1, ==, "HSI:0");
+
+	/* just success from HSI:1 */
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_SPI_BIOSWE);
+	fwupd_security_attr_set_plugin (attr, "test");
+	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_set_url (attr, "http://test");
+	fu_security_attrs_append (attrs, attr);
+	hsi2 = fu_security_attrs_calculate_hsi (attrs, FU_SECURITY_ATTRS_FLAG_NONE);
+	g_assert_cmpstr (hsi2, ==, "HSI:1");
+	g_clear_object (&attr);
+
+	/* add failed from HSI:2, so still HSI:1 */
+	attr = fwupd_security_attr_new ("org.fwupd.hsi.PRX");
+	fwupd_security_attr_set_plugin (attr, "test");
+	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT);
+	fwupd_security_attr_set_url (attr, "http://test");
+	fu_security_attrs_append (attrs, attr);
+	hsi3 = fu_security_attrs_calculate_hsi (attrs, FU_SECURITY_ATTRS_FLAG_NONE);
+	g_assert_cmpstr (hsi3, ==, "HSI:1");
+	g_clear_object (&attr);
+
+	/* add attr from HSI:3, obsoleting the failure */
+	attr = fwupd_security_attr_new ("org.fwupd.hsi.BIOSGuard");
+	fwupd_security_attr_set_plugin (attr, "test");
+	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL);
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_add_obsolete (attr, "org.fwupd.hsi.PRX");
+	fwupd_security_attr_set_url (attr, "http://test");
+	fu_security_attrs_append (attrs, attr);
+	fu_security_attrs_depsolve (attrs);
+	hsi4 = fu_security_attrs_calculate_hsi (attrs, FU_SECURITY_ATTRS_FLAG_NONE);
+	g_assert_cmpstr (hsi4, ==, "HSI:3");
+	g_clear_object (&attr);
+
+	/* add taint that was fine */
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_FWUPD_PLUGINS);
+	fwupd_security_attr_set_plugin (attr, "test");
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
+	fwupd_security_attr_set_url (attr, "http://test");
+	fu_security_attrs_append (attrs, attr);
+	hsi5 = fu_security_attrs_calculate_hsi (attrs, FU_SECURITY_ATTRS_FLAG_NONE);
+	g_assert_cmpstr (hsi5, ==, "HSI:3");
+	g_clear_object (&attr);
+
+	/* add updates and attestation */
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_FWUPD_UPDATES);
+	fwupd_security_attr_set_plugin (attr, "test");
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES);
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ATTESTATION);
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_set_url (attr, "http://test");
+	fu_security_attrs_append (attrs, attr);
+	hsi6 = fu_security_attrs_calculate_hsi (attrs, FU_SECURITY_ATTRS_FLAG_NONE);
+	g_assert_cmpstr (hsi6, ==, "HSI:3+UA");
+	g_clear_object (&attr);
+
+	/* add issue that was uncool */
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_KERNEL_SWAP);
+	fwupd_security_attr_set_plugin (attr, "test");
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
+	fwupd_security_attr_set_url (attr, "http://test");
+	fu_security_attrs_append (attrs, attr);
+	hsi7 = fu_security_attrs_calculate_hsi (attrs, FU_SECURITY_ATTRS_FLAG_NONE);
+	g_assert_cmpstr (hsi7, ==, "HSI:3+UA!");
+	g_clear_object (&attr);
+
+	/* show version in the attribute */
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_KERNEL_SWAP);
+	fwupd_security_attr_set_plugin (attr, "test");
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
+	fwupd_security_attr_set_url (attr, "http://test");
+	fu_security_attrs_append (attrs, attr);
+	hsi8 = fu_security_attrs_calculate_hsi (attrs, FU_SECURITY_ATTRS_FLAG_ADD_VERSION);
+	expected_hsi8 = g_strdup_printf ("HSI:3+UA! (v%d.%d.%d)",
+					FWUPD_MAJOR_VERSION,
+					FWUPD_MINOR_VERSION,
+					FWUPD_MICRO_VERSION);
+	g_assert_cmpstr (hsi8, ==, expected_hsi8);
+	g_clear_object (&attr);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -1796,11 +2109,14 @@ main (int argc, char **argv)
 	g_setenv ("FWUPD_OFFLINE_TRIGGER", "/tmp/fwupd-self-test/system-update", TRUE);
 	g_setenv ("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 
+	g_test_add_func ("/fwupd/security-attrs{hsi}", fu_security_attrs_hsi_func);
 	g_test_add_func ("/fwupd/plugin{delay}", fu_plugin_delay_func);
 	g_test_add_func ("/fwupd/plugin{quirks}", fu_plugin_quirks_func);
 	g_test_add_func ("/fwupd/plugin{quirks-performance}", fu_plugin_quirks_performance_func);
 	g_test_add_func ("/fwupd/plugin{quirks-device}", fu_plugin_quirks_device_func);
 	g_test_add_func ("/fwupd/chunk", fu_chunk_func);
+	g_test_add_func ("/fwupd/common{byte-array}", fu_common_byte_array_func);
+	g_test_add_func ("/fwupd/common{crc}", fu_common_crc_func);
 	g_test_add_func ("/fwupd/common{string-append-kv}", fu_common_string_append_kv_func);
 	g_test_add_func ("/fwupd/common{version-guess-format}", fu_common_version_guess_format_func);
 	g_test_add_func ("/fwupd/common{version}", fu_common_version_func);
@@ -1823,7 +2139,10 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/hwids", fu_hwids_func);
 	g_test_add_func ("/fwupd/smbios", fu_smbios_func);
 	g_test_add_func ("/fwupd/smbios3", fu_smbios3_func);
+	g_test_add_func ("/fwupd/smbios{dt}", fu_smbios_dt_func);
 	g_test_add_func ("/fwupd/firmware", fu_firmware_func);
+	g_test_add_func ("/fwupd/firmware{dedupe}", fu_firmware_dedupe_func);
+	g_test_add_func ("/fwupd/firmware{build}", fu_firmware_build_func);
 	g_test_add_func ("/fwupd/firmware{ihex}", fu_firmware_ihex_func);
 	g_test_add_func ("/fwupd/firmware{ihex-offset}", fu_firmware_ihex_offset_func);
 	g_test_add_func ("/fwupd/firmware{ihex-signed}", fu_firmware_ihex_signed_func);
@@ -1832,6 +2151,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/firmware{dfu}", fu_firmware_dfu_func);
 	g_test_add_func ("/fwupd/archive{invalid}", fu_archive_invalid_func);
 	g_test_add_func ("/fwupd/archive{cab}", fu_archive_cab_func);
+	g_test_add_func ("/fwupd/device", fu_device_func);
 	g_test_add_func ("/fwupd/device{flags}", fu_device_flags_func);
 	g_test_add_func ("/fwupd/device{parent}", fu_device_parent_func);
 	g_test_add_func ("/fwupd/device{incorporate}", fu_device_incorporate_func);

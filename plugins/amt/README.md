@@ -25,3 +25,7 @@ Vendor ID Security
 ------------------
 
 The device is not upgradable and thus requires no vendor ID set.
+
+External interface access
+-------------------------
+This plugin requires read only access to `/dev/mei0`.

@@ -198,6 +198,7 @@ msgstr "不要檢查是否有尚未報告的歷史"
 msgid "Do not write to the history database"
 msgstr "不要寫入歷史資料庫中"
 
+#. TRANSLATORS: success
 #. success
 msgid "Done!"
 msgstr "完成！"
@@ -233,6 +234,8 @@ msgstr "對支援的系統啟用韌體更新支援"
 msgid "Enable this remote?"
 msgstr "啟用此遠端站點？"
 
+#. TRANSLATORS: Suffix: the HSI result
+#. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
 msgid "Enabled"
 msgstr "啟用"
@@ -267,10 +270,6 @@ msgstr "經過一段短暫延遲後便離開"
 msgid "Exit after the engine has loaded"
 msgstr "引擎載入後離開"
 
-#. TRANSLATORS: the server is rate-limiting downloads
-msgid "Failed to download due to server limit"
-msgstr "因伺服器限制而下載失敗"
-
 #. TRANSLATORS: quirks are device-specific workarounds
 msgid "Failed to load quirks"
 msgstr "無法載入奇技淫巧"
@@ -278,22 +277,6 @@ msgstr "無法載入奇技淫巧"
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
 msgstr "無法解析引數"
-
-#. TRANSLATORS: downloading unknown file
-msgid "Fetching file"
-msgstr "擷取檔案中"
-
-#. TRANSLATORS: downloading new firmware file
-msgid "Fetching firmware"
-msgstr "擷取韌體中"
-
-#. TRANSLATORS: downloading new metadata file
-msgid "Fetching metadata"
-msgstr "擷取中介資料中"
-
-#. TRANSLATORS: downloading new signing file
-msgid "Fetching signature"
-msgstr "擷取簽章中"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
@@ -330,6 +313,10 @@ msgstr "此機器沒有韌體更新支援。"
 
 msgid "Firmware updates are supported on this machine."
 msgstr "此機器有韌體更新支援。"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Found"
+msgstr "找到"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -416,10 +403,6 @@ msgstr "列出支援的韌體更新"
 msgid "Loading…"
 msgstr "載入中…"
 
-#. TRANSLATORS: command line option
-msgid "Manually whitelist specific plugins"
-msgstr "手動白名單指定插件"
-
 #. TRANSLATORS: remote URI
 msgid "Metadata URI"
 msgstr "中介資料 URI"
@@ -439,6 +422,7 @@ msgstr "修改設定的遠端站點"
 msgid "Monitor the daemon for events"
 msgstr "監控幕後程式是否有活動"
 
+#. TRANSLATORS: user did not tell the tool what to do
 msgid "No action specified!"
 msgstr "未指定動作！"
 
@@ -454,9 +438,9 @@ msgstr "找不到插件"
 msgid "No remotes are currently enabled so no metadata is available."
 msgstr "目前沒有啟用的遠端站點，因而沒有中介資料可用。"
 
-#. TRANSLATORS: command line option
-msgid "Override plugin warning"
-msgstr "凌駕插件警告"
+#. TRANSLATORS: Suffix: the HSI result
+msgid "OK"
+msgstr "確定"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
@@ -654,10 +638,6 @@ msgstr "將所有韌體更新至可用的最新版本"
 msgid "Updating %s from %s to %s... "
 msgstr "正將 %s 從 %s 版升級至 %s 版... "
 
-#. TRANSLATORS: the server sent the user a small message
-msgid "Upload message:"
-msgstr "上傳訊息："
-
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "是否立刻上傳報告？"
@@ -673,6 +653,10 @@ msgstr "使用者名稱"
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
 msgstr "核驗中…"
+
+#. TRANSLATORS: the detected version number of the dbx
+msgid "Version"
+msgstr "版本"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

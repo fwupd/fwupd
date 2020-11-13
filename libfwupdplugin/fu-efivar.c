@@ -69,13 +69,13 @@ fu_efivar_supported (GError **error)
 #endif
 }
 
+#ifndef _WIN32
 static gboolean
 fu_efivar_set_immutable_fd (int fd,
 			     gboolean value,
 			     gboolean *value_old,
 			     GError **error)
 {
-#ifndef _WIN32
 	guint flags;
 	gboolean is_immutable;
 	int rc;
@@ -124,14 +124,8 @@ fu_efivar_set_immutable_fd (int fd,
 		return FALSE;
 	}
 	return TRUE;
-#else
-	g_set_error_literal (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "efivarfs not currently supported on Windows");
-	return FALSE;
-#endif
 }
+#endif
 
 static gboolean
 fu_efivar_set_immutable (const gchar *fn,
@@ -329,6 +323,124 @@ fu_efivar_get_data (const gchar *guid, const gchar *name, guint8 **data,
 }
 
 /**
+ * fu_efivar_get_data_bytes:
+ * @guid: Globally unique identifier
+ * @name: Variable name
+ * @attr: (nullable): Attributes
+ * @error: A #GError
+ *
+ * Gets the data from a UEFI variable in NVRAM
+ *
+ * Returns: (transfer full): a #GBytes, or %NULL
+ *
+ * Since: 1.5.0
+ **/
+GBytes *
+fu_efivar_get_data_bytes (const gchar *guid,
+			  const gchar *name,
+			  guint32 *attr,
+			  GError **error)
+{
+	guint8 *data = NULL;
+	gsize datasz = 0;
+	if (!fu_efivar_get_data (guid, name, &data, &datasz, attr, error))
+		return NULL;
+	return g_bytes_new_take (data, datasz);
+}
+
+/**
+ * fu_efivar_get_names:
+ * @guid: Globally unique identifier
+ * @error: A #GError
+ *
+ * Gets the list of names where the GUID matches. An error is set if there are
+ * no names matching the GUID.
+ *
+ * Returns: (transfer container) (element-type utf8): array of names
+ *
+ * Since: 1.4.7
+ **/
+GPtrArray *
+fu_efivar_get_names (const gchar *guid, GError **error)
+{
+	const gchar *name_guid;
+	g_autofree gchar *path = fu_efivar_get_path ();
+	g_autoptr(GDir) dir = NULL;
+	g_autoptr(GPtrArray) names = g_ptr_array_new_with_free_func (g_free);
+
+	/* find names with matching GUID */
+	dir = g_dir_open (path, 0, error);
+	if (dir == NULL)
+		return NULL;
+	while ((name_guid = g_dir_read_name (dir)) != NULL) {
+		gsize name_guidsz = strlen (name_guid);
+		if (name_guidsz < 38)
+			continue;
+		if (g_strcmp0 (name_guid + name_guidsz - 36, guid) == 0) {
+			g_ptr_array_add (names,
+					 g_strndup (name_guid, name_guidsz - 37));
+		}
+	}
+
+	/* nothing found */
+	if (names->len == 0) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_FOUND,
+			     "no names for GUID %s", guid);
+		return NULL;
+	}
+
+	/* success */
+	return g_steal_pointer (&names);
+}
+
+/**
+ * fu_efivar_space_used:
+ * @error: A #GError
+ *
+ * Gets the total size used by all EFI variables. This may be less than the size reported by the
+ * kernel as some (hopefully small) variables are hidden from userspace.
+ *
+ * Returns: total allocated size of all visible variables, or %G_MAXUINT64 on error
+ *
+ * Since: 1.5.1
+ **/
+guint64
+fu_efivar_space_used (GError **error)
+{
+	const gchar *fn;
+	guint64 total = 0;
+	g_autoptr(GDir) dir = NULL;
+	g_autofree gchar *path = fu_efivar_get_path ();
+
+	/* stat each file */
+	dir = g_dir_open (path, 0, error);
+	if (dir == NULL)
+		return G_MAXUINT64;
+	while ((fn = g_dir_read_name (dir)) != NULL) {
+		guint64 sz;
+		g_autofree gchar *pathfn = g_build_filename (path, fn, NULL);
+		g_autoptr(GFile) file = g_file_new_for_path (pathfn);
+		g_autoptr(GFileInfo) info = NULL;
+
+		info = g_file_query_info (file,
+					  G_FILE_ATTRIBUTE_STANDARD_ALLOCATED_SIZE ","
+					  G_FILE_ATTRIBUTE_STANDARD_SIZE,
+					  G_FILE_QUERY_INFO_NONE,
+					  NULL, error);
+		if (info == NULL)
+			return G_MAXUINT64;
+		sz = g_file_info_get_attribute_uint64 (info, G_FILE_ATTRIBUTE_STANDARD_ALLOCATED_SIZE);
+		if (sz == 0)
+			sz = g_file_info_get_attribute_uint64 (info, G_FILE_ATTRIBUTE_STANDARD_SIZE);
+		total += sz;
+	}
+
+	/* success */
+	return total;
+}
+/**
  * fu_efivar_set_data:
  * @guid: Globally unique identifier
  * @name: Variable name
@@ -414,6 +526,64 @@ fu_efivar_set_data (const gchar *guid, const gchar *name, const guint8 *data,
 }
 
 /**
+ * fu_efivar_set_data_bytes:
+ * @guid: Globally unique identifier
+ * @name: Variable name
+ * @bytes: a #GBytes
+ * @attr: Attributes
+ * @error: A #GError
+ *
+ * Sets the data to a UEFI variable in NVRAM
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fu_efivar_set_data_bytes (const gchar *guid, const gchar *name, GBytes *bytes,
+			  guint32 attr, GError **error)
+{
+	gsize bufsz = 0;
+	const guint8 *buf = g_bytes_get_data (bytes, &bufsz);
+	return fu_efivar_set_data (guid, name, buf, bufsz, attr, error);
+}
+
+/**
+ * fu_efivar_secure_boot_enabled_full:
+ * @error: A #GError
+ *
+ * Determines if secure boot was enabled
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fu_efivar_secure_boot_enabled_full (GError **error)
+{
+	gsize data_size = 0;
+	g_autofree guint8 *data = NULL;
+
+	if (!fu_efivar_get_data (FU_EFIVAR_GUID_EFI_GLOBAL, "SecureBoot",
+				 &data, &data_size, NULL, NULL)) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "SecureBoot is not available");
+		return FALSE;
+	}
+	if (data_size >= 1 && data[0] & 1)
+		return TRUE;
+
+	/* available, but not enabled */
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
+			     "SecureBoot is not enabled");
+	return FALSE;
+}
+
+/**
  * fu_efivar_secure_boot_enabled:
  *
  * Determines if secure boot was enabled
@@ -425,13 +595,5 @@ fu_efivar_set_data (const gchar *guid, const gchar *name, const guint8 *data,
 gboolean
 fu_efivar_secure_boot_enabled (void)
 {
-	gsize data_size = 0;
-	g_autofree guint8 *data = NULL;
-
-	if (!fu_efivar_get_data (FU_EFIVAR_GUID_EFI_GLOBAL, "SecureBoot",
-				    &data, &data_size, NULL, NULL))
-		return FALSE;
-	if (data_size >= 1 && data[0] & 1)
-		return TRUE;
-	return FALSE;
+	return fu_efivar_secure_boot_enabled_full (NULL);
 }

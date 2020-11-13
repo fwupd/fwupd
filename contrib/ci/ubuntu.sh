@@ -2,7 +2,14 @@
 set -e
 set -x
 
+#clone test firmware
+if [ "$CI_NETWORK" = "true" ]; then
+	./contrib/ci/get_test_firmware.sh
+	export G_TEST_SRCDIR=`pwd`/fwupd-test-firmware/installed-tests
+fi
+
 #evaluate using Ubuntu's buildflags
+#evaluate using Debian/Ubuntu's buildflags
 eval "$(dpkg-buildflags --export=sh)"
 #filter out -Bsymbolic-functions
 export LDFLAGS=$(dpkg-buildflags --get LDFLAGS | sed "s/-Wl,-Bsymbolic-functions\s//")

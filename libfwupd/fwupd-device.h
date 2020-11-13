@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2020 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -41,6 +41,8 @@ void		 fwupd_device_set_parent_id		(FwupdDevice	*device,
 FwupdDevice	*fwupd_device_get_parent		(FwupdDevice	*device);
 void		 fwupd_device_set_parent		(FwupdDevice	*device,
 							 FwupdDevice	*parent);
+void		 fwupd_device_add_child			(FwupdDevice	*device,
+							 FwupdDevice	*child);
 GPtrArray	*fwupd_device_get_children		(FwupdDevice	*device);
 const gchar	*fwupd_device_get_name			(FwupdDevice	*device);
 void		 fwupd_device_set_name			(FwupdDevice	*device,
@@ -51,6 +53,9 @@ void		 fwupd_device_set_serial		(FwupdDevice	*device,
 const gchar	*fwupd_device_get_summary		(FwupdDevice	*device);
 void		 fwupd_device_set_summary		(FwupdDevice	*device,
 							 const gchar	*summary);
+const gchar	*fwupd_device_get_branch		(FwupdDevice	*device);
+void		 fwupd_device_set_branch		(FwupdDevice	*device,
+							 const gchar	*branch);
 const gchar	*fwupd_device_get_description		(FwupdDevice	*device);
 void		 fwupd_device_set_description		(FwupdDevice	*device,
 							 const gchar	*description);

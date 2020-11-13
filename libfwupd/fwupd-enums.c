@@ -197,6 +197,10 @@ fwupd_device_flag_to_string (FwupdDeviceFlags device_flag)
 		return "updatable-hidden";
 	if (device_flag == FWUPD_DEVICE_FLAG_SKIPS_RESTART)
 		return "skips-restart";
+	if (device_flag == FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES)
+		return "has-multiple-branches";
+	if (device_flag == FWUPD_DEVICE_FLAG_BACKUP_BEFORE_INSTALL)
+		return "backup-before-install";
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -295,6 +299,88 @@ fwupd_device_flag_from_string (const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN;
 	if (g_strcmp0 (device_flag, "skips-restart") == 0)
 		return FWUPD_DEVICE_FLAG_SKIPS_RESTART;
+	if (g_strcmp0 (device_flag, "has-multiple-branches") == 0)
+		return FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES;
+	if (g_strcmp0 (device_flag, "backup-before-install") == 0)
+		return FWUPD_DEVICE_FLAG_BACKUP_BEFORE_INSTALL;
+	return FWUPD_DEVICE_FLAG_UNKNOWN;
+}
+
+/**
+ * fwupd_plugin_flag_to_string:
+ * @plugin_flag: A #FwupdPluginFlags, e.g. %FWUPD_DEVICE_FLAG_REQUIRE_AC
+ *
+ * Converts a #FwupdDeviceFlags to a string.
+ *
+ * Return value: identifier string
+ *
+ * Since: 1.5.0
+ **/
+const gchar *
+fwupd_plugin_flag_to_string (FwupdPluginFlags plugin_flag)
+{
+	if (plugin_flag == FWUPD_DEVICE_FLAG_NONE)
+		return "none";
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_DISABLED)
+		return "disabled";
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_USER_WARNING)
+		return "user-warning";
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE)
+		return "clear-updatable";
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_NO_HARDWARE)
+		return "no-hardware";
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED)
+		return "capsules-unsupported";
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_UNLOCK_REQUIRED)
+		return "unlock-required";
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED)
+		return "efivar-not-mounted";
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND)
+		return "esp-not-found";
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_LEGACY_BIOS)
+		return "legacy-bios";
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_FAILED_OPEN)
+		return "failed-open";
+	if (plugin_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
+		return "unknown";
+	return NULL;
+}
+
+/**
+ * fwupd_plugin_flag_from_string:
+ * @plugin_flag: A string, e.g. `require-ac`
+ *
+ * Converts a string to a #FwupdPluginFlags.
+ *
+ * Return value: enumerated value
+ *
+ * Since: 1.5.0
+ **/
+FwupdPluginFlags
+fwupd_plugin_flag_from_string (const gchar *plugin_flag)
+{
+	if (g_strcmp0 (plugin_flag, "none") == 0)
+		return FWUPD_DEVICE_FLAG_NONE;
+	if (g_strcmp0 (plugin_flag, "disabled") == 0)
+		return FWUPD_PLUGIN_FLAG_DISABLED;
+	if (g_strcmp0 (plugin_flag, "user-warning") == 0)
+		return FWUPD_PLUGIN_FLAG_USER_WARNING;
+	if (g_strcmp0 (plugin_flag, "clear-updatable") == 0)
+		return FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE;
+	if (g_strcmp0 (plugin_flag, "no-hardware") == 0)
+		return FWUPD_PLUGIN_FLAG_NO_HARDWARE;
+	if (g_strcmp0 (plugin_flag, "capsules-unsupported") == 0)
+		return FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED;
+	if (g_strcmp0 (plugin_flag, "unlock-required") == 0)
+		return FWUPD_PLUGIN_FLAG_UNLOCK_REQUIRED;
+	if (g_strcmp0 (plugin_flag, "efivar-not-mounted") == 0)
+		return FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED;
+	if (g_strcmp0 (plugin_flag, "esp-not-found") == 0)
+		return FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND;
+	if (g_strcmp0 (plugin_flag, "legacy-bios") == 0)
+		return FWUPD_PLUGIN_FLAG_LEGACY_BIOS;
+	if (g_strcmp0 (plugin_flag, "failed-open") == 0)
+		return FWUPD_PLUGIN_FLAG_FAILED_OPEN;
 	return FWUPD_DEVICE_FLAG_UNKNOWN;
 }
 
@@ -419,6 +505,8 @@ fwupd_feature_flag_to_string (FwupdFeatureFlags feature_flag)
 		return "detach-action";
 	if (feature_flag == FWUPD_FEATURE_FLAG_UPDATE_ACTION)
 		return "update-action";
+	if (feature_flag == FWUPD_FEATURE_FLAG_SWITCH_BRANCH)
+		return "switch-branch";
 	return NULL;
 }
 
@@ -443,6 +531,8 @@ fwupd_feature_flag_from_string (const gchar *feature_flag)
 		return FWUPD_FEATURE_FLAG_DETACH_ACTION;
 	if (g_strcmp0 (feature_flag, "update-action") == 0)
 		return FWUPD_FEATURE_FLAG_UPDATE_ACTION;
+	if (g_strcmp0 (feature_flag, "switch-branch") == 0)
+		return FWUPD_FEATURE_FLAG_SWITCH_BRANCH;
 	return FWUPD_FEATURE_FLAG_LAST;
 }
 
@@ -521,6 +611,8 @@ fwupd_release_flag_to_string (FwupdReleaseFlags release_flag)
 		return "blocked-version";
 	if (release_flag == FWUPD_RELEASE_FLAG_BLOCKED_APPROVAL)
 		return "blocked-approval";
+	if (release_flag == FWUPD_RELEASE_FLAG_IS_ALTERNATE_BRANCH)
+		return "is-alternate-branch";
 	return NULL;
 }
 
@@ -549,6 +641,8 @@ fwupd_release_flag_from_string (const gchar *release_flag)
 		return FWUPD_RELEASE_FLAG_BLOCKED_VERSION;
 	if (g_strcmp0 (release_flag, "blocked-approval") == 0)
 		return FWUPD_RELEASE_FLAG_BLOCKED_APPROVAL;
+	if (g_strcmp0 (release_flag, "is-alternate-branch") == 0)
+		return FWUPD_RELEASE_FLAG_IS_ALTERNATE_BRANCH;
 	return FWUPD_RELEASE_FLAG_NONE;
 }
 
@@ -578,7 +672,7 @@ fwupd_release_urgency_to_string (FwupdReleaseUrgency release_urgency)
 
 /**
  * fwupd_release_urgency_from_string:
- * @release_urgency: A string, e.g. `trusted-payload`
+ * @release_urgency: A string, e.g. `low`
  *
  * Converts a string to an enumerated value.
  *

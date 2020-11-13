@@ -70,6 +70,7 @@ typedef enum {
  * @FWUPD_FEATURE_FLAG_CAN_REPORT:		Can upload a report of the update back to the server
  * @FWUPD_FEATURE_FLAG_DETACH_ACTION:		Can perform detach action, typically showing text
  * @FWUPD_FEATURE_FLAG_UPDATE_ACTION:		Can perform update action, typically showing text
+ * @FWUPD_FEATURE_FLAG_SWITCH_BRANCH:		Can switch the firmware branch
  *
  * The flags to the feature capabilities of the front-end client.
  **/
@@ -78,6 +79,7 @@ typedef enum {
 	FWUPD_FEATURE_FLAG_CAN_REPORT		= 1 << 0,	/* Since: 1.4.5 */
 	FWUPD_FEATURE_FLAG_DETACH_ACTION	= 1 << 1,	/* Since: 1.4.5 */
 	FWUPD_FEATURE_FLAG_UPDATE_ACTION	= 1 << 2,	/* Since: 1.4.5 */
+	FWUPD_FEATURE_FLAG_SWITCH_BRANCH	= 1 << 3,	/* Since: 1.5.0 */
 	/*< private >*/
 	FWUPD_FEATURE_FLAG_LAST
 } FwupdFeatureFlags;
@@ -88,7 +90,7 @@ typedef enum {
  * @FWUPD_DEVICE_FLAG_INTERNAL:			Device cannot be removed easily
  * @FWUPD_DEVICE_FLAG_UPDATABLE:		Device is updatable in this or any other mode
  * @FWUPD_DEVICE_FLAG_ONLY_OFFLINE:		Update can only be done from offline mode
- * @FWUPD_DEVICE_FLAG_REQUIRE_AC:		Requires AC power
+ * @FWUPD_DEVICE_FLAG_REQUIRE_AC:		System requires external power source
  * @FWUPD_DEVICE_FLAG_LOCKED:			Is locked and can be unlocked
  * @FWUPD_DEVICE_FLAG_SUPPORTED:		Is found in current metadata
  * @FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER:		Requires a bootloader mode to be manually enabled by the user
@@ -124,6 +126,8 @@ typedef enum {
  * @FWUPD_DEVICE_FLAG_NO_GUID_MATCHING:		Force an explicit ID match when adding devices to the device list
  * @FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN:		Device is updatable but should not be called by the client
  * @FWUPD_DEVICE_FLAG_SKIPS_RESTART:		Device relies upon activation or power cycle to load firmware
+ * @FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES:	Device supports switching to a different stream of firmware
+ * @FWUPD_DEVICE_FLAG_BACKUP_BEFORE_INSTALL:	Device firmware should be saved before installing firmware
  *
  * The device flags.
  **/
@@ -166,7 +170,9 @@ typedef enum {
 #define FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS	(1llu << 35)	/* Since: 1.4.0 */
 #define FWUPD_DEVICE_FLAG_NO_GUID_MATCHING	(1llu << 36)	/* Since: 1.4.1 */
 #define FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN	(1llu << 37)	/* Since: 1.4.1 */
-#define FWUPD_DEVICE_FLAG_SKIPS_RESTART		(1llu << 38)	/* Since: 1.4.5 */
+#define FWUPD_DEVICE_FLAG_SKIPS_RESTART		(1llu << 38)	/* Since: 1.5.0 */
+#define FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES	(1llu << 39)	/* Since: 1.5.0 */
+#define FWUPD_DEVICE_FLAG_BACKUP_BEFORE_INSTALL	(1llu << 40)	/* Since: 1.5.0 */
 #define FWUPD_DEVICE_FLAG_UNKNOWN		G_MAXUINT64	/* Since: 0.7.3 */
 typedef guint64 FwupdDeviceFlags;
 
@@ -179,6 +185,7 @@ typedef guint64 FwupdDeviceFlags;
  * @FWUPD_RELEASE_FLAG_IS_DOWNGRADE:		Is older than the device version
  * @FWUPD_RELEASE_FLAG_BLOCKED_VERSION:		Blocked as below device version-lowest
  * @FWUPD_RELEASE_FLAG_BLOCKED_APPROVAL:	Blocked as release not approved
+ * @FWUPD_RELEASE_FLAG_IS_ALTERNATE_BRANCH:	Is an alternate branch of firmware
  *
  * The release flags.
  **/
@@ -189,6 +196,7 @@ typedef guint64 FwupdDeviceFlags;
 #define FWUPD_RELEASE_FLAG_IS_DOWNGRADE		(1u << 3)	/* Since: 1.2.6 */
 #define FWUPD_RELEASE_FLAG_BLOCKED_VERSION	(1u << 4)	/* Since: 1.2.6 */
 #define FWUPD_RELEASE_FLAG_BLOCKED_APPROVAL	(1u << 5)	/* Since: 1.2.6 */
+#define FWUPD_RELEASE_FLAG_IS_ALTERNATE_BRANCH	(1u << 6)	/* Since: 1.5.0 */
 #define FWUPD_RELEASE_FLAG_UNKNOWN		G_MAXUINT64	/* Since: 1.2.6 */
 typedef guint64 FwupdReleaseFlags;
 
@@ -213,6 +221,36 @@ typedef enum {
 } FwupdReleaseUrgency;
 
 /**
+ * FwupdPluginFlags:
+ * @FWUPD_PLUGIN_FLAG_NONE:			No flags set
+ * @FWUPD_PLUGIN_FLAG_DISABLED:			Disabled
+ * @FWUPD_PLUGIN_FLAG_USER_WARNING:		Show the user a warning
+ * @FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE:		Clear the UPDATABLE flag from devices
+ * @FWUPD_PLUGIN_FLAG_NO_HARDWARE:		No hardware is found
+ * @FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED:	UEFI UpdateCapsule are unsupported
+ * @FWUPD_PLUGIN_FLAG_UNLOCK_REQUIRED:		Hardware unlock is required
+ * @FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED:	The efivar filesystem is not found
+ * @FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND:		The EFI ESP not found
+ * @FWUPD_PLUGIN_FLAG_LEGACY_BIOS:		System running in legacy CSM mode
+ * @FWUPD_PLUGIN_FLAG_FAILED_OPEN:		Failed to open plugin (missing dependency)
+ *
+ * The plugin flags.
+ **/
+#define FWUPD_PLUGIN_FLAG_NONE			(0u)		/* Since: 1.5.0 */
+#define FWUPD_PLUGIN_FLAG_DISABLED		(1u << 0)	/* Since: 1.5.0 */
+#define FWUPD_PLUGIN_FLAG_USER_WARNING		(1u << 1)	/* Since: 1.5.0 */
+#define FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE	(1u << 2)	/* Since: 1.5.0 */
+#define FWUPD_PLUGIN_FLAG_NO_HARDWARE		(1u << 3)	/* Since: 1.5.0 */
+#define FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED	(1u << 4)	/* Since: 1.5.0 */
+#define FWUPD_PLUGIN_FLAG_UNLOCK_REQUIRED	(1u << 5)	/* Since: 1.5.0 */
+#define FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED	(1u << 6)	/* Since: 1.5.0 */
+#define FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND		(1u << 7)	/* Since: 1.5.0 */
+#define FWUPD_PLUGIN_FLAG_LEGACY_BIOS		(1u << 8)	/* Since: 1.5.0 */
+#define FWUPD_PLUGIN_FLAG_FAILED_OPEN		(1u << 9)	/* Since: 1.5.0 */
+#define FWUPD_PLUGIN_FLAG_UNKNOWN		G_MAXUINT64	/* Since: 1.5.0 */
+typedef guint64 FwupdPluginFlags;
+
+/**
  * FwupdInstallFlags:
  * @FWUPD_INSTALL_FLAG_NONE:			No flags set
  * @FWUPD_INSTALL_FLAG_OFFLINE:			Schedule this for next boot
@@ -220,8 +258,12 @@ typedef enum {
  * @FWUPD_INSTALL_FLAG_ALLOW_OLDER:		Allow downgrading firmware
  * @FWUPD_INSTALL_FLAG_FORCE:			Force the update even if not a good idea
  * @FWUPD_INSTALL_FLAG_NO_HISTORY:		Do not write to the history database
+ * @FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH:	Allow firmware branch switching
+ * @FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM:		Ignore firmware CRCs and checksums
+ * @FWUPD_INSTALL_FLAG_IGNORE_VID_PID:		Ignore firmware vendor and project checks
+ * @FWUPD_INSTALL_FLAG_IGNORE_POWER:		Ignore requirement of external power source
  *
- * Flags to set when performing the firwmare update or install.
+ * Flags to set when performing the firmware update or install.
  **/
 typedef enum {
 	FWUPD_INSTALL_FLAG_NONE			= 0,		/* Since: 0.7.0 */
@@ -230,6 +272,10 @@ typedef enum {
 	FWUPD_INSTALL_FLAG_ALLOW_OLDER		= 1 << 2,	/* Since: 0.7.0 */
 	FWUPD_INSTALL_FLAG_FORCE		= 1 << 3,	/* Since: 0.7.1 */
 	FWUPD_INSTALL_FLAG_NO_HISTORY		= 1 << 4,	/* Since: 1.0.8 */
+	FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH	= 1 << 5,	/* Since: 1.5.0 */
+	FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM	= 1 << 6,	/* Since: 1.5.0 */
+	FWUPD_INSTALL_FLAG_IGNORE_VID_PID	= 1 << 7,	/* Since: 1.5.0 */
+	FWUPD_INSTALL_FLAG_IGNORE_POWER		= 1 << 8,	/* Since: 1.5.0 */
 	/*< private >*/
 	FWUPD_INSTALL_FLAG_LAST
 } FwupdInstallFlags;
@@ -240,7 +286,7 @@ typedef enum {
  * @FWUPD_SELF_SIGN_FLAG_ADD_TIMESTAMP:		Add the timestamp to the detached signature
  * @FWUPD_SELF_SIGN_FLAG_ADD_CERT:		Add the certificate to the detached signature
  *
- * Flags to set when performing the firwmare update or install.
+ * Flags to set when performing the firmware update or install.
  **/
 typedef enum {
 	FWUPD_SELF_SIGN_FLAG_NONE		= 0,		/* Since: 1.2.6 */
@@ -335,6 +381,8 @@ const gchar	*fwupd_status_to_string			(FwupdStatus	 status);
 FwupdStatus	 fwupd_status_from_string		(const gchar	*status);
 const gchar	*fwupd_device_flag_to_string		(FwupdDeviceFlags device_flag);
 FwupdDeviceFlags fwupd_device_flag_from_string		(const gchar	*device_flag);
+const gchar	*fwupd_plugin_flag_to_string		(FwupdPluginFlags plugin_flag);
+FwupdPluginFlags fwupd_plugin_flag_from_string		(const gchar	*plugin_flag);
 const gchar	*fwupd_release_flag_to_string		(FwupdReleaseFlags release_flag);
 FwupdReleaseFlags fwupd_release_flag_from_string	(const gchar	*release_flag);
 const gchar	*fwupd_release_urgency_to_string	(FwupdReleaseUrgency release_urgency);

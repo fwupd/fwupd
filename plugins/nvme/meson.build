@@ -34,8 +34,9 @@ shared_module('fu_plugin_nvme',
 )
 
 if get_option('tests')
-  testdatadir = join_paths(meson.current_source_dir(), 'tests')
-  cargs += '-DTESTDATADIR="' + testdatadir + '"'
+  testdatadirs = environment()
+  testdatadirs.set('G_TEST_SRCDIR', meson.current_source_dir())
+  testdatadirs.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'nvme-self-test',
     fu_hash,
@@ -56,7 +57,8 @@ if get_option('tests')
       fwupd,
       fwupdplugin,
     ],
-    c_args : cargs
+    install : true,
+    install_dir : installed_test_bindir,
   )
-  test('nvme-self-test', e)
+  test('nvme-self-test', e, env : testdatadirs)  # added to installed-tests
 endif

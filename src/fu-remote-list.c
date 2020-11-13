@@ -34,6 +34,7 @@ struct _FuRemoteList
 	GObject			 parent_instance;
 	GPtrArray		*array;			/* (element-type FwupdRemote) */
 	GPtrArray		*monitors;		/* (element-type GFileMonitor) */
+	GHashTable		*hash_unfound;		/* utf8 : NULL */
 	XbSilo			*silo;
 };
 
@@ -183,7 +184,7 @@ fu_remote_list_add_for_path (FuRemoteList *self, const gchar *path, GError **err
 		fwupd_remote_set_remotes_dir (remote, remotesdir);
 
 		/* load from keyfile */
-		g_debug ("loading remotes from %s", filename);
+		g_debug ("loading remote from %s", filename);
 		if (!fwupd_remote_load_from_filename (remote, filename,
 						      NULL, error)) {
 			g_prefix_error (error, "failed to load %s: ", filename);
@@ -296,6 +297,7 @@ static guint
 fu_remote_list_depsolve_with_direction (FuRemoteList *self, gint inc)
 {
 	guint cnt = 0;
+
 	for (guint i = 0; i < self->array->len; i++) {
 		FwupdRemote *remote = g_ptr_array_index (self->array, i);
 		gchar **order = inc < 0 ? fwupd_remote_get_order_after (remote) :
@@ -310,7 +312,11 @@ fu_remote_list_depsolve_with_direction (FuRemoteList *self, gint inc)
 			}
 			remote2 = fu_remote_list_get_by_id (self, order[j]);
 			if (remote2 == NULL) {
+				if (g_hash_table_contains (self->hash_unfound, order[j]))
+					continue;
 				g_debug ("ignoring unfound remote %s", order[j]);
+				g_hash_table_insert (self->hash_unfound,
+						     g_strdup (order[j]), NULL);
 				continue;
 			}
 			if (fwupd_remote_get_priority (remote) > fwupd_remote_get_priority (remote2))
@@ -487,6 +493,7 @@ fu_remote_list_init (FuRemoteList *self)
 {
 	self->array = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	self->monitors = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_remote_list_monitor_unref);
+	self->hash_unfound = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
 }
 
 static void
@@ -497,6 +504,7 @@ fu_remote_list_finalize (GObject *obj)
 		g_object_unref (self->silo);
 	g_ptr_array_unref (self->array);
 	g_ptr_array_unref (self->monitors);
+	g_hash_table_unref (self->hash_unfound);
 	G_OBJECT_CLASS (fu_remote_list_parent_class)->finalize (obj);
 }
 

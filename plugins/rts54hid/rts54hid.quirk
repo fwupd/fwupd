@@ -11,6 +11,6 @@ Plugin = rts54hid
 Name = HDMI Converter
 Flags = updatable
 FirmwareSize = 0x20000
-Rts54SlaveAddr = 0x00
+Rts54TargetAddr = 0x00
 Rts54I2cSpeed = 0x00
 Rts54RegisterAddrLen = 0x04

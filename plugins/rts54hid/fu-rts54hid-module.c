@@ -17,7 +17,7 @@
 
 struct _FuRts54HidModule {
 	FuDevice			 parent_instance;
-	guint8				 slave_addr;
+	guint8				 target_addr;
 	guint8				 i2c_speed;
 	guint8				 register_addr_len;
 };
@@ -28,7 +28,7 @@ static void
 fu_rts54hid_module_to_string (FuDevice *module, guint idt, GString *str)
 {
 	FuRts54HidModule *self = FU_RTS54HID_MODULE (module);
-	fu_common_string_append_kx (str, idt, "SlaveAddr", self->slave_addr);
+	fu_common_string_append_kx (str, idt, "TargetAddr", self->target_addr);
 	fu_common_string_append_kx (str, idt, "I2cSpeed", self->i2c_speed);
 	fu_common_string_append_kx (str, idt, "RegisterAddrLen", self->register_addr_len);
 }
@@ -59,7 +59,7 @@ fu_rts54hid_module_i2c_write (FuRts54HidModule *self,
 		.ext = FU_RTS54HID_EXT_I2C_WRITE,
 		.dwregaddr = 0,
 		.bufferlen = GUINT16_TO_LE (data_sz),
-		.parameters_i2c = {.slave_addr = self->slave_addr,
+		.parameters_i2c = {.target_addr = self->target_addr,
 				   .data_sz = self->register_addr_len,
 				   .speed = self->i2c_speed | 0x80},
 	};
@@ -83,7 +83,7 @@ fu_rts54hid_module_i2c_write (FuRts54HidModule *self,
 				       FU_RTS54HID_DEVICE_TIMEOUT * 2,
 				       FU_HID_DEVICE_FLAG_NONE,
 				       error)) {
-		g_prefix_error (error, "failed to write i2c @%04x: ", self->slave_addr);
+		g_prefix_error (error, "failed to write i2c @%04x: ", self->target_addr);
 		return FALSE;
 	}
 	return TRUE;
@@ -102,7 +102,7 @@ fu_rts54hid_module_i2c_read (FuRts54HidModule *self,
 		.ext = FU_RTS54HID_EXT_I2C_READ,
 		.dwregaddr = GUINT32_TO_LE (cmd),
 		.bufferlen = GUINT16_TO_LE (data_sz),
-		.parameters_i2c = {.slave_addr = self->slave_addr,
+		.parameters_i2c = {.target_addr = self->target_addr,
 				   .data_sz = self->register_addr_len,
 				   .speed = self->i2c_speed | 0x80},
 	};
@@ -123,7 +123,7 @@ fu_rts54hid_module_i2c_read (FuRts54HidModule *self,
 				       FU_RTS54HID_DEVICE_TIMEOUT * 2,
 				       FU_HID_DEVICE_FLAG_NONE,
 				       error)) {
-		g_prefix_error (error, "failed to write i2c @%04x: ", self->slave_addr);
+		g_prefix_error (error, "failed to write i2c @%04x: ", self->target_addr);
 		return FALSE;
 	}
 	if (!fu_hid_device_get_report (FU_HID_DEVICE (parent), 0x0, buf, sizeof(buf),
@@ -144,17 +144,17 @@ fu_rts54hid_module_set_quirk_kv (FuDevice *device,
 {
 	FuRts54HidModule *self = FU_RTS54HID_MODULE (device);
 
-	/* load slave address from quirks */
-	if (g_strcmp0 (key, "Rts54SlaveAddr") == 0) {
+	/* load target address from quirks */
+	if (g_strcmp0 (key, "Rts54TargetAddr") == 0) {
 		guint64 tmp = fu_common_strtoull (value);
 		if (tmp <= 0xff) {
-			self->slave_addr = tmp;
+			self->target_addr = tmp;
 			return TRUE;
 		}
 		g_set_error_literal (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
-				     "invalid slave address");
+				     "invalid target address");
 		return FALSE;
 	}
 

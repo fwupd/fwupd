@@ -15,6 +15,7 @@ meson .. \
     --libexecdir=$target \
     --bindir=$target \
     -Dbuild=standalone \
+    -Dpolkit=false \
     -Dplugin_coreboot=false \
     -Dplugin_flashrom=false \
     -Dplugin_uefi=false \
@@ -22,7 +23,7 @@ meson .. \
     -Dplugin_altos=false \
     -Dplugin_dell=false \
     -Dplugin_nvme=false \
-    -Dplugin_tpm=false \
+    -Dtpm=false \
     -Dsystemd=false \
     -Dplugin_emmc=false \
     -Dplugin_amt=false \
@@ -40,6 +41,10 @@ meson .. \
     -Dlibjcat:man=false \
     -Dlibjcat:gpg=false \
     -Dlibjcat:introspection=false \
+    -Dgusb:tests=false \
+    -Dgusb:docs=false \
+    -Dgusb:introspection=false \
+    -Dgusb:vapi=false \
     -Dgudev=false $@
 VERSION=$(meson introspect . --projectinfo | jq -r .version)
 ninja -v

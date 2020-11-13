@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version : '1.4.6',
+  version : '1.5.1',
   license : 'LGPL-2.1+',
   meson_version : '>=0.47.0',
   default_options : ['warning_level=2', 'c_std=c99'],
@@ -124,6 +124,7 @@ test_link_args = [
   '-Wl,-z,relro',
   '-Wl,-z,defs',
   '-Wl,-z,now',
+  '-Wl,-z,ibt,-z,shstk',
 ]
 foreach arg: test_link_args
   if cc.has_link_argument(arg)
@@ -170,10 +171,14 @@ if host_machine.system() == 'windows'
   sysconfdir = get_option('sysconfdir')
   localstatedir = get_option('localstatedir')
   datadir = get_option('datadir')
+  installed_test_bindir = get_option('libexecdir')
+  installed_test_datadir = get_option('datadir')
 else
   datadir = join_paths(prefix, get_option('datadir'))
   sysconfdir = join_paths(prefix, get_option('sysconfdir'))
   localstatedir = join_paths(prefix, get_option('localstatedir'))
+  installed_test_bindir = join_paths(libexecdir, 'installed-tests', meson.project_name())
+  installed_test_datadir = join_paths(datadir, 'installed-tests', meson.project_name())
 endif
 mandir = join_paths(prefix, get_option('mandir'))
 localedir = join_paths(prefix, get_option('localedir'))
@@ -196,7 +201,7 @@ else
   gudev = dependency('', required : false)
 endif
 libxmlb = dependency('xmlb', version : '>= 0.1.13', fallback : ['libxmlb', 'libxmlb_dep'])
-gusb = dependency('gusb', version : '>= 0.2.9', fallback : ['gusb', 'gusb_dep'])
+gusb = dependency('gusb', version : '>= 0.3.5', fallback : ['gusb', 'gusb_dep'])
 sqlite = dependency('sqlite3')
 libarchive = dependency('libarchive')
 endif
@@ -205,11 +210,16 @@ libjsonglib = dependency('json-glib-1.0', version : '>= 1.1.1')
 valgrind = dependency('valgrind', required: false)
 soup = dependency('libsoup-2.4', version : '>= 2.51.92')
 if build_daemon
-  polkit = dependency('polkit-gobject-1', version : '>= 0.103')
-  if polkit.version().version_compare('>= 0.114')
-    conf.set('HAVE_POLKIT_0_114', '1')
-  endif
+  if get_option('polkit')
+    polkit = dependency('polkit-gobject-1', version : '>= 0.103')
+    conf.set('HAVE_POLKIT', '1')
+    if polkit.version().version_compare('>= 0.114')
+      conf.set('HAVE_POLKIT_0_114', '1')
+    endif
   conf.set_quoted ('POLKIT_ACTIONDIR', polkit.get_pkgconfig_variable('actiondir'))
+  else
+    warning('Polkit is disabled, the daemon will allow ALL client actions')
+  endif
   udevdir = get_option('udevdir')
   if udevdir == ''
     udev = dependency('udev')
@@ -221,10 +231,6 @@ libgcab = dependency('libgcab-1.0', version : '>= 1.0', fallback : ['gcab', 'gca
 gcab = find_program('gcab', required : true)
 bashcomp = dependency('bash-completion', required: false)
 python3 = find_program('python3')
-tpm2tss = dependency('tss2-esys', version : '>= 2.0', required: false)
-if tpm2tss.found()
-  conf.set('HAVE_TSS2', '1')
-endif
 
 platform_deps = []
 if get_option('default_library') != 'static'
@@ -237,13 +243,11 @@ if valgrind.found()
   conf.set('HAVE_VALGRIND', '1')
 endif
 
-if build_standalone and get_option('plugin_redfish')
-  efivar = dependency('efivar')
-endif
-
 if build_standalone and get_option('plugin_altos')
   libelf = dependency('libelf')
 endif
+
+host_cpu = host_machine.cpu_family()
 
 if cc.has_header('sys/utsname.h')
   conf.set('HAVE_UTSNAME_H', '1')
@@ -251,8 +255,17 @@ endif
 if cc.has_header('sys/ioctl.h')
   conf.set('HAVE_IOCTL_H', '1')
 endif
-if cc.has_header('sys/errno.h')
+if cc.has_header('errno.h')
   conf.set('HAVE_ERRNO_H', '1')
+endif
+if cc.has_header('sys/socket.h')
+  conf.set('HAVE_SOCKET_H', '1')
+endif
+if cc.has_header('linux/ethtool.h')
+  conf.set('HAVE_ETHTOOL_H', '1')
+endif
+if cc.has_header('sys/mman.h')
+  conf.set('HAVE_MMAN_H', '1')
 endif
 if cc.has_header('poll.h')
   conf.set('HAVE_POLL_H', '1')
@@ -260,11 +273,21 @@ endif
 if cc.has_header('fnmatch.h')
   conf.set('HAVE_FNMATCH_H', '1')
 endif
+if cc.has_header('cpuid.h') and (host_cpu == 'x86' or host_cpu == 'x86_64')
+  conf.set('HAVE_CPUID_H', '1')
+else
+  if get_option('plugin_msr')
+    error('cpuid.h is required for -Dplugin_msr=true')
+  endif
+endif
 if cc.has_function('getuid')
   conf.set('HAVE_GETUID', '1')
 endif
 if cc.has_function('realpath')
   conf.set('HAVE_REALPATH', '1')
+endif
+if cc.has_function('sigaction')
+  conf.set('HAVE_SIGACTION', '1')
 endif
 if cc.has_header_symbol('locale.h', 'LC_MESSAGES')
   conf.set('HAVE_LC_MESSAGES', '1')
@@ -273,16 +296,17 @@ if cc.has_function('pwrite', args : '-D_XOPEN_SOURCE')
   conf.set('HAVE_PWRITE', '1')
 endif
 
-if build_standalone and get_option('plugin_tpm') and not tpm2tss.found()
-  error('tss2-esys is required for -Dplugin_tpm=true')
+if build_standalone and get_option('tpm')
+  tpm2tss = dependency('tss2-esys', version : '>= 2.0')
+  conf.set('HAVE_TSS2', '1')
+else
+  tpm2tss = dependency('', required: false)
 endif
 
 if build_standalone and get_option('plugin_uefi')
   cairo = dependency('cairo')
   fontconfig = cc.find_library('fontconfig')
   freetype = cc.find_library('freetype')
-  efivar = dependency('efivar', version : '>= 33')
-  conf.set_quoted('EFIVAR_LIBRARY_VERSION', efivar.version())
   efiboot = dependency('efiboot')
   objcopy = find_program ('objcopy')
   readelf = find_program ('readelf')
@@ -291,17 +315,18 @@ if build_standalone and get_option('plugin_uefi')
   efi_app_location = join_paths(libexecdir, 'fwupd', 'efi')
   conf.set_quoted ('EFI_APP_LOCATION', efi_app_location)
 
-  efi_arch = host_machine.cpu_family()
-  if efi_arch == 'x86'
+  conf.set('EFI_OBJCOPY', get_option('efi-objcopy'))
+
+  if host_cpu == 'x86'
           EFI_MACHINE_TYPE_NAME = 'ia32'
           gnu_efi_arch = 'ia32'
-  elif efi_arch == 'x86_64'
+  elif host_cpu == 'x86_64'
           EFI_MACHINE_TYPE_NAME = 'x64'
           gnu_efi_arch = 'x86_64'
-  elif efi_arch == 'arm'
+  elif host_cpu == 'arm'
           EFI_MACHINE_TYPE_NAME = 'arm'
           gnu_efi_arch = 'arm'
-  elif efi_arch == 'aarch64'
+  elif host_cpu == 'aarch64'
           EFI_MACHINE_TYPE_NAME = 'aa64'
           gnu_efi_arch = 'aarch64'
   else
@@ -317,7 +342,6 @@ endif
 
 if build_standalone and get_option('plugin_dell')
   libsmbios_c = dependency('libsmbios_c', version : '>= 2.4.0')
-  efivar = dependency('efivar')
   conf.set('HAVE_DELL', '1')
   if not get_option('plugin_uefi')
     error('plugin_dell also needs plugin_uefi to work')
@@ -418,6 +442,7 @@ if build_standalone
   plugin_deps += soup
   plugin_deps += libarchive
   plugin_deps += gudev
+  plugin_deps += libjsonglib
 endif
 
 root_incdir = include_directories('.')
@@ -427,7 +452,7 @@ if get_option('gtkdoc')
   subdir('docs')
 endif
 subdir('libfwupd')
-if build_daemon
+if build_daemon and get_option('polkit')
   subdir('policy')
 endif
 if build_standalone
@@ -451,4 +476,18 @@ if makensis.found()
       makensis,
       join_paths(meson.source_root(), 'contrib', 'setup-win32.nsi'),
   ])
+endif
+
+codespell = find_program('codespell', required : false)
+if codespell.found()
+run_target('codespell',
+  command: [
+    codespell,
+    meson.source_root(),
+    '--write-changes',
+    '--builtin', 'en-GB_to_en-US',
+    '--skip', '*.po,*.csv,*.svg,*.p7c,subprojects,.git,pcrs,build*',
+    '--ignore-words-list', 'conexant,Conexant,gir,GIR,hsi,HSI,cancelled,Cancelled',
+  ]
+)
 endif

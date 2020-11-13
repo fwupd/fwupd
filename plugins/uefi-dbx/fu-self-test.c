@@ -13,24 +13,21 @@
 #include "fu-efi-image.h"
 #include "fu-efi-signature-parser.h"
 
-static gchar *
-fu_test_get_filename (const gchar *filename)
-{
-	g_autofree gchar *path = NULL;
-	path = g_build_filename (TESTDATADIR, filename, NULL);
-	return fu_common_realpath (path, NULL);
-}
-
 static void
 fu_efi_image_func (void)
 {
+	const gchar *ci = g_getenv ("CI_NETWORK");
 	const gchar *csum = NULL;
 	g_autofree gchar *fn = NULL;
 	g_autoptr(FuEfiImage) img = NULL;
 	g_autoptr(GBytes) bytes = NULL;
 	g_autoptr(GError) error = NULL;
 
-	fn = fu_test_get_filename ("fwupdx64.efi");
+	fn = g_test_build_filename (G_TEST_DIST, "tests", "fwupdx64.efi", NULL);
+	if (!g_file_test (fn, G_FILE_TEST_EXISTS) && ci == NULL) {
+		g_test_skip ("Missing fwupdx64.efi");
+		return;
+	}
 	g_assert_nonnull (fn);
 	bytes = fu_common_get_contents_bytes (fn, &error);
 	g_assert_no_error (error);

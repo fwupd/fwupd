@@ -145,6 +145,8 @@ fu_plugin_list_depsolve (FuPluginList *self, GError **error)
 		for (guint i = 0; i < self->plugins->len; i++) {
 			FuPlugin *plugin = g_ptr_array_index (self->plugins, i);
 			deps = fu_plugin_get_rules (plugin, FU_PLUGIN_RULE_RUN_AFTER);
+			if (deps == NULL)
+				continue;
 			for (guint j = 0; j < deps->len && !changes; j++) {
 				const gchar *plugin_name = g_ptr_array_index (deps, j);
 				dep = fu_plugin_list_find_by_name (self, plugin_name, NULL);
@@ -155,7 +157,7 @@ fu_plugin_list_depsolve (FuPluginList *self, GError **error)
 						 fu_plugin_get_name (plugin));
 					continue;
 				}
-				if (!fu_plugin_get_enabled (dep))
+				if (fu_plugin_has_flag (dep, FWUPD_PLUGIN_FLAG_DISABLED))
 					continue;
 				if (fu_plugin_get_order (plugin) <= fu_plugin_get_order (dep)) {
 					g_debug ("%s [%u] to be ordered after %s [%u] "
@@ -173,6 +175,8 @@ fu_plugin_list_depsolve (FuPluginList *self, GError **error)
 		for (guint i = 0; i < self->plugins->len; i++) {
 			FuPlugin *plugin = g_ptr_array_index (self->plugins, i);
 			deps = fu_plugin_get_rules (plugin, FU_PLUGIN_RULE_RUN_BEFORE);
+			if (deps == NULL)
+				continue;
 			for (guint j = 0; j < deps->len && !changes; j++) {
 				const gchar *plugin_name = g_ptr_array_index (deps, j);
 				dep = fu_plugin_list_find_by_name (self, plugin_name, NULL);
@@ -183,7 +187,7 @@ fu_plugin_list_depsolve (FuPluginList *self, GError **error)
 						 fu_plugin_get_name (plugin));
 					continue;
 				}
-				if (!fu_plugin_get_enabled (dep))
+				if (fu_plugin_has_flag (dep, FWUPD_PLUGIN_FLAG_DISABLED))
 					continue;
 				if (fu_plugin_get_order (plugin) >= fu_plugin_get_order (dep)) {
 					g_debug ("%s [%u] to be ordered before %s [%u] "
@@ -203,6 +207,8 @@ fu_plugin_list_depsolve (FuPluginList *self, GError **error)
 		for (guint i = 0; i < self->plugins->len; i++) {
 			FuPlugin *plugin = g_ptr_array_index (self->plugins, i);
 			deps = fu_plugin_get_rules (plugin, FU_PLUGIN_RULE_BETTER_THAN);
+			if (deps == NULL)
+				continue;
 			for (guint j = 0; j < deps->len && !changes; j++) {
 				const gchar *plugin_name = g_ptr_array_index (deps, j);
 				dep = fu_plugin_list_find_by_name (self, plugin_name, NULL);
@@ -213,7 +219,7 @@ fu_plugin_list_depsolve (FuPluginList *self, GError **error)
 						 fu_plugin_get_name (plugin));
 					continue;
 				}
-				if (!fu_plugin_get_enabled (dep))
+				if (fu_plugin_has_flag (dep, FWUPD_PLUGIN_FLAG_DISABLED))
 					continue;
 				if (fu_plugin_get_priority (plugin) <= fu_plugin_get_priority (dep)) {
 					g_debug ("%s [%u] better than %s [%u] "
@@ -242,20 +248,22 @@ fu_plugin_list_depsolve (FuPluginList *self, GError **error)
 	/* check for conflicts */
 	for (guint i = 0; i < self->plugins->len; i++) {
 		FuPlugin *plugin = g_ptr_array_index (self->plugins, i);
-		if (!fu_plugin_get_enabled (plugin))
+		if (fu_plugin_has_flag (plugin, FWUPD_PLUGIN_FLAG_DISABLED))
 			continue;
 		deps = fu_plugin_get_rules (plugin, FU_PLUGIN_RULE_CONFLICTS);
+		if (deps == NULL)
+			continue;
 		for (guint j = 0; j < deps->len && !changes; j++) {
 			const gchar *plugin_name = g_ptr_array_index (deps, j);
 			dep = fu_plugin_list_find_by_name (self, plugin_name, NULL);
 			if (dep == NULL)
 				continue;
-			if (!fu_plugin_get_enabled (dep))
+			if (fu_plugin_has_flag (dep, FWUPD_PLUGIN_FLAG_DISABLED))
 				continue;
 			g_debug ("disabling %s as conflicts with %s",
 				 fu_plugin_get_name (dep),
 				 fu_plugin_get_name (plugin));
-			fu_plugin_set_enabled (dep, FALSE);
+			fu_plugin_add_flag (dep, FWUPD_PLUGIN_FLAG_DISABLED);
 		}
 	}
 

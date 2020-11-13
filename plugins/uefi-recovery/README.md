@@ -20,3 +20,7 @@ Vendor ID Security
 ------------------
 
 The vendor ID is set from the BIOS vendor, for example `DMI:LENOVO`
+
+External interface access
+-------------------------
+This plugin requires no extra access.

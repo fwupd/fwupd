@@ -7,9 +7,8 @@
 
 #pragma once
 
-#include <glib-object.h>
+#include <gio/gio.h>
 
 #include "fu-volume.h"
 
-FuVolume	*fu_volume_new_from_proxy		(GDBusProxy	*proxy);
 FuVolume	*fu_volume_new_from_mount_path		(const gchar	*mount_path);

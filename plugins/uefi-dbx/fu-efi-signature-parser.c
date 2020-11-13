@@ -73,13 +73,10 @@ fu_efi_signature_list_parse_list (GPtrArray *siglists,
 	}
 	sig_type = fwupd_guid_to_string (&guid, FWUPD_GUID_FLAG_MIXED_ENDIAN);
 	if (g_strcmp0 (sig_type, "c1c41626-504c-4092-aca9-41f936934328") == 0) {
-		g_debug ("EFI_SIGNATURE_LIST SHA256");
 		siglist = fu_efi_signature_list_new (FU_EFI_SIGNATURE_KIND_SHA256);
 	} else if (g_strcmp0 (sig_type, "a5c059a1-94e4-4aa7-87b5-ab155c2bf072") == 0) {
-		g_debug ("EFI_SIGNATURE_LIST X509");
 		siglist = fu_efi_signature_list_new (FU_EFI_SIGNATURE_KIND_X509);
 	} else {
-		g_debug ("EFI_SIGNATURE_LIST unknown: %s", sig_type);
 		siglist = fu_efi_signature_list_new (FU_EFI_SIGNATURE_KIND_UNKNOWN);
 	}
 	if (!fu_common_read_uint32_safe (buf, bufsz, *offset + 0x10,

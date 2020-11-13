@@ -13,3 +13,16 @@ InstallDuration = 2
 [DeviceInstanceId=USB\VID_06CB&PID_00E9]
 Plugin = synaptics_prometheus
 InstallDuration = 2
+
+[DeviceInstanceId=USB\VID_06CB&PID_00C2]
+Plugin = synaptics_prometheus
+InstallDuration = 2
+
+[DeviceInstanceId=USB\VID_06CB&PID_00F9]
+Plugin = synaptics_prometheus
+InstallDuration = 2
+
+[DeviceInstanceId=USB\VID_06CB&PID_00FC]
+Plugin = synaptics_prometheus
+InstallDuration = 2
+

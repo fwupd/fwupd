@@ -20,14 +20,6 @@
 
 #include "fwupd-error.h"
 
-static gchar *
-dfu_test_get_filename (const gchar *filename)
-{
-	g_autofree gchar *path = NULL;
-	path = g_build_filename (TESTDATADIR, filename, NULL);
-	return fu_common_realpath (path, NULL);
-}
-
 static void
 dfu_enums_func (void)
 {
@@ -118,6 +110,7 @@ dfu_firmware_dfu_func (void)
 {
 	gchar buf[256];
 	gboolean ret;
+	const gchar *ci = g_getenv ("CI_NETWORK");
 	g_autofree gchar *filename = NULL;
 	g_autoptr(DfuFirmware) firmware1 = dfu_firmware_new ();
 	g_autoptr(DfuFirmware) firmware2 = dfu_firmware_new ();
@@ -162,7 +155,11 @@ dfu_firmware_dfu_func (void)
 	g_assert_cmpint (dfu_firmware_get_size (firmware2), ==, 256);
 
 	/* load a real firmware */
-	filename = dfu_test_get_filename ("kiibohd.dfu.bin");
+	filename = g_test_build_filename (G_TEST_DIST, "tests", "kiibohd.dfu.bin", NULL);
+	if (!g_file_test (filename, G_FILE_TEST_EXISTS) && ci == NULL) {
+		g_test_skip ("Missing kiibohd.dfu.bin");
+		return;
+	}
 	g_assert (filename != NULL);
 	file = g_file_new_for_path (filename);
 	ret = dfu_firmware_parse_file (firmware3, file,
@@ -192,6 +189,7 @@ static void
 dfu_firmware_dfuse_func (void)
 {
 	gboolean ret;
+	const gchar *ci = g_getenv ("CI_NETWORK");
 	g_autofree gchar *filename = NULL;
 	g_autoptr(DfuFirmware) firmware = NULL;
 	g_autoptr(GBytes) roundtrip_orig = NULL;
@@ -201,7 +199,11 @@ dfu_firmware_dfuse_func (void)
 
 	/* load a DeFUse firmware */
 	g_setenv ("DFU_SELF_TEST_IMAGE_MEMCPY_NAME", "", FALSE);
-	filename = dfu_test_get_filename ("dev_VRBRAIN.dfu");
+	filename = g_test_build_filename (G_TEST_DIST, "tests", "dev_VRBRAIN.dfu", NULL);
+	if (!g_file_test (filename, G_FILE_TEST_EXISTS) && ci == NULL) {
+		g_test_skip ("Missing dev_VRBRAIN.dfu");
+		return;
+	}
 	g_assert (filename != NULL);
 	file = g_file_new_for_path (filename);
 	firmware = dfu_firmware_new ();

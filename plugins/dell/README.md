@@ -181,3 +181,7 @@ These updates can be performed the standard method of using:
 
 Some components are updatable via other plugins in fwupd such as multi stream
 transport hub (MST) and thunderbolt NVM.
+
+External interface access
+-------------------------
+This plugin requires read/write access to `/dev/wmi/dell-smbios` and `/sys/bus/platform/devices/dcdbas`.

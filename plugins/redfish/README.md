@@ -73,3 +73,7 @@ and verify the uri with
 or
 
     $ curl -k https://192.168.0.133:443/redfish/v1/
+
+External interface access
+-------------------------
+This requires HTTP access to a given URL.

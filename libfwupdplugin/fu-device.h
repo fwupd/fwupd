@@ -64,8 +64,20 @@ struct _FuDeviceClass
 	gboolean		 (*cleanup)		(FuDevice	*self,
 							 FwupdInstallFlags flags,
 							 GError		**error);
+	void			 (*report_metadata_pre)	(FuDevice	*self,
+							 GHashTable	*metadata);
+	void			 (*report_metadata_post)(FuDevice	*self,
+							 GHashTable	*metadata);
+	gboolean		 (*bind_driver)		(FuDevice	*self,
+							 const gchar	*subsystem,
+							 const gchar	*driver,
+							 GError		**error);
+	gboolean		 (*unbind_driver)	(FuDevice	*self,
+							 GError		**error);
+	GBytes			*(*dump_firmware)	(FuDevice	*self,
+							 GError		**error);
 	/*< private >*/
-	gpointer	padding[16];
+	gpointer	padding[11];
 };
 
 /**
@@ -120,6 +132,7 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_set_plugin(d,v)		fwupd_device_set_plugin(FWUPD_DEVICE(d),v)
 #define fu_device_set_serial(d,v)		fwupd_device_set_serial(FWUPD_DEVICE(d),v)
 #define fu_device_set_summary(d,v)		fwupd_device_set_summary(FWUPD_DEVICE(d),v)
+#define fu_device_set_branch(d,v)		fwupd_device_set_branch(FWUPD_DEVICE(d),v)
 #define fu_device_set_update_message(d,v)	fwupd_device_set_update_message(FWUPD_DEVICE(d),v)
 #define fu_device_set_update_image(d,v)		fwupd_device_set_update_image(FWUPD_DEVICE(d),v)
 #define fu_device_set_update_error(d,v)		fwupd_device_set_update_error(FWUPD_DEVICE(d),v)
@@ -142,6 +155,7 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_get_name(d)			fwupd_device_get_name(FWUPD_DEVICE(d))
 #define fu_device_get_serial(d)			fwupd_device_get_serial(FWUPD_DEVICE(d))
 #define fu_device_get_summary(d)		fwupd_device_get_summary(FWUPD_DEVICE(d))
+#define fu_device_get_branch(d)			fwupd_device_get_branch(FWUPD_DEVICE(d))
 #define fu_device_get_id(d)			fwupd_device_get_id(FWUPD_DEVICE(d))
 #define fu_device_get_plugin(d)			fwupd_device_get_plugin(FWUPD_DEVICE(d))
 #define fu_device_get_update_error(d)		fwupd_device_get_update_error(FWUPD_DEVICE(d))
@@ -259,10 +273,13 @@ void		 fu_device_set_progress			(FuDevice	*self,
 void		 fu_device_set_progress_full		(FuDevice	*self,
 							 gsize		 progress_done,
 							 gsize		 progress_total);
+void		 fu_device_sleep_with_progress		(FuDevice	*self,
+							 guint		 delay_secs);
 void		 fu_device_set_quirks			(FuDevice	*self,
 							 FuQuirks	*quirks);
 FuQuirks	*fu_device_get_quirks			(FuDevice	*self);
 FwupdRelease	*fu_device_get_release_default		(FuDevice	*self);
+GType		 fu_device_get_specialized_gtype	(FuDevice	*self);
 gboolean	 fu_device_write_firmware		(FuDevice	*self,
 							 GBytes		*fw,
 							 FwupdInstallFlags flags,
@@ -272,6 +289,8 @@ FuFirmware	*fu_device_prepare_firmware		(FuDevice	*self,
 							 FwupdInstallFlags flags,
 							 GError		**error);
 FuFirmware	*fu_device_read_firmware		(FuDevice	*self,
+							 GError		**error);
+GBytes		*fu_device_dump_firmware		(FuDevice	*self,
 							 GError		**error);
 gboolean	 fu_device_attach			(FuDevice	*self,
 							 GError		**error);
@@ -318,3 +337,11 @@ gboolean	 fu_device_retry			(FuDevice	*self,
 							 guint		 count,
 							 gpointer	 user_data,
 							 GError		**error);
+gboolean	 fu_device_bind_driver			(FuDevice	*self,
+							 const gchar	*subsystem,
+							 const gchar	*driver,
+							 GError		**error);
+gboolean	 fu_device_unbind_driver		(FuDevice	*self,
+							 GError		**error);
+GHashTable	*fu_device_report_metadata_pre		(FuDevice	*self);
+GHashTable	*fu_device_report_metadata_post		(FuDevice	*self);

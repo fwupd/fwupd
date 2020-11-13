@@ -8,7 +8,8 @@
 #pragma once
 
 #include <glib.h>
-#include <efivar.h>
+
+#include "fwupd-common.h"
 
 #define EFI_CAPSULE_HEADER_FLAGS_PERSIST_ACROSS_RESET	0x00010000
 #define EFI_CAPSULE_HEADER_FLAGS_POPULATE_SYSTEM_TABLE	0x00020000
@@ -29,7 +30,7 @@ typedef struct __attribute__((__packed__)) {
 } efi_time_t;
 
 typedef struct __attribute__((__packed__)) {
-	efi_guid_t	 guid;
+	fwupd_guid_t	 guid;
 	guint32		 header_size;
 	guint32		 flags;
 	guint32		 capsule_image_size;
@@ -47,7 +48,7 @@ typedef struct __attribute__((__packed__)) {
 
 typedef struct __attribute__((__packed__)) {
 	guint32		 update_info_version;
-	efi_guid_t	 guid;
+	fwupd_guid_t	 guid;
 	guint32		 capsule_flags;
 	guint64		 hw_inst;
 	efi_time_t	 time_attempted;
@@ -74,4 +75,3 @@ GPtrArray	*fu_uefi_get_esrt_entry_paths	(const gchar	*esrt_path,
 						 GError		**error);
 guint64		 fu_uefi_read_file_as_uint64	(const gchar	*path,
 						 const gchar	*attr_name);
-void		 fu_uefi_print_efivar_errors	(void);

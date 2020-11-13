@@ -8,6 +8,7 @@
 
 #include "fu-quirks.h"
 #include "fu-plugin.h"
+#include "fu-security-attrs.h"
 #include "fu-smbios.h"
 
 FuPlugin	*fu_plugin_new				(void);
@@ -89,6 +90,8 @@ gboolean	 fu_plugin_runner_udev_device_changed	(FuPlugin	*self,
 gboolean	 fu_plugin_runner_device_created	(FuPlugin	*self,
 							 FuDevice	*device,
 							 GError		**error);
+void		 fu_plugin_runner_device_added		(FuPlugin	*self,
+							 FuDevice	*device);
 void		 fu_plugin_runner_device_removed	(FuPlugin	*self,
 							 FuDevice	*device);
 void		 fu_plugin_runner_device_register	(FuPlugin	*self,
@@ -114,6 +117,8 @@ gboolean	 fu_plugin_runner_clear_results		(FuPlugin	*self,
 gboolean	 fu_plugin_runner_get_results		(FuPlugin	*self,
 							 FuDevice	*device,
 							 GError		**error);
+void		 fu_plugin_runner_add_security_attrs	(FuPlugin	*self,
+							 FuSecurityAttrs*attrs);
 gint		 fu_plugin_name_compare			(FuPlugin	*plugin1,
 							 FuPlugin	*plugin2);
 gint		 fu_plugin_order_compare		(FuPlugin	*plugin1,

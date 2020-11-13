@@ -38,17 +38,15 @@ typedef struct {
 	gchar				*logical_id;
 	gchar				*proxy_guid;
 	FuDevice			*alternate;
-	FuDevice			*parent;	/* noref */
 	FuDevice			*proxy;		/* noref */
 	FuQuirks			*quirks;
-	GHashTable			*metadata;
+	GHashTable			*metadata;	/* (nullable) */
 	GRWLock				 metadata_mutex;
 	GPtrArray			*parent_guids;
 	GRWLock				 parent_guids_mutex;
-	GPtrArray			*children;
 	guint				 remove_delay;	/* ms */
 	guint				 progress;
-	guint				 order;
+	gint				 order;
 	guint				 priority;
 	guint				 poll_id;
 	gboolean			 done_probe;
@@ -75,7 +73,6 @@ enum {
 	PROP_PHYSICAL_ID,
 	PROP_LOGICAL_ID,
 	PROP_QUIRKS,
-	PROP_PARENT,
 	PROP_PROXY,
 	PROP_LAST
 };
@@ -101,9 +98,6 @@ fu_device_get_property (GObject *object, guint prop_id,
 		break;
 	case PROP_QUIRKS:
 		g_value_set_object (value, priv->quirks);
-		break;
-	case PROP_PARENT:
-		g_value_set_object (value, priv->parent);
 		break;
 	case PROP_PROXY:
 		g_value_set_object (value, priv->proxy);
@@ -131,9 +125,6 @@ fu_device_set_property (GObject *object, guint prop_id,
 		break;
 	case PROP_QUIRKS:
 		fu_device_set_quirks (self, g_value_get_object (value));
-		break;
-	case PROP_PARENT:
-		fu_device_set_parent (self, g_value_get_object (value));
 		break;
 	case PROP_PROXY:
 		fu_device_set_proxy (self, g_value_get_object (value));
@@ -169,12 +160,22 @@ fu_device_get_possible_plugins (FuDevice *self)
  * Adds a plugin name to the list of plugins that *might* be able to handle this
  * device. This is tyically called from a quirk handler.
  *
- * Since: 1.3.3
+ * Duplicate plugin names are ignored.
+ *
+ * Since: 1.5.1
  **/
-static void
+void
 fu_device_add_possible_plugin (FuDevice *self, const gchar *plugin)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
+
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_return_if_fail (plugin != NULL);
+
+	/* add if it does not already exist */
+	if (g_ptr_array_find_with_equal_func (priv->possible_plugins, plugin,
+					      g_str_equal, NULL))
+		return;
 	g_ptr_array_add (priv->possible_plugins, g_strdup (plugin));
 }
 
@@ -405,7 +406,7 @@ fu_device_set_poll_interval (FuDevice *self, guint interval)
  *
  * Since: 1.0.8
  **/
-guint
+gint
 fu_device_get_order (FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
@@ -424,7 +425,7 @@ fu_device_get_order (FuDevice *self)
  * Since: 1.0.8
  **/
 void
-fu_device_set_order (FuDevice *self, guint order)
+fu_device_set_order (FuDevice *self, gint order)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_DEVICE (self));
@@ -603,9 +604,8 @@ fu_device_set_alternate (FuDevice *self, FuDevice *alternate)
 FuDevice *
 fu_device_get_parent (FuDevice *self)
 {
-	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
-	return priv->parent;
+	return FU_DEVICE (fwupd_device_get_parent (FWUPD_DEVICE (self)));
 }
 
 /**
@@ -624,12 +624,13 @@ fu_device_get_parent (FuDevice *self)
 FuDevice *
 fu_device_get_root (FuDevice *self)
 {
-	FuDevicePrivate *priv = GET_PRIVATE (self);
+	FuDevice *parent;
 	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
-	while (priv->parent != NULL) {
-		self = priv->parent;
-		priv = GET_PRIVATE (self);
-	}
+	do {
+		parent = fu_device_get_parent (self);
+		if (parent != NULL)
+			self = parent;
+	} while (parent != NULL);
 	return g_object_ref (self);
 }
 
@@ -649,16 +650,7 @@ fu_device_get_root (FuDevice *self)
 void
 fu_device_set_parent (FuDevice *self, FuDevice *parent)
 {
-	FuDevicePrivate *priv = GET_PRIVATE (self);
-
 	g_return_if_fail (FU_IS_DEVICE (self));
-
-	/* if unspecified, always child before parent */
-	if (parent != NULL &&
-	    fu_device_get_order (parent) == fu_device_get_order (self)) {
-		g_debug ("auto-setting %s order", fu_device_get_id (parent));
-		fu_device_set_order (parent, fu_device_get_order (self) + 1);
-	}
 
 	/* if the parent has quirks, make the child inherit it */
 	if (parent != NULL) {
@@ -667,15 +659,7 @@ fu_device_set_parent (FuDevice *self, FuDevice *parent)
 			fu_device_set_quirks (self, fu_device_get_quirks (parent));
 	}
 
-	if (priv->parent != NULL)
-		g_object_remove_weak_pointer (G_OBJECT (priv->parent), (gpointer *) &priv->parent);
-	if (parent != NULL)
-		g_object_add_weak_pointer (G_OBJECT (parent), (gpointer *) &priv->parent);
-	priv->parent = parent;
-
-	/* this is what goes over D-Bus */
-	fwupd_device_set_parent_id (FWUPD_DEVICE (self),
-				    parent != NULL ? fu_device_get_id (parent) : NULL);
+	fwupd_device_set_parent (FWUPD_DEVICE (self), FWUPD_DEVICE (parent));
 }
 
 /**
@@ -740,9 +724,8 @@ fu_device_get_proxy (FuDevice *self)
 GPtrArray *
 fu_device_get_children (FuDevice *self)
 {
-	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
-	return priv->children;
+	return fwupd_device_get_children (FWUPD_DEVICE (self));
 }
 
 /**
@@ -759,20 +742,18 @@ void
 fu_device_add_child (FuDevice *self, FuDevice *child)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
+	GPtrArray *children;
+
 	g_return_if_fail (FU_IS_DEVICE (self));
 	g_return_if_fail (FU_IS_DEVICE (child));
 
 	/* add if the child does not already exist */
-	for (guint i = 0; i < priv->children->len; i++) {
-		FuDevice *devtmp = g_ptr_array_index (priv->children, i);
-		if (devtmp == child)
-			return;
-	}
-	g_ptr_array_add (priv->children, g_object_ref (child));
+	fwupd_device_add_child (FWUPD_DEVICE (self), FWUPD_DEVICE (child));
 
 	/* ensure the parent has the MAX() of the childrens removal delay  */
-	for (guint i = 0; i < priv->children->len; i++) {
-		FuDevice *child_tmp = g_ptr_array_index (priv->children, i);
+	children = fu_device_get_children (self);
+	for (guint i = 0; i < children->len; i++) {
+		FuDevice *child_tmp = g_ptr_array_index (children, i);
 		guint remove_delay = fu_device_get_remove_delay (child_tmp);
 		if (remove_delay > priv->remove_delay) {
 			g_debug ("setting remove delay to %u as child is greater than %u",
@@ -802,15 +783,6 @@ fu_device_add_child (FuDevice *self, FuDevice *child)
 
 	/* ensure the parent is also set on the child */
 	fu_device_set_parent (child, self);
-
-	/* order devices so they are updated in the correct sequence */
-	if (fu_device_has_flag (child, FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST)) {
-		if (priv->order >= fu_device_get_order (child))
-			fu_device_set_order (child, priv->order + 1);
-	} else {
-		if (priv->order <= fu_device_get_order (child))
-			priv->order = fu_device_get_order (child) + 1;
-	}
 }
 
 /**
@@ -987,6 +959,10 @@ fu_device_set_quirk_kv (FuDevice *self,
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_SUMMARY) == 0) {
 		fu_device_set_summary (self, value);
+		return TRUE;
+	}
+	if (g_strcmp0 (key, FU_QUIRKS_BRANCH) == 0) {
+		fu_device_set_branch (self, value);
 		return TRUE;
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_VENDOR) == 0) {
@@ -1409,6 +1385,8 @@ fu_device_get_metadata (FuDevice *self, const gchar *key)
 	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
 	g_return_val_if_fail (key != NULL, NULL);
 	g_return_val_if_fail (locker != NULL, NULL);
+	if (priv->metadata == NULL)
+		return NULL;
 	return g_hash_table_lookup (priv->metadata, key);
 }
 
@@ -1434,6 +1412,8 @@ fu_device_get_metadata_boolean (FuDevice *self, const gchar *key)
 	g_return_val_if_fail (key != NULL, FALSE);
 	g_return_val_if_fail (locker != NULL, FALSE);
 
+	if (priv->metadata == NULL)
+		return FALSE;
 	tmp = g_hash_table_lookup (priv->metadata, key);
 	if (tmp == NULL)
 		return FALSE;
@@ -1464,6 +1444,8 @@ fu_device_get_metadata_integer (FuDevice *self, const gchar *key)
 	g_return_val_if_fail (key != NULL, G_MAXUINT);
 	g_return_val_if_fail (locker != NULL, G_MAXUINT);
 
+	if (priv->metadata == NULL)
+		return G_MAXUINT;
 	tmp = g_hash_table_lookup (priv->metadata, key);
 	if (tmp == NULL)
 		return G_MAXUINT;
@@ -1492,6 +1474,8 @@ fu_device_remove_metadata (FuDevice *self, const gchar *key)
 	g_return_if_fail (FU_IS_DEVICE (self));
 	g_return_if_fail (key != NULL);
 	g_return_if_fail (locker != NULL);
+	if (priv->metadata == NULL)
+		return;
 	g_hash_table_remove (priv->metadata, key);
 }
 
@@ -1514,6 +1498,10 @@ fu_device_set_metadata (FuDevice *self, const gchar *key, const gchar *value)
 	g_return_if_fail (key != NULL);
 	g_return_if_fail (value != NULL);
 	g_return_if_fail (locker != NULL);
+	if (priv->metadata == NULL) {
+		priv->metadata = g_hash_table_new_full (g_str_hash, g_str_equal,
+							g_free, g_free);
+	}
 	g_hash_table_insert (priv->metadata, g_strdup (key), g_strdup (value));
 }
 
@@ -1617,6 +1605,7 @@ void
 fu_device_set_id (FuDevice *self, const gchar *id)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
+	GPtrArray *children;
 	g_autofree gchar *id_hash = NULL;
 
 	g_return_if_fail (FU_IS_DEVICE (self));
@@ -1633,8 +1622,9 @@ fu_device_set_id (FuDevice *self, const gchar *id)
 	priv->device_id_valid = TRUE;
 
 	/* ensure the parent ID is set */
-	for (guint i = 0; i < priv->children->len; i++) {
-		FuDevice *devtmp = g_ptr_array_index (priv->children, i);
+	children = fu_device_get_children (self);
+	for (guint i = 0; i < children->len; i++) {
+		FuDevice *devtmp = g_ptr_array_index (children, i);
 		fwupd_device_set_parent_id (FWUPD_DEVICE (devtmp), id_hash);
 	}
 }
@@ -2250,6 +2240,32 @@ fu_device_set_progress_full (FuDevice *self, gsize progress_done, gsize progress
 	fu_device_set_progress (self, (guint) percentage);
 }
 
+/**
+ * fu_device_sleep_with_progress:
+ * @self: A #FuDevice
+ * @delay_secs: the delay in seconds
+ *
+ * Sleeps, setting the device progress from 0..100% as time continues.
+ * The value is gven in whole seconds as it does not make sense to show the
+ * progressbar advancing so quickly for durations of less than one second.
+ *
+ * Since: 1.5.0
+ **/
+void
+fu_device_sleep_with_progress (FuDevice *self, guint delay_secs)
+{
+	gulong delay_us_pc = (delay_secs * G_USEC_PER_SEC) / 100;
+
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_return_if_fail (delay_secs > 0);
+
+	fu_device_set_progress (self, 0);
+	for (guint i = 0; i < 100; i++) {
+		g_usleep (delay_us_pc);
+		fu_device_set_progress (self, i + 1);
+	}
+}
+
 static void
 fu_device_add_string (FuDevice *self, guint idt, GString *str)
 {
@@ -2257,7 +2273,6 @@ fu_device_add_string (FuDevice *self, guint idt, GString *str)
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_autofree gchar *tmp = NULL;
-	g_autoptr(GList) keys = NULL;
 	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_reader_locker_new (&priv->metadata_mutex);
 
 	g_return_if_fail (locker != NULL);
@@ -2288,15 +2303,17 @@ fu_device_add_string (FuDevice *self, guint idt, GString *str)
 		g_autofree gchar *sz = g_strdup_printf ("%" G_GUINT64_FORMAT, priv->size_max);
 		fu_common_string_append_kv (str, idt + 1, "FirmwareSizeMax", sz);
 	}
-	if (priv->order > 0)
+	if (priv->order != G_MAXINT)
 		fu_common_string_append_ku (str, idt + 1, "Order", priv->order);
 	if (priv->priority > 0)
 		fu_common_string_append_ku (str, idt + 1, "Priority", priv->priority);
-	keys = g_hash_table_get_keys (priv->metadata);
-	for (GList *l = keys; l != NULL; l = l->next) {
-		const gchar *key = l->data;
-		const gchar *value = g_hash_table_lookup (priv->metadata, key);
-		fu_common_string_append_kv (str, idt + 1, key, value);
+	if (priv->metadata != NULL) {
+		g_autoptr(GList) keys = g_hash_table_get_keys (priv->metadata);
+		for (GList *l = keys; l != NULL; l = l->next) {
+			const gchar *key = l->data;
+			const gchar *value = g_hash_table_lookup (priv->metadata, key);
+			fu_common_string_append_kv (str, idt + 1, key, value);
+		}
 	}
 
 	/* subclassed */
@@ -2305,11 +2322,9 @@ fu_device_add_string (FuDevice *self, guint idt, GString *str)
 
 	/* print children also */
 	children = fu_device_get_children (self);
-	if (children != NULL) {
-		for (guint i = 0; i < children->len; i++) {
-			FuDevice *child = g_ptr_array_index (children, i);
-			fu_device_add_string (child, idt + 1, str);
-		}
+	for (guint i = 0; i < children->len; i++) {
+		FuDevice *child = g_ptr_array_index (children, i);
+		fu_device_add_string (child, idt + 1, str);
 	}
 }
 
@@ -2474,6 +2489,7 @@ fu_device_prepare_firmware (FuDevice *self,
 
 	/* optionally subclassed */
 	if (klass->prepare_firmware != NULL) {
+		fu_device_set_status (self, FWUPD_STATUS_DECOMPRESSING);
 		firmware = klass->prepare_firmware (self, fw, flags, error);
 		if (firmware == NULL)
 			return NULL;
@@ -2517,6 +2533,11 @@ fu_device_prepare_firmware (FuDevice *self,
  * @error: A #GError
  *
  * Reads firmware from the device by calling a plugin-specific vfunc.
+ * The device subclass should try to ensure the firmware does not contain any
+ * serial numbers or user-configuration values and can be used to calculate the
+ * device checksum.
+ *
+ * The return value can be converted to a blob of memory using fu_firmware_write().
  *
  * Returns: (transfer full): A #FuFirmware, or %NULL for error
  *
@@ -2526,14 +2547,13 @@ FuFirmware *
 fu_device_read_firmware (FuDevice *self, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+	g_autoptr(GBytes) fw = NULL;
 
 	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
-
-	/* no plugin-specific method or device doesn't support */
-	if (!fu_device_has_flag (self, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE) ||
-	    klass->read_firmware == NULL) {
+	/* device does not support reading for verification CRCs */
+	if (!fu_device_has_flag (self, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE)) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -2542,7 +2562,49 @@ fu_device_read_firmware (FuDevice *self, GError **error)
 	}
 
 	/* call vfunc */
-	return klass->read_firmware (self, error);
+	if (klass->read_firmware != NULL)
+		return klass->read_firmware (self, error);
+
+	/* use the default FuFirmware when only ->dump_firmware is provided */
+	fw = fu_device_dump_firmware (self, error);
+	if (fw == NULL)
+		return NULL;
+	return fu_firmware_new_from_bytes (fw);
+}
+
+/**
+ * fu_device_dump_firmware:
+ * @self: A #FuDevice
+ * @error: A #GError
+ *
+ * Reads the raw firmware image from the device by calling a plugin-specific
+ * vfunc. This raw firmware image may contain serial numbers or device-specific
+ * configuration but should be a byte-for-byte match compared to using an
+ * external SPI programmer.
+ *
+ * Returns: (transfer full): A #GBytes, or %NULL for error
+ *
+ * Since: 1.5.0
+ **/
+GBytes *
+fu_device_dump_firmware (FuDevice *self, GError **error)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+
+	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* use the default FuFirmware when only ->dump_firmware is provided */
+	if (klass->dump_firmware == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "not supported");
+		return NULL;
+	}
+
+	/* proxy */
+	return klass->dump_firmware (self, error);
 }
 
 /**
@@ -2878,7 +2940,7 @@ fu_device_rescan (FuDevice *self, GError **error)
 void
 fu_device_convert_instance_ids (FuDevice *self)
 {
-	FuDevicePrivate *priv = GET_PRIVATE (self);
+	GPtrArray *children;
 	GPtrArray *instance_ids = fwupd_device_get_instance_ids (FWUPD_DEVICE (self));
 
 	/* OEM specific hardware */
@@ -2891,8 +2953,9 @@ fu_device_convert_instance_ids (FuDevice *self)
 	}
 
 	/* convert all children too */
-	for (guint i = 0; i < priv->children->len; i++) {
-		FuDevice *devtmp = g_ptr_array_index (priv->children, i);
+	children = fu_device_get_children (self);
+	for (guint i = 0; i < children->len; i++) {
+		FuDevice *devtmp = g_ptr_array_index (children, i);
 		fu_device_convert_instance_ids (devtmp);
 	}
 }
@@ -2988,6 +3051,138 @@ fu_device_probe_invalidate (FuDevice *self)
 }
 
 /**
+ * fu_device_report_metadata_pre:
+ * @self: A #FuDevice
+ *
+ * Collects metadata that would be useful for debugging a failed update report.
+ *
+ * Returns: (transfer full) (nullable): A #GHashTable, or %NULL if there is no data
+ *
+ * Since: 1.5.0
+ **/
+GHashTable *
+fu_device_report_metadata_pre (FuDevice *self)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+	g_autoptr(GHashTable) metadata = NULL;
+
+	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
+
+	/* not implemented */
+	if (klass->report_metadata_pre == NULL)
+		return NULL;
+
+	/* metadata for all devices */
+	metadata = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+	klass->report_metadata_pre (self, metadata);
+	return g_steal_pointer (&metadata);
+}
+
+/**
+ * fu_device_report_metadata_post:
+ * @self: A #FuDevice
+ *
+ * Collects metadata that would be useful for debugging a failed update report.
+ *
+ * Returns: (transfer full) (nullable): A #GHashTable, or %NULL if there is no data
+ *
+ * Since: 1.5.0
+ **/
+GHashTable *
+fu_device_report_metadata_post (FuDevice *self)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+	g_autoptr(GHashTable) metadata = NULL;
+
+	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
+
+	/* not implemented */
+	if (klass->report_metadata_post == NULL)
+		return NULL;
+
+	/* metadata for all devices */
+	metadata = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+	klass->report_metadata_post (self, metadata);
+	return g_steal_pointer (&metadata);
+}
+
+/**
+ * fu_device_bind_driver:
+ * @self: A #FuDevice
+ * @subsystem: A subsystem string, e.g. `pci`
+ * @driver: A kernel module name, e.g. `tg3`
+ * @error: A #GError, or %NULL
+ *
+ * Binds a driver to the device, which normally means the kernel driver takes
+ * control of the hardware.
+ *
+ * Returns: %TRUE if driver was bound.
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fu_device_bind_driver (FuDevice *self,
+		       const gchar *subsystem,
+		       const gchar *driver,
+		       GError **error)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+
+	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
+	g_return_val_if_fail (subsystem != NULL, FALSE);
+	g_return_val_if_fail (driver != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* not implemented */
+	if (klass->bind_driver == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "not supported");
+		return FALSE;
+	}
+
+	/* subclass */
+	return klass->bind_driver (self, subsystem, driver, error);
+}
+
+/**
+ * fu_device_unbind_driver:
+ * @self: A #FuDevice
+ * @error: A #GError, or %NULL
+ *
+ * Unbinds the driver from the device, which normally means the kernel releases
+ * the hardware so it can be used from userspace.
+ *
+ * If there is no driver bound then this function will return with success
+ * without actually doing anything.
+ *
+ * Returns: %TRUE if driver was unbound.
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fu_device_unbind_driver (FuDevice *self, GError **error)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+
+	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* not implemented */
+	if (klass->unbind_driver == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "not supported");
+		return FALSE;
+	}
+
+	/* subclass */
+	return klass->unbind_driver (self, error);
+}
+
+/**
  * fu_device_incorporate:
  * @self: A #FuDevice
  * @donor: Another #FuDevice
@@ -3004,7 +3199,6 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 	FuDevicePrivate *priv_donor = GET_PRIVATE (donor);
 	GPtrArray *instance_ids = fu_device_get_instance_ids (donor);
 	GPtrArray *parent_guids = fu_device_get_parent_guids (donor);
-	g_autoptr(GList) metadata_keys = NULL;
 
 	g_return_if_fail (FU_IS_DEVICE (self));
 	g_return_if_fail (FU_IS_DEVICE (donor));
@@ -3029,12 +3223,14 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 		fu_device_add_parent_guid (self, g_ptr_array_index (parent_guids, i));
 	g_rw_lock_reader_unlock (&priv_donor->parent_guids_mutex);
 	g_rw_lock_reader_lock (&priv_donor->metadata_mutex);
-	metadata_keys = g_hash_table_get_keys (priv_donor->metadata);
-	for (GList *l = metadata_keys; l != NULL; l = l->next) {
-		const gchar *key = l->data;
-		if (g_hash_table_lookup (priv->metadata, key) == NULL) {
-			const gchar *value = g_hash_table_lookup (priv_donor->metadata, key);
-			fu_device_set_metadata (self, key, value);
+	if (priv->metadata != NULL) {
+		g_autoptr(GList) keys = g_hash_table_get_keys (priv_donor->metadata);
+		for (GList *l = keys; l != NULL; l = l->next) {
+			const gchar *key = l->data;
+			if (g_hash_table_lookup (priv->metadata, key) == NULL) {
+				const gchar *value = g_hash_table_lookup (priv_donor->metadata, key);
+				fu_device_set_metadata (self, key, value);
+			}
 		}
 	}
 	g_rw_lock_reader_unlock (&priv_donor->metadata_mutex);
@@ -3134,13 +3330,6 @@ fu_device_class_init (FuDeviceClass *klass)
 				     G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_QUIRKS, pspec);
 
-	pspec = g_param_spec_object ("parent", NULL, NULL,
-				     FU_TYPE_DEVICE,
-				     G_PARAM_READWRITE |
-				     G_PARAM_CONSTRUCT |
-				     G_PARAM_STATIC_NAME);
-	g_object_class_install_property (object_class, PROP_PARENT, pspec);
-
 	pspec = g_param_spec_object ("proxy", NULL, NULL,
 				     FU_TYPE_DEVICE,
 				     G_PARAM_READWRITE |
@@ -3153,13 +3342,11 @@ static void
 fu_device_init (FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
-	priv->children = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	priv->order = G_MAXINT;
 	priv->parent_guids = g_ptr_array_new_with_free_func (g_free);
 	priv->possible_plugins = g_ptr_array_new_with_free_func (g_free);
 	priv->retry_recs = g_ptr_array_new_with_free_func (g_free);
 	g_rw_lock_init (&priv->parent_guids_mutex);
-	priv->metadata = g_hash_table_new_full (g_str_hash, g_str_equal,
-						g_free, g_free);
 	g_rw_lock_init (&priv->metadata_mutex);
 }
 
@@ -3169,20 +3356,19 @@ fu_device_finalize (GObject *object)
 	FuDevice *self = FU_DEVICE (object);
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 
+	g_rw_lock_clear (&priv->metadata_mutex);
+	g_rw_lock_clear (&priv->parent_guids_mutex);
+
 	if (priv->alternate != NULL)
 		g_object_unref (priv->alternate);
-	if (priv->parent != NULL)
-		g_object_remove_weak_pointer (G_OBJECT (priv->parent), (gpointer *) &priv->parent);
 	if (priv->proxy != NULL)
 		g_object_remove_weak_pointer (G_OBJECT (priv->proxy), (gpointer *) &priv->proxy);
 	if (priv->quirks != NULL)
 		g_object_unref (priv->quirks);
 	if (priv->poll_id != 0)
 		g_source_remove (priv->poll_id);
-	g_rw_lock_clear (&priv->metadata_mutex);
-	g_rw_lock_clear (&priv->parent_guids_mutex);
-	g_hash_table_unref (priv->metadata);
-	g_ptr_array_unref (priv->children);
+	if (priv->metadata != NULL)
+		g_hash_table_unref (priv->metadata);
 	g_ptr_array_unref (priv->parent_guids);
 	g_ptr_array_unref (priv->possible_plugins);
 	g_ptr_array_unref (priv->retry_recs);

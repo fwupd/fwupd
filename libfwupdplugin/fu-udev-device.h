@@ -41,6 +41,7 @@ struct _FuUdevDeviceClass
  * @FU_UDEV_DEVICE_FLAG_OPEN_READ:		Open the device read-only
  * @FU_UDEV_DEVICE_FLAG_OPEN_WRITE:		Open the device write-only
  * @FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT:	Get the vendor ID fallback from the parent
+ * @FU_UDEV_DEVICE_FLAG_USE_CONFIG:		Read and write from the device config
  *
  * Flags used when opening the device using fu_device_open().
  **/
@@ -49,6 +50,8 @@ typedef enum {
 	FU_UDEV_DEVICE_FLAG_OPEN_READ		= 1 << 0,
 	FU_UDEV_DEVICE_FLAG_OPEN_WRITE		= 1 << 1,
 	FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT	= 1 << 2,
+	FU_UDEV_DEVICE_FLAG_USE_CONFIG		= 1 << 3,
+	FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK	= 1 << 4,
 	/*< private >*/
 	FU_UDEV_DEVICE_FLAG_LAST
 } FuUdevDeviceFlags;
@@ -60,7 +63,10 @@ const gchar	*fu_udev_device_get_sysfs_path		(FuUdevDevice	*self);
 const gchar	*fu_udev_device_get_subsystem		(FuUdevDevice	*self);
 guint32		 fu_udev_device_get_vendor		(FuUdevDevice	*self);
 guint32		 fu_udev_device_get_model		(FuUdevDevice	*self);
+guint32		 fu_udev_device_get_subsystem_vendor	(FuUdevDevice	*self);
+guint32		 fu_udev_device_get_subsystem_model	(FuUdevDevice	*self);
 guint8		 fu_udev_device_get_revision		(FuUdevDevice	*self);
+guint64		 fu_udev_device_get_number		(FuUdevDevice	*self);
 guint		 fu_udev_device_get_slot_depth		(FuUdevDevice	*self,
 							 const gchar	*subsystem);
 gboolean	 fu_udev_device_set_physical_id		(FuUdevDevice	*self,

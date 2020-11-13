@@ -23,8 +23,8 @@ gboolean	 fu_config_set_key_value		(FuConfig	*self,
 
 guint64		 fu_config_get_archive_size_max		(FuConfig	*self);
 guint		 fu_config_get_idle_timeout		(FuConfig	*self);
-GPtrArray	*fu_config_get_blacklist_devices	(FuConfig	*self);
-GPtrArray	*fu_config_get_blacklist_plugins	(FuConfig	*self);
+GPtrArray	*fu_config_get_disabled_devices		(FuConfig	*self);
+GPtrArray	*fu_config_get_disabled_plugins		(FuConfig	*self);
 GPtrArray	*fu_config_get_approved_firmware	(FuConfig	*self);
 GPtrArray	*fu_config_get_blocked_firmware		(FuConfig	*self);
 gboolean	 fu_config_get_update_motd		(FuConfig	*self);

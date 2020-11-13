@@ -1,7 +1,7 @@
 # ThinkPad TBT3-TR Gen 2 dock
 [DeviceInstanceId=USB\VID_17EF&PID_3083]
 Guid = SYNAPTICS_CXAUDIO\CX2098X
-ParentGuid = TBT-01081720
+ParentGuid = USB\VID_17EF&PID_307F&HUB_0006
 
 # ThinkPad TBT3-MS Gen 2 dock
 [DeviceInstanceId=USB\VID_17EF&PID_3092]

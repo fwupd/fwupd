@@ -47,3 +47,7 @@ This plugin uses the following plugin-specific quirks:
 |------------------------|-------------------------------------------|-----------------------|
 | `AtaTransferBlocks`    | Blocks to transfer, or `0xffff` for max   | 1.2.4                 |
 | `AtaTransferMode`      | The transfer mode, `0x3`, `0x7` or `0xe`  | 1.2.4                 |
+
+External interface access
+-------------------------
+This plugin requires the `SG_IO` ioctl interface.

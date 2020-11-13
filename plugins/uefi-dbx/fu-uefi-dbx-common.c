@@ -6,6 +6,8 @@
 
 #include "config.h"
 
+#include "fwupd-error.h"
+
 #include "fu-common.h"
 #include "fu-efi-image.h"
 #include "fu-efi-signature-common.h"
@@ -64,8 +66,8 @@ fu_uefi_dbx_signature_list_validate_volume (GPtrArray *siglists, FuVolume *esp, 
 		g_debug ("fn=%s, checksum=%s", fn, checksum);
 		if (fu_efi_signature_list_array_has_checksum (siglists, checksum)) {
 			g_set_error (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NEEDS_USER_ACTION,
 				     "%s Authenticode checksum [%s] is present in dbx",
 				     fn, checksum);
 			return FALSE;

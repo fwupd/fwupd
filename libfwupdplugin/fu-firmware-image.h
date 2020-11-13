@@ -8,6 +8,7 @@
 
 #include <glib-object.h>
 #include <fwupd.h>
+#include <xmlb.h>
 
 #define FU_TYPE_FIRMWARE_IMAGE (fu_firmware_image_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuFirmwareImage, fu_firmware_image, FU, FIRMWARE_IMAGE, GObject)
@@ -24,8 +25,11 @@ struct _FuFirmwareImageClass
 						 GString		*str);
 	GBytes			*(*write)	(FuFirmwareImage	*self,
 						 GError			**error);
+	gboolean		 (*build)	(FuFirmwareImage	*self,
+						 XbNode			*n,
+						 GError			**error);
 	/*< private >*/
-	gpointer		 padding[28];
+	gpointer		 padding[27];
 };
 
 #define FU_FIRMWARE_IMAGE_ID_PAYLOAD		"payload"
@@ -38,17 +42,31 @@ gchar		*fu_firmware_image_to_string	(FuFirmwareImage	*self);
 const gchar	*fu_firmware_image_get_version	(FuFirmwareImage	*self);
 void		 fu_firmware_image_set_version	(FuFirmwareImage	*self,
 						 const gchar		*version);
+const gchar	*fu_firmware_image_get_filename	(FuFirmwareImage	*self);
+void		 fu_firmware_image_set_filename	(FuFirmwareImage	*self,
+						 const gchar		*filename);
 const gchar	*fu_firmware_image_get_id	(FuFirmwareImage	*self);
 void		 fu_firmware_image_set_id	(FuFirmwareImage	*self,
 						 const gchar		*id);
 guint64		 fu_firmware_image_get_addr	(FuFirmwareImage	*self);
 void		 fu_firmware_image_set_addr	(FuFirmwareImage	*self,
 						 guint64		 addr);
+guint64		 fu_firmware_image_get_offset	(FuFirmwareImage	*self);
+void		 fu_firmware_image_set_offset	(FuFirmwareImage	*self,
+						 guint64		 offset);
 guint64		 fu_firmware_image_get_idx	(FuFirmwareImage	*self);
 void		 fu_firmware_image_set_idx	(FuFirmwareImage	*self,
 						 guint64		 idx);
+GBytes		*fu_firmware_image_get_bytes	(FuFirmwareImage	*self);
 void		 fu_firmware_image_set_bytes	(FuFirmwareImage	*self,
 						 GBytes			*bytes);
+gboolean	 fu_firmware_image_parse	(FuFirmwareImage	*self,
+						 GBytes			*fw,
+						 FwupdInstallFlags	 flags,
+						 GError			**error);
+gboolean	 fu_firmware_image_build	(FuFirmwareImage	*self,
+						 XbNode			*n,
+						 GError			**error);
 GBytes		*fu_firmware_image_write	(FuFirmwareImage	*self,
 						 GError			**error);
 GBytes		*fu_firmware_image_write_chunk	(FuFirmwareImage	*self,

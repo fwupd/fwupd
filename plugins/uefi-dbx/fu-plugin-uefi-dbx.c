@@ -7,15 +7,18 @@
 #include "config.h"
 
 #include "fu-plugin-vfuncs.h"
+#include "fu-efivar.h"
 #include "fu-hash.h"
 #include "fu-efi-signature-common.h"
 #include "fu-efi-signature-parser.h"
+#include "fu-uefi-dbx-common.h"
 #include "fu-uefi-dbx-device.h"
 
 void
 fu_plugin_init (FuPlugin *plugin)
 {
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "uefi");
 }
 
 gboolean

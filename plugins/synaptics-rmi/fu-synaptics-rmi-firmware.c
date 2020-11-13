@@ -349,7 +349,7 @@ fu_synaptics_rmi_firmware_parse (FuFirmware *firmware,
 	/* verify checksum */
 	self->checksum = fu_common_read_uint32 (data + RMI_IMG_CHECKSUM_OFFSET, G_LITTLE_ENDIAN);
 	checksum_calculated = fu_synaptics_rmi_generate_checksum (data + 4, sz - 4);
-	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
 		if (self->checksum != checksum_calculated) {
 			g_set_error (error,
 				     FWUPD_ERROR,
@@ -403,7 +403,7 @@ fu_synaptics_rmi_firmware_generate_v0x (void)
 	GByteArray *buf = g_byte_array_new ();
 
 	/* create empty block */
-	g_byte_array_set_size (buf, RMI_IMG_FW_OFFSET + 0x4 + 0x4);
+	fu_byte_array_set_size (buf, RMI_IMG_FW_OFFSET + 0x4 + 0x4);
 	buf->data[RMI_IMG_IO_OFFSET] = 0x0;			/* no build_id or package_id */
 	buf->data[RMI_IMG_BOOTLOADER_VERSION_OFFSET] = 0x2;	/* not hierarchical */
 	memcpy (buf->data + RMI_IMG_PRODUCT_ID_OFFSET, "Example", 7);
@@ -436,7 +436,7 @@ fu_synaptics_rmi_firmware_generate_v10 (void)
 	};
 
 	/* create empty block */
-	g_byte_array_set_size (buf, RMI_IMG_FW_OFFSET + 0x48);
+	fu_byte_array_set_size (buf, RMI_IMG_FW_OFFSET + 0x48);
 	buf->data[RMI_IMG_IO_OFFSET] = 0x1;
 	buf->data[RMI_IMG_BOOTLOADER_VERSION_OFFSET] = 16;	/* hierarchical */
 	memcpy (buf->data + RMI_IMG_PRODUCT_ID_OFFSET, "Example", 7);

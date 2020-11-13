@@ -17,6 +17,7 @@
 #include "fu-engine-request.h"
 #include "fu-install-task.h"
 #include "fu-plugin.h"
+#include "fu-security-attrs.h"
 
 #define FU_TYPE_ENGINE (fu_engine_get_type ())
 G_DECLARE_FINAL_TYPE (FuEngine, fu_engine, FU, ENGINE, GObject)
@@ -50,6 +51,7 @@ gboolean	 fu_engine_load_plugins			(FuEngine	*self,
 gboolean	 fu_engine_get_tainted			(FuEngine	*self);
 const gchar	*fu_engine_get_host_product		(FuEngine *self);
 const gchar	*fu_engine_get_host_machine_id		(FuEngine *self);
+const gchar	*fu_engine_get_host_security_id		(FuEngine	*self);
 FwupdStatus	 fu_engine_get_status			(FuEngine	*self);
 XbSilo		*fu_engine_get_silo_from_blob		(FuEngine	*self,
 							 GBytes		*blob_cab,
@@ -86,6 +88,9 @@ GPtrArray	*fu_engine_get_upgrades			(FuEngine	*self,
 FwupdDevice	*fu_engine_get_results			(FuEngine	*self,
 							 const gchar	*device_id,
 							 GError		**error);
+FuSecurityAttrs	*fu_engine_get_host_security_attrs	(FuEngine	*self);
+GHashTable	*fu_engine_get_report_metadata		(FuEngine	*self,
+							 GError		**error);
 gboolean	 fu_engine_clear_results		(FuEngine	*self,
 							 const gchar	*device_id,
 							 GError		**error);
@@ -108,7 +113,7 @@ gboolean	 fu_engine_verify			(FuEngine	*self,
 gboolean	 fu_engine_verify_update		(FuEngine	*self,
 							 const gchar	*device_id,
 							 GError		**error);
-GBytes		*fu_engine_firmware_read		(FuEngine	*self,
+GBytes		*fu_engine_firmware_dump		(FuEngine	*self,
 							 FuDevice	*device,
 							 FwupdInstallFlags flags,
 							 GError		**error);
@@ -189,6 +194,8 @@ void		 fu_engine_add_plugin			(FuEngine	*self,
 void		 fu_engine_add_runtime_version		(FuEngine	*self,
 							 const gchar	*component_id,
 							 const gchar	*version);
+gboolean	 fu_engine_check_trust			(FuInstallTask	*task,
+							 GError		**error);
 gboolean	 fu_engine_check_requirements		(FuEngine	*self,
 							 FuEngineRequest *request,
 							 FuInstallTask	*task,

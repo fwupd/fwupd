@@ -64,11 +64,70 @@ typedef struct __attribute__((packed)) {
 typedef struct {
 	guint8			 type;
 	guint16			 handle;
-	GBytes			*data;
+	GByteArray		*buf;
 	GPtrArray		*strings;
 } FuSmbiosItem;
 
 G_DEFINE_TYPE (FuSmbios, fu_smbios, G_TYPE_OBJECT)
+
+static void
+fu_smbios_convert_dt_string (FuSmbios *self, guint8 type, guint8 offset,
+			     const gchar *path, const gchar *subpath)
+{
+	FuSmbiosItem *item = g_ptr_array_index (self->items, type);
+	gsize bufsz = 0;
+	g_autofree gchar *fn = g_build_filename (path, subpath, NULL);
+	g_autofree gchar *buf = NULL;
+
+	/* not found */
+	if (!g_file_get_contents (fn, &buf, &bufsz, NULL))
+		return;
+
+	/* add to strtab */
+	g_ptr_array_add (item->strings, g_strndup (buf, bufsz));
+	for (guint i = item->buf->len; i < (guint) offset + 1; i++)
+		fu_byte_array_append_uint8 (item->buf, 0x0);
+	item->buf->data[offset] = item->strings->len;
+}
+
+static gboolean
+fu_smbios_setup_from_path_dt (FuSmbios *self, const gchar *path, GError **error)
+{
+	/* add all four faked structures */
+	for (guint i = 0; i < FU_SMBIOS_STRUCTURE_TYPE_LAST; i++) {
+		FuSmbiosItem *item = g_new0 (FuSmbiosItem, 1);
+		item->type = i;
+		item->buf = g_byte_array_new ();
+		item->strings = g_ptr_array_new_with_free_func (g_free);
+		g_ptr_array_add (self->items, item);
+	}
+
+	/* DMI:Manufacturer */
+	fu_smbios_convert_dt_string (self, FU_SMBIOS_STRUCTURE_TYPE_SYSTEM, 0x04,
+				     path, "vendor");
+
+	/* DMI:Family */
+	fu_smbios_convert_dt_string (self, FU_SMBIOS_STRUCTURE_TYPE_SYSTEM, 0x1a,
+				     path, "model-name");
+
+	/* DMI:ProductName */
+	fu_smbios_convert_dt_string (self, FU_SMBIOS_STRUCTURE_TYPE_SYSTEM, 0x05,
+				     path, "model");
+
+	/* DMI:BiosVersion */
+	fu_smbios_convert_dt_string (self, FU_SMBIOS_STRUCTURE_TYPE_BIOS, 0x05,
+				     path, "ibm,firmware-versions/version");
+
+	/* DMI:BaseboardManufacturer */
+	fu_smbios_convert_dt_string (self, FU_SMBIOS_STRUCTURE_TYPE_BASEBOARD, 0x04,
+				     path, "vpd/root-node-vpd@a000/enclosure@1e00/backplane@800/vendor");
+
+	/* DMI:BaseboardProduct */
+	fu_smbios_convert_dt_string (self, FU_SMBIOS_STRUCTURE_TYPE_BASEBOARD, 0x05,
+				     path, "vpd/root-node-vpd@a000/enclosure@1e00/backplane@800/part-number");
+
+	return TRUE;
+}
 
 static gboolean
 fu_smbios_setup_from_data (FuSmbios *self, const guint8 *buf, gsize sz, GError **error)
@@ -93,8 +152,9 @@ fu_smbios_setup_from_data (FuSmbios *self, const guint8 *buf, gsize sz, GError *
 		item = g_new0 (FuSmbiosItem, 1);
 		item->type = str->type;
 		item->handle = GUINT16_FROM_LE (str->handle);
-		item->data = g_bytes_new (buf + i, str->len);
+		item->buf = g_byte_array_sized_new (str->len);
 		item->strings = g_ptr_array_new_with_free_func (g_free);
+		g_byte_array_append (item->buf, buf + i, str->len);
 		g_ptr_array_add (self->items, item);
 
 		/* jump to the end of the struct */
@@ -135,6 +195,17 @@ fu_smbios_setup_from_file (FuSmbios *self, const gchar *filename, GError **error
 {
 	gsize sz = 0;
 	g_autofree gchar *buf = NULL;
+	g_autofree gchar *basename = NULL;
+
+	g_return_val_if_fail (FU_IS_SMBIOS (self), FALSE);
+	g_return_val_if_fail (filename != NULL, FALSE);
+
+	/* use a heuristic */
+	basename = g_path_get_basename (filename);
+	if (g_strcmp0 (basename, "base") == 0)
+		return fu_smbios_setup_from_path_dt (self, filename, error);
+
+	/* DMI blob */
 	if (!g_file_get_contents (filename, &buf, &sz, error))
 		return FALSE;
 	return fu_smbios_setup_from_data (self, (guint8 *) buf, sz, error);
@@ -229,20 +300,8 @@ fu_smbios_parse_ep64 (FuSmbios *self, const gchar *buf, gsize sz, GError **error
 	return TRUE;
 }
 
-/**
- * fu_smbios_setup_from_path:
- * @self: A #FuSmbios
- * @path: A path, e.g. `/sys/firmware/dmi/tables`
- * @error: A #GError or %NULL
- *
- * Reads all the SMBIOS values from a specific path.
- *
- * Returns: %TRUE for success
- *
- * Since: 1.0.0
- **/
-gboolean
-fu_smbios_setup_from_path (FuSmbios *self, const gchar *path, GError **error)
+static gboolean
+fu_smbios_setup_from_path_dmi (FuSmbios *self, const gchar *path, GError **error)
 {
 	gsize sz = 0;
 	g_autofree gchar *dmi_fn = NULL;
@@ -305,6 +364,33 @@ fu_smbios_setup_from_path (FuSmbios *self, const gchar *path, GError **error)
 }
 
 /**
+ * fu_smbios_setup_from_path:
+ * @self: A #FuSmbios
+ * @path: A path, e.g. `/sys/firmware/dmi/tables`
+ * @error: A #GError or %NULL
+ *
+ * Reads all the SMBIOS values from a specific path.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.0.0
+ **/
+gboolean
+fu_smbios_setup_from_path (FuSmbios *self, const gchar *path, GError **error)
+{
+	g_autofree gchar *basename = NULL;
+
+	g_return_val_if_fail (FU_IS_SMBIOS (self), FALSE);
+	g_return_val_if_fail (path != NULL, FALSE);
+
+	/* use a heuristic */
+	basename = g_path_get_basename (path);
+	if (g_strcmp0 (basename, "base") == 0)
+		return fu_smbios_setup_from_path_dt (self, path, error);
+	return fu_smbios_setup_from_path_dmi (self, path, error);
+}
+
+/**
  * fu_smbios_setup:
  * @self: A #FuSmbios
  * @error: A #GError or %NULL
@@ -319,11 +405,30 @@ gboolean
 fu_smbios_setup (FuSmbios *self, GError **error)
 {
 	g_autofree gchar *path = NULL;
+	g_autofree gchar *path_dt = NULL;
 	g_autofree gchar *sysfsfwdir = NULL;
+
 	g_return_val_if_fail (FU_IS_SMBIOS (self), FALSE);
+
 	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
+
+	/* DMI */
 	path = g_build_filename (sysfsfwdir, "dmi", "tables", NULL);
-	return fu_smbios_setup_from_path (self, path, error);
+	if (g_file_test (path, G_FILE_TEST_EXISTS))
+		return fu_smbios_setup_from_path (self, path, error);
+
+	/* DT */
+	path_dt = g_build_filename (sysfsfwdir, "devicetree", "base", NULL);
+	if (g_file_test (path_dt, G_FILE_TEST_EXISTS))
+		return fu_smbios_setup_from_path (self, path_dt, error);
+
+	/* neither found */
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "neither SMBIOS or DT found");
+	return FALSE;
+
 }
 
 /**
@@ -348,8 +453,7 @@ fu_smbios_to_string (FuSmbios *self)
 	for (guint i = 0; i < self->items->len; i++) {
 		FuSmbiosItem *item = g_ptr_array_index (self->items, i);
 		g_string_append_printf (str, "Type: %02x\n", item->type);
-		g_string_append_printf (str, " Length: %" G_GSIZE_FORMAT "\n",
-					g_bytes_get_size (item->data));
+		g_string_append_printf (str, " Length: %u\n", item->buf->len);
 		g_string_append_printf (str, " Handle: 0x%04x\n", item->handle);
 		for (guint j = 0; j < item->strings->len; j++) {
 			const gchar *tmp = g_ptr_array_index (item->strings, j);
@@ -395,7 +499,54 @@ fu_smbios_get_data (FuSmbios *self, guint8 type, GError **error)
 			     "no structure with type %02x", type);
 		return NULL;
 	}
-	return g_bytes_ref (item->data);
+	return g_bytes_new (item->buf->data, item->buf->len);
+}
+
+/**
+ * fu_smbios_get_integer:
+ * @self: A #FuSmbios
+ * @type: A structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS
+ * @offset: A structure offset
+ * @error: A #GError or %NULL
+ *
+ * Reads an integer value from the SMBIOS string table of a specific structure.
+ *
+ * The @type and @offset can be referenced from the DMTF SMBIOS specification:
+ * https://www.dmtf.org/sites/default/files/standards/documents/DSP0134_3.1.1.pdf
+ *
+ * Returns: an integer, or %G_MAXUINT if invalid or not found
+ *
+ * Since: 1.5.0
+ **/
+guint
+fu_smbios_get_integer (FuSmbios *self, guint8 type, guint8 offset, GError **error)
+{
+	FuSmbiosItem *item;
+
+	g_return_val_if_fail (FU_IS_SMBIOS (self), 0);
+
+	/* get item */
+	item = fu_smbios_get_item_for_type (self, type);
+	if (item == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "no structure with type %02x", type);
+		return G_MAXUINT;
+	}
+
+	/* check offset valid */
+	if (offset >= item->buf->len) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "offset bigger than size %u",
+			     item->buf->len);
+		return G_MAXUINT;
+	}
+
+	/* success */
+	return item->buf->data[offset];
 }
 
 /**
@@ -418,8 +569,6 @@ const gchar *
 fu_smbios_get_string (FuSmbios *self, guint8 type, guint8 offset, GError **error)
 {
 	FuSmbiosItem *item;
-	const guint8 *data;
-	gsize sz;
 
 	g_return_val_if_fail (FU_IS_SMBIOS (self), NULL);
 
@@ -434,15 +583,15 @@ fu_smbios_get_string (FuSmbios *self, guint8 type, guint8 offset, GError **error
 	}
 
 	/* check offset valid */
-	data = g_bytes_get_data (item->data, &sz);
-	if (offset >= sz) {
+	if (offset >= item->buf->len) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
-			     "offset bigger than size %" G_GSIZE_FORMAT, sz);
+			     "offset bigger than size %u",
+			     item->buf->len);
 		return NULL;
 	}
-	if (data[offset] == 0x00) {
+	if (item->buf->data[offset] == 0x00) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_FOUND,
@@ -451,21 +600,21 @@ fu_smbios_get_string (FuSmbios *self, guint8 type, guint8 offset, GError **error
 	}
 
 	/* check string index valid */
-	if (data[offset] > item->strings->len) {
+	if (item->buf->data[offset] > item->strings->len) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
 			     "index larger than string table %u",
-			     data[offset]);
+			     item->strings->len);
 		return NULL;
 	}
-	return g_ptr_array_index (item->strings, data[offset] - 1);
+	return g_ptr_array_index (item->strings, item->buf->data[offset] - 1);
 }
 
 static void
 fu_smbios_item_free (FuSmbiosItem *item)
 {
-	g_bytes_unref (item->data);
+	g_byte_array_unref (item->buf);
 	g_ptr_array_unref (item->strings);
 	g_free (item);
 }

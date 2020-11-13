@@ -14,6 +14,9 @@
 
 #include "fwupd-error.h"
 
+#define EFIDP_MEDIA_TYPE	0x04
+#define EFIDP_MEDIA_FILE	0x4
+
 struct _FuUefiUpdateInfo {
 	GObject			 parent_instance;
 	guint32			 version;
@@ -80,7 +83,7 @@ gboolean
 fu_uefi_update_info_parse (FuUefiUpdateInfo *self, const guint8 *buf, gsize sz, GError **error)
 {
 	efi_update_info_t info;
-	efi_guid_t guid_tmp;
+	fwupd_guid_t guid_tmp;
 
 	g_return_val_if_fail (FU_IS_UEFI_UPDATE_INFO (self), FALSE);
 
@@ -96,14 +99,8 @@ fu_uefi_update_info_parse (FuUefiUpdateInfo *self, const guint8 *buf, gsize sz, 
 	self->capsule_flags = info.capsule_flags;
 	self->hw_inst = info.hw_inst;
 	self->status = info.status;
-	memcpy (&guid_tmp, &info.guid, sizeof(efi_guid_t));
-	if (efi_guid_to_str (&guid_tmp, &self->guid) < 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "failed to convert GUID");
-		return FALSE;
-	}
+	memcpy (&guid_tmp, &info.guid, sizeof(fwupd_guid_t));
+	self->guid = fwupd_guid_to_string (&guid_tmp, FWUPD_GUID_FLAG_MIXED_ENDIAN);
 	if (sz > sizeof(efi_update_info_t)) {
 		self->capsule_fn = fu_uefi_update_info_parse_dp (buf + sizeof(efi_update_info_t),
 								 sz - sizeof(efi_update_info_t),

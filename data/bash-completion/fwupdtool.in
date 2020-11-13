@@ -4,7 +4,9 @@ _fwupdtool_cmd_list=(
 	'esp-list'
 	'esp-mount'
 	'esp-unmount'
+	'firmware-build'
 	'firmware-convert'
+	'firmware-extract'
 	'firmware-parse'
 	'get-updates'
 	'get-upgrades'
@@ -23,14 +25,18 @@ _fwupdtool_cmd_list=(
 	'install-blob'
 	'monitor'
 	'reinstall'
+	'security'
+	'switch-branch'
 	'self-sign'
 	'smbios-dump'
 	'attach'
 	'detach'
-	'firmware-read'
+	'firmware-dump'
 	'refresh'
 	'verify-update'
 	'watch'
+	'unbind-driver'
+	'bind-driver'
 )
 
 _fwupdtool_opts=(
@@ -39,13 +45,16 @@ _fwupdtool_opts=(
 	'--allow-reinstall'
 	'--allow-older'
 	'--force'
-	'--show-all-devices'
-	'--plugin-whitelist'
+	'--show-all'
+	'--plugins'
 	'--prepare'
 	'--cleanup'
 	'--filter'
 	'--disable-ssl-strict'
 	'--no-safety-check'
+	'--ignore-checksum'
+	'--ignore-vid-pid'
+	'--ignore-power'
 )
 
 _show_filters()
@@ -84,7 +93,7 @@ _fwupdtool()
 	command=${COMP_WORDS[1]}
 
 	case $prev in
-	--plugin-whitelist)
+	--plugins)
 		_show_plugins
 		return 0
 		;;
@@ -95,7 +104,7 @@ _fwupdtool()
 	esac
 
 	case $command in
-	get-details|install|install-blob|firmware-read)
+	get-details|install|install-blob|firmware-dump)
 		#find files
 		if [[ "$prev" = "$command" ]]; then
 			_filedir
@@ -104,7 +113,7 @@ _fwupdtool()
 			_show_modifiers
 		fi
 		;;
-	attach|detach|activate|verify-update|reinstall)
+	attach|detach|activate|verify-update|reinstall|get-updates)
 		if [[ "$prev" = "$command" ]]; then
 			_show_device_ids
 		#modifiers

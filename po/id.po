@@ -447,6 +447,7 @@ msgstr[0] "Jangan unggah laporan, dan jangan pernah meminta untuk mengunggah lap
 msgid "Do not write to the history database"
 msgstr "Jangan menulis ke basis data riwayat"
 
+#. TRANSLATORS: success
 #. success
 msgid "Done!"
 msgstr "Selesai!"
@@ -491,6 +492,8 @@ msgstr "Aktifkan dukungan pembaruan firmware pada sistem yang didukung"
 msgid "Enable this remote?"
 msgstr "Aktifkan remote ini?"
 
+#. TRANSLATORS: Suffix: the HSI result
+#. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
 msgid "Enabled"
 msgstr "Difungsikan"
@@ -529,10 +532,6 @@ msgstr "Keluar setelah mesin telah dimuat"
 msgid "Failed to connect to daemon"
 msgstr "Gagal menyambung ke daemon"
 
-#. TRANSLATORS: the server is rate-limiting downloads
-msgid "Failed to download due to server limit"
-msgstr "Gagal mengunduh karena batas server"
-
 #. TRANSLATORS: we could not get the devices to update offline
 msgid "Failed to get pending devices"
 msgstr "Gagal mendapatkan perangkat yang tertunda"
@@ -564,22 +563,6 @@ msgstr "Gagal reboot"
 #. TRANSLATORS: we could not talk to plymouth
 msgid "Failed to set splash mode"
 msgstr "Gagal mengatur mode splash"
-
-#. TRANSLATORS: downloading unknown file
-msgid "Fetching file"
-msgstr "Sedang mengambil berkas"
-
-#. TRANSLATORS: downloading new firmware file
-msgid "Fetching firmware"
-msgstr "Sedang mengambil firmware"
-
-#. TRANSLATORS: downloading new metadata file
-msgid "Fetching metadata"
-msgstr "Sedang mengambil metadata"
-
-#. TRANSLATORS: downloading new signing file
-msgid "Fetching signature"
-msgstr "Sedang mengambil tanda tangan"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
@@ -625,12 +608,17 @@ msgstr "Pembaruan firmware tidak didukung pada mesin ini."
 msgid "Firmware updates are supported on this machine."
 msgstr "Pembaruan firmware didukung pada mesin ini."
 
+#. TRANSLATORS: description of plugin state, e.g. disabled
 #. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "Flag"
 
 msgid "Force the action ignoring all warnings"
 msgstr "Paksa tindakan mengabaikan semua peringatan"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Found"
+msgstr "Ditemukan"
 
 #. TRANSLATORS: global ID common to all similar hardware
 msgid "GUID"
@@ -660,10 +648,6 @@ msgstr "Dapatkan rincian tentang suatu berkas firmware"
 #. TRANSLATORS: command description
 msgid "Gets the configured remotes"
 msgstr "Dapatkan remote-remote yang terkonfigurasi"
-
-#. TRANSLATORS: firmware approved by the admin
-msgid "Gets the list of approved firmware."
-msgstr "Dapatkan daftar firmware yang disetujui."
 
 #. TRANSLATORS: command description
 msgid "Gets the list of updates for connected hardware"
@@ -783,10 +767,6 @@ msgstr "Daftar tipe firmware yang tersedia"
 msgid "Loading…"
 msgstr "Memuat…"
 
-#. TRANSLATORS: command line option
-msgid "Manually whitelist specific plugins"
-msgstr "Secara manual memasukkan daftar putih plugin tertentu"
-
 #. TRANSLATORS: remote URI
 msgid "Metadata Signature"
 msgstr "Tanda Tangan Metadata"
@@ -807,10 +787,6 @@ msgstr "Versi Minimum"
 #, c-format
 msgid "Mismatched daemon and client, use %s instead"
 msgstr "Daemon dan klien tidak cocok, gunakan %s sebagai gantinya"
-
-#. TRANSLATORS: sets something in daemon.conf
-msgid "Modifies a daemon configuration value."
-msgstr "Mengubah suatu nilai konfigurasi daemon."
 
 #. TRANSLATORS: command description
 msgid "Modifies a given remote"
@@ -838,6 +814,7 @@ msgstr "Perlu dimatikan setelah instalasi"
 msgid "New version"
 msgstr "Versi baru"
 
+#. TRANSLATORS: user did not tell the tool what to do
 msgid "No action specified!"
 msgstr "Tidak ada tindakan yang ditentukan!"
 
@@ -875,13 +852,13 @@ msgstr "Tidak ada remote yang tersedia"
 msgid "No updates were applied"
 msgstr "Tidak ada pembaruan yang diterapkan"
 
+#. TRANSLATORS: Suffix: the HSI result
+msgid "OK"
+msgstr "OK"
+
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Hanya tampilkan nilai PCR tunggal"
-
-#. TRANSLATORS: command line option
-msgid "Override plugin warning"
-msgstr "Timpa peringatan plugin"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
@@ -965,10 +942,6 @@ msgstr "Reboot…"
 msgid "Refresh metadata from remote server"
 msgstr "Segarkan metadata dari server remote"
 
-#. TRANSLATORS: command description
-msgid "Reinstall current firmware on the device."
-msgstr "Menginstal ulang firmware saat ini di perangkat."
-
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
 #. * e.g. "1.2.3"
@@ -996,10 +969,6 @@ msgstr "URI Lapor"
 #. TRANSLATORS: Has been reported to a metadata server
 msgid "Reported to remote server"
 msgstr "Dilaporkan ke server remote"
-
-#. TRANSLATORS: Must be plugged in to an outlet
-msgid "Requires AC power"
-msgstr "Membutuhkan daya AC"
 
 #. TRANSLATORS: Requires a bootloader mode to be manually enabled by the user
 msgid "Requires a bootloader"
@@ -1060,12 +1029,9 @@ msgstr "Nomor Seri"
 msgid "Set the debugging flag during update"
 msgstr "Atur flag debugging selama pembaruan"
 
+#. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
 msgstr "Setel daftar firmware yang disetujui"
-
-#. TRANSLATORS: firmware approved by the admin
-msgid "Sets the list of approved firmware."
-msgstr "Tata daftar firmware yang disetujui."
 
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
@@ -1323,10 +1289,6 @@ msgstr "Memutakhirkan %s…"
 msgid "Upgrade available for %s from %s to %s"
 msgstr "Pembaruan tersedia untuk %s dari %s ke %s"
 
-#. TRANSLATORS: the server sent the user a small message
-msgid "Upload message:"
-msgstr "Pesan unggah:"
-
 msgid "Upload report just this one time, but prompt again for future updates"
 msgid_plural "Upload reports just this one time, but prompt again for future updates"
 msgstr[0] "Unggah laporan hanya sekali ini saja, tetapi minta lagi untuk pembaruan di masa mendatang"
@@ -1367,9 +1329,9 @@ msgstr "Vendor"
 msgid "Verifying…"
 msgstr "Verifikasi…"
 
-#. TRANSLATORS: try to help
-msgid "WARNING: Ignoring SSL strict checks, to do this automatically in the future export DISABLE_SSL_STRICT in your environment"
-msgstr "PERINGATAN: Mengabaikan pemeriksaan ketat SSL, untuk melakukan ini secara otomatis di masa mendatang ekspor DISABLE_SSL_STRICT dalam lingkungan Anda"
+#. TRANSLATORS: the detected version number of the dbx
+msgid "Version"
+msgstr "Versi"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
@@ -1402,16 +1364,3 @@ msgstr "Distributor Anda mungkin belum memverifikasi pembaruan firmware untuk ko
 #. TRANSLATORS: program name
 msgid "fwupd TPM event log utility"
 msgstr "Utilitas log kejadian TPM fwupd"
-
-#. TRANSLATORS: message letting the user know no device upgrade available due
-#. to missing on LVFS
-#. * %1 is the device name
-#, c-format
-msgid "• %s has no available firmware updates"
-msgstr "• %s tidak memiliki pembaruan firmware yang tersedia"
-
-#. TRANSLATORS: message letting the user know no device upgrade available
-#. * %1 is the device name
-#, c-format
-msgid "• %s has the latest available firmware version"
-msgstr "• %s memiliki versi firmware terbaru yang tersedia"

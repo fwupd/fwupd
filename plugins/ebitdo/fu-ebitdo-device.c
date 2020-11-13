@@ -236,7 +236,7 @@ static gboolean
 fu_ebitdo_device_validate (FuEbitdoDevice *self, GError **error)
 {
 	const gchar *ven;
-	const gchar *whitelist[] = {
+	const gchar *allowlist[] = {
 		"8Bitdo",
 		"SFC30",
 		NULL };
@@ -245,7 +245,7 @@ fu_ebitdo_device_validate (FuEbitdoDevice *self, GError **error)
 	if (fu_usb_device_get_vid (FU_USB_DEVICE (self)) == 0x2dc8)
 		return TRUE;
 
-	/* verify the vendor prefix against a whitelist */
+	/* verify the vendor prefix against a allowlist */
 	ven = fu_device_get_vendor (FU_DEVICE (self));
 	if (ven == NULL) {
 		g_set_error (error,
@@ -254,14 +254,14 @@ fu_ebitdo_device_validate (FuEbitdoDevice *self, GError **error)
 			     "could not check vendor descriptor: ");
 		return FALSE;
 	}
-	for (guint i = 0; whitelist[i] != NULL; i++) {
-		if (g_str_has_prefix (ven, whitelist[i]))
+	for (guint i = 0; allowlist[i] != NULL; i++) {
+		if (g_str_has_prefix (ven, allowlist[i]))
 			return TRUE;
 	}
 	g_set_error (error,
 		     G_IO_ERROR,
 		     G_IO_ERROR_INVALID_DATA,
-		     "vendor '%s' did not match whitelist, "
+		     "vendor '%s' did not match allowlist, "
 		     "probably not a 8Bitdo device…", ven);
 	return FALSE;
 }
@@ -581,7 +581,6 @@ fu_ebitdo_device_prepare_firmware (FuDevice *device,
 				   GError **error)
 {
 	g_autoptr(FuFirmware) firmware = fu_ebitdo_firmware_new ();
-	fu_device_set_status (device, FWUPD_STATUS_DECOMPRESSING);
 	if (!fu_firmware_parse (firmware, fw, flags, error))
 		return NULL;
 	return g_steal_pointer (&firmware);

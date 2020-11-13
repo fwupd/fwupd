@@ -656,7 +656,7 @@ fu_fastboot_device_set_quirk_kv (FuDevice *device,
 {
 	FuFastbootDevice *self = FU_FASTBOOT_DEVICE (device);
 
-	/* load slave address from quirks */
+	/* load from quirks */
 	if (g_strcmp0 (key, "FastbootBlockSize") == 0) {
 		guint64 tmp = fu_common_strtoull (value);
 		if (tmp >= 0x40 && tmp < 0x100000) {

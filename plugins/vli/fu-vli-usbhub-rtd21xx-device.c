@@ -448,10 +448,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware (FuDevice *device,
 
 	/* the device needs some time to restart with the new firmware before
 	 * it can be queried again */
-	for (guint i = 0; i < 100; i++) {
-		g_usleep (200000);
-		fu_device_set_progress (device, i);
-	}
+	fu_device_sleep_with_progress (device, 20);
 
 	/* success */
 	return TRUE;

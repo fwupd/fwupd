@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015-2020 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -39,6 +39,7 @@ typedef struct {
 	gchar				*name;
 	gchar				*serial;
 	gchar				*summary;
+	gchar				*branch;
 	gchar				*description;
 	gchar				*vendor;
 	gchar				*vendor_id;
@@ -62,7 +63,7 @@ typedef struct {
 	gchar				*update_image;
 	FwupdStatus			 status;
 	GPtrArray			*releases;
-	FwupdDevice			*parent;
+	FwupdDevice			*parent;	/* noref */
 } FwupdDevicePrivate;
 
 enum {
@@ -71,6 +72,7 @@ enum {
 	PROP_FLAGS,
 	PROP_PROTOCOL,
 	PROP_STATUS,
+	PROP_PARENT,
 	PROP_LAST
 };
 
@@ -170,6 +172,42 @@ fwupd_device_set_summary (FwupdDevice *device, const gchar *summary)
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
 	g_free (priv->summary);
 	priv->summary = g_strdup (summary);
+}
+
+/**
+ * fwupd_device_get_branch:
+ * @device: A #FwupdDevice
+ *
+ * Gets the current device branch.
+ *
+ * Returns: the device branch, or %NULL if unset
+ *
+ * Since: 1.5.0
+ **/
+const gchar *
+fwupd_device_get_branch (FwupdDevice *device)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	return priv->branch;
+}
+
+/**
+ * fwupd_device_set_branch:
+ * @device: A #FwupdDevice
+ * @branch: the device one line branch
+ *
+ * Sets the current device branch.
+ *
+ * Since: 1.5.0
+ **/
+void
+fwupd_device_set_branch (FwupdDevice *device, const gchar *branch)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	g_free (priv->branch);
+	priv->branch = g_strdup (branch);
 }
 
 /**
@@ -311,10 +349,40 @@ void
 fwupd_device_set_parent (FwupdDevice *device, FwupdDevice *parent)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	FwupdDevicePrivate *priv_parent = GET_PRIVATE (parent);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
-	g_set_object (&priv->parent, parent);
-	g_ptr_array_add (priv_parent->children, g_object_ref (device));
+
+	if (priv->parent != NULL)
+		g_object_remove_weak_pointer (G_OBJECT (priv->parent), (gpointer *) &priv->parent);
+	if (parent != NULL)
+		g_object_add_weak_pointer (G_OBJECT (parent), (gpointer *) &priv->parent);
+	priv->parent = parent;
+
+	/* this is what goes over D-Bus */
+	fwupd_device_set_parent_id (device, parent != NULL ? fwupd_device_get_id (parent) : NULL);
+}
+
+/**
+ * fwupd_device_add_child:
+ * @self: A #FwupdDevice
+ * @child: Another #FwupdDevice
+ *
+ * Adds a child device. An child device is logically linked to the primary
+ * device in some way.
+ *
+ * Since: 1.5.1
+ **/
+void
+fwupd_device_add_child (FwupdDevice *device, FwupdDevice *child)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+
+	/* add if the child does not already exist */
+	for (guint i = 0; i < priv->children->len; i++) {
+		FwupdDevice *devtmp = g_ptr_array_index (priv->children, i);
+		if (devtmp == child)
+			return;
+	}
+	g_ptr_array_add (priv->children, g_object_ref (child));
 }
 
 /**
@@ -1098,7 +1166,6 @@ fwupd_device_get_created (FwupdDevice *device)
 	return priv->created;
 }
 
-
 /**
  * fwupd_device_set_created:
  * @device: A #FwupdDevice
@@ -1190,6 +1257,8 @@ fwupd_device_incorporate (FwupdDevice *self, FwupdDevice *donor)
 		fwupd_device_set_serial (self, priv_donor->serial);
 	if (priv->summary == NULL)
 		fwupd_device_set_summary (self, priv_donor->summary);
+	if (priv->branch == NULL)
+		fwupd_device_set_branch (self, priv_donor->branch);
 	if (priv->vendor == NULL)
 		fwupd_device_set_vendor (self, priv_donor->vendor);
 	if (priv->vendor_id == NULL)
@@ -1324,6 +1393,11 @@ fwupd_device_to_variant_full (FwupdDevice *device, FwupdDeviceFlags flags)
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_SUMMARY,
 				       g_variant_new_string (priv->summary));
+	}
+	if (priv->branch != NULL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_BRANCH,
+				       g_variant_new_string (priv->branch));
 	}
 	if (priv->checksums->len > 0) {
 		g_autoptr(GString) str = g_string_new ("");
@@ -1535,6 +1609,10 @@ fwupd_device_from_key_value (FwupdDevice *device, const gchar *key, GVariant *va
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_SUMMARY) == 0) {
 		fwupd_device_set_summary (device, g_variant_get_string (value, NULL));
+		return;
+	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_BRANCH) == 0) {
+		fwupd_device_set_branch (device, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DESCRIPTION) == 0) {
@@ -2037,6 +2115,7 @@ fwupd_device_to_json (FwupdDevice *device, JsonBuilder *builder)
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_SERIAL, priv->serial);
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
+	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_BRANCH, priv->branch);
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_PROTOCOL, priv->protocol);
 	if (priv->flags != FWUPD_DEVICE_FLAG_NONE) {
@@ -2173,6 +2252,7 @@ fwupd_device_to_string (FwupdDevice *device)
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_SERIAL, priv->serial);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_BRANCH, priv->branch);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_PROTOCOL, priv->protocol);
 	fwupd_pad_kv_dfl (str, FWUPD_RESULT_KEY_FLAGS, priv->flags);
@@ -2248,6 +2328,9 @@ fwupd_device_get_property (GObject *object, guint prop_id,
 	case PROP_STATUS:
 		g_value_set_uint (value, priv->status);
 		break;
+	case PROP_PARENT:
+		g_value_set_object (value, priv->parent);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
@@ -2271,6 +2354,9 @@ fwupd_device_set_property (GObject *object, guint prop_id,
 		break;
 	case PROP_STATUS:
 		fwupd_device_set_status (self, g_value_get_uint (value));
+		break;
+	case PROP_PARENT:
+		fwupd_device_set_parent (self, g_value_get_object (value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2316,6 +2402,13 @@ fwupd_device_class_init (FwupdDeviceClass *klass)
 				   G_PARAM_READWRITE |
 				   G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_STATUS, pspec);
+
+	pspec = g_param_spec_object ("parent", NULL, NULL,
+				     FWUPD_TYPE_DEVICE,
+				     G_PARAM_READWRITE |
+				     G_PARAM_CONSTRUCT |
+				     G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_PARENT, pspec);
 }
 
 static void
@@ -2337,13 +2430,14 @@ fwupd_device_finalize (GObject *object)
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 
 	if (priv->parent != NULL)
-		g_object_unref (priv->parent);
+		g_object_remove_weak_pointer (G_OBJECT (priv->parent), (gpointer *) &priv->parent);
 	g_free (priv->description);
 	g_free (priv->id);
 	g_free (priv->parent_id);
 	g_free (priv->name);
 	g_free (priv->serial);
 	g_free (priv->summary);
+	g_free (priv->branch);
 	g_free (priv->vendor);
 	g_free (priv->vendor_id);
 	g_free (priv->plugin);
@@ -2439,8 +2533,10 @@ fwupd_device_array_ensure_parents (GPtrArray *devices)
 		if (parent_id != NULL) {
 			FwupdDevice *dev_tmp;
 			dev_tmp = g_hash_table_lookup (devices_by_id, parent_id);
-			if (dev_tmp != NULL)
+			if (dev_tmp != NULL) {
+				fwupd_device_add_child (dev_tmp, dev);
 				fwupd_device_set_parent (dev, dev_tmp);
+			}
 		}
 	}
 }

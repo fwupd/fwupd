@@ -12,11 +12,14 @@
 #include <glib/gi18n.h>
 #include <gusb.h>
 #include <xmlb.h>
-#include <json-glib/json-glib.h>
+#include <fwupd.h>
 
 #include "fu-common.h"
+#include "fu-device-private.h"
 #include "fu-util-common.h"
 #include "fu-device.h"
+#include "fu-security-attr.h"
+#include "fu-security-attrs.h"
 
 #ifdef HAVE_SYSTEMD
 #include "fu-systemd.h"
@@ -31,6 +34,12 @@ fu_util_get_systemd_unit (void)
 	if (g_getenv ("SNAP") != NULL)
 		return SYSTEMD_SNAP_FWUPD_UNIT;
 	return SYSTEMD_FWUPD_UNIT;
+}
+
+gchar *
+fu_util_term_format (const gchar *text, FuUtilTermColor fg_color)
+{
+	return g_strdup_printf ("\033[%um\033[1m%s\033[0m", fg_color, text);
 }
 
 #ifdef HAVE_SYSTEMD
@@ -584,6 +593,17 @@ fu_util_cmd_array_to_string (GPtrArray *array)
 	return g_string_free (string, FALSE);
 }
 
+const gchar *
+fu_util_release_get_branch (FwupdRelease *release)
+{
+	const gchar *tmp = fwupd_release_get_branch (release);
+	if (tmp == NULL) {
+		/* TRANSLATORS: this is the default branch name when unset */
+		return _("default");
+	}
+	return tmp;
+}
+
 gchar *
 fu_util_release_get_name (FwupdRelease *release)
 {
@@ -965,7 +985,7 @@ fu_util_device_flag_to_string (guint64 device_flag)
 	}
 	if (device_flag == FWUPD_DEVICE_FLAG_REQUIRE_AC) {
 		/* TRANSLATORS: Must be plugged in to an outlet */
-		return _("Requires AC power");
+		return _("System requires external power source");
 	}
 	if (device_flag == FWUPD_DEVICE_FLAG_LOCKED) {
 		/* TRANSLATORS: Is locked and can be unlocked */
@@ -1070,6 +1090,14 @@ fu_util_device_flag_to_string (guint64 device_flag)
 	if (device_flag == FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES) {
 		/* TRANSLATORS: a version check is required for all firmware */
 		return _("Device is required to install all provided releases");
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES) {
+		/* TRANSLATORS: there is more than one supplier of the firmware */
+		return _("Device supports switching to a different branch of firmware");
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_BACKUP_BEFORE_INSTALL) {
+		/* TRANSLATORS: save the old firmware to disk before installing the new one */
+		return _("Device will backup firmware before installing");
 	}
 	if (device_flag == FWUPD_DEVICE_FLAG_MD_SET_NAME) {
 		/* skip */
@@ -1276,6 +1304,121 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 	return g_string_free (str, FALSE);
 }
 
+const gchar *
+fu_util_plugin_flag_to_string (FwupdPluginFlags plugin_flag)
+{
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_UNKNOWN)
+		return NULL;
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE)
+		return NULL;
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_USER_WARNING)
+		return NULL;
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_NONE) {
+		/* TRANSLATORS: Plugin is active and in use */
+		return _("Enabled");
+	}
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_DISABLED) {
+		/* TRANSLATORS: Plugin is inactive and not used */
+		return _("Disabled");
+	}
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_NO_HARDWARE) {
+		/* TRANSLATORS: not required for this system */
+		return _("Required hardware was not found");
+	}
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_LEGACY_BIOS) {
+		/* TRANSLATORS: system is not booted in UEFI mode */
+		return _("Firmware can not be updated in legacy BIOS mode");
+	}
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED) {
+		/* TRANSLATORS: capsule updates are an optional BIOS feature */
+		return _("UEFI capsule updates not available or enabled");
+	}
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_UNLOCK_REQUIRED) {
+		/* TRANSLATORS: user needs to run a command */
+		return _("Firmware updates disabled; run 'fwupdmgr unlock' to enable");
+	}
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED) {
+		/* TRANSLATORS: the user is using Gentoo/Arch and has screwed something up */
+		return _("Required efivarfs filesystem was not found");
+	}
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND) {
+		/* TRANSLATORS: partition refers to something on disk, again, hey Arch users */
+		return _("UEFI ESP partition not detected or configured");
+	}
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_FAILED_OPEN) {
+		/* TRANSLATORS: Failed to open plugin, hey Arch users */
+		return _("Plugin dependencies missing");
+	}
+
+	/* fall back for unknown types */
+	return fwupd_plugin_flag_to_string (plugin_flag);
+}
+
+static gchar *
+fu_util_plugin_flag_to_cli_text (FwupdPluginFlags plugin_flag)
+{
+	switch (plugin_flag) {
+	case FWUPD_PLUGIN_FLAG_UNKNOWN:
+	case FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE:
+	case FWUPD_PLUGIN_FLAG_USER_WARNING:
+		return NULL;
+	case FWUPD_PLUGIN_FLAG_NONE:
+		return fu_util_term_format (fu_util_plugin_flag_to_string (plugin_flag),
+					    FU_UTIL_CLI_COLOR_GREEN);
+	case FWUPD_PLUGIN_FLAG_DISABLED:
+	case FWUPD_PLUGIN_FLAG_NO_HARDWARE:
+		return fu_util_term_format (fu_util_plugin_flag_to_string (plugin_flag),
+					    FU_UTIL_CLI_COLOR_BLACK);
+	case FWUPD_PLUGIN_FLAG_LEGACY_BIOS:
+	case FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED:
+	case FWUPD_PLUGIN_FLAG_UNLOCK_REQUIRED:
+	case FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED:
+	case FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND:
+		return fu_util_term_format (fu_util_plugin_flag_to_string (plugin_flag),
+					    FU_UTIL_TERM_COLOR_RED);
+	default:
+		break;
+	}
+
+	/* fall back for unknown types */
+	return g_strdup (fwupd_plugin_flag_to_string (plugin_flag));
+}
+
+gchar *
+fu_util_plugin_to_string (FwupdPlugin *plugin, guint idt)
+{
+	GString *str = g_string_new (NULL);
+	const gchar *hdr;
+	guint64 flags = fwupd_plugin_get_flags (plugin);
+
+	fu_common_string_append_kv (str, idt, fwupd_plugin_get_name (plugin), NULL);
+
+	/* TRANSLATORS: description of plugin state, e.g. disabled */
+	hdr = _("Flags");
+	if (flags == 0x0) {
+		const gchar *tmp = fu_util_plugin_flag_to_cli_text (flags);
+		g_autofree gchar *li = g_strdup_printf ("• %s", tmp);
+		fu_common_string_append_kv (str, idt + 1, hdr, li);
+	} else {
+		for (guint i = 0; i < 64; i++) {
+			g_autofree gchar *li = NULL;
+			g_autofree gchar *tmp = NULL;
+			if ((flags & ((guint64) 1 << i)) == 0)
+				continue;
+			tmp = fu_util_plugin_flag_to_cli_text ((guint64) 1 << i);
+			if (tmp == NULL)
+				continue;
+			li = g_strdup_printf ("• %s", tmp);
+			fu_common_string_append_kv (str, idt + 1, hdr, li);
+
+			/* clear header */
+			hdr = "";
+		}
+	}
+
+	return g_string_free (str, FALSE);
+}
+
 static const gchar *
 fu_util_license_to_string (const gchar *license)
 {
@@ -1334,6 +1477,11 @@ fu_util_release_to_string (FwupdRelease *rel, guint idt)
 		/* TRANSLATORS: the server the file is coming from */
 		fu_common_string_append_kv (str, idt + 1, _("Remote ID"),
 					    fwupd_release_get_remote_id (rel));
+	}
+	if (fwupd_release_get_branch (rel) != NULL) {
+		/* TRANSLATORS: the stream of firmware, e.g. nonfree or open-source */
+		fu_common_string_append_kv (str, idt + 1, _("Branch"),
+					    fwupd_release_get_branch (rel));
 	}
 	if (fwupd_release_get_summary (rel) != NULL) {
 		/* TRANSLATORS: one line summary of device */
@@ -1543,6 +1691,132 @@ fu_util_remote_to_string (FwupdRemote *remote, guint idt)
 	return g_string_free (str, FALSE);
 }
 
+static void
+fu_security_attr_append_str (FwupdSecurityAttr *attr, GString *str, FuSecurityAttrToStringFlags flags)
+{
+	g_autofree gchar *name = NULL;
+
+	/* hide obsoletes by default */
+	if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED) &&
+	    (flags & FU_SECURITY_ATTR_TO_STRING_FLAG_SHOW_OBSOLETES) == 0)
+		return;
+
+	name = fu_security_attr_get_name (attr);
+	if (name == NULL)
+		name = g_strdup (fwupd_security_attr_get_appstream_id (attr));
+	if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED)) {
+		g_string_append (str, "✦ ");
+	} else if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
+		g_string_append (str, "✔ ");
+	} else {
+		g_string_append (str, "✘ ");
+	}
+	g_string_append_printf (str, "%s:", name);
+	for (guint i = fu_common_strwidth (name); i < 30; i++)
+		g_string_append (str, " ");
+	if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED)) {
+		g_string_append_printf (str, "\033[37m\033[1m%s\033[0m", fu_security_attr_get_result (attr));
+	} else if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
+		g_string_append_printf (str, "\033[32m\033[1m%s\033[0m", fu_security_attr_get_result (attr));
+	} else {
+		g_string_append_printf (str, "\033[31m\033[1m%s\033[0m", fu_security_attr_get_result (attr));
+	}
+	if ((flags & FU_SECURITY_ATTR_TO_STRING_FLAG_SHOW_URLS) > 0 &&
+	    fwupd_security_attr_get_url (attr) != NULL) {
+		g_string_append_printf (str, ": %s",
+					fwupd_security_attr_get_url (attr));
+	}
+	if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED)) {
+		/* TRANSLATORS: this is shown as a suffix for obsoleted tests */
+		g_string_append_printf (str, " %s", _("(obsoleted)"));
+	}
+	g_string_append_printf (str, "\n");
+}
+
+gchar *
+fu_util_security_attrs_to_string (GPtrArray *attrs, FuSecurityAttrToStringFlags strflags)
+{
+	FwupdSecurityAttrFlags flags = FWUPD_SECURITY_ATTR_FLAG_NONE;
+	const FwupdSecurityAttrFlags hpi_suffixes[] = {
+		FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES,
+		FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ATTESTATION,
+		FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE,
+		FWUPD_SECURITY_ATTR_FLAG_NONE,
+	};
+	GString *str = g_string_new (NULL);
+	gboolean low_help = FALSE;
+	gboolean runtime_help = FALSE;
+	gboolean pcr0_help = FALSE;
+
+	for (guint j = 1; j <= FWUPD_SECURITY_ATTR_LEVEL_LAST; j++) {
+		gboolean has_header = FALSE;
+		for (guint i = 0; i < attrs->len; i++) {
+			FwupdSecurityAttr *attr = g_ptr_array_index (attrs, i);
+			if (fwupd_security_attr_get_level (attr) != j)
+				continue;
+			if (!has_header) {
+				g_string_append_printf (str, "\n\033[1mHSI-%u\033[0m\n", j);
+				has_header = TRUE;
+			}
+			fu_security_attr_append_str (attr, str, strflags);
+			/* make sure they have at least HSI-1 */
+			if (j < FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT &&
+			    !fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
+				low_help = TRUE;
+
+			/* check for PCR0 not matching */
+			if (g_strcmp0 (fwupd_security_attr_get_appstream_id (attr),
+					FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0) == 0 &&
+			    fwupd_security_attr_get_result (attr) == FWUPD_SECURITY_ATTR_RESULT_NOT_VALID)
+				    pcr0_help = TRUE;
+		}
+	}
+	for (guint i = 0; i < attrs->len; i++) {
+		FwupdSecurityAttr *attr = g_ptr_array_index (attrs, i);
+		flags |= fwupd_security_attr_get_flags (attr);
+	}
+	for (guint j = 0; hpi_suffixes[j] != FWUPD_SECURITY_ATTR_FLAG_NONE; j++) {
+		if (flags & hpi_suffixes[j]) {
+			g_string_append_printf (str, "\n\033[1m%s -%s\033[0m\n",
+						/* TRANSLATORS:  this is the HSI suffix */
+						_("Runtime Suffix"),
+						fwupd_security_attr_flag_to_suffix (hpi_suffixes[j]));
+			for (guint i = 0; i < attrs->len; i++) {
+				FwupdSecurityAttr *attr = g_ptr_array_index (attrs, i);
+				if (!fwupd_security_attr_has_flag (attr, hpi_suffixes[j]))
+					continue;
+				if (fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE) &&
+				    !fwupd_security_attr_has_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS))
+					runtime_help = TRUE;
+				fu_security_attr_append_str (attr, str, strflags);
+			}
+		}
+	}
+
+	if (low_help) {
+		g_string_append_printf (str, "\n%s\n » %s\n",
+					/* TRANSLATORS: this is instructions on how to improve the HSI security level */
+					_("This system has a low HSI security level."),
+					"https://github.com/fwupd/fwupd/wiki/Low-host-security-level");
+	}
+	if (runtime_help) {
+		g_string_append_printf (str, "\n%s\n » %s\n",
+					/* TRANSLATORS: this is instructions on how to improve the HSI suffix */
+					_("This system has HSI runtime issues."),
+					"https://github.com/fwupd/fwupd/wiki/Host-security-ID-runtime-issues");
+	}
+
+	if (pcr0_help) {
+		g_string_append_printf (str, "\n%s\n » %s\n",
+					/* TRANSLATORS: this is more background on a security measurement problem */
+					_("The TPM PCR0 differs from reconstruction."),
+					"https://github.com/fwupd/fwupd/wiki/TPM-PCR0-differs-from-reconstruction");
+
+	}
+
+	return g_string_free (str, FALSE);
+}
+
 gboolean
 fu_util_send_report (FwupdClient *client,
 		     const gchar *report_uri,
@@ -1625,5 +1899,97 @@ fu_util_send_report (FwupdClient *client,
 	}
 
 	/* success */
+	return TRUE;
+}
+
+gint
+fu_util_sort_devices_by_flags_cb (gconstpointer a, gconstpointer b)
+{
+	FuDevice *dev_a = *((FuDevice **) a);
+	FuDevice *dev_b = *((FuDevice **) b);
+
+	if ((!fu_device_has_flag (dev_a, FWUPD_DEVICE_FLAG_UPDATABLE) &&
+	     fu_device_has_flag (dev_b, FWUPD_DEVICE_FLAG_UPDATABLE)) ||
+	    (!fu_device_has_flag (dev_a, FWUPD_DEVICE_FLAG_SUPPORTED) &&
+	     fu_device_has_flag (dev_b, FWUPD_DEVICE_FLAG_SUPPORTED)))
+		return -1;
+	if ((fu_device_has_flag (dev_a, FWUPD_DEVICE_FLAG_UPDATABLE) &&
+	    !fu_device_has_flag (dev_b, FWUPD_DEVICE_FLAG_UPDATABLE)) ||
+	    (fu_device_has_flag (dev_a, FWUPD_DEVICE_FLAG_SUPPORTED) &&
+	    !fu_device_has_flag (dev_b, FWUPD_DEVICE_FLAG_SUPPORTED)))
+		return 1;
+
+	return 0;
+}
+
+static gint
+fu_util_device_order_compare (FuDevice *device1, FuDevice *device2)
+{
+	if (fu_device_get_order (device1) < fu_device_get_order (device2))
+		return -1;
+	if (fu_device_get_order (device1) > fu_device_get_order (device2))
+		return 1;
+	return 0;
+}
+
+gint
+fu_util_device_order_sort_cb (gconstpointer a, gconstpointer b)
+{
+	FuDevice *device_a = *((FuDevice **) a);
+	FuDevice *device_b = *((FuDevice **) b);
+	return fu_util_device_order_compare (device_a, device_b);
+}
+
+
+gboolean
+fu_util_switch_branch_warning (FwupdDevice *dev,
+			       FwupdRelease *rel,
+			       gboolean assume_yes,
+			       GError **error)
+{
+	const gchar *desc_markup = NULL;
+	g_autofree gchar *desc_plain = NULL;
+	g_autoptr(GString) desc_full = g_string_new (NULL);
+
+	/* warn the user if the vendor is different */
+	if (g_strcmp0 (fwupd_device_get_vendor (dev), fwupd_release_get_vendor (rel)) != 0) {
+		/* TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name */
+		g_string_append_printf (desc_full, _("The firmware from %s is not "
+						     "supplied by %s, the hardware vendor."),
+					fwupd_release_get_vendor (rel),
+					fwupd_device_get_vendor (dev));
+		g_string_append (desc_full, "\n\n");
+		/* TRANSLATORS: %1 is the device vendor name */
+		g_string_append_printf (desc_full, _("Your hardware may be damaged using this firmware, "
+						     "and installing this release may void any warranty "
+						     "with %s."),
+					fwupd_device_get_vendor (dev));
+		g_string_append (desc_full, "\n\n");
+	}
+
+	/* from the <description> in the AppStream data */
+	desc_markup = fwupd_release_get_description (rel);
+	if (desc_markup == NULL)
+		return TRUE;
+	desc_plain = fu_util_convert_description (desc_markup, error);
+	if (desc_plain == NULL)
+		return FALSE;
+	g_string_append (desc_full, desc_plain);
+
+	/* show and ask user to confirm */
+	fu_util_warning_box (desc_full->str, 80);
+	if (!assume_yes) {
+		/* ask for permission */
+		g_print ("\n%s [y|N]: ",
+			 /* TRANSLATORS: should the branch be changed */
+			 _("Do you understand the consequences of changing the firmware branch?"));
+		if (!fu_util_prompt_for_boolean (FALSE)) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOTHING_TO_DO,
+					     "Declined branch switch");
+			return FALSE;
+		}
+	}
 	return TRUE;
 }

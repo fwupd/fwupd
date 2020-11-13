@@ -6,6 +6,7 @@
 # Ascii Wolf <mail@asciiwolf.com>, 2017,2019-2020
 # Ascii Wolf <mail@asciiwolf.com>, 2017
 # Marek Černocký <marek@manet.cz>, 2016,2018
+# Pavel Borecki <pavel.borecki@gmail.com>, 2020
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -25,6 +26,159 @@ msgstr[0] "Zbývá %.0f minuta"
 msgstr[1] "Zbývají %.0f minuty"
 msgstr[2] "Zbývá %.0f minut"
 msgstr[3] "Zbývá %.0f minuty"
+
+#. TRANSLATORS: the CPU microcode is firmware loaded onto the CPU
+#. * at system bootup
+#, c-format
+msgid "%s CPU Microcode Update"
+msgstr "Aktualizace mikrokódu procesoru %s"
+
+#. TRANSLATORS: a specific part of hardware,
+#. * the first %s is the device name, e.g. 'Secure Boot`
+#, c-format
+msgid "%s Configuration Update"
+msgstr "Aktualizace nastavení %s"
+
+#. TRANSLATORS: ME stands for Management Engine, where
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Consumer ME Update"
+msgstr "Aktualizace spotřebitelského ME v %s"
+
+#. TRANSLATORS: the controller is a device that has other devices
+#. * plugged into it, for example ThunderBolt, FireWire or USB,
+#. * the first %s is the device name, e.g. 'Intel ThunderBolt`
+#, c-format
+msgid "%s Controller Update"
+msgstr "Aktualizace řadiče %s"
+
+#. TRANSLATORS: ME stands for Management Engine (with Intel AMT),
+#. * where the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Corporate ME Update"
+msgstr "Aktualizace korporátního ME v %s"
+
+#. TRANSLATORS: a specific part of hardware,
+#. * the first %s is the device name, e.g. 'Unifying Receiver`
+#, c-format
+msgid "%s Device Update"
+msgstr "Aktualizace zařízení %s"
+
+#. TRANSLATORS: the EC is typically the keyboard controller chip,
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Embedded Controller Update"
+msgstr "Aktualizace vestavěného řadiče v %s"
+
+#. TRANSLATORS: ME stands for Management Engine, the Intel AMT thing,
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s ME Update"
+msgstr "Aktualizace ME v %s"
+
+#. TRANSLATORS: the entire system, e.g. all internal devices,
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s System Update"
+msgstr "Celková aktualizace %s"
+
+#. TRANSLATORS: the Thunderbolt controller is a device that
+#. * has other high speed Thunderbolt devices plugged into it;
+#. * the first %s is the system name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Thunderbolt Controller Update"
+msgstr "Aktualizace řadiče Thunderbolt %s"
+
+#. TRANSLATORS: this is the fallback where we don't know if the release
+#. * is updating the system, the device, or a device class, or something else
+#. --
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Update"
+msgstr "Aktualizace %s"
+
+#. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
+#, c-format
+msgid "%s manufacturing mode"
+msgstr "režim pro výrobce v %s"
+
+#. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
+#, c-format
+msgid "%s override"
+msgstr "přebití %s"
+
+#. TRANSLATORS: Title: %1 is ME kind, e.g. CSME/TXT, %2 is a version number
+#, c-format
+msgid "%s v%s"
+msgstr "%s verze %s"
+
+#. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
+#, c-format
+msgid "%s version"
+msgstr "Verze %s"
+
+#. TRANSLATORS: duration in days!
+#, c-format
+msgid "%u day"
+msgid_plural "%u days"
+msgstr[0] "%u den"
+msgstr[1] "%u dny"
+msgstr[2] "%u dnů"
+msgstr[3] "%u dny"
+
+#, c-format
+msgid "%u device has a firmware upgrade available."
+msgid_plural "%u devices have a firmware upgrade available."
+msgstr[0] "Je k dispozici novější firmware pro %u zařízení."
+msgstr[1] "Jsou k dispozici novější firmware pro %u zařízení."
+msgstr[2] "Jsou k dispozici novější firmware pro %u zařízení."
+msgstr[3] "Jsou k dispozici novější firmware pro %u zařízení."
+
+#. TRANSLATORS: duration in minutes
+#, c-format
+msgid "%u hour"
+msgid_plural "%u hours"
+msgstr[0] "%u hodina"
+msgstr[1] "%u hodiny"
+msgstr[2] "%u hodin"
+msgstr[3] "%u hodiny"
+
+#. TRANSLATORS: duration in minutes
+#, c-format
+msgid "%u minute"
+msgid_plural "%u minutes"
+msgstr[0] "%u minuta"
+msgstr[1] "%u minuty"
+msgstr[2] "%u minut"
+msgstr[3] "%u minuty"
+
+#. TRANSLATORS: duration in seconds
+#, c-format
+msgid "%u second"
+msgid_plural "%u seconds"
+msgstr[0] "%u sekunda"
+msgstr[1] "%u sekundy"
+msgstr[2] "%u sekund"
+msgstr[3] "%u sekundy"
+
+#. TRANSLATORS: command description
+msgid "Activate devices"
+msgstr "Aktivovat zařízení"
+
+#. TRANSLATORS: command description
+msgid "Activate pending devices"
+msgstr "Aktivovat čekající zařízení"
+
+msgid "Activate the new firmware on the device"
+msgstr "Aktivovat nový firmware na zařízení"
+
+#. TRANSLATORS: shown when shutting down to switch to the new version
+msgid "Activating firmware update"
+msgstr "Aktivování aktualizace firmware"
+
+#. TRANSLATORS: shown when shutting down to switch to the new version
+msgid "Activating firmware update for"
+msgstr "Aktivace aktualizovaného firmware pro"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Added"
@@ -51,9 +205,17 @@ msgstr "Povolit přechod na nižší verze firmwaru"
 msgid "Allow reinstalling existing firmware versions"
 msgstr "Povolit reinstalaci stávající verze firmwaru"
 
+#. TRANSLATORS: command line option
+msgid "Allow switching firmware branch"
+msgstr "Umožnit přepnutí varianty firmware"
+
 #. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "Některá z aktualizací vyžaduje pro dokončení restart."
+
+#. TRANSLATORS: explain why we want to shutdown
+msgid "An update requires the system to shutdown to complete."
+msgstr "Pro dokončení aktualizace je zapotřebí vypnutí počítače."
 
 #. TRANSLATORS: command line option
 msgid "Answer yes to all questions"
@@ -62,6 +224,31 @@ msgstr "Na všechny dotazy odpovědět ano"
 #. TRANSLATORS: command line option
 msgid "Apply firmware updates"
 msgstr "Použít aktualizace firmwaru"
+
+#. TRANSLATORS: command line option
+msgid "Apply update even when not advised"
+msgstr "Použít aktualizaci i když to není doporučeno"
+
+#. TRANSLATORS: command line option
+msgid "Apply update files"
+msgstr "Použít soubory s aktualizací"
+
+#. TRANSLATORS: actually sending the update to the hardware
+msgid "Applying update…"
+msgstr "Provádění aktualizace…"
+
+#. TRANSLATORS: approved firmware has been checked by
+#. * the domain administrator
+msgid "Approved firmware:"
+msgid_plural "Approved firmware:"
+msgstr[0] "Schválený firmware:"
+msgstr[1] "Schválené firmwary:"
+msgstr[2] "Schválených firmwarů:"
+msgstr[3] "Schválené firmwary:"
+
+#. TRANSLATORS: stop nagging the user
+msgid "Ask again next time?"
+msgstr "Ptát se i příště?"
 
 #. TRANSLATORS: command description
 msgid "Attach to firmware mode"
@@ -84,6 +271,18 @@ msgid "Authentication is required to modify a configured remote used for firmwar
 msgstr "Ke změně nastaveného vzdáleného zdroje, který se používá pro aktualizace firmwaru, je vyžadováno ověření"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify daemon configuration"
+msgstr "Ke změně nastavení procesu služby je vyžadováno ověření se"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to set the list of approved firmware"
+msgstr "Pro nastavení seznamu schválených firmwarů je vyžadováno ověření se"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to switch to the new firmware version"
+msgstr "Pro přepnutí na novou verzi firmware je vyžadováno ověření se"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to unlock a device"
 msgstr "Pro odemknutí zařízení je požadováno ověření"
 
@@ -99,6 +298,30 @@ msgstr "K aktualizaci firmwaru na tomto počítači je vyžadováno ověření"
 msgid "Authentication is required to update the stored checksums for the device"
 msgstr "K aktualizaci uložených kontrolních součtů zařízení je vyžadováno ověření"
 
+#. TRANSLATORS: can we JFDI?
+msgid "Automatically upload every time?"
+msgstr "Pokaždé automaticky nahrát?"
+
+#. TRANSLATORS: command description
+msgid "Bind new kernel driver"
+msgstr "Napojit nový ovladač jádra"
+
+#. TRANSLATORS: there follows a list of hashes
+msgid "Blocked firmware files:"
+msgstr "Blokované soubory s firmware:"
+
+#. TRANSLATORS: we will not offer this firmware to the user
+msgid "Blocking firmware:"
+msgstr "Blokuje se firmware:"
+
+#. TRANSLATORS: command description
+msgid "Blocks a specific firmware from being installed"
+msgstr "Blokuje instalaci konkrétního firmware"
+
+#. TRANSLATORS: command description
+msgid "Build a firmware file"
+msgstr "Sestavit soubor s firmware"
+
 #. TRANSLATORS: command description
 msgid "Build firmware using a sandbox"
 msgstr "Sestavit firmware za použití izolovaného prostředí"
@@ -111,6 +334,14 @@ msgstr "Zrušit"
 msgid "Cancelled"
 msgstr "Zrušeno"
 
+#. TRANSLATORS: same or newer update already applied
+msgid "Cannot apply as dbx update has already been applied."
+msgstr "Tuto aktualizaci dbx už není možné použít, protože už je používána."
+
+#. TRANSLATORS: the user is using a LiveCD or LiveUSB install disk
+msgid "Cannot apply updates on live media"
+msgstr "Aktualizace není možné použít při provozování systému z instalačního média (live)"
+
 #. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
@@ -120,13 +351,26 @@ msgstr "Změněno"
 msgid "Checksum"
 msgstr "Kontrolní součet"
 
+#. TRANSLATORS: get interactive prompt, where branch is the
+#. * supplier of the firmware, e.g. "non-free" or "free"
+msgid "Choose a branch:"
+msgstr "Zvolte variantu firmware:"
+
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a device:"
 msgstr "Vyberte zařízení:"
 
 #. TRANSLATORS: get interactive prompt
+msgid "Choose a firmware type:"
+msgstr "Zvolte typ firmware:"
+
+#. TRANSLATORS: get interactive prompt
 msgid "Choose a release:"
 msgstr "Vyberte verzi:"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose a volume:"
+msgstr "Zvolte svazek:"
 
 #. TRANSLATORS: command description
 msgid "Clears any updates scheduled to be updated offline"
@@ -139,6 +383,18 @@ msgstr "Smazat výsledky z poslední aktualizace"
 #. TRANSLATORS: error message
 msgid "Command not found"
 msgstr "Příkaz nebyl nalezen"
+
+#. TRANSLATORS: prompt to apply the update
+msgid "Continue with update?"
+msgstr "Pokračovat v aktualizaci?"
+
+#. TRANSLATORS: command description
+msgid "Convert a firmware file"
+msgstr "Převést soubor s firmware"
+
+#. TRANSLATORS: Device supports some form of checksum verification
+msgid "Cryptographic hash verification is available"
+msgstr "Je k dispozici kryptografické ověření otisku"
 
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
@@ -160,6 +416,10 @@ msgstr "Popis"
 msgid "Detach to bootloader mode"
 msgstr "Odpojit do režimu zavaděče"
 
+#. TRANSLATORS: ID for hardware, typically a SHA1 sum
+msgid "Device ID"
+msgstr "Identifikátor zařízení"
+
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device added:"
 msgstr "Přidáno zařízení:"
@@ -168,9 +428,21 @@ msgstr "Přidáno zařízení:"
 msgid "Device changed:"
 msgstr "Změněno zařízení:"
 
+#. TRANSLATORS: Is locked and can be unlocked
+msgid "Device is locked"
+msgstr "Zařízení je uzamčeno"
+
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device removed:"
 msgstr "Odebráno zařízení:"
+
+#. TRANSLATORS: Device update needs to be separately activated
+msgid "Device update needs activation"
+msgstr "Zařízení je pro aktualizaci třeba aktivovat"
+
+#. TRANSLATORS: Device will not return after update completes
+msgid "Device will not re-appear after update completes"
+msgstr "Po dokončení aktualizace se zařízení hned znovu neobjeví"
 
 #. TRANSLATORS: a list of successful updates
 msgid "Devices that have been updated successfully:"
@@ -179,6 +451,15 @@ msgstr "Zařízení, která byla úspěšně aktualizována:"
 #. TRANSLATORS: a list of failed updates
 msgid "Devices that were not updated correctly:"
 msgstr "Zařízení, která nebyla úspěšně aktualizována:"
+
+#. TRANSLATORS: message letting the user know no device upgrade available due
+#. to missing on LVFS
+msgid "Devices with no available firmware updates: "
+msgstr "Zařízení, ke kterém nejsou k dispozici aktualizace firmware:"
+
+#. TRANSLATORS: message letting the user know no device upgrade available
+msgid "Devices with the latest available firmware version:"
+msgstr "Zařízení s nejnovějšími dostupnými verzemi firmware:"
 
 msgid "Disabled fwupdate debugging"
 msgstr "Vypnout ladění fwupdate"
@@ -203,10 +484,23 @@ msgstr "Nekontrolovat restart po aktualizaci"
 msgid "Do not check for unreported history"
 msgstr "Nekontrolovat nenahlášení historie"
 
+#. TRANSLATORS: turn on all debugging
+msgid "Do not include log domain prefix"
+msgstr "Nepřidávat dlouhou příponu oblasti"
+
+#. TRANSLATORS: turn on all debugging
+msgid "Do not include timestamp prefix"
+msgstr "Nepřidávat příponu s datem a časem"
+
+#. TRANSLATORS: command line option
+msgid "Do not perform device safety checks"
+msgstr "Neprovádět kontroly bezpečnosti zařízení"
+
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
 msgstr "Nezapisovat do databáze historie"
 
+#. TRANSLATORS: success
 #. success
 msgid "Done!"
 msgstr "Hotovo!"
@@ -221,6 +515,11 @@ msgstr "Přejít na nižší verzi firmwaru na zařízení"
 #, c-format
 msgid "Downgrading %s from %s to %s... "
 msgstr "Převádí se %s z verze %s na %s…"
+
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Downgrading %s…"
+msgstr "Vracení %s na starší verzi…"
 
 #. TRANSLATORS: downloading from a remote server
 msgid "Downloading…"
@@ -242,6 +541,8 @@ msgstr "Povolit podporu aktualizace firmwaru na podporovaných systémech"
 msgid "Enable this remote?"
 msgstr "Povolit tento vzdálený zdroj?"
 
+#. TRANSLATORS: Suffix: the HSI result
+#. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
 msgid "Enabled"
 msgstr "Povoleno"
@@ -260,6 +561,14 @@ msgstr "Zapnutí této funkcionality je na vaše vlastní riziko, což znamená,
 msgid "Enabling this remote is done at your own risk."
 msgstr "Povolení tohoto zdroje je na vaše vlastní riziko."
 
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Encrypted"
+msgstr "Šifrované"
+
+#. TRANSLATORS: Title: Memory contents are encrypted, e.g. Intel TME
+msgid "Encrypted RAM"
+msgstr "Šifrovaná RAM"
+
 #. TRANSLATORS: command description
 msgid "Erase all firmware update history"
 msgstr "Smazat veškerou historii aktualizací"
@@ -276,33 +585,75 @@ msgstr "Skončit po krátké prodlevě"
 msgid "Exit after the engine has loaded"
 msgstr "Skončit po načtení výkonné části"
 
-#. TRANSLATORS: the server is rate-limiting downloads
-msgid "Failed to download due to server limit"
-msgstr "Nezdařilo se stáhnout kvůli omezením serveru"
+#. TRANSLATORS: command description
+msgid "Extract a firmware blob to images"
+msgstr "Rozbalit firmware z blobu do obrazů"
+
+#. TRANSLATORS: Suffix: the fallback HSI result
+msgid "Failed"
+msgstr "Nezdařilo se"
+
+#. TRANSLATORS: dbx file failed to be applied as an update
+msgid "Failed to apply update"
+msgstr "Aktualizaci se nepodařilo provést"
+
+#. TRANSLATORS: we could not talk to the fwupd daemon
+msgid "Failed to connect to daemon"
+msgstr "Nepodařilo se spojit s procesem služby"
+
+#. TRANSLATORS: could not parse file
+msgid "Failed to extract local dbx "
+msgstr "Nepodařilo se rozbalit místní dbx"
+
+#. TRANSLATORS: we could not get the devices to update offline
+msgid "Failed to get pending devices"
+msgstr "Nepodařilo se získat čekající zařízení"
+
+#. TRANSLATORS: we could not install for some reason
+msgid "Failed to install firmware update"
+msgstr "Aktualizaci firmware se nepodařilo nainstalovat"
+
+#. TRANSLATORS: could not read existing system data
+#. TRANSLATORS: could not read file
+msgid "Failed to load local dbx"
+msgstr "Nepodařilo se načíst místní dbx"
 
 #. TRANSLATORS: quirks are device-specific workarounds
 msgid "Failed to load quirks"
 msgstr "Selhalo načtení zvláštních požadavků"
 
+#. TRANSLATORS: could not read existing system data
+msgid "Failed to load system dbx"
+msgstr "Nepodařilo se načíst systémové dbx"
+
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
 msgstr "Selhalo zpracování argumentů"
 
-#. TRANSLATORS: downloading unknown file
-msgid "Fetching file"
-msgstr "Stahuje se soubor"
+#. TRANSLATORS: failed to read measurements file
+msgid "Failed to parse file"
+msgstr "Soubor se nepodařilo zpracovat"
 
-#. TRANSLATORS: downloading new firmware file
-msgid "Fetching firmware"
-msgstr "Stahuje se firmware"
+#. TRANSLATORS: the user didn't read the man page
+msgid "Failed to parse flags for --filter"
+msgstr "Nepodařilo se zpracovat příznaky pro --filter"
 
-#. TRANSLATORS: downloading new metadata file
-msgid "Fetching metadata"
-msgstr "Stahují se metadata"
+#. TRANSLATORS: could not parse file
+msgid "Failed to parse local dbx"
+msgstr "Nepodařilo se zpracovat místní dbx"
 
-#. TRANSLATORS: downloading new signing file
-msgid "Fetching signature"
-msgstr "Stahuje se podpis"
+#. TRANSLATORS: we could not reboot for some reason
+msgid "Failed to reboot"
+msgstr "Nepodařilo se restartovat"
+
+#. TRANSLATORS: we could not talk to plymouth
+msgid "Failed to set splash mode"
+msgstr "Nepodařilo se nastavit režim startovací obrazovky"
+
+#. TRANSLATORS: something with a blocked hash exists
+#. * in the users ESP -- which would be bad!
+msgid "Failed to validate ESP contents"
+msgstr "Nepodařilo se ověřit obsah ESP oddílu"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
@@ -311,6 +662,10 @@ msgstr "Název souboru"
 #. TRANSLATORS: filename of the local file
 msgid "Filename Signature"
 msgstr "Podpis názvu souboru"
+
+#. TRANSLATORS: user did not include a filename parameter
+msgid "Filename required"
+msgstr "Je zapotřebí zadat název souboru"
 
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
@@ -328,6 +683,18 @@ msgstr "Démon pro aktualizaci firmwaru"
 msgid "Firmware Utility"
 msgstr "Nástroj pro práci s firmwarem"
 
+#. TRANSLATORS: Title: if we can verify the firmware checksums
+msgid "Firmware attestation"
+msgstr "Atestace firmware"
+
+#. TRANSLATORS: user selected something not possible
+msgid "Firmware is already blocked"
+msgstr "Firmware už je blokován"
+
+#. TRANSLATORS: user selected something not possible
+msgid "Firmware is not already blocked"
+msgstr "Firmware ještě není blokován"
+
 #. TRANSLATORS: the metadata is very out of date; %u is a number > 1
 #, c-format
 msgid "Firmware metadata has not been updated for %u day and may not be up to date."
@@ -337,11 +704,34 @@ msgstr[1] "Metadata firmwaru nebyla akualizována již %u dny a nelze je aktuali
 msgstr[2] "Metadata firmwaru nebyla akualizována již %u dní a nelze je aktualizovat."
 msgstr[3] "Metadata firmwaru nebyla akualizována již %u dne a nelze je aktualizovat."
 
+#. TRANSLATORS: Title: if firmware updates are available
+msgid "Firmware updates"
+msgstr "Aktualizace firmware"
+
 msgid "Firmware updates are not supported on this machine."
 msgstr "Aktualizace firmwaru nejsou na tomto počítači podporované."
 
 msgid "Firmware updates are supported on this machine."
 msgstr "Aktualizace firmwaru jsou na tomto počítači podporované."
+
+#. TRANSLATORS: command line option
+msgid "Force the action by relaxing some runtime checks"
+msgstr "Vynutit akci uvolněním některých kontrol při vykonávání"
+
+msgid "Force the action ignoring all warnings"
+msgstr "Vynutit, aby při akci byla ignorována všechna varování"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Found"
+msgstr "Nalezeno"
+
+#. TRANSLATORS: command description
+msgid "Get all device flags supported by fwupd"
+msgstr "Získat všechny příznaky zařízení podporované fwupd"
+
+#. TRANSLATORS: command description
+msgid "Get all devices and possible releases"
+msgstr "Zjistit všechna zařízení a vydání, která jsou možná"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -360,6 +750,18 @@ msgid "Gets the configured remotes"
 msgstr "Vypsat nastavené vzdálené zdroje"
 
 #. TRANSLATORS: command description
+msgid "Gets the host security attributes"
+msgstr "Zjistit atributy zabezpečení hostitele"
+
+#. TRANSLATORS: firmware approved by the admin
+msgid "Gets the list of approved firmware"
+msgstr "Získá seznam schválených firmware"
+
+#. TRANSLATORS: command description
+msgid "Gets the list of blocked firmware"
+msgstr "Získá seznam blokovaných firmware"
+
+#. TRANSLATORS: command description
 msgid "Gets the list of updates for connected hardware"
 msgstr "Vypsat seznam aktualizací pro připojený hardware"
 
@@ -371,9 +773,42 @@ msgstr "Vypsat vydání pro zařízení"
 msgid "Gets the results from the last update"
 msgstr "Vypsat výsledky z poslední aktualizace"
 
+#. TRANSLATORS: The hardware is waiting to be replugged
+msgid "Hardware is waiting to be replugged"
+msgstr "Hardware čeká na opětovné připojení"
+
+#. TRANSLATORS: this is a string like 'HSI:2-U'
+msgid "Host Security ID:"
+msgstr "Identifikátor zabezpečení hostitele:"
+
+#. TRANSLATORS: Title:
+#. https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
+msgid "IOMMU"
+msgstr "IOMMU"
+
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
 msgstr "Nečinný…"
+
+#. TRANSLATORS: command line option
+msgid "Ignore SSL strict checks when downloading files"
+msgstr "Při stahování souborů ignorovat některé nedostatky SSL certifikátů"
+
+#. TRANSLATORS: command line option
+msgid "Ignore firmware checksum failures"
+msgstr "Ignorovat nesprávný kontrolní součet firmware"
+
+#. TRANSLATORS: command line option
+msgid "Ignore firmware hardware mismatch failures"
+msgstr "Ignorovat neshody firmware s hardware"
+
+#. TRANSLATORS: command line option
+msgid "Ignore requirement of external power source"
+msgstr "Ignorovat požadavek na přítomnost externího napájení"
+
+#. TRANSLATORS: Ignore validation safety checks when flashing this device
+msgid "Ignore validation safety checks"
+msgstr "Ignorovat výsledky kontrol ověření"
 
 #. TRANSLATORS: command description
 msgid "Install a firmware blob on a device"
@@ -392,11 +827,19 @@ msgstr "Instalace podepsaného firmwaru zařízení"
 msgid "Install signed system firmware"
 msgstr "Instalace podepsaného systémového firmwaru"
 
+#. TRANSLATORS: Install composite firmware on the parent before the child
+msgid "Install to parent device first"
+msgstr "Nejprve nainstalovat do nadřazeného zařízení"
+
 msgid "Install unsigned device firmware"
 msgstr "Instalace nepodepsaného firmwaru zařízení"
 
 msgid "Install unsigned system firmware"
 msgstr "Instalace nepodepsaného systémového firmwaru"
+
+#. TRANSLATORS: console message when no Plymouth is installed
+msgid "Installing Firmware…"
+msgstr "Instalace firmware…"
 
 #. TRANSLATORS: this is shown when updating the firmware after the reboot
 msgid "Installing firmware update…"
@@ -406,6 +849,51 @@ msgstr "Instaluje se aktualizace firmwaru…"
 #, c-format
 msgid "Installing on %s…"
 msgstr "Instaluje se na zařízení %s…"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel
+msgid "Intel BootGuard"
+msgstr "Intel BootGuard"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * error policy is what to do on failure
+msgid "Intel BootGuard error policy"
+msgstr "Co Intel BootGuard udělá v případě chyb"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * verified boot refers to the way the boot process is verified
+msgid "Intel BootGuard verified boot"
+msgstr "Ověřené zavádění s Intel BootGuard"
+
+#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
+#. * active means being used by the OS
+msgid "Intel CET Active"
+msgstr "Intel CET aktivní"
+
+#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
+#. * enabled means supported by the processor
+msgid "Intel CET Enabled"
+msgstr "Intel CET podporováno"
+
+#. TRANSLATORS: Title: Direct Connect Interface (DCI) allows
+#. * debugging of Intel processors using the USB3 port
+msgid "Intel DCI debugger"
+msgstr "Ladící nástroj Intel DCI"
+
+#. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
+msgid "Intel SMAP"
+msgstr "Intel SMAP"
+
+#. TRANSLATORS: Device cannot be removed easily
+msgid "Internal device"
+msgstr "Vestavěné zařízení"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Invalid"
+msgstr "Neplatné"
+
+#. TRANSLATORS: Is currently in bootloader mode
+msgid "Is in bootloader mode"
+msgstr "Je v režimu zavaděče"
 
 msgid "Keyring"
 msgstr "Klíčenka"
@@ -420,17 +908,48 @@ msgstr "Linux Vendor Firmware Service (stabilní firmware)"
 msgid "Linux Vendor Firmware Service (testing firmware)"
 msgstr "Linux Vendor Firmware Service (testovací firmware)"
 
+#. TRANSLATORS: Title: if it's tainted or not
+msgid "Linux kernel"
+msgstr "Linuxové jádro"
+
+#. TRANSLATORS: Title: lockdown is a security mode of the kernel
+msgid "Linux kernel lockdown"
+msgstr "Uzamčení linuxového jádra"
+
+#. TRANSLATORS: Title: swap space or swap partition
+msgid "Linux swap"
+msgstr "Linuxový odkládací prostor"
+
+#. TRANSLATORS: command line option
+msgid "List entries in dbx"
+msgstr "Vypsat položky v dbx"
+
 #. TRANSLATORS: command line option
 msgid "List supported firmware updates"
 msgstr "Vypsat podporované aktualizace firmwarů"
+
+#. TRANSLATORS: command description
+msgid "List the available firmware types"
+msgstr "Vypsat typy firmware, které jsou k dispozici"
+
+#. TRANSLATORS: command description
+msgid "Lists files on the ESP"
+msgstr "Vypíše soubory na ESP oddílu"
 
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
 msgstr "Načítá se…"
 
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Locked"
+msgstr "Zamčeno"
+
+msgid "MEI version"
+msgstr "Verze MEI"
+
 #. TRANSLATORS: command line option
-msgid "Manually whitelist specific plugins"
-msgstr "Ručně povolit konkrétní zásuvné moduly"
+msgid "Manually enable specific plugins"
+msgstr "Ručně zapnout konkrétní zásuvné moduly"
 
 #. TRANSLATORS: remote URI
 msgid "Metadata URI"
@@ -447,12 +966,38 @@ msgstr "Změnit zadaný vzdálený zdroj"
 msgid "Modify a configured remote"
 msgstr "Upravit nastavený vzdálený zdroj"
 
+msgid "Modify daemon configuration"
+msgstr "Upravit nastavení procesu služby"
+
 #. TRANSLATORS: command description
 msgid "Monitor the daemon for events"
 msgstr "Sledovat události démona"
 
+#. TRANSLATORS: command description
+msgid "Mounts the ESP"
+msgstr "Připojí ESP oddíl"
+
+#. TRANSLATORS: Requires a reboot to apply firmware or to reload hardware
+msgid "Needs a reboot after installation"
+msgstr "Po instalaci vyžaduje restart"
+
+#. TRANSLATORS: Requires system shutdown to apply firmware
+msgid "Needs shutdown after installation"
+msgstr "Po instalaci vyžaduje vypnutí"
+
+#. TRANSLATORS: user did not tell the tool what to do
 msgid "No action specified!"
 msgstr "Není určena žádné akce!"
+
+#. TRANSLATORS: message letting the user know no device downgrade available
+#. * %1 is the device name
+#, c-format
+msgid "No downgrades for %s"
+msgstr "Pro %s nejsou k dispozici žádné starší verze"
+
+#. TRANSLATORS: nothing found
+msgid "No firmware IDs found"
+msgstr "Nenalezeny žádné identifikátory firmware"
 
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
@@ -462,17 +1007,57 @@ msgstr "Nebylo nalezeno žádné zařízení schopné aktualizace firmwaru"
 msgid "No plugins found"
 msgstr "Nebyl nalezen žádný zásuvný modul"
 
+#. TRANSLATORS: no repositories to download from
+msgid "No releases available"
+msgstr "Nejsou k dispozici žádná vydání"
+
 #. TRANSLATORS: explain why no metadata available
 msgid "No remotes are currently enabled so no metadata is available."
 msgstr "Zrovna nejsou povolené žádné vzdálené zdroje, takže nejsou k dispozici žádná metadata."
 
+#. TRANSLATORS: no repositories to download from
+msgid "No remotes available"
+msgstr "Nejsou k dispozici žádné protějšky"
+
+#. TRANSLATORS: nothing was updated offline
+msgid "No updates were applied"
+msgstr "Nebyly nainstalovány žádné aktualizace"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Not found"
+msgstr "Nenalezeno"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Not supported"
+msgstr "Nepodporováno"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "OK"
+msgstr "V pořádku"
+
 #. TRANSLATORS: command line option
-msgid "Override plugin warning"
-msgstr "Potlačit varování zásuvného modulu"
+msgid "Only show single PCR value"
+msgstr "Zobrazit pouze jedinou PCR hodnotu"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Přepsat výchozí cestu ESP"
+
+#. TRANSLATORS: command line option
+msgid "Override warnings and force the action"
+msgstr "Přebít varování a vynutit akci"
+
+#. TRANSLATORS: command description
+msgid "Parse and show details about a firmware file"
+msgstr "Zpracovat a zobrazit podrobnosti o souboru s firmware"
+
+#. TRANSLATORS: reading new dbx from the update
+msgid "Parsing dbx update…"
+msgstr "Zpracovávání aktualizace dbx…"
+
+#. TRANSLATORS: reading existing dbx from the system
+msgid "Parsing system dbx…"
+msgstr "Zpracovávání systémového dbx…"
 
 #. TRANSLATORS: remote filename base
 msgid "Password"
@@ -481,10 +1066,24 @@ msgstr "Heslo"
 msgid "Payload"
 msgstr "Obsah"
 
+#. TRANSLATORS: console message when not using plymouth
+msgid "Percentage complete"
+msgstr "Dokončeno procent"
+
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u: "
 msgstr "Zadejte prosím číslo od 0 do %u:"
+
+#. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
+msgid "Pre-boot DMA protection"
+msgstr "Ochrana přímého přístupu do paměti před startem operačního systému"
+
+msgid "Print the version number"
+msgstr "Vypsat číslo verze"
+
+msgid "Print verbose debug statements"
+msgstr "Vypsat podrobná ladící hlášení"
 
 #. TRANSLATORS: the numeric priority
 msgid "Priority"
@@ -498,6 +1097,10 @@ msgid "Query for firmware update support"
 msgstr "Dotázat se na podporu aktualizace firmwaru"
 
 #. TRANSLATORS: command description
+msgid "Read a firmware blob from a device"
+msgstr "Načíst blob firmware ze zařízení"
+
+#. TRANSLATORS: command description
 msgid "Read firmware from device into a file"
 msgstr "Přečíst firmware ze zařízení do souboru"
 
@@ -505,13 +1108,26 @@ msgstr "Přečíst firmware ze zařízení do souboru"
 msgid "Read firmware from one partition into a file"
 msgstr "Přečíst firmware z jednoho oddílu do souboru"
 
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Reading from %s…"
+msgstr "Načítání z %s…"
+
 #. TRANSLATORS: reading from the flash chips
 msgid "Reading…"
 msgstr "Čte se…"
 
+#. TRANSLATORS: console message when not using plymouth
+msgid "Rebooting…"
+msgstr "Restartování…"
+
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "Aktualizovat metadata ze vzdáleného serveru"
+
+#. TRANSLATORS: command description
+msgid "Reinstall current firmware on the device"
+msgstr "Přeinstaluje stávající firmware na zařízení"
 
 #. TRANSLATORS: command description
 msgid "Reinstall firmware on a device"
@@ -541,6 +1157,14 @@ msgstr "Nahradit data ve stávajícím souboru s firmwarem"
 msgid "Report URI"
 msgstr "URI hlášení"
 
+#. TRANSLATORS: Has been reported to a metadata server
+msgid "Reported to remote server"
+msgstr "Nahlášeno na vzdálený server"
+
+#. TRANSLATORS: Requires a bootloader mode to be manually enabled by the user
+msgid "Requires a bootloader"
+msgstr "Vyžaduje zavaděč systému"
+
 #. TRANSLATORS: metadata is downloaded from the Internet
 msgid "Requires internet connection"
 msgstr "Vyžaduje připojení k Internetu"
@@ -548,6 +1172,10 @@ msgstr "Vyžaduje připojení k Internetu"
 #. TRANSLATORS: reboot to apply the update
 msgid "Restart now?"
 msgstr "Restartovat nyní?"
+
+#. TRANSLATORS: configuration changes only take effect on restart
+msgid "Restart the daemon to make the change effective?"
+msgstr "Restartovat proces služby, aby se změny uplatnily?"
 
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
@@ -557,6 +1185,21 @@ msgstr "Zařízení se restartuje…"
 msgid "Return all the hardware IDs for the machine"
 msgstr "Vrátit všechna ID hardwaru počítače"
 
+msgid "Run `fwupdmgr get-upgrades` for more information."
+msgstr "Podrobnosti získáte spuštěním `fwupdmgr get-upgrades`."
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "SPI BIOS region"
+msgstr "Oblast SPI BIOS"
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "SPI lock"
+msgstr "SPI uzamčení"
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "SPI write"
+msgstr "SPI zápis"
+
 #. TRANSLATORS: command line option
 msgid "Schedule installation for next reboot when possible"
 msgstr "Pokud je to možné, naplánovat instalaci na příští restart"
@@ -565,17 +1208,41 @@ msgstr "Pokud je to možné, naplánovat instalaci na příští restart"
 msgid "Scheduling…"
 msgstr "Plánuje se…"
 
+#. TRANSLATORS: Device has been chosen by the daemon for the user
+msgid "Selected device"
+msgstr "Vybrané zařízení"
+
+#. TRANSLATORS: Volume has been chosen by the user
+msgid "Selected volume"
+msgstr "Vybraný svazek"
+
 #. TRANSLATORS: command line option
 msgid "Set the debugging flag during update"
 msgstr "Během aktualizace nastavit příznak ladění"
+
+#. TRANSLATORS: firmware approved by the admin
+msgid "Sets the list of approved firmware"
+msgstr "Nastavuje seznam schváleného firmware"
 
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
 msgstr "Sdílet historii firmwaru s vývojáři"
 
 #. TRANSLATORS: command line option
+msgid "Show all results"
+msgstr "Zobrazit všechny výsledky"
+
+#. TRANSLATORS: command line option
 msgid "Show client and daemon versions"
 msgstr "Zobrazit verzi klienta a démona"
+
+#. TRANSLATORS: this is for daemon development
+msgid "Show daemon verbose information for a particular domain"
+msgstr "Zobrazit podrobnější informace z procesu služby pro konkrétní oblast"
+
+#. TRANSLATORS: turn on all debugging
+msgid "Show debugging information for all domains"
+msgstr "Zapnout vypisování ladících informací pro všechny oblasti"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
@@ -598,6 +1265,10 @@ msgid "Show plugin verbose information"
 msgstr "Zobrazit podrobné informace o zásuvném modulu"
 
 #. TRANSLATORS: command line option
+msgid "Show the calculated version of the dbx"
+msgstr "Zobrazit vypočtenou verzi dbx"
+
+#. TRANSLATORS: command line option
 msgid "Show the debug log from the last attempted update"
 msgstr "Zobrazit ladicí záznam z posledního pokusu o aktualizaci"
 
@@ -605,9 +1276,66 @@ msgstr "Zobrazit ladicí záznam z posledního pokusu o aktualizaci"
 msgid "Show the information of firmware update status"
 msgstr "Zobrazit informace o stavu aktualizace firmwaru"
 
+#. TRANSLATORS: shutdown to apply the update
+msgid "Shutdown now?"
+msgstr "Vypnout nyní?"
+
+msgid "Sign data using the client certificate"
+msgstr "Podepsat data klientským certifikátem"
+
+msgctxt "command-description"
+msgid "Sign data using the client certificate"
+msgstr "Podepsat data klientským certifikátem"
+
+msgid "Signature"
+msgstr "Podpis"
+
+msgid "Specify Vendor/Product ID(s) of DFU device"
+msgstr "Zadejte  identifikátor(y) výrobce/produktu DFU zařízení"
+
+#. TRANSLATORS: command line option
+msgid "Specify the dbx database file"
+msgstr "Zadejte soubor dbx databáze"
+
+msgid "Specify the number of bytes per USB transfer"
+msgstr "Zadejte počet bajtů v jednotlivých přenosech přes USB sběrnici"
+
+#. TRANSLATORS: success message -- where activation is making the new
+#. * firmware take effect, usually after updating offline
+msgid "Successfully activated all devices"
+msgstr "Všechna zařízení úspěšně aktivována"
+
+#. TRANSLATORS: success message -- a per-system setting value
+msgid "Successfully modified configuration value"
+msgstr "Hodnota v nastavení úspěšně změněna"
+
+#. TRANSLATORS: success message when user refreshes device checksums
+msgid "Successfully updated device checksums"
+msgstr "Kontrolní součty zařízení úspěšně zaktualizovány"
+
 #. TRANSLATORS: one line summary of device
 msgid "Summary"
 msgstr "Souhrn"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Supported"
+msgstr "Podporováno"
+
+#. TRANSLATORS: Is found in current metadata
+msgid "Supported on remote server"
+msgstr "Podporováno na vzdáleném serveru"
+
+#. TRANSLATORS: Must be plugged in to an outlet
+msgid "System requires external power source"
+msgstr "Počítač vyžaduje externí napájení"
+
+#. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
+msgid "TPM PCR0 reconstruction"
+msgstr "Rekonstrukce TPM PCR0"
+
+#. TRANSLATORS: Title: TPM = Trusted Platform Module
+msgid "TPM v2.0"
+msgstr "TPM v2.0"
 
 msgid "Target"
 msgstr "Cíl"
@@ -616,12 +1344,33 @@ msgstr "Cíl"
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
 msgstr "LVFS je svobodná služba, které funguje jako nezávislý právní subjekt a nemá žádné vazby na systém $OS_RELEASE:NAME$. Váš distributor nemusí některé z aktualizací firmwaru schválit kvůli kompatibilitě s vaším systémem nebo připojenými zařízeními. Veškerý firmware je poskytován pouze přímo výrobci daných zařízení."
 
+#. TRANSLATORS: the user is SOL for support...
+msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
+msgstr "Proces služby načetl kód třetí strany a není už podporován původními vývojáři!"
+
+#. TRANSLATORS: nothing to show
+msgid "There are no blocked firmware files"
+msgstr "Nejsou zde žádné blokované soubory s firmware"
+
+#. TRANSLATORS: approved firmware has been checked by
+#. * the domain administrator
+msgid "There is no approved firmware."
+msgstr "Není k dispozici žádný schválený firmware"
+
 #. TRANSLATORS: we're poking around as a power user
 msgid "This program may only work correctly as root"
 msgstr "Tento program může správně fungovat jen pod uživatelem root"
 
 msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
 msgstr "Tento zdroj obsahuje firmware, který není zakázaný, ale zatím je u výrobce stále ve stádiu testování. Měli byste se ujistit, že znáte způsob, jak se vrátit k předchozí verzi firmwaru, kdyby došlo k selhání."
+
+#. TRANSLATORS: description of dbxtool
+msgid "This tool allows an administrator to apply UEFI dbx updates."
+msgstr "Tento nástroj správci umožňuje použít UEFI dbx aktualizace."
+
+#. TRANSLATORS: the user needs to stop playing with stuff
+msgid "This tool can only be used by the root user"
+msgstr "Tento nástroj může používat pouze uživatel s oprávněními na úrovni správce systému (root)"
 
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
@@ -631,22 +1380,67 @@ msgstr "Typ"
 msgid "UEFI Firmware Utility"
 msgstr "Nástroj pro práci s firmwarem UEFI"
 
+#. TRANSLATORS: program name
+msgid "UEFI dbx Utility"
+msgstr "Nástroj pro UEFI dbx"
+
+#. TRANSLATORS: error message
+msgid "Unable to connect to service"
+msgstr "Nedaří se připojit se ke službě"
+
+#. TRANSLATORS: command description
+msgid "Unbind current driver"
+msgstr "Odpojit stávající ovladač"
+
+#. TRANSLATORS: we will now offer this firmware to the user
+msgid "Unblocking firmware:"
+msgstr "Odblokovává se firmware:"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Unencrypted"
+msgstr "Nešifrované"
+
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 #. TRANSLATORS: unknown release urgency
 msgid "Unknown"
 msgstr "Neznámý"
 
+#. TRANSLATORS: Name of hardware
+msgid "Unknown Device"
+msgstr "Neznámé zařízení"
+
 msgid "Unlock the device to allow access"
 msgstr "Odemknutí zařízení pro umožnění přístupu"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Unlocked"
+msgstr "Odemčené"
 
 #. TRANSLATORS: command description
 msgid "Unlocks the device for firmware access"
 msgstr "Odemknout zařízení pro přístup k firmwaru"
 
+#. TRANSLATORS: command description
+msgid "Unmounts the ESP"
+msgstr "Odpojí ESP oddíl"
+
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"
 msgstr "Během aktualizace zrušit příznak ladění"
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "Unsupported daemon version %s, client version is %s"
+msgstr "Nepodporovaná verze procesu služby %s, verze klienta je %s"
+
+#. TRANSLATORS: Device is updatable in this or any other mode
+msgid "Updatable"
+msgstr "Možné aktualizovat"
+
+#. TRANSLATORS: command description
+msgid "Update all devices that match local metadata"
+msgstr "Aktualizovat veškerá zařízení, která se shodují s místními metadaty"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
@@ -656,12 +1450,23 @@ msgstr "O selhání aktualizace se ví, více informací najdete na této adrese
 msgid "Update now?"
 msgstr "Aktualizovat nyní?"
 
+#. TRANSLATORS: Update can only be done from offline mode
+msgid "Update requires a reboot"
+msgstr "Aktualizace vyžaduje restart"
+
 msgid "Update the stored device verification information"
 msgstr "Aktualizace uložené informace o ověření zařízení"
 
 #. TRANSLATORS: command description
+msgid "Update the stored metadata with current contents"
+msgstr "Aktualizovat uložená metadata stávajícím obsahem"
+
+#. TRANSLATORS: command description
 msgid "Updates all firmware to latest versions available"
 msgstr "Aktualizovat všechen firmware na nejnovější dostupné verze"
+
+msgid "Updating"
+msgstr "Aktualizuje se"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
@@ -670,9 +1475,10 @@ msgstr "Aktualizovat všechen firmware na nejnovější dostupné verze"
 msgid "Updating %s from %s to %s... "
 msgstr "Aktualizuje se %s z verze %s na %s…"
 
-#. TRANSLATORS: the server sent the user a small message
-msgid "Upload message:"
-msgstr "Nahraná zpráva:"
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Updating %s…"
+msgstr "Aktualizace %s…"
 
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
@@ -682,13 +1488,45 @@ msgstr "Nahrát hlášení nyní?"
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
 msgstr "Když nahrajete hlášení o firmwaru, pomůžete tím výrobcům hardwaru rychle rozpoznat nezdařené a úspěšné aktualizace na reálných zařízeních."
 
+#. TRANSLATORS: error message explaining command to run to how to get help
+msgid "Use fwupdmgr --help for help"
+msgstr "Pro zobrazení nápovědy použijte příkaz fwupdmgr --help"
+
+#. TRANSLATORS: error message explaining command to run to how to get help
+msgid "Use fwupdtool --help for help"
+msgstr "Nápovědu obdržíte spuštěním fwupdtool --help"
+
+#. TRANSLATORS: command line option
+msgid "Use quirk flags when installing firmware"
+msgstr "Při instalaci firmware použít příznaky pro kompatibilitu"
+
+#. TRANSLATORS: User has been notified
+msgid "User has been notified"
+msgstr "Uživatel byl upozorněn"
+
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "Uživatelské jméno"
 
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Valid"
+msgstr "Platné"
+
+#. TRANSLATORS: ESP refers to the EFI System Partition
+msgid "Validating ESP contents…"
+msgstr "Ověřování obsahu ESP oddílu…"
+
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
 msgstr "Ověřuje se…"
+
+#. TRANSLATORS: the detected version number of the dbx
+msgid "Version"
+msgstr "Verze"
+
+#. TRANSLATORS: this is a prefix on the console
+msgid "WARNING:"
+msgstr "VAROVÁNÍ:"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
@@ -710,6 +1548,10 @@ msgstr "Zapsat firmware ze souboru do zařízení"
 msgid "Write firmware from file into one partition"
 msgstr "Zapsat firmware ze souboru do jednoho oddílu"
 
+#. TRANSLATORS: decompressing images from a container firmware
+msgid "Writing file:"
+msgstr "Zápis do souboru:"
+
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing…"
 msgstr "Zapisuje se…"
@@ -717,3 +1559,15 @@ msgstr "Zapisuje se…"
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
 msgstr "Váš distributor nemusí schválit některé aktualizace firmwaru kvůli kompatibilitě s vaším systémem nebo připojenými zařízeními."
+
+#. TRANSLATORS: this is the default branch name when unset
+msgid "default"
+msgstr "výchozí"
+
+#. TRANSLATORS: program name
+msgid "fwupd TPM event log utility"
+msgstr "fwupd nástroj pro záznamy událostí v TPM"
+
+#. TRANSLATORS: Title: if the fwupd plugins are all present and correct
+msgid "fwupd plugins"
+msgstr "zásuvné moduly pro fwupd"

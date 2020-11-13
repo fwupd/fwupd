@@ -22,6 +22,12 @@ msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"
 msgstr[0] "%.0f분 남음"
 
+#. TRANSLATORS: the CPU microcode is firmware loaded onto the CPU
+#. * at system bootup
+#, c-format
+msgid "%s CPU Microcode Update"
+msgstr "%s CPU 마이크로코드 업데이트"
+
 #. TRANSLATORS: ME stands for Management Engine, where
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
@@ -309,6 +315,18 @@ msgstr "명령을 찾을 수 없습니다"
 msgid "Continue with update?"
 msgstr "업데이트를 계속 진행하시겠습니까?"
 
+#. TRANSLATORS: command description
+msgid "Convert a firmware file"
+msgstr "펌웨어 파일을 변환합니다"
+
+#. TRANSLATORS: when the update was built
+msgid "Created"
+msgstr "생성됨"
+
+#. TRANSLATORS: the release urgency
+msgid "Critical"
+msgstr "매우 높음"
+
 #. TRANSLATORS: Device supports some form of checksum verification
 msgid "Cryptographic hash verification is available"
 msgstr "암호화 해시 검사 사용 가능"
@@ -448,6 +466,7 @@ msgstr[0] "보고서를 업로드하지 않고 다음에 업데이트할 때에�
 msgid "Do not write to the history database"
 msgstr "과거 기록 데이터베이스에 기록하지 않기"
 
+#. TRANSLATORS: success
 #. success
 msgid "Done!"
 msgstr "완료!"
@@ -492,6 +511,8 @@ msgstr "지원하는 시스템의 펌웨어 업데이트 지원 활성화"
 msgid "Enable this remote?"
 msgstr "이 원격 설정을 활성화하시겠습니까?"
 
+#. TRANSLATORS: Suffix: the HSI result
+#. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
 msgid "Enabled"
 msgstr "활성화 여부"
@@ -530,10 +551,6 @@ msgstr "엔진을 불러온 후 나가기"
 msgid "Failed to connect to daemon"
 msgstr "데몬에 연결할 수 없음"
 
-#. TRANSLATORS: the server is rate-limiting downloads
-msgid "Failed to download due to server limit"
-msgstr "서버 제한으로 파일을 다운로드할 수 없음"
-
 #. TRANSLATORS: we could not get the devices to update offline
 msgid "Failed to get pending devices"
 msgstr "대기 중인 장치를 가져올 수 없음"
@@ -565,22 +582,6 @@ msgstr "다시 시작할 수 없음"
 #. TRANSLATORS: we could not talk to plymouth
 msgid "Failed to set splash mode"
 msgstr "스플래시 모드를 설정할 수 없음"
-
-#. TRANSLATORS: downloading unknown file
-msgid "Fetching file"
-msgstr "파일 가져오는 중"
-
-#. TRANSLATORS: downloading new firmware file
-msgid "Fetching firmware"
-msgstr "펌웨어 가져오는 중"
-
-#. TRANSLATORS: downloading new metadata file
-msgid "Fetching metadata"
-msgstr "메타데이터 가져오는 중"
-
-#. TRANSLATORS: downloading new signing file
-msgid "Fetching signature"
-msgstr "서명 가져오는 중"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
@@ -626,12 +627,17 @@ msgstr "이 머신에서 펌웨어 업데이트를 지원하지 않습니다."
 msgid "Firmware updates are supported on this machine."
 msgstr "이 머신에서 펌웨어 업데이트를 지원합니다."
 
+#. TRANSLATORS: description of plugin state, e.g. disabled
 #. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "플래그"
 
 msgid "Force the action ignoring all warnings"
 msgstr "모든 경고를 무시하고 작업 강제 진행"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Found"
+msgstr "감지 장치"
 
 #. TRANSLATORS: global ID common to all similar hardware
 msgid "GUID"
@@ -662,10 +668,6 @@ msgstr "펌웨어 파일 세부 정보를 가져옵니다"
 msgid "Gets the configured remotes"
 msgstr "원격 설정 정보를 가져옵니다"
 
-#. TRANSLATORS: firmware approved by the admin
-msgid "Gets the list of approved firmware."
-msgstr "허용된 펌웨어 목록을 가져옵니다."
-
 #. TRANSLATORS: command description
 msgid "Gets the list of updates for connected hardware"
 msgstr "연결한 하드웨어의 업데이트 목록을 가져옵니다"
@@ -681,6 +683,10 @@ msgstr "최근 업데이트 결과를 가져옵니다"
 #. TRANSLATORS: The hardware is waiting to be replugged
 msgid "Hardware is waiting to be replugged"
 msgstr "하드웨어를 다시 연결해야 함"
+
+#. TRANSLATORS: the release urgency
+msgid "High"
+msgstr "높음"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -784,9 +790,13 @@ msgstr "사용 가능한 펌웨어 종류를 표시합니다"
 msgid "Loading…"
 msgstr "불러오는 중…"
 
-#. TRANSLATORS: command line option
-msgid "Manually whitelist specific plugins"
-msgstr "지정한 플러그인을 수동으로 허용 목록에 추가"
+#. TRANSLATORS: the release urgency
+msgid "Low"
+msgstr "낮음"
+
+#. TRANSLATORS: the release urgency
+msgid "Medium"
+msgstr "중간"
 
 #. TRANSLATORS: remote URI
 msgid "Metadata Signature"
@@ -808,10 +818,6 @@ msgstr "최소 버전"
 #, c-format
 msgid "Mismatched daemon and client, use %s instead"
 msgstr "데몬과 클라이언트가 일치하지 않음, %s을(를) 대신 사용함"
-
-#. TRANSLATORS: sets something in daemon.conf
-msgid "Modifies a daemon configuration value."
-msgstr "데몬 설정값을 변경합니다."
 
 #. TRANSLATORS: command description
 msgid "Modifies a given remote"
@@ -839,6 +845,7 @@ msgstr "설치 후 종료 필요함"
 msgid "New version"
 msgstr "새 버전"
 
+#. TRANSLATORS: user did not tell the tool what to do
 msgid "No action specified!"
 msgstr "동작을 지정하지 않았습니다!"
 
@@ -876,13 +883,13 @@ msgstr "원격 저장소 없음"
 msgid "No updates were applied"
 msgstr "적용된 업데이트 없음"
 
+#. TRANSLATORS: Suffix: the HSI result
+msgid "OK"
+msgstr "확인"
+
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "단일 PCR 값만 표시"
-
-#. TRANSLATORS: command line option
-msgid "Override plugin warning"
-msgstr "플러그인 경고 무시"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
@@ -967,8 +974,8 @@ msgid "Refresh metadata from remote server"
 msgstr "원격 서버의 메타데이터를 새로 고칩니다"
 
 #. TRANSLATORS: command description
-msgid "Reinstall current firmware on the device."
-msgstr "장치에 현재 펌웨어를 다시 설치합니다."
+msgid "Reinstall firmware on a device"
+msgstr "장치에 펌웨어를 다시 설치합니다"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
@@ -997,10 +1004,6 @@ msgstr "보고서 URI"
 #. TRANSLATORS: Has been reported to a metadata server
 msgid "Reported to remote server"
 msgstr "원격 서버에 보고됨"
-
-#. TRANSLATORS: Must be plugged in to an outlet
-msgid "Requires AC power"
-msgstr "AC 전원 필요함"
 
 #. TRANSLATORS: Requires a bootloader mode to be manually enabled by the user
 msgid "Requires a bootloader"
@@ -1061,12 +1064,9 @@ msgstr "일련 번호"
 msgid "Set the debugging flag during update"
 msgstr "업데이트 중 디버깅 플래그 설정"
 
+#. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
 msgstr "허용된 펌웨어 목록 설정"
-
-#. TRANSLATORS: firmware approved by the admin
-msgid "Sets the list of approved firmware."
-msgstr "허용된 펌웨어 목록을 설정합니다."
 
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
@@ -1324,10 +1324,6 @@ msgstr "%s 업데이트 중..."
 msgid "Upgrade available for %s from %s to %s"
 msgstr "%s 업그레이드 사용 가능: %s에서 %s(으)로"
 
-#. TRANSLATORS: the server sent the user a small message
-msgid "Upload message:"
-msgstr "업로드 메시지:"
-
 msgid "Upload report just this one time, but prompt again for future updates"
 msgid_plural "Upload reports just this one time, but prompt again for future updates"
 msgstr[0] "이번 한 번만 보고서를 업로드하고 다음에 업데이트할 때 묻기"
@@ -1343,6 +1339,10 @@ msgstr[0] "이번 한 번 보고서를 업로드하고 다음에 업데이트할
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
 msgstr "펌웨어 보고서를 업로드하면 하드웨어 제작사에서 실제 장치에 업데이트를 적용했을 때 성공 및 실패 여부를 빠르게 알 수 있습니다."
+
+#. TRANSLATORS: how important the release is
+msgid "Urgency"
+msgstr "중요도"
 
 #. TRANSLATORS: command line option
 msgid "Use quirk flags when installing firmware"
@@ -1368,9 +1368,9 @@ msgstr "제조사"
 msgid "Verifying…"
 msgstr "검증 중…"
 
-#. TRANSLATORS: try to help
-msgid "WARNING: Ignoring SSL strict checks, to do this automatically in the future export DISABLE_SSL_STRICT in your environment"
-msgstr "경고: SSL 엄격 검사를 건너뜁니다. 이 옵션을 자동으로 지정하려면 DISABLE_SSL_STRICT 환경 변수를 지정하십시오"
+#. TRANSLATORS: the detected version number of the dbx
+msgid "Version"
+msgstr "버전"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
@@ -1399,3 +1399,7 @@ msgstr "쓰는 중…"
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
 msgstr "배포판 개발사에서 펌웨어 업데이트와 시스템 및 연결된 장치간의 호환성을 검증한다는 보장이 없습니다."
+
+#. TRANSLATORS: program name
+msgid "fwupd TPM event log utility"
+msgstr "fwupd TPM 이벤트 로그 유틸리티"

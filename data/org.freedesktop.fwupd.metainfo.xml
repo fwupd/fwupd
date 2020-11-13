@@ -30,97 +30,82 @@
   </content_rating>
   <provides>
     <binary>fwupdmgr</binary>
+    <binary>fwupdtool</binary>
+    <binary>fwupdtpmevlog</binary>
+    <binary>fwupdagent</binary>
   </provides>
   <releases>
-    <release version="1.4.6" date="2020-09-07">
+    <release version="1.5.1" date="2020-11-02">
       <description>
         <p>This release adds the following features:</p>
         <ul>
-          <li>Add a re-implementation of the rhboot dbxtool</li>
-          <li>Add commands to fwupdtool for interacting with the ESP</li>
-          <li>Add support for the LabTop Mk IV</li>
-          <li>Add support for the Realtek RTD21XX I²C protocol</li>
-          <li>Add X-Configuration category to use for dbx updates</li>
-          <li>Allow blocking specific firmware releases by checksum</li>
-          <li>Allow plugins to set remove delay only on the child</li>
-          <li>Allow updating the dbx, validating it is safe to apply</li>
-          <li>Support download of large DFU firmware</li>
-          <li>Support polling the status from device in dfuManifest state</li>
+          <li>Include the amount of NVRAM size in use in the LVFS failure report</li>
         </ul>
         <p>This release fixes the following bugs:</p>
         <ul>
-          <li>Add missing Synaptics Prometheus GUIDs for ConfigId</li>
-          <li>Allow DFU device to attach to runtime without a bus reset</li>
-          <li>Be more careful doing multiple writes to the same device</li>
-          <li>Cancel the file monitor before disposal to avoid a potential deadlock</li>
-          <li>Correctly label the vebdor for more NVMe devices</li>
-          <li>Specify a remove delay for Poly USB Cameras</li>
-          <li>Use newer libxmlb features to properly display more AppStream markup</li>
+          <li>Delete unused EFI variables when deploying firmware</li>
+          <li>Fix probe warning for the Logitech Unifying device</li>
+          <li>Make bcm57xx hotplug more reliable</li>
+          <li>Recognize authorized thunderbolt value of 2</li>
+          <li>Remove the duplicate parent-child data in FwupdDevice and FuDevice</li>
+          <li>Show a less scary fwupdate output for devices without info</li>
+          <li>Show a link to discover more information about a specific plugin failure</li>
+          <li>Use a different Device ID for the OptionROM devices</li>
+          <li>Use UDisks to find out if swap devices are encrypted</li>
         </ul>
       </description>
     </release>
-    <release version="1.4.5" date="2020-07-30">
+    <release version="1.5.0" date="2020-10-26">
       <description>
         <p>This release adds the following features:</p>
         <ul>
-          <li>Add dual-image feature for VL103 backup firmware</li>
-          <li>Add more CCGX hybrid dock support</li>
+          <li>Add a compatible re-implementation of the rhboot dbxtool</li>
+          <li>Add async versions of the library for GUI tools</li>
+          <li>Add commands for interacting with the ESP to fwupdtool</li>
+          <li>Add firmware-extract subcommand to fwupdtool</li>
+          <li>Add FwupdPlugin so we can convey enumerated system errors to the end user</li>
+          <li>Add plugin for Goodix fingerprint sensors</li>
+          <li>Add plugin that can update the BCM5719 network adapter</li>
+          <li>Add plugin to update Elan Touchpads using HID</li>
           <li>Add support for a delayed activation flow for Thunderbolt</li>
+          <li>Add support for ChromeOS Quiche and Gingerbread</li>
+          <li>Add support for Hyper hardware</li>
+          <li>Add support for the Host Security ID</li>
+          <li>Add support for ThunderBolt retimers</li>
+          <li>Add switch-branch command to fwupdtool and fwupdmgr</li>
+          <li>Allow blocking specific firmware releases by checksum</li>
+          <li>Allow constructing a firmware with multiple images</li>
           <li>Allow firmware to require specific features from front-end clients</li>
-          <li>Modernize the thunderbolt plugin for future hardware</li>
-          <li>Support LVFS::UpdateImage in GUI clients</li>
+          <li>Allow updating the dbx using the LVFS, validating it is safe to apply</li>
+          <li>Include the HSI results and attributes in the uploaded report</li>
+          <li>Support loading DMI data from DT systems</li>
+          <li>Support LVFS::UpdateImage for GUI clients</li>
         </ul>
         <p>This release fixes the following bugs:</p>
         <ul>
-          <li>Be more defensive when remotes are missing required keys</li>
-          <li>Check all AppStream components when verifying</li>
-          <li>Check for free space after cleaning up ESP</li>
-          <li>Fix TPM PCR0 calculation</li>
-          <li>Only show UpdateMessage when state is success</li>
-          <li>Read the modem vendor ID correctly</li>
-          <li>Set the runtime version to 0.0.0 for pre-1.0.0 Thelio Io firmware</li>
-          <li>Support compiling libqmi-glib 1.26.0 and later</li>
-          <li>Use the GPIOB reset for the MiniDock VL103</li>
-          <li>Wait for the root device to be replugged when updating the MSP430</li>
-        </ul>
-      </description>
-    </release>
-    <release version="1.4.4" date="2020-06-10">
-      <description>
-        <p>This release fixes the following regression:</p>
-        <ul>
-          <li>Fix refreshing when checking for downgraded metadata</li>
-        </ul>
-      </description>
-    </release>
-    <release version="1.4.3" date="2020-06-09">
-      <description>
-        <p>This release adds the following features:</p>
-        <ul>
-          <li>Add support for HP DMC dock devices</li>
-        </ul>
-        <p>This release fixes the following bugs:</p>
-        <ul>
-          <li>Always enforce the metadata signature has a valid timestamp</li>
-          <li>Capture the dock SKU in metadata</li>
-          <li>Check the device requirements when returning from GetDetails</li>
-          <li>Force the prometheus minor version from 0x02 to 0x01</li>
-          <li>Prevent Dell dock updates to occur via synaptics-mst plugin</li>
-        </ul>
-      </description>
-    </release>
-    <release version="1.4.2" date="2020-05-18">
-      <description>
-        <p>This release fixes the following bugs:</p>
-        <ul>
-          <li>Add several more ATA OUI quirks</li>
-          <li>Avoid communicating with DFU devices when bitManifestationTolerant is off</li>
-          <li>Correct the display of final calculated PCRs</li>
-          <li>Delay activation for Dell Thunderbolt updates</li>
-          <li>Do not use synaptics-rmi on the Dell K12A</li>
-          <li>Fix switching wacom-raw to bootloader mode</li>
-          <li>Switch the default of EnumerateAllDevices to false</li>
-          <li>Use GPIOB to reset the VL817 found in two Lenovo products</li>
+          <li>Allow compiling the daemon without polkit support</li>
+          <li>Always look at all TPM eventlog supported algorithms</li>
+          <li>Change all instances of master/slave to initiator/target</li>
+          <li>Correctly order devices when using logical parents</li>
+          <li>Do not dedupe NVMe or VLI PD devices</li>
+          <li>Do not expose the VLI shared-SPI devices on the USB2 recovery device</li>
+          <li>Do not fix up the version on post-update mismatch</li>
+          <li>Download the metadata first when using 'fwupdtool refresh'</li>
+          <li>Drop efivar dependency</li>
+          <li>Drop support for ThunderBolt force power due to hardware issues</li>
+          <li>Fix setting BootNext correctly when multiple updates are scheduled</li>
+          <li>Fix the topology of the audio device on the Lenovo TR dock</li>
+          <li>Make return code different for get-updates with no updates</li>
+          <li>Make specific authorizations also imply others</li>
+          <li>Make TPM support more optional</li>
+          <li>Parse the HEX version before comparing for equality</li>
+          <li>Prevent dell-dock updates to occur via synaptics-mst plugin</li>
+          <li>Record the UEFI failure in more cases</li>
+          <li>Retry the HID SetReport to fix flashing the TB3 dock</li>
+          <li>Show an error when a plugin is missing dependencies</li>
+          <li>Use libxmlb bound parameters to speed up the device verification</li>
+          <li>Use pkttyagent to request user passwords if running without GUI</li>
+          <li>Use the JCat file to select the metadata file</li>
         </ul>
       </description>
     </release>
@@ -192,6 +177,32 @@
           <li>Parse the CSR firmware as a DFU file</li>
           <li>Set the protocol when updating logitech HID++ devices</li>
           <li>When TPM PCR0 measurements fail, query if secure boot is available and enabled</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.9" date="2020-03-04">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Added completion script for fish shell</li>
+          <li>Inihbit all power management actions using logind when updating</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Always check for PLAIN when doing vercmp() operations</li>
+          <li>Always return AppStream markup for remote agreements</li>
+          <li>Apply UEFI capsule update even with single valid capsule</li>
+          <li>Check the device protocol before de-duping devices</li>
+          <li>Copy the version and format from donor device in get-details</li>
+          <li>Correctly append the release to devices in `fwupdtool get-details`</li>
+          <li>Decrease minimum battery requirement to 10%</li>
+          <li>Discard the reason upgrades aren't available</li>
+          <li>Do not fail loading in /etc/machine-id is not available</li>
+          <li>Fix a critical warning when installing some firmware</li>
+          <li>For the `get-details` command make sure to always show devices</li>
+          <li>Set the MSP430 version format to pair</li>
+          <li>Switch off the ATA verbose logging by default</li>
+          <li>Use unknown for version format by default on get-details</li>
         </ul>
       </description>
     </release>
@@ -513,7 +524,7 @@
           <li>Do not fail to start the daemon if tpm2_pcrlist hangs</li>
           <li>Do not fail when scheduling more than one update to be run offline</li>
           <li>Do not let failing to find DBus prevent fwuptool from starting</li>
-          <li>Do not schedule an update on battery power if it requires AC power</li>
+          <li>Do not schedule an update on battery power if it requires an external power source</li>
           <li>Include all device checksums in the LVFS report</li>
           <li>Rename the shimx64.efi binary for known broken firmware</li>
           <li>Upload the UPDATE_INFO entry for the UEFI UX capsule</li>

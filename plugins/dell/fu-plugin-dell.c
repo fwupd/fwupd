@@ -93,7 +93,7 @@ struct da_structure {
 /**
  * Devices that should allow modeswitching
  */
-static guint16 tpm_switch_whitelist[] = {0x06F2, 0x06F3, 0x06DD, 0x06DE, 0x06DF,
+static guint16 tpm_switch_allowlist[] = {0x06F2, 0x06F3, 0x06DD, 0x06DE, 0x06DF,
 					 0x06DB, 0x06DC, 0x06BB, 0x06C6, 0x06BA,
 					 0x06B9, 0x05CA, 0x06C7, 0x06B7, 0x06E0,
 					 0x06E5, 0x06D9, 0x06DA, 0x06E4, 0x0704,
@@ -106,7 +106,7 @@ static guint16 tpm_switch_whitelist[] = {0x06F2, 0x06F3, 0x06DD, 0x06DE, 0x06DF,
 /**
   * Dell device types to run
   */
-static guint8 enclosure_whitelist [] = { 0x03, /* desktop */
+static guint8 enclosure_allowlist [] = { 0x03, /* desktop */
 					 0x04, /* low profile desktop */
 					 0x06, /* mini tower */
 					 0x07, /* tower */
@@ -180,8 +180,8 @@ fu_dell_supported (FuPlugin *plugin)
 	value = g_bytes_get_data (enclosure, &len);
 	if (len == 0)
 		return FALSE;
-	for (guint i = 0; i < G_N_ELEMENTS (enclosure_whitelist); i++) {
-		if (enclosure_whitelist[i] == value[0])
+	for (guint i = 0; i < G_N_ELEMENTS (enclosure_allowlist); i++) {
+		if (enclosure_allowlist[i] == value[0])
 			return TRUE;
 	}
 
@@ -286,9 +286,6 @@ fu_plugin_dock_node (FuPlugin *plugin, const gchar *platform,
 		if (fu_plugin_dell_capsule_supported (plugin)) {
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
-		} else {
-			fu_device_set_update_error (dev,
-						    "UEFI capsule updates turned off in BIOS setup");
 		}
 	}
 
@@ -608,6 +605,7 @@ fu_plugin_dell_add_tpm_model (FuDevice *dev, GError **error)
 		                     "failed to read TPM vendor string");
 		return FALSE;
 	}
+	fu_device_set_metadata (dev, "TpmFamily", family);
 
 	/* these are not guaranteed by spec and may be NULL */
 	vendor2 = fu_plugin_dell_get_tpm_capability (ctx, TPM2_PT_VENDOR_STRING_2);
@@ -693,8 +691,8 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	else if (system_id == 0)
 		return FALSE;
 
-	for (guint i = 0; i < G_N_ELEMENTS (tpm_switch_whitelist); i++) {
-		if (tpm_switch_whitelist[i] == system_id) {
+	for (guint i = 0; i < G_N_ELEMENTS (tpm_switch_allowlist); i++) {
+		if (tpm_switch_allowlist[i] == system_id) {
 			can_switch_modes = TRUE;
 		}
 	}
@@ -734,9 +732,6 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 		if (fu_plugin_dell_capsule_supported (plugin)) {
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
-		} else {
-			fu_device_set_update_error (dev,
-						    "UEFI capsule updates turned off in BIOS setup");
 		}
 		fu_device_set_flashes_left (dev, out->flashes_left);
 	} else {
@@ -750,6 +745,8 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	if (!fu_device_setup (dev, error))
 		return FALSE;
 	fu_plugin_device_register (plugin, dev);
+	fu_plugin_add_report_metadata (plugin, "TpmFamily",
+				       fu_device_get_metadata (dev, "TpmFamily"));
 
 	/* build alternate device node */
 	if (can_switch_modes) {
@@ -892,10 +889,14 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	 */
 	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
 	esrtdir = g_build_filename (sysfsfwdir, "efi", "esrt", NULL);
-	if (g_file_test (esrtdir, G_FILE_TEST_EXISTS)) {
+	if (g_file_test (esrtdir, G_FILE_TEST_EXISTS))
 		data->capsule_supported = TRUE;
-	} else {
-		g_debug ("UEFI capsule firmware updating not supported");
+
+	/* capsules not supported */
+	if (!fu_plugin_dell_capsule_supported (plugin)) {
+		fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_USER_WARNING);
+		fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE);
+		fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED);
 	}
 
 	return TRUE;

@@ -26,7 +26,7 @@ struct _FuCcgxHpiDevice
 	guint8			 num_ports;	/* max number of ports	*/
 	FWMode			 fw_mode;
 	FWImageType		 fw_image_type;
-	guint8			 slave_address;
+	guint8			 target_address;
 	guint8			 ep_bulk_in;
 	guint8			 ep_bulk_out;
 	guint8			 ep_intr_in;
@@ -273,19 +273,19 @@ fu_ccgx_hpi_device_i2c_read (FuCcgxHpiDevice *self,
 			     CyI2CDataConfigBits cfg_bits,
 			     GError **error)
 {
-	guint8 slave_address = 0;
+	guint8 target_address = 0;
 
 	if (!fu_ccgx_hpi_device_check_i2c_status (self, CY_I2C_MODE_READ, error)) {
 		g_prefix_error (error, "i2c read error: ");
 		return FALSE;
 	}
-	slave_address = (self->slave_address & 0x7F) | (self->scb_index << 7);
+	target_address = (self->target_address & 0x7F) | (self->scb_index << 7);
 	if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (self)),
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
 					    G_USB_DEVICE_RECIPIENT_DEVICE,
 					    CY_I2C_READ_CMD,
-					    (((guint16) slave_address) << 8) | cfg_bits,
+					    (((guint16) target_address) << 8) | cfg_bits,
 					    bufsz, NULL, 0x0, NULL,
 					    FU_CCGX_HPI_WAIT_TIMEOUT, NULL,
 					    error)) {
@@ -316,19 +316,19 @@ fu_ccgx_hpi_device_i2c_write (FuCcgxHpiDevice *self,
 			      CyI2CDataConfigBits cfg_bits,
 			      GError **error)
 {
-	guint8 slave_address;
+	guint8 target_address;
 
 	if (!fu_ccgx_hpi_device_check_i2c_status (self, CY_I2C_MODE_WRITE, error)) {
 		g_prefix_error (error, "i2c get status error: ");
 		return FALSE;
 	}
-	slave_address = (self->slave_address & 0x7F) | (self->scb_index << 7);
+	target_address = (self->target_address & 0x7F) | (self->scb_index << 7);
 	if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (self)),
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
 					    G_USB_DEVICE_RECIPIENT_DEVICE,
 					    CY_I2C_WRITE_CMD,
-					    ((guint16) slave_address << 8) | (cfg_bits & CY_I2C_DATA_CONFIG_STOP),
+					    ((guint16) target_address << 8) | (cfg_bits & CY_I2C_DATA_CONFIG_STOP),
 					    bufsz, /* idx */
 					    NULL, 0x0, NULL,
 					    FU_CCGX_HPI_WAIT_TIMEOUT,
@@ -359,20 +359,20 @@ fu_ccgx_hpi_device_i2c_write_no_resp (FuCcgxHpiDevice *self,
 				      CyI2CDataConfigBits cfg_bits,
 				      GError **error)
 {
-	guint8 slave_address = 0;
+	guint8 target_address = 0;
 	g_autoptr(GError) error_local = NULL;
 
 	if (!fu_ccgx_hpi_device_check_i2c_status (self, CY_I2C_MODE_WRITE, error)) {
 		g_prefix_error (error, "i2c write error: ");
 		return FALSE;
 	}
-	slave_address = (self->slave_address & 0x7F) | (self->scb_index << 7);
+	target_address = (self->target_address & 0x7F) | (self->scb_index << 7);
 	if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (self)),
 					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
 					    G_USB_DEVICE_RECIPIENT_DEVICE,
 					    CY_I2C_WRITE_CMD,
-					    ((guint16) slave_address << 8) | (cfg_bits & CY_I2C_DATA_CONFIG_STOP),
+					    ((guint16) target_address << 8) | (cfg_bits & CY_I2C_DATA_CONFIG_STOP),
 					    bufsz, NULL, 0x0, NULL,
 					    FU_CCGX_HPI_WAIT_TIMEOUT,
 					    NULL, error)) {
@@ -1082,7 +1082,7 @@ fu_ccgx_hpi_device_prepare_firmware (FuDevice *device,
 			     self->silicon_id, fw_silicon_id);
 		return NULL;
 	}
-	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) == 0) {
 		fw_app_type = fu_ccgx_firmware_get_app_type (FU_CCGX_FIRMWARE (firmware));
 		if (fw_app_type != self->fw_app_type) {
 			g_set_error (error,
@@ -1375,7 +1375,7 @@ fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 		return FALSE;
 	}
 	i2c_config.frequency = FU_CCGX_HPI_FREQ;
-	i2c_config.is_master = TRUE;
+	i2c_config.is_initiator = TRUE;
 	i2c_config.is_msb_first = TRUE;
 	if (!fu_ccgx_hpi_device_set_i2c_config (self, &i2c_config, error)) {
 		g_prefix_error (error, "set config error: ");
@@ -1573,7 +1573,7 @@ fu_ccgx_hpi_device_init (FuCcgxHpiDevice *self)
 	self->inf_num = 0x0;
 	self->hpi_addrsz = 1;
 	self->num_ports = 1;
-	self->slave_address = PD_I2C_SLAVE_ADDRESS;
+	self->target_address = PD_I2C_TARGET_ADDRESS;
 	self->ep_bulk_out = PD_I2C_USB_EP_BULK_OUT;
 	self->ep_bulk_in = PD_I2C_USB_EP_BULK_IN;
 	self->ep_intr_in = PD_I2C_USB_EP_INTR_IN;

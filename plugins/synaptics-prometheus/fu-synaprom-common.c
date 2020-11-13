@@ -41,7 +41,7 @@ GByteArray *
 fu_synaprom_reply_new (gsize cmdlen)
 {
 	GByteArray *blob = g_byte_array_new ();
-	g_byte_array_set_size (blob, cmdlen);
+	fu_byte_array_set_size (blob, cmdlen);
 	return blob;
 }
 

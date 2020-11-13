@@ -54,7 +54,7 @@ typedef enum {
 } FuDellDockECFWUpdateStatus;
 
 const FuHIDI2CParameters ec_base_settings = {
-	.i2cslaveaddr = I2C_EC_ADDRESS,
+	.i2ctargetaddr = I2C_EC_ADDRESS,
 	.regaddrlen = 1,
 	.i2cspeed = I2C_SPEED_250K,
 };

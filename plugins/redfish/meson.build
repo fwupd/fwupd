@@ -21,7 +21,6 @@ shared_module('fu_plugin_redfish',
   c_args : cargs,
   dependencies : [
     plugin_deps,
-    efivar,
     libjsonglib,
   ],
 )
@@ -46,14 +45,15 @@ if get_option('tests')
     ],
     dependencies : [
       plugin_deps,
-      efivar,
       libjsonglib,
     ],
     link_with : [
       fwupd,
       fwupdplugin,
     ],
-    c_args : cargs
+    c_args : cargs,
+    install : true,
+    install_dir : installed_test_bindir,
   )
-  test('redfish-self-test', e)
+  test('redfish-self-test', e)  # added to installed-tests
 endif

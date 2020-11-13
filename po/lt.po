@@ -4,6 +4,7 @@
 #
 # Translators:
 # Moo, 2019
+# Moo, 2020
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -270,6 +271,7 @@ msgstr "Netikrinti ar yra istorijos apie kurią nepranešta"
 msgid "Do not write to the history database"
 msgstr "Nerašyti į istorijos duomenų bazę"
 
+#. TRANSLATORS: success
 #. success
 msgid "Done!"
 msgstr "Atlikta!"
@@ -310,6 +312,8 @@ msgstr "Įjungti programinės aparatinės įrangos atnaujinimo palaikymą palaik
 msgid "Enable this remote?"
 msgstr "Įjungti šią nuotolinę saugyklą?"
 
+#. TRANSLATORS: Suffix: the HSI result
+#. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
 msgid "Enabled"
 msgstr "Įjungta"
@@ -345,10 +349,6 @@ msgstr "Išeiti, įkėlus modulį"
 msgid "Failed to connect to daemon"
 msgstr "Nepavyko prisijungti prie tarnybos"
 
-#. TRANSLATORS: the server is rate-limiting downloads
-msgid "Failed to download due to server limit"
-msgstr "Nepavyko atsisiųsti dėl serverio apribojimo"
-
 #. TRANSLATORS: we could not get the devices to update offline
 msgid "Failed to get pending devices"
 msgstr "Nepavyko gauti laukiančių įrenginių"
@@ -372,22 +372,6 @@ msgstr "Nepavyko paleisti iš naujo"
 #. TRANSLATORS: we could not talk to plymouth
 msgid "Failed to set splash mode"
 msgstr "Nepavyko nustatyti prisistatymo lango veikseną"
-
-#. TRANSLATORS: downloading unknown file
-msgid "Fetching file"
-msgstr "Gaunamas failas"
-
-#. TRANSLATORS: downloading new firmware file
-msgid "Fetching firmware"
-msgstr "Gaunama programinė aparatinė įranga"
-
-#. TRANSLATORS: downloading new metadata file
-msgid "Fetching metadata"
-msgstr "Gaunami metaduomenys"
-
-#. TRANSLATORS: downloading new signing file
-msgid "Fetching signature"
-msgstr "Gaunamas parašas"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
@@ -423,12 +407,17 @@ msgstr "Šiame kompiuteryje programinės aparatinės įrangos atnaujinimai yra n
 msgid "Firmware updates are supported on this machine."
 msgstr "Šiame kompiuteryje yra prieinami programinės aparatinės įrangos atnaujinimai."
 
+#. TRANSLATORS: description of plugin state, e.g. disabled
 #. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "Vėliavėlės"
 
 msgid "Force the action ignoring all warnings"
 msgstr "Priverstinai atlikti veiksmą nepaisant visų įspėjimų"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Found"
+msgstr "Rastas"
 
 #. TRANSLATORS: command description
 msgid "Get all devices and possible releases"
@@ -449,10 +438,6 @@ msgstr "Gauna išsamesnę informaciją apie programinės aparatinės įrangos fa
 #. TRANSLATORS: command description
 msgid "Gets the configured remotes"
 msgstr "Gauna sukonfigūruotas nuotolines saugyklas"
-
-#. TRANSLATORS: firmware approved by the admin
-msgid "Gets the list of approved firmware."
-msgstr "Gauna patvirtintos programinės aparatinės įrangos sąrašą."
 
 #. TRANSLATORS: command description
 msgid "Gets the list of updates for connected hardware"
@@ -527,10 +512,6 @@ msgstr "Išvardyti prieinamus programinės aparatinės įrangos atnaujinimus"
 msgid "Loading…"
 msgstr "Įkeliama…"
 
-#. TRANSLATORS: command line option
-msgid "Manually whitelist specific plugins"
-msgstr "Rankiniu būdu įtraukti tam tikrus įskiepius į baltąjį sąrašą"
-
 #. TRANSLATORS: remote URI
 msgid "Metadata URI"
 msgstr "Metaduomenų URI"
@@ -546,10 +527,14 @@ msgstr "Modifikuoja nurodytą nuotolinę saugyklą"
 msgid "Modify a configured remote"
 msgstr "Modifikuoti sukonfigūruotą nuotolinę saugyklą"
 
+msgid "Modify daemon configuration"
+msgstr "Modifikuoti tarnybos konfigūraciją"
+
 #. TRANSLATORS: command description
 msgid "Monitor the daemon for events"
 msgstr "Stebėti tarnybą, ar yra įvykių"
 
+#. TRANSLATORS: user did not tell the tool what to do
 msgid "No action specified!"
 msgstr "Nenurodytas joks veiksmas!"
 
@@ -569,9 +554,9 @@ msgstr "Šiuo metu nėra įjungtos jokios nuotolinės saugyklos, taigi, nėra pr
 msgid "No updates were applied"
 msgstr "Nebuvo pritaikyti jokie atnaujinimai"
 
-#. TRANSLATORS: command line option
-msgid "Override plugin warning"
-msgstr "Nustelbti įskiepio įspėjimą"
+#. TRANSLATORS: Suffix: the HSI result
+msgid "OK"
+msgstr "Gerai"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
@@ -694,12 +679,9 @@ msgstr "Suplanuojama…"
 msgid "Set the debugging flag during update"
 msgstr "Atnaujinimo metu nustatyti derinimo vėliavėlę"
 
+#. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
 msgstr "Nustato patvirtintą programinės aparatinės įrangos sąrašą"
-
-#. TRANSLATORS: firmware approved by the admin
-msgid "Sets the list of approved firmware."
-msgstr "Nustato patvirtintos programinės aparatinės įrangos sąrašą."
 
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
@@ -841,10 +823,6 @@ msgstr "Atnaujinama %s iš %s į %s... "
 msgid "Updating %s…"
 msgstr "Atnaujinama %s…"
 
-#. TRANSLATORS: the server sent the user a small message
-msgid "Upload message:"
-msgstr "Išsiuntimo žinutė:"
-
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "Išsiųsti ataskaitą dabar?"
@@ -860,6 +838,10 @@ msgstr "Naudotojo vardas"
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
 msgstr "Patikrinama…"
+
+#. TRANSLATORS: the detected version number of the dbx
+msgid "Version"
+msgstr "Versija"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

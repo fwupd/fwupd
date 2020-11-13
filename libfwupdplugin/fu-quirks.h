@@ -48,6 +48,7 @@ gboolean	 fu_quirks_lookup_by_id_iter		(FuQuirks	*self,
 #define	FU_QUIRKS_SUMMARY			"Summary"
 #define	FU_QUIRKS_ICON				"Icon"
 #define	FU_QUIRKS_NAME				"Name"
+#define	FU_QUIRKS_BRANCH			"Branch"
 #define	FU_QUIRKS_GUID				"Guid"
 #define	FU_QUIRKS_COUNTERPART_GUID		"CounterpartGuid"
 #define	FU_QUIRKS_PARENT_GUID			"ParentGuid"

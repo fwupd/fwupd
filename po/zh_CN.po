@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Boyuan Yang <073plan@gmail.com>, 2017
+# Boyuan Yang <073plan@gmail.com>, 2017,2020
 # Dingzhong Chen <wsxy162@gmail.com>, 2020
 # Dingzhong Chen <wsxy162@gmail.com>, 2016-2019
 # Mingcong Bai <jeffbai@aosc.xyz>, 2017-2018
@@ -452,6 +452,7 @@ msgstr[0] "不要上传报告，并且以后更新时也不再询问"
 msgid "Do not write to the history database"
 msgstr "不要写入历史数据库"
 
+#. TRANSLATORS: success
 #. success
 msgid "Done!"
 msgstr "完成！"
@@ -496,6 +497,8 @@ msgstr "在所支持的系统上启用固件更新的支持"
 msgid "Enable this remote?"
 msgstr "要启用此远程源吗？"
 
+#. TRANSLATORS: Suffix: the HSI result
+#. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
 msgid "Enabled"
 msgstr "已启用"
@@ -534,10 +537,6 @@ msgstr "在引擎加载后退出"
 msgid "Failed to connect to daemon"
 msgstr "连接到守护进程失败"
 
-#. TRANSLATORS: the server is rate-limiting downloads
-msgid "Failed to download due to server limit"
-msgstr "由于服务器限制而下载失败"
-
 #. TRANSLATORS: we could not get the devices to update offline
 msgid "Failed to get pending devices"
 msgstr "获取待处理的设备失败"
@@ -569,22 +568,6 @@ msgstr "重启失败"
 #. TRANSLATORS: we could not talk to plymouth
 msgid "Failed to set splash mode"
 msgstr "设定启动屏幕模式失败"
-
-#. TRANSLATORS: downloading unknown file
-msgid "Fetching file"
-msgstr "正在获取文件"
-
-#. TRANSLATORS: downloading new firmware file
-msgid "Fetching firmware"
-msgstr "正在获取固件"
-
-#. TRANSLATORS: downloading new metadata file
-msgid "Fetching metadata"
-msgstr "正在获取元信息"
-
-#. TRANSLATORS: downloading new signing file
-msgid "Fetching signature"
-msgstr "正在获取签名"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
@@ -624,18 +607,27 @@ msgid "Firmware metadata has not been updated for %u day and may not be up to da
 msgid_plural "Firmware metadata has not been updated for %u days and may not be up to date."
 msgstr[0] "固件元数据已有 %u 天未更新，数据可能不是最新的。"
 
+#. TRANSLATORS: Title: if firmware updates are available
+msgid "Firmware updates"
+msgstr "固件更新"
+
 msgid "Firmware updates are not supported on this machine."
 msgstr "此机器不支持固件更新。"
 
 msgid "Firmware updates are supported on this machine."
 msgstr "此机器支持固件更新。"
 
+#. TRANSLATORS: description of plugin state, e.g. disabled
 #. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "标志"
 
 msgid "Force the action ignoring all warnings"
 msgstr "强制操作忽略所有警告"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Found"
+msgstr "找到"
 
 #. TRANSLATORS: global ID common to all similar hardware
 msgid "GUID"
@@ -665,10 +657,6 @@ msgstr "获取有关某固件文件的详细信息"
 #. TRANSLATORS: command description
 msgid "Gets the configured remotes"
 msgstr "获取已配置的远程源"
-
-#. TRANSLATORS: firmware approved by the admin
-msgid "Gets the list of approved firmware."
-msgstr "获取批准固件的列表。"
 
 #. TRANSLATORS: command description
 msgid "Gets the list of updates for connected hardware"
@@ -776,6 +764,10 @@ msgstr "Linux 供应商固件服务（稳定固件）"
 msgid "Linux Vendor Firmware Service (testing firmware)"
 msgstr "Linux 供应商固件服务（测试固件）"
 
+#. TRANSLATORS: Title: if it's tainted or not
+msgid "Linux kernel"
+msgstr "Linux 内核"
+
 #. TRANSLATORS: command line option
 msgid "List supported firmware updates"
 msgstr "列出所支持固件的更新"
@@ -787,10 +779,6 @@ msgstr "列出可用的固件类型"
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
 msgstr "正在加载…"
-
-#. TRANSLATORS: command line option
-msgid "Manually whitelist specific plugins"
-msgstr "将指定插件手动加入白名单"
 
 #. TRANSLATORS: remote URI
 msgid "Metadata Signature"
@@ -812,10 +800,6 @@ msgstr "最小版本"
 #, c-format
 msgid "Mismatched daemon and client, use %s instead"
 msgstr "守护进程与客户端不匹配，使用 %s 来代替"
-
-#. TRANSLATORS: sets something in daemon.conf
-msgid "Modifies a daemon configuration value."
-msgstr "修改守护进程配置值。"
 
 #. TRANSLATORS: command description
 msgid "Modifies a given remote"
@@ -843,6 +827,7 @@ msgstr "安装完后需要关机"
 msgid "New version"
 msgstr "新版本"
 
+#. TRANSLATORS: user did not tell the tool what to do
 msgid "No action specified!"
 msgstr "未指定操作！"
 
@@ -880,13 +865,13 @@ msgstr "无可用远程源"
 msgid "No updates were applied"
 msgstr "没有应用任何更新"
 
+#. TRANSLATORS: Suffix: the HSI result
+msgid "OK"
+msgstr "确定"
+
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "只显示单 PCR 值"
-
-#. TRANSLATORS: command line option
-msgid "Override plugin warning"
-msgstr "忽略插件警告"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
@@ -970,10 +955,6 @@ msgstr "正在重启……"
 msgid "Refresh metadata from remote server"
 msgstr "刷新来自远程服务器的元数据"
 
-#. TRANSLATORS: command description
-msgid "Reinstall current firmware on the device."
-msgstr "在设备上重新安装当前的固件。"
-
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
 #. * e.g. "1.2.3"
@@ -1001,10 +982,6 @@ msgstr "报告 URI"
 #. TRANSLATORS: Has been reported to a metadata server
 msgid "Reported to remote server"
 msgstr "已报告到远程服务器"
-
-#. TRANSLATORS: Must be plugged in to an outlet
-msgid "Requires AC power"
-msgstr "需要交流电源"
 
 #. TRANSLATORS: Requires a bootloader mode to be manually enabled by the user
 msgid "Requires a bootloader"
@@ -1065,12 +1042,9 @@ msgstr "序列号"
 msgid "Set the debugging flag during update"
 msgstr "更新期间设定调试标志"
 
+#. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
 msgstr "设定批准固件的列表"
-
-#. TRANSLATORS: firmware approved by the admin
-msgid "Sets the list of approved firmware."
-msgstr "设定批准固件的列表。"
 
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
@@ -1236,6 +1210,10 @@ msgstr "类型"
 msgid "UEFI Firmware Utility"
 msgstr "固件 UEFI 实用工具"
 
+#. TRANSLATORS: error message
+msgid "Unable to connect to service"
+msgstr "无法连接到服务"
+
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
 #. TRANSLATORS: unknown release urgency
@@ -1328,10 +1306,6 @@ msgstr "正在更新 %s……"
 msgid "Upgrade available for %s from %s to %s"
 msgstr "%s 有从版本 %s 到 %s 的升级"
 
-#. TRANSLATORS: the server sent the user a small message
-msgid "Upload message:"
-msgstr "上传消息："
-
 msgid "Upload report just this one time, but prompt again for future updates"
 msgid_plural "Upload reports just this one time, but prompt again for future updates"
 msgstr[0] "仅这次上传报告，但以后更新时再次提示"
@@ -1347,6 +1321,14 @@ msgstr[0] "此次上传报告，并且以后完成更新后自动上传报告"
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
 msgstr "上传固件报告可帮助硬件供应商尽快确定真实设备上更新的成功及失败案例。"
+
+#. TRANSLATORS: error message explaining command to run to how to get help
+msgid "Use fwupdmgr --help for help"
+msgstr "使用 fwupdmgr --help 获取帮助信息"
+
+#. TRANSLATORS: error message explaining command to run to how to get help
+msgid "Use fwupdtool --help for help"
+msgstr "使用 fwupdtool --help 获取帮助信息"
 
 #. TRANSLATORS: command line option
 msgid "Use quirk flags when installing firmware"
@@ -1372,9 +1354,9 @@ msgstr "供应商"
 msgid "Verifying…"
 msgstr "正在验证…"
 
-#. TRANSLATORS: try to help
-msgid "WARNING: Ignoring SSL strict checks, to do this automatically in the future export DISABLE_SSL_STRICT in your environment"
-msgstr "警告：现忽略 SSL 严格检查，要在以后自动忽略请在你的环境变量里导出 DISABLE_SSL_STRICT"
+#. TRANSLATORS: the detected version number of the dbx
+msgid "Version"
+msgstr "版本"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

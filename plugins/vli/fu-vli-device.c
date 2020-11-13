@@ -370,7 +370,7 @@ fu_vli_device_spi_erase_all (FuVliDevice *self, GError **error)
 		return FALSE;
 	if (!fu_vli_device_spi_chip_erase (self, error))
 		return FALSE;
-	g_usleep (4 * G_USEC_PER_SEC);
+	fu_device_sleep_with_progress (FU_DEVICE (self), 4); /* seconds */
 
 	/* verify chip was erased */
 	for (guint addr = 0; addr < 0x10000; addr += 0x1000) {
@@ -539,7 +539,6 @@ fu_vli_device_setup (FuDevice *device, GError **error)
 			g_autofree gchar *devid1 = NULL;
 			g_autofree gchar *devid2 = NULL;
 			g_autofree gchar *flash_id = fu_vli_device_get_flash_id_str (self);
-			g_debug ("using flash part %s", flash_id);
 
 			/* load the SPI parameters from quirks */
 			spi_id = g_strdup_printf ("VLI_USBHUB\\SPI_%s", flash_id);
@@ -632,6 +631,15 @@ fu_vli_device_set_quirk_kv (FuDevice *device,
 }
 
 static void
+fu_vli_device_report_metadata_pre (FuDevice *device, GHashTable *metadata)
+{
+	FuVliDevice *self = FU_VLI_DEVICE (device);
+	g_hash_table_insert (metadata,
+			     g_strdup ("GType"),
+			     g_strdup (G_OBJECT_TYPE_NAME (self)));
+}
+
+static void
 fu_vli_device_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
 	FuVliDevice *self = FU_VLI_DEVICE (object);
@@ -697,4 +705,5 @@ fu_vli_device_class_init (FuVliDeviceClass *klass)
 	klass_device->to_string = fu_vli_device_to_string;
 	klass_device->set_quirk_kv = fu_vli_device_set_quirk_kv;
 	klass_device->setup = fu_vli_device_setup;
+	klass_device->report_metadata_pre = fu_vli_device_report_metadata_pre;
 }

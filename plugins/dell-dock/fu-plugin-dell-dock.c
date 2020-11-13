@@ -121,6 +121,17 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 	return TRUE;
 }
 
+void
+fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
+{
+	/* thunderbolt plugin */
+	if (g_strcmp0 (fu_device_get_plugin (device), "thunderbolt") != 0 ||
+	    fu_device_has_flag (device, FWUPD_DEVICE_FLAG_INTERNAL))
+		return;
+	/* clone updatable flag to leave in needs activation state */
+	fu_dell_dock_clone_updatable (device);
+}
+
 gboolean
 fu_plugin_device_removed (FuPlugin *plugin, FuDevice *device, GError **error)
 {

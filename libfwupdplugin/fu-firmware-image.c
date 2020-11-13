@@ -22,8 +22,10 @@ typedef struct {
 	gchar			*id;
 	GBytes			*bytes;
 	guint64			 addr;
+	guint64			 offset;
 	guint64			 idx;
 	gchar			*version;
+	gchar			*filename;
 } FuFirmwareImagePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuFirmwareImage, fu_firmware_image, G_TYPE_OBJECT)
@@ -63,6 +65,42 @@ fu_firmware_image_set_version (FuFirmwareImage *self, const gchar *version)
 	g_return_if_fail (FU_IS_FIRMWARE_IMAGE (self));
 	g_free (priv->version);
 	priv->version = g_strdup (version);
+}
+
+/**
+ * fu_firmware_image_get_filename:
+ * @self: A #FuFirmwareImage
+ *
+ * Gets an optional filename that represents the image source or destination.
+ *
+ * Returns: a string, or %NULL
+ *
+ * Since: 1.5.0
+ **/
+const gchar *
+fu_firmware_image_get_filename (FuFirmwareImage *self)
+{
+	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_FIRMWARE_IMAGE (self), NULL);
+	return priv->filename;
+}
+
+/**
+ * fu_firmware_image_set_filename:
+ * @self: A #FuFirmwareImage
+ * @filename: (nullable): A string filename, or %NULL
+ *
+ * Sets an optional filename that represents the image source or destination.
+ *
+ * Since: 1.5.0
+ **/
+void
+fu_firmware_image_set_filename (FuFirmwareImage *self, const gchar *filename)
+{
+	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_FIRMWARE_IMAGE (self));
+	g_free (priv->filename);
+	priv->filename = g_strdup (filename);
 }
 
 /**
@@ -135,6 +173,41 @@ fu_firmware_image_get_addr (FuFirmwareImage *self)
 }
 
 /**
+ * fu_firmware_image_set_offset:
+ * @self: a #FuPlugin
+ * @offset: integer
+ *
+ * Sets the base offset of the image.
+ *
+ * Since: 1.5.0
+ **/
+void
+fu_firmware_image_set_offset (FuFirmwareImage *self, guint64 offset)
+{
+	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_FIRMWARE_IMAGE (self));
+	priv->offset = offset;
+}
+
+/**
+ * fu_firmware_image_get_offset:
+ * @self: a #FuPlugin
+ *
+ * Gets the base offset of the image.
+ *
+ * Returns: integer
+ *
+ * Since: 1.5.0
+ **/
+guint64
+fu_firmware_image_get_offset (FuFirmwareImage *self)
+{
+	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_FIRMWARE_IMAGE (self), G_MAXUINT64);
+	return priv->offset;
+}
+
+/**
  * fu_firmware_image_set_idx:
  * @self: a #FuPlugin
  * @idx: integer
@@ -186,6 +259,135 @@ fu_firmware_image_set_bytes (FuFirmwareImage *self, GBytes *bytes)
 	g_return_if_fail (bytes != NULL);
 	g_return_if_fail (priv->bytes == NULL);
 	priv->bytes = g_bytes_ref (bytes);
+}
+
+/**
+ * fu_firmware_image_get_bytes:
+ * @self: a #FuPlugin
+ *
+ * Gets the data set using fu_firmware_image_set_bytes().
+ *
+ * This should only really be used by objects subclassing #FuFirmwareImage as
+ * images are normally exported to a file using fu_firmware_image_write().
+ *
+ * Returns: (transfer full): a #GBytes of the data, or %NULL if the bytes is not set
+ *
+ * Since: 1.5.0
+ **/
+GBytes *
+fu_firmware_image_get_bytes (FuFirmwareImage *self)
+{
+	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_FIRMWARE_IMAGE (self), NULL);
+	if (priv->bytes == NULL)
+		return NULL;
+	return g_bytes_ref (priv->bytes);
+}
+
+/**
+ * fu_firmware_image_parse:
+ * @self: A #FuFirmwareImage
+ * @fw: A #GBytes
+ * @flags: some #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_FORCE
+ * @error: A #GError, or %NULL
+ *
+ * Parses a firmware image, typically checking image CRCs and/or headers.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fu_firmware_image_parse (FuFirmwareImage *self,
+			 GBytes *fw,
+			 FwupdInstallFlags flags,
+			 GError **error)
+{
+	FuFirmwareImageClass *klass = FU_FIRMWARE_IMAGE_GET_CLASS (self);
+
+	g_return_val_if_fail (FU_IS_FIRMWARE_IMAGE (self), FALSE);
+	g_return_val_if_fail (fw != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* subclassed */
+	if (klass->parse != NULL)
+		return klass->parse (self, fw, flags, error);
+
+	/* just add entire blob */
+	fu_firmware_image_set_bytes (self, fw);
+	return TRUE;
+}
+
+/**
+ * fu_firmware_image_build:
+ * @self: A #FuFirmwareImage
+ * @n: A #XbNode
+ * @error: A #GError, or %NULL
+ *
+ * Builds a firmware image from an XML manifest.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fu_firmware_image_build (FuFirmwareImage *self, XbNode *n, GError **error)
+{
+	FuFirmwareImageClass *klass = FU_FIRMWARE_IMAGE_GET_CLASS (self);
+	guint64 tmpval;
+	const gchar *tmp;
+	g_autoptr(XbNode) data = NULL;
+
+	g_return_val_if_fail (FU_IS_FIRMWARE_IMAGE (self), FALSE);
+	g_return_val_if_fail (XB_IS_NODE (n), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	tmp = xb_node_query_text (n, "version", NULL);
+	if (tmp != NULL)
+		fu_firmware_image_set_version (self, tmp);
+	tmp = xb_node_query_text (n, "id", NULL);
+	if (tmp != NULL)
+		fu_firmware_image_set_id (self, tmp);
+	tmpval = xb_node_query_text_as_uint (n, "idx", NULL);
+	if (tmpval != G_MAXUINT64)
+		fu_firmware_image_set_idx (self, tmpval);
+	tmpval = xb_node_query_text_as_uint (n, "addr", NULL);
+	if (tmpval != G_MAXUINT64)
+		fu_firmware_image_set_addr (self, tmpval);
+	tmpval = xb_node_query_text_as_uint (n, "offset", NULL);
+	if (tmpval != G_MAXUINT64)
+		fu_firmware_image_set_offset (self, tmpval);
+	tmp = xb_node_query_text (n, "filename", NULL);
+	if (tmp != NULL) {
+		g_autoptr(GBytes) blob = NULL;
+		blob = fu_common_get_contents_bytes (tmp, error);
+		if (blob == NULL)
+			return FALSE;
+		fu_firmware_image_set_bytes (self, blob);
+		fu_firmware_image_set_filename (self, tmp);
+	}
+	data = xb_node_query_first (n, "data", NULL);
+	if (data != NULL && xb_node_get_text (data) != NULL) {
+		gsize bufsz = 0;
+		g_autofree guchar *buf = NULL;
+		g_autoptr(GBytes) blob = NULL;
+		buf = g_base64_decode (xb_node_get_text (data), &bufsz);
+		blob = g_bytes_new (buf, bufsz);
+		fu_firmware_image_set_bytes (self, blob);
+	} else if (data != NULL) {
+		g_autoptr(GBytes) blob = NULL;
+		blob = g_bytes_new (NULL, 0);
+		fu_firmware_image_set_bytes (self, blob);
+	}
+
+	/* subclassed */
+	if (klass->build != NULL) {
+		if (!klass->build (self, n, error))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
 }
 
 /**
@@ -297,8 +499,12 @@ fu_firmware_image_add_string (FuFirmwareImage *self, guint idt, GString *str)
 		fu_common_string_append_kx (str, idt, "Index", priv->idx);
 	if (priv->addr != 0x0)
 		fu_common_string_append_kx (str, idt, "Address", priv->addr);
+	if (priv->offset != 0x0)
+		fu_common_string_append_kx (str, idt, "Offset", priv->offset);
 	if (priv->version != NULL)
 		fu_common_string_append_kv (str, idt, "Version", priv->version);
+	if (priv->filename != NULL)
+		fu_common_string_append_kv (str, idt, "Filename", priv->filename);
 	if (priv->bytes != NULL) {
 		fu_common_string_append_kx (str, idt, "Data",
 					    g_bytes_get_size (priv->bytes));
@@ -339,6 +545,7 @@ fu_firmware_image_finalize (GObject *object)
 	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
 	g_free (priv->id);
 	g_free (priv->version);
+	g_free (priv->filename);
 	if (priv->bytes != NULL)
 		g_bytes_unref (priv->bytes);
 	G_OBJECT_CLASS (fu_firmware_image_parent_class)->finalize (object);

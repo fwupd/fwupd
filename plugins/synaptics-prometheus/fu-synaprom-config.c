@@ -133,7 +133,6 @@ fu_synaprom_config_prepare_firmware (FuDevice *device,
 	guint32 id2;
 
 	/* parse the firmware */
-	fu_device_set_status (device, FWUPD_STATUS_DECOMPRESSING);
 	if (!fu_firmware_parse (firmware, fw, flags, error))
 		return NULL;
 
@@ -151,7 +150,7 @@ fu_synaprom_config_prepare_firmware (FuDevice *device,
 	memcpy (&hdr, g_bytes_get_data (blob, NULL), sizeof(hdr));
 	product = GUINT32_FROM_LE(hdr.product);
 	if (product != FU_SYNAPROM_PRODUCT_PROMETHEUS) {
-		if (flags & FWUPD_INSTALL_FLAG_FORCE) {
+		if (flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) {
 			g_warning ("CFG metadata not compatible, "
 				   "got 0x%02x expected 0x%02x",
 				   product, (guint) FU_SYNAPROM_PRODUCT_PROMETHEUS);
@@ -168,7 +167,7 @@ fu_synaprom_config_prepare_firmware (FuDevice *device,
 	id1 = GUINT32_FROM_LE(hdr.id1);
 	id2 = GUINT32_FROM_LE(hdr.id2);
 	if (id1 != self->configid1 || id2 != self->configid2) {
-		if (flags & FWUPD_INSTALL_FLAG_FORCE) {
+		if (flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) {
 			g_warning ("CFG version not compatible, "
 				   "got %u:%u expected %u:%u",
 				   id1, id2, self->configid1, self->configid2);

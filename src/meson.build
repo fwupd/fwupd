@@ -4,10 +4,16 @@ if build_daemon
   )
 endif
 
+client_src = []
 systemd_src = []
+daemon_dep = []
 
 if get_option('systemd')
   systemd_src += 'fu-systemd.c'
+endif
+if build_daemon and get_option('polkit')
+  client_src += 'fu-polkit-agent.c'
+  daemon_dep += polkit
 endif
 
 if build_daemon
@@ -17,7 +23,9 @@ fwupdmgr = executable(
     'fu-util.c',
     'fu-history.c',
     'fu-progressbar.c',
+    'fu-security-attr.c',
     'fu-util-common.c',
+    client_src,
     systemd_src
   ],
   include_directories : [
@@ -49,6 +57,7 @@ fwupdagent = executable(
   'fwupdagent',
   sources : [
     'fu-agent.c',
+    'fu-security-attr.c',
     'fu-util-common.c',
     systemd_src,
   ],
@@ -80,6 +89,7 @@ fwupdoffline = executable(
   sources : [
     'fu-history.c',
     'fu-offline.c',
+    'fu-security-attr.c',
     'fu-util-common.c',
     systemd_src
   ],
@@ -133,6 +143,7 @@ fwupdtool = executable(
     'fu-plugin-list.c',
     'fu-progressbar.c',
     'fu-remote-list.c',
+    'fu-security-attr.c',
     'fu-util-common.c',
     systemd_src
   ],
@@ -163,22 +174,24 @@ fwupdtool = executable(
   install_dir : bindir
 )
 
-if build_daemon and get_option('man')
+if get_option('man')
   help2man = find_program('help2man')
-  custom_target('fwupdmgr-man',
-    input : fwupdmgr,
-    output : 'fwupdmgr.1',
-    command : [
-      help2man, '@INPUT@',
-      '--no-info',
-      '--output', '@OUTPUT@',
-      '--name', 'Firmware update manager client utility',
-      '--manual', 'User Commands',
-      '--version-string', fwupd_version,
-    ],
-    install : true,
-    install_dir : join_paths(mandir, 'man1'),
-  )
+  if build_daemon
+    custom_target('fwupdmgr-man',
+      input : fwupdmgr,
+      output : 'fwupdmgr.1',
+      command : [
+        help2man, '@INPUT@',
+        '--no-info',
+        '--output', '@OUTPUT@',
+        '--name', 'Firmware update manager client utility',
+        '--manual', 'User Commands',
+        '--version-string', fwupd_version,
+      ],
+      install : true,
+      install_dir : join_paths(mandir, 'man1'),
+    )
+  endif
   if get_option('agent')
     custom_target('fwupdagent-man',
       input : fwupdagent,
@@ -195,22 +208,22 @@ if build_daemon and get_option('man')
       install_dir : join_paths(mandir, 'man1'),
     )
   endif
-endif
-if get_option('man')
-  custom_target('fwupdtool-man',
-    input : fwupdtool,
-    output : 'fwupdtool.1',
-    command : [
-      help2man, '@INPUT@',
-      '--no-info',
-      '--output', '@OUTPUT@',
-      '--name', 'Standalone firmware update utility',
-      '--manual', 'User Commands',
-      '--version-string', fwupd_version,
-    ],
-    install : true,
-    install_dir : join_paths(mandir, 'man1'),
-  )
+  if build_standalone
+    custom_target('fwupdtool-man',
+      input : fwupdtool,
+      output : 'fwupdtool.1',
+      command : [
+        help2man, '@INPUT@',
+        '--no-info',
+        '--output', '@OUTPUT@',
+        '--name', 'Standalone firmware update utility',
+        '--manual', 'User Commands',
+        '--version-string', fwupd_version,
+      ],
+      install : true,
+      install_dir : join_paths(mandir, 'man1'),
+    )
+  endif
 endif
 
 if build_daemon
@@ -232,6 +245,7 @@ executable(
     'fu-main.c',
     'fu-plugin-list.c',
     'fu-remote-list.c',
+    'fu-security-attr.c',
     systemd_src
   ],
   include_directories : [
@@ -247,12 +261,12 @@ executable(
     gmodule,
     gudev,
     gusb,
-    polkit,
     soup,
     sqlite,
     valgrind,
     libarchive,
     libjsonglib,
+    daemon_dep
   ],
   link_with : [
     fwupd,
@@ -289,6 +303,7 @@ if get_option('tests')
       'fu-plugin-list.c',
       'fu-progressbar.c',
       'fu-remote-list.c',
+      'fu-security-attr.c',
       'fu-self-test.c',
       systemd_src
     ],
@@ -337,6 +352,7 @@ if get_option('tests')
       fwupdplugin_incdir,
     ],
     dependencies : [
+      libxmlb,
       gio,
     ],
     link_with : [

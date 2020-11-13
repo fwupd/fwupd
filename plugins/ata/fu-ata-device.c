@@ -548,10 +548,11 @@ fu_ata_device_command (FuAtaDevice *self, struct ata_tf *tf,
 				   SG_IO, (guint8 *) &io_hdr,
 				   NULL, error))
 		return FALSE;
-	g_debug ("ATA_%u status=0x%x, host_status=0x%x, driver_status=0x%x",
-		io_hdr.cmd_len, io_hdr.status, io_hdr.host_status, io_hdr.driver_status);
-	if (g_getenv ("FWUPD_ATA_VERBOSE") != NULL)
+	if (g_getenv ("FWUPD_ATA_VERBOSE") != NULL) {
+		g_debug ("ATA_%u status=0x%x, host_status=0x%x, driver_status=0x%x",
+			io_hdr.cmd_len, io_hdr.status, io_hdr.host_status, io_hdr.driver_status);
 		fu_common_dump_raw (G_LOG_DOMAIN, "SB", sb, sizeof(sb));
+	}
 
 	/* error check */
 	if (io_hdr.status && io_hdr.status != SG_CHECK_CONDITION) {
@@ -584,8 +585,12 @@ fu_ata_device_command (FuAtaDevice *self, struct ata_tf *tf,
 	tf->lbah   = sb[8 + 11];
 	tf->dev    = sb[8 + 12];
 	tf->status = sb[8 + 13];
-	g_debug ("ATA_%u stat=%02x err=%02x nsect=%02x lbal=%02x lbam=%02x lbah=%02x dev=%02x",
-		 io_hdr.cmd_len, tf->status, tf->error, tf->nsect, tf->lbal, tf->lbam, tf->lbah, tf->dev);
+	if (g_getenv ("FWUPD_ATA_VERBOSE") != NULL) {
+		g_debug ("ATA_%u stat=%02x err=%02x nsect=%02x lbal=%02x "
+			 "lbam=%02x lbah=%02x dev=%02x",
+			 io_hdr.cmd_len, tf->status, tf->error, tf->nsect, tf->lbal,
+			 tf->lbam, tf->lbah, tf->dev);
+	}
 
 	/* io error */
 	if (tf->status & (ATA_STAT_ERR | ATA_STAT_DRQ)) {

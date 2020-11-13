@@ -257,11 +257,19 @@ main (int argc, char *argv[])
 
 			/* load any existing update info */
 			info = fu_uefi_device_load_update_info (dev, &error_local);
+			g_print ("Information for the update status entry %u:\n", i);
 			if (info == NULL) {
-				g_printerr ("failed: %s\n", error_local->message);
+				if (g_error_matches (error_local,
+						     G_IO_ERROR,
+						     G_IO_ERROR_NOT_FOUND)) {
+					g_print ("  Firmware GUID: {%s}\n",
+						 fu_uefi_device_get_guid (dev));
+					g_print ("  Update Status: No update info found\n\n");
+				} else {
+					g_printerr ("Failed: %s\n\n", error_local->message);
+				}
 				continue;
 			}
-			g_print ("Information for the update status entry %u:\n", i);
 			g_print ("  Information Version: %" G_GUINT32_FORMAT "\n",
 				 fu_uefi_update_info_get_version (info));
 			g_print ("  Firmware GUID: {%s}\n",
@@ -288,12 +296,12 @@ main (int argc, char *argv[])
 		const guint8 data = 1;
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_efivar_set_data (FU_EFIVAR_GUID_FWUPDATE,
-					    "FWUPDATE_VERBOSE",
-					    &data, sizeof(data),
-					    EFI_VARIABLE_NON_VOLATILE |
-					    EFI_VARIABLE_BOOTSERVICE_ACCESS |
-					    EFI_VARIABLE_RUNTIME_ACCESS,
-					    &error_local)) {
+					 "FWUPDATE_VERBOSE",
+					 &data, sizeof(data),
+					 FU_EFIVAR_ATTR_NON_VOLATILE |
+					 FU_EFIVAR_ATTR_BOOTSERVICE_ACCESS |
+					 FU_EFIVAR_ATTR_RUNTIME_ACCESS,
+					 &error_local)) {
 			g_printerr ("failed: %s\n", error_local->message);
 			return EXIT_FAILURE;
 		}
@@ -327,6 +335,7 @@ main (int argc, char *argv[])
 			g_printerr ("failed: %s\n", error_local->message);
 			return EXIT_FAILURE;
 		}
+		fu_uefi_device_set_esp (dev, esp);
 		if (flags != NULL)
 			fu_device_set_custom_flags (FU_DEVICE (dev), flags);
 		if (!fu_device_prepare (FU_DEVICE (dev),

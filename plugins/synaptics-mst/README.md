@@ -84,3 +84,7 @@ Here is a sample list of systems known to support them however:
  *  Latitude Rugged 5414
  *  Latitude Rugged 7214
  *  Latitude Rugged 7414
+
+External interface access
+-------------------------
+This plugin requires read/write access to `/dev/drm_dp_aux*`.

@@ -27,7 +27,7 @@ fu_wac_firmware_parse_func (void)
 	g_autoptr(GError) error = NULL;
 
 	/* parse the test file */
-	fn = g_build_filename (TESTDATADIR, "test.wac", NULL);
+	fn = g_test_build_filename (G_TEST_DIST, "tests", "test.wac", NULL);
 	if (!g_file_test (fn, G_FILE_TEST_EXISTS)) {
 		g_test_skip ("no data file found");
 		return;

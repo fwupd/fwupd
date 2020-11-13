@@ -8,6 +8,7 @@
 
 #include "fu-plugin.h"
 #include "fu-device.h"
+#include "fu-security-attrs.h"
 
 /**
  * SECTION:fu-plugin-vfuncs
@@ -312,6 +313,17 @@ gboolean	 fu_plugin_udev_device_changed		(FuPlugin	*plugin,
 							 FuUdevDevice	*device,
 							 GError		**error);
 /**
+ * fu_plugin_device_added
+ * @plugin: A #FuPlugin
+ * @device: A #FuDevice
+ *
+ * Function run when the subclassed device has been added.
+ *
+ * Since: 1.5.0
+ **/
+void		 fu_plugin_device_added			(FuPlugin	*plugin,
+							 FuDevice	*dev);
+/**
  * fu_plugin_device_removed
  * @plugin: A #FuPlugin
  * @device: A #FuDevice
@@ -348,3 +360,14 @@ gboolean	 fu_plugin_device_created		(FuPlugin	*plugin,
  **/
 void		 fu_plugin_device_registered		(FuPlugin	*plugin,
 							 FuDevice	*dev);
+/**
+ * fu_plugin_add_security_attrs
+ * @plugin: A #FuPlugin
+ * @attrs: A #FuSecurityAttrs
+ *
+ * Function that asks plugins to add Host Security Attributes.
+ *
+ * Since: 1.5.0
+ **/
+void		 fu_plugin_add_security_attrs		(FuPlugin	*plugin,
+							 FuSecurityAttrs *attrs);

@@ -19,6 +19,10 @@
 #include <shlwapi.h>
 #endif
 
+#ifdef HAVE_CPUID_H
+#include <cpuid.h>
+#endif
+
 #include <archive_entry.h>
 #include <archive.h>
 #include <errno.h>
@@ -31,11 +35,12 @@
 #include "fu-common.h"
 #include "fu-volume-private.h"
 
-#define UDISKS_DBUS_SERVICE		"org.freedesktop.UDisks2"
-#define UDISKS_DBUS_PATH		"/org/freedesktop/UDisks2/Manager"
-#define UDISKS_DBUS_MANAGER_INTERFACE	"org.freedesktop.UDisks2.Manager"
-#define UDISKS_DBUS_PART_INTERFACE 	"org.freedesktop.UDisks2.Partition"
-#define UDISKS_DBUS_FILE_INTERFACE	"org.freedesktop.UDisks2.Filesystem"
+#define UDISKS_DBUS_SERVICE			"org.freedesktop.UDisks2"
+#define UDISKS_DBUS_PATH			"/org/freedesktop/UDisks2/Manager"
+#define UDISKS_DBUS_MANAGER_INTERFACE		"org.freedesktop.UDisks2.Manager"
+#define UDISKS_DBUS_INTERFACE_PARTITION 	"org.freedesktop.UDisks2.Partition"
+#define UDISKS_DBUS_INTERFACE_FILESYSTEM	"org.freedesktop.UDisks2.Filesystem"
+#define UDISKS_DBUS_INTERFACE_BLOCK		"org.freedesktop.UDisks2.Block"
 
 /**
  * SECTION:fu-common
@@ -159,7 +164,8 @@ fu_common_mkdir_parent (const gchar *filename, GError **error)
 	g_autofree gchar *parent = NULL;
 
 	parent = g_path_get_dirname (filename);
-	g_debug ("creating path %s", parent);
+	if (!g_file_test (parent, G_FILE_TEST_IS_DIR))
+		g_debug ("creating path %s", parent);
 	if (g_mkdir_with_parents (parent, 0755) == -1) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -1033,6 +1039,12 @@ fu_common_get_path (FuPathKind path_kind)
 		if (tmp != NULL)
 			return g_build_filename (tmp, FWUPD_LOCALSTATEDIR, NULL);
 		return g_build_filename (FWUPD_LOCALSTATEDIR, NULL);
+	/* /proc */
+	case FU_PATH_KIND_PROCFS:
+		tmp = g_getenv ("FWUPD_PROCFS");
+		if (tmp != NULL)
+			return g_strdup (tmp);
+		return g_strdup ("/proc");
 	/* /sys/firmware */
 	case FU_PATH_KIND_SYSFSDIR_FW:
 		tmp = g_getenv ("FWUPD_SYSFSFWDIR");
@@ -1057,6 +1069,12 @@ fu_common_get_path (FuPathKind path_kind)
 		if (tmp != NULL)
 			return g_strdup (tmp);
 		return g_strdup ("/sys/kernel/security");
+	/* /sys/firmware/acpi/tables */
+	case FU_PATH_KIND_ACPI_TABLES:
+		tmp = g_getenv ("FWUPD_ACPITABLESDIR");
+		if (tmp != NULL)
+			return g_strdup (tmp);
+		return g_strdup ("/sys/firmware/acpi/tables");
 	/* /etc */
 	case FU_PATH_KIND_SYSCONFDIR:
 		tmp = g_getenv ("FWUPD_SYSCONFDIR");
@@ -1217,6 +1235,9 @@ fu_common_strwidth (const gchar *text)
 {
 	const gchar *p = text;
 	gsize width = 0;
+
+	g_return_val_if_fail (text != NULL, 0);
+
 	while (*p) {
 		gunichar c = g_utf8_get_char (p);
 		if (g_unichar_iswide (c))
@@ -1679,6 +1700,49 @@ fu_common_fnmatch (const gchar *pattern, const gchar *str)
 #endif
 }
 
+static gint
+fu_common_filename_glob_sort_cb (gconstpointer a, gconstpointer b)
+{
+	return g_strcmp0 (*(const gchar **)a, *(const gchar **)b);
+}
+
+/**
+ * fu_common_filename_glob:
+ * @directory: a directory path
+ * @pattern: a glob pattern, e.g. `*foo*`
+ * @error: A #GError or %NULL
+ *
+ * Returns all the filenames that match a specific glob pattern.
+ * Any results are sorted. No matching files will set @error.
+ *
+ * Return value:  (element-type utf8) (transfer container): matching files, or %NULL
+ *
+ * Since: 1.5.0
+ **/
+GPtrArray *
+fu_common_filename_glob (const gchar *directory, const gchar *pattern, GError **error)
+{
+	const gchar *basename;
+	g_autoptr(GDir) dir = g_dir_open (directory, 0, error);
+	g_autoptr(GPtrArray) files = g_ptr_array_new_with_free_func (g_free);
+	if (dir == NULL)
+		return NULL;
+	while ((basename = g_dir_read_name (dir)) != NULL) {
+		if (!fu_common_fnmatch (pattern, basename))
+			continue;
+		g_ptr_array_add (files, g_build_filename (directory, basename, NULL));
+	}
+	if (files->len == 0) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_NOT_FOUND,
+				     "no files matched pattern");
+		return NULL;
+	}
+	g_ptr_array_sort (files, fu_common_filename_glob_sort_cb);
+	return g_steal_pointer (&files);
+}
+
 /**
  * fu_common_strnsplit:
  * @str: a string to split
@@ -1938,6 +2002,24 @@ fu_byte_array_append_uint32 (GByteArray *array, guint32 data, FuEndianType endia
 }
 
 /**
+ * fu_byte_array_set_size:
+ * @array: a #GByteArray
+ * @length:  the new size of the GByteArray
+ *
+ * Sets the size of the GByteArray, expanding it with NULs if necessary.
+ *
+ * Since: 1.5.0
+ **/
+void
+fu_byte_array_set_size (GByteArray *array, guint length)
+{
+	guint oldlength = array->len;
+	g_byte_array_set_size (array, length);
+	if (length > oldlength)
+		memset (array->data + oldlength, 0x0, length - oldlength);
+}
+
+/**
  * fu_common_kernel_locked_down:
  *
  * Determines if kernel lockdown in effect
@@ -1969,6 +2051,83 @@ fu_common_kernel_locked_down (void)
 #else
 	return FALSE;
 #endif
+}
+
+/**
+ * fu_common_cpuid:
+ * @leaf: The CPUID level, now called the 'leaf' by Intel
+ * @eax: (out) (nullable): EAX register
+ * @ebx: (out) (nullable): EBX register
+ * @ecx: (out) (nullable): ECX register
+ * @edx: (out) (nullable): EDX register
+ * @error: A #GError or NULL
+ *
+ * Calls CPUID and returns the registers for the given leaf.
+ *
+ * Return value: %TRUE if the registers are set.
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fu_common_cpuid (guint32 leaf,
+		 guint32 *eax,
+		 guint32 *ebx,
+		 guint32 *ecx,
+		 guint32 *edx,
+		 GError **error)
+{
+#ifdef HAVE_CPUID_H
+	guint eax_tmp = 0;
+	guint ebx_tmp = 0;
+	guint ecx_tmp = 0;
+	guint edx_tmp = 0;
+
+	/* get vendor */
+	__get_cpuid_count (leaf, 0x0, &eax_tmp, &ebx_tmp, &ecx_tmp, &edx_tmp);
+	if (eax != NULL)
+		*eax = eax_tmp;
+	if (ebx != NULL)
+		*ebx = ebx_tmp;
+	if (ecx != NULL)
+		*ecx = ecx_tmp;
+	if (edx != NULL)
+		*edx = edx_tmp;
+	return TRUE;
+#else
+	g_set_error_literal (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_SUPPORTED,
+			     "no <cpuid.h> support");
+	return FALSE;
+#endif
+}
+
+/**
+ * fu_common_is_cpu_intel:
+ *
+ * Uses CPUID to discover the CPU vendor and check if it is Intel.
+ *
+ * Return value: %TRUE if the vendor was Intel.
+ *
+ * Since: 1.5.0
+ **/
+gboolean
+fu_common_is_cpu_intel (void)
+{
+	guint ebx = 0;
+	guint ecx = 0;
+	guint edx = 0;
+
+	if (!fu_common_cpuid (0x0, NULL, &ebx, &ecx, &edx, NULL))
+		return FALSE;
+#ifdef HAVE_CPUID_H
+	if (ebx == signature_INTEL_ebx &&
+	    edx == signature_INTEL_edx &&
+	    ecx == signature_INTEL_ecx) {
+		return TRUE;
+	}
+#endif
+	return FALSE;
 }
 
 /**
@@ -2006,16 +2165,21 @@ fu_common_is_live_media (void)
 }
 
 static GPtrArray *
-fu_common_get_block_devices (GDBusConnection *connection, GError **error)
+fu_common_get_block_devices (GError **error)
 {
 	GVariantBuilder builder;
-	GVariant *input;
 	const gchar *obj;
 	g_autoptr(GVariant) output = NULL;
 	g_autoptr(GDBusProxy) proxy = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GVariantIter) iter = NULL;
+	g_autoptr(GDBusConnection) connection = NULL;
 
+	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
+	if (connection == NULL) {
+		g_prefix_error (error, "failed to get system bus: ");
+		return NULL;
+	}
 	proxy = g_dbus_proxy_new_sync (connection,
 				       G_DBUS_PROXY_FLAGS_NONE, NULL,
 				       UDISKS_DBUS_SERVICE,
@@ -2027,17 +2191,36 @@ fu_common_get_block_devices (GDBusConnection *connection, GError **error)
 		return NULL;
 	}
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
-	input = g_variant_new ("(a{sv})", &builder);
 	output =  g_dbus_proxy_call_sync (proxy,
-					  "GetBlockDevices", g_variant_ref (input),
+					  "GetBlockDevices",
+					  g_variant_new ("(a{sv})", &builder),
 					  G_DBUS_CALL_FLAGS_NONE,
 					  -1, NULL, error);
-	if (output == NULL)
+	if (output == NULL) {
+		if (error != NULL)
+			g_dbus_error_strip_remote_error (*error);
+		g_prefix_error (error, "failed to call %s.%s(): ",
+				UDISKS_DBUS_SERVICE,
+				"GetBlockDevices");
 		return NULL;
-	devices = g_ptr_array_new_with_free_func (g_free);
+	}
+	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	g_variant_get (output, "(ao)", &iter);
-	while (g_variant_iter_next (iter, "o", &obj))
-		g_ptr_array_add (devices, g_strdup (obj));
+	while (g_variant_iter_next (iter, "&o", &obj)) {
+		g_autoptr(GDBusProxy) proxy_blk = NULL;
+		proxy_blk = g_dbus_proxy_new_sync (connection,
+						   G_DBUS_PROXY_FLAGS_NONE, NULL,
+						   UDISKS_DBUS_SERVICE,
+						   obj,
+						   UDISKS_DBUS_INTERFACE_BLOCK,
+						   NULL, error);
+		if (proxy_blk == NULL) {
+			g_prefix_error (error, "failed to initialize d-bus proxy for %s: ", obj);
+			return NULL;
+		}
+		g_ptr_array_add (devices, g_steal_pointer (&proxy_blk));
+	}
+
 
 	return g_steal_pointer (&devices);
 }
@@ -2047,9 +2230,7 @@ fu_common_get_block_devices (GDBusConnection *connection, GError **error)
  * @kind: A volume kind, typically a GUID
  * @error: A #GError or NULL
  *
- * Call into the plugin's get results routine
- *
- * Finds all volumes of a specific type
+ * Finds all volumes of a specific partition type
  *
  * Returns: (transfer container) (element-type FuVolume): a #GPtrArray, or %NULL if the kind was not found
  *
@@ -2058,56 +2239,56 @@ fu_common_get_block_devices (GDBusConnection *connection, GError **error)
 GPtrArray *
 fu_common_get_volumes_by_kind (const gchar *kind, GError **error)
 {
-	g_autoptr(GDBusConnection) connection = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) volumes = NULL;
 
-	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
-	if (connection == NULL) {
-		g_prefix_error (error, "failed to get system bus: ");
-		return NULL;
-	}
-	devices = fu_common_get_block_devices (connection, error);
+	devices = fu_common_get_block_devices (error);
 	if (devices == NULL)
 		return NULL;
 	volumes = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	for (guint i = 0; i < devices->len; i++) {
-		const gchar *obj = g_ptr_array_index (devices, i);
+		GDBusProxy *proxy_blk = g_ptr_array_index (devices, i);
 		const gchar *type_str;
 		g_autoptr(GDBusProxy) proxy_part = NULL;
-		g_autoptr(GDBusProxy) proxy_file = NULL;
-		g_autoptr(GError) error_local = NULL;
+		g_autoptr(GDBusProxy) proxy_fs = NULL;
 		g_autoptr(GVariant) val = NULL;
 
-		proxy_part = g_dbus_proxy_new_sync (connection,
+		proxy_part = g_dbus_proxy_new_sync (g_dbus_proxy_get_connection (proxy_blk),
 						    G_DBUS_PROXY_FLAGS_NONE, NULL,
 						    UDISKS_DBUS_SERVICE,
-						    obj,
-						    UDISKS_DBUS_PART_INTERFACE,
+						    g_dbus_proxy_get_object_path (proxy_blk),
+						    UDISKS_DBUS_INTERFACE_PARTITION,
 						    NULL, error);
 		if (proxy_part == NULL) {
-			g_prefix_error (error, "failed to initialize d-bus proxy %s: ", obj);
+			g_prefix_error (error, "failed to initialize d-bus proxy %s: ",
+					g_dbus_proxy_get_object_path (proxy_blk));
 			return NULL;
 		}
 		val = g_dbus_proxy_get_cached_property (proxy_part, "Type");
 		if (val == NULL)
 			continue;
 
-		g_variant_get (val, "s", &type_str);
-		g_debug ("device %s, type: %s", obj, type_str);
+		g_variant_get (val, "&s", &type_str);
+		g_debug ("device %s, type: %s",
+			 g_dbus_proxy_get_object_path (proxy_blk), type_str);
 		if (g_strcmp0 (type_str, kind) != 0)
 			continue;
-		proxy_file = g_dbus_proxy_new_sync (connection,
-						    G_DBUS_PROXY_FLAGS_NONE, NULL,
-						    UDISKS_DBUS_SERVICE,
-						    obj,
-						    UDISKS_DBUS_FILE_INTERFACE,
-						    NULL, error);
-		if (proxy_file == NULL) {
-			g_prefix_error (error, "failed to initialize d-bus proxy %s: ", obj);
+		proxy_fs = g_dbus_proxy_new_sync (g_dbus_proxy_get_connection (proxy_blk),
+						  G_DBUS_PROXY_FLAGS_NONE, NULL,
+						  UDISKS_DBUS_SERVICE,
+						  g_dbus_proxy_get_object_path (proxy_blk),
+						  UDISKS_DBUS_INTERFACE_FILESYSTEM,
+						  NULL, error);
+		if (proxy_fs == NULL) {
+			g_prefix_error (error, "failed to initialize d-bus proxy %s: ",
+					g_dbus_proxy_get_object_path (proxy_blk));
 			return NULL;
 		}
-		g_ptr_array_add (volumes, fu_volume_new_from_proxy (proxy_file));
+		g_ptr_array_add (volumes,
+				 g_object_new (FU_TYPE_VOLUME,
+					       "proxy-block", proxy_blk,
+					       "proxy-filesystem", proxy_fs,
+					       NULL));
 	}
 	if (volumes->len == 0) {
 		g_set_error (error,
@@ -2117,6 +2298,90 @@ fu_common_get_volumes_by_kind (const gchar *kind, GError **error)
 		return NULL;
 	}
 	return g_steal_pointer (&volumes);
+}
+
+/**
+ * fu_common_get_volume_by_device:
+ * @device: A device string, typcically starting with `/dev/`
+ * @error: A #GError or NULL
+ *
+ * Finds the first volume from the specified device.
+ *
+ * Returns: (transfer full): a #GPtrArray, or %NULL if the kind was not found
+ *
+ * Since: 1.5.1
+ **/
+FuVolume *
+fu_common_get_volume_by_device (const gchar *device, GError **error)
+{
+	g_autoptr(GPtrArray) devices = NULL;
+
+	/* find matching block device */
+	devices = fu_common_get_block_devices (error);
+	if (devices == NULL)
+		return NULL;
+	for (guint i = 0; i < devices->len; i++) {
+		GDBusProxy *proxy_blk = g_ptr_array_index (devices, i);
+		g_autoptr(GVariant) val = NULL;
+		val = g_dbus_proxy_get_cached_property (proxy_blk, "Device");
+		if (val == NULL)
+			continue;
+		if (g_strcmp0 (g_variant_get_bytestring (val), device) == 0) {
+			return g_object_new (FU_TYPE_VOLUME,
+					     "proxy-block", proxy_blk,
+					     NULL);
+		}
+	}
+
+	/* failed */
+	g_set_error (error,
+		     G_IO_ERROR,
+		     G_IO_ERROR_NOT_FOUND,
+		     "no volumes for device %s",
+		     device);
+	return NULL;
+}
+
+/**
+ * fu_common_get_volume_by_devnum:
+ * @devicenum: A device number
+ * @error: A #GError or NULL
+ *
+ * Finds the first volume from the specified device.
+ *
+ * Returns: (transfer full): a #GPtrArray, or %NULL if the kind was not found
+ *
+ * Since: 1.5.1
+ **/
+FuVolume *
+fu_common_get_volume_by_devnum (guint32 devnum, GError **error)
+{
+	g_autoptr(GPtrArray) devices = NULL;
+
+	/* find matching block device */
+	devices = fu_common_get_block_devices (error);
+	if (devices == NULL)
+		return NULL;
+	for (guint i = 0; i < devices->len; i++) {
+		GDBusProxy *proxy_blk = g_ptr_array_index (devices, i);
+		g_autoptr(GVariant) val = NULL;
+		val = g_dbus_proxy_get_cached_property (proxy_blk, "DeviceNumber");
+		if (val == NULL)
+			continue;
+		if (devnum == g_variant_get_uint64 (val)) {
+			return g_object_new (FU_TYPE_VOLUME,
+					     "proxy-block", proxy_blk,
+					     NULL);
+		}
+	}
+
+	/* failed */
+	g_set_error (error,
+		     G_IO_ERROR,
+		     G_IO_ERROR_NOT_FOUND,
+		     "no volumes for devnum %u",
+		     devnum);
+	return NULL;
 }
 
 /**
@@ -2186,7 +2451,7 @@ fu_common_get_esp_for_path (const gchar *esp_path, GError **error)
 		return NULL;
 	for (guint i = 0; i < volumes->len; i++) {
 		FuVolume *vol = g_ptr_array_index (volumes, i);
-		g_autofree gchar *vol_basename = g_path_get_basename (fu_volume_get_id (vol));
+		g_autofree gchar *vol_basename = g_path_get_basename (fu_volume_get_mount_point (vol));
 		if (g_strcmp0 (basename, vol_basename) == 0)
 			return g_object_ref (vol);
 	}
@@ -2196,4 +2461,102 @@ fu_common_get_esp_for_path (const gchar *esp_path, GError **error)
 		     "No ESP with path %s",
 		     esp_path);
 	return NULL;
+}
+
+/**
+ * fu_common_crc8:
+ * @buf: memory buffer
+ * @bufsz: sizeof buf
+ *
+ * Returns the cyclic redundancy check value for the given memory buffer.
+ *
+ * Returns: CRC value
+ *
+ * Since: 1.5.0
+ **/
+guint8
+fu_common_crc8 (const guint8 *buf, gsize bufsz)
+{
+	guint32 crc = 0;
+	for (gsize j = bufsz; j > 0; j--) {
+		crc ^= (*(buf++) << 8);
+		for (guint32 i = 8; i; i--) {
+			if (crc & 0x8000)
+				crc ^= (0x1070 << 3);
+			crc <<= 1;
+		}
+	}
+	return ~((guint8) (crc >> 8));
+}
+
+/**
+ * fu_common_crc16:
+ * @buf: memory buffer
+ * @bufsz: sizeof buf
+ *
+ * Returns the cyclic redundancy check value for the given memory buffer.
+ *
+ * Returns: CRC value
+ *
+ * Since: 1.5.0
+ **/
+guint16
+fu_common_crc16 (const guint8 *buf, gsize bufsz)
+{
+	guint16 crc = 0xffff;
+	for (gsize len = bufsz; len > 0; len--) {
+		crc = (guint16) (crc ^ (*buf++));
+		for (guint8 i = 0; i < 8; i++) {
+			if (crc & 0x1) {
+				crc = (crc >> 1) ^ 0xa001;
+			} else {
+				crc >>= 1;
+			}
+		}
+	}
+	return ~crc;
+}
+
+/**
+ * fu_common_crc32_full:
+ * @buf: memory buffer
+ * @bufsz: sizeof buf
+ * @crc: initial CRC value, typically 0xFFFFFFFF
+ * @polynomial: CRC polynomial, typically 0xEDB88320
+ *
+ * Returns the cyclic redundancy check value for the given memory buffer.
+ *
+ * Returns: CRC value
+ *
+ * Since: 1.5.0
+ **/
+guint32
+fu_common_crc32_full (const guint8 *buf, gsize bufsz, guint32 crc, guint32 polynomial)
+{
+	for (guint32 idx = 0; idx < bufsz; idx++) {
+		guint8 data = *buf++;
+		crc = crc ^ data;
+		for (guint32 bit = 0; bit < 8; bit++) {
+			guint32 mask = -(crc & 1);
+			crc = (crc >> 1) ^ (polynomial & mask);
+		}
+	}
+	return ~crc;
+}
+
+/**
+ * fu_common_crc32:
+ * @buf: memory buffer
+ * @bufsz: sizeof buf
+ *
+ * Returns the cyclic redundancy check value for the given memory buffer.
+ *
+ * Returns: CRC value
+ *
+ * Since: 1.5.0
+ **/
+guint32
+fu_common_crc32 (const guint8 *buf, gsize bufsz)
+{
+	return fu_common_crc32_full (buf, bufsz, 0xFFFFFFFF, 0xEDB88320);
 }

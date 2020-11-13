@@ -1,3 +1,9 @@
+fwupd (1.5.1-1) UNRELEASED; urgency=medium
+
+  * New upstream version (1.5.1)
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Fri, 13 Nov 2020 09:42:10 -0600
+
 fwupd (1.4.6-2) unstable; urgency=medium
 
   * Add udisks2 to recommends

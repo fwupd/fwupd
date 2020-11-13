@@ -25,7 +25,7 @@
  * SECTION:fu-quirks
  * @short_description: device quirks
  *
- * Quirks can be used to modify device behaviour.
+ * Quirks can be used to modify device behavior.
  * When fwupd is installed in long-term support distros it's very hard to
  * backport new versions as new hardware is released.
  *
@@ -149,10 +149,8 @@ fu_quirks_add_quirks_for_path (FuQuirks *self, XbBuilder *builder,
 
 	/* add valid files to the array */
 	path_hw = g_build_filename (path, "quirks.d", NULL);
-	if (!g_file_test (path_hw, G_FILE_TEST_EXISTS)) {
-		g_debug ("no %s, skipping", path_hw);
+	if (!g_file_test (path_hw, G_FILE_TEST_EXISTS))
 		return TRUE;
-	}
 	dir = g_dir_open (path_hw, 0, error);
 	if (dir == NULL)
 		return FALSE;
@@ -229,7 +227,7 @@ fu_quirks_check_silo (FuQuirks *self, GError **error)
 	cachedirpkg = fu_common_get_path (FU_PATH_KIND_CACHEDIR_PKG);
 	xmlbfn = g_build_filename (cachedirpkg, "quirks.xmlb", NULL);
 	file = g_file_new_for_path (xmlbfn);
-	if (g_getenv ("XMLB_VERBOSE") != NULL) {
+	if (g_getenv ("FWUPD_XMLB_VERBOSE") != NULL) {
 		xb_builder_set_profile_flags (builder,
 					      XB_SILO_PROFILE_FLAG_XPATH |
 					      XB_SILO_PROFILE_FLAG_DEBUG);

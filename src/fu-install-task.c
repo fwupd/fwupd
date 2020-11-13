@@ -198,6 +198,8 @@ fu_install_task_check_requirements (FuInstallTask *self,
 				    FwupdInstallFlags flags,
 				    GError **error)
 {
+	const gchar *branch_new;
+	const gchar *branch_old;
 	const gchar *protocol;
 	const gchar *version;
 	const gchar *version_release_raw;
@@ -258,9 +260,10 @@ fu_install_task_check_requirements (FuInstallTask *self,
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Device %s doesn't support %s",
+			     "Device %s does not support %s, only %s",
 			     fu_device_get_name (self->device),
-			     protocol);
+			     protocol,
+			     fu_device_get_protocol (self->device));
 		return FALSE;
 	}
 
@@ -272,6 +275,22 @@ fu_install_task_check_requirements (FuInstallTask *self,
 			     "Device %s [%s] is locked",
 			     fu_device_get_name (self->device),
 			     fu_device_get_id (self->device));
+		return FALSE;
+	}
+
+	/* check the branch is not switching */
+	branch_new = xb_node_query_text (self->component, "branch", NULL);
+	branch_old = fu_device_get_branch (self->device);
+	if ((flags & FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH) == 0 &&
+	    g_strcmp0 (branch_old, branch_new) != 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "Device %s [%s] would switch firmware branch from %s to %s",
+			     fu_device_get_name (self->device),
+			     fu_device_get_id (self->device),
+			     branch_old != NULL ? branch_old : "default",
+			     branch_new != NULL ? branch_new : "default");
 		return FALSE;
 	}
 
@@ -335,7 +354,8 @@ fu_install_task_check_requirements (FuInstallTask *self,
 	}
 
 	/* check the version formats match if set in the release */
-	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
+	    (flags & FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH) == 0) {
 		verfmts = xb_node_query (self->component,
 					"custom/value[@key='LVFS::VersionFormat']",
 					0, NULL);
@@ -377,7 +397,9 @@ fu_install_task_check_requirements (FuInstallTask *self,
 		return FALSE;
 	}
 	self->is_downgrade = vercmp > 0;
-	if (self->is_downgrade && (flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) == 0) {
+	if (self->is_downgrade &&
+	    (flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) == 0 &&
+	    (flags & FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH) == 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_VERSION_NEWER,

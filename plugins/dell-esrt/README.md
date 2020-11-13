@@ -45,3 +45,9 @@ UEFI dummy device
   Version:              0
   Created:              2018-06-25
 ```
+
+External interface access
+-------------------------
+This plugin requires:
+* read/write access to `/dev/wmi/dell-smbios` and `/sys/bus/platform/devices/dcdbas`.
+* read access to `/sys/firmware/efi/esrt`.

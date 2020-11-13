@@ -54,7 +54,7 @@ mkdir -p dist
 cp $HOME/rpmbuild/RPMS/*/*.rpm dist
 
 if [ "$CI" = "true" ]; then
-	sed "s,^BlacklistPlugins=test;invalid,BlacklistPlugins=," -i /etc/fwupd/daemon.conf
+	sed "s,^DisabledPlugins=test;invalid,DisabledPlugins=," -i /etc/fwupd/daemon.conf
 
 	# set up enough PolicyKit and D-Bus to run the daemon
 	mkdir -p /run/dbus

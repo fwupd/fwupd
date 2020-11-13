@@ -61,7 +61,7 @@ fu_rom_func (void)
 		g_assert (rom != NULL);
 
 		/* load file */
-		filename = g_build_filename (TESTDATADIR, data[i].fn, NULL);
+		filename = g_test_build_filename (G_TEST_DIST, "tests", data[i].fn, NULL);
 		if (!g_file_test (filename, G_FILE_TEST_EXISTS))
 			continue;
 		g_print ("\nparsing %s...", filename);
@@ -83,7 +83,7 @@ fu_rom_all_func (void)
 	g_autofree gchar *path = NULL;
 
 	/* may or may not exist */
-	path = g_build_filename (TESTDATADIR, "roms", NULL);
+	path = g_test_build_filename (G_TEST_DIST, "tests", "roms", NULL);
 	if (!g_file_test (path, G_FILE_TEST_EXISTS))
 		return;
 	g_print ("\n");

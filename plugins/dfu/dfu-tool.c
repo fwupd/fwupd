@@ -924,8 +924,10 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* allow wildcards */
-	if (priv->force)
-		flags |= FWUPD_INSTALL_FLAG_FORCE;
+	if (priv->force) {
+		flags |= FWUPD_INSTALL_FLAG_IGNORE_VID_PID;
+		flags |= FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM;
+	}
 
 	/* transfer */
 	g_signal_connect (device, "notify::status",

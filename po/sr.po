@@ -159,6 +159,7 @@ msgstr "Не проверавај да ли је потребно поновно
 msgid "Do not check for unreported history"
 msgstr "Не проверавај непослати историјат"
 
+#. TRANSLATORS: success
 #. success
 msgid "Done!"
 msgstr "Урађено!"
@@ -182,6 +183,8 @@ msgstr "Преузимам…"
 msgid "Dump SMBIOS data from a file"
 msgstr "Ишчитај SMBIOS податке из датотеке"
 
+#. TRANSLATORS: Suffix: the HSI result
+#. TRANSLATORS: Plugin is active and in use
 #. TRANSLATORS: if the remote is enabled
 msgid "Enabled"
 msgstr "Омогућено"
@@ -209,22 +212,6 @@ msgstr "Нисам могао да учитам ћефове"
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
 msgstr "Не могу да обрадим аргументе"
-
-#. TRANSLATORS: downloading unknown file
-msgid "Fetching file"
-msgstr "Добављам датотеку"
-
-#. TRANSLATORS: downloading new firmware file
-msgid "Fetching firmware"
-msgstr "Добављам фирмвер"
-
-#. TRANSLATORS: downloading new metadata file
-msgid "Fetching metadata"
-msgstr "Добављам мета-податке"
-
-#. TRANSLATORS: downloading new signing file
-msgid "Fetching signature"
-msgstr "Добављам потпис"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename"
@@ -257,6 +244,10 @@ msgid_plural "Firmware metadata has not been updated for %u days and may not be 
 msgstr[0] "Метаподаци фирмвера нису ажурирани %u дан и можда су застарели."
 msgstr[1] "Метаподаци фирмвера нису ажурирани %u дана и можда су застарели."
 msgstr[2] "Метаподаци фирмвера нису ажурирани %u дана и можда су застарели."
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Found"
+msgstr "Нашао"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -335,9 +326,9 @@ msgstr "Прати демона за догађајима"
 msgid "No hardware detected with firmware update capability"
 msgstr "Нема хардвера којем се може ажурирати фирмвер"
 
-#. TRANSLATORS: command line option
-msgid "Override plugin warning"
-msgstr "Превазилази упозорења прикључка"
+#. TRANSLATORS: Suffix: the HSI result
+msgid "OK"
+msgstr "У реду"
 
 #. TRANSLATORS: remote filename base
 msgid "Password"
@@ -487,10 +478,6 @@ msgstr "Ажурира сав фирмвер на последња доступ�
 msgid "Updating %s from %s to %s... "
 msgstr "Ажурирам %s са %s на %s..."
 
-#. TRANSLATORS: the server sent the user a small message
-msgid "Upload message:"
-msgstr "Отпремна порука:"
-
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "Отпремити извештај сада?"
@@ -502,6 +489,10 @@ msgstr "Корисничко име"
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
 msgstr "Проверавам…"
+
+#. TRANSLATORS: the detected version number of the dbx
+msgid "Version"
+msgstr "Издање"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"

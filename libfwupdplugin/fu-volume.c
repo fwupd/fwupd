@@ -23,8 +23,17 @@
 
 struct _FuVolume {
 	GObject			 parent_instance;
-	GDBusProxy		*proxy;
+	GDBusProxy		*proxy_blk;
+	GDBusProxy		*proxy_fs;
 	gchar			*mount_path;	/* only when mounted ourselves */
+};
+
+enum {
+	PROP_0,
+	PROP_MOUNT_PATH,
+	PROP_PROXY_BLOCK,
+	PROP_PROXY_FILESYSTEM,
+	PROP_LAST
 };
 
 G_DEFINE_TYPE (FuVolume, fu_volume, G_TYPE_OBJECT)
@@ -34,16 +43,82 @@ fu_volume_finalize (GObject *obj)
 {
 	FuVolume *self = FU_VOLUME (obj);
 	g_free (self->mount_path);
-	if (self->proxy != NULL)
-		g_object_unref (self->proxy);
+	if (self->proxy_blk != NULL)
+		g_object_unref (self->proxy_blk);
+	if (self->proxy_fs != NULL)
+		g_object_unref (self->proxy_fs);
 	G_OBJECT_CLASS (fu_volume_parent_class)->finalize (obj);
+}
+
+static void
+fu_volume_get_property (GObject *object, guint prop_id,
+			GValue *value, GParamSpec *pspec)
+{
+	FuVolume *self = FU_VOLUME (object);
+	switch (prop_id) {
+	case PROP_MOUNT_PATH:
+		g_value_set_string (value, self->mount_path);
+		break;
+	case PROP_PROXY_BLOCK:
+		g_value_set_object (value, self->proxy_blk);
+		break;
+	case PROP_PROXY_FILESYSTEM:
+		g_value_set_object (value, self->proxy_fs);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+		break;
+	}
+}
+
+static void
+fu_volume_set_property (GObject *object, guint prop_id,
+			   const GValue *value, GParamSpec *pspec)
+{
+	FuVolume *self = FU_VOLUME (object);
+	switch (prop_id) {
+	case PROP_MOUNT_PATH:
+		self->mount_path = g_value_dup_string (value);
+		break;
+	case PROP_PROXY_BLOCK:
+		self->proxy_blk = g_value_dup_object (value);
+		break;
+	case PROP_PROXY_FILESYSTEM:
+		self->proxy_fs = g_value_dup_object (value);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+		break;
+	}
 }
 
 static void
 fu_volume_class_init (FuVolumeClass *klass)
 {
+	GParamSpec *pspec;
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
 	object_class->finalize = fu_volume_finalize;
+	object_class->get_property = fu_volume_get_property;
+	object_class->set_property = fu_volume_set_property;
+
+	pspec = g_param_spec_object ("proxy-block", NULL, NULL, G_TYPE_DBUS_PROXY,
+				      G_PARAM_CONSTRUCT_ONLY |
+				      G_PARAM_READWRITE |
+				      G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_PROXY_BLOCK, pspec);
+
+	pspec = g_param_spec_object ("proxy-filesystem", NULL, NULL, G_TYPE_DBUS_PROXY,
+				      G_PARAM_CONSTRUCT_ONLY |
+				      G_PARAM_READWRITE |
+				      G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_PROXY_FILESYSTEM, pspec);
+
+	pspec = g_param_spec_string ("mount-path", NULL, NULL, NULL,
+				     G_PARAM_CONSTRUCT_ONLY |
+				     G_PARAM_READWRITE |
+				     G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_MOUNT_PATH, pspec);
 }
 
 static void
@@ -65,7 +140,11 @@ const gchar *
 fu_volume_get_id (FuVolume *self)
 {
 	g_return_val_if_fail (FU_IS_VOLUME (self), NULL);
-	return g_dbus_proxy_get_object_path (self->proxy);
+	if (self->proxy_fs != NULL)
+		return g_dbus_proxy_get_object_path (self->proxy_fs);
+	if (self->proxy_blk != NULL)
+		return g_dbus_proxy_get_object_path (self->proxy_blk);
+	return NULL;
 }
 
 /**
@@ -81,9 +160,8 @@ fu_volume_get_id (FuVolume *self)
 gchar *
 fu_volume_get_mount_point (FuVolume *self)
 {
-	const gchar **mountpoints = NULL;
+	g_autofree const gchar **mountpoints = NULL;
 	g_autoptr(GVariant) val = NULL;
-	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail (FU_IS_VOLUME (self), NULL);
 
@@ -92,7 +170,9 @@ fu_volume_get_mount_point (FuVolume *self)
 		return g_strdup (self->mount_path);
 
 	/* something else mounted it */
-	val = g_dbus_proxy_get_cached_property (self->proxy, "MountPoints");
+	if (self->proxy_fs == NULL)
+		return NULL;
+	val = g_dbus_proxy_get_cached_property (self->proxy_fs, "MountPoints");
 	if (val == NULL)
 		return NULL;
 	mountpoints = g_variant_get_bytestring_array (val, NULL);
@@ -166,6 +246,33 @@ fu_volume_is_mounted (FuVolume *self)
 }
 
 /**
+ * fu_volume_is_encrypted:
+ * @self: a @FuVolume
+ *
+ * Checks if the VOLUME is currently encrypted.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.5.1
+ **/
+gboolean
+fu_volume_is_encrypted (FuVolume *self)
+{
+	g_autoptr(GVariant) val = NULL;
+
+	g_return_val_if_fail (FU_IS_VOLUME (self), FALSE);
+
+	if (self->proxy_blk == NULL)
+		return FALSE;
+	val = g_dbus_proxy_get_cached_property (self->proxy_blk, "CryptoBackingDevice");
+	if (val == NULL)
+		return FALSE;
+	if (g_strcmp0 (g_variant_get_string (val, NULL), "/") == 0)
+		return FALSE;
+	return TRUE;
+}
+
+/**
  * fu_volume_mount:
  * @self: a @FuVolume
  * @error: A #GError, or %NULL
@@ -185,12 +292,12 @@ fu_volume_mount (FuVolume *self, GError **error)
 	g_return_val_if_fail (FU_IS_VOLUME (self), FALSE);
 
 	/* device from the self tests */
-	if (self->proxy == NULL)
+	if (self->proxy_fs == NULL)
 		return TRUE;
 
 	g_debug ("mounting %s", fu_volume_get_id (self));
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
-	val = g_dbus_proxy_call_sync (self->proxy,
+	val = g_dbus_proxy_call_sync (self->proxy_fs,
 				      "Mount", g_variant_new ("(a{sv})", &builder),
 				      G_DBUS_CALL_FLAGS_NONE,
 				      -1, NULL, error);
@@ -220,12 +327,12 @@ fu_volume_unmount (FuVolume *self, GError **error)
 	g_return_val_if_fail (FU_IS_VOLUME (self), FALSE);
 
 	/* device from the self tests */
-	if (self->proxy == NULL)
+	if (self->proxy_fs == NULL)
 		return TRUE;
 
 	g_debug ("unmounting %s", fu_volume_get_id (self));
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
-	val = g_dbus_proxy_call_sync (self->proxy,
+	val = g_dbus_proxy_call_sync (self->proxy_fs,
 				      "Unmount",
 				      g_variant_new ("(a{sv})", &builder),
 				      G_DBUS_CALL_FLAGS_NONE,
@@ -259,16 +366,6 @@ fu_volume_locker (FuVolume *self, GError **error)
 					  (FuDeviceLockerFunc) fu_volume_mount,
 					  (FuDeviceLockerFunc) fu_volume_unmount,
 					  error);
-}
-
-/* private */
-FuVolume *
-fu_volume_new_from_proxy (GDBusProxy *proxy)
-{
-	g_autoptr(FuVolume) self = g_object_new (FU_TYPE_VOLUME, NULL);
-	g_return_val_if_fail (proxy != NULL, NULL);
-	g_set_object (&self->proxy, proxy);
-	return g_steal_pointer (&self);
 }
 
 /* private */

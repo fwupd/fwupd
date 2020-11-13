@@ -169,7 +169,6 @@ fwupd_get_os_release (GError **error)
 
 	/* find the correct file */
 	for (guint i = 0; paths[i] != NULL; i++) {
-		g_debug ("looking for os-release at %s", paths[i]);
 		if (g_file_test (paths[i], G_FILE_TEST_EXISTS)) {
 			filename = paths[i];
 			break;
@@ -939,6 +938,96 @@ fwupd_variant_to_hash_kv (GVariant *dict)
 	while (g_variant_iter_loop (&iter, "{ss}", &key, &value))
 		g_hash_table_insert (hash, g_strdup (key), g_strdup (value));
 	return hash;
+}
+
+static void
+fwupd_input_stream_read_bytes_cb (GObject *source,
+				  GAsyncResult *res,
+				  gpointer user_data)
+{
+	GByteArray *bufarr;
+	GInputStream *stream = G_INPUT_STREAM (source);
+	g_autoptr(GBytes) bytes = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GTask) task = G_TASK (user_data);
+#if GLIB_CHECK_VERSION(2, 64, 0)
+	guint8 *buf;
+	gsize bufsz = 0;
+#endif
+
+	/* read buf */
+	bytes = g_input_stream_read_bytes_finish (stream, res, &error);
+	if (bytes == NULL) {
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* add bytes to buffer */
+	bufarr = g_task_get_task_data (task);
+	if (g_bytes_get_size (bytes) > 0) {
+		GCancellable *cancellable = g_task_get_cancellable (task);
+		g_debug ("add %u", (guint) g_bytes_get_size (bytes));
+		g_byte_array_append (bufarr,
+				     g_bytes_get_data (bytes, NULL),
+				     g_bytes_get_size (bytes));
+		g_input_stream_read_bytes_async (g_steal_pointer (&stream),
+						 256 * 1024, /* bigger chunk */
+						 G_PRIORITY_DEFAULT,
+						 cancellable,
+						 fwupd_input_stream_read_bytes_cb,
+						 g_steal_pointer (&task));
+		return;
+	}
+
+	/* success */
+#if GLIB_CHECK_VERSION(2, 64, 0)
+	buf = g_byte_array_steal (bufarr, &bufsz);
+	g_task_return_pointer (task,
+			       g_bytes_new_take (buf, bufsz),
+			       (GDestroyNotify) g_bytes_unref);
+#else
+	g_task_return_pointer (task,
+			       g_bytes_new (bufarr->data, bufarr->len),
+			       (GDestroyNotify) g_bytes_unref);
+#endif
+}
+
+/**
+ * fwupd_input_stream_read_bytes_async: (skip):
+ **/
+void
+fwupd_input_stream_read_bytes_async (GInputStream *stream,
+				     GCancellable *cancellable,
+				     GAsyncReadyCallback callback,
+				     gpointer callback_data)
+{
+	g_autoptr(GTask) task = NULL;
+
+	g_return_if_fail (G_IS_INPUT_STREAM (stream));
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+
+	task = g_task_new (stream, cancellable, callback, callback_data);
+	g_task_set_task_data (task, g_byte_array_new (), (GDestroyNotify) g_byte_array_unref);
+	g_input_stream_read_bytes_async (stream,
+					 64 * 1024, /* small */
+					 G_PRIORITY_DEFAULT,
+					 cancellable,
+					 fwupd_input_stream_read_bytes_cb,
+					 g_steal_pointer (&task));
+}
+
+/**
+ * fwupd_input_stream_read_bytes_finish: (skip):
+ **/
+GBytes *
+fwupd_input_stream_read_bytes_finish (GInputStream *stream,
+				      GAsyncResult *res,
+				      GError **error)
+{
+	g_return_val_if_fail (G_IS_INPUT_STREAM (stream), NULL);
+	g_return_val_if_fail (g_task_is_valid (res, stream), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+	return g_task_propagate_pointer (G_TASK(res), error);
 }
 
 #ifdef HAVE_GIO_UNIX

@@ -22,13 +22,18 @@
 #include "fu-udev-device.h"
 #endif
 #include "fwupd-common.h"
+#include "fwupd-plugin.h"
 
 #define FU_TYPE_PLUGIN (fu_plugin_get_type ())
-G_DECLARE_DERIVABLE_TYPE (FuPlugin, fu_plugin, FU, PLUGIN, GObject)
+G_DECLARE_DERIVABLE_TYPE (FuPlugin, fu_plugin, FU, PLUGIN, FwupdPlugin)
+
+#define fu_plugin_get_flags(p)			fwupd_plugin_get_flags(FWUPD_PLUGIN(p))
+#define fu_plugin_has_flag(p,f)			fwupd_plugin_has_flag(FWUPD_PLUGIN(p),f)
+#define fu_plugin_add_flag(p,f)			fwupd_plugin_add_flag(FWUPD_PLUGIN(p),f)
 
 struct _FuPluginClass
 {
-	GObjectClass	 parent_class;
+	FwupdPluginClass parent_class;
 	/* signals */
 	void		 (* device_added)		(FuPlugin	*self,
 							 FuDevice	*device);
@@ -49,8 +54,9 @@ struct _FuPluginClass
 	gboolean	 (* add_firmware_gtype)		(FuPlugin	*self,
 							 const gchar	*id,
 							 GType		 gtype);
+	void		 (* security_changed)		(FuPlugin	*self);
 	/*< private >*/
-	gpointer	padding[21];
+	gpointer	padding[20];
 };
 
 /**
@@ -95,9 +101,11 @@ const gchar	*fu_plugin_get_name			(FuPlugin	*self);
 FuPluginData	*fu_plugin_get_data			(FuPlugin	*self);
 FuPluginData	*fu_plugin_alloc_data			(FuPlugin	*self,
 							 gsize		 data_sz);
-gboolean	 fu_plugin_get_enabled			(FuPlugin	*self);
+gboolean	 fu_plugin_get_enabled			(FuPlugin	*self)
+G_DEPRECATED_FOR(fu_plugin_has_flag);
 void		 fu_plugin_set_enabled			(FuPlugin	*self,
-							 gboolean	 enabled);
+							 gboolean	 enabled)
+G_DEPRECATED_FOR(fu_plugin_add_flag);
 void		 fu_plugin_set_build_hash		(FuPlugin	*self,
 							 const gchar	*build_hash);
 GUsbContext	*fu_plugin_get_usb_context		(FuPlugin	*self);
@@ -108,6 +116,7 @@ void		 fu_plugin_device_remove		(FuPlugin	*self,
 void		 fu_plugin_device_register		(FuPlugin	*self,
 							 FuDevice	*device);
 void		 fu_plugin_request_recoldplug		(FuPlugin	*self);
+void		 fu_plugin_security_changed		(FuPlugin	*self);
 void		 fu_plugin_set_coldplug_delay		(FuPlugin	*self,
 							 guint		 duration);
 void		 fu_plugin_set_device_gtype		(FuPlugin	*self,

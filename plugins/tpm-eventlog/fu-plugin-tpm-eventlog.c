@@ -10,11 +10,12 @@
 #include "fu-plugin-vfuncs.h"
 
 #include "fu-tpm-eventlog-device.h"
-#include "fu-efivar.h"
 
 struct FuPluginData {
 	GPtrArray		*pcr0s;
-	gboolean		 secure_boot_problem;
+	gboolean		 has_tpm_device;
+	gboolean		 has_uefi_device;
+	gboolean		 reconstructed;
 };
 
 void
@@ -22,6 +23,7 @@ fu_plugin_init (FuPlugin *plugin)
 {
 	fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_BEFORE, "uefi");
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "tpm");
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 }
 
@@ -42,16 +44,9 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	g_autofree gchar *str = NULL;
 	g_autofree guint8 *buf = NULL;
 	g_autoptr(FuTpmEventlogDevice) dev = NULL;
-	g_autoptr(GError) error_local = NULL;
 
-	if (!g_file_get_contents (fn, (gchar **) &buf, &bufsz, &error_local)) {
-		if (fu_efivar_supported (NULL) && !fu_efivar_secure_boot_enabled ()) {
-			data->secure_boot_problem = TRUE;
-			return TRUE;
-		}
-		g_propagate_error (error, g_steal_pointer (&error_local));
+	if (!g_file_get_contents (fn, (gchar **) &buf, &bufsz, error))
 		return FALSE;
-	}
 	if (bufsz == 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -76,45 +71,92 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 
 	/* add optional report metadata */
 	str = fu_tpm_eventlog_device_report_metadata (dev);
-	g_debug ("using TPM event log report data of:\n%s", str);
 	fu_plugin_add_report_metadata (plugin, "TpmEventLog", str);
 	fu_plugin_device_add (plugin, FU_DEVICE (dev));
 	return TRUE;
 }
 
-void
-fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
+static void
+fu_plugin_device_registered_tpm (FuPlugin *plugin, FuDevice *device)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	data->has_tpm_device = TRUE;
+}
+
+static void
+fu_plugin_device_registered_uefi (FuPlugin *plugin, FuDevice *device)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	GPtrArray *checksums;
-
-	/* only care about UEFI devices from ESRT */
-	if (g_strcmp0 (fu_device_get_plugin (device), "uefi") != 0)
-		return;
 
 	/* only the system-firmware device gets checksums */
 	checksums = fu_device_get_checksums (device);
 	if (checksums->len == 0)
 		return;
-
-	if (data->secure_boot_problem) {
-		g_warning ("Platform firmware measurement unavailable. Secure boot is disabled in "
-			   "BIOS setup, enabling it may fix this issue");
-		return;
-	}
+	data->has_uefi_device = TRUE;
 
 	for (guint i = 0; i < checksums->len; i++) {
 		const gchar *checksum = g_ptr_array_index (checksums, i);
+		data->reconstructed = FALSE;
 		for (guint j = 0; j < data->pcr0s->len; j++) {
 			const gchar *checksum_tmp = g_ptr_array_index (data->pcr0s, j);
+			/* skip unless same algorithm */
+			if (strlen (checksum) != strlen (checksum_tmp))
+				continue;
 			if (g_strcmp0 (checksum, checksum_tmp) == 0) {
-				g_debug ("TPM reconstructed event log matched PCR0 reading");
-				return;
+				data->reconstructed = TRUE;
+				break;
 			}
 		}
+		/* check at least one reconstruction for this algorithm */
+		if (!data->reconstructed)
+			return;
+	}
+}
+
+void
+fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
+{
+	/* only care about UEFI devices from ESRT */
+	if (g_strcmp0 (fu_device_get_plugin (device), "uefi") == 0) {
+		fu_plugin_device_registered_uefi (plugin, device);
+		return;
 	}
 
-	/* urgh, this is unexpected */
-	g_warning ("TPM PCR0 differs from reconstruction, "
-		   "please see https://github.com/fwupd/fwupd/wiki/TPM-PCR0-differs-from-reconstruction");
+	/* detect the system TPM device */
+	if (g_strcmp0 (fu_device_get_plugin (device), "tpm") == 0) {
+		fu_plugin_device_registered_tpm (plugin, device);
+		return;
+	}
+}
+
+void
+fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	/* no TPM device */
+	if (!data->has_tpm_device)
+		return;
+
+	/* create attr */
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0);
+	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
+	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT);
+	fu_security_attrs_append (attrs, attr);
+
+	/* check reconstructed to PCR0 */
+	if (fu_plugin_has_flag (plugin, FWUPD_PLUGIN_FLAG_DISABLED) || !data->has_uefi_device) {
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
+		return;
+	}
+	if (!data->reconstructed) {
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		return;
+	}
+
+	/* success */
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
 }

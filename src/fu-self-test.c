@@ -25,6 +25,8 @@
 #include "fu-plugin-list.h"
 #include "fu-progressbar.h"
 #include "fu-hash.h"
+#include "fu-security-attr.h"
+#include "fu-security-attrs.h"
 #include "fu-smbios-private.h"
 
 typedef struct {
@@ -1074,15 +1076,18 @@ fu_engine_device_parent_func (gconstpointer user_data)
 	/* add two together */
 	fu_engine_add_device (engine, device2);
 
+	/* this is normally done by fu_plugin_device_add() */
+	fu_engine_add_device (engine, device3);
+
 	/* verify both children were adopted */
 	g_assert (fu_device_get_parent (device3) == device2);
 	g_assert (fu_device_get_parent (device1) == device2);
 	g_assert_cmpstr (fu_device_get_vendor (device3), ==, "oem");
 
 	/* verify order */
-	g_assert_cmpint (fu_device_get_order (device1), ==, 0);
-	g_assert_cmpint (fu_device_get_order (device2), ==, 1);
-	g_assert_cmpint (fu_device_get_order (device3), ==, 0);
+	g_assert_cmpint (fu_device_get_order (device1), ==, -1);
+	g_assert_cmpint (fu_device_get_order (device2), ==, 0);
+	g_assert_cmpint (fu_device_get_order (device3), ==, -1);
 }
 
 static void
@@ -1380,12 +1385,17 @@ fu_engine_downgrade_func (gconstpointer user_data)
 	fu_device_set_name (device, "Test Device");
 	fu_device_add_guid (device, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+#ifndef HAVE_POLKIT
+	g_test_expect_message ("FuEngine", G_LOG_LEVEL_WARNING, "*archive signature missing or not trusted");
+#endif
 	fu_engine_add_device (engine, device);
 	devices = fu_engine_get_devices (engine, &error);
 	g_assert_no_error (error);
 	g_assert (devices != NULL);
 	g_assert_cmpint (devices->len, ==, 1);
+#ifdef HAVE_POLKIT
 	g_assert (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_SUPPORTED));
+#endif
 	g_assert (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REGISTERED));
 
 	/* get the releases for one device */
@@ -1490,13 +1500,17 @@ fu_engine_install_duration_func (gconstpointer user_data)
 	fu_device_add_guid (device, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
 	fu_device_set_install_duration (device, 999);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+#ifndef HAVE_POLKIT
+	g_test_expect_message ("FuEngine", G_LOG_LEVEL_WARNING, "*archive signature missing or not trusted");
+#endif
 	fu_engine_add_device (engine, device);
 	devices = fu_engine_get_devices (engine, &error);
 	g_assert_no_error (error);
 	g_assert (devices != NULL);
 	g_assert_cmpint (devices->len, ==, 1);
+#ifdef HAVE_POLKIT
 	g_assert (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_SUPPORTED));
-
+#endif
 	/* check the release install duration */
 	releases = fu_engine_get_releases (engine,
 					   request,
@@ -1970,14 +1984,15 @@ fu_device_list_delay_func (gconstpointer user_data)
 	fu_device_list_add (device_list, device1);
 	g_assert_cmpint (added_cnt, ==, 1);
 	g_assert_cmpint (removed_cnt, ==, 0);
-	g_assert_cmpint (changed_cnt, ==, 0);
+	g_assert_cmpint (changed_cnt, ==, 1);
 
 	/* add a device with the same ID */
 	fu_device_set_id (device2, "device1");
 	fu_device_list_add (device_list, device2);
+	fu_device_set_remove_delay (device2, 100);
 	g_assert_cmpint (added_cnt, ==, 1);
 	g_assert_cmpint (removed_cnt, ==, 0);
-	g_assert_cmpint (changed_cnt, ==, 0);
+	g_assert_cmpint (changed_cnt, ==, 2);
 
 	/* spin a bit */
 	fu_test_loop_run_with_timeout (10);
@@ -2390,7 +2405,7 @@ fu_plugin_list_depsolve_func (gconstpointer user_data)
 	plugin = g_ptr_array_index (plugins, 0);
 	g_assert_cmpstr (fu_plugin_get_name (plugin), ==, "plugin2");
 	g_assert_cmpint (fu_plugin_get_order (plugin), ==, 0);
-	g_assert (fu_plugin_get_enabled (plugin));
+	g_assert_false (fu_plugin_has_flag (plugin, FWUPD_PLUGIN_FLAG_DISABLED));
 
 	/* add another rule, then re-depsolve */
 	fu_plugin_add_rule (plugin1, FU_PLUGIN_RULE_CONFLICTS, "plugin2");
@@ -2400,11 +2415,11 @@ fu_plugin_list_depsolve_func (gconstpointer user_data)
 	plugin = fu_plugin_list_find_by_name (plugin_list, "plugin1", &error);
 	g_assert_no_error (error);
 	g_assert (plugin != NULL);
-	g_assert (fu_plugin_get_enabled (plugin));
+	g_assert_false (fu_plugin_has_flag (plugin, FWUPD_PLUGIN_FLAG_DISABLED));
 	plugin = fu_plugin_list_find_by_name (plugin_list, "plugin2", &error);
 	g_assert_no_error (error);
 	g_assert (plugin != NULL);
-	g_assert (!fu_plugin_get_enabled (plugin));
+	g_assert_true (fu_plugin_has_flag (plugin, FWUPD_PLUGIN_FLAG_DISABLED));
 }
 
 static void
@@ -2946,6 +2961,15 @@ fu_plugin_composite_func (gconstpointer user_data)
 	}
 }
 
+static void
+fu_security_attr_func (gconstpointer user_data)
+{
+	g_autoptr(FwupdSecurityAttr) attr = fwupd_security_attr_new (NULL);
+	for (guint i = 0; i < FWUPD_SECURITY_ATTR_RESULT_LAST; i++) {
+		fwupd_security_attr_set_result (attr, i);
+		g_assert_cmpstr (fu_security_attr_get_result (attr), !=, NULL);
+	}
+}
 
 static void
 fu_memcpy_func (gconstpointer user_data)
@@ -3127,6 +3151,8 @@ main (int argc, char **argv)
 			      fu_plugin_module_func);
 	g_test_add_data_func ("/fwupd/memcpy", self,
 			      fu_memcpy_func);
+	g_test_add_data_func ("/fwupd/security-attr", self,
+			      fu_security_attr_func);
 	g_test_add_data_func ("/fwupd/device-list", self,
 			      fu_device_list_func);
 	g_test_add_data_func ("/fwupd/device-list{delay}", self,

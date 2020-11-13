@@ -149,8 +149,7 @@ fu_vli_usbhub_msp430_device_detach (FuDevice *device, GError **error)
 
 	/* avoid power instability by waiting T1 */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	fu_device_set_progress (device, 0);
-	g_usleep (G_USEC_PER_SEC);
+	fu_device_sleep_with_progress (device, 1); /* seconds */
 
 	/* check the device came back */
 	if (!fu_vli_usbhub_device_i2c_read_status (parent, &status, error)) {
@@ -167,7 +166,6 @@ fu_vli_usbhub_msp430_device_prepare_firmware (FuDevice *device,
 					      GError **error)
 {
 	g_autoptr(FuFirmware) firmware = fu_ihex_firmware_new ();
-	fu_device_set_status (device, FWUPD_STATUS_DECOMPRESSING);
 	if (!fu_firmware_tokenize (firmware, fw, flags, error))
 		return NULL;
 	return g_steal_pointer (&firmware);
@@ -246,28 +244,8 @@ fu_vli_usbhub_msp430_device_write_firmware (FuDevice *device,
 		FuVliUsbhubDeviceRequest req = { 0x0 };
 		const gchar *line = rcd->buf->str;
 
-		/* check there's enough data for the smallest possible record */
-		if (rcd->buf->len < 11) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "line %u is incomplete, length %u",
-				     rcd->ln, (guint) rcd->buf->len);
-			return FALSE;
-		}
-
-		/* check starting token */
-		if (line[0] != ':') {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "invalid starting token on line %u: %s",
-				     rcd->ln, line);
-			return FALSE;
-		}
-
 		/* length, 16-bit address, type */
-		req.len = fu_firmware_strparse_uint8 (line + 1);
+		req.len = rcd->byte_cnt;
 		if (req.len >= sizeof(req.buf) - 7) {
 			g_set_error (error,
 				     FWUPD_ERROR,

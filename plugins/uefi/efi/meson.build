@@ -1,5 +1,6 @@
 efi_cc = get_option('efi-cc')
 efi_ld = get_option('efi-ld')
+efi_objcopy = get_option('efi-objcopy')
 efi_ldsdir = get_option('efi-ldsdir')
 efi_incdir = get_option('efi-includedir')
 
@@ -90,13 +91,13 @@ compile_args = ['-Og',
 if get_option('werror')
     compile_args += '-Werror'
 endif
-if efi_arch == 'x86_64'
+if host_cpu == 'x86_64'
   compile_args += ['-mno-red-zone',
                    '-mno-sse',
                    '-mno-mmx',
                    '-DEFI_FUNCTION_WRAPPER',
                    '-DGNU_EFI_USE_MS_ABI']
-elif efi_arch == 'ia32'
+elif host_cpu == 'x86'
   compile_args += ['-mno-sse',
                    '-mno-mmx',
                    '-mno-red-zone',
@@ -113,7 +114,7 @@ efi_ldflags = ['-T',
                '-L', efi_ldsdir,
                '-L', efi_libdir,
                join_paths(efi_ldsdir, arch_crt)]
-if efi_arch == 'aarch64' or efi_arch == 'arm'
+if host_cpu == 'aarch64' or host_cpu == 'arm'
   # Aarch64 and ARM32 don't have an EFI capable objcopy. Use 'binary'
   # instead, and add required symbols manually.
   efi_ldflags += ['--defsym=EFI_SUBSYSTEM=0xa']
@@ -153,7 +154,13 @@ so = custom_target('fwup.so',
                              efi_ldflags + ['@INPUT@'] +
                              ['-lefi', '-lgnuefi', libgcc_file_name])
 
-build_tool = join_paths(meson.source_root(), 'plugins', 'uefi', 'efi', 'generate_binary.sh')
+configure_file(
+  input : 'generate_binary.sh.in',
+  output : 'generate_binary.sh',
+  configuration : conf
+)
+
+build_tool = join_paths(meson.current_build_dir(), 'generate_binary.sh')
 app = custom_target(efi_name,
                     input : so,
                     output : efi_name,
@@ -164,7 +171,7 @@ app = custom_target(efi_name,
 dbg = custom_target('efi_debug',
                     input : so,
                     output : efi_name + '.debug',
-                    command : [objcopy,
+                    command : [efi_objcopy,
                                '-j', '.text',
                                '-j', '.sdata',
                                '-j', '.data',

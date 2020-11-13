@@ -7,6 +7,8 @@
 
 #include "config.h"
 
+#include "fu-common.h"
+
 #include "fu-vli-pd-common.h"
 #include "fu-vli-pd-firmware.h"
 
@@ -45,6 +47,8 @@ fu_vli_pd_firmware_validate_header (FuVliPdFirmware *self)
 	if (GUINT16_FROM_LE (self->hdr.vid) == 0x2109)
 		return TRUE;
 	if (GUINT16_FROM_LE (self->hdr.vid) == 0x17EF)
+		return TRUE;
+	if (GUINT16_FROM_LE (self->hdr.vid) == 0x2D01)
 		return TRUE;
 	return FALSE;
 }
@@ -128,7 +132,7 @@ fu_vli_pd_firmware_parse (FuFirmware *firmware,
 	}
 
 	/* check CRC */
-	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint16 crc_actual;
 		guint16 crc_file = 0x0;
 		if (!fu_common_read_uint16_safe	(buf, bufsz, bufsz - 2, &crc_file,
@@ -136,7 +140,7 @@ fu_vli_pd_firmware_parse (FuFirmware *firmware,
 			g_prefix_error (error, "failed to read file CRC: ");
 			return FALSE;
 		}
-		crc_actual = fu_vli_common_crc16 (buf, bufsz - 2);
+		crc_actual = fu_common_crc16 (buf, bufsz - 2);
 		if (crc_actual != crc_file) {
 			g_set_error (error,
 				     FWUPD_ERROR,

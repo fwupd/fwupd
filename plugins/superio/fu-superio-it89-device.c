@@ -417,18 +417,35 @@ fu_plugin_superio_fix_signature (FuSuperioDevice *self, GBytes *fw, GError **err
 	return g_bytes_new_take (g_steal_pointer (&buf2), sz);
 }
 
+static GBytes *
+fu_superio_it89_device_dump_firmware (FuDevice *device, GError **error)
+{
+	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
+	guint64 fwsize = fu_device_get_firmware_size_min (device);
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	/* require detach -> attach */
+	locker = fu_device_locker_new_full (device,
+					    (FuDeviceLockerFunc) fu_device_detach,
+					    (FuDeviceLockerFunc) fu_device_attach,
+					    error);
+	if (locker == NULL)
+		return NULL;
+
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_READ);
+	return fu_superio_it89_device_read_addr (self, 0x0, fwsize,
+						 fu_superio_it89_device_progress_cb,
+						 error);
+}
+
 static FuFirmware *
 fu_superio_it89_device_read_firmware (FuDevice *device, GError **error)
 {
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
-	guint64 fwsize = fu_device_get_firmware_size_min (device);
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
-	fu_device_set_status (device, FWUPD_STATUS_DEVICE_READ);
-	blob = fu_superio_it89_device_read_addr (self, 0x0, fwsize,
-						 fu_superio_it89_device_progress_cb,
-						 error);
+	blob = fu_superio_it89_device_dump_firmware (device, error);
 	fw = fu_plugin_superio_fix_signature (self, blob, error);
 	return fu_firmware_new_from_bytes (fw);
 }
@@ -681,6 +698,7 @@ fu_superio_it89_device_class_init (FuSuperioIt89DeviceClass *klass)
 	klass_device->attach = fu_superio_it89_device_attach;
 	klass_device->detach = fu_superio_it89_device_detach;
 	klass_device->read_firmware = fu_superio_it89_device_read_firmware;
+	klass_device->dump_firmware = fu_superio_it89_device_dump_firmware;
 	klass_device->write_firmware = fu_superio_it89_device_write_firmware;
 	klass_superio_device->setup = fu_superio_it89_device_setup;
 }

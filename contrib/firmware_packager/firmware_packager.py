@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 #
-# Copyright (C) 2017 Max Ehrlich max.ehr@gmail.com
+# Copyright (C) 2017 Max Ehrlich maxehr@gmail.com
 #
 # SPDX-License-Identifier: LGPL-2.1+
 #
@@ -107,7 +107,7 @@ def main(args):
         print('Creating metainfo')
         make_firmware_metainfo(args, dir)
 
-        print('Cabbing firmware files')
+        print('Creating cabinet file')
         create_firmware_cab(args, dir)
 
         print('Done')

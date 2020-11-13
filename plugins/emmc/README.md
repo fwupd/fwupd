@@ -24,3 +24,7 @@ Vendor ID Security
 ------------------
 
 The vendor ID is set from the EMMC vendor, for example set to `EMMC:{$manfid}`
+
+External interface access
+-------------------------
+This plugin requires ioctl `MMC_IOC_CMD` and `MMC_IOC_MULTI_CMD` access.

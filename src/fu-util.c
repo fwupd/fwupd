@@ -25,7 +25,9 @@
 
 #include "fu-history.h"
 #include "fu-plugin-private.h"
+#include "fu-polkit-agent.h"
 #include "fu-progressbar.h"
+#include "fu-security-attrs.h"
 #include "fu-util-common.h"
 #include "fwupd-common-private.h"
 
@@ -65,7 +67,7 @@ struct FuUtilPrivate {
 	gboolean		 no_safety_check;
 	gboolean		 assume_yes;
 	gboolean		 sign;
-	gboolean		 show_all_devices;
+	gboolean		 show_all;
 	gboolean		 disable_ssl_strict;
 	/* only valid in update and downgrade */
 	FuUtilOperation		 current_operation;
@@ -505,7 +507,7 @@ fu_util_build_device_tree (FuUtilPrivate *priv, GNode *root, GPtrArray *devs, Fw
 		FwupdDevice *dev_tmp = g_ptr_array_index (devs, i);
 		if (!fu_util_filter_device (priv, dev_tmp))
 			continue;
-		if (!priv->show_all_devices &&
+		if (!priv->show_all &&
 		    !fu_util_is_interesting_device (dev_tmp))
 			continue;
 		if (fwupd_device_get_parent (dev_tmp) == dev) {
@@ -549,6 +551,31 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_util_perhaps_show_unreported (priv, error))
 		return FALSE;
 
+	return TRUE;
+}
+
+static gboolean
+fu_util_get_plugins (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(GPtrArray) plugins = NULL;
+
+	/* get results from daemon */
+	plugins = fwupd_client_get_plugins (priv->client, NULL, error);
+	if (plugins == NULL)
+		return FALSE;
+
+	/* print */
+	for (guint i = 0; i < plugins->len; i++) {
+		FuPlugin *plugin = g_ptr_array_index (plugins, i);
+		g_autofree gchar *str = fu_util_plugin_to_string (FWUPD_PLUGIN (plugin), 0);
+		g_print ("%s\n", str);
+	}
+	if (plugins->len == 0) {
+		/* TRANSLATORS: nothing found */
+		g_print ("%s\n", _("No plugins found"));
+	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -655,7 +682,7 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* implied, important for get-details on a device not in your system */
-	priv->show_all_devices = TRUE;
+	priv->show_all = TRUE;
 
 	array = fwupd_client_get_details (priv->client, values[0], NULL, error);
 	if (array == NULL)
@@ -1368,15 +1395,32 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 	gboolean supported = FALSE;
 	g_autoptr(GNode) root = g_node_new (NULL);
 	g_autofree gchar *title = fu_util_get_tree_title (priv);
+	gboolean no_updates_header = FALSE;
+	gboolean latest_header = FALSE;
 
 	/* are the remotes very old */
 	if (!fu_util_perhaps_refresh_remotes (priv, error))
 		return FALSE;
 
-	/* get devices from daemon */
-	devices = fwupd_client_get_devices (priv->client, NULL, error);
-	if (devices == NULL)
+	/* handle both forms */
+	if (g_strv_length (values) == 0) {
+		devices = fwupd_client_get_devices (priv->client, NULL, error);
+		if (devices == NULL)
+			return FALSE;
+	} else if (g_strv_length (values) == 1) {
+		FwupdDevice *device = fu_util_get_device_by_id (priv, values[0], error);
+		if (device == NULL)
+			return FALSE;
+		devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+		g_ptr_array_add (devices, device);
+	} else {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments");
 		return FALSE;
+	}
+	g_ptr_array_sort (devices, fu_util_sort_devices_by_flags_cb);
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
 		g_autoptr(GPtrArray) rels = NULL;
@@ -1387,11 +1431,12 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE))
 			continue;
 		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED)) {
-			/* TRANSLATORS: message letting the user know no device upgrade available due to missing on LVFS
-			* %1 is the device name */
-			g_autofree gchar *tmp = g_strdup_printf (_("• %s has no available firmware updates"),
-								 fwupd_device_get_name (dev));
-			g_printerr ("%s\n", tmp);
+			if (!no_updates_header) {
+				/* TRANSLATORS: message letting the user know no device upgrade available due to missing on LVFS */
+				g_printerr ("%s\n", _("Devices with no available firmware updates: "));
+				no_updates_header = TRUE;
+			}
+			g_printerr (" • %s\n", fwupd_device_get_name (dev));
 			continue;
 		}
 		if (!fu_util_filter_device (priv, dev))
@@ -1403,11 +1448,12 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 						  fwupd_device_get_id (dev),
 						  NULL, &error_local);
 		if (rels == NULL) {
-			/* TRANSLATORS: message letting the user know no device upgrade available
-			* %1 is the device name */
-			g_autofree gchar *tmp = g_strdup_printf (_("• %s has the latest available firmware version"),
-								 fwupd_device_get_name (dev));
-			g_printerr ("%s\n", tmp);
+			if (!latest_header) {
+				/* TRANSLATORS: message letting the user know no device upgrade available */
+				g_printerr ("%s\n", _("Devices with the latest available firmware version:"));
+				latest_header = TRUE;
+			}
+			g_printerr (" • %s\n", fwupd_device_get_name (dev));
 			/* discard the actual reason from user, but leave for debugging */
 			g_debug ("%s", error_local->message);
 			continue;
@@ -1421,9 +1467,6 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		}
 	}
 
-	if (g_node_n_nodes (root, G_TRAVERSE_ALL) > 1)
-		fu_util_print_tree (root, title);
-
 	/* nag? */
 	if (!fu_util_perhaps_show_unreported (priv, error))
 		return FALSE;
@@ -1431,11 +1474,21 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 	/* no devices supported by LVFS or all are filtered */
 	if (!supported) {
 		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOTHING_TO_DO,
-				     "No updatable devices");
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOTHING_TO_DO,
+			     "No updatable devices");
 		return FALSE;
 	}
+	/* no updates available */
+	if (g_node_n_nodes (root, G_TRAVERSE_ALL) <= 1) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOTHING_TO_DO,
+				     "No updates available for remaining devices");
+		return FALSE;
+	}
+
+	fu_util_print_tree (root, title);
 
 	/* success */
 	return TRUE;
@@ -1515,6 +1568,8 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
 	gboolean supported = FALSE;
+	gboolean no_updates_header = FALSE;
+	gboolean latest_header = FALSE;
 
 	/* get devices from daemon */
 	devices = fwupd_client_get_devices (priv->client, NULL, error);
@@ -1523,6 +1578,7 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 	priv->current_operation = FU_UTIL_OPERATION_UPDATE;
 	g_signal_connect (priv->client, "device-changed",
 			  G_CALLBACK (fu_util_update_device_changed_cb), priv);
+	g_ptr_array_sort (devices, fu_util_sort_devices_by_flags_cb);
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
 		FwupdRelease *rel;
@@ -1535,11 +1591,12 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE))
 			continue;
 		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED)) {
-			/* TRANSLATORS: message letting the user know no device upgrade available due to missing on LVFS
-			* %1 is the device name */
-			g_autofree gchar *tmp = g_strdup_printf (_("• %s has no available firmware updates"),
-								 fwupd_device_get_name (dev));
-			g_printerr ("%s\n", tmp);
+			if (!no_updates_header) {
+				/* TRANSLATORS: message letting the user know no device upgrade available due to missing on LVFS */
+				g_printerr ("%s\n", _("Devices with no available firmware updates: "));
+				no_updates_header = TRUE;
+			}
+			g_printerr (" • %s\n", fwupd_device_get_name (dev));
 			continue;
 		}
 		if (!fu_util_filter_device (priv, dev))
@@ -1551,11 +1608,12 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 						  fwupd_device_get_id (dev),
 						  NULL, &error_local);
 		if (rels == NULL) {
-			/* TRANSLATORS: message letting the user know no device upgrade available
-			* %1 is the device name */
-			g_autofree gchar *tmp = g_strdup_printf (_("• %s has the latest available firmware version"),
-								 fwupd_device_get_name (dev));
-			g_printerr ("%s\n", tmp);
+			if (!latest_header) {
+				/* TRANSLATORS: message letting the user know no device upgrade available */
+				g_printerr ("%s\n", _("Devices with the latest available firmware version:"));
+				latest_header = TRUE;
+			}
+			g_printerr (" • %s\n", fwupd_device_get_name (dev));
 			/* discard the actual reason from user, but leave for debugging */
 			g_debug ("%s", error_local->message);
 			continue;
@@ -1843,6 +1901,122 @@ fu_util_reinstall (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_switch_branch (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	const gchar *remote_id;
+	const gchar *branch;
+	g_autoptr(FwupdRelease) rel = NULL;
+	g_autoptr(GPtrArray) rels = NULL;
+	g_autoptr(GPtrArray) branches = g_ptr_array_new_with_free_func (g_free);
+	g_autoptr(FwupdDevice) dev = NULL;
+
+	/* find the device and check it has multiple branches */
+	priv->filter_include |= FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES;
+	dev = fu_util_get_device_or_prompt (priv, values, error);
+	if (dev == NULL)
+		return FALSE;
+
+	/* get all releases, including the alternate branch versions */
+	rels = fwupd_client_get_releases (priv->client, fwupd_device_get_id (dev),
+					  NULL, error);
+	if (rels == NULL)
+		return FALSE;
+
+	/* get all the unique branches */
+	for (guint i = 0; i < rels->len; i++) {
+		FwupdRelease *rel_tmp = g_ptr_array_index (rels, i);
+		const gchar *branch_tmp = fu_util_release_get_branch (rel_tmp);
+		if (g_ptr_array_find_with_equal_func (branches, branch_tmp,
+						      g_str_equal, NULL))
+			continue;
+		g_ptr_array_add (branches, g_strdup (branch_tmp));
+	}
+
+	/* branch name is optional */
+	if (g_strv_length (values) > 1) {
+		branch = values[1];
+	} else if (branches->len == 1) {
+		branch = g_ptr_array_index (branches, 0);
+	} else {
+		guint idx;
+
+		/* TRANSLATORS: get interactive prompt, where branch is the
+		 * supplier of the firmware, e.g. "non-free" or "free" */
+		g_print ("%s\n", _("Choose a branch:"));
+		/* TRANSLATORS: this is to abort the interactive prompt */
+		g_print ("0.\t%s\n", _("Cancel"));
+		for (guint i = 0; i < branches->len; i++) {
+			const gchar *branch_tmp = g_ptr_array_index (branches, i);
+			g_print ("%u.\t%s\n", i + 1, branch_tmp);
+		}
+		idx = fu_util_prompt_for_number (branches->len);
+		if (idx == 0) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOTHING_TO_DO,
+					     "Request canceled");
+			return FALSE;
+		}
+		branch = g_ptr_array_index (branches, idx - 1);
+	}
+
+	/* sanity check */
+	if (g_strcmp0 (branch, fu_device_get_branch (dev)) == 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "Device %s is already on branch %s",
+			     fu_device_get_name (dev),
+			     branch);
+		return FALSE;
+	}
+
+	/* the releases are ordered by version */
+	for (guint j = 0; j < rels->len; j++) {
+		FwupdRelease *rel_tmp = g_ptr_array_index (rels, j);
+		if (g_strcmp0 (fwupd_release_get_branch (rel_tmp), branch) == 0) {
+			rel = g_object_ref (rel_tmp);
+			break;
+		}
+	}
+	if (rel == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "No releases for branch %s",
+			     branch);
+		return FALSE;
+	}
+
+	/* we're switching branch */
+	if (!fu_util_switch_branch_warning (dev, rel, priv->assume_yes, error))
+		return FALSE;
+
+	/* update the console if composite devices are also updated */
+	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
+	g_signal_connect (priv->client, "device-changed",
+			  G_CALLBACK (fu_util_update_device_changed_cb), priv);
+	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
+	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH;
+	if (!fu_util_update_device_with_release (priv, dev, rel, error))
+		return FALSE;
+	fu_util_display_current_message (priv);
+
+	/* send report if we're supposed to */
+	remote_id = fwupd_release_get_remote_id (rel);
+	if (!fu_util_maybe_send_reports (priv, remote_id, error))
+		return FALSE;
+
+	/* we don't want to ask anything */
+	if (priv->no_reboot_check) {
+		g_debug ("skipping reboot check");
+		return TRUE;
+	}
+
+	return fu_util_prompt_complete (priv->completion_flags, TRUE, error);
+}
+
+static gboolean
 fu_util_activate (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
@@ -1862,10 +2036,7 @@ fu_util_activate (FuUtilPrivate *priv, gchar **values, GError **error)
 			}
 		}
 	} else if (g_strv_length (values) == 1) {
-		FwupdDevice *device = fwupd_client_get_device_by_id (priv->client,
-								     values[0],
-								     NULL,
-								     error);
+		FwupdDevice *device = fu_util_get_device_by_id (priv, values[0], error);
 		if (device == NULL)
 			return FALSE;
 		devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
@@ -1890,6 +2061,8 @@ fu_util_activate (FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* activate anything with _NEEDS_ACTIVATION */
+	/* order by device priority */
+	g_ptr_array_sort (devices, fu_util_device_order_sort_cb);
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *device = g_ptr_array_index (devices, i);
 		if (!fu_util_filter_device (priv, device))
@@ -2000,6 +2173,231 @@ fu_util_modify_config (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+static FwupdRemote *
+fu_util_get_remote_with_security_report_uri (FuUtilPrivate *priv, GError **error)
+{
+	g_autoptr(GPtrArray) remotes = NULL;
+
+	/* get all remotes */
+	remotes = fwupd_client_get_remotes (priv->client, NULL, error);
+	if (remotes == NULL)
+		return NULL;
+
+	for (guint i = 0; i < remotes->len; i++) {
+		FwupdRemote *remote = g_ptr_array_index (remotes, i);
+		if (!fwupd_remote_get_enabled (remote))
+			continue;
+		if (fwupd_remote_get_security_report_uri (remote) != NULL)
+			return g_object_ref (remote);
+	}
+
+	/* failed */
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "No remotes specified SecurityReportURI");
+	return NULL;
+}
+
+static gboolean
+fu_util_upload_security (FuUtilPrivate *priv, GPtrArray *attrs, GError **error)
+{
+	GHashTableIter iter;
+	const gchar *key;
+	const gchar *value;
+	g_autofree gchar *data = NULL;
+	g_autofree gchar *sig = NULL;
+	g_autoptr(FwupdRemote) remote = NULL;
+	g_autoptr(GBytes) upload_response = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GHashTable) metadata = NULL;
+	g_autoptr(JsonBuilder) builder = NULL;
+	g_autoptr(JsonGenerator) json_generator = NULL;
+	g_autoptr(JsonNode) json_root = NULL;
+
+	/* can we find a remote with a security attr */
+	remote = fu_util_get_remote_with_security_report_uri (priv, &error_local);
+	if (remote == NULL) {
+		g_debug ("failed to find suitable remote: %s", error_local->message);
+		return TRUE;
+	}
+	if (!priv->assume_yes &&
+	    !fwupd_remote_get_automatic_security_reports (remote)) {
+		g_autofree gchar *tmp = NULL;
+		/* TRANSLATORS: ask the user to share, %s is something like:
+		 * "Linux Vendor Firmware Service" */
+		tmp = g_strdup_printf ("Upload these anonymous results to the %s to help other users?",
+				       fwupd_remote_get_title (remote));
+
+		g_print ("\n%s [y|N]: ", tmp);
+		if (!fu_util_prompt_for_boolean (FALSE)) {
+			g_print ("%s [Y|n]: ",
+				 /* TRANSLATORS: stop nagging the user */
+				 _("Ask again next time?"));
+			if (!fu_util_prompt_for_boolean (TRUE)) {
+				if (!fwupd_client_modify_remote (priv->client,
+								 fwupd_remote_get_id (remote),
+								 "SecurityReportURI", "",
+								 NULL, error))
+					return FALSE;
+			}
+			return TRUE;
+		}
+	}
+
+	/* get metadata */
+	metadata = fwupd_client_get_report_metadata (priv->client,
+						     priv->cancellable,
+						     error);
+	if (metadata == NULL)
+		return FALSE;
+
+	/* create header */
+	builder = json_builder_new ();
+	json_builder_begin_object (builder);
+	json_builder_set_member_name (builder, "ReportVersion");
+	json_builder_add_int_value (builder, 2);
+	json_builder_set_member_name (builder, "MachineId");
+	json_builder_add_string_value (builder, fwupd_client_get_host_machine_id (priv->client));
+
+	/* this is system metadata not stored in the database */
+	json_builder_set_member_name (builder, "Metadata");
+	json_builder_begin_object (builder);
+
+	g_hash_table_iter_init (&iter, metadata);
+	while (g_hash_table_iter_next (&iter, (gpointer *) &key, (gpointer *) &value)) {
+		json_builder_set_member_name (builder, key);
+		json_builder_add_string_value (builder, value);
+	}
+	json_builder_set_member_name (builder, "HostSecurityId");
+	json_builder_add_string_value (builder, fwupd_client_get_host_security_id (priv->client));
+	json_builder_end_object (builder);
+
+	/* attrs */
+	json_builder_set_member_name (builder, "SecurityAttributes");
+	json_builder_begin_array (builder);
+	for (guint i = 0; i < attrs->len; i++) {
+		FwupdSecurityAttr *attr = g_ptr_array_index (attrs, i);
+		json_builder_begin_object (builder);
+		fwupd_security_attr_to_json (attr, builder);
+		json_builder_end_object (builder);
+	}
+	json_builder_end_array (builder);
+	json_builder_end_object (builder);
+
+	/* export as a string */
+	json_root = json_builder_get_root (builder);
+	json_generator = json_generator_new ();
+	json_generator_set_pretty (json_generator, TRUE);
+	json_generator_set_root (json_generator, json_root);
+	data = json_generator_to_data (json_generator, NULL);
+	if (data == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "Failed to convert to JSON string");
+		return FALSE;
+	}
+
+	/* self sign data */
+	if (priv->sign) {
+		sig = fwupd_client_self_sign (priv->client, data,
+					      FWUPD_SELF_SIGN_FLAG_ADD_TIMESTAMP,
+					      priv->cancellable, error);
+		if (sig == NULL)
+			return FALSE;
+	}
+
+	/* ask for permission */
+	if (!priv->assume_yes &&
+	    !fwupd_remote_get_automatic_security_reports (remote)) {
+		fu_util_print_data (_("Target"), fwupd_remote_get_security_report_uri (remote));
+		fu_util_print_data (_("Payload"), data);
+		if (sig != NULL)
+			fu_util_print_data (_("Signature"), sig);
+		g_print ("%s [Y|n]: ", _("Proceed with upload?"));
+		if (!fu_util_prompt_for_boolean (TRUE)) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_PERMISSION_DENIED,
+					     "User declined action");
+			return FALSE;
+		}
+	}
+
+	/* POST request */
+	upload_response = fwupd_client_upload_bytes (priv->client,
+						     fwupd_remote_get_security_report_uri (remote),
+						     data, sig,
+						     FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART,
+						     priv->cancellable, error);
+	if (upload_response == NULL)
+		return FALSE;
+
+	/* TRANSLATORS: success, so say thank you to the user */
+	g_print ("%s\n", "Host Security ID attributes uploaded successfully, thanks!");
+
+	/* as this worked, ask if the user want to do this every time */
+	if (!fwupd_remote_get_automatic_security_reports (remote)) {
+		g_print ("%s [y|N]: ",
+			 /* TRANSLATORS: can we JFDI? */
+			 _("Automatically upload every time?"));
+		if (fu_util_prompt_for_boolean (FALSE)) {
+			if (!fwupd_client_modify_remote (priv->client,
+							 fwupd_remote_get_id (remote),
+							 "AutomaticSecurityReports", "true",
+							 NULL, error))
+				return FALSE;
+		}
+	}
+
+	return TRUE;
+}
+
+static gboolean
+fu_util_security (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	FuSecurityAttrToStringFlags flags = FU_SECURITY_ATTR_TO_STRING_FLAG_NONE;
+	g_autoptr(GPtrArray) attrs = NULL;
+	g_autofree gchar *str = NULL;
+
+	/* not ready yet */
+	if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "The HSI specification is not yet complete. "
+				     "To ignore this warning, use --force");
+		return FALSE;
+	}
+
+	/* TRANSLATORS: this is a string like 'HSI:2-U' */
+	g_print ("%s \033[1m%s\033[0m\n", _("Host Security ID:"),
+		 fwupd_client_get_host_security_id (priv->client));
+
+	/* print the "why" */
+	attrs = fwupd_client_get_host_security_attrs (priv->client,
+						      priv->cancellable,
+						      error);
+	if (attrs == NULL)
+		return FALSE;
+
+	/* show or hide different elements */
+	if (priv->show_all) {
+		flags |= FU_SECURITY_ATTR_TO_STRING_FLAG_SHOW_OBSOLETES;
+		flags |= FU_SECURITY_ATTR_TO_STRING_FLAG_SHOW_URLS;
+	}
+	str = fu_util_security_attrs_to_string (attrs, flags);
+	g_print ("%s\n", str);
+
+	/* opted-out */
+	if (priv->no_unreported_check)
+		return TRUE;
+
+	/* upload, with confirmation */
+	return fu_util_upload_security (priv, attrs, error);
+}
+
 static void
 fu_util_ignore_cb (const gchar *log_domain, GLogLevelFlags log_level,
 		   const gchar *message, gpointer user_data)
@@ -2062,6 +2460,7 @@ fu_util_check_daemon_version (FuUtilPrivate *priv, GError **error)
 static gboolean
 fu_util_check_polkit_actions (GError **error)
 {
+#ifdef HAVE_POLKIT
 	g_autofree gchar *directory = fu_common_get_path (FU_PATH_KIND_POLKIT_ACTIONS);
 	g_autofree gchar *filename = g_build_filename (directory,
 						       "org.freedesktop.fwupd.policy",
@@ -2073,16 +2472,9 @@ fu_util_check_polkit_actions (GError **error)
 				     "PolicyKit files are missing, see https://github.com/fwupd/fwupd/wiki/PolicyKit-files-are-missing");
 		return FALSE;
 	}
+#endif
 
 	return TRUE;
-}
-
-static void
-fu_util_display_help (FuUtilPrivate *priv)
-{
-	g_autofree gchar *tmp = NULL;
-	tmp = g_option_context_get_help (priv->context, TRUE, NULL);
-	g_printerr ("%s\n", tmp);
 }
 
 #pragma clang diagnostic push
@@ -2246,12 +2638,63 @@ fu_util_get_blocked_firmware (FuUtilPrivate *priv, gchar **values, GError **erro
 	return TRUE;
 }
 
+static void
+fu_util_show_plugin_warnings (FuUtilPrivate *priv)
+{
+	FwupdPluginFlags flags = FWUPD_PLUGIN_FLAG_NONE;
+	g_autoptr(GPtrArray) plugins = NULL;
+
+	/* get plugins from daemon, ignoring if the daemon is too old */
+	plugins = fwupd_client_get_plugins (priv->client, NULL, NULL);
+	if (plugins == NULL)
+		return;
+
+	/* get a superset so we do not show the same message more than once */
+	for (guint i = 0; i < plugins->len; i++) {
+		FwupdPlugin *plugin = g_ptr_array_index (plugins, i);
+		if (!fwupd_plugin_has_flag (plugin, FWUPD_PLUGIN_FLAG_USER_WARNING))
+			continue;
+		flags |= fwupd_plugin_get_flags (plugin);
+	}
+
+	/* never show these, they're way too generic */
+	flags &= ~FWUPD_PLUGIN_FLAG_DISABLED;
+	flags &= ~FWUPD_PLUGIN_FLAG_NO_HARDWARE;
+
+	/* print */
+	for (guint i = 0; i < 64; i++) {
+		FwupdPluginFlags flag = (guint64) 1 << i;
+		const gchar *tmp;
+		g_autofree gchar *fmt = NULL;
+		g_autofree gchar *url= NULL;
+		g_autoptr(GString) str = g_string_new (NULL);
+		if ((flags & flag) == 0)
+			continue;
+		tmp = fu_util_plugin_flag_to_string (flag);
+		if (tmp == NULL)
+			continue;
+		/* TRANSLATORS: this is a prefix on the console */
+		fmt = fu_util_term_format (_("WARNING:"), FU_UTIL_TERM_COLOR_RED);
+		g_string_append_printf (str, "%s %s\n", fmt, tmp);
+
+		url = g_strdup_printf ("https://github.com/fwupd/fwupd/wiki/PluginFlag:%s",
+				       fwupd_plugin_flag_to_string (flag));
+		g_string_append (str, "  ");
+		/* TRANSLATORS: %s is a link to a website */
+		g_string_append_printf (str, _("See %s for more information."), url);
+		g_string_append (str, "\n");
+		g_printerr ("%s", str->str);
+	}
+}
+
 int
 main (int argc, char *argv[])
 {
 	gboolean force = FALSE;
+	gboolean allow_branch_switch = FALSE;
 	gboolean allow_older = FALSE;
 	gboolean allow_reinstall = FALSE;
+	gboolean ignore_power = FALSE;
 	gboolean is_interactive = TRUE;
 	gboolean no_history = FALSE;
 	gboolean offline = FALSE;
@@ -2260,6 +2703,7 @@ main (int argc, char *argv[])
 	gboolean version = FALSE;
 	g_autoptr(FuUtilPrivate) priv = g_new0 (FuUtilPrivate, 1);
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GError) error_polkit = NULL;
 	g_autoptr(GPtrArray) cmd_array = fu_util_cmd_array_new ();
 	g_autofree gchar *cmd_descriptions = NULL;
 	g_autofree gchar *filter = NULL;
@@ -2279,9 +2723,12 @@ main (int argc, char *argv[])
 		{ "allow-older", '\0', 0, G_OPTION_ARG_NONE, &allow_older,
 			/* TRANSLATORS: command line option */
 			_("Allow downgrading firmware versions"), NULL },
+		{ "allow-branch-switch", '\0', 0, G_OPTION_ARG_NONE, &allow_branch_switch,
+			/* TRANSLATORS: command line option */
+			_("Allow switching firmware branch"), NULL },
 		{ "force", '\0', 0, G_OPTION_ARG_NONE, &force,
 			/* TRANSLATORS: command line option */
-			_("Override warnings and force the action"), NULL },
+			_("Force the action by relaxing some runtime checks"), NULL },
 		{ "assume-yes", 'y', 0, G_OPTION_ARG_NONE, &priv->assume_yes,
 			/* TRANSLATORS: command line option */
 			_("Answer yes to all questions"), NULL },
@@ -2303,7 +2750,10 @@ main (int argc, char *argv[])
 		{ "no-history", '\0', 0, G_OPTION_ARG_NONE, &no_history,
 			/* TRANSLATORS: command line option */
 			_("Do not write to the history database"), NULL },
-		{ "show-all-devices", '\0', 0, G_OPTION_ARG_NONE, &priv->show_all_devices,
+		{ "show-all", '\0', 0, G_OPTION_ARG_NONE, &priv->show_all,
+			/* TRANSLATORS: command line option */
+			_("Show all results"), NULL },
+		{ "show-all-devices", '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &priv->show_all,
 			/* TRANSLATORS: command line option */
 			_("Show devices that are not updatable"), NULL },
 		{ "disable-ssl-strict", '\0', 0, G_OPTION_ARG_NONE, &priv->disable_ssl_strict,
@@ -2313,6 +2763,9 @@ main (int argc, char *argv[])
 			/* TRANSLATORS: command line option */
 			_("Filter with a set of device flags using a ~ prefix to "
 			  "exclude, e.g. 'internal,~needs-reboot'"), NULL },
+		{ "ignore-power", '\0', 0, G_OPTION_ARG_NONE, &ignore_power,
+			/* TRANSLATORS: command line option */
+			_("Ignore requirement of external power source"), NULL },
 		{ NULL}
 	};
 
@@ -2368,7 +2821,7 @@ main (int argc, char *argv[])
 		     fu_util_get_details);
 	fu_util_cmd_array_add (cmd_array,
 		     "get-updates,get-upgrades",
-		     NULL,
+		     "[DEVICE-ID|GUID]",
 		     /* TRANSLATORS: command description */
 		     _("Gets the list of updates for connected hardware"),
 		     fu_util_get_updates);
@@ -2466,44 +2919,62 @@ main (int argc, char *argv[])
 		     "get-approved-firmware",
 		     NULL,
 		     /* TRANSLATORS: firmware approved by the admin */
-		     _("Gets the list of approved firmware."),
+		     _("Gets the list of approved firmware"),
 		     fu_util_get_approved_firmware);
 	fu_util_cmd_array_add (cmd_array,
 		     "set-approved-firmware",
 		     "CHECKSUM1[,CHECKSUM2][,CHECKSUM3]",
 		     /* TRANSLATORS: firmware approved by the admin */
-		     _("Sets the list of approved firmware."),
+		     _("Sets the list of approved firmware"),
 		     fu_util_set_approved_firmware);
 	fu_util_cmd_array_add (cmd_array,
 		     "modify-config",
 		     "KEY,VALUE",
 		     /* TRANSLATORS: sets something in daemon.conf */
-		     _("Modifies a daemon configuration value."),
+		     _("Modifies a daemon configuration value"),
 		     fu_util_modify_config);
 	fu_util_cmd_array_add (cmd_array,
 		     "reinstall",
 		     "[DEVICE-ID|GUID]",
 		     /* TRANSLATORS: command description */
-		     _("Reinstall current firmware on the device."),
+		     _("Reinstall current firmware on the device"),
 		     fu_util_reinstall);
+	fu_util_cmd_array_add (cmd_array,
+		     "switch-branch",
+		     "[DEVICE-ID|GUID] [BRANCH]",
+		     /* TRANSLATORS: command description */
+		     _("Switch the firmware branch on the device"),
+		     fu_util_switch_branch);
+	fu_util_cmd_array_add (cmd_array,
+		     "security",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Gets the host security attributes"),
+		     fu_util_security);
 	fu_util_cmd_array_add (cmd_array,
 		     "block-firmware",
 		     "[CHECKSUM]",
 		     /* TRANSLATORS: command description */
-		     _("Blocks a specific firmware from being installed."),
+		     _("Blocks a specific firmware from being installed"),
 		     fu_util_block_firmware);
 	fu_util_cmd_array_add (cmd_array,
 		     "unblock-firmware",
 		     "[CHECKSUM]",
 		     /* TRANSLATORS: command description */
-		     _("Blocks a specific firmware from being installed."),
+		     _("Unblocks a specific firmware from being installed"),
 		     fu_util_unblock_firmware);
 	fu_util_cmd_array_add (cmd_array,
 		     "get-blocked-firmware",
 		     NULL,
 		     /* TRANSLATORS: command description */
-		     _("Gets the list of blocked firmware."),
+		     _("Gets the list of blocked firmware"),
 		     fu_util_get_blocked_firmware);
+	fu_util_cmd_array_add (cmd_array,
+		     "get-plugins",
+		     NULL,
+		     /* TRANSLATORS: command description */
+		     _("Get all enabled plugins registered with the system"),
+		     fu_util_get_plugins);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();
@@ -2538,10 +3009,13 @@ main (int argc, char *argv[])
 
 	/* allow disabling SSL strict mode for broken corporate proxies */
 	if (priv->disable_ssl_strict) {
+		g_autofree gchar *fmt = NULL;
+		/* TRANSLATORS: this is a prefix on the console */
+		fmt = fu_util_term_format (_("WARNING:"), FU_UTIL_TERM_COLOR_RED);
 		/* TRANSLATORS: try to help */
-		g_printerr ("%s\n", _("WARNING: Ignoring SSL strict checks, "
-				      "to do this automatically in the future "
-				      "export DISABLE_SSL_STRICT in your environment"));
+		g_printerr ("%s %s\n", fmt, _("Ignoring SSL strict checks, "
+					      "to do this automatically in the future "
+					      "export DISABLE_SSL_STRICT in your environment"));
 		g_setenv ("DISABLE_SSL_STRICT", "1", TRUE);
 	}
 
@@ -2584,10 +3058,26 @@ main (int argc, char *argv[])
 		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
 	if (allow_older)
 		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
-	if (force)
+	if (allow_branch_switch)
+		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH;
+	if (force) {
 		priv->flags |= FWUPD_INSTALL_FLAG_FORCE;
+		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_POWER;
+	}
 	if (no_history)
 		priv->flags |= FWUPD_INSTALL_FLAG_NO_HISTORY;
+	if (ignore_power)
+		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_POWER;
+
+#ifdef HAVE_POLKIT
+	/* start polkit tty agent to listen for password requests */
+	if (is_interactive) {
+		if (!fu_polkit_agent_open (&error_polkit)) {
+			g_printerr ("Failed to open polkit agent: %s\n",
+				    error_polkit->message);
+		}
+	}
+#endif
 
 	/* connect to the daemon */
 	priv->client = fwupd_client_new ();
@@ -2617,9 +3107,18 @@ main (int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 	if (fwupd_client_get_tainted (priv->client)) {
-		g_printerr ("WARNING: The daemon has loaded 3rd party code and "
-			    "is no longer supported by the upstream developers!\n");
+		g_autofree gchar *fmt = NULL;
+		/* TRANSLATORS: this is a prefix on the console */
+		fmt = fu_util_term_format (_("WARNING:"), FU_UTIL_TERM_COLOR_RED);
+		g_printerr ("%s %s\n",
+			    fmt,
+			    /* TRANSLATORS: the user is SOL for support... */
+			    _("The daemon has loaded 3rd party code and "
+			      "is no longer supported by the upstream developers!"));
 	}
+
+	/* show user-visible warnings from the plugins */
+	fu_util_show_plugin_warnings (priv);
 
 	/* we know the runtime daemon version now */
 	fwupd_client_set_user_agent_for_package (priv->client, "fwupdmgr", PACKAGE_VERSION);
@@ -2651,6 +3150,7 @@ main (int argc, char *argv[])
 	if (is_interactive) {
 		if (!fwupd_client_set_feature_flags (priv->client,
 						     FWUPD_FEATURE_FLAG_CAN_REPORT |
+						     FWUPD_FEATURE_FLAG_SWITCH_BRANCH |
 						     FWUPD_FEATURE_FLAG_UPDATE_ACTION |
 						     FWUPD_FEATURE_FLAG_DETACH_ACTION,
 						     priv->cancellable, &error)) {
@@ -2663,15 +3163,23 @@ main (int argc, char *argv[])
 	/* run the specified command */
 	ret = fu_util_cmd_array_run (cmd_array, priv, argv[1], (gchar**) &argv[2], &error);
 	if (!ret) {
-		ret = EXIT_FAILURE;
 		g_printerr ("%s\n", error->message);
-		if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_ARGS))
-			fu_util_display_help (priv);
-		else if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
-			ret = EXIT_NOTHING_TO_DO;
-	} else {
-		ret = EXIT_SUCCESS;
+		if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_ARGS)) {
+			/* TRANSLATORS: error message explaining command to run to how to get help */
+			g_printerr ("\n%s\n", _("Use fwupdmgr --help for help"));
+		} else if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
+			g_debug ("%s\n", error->message);
+			return EXIT_NOTHING_TO_DO;
+		}
+		return EXIT_FAILURE;
 	}
 
-	return ret;
+
+#ifdef HAVE_POLKIT
+	/* stop listening for polkit questions */
+	fu_polkit_agent_close ();
+#endif
+
+	/* success */
+	return EXIT_SUCCESS;
 }

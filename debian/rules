@@ -14,9 +14,6 @@ ifneq ($(CI),)
 	export CI=--werror --wrap-mode=default
 endif
 
-regenerate_control:
-	OS=debian-x86_64 ./contrib/ci/generate_debian.py
-
 SB_STYLE := debian
 deb_version := $(shell dpkg-parsechangelog --show-field Version)
 export FLASHROM=-Dplugin_flashrom=false
@@ -47,9 +44,9 @@ override_dh_auto_configure:
 		export DELL="-Dplugin_dell=false"; \
 	fi; \
 	if pkg-config --exists efivar; then \
-		export UEFI="-Dplugin_uefi=true -Dplugin_redfish=true -Dplugin_nvme=true"; \
+		export UEFI="-Dplugin_uefi=true -Dplugin_redfish=true -Dplugin_nvme=true -Dplugin_msr=true"; \
 	else \
-		export UEFI="-Dplugin_uefi=false -Dplugin_redfish=false -Dplugin_nvme=false"; \
+		export UEFI="-Dplugin_uefi=false -Dplugin_redfish=false -Dplugin_nvme=false -Dplugin_msr=false"; \
 	fi; \
 	dh_auto_configure -- $$UEFI $$DELL $$FLASHROM $$CI -Dplugin_dummy=true -Dgtkdoc=true
 
@@ -61,9 +58,7 @@ override_dh_install:
 	if [ -d debian/tmp/usr/libexec/fwupd/efi/ ]; then \
 		dh_install -pfwupd usr/libexec/fwupd/efi ;\
 	fi
-	if [ -z "$$CI" ]; then \
-		dh_missing -a --fail-missing; \
-	fi
+	dh_missing -a --fail-missing
 
 	#this is placed in fwupd-tests
 	rm -f debian/fwupd/usr/lib/*/fwupd-plugins-3/libfu_plugin_test.so

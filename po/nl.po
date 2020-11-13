@@ -93,6 +93,7 @@ msgstr "Apparaat gewijzigd:"
 msgid "Device removed:"
 msgstr "Apparaat verwijderd:"
 
+#. TRANSLATORS: success
 #. success
 msgid "Done!"
 msgstr "Afgerond!"
@@ -127,6 +128,10 @@ msgstr "Firmware Update Daemon"
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
 msgstr "Firmware-hulpmiddel"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Found"
+msgstr "Gevonden"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -179,9 +184,9 @@ msgstr "De achtergrondservice controleren op gebeurtenissen"
 msgid "No hardware detected with firmware update capability"
 msgstr "Geen hardware aangetroffen die in staat is firmware bij te werken"
 
-#. TRANSLATORS: command line option
-msgid "Override plugin warning"
-msgstr "Pluginwaarschuwing negeren"
+#. TRANSLATORS: Suffix: the HSI result
+msgid "OK"
+msgstr "Oké"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from device into a file"

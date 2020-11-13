@@ -8,6 +8,9 @@ Updating the UEFI revocation database prevents starting EFI binaries with known
 security issues, and is typically no longer done from a firmware update due to
 the risk of the machine being "bricked" if the bootloader is not updated first.
 
+This plugin also checks if the UEFI dbx contains all the most recent revoked
+checksums. The result will be stored in an security attribute for HSI.
+
 Firmware Format
 ---------------
 
@@ -36,3 +39,9 @@ Vendor ID Security
 ------------------
 
 The vendor ID is hardcoded to `UEFI:Microsoft` for all devices.
+
+
+External interface access
+-------------------------
+This plugin requires:
+* read/write access to `/sys/firmware/efi/efivars`

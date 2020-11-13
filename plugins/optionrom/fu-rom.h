@@ -34,8 +34,7 @@ gboolean	 fu_rom_load_file			(FuRom		*self,
 							 GCancellable	*cancellable,
 							 GError		**error);
 gboolean	 fu_rom_load_data			(FuRom		*self,
-							 guint8		*buffer,
-							 gsize		 buffer_sz,
+							 GBytes		*blob,
 							 FuRomLoadFlags	 flags,
 							 GCancellable	*cancellable,
 							 GError		**error);
@@ -48,3 +47,6 @@ GBytes		*fu_rom_get_data			(FuRom		*self);
 guint16		 fu_rom_get_vendor			(FuRom		*self);
 guint16		 fu_rom_get_model			(FuRom		*self);
 const gchar	*fu_rom_kind_to_string			(FuRomKind	 kind);
+GBytes		*fu_rom_dump_firmware			(GFile		*file,
+							 GCancellable	*cancellable,
+							 GError		**error);
