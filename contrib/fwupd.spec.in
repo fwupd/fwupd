@@ -391,7 +391,6 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_libdir}/fwupd-plugins-3/libfu_plugin_amt.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_ata.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_bcm57xx.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_bios.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_ccgx.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_colorhug.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_coreboot.so
@@ -451,6 +450,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %if 0%{?have_uefi}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_tpm.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_tpm_eventlog.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_bios.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_uefi.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_uefi_dbx.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_uefi_recovery.so
