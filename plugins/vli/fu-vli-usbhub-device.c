@@ -536,7 +536,7 @@ fu_vli_usbhub_device_msp430_setup (FuVliUsbhubDevice *self, GError **error)
 				     FWUPD_ERROR_NOT_FOUND)) {
 			g_debug ("%s", error_local->message);
 		} else {
-			g_warning ("cannot create I²C device: %s",
+			g_warning ("cannot create MSP430 I²C device: %s",
 				   error_local->message);
 		}
 		return TRUE;
@@ -561,7 +561,7 @@ fu_vli_usbhub_device_rtd21xx_setup (FuVliUsbhubDevice *self, GError **error)
 				     FWUPD_ERROR_NOT_FOUND)) {
 			g_debug ("%s", error_local->message);
 		} else {
-			g_warning ("cannot create I²C device: %s",
+			g_warning ("cannot create RTD21XX I²C device: %s",
 				   error_local->message);
 		}
 		return TRUE;
