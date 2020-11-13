@@ -32,7 +32,7 @@ install_headers([
 
 libfwupd_deps = [
     giounix,
-    soup,
+    libcurl,
     libjcat,
     libjsonglib,
 ]
@@ -122,19 +122,18 @@ if get_option('introspection')
     header : 'fwupd.h',
     dependencies : [
       giounix,
-      soup,
+      libcurl,
     ],
     includes : [
       'Gio-2.0',
       'GObject-2.0',
-      'Soup-2.4',
     ],
     install : true
   )
 
   gnome.generate_vapi('fwupd',
     sources : fwupd_gir[0],
-    packages : ['gio-2.0', 'libsoup-2.4'],
+    packages : ['gio-2.0'],
     install : true,
   )
 
@@ -178,7 +177,7 @@ if get_option('tests')
     ],
     dependencies : [
       gio,
-      soup,
+      libcurl,
       libjsonglib,
     ],
     link_with : fwupd,

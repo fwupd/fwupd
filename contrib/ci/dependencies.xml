@@ -817,20 +817,20 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
-  <dependency type="build" id="libsoup2.4-dev">
+  <dependency type="build" id="libcurl4-gnutls-dev">
     <distro id="arch">
-      <package>libsoup</package>
+      <package>curl</package>
     </distro>
     <distro id="centos">
-      <package>libsoup-devel</package>
+      <package>libcurl-devel</package>
     </distro>
     <distro id="fedora">
-      <package>libsoup-devel</package>
+      <package>libcurl-devel</package>
     </distro>
     <distro id="debian">
       <control />
       <package variant="x86_64" />
-      <package variant="s390x">libsoup2.4-dev:s390x</package>
+      <package variant="s390x">libcurl4-gnutls-dev:s390x</package>
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">

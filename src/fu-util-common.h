@@ -8,7 +8,6 @@
 
 #include <glib.h>
 #include <fwupd.h>
-#include <libsoup/soup.h>
 
 /* this is only valid for tools */
 #define FWUPD_ERROR_INVALID_ARGS        (FWUPD_ERROR_LAST+1)
@@ -119,3 +118,4 @@ gboolean	 fu_util_switch_branch_warning	(FwupdDevice	*dev,
 						 gboolean	 assume_yes,
 						 GError		**error);
 void		 fu_util_show_unsupported_warn	(void);
+gboolean	 fu_util_is_url			(const gchar	*perhaps_url);

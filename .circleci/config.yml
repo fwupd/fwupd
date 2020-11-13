@@ -32,14 +32,16 @@ jobs:
                                   gcc
                                   gcab
                                   mingw32-nsis
+                                  mingw64-brotli
                                   mingw64-gcc
                                   mingw64-pkg-config
                                   mingw64-glib2
+                                  mingw64-gnutls
                                   mingw64-libgusb
                                   mingw64-sqlite
                                   mingw64-libarchive
                                   mingw64-json-glib
-                                  mingw64-libsoup
+                                  mingw64-curl
                                   wine
       - checkout
       - run:

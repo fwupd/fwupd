@@ -35,6 +35,8 @@ apps:
     command: fwupdagent.wrapper
 
 parts:
+  curl:
+        source: https://curl.se/download/curl-7.73.0.tar.bz2
   tpm2-tss:
     plugin: autotools
     source: https://github.com/tpm2-software/tpm2-tss/releases/download/2.3.0/tpm2-tss-2.3.0.tar.gz
@@ -211,7 +213,6 @@ parts:
       - libpci-dev
       - libpolkit-gobject-1-dev
       - libsmbios-dev
-      - libsoup2.4-dev
       - libsqlite3-dev
       - libsystemd-dev
       - locales
@@ -232,7 +233,6 @@ parts:
       - libjson-glib-1.0-0
       - libpolkit-gobject-1-0
       - libsmbios-c2
-      - libsoup2.4-1
       - glib-networking
       - libglib2.0-bin
     prime:
@@ -272,7 +272,7 @@ parts:
       - -usr/lib/*/pkgconfig
       # we don't want system gnutls leaking in
       - -usr/lib/*/libgnutls*
-    after: [meson, build-introspection, modemmanager, libmbim, libqmi, tpm2-tss, gnutls]
+    after: [meson, build-introspection, modemmanager, libmbim, libqmi, tpm2-tss, gnutls, curl]
   fix-bash-completion:
     plugin: make
     source: contrib/snap/fix-bash-completion

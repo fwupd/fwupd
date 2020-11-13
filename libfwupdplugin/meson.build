@@ -143,7 +143,6 @@ fwupdplugin_pkgg.generate(
                'json-glib-1.0',
                'libarchive',
                'libgcab-1.0',
-               'libsoup-2.4',
                'xmlb',
                'jcat',
   ],

@@ -584,13 +584,11 @@ fu_util_download_if_required (FuUtilPrivate *priv, const gchar *perhapsfn, GErro
 {
 	g_autofree gchar *filename = NULL;
 	g_autoptr(GBytes) blob = NULL;
-	g_autoptr(SoupURI) uri = NULL;
 
 	/* a local file */
 	if (g_file_test (perhapsfn, G_FILE_TEST_EXISTS))
 		return g_strdup (perhapsfn);
-	uri = soup_uri_new (perhapsfn);
-	if (uri == NULL)
+	if (!fu_util_is_url (perhapsfn))
 		return g_strdup (perhapsfn);
 
 	/* download the firmware to a cachedir */
