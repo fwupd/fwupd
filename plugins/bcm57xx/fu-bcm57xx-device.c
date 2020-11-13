@@ -57,8 +57,8 @@ fu_bcm57xx_device_probe (FuUdevDevice *device, GError **error)
 	g_autofree gchar *fn = NULL;
 	g_autoptr(GPtrArray) ifaces = NULL;
 
-	/* only enumerate number 0 */
-	if (fu_udev_device_get_number (device) != 0) {
+	/* only enumerate first device */
+	if (fu_udev_device_get_number (device) != 1) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
