@@ -7,7 +7,7 @@ install_data([
 )
 
 install_data(['fwupd-platform-integrity.conf'],
-  install_dir: join_paths(sysconfdir, 'modules-load.d')
+  install_dir: join_paths(libdir, 'modules-load.d')
 )
 
 shared_module('fu_plugin_platform_integrity',

@@ -5,7 +5,7 @@ install_data(['msr.quirk'],
 )
 
 install_data(['fwupd-msr.conf'],
-  install_dir: join_paths(sysconfdir, 'modules-load.d')
+  install_dir: join_paths(libdir, 'modules-load.d')
 )
 
 shared_module('fu_plugin_msr',
