@@ -1,4 +1,4 @@
-fwupd (1.5.1-4) UNRELEASED; urgency=medium
+fwupd (1.5.1-4) unstable; urgency=medium
 
   * trivial: debian: disable downloading from LVFS in autopkgtest
 
