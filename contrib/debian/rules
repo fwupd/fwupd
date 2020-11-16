@@ -66,7 +66,7 @@ override_dh_auto_configure:
 
 override_dh_install:
 	find debian/tmp/usr -type f -name "*a" -print | xargs rm -f
-	sed -i 's,wheel,sudo,' ./debian/tmp/usr/share/polkit-1/rules.d/org.freedesktop.fwupd.rules
+	sed -i 's,wheel,sudo,' debian/tmp/usr/share/polkit-1/rules.d/org.freedesktop.fwupd.rules
 	dh_install
 	#install the EFI binaries if needed
 	[ ! -d debian/tmp/usr/libexec/fwupd/efi/ ] || dh_install -pfwupd usr/libexec/fwupd/efi
@@ -90,8 +90,8 @@ ifeq (debian,$(SB_STYLE))
 	done
 	install -m 0755 debian/fwupd.postinst $(TMPLDIR)/source-template/debian/fwupd-$(DEB_HOST_ARCH)-signed.postinst
 	install -m 0755 debian/fwupd.postrm $(TMPLDIR)/source-template/debian/fwupd-$(DEB_HOST_ARCH)-signed.postrm
-	./debian/gen_signing_changelog $(TMPLDIR)/source-template/debian fwupd $(DEB_HOST_ARCH)
-	./debian/gen_signing_json $(TMPLDIR) fwupd ${DEB_HOST_ARCH}
+	debian/gen_signing_changelog $(TMPLDIR)/source-template/debian fwupd $(DEB_HOST_ARCH)
+	debian/gen_signing_json $(TMPLDIR) fwupd ${DEB_HOST_ARCH}
 endif
 
 override_dh_strip_nondeterminism:
