@@ -7,7 +7,5 @@ RUN echo fubar > /etc/machine-id
 RUN dnf -y update
 RUN echo fubar > /etc/machine-id
 %%%INSTALL_DEPENDENCIES_COMMAND%%%
-RUN mkdir /build
-WORKDIR /build
-COPY . .
+WORKDIR /github/workspace
 CMD ["./contrib/ci/fedora.sh"]
