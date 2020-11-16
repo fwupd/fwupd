@@ -11,24 +11,39 @@ ifeq "$(DEB_HOST_ARCH_BITS)" "32"
 endif
 
 ifneq ($(CI),)
-	export CI=--werror --wrap-mode=default
+	CI_FLAGS=--werror --wrap-mode=default
+else
+	CI_FLAGS=
 endif
 
 SB_STYLE := debian
 deb_version := $(shell dpkg-parsechangelog --show-field Version)
-export FLASHROM=-Dplugin_flashrom=false
+FLASHROM=-Dplugin_flashrom=false
 ifeq (yes,$(shell dpkg-vendor --derives-from Ubuntu && echo yes))
 	SB_STYLE := ubuntu
 	tar_name := fwupd_$(deb_version)_$(DEB_HOST_ARCH).tar.gz
 else
 	TMPLDIR  := debian/fwupd-$(DEB_HOST_ARCH)-signed-template/usr/share/code-signing/fwupd-$(DEB_HOST_ARCH)-signed-template
 	ifneq "$(DEB_HOST_ARCH)" "ia64"
-		export FLASHROM=-Dplugin_flashrom=true
+		FLASHROM=-Dplugin_flashrom=true
 	endif
 endif
-export MSR=-Dplugin_msr=false
+
+ifeq (yes,$(shell pkg-config --exists libsmbios_c && echo yes))
+	DELL=-Dplugin_dell=true
+else
+	DELL=-Dplugin_dell=false
+endif
+
+ifeq (yes,$(shell pkg-config --exists efivar && echo yes))
+	UEFI=-Dplugin_uefi=true -Dplugin_redfish=true -Dplugin_nvme=true
+else
+	UEFI=-Dplugin_uefi=false -Dplugin_redfish=false -Dplugin_nvme=false
+endif
+
+MSR=-Dplugin_msr=false
 ifneq ($(filter $(DEB_HOST_ARCH_CPU),i386 amd64),)
-	export MSR=-Dplugin_msr=true
+	MSR=-Dplugin_msr=true
 endif
 
 %:
@@ -42,17 +57,7 @@ ifeq (ubuntu,$(SB_STYLE))
 endif
 
 override_dh_auto_configure:
-	if pkg-config --exists libsmbios_c; then \
-		export DELL="-Dplugin_dell=true"; \
-	else \
-		export DELL="-Dplugin_dell=false"; \
-	fi; \
-	if pkg-config --exists efivar; then \
-		export UEFI="-Dplugin_uefi=true -Dplugin_redfish=true -Dplugin_nvme=true"; \
-	else \
-		export UEFI="-Dplugin_uefi=false -Dplugin_redfish=false -Dplugin_nvme=false"; \
-	fi; \
-	dh_auto_configure -- $$UEFI $$DELL $$FLASHROM $$MSR $$CI -Dplugin_dummy=true -Dgtkdoc=true -Dsupported_build=true
+	dh_auto_configure -- $(UEFI) $(DELL) $(FLASHROM) $(MSR) $(CI_FLAGS) -Dplugin_dummy=true -Dgtkdoc=true -Dsupported_build=true
 
 override_dh_install:
 	find debian/tmp/usr -type f -name "*a" -print | xargs rm -f
