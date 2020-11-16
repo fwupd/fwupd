@@ -61,8 +61,7 @@ if not os.path.exists(input):
 with open(input, 'r') as rfd:
     lines = rfd.readlines()
 
-out = tempfile.NamedTemporaryFile(dir='.', delete=True)
-with open(out.name, 'w') as wfd:
+with open('Dockerfile', 'w') as wfd:
     for line in lines:
         if line.startswith("FROM %%%ARCH_PREFIX%%%"):
             if (OS == "debian" or OS == "ubuntu") and SUBOS == "i386":
@@ -101,5 +100,5 @@ with open(out.name, 'w') as wfd:
         args += ['--build-arg=http_proxy=%s' % os.environ['http_proxy']]
     if 'https_proxy' in os.environ:
         args += ['--build-arg=https_proxy=%s' % os.environ['https_proxy']]
-    args += [ "-f", "./%s" % os.path.basename(out.name), "."]
+    args += ["-f", "./Dockerfile", "."]
     subprocess.check_call(args)

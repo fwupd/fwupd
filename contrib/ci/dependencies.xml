@@ -10,6 +10,11 @@
       <package />
     </distro>
   </dependency>
+  <dependency type="build" id="abigail-tools">
+    <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
   <dependency type="build" id="bash-completion">
     <distro id="debian">
       <control />
