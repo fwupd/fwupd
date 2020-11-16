@@ -59,6 +59,7 @@ Conflicts: fwupdate-amd64-signed,
 	   fwupdate-armhf-signed
 Breaks: gir1.2-dfu-1.0 (<< 0.9.7-1),
 	libdfu1 (<< 0.9.7-1),
+	fwupdate (<< 12-7),
 	libdfu-dev (<< 0.9.7-1)
 Replaces: gir1.2-dfu-1.0 (<< 0.9.7-1),
 	  libdfu1 (<< 0.9.7-1),
