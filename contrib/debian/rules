@@ -94,10 +94,10 @@ endif
 override_dh_strip_nondeterminism:
 	dh_strip_nondeterminism -Xfirmware-example.xml.gz
 
+ifneq (yes,$(shell command -v valgrind >/dev/null 2>&1 && echo yes))
 override_dh_auto_test:
-	if [ -x /usr/bin/valgrind ] ; then \
-		dh_auto_test; \
-	fi
+	:
+endif
 
 override_dh_builddeb:
 	dh_builddeb
