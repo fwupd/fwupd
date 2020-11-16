@@ -10,10 +10,10 @@ ifeq ($(DEB_HOST_ARCH_BITS),32)
 	export DEB_CFLAGS_MAINT_APPEND = -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
 endif
 
+CONFARGS =
+
 ifneq ($(CI),)
-	CI_FLAGS=--werror --wrap-mode=default
-else
-	CI_FLAGS=
+	CONFARGS += --werror --wrap-mode=default
 endif
 
 SB_STYLE := debian
@@ -21,33 +21,35 @@ deb_version := $(shell dpkg-parsechangelog --show-field Version)
 ifeq (yes,$(shell dpkg-vendor --derives-from Ubuntu && echo yes))
 	SB_STYLE := ubuntu
 	tar_name := fwupd_$(deb_version)_$(DEB_HOST_ARCH).tar.gz
-	FLASHROM=-Dplugin_flashrom=false
+	CONFARGS += -Dplugin_flashrom=false
 else
 	TMPLDIR  := debian/fwupd-$(DEB_HOST_ARCH)-signed-template/usr/share/code-signing/fwupd-$(DEB_HOST_ARCH)-signed-template
 	ifneq ($(DEB_HOST_ARCH_CPU),ia64)
-		FLASHROM=-Dplugin_flashrom=true
+		CONFARGS += -Dplugin_flashrom=true
 	else
-		FLASHROM=-Dplugin_flashrom=false
+		CONFARGS += -Dplugin_flashrom=false
 	endif
 endif
 
 ifeq (yes,$(shell pkg-config --exists libsmbios_c && echo yes))
-	DELL=-Dplugin_dell=true
+	CONFARGS += -Dplugin_dell=true
 else
-	DELL=-Dplugin_dell=false
+	CONFARGS += -Dplugin_dell=false
 endif
 
 ifeq (yes,$(shell pkg-config --exists efivar && echo yes))
-	UEFI=-Dplugin_uefi=true -Dplugin_redfish=true -Dplugin_nvme=true
+	CONFARGS += -Dplugin_uefi=true -Dplugin_redfish=true -Dplugin_nvme=true
 else
-	UEFI=-Dplugin_uefi=false -Dplugin_redfish=false -Dplugin_nvme=false
+	CONFARGS += -Dplugin_uefi=false -Dplugin_redfish=false -Dplugin_nvme=false
 endif
 
 ifneq ($(filter $(DEB_HOST_ARCH_CPU),i386 amd64),)
-	MSR=-Dplugin_msr=true
+	CONFARGS += -Dplugin_msr=true
 else
-	MSR=-Dplugin_msr=false
+	CONFARGS += -Dplugin_msr=false
 endif
+
+CONFARGS += -Dplugin_dummy=true -Dgtkdoc=true -Dsupported_build=true
 
 %:
 	dh $@ --with gir
@@ -60,7 +62,7 @@ ifeq (ubuntu,$(SB_STYLE))
 endif
 
 override_dh_auto_configure:
-	dh_auto_configure -- $(UEFI) $(DELL) $(FLASHROM) $(MSR) $(CI_FLAGS) -Dplugin_dummy=true -Dgtkdoc=true -Dsupported_build=true
+	dh_auto_configure -- $(CONFARGS)
 
 override_dh_install:
 	find debian/tmp/usr -type f -name "*a" -print | xargs rm -f
