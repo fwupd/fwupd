@@ -18,14 +18,16 @@ endif
 
 SB_STYLE := debian
 deb_version := $(shell dpkg-parsechangelog --show-field Version)
-FLASHROM=-Dplugin_flashrom=false
 ifeq (yes,$(shell dpkg-vendor --derives-from Ubuntu && echo yes))
 	SB_STYLE := ubuntu
 	tar_name := fwupd_$(deb_version)_$(DEB_HOST_ARCH).tar.gz
+	FLASHROM=-Dplugin_flashrom=false
 else
 	TMPLDIR  := debian/fwupd-$(DEB_HOST_ARCH)-signed-template/usr/share/code-signing/fwupd-$(DEB_HOST_ARCH)-signed-template
-	ifneq "$(DEB_HOST_ARCH)" "ia64"
+	ifneq ($(DEB_HOST_ARCH_CPU),ia64)
 		FLASHROM=-Dplugin_flashrom=true
+	else
+		FLASHROM=-Dplugin_flashrom=false
 	endif
 endif
 
@@ -41,9 +43,10 @@ else
 	UEFI=-Dplugin_uefi=false -Dplugin_redfish=false -Dplugin_nvme=false
 endif
 
-MSR=-Dplugin_msr=false
 ifneq ($(filter $(DEB_HOST_ARCH_CPU),i386 amd64),)
 	MSR=-Dplugin_msr=true
+else
+	MSR=-Dplugin_msr=false
 endif
 
 %:
