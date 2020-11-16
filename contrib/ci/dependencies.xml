@@ -11,7 +11,7 @@
     </distro>
   </dependency>
   <dependency type="build" id="abigail-tools">
-    <distro id="debian">
+    <distro id="ubuntu">
       <package variant="x86_64" />
     </distro>
   </dependency>
