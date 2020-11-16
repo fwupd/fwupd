@@ -1,4 +1,4 @@
-fwupd (1.5.1-2) UNRELEASED; urgency=medium
+fwupd (1.5.1-2) unstable; urgency=medium
 
   [ Mario Limonciello ]
   * Backport a patch to indicate if packages are supported or not
@@ -21,7 +21,7 @@ fwupd (1.5.1-2) UNRELEASED; urgency=medium
   * debian: Remove unnecessary ./ use
   * debian: Add quotes around glob
 
- -- Mario Limonciello <mario.limonciello@dell.com>  Mon, 16 Nov 2020 09:17:24 -0600
+ -- Mario Limonciello <mario.limonciello@dell.com>  Mon, 16 Nov 2020 09:31:32 -0600
 
 fwupd (1.5.1-1) unstable; urgency=medium
 
