@@ -6,21 +6,23 @@ Files: *
 Copyright: 9elements Agency GmbH <patrick.rudolph@9elements.com>
 	   Aleksander Morgado <aleksander@aleksander.es>
 	   Andrew Duggan
+	   Benson Leung <bleung@chromium.org>
 	   Christian J. Kellner <christian@kellner.me>
 	   Cypress Semiconductor Corporation.
-	   Debarshi Ray <debarshir@src.gnome.org>
 	   Dell Inc.
 	   Dell, Inc.
-	   Emmanuel Pacaud <emmanuel@gnome.org>
+	   Evan Lojewski
 	   Fresco Logic
 	   Google, Inc.
-	   Hans de Goede <hdegoede@redhat.com>
+	   H.J. Lu <hjl.tools@gmail.com>
 	   Intel Corporation.
 	   Intel, Inc.
 	   Jeremy Soller <jeremy@system76.com>
 	   Kalev Lember <klember@redhat.com>
+	   Lennart Poettering <lennart@poettering.net>
 	   Mario Limonciello <mario.limonciello@dell.com>
-	   Max Ehrlich max.ehr@gmail.com
+	   Matthias Klumpp <matthias@tenstral.net>
+	   Max Ehrlich maxehr@gmail.com
 	   Peichen Huang <peichenhuang@tw.synaptics.com>
 	   Peter Jones <pjones@redhat.com>
 	   Realtek Semiconductor Corporation
@@ -32,6 +34,7 @@ Copyright: 9elements Agency GmbH <patrick.rudolph@9elements.com>
 	   Synaptics Inc.
 	   Synaptics Incorporated
 	   VIA Corporation
+	   boger wang <boger@goodix.com>
 License: LGPL-2.1+
 
 Files:  *.metainfo.xml
