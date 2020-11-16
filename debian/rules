@@ -27,7 +27,7 @@ else
 	endif
 endif
 export MSR=-Dplugin_msr=false
-ifeq ("$(DEB_HOST_ARCH)",$(filter $(DEB_HOST_ARCH),i386 amd64))
+ifneq ($(filter $(DEB_HOST_ARCH_CPU),i386 amd64),)
 	export MSR=-Dplugin_msr=true
 endif
 
