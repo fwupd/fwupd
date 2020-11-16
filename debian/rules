@@ -110,6 +110,3 @@ ifeq (ubuntu,$(SB_STYLE))
 		dpkg-distaddfile $(tar_name) raw-uefi - ;\
 	fi
 endif
-
-override_dh_shlibdeps:
-	dh_shlibdeps $$DHSLIBS
