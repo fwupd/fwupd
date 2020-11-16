@@ -70,7 +70,7 @@ override_dh_install:
 	dh_install
 	#install the EFI binaries if needed
 	if [ -d debian/tmp/usr/libexec/fwupd/efi/ ]; then \
-		dh_install -pfwupd usr/libexec/fwupd/efi ;\
+		dh_install -pfwupd usr/libexec/fwupd/efi; \
 	fi
 	dh_missing -a --fail-missing
 
@@ -108,10 +108,10 @@ override_dh_builddeb:
 	dh_builddeb
 ifeq (ubuntu,$(SB_STYLE))
 	set -e; if [ -d debian/tmp/usr/libexec/fwupd/efi/ ]; then \
-		mkdir -p debian/fwupd-images/$(deb_version) ;\
-		cp debian/tmp/usr/libexec/fwupd/efi/fwupd*.efi debian/fwupd-images/$(deb_version) ;\
-		echo $(deb_version) > debian/fwupd-images/$(deb_version)/version ;\
-		tar -C debian/fwupd-images -czvf ../$(tar_name) . ;\
-		dpkg-distaddfile $(tar_name) raw-uefi - ;\
+		mkdir -p debian/fwupd-images/$(deb_version); \
+		cp debian/tmp/usr/libexec/fwupd/efi/fwupd*.efi debian/fwupd-images/$(deb_version); \
+		echo $(deb_version) > debian/fwupd-images/$(deb_version)/version; \
+		tar -C debian/fwupd-images -czvf ../$(tar_name) .; \
+		dpkg-distaddfile $(tar_name) raw-uefi -; \
 	fi
 endif
