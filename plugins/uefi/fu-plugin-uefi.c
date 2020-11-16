@@ -620,6 +620,10 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	g_autofree gchar *nvram_total_str = NULL;
 	g_autoptr(GError) error_local = NULL;
 
+	/* don't let user's environment influence test suite failures */
+	if (g_getenv ("FWUPD_UEFI_TEST") != NULL)
+		return TRUE;
+
 	/* some platforms have broken SMBIOS data */
 	if (fu_plugin_has_custom_flag (plugin, "uefi-force-enable"))
 		return TRUE;
