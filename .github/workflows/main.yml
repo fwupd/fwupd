@@ -10,8 +10,18 @@ on:
   pull_request:
     branches: [ master ]
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
+  abi:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Install dependencies
+        run: ./contrib/ci/generate_dependencies.py | sudo xargs apt install -y
+      - name: Check ABI
+        run: ./contrib/ci/check-abi $(git describe --abbrev=0 --tags) $(git rev-parse HEAD)
+
   # This workflow contains a single job called "build"
   build:
     # The type of runner that the job will run on
