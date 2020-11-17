@@ -8,7 +8,5 @@ RUN rm /usr/share/libalpm/hooks/package-cleanup.hook
 RUN echo fubar > /etc/machine-id
 RUN pacman -Syu --noconfirm archlinux-keyring
 %%%INSTALL_DEPENDENCIES_COMMAND%%%
-RUN mkdir /build
-WORKDIR /build
-COPY . .
+WORKDIR /github/workspace
 CMD ["./contrib/ci/arch.sh"]

@@ -7,10 +7,10 @@ jobs:
       - checkout
       - run:
           name: "Build container"
-          command: OS=ubuntu-x86_64 ./contrib/ci/generate_docker.py
+          command: OS=ubuntu-x86_64 ./contrib/ci/generate_docker.py build
       - run:
           name: "Run build script"
-          command: docker run --privileged -e CI=true -t -v `pwd`/dist:/build/dist fwupd-ubuntu-x86_64
+          command: docker run --privileged -e CI=true -t -v `pwd`/dist:/github/workspace/dist fwupd-ubuntu-x86_64
       - persist_to_workspace:
           root: .
           paths:
@@ -23,10 +23,10 @@ jobs:
       - checkout
       - run:
           name: "Build container"
-          command: OS=debian-x86_64 ./contrib/ci/generate_docker.py
+          command: OS=debian-x86_64 ./contrib/ci/generate_docker.py build
       - run:
           name: "Run build script"
-          command: docker run --privileged -e CI=true -t -v `pwd`/dist:/build/dist fwupd-debian-x86_64 ./contrib/ci/trust.sh
+          command: docker run --privileged -e CI=true -t -v `pwd`/dist:/github/workspace/dist fwupd-debian-x86_64 ./contrib/ci/trust.sh
 
   build-windows:
     docker:
