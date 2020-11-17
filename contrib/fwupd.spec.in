@@ -31,11 +31,6 @@
 %global have_msr 1
 %endif
 
-# redfish is only available on this arch
-%ifarch x86_64
-%global have_redfish 1
-%endif
-
 # libsmbios is only available on x86
 %ifarch x86_64
 %global have_dell 1
@@ -90,10 +85,6 @@ BuildRequires: flashrom-devel >= 1.2-2
 %if 0%{?have_modem_manager}
 BuildRequires: ModemManager-glib-devel >= 1.10.0
 BuildRequires: libqmi-devel >= 1.22.0
-%endif
-
-%if 0%{?have_redfish}
-BuildRequires: efivar-devel >= 33
 %endif
 
 %if 0%{?have_uefi}
@@ -220,18 +211,11 @@ can be flashed using flashrom. It is probably not required on servers.
     -Dplugin_msr=false \
 %endif
     -Dplugin_thunderbolt=true \
-%if 0%{?have_redfish}
-    -Dplugin_redfish=true \
-%else
-    -Dplugin_redfish=false \
-%endif
 %if 0%{?have_uefi}
     -Dplugin_uefi=true \
-    -Dplugin_nvme=true \
     -Dtpm=true \
 %else
     -Dplugin_uefi=false \
-    -Dplugin_nvme=false \
     -Dtpm=false \
 %endif
 %if 0%{?have_dell}
@@ -300,9 +284,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %if 0%{?have_uefi}
 %config(noreplace)%{_sysconfdir}/fwupd/uefi.conf
 %endif
-%if 0%{?have_redfish}
 %config(noreplace)%{_sysconfdir}/fwupd/redfish.conf
-%endif
 %config(noreplace)%{_sysconfdir}/fwupd/thunderbolt.conf
 %dir %{_libexecdir}/fwupd
 %{_libexecdir}/fwupd/fwupd
@@ -427,9 +409,7 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %{_libdir}/fwupd-plugins-3/libfu_plugin_pci_bcr.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_pci_mei.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_platform_integrity.so
-%if 0%{?have_redfish}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_redfish.so
-%endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_rts54hid.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_rts54hub.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_solokey.so
