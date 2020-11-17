@@ -1997,6 +1997,56 @@ fwupd_client_download_bytes (FwupdClient *self,
 	return g_steal_pointer (&helper->bytes);
 }
 
+/**
+ * fwupd_client_download_file:
+ * @self: A #FwupdClient
+ * @url: the remote URL
+ * @file: a #GFile
+ * @flags: #FwupdClientDownloadFlags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_NONE
+ * @cancellable: the #GCancellable, or %NULL
+ * @error: the #GError, or %NULL
+ *
+ * Downloads data from a remote server. The fwupd_client_set_user_agent() function
+ * should be called before this method is used.
+ *
+ * Returns: %TRUE if the file was written, or %NULL for error
+ *
+ * Since: 1.5.2
+ **/
+gboolean
+fwupd_client_download_file (FwupdClient *self,
+			    const gchar *url,
+			    GFile *file,
+			    FwupdClientDownloadFlags flags,
+			    GCancellable *cancellable,
+			    GError **error)
+{
+	gssize size;
+	g_autoptr(GBytes) bytes = NULL;
+	g_autoptr(GOutputStream) ostream = NULL;
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
+	g_return_val_if_fail (url != NULL, FALSE);
+	g_return_val_if_fail (G_IS_FILE (file), FALSE);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* download then write */
+	bytes = fwupd_client_download_bytes (self, url, flags, cancellable, error);
+	if (bytes == NULL)
+		return FALSE;
+	ostream = G_OUTPUT_STREAM (g_file_replace (file, NULL, FALSE,
+				   G_FILE_CREATE_NONE, NULL, error));
+	if (ostream == NULL)
+		return FALSE;
+	size = g_output_stream_write_bytes (ostream, bytes, NULL, error);
+	if (size < 0)
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
 static void
 fwupd_client_upload_bytes_cb (GObject *source, GAsyncResult *res, gpointer user_data)
 {

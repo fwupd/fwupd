@@ -164,6 +164,12 @@ GBytes		*fwupd_client_download_bytes		(FwupdClient	*self,
 							 FwupdClientDownloadFlags flags,
 							 GCancellable	*cancellable,
 							 GError		**error);
+gboolean	 fwupd_client_download_file		(FwupdClient	*self,
+							 const gchar	*url,
+							 GFile		*file,
+							 FwupdClientDownloadFlags flags,
+							 GCancellable	*cancellable,
+							 GError		**error);
 GBytes		*fwupd_client_upload_bytes		(FwupdClient	*self,
 							 const gchar	*url,
 							 const gchar	*payload,
