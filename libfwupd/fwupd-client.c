@@ -3862,6 +3862,26 @@ fwupd_client_set_user_agent (FwupdClient *self, const gchar *user_agent)
 }
 
 /**
+ * fwupd_client_get_user_agent:
+ * @self: A #FwupdClient
+ *
+ * Gets the string that represents the user agent that is used for
+ * uploading and downloading. The user agent will contain the runtime
+ * version of fwupd somewhere in the provided string.
+ *
+ * Returns: a string, or %NULL for unknown.
+ *
+ * Since: 1.5.2
+ **/
+const gchar *
+fwupd_client_get_user_agent (FwupdClient *self)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
+	return priv->user_agent;
+}
+
+/**
  * fwupd_client_set_user_agent_for_package:
  * @self: A #FwupdClient
  * @package_name: client program name, e.g. "gnome-software"

@@ -355,6 +355,7 @@ void		 fwupd_client_set_feature_flags_async	(FwupdClient	*self,
 gboolean	 fwupd_client_set_feature_flags_finish	(FwupdClient	*self,
 							 GAsyncResult	*res,
 							 GError		**error);
+const gchar	*fwupd_client_get_user_agent		(FwupdClient	*self);
 void		 fwupd_client_set_user_agent		(FwupdClient	*self,
 							 const gchar	*user_agent);
 void		 fwupd_client_set_user_agent_for_package(FwupdClient	*self,
