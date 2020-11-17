@@ -2880,6 +2880,8 @@ fwupd_client_refresh_remote_signature_cb (GObject *source,
 	FwupdClientRefreshRemoteData *data = g_task_get_task_data (task);
 	FwupdClient *self = g_task_get_source_object (task);
 	GCancellable *cancellable = g_task_get_cancellable (task);
+	GChecksumType checksum_kind;
+	g_autofree gchar *checksum = NULL;
 
 	/* save signature */
 	bytes = fwupd_client_download_bytes_finish (FWUPD_CLIENT (source), res, &error);
@@ -2890,6 +2892,18 @@ fwupd_client_refresh_remote_signature_cb (GObject *source,
 	data->signature = g_steal_pointer (&bytes);
 	if (!fwupd_remote_load_signature_bytes (data->remote, data->signature, &error)) {
 		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+
+	/* is the signature checksum the same? */
+	checksum_kind = fwupd_checksum_guess_kind (fwupd_remote_get_checksum (data->remote));
+	checksum = g_compute_checksum_for_data (checksum_kind,
+						(const guchar *) g_bytes_get_data (data->signature, NULL),
+						g_bytes_get_size (data->signature));
+	if (g_strcmp0 (checksum, fwupd_remote_get_checksum (data->remote)) == 0) {
+		g_debug ("metadata signature of %s is unchanged, skipping",
+			 fwupd_remote_get_id (data->remote));
+		g_task_return_boolean (task, TRUE);
 		return;
 	}
 
