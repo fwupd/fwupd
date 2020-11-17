@@ -10,7 +10,7 @@ jobs:
           command: OS=ubuntu-x86_64 ./contrib/ci/generate_docker.py build
       - run:
           name: "Run build script"
-          command: docker run --privileged -e CI=true -t -v `pwd`/dist:/github/workspace/dist fwupd-ubuntu-x86_64
+          command: docker run --privileged -e CI=true -t -v `pwd`:/github/workspace fwupd-ubuntu-x86_64
       - persist_to_workspace:
           root: .
           paths:
