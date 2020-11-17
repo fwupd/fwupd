@@ -5,8 +5,10 @@ dirname=`dirname $0`
 
 run_test()
 {
-        $dirname/$1
-        rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
+        if [ -f $dirname/$1 ]; then
+                $dirname/$1
+                rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
+        fi
 }
 
 run_test acpi-dmar-self-test
