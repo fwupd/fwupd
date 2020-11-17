@@ -38,9 +38,9 @@ else
 endif
 
 ifeq (yes,$(shell pkg-config --exists efivar && echo yes))
-	CONFARGS += -Dplugin_uefi=true -Dplugin_redfish=true -Dplugin_nvme=true
+	CONFARGS += -Dplugin_uefi=true
 else
-	CONFARGS += -Dplugin_uefi=false -Dplugin_redfish=false -Dplugin_nvme=false
+	CONFARGS += -Dplugin_uefi=false
 endif
 
 ifneq ($(filter $(DEB_HOST_ARCH_CPU),i386 amd64),)
