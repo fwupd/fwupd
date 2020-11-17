@@ -10,7 +10,5 @@ RUN echo fubar > /etc/machine-id
 RUN pip3 install pillow pygobject
 RUN wget https://copr.fedorainfracloud.org/coprs/jsynacek/systemd-backports-for-centos-7/repo/epel-7/jsynacek-systemd-backports-for-centos-7-epel-7.repo -O /etc/yum.repos.d/jsynacek-systemd-centos-7.repo
 RUN yum --enablerepo=epel-testing -y update
-RUN mkdir /build
-WORKDIR /build
-COPY . .
+WORKDIR /github/workspace
 CMD ["./contrib/ci/centos.sh"]
