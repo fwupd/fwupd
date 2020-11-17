@@ -1981,6 +1981,7 @@ fwupd_client_download_bytes (FwupdClient *self,
 	g_return_val_if_fail (url != NULL, NULL);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+	g_return_val_if_fail (fwupd_client_get_user_agent (self) != NULL, NULL);
 
 	/* connect */
 	if (!fwupd_client_connect (self, cancellable, error))
@@ -2030,6 +2031,7 @@ fwupd_client_download_file (FwupdClient *self,
 	g_return_val_if_fail (G_IS_FILE (file), FALSE);
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	g_return_val_if_fail (fwupd_client_get_user_agent (self) != NULL, FALSE);
 
 	/* download then write */
 	bytes = fwupd_client_download_bytes (self, url, flags, cancellable, error);
