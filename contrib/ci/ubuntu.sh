@@ -8,6 +8,9 @@ if [ "$CI_NETWORK" = "true" ]; then
 	export G_TEST_SRCDIR=`pwd`/fwupd-test-firmware/installed-tests
 fi
 
+#check for and install missing dependencies
+./contrib/ci/generate_dependencies.py | xargs apt install -y
+
 #evaluate using Ubuntu's buildflags
 #evaluate using Debian/Ubuntu's buildflags
 eval "$(dpkg-buildflags --export=sh)"
