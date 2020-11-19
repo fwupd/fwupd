@@ -2917,6 +2917,62 @@ fwupd_client_refresh_remote_signature_cb (GObject *source,
 }
 
 /**
+ * fwupd_client_refresh_remote_full_async:
+ * @self: A #FwupdClient
+ * @remote: A #FwupdRemote
+ * @age_max: max age in seconds, or 0 for always
+ * @cancellable: the #GCancellable, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
+ *
+ * Refreshes a remote by downloading new metadata as required.
+ *
+ * Since: 1.5.2
+ **/
+void
+fwupd_client_refresh_remote_full_async (FwupdClient *self,
+					FwupdRemote *remote,
+					guint64 age_max,
+					GCancellable *cancellable,
+					GAsyncReadyCallback callback,
+					gpointer callback_data)
+{
+	FwupdClientRefreshRemoteData *data;
+	g_autoptr(GTask) task = NULL;
+
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (FWUPD_IS_REMOTE (remote));
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+
+	task = g_task_new (self, cancellable, callback, callback_data);
+
+	/* check cache age */
+	if (age_max > 0) {
+		if (fwupd_remote_get_age (remote) < age_max) {
+			g_debug ("only %" G_GUINT64_FORMAT "s old, ignoring",
+				 fwupd_remote_get_age (remote));
+			g_task_return_boolean (task, TRUE);
+			return;
+		}
+	}
+
+	data = g_new0 (FwupdClientRefreshRemoteData, 1);
+	data->remote = g_object_ref (remote);
+	g_task_set_task_data (task,
+			      g_steal_pointer (&data),
+			      (GDestroyNotify) fwupd_client_refresh_remote_data_free);
+
+	/* download signature */
+	fwupd_client_download_bytes_async (self,
+					   fwupd_remote_get_metadata_uri_sig (remote),
+					   FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
+					   cancellable,
+					   fwupd_client_refresh_remote_signature_cb,
+					   g_steal_pointer (&task));
+
+}
+
+/**
  * fwupd_client_refresh_remote_async:
  * @self: A #FwupdClient
  * @remote: A #FwupdRemote
@@ -2935,28 +2991,12 @@ fwupd_client_refresh_remote_async (FwupdClient *self,
 				   GAsyncReadyCallback callback,
 				   gpointer callback_data)
 {
-	FwupdClientRefreshRemoteData *data;
-	g_autoptr(GTask) task = NULL;
-
-	g_return_if_fail (FWUPD_IS_CLIENT (self));
-	g_return_if_fail (FWUPD_IS_REMOTE (remote));
-	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
-
-	task = g_task_new (self, cancellable, callback, callback_data);
-	data = g_new0 (FwupdClientRefreshRemoteData, 1);
-	data->remote = g_object_ref (remote);
-	g_task_set_task_data (task,
-			      g_steal_pointer (&data),
-			      (GDestroyNotify) fwupd_client_refresh_remote_data_free);
-
-	/* download signature */
-	fwupd_client_download_bytes_async (self,
-					   fwupd_remote_get_metadata_uri_sig (remote),
-					   FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
-					   cancellable,
-					   fwupd_client_refresh_remote_signature_cb,
-					   g_steal_pointer (&task));
-
+	fwupd_client_refresh_remote_full_async (self,
+						remote,
+						0, /* age */
+						cancellable,
+						callback,
+						callback_data);
 }
 
 /**

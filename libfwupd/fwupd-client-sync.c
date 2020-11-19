@@ -1328,6 +1328,46 @@ fwupd_client_refresh_remote_cb (GObject *source,
 }
 
 /**
+ * fwupd_client_refresh_remote_full:
+ * @self: A #FwupdClient
+ * @remote: A #FwupdRemote
+ * @age_max: max age in seconds, or 0 for always
+ * @cancellable: A #GCancellable, or %NULL
+ * @error: A #GError, or %NULL
+ *
+ * Refreshes a remote by downloading new metadata as required.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.5.2
+ **/
+gboolean
+fwupd_client_refresh_remote_full (FwupdClient *self,
+				  FwupdRemote *remote,
+				  guint64 age_max,
+				  GCancellable *cancellable,
+				  GError **error)
+{
+	g_autoptr(FwupdClientHelper) helper = fwupd_client_helper_new ();
+
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
+	g_return_val_if_fail (FWUPD_IS_REMOTE (remote), FALSE);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	fwupd_client_refresh_remote_full_async (self, remote, age_max,
+						cancellable,
+						fwupd_client_refresh_remote_cb,
+						helper);
+	g_main_loop_run (helper->loop);
+	if (!helper->ret) {
+		g_propagate_error (error, g_steal_pointer (&helper->error));
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/**
  * fwupd_client_refresh_remote:
  * @self: A #FwupdClient
  * @remote: A #FwupdRemote
@@ -1346,22 +1386,8 @@ fwupd_client_refresh_remote (FwupdClient *self,
 			     GCancellable *cancellable,
 			     GError **error)
 {
-	g_autoptr(FwupdClientHelper) helper = fwupd_client_helper_new ();
-
-	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
-	g_return_val_if_fail (FWUPD_IS_REMOTE (remote), FALSE);
-	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-	fwupd_client_refresh_remote_async (self, remote, cancellable,
-					   fwupd_client_refresh_remote_cb,
-					   helper);
-	g_main_loop_run (helper->loop);
-	if (!helper->ret) {
-		g_propagate_error (error, g_steal_pointer (&helper->error));
-		return FALSE;
-	}
-	return TRUE;
+	return fwupd_client_refresh_remote_full (self, remote, 0,
+						 cancellable, error);
 }
 
 static void

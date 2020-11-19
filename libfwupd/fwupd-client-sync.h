@@ -114,6 +114,11 @@ gboolean	 fwupd_client_refresh_remote		(FwupdClient	*self,
 							 FwupdRemote	*remote,
 							 GCancellable	*cancellable,
 							 GError		**error);
+gboolean	 fwupd_client_refresh_remote_full	(FwupdClient	*self,
+							 FwupdRemote	*remote,
+							 guint64	 age_max,
+							 GCancellable	*cancellable,
+							 GError		**error);
 gboolean	 fwupd_client_modify_remote		(FwupdClient	*self,
 							 const gchar	*remote_id,
 							 const gchar	*key,

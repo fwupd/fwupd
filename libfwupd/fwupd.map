@@ -621,5 +621,7 @@ LIBFWUPD_1.5.2 {
   global:
     fwupd_client_download_file;
     fwupd_client_get_user_agent;
+    fwupd_client_refresh_remote_full;
+    fwupd_client_refresh_remote_full_async;
   local: *;
 } LIBFWUPD_1.5.1;

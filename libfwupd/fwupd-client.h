@@ -253,6 +253,12 @@ void		 fwupd_client_refresh_remote_async	(FwupdClient	*self,
 							 GCancellable	*cancellable,
 							 GAsyncReadyCallback callback,
 							 gpointer	 callback_data);
+void		 fwupd_client_refresh_remote_full_async	(FwupdClient	*self,
+							 FwupdRemote	*remote,
+							 guint64	 age_max,
+							 GCancellable	*cancellable,
+							 GAsyncReadyCallback callback,
+							 gpointer	 callback_data);
 gboolean	 fwupd_client_refresh_remote_finish	(FwupdClient	*self,
 							 GAsyncResult	*res,
 							 GError		**error);

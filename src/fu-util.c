@@ -1129,8 +1129,9 @@ fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 			continue;
 		download_remote_enabled = TRUE;
 		g_print ("%s %s\n", _("Updating"), fwupd_remote_get_id (remote));
-		if (!fwupd_client_refresh_remote (priv->client, remote,
-						  priv->cancellable, error))
+		if (!fwupd_client_refresh_remote_full (priv->client, remote,
+						       10, /* seconds */
+						       priv->cancellable, error))
 			return FALSE;
 	}
 
