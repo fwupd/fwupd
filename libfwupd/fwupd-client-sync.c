@@ -21,6 +21,7 @@ typedef struct {
 	gchar		*str;
 	GError		*error;
 	GPtrArray	*array;
+	GMainContext	*context;
 	GMainLoop	*loop;
 	GVariant	*val;
 	GHashTable	*hash;
@@ -45,6 +46,7 @@ fwupd_client_helper_free (FwupdClientHelper *helper)
 		g_object_unref (helper->device);
 	g_free (helper->str);
 	g_main_loop_unref (helper->loop);
+	g_main_context_unref (helper->context);
 	g_free (helper);
 }
 
@@ -53,7 +55,8 @@ fwupd_client_helper_new (void)
 {
 	FwupdClientHelper *helper;
 	helper = g_new0 (FwupdClientHelper, 1);
-	helper->loop = g_main_loop_new (NULL, FALSE);
+	helper->context = g_main_context_new ();
+	helper->loop = g_main_loop_new (helper->context, FALSE);
 	return helper;
 }
 
@@ -94,8 +97,10 @@ fwupd_client_connect (FwupdClient *self, GCancellable *cancellable, GError **err
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_connect_async (self, cancellable, fwupd_client_connect_cb, helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (!helper->ret) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return FALSE;
@@ -137,9 +142,11 @@ fwupd_client_get_devices (FwupdClient *self, GCancellable *cancellable, GError *
 		return NULL;
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_get_devices_async (self, cancellable,
 					fwupd_client_get_devices_cb, helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (helper->array == NULL) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return NULL;
@@ -181,9 +188,11 @@ fwupd_client_get_plugins (FwupdClient *self, GCancellable *cancellable, GError *
 		return NULL;
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_get_plugins_async (self, cancellable,
 					fwupd_client_get_plugins_cb, helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (helper->array == NULL) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return NULL;
@@ -225,9 +234,11 @@ fwupd_client_get_history (FwupdClient *self, GCancellable *cancellable, GError *
 		return NULL;
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_get_history_async (self, cancellable,
 					fwupd_client_get_history_cb, helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (helper->array == NULL) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return NULL;
@@ -272,9 +283,11 @@ fwupd_client_get_releases (FwupdClient *self, const gchar *device_id,
 		return NULL;
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_get_releases_async (self, device_id, cancellable,
 					 fwupd_client_get_releases_cb, helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (helper->array == NULL) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return NULL;
@@ -319,9 +332,11 @@ fwupd_client_get_downgrades (FwupdClient *self, const gchar *device_id,
 		return NULL;
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_get_downgrades_async (self, device_id, cancellable,
 					   fwupd_client_get_downgrades_cb, helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (helper->array == NULL) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return NULL;
@@ -366,9 +381,11 @@ fwupd_client_get_upgrades (FwupdClient *self, const gchar *device_id,
 		return NULL;
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_get_upgrades_async (self, device_id, cancellable,
 					   fwupd_client_get_upgrades_cb, helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (helper->array == NULL) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return NULL;
@@ -415,11 +432,13 @@ fwupd_client_get_details_bytes (FwupdClient *self,
 		return NULL;
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_get_details_bytes_async (self, bytes,
 					      cancellable,
 					      fwupd_client_get_details_bytes_cb,
 					      helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (helper->array == NULL) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return NULL;
@@ -473,10 +492,12 @@ fwupd_client_get_details (FwupdClient *self,
 	istr = fwupd_unix_input_stream_from_fn (filename, error);
 	if (istr == NULL)
 		return NULL;
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_get_details_stream_async (self, istr, cancellable,
 					       fwupd_client_get_details_cb,
 					       helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (helper->array == NULL) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return NULL;
@@ -530,10 +551,12 @@ fwupd_client_verify (FwupdClient *self,
 		return FALSE;
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_verify_async (self, device_id, cancellable,
 				   fwupd_client_verify_cb,
 				   helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (!helper->ret) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return FALSE;
@@ -580,10 +603,12 @@ fwupd_client_verify_update (FwupdClient *self,
 		return FALSE;
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_verify_update_async (self, device_id, cancellable,
 					  fwupd_client_verify_update_cb,
 					  helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (!helper->ret) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return FALSE;
@@ -630,10 +655,12 @@ fwupd_client_unlock (FwupdClient *self,
 		return FALSE;
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_unlock_async (self, device_id, cancellable,
 				   fwupd_client_unlock_cb,
 				   helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (!helper->ret) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return FALSE;
@@ -683,11 +710,13 @@ fwupd_client_modify_config (FwupdClient *self,
 		return FALSE;
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_modify_config_async (self, key, value,
 					  cancellable,
 					  fwupd_client_modify_config_cb,
 					  helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (!helper->ret) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return FALSE;
@@ -735,11 +764,13 @@ fwupd_client_activate (FwupdClient *self,
 		return FALSE;
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_activate_async (self, device_id,
 				     cancellable,
 				     fwupd_client_activate_cb,
 				     helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (!helper->ret) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return FALSE;
@@ -786,11 +817,13 @@ fwupd_client_clear_results (FwupdClient *self,
 		return FALSE;
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_clear_results_async (self, device_id,
 					  cancellable,
 					  fwupd_client_clear_results_cb,
 					  helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (!helper->ret) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return FALSE;
@@ -835,9 +868,11 @@ fwupd_client_get_results (FwupdClient *self, const gchar *device_id,
 		return NULL;
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_get_results_async (self, device_id, cancellable,
 					fwupd_client_get_results_cb, helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (helper->device == NULL) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return NULL;
@@ -881,10 +916,12 @@ fwupd_client_get_host_security_attrs (FwupdClient *self,
 		return NULL;
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_get_host_security_attrs_async (self, cancellable,
 						    fwupd_client_get_host_security_attrs_cb,
 						    helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (helper->array == NULL) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return NULL;
@@ -931,10 +968,12 @@ fwupd_client_get_device_by_id (FwupdClient *self,
 		return NULL;
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_get_device_by_id_async (self, device_id, cancellable,
 					     fwupd_client_get_device_by_id_cb,
 					     helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (helper->device == NULL) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return NULL;
@@ -980,10 +1019,12 @@ fwupd_client_get_devices_by_guid (FwupdClient *self, const gchar *guid,
 		return NULL;
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_get_devices_by_guid_async (self, guid, cancellable,
 						fwupd_client_get_devices_by_guid_cb,
 						helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (helper->array == NULL) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return NULL;
@@ -1044,11 +1085,13 @@ fwupd_client_install (FwupdClient *self,
 		return FALSE;
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_install_stream_async (self, device_id, istr, filename,
 					   install_flags, cancellable,
 				           fwupd_client_install_fd_cb,
 				           helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (!helper->ret) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return FALSE;
@@ -1107,11 +1150,13 @@ fwupd_client_install_bytes (FwupdClient *self,
 		return FALSE;
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_install_bytes_async (self, device_id, bytes, install_flags,
 					  cancellable,
 					  fwupd_client_install_bytes_cb,
 					  helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (!helper->ret) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return FALSE;
@@ -1162,11 +1207,13 @@ fwupd_client_install_release (FwupdClient *self,
 		return FALSE;
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_install_release_async (self, device, release,
 					    install_flags, cancellable,
 					    fwupd_client_install_release_cb,
 					    helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (!helper->ret) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return FALSE;
@@ -1236,10 +1283,12 @@ fwupd_client_update_metadata (FwupdClient *self,
 		return FALSE;
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_update_metadata_stream_async (self, remote_id, istr, istr_sig, cancellable,
 						   fwupd_client_update_metadata_cb,
 					           helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (!helper->ret) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return FALSE;
@@ -1304,11 +1353,13 @@ fwupd_client_update_metadata_bytes (FwupdClient *self,
 		return FALSE;
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_update_metadata_bytes_async (self, remote_id, metadata, signature,
 						  cancellable,
 						  fwupd_client_update_metadata_bytes_cb,
 						  helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (!helper->ret) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return FALSE;
@@ -1353,10 +1404,13 @@ fwupd_client_refresh_remote (FwupdClient *self,
 	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
+	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_refresh_remote_async (self, remote, cancellable,
 					   fwupd_client_refresh_remote_cb,
 					   helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (!helper->ret) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return FALSE;
@@ -1411,11 +1465,13 @@ fwupd_client_modify_remote (FwupdClient *self,
 		return FALSE;
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_modify_remote_async (self, remote_id, key, value,
 					  cancellable,
 					  fwupd_client_modify_remote_cb,
 					  helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (!helper->ret) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return FALSE;
@@ -1459,10 +1515,12 @@ fwupd_client_get_report_metadata (FwupdClient *self,
 		return NULL;
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_get_report_metadata_async (self, cancellable,
 						fwupd_client_get_report_metadata_cb,
 						helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (helper->hash == NULL) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return NULL;
@@ -1518,11 +1576,13 @@ fwupd_client_modify_device (FwupdClient *self,
 		return FALSE;
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_modify_device_async (self, device_id, key, value,
 					  cancellable,
 					  fwupd_client_modify_device_cb,
 					  helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (!helper->ret) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return FALSE;
@@ -1564,9 +1624,11 @@ fwupd_client_get_remotes (FwupdClient *self, GCancellable *cancellable, GError *
 		return NULL;
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_get_remotes_async (self, cancellable,
 					fwupd_client_get_remotes_cb, helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (helper->array == NULL) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return NULL;
@@ -1667,10 +1729,12 @@ fwupd_client_get_approved_firmware (FwupdClient *self,
 		return NULL;
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_get_approved_firmware_async (self, cancellable,
 						  fwupd_client_get_approved_firmware_cb,
 						  helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (helper->array == NULL) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return NULL;
@@ -1722,10 +1786,12 @@ fwupd_client_set_approved_firmware (FwupdClient *self,
 		g_ptr_array_add (array, g_strdup (checksums[i]));
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_set_approved_firmware_async (self, array, cancellable,
 						  fwupd_client_set_approved_firmware_cb,
 						  helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (!helper->ret) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return FALSE;
@@ -1770,10 +1836,12 @@ fwupd_client_get_blocked_firmware (FwupdClient *self,
 		return NULL;
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_get_blocked_firmware_async (self, cancellable,
 						 fwupd_client_get_blocked_firmware_cb,
 						 helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (helper->array == NULL) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return NULL;
@@ -1829,10 +1897,12 @@ fwupd_client_set_blocked_firmware (FwupdClient *self,
 		g_ptr_array_add (array, g_strdup (checksums[i]));
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_set_blocked_firmware_async (self, array, cancellable,
 						 fwupd_client_set_blocked_firmware_cb,
 						 helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (!helper->ret) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return FALSE;
@@ -1882,10 +1952,12 @@ fwupd_client_set_feature_flags (FwupdClient *self,
 		return FALSE;
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_set_feature_flags_async (self, feature_flags, cancellable,
 					      fwupd_client_set_feature_flags_cb,
 					      helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (!helper->ret) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return FALSE;
@@ -1934,10 +2006,12 @@ fwupd_client_self_sign (FwupdClient *self,
 		return NULL;
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_self_sign_async (self, value, flags, cancellable,
 				      fwupd_client_self_sign_cb,
 				      helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (helper->str == NULL) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return NULL;
@@ -1988,9 +2062,11 @@ fwupd_client_download_bytes (FwupdClient *self,
 		return NULL;
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_download_bytes_async (self, url, flags, cancellable,
 					   fwupd_client_download_bytes_cb, helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (helper->bytes == NULL) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return NULL;
@@ -2095,9 +2171,11 @@ fwupd_client_upload_bytes (FwupdClient *self,
 		return NULL;
 
 	/* call async version and run loop until complete */
+	g_main_context_push_thread_default (helper->context);
 	fwupd_client_upload_bytes_async (self, url, payload, signature, flags, cancellable,
 					 fwupd_client_upload_bytes_cb, helper);
 	g_main_loop_run (helper->loop);
+	g_main_context_pop_thread_default (helper->context);
 	if (helper->bytes == NULL) {
 		g_propagate_error (error, g_steal_pointer (&helper->error));
 		return NULL;
