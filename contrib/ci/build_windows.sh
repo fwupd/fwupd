@@ -31,6 +31,7 @@ meson .. \
     -Dplugin_thunderbolt=false \
     -Dplugin_synaptics=false \
     -Dman=false \
+    -Dsoup_session_compat=false \
     -Dgcab:introspection=false \
     -Dgcab:docs=false \
     -Dgcab:nls=false \
