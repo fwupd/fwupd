@@ -1,8 +1,8 @@
-fwupd (1.5.1-5) UNRELEASED; urgency=medium
+fwupd (1.5.1-5) unstable; urgency=medium
 
   * Backport patch to fix ppc64el autopkgtest failure
 
- -- Mario Limonciello <mario.limonciello@dell.com>  Thu, 19 Nov 2020 00:35:27 -0600
+ -- Mario Limonciello <mario.limonciello@dell.com>  Thu, 19 Nov 2020 00:36:17 -0600
 
 fwupd (1.5.1-4) unstable; urgency=medium
 
