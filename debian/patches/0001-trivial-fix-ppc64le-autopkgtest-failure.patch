@@ -1,0 +1,31 @@
+From 5258f3358598293db6c8aa81197061b0998d42ac Mon Sep 17 00:00:00 2001
+From: Mario Limonciello <mario.limonciello@dell.com>
+Date: Tue, 17 Nov 2020 11:13:23 -0600
+Subject: [PATCH] trivial: fix ppc64le autopkgtest failure
+
+nvme-self-test only runs if nvme is compiled, which it isn't for
+ppc64le.
+---
+ data/installed-tests/fwupd.sh | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/data/installed-tests/fwupd.sh b/data/installed-tests/fwupd.sh
+index 0a6e7eb3..cc82dc29 100755
+--- a/data/installed-tests/fwupd.sh
++++ b/data/installed-tests/fwupd.sh
+@@ -5,8 +5,10 @@ dirname=`dirname $0`
+ 
+ run_test()
+ {
+-        $dirname/$1
+-        rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
++        if [ -f $dirname/$1 ]; then
++                $dirname/$1
++                rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
++        fi
+ }
+ 
+ run_test acpi-dmar-self-test
+-- 
+2.25.1
+
