@@ -355,6 +355,10 @@ if build_standalone and get_option('plugin_modem_manager')
   add_project_arguments('-DQMI_REQUIRED_VERSION="1.23.1"', language : 'c')
 endif
 
+if get_option('soup_session_compat')
+    conf.set('SOUP_SESSION_COMPAT', '1')
+endif
+
 if build_standalone and get_option('plugin_nvme')
   if not cc.has_header('linux/nvme_ioctl.h')
     error('NVMe support requires kernel >= 4.4')
@@ -412,6 +416,7 @@ gnome = import('gnome')
 i18n = import('i18n')
 
 conf.set_quoted('FWUPD_BINDIR', bindir)
+conf.set_quoted('FWUPD_LIBDIR', libdir)
 conf.set_quoted('FWUPD_LIBEXECDIR', libexecdir)
 conf.set_quoted('FWUPD_DATADIR', datadir)
 conf.set_quoted('FWUPD_LOCALSTATEDIR', localstatedir)

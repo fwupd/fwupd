@@ -28,6 +28,7 @@ option('systemd_root_prefix', type: 'string', value: '', description: 'Directory
 option('elogind', type : 'boolean', value : false, description : 'enable elogind support')
 option('tests', type : 'boolean', value : true, description : 'enable tests')
 option('tpm', type : 'boolean', value : true, description : 'enable TPM support')
+option('soup_session_compat', type : 'boolean', value : true, description : 'enable SoupSession runtime compatibility support')
 option('udevdir', type: 'string', value: '', description: 'Directory for udev rules')
 option('efi-cc', type : 'string', value : 'gcc', description : 'the compiler to use for EFI modules')
 option('efi-ld', type : 'string', value : 'ld', description : 'the linker to use for EFI modules')

@@ -32,6 +32,7 @@ install_headers([
 
 libfwupd_deps = [
     giounix,
+    gmodule,
     libcurl,
     libjcat,
     libjsonglib,
