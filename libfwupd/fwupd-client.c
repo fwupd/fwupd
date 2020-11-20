@@ -65,6 +65,7 @@ typedef struct {
 typedef struct {
 	CURL				*curl;
 	curl_mime			*mime;
+	struct curl_slist		*headers;
 } FwupdCurlHelper;
 
 enum {
@@ -104,6 +105,8 @@ fwupd_client_curl_helper_free (FwupdCurlHelper *helper)
 		curl_easy_cleanup (helper->curl);
 	if (helper->mime != NULL)
 		curl_mime_free (helper->mime);
+	if (helper->headers != NULL)
+		curl_slist_free_all (helper->headers);
 	g_free (helper);
 }
 
@@ -4221,7 +4224,9 @@ fwupd_client_upload_bytes_async (FwupdClient *self,
 			curl_mime_name (part, "signature");
 		}
 	} else {
-		curl_easy_setopt (helper->mime, CURLOPT_POST, 1L);
+		helper->headers = curl_slist_append (helper->headers, "Content-Type: text/plain");
+		curl_easy_setopt (helper->curl, CURLOPT_HTTPHEADER, helper->headers);
+		curl_easy_setopt (helper->curl, CURLOPT_POST, 1L);
 		curl_easy_setopt (helper->curl, CURLOPT_POSTFIELDSIZE, strlen (payload));
 		curl_easy_setopt (helper->curl, CURLOPT_COPYPOSTFIELDS, payload);
 	}
