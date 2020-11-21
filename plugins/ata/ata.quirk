@@ -18,6 +18,10 @@ VendorId = ATA:0x1987
 Vendor = Seagate
 VendorId = ATA:0x1BB1
 
+[DeviceInstanceId=OUI\00080d]
+Vendor = Toshiba
+VendorId = ATA:0x1179
+
 [DeviceInstanceId=OUI\000c50]
 Vendor = Seagate
 VendorId = ATA:0x1BB1
