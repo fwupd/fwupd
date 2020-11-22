@@ -475,7 +475,7 @@ fu_engine_get_remote_id_for_checksum (FuEngine *self, const gchar *csum)
 {
 	g_autofree gchar *xpath = NULL;
 	g_autoptr(XbNode) key = NULL;
-	xpath = g_strdup_printf ("components/component/releases/release/"
+	xpath = g_strdup_printf ("components/component[@type='firmware']/releases/release/"
 				 "checksum[@target='container'][text()='%s']/../../"
 				 "../../custom/value[@key='fwupd::RemoteId']", csum);
 	key = xb_silo_query_first (self->silo, xpath, NULL);
@@ -788,7 +788,7 @@ fu_engine_get_component_by_guids (FuEngine *self, FuDevice *device)
 	for (guint i = 0; i < guids->len; i++) {
 		const gchar *guid = g_ptr_array_index (guids, i);
 		xb_string_append_union (xpath,
-					"components/component/"
+					"components/component[@type='firmware']/"
 					"provides/firmware[@type='flashed'][text()='%s']/"
 					"../..", guid);
 	}
@@ -859,7 +859,7 @@ fu_engine_verify_from_system_metadata (FuEngine *self,
 
 	/* prepare query with bound GUID parameter */
 	query = xb_query_new_full (self->silo,
-				   "components/component/"
+				   "components/component[@type='firmware']/"
 				   "provides/firmware[@type='flashed'][text()=?]/"
 				   "../../releases/release",
 				   XB_QUERY_FLAG_OPTIMIZE |
@@ -3326,17 +3326,23 @@ fu_engine_load_metadata_store (FuEngine *self, FuEngineLoadFlags flags, GError *
 		return FALSE;
 
 	/* print what we've got */
-	components = xb_silo_query (self->silo, "components/component", 0, NULL);
+	components = xb_silo_query (self->silo,
+				    "components/component[@type='firmware']",
+				    0, NULL);
 	if (components != NULL)
 		g_debug ("%u components now in silo", components->len);
 
 	/* build the index */
 	if (!xb_silo_query_build_index (self->silo,
-					"components/component/provides/firmware",
+					"components/component",
 					"type", error))
 		return FALSE;
 	if (!xb_silo_query_build_index (self->silo,
-					"components/component/provides/firmware",
+					"components/component[@type='firmware']/provides/firmware",
+					"type", error))
+		return FALSE;
+	if (!xb_silo_query_build_index (self->silo,
+					"components/component[@type='firmware']/provides/firmware",
 					NULL, error))
 		return FALSE;
 
@@ -3863,7 +3869,9 @@ fu_engine_get_details (FuEngine *self, FuEngineRequest *request, gint fd, GError
 	silo = fu_engine_get_silo_from_blob (self, blob, error);
 	if (silo == NULL)
 		return NULL;
-	components = xb_silo_query (silo, "components/component", 0, &error_local);
+	components = xb_silo_query (silo,
+				    "components/component[@type='firmware']",
+				    0, &error_local);
 	if (components == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -3874,10 +3882,10 @@ fu_engine_get_details (FuEngine *self, FuEngineRequest *request, gint fd, GError
 	}
 
 	/* build the index */
-	if (!xb_silo_query_build_index (silo, "components/component/provides/firmware",
+	if (!xb_silo_query_build_index (silo, "components/component[@type='firmware']/provides/firmware",
 					"type", error))
 		return NULL;
-	if (!xb_silo_query_build_index (silo, "components/component/provides/firmware",
+	if (!xb_silo_query_build_index (silo, "components/component[@type='firmware']/provides/firmware",
 					NULL, error))
 		return NULL;
 
@@ -4404,7 +4412,7 @@ fu_engine_get_releases_for_device (FuEngine *self,
 	for (guint i = 0; i < device_guids->len; i++) {
 		const gchar *guid = g_ptr_array_index (device_guids, i);
 		xb_string_append_union (xpath,
-					"components/component/"
+					"components/component[@type='firmware']/"
 					"provides/firmware[@type=$'flashed'][text()=$'%s']/"
 					"../..", guid);
 	}
@@ -5674,7 +5682,7 @@ fu_engine_plugin_check_supported_cb (FuPlugin *plugin, const gchar *guid, FuEngi
 	if (fu_config_get_enumerate_all_devices (self->config))
 		return TRUE;
 
-	xpath = g_strdup_printf ("components/component/"
+	xpath = g_strdup_printf ("components/component[@type='firmware']/"
 				 "provides/firmware[@type='flashed'][text()='%s']",
 				 guid);
 	n = xb_silo_query_first (self->silo, xpath, NULL);

@@ -676,7 +676,9 @@ fu_cabinet_parse (FuCabinet *self,
 		return FALSE;
 
 	/* sanity check */
-	components = xb_silo_query (self->silo, "components/component", 0, &error_local);
+	components = xb_silo_query (self->silo,
+				    "components/component[@type='firmware']",
+				    0, &error_local);
 	if (components == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,

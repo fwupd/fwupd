@@ -853,7 +853,9 @@ fu_main_install_with_helper (FuMainAuthHelper *helper_ref, GError **error)
 		return FALSE;
 
 	/* for each component in the silo */
-	components = xb_silo_query (helper->silo, "components/component", 0, error);
+	components = xb_silo_query (helper->silo,
+				    "components/component[@type='firmware']",
+				    0, error);
 	if (components == NULL)
 		return FALSE;
 	helper->action_ids = g_ptr_array_new_with_free_func (g_free);
