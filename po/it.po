@@ -1446,6 +1446,11 @@ msgstr "Pianifica l'installazione al prossimo riavvio quando è possibile"
 msgid "Scheduling…"
 msgstr "Pianificazione…"
 
+#. TRANSLATORS: %s is a link to a website
+#, c-format
+msgid "See %s for more information."
+msgstr "Per maggiori informazioni, consultare %s."
+
 #. TRANSLATORS: Device has been chosen by the daemon for the user
 msgid "Selected device"
 msgstr "Dispositivo selezionato"

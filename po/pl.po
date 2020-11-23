@@ -349,7 +349,7 @@ msgstr "Blokowanie oprogramowania sprzętowego:"
 
 #. TRANSLATORS: command description
 msgid "Blocks a specific firmware from being installed"
-msgstr "Blokuje instalację podanego oprogramowania sprzętowego"
+msgstr "Blokuje możliwość instalacji podanego oprogramowania sprzętowego"
 
 #. TRANSLATORS: firmware version of bootloader
 msgid "Bootloader Version"
@@ -1471,6 +1471,11 @@ msgstr "Planuje instalację podczas następnego ponownego uruchomienia"
 msgid "Scheduling…"
 msgstr "Planowanie…"
 
+#. TRANSLATORS: %s is a link to a website
+#, c-format
+msgid "See %s for more information."
+msgstr "%s zawiera więcej informacji"
+
 #. TRANSLATORS: Device has been chosen by the daemon for the user
 msgid "Selected device"
 msgstr "Wybrane urządzenie"
@@ -1758,6 +1763,10 @@ msgstr "Odwiązuje bieżący sterownik"
 #. TRANSLATORS: we will now offer this firmware to the user
 msgid "Unblocking firmware:"
 msgstr "Odblokowywanie oprogramowania sprzętowego:"
+
+#. TRANSLATORS: command description
+msgid "Unblocks a specific firmware from being installed"
+msgstr "Odblokowuje możliwość instalacji podanego oprogramowania sprzętowego"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Unencrypted"

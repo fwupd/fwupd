@@ -1446,6 +1446,11 @@ msgstr "Ajasta asennus uudelleenkäynnistykselle mahdollisuuksien mukaan"
 msgid "Scheduling…"
 msgstr "Ajoitetaan…"
 
+#. TRANSLATORS: %s is a link to a website
+#, c-format
+msgid "See %s for more information."
+msgstr "Katso %s saadaksesi lisätietoja."
+
 #. TRANSLATORS: Device has been chosen by the daemon for the user
 msgid "Selected device"
 msgstr "Valittu laite"
@@ -1731,6 +1736,10 @@ msgstr "Pura nykyinen ohjain"
 #. TRANSLATORS: we will now offer this firmware to the user
 msgid "Unblocking firmware:"
 msgstr "Laiteohjelmiston poistaminen käytöstä:"
+
+#. TRANSLATORS: command description
+msgid "Unblocks a specific firmware from being installed"
+msgstr "Poistaa asennuseston laiteohjelmistosta"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Unencrypted"

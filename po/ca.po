@@ -1277,6 +1277,10 @@ msgstr "Percentatge completat"
 msgid "Please enter a number from 0 to %u: "
 msgstr "Introduïu un número del 0 al %u: "
 
+#. TRANSLATORS: Failed to open plugin, hey Arch users
+msgid "Plugin dependencies missing"
+msgstr "Manquen les dependències del connector"
+
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
 msgstr "Protecció DMA durant la prearrencada"
@@ -1441,6 +1445,11 @@ msgstr "Planifica la instal·lació per al següent reinici quan sigui possible"
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Planificació..."
+
+#. TRANSLATORS: %s is a link to a website
+#, c-format
+msgid "See %s for more information."
+msgstr "Per a més informació, vegeu %s."
 
 #. TRANSLATORS: Device has been chosen by the daemon for the user
 msgid "Selected device"
@@ -1727,6 +1736,10 @@ msgstr "Desvincula el controlador actual"
 #. TRANSLATORS: we will now offer this firmware to the user
 msgid "Unblocking firmware:"
 msgstr "Microprogramari desbloquejat:"
+
+#. TRANSLATORS: command description
+msgid "Unblocks a specific firmware from being installed"
+msgstr "Desbloqueja la instal·lació d'un microprogramari específic"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Unencrypted"

@@ -1471,6 +1471,11 @@ msgstr "Якщо можливо, запланувати встановлення
 msgid "Scheduling…"
 msgstr "Плануємо…"
 
+#. TRANSLATORS: %s is a link to a website
+#, c-format
+msgid "See %s for more information."
+msgstr "Див. %s, щоб дізнатися більше."
+
 #. TRANSLATORS: Device has been chosen by the daemon for the user
 msgid "Selected device"
 msgstr "Вибрано пристрій"
