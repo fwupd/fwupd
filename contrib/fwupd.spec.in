@@ -136,6 +136,8 @@ Provides: fwupdate-efi
 %endif
 
 # optional, but a really good idea
+Recommends: udisks2
+
 %if 0%{?have_modem_manager}
 Recommends: %{name}-plugin-modem-manager
 %endif
