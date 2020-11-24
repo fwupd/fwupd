@@ -129,7 +129,16 @@ fwupd_remote_set_kind (FwupdRemote *self, FwupdRemoteKind kind)
 	priv->kind = kind;
 }
 
-static void
+/**
+ * fwupd_remote_set_keyring_kind:
+ * @self: A #FwupdRemote
+ * @keyring_kind: #FwupdKeyringKind e.g. #FWUPD_KEYRING_KIND_PKCS7
+ *
+ * Sets the keyring kind
+ *
+ * Since: 1.5.3
+ **/
+void
 fwupd_remote_set_keyring_kind (FwupdRemote *self, FwupdKeyringKind keyring_kind)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
