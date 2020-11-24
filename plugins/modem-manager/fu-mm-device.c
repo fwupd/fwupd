@@ -485,8 +485,6 @@ typedef struct {
 	FuMmDevice	*device;
 	GError		*error;
 	GPtrArray	*file_infos;
-	gsize		 total_written;
-	gsize		 total_bytes;
 } FuMmArchiveIterateCtx;
 
 static gboolean
@@ -536,7 +534,6 @@ fu_mm_qmi_pdc_archive_iterate_mcfg (FuArchive	*archive,
 	file_info->bytes = g_bytes_ref (bytes);
 	file_info->active = fu_mm_should_be_active (fu_device_get_version (FU_DEVICE (ctx->device)), filename);
 	g_ptr_array_add (ctx->file_infos, file_info);
-	ctx->total_bytes += g_bytes_get_size (file_info->bytes);
 	return TRUE;
 }
 
@@ -577,8 +574,6 @@ fu_mm_device_write_firmware_qmi_pdc (FuDevice *device, GBytes *fw, GArray **acti
 		.device = FU_MM_DEVICE (device),
 		.error = NULL,
 		.file_infos = file_infos,
-		.total_written = 0,
-		.total_bytes = 0,
 	};
 
 	/* decompress entire archive ahead of time */
