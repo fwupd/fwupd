@@ -43,6 +43,7 @@ struct _FuMmDevice {
 	MMModemFirmwareUpdateMethod	 update_methods;
 	gchar				*detach_fastboot_at;
 	gint				 port_at_ifnum;
+	gint				 port_qmi_ifnum;
 
 	/* fastboot detach handling */
 	gchar				*port_at;
@@ -100,6 +101,13 @@ fu_mm_device_get_port_at_ifnum (FuMmDevice *device)
 {
 	g_return_val_if_fail (FU_IS_MM_DEVICE (device), -1);
 	return device->port_at_ifnum;
+}
+
+gint
+fu_mm_device_get_port_qmi_ifnum (FuMmDevice *device)
+{
+	g_return_val_if_fail (FU_IS_MM_DEVICE (device), -1);
+	return device->port_qmi_ifnum;
 }
 
 static gboolean
@@ -216,13 +224,20 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* if we have the at port reported, get sysfs path and interface number */
 	if (self->port_at != NULL) {
 		fu_mm_utils_get_port_info (self->port_at, &device_sysfs_path, &self->port_at_ifnum, NULL);
-	} else if (self->port_qmi != NULL) {
-		fu_mm_utils_get_port_info (self->port_qmi, &device_sysfs_path, NULL, NULL);
-	} else {
-		g_warn_if_reached ();
+	}
+	if (self->port_qmi != NULL) {
+		g_autofree gchar *qmi_device_sysfs_path = NULL;
+		fu_mm_utils_get_port_info (self->port_qmi, &qmi_device_sysfs_path, &self->port_qmi_ifnum, NULL);
+		if (device_sysfs_path == NULL && qmi_device_sysfs_path != NULL) {
+			device_sysfs_path = g_steal_pointer (&qmi_device_sysfs_path);
+		} else if (g_strcmp0 (device_sysfs_path, qmi_device_sysfs_path) != 0) {
+			g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+				     "mismatched device sysfs path: %s != %s",
+				     device_sysfs_path, qmi_device_sysfs_path);
+			return FALSE;
+		}
 	}
 
 	/* if no device sysfs file, error out */
@@ -775,6 +790,7 @@ fu_mm_device_new (MMManager *manager, MMObject *omodem)
 	self->manager = g_object_ref (manager);
 	self->omodem = g_object_ref (omodem);
 	self->port_at_ifnum = -1;
+	self->port_qmi_ifnum = -1;
 	return self;
 }
 
@@ -792,6 +808,7 @@ fu_plugin_mm_inhibited_device_info_new (FuMmDevice *device)
 	info->update_methods = fu_mm_device_get_update_methods (device);
 	info->detach_fastboot_at = g_strdup (fu_mm_device_get_detach_fastboot_at (device));
 	info->port_at_ifnum = fu_mm_device_get_port_at_ifnum (device);
+	info->port_qmi_ifnum = fu_mm_device_get_port_qmi_ifnum (device);
 	info->inhibited_uid = g_strdup (fu_mm_device_get_inhibition_uid (device));
 
 	return info;
@@ -825,6 +842,7 @@ fu_mm_device_udev_new (MMManager *manager,
 	self->update_methods = info->update_methods;
 	self->detach_fastboot_at = g_strdup (info->detach_fastboot_at);
 	self->port_at_ifnum = info->port_at_ifnum;
+	self->port_qmi_ifnum = info->port_qmi_ifnum;
 
 	for (guint i = 0; i < info->guids->len; i++)
 		fu_device_add_guid (FU_DEVICE (self), g_ptr_array_index (info->guids, i));
@@ -840,17 +858,19 @@ fu_mm_device_udev_add_port (FuMmDevice	*self,
 {
 	g_return_if_fail (FU_IS_MM_DEVICE (self));
 
-	/* cdc-wdm ports always added unless one already set */
 	if (g_str_equal (subsystem, "usbmisc") &&
-	    (self->port_qmi == NULL)) {
+	    self->port_qmi == NULL &&
+	    ifnum >= 0 &&
+	    ifnum == self->port_qmi_ifnum) {
 		g_debug ("added QMI port %s (%s)", path, subsystem);
 		self->port_qmi = g_strdup (path);
 		return;
 	}
 
 	if (g_str_equal (subsystem, "tty") &&
-	    (self->port_at == NULL) &&
-	    (ifnum >= 0) && (ifnum == self->port_at_ifnum)) {
+	    self->port_at == NULL &&
+	    ifnum >= 0 &&
+	    ifnum == self->port_at_ifnum) {
 		g_debug ("added AT port %s (%s)", path, subsystem);
 		self->port_at = g_strdup (path);
 		return;
