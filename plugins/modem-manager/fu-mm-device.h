@@ -20,6 +20,7 @@ FuMmDevice			*fu_mm_device_new			(MMManager	*manager,
 const gchar			*fu_mm_device_get_inhibition_uid	(FuMmDevice	*device);
 const gchar			*fu_mm_device_get_detach_fastboot_at	(FuMmDevice	*device);
 gint				 fu_mm_device_get_port_at_ifnum		(FuMmDevice	*device);
+gint				 fu_mm_device_get_port_qmi_ifnum	(FuMmDevice	*device);
 MMModemFirmwareUpdateMethod	 fu_mm_device_get_update_methods	(FuMmDevice	*device);
 
 /* support for udev-based devices */
@@ -35,6 +36,7 @@ struct FuPluginMmInhibitedDeviceInfo {
 	MMModemFirmwareUpdateMethod update_methods;
 	gchar		*detach_fastboot_at;
 	gint		 port_at_ifnum;
+	gint		 port_qmi_ifnum;
 };
 FuPluginMmInhibitedDeviceInfo	*fu_plugin_mm_inhibited_device_info_new	 (FuMmDevice *device);
 void				 fu_plugin_mm_inhibited_device_info_free (FuPluginMmInhibitedDeviceInfo *info);
