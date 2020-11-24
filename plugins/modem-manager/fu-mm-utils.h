@@ -11,12 +11,14 @@
 #include <gudev/gudev.h>
 
 gboolean	fu_mm_utils_get_udev_port_info	(GUdevDevice	 *dev,
+						 gchar		**device_bus,
 						 gchar		**device_sysfs_path,
-						 gint		 *port_ifnum,
+						 gint		 *port_usb_ifnum,
 						 GError		**error);
 gboolean	fu_mm_utils_get_port_info	(const gchar	 *path,
+						 gchar		**device_bus,
 						 gchar		**device_sysfs_path,
-						 gint		 *port_ifnum,
+						 gint		 *port_usb_ifnum,
 						 GError		**error);
 
 #endif /* __FU_MM_UTILS_H */
