@@ -144,6 +144,7 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 	guint n_ports = 0;
 	g_autoptr(MMFirmwareUpdateSettings) update_settings = NULL;
 	g_autofree gchar *device_sysfs_path = NULL;
+	g_autofree gchar *device_bus = NULL;
 
 	/* inhibition uid is the modem interface 'Device' property, which may
 	 * be the device sysfs path or a different user-provided id */
@@ -251,11 +252,12 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 	}
 
 	if (self->port_at != NULL) {
-		fu_mm_utils_get_port_info (self->port_at, &device_sysfs_path, &self->port_at_ifnum, NULL);
+		fu_mm_utils_get_port_info (self->port_at, &device_bus, &device_sysfs_path, &self->port_at_ifnum, NULL);
 	}
 	if (self->port_qmi != NULL) {
 		g_autofree gchar *qmi_device_sysfs_path = NULL;
-		fu_mm_utils_get_port_info (self->port_qmi, &qmi_device_sysfs_path, &self->port_qmi_ifnum, NULL);
+		g_autofree gchar *qmi_device_bus = NULL;
+		fu_mm_utils_get_port_info (self->port_qmi, &qmi_device_bus, &qmi_device_sysfs_path, &self->port_qmi_ifnum, NULL);
 		if (device_sysfs_path == NULL && qmi_device_sysfs_path != NULL) {
 			device_sysfs_path = g_steal_pointer (&qmi_device_sysfs_path);
 		} else if (g_strcmp0 (device_sysfs_path, qmi_device_sysfs_path) != 0) {
@@ -264,14 +266,24 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 				     device_sysfs_path, qmi_device_sysfs_path);
 			return FALSE;
 		}
+		if (device_bus == NULL && qmi_device_bus != NULL) {
+			device_bus = g_steal_pointer (&qmi_device_bus);
+		} else if (g_strcmp0 (device_bus, qmi_device_bus) != 0) {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_FAILED,
+				     "mismatched device bus: %s != %s",
+				     device_bus, qmi_device_bus);
+			return FALSE;
+		}
 	}
 
 	/* if no device sysfs file, error out */
-	if (device_sysfs_path == NULL) {
+	if (device_sysfs_path == NULL || device_bus == NULL) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "failed to find device sysfs path");
+				     "failed to find device details");
 		return FALSE;
 	}
 
@@ -285,15 +297,32 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 	for (guint i = 0; device_ids[i] != NULL; i++)
 		fu_device_add_instance_id (device, device_ids[i]);
 	if (fu_device_get_vendor_ids (device) == NULL) {
-		g_autofree gchar *path = g_build_filename (device_sysfs_path, "idVendor", NULL);
-		g_autofree gchar *value = NULL;
+		g_autofree gchar *path = NULL;
+		g_autofree gchar *value_str = NULL;
 		g_autoptr(GError) error_local = NULL;
 
-		if (!g_file_get_contents (path, &value, NULL, &error_local)) {
+		if (g_strcmp0 (device_bus, "USB") == 0)
+			path = g_build_filename (device_sysfs_path, "idVendor", NULL);
+		else if (g_strcmp0 (device_bus, "PCI") == 0)
+			path = g_build_filename (device_sysfs_path, "vendor", NULL);
+
+		if (path == NULL) {
+			g_warning ("failed to set vendor ID: unsupported bus: %s", device_bus);
+		} else if (!g_file_get_contents (path, &value_str, NULL, &error_local)) {
 			g_warning ("failed to set vendor ID: %s", error_local->message);
 		} else {
-			g_autofree gchar *vendor_id = g_strdup_printf ("USB:0x%s", g_strchomp (value));
-			fu_device_add_vendor_id (device, vendor_id);
+			guint64 value_int;
+
+			/* note: the string value may be prefixed with '0x' (e.g. when reading
+			 * the PCI 'vendor' attribute, or not prefixed with anything, as in the
+			 * USB 'idVendor' attribute. */
+			value_int = g_ascii_strtoull (value_str, NULL, 16);
+			if (value_int > G_MAXUINT16) {
+				g_warning ("failed to set vendor ID: invalid value: %s", value_str);
+			} else {
+				g_autofree gchar *vendor_id = g_strdup_printf ("%s:0x%04X", device_bus, (guint) value_int);
+				fu_device_add_vendor_id (device, vendor_id);
+			}
 		}
 	}
 
