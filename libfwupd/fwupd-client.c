@@ -4035,13 +4035,15 @@ fwupd_client_download_bytes_thread_cb (GTask *task,
 			g_task_return_new_error (task,
 						 FWUPD_ERROR,
 						 FWUPD_ERROR_INVALID_FILE,
-						 "%s", errbuf);
+						 "failed to download file: %s",
+						 errbuf);
 			return;
 		}
 		g_task_return_new_error (task,
 					 FWUPD_ERROR,
 					 FWUPD_ERROR_INVALID_FILE,
-					 "%s", curl_easy_strerror (res));
+					 "failed to download file: %s",
+					 curl_easy_strerror (res));
 
 		return;
 	}
@@ -4147,13 +4149,15 @@ fwupd_client_upload_bytes_thread_cb (GTask *task,
 			g_task_return_new_error (task,
 						 FWUPD_ERROR,
 						 FWUPD_ERROR_INVALID_FILE,
-						 "%s", errbuf);
+						 "failed to upload file: %s",
+						 errbuf);
 			return;
 		}
 		g_task_return_new_error (task,
 					 FWUPD_ERROR,
 					 FWUPD_ERROR_INVALID_FILE,
-					 "%s", curl_easy_strerror (res));
+					 "failed to upload file: %s",
+					 curl_easy_strerror (res));
 
 		return;
 	}
