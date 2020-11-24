@@ -623,3 +623,9 @@ LIBFWUPD_1.5.2 {
     fwupd_client_get_user_agent;
   local: *;
 } LIBFWUPD_1.5.1;
+
+LIBFWUPD_1.5.3 {
+  global:
+    fwupd_remote_set_keyring_kind;
+  local: *;
+} LIBFWUPD_1.5.2;
