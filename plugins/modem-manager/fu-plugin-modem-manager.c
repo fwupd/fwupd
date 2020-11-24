@@ -62,6 +62,8 @@ fu_plugin_mm_uninhibit_device (FuPlugin *plugin)
 	FuPluginData *priv = fu_plugin_get_data (plugin);
 	g_autoptr(FuPluginMmInhibitedDeviceInfo) info = NULL;
 
+	g_clear_object (&priv->udev_client);
+
 	/* get the device removed from the plugin cache before uninhibiting */
 	fu_plugin_mm_udev_device_removed (plugin);
 
