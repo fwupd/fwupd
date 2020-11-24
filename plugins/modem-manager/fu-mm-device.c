@@ -111,6 +111,28 @@ fu_mm_device_get_port_qmi_ifnum (FuMmDevice *device)
 }
 
 static gboolean
+validate_firmware_update_method (MMModemFirmwareUpdateMethod methods, GError **error)
+{
+	static const MMModemFirmwareUpdateMethod supported_combinations[] = {
+		MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT,
+		MM_MODEM_FIRMWARE_UPDATE_METHOD_QMI_PDC | MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT,
+	};
+	g_autofree gchar *methods_str = NULL;
+
+	methods_str = mm_modem_firmware_update_method_build_string_from_mask (methods);
+	for (guint i = 0; i < G_N_ELEMENTS (supported_combinations); i++) {
+		if (supported_combinations[i] == methods) {
+			g_debug ("valid firmware update combination: %s", methods_str);
+			return TRUE;
+		}
+	}
+
+	g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
+		     "invalid firmware update combination: %s", methods_str);
+	return FALSE;
+}
+
+static gboolean
 fu_mm_device_probe_default (FuDevice *device, GError **error)
 {
 	FuMmDevice *self = FU_MM_DEVICE (device);
@@ -138,6 +160,10 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 				     "modem cannot be put in programming mode");
 		return FALSE;
 	}
+
+	/* make sure the combination is supported */
+	if (!validate_firmware_update_method (self->update_methods, error))
+		return FALSE;
 
 	/* various fastboot commands */
 	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT) {
@@ -433,13 +459,12 @@ fu_mm_device_detach (FuDevice *device, GError **error)
 	 *
 	 * If the FuMmModem is created from a MM-exposed modem and...
 	 *  a) we only support fastboot, we just trigger the fastboot detach.
-	 *  b) we only support qmi-pdc, we just exit without any detach.
-	 *  c) we support both fastboot and qmi-pdc, we will set the
+	 *  b) we support both fastboot and qmi-pdc, we will set the
 	 *     ANOTHER_WRITE_REQUIRED flag in the device and we'll trigger
 	 *     the fastboot detach.
 	 *
 	 * If the FuMmModem is created from udev events...
-	 *  d) it means we're in the extra required write that was flagged
+	 *  c) it means we're in the extra required write that was flagged
 	 *     in an earlier detach(), and we need to perform the qmi-pdc
 	 *     update procedure at this time, so we just exit without any
 	 *     detach.
