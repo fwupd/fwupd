@@ -989,6 +989,9 @@ fwupd_remote_load_signature_jcat (FwupdRemote *self, JcatFile *jcat_file, GError
  *
  * Parses the signature, updating the metadata URI as appropriate.
  *
+ * This can only be called for remotes with `Keyring=jcat` which is
+ * the default for most remotes.
+ *
  * Returns: %TRUE for success
  *
  * Since: 1.4.5
@@ -996,12 +999,22 @@ fwupd_remote_load_signature_jcat (FwupdRemote *self, JcatFile *jcat_file, GError
 gboolean
 fwupd_remote_load_signature_bytes (FwupdRemote *self, GBytes *bytes, GError **error)
 {
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	g_autoptr(GInputStream) istr = NULL;
 	g_autoptr(JcatFile) jcat_file = jcat_file_new ();
 
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), FALSE);
 	g_return_val_if_fail (bytes != NULL, FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* sanity check */
+	if (priv->keyring_kind != FWUPD_KEYRING_KIND_JCAT) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "only supported for JCat remotes");
+		return FALSE;
+	}
 
 	istr = g_memory_input_stream_new_from_bytes (bytes);
 	if (!jcat_file_import_stream (jcat_file, istr, JCAT_IMPORT_FLAG_NONE, NULL, error))

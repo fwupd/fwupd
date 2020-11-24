@@ -2955,9 +2955,12 @@ fwupd_client_refresh_remote_signature_cb (GObject *source,
 		return;
 	}
 	data->signature = g_steal_pointer (&bytes);
-	if (!fwupd_remote_load_signature_bytes (data->remote, data->signature, &error)) {
-		g_task_return_error (task, g_steal_pointer (&error));
-		return;
+	if (fwupd_remote_get_keyring_kind (data->remote) == FWUPD_KEYRING_KIND_JCAT) {
+		if (!fwupd_remote_load_signature_bytes (data->remote, data->signature, &error)) {
+			g_prefix_error (&error, "Failed to load signature: ");
+			g_task_return_error (task, g_steal_pointer (&error));
+			return;
+		}
 	}
 
 	/* is the signature checksum the same? */
