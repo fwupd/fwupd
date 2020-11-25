@@ -373,7 +373,8 @@ main (int argc, char *argv[])
 	cmd_descriptions = fu_util_cmd_array_to_string (cmd_array);
 	g_option_context_set_summary (priv->context, cmd_descriptions);
 	g_option_context_set_description (priv->context,
-		"This tool can be used from other tools and from shell scripts.");
+		/* TRANSLATORS: CLI description */
+		_("This tool can be used from other tools and from shell scripts."));
 
 	/* TRANSLATORS: program name */
 	g_set_application_name (_("Firmware Agent"));

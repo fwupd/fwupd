@@ -2700,13 +2700,15 @@ main (int argc, char *argv[])
 	/* add commands */
 	fu_util_cmd_array_add (cmd_array,
 		     "build-firmware",
-		     "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]",
+		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+		     _("FILE-IN FILE-OUT [SCRIPT] [OUTPUT]"),
 		     /* TRANSLATORS: command description */
 		     _("Build firmware using a sandbox"),
 		     fu_util_firmware_builder);
 	fu_util_cmd_array_add (cmd_array,
 		     "smbios-dump",
-		     "FILE",
+		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+		     _("FILE"),
 		     /* TRANSLATORS: command description */
 		     _("Dump SMBIOS data from a file"),
 		     fu_util_smbios_dump);
@@ -2730,7 +2732,8 @@ main (int argc, char *argv[])
 		     fu_util_get_history);
 	fu_util_cmd_array_add (cmd_array,
 		     "get-updates,get-upgrades",
-		     "[DEVICE-ID|GUID]",
+		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+		     _("[DEVICE-ID|GUID]"),
 		     /* TRANSLATORS: command description */
 		     _("Gets the list of updates for connected hardware"),
 		     fu_util_get_updates);
@@ -2754,55 +2757,64 @@ main (int argc, char *argv[])
 		     fu_util_watch);
 	fu_util_cmd_array_add (cmd_array,
 		     "install-blob",
-		     "FILENAME DEVICE-ID",
+		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+		     _("FILENAME DEVICE-ID"),
 		     /* TRANSLATORS: command description */
 		     _("Install a firmware blob on a device"),
 		     fu_util_install_blob);
 	fu_util_cmd_array_add (cmd_array,
 		     "install",
-		     "FILE [DEVICE-ID|GUID]",
+		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+		     _("FILE [DEVICE-ID|GUID]"),
 		     /* TRANSLATORS: command description */
 		     _("Install a firmware file on this hardware"),
 		     fu_util_install);
 	fu_util_cmd_array_add (cmd_array,
 		     "reinstall",
-		     "DEVICE-ID|GUID",
+		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+		     _("DEVICE-ID|GUID"),
 		     /* TRANSLATORS: command description */
 		     _("Reinstall firmware on a device"),
 		     fu_util_reinstall);
 	fu_util_cmd_array_add (cmd_array,
 		     "attach",
-		     "DEVICE-ID|GUID",
+		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+		     _("DEVICE-ID|GUID"),
 		     /* TRANSLATORS: command description */
 		     _("Attach to firmware mode"),
 		     fu_util_attach);
 	fu_util_cmd_array_add (cmd_array,
 		     "detach",
-		     "DEVICE-ID|GUID",
+		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+		     _("DEVICE-ID|GUID"),
 		     /* TRANSLATORS: command description */
 		     _("Detach to bootloader mode"),
 		     fu_util_detach);
 	fu_util_cmd_array_add (cmd_array,
 		     "unbind-driver",
-		     "[DEVICE-ID|GUID]",
+		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+		     _("[DEVICE-ID|GUID]"),
 		     /* TRANSLATORS: command description */
 		     _("Unbind current driver"),
 		     fu_util_unbind_driver);
 	fu_util_cmd_array_add (cmd_array,
 		     "bind-driver",
-		     "subsystem driver [DEVICE-ID|GUID]",
+		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+		     _("SUBSYSTEM DRIVER [DEVICE-ID|GUID]"),
 		     /* TRANSLATORS: command description */
 		     _("Bind new kernel driver"),
 		     fu_util_bind_driver);
 	fu_util_cmd_array_add (cmd_array,
 		     "activate",
-		     "[DEVICE-ID|GUID]",
+		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+		     _("[DEVICE-ID|GUID]"),
 		     /* TRANSLATORS: command description */
 		     _("Activate pending devices"),
 		     fu_util_activate);
 	fu_util_cmd_array_add (cmd_array,
 		     "hwids",
-		     "[FILE]",
+		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+		     _("[FILE]"),
 		     /* TRANSLATORS: command description */
 		     _("Return all the hardware IDs for the machine"),
 		     fu_util_hwids);
@@ -2814,50 +2826,58 @@ main (int argc, char *argv[])
 		     fu_util_monitor);
 	fu_util_cmd_array_add (cmd_array,
 		     "update,upgrade",
-		     "[DEVICE-ID|GUID]",
+		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+		     _("[DEVICE-ID|GUID]"),
 		     /* TRANSLATORS: command description */
 		     _("Update all devices that match local metadata"),
 		     fu_util_update);
 	fu_util_cmd_array_add (cmd_array,
 		     "self-sign",
-		     "TEXT",
+		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+		     _("TEXT"),
 		     /* TRANSLATORS: command description */
 		     C_("command-description",
 			"Sign data using the client certificate"),
 		     fu_util_self_sign);
 	fu_util_cmd_array_add (cmd_array,
 		     "verify-update",
-		     "[DEVICE-ID|GUID]",
+		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+		     _("[DEVICE-ID|GUID]"),
 		     /* TRANSLATORS: command description */
 		     _("Update the stored metadata with current contents"),
 		     fu_util_verify_update);
 	fu_util_cmd_array_add (cmd_array,
 		     "firmware-dump",
-		     "FILENAME [DEVICE-ID|GUID]",
+		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+		     _("FILENAME [DEVICE-ID|GUID]"),
 		     /* TRANSLATORS: command description */
 		     _("Read a firmware blob from a device"),
 		     fu_util_firmware_dump);
 	fu_util_cmd_array_add (cmd_array,
 		     "firmware-convert",
-		     "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]",
+		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+		     _("FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"),
 		     /* TRANSLATORS: command description */
 		     _("Convert a firmware file"),
 		     fu_util_firmware_convert);
 	fu_util_cmd_array_add (cmd_array,
 		     "firmware-build",
-		     "BUILDER-XML FILENAME-DST",
+		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+		     _("BUILDER-XML FILENAME-DST"),
 		     /* TRANSLATORS: command description */
 		     _("Build a firmware file"),
 		     fu_util_firmware_build);
 	fu_util_cmd_array_add (cmd_array,
 		     "firmware-parse",
-		     "FILENAME [FIRMWARE-TYPE]",
+		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+		     _("FILENAME [FIRMWARE-TYPE]"),
 		     /* TRANSLATORS: command description */
 		     _("Parse and show details about a firmware file"),
 		     fu_util_firmware_parse);
 	fu_util_cmd_array_add (cmd_array,
 		     "firmware-extract",
-		     "FILENAME [FIRMWARE-TYPE]",
+		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+		     _("FILENAME [FIRMWARE-TYPE]"),
 		     /* TRANSLATORS: command description */
 		     _("Extract a firmware blob to images"),
 		     fu_util_firmware_extract);
@@ -2905,7 +2925,8 @@ main (int argc, char *argv[])
 		     fu_util_esp_list);
 	fu_util_cmd_array_add (cmd_array,
 		     "switch-branch",
-		     "[DEVICE-ID|GUID] [BRANCH]",
+		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+		     _("[DEVICE-ID|GUID] [BRANCH]"),
 		     /* TRANSLATORS: command description */
 		     _("Switch the firmware branch on the device"),
 		     fu_util_switch_branch);
@@ -2941,8 +2962,9 @@ main (int argc, char *argv[])
 	cmd_descriptions = fu_util_cmd_array_to_string (cmd_array);
 	g_option_context_set_summary (priv->context, cmd_descriptions);
 	g_option_context_set_description (priv->context,
-		"This tool allows an administrator to use the fwupd plugins "
-		"without being installed on the host system.");
+		/* TRANSLATORS: CLI description */
+		_("This tool allows an administrator to use the fwupd plugins "
+		  "without being installed on the host system."));
 
 	/* TRANSLATORS: program name */
 	g_set_application_name (_("Firmware Utility"));

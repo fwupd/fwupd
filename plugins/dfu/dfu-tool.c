@@ -979,9 +979,9 @@ main (int argc, char *argv[])
 		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
 			_("Print verbose debug statements"), NULL },
 		{ "device", 'd', 0, G_OPTION_ARG_STRING, &priv->device_vid_pid,
-			_("Specify Vendor/Product ID(s) of DFU device"), "VID:PID" },
+			_("Specify Vendor/Product ID(s) of DFU device"), _("VID:PID") },
 		{ "transfer-size", 't', 0, G_OPTION_ARG_STRING, &priv->transfer_size,
-			_("Specify the number of bytes per USB transfer"), "BYTES" },
+			_("Specify the number of bytes per USB transfer"), _("BYTES") },
 		{ "force", '\0', 0, G_OPTION_ARG_NONE, &priv->force,
 			_("Force the action ignoring all warnings"), NULL },
 		{ NULL}
@@ -997,13 +997,15 @@ main (int argc, char *argv[])
 	priv->cmd_array = g_ptr_array_new_with_free_func ((GDestroyNotify) dfu_tool_item_free);
 	dfu_tool_add (priv->cmd_array,
 		     "read",
-		     "FILENAME",
+		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+		     _("FILENAME"),
 		     /* TRANSLATORS: command description */
 		     _("Read firmware from device into a file"),
 		     dfu_tool_read);
 	dfu_tool_add (priv->cmd_array,
 		     "read-alt",
-		     "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID",
+		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+		     _("FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID"),
 		     /* TRANSLATORS: command description */
 		     _("Read firmware from one partition into a file"),
 		     dfu_tool_read_alt);
@@ -1015,7 +1017,8 @@ main (int argc, char *argv[])
 		     dfu_tool_write);
 	dfu_tool_add (priv->cmd_array,
 		     "write-alt",
-		     "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID [IMAGE-ALT-NAME|IMAGE-ALT-ID]",
+		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+		     _("FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID [IMAGE-ALT-NAME|IMAGE-ALT-ID]"),
 		     /* TRANSLATORS: command description */
 		     _("Write firmware from file into one partition"),
 		     dfu_tool_write_alt);
