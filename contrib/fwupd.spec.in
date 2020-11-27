@@ -269,6 +269,11 @@ mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 %post
 %systemd_post fwupd.service
 
+# change vendor-installed remotes to use the default keyring type
+for fn in /etc/fwupd/remotes.d/*.conf;
+    do sed -i 's/Keyring=gpg/#Keyring=pkcs/g' "$fn";
+done
+
 %preun
 %systemd_preun fwupd.service
 
