@@ -14,7 +14,7 @@
 guint32
 fu_bcm57xx_nvram_crc (const guint8 *buf, gsize bufsz)
 {
-	return GUINT32_FROM_BE(fu_common_crc32 (buf, bufsz));
+	return GUINT32_SWAP_LE_BE (fu_common_crc32 (buf, bufsz));
 }
 
 gboolean
