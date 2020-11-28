@@ -1532,11 +1532,13 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		return;
 	}
 	if (g_strcmp0 (method_name, "SetFeatureFlags") == 0) {
-		guint64 feature_flags = 0;
-		g_variant_get (parameters, "(t)", &feature_flags);
-		g_debug ("Called %s(%" G_GUINT64_FORMAT ")", method_name, feature_flags);
+		FwupdFeatureFlags feature_flags;
+		guint64 feature_flags_u64 = 0;
+		g_variant_get (parameters, "(t)", &feature_flags_u64);
+		g_debug ("Called %s(%" G_GUINT64_FORMAT ")", method_name, feature_flags_u64);
 
 		/* old flags for the same sender will be automatically destroyed */
+		feature_flags = feature_flags_u64;
 		g_hash_table_insert (priv->sender_features,
 				     g_strdup (sender),
 				     g_memdup (&feature_flags, sizeof(feature_flags)));
