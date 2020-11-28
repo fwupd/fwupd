@@ -74,15 +74,13 @@ typedef enum {
  *
  * The flags to the feature capabilities of the front-end client.
  **/
-typedef enum {
-	FWUPD_FEATURE_FLAG_NONE			= 0,		/* Since: 1.4.5 */
-	FWUPD_FEATURE_FLAG_CAN_REPORT		= 1 << 0,	/* Since: 1.4.5 */
-	FWUPD_FEATURE_FLAG_DETACH_ACTION	= 1 << 1,	/* Since: 1.4.5 */
-	FWUPD_FEATURE_FLAG_UPDATE_ACTION	= 1 << 2,	/* Since: 1.4.5 */
-	FWUPD_FEATURE_FLAG_SWITCH_BRANCH	= 1 << 3,	/* Since: 1.5.0 */
-	/*< private >*/
-	FWUPD_FEATURE_FLAG_LAST
-} FwupdFeatureFlags;
+#define FWUPD_FEATURE_FLAG_NONE			(0u)		/* Since: 1.4.5 */
+#define FWUPD_FEATURE_FLAG_CAN_REPORT		(1u << 0)	/* Since: 1.4.5 */
+#define FWUPD_FEATURE_FLAG_DETACH_ACTION	(1u << 1)	/* Since: 1.4.5 */
+#define FWUPD_FEATURE_FLAG_UPDATE_ACTION	(1u << 2)	/* Since: 1.4.5 */
+#define FWUPD_FEATURE_FLAG_SWITCH_BRANCH	(1u << 3)	/* Since: 1.5.0 */
+#define FWUPD_FEATURE_FLAG_UNKNOWN		G_MAXUINT64	/* Since: 1.5.3 */
+typedef guint64 FwupdFeatureFlags;
 
 /**
  * FwupdDeviceFlags:

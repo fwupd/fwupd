@@ -537,7 +537,7 @@ fwupd_feature_flag_from_string (const gchar *feature_flag)
 		return FWUPD_FEATURE_FLAG_UPDATE_ACTION;
 	if (g_strcmp0 (feature_flag, "switch-branch") == 0)
 		return FWUPD_FEATURE_FLAG_SWITCH_BRANCH;
-	return FWUPD_FEATURE_FLAG_LAST;
+	return FWUPD_FEATURE_FLAG_UNKNOWN;
 }
 
 /**

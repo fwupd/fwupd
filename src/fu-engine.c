@@ -1381,7 +1381,7 @@ fu_engine_check_requirement_client (FuEngine *self,
 		FwupdFeatureFlags flag = fwupd_feature_flag_from_string (feature_split[i]);
 
 		/* not recognised */
-		if (flag == FWUPD_FEATURE_FLAG_LAST) {
+		if (flag == FWUPD_FEATURE_FLAG_UNKNOWN) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_FOUND,
