@@ -104,7 +104,7 @@ fu_bcm57xx_stage1_image_write (FuFirmwareImage *image, GError **error)
 
 	/* add CRC */
 	crc = fu_bcm57xx_nvram_crc (buf, bufsz);
-	fu_byte_array_append_uint32 (blob, crc, G_BIG_ENDIAN);
+	fu_byte_array_append_uint32 (blob, crc, G_LITTLE_ENDIAN);
 	return g_byte_array_free_to_bytes (g_steal_pointer (&blob));
 }
 
