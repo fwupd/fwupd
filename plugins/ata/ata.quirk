@@ -82,6 +82,10 @@ VendorId = ATA:0x1CC1
 Vendor = SanDisk
 VendorId = ATA:0x15B7
 
+[DeviceInstanceId=OUI\96a060]
+Vendor = Western Digital
+VendorId = ATA:0x101C
+
 [DeviceInstanceId=OUI\e83a97]
 Vendor = Toshiba
 VendorId = ATA:0x1179
