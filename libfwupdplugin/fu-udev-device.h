@@ -42,6 +42,7 @@ struct _FuUdevDeviceClass
  * @FU_UDEV_DEVICE_FLAG_OPEN_WRITE:		Open the device write-only
  * @FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT:	Get the vendor ID fallback from the parent
  * @FU_UDEV_DEVICE_FLAG_USE_CONFIG:		Read and write from the device config
+ * @FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK:		Open nonblocking, e.g. O_NONBLOCK
  *
  * Flags used when opening the device using fu_device_open().
  **/

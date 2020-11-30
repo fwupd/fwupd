@@ -41,6 +41,7 @@ typedef enum {
 	FU_HID_DEVICE_FLAG_RETRY_FAILURE	= 1 << 2,
 	FU_HID_DEVICE_FLAG_NO_KERNEL_UNBIND	= 1 << 3,
 	FU_HID_DEVICE_FLAG_NO_KERNEL_REBIND	= 1 << 4,
+	/*< private >*/
 	FU_HID_DEVICE_FLAG_LAST
 } FuHidDeviceFlags;
 

@@ -1563,6 +1563,8 @@ fu_plugin_runner_composite_cleanup (FuPlugin *self, GPtrArray *devices, GError *
 /**
  * fu_plugin_runner_update_prepare:
  * @self: a #FuPlugin
+ * @flags: #FwupdInstallFlags
+ * @device: a #FuDevice
  * @error: a #GError or NULL
  *
  * Runs the update_prepare routine for the plugin
@@ -1583,6 +1585,8 @@ fu_plugin_runner_update_prepare (FuPlugin *self, FwupdInstallFlags flags, FuDevi
 /**
  * fu_plugin_runner_update_cleanup:
  * @self: a #FuPlugin
+ * @flags: #FwupdInstallFlags
+ * @device: a #FuDevice
  * @error: a #GError or NULL
  *
  * Runs the update_cleanup routine for the plugin
@@ -1645,6 +1649,7 @@ fu_plugin_runner_update_detach (FuPlugin *self, FuDevice *device, GError **error
 /**
  * fu_plugin_runner_update_reload:
  * @self: a #FuPlugin
+ * @device: A #FuDevice
  * @error: a #GError or NULL
  *
  * Runs reload routine for a device

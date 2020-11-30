@@ -12,10 +12,10 @@
 #include "fu-firmware-image-private.h"
 
 /**
- * SECTION:fu-firmware_image
- * @short_description: a firmware_image file
+ * SECTION:fu-firmware-image
+ * @short_description: a firmware image section
  *
- * An object that represents a firmware_image file.
+ * An object that represents an image within the firmware file.
  */
 
 typedef struct {
