@@ -3506,6 +3506,8 @@ fu_engine_update_metadata_bytes (FuEngine *self, const gchar *remote_id,
 {
 	FwupdKeyringKind keyring_kind;
 	FwupdRemote *remote;
+	JcatVerifyFlags jcat_flags = JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE;
+	g_autoptr(JcatFile) jcat_file = jcat_file_new ();
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
 	g_return_val_if_fail (remote_id != NULL, FALSE);
@@ -3530,23 +3532,37 @@ fu_engine_update_metadata_bytes (FuEngine *self, const gchar *remote_id,
 		return FALSE;
 	}
 
-	/* verify file */
+	/* verify JCatFile, or create a dummy one from legacy data */
 	keyring_kind = fwupd_remote_get_keyring_kind (remote);
-	if (keyring_kind != FWUPD_KEYRING_KIND_NONE) {
-		g_autoptr(GError) error_local = NULL;
+	if (keyring_kind == FWUPD_KEYRING_KIND_JCAT) {
 		g_autoptr(GInputStream) istream = NULL;
-		g_autoptr(GPtrArray) results = NULL;
-		g_autoptr(JcatFile) jcat_file = jcat_file_new ();
-		g_autoptr(JcatItem) jcat_item = NULL;
-		g_autoptr(JcatResult) jcat_result = NULL;
-		g_autoptr(JcatResult) jcat_result_old = NULL;
-
-		/* load Jcat file */
 		istream = g_memory_input_stream_new_from_bytes (bytes_sig);
 		if (!jcat_file_import_stream (jcat_file, istream,
 					      JCAT_IMPORT_FLAG_NONE,
 					      NULL, error))
 			return FALSE;
+		jcat_flags |= JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM;
+	} else if (keyring_kind == FWUPD_KEYRING_KIND_GPG) {
+		g_autoptr(JcatBlob) jcab_blob = NULL;
+		g_autoptr(JcatItem) jcat_item = jcat_item_new ("");
+		jcab_blob = jcat_blob_new (JCAT_BLOB_KIND_GPG, bytes_sig);
+		jcat_item_add_blob (jcat_item, jcab_blob);
+		jcat_file_add_item (jcat_file, jcat_item);
+	} else if (keyring_kind == FWUPD_KEYRING_KIND_PKCS7) {
+		g_autoptr(JcatBlob) jcab_blob = NULL;
+		g_autoptr(JcatItem) jcat_item = jcat_item_new ("");
+		jcab_blob = jcat_blob_new (JCAT_BLOB_KIND_PKCS7, bytes_sig);
+		jcat_item_add_blob (jcat_item, jcab_blob);
+		jcat_file_add_item (jcat_file, jcat_item);
+	}
+
+	/* verify file */
+	if (keyring_kind != FWUPD_KEYRING_KIND_NONE) {
+		g_autoptr(GError) error_local = NULL;
+		g_autoptr(GPtrArray) results = NULL;
+		g_autoptr(JcatItem) jcat_item = NULL;
+		g_autoptr(JcatResult) jcat_result = NULL;
+		g_autoptr(JcatResult) jcat_result_old = NULL;
 
 		/* this should only be signing one thing */
 		jcat_item = jcat_file_get_item_default (jcat_file, error);
@@ -3554,9 +3570,7 @@ fu_engine_update_metadata_bytes (FuEngine *self, const gchar *remote_id,
 			return FALSE;
 		results = jcat_context_verify_item (self->jcat_context,
 						    bytes_raw, jcat_item,
-						    JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
-						    JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
-						    error);
+						    jcat_flags, error);
 		if (results == NULL)
 			return FALSE;
 

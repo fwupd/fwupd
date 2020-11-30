@@ -191,9 +191,6 @@ fu_remote_list_add_for_path (FuRemoteList *self, const gchar *path, GError **err
 			return FALSE;
 		}
 
-		/* force this to JCat, it's the only thing we support */
-		fwupd_remote_set_keyring_kind (remote, FWUPD_KEYRING_KIND_JCAT);
-
 		/* watch the remote_list file and the XML file itself */
 		if (!fu_remote_list_add_inotify (self, filename, error))
 			return FALSE;
