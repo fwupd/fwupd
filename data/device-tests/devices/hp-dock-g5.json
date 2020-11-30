@@ -1,0 +1,16 @@
+{
+  "name": "HP USB-C Dock G5",
+  "guids": [
+    "9434f89a-3351-536d-a281-f70203326833"
+  ],
+  "releases": [
+    {
+      "version": "1.0.8.0",
+      "file": "c320fae2f84bf362cbbddb0f57d899b42e4e05d52a53e8a01e131495c7f10fe6-HP-USBC_DOCK_G5-V1.0.8.0.cab"
+    },
+    {
+      "version": "1.0.11.0",
+      "file": "61467bb36546de4449bfc72f9001fb0824606a8ef0b268383f145acf59c473f8-HP-USBC_DOCK_G5-V1.0.11.0.cab"
+    }
+  ]
+}
