@@ -104,7 +104,7 @@ main (int argc, char *argv[])
 			/* TRANSLATORS: command line option */
 			_("Apply firmware updates"),
 			/* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			_("GUID") },
+			C_("A single GUID", "GUID") },
 		{ "flags", 'f', 0, G_OPTION_ARG_STRING, &flags,
 			/* TRANSLATORS: command line option */
 			_("Use quirk flags when installing firmware"), NULL },
