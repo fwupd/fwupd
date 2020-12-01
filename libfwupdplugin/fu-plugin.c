@@ -1947,8 +1947,7 @@ fu_plugin_runner_udev_device_added (FuPlugin *self, FuUdevDevice *device, GError
 	if (func == NULL) {
 		if (priv->device_gtype != G_TYPE_INVALID ||
 		    fu_device_get_specialized_gtype (FU_DEVICE (device)) != G_TYPE_INVALID) {
-			if (!fu_plugin_udev_device_added (self, device, error))
-				return FALSE;
+			return fu_plugin_udev_device_added (self, device, error);
 		}
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
