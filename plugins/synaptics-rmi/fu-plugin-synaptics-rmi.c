@@ -10,6 +10,7 @@
 #include "fu-hash.h"
 
 #include "fu-synaptics-rmi-device.h"
+#include "fu-synaptics-rmi-ps2-device.h"
 #include "fu-synaptics-rmi-firmware.h"
 
 void
@@ -17,6 +18,8 @@ fu_plugin_init (FuPlugin *plugin)
 {
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 	fu_plugin_add_udev_subsystem (plugin, "hidraw");
-	fu_plugin_set_device_gtype (plugin, FU_TYPE_SYNAPTICS_RMI_DEVICE);
+	fu_plugin_add_udev_subsystem (plugin, "serio");
+	g_type_ensure (FU_TYPE_SYNAPTICS_RMI_DEVICE);
+	g_type_ensure (FU_TYPE_SYNAPTICS_RMI_PS2_DEVICE);
 	fu_plugin_add_firmware_gtype (plugin, "rmi", FU_TYPE_SYNAPTICS_RMI_FIRMWARE);
 }
