@@ -1950,7 +1950,11 @@ fu_plugin_runner_udev_device_added (FuPlugin *self, FuUdevDevice *device, GError
 			if (!fu_plugin_udev_device_added (self, device, error))
 				return FALSE;
 		}
-		return TRUE;
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "No device GType set");
+		return FALSE;
 	}
 	g_debug ("udev_device_added(%s)", fu_plugin_get_name (self));
 	if (!func (self, device, &error_local)) {
