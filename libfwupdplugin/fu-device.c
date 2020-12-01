@@ -1049,6 +1049,7 @@ fu_device_set_quirk_kv (FuDevice *self,
 				     G_IO_ERROR,
 				     G_IO_ERROR_NOT_FOUND,
 				     "device GType %s not supported", value);
+			return FALSE;
 		}
 		return TRUE;
 	}
