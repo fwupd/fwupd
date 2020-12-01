@@ -5439,6 +5439,12 @@ fu_engine_udev_device_add (FuEngine *self, GUdevDevice *udev_device)
 		return;
 	}
 
+	/* super useful for plugin development */
+	if (g_getenv ("FWUPD_PROBE_VERBOSE") != NULL) {
+		g_autofree gchar *str = fu_device_to_string (FU_DEVICE (device));
+		g_debug ("%s", str);
+	}
+
 	/* can be specified using a quirk */
 	possible_plugins = fu_device_get_possible_plugins (FU_DEVICE (device));
 	for (guint i = 0; i < possible_plugins->len; i++) {
