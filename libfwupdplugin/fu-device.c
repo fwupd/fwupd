@@ -2315,6 +2315,10 @@ fu_device_add_string (FuDevice *self, guint idt, GString *str)
 			fu_common_string_append_kv (str, idt + 1, key, value);
 		}
 	}
+	for (guint i = 0; i < priv->possible_plugins->len; i++) {
+		const gchar *name = g_ptr_array_index (priv->possible_plugins, i);
+		fu_common_string_append_kv (str, idt + 1, "PossiblePlugin", name);
+	}
 
 	/* subclassed */
 	if (klass->to_string != NULL)
