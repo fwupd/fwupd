@@ -244,6 +244,28 @@ fu_udev_device_probe_i2c_dev (FuUdevDevice *self, GError **error)
 	}
 	return TRUE;
 }
+
+static gboolean
+fu_udev_device_probe_serio (FuUdevDevice *self, GError **error)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	const gchar *tmp;
+
+	/* firmware ID */
+	tmp = g_udev_device_get_property (priv->udev_device, "SERIO_FIRMWARE_ID");
+	if (tmp != NULL) {
+		g_autofree gchar *devid = NULL;
+		g_autofree gchar *id_safe = NULL;
+		/* this prefix is not useful */
+		if (g_str_has_prefix (tmp, "PNP: "))
+			tmp += 5;
+		id_safe = g_utf8_strup (tmp, -1);
+		g_strdelimit (id_safe, " /\\\"", '-');
+		devid = g_strdup_printf ("SERIO\\FWID_%s", id_safe);
+		fu_device_add_instance_id (FU_DEVICE (self), devid);
+	}
+	return TRUE;
+}
 #endif
 
 static gboolean
@@ -456,6 +478,12 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	/* i2c devices all expose a name */
 	if (g_strcmp0 (g_udev_device_get_subsystem (priv->udev_device), "i2c-dev") == 0) {
 		if (!fu_udev_device_probe_i2c_dev (self, error))
+			return FALSE;
+	}
+
+	/* add firmware_id */
+	if (g_strcmp0 (g_udev_device_get_subsystem (priv->udev_device), "serio") == 0) {
+		if (!fu_udev_device_probe_serio (self, error))
 			return FALSE;
 	}
 
