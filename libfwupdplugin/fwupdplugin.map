@@ -687,3 +687,9 @@ LIBFWUPDPLUGIN_1.5.2 {
     fu_volume_is_internal;
   local: *;
 } LIBFWUPDPLUGIN_1.5.1;
+
+LIBFWUPDPLUGIN_1.5.3 {
+  global:
+    fu_udev_device_get_driver;
+  local: *;
+} LIBFWUPDPLUGIN_1.5.2;

@@ -43,6 +43,7 @@ typedef struct
 	guint32			 subsystem_model;
 	guint8			 revision;
 	gchar			*subsystem;
+	gchar			*driver;
 	gchar			*device_file;
 	gint			 fd;
 	FuUdevDeviceFlags	 flags;
@@ -54,6 +55,7 @@ enum {
 	PROP_0,
 	PROP_UDEV_DEVICE,
 	PROP_SUBSYSTEM,
+	PROP_DRIVER,
 	PROP_DEVICE_FILE,
 	PROP_LAST
 };
@@ -151,6 +153,8 @@ fu_udev_device_to_string (FuDevice *device, guint idt, GString *str)
 		fu_common_string_append_kv (str, idt, "SysfsPath",
 					    g_udev_device_get_sysfs_path (priv->udev_device));
 		fu_common_string_append_kv (str, idt, "Subsystem", priv->subsystem);
+		if (priv->driver != NULL)
+			fu_common_string_append_kv (str, idt, "Driver", priv->driver);
 	}
 	if (g_getenv ("FU_UDEV_DEVICE_DEBUG") != NULL) {
 		g_autoptr(GUdevDevice) udev_parent = NULL;
@@ -180,6 +184,20 @@ fu_udev_device_set_subsystem (FuUdevDevice *self, const gchar *subsystem)
 	g_free (priv->subsystem);
 	priv->subsystem = g_strdup (subsystem);
 	g_object_notify (G_OBJECT (self), "subsystem");
+}
+
+static void
+fu_udev_device_set_driver (FuUdevDevice *self, const gchar *driver)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+
+	/* not changed */
+	if (g_strcmp0 (priv->driver, driver) == 0)
+		return;
+
+	g_free (priv->driver);
+	priv->driver = g_strdup (driver);
+	g_object_notify (G_OBJECT (self), "driver");
 }
 
 static void
@@ -420,12 +438,11 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	}
 
 	/* add the driver */
-	tmp = g_udev_device_get_driver (priv->udev_device);
-	if (tmp != NULL) {
+	if (priv->driver != NULL) {
 		g_autofree gchar *devid = NULL;
 		devid = g_strdup_printf ("%s\\DRIVER_%s",
 					 subsystem,
-					 tmp);
+					 priv->driver);
 		fu_device_add_instance_id_full (device, devid,
 						FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
 	}
@@ -491,6 +508,7 @@ fu_udev_device_set_dev (FuUdevDevice *self, GUdevDevice *udev_device)
 		return;
 #ifdef HAVE_GUDEV
 	fu_udev_device_set_subsystem (self, g_udev_device_get_subsystem (priv->udev_device));
+	fu_udev_device_set_driver (self, g_udev_device_get_driver (priv->udev_device));
 	fu_udev_device_set_device_file (self, g_udev_device_get_device_file (priv->udev_device));
 
 	/* try to get one line summary */
@@ -702,6 +720,24 @@ fu_udev_device_get_subsystem (FuUdevDevice *self)
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), NULL);
 	return priv->subsystem;
+}
+
+/**
+ * fu_udev_device_get_driver:
+ * @self: A #FuUdevDevice
+ *
+ * Gets the device driver, e.g. "psmouse".
+ *
+ * Returns: a subsystem, or NULL if unset or invalid
+ *
+ * Since: 1.5.3
+ **/
+const gchar *
+fu_udev_device_get_driver (FuUdevDevice *self)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), NULL);
+	return priv->driver;
 }
 
 /**
@@ -1530,6 +1566,9 @@ fu_udev_device_get_property (GObject *object, guint prop_id,
 	case PROP_SUBSYSTEM:
 		g_value_set_string (value, priv->subsystem);
 		break;
+	case PROP_DRIVER:
+		g_value_set_string (value, priv->driver);
+		break;
 	case PROP_DEVICE_FILE:
 		g_value_set_string (value, priv->device_file);
 		break;
@@ -1551,6 +1590,9 @@ fu_udev_device_set_property (GObject *object, guint prop_id,
 	case PROP_SUBSYSTEM:
 		fu_udev_device_set_subsystem (self, g_value_get_string (value));
 		break;
+	case PROP_DRIVER:
+		fu_udev_device_set_driver (self, g_value_get_string (value));
+		break;
 	case PROP_DEVICE_FILE:
 		fu_udev_device_set_device_file (self, g_value_get_string (value));
 		break;
@@ -1567,6 +1609,7 @@ fu_udev_device_finalize (GObject *object)
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 
 	g_free (priv->subsystem);
+	g_free (priv->driver);
 	g_free (priv->device_file);
 	if (priv->udev_device != NULL)
 		g_object_unref (priv->udev_device);
@@ -1620,6 +1663,12 @@ fu_udev_device_class_init (FuUdevDeviceClass *klass)
 				     G_PARAM_READWRITE |
 				     G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_SUBSYSTEM, pspec);
+
+	pspec = g_param_spec_string ("driver", NULL, NULL,
+				     NULL,
+				     G_PARAM_READWRITE |
+				     G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_DRIVER, pspec);
 
 	pspec = g_param_spec_string ("device-file", NULL, NULL,
 				     NULL,
