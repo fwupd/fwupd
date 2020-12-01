@@ -155,6 +155,8 @@ fu_udev_device_to_string (FuDevice *device, guint idt, GString *str)
 		fu_common_string_append_kv (str, idt, "Subsystem", priv->subsystem);
 		if (priv->driver != NULL)
 			fu_common_string_append_kv (str, idt, "Driver", priv->driver);
+		if (priv->device_file != NULL)
+			fu_common_string_append_kv (str, idt, "DeviceFile", priv->device_file);
 	}
 	if (g_getenv ("FU_UDEV_DEVICE_DEBUG") != NULL) {
 		g_autoptr(GUdevDevice) udev_parent = NULL;
@@ -504,6 +506,26 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	return TRUE;
 }
 
+#ifdef HAVE_GUDEV
+static gchar *
+fu_udev_device_get_miscdev0 (FuUdevDevice *self)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	const gchar *fn;
+	g_autofree gchar *miscdir = NULL;
+	g_autoptr(GDir) dir = NULL;
+
+	miscdir = g_build_filename (g_udev_device_get_sysfs_path (priv->udev_device), "misc", NULL);
+	dir = g_dir_open (miscdir, 0, NULL);
+	if (dir == NULL)
+		return NULL;
+	fn = g_dir_read_name (dir);
+	if (fn == NULL)
+		return NULL;
+	return g_strdup_printf ("/dev/%s", fn);
+}
+#endif
+
 static void
 fu_udev_device_set_dev (FuUdevDevice *self, GUdevDevice *udev_device)
 {
@@ -538,6 +560,14 @@ fu_udev_device_set_dev (FuUdevDevice *self, GUdevDevice *udev_device)
 	fu_udev_device_set_subsystem (self, g_udev_device_get_subsystem (priv->udev_device));
 	fu_udev_device_set_driver (self, g_udev_device_get_driver (priv->udev_device));
 	fu_udev_device_set_device_file (self, g_udev_device_get_device_file (priv->udev_device));
+
+	/* fall back to the first thing handled by misc drivers */
+	if (priv->device_file == NULL) {
+		if (g_strcmp0 (priv->subsystem, "serio") == 0)
+			priv->device_file = fu_udev_device_get_miscdev0 (self);
+		if (priv->device_file != NULL)
+			g_debug ("falling back to misc %s", priv->device_file);
+	}
 
 	/* try to get one line summary */
 	summary = g_udev_device_get_sysfs_attr (priv->udev_device, "description");
