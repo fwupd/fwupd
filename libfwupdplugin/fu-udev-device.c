@@ -150,6 +150,7 @@ fu_udev_device_to_string (FuDevice *device, guint idt, GString *str)
 	if (priv->udev_device != NULL) {
 		fu_common_string_append_kv (str, idt, "SysfsPath",
 					    g_udev_device_get_sysfs_path (priv->udev_device));
+		fu_common_string_append_kv (str, idt, "Subsystem", priv->subsystem);
 	}
 	if (g_getenv ("FU_UDEV_DEVICE_DEBUG") != NULL) {
 		g_autoptr(GUdevDevice) udev_parent = NULL;
