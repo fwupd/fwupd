@@ -62,6 +62,7 @@ GUdevDevice	*fu_udev_device_get_dev			(FuUdevDevice	*self);
 const gchar	*fu_udev_device_get_device_file		(FuUdevDevice	*self);
 const gchar	*fu_udev_device_get_sysfs_path		(FuUdevDevice	*self);
 const gchar	*fu_udev_device_get_subsystem		(FuUdevDevice	*self);
+const gchar	*fu_udev_device_get_driver		(FuUdevDevice	*self);
 guint32		 fu_udev_device_get_vendor		(FuUdevDevice	*self);
 guint32		 fu_udev_device_get_model		(FuUdevDevice	*self);
 guint32		 fu_udev_device_get_subsystem_vendor	(FuUdevDevice	*self);
