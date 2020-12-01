@@ -125,7 +125,10 @@ fu_synaptics_rmi_device_to_string (FuUdevDevice *device, guint idt, GString *str
 {
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE (device);
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
-	fu_common_string_append_kx (str, idt, "BlVer", priv->f34->function_version + 0x5);
+	if (priv->f34 != NULL) {
+		fu_common_string_append_kx (str, idt, "BlVer",
+					    priv->f34->function_version + 0x5);
+	}
 	fu_synaptics_rmi_flash_to_string (&priv->flash, idt, str);
 }
 
