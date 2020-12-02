@@ -19,5 +19,6 @@ install_if_missing etc/systemd/system/fwupd-activate.service /
 systemctl daemon-reload
 systemctl enable fwupd-activate
 systemctl start fwupd-activate
-#msr module
-install_if_missing lib/modules-load.d/fwupd-msr.conf /usr
+#kernel modules
+install_if_missing usr/lib/modules-load.d/fwupd-msr.conf /
+install_if_missing usr/lib/modules-load.d/fwupd-platform-integrity.conf /
