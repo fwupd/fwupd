@@ -199,7 +199,7 @@ fu_synaptics_rmi_ps2_device_write_firmware (FuDevice *device,
 					    GError **error)
 {
 //	FuSynapticsRmiPs2Device *self = FU_SYNAPTICS_RMI_PS2_DEVICE (device);
-//DRAW THE REST OF THE OWL
+	fu_device_sleep_with_progress (device, 5);
 	return TRUE;
 }
 
@@ -275,7 +275,11 @@ fu_synaptics_rmi_ps2_device_detach (FuDevice *device, GError **error)
 	}
 
 	/* rescan device */
-	if (!fu_device_probe (device, error))
+	if (!fu_device_close (device, error))
+		return FALSE;
+	if (!fu_device_rescan (device, error))
+		return FALSE;
+	if (!fu_device_open (device, error))
 		return FALSE;
 
 	/* disable stream */
@@ -311,7 +315,7 @@ fu_synaptics_rmi_ps2_device_attach (FuDevice *device, GError **error)
 	}
 
 	/* rescan device */
-	return fu_device_probe (device, error);
+	return fu_device_rescan (device, error);
 }
 
 static void
