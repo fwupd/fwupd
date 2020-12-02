@@ -13,6 +13,7 @@
 struct _FuSynapticsRmiPs2Device {
 	FuUdevDevice		 parent_instance;
 	FuIOChannel		*io_channel;
+	gboolean		 inRMIBackdoor;
 };
 
 G_DEFINE_TYPE (FuSynapticsRmiPs2Device, fu_synaptics_rmi_ps2_device, FU_TYPE_UDEV_DEVICE)
@@ -84,7 +85,7 @@ WriteByte (FuSynapticsRmiPs2Device *self, guint8 buf, guint timeout, GError **er
 			continue;
 		}
 		if (res == edpsError) {
-			g_debug ("PS2Device::WriteByte fail received error from touchpad");
+			g_debug ("WriteByte fail received error from touchpad");
 			do_write = TRUE;
 			g_usleep (1000 * 10);
 			continue;
@@ -99,8 +100,8 @@ WriteByte (FuSynapticsRmiPs2Device *self, guint8 buf, guint timeout, GError **er
 static void
 fu_synaptics_rmi_ps2_device_to_string (FuUdevDevice *device, guint idt, GString *str)
 {
-//	FuSynapticsRmiPs2Device *self = FU_SYNAPTICS_RMI_PS2_DEVICE (device);
-//	fu_common_string_append_kx (str, idt, "I2cAddr", self->i2c_addr);
+	FuSynapticsRmiPs2Device *self = FU_SYNAPTICS_RMI_PS2_DEVICE (device);
+	fu_common_string_append_kb (str, idt, "InRmiBackdoor", self->inRMIBackdoor);
 }
 
 static gboolean
@@ -137,6 +138,14 @@ fu_synaptics_rmi_ps2_device_open (FuUdevDevice *device, GError **error)
 
 	/* in serio_raw mode */
 	if (fu_device_has_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+
+		/* clear out any data in the serio_raw queue */
+		for(guint i = 0; i < 0xffff; i++) {
+			guint8 tmp = 0;
+			if (!ReadByte (self, &tmp, 20, NULL))
+				break;
+		}
+
 		/* send reset -- may take 300-500ms */
 		if (!WriteByte (self, edpAuxReset, 600, error)) {
 			g_prefix_error (error, "failed to reset: ");
