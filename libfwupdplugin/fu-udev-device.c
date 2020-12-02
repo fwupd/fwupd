@@ -1202,6 +1202,40 @@ fu_udev_device_open (FuDevice *device, GError **error)
 }
 
 static gboolean
+fu_udev_device_rescan (FuDevice *device, GError **error)
+{
+#ifdef HAVE_GUDEV
+	FuUdevDevice *self = FU_UDEV_DEVICE (device);
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	const gchar *sysfs_path;
+	g_autoptr(GUdevClient) udev_client = g_udev_client_new (NULL);
+	g_autoptr(GUdevDevice) udev_device = NULL;
+
+	/* never set */
+	if (priv->udev_device == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "rescan with no previous device");
+		return FALSE;
+	}
+	sysfs_path = g_udev_device_get_sysfs_path (priv->udev_device);
+	udev_device = g_udev_client_query_by_sysfs_path (udev_client, sysfs_path);
+	if (udev_device == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "rescan could not find device %s",
+			     sysfs_path);
+		return FALSE;
+	}
+	fu_udev_device_set_dev (self, udev_device);
+	fu_device_probe_invalidate (device);
+#endif
+	return fu_device_probe (device, error);
+}
+
+static gboolean
 fu_udev_device_close (FuDevice *device, GError **error)
 {
 	FuUdevDevice *self = FU_UDEV_DEVICE (device);
@@ -1667,6 +1701,7 @@ fu_udev_device_class_init (FuUdevDeviceClass *klass)
 	object_class->get_property = fu_udev_device_get_property;
 	object_class->set_property = fu_udev_device_set_property;
 	device_class->probe = fu_udev_device_probe;
+	device_class->rescan = fu_udev_device_rescan;
 	device_class->incorporate = fu_udev_device_incorporate;
 	device_class->open = fu_udev_device_open;
 	device_class->close = fu_udev_device_close;
