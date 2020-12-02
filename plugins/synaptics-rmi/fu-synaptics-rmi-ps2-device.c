@@ -97,7 +97,7 @@ WriteByte (FuSynapticsRmiPs2Device *self, guint8 buf, guint timeout, GError **er
 }
 
 static void
-fu_synaptics_rmi_ps2_device_to_string (FuDevice *device, guint idt, GString *str)
+fu_synaptics_rmi_ps2_device_to_string (FuUdevDevice *device, guint idt, GString *str)
 {
 //	FuSynapticsRmiPs2Device *self = FU_SYNAPTICS_RMI_PS2_DEVICE (device);
 //	fu_common_string_append_kx (str, idt, "I2cAddr", self->i2c_addr);
@@ -342,13 +342,13 @@ fu_synaptics_rmi_ps2_device_class_init (FuSynapticsRmiPs2DeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuUdevDeviceClass *klass_udev_device = FU_UDEV_DEVICE_CLASS (klass);
 	object_class->finalize = fu_synaptics_rmi_ps2_device_finalize;
-	klass_device->to_string = fu_synaptics_rmi_ps2_device_to_string;
 	klass_device->attach = fu_synaptics_rmi_ps2_device_attach;
 	klass_device->detach = fu_synaptics_rmi_ps2_device_detach;
 	klass_device->setup = fu_synaptics_rmi_ps2_device_setup;
 	klass_device->reload = fu_synaptics_rmi_ps2_device_setup;
 	klass_device->write_firmware = fu_synaptics_rmi_ps2_device_write_firmware;
 	klass_device->prepare_firmware = fu_synaptics_rmi_ps2_device_prepare_firmware;
+	klass_udev_device->to_string = fu_synaptics_rmi_ps2_device_to_string;
 	klass_udev_device->probe = fu_synaptics_rmi_ps2_device_probe;
 	klass_udev_device->open = fu_synaptics_rmi_ps2_device_open;
 	klass_udev_device->close = fu_synaptics_rmi_ps2_device_close;
