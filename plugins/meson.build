@@ -22,7 +22,6 @@ subdir('dell-dock')
 subdir('nitrokey')
 subdir('pci-bcr')
 subdir('pci-mei')
-subdir('platform-integrity')
 subdir('rts54hid')
 subdir('rts54hub')
 subdir('solokey')
@@ -129,4 +128,8 @@ endif
 
 if get_option('plugin_coreboot')
 subdir('coreboot')
+endif
+
+if get_option('plugin_platform_integrity')
+subdir('platform-integrity')
 endif

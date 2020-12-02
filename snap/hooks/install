@@ -21,4 +21,3 @@ systemctl enable fwupd-activate
 systemctl start fwupd-activate
 #kernel modules
 install_if_missing usr/lib/modules-load.d/fwupd-msr.conf /
-install_if_missing usr/lib/modules-load.d/fwupd-platform-integrity.conf /
