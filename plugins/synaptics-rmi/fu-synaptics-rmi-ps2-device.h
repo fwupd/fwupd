@@ -98,3 +98,6 @@ enum EStickDeviceType {
 	esdtSynaptics,
 	esdtUnknown			= 0xFFFFFFFF
 };
+
+gboolean	 fu_synaptics_rmi_ps2_device_enable_RMI_backdoor (FuSynapticsRmiPs2Device *self,
+						      GError **error);

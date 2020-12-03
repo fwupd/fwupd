@@ -97,6 +97,140 @@ WriteByte (FuSynapticsRmiPs2Device *self, guint8 buf, guint timeout, GError **er
 	return FALSE;
 }
 
+static gboolean
+WriteRMIRegister (FuSynapticsRmiPs2Device *self, 
+				 guint8 addr, 
+				 const guint8 *buf, 
+				 guint8 len, 
+				 guint timeout, 
+				 GError **error)
+{
+
+	if (!self->inRMIBackdoor && !fu_synaptics_rmi_ps2_device_enable_RMI_backdoor(self, error)) {
+		g_prefix_error (error, "failed to enable RMI backdoor: ");
+		return FALSE;
+	}
+		
+
+	if(!WriteByte(self, edpAuxSetScaling2To1, timeout, error)) {
+		g_prefix_error (error, "failed to WriteByte: ");
+		return FALSE;
+	}
+
+	if (!WriteByte(self, edpAuxSetSampleRate, timeout, error)) {
+		g_prefix_error (error, "failed to WriteByte: ");
+		return FALSE;
+	}
+
+	if (!WriteByte(self, addr, timeout, error)) {
+		g_prefix_error (error, "failed to WriteByte: ");
+		return FALSE;
+	}
+
+	for(guint8 numBytes = 0 ; numBytes < len ; numBytes++){
+		if (!WriteByte(self, edpAuxSetSampleRate, timeout, error)) {
+			g_prefix_error (error, "failed to WriteByte: ");
+			return FALSE;
+		}
+
+		if (!WriteByte(self, *(buf + numBytes), timeout, error)) {
+			g_prefix_error (error, "failed to WriteByte: ");
+			return FALSE;
+		}
+	}
+	
+
+	g_usleep (1000*20);
+
+	return TRUE;
+}
+
+static gboolean
+ReadRMIRegister (FuSynapticsRmiPs2Device *self, 
+				guint8 addr, 
+				guint8 * buf,
+				GError **error)
+{
+	if (!buf) {
+		return FALSE;
+	}
+
+	g_debug ("ReadRMIRegister: register address = 0x%x", addr);
+	if (!self->inRMIBackdoor && !fu_synaptics_rmi_ps2_device_enable_RMI_backdoor(self, error)) {
+		g_prefix_error (error, "failed to enable RMI backdoor: ");
+		return FALSE;
+	}
+
+	g_autoptr(GError) error_local = NULL;
+	if (!(WriteByte(self, edpAuxSetScaling2To1, 0, &error_local) && WriteByte(self, edpAuxSetSampleRate, 0, &error_local)
+		&& WriteByte(self, addr, 0, &error_local) && WriteByte(self, edpAuxStatusRequest, 0, &error_local)))
+	{
+		g_warning ("failed to write command in Read RMI Register: %s", error_local->message);
+		return FALSE;
+	}
+
+	guint32 response = 0;
+	for (gint i = 0; i < 3; ++i) {
+		guint8 tmp = 0;
+		if(!ReadByte(self, &tmp, 0, error)) {
+			g_prefix_error (error, "failed to Read byte: ");
+			return FALSE;
+		}
+		response = response | (tmp << (8 * i));
+	}
+
+	// We only care about the least significant byte since that is what contains the value
+	// of the register at the address addr
+	*buf = (guint8)response;
+	g_debug ("RMI value == 0x%x", *buf);
+
+	g_usleep (1000*20);
+
+	g_debug ("Finished Read RMI Register");
+
+	return TRUE;
+}
+
+static gboolean
+ReadRMIPacketRegister(FuSynapticsRmiPs2Device *self,
+					  guint8 addr, 
+					  guint8 * buf, 
+					  gint len, 
+					  GError **error)
+{
+	if (!buf) {
+		return FALSE;
+	}
+
+	g_debug ("ReadRMIPacketRegister: register address = 0x%x", addr);
+	if (!self->inRMIBackdoor && !fu_synaptics_rmi_ps2_device_enable_RMI_backdoor(self, error)) {
+		g_prefix_error (error, "failed to enable RMI backdoor: ");
+		return FALSE;
+	}
+
+	g_autoptr(GError) error_local = NULL;
+	if (!(WriteByte(self, edpAuxSetScaling2To1, 0, &error_local) && WriteByte(self, edpAuxSetSampleRate, 0, &error_local)
+		&& WriteByte(self, addr, 0, &error_local) && WriteByte(self, edpAuxStatusRequest, 0, &error_local)))
+	{
+		g_warning ("failed to write command in Read RMI Packet Register: %s", error_local->message);
+		return FALSE;
+	}
+
+	for (gint i = 0; i < len; ++i) {
+		guint8 tmp = 0;
+		if(!ReadByte(self, &tmp, 0, error)) {
+			return FALSE;
+		}
+		*(buf+i) = tmp;
+	}
+
+	g_usleep (1000*20);
+
+	g_debug ("Finished Read RMI Packet Register");
+
+	return TRUE;
+}
+
 static void
 fu_synaptics_rmi_ps2_device_to_string (FuUdevDevice *device, guint idt, GString *str)
 {
@@ -265,6 +399,28 @@ fu_synaptics_rmi_ps2_device_set_sample_rate_sequence (FuSynapticsRmiPs2Device *s
 	return FALSE;
 }
 
+gboolean
+fu_synaptics_rmi_ps2_device_enable_RMI_backdoor (FuSynapticsRmiPs2Device *self,
+						      GError **error)
+{
+	g_debug ("Enable RMI backdoor");
+
+	/* disable stream */
+	if (!WriteByte (self, edpAuxDisable, 50, error)) {
+		g_prefix_error (error, "failed to disable stream mode: ");
+		return FALSE;
+	}
+
+	/* enable RMI mode */
+	if (!fu_synaptics_rmi_ps2_device_set_sample_rate_sequence (self, essrSetModeByte2, edpAuxFullRMIBackDoor, FALSE, error)) {
+		g_prefix_error (error, "failed to enter RMI mode: ");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+
 static gboolean
 fu_synaptics_rmi_ps2_device_detach (FuDevice *device, GError **error)
 {
@@ -291,15 +447,8 @@ fu_synaptics_rmi_ps2_device_detach (FuDevice *device, GError **error)
 	if (!fu_device_open (device, error))
 		return FALSE;
 
-	/* disable stream */
-	if (!WriteByte (self, edpAuxDisable, 50, error)) {
-		g_prefix_error (error, "failed to disable stream mode: ");
-		return FALSE;
-	}
-
-	/* enable RMI mode */
-	if (!fu_synaptics_rmi_ps2_device_set_sample_rate_sequence (self, essrSetModeByte2, edpAuxFullRMIBackDoor, FALSE, error)) {
-		g_prefix_error (error, "failed to enter RMI mode: ");
+	if (!fu_synaptics_rmi_ps2_device_enable_RMI_backdoor(self, error)){
+		g_prefix_error (error, "failed to enable RMI backdoor: ");
 		return FALSE;
 	}
 
