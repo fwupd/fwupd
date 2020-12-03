@@ -626,6 +626,8 @@ LIBFWUPD_1.5.2 {
 
 LIBFWUPD_1.5.3 {
   global:
+    fwupd_client_get_main_context;
+    fwupd_client_set_main_context;
     fwupd_remote_set_keyring_kind;
   local: *;
 } LIBFWUPD_1.5.2;

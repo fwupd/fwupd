@@ -45,6 +45,7 @@ typedef GObject		*(*FwupdClientObjectNewFunc)	(void);
 static void fwupd_client_finalize	 (GObject *object);
 
 typedef struct {
+	GMainContext			*main_ctx;
 	FwupdStatus			 status;
 	gboolean			 tainted;
 	gboolean			 interactive;
@@ -271,6 +272,44 @@ fwupd_client_signal_cb (GDBusProxy *proxy,
 		return;
 	}
 	g_debug ("Unknown signal name '%s' from %s", signal_name, sender_name);
+}
+
+/**
+ * fwupd_client_get_main_context:
+ * @self: A #FwupdClient
+ *
+ * Gets the internal #GMainContext to use for synchronous methods.
+ * By default the value is set to the value of g_main_context_ref_thread_default()
+ *
+ * Return value: (transfer full): the #GMainContext
+ *
+ * Since: 1.5.3
+ **/
+GMainContext *
+fwupd_client_get_main_context (FwupdClient *self)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	if (priv->main_ctx != NULL)
+		return g_main_context_ref (priv->main_ctx);
+	return g_main_context_ref_thread_default ();
+}
+
+/**
+ * fwupd_client_set_main_context:
+ * @self: A #FwupdClient
+ * @main_ctx: #GMainContext
+ *
+ * Sets the internal #GMainContext to use for synchronous methods.
+ *
+ * Since: 1.5.3
+ **/
+void
+fwupd_client_set_main_context (FwupdClient *self, GMainContext *main_ctx)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	if (main_ctx != priv->main_ctx)
+		g_main_context_unref (priv->main_ctx);
+	priv->main_ctx = g_main_context_ref (main_ctx);
 }
 
 /**
@@ -4582,6 +4621,7 @@ fwupd_client_finalize (GObject *object)
 	FwupdClient *self = FWUPD_CLIENT (object);
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
 
+	g_clear_pointer (&priv->main_ctx, g_main_context_unref);
 	g_free (priv->user_agent);
 	g_free (priv->daemon_version);
 	g_free (priv->host_product);
