@@ -32,6 +32,11 @@ export TPM_SERVER_RUNNING=1
 sudo -E -u nobody PKGEXT='.pkg.tar' makepkg -e --noconfirm
 pacman -U --noconfirm *.pkg.*
 
+#run the CI tests for Qt5
+pacman -Syu --noconfirm qt5-base
+meson qt5-thread-test ../contrib/ci/qt5-thread-test
+ninja -C qt5-thread-test test
+
 # move the package to working dir
 mv *.pkg.* ../dist
 
