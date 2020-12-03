@@ -68,6 +68,9 @@ typedef enum {
 } FwupdClientUploadFlags;
 
 FwupdClient	*fwupd_client_new			(void);
+GMainContext	*fwupd_client_get_main_context		(FwupdClient	*self);
+void		 fwupd_client_set_main_context		(FwupdClient	*self,
+							 GMainContext	*main_ctx);
 void		 fwupd_client_connect_async		(FwupdClient	*self,
 							 GCancellable	*cancellable,
 							 GAsyncReadyCallback callback,
