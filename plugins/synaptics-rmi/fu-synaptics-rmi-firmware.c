@@ -23,6 +23,8 @@ struct _FuSynapticsRmiFirmware {
 	guint16			 package_id;
 	guint16			 product_info;
 	gchar			*product_id;
+	guint8			 hasBlv5Signature;
+	guint32			 blv5SignatureSize;
 };
 
 G_DEFINE_TYPE (FuSynapticsRmiFirmware, fu_synaptics_rmi_firmware, FU_TYPE_FIRMWARE)
@@ -37,6 +39,9 @@ G_DEFINE_TYPE (FuSynapticsRmiFirmware, fu_synaptics_rmi_firmware, FU_TYPE_FIRMWA
 #define RMI_IMG_PRODUCT_ID_OFFSET		0x10
 #define RMI_IMG_PRODUCT_INFO_OFFSET		0x1e
 #define RMI_IMG_FW_OFFSET			0x100
+
+#define RMI_IMG_SIGNATURE_SIZE_OFFSET   0x54
+#define RMI_IMG_SIGNATURE_SIZE_SIZE     4
 
 #define RMI_IMG_V10_CNTR_ADDR_OFFSET		0x0c
 
@@ -379,6 +384,13 @@ fu_synaptics_rmi_firmware_parse (FuFirmware *firmware,
 	case 6:
 		if (!fu_synaptics_rmi_firmware_parse_v0x (firmware, fw, error))
 			return FALSE;
+		self->hasBlv5Signature = ((self->io & 0x10) >> 1);
+		if(self->hasBlv5Signature){
+			for(int i=0 ; i<RMI_IMG_SIGNATURE_SIZE_SIZE ; i++){
+				self->blv5SignatureSize |= (data[RMI_IMG_SIGNATURE_SIZE_OFFSET + i] & 0x00FF) << (8*i);
+			}
+			g_debug ("Blv5 signature size : %ld\n", self->blv5SignatureSize);
+		}
 		break;
 	case 16:
 		if (!fu_synaptics_rmi_firmware_parse_v10 (firmware, fw, error))
