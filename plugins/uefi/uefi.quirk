@@ -1,3 +1,7 @@
+# Star Labs Lite (Mk III)
+[Guid=d9d7b13b-e4db-4f91-8bf6-8952a9caa82a]
+Flags = no-ux-capsule
+
 # Star Labs LabTop (Mk III)
 [Guid=8265d473-a6c2-42b4-897b-bc220faa2d32]
 Flags = use-shim-unique
