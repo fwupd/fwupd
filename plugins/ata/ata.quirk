@@ -86,6 +86,10 @@ VendorId = ATA:0x15B7
 Vendor = Western Digital
 VendorId = ATA:0x101C
 
+[DeviceInstanceId=OUI\f8db4c]
+Vendor = PNY
+VendorId = ATA:0x196E
+
 [DeviceInstanceId=OUI\e83a97]
 Vendor = Toshiba
 VendorId = ATA:0x1179
