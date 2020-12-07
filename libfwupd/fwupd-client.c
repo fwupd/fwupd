@@ -4326,7 +4326,7 @@ fwupd_client_ensure_soup_session (FwupdClient *self)
 		return;
 	}
 
-	/* load the library at rumtime, leaking the module */
+	/* load the library at runtime, leaking the module */
 	if (priv->soup_module == NULL) {
 		g_autofree gchar *fn = NULL;
 		fn = g_build_filename (FWUPD_LIBDIR, "libsoup-2.4.so.1", NULL);
