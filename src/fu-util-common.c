@@ -2009,11 +2009,18 @@ fu_util_show_unsupported_warn (void)
 #endif
 }
 
+#ifdef HAVE_LIBCURL_7_62_0
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(CURLU, curl_url_cleanup)
+#endif
 
 gboolean
 fu_util_is_url (const gchar *perhaps_url)
 {
+#ifdef HAVE_LIBCURL_7_62_0
 	g_autoptr(CURLU) h = curl_url ();
 	return curl_url_set (h, CURLUPART_URL, perhaps_url, 0) == CURLUE_OK;
+#else
+	return g_str_has_prefix (perhaps_url, "http://") ||
+		g_str_has_prefix (perhaps_url, "https://");
+#endif
 }

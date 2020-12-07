@@ -67,9 +67,11 @@ enum {
 G_DEFINE_TYPE_WITH_PRIVATE (FwupdRemote, fwupd_remote, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fwupd_remote_get_instance_private (o))
 
+#ifdef HAVE_LIBCURL_7_62_0
 typedef gchar curlptr;
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(curlptr, curl_free)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(CURLU, curl_url_cleanup)
+#endif
 
 static void
 fwupd_remote_set_username (FwupdRemote *self, const gchar *username)
@@ -175,15 +177,13 @@ fwupd_remote_get_suffix_for_keyring_kind (FwupdKeyringKind keyring_kind)
 	return NULL;
 }
 
-static CURLU *
+static gchar *
 fwupd_remote_build_uri (FwupdRemote *self, const gchar *url, GError **error)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+#ifdef HAVE_LIBCURL_7_62_0
+	g_autoptr(curlptr) tmp_uri = NULL;
 	g_autoptr(CURLU) uri = curl_url ();
-
-	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
-	g_return_val_if_fail (url != NULL, NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* create URI, substituting if required */
 	if (priv->firmware_base_uri != NULL) {
@@ -237,7 +237,19 @@ fwupd_remote_build_uri (FwupdRemote *self, const gchar *url, GError **error)
 		curl_url_set (uri, CURLUPART_USER, priv->username, 0);
 	if (priv->password != NULL)
 		curl_url_set (uri, CURLUPART_PASSWORD, priv->password, 0);
-	return g_steal_pointer (&uri);
+	curl_url_get (uri, CURLUPART_URL, &tmp_uri, 0);
+	return g_strdup (tmp_uri);
+#else
+	if (priv->firmware_base_uri != NULL) {
+		g_autofree gchar *basename = g_path_get_basename (url);
+		return g_build_filename (priv->firmware_base_uri, basename, NULL);
+	}
+	if (g_strstr_len (url, -1, "/") == NULL) {
+		g_autofree gchar *basename = g_path_get_dirname (priv->metadata_uri);
+		return g_build_filename (basename, url, NULL);
+	}
+	return g_strdup (url);
+#endif
 }
 
 /* note, this has to be set before username and password */
@@ -885,12 +897,10 @@ fwupd_remote_get_checksum (FwupdRemote *self)
 gchar *
 fwupd_remote_build_firmware_uri (FwupdRemote *self, const gchar *url, GError **error)
 {
-	g_autoptr(curlptr) tmp = NULL;
-	g_autoptr(CURLU) uri = fwupd_remote_build_uri (self, url, error);
-	if (uri == NULL)
-		return NULL;
-	curl_url_get (uri, CURLUPART_URL, &tmp, 0);
-	return g_strdup (tmp);
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
+	g_return_val_if_fail (url != NULL, NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+	return fwupd_remote_build_uri (self, url, error);
 }
 
 /**
