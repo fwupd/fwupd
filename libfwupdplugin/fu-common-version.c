@@ -514,7 +514,7 @@ fu_common_vercmp (const gchar *version_a, const gchar *version_b)
 	if (version_a == NULL || version_b == NULL)
 		return G_MAXINT;
 
-	/* optimisation */
+	/* optimization */
 	if (g_strcmp0 (version_a, version_b) == 0)
 		return 0;
 

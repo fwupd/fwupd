@@ -1380,7 +1380,7 @@ fu_engine_check_requirement_client (FuEngine *self,
 	for (guint i = 0; feature_split[i] != NULL; i++) {
 		FwupdFeatureFlags flag = fwupd_feature_flag_from_string (feature_split[i]);
 
-		/* not recognised */
+		/* not recognized */
 		if (flag == FWUPD_FEATURE_FLAG_LAST) {
 			g_set_error (error,
 				     FWUPD_ERROR,

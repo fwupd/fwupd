@@ -368,7 +368,7 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 			fu_device_set_vendor (device, tmp);
 	}
 
-	/* try harder to find a vendor name the user will recognise */
+	/* try harder to find a vendor name the user will recognize */
 	if (priv->flags & FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT &&
 	    udev_parent != NULL && fu_device_get_vendor (device) == NULL) {
 		g_autoptr(GUdevDevice) device_tmp = g_object_ref (udev_parent);
