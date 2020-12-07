@@ -208,7 +208,10 @@ endif
 libjcat = dependency('jcat', version : '>= 0.1.0', fallback : ['libjcat', 'libjcat_dep'])
 libjsonglib = dependency('json-glib-1.0', version : '>= 1.1.1')
 valgrind = dependency('valgrind', required: false)
-libcurl = dependency('libcurl', version : '>= 7.62.0')
+libcurl = dependency('libcurl', version : '>= 7.61.0')
+if libcurl.version().version_compare('>= 7.62.0')
+  conf.set('HAVE_LIBCURL_7_62_0', '1')
+endif
 if build_daemon
   if get_option('polkit')
     polkit = dependency('polkit-gobject-1', version : '>= 0.103')

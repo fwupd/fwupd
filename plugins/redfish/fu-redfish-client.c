@@ -34,9 +34,11 @@ struct _FuRedfishClient
 
 G_DEFINE_TYPE (FuRedfishClient, fu_redfish_client, G_TYPE_OBJECT)
 
+#ifdef HAVE_LIBCURL_7_62_0
 typedef gchar curlptr;
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(curlptr, curl_free)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(CURLU, curl_url_cleanup)
+#endif
 
 static size_t
 fu_redfish_client_fetch_data_cb (char *ptr, size_t size, size_t nmemb, void *userdata)
@@ -52,10 +54,15 @@ fu_redfish_client_fetch_data (FuRedfishClient *self, const gchar *uri_path, GErr
 {
 	CURLcode res;
 	g_autofree gchar *port = g_strdup_printf ("%u", self->port);
-	g_autoptr(CURLU) uri = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new ();
+#ifdef HAVE_LIBCURL_7_62_0
+	g_autoptr(CURLU) uri = NULL;
+#else
+	g_autofree gchar *uri = NULL;
+#endif
 
 	/* create URI */
+#ifdef HAVE_LIBCURL_7_62_0
 	uri = curl_url ();
 	curl_url_set (uri, CURLU_DEFAULT_SCHEME, self->use_https ? "https" : "http", 0);
 	curl_url_set (uri, CURLUPART_PATH, uri_path, 0);
@@ -68,19 +75,43 @@ fu_redfish_client_fetch_data (FuRedfishClient *self, const gchar *uri_path, GErr
 				     "failed to create message for URI");
 		return NULL;
 	}
+#else
+	uri = g_strdup_printf ("%s://%s:%s%s",
+			       self->use_https ? "https" : "http",
+			       self->hostname,
+			       port,
+			       uri_path);
+	if (curl_easy_setopt (self->curl, CURLOPT_URL, uri) != CURLE_OK) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "failed to create message for URI");
+		return NULL;
+	}
+#endif
 	curl_easy_setopt (self->curl, CURLOPT_WRITEFUNCTION, fu_redfish_client_fetch_data_cb);
 	curl_easy_setopt (self->curl, CURLOPT_WRITEDATA, buf);
 	res = curl_easy_perform (self->curl);
 	if (res != CURLE_OK) {
 		glong status_code = 0;
+#ifdef HAVE_LIBCURL_7_62_0
 		g_autoptr(curlptr) uri_str = NULL;
+#endif
 		curl_easy_getinfo (self->curl, CURLINFO_RESPONSE_CODE, &status_code);
+#ifdef HAVE_LIBCURL_7_62_0
 		curl_url_get (uri, CURLUPART_URL, &uri_str, 0);
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
 			     "failed to download %s: %s",
 			     uri_str, curl_easy_strerror (res));
+#else
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "failed to download %s: %s",
+			     uri, curl_easy_strerror (res));
+#endif
 		return NULL;
 	}
 
@@ -572,7 +603,11 @@ fu_redfish_client_update (FuRedfishClient *self, FuDevice *device, GBytes *blob_
 	curl_mimepart *part;
 	g_autofree gchar *filename = NULL;
 	g_autofree gchar *port = g_strdup_printf ("%u", self->port);
+#ifdef HAVE_LIBCURL_7_62_0
 	g_autoptr(CURLU) uri = curl_url ();
+#else
+	g_autofree gchar *uri = NULL;
+#endif
 	g_autoptr(curl_mime) mime = curl_mime_init (self->curl);
 
 	/* Get the update version */
@@ -587,6 +622,7 @@ fu_redfish_client_update (FuRedfishClient *self, FuDevice *device, GBytes *blob_
 	}
 
 	/* create URI */
+#ifdef HAVE_LIBCURL_7_62_0
 	curl_url_set (uri, CURLU_DEFAULT_SCHEME, self->use_https ? "https" : "http", 0);
 	curl_url_set (uri, CURLUPART_PATH, self->push_uri_path, 0);
 	curl_url_set (uri, CURLUPART_HOST, self->hostname, 0);
@@ -598,6 +634,20 @@ fu_redfish_client_update (FuRedfishClient *self, FuDevice *device, GBytes *blob_
 				     "failed to create message for URI");
 		return FALSE;
 	}
+#else
+	uri = g_strdup_printf ("%s://%s:%s%s",
+			       self->use_https ? "https" : "http",
+			       self->hostname,
+			       port,
+			       self->push_uri_path);
+	if (curl_easy_setopt (self->curl, CURLOPT_URL, uri) != CURLE_OK) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "failed to create message for URI");
+		return FALSE;
+	}
+#endif
 
 	/* Create the multipart request */
 	curl_easy_setopt (self->curl, CURLOPT_MIMEPOST, mime);
@@ -607,8 +657,11 @@ fu_redfish_client_update (FuRedfishClient *self, FuDevice *device, GBytes *blob_
 	res = curl_easy_perform (self->curl);
 	if (res != CURLE_OK) {
 		glong status_code = 0;
+#ifdef HAVE_LIBCURL_7_62_0
 		g_autoptr(curlptr) uri_str = NULL;
+#endif
 		curl_easy_getinfo (self->curl, CURLINFO_RESPONSE_CODE, &status_code);
+#ifdef HAVE_LIBCURL_7_62_0
 		curl_url_get (uri, CURLUPART_URL, &uri_str, 0);
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -617,6 +670,15 @@ fu_redfish_client_update (FuRedfishClient *self, FuDevice *device, GBytes *blob_
 			     filename, uri_str,
 			     curl_easy_strerror (res));
 		return FALSE;
+#else
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "failed to upload %s to %s: %s",
+			     filename, uri,
+			     curl_easy_strerror (res));
+		return FALSE;
+#endif
 	}
 
 	return TRUE;
