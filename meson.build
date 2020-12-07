@@ -392,8 +392,12 @@ if build_standalone and get_option('systemd')
   else
     systemdunitdir = systemd.get_pkgconfig_variable('systemdsystemunitdir', define_variable: ['rootprefix', systemd_root_prefix])
     systemdsystempresetdir = systemd.get_pkgconfig_variable('systemdsystempresetdir', define_variable: ['rootprefix', systemd_root_prefix])
-    systemd_shutdown_dir = systemd.get_pkgconfig_variable('systemdshutdowndir', define_variable: [systemd.version().version_compare('>= 246') ? 'root_prefix' : 'rootprefix', systemd_root_prefix])
-    systemd_modules_load_dir = systemd.get_pkgconfig_variable('modulesloaddir', define_variable: ['rootprefix', systemd_root_prefix])
+    systemd_root_prefix_varname = 'root_prefix'
+    if systemd.version().version_compare('< 246')
+      systemd_root_prefix_varname = 'rootprefix'
+    endif
+    systemd_shutdown_dir = systemd.get_pkgconfig_variable('systemdshutdowndir', define_variable: [systemd_root_prefix_varname, systemd_root_prefix])
+    systemd_modules_load_dir = systemd.get_pkgconfig_variable('modulesloaddir', define_variable: [systemd_root_prefix_varname, systemd_root_prefix])
   endif
 else
   libsystemd = dependency('', required: false)
