@@ -1,7 +1,3 @@
-cargs = [
-  '-DG_LOG_DOMAIN="Fwupd"',
-]
-
 fwupd_version_h = configure_file(
   input : 'fwupd-version.h.in',
   output : 'fwupd-version.h',
@@ -58,7 +54,7 @@ fwupd = shared_library(
   version : libfwupd_lt_version,
   dependencies : libfwupd_deps,
   c_args : [
-      cargs,
+      '-DG_LOG_DOMAIN="Fwupd"',
       '-DLOCALSTATEDIR="' + localstatedir + '"',
     ],
   include_directories : root_incdir,
@@ -183,7 +179,7 @@ if get_option('tests')
     ],
     link_with : fwupd,
     c_args : [
-      cargs,
+      '-DG_LOG_DOMAIN="Fwupd"',
       '-DLOCALSTATEDIR="' + localstatedir + '"',
       '-DTESTDATADIR="' + testdatadir + '"',
       '-DFU_SELF_TEST_REMOTES_DIR="' + testdatadir + '"',

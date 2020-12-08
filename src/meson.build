@@ -360,7 +360,6 @@ if get_option('tests')
       fwupd,
       fwupdplugin,
     ],
-    c_args : cargs
   )
 endif
 
