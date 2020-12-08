@@ -1,3 +1,9 @@
+fwupd (1.5.3-2) unstable; urgency=medium
+
+  * trivial: debian: only install fwupd-msr.conf if needed
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Tue, 08 Dec 2020 10:45:45 -0600
+
 fwupd (1.5.3-1) unstable; urgency=medium
 
   * New upstream version (1.5.3)
