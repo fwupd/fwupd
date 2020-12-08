@@ -27,6 +27,22 @@ if build_daemon and get_option('polkit')
   daemon_dep += polkit
 endif
 
+daemon_src = [
+  'fu-config.c',
+  'fu-debug.c',
+  'fu-device-list.c',
+  'fu-engine.c',
+  'fu-engine-helper.c',
+  'fu-engine-request.c',
+  'fu-history.c',
+  'fu-idle.c',
+  'fu-install-task.c',
+  'fu-keyring-utils.c',
+  'fu-plugin-list.c',
+  'fu-remote-list.c',
+  'fu-security-attr.c',
+] + systemd_src
+
 if build_daemon
 fwupdmgr = executable(
   'fwupdmgr',
@@ -141,22 +157,9 @@ fwupdtool = executable(
   export_dynamic : true,
   sources : [
     'fu-tool.c',
-    'fu-config.c',
-    'fu-debug.c',
-    'fu-device-list.c',
-    'fu-engine.c',
-    'fu-engine-helper.c',
-    'fu-engine-request.c',
-    'fu-history.c',
-    'fu-idle.c',
-    'fu-install-task.c',
-    'fu-keyring-utils.c',
-    'fu-plugin-list.c',
     'fu-progressbar.c',
-    'fu-remote-list.c',
-    'fu-security-attr.c',
     'fu-util-common.c',
-    systemd_src
+    daemon_src,
   ],
   include_directories : [
     root_incdir,
@@ -245,21 +248,8 @@ executable(
   resources_src,
   fu_hash,
   sources : [
-    'fu-config.c',
-    'fu-debug.c',
-    'fu-device-list.c',
-    'fu-engine.c',
-    'fu-engine-helper.c',
-    'fu-engine-request.c',
-    'fu-history.c',
-    'fu-idle.c',
-    'fu-install-task.c',
-    'fu-keyring-utils.c',
     'fu-main.c',
-    'fu-plugin-list.c',
-    'fu-remote-list.c',
-    'fu-security-attr.c',
-    systemd_src
+    daemon_src,
   ],
   include_directories : [
     root_incdir,
@@ -294,21 +284,9 @@ if get_option('tests')
     test_deps,
     fu_hash,
     sources : [
-      'fu-config.c',
-      'fu-device-list.c',
-      'fu-engine.c',
-      'fu-engine-helper.c',
-      'fu-engine-request.c',
-      'fu-history.c',
-      'fu-idle.c',
-      'fu-install-task.c',
-      'fu-keyring-utils.c',
-      'fu-plugin-list.c',
       'fu-progressbar.c',
-      'fu-remote-list.c',
-      'fu-security-attr.c',
       'fu-self-test.c',
-      systemd_src
+      daemon_src,
     ],
     include_directories : [
       root_incdir,
