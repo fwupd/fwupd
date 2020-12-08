@@ -3,6 +3,10 @@ fwupd (1.5.3-1) UNRELEASED; urgency=medium
   * New upstream version (1.5.3)
   * Drop all patches (upstream)
   * Follow defaults for nvme and redfish plugins (don't need efivar now)
+  * debian/control:
+    - Drop libsoup build dependency
+    - Add libcurl build dependency
+    - Add systemd build dependency
 
  -- Mario Limonciello <mario.limonciello@dell.com>  Tue, 08 Dec 2020 08:30:56 -0600
 

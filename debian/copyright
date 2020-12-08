@@ -4,6 +4,7 @@ Source: https://github.com/fwupd/fwupd
 
 Files: *
 Copyright: 9elements Agency GmbH <patrick.rudolph@9elements.com>
+	   Aleix Pol <aleixpol@kde.org>
 	   Aleksander Morgado <aleksander@aleksander.es>
 	   Andrew Duggan
 	   Benson Leung <bleung@chromium.org>
