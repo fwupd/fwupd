@@ -1850,7 +1850,7 @@ fu_efivar_func (void)
 	/* check we can get the space used */
 	total = fu_efivar_space_used (&error);
 	g_assert_no_error (error);
-	g_assert_cmpint (total, ==, 0x2000);
+	g_assert_cmpint (total, >=, 0x2000);
 
 	/* check existing keys */
 	g_assert_false (fu_efivar_exists (FU_EFIVAR_GUID_EFI_GLOBAL, "NotGoingToExist"));
@@ -2060,13 +2060,11 @@ fu_security_attrs_hsi_func (void)
 	/* add updates and attestation */
 	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_FWUPD_UPDATES);
 	fwupd_security_attr_set_plugin (attr, "test");
-	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES);
-	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ATTESTATION);
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 	fwupd_security_attr_set_url (attr, "http://test");
 	fu_security_attrs_append (attrs, attr);
 	hsi6 = fu_security_attrs_calculate_hsi (attrs, FU_SECURITY_ATTRS_FLAG_NONE);
-	g_assert_cmpstr (hsi6, ==, "HSI:3+UA");
+	g_assert_cmpstr (hsi6, ==, "HSI:3");
 	g_clear_object (&attr);
 
 	/* add issue that was uncool */
@@ -2076,7 +2074,7 @@ fu_security_attrs_hsi_func (void)
 	fwupd_security_attr_set_url (attr, "http://test");
 	fu_security_attrs_append (attrs, attr);
 	hsi7 = fu_security_attrs_calculate_hsi (attrs, FU_SECURITY_ATTRS_FLAG_NONE);
-	g_assert_cmpstr (hsi7, ==, "HSI:3+UA!");
+	g_assert_cmpstr (hsi7, ==, "HSI:3!");
 	g_clear_object (&attr);
 
 	/* show version in the attribute */
@@ -2086,7 +2084,7 @@ fu_security_attrs_hsi_func (void)
 	fwupd_security_attr_set_url (attr, "http://test");
 	fu_security_attrs_append (attrs, attr);
 	hsi8 = fu_security_attrs_calculate_hsi (attrs, FU_SECURITY_ATTRS_FLAG_ADD_VERSION);
-	expected_hsi8 = g_strdup_printf ("HSI:3+UA! (v%d.%d.%d)",
+	expected_hsi8 = g_strdup_printf ("HSI:3! (v%d.%d.%d)",
 					FWUPD_MAJOR_VERSION,
 					FWUPD_MINOR_VERSION,
 					FWUPD_MICRO_VERSION);

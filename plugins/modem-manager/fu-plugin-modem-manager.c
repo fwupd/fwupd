@@ -62,6 +62,8 @@ fu_plugin_mm_uninhibit_device (FuPlugin *plugin)
 	FuPluginData *priv = fu_plugin_get_data (plugin);
 	g_autoptr(FuPluginMmInhibitedDeviceInfo) info = NULL;
 
+	g_clear_object (&priv->udev_client);
+
 	/* get the device removed from the plugin cache before uninhibiting */
 	fu_plugin_mm_udev_device_removed (plugin);
 
@@ -196,11 +198,13 @@ fu_plugin_mm_inhibit_device (FuPlugin *plugin, FuDevice *device, GError **error)
 	/* setup inhibited device info */
 	priv->inhibited = g_steal_pointer (&info);
 
-	/* as soon as inhibition is place, we need to do modem device monitoring based
-	 * on the udev client, as MM no longer reports devices */
-	priv->udev_client = g_udev_client_new (subsystems);
-	g_signal_connect (priv->udev_client, "uevent",
-			  G_CALLBACK (fu_plugin_mm_udev_uevent_cb), plugin);
+	/* only do modem port monitoring using udev if the module is expected
+	 * to reset itself into a fully different layout, e.g. a fastboot device */
+	if (fu_mm_device_get_update_methods (FU_MM_DEVICE (device)) & MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT) {
+		priv->udev_client = g_udev_client_new (subsystems);
+		g_signal_connect (priv->udev_client, "uevent",
+				  G_CALLBACK (fu_plugin_mm_udev_uevent_cb), plugin);
+	}
 
 	return TRUE;
 }

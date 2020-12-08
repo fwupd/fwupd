@@ -1,0 +1,13 @@
+{
+  "name": "Lenovo USB-C Dock Gen2 (CXAUDIO)",
+  "guids": [
+    "dbb8d54c-42e6-5215-b7ac-1df16872bb06"
+  ],
+  "repeat": 2,
+  "releases": [
+    {
+      "version": "49-0E-14",
+      "file": "eb4ffc9ecdc36a46728889edf219165dcb86a1455bf55a820c6d375fa81ea464-Lenovo-ThinkPad-USBCGen2Dock-Firmware-49-0E-14.cab"
+    }
+  ]
+}

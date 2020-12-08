@@ -42,6 +42,7 @@ struct _FuUdevDeviceClass
  * @FU_UDEV_DEVICE_FLAG_OPEN_WRITE:		Open the device write-only
  * @FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT:	Get the vendor ID fallback from the parent
  * @FU_UDEV_DEVICE_FLAG_USE_CONFIG:		Read and write from the device config
+ * @FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK:		Open nonblocking, e.g. O_NONBLOCK
  *
  * Flags used when opening the device using fu_device_open().
  **/
@@ -61,6 +62,7 @@ GUdevDevice	*fu_udev_device_get_dev			(FuUdevDevice	*self);
 const gchar	*fu_udev_device_get_device_file		(FuUdevDevice	*self);
 const gchar	*fu_udev_device_get_sysfs_path		(FuUdevDevice	*self);
 const gchar	*fu_udev_device_get_subsystem		(FuUdevDevice	*self);
+const gchar	*fu_udev_device_get_driver		(FuUdevDevice	*self);
 guint32		 fu_udev_device_get_vendor		(FuUdevDevice	*self);
 guint32		 fu_udev_device_get_model		(FuUdevDevice	*self);
 guint32		 fu_udev_device_get_subsystem_vendor	(FuUdevDevice	*self);

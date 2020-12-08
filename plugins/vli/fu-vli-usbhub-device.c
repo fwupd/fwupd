@@ -536,7 +536,7 @@ fu_vli_usbhub_device_msp430_setup (FuVliUsbhubDevice *self, GError **error)
 				     FWUPD_ERROR_NOT_FOUND)) {
 			g_debug ("%s", error_local->message);
 		} else {
-			g_warning ("cannot create I²C device: %s",
+			g_warning ("cannot create MSP430 I²C device: %s",
 				   error_local->message);
 		}
 		return TRUE;
@@ -561,7 +561,7 @@ fu_vli_usbhub_device_rtd21xx_setup (FuVliUsbhubDevice *self, GError **error)
 				     FWUPD_ERROR_NOT_FOUND)) {
 			g_debug ("%s", error_local->message);
 		} else {
-			g_warning ("cannot create I²C device: %s",
+			g_warning ("cannot create RTD21XX I²C device: %s",
 				   error_local->message);
 		}
 		return TRUE;
@@ -600,7 +600,7 @@ fu_vli_usbhub_device_setup (FuVliDevice *device, GError **error)
 	if (!fu_vli_device_spi_read_block (FU_VLI_DEVICE (self), VLI_USBHUB_FLASHMAP_ADDR_HD1,
 					   (guint8 *) &self->hd1_hdr,
 					   sizeof(self->hd1_hdr), error)) {
-		g_prefix_error (error, "failed to read HD1 header");
+		g_prefix_error (error, "failed to read HD1 header: ");
 		return FALSE;
 	}
 
@@ -637,7 +637,7 @@ fu_vli_usbhub_device_setup (FuVliDevice *device, GError **error)
 		if (!fu_vli_device_spi_read_block (FU_VLI_DEVICE (self), VLI_USBHUB_FLASHMAP_ADDR_HD2,
 						   (guint8 *) &self->hd2_hdr,
 						   sizeof(self->hd2_hdr), error)) {
-			g_prefix_error (error, "failed to read HD2 header");
+			g_prefix_error (error, "failed to read HD2 header: ");
 			return FALSE;
 		}
 	}
@@ -744,7 +744,7 @@ fu_vli_usbhub_device_update_v2_recovery (FuVliUsbhubDevice *self, GBytes *fw, GE
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_ERASE);
 	for (guint32 addr = 0; addr < bufsz; addr += 0x1000) {
 		if (!fu_vli_device_spi_erase_sector (FU_VLI_DEVICE (self), addr, error)) {
-			g_prefix_error (error, "failed to erase sector @0x%x", addr);
+			g_prefix_error (error, "failed to erase sector @0x%x: ", addr);
 			return FALSE;
 		}
 		fu_device_set_progress_full (FU_DEVICE (self), (gsize) addr, bufsz);
@@ -848,7 +848,7 @@ fu_vli_usbhub_device_update_v2 (FuVliUsbhubDevice *self, FuFirmware *firmware, G
 						   (guint8 *) &self->hd1_hdr, sizeof(hdr),
 						   error)) {
 			g_prefix_error (error,
-					"failed to read root header from 0x%x",
+					"failed to read root header from 0x%x: ",
 					(guint) VLI_USBHUB_FLASHMAP_ADDR_HD1_BACKUP);
 			return FALSE;
 		}

@@ -122,7 +122,7 @@ fu_wacom_device_w9021_erase_all (FuWacomEmrDevice *self, GError **error)
 		return FALSE;
 	}
 	if (!fu_wacom_common_rc_set_error (&rsp, error)) {
-		g_prefix_error (error, "failed to erase");
+		g_prefix_error (error, "failed to erase: ");
 		return FALSE;
 	}
 	g_usleep (50);

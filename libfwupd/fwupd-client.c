@@ -8,7 +8,8 @@
 
 #include <glib-object.h>
 #include <gio/gio.h>
-#include <libsoup/soup.h>
+#include <gmodule.h>
+#include <curl/curl.h>
 #ifdef HAVE_GIO_UNIX
 #include <gio/gunixfdlist.h>
 #endif
@@ -30,6 +31,8 @@
 #include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
 
+typedef GObject		*(*FwupdClientObjectNewFunc)	(void);
+
 /**
  * SECTION:fwupd-client
  * @short_description: a way of interfacing with the daemon
@@ -42,6 +45,7 @@
 static void fwupd_client_finalize	 (GObject *object);
 
 typedef struct {
+	GMainContext			*main_ctx;
 	FwupdStatus			 status;
 	gboolean			 tainted;
 	gboolean			 interactive;
@@ -52,9 +56,18 @@ typedef struct {
 	gchar				*host_security_id;
 	GDBusConnection			*conn;
 	GDBusProxy			*proxy;
-	SoupSession			*soup_session;
 	gchar				*user_agent;
+#ifdef SOUP_SESSION_COMPAT
+	GObject				*soup_session;
+	GModule				*soup_module;	/* we leak this */
+#endif
 } FwupdClientPrivate;
+
+typedef struct {
+	CURL				*curl;
+	curl_mime			*mime;
+	struct curl_slist		*headers;
+} FwupdCurlHelper;
 
 enum {
 	SIGNAL_CHANGED,
@@ -71,7 +84,7 @@ enum {
 	PROP_PERCENTAGE,
 	PROP_DAEMON_VERSION,
 	PROP_TAINTED,
-	PROP_SOUP_SESSION,
+	PROP_SOUP_SESSION, /* compat ABI, do not use! */
 	PROP_HOST_PRODUCT,
 	PROP_HOST_MACHINE_ID,
 	PROP_HOST_SECURITY_ID,
@@ -83,6 +96,24 @@ static guint signals [SIGNAL_LAST] = { 0 };
 
 G_DEFINE_TYPE_WITH_PRIVATE (FwupdClient, fwupd_client, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fwupd_client_get_instance_private (o))
+
+#ifdef HAVE_LIBCURL_7_62_0
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(CURLU, curl_url_cleanup)
+#endif
+
+static void
+fwupd_client_curl_helper_free (FwupdCurlHelper *helper)
+{
+	if (helper->curl != NULL)
+		curl_easy_cleanup (helper->curl);
+	if (helper->mime != NULL)
+		curl_mime_free (helper->mime);
+	if (helper->headers != NULL)
+		curl_slist_free_all (helper->headers);
+	g_free (helper);
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FwupdCurlHelper, fwupd_client_curl_helper_free)
 
 static void
 fwupd_client_set_host_product (FwupdClient *self, const gchar *host_product)
@@ -246,6 +277,44 @@ fwupd_client_signal_cb (GDBusProxy *proxy,
 }
 
 /**
+ * fwupd_client_get_main_context:
+ * @self: A #FwupdClient
+ *
+ * Gets the internal #GMainContext to use for synchronous methods.
+ * By default the value is set to the value of g_main_context_ref_thread_default()
+ *
+ * Return value: (transfer full): the #GMainContext
+ *
+ * Since: 1.5.3
+ **/
+GMainContext *
+fwupd_client_get_main_context (FwupdClient *self)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	if (priv->main_ctx != NULL)
+		return g_main_context_ref (priv->main_ctx);
+	return g_main_context_ref_thread_default ();
+}
+
+/**
+ * fwupd_client_set_main_context:
+ * @self: A #FwupdClient
+ * @main_ctx: #GMainContext
+ *
+ * Sets the internal #GMainContext to use for synchronous methods.
+ *
+ * Since: 1.5.3
+ **/
+void
+fwupd_client_set_main_context (FwupdClient *self, GMainContext *main_ctx)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	if (main_ctx != priv->main_ctx)
+		g_main_context_unref (priv->main_ctx);
+	priv->main_ctx = g_main_context_ref (main_ctx);
+}
+
+/**
  * fwupd_client_ensure_networking:
  * @self: A #FwupdClient
  * @error: the #GError, or %NULL
@@ -262,12 +331,6 @@ gboolean
 fwupd_client_ensure_networking (FwupdClient *self, GError **error)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	const gchar *http_proxy;
-	g_autoptr(SoupSession) session = NULL;
-
-	/* already exists */
-	if (priv->soup_session != NULL)
-		return TRUE;
 
 	/* check the user agent is sane */
 	if (priv->user_agent == NULL) {
@@ -284,22 +347,69 @@ fwupd_client_ensure_networking (FwupdClient *self, GError **error)
 				     "user agent unsuitable; fwupd version required");
 		return FALSE;
 	}
+#ifdef SOUP_SESSION_COMPAT
+	if (priv->soup_session != NULL) {
+		g_object_set (priv->soup_session,
+			      "user-agent", priv->user_agent,
+			      NULL);
+	}
+#endif
+	return TRUE;
+}
 
-	/* create the soup session */
-	session = soup_session_new_with_options (SOUP_SESSION_USER_AGENT, priv->user_agent,
-						 SOUP_SESSION_TIMEOUT, 60,
-						 NULL);
-	if (session == NULL) {
+static int
+fwupd_client_progress_callback_cb (void *clientp,
+				   curl_off_t dltotal,
+				   curl_off_t dlnow,
+				   curl_off_t ultotal,
+				   curl_off_t ulnow)
+{
+	FwupdClient *self = FWUPD_CLIENT (clientp);
+
+	/* calculate percentage */
+	if (dltotal > 0 && dlnow >= 0 && dlnow <= dltotal) {
+		guint percentage = (guint) ((100 * dlnow) / dltotal);
+		g_debug ("download progress: %u%%", percentage);
+		fwupd_client_set_percentage (self, percentage);
+	} else if (ultotal > 0 && ulnow >= 0 && ulnow <= ultotal) {
+		guint percentage = (guint) ((100 * ulnow) / ultotal);
+		g_debug ("upload progress: %u%%", percentage);
+		fwupd_client_set_percentage (self, percentage);
+	}
+
+	return 0;
+}
+
+static FwupdCurlHelper *
+fwupd_client_curl_new (FwupdClient *self, GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	const gchar *http_proxy;
+	g_autoptr(FwupdCurlHelper) helper = g_new0 (FwupdCurlHelper, 1);
+
+	/* check the user agent is sane */
+	if (!fwupd_client_ensure_networking (self, error))
+		return NULL;
+
+	/* create the session */
+	helper->curl = curl_easy_init ();
+	if (helper->curl == NULL) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
 				     "failed to setup networking");
-		return FALSE;
+		return NULL;
 	}
+	if (g_getenv ("FWUPD_CURL_VERBOSE") != NULL)
+		curl_easy_setopt (helper->curl, CURLOPT_VERBOSE, 1L);
+	curl_easy_setopt (helper->curl, CURLOPT_XFERINFOFUNCTION, fwupd_client_progress_callback_cb);
+	curl_easy_setopt (helper->curl, CURLOPT_XFERINFODATA, self);
+	curl_easy_setopt (helper->curl, CURLOPT_USERAGENT, priv->user_agent);
+	curl_easy_setopt (helper->curl, CURLOPT_CONNECTTIMEOUT, 60L);
 
 	/* relax the SSL checks for broken corporate proxies */
 	if (g_getenv ("DISABLE_SSL_STRICT") != NULL)
-		g_object_set (session, SOUP_SESSION_SSL_STRICT, FALSE, NULL);
+		curl_easy_setopt (helper->curl, CURLOPT_SSL_VERIFYPEER, 0L);
 
 	/* set the proxy */
 	http_proxy = g_getenv ("https_proxy");
@@ -309,22 +419,12 @@ fwupd_client_ensure_networking (FwupdClient *self, GError **error)
 		http_proxy = g_getenv ("http_proxy");
 	if (http_proxy == NULL)
 		http_proxy = g_getenv ("HTTP_PROXY");
-	if (http_proxy != NULL && strlen (http_proxy) > 0) {
-		g_autoptr(SoupURI) proxy_uri = soup_uri_new (http_proxy);
-		if (proxy_uri == NULL) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "invalid proxy URI: %s", http_proxy);
-			return FALSE;
-		}
-		g_object_set (session, SOUP_SESSION_PROXY_URI, proxy_uri, NULL);
-	}
+	if (http_proxy != NULL && strlen (http_proxy) > 0)
+		curl_easy_setopt (helper->curl, CURLOPT_PROXY, http_proxy);
 
 	/* this disables the double-compression of the firmware.xml.gz file */
-	soup_session_remove_feature_by_type (session, SOUP_TYPE_CONTENT_DECODER);
-	priv->soup_session = g_steal_pointer (&session);
-	return TRUE;
+	curl_easy_setopt (helper->curl, CURLOPT_HTTP_CONTENT_DECODING, 0L);
+	return g_steal_pointer (&helper);
 }
 
 static void
@@ -2234,6 +2334,18 @@ fwupd_client_install_release_download_cb (GObject *source, GAsyncResult *res, gp
 					  g_steal_pointer (&task));
 }
 
+static gboolean
+fwupd_client_is_url (const gchar *perhaps_url)
+{
+#ifdef HAVE_LIBCURL_7_62_0
+	g_autoptr(CURLU) h = curl_url ();
+	return curl_url_set (h, CURLUPART_URL, perhaps_url, 0) == CURLUE_OK;
+#else
+	return g_str_has_prefix (perhaps_url, "http://") ||
+		g_str_has_prefix (perhaps_url, "https://");
+#endif
+}
+
 static void
 fwupd_client_install_release_remote_cb (GObject *source, GAsyncResult *res, gpointer user_data)
 {
@@ -2242,7 +2354,6 @@ fwupd_client_install_release_remote_cb (GObject *source, GAsyncResult *res, gpoi
 	g_autoptr(FwupdRemote) remote = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GTask) task = G_TASK (user_data);
-	g_autoptr(SoupURI) uri = NULL;
 	FwupdClientInstallReleaseData *data = g_task_get_task_data (task);
 	GCancellable *cancellable = g_task_get_cancellable (task);
 
@@ -2254,8 +2365,8 @@ fwupd_client_install_release_remote_cb (GObject *source, GAsyncResult *res, gpoi
 	}
 
 	/* local and directory remotes may have the firmware already */
-	uri = soup_uri_new (fwupd_release_get_uri (data->release));
-	if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_LOCAL && uri == NULL) {
+	if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_LOCAL &&
+	    !fwupd_client_is_url (fwupd_release_get_uri (data->release))) {
 		const gchar *fn_cache = fwupd_remote_get_filename_cache (remote);
 		g_autofree gchar *path = g_path_get_dirname (fn_cache);
 		fn = g_build_filename (path, fwupd_release_get_uri (data->release), NULL);
@@ -2880,6 +2991,8 @@ fwupd_client_refresh_remote_signature_cb (GObject *source,
 	FwupdClientRefreshRemoteData *data = g_task_get_task_data (task);
 	FwupdClient *self = g_task_get_source_object (task);
 	GCancellable *cancellable = g_task_get_cancellable (task);
+	GChecksumType checksum_kind;
+	g_autofree gchar *checksum = NULL;
 
 	/* save signature */
 	bytes = fwupd_client_download_bytes_finish (FWUPD_CLIENT (source), res, &error);
@@ -2888,8 +3001,23 @@ fwupd_client_refresh_remote_signature_cb (GObject *source,
 		return;
 	}
 	data->signature = g_steal_pointer (&bytes);
-	if (!fwupd_remote_load_signature_bytes (data->remote, data->signature, &error)) {
-		g_task_return_error (task, g_steal_pointer (&error));
+	if (fwupd_remote_get_keyring_kind (data->remote) == FWUPD_KEYRING_KIND_JCAT) {
+		if (!fwupd_remote_load_signature_bytes (data->remote, data->signature, &error)) {
+			g_prefix_error (&error, "Failed to load signature: ");
+			g_task_return_error (task, g_steal_pointer (&error));
+			return;
+		}
+	}
+
+	/* is the signature checksum the same? */
+	checksum_kind = fwupd_checksum_guess_kind (fwupd_remote_get_checksum (data->remote));
+	checksum = g_compute_checksum_for_data (checksum_kind,
+						(const guchar *) g_bytes_get_data (data->signature, NULL),
+						g_bytes_get_size (data->signature));
+	if (g_strcmp0 (checksum, fwupd_remote_get_checksum (data->remote)) == 0) {
+		g_debug ("metadata signature of %s is unchanged, skipping",
+			 fwupd_remote_get_id (data->remote));
+		g_task_return_boolean (task, TRUE);
 		return;
 	}
 
@@ -3848,6 +3976,26 @@ fwupd_client_set_user_agent (FwupdClient *self, const gchar *user_agent)
 }
 
 /**
+ * fwupd_client_get_user_agent:
+ * @self: A #FwupdClient
+ *
+ * Gets the string that represents the user agent that is used for
+ * uploading and downloading. The user agent will contain the runtime
+ * version of fwupd somewhere in the provided string.
+ *
+ * Returns: a string, or %NULL for unknown.
+ *
+ * Since: 1.5.2
+ **/
+const gchar *
+fwupd_client_get_user_agent (FwupdClient *self)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), NULL);
+	return priv->user_agent;
+}
+
+/**
  * fwupd_client_set_user_agent_for_package:
  * @self: A #FwupdClient
  * @package_name: client program name, e.g. "gnome-software"
@@ -3895,97 +4043,62 @@ fwupd_client_set_user_agent_for_package (FwupdClient *self,
 	priv->user_agent = g_string_free (str, FALSE);
 }
 
-static void
-fwupd_client_download_chunk_cb (SoupMessage *msg, SoupBuffer *chunk, gpointer user_data)
+static size_t
+fwupd_client_download_write_callback_cb (char *ptr, size_t size, size_t nmemb, void *userdata)
 {
-	guint percentage;
-	goffset header_size;
-	goffset body_length;
-	FwupdClient *self = FWUPD_CLIENT (user_data);
-
-	/* if it's returning "Found" or an error, ignore the percentage */
-	if (msg->status_code != SOUP_STATUS_OK) {
-		g_debug ("ignoring status code %u (%s)",
-			 msg->status_code, msg->reason_phrase);
-		return;
-	}
-
-	/* get data */
-	body_length = msg->response_body->length;
-	header_size = soup_message_headers_get_content_length (msg->response_headers);
-	if (header_size < body_length)
-		return;
-
-	/* calculate percentage */
-	percentage = (guint) ((100 * body_length) / header_size);
-	g_debug ("progress: %u%%", percentage);
-	fwupd_client_set_percentage (self, percentage);
+	GByteArray *buf = (GByteArray *) userdata;
+	gsize realsize = size * nmemb;
+	g_byte_array_append (buf, (const guint8 *) ptr, realsize);
+	return realsize;
 }
 
 static void
-fwupd_client_read_bytes_cb (GObject *source, GAsyncResult *res, gpointer user_data)
+fwupd_client_download_bytes_thread_cb (GTask *task,
+				       gpointer source_object,
+				       gpointer task_data,
+				       GCancellable *cancellable)
 {
-	g_autoptr(GBytes) bytes = NULL;
-	g_autoptr(GError) error = NULL;
-	g_autoptr(GTask) task = G_TASK (user_data);
+	FwupdClient *self = FWUPD_CLIENT (source_object);
+	FwupdCurlHelper *helper = g_task_get_task_data (task);
+	CURLcode res;
+	gchar errbuf[CURL_ERROR_SIZE] = { '\0' };
+	g_autoptr(GByteArray) buf = g_byte_array_new ();
 
-	bytes = fwupd_input_stream_read_bytes_finish (G_INPUT_STREAM (source), res, &error);
-	if (bytes == NULL) {
-		g_task_return_error (task, g_steal_pointer (&error));
-		return;
-	}
-
-	/* success */
-	g_task_return_pointer (task,
-			       g_steal_pointer (&bytes),
-			       (GDestroyNotify) g_bytes_unref);
-}
-
-static void
-fwupd_client_download_bytes_cb (GObject *source,
-				GAsyncResult *res,
-				gpointer user_data)
-{
-	g_autoptr(GTask) task = G_TASK (user_data);
-	FwupdClient *self = g_task_get_source_object (task);
-	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	GCancellable *cancellable = g_task_get_cancellable (task);
-	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) istr = NULL;
-	guint status_code = 0;
-	SoupMessage *msg = g_task_get_task_data (task);
-
-	/* get the result */
+	curl_easy_setopt (helper->curl, CURLOPT_ERRORBUFFER, errbuf);
+	curl_easy_setopt (helper->curl, CURLOPT_WRITEFUNCTION, fwupd_client_download_write_callback_cb);
+	curl_easy_setopt (helper->curl, CURLOPT_WRITEDATA, buf);
+	res = curl_easy_perform (helper->curl);
 	fwupd_client_set_status (self, FWUPD_STATUS_IDLE);
-	istr = soup_session_send_finish (priv->soup_session, res, &error);
-	if (istr == NULL) {
-		g_task_return_error (task, g_steal_pointer (&error));
-		return;
-	}
-
-	/* check the input stream before reading the data */
-	g_object_get (msg, "status-code", &status_code, NULL);
-	g_debug ("status-code was %u", status_code);
-	if (status_code == 429) {
+	if (res != CURLE_OK) {
+		glong status_code = 0;
+		curl_easy_getinfo (helper->curl, CURLINFO_RESPONSE_CODE, &status_code);
+		g_debug ("status-code was %ld", status_code);
+		if (status_code == 429) {
+			g_task_return_new_error (task,
+						 FWUPD_ERROR,
+						 FWUPD_ERROR_INVALID_FILE,
+						 "Failed to download due to server limit");
+			return;
+		}
+		if (errbuf[0] != '\0') {
+			g_task_return_new_error (task,
+						 FWUPD_ERROR,
+						 FWUPD_ERROR_INVALID_FILE,
+						 "failed to download file: %s",
+						 errbuf);
+			return;
+		}
 		g_task_return_new_error (task,
 					 FWUPD_ERROR,
 					 FWUPD_ERROR_INVALID_FILE,
-					 "Failed to download due to server limit");
-		return;
-	}
-	if (status_code != SOUP_STATUS_OK) {
-		g_task_return_new_error (task,
-					 FWUPD_ERROR,
-					 FWUPD_ERROR_INVALID_FILE,
-					 "Failed to download: %s",
-					 soup_status_get_phrase (status_code));
-		return;
-	}
+					 "failed to download file: %s",
+					 curl_easy_strerror (res));
 
-	/* read the input stream into a GBytes, async */
-	fwupd_input_stream_read_bytes_async (istr, cancellable,
-					     fwupd_client_read_bytes_cb,
-					     g_steal_pointer (&task));
+		return;
+	}
+	g_task_return_pointer (task,
+			       g_byte_array_free_to_bytes (g_steal_pointer (&buf)),
+			       (GDestroyNotify) g_bytes_unref);
 }
 
 /**
@@ -4015,9 +4128,8 @@ fwupd_client_download_bytes_async (FwupdClient *self,
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_autoptr(GTask) task = NULL;
-	g_autoptr(SoupMessage) msg = NULL;
-	g_autoptr(SoupURI) uri = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(FwupdCurlHelper) helper = NULL;
 
 	g_return_if_fail (FWUPD_IS_CLIENT (self));
 	g_return_if_fail (url != NULL);
@@ -4026,31 +4138,18 @@ fwupd_client_download_bytes_async (FwupdClient *self,
 
 	/* ensure networking set up */
 	task = g_task_new (self, cancellable, callback, callback_data);
-	if (!fwupd_client_ensure_networking (self, &error)) {
+	helper = fwupd_client_curl_new (self, &error);
+	if (helper == NULL) {
 		g_task_return_error (task, g_steal_pointer (&error));
 		return;
 	}
+	curl_easy_setopt (helper->curl, CURLOPT_URL, url);
+	g_task_set_task_data (task, g_steal_pointer (&helper), (GDestroyNotify) fwupd_client_curl_helper_free);
 
 	/* download data */
 	g_debug ("downloading %s", url);
-	uri = soup_uri_new (url);
-	msg = soup_message_new_from_uri (SOUP_METHOD_GET, uri);
-	if (msg == NULL) {
-		g_task_return_new_error (task,
-					 FWUPD_ERROR,
-					 FWUPD_ERROR_INVALID_FILE,
-					 "Failed to parse URI %s", url);
-		return;
-	}
-	g_signal_connect (msg, "got-chunk",
-			  G_CALLBACK (fwupd_client_download_chunk_cb),
-			  self);
-	g_task_set_task_data (task, g_object_ref (msg), (GDestroyNotify) g_object_unref);
 	fwupd_client_set_status (self, FWUPD_STATUS_DOWNLOADING);
-	soup_session_send_async (priv->soup_session, msg,
-				 cancellable,
-				 fwupd_client_download_bytes_cb,
-				 g_steal_pointer (&task));
+	g_task_run_in_thread (task, fwupd_client_download_bytes_thread_cb);
 }
 
 /**
@@ -4075,42 +4174,45 @@ fwupd_client_download_bytes_finish (FwupdClient *self, GAsyncResult *res, GError
 }
 
 static void
-fwupd_client_upload_bytes_cb (GObject *source,
-			      GAsyncResult *res,
-			      gpointer user_data)
+fwupd_client_upload_bytes_thread_cb (GTask *task,
+				     gpointer source_object,
+				     gpointer task_data,
+				     GCancellable *cancellable)
 {
-	g_autoptr(GTask) task = G_TASK (user_data);
-	FwupdClient *self = g_task_get_source_object (task);
-	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	GCancellable *cancellable = g_task_get_cancellable (task);
-	g_autoptr(GError) error = NULL;
-	g_autoptr(GInputStream) istr = NULL;
-	guint status_code;
-	SoupMessage *msg = g_task_get_task_data (task);
+	FwupdClient *self = FWUPD_CLIENT (source_object);
+	FwupdCurlHelper *helper = g_task_get_task_data (task);
+	CURLcode res;
+	gchar errbuf[CURL_ERROR_SIZE] = { '\0' };
+	g_autoptr(GByteArray) buf = g_byte_array_new ();
 
-	/* get the result */
-	istr = soup_session_send_finish (priv->soup_session, res, &error);
-	if (istr == NULL) {
-		g_task_return_error (task, g_steal_pointer (&error));
-		return;
-	}
-
-	/* check the input stream before reading the data */
-	g_object_get (msg, "status-code", &status_code, NULL);
-	g_debug ("status-code was %u", status_code);
-	if (!SOUP_STATUS_IS_SUCCESSFUL (status_code)) {
+	curl_easy_setopt (helper->curl, CURLOPT_ERRORBUFFER, errbuf);
+	curl_easy_setopt (helper->curl, CURLOPT_WRITEFUNCTION, fwupd_client_download_write_callback_cb);
+	curl_easy_setopt (helper->curl, CURLOPT_WRITEDATA, buf);
+	res = curl_easy_perform (helper->curl);
+	fwupd_client_set_status (self, FWUPD_STATUS_IDLE);
+	if (res != CURLE_OK) {
+		glong status_code = 0;
+		curl_easy_getinfo (helper->curl, CURLINFO_RESPONSE_CODE, &status_code);
+		g_debug ("status-code was %ld", status_code);
+		if (errbuf[0] != '\0') {
+			g_task_return_new_error (task,
+						 FWUPD_ERROR,
+						 FWUPD_ERROR_INVALID_FILE,
+						 "failed to upload file: %s",
+						 errbuf);
+			return;
+		}
 		g_task_return_new_error (task,
 					 FWUPD_ERROR,
 					 FWUPD_ERROR_INVALID_FILE,
-					 "Failed to download: %s",
-					 soup_status_get_phrase (status_code));
+					 "failed to upload file: %s",
+					 curl_easy_strerror (res));
+
 		return;
 	}
-
-	/* read the input stream into a GBytes, async */
-	fwupd_input_stream_read_bytes_async (istr, cancellable,
-					     fwupd_client_read_bytes_cb,
-					     g_steal_pointer (&task));
+	g_task_return_pointer (task,
+			       g_byte_array_free_to_bytes (g_steal_pointer (&buf)),
+			       (GDestroyNotify) g_bytes_unref);
 }
 
 /**
@@ -4144,8 +4246,7 @@ fwupd_client_upload_bytes_async (FwupdClient *self,
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_autoptr(GTask) task = NULL;
-	g_autoptr(SoupMessage) msg = NULL;
-	g_autoptr(SoupURI) uri = NULL;
+	g_autoptr(FwupdCurlHelper) helper = NULL;
 	g_autoptr(GError) error = NULL;
 
 	g_return_if_fail (FWUPD_IS_CLIENT (self));
@@ -4155,48 +4256,39 @@ fwupd_client_upload_bytes_async (FwupdClient *self,
 
 	/* ensure networking set up */
 	task = g_task_new (self, cancellable, callback, callback_data);
-	if (!fwupd_client_ensure_networking (self, &error)) {
+	helper = fwupd_client_curl_new (self, &error);
+	if (helper == NULL) {
 		g_task_return_error (task, g_steal_pointer (&error));
 		return;
 	}
 
-	/* download data */
-	g_debug ("downloading %s", url);
-	uri = soup_uri_new (url);
-
 	/* build message */
 	if ((flags & FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART) > 0 ||
 	    signature != NULL) {
-		g_autoptr(SoupMultipart) mp = NULL;
-		mp = soup_multipart_new (SOUP_FORM_MIME_TYPE_MULTIPART);
-		soup_multipart_append_form_string (mp, "payload", payload);
-		if (signature != NULL)
-			soup_multipart_append_form_string (mp, "signature", signature);
-		msg = soup_form_request_new_from_multipart (url, mp);
+		curl_mimepart *part;
+		helper->mime = curl_mime_init (helper->curl);
+		curl_easy_setopt (helper->curl, CURLOPT_MIMEPOST, helper->mime);
+		part = curl_mime_addpart (helper->mime);
+		curl_mime_data (part, payload, CURL_ZERO_TERMINATED);
+		curl_mime_name (part, "payload");
+		if (signature != NULL) {
+			part = curl_mime_addpart (helper->mime);
+			curl_mime_data (part, signature, CURL_ZERO_TERMINATED);
+			curl_mime_name (part, "signature");
+		}
 	} else {
-		msg = soup_message_new (SOUP_METHOD_POST, url);
-		soup_message_set_request (msg, "application/json; charset=utf-8",
-					  SOUP_MEMORY_COPY, payload, strlen (payload));
+		helper->headers = curl_slist_append (helper->headers, "Content-Type: text/plain");
+		curl_easy_setopt (helper->curl, CURLOPT_HTTPHEADER, helper->headers);
+		curl_easy_setopt (helper->curl, CURLOPT_POST, 1L);
+		curl_easy_setopt (helper->curl, CURLOPT_POSTFIELDSIZE, strlen (payload));
+		curl_easy_setopt (helper->curl, CURLOPT_COPYPOSTFIELDS, payload);
 	}
 
-	/* POST request */
-	if (msg == NULL) {
-		g_task_return_new_error (task,
-					 FWUPD_ERROR,
-					 FWUPD_ERROR_INVALID_FILE,
-					 "Failed to parse URI %s", url);
-		return;
-	}
-	g_signal_connect (msg, "got-chunk",
-			  G_CALLBACK (fwupd_client_download_chunk_cb),
-			  self);
-	g_task_set_task_data (task, g_object_ref (msg), (GDestroyNotify) g_object_unref);
 	fwupd_client_set_status (self, FWUPD_STATUS_IDLE);
 	g_debug ("uploading to %s", url);
-	soup_session_send_async (priv->soup_session, msg,
-				 cancellable,
-				 fwupd_client_upload_bytes_cb,
-				 g_steal_pointer (&task));
+	curl_easy_setopt (helper->curl, CURLOPT_URL, url);
+	g_task_set_task_data (task, g_steal_pointer (&helper), (GDestroyNotify) fwupd_client_curl_helper_free);
+	g_task_run_in_thread (task, fwupd_client_upload_bytes_thread_cb);
 }
 
 /**
@@ -4220,6 +4312,50 @@ fwupd_client_upload_bytes_finish (FwupdClient *self, GAsyncResult *res, GError *
 	return g_task_propagate_pointer (G_TASK(res), error);
 }
 
+#ifdef SOUP_SESSION_COMPAT
+/* this is bad; we dlopen libsoup-2.4.so.1 and get the gtype manually
+ * to avoid deps on both libcurl and libsoup whilst preserving ABI */
+static void
+fwupd_client_ensure_soup_session (FwupdClient *self)
+{
+	FwupdClientObjectNewFunc func = NULL;
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	GType soup_gtype;
+
+	/* already set up */
+	if (priv->soup_session != NULL)
+		return;
+
+	/* known GType, just create */
+	soup_gtype = g_type_from_name ("SoupSession");
+	if (soup_gtype != 0) {
+		priv->soup_session = g_object_new (soup_gtype, NULL);
+		return;
+	}
+
+	/* load the library at runtime, leaking the module */
+	if (priv->soup_module == NULL) {
+		g_autofree gchar *fn = NULL;
+		fn = g_build_filename (FWUPD_LIBDIR, "libsoup-2.4.so.1", NULL);
+		priv->soup_module = g_module_open (fn, G_MODULE_BIND_LAZY);
+		if (priv->soup_module == NULL) {
+			g_warning ("failed to find libsoup library");
+			return;
+		}
+	}
+	if (!g_module_symbol (priv->soup_module,
+			      "soup_session_new",
+			      (gpointer *) &func)) {
+		g_warning ("failed to find soup_session_get_type()");
+		g_module_close (priv->soup_module);
+		priv->soup_module = NULL;
+		return;
+	}
+	priv->soup_session = func ();
+	g_object_set (priv->soup_session, "timeout", (guint) 60, NULL);
+}
+#endif
+
 static void
 fwupd_client_get_property (GObject *object, guint prop_id,
 			   GValue *value, GParamSpec *pspec)
@@ -4235,7 +4371,12 @@ fwupd_client_get_property (GObject *object, guint prop_id,
 		g_value_set_boolean (value, priv->tainted);
 		break;
 	case PROP_SOUP_SESSION:
+#ifdef SOUP_SESSION_COMPAT
+		fwupd_client_ensure_soup_session (self);
 		g_value_set_object (value, priv->soup_session);
+#else
+		g_value_set_object (value, NULL);
+#endif
 		break;
 	case PROP_PERCENTAGE:
 		g_value_set_uint (value, priv->percentage);
@@ -4274,9 +4415,6 @@ fwupd_client_set_property (GObject *object, guint prop_id,
 		break;
 	case PROP_PERCENTAGE:
 		priv->percentage = g_value_get_uint (value);
-		break;
-	case PROP_SOUP_SESSION:
-		g_set_object (&priv->soup_session, g_value_get_object (value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -4437,12 +4575,12 @@ fwupd_client_class_init (FwupdClientClass *klass)
 	/**
 	 * FwupdClient:soup-session:
 	 *
-	 * The libsoup session.
+	 * The libsoup session, now unused.
 	 *
 	 * Since: 1.4.5
 	 */
-	pspec = g_param_spec_object ("soup-session", NULL, NULL, SOUP_TYPE_SESSION,
-				     G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	pspec = g_param_spec_object ("soup-session", NULL, NULL, G_TYPE_OBJECT,
+				     G_PARAM_READABLE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_SOUP_SESSION, pspec);
 
 	/**
@@ -4490,6 +4628,7 @@ fwupd_client_finalize (GObject *object)
 	FwupdClient *self = FWUPD_CLIENT (object);
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
 
+	g_clear_pointer (&priv->main_ctx, g_main_context_unref);
 	g_free (priv->user_agent);
 	g_free (priv->daemon_version);
 	g_free (priv->host_product);
@@ -4499,8 +4638,10 @@ fwupd_client_finalize (GObject *object)
 		g_object_unref (priv->conn);
 	if (priv->proxy != NULL)
 		g_object_unref (priv->proxy);
+#ifdef SOUP_SESSION_COMPAT
 	if (priv->soup_session != NULL)
 		g_object_unref (priv->soup_session);
+#endif
 
 	G_OBJECT_CLASS (fwupd_client_parent_class)->finalize (object);
 }

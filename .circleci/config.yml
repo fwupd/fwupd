@@ -1,17 +1,5 @@
 version: 2
 jobs:
-  check-abi:
-    machine:
-      image: circleci/classic:latest
-    steps:
-      - checkout
-      - run:
-          name: "Build container"
-          command: OS=debian-x86_64 ./contrib/ci/generate_docker.py
-      - run:
-          name: "Run build script"
-          command: docker run -t -v `pwd`:/build fwupd-debian-x86_64 ./contrib/ci/check-abi $(git describe --abbrev=0 --tags) $(git rev-parse HEAD)
-
   build-ubuntu-x86_64:
     machine:
       image: circleci/classic:latest
@@ -19,30 +7,18 @@ jobs:
       - checkout
       - run:
           name: "Build container"
-          command: OS=ubuntu-x86_64 ./contrib/ci/generate_docker.py
+          command: OS=ubuntu-x86_64 ./contrib/ci/generate_docker.py build
       - run:
           name: "Run build script"
-          command: docker run --privileged -e CI=true -t -v `pwd`/dist:/build/dist fwupd-ubuntu-x86_64
+          command: docker run --privileged -e CI=true -t -v `pwd`:/github/workspace fwupd-ubuntu-x86_64
       - persist_to_workspace:
           root: .
           paths:
             - "dist/docs"
 
-  build-chromeos-x86_64:
-    machine:
-      image: circleci/classic:latest
-    steps:
-      - checkout
-      - run:
-          name: "Build container"
-          command: OS=debian-x86_64 ./contrib/ci/generate_docker.py
-      - run:
-          name: "Run build script"
-          command: docker run --privileged -e CI=true -t -v `pwd`/dist:/build/dist fwupd-debian-x86_64 ./contrib/ci/trust.sh
-
   build-windows:
     docker:
-      - image: fedora:31
+      - image: fedora:latest
     steps:
       - run:
           name: "Install deps"
@@ -56,14 +32,16 @@ jobs:
                                   gcc
                                   gcab
                                   mingw32-nsis
+                                  mingw64-brotli
                                   mingw64-gcc
                                   mingw64-pkg-config
                                   mingw64-glib2
+                                  mingw64-gnutls
                                   mingw64-libgusb
                                   mingw64-sqlite
                                   mingw64-libarchive
                                   mingw64-json-glib
-                                  mingw64-libsoup
+                                  mingw64-curl
                                   wine
       - checkout
       - run:
@@ -175,8 +153,6 @@ workflows:
       - build-windows
       - build-ubuntu-x86_64
       - build-snap
-      - check-abi
-      - build-chromeos-x86_64
       - publish-edge:
           requires:
             - build-snap

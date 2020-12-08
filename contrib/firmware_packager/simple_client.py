@@ -62,13 +62,23 @@ def parse_args():
         help="Reinstall payloads(default False)",
     )
     parser.add_argument(
-        "command", choices=["get-devices", "get-details", "install"], help="What to do"
+        "command", choices=["get-devices", "get-details", "install", "refresh"], help="What to do"
     )
     parser.add_argument('cab', nargs='?', help='CAB file')
     parser.add_argument('deviceid', nargs='?', help='DeviceID to operate on(optional)')
     args = parser.parse_args()
     return args
 
+def refresh(client):
+    """Uses fwupd client to refresh metadata"""
+    remotes = client.get_remotes()
+    client.set_user_agent_for_package("simple_client", "@FWUPD_VERSION@")
+    for remote in remotes:
+        if not remote.get_enabled():
+            continue
+        if remote.get_kind() != Fwupd.RemoteKind.DOWNLOAD:
+            continue
+        client.refresh_remote(remote)
 
 def get_devices(client):
     """Use fwupd client to fetch devices"""
@@ -140,6 +150,8 @@ if __name__ == '__main__':
     elif ARGS.command == "get-details":
         check_exists(ARGS.cab)
         get_details(CLIENT, ARGS.cab)
+    elif ARGS.command == "refresh":
+        refresh(CLIENT)
     elif ARGS.command == "install":
         check_exists(ARGS.cab)
         install(CLIENT, ARGS.cab, ARGS.deviceid, ARGS.allow_older, ARGS.allow_reinstall)

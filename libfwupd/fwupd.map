@@ -616,3 +616,18 @@ LIBFWUPD_1.5.1 {
     fwupd_device_add_child;
   local: *;
 } LIBFWUPD_1.5.0;
+
+LIBFWUPD_1.5.2 {
+  global:
+    fwupd_client_download_file;
+    fwupd_client_get_user_agent;
+  local: *;
+} LIBFWUPD_1.5.1;
+
+LIBFWUPD_1.5.3 {
+  global:
+    fwupd_client_get_main_context;
+    fwupd_client_set_main_context;
+    fwupd_remote_set_keyring_kind;
+  local: *;
+} LIBFWUPD_1.5.2;

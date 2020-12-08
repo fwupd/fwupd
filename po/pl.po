@@ -335,6 +335,13 @@ msgstr "Automatyczne zgłaszanie"
 msgid "Automatically upload every time?"
 msgstr "Automatycznie wysyłać za każdym razem?"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "BUILDER-XML FILENAME-DST"
+msgstr "BUILDER-XML NAZWA-PLIKU-DOCELOWEGO"
+
+msgid "BYTES"
+msgstr "BAJTY"
+
 #. TRANSLATORS: command description
 msgid "Bind new kernel driver"
 msgstr "Dowiązuje nowy sterownik jądra"
@@ -349,7 +356,7 @@ msgstr "Blokowanie oprogramowania sprzętowego:"
 
 #. TRANSLATORS: command description
 msgid "Blocks a specific firmware from being installed"
-msgstr "Blokuje instalację podanego oprogramowania sprzętowego"
+msgstr "Blokuje możliwość instalacji podanego oprogramowania sprzętowego"
 
 #. TRANSLATORS: firmware version of bootloader
 msgid "Bootloader Version"
@@ -366,6 +373,10 @@ msgstr "Buduje plik oprogramowania sprzętowego"
 #. TRANSLATORS: command description
 msgid "Build firmware using a sandbox"
 msgstr "Buduje oprogramowanie sprzętowe za pomocą piaskownicy"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
+msgstr "SUMA-KONTROLNA1[,SUMA-KONTROLNA2][,SUMA-KONTROLNA3]"
 
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
@@ -452,6 +463,10 @@ msgstr "Dostępne jest sprawdzenie poprawności kryptograficznej sumy kontrolnej
 #. TRANSLATORS: version number of current firmware
 msgid "Current version"
 msgstr "Obecna wersja"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "DEVICE-ID|GUID"
+msgstr "IDENTYFIKATOR-URZĄDZENIA|GUID"
 
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
@@ -709,6 +724,46 @@ msgstr "Kończy działanie po wczytaniu mechanizmu"
 msgid "Extract a firmware blob to images"
 msgstr "Rozpakowuje zamknięte oprogramowanie sprzętowe do obrazów"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILE"
+msgstr "PLIK"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILE [DEVICE-ID|GUID]"
+msgstr "PLIK [IDENTYFIKATOR-URZĄDZENIA|GUID]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]"
+msgstr "PLIK-WEJŚCIOWY PLIK-WYJŚCIOWY [SKRYPT] [WYJŚCIE]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME"
+msgstr "NAZWA-PLIKU"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID"
+msgstr "NAZWA-PLIKU ALTERNATYWNA-NAZWA-URZĄDZENIA|ALTERNATYWNY-IDENTYFIKATOR-URZĄDZENIA"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID [IMAGE-ALT-NAME|IMAGE-ALT-ID]"
+msgstr "NAZWA-PLIKU ALTERNATYWNA-NAZWA-URZĄDZENIA|ALTERNATYWNY-IDENTYFIKATOR-URZĄDZENIA [ALTERNATYWNA-NAZWA-OBRAZU|ALTERNATYWNY-IDENTYFIKATOR-OBRAZU]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DEVICE-ID"
+msgstr "NAZWA-PLIKU IDENTYFIKATOR-URZĄDZENIA"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [DEVICE-ID|GUID]"
+msgstr "NAZWA-PLIKU [IDENTYFIKATOR-URZĄDZENIA|GUID]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [FIRMWARE-TYPE]"
+msgstr "NAZWA-PLIKU [TYP-OPROGRAMOWANIA-SPRZĘTOWEGO]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
+msgstr "NAZWA-PLIKU-ŹRÓDŁOWEGO NAZWA-PLIKU-DOCELOWEGO [TYP-ŹRÓDŁOWEGO-OPROGRAMOWANIA-SPRZĘTOWEGO] [TYP-DOCELOWEGO-OPROGRAMOWANIA-SPRZĘTOWEGO]"
+
 #. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Nie powiodło się"
@@ -873,6 +928,11 @@ msgstr[0] "GUID"
 msgstr[1] "GUID"
 msgstr[2] "GUID"
 msgstr[3] "GUID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "A single GUID"
+msgid "GUID"
+msgstr "GUID"
 
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
@@ -1074,6 +1134,10 @@ msgstr[1] "Błędy"
 msgstr[2] "Błędy"
 msgstr[3] "Błędy"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "KEY,VALUE"
+msgstr "KLUCZ,WARTOŚĆ"
+
 msgid "Keyring"
 msgstr "Baza kluczy"
 
@@ -1274,6 +1338,10 @@ msgstr "Zastępuje domyślną ścieżkę ESP"
 msgid "Override warnings and force the action"
 msgstr "Zastępuje ostrzeżenia i wymusza działanie"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "PATH"
+msgstr "ŚCIEŻKA"
+
 #. TRANSLATORS: command description
 msgid "Parse and show details about a firmware file"
 msgstr "Przetwarza i wyświetla informacje o pliku oprogramowania sprzętowego"
@@ -1334,6 +1402,14 @@ msgstr "Własnościowe"
 #. TRANSLATORS: command line option
 msgid "Query for firmware update support"
 msgstr "Odpytuje obsługę aktualizacji oprogramowania sprzętowego"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "REMOTE-ID"
+msgstr "IDENTYFIKATOR-REPOZYTORIUM"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "REMOTE-ID KEY VALUE"
+msgstr "IDENTYFIKATOR-REPOZYTORIUM KLUCZ WARTOŚĆ"
 
 #. TRANSLATORS: command description
 msgid "Read a firmware blob from a device"
@@ -1459,6 +1535,10 @@ msgstr "Blokada SPI"
 msgid "SPI write"
 msgstr "Zapis SPI"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
+msgstr "PODSYSTEM STEROWNIK [IDENTYFIKATOR-URZĄDZENIA|GUID]"
+
 #. TRANSLATORS: command line option
 msgid "Save device state into a JSON file between executions"
 msgstr "Zapisuje stan urządzenia do pliku JSON między wykonaniami"
@@ -1470,6 +1550,11 @@ msgstr "Planuje instalację podczas następnego ponownego uruchomienia"
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Planowanie…"
+
+#. TRANSLATORS: %s is a link to a website
+#, c-format
+msgid "See %s for more information."
+msgstr "%s zawiera więcej informacji"
 
 #. TRANSLATORS: Device has been chosen by the daemon for the user
 msgid "Selected device"
@@ -1659,6 +1744,10 @@ msgstr "Przełącza gałąź oprogramowania sprzętowego na urządzeniu"
 msgid "System requires external power source"
 msgstr "Komputer wymaga zewnętrznego źródła zasilania"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "TEXT"
+msgstr "TEKST"
+
 #. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
 msgid "TPM PCR0 reconstruction"
 msgstr "Rekonstrukcja PCR0 TPM"
@@ -1700,6 +1789,10 @@ msgstr "Nie ma zablokowanych plików oprogramowania sprzętowego"
 msgid "There is no approved firmware."
 msgstr "Nie ma zatwierdzonego oprogramowania sprzętowego."
 
+#. TRANSLATORS: unsupported build of the package
+msgid "This package has not been validated, it may not work properly."
+msgstr "Ten pakiet nie został zweryfikowany, może nie działać poprawnie."
+
 #. TRANSLATORS: we're poking around as a power user
 msgid "This program may only work correctly as root"
 msgstr "Ten program może działać poprawnie tylko jako root"
@@ -1719,9 +1812,29 @@ msgstr "Ten komputer ma niski poziom zabezpieczeń HSI."
 msgid "This tool allows an administrator to apply UEFI dbx updates."
 msgstr "To narzędzie umożliwia administratorowi zastosowywanie aktualizacji bazy dbx dla UEFI."
 
+#. TRANSLATORS: CLI description
+msgid "This tool allows an administrator to debug UpdateCapsule operation."
+msgstr "To narzędzie umożliwia administratorowi debugowanie działania UpdateCapsule."
+
+#. TRANSLATORS: CLI description
+msgid "This tool allows an administrator to query and control the fwupd daemon, allowing them to perform actions such as installing or downgrading firmware."
+msgstr "To narzędzie umożliwia administratorowi odpytywanie i sterowanie usługą fwupd, umożliwiając wykonywanie takich działań, jak instalowanie lub instalowanie poprzedniej wersji oprogramowania sprzętowego."
+
+#. TRANSLATORS: CLI description
+msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
+msgstr "To narzędzie umożliwia administratorowi używanie wtyczek fwupd bez ich instalacji na komputerze."
+
+#. TRANSLATORS: CLI description
+msgid "This tool can be used from other tools and from shell scripts."
+msgstr "To narzędzie może być używane z innych narzędzi i ze skryptów powłoki."
+
 #. TRANSLATORS: the user needs to stop playing with stuff
 msgid "This tool can only be used by the root user"
 msgstr "To narzędzie może być używane tylko przez użytkownika root"
+
+#. TRANSLATORS: CLI description
+msgid "This tool will read and parse the TPM event log from the system firmware."
+msgstr "To narzędzie odczyta i przetworzy dziennik zdarzeń TPM z oprogramowania sprzętowego komputera."
 
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
@@ -1758,6 +1871,10 @@ msgstr "Odwiązuje bieżący sterownik"
 #. TRANSLATORS: we will now offer this firmware to the user
 msgid "Unblocking firmware:"
 msgstr "Odblokowywanie oprogramowania sprzętowego:"
+
+#. TRANSLATORS: command description
+msgid "Unblocks a specific firmware from being installed"
+msgstr "Odblokowuje możliwość instalacji podanego oprogramowania sprzętowego"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Unencrypted"
@@ -1916,6 +2033,9 @@ msgstr "Użytkownik został powiadomiony"
 msgid "Username"
 msgstr "Nazwa użytkownika"
 
+msgid "VID:PID"
+msgstr "VID:PID"
+
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Valid"
 msgstr "Prawidłowe"
@@ -1980,6 +2100,26 @@ msgstr "Używana dystrybucja mogła nie sprawdzić zgodności aktualizacji oprog
 #, c-format
 msgid "Your hardware may be damaged using this firmware, and installing this release may void any warranty with %s."
 msgstr "Sprzęt może zostać uszkodzony przez użycie tego oprogramowania sprzętowego, a zainstalowanie tego wydania może spowodować utratę gwarancji od firmy %s."
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[CHECKSUM]"
+msgstr "[SUMA-KONTROLNA]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE-ID|GUID]"
+msgstr "[IDENTYFIKATOR-URZĄDZENIA|GUID]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE-ID|GUID] [BRANCH]"
+msgstr "[IDENTYFIKATOR-URZĄDZENIA|GUID] [GAŁĄŹ]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[FILE FILE_SIG REMOTE-ID]"
+msgstr "[PLIK PODPIS_PLIKU IDENTYFIKATOR-REPOZYTORIUM]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[FILE]"
+msgstr "[PLIK]"
 
 #. TRANSLATORS: this is the default branch name when unset
 msgid "default"

@@ -1563,6 +1563,8 @@ fu_plugin_runner_composite_cleanup (FuPlugin *self, GPtrArray *devices, GError *
 /**
  * fu_plugin_runner_update_prepare:
  * @self: a #FuPlugin
+ * @flags: #FwupdInstallFlags
+ * @device: a #FuDevice
  * @error: a #GError or NULL
  *
  * Runs the update_prepare routine for the plugin
@@ -1583,6 +1585,8 @@ fu_plugin_runner_update_prepare (FuPlugin *self, FwupdInstallFlags flags, FuDevi
 /**
  * fu_plugin_runner_update_cleanup:
  * @self: a #FuPlugin
+ * @flags: #FwupdInstallFlags
+ * @device: a #FuDevice
  * @error: a #GError or NULL
  *
  * Runs the update_cleanup routine for the plugin
@@ -1645,6 +1649,7 @@ fu_plugin_runner_update_detach (FuPlugin *self, FuDevice *device, GError **error
 /**
  * fu_plugin_runner_update_reload:
  * @self: a #FuPlugin
+ * @device: A #FuDevice
  * @error: a #GError or NULL
  *
  * Runs reload routine for a device
@@ -1942,10 +1947,13 @@ fu_plugin_runner_udev_device_added (FuPlugin *self, FuUdevDevice *device, GError
 	if (func == NULL) {
 		if (priv->device_gtype != G_TYPE_INVALID ||
 		    fu_device_get_specialized_gtype (FU_DEVICE (device)) != G_TYPE_INVALID) {
-			if (!fu_plugin_udev_device_added (self, device, error))
-				return FALSE;
+			return fu_plugin_udev_device_added (self, device, error);
 		}
-		return TRUE;
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "No device GType set");
+		return FALSE;
 	}
 	g_debug ("udev_device_added(%s)", fu_plugin_get_name (self));
 	if (!func (self, device, &error_local)) {

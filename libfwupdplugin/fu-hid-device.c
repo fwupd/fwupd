@@ -33,6 +33,7 @@ typedef struct
 	FuUsbDevice		*usb_device;
 	guint8			 interface;
 	gboolean		 interface_autodetect;
+	FuHidDeviceFlags	 flags;
 } FuHidDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuHidDevice, fu_hid_device, FU_TYPE_USB_DEVICE)
@@ -82,6 +83,7 @@ fu_hid_device_open (FuUsbDevice *device, GError **error)
 	FuHidDevice *self = FU_HID_DEVICE (device);
 	FuHidDeviceClass *klass = FU_HID_DEVICE_GET_CLASS (device);
 	FuHidDevicePrivate *priv = GET_PRIVATE (self);
+	GUsbDeviceClaimInterfaceFlags flags = 0;
 	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
 
 	/* auto-detect */
@@ -109,9 +111,9 @@ fu_hid_device_open (FuUsbDevice *device, GError **error)
 	}
 
 	/* claim */
-	if (!g_usb_device_claim_interface (usb_device, priv->interface,
-					   G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					   error)) {
+	if ((priv->flags & FU_HID_DEVICE_FLAG_NO_KERNEL_UNBIND) == 0)
+		flags |= G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER;
+	if (!g_usb_device_claim_interface (usb_device, priv->interface, flags, error)) {
 		g_prefix_error (error, "failed to claim HID interface: ");
 		return FALSE;
 	}
@@ -132,7 +134,9 @@ fu_hid_device_close (FuUsbDevice *device, GError **error)
 	FuHidDevice *self = FU_HID_DEVICE (device);
 	FuHidDeviceClass *klass = FU_HID_DEVICE_GET_CLASS (device);
 	FuHidDevicePrivate *priv = GET_PRIVATE (self);
+	GUsbDeviceClaimInterfaceFlags flags = 0;
 	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
+	g_autoptr(GError) error_local = NULL;
 
 	/* subclassed */
 	if (klass->close != NULL) {
@@ -141,10 +145,21 @@ fu_hid_device_close (FuUsbDevice *device, GError **error)
 	}
 
 	/* release */
-	if (!g_usb_device_release_interface (usb_device, priv->interface,
-					     G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					     error)) {
-		g_prefix_error (error, "failed to release HID interface: ");
+	if ((priv->flags & FU_HID_DEVICE_FLAG_NO_KERNEL_REBIND) == 0)
+		flags |= G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER;
+	if (!g_usb_device_release_interface (usb_device, priv->interface, flags, &error_local)) {
+		if (g_error_matches (error_local,
+				     G_USB_DEVICE_ERROR,
+				     G_USB_DEVICE_ERROR_NO_DEVICE) ||
+		    g_error_matches (error_local,
+				     G_USB_DEVICE_ERROR,
+				     G_USB_DEVICE_ERROR_INTERNAL)) {
+			g_debug ("ignoring: %s", error_local->message);
+			return TRUE;
+		}
+		g_propagate_prefixed_error (error,
+					    g_steal_pointer (&error_local),
+					    "failed to release HID interface: ");
 		return FALSE;
 	}
 
@@ -192,6 +207,23 @@ fu_hid_device_get_interface (FuHidDevice *self)
 	return priv->interface;
 }
 
+/**
+ * fu_hid_device_add_flag:
+ * @self: A #FuHidDevice
+ * @flag: #FuHidDeviceFlags, e.g. %FU_HID_DEVICE_FLAG_RETRY_FAILURE
+ *
+ * Adds a flag to be used for all set and get report messages.
+ *
+ * Since: 1.5.2
+ **/
+void
+fu_hid_device_add_flag (FuHidDevice *self, FuHidDeviceFlags flag)
+{
+	FuHidDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_HID_DEVICE (self));
+	priv->flags |= flag;
+}
+
 typedef struct {
 	guint8		 value;
 	guint8		*buf;
@@ -215,7 +247,10 @@ fu_hid_device_set_report_internal (FuHidDevice *self,
 		wvalue = (FU_HID_REPORT_TYPE_FEATURE << 8) | helper->value;
 
 	if (g_getenv ("FU_HID_DEVICE_VERBOSE") != NULL) {
-		fu_common_dump_raw (G_LOG_DOMAIN, "HID::SetReport",
+		g_autofree gchar *title = NULL;
+		title = g_strdup_printf ("HID::SetReport [wValue=0x%04x ,wIndex=%u]",
+					 wvalue, priv->interface);
+		fu_common_dump_raw (G_LOG_DOMAIN, title,
 				    helper->buf, helper->bufsz);
 	}
 	usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
@@ -275,6 +310,7 @@ fu_hid_device_set_report (FuHidDevice *self,
 			  GError **error)
 {
 	FuHidDeviceRetryHelper helper;
+	FuHidDevicePrivate *priv = GET_PRIVATE (self);
 
 	g_return_val_if_fail (FU_HID_DEVICE (self), FALSE);
 	g_return_val_if_fail (buf != NULL, FALSE);
@@ -285,7 +321,7 @@ fu_hid_device_set_report (FuHidDevice *self,
 	helper.buf = buf;
 	helper.bufsz = bufsz;
 	helper.timeout = timeout;
-	helper.flags = flags;
+	helper.flags = priv->flags | flags;
 
 	/* special case */
 	if (flags & FU_HID_DEVICE_FLAG_RETRY_FAILURE) {
@@ -315,7 +351,10 @@ fu_hid_device_get_report_internal (FuHidDevice *self,
 		wvalue = (FU_HID_REPORT_TYPE_FEATURE << 8) | helper->value;
 
 	if (g_getenv ("FU_HID_DEVICE_VERBOSE") != NULL) {
-		fu_common_dump_raw (G_LOG_DOMAIN, "HID::GetReport",
+		g_autofree gchar *title = NULL;
+		title = g_strdup_printf ("HID::GetReport [wValue=0x%04x, wIndex=%u]",
+					 wvalue, priv->interface);
+		fu_common_dump_raw (G_LOG_DOMAIN, title,
 				    helper->buf, actual_len);
 	}
 	usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
@@ -332,8 +371,12 @@ fu_hid_device_get_report_internal (FuHidDevice *self,
 		g_prefix_error (error, "failed to GetReport: ");
 		return FALSE;
 	}
-	if (g_getenv ("FU_HID_DEVICE_VERBOSE") != NULL)
-		fu_common_dump_raw (G_LOG_DOMAIN, "HID::GetReport", helper->buf, actual_len);
+	if (g_getenv ("FU_HID_DEVICE_VERBOSE") != NULL) {
+		g_autofree gchar *title = NULL;
+		title = g_strdup_printf ("HID::GetReport [wValue=0x%04x, wIndex=%u]",
+					 wvalue, priv->interface);
+		fu_common_dump_raw (G_LOG_DOMAIN, title, helper->buf, actual_len);
+	}
 	if ((helper->flags & FU_HID_DEVICE_FLAG_ALLOW_TRUNC) == 0 && actual_len != helper->bufsz) {
 		g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
 			     "read %" G_GSIZE_FORMAT ", requested %" G_GSIZE_FORMAT " bytes",
@@ -377,6 +420,7 @@ fu_hid_device_get_report (FuHidDevice *self,
 			  GError **error)
 {
 	FuHidDeviceRetryHelper helper;
+	FuHidDevicePrivate *priv = GET_PRIVATE (self);
 
 	g_return_val_if_fail (FU_HID_DEVICE (self), FALSE);
 	g_return_val_if_fail (buf != NULL, FALSE);
@@ -387,7 +431,7 @@ fu_hid_device_get_report (FuHidDevice *self,
 	helper.buf = buf;
 	helper.bufsz = bufsz;
 	helper.timeout = timeout;
-	helper.flags = flags;
+	helper.flags = priv->flags | flags;
 
 	/* special case */
 	if (flags & FU_HID_DEVICE_FLAG_RETRY_FAILURE) {

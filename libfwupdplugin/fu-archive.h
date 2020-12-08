@@ -32,6 +32,7 @@ typedef enum {
  * @filename: A filename.
  * @bytes: The blob referenced by @filename.
  * @user_data: User data.
+ * @error: a #GError or NULL
  *
  * Specifies the type of archive iteration function.
  */

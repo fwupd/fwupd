@@ -29,6 +29,8 @@ struct _FuHidDeviceClass
  * @FU_HID_DEVICE_FLAG_ALLOW_TRUNC:		Allow truncated reads and writes
  * @FU_HID_DEVICE_FLAG_IS_FEATURE:		Use %FU_HID_REPORT_TYPE_FEATURE for wValue
  * @FU_HID_DEVICE_FLAG_RETRY_FAILURE:		Retry up to 10 times on failure
+ * @FU_HID_DEVICE_FLAG_NO_KERNEL_UNBIND:	Do not unbind the kernel driver on open
+ * @FU_HID_DEVICE_FLAG_NO_KERNEL_REBIND:	Do not rebind the kernel driver on close
  *
  * Flags used when calling fu_hid_device_get_report() and fu_hid_device_set_report().
  **/
@@ -37,10 +39,15 @@ typedef enum {
 	FU_HID_DEVICE_FLAG_ALLOW_TRUNC		= 1 << 0,
 	FU_HID_DEVICE_FLAG_IS_FEATURE		= 1 << 1,
 	FU_HID_DEVICE_FLAG_RETRY_FAILURE	= 1 << 2,
+	FU_HID_DEVICE_FLAG_NO_KERNEL_UNBIND	= 1 << 3,
+	FU_HID_DEVICE_FLAG_NO_KERNEL_REBIND	= 1 << 4,
+	/*< private >*/
 	FU_HID_DEVICE_FLAG_LAST
 } FuHidDeviceFlags;
 
 FuHidDevice	*fu_hid_device_new			(GUsbDevice	*usb_device);
+void		 fu_hid_device_add_flag			(FuHidDevice	*self,
+							 FuHidDeviceFlags flag);
 void		 fu_hid_device_set_interface		(FuHidDevice	*self,
 							 guint8		 interface);
 guint8		 fu_hid_device_get_interface		(FuHidDevice	*self);

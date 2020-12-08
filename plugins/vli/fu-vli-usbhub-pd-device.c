@@ -54,7 +54,7 @@ fu_vli_usbhub_pd_device_setup (FuDevice *device, GError **error)
 					   VLI_USBHUB_FLASHMAP_ADDR_PD_LEGACY +
 					   VLI_USBHUB_PD_FLASHMAP_ADDR_LEGACY,
 					   (guint8 *) &hdr, sizeof(hdr), error)) {
-		g_prefix_error (error, "failed to read legacy PD header");
+		g_prefix_error (error, "failed to read legacy PD header: ");
 		return FALSE;
 	}
 
@@ -66,7 +66,7 @@ fu_vli_usbhub_pd_device_setup (FuDevice *device, GError **error)
 						   VLI_USBHUB_FLASHMAP_ADDR_PD +
 						   VLI_USBHUB_PD_FLASHMAP_ADDR,
 						   (guint8 *) &hdr, sizeof(hdr), error)) {
-			g_prefix_error (error, "failed to read PD header");
+			g_prefix_error (error, "failed to read PD header: ");
 			return FALSE;
 		}
 	}

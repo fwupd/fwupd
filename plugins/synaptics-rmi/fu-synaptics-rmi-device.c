@@ -125,7 +125,10 @@ fu_synaptics_rmi_device_to_string (FuUdevDevice *device, guint idt, GString *str
 {
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE (device);
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
-	fu_common_string_append_kx (str, idt, "BlVer", priv->f34->function_version + 0x5);
+	if (priv->f34 != NULL) {
+		fu_common_string_append_kx (str, idt, "BlVer",
+					    priv->f34->function_version + 0x5);
+	}
 	fu_synaptics_rmi_flash_to_string (&priv->flash, idt, str);
 }
 
@@ -313,7 +316,7 @@ fu_synaptics_rmi_device_set_rma_page (FuSynapticsRmiDevice *self, guint8 page, G
 
 	fu_byte_array_append_uint8 (req, page);
 	if (!fu_synaptics_rmi_device_write (self, RMI_DEVICE_PAGE_SELECT_REGISTER, req, error)) {
-		g_prefix_error (error, "failed to set RMA page 0x%x", page);
+		g_prefix_error (error, "failed to set RMA page 0x%x: ", page);
 		return FALSE;
 	}
 	return TRUE;

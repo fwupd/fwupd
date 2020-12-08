@@ -1,0 +1,39 @@
+name: Continuous Integration
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  abi:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Refresh dependencies
+        run: sudo apt update
+      - name: Install dependencies
+        run: ./contrib/ci/generate_dependencies.py | sudo xargs apt install -y
+      - name: Check ABI
+        run: ./contrib/ci/check-abi $(git describe --abbrev=0 --tags) $(git rev-parse HEAD)
+
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [fedora, debian-x86_64, arch, debian-i386]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Docker login
+        run: docker login docker.pkg.github.com -u $GITHUB_ACTOR -p $GITHUB_TOKEN
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Build in container
+        env:
+          CI_NETWORK: true
+          CI: true
+        run: |
+          echo $GITHUB_WORKSPACE
+          docker run --privileged -e CI=true -t -v $GITHUB_WORKSPACE:/github/workspace docker.pkg.github.com/fwupd/fwupd/fwupd-${{matrix.os}}:latest

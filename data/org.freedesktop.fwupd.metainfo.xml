@@ -35,6 +35,56 @@
     <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.5.3" date="2020-12-08">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Allow setting the GMainContext when used for sync methods</li>
+          <li>Export the driver name from FuUdevDevice</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add a UEFI quirk for Star Labs Lite Mk III</li>
+          <li>Add the device firmare ID for serio class hardware</li>
+          <li>Allow the client to send legacy PKCS7 and GPG signatures</li>
+          <li>Do not use accidentally depend on new meson versions</li>
+          <li>Fix a possible critical warning due to missing retval</li>
+          <li>Fix the endianness for the CRC check in bcm57xx</li>
+          <li>Lower the CURL version required to fix RHEL</li>
+          <li>Make sure the correct interface number is used for QMI</li>
+          <li>Mark more user-visible strings as translatable</li>
+          <li>Restrict loading component types of firmware</li>
+          <li>Validate ModemManager firmware update method combinations</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.5.2" date="2020-11-23">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add a flag to indicate if packages are supported</li>
+          <li>Add a plugin for the Pinebook Pro laptop</li>
+          <li>Allow components to set the icon from the metadata</li>
+          <li>Switch from libsoup to libcurl for downloading data</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Fall back to FAT32 internal partitions for detecting ESP</li>
+          <li>Fix detection of ColorHug version on older firmware versions</li>
+          <li>Fix reading BCM57XX vendor and device ids from firmware</li>
+          <li>Fix replugging the MSP430 device</li>
+          <li>Fix sync method when called from threads without a context</li>
+          <li>Ignore an invalid vendor-id when adding releases for display</li>
+          <li>Improve synaptics-mst reliability when writing data</li>
+          <li>Install modules-load configs in the correct directory</li>
+          <li>Notify the service manager when idle-quitting</li>
+          <li>Only download the remote metadata as required</li>
+          <li>Remove HSI update and attestation suffixes</li>
+          <li>Restore recognizing GPG and PKCS7 signature types in libfwupd</li>
+          <li>Set the SMBIOS chassis type to portable if a DT battery exists</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.5.1" date="2020-11-02">
       <description>
         <p>This release adds the following features:</p>

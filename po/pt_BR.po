@@ -220,6 +220,10 @@ msgstr "Permite fazer downgrade de versões de firmware"
 msgid "Allow reinstalling existing firmware versions"
 msgstr "Permite reinstalar versões de firmware existentes"
 
+#. TRANSLATORS: command line option
+msgid "Allow switching firmware branch"
+msgstr "Permite alternar a ramificação do firmware"
+
 #. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "Uma atualização requer uma reinicialização para completar."
@@ -319,6 +323,10 @@ msgstr "Relatórios automáticos"
 msgid "Automatically upload every time?"
 msgstr "Enviar automaticamente toda vez?"
 
+#. TRANSLATORS: command description
+msgid "Bind new kernel driver"
+msgstr "Vincula novo driver de kernel"
+
 #. TRANSLATORS: there follows a list of hashes
 msgid "Blocked firmware files:"
 msgstr "Arquivos de firmware bloqueados:"
@@ -327,9 +335,21 @@ msgstr "Arquivos de firmware bloqueados:"
 msgid "Blocking firmware:"
 msgstr "Bloqueando firmware:"
 
+#. TRANSLATORS: command description
+msgid "Blocks a specific firmware from being installed"
+msgstr "Impede que um firmware específico seja instalado"
+
 #. TRANSLATORS: firmware version of bootloader
 msgid "Bootloader Version"
 msgstr "Versão do gerenciador de boot"
+
+#. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
+msgid "Branch"
+msgstr "Ramificação"
+
+#. TRANSLATORS: command description
+msgid "Build a firmware file"
+msgstr "Compila um arquivo de firmware"
 
 #. TRANSLATORS: command description
 msgid "Build firmware using a sandbox"
@@ -363,6 +383,11 @@ msgstr "Verifica se o hash criptográfico corresponde ao firmware"
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Soma de verificação"
+
+#. TRANSLATORS: get interactive prompt, where branch is the
+#. * supplier of the firmware, e.g. "non-free" or "free"
+msgid "Choose a branch:"
+msgstr "Escolha uma ramificação:"
 
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a device:"
@@ -462,7 +487,7 @@ msgstr "Dispositivo modificado:"
 
 #. TRANSLATORS: a version check is required for all firmware
 msgid "Device firmware is required to have a version check"
-msgstr "Firmware de dispositivo é necessário para ter uma verificação de versão"
+msgstr "Um firmware de dispositivo é necessário para ter uma verificação de versão"
 
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
@@ -484,9 +509,17 @@ msgstr "Dispositivo removido:"
 msgid "Device stages updates"
 msgstr "Atualizações de estágios do dispositivo"
 
+#. TRANSLATORS: there is more than one supplier of the firmware
+msgid "Device supports switching to a different branch of firmware"
+msgstr "O dispositivo tem suporte para alternar para uma ramificação diferente do firmware"
+
 #. TRANSLATORS: Device update needs to be separately activated
 msgid "Device update needs activation"
 msgstr "A atualização do dispositivo precisa de ativação"
+
+#. TRANSLATORS: save the old firmware to disk before installing the new one
+msgid "Device will backup firmware before installing"
+msgstr "O dispositivo fará backup do firmware antes de instalar"
 
 #. TRANSLATORS: Device will not return after update completes
 msgid "Device will not re-appear after update completes"
@@ -562,6 +595,10 @@ msgstr[1] "Não enviar relatórios e nunca solicitar para enviar relatórios em 
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
 msgstr "Não escreve no banco de dados de histórico"
+
+#. TRANSLATORS: should the branch be changed
+msgid "Do you understand the consequences of changing the firmware branch?"
+msgstr "Você entende as consequências de trocar a ramificação do firmware?"
 
 #. TRANSLATORS: success
 #. success
@@ -651,6 +688,10 @@ msgstr "Sair após pequeno atraso"
 #. TRANSLATORS: exit straight away, used for automatic profiling
 msgid "Exit after the engine has loaded"
 msgstr "Sair após o carregamento do motor"
+
+#. TRANSLATORS: command description
+msgid "Extract a firmware blob to images"
+msgstr "Extrai um blob de firmware para imagens"
 
 #. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
@@ -758,6 +799,10 @@ msgstr "Utilitário de Firmware"
 msgid "Firmware attestation"
 msgstr "Atestação de firmware"
 
+#. TRANSLATORS: system is not booted in UEFI mode
+msgid "Firmware can not be updated in legacy BIOS mode"
+msgstr "O firmware não pode ser atualizado no modo BIOS legado"
+
 #. TRANSLATORS: user selected something not possible
 msgid "Firmware is already blocked"
 msgstr "O firmware já está bloqueado"
@@ -783,10 +828,18 @@ msgstr "Não há suporte a atualizações de firmware nessa máquina."
 msgid "Firmware updates are supported on this machine."
 msgstr "Há suporte a atualizações de firmware nesta máquina."
 
+#. TRANSLATORS: user needs to run a command
+msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
+msgstr "Atualizações de firmware desabilitadas; execute \"fwupdmgr unlock\" para habilitar"
+
 #. TRANSLATORS: description of plugin state, e.g. disabled
 #. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "Opções"
+
+#. TRANSLATORS: command line option
+msgid "Force the action by relaxing some runtime checks"
+msgstr "Força a ação relaxando alguns verificações em tempo de execução"
 
 msgid "Force the action ignoring all warnings"
 msgstr "Força a ação ignorando todos avisos"
@@ -800,6 +853,11 @@ msgid "GUID"
 msgid_plural "GUIDs"
 msgstr[0] "GUID"
 msgstr[1] "GUIDs"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "A single GUID"
+msgid "GUID"
+msgstr "GUID"
 
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
@@ -828,6 +886,14 @@ msgstr "Obtém os remotos configurados"
 #. TRANSLATORS: command description
 msgid "Gets the host security attributes"
 msgstr "Obtém os atributos de segurança do host"
+
+#. TRANSLATORS: firmware approved by the admin
+msgid "Gets the list of approved firmware"
+msgstr "Obtém a lista de firmware aprovado"
+
+#. TRANSLATORS: command description
+msgid "Gets the list of blocked firmware"
+msgstr "Obtém a lista de firmwares bloqueados"
 
 #. TRANSLATORS: command description
 msgid "Gets the list of updates for connected hardware"
@@ -866,9 +932,25 @@ msgstr "Ocioso…"
 msgid "Ignore SSL strict checks when downloading files"
 msgstr "Ignora verificações estritas de SSL ao baixar arquivos"
 
+#. TRANSLATORS: command line option
+msgid "Ignore firmware checksum failures"
+msgstr "Ignora falhas de soma de verificação de firmware"
+
+#. TRANSLATORS: command line option
+msgid "Ignore firmware hardware mismatch failures"
+msgstr "Ignora falhas de incompatibilidade de hardware de firmware"
+
+#. TRANSLATORS: command line option
+msgid "Ignore requirement of external power source"
+msgstr "Ignora o requisito de fonte de alimentação externa"
+
 #. TRANSLATORS: Ignore validation safety checks when flashing this device
 msgid "Ignore validation safety checks"
 msgstr "Ignorar verificações de segurança de validação"
+
+#. TRANSLATORS: try to help
+msgid "Ignoring SSL strict checks, to do this automatically in the future export DISABLE_SSL_STRICT in your environment"
+msgstr "Ignorando as verificações estritas de SSL; para fazer isso automaticamente no futuro, exporte DISABLE_SSL_STRICT em seu ambiente"
 
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Install Duration"
@@ -1020,6 +1102,10 @@ msgstr "Lista atualizações de firmware suportadas"
 msgid "List the available firmware types"
 msgstr "Lista os tipos de firmware disponível"
 
+#. TRANSLATORS: command description
+msgid "Lists files on the ESP"
+msgstr "Lista arquivos na ESP"
+
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
 msgstr "Carregando…"
@@ -1075,6 +1161,10 @@ msgstr "Versão mínima"
 msgid "Mismatched daemon and client, use %s instead"
 msgstr "Daemon e cliente incompatíveis, use %s"
 
+#. TRANSLATORS: sets something in daemon.conf
+msgid "Modifies a daemon configuration value"
+msgstr "Modifica um valor de configuração do daemon"
+
 #. TRANSLATORS: command description
 msgid "Modifies a given remote"
 msgstr "Modifica um remoto dado"
@@ -1088,6 +1178,10 @@ msgstr "Modificar a configuração do daemon"
 #. TRANSLATORS: command description
 msgid "Monitor the daemon for events"
 msgstr "Monitora o daemon por eventos"
+
+#. TRANSLATORS: command description
+msgid "Mounts the ESP"
+msgstr "Monta a ESP"
 
 #. TRANSLATORS: Requires a reboot to apply firmware or to reload hardware
 msgid "Needs a reboot after installation"
@@ -1121,7 +1215,7 @@ msgstr "Nenhum periférico com capacidade de atualização de firmware foi detec
 
 #. TRANSLATORS: nothing found
 msgid "No plugins found"
-msgstr "Nenhum plugin localizado"
+msgstr "Nenhum plugin encontrado"
 
 #. TRANSLATORS: no repositories to download from
 msgid "No releases available"
@@ -1191,6 +1285,10 @@ msgstr "Percentagem concluída"
 msgid "Please enter a number from 0 to %u: "
 msgstr "Por favor, insira um número de 0 a %u: "
 
+#. TRANSLATORS: Failed to open plugin, hey Arch users
+msgid "Plugin dependencies missing"
+msgstr "Dependências de plugin ausentes"
+
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
 msgstr "Proteção de DMA pré-inicialização"
@@ -1250,6 +1348,10 @@ msgid "Refresh metadata from remote server"
 msgstr "Renova metadados do servidor remoto"
 
 #. TRANSLATORS: command description
+msgid "Reinstall current firmware on the device"
+msgstr "Reinstala o firmware atual no dispositivo"
+
+#. TRANSLATORS: command description
 msgid "Reinstall firmware on a device"
 msgstr "Reinstala firmware em um dispositivo"
 
@@ -1280,6 +1382,14 @@ msgstr "URI do relatório"
 #. TRANSLATORS: Has been reported to a metadata server
 msgid "Reported to remote server"
 msgstr "Relatado ao servidor remoto"
+
+#. TRANSLATORS: the user is using Gentoo/Arch and has screwed something up
+msgid "Required efivarfs filesystem was not found"
+msgstr "O sistema de arquivos efivarfs necessário não foi encontrado"
+
+#. TRANSLATORS: not required for this system
+msgid "Required hardware was not found"
+msgstr "O hardware necessário não foi encontrado"
 
 #. TRANSLATORS: Requires a bootloader mode to be manually enabled by the user
 msgid "Requires a bootloader"
@@ -1344,6 +1454,11 @@ msgstr "Agenda instalação para próxima reinicialização quando possível"
 msgid "Scheduling…"
 msgstr "Agendando…"
 
+#. TRANSLATORS: %s is a link to a website
+#, c-format
+msgid "See %s for more information."
+msgstr "Veja %s para mais informações."
+
 #. TRANSLATORS: Device has been chosen by the daemon for the user
 msgid "Selected device"
 msgstr "Dispositivo selecionado"
@@ -1367,6 +1482,10 @@ msgstr "Define a lista de firmwares aprovados"
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
 msgstr "Compartilha histórico de firmware com os desenvolvedores"
+
+#. TRANSLATORS: command line option
+msgid "Show all results"
+msgstr "Mostra todos os resultados"
 
 #. TRANSLATORS: command line option
 msgid "Show client and daemon versions"
@@ -1518,6 +1637,14 @@ msgstr "Suspensão para inativo"
 msgid "Suspend-to-ram"
 msgstr "Suspensão para RAM"
 
+#. TRANSLATORS: command description
+msgid "Switch the firmware branch on the device"
+msgstr "Alterna a ramificação do firmware no dispositivo"
+
+#. TRANSLATORS: Must be plugged in to an outlet
+msgid "System requires external power source"
+msgstr "O sistema exige uma fonte de alimentação externa"
+
 #. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
 msgid "TPM PCR0 reconstruction"
 msgstr "Reconstrução de PCR0 de TPM"
@@ -1541,6 +1668,15 @@ msgstr "O LVFS é um serviço livre que opera como uma entidade legal independen
 msgid "The TPM PCR0 differs from reconstruction."
 msgstr "O TPM PCR0 diverge da reconstrução."
 
+#. TRANSLATORS: the user is SOL for support...
+msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
+msgstr "O daemon carregou código de terceiros e não é mais suportado pelos desenvolvedores upstream!"
+
+#. TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name
+#, c-format
+msgid "The firmware from %s is not supplied by %s, the hardware vendor."
+msgstr "O firmware de %s não é fornecido por %s, o fornecedor de hardware."
+
 #. TRANSLATORS: nothing to show
 msgid "There are no blocked firmware files"
 msgstr "Não há arquivos de firmware bloqueados"
@@ -1549,6 +1685,10 @@ msgstr "Não há arquivos de firmware bloqueados"
 #. * the domain administrator
 msgid "There is no approved firmware."
 msgstr "Nenhum firmware aprovado."
+
+#. TRANSLATORS: unsupported build of the package
+msgid "This package has not been validated, it may not work properly."
+msgstr "Este pacote não foi validado, ele pode não funcionar corretamente."
 
 #. TRANSLATORS: we're poking around as a power user
 msgid "This program may only work correctly as root"
@@ -1577,9 +1717,17 @@ msgstr "Essa ferramenta só pode ser usada pelo usuário root"
 msgid "Type"
 msgstr "Tipo"
 
+#. TRANSLATORS: partition refers to something on disk, again, hey Arch users
+msgid "UEFI ESP partition not detected or configured"
+msgstr "Partição UEFI ESP não detectada ou configurada"
+
 #. TRANSLATORS: program name
 msgid "UEFI Firmware Utility"
 msgstr "Utilitário de Firmware UEFI"
+
+#. TRANSLATORS: capsule updates are an optional BIOS feature
+msgid "UEFI capsule updates not available or enabled"
+msgstr "As atualizações da cápsula UEFI não estão disponíveis ou habilitadas"
 
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
@@ -1593,9 +1741,17 @@ msgstr "Secure boot de UEFI"
 msgid "Unable to connect to service"
 msgstr "Não foi possível conectar ao serviço"
 
+#. TRANSLATORS: command description
+msgid "Unbind current driver"
+msgstr "Desvincula o driver atual"
+
 #. TRANSLATORS: we will now offer this firmware to the user
 msgid "Unblocking firmware:"
 msgstr "Desbloqueando firmware:"
+
+#. TRANSLATORS: command description
+msgid "Unblocks a specific firmware from being installed"
+msgstr "Retira impedimento de um firmware específico ser instalado"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Unencrypted"
@@ -1622,6 +1778,10 @@ msgstr "Desbloqueado"
 msgid "Unlocks the device for firmware access"
 msgstr "Desbloqueia o dispositivo para acesso do firmware"
 
+#. TRANSLATORS: command description
+msgid "Unmounts the ESP"
+msgstr "Desmonta a ESP"
+
 #. TRANSLATORS: command line option
 msgid "Unset the debugging flag during update"
 msgstr "Desativa a opção de depuração durante atualização"
@@ -1641,7 +1801,7 @@ msgstr "Atualizável"
 
 #. TRANSLATORS: error message from last update attempt
 msgid "Update Error"
-msgstr "Erro na atualização"
+msgstr "Erro de atualização"
 
 #. TRANSLATORS: helpful messages from last update
 #. TRANSLATORS: helpful messages for the update
@@ -1805,6 +1965,15 @@ msgstr "Escrevendo…"
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
 msgstr "Seu distribuidor pode não ter verificado qualquer das atualizações de firmware para compatibilidade com seu sistema ou dispositivos conectados."
+
+#. TRANSLATORS: %1 is the device vendor name
+#, c-format
+msgid "Your hardware may be damaged using this firmware, and installing this release may void any warranty with %s."
+msgstr "Seu hardware pode ser danificado usando este firmware e instalar esta versão pode anular qualquer garantia com %s."
+
+#. TRANSLATORS: this is the default branch name when unset
+msgid "default"
+msgstr "padrão"
 
 #. TRANSLATORS: program name
 msgid "fwupd TPM event log utility"

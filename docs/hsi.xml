@@ -201,23 +201,6 @@
       </para>
     </refsect2>
 
-    <refsect3 id="org.fwupd.hsi.Fwupd.Updates">
-      <title>HSI Runtime Suffix <code>U</code></title>
-      <para>
-        Updates available on the <ulink url="https://fwupd.org/">
-        Linux Vendor Firmware Service </ulink> which are less than 12 months old.
-      </para>
-    </refsect3>
-
-    <refsect3 id="org.fwupd.hsi.Fwupd.Attestation">
-      <title>HSI Runtime Suffix <code>A</code></title>
-      <para>
-        Attestation data is available to verify the current system firmware.
-        For most UEFI platforms, this is usually the Trusted Platform Module (TPM)
-        PCR0 hash, but other attestation checksums could be used.
-      </para>
-    </refsect3>
-
     <refsect3 id="runtime-bang">
       <title>HSI Runtime Suffix <code>!</code></title>
       <para>

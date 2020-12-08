@@ -6,7 +6,7 @@
 
 #include "config.h"
 
-#include <libsoup/soup.h>
+#include <curl/curl.h>
 #include <jcat.h>
 
 #include "fwupd-deprecated.h"
@@ -67,6 +67,12 @@ enum {
 G_DEFINE_TYPE_WITH_PRIVATE (FwupdRemote, fwupd_remote, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fwupd_remote_get_instance_private (o))
 
+#ifdef HAVE_LIBCURL_7_62_0
+typedef gchar curlptr;
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(curlptr, curl_free)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(CURLU, curl_url_cleanup)
+#endif
+
 static void
 fwupd_remote_set_username (FwupdRemote *self, const gchar *username)
 {
@@ -125,7 +131,16 @@ fwupd_remote_set_kind (FwupdRemote *self, FwupdRemoteKind kind)
 	priv->kind = kind;
 }
 
-static void
+/**
+ * fwupd_remote_set_keyring_kind:
+ * @self: A #FwupdRemote
+ * @keyring_kind: #FwupdKeyringKind e.g. #FWUPD_KEYRING_KIND_PKCS7
+ *
+ * Sets the keyring kind
+ *
+ * Since: 1.5.3
+ **/
+void
 fwupd_remote_set_keyring_kind (FwupdRemote *self, FwupdKeyringKind keyring_kind)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
@@ -150,60 +165,65 @@ fwupd_remote_set_filename_source (FwupdRemote *self, const gchar *filename_sourc
 	priv->filename_source = g_strdup (filename_source);
 }
 
-static SoupURI *
+static const gchar *
+fwupd_remote_get_suffix_for_keyring_kind (FwupdKeyringKind keyring_kind)
+{
+	if (keyring_kind == FWUPD_KEYRING_KIND_JCAT)
+		return ".jcat";
+	if (keyring_kind == FWUPD_KEYRING_KIND_GPG)
+		return ".asc";
+	if (keyring_kind == FWUPD_KEYRING_KIND_PKCS7)
+		return ".p7b";
+	return NULL;
+}
+
+static gchar *
 fwupd_remote_build_uri (FwupdRemote *self, const gchar *url, GError **error)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
-	SoupURI *uri;
-
-	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
-	g_return_val_if_fail (url != NULL, NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+#ifdef HAVE_LIBCURL_7_62_0
+	g_autoptr(curlptr) tmp_uri = NULL;
+	g_autoptr(CURLU) uri = curl_url ();
 
 	/* create URI, substituting if required */
 	if (priv->firmware_base_uri != NULL) {
-		g_autoptr(SoupURI) uri_tmp = NULL;
 		g_autofree gchar *basename = NULL;
-		g_autofree gchar *url2 = NULL;
-		uri_tmp = soup_uri_new (url);
-		if (uri_tmp == NULL) {
+		g_autofree gchar *path_new = NULL;
+		g_autoptr(curlptr) path = NULL;
+		g_autoptr(CURLU) uri_tmp = curl_url ();
+		if (curl_url_set (uri_tmp, CURLUPART_URL, url, 0) != CURLUE_OK) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
-				     "Failed to parse URI '%s'", url);
+				     "Failed to parse url '%s'", url);
 			return NULL;
 		}
-		basename = g_path_get_basename (soup_uri_get_path (uri_tmp));
-		url2 = g_build_filename (priv->firmware_base_uri, basename, NULL);
-		uri = soup_uri_new (url2);
-		if (uri == NULL) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "Failed to parse URI '%s'", url2);
-			return NULL;
-		}
+		curl_url_get (uri_tmp, CURLUPART_PATH, &path, 0);
+		basename = g_path_get_basename (path);
+		path_new = g_build_filename (priv->firmware_base_uri, basename, NULL);
+		curl_url_set (uri, CURLUPART_URL, path_new, 0);
 
 	/* use the base URI of the metadata to build the full path */
 	} else if (g_strstr_len (url, -1, "/") == NULL) {
 		g_autofree gchar *basename = NULL;
-		g_autofree gchar *path = NULL;
-		uri = soup_uri_new (priv->metadata_uri);
-		if (uri == NULL) {
+		g_autofree gchar *path_new = NULL;
+		g_autoptr(curlptr) path = NULL;
+		if (curl_url_set (uri, CURLUPART_URL, priv->metadata_uri, 0) != CURLUE_OK) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
-				     "Failed to parse metadata URI '%s'", url);
+				     "Failed to parse url '%s'",
+				     priv->metadata_uri);
 			return NULL;
 		}
-		basename = g_path_get_dirname (soup_uri_get_path (uri));
-		path = g_build_filename (basename, url, NULL);
-		soup_uri_set_path (uri, path);
+		curl_url_get (uri, CURLUPART_PATH, &path, 0);
+		basename = g_path_get_dirname (path);
+		path_new = g_build_filename (basename, url, NULL);
+		curl_url_set (uri, CURLUPART_URL, path_new, 0);
 
 	/* a normal URI */
 	} else {
-		uri = soup_uri_new (url);
-		if (uri == NULL) {
+		if (curl_url_set (uri, CURLUPART_URL, url, 0) != CURLUE_OK) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
@@ -214,10 +234,22 @@ fwupd_remote_build_uri (FwupdRemote *self, const gchar *url, GError **error)
 
 	/* set the username and password */
 	if (priv->username != NULL)
-		soup_uri_set_user (uri, priv->username);
+		curl_url_set (uri, CURLUPART_USER, priv->username, 0);
 	if (priv->password != NULL)
-		soup_uri_set_password (uri, priv->password);
-	return uri;
+		curl_url_set (uri, CURLUPART_PASSWORD, priv->password, 0);
+	curl_url_get (uri, CURLUPART_URL, &tmp_uri, 0);
+	return g_strdup (tmp_uri);
+#else
+	if (priv->firmware_base_uri != NULL) {
+		g_autofree gchar *basename = g_path_get_basename (url);
+		return g_build_filename (priv->firmware_base_uri, basename, NULL);
+	}
+	if (g_strstr_len (url, -1, "/") == NULL) {
+		g_autofree gchar *basename = g_path_get_dirname (priv->metadata_uri);
+		return g_build_filename (basename, url, NULL);
+	}
+	return g_strdup (url);
+#endif
 }
 
 /* note, this has to be set before username and password */
@@ -225,19 +257,15 @@ static void
 fwupd_remote_set_metadata_uri (FwupdRemote *self, const gchar *metadata_uri)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
-	g_autoptr(SoupURI) uri = NULL;
-
-	/* build the URI */
-	uri = soup_uri_new (metadata_uri);
-	if (uri == NULL)
-		return;
+	const gchar *suffix;
 
 	/* save this so we can export the object as a GVariant */
 	priv->metadata_uri = g_strdup (metadata_uri);
 
 	/* generate the signature URI too */
-	if (priv->keyring_kind == FWUPD_KEYRING_KIND_JCAT)
-		priv->metadata_uri_sig = g_strconcat (metadata_uri, ".jcat", NULL);
+	suffix = fwupd_remote_get_suffix_for_keyring_kind (priv->keyring_kind);
+	if (suffix != NULL)
+		priv->metadata_uri_sig = g_strconcat (metadata_uri, suffix, NULL);
 }
 
 /* note, this has to be set after MetadataURI */
@@ -310,6 +338,7 @@ static void
 fwupd_remote_set_filename_cache (FwupdRemote *self, const gchar *filename)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	const gchar *suffix;
 
 	g_return_if_fail (FWUPD_IS_REMOTE (self));
 
@@ -317,9 +346,10 @@ fwupd_remote_set_filename_cache (FwupdRemote *self, const gchar *filename)
 	priv->filename_cache = g_strdup (filename);
 
 	/* create for all remote types */
-	if (priv->keyring_kind == FWUPD_KEYRING_KIND_JCAT) {
+	suffix = fwupd_remote_get_suffix_for_keyring_kind (priv->keyring_kind);
+	if (suffix != NULL) {
 		g_free (priv->filename_cache_sig);
-		priv->filename_cache_sig = g_strconcat (filename, ".jcat", NULL);
+		priv->filename_cache_sig = g_strconcat (filename, suffix, NULL);
 	}
 }
 
@@ -383,11 +413,6 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 				     "Failed to parse type '%s'",
 				     keyring_kind);
 			return FALSE;
-		}
-		if (priv->keyring_kind == FWUPD_KEYRING_KIND_GPG ||
-		    priv->keyring_kind == FWUPD_KEYRING_KIND_PKCS7) {
-			g_debug ("converting Keyring value to Jcat");
-			priv->keyring_kind = FWUPD_KEYRING_KIND_JCAT;
 		}
 	}
 
@@ -872,10 +897,10 @@ fwupd_remote_get_checksum (FwupdRemote *self)
 gchar *
 fwupd_remote_build_firmware_uri (FwupdRemote *self, const gchar *url, GError **error)
 {
-	g_autoptr(SoupURI) uri = fwupd_remote_build_uri (self, url, error);
-	if (uri == NULL)
-		return NULL;
-	return soup_uri_to_string (uri, FALSE);
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), NULL);
+	g_return_val_if_fail (url != NULL, NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+	return fwupd_remote_build_uri (self, url, error);
 }
 
 /**
@@ -983,6 +1008,9 @@ fwupd_remote_load_signature_jcat (FwupdRemote *self, JcatFile *jcat_file, GError
  *
  * Parses the signature, updating the metadata URI as appropriate.
  *
+ * This can only be called for remotes with `Keyring=jcat` which is
+ * the default for most remotes.
+ *
  * Returns: %TRUE for success
  *
  * Since: 1.4.5
@@ -990,12 +1018,22 @@ fwupd_remote_load_signature_jcat (FwupdRemote *self, JcatFile *jcat_file, GError
 gboolean
 fwupd_remote_load_signature_bytes (FwupdRemote *self, GBytes *bytes, GError **error)
 {
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	g_autoptr(GInputStream) istr = NULL;
 	g_autoptr(JcatFile) jcat_file = jcat_file_new ();
 
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), FALSE);
 	g_return_val_if_fail (bytes != NULL, FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* sanity check */
+	if (priv->keyring_kind != FWUPD_KEYRING_KIND_JCAT) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "only supported for JCat remotes");
+		return FALSE;
+	}
 
 	istr = g_memory_input_stream_new_from_bytes (bytes);
 	if (!jcat_file_import_stream (jcat_file, istr, JCAT_IMPORT_FLAG_NONE, NULL, error))

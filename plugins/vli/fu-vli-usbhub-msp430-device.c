@@ -153,7 +153,7 @@ fu_vli_usbhub_msp430_device_detach (FuDevice *device, GError **error)
 
 	/* check the device came back */
 	if (!fu_vli_usbhub_device_i2c_read_status (parent, &status, error)) {
-		g_prefix_error (error, "device did not come back after detach");
+		g_prefix_error (error, "device did not come back after detach: ");
 		return FALSE;
 	}
 	return fu_vli_usbhub_i2c_check_status (status, error);
@@ -286,10 +286,7 @@ fu_vli_usbhub_msp430_device_write_firmware (FuDevice *device,
 	/* the device automatically reboots */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
 	fu_device_set_progress (device, 0);
-
-	/* as soon as the parent comes back we can query the child */
-	root = fu_device_get_root (device);
-	fu_device_add_flag (root, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	/* success */
 	return TRUE;

@@ -56,6 +56,11 @@ echo "Testing the verification of firmware (again)..."
 fwupdmgr verify $device
 rc=$?; if [[ $rc != 0 ]]; then error $rc; fi
 
+if [ -z "$CI_NETWORK" ]; then
+        echo "Skipping remaining tests due to CI_NETWORK not being set"
+        exit 0
+fi
+
 # ---
 echo "Downgrading to older release (requires network access)"
 fwupdmgr downgrade $device -y

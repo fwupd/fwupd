@@ -610,7 +610,7 @@ fu_synaptics_cxaudio_device_write_firmware (FuDevice *device,
 							    &value, sizeof(value),
 							    FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_NONE,
 							    error)) {
-			g_prefix_error (error, "failed to initialize layout signature ");
+			g_prefix_error (error, "failed to initialize layout signature: ");
 			return FALSE;
 		}
 		if (!fu_synaptics_cxaudio_device_operation (self,
@@ -620,7 +620,7 @@ fu_synaptics_cxaudio_device_write_firmware (FuDevice *device,
 							    &value, sizeof(value),
 							    FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_NONE,
 							    error)) {
-			g_prefix_error (error, "failed to initialize layout signature ");
+			g_prefix_error (error, "failed to initialize layout signature: ");
 			return FALSE;
 		}
 		g_debug ("initialized layout signature");
@@ -670,7 +670,7 @@ fu_synaptics_cxaudio_device_write_firmware (FuDevice *device,
 								    (guint8 *) &pinfo, sizeof(pinfo),
 								    FU_SYNAPTICS_CXAUDIO_OPERATION_FLAG_NONE,
 								    error)) {
-				g_prefix_error (error, "failed to write empty EEPROM patch info");
+				g_prefix_error (error, "failed to write empty EEPROM patch info: ");
 				return FALSE;
 			}
 			g_debug ("invalidated old FW patch for CX2070x (RAM) device");

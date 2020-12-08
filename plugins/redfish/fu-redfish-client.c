@@ -7,7 +7,7 @@
 #include "config.h"
 
 #include <json-glib/json-glib.h>
-#include <libsoup/soup.h>
+#include <curl/curl.h>
 #include <string.h>
 
 #include "fwupd-error.h"
@@ -22,14 +22,11 @@
 struct _FuRedfishClient
 {
 	GObject			 parent_instance;
-	SoupSession		*session;
+	CURL			*curl;
 	gchar			*hostname;
 	guint			 port;
-	gchar			*username;
-	gchar			*password;
 	gchar			*update_uri_path;
 	gchar			*push_uri_path;
-	gboolean		 auth_created;
 	gboolean		 use_https;
 	gboolean		 cacheck;
 	GPtrArray		*devices;
@@ -37,62 +34,88 @@ struct _FuRedfishClient
 
 G_DEFINE_TYPE (FuRedfishClient, fu_redfish_client, G_TYPE_OBJECT)
 
-static void
-fu_redfish_client_set_auth (FuRedfishClient *self, SoupURI *uri,
-			    SoupMessage *msg)
+#ifdef HAVE_LIBCURL_7_62_0
+typedef gchar curlptr;
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(curlptr, curl_free)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(CURLU, curl_url_cleanup)
+#endif
+
+static size_t
+fu_redfish_client_fetch_data_cb (char *ptr, size_t size, size_t nmemb, void *userdata)
 {
-	if ((self->username != NULL && self->password != NULL) &&
-	    self->auth_created == FALSE) {
-		/*
-		 * Some redfish implementations miss WWW-Authenticate
-		 * header for a 401 response, and SoupAuthManager couldn't
-		 * generate SoupAuth accordingly. Since DSP0266 makes
-		 * Basic Authorization a requirement for redfish, it shall be
-		 * safe to use Basic Auth for all redfish implementations.
-		 */
-		SoupAuthManager *manager = SOUP_AUTH_MANAGER (soup_session_get_feature (self->session, SOUP_TYPE_AUTH_MANAGER));
-		g_autoptr(SoupAuth) auth = soup_auth_new (SOUP_TYPE_AUTH_BASIC,
-							  msg, "Basic");
-		soup_auth_authenticate (auth, self->username, self->password);
-		soup_auth_manager_use_auth (manager, uri, auth);
-		self->auth_created = TRUE;
-	}
+	GByteArray *buf = (GByteArray *) userdata;
+	gsize realsize = size * nmemb;
+	g_byte_array_append (buf, (const guint8 *) ptr, realsize);
+	return realsize;
 }
 
 static GBytes *
 fu_redfish_client_fetch_data (FuRedfishClient *self, const gchar *uri_path, GError **error)
 {
-	guint status_code;
-	g_autoptr(SoupMessage) msg = NULL;
-	g_autoptr(SoupURI) uri = NULL;
+	CURLcode res;
+	g_autofree gchar *port = g_strdup_printf ("%u", self->port);
+	g_autoptr(GByteArray) buf = g_byte_array_new ();
+#ifdef HAVE_LIBCURL_7_62_0
+	g_autoptr(CURLU) uri = NULL;
+#else
+	g_autofree gchar *uri = NULL;
+#endif
 
 	/* create URI */
-	uri = soup_uri_new (NULL);
-	soup_uri_set_scheme (uri, self->use_https ? "https" : "http");
-	soup_uri_set_path (uri, uri_path);
-	soup_uri_set_host (uri, self->hostname);
-	soup_uri_set_port (uri, self->port);
-	msg = soup_message_new_from_uri (SOUP_METHOD_GET, uri);
-	if (msg == NULL) {
-		g_autofree gchar *tmp = soup_uri_to_string (uri, FALSE);
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "failed to create message for URI %s", tmp);
+#ifdef HAVE_LIBCURL_7_62_0
+	uri = curl_url ();
+	curl_url_set (uri, CURLU_DEFAULT_SCHEME, self->use_https ? "https" : "http", 0);
+	curl_url_set (uri, CURLUPART_PATH, uri_path, 0);
+	curl_url_set (uri, CURLUPART_HOST, self->hostname, 0);
+	curl_url_set (uri, CURLUPART_PORT, port, 0);
+	if (curl_easy_setopt (self->curl, CURLOPT_CURLU, uri) != CURLE_OK) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "failed to create message for URI");
 		return NULL;
 	}
-	fu_redfish_client_set_auth (self, uri, msg);
-	status_code = soup_session_send_message (self->session, msg);
-	if (status_code != SOUP_STATUS_OK) {
-		g_autofree gchar *tmp = soup_uri_to_string (uri, FALSE);
+#else
+	uri = g_strdup_printf ("%s://%s:%s%s",
+			       self->use_https ? "https" : "http",
+			       self->hostname,
+			       port,
+			       uri_path);
+	if (curl_easy_setopt (self->curl, CURLOPT_URL, uri) != CURLE_OK) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "failed to create message for URI");
+		return NULL;
+	}
+#endif
+	curl_easy_setopt (self->curl, CURLOPT_WRITEFUNCTION, fu_redfish_client_fetch_data_cb);
+	curl_easy_setopt (self->curl, CURLOPT_WRITEDATA, buf);
+	res = curl_easy_perform (self->curl);
+	if (res != CURLE_OK) {
+		glong status_code = 0;
+#ifdef HAVE_LIBCURL_7_62_0
+		g_autoptr(curlptr) uri_str = NULL;
+#endif
+		curl_easy_getinfo (self->curl, CURLINFO_RESPONSE_CODE, &status_code);
+#ifdef HAVE_LIBCURL_7_62_0
+		curl_url_get (uri, CURLUPART_URL, &uri_str, 0);
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
 			     "failed to download %s: %s",
-			     tmp, soup_status_get_phrase (status_code));
+			     uri_str, curl_easy_strerror (res));
+#else
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "failed to download %s: %s",
+			     uri, curl_easy_strerror (res));
+#endif
 		return NULL;
 	}
-	return g_bytes_new (msg->response_body->data, msg->response_body->length);
+
+	return g_byte_array_free_to_bytes (g_steal_pointer (&buf));
 }
 
 static gboolean
@@ -569,19 +592,23 @@ fu_redfish_client_set_smbios_interfaces (FuRedfishClient *self,
 	return TRUE;
 }
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(curl_mime, curl_mime_free)
+
 gboolean
 fu_redfish_client_update (FuRedfishClient *self, FuDevice *device, GBytes *blob_fw,
 			  GError **error)
 {
+	CURLcode res;
 	FwupdRelease *release;
+	curl_mimepart *part;
 	g_autofree gchar *filename = NULL;
-
-	guint status_code;
-	g_autoptr(SoupMessage) msg = NULL;
-	g_autoptr(SoupURI) uri = NULL;
-	g_autoptr(SoupMultipart) multipart = NULL;
-	g_autoptr(SoupBuffer) buffer = NULL;
-	g_autofree gchar *uri_str = NULL;
+	g_autofree gchar *port = g_strdup_printf ("%u", self->port);
+#ifdef HAVE_LIBCURL_7_62_0
+	g_autoptr(CURLU) uri = curl_url ();
+#else
+	g_autofree gchar *uri = NULL;
+#endif
+	g_autoptr(curl_mime) mime = curl_mime_init (self->curl);
 
 	/* Get the update version */
 	release = fwupd_device_get_release_default (FWUPD_DEVICE (device));
@@ -595,39 +622,63 @@ fu_redfish_client_update (FuRedfishClient *self, FuDevice *device, GBytes *blob_
 	}
 
 	/* create URI */
-	uri = soup_uri_new (NULL);
-	soup_uri_set_scheme (uri, self->use_https ? "https" : "http");
-	soup_uri_set_path (uri, self->push_uri_path);
-	soup_uri_set_host (uri, self->hostname);
-	soup_uri_set_port (uri, self->port);
-	uri_str = soup_uri_to_string (uri, FALSE);
-
-	/* Create the multipart request */
-	multipart = soup_multipart_new (SOUP_FORM_MIME_TYPE_MULTIPART);
-	buffer = soup_buffer_new (SOUP_MEMORY_COPY,
-				  g_bytes_get_data (blob_fw, NULL),
-				  g_bytes_get_size (blob_fw));
-	soup_multipart_append_form_file (multipart, filename, filename,
-					 "application/octet-stream",
-					 buffer);
-	msg = soup_form_request_new_from_multipart (uri_str, multipart);
-	if (msg == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "failed to create message for URI %s", uri_str);
+#ifdef HAVE_LIBCURL_7_62_0
+	curl_url_set (uri, CURLU_DEFAULT_SCHEME, self->use_https ? "https" : "http", 0);
+	curl_url_set (uri, CURLUPART_PATH, self->push_uri_path, 0);
+	curl_url_set (uri, CURLUPART_HOST, self->hostname, 0);
+	curl_url_set (uri, CURLUPART_PORT, port, 0);
+	if (curl_easy_setopt (self->curl, CURLOPT_CURLU, uri) != CURLE_OK) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "failed to create message for URI");
 		return FALSE;
 	}
-	fu_redfish_client_set_auth (self, uri, msg);
-	status_code = soup_session_send_message (self->session, msg);
-	if (status_code != SOUP_STATUS_OK) {
+#else
+	uri = g_strdup_printf ("%s://%s:%s%s",
+			       self->use_https ? "https" : "http",
+			       self->hostname,
+			       port,
+			       self->push_uri_path);
+	if (curl_easy_setopt (self->curl, CURLOPT_URL, uri) != CURLE_OK) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "failed to create message for URI");
+		return FALSE;
+	}
+#endif
+
+	/* Create the multipart request */
+	curl_easy_setopt (self->curl, CURLOPT_MIMEPOST, mime);
+	part = curl_mime_addpart (mime);
+	curl_mime_data (part, g_bytes_get_data (blob_fw, NULL), g_bytes_get_size (blob_fw));
+	curl_mime_type (part, "application/octet-stream");
+	res = curl_easy_perform (self->curl);
+	if (res != CURLE_OK) {
+		glong status_code = 0;
+#ifdef HAVE_LIBCURL_7_62_0
+		g_autoptr(curlptr) uri_str = NULL;
+#endif
+		curl_easy_getinfo (self->curl, CURLINFO_RESPONSE_CODE, &status_code);
+#ifdef HAVE_LIBCURL_7_62_0
+		curl_url_get (uri, CURLUPART_URL, &uri_str, 0);
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
 			     "failed to upload %s to %s: %s",
 			     filename, uri_str,
-			     soup_status_get_phrase (status_code));
+			     curl_easy_strerror (res));
 		return FALSE;
+#else
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "failed to upload %s to %s: %s",
+			     filename, uri,
+			     curl_easy_strerror (res));
+		return FALSE;
+#endif
 	}
 
 	return TRUE;
@@ -662,24 +713,12 @@ fu_redfish_client_setup (FuRedfishClient *self, GBytes *smbios_table, GError **e
 		return FALSE;
 	}
 
-	/* create the soup session */
+	/* setup networking */
 	user_agent = g_strdup_printf ("%s/%s", PACKAGE_NAME, PACKAGE_VERSION);
-	self->session = soup_session_new_with_options (SOUP_SESSION_USER_AGENT, user_agent,
-						       SOUP_SESSION_TIMEOUT, 60,
-						       NULL);
-	if (self->session == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "failed to setup networking");
-		return FALSE;
-	}
-
-	if (self->cacheck == FALSE) {
-		g_object_set (G_OBJECT (self->session),
-			      SOUP_SESSION_SSL_STRICT, FALSE,
-			      NULL);
-	}
+	curl_easy_setopt (self->curl, CURLOPT_USERAGENT , user_agent);
+	curl_easy_setopt (self->curl, CURLOPT_CONNECTTIMEOUT, 60L);
+	if (self->cacheck == FALSE)
+		curl_easy_setopt (self->curl, CURLOPT_SSL_VERIFYPEER , 0L);
 
 	/* this is optional */
 	if (smbios_table != NULL) {
@@ -700,10 +739,6 @@ fu_redfish_client_setup (FuRedfishClient *self, GBytes *smbios_table, GError **e
 		g_debug ("Hostname: %s", self->hostname);
 	if (self->port != 0)
 		g_debug ("Port:     %u", self->port);
-	if (self->username != NULL)
-		g_debug ("Username: %s", self->username);
-	if (self->password != NULL)
-		g_debug ("Password: %s", self->password);
 
 	/* try to connect */
 	blob = fu_redfish_client_fetch_data (self, "/redfish/v1/", error);
@@ -800,28 +835,24 @@ fu_redfish_client_set_cacheck (FuRedfishClient *self, gboolean cacheck)
 void
 fu_redfish_client_set_username (FuRedfishClient *self, const gchar *username)
 {
-	g_free (self->username);
-	self->username = g_strdup (username);
+	curl_easy_setopt (self->curl, CURLOPT_USERNAME, username);
 }
 
 void
 fu_redfish_client_set_password (FuRedfishClient *self, const gchar *password)
 {
-	g_free (self->password);
-	self->password = g_strdup (password);
+	curl_easy_setopt (self->curl, CURLOPT_PASSWORD, password);
 }
 
 static void
 fu_redfish_client_finalize (GObject *object)
 {
 	FuRedfishClient *self = FU_REDFISH_CLIENT (object);
-	if (self->session != NULL)
-		g_object_unref (self->session);
+	if (self->curl != NULL)
+		curl_easy_cleanup (self->curl);
 	g_free (self->update_uri_path);
 	g_free (self->push_uri_path);
 	g_free (self->hostname);
-	g_free (self->username);
-	g_free (self->password);
 	g_ptr_array_unref (self->devices);
 	G_OBJECT_CLASS (fu_redfish_client_parent_class)->finalize (object);
 }
@@ -837,6 +868,11 @@ static void
 fu_redfish_client_init (FuRedfishClient *self)
 {
 	self->devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	self->curl = curl_easy_init ();
+
+	/* since DSP0266 makes Basic Authorization a requirement,
+	 * it is safe to use Basic Auth for all implementations */
+	curl_easy_setopt (self->curl, CURLOPT_HTTPAUTH, (glong) CURLAUTH_BASIC);
 }
 
 FuRedfishClient *

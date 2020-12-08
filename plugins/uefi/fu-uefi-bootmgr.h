@@ -10,6 +10,8 @@
 #include <glib.h>
 #include <efivar.h>
 
+#include "fu-device.h"
+
 typedef enum {
 	FU_UEFI_BOOTMGR_FLAG_NONE		= 0,
 	FU_UEFI_BOOTMGR_FLAG_USE_SHIM_FOR_SB	= 1 << 0,
@@ -17,7 +19,8 @@ typedef enum {
 	FU_UEFI_BOOTMGR_FLAG_LAST
 } FuUefiBootmgrFlags;
 
-gboolean	 fu_uefi_bootmgr_bootnext	(const gchar		*esp_path,
+gboolean	 fu_uefi_bootmgr_bootnext	(FuDevice 		*device,
+						 const gchar		*esp_path,
 						 const gchar		*description,
 						 FuUefiBootmgrFlags	 flags,
 						 GError			**error);

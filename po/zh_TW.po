@@ -318,6 +318,11 @@ msgstr "此機器有韌體更新支援。"
 msgid "Found"
 msgstr "找到"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "A single GUID"
+msgid "GUID"
+msgstr "GUID"
+
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
 msgstr "取得所有支援韌體更新的裝置"

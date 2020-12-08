@@ -221,7 +221,7 @@ fu_synaptics_rmi_v7_device_write_blocks (FuSynapticsRmiDevice *self,
 		g_autoptr(GByteArray) req = g_byte_array_new ();
 		g_byte_array_append (req, chk->data, chk->data_sz);
 		if (!fu_synaptics_rmi_device_write (self, address, req, error)) {
-			g_prefix_error (error, "failed to write block @0x%x:%x ", address, chk->address);
+			g_prefix_error (error, "failed to write block @0x%x:%x: ", address, chk->address);
 			return FALSE;
 		}
 	}

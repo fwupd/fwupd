@@ -354,7 +354,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware (FuDevice *device,
 		return FALSE;
 	}
 	if (read_buf[0] != ISP_STATUS_IDLE_SUCCESS) {
-		g_prefix_error (error, "failed project ID with error 0x%02x", read_buf[0]);
+		g_prefix_error (error, "failed project ID with error 0x%02x: ", read_buf[0]);
 		return FALSE;
 	}
 

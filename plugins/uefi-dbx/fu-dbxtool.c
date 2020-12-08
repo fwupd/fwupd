@@ -81,7 +81,9 @@ main (int argc, char *argv[])
 			_("Apply update files"), NULL },
 		{ "dbx", 'd', 0, G_OPTION_ARG_STRING, &dbxfile,
 			/* TRANSLATORS: command line option */
-			_("Specify the dbx database file"), "FILENAME" },
+			_("Specify the dbx database file"),
+			/* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			_("FILENAME") },
 		{ "force", 'f', 0, G_OPTION_ARG_NONE, &force,
 			/* TRANSLATORS: command line option */
 			_("Apply update even when not advised"), NULL },

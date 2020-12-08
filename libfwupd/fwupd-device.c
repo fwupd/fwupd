@@ -363,7 +363,7 @@ fwupd_device_set_parent (FwupdDevice *device, FwupdDevice *parent)
 
 /**
  * fwupd_device_add_child:
- * @self: A #FwupdDevice
+ * @device: A #FwupdDevice
  * @child: Another #FwupdDevice
  *
  * Adds a child device. An child device is logically linked to the primary

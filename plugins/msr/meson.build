@@ -4,9 +4,11 @@ install_data(['msr.quirk'],
   install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
 )
 
+if get_option('systemd')
 install_data(['fwupd-msr.conf'],
-  install_dir: join_paths(sysconfdir, 'modules-load.d')
+  install_dir: systemd_modules_load_dir,
 )
+endif
 
 shared_module('fu_plugin_msr',
   fu_hash,

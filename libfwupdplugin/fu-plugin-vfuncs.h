@@ -315,7 +315,7 @@ gboolean	 fu_plugin_udev_device_changed		(FuPlugin	*plugin,
 /**
  * fu_plugin_device_added
  * @plugin: A #FuPlugin
- * @device: A #FuDevice
+ * @dev: A #FuDevice
  *
  * Function run when the subclassed device has been added.
  *
@@ -339,7 +339,7 @@ gboolean	 fu_plugin_device_removed		(FuPlugin	*plugin,
 /**
  * fu_plugin_device_created
  * @plugin: A #FuPlugin
- * @device: A #FuDevice
+ * @dev: A #FuDevice
  * @error: A #GError or %NULL
  *
  * Function run when the subclassed device has been created.
@@ -352,7 +352,7 @@ gboolean	 fu_plugin_device_created		(FuPlugin	*plugin,
 /**
  * fu_plugin_device_registered
  * @plugin: A #FuPlugin
- * @device: A #FuDevice
+ * @dev: A #FuDevice
  *
  * Function run when device registered from another plugin.
  *

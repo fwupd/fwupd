@@ -43,6 +43,7 @@ typedef struct
 	guint32			 subsystem_model;
 	guint8			 revision;
 	gchar			*subsystem;
+	gchar			*driver;
 	gchar			*device_file;
 	gint			 fd;
 	FuUdevDeviceFlags	 flags;
@@ -54,6 +55,7 @@ enum {
 	PROP_0,
 	PROP_UDEV_DEVICE,
 	PROP_SUBSYSTEM,
+	PROP_DRIVER,
 	PROP_DEVICE_FILE,
 	PROP_LAST
 };
@@ -150,6 +152,11 @@ fu_udev_device_to_string (FuDevice *device, guint idt, GString *str)
 	if (priv->udev_device != NULL) {
 		fu_common_string_append_kv (str, idt, "SysfsPath",
 					    g_udev_device_get_sysfs_path (priv->udev_device));
+		fu_common_string_append_kv (str, idt, "Subsystem", priv->subsystem);
+		if (priv->driver != NULL)
+			fu_common_string_append_kv (str, idt, "Driver", priv->driver);
+		if (priv->device_file != NULL)
+			fu_common_string_append_kv (str, idt, "DeviceFile", priv->device_file);
 	}
 	if (g_getenv ("FU_UDEV_DEVICE_DEBUG") != NULL) {
 		g_autoptr(GUdevDevice) udev_parent = NULL;
@@ -179,6 +186,20 @@ fu_udev_device_set_subsystem (FuUdevDevice *self, const gchar *subsystem)
 	g_free (priv->subsystem);
 	priv->subsystem = g_strdup (subsystem);
 	g_object_notify (G_OBJECT (self), "subsystem");
+}
+
+static void
+fu_udev_device_set_driver (FuUdevDevice *self, const gchar *driver)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+
+	/* not changed */
+	if (g_strcmp0 (priv->driver, driver) == 0)
+		return;
+
+	g_free (priv->driver);
+	priv->driver = g_strdup (driver);
+	g_object_notify (G_OBJECT (self), "driver");
 }
 
 static void
@@ -221,6 +242,28 @@ fu_udev_device_probe_i2c_dev (FuUdevDevice *self, GError **error)
 		g_autofree gchar *name_safe = g_strdup (name);
 		g_strdelimit (name_safe, " /\\\"", '-');
 		devid = g_strdup_printf ("I2C\\NAME_%s", name_safe);
+		fu_device_add_instance_id (FU_DEVICE (self), devid);
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_udev_device_probe_serio (FuUdevDevice *self, GError **error)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	const gchar *tmp;
+
+	/* firmware ID */
+	tmp = g_udev_device_get_property (priv->udev_device, "SERIO_FIRMWARE_ID");
+	if (tmp != NULL) {
+		g_autofree gchar *devid = NULL;
+		g_autofree gchar *id_safe = NULL;
+		/* this prefix is not useful */
+		if (g_str_has_prefix (tmp, "PNP: "))
+			tmp += 5;
+		id_safe = g_utf8_strup (tmp, -1);
+		g_strdelimit (id_safe, " /\\\"", '-');
+		devid = g_strdup_printf ("SERIO\\FWID_%s", id_safe);
 		fu_device_add_instance_id (FU_DEVICE (self), devid);
 	}
 	return TRUE;
@@ -325,7 +368,7 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 			fu_device_set_vendor (device, tmp);
 	}
 
-	/* try harder to find a vendor name the user will recognise */
+	/* try harder to find a vendor name the user will recognize */
 	if (priv->flags & FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT &&
 	    udev_parent != NULL && fu_device_get_vendor (device) == NULL) {
 		g_autoptr(GUdevDevice) device_tmp = g_object_ref (udev_parent);
@@ -419,12 +462,11 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	}
 
 	/* add the driver */
-	tmp = g_udev_device_get_driver (priv->udev_device);
-	if (tmp != NULL) {
+	if (priv->driver != NULL) {
 		g_autofree gchar *devid = NULL;
 		devid = g_strdup_printf ("%s\\DRIVER_%s",
 					 subsystem,
-					 tmp);
+					 priv->driver);
 		fu_device_add_instance_id_full (device, devid,
 						FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
 	}
@@ -438,6 +480,12 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	/* i2c devices all expose a name */
 	if (g_strcmp0 (g_udev_device_get_subsystem (priv->udev_device), "i2c-dev") == 0) {
 		if (!fu_udev_device_probe_i2c_dev (self, error))
+			return FALSE;
+	}
+
+	/* add firmware_id */
+	if (g_strcmp0 (g_udev_device_get_subsystem (priv->udev_device), "serio") == 0) {
+		if (!fu_udev_device_probe_serio (self, error))
 			return FALSE;
 	}
 
@@ -457,6 +505,26 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	/* success */
 	return TRUE;
 }
+
+#ifdef HAVE_GUDEV
+static gchar *
+fu_udev_device_get_miscdev0 (FuUdevDevice *self)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	const gchar *fn;
+	g_autofree gchar *miscdir = NULL;
+	g_autoptr(GDir) dir = NULL;
+
+	miscdir = g_build_filename (g_udev_device_get_sysfs_path (priv->udev_device), "misc", NULL);
+	dir = g_dir_open (miscdir, 0, NULL);
+	if (dir == NULL)
+		return NULL;
+	fn = g_dir_read_name (dir);
+	if (fn == NULL)
+		return NULL;
+	return g_strdup_printf ("/dev/%s", fn);
+}
+#endif
 
 static void
 fu_udev_device_set_dev (FuUdevDevice *self, GUdevDevice *udev_device)
@@ -490,7 +558,18 @@ fu_udev_device_set_dev (FuUdevDevice *self, GUdevDevice *udev_device)
 		return;
 #ifdef HAVE_GUDEV
 	fu_udev_device_set_subsystem (self, g_udev_device_get_subsystem (priv->udev_device));
+	fu_udev_device_set_driver (self, g_udev_device_get_driver (priv->udev_device));
 	fu_udev_device_set_device_file (self, g_udev_device_get_device_file (priv->udev_device));
+
+	/* fall back to the first thing handled by misc drivers */
+	if (priv->device_file == NULL) {
+		/* perhaps we should unconditionally fall back? or perhaps
+		 * require FU_UDEV_DEVICE_FLAG_FALLBACK_MISC... */
+		if (g_strcmp0 (priv->subsystem, "serio") == 0)
+			priv->device_file = fu_udev_device_get_miscdev0 (self);
+		if (priv->device_file != NULL)
+			g_debug ("falling back to misc %s", priv->device_file);
+	}
 
 	/* try to get one line summary */
 	summary = g_udev_device_get_sysfs_attr (priv->udev_device, "description");
@@ -701,6 +780,24 @@ fu_udev_device_get_subsystem (FuUdevDevice *self)
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), NULL);
 	return priv->subsystem;
+}
+
+/**
+ * fu_udev_device_get_driver:
+ * @self: A #FuUdevDevice
+ *
+ * Gets the device driver, e.g. "psmouse".
+ *
+ * Returns: a subsystem, or NULL if unset or invalid
+ *
+ * Since: 1.5.3
+ **/
+const gchar *
+fu_udev_device_get_driver (FuUdevDevice *self)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), NULL);
+	return priv->driver;
 }
 
 /**
@@ -951,6 +1048,7 @@ fu_udev_device_set_physical_id (FuUdevDevice *self, const gchar *subsystems, GEr
 	} else if (g_strcmp0 (subsystem, "usb") == 0 ||
 		   g_strcmp0 (subsystem, "mmc") == 0 ||
 		   g_strcmp0 (subsystem, "i2c") == 0 ||
+		   g_strcmp0 (subsystem, "platform") == 0 ||
 		   g_strcmp0 (subsystem, "scsi") == 0) {
 		tmp = g_udev_device_get_property (udev_device, "DEVPATH");
 		if (tmp == NULL) {
@@ -1133,6 +1231,40 @@ fu_udev_device_open (FuDevice *device, GError **error)
 
 	/* success */
 	return TRUE;
+}
+
+static gboolean
+fu_udev_device_rescan (FuDevice *device, GError **error)
+{
+#ifdef HAVE_GUDEV
+	FuUdevDevice *self = FU_UDEV_DEVICE (device);
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	const gchar *sysfs_path;
+	g_autoptr(GUdevClient) udev_client = g_udev_client_new (NULL);
+	g_autoptr(GUdevDevice) udev_device = NULL;
+
+	/* never set */
+	if (priv->udev_device == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "rescan with no previous device");
+		return FALSE;
+	}
+	sysfs_path = g_udev_device_get_sysfs_path (priv->udev_device);
+	udev_device = g_udev_client_query_by_sysfs_path (udev_client, sysfs_path);
+	if (udev_device == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "rescan could not find device %s",
+			     sysfs_path);
+		return FALSE;
+	}
+	fu_udev_device_set_dev (self, udev_device);
+	fu_device_probe_invalidate (device);
+#endif
+	return fu_device_probe (device, error);
 }
 
 static gboolean
@@ -1529,6 +1661,9 @@ fu_udev_device_get_property (GObject *object, guint prop_id,
 	case PROP_SUBSYSTEM:
 		g_value_set_string (value, priv->subsystem);
 		break;
+	case PROP_DRIVER:
+		g_value_set_string (value, priv->driver);
+		break;
 	case PROP_DEVICE_FILE:
 		g_value_set_string (value, priv->device_file);
 		break;
@@ -1550,6 +1685,9 @@ fu_udev_device_set_property (GObject *object, guint prop_id,
 	case PROP_SUBSYSTEM:
 		fu_udev_device_set_subsystem (self, g_value_get_string (value));
 		break;
+	case PROP_DRIVER:
+		fu_udev_device_set_driver (self, g_value_get_string (value));
+		break;
 	case PROP_DEVICE_FILE:
 		fu_udev_device_set_device_file (self, g_value_get_string (value));
 		break;
@@ -1566,6 +1704,7 @@ fu_udev_device_finalize (GObject *object)
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 
 	g_free (priv->subsystem);
+	g_free (priv->driver);
 	g_free (priv->device_file);
 	if (priv->udev_device != NULL)
 		g_object_unref (priv->udev_device);
@@ -1594,6 +1733,7 @@ fu_udev_device_class_init (FuUdevDeviceClass *klass)
 	object_class->get_property = fu_udev_device_get_property;
 	object_class->set_property = fu_udev_device_set_property;
 	device_class->probe = fu_udev_device_probe;
+	device_class->rescan = fu_udev_device_rescan;
 	device_class->incorporate = fu_udev_device_incorporate;
 	device_class->open = fu_udev_device_open;
 	device_class->close = fu_udev_device_close;
@@ -1619,6 +1759,12 @@ fu_udev_device_class_init (FuUdevDeviceClass *klass)
 				     G_PARAM_READWRITE |
 				     G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_SUBSYSTEM, pspec);
+
+	pspec = g_param_spec_string ("driver", NULL, NULL,
+				     NULL,
+				     G_PARAM_READWRITE |
+				     G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_DRIVER, pspec);
 
 	pspec = g_param_spec_string ("device-file", NULL, NULL,
 				     NULL,

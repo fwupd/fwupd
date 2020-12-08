@@ -6,9 +6,11 @@ install_data([
   install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
 )
 
+if get_option('systemd')
 install_data(['fwupd-platform-integrity.conf'],
-  install_dir: join_paths(sysconfdir, 'modules-load.d')
+  install_dir: systemd_modules_load_dir,
 )
+endif
 
 shared_module('fu_plugin_platform_integrity',
   fu_hash,

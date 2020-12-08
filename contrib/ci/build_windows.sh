@@ -23,6 +23,7 @@ meson .. \
     -Dplugin_altos=false \
     -Dplugin_dell=false \
     -Dplugin_nvme=false \
+    -Dplugin_platform_integrity=false \
     -Dtpm=false \
     -Dsystemd=false \
     -Dplugin_emmc=false \
@@ -31,6 +32,7 @@ meson .. \
     -Dplugin_thunderbolt=false \
     -Dplugin_synaptics=false \
     -Dman=false \
+    -Dsoup_session_compat=false \
     -Dgcab:introspection=false \
     -Dgcab:docs=false \
     -Dgcab:nls=false \

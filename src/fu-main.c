@@ -17,6 +17,9 @@
 #ifdef HAVE_POLKIT
 #include <polkit/polkit.h>
 #endif
+#ifdef HAVE_SYSTEMD
+#include <systemd/sd-daemon.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <jcat.h>
@@ -850,7 +853,9 @@ fu_main_install_with_helper (FuMainAuthHelper *helper_ref, GError **error)
 		return FALSE;
 
 	/* for each component in the silo */
-	components = xb_silo_query (helper->silo, "components/component", 0, error);
+	components = xb_silo_query (helper->silo,
+				    "components/component[@type='firmware']",
+				    0, error);
 	if (components == NULL)
 		return FALSE;
 	helper->action_ids = g_ptr_array_new_with_free_func (g_free);
@@ -1529,11 +1534,13 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		return;
 	}
 	if (g_strcmp0 (method_name, "SetFeatureFlags") == 0) {
-		guint64 feature_flags = 0;
-		g_variant_get (parameters, "(t)", &feature_flags);
-		g_debug ("Called %s(%" G_GUINT64_FORMAT ")", method_name, feature_flags);
+		FwupdFeatureFlags feature_flags;
+		guint64 feature_flags_u64 = 0;
+		g_variant_get (parameters, "(t)", &feature_flags_u64);
+		g_debug ("Called %s(%" G_GUINT64_FORMAT ")", method_name, feature_flags_u64);
 
 		/* old flags for the same sender will be automatically destroyed */
+		feature_flags = feature_flags_u64;
 		g_hash_table_insert (priv->sender_features,
 				     g_strdup (sender),
 				     g_memdup (&feature_flags, sizeof(feature_flags)));
@@ -2028,6 +2035,11 @@ main (int argc, char *argv[])
 	/* wait */
 	g_message ("Daemon ready for requests (locale %s)", g_getenv ("LANG"));
 	g_main_loop_run (priv->loop);
+
+#ifdef HAVE_SYSTEMD
+	/* notify the service manager */
+	sd_notify (0, "STOPPING=1");
+#endif
 
 	/* success */
 	return EXIT_SUCCESS;

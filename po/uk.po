@@ -335,6 +335,13 @@ msgstr "Автоматичне звітування"
 msgid "Automatically upload every time?"
 msgstr "Автоматично вивантажувати кожного разу?"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "BUILDER-XML FILENAME-DST"
+msgstr "XML-ЗБИРАННЯ НАЗВА-ФАЙЛА-ДЖ"
+
+msgid "BYTES"
+msgstr "БАЙТИ"
+
 #. TRANSLATORS: command description
 msgid "Bind new kernel driver"
 msgstr "Пов'язати новий драйвер ядра"
@@ -366,6 +373,10 @@ msgstr "Зібрати файл мікропрограми"
 #. TRANSLATORS: command description
 msgid "Build firmware using a sandbox"
 msgstr "Зібрати мікропрограму за допомогою пісочниці"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
+msgstr "КОНТР_СУМА1[,КОНТР_СУМА2][,КОНТР_СУМА3]"
 
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
@@ -452,6 +463,10 @@ msgstr "Доступна перевірка криптографічної хе�
 #. TRANSLATORS: version number of current firmware
 msgid "Current version"
 msgstr "Поточна версія"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "DEVICE-ID|GUID"
+msgstr "ІД_ПРИСТРОЮ|GUID"
 
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
@@ -709,6 +724,46 @@ msgstr "Завершити роботу після завантаження ру
 msgid "Extract a firmware blob to images"
 msgstr "Видобувати бінарну мікропрограму до образів"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILE"
+msgstr "ФАЙЛ"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILE [DEVICE-ID|GUID]"
+msgstr "ФАЙЛ [ІД_ПРИСТРОЮ|GUID]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]"
+msgstr "ВХІДНИЙ_ФАЙЛ ВИХІДНИЙ_ФАЙЛ [СКРИПТ] [ВИВЕДЕННЯ]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME"
+msgstr "НАЗВА_ФАЙЛА"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID"
+msgstr "НАЗВА_ФАЙЛА АЛЬТ_НАЗВА_ПРИСТРОЮ|АЛЬТ_ІД_ПРИСТРОЮ"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID [IMAGE-ALT-NAME|IMAGE-ALT-ID]"
+msgstr "НАЗВА_ФАЙЛА АЛЬТ_НАЗВА_ПРИСТРОЮ|АЛЬТ_ІД_ПРИСТРОЮ [АЛЬТ_НАЗВА_ОБРАЗУ|АЛЬТ_ІД_ОБРАЗУ]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DEVICE-ID"
+msgstr "НАЗВА_ФАЙЛА ІД_ПРИСТРОЮ"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [DEVICE-ID|GUID]"
+msgstr "НАЗВА_ФАЙЛА [ІД_ПРИСТРОЮ|GUID]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [FIRMWARE-TYPE]"
+msgstr "НАЗВА-ФАЙЛА [ТИП-МІКРОПРОГРАМИ]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
+msgstr "НАЗВА_ФАЙЛА_ДЖ НАЗВА_ФАЙЛА_ПРИЗН [ТИП-МІКРОПРОГРАМИ-ДЖ] [ТИП-МІКРОПРОГРАМИ-ПРИЗН]"
+
 #. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Помилка"
@@ -873,6 +928,11 @@ msgstr[0] "GUID"
 msgstr[1] "GUID"
 msgstr[2] "GUID"
 msgstr[3] "GUID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "A single GUID"
+msgid "GUID"
+msgstr "GUID"
 
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
@@ -1074,6 +1134,10 @@ msgstr[1] "Вади"
 msgstr[2] "Вади"
 msgstr[3] "Вада"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "KEY,VALUE"
+msgstr "КЛЮЧ,ЗНАЧЕННЯ"
+
 msgid "Keyring"
 msgstr "Сховище ключів"
 
@@ -1274,6 +1338,10 @@ msgstr "Перевизначити типовий шлях до ESP"
 msgid "Override warnings and force the action"
 msgstr "Не зважати на попередження і примусово виконати дію"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "PATH"
+msgstr "ШЛЯХ"
+
 #. TRANSLATORS: command description
 msgid "Parse and show details about a firmware file"
 msgstr "Обробити і показати параметри файла мікропрограми"
@@ -1334,6 +1402,14 @@ msgstr "Пропрієтарна"
 #. TRANSLATORS: command line option
 msgid "Query for firmware update support"
 msgstr "Опитати щодо підтримки оновлення мікропрограми"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "REMOTE-ID"
+msgstr "ВІДДАЛ-ІД"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "REMOTE-ID KEY VALUE"
+msgstr "ВІДДАЛ-ІД КЛЮЧ ЗНАЧЕННЯ"
 
 #. TRANSLATORS: command description
 msgid "Read a firmware blob from a device"
@@ -1459,6 +1535,10 @@ msgstr "Блокування SPI"
 msgid "SPI write"
 msgstr "Запис SPI"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
+msgstr "ПІДСИСТЕМА ДРАЙВЕР [ІД_ПРИСТРОЮ|GUID]"
+
 #. TRANSLATORS: command line option
 msgid "Save device state into a JSON file between executions"
 msgstr "Зберігати стан пристрою до файла JSON між виконаннями"
@@ -1470,6 +1550,11 @@ msgstr "Якщо можливо, запланувати встановлення
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Плануємо…"
+
+#. TRANSLATORS: %s is a link to a website
+#, c-format
+msgid "See %s for more information."
+msgstr "Див. %s, щоб дізнатися більше."
 
 #. TRANSLATORS: Device has been chosen by the daemon for the user
 msgid "Selected device"
@@ -1659,6 +1744,10 @@ msgstr "Перемкнути гілку мікропрограми на прис
 msgid "System requires external power source"
 msgstr "Система потребує зовнішнього джерела живлення"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "TEXT"
+msgstr "ТЕКСТ"
+
 #. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
 msgid "TPM PCR0 reconstruction"
 msgstr "Відновлення PCR0 TPM"
@@ -1700,6 +1789,10 @@ msgstr "Заблокованих файлів мікропрограм нема�
 msgid "There is no approved firmware."
 msgstr "Немає схвалених мікропрограм."
 
+#. TRANSLATORS: unsupported build of the package
+msgid "This package has not been validated, it may not work properly."
+msgstr "Цей пакунок не було перевірено. Його належну роботу не можна гарантувати."
+
 #. TRANSLATORS: we're poking around as a power user
 msgid "This program may only work correctly as root"
 msgstr "Програма зможе працювати належними чином лише від імені користувача root"
@@ -1719,9 +1812,29 @@ msgstr "Ця система має низький рівень захисту HS
 msgid "This tool allows an administrator to apply UEFI dbx updates."
 msgstr "За допомогою цієї програми адміністратор може застосувати оновлення до dbx UEFI."
 
+#. TRANSLATORS: CLI description
+msgid "This tool allows an administrator to debug UpdateCapsule operation."
+msgstr "За допомогою цього інструмента адміністратор може виконувати діагностику операції UpdateCapsule."
+
+#. TRANSLATORS: CLI description
+msgid "This tool allows an administrator to query and control the fwupd daemon, allowing them to perform actions such as installing or downgrading firmware."
+msgstr "За допомогою цього інструмента адміністратор може опитувати фонову службу fwupd і керувати нею. Це уможливлює виконання таких дій, як встановлення мікропрограм або зниження версії мікропрограм."
+
+#. TRANSLATORS: CLI description
+msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
+msgstr "За допомогою цього інструмента адміністратор може скористатися додатками fwupd без встановлення їх до основної системи."
+
+#. TRANSLATORS: CLI description
+msgid "This tool can be used from other tools and from shell scripts."
+msgstr "Цим інструментом можна скористатися з інших інструментів та скриптів оболонки."
+
 #. TRANSLATORS: the user needs to stop playing with stuff
 msgid "This tool can only be used by the root user"
 msgstr "Цим інструментом може користуватися лише root"
+
+#. TRANSLATORS: CLI description
+msgid "This tool will read and parse the TPM event log from the system firmware."
+msgstr "Цей інструмент читає і обробляє журнал подій TPM, який заповнюється мікропрограмами системи."
 
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
@@ -1920,6 +2033,9 @@ msgstr "Сповіщено користувача"
 msgid "Username"
 msgstr "Користувач"
 
+msgid "VID:PID"
+msgstr "VID:PID"
+
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Valid"
 msgstr "Коректна"
@@ -1984,6 +2100,26 @@ msgstr "Виробник вашого дистрибутива може не п�
 #, c-format
 msgid "Your hardware may be damaged using this firmware, and installing this release may void any warranty with %s."
 msgstr "Ваше обладнання може бути пошкоджено через використання цієї мікропрограми. Встановлення цього випуску може призвести до відмови %s від гарантійних зобов'язань."
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[CHECKSUM]"
+msgstr "[КОНТРОЛЬНА_СУМА]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE-ID|GUID]"
+msgstr "[ІД_ПРИСТРОЮ|GUID]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE-ID|GUID] [BRANCH]"
+msgstr "[ІД_ПРИСТРОЮ|GUID] [ГІЛКА]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[FILE FILE_SIG REMOTE-ID]"
+msgstr "[ФАЙЛ ПІДПИС_ФАЙЛА ВІДДАЛ-ІД]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[FILE]"
+msgstr "[ФАЙЛ]"
 
 #. TRANSLATORS: this is the default branch name when unset
 msgid "default"

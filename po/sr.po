@@ -249,6 +249,11 @@ msgstr[2] "Метаподаци фирмвера нису ажурирани %u 
 msgid "Found"
 msgstr "Нашао"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "A single GUID"
+msgid "GUID"
+msgstr "ГУИД"
+
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
 msgstr "Добави све уређаје који подржавају ажурирање фирмвера"

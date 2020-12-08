@@ -320,6 +320,13 @@ msgstr "Automaattinen raportointi"
 msgid "Automatically upload every time?"
 msgstr "Ladataan automaattisesti joka kerta?"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "BUILDER-XML FILENAME-DST"
+msgstr "BUILDER-XML FILENAME-DST"
+
+msgid "BYTES"
+msgstr "BYTES"
+
 #. TRANSLATORS: command description
 msgid "Bind new kernel driver"
 msgstr "Kytke uusi laiteohjain"
@@ -351,6 +358,10 @@ msgstr "Luo laiteohjelmiston tiedosto"
 #. TRANSLATORS: command description
 msgid "Build firmware using a sandbox"
 msgstr "Rakenna laiteohjelmisto hiekkalaatikon avulla"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
+msgstr "CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
@@ -437,6 +448,10 @@ msgstr "Salauksen algoritmin tarkistus on käytettävissä"
 #. TRANSLATORS: version number of current firmware
 msgid "Current version"
 msgstr "Nykyinen versio"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "DEVICE-ID|GUID"
+msgstr "DEVICE-ID|GUID"
 
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
@@ -690,6 +705,46 @@ msgstr "Poistu kun moottori on ladattu"
 msgid "Extract a firmware blob to images"
 msgstr "Laiteohjelmiston blob purkaminen kuvaksi "
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILE"
+msgstr "FILE"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILE [DEVICE-ID|GUID]"
+msgstr "FILE [DEVICE-ID|GUID]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]"
+msgstr "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME"
+msgstr "FILENAME"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID"
+msgstr "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID [IMAGE-ALT-NAME|IMAGE-ALT-ID]"
+msgstr "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID [IMAGE-ALT-NAME|IMAGE-ALT-ID]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DEVICE-ID"
+msgstr "FILENAME DEVICE-ID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [DEVICE-ID|GUID]"
+msgstr "FILENAME [DEVICE-ID|GUID]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [FIRMWARE-TYPE]"
+msgstr "FILENAME [FIRMWARE-TYPE]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
+msgstr "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
+
 #. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
 msgstr "Epäonnistui"
@@ -850,6 +905,11 @@ msgid "GUID"
 msgid_plural "GUIDs"
 msgstr[0] "GUIDs"
 msgstr[1] "GUIDs"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "A single GUID"
+msgid "GUID"
+msgstr "GUID"
 
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
@@ -1048,6 +1108,10 @@ msgid "Issue"
 msgid_plural "Issues"
 msgstr[0] "Kysymykset"
 msgstr[1] "Kysymykset"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "KEY,VALUE"
+msgstr "KEY,VALUE"
 
 msgid "Keyring"
 msgstr "Avaimet"
@@ -1249,6 +1313,10 @@ msgstr "Ohita oletusarvoinen ESP-polku"
 msgid "Override warnings and force the action"
 msgstr "Ohita varoitukset ja pakota toiminto"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "PATH"
+msgstr "PATH"
+
 #. TRANSLATORS: command description
 msgid "Parse and show details about a firmware file"
 msgstr "Analysoi ja näytä tiedot laiteohjelmiston tiedostosta"
@@ -1309,6 +1377,14 @@ msgstr "Suljettu"
 #. TRANSLATORS: command line option
 msgid "Query for firmware update support"
 msgstr "Kysely firmware-päivityksen tuesta"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "REMOTE-ID"
+msgstr "REMOTE-ID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "REMOTE-ID KEY VALUE"
+msgstr "REMOTE-ID KEY VALUE"
 
 #. TRANSLATORS: command description
 msgid "Read a firmware blob from a device"
@@ -1434,6 +1510,10 @@ msgstr "SPI-lukko"
 msgid "SPI write"
 msgstr "SPI-kirjoitus"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
+msgstr "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
+
 #. TRANSLATORS: command line option
 msgid "Save device state into a JSON file between executions"
 msgstr "Tallenna laitteen tila JSON-tiedostoon suoritusten välillä"
@@ -1445,6 +1525,11 @@ msgstr "Ajasta asennus uudelleenkäynnistykselle mahdollisuuksien mukaan"
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Ajoitetaan…"
+
+#. TRANSLATORS: %s is a link to a website
+#, c-format
+msgid "See %s for more information."
+msgstr "Katso %s saadaksesi lisätietoja."
 
 #. TRANSLATORS: Device has been chosen by the daemon for the user
 msgid "Selected device"
@@ -1632,6 +1717,10 @@ msgstr "Vaihda laitteen laiteohjelmiston haaraa"
 msgid "System requires external power source"
 msgstr "Järjestelmä vaatii ulkoisen virtalähteen"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "TEXT"
+msgstr "TEXT"
+
 #. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
 msgid "TPM PCR0 reconstruction"
 msgstr "TPM PCR0 -jälleenrakennus"
@@ -1673,6 +1762,10 @@ msgstr "Estettyjä firmware-tiedostoja ei ole"
 msgid "There is no approved firmware."
 msgstr "Hyväksyttyä laiteohjelmistoa ei ole."
 
+#. TRANSLATORS: unsupported build of the package
+msgid "This package has not been validated, it may not work properly."
+msgstr "Tätä pakettia ei ole vahvistettu, se ei välttämättä toimi oikein."
+
 #. TRANSLATORS: we're poking around as a power user
 msgid "This program may only work correctly as root"
 msgstr "Tämä ohjelma toimii oikein vain root-käyttäjän oikeuksin"
@@ -1692,9 +1785,29 @@ msgstr "Tämän järjestelmän HSI-tietoturvataso on alhainen."
 msgid "This tool allows an administrator to apply UEFI dbx updates."
 msgstr "Tämän työkalun avulla järjestelmänvalvoja voi käyttää UEFI dbx-päivityksiä."
 
+#. TRANSLATORS: CLI description
+msgid "This tool allows an administrator to debug UpdateCapsule operation."
+msgstr "Tämän työkalun avulla järjestelmänvalvoja voi korjata päivitys-kapselin toiminnan."
+
+#. TRANSLATORS: CLI description
+msgid "This tool allows an administrator to query and control the fwupd daemon, allowing them to perform actions such as installing or downgrading firmware."
+msgstr "Tämän työkalun avulla järjestelmänvalvoja voi kysellä ja hallita fwupd-palvelua, jolloin voi suorittaa toimintoja, kuten laiteohjelmiston asennus tai päivittäminen."
+
+#. TRANSLATORS: CLI description
+msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
+msgstr "Tämän työkalun avulla järjestelmänvalvoja voi käyttää fwupd-laajennuksia asentamatta sitä järjestelmään."
+
+#. TRANSLATORS: CLI description
+msgid "This tool can be used from other tools and from shell scripts."
+msgstr "Tätä työkalua voidaan käyttää muista työkaluista ja päätteellä. "
+
 #. TRANSLATORS: the user needs to stop playing with stuff
 msgid "This tool can only be used by the root user"
 msgstr "Tätä työkalua voi käyttää vain root-käyttäjä"
+
+#. TRANSLATORS: CLI description
+msgid "This tool will read and parse the TPM event log from the system firmware."
+msgstr "Tämä työkalu lukee ja TPM-tapahtumalokin järjestelmän laiteohjelmistosta."
 
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
@@ -1731,6 +1844,10 @@ msgstr "Pura nykyinen ohjain"
 #. TRANSLATORS: we will now offer this firmware to the user
 msgid "Unblocking firmware:"
 msgstr "Laiteohjelmiston poistaminen käytöstä:"
+
+#. TRANSLATORS: command description
+msgid "Unblocks a specific firmware from being installed"
+msgstr "Poistaa asennuseston laiteohjelmistosta"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Unencrypted"
@@ -1885,6 +2002,9 @@ msgstr "Käyttäjälle on ilmoitettu"
 msgid "Username"
 msgstr "Käyttäjätunnus"
 
+msgid "VID:PID"
+msgstr "VID:PID"
+
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Valid"
 msgstr "Voimassa"
@@ -1949,6 +2069,26 @@ msgstr "Jakelijasi ei ehkä ole tarkistanut mitään laiteohjelmistopäivityksi�
 #, c-format
 msgid "Your hardware may be damaged using this firmware, and installing this release may void any warranty with %s."
 msgstr "Laitteistosi saattaa vaurioitua tämän laiteohjelmiston avulla ja asentaminen voi mitätöidä %stakuun."
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[CHECKSUM]"
+msgstr "[CHECKSUM]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE-ID|GUID]"
+msgstr "[DEVICE-ID|GUID]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE-ID|GUID] [BRANCH]"
+msgstr "[DEVICE-ID|GUID] [BRANCH]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[FILE FILE_SIG REMOTE-ID]"
+msgstr "[FILE FILE_SIG REMOTE-ID]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[FILE]"
+msgstr "[FILE]"
 
 #. TRANSLATORS: this is the default branch name when unset
 msgid "default"

@@ -437,7 +437,7 @@ fu_ebitdo_device_write_firmware (FuDevice *device,
 				    FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
 				    FU_EBITDO_PKT_CMD_FW_UPDATE_HEADER,
 				    buf, bufsz, error)) {
-		g_prefix_error (error, "failed to set up firmware header:");
+		g_prefix_error (error, "failed to set up firmware header: ");
 		return FALSE;
 	}
 	if (!fu_ebitdo_device_receive (self, NULL, 0, error)) {

@@ -166,6 +166,11 @@ msgstr "Lêernaamhandtekening"
 msgid "Found"
 msgstr "Gevind"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "A single GUID"
+msgid "GUID"
+msgstr "GUID"
+
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
 msgstr "Ledig…"

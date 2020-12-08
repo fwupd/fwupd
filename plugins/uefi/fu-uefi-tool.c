@@ -91,7 +91,9 @@ main (int argc, char *argv[])
 			_("Enable firmware update support on supported systems"), NULL },
 		{ "esp-path", 'p', 0, G_OPTION_ARG_STRING, &esp_path,
 			/* TRANSLATORS: command line option */
-			_("Override the default ESP path"), "PATH" },
+			_("Override the default ESP path"),
+			/* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			_("PATH") },
 		{ "set-debug", 'd', 0, G_OPTION_ARG_NONE, &action_set_debug,
 			/* TRANSLATORS: command line option */
 			_("Set the debugging flag during update"), NULL },
@@ -100,7 +102,9 @@ main (int argc, char *argv[])
 			_("Unset the debugging flag during update"), NULL },
 		{ "apply", 'a', 0, G_OPTION_ARG_STRING, &apply,
 			/* TRANSLATORS: command line option */
-			_("Apply firmware updates"), "GUID" },
+			_("Apply firmware updates"),
+			/* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			C_("A single GUID", "GUID") },
 		{ "flags", 'f', 0, G_OPTION_ARG_STRING, &flags,
 			/* TRANSLATORS: command line option */
 			_("Use quirk flags when installing firmware"), NULL },
@@ -123,7 +127,8 @@ main (int argc, char *argv[])
 	/* get a action_list of the commands */
 	priv->context = g_option_context_new (NULL);
 	g_option_context_set_description (priv->context,
-		"This tool allows an administrator to debug UpdateCapsule operation.");
+		/* TRANSLATORS: CLI description */
+		_("This tool allows an administrator to debug UpdateCapsule operation."));
 
 	/* TRANSLATORS: program name */
 	g_set_application_name (_("UEFI Firmware Utility"));

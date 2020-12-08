@@ -1,7 +1,6 @@
 subdir('acpi-dmar')
 subdir('acpi-facp')
 subdir('bcm57xx')
-subdir('bios')
 subdir('ccgx')
 subdir('cros-ec')
 subdir('cpu')
@@ -11,6 +10,7 @@ subdir('ebitdo')
 subdir('ep963x')
 subdir('fastboot')
 subdir('fresco-pd')
+subdir('hailuck')
 subdir('iommu')
 subdir('jabra')
 subdir('linux-lockdown')
@@ -22,7 +22,6 @@ subdir('dell-dock')
 subdir('nitrokey')
 subdir('pci-bcr')
 subdir('pci-mei')
-subdir('platform-integrity')
 subdir('rts54hid')
 subdir('rts54hub')
 subdir('solokey')
@@ -117,6 +116,7 @@ subdir('synaptics-mst')
 endif
 
 if get_option('plugin_uefi')
+subdir('bios')
 subdir('uefi')
 subdir('uefi-recovery')
 subdir('uefi-dbx')
@@ -128,4 +128,8 @@ endif
 
 if get_option('plugin_coreboot')
 subdir('coreboot')
+endif
+
+if get_option('plugin_platform_integrity')
+subdir('platform-integrity')
 endif

@@ -18,6 +18,10 @@ VendorId = ATA:0x1987
 Vendor = Seagate
 VendorId = ATA:0x1BB1
 
+[DeviceInstanceId=OUI\00080d]
+Vendor = Toshiba
+VendorId = ATA:0x1179
+
 [DeviceInstanceId=OUI\000c50]
 Vendor = Seagate
 VendorId = ATA:0x1BB1
@@ -77,6 +81,14 @@ VendorId = ATA:0x1CC1
 [DeviceInstanceId=OUI\001b44]
 Vendor = SanDisk
 VendorId = ATA:0x15B7
+
+[DeviceInstanceId=OUI\96a060]
+Vendor = Western Digital
+VendorId = ATA:0x101C
+
+[DeviceInstanceId=OUI\f8db4c]
+Vendor = PNY
+VendorId = ATA:0x196E
 
 [DeviceInstanceId=OUI\e83a97]
 Vendor = Toshiba

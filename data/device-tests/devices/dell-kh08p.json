@@ -1,0 +1,16 @@
+{
+  "name": "Dell KH08P [BCM5719]",
+  "guids": [
+    "ec5b8a9e-973b-58cc-935b-8322fabaebe9"
+  ],
+  "releases": [
+    {
+      "version": "0.4.62",
+      "file": "6cf165037a381eb29c183319e031def6b87e3ce955781ecf73f28751a1365db2-kh08p-bcm5719-0.4.62.cab"
+    },
+    {
+      "version": "0.4.64",
+      "file": "4b8eb1735b7461e0f6f856447527bc0edbb31b4681e71aaef488a62a65fa14eb-kh08p-bcm5719-0.4.64.cab"
+    }
+  ]
+}

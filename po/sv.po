@@ -761,6 +761,11 @@ msgid_plural "GUIDs"
 msgstr[0] "GUID"
 msgstr[1] "GUID:er"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "A single GUID"
+msgid "GUID"
+msgstr "GUID"
+
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
 msgstr "Hämta alla enhetsflaggor som stöds av fwupd"

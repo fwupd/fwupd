@@ -508,7 +508,7 @@ msgstr "Enhedstrin-opdateringer"
 
 #. TRANSLATORS: there is more than one supplier of the firmware
 msgid "Device supports switching to a different branch of firmware"
-msgstr "Enheden undertøtter at der kan skiftes til en anden gren med firmware"
+msgstr "Enheden understøtter at der kan skiftes til en anden gren med firmware"
 
 #. TRANSLATORS: Device update needs to be separately activated
 msgid "Device update needs activation"
@@ -827,7 +827,7 @@ msgstr "Maskinen understøtter firmwareopdateringer."
 
 #. TRANSLATORS: user needs to run a command
 msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
-msgstr "Firewareopdateringer deaktiveret; kør 'fwupdmgr unlock' for at aktivere"
+msgstr "Firmwareopdateringer deaktiveret; kør 'fwupdmgr unlock' for at aktivere"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
 #. TRANSLATORS: release properties
@@ -850,6 +850,11 @@ msgid "GUID"
 msgid_plural "GUIDs"
 msgstr[0] "GUID"
 msgstr[1] "GUID'er"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "A single GUID"
+msgid "GUID"
+msgstr "GUID"
 
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
@@ -1446,6 +1451,11 @@ msgstr "Planlægning af installation ved næste genstart, når det er muligt"
 msgid "Scheduling…"
 msgstr "Planlægger …"
 
+#. TRANSLATORS: %s is a link to a website
+#, c-format
+msgid "See %s for more information."
+msgstr "Se %s for mere information."
+
 #. TRANSLATORS: Device has been chosen by the daemon for the user
 msgid "Selected device"
 msgstr "Valgte enhed"
@@ -1732,6 +1742,10 @@ msgstr "Fjern binding af nuværende driver"
 msgid "Unblocking firmware:"
 msgstr "Fjerner blokering af firmware:"
 
+#. TRANSLATORS: command description
+msgid "Unblocks a specific firmware from being installed"
+msgstr "Fjerner blokering af en bestemt firmware fra at blive installeret"
+
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Unencrypted"
 msgstr "Dekrypteret"
@@ -1768,7 +1782,7 @@ msgstr "Fjern fejlsøgningsflaget under opdatering"
 #. TRANSLATORS: error message
 #, c-format
 msgid "Unsupported daemon version %s, client version is %s"
-msgstr "Uunderstøttet dæmonversion %s, klientversionen er %s"
+msgstr "Ikke-understøttet dæmonversion %s, klientversionen er %s"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Untainted"
@@ -1785,7 +1799,7 @@ msgstr "Fejl ved opdatering"
 #. TRANSLATORS: helpful messages from last update
 #. TRANSLATORS: helpful messages for the update
 msgid "Update Message"
-msgstr "Opdateringsmeddelelese"
+msgstr "Opdateringsmeddelelse"
 
 #. TRANSLATORS: hardware state, e.g. "pending"
 msgid "Update State"

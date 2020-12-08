@@ -538,7 +538,7 @@ fu_ccgx_hpi_device_read_event_reg (FuCcgxHpiDevice *self,
 						  reg_addr,
 						  buf, sizeof(buf),
 						  error)) {
-			g_prefix_error (error, "read response reg error:");
+			g_prefix_error (error, "read response reg error: ");
 			return FALSE;
 		}
 
@@ -554,7 +554,7 @@ fu_ccgx_hpi_device_read_event_reg (FuCcgxHpiDevice *self,
 							  event->event_data,
 							  event->event_length,
 							  error)) {
-				g_prefix_error (error, "read event data error:");
+				g_prefix_error (error, "read event data error: ");
 				return FALSE;
 			}
 		}
@@ -564,7 +564,7 @@ fu_ccgx_hpi_device_read_event_reg (FuCcgxHpiDevice *self,
 						  CY_PD_REG_RESPONSE_ADDR,
 						  buf, sizeof(buf),
 						  error)) {
-			g_prefix_error (error, "read response reg error:");
+			g_prefix_error (error, "read response reg error: ");
 			return FALSE;
 		}
 		event->event_code   = buf[0];
@@ -576,7 +576,7 @@ fu_ccgx_hpi_device_read_event_reg (FuCcgxHpiDevice *self,
 							  event->event_data,
 							  event->event_length,
 							  error)) {
-				g_prefix_error (error, "read event data error:");
+				g_prefix_error (error, "read event data error: ");
 				return FALSE;
 			}
 		}
@@ -881,7 +881,7 @@ fu_ccgx_hpi_write_flash_cb (FuDevice *device, gpointer user_data, GError **error
 	/* write data to memory */
 	addr_tmp = self->hpi_addrsz > 1 ? HPI_DEV_REG_FLASH_MEM : CY_PD_REG_BOOTDATA_MEMORY_ADDR;
 	if (!fu_ccgx_hpi_device_reg_write (self, addr_tmp, helper->buf, helper->bufsz, error)) {
-		g_prefix_error (error, "write buf to memory error");
+		g_prefix_error (error, "write buf to memory error: ");
 		return FALSE;
 	}
 	if (!fu_ccgx_hpi_device_reg_write (self, CY_PD_REG_FLASH_READ_WRITE_ADDR,
@@ -896,7 +896,7 @@ fu_ccgx_hpi_write_flash_cb (FuDevice *device, gpointer user_data, GError **error
 					   &hpi_event,
 					   HPI_CMD_COMMAND_RESPONSE_TIME_MS,
 					   error)) {
-		g_prefix_error (error, "write flash resp error");
+		g_prefix_error (error, "write flash resp error: ");
 		return FALSE;
 	}
 	if (hpi_event != CY_PD_RESP_SUCCESS) {
@@ -974,7 +974,7 @@ fu_ccgx_hpi_read_flash_cb (FuDevice *device, gpointer user_data, GError **error)
 	}
 	addr_tmp = self->hpi_addrsz > 1 ? HPI_DEV_REG_FLASH_MEM : CY_PD_REG_BOOTDATA_MEMORY_ADDR;
 	if (!fu_ccgx_hpi_device_reg_read (self, addr_tmp, helper->buf, helper->bufsz, error)) {
-		g_prefix_error (error, "read data from memory error");
+		g_prefix_error (error, "read data from memory error: ");
 		return FALSE;
 	}
 	return TRUE;

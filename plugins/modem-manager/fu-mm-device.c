@@ -43,6 +43,7 @@ struct _FuMmDevice {
 	MMModemFirmwareUpdateMethod	 update_methods;
 	gchar				*detach_fastboot_at;
 	gint				 port_at_ifnum;
+	gint				 port_qmi_ifnum;
 
 	/* fastboot detach handling */
 	gchar				*port_at;
@@ -102,6 +103,35 @@ fu_mm_device_get_port_at_ifnum (FuMmDevice *device)
 	return device->port_at_ifnum;
 }
 
+gint
+fu_mm_device_get_port_qmi_ifnum (FuMmDevice *device)
+{
+	g_return_val_if_fail (FU_IS_MM_DEVICE (device), -1);
+	return device->port_qmi_ifnum;
+}
+
+static gboolean
+validate_firmware_update_method (MMModemFirmwareUpdateMethod methods, GError **error)
+{
+	static const MMModemFirmwareUpdateMethod supported_combinations[] = {
+		MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT,
+		MM_MODEM_FIRMWARE_UPDATE_METHOD_QMI_PDC | MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT,
+	};
+	g_autofree gchar *methods_str = NULL;
+
+	methods_str = mm_modem_firmware_update_method_build_string_from_mask (methods);
+	for (guint i = 0; i < G_N_ELEMENTS (supported_combinations); i++) {
+		if (supported_combinations[i] == methods) {
+			g_debug ("valid firmware update combination: %s", methods_str);
+			return TRUE;
+		}
+	}
+
+	g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
+		     "invalid firmware update combination: %s", methods_str);
+	return FALSE;
+}
+
 static gboolean
 fu_mm_device_probe_default (FuDevice *device, GError **error)
 {
@@ -130,6 +160,10 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 				     "modem cannot be put in programming mode");
 		return FALSE;
 	}
+
+	/* make sure the combination is supported */
+	if (!validate_firmware_update_method (self->update_methods, error))
+		return FALSE;
 
 	/* various fastboot commands */
 	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT) {
@@ -216,13 +250,20 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* if we have the at port reported, get sysfs path and interface number */
 	if (self->port_at != NULL) {
 		fu_mm_utils_get_port_info (self->port_at, &device_sysfs_path, &self->port_at_ifnum, NULL);
-	} else if (self->port_qmi != NULL) {
-		fu_mm_utils_get_port_info (self->port_qmi, &device_sysfs_path, NULL, NULL);
-	} else {
-		g_warn_if_reached ();
+	}
+	if (self->port_qmi != NULL) {
+		g_autofree gchar *qmi_device_sysfs_path = NULL;
+		fu_mm_utils_get_port_info (self->port_qmi, &qmi_device_sysfs_path, &self->port_qmi_ifnum, NULL);
+		if (device_sysfs_path == NULL && qmi_device_sysfs_path != NULL) {
+			device_sysfs_path = g_steal_pointer (&qmi_device_sysfs_path);
+		} else if (g_strcmp0 (device_sysfs_path, qmi_device_sysfs_path) != 0) {
+			g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+				     "mismatched device sysfs path: %s != %s",
+				     device_sysfs_path, qmi_device_sysfs_path);
+			return FALSE;
+		}
 	}
 
 	/* if no device sysfs file, error out */
@@ -418,13 +459,12 @@ fu_mm_device_detach (FuDevice *device, GError **error)
 	 *
 	 * If the FuMmModem is created from a MM-exposed modem and...
 	 *  a) we only support fastboot, we just trigger the fastboot detach.
-	 *  b) we only support qmi-pdc, we just exit without any detach.
-	 *  c) we support both fastboot and qmi-pdc, we will set the
+	 *  b) we support both fastboot and qmi-pdc, we will set the
 	 *     ANOTHER_WRITE_REQUIRED flag in the device and we'll trigger
 	 *     the fastboot detach.
 	 *
 	 * If the FuMmModem is created from udev events...
-	 *  d) it means we're in the extra required write that was flagged
+	 *  c) it means we're in the extra required write that was flagged
 	 *     in an earlier detach(), and we need to perform the qmi-pdc
 	 *     update procedure at this time, so we just exit without any
 	 *     detach.
@@ -470,8 +510,6 @@ typedef struct {
 	FuMmDevice	*device;
 	GError		*error;
 	GPtrArray	*file_infos;
-	gsize		 total_written;
-	gsize		 total_bytes;
 } FuMmArchiveIterateCtx;
 
 static gboolean
@@ -521,7 +559,6 @@ fu_mm_qmi_pdc_archive_iterate_mcfg (FuArchive	*archive,
 	file_info->bytes = g_bytes_ref (bytes);
 	file_info->active = fu_mm_should_be_active (fu_device_get_version (FU_DEVICE (ctx->device)), filename);
 	g_ptr_array_add (ctx->file_infos, file_info);
-	ctx->total_bytes += g_bytes_get_size (file_info->bytes);
 	return TRUE;
 }
 
@@ -562,8 +599,6 @@ fu_mm_device_write_firmware_qmi_pdc (FuDevice *device, GBytes *fw, GArray **acti
 		.device = FU_MM_DEVICE (device),
 		.error = NULL,
 		.file_infos = file_infos,
-		.total_written = 0,
-		.total_bytes = 0,
 	};
 
 	/* decompress entire archive ahead of time */
@@ -775,6 +810,7 @@ fu_mm_device_new (MMManager *manager, MMObject *omodem)
 	self->manager = g_object_ref (manager);
 	self->omodem = g_object_ref (omodem);
 	self->port_at_ifnum = -1;
+	self->port_qmi_ifnum = -1;
 	return self;
 }
 
@@ -792,6 +828,7 @@ fu_plugin_mm_inhibited_device_info_new (FuMmDevice *device)
 	info->update_methods = fu_mm_device_get_update_methods (device);
 	info->detach_fastboot_at = g_strdup (fu_mm_device_get_detach_fastboot_at (device));
 	info->port_at_ifnum = fu_mm_device_get_port_at_ifnum (device);
+	info->port_qmi_ifnum = fu_mm_device_get_port_qmi_ifnum (device);
 	info->inhibited_uid = g_strdup (fu_mm_device_get_inhibition_uid (device));
 
 	return info;
@@ -825,6 +862,7 @@ fu_mm_device_udev_new (MMManager *manager,
 	self->update_methods = info->update_methods;
 	self->detach_fastboot_at = g_strdup (info->detach_fastboot_at);
 	self->port_at_ifnum = info->port_at_ifnum;
+	self->port_qmi_ifnum = info->port_qmi_ifnum;
 
 	for (guint i = 0; i < info->guids->len; i++)
 		fu_device_add_guid (FU_DEVICE (self), g_ptr_array_index (info->guids, i));
@@ -840,17 +878,19 @@ fu_mm_device_udev_add_port (FuMmDevice	*self,
 {
 	g_return_if_fail (FU_IS_MM_DEVICE (self));
 
-	/* cdc-wdm ports always added unless one already set */
 	if (g_str_equal (subsystem, "usbmisc") &&
-	    (self->port_qmi == NULL)) {
+	    self->port_qmi == NULL &&
+	    ifnum >= 0 &&
+	    ifnum == self->port_qmi_ifnum) {
 		g_debug ("added QMI port %s (%s)", path, subsystem);
 		self->port_qmi = g_strdup (path);
 		return;
 	}
 
 	if (g_str_equal (subsystem, "tty") &&
-	    (self->port_at == NULL) &&
-	    (ifnum >= 0) && (ifnum == self->port_at_ifnum)) {
+	    self->port_at == NULL &&
+	    ifnum >= 0 &&
+	    ifnum == self->port_at_ifnum) {
 		g_debug ("added AT port %s (%s)", path, subsystem);
 		self->port_at = g_strdup (path);
 		return;

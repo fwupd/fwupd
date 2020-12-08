@@ -19,7 +19,7 @@ popd
 chown nobody . -R
 
 # install and run TPM simulator necessary for plugins/uefi/uefi-self-test
-pacman -S --noconfirm swtpm tpm2-tools
+pacman -Syu --noconfirm swtpm tpm2-tools
 swtpm socket --tpm2 --server port=2321 --ctrl type=tcp,port=2322 --flags not-need-init --tpmstate "dir=$PWD" &
 trap "kill $!" EXIT
 # extend a PCR0 value for test suite
@@ -31,6 +31,11 @@ export TPM_SERVER_RUNNING=1
 # build the package and install it
 sudo -E -u nobody PKGEXT='.pkg.tar' makepkg -e --noconfirm
 pacman -U --noconfirm *.pkg.*
+
+#run the CI tests for Qt5
+pacman -Syu --noconfirm qt5-base
+meson qt5-thread-test ../contrib/ci/qt5-thread-test
+ninja -C qt5-thread-test test
 
 # move the package to working dir
 mv *.pkg.* ../dist

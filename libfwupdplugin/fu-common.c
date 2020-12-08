@@ -2249,6 +2249,7 @@ fu_common_get_volumes_by_kind (const gchar *kind, GError **error)
 	for (guint i = 0; i < devices->len; i++) {
 		GDBusProxy *proxy_blk = g_ptr_array_index (devices, i);
 		const gchar *type_str;
+		g_autoptr(FuVolume) vol = NULL;
 		g_autoptr(GDBusProxy) proxy_part = NULL;
 		g_autoptr(GDBusProxy) proxy_fs = NULL;
 		g_autoptr(GVariant) val = NULL;
@@ -2269,10 +2270,6 @@ fu_common_get_volumes_by_kind (const gchar *kind, GError **error)
 			continue;
 
 		g_variant_get (val, "&s", &type_str);
-		g_debug ("device %s, type: %s",
-			 g_dbus_proxy_get_object_path (proxy_blk), type_str);
-		if (g_strcmp0 (type_str, kind) != 0)
-			continue;
 		proxy_fs = g_dbus_proxy_new_sync (g_dbus_proxy_get_connection (proxy_blk),
 						  G_DBUS_PROXY_FLAGS_NONE, NULL,
 						  UDISKS_DBUS_SERVICE,
@@ -2284,11 +2281,17 @@ fu_common_get_volumes_by_kind (const gchar *kind, GError **error)
 					g_dbus_proxy_get_object_path (proxy_blk));
 			return NULL;
 		}
-		g_ptr_array_add (volumes,
-				 g_object_new (FU_TYPE_VOLUME,
-					       "proxy-block", proxy_blk,
-					       "proxy-filesystem", proxy_fs,
-					       NULL));
+		vol = g_object_new (FU_TYPE_VOLUME,
+				    "proxy-block", proxy_blk,
+				    "proxy-filesystem", proxy_fs,
+				    NULL);
+		g_debug ("device %s, type: %s, internal: %d, fs: %s",
+			 g_dbus_proxy_get_object_path (proxy_blk), type_str,
+			 fu_volume_is_internal (vol),
+			 fu_volume_get_id_type (vol));
+		if (g_strcmp0 (type_str, kind) != 0)
+			continue;
+		g_ptr_array_add (volumes, g_steal_pointer (&vol));
 	}
 	if (volumes->len == 0) {
 		g_set_error (error,
@@ -2344,7 +2347,7 @@ fu_common_get_volume_by_device (const gchar *device, GError **error)
 
 /**
  * fu_common_get_volume_by_devnum:
- * @devicenum: A device number
+ * @devnum: A device number
  * @error: A #GError or NULL
  *
  * Finds the first volume from the specified device.
@@ -2400,18 +2403,44 @@ fu_common_get_esp_default (GError **error)
 	const gchar *path_tmp;
 	g_autoptr(GPtrArray) volumes_fstab = g_ptr_array_new ();
 	g_autoptr(GPtrArray) volumes_mtab = g_ptr_array_new ();
+	g_autoptr(GPtrArray) volumes_vfat = g_ptr_array_new ();
 	g_autoptr(GPtrArray) volumes = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* for the test suite use local directory for ESP */
 	path_tmp = g_getenv ("FWUPD_UEFI_ESP_PATH");
 	if (path_tmp != NULL)
 		return fu_volume_new_from_mount_path (path_tmp);
 
-	volumes = fu_common_get_volumes_by_kind (FU_VOLUME_KIND_ESP, error);
-	if (volumes == NULL)
-		return NULL;
+	volumes = fu_common_get_volumes_by_kind (FU_VOLUME_KIND_ESP, &error_local);
+	if (volumes == NULL) {
+		g_debug ("%s, falling back to %s", error_local->message, FU_VOLUME_KIND_BDP);
+		volumes = fu_common_get_volumes_by_kind (FU_VOLUME_KIND_BDP, error);
+		if (volumes == NULL) {
+			g_prefix_error (error, "%s: ", error_local->message);
+			return NULL;
+		}
+	}
+	/* only add in internal vfat partitions */
 	for (guint i = 0; i < volumes->len; i++) {
 		FuVolume *vol = g_ptr_array_index (volumes, i);
+		g_autofree gchar *type = fu_volume_get_id_type (vol);
+		if (type == NULL)
+			continue;
+		if (!fu_volume_is_internal (vol))
+			continue;
+		if (g_strcmp0 (type, "vfat") == 0)
+			g_ptr_array_add (volumes_vfat, vol);
+	}
+	if (volumes_vfat->len == 0) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_FILENAME,
+			     "No ESP found");
+		return NULL;
+	}
+	for (guint i = 0; i < volumes_vfat->len; i++) {
+		FuVolume *vol = g_ptr_array_index (volumes_vfat, i);
 		g_ptr_array_add (fu_volume_is_mounted (vol) ? volumes_mtab : volumes_fstab, vol);
 	}
 	if (volumes_mtab->len == 1) {

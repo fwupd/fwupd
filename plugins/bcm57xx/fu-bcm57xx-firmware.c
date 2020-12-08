@@ -443,7 +443,7 @@ fu_bcm57xx_firmware_write (FuFirmware *firmware, GError **error)
 	fu_byte_array_append_uint32 (buf, self->phys_addr, G_BIG_ENDIAN);
 	fu_byte_array_append_uint32 (buf, g_bytes_get_size (blob_stage1) / sizeof(guint32), G_BIG_ENDIAN);
 	fu_byte_array_append_uint32 (buf, BCM_NVRAM_STAGE1_BASE, G_BIG_ENDIAN);
-	fu_byte_array_append_uint32 (buf, fu_bcm57xx_nvram_crc (buf->data, buf->len), G_BIG_ENDIAN);
+	fu_byte_array_append_uint32 (buf, fu_bcm57xx_nvram_crc (buf->data, buf->len), G_LITTLE_ENDIAN);
 
 	/* add directory entries */
 	blob_dicts = g_ptr_array_new_with_free_func ((GDestroyNotify) g_bytes_unref);

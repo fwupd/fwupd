@@ -1,4 +1,5 @@
 /build
+/build-win32
 /dist
 /.vscode
 /build-dir
@@ -30,3 +31,4 @@ plugins/synaptics-mst/tests/
 plugins/synaptics-prometheus/tests/
 plugins/tpm-eventlog/tests/
 plugins/uefi-dbx/tests/
+.buildconfig

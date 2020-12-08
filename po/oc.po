@@ -82,6 +82,11 @@ msgstr "Servici D-Bus de mesa a jorn dels micrologicials"
 msgid "Found"
 msgstr "Trobat"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "A single GUID"
+msgid "GUID"
+msgstr "GUID"
+
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
 msgstr "Obténer la lista dels periferics que supòrtan las mesas a jorn de micrologicial"

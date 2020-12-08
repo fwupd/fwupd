@@ -500,7 +500,7 @@ fu_superio_it89_device_check_eflash (FuSuperioDevice *self, GError **error)
 	fw = fu_superio_it89_device_read_addr (self, fwsize - sigsz,
 					       sigsz, NULL, error);
 	if (fw == NULL) {
-		g_prefix_error (error, "failed to read signature bytes");
+		g_prefix_error (error, "failed to read signature bytes: ");
 		return FALSE;
 	}
 
@@ -534,7 +534,7 @@ fu_superio_it89_device_write_chunk (FuSuperioDevice *self, FuChunk *chk, GError 
 
 	/* erase page */
 	if (!fu_superio_it89_device_erase_addr (self, chk->address, error)) {
-		g_prefix_error (error, "failed to erase @0x%04x", (guint) chk->address);
+		g_prefix_error (error, "failed to erase @0x%04x: ", (guint) chk->address);
 		return FALSE;
 	}
 
@@ -544,7 +544,7 @@ fu_superio_it89_device_write_chunk (FuSuperioDevice *self, FuChunk *chk, GError 
 						error);
 	if (fw1 == NULL) {
 		g_prefix_error (error, "failed to read erased "
-				"bytes @0x%04x", (guint) chk->address);
+				"bytes @0x%04x: ", (guint) chk->address);
 		return FALSE;
 	}
 	if (!fu_common_bytes_is_empty (fw1)) {
@@ -562,7 +562,7 @@ fu_superio_it89_device_write_chunk (FuSuperioDevice *self, FuChunk *chk, GError 
 
 	/* write page */
 	if (!fu_superio_it89_device_write_addr (self, chk->address, fw2, error)) {
-		g_prefix_error (error, "failed to write @0x%04x", (guint) chk->address);
+		g_prefix_error (error, "failed to write @0x%04x: ", (guint) chk->address);
 		return FALSE;
 	}
 
@@ -572,11 +572,11 @@ fu_superio_it89_device_write_chunk (FuSuperioDevice *self, FuChunk *chk, GError 
 						error);
 	if (fw3 == NULL) {
 		g_prefix_error (error, "failed to read written "
-				"bytes @0x%04x", (guint) chk->address);
+				"bytes @0x%04x: ", (guint) chk->address);
 		return FALSE;
 	}
 	if (!fu_common_bytes_compare (fw2, fw3, error)) {
-		g_prefix_error (error, "failed to verify @0x%04x",
+		g_prefix_error (error, "failed to verify @0x%04x: ",
 				(guint) chk->address);
 		return FALSE;
 	}

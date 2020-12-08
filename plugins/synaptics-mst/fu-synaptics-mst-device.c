@@ -235,7 +235,7 @@ fu_synaptics_mst_device_set_flash_sector_erase (FuSynapticsMstDevice *self,
 							 UPDC_FLASH_ERASE,
 							 2, 0, (guint8 *)&us_data,
 							 error)) {
-		g_prefix_error (error, "can't sector erase flash at offset %x",
+		g_prefix_error (error, "can't sector erase flash at offset %x: ",
 				offset);
 		return FALSE;
 	}
@@ -859,7 +859,10 @@ fu_synaptics_mst_device_write_firmware (FuDevice *device,
 			return FALSE;
 		}
 	}
+
+	/* wait for flash clear to settle */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+	fu_device_sleep_with_progress (device, 2);
 	return TRUE;
 }
 

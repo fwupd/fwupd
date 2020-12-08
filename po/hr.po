@@ -226,6 +226,10 @@ msgstr "Dopusti vraćanje starije inačice firmvera"
 msgid "Allow reinstalling existing firmware versions"
 msgstr "Dopusti ponovnu instalaciju firmvera postojeće inačice"
 
+#. TRANSLATORS: command line option
+msgid "Allow switching firmware branch"
+msgstr "Dopusti prebacivanje između firmver grana"
+
 #. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "Nadopuna zahtijeva ponovno pokretanje za završetak."
@@ -326,6 +330,10 @@ msgstr "Automatsko izvještavanje"
 msgid "Automatically upload every time?"
 msgstr "Automatski pošalji svaki put?"
 
+#. TRANSLATORS: command description
+msgid "Bind new kernel driver"
+msgstr "Spoji novi pogon jezgre"
+
 #. TRANSLATORS: there follows a list of hashes
 msgid "Blocked firmware files:"
 msgstr "Datoteke blokiranog firmvera:"
@@ -334,6 +342,10 @@ msgstr "Datoteke blokiranog firmvera:"
 msgid "Blocking firmware:"
 msgstr "Blokiranje firmvera:"
 
+#. TRANSLATORS: command description
+msgid "Blocks a specific firmware from being installed"
+msgstr "Blokira instalaciju određenog firmvera"
+
 #. TRANSLATORS: firmware version of bootloader
 msgid "Bootloader Version"
 msgstr "Inačica učitača pokretanja"
@@ -341,6 +353,10 @@ msgstr "Inačica učitača pokretanja"
 #. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
 msgid "Branch"
 msgstr "Grana"
+
+#. TRANSLATORS: command description
+msgid "Build a firmware file"
+msgstr "Izgradi datoteku firmvera"
 
 #. TRANSLATORS: command description
 msgid "Build firmware using a sandbox"
@@ -500,9 +516,17 @@ msgstr "Uređaj uklonjen:"
 msgid "Device stages updates"
 msgstr "Nadopune uređaja u fazama"
 
+#. TRANSLATORS: there is more than one supplier of the firmware
+msgid "Device supports switching to a different branch of firmware"
+msgstr "Uređaj podržava mijenjanje na jednu drugu granu firmvera"
+
 #. TRANSLATORS: Device update needs to be separately activated
 msgid "Device update needs activation"
 msgstr "Nadopuni uređaja je potrebna aktivacija"
+
+#. TRANSLATORS: save the old firmware to disk before installing the new one
+msgid "Device will backup firmware before installing"
+msgstr "Uređaj će spremiti sigurnosnu kopiju firmvera prije instaliranja"
 
 #. TRANSLATORS: Device will not return after update completes
 msgid "Device will not re-appear after update completes"
@@ -580,6 +604,10 @@ msgstr[2] "Ne šaljite izvještaje, i nemoj nikada upitati za slanje izvještaja
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
 msgstr "Ne zapisuj bazu podataka povijesti"
+
+#. TRANSLATORS: should the branch be changed
+msgid "Do you understand the consequences of changing the firmware branch?"
+msgstr "Razumiješ li posljedice mijenjanja grane firmvera?"
 
 #. TRANSLATORS: success
 #. success
@@ -669,6 +697,10 @@ msgstr "Izađi nakon kratke odgode"
 #. TRANSLATORS: exit straight away, used for automatic profiling
 msgid "Exit after the engine has loaded"
 msgstr "Izađi nakon učitavanja pogona"
+
+#. TRANSLATORS: command description
+msgid "Extract a firmware blob to images"
+msgstr "Izdvoji blob firmvera u slike"
 
 #. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
@@ -776,6 +808,10 @@ msgstr "Firmver pomagalo"
 msgid "Firmware attestation"
 msgstr "Frimver provjera"
 
+#. TRANSLATORS: system is not booted in UEFI mode
+msgid "Firmware can not be updated in legacy BIOS mode"
+msgstr "Firmver se ne može aktualizirati u starom BIOS modusu"
+
 #. TRANSLATORS: user selected something not possible
 msgid "Firmware is already blocked"
 msgstr "Firmver je već blokiran"
@@ -802,10 +838,18 @@ msgstr "Nadopuna firmvera nije podržana na ovom računalu."
 msgid "Firmware updates are supported on this machine."
 msgstr "Nadopuna firmvera je podržana na ovom računalu."
 
+#. TRANSLATORS: user needs to run a command
+msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
+msgstr "Aktualiziranje firmvera je deaktivirano; aktiviraj ga pomoću „fwupdmgr unlock”"
+
 #. TRANSLATORS: description of plugin state, e.g. disabled
 #. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "Oznake"
+
+#. TRANSLATORS: command line option
+msgid "Force the action by relaxing some runtime checks"
+msgstr "Prisili radnju zanemarujući neke provjere vremena pokretanja"
 
 msgid "Force the action ignoring all warnings"
 msgstr "Prisili radnju zanemarujući sva upozorenja"
@@ -820,6 +864,11 @@ msgid_plural "GUIDs"
 msgstr[0] "Globalna jedinstvena oznaka"
 msgstr[1] "Globalne jedinstvene oznake"
 msgstr[2] "Globalne jedinstvene oznake"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "A single GUID"
+msgid "GUID"
+msgstr "GUID"
 
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
@@ -848,6 +897,14 @@ msgstr "Prikazuje udaljena podešavanja"
 #. TRANSLATORS: command description
 msgid "Gets the host security attributes"
 msgstr "Prikaži sigurnosne značajke poslužitelja"
+
+#. TRANSLATORS: firmware approved by the admin
+msgid "Gets the list of approved firmware"
+msgstr "Preuzima popis odobrenih firmvera"
+
+#. TRANSLATORS: command description
+msgid "Gets the list of blocked firmware"
+msgstr "Preuzima popis blokiranih firmvera."
 
 #. TRANSLATORS: command description
 msgid "Gets the list of updates for connected hardware"
@@ -886,9 +943,25 @@ msgstr "Mirovanje..."
 msgid "Ignore SSL strict checks when downloading files"
 msgstr "Zanemari SSL ograničene provjere pri preuzimanju datoteka"
 
+#. TRANSLATORS: command line option
+msgid "Ignore firmware checksum failures"
+msgstr "Zanemari neuspjele kontrolne zbrojeve firmvera"
+
+#. TRANSLATORS: command line option
+msgid "Ignore firmware hardware mismatch failures"
+msgstr "Zanemari neuspjela poklapanja hardvera firmvera"
+
+#. TRANSLATORS: command line option
+msgid "Ignore requirement of external power source"
+msgstr "Zanemari zahtjev vanjskog izvora energije"
+
 #. TRANSLATORS: Ignore validation safety checks when flashing this device
 msgid "Ignore validation safety checks"
 msgstr "Zanemari provjeru sigurnosti uređaja"
+
+#. TRANSLATORS: try to help
+msgid "Ignoring SSL strict checks, to do this automatically in the future export DISABLE_SSL_STRICT in your environment"
+msgstr "Zanemaruju se stroge SSL provjere, da bi se to ubuduće automatski desilo izvezi DISABLE_SSL_STRICT u tvom okruženju"
 
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Install Duration"
@@ -1100,6 +1173,10 @@ msgstr "Najmanja inačica"
 msgid "Mismatched daemon and client, use %s instead"
 msgstr "Pozadinski program i klijent se ne podudaraju, umjesto koristite %s"
 
+#. TRANSLATORS: sets something in daemon.conf
+msgid "Modifies a daemon configuration value"
+msgstr "Mijenja vrijednost konfiguracije demona"
+
 #. TRANSLATORS: command description
 msgid "Modifies a given remote"
 msgstr "Promjena zadane udaljene lokacije"
@@ -1283,6 +1360,10 @@ msgid "Refresh metadata from remote server"
 msgstr "Osvježi metapodatke s udaljenog poslužitelja"
 
 #. TRANSLATORS: command description
+msgid "Reinstall current firmware on the device"
+msgstr "Ponovno instaliraj trenutačni firmver na uređaj"
+
+#. TRANSLATORS: command description
 msgid "Reinstall firmware on a device"
 msgstr "Ponovno instaliraj firmver na uređaj"
 
@@ -1384,6 +1465,11 @@ msgstr "Zakaži instalaciju pri sljedećem pokretanju kada je moguće"
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Zakazivanje..."
+
+#. TRANSLATORS: %s is a link to a website
+#, c-format
+msgid "See %s for more information."
+msgstr "Pročitaj daljnje informacije na %s."
 
 #. TRANSLATORS: Device has been chosen by the daemon for the user
 msgid "Selected device"
@@ -1564,6 +1650,10 @@ msgstr "Suspendiraju-u-mirovanje"
 msgid "Suspend-to-ram"
 msgstr "Suspendiraju-u-ram"
 
+#. TRANSLATORS: command description
+msgid "Switch the firmware branch on the device"
+msgstr "Zamijeni granu firmvera na uređaju"
+
 #. TRANSLATORS: Must be plugged in to an outlet
 msgid "System requires external power source"
 msgstr "Sustav zahtijeva vanjski izvor energije"
@@ -1591,6 +1681,15 @@ msgstr "LVFS (Firmver Usluga Linux Proizvođača) je besplatna usluga koja djelu
 msgid "The TPM PCR0 differs from reconstruction."
 msgstr "TPM PCR0 razlikuje se od rekonstrukcije."
 
+#. TRANSLATORS: the user is SOL for support...
+msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
+msgstr "Demon je učitao strani kȏd i više ga ne podržavaju programeri izvorne grane!"
+
+#. TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name
+#, c-format
+msgid "The firmware from %s is not supplied by %s, the hardware vendor."
+msgstr "Firmver od %s se ne isporučuje od %s, dobavljač hardvera."
+
 #. TRANSLATORS: nothing to show
 msgid "There are no blocked firmware files"
 msgstr "Nema blokiranih firmvera"
@@ -1599,6 +1698,10 @@ msgstr "Nema blokiranih firmvera"
 #. * the domain administrator
 msgid "There is no approved firmware."
 msgstr "Ne postoji odobreni firmver."
+
+#. TRANSLATORS: unsupported build of the package
+msgid "This package has not been validated, it may not work properly."
+msgstr "Ovaj paket nije provjeren, možda neće ispravno raditi."
 
 #. TRANSLATORS: we're poking around as a power user
 msgid "This program may only work correctly as root"
@@ -1635,6 +1738,10 @@ msgstr "UEFI ESP particija nije otkrivena ili konfigurirana"
 msgid "UEFI Firmware Utility"
 msgstr "UEFI firmver pomagalo"
 
+#. TRANSLATORS: capsule updates are an optional BIOS feature
+msgid "UEFI capsule updates not available or enabled"
+msgstr "Aktualiziranja za UEFI capsule nedostupna ili neaktivirana"
+
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
 msgstr "UEFI dbx pomagalo"
@@ -1647,9 +1754,17 @@ msgstr "UEFI sigurno pokretanje (secure boot)"
 msgid "Unable to connect to service"
 msgstr "Neuspjelo povezivanje s udaljenom uslugom"
 
+#. TRANSLATORS: command description
+msgid "Unbind current driver"
+msgstr "Odspoji trenutačni pogon"
+
 #. TRANSLATORS: we will now offer this firmware to the user
 msgid "Unblocking firmware:"
 msgstr "Neblokiranje firmvera:"
+
+#. TRANSLATORS: command description
+msgid "Unblocks a specific firmware from being installed"
+msgstr "Deblokira instalaciju određenog firmvera"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Unencrypted"
@@ -1865,6 +1980,11 @@ msgstr "Zapisivanje..."
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
 msgstr "Vaš distributer možda nije provjerio nadopune firmvera za kompatibilnost s vašim sustavom ili priključenim uređajima."
+
+#. TRANSLATORS: %1 is the device vendor name
+#, c-format
+msgid "Your hardware may be damaged using this firmware, and installing this release may void any warranty with %s."
+msgstr "Tvoj hardver se može oštetiti upotrebom ovog firmvera. Instaliranjem ovog izdanja možda se poništavaju %s jamstva."
 
 #. TRANSLATORS: this is the default branch name when unset
 msgid "default"

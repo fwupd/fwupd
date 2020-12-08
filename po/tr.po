@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Emin Tufan <etcetin@gmail.com>, 2020
+# Emin Tufan Çetin <etcetin@gmail.com>, 2020
 # Muhammet Kara <muhammetk@gmail.com>, 2016
 # Sabri Ünal <libreajans@gmail.com>, 2019-2020
 # Sabri Ünal <yakushabb@gmail.com>, 2020
@@ -520,6 +520,11 @@ msgid "GUID"
 msgid_plural "GUIDs"
 msgstr[0] "GUID"
 msgstr[1] "GUIDs"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "A single GUID"
+msgid "GUID"
+msgstr "GUID"
 
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"

@@ -475,7 +475,7 @@ fu_engine_get_remote_id_for_checksum (FuEngine *self, const gchar *csum)
 {
 	g_autofree gchar *xpath = NULL;
 	g_autoptr(XbNode) key = NULL;
-	xpath = g_strdup_printf ("components/component/releases/release/"
+	xpath = g_strdup_printf ("components/component[@type='firmware']/releases/release/"
 				 "checksum[@target='container'][text()='%s']/../../"
 				 "../../custom/value[@key='fwupd::RemoteId']", csum);
 	key = xb_silo_query_first (self->silo, xpath, NULL);
@@ -788,7 +788,7 @@ fu_engine_get_component_by_guids (FuEngine *self, FuDevice *device)
 	for (guint i = 0; i < guids->len; i++) {
 		const gchar *guid = g_ptr_array_index (guids, i);
 		xb_string_append_union (xpath,
-					"components/component/"
+					"components/component[@type='firmware']/"
 					"provides/firmware[@type='flashed'][text()='%s']/"
 					"../..", guid);
 	}
@@ -859,7 +859,7 @@ fu_engine_verify_from_system_metadata (FuEngine *self,
 
 	/* prepare query with bound GUID parameter */
 	query = xb_query_new_full (self->silo,
-				   "components/component/"
+				   "components/component[@type='firmware']/"
 				   "provides/firmware[@type='flashed'][text()=?]/"
 				   "../../releases/release",
 				   XB_QUERY_FLAG_OPTIMIZE |
@@ -1145,8 +1145,8 @@ fu_engine_check_requirement_not_child (FuEngine *self, XbNode *req,
 }
 
 static gboolean
-fu_engine_check_requirement_firmware (FuEngine *self, XbNode *req,
-				      FuDevice *device, GError **error)
+fu_engine_check_requirement_firmware (FuEngine *self, XbNode *req, FuDevice *device,
+				      FwupdInstallFlags flags, GError **error)
 {
 	guint64 depth;
 	g_autoptr(FuDevice) device_actual = g_object_ref (device);
@@ -1222,8 +1222,8 @@ fu_engine_check_requirement_firmware (FuEngine *self, XbNode *req,
 	/* vendor ID */
 	if (g_strcmp0 (xb_node_get_text (req), "vendor-id") == 0 &&
 	    fu_device_get_vendor_id (device_actual) != NULL) {
-		const gchar *version = fu_device_get_vendor_id (device_actual);
-		if (!fu_engine_require_vercmp (req, version,
+		if ((flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) == 0 &&
+		    !fu_engine_require_vercmp (req, fu_device_get_vendor_id (device_actual),
 					       fu_device_get_version_format (device_actual),
 					       &error_local)) {
 			g_set_error (error,
@@ -1380,7 +1380,7 @@ fu_engine_check_requirement_client (FuEngine *self,
 	for (guint i = 0; feature_split[i] != NULL; i++) {
 		FwupdFeatureFlags flag = fwupd_feature_flag_from_string (feature_split[i]);
 
-		/* not recognised */
+		/* not recognized */
 		if (flag == FWUPD_FEATURE_FLAG_LAST) {
 			g_set_error (error,
 				     FWUPD_ERROR,
@@ -1410,6 +1410,7 @@ fu_engine_check_requirement (FuEngine *self,
 			     FuEngineRequest *request,
 			     XbNode *req,
 			     FuDevice *device,
+			     FwupdInstallFlags flags,
 			     GError **error)
 {
 	/* ensure component requirement */
@@ -1420,7 +1421,8 @@ fu_engine_check_requirement (FuEngine *self,
 	if (g_strcmp0 (xb_node_get_element (req), "firmware") == 0) {
 		if (device == NULL)
 			return TRUE;
-		return fu_engine_check_requirement_firmware (self, req, device, error);
+		return fu_engine_check_requirement_firmware (self, req, device,
+							     flags, error);
 	}
 
 	/* ensure hardware requirement */
@@ -1478,7 +1480,9 @@ fu_engine_check_requirements (FuEngine *self,
 	if (reqs != NULL) {
 		for (guint i = 0; i < reqs->len; i++) {
 			XbNode *req = g_ptr_array_index (reqs, i);
-			if (!fu_engine_check_requirement (self, request, req, device, error))
+			if (!fu_engine_check_requirement (self, request,
+							  req, device,
+							  flags, error))
 				return FALSE;
 		}
 	} else if (!g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) &&
@@ -1615,7 +1619,10 @@ fu_engine_get_report_metadata_kernel_cmdline (GHashTable *hash, GError **error)
 		g_auto(GStrv) tokens = fu_common_strnsplit (buf, bufsz - 1, " ", -1);
 		g_autoptr(GString) cmdline_safe = g_string_new (NULL);
 		for (guint i = 0; tokens[i] != NULL; i++) {
-			g_auto(GStrv) kv = g_strsplit (tokens[i], "=", 2);
+			g_auto(GStrv) kv = NULL;
+			if (strlen (tokens[i]) == 0)
+				continue;
+			kv = g_strsplit (tokens[i], "=", 2);
 			if (g_strv_contains (ignore, kv[0]))
 				continue;
 			if (cmdline_safe->len > 0)
@@ -2178,7 +2185,8 @@ fu_engine_install_release (FuEngine *self,
 	fmt = fu_device_get_version_format (device);
 	if (version_rel != NULL &&
 	    fu_common_vercmp_full (version_orig, version_rel, fmt) != 0 &&
-	    fu_common_vercmp_full (version_orig, fu_device_get_version (device), fmt) == 0) {
+	    fu_common_vercmp_full (version_orig, fu_device_get_version (device), fmt) == 0 &&
+	    !fu_device_has_flag (device, FWUPD_DEVICE_FLAG_SKIPS_RESTART)) {
 		g_autofree gchar *str = NULL;
 		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
 		str = g_strdup_printf ("device version not updated on success, %s != %s",
@@ -3069,6 +3077,23 @@ fu_engine_md_refresh_device_name (FuEngine *self, FuDevice *device, XbNode *comp
 	}
 }
 
+static void
+fu_engine_md_refresh_device_icon (FuEngine *self, FuDevice *device, XbNode *component)
+{
+	const gchar *icon = NULL;
+
+	/* require data */
+	if (component == NULL)
+		return;
+
+	/* copy 1:1 */
+	icon = xb_node_query_text (component, "icon", NULL);
+	if (icon != NULL) {
+		fu_device_add_icon (device, icon);
+		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_MD_SET_ICON);
+	}
+}
+
 static const gchar *
 fu_common_device_category_to_name (const gchar *cat)
 {
@@ -3181,6 +3206,8 @@ fu_engine_md_refresh_device_from_component (FuEngine *self, FuDevice *device, Xb
 		fu_engine_md_refresh_device_name (self, device, component);
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY))
 		fu_engine_md_refresh_device_name_category (self, device, component);
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_MD_SET_ICON))
+		fu_engine_md_refresh_device_icon (self, device, component);
 
 	/* fix the version */
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_MD_SET_VERFMT))
@@ -3300,17 +3327,23 @@ fu_engine_load_metadata_store (FuEngine *self, FuEngineLoadFlags flags, GError *
 		return FALSE;
 
 	/* print what we've got */
-	components = xb_silo_query (self->silo, "components/component", 0, NULL);
+	components = xb_silo_query (self->silo,
+				    "components/component[@type='firmware']",
+				    0, NULL);
 	if (components != NULL)
 		g_debug ("%u components now in silo", components->len);
 
 	/* build the index */
 	if (!xb_silo_query_build_index (self->silo,
-					"components/component/provides/firmware",
+					"components/component",
 					"type", error))
 		return FALSE;
 	if (!xb_silo_query_build_index (self->silo,
-					"components/component/provides/firmware",
+					"components/component[@type='firmware']/provides/firmware",
+					"type", error))
+		return FALSE;
+	if (!xb_silo_query_build_index (self->silo,
+					"components/component[@type='firmware']/provides/firmware",
 					NULL, error))
 		return FALSE;
 
@@ -3474,6 +3507,8 @@ fu_engine_update_metadata_bytes (FuEngine *self, const gchar *remote_id,
 {
 	FwupdKeyringKind keyring_kind;
 	FwupdRemote *remote;
+	JcatVerifyFlags jcat_flags = JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE;
+	g_autoptr(JcatFile) jcat_file = jcat_file_new ();
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
 	g_return_val_if_fail (remote_id != NULL, FALSE);
@@ -3498,23 +3533,37 @@ fu_engine_update_metadata_bytes (FuEngine *self, const gchar *remote_id,
 		return FALSE;
 	}
 
-	/* verify file */
+	/* verify JCatFile, or create a dummy one from legacy data */
 	keyring_kind = fwupd_remote_get_keyring_kind (remote);
-	if (keyring_kind != FWUPD_KEYRING_KIND_NONE) {
-		g_autoptr(GError) error_local = NULL;
+	if (keyring_kind == FWUPD_KEYRING_KIND_JCAT) {
 		g_autoptr(GInputStream) istream = NULL;
-		g_autoptr(GPtrArray) results = NULL;
-		g_autoptr(JcatFile) jcat_file = jcat_file_new ();
-		g_autoptr(JcatItem) jcat_item = NULL;
-		g_autoptr(JcatResult) jcat_result = NULL;
-		g_autoptr(JcatResult) jcat_result_old = NULL;
-
-		/* load Jcat file */
 		istream = g_memory_input_stream_new_from_bytes (bytes_sig);
 		if (!jcat_file_import_stream (jcat_file, istream,
 					      JCAT_IMPORT_FLAG_NONE,
 					      NULL, error))
 			return FALSE;
+		jcat_flags |= JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM;
+	} else if (keyring_kind == FWUPD_KEYRING_KIND_GPG) {
+		g_autoptr(JcatBlob) jcab_blob = NULL;
+		g_autoptr(JcatItem) jcat_item = jcat_item_new ("");
+		jcab_blob = jcat_blob_new (JCAT_BLOB_KIND_GPG, bytes_sig);
+		jcat_item_add_blob (jcat_item, jcab_blob);
+		jcat_file_add_item (jcat_file, jcat_item);
+	} else if (keyring_kind == FWUPD_KEYRING_KIND_PKCS7) {
+		g_autoptr(JcatBlob) jcab_blob = NULL;
+		g_autoptr(JcatItem) jcat_item = jcat_item_new ("");
+		jcab_blob = jcat_blob_new (JCAT_BLOB_KIND_PKCS7, bytes_sig);
+		jcat_item_add_blob (jcat_item, jcab_blob);
+		jcat_file_add_item (jcat_file, jcat_item);
+	}
+
+	/* verify file */
+	if (keyring_kind != FWUPD_KEYRING_KIND_NONE) {
+		g_autoptr(GError) error_local = NULL;
+		g_autoptr(GPtrArray) results = NULL;
+		g_autoptr(JcatItem) jcat_item = NULL;
+		g_autoptr(JcatResult) jcat_result = NULL;
+		g_autoptr(JcatResult) jcat_result_old = NULL;
 
 		/* this should only be signing one thing */
 		jcat_item = jcat_file_get_item_default (jcat_file, error);
@@ -3522,9 +3571,7 @@ fu_engine_update_metadata_bytes (FuEngine *self, const gchar *remote_id,
 			return FALSE;
 		results = jcat_context_verify_item (self->jcat_context,
 						    bytes_raw, jcat_item,
-						    JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
-						    JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
-						    error);
+						    jcat_flags, error);
 		if (results == NULL)
 			return FALSE;
 
@@ -3728,7 +3775,7 @@ fu_engine_get_result_from_component (FuEngine *self,
 	/* check we can install it */
 	task = fu_install_task_new (NULL, component);
 	if (!fu_engine_check_requirements (self, request, task,
-					   FWUPD_INSTALL_FLAG_NONE,
+					   FWUPD_INSTALL_FLAG_IGNORE_VID_PID,
 					   error))
 		return NULL;
 
@@ -3837,7 +3884,9 @@ fu_engine_get_details (FuEngine *self, FuEngineRequest *request, gint fd, GError
 	silo = fu_engine_get_silo_from_blob (self, blob, error);
 	if (silo == NULL)
 		return NULL;
-	components = xb_silo_query (silo, "components/component", 0, &error_local);
+	components = xb_silo_query (silo,
+				    "components/component[@type='firmware']",
+				    0, &error_local);
 	if (components == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -3848,10 +3897,10 @@ fu_engine_get_details (FuEngine *self, FuEngineRequest *request, gint fd, GError
 	}
 
 	/* build the index */
-	if (!xb_silo_query_build_index (silo, "components/component/provides/firmware",
+	if (!xb_silo_query_build_index (silo, "components/component[@type='firmware']/provides/firmware",
 					"type", error))
 		return NULL;
-	if (!xb_silo_query_build_index (silo, "components/component/provides/firmware",
+	if (!xb_silo_query_build_index (silo, "components/component[@type='firmware']/provides/firmware",
 					NULL, error))
 		return NULL;
 
@@ -3882,6 +3931,7 @@ fu_engine_get_details (FuEngine *self, FuEngineRequest *request, gint fd, GError
 			g_autoptr(GError) error_req = NULL;
 			if (!fu_engine_check_requirements (self, request, task,
 							   FWUPD_INSTALL_FLAG_OFFLINE |
+							   FWUPD_INSTALL_FLAG_IGNORE_VID_PID |
 							   FWUPD_INSTALL_FLAG_ALLOW_REINSTALL |
 							   FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH |
 							   FWUPD_INSTALL_FLAG_ALLOW_OLDER,
@@ -4216,6 +4266,7 @@ fu_engine_add_releases_for_device_component (FuEngine *self,
 
 	if (!fu_engine_check_requirements (self, request, task,
 					   FWUPD_INSTALL_FLAG_OFFLINE |
+					   FWUPD_INSTALL_FLAG_IGNORE_VID_PID |
 					   FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH |
 					   FWUPD_INSTALL_FLAG_ALLOW_REINSTALL |
 					   FWUPD_INSTALL_FLAG_ALLOW_OLDER,
@@ -4376,7 +4427,7 @@ fu_engine_get_releases_for_device (FuEngine *self,
 	for (guint i = 0; i < device_guids->len; i++) {
 		const gchar *guid = g_ptr_array_index (device_guids, i);
 		xb_string_append_union (xpath,
-					"components/component/"
+					"components/component[@type='firmware']/"
 					"provides/firmware[@type=$'flashed'][text()=$'%s']/"
 					"../..", guid);
 	}
@@ -5389,6 +5440,12 @@ fu_engine_udev_device_add (FuEngine *self, GUdevDevice *udev_device)
 		return;
 	}
 
+	/* super useful for plugin development */
+	if (g_getenv ("FWUPD_PROBE_VERBOSE") != NULL) {
+		g_autofree gchar *str = fu_device_to_string (FU_DEVICE (device));
+		g_debug ("%s", str);
+	}
+
 	/* can be specified using a quirk */
 	possible_plugins = fu_device_get_possible_plugins (FU_DEVICE (device));
 	for (guint i = 0; i < possible_plugins->len; i++) {
@@ -5536,9 +5593,10 @@ fu_engine_enumerate_udev (FuEngine *self)
 		const gchar *subsystem = g_ptr_array_index (self->udev_subsystems, i);
 		GList *devices = g_udev_client_query_by_subsystem (self->gudev_client,
 								   subsystem);
-		if (g_list_length (devices) > 0)
+		if (g_getenv ("FWUPD_PROBE_VERBOSE") != NULL) {
 			g_debug ("%u devices with subsystem %s",
 				 g_list_length (devices), subsystem);
+		}
 		for (GList *l = devices; l != NULL; l = l->next) {
 			GUdevDevice *udev_device = l->data;
 			fu_engine_udev_device_add (self, udev_device);
@@ -5646,7 +5704,7 @@ fu_engine_plugin_check_supported_cb (FuPlugin *plugin, const gchar *guid, FuEngi
 	if (fu_config_get_enumerate_all_devices (self->config))
 		return TRUE;
 
-	xpath = g_strdup_printf ("components/component/"
+	xpath = g_strdup_printf ("components/component[@type='firmware']/"
 				 "provides/firmware[@type='flashed'][text()='%s']",
 				 guid);
 	n = xb_silo_query_first (self->silo, xpath, NULL);
@@ -5705,84 +5763,6 @@ fu_engine_ensure_security_attrs_tainted (FuEngine *self)
 	/* success */
 	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED);
-}
-
-static void
-fu_engine_ensure_security_attrs_supported (FuEngine *self)
-{
-	FwupdRelease *rel_current = NULL;
-	FwupdRelease *rel_newest = NULL;
-	g_autoptr(FwupdSecurityAttr) attr_a = NULL;
-	g_autoptr(FwupdSecurityAttr) attr_u = NULL;
-	guint64 now = (guint64) g_get_real_time () / G_USEC_PER_SEC;
-	g_autoptr(FuDevice) device = NULL;
-	g_autoptr(GPtrArray) releases = NULL;
-
-	attr_u = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_FWUPD_UPDATES);
-	fwupd_security_attr_set_plugin (attr_u, "core");
-	fwupd_security_attr_add_flag (attr_u, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES);
-	fu_security_attrs_append (self->host_security_attrs, attr_u);
-	attr_a = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_FWUPD_ATTESTATION);
-	fwupd_security_attr_set_plugin (attr_a, "core");
-	fwupd_security_attr_add_flag (attr_a, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ATTESTATION);
-	fu_security_attrs_append (self->host_security_attrs, attr_a);
-	/* get device */
-	device = fu_device_list_get_by_guid (self->device_list,
-					     /* main-system-firmware */
-					     "230c8b18-8d9b-53ec-838b-6cfc0383493a",
-					     NULL);
-
-	/* find out if there is firmware less than 12 months old */
-	if (device == NULL) {
-		fwupd_security_attr_set_result (attr_u, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
-	} else {
-		g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
-		fu_engine_request_set_feature_flags (request, ~0);
-		releases = fu_engine_get_releases_for_device (self, request, device, NULL);
-		if (releases == NULL) {
-			fwupd_security_attr_set_result (attr_u, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
-		} else {
-			/* check the age */
-			for (guint i = 0; i < releases->len; i++) {
-				FwupdRelease *rel_tmp = g_ptr_array_index (releases, i);
-				if (rel_newest == NULL ||
-				    fwupd_release_get_created (rel_tmp) > fwupd_release_get_created (rel_newest))
-					rel_newest = rel_tmp;
-			}
-			g_debug ("newest release is %" G_GUINT64_FORMAT " months old",
-				 (now - fwupd_release_get_created (rel_newest)) / (60 * 60 * 24 * 30));
-			fwupd_security_attr_set_result (attr_u, FWUPD_SECURITY_ATTR_RESULT_SUPPORTED);
-			if (now - fwupd_release_get_created (rel_newest) < 60 * 60 * 24 * 30 * 12) {
-				fwupd_security_attr_add_flag (attr_u, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-				fwupd_security_attr_set_result (attr_a, FWUPD_SECURITY_ATTR_RESULT_SUPPORTED);
-			}
-		}
-	}
-
-	/* do we have attestation checksums */
-	if (releases != NULL) {
-		for (guint i = 0; i < releases->len; i++) {
-			FwupdRelease *rel_tmp = g_ptr_array_index (releases, i);
-			if (fu_common_vercmp_full (fu_device_get_version (device),
-						   fwupd_release_get_version (rel_tmp),
-						   fu_device_get_version_format (device)) == 0) {
-				rel_current = rel_tmp;
-				break;
-			}
-		}
-	}
-	if (rel_current == NULL) {
-		fwupd_security_attr_set_result (attr_a, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
-	} else {
-		g_autoptr(GError) error_local = NULL;
-		if (!fu_engine_verify (self, fu_device_get_id (device), &error_local)) {
-			fwupd_security_attr_set_result (attr_a, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
-			g_debug ("Failed to find attestation checksums: %s", error_local->message);
-		} else {
-			fwupd_security_attr_add_flag (attr_a, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-			fwupd_security_attr_set_result (attr_a, FWUPD_SECURITY_ATTR_RESULT_SUPPORTED);
-		}
-	}
 }
 
 static gchar *
@@ -5846,7 +5826,6 @@ fu_engine_ensure_security_attrs (FuEngine *self)
 
 	/* built in */
 	fu_engine_ensure_security_attrs_tainted (self);
-	fu_engine_ensure_security_attrs_supported (self);
 
 	/* call into plugins */
 	for (guint j = 0; j < plugins->len; j++) {

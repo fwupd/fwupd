@@ -30,6 +30,14 @@ install_headers([
   subdir : 'fwupd-1/libfwupd',
 )
 
+libfwupd_deps = [
+    giounix,
+    gmodule,
+    libcurl,
+    libjcat,
+    libjsonglib,
+]
+
 fwupd_mapfile = 'fwupd.map'
 vflag = '-Wl,--version-script,@0@/@1@'.format(meson.current_source_dir(), fwupd_mapfile)
 fwupd = shared_library(
@@ -48,12 +56,7 @@ fwupd = shared_library(
   ],
   soversion : libfwupd_lt_current,
   version : libfwupd_lt_version,
-  dependencies : [
-    giounix,
-    soup,
-    libjcat,
-    libjsonglib,
-  ],
+  dependencies : libfwupd_deps,
   c_args : [
       cargs,
       '-DLOCALSTATEDIR="' + localstatedir + '"',
@@ -62,6 +65,12 @@ fwupd = shared_library(
   link_args : vflag,
   link_depends : fwupd_mapfile,
   install : true
+)
+
+libfwupd_dep = declare_dependency(
+  link_with : fwupd,
+  include_directories : [root_incdir, include_directories('.')],
+  dependencies : libfwupd_deps
 )
 
 pkgg = import('pkgconfig')
@@ -114,19 +123,18 @@ if get_option('introspection')
     header : 'fwupd.h',
     dependencies : [
       giounix,
-      soup,
+      libcurl,
     ],
     includes : [
       'Gio-2.0',
       'GObject-2.0',
-      'Soup-2.4',
     ],
     install : true
   )
 
   gnome.generate_vapi('fwupd',
     sources : fwupd_gir[0],
-    packages : ['gio-2.0', 'libsoup-2.4'],
+    packages : ['gio-2.0'],
     install : true,
   )
 
@@ -170,7 +178,7 @@ if get_option('tests')
     ],
     dependencies : [
       gio,
-      soup,
+      libcurl,
       libjsonglib,
     ],
     link_with : fwupd,

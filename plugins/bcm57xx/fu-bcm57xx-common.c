@@ -14,7 +14,7 @@
 guint32
 fu_bcm57xx_nvram_crc (const guint8 *buf, gsize bufsz)
 {
-	return GUINT32_FROM_BE(fu_common_crc32 (buf, bufsz));
+	return fu_common_crc32 (buf, bufsz);
 }
 
 gboolean
@@ -27,7 +27,7 @@ fu_bcm57xx_verify_crc (GBytes *fw, GError **error)
 
 	/* expected */
 	if (!fu_common_read_uint32_safe (buf, bufsz, bufsz - sizeof(guint32),
-					 &crc_file, G_BIG_ENDIAN, error))
+					 &crc_file, G_LITTLE_ENDIAN, error))
 		return FALSE;
 
 	/* reality */

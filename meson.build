@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version : '1.5.1',
+  version : '1.5.3',
   license : 'LGPL-2.1+',
   meson_version : '>=0.47.0',
   default_options : ['warning_level=2', 'c_std=c99'],
@@ -131,7 +131,7 @@ foreach arg: test_link_args
     global_link_args += arg
   endif
 endforeach
-add_global_link_arguments(
+add_project_link_arguments(
   global_link_args,
   language: 'c'
 )
@@ -208,7 +208,10 @@ endif
 libjcat = dependency('jcat', version : '>= 0.1.0', fallback : ['libjcat', 'libjcat_dep'])
 libjsonglib = dependency('json-glib-1.0', version : '>= 1.1.1')
 valgrind = dependency('valgrind', required: false)
-soup = dependency('libsoup-2.4', version : '>= 2.51.92')
+libcurl = dependency('libcurl', version : '>= 7.61.0')
+if libcurl.version().version_compare('>= 7.62.0')
+  conf.set('HAVE_LIBCURL_7_62_0', '1')
+endif
 if build_daemon
   if get_option('polkit')
     polkit = dependency('polkit-gobject-1', version : '>= 0.103')
@@ -228,7 +231,7 @@ if build_daemon
 endif
 libm = cc.find_library('m', required: false)
 libgcab = dependency('libgcab-1.0', version : '>= 1.0', fallback : ['gcab', 'gcab_dep'])
-gcab = find_program('gcab', required : true)
+gcab = find_program('gcab', required : get_option('tests'))
 bashcomp = dependency('bash-completion', required: false)
 python3 = find_program('python3')
 
@@ -355,6 +358,10 @@ if build_standalone and get_option('plugin_modem_manager')
   add_project_arguments('-DQMI_REQUIRED_VERSION="1.23.1"', language : 'c')
 endif
 
+if get_option('soup_session_compat')
+    conf.set('SOUP_SESSION_COMPAT', '1')
+endif
+
 if build_standalone and get_option('plugin_nvme')
   if not cc.has_header('linux/nvme_ioctl.h')
     error('NVMe support requires kernel >= 4.4')
@@ -376,6 +383,7 @@ endif
 
 if build_standalone and get_option('systemd')
   systemd = dependency('systemd', version : '>= 211')
+  libsystemd = dependency('libsystemd')
   conf.set('HAVE_SYSTEMD' , '1')
   conf.set('HAVE_LOGIND' , '1')
   systemd_root_prefix = get_option('systemd_root_prefix')
@@ -383,11 +391,19 @@ if build_standalone and get_option('systemd')
     systemdunitdir = systemd.get_pkgconfig_variable('systemdsystemunitdir')
     systemdsystempresetdir = systemd.get_pkgconfig_variable('systemdsystempresetdir')
     systemd_shutdown_dir = systemd.get_pkgconfig_variable('systemdshutdowndir')
+    systemd_modules_load_dir = systemd.get_pkgconfig_variable('modulesloaddir')
   else
     systemdunitdir = systemd.get_pkgconfig_variable('systemdsystemunitdir', define_variable: ['rootprefix', systemd_root_prefix])
     systemdsystempresetdir = systemd.get_pkgconfig_variable('systemdsystempresetdir', define_variable: ['rootprefix', systemd_root_prefix])
-    systemd_shutdown_dir = systemd.get_pkgconfig_variable('systemdshutdowndir', define_variable: [systemd.version().version_compare('>= 246') ? 'root_prefix' : 'rootprefix', systemd_root_prefix])
+    systemd_root_prefix_varname = 'root_prefix'
+    if systemd.version().version_compare('< 246')
+      systemd_root_prefix_varname = 'rootprefix'
+    endif
+    systemd_shutdown_dir = systemd.get_pkgconfig_variable('systemdshutdowndir', define_variable: [systemd_root_prefix_varname, systemd_root_prefix])
+    systemd_modules_load_dir = systemd.get_pkgconfig_variable('modulesloaddir', define_variable: [systemd_root_prefix_varname, systemd_root_prefix])
   endif
+else
+  libsystemd = dependency('', required: false)
 endif
 
 if build_standalone and get_option('elogind')
@@ -399,10 +415,15 @@ if build_standalone and get_option('consolekit')
   conf.set('HAVE_CONSOLEKIT' , '1')
 endif
 
+if get_option('supported_build')
+    conf.set('SUPPORTED_BUILD', '1')
+endif
+
 gnome = import('gnome')
 i18n = import('i18n')
 
 conf.set_quoted('FWUPD_BINDIR', bindir)
+conf.set_quoted('FWUPD_LIBDIR', libdir)
 conf.set_quoted('FWUPD_LIBEXECDIR', libexecdir)
 conf.set_quoted('FWUPD_DATADIR', datadir)
 conf.set_quoted('FWUPD_LOCALSTATEDIR', localstatedir)
@@ -439,7 +460,6 @@ if build_standalone
   plugin_deps += giounix
   plugin_deps += gmodule
   plugin_deps += gusb
-  plugin_deps += soup
   plugin_deps += libarchive
   plugin_deps += gudev
   plugin_deps += libjsonglib

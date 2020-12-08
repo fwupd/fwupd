@@ -619,7 +619,7 @@ fu_ata_device_setup (FuDevice *device, GError **error)
 	tf.nsect = 1; /* 512 bytes */
 	if (!fu_ata_device_command (self, &tf, SG_DXFER_FROM_DEV, 1000,
 				    id, sizeof(id), error)) {
-		g_prefix_error (error, "failed to IDENTIFY");
+		g_prefix_error (error, "failed to IDENTIFY: ");
 		return FALSE;
 	}
 	if (g_getenv ("FWUPD_ATA_VERBOSE") != NULL)
@@ -693,7 +693,7 @@ fu_ata_device_fw_download (FuAtaDevice *self,
 	if (!fu_ata_device_command (self, &tf, SG_DXFER_TO_DEV,
 				    120 * 1000, /* a long time! */
 				    (guint8 *) data, data_sz, error)) {
-		g_prefix_error (error, "failed to write firmware @0x%0x",
+		g_prefix_error (error, "failed to write firmware @0x%0x: ",
 				(guint) addr);
 		return FALSE;
 	}
