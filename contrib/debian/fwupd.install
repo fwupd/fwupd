@@ -9,7 +9,6 @@ usr/share/polkit-1/*
 usr/share/locale
 usr/share/metainfo/*
 usr/libexec/fwupd/*
-usr/lib/modules-load.d/*.conf
 usr/share/man/man1/*
 lib/systemd/system/*
 lib/systemd/system-preset/*
