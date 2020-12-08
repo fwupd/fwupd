@@ -91,6 +91,7 @@ goodixmoc_device_cmd_recv (GUsbDevice  *usbdevice,
 {
 	GxfpPkgHeader header = { 0 };
 	guint32 crc_actual = 0;
+	guint32 crc_calculated = 0;
 	gsize actual_len = 0;
 	gsize offset = 0;
 
@@ -131,11 +132,19 @@ goodixmoc_device_cmd_recv (GUsbDevice  *usbdevice,
 			return FALSE;
 		offset = sizeof(header) + header.len;
 		crc_actual = fu_common_crc32 (reply->data, offset);
-		if (crc_actual != GUINT32_FROM_LE(*(guint32 *)(reply->data + offset))) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INTERNAL,
-					     "invalid checksum");
+		if (!fu_common_read_uint32_safe	(reply->data,
+						 reply->len,
+						 offset,
+						 &crc_calculated,
+						 G_LITTLE_ENDIAN,
+						 error))
+			return FALSE;
+		if (crc_actual != crc_calculated) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "invalid checksum, got 0x%x, expected 0x%x",
+				     crc_calculated, crc_actual);
 			return FALSE;
 		}
 
