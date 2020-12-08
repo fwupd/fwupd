@@ -133,9 +133,9 @@ Fuzzing
 
 There are several automated fuzzing tests in fwupd. These take some time to run:
 
-    CC=afl-gcc meson --default-library=static ../
-    AFL_HARDEN=1 ninja
-    ninja fuzz-synaptics-rmi
+    CC=hfuzz-clang meson --default-library=static -Dtmpdir=/tmp -Dsystemd_root_prefix=/tmp ../
+    ninja install
     ninja fuzz-firmware
     ninja fuzz-smbios
     ninja fuzz-efidbx
+    ninja fuzz-tpm-eventlog

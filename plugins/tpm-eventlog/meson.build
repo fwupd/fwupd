@@ -98,11 +98,15 @@ if get_option('man')
   )
 endif
 
-run_target('fuzz-tpm-eventlog',
-  command: [
-    join_paths(meson.source_root(), 'contrib/afl-fuzz.py'),
-    '-i', join_paths(meson.current_source_dir(), 'tests'),
-    '-o', join_paths(meson.current_build_dir(), 'findings'),
-    fwupdtpmevlog,
-  ],
-)
+if honggfuzz.found()
+  run_target('fuzz-tpm-eventlog',
+    command: [
+      honggfuzz,
+      '--input', join_paths(meson.current_source_dir(), 'fuzzing'),
+      '--output', join_paths(meson.current_build_dir(), 'fuzzing-corpus'),
+      '--workspace', join_paths(meson.current_build_dir(), 'fuzzing-findings'),
+      '--verifier',
+      '--', fwupdtpmevlog, '___FILE___',
+    ],
+  )
+endif

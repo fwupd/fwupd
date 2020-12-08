@@ -73,7 +73,6 @@ warning_flags = [
   '-Wformat-signedness',
   '-Wignored-qualifiers',
   '-Wimplicit-function-declaration',
-  '-Wincompatible-pointer-types-discards-qualifiers',
   '-Winit-self',
   '-Wlogical-op',
   '-Wmaybe-uninitialized',
@@ -112,6 +111,12 @@ warning_flags = [
 ]
 cc = meson.get_compiler('c')
 add_project_arguments(cc.get_supported_arguments(warning_flags), language : 'c')
+
+# use honggfuzz for parallel persistent fuzzing
+honggfuzz = find_program('honggfuzz', required: cc.has_function('HF_ITER'))
+if honggfuzz.found()
+  conf.set('HAVE_HF_ITER', '1')
+endif
 
 if not meson.is_cross_build()
   add_project_arguments('-fstack-protector-strong', language : 'c')
