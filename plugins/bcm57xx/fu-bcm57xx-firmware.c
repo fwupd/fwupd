@@ -130,7 +130,9 @@ fu_bcm57xx_firmware_parse_stage1 (FuBcm57xxFirmware *self,
 	}
 
 	/* verify CRC */
-	blob = g_bytes_new_from_bytes (fw, stage1_off, stage1_sz);
+	blob = fu_common_bytes_new_offset (fw, stage1_off, stage1_sz, error);
+	if (blob == NULL)
+		return NULL;
 	if (!fu_firmware_image_parse (img, blob, flags, error))
 		return NULL;
 
@@ -174,7 +176,9 @@ fu_bcm57xx_firmware_parse_stage2 (FuBcm57xxFirmware *self,
 	}
 
 	/* verify CRC */
-	blob = g_bytes_new_from_bytes (fw, stage2_off + 0x8, stage2_sz);
+	blob = fu_common_bytes_new_offset (fw, stage2_off + 0x8, stage2_sz, error);
+	if (blob == NULL)
+		return NULL;
 	if (!fu_firmware_image_parse (img, blob, flags, error))
 		return NULL;
 
@@ -240,7 +244,9 @@ fu_bcm57xx_firmware_parse_dict (FuBcm57xxFirmware *self, GBytes *fw, guint idx,
 			     (guint) dict_sz, (guint) dict_off);
 		return FALSE;
 	}
-	blob = g_bytes_new_from_bytes (fw, dict_off, dict_sz);
+	blob = fu_common_bytes_new_offset (fw, dict_off, dict_sz, error);
+	if (blob == NULL)
+		return FALSE;
 	if (!fu_firmware_image_parse (img, blob, flags, error))
 		return FALSE;
 
@@ -312,14 +318,24 @@ fu_bcm57xx_firmware_parse (FuFirmware *firmware,
 	self->source_padchar = buf[bufsz - 1];
 
 	/* NVRAM header */
-	blob_header = g_bytes_new_from_bytes (fw, BCM_NVRAM_HEADER_BASE, BCM_NVRAM_HEADER_SZ);
+	blob_header = fu_common_bytes_new_offset (fw,
+						  BCM_NVRAM_HEADER_BASE,
+						  BCM_NVRAM_HEADER_SZ,
+						  error);
+	if (blob_header == NULL)
+		return FALSE;
 	if (!fu_bcm57xx_firmware_parse_header (self, blob_header, error)) {
 		g_prefix_error (error, "failed to parse header: ");
 		return FALSE;
 	}
 
 	/* info */
-	blob_info = g_bytes_new_from_bytes (fw, BCM_NVRAM_INFO_BASE, BCM_NVRAM_INFO_SZ);
+	blob_info = fu_common_bytes_new_offset (fw,
+						BCM_NVRAM_INFO_BASE,
+						BCM_NVRAM_INFO_SZ,
+						error);
+	if (blob_info == NULL)
+		return FALSE;
 	img_info = fu_bcm57xx_firmware_parse_info (self, blob_info, error);
 	if (img_info == NULL) {
 		g_prefix_error (error, "failed to parse info: ");
@@ -329,14 +345,24 @@ fu_bcm57xx_firmware_parse (FuFirmware *firmware,
 	fu_firmware_add_image (firmware, img_info);
 
 	/* VPD */
-	blob_vpd = g_bytes_new_from_bytes (fw, BCM_NVRAM_VPD_BASE, BCM_NVRAM_VPD_SZ);
+	blob_vpd = fu_common_bytes_new_offset (fw,
+					       BCM_NVRAM_VPD_BASE,
+					       BCM_NVRAM_VPD_SZ,
+					       error);
+	if (blob_vpd == NULL)
+		return FALSE;
 	img_vpd = fu_firmware_image_new (blob_vpd);
 	fu_firmware_image_set_id (img_vpd, "vpd");
 	fu_firmware_image_set_offset (img_vpd, BCM_NVRAM_VPD_BASE);
 	fu_firmware_add_image (firmware, img_vpd);
 
 	/* info2 */
-	blob_info2 = g_bytes_new_from_bytes (fw, BCM_NVRAM_INFO2_BASE, BCM_NVRAM_INFO2_SZ);
+	blob_info2 = fu_common_bytes_new_offset (fw,
+						 BCM_NVRAM_INFO2_BASE,
+						 BCM_NVRAM_INFO2_SZ,
+						 error);
+	if (blob_info2 == NULL)
+		return FALSE;
 	img_info2 = fu_firmware_image_new (blob_info2);
 	fu_firmware_image_set_id (img_info2, "info2");
 	fu_firmware_image_set_offset (img_info2, BCM_NVRAM_INFO2_BASE);

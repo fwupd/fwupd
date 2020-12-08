@@ -604,9 +604,12 @@ fu_thunderbolt_device_write_data (FuThunderboltDevice	*self,
 	do {
 		g_autoptr(GBytes) fw_data = NULL;
 
-		fw_data = g_bytes_new_from_bytes (blob_fw,
-						  nwritten,
-						  fw_size - nwritten);
+		fw_data = fu_common_bytes_new_offset (blob_fw,
+						      nwritten,
+						      fw_size - nwritten,
+						      error);
+		if (fw_data == NULL)
+			return FALSE;
 
 		n = g_output_stream_write_bytes (os,
 						 fw_data,

@@ -69,7 +69,11 @@ fu_bcm57xx_stage1_image_parse (FuFirmwareImage *image,
 			fu_firmware_image_set_version (image, veritem->version);
 	}
 
-	fw_nocrc = g_bytes_new_from_bytes (fw, 0x0, g_bytes_get_size (fw) - sizeof(guint32));
+	fw_nocrc = fu_common_bytes_new_offset (fw, 0x0,
+					       g_bytes_get_size (fw) - sizeof(guint32),
+					       error);
+	if (fw_nocrc == NULL)
+		return FALSE;
 	fu_firmware_image_set_bytes (image, fw_nocrc);
 	return TRUE;
 }

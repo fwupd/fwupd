@@ -356,10 +356,10 @@ fu_uefi_device_fixup_firmware (FuDevice *device, GBytes *fw, GError **error)
 	/* ESRT header matches payload */
 	if (g_strcmp0 (fu_uefi_device_get_guid (self), guid_new) == 0) {
 		g_debug ("ESRT matches payload GUID");
-		return g_bytes_new_from_bytes (fw, 0, fw_length);
+		return g_bytes_ref (fw);
 	/* Type that doesn't require a header */
 	} else if (!self->requires_header) {
-		return g_bytes_new_from_bytes (fw, 0, fw_length);
+		return g_bytes_ref (fw);
 	/* Missing, add a header */
 	} else {
 		guint header_size = getpagesize();

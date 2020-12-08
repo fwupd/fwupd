@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include "fu-common.h"
 #include "fu-fmap-firmware.h"
 
 #define FMAP_SIGNATURE		"__FMAP__"
@@ -220,9 +221,12 @@ fu_fmap_firmware_parse (FuFirmware *firmware,
 		g_autoptr(GBytes) bytes = NULL;
 
 		img = fu_firmware_image_new (NULL);
-		bytes = g_bytes_new_from_bytes (fw,
-						(gsize) area->offset,
-						(gsize) area->size);
+		bytes = fu_common_bytes_new_offset (fw,
+						    (gsize) area->offset,
+						    (gsize) area->size,
+						    error);
+		if (bytes == NULL)
+			return FALSE;
 		fu_firmware_image_set_id (img, (const gchar *) area->name);
 		fu_firmware_image_set_idx (img, i + 1);
 		fu_firmware_image_set_addr (img, (guint64) area->offset);
