@@ -259,6 +259,7 @@ fu_synaptics_rmi_firmware_parse_v10 (FuFirmware *firmware, GBytes *fw, GError **
 					     content_addr, (guint) length);
 				return FALSE;
 			}
+			g_clear_pointer (&self->product_id, g_free);
 			self->io = 1;
 			self->package_id = fu_common_read_uint32 (data + content_addr, G_LITTLE_ENDIAN);
 			self->build_id = fu_common_read_uint32 (data + content_addr + 4, G_LITTLE_ENDIAN);
@@ -361,6 +362,7 @@ fu_synaptics_rmi_firmware_parse (FuFirmware *firmware,
 	}
 
 	/* parse legacy image */
+	g_clear_pointer (&self->product_id, g_free);
 	self->io = data[RMI_IMG_IO_OFFSET];
 	self->bootloader_version = data[RMI_IMG_BOOTLOADER_VERSION_OFFSET];
 	if (self->io == 1) {
@@ -463,9 +465,19 @@ fu_synaptics_rmi_firmware_init (FuSynapticsRmiFirmware *self)
 }
 
 static void
+fu_synaptics_rmi_firmware_finalize (GObject *obj)
+{
+	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE (obj);
+	g_free (self->product_id);
+	G_OBJECT_CLASS (fu_synaptics_rmi_firmware_parent_class)->finalize (obj);
+}
+
+static void
 fu_synaptics_rmi_firmware_class_init (FuSynapticsRmiFirmwareClass *klass)
 {
+	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS (klass);
+	object_class->finalize = fu_synaptics_rmi_firmware_finalize;
 	klass_firmware->parse = fu_synaptics_rmi_firmware_parse;
 	klass_firmware->to_string = fu_synaptics_rmi_firmware_to_string;
 }
