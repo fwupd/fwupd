@@ -364,10 +364,8 @@ fu_cabinet_build_silo_file (FuCabinet *self,
 	g_autoptr(XbBuilderNode) bn_info = xb_builder_node_new ("info");
 
 	/* indicate the metainfo file was signed */
-	if (release_flags & FWUPD_RELEASE_FLAG_TRUSTED_METADATA) {
-		g_autoptr(XbBuilderNode) bn_trust = NULL;
+	if (release_flags & FWUPD_RELEASE_FLAG_TRUSTED_METADATA)
 		xb_builder_node_insert (bn_info, "metadata_trust", NULL);
-	}
 	xb_builder_source_set_info (source, bn_info);
 
 	/* rewrite to be under a components root */

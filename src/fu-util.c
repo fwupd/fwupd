@@ -768,7 +768,6 @@ fu_util_report_history (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GHashTable) report_map = NULL;
 	g_autoptr(GList) ids = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
-	g_autoptr(GPtrArray) remotes = NULL;
 	g_autoptr(GString) str = g_string_new (NULL);
 
 	/* get all devices from the history database, then filter them,
