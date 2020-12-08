@@ -7,6 +7,7 @@ fwupd (1.5.3-1) UNRELEASED; urgency=medium
     - Drop libsoup build dependency
     - Add libcurl build dependency
     - Add systemd build dependency
+  * Migrate debian/fwupd.preinst content to debian/fwupd.maintscript
 
  -- Mario Limonciello <mario.limonciello@dell.com>  Tue, 08 Dec 2020 08:30:56 -0600
 
