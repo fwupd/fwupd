@@ -1633,6 +1633,42 @@ fu_common_bytes_pad (GBytes *bytes, gsize sz)
 }
 
 /**
+ * fu_common_bytes_new_offset:
+ * @bytes: a #GBytes
+ * @offset: where subsection starts at
+ * @length: length of subsection
+ * @error: A #GError or %NULL
+ *
+ * Creates a #GBytes which is a subsection of another #GBytes.
+ *
+ * Return value: (transfer full): a #GBytes, or #NULL if range is invalid
+ *
+ * Since: 1.5.4
+ **/
+GBytes *
+fu_common_bytes_new_offset (GBytes *bytes,
+			    gsize offset,
+			    gsize length,
+			    GError **error)
+{
+	g_return_val_if_fail (bytes != NULL, NULL);
+
+	/* sanity check */
+	if (offset + length > g_bytes_get_size (bytes)) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "cannot create bytes @0x%02x for 0x%02x "
+			     "as buffer only 0x%04x bytes in size",
+			     (guint) offset,
+			     (guint) length,
+			     (guint) g_bytes_get_size (bytes));
+		return NULL;
+	}
+	return g_bytes_new_from_bytes (bytes, offset, length);
+}
+
+/**
  * fu_common_realpath:
  * @filename: a filename
  * @error: A #GError or %NULL

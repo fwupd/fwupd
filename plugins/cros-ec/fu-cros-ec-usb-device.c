@@ -479,9 +479,12 @@ fu_cros_ec_usb_device_transfer_block (FuDevice *device, gpointer user_data,
 		return FALSE;
 	}
 
-	block_bytes = g_bytes_new_from_bytes (block_info->image_bytes,
-					      block_info->offset,
-					      block_info->payload_size);
+	block_bytes = fu_common_bytes_new_offset (block_info->image_bytes,
+						  block_info->offset,
+						  block_info->payload_size,
+						  error);
+	if (block_bytes == NULL)
+		return FALSE;
 	chunks = fu_chunk_array_new_from_bytes (block_bytes,
 						0x00,
 						0x00,
