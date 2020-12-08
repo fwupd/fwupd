@@ -1,3 +1,10 @@
+fwupd (1.5.3-1) UNRELEASED; urgency=medium
+
+  * New upstream version (1.5.3)
+  * Drop all patches (upstream)
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Tue, 08 Dec 2020 08:30:56 -0600
+
 fwupd (1.5.1-5) unstable; urgency=medium
 
   * Backport patch to fix ppc64el autopkgtest failure
