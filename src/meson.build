@@ -6,7 +6,18 @@ endif
 
 client_src = []
 systemd_src = []
-daemon_dep = []
+daemon_dep = [
+  libjcat,
+  libxmlb,
+  libgcab,
+  giounix,
+  gmodule,
+  gudev,
+  gusb,
+  sqlite,
+  libarchive,
+  libjsonglib,
+]
 
 if get_option('systemd')
   systemd_src += 'fu-systemd.c'
@@ -256,19 +267,9 @@ executable(
     fwupdplugin_incdir,
   ],
   dependencies : [
-    libjcat,
-    libxmlb,
-    libgcab,
-    giounix,
-    gmodule,
-    gudev,
-    gusb,
-    sqlite,
     valgrind,
-    libarchive,
-    libjsonglib,
     libsystemd,
-    daemon_dep
+    daemon_dep,
   ],
   link_with : [
     fwupd,
@@ -315,17 +316,7 @@ if get_option('tests')
       fwupdplugin_incdir,
     ],
     dependencies : [
-      libjcat,
-      libxmlb,
-      libgcab,
-      giounix,
-      gmodule,
-      gudev,
-      gusb,
-      sqlite,
-      valgrind,
-      libarchive,
-      libjsonglib,
+      daemon_dep,
     ],
     link_with : [
       fwupd,
