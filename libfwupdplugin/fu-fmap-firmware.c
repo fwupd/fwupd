@@ -186,10 +186,7 @@ fu_fmap_firmware_parse (FuFirmware *firmware,
 	}
 
 	if (!fmap_find (image, image_len, &offset, error)) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "cannot find fmap in image");
+		g_prefix_error (error, "cannot find fmap in image: ");
 		return FALSE;
 	}
 
