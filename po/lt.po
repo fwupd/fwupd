@@ -414,6 +414,10 @@ msgstr "Nepavyko įkelti gudrybių"
 msgid "Failed to parse arguments"
 msgstr "Nepavyko išanalizuoti argumentų"
 
+#. TRANSLATORS: failed to read measurements file
+msgid "Failed to parse file"
+msgstr "Nepavyko išanalizuoti failo"
+
 #. TRANSLATORS: we could not reboot for some reason
 msgid "Failed to reboot"
 msgstr "Nepavyko paleisti iš naujo"
@@ -475,6 +479,11 @@ msgstr "Priverstinai atlikti veiksmą nepaisant visų įspėjimų"
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Found"
 msgstr "Rastas"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "A single GUID"
+msgid "GUID"
+msgstr "GUID"
 
 #. TRANSLATORS: command description
 msgid "Get all devices and possible releases"
@@ -704,6 +713,11 @@ msgstr "Skaityti programinę aparatinę įrangą iš įrenginio į failą"
 msgid "Read firmware from one partition into a file"
 msgstr "Skaityti programinę aparatinę įrangą iš vieno skaidinio į failą"
 
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Reading from %s…"
+msgstr "Skaitoma iš %s…"
+
 #. TRANSLATORS: reading from the flash chips
 msgid "Reading…"
 msgstr "Skaitoma…"
@@ -796,6 +810,10 @@ msgstr "Nustato patvirtintą programinės aparatinės įrangos sąrašą"
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
 msgstr "Bendrinti programinės aparatinės įrangos istoriją su plėtotojais"
+
+#. TRANSLATORS: command line option
+msgid "Show all results"
+msgstr "Rodyti visus rezultatus"
 
 #. TRANSLATORS: command line option
 msgid "Show client and daemon versions"

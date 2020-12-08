@@ -644,6 +644,11 @@ msgid "GUID"
 msgid_plural "GUIDs"
 msgstr[0] "GUID"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "A single GUID"
+msgid "GUID"
+msgstr "GUID"
+
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
 msgstr "fwupd를 지원하는 모든 장치 정보를 가져옵니다"

@@ -290,6 +290,11 @@ msgstr "Aktion erzwingen, bei der alle Warnungen ignoriert werden"
 msgid "Found"
 msgstr "Gefunden"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "A single GUID"
+msgid "GUID"
+msgstr "GUID"
+
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
 msgstr "Alle Geräte ermitteln, die Firmware-Aktualisierungen unterstützen"

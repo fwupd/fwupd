@@ -401,6 +401,11 @@ msgstr "Sfuarce la azion ignorant ducj i avertiments"
 msgid "Found"
 msgstr "Cjatât"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "A single GUID"
+msgid "GUID"
+msgstr "GUID"
+
 #. TRANSLATORS: command description
 msgid "Get all devices and possible releases"
 msgstr "Oten ducj i dispositîfs e lis pussibilis publicazions"

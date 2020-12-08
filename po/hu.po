@@ -622,6 +622,11 @@ msgid_plural "GUIDs"
 msgstr[0] "GUID"
 msgstr[1] "GUID-ok"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "A single GUID"
+msgid "GUID"
+msgstr "GUID"
+
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
 msgstr "Az fwupd által támogatott összes eszközjelző lekérése"

@@ -501,6 +501,11 @@ msgstr "Выполнить действие, игнорируя все пред�
 msgid "Found"
 msgstr "Найдено"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "A single GUID"
+msgid "GUID"
+msgstr "GUID"
+
 #. TRANSLATORS: command description
 msgid "Get all devices and possible releases"
 msgstr "Получить все устройства и возможные выпуски"

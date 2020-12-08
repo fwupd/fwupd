@@ -220,6 +220,10 @@ msgstr "Permite fazer downgrade de versões de firmware"
 msgid "Allow reinstalling existing firmware versions"
 msgstr "Permite reinstalar versões de firmware existentes"
 
+#. TRANSLATORS: command line option
+msgid "Allow switching firmware branch"
+msgstr "Permite alternar a ramificação do firmware"
+
 #. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "Uma atualização requer uma reinicialização para completar."
@@ -339,6 +343,10 @@ msgstr "Impede que um firmware específico seja instalado"
 msgid "Bootloader Version"
 msgstr "Versão do gerenciador de boot"
 
+#. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
+msgid "Branch"
+msgstr "Ramificação"
+
 #. TRANSLATORS: command description
 msgid "Build a firmware file"
 msgstr "Compila um arquivo de firmware"
@@ -375,6 +383,11 @@ msgstr "Verifica se o hash criptográfico corresponde ao firmware"
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Soma de verificação"
+
+#. TRANSLATORS: get interactive prompt, where branch is the
+#. * supplier of the firmware, e.g. "non-free" or "free"
+msgid "Choose a branch:"
+msgstr "Escolha uma ramificação:"
 
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a device:"
@@ -474,7 +487,7 @@ msgstr "Dispositivo modificado:"
 
 #. TRANSLATORS: a version check is required for all firmware
 msgid "Device firmware is required to have a version check"
-msgstr "Firmware de dispositivo é necessário para ter uma verificação de versão"
+msgstr "Um firmware de dispositivo é necessário para ter uma verificação de versão"
 
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
@@ -495,6 +508,10 @@ msgstr "Dispositivo removido:"
 #. TRANSLATORS: Device supports a safety mechanism for flashing
 msgid "Device stages updates"
 msgstr "Atualizações de estágios do dispositivo"
+
+#. TRANSLATORS: there is more than one supplier of the firmware
+msgid "Device supports switching to a different branch of firmware"
+msgstr "O dispositivo tem suporte para alternar para uma ramificação diferente do firmware"
 
 #. TRANSLATORS: Device update needs to be separately activated
 msgid "Device update needs activation"
@@ -578,6 +595,10 @@ msgstr[1] "Não enviar relatórios e nunca solicitar para enviar relatórios em 
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
 msgstr "Não escreve no banco de dados de histórico"
+
+#. TRANSLATORS: should the branch be changed
+msgid "Do you understand the consequences of changing the firmware branch?"
+msgstr "Você entende as consequências de trocar a ramificação do firmware?"
 
 #. TRANSLATORS: success
 #. success
@@ -832,6 +853,11 @@ msgid "GUID"
 msgid_plural "GUIDs"
 msgstr[0] "GUID"
 msgstr[1] "GUIDs"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "A single GUID"
+msgid "GUID"
+msgstr "GUID"
 
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
@@ -1189,7 +1215,7 @@ msgstr "Nenhum periférico com capacidade de atualização de firmware foi detec
 
 #. TRANSLATORS: nothing found
 msgid "No plugins found"
-msgstr "Nenhum plugin localizado"
+msgstr "Nenhum plugin encontrado"
 
 #. TRANSLATORS: no repositories to download from
 msgid "No releases available"
@@ -1611,6 +1637,10 @@ msgstr "Suspensão para inativo"
 msgid "Suspend-to-ram"
 msgstr "Suspensão para RAM"
 
+#. TRANSLATORS: command description
+msgid "Switch the firmware branch on the device"
+msgstr "Alterna a ramificação do firmware no dispositivo"
+
 #. TRANSLATORS: Must be plugged in to an outlet
 msgid "System requires external power source"
 msgstr "O sistema exige uma fonte de alimentação externa"
@@ -1655,6 +1685,10 @@ msgstr "Não há arquivos de firmware bloqueados"
 #. * the domain administrator
 msgid "There is no approved firmware."
 msgstr "Nenhum firmware aprovado."
+
+#. TRANSLATORS: unsupported build of the package
+msgid "This package has not been validated, it may not work properly."
+msgstr "Este pacote não foi validado, ele pode não funcionar corretamente."
 
 #. TRANSLATORS: we're poking around as a power user
 msgid "This program may only work correctly as root"
@@ -1767,7 +1801,7 @@ msgstr "Atualizável"
 
 #. TRANSLATORS: error message from last update attempt
 msgid "Update Error"
-msgstr "Erro na atualização"
+msgstr "Erro de atualização"
 
 #. TRANSLATORS: helpful messages from last update
 #. TRANSLATORS: helpful messages for the update
@@ -1936,6 +1970,10 @@ msgstr "Seu distribuidor pode não ter verificado qualquer das atualizações de
 #, c-format
 msgid "Your hardware may be damaged using this firmware, and installing this release may void any warranty with %s."
 msgstr "Seu hardware pode ser danificado usando este firmware e instalar esta versão pode anular qualquer garantia com %s."
+
+#. TRANSLATORS: this is the default branch name when unset
+msgid "default"
+msgstr "padrão"
 
 #. TRANSLATORS: program name
 msgid "fwupd TPM event log utility"
