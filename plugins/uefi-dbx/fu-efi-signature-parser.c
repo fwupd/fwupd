@@ -135,6 +135,14 @@ fu_efi_signature_parser_new (const guint8 *buf, gsize bufsz,
 	/* this allows us to skip the efi permissions uint32_t or even the
 	 * Microsoft PKCS-7 signature */
 	if (flags & FU_EFI_SIGNATURE_PARSER_FLAGS_IGNORE_HEADER) {
+		if (bufsz < 5) {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_FAILED,
+				     "signature invalid: 0x%x",
+				     (guint) bufsz);
+			return NULL;
+		}
 		for (gsize i = 0; i < bufsz - 5; i++) {
 			if (memcmp (buf + i, "\x26\x16\xc4\xc1\x4c", 5) == 0) {
 				g_debug ("found EFI_SIGNATURE_LIST @0x%x", (guint) i);
