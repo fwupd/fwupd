@@ -264,6 +264,9 @@ rm -vf %{fwup_efi_fn}.tmp
 
 mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 
+# workaround for https://bugzilla.redhat.com/show_bug.cgi?id=1757948
+mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/cache/fwupd
+
 %find_lang %{name}
 
 %post
@@ -363,6 +366,7 @@ done
 %{_presetdir}/fwupd-refresh.preset
 %{_unitdir}/system-update.target.wants/
 %dir %{_localstatedir}/lib/fwupd
+%dir %{_localstatedir}/cache/fwupd
 %dir %{_datadir}/fwupd/quirks.d
 %{_datadir}/fwupd/quirks.d/*.quirk
 %{_localstatedir}/lib/fwupd/builder/README.md
@@ -407,9 +411,7 @@ done
 %{_libdir}/fwupd-plugins-3/libfu_plugin_msr.so
 %endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_nitrokey.so
-%if 0%{?have_uefi}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_nvme.so
-%endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_optionrom.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_pci_bcr.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_pci_mei.so
@@ -470,8 +472,8 @@ done
 %{_libdir}/pkgconfig/fwupd.pc
 %{_libdir}/pkgconfig/fwupdplugin.pc
 
-%if 0%{?enable_tests}
 %files tests
+%if 0%{?enable_tests}
 %dir %{_datadir}/installed-tests/fwupd
 %{_datadir}/installed-tests/fwupd/fwupd-tests.xml
 %{_datadir}/installed-tests/fwupd/*.test
