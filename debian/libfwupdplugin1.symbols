@@ -45,6 +45,8 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  LIBFWUPDPLUGIN_1.4.7@LIBFWUPDPLUGIN_1.4.7 1.4.7
  LIBFWUPDPLUGIN_1.5.0@LIBFWUPDPLUGIN_1.5.0 1.5.0
  LIBFWUPDPLUGIN_1.5.1@LIBFWUPDPLUGIN_1.5.1 1.5.1
+ LIBFWUPDPLUGIN_1.5.2@LIBFWUPDPLUGIN_1.5.2 1.5.2
+ LIBFWUPDPLUGIN_1.5.3@LIBFWUPDPLUGIN_1.5.3 1.5.3
  fu_archive_get_type@LIBFWUPDPLUGIN_1.2.2 1.2.2
  fu_archive_iterate@LIBFWUPDPLUGIN_1.3.4 1.3.4
  fu_archive_lookup_by_fn@LIBFWUPDPLUGIN_1.2.2 1.2.2
@@ -313,6 +315,7 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  fu_firmware_write_file@LIBFWUPDPLUGIN_1.3.3 1.3.3
  fu_fmap_firmware_get_type@LIBFWUPDPLUGIN_1.5.0 1.5.0
  fu_fmap_firmware_new@LIBFWUPDPLUGIN_1.5.0 1.5.0
+ fu_hid_device_add_flag@LIBFWUPDPLUGIN_1.5.2 1.5.2
  fu_hid_device_get_interface@LIBFWUPDPLUGIN_1.4.0 1.4.0
  fu_hid_device_get_report@LIBFWUPDPLUGIN_1.4.0 1.4.0
  fu_hid_device_get_type@LIBFWUPDPLUGIN_1.4.0 1.4.0
@@ -457,6 +460,7 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  fu_udev_device_get_dev@LIBFWUPDPLUGIN_1.1.2 1.1.2
  fu_udev_device_get_device_file@LIBFWUPDPLUGIN_1.3.1 1.3.1
  fu_udev_device_get_devtype@LIBFWUPDPLUGIN_1.4.5 1.4.5
+ fu_udev_device_get_driver@LIBFWUPDPLUGIN_1.5.3 1.5.3
  fu_udev_device_get_fd@LIBFWUPDPLUGIN_1.3.3 1.3.3
  fu_udev_device_get_model@LIBFWUPDPLUGIN_1.1.2 1.1.2
  fu_udev_device_get_number@LIBFWUPDPLUGIN_1.5.0 1.5.0
@@ -493,9 +497,11 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  fu_usb_device_set_dev@LIBFWUPDPLUGIN_1.0.2 1.0.2
  fu_volume_check_free_space@LIBFWUPDPLUGIN_1.4.6 1.4.6
  fu_volume_get_id@LIBFWUPDPLUGIN_1.4.6 1.4.6
+ fu_volume_get_id_type@LIBFWUPDPLUGIN_1.5.2 1.5.2
  fu_volume_get_mount_point@LIBFWUPDPLUGIN_1.4.6 1.4.6
  fu_volume_get_type@LIBFWUPDPLUGIN_1.4.6 1.4.6
  fu_volume_is_encrypted@LIBFWUPDPLUGIN_1.5.1 1.5.1
+ fu_volume_is_internal@LIBFWUPDPLUGIN_1.5.2 1.5.2
  fu_volume_is_mounted@LIBFWUPDPLUGIN_1.4.6 1.4.6
  fu_volume_locker@LIBFWUPDPLUGIN_1.4.6 1.4.6
  fu_volume_mount@LIBFWUPDPLUGIN_1.4.6 1.4.6
