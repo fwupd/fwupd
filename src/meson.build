@@ -307,14 +307,13 @@ if get_option('tests')
     ],
   )
   test('fu-self-test', e, is_parallel:false, timeout:180)
-endif
 
-if get_option('tests')
   # for fuzzing
   fwupd_firmware_dump = executable(
     'fwupd-firmware-dump',
     sources : [
       'fu-firmware-dump.c',
+      daemon_src,
     ],
     include_directories : [
       root_incdir,
@@ -322,8 +321,7 @@ if get_option('tests')
       fwupdplugin_incdir,
     ],
     dependencies : [
-      libxmlb,
-      gio,
+      daemon_dep,
     ],
     link_with : [
       fwupd,
@@ -332,6 +330,4 @@ if get_option('tests')
   )
 endif
 
-if get_option('tests')
-  subdir('fuzzing')
-endif
+subdir('fuzzing')

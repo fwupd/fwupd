@@ -79,5 +79,17 @@ if get_option('tests')
     install_dir : installed_test_bindir,
   )
   test('optionrom-self-test', e, env : testdatadirs)  # added to installed-tests
-  subdir('fuzzing')
+endif
+
+if honggfuzz.found()
+  run_target('fuzz-optionrom',
+    command: [
+      honggfuzz,
+      '--input', join_paths(meson.current_source_dir(), 'fuzzing'),
+      '--output', join_paths(meson.current_build_dir(), 'fuzzing-corpus'),
+      '--workspace', join_paths(meson.current_build_dir(), 'fuzzing-findings'),
+      '--verifier',
+      '--', optionrom_tool, 'rom', '___FILE___',
+    ],
+  )
 endif
