@@ -1009,7 +1009,6 @@ fwupd_client_get_device_by_id_cb (GObject *source,
 	g_autoptr(GTask) task = G_TASK (user_data);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
-	g_autoptr(FwupdDevice) device = NULL;
 	const gchar *device_id = g_task_get_task_data (task);
 
 	devices = fwupd_client_get_devices_finish (FWUPD_CLIENT (source), res, &error);
@@ -2426,7 +2425,6 @@ fwupd_client_install_release_async (FwupdClient *self,
 				    gpointer callback_data)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GError) error = NULL;
 	g_autoptr(GTask) task = NULL;
 	FwupdClientInstallReleaseData *data;
 	const gchar *remote_id;

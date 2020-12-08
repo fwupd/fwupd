@@ -230,7 +230,6 @@ fu_vli_usbhub_msp430_device_write_firmware (FuDevice *device,
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE (fu_device_get_parent (device));
 	GPtrArray *records = fu_ihex_firmware_get_records (FU_IHEX_FIRMWARE (firmware));
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(FuDevice) root = NULL;
 
 	/* open device */
 	locker = fu_device_locker_new (parent, error);

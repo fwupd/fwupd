@@ -360,7 +360,6 @@ fu_bcm57xx_firmware_parse (FuFirmware *firmware,
 
 	/* dictionaries, e.g. APE */
 	for (guint i = 0; i < 8; i++) {
-		g_autoptr(FuFirmwareImage) img = NULL;
 		if (!fu_bcm57xx_firmware_parse_dict (self, fw, i, flags, error)) {
 			g_prefix_error (error, "failed to parse dict 0x%x: ", i);
 			return FALSE;
