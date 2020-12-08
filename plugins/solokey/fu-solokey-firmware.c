@@ -55,6 +55,13 @@ fu_solokey_firmware_parse (FuFirmware *firmware,
 		return FALSE;
 	}
 	json_root = json_parser_get_root (parser);
+	if (json_root == NULL || !JSON_NODE_HOLDS_OBJECT (json_root)) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "JSON invalid as has no root");
+		return FALSE;
+	}
 	json_obj = json_node_get_object (json_root);
 	if (!json_object_has_member (json_obj, "firmware")) {
 		g_set_error_literal (error,
