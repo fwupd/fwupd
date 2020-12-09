@@ -21,7 +21,7 @@ fmap_size (FuFmap *fmap)
 	if (fmap == NULL)
 		return -1;
 
-	return sizeof (*fmap) + (fmap->nareas * sizeof (FuFmap));
+	return sizeof (*fmap) + (fmap->nareas * sizeof (FuFmapArea));
 }
 
 /* brute force linear search */
