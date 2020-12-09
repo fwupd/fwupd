@@ -14,9 +14,15 @@
 
 struct _FuSynapromFirmware {
 	FuFirmware		 parent_instance;
+	guint32			 product_id;
 };
 
 G_DEFINE_TYPE (FuSynapromFirmware, fu_synaprom_firmware, FU_TYPE_FIRMWARE)
+
+#define FU_SYNAPROM_FIRMWARE_TAG_MFW_HEADER		0x0001
+#define FU_SYNAPROM_FIRMWARE_TAG_MFW_PAYLOAD		0x0002
+#define FU_SYNAPROM_FIRMWARE_TAG_CFG_HEADER		0x0003
+#define FU_SYNAPROM_FIRMWARE_TAG_CFG_PAYLOAD		0x0004
 
 typedef struct __attribute__((packed)) {
 	guint16			 tag;
@@ -39,6 +45,13 @@ fu_synaprom_firmware_tag_to_string (guint16 tag)
 	if (tag == FU_SYNAPROM_FIRMWARE_TAG_CFG_PAYLOAD)
 		return "cfg-update-payload";
 	return NULL;
+}
+
+static void
+fu_synaprom_firmware_to_string (FuFirmware *firmware, guint idt, GString *str)
+{
+	FuSynapromFirmware *self = FU_SYNAPROM_FIRMWARE (firmware);
+	fu_common_string_append_kx (str, idt, "ProductId", self->product_id);
 }
 
 static gboolean
@@ -116,12 +129,13 @@ fu_synaprom_firmware_parse (FuFirmware *firmware,
 }
 
 static GBytes *
-fu_synaprom_firmware_write (FuFirmware *self, GError **error)
+fu_synaprom_firmware_write (FuFirmware *firmware, GError **error)
 {
+	FuSynapromFirmware *self = FU_SYNAPROM_FIRMWARE (firmware);
 	GByteArray *blob = g_byte_array_new ();
-	const guint8 data[] = { 'R', 'H' };
+	g_autoptr(GBytes) payload = NULL;
 	FuSynapromFirmwareMfwHeader hdr = {
-		.product	= GUINT32_TO_LE(0x41),
+		.product	= GUINT32_TO_LE(self->product_id),
 		.id 		= GUINT32_TO_LE(0xff),
 		.buildtime	= GUINT32_TO_LE(0xff),
 		.buildnum	= GUINT32_TO_LE(0xff),
@@ -130,19 +144,47 @@ fu_synaprom_firmware_write (FuFirmware *self, GError **error)
 	};
 
 	/* add header */
-	fu_byte_array_append_uint16 (blob, FU_SYNAPROM_FIRMWARE_TAG_MFW_HEADER, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint32 (blob, sizeof(hdr), G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint16 (blob,
+				     FU_SYNAPROM_FIRMWARE_TAG_MFW_HEADER,
+				     G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint32 (blob,
+				     sizeof(hdr),
+				     G_LITTLE_ENDIAN);
 	g_byte_array_append (blob, (const guint8 *) &hdr, sizeof(hdr));
 
 	/* add payload */
-	fu_byte_array_append_uint16 (blob, FU_SYNAPROM_FIRMWARE_TAG_MFW_PAYLOAD, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint32 (blob, sizeof(data), G_LITTLE_ENDIAN);
-	g_byte_array_append (blob, data, sizeof(data));
+	payload = fu_firmware_get_image_default_bytes (firmware, error);
+	if (payload == NULL)
+		return FALSE;
+	fu_byte_array_append_uint16 (blob,
+				     FU_SYNAPROM_FIRMWARE_TAG_MFW_PAYLOAD,
+				     G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint32 (blob,
+				     g_bytes_get_size (payload),
+				     G_LITTLE_ENDIAN);
+	g_byte_array_append (blob,
+			     g_bytes_get_data (payload, NULL),
+			     g_bytes_get_size (payload));
 
 	/* add signature */
 	for (guint i = 0; i < FU_SYNAPROM_FIRMWARE_SIGSIZE; i++)
 		fu_byte_array_append_uint8 (blob, 0xff);
 	return g_byte_array_free_to_bytes (blob);
+}
+
+static gboolean
+fu_synaprom_firmware_build (FuFirmware *firmware, XbNode *n, GError **error)
+{
+	FuSynapromFirmware *self = FU_SYNAPROM_FIRMWARE (firmware);
+	guint64 tmp;
+
+	/* simple properties */
+	tmp = xb_node_query_text_as_uint (n, "product_id", NULL);
+	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT32)
+		self->product_id = tmp;
+
+	/* success */
+	return TRUE;
 }
 
 static void
@@ -156,6 +198,8 @@ fu_synaprom_firmware_class_init (FuSynapromFirmwareClass *klass)
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS (klass);
 	klass_firmware->parse = fu_synaprom_firmware_parse;
 	klass_firmware->write = fu_synaprom_firmware_write;
+	klass_firmware->to_string = fu_synaprom_firmware_to_string;
+	klass_firmware->build = fu_synaprom_firmware_build;
 }
 
 FuFirmware *
