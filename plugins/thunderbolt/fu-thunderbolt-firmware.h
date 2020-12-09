@@ -28,6 +28,7 @@ typedef enum {
 	_FAMILY_AR_C,
 	_FAMILY_TR,
 	_FAMILY_BB,
+	_FAMILY_MR,
 } FuThunderboltFamily;
 
 struct _FuThunderboltFirmwareClass
