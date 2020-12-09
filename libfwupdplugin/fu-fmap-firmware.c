@@ -248,6 +248,63 @@ fu_fmap_firmware_parse (FuFirmware *firmware,
 	return TRUE;
 }
 
+static GBytes *
+fu_fmap_firmware_write (FuFirmware *firmware, GError **error)
+{
+	gsize total_sz;
+	gsize offset;
+	g_autoptr(GPtrArray) images = fu_firmware_get_images (firmware);
+	g_autoptr(GByteArray) buf = g_byte_array_new ();
+	FuFmap hdr = {
+		.signature = { FMAP_SIGNATURE },
+		.ver_major = 0x1,
+		.ver_minor = 0x1,
+		.base = 0x0,
+		.size = 0x0,
+		.name = "",
+		.nareas = GUINT32_TO_LE (images->len),
+	};
+
+	/* add header */
+	total_sz = offset = sizeof(hdr) + (sizeof(FuFmapArea) * images->len);
+	for (guint i = 0; i < images->len; i++) {
+		FuFirmwareImage *img = g_ptr_array_index (images, i);
+		g_autoptr(GBytes) fw = fu_firmware_image_get_bytes (img);
+		total_sz += g_bytes_get_size (fw);
+	}
+	hdr.size = GUINT16_TO_LE (total_sz);
+	g_byte_array_append (buf, (const guint8 *) &hdr, sizeof(hdr));
+
+	/* add each area */
+	for (guint i = 0; i < images->len; i++) {
+		FuFirmwareImage *img = g_ptr_array_index (images, i);
+		const gchar *id = fu_firmware_image_get_id (img);
+		g_autoptr(GBytes) fw = fu_firmware_image_get_bytes (img);
+		FuFmapArea area = {
+			.offset = GUINT32_TO_LE (offset),
+			.size = GUINT32_TO_LE (g_bytes_get_size (fw)),
+			.name = { "" },
+			.flags = 0x0,
+		};
+		if (id != NULL)
+			strncpy ((gchar *) area.name, id, sizeof(area.name) - 1);
+		g_byte_array_append (buf, (const guint8 *) &area, sizeof(area));
+		offset += g_bytes_get_size (fw);
+	}
+
+	/* add the images */
+	for (guint i = 0; i < images->len; i++) {
+		FuFirmwareImage *img = g_ptr_array_index (images, i);
+		g_autoptr(GBytes) fw = fu_firmware_image_get_bytes (img);
+		g_byte_array_append (buf,
+				     g_bytes_get_data (fw, NULL),
+				     g_bytes_get_size (fw));
+	}
+
+	/* success */
+	return g_byte_array_free_to_bytes (g_steal_pointer (&buf));
+}
+
 static void
 fu_fmap_firmware_init (FuFmapFirmware *self)
 {
@@ -258,6 +315,7 @@ fu_fmap_firmware_class_init (FuFmapFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS (klass);
 	klass_firmware->parse = fu_fmap_firmware_parse;
+	klass_firmware->write = fu_fmap_firmware_write;
 }
 
 /**
