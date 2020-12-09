@@ -189,7 +189,7 @@ fu_fmap_firmware_parse (FuFirmware *firmware,
 	FuFmapFirmwareClass *klass_firmware = FU_FMAP_FIRMWARE_GET_CLASS (firmware);
 	gsize image_len;
 	guint8 *image = (guint8 *)g_bytes_get_data (fw, &image_len);
-	gsize offset;
+	gsize offset = 0;
 	const FuFmap *fmap;
 
 	/* corrupt */
@@ -201,9 +201,12 @@ fu_fmap_firmware_parse (FuFirmware *firmware,
 		return FALSE;
 	}
 
-	if (!fmap_find (image, image_len, &offset, error)) {
-		g_prefix_error (error, "cannot find fmap in image: ");
-		return FALSE;
+	/* only search for the fmap signature if not fuzzing */
+	if ((flags & FWUPD_INSTALL_FLAG_NO_SEARCH) == 0) {
+		if (!fmap_find (image, image_len, &offset, error)) {
+			g_prefix_error (error, "cannot find fmap in image: ");
+			return FALSE;
+		}
 	}
 
 	fmap = (const FuFmap *)(image + offset);
