@@ -61,27 +61,4 @@ if get_option('tests')
     install_dir : installed_test_bindir,
   )
   test('synaptics-prometheus-self-test', e, env : testdatadirs)  # added to installed-tests
-
-  # for fuzzing
-  executable(
-    'synaptics-prometheus-dump',
-    sources : [
-      'fu-dump.c',
-      'fu-synaprom-firmware.c',
-    ],
-    include_directories : [
-      root_incdir,
-      fwupd_incdir,
-      fwupdplugin_incdir,
-    ],
-    dependencies : [
-      gio,
-      libxmlb,
-    ],
-    link_with : [
-      fwupd,
-      fwupdplugin,
-    ],
-    c_args : cargs
-  )
 endif
