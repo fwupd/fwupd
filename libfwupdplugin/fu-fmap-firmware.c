@@ -236,6 +236,10 @@ fu_fmap_firmware_parse (FuFirmware *firmware,
 		g_autoptr(FuFirmwareImage) img = NULL;
 		g_autoptr(GBytes) bytes = NULL;
 
+		/* skip */
+		if (area->size == 0)
+			continue;
+
 		img = fu_firmware_image_new (NULL);
 		bytes = fu_common_bytes_new_offset (fw,
 						    (gsize) area->offset,
