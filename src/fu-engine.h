@@ -25,14 +25,19 @@ G_DECLARE_FINAL_TYPE (FuEngine, fu_engine, FU, ENGINE, GObject)
 /**
  * FuEngineLoadFlags:
  * @FU_ENGINE_LOAD_FLAG_NONE:		No flags set
- * @FU_ENGINE_LOAD_FLAG_READONLY_FS:	Ignore readonly filesystem errors
+ * @FU_ENGINE_LOAD_FLAG_READONLY:	Ignore readonly filesystem errors
+ * @FU_ENGINE_LOAD_FLAG_COLDPLUG:	Enumerate devices
+ * @FU_ENGINE_LOAD_FLAG_REMOTES:	Enumerate remotes
+ * @FU_ENGINE_LOAD_FLAG_HWINFO:		Load details about the hardware
  *
  * The flags to use when loading the engine.
  **/
 typedef enum {
 	FU_ENGINE_LOAD_FLAG_NONE		= 0,
-	FU_ENGINE_LOAD_FLAG_READONLY_FS		= 1 << 0,
-	FU_ENGINE_LOAD_FLAG_NO_ENUMERATE	= 1 << 1,
+	FU_ENGINE_LOAD_FLAG_READONLY		= 1 << 0,
+	FU_ENGINE_LOAD_FLAG_COLDPLUG		= 1 << 1,
+	FU_ENGINE_LOAD_FLAG_REMOTES		= 1 << 2,
+	FU_ENGINE_LOAD_FLAG_HWINFO		= 1 << 3,
 	/*< private >*/
 	FU_ENGINE_LOAD_FLAG_LAST
 } FuEngineLoadFlags;

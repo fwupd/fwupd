@@ -304,7 +304,7 @@ fu_main_engine_percentage_changed_cb (FuEngine *engine,
 static gboolean
 fu_util_watch (FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_COLDPLUG, error))
 		return FALSE;
 	g_main_loop_run (priv->loop);
 	return TRUE;
@@ -462,7 +462,11 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 	gboolean latest_header = FALSE;
 
 	/* load engine */
-	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+	if (!fu_util_start_engine (priv,
+				   FU_ENGINE_LOAD_FLAG_COLDPLUG |
+				   FU_ENGINE_LOAD_FLAG_HWINFO |
+				   FU_ENGINE_LOAD_FLAG_REMOTES,
+				   error))
 		return FALSE;
 	title = fu_util_get_tree_title (priv);
 
@@ -558,7 +562,11 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 	gint fd;
 
 	/* load engine */
-	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+	if (!fu_util_start_engine (priv,
+				   FU_ENGINE_LOAD_FLAG_COLDPLUG |
+				   FU_ENGINE_LOAD_FLAG_HWINFO |
+				   FU_ENGINE_LOAD_FLAG_REMOTES,
+				   error))
 		return FALSE;
 	title = fu_util_get_tree_title (priv);
 
@@ -652,7 +660,11 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GPtrArray) devs = NULL;
 
 	/* load engine */
-	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+	if (!fu_util_start_engine (priv,
+				   FU_ENGINE_LOAD_FLAG_COLDPLUG |
+				   FU_ENGINE_LOAD_FLAG_HWINFO |
+				   FU_ENGINE_LOAD_FLAG_REMOTES,
+				   error))
 		return FALSE;
 	title = fu_util_get_tree_title (priv);
 
@@ -762,7 +774,11 @@ fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* load engine */
-	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+	if (!fu_util_start_engine (priv,
+				   FU_ENGINE_LOAD_FLAG_COLDPLUG |
+				   FU_ENGINE_LOAD_FLAG_HWINFO |
+				   FU_ENGINE_LOAD_FLAG_REMOTES,
+				   error))
 		return FALSE;
 
 	/* get device */
@@ -939,7 +955,11 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(XbSilo) silo = NULL;
 
 	/* load engine */
-	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+	if (!fu_util_start_engine (priv,
+				   FU_ENGINE_LOAD_FLAG_COLDPLUG |
+				   FU_ENGINE_LOAD_FLAG_HWINFO |
+				   FU_ENGINE_LOAD_FLAG_REMOTES,
+				   error))
 		return FALSE;
 
 	/* handle both forms */
@@ -1241,7 +1261,11 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 
-	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+	if (!fu_util_start_engine (priv,
+				   FU_ENGINE_LOAD_FLAG_COLDPLUG |
+				   FU_ENGINE_LOAD_FLAG_HWINFO |
+				   FU_ENGINE_LOAD_FLAG_REMOTES,
+				   error))
 		return FALSE;
 
 	priv->current_operation = FU_UTIL_OPERATION_UPDATE;
@@ -1284,7 +1308,11 @@ fu_util_reinstall (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 
-	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+	if (!fu_util_start_engine (priv,
+				   FU_ENGINE_LOAD_FLAG_COLDPLUG |
+				   FU_ENGINE_LOAD_FLAG_HWINFO |
+				   FU_ENGINE_LOAD_FLAG_REMOTES,
+				   error))
 		return FALSE;
 
 	dev = fu_util_get_device (priv, values[0], error);
@@ -1347,7 +1375,11 @@ fu_util_detach (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* load engine */
-	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+	if (!fu_util_start_engine (priv,
+				   FU_ENGINE_LOAD_FLAG_COLDPLUG |
+				   FU_ENGINE_LOAD_FLAG_HWINFO |
+				   FU_ENGINE_LOAD_FLAG_REMOTES,
+				   error))
 		return FALSE;
 
 	/* get device */
@@ -1375,7 +1407,11 @@ fu_util_unbind_driver (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* load engine */
-	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+	if (!fu_util_start_engine (priv,
+				   FU_ENGINE_LOAD_FLAG_COLDPLUG |
+				   FU_ENGINE_LOAD_FLAG_HWINFO |
+				   FU_ENGINE_LOAD_FLAG_REMOTES,
+				   error))
 		return FALSE;
 
 	/* get device */
@@ -1401,7 +1437,11 @@ fu_util_bind_driver (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* load engine */
-	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+	if (!fu_util_start_engine (priv,
+				   FU_ENGINE_LOAD_FLAG_COLDPLUG |
+				   FU_ENGINE_LOAD_FLAG_HWINFO |
+				   FU_ENGINE_LOAD_FLAG_REMOTES,
+				   error))
 		return FALSE;
 
 	/* get device */
@@ -1435,7 +1475,11 @@ fu_util_attach (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* load engine */
-	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+	if (!fu_util_start_engine (priv,
+				   FU_ENGINE_LOAD_FLAG_COLDPLUG |
+				   FU_ENGINE_LOAD_FLAG_HWINFO |
+				   FU_ENGINE_LOAD_FLAG_REMOTES,
+				   error))
 		return FALSE;
 
 	/* get device */
@@ -1497,7 +1541,7 @@ fu_util_activate (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* load engine */
-	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_READONLY_FS, error))
+	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_READONLY, error))
 		return FALSE;
 
 	/* parse arguments */
@@ -1748,7 +1792,7 @@ fu_util_get_firmware_types (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GPtrArray) firmware_types = NULL;
 
 	/* load engine */
-	if (!fu_engine_load (priv->engine, FU_ENGINE_LOAD_FLAG_NO_ENUMERATE, error))
+	if (!fu_engine_load (priv->engine, FU_ENGINE_LOAD_FLAG_READONLY, error))
 		return FALSE;
 
 	firmware_types = fu_engine_get_firmware_gtype_ids (priv->engine);
@@ -1819,7 +1863,7 @@ fu_util_firmware_parse (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* load engine */
-	if (!fu_engine_load (priv->engine, FU_ENGINE_LOAD_FLAG_NO_ENUMERATE, error))
+	if (!fu_engine_load (priv->engine, FU_ENGINE_LOAD_FLAG_READONLY, error))
 		return FALSE;
 
 	/* find the GType to use */
@@ -1870,7 +1914,7 @@ fu_util_firmware_extract (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* load engine */
-	if (!fu_engine_load (priv->engine, FU_ENGINE_LOAD_FLAG_NO_ENUMERATE, error))
+	if (!fu_engine_load (priv->engine, FU_ENGINE_LOAD_FLAG_READONLY, error))
 		return FALSE;
 
 	/* find the GType to use */
@@ -1952,7 +1996,7 @@ fu_util_firmware_build (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* load engine */
-	if (!fu_engine_load (priv->engine, FU_ENGINE_LOAD_FLAG_NO_ENUMERATE, error))
+	if (!fu_engine_load (priv->engine, FU_ENGINE_LOAD_FLAG_READONLY, error))
 		return FALSE;
 
 	/* parse XML */
@@ -2050,7 +2094,7 @@ fu_util_firmware_convert (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* load engine */
-	if (!fu_engine_load (priv->engine, FU_ENGINE_LOAD_FLAG_NO_ENUMERATE, error))
+	if (!fu_engine_load (priv->engine, FU_ENGINE_LOAD_FLAG_READONLY, error))
 		return FALSE;
 
 	/* find the GType to use */
@@ -2112,7 +2156,11 @@ fu_util_verify_update (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(FuDevice) dev = NULL;
 
 	/* load engine */
-	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+	if (!fu_util_start_engine (priv,
+				   FU_ENGINE_LOAD_FLAG_COLDPLUG |
+				   FU_ENGINE_LOAD_FLAG_HWINFO |
+				   FU_ENGINE_LOAD_FLAG_REMOTES,
+				   error))
 		return FALSE;
 
 	/* get device */
@@ -2144,7 +2192,11 @@ fu_util_get_history (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autofree gchar *title = NULL;
 
 	/* load engine */
-	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+	if (!fu_util_start_engine (priv,
+				   FU_ENGINE_LOAD_FLAG_COLDPLUG |
+				   FU_ENGINE_LOAD_FLAG_HWINFO |
+				   FU_ENGINE_LOAD_FLAG_REMOTES,
+				   error))
 		return FALSE;
 	title = fu_util_get_tree_title (priv);
 
@@ -2273,7 +2325,11 @@ fu_util_refresh (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GPtrArray) remotes = NULL;
 
 	/* load engine */
-	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+	if (!fu_util_start_engine (priv,
+				   FU_ENGINE_LOAD_FLAG_COLDPLUG |
+				   FU_ENGINE_LOAD_FLAG_HWINFO |
+				   FU_ENGINE_LOAD_FLAG_REMOTES,
+				   error))
 		return FALSE;
 
 	/* download new metadata */
@@ -2300,7 +2356,7 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autofree gchar *title = NULL;
 
 	/* load engine */
-	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_REMOTES, error))
 		return FALSE;
 	title = fu_util_get_tree_title (priv);
 
@@ -2342,7 +2398,11 @@ fu_util_security (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 
-	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+	if (!fu_util_start_engine (priv,
+				   FU_ENGINE_LOAD_FLAG_COLDPLUG |
+				   FU_ENGINE_LOAD_FLAG_HWINFO |
+				   FU_ENGINE_LOAD_FLAG_REMOTES,
+				   error))
 		return FALSE;
 
 	/* TRANSLATORS: this is a string like 'HSI:2-U' */
@@ -2477,7 +2537,11 @@ fu_util_switch_branch (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(FuDevice) dev = NULL;
 
 	/* load engine */
-	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+	if (!fu_util_start_engine (priv,
+				   FU_ENGINE_LOAD_FLAG_COLDPLUG |
+				   FU_ENGINE_LOAD_FLAG_HWINFO |
+				   FU_ENGINE_LOAD_FLAG_REMOTES,
+				   error))
 		return FALSE;
 
 	/* find the device and check it has multiple branches */
