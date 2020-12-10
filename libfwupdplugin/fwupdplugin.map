@@ -699,3 +699,9 @@ LIBFWUPDPLUGIN_1.5.4 {
     fu_common_bytes_new_offset;
   local: *;
 } LIBFWUPDPLUGIN_1.5.3;
+
+LIBFWUPDPLUGIN_1.5.5 {
+  global:
+    fu_device_retry_full;
+  local: *;
+} LIBFWUPDPLUGIN_1.5.4;

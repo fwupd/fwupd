@@ -20,6 +20,9 @@
 #include "fwupd-common.h"
 #include "fwupd-device-private.h"
 
+#define FU_DEVICE_RETRY_OPEN_COUNT			5
+#define FU_DEVICE_RETRY_OPEN_DELAY			500 /* ms */
+
 /**
  * SECTION:fu-device
  * @short_description: a physical or logical device
@@ -233,10 +236,11 @@ fu_device_retry_set_delay (FuDevice *self, guint delay)
 }
 
 /**
- * fu_device_retry:
+ * fu_device_retry_full:
  * @self: A #FuDevice
  * @func: (scope async): A function to execute
  * @count: The number of tries to try the function
+ * @delay: The delay between each try in ms
  * @user_data: (nullable): a helper to pass to @user_data
  * @error: A #GError
  *
@@ -249,14 +253,15 @@ fu_device_retry_set_delay (FuDevice *self, guint delay)
  * If the reset function returns %FALSE, then the function returns straight away
  * without processing any pending retries.
  *
- * Since: 1.4.0
+ * Since: 1.5.5
  **/
 gboolean
-fu_device_retry (FuDevice *self,
-		 FuDeviceRetryFunc func,
-		 guint count,
-		 gpointer user_data,
-		 GError **error)
+fu_device_retry_full (FuDevice *self,
+		      FuDeviceRetryFunc func,
+		      guint count,
+		      guint delay,
+		      gpointer user_data,
+		      GError **error)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 
@@ -269,8 +274,8 @@ fu_device_retry (FuDevice *self,
 		g_autoptr(GError) error_local =	NULL;
 
 		/* delay */
-		if (i > 0 && priv->retry_delay > 0)
-			g_usleep (priv->retry_delay * 1000);
+		if (i > 0 && delay > 0)
+			g_usleep (delay * 1000);
 
 		/* run function, if success return success */
 		if (func (self, user_data, &error_local))
@@ -321,6 +326,38 @@ fu_device_retry (FuDevice *self,
 
 	/* success */
 	return TRUE;
+}
+
+/**
+ * fu_device_retry:
+ * @self: A #FuDevice
+ * @func: (scope async): A function to execute
+ * @count: The number of tries to try the function
+ * @user_data: (nullable): a helper to pass to @user_data
+ * @error: A #GError
+ *
+ * Calls a specific function a number of times, optionally handling the error
+ * with a reset action.
+ *
+ * If fu_device_retry_add_recovery() has not been used then all errors are
+ * considered non-fatal until the last try.
+ *
+ * If the reset function returns %FALSE, then the function returns straight away
+ * without processing any pending retries.
+ *
+ * Since: 1.4.0
+ **/
+gboolean
+fu_device_retry (FuDevice *self,
+		 FuDeviceRetryFunc func,
+		 guint count,
+		 gpointer user_data,
+		 GError **error)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	return fu_device_retry_full (self, func, count,
+				     priv->retry_delay,
+				     user_data, error);
 }
 
 /**
@@ -2755,6 +2792,13 @@ fu_device_cleanup (FuDevice *self, FwupdInstallFlags flags, GError **error)
 	return klass->cleanup (self, flags, error);
 }
 
+static gboolean
+fu_device_open_cb (FuDevice *self, gpointer user_data, GError **error)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+	return klass->open (self, error);
+}
+
 /**
  * fu_device_open:
  * @self: A #FuDevice
@@ -2796,8 +2840,16 @@ fu_device_open (FuDevice *self, GError **error)
 
 	/* subclassed */
 	if (klass->open != NULL) {
-		if (!klass->open (self, error))
-			return FALSE;
+		if (fu_device_has_flag (self, FWUPD_DEVICE_FLAG_RETRY_OPEN)) {
+			if (!fu_device_retry_full (self, fu_device_open_cb,
+						   FU_DEVICE_RETRY_OPEN_COUNT,
+						   FU_DEVICE_RETRY_OPEN_DELAY,
+						   NULL, error))
+				return FALSE;
+		} else {
+			if (!klass->open (self, error))
+				return FALSE;
+		}
 	}
 
 	/* setup */
