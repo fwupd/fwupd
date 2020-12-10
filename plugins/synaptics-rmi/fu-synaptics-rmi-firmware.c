@@ -223,7 +223,7 @@ fu_synaptics_rmi_firmware_parse_v10 (FuFirmware *firmware, GBytes *fw, GError **
 		length = GUINT32_FROM_LE(desc.content_length);
 		g_debug ("RmiFirmwareContainerDescriptor 0x%02x @ 0x%x (len 0x%x)",
 			 container_id, content_addr, length);
-		if (length > sz) {
+		if (length == 0 || length > sz) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
