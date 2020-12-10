@@ -6289,6 +6289,48 @@ fu_engine_ensure_client_certificate (FuEngine *self)
 	g_debug ("client certificate exists and working");
 }
 
+static void
+fu_engine_add_firmware_gtypes (FuEngine *self)
+{
+	fu_engine_add_firmware_gtype (self, "raw", FU_TYPE_FIRMWARE);
+	fu_engine_add_firmware_gtype (self, "dfu", FU_TYPE_DFU_FIRMWARE);
+	fu_engine_add_firmware_gtype (self, "fmap", FU_TYPE_FMAP_FIRMWARE);
+	fu_engine_add_firmware_gtype (self, "ihex", FU_TYPE_IHEX_FIRMWARE);
+	fu_engine_add_firmware_gtype (self, "srec", FU_TYPE_SREC_FIRMWARE);
+}
+
+/**
+ * fu_engine_load_firmware:
+ * @self: A #FuEngine
+ * @error: A #GError, or %NULL
+ *
+ * Load the plugins so that the firmware parser ONLY is ready to use.
+ *
+ * Returns: %TRUE for success
+ **/
+gboolean
+fu_engine_load_firmware (FuEngine *self, GError **error)
+{
+	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* avoid re-loading a second time if fu-tool or fu-util request to */
+	if (self->loaded)
+		return TRUE;
+
+	/* load plugins */
+	fu_engine_add_firmware_gtypes (self);
+	if (!fu_engine_load_plugins (self, error)) {
+		g_prefix_error (error, "failed to load plugins: ");
+		return FALSE;
+	}
+	fu_engine_plugins_setup (self);
+
+	/* success */
+	self->loaded = TRUE;
+	return TRUE;
+}
+
 /**
  * fu_engine_load:
  * @self: A #FuEngine
@@ -6388,11 +6430,7 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	}
 
 	/* add the "built-in" firmware types */
-	fu_engine_add_firmware_gtype (self, "raw", FU_TYPE_FIRMWARE);
-	fu_engine_add_firmware_gtype (self, "dfu", FU_TYPE_DFU_FIRMWARE);
-	fu_engine_add_firmware_gtype (self, "fmap", FU_TYPE_FMAP_FIRMWARE);
-	fu_engine_add_firmware_gtype (self, "ihex", FU_TYPE_IHEX_FIRMWARE);
-	fu_engine_add_firmware_gtype (self, "srec", FU_TYPE_SREC_FIRMWARE);
+	fu_engine_add_firmware_gtypes (self);
 
 	/* set shared USB context */
 	self->usb_ctx = g_usb_context_new (error);
