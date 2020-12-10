@@ -100,6 +100,14 @@ fu_synaprom_firmware_parse (FuFirmware *firmware,
 			return FALSE;
 		}
 		hdrsz = GUINT32_FROM_LE(header.bufsz);
+		if (hdrsz == 0) {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "empty header for tag 0x%04x",
+				     tag);
+			return FALSE;
+		}
 		offset += sizeof(header) + hdrsz;
 		if (offset > bufsz) {
 			g_set_error (error,
