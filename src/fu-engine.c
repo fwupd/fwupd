@@ -5929,14 +5929,10 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 		g_signal_connect (plugin, "add-firmware-gtype",
 				  G_CALLBACK (fu_engine_plugin_add_firmware_gtype_cb),
 				  self);
-
-		/* if loaded from fu_engine_load() open the plugin */
-		if (self->usb_ctx != NULL) {
-			if (!fu_plugin_open (plugin, filename, &error_local)) {
-				g_warning ("cannot load: %s", error_local->message);
-				fu_engine_add_plugin (self, plugin);
-				continue;
-			}
+		if (!fu_plugin_open (plugin, filename, &error_local)) {
+			g_warning ("cannot load: %s", error_local->message);
+			fu_engine_add_plugin (self, plugin);
+			continue;
 		}
 
 		/* runtime disabled */
