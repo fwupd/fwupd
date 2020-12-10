@@ -5880,7 +5880,7 @@ fu_engine_get_host_security_attrs (FuEngine *self)
 	return g_object_ref (self->host_security_attrs);
 }
 
-gboolean
+static gboolean
 fu_engine_load_plugins (FuEngine *self, GError **error)
 {
 	const gchar *fn;

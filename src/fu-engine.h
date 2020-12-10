@@ -46,8 +46,6 @@ void		 fu_engine_idle_reset			(FuEngine	*self);
 gboolean	 fu_engine_load				(FuEngine	*self,
 							 FuEngineLoadFlags flags,
 							 GError		**error);
-gboolean	 fu_engine_load_plugins			(FuEngine	*self,
-							 GError		**error);
 gboolean	 fu_engine_get_tainted			(FuEngine	*self);
 const gchar	*fu_engine_get_host_product		(FuEngine *self);
 const gchar	*fu_engine_get_host_machine_id		(FuEngine *self);
