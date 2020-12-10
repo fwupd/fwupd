@@ -222,6 +222,14 @@ fu_ccgx_dmc_firmware_parse_image (FuFirmware *firmware,
 				     img_rcd->info_header.num_img_segments);
 			return FALSE;
 		}
+		if (img_rcd->info_header.row_size == 0) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "invalid row size = %d",
+				     img_rcd->info_header.row_size);
+			return FALSE;
+		}
 
 		/* parse segment */
 		if (!fu_ccgx_dmc_firmware_parse_segment (firmware, fw_buf, fw_bufsz, img_rcd,
