@@ -239,6 +239,7 @@ fu_fmap_firmware_parse (FuFirmware *firmware,
 		FuFmapArea area;
 		g_autoptr(FuFirmwareImage) img = NULL;
 		g_autoptr(GBytes) bytes = NULL;
+		g_autofree gchar *area_name = NULL;
 
 		/* load area */
 		if (!fu_memcpy_safe ((guint8 *) &area, sizeof(area), 0x0,	/* dst */
@@ -257,13 +258,14 @@ fu_fmap_firmware_parse (FuFirmware *firmware,
 						    error);
 		if (bytes == NULL)
 			return FALSE;
-		fu_firmware_image_set_id (img, (const gchar *) area.name);
+		area_name = g_strndup ((const gchar *) area.name, FU_FMAP_FIRMWARE_STRLEN);
+		fu_firmware_image_set_id (img, area_name);
 		fu_firmware_image_set_idx (img, i + 1);
 		fu_firmware_image_set_addr (img, GUINT32_FROM_LE (area.offset));
 		fu_firmware_image_set_bytes (img, bytes);
 		fu_firmware_add_image (firmware, img);
 
-		if (g_strcmp0 ((const char *)area.name, FMAP_AREANAME) == 0) {
+		if (g_strcmp0 (area_name, FMAP_AREANAME) == 0) {
 			g_autofree gchar *version = NULL;
 			version = g_strdup_printf ("%d.%d",
 						   fmap.ver_major,
