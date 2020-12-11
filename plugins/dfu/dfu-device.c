@@ -1237,9 +1237,13 @@ dfu_device_close (FuUsbDevice *device, GError **error)
 
 	/* release interface */
 	if (priv->claimed_interface) {
-		g_usb_device_release_interface (usb_device,
-						(gint) priv->iface_number,
-						0, NULL);
+		g_autoptr(GError) error_local = NULL;
+		if (!g_usb_device_release_interface (usb_device,
+						     (gint) priv->iface_number,
+						     0, &error_local)) {
+			g_warning ("failed to release interface: %s",
+				   error_local->message);
+		}
 		priv->claimed_interface = FALSE;
 	}
 
