@@ -216,7 +216,7 @@ fu_fmap_firmware_parse (FuFirmware *firmware,
 		return FALSE;
 	priv->base = GUINT64_FROM_LE (fmap.base);
 
-	if (fmap.size != bufsz) {
+	if (GUINT32_FROM_LE (fmap.size) != bufsz) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_INVALID_DATA,
@@ -225,17 +225,17 @@ fu_fmap_firmware_parse (FuFirmware *firmware,
 			     (guint) bufsz);
 		return FALSE;
 	}
-	if (fmap.nareas < 1) {
+	if (GUINT16_FROM_LE (fmap.nareas) < 1) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_INVALID_DATA,
 			     "number of areas too small, got %" G_GUINT16_FORMAT,
-			     fmap.nareas);
+			     GUINT16_FROM_LE (fmap.nareas));
 		return FALSE;
 	}
 	offset += sizeof(fmap);
 
-	for (gsize i = 0; i < fmap.nareas; i++) {
+	for (gsize i = 0; i < GUINT16_FROM_LE (fmap.nareas); i++) {
 		FuFmapArea area;
 		g_autoptr(FuFirmwareImage) img = NULL;
 		g_autoptr(GBytes) bytes = NULL;
@@ -252,14 +252,14 @@ fu_fmap_firmware_parse (FuFirmware *firmware,
 
 		img = fu_firmware_image_new (NULL);
 		bytes = fu_common_bytes_new_offset (fw,
-						    (gsize) area.offset,
-						    (gsize) area.size,
+						    (gsize) GUINT32_FROM_LE (area.offset),
+						    (gsize) GUINT32_FROM_LE (area.size),
 						    error);
 		if (bytes == NULL)
 			return FALSE;
 		fu_firmware_image_set_id (img, (const gchar *) area.name);
 		fu_firmware_image_set_idx (img, i + 1);
-		fu_firmware_image_set_addr (img, (guint64) area.offset);
+		fu_firmware_image_set_addr (img, GUINT32_FROM_LE (area.offset));
 		fu_firmware_image_set_bytes (img, bytes);
 		fu_firmware_add_image (firmware, img);
 
