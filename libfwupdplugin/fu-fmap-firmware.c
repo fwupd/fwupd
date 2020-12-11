@@ -187,10 +187,10 @@ fu_fmap_firmware_parse (FuFirmware *firmware,
 	FuFmapFirmware *self = FU_FMAP_FIRMWARE (firmware);
 	FuFmapFirmwarePrivate *priv = GET_PRIVATE (self);
 	FuFmapFirmwareClass *klass_firmware = FU_FMAP_FIRMWARE_GET_CLASS (firmware);
-	gsize image_len;
-	guint8 *image = (guint8 *)g_bytes_get_data (fw, &image_len);
+	gsize bufsz;
+	const guint8 *buf = g_bytes_get_data (fw, &bufsz);
 	gsize offset = 0;
-	const FuFmap *fmap;
+	FuFmap fmap;
 
 	/* corrupt */
 	if (g_bytes_get_size (fw) < sizeof (FuFmap)) {
@@ -203,62 +203,74 @@ fu_fmap_firmware_parse (FuFirmware *firmware,
 
 	/* only search for the fmap signature if not fuzzing */
 	if ((flags & FWUPD_INSTALL_FLAG_NO_SEARCH) == 0) {
-		if (!fmap_find (image, image_len, &offset, error)) {
+		if (!fmap_find (buf, bufsz, &offset, error)) {
 			g_prefix_error (error, "cannot find fmap in image: ");
 			return FALSE;
 		}
 	}
 
-	fmap = (const FuFmap *)(image + offset);
-	priv->base = GUINT64_FROM_LE (fmap->base);
+	/* load header */
+	if (!fu_memcpy_safe ((guint8 *) &fmap, sizeof(fmap), 0x0,	/* dst */
+			     buf, bufsz, offset,			/* src */
+			     sizeof(fmap), error))
+		return FALSE;
+	priv->base = GUINT64_FROM_LE (fmap.base);
 
-	if (fmap->size != image_len) {
+	if (fmap.size != bufsz) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_INVALID_DATA,
 			     "file size incorrect, expected 0x%04x got 0x%04x",
-			     (guint) fmap->size,
-			     (guint) image_len);
+			     (guint) fmap.size,
+			     (guint) bufsz);
 		return FALSE;
 	}
-
-	if (fmap->nareas < 1) {
+	if (fmap.nareas < 1) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_INVALID_DATA,
 			     "number of areas too small, got %" G_GUINT16_FORMAT,
-			     fmap->nareas);
+			     fmap.nareas);
 		return FALSE;
 	}
+	offset += sizeof(fmap);
 
-	for (gsize i = 0; i < fmap->nareas; i++) {
-		const FuFmapArea *area = &fmap->areas[i];
+	for (gsize i = 0; i < fmap.nareas; i++) {
+		FuFmapArea area;
 		g_autoptr(FuFirmwareImage) img = NULL;
 		g_autoptr(GBytes) bytes = NULL;
 
+		/* load area */
+		if (!fu_memcpy_safe ((guint8 *) &area, sizeof(area), 0x0,	/* dst */
+				     buf, bufsz, offset,			/* src */
+				     sizeof(area), error))
+			return FALSE;
+
 		/* skip */
-		if (area->size == 0)
+		if (area.size == 0)
 			continue;
 
 		img = fu_firmware_image_new (NULL);
 		bytes = fu_common_bytes_new_offset (fw,
-						    (gsize) area->offset,
-						    (gsize) area->size,
+						    (gsize) area.offset,
+						    (gsize) area.size,
 						    error);
 		if (bytes == NULL)
 			return FALSE;
-		fu_firmware_image_set_id (img, (const gchar *) area->name);
+		fu_firmware_image_set_id (img, (const gchar *) area.name);
 		fu_firmware_image_set_idx (img, i + 1);
-		fu_firmware_image_set_addr (img, (guint64) area->offset);
+		fu_firmware_image_set_addr (img, (guint64) area.offset);
 		fu_firmware_image_set_bytes (img, bytes);
 		fu_firmware_add_image (firmware, img);
 
-		if (g_strcmp0 ((const char *)area->name, FMAP_AREANAME) == 0) {
-			g_autofree gchar *version = g_strdup_printf ("%d.%d",
-								     fmap->ver_major,
-								     fmap->ver_minor);
+		if (g_strcmp0 ((const char *)area.name, FMAP_AREANAME) == 0) {
+			g_autofree gchar *version = NULL;
+			version = g_strdup_printf ("%d.%d",
+						   fmap.ver_major,
+						   fmap.ver_minor);
 			fu_firmware_image_set_version (img, version);
 		}
+		offset += sizeof(area);
 	}
 
 	/* subclassed */
