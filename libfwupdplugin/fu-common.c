@@ -2437,6 +2437,7 @@ FuVolume *
 fu_common_get_esp_default (GError **error)
 {
 	const gchar *path_tmp;
+	gboolean has_internal = FALSE;
 	g_autoptr(GPtrArray) volumes_fstab = g_ptr_array_new ();
 	g_autoptr(GPtrArray) volumes_mtab = g_ptr_array_new ();
 	g_autoptr(GPtrArray) volumes_vfat = g_ptr_array_new ();
@@ -2457,13 +2458,26 @@ fu_common_get_esp_default (GError **error)
 			return NULL;
 		}
 	}
-	/* only add in internal vfat partitions */
+
+	/* are there _any_ internal vfat partitions?
+	 * remember HintSystem is just that -- a hint! */
+	for (guint i = 0; i < volumes->len; i++) {
+		FuVolume *vol = g_ptr_array_index (volumes, i);
+		g_autofree gchar *type = fu_volume_get_id_type (vol);
+		if (g_strcmp0 (type, "vfat") == 0 &&
+		    fu_volume_is_internal (vol)) {
+			has_internal = TRUE;
+			break;
+		}
+	}
+
+	/* filter to vfat partitions */
 	for (guint i = 0; i < volumes->len; i++) {
 		FuVolume *vol = g_ptr_array_index (volumes, i);
 		g_autofree gchar *type = fu_volume_get_id_type (vol);
 		if (type == NULL)
 			continue;
-		if (!fu_volume_is_internal (vol))
+		if (has_internal && !fu_volume_is_internal (vol))
 			continue;
 		if (g_strcmp0 (type, "vfat") == 0)
 			g_ptr_array_add (volumes_vfat, vol);
