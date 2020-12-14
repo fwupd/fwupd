@@ -50,6 +50,7 @@ _fwupdmgr_opts=(
 	'--no-metadata-check'
 	'--no-reboot-check'
 	'--no-safety-check'
+	'--no-remote-check'
 	'--show-all'
 	'--sign'
 	'--filter'
