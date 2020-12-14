@@ -10,6 +10,7 @@ if honggfuzz.found()
       '--', fwupdtool, 'smbios-dump', '___FILE___',
     ],
   )
+if get_option('tests')
   run_target('fuzz-firmware',
     command: [
       honggfuzz,
@@ -22,4 +23,5 @@ if honggfuzz.found()
       fwupd_firmware_dump, '--timeout', '50',
     ],
 )
+endif
 endif
