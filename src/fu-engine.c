@@ -4481,9 +4481,11 @@ fu_engine_get_releases_for_device (FuEngine *self,
 	for (guint i = 0; i < releases->len; i++) {
 		FwupdRelease *rel_tmp = FWUPD_RELEASE (g_ptr_array_index (releases, i));
 		const gchar *branch_tmp = fu_engine_get_branch_fallback (fwupd_release_get_branch (rel_tmp));
+#if GLIB_CHECK_VERSION(2,54,3)
 		if (g_ptr_array_find_with_equal_func (branches, branch_tmp,
 						      g_str_equal, NULL))
 			continue;
+#endif
 		g_ptr_array_add (branches, g_strdup (branch_tmp));
 	}
 	if (branches->len > 1)
