@@ -167,9 +167,8 @@ fu_util_show_plugin_warnings (FuUtilPrivate *priv)
 static gboolean
 fu_util_start_engine (FuUtilPrivate *priv, FuEngineLoadFlags flags, GError **error)
 {
-	g_autoptr(GError) error_local = NULL;
-
 #ifdef HAVE_SYSTEMD
+	g_autoptr(GError) error_local = NULL;
 	if (!fu_systemd_unit_stop (fu_util_get_systemd_unit (), &error_local))
 		g_debug ("Failed to stop daemon: %s", error_local->message);
 #endif
