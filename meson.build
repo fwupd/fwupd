@@ -297,6 +297,9 @@ endif
 if cc.has_function('sigaction')
   conf.set('HAVE_SIGACTION', '1')
 endif
+if cc.has_function('memfd_create')
+  conf.set('HAVE_MEMFD_CREATE', '1')
+endif
 if cc.has_header_symbol('locale.h', 'LC_MESSAGES')
   conf.set('HAVE_LC_MESSAGES', '1')
 endif
