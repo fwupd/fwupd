@@ -61,6 +61,7 @@ struct FuUtilPrivate {
 	FwupdInstallFlags	 flags;
 	FwupdClient		*client;
 	FuProgressbar		*progressbar;
+	gboolean		 no_remote_check;
 	gboolean		 no_metadata_check;
 	gboolean		 no_reboot_check;
 	gboolean		 no_unreported_check;
@@ -1134,8 +1135,8 @@ fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 	/* no web remote is declared; try to enable LVFS */
 	if (!download_remote_enabled) {
 		/* we don't want to ask anything */
-		if (priv->no_metadata_check) {
-			g_debug ("skipping metadata check");
+		if (priv->no_remote_check) {
+			g_debug ("skipping remote check");
 			return TRUE;
 		}
 
@@ -2740,6 +2741,9 @@ main (int argc, char *argv[])
 		{ "no-metadata-check", '\0', 0, G_OPTION_ARG_NONE, &priv->no_metadata_check,
 			/* TRANSLATORS: command line option */
 			_("Do not check for old metadata"), NULL },
+		{ "no-remote-check", '\0', 0, G_OPTION_ARG_NONE, &priv->no_remote_check,
+			/* TRANSLATORS: command line option */
+			_("Do not check if download remotes should be enabled"), NULL },
 		{ "no-reboot-check", '\0', 0, G_OPTION_ARG_NONE, &priv->no_reboot_check,
 			/* TRANSLATORS: command line option */
 			_("Do not check for reboot after update"), NULL },
@@ -3048,6 +3052,7 @@ main (int argc, char *argv[])
 		priv->no_metadata_check = TRUE;
 		priv->no_reboot_check = TRUE;
 		priv->no_safety_check = TRUE;
+		priv->no_remote_check = TRUE;
 		fu_progressbar_set_interactive (priv->progressbar, FALSE);
 	}
 
