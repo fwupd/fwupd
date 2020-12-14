@@ -1403,13 +1403,10 @@ fu_firmware_ihex_func (void)
 	g_autoptr(GBytes) data_hex = NULL;
 	g_autoptr(GBytes) data_ref = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GFile) file_ref = NULL;
-	g_autoptr(GFile) file_hex = NULL;
 
 	/* load a Intel hex32 file */
 	filename_hex = g_build_filename (TESTDATADIR_SRC, "firmware.hex", NULL);
-	file_hex = g_file_new_for_path (filename_hex);
-	data_file = g_file_load_bytes (file_hex, NULL, NULL, &error);
+	data_file = fu_common_get_contents_bytes (filename_hex, &error);
 	g_assert_no_error (error);
 	g_assert (data_file != NULL);
 	ret = fu_firmware_parse (firmware, data_file, FWUPD_INSTALL_FLAG_NONE, &error);
@@ -1422,8 +1419,7 @@ fu_firmware_ihex_func (void)
 
 	/* did we match the reference file? */
 	filename_ref = g_build_filename (TESTDATADIR_SRC, "firmware.bin", NULL);
-	file_ref = g_file_new_for_path (filename_ref);
-	data_ref = g_file_load_bytes (file_ref, NULL, NULL, &error);
+	data_ref = fu_common_get_contents_bytes (filename_ref, &error);
 	g_assert_no_error (error);
 	g_assert (data_ref != NULL);
 	ret = fu_common_bytes_compare (data_fw, data_ref, &error);
@@ -1462,12 +1458,10 @@ fu_firmware_ihex_signed_func (void)
 	g_autoptr(GBytes) data_fw = NULL;
 	g_autoptr(GBytes) data_sig = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GFile) file_hex = NULL;
 
 	/* load a signed Intel hex32 file */
 	filename_shex = g_build_filename (TESTDATADIR_SRC, "firmware.shex", NULL);
-	file_hex = g_file_new_for_path (filename_shex);
-	data_file = g_file_load_bytes (file_hex, NULL, NULL, &error);
+	data_file = fu_common_get_contents_bytes (filename_shex, &error);
 	g_assert_no_error (error);
 	g_assert (data_file != NULL);
 	ret = fu_firmware_parse (firmware, data_file, FWUPD_INSTALL_FLAG_NONE, &error);
@@ -1546,12 +1540,9 @@ fu_firmware_srec_func (void)
 	g_autoptr(GBytes) data_srec = NULL;
 	g_autoptr(GBytes) data_bin = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GFile) file_bin = NULL;
-	g_autoptr(GFile) file_srec = NULL;
 
 	filename_srec = g_build_filename (TESTDATADIR_SRC, "firmware.srec", NULL);
-	file_srec = g_file_new_for_path (filename_srec);
-	data_srec = g_file_load_bytes (file_srec, NULL, NULL, &error);
+	data_srec = fu_common_get_contents_bytes (filename_srec, &error);
 	g_assert_no_error (error);
 	g_assert (data_srec != NULL);
 	ret = fu_firmware_parse (firmware, data_srec, FWUPD_INSTALL_FLAG_NONE, &error);
@@ -1564,8 +1555,7 @@ fu_firmware_srec_func (void)
 
 	/* did we match the reference file? */
 	filename_ref = g_build_filename (TESTDATADIR_SRC, "firmware.bin", NULL);
-	file_bin = g_file_new_for_path (filename_ref);
-	data_ref = g_file_load_bytes (file_bin, NULL, NULL, &error);
+	data_ref = fu_common_get_contents_bytes (filename_ref, &error);
 	g_assert_no_error (error);
 	g_assert (data_ref != NULL);
 	ret = fu_common_bytes_compare (data_bin, data_ref, &error);
@@ -1685,12 +1675,9 @@ fu_firmware_dfu_func (void)
 	g_autoptr(GBytes) data_dfu = NULL;
 	g_autoptr(GBytes) data_bin = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GFile) file_bin = NULL;
-	g_autoptr(GFile) file_dfu = NULL;
 
 	filename_dfu = g_build_filename (TESTDATADIR_SRC, "firmware.dfu", NULL);
-	file_dfu = g_file_new_for_path (filename_dfu);
-	data_dfu = g_file_load_bytes (file_dfu, NULL, NULL, &error);
+	data_dfu = fu_common_get_contents_bytes (filename_dfu, &error);
 	g_assert_no_error (error);
 	g_assert (data_dfu != NULL);
 	ret = fu_firmware_parse (firmware, data_dfu, FWUPD_INSTALL_FLAG_NONE, &error);
@@ -1706,8 +1693,7 @@ fu_firmware_dfu_func (void)
 
 	/* did we match the reference file? */
 	filename_ref = g_build_filename (TESTDATADIR_SRC, "firmware.bin", NULL);
-	file_bin = g_file_new_for_path (filename_ref);
-	data_ref = g_file_load_bytes (file_bin, NULL, NULL, &error);
+	data_ref = fu_common_get_contents_bytes (filename_ref, &error);
 	g_assert_no_error (error);
 	g_assert (data_ref != NULL);
 	ret = fu_common_bytes_compare (data_bin, data_ref, &error);
