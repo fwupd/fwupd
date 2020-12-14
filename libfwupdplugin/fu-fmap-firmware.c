@@ -6,6 +6,8 @@
 
 #include "config.h"
 
+#include <string.h>
+
 #include "fu-common.h"
 #include "fu-fmap-firmware.h"
 

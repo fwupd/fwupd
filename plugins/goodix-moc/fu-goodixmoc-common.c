@@ -8,6 +8,7 @@
 #include "config.h"
 
 #include <fwupd.h>
+#include <string.h>
 
 #include "fu-common.h"
 #include "fu-goodixmoc-common.h"

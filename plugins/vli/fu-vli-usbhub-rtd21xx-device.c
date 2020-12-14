@@ -56,12 +56,15 @@ fu_vli_usbhub_device_i2c_write (FuVliUsbhubDevice *self,
 				GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
-	g_autofree guint8 *buf = g_malloc0 (datasz + 2);
+	gsize bufsz = datasz + 2;
+	g_autofree guint8 *buf = g_malloc0 (bufsz);
 
 	buf[0] = slave_addr;
 	buf[1] = sub_addr;
-	memcpy (buf + 2, data, datasz);
-
+	if (!fu_memcpy_safe (buf, bufsz, 0x2, /* dst */
+			     data, datasz, 0x0, /* src */
+			     datasz, error))
+		return FALSE;
 	if (g_getenv ("FWUPD_VLI_USBHUB_VERBOSE") != NULL)
 		fu_common_dump_raw (G_LOG_DOMAIN, "I2cWriteData", buf, datasz + 2);
 	if (!g_usb_device_control_transfer (usb_device,
