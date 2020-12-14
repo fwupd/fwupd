@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include <string.h>
 #include <xmlb.h>
 #include <fwupd.h>
 #include <fwupdplugin.h>
