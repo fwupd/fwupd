@@ -1037,6 +1037,7 @@ fwupd_input_stream_read_bytes_finish (GInputStream *stream,
 GUnixInputStream *
 fwupd_unix_input_stream_from_bytes (GBytes *bytes, GError **error)
 {
+#ifdef HAVE_MEMFD_CREATE
 	gint fd;
 	gssize rc;
 
@@ -1064,6 +1065,13 @@ fwupd_unix_input_stream_from_bytes (GBytes *bytes, GError **error)
 		return NULL;
 	}
 	return G_UNIX_INPUT_STREAM (g_unix_input_stream_new (fd, TRUE));
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "memfd_create() not available");
+	return NULL;
+#endif
 }
 
 /**
