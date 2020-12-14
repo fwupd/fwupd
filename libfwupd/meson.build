@@ -34,22 +34,29 @@ libfwupd_deps = [
     libjsonglib,
 ]
 
+libfwupd_src = [
+  'fwupd-client.c',
+  'fwupd-client-sync.c',
+  'fwupd-common.c',
+  'fwupd-device.c',
+  'fwupd-enums.c',
+  'fwupd-error.c',
+  'fwupd-security-attr.c',
+  'fwupd-release.c',
+  'fwupd-plugin.c',
+  'fwupd-remote.c',
+]
+
+# force the meson link detection logic to choose the C++ linker
+if get_option('link_language') == 'cpp'
+  libfwupd_src += 'fwupd-fuzz.cpp'
+endif
+
 fwupd_mapfile = 'fwupd.map'
 vflag = '-Wl,--version-script,@0@/@1@'.format(meson.current_source_dir(), fwupd_mapfile)
 fwupd = shared_library(
   'fwupd',
-  sources : [
-    'fwupd-client.c',
-    'fwupd-client-sync.c',
-    'fwupd-common.c',
-    'fwupd-device.c',
-    'fwupd-enums.c',
-    'fwupd-error.c',
-    'fwupd-security-attr.c',
-    'fwupd-release.c',
-    'fwupd-plugin.c',
-    'fwupd-remote.c',
-  ],
+  sources : libfwupd_src,
   soversion : libfwupd_lt_current,
   version : libfwupd_lt_version,
   dependencies : libfwupd_deps,
