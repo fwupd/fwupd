@@ -7,6 +7,8 @@
 
 #include "config.h"
 
+#include <string.h>
+
 #include "fu-common.h"
 
 #include "fu-synaptics-cxaudio-firmware.h"

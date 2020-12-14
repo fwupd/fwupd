@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
+#include <string.h>
 #ifdef HAVE_MMAN_H
 #include <sys/mman.h>
 #endif

@@ -7,6 +7,8 @@
 
 #include "config.h"
 
+#include <string.h>
+
 #include "fu-common.h"
 #include "fu-common-version.h"
 #include "fu-firmware-common.h"

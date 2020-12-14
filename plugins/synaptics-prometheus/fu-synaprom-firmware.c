@@ -7,6 +7,7 @@
 
 #include "config.h"
 
+#include <string.h>
 #include <gio/gio.h>
 
 #include "fu-common.h"

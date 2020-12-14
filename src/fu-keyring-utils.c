@@ -7,6 +7,7 @@
 #define G_LOG_DOMAIN				"FuKeyring"
 
 #include <config.h>
+#include <string.h>
 
 #include "fwupd-error.h"
 

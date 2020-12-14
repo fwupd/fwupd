@@ -7,6 +7,8 @@
 
 #include "config.h"
 
+#include <string.h>
+
 #include "fu-chunk.h"
 
 #include "fu-ccgx-common.h"

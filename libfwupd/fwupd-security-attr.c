@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include <gio/gio.h>
+#include <string.h>
 
 #include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
