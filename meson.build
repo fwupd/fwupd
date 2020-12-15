@@ -290,7 +290,9 @@ endif
 if cc.has_header('fnmatch.h')
   conf.set('HAVE_FNMATCH_H', '1')
 endif
-if cc.has_header('cpuid.h') and (host_cpu == 'x86' or host_cpu == 'x86_64')
+if cc.has_header('cpuid.h') and \
+   cc.has_header_symbol('cpuid.h', '__get_cpuid_count') and \
+   (host_cpu == 'x86' or host_cpu == 'x86_64')
   conf.set('HAVE_CPUID_H', '1')
 else
   if get_option('plugin_msr')
