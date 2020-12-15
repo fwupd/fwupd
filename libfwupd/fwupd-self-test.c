@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include <glib-object.h>
+#include <string.h>
 #ifdef HAVE_FNMATCH_H
 #include <fnmatch.h>
 #endif
