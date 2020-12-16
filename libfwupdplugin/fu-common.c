@@ -516,7 +516,7 @@ fu_common_firmware_builder (GBytes *bytes,
 	fu_common_add_argv (argv, "--die-with-parent");
 	fu_common_add_argv (argv, "--ro-bind /usr /usr");
 	fu_common_add_argv (argv, "--ro-bind /lib /lib");
-	fu_common_add_argv (argv, "--ro-bind /lib64 /lib64");
+	fu_common_add_argv (argv, "--ro-bind-try /lib64 /lib64");
 	fu_common_add_argv (argv, "--ro-bind /bin /bin");
 	fu_common_add_argv (argv, "--ro-bind /sbin /sbin");
 	fu_common_add_argv (argv, "--dir /tmp");
