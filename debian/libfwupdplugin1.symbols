@@ -47,6 +47,7 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  LIBFWUPDPLUGIN_1.5.1@LIBFWUPDPLUGIN_1.5.1 1.5.1
  LIBFWUPDPLUGIN_1.5.2@LIBFWUPDPLUGIN_1.5.2 1.5.2
  LIBFWUPDPLUGIN_1.5.3@LIBFWUPDPLUGIN_1.5.3 1.5.3
+ LIBFWUPDPLUGIN_1.5.4@LIBFWUPDPLUGIN_1.5.4 1.5.4
  fu_archive_get_type@LIBFWUPDPLUGIN_1.2.2 1.2.2
  fu_archive_iterate@LIBFWUPDPLUGIN_1.3.4 1.3.4
  fu_archive_lookup_by_fn@LIBFWUPDPLUGIN_1.2.2 1.2.2
@@ -70,6 +71,7 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  fu_common_bytes_compare@LIBFWUPDPLUGIN_1.2.6 1.2.6
  fu_common_bytes_compare_raw@LIBFWUPDPLUGIN_1.3.2 1.3.2
  fu_common_bytes_is_empty@LIBFWUPDPLUGIN_1.2.6 1.2.6
+ fu_common_bytes_new_offset@LIBFWUPDPLUGIN_1.5.4 1.5.4
  fu_common_bytes_pad@LIBFWUPDPLUGIN_1.3.1 1.3.1
  fu_common_cab_build_silo@LIBFWUPDPLUGIN_1.2.0 1.2.0
  fu_common_cpuid@LIBFWUPDPLUGIN_1.5.0 1.5.0

@@ -1,3 +1,9 @@
+fwupd (1.5.4-1) UNRELEASED; urgency=medium
+
+  * New upstream version (1.5.4)
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Thu, 17 Dec 2020 08:21:03 -0600
+
 fwupd (1.5.3-2) unstable; urgency=medium
 
   * trivial: debian: only install fwupd-msr.conf if needed
