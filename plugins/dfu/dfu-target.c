@@ -519,6 +519,7 @@ dfu_target_check_status (DfuTarget *target, GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
 	DfuStatus status;
+	g_autoptr(GTimer) timer = g_timer_new ();
 
 	/* get the status */
 	if (!dfu_device_refresh (priv->device, error))
@@ -530,6 +531,15 @@ dfu_target_check_status (DfuTarget *target, GError **error)
 		g_usleep (dfu_device_get_download_timeout (priv->device) * 1000);
 		if (!dfu_device_refresh (priv->device, error))
 			return FALSE;
+		/* this is a really long time to save fwupd in case
+		 * the device has got wedged */
+		if (g_timer_elapsed (timer, NULL) > 120.f) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "Stuck in DFU_DNBUSY");
+			return FALSE;
+		}
 	}
 
 	/* not in an error state */
