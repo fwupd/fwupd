@@ -615,7 +615,7 @@ fu_udev_device_get_slot_depth (FuUdevDevice *self, const gchar *subsystem)
 	return 0;
 }
 
-#ifndef _WIN32
+#ifdef HAVE_GUDEV
 static gchar *
 fu_udev_device_get_bind_id (FuUdevDevice *self)
 {
@@ -633,7 +633,7 @@ fu_udev_device_get_bind_id (FuUdevDevice *self)
 static gboolean
 fu_udev_device_unbind_driver (FuDevice *device, GError **error)
 {
-#ifndef _WIN32
+#ifdef HAVE_GUDEV
 	FuUdevDevice *self = FU_UDEV_DEVICE (device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 	g_autofree gchar *bind_id = NULL;
@@ -668,7 +668,7 @@ fu_udev_device_unbind_driver (FuDevice *device, GError **error)
 	g_set_error_literal (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "driver unbinding not supported on Windows");
+			     "driver unbinding not supported");
 	return FALSE;
 #endif
 }
@@ -679,7 +679,7 @@ fu_udev_device_bind_driver (FuDevice *device,
 			    const gchar *driver,
 			    GError **error)
 {
-#ifndef _WIN32
+#ifdef HAVE_GUDEV
 	FuUdevDevice *self = FU_UDEV_DEVICE (device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 	g_autofree gchar *bind_id = NULL;

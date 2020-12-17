@@ -35,6 +35,25 @@
     <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.5.4" date="2020-12-16">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add Maple Ridge Thunderbolt firmware parsing support</li>
+          <li>Add --no-remote-check to ignore checking for download remotes</li>
+          <li>Allow creating FMAP and Synaptics firmware using builder.xml</li>
+          <li>Build a test harness that uses honggfuzz to fuzz firmware</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Allow using fwupdtool as non-root for firmware commands</li>
+          <li>Do not trust the Block.HintSystem boolean for ESP filtering</li>
+          <li>Fix a memory leak when parsing Synaptics firmware</li>
+          <li>Fix a possible crash when reading the Goodix MOC USB request</li>
+          <li>Fix crashes when parsing invalid FMAP, DMC, Solokey and Synaptics images</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.5.3" date="2020-12-08">
       <description>
         <p>This release adds the following features:</p>

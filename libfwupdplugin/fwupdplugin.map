@@ -693,3 +693,9 @@ LIBFWUPDPLUGIN_1.5.3 {
     fu_udev_device_get_driver;
   local: *;
 } LIBFWUPDPLUGIN_1.5.2;
+
+LIBFWUPDPLUGIN_1.5.4 {
+  global:
+    fu_common_bytes_new_offset;
+  local: *;
+} LIBFWUPDPLUGIN_1.5.3;

@@ -37,6 +37,10 @@ fu_plugin_add_security_attrs_intel_cet_enabled (FuPlugin *plugin, FuSecurityAttr
 	FuCpuDevice *device = fu_plugin_cache_lookup (plugin, "cpu");
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
+	/* no CPU */
+	if (device == NULL)
+		return;
+
 	/* create attr */
 	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_INTEL_CET_ENABLED);
 	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
@@ -63,6 +67,10 @@ fu_plugin_add_security_attrs_intel_cet_active (FuPlugin *plugin, FuSecurityAttrs
 	g_autofree gchar *toolfn = NULL;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error_local = NULL;
+
+	/* no CPU */
+	if (device == NULL)
+		return;
 
 	/* check for CET */
 	if (!fu_cpu_device_has_flag (device, FU_CPU_DEVICE_FLAG_SHSTK) ||
@@ -98,6 +106,10 @@ fu_plugin_add_security_attrs_intel_tme (FuPlugin *plugin, FuSecurityAttrs *attrs
 	FuCpuDevice *device = fu_plugin_cache_lookup (plugin, "cpu");
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
+	/* no CPU */
+	if (device == NULL)
+		return;
+
 	/* create attr */
 	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM);
 	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
@@ -120,6 +132,10 @@ fu_plugin_add_security_attrs_intel_smap (FuPlugin *plugin, FuSecurityAttrs *attr
 {
 	FuCpuDevice *device = fu_plugin_cache_lookup (plugin, "cpu");
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	/* no CPU */
+	if (device == NULL)
+		return;
 
 	/* create attr */
 	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_INTEL_SMAP);

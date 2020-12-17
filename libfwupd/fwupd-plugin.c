@@ -6,6 +6,8 @@
 
 #include "config.h"
 
+#include <string.h>
+
 #include "fwupd-enums-private.h"
 #include "fwupd-plugin-private.h"
 

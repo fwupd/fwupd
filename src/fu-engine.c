@@ -873,13 +873,21 @@ fu_engine_verify_from_system_metadata (FuEngine *self,
 		const gchar *guid = g_ptr_array_index (guids, i);
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(GPtrArray) releases = NULL;
+#if LIBXMLB_CHECK_VERSION(0,3,0)
+		g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT ();
+#endif
 
 		/* bind GUID and then query */
+#if LIBXMLB_CHECK_VERSION(0,3,0)
+		xb_value_bindings_bind_str (xb_query_context_get_bindings (&context), 0, guid, NULL);
+		releases = xb_silo_query_with_context (self->silo, query, &context, &error_local);
+#else
 		if (!xb_query_bind_str (query, 0, guid, error)) {
 			g_prefix_error (error, "failed to bind string: ");
 			return NULL;
 		}
 		releases = xb_silo_query_full (self->silo, query, &error_local);
+#endif
 		if (releases == NULL) {
 			if (g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) ||
 			    g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
@@ -3315,7 +3323,7 @@ fu_engine_load_metadata_store (FuEngine *self, FuEngineLoadFlags flags, GError *
 	}
 
 	/* on a read-only filesystem don't care about the cache GUID */
-	if (flags & FU_ENGINE_LOAD_FLAG_READONLY_FS)
+	if (flags & FU_ENGINE_LOAD_FLAG_READONLY)
 		compile_flags |= XB_BUILDER_COMPILE_FLAG_IGNORE_GUID;
 
 	/* ensure silo is up to date */
@@ -4473,9 +4481,11 @@ fu_engine_get_releases_for_device (FuEngine *self,
 	for (guint i = 0; i < releases->len; i++) {
 		FwupdRelease *rel_tmp = FWUPD_RELEASE (g_ptr_array_index (releases, i));
 		const gchar *branch_tmp = fu_engine_get_branch_fallback (fwupd_release_get_branch (rel_tmp));
+#if GLIB_CHECK_VERSION(2,54,3)
 		if (g_ptr_array_find_with_equal_func (branches, branch_tmp,
 						      g_str_equal, NULL))
 			continue;
+#endif
 		g_ptr_array_add (branches, g_strdup (branch_tmp));
 	}
 	if (branches->len > 1)
@@ -6288,7 +6298,7 @@ fu_engine_ensure_client_certificate (FuEngine *self)
 /**
  * fu_engine_load:
  * @self: A #FuEngine
- * @flags: #FuEngineLoadFlags, e.g. %FU_ENGINE_LOAD_FLAG_READONLY_FS
+ * @flags: #FuEngineLoadFlags, e.g. %FU_ENGINE_LOAD_FLAG_READONLY
  * @error: A #GError, or %NULL
  *
  * Load the firmware update engine so it is ready for use.
@@ -6298,7 +6308,6 @@ fu_engine_ensure_client_certificate (FuEngine *self)
 gboolean
 fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 {
-	FuRemoteListLoadFlags remote_list_flags = FU_REMOTE_LIST_LOAD_FLAG_NONE;
 	FuQuirksLoadFlags quirks_flags = FU_QUIRKS_LOAD_FLAG_NONE;
 	g_autoptr(GPtrArray) checksums_approved = NULL;
 	g_autoptr(GPtrArray) checksums_blocked = NULL;
@@ -6327,11 +6336,14 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	}
 
 	/* read remotes */
-	if (flags & FU_ENGINE_LOAD_FLAG_READONLY_FS)
-		remote_list_flags |= FU_REMOTE_LIST_LOAD_FLAG_READONLY_FS;
-	if (!fu_remote_list_load (self->remote_list, remote_list_flags, error)) {
-		g_prefix_error (error, "Failed to load remotes: ");
-		return FALSE;
+	if (flags & FU_ENGINE_LOAD_FLAG_REMOTES) {
+		FuRemoteListLoadFlags remote_list_flags = FU_REMOTE_LIST_LOAD_FLAG_NONE;
+		if (flags & FU_ENGINE_LOAD_FLAG_READONLY)
+			remote_list_flags |= FU_REMOTE_LIST_LOAD_FLAG_READONLY_FS;
+		if (!fu_remote_list_load (self->remote_list, remote_list_flags, error)) {
+			g_prefix_error (error, "Failed to load remotes: ");
+			return FALSE;
+		}
 	}
 
 	/* create client certificate */
@@ -6370,10 +6382,12 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 		fu_idle_set_timeout (self->idle, fu_config_get_idle_timeout (self->config));
 
 	/* load quirks, SMBIOS and the hwids */
-	fu_engine_load_smbios (self);
-	fu_engine_load_hwids (self);
+	if (flags & FU_ENGINE_LOAD_FLAG_HWINFO) {
+		fu_engine_load_smbios (self);
+		fu_engine_load_hwids (self);
+	}
 	/* on a read-only filesystem don't care about the cache GUID */
-	if (flags & FU_ENGINE_LOAD_FLAG_READONLY_FS)
+	if (flags & FU_ENGINE_LOAD_FLAG_READONLY)
 		quirks_flags |= FU_QUIRKS_LOAD_FLAG_READONLY_FS;
 	fu_engine_load_quirks (self, quirks_flags);
 
@@ -6438,7 +6452,7 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 
 	/* add devices */
 	fu_engine_plugins_setup (self);
-	if ((flags & FU_ENGINE_LOAD_FLAG_NO_ENUMERATE) == 0)
+	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG)
 		fu_engine_plugins_coldplug (self, FALSE);
 
 	/* coldplug USB devices */
@@ -6448,12 +6462,12 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	g_signal_connect (self->usb_ctx, "device-removed",
 			  G_CALLBACK (fu_engine_usb_device_removed_cb),
 			  self);
-	if ((flags & FU_ENGINE_LOAD_FLAG_NO_ENUMERATE) == 0)
+	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG)
 		g_usb_context_enumerate (self->usb_ctx);
 
 #ifdef HAVE_GUDEV
 	/* coldplug udev devices */
-	if ((flags & FU_ENGINE_LOAD_FLAG_NO_ENUMERATE) == 0)
+	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG)
 		fu_engine_enumerate_udev (self);
 #endif
 

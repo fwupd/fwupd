@@ -479,11 +479,18 @@ fu_firmware_image_write_chunk (FuFirmwareImage *self,
 
 	/* if we have less data than requested */
 	chunk_left = g_bytes_get_size (priv->bytes) - offset;
-	if (chunk_sz_max > chunk_left)
-		return g_bytes_new_from_bytes (priv->bytes, offset, chunk_left);
+	if (chunk_sz_max > chunk_left) {
+		return fu_common_bytes_new_offset (priv->bytes,
+						   offset,
+						   chunk_left,
+						   error);
+	}
 
 	/* check chunk */
-	return g_bytes_new_from_bytes (priv->bytes, offset, chunk_sz_max);
+	return fu_common_bytes_new_offset (priv->bytes,
+					   offset,
+					   chunk_sz_max,
+					   error);
 }
 
 void

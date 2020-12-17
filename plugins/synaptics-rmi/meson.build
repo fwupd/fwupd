@@ -56,5 +56,4 @@ if get_option('tests')
     ],
     c_args : cargs
   )
-  subdir('fuzzing')
 endif

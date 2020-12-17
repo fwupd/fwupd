@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version : '1.5.3',
+  version : '1.5.4',
   license : 'LGPL-2.1+',
   meson_version : '>=0.47.0',
   default_options : ['warning_level=2', 'c_std=c99'],
@@ -73,7 +73,6 @@ warning_flags = [
   '-Wformat-signedness',
   '-Wignored-qualifiers',
   '-Wimplicit-function-declaration',
-  '-Wincompatible-pointer-types-discards-qualifiers',
   '-Winit-self',
   '-Wlogical-op',
   '-Wmaybe-uninitialized',
@@ -112,6 +111,18 @@ warning_flags = [
 ]
 cc = meson.get_compiler('c')
 add_project_arguments(cc.get_supported_arguments(warning_flags), language : 'c')
+
+# oss-fuzz requires linking with CXX...
+link_language = get_option('link_language')
+if link_language != 'c'
+  add_languages(link_language)
+endif
+
+# use honggfuzz for parallel persistent fuzzing
+honggfuzz = find_program('honggfuzz', required: false)
+if cc.has_function('HF_ITER')
+  conf.set('HAVE_HF_ITER', '1')
+endif
 
 if not meson.is_cross_build()
   add_project_arguments('-fstack-protector-strong', language : 'c')
@@ -208,7 +219,10 @@ endif
 libjcat = dependency('jcat', version : '>= 0.1.0', fallback : ['libjcat', 'libjcat_dep'])
 libjsonglib = dependency('json-glib-1.0', version : '>= 1.1.1')
 valgrind = dependency('valgrind', required: false)
-libcurl = dependency('libcurl', version : '>= 7.61.0')
+libcurl = dependency('libcurl', version : '>= 7.47.0')
+if libcurl.version().version_compare('>= 7.56.0')
+  conf.set('HAVE_LIBCURL_7_56_0', '1')
+endif
 if libcurl.version().version_compare('>= 7.62.0')
   conf.set('HAVE_LIBCURL_7_62_0', '1')
 endif
@@ -276,7 +290,9 @@ endif
 if cc.has_header('fnmatch.h')
   conf.set('HAVE_FNMATCH_H', '1')
 endif
-if cc.has_header('cpuid.h') and (host_cpu == 'x86' or host_cpu == 'x86_64')
+if cc.has_header('cpuid.h') and \
+   cc.has_header_symbol('cpuid.h', '__get_cpuid_count') and \
+   (host_cpu == 'x86' or host_cpu == 'x86_64')
   conf.set('HAVE_CPUID_H', '1')
 else
   if get_option('plugin_msr')
@@ -291,6 +307,9 @@ if cc.has_function('realpath')
 endif
 if cc.has_function('sigaction')
   conf.set('HAVE_SIGACTION', '1')
+endif
+if cc.has_function('memfd_create')
+  conf.set('HAVE_MEMFD_CREATE', '1')
 endif
 if cc.has_header_symbol('locale.h', 'LC_MESSAGES')
   conf.set('HAVE_LC_MESSAGES', '1')

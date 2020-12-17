@@ -628,7 +628,7 @@ fu_vli_usbhub_device_setup (FuVliDevice *device, GError **error)
 			     G_IO_ERROR,
 			     G_IO_ERROR_NOT_SUPPORTED,
 			     "hardware is not supported, dev_id=0x%x",
-			     GUINT16_FROM_BE(self->hd1_hdr.dev_id));
+			     (guint) GUINT16_FROM_BE(self->hd1_hdr.dev_id));
 		return FALSE;
 	}
 
@@ -693,7 +693,8 @@ fu_vli_usbhub_device_prepare_firmware (FuDevice *device,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
 			     "firmware incompatible, got 0x%04x, expected 0x%04x",
-			     device_id, GUINT16_FROM_BE(self->hd1_hdr.dev_id));
+			     device_id,
+			     (guint) GUINT16_FROM_BE(self->hd1_hdr.dev_id));
 		return NULL;
 	}
 

@@ -194,10 +194,16 @@ dfu_target_stm_upload_element (DfuTarget *target,
 
 	/* create new image */
 	contents = dfu_utils_bytes_join_array (chunks);
-	if (expected_size > 0)
-		contents_truncated = g_bytes_new_from_bytes (contents, 0, expected_size);
-	else
+	if (expected_size > 0) {
+		contents_truncated = fu_common_bytes_new_offset (contents,
+								 0,
+								 expected_size,
+								 error);
+		if (contents_truncated == NULL)
+			return NULL;
+	} else {
 		contents_truncated = g_bytes_ref (contents);
+	}
 	element = dfu_element_new ();
 	dfu_element_set_contents (element, contents_truncated);
 	dfu_element_set_address (element, address);
@@ -347,7 +353,12 @@ dfu_target_stm_download_element (DfuTarget *target,
 		length = g_bytes_get_size (bytes) - offset;
 		if (length > transfer_size)
 			length = transfer_size;
-		bytes_tmp = g_bytes_new_from_bytes (bytes, offset, length);
+		bytes_tmp = fu_common_bytes_new_offset (bytes,
+							offset,
+							length,
+							error);
+		if (bytes_tmp == NULL)
+			return FALSE;
 		g_debug ("writing sector at 0x%04x (0x%" G_GSIZE_FORMAT ")",
 			 offset_dev,
 			 g_bytes_get_size (bytes_tmp));

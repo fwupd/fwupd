@@ -55,6 +55,13 @@ fu_solokey_firmware_parse (FuFirmware *firmware,
 		return FALSE;
 	}
 	json_root = json_parser_get_root (parser);
+	if (json_root == NULL || !JSON_NODE_HOLDS_OBJECT (json_root)) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "JSON invalid as has no root");
+		return FALSE;
+	}
 	json_obj = json_node_get_object (json_root);
 	if (!json_object_has_member (json_obj, "firmware")) {
 		g_set_error_literal (error,
@@ -73,6 +80,13 @@ fu_solokey_firmware_parse (FuFirmware *firmware,
 
 	/* decode */
 	base64 = json_object_get_string_member (json_obj, "firmware");
+	if (base64 == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "JSON 'firmware' missing");
+		return FALSE;
+	}
 	fw_ihex = _g_base64_decode_to_bytes (base64);
 	if (!fu_firmware_parse (ihex_firmware, fw_ihex, flags, error))
 		return FALSE;
@@ -82,7 +96,15 @@ fu_solokey_firmware_parse (FuFirmware *firmware,
 	fu_firmware_add_image (firmware, img);
 
 	/* signature */
-	base64_websafe = g_string_new (json_object_get_string_member (json_obj, "signature"));
+	base64 = json_object_get_string_member (json_obj, "signature");
+	if (base64 == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "JSON 'signature' missing");
+		return FALSE;
+	}
+	base64_websafe = g_string_new (base64);
 	fu_common_string_replace (base64_websafe, "-", "+");
 	fu_common_string_replace (base64_websafe, "_", "/");
 	g_string_append (base64_websafe, "==");

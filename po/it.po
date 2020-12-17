@@ -582,6 +582,10 @@ msgstr "Non controlla se è necessario riavviare dopo un aggiornamento"
 msgid "Do not check for unreported history"
 msgstr "Non controlla la cronologia non segnalata "
 
+#. TRANSLATORS: command line option
+msgid "Do not check if download remotes should be enabled"
+msgstr "Non controlla se lo scaricamento dai remoti deve essere abilitato"
+
 #. TRANSLATORS: turn on all debugging
 msgid "Do not include log domain prefix"
 msgstr "Non include il prefisso del dominio"
@@ -1808,6 +1812,10 @@ msgstr "Questo strumento può essere usato solamente dall'utente root"
 #. TRANSLATORS: CLI description
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "Questo strumento legge e analizza il registro eventi TPM dal firmware di sistema."
+
+#. TRANSLATORS: command line option
+msgid "Timeout in milliseconds for each parse"
+msgstr "Tempo massimo in millisecondi per ogni analisi"
 
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"

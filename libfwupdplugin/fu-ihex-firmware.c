@@ -69,11 +69,24 @@ fu_ihex_firmware_record_new (guint ln, const gchar *line,
 
 	/* check starting token */
 	if (line[0] != ':') {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "invalid starting token: %s",
-			     line);
+		g_autoptr(GString) str = g_string_new (NULL);
+		for (gsize i = 0; line[i] != '\0' && i < 5; i++) {
+			if (!g_ascii_isprint (line[i]))
+				break;
+			g_string_append_c (str, line[i]);
+		}
+		if (str->len > 0) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "invalid starting token: %s",
+				     str->str);
+			return NULL;
+		}
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "invalid starting token");
 		return NULL;
 	}
 

@@ -516,7 +516,7 @@ fu_common_firmware_builder (GBytes *bytes,
 	fu_common_add_argv (argv, "--die-with-parent");
 	fu_common_add_argv (argv, "--ro-bind /usr /usr");
 	fu_common_add_argv (argv, "--ro-bind /lib /lib");
-	fu_common_add_argv (argv, "--ro-bind /lib64 /lib64");
+	fu_common_add_argv (argv, "--ro-bind-try /lib64 /lib64");
 	fu_common_add_argv (argv, "--ro-bind /bin /bin");
 	fu_common_add_argv (argv, "--ro-bind /sbin /sbin");
 	fu_common_add_argv (argv, "--dir /tmp");
@@ -1633,6 +1633,42 @@ fu_common_bytes_pad (GBytes *bytes, gsize sz)
 }
 
 /**
+ * fu_common_bytes_new_offset:
+ * @bytes: a #GBytes
+ * @offset: where subsection starts at
+ * @length: length of subsection
+ * @error: A #GError or %NULL
+ *
+ * Creates a #GBytes which is a subsection of another #GBytes.
+ *
+ * Return value: (transfer full): a #GBytes, or #NULL if range is invalid
+ *
+ * Since: 1.5.4
+ **/
+GBytes *
+fu_common_bytes_new_offset (GBytes *bytes,
+			    gsize offset,
+			    gsize length,
+			    GError **error)
+{
+	g_return_val_if_fail (bytes != NULL, NULL);
+
+	/* sanity check */
+	if (offset + length > g_bytes_get_size (bytes)) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "cannot create bytes @0x%02x for 0x%02x "
+			     "as buffer only 0x%04x bytes in size",
+			     (guint) offset,
+			     (guint) length,
+			     (guint) g_bytes_get_size (bytes));
+		return NULL;
+	}
+	return g_bytes_new_from_bytes (bytes, offset, length);
+}
+
+/**
  * fu_common_realpath:
  * @filename: a filename
  * @error: A #GError or %NULL
@@ -2401,6 +2437,7 @@ FuVolume *
 fu_common_get_esp_default (GError **error)
 {
 	const gchar *path_tmp;
+	gboolean has_internal = FALSE;
 	g_autoptr(GPtrArray) volumes_fstab = g_ptr_array_new ();
 	g_autoptr(GPtrArray) volumes_mtab = g_ptr_array_new ();
 	g_autoptr(GPtrArray) volumes_vfat = g_ptr_array_new ();
@@ -2421,13 +2458,26 @@ fu_common_get_esp_default (GError **error)
 			return NULL;
 		}
 	}
-	/* only add in internal vfat partitions */
+
+	/* are there _any_ internal vfat partitions?
+	 * remember HintSystem is just that -- a hint! */
+	for (guint i = 0; i < volumes->len; i++) {
+		FuVolume *vol = g_ptr_array_index (volumes, i);
+		g_autofree gchar *type = fu_volume_get_id_type (vol);
+		if (g_strcmp0 (type, "vfat") == 0 &&
+		    fu_volume_is_internal (vol)) {
+			has_internal = TRUE;
+			break;
+		}
+	}
+
+	/* filter to vfat partitions */
 	for (guint i = 0; i < volumes->len; i++) {
 		FuVolume *vol = g_ptr_array_index (volumes, i);
 		g_autofree gchar *type = fu_volume_get_id_type (vol);
 		if (type == NULL)
 			continue;
-		if (!fu_volume_is_internal (vol))
+		if (has_internal && !fu_volume_is_internal (vol))
 			continue;
 		if (g_strcmp0 (type, "vfat") == 0)
 			g_ptr_array_add (volumes_vfat, vol);

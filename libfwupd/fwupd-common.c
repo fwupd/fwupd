@@ -612,19 +612,19 @@ fwupd_guid_to_string (const fwupd_guid_t *guid, FwupdGuidFlags flags)
 	/* mixed is bizaar, but specified as the DCE encoding */
 	if (flags & FWUPD_GUID_FLAG_MIXED_ENDIAN) {
 		return g_strdup_printf ("%08x-%04x-%04x-%04x-%02x%02x%02x%02x%02x%02x",
-					GUINT32_FROM_LE(gnat.a),
-					GUINT16_FROM_LE(gnat.b),
-					GUINT16_FROM_LE(gnat.c),
-					GUINT16_FROM_BE(gnat.d),
+					(guint) GUINT32_FROM_LE(gnat.a),
+					(guint) GUINT16_FROM_LE(gnat.b),
+					(guint) GUINT16_FROM_LE(gnat.c),
+					(guint) GUINT16_FROM_BE(gnat.d),
 					gnat.e[0], gnat.e[1],
 					gnat.e[2], gnat.e[3],
 					gnat.e[4], gnat.e[5]);
 	}
 	return g_strdup_printf ("%08x-%04x-%04x-%04x-%02x%02x%02x%02x%02x%02x",
-				GUINT32_FROM_BE(gnat.a),
-				GUINT16_FROM_BE(gnat.b),
-				GUINT16_FROM_BE(gnat.c),
-				GUINT16_FROM_BE(gnat.d),
+				(guint) GUINT32_FROM_BE(gnat.a),
+				(guint) GUINT16_FROM_BE(gnat.b),
+				(guint) GUINT16_FROM_BE(gnat.c),
+				(guint) GUINT16_FROM_BE(gnat.d),
 				gnat.e[0], gnat.e[1],
 				gnat.e[2], gnat.e[3],
 				gnat.e[4], gnat.e[5]);
@@ -1037,6 +1037,7 @@ fwupd_input_stream_read_bytes_finish (GInputStream *stream,
 GUnixInputStream *
 fwupd_unix_input_stream_from_bytes (GBytes *bytes, GError **error)
 {
+#ifdef HAVE_MEMFD_CREATE
 	gint fd;
 	gssize rc;
 
@@ -1064,6 +1065,13 @@ fwupd_unix_input_stream_from_bytes (GBytes *bytes, GError **error)
 		return NULL;
 	}
 	return G_UNIX_INPUT_STREAM (g_unix_input_stream_new (fd, TRUE));
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "memfd_create() not available");
+	return NULL;
+#endif
 }
 
 /**

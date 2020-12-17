@@ -6,7 +6,18 @@ endif
 
 client_src = []
 systemd_src = []
-daemon_dep = []
+daemon_dep = [
+  libjcat,
+  libxmlb,
+  libgcab,
+  giounix,
+  gmodule,
+  gudev,
+  gusb,
+  sqlite,
+  libarchive,
+  libjsonglib,
+]
 
 if get_option('systemd')
   systemd_src += 'fu-systemd.c'
@@ -15,6 +26,22 @@ if build_daemon and get_option('polkit')
   client_src += 'fu-polkit-agent.c'
   daemon_dep += polkit
 endif
+
+daemon_src = [
+  'fu-config.c',
+  'fu-debug.c',
+  'fu-device-list.c',
+  'fu-engine.c',
+  'fu-engine-helper.c',
+  'fu-engine-request.c',
+  'fu-history.c',
+  'fu-idle.c',
+  'fu-install-task.c',
+  'fu-keyring-utils.c',
+  'fu-plugin-list.c',
+  'fu-remote-list.c',
+  'fu-security-attr.c',
+] + systemd_src
 
 if build_daemon
 fwupdmgr = executable(
@@ -130,22 +157,9 @@ fwupdtool = executable(
   export_dynamic : true,
   sources : [
     'fu-tool.c',
-    'fu-config.c',
-    'fu-debug.c',
-    'fu-device-list.c',
-    'fu-engine.c',
-    'fu-engine-helper.c',
-    'fu-engine-request.c',
-    'fu-history.c',
-    'fu-idle.c',
-    'fu-install-task.c',
-    'fu-keyring-utils.c',
-    'fu-plugin-list.c',
     'fu-progressbar.c',
-    'fu-remote-list.c',
-    'fu-security-attr.c',
     'fu-util-common.c',
-    systemd_src
+    daemon_src,
   ],
   include_directories : [
     root_incdir,
@@ -234,21 +248,8 @@ executable(
   resources_src,
   fu_hash,
   sources : [
-    'fu-config.c',
-    'fu-debug.c',
-    'fu-device-list.c',
-    'fu-engine.c',
-    'fu-engine-helper.c',
-    'fu-engine-request.c',
-    'fu-history.c',
-    'fu-idle.c',
-    'fu-install-task.c',
-    'fu-keyring-utils.c',
     'fu-main.c',
-    'fu-plugin-list.c',
-    'fu-remote-list.c',
-    'fu-security-attr.c',
-    systemd_src
+    daemon_src,
   ],
   include_directories : [
     root_incdir,
@@ -256,19 +257,9 @@ executable(
     fwupdplugin_incdir,
   ],
   dependencies : [
-    libjcat,
-    libxmlb,
-    libgcab,
-    giounix,
-    gmodule,
-    gudev,
-    gusb,
-    sqlite,
     valgrind,
-    libarchive,
-    libjsonglib,
     libsystemd,
-    daemon_dep
+    daemon_dep,
   ],
   link_with : [
     fwupd,
@@ -293,21 +284,9 @@ if get_option('tests')
     test_deps,
     fu_hash,
     sources : [
-      'fu-config.c',
-      'fu-device-list.c',
-      'fu-engine.c',
-      'fu-engine-helper.c',
-      'fu-engine-request.c',
-      'fu-history.c',
-      'fu-idle.c',
-      'fu-install-task.c',
-      'fu-keyring-utils.c',
-      'fu-plugin-list.c',
       'fu-progressbar.c',
-      'fu-remote-list.c',
-      'fu-security-attr.c',
       'fu-self-test.c',
-      systemd_src
+      daemon_src,
     ],
     include_directories : [
       root_incdir,
@@ -315,17 +294,7 @@ if get_option('tests')
       fwupdplugin_incdir,
     ],
     dependencies : [
-      libjcat,
-      libxmlb,
-      libgcab,
-      giounix,
-      gmodule,
-      gudev,
-      gusb,
-      sqlite,
-      valgrind,
-      libarchive,
-      libjsonglib,
+      daemon_dep,
     ],
     link_with : [
       fwupd,
@@ -338,14 +307,13 @@ if get_option('tests')
     ],
   )
   test('fu-self-test', e, is_parallel:false, timeout:180)
-endif
 
-if get_option('tests')
   # for fuzzing
   fwupd_firmware_dump = executable(
     'fwupd-firmware-dump',
     sources : [
       'fu-firmware-dump.c',
+      daemon_src,
     ],
     include_directories : [
       root_incdir,
@@ -353,17 +321,13 @@ if get_option('tests')
       fwupdplugin_incdir,
     ],
     dependencies : [
-      libxmlb,
-      gio,
+      daemon_dep,
     ],
     link_with : [
       fwupd,
       fwupdplugin,
     ],
-    c_args : cargs
   )
 endif
 
-if get_option('tests')
-  subdir('fuzzing')
-endif
+subdir('fuzzing')

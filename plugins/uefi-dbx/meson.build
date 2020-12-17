@@ -137,12 +137,15 @@ if get_option('man')
   )
 endif
 
-run_target('fuzz-efidbx',
-  command: [
-    join_paths(meson.source_root(), 'contrib/afl-fuzz.py'),
-    '-i', join_paths(meson.current_source_dir(), 'fuzzing'),
-    '-o', join_paths(meson.current_build_dir(), 'findings'),
-    '--command', uefi_dbx_fuzzer,
-    fwupdtool,
-  ],
-)
+if honggfuzz.found()
+  run_target('fuzz-efidbx',
+    command: [
+      honggfuzz,
+      '--input', join_paths(meson.current_source_dir(), 'fuzzing'),
+      '--output', join_paths(meson.current_build_dir(), 'fuzzing-corpus'),
+      '--workspace', join_paths(meson.current_build_dir(), 'fuzzing-findings'),
+      '--verifier',
+      '--', uefi_dbx_fuzzer, '___FILE___',
+    ],
+  )
+endif

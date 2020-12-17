@@ -65,7 +65,9 @@ typedef struct {
 
 typedef struct {
 	CURL				*curl;
+#ifdef HAVE_LIBCURL_7_56_0
 	curl_mime			*mime;
+#endif
 	struct curl_slist		*headers;
 } FwupdCurlHelper;
 
@@ -106,8 +108,10 @@ fwupd_client_curl_helper_free (FwupdCurlHelper *helper)
 {
 	if (helper->curl != NULL)
 		curl_easy_cleanup (helper->curl);
+#ifdef HAVE_LIBCURL_7_56_0
 	if (helper->mime != NULL)
 		curl_mime_free (helper->mime);
+#endif
 	if (helper->headers != NULL)
 		curl_slist_free_all (helper->headers);
 	g_free (helper);
@@ -1009,7 +1013,6 @@ fwupd_client_get_device_by_id_cb (GObject *source,
 	g_autoptr(GTask) task = G_TASK (user_data);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
-	g_autoptr(FwupdDevice) device = NULL;
 	const gchar *device_id = g_task_get_task_data (task);
 
 	devices = fwupd_client_get_devices_finish (FWUPD_CLIENT (source), res, &error);
@@ -2426,7 +2429,6 @@ fwupd_client_install_release_async (FwupdClient *self,
 				    gpointer callback_data)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GError) error = NULL;
 	g_autoptr(GTask) task = NULL;
 	FwupdClientInstallReleaseData *data;
 	const gchar *remote_id;
@@ -4265,6 +4267,7 @@ fwupd_client_upload_bytes_async (FwupdClient *self,
 	/* build message */
 	if ((flags & FWUPD_CLIENT_UPLOAD_FLAG_ALWAYS_MULTIPART) > 0 ||
 	    signature != NULL) {
+#ifdef HAVE_LIBCURL_7_56_0
 		curl_mimepart *part;
 		helper->mime = curl_mime_init (helper->curl);
 		curl_easy_setopt (helper->curl, CURLOPT_MIMEPOST, helper->mime);
@@ -4276,6 +4279,13 @@ fwupd_client_upload_bytes_async (FwupdClient *self,
 			curl_mime_data (part, signature, CURL_ZERO_TERMINATED);
 			curl_mime_name (part, "signature");
 		}
+#else
+		g_task_return_new_error (task,
+					 FWUPD_ERROR,
+					 FWUPD_ERROR_INTERNAL,
+					 "not supported as libcurl is too old");
+		return;
+#endif
 	} else {
 		helper->headers = curl_slist_append (helper->headers, "Content-Type: text/plain");
 		curl_easy_setopt (helper->curl, CURLOPT_HTTPHEADER, helper->headers);

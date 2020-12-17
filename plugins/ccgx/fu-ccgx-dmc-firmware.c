@@ -7,6 +7,8 @@
 
 #include "config.h"
 
+#include <string.h>
+
 #include "fu-common.h"
 #include "fu-common-version.h"
 #include "fu-ccgx-dmc-common.h"
@@ -220,6 +222,14 @@ fu_ccgx_dmc_firmware_parse_image (FuFirmware *firmware,
 				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "invalid segment number = %d",
 				     img_rcd->info_header.num_img_segments);
+			return FALSE;
+		}
+		if (img_rcd->info_header.row_size == 0) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "invalid row size = %d",
+				     img_rcd->info_header.row_size);
 			return FALSE;
 		}
 

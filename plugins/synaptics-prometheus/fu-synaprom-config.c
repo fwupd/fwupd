@@ -48,6 +48,15 @@ typedef struct __attribute__((packed)) {
 	guint16		 unused[3];
 } FuSynapromIotaConfigVersion;
 
+/* le */
+typedef struct __attribute__((packed)) {
+	guint32			 product;
+	guint32			 id1;			/* verification ID */
+	guint32			 id2;			/* verification ID */
+	guint16			 version;		/* config version */
+	guint8			 unused[2];
+} FuSynapromFirmwareCfgHeader;
+
 #define FU_SYNAPROM_CMD_IOTA_FIND_FLAGS_ALLIOTAS	0x0001	/* itype ignored*/
 #define FU_SYNAPROM_CMD_IOTA_FIND_FLAGS_READMAX		0x0002	/* nbytes ignored */
 #define FU_SYNAPROM_MAX_IOTA_READ_SIZE			(64 * 1024) /* max size of iota data returned */

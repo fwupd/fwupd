@@ -14,4 +14,4 @@ ProtectKernelModules=yes
 ProtectControlGroups=yes
 RestrictRealtime=yes
 SuccessExitStatus=2
-ExecStart=@bindir@/fwupdmgr refresh --no-metadata-check
+ExecStart=@bindir@/fwupdmgr refresh

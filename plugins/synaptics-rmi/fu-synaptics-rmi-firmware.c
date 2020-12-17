@@ -20,7 +20,7 @@ struct _FuSynapticsRmiFirmware {
 	guint8			 io;
 	guint8			 bootloader_version;
 	guint32			 build_id;
-	guint16			 package_id;
+	guint32			 package_id;
 	guint16			 product_info;
 	gchar			*product_id;
 };
@@ -172,7 +172,11 @@ fu_synaptics_rmi_firmware_parse_v10 (FuFirmware *firmware, GBytes *fw, GError **
 	gsize sz = 0;
 	const guint8 *data = g_bytes_get_data (fw, &sz);
 
-	cntr_addr = fu_common_read_uint32 (data + RMI_IMG_V10_CNTR_ADDR_OFFSET, G_LITTLE_ENDIAN);
+	if (!fu_common_read_uint32_safe (data, sz,
+					 RMI_IMG_V10_CNTR_ADDR_OFFSET,
+					 &cntr_addr, G_LITTLE_ENDIAN,
+					 error))
+		return FALSE;
 	g_debug ("v10 RmiFirmwareContainerDescriptor at 0x%x", cntr_addr);
 	if (!fu_memcpy_safe ((guint8 *) &desc, sizeof(desc), 0x0,	/* dst */
 			     data, sz, cntr_addr,			/* src */
@@ -204,8 +208,11 @@ fu_synaptics_rmi_firmware_parse_v10 (FuFirmware *firmware, GBytes *fw, GError **
 
 	for (guint32 i = 0; i < cntrs_len; i++) {
 		guint32 content_addr;
-		guint32 addr = fu_common_read_uint32 (data + offset, G_LITTLE_ENDIAN);
+		guint32 addr;
 		guint32 length;
+		if (!fu_common_read_uint32_safe (data, sz, offset, &addr,
+						 G_LITTLE_ENDIAN, error))
+			return FALSE;
 		g_debug ("parsing RmiFirmwareContainerDescriptor at 0x%x", addr);
 		if (!fu_memcpy_safe ((guint8 *) &desc, sizeof(desc), 0x0,	/* dst */
 				     data, sz, addr,				/* src */
@@ -216,7 +223,7 @@ fu_synaptics_rmi_firmware_parse_v10 (FuFirmware *firmware, GBytes *fw, GError **
 		length = GUINT32_FROM_LE(desc.content_length);
 		g_debug ("RmiFirmwareContainerDescriptor 0x%02x @ 0x%x (len 0x%x)",
 			 container_id, content_addr, length);
-		if (length > sz) {
+		if (length == 0 || length > sz) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
@@ -259,9 +266,20 @@ fu_synaptics_rmi_firmware_parse_v10 (FuFirmware *firmware, GBytes *fw, GError **
 					     content_addr, (guint) length);
 				return FALSE;
 			}
+			g_clear_pointer (&self->product_id, g_free);
 			self->io = 1;
-			self->package_id = fu_common_read_uint32 (data + content_addr, G_LITTLE_ENDIAN);
-			self->build_id = fu_common_read_uint32 (data + content_addr + 4, G_LITTLE_ENDIAN);
+			if (!fu_common_read_uint32_safe (data, sz,
+							 content_addr,
+							 &self->package_id,
+							 G_LITTLE_ENDIAN,
+							 error))
+				return FALSE;
+			if (!fu_common_read_uint32_safe (data, sz,
+							 content_addr + 0x04,
+							 &self->build_id,
+							 G_LITTLE_ENDIAN,
+							 error))
+				return FALSE;
 			self->product_id = g_strndup ((const gchar *) data + content_addr + 0x18, RMI_PRODUCT_ID_LENGTH);
 			break;
 		default:
@@ -279,12 +297,17 @@ static gboolean
 fu_synaptics_rmi_firmware_parse_v0x (FuFirmware *firmware, GBytes *fw, GError **error)
 {
 	guint32 cfg_sz;
-	guint32 img_sz;
+	guint32 img_sz = 0;
 	gsize sz = 0;
 	const guint8 *data = g_bytes_get_data (fw, &sz);
 
 	/* main firmware */
-	img_sz = fu_common_read_uint32 (data + RMI_IMG_IMAGE_SIZE_OFFSET, G_LITTLE_ENDIAN);
+	if (!fu_common_read_uint32_safe (data, sz,
+					 RMI_IMG_IMAGE_SIZE_OFFSET,
+					 &img_sz,
+					 G_LITTLE_ENDIAN,
+					 error))
+		return FALSE;
 	if (img_sz > 0) {
 		if (img_sz > sz - RMI_IMG_FW_OFFSET) {
 			g_set_error (error,
@@ -300,7 +323,11 @@ fu_synaptics_rmi_firmware_parse_v0x (FuFirmware *firmware, GBytes *fw, GError **
 	}
 
 	/* config */
-	cfg_sz = fu_common_read_uint32 (data + RMI_IMG_CONFIG_SIZE_OFFSET, G_LITTLE_ENDIAN);
+	if (!fu_common_read_uint32_safe (data, sz,
+					 RMI_IMG_CONFIG_SIZE_OFFSET,
+					 &cfg_sz, G_LITTLE_ENDIAN,
+					 error))
+		return FALSE;
 	if (cfg_sz > 0) {
 		if (cfg_sz > sz - RMI_IMG_FW_OFFSET) {
 			g_set_error (error,
@@ -347,7 +374,12 @@ fu_synaptics_rmi_firmware_parse (FuFirmware *firmware,
 	}
 
 	/* verify checksum */
-	self->checksum = fu_common_read_uint32 (data + RMI_IMG_CHECKSUM_OFFSET, G_LITTLE_ENDIAN);
+	if (!fu_common_read_uint32_safe (data, sz,
+					 RMI_IMG_CHECKSUM_OFFSET,
+					 &self->checksum,
+					 G_LITTLE_ENDIAN,
+					 error))
+		return FALSE;
 	checksum_calculated = fu_synaptics_rmi_generate_checksum (data + 4, sz - 4);
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
 		if (self->checksum != checksum_calculated) {
@@ -361,14 +393,30 @@ fu_synaptics_rmi_firmware_parse (FuFirmware *firmware,
 	}
 
 	/* parse legacy image */
+	g_clear_pointer (&self->product_id, g_free);
 	self->io = data[RMI_IMG_IO_OFFSET];
 	self->bootloader_version = data[RMI_IMG_BOOTLOADER_VERSION_OFFSET];
 	if (self->io == 1) {
-		self->build_id = fu_common_read_uint32 (data + RMI_IMG_FW_BUILD_ID_OFFSET, G_LITTLE_ENDIAN);
-		self->package_id = fu_common_read_uint32 (data + RMI_IMG_PACKAGE_ID_OFFSET, G_LITTLE_ENDIAN);
+		if (!fu_common_read_uint32_safe (data, sz,
+						 RMI_IMG_FW_BUILD_ID_OFFSET,
+						 &self->build_id,
+						 G_LITTLE_ENDIAN,
+						 error))
+			return FALSE;
+		if (!fu_common_read_uint32_safe (data, sz,
+						 RMI_IMG_PACKAGE_ID_OFFSET,
+						 &self->package_id,
+						 G_LITTLE_ENDIAN,
+						 error))
+			return FALSE;
 	}
 	self->product_id = g_strndup ((const gchar *) data + RMI_IMG_PRODUCT_ID_OFFSET, RMI_PRODUCT_ID_LENGTH);
-	self->product_info = fu_common_read_uint16 (data + RMI_IMG_PRODUCT_INFO_OFFSET, G_LITTLE_ENDIAN);
+	if (!fu_common_read_uint16_safe (data, sz,
+					 RMI_IMG_PRODUCT_INFO_OFFSET,
+					 &self->product_info,
+					 G_LITTLE_ENDIAN,
+					 error))
+		return FALSE;
 
 	/* parse partitions, but ignore lockdown */
 	switch (self->bootloader_version) {
@@ -463,9 +511,19 @@ fu_synaptics_rmi_firmware_init (FuSynapticsRmiFirmware *self)
 }
 
 static void
+fu_synaptics_rmi_firmware_finalize (GObject *obj)
+{
+	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE (obj);
+	g_free (self->product_id);
+	G_OBJECT_CLASS (fu_synaptics_rmi_firmware_parent_class)->finalize (obj);
+}
+
+static void
 fu_synaptics_rmi_firmware_class_init (FuSynapticsRmiFirmwareClass *klass)
 {
+	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS (klass);
+	object_class->finalize = fu_synaptics_rmi_firmware_finalize;
 	klass_firmware->parse = fu_synaptics_rmi_firmware_parse;
 	klass_firmware->to_string = fu_synaptics_rmi_firmware_to_string;
 }

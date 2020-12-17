@@ -8,6 +8,8 @@
 
 #include "config.h"
 
+#include <string.h>
+
 #include "fu-common.h"
 #include "fu-dfu-firmware.h"
 
@@ -264,7 +266,9 @@ fu_dfu_firmware_parse (FuFirmware *firmware,
 	}
 
 	/* success */
-	contents = g_bytes_new_from_bytes (fw, 0, len - ftr.len);
+	contents = fu_common_bytes_new_offset (fw, 0, len - ftr.len, error);
+	if (contents == NULL)
+		return FALSE;
 	image = fu_firmware_image_new (contents);
 	fu_firmware_add_image (firmware, image);
 	return TRUE;

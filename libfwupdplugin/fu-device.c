@@ -173,9 +173,11 @@ fu_device_add_possible_plugin (FuDevice *self, const gchar *plugin)
 	g_return_if_fail (plugin != NULL);
 
 	/* add if it does not already exist */
+#if GLIB_CHECK_VERSION(2,54,3)
 	if (g_ptr_array_find_with_equal_func (priv->possible_plugins, plugin,
 					      g_str_equal, NULL))
 		return;
+#endif
 	g_ptr_array_add (priv->possible_plugins, g_strdup (plugin));
 }
 

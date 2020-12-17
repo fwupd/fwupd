@@ -120,6 +120,8 @@ fu_thunderbolt_firmware_family_to_string (FuThunderboltFamily family)
 		return "Titan Ridge";
 	if (family == _FAMILY_BB)
 		return "BB";
+	if (family == _FAMILY_MR)
+		return "Maple Ridge";
 	return "Unknown";
 }
 
@@ -382,6 +384,13 @@ fu_thunderbolt_firmware_parse (FuFirmware *firmware,
 		{ 0x15EA, 3, _FAMILY_TR, 2 }, /* TR 4C */
 		{ 0x15EF, 3, _FAMILY_TR, 2 }, /* TR 4C device */
 		{ 0x15EE, 3, _FAMILY_BB, 0 }, /* BB device */
+		/* Maple ridge devices
+		 * NOTE: These are expected to be flashed via UEFI capsules *not* Thunderbolt plugin
+		 * Flashing via fwupd will require matching kernel work.
+		 * They're left here only for parsing the binaries
+		 */
+		{ 0x1136, 4, _FAMILY_MR, 2 },
+		{ 0x1137, 4, _FAMILY_MR, 2 },
 		{ 0 }
 	};
 
@@ -442,7 +451,7 @@ fu_thunderbolt_firmware_parse (FuFirmware *firmware,
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Unknown controller");
+			     "Unknown controller: %x", priv->device_id);
 		return FALSE;
 	}
 

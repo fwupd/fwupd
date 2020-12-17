@@ -61,6 +61,7 @@ struct FuUtilPrivate {
 	FwupdInstallFlags	 flags;
 	FwupdClient		*client;
 	FuProgressbar		*progressbar;
+	gboolean		 no_remote_check;
 	gboolean		 no_metadata_check;
 	gboolean		 no_reboot_check;
 	gboolean		 no_unreported_check;
@@ -768,7 +769,6 @@ fu_util_report_history (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GHashTable) report_map = NULL;
 	g_autoptr(GList) ids = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
-	g_autoptr(GPtrArray) remotes = NULL;
 	g_autoptr(GString) str = g_string_new (NULL);
 
 	/* get all devices from the history database, then filter them,
@@ -1135,8 +1135,8 @@ fu_util_download_metadata (FuUtilPrivate *priv, GError **error)
 	/* no web remote is declared; try to enable LVFS */
 	if (!download_remote_enabled) {
 		/* we don't want to ask anything */
-		if (priv->no_metadata_check) {
-			g_debug ("skipping metadata check");
+		if (priv->no_remote_check) {
+			g_debug ("skipping remote check");
 			return TRUE;
 		}
 
@@ -1924,9 +1924,11 @@ fu_util_switch_branch (FuUtilPrivate *priv, gchar **values, GError **error)
 	for (guint i = 0; i < rels->len; i++) {
 		FwupdRelease *rel_tmp = g_ptr_array_index (rels, i);
 		const gchar *branch_tmp = fu_util_release_get_branch (rel_tmp);
+#if GLIB_CHECK_VERSION(2,54,3)
 		if (g_ptr_array_find_with_equal_func (branches, branch_tmp,
 						      g_str_equal, NULL))
 			continue;
+#endif
 		g_ptr_array_add (branches, g_strdup (branch_tmp));
 	}
 
@@ -2739,6 +2741,9 @@ main (int argc, char *argv[])
 		{ "no-metadata-check", '\0', 0, G_OPTION_ARG_NONE, &priv->no_metadata_check,
 			/* TRANSLATORS: command line option */
 			_("Do not check for old metadata"), NULL },
+		{ "no-remote-check", '\0', 0, G_OPTION_ARG_NONE, &priv->no_remote_check,
+			/* TRANSLATORS: command line option */
+			_("Do not check if download remotes should be enabled"), NULL },
 		{ "no-reboot-check", '\0', 0, G_OPTION_ARG_NONE, &priv->no_reboot_check,
 			/* TRANSLATORS: command line option */
 			_("Do not check for reboot after update"), NULL },
@@ -3047,6 +3052,7 @@ main (int argc, char *argv[])
 		priv->no_metadata_check = TRUE;
 		priv->no_reboot_check = TRUE;
 		priv->no_safety_check = TRUE;
+		priv->no_remote_check = TRUE;
 		fu_progressbar_set_interactive (priv->progressbar, FALSE);
 	}
 
