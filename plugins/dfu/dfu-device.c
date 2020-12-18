@@ -66,6 +66,8 @@
  */
 #define	FU_QUIRKS_DFU_FORCE_VERSION		"DfuForceVersion"
 
+#define DFU_DEVICE_DNLOAD_TIMEOUT_DEFAULT	5	/* ms */
+
 #include "config.h"
 
 #include <string.h>
@@ -920,11 +922,16 @@ dfu_device_refresh (DfuDevice *device, GError **error)
 	/* status or state changed */
 	dfu_device_set_status (device, buf[0]);
 	if (fu_device_has_custom_flag (FU_DEVICE (device), "ignore-polltimeout")) {
-		priv->dnload_timeout = 5;
+		priv->dnload_timeout = DFU_DEVICE_DNLOAD_TIMEOUT_DEFAULT;
 	} else {
 		priv->dnload_timeout = buf[1] +
 					(((guint32) buf[2]) << 8) +
 					(((guint32) buf[3]) << 16);
+		if (priv->dnload_timeout == 0) {
+			priv->dnload_timeout = DFU_DEVICE_DNLOAD_TIMEOUT_DEFAULT;
+			g_debug ("no dnload-timeout, using default of %ums",
+				 priv->dnload_timeout);
+		}
 	}
 	g_debug ("refreshed status=%s and state=%s (dnload=%u)",
 		 dfu_status_to_string (priv->status),
