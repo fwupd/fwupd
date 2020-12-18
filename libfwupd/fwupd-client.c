@@ -53,6 +53,7 @@ typedef struct {
 	gboolean			 tainted;
 	gboolean			 interactive;
 	guint				 percentage;
+	guint				 idle_id;
 	gchar				*daemon_version;
 	gchar				*host_product;
 	gchar				*host_machine_id;
@@ -181,17 +182,30 @@ fwupd_client_set_percentage (FwupdClient *self, guint percentage)
 	g_object_notify (G_OBJECT (self), "percentage");
 }
 
+typedef struct {
+	FwupdClient	*self;
+	GVariant	*changed_properties;
+} FwupdClientPropertyHelper;
+
 static void
-fwupd_client_properties_changed_cb (GDBusProxy *proxy,
-				    GVariant *changed_properties,
-				    GStrv invalidated_properties,
-				    FwupdClient *self)
+fwupd_client_property_helper_free (FwupdClientPropertyHelper *helper)
 {
+	g_object_unref (helper->self);
+	g_variant_unref (helper->changed_properties);
+	g_free (helper);
+}
+
+static gboolean
+fwupd_client_properties_changed_idle_cb (gpointer user_data)
+{
+	FwupdClientPropertyHelper *helper = (FwupdClientPropertyHelper *) user_data;
+	FwupdClient *self = FWUPD_CLIENT (helper->self);
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	GDBusProxy *proxy = G_DBUS_PROXY (priv->proxy);
 	g_autoptr(GVariantDict) dict = NULL;
 
 	/* print to the console */
-	dict = g_variant_dict_new (changed_properties);
+	dict = g_variant_dict_new (helper->changed_properties);
 	if (g_variant_dict_contains (dict, "Status")) {
 		g_autoptr(GVariant) val = NULL;
 		val = g_dbus_proxy_get_cached_property (proxy, "Status");
@@ -244,6 +258,79 @@ fwupd_client_properties_changed_cb (GDBusProxy *proxy,
 		if (val != NULL)
 			fwupd_client_set_host_security_id (self, g_variant_get_string (val, NULL));
 	}
+	return G_SOURCE_REMOVE;
+}
+
+static void
+fwupd_client_properties_changed_cb (GDBusProxy *proxy,
+				    GVariant *changed_properties,
+				    GStrv invalidated_properties,
+				    FwupdClient *self)
+{
+	/* we want the GDBusProxy to emit signals in the thread default
+	 * main context of the thread which called fwupd_client_new()
+	 * not the first one that caused a fwupd_client_connect_async()... */
+	FwupdClientPropertyHelper *helper = g_new0 (FwupdClientPropertyHelper, 1);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GSource) source = g_idle_source_new ();
+
+	helper->self = g_object_ref (self);
+	helper->changed_properties = g_variant_ref (changed_properties);
+	g_source_set_callback (source,
+			       fwupd_client_properties_changed_idle_cb,
+			       helper,
+			       (GDestroyNotify) fwupd_client_property_helper_free);
+	if (priv->idle_id != 0)
+		g_source_remove (priv->idle_id);
+	priv->idle_id = g_source_attach (g_steal_pointer (&source),
+					 priv->main_ctx_prxy);
+}
+
+typedef struct {
+	FwupdClient	*self;
+	gchar		*signal_name;
+	GVariant	*parameters;
+} FwupdClientSignalHelper;
+
+static void
+fwupd_client_signal_helper_free (FwupdClientSignalHelper *helper)
+{
+	g_object_unref (helper->self);
+	g_variant_unref (helper->parameters);
+	g_free (helper->signal_name);
+	g_free (helper);
+}
+
+static gboolean
+fwupd_client_signal_idle_cb (gpointer user_data)
+{
+	FwupdClientSignalHelper *helper = (FwupdClientSignalHelper *) user_data;
+	FwupdClient *self = FWUPD_CLIENT (helper->self);
+	const gchar *signal_name = helper->signal_name;
+	g_autoptr(FwupdDevice) dev = NULL;
+
+	if (g_strcmp0 (signal_name, "Changed") == 0) {
+		g_debug ("Emitting ::changed()");
+		g_signal_emit (self, signals[SIGNAL_CHANGED], 0);
+	} else if (g_strcmp0 (signal_name, "DeviceAdded") == 0) {
+		dev = fwupd_device_from_variant (helper->parameters);
+		g_debug ("Emitting ::device-added(%s)",
+			 fwupd_device_get_id (dev));
+		g_signal_emit (self, signals[SIGNAL_DEVICE_ADDED], 0, dev);
+	} else if (g_strcmp0 (signal_name, "DeviceRemoved") == 0) {
+		dev = fwupd_device_from_variant (helper->parameters);
+		g_signal_emit (self, signals[SIGNAL_DEVICE_REMOVED], 0, dev);
+		g_debug ("Emitting ::device-removed(%s)",
+			 fwupd_device_get_id (dev));
+	} else if (g_strcmp0 (signal_name, "DeviceChanged") == 0) {
+		dev = fwupd_device_from_variant (helper->parameters);
+		g_signal_emit (self, signals[SIGNAL_DEVICE_CHANGED], 0, dev);
+		g_debug ("Emitting ::device-changed(%s)",
+			 fwupd_device_get_id (dev));
+	} else {
+		g_debug ("Unknown signal name %s", signal_name);
+	}
+	return G_SOURCE_REMOVE;
 }
 
 static void
@@ -253,34 +340,24 @@ fwupd_client_signal_cb (GDBusProxy *proxy,
 			GVariant *parameters,
 			FwupdClient *self)
 {
-	g_autoptr(FwupdDevice) dev = NULL;
-	if (g_strcmp0 (signal_name, "Changed") == 0) {
-		g_debug ("Emitting ::changed()");
-		g_signal_emit (self, signals[SIGNAL_CHANGED], 0);
-		return;
-	}
-	if (g_strcmp0 (signal_name, "DeviceAdded") == 0) {
-		dev = fwupd_device_from_variant (parameters);
-		g_debug ("Emitting ::device-added(%s)",
-			 fwupd_device_get_id (dev));
-		g_signal_emit (self, signals[SIGNAL_DEVICE_ADDED], 0, dev);
-		return;
-	}
-	if (g_strcmp0 (signal_name, "DeviceRemoved") == 0) {
-		dev = fwupd_device_from_variant (parameters);
-		g_signal_emit (self, signals[SIGNAL_DEVICE_REMOVED], 0, dev);
-		g_debug ("Emitting ::device-removed(%s)",
-			 fwupd_device_get_id (dev));
-		return;
-	}
-	if (g_strcmp0 (signal_name, "DeviceChanged") == 0) {
-		dev = fwupd_device_from_variant (parameters);
-		g_signal_emit (self, signals[SIGNAL_DEVICE_CHANGED], 0, dev);
-		g_debug ("Emitting ::device-changed(%s)",
-			 fwupd_device_get_id (dev));
-		return;
-	}
-	g_debug ("Unknown signal name '%s' from %s", signal_name, sender_name);
+	FwupdClientSignalHelper *helper = g_new0 (FwupdClientSignalHelper, 1);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GSource) source = g_idle_source_new ();
+
+	/* we want the GDBusProxy to emit signals in the thread default
+	 * main context of the thread which called fwupd_client_new()
+	 * not the first one that caused a fwupd_client_connect_async()... */
+	helper->self = g_object_ref (self);
+	helper->signal_name = g_strdup (signal_name);
+	helper->parameters = g_variant_ref (parameters);
+	g_source_set_callback (source,
+			       fwupd_client_signal_idle_cb,
+			       helper,
+			       (GDestroyNotify) fwupd_client_signal_helper_free);
+	if (priv->idle_id != 0)
+		g_source_remove (priv->idle_id);
+	priv->idle_id = g_source_attach (g_steal_pointer (&source),
+					 priv->main_ctx_prxy);
 }
 
 /**
@@ -501,11 +578,6 @@ fwupd_client_connect_get_bus_cb (GObject *source,
 		g_task_return_error (task, g_steal_pointer (&error));
 		return;
 	}
-
-	/* we want the GDBusProxy to emit signals in the thread default
-	 * main context of the thread which called fwupd_client_new()
-	 * not the first one that caused a fwupd_client_connect_async()... */
-	g_main_context_push_thread_default (priv->main_ctx_prxy);
 	g_dbus_proxy_new (priv->conn,
 			  G_DBUS_PROXY_FLAGS_NONE,
 			  NULL,
@@ -515,7 +587,6 @@ fwupd_client_connect_get_bus_cb (GObject *source,
 			  g_task_get_cancellable (task),
 			  fwupd_client_connect_get_proxy_cb,
 			  g_object_ref (task));
-	g_main_context_pop_thread_default (priv->main_ctx_prxy);
 }
 
 /**
@@ -4705,6 +4776,8 @@ fwupd_client_finalize (GObject *object)
 	g_free (priv->host_product);
 	g_free (priv->host_machine_id);
 	g_free (priv->host_security_id);
+	if (priv->idle_id != 0)
+		g_source_remove (priv->idle_id);
 	if (priv->conn != NULL)
 		g_object_unref (priv->conn);
 	if (priv->proxy != NULL)
