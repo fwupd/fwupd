@@ -281,6 +281,34 @@
       </note>
     </refsect3>
 
+    <refsect3 id="org.fwupd.hsi.Uefi.Pk">
+      <title>UEFI PK</title>
+      <para>
+        UEFI defines a platform key for the system.
+        This should not be a test key, e.g. ``DO NOT TRUST - AMI Test PK``
+      </para>
+      <itemizedlist>
+        <listitem>
+          <para>
+            For HSI-1 a test key must not be enrolled.
+            <emphasis>v1.5.0</emphasis>
+          </para>
+        </listitem>
+      </itemizedlist>
+      <note>
+        <para>
+          See also:
+          <itemizedlist>
+            <listitem>
+              <ulink url="https://wiki.ubuntu.com/UEFI/SecureBoot/Testing">
+                UEFI Testing Wiki Entry
+              </ulink>
+            </listitem>
+          </itemizedlist>
+        </para>
+      </note>
+    </refsect3>
+
     <refsect3 id="org.fwupd.hsi.Spi.Bioswe">
       <title>BIOS Write Enable (BWE)</title>
       <para>

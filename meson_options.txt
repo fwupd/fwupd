@@ -17,6 +17,7 @@ option('plugin_synaptics', type: 'boolean', value: true, description : 'enable S
 option('plugin_thunderbolt', type : 'boolean', value : true, description : 'enable Thunderbolt support')
 option('plugin_redfish', type : 'boolean', value : true, description : 'enable Redfish support')
 option('plugin_uefi_capsule', type : 'boolean', value : true, description : 'enable UEFI support')
+option('plugin_uefi_pk', type : 'boolean', value : true, description : 'enable UEFI PK support')
 option('plugin_nvme', type : 'boolean', value : true, description : 'enable NVMe support')
 option('plugin_modem_manager', type : 'boolean', value : false, description : 'enable ModemManager support')
 option('plugin_msr', type : 'boolean', value : true, description : 'enable MSR support')

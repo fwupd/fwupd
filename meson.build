@@ -249,6 +249,10 @@ gcab = find_program('gcab', required : get_option('tests'))
 bashcomp = dependency('bash-completion', required: false)
 python3 = find_program('python3')
 
+if get_option('plugin_uefi_pk')
+  gnutls = dependency('gnutls', version : '>= 3.6.0')
+endif
+
 platform_deps = []
 if get_option('default_library') != 'static'
   if host_machine.system() == 'windows'
