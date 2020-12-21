@@ -43,6 +43,7 @@ G_BEGIN_DECLS
 #define FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT		"org.fwupd.hsi.Uefi.SecureBoot"		/* Since: 1.5.0 */
 #define FWUPD_SECURITY_ATTR_ID_INTEL_DCI_ENABLED	"org.fwupd.hsi.IntelDci.Enabled"	/* Since: 1.5.0 */
 #define FWUPD_SECURITY_ATTR_ID_INTEL_DCI_LOCKED		"org.fwupd.hsi.IntelDci.Locked"		/* Since: 1.5.0 */
+#define FWUPD_SECURITY_ATTR_ID_UEFI_PK			"org.fwupd.hsi.Uefi.Pk"			/* Since: 1.5.5 */
 
 GVariant	*fwupd_security_attr_to_variant		(FwupdSecurityAttr	*self);
 void		 fwupd_security_attr_to_json		(FwupdSecurityAttr	*self,

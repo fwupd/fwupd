@@ -439,6 +439,7 @@ done
 %{_libdir}/fwupd-plugins-3/libfu_plugin_bios.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_uefi.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_uefi_dbx.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_uefi_pk.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_uefi_recovery.so
 %endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_logind.so

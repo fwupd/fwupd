@@ -29,6 +29,38 @@ shared_module('fu_plugin_uefi_dbx',
   ],
 )
 
+if get_option('plugin_uefi_pk')
+shared_module('fu_plugin_uefi_pk',
+  fu_hash,
+  sources : [
+    'fu-plugin-uefi-pk.c',
+    'fu-uefi-dbx-common.c',
+    'fu-uefi-dbx-device.c',
+    'fu-efi-image.c',
+    'fu-efi-signature.c',
+    'fu-efi-signature-common.c',
+    'fu-efi-signature-list.c',
+    'fu-efi-signature-parser.c',
+  ],
+  include_directories : [
+    root_incdir,
+    fwupd_incdir,
+    fwupdplugin_incdir,
+  ],
+  install : true,
+  install_dir: plugin_dir,
+  link_with : [
+    fwupd,
+    fwupdplugin,
+  ],
+  c_args : cargs,
+  dependencies : [
+    plugin_deps,
+    gnutls,
+  ],
+)
+endif
+
 if get_option('tests')
   testdatadirs = environment()
   testdatadirs.set('G_TEST_SRCDIR', meson.current_source_dir())
