@@ -97,6 +97,10 @@ fu_security_attr_get_name (FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: a better sleep state */
 		return g_strdup (_("Suspend-to-idle"));
 	}
+	if (g_strcmp0 (appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_PK) == 0) {
+		/* TRANSLATORS: Title: PK is the 'platform key' for the machine */
+		return g_strdup (_("UEFI platform key"));
+	}
 	if (g_strcmp0 (appstream_id, FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT) == 0) {
 		/* TRANSLATORS: Title: SB is a way of locking down UEFI */
 		return g_strdup (_("UEFI secure boot"));

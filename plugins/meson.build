@@ -126,6 +126,10 @@ subdir('uefi-recovery')
 subdir('uefi-dbx')
 endif
 
+if get_option('plugin_uefi_pk')
+subdir('uefi-pk')
+endif
+
 if get_option('plugin_flashrom')
 subdir('flashrom')
 endif
