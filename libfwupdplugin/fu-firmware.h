@@ -22,19 +22,23 @@ struct _FuFirmwareClass
 							 guint64	 addr_start,
 							 guint64	 addr_end,
 							 FwupdInstallFlags flags,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 	GBytes			*(*write)		(FuFirmware	*self,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 	void			 (*to_string)		(FuFirmware	*self,
 							 guint		 indent,
 							 GString	*str);
 	gboolean		 (*tokenize)		(FuFirmware	*self,
 							 GBytes		*fw,
 							 FwupdInstallFlags flags,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 	gboolean		 (*build)		(FuFirmware	*self,
 							 XbNode		*n,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 	/*< private >*/
 	gpointer		 padding[27];
 };
@@ -69,29 +73,36 @@ gboolean	 fu_firmware_has_flag			(FuFirmware	*firmware,
 gboolean	 fu_firmware_tokenize			(FuFirmware	*self,
 							 GBytes		*fw,
 							 FwupdInstallFlags flags,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_firmware_build			(FuFirmware	*self,
 							 XbNode		*n,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_firmware_parse			(FuFirmware	*self,
 							 GBytes		*fw,
 							 FwupdInstallFlags flags,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_firmware_parse_file			(FuFirmware	*self,
 							 GFile		*file,
 							 FwupdInstallFlags flags,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_firmware_parse_full			(FuFirmware	*self,
 							 GBytes		*fw,
 							 guint64	 addr_start,
 							 guint64	 addr_end,
 							 FwupdInstallFlags flags,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 GBytes		*fu_firmware_write			(FuFirmware	*self,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_firmware_write_file			(FuFirmware	*self,
 							 GFile		*file,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 
 void		 fu_firmware_add_image			(FuFirmware	*self,
 							 FuFirmwareImage *img);

@@ -29,4 +29,5 @@ gchar		*fu_common_version_ensure_semver (const gchar	*version);
 FwupdVersionFormat	 fu_common_version_guess_format	(const gchar	*version);
 gboolean	 fu_common_version_verify_format	(const gchar	*version,
 							 FwupdVersionFormat fmt,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;

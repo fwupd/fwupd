@@ -32,29 +32,36 @@ gboolean	 fu_efivar_get_data		(const gchar	*guid,
 						 guint8		**data,
 						 gsize		*data_sz,
 						 guint32	*attr,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 GBytes		*fu_efivar_get_data_bytes	(const gchar	*guid,
 						 const gchar	*name,
 						 guint32	*attr,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_efivar_set_data		(const gchar	*guid,
 						 const gchar	*name,
 						 const guint8	*data,
 						 gsize		 sz,
 						 guint32	 attr,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_efivar_set_data_bytes	(const gchar	*guid,
 						 const gchar	*name,
 						 GBytes		*bytes,
 						 guint32	 attr,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_efivar_delete		(const gchar	*guid,
 						 const gchar	*name,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_efivar_delete_with_glob	(const gchar	*guid,
 						 const gchar	*name_glob,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 GPtrArray	*fu_efivar_get_names		(const gchar	*guid,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_efivar_secure_boot_enabled	(void);
 gboolean	 fu_efivar_secure_boot_enabled_full(GError	**error);

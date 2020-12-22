@@ -92,41 +92,53 @@ gboolean	 fu_common_spawn_sync		(const gchar * const *argv,
 						 gpointer	 handler_user_data,
 						 guint		 timeout_ms,
 						 GCancellable	*cancellable,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 
 gchar		*fu_common_get_path		(FuPathKind	 path_kind);
 gchar		*fu_common_realpath		(const gchar	*filename,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 GPtrArray	*fu_common_filename_glob	(const gchar	*directory,
 						 const gchar	*pattern,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_common_fnmatch		(const gchar	*pattern,
 						 const gchar	*str);
 gboolean	 fu_common_rmtree		(const gchar	*directory,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 GPtrArray	*fu_common_get_files_recursive	(const gchar	*path,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_common_mkdir_parent		(const gchar	*filename,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_common_set_contents_bytes	(const gchar	*filename,
 						 GBytes		*bytes,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 GBytes		*fu_common_get_contents_bytes	(const gchar	*filename,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 GBytes		*fu_common_get_contents_fd	(gint		 fd,
 						 gsize		 count,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_common_extract_archive	(GBytes		*blob,
 						 const gchar	*dir,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 GBytes		*fu_common_firmware_builder	(GBytes		*bytes,
 						 const gchar	*script_fn,
 						 const gchar	*output_fn,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 GError		*fu_common_error_array_get_best	(GPtrArray	*errors);
 guint64		 fu_common_strtoull		(const gchar	*str);
 gchar		*fu_common_find_program_in_path	(const gchar	*basename,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 gchar		*fu_common_strstrip		(const gchar	*str);
 void		 fu_common_dump_raw		(const gchar	*log_domain,
 						 const gchar	*title,
@@ -147,18 +159,21 @@ GBytes		*fu_common_bytes_align		(GBytes		*bytes,
 gboolean	 fu_common_bytes_is_empty	(GBytes		*bytes);
 gboolean	 fu_common_bytes_compare	(GBytes		*bytes1,
 						 GBytes		*bytes2,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_common_bytes_compare_raw	(const guint8	*buf1,
 						 gsize		 bufsz1,
 						 const guint8	*buf2,
 						 gsize		 bufsz2,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 GBytes		*fu_common_bytes_pad		(GBytes		*bytes,
 						 gsize		 sz);
 GBytes		*fu_common_bytes_new_offset	(GBytes		*bytes,
 						 gsize		 offset,
 						 gsize		 length,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 gsize		 fu_common_strwidth		(const gchar	*text);
 gboolean	 fu_memcpy_safe			(guint8		*dst,
 						 gsize		 dst_sz,
@@ -167,24 +182,28 @@ gboolean	 fu_memcpy_safe			(guint8		*dst,
 						 gsize		 src_sz,
 						 gsize		 src_offset,
 						 gsize		 n,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_common_read_uint8_safe	(const guint8	*buf,
 						 gsize		 bufsz,
 						 gsize		 offset,
 						 guint8		*value,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_common_read_uint16_safe	(const guint8	*buf,
 						 gsize		 bufsz,
 						 gsize		 offset,
 						 guint16	*value,
 						 FuEndianType	 endian,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_common_read_uint32_safe	(const guint8	*buf,
 						 gsize		 bufsz,
 						 gsize		 offset,
 						 guint32	*value,
 						 FuEndianType	 endian,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 
 void		 fu_byte_array_set_size		(GByteArray	*array,
 						 guint		 length);
@@ -237,18 +256,24 @@ gboolean	 fu_common_cpuid		(guint32	 leaf,
 						 guint32	*ebx,
 						 guint32	*ecx,
 						 guint32	*edx,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_common_is_cpu_intel		(void);
 gboolean	 fu_common_is_live_media	(void);
 GPtrArray	*fu_common_get_volumes_by_kind	(const gchar	*kind,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 FuVolume	*fu_common_get_volume_by_device (const gchar	*device,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 FuVolume	*fu_common_get_volume_by_devnum	(guint32	 devnum,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 FuVolume	*fu_common_get_esp_for_path	(const gchar	*esp_path,
-						 GError		**error);
-FuVolume	*fu_common_get_esp_default	(GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
+FuVolume	*fu_common_get_esp_default	(GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 
 guint8		 fu_common_crc8			(const guint8	*buf,
 						 gsize		 bufsz);

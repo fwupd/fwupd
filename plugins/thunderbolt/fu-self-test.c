@@ -876,11 +876,11 @@ fu_thunderbolt_gudev_uevent_cb (GUdevClient *gudev_client,
 				GUdevDevice *udev_device,
 				ThunderboltTest *tt)
 {
-	g_autoptr(GError) error_local = NULL;
-
 	if (g_strcmp0 (action, "add") == 0) {
 		g_autoptr(FuUdevDevice) device = fu_udev_device_new (udev_device);
-		fu_plugin_runner_udev_device_added (tt->plugin, device, &error_local);
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_plugin_runner_udev_device_added (tt->plugin, device, &error_local))
+			g_debug ("failed to add: %s", error_local->message);
 		return;
 	}
 	if (g_strcmp0 (action, "remove") == 0) {

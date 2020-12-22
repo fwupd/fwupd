@@ -21,15 +21,19 @@ G_DECLARE_FINAL_TYPE (FuVolume, fu_volume, FU, VOLUME, GObject)
 const gchar	*fu_volume_get_id		(FuVolume	*self);
 gboolean	 fu_volume_check_free_space	(FuVolume	*self,
 						 guint64	 required,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_volume_is_mounted		(FuVolume	*self);
 gboolean	 fu_volume_is_encrypted		(FuVolume	*self);
 gchar		*fu_volume_get_mount_point	(FuVolume	*self);
 gboolean	 fu_volume_mount		(FuVolume	*self,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_volume_unmount		(FuVolume	*self,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 FuDeviceLocker	*fu_volume_locker		(FuVolume	*self,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_volume_is_internal		(FuVolume	*self);
 gchar		*fu_volume_get_id_type		(FuVolume	*self);
