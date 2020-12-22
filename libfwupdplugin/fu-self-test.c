@@ -1117,6 +1117,10 @@ fu_device_parent_func (void)
 	g_autoptr(FuDevice) parent = fu_device_new ();
 	g_autoptr(FuDevice) parent_root = NULL;
 
+	fu_device_set_physical_id (child, "dummy");
+	fu_device_set_physical_id (grandparent, "dummy");
+	fu_device_set_physical_id (parent, "dummy");
+
 	/* set up three layer family */
 	fu_device_add_child (grandparent, parent);
 	fu_device_add_child (parent, child);

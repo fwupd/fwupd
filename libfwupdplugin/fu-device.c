@@ -745,6 +745,7 @@ fu_device_add_child (FuDevice *self, FuDevice *child)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	GPtrArray *children;
+	g_autoptr(GError) error = NULL;
 
 	g_return_if_fail (FU_IS_DEVICE (self));
 	g_return_if_fail (FU_IS_DEVICE (child));
@@ -781,7 +782,8 @@ fu_device_add_child (FuDevice *self, FuDevice *child)
 	}
 
 	/* ensure the ID is converted */
-	fu_device_ensure_id (child, NULL);
+	if (!fu_device_ensure_id (child, &error))
+		g_warning ("failed to ensure child: %s", error->message);
 
 	/* ensure the parent is also set on the child */
 	fu_device_set_parent (child, self);

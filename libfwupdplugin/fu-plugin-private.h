@@ -44,52 +44,69 @@ gboolean	 fu_plugin_has_rule			(FuPlugin	*self,
 GHashTable	*fu_plugin_get_report_metadata		(FuPlugin	*self);
 gboolean	 fu_plugin_open				(FuPlugin	*self,
 							 const gchar	*filename,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_plugin_runner_startup		(FuPlugin	*self,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_plugin_runner_coldplug		(FuPlugin	*self,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_plugin_runner_coldplug_prepare	(FuPlugin	*self,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_plugin_runner_coldplug_cleanup	(FuPlugin	*self,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_plugin_runner_recoldplug		(FuPlugin	*self,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_plugin_runner_update_prepare	(FuPlugin	*self,
 							 FwupdInstallFlags flags,
 							 FuDevice	*device,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_plugin_runner_update_cleanup	(FuPlugin	*self,
 							 FwupdInstallFlags flags,
 							 FuDevice	*device,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_plugin_runner_composite_prepare	(FuPlugin	*self,
 							 GPtrArray	*devices,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_plugin_runner_composite_cleanup	(FuPlugin	*self,
 							 GPtrArray	*devices,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_plugin_runner_update_attach		(FuPlugin	*self,
 							 FuDevice	*device,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_plugin_runner_update_detach		(FuPlugin	*self,
 							 FuDevice	*device,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_plugin_runner_update_reload		(FuPlugin	*self,
 							 FuDevice	*device,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_plugin_runner_usb_device_added	(FuPlugin	*self,
 							 FuUsbDevice	*device,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_plugin_runner_udev_device_added	(FuPlugin	*self,
 							 FuUdevDevice	*device,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_plugin_runner_udev_device_changed	(FuPlugin	*self,
 							 FuUdevDevice	*device,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_plugin_runner_device_created	(FuPlugin	*self,
 							 FuDevice	*device,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 void		 fu_plugin_runner_device_added		(FuPlugin	*self,
 							 FuDevice	*device);
 void		 fu_plugin_runner_device_removed	(FuPlugin	*self,
@@ -100,23 +117,28 @@ gboolean	 fu_plugin_runner_update		(FuPlugin	*self,
 							 FuDevice	*device,
 							 GBytes		*blob_fw,
 							 FwupdInstallFlags flags,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_plugin_runner_verify		(FuPlugin	*self,
 							 FuDevice	*device,
 							 FuPluginVerifyFlags flags,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_plugin_runner_activate 		(FuPlugin *self,
 							 FuDevice *device,
 							 GError **error);
 gboolean	 fu_plugin_runner_unlock		(FuPlugin	*self,
 							 FuDevice	*device,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_plugin_runner_clear_results		(FuPlugin	*self,
 							 FuDevice	*device,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_plugin_runner_get_results		(FuPlugin	*self,
 							 FuDevice	*device,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 void		 fu_plugin_runner_add_security_attrs	(FuPlugin	*self,
 							 FuSecurityAttrs*attrs);
 gint		 fu_plugin_name_compare			(FuPlugin	*plugin1,

@@ -450,6 +450,7 @@ fu_engine_requirements_child_func (gconstpointer user_data)
 	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
 	fu_device_set_version_format (child, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version (child, "0.0.999");
+	fu_device_set_physical_id (child, "dummy");
 	fu_device_add_child (device, child);
 
 	/* make the component require three things */
@@ -505,6 +506,7 @@ fu_engine_requirements_child_fail_func (gconstpointer user_data)
 	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
 	fu_device_set_version_format (child, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version (child, "0.0.1");
+	fu_device_set_physical_id (child, "dummy");
 	fu_device_add_child (device, child);
 
 	/* make the component require three things */

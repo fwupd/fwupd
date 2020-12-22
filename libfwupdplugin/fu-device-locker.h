@@ -16,10 +16,13 @@ typedef gboolean (*FuDeviceLockerFunc)		(GObject		*device,
 						 GError			**error);
 
 FuDeviceLocker	*fu_device_locker_new		(gpointer		 device,
-						 GError			**error);
+						 GError			**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 FuDeviceLocker	*fu_device_locker_new_full	(gpointer		 device,
 						 FuDeviceLockerFunc	 open_func,
 						 FuDeviceLockerFunc	 close_func,
-						 GError			**error);
+						 GError			**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_device_locker_close		(FuDeviceLocker		*self,
-						 GError			**error);
+						 GError			**error)
+						 G_GNUC_WARN_UNUSED_RESULT;

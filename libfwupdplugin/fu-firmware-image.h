@@ -19,15 +19,18 @@ struct _FuFirmwareImageClass
 	gboolean		 (*parse)	(FuFirmwareImage	*self,
 						 GBytes			*fw,
 						 FwupdInstallFlags	 flags,
-						 GError			**error);
+						 GError			**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 	void			 (*to_string)	(FuFirmwareImage	*self,
 						 guint			 idt,
 						 GString		*str);
 	GBytes			*(*write)	(FuFirmwareImage	*self,
-						 GError			**error);
+						 GError			**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 	gboolean		 (*build)	(FuFirmwareImage	*self,
 						 XbNode			*n,
-						 GError			**error);
+						 GError			**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 	/*< private >*/
 	gpointer		 padding[27];
 };
@@ -63,13 +66,17 @@ void		 fu_firmware_image_set_bytes	(FuFirmwareImage	*self,
 gboolean	 fu_firmware_image_parse	(FuFirmwareImage	*self,
 						 GBytes			*fw,
 						 FwupdInstallFlags	 flags,
-						 GError			**error);
+						 GError			**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_firmware_image_build	(FuFirmwareImage	*self,
 						 XbNode			*n,
-						 GError			**error);
+						 GError			**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 GBytes		*fu_firmware_image_write	(FuFirmwareImage	*self,
-						 GError			**error);
+						 GError			**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 GBytes		*fu_firmware_image_write_chunk	(FuFirmwareImage	*self,
 						 guint64		 address,
 						 guint64		 chunk_sz_max,
-						 GError			**error);
+						 GError			**error)
+						 G_GNUC_WARN_UNUSED_RESULT;

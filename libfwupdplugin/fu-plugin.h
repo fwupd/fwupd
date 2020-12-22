@@ -135,7 +135,8 @@ gboolean	 fu_plugin_check_hwid			(FuPlugin	*self,
 							 const gchar	*hwid);
 gchar		*fu_plugin_get_hwid_replace_value	(FuPlugin	*self,
 							 const gchar	*keys,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 GPtrArray	*fu_plugin_get_hwids			(FuPlugin	*self);
 const gchar	*fu_plugin_get_dmi_value		(FuPlugin	*self,
 							 const gchar	*dmi_id);

@@ -40,15 +40,19 @@ typedef gboolean (*FuArchiveIterateFunc)	(FuArchive		*self,
 						 const gchar		*filename,
 						 GBytes			*bytes,
 						 gpointer		 user_data,
-						 GError			**error);
+						 GError			**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 
-FuArchive	*fu_archive_new			(GBytes		*data,
-						 FuArchiveFlags	 flags,
-						 GError		**error);
-GBytes		*fu_archive_lookup_by_fn	(FuArchive	*self,
-						 const gchar	*fn,
-						 GError		**error);
+FuArchive	*fu_archive_new			(GBytes			*data,
+						 FuArchiveFlags		 flags,
+						 GError			**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
+GBytes		*fu_archive_lookup_by_fn	(FuArchive		*self,
+						 const gchar		*fn,
+						 GError			**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_archive_iterate		(FuArchive		*self,
 						 FuArchiveIterateFunc	callback,
 						 gpointer		user_data,
-						 GError			**error);
+						 GError			**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
