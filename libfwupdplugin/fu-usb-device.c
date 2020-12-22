@@ -506,6 +506,9 @@ fu_usb_device_find_udev_device (FuUsbDevice *device, GError **error)
 	g_autoptr(GList) devices = NULL;
 	g_autoptr(GUdevClient) gudev_client = g_udev_client_new (NULL);
 
+	g_return_val_if_fail (FU_IS_USB_DEVICE (device), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
 	/* find all tty devices */
 	devices = g_udev_client_query_by_subsystem (gudev_client, "usb");
 	for (GList *l = devices; l != NULL; l = l->next) {

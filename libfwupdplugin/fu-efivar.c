@@ -51,6 +51,7 @@ fu_efivar_supported (GError **error)
 {
 #ifndef _WIN32
 	g_autofree gchar *efivardir = fu_efivar_get_path ();
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 	if (!g_file_test (efivardir, G_FILE_TEST_IS_DIR)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -61,6 +62,7 @@ fu_efivar_supported (GError **error)
 	}
 	return TRUE;
 #else
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 	g_set_error_literal (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
@@ -173,8 +175,15 @@ fu_efivar_set_immutable (const gchar *fn,
 gboolean
 fu_efivar_delete (const gchar *guid, const gchar *name, GError **error)
 {
-	g_autofree gchar *fn = fu_efivar_get_filename (guid, name);
-	g_autoptr(GFile) file = g_file_new_for_path (fn);
+	g_autofree gchar *fn = NULL;
+	g_autoptr(GFile) file = NULL;
+
+	g_return_val_if_fail (guid != NULL, FALSE);
+	g_return_val_if_fail (name != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	fn = fu_efivar_get_filename (guid, name);
+	file = g_file_new_for_path (fn);
 	if (!g_file_query_exists (file, NULL))
 		return TRUE;
 	if (!fu_efivar_set_immutable (fn, FALSE, NULL, error)) {
@@ -202,7 +211,13 @@ fu_efivar_delete_with_glob (const gchar *guid, const gchar *name_glob, GError **
 	const gchar *fn;
 	g_autofree gchar *nameguid_glob = NULL;
 	g_autofree gchar *efivardir = fu_efivar_get_path ();
-	g_autoptr(GDir) dir = g_dir_open (efivardir, 0, error);
+	g_autoptr(GDir) dir = NULL;
+
+	g_return_val_if_fail (guid != NULL, FALSE);
+	g_return_val_if_fail (name_glob != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	dir = g_dir_open (efivardir, 0, error);
 	if (dir == NULL)
 		return FALSE;
 	nameguid_glob = g_strdup_printf ("%s-%s", name_glob, guid);
@@ -235,7 +250,12 @@ fu_efivar_delete_with_glob (const gchar *guid, const gchar *name_glob, GError **
 gboolean
 fu_efivar_exists (const gchar *guid, const gchar *name)
 {
-	g_autofree gchar *fn = fu_efivar_get_filename (guid, name);
+	g_autofree gchar *fn = NULL;
+
+	g_return_val_if_fail (guid != NULL, FALSE);
+	g_return_val_if_fail (name != NULL, FALSE);
+
+	fn = fu_efivar_get_filename (guid, name);
 	return g_file_test (fn, G_FILE_TEST_EXISTS);
 }
 
@@ -263,12 +283,18 @@ fu_efivar_get_data (const gchar *guid, const gchar *name, guint8 **data,
 	gssize data_sz_tmp;
 	guint32 attr_tmp;
 	guint64 sz;
-	g_autofree gchar *fn = fu_efivar_get_filename (guid, name);
-	g_autoptr(GFile) file = g_file_new_for_path (fn);
+	g_autofree gchar *fn = NULL;
+	g_autoptr(GFile) file = NULL;
 	g_autoptr(GFileInfo) info = NULL;
 	g_autoptr(GInputStream) istr = NULL;
 
+	g_return_val_if_fail (guid != NULL, FALSE);
+	g_return_val_if_fail (name != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
 	/* open file as stream */
+	fn = fu_efivar_get_filename (guid, name);
+	file = g_file_new_for_path (fn);
 	istr = G_INPUT_STREAM (g_file_read (file, NULL, error));
 	if (istr == NULL)
 		return FALSE;
@@ -343,6 +369,11 @@ fu_efivar_get_data_bytes (const gchar *guid,
 {
 	guint8 *data = NULL;
 	gsize datasz = 0;
+
+	g_return_val_if_fail (guid != NULL, NULL);
+	g_return_val_if_fail (name != NULL, NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
 	if (!fu_efivar_get_data (guid, name, &data, &datasz, attr, error))
 		return NULL;
 	return g_bytes_new_take (data, datasz);
@@ -367,6 +398,9 @@ fu_efivar_get_names (const gchar *guid, GError **error)
 	g_autofree gchar *path = fu_efivar_get_path ();
 	g_autoptr(GDir) dir = NULL;
 	g_autoptr(GPtrArray) names = g_ptr_array_new_with_free_func (g_free);
+
+	g_return_val_if_fail (guid != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* find names with matching GUID */
 	dir = g_dir_open (path, 0, error);
@@ -413,6 +447,8 @@ fu_efivar_space_used (GError **error)
 	guint64 total = 0;
 	g_autoptr(GDir) dir = NULL;
 	g_autofree gchar *path = fu_efivar_get_path ();
+
+	g_return_val_if_fail (error == NULL || *error == NULL, G_MAXUINT64);
 
 	/* stat each file */
 	dir = g_dir_open (path, 0, error);
@@ -467,6 +503,11 @@ fu_efivar_set_data (const gchar *guid, const gchar *name, const guint8 *data,
 	g_autofree guint8 *buf = g_malloc0 (sizeof(guint32) + sz);
 	g_autoptr(GFile) file = g_file_new_for_path (fn);
 	g_autoptr(GOutputStream) ostr = NULL;
+
+	g_return_val_if_fail (guid != NULL, FALSE);
+	g_return_val_if_fail (name != NULL, FALSE);
+	g_return_val_if_fail (data != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* create empty file so we can clear the immutable bit before writing */
 	if (!g_file_query_exists (file, NULL)) {
@@ -544,7 +585,14 @@ fu_efivar_set_data_bytes (const gchar *guid, const gchar *name, GBytes *bytes,
 			  guint32 attr, GError **error)
 {
 	gsize bufsz = 0;
-	const guint8 *buf = g_bytes_get_data (bytes, &bufsz);
+	const guint8 *buf;
+
+	g_return_val_if_fail (guid != NULL, FALSE);
+	g_return_val_if_fail (name != NULL, FALSE);
+	g_return_val_if_fail (bytes != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	buf = g_bytes_get_data (bytes, &bufsz);
 	return fu_efivar_set_data (guid, name, buf, bufsz, attr, error);
 }
 
@@ -563,6 +611,8 @@ fu_efivar_secure_boot_enabled_full (GError **error)
 {
 	gsize data_size = 0;
 	g_autofree guint8 *data = NULL;
+
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	if (!fu_efivar_get_data (FU_EFIVAR_GUID_EFI_GLOBAL, "SecureBoot",
 				 &data, &data_size, NULL, NULL)) {

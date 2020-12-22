@@ -336,6 +336,9 @@ fwupd_client_ensure_networking (FwupdClient *self, GError **error)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
 
+	g_return_val_if_fail (FWUPD_IS_CLIENT (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
 	/* check the user agent is sane */
 	if (priv->user_agent == NULL) {
 		g_set_error_literal (error,

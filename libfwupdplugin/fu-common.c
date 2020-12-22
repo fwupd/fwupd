@@ -68,6 +68,9 @@ fu_common_rmtree (const gchar *directory, GError **error)
 	const gchar *filename;
 	g_autoptr(GDir) dir = NULL;
 
+	g_return_val_if_fail (directory != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
 	/* try to open */
 	g_debug ("removing %s", directory);
 	dir = g_dir_open (directory, 0, error);
@@ -143,6 +146,10 @@ GPtrArray *
 fu_common_get_files_recursive (const gchar *path, GError **error)
 {
 	g_autoptr(GPtrArray) files = g_ptr_array_new_with_free_func (g_free);
+
+	g_return_val_if_fail (path != NULL, NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
 	if (!fu_common_get_file_list_internal (files, path, error))
 		return NULL;
 	return g_steal_pointer (&files);
@@ -162,6 +169,9 @@ gboolean
 fu_common_mkdir_parent (const gchar *filename, GError **error)
 {
 	g_autofree gchar *parent = NULL;
+
+	g_return_val_if_fail (filename != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	parent = g_path_get_dirname (filename);
 	if (!g_file_test (parent, G_FILE_TEST_IS_DIR))
@@ -198,6 +208,10 @@ fu_common_set_contents_bytes (const gchar *filename, GBytes *bytes, GError **err
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(GFile) file_parent = NULL;
 
+	g_return_val_if_fail (filename != NULL, FALSE);
+	g_return_val_if_fail (bytes != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
 	file = g_file_new_for_path (filename);
 	file_parent = g_file_get_parent (file);
 	if (!g_file_query_exists (file_parent, NULL)) {
@@ -225,6 +239,10 @@ fu_common_get_contents_bytes (const gchar *filename, GError **error)
 {
 	gchar *data = NULL;
 	gsize len = 0;
+
+	g_return_val_if_fail (filename != NULL, NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
 	if (!g_file_get_contents (filename, &data, &len, error))
 		return NULL;
 	g_debug ("reading %s with %" G_GSIZE_FORMAT " bytes", filename, len);
@@ -321,6 +339,10 @@ fu_common_extract_archive (GBytes *blob, const gchar *dir, GError **error)
 	int r;
 	struct archive *arch = NULL;
 	struct archive_entry *entry;
+
+	g_return_val_if_fail (blob != NULL, FALSE);
+	g_return_val_if_fail (dir != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* decompress anything matching either glob */
 	g_debug ("decompressing into %s", dir);
@@ -701,6 +723,10 @@ fu_common_spawn_sync (const gchar * const * argv,
 	g_autoptr(GSubprocess) subprocess = NULL;
 	g_autofree gchar *argv_str = NULL;
 	gulong cancellable_id = 0;
+
+	g_return_val_if_fail (argv != NULL, FALSE);
+	g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* create subprocess */
 	argv_str = g_strjoinv (" ", (gchar **) argv);
@@ -1652,6 +1678,7 @@ fu_common_bytes_new_offset (GBytes *bytes,
 			    GError **error)
 {
 	g_return_val_if_fail (bytes != NULL, NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* sanity check */
 	if (offset + length > g_bytes_get_size (bytes)) {
@@ -1685,6 +1712,7 @@ fu_common_realpath (const gchar *filename, GError **error)
 	char full_tmp[PATH_MAX];
 
 	g_return_val_if_fail (filename != NULL, NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 #ifdef HAVE_REALPATH
 	if (realpath (filename, full_tmp) == NULL) {
@@ -1759,8 +1787,14 @@ GPtrArray *
 fu_common_filename_glob (const gchar *directory, const gchar *pattern, GError **error)
 {
 	const gchar *basename;
-	g_autoptr(GDir) dir = g_dir_open (directory, 0, error);
+	g_autoptr(GDir) dir = NULL;
 	g_autoptr(GPtrArray) files = g_ptr_array_new_with_free_func (g_free);
+
+	g_return_val_if_fail (directory != NULL, NULL);
+	g_return_val_if_fail (pattern != NULL, NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	dir = g_dir_open (directory, 0, error);
 	if (dir == NULL)
 		return NULL;
 	while ((basename = g_dir_read_name (dir)) != NULL) {
@@ -1836,6 +1870,10 @@ fu_memcpy_safe (guint8 *dst, gsize dst_sz, gsize dst_offset,
 		const guint8 *src, gsize src_sz, gsize src_offset,
 		gsize n, GError **error)
 {
+	g_return_val_if_fail (dst != NULL, FALSE);
+	g_return_val_if_fail (src != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
 	if (n == 0)
 		return TRUE;
 
@@ -1903,6 +1941,10 @@ fu_common_read_uint8_safe (const guint8 *buf,
 			   GError **error)
 {
 	guint8 tmp;
+
+	g_return_val_if_fail (buf != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
 	if (!fu_memcpy_safe (&tmp, sizeof(tmp), 0x0,	/* dst */
 			     buf, bufsz, offset,	/* src */
 			     sizeof(tmp), error))
@@ -1940,6 +1982,10 @@ fu_common_read_uint16_safe (const guint8 *buf,
 			    GError **error)
 {
 	guint8 dst[2] = { 0x0 };
+
+	g_return_val_if_fail (buf != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
 	if (!fu_memcpy_safe (dst, sizeof(dst), 0x0,	/* dst */
 			     buf, bufsz, offset,	/* src */
 			     sizeof(dst), error))
@@ -1977,6 +2023,10 @@ fu_common_read_uint32_safe (const guint8 *buf,
 			    GError **error)
 {
 	guint8 dst[4] = { 0x0 };
+
+	g_return_val_if_fail (buf != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
 	if (!fu_memcpy_safe (dst, sizeof(dst), 0x0,	/* dst */
 			     buf, bufsz, offset,	/* src */
 			     sizeof(dst), error))
@@ -2117,6 +2167,8 @@ fu_common_cpuid (guint32 leaf,
 	guint ebx_tmp = 0;
 	guint ecx_tmp = 0;
 	guint edx_tmp = 0;
+
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* get vendor */
 	__get_cpuid_count (leaf, 0x0, &eax_tmp, &ebx_tmp, &ecx_tmp, &edx_tmp);
@@ -2278,6 +2330,9 @@ fu_common_get_volumes_by_kind (const gchar *kind, GError **error)
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) volumes = NULL;
 
+	g_return_val_if_fail (kind != NULL, NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
 	devices = fu_common_get_block_devices (error);
 	if (devices == NULL)
 		return NULL;
@@ -2355,6 +2410,9 @@ fu_common_get_volume_by_device (const gchar *device, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
 
+	g_return_val_if_fail (device != NULL, NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
 	/* find matching block device */
 	devices = fu_common_get_block_devices (error);
 	if (devices == NULL)
@@ -2396,6 +2454,8 @@ FuVolume *
 fu_common_get_volume_by_devnum (guint32 devnum, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
+
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* find matching block device */
 	devices = fu_common_get_block_devices (error);
@@ -2443,6 +2503,8 @@ fu_common_get_esp_default (GError **error)
 	g_autoptr(GPtrArray) volumes_vfat = g_ptr_array_new ();
 	g_autoptr(GPtrArray) volumes = NULL;
 	g_autoptr(GError) error_local = NULL;
+
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* for the test suite use local directory for ESP */
 	path_tmp = g_getenv ("FWUPD_UEFI_ESP_PATH");
@@ -2522,12 +2584,16 @@ fu_common_get_esp_default (GError **error)
 FuVolume *
 fu_common_get_esp_for_path (const gchar *esp_path, GError **error)
 {
-	g_autofree gchar *basename = g_path_get_basename (esp_path);
+	g_autofree gchar *basename = NULL;
 	g_autoptr(GPtrArray) volumes = NULL;
+
+	g_return_val_if_fail (esp_path != NULL, NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	volumes = fu_common_get_volumes_by_kind (FU_VOLUME_KIND_ESP, error);
 	if (volumes == NULL)
 		return NULL;
+	basename = g_path_get_basename (esp_path);
 	for (guint i = 0; i < volumes->len; i++) {
 		FuVolume *vol = g_ptr_array_index (volumes, i);
 		g_autofree gchar *vol_basename = g_path_get_basename (fu_volume_get_mount_point (vol));

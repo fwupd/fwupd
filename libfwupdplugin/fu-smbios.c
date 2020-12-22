@@ -216,6 +216,7 @@ fu_smbios_setup_from_file (FuSmbios *self, const gchar *filename, GError **error
 
 	g_return_val_if_fail (FU_IS_SMBIOS (self), FALSE);
 	g_return_val_if_fail (filename != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* use a heuristic */
 	basename = g_path_get_basename (filename);
@@ -399,6 +400,7 @@ fu_smbios_setup_from_path (FuSmbios *self, const gchar *path, GError **error)
 
 	g_return_val_if_fail (FU_IS_SMBIOS (self), FALSE);
 	g_return_val_if_fail (path != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* use a heuristic */
 	basename = g_path_get_basename (path);
@@ -426,6 +428,7 @@ fu_smbios_setup (FuSmbios *self, GError **error)
 	g_autofree gchar *sysfsfwdir = NULL;
 
 	g_return_val_if_fail (FU_IS_SMBIOS (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
 
@@ -507,7 +510,10 @@ GBytes *
 fu_smbios_get_data (FuSmbios *self, guint8 type, GError **error)
 {
 	FuSmbiosItem *item;
+
 	g_return_val_if_fail (FU_IS_SMBIOS (self), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
 	item = fu_smbios_get_item_for_type (self, type);
 	if (item == NULL) {
 		g_set_error (error,
@@ -541,6 +547,7 @@ fu_smbios_get_integer (FuSmbios *self, guint8 type, guint8 offset, GError **erro
 	FuSmbiosItem *item;
 
 	g_return_val_if_fail (FU_IS_SMBIOS (self), 0);
+	g_return_val_if_fail (error == NULL || *error == NULL, 0);
 
 	/* get item */
 	item = fu_smbios_get_item_for_type (self, type);
@@ -588,6 +595,7 @@ fu_smbios_get_string (FuSmbios *self, guint8 type, guint8 offset, GError **error
 	FuSmbiosItem *item;
 
 	g_return_val_if_fail (FU_IS_SMBIOS (self), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* get item */
 	item = fu_smbios_get_item_for_type (self, type);

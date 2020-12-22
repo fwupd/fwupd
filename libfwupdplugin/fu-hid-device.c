@@ -315,6 +315,7 @@ fu_hid_device_set_report (FuHidDevice *self,
 	g_return_val_if_fail (FU_HID_DEVICE (self), FALSE);
 	g_return_val_if_fail (buf != NULL, FALSE);
 	g_return_val_if_fail (bufsz != 0, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* create helper */
 	helper.value = value;
@@ -425,6 +426,7 @@ fu_hid_device_get_report (FuHidDevice *self,
 	g_return_val_if_fail (FU_HID_DEVICE (self), FALSE);
 	g_return_val_if_fail (buf != NULL, FALSE);
 	g_return_val_if_fail (bufsz != 0, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* create helper */
 	helper.value = value;

@@ -424,6 +424,10 @@ fu_plugin_open (FuPlugin *self, const gchar *filename, GError **error)
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginInitFunc func = NULL;
 
+	g_return_val_if_fail (FU_IS_PLUGIN (self), FALSE);
+	g_return_val_if_fail (filename != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
 	priv->module = g_module_open (filename, 0);
 	if (priv->module == NULL) {
 		g_set_error (error,
@@ -1879,6 +1883,10 @@ fu_plugin_runner_usb_device_added (FuPlugin *self, FuUsbDevice *device, GError *
 	FuPluginUsbDeviceAddedFunc func = NULL;
 	g_autoptr(GError) error_local = NULL;
 
+	g_return_val_if_fail (FU_IS_PLUGIN (self), FALSE);
+	g_return_val_if_fail (FU_IS_USB_DEVICE (device), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
 	/* not enabled */
 	if (fu_plugin_has_flag (self, FWUPD_PLUGIN_FLAG_DISABLED))
 		return TRUE;
@@ -1933,6 +1941,10 @@ fu_plugin_runner_udev_device_added (FuPlugin *self, FuUdevDevice *device, GError
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginUdevDeviceAddedFunc func = NULL;
 	g_autoptr(GError) error_local = NULL;
+
+	g_return_val_if_fail (FU_IS_PLUGIN (self), FALSE);
+	g_return_val_if_fail (FU_IS_UDEV_DEVICE (device), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* not enabled */
 	if (fu_plugin_has_flag (self, FWUPD_PLUGIN_FLAG_DISABLED))
@@ -1991,6 +2003,10 @@ fu_plugin_runner_udev_device_changed (FuPlugin *self, FuUdevDevice *device, GErr
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginUdevDeviceAddedFunc func = NULL;
 	g_autoptr(GError) error_local = NULL;
+
+	g_return_val_if_fail (FU_IS_PLUGIN (self), FALSE);
+	g_return_val_if_fail (FU_IS_UDEV_DEVICE (device), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* not enabled */
 	if (fu_plugin_has_flag (self, FWUPD_PLUGIN_FLAG_DISABLED))
@@ -2123,6 +2139,10 @@ fu_plugin_runner_device_created (FuPlugin *self, FuDevice *device, GError **erro
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginDeviceFunc func = NULL;
 
+	g_return_val_if_fail (FU_IS_PLUGIN (self), FALSE);
+	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
 	/* not enabled */
 	if (fu_plugin_has_flag (self, FWUPD_PLUGIN_FLAG_DISABLED))
 		return TRUE;
@@ -2160,6 +2180,10 @@ fu_plugin_runner_verify (FuPlugin *self,
 	FuPluginVerifyFunc func = NULL;
 	GPtrArray *checksums;
 	g_autoptr(GError) error_local = NULL;
+
+	g_return_val_if_fail (FU_IS_PLUGIN (self), FALSE);
+	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* not enabled */
 	if (fu_plugin_has_flag (self, FWUPD_PLUGIN_FLAG_DISABLED))
@@ -2240,6 +2264,10 @@ fu_plugin_runner_activate (FuPlugin *self, FuDevice *device, GError **error)
 {
 	guint64 flags;
 
+	g_return_val_if_fail (FU_IS_PLUGIN (self), FALSE);
+	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
 	/* final check */
 	flags = fu_device_get_flags (device);
 	if ((flags & FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION) == 0) {
@@ -2280,6 +2308,10 @@ gboolean
 fu_plugin_runner_unlock (FuPlugin *self, FuDevice *device, GError **error)
 {
 	guint64 flags;
+
+	g_return_val_if_fail (FU_IS_PLUGIN (self), FALSE);
+	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* final check */
 	flags = fu_device_get_flags (device);
@@ -2330,6 +2362,10 @@ fu_plugin_runner_update (FuPlugin *self,
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginUpdateFunc update_func;
 	g_autoptr(GError) error_local = NULL;
+
+	g_return_val_if_fail (FU_IS_PLUGIN (self), FALSE);
+	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* not enabled */
 	if (fu_plugin_has_flag (self, FWUPD_PLUGIN_FLAG_DISABLED)) {
@@ -2396,6 +2432,10 @@ fu_plugin_runner_clear_results (FuPlugin *self, FuDevice *device, GError **error
 	FuPluginDeviceFunc func = NULL;
 	g_autoptr(GError) error_local = NULL;
 
+	g_return_val_if_fail (FU_IS_PLUGIN (self), FALSE);
+	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
 	/* not enabled */
 	if (fu_plugin_has_flag (self, FWUPD_PLUGIN_FLAG_DISABLED))
 		return TRUE;
@@ -2444,6 +2484,10 @@ fu_plugin_runner_get_results (FuPlugin *self, FuDevice *device, GError **error)
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginDeviceFunc func = NULL;
 	g_autoptr(GError) error_local = NULL;
+
+	g_return_val_if_fail (FU_IS_PLUGIN (self), FALSE);
+	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* not enabled */
 	if (fu_plugin_has_flag (self, FWUPD_PLUGIN_FLAG_DISABLED))

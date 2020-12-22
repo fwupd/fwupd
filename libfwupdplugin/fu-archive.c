@@ -106,6 +106,7 @@ fu_archive_iterate (FuArchive *self,
 
 	g_return_val_if_fail (FU_IS_ARCHIVE (self), FALSE);
 	g_return_val_if_fail (callback != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	g_hash_table_iter_init (&iter, self->entries);
 	while (g_hash_table_iter_next (&iter, &key, &value)) {
