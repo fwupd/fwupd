@@ -27,13 +27,16 @@ void		 fwupd_input_stream_read_bytes_async	(GInputStream	*stream,
 							 gpointer	 callback_data);
 GBytes		*fwupd_input_stream_read_bytes_finish	(GInputStream	*stream,
 							 GAsyncResult	*res,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 
 #ifdef HAVE_GIO_UNIX
 GUnixInputStream *fwupd_unix_input_stream_from_bytes	(GBytes		*bytes,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 GUnixInputStream *fwupd_unix_input_stream_from_fn	(const gchar	*fn,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 #endif
 
 G_END_DECLS
