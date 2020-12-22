@@ -439,6 +439,9 @@ fu_common_version_verify_format (const gchar *version,
 	FwupdVersionFormat fmt_base = fu_common_version_convert_base (fmt);
 	FwupdVersionFormat fmt_guess;
 
+	g_return_val_if_fail (version != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
 	/* don't touch */
 	if (fmt == FWUPD_VERSION_FORMAT_PLAIN)
 		return TRUE;

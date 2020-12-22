@@ -455,6 +455,9 @@ fu_firmware_image_write_chunk (FuFirmwareImage *self,
 	gsize chunk_left;
 	guint64 offset;
 
+	g_return_val_if_fail (FU_IS_FIRMWARE_IMAGE (self), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
 	/* check address requested is larger than base address */
 	if (address < priv->addr) {
 		g_set_error (error,

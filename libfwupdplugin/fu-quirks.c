@@ -408,6 +408,7 @@ gboolean
 fu_quirks_load (FuQuirks *self, FuQuirksLoadFlags load_flags, GError **error)
 {
 	g_return_val_if_fail (FU_IS_QUIRKS (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 	self->load_flags = load_flags;
 	return fu_quirks_check_silo (self, error);
 }

@@ -200,6 +200,7 @@ fu_volume_check_free_space (FuVolume *self, guint64 required, GError **error)
 	g_autoptr(GFileInfo) info = NULL;
 
 	g_return_val_if_fail (FU_IS_VOLUME (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* skip the checks for unmounted disks */
 	path = fu_volume_get_mount_point (self);
@@ -290,6 +291,7 @@ fu_volume_mount (FuVolume *self, GError **error)
 	g_autoptr(GVariant) val = NULL;
 
 	g_return_val_if_fail (FU_IS_VOLUME (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* device from the self tests */
 	if (self->proxy_fs == NULL)
@@ -372,6 +374,7 @@ fu_volume_unmount (FuVolume *self, GError **error)
 	g_autoptr(GVariant) val = NULL;
 
 	g_return_val_if_fail (FU_IS_VOLUME (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* device from the self tests */
 	if (self->proxy_fs == NULL)
@@ -406,6 +409,9 @@ fu_volume_unmount (FuVolume *self, GError **error)
 FuDeviceLocker *
 fu_volume_locker (FuVolume *self, GError **error)
 {
+	g_return_val_if_fail (FU_IS_VOLUME (self), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
 	/* already open, so NOP */
 	if (fu_volume_is_mounted (self))
 		return g_object_new (FU_TYPE_DEVICE_LOCKER, NULL);

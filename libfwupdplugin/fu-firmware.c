@@ -360,6 +360,11 @@ fu_firmware_parse_file (FuFirmware *self, GFile *file, FwupdInstallFlags flags, 
 	gchar *buf = NULL;
 	gsize bufsz = 0;
 	g_autoptr(GBytes) fw = NULL;
+
+	g_return_val_if_fail (FU_IS_FIRMWARE (self), FALSE);
+	g_return_val_if_fail (G_IS_FILE (file), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
 	if (!g_file_load_contents (file, NULL, &buf, &bufsz, NULL, error))
 		return FALSE;
 	fw = g_bytes_new_take (buf, bufsz);
@@ -409,6 +414,11 @@ gboolean
 fu_firmware_write_file (FuFirmware *self, GFile *file, GError **error)
 {
 	g_autoptr(GBytes) blob = NULL;
+
+	g_return_val_if_fail (FU_IS_FIRMWARE (self), FALSE);
+	g_return_val_if_fail (G_IS_FILE (file), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
 	blob = fu_firmware_write (self, error);
 	if (blob == NULL)
 		return FALSE;
