@@ -1,4 +1,9 @@
-
+/*
+ * Copyright (C) 2020 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2020 Jimmy Yu <Jimmy_yu@pixart.com>
+ *
+ * SPDX-License-Identifier: LGPL-2.1+
+ */
 
 #pragma once
 
@@ -17,9 +22,9 @@
 #define CMD_FW_OTA_RETRANSMIT 0x28
 #define CMD_FW_OTA_DISCONNECT 0x29
 
-#define ERR_COMMAND_SUCCESS           0x00
-#define ERR_COMMAND_UPDATE_FAIL       0xFF
-#define EVT_COMMAND_COMPLETE        (0x0E)
+#define ERR_COMMAND_SUCCESS          0x00
+#define ERR_COMMAND_UPDATE_FAIL      0xFF
+#define EVT_COMMAND_COMPLETE         0x0E
 #define CMD_COMPLETE_HDR_SZ     1
 
 #define OTA_BUFFER_SIZE 256
@@ -32,15 +37,15 @@
 /* brief Paremeter of CMD_FW_OTA_INIT command */
 struct cmd_fw_set_address
 {
-    gushort sz;        /* OTA data size */
-    guint32 addr;      /* OTA address */
+    guint16 sz;        /* OTA data size */
+    guint32 addr;      /* OTA address */    
 };
 
 /* Paremeter of CMD_FW_UPGRADE command */
 struct cmd_fw_upgrade
 {
     guint32 sz;            /* Firmware size */
-    gushort checksum;      /* Firmware checksum */
+    guint16 checksum;      /* Firmware checksum */
     guint8 version[10];    /* Firmware version */
 };
 
@@ -86,11 +91,11 @@ struct ret_fw_ota_init_new_cmd
 {
     guint8 status;             /* Status */
     guint8 new_flow;           /* Inform OTA app to run new OTA flow */
-    gushort offset;            /* Current object offset already upgrade to flash */
-    gushort checksum;          /* Current checksum of data already upgrade to flash */
+    guint16 offset;            /* Current object offset already upgrade to flash */
+    guint16 checksum;          /* Current checksum of data already upgrade to flash */
     guint32 max_object_size;   /* Max object size */
-    gushort mtu_size;          /* MTU size */
-    gushort prn_threshold;     /* Packet Receipt Notification(PRN) threshold */
+    guint16 mtu_size;          /* MTU size */
+    guint16 prn_threshold;     /* Packet Receipt Notification(PRN) threshold */
     guint8 spec_check_result;  /* Spec check result */
 };
 
@@ -105,7 +110,7 @@ struct ret_fw_info_get
 {
     guint8 status;         /* Status */
     guint8 version[5];     /* Firmware version */
-    gushort checksum;      /* Firmware checksum */
+    guint16 checksum;      /* Firmware checksum */
 };
 
 /* Return paremeter of OTA notify */
@@ -113,7 +118,7 @@ struct ret_fw_notify
 {
     guint8 opcode;     /* OP code */
     guint8 status;     /* Status */
-    gushort checksum;  /* Checksum */
+    guint16 checksum;  /* Checksum */
 };
 
 /* Return paremeter */
@@ -173,7 +178,7 @@ struct ota_fw_info
     guint8     fw_desc[32];        /* Firmware description */
     guint8     fw_version[8];      /* Firmware version */
     guint32    fw_size;            /* Firmware size */
-    gushort    fw_checksum;        /* Firmware checksum */
+    guint16    fw_checksum;        /* Firmware checksum */
 };
 
 enum ota_fw_upgrade_option

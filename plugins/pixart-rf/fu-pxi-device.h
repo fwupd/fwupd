@@ -15,11 +15,5 @@ G_DECLARE_DERIVABLE_TYPE (FuPxiDevice, fu_pxi_device, FU, PXI_DEVICE, FuUdevDevi
 
 struct _FuPxiDeviceClass
 {
-    FuUdevDeviceClass	parent_class;
+	FuUdevDeviceClass	parent_class;
 };
-
-
-
-
-
-
