@@ -32,7 +32,7 @@ subdir('upower')
 subdir('wacom-usb')
 subdir('vli')
 subdir('goodix-moc')
-
+subdir('pixart-rf')
 
 if get_option('plugin_msr')
 subdir('msr')
@@ -129,10 +129,6 @@ endif
 
 if get_option('plugin_coreboot')
 subdir('coreboot')
-endif
-
-if get_option('plugin_pixart_rf')
-subdir('pixart-rf')
 endif
 
 if get_option('plugin_platform_integrity')

@@ -15,6 +15,7 @@
 #include "fu-common.h"
 #include "fu-pxi-device-common.h"
 #include "fu-udev-device.h"
+#include "fu-pxi-firmware.h"
 
 #define PXI_HID_DEV_OTA_INPUT_REPORT_ID 0x05
 #define PXI_HID_DEV_OTA_OUTPUT_REPORT_ID 0x06
@@ -28,43 +29,11 @@ fu_pxi_device_prepare_firmware (FuDevice *device,
                                 FwupdInstallFlags flags,
                                 GError **error)
 {
-	g_autoptr(FuFirmware) firmware = fu_firmware_new ();
-	guint32 idx = 0;
-	gsize fw_sz = g_bytes_get_size(fw);
-	guint8 pos = 0;
-	gchar version[5] = {'.', '.', '.', '.', '.'};
-	const guint8 *fw_ptr = g_bytes_get_data(fw, &fw_sz);
-
-	if (!fu_firmware_parse (firmware, fw, flags, error)) {
-		return NULL;
-	}
-
-	fu_common_dump_raw (G_LOG_DOMAIN, "fw last 32 bytes", &fw_ptr[fw_sz - 32], 32);
-
-	/* find the version tag */
-	for (idx = 0; idx < 32; idx++) {
-		if(fw_ptr[(fw_sz - 32) + idx ] == 'v') {
-		        pos = idx;
-		        break;
-		}
-	}
-
-	/* ensure the version */
-	if ((pos != 31) && (fw_ptr[(fw_sz - 32) + pos + 1] == '_')) {
+	g_autoptr(FuFirmware) firmware = fu_pxi_rf_firmware_new ();
 	
-		g_debug ("version in bin");
-		version[0] = fw_ptr[(fw_sz - 32) + pos + 2];
-		version[2] = fw_ptr[(fw_sz - 32) + pos + 4];
-		version[4] = fw_ptr[(fw_sz - 32) + pos + 6];
-		fu_firmware_set_version (firmware, version);
-		
-	} else {
-		/* set the default version if can not find it in fw bin */
-		fu_firmware_set_version (firmware, "1.0.0");
-	}
-
-	g_debug ("firmware ver %s", fu_firmware_get_version (firmware));
-
+	if (!fu_firmware_parse (firmware, fw, flags, error))
+		return NULL;
+	
 	return g_steal_pointer (&firmware);
 }
 
@@ -105,7 +74,6 @@ fu_pxi_device_write_firmware (FuDevice *device,
 		return FALSE;
 
 
-
 	fw_sz = g_bytes_get_size (fw);
 	fw_ptr = g_bytes_get_data (fw, &fw_sz);
 
@@ -113,18 +81,18 @@ fu_pxi_device_write_firmware (FuDevice *device,
 	/* calculate fw checksum */
 	fu_pxi_device_calculate_checksum (&fw_bin_checksum, fw_sz, fw_ptr);
 
-	g_debug("fw bin checksum %x, fw_sz %lu", fw_bin_checksum, fw_sz);
-	g_debug("firmware ver %s", fu_firmware_get_version (firmware));
+	g_debug ("fw bin checksum %x, fw_sz %lu", fw_bin_checksum, fw_sz);
+	g_debug ("firmware ver %s", fu_firmware_get_version (firmware));
 
         /* bulid firmware checksum table */
 	for (idx = 0 ; idx < fw_sz / MAX_OBJECT_SIZE  ; idx++) {
 
 		fu_pxi_device_calculate_checksum (&checksum, MAX_OBJECT_SIZE, &fw_ptr[idx * MAX_OBJECT_SIZE]);
 		g_array_append_val (fw_check_sum_table, checksum);
-		g_debug("idx %u checksum %x checksum in table %x", idx, checksum, g_array_index (fw_check_sum_table, guint16, idx));
+		g_debug ("idx %u checksum %x checksum in table %x", idx, checksum, g_array_index (fw_check_sum_table, guint16, idx));
 
 	}
-
+	/* add whole bin checksum */
 	g_array_append_val (fw_check_sum_table, fw_bin_checksum);
 
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_READ);
@@ -185,7 +153,7 @@ fu_pxi_device_write_firmware (FuDevice *device,
 		if (!fu_udev_device_pwrite_full (FU_UDEV_DEVICE (device), 0, buf, sizeof(struct cmd_fw_object_create) + 2, error))
 			return FALSE;
 
-		memset(buf, 0,PXI_OTA_BUF_SZ);
+		memset (buf, 0,PXI_OTA_BUF_SZ);
 		buf[0] = PXI_HID_DEV_OTA_INPUT_REPORT_ID;
 		fu_udev_device_pread_full (FU_UDEV_DEVICE (device), 0, buf, PXI_OTA_BUF_SZ,error);
 		g_debug("CMD_FW_OBJECT_CREATE %u",offset);
@@ -198,7 +166,7 @@ fu_pxi_device_write_firmware (FuDevice *device,
 		while (object_size > 0) {
 
 			write_sz = object_size > PXI_OTA_PAYLOAD ? PXI_OTA_PAYLOAD : object_size ;
-			memset(buf, 0,PXI_OTA_BUF_SZ);
+			memset (buf, 0,PXI_OTA_BUF_SZ);
 			buf[0] = PXI_HID_DEV_OTA_OUTPUT_REPORT_ID;
 		
 			if(!fu_memcpy_safe (buf, PXI_OTA_BUF_SZ, 1, (guint8*)&fw_ptr[offset],write_sz, 0, write_sz, error))
@@ -207,7 +175,7 @@ fu_pxi_device_write_firmware (FuDevice *device,
 			if(!fu_udev_device_pwrite_full (FU_UDEV_DEVICE (device), 0, buf, write_sz + 1, error))
 				return FALSE;
 				
-			g_debug ("object_size %u write_sz %u ,offset %u", object_size, write_sz, offset);
+			//g_debug ("object_size %u write_sz %u ,offset %u", object_size, write_sz, offset);
 
 
 			offset = offset + write_sz;
@@ -237,11 +205,10 @@ fu_pxi_device_write_firmware (FuDevice *device,
 			}
 
 
-			if ((object_size == 0) && (offset != g_bytes_get_size(fw))) {
+			if (((object_size == 0) && (offset != g_bytes_get_size (fw))) || ((offset == g_bytes_get_size (fw)))) {
 
-				g_debug("object clear");
+				g_debug("object write done");
 				g_clear_error (error);
-
 				memset(buf, 0, PXI_OTA_BUF_SZ);
 
 				buf[0] = PXI_HID_DEV_OTA_INPUT_REPORT_ID;
@@ -259,15 +226,13 @@ fu_pxi_device_write_firmware (FuDevice *device,
 				}
 				prn = 0;
 				break;
-
 			}
-
 		}
 
-
-			idx++;
-			
-	} while( fw_sz > 0 );
+		
+		idx++;
+	
+	} while (fw_sz > 0);
 
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_VERIFY);
 
@@ -280,7 +245,7 @@ fu_pxi_device_write_firmware (FuDevice *device,
 	fw_ver_ptr = fu_firmware_get_version (firmware);
 
 	/* set fw updgrad info */
-	fw_upgrade.sz = g_bytes_get_size(fw);
+	fw_upgrade.sz = g_bytes_get_size (fw);
 	fw_upgrade.checksum = fw_bin_checksum;
 
 	fw_upgrade.version[0] = fw_ver_ptr[0];
@@ -291,37 +256,37 @@ fu_pxi_device_write_firmware (FuDevice *device,
 
 	/* send fw upgrade command */
 	g_debug ("send fw updgrad command");
-	
+
 	if (!fu_memcpy_safe (buf, PXI_OTA_BUF_SZ, 2, (guint8*)&fw_upgrade,sizeof(struct cmd_fw_upgrade), 0, sizeof(struct cmd_fw_upgrade), error))
 		return FALSE;
 		
 	if (!fu_udev_device_pwrite_full (FU_UDEV_DEVICE (device), 0, buf, sizeof(struct cmd_fw_upgrade) + 2, error))
 		return FALSE;
-
+	fu_common_dump_raw (G_LOG_DOMAIN, "buf", (guint8 *)buf, PXI_OTA_BUF_SZ);
 	/* read fw updgrad command result */
-	g_clear_error (error);
-	memset (buf, 0,PXI_OTA_BUF_SZ);
+	g_debug ("read fw updgrad result");
+	memset (buf, 0, PXI_OTA_BUF_SZ);
 	buf[0] = PXI_HID_DEV_OTA_INPUT_REPORT_ID;
-
-	fu_udev_device_pread_full (FU_UDEV_DEVICE (device), 1, buf, PXI_OTA_BUF_SZ,error);
+	
+	fu_udev_device_pread_full (FU_UDEV_DEVICE (device), 1, buf, PXI_OTA_BUF_SZ - 1, error);
 	fu_common_dump_raw (G_LOG_DOMAIN, "buf", (guint8 *)buf, PXI_OTA_BUF_SZ);
 	
-	if (!fu_memcpy_safe ((guint8 *)&fw_notify_result, sizeof(struct ret_fw_notify), 0, buf,PXI_OTA_BUF_SZ,1, sizeof(struct ret_fw_notify), error))
+	if (!fu_memcpy_safe ((guint8 *)&fw_notify_result, sizeof(struct ret_fw_notify), 0, buf,PXI_OTA_BUF_SZ, 1, sizeof(struct ret_fw_notify), error))
 		return FALSE;
-
+	
 	if (fw_notify_result.opcode != CMD_FW_UPGRADE) {
 		g_set_error (error, FWUPD_ERROR,FWUPD_ERROR_READ, "FWUPD_ERROR_READ %d", CMD_FW_WRITE);
 		return FALSE;
 	}
 
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+	
 	/* send device reset command */
-	g_clear_error (error);
 	memset(buf, 0,PXI_OTA_BUF_SZ);
 	buf[0] = PXI_HID_DEV_OTA_OUTPUT_REPORT_ID;
 	buf[1] = CMD_FW_MCU_RESET;
 
-	fw_ota_disconnect.reason = g_bytes_get_size(fw);
+	fw_ota_disconnect.reason = g_bytes_get_size (fw);
 	if (!fu_memcpy_safe (buf, PXI_OTA_BUF_SZ, 2, (guint8*)&fw_ota_disconnect, sizeof(struct cmd_fw_ota_disconnect), 0, sizeof(struct cmd_fw_ota_disconnect), error))
 		return FALSE;	
 	
@@ -337,8 +302,6 @@ fu_pxi_device_probe (FuDevice *device, GError **error)
         /* set the physical ID */
         if (!fu_udev_device_set_physical_id (FU_UDEV_DEVICE (device), "hid", error))
                 return FALSE;
-        
-
         return TRUE;
 }
 

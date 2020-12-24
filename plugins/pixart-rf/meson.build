@@ -6,7 +6,7 @@ shared_module('fu_plugin_pixart_rf',
     'fu-plugin-pixart-rf.c',
     'fu-pxi-device.c',
     'fu-pxi-device-common.c',
-
+    'fu-pxi-firmware.c',
   ],
   include_directories : [
     root_incdir,
