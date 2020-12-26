@@ -281,6 +281,9 @@ endif
 if cc.has_header('linux/ethtool.h')
   conf.set('HAVE_ETHTOOL_H', '1')
 endif
+if cc.has_header('linux/hidraw.h')
+  conf.set('HAVE_HIDRAW_H', '1')
+endif
 if cc.has_header('sys/mman.h')
   conf.set('HAVE_MMAN_H', '1')
 endif

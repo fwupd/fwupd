@@ -1,0 +1,3 @@
+# pxi-hid
+[DeviceInstanceId=HIDRAW\VEN_093A&DEV_2801]
+Plugin = pixart_rf
