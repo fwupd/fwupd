@@ -32,6 +32,7 @@ subdir('upower')
 subdir('wacom-usb')
 subdir('vli')
 subdir('goodix-moc')
+subdir('pixart-rf')
 
 if get_option('plugin_msr')
 subdir('msr')
