@@ -29,10 +29,13 @@ install_headers([
 libfwupd_deps = [
     giounix,
     gmodule,
-    libcurl,
     libjcat,
     libjsonglib,
 ]
+
+if get_option('curl')
+  libfwupd_deps += libcurl
+endif
 
 libfwupd_src = [
   'fwupd-client.c',
@@ -88,6 +91,12 @@ pkgg.generate(
 )
 
 if get_option('introspection')
+  fwupd_gir_deps = [
+      giounix,
+  ]
+  if get_option('curl')
+    fwupd_gir_deps += libcurl
+  endif
   fwupd_gir = gnome.generate_gir(fwupd,
     sources : [
       'fwupd-client.c',
@@ -124,10 +133,7 @@ if get_option('introspection')
     identifier_prefix : 'Fwupd',
     export_packages : 'fwupd',
     header : 'fwupd.h',
-    dependencies : [
-      giounix,
-      libcurl,
-    ],
+    dependencies : fwupd_gir_deps,
     includes : [
       'Gio-2.0',
       'GObject-2.0',
@@ -180,9 +186,7 @@ if get_option('tests')
       root_incdir,
     ],
     dependencies : [
-      gio,
-      libcurl,
-      libjsonglib,
+      libfwupd_deps,
     ],
     link_with : fwupd,
     c_args : [

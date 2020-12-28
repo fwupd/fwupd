@@ -100,6 +100,9 @@ subdir('thunderbolt')
 endif
 
 if get_option('plugin_redfish')
+if not get_option('curl')
+  error('curl is required for plugin_redfish')
+endif
 subdir('redfish')
 endif
 
