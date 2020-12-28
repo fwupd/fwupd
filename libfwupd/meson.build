@@ -54,7 +54,7 @@ endif
 
 fwupd_mapfile = 'fwupd.map'
 vflag = '-Wl,--version-script,@0@/@1@'.format(meson.current_source_dir(), fwupd_mapfile)
-fwupd = shared_library(
+fwupd = library(
   'fwupd',
   sources : libfwupd_src,
   soversion : libfwupd_lt_current,

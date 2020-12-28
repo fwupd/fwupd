@@ -109,7 +109,7 @@ library_deps = [
 
 fwupdplugin_mapfile = 'fwupdplugin.map'
 vflag = '-Wl,--version-script,@0@/@1@'.format(meson.current_source_dir(), fwupdplugin_mapfile)
-fwupdplugin = shared_library(
+fwupdplugin = library(
   'fwupdplugin',
   sources : [
     fwupdplugin_src,
