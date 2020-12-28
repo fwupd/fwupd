@@ -30,6 +30,7 @@ option('elogind', type : 'boolean', value : false, description : 'enable elogind
 option('tests', type : 'boolean', value : true, description : 'enable tests')
 option('tpm', type : 'boolean', value : true, description : 'enable TPM support')
 option('soup_session_compat', type : 'boolean', value : true, description : 'enable SoupSession runtime compatibility support')
+option('curl', type : 'boolean', value : true, description : 'enable libcurl support')
 option('udevdir', type: 'string', value: '', description: 'Directory for udev rules')
 option('efi-cc', type : 'string', value : 'gcc', description : 'the compiler to use for EFI modules')
 option('efi-ld', type : 'string', value : 'ld', description : 'the linker to use for EFI modules')
