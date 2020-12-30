@@ -35,7 +35,7 @@
 #define FU_PXI_DEVICE_OBJECT_SIZE_MAX		4096	/* bytes */
 #define FU_PXI_DEVICE_OTA_BUF_SZ		32	/* bytes */
 #define FU_PXI_DEVICE_NOTTFY_RET_LEN		4	/* bytes */
-#define FU_PXI_DEVICE_fW_IFNO_RET_LEN		8	/* bytes */
+#define FU_PXI_DEVICE_fW_INFO_RET_LEN		8	/* bytes */
 
 /* OTA target selection */
 enum ota_process_setting {
