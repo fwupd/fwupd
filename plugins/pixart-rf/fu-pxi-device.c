@@ -205,12 +205,12 @@ fu_pxi_device_wait_notify (FuPxiDevice *self,
 					error))
 		return FALSE;
 	if (status != NULL) {
-		if (!fu_common_read_uint8_safe (res, sizeof(res), 0x01,
+		if (!fu_common_read_uint8_safe (res, sizeof(res), 0x1,
 						status, error))
 			return FALSE;
 	}
 	if (checksum != NULL) {
-		if (!fu_common_read_uint16_safe (res, sizeof(res), 0x03,
+		if (!fu_common_read_uint16_safe (res, sizeof(res), 0x3,
 						 checksum, G_LITTLE_ENDIAN, error))
 			return FALSE;
 	}
@@ -321,7 +321,7 @@ fu_pxi_device_reset (FuPxiDevice *self, gsize fw_sz, GError **error)
 	};
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_RESTART);
 	if (!fu_udev_device_pwrite_full (FU_UDEV_DEVICE (self), 0,
-					 req, 0x03,
+					 req, 0x3,
 					 error)) {
 		g_prefix_error (error, "failed to reset: ");
 		return FALSE;
