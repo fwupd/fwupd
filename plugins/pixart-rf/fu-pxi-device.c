@@ -169,9 +169,15 @@ fu_pxi_device_check_support_resume (FuPxiDevice *self,
 	}
 	
 	/* check current file is different with previous fw bin or not */
-	if (self->checksum != checksum_tmp)
-	        return FALSE;
-	        
+	if (self->checksum != checksum_tmp) {
+		g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_READ,
+		     "checksum is different with previous fw got %x, expected %x",
+			     self->checksum,
+			     checksum_tmp);
+	       return FALSE;
+        }
 	return TRUE;
 }
 
