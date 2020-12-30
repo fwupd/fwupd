@@ -467,7 +467,7 @@ fu_pxi_device_write_firmware (FuDevice *device,
 	FuPxiDevice *self = FU_PXI_DEVICE (device);
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
-	
+
 	/* get the default image */
 	fw = fu_firmware_get_image_default_bytes (firmware, error);
 	if (fw == NULL)
@@ -480,13 +480,13 @@ fu_pxi_device_write_firmware (FuDevice *device,
 	if (!fu_pxi_device_fw_ota_init_new (self, g_bytes_get_size (fw), error))
 		return FALSE;
 
-
 	/* prepare write fw into device */
 	chunks = fu_chunk_array_new_from_bytes (fw, 0x0, 0x0, FU_PXI_DEVICE_OBJECT_SIZE_MAX);
 	if (!fu_pxi_device_check_support_resume (self, firmware, error)) {
 		self->offset = 0;
 		self->checksum = 0;
 	}
+
 	/* write fw into device */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = self->offset; i < chunks->len; i++) {
@@ -495,6 +495,7 @@ fu_pxi_device_write_firmware (FuDevice *device,
 			return FALSE;
 		fu_device_set_progress_full (device, (gsize) i, (gsize) chunks->len);
 	}
+
 	/* fw upgrade command */
 	if (!fu_pxi_device_fw_upgrade (self, firmware, error))
 		return FALSE;
@@ -506,7 +507,7 @@ fu_pxi_device_write_firmware (FuDevice *device,
 static gboolean
 fu_pxi_device_fw_get_info (FuPxiDevice *self, GError **error)
 {
-	guint8 res[FU_PXI_DEVICE_OTA_BUF_SZ];
+	guint8 res[FU_PXI_DEVICE_OTA_BUF_SZ] = { 0x0 };
 	guint8 opcode = 0x0;
 	guint16 checksum = 0;
 	g_autofree gchar *version_str = NULL;
