@@ -54,7 +54,7 @@ fu_pxi_rf_firmware_parse (FuFirmware *firmware,
 	/* set the default version if can not find it in fw bin */
 	if (pos < 32 - 6 && buf[(bufsz - 32) + pos + 1] == '_') {
 		g_autofree gchar *version = NULL;
-		version = g_strdup_printf ("%u.%u.%u",
+		version = g_strdup_printf ("%c.%c.%c",
 					   buf[(bufsz - 32) + pos + 2],
 					   buf[(bufsz - 32) + pos + 4],
 					   buf[(bufsz - 32) + pos + 6]);
