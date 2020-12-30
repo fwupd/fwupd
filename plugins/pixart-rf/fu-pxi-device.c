@@ -160,6 +160,14 @@ fu_pxi_device_check_support_resume (FuPxiDevice *self,
 	
 	/* get the default image */
 	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	if (fw == NULL) {
+		g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_READ,
+		     "fw is null");
+	       return FALSE;
+	}	
+	
 	chunks = fu_chunk_array_new_from_bytes (fw, 0x0, 0x0, FU_PXI_DEVICE_OBJECT_SIZE_MAX);
 	
 	/* calculate device current checksum */
