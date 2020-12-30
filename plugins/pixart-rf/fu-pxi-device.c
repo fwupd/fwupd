@@ -501,7 +501,7 @@ fu_pxi_device_write_firmware (FuDevice *device,
 		return FALSE;
 
 	/* send device reset command */
-	return fu_pxi_device_reset (self, g_bytes_get_size (fw), error);
+	return fu_pxi_device_reset (self, error);
 }
 
 static gboolean
@@ -522,7 +522,7 @@ fu_pxi_device_fw_get_info (FuPxiDevice *self, GError **error)
 
 	res[0] = PXI_HID_DEV_OTA_FEATURE_REPORT_ID;
 	res[1] = FU_PXI_DEVICE_CMD_FW_GET_INFO;
-	if (!fu_pxi_device_get_feature (self, res, FU_PXI_DEVICE_fW_IFNO_RET_LEN + 1, error))
+	if (!fu_pxi_device_get_feature (self, res, FU_PXI_DEVICE_fW_INFO_RET_LEN + 1, error))
 		return FALSE;
 		
 	if (g_getenv ("FWUPD_PIXART_RF_VERBOSE") != NULL)
