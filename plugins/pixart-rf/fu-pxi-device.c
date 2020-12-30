@@ -312,7 +312,7 @@ fu_pxi_device_write_chunk (FuPxiDevice *self, FuChunk *chk, GError **error)
 }
 
 static gboolean
-fu_pxi_device_reset (FuPxiDevice *self, gsize fw_sz, GError **error)
+fu_pxi_device_reset (FuPxiDevice *self, GError **error)
 {
 	guint8 req[FU_PXI_DEVICE_OTA_BUF_SZ] = {
 		PXI_HID_DEV_OTA_OUTPUT_REPORT_ID,
