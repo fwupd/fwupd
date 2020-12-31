@@ -14,6 +14,14 @@ Flags = elantp-recovery
 [HwId=34874ca5-54f0-5a4f-9161-e03910d14b75] 
 Flags = elantp-recovery
 
+# Lenovo ThinkPad X13 Gen 2 - 20XHFVT007
+[HwId=e5319542-ca16-5d93-bd0f-2d25f547a846] 
+Flags = elantp-recovery
+
+# Lenovo ThinkPad X13 Gen 2 - 20XHFVT003
+[HwId=ea5ea62f-ec8d-5f5d-8231-0816c89d75d6] 
+Flags = elantp-recovery
+
 # Acer Aspire V3-372T
 [HwId=513cde3d-d939-59bd-a634-5c1645ebb93b]
 Flags = elantp-recovery
