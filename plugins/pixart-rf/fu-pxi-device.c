@@ -240,9 +240,14 @@ fu_pxi_device_fw_object_create (FuPxiDevice *self, FuChunk *chk, GError **error)
 		return FALSE;
 		
 	/* check object create success or not */
-	if (res[0x01] != FU_PXI_DEVICE_CMD_FW_OBJECT_CREATE)
-		return FALSE;		
-
+	if (res[0x01] != FU_PXI_DEVICE_CMD_FW_OBJECT_CREATE) {
+		 g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_READ,
+			     "object createe fail opcode %02x",
+			     res[0x01]);
+		 return FALSE;
+	}
 	return TRUE;
 }
 
