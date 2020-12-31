@@ -170,6 +170,16 @@ fu_pxi_device_check_support_resume (FuPxiDevice *self,
 	
 	chunks = fu_chunk_array_new_from_bytes (fw, 0x0, 0x0, FU_PXI_DEVICE_OBJECT_SIZE_MAX);
 	
+	/* check offset is invalid or not */
+	if (self->offset > chunks->len) {
+		g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_READ,
+		     "offset from device is invalidfw got %x ,current maximum %x",
+			     self->offset 
+			     chunks->len);
+	       return FALSE;
+	}
 	/* calculate device current checksum */
 	for (guint i = 0; i < self->offset; i++) {	
 		FuChunk *chk = g_ptr_array_index (chunks, i);
