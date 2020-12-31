@@ -3,3 +3,9 @@
 Plugin = rts54hub
 FirmwareSizeMin = 0x20000
 FirmwareSizeMax = 0x40000
+
+# Lenovo HotRod
+[DeviceInstanceId=USB\VID_17EF&PID_30BF]
+Plugin = rts54hub
+FirmwareSizeMin = 0x20000
+FirmwareSizeMax = 0x40000
