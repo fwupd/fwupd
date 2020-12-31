@@ -175,8 +175,8 @@ fu_pxi_device_check_support_resume (FuPxiDevice *self,
 		g_set_error (error,
 		     FWUPD_ERROR,
 		     FWUPD_ERROR_READ,
-		     "offset from device is invalidfw got %x ,current maximum %x",
-			     self->offset 
+		     "offset from device is invalidfw got %x ,current maximum %u",
+			     self->offset, 
 			     chunks->len);
 	       return FALSE;
 	}
@@ -254,8 +254,9 @@ fu_pxi_device_fw_object_create (FuPxiDevice *self, FuChunk *chk, GError **error)
 		 g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_READ,
-			     "object createe fail opcode %02x",
-			     res[0x01]);
+			     "object createe fail opcode got %x, expected %x",
+			     res[0x01],
+			     FU_PXI_DEVICE_CMD_FW_OBJECT_CREATE);
 		 return FALSE;
 	}
 	return TRUE;
@@ -482,7 +483,8 @@ fu_pxi_device_write_firmware (FuDevice *device,
 	FuPxiDevice *self = FU_PXI_DEVICE (device);
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
-
+	g_autoptr(GError) error_local = NULL;
+	
 	/* get the default image */
 	fw = fu_firmware_get_image_default_bytes (firmware, error);
 	if (fw == NULL)
@@ -497,7 +499,8 @@ fu_pxi_device_write_firmware (FuDevice *device,
 
 	/* prepare write fw into device */
 	chunks = fu_chunk_array_new_from_bytes (fw, 0x0, 0x0, FU_PXI_DEVICE_OBJECT_SIZE_MAX);
-	if (!fu_pxi_device_check_support_resume (self, firmware, error)) {
+	if (!fu_pxi_device_check_support_resume (self, firmware, error_local)) {
+		g_debug ("do not resume: %s", error_local->message);
 		self->offset = 0;
 		self->checksum = 0;
 	}
