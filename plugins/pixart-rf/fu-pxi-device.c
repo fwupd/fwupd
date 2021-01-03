@@ -294,7 +294,7 @@ fu_pxi_device_write_chunk (FuPxiDevice *self, FuChunk *chk, GError **error)
 		prn++;
 		if (prn >= self->prn_threshold) {
 			guint8 opcode = 0;
-			if (!fu_pxi_device_wait_notify (self, 0x0, &opcode, NULL, error))
+			if (!fu_pxi_device_wait_notify (self, 0x0, &opcode, &checksum_tmp, error))
 				return FALSE;
 			if (opcode != FU_PXI_DEVICE_CMD_FW_WRITE) {
 				g_set_error (error,
@@ -307,11 +307,12 @@ fu_pxi_device_write_chunk (FuPxiDevice *self, FuChunk *chk, GError **error)
 			prn = 0;
 		}
 	}
-
-	/* the last chunk */
-	if (!fu_pxi_device_wait_notify (self, 0x0, NULL, &checksum_tmp, error))
-		return FALSE;
-	self->checksum  +=  checksum;	
+	self->checksum  +=  checksum;
+	/* check chunk is equal to FU_PXI_DEVICE_OBJECT_SIZE_MAX */ 
+	if (chk->data_sz == FU_PXI_DEVICE_OBJECT_SIZE_MAX) {
+		if (!fu_pxi_device_wait_notify (self, 0x0, NULL, &checksum_tmp, error))
+			return FALSE;
+	}
 	g_debug ("checksum %x, table checksum %x", checksum_tmp, self->checksum);
 	if (checksum_tmp != self->checksum ) {
 		g_set_error (error,
