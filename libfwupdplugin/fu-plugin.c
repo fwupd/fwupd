@@ -1749,14 +1749,32 @@ fu_plugin_set_device_gtype (FuPlugin *self, GType device_gtype)
 	priv->device_gtype = device_gtype;
 }
 
+static gchar *
+fu_common_string_uncamelcase (const gchar *str)
+{
+	GString *tmp = g_string_new (NULL);
+	for (guint i = 0; str[i] != '\0'; i++) {
+		if (g_ascii_islower (str[i]) ||
+		    g_ascii_isdigit (str[i])) {
+			g_string_append_c (tmp, str[i]);
+			continue;
+		}
+		if (i > 0)
+			g_string_append_c (tmp, '-');
+		g_string_append_c (tmp, g_ascii_tolower (str[i]));
+	}
+	return g_string_free (tmp, FALSE);
+}
+
 /**
  * fu_plugin_add_firmware_gtype:
  * @self: a #FuPlugin
- * @id: A string describing the type
- * @gtype: a #GType `FU_TYPE_DEVICE`
+ * @id: (nullable): An optional string describing the type, e.g. "ihex"
+ * @gtype: a #GType e.g. `FU_TYPE_FOO_FIRMWARE`
  *
- * Adds a firmware #GType which is used when creating devices.
- * *
+ * Adds a firmware #GType which is used when creating devices. If @id is not
+ * specified then it is guessed using the #GType name.
+ *
  * Plugins can use this method only in fu_plugin_init()
  *
  * Since: 1.3.3
@@ -1764,7 +1782,17 @@ fu_plugin_set_device_gtype (FuPlugin *self, GType device_gtype)
 void
 fu_plugin_add_firmware_gtype (FuPlugin *self, const gchar *id, GType gtype)
 {
-	g_signal_emit (self, signals[SIGNAL_ADD_FIRMWARE_GTYPE], 0, id, gtype);
+	g_autofree gchar *id_safe = NULL;
+	if (id != NULL) {
+		id_safe = g_strdup (id);
+	} else {
+		GString *str = g_string_new (g_type_name (gtype));
+		if (g_str_has_prefix (str->str, "Fu"))
+			g_string_erase (str, 0, 2);
+		fu_common_string_replace (str, "Firmware", "");
+		id_safe = fu_common_string_uncamelcase (str->str);
+	}
+	g_signal_emit (self, signals[SIGNAL_ADD_FIRMWARE_GTYPE], 0, id_safe, gtype);
 }
 
 static gboolean
