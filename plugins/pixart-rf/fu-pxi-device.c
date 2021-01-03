@@ -233,7 +233,6 @@ static gboolean
 fu_pxi_device_fw_object_create (FuPxiDevice *self, FuChunk *chk, GError **error)
 {
 	g_autoptr(GByteArray) req = g_byte_array_new ();
-	guint8 res[FU_PXI_DEVICE_OTA_BUF_SZ] = { PXI_HID_DEV_OTA_INPUT_REPORT_ID };
 	guint8 opcode = 0;
 	/* request */
 	fu_byte_array_append_uint8 (req, PXI_HID_DEV_OTA_OUTPUT_REPORT_ID);
