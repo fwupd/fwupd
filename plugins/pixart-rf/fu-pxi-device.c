@@ -234,7 +234,7 @@ fu_pxi_device_fw_object_create (FuPxiDevice *self, FuChunk *chk, GError **error)
 {
 	g_autoptr(GByteArray) req = g_byte_array_new ();
 	guint8 res[FU_PXI_DEVICE_OTA_BUF_SZ] = { PXI_HID_DEV_OTA_INPUT_REPORT_ID };
-
+	guint8 opcode = 0;
 	/* request */
 	fu_byte_array_append_uint8 (req, PXI_HID_DEV_OTA_OUTPUT_REPORT_ID);
 	fu_byte_array_append_uint8 (req, FU_PXI_DEVICE_CMD_FW_OBJECT_CREATE);
@@ -244,20 +244,16 @@ fu_pxi_device_fw_object_create (FuPxiDevice *self, FuChunk *chk, GError **error)
 					 req->data, req->len, error))
 		return FALSE;
 
-	/* reply */
-	if (!fu_udev_device_pread_full (FU_UDEV_DEVICE (self), 0x0,
-					res, 0x2, error))
-		return FALSE;
-		
 	/* check object create success or not */
-	if (res[0x01] != FU_PXI_DEVICE_CMD_FW_OBJECT_CREATE) {
-		 g_set_error (error,
+	if (!fu_pxi_device_wait_notify (self, 0x0, &opcode, NULL, error))
+		return FALSE;
+	if (opcode != FU_PXI_DEVICE_CMD_FW_OBJECT_CREATE) {
+		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_READ,
-			     "object createe fail opcode got %x, expected %d",
-			     res[0x01],
-			     FU_PXI_DEVICE_CMD_FW_OBJECT_CREATE);
-		 return FALSE;
+			     "FwWrite opcode invalid %02x",
+			     opcode);
+		return FALSE;
 	}
 	return TRUE;
 }
