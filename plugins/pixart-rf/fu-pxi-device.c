@@ -307,6 +307,15 @@ fu_pxi_device_write_chunk (FuPxiDevice *self, FuChunk *chk, GError **error)
 	if (chk->data_sz == FU_PXI_DEVICE_OBJECT_SIZE_MAX) {
 		if (!fu_pxi_device_wait_notify (self, 0x0, NULL, &checksum_tmp, error))
 			return FALSE;
+	} else {
+		/* The last checksum from PRN */
+		if (self->checksum == checksum)
+			return TRUE;
+		else {
+			/* The last checksum from device fw length is zero notfiy */
+			if (!fu_pxi_device_wait_notify (self, 0x0, NULL, &checksum_tmp, error))
+				return FALSE;
+		}
 	}
 	g_debug ("checksum %x, table checksum %x", checksum_tmp, self->checksum);
 	if (checksum_tmp != self->checksum ) {
