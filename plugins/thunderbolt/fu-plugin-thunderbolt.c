@@ -77,8 +77,8 @@ fu_plugin_init (FuPlugin *plugin)
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 	fu_plugin_add_udev_subsystem (plugin, "thunderbolt");
 	fu_plugin_set_device_gtype (plugin, FU_TYPE_THUNDERBOLT_DEVICE);
-	fu_plugin_add_firmware_gtype (plugin, "thunderbolt", FU_TYPE_THUNDERBOLT_FIRMWARE);
-	fu_plugin_add_firmware_gtype (plugin, "thunderbolt-update", FU_TYPE_THUNDERBOLT_FIRMWARE_UPDATE);
+	fu_plugin_add_firmware_gtype (plugin, NULL, FU_TYPE_THUNDERBOLT_FIRMWARE);
+	fu_plugin_add_firmware_gtype (plugin, NULL, FU_TYPE_THUNDERBOLT_FIRMWARE_UPDATE);
 	/* dell-dock plugin uses a slower bus for flashing */
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_BETTER_THAN, "dell_dock");
 }
