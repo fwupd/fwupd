@@ -12,11 +12,11 @@
 #include "fu-hailuck-common.h"
 #include "fu-hailuck-tp-device.h"
 
-struct _FuHaiLuckTpDevice {
+struct _FuHailuckTpDevice {
 	FuDevice		 parent_instance;
 };
 
-G_DEFINE_TYPE (FuHaiLuckTpDevice, fu_hailuck_tp_device, FU_TYPE_DEVICE)
+G_DEFINE_TYPE (FuHailuckTpDevice, fu_hailuck_tp_device, FU_TYPE_DEVICE)
 
 static gboolean
 fu_hailuck_tp_device_probe (FuDevice *device, GError **error)
@@ -198,7 +198,7 @@ fu_hailuck_tp_device_write_firmware (FuDevice *device,
 }
 
 static void
-fu_hailuck_tp_device_init (FuHaiLuckTpDevice *self)
+fu_hailuck_tp_device_init (FuHailuckTpDevice *self)
 {
 	fu_device_retry_set_delay (FU_DEVICE (self), 50); /* ms */
 	fu_device_set_firmware_size (FU_DEVICE (self), 0x6018);
@@ -213,7 +213,7 @@ fu_hailuck_tp_device_init (FuHaiLuckTpDevice *self)
 }
 
 static void
-fu_hailuck_tp_device_class_init (FuHaiLuckTpDeviceClass *klass)
+fu_hailuck_tp_device_class_init (FuHailuckTpDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	klass_device->write_firmware = fu_hailuck_tp_device_write_firmware;
@@ -222,10 +222,10 @@ fu_hailuck_tp_device_class_init (FuHaiLuckTpDeviceClass *klass)
 	klass_device->probe = fu_hailuck_tp_device_probe;
 }
 
-FuHaiLuckTpDevice *
+FuHailuckTpDevice *
 fu_hailuck_tp_device_new (FuDevice *device)
 {
-	FuHaiLuckTpDevice *self;
+	FuHailuckTpDevice *self;
 	self = g_object_new (FU_TYPE_HAILUCK_TP_DEVICE,
 			     "parent", device,
 			     NULL);

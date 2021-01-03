@@ -10,4 +10,4 @@
 #include "fu-hid-device.h"
 
 #define FU_TYPE_HAILUCK_KBD_DEVICE (fu_hailuck_kbd_device_get_type ())
-G_DECLARE_FINAL_TYPE (FuHaiLuckKbdDevice, fu_hailuck_kbd_device, FU, HAILUCK_KBD_DEVICE, FuHidDevice)
+G_DECLARE_FINAL_TYPE (FuHailuckKbdDevice, fu_hailuck_kbd_device, FU, HAILUCK_KBD_DEVICE, FuHidDevice)
