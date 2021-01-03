@@ -287,7 +287,6 @@ done
 %files -f %{name}.lang
 %doc README.md AUTHORS
 %license COPYING
-%config(noreplace)%{_sysconfdir}/fwupd/ata.conf
 %config(noreplace)%{_sysconfdir}/fwupd/daemon.conf
 %config(noreplace)%{_sysconfdir}/fwupd/upower.conf
 %if 0%{?have_uefi}

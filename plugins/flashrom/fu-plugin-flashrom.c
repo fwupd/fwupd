@@ -112,7 +112,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 			fu_device_add_guid (dev, guid);
 			if (dmi_vendor != NULL) {
 				g_autofree gchar *vendor_id = g_strdup_printf ("DMI:%s", dmi_vendor);
-				fu_device_set_vendor_id (FU_DEVICE (dev), vendor_id);
+				fu_device_add_vendor_id (FU_DEVICE (dev), vendor_id);
 			}
 			g_ptr_array_add (devices, g_steal_pointer (&dev));
 			break;

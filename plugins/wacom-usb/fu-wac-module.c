@@ -320,7 +320,7 @@ fu_wac_module_constructed (GObject *object)
 
 	/* set vendor ID */
 	vendor_id = g_strdup_printf ("USB:0x%04X", g_usb_device_get_vid (priv->usb_device));
-	fu_device_set_vendor_id (FU_DEVICE (self), vendor_id);
+	fu_device_add_vendor_id (FU_DEVICE (self), vendor_id);
 
 	/* set USB physical and logical IDs */
 	fu_device_set_physical_id (FU_DEVICE (self),

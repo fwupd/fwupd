@@ -216,7 +216,7 @@ fu_tpm_device_setup (FuDevice *device, GError **error)
 
 	/* enforce vendors can only ship updates for their own hardware */
 	vendor_id = g_strdup_printf ("TPM:%s", manufacturer);
-	fu_device_set_vendor_id (device, vendor_id);
+	fu_device_add_vendor_id (device, vendor_id);
 	tmp = fu_tpm_device_convert_manufacturer (manufacturer);
 	fu_device_set_vendor (device, tmp != NULL ? tmp : manufacturer);
 

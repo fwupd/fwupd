@@ -201,7 +201,7 @@ fu_emmc_device_probe (FuUdevDevice *device, GError **error)
 	/* set the vendor */
 	tmp = g_udev_device_get_sysfs_attr (udev_parent, "manfid");
 	vendor_id = g_strdup_printf ("EMMC:%s", tmp);
-	fu_device_set_vendor_id (FU_DEVICE (device), vendor_id);
+	fu_device_add_vendor_id (FU_DEVICE (device), vendor_id);
 	fu_device_set_vendor (FU_DEVICE (device), fu_emmc_device_get_manufacturer (manfid));
 
 	/* set the physical ID */

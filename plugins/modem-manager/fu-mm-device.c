@@ -284,7 +284,7 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 	fu_device_set_version (device, version);
 	for (guint i = 0; device_ids[i] != NULL; i++)
 		fu_device_add_instance_id (device, device_ids[i]);
-	if (fu_device_get_vendor_id (device) == NULL) {
+	if (fu_device_get_vendor_ids (device) == NULL) {
 		g_autofree gchar *path = g_build_filename (device_sysfs_path, "idVendor", NULL);
 		g_autofree gchar *value = NULL;
 		g_autoptr(GError) error_local = NULL;
@@ -293,7 +293,7 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 			g_warning ("failed to set vendor ID: %s", error_local->message);
 		} else {
 			g_autofree gchar *vendor_id = g_strdup_printf ("USB:0x%s", g_strchomp (value));
-			fu_device_set_vendor_id (device, vendor_id);
+			fu_device_add_vendor_id (device, vendor_id);
 		}
 	}
 

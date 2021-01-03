@@ -477,7 +477,7 @@ fu_logitech_hidpp_peripheral_probe (FuUdevDevice *device, GError **error)
 		return FALSE;
 
 	/* nearly... */
-	fu_device_set_vendor_id (FU_DEVICE (device), "USB:0x046D");
+	fu_device_add_vendor_id (FU_DEVICE (device), "USB:0x046D");
 
 	/* this is a non-standard extension */
 	devid = g_strdup_printf ("UFY\\VID_%04X&PID_%04X",

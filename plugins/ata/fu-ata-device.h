@@ -18,5 +18,3 @@ FuAtaDevice	*fu_ata_device_new_from_blob		(const guint8	*buf,
 /* for self tests */
 guint8		 fu_ata_device_get_transfer_mode	(FuAtaDevice	*self);
 guint16		 fu_ata_device_get_transfer_blocks	(FuAtaDevice	*self);
-void		 fu_ata_device_set_unknown_oui_report	(FuAtaDevice	*self,
-							 gboolean	 enabled);

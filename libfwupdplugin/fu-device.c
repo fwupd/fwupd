@@ -808,8 +808,13 @@ fu_device_add_child (FuDevice *self, FuDevice *child)
 		fu_device_set_physical_id (child, fu_device_get_physical_id (self));
 	if (fu_device_get_vendor (child) == NULL)
 		fu_device_set_vendor (child, fu_device_get_vendor (self));
-	if (fu_device_get_vendor_id (child) == NULL)
-		fu_device_set_vendor_id (child, fu_device_get_vendor_id (self));
+	if (fu_device_get_vendor_ids(child)->len == 0) {
+		GPtrArray *vendor_ids = fu_device_get_vendor_ids (self);
+		for (guint i = 0; i < vendor_ids->len; i++) {
+			const gchar *vendor_id = g_ptr_array_index (vendor_ids, i);
+			fu_device_add_vendor_id (child, vendor_id);
+		}
+	}
 	if (fu_device_get_icons(child)->len == 0) {
 		GPtrArray *icons = fu_device_get_icons (self);
 		for (guint i = 0; i < icons->len; i++) {
@@ -1011,7 +1016,7 @@ fu_device_set_quirk_kv (FuDevice *self,
 		return TRUE;
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_VENDOR_ID) == 0) {
-		fu_device_set_vendor_id (self, value);
+		fu_device_add_vendor_id (self, value);
 		return TRUE;
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_PROTOCOL) == 0) {

@@ -34,6 +34,7 @@ typedef struct {
 	guint64				 modified;
 	guint64				 flags;
 	GPtrArray			*guids;
+	GPtrArray			*vendor_ids;
 	GPtrArray			*instance_ids;
 	GPtrArray			*icons;
 	gchar				*name;
@@ -42,7 +43,7 @@ typedef struct {
 	gchar				*branch;
 	gchar				*description;
 	gchar				*vendor;
-	gchar				*vendor_id;
+	gchar				*vendor_id;	/* for compat only */
 	gchar				*homepage;
 	gchar				*plugin;
 	gchar				*protocol;
@@ -659,11 +660,13 @@ fwupd_device_set_vendor (FwupdDevice *device, const gchar *vendor)
  * fwupd_device_get_vendor_id:
  * @device: A #FwupdDevice
  *
- * Gets the device vendor ID.
+ * Gets the combined device vendor ID.
  *
- * Returns: the device vendor, e.g. 'USB:0x1234', or %NULL if unset
+ * Returns: the device vendor, e.g. 'USB:0x1234|PCI:0x5678', or %NULL if unset
  *
  * Since: 0.9.4
+ *
+ * Deprecated: 1.5.5: Use fwupd_device_get_vendor_ids() instead.
  **/
 const gchar *
 fwupd_device_get_vendor_id (FwupdDevice *device)
@@ -676,19 +679,103 @@ fwupd_device_get_vendor_id (FwupdDevice *device)
 /**
  * fwupd_device_set_vendor_id:
  * @device: A #FwupdDevice
- * @vendor_id: the ID, e.g. 'USB:0x1234'
+ * @vendor_id: the ID, e.g. 'USB:0x1234' or 'USB:0x1234|PCI:0x5678'
  *
  * Sets the device vendor ID.
  *
  * Since: 0.9.4
+ *
+ * Deprecated: 1.5.5: Use fwupd_device_add_vendor_id() instead.
  **/
 void
 fwupd_device_set_vendor_id (FwupdDevice *device, const gchar *vendor_id)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_auto(GStrv) vendor_ids = NULL;
+
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	g_return_if_fail (vendor_id != NULL);
+
+	/* add all */
+	vendor_ids = g_strsplit (vendor_id, "|", -1);
+	for (guint i = 0; vendor_ids[i] != NULL; i++)
+		fwupd_device_add_vendor_id (device, vendor_ids[i]);
+}
+
+/**
+ * fwupd_device_get_vendor_ids:
+ * @device: A #FwupdDevice
+ *
+ * Gets the device vendor ID.
+ *
+ * Returns: (element-type utf8) (transfer none): the device vendor ID
+ *
+ * Since: 1.5.5
+ **/
+GPtrArray *
+fwupd_device_get_vendor_ids (FwupdDevice *device)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	return priv->vendor_ids;
+}
+
+/**
+ * fwupd_device_has_vendor_id:
+ * @device: A #FwupdDevice
+ * @vendor_id: the ID, e.g. 'USB:0x1234'
+ *
+ * Finds out if the device has this specific vendor ID.
+ *
+ * Returns: %TRUE if the ID is found
+ *
+ * Since: 1.5.5
+ **/
+gboolean
+fwupd_device_has_vendor_id (FwupdDevice *device, const gchar *vendor_id)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+
+	g_return_val_if_fail (FWUPD_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (vendor_id != NULL, FALSE);
+
+	for (guint i = 0; i < priv->vendor_ids->len; i++) {
+		const gchar *vendor_id_tmp = g_ptr_array_index (priv->vendor_ids, i);
+		if (g_strcmp0 (vendor_id, vendor_id_tmp) == 0)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+/**
+ * fwupd_device_add_vendor_id:
+ * @device: A #FwupdDevice
+ * @vendor_id: the ID, e.g. 'USB:0x1234'
+ *
+ * Adds a device vendor ID.
+ *
+ * Since: 1.5.5
+ **/
+void
+fwupd_device_add_vendor_id (FwupdDevice *device, const gchar *vendor_id)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_auto(GStrv) vendor_ids_tmp = NULL;
+
+	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	g_return_if_fail (vendor_id != NULL);
+
+	if (fwupd_device_has_vendor_id (device, vendor_id))
+		return;
+	g_ptr_array_add (priv->vendor_ids, g_strdup (vendor_id));
+
+	/* build for compatibility */
+	vendor_ids_tmp = g_new0 (gchar *, priv->vendor_ids->len + 1);
+	for (guint i = 0; i < priv->vendor_ids->len; i++) {
+		const gchar *vendor_id_tmp = g_ptr_array_index (priv->vendor_ids, i);
+		vendor_ids_tmp[i] = g_strdup (vendor_id_tmp);
+	}
 	g_free (priv->vendor_id);
-	priv->vendor_id = g_strdup (vendor_id);
+	priv->vendor_id = g_strjoinv ("|", vendor_ids_tmp);
 }
 
 /**
@@ -1261,8 +1348,10 @@ fwupd_device_incorporate (FwupdDevice *self, FwupdDevice *donor)
 		fwupd_device_set_branch (self, priv_donor->branch);
 	if (priv->vendor == NULL)
 		fwupd_device_set_vendor (self, priv_donor->vendor);
-	if (priv->vendor_id == NULL)
-		fwupd_device_set_vendor_id (self, priv_donor->vendor_id);
+	for (guint i = 0; i < priv_donor->vendor_ids->len; i++) {
+		const gchar *tmp = g_ptr_array_index (priv_donor->vendor_ids, i);
+		fwupd_device_add_vendor_id (self, tmp);
+	}
 	if (priv->plugin == NULL)
 		fwupd_device_set_plugin (self, priv_donor->plugin);
 	if (priv->protocol == NULL)
@@ -1363,10 +1452,17 @@ fwupd_device_to_variant_full (FwupdDevice *device, FwupdDeviceFlags flags)
 				       FWUPD_RESULT_KEY_VENDOR,
 				       g_variant_new_string (priv->vendor));
 	}
-	if (priv->vendor_id != NULL) {
+	if (priv->vendor_ids->len > 0) {
+		g_autoptr(GString) str = g_string_new (NULL);
+		for (guint i = 0; i < priv->vendor_ids->len; i++) {
+			const gchar *tmp = g_ptr_array_index (priv->vendor_ids, i);
+			g_string_append_printf (str, "%s|", tmp);
+		}
+		if (str->len > 0)
+			g_string_truncate (str, str->len - 1);
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_VENDOR_ID,
-				       g_variant_new_string (priv->vendor_id));
+				       g_variant_new_string (str->str));
 	}
 	if (priv->flags > 0) {
 		g_variant_builder_add (&builder, "{sv}",
@@ -1600,7 +1696,10 @@ fwupd_device_from_key_value (FwupdDevice *device, const gchar *key, GVariant *va
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_VENDOR_ID) == 0) {
-		fwupd_device_set_vendor_id (device, g_variant_get_string (value, NULL));
+		g_auto(GStrv) vendor_ids = NULL;
+		vendor_ids = g_strsplit (g_variant_get_string (value, NULL), "|", -1);
+		for (guint i = 0; vendor_ids[i] != NULL; i++)
+			fwupd_device_add_vendor_id (device, vendor_ids[i]);
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_SERIAL) == 0) {
@@ -2141,6 +2240,15 @@ fwupd_device_to_json (FwupdDevice *device, JsonBuilder *builder)
 	}
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_VENDOR_ID, priv->vendor_id);
+	if (priv->vendor_ids->len > 1) { /* --> 0 when bumping API */
+		json_builder_set_member_name (builder, "VendorIds");
+		json_builder_begin_array (builder);
+		for (guint i = 0; i < priv->vendor_ids->len; i++) {
+			const gchar *tmp = g_ptr_array_index (priv->vendor_ids, i);
+			json_builder_add_string_value (builder, tmp);
+		}
+		json_builder_end_array (builder);
+	}
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_VERSION, priv->version);
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_VERSION_LOWEST, priv->version_lowest);
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_VERSION_BOOTLOADER, priv->version_bootloader);
@@ -2262,7 +2370,10 @@ fwupd_device_to_string (FwupdDevice *device)
 		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_CHECKSUM, checksum_display);
 	}
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_VENDOR_ID, priv->vendor_id);
+	for (guint i = 0; i < priv->vendor_ids->len; i++) {
+		const gchar *tmp = g_ptr_array_index (priv->vendor_ids, i);
+		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_VENDOR_ID, tmp);
+	}
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_VERSION, priv->version);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_VERSION_LOWEST, priv->version_lowest);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_VERSION_BOOTLOADER, priv->version_bootloader);
@@ -2419,6 +2530,7 @@ fwupd_device_init (FwupdDevice *device)
 	priv->instance_ids = g_ptr_array_new_with_free_func (g_free);
 	priv->icons = g_ptr_array_new_with_free_func (g_free);
 	priv->checksums = g_ptr_array_new_with_free_func (g_free);
+	priv->vendor_ids = g_ptr_array_new_with_free_func (g_free);
 	priv->children = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	priv->releases = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 }
@@ -2449,6 +2561,7 @@ fwupd_device_finalize (GObject *object)
 	g_free (priv->version_lowest);
 	g_free (priv->version_bootloader);
 	g_ptr_array_unref (priv->guids);
+	g_ptr_array_unref (priv->vendor_ids);
 	g_ptr_array_unref (priv->instance_ids);
 	g_ptr_array_unref (priv->icons);
 	g_ptr_array_unref (priv->checksums);

@@ -56,7 +56,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	dmi_vendor = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VENDOR);
 	if (dmi_vendor != NULL) {
 		g_autofree gchar *vendor_id = g_strdup_printf ("DMI:%s", dmi_vendor);
-		fu_device_set_vendor_id (device, vendor_id);
+		fu_device_add_vendor_id (device, vendor_id);
 	}
 
 	fu_plugin_device_register (plugin, device);
