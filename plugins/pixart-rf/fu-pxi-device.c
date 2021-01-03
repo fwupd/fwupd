@@ -309,7 +309,7 @@ fu_pxi_device_write_chunk (FuPxiDevice *self, FuChunk *chk, GError **error)
 			return FALSE;
 	} else {
 		/* The last checksum from PRN */
-		if (self->checksum == checksum)
+		if (self->checksum == checksum_tmp)
 			return TRUE;
 		else {
 			/* The last checksum from device fw length is zero notfiy */
