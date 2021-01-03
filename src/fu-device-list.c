@@ -569,6 +569,7 @@ static void
 fu_device_list_replace (FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 {
 	const gchar *custom_flags;
+	GPtrArray *vendor_ids;
 
 	/* clear timeout if scheduled */
 	if (item->remove_id != 0) {
@@ -580,11 +581,11 @@ fu_device_list_replace (FuDeviceList *self, FuDeviceItem *item, FuDevice *device
 	fu_device_list_add_missing_guids (device, item->device);
 
 	/* enforce the vendor ID if specified */
-	if (fu_device_get_vendor_id (item->device) != NULL &&
-	    fu_device_get_vendor_id (device) == NULL) {
-		const gchar *vendor_id = fu_device_get_vendor_id (item->device);
+	vendor_ids = fu_device_get_vendor_ids (item->device);
+	for (guint i = 0; i < vendor_ids->len; i++) {
+		const gchar *vendor_id = g_ptr_array_index (vendor_ids, i);
 		g_debug ("copying old vendor ID %s to new device", vendor_id);
-		fu_device_set_vendor_id (device, vendor_id);
+		fu_device_add_vendor_id (device, vendor_id);
 	}
 
 	/* copy over custom flags */

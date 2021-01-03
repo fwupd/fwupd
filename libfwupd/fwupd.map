@@ -631,3 +631,11 @@ LIBFWUPD_1.5.3 {
     fwupd_remote_set_keyring_kind;
   local: *;
 } LIBFWUPD_1.5.2;
+
+LIBFWUPD_1.5.5 {
+  global:
+    fwupd_device_add_vendor_id;
+    fwupd_device_get_vendor_ids;
+    fwupd_device_has_vendor_id;
+  local: *;
+} LIBFWUPD_1.5.3;

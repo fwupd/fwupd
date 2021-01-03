@@ -553,7 +553,7 @@ fu_plugin_uefi_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GError **er
 		dmi_vendor = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VENDOR);
 		if (dmi_vendor != NULL) {
 			g_autofree gchar *vendor_id = g_strdup_printf ("DMI:%s", dmi_vendor);
-			fu_device_set_vendor_id (FU_DEVICE (dev), vendor_id);
+			fu_device_add_vendor_id (FU_DEVICE (dev), vendor_id);
 		}
 	}
 

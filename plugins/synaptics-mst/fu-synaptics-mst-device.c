@@ -70,7 +70,7 @@ fu_synaptics_mst_device_init (FuSynapticsMstDevice *self)
 {
 	fu_device_set_protocol (FU_DEVICE (self), "com.synaptics.mst");
 	fu_device_set_vendor (FU_DEVICE (self), "Synaptics");
-	fu_device_set_vendor_id (FU_DEVICE (self), "DRM_DP_AUX_DEV:0x06CB");
+	fu_device_add_vendor_id (FU_DEVICE (self), "DRM_DP_AUX_DEV:0x06CB");
 	fu_device_set_summary (FU_DEVICE (self), "Multi-Stream Transport Device");
 	fu_device_add_icon (FU_DEVICE (self), "video-display");
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_TRIPLET);

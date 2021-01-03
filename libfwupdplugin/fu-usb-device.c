@@ -309,7 +309,7 @@ fu_usb_device_probe (FuDevice *device, GError **error)
 
 	/* set vendor ID */
 	vendor_id = g_strdup_printf ("USB:0x%04X", g_usb_device_get_vid (priv->usb_device));
-	fu_device_set_vendor_id (device, vendor_id);
+	fu_device_add_vendor_id (device, vendor_id);
 
 	/* set the version if the release has been set */
 	release = g_usb_device_get_release (priv->usb_device);
