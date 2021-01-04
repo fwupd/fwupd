@@ -483,7 +483,7 @@ fu_synaptics_rmi_firmware_write_v0x (FuFirmware *firmware, GError **error)
 		if (!fu_memcpy_safe (buf->data, buf->len, RMI_IMG_PRODUCT_ID_OFFSET,		/* dst */
 				     (const guint8 *) self->product_id, product_id_sz, 0x0,	/* src */
 				     product_id_sz, error))
-			return FALSE;
+			return NULL;
 	}
 	fu_common_write_uint16 (buf->data + RMI_IMG_PRODUCT_INFO_OFFSET, 0x1234, G_LITTLE_ENDIAN);
 	fu_common_write_uint32 (buf->data + RMI_IMG_IMAGE_SIZE_OFFSET, bufsz, G_LITTLE_ENDIAN);
@@ -534,7 +534,7 @@ fu_synaptics_rmi_firmware_write_v10 (FuFirmware *firmware, GError **error)
 		if (!fu_memcpy_safe (buf->data, buf->len, RMI_IMG_PRODUCT_ID_OFFSET,		/* dst */
 				     (const guint8 *) self->product_id, product_id_sz, 0x0,	/* src */
 				     product_id_sz, error))
-			return FALSE;
+			return NULL;
 	}
 	fu_common_write_uint32 (buf->data + RMI_IMG_FW_BUILD_ID_OFFSET, 0x1234, G_LITTLE_ENDIAN);
 	fu_common_write_uint32 (buf->data + RMI_IMG_PACKAGE_ID_OFFSET, 0x4321, G_LITTLE_ENDIAN);
@@ -600,7 +600,7 @@ fu_synaptics_rmi_firmware_write (FuFirmware *firmware, GError **error)
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "kind not supported");
-	return FALSE;
+	return NULL;
 }
 
 static void

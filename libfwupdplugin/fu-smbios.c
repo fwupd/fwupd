@@ -512,7 +512,7 @@ fu_smbios_get_data (FuSmbios *self, guint8 type, GError **error)
 	FuSmbiosItem *item;
 
 	g_return_val_if_fail (FU_IS_SMBIOS (self), NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	item = fu_smbios_get_item_for_type (self, type);
 	if (item == NULL) {

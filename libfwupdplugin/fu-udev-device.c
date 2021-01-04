@@ -1509,7 +1509,7 @@ fu_udev_device_get_sysfs_attr (FuUdevDevice *self, const gchar *attr,
 
 	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), NULL);
 	g_return_val_if_fail (attr != NULL, NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* nothing to do */
 	if (priv->udev_device == NULL) {

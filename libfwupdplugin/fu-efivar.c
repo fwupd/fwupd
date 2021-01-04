@@ -399,8 +399,8 @@ fu_efivar_get_names (const gchar *guid, GError **error)
 	g_autoptr(GDir) dir = NULL;
 	g_autoptr(GPtrArray) names = g_ptr_array_new_with_free_func (g_free);
 
-	g_return_val_if_fail (guid != NULL, FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	g_return_val_if_fail (guid != NULL, NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* find names with matching GUID */
 	dir = g_dir_open (path, 0, error);
