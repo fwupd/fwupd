@@ -166,8 +166,8 @@ fu_pxi_device_check_support_resume (FuPxiDevice *self,
 		     FWUPD_ERROR_READ,
 		     "fw is null");
 	       return FALSE;
-	}	
-	
+	}
+
 	chunks = fu_chunk_array_new_from_bytes (fw, 0x0, 0x0, FU_PXI_DEVICE_OBJECT_SIZE_MAX);
 	
 	/* check offset is invalid or not */
@@ -274,7 +274,7 @@ fu_pxi_device_write_chunk (FuPxiDevice *self, FuChunk *chk, GError **error)
 	guint16 checksum = fu_pxi_device_calculate_checksum (chk->data, chk->data_sz);
 	guint16 checksum_form_device = 0;
 	g_autoptr(GPtrArray) chunks = NULL;
-	
+
 	/* send create fw object command */
 	if (!fu_pxi_device_fw_object_create (self, chk, error))
 		return FALSE;
