@@ -1206,6 +1206,113 @@ fu_engine_check_requirement_vendor_id (FuEngine *self, XbNode *req,
 }
 
 static gboolean
+fu_engine_check_requirement_device_flag_str (FuEngine *self, FuDevice *device,
+					     const gchar *flag_str, GError **error)
+{
+	FwupdDeviceFlags flag;
+
+	/* is this a negated device flag */
+	if (g_str_has_prefix (flag_str, "~")) {
+		flag = fwupd_device_flag_from_string (flag_str + 1);
+		if (flag != FWUPD_DEVICE_FLAG_UNKNOWN) {
+			if (!fu_device_has_flag (device, flag))
+				return TRUE;
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "device [%s] flag %s is set",
+				     fu_device_get_id (device),
+				     flag_str + 1);
+			return FALSE;
+		}
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "unknown device flag, got %s",
+			     flag_str + 1);
+		return FALSE;
+	}
+
+	/* is this a known device flag */
+	flag = fwupd_device_flag_from_string (flag_str);
+	if (flag != FWUPD_DEVICE_FLAG_UNKNOWN) {
+		if (fu_device_has_flag (device, flag))
+			return TRUE;
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "device [%s] flag %s is not set",
+			     fu_device_get_id (device),
+			     flag_str);
+		return FALSE;
+	}
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_SUPPORTED,
+		     "unknown device flag, got %s",
+		     flag_str);
+	return FALSE;
+}
+
+static gboolean
+fu_engine_check_requirement_device_flag (FuEngine *self, XbNode *req, FuDevice *device,
+					 FwupdInstallFlags flags, GError **error)
+{
+	g_auto(GStrv) data = NULL;
+	g_autoptr(FuDevice) device_tmp = NULL;
+
+	/* split values like:
+	 *  - has-upgrade
+	 *  - 1ff60ab2-3905-06a1-b476-0371f00c9e9b:~has-upgrade
+	 */
+	if (xb_node_get_text (req) == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "No value for device flag");
+		return FALSE;
+	}
+
+	/* flags for the current device */
+	data = g_strsplit (xb_node_get_text (req), ":", -1);
+	if (g_strv_length (data) == 1)
+		return fu_engine_check_requirement_device_flag_str (self, device, data[0], error);
+
+	/* some other device */
+	if (g_strv_length (data) != 2 || !fwupd_guid_is_valid (data[0])) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "Invalid value for device flag, expected GUID:FLAG, got %s",
+			     xb_node_get_text (req));
+		return FALSE;
+	}
+	device_tmp = fu_device_list_get_by_guid (self->device_list, data[0], error);
+	if (device_tmp == NULL)
+		return FALSE;
+	return fu_engine_check_requirement_device_flag_str (self, device_tmp, data[1], error);
+}
+
+static gboolean
+fu_engine_check_requirement_device (FuEngine *self, XbNode *req, FuDevice *device,
+				    FwupdInstallFlags flags, GError **error)
+{
+	const gchar *kind = xb_node_get_attr (req, "type");
+
+	/* check if a device has a specific flag */
+	if (g_strcmp0 (kind, "flag") == 0)
+		return fu_engine_check_requirement_device_flag (self, req, device, flags, error);
+
+	/* not supported */
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_SUPPORTED,
+		     "cannot handle device requirement type '%s'",
+		     kind);
+	return FALSE;
+}
+
+static gboolean
 fu_engine_check_requirement_firmware (FuEngine *self, XbNode *req, FuDevice *device,
 				      FwupdInstallFlags flags, GError **error)
 {
@@ -1474,6 +1581,14 @@ fu_engine_check_requirement (FuEngine *self,
 			return TRUE;
 		return fu_engine_check_requirement_firmware (self, req, device,
 							     flags, error);
+	}
+
+	/* ensure device requirement */
+	if (g_strcmp0 (xb_node_get_element (req), "device") == 0) {
+		if (device == NULL)
+			return TRUE;
+		return fu_engine_check_requirement_device (self, req, device,
+							   flags, error);
 	}
 
 	/* ensure hardware requirement */
@@ -3067,6 +3182,7 @@ static void
 fu_engine_ensure_device_supported (FuEngine *self, FuDevice *device)
 {
 	gboolean is_supported = FALSE;
+	gboolean has_upgrade = FALSE;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) releases = NULL;
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
@@ -3093,6 +3209,25 @@ fu_engine_ensure_device_supported (FuEngine *self, FuDevice *device)
 	} else {
 		if (releases->len > 0)
 			is_supported = TRUE;
+	}
+
+	/* use a flag to optimize requirement checking later on */
+	for (guint i = 0; releases != NULL && i < releases->len; i++) {
+		FwupdRelease *rel = g_ptr_array_index (releases, i);
+		if (fwupd_release_has_flag (rel, FWUPD_RELEASE_FLAG_IS_UPGRADE) &&
+		    !fwupd_release_has_flag (rel, FWUPD_RELEASE_FLAG_BLOCKED_VERSION) &&
+		    !fwupd_release_has_flag (rel, FWUPD_RELEASE_FLAG_BLOCKED_APPROVAL)) {
+			has_upgrade = TRUE;
+			break;
+		}
+	}
+	if (has_upgrade && !fu_device_has_flag (device, FWUPD_DEVICE_FLAG_HAS_UPGRADE)) {
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_HAS_UPGRADE);
+		fu_engine_emit_device_changed (self, device);
+	}
+	if (!has_upgrade && fu_device_has_flag (device, FWUPD_DEVICE_FLAG_HAS_UPGRADE)) {
+		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_HAS_UPGRADE);
+		fu_engine_emit_device_changed (self, device);
 	}
 
 	/* was supported, now unsupported */
