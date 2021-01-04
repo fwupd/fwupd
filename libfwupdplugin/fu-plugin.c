@@ -1832,7 +1832,7 @@ fu_plugin_usb_device_added (FuPlugin *self, FuUsbDevice *device, GError **error)
 
 	/* there are a lot of different devices that match, but not all respond
 	 * well to opening -- so limit some ones with issued updates */
-	if (fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_ONLY_SUPPORTED)) {
+	if (fu_device_has_internal_flag (dev, FU_DEVICE_INTERNAL_FLAG_ONLY_SUPPORTED)) {
 		if (!fu_device_probe (dev, error))
 			return FALSE;
 		fu_device_convert_instance_ids (dev);
@@ -1872,7 +1872,7 @@ fu_plugin_udev_device_added (FuPlugin *self, FuUdevDevice *device, GError **erro
 
 	/* there are a lot of different devices that match, but not all respond
 	 * well to opening -- so limit some ones with issued updates */
-	if (fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_ONLY_SUPPORTED)) {
+	if (fu_device_has_internal_flag (dev, FU_DEVICE_INTERNAL_FLAG_ONLY_SUPPORTED)) {
 		if (!fu_device_probe (dev, error))
 			return FALSE;
 		fu_device_convert_instance_ids (dev);

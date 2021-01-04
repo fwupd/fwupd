@@ -62,6 +62,7 @@ typedef struct {
 	GPtrArray			*possible_plugins;
 	GPtrArray			*retry_recs;	/* of FuDeviceRetryRecovery */
 	guint				 retry_delay;
+	FuDeviceInternalFlags		 internal_flags;
 } FuDevicePrivate;
 
 typedef struct {
@@ -136,6 +137,121 @@ fu_device_set_property (GObject *object, guint prop_id,
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
 	}
+}
+
+/**
+ * fu_device_internal_flag_to_string:
+ * @flag: A #FuDeviceInternalFlags, e.g. %FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON
+ *
+ * Converts a #FuDeviceInternalFlags to a string.
+ *
+ * Return value: identifier string
+ *
+ * Since: 1.5.5
+ **/
+const gchar *
+fu_device_internal_flag_to_string (FuDeviceInternalFlags flag)
+{
+	if (flag == FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON)
+		return "md-set-icon";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME)
+		return "md-set-name";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME_CATEGORY)
+		return "md-set-name-category";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT)
+		return "md-set-verfmt";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_ONLY_SUPPORTED)
+		return "only-supported";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_NO_AUTO_INSTANCE_IDS)
+		return "no-auto-instance-ids";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER)
+		return "ensure-semver";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_RETRY_OPEN)
+		return "retry-open";
+	return NULL;
+}
+
+/**
+ * fu_device_internal_flag_from_string:
+ * @flag: A string, e.g. `md-set-icon`
+ *
+ * Converts a string to a #FuDeviceInternalFlags.
+ *
+ * Return value: enumerated value
+ *
+ * Since: 1.5.5
+ **/
+FuDeviceInternalFlags
+fu_device_internal_flag_from_string (const gchar *flag)
+{
+	if (g_strcmp0 (flag, "md-set-icon") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON;
+	if (g_strcmp0 (flag, "md-set-name") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME;
+	if (g_strcmp0 (flag, "md-set-name-category") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME_CATEGORY;
+	if (g_strcmp0 (flag, "md-set-verfmt") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT;
+	if (g_strcmp0 (flag, "only-supported") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_ONLY_SUPPORTED;
+	if (g_strcmp0 (flag, "no-auto-instance-ids") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_NO_AUTO_INSTANCE_IDS;
+	if (g_strcmp0 (flag, "ensure-semver") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER;
+	if (g_strcmp0 (flag, "retry-open") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_RETRY_OPEN;
+	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
+}
+
+/**
+ * fu_device_add_internal_flag:
+ * @self: A #FuDevice
+ * @flag: A #FuDeviceInternalFlags, e.g. %FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON
+ *
+ * Adds a private flag that stays internal to the engine and is not leaked to the client.
+ *
+ * Since: 1.5.5
+ **/
+void
+fu_device_add_internal_flag (FuDevice *self, FuDeviceInternalFlags flag)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_DEVICE (self));
+	priv->internal_flags |= flag;
+}
+
+/**
+ * fu_device_remove_internal_flag:
+ * @self: A #FuDevice
+ * @flag: A #FuDeviceInternalFlags, e.g. %FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON
+ *
+ * Removes a private flag that stays internal to the engine and is not leaked to the client.
+ *
+ * Since: 1.5.5
+ **/
+void
+fu_device_remove_internal_flag (FuDevice *self, FuDeviceInternalFlags flag)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_DEVICE (self));
+	priv->internal_flags &= ~flag;
+}
+
+/**
+ * fu_device_has_internal_flag:
+ * @self: A #FuDevice
+ * @flag: A #FuDeviceInternalFlags, e.g. %FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON
+ *
+ * Tests for a private flag that stays internal to the engine and is not leaked to the client.
+ *
+ * Since: 1.5.5
+ **/
+gboolean
+fu_device_has_internal_flag (FuDevice *self, FuDeviceInternalFlags flag)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
+	return (priv->internal_flags & flag) > 0;
 }
 
 /**
@@ -1718,7 +1834,7 @@ fu_device_set_version (FuDevice *self, const gchar *version)
 	g_return_if_fail (FU_IS_DEVICE (self));
 
 	/* sanitize if required */
-	if (fu_device_has_flag (self, FWUPD_DEVICE_FLAG_ENSURE_SEMVER)) {
+	if (fu_device_has_internal_flag (self, FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER)) {
 		version_safe = fu_common_version_ensure_semver (version);
 		if (g_strcmp0 (version, version_safe) != 0)
 			g_debug ("converted '%s' to '%s'", version, version_safe);
@@ -1760,7 +1876,7 @@ fu_device_set_version_lowest (FuDevice *self, const gchar *version)
 	g_return_if_fail (FU_IS_DEVICE (self));
 
 	/* sanitize if required */
-	if (fu_device_has_flag (self, FWUPD_DEVICE_FLAG_ENSURE_SEMVER)) {
+	if (fu_device_has_internal_flag (self, FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER)) {
 		version_safe = fu_common_version_ensure_semver (version);
 		if (g_strcmp0 (version, version_safe) != 0)
 			g_debug ("converted '%s' to '%s'", version, version_safe);
@@ -1802,7 +1918,7 @@ fu_device_set_version_bootloader (FuDevice *self, const gchar *version)
 	g_return_if_fail (FU_IS_DEVICE (self));
 
 	/* sanitize if required */
-	if (fu_device_has_flag (self, FWUPD_DEVICE_FLAG_ENSURE_SEMVER)) {
+	if (fu_device_has_internal_flag (self, FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER)) {
 		version_safe = fu_common_version_ensure_semver (version);
 		if (g_strcmp0 (version, version_safe) != 0)
 			g_debug ("converted '%s' to '%s'", version, version_safe);
@@ -2063,21 +2179,26 @@ static void
 fu_device_set_custom_flag (FuDevice *self, const gchar *hint)
 {
 	FwupdDeviceFlags flag;
+	FuDeviceInternalFlags internal_flag;
 
 	/* is this a negated device flag */
 	if (g_str_has_prefix (hint, "~")) {
 		flag = fwupd_device_flag_from_string (hint + 1);
 		if (flag != FWUPD_DEVICE_FLAG_UNKNOWN)
 			fu_device_remove_flag (self, flag);
+		internal_flag = fu_device_internal_flag_from_string (hint + 1);
+		if (internal_flag != FU_DEVICE_INTERNAL_FLAG_UNKNOWN)
+			fu_device_remove_internal_flag (self, internal_flag);
 		return;
 	}
 
 	/* is this a known device flag */
 	flag = fwupd_device_flag_from_string (hint);
-	if (flag != FWUPD_DEVICE_FLAG_UNKNOWN) {
+	if (flag != FWUPD_DEVICE_FLAG_UNKNOWN)
 		fu_device_add_flag (self, flag);
-		return;
-	}
+	internal_flag = fu_device_internal_flag_from_string (hint);
+	if (internal_flag != FU_DEVICE_INTERNAL_FLAG_UNKNOWN)
+		fu_device_remove_internal_flag (self, internal_flag);
 }
 
 /**
@@ -2365,6 +2486,18 @@ fu_device_add_string (FuDevice *self, guint idt, GString *str)
 	for (guint i = 0; i < priv->possible_plugins->len; i++) {
 		const gchar *name = g_ptr_array_index (priv->possible_plugins, i);
 		fu_common_string_append_kv (str, idt + 1, "PossiblePlugin", name);
+	}
+	if (priv->internal_flags != FU_DEVICE_INTERNAL_FLAG_NONE) {
+		g_autoptr(GString) tmp2 = g_string_new ("");
+		for (guint i = 0; i < 64; i++) {
+			if ((priv->internal_flags & ((guint64) 1 << i)) == 0)
+				continue;
+			g_string_append_printf (tmp2, "%s|",
+						fu_device_internal_flag_to_string ((guint64) 1 << i));
+		}
+		if (tmp2->len > 0)
+			g_string_truncate (tmp2, tmp2->len - 1);
+		fu_common_string_append_kv (tmp2, idt + 1, "PrivateFlags", tmp2->str);
 	}
 
 	/* subclassed */
@@ -2845,7 +2978,7 @@ fu_device_open (FuDevice *self, GError **error)
 
 	/* subclassed */
 	if (klass->open != NULL) {
-		if (fu_device_has_flag (self, FWUPD_DEVICE_FLAG_RETRY_OPEN)) {
+		if (fu_device_has_internal_flag (self, FU_DEVICE_INTERNAL_FLAG_RETRY_OPEN)) {
 			if (!fu_device_retry_full (self, fu_device_open_cb,
 						   FU_DEVICE_RETRY_OPEN_COUNT,
 						   FU_DEVICE_RETRY_OPEN_DELAY,
@@ -2994,7 +3127,7 @@ fu_device_rescan (FuDevice *self, GError **error)
  * @self: A #FuDevice
  *
  * Converts all the Device Instance IDs added using fu_device_add_instance_id()
- * into actual GUIDs, **unless** %FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS has
+ * into actual GUIDs, **unless** %FU_DEVICE_INTERNAL_FLAG_NO_AUTO_INSTANCE_IDS has
  * been set.
  *
  * Plugins will only need to need to call this manually when adding child
@@ -3010,7 +3143,7 @@ fu_device_convert_instance_ids (FuDevice *self)
 	GPtrArray *instance_ids = fwupd_device_get_instance_ids (FWUPD_DEVICE (self));
 
 	/* OEM specific hardware */
-	if (fu_device_has_flag (self, FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS))
+	if (fu_device_has_internal_flag (self, FU_DEVICE_INTERNAL_FLAG_NO_AUTO_INSTANCE_IDS))
 		return;
 	for (guint i = 0; i < instance_ids->len; i++) {
 		const gchar *instance_id = g_ptr_array_index (instance_ids, i);

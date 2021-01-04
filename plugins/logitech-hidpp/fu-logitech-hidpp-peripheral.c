@@ -1045,5 +1045,6 @@ fu_logitech_hidpp_peripheral_init (FuLogitechHidPpPeripheral *self)
 
 	/* there are a lot of unifying peripherals, but not all respond
 	 * well to opening -- so limit to ones with issued updates */
-	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_ONLY_SUPPORTED);
+	fu_device_add_internal_flag (FU_DEVICE (self),
+				     FU_DEVICE_INTERNAL_FLAG_ONLY_SUPPORTED);
 }

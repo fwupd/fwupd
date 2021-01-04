@@ -3124,7 +3124,7 @@ fu_engine_md_refresh_device_name (FuEngine *self, FuDevice *device, XbNode *comp
 	name = xb_node_query_text (component, "name", NULL);
 	if (name != NULL) {
 		fu_device_set_name (device, name);
-		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_MD_SET_NAME);
+		fu_device_remove_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME);
 	}
 }
 
@@ -3141,7 +3141,7 @@ fu_engine_md_refresh_device_icon (FuEngine *self, FuDevice *device, XbNode *comp
 	icon = xb_node_query_text (component, "icon", NULL);
 	if (icon != NULL) {
 		fu_device_add_icon (device, icon);
-		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_MD_SET_ICON);
+		fu_device_remove_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON);
 	}
 }
 
@@ -3187,7 +3187,7 @@ fu_engine_md_refresh_device_name_category (FuEngine *self, FuDevice *device, XbN
 	}
 	if (name != NULL) {
 		fu_device_set_name (device, name);
-		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY);
+		fu_device_remove_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME_CATEGORY);
 	}
 }
 
@@ -3246,22 +3246,22 @@ fu_engine_md_refresh_device_verfmt (FuEngine *self, FuDevice *device, XbNode *co
 	}
 
 	/* do not try to do this again */
-	fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_MD_SET_VERFMT);
+	fu_device_remove_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT);
 }
 
 void
 fu_engine_md_refresh_device_from_component (FuEngine *self, FuDevice *device, XbNode *component)
 {
 	/* set the name */
-	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_MD_SET_NAME))
+	if (fu_device_has_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME))
 		fu_engine_md_refresh_device_name (self, device, component);
-	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY))
+	if (fu_device_has_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME_CATEGORY))
 		fu_engine_md_refresh_device_name_category (self, device, component);
-	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_MD_SET_ICON))
+	if (fu_device_has_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON))
 		fu_engine_md_refresh_device_icon (self, device, component);
 
 	/* fix the version */
-	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_MD_SET_VERFMT))
+	if (fu_device_has_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT))
 		fu_engine_md_refresh_device_verfmt (self, device, component);
 }
 
@@ -3972,7 +3972,7 @@ fu_engine_get_details (FuEngine *self, FuEngineRequest *request, gint fd, GError
 			fwupd_release_set_remote_id (rel, remote_id);
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED);
 		}
-		if (fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_MD_SET_VERFMT))
+		if (fu_device_has_internal_flag (dev, FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT))
 			fu_engine_md_refresh_device_verfmt (self, dev, component);
 
 		/* if this matched a device on the system, ensure all the
