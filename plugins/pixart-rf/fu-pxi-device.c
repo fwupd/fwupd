@@ -272,7 +272,7 @@ fu_pxi_device_write_chunk (FuPxiDevice *self, FuChunk *chk, GError **error)
 {
 	guint32 prn = 0;
 	guint16 checksum = fu_pxi_device_calculate_checksum (chk->data, chk->data_sz);
-	guint16 checksum_form_device = 0;
+	guint16 checksum_from_device = 0;
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	/* send create fw object command */
@@ -290,7 +290,7 @@ fu_pxi_device_write_chunk (FuPxiDevice *self, FuChunk *chk, GError **error)
 		/* wait notify from device when PRN over threhod write or offset reach max object sz or write offset reach fw length*/ 
 		if ((prn >= self->prn_threshold) || (i == (chunks->len -1))) {
 			guint8 opcode = 0;
-			if (!fu_pxi_device_wait_notify (self, 0x0, &opcode, &checksum_form_device, error))
+			if (!fu_pxi_device_wait_notify (self, 0x0, &opcode, &checksum_from_device, error))
 				return FALSE;
 			if (opcode != FU_PXI_DEVICE_CMD_FW_WRITE) {
 				g_set_error (error,
@@ -304,13 +304,13 @@ fu_pxi_device_write_chunk (FuPxiDevice *self, FuChunk *chk, GError **error)
 		}
 	}
 	self->checksum  +=  checksum;
-	g_debug ("checksum %x, table checksum %x", checksum_form_device, self->checksum);
-	if (checksum_form_device != self->checksum ) {
+	g_debug ("checksum %x, table checksum %x", checksum_from_device, self->checksum);
+	if (checksum_from_device != self->checksum ) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_READ,
 			     "checksum fail, got %x, expected %x",
-			     checksum_form_device,
+			     checksum_from_device,
 			     checksum);
 		return FALSE;
 	}
