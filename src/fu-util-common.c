@@ -1040,23 +1040,11 @@ fu_util_device_flag_to_string (guint64 device_flag)
 		/* skip */
 		return NULL;
 	}
-	if (device_flag == FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS) {
-		/* skip */
-		return NULL;
-	}
 	if (device_flag == FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION) {
 		/* TRANSLATORS: Device update needs to be separately activated */
 		return _("Device update needs activation");
 	}
-	if (device_flag == FWUPD_DEVICE_FLAG_ENSURE_SEMVER) {
-		/* skip */
-		return NULL;
-	}
 	if (device_flag == FWUPD_DEVICE_FLAG_HISTORICAL) {
-		/* skip */
-		return NULL;
-	}
-	if (device_flag == FWUPD_DEVICE_FLAG_ONLY_SUPPORTED) {
 		/* skip */
 		return NULL;
 	}
@@ -1100,27 +1088,7 @@ fu_util_device_flag_to_string (guint64 device_flag)
 		/* TRANSLATORS: save the old firmware to disk before installing the new one */
 		return _("Device will backup firmware before installing");
 	}
-	if (device_flag == FWUPD_DEVICE_FLAG_MD_SET_NAME) {
-		/* skip */
-		return NULL;
-	}
-	if (device_flag == FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY) {
-		/* skip */
-		return NULL;
-	}
-	if (device_flag == FWUPD_DEVICE_FLAG_MD_SET_VERFMT) {
-		/* skip */
-		return NULL;
-	}
-	if (device_flag == FWUPD_DEVICE_FLAG_MD_SET_ICON) {
-		/* skip */
-		return NULL;
-	}
 	if (device_flag == FWUPD_DEVICE_FLAG_SKIPS_RESTART) {
-		/* skip */
-		return NULL;
-	}
-	if (device_flag == FWUPD_DEVICE_FLAG_RETRY_OPEN) {
 		/* skip */
 		return NULL;
 	}

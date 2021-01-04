@@ -157,7 +157,8 @@ fu_ata_device_parse_id_maybe_dell (FuAtaDevice *self, const guint16 *buf)
 
 	/* do not add the FuUdevDevice instance IDs as generic firmware
 	 * should not be used on these OEM-specific devices */
-	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS);
+	fu_device_add_internal_flag (FU_DEVICE (self),
+				     FU_DEVICE_INTERNAL_FLAG_NO_AUTO_INSTANCE_IDS);
 
 	/* add instance ID *and* GUID as using no-auto-instance-ids */
 	guid_id = g_strdup_printf ("STORAGE-DELL-%s", component_id);

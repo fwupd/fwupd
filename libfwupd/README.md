@@ -4,6 +4,7 @@ Planned API/ABI changes for next release
  * Typedef `FwupdFeatureFlags` to `guint64` so it's the same size on all platforms
  * Remove the `soup-session` fallback property in `FwupdClient`.
  * Remove fwupd_device_set_vendor_id() and fwupd_device_get_vendor_id()
+ * Remove the deprecated flags like `FWUPD_DEVICE_FLAG_MD_SET_ICON`
 
 Migration from Version 0.9.x
 ============================

@@ -537,8 +537,10 @@ fu_plugin_uefi_capsule_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GEr
 		name = fu_plugin_uefi_capsule_get_name_for_type (plugin, device_kind);
 		if (name != NULL)
 			fu_device_set_name (FU_DEVICE (dev), name);
-		if (device_kind != FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE)
-			fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY);
+		if (device_kind != FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE) {
+			fu_device_add_internal_flag (FU_DEVICE (dev),
+						     FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME_CATEGORY);
+		}
 	}
 	/* set fallback vendor if nothing else is set */
 	if (fu_device_get_vendor (FU_DEVICE (dev)) == NULL &&

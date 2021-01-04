@@ -193,6 +193,34 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_get_flashes_left(d)		fwupd_device_get_flashes_left(FWUPD_DEVICE(d))
 #define fu_device_get_install_duration(d)	fwupd_device_get_install_duration(FWUPD_DEVICE(d))
 
+/**
+ * FuDeviceInternalFlags:
+ * @FU_DEVICE_INTERNAL_FLAG_NONE:			No flags set
+ * @FU_DEVICE_INTERNAL_FLAG_NO_AUTO_INSTANCE_IDS:	Do not add instance IDs from the device baseclass
+ * @FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER:		Ensure the version is a valid semantic version, e.g. numbers separated with dots
+ * @FU_DEVICE_INTERNAL_FLAG_ONLY_SUPPORTED:		Only devices supported in the metadata will be opened
+ * @FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME:		Set the device name from the metadata `name` if available
+ * @FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME_CATEGORY:	Set the device name from the metadata `category` if available
+ * @FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT:		Set the device version format from the metadata if available
+ * @FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON:		Set the device icon from the metadata if available
+ * @FU_DEVICE_INTERNAL_FLAG_RETRY_OPEN:			Retry the device open up to 5 times if it fails
+ *
+ * The device internal flags.
+ **/
+typedef enum {
+	FU_DEVICE_INTERNAL_FLAG_NONE			= 0,
+	FU_DEVICE_INTERNAL_FLAG_NO_AUTO_INSTANCE_IDS	= (1llu << 0),	/* Since: 1.5.5 */
+	FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER		= (1llu << 1),	/* Since: 1.5.5 */
+	FU_DEVICE_INTERNAL_FLAG_ONLY_SUPPORTED		= (1llu << 2),	/* Since: 1.5.5 */
+	FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME		= (1llu << 3),	/* Since: 1.5.5 */
+	FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME_CATEGORY	= (1llu << 4),	/* Since: 1.5.5 */
+	FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT		= (1llu << 5),	/* Since: 1.5.5 */
+	FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON		= (1llu << 6),	/* Since: 1.5.5 */
+	FU_DEVICE_INTERNAL_FLAG_RETRY_OPEN		= (1llu << 7),	/* Since: 1.5.5 */
+	/*< private >*/
+	FU_DEVICE_INTERNAL_FLAG_UNKNOWN			= G_MAXUINT64,
+} FuDeviceInternalFlags;
+
 /* accessors */
 gchar		*fu_device_to_string			(FuDevice	*self);
 const gchar	*fu_device_get_alternate_id		(FuDevice	*self);
@@ -301,6 +329,12 @@ void		 fu_device_set_quirks			(FuDevice	*self,
 FuQuirks	*fu_device_get_quirks			(FuDevice	*self);
 FwupdRelease	*fu_device_get_release_default		(FuDevice	*self);
 GType		 fu_device_get_specialized_gtype	(FuDevice	*self);
+void		 fu_device_add_internal_flag		(FuDevice	*self,
+							 FuDeviceInternalFlags flag);
+void		 fu_device_remove_internal_flag		(FuDevice	*self,
+							 FuDeviceInternalFlags flag);
+gboolean	 fu_device_has_internal_flag		(FuDevice	*self,
+							 FuDeviceInternalFlags flag);
 gboolean	 fu_device_write_firmware		(FuDevice	*self,
 							 GBytes		*fw,
 							 FwupdInstallFlags flags,
