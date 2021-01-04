@@ -31,29 +31,3 @@ shared_module('fu_plugin_synaptics_rmi',
     fwupdplugin,
   ],
 )
-
-if get_option('tests')
-  # for fuzzing
-  synaptics_rmi_dump = executable(
-    'synaptics-rmi-dump',
-    sources : [
-      'fu-dump.c',
-      'fu-synaptics-rmi-common.c',
-      'fu-synaptics-rmi-firmware.c',
-    ],
-    include_directories : [
-      root_incdir,
-      fwupd_incdir,
-      fwupdplugin_incdir,
-    ],
-    dependencies : [
-      gio,
-      libxmlb,
-    ],
-    link_with : [
-      fwupd,
-      fwupdplugin,
-    ],
-    c_args : cargs
-  )
-endif
