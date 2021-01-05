@@ -18,7 +18,7 @@ cp -R ../../../!(build|dist) .
 popd
 chown nobody . -R
 
-# install and run TPM simulator necessary for plugins/uefi/uefi-self-test
+# install and run TPM simulator necessary for plugins/uefi-capsule/uefi-self-test
 pacman -Syu --noconfirm swtpm tpm2-tools
 swtpm socket --tpm2 --server port=2321 --ctrl type=tcp,port=2322 --flags not-need-init --tpmstate "dir=$PWD" &
 trap "kill $!" EXIT

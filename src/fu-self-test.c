@@ -982,7 +982,7 @@ fu_engine_device_priority_func (gconstpointer user_data)
 	fu_device_add_vendor_id (device3, "USB:FFFF");
 	fu_device_set_protocol (device3, "com.acme");
 	fu_device_set_priority (device3, 0);
-	fu_device_set_plugin (device3, "uefi");
+	fu_device_set_plugin (device3, "uefi_capsule");
 	fu_device_add_instance_id (device3, "GUID1");
 	fu_device_convert_instance_ids (device3);
 	fu_engine_add_device (engine, device3);
@@ -1019,7 +1019,7 @@ fu_engine_device_priority_func (gconstpointer user_data)
 	fu_device_add_vendor_id (device5, "USB:FFFF");
 	fu_device_set_protocol (device5, "com.acme");
 	fu_device_set_priority (device5, 0);
-	fu_device_set_plugin (device5, "uefi");
+	fu_device_set_plugin (device5, "uefi_capsule");
 	fu_device_add_instance_id (device5, "GUID5");
 	fu_device_set_name (device5, "ABC");
 	fu_device_convert_instance_ids (device5);

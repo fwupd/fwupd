@@ -22,7 +22,7 @@ void
 fu_plugin_init (FuPlugin *plugin)
 {
 	fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
-	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_BEFORE, "uefi");
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_BEFORE, "uefi_capsule");
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "tpm");
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 }
@@ -118,7 +118,7 @@ void
 fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 {
 	/* only care about UEFI devices from ESRT */
-	if (g_strcmp0 (fu_device_get_plugin (device), "uefi") == 0) {
+	if (g_strcmp0 (fu_device_get_plugin (device), "uefi_capsule") == 0) {
 		fu_plugin_device_registered_uefi (plugin, device);
 		return;
 	}
