@@ -17,6 +17,7 @@ typedef enum {
 	FU_EFI_SIGNATURE_KIND_UNKNOWN,
 	FU_EFI_SIGNATURE_KIND_SHA256,
 	FU_EFI_SIGNATURE_KIND_X509,
+	/*< private >*/
 	FU_EFI_SIGNATURE_KIND_LAST
 } FuEfiSignatureKind;
 
@@ -24,10 +25,7 @@ typedef enum {
 #define FU_EFI_SIGNATURE_GUID_MICROSOFT		"77fa9abd-0359-4d32-bd60-28f4e78f784b"
 #define FU_EFI_SIGNATURE_GUID_OVMF		"a0baa8a3-041d-48a8-bc87-c36d121b5e3d"
 
-const gchar	*fu_efi_signature_kind_to_string	(FuEfiSignatureKind kind);
-const gchar	*fu_efi_signature_guid_to_string	(const gchar	*guid);
+const gchar	*fu_efi_signature_kind_to_string	(FuEfiSignatureKind	 kind);
 
-FuEfiSignature	*fu_efi_signature_new			(FuEfiSignatureKind kind,
-							 const gchar	*owner);
-FuEfiSignatureKind fu_efi_signature_get_kind		(FuEfiSignature	*self);
-const gchar 	*fu_efi_signature_get_owner		(FuEfiSignature	*self);
+FuEfiSignatureKind fu_efi_signature_get_kind		(FuEfiSignature		*self);
+const gchar 	*fu_efi_signature_get_owner		(FuEfiSignature		*self);

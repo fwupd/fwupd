@@ -53,6 +53,8 @@
     <xi:include href="xml/fu-device-metadata.xml"/>
     <xi:include href="xml/fu-device.xml"/>
     <xi:include href="xml/fu-dfu-firmware.xml"/>
+    <xi:include href="xml/fu-efi-signature.xml"/>
+    <xi:include href="xml/fu-efi-signature-list.xml"/>
     <xi:include href="xml/fu-firmware-common.xml"/>
     <xi:include href="xml/fu-firmware-image.xml"/>
     <xi:include href="xml/fu-firmware.xml"/>

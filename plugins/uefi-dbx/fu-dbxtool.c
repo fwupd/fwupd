@@ -17,7 +17,6 @@
 #include "fu-common.h"
 #include "fu-efivar.h"
 #include "fu-uefi-dbx-common.h"
-#include "fu-efi-signature-common.h"
 #include "fu-efi-signature.h"
 
 /* custom return code */
@@ -53,6 +52,37 @@ fu_dbxtool_get_siglist_local (const gchar *filename, GError **error)
 	if (!fu_firmware_parse (siglist, blob, FWUPD_INSTALL_FLAG_NONE, error))
 		return NULL;
 	return g_steal_pointer (&siglist);
+}
+
+static gboolean
+fu_dbxtool_siglist_inclusive (FuFirmware *outer, FuFirmware *inner)
+{
+	g_autoptr(GPtrArray) sigs = fu_firmware_get_images (inner);
+	for (guint i = 0; i < sigs->len; i++) {
+		FuEfiSignature *sig = g_ptr_array_index (sigs, i);
+		g_autofree gchar *checksum = NULL;
+		g_autoptr(FuFirmwareImage) img = NULL;
+		checksum = fu_firmware_image_get_checksum (FU_FIRMWARE_IMAGE (sig),
+							   G_CHECKSUM_SHA256, NULL);
+		if (checksum == NULL)
+			continue;
+		img = fu_firmware_get_image_by_checksum (outer, checksum, NULL);
+		if (img == NULL)
+			return FALSE;
+	}
+	return TRUE;
+}
+
+static const gchar *
+fu_dbxtool_guid_to_string (const gchar *guid)
+{
+	if (g_strcmp0 (guid, FU_EFI_SIGNATURE_GUID_ZERO) == 0)
+		return "zero";
+	if (g_strcmp0 (guid, FU_EFI_SIGNATURE_GUID_MICROSOFT) == 0)
+		return "microsoft";
+	if (g_strcmp0 (guid, FU_EFI_SIGNATURE_GUID_OVMF) == 0)
+		return "ovmf";
+	return guid;
 }
 
 int
@@ -155,7 +185,7 @@ main (int argc, char *argv[])
 								   NULL);
 			g_print ("%4u: {%s} {%s} %s\n",
 				 cnt++,
-				 fu_efi_signature_guid_to_string (fu_efi_signature_get_owner (sig)),
+				 fu_dbxtool_guid_to_string (fu_efi_signature_get_owner (sig)),
 				 fu_efi_signature_kind_to_string (fu_efi_signature_get_kind (sig)),
 				 checksum);
 		}
@@ -206,7 +236,7 @@ main (int argc, char *argv[])
 		}
 
 		/* check this is a newer dbx update */
-		if (!force && fu_efi_signature_list_inclusive (FU_EFI_SIGNATURE_LIST (dbx_system), FU_EFI_SIGNATURE_LIST (dbx_update))) {
+		if (!force && fu_dbxtool_siglist_inclusive (dbx_system, dbx_update)) {
 			/* TRANSLATORS: same or newer update already applied */
 			g_printerr ("%s\n", _("Cannot apply as dbx update has already been applied."));
 			return EXIT_FAILURE;

@@ -35,6 +35,8 @@
 #include <libfwupdplugin/fu-security-attrs.h>
 #include <libfwupdplugin/fu-smbios.h>
 #include <libfwupdplugin/fu-srec-firmware.h>
+#include <libfwupdplugin/fu-efi-signature.h>
+#include <libfwupdplugin/fu-efi-signature-list.h>
 #include <libfwupdplugin/fu-efivar.h>
 #include <libfwupdplugin/fu-udev-device.h>
 #include <libfwupdplugin/fu-usb-device.h>
