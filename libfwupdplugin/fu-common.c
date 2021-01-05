@@ -1840,6 +1840,46 @@ fu_common_strnsplit (const gchar *str, gsize sz,
 }
 
 /**
+ * fu_common_strsafe:
+ * @str: (nullable): a string to make safe for printing
+ * @maxsz: maximum size of returned string
+ *
+ * Converts a string into something that can be safely printed.
+ *
+ * Return value: (transfer full): safe string, or %NULL if there was nothing valid
+ *
+ * Since: 1.5.5
+ **/
+gchar *
+fu_common_strsafe (const gchar *str, gsize maxsz)
+{
+	gboolean valid = FALSE;
+	g_autoptr(GString) tmp = NULL;
+
+	g_return_val_if_fail (maxsz > 0, NULL);
+
+	/* sanity check */
+	if (str == NULL)
+		return NULL;
+
+	/* replace non-printable chars with '.' */
+	tmp = g_string_sized_new (strlen (str));
+	for (gsize i = 0; str[i] != '\0' && i < maxsz; i++) {
+		if (!g_ascii_isprint (str[i])) {
+			g_string_append_c (tmp, '.');
+			continue;
+		}
+		g_string_append_c (tmp, str[i]);
+		valid = TRUE;
+	}
+
+	/* if just junk, don't return 'all dots' */
+	if (tmp->len == 0 || !valid)
+		return NULL;
+	return g_string_free (g_steal_pointer (&tmp), FALSE);
+}
+
+/**
  * fu_memcpy_safe:
  * @dst: destination buffer
  * @dst_sz: maximum size of @dst, typically `sizeof(dst)`

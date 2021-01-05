@@ -250,6 +250,8 @@ gchar		**fu_common_strnsplit		(const gchar	*str,
 						 gsize		 sz,
 						 const gchar	*delimiter,
 						 gint		 max_tokens);
+gchar		*fu_common_strsafe		(const gchar	*str,
+						 gsize		 maxsz);
 gboolean	 fu_common_kernel_locked_down	(void);
 gboolean	 fu_common_cpuid		(guint32	 leaf,
 						 guint32	*eax,

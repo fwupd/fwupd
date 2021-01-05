@@ -702,6 +702,7 @@ LIBFWUPDPLUGIN_1.5.4 {
 
 LIBFWUPDPLUGIN_1.5.5 {
   global:
+    fu_common_strsafe;
     fu_device_retry_full;
     fu_firmware_get_image_by_checksum;
     fu_firmware_image_get_checksum;
