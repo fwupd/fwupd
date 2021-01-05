@@ -2236,26 +2236,49 @@ fu_common_cpuid (guint32 leaf,
  * Uses CPUID to discover the CPU vendor and check if it is Intel.
  *
  * Return value: %TRUE if the vendor was Intel.
+ * Deprecated: 1.5.5: Use fu_common_get_cpu_vendor() instead.
  *
  * Since: 1.5.0
  **/
 gboolean
 fu_common_is_cpu_intel (void)
 {
+	return fu_common_get_cpu_vendor () == FU_CPU_VENDOR_INTEL;
+}
+
+/**
+ * fu_common_get_cpu_vendor:
+ *
+ * Uses CPUID to discover the CPU vendor.
+ *
+ * Return value: a #FuCpuVendor, e.g. %FU_CPU_VENDOR_AMD if the vendor was AMD.
+ *
+ * Since: 1.5.5
+ **/
+FuCpuVendor
+fu_common_get_cpu_vendor (void)
+{
+#ifdef HAVE_CPUID_H
 	guint ebx = 0;
 	guint ecx = 0;
 	guint edx = 0;
 
-	if (!fu_common_cpuid (0x0, NULL, &ebx, &ecx, &edx, NULL))
-		return FALSE;
-#ifdef HAVE_CPUID_H
-	if (ebx == signature_INTEL_ebx &&
-	    edx == signature_INTEL_edx &&
-	    ecx == signature_INTEL_ecx) {
-		return TRUE;
+	if (fu_common_cpuid (0x0, NULL, &ebx, &ecx, &edx, NULL)) {
+		if (ebx == signature_INTEL_ebx &&
+		    edx == signature_INTEL_edx &&
+		    ecx == signature_INTEL_ecx) {
+			return FU_CPU_VENDOR_INTEL;
+		}
+		if (ebx == signature_AMD_ebx &&
+		    edx == signature_AMD_edx &&
+		    ecx == signature_AMD_ecx) {
+			return FU_CPU_VENDOR_AMD;
+		}
 	}
 #endif
-	return FALSE;
+
+	/* failed */
+	return FU_CPU_VENDOR_UNKNOWN;
 }
 
 /**
