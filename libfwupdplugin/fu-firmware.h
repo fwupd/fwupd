@@ -128,6 +128,9 @@ FuFirmwareImage *fu_firmware_get_image_by_idx		(FuFirmware	*self,
 GBytes		*fu_firmware_get_image_by_idx_bytes	(FuFirmware	*self,
 							 guint64	 idx,
 							 GError		**error);
+FuFirmwareImage	*fu_firmware_get_image_by_checksum	(FuFirmware	*self,
+							 const gchar	*checksum,
+							 GError		**error);
 FuFirmwareImage	*fu_firmware_get_image_default		(FuFirmware	*self,
 							 GError		**error);
 GBytes		*fu_firmware_get_image_default_bytes	(FuFirmware	*self,

@@ -31,8 +31,12 @@ struct _FuFirmwareImageClass
 						 XbNode			*n,
 						 GError			**error)
 						 G_GNUC_WARN_UNUSED_RESULT;
+	gchar			*(*get_checksum)(FuFirmwareImage	*self,
+						 GChecksumType		 csum_kind,
+						 GError			**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 	/*< private >*/
-	gpointer		 padding[27];
+	gpointer		 padding[26];
 };
 
 #define FU_FIRMWARE_IMAGE_ID_PAYLOAD		"payload"
@@ -63,6 +67,9 @@ void		 fu_firmware_image_set_idx	(FuFirmwareImage	*self,
 GBytes		*fu_firmware_image_get_bytes	(FuFirmwareImage	*self);
 void		 fu_firmware_image_set_bytes	(FuFirmwareImage	*self,
 						 GBytes			*bytes);
+gchar		*fu_firmware_image_get_checksum	(FuFirmwareImage	*self,
+						 GChecksumType		 csum_kind,
+						 GError			**error);
 gboolean	 fu_firmware_image_parse	(FuFirmwareImage	*self,
 						 GBytes			*fw,
 						 FwupdInstallFlags	 flags,
